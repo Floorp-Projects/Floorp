@@ -36,6 +36,9 @@ public:
   friend nsresult NS_NewMathMLmsupFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame);
 
   NS_IMETHOD
+  TransmitAutomaticData(nsIPresContext* aPresContext);
+
+  NS_IMETHOD
   Place(nsIPresContext*      aPresContext,
         nsIRenderingContext& aRenderingContext,
         PRBool               aPlaceOrigin,
@@ -49,26 +52,6 @@ public:
                     nsIFrame*            aForFrame,
                     nscoord              aUserSupScriptShift = 0,
                     nscoord              aScriptSpace = NSFloatPointsToTwips(0.5f));
-
-  NS_IMETHOD
-  TransmitAutomaticData(nsIPresContext* aPresContext)
-  {
-#if defined(NS_DEBUG) && defined(SHOW_BOUNDING_BOX)
-    mPresentationData.flags |= NS_MATHML_SHOW_BOUNDING_METRICS;
-#endif
-
-    // check whether or not this is an embellished operator
-    EmbellishOperator();
-    // 1. The REC says:
-    // The <msup> element increments scriptlevel by 1, and sets displaystyle to
-    // "false", within superscript, but leaves both attributes unchanged within base.
-    // 2. The TeXbook (Ch 17. p.141) says the superscript *inherits* the compression,
-    // so we don't set the compression flag. Our parent will propagate its own.
-    UpdatePresentationDataFromChildAt(aPresContext, 1, -1, 1,
-      ~NS_MATHML_DISPLAYSTYLE,
-       NS_MATHML_DISPLAYSTYLE);
-    return NS_OK;
-  }
 
 protected:
   nsMathMLmsupFrame();

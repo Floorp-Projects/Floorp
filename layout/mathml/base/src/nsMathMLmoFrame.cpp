@@ -46,46 +46,6 @@
 // <mo> -- operator, fence, or separator - implementation
 //
 
-// TODO:
-// * Handle embellished operators
-//   See the section "Exception for embellished operators"
-//   in http://www.w3.org/TR/REC-MathML/chap3_2.html
-//
-// * For a markup <mo>content</mo>, if "content" is not found in
-//   the operator dictionary, the REC sets default attributes :
-//   fence = false
-//   separator = false
-//   lspace = .27777em
-//   rspace = .27777em
-//   stretchy = false
-//   symmetric = true
-//   maxsize = infinity
-//   minsize = 1
-//   largeop = false
-//   movablelimits = false
-//   accent = false
-//
-//   We only have to handle *lspace* and *rspace*, perhaps via a CSS padding rule
-//   in mathml.css, and override the rule if the content is found?
-//
-
-// * The spacing is wrong in certain situations, e.g.// <mrow> <mo>&ForAll;</mo> <mo>+</mo></mrow>
-//
-//   The REC tells more about lspace and rspace attributes:
-//
-//   The values for lspace and rspace given here range from 0 to 6/18 em in
-//   units of 1/18 em. For the invisible operators whose content is
-//   "&InvisibleTimes;" or "&ApplyFunction;", it is suggested that MathML
-//   renderers choose spacing in a context-sensitive way (which is an exception to
-//   the static values given in the following table). For <mo>&ApplyFunction;</mo>,
-//   the total spacing (lspace + rspace) in expressions such as "sin x"
-//   (where the right operand doesn't start with a fence) should be greater
-//   than 0; for <mo>&InvisibleTimes;</mo>, the total spacing should be greater
-//   than 0 when both operands (or the nearest tokens on either side, if on
-//   the baseline) are identifiers displayed in a non-slanted font (i.e., under
-//   the suggested rules, when both operands are multi-character identifiers).
-
-
 // additional style context to be used by our MathMLChar.
 #define NS_MATHML_CHAR_STYLE_CONTEXT_INDEX   0
 
@@ -127,8 +87,7 @@ nsMathMLmoFrame::Paint(nsIPresContext*      aPresContext,
 #if defined(NS_DEBUG) && defined(SHOW_BOUNDING_BOX)
     // for visual debug
     if (NS_FRAME_PAINT_LAYER_FOREGROUND == aWhichLayer &&
-        NS_MATHML_PAINT_BOUNDING_METRICS(mPresentationData.flags))
-    {
+        NS_MATHML_PAINT_BOUNDING_METRICS(mPresentationData.flags)) {
       aRenderingContext.SetColor(NS_RGB(0,255,255));
       nscoord x = mReference.x + mBoundingMetrics.leftBearing;
       nscoord y = mReference.y - mBoundingMetrics.ascent;
@@ -145,25 +104,17 @@ nsMathMLmoFrame::Paint(nsIPresContext*      aPresContext,
   return rv;
 }
 
-NS_IMETHODIMP
-nsMathMLmoFrame::Init(nsIPresContext*  aPresContext,
-                      nsIContent*      aContent,
-                      nsIFrame*        aParent,
-                      nsIStyleContext* aContext,
-                      nsIFrame*        aPrevInFlow)
+// get the text that we enclose and setup our nsMathMLChar
+void
+nsMathMLmoFrame::ProcessTextData(nsIPresContext* aPresContext)
 {
-  // Let the base class do its Init()
-  nsresult rv = nsMathMLContainerFrame::Init(aPresContext, aContent, aParent, aContext, aPrevInFlow);
- 
-  // Init our local attributes
   mFlags = 0;
-  mMinSize = float(NS_UNCONSTRAINEDSIZE);
-  mMaxSize = float(NS_UNCONSTRAINEDSIZE);
+  if (!mFrames.FirstChild())
+    return;
 
-  // get the text that we enclose
-  nsAutoString data;
   // kids can be comment-nodes, attribute-nodes, text-nodes...
   // we use the DOM to ensure that we only look at text-nodes...
+  nsAutoString data;
   PRInt32 numKids;
   mContent->ChildCount(numKids);
   for (PRInt32 kid=0; kid<numKids; kid++) {
@@ -178,242 +129,217 @@ nsMathMLmoFrame::Init(nsIPresContext*  aPresContext,
       }
     }
   }
-  // cache the operator
-  mMathMLChar.SetData(aPresContext, data);
-  PRBool isMutable = ResolveMathMLCharStyle(aPresContext, mContent, mStyleContext, &mMathMLChar);
-  if (isMutable) {
+
+  // cache the special bits: mutable, accent, movablelimits, centered.
+  // we need to do this in anticipation of other requirements, and these
+  // bits don't change. Do not reset these bits unless the text gets changed.
+
+  // lookup all the forms under which the operator is listed in the dictionary,
+  // and record whether the operator has accent="true" or movablelimits="true"
+  nsOperatorFlags flags[4];
+  float lspace[4], rspace[4];
+  nsMathMLOperators::LookupOperators(data, flags, lspace, rspace);
+  nsOperatorFlags allFlags =
+    flags[NS_MATHML_OPERATOR_FORM_INFIX] |
+    flags[NS_MATHML_OPERATOR_FORM_POSTFIX] |
+    flags[NS_MATHML_OPERATOR_FORM_PREFIX];
+
+  mFlags |= allFlags & NS_MATHML_OPERATOR_ACCENT;
+  mFlags |= allFlags & NS_MATHML_OPERATOR_MOVABLELIMITS;
+
+  PRBool isMutable =
+    NS_MATHML_OPERATOR_IS_STRETCHY(allFlags) ||
+    NS_MATHML_OPERATOR_IS_LARGEOP(allFlags);
+  if (isMutable)
     mFlags |= NS_MATHML_OPERATOR_MUTABLE;
+
+  // see if this is an operator that should be centered to cater for 
+  // fonts that are not math-aware
+  if (1 == data.Length()) {
+    PRUnichar ch = data[0];
+    if ((ch == '+') || (ch == '=') || (ch == '*') ||
+        (ch == 0x00D7)) { // &times;
+      mFlags |= NS_MATHML_OPERATOR_CENTERED;
+    }
   }
 
-  return rv;
+  // cache the operator
+  mMathMLChar.SetData(aPresContext, data);
+  ResolveMathMLCharStyle(aPresContext, mContent, mStyleContext, &mMathMLChar, isMutable);
 }
 
-NS_IMETHODIMP
-nsMathMLmoFrame::TransmitAutomaticData(nsIPresContext* aPresContext)
-{
-#if defined(NS_DEBUG) && defined(SHOW_BOUNDING_BOX)
-  mPresentationData.flags |= NS_MATHML_SHOW_BOUNDING_METRICS;
-#endif
-
-  // fill our mEmbellishData member variable
-  nsIFrame* firstChild = mFrames.FirstChild();
-  if (firstChild) {
-    mEmbellishData.direction = mMathMLChar.GetStretchDirection();
-    mEmbellishData.flags |= NS_MATHML_EMBELLISH_OPERATOR;
-    mEmbellishData.nextFrame = nsnull; 
-    mEmbellishData.coreFrame = this;
-
-    // there are two extra things that we need to record so that if our
-    // parent is <mover>, <munder>, or <munderover>, they will treat us properly:
-    // 1) do we have accent="true"
-    // 2) do we have movablelimits="true"
-    
-    // they need the extra information to decide how to treat their scripts/limits
-    // (note: <mover>, <munder>, or <munderover> need not necessarily be our
-    // direct parent -- case of embellished operators)
-    
-    mEmbellishData.flags &= ~NS_MATHML_EMBELLISH_ACCENT; // default is false
-    mEmbellishData.flags &= ~NS_MATHML_EMBELLISH_MOVABLELIMITS; // default is false
-    
-    nsAutoString value;
-    PRBool accentAttribute = PR_FALSE;
-    PRBool movablelimitsAttribute = PR_FALSE;
-    
-    // see if the accent attribute is there
-    if (NS_CONTENT_ATTR_HAS_VALUE == GetAttribute(mContent, mPresentationData.mstyle,
-                     nsMathMLAtoms::accent_, value))
-    {
-      accentAttribute = PR_TRUE;
-      if (value.Equals(NS_LITERAL_STRING("true")))
-      {
-        mEmbellishData.flags |= NS_MATHML_EMBELLISH_ACCENT;
-      }
-    }
-    
-    // see if the movablelimits attribute is there
-    if (NS_CONTENT_ATTR_HAS_VALUE == GetAttribute(mContent, mPresentationData.mstyle,
-                     nsMathMLAtoms::movablelimits_, value))
-    {
-      movablelimitsAttribute = PR_TRUE;
-      if (value.Equals(NS_LITERAL_STRING("true")))
-      {
-        mEmbellishData.flags |= NS_MATHML_EMBELLISH_MOVABLELIMITS;
-      }
-    }
-    
-    if (!accentAttribute || !movablelimitsAttribute) {
-      // If we reach here, it means one or both attributes are missing.
-      // Unfortunately, we have to lookup the dictionary to see who
-      // we are, i.e., two lookups, counting also the one in Stretch()!
-      // The lookup in Stretch() assumes that the surrounding frame tree
-      // is already fully constructed, which is not true at this stage.
-    
-      // all accent="true" in the dictionary have form="postfix"
-      // XXX should we check if the form attribute is there?
-      nsAutoString data;
-      mMathMLChar.GetData(data);
-      nsOperatorFlags form = NS_MATHML_OPERATOR_FORM_POSTFIX;
-      nsOperatorFlags flags = 0;
-      float leftSpace, rightSpace;
-      PRBool found = nsMathMLOperators::LookupOperator(data, form,
-                                             &flags, &leftSpace, &rightSpace);
-    
-      if (found && !accentAttribute && NS_MATHML_OPERATOR_IS_ACCENT(flags))
-      {
-        mEmbellishData.flags |= NS_MATHML_EMBELLISH_ACCENT;
-      }
-    
-      // all movablemits="true" in the dictionary have form="prefix",
-      // but this doesn't matter here, as the lookup has returned whatever
-      // is in the dictionary
-      if (found && !movablelimitsAttribute && NS_MATHML_OPERATOR_IS_MOVABLELIMITS(flags))
-      {
-        mEmbellishData.flags |= NS_MATHML_EMBELLISH_MOVABLELIMITS;
-      }
-    }
-  }   
-  return NS_OK;
-}
-
+// get our 'form' and lookup in the Operator Dictionary to fetch 
+// our default data that may come from there, the look our attributes.
+// The function has to be called during reflow because certain value
+// before, we will re-use unchanged things that we computed earlier
 void
-nsMathMLmoFrame::InitData(nsIPresContext* aPresContext)
+nsMathMLmoFrame::ProcessOperatorData(nsIPresContext* aPresContext)
 {
-  nsresult rv = NS_OK;
+  // if we have been here before, we will just use our cached form
+  nsOperatorFlags form = NS_MATHML_OPERATOR_GET_FORM(mFlags);
+  nsAutoString value;
 
-  // Remember the mutable bit from Init().
+  // special bits are always kept in mFlags.
+  // remember the mutable bit from ProcessTextData().
   // Some chars are listed under different forms in the dictionary,
   // and there could be a form under which the char is mutable.
   // If the char is the core of an embellished container, we will keep
-  // it mutable irrespective of the form of the embellished container
-  mFlags &= NS_MATHML_OPERATOR_MUTABLE;
+  // it mutable irrespective of the form of the embellished container.
+  // Also remember the other special bits that we want to carry forward.
+  mFlags &= NS_MATHML_OPERATOR_MUTABLE |
+            NS_MATHML_OPERATOR_ACCENT | 
+            NS_MATHML_OPERATOR_MOVABLELIMITS |
+            NS_MATHML_OPERATOR_CENTERED;
 
-  // Get our outermost embellished container and its parent. 
-  // We ensure that we are the core, not just a sibling of the core
-  nsIMathMLFrame* mathMLFrame = nsnull;
-  nsIFrame* embellishAncestor = this;
-  nsEmbellishData embellishData;
-  nsIFrame* parentAncestor = this;
-  do {
-    embellishAncestor = parentAncestor;
-    embellishAncestor->GetParent(&parentAncestor);
-    parentAncestor->QueryInterface(NS_GET_IID(nsIMathMLFrame), (void**)&mathMLFrame);
-    if (mathMLFrame) {
-      mathMLFrame->GetEmbellishData(embellishData);
+  if (!mEmbellishData.coreFrame) {
+    // i.e., we haven't been here before, the default form is infix
+    form = NS_MATHML_OPERATOR_FORM_INFIX;
+
+    // reset everything so that we don't keep outdated values around
+    // in case of dynamic changes
+    mEmbellishData.flags = 0;
+    mEmbellishData.nextFrame = nsnull; 
+    mEmbellishData.coreFrame = nsnull;
+    mEmbellishData.direction = NS_STRETCH_DIRECTION_UNSUPPORTED;
+    mEmbellishData.leftSpace = 0;
+    mEmbellishData.rightSpace = 0;
+
+    if (!mFrames.FirstChild())
+      return;
+
+    mEmbellishData.flags |= NS_MATHML_EMBELLISH_OPERATOR;
+    mEmbellishData.nextFrame = nsnull; 
+    mEmbellishData.coreFrame = this;
+    mEmbellishData.direction = mMathMLChar.GetStretchDirection();
+
+    // there are two particular things that we also need to record so that if our
+    // parent is <mover>, <munder>, or <munderover>, they will treat us properly:
+    // 1) do we have accent="true"
+    // 2) do we have movablelimits="true"
+
+    // they need the extra information to decide how to treat their scripts/limits
+    // (note: <mover>, <munder>, or <munderover> need not necessarily be our
+    // direct parent -- case of embellished operators)
+
+    // default values from the Operator Dictionary were obtained in ProcessTextData()
+    // and these special bits are always kept in mFlags
+    if (NS_MATHML_OPERATOR_IS_ACCENT(mFlags))
+      mEmbellishData.flags |= NS_MATHML_EMBELLISH_ACCENT;
+    if (NS_MATHML_OPERATOR_IS_MOVABLELIMITS(mFlags))
+      mEmbellishData.flags |= NS_MATHML_EMBELLISH_MOVABLELIMITS;
+
+    // see if the accent attribute is there
+    if (NS_CONTENT_ATTR_HAS_VALUE == GetAttribute(mContent, mPresentationData.mstyle,
+                     nsMathMLAtoms::accent_, value)) {
+      if (value.Equals(NS_LITERAL_STRING("true")))
+        mEmbellishData.flags |= NS_MATHML_EMBELLISH_ACCENT;
+      else if (value.Equals(NS_LITERAL_STRING("false")))
+        mEmbellishData.flags &= ~NS_MATHML_EMBELLISH_ACCENT;
+    }
+    // see if the movablelimits attribute is there
+    if (NS_CONTENT_ATTR_HAS_VALUE == GetAttribute(mContent, mPresentationData.mstyle,
+                     nsMathMLAtoms::movablelimits_, value)) {
+      if (value.Equals(NS_LITERAL_STRING("true")))
+        mEmbellishData.flags |= NS_MATHML_EMBELLISH_MOVABLELIMITS;
+      else if (value.Equals(NS_LITERAL_STRING("false")))
+        mEmbellishData.flags &= ~NS_MATHML_EMBELLISH_MOVABLELIMITS;
+    }
+
+    // get our outermost embellished container and its parent. 
+    // (we ensure that we are the core, not just a sibling of the core)
+    nsIFrame* embellishAncestor = this;
+    nsEmbellishData embellishData;
+    nsIFrame* parentAncestor = this;
+    do {
+      embellishAncestor = parentAncestor;
+      embellishAncestor->GetParent(&parentAncestor);
+      GetEmbellishDataFrom(parentAncestor, embellishData);
+    } while (embellishData.coreFrame == this);
+
+    // flag if we have an embellished ancestor
+    if (embellishAncestor != this)
+      mFlags |= NS_MATHML_OPERATOR_EMBELLISH_ANCESTOR;
+    else
+      mFlags &= ~NS_MATHML_OPERATOR_EMBELLISH_ANCESTOR;
+
+    // find the position of our outermost embellished container w.r.t
+    // its siblings (frames are singly-linked together).
+    nsIFrame* firstChild;
+    parentAncestor->FirstChild(aPresContext, nsnull, &firstChild);
+    nsFrameList frameList(firstChild);
+
+    nsIFrame* nextSibling;
+    embellishAncestor->GetNextSibling(&nextSibling);
+    nsIFrame* prevSibling = frameList.GetPrevSiblingFor(embellishAncestor);
+
+    // flag to distinguish from a real infix
+    if (!prevSibling && !nextSibling)
+      mFlags |= NS_MATHML_OPERATOR_EMBELLISH_ISOLATED;
+    else
+      mFlags &= ~NS_MATHML_OPERATOR_EMBELLISH_ISOLATED;
+
+    // find our form
+    if (NS_CONTENT_ATTR_HAS_VALUE == GetAttribute(mContent, mPresentationData.mstyle,
+                     nsMathMLAtoms::form_, value)) {
+      if (value.Equals(NS_LITERAL_STRING("prefix")))
+        form = NS_MATHML_OPERATOR_FORM_PREFIX;
+      else if (value.Equals(NS_LITERAL_STRING("postfix")))
+        form = NS_MATHML_OPERATOR_FORM_POSTFIX;
     }
     else {
-      embellishData.coreFrame = nsnull;
+      // set our form flag depending on the position
+      if (!prevSibling && nextSibling)
+        form = NS_MATHML_OPERATOR_FORM_PREFIX;
+      else if (prevSibling && !nextSibling)
+        form = NS_MATHML_OPERATOR_FORM_POSTFIX;
     }
-  } while (embellishData.coreFrame == this);
-  // flag if we have an embellished ancestor
-  if (embellishAncestor != this) {
-    mFlags |= NS_MATHML_OPERATOR_EMBELLISH_ANCESTOR;
   }
 
-  // find our form
-  nsAutoString value;
-  nsOperatorFlags form = NS_MATHML_OPERATOR_FORM_INFIX;
-  if (NS_CONTENT_ATTR_HAS_VALUE == GetAttribute(mContent, mPresentationData.mstyle,
-                   nsMathMLAtoms::form_, value)) {
-    if (value.Equals(NS_LITERAL_STRING("prefix")))
-      form = NS_MATHML_OPERATOR_FORM_PREFIX;
-    else if (value.Equals(NS_LITERAL_STRING("postfix")))
-      form = NS_MATHML_OPERATOR_FORM_POSTFIX;
-  }
-  else {
-    // Find the position of our outermost embellished container w.r.t
-    // its siblings (frames are singly-linked together).
-    nsIFrame* prev = nsnull;
-    nsIFrame* next = nsnull;
-    nsIFrame* frame;
+  // lookup the operator dictionary
+  // the form can be null to mean that the stretching of our mMathMLChar
+  // failed earlier, in which case we won't bother re-stretching again
+  if (form) {
+    float lspace = 0.0f;
+    float rspace = 0.0f;
+    nsAutoString data;
+    mMathMLChar.GetData(data);
+    mMathMLChar.SetData(aPresContext, data); // XXX hack to reset, bug 45010
+    PRBool found = nsMathMLOperators::LookupOperator(data, form, &mFlags, &lspace, &rspace);
+    if (found) {
+      // cache the default values of lspace & rspace that we get from the dictionary.
+      // since these values are relative to the 'em' unit, convert to twips now
+      nscoord em;
+      const nsStyleFont* font;
+      GetStyleData(eStyleStruct_Font, (const nsStyleStruct *&)font);
+      nsCOMPtr<nsIFontMetrics> fm;
+      aPresContext->GetMetricsFor(font->mFont, getter_AddRefs(fm));
+      GetEmHeight(fm, em);
 
-    embellishAncestor->GetNextSibling(&next);
-    parentAncestor->FirstChild(aPresContext, nsnull, &frame);
-    while (frame) {
-      if (frame == embellishAncestor) break;
-      prev = frame;
-      frame->GetNextSibling(&frame);
+      mEmbellishData.leftSpace = NSToCoordRound(lspace * em);
+      mEmbellishData.rightSpace = NSToCoordRound(rspace * em);
+
+      // tuning if we don't want too much extra space when we are a script.
+      // (with its fonts, TeX sets lspace=0 & rspace=0 as soon as scriptlevel>0.
+      // Our fonts can be anything, so...)
+      if (mPresentationData.scriptLevel > 0) {
+        if (NS_MATHML_OPERATOR_EMBELLISH_IS_ISOLATED(mFlags)) {
+          // could be an isolated accent or script, e.g., x^{+}, just zero out
+          mEmbellishData.leftSpace = 0;
+          mEmbellishData.rightSpace  = 0;
+        }
+        else if (!NS_MATHML_OPERATOR_HAS_EMBELLISH_ANCESTOR(mFlags)) {
+          mEmbellishData.leftSpace /= 2;
+          mEmbellishData.rightSpace  /= 2;
+        }
+      }
     }
-
-    // set our form flag depending on the position
-    if (!prev && next)
-      form = NS_MATHML_OPERATOR_FORM_PREFIX;
-    else if (prev && !next)
-      form = NS_MATHML_OPERATOR_FORM_POSTFIX;
-  }
-
-  // Lookup the operator dictionary
-  nsAutoString data;
-  mMathMLChar.GetData(data);
-  mMathMLChar.SetData(aPresContext, data); // XXX hack to reset, bug 45010
-  float lspace, rspace;
-  PRBool found = nsMathMLOperators::LookupOperator(data, form, &mFlags, &lspace, &rspace);
-
-  // If we don't want too much extra space when we are a script
-  if ((0 < mPresentationData.scriptLevel) &&
-      !NS_MATHML_OPERATOR_HAS_EMBELLISH_ANCESTOR(mFlags)) {
-    lspace /= 2.0f;
-    rspace /= 2.0f;
-  }
-
-  // Since these values are relative to the 'em' unit, convert to twips now
-  nscoord leftSpace, rightSpace, em;
-  const nsStyleFont* font;
-  GetStyleData(eStyleStruct_Font, (const nsStyleStruct *&)font);
-  nsCOMPtr<nsIFontMetrics> fm;
-  aPresContext->GetMetricsFor(font->mFont, getter_AddRefs(fm));
-  GetEmHeight(fm, em);
-  leftSpace = NSToCoordRound(lspace * em);
-  rightSpace = NSToCoordRound(rspace * em);
-
-  // Now see if there are user-defined attributes that override the dictionary.
-  // XXX If an attribute can be forced to be true when it is false in the
-  // dictionary, then the following code has to change...
-
-  // For each attribute overriden by the user, turn off its bit flag.
-  // symmetric|movablelimits|separator|largeop|accent|fence|stretchy|form
-  nsAutoString kfalse, ktrue;
-  kfalse.Assign(NS_LITERAL_STRING("false"));
-  ktrue.Assign(NS_LITERAL_STRING("true"));
-  if (NS_MATHML_OPERATOR_IS_STRETCHY(mFlags)) {
-    if (NS_CONTENT_ATTR_HAS_VALUE == GetAttribute(mContent, mPresentationData.mstyle,
-                     nsMathMLAtoms::stretchy_, value) && value == kfalse)
-      mFlags &= ~NS_MATHML_OPERATOR_STRETCHY;
-  }
-  if (NS_MATHML_OPERATOR_IS_FENCE(mFlags)) {
-    if (NS_CONTENT_ATTR_HAS_VALUE == GetAttribute(mContent, mPresentationData.mstyle,
-                     nsMathMLAtoms::fence_, value) && value == kfalse)
-      mFlags &= ~NS_MATHML_OPERATOR_FENCE;
-  }
-  if (NS_MATHML_OPERATOR_IS_ACCENT(mFlags)) {
-    if (NS_CONTENT_ATTR_HAS_VALUE == GetAttribute(mContent, mPresentationData.mstyle,
-                     nsMathMLAtoms::accent_, value) && value == kfalse)
-      mFlags &= ~NS_MATHML_OPERATOR_ACCENT;
-  }
-  if (NS_MATHML_OPERATOR_IS_LARGEOP(mFlags)) {
-    if (NS_CONTENT_ATTR_HAS_VALUE == GetAttribute(mContent, mPresentationData.mstyle,
-                     nsMathMLAtoms::largeop_, value) && value == kfalse)
-      mFlags &= ~NS_MATHML_OPERATOR_LARGEOP;
-  }
-  if (NS_MATHML_OPERATOR_IS_SEPARATOR(mFlags)) {
-    if (NS_CONTENT_ATTR_HAS_VALUE == GetAttribute(mContent, mPresentationData.mstyle,
-                     nsMathMLAtoms::separator_, value) && value == kfalse)
-      mFlags &= ~NS_MATHML_OPERATOR_SEPARATOR;
-  }
-  if (NS_MATHML_OPERATOR_IS_MOVABLELIMITS(mFlags)) {
-    if (NS_CONTENT_ATTR_HAS_VALUE == GetAttribute(mContent, mPresentationData.mstyle,
-                     nsMathMLAtoms::movablelimits_, value) && value == kfalse)
-      mFlags &= ~NS_MATHML_OPERATOR_MOVABLELIMITS;
-  }
-  if (NS_CONTENT_ATTR_HAS_VALUE == GetAttribute(mContent, mPresentationData.mstyle,
-                   nsMathMLAtoms::symmetric_, value)) {
-   if (value == kfalse) mFlags &= ~NS_MATHML_OPERATOR_SYMMETRIC;
-   else if (value == ktrue) mFlags |= NS_MATHML_OPERATOR_SYMMETRIC;
   }
 
   // If we are an accent without explicit lspace="." or rspace=".",
-  // ignore our default left/right space
+  // we will ignore our default left/right space
 
   // lspace = number h-unit | namedspace
+  nscoord leftSpace = mEmbellishData.leftSpace;
   if (NS_CONTENT_ATTR_HAS_VALUE == GetAttribute(mContent, mPresentationData.mstyle,
                    nsMathMLAtoms::lspace_, value)) {
     nsCSSValue cssValue;
@@ -431,6 +357,7 @@ nsMathMLmoFrame::InitData(nsIPresContext* aPresContext)
   }
 
   // rspace = number h-unit | namedspace
+  nscoord rightSpace = mEmbellishData.rightSpace;
   if (NS_CONTENT_ATTR_HAS_VALUE == GetAttribute(mContent, mPresentationData.mstyle,
                    nsMathMLAtoms::rspace_, value)) {
     nsCSSValue cssValue;
@@ -447,11 +374,53 @@ nsMathMLmoFrame::InitData(nsIPresContext* aPresContext)
     rightSpace = 0;
   }
 
-  // cache these values
+  // the values that we get from our attributes override the dictionary
   mEmbellishData.leftSpace = leftSpace;
   mEmbellishData.rightSpace = rightSpace;
 
+  // Nows see if there are user-defined attributes that override the dictionary.
+  // XXX If an attribute can be forced to be true when it is false in the
+  // dictionary, then the following code has to change...
+
+  // For each attribute overriden by the user, turn off its bit flag.
+  // symmetric|movablelimits|separator|largeop|accent|fence|stretchy|form
+  // special: accent and movablelimits are handled in ProcessEmbellishData()
+  // don't process them here
+
+  nsAutoString kfalse, ktrue;
+  kfalse.Assign(NS_LITERAL_STRING("false"));
+  ktrue.Assign(NS_LITERAL_STRING("true"));
+
+  if (NS_MATHML_OPERATOR_IS_STRETCHY(mFlags)) {
+    if (NS_CONTENT_ATTR_HAS_VALUE == GetAttribute(mContent, mPresentationData.mstyle,
+                     nsMathMLAtoms::stretchy_, value) && value == kfalse)
+      mFlags &= ~NS_MATHML_OPERATOR_STRETCHY;
+  }
+  if (NS_MATHML_OPERATOR_IS_FENCE(mFlags)) {
+    if (NS_CONTENT_ATTR_HAS_VALUE == GetAttribute(mContent, mPresentationData.mstyle,
+                     nsMathMLAtoms::fence_, value) && value == kfalse)
+      mFlags &= ~NS_MATHML_OPERATOR_FENCE;
+  }
+  if (NS_MATHML_OPERATOR_IS_LARGEOP(mFlags)) {
+    if (NS_CONTENT_ATTR_HAS_VALUE == GetAttribute(mContent, mPresentationData.mstyle,
+                     nsMathMLAtoms::largeop_, value) && value == kfalse)
+      mFlags &= ~NS_MATHML_OPERATOR_LARGEOP;
+  }
+  if (NS_MATHML_OPERATOR_IS_SEPARATOR(mFlags)) {
+    if (NS_CONTENT_ATTR_HAS_VALUE == GetAttribute(mContent, mPresentationData.mstyle,
+                     nsMathMLAtoms::separator_, value) && value == kfalse)
+      mFlags &= ~NS_MATHML_OPERATOR_SEPARATOR;
+  }
+  if (NS_CONTENT_ATTR_HAS_VALUE == GetAttribute(mContent, mPresentationData.mstyle,
+                   nsMathMLAtoms::symmetric_, value)) {
+   if (value == kfalse)
+     mFlags &= ~NS_MATHML_OPERATOR_SYMMETRIC;
+   else if (value == ktrue)
+     mFlags |= NS_MATHML_OPERATOR_SYMMETRIC;
+  }
+
   // minsize = number [ v-unit | h-unit ] | namedspace
+  mMinSize = float(NS_UNCONSTRAINEDSIZE);
   if (NS_CONTENT_ATTR_HAS_VALUE == GetAttribute(mContent, mPresentationData.mstyle,
                    nsMathMLAtoms::minsize_, value)) {
     nsCSSValue cssValue;
@@ -484,6 +453,7 @@ nsMathMLmoFrame::InitData(nsIPresContext* aPresContext)
   }
 
   // maxsize = number [ v-unit | h-unit ] | namedspace | infinity
+  mMaxSize = float(NS_UNCONSTRAINEDSIZE);
   if (NS_CONTENT_ATTR_HAS_VALUE == GetAttribute(mContent, mPresentationData.mstyle,
                    nsMathMLAtoms::maxsize_, value)) {
     nsCSSValue cssValue;
@@ -514,25 +484,6 @@ nsMathMLmoFrame::InitData(nsIPresContext* aPresContext)
       }
     }
   }
-
-  // If the stretchy or largeop attributes have been disabled,
-  // the operator is not mutable
-  if (!found ||
-      (!NS_MATHML_OPERATOR_IS_STRETCHY(mFlags) &&
-       !NS_MATHML_OPERATOR_IS_LARGEOP(mFlags)))
-  {
-    mFlags &= ~NS_MATHML_OPERATOR_MUTABLE;
-  }
-
-  // See if this is an operator that should be centered to cater for 
-  // fonts that are not math-aware
-  if (1 == data.Length()) {
-    PRUnichar ch = data[0];
-    if ((ch == '+') || (ch == '=') || (ch == '*') ||
-        (ch == 0x00D7)) { // &times;
-      mFlags |= NS_MATHML_OPERATOR_CENTERED;
-    }
-  }
 }
 
 // NOTE: aDesiredStretchSize is an IN/OUT parameter
@@ -545,13 +496,11 @@ nsMathMLmoFrame::Stretch(nsIPresContext*      aPresContext,
                          nsBoundingMetrics&   aContainerSize,
                          nsHTMLReflowMetrics& aDesiredStretchSize)
 {
-  if (NS_MATHML_STRETCH_WAS_DONE(mEmbellishData.flags)) {
+  if (NS_MATHML_STRETCH_WAS_DONE(mPresentationData.flags)) {
     NS_WARNING("it is wrong to fire stretch more than once on a frame");
     return NS_OK;
   }
-  mEmbellishData.flags |= NS_MATHML_STRETCH_DONE;
-
-  InitData(aPresContext);
+  mPresentationData.flags |= NS_MATHML_STRETCH_DONE;
 
   // get the axis height;
   const nsStyleFont *font = NS_STATIC_CAST(const nsStyleFont*,
@@ -574,8 +523,15 @@ nsMathMLmoFrame::Stretch(nsIPresContext*      aPresContext,
     PRBool isVertical = PR_FALSE;
     PRUint32 stretchHint = NS_STRETCH_NORMAL;
 
-    // see if it is okay to stretch
-    if (NS_MATHML_OPERATOR_IS_MUTABLE(mFlags)) {
+    // see if it is okay to stretch, starting from what the Operator Dictionary said
+    PRBool isMutable = NS_MATHML_OPERATOR_IS_MUTABLE(mFlags);
+    // if the stretchy and largeop attributes have been disabled,
+    // the operator is not mutable
+    if (!NS_MATHML_OPERATOR_IS_STRETCHY(mFlags) &&
+        !NS_MATHML_OPERATOR_IS_LARGEOP(mFlags))
+      isMutable = PR_FALSE;
+
+    if (isMutable) {
 
       container = aContainerSize;
 
@@ -787,11 +743,39 @@ nsMathMLmoFrame::Stretch(nsIPresContext*      aPresContext,
 }
 
 NS_IMETHODIMP
+nsMathMLmoFrame::SetInitialChildList(nsIPresContext* aPresContext,
+                                     nsIAtom*        aListName,
+                                     nsIFrame*       aChildList)
+{
+  // First, let the base class do its work
+  nsresult rv = nsMathMLContainerFrame::SetInitialChildList(aPresContext, aListName, aChildList);
+  if (NS_FAILED(rv)) return rv;
+
+  // No need to tract the style context given to our MathML char. 
+  // The Style System will use Get/SetAdditionalStyleContext() to keep it
+  // up-to-date if dynamic changes arise.
+  ProcessTextData(aPresContext);
+  return rv;
+}
+
+NS_IMETHODIMP
+nsMathMLmoFrame::TransmitAutomaticData(nsIPresContext* aPresContext)
+{
+  // this will cause us to re-sync our flags from scratch
+  mEmbellishData.coreFrame = nsnull;
+  ProcessOperatorData(aPresContext);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 nsMathMLmoFrame::Reflow(nsIPresContext*          aPresContext,
                         nsHTMLReflowMetrics&     aDesiredSize,
                         const nsHTMLReflowState& aReflowState,
                         nsReflowStatus&          aStatus)
 {
+  // certain values use units that depend on our style context, so
+  // it is safer to just process the whole lot here
+  ProcessOperatorData(aPresContext);
   return ReflowTokenFor(this, aPresContext, aDesiredSize,
                         aReflowState, aStatus);
 }
@@ -804,6 +788,31 @@ nsMathMLmoFrame::Place(nsIPresContext*      aPresContext,
 {
   return PlaceTokenFor(this, aPresContext, aRenderingContext,
                        aPlaceOrigin, aDesiredSize);
+}
+
+NS_IMETHODIMP
+nsMathMLmoFrame::ReflowDirtyChild(nsIPresShell* aPresShell,
+                                  nsIFrame*     aChild)
+{
+  // if we get this, it means it was called by the nsTextFrame beneath us, and 
+  // this means something changed in the text content. So blow away everything
+  // an re-build the automatic data from the parent of our outermost embellished
+  // container (we ensure that we are the core, not just a sibling of the core)
+
+  nsCOMPtr<nsIPresContext> presContext;
+  aPresShell->GetPresContext(getter_AddRefs(presContext));
+
+  ProcessTextData(presContext);
+
+  nsIFrame* target = this;
+  nsEmbellishData embellishData;
+  do {
+    target->GetParent(&target);
+    GetEmbellishDataFrom(target, embellishData);
+  } while (embellishData.coreFrame == this);
+
+  // we have automatic data to update in the children of the target frame
+  return ReLayoutChildren(presContext, target);
 }
 
 // ----------------------

@@ -32,13 +32,6 @@
 class nsMathMLmtextFrame : public nsMathMLContainerFrame {
 public:
   friend nsresult NS_NewMathMLmtextFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame);
-  
-  NS_IMETHOD
-  Init(nsIPresContext*  aPresContext,
-       nsIContent*      aContent,
-       nsIFrame*        aParent,
-       nsIStyleContext* aContext,
-       nsIFrame*        aPrevInFlow);
 
   NS_IMETHOD
   Reflow(nsIPresContext*          aPresContext,

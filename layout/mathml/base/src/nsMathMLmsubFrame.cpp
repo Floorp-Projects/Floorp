@@ -68,6 +68,26 @@ nsMathMLmsubFrame::~nsMathMLmsubFrame()
 }
 
 NS_IMETHODIMP
+nsMathMLmsubFrame::TransmitAutomaticData(nsIPresContext* aPresContext)
+{
+  // if our base is an embellished operator, let its state bubble to us
+  nsIFrame* baseFrame = mFrames.FirstChild();
+  GetEmbellishDataFrom(baseFrame, mEmbellishData);
+  if (NS_MATHML_IS_EMBELLISH_OPERATOR(mEmbellishData.flags))
+    mEmbellishData.nextFrame = baseFrame;
+
+  // 1. The REC says:
+  // The <msub> element increments scriptlevel by 1, and sets displaystyle to
+  // "false", within subscript, but leaves both attributes unchanged within base.
+  // 2. The TeXbook (Ch 17. p.141) says the subscript is compressed
+  UpdatePresentationDataFromChildAt(aPresContext, 1, -1, 1,
+    ~NS_MATHML_DISPLAYSTYLE | NS_MATHML_COMPRESSED,
+     NS_MATHML_DISPLAYSTYLE | NS_MATHML_COMPRESSED);
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 nsMathMLmsubFrame::Place (nsIPresContext*      aPresContext,
                           nsIRenderingContext& aRenderingContext,
                           PRBool               aPlaceOrigin,
@@ -107,13 +127,10 @@ nsMathMLmsubFrame::PlaceSubScript (nsIPresContext*      aPresContext,
                                    nscoord              aUserSubScriptShift,
                                    nscoord              aScriptSpace)
 {
-  nsresult rv = NS_OK;
-
   // the caller better be a mathml frame
-  nsIMathMLFrame* mathMLFrame = nsnull;
-  rv = aFrame->QueryInterface (NS_GET_IID(nsIMathMLFrame), 
-                                     (void**)&mathMLFrame);
-  if (NS_FAILED(rv) || !mathMLFrame) return rv;
+  nsIMathMLFrame* mathMLFrame;
+  aFrame->QueryInterface(NS_GET_IID(nsIMathMLFrame), (void**)&mathMLFrame);
+  if (!mathMLFrame) return NS_ERROR_INVALID_ARG;
 
   // force the scriptSpace to be atleast 1 pixel 
   float p2t;
@@ -123,38 +140,15 @@ nsMathMLmsubFrame::PlaceSubScript (nsIPresContext*      aPresContext,
   ////////////////////////////////////
   // Get the children's desired sizes
 
-  PRInt32 count = 0;
-  nsHTMLReflowMetrics baseSize (nsnull);
-  nsHTMLReflowMetrics subScriptSize (nsnull);
-  nsIFrame* baseFrame = nsnull;
-  nsIFrame* subScriptFrame = nsnull;
-  // parameter v, Rule 18a, Appendix G of the TeXbook
-  nscoord minSubScriptShift = 0; 
-
   nsBoundingMetrics bmBase, bmSubScript;
-
-  nsIFrame* childFrame = nsnull;
-  aFrame->FirstChild(aPresContext, nsnull, &childFrame);
-  while (childFrame) {
-    if (0 == count) {
-      // base 
-      baseFrame = childFrame;
-      GetReflowAndBoundingMetricsFor(baseFrame, baseSize, bmBase);
-    }
-    else if (1 == count) {
-      // subscript
-      subScriptFrame = childFrame;
-      GetReflowAndBoundingMetricsFor(subScriptFrame, subScriptSize, bmSubScript);
-      // get the subdrop from the subscript font
-      nscoord subDrop;
-      GetSubDropFromChild (aPresContext, subScriptFrame, subDrop);
-      // parameter v, Rule 18a, App. G, TeXbook
-      minSubScriptShift = bmBase.descent + subDrop;
-    }
-    count++;
-    childFrame->GetNextSibling(&childFrame);
-  }
-  if (2 != count) {
+  nsHTMLReflowMetrics baseSize(nsnull);
+  nsHTMLReflowMetrics subScriptSize(nsnull);
+  nsIFrame* baseFrame;
+  aFrame->FirstChild(aPresContext, nsnull, &baseFrame);
+  nsIFrame* subScriptFrame = nsnull;
+  if (baseFrame)
+    baseFrame->GetNextSibling(&subScriptFrame);
+  if (!baseFrame || !subScriptFrame || HasNextSibling(subScriptFrame)) {
     // report an error, encourage people to get their markups in order
     NS_WARNING("invalid markup");
     return NS_STATIC_CAST(nsMathMLContainerFrame*, 
@@ -162,6 +156,14 @@ nsMathMLmsubFrame::PlaceSubScript (nsIPresContext*      aPresContext,
                                                aRenderingContext, 
                                                aDesiredSize);
   }
+  GetReflowAndBoundingMetricsFor(baseFrame, baseSize, bmBase);
+  GetReflowAndBoundingMetricsFor(subScriptFrame, subScriptSize, bmSubScript);
+
+  // get the subdrop from the subscript font
+  nscoord subDrop;
+  GetSubDropFromChild(aPresContext, subScriptFrame, subDrop);
+  // parameter v, Rule 18a, App. G, TeXbook
+  nscoord minSubScriptShift = bmBase.descent + subDrop;
 
   //////////////////
   // Place Children
@@ -170,9 +172,6 @@ nsMathMLmsubFrame::PlaceSubScript (nsIPresContext*      aPresContext,
   // = h(x) - 4/5 * sigma_5, Rule 18b, App. G, TeXbook
   nscoord xHeight = 0;
   nsCOMPtr<nsIFontMetrics> fm;
-
-//  const nsStyleFont* aFont =
-//    (const nsStyleFont*) mStyleContext->GetStyleData (eStyleStruct_Font);
 
   const nsStyleFont* font;
   baseFrame->GetStyleData(eStyleStruct_Font, (const nsStyleStruct *&)font);

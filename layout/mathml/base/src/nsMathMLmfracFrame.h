@@ -144,18 +144,7 @@ protected:
   virtual PRIntn GetSkipSides() const { return 0; }
 
   PRBool
-  IsBevelled()
-  {
-    nsAutoString value;
-    if (NS_CONTENT_ATTR_HAS_VALUE == 
-        GetAttribute(mContent, mPresentationData.mstyle,
-                     nsMathMLAtoms::bevelled_, value)) {
-      if (value.Equals(NS_LITERAL_STRING("true"))) {
-        return PR_TRUE;
-      }
-    }
-    return PR_FALSE;
-  }
+  IsBevelled();
 
   PRInt32 mInnerScriptLevel;
   nsRect  mLineRect;

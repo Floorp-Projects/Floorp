@@ -70,6 +70,25 @@ nsMathMLmoverFrame::~nsMathMLmoverFrame()
 }
 
 NS_IMETHODIMP
+nsMathMLmoverFrame::AttributeChanged(nsIPresContext* aPresContext,
+                                     nsIContent*     aContent,
+                                     PRInt32         aNameSpaceID,
+                                     nsIAtom*        aAttribute,
+                                     PRInt32         aModType, 
+                                     PRInt32         aHint)
+{
+  if (nsMathMLAtoms::accent_ == aAttribute) {
+    // When we have automatic data to update within ourselves, we ask our
+    // parent to re-layout its children
+    return ReLayoutChildren(aPresContext, mParent);
+  }
+
+  return nsMathMLContainerFrame::
+         AttributeChanged(aPresContext, aContent, aNameSpaceID,
+                          aAttribute, aModType, aHint);
+}
+
+NS_IMETHODIMP
 nsMathMLmoverFrame::UpdatePresentationData(nsIPresContext* aPresContext,
                                            PRInt32         aScriptLevelIncrement,
                                            PRUint32        aFlagsValues,
@@ -78,12 +97,12 @@ nsMathMLmoverFrame::UpdatePresentationData(nsIPresContext* aPresContext,
   nsMathMLContainerFrame::UpdatePresentationData(aPresContext,
     aScriptLevelIncrement, aFlagsValues, aFlagsToUpdate);
   // disable the stretch-all flag if we are going to act like a superscript
-  if ( NS_MATHML_IS_MOVABLELIMITS(mPresentationData.flags) &&
+  if ( NS_MATHML_EMBELLISH_IS_MOVABLELIMITS(mEmbellishData.flags) &&
       !NS_MATHML_IS_DISPLAYSTYLE(mPresentationData.flags)) {
-    mEmbellishData.flags &= ~NS_MATHML_STRETCH_ALL_CHILDREN_HORIZONTALLY;
+    mPresentationData.flags &= ~NS_MATHML_STRETCH_ALL_CHILDREN_HORIZONTALLY;
   }
   else {
-    mEmbellishData.flags |= NS_MATHML_STRETCH_ALL_CHILDREN_HORIZONTALLY;
+    mPresentationData.flags |= NS_MATHML_STRETCH_ALL_CHILDREN_HORIZONTALLY;
   }
   return NS_OK;
 }
@@ -124,24 +143,28 @@ nsMathMLmoverFrame::UpdatePresentationDataFromChildAt(nsIPresContext* aPresConte
   }
   return NS_OK;
 
-  // XXX For #2, if the inner <mo> changes, is has to trigger 
-  // XXX a re-computation of all flags that depend on its state
-  // XXX in the entire embellished hierarchy
+  // For #2, the base class will trigger a re-build of all automatic data
+  // in the embellished hierarchy when an accent attribute is changed
+}
+
+NS_IMETHODIMP
+nsMathMLmoverFrame::InheritAutomaticData(nsIPresContext* aPresContext,
+                                         nsIFrame*       aParent)
+{
+  // let the base class get the default from our parent
+  nsMathMLContainerFrame::InheritAutomaticData(aPresContext, aParent);
+
+  mPresentationData.flags |= NS_MATHML_STRETCH_ALL_CHILDREN_HORIZONTALLY;
+
+  return NS_OK;
 }
 
 NS_IMETHODIMP
 nsMathMLmoverFrame::TransmitAutomaticData(nsIPresContext* aPresContext)
 {
-#if defined(NS_DEBUG) && defined(SHOW_BOUNDING_BOX)
-  mPresentationData.flags |= NS_MATHML_SHOW_BOUNDING_METRICS;
-#endif
-
-  mEmbellishData.flags |= NS_MATHML_STRETCH_ALL_CHILDREN_HORIZONTALLY;
-
-  // check whether or not this is an embellished operator
-  EmbellishOperator();
-
-  // set our accent flag
+  // At this stage, all our children are in sync and we can fully
+  // resolve our own mEmbellishData struct
+  //---------------------------------------------------------------------
 
   /* The REC says:
   The default value of accent is false, unless overscript
@@ -159,104 +182,65 @@ XXX The winner is the outermost in conflicting settings like these:
 </mover>
    */
 
-  PRInt32 count = 0;
-  nsIFrame* baseFrame = nsnull;
   nsIFrame* overscriptFrame = nsnull;
-  nsIFrame* childFrame = mFrames.FirstChild();
-  while (childFrame) {
-    if (0 == count) baseFrame = childFrame;
-    if (1 == count) { overscriptFrame = childFrame; break; }
-    count++;
-    childFrame->GetNextSibling(&childFrame);
-  }
+  nsIFrame* baseFrame = mFrames.FirstChild();
+  if (baseFrame)
+    baseFrame->GetNextSibling(&overscriptFrame);
+  if (!baseFrame || !overscriptFrame)
+    return NS_OK; // a visual error indicator will be reported later during layout
 
-  nsIMathMLFrame* overscriptMathMLFrame = nsnull;
-  nsIMathMLFrame* mathMLFrame = nsnull;
-  nsEmbellishData embellishData;
+  // if our base is an embellished operator, let its state bubble to us (in particular,
+  // this is where we get the flag for NS_MATHML_EMBELLISH_MOVABLELIMITS). Our flags
+  // are reset to the default values of false if the base frame isn't embellished.
+  GetEmbellishDataFrom(baseFrame, mEmbellishData);
+  if (NS_MATHML_IS_EMBELLISH_OPERATOR(mEmbellishData.flags))
+    mEmbellishData.nextFrame = baseFrame;
+
   nsAutoString value;
 
-  mPresentationData.flags &= ~NS_MATHML_MOVABLELIMITS; // default is false
-  mPresentationData.flags &= ~NS_MATHML_ACCENTOVER; // default of accent is false
+  // The default value of accent is false, unless the overscript is embellished
+  // and its core <mo> is an accent
+  nsEmbellishData embellishData;
+  GetEmbellishDataFrom(overscriptFrame, embellishData);
+  if (NS_MATHML_EMBELLISH_IS_ACCENT(embellishData.flags))
+    mEmbellishData.flags |= NS_MATHML_EMBELLISH_ACCENTOVER;
+  else
+    mEmbellishData.flags &= ~NS_MATHML_EMBELLISH_ACCENTOVER;
 
-  // see if the baseFrame has movablelimits="true" or if it is an
-  // embellished operator whose movablelimits attribute is set to true
-  if (baseFrame && NS_MATHML_IS_EMBELLISH_OPERATOR(mEmbellishData.flags)) {
-    nsCOMPtr<nsIContent> baseContent;
-    baseFrame->GetContent(getter_AddRefs(baseContent));
-    if (NS_CONTENT_ATTR_HAS_VALUE == baseContent->GetAttr(kNameSpaceID_None, 
-                     nsMathMLAtoms::movablelimits_, value)) {
-      if (value.Equals(NS_LITERAL_STRING("true"))) {
-        mPresentationData.flags |= NS_MATHML_MOVABLELIMITS;
-      }
-    }
-    else { // no attribute, get the value from the core
-      mEmbellishData.coreFrame->QueryInterface(NS_GET_IID(nsIMathMLFrame), (void**)&mathMLFrame);
-      if (mathMLFrame) {
-        mathMLFrame->GetEmbellishData(embellishData);
-        if (NS_MATHML_EMBELLISH_IS_MOVABLELIMITS(embellishData.flags)) {
-          mPresentationData.flags |= NS_MATHML_MOVABLELIMITS;
-        }
-      }
-    }
+  // if we have an accent attribute, it overrides what the overscript said
+  if (NS_CONTENT_ATTR_HAS_VALUE == mContent->GetAttr(kNameSpaceID_None, 
+                   nsMathMLAtoms::accent_, value)) {
+    if (value.Equals(NS_LITERAL_STRING("true")))
+      mEmbellishData.flags |= NS_MATHML_EMBELLISH_ACCENTOVER;
+    else if (value.Equals(NS_LITERAL_STRING("false"))) 
+      mEmbellishData.flags &= ~NS_MATHML_EMBELLISH_ACCENTOVER;
   }
 
-  // see if the overscriptFrame is <mo> or an embellished operator
-  if (overscriptFrame) {
-    overscriptFrame->QueryInterface(NS_GET_IID(nsIMathMLFrame), (void**)&overscriptMathMLFrame);
-    if (overscriptMathMLFrame) {
-      overscriptMathMLFrame->GetEmbellishData(embellishData);
-      // core of the overscriptFrame
-      if (NS_MATHML_IS_EMBELLISH_OPERATOR(embellishData.flags) && embellishData.coreFrame) {
-        embellishData.coreFrame->QueryInterface(NS_GET_IID(nsIMathMLFrame), (void**)&mathMLFrame);
-        if (mathMLFrame) {
-          mathMLFrame->GetEmbellishData(embellishData);
-          // if we have the accent attribute, tell the core to behave as 
-          // requested (otherwise leave the core with its default behavior)
-          if (NS_CONTENT_ATTR_HAS_VALUE == mContent->GetAttr(kNameSpaceID_None, 
-                          nsMathMLAtoms::accent_, value))
-          {
-            if (value.Equals(NS_LITERAL_STRING("true"))) embellishData.flags |= NS_MATHML_EMBELLISH_ACCENT;
-            else if (value.Equals(NS_LITERAL_STRING("false"))) embellishData.flags &= ~NS_MATHML_EMBELLISH_ACCENT;
-            mathMLFrame->SetEmbellishData(embellishData);
-          }
+  // disable the stretch-all flag if we are going to act like a superscript
+  if ( NS_MATHML_EMBELLISH_IS_MOVABLELIMITS(mEmbellishData.flags) &&
+      !NS_MATHML_IS_DISPLAYSTYLE(mPresentationData.flags))
+    mPresentationData.flags &= ~NS_MATHML_STRETCH_ALL_CHILDREN_HORIZONTALLY;
 
-          // sync the presentation data: record whether we have an accent
-          if (NS_MATHML_EMBELLISH_IS_ACCENT(embellishData.flags))
-            mPresentationData.flags |= NS_MATHML_ACCENTOVER;
-        }
-//XXX should sync the presentation data be at this spot, after the if?
-      }
-    }
-  }
+  // Now transmit any change that we want to our children so that they
+  // can update their mPresentationData structs
+  //---------------------------------------------------------------------
 
   /* The REC says:
      Within overscript, <mover> always sets displaystyle to "false", 
      but increments scriptlevel by 1 only when accent is "false".
-  */
-  /*
+
      The TeXBook treats 'over' like a superscript, so p.141 or Rule 13a
      say it shouldn't be compressed. However, The TeXBook says
      that math accents and \overline change uncramped styles to their
      cramped counterparts.
   */
-  if (overscriptMathMLFrame) {
-    PRInt32 increment = NS_MATHML_IS_ACCENTOVER(mPresentationData.flags)
-                      ? 0 : 1;
-    PRUint32 compress = NS_MATHML_IS_ACCENTOVER(mPresentationData.flags)
-                      ? NS_MATHML_COMPRESSED : 0;
-    overscriptMathMLFrame->UpdatePresentationData(aPresContext, increment,
-      ~NS_MATHML_DISPLAYSTYLE | compress,
-       NS_MATHML_DISPLAYSTYLE | compress);
-    overscriptMathMLFrame->UpdatePresentationDataFromChildAt(aPresContext, 0, -1, increment,
-      ~NS_MATHML_DISPLAYSTYLE | compress,
-       NS_MATHML_DISPLAYSTYLE | compress);
-  }
-
-  // disable the stretch-all flag if we are going to act like a superscript
-  if ( NS_MATHML_IS_MOVABLELIMITS(mPresentationData.flags) &&
-      !NS_MATHML_IS_DISPLAYSTYLE(mPresentationData.flags)) {
-    mEmbellishData.flags &= ~NS_MATHML_STRETCH_ALL_CHILDREN_HORIZONTALLY;
-  }
+  PRInt32 increment = NS_MATHML_EMBELLISH_IS_ACCENTOVER(mEmbellishData.flags)
+    ? 0 : 1;
+  PRUint32 compress = NS_MATHML_EMBELLISH_IS_ACCENTOVER(mEmbellishData.flags)
+    ? NS_MATHML_COMPRESSED : 0;
+  PropagatePresentationDataFor(aPresContext, overscriptFrame, increment,
+    ~NS_MATHML_DISPLAYSTYLE | compress,
+     NS_MATHML_DISPLAYSTYLE | compress);
 
   return NS_OK;
 }
@@ -270,7 +254,7 @@ The REC says:
   often used for limits on symbols such as &sum;. 
 
 i.e.:
- if ( NS_MATHML_IS_MOVABLELIMITS(mPresentationData.flags) &&
+ if ( NS_MATHML_EMBELLISH_IS_MOVABLELIMITS(mEmbellishData.flags) &&
      !NS_MATHML_IS_DISPLAYSTYLE(mPresentationData.flags)) {
   // place like superscript
  }
@@ -285,9 +269,7 @@ nsMathMLmoverFrame::Place(nsIPresContext*      aPresContext,
                           PRBool               aPlaceOrigin,
                           nsHTMLReflowMetrics& aDesiredSize)
 { 
-  nsresult rv = NS_OK;
-  
-  if ( NS_MATHML_IS_MOVABLELIMITS(mPresentationData.flags) &&
+  if ( NS_MATHML_EMBELLISH_IS_MOVABLELIMITS(mEmbellishData.flags) &&
       !NS_MATHML_IS_DISPLAYSTYLE(mPresentationData.flags)) {
     // place like superscript
     return nsMathMLmsupFrame::PlaceSuperScript(aPresContext,
@@ -300,33 +282,20 @@ nsMathMLmoverFrame::Place(nsIPresContext*      aPresContext,
   ////////////////////////////////////
   // Get the children's desired sizes
 
-  PRInt32 count = 0;
   nsBoundingMetrics bmBase, bmOver;
-  nsHTMLReflowMetrics baseSize (nsnull);
-  nsHTMLReflowMetrics overSize (nsnull);
-  nsIFrame* baseFrame = nsnull;
+  nsHTMLReflowMetrics baseSize(nsnull);
+  nsHTMLReflowMetrics overSize(nsnull);
   nsIFrame* overFrame = nsnull;
-
-  nsIFrame* childFrame = mFrames.FirstChild();
-  while (childFrame) {
-    if (0 == count) {
-      // base 
-      baseFrame = childFrame;
-      GetReflowAndBoundingMetricsFor(baseFrame, baseSize, bmBase);
-    }
-    else if (1 == count) {
-      // over
-      overFrame = childFrame;
-      GetReflowAndBoundingMetricsFor(overFrame, overSize, bmOver);
-    }
-    count++;
-    childFrame->GetNextSibling(&childFrame);
-  }
-  if (2 != count) {
+  nsIFrame* baseFrame = mFrames.FirstChild();
+  if (baseFrame)
+    baseFrame->GetNextSibling(&overFrame);
+  if (!baseFrame || !overFrame || HasNextSibling(overFrame)) {
     // report an error, encourage people to get their markups in order
     NS_WARNING("invalid markup");
     return ReflowError(aPresContext, aRenderingContext, aDesiredSize);
   }
+  GetReflowAndBoundingMetricsFor(baseFrame, baseSize, bmBase);
+  GetReflowAndBoundingMetricsFor(overFrame, overSize, bmOver);
 
   ////////////////////
   // Place Children
@@ -349,7 +318,7 @@ nsMathMLmoverFrame::Place(nsIPresContext*      aPresContext,
   nscoord correction = 0;
   nscoord delta1 = 0; // gap between base and overscript
   nscoord delta2 = 0; // extra space above overscript
-  if (!NS_MATHML_IS_ACCENTOVER(mPresentationData.flags)) {    
+  if (!NS_MATHML_EMBELLISH_IS_ACCENTOVER(mEmbellishData.flags)) {    
     // Rule 13a, App. G, TeXbook
     GetItalicCorrection (bmBase, correction);
     nscoord bigOpSpacing1, bigOpSpacing3, bigOpSpacing5, dummy; 
@@ -424,7 +393,7 @@ nsMathMLmoverFrame::Place(nsIPresContext*      aPresContext,
     dxOver = -bmOver.leftBearing;
   }
 
-  if (NS_MATHML_IS_ACCENTOVER(mPresentationData.flags)) {
+  if (NS_MATHML_EMBELLISH_IS_ACCENTOVER(mEmbellishData.flags)) {
     mBoundingMetrics.width = PR_MAX(bmBase.width, overWidth); 
   }
   else {
@@ -443,7 +412,7 @@ nsMathMLmoverFrame::Place(nsIPresContext*      aPresContext,
   dxBase = (mBoundingMetrics.width - bmBase.width) / 2;
   dyBase = aDesiredSize.ascent - baseSize.ascent;
 
-  if (NS_MATHML_IS_ACCENTOVER(mPresentationData.flags)) {
+  if (NS_MATHML_EMBELLISH_IS_ACCENTOVER(mEmbellishData.flags)) {
     dxOver += correction + (mBoundingMetrics.width - overWidth)/2;
   }
   else {

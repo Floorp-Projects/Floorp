@@ -66,17 +66,9 @@ nsMathMLmspaceFrame::~nsMathMLmspaceFrame()
 {
 }
 
-NS_IMETHODIMP
-nsMathMLmspaceFrame::Init(nsIPresContext*  aPresContext,
-                          nsIContent*      aContent,
-                          nsIFrame*        aParent,
-                          nsIStyleContext* aContext,
-                          nsIFrame*        aPrevInFlow)
+void
+nsMathMLmspaceFrame::ProcessAttributes(nsIPresContext* aPresContext)
 {
-  nsresult rv = nsMathMLContainerFrame::Init(aPresContext, aContent, aParent, aContext, aPrevInFlow);
-
-//  mEmbellishData.flags = NS_MATHML_SPACELIKE;
-
   /*
   parse the attributes
 
@@ -84,9 +76,6 @@ nsMathMLmspaceFrame::Init(nsIPresContext*  aPresContext,
   height = number v-unit 
   depth  = number v-unit 
   */
-
-  // XXX Need to check what will happen in case of style changes
-  // These may have to be moved in Reflow() to capture style changes
 
   nsAutoString value;
   nsCSSValue cssValue;
@@ -123,8 +112,6 @@ nsMathMLmspaceFrame::Init(nsIPresContext*  aPresContext,
       mDepth = CalcLength(aPresContext, mStyleContext, cssValue);
     }
   }
-
-  return rv;
 }
 
 NS_IMETHODIMP
@@ -132,7 +119,9 @@ nsMathMLmspaceFrame::Reflow(nsIPresContext*          aPresContext,
                             nsHTMLReflowMetrics&     aDesiredSize,
                             const nsHTMLReflowState& aReflowState,
                             nsReflowStatus&          aStatus)
-{ 
+{
+  ProcessAttributes(aPresContext);
+
   mBoundingMetrics.Clear();
   mBoundingMetrics.width = mWidth;
   mBoundingMetrics.ascent = mHeight;

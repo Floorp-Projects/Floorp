@@ -47,8 +47,8 @@
 
 //NOTE:
 //  The code assumes that TeX fonts are picked.
-//  There is not fall-back to draw the branches of the sqrt explicitly
-//  in the case where TeX fonts are not there. In general, there is not
+//  There is no fall-back to draw the branches of the sqrt explicitly
+//  in the case where TeX fonts are not there. In general, there are no
 //  fall-back(s) in MathML when some (freely-downloadable) fonts are missing.
 //  Otherwise, this will add much work and unnecessary complexity to the core
 //  MathML  engine. Assuming that authors have the free fonts is part of the
@@ -91,15 +91,43 @@ nsMathMLmsqrtFrame::Init(nsIPresContext*  aPresContext,
                          nsIStyleContext* aContext,
                          nsIFrame*        aPrevInFlow)
 {
-  nsresult rv = NS_OK;
-  rv = nsMathMLContainerFrame::Init(aPresContext, aContent, aParent,
-                                    aContext, aPrevInFlow);
+  nsresult rv = nsMathMLContainerFrame::Init(aPresContext, aContent, aParent,
+                                             aContext, aPrevInFlow);
 
+  // No need to tract the style context given to our MathML char. 
+  // The Style System will use Get/SetAdditionalStyleContext() to keep it
+  // up-to-date if dynamic changes arise.
   nsAutoString sqrChar; sqrChar.Assign(kSqrChar);
   mSqrChar.SetData(aPresContext, sqrChar);
-  ResolveMathMLCharStyle(aPresContext, mContent, mStyleContext, &mSqrChar);
+  ResolveMathMLCharStyle(aPresContext, mContent, mStyleContext, &mSqrChar, PR_TRUE);
 
   return rv;
+}
+
+NS_IMETHODIMP
+nsMathMLmsqrtFrame::InheritAutomaticData(nsIPresContext* aPresContext,
+                                         nsIFrame*       aParent) 
+{
+  // let the base class get the default from our parent
+  nsMathMLContainerFrame::InheritAutomaticData(aPresContext, aParent);
+
+  mPresentationData.flags |= NS_MATHML_STRETCH_ALL_CHILDREN_VERTICALLY;
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsMathMLmsqrtFrame::TransmitAutomaticData(nsIPresContext* aPresContext)
+{
+  // 1. The REC says:
+  //    The <msqrt> element leaves both attributes [displaystyle and scriptlevel]
+  //    unchanged within all its arguments.
+  // 2. The TeXBook (Ch 17. p.141) says that \sqrt is cramped 
+  UpdatePresentationDataFromChildAt(aPresContext, 0, -1, 0,
+     NS_MATHML_COMPRESSED,
+     NS_MATHML_COMPRESSED);
+
+  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -109,21 +137,17 @@ nsMathMLmsqrtFrame::Paint(nsIPresContext*      aPresContext,
                           nsFramePaintLayer    aWhichLayer,
                           PRUint32             aFlags)
 {
-  nsresult rv = NS_OK;
-
   /////////////
   // paint the content we are square-rooting
-  rv = nsMathMLContainerFrame::Paint(aPresContext, aRenderingContext, 
-                                     aDirtyRect, aWhichLayer);
+  nsresult rv = nsMathMLContainerFrame::Paint(aPresContext, aRenderingContext, 
+                                              aDirtyRect, aWhichLayer);
   /////////////
   // paint the sqrt symbol
-  if (!NS_MATHML_HAS_ERROR(mPresentationData.flags))
-  {
+  if (!NS_MATHML_HAS_ERROR(mPresentationData.flags)) {
     mSqrChar.Paint(aPresContext, aRenderingContext,
                    aDirtyRect, aWhichLayer, this);
 
-    if (NS_FRAME_PAINT_LAYER_FOREGROUND == aWhichLayer)
-    {
+    if (NS_FRAME_PAINT_LAYER_FOREGROUND == aWhichLayer) {
       // paint the overline bar
       const nsStyleColor *color = NS_STATIC_CAST(const nsStyleColor*,
         mStyleContext->GetStyleData(eStyleStruct_Color));
@@ -133,8 +157,7 @@ nsMathMLmsqrtFrame::Paint(nsIPresContext*      aPresContext,
 
 #if defined(NS_DEBUG) && defined(SHOW_BOUNDING_BOX)
     // for visual debug
-    if (NS_MATHML_PAINT_BOUNDING_METRICS(mPresentationData.flags))
-    {
+    if (NS_MATHML_PAINT_BOUNDING_METRICS(mPresentationData.flags)) {
       nsRect rect;
       mSqrChar.GetRect(rect);
 
@@ -160,18 +183,15 @@ nsMathMLmsqrtFrame::Reflow(nsIPresContext*          aPresContext,
                            const nsHTMLReflowState& aReflowState,
                            nsReflowStatus&          aStatus)
 {
-  nsresult rv = NS_OK;
-
-  nsBoundingMetrics bmSqr, bmBase;
-
   ///////////////
   // Let the base class format our content like an inferred mrow
   nsHTMLReflowMetrics baseSize(aDesiredSize);
-  rv = nsMathMLContainerFrame::Reflow(aPresContext, baseSize,
-                                      aReflowState, aStatus);
+  nsresult rv = nsMathMLContainerFrame::Reflow(aPresContext, baseSize,
+                                               aReflowState, aStatus);
   //NS_ASSERTION(NS_FRAME_IS_COMPLETE(aStatus), "bad status");
   if (NS_FAILED(rv)) return rv;
 
+  nsBoundingMetrics bmSqr, bmBase;
   bmBase = baseSize.mBoundingMetrics;
 
   ////////////

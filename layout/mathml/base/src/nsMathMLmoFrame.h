@@ -43,11 +43,9 @@ public:
                             nsIStyleContext** aStyleContext) const;
 
   NS_IMETHOD
-  Init(nsIPresContext*  aPresContext,
-       nsIContent*      aContent,
-       nsIFrame*        aParent,
-       nsIStyleContext* aContext,
-       nsIFrame*        aPrevInFlow);
+  SetInitialChildList(nsIPresContext* aPresContext,
+                      nsIAtom*        aListName,
+                      nsIFrame*       aChildList);
 
   NS_IMETHOD
   Paint(nsIPresContext*      aPresContext,
@@ -55,6 +53,9 @@ public:
         const nsRect&        aDirtyRect,
         nsFramePaintLayer    aWhichLayer,
         PRUint32             aFlags = 0);
+
+  NS_IMETHOD
+  TransmitAutomaticData(nsIPresContext* aPresContext);
 
   NS_IMETHOD
   Reflow(nsIPresContext*          aPresContext,
@@ -69,7 +70,8 @@ public:
         nsHTMLReflowMetrics& aDesiredSize);
 
   NS_IMETHOD
-  TransmitAutomaticData(nsIPresContext* aPresContext);
+  ReflowDirtyChild(nsIPresShell* aPresShell,
+                   nsIFrame*     aChild);
 
   // This method is called by the parent frame to ask <mo> 
   // to stretch itself.
@@ -80,10 +82,6 @@ public:
           nsBoundingMetrics&   aContainerSize,
           nsHTMLReflowMetrics& aDesiredStretchSize);
 
-  // helper method to lookup the operator dictionary and initialize our member data
-  void 
-  InitData(nsIPresContext* aPresContext);
-
 protected:
   nsMathMLmoFrame();
   virtual ~nsMathMLmoFrame();
@@ -91,10 +89,19 @@ protected:
   virtual PRIntn GetSkipSides() const { return 0; }
 
   nsMathMLChar     mMathMLChar; // Here is the MathMLChar that will deal with the operator.
-
   nsOperatorFlags  mFlags;
   float            mMinSize;
   float            mMaxSize;
+
+  // helper to get the text that we enclose and setup our nsMathMLChar
+  void
+  ProcessTextData(nsIPresContext* aPresContext);
+
+  // helper to get our 'form' and lookup in the Operator Dictionary to fetch 
+  // our default data that may come from there, and to complete the setup
+  // using attributes that we may have
+  void
+  ProcessOperatorData(nsIPresContext* aPresContext);
 };
 
 #endif /* nsMathMLmoFrame_h___ */

@@ -118,8 +118,7 @@ nsMathMLContainerFrame::PaintError(nsIPresContext*      aPresContext,
                                    const nsRect&        aDirtyRect,
                                    nsFramePaintLayer    aWhichLayer)
 {
-  if (NS_FRAME_PAINT_LAYER_FOREGROUND == aWhichLayer)
-  {
+  if (NS_FRAME_PAINT_LAYER_FOREGROUND == aWhichLayer) {
     NS_ASSERTION(NS_MATHML_HAS_ERROR(mPresentationData.flags),
                  "There is nothing wrong with this frame!");
     // Set color and font ...
@@ -140,7 +139,6 @@ nsMathMLContainerFrame::PaintError(nsIPresContext*      aPresContext,
     aRenderingContext.DrawString(errorMsg.get(),
                                  PRUint32(errorMsg.Length()),
                                  0, ascent);
-
   }
   return NS_OK;
 }
@@ -149,35 +147,6 @@ nsMathMLContainerFrame::PaintError(nsIPresContext*      aPresContext,
  * nsIMathMLFrame - support methods for stretchy elements
  * =============================================================================
  */
-
-// This is the method used to set the frame as an embellished container.
-// It checks if the first (non-empty) child is embellished. Hence, calls
-// must be bottom-up. The method must only be called from within frames who are
-// entitled to be potential embellished operators as per the MathML REC.
-NS_IMETHODIMP
-nsMathMLContainerFrame::EmbellishOperator()
-{
-  nsIFrame* firstChild = mFrames.FirstChild();
-  if (firstChild && IsEmbellishOperator(firstChild)) {
-    // Cache the first child
-    mEmbellishData.flags |= NS_MATHML_EMBELLISH_OPERATOR;
-    mEmbellishData.nextFrame = firstChild;
-    // Cache also the inner-most embellished frame at the core of the hierarchy
-    nsIMathMLFrame* mathMLFrame;
-    firstChild->QueryInterface(NS_GET_IID(nsIMathMLFrame), (void**)&mathMLFrame);
-    nsEmbellishData embellishData;
-    mathMLFrame->GetEmbellishData(embellishData);
-    mEmbellishData.coreFrame = embellishData.coreFrame;
-    mEmbellishData.direction = embellishData.direction;
-  }
-  else {
-    mEmbellishData.flags &= ~NS_MATHML_EMBELLISH_OPERATOR;
-    mEmbellishData.nextFrame = nsnull;
-    mEmbellishData.coreFrame = nsnull;
-    mEmbellishData.direction = NS_STRETCH_DIRECTION_UNSUPPORTED;
-  }
-  return NS_OK;
-}
 
 // helper method to facilitate getting the reflow and bounding metrics
 void
@@ -234,8 +203,8 @@ nsMathMLContainerFrame::GetPreferredStretchSize(nsIPresContext*      aPresContex
   else {
     // compute a size that doesn't include embellishements
     NS_ASSERTION(NS_MATHML_IS_EMBELLISH_OPERATOR(mEmbellishData.flags) ||
-                 NS_MATHML_WILL_STRETCH_ALL_CHILDREN_HORIZONTALLY(mEmbellishData.flags) ||
-                 NS_MATHML_WILL_STRETCH_ALL_CHILDREN_VERTICALLY(mEmbellishData.flags),
+                 NS_MATHML_WILL_STRETCH_ALL_CHILDREN_HORIZONTALLY(mPresentationData.flags) ||
+                 NS_MATHML_WILL_STRETCH_ALL_CHILDREN_VERTICALLY(mPresentationData.flags),
                  "invalid call to GetPreferredStretchSize");
     nsRect rect;
     PRBool firstTime = PR_TRUE;
@@ -273,14 +242,14 @@ nsMathMLContainerFrame::GetPreferredStretchSize(nsIPresContext*      aPresContex
       if (firstTime) {
         firstTime = PR_FALSE;
         bm = bmChild;
-        if (!NS_MATHML_WILL_STRETCH_ALL_CHILDREN_HORIZONTALLY(mEmbellishData.flags) &&
-            !NS_MATHML_WILL_STRETCH_ALL_CHILDREN_VERTICALLY(mEmbellishData.flags)) {
+        if (!NS_MATHML_WILL_STRETCH_ALL_CHILDREN_HORIZONTALLY(mPresentationData.flags) &&
+            !NS_MATHML_WILL_STRETCH_ALL_CHILDREN_VERTICALLY(mPresentationData.flags)) {
           // we may get here for cases such as <msup><mo>...</mo> ... </msup>
           break;
         }
       }
       else {
-        if (NS_MATHML_WILL_STRETCH_ALL_CHILDREN_HORIZONTALLY(mEmbellishData.flags)) {
+        if (NS_MATHML_WILL_STRETCH_ALL_CHILDREN_HORIZONTALLY(mPresentationData.flags)) {
           // if we get here, it means this is container that will stack its children
           // vertically and fire an horizontal stretch on each them. This is the case
           // for \munder, \mover, \munderover. We just sum-up the size vertically.
@@ -290,7 +259,7 @@ nsMathMLContainerFrame::GetPreferredStretchSize(nsIPresContext*      aPresContex
           if (bm.rightBearing < bmChild.rightBearing)
             bm.rightBearing = bmChild.rightBearing;
         }
-        else if (NS_MATHML_WILL_STRETCH_ALL_CHILDREN_VERTICALLY(mEmbellishData.flags)) {
+        else if (NS_MATHML_WILL_STRETCH_ALL_CHILDREN_VERTICALLY(mPresentationData.flags)) {
           // just sum-up the sizes horizontally.
           bm += bmChild;
         }
@@ -314,11 +283,11 @@ nsMathMLContainerFrame::Stretch(nsIPresContext*      aPresContext,
 {
   if (NS_MATHML_IS_EMBELLISH_OPERATOR(mEmbellishData.flags)) {
 
-    if (NS_MATHML_STRETCH_WAS_DONE(mEmbellishData.flags)) {
+    if (NS_MATHML_STRETCH_WAS_DONE(mPresentationData.flags)) {
       NS_WARNING("it is wrong to fire stretch more than once on a frame");
       return NS_OK;
     }
-    mEmbellishData.flags |= NS_MATHML_STRETCH_DONE;
+    mPresentationData.flags |= NS_MATHML_STRETCH_DONE;
 
     if (NS_MATHML_HAS_ERROR(mPresentationData.flags)) {
       NS_WARNING("it is wrong to fire stretch on a erroneous frame");
@@ -334,8 +303,8 @@ nsMathMLContainerFrame::Stretch(nsIPresContext*      aPresContext,
       NS_ASSERTION(mathMLFrame, "Something is wrong somewhere");
       if (mathMLFrame) {
         PRBool stretchAll =
-          NS_MATHML_WILL_STRETCH_ALL_CHILDREN_VERTICALLY(mEmbellishData.flags) ||
-          NS_MATHML_WILL_STRETCH_ALL_CHILDREN_HORIZONTALLY(mEmbellishData.flags);
+          NS_MATHML_WILL_STRETCH_ALL_CHILDREN_VERTICALLY(mPresentationData.flags) ||
+          NS_MATHML_WILL_STRETCH_ALL_CHILDREN_HORIZONTALLY(mPresentationData.flags);
 
         // And the trick is that the child's rect.x is still holding the descent,
         // and rect.y is still holding the ascent ...
@@ -382,7 +351,7 @@ nsMathMLContainerFrame::Stretch(nsIPresContext*      aPresContext,
         if (stretchAll) {
 
           nsStretchDirection stretchDir =
-            NS_MATHML_WILL_STRETCH_ALL_CHILDREN_VERTICALLY(mEmbellishData.flags) ?
+            NS_MATHML_WILL_STRETCH_ALL_CHILDREN_VERTICALLY(mPresentationData.flags) ?
               NS_STRETCH_DIRECTION_VERTICAL : NS_STRETCH_DIRECTION_HORIZONTAL;
 
           GetPreferredStretchSize(aPresContext, aRenderingContext, STRETCH_CONSIDER_EMBELLISHMENTS,
@@ -416,11 +385,16 @@ nsMathMLContainerFrame::Stretch(nsIPresContext*      aPresContext,
         // container and so we put the spacing, otherwise we don't include the spacing,
         // the outermost embellished container will take care of it.
 
-        if (!IsEmbellishOperator(mParent)) {
-
+        nsEmbellishData parentData;
+        GetEmbellishDataFrom(mParent, parentData);
+        // ensure that we are the embellished child, not just a sibling
+        // (need to test coreFrame since <mfrac> resets other things)
+        if (parentData.coreFrame != mEmbellishData.coreFrame) {
+          // (we fetch values from the core since they may use units that depend
+          // on style data, and style changes could have occured in the core since
+          // our last visit there)
           nsEmbellishData coreData;
-          mEmbellishData.coreFrame->QueryInterface(NS_GET_IID(nsIMathMLFrame), (void**)&mathMLFrame);
-          mathMLFrame->GetEmbellishData(coreData);
+          GetEmbellishDataFrom(mEmbellishData.coreFrame, coreData);
 
           mBoundingMetrics.width += coreData.leftSpace + coreData.rightSpace;
           aDesiredStretchSize.width = mBoundingMetrics.width;
@@ -484,15 +458,17 @@ nsMathMLContainerFrame::FinalizeReflow(nsIPresContext*      aPresContext,
     // Don't go without checking to see if our parent will later fire a Stretch() command
     // targeted at us. The Stretch() will cause the rect.x and rect.y to clear...
     PRBool parentWillFireStretch = PR_FALSE;
-    nsEmbellishData parentData;
     nsIMathMLFrame* mathMLFrame;
     mParent->QueryInterface(NS_GET_IID(nsIMathMLFrame), (void**)&mathMLFrame);
     if (mathMLFrame) {
-      mathMLFrame->GetEmbellishData(parentData);
-      if (NS_MATHML_WILL_STRETCH_ALL_CHILDREN_VERTICALLY(parentData.flags) ||
-          NS_MATHML_WILL_STRETCH_ALL_CHILDREN_HORIZONTALLY(parentData.flags) ||
-          (NS_MATHML_IS_EMBELLISH_OPERATOR(parentData.flags)
-            && parentData.nextFrame == this))
+      nsEmbellishData embellishData;
+      nsPresentationData presentationData;
+      mathMLFrame->GetEmbellishData(embellishData);
+      mathMLFrame->GetPresentationData(presentationData);
+      if (NS_MATHML_WILL_STRETCH_ALL_CHILDREN_VERTICALLY(presentationData.flags) ||
+          NS_MATHML_WILL_STRETCH_ALL_CHILDREN_HORIZONTALLY(presentationData.flags) ||
+          (NS_MATHML_IS_EMBELLISH_OPERATOR(embellishData.flags)
+            && embellishData.nextFrame == this))
       {
         parentWillFireStretch = PR_TRUE;
       }
@@ -501,8 +477,8 @@ nsMathMLContainerFrame::FinalizeReflow(nsIPresContext*      aPresContext,
       // There is nobody who will fire the stretch for us, we do it ourselves!
 
       PRBool stretchAll =
-        /* NS_MATHML_WILL_STRETCH_ALL_CHILDREN_VERTICALLY(mEmbellishData.flags) || */
-        NS_MATHML_WILL_STRETCH_ALL_CHILDREN_HORIZONTALLY(mEmbellishData.flags);
+        /* NS_MATHML_WILL_STRETCH_ALL_CHILDREN_VERTICALLY(mPresentationData.flags) || */
+        NS_MATHML_WILL_STRETCH_ALL_CHILDREN_HORIZONTALLY(mPresentationData.flags);
 
       nsBoundingMetrics defaultSize;
       if (mEmbellishData.coreFrame == this /* case of a bare <mo>...</mo> itself */
@@ -860,13 +836,10 @@ nsMathMLContainerFrame::Init(nsIPresContext*  aPresContext,
   CompressWhitespace(aContent);
 
   // let the base class do its Init()
-  nsresult rv;
-  rv = nsHTMLContainerFrame::Init(aPresContext, aContent, aParent, aContext, aPrevInFlow);
+  return nsHTMLContainerFrame::Init(aPresContext, aContent, aParent, aContext, aPrevInFlow);
 
-  // now, inherit the scriptlevel and displaystyle from our parent
-  InheritAutomaticData(aPresContext, aParent);
-
-  return rv;
+  // ...We will build our automatic MathML data once the entire <math>...</math>
+  // tree is constructed.
 }
 
 // This method is called in a bottom-up manner, as we ascend the frame tree
@@ -877,7 +850,7 @@ nsMathMLContainerFrame::SetInitialChildList(nsIPresContext* aPresContext,
                                             nsIFrame*       aChildList)
 {
   // First, let the base class do its job
-  nsHTMLContainerFrame::SetInitialChildList(aPresContext, aListName, aChildList);
+  nsresult rv = nsHTMLContainerFrame::SetInitialChildList(aPresContext, aListName, aChildList);
 
   // Next, since we are an inline frame, and since we are a container, we have to
   // be very careful with the way we treat our children. Things look okay when
@@ -891,63 +864,55 @@ nsMathMLContainerFrame::SetInitialChildList(nsIPresContext* aPresContext,
 
   // So wrap foreign children in nsMathMLForeignFrameWrapper frames
   WrapForeignFrames(aPresContext);
+  return rv;
 
-  // Now that our subtree is fully constructed, set the automatic
-  // presentation data and embellishment data that apply in our subtree
-  return TransmitAutomaticData(aPresContext);
+  // ...We will build our automatic MathML data once the entire <math>...</math>
+  // tree is constructed.
 }
 
 // Note that this method re-builds the automatic data in the children -- not
-// in aFrame itself (except for those particular operations that the frame
-// may do in aFrame->TransmitAutomaticData()). The reason it works this way
-// is because a container frame knows what it wants for its children, whereas
-// children have no clue who their parent is. For example, it is <mfrac> who
-// knows that its children have to be in scriptsizes, and has to transmit this
-// information to them. Hence, when changes occur in a child frame, the child
-// has to pass the re-build to its parent. Unfortunately, the extra cost for
-// this is that it will re-sync in the siblings of the child as well.
+// in aParentFrame itself (except for those particular operations that the
+// parent frame may do in its TransmitAutomaticData()).
 /* static */ void
-nsMathMLContainerFrame::RebuildAutomaticDataFor(nsIPresContext* aPresContext,
-                                                nsIFrame*       aFrame)
+nsMathMLContainerFrame::RebuildAutomaticDataForChildren(nsIPresContext* aPresContext,
+                                                        nsIFrame*       aParentFrame)
 {
   // 1. As we descend the tree, make each child frame inherit data from
   // the parent
   // 2. As we ascend the tree, transmit any specific change that we want
   // down the subtrees
   nsIFrame* childFrame;
-  aFrame->FirstChild(aPresContext, nsnull, &childFrame);
+  aParentFrame->FirstChild(aPresContext, nsnull, &childFrame);
   while (childFrame) {
     nsIMathMLFrame* childMathMLFrame;
     childFrame->QueryInterface(NS_GET_IID(nsIMathMLFrame), (void**)&childMathMLFrame);
     if (childMathMLFrame) {
-      childMathMLFrame->InheritAutomaticData(aPresContext, aFrame);
+      childMathMLFrame->InheritAutomaticData(aPresContext, aParentFrame);
     }
-    RebuildAutomaticDataFor(aPresContext, childFrame);
+    RebuildAutomaticDataForChildren(aPresContext, childFrame);
     childFrame->GetNextSibling(&childFrame);
   }
   nsIMathMLFrame* mathMLFrame;
-  aFrame->QueryInterface(NS_GET_IID(nsIMathMLFrame), (void**)&mathMLFrame);
+  aParentFrame->QueryInterface(NS_GET_IID(nsIMathMLFrame), (void**)&mathMLFrame);
   if (mathMLFrame) {
     mathMLFrame->TransmitAutomaticData(aPresContext);
   }
 }
 
 /* static */ nsresult
-nsMathMLContainerFrame::ReLayout(nsIPresContext* aPresContext,
-                                 nsIFrame*       aFrame)
+nsMathMLContainerFrame::ReLayoutChildren(nsIPresContext* aPresContext,
+                                         nsIFrame*       aParentFrame)
 {
   // walk-up to the first frame that is a MathML frame, stop if we reach <math>
   PRInt32 parentScriptLevel = 0;
-  nsIFrame* frame = aFrame;
+  nsIFrame* frame = aParentFrame;
   while (frame) {
     // stop if it is a MathML frame
     nsIMathMLFrame* mathMLFrame;
     frame->QueryInterface(NS_GET_IID(nsIMathMLFrame), (void**)&mathMLFrame);
     if (mathMLFrame) {
-      nsIFrame* parent;
-      frame->GetParent(&parent);
       nsPresentationData parentData;
-      GetPresentationDataFrom(parent, parentData);
+      mathMLFrame->GetPresentationData(parentData);
       parentScriptLevel = parentData.scriptLevel;
       break;
     }
@@ -971,7 +936,7 @@ nsMathMLContainerFrame::ReLayout(nsIPresContext* aPresContext,
   PRBool old = IsEmbellishOperator(frame);
 #endif
 
-  RebuildAutomaticDataFor(aPresContext, frame);
+  RebuildAutomaticDataForChildren(aPresContext, frame);
 
 #ifdef DEBUG_rbs
   PRBool now = IsEmbellishOperator(frame);
@@ -979,8 +944,22 @@ nsMathMLContainerFrame::ReLayout(nsIPresContext* aPresContext,
     NS_WARNING("REMIND: case where the embellished hierarchy has to be rebuilt too");
 #endif
 
-  // re-resolve the style data in our subtree to sync any change of script sizes
-  PropagateScriptStyleFor(aPresContext, frame, parentScriptLevel);
+  // re-resolve the style data to sync any change of script sizes
+  nsIFrame* childFrame;
+  aParentFrame->FirstChild(aPresContext, nsnull, &childFrame);
+  while (childFrame) {
+    nsIMathMLFrame* mathMLFrame;
+    childFrame->QueryInterface(NS_GET_IID(nsIMathMLFrame), (void**)&mathMLFrame);
+    if (mathMLFrame) {
+      // propagate using the base method to make sure that the control
+      // is passed on to MathML frames that may be overloading the method
+      mathMLFrame->ReResolveScriptStyle(aPresContext, parentScriptLevel);
+    }
+    else {
+      PropagateScriptStyleFor(aPresContext, childFrame, parentScriptLevel);
+    }
+    childFrame->GetNextSibling(&childFrame);
+  }
 
   // Ask our parent frame to reflow us
   nsCOMPtr<nsIPresShell> presShell;
@@ -1000,7 +979,7 @@ nsMathMLContainerFrame::ChildListChanged(nsIPresContext* aPresContext,
     // wrap any new foreign child that may have crept in
     WrapForeignFrames(aPresContext);
   }
-  return ReLayout(aPresContext, this);
+  return ReLayoutChildren(aPresContext, this);
 }
 
 NS_IMETHODIMP
@@ -1084,14 +1063,29 @@ nsMathMLContainerFrame::AttributeChanged(nsIPresContext* aPresContext,
   nsresult rv = nsHTMLContainerFrame::AttributeChanged(aPresContext, aChild,
                                                        aNameSpaceID, aAttribute, aModType, aHint);
   if (NS_FAILED(rv)) return rv;
-  nsCOMPtr<nsIPresShell> shell;
-  nsHTMLReflowCommand *reflowCmd;
-  aPresContext->GetShell(getter_AddRefs(shell));
-  rv = NS_NewHTMLReflowCommand(&reflowCmd, this,
-                               eReflowType_ContentChanged,
-                               nsnull, aAttribute);
-  if (NS_SUCCEEDED(rv) && shell) shell->AppendReflowCommand(reflowCmd);
-  return rv;
+
+  // check if this is an attribute that can affect the embellished hierarchy
+  // in a significant way. We handle this here to avoid duplication of code.
+  if (nsMathMLAtoms::accent_ == aAttribute ||
+      nsMathMLAtoms::accentunder_ == aAttribute ||
+      nsMathMLAtoms::movablelimits_ == aAttribute) {
+
+    // set the target as the parent of our outermost embellished container
+    // (we ensure that we are the core, not just a sibling of the core)
+    nsIFrame* target = this;
+    nsEmbellishData embellishData;
+    do {
+      target->GetParent(&target);
+      GetEmbellishDataFrom(target, embellishData);
+    } while (embellishData.coreFrame == this);
+
+    // we have automatic data to update in the children of the target frame
+    return ReLayoutChildren(aPresContext, target);
+  }
+
+  nsCOMPtr<nsIPresShell> presShell;
+  aPresContext->GetShell(getter_AddRefs(presShell));
+  return mParent->ReflowDirtyChild(presShell, this);
 }
 
 // helper function to reflow token elements
@@ -1319,12 +1313,12 @@ printf("\n");
   // after finishing the stretching of the embellished child - bug 117652
 
   if (!NS_MATHML_IS_EMBELLISH_OPERATOR(mEmbellishData.flags) &&
-      (NS_MATHML_WILL_STRETCH_ALL_CHILDREN_VERTICALLY(mEmbellishData.flags) ||
-       NS_MATHML_WILL_STRETCH_ALL_CHILDREN_HORIZONTALLY(mEmbellishData.flags))) {
+      (NS_MATHML_WILL_STRETCH_ALL_CHILDREN_VERTICALLY(mPresentationData.flags) ||
+       NS_MATHML_WILL_STRETCH_ALL_CHILDREN_HORIZONTALLY(mPresentationData.flags))) {
 
     // get the stretchy direction
     nsStretchDirection stretchDir =
-      NS_MATHML_WILL_STRETCH_ALL_CHILDREN_VERTICALLY(mEmbellishData.flags) 
+      NS_MATHML_WILL_STRETCH_ALL_CHILDREN_VERTICALLY(mPresentationData.flags) 
       ? NS_STRETCH_DIRECTION_VERTICAL 
       : NS_STRETCH_DIRECTION_HORIZONTAL;
 

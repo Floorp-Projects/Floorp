@@ -67,9 +67,14 @@ nsMathMLmphantomFrame::~nsMathMLmphantomFrame()
 }
 
 NS_IMETHODIMP
-nsMathMLmphantomFrame::TransmitAutomaticData(nsIPresContext* aPresContext)
+nsMathMLmphantomFrame::InheritAutomaticData(nsIPresContext* aPresContext,
+                                            nsIFrame*       aParent)
 {
-  mEmbellishData.flags |= NS_MATHML_STRETCH_ALL_CHILDREN_VERTICALLY;
+  // let the base class get the default from our parent
+  nsMathMLContainerFrame::InheritAutomaticData(aPresContext, aParent);
+
+  mPresentationData.flags |= NS_MATHML_STRETCH_ALL_CHILDREN_VERTICALLY;
+
   return NS_OK;
 }
 

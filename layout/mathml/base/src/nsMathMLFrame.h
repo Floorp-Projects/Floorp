@@ -99,11 +99,6 @@ public:
   }
 
   NS_IMETHOD
-  EmbellishOperator() {
-    return NS_OK;
-  }
-
-  NS_IMETHOD
   GetEmbellishData(nsEmbellishData& aEmbellishData) {
     aEmbellishData = mEmbellishData;
     return NS_OK;
@@ -164,24 +159,47 @@ public:
   // helper to give a style context suitable for doing the stretching to the
   // MathMLChar. Frame classes that use this should make the extra style contexts
   // accessible to the Style System via Get/Set AdditionalStyleContext.
-  // return true if the char is a mutable char
-  static PRBool
+  static void
   ResolveMathMLCharStyle(nsIPresContext*  aPresContext,
                          nsIContent*      aContent,
                          nsIStyleContext* aParenStyleContext,
-                         nsMathMLChar*    aMathMLChar);
+                         nsMathMLChar*    aMathMLChar,
+                         PRBool           aIsMutableChar);
 
   // helper to check if a frame is embellished
+  // The MathML REC precisely defines an "embellished operator" as:
+  // - an <mo> element;
+  // - or one of the elements <msub>, <msup>, <msubsup>, <munder>, <mover>,
+  //   <munderover>, <mmultiscripts>, <mfrac>, or <semantics>, whose first 
+  //   argument exists and is an embellished operator;
+  //- or one of the elements <mstyle>, <mphantom>, or <mpadded>, such that
+  //   an <mrow> containing the same arguments would be an embellished
+  //   operator;
+  // - or an <maction> element whose selected subexpression exists and is an
+  //   embellished operator;
+  // - or an <mrow> whose arguments consist (in any order) of one embellished
+  //   operator and zero or more spacelike elements.
   static PRBool
   IsEmbellishOperator(nsIFrame* aFrame);
 
-  // helper to get the presentation data of a frame. If we happen to
-  // be surrounded by non-MathML helper frames needed for our support,
-  // we walk up the frame hierarchy until we reach a MathML frame
-  // or the <root> math element.
+  // helper to get the mEmbellishData of a frame
+  static void
+  GetEmbellishDataFrom(nsIFrame*        aFrame,
+                       nsEmbellishData& aEmbellishData);
+
+  // helper to get the presentation data of a frame. If aClimbTree is
+  // set to true and the frame happens to be surrounded by non-MathML
+  // helper frames needed for its support, we walk up the frame hierarchy
+  // until we reach a MathML ancestor or the <root> math element.
   static void
   GetPresentationDataFrom(nsIFrame*           aFrame,
-                          nsPresentationData& aPresentationData);
+                          nsPresentationData& aPresentationData,
+                          PRBool              aClimbTree = PR_TRUE);
+
+  // helper to check if a frame has a next sibling - used to report
+  // an error when a next sibling is found where unexpected
+  static PRBool
+  HasNextSibling(nsIFrame* aFrame);
 
   // helper to check if a content has an attribute. If content is nsnull or if
   // the attribute is not there, check if the attribute is on the mstyle hierarchy

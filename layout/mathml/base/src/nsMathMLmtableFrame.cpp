@@ -422,12 +422,7 @@ nsMathMLmtableOuterFrame::Init(nsIPresContext*  aPresContext,
                                nsIStyleContext* aContext,
                                nsIFrame*        aPrevInFlow)
 {
-  nsresult  rv = nsTableOuterFrame::Init(aPresContext, aContent, aParent, aContext, aPrevInFlow);
-
-  // now, inherit the scriptlevel and displaystyle from our parent
-  InheritAutomaticData(aPresContext, aParent);
-
-  return rv;
+  return nsTableOuterFrame::Init(aPresContext, aContent, aParent, aContext, aPrevInFlow);
 }
 
 nsIFrame*
@@ -695,14 +690,10 @@ nsMathMLmtdInnerFrame::Init(nsIPresContext*  aPresContext,
                             nsIStyleContext* aContext,
                             nsIFrame*        aPrevInFlow)
 {
-  nsresult rv;
-  rv = nsBlockFrame::Init(aPresContext, aContent, aParent, aContext, aPrevInFlow);
+  nsresult rv = nsBlockFrame::Init(aPresContext, aContent, aParent, aContext, aPrevInFlow);
 
   // record that children that are ignorable whitespace should be excluded
   mState |= NS_FRAME_EXCLUDE_IGNORABLE_WHITESPACE;
-
-  // now, inherit the scriptlevel and displaystyle from our parent
-  InheritAutomaticData(aPresContext, aParent);
 
   return rv;
 }

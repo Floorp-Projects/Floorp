@@ -29,18 +29,30 @@ NS_IMETHODIMP
 nsMathMLFrame::InheritAutomaticData(nsIPresContext* aPresContext,
                                     nsIFrame*       aParent) 
 {
-  mPresentationData.flags = 0;
-  mPresentationData.mstyle = nsnull;
-  mPresentationData.scriptLevel = 0;
-
   mEmbellishData.flags = 0;
   mEmbellishData.nextFrame = nsnull;
   mEmbellishData.coreFrame = nsnull;
   mEmbellishData.direction = NS_STRETCH_DIRECTION_UNSUPPORTED;
-  mEmbellishData.leftSpace = mEmbellishData.rightSpace = 0;
+  mEmbellishData.leftSpace = 0;
+  mEmbellishData.rightSpace = 0;
+
+  mPresentationData.flags = 0;
+  mPresentationData.mstyle = nsnull;
+  mPresentationData.scriptLevel = 0;
 
   // by default, just inherit the display & scriptlevel of our parent
-  GetPresentationDataFrom(aParent, mPresentationData);
+  nsPresentationData parentData;
+  GetPresentationDataFrom(aParent, parentData);
+  mPresentationData.mstyle = parentData.mstyle;
+  mPresentationData.scriptLevel = parentData.scriptLevel;
+  if (NS_MATHML_IS_DISPLAYSTYLE(parentData.flags)) {
+    mPresentationData.flags |= NS_MATHML_DISPLAYSTYLE;
+  }
+
+#if defined(NS_DEBUG) && defined(SHOW_BOUNDING_BOX)
+  mPresentationData.flags |= NS_MATHML_SHOW_BOUNDING_METRICS;
+#endif
+
   return NS_OK;
 }
 
@@ -72,63 +84,79 @@ nsMathMLFrame::UpdatePresentationData(nsIPresContext* aPresContext,
   return NS_OK;
 }
 
-/* static */ PRBool
-nsMathMLFrame::IsEmbellishOperator(nsIFrame* aFrame)
-{
-  NS_PRECONDITION(aFrame, "null arg");
-  if (!aFrame) return PR_FALSE;
-  nsIMathMLFrame* mathMLFrame;
-  aFrame->QueryInterface(NS_GET_IID(nsIMathMLFrame), (void**)&mathMLFrame);
-  if (!mathMLFrame) return PR_FALSE;
-  nsEmbellishData embellishData;
-  mathMLFrame->GetEmbellishData(embellishData);
-  return NS_MATHML_IS_EMBELLISH_OPERATOR(embellishData.flags);
-}
-
 // Helper to give a style context suitable for doing the stretching of
 // a MathMLChar. Frame classes that use this should ensure that the 
 // extra leaf style contexts given to the MathMLChars are acessible to
 // the Style System via the Get/Set AdditionalStyleContext() APIs.
-/* static */ PRBool
+/* static */ void
 nsMathMLFrame::ResolveMathMLCharStyle(nsIPresContext*  aPresContext,
                                       nsIContent*      aContent,
                                       nsIStyleContext* aParentStyleContext,
-                                      nsMathMLChar*    aMathMLChar)
+                                      nsMathMLChar*    aMathMLChar,
+                                      PRBool           aIsMutableChar)
 {
-  nsAutoString data;
-  aMathMLChar->GetData(data);
-  PRBool isStretchy = nsMathMLOperators::IsMutableOperator(data);
-  nsIAtom* fontAtom = (isStretchy) ?
+  nsIAtom* fontAtom = (aIsMutableChar) ?
     nsMathMLAtoms::fontstyle_stretchy :
-    nsMathMLAtoms::fontstyle_anonymous;
+    nsMathMLAtoms::fontstyle_anonymous; // savings
   nsCOMPtr<nsIStyleContext> newStyleContext;
   nsresult rv = aPresContext->ResolvePseudoStyleContextFor(aContent, fontAtom, 
                                              aParentStyleContext, PR_FALSE,
                                              getter_AddRefs(newStyleContext));
   if (NS_SUCCEEDED(rv) && newStyleContext)
     aMathMLChar->SetStyleContext(newStyleContext);
+}
 
-  return isStretchy;
+/* static */ PRBool
+nsMathMLFrame::IsEmbellishOperator(nsIFrame* aFrame)
+{
+  nsEmbellishData embellishData;
+  GetEmbellishDataFrom(aFrame, embellishData);
+  return NS_MATHML_IS_EMBELLISH_OPERATOR(embellishData.flags);
+}
+
+/* static */ void
+nsMathMLFrame::GetEmbellishDataFrom(nsIFrame*        aFrame,
+                                    nsEmbellishData& aEmbellishData)
+{
+  // initialize OUT params
+  aEmbellishData.flags = 0;
+  aEmbellishData.nextFrame = nsnull;
+  aEmbellishData.coreFrame = nsnull;
+  aEmbellishData.direction = NS_STRETCH_DIRECTION_UNSUPPORTED;
+  aEmbellishData.leftSpace = 0;
+  aEmbellishData.rightSpace = 0;
+
+  if (aFrame) {
+    nsIMathMLFrame* mathMLFrame;
+    aFrame->QueryInterface(NS_GET_IID(nsIMathMLFrame), (void**)&mathMLFrame);
+    if (mathMLFrame) {
+      mathMLFrame->GetEmbellishData(aEmbellishData);
+    }
+  }
 }
 
 // helper to get the presentation data of a frame, by possibly walking up
 // the frame hierarchy if we happen to be surrounded by non-MathML frames.
 /* static */ void
 nsMathMLFrame::GetPresentationDataFrom(nsIFrame*           aFrame,
-                                       nsPresentationData& aPresentationData)
+                                       nsPresentationData& aPresentationData,
+                                       PRBool              aClimbTree)
 {
+  // initialize OUT params
+  aPresentationData.flags = 0;
+  aPresentationData.mstyle = nsnull;
+  aPresentationData.scriptLevel = 0;
+
   nsIFrame* frame = aFrame;
   while (frame) {
     nsIMathMLFrame* mathMLFrame;
     frame->QueryInterface(NS_GET_IID(nsIMathMLFrame), (void**)&mathMLFrame);
     if (mathMLFrame) {
-      nsPresentationData presentationData;
-      mathMLFrame->GetPresentationData(presentationData);
-      aPresentationData.mstyle = presentationData.mstyle;
-      aPresentationData.scriptLevel = presentationData.scriptLevel;
-      if (NS_MATHML_IS_DISPLAYSTYLE(presentationData.flags)) {
-        aPresentationData.flags |= NS_MATHML_DISPLAYSTYLE;
-      }
+      mathMLFrame->GetPresentationData(aPresentationData);
+      break;
+    }
+    // stop if the caller doesn't want to lookup beyond the frame
+    if (!aClimbTree) {
       break;
     }
     // stop if we reach the root <math> tag
@@ -146,6 +174,17 @@ nsMathMLFrame::GetPresentationDataFrom(nsIFrame*           aFrame,
     }
     frame->GetParent(&frame);
   }
+}
+
+/* static */ PRBool
+nsMathMLFrame::HasNextSibling(nsIFrame* aFrame)
+{
+  if (aFrame) {
+    nsIFrame* sibling;
+    aFrame->GetNextSibling(&sibling);
+    return sibling != nsnull;
+  }
+  return PR_FALSE;
 }
 
 // helper to get an attribute from the content or the surrounding <mstyle> hierarchy

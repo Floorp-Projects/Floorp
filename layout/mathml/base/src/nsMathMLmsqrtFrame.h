@@ -87,21 +87,10 @@ public:
         PRUint32             aFlags = 0);
 
   NS_IMETHOD
-  TransmitAutomaticData(nsIPresContext* aPresContext)
-  {
-#if defined(NS_DEBUG) && defined(SHOW_BOUNDING_BOX)
-    mPresentationData.flags |= NS_MATHML_SHOW_BOUNDING_METRICS;
-#endif
-    mEmbellishData.flags |= NS_MATHML_STRETCH_ALL_CHILDREN_VERTICALLY;
-    // 1. The REC says:
-    //    The <msqrt> element leaves both attributes [displaystyle and scriptlevel]
-    //    unchanged within all its arguments.
-    // 2. The TeXBook (Ch 17. p.141) says that \sqrt is cramped 
-    UpdatePresentationDataFromChildAt(aPresContext, 0, -1, 0,
-       NS_MATHML_COMPRESSED,
-       NS_MATHML_COMPRESSED);
-    return NS_OK;
-  }
+  InheritAutomaticData(nsIPresContext* aPresContext,
+                       nsIFrame*       aParent);
+  NS_IMETHOD
+  TransmitAutomaticData(nsIPresContext* aPresContext);
 
 protected:
   nsMathMLmsqrtFrame();

@@ -99,7 +99,6 @@ nsMathMLmactionFrame::Init(nsIPresContext*  aPresContext,
                            nsIStyleContext* aContext,
                            nsIFrame*        aPrevInFlow)
 {
-  nsresult rv;
   nsAutoString value, prefix;
 
   // Init our local attributes
@@ -166,13 +165,7 @@ nsMathMLmactionFrame::Init(nsIPresContext*  aPresContext,
   }
 
   // Let the base class do the rest
-  rv = nsMathMLContainerFrame::Init(aPresContext, aContent, aParent, aContext, aPrevInFlow);
-
-#if defined(NS_DEBUG) && defined(SHOW_BOUNDING_BOX)
-  mPresentationData.flags |= NS_MATHML_SHOW_BOUNDING_METRICS;
-#endif
-
-  return rv;
+  return nsMathMLContainerFrame::Init(aPresContext, aContent, aParent, aContext, aPrevInFlow);
 }
 
 // return the frame whose number is given by the attribute selection="number"
@@ -221,23 +214,9 @@ nsMathMLmactionFrame::GetSelectedFrame()
 
   // if the selected child is an embellished operator,
   // we become embellished as well
-  mEmbellishData.flags &= ~NS_MATHML_EMBELLISH_OPERATOR;
-  mEmbellishData.nextFrame = nsnull;
-  mEmbellishData.coreFrame = nsnull;
-  mEmbellishData.direction = NS_STRETCH_DIRECTION_UNSUPPORTED;
-  if (mSelectedFrame) {
-    nsIMathMLFrame* mathMLFrame;
-    mSelectedFrame->QueryInterface(NS_GET_IID(nsIMathMLFrame), (void**)&mathMLFrame);
-    if (mathMLFrame) {
-      nsEmbellishData embellishData;
-      mathMLFrame->GetEmbellishData(embellishData);
-      if (NS_MATHML_IS_EMBELLISH_OPERATOR(embellishData.flags)) {
-        mEmbellishData.flags |= NS_MATHML_EMBELLISH_OPERATOR;
-        mEmbellishData.nextFrame = mSelectedFrame; // yes!
-        mEmbellishData.coreFrame = embellishData.coreFrame;
-        mEmbellishData.direction = embellishData.direction;
-      }
-    }
+  GetEmbellishDataFrom(mSelectedFrame, mEmbellishData);
+  if (NS_MATHML_IS_EMBELLISH_OPERATOR(mEmbellishData.flags)) {
+    mEmbellishData.nextFrame = mSelectedFrame; // yes!
   }
 
   return mSelectedFrame;
@@ -316,8 +295,7 @@ nsMathMLmactionFrame::Paint(nsIPresContext*      aPresContext,
 #if defined(NS_DEBUG) && defined(SHOW_BOUNDING_BOX)
   // visual debug
   if (NS_FRAME_PAINT_LAYER_FOREGROUND == aWhichLayer &&
-      NS_MATHML_PAINT_BOUNDING_METRICS(mPresentationData.flags))
-  {
+      NS_MATHML_PAINT_BOUNDING_METRICS(mPresentationData.flags)) {
     aRenderingContext.SetColor(NS_RGB(0,0,255));
 
     nscoord x = mReference.x + mBoundingMetrics.leftBearing;

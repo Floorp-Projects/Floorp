@@ -37,6 +37,7 @@
 #include "nsStyleUtil.h"
 
 #include "nsIDOMText.h"
+#include "nsITextContent.h"
 
 #include "nsMathMLmsFrame.h"
 
@@ -67,11 +68,8 @@ nsMathMLmsFrame::~nsMathMLmsFrame()
 {
 }
 
-
 NS_IMETHODIMP
-nsMathMLmsFrame::SetInitialChildList(nsIPresContext* aPresContext,
-                                     nsIAtom*        aListName,
-                                     nsIFrame*       aChildList)
+nsMathMLmsFrame::TransmitAutomaticData(nsIPresContext* aPresContext)
 {
   // It is assumed that the mathml.css file contains two rules:
   // ms:before { content: open-quote; }
@@ -86,48 +84,73 @@ nsMathMLmsFrame::SetInitialChildList(nsIPresContext* aPresContext,
   // But what if the mathml.css file wasn't loaded? 
   // We also check that we are not relying on null pointers...
 
-  PRInt32 count = 0;
   nsIFrame* rightFrame = nsnull;
-  nsIFrame* leftFrame = nsnull;
-  nsIFrame* childFrame = aChildList;
-  while (childFrame) {
-    if (0 == count) leftFrame = childFrame;
-    // 1 == count is the the frame for the actual content of <ms>
-    else if (2 == count) rightFrame = childFrame;
-    count++;
-    childFrame->GetNextSibling(&childFrame);
-  }
+  nsIFrame* baseFrame = nsnull;
+  nsIFrame* leftFrame = mFrames.FirstChild();
+  if (leftFrame)
+    leftFrame->GetNextSibling(&baseFrame);
+  if (baseFrame)
+    baseFrame->GetNextSibling(&rightFrame);
+  if (!leftFrame || !baseFrame || !rightFrame)
+    return NS_OK;
 
-  if (3 == count && leftFrame && rightFrame) {
-    nsAutoString value;
-    nsIFrame* textFrame;
-    nsCOMPtr<nsIContent> quoteContent;
-    // lquote
-    if (NS_CONTENT_ATTR_HAS_VALUE == GetAttribute(mContent, mPresentationData.mstyle,
-                     nsMathMLAtoms::lquote_, value)) {
-      leftFrame->FirstChild(aPresContext, nsnull, &textFrame);
-      if (textFrame) {
-        textFrame->GetContent(getter_AddRefs(quoteContent));
-        if (quoteContent.get()) {
-          nsCOMPtr<nsIDOMText> domText(do_QueryInterface(quoteContent));
-          if (domText.get()) domText->SetData(value);
-        }
-      }
-    }
-    // rquote
-    if (NS_CONTENT_ATTR_HAS_VALUE == GetAttribute(mContent, mPresentationData.mstyle,
-                     nsMathMLAtoms::rquote_, value)) {
-      rightFrame->FirstChild(aPresContext, nsnull, &textFrame);
-      if (textFrame) {
-        textFrame->GetContent(getter_AddRefs(quoteContent));
-        if (quoteContent.get()) {
-          nsCOMPtr<nsIDOMText> domText(do_QueryInterface(quoteContent));
-          if (domText.get()) domText->SetData(value);
+  nsAutoString value;
+  nsIFrame* textFrame;
+  nsCOMPtr<nsIContent> quoteContent;
+  // lquote
+  if (NS_CONTENT_ATTR_HAS_VALUE == GetAttribute(mContent, mPresentationData.mstyle,
+                   nsMathMLAtoms::lquote_, value)) {
+    leftFrame->FirstChild(aPresContext, nsnull, &textFrame);
+    if (textFrame) {
+      textFrame->GetContent(getter_AddRefs(quoteContent));
+      if (quoteContent.get()) {
+        nsCOMPtr<nsIDOMText> domText(do_QueryInterface(quoteContent));
+        if (domText.get()) {
+          nsCOMPtr<nsITextContent> tc(do_QueryInterface(quoteContent));
+          if (tc) {
+            tc->SetText(value, PR_FALSE); // no notify since we don't want a reflow yet
+          }
         }
       }
     }
   }
+  // rquote
+  if (NS_CONTENT_ATTR_HAS_VALUE == GetAttribute(mContent, mPresentationData.mstyle,
+                   nsMathMLAtoms::rquote_, value)) {
+    rightFrame->FirstChild(aPresContext, nsnull, &textFrame);
+    if (textFrame) {
+      textFrame->GetContent(getter_AddRefs(quoteContent));
+      if (quoteContent.get()) {
+        nsCOMPtr<nsIDOMText> domText(do_QueryInterface(quoteContent));
+        if (domText.get()) {
+          nsCOMPtr<nsITextContent> tc(do_QueryInterface(quoteContent));
+          if (tc) {
+            tc->SetText(value, PR_FALSE); // no notify since we don't want a reflow yet
+          }
+        }
+      }
+    }
+  }
 
-  // let the base class take care of the rest
-  return nsMathMLContainerFrame::SetInitialChildList(aPresContext, aListName, aChildList);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsMathMLmsFrame::AttributeChanged(nsIPresContext* aPresContext,
+                                  nsIContent*     aContent,
+                                  PRInt32         aNameSpaceID,
+                                  nsIAtom*        aAttribute,
+                                  PRInt32         aModType, 
+                                  PRInt32         aHint)
+{
+  if (nsMathMLAtoms::lquote_ == aAttribute ||
+      nsMathMLAtoms::rquote_ == aAttribute) {
+    // When the automatic data to update are only within our
+    // children, we just re-layout them
+    return ReLayoutChildren(aPresContext, this);
+  }
+
+  return nsMathMLContainerFrame::
+         AttributeChanged(aPresContext, aContent, aNameSpaceID,
+                          aAttribute, aModType, aHint);
 }
