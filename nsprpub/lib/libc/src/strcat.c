@@ -52,9 +52,8 @@ PL_strncat(char *dest, const char *src, PRUint32 max)
 {
     char *rv;
 
-    if( (char *)0 == dest ) return (char *)0;
-    if( (const char *)0 == src ) return dest;
-    if( 0 == max ) return dest;
+    if( ((char *)0 == dest) || ((const char *)0 == src) || (0 == max) )
+        return dest;
 
     for( rv = dest; *dest; dest++ )
         ;
@@ -69,8 +68,8 @@ PL_strcatn(char *dest, PRUint32 max, const char *src)
     char *rv;
     PRUint32 dl;
 
-    if( (char *)0 == dest ) return (char *)0;
-    if( (const char *)0 == src ) return dest;
+    if( ((char *)0 == dest) || ((const char *)0 == src) )
+        return dest;
 
     for( rv = dest, dl = 0; *dest; dest++, dl++ )
         ;

@@ -37,22 +37,23 @@
 
 #include "plstr.h"
 #include "prmem.h"
+#include <string.h>
 
 PR_IMPLEMENT(char *)
 PL_strdup(const char *s)
 {
     char *rv;
-    PRUint32 l;
-
-    l = PL_strlen(s);
-
-    rv = (char *)malloc(l+1);
-    if( (char *)0 == rv ) return rv;
+    size_t n;
 
     if( (const char *)0 == s )
-        *rv = '\0';
-    else
-        (void)PL_strcpy(rv, s);
+        s = "";
+
+    n = strlen(s) + 1;
+
+    rv = (char *)malloc(n);
+    if( (char *)0 == rv ) return rv;
+
+    (void)memcpy(rv, s, n);
 
     return rv;
 }
@@ -67,17 +68,18 @@ PR_IMPLEMENT(char *)
 PL_strndup(const char *s, PRUint32 max)
 {
     char *rv;
-    PRUint32 l;
+    size_t l;
+
+    if( (const char *)0 == s )
+        s = "";
 
     l = PL_strnlen(s, max);
 
     rv = (char *)malloc(l+1);
     if( (char *)0 == rv ) return rv;
 
-    if( (const char *)0 == s )
-        *rv = '\0';
-    else
-        (void)PL_strncpyz(rv, s, l+1);
+    (void)memcpy(rv, s, l);
+    rv[l] = '\0';
 
     return rv;
 }
