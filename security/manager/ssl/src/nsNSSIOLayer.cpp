@@ -54,7 +54,15 @@
 #include "sslerr.h"
 #include "certdb.h"
 
-//#define DEBUG_SSL_VERBOSE
+//#define DEBUG_SSL_VERBOSE //Enable this define to get minimal 
+                            //reports when doing SSL read/write
+                            
+//#define DUMP_BUFFER  //Enable this define along with
+                       //DEBUG_SSL_VERBOSE to dump SSL
+                       //read/write buffer to a log.
+                       //Uses PR_LOG except on Mac where
+                       //we always write out to our own
+                       //file.
 
 static nsISecurityManagerComponent* gNSSService = nsnull;
 static PRBool firstTime = PR_TRUE;
@@ -63,6 +71,32 @@ static PRIOMethods nsSSLIOLayerMethods;
 
 #ifdef PR_LOGGING
 extern PRLogModuleInfo* gPIPNSSLog;
+#endif
+
+#if defined(DEBUG_SSL_VERBOSE) && defined (XP_MAC)
+
+#ifdef PR_LOG
+#undef PR_LOG
+#endif
+
+static PRFileDesc *gMyLogFile = nsnull;
+#define MAC_LOG_FILE "MAC PIPNSS Log File"
+
+void MyLogFunction(const char *fmt, ...)
+{
+  
+  va_list ap;
+  va_start(ap,fmt);
+  if (gMyLogFile == nsnull)
+    gMyLogFile = PR_Open(MAC_LOG_FILE, PR_WRONLY | PR_CREATE_FILE | PR_APPEND,
+                         0600);
+  if (!gMyLogFile)
+      return;
+  PR_vfprintf(gMyLogFile, fmt, ap);
+  va_end(ap);
+}
+
+#define PR_LOG(module,level,args) MyLogFunction args
 #endif
 
 nsNSSSocketInfo::nsNSSSocketInfo()
@@ -354,8 +388,63 @@ nsSSLIOLayerClose(PRFileDesc *fd)
   return status;
 }
 
-#ifdef DEBUG_SSL_VERBOSE
+#if defined(DEBUG_SSL_VERBOSE) && defined(DUMP_BUFFER)
+/* Dumps a (potentially binary) buffer using SSM_DEBUG. 
+   (We could have used the version in ssltrace.c, but that's
+   specifically tailored to SSLTRACE. Sigh. */
+#define DUMPBUF_LINESIZE 24
+static void
+nsDumpBuffer(unsigned char *buf, PRIntn len)
+{
+  char hexbuf[DUMPBUF_LINESIZE*3+1];
+  char chrbuf[DUMPBUF_LINESIZE+1];
+  static const char *hex = "0123456789abcdef";
+  PRIntn i = 0, l = 0;
+  char ch, *c, *h;
+  if (len == 0)
+    return;
+  hexbuf[DUMPBUF_LINESIZE*3] = '\0';
+  chrbuf[DUMPBUF_LINESIZE] = '\0';
+  (void) memset(hexbuf, 0x20, DUMPBUF_LINESIZE*3);
+  (void) memset(chrbuf, 0x20, DUMPBUF_LINESIZE);
+  h = hexbuf;
+  c = chrbuf;
 
+  while (i < len)
+  {
+    ch = buf[i];
+
+    if (l == DUMPBUF_LINESIZE)
+    {
+      PR_LOG(gPIPNSSLog, PR_LOG_DEBUG, ("%s%s\n", hexbuf, chrbuf));
+      (void) memset(hexbuf, 0x20, DUMPBUF_LINESIZE*3);
+      (void) memset(chrbuf, 0x20, DUMPBUF_LINESIZE);
+      h = hexbuf;
+      c = chrbuf;
+      l = 0;
+    }
+
+    /* Convert a character to hex. */
+    *h++ = hex[(ch >> 4) & 0xf];
+    *h++ = hex[ch & 0xf];
+    h++;
+        
+    /* Put the character (if it's printable) into the character buffer. */
+    if ((ch >= 0x20) && (ch <= 0x7e))
+      *c++ = ch;
+    else
+      *c++ = '.';
+    i++; l++;
+  }
+  PR_LOG(gPIPNSSLog, PR_LOG_DEBUG, ("%s%s\n", hexbuf, chrbuf));
+}
+
+#define DEBUG_DUMP_BUFFER(buf,len) nsDumpBuffer(buf,len)
+#else
+#define DEBUG_DUMP_BUFFER(buf,len)
+#endif
+
+#ifdef DEBUG_SSL_VERBOSE
 static PRInt32 PR_CALLBACK
 nsSSLIOLayerRead(PRFileDesc* fd, void* buf, PRInt32 amount)
 {
@@ -364,6 +453,7 @@ nsSSLIOLayerRead(PRFileDesc* fd, void* buf, PRInt32 amount)
 
   PRInt32 bytesRead = fd->lower->methods->read(fd->lower, buf, amount);
   PR_LOG(gPIPNSSLog, PR_LOG_DEBUG, ("[%p] read %d bytes\n", (void*)fd, bytesRead));
+  DEBUG_DUMP_BUFFER((unsigned char*)buf, bytesRead);
   return bytesRead;
 }
 
@@ -372,7 +462,8 @@ nsSSLIOLayerWrite(PRFileDesc* fd, const void* buf, PRInt32 amount)
 {
   if (!fd || !fd->lower)
     return PR_FAILURE;
-
+    
+  DEBUG_DUMP_BUFFER((unsigned char*)buf, amount);
   PRInt32 bytesWritten = fd->lower->methods->write(fd->lower, buf, amount);
   PR_LOG(gPIPNSSLog, PR_LOG_DEBUG, ("[%p] wrote %d bytes\n", (void*)fd, bytesWritten));
   return bytesWritten;
