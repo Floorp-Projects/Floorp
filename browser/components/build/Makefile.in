@@ -27,6 +27,7 @@ REQUIRES = \
 	nkcache \
 	txmgr \
 	bookmarks \
+  winhooks \
 	$(NULL)
 	
 ifdef MIGRATION_ENABLED
@@ -61,6 +62,16 @@ endif
 SHARED_LIBRARY_LIBS = \
 	$(DIST)/lib/$(LIB_PREFIX)bookmarks_s.$(LIB_SUFFIX) \
 	$(NULL)
+
+ifeq ($(OS_ARCH),WINNT)
+SHARED_LIBRARY_LIBS += \
+  $(DIST)/lib/$(LIB_PREFIX)winhooks_s.$(LIB_SUFFIX) \
+  $(NULL)
+
+LOCAL_INCLUDES  += \
+  -I$(srcdir)/../winhooks \
+  $(NULL)
+endif
 
 ifdef MIGRATION_ENABLED
 SHARED_LIBRARY_LIBS += 	$(DIST)/lib/$(LIB_PREFIX)migration_s.$(LIB_SUFFIX)

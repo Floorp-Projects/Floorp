@@ -48,4 +48,8 @@ ifdef MIGRATION_ENABLED
 DIRS += migration
 endif
 
+ifeq ($(OS_ARCH),WINNT)
+DIRS    += winhooks 
+endif
+
 include $(topsrcdir)/config/rules.mk

@@ -66,6 +66,7 @@ REQUIRES = \
 	webbrwsr \
 	widget \
 	windowwatcher \
+  winhooks \
 	xpcom \
 	xpconnect \
 	xpinstall \
