@@ -28,6 +28,7 @@ CPPSRCS = 		x86.nad.burg.cpp			\
 			x86Emitter.cpp				\
 			x86Float.cpp				\
 			x86Formatter.cpp			\
+			x86GenStub.cpp				\
 			x86Instruction.cpp			\
 			x86StdCall.cpp				\
 			$(OS_SUPPORT)				\
@@ -36,8 +37,6 @@ CPPSRCS = 		x86.nad.burg.cpp			\
 LOCAL_MD_EXPORTS_x86 = 	x86ArgumentList.h			\
 			x86Float.h				\
 			x86Formatter.h				\
-			x86Linux_Support.h			\
-			x86FreeBSD_Support.h			\
 			x86Opcode.h				\
 			x86StdCall.h				\
 			x86Cpu.h				\
@@ -61,17 +60,9 @@ include $(DEPTH)/config/config.mk
 # Generation of OS-specific support files
 #
 ifeq ($(OS_ARCH),WINNT)
-OS_SUPPORT		= x86Win32_Support.cpp
-endif
-
-ifeq ($(OS_ARCH),Linux)
-ASFILES			= x86Linux.s
-OS_SUPPORT		= x86Linux_Support.cpp
-endif
-
-ifeq ($(OS_ARCH),FreeBSD)
-ASFILES			= x86FreeBSD.s
-OS_SUPPORT		= x86FreeBSD_Support.cpp
+OS_SUPPORT		= x86Stub.cpp
+else
+ASFILES			= x86Stub_gas.s
 endif
 
 #######################################################################
