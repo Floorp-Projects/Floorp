@@ -3,3 +3,4 @@ RegFactory
 TestFactory
 TestCOMPtr
 TestID
+TestXPIDLString
