@@ -119,7 +119,7 @@ function initializeSelection()
   try{
     var timingPref = prefs.GetIntPref(autoupdateTimeTypeString);
     if(timingPref != null) {
-      if(timingPref == crl.TYPE_AUTOUPDATE_TIME_BASED) {
+      if(timingPref == crlManager.TYPE_AUTOUPDATE_TIME_BASED) {
         if(hasNextUpdate){
           updateTypeRadio.selectedItem = timeBasedRadio;
         }
@@ -218,11 +218,11 @@ function onAccept()
    var freqCnt = (document.getElementById("nextUpdateFreq")).value;
 
    if(timingTypeId == "timeBasedRadio"){
-     prefs.SetIntPref(autoupdateTimeTypeString,crl.TYPE_AUTOUPDATE_TIME_BASED);
-     updateTime = crlManager.computeNextAutoUpdateTime(crl, crl.TYPE_AUTOUPDATE_TIME_BASED, dayCnt);
+     prefs.SetIntPref(autoupdateTimeTypeString,crlManager.TYPE_AUTOUPDATE_TIME_BASED);
+     updateTime = crlManager.computeNextAutoUpdateTime(crl, crlManager.TYPE_AUTOUPDATE_TIME_BASED, dayCnt);
    } else {
-     prefs.SetIntPref(autoupdateTimeTypeString,crl.TYPE_AUTOUPDATE_FREQ_BASED);
-     updateTime = crlManager.computeNextAutoUpdateTime(crl, crl.TYPE_AUTOUPDATE_FREQ_BASED, freqCnt);
+     prefs.SetIntPref(autoupdateTimeTypeString,crlManager.TYPE_AUTOUPDATE_FREQ_BASED);
+     updateTime = crlManager.computeNextAutoUpdateTime(crl, crlManager.TYPE_AUTOUPDATE_FREQ_BASED, freqCnt);
    }
 
    //alert(updateTime);
