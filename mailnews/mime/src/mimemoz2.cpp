@@ -271,6 +271,7 @@ BuildAttachmentList(MimeObject *aChild, nsMsgAttachmentData *aAttachData,
 {
   char                  *disp;
   PRInt32               i;
+  PRInt32               j;
   MimeContainer         *cobj = (MimeContainer *) aChild;
   nsMsgAttachmentData   *tmp = nsnull;
   PRBool                isAlternativeOrRelated;
@@ -291,13 +292,17 @@ BuildAttachmentList(MimeObject *aChild, nsMsgAttachmentData *aAttachData,
     char          *part = mime_part_address(child);
     char          *imappart = NULL;
 
-    if ( NS_FAILED(BuildAttachmentList((MimeObject *)child, aAttachData, aMessageURL)) )
-      return NS_OK;
-
-    // If this is a child of an AppleDouble handler, these are subparts of a single file (ugh!)
-    // So don't add them to the attachment list!
-    if ( (child->parent) && (mime_typep(child->parent, (MimeObjectClass *) &mimeMultipartAppleDoubleClass)) )
-      continue;
+    /*
+      AppleDouble part need special care: we need to fetch the part as well it's two
+      children for the needed info as they could be anywhere, eventually, they won't contain
+      a name or file name. In any case we need to build only one attachment data
+    */
+    PRBool isAnAppleDoublePart = mime_typep(child, (MimeObjectClass *) &mimeMultipartAppleDoubleClass) &&
+                                 ((MimeContainer *)child)->nchildren == 2;
+    
+    if (!isAnAppleDoublePart)
+      if ( NS_FAILED(BuildAttachmentList((MimeObject *)child, aAttachData, aMessageURL)) )
+        return NS_OK;
 
     if (!part) 
       return NS_ERROR_OUT_OF_MEMORY;
@@ -335,6 +340,14 @@ BuildAttachmentList(MimeObject *aChild, nsMsgAttachmentData *aAttachData,
     if (disp) 
     {
       tmp->real_name = MimeHeaders_get_parameter(disp, "filename", NULL, NULL);
+      if (isAnAppleDoublePart)
+        for (j = 0; j < 2 && !tmp->real_name; j ++)
+        {
+          PR_FREEIF(disp);
+          disp = MimeHeaders_get(((MimeContainer *)child)->children[j]->headers, HEADER_CONTENT_DISPOSITION, PR_FALSE, PR_FALSE);
+          tmp->real_name = MimeHeaders_get_parameter(disp, "filename", NULL, NULL);
+        }
+
       if (tmp->real_name)
       {
         char *fname = NULL;
@@ -354,10 +367,19 @@ BuildAttachmentList(MimeObject *aChild, nsMsgAttachmentData *aAttachData,
     {
       tmp->x_mac_type   = MimeHeaders_get_parameter(disp, PARAM_X_MAC_TYPE, NULL, NULL);
       tmp->x_mac_creator= MimeHeaders_get_parameter(disp, PARAM_X_MAC_CREATOR, NULL, NULL);
+      
       if (!tmp->real_name || *tmp->real_name == 0)
       {
         PR_FREEIF(tmp->real_name);
         tmp->real_name = MimeHeaders_get_parameter(disp, "name", NULL, NULL);
+        if (isAnAppleDoublePart)
+          for (j = 0; j < 2 && !tmp->real_name; j ++)
+          {
+            PR_FREEIF(disp);
+            disp = MimeHeaders_get(((MimeContainer *)child)->children[j]->headers, HEADER_CONTENT_TYPE, PR_FALSE, PR_FALSE);
+            tmp->real_name = MimeHeaders_get_parameter(disp, "name", NULL, NULL);
+          }
+        
         if (tmp->real_name)
         {
           char *fname = NULL;
@@ -376,6 +398,22 @@ BuildAttachmentList(MimeObject *aChild, nsMsgAttachmentData *aAttachData,
                                        PR_FALSE, PR_FALSE);
 
     // Now, do the right thing with the name!
+    if (!tmp->real_name)
+    {
+      /* If this attachment doesn't have a name, just give it one... */
+      tmp->real_name = MimeGetStringByID(MIME_MSG_DEFAULT_ATTACHMENT_NAME);
+      if (tmp->real_name)
+      {
+        char *newName = PR_smprintf(tmp->real_name, mime_part_address(child));
+        if (newName)
+        {
+          PR_Free(tmp->real_name);
+          tmp->real_name = newName;
+        }
+      }
+      else
+        tmp->real_name = mime_part_address(child);
+    }
     ValidateRealName(tmp, child->headers);
 
     if (isIMAPPart)
@@ -952,8 +990,7 @@ mime_convert_chars_to_ostype(const char *osTypeStr)
 		return '????';
 
 	PRUint32 result;
-	char *p = osTypeStr;
-	PRInt32 i;
+	const char *p = osTypeStr;
 
 	for (result = 0; *p; p++)
 	{
@@ -1854,7 +1891,7 @@ MimeGetStringByID(PRInt32 stringID)
 		res = stringBundle->GetStringFromID(stringID, &ptrv);
 
 		if (NS_FAILED(res)) 
-      return resultString;
+      return nsCRT::strdup(resultString);
 		else
     {
       nsAutoString v;
@@ -1864,7 +1901,7 @@ MimeGetStringByID(PRInt32 stringID)
 	}
 
   if (!tempString)
-    return resultString;
+    return nsCRT::strdup(resultString);
   else
     return tempString;
 }
