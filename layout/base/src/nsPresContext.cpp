@@ -150,6 +150,9 @@ nsPresContext::Init(nsIDeviceContext* aDeviceContext, nsIPref* aPrefs)
     if (NS_OK == mPrefs->GetIntPref("intl.font2.win.fixed_size", &prefInt)) {
       mDefaultFixedFont.size = NSIntPointsToTwips(prefInt);
     }
+    if (NS_OK == mPrefs->GetIntPref("nglayout.compatibility.mode", &prefInt)) {
+      mCompatibilityMode = (enum nsCompatibility)prefInt;  // bad cast
+    }
   }
 
 #ifdef DEBUG
