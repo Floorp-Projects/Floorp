@@ -4087,10 +4087,6 @@ nsHTMLEditRules::FindNearSelectableNode(nsIDOMNode *aSelNode,
                        || nsHTMLEditUtils::IsBreak(nearNode)
                        || nsHTMLEditUtils::IsImage(nearNode)))
   {
-    // dont cross any table elements
-    if (mEditor->IsTableElement(nearNode))
-      return NS_OK;  
-
     curNode = nearNode;
     if (aDirection == nsIEditor::ePrevious)
       res = mEditor->GetPriorHTMLNode(curNode, &nearNode);
@@ -4099,8 +4095,46 @@ nsHTMLEditRules::FindNearSelectableNode(nsIDOMNode *aSelNode,
     if (NS_FAILED(res)) return res;
   }
   
-  if (nearNode) *outSelectableNode = do_QueryInterface(nearNode);
+  if (nearNode)
+  {
+    // dont cross any table elements
+    PRBool bInDifTblElems;
+    res = InDifferentTableElements(nearNode, aSelNode, &bInDifTblElems);
+    if (NS_FAILED(res)) return res;
+    if (bInDifTblElems) return NS_OK;  
+    
+    // otherwise, ok, we have found a good spot to put the selection
+    *outSelectableNode = do_QueryInterface(nearNode);
+  }
   return res;
+}
+
+
+nsresult
+nsHTMLEditRules::InDifferentTableElements(nsIDOMNode *aNode1, nsIDOMNode *aNode2, PRBool *aResult)
+{
+  if (!aNode1 || !aNode2 || !aResult) NS_ERROR_NULL_POINTER;
+
+  nsCOMPtr<nsIDOMNode> tn1, tn2, node = aNode1, temp;
+  
+  while (node && !mEditor->IsTableElement(node))
+  {
+    node->GetParentNode(getter_AddRefs(temp));
+    node = temp;
+  }
+  tn1 = node;
+  
+  node = aNode2;
+  while (node && !mEditor->IsTableElement(node))
+  {
+    node->GetParentNode(getter_AddRefs(temp));
+    node = temp;
+  }
+  tn2 = node;
+  
+  *aResult = (tn1 != tn2);
+  
+  return NS_OK;
 }
 
 

@@ -167,6 +167,7 @@ protected:
                                   PRInt32 aSelOffset, 
                                   nsIEditor::EDirection aDirection,
                                   nsCOMPtr<nsIDOMNode> *outSelectableNode);
+  nsresult InDifferentTableElements(nsIDOMNode *aNode1, nsIDOMNode *aNode2, PRBool *aResult);
   nsresult RemoveEmptyNodes();
   nsresult SelectionEndpointInNode(nsIDOMNode *aNode, PRBool *aResult);
   nsresult DoTextNodeWhitespace(nsIDOMCharacterData *aTextNode, PRInt32 aStart, PRInt32 aEnd);
