@@ -402,7 +402,7 @@ sub view
     my $filesize = length($thedata);
 
     print Bugzilla->cgi->header(-type=>"$contenttype; name=\"$filename\"",
-                                -content_disposition=> "inline; filename=$filename\n",
+                                -content_disposition=> "inline; filename=$filename",
                                 -content_length => $filesize);
 
     print $thedata;
