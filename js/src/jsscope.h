@@ -100,7 +100,7 @@
  * having only X->Z where Y was deleted.  All such scopes have a lastProp that
  * points to the Z child of Y.  But a scope in which Y was deleted does not
  * have a table entry for Y, and when iterating that scope by traversing the
- * ancestor line from Z, we will have to test for a scope entry for each node,
+ * ancestor line from Z, we will have to test for a table entry for each node,
  * skipping nodes that lack entries.
  *
  * What if we add Y again?  X->Y->Z->Y is wrong and we'll enumerate Y twice.
