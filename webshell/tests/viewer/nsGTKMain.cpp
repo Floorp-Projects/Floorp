@@ -31,20 +31,7 @@ extern "C" char *fe_GetConfigDir(void) {
   return strdup("/tmp");
 }
 
-//extern XtAppContext gAppContext; // XXX This should be changed
 static nsNativeViewerApp* gTheApp;
-PLEventQueue*  gUnixMainEventQueue = nsnull;
-
-extern void nsWebShell_SetUnixEventQueue(PLEventQueue* aEventQueue);
-
-static void nsUnixEventProcessorCallback(gpointer data,
-                                         gint source,
-                                         GdkInputCondition condition)
-{
-  NS_ASSERTION(source==PR_GetEventQueueSelectFD(gUnixMainEventQueue),
-               "Error in nsUnixMain.cpp:nsUnixEventProcessCallback");
-  PR_ProcessPendingEvents(gUnixMainEventQueue);
-}
 
 nsNativeViewerApp::nsNativeViewerApp()
 {
@@ -57,24 +44,6 @@ nsNativeViewerApp::~nsNativeViewerApp()
 int
 nsNativeViewerApp::Run()
 {
-   // Setup event queue for dispatching 
-   // asynchronous posts of form data + clicking on links.
-   // Lifted from cmd/xfe/mozilla.c
-
-  gUnixMainEventQueue = PR_CreateEventQueue("viewer-event-queue", PR_GetCurrentThread());
-  if (nsnull == gUnixMainEventQueue) {
-     // Force an assertion
-    NS_ASSERTION("Can not create an event loop", PR_FALSE); 
-  }
-
-   // XXX Setup webshell's event queue. This should be changed
-  nsWebShell_SetUnixEventQueue(gUnixMainEventQueue);
-
-  gdk_input_add(PR_GetEventQueueSelectFD(gUnixMainEventQueue),
-                GDK_INPUT_READ,
-                nsUnixEventProcessorCallback,
-                NULL);
-                
   OpenWindow();
   mAppShell->Run();
   return 0;
