@@ -143,4 +143,7 @@ PRTimeToSeconds(PRTime t_usec)
 // nsCRT::strdup likes to convert nsnull to "" 
 #define strdup_if(s) (s ? nsCRT::strdup(s) : nsnull)
 
+// round q-value to one decimal place; return most significant digit as uint.
+#define QVAL_TO_UINT(q) ((unsigned int) ((q + 0.05) * 10.0))
+
 #endif // nsHttp_h__
