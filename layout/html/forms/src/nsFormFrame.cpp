@@ -896,8 +896,9 @@ nsFormFrame::OnSubmit(nsIPresContext* aPresContext, nsIFrame* aFrame)
       nsCOMPtr<nsIDOMWindowInternal> window = do_QueryInterface(globalObject);
 
       for (theEnum->First(); theEnum->IsDone() != NS_OK; theEnum->Next()) {
-        result = theEnum->CurrentItem(getter_AddRefs(inst));
-        if (NS_SUCCEEDED(result) && inst) {
+        nsresult gotObserver = NS_OK;
+        gotObserver = theEnum->CurrentItem(getter_AddRefs(inst));
+        if (NS_SUCCEEDED(gotObserver) && inst) {
           nsCOMPtr<nsIFormSubmitObserver> formSubmitObserver = do_QueryInterface(inst, &result);
           if (NS_SUCCEEDED(result) && formSubmitObserver) {
             nsresult notifyStatus = formSubmitObserver->Notify(mContent, window, actionURL, &cancelSubmit);
