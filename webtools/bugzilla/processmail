@@ -206,7 +206,7 @@ foreach i $argv {
     puts $fid $text
     close $fid
     if {[Different $old $new]} {
-        catch {exec diff -c $old $new > $diffs}
+        catch {exec diff -u $old $new > $diffs}
         set tolist [fixaddresses [list $bug(assigned_to) $bug(reporter)]]
         set cclist [fixaddresses $bug(cclist)]
         set logstr "Bug $i changed"
