@@ -1372,13 +1372,13 @@ void morkParser::EndSpanOnLastByte(morkEnv* mev, morkSpan* ioSpan)
   mork_pos here;
   nsIMdbEnv *ev = mev->AsMdbEnv();
   nsresult rv= mParser_Stream->Tell(ev, &here);
-  if ( here > 0 ) // positive?
-    --here;
-  else
-    here = 0;
-    
-  if ( mev->Good() )
+  if ( NS_SUCCEEDED(rv) && mev->Good() )
   {
+    if ( here > 0 )
+      --here;
+    else
+      here = 0;
+
     this->SetHerePos(here);
     ioSpan->SetEndWithEnd(mParser_PortSpan);
   }
@@ -1389,13 +1389,13 @@ void morkParser::StartSpanOnLastByte(morkEnv* mev, morkSpan* ioSpan)
   mork_pos here;
   nsIMdbEnv *ev = mev->AsMdbEnv();
   nsresult rv = mParser_Stream->Tell(ev, &here);
-  if ( here > 0 ) // positive?
-    --here;
-  else
-    here = 0;
-    
-  if ( mev->Good() )
+  if ( NS_SUCCEEDED(rv) && mev->Good() )
   {
+    if ( here > 0 )
+      --here;
+    else
+      here = 0;
+
     this->SetHerePos(here);
     ioSpan->SetStartWithEnd(mParser_PortSpan);
     ioSpan->SetEndWithEnd(mParser_PortSpan);
