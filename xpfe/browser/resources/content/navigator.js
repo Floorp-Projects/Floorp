@@ -264,6 +264,9 @@ function Startup()
   window.XULBrowserWindow = new nsBrowserStatusHandler();
   window.buttonPrefListener = new nsButtonPrefListener();
 
+  window.browserContentListener =
+    new nsBrowserContentListener(window, getBrowser());
+  
   // XXXjag hack for directory.xul/js
   _content.appCore = appCore;
 
@@ -383,6 +386,7 @@ function Shutdown()
   pref.removeObserver(window.buttonPrefListener.domain,
                       window.buttonPrefListener);
 
+  window.browserContentListener.close();
   // Close the app core.
   if (appCore)
     appCore.close();
@@ -1252,7 +1256,7 @@ function ShowAndSelectContentsOfURLBar()
   // If it's hidden, show it.
   if (navBar.getAttribute("hidden") == "true")
     goToggleToolbar('nav-bar','cmd_viewnavbar');
- 
+	
   if (gURLBar.value)
     gURLBar.select();
   else

@@ -26,6 +26,7 @@
 #include "nsBrowserInstance.h"
 
 // Helper Includes
+#include "nsIGenericFactory.h"
 
 // Interfaces Needed
 #include "nsIXULWindow.h"
@@ -129,11 +130,10 @@ static NS_DEFINE_IID(kProxyObjectManagerCID, NS_PROXYEVENT_MANAGER_CID);
 
 // Stuff to implement find/findnext
 #include "nsIFindComponent.h"
-#ifdef DEBUG_warren
-#include "prlog.h"
-#if defined(DEBUG) || defined(FORCE_PR_LOG)
-static PRLogModuleInfo* gTimerLog = nsnull;
-#endif /* DEBUG || FORCE_PR_LOG */
+
+// if DEBUG or MOZ_PERF_METRICS are defined, enable the PageCycler
+#ifdef DEBUG
+#define ENABLE_PAGE_CYCLER
 #endif
 
 // if DEBUG, NS_BUILD_REFCNT_LOGGING, or MOZ_PERF_METRICS is defined,
@@ -526,7 +526,8 @@ nsresult nsBrowserInstance::GetContentAreaDocShell(nsIDocShell** outDocShell)
     ReinitializeContentVariables();
 
   docShell = do_QueryReferent(mContentAreaDocShellWeak);
-  NS_IF_ADDREF(*outDocShell = docShell);
+  *outDocShell = docShell;
+  NS_IF_ADDREF(*outDocShell);
   return NS_OK;
 }
     
@@ -569,7 +570,8 @@ nsresult nsBrowserInstance::GetFocussedContentWindow(nsIDOMWindowInternal** outF
   if (!focussedWindow)
     GetContentWindow(getter_AddRefs(focussedWindow));   // default to content window
 
-  NS_IF_ADDREF(*outFocussedWindow = focussedWindow);
+  *outFocussedWindow = focussedWindow;
+  NS_IF_ADDREF(*outFocussedWindow);
   return NS_OK;
 }
 
@@ -583,9 +585,8 @@ NS_IMPL_RELEASE(nsBrowserInstance)
 
 NS_INTERFACE_MAP_BEGIN(nsBrowserInstance)
    NS_INTERFACE_MAP_ENTRY(nsIBrowserInstance)
-   NS_INTERFACE_MAP_ENTRY(nsIURIContentListener)
    NS_INTERFACE_MAP_ENTRY(nsISupportsWeakReference)
-   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIURIContentListener)
+   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIBrowserInstance)
 NS_INTERFACE_MAP_END
 
 //*****************************************************************************
@@ -686,13 +687,6 @@ nsBrowserInstance::Init()
 {
   nsresult rv = NS_OK;
 
-  // register ourselves as a content listener with the uri dispatcher service
-  rv = NS_OK;
-  NS_WITH_SERVICE(nsIURILoader, dispatcher, NS_URI_LOADER_CONTRACTID, &rv);
-  if (NS_SUCCEEDED(rv)) 
-    rv = dispatcher->RegisterContentListener(this);
-
-
   return rv;
 }
 
@@ -740,8 +734,6 @@ nsBrowserInstance::SetWebShellWindow(nsIDOMWindowInternal* aWin)
     mDocShell = docShell.get();
     //NS_ADDREF(mDocShell); WE DO NOT OWN THIS
     // inform our top level webshell that we are its parent URI content listener...
-    docShell->SetParentURIContentListener(this);
-
     if (APP_DEBUG) {
       nsCOMPtr<nsIDocShellTreeItem> docShellAsItem(do_QueryInterface(docShell));
       nsXPIDLString name;
@@ -781,13 +773,6 @@ nsBrowserInstance::Close()
   //Release Urlbar History
   mUrlbarHistory = null_nsCOMPtr();
 
-  // unregister ourselves with the uri loader because
-  // we can no longer accept new content!
-  nsresult rv = NS_OK;
-  NS_WITH_SERVICE(nsIURILoader, dispatcher, NS_URI_LOADER_CONTRACTID, &rv);
-  if (NS_SUCCEEDED(rv)) 
-    rv = dispatcher->UnRegisterContentListener(this);
-
   return NS_OK;
 }
 
@@ -807,135 +792,10 @@ nsBrowserInstance::Copy()
   return NS_OK;
 }
 
+
 //*****************************************************************************
-//    nsBrowserInstance: nsIURIContentListener
+// nsBrowserInstance: Helpers
 //*****************************************************************************
-
-NS_IMETHODIMP nsBrowserInstance::OnStartURIOpen(nsIURI* aURI, 
-   const char* aWindowTarget, PRBool* aAbortOpen)
-{
-   return NS_OK;
-}
-
-NS_IMETHODIMP 
-nsBrowserInstance::GetProtocolHandler(nsIURI * /* aURI */, nsIProtocolHandler **aProtocolHandler)
-{
-   // we don't have any app specific protocol handlers we want to use so 
-  // just use the system default by returning null.
-  *aProtocolHandler = nsnull;
-  return NS_OK;
-}
-
-NS_IMETHODIMP 
-nsBrowserInstance::DoContent(const char *aContentType, nsURILoadCommand aCommand, const char *aWindowTarget, 
-                             nsIRequest *request, nsIStreamListener **aContentHandler, PRBool *aAbortProcess)
-{
-  nsCOMPtr<nsIDocShell> docShell;
-  GetContentAreaDocShell(getter_AddRefs(docShell));
-
-  // forward the DoContent call to our content area webshell
-  nsCOMPtr<nsIURIContentListener> ctnListener (do_GetInterface(docShell));
-  if (ctnListener)
-    return ctnListener->DoContent(aContentType, aCommand, aWindowTarget, request, aContentHandler, aAbortProcess);
-  return NS_OK;
-}
-
-NS_IMETHODIMP 
-nsBrowserInstance::IsPreferred(const char * aContentType,
-                               nsURILoadCommand aCommand,
-                               const char * aWindowTarget,
-                               char ** aDesiredContentType,
-                               PRBool * aCanHandleContent)
-{
-  // the browser window is the primary content handler for the following types:
-  // If we are asked to handle any of these types, we will always say Yes!
-  // regardlesss of the uri load command.
-  //    incoming Type                     Preferred type
-  //      text/html
-  //      application/vnd.mozilla.xul+xml
-  //      text/rdf
-  //      text/xml
-  //      text/css
-  //      image/gif
-  //      image/jpeg
-  //      image/png
-  //      image/tiff
-  //      application/http-index-format
-
-  if (aContentType)
-  {
-     // (1) list all content types we want to  be the primary handler for....
-     // and suggest a desired content type if appropriate...
-     if (nsCRT::strcasecmp(aContentType,  "text/html") == 0
-       || nsCRT::strcasecmp(aContentType, "application/vnd.mozilla.xul+xml") == 0
-       || nsCRT::strcasecmp(aContentType, "text/rdf") == 0 
-       || nsCRT::strcasecmp(aContentType, "text/xml") == 0
-       || nsCRT::strcasecmp(aContentType, "application/xml") == 0
-       || nsCRT::strcasecmp(aContentType, "application/xhtml+xml") == 0
-       || nsCRT::strcasecmp(aContentType, "text/css") == 0
-       || nsCRT::strcasecmp(aContentType, "image/gif") == 0
-       || nsCRT::strcasecmp(aContentType, "image/jpeg") == 0
-       || nsCRT::strcasecmp(aContentType, "image/png") == 0
-       || nsCRT::strcasecmp(aContentType, "image/tiff") == 0
-       || nsCRT::strcasecmp(aContentType, "text/plain") == 0
-       || nsCRT::strcasecmp(aContentType, "application/http-index-format") == 0)
-       *aCanHandleContent = PR_TRUE;
-  }
-  else
-    *aCanHandleContent = PR_FALSE;
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP 
-nsBrowserInstance::CanHandleContent(const char * aContentType,
-                                    nsURILoadCommand aCommand,
-                                    const char * aWindowTarget,
-                                    char ** aDesiredContentType,
-                                    PRBool * aCanHandleContent)
-
-{
-  nsCOMPtr<nsIDocShell> docShell;
-  GetContentAreaDocShell(getter_AddRefs(docShell));
-
-  // can handle is really determined by what our docshell can 
-  // load...so ask it....
-  nsCOMPtr<nsIURIContentListener> ctnListener(do_GetInterface(docShell)); 
-  if (ctnListener)
-    return ctnListener->CanHandleContent(aContentType, aCommand, aWindowTarget, aDesiredContentType, aCanHandleContent);
-  else
-    *aCanHandleContent = PR_FALSE;
-
- return NS_OK;
-}
-
-NS_IMETHODIMP 
-nsBrowserInstance::GetParentContentListener(nsIURIContentListener** aParent)
-{
-  *aParent = nsnull;
-  return NS_OK;
-}
-
-NS_IMETHODIMP 
-nsBrowserInstance::SetParentContentListener(nsIURIContentListener* aParent)
-{
-  NS_ASSERTION(!aParent, "SetParentContentListener on the application level should never be called");
-  return NS_OK;
-}
-
-NS_IMETHODIMP 
-nsBrowserInstance::GetLoadCookie(nsISupports ** aLoadCookie)
-{
-  *aLoadCookie = nsnull;
-  return NS_OK;
-}
-
-NS_IMETHODIMP 
-nsBrowserInstance::SetLoadCookie(nsISupports * aLoadCookie)
-{
-  NS_ASSERTION(!aLoadCookie, "SetLoadCookie on the application level should never be called");
-  return NS_OK;
-}
 
 
 ////////////////////////////////////////////////////////////////////////
@@ -1135,8 +995,6 @@ NS_IMETHODIMP nsBrowserContentHandler::HandleContent(const char * aContentType,
 
   return NS_OK;
 }
-
-NS_DEFINE_MODULE_INSTANCE_COUNTER()
 
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsBrowserInstance, Init)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsBrowserContentHandler)
