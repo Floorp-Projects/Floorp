@@ -687,10 +687,7 @@ tab[busy] {
 /* ::::: throbber ::::: */
 
 #navigator-throbber {
-  -moz-user-focus: ignore !important;
-  -moz-box-align: center;
-  -moz-box-pack: center;
-
+  -moz-user-focus: ignore;
   padding: 0px !important;
   border: none !important;
   margin: 2px 4px !important;

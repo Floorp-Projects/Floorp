@@ -586,7 +586,6 @@ pref("bidi.support", 1);
 // 2 = defaultcharactersetBidi
 pref("bidi.characterset", 1);
 
-
 pref("browser.throbber.url","chrome://navigator-region/locale/region.properties");
 
 // used for double-click word selection behavior. Win will override.
