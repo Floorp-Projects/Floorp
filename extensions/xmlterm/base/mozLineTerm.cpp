@@ -210,10 +210,9 @@ NS_IMETHODIMP mozLineTerm::GetSecurePrincipal(nsIDOMDocument *domDoc,
   if (!doc)
     return NS_ERROR_FAILURE;
 
-  nsCOMPtr<nsIPrincipal> principal;
-  result = doc->GetPrincipal(getter_AddRefs(principal));
-  if (NS_FAILED(result)) 
-    return result;
+  nsIPrincipal *principal = doc->GetPrincipal();
+  if (!principal) 
+    return NS_ERROR_FAILURE;
 
 #if 0  // Temporarily comented out, because ToString is not immplemented
   result = principal->ToString(aPrincipalStr);
