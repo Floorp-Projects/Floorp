@@ -1708,13 +1708,13 @@ NS_IMETHODIMP nsTreeBodyFrame::RowCountChanged(PRInt32 aIndex, PRInt32 aCount)
     return NS_OK;
 
   mRowCount += aCount;
-  PRInt32 count = PR_ABS(aCount);
-  PRInt32 rowCount;
-  mView->GetRowCount(&rowCount);
 #ifdef DEBUG
+  PRInt32 rowCount = mRowCount;
+  mView->GetRowCount(&rowCount);
   NS_ASSERTION(rowCount == mRowCount, "row count did not change by the amount suggested, check caller");
 #endif
 
+  PRInt32 count = PR_ABS(aCount);
   PRInt32 last;
   GetLastVisibleRow(&last);
   if (aIndex >= mTopRowIndex && aIndex <= last)
