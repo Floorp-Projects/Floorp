@@ -431,24 +431,15 @@ class NS_COM NS_ConvertUCS2toUTF8
     */
   {
     public:
-      friend NS_COM char* ToNewUTF8String( const nsAString& aSource );
-
-    public:
-      explicit
-      NS_ConvertUCS2toUTF8( const PRUnichar* aString )
+      explicit NS_ConvertUCS2toUTF8( const PRUnichar* aString );
+      NS_ConvertUCS2toUTF8( const PRUnichar* aString, PRUint32 aLength );
+      explicit NS_ConvertUCS2toUTF8( const nsAString& aString )
         {
-          Append( aString, ~PRUint32(0) /* MAXINT */);
+          Init(aString);
         }
-
-      NS_ConvertUCS2toUTF8( const PRUnichar* aString, PRUint32 aLength )
-        {
-          Append( aString, aLength );
-        }
-
-      explicit NS_ConvertUCS2toUTF8( const nsAString& aString );
 
     protected:
-      void Append( const PRUnichar* aString, PRUint32 aLength );
+      void Init( const nsAString& aString );
 
     private:
         // NOT TO BE IMPLEMENTED

@@ -54,8 +54,10 @@
 #include "prdtoa.h"
 #endif
 
+#ifdef DEBUG
 static const char* kPossibleNull = "Error: possible unintended null in string";
 static const char* kNullPointerError = "Error: unexpected null ptr";
+#endif
 static const char* kWhitespace="\b\t\r\n ";
 
 const nsBufferHandle<PRUnichar>*

@@ -54,6 +54,10 @@ class UTF8traits
 #define PLANE1_BASE           0x00010000  
 #define UCS2_REPLACEMENT_CHAR 0xfffd     
 
+/**
+ * A character sink (see |copy_string| in nsAlgorithm.h) for converting
+ * UTF-8 to UCS2 (really UTF-16).
+ */
 class ConvertUTF8toUCS2
   {
     public:
@@ -181,12 +185,21 @@ class ConvertUTF8toUCS2
         return p - start;
       }
 
+    void write_terminator()
+      {
+        *mBuffer = buffer_type(0);
+      }
+
     private:
       buffer_type* mStart;
       buffer_type* mBuffer;
       PRBool mErrorEncountered;
   };
 
+/**
+ * A character sink (see |copy_string| in nsAlgorithm.h) for computing
+ * the length of a UTF-8 string.
+ */
 class CalculateUTF8Length
   {
     public:
@@ -240,6 +253,150 @@ class CalculateUTF8Length
     private:
       size_t mLength;
       PRBool mErrorEncountered;
+  };
+
+/**
+ * A character sink (see |copy_string| in nsAlgorithm.h) for converting
+ * UCS2 (really UTF-16) to UTF-8.
+ */
+class ConvertUCS2toUTF8
+  {
+    public:
+      typedef nsAString::char_type  value_type;
+      typedef nsACString::char_type buffer_type;
+
+    // The error handling here is more lenient than that in
+    // |ConvertUTF8toUCS2|, but it's that way for backwards
+    // compatibility.
+
+    ConvertUCS2toUTF8( buffer_type* aBuffer )
+        : mStart(aBuffer), mBuffer(aBuffer) {}
+
+    size_t Size() const { return mBuffer - mStart; }
+
+    PRUint32 write( const value_type* start, PRUint32 N )
+      {
+        for (const value_type *p = start, *end = start + N; p < end; ++p )
+          {
+            value_type c = *p;
+            if (! (c & 0xFF80)) // U+0000 - U+007F
+              {
+                *mBuffer++ = (char)c;
+              } 
+            else if (! (c & 0xF800)) // U+0100 - U+07FF
+              {
+                *mBuffer++ = 0xC0 | (char)(c >> 6);
+                *mBuffer++ = 0x80 | (char)(0x003F & c);
+              }
+            else if (0xD800 == (0xFC00 & c)) // U+D800 - U+DBFF
+              {
+                // D800- DBFF - High Surrogate 
+                // N = (H- D800) *400 + 10000 + ...
+                PRUint32 ucs4 = 0x10000 + ((0x03FF & c) << 10);
+
+                ++p;
+                if (p == end)
+                  {
+                    NS_ERROR("Surrogate pair split between fragments");
+                    return N;
+                  }
+                c = *p;
+
+                if (0xDC00 == (0xFC00 & c))
+                  { 
+                    // DC00- DFFF - Low Surrogate 
+                    // N += ( L - DC00 )  
+                    ucs4 |= (0x03FF & c);
+
+                    // 0001 0000-001F FFFF
+                    *mBuffer++ = 0xF0 | (char)(ucs4 >> 18);
+                    *mBuffer++ = 0x80 | (char)(0x003F & (ucs4 >> 12));
+                    *mBuffer++ = 0x80 | (char)(0x003F & (ucs4 >> 6));
+                    *mBuffer++ = 0x80 | (char)(0x003F & ucs4) ;
+                  }
+                else
+                  {
+                    NS_ERROR("got a High Surrogate but no low surrogate");
+                    // output nothing.
+                  }
+              }
+            else if (0xDC00 == (0xFC00 & c)) // U+DC00 - U+DFFF
+              { 
+                // DC00- DFFF - Low Surrogate 
+                NS_ERROR("got a low Surrogate but no high surrogate");
+                // output nothing.
+              }
+            else // U+0800 - U+D7FF, U+E000 - U+FFFF
+              {
+                *mBuffer++ = 0xE0 | (char)(c >> 12);
+                *mBuffer++ = 0x80 | (char)(0x003F & (c >> 6));
+                *mBuffer++ = 0x80 | (char)(0x003F & c );
+              }
+          }
+
+        return N;
+      }
+
+    void write_terminator()
+      {
+        *mBuffer = buffer_type(0);
+      }
+
+    private:
+      buffer_type* mStart;
+      buffer_type* mBuffer;
+  };
+
+/**
+ * A character sink (see |copy_string| in nsAlgorithm.h) for computing
+ * the number of bytes a UCS2 (really UTF-16) would occupy in UTF-8.
+ */
+class CalculateUTF8Size
+  {
+    public:
+      typedef nsAString::char_type value_type;
+
+    CalculateUTF8Size()
+      : mSize(0) { }
+
+    size_t Size() const { return mSize; }
+
+    PRUint32 write( const value_type* start, PRUint32 N )
+      {
+        // Assume UCS2 surrogate pairs won't be spread across fragments.
+        for (const value_type *p = start, *end = start + N; p < end; ++p )
+          {
+            value_type c = *p;
+            if (! (c & 0xFF80)) // U+0000 - U+007F
+              mSize += 1;
+            else if (! (c & 0xF800)) // U+0100 - U+07FF
+              mSize += 2;
+            else if (0xD800 == (0xFC00 & c)) // U+D800 - U+DBFF
+              {
+                ++p;
+                if (p == end)
+                  {
+                    NS_ERROR("Surrogate pair split between fragments");
+                    return N;
+                  }
+                c = *p;
+
+                if (0xDC00 == (0xFC00 & c))
+                  mSize += 4;
+                else
+                  NS_ERROR("got a high Surrogate but no low surrogate");
+              }
+            else if (0xDC00 == (0xFC00 & c)) // U+DC00 - U+DFFF
+              NS_ERROR("got a low Surrogate but no high surrogate");
+            else // U+0800 - U+D7FF, U+E000 - U+FFFF
+              mSize += 3;
+          }
+
+        return N;
+      }
+
+    private:
+      size_t mSize;
   };
 
 #endif /* !defined(nsUTF8Utils_h_) */
