@@ -98,13 +98,12 @@ nsHTTPRequest::Build()
     }
 
     // Create the Input Stream for writing the request...
-    nsIBuffer* buf;
-    rv = NS_NewBuffer(&buf, NS_HTTP_REQUEST_SEGMENT_SIZE,
+    nsCOMPtr<nsIBuffer> buf;
+    rv = NS_NewBuffer(getter_AddRefs(buf), NS_HTTP_REQUEST_SEGMENT_SIZE,
                       NS_HTTP_REQUEST_BUFFER_SIZE, nsnull);
     if (NS_FAILED(rv)) return rv;
 
     rv = NS_NewBufferInputStream(&m_Request, buf);
-    NS_RELEASE(buf);
     if (NS_FAILED(rv)) return rv;
 
     //
@@ -131,8 +130,10 @@ nsHTTPRequest::Build()
            ("\tnsHTTPRequest [this=%x].\tFirst line: %s",
             this, lineBuffer.GetBuffer()));
 
-    rv = m_Request->Fill(lineBuffer.GetBuffer(), lineBuffer.Length(), 
+    rv = buf->Write(lineBuffer.GetBuffer(), lineBuffer.Length(), 
                          &bytesWritten);
+//    rv = m_Request->Fill(lineBuffer.GetBuffer(), lineBuffer.Length(), 
+//                         &bytesWritten);
     if (NS_FAILED(rv)) return rv;
     
 /*    switch (m_Method)
@@ -176,15 +177,18 @@ nsHTTPRequest::Build()
                ("\tnsHTTPRequest [this=%x].\t\t%s\n",
                 this, lineBuffer.GetBuffer()));
 
-        rv = m_Request->Fill(lineBuffer.GetBuffer(), lineBuffer.Length(),
+        rv = buf->Write(lineBuffer.GetBuffer(), lineBuffer.Length(),
                              &bytesWritten);
+//        rv = m_Request->Fill(lineBuffer.GetBuffer(), lineBuffer.Length(),
+//                             &bytesWritten);
         if (NS_FAILED(rv)) return rv;
 
         lineBuffer.Truncate();
     }
 
     // Write the final \r\n
-    rv = m_Request->Fill(CRLF, PL_strlen(CRLF), &bytesWritten);
+    rv = buf->Write(CRLF, PL_strlen(CRLF), &bytesWritten);
+//    rv = m_Request->Fill(CRLF, PL_strlen(CRLF), &bytesWritten);
     if (NS_FAILED(rv)) return rv;
 
     PR_LOG(gHTTPLog, PR_LOG_DEBUG, 

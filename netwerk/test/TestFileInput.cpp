@@ -218,7 +218,8 @@ Simulated_nsFileTransport_Run(nsReader* reader, const char* path)
     while (PR_TRUE) {
         PRUint32 amt;
 		    /* id'l change to FillFrom... */
-        rv = bufStr->FillFrom(fileStr, spec.GetFileSize(), &amt);
+//        rv = bufStr->FillFrom(fileStr, spec.GetFileSize(), &amt);
+        rv = buf->WriteFrom(fileStr, spec.GetFileSize(), &amt);
         if (rv == NS_BASE_STREAM_EOF) {
             rv = NS_OK;
             break;
