@@ -213,6 +213,9 @@ nsHTMLFramesetFrame::nsHTMLFramesetFrame()
   mEdgeColors.Set(NO_COLOR);
   mVerBorders          = nsnull;
   mHorBorders          = nsnull;
+  mChildTypes          = nsnull;
+  mChildFrameborder    = nsnull;
+  mChildBorderColors   = nsnull;
 }
 
 nsHTMLFramesetFrame::~nsHTMLFramesetFrame()
@@ -241,6 +244,10 @@ nsresult nsHTMLFramesetFrame::QueryInterface(const nsIID& aIID,
 }
 
 static NS_DEFINE_IID(kViewCID, NS_VIEW_CID);
+
+#define FRAMESET 0
+#define FRAME 1
+#define BLANK 2
 
 NS_IMETHODIMP
 nsHTMLFramesetFrame::Init(nsIPresContext*  aPresContext,
@@ -285,6 +292,113 @@ nsHTMLFramesetFrame::Init(nsIPresContext*  aPresContext,
   viewMan->InsertChild(parView, view, 0);
   SetView(aPresContext, view);
 
+  nsCOMPtr<nsIPresShell> shell;
+  aPresContext->GetShell(getter_AddRefs(shell));
+  
+  nsFrameborder  frameborder = GetFrameBorder(PR_FALSE);
+  PRInt32 borderWidth = GetBorderWidth(aPresContext);
+  nscolor borderColor = GetBorderColor();
+ 
+  // parse the rows= cols= data
+  ParseRowCol(aPresContext, nsHTMLAtoms::rows, mNumRows, &mRowSpecs);
+  ParseRowCol(aPresContext, nsHTMLAtoms::cols, mNumCols, &mColSpecs);
+  mRowSizes  = new nscoord[mNumRows];
+  mColSizes  = new nscoord[mNumCols];
+
+  PRInt32 numCells = mNumRows*mNumCols;
+
+  mVerBorders    = new nsHTMLFramesetBorderFrame*[mNumCols];  // 1 more than number of ver borders
+  for (int verX  = 0; verX < mNumCols; verX++)
+    mVerBorders[verX]    = nsnull;
+
+  mHorBorders    = new nsHTMLFramesetBorderFrame*[mNumRows];  // 1 more than number of hor borders
+  for (int horX = 0; horX < mNumRows; horX++)
+    mHorBorders[horX]    = nsnull;
+     
+  mChildTypes = new PRInt32[numCells]; 
+  mChildFrameborder  = new nsFrameborder[numCells]; 
+  mChildBorderColors  = new nsBorderColor[numCells]; 
+
+  // create the children frames; skip content which isn't <frameset> or <frame>
+  nsIFrame* lastChild = nsnull;
+  mChildCount = 0; // number of <frame> or <frameset> children
+  nsIFrame* frame;
+  PRInt32 numChildren; // number of any type of children
+  mContent->ChildCount(numChildren);
+  for (int childX = 0; childX < numChildren; childX++) {
+    if (mChildCount == numCells) { // we have more <frame> or <frameset> than cells
+      break;
+    }
+    nsCOMPtr<nsIContent> child;
+    mContent->ChildAt(childX, *getter_AddRefs(child));
+    if (!child->IsContentOfType(nsIContent::eHTML))
+      continue;
+    nsCOMPtr<nsIAtom> tag;
+    child->GetTag(*getter_AddRefs(tag));
+    if ((nsHTMLAtoms::frameset == tag) || (nsHTMLAtoms::frame == tag)) {
+      nsCOMPtr<nsIStyleContext> kidSC;
+      nsresult         result;
+
+      aPresContext->ResolveStyleContextFor(child, mStyleContext,
+                                           PR_FALSE, getter_AddRefs(kidSC));
+      if (nsHTMLAtoms::frameset == tag.get()) {
+        result = NS_NewHTMLFramesetFrame(shell, &frame);
+        frame->Init(aPresContext, child, this, kidSC, nsnull);
+
+        mChildTypes[mChildCount] = FRAMESET;
+        nsHTMLFramesetFrame* childFrame = (nsHTMLFramesetFrame*)frame;
+        childFrame->SetParentFrameborder(frameborder);
+        childFrame->SetParentBorderWidth(borderWidth);
+        childFrame->SetParentBorderColor(borderColor);
+        mChildBorderColors[mChildCount].Set(childFrame->GetBorderColor());
+      } else { // frame
+        result = NS_NewHTMLFrameOuterFrame(shell, &frame);
+        frame->Init(aPresContext, child, this, kidSC, nsnull);
+
+        mChildTypes[mChildCount] = FRAME;
+        
+        mChildFrameborder[mChildCount] = GetFrameBorder(child, PR_FALSE);
+        mChildBorderColors[mChildCount].Set(GetBorderColor(child));
+      }
+      
+      if (NS_FAILED(result))
+        return result;
+
+      if (lastChild)
+        lastChild->SetNextSibling(frame);
+      else
+        mFrames.SetFrames(frame);
+      
+      lastChild = frame;
+      mChildCount++;
+    }
+  }
+
+  mNonBlankChildCount = mChildCount;
+  // add blank frames for frameset cells that had no content provided
+  for (int blankX = mChildCount; blankX < numCells; blankX++) {
+    // XXX the blank frame is using the content of its parent - at some point it 
+    // should just have null content, if we support that
+    nsHTMLFramesetBlankFrame* blankFrame = new (shell.get()) nsHTMLFramesetBlankFrame;
+    nsCOMPtr<nsIStyleContext> pseudoStyleContext;
+    aPresContext->ResolvePseudoStyleContextFor(mContent, nsHTMLAtoms::framesetBlankPseudo,
+                                               mStyleContext, PR_FALSE,
+                                               getter_AddRefs(pseudoStyleContext));
+    if(blankFrame)
+      blankFrame->Init(aPresContext, mContent, this, pseudoStyleContext, nsnull);
+   
+    if (lastChild)
+      lastChild->SetNextSibling(blankFrame);
+    else
+      mFrames.SetFrames(blankFrame);
+    
+    lastChild = blankFrame;
+    mChildTypes[mChildCount] = BLANK;
+    mChildBorderColors[mChildCount].Set(NO_COLOR);
+    mChildCount++;
+  }
+
+  mNonBorderChildCount = mChildCount;
   return rv;
 }
 
@@ -929,11 +1043,6 @@ nscolor nsHTMLFramesetFrame::GetBorderColor(nsIContent* aContent)
   return result;
 }
 
-
-#define FRAMESET 0
-#define FRAME 1
-#define BLANK 2
-
 NS_IMETHODIMP
 nsHTMLFramesetFrame::Reflow(nsIPresContext*          aPresContext,
                             nsHTMLReflowMetrics&     aDesiredSize,
@@ -947,17 +1056,7 @@ nsHTMLFramesetFrame::Reflow(nsIPresContext*          aPresContext,
   //printf("FramesetFrame2::Reflow %X (%d,%d) \n", this, aReflowState.availableWidth, aReflowState.availableHeight); 
   // Always get the size so that the caller knows how big we are
   GetDesiredSize(aPresContext, aReflowState, aDesiredSize);
-  PRBool firstTime = (0 == mNumRows);
-
-  if (firstTime) { 
-    // parse the rows= cols= data
-    ParseRowCol(aPresContext, nsHTMLAtoms::rows, mNumRows, &mRowSpecs);
-    ParseRowCol(aPresContext, nsHTMLAtoms::cols, mNumCols, &mColSpecs);
-    mRowSizes  = new nscoord[mNumRows];
-    mColSizes  = new nscoord[mNumCols];
-  }
-  PRInt32 numCells = mNumRows*mNumCols;
-
+  
   nscoord width  = (aDesiredSize.width <= aReflowState.availableWidth)
     ? aDesiredSize.width : aReflowState.availableWidth;
   nscoord height = (aDesiredSize.height <= aReflowState.availableHeight)
@@ -973,6 +1072,7 @@ nsHTMLFramesetFrame::Reflow(nsIPresContext*          aPresContext,
   height -= (mNumRows - 1) * borderWidth;
   if (height < 0) height = 0;
 
+  PRBool firstTime = (eReflowReason_Initial == aReflowState.reason);
   if (!mDrag.mActive && ( (firstTime) ||
                   ( (mRect.width != 0) && (mRect.height != 0) &&
                     (aDesiredSize.width != 0) && (aDesiredSize.height != 0) &&
@@ -985,127 +1085,22 @@ nsHTMLFramesetFrame::Reflow(nsIPresContext*          aPresContext,
   nscolor*       verBorderColors   = nsnull;
   PRBool*        horBordersVis     = nsnull; // horizontal borders visibility
   nscolor*       horBorderColors   = nsnull;
-  PRInt32*       childTypes        = nsnull; // frameset/frame distinction of children  
-  nsFrameborder* childFrameborder  = nsnull; // the frameborder attr of children 
-  nsBorderColor* childBorderColors = nsnull;
-  nscolor        borderColor       = NO_COLOR;
+  nscolor        borderColor       = GetBorderColor();
   nsFrameborder  frameborder       = GetFrameBorder(PR_FALSE);
 
   if (firstTime) {
-    mVerBorders    = new nsHTMLFramesetBorderFrame*[mNumCols];  // 1 more than number of ver borders
     verBordersVis = new PRBool[mNumCols];
     verBorderColors = new nscolor[mNumCols];
     for (int verX  = 0; verX < mNumCols; verX++) {
-      mVerBorders[verX]    = nsnull;
       verBordersVis[verX] = PR_FALSE;
       verBorderColors[verX] = NO_COLOR;
     }
-  
-    mHorBorders    = new nsHTMLFramesetBorderFrame*[mNumRows];  // 1 more than number of hor borders
+
     horBordersVis = new PRBool[mNumRows];
     horBorderColors = new nscolor[mNumRows];
     for (int horX = 0; horX < mNumRows; horX++) {
-      mHorBorders[horX]    = nsnull;
       horBordersVis[horX] = PR_FALSE;
       horBorderColors[horX] = NO_COLOR;
-    }
-    childTypes = new PRInt32[numCells]; 
-    childFrameborder  = new nsFrameborder[numCells]; 
-    childBorderColors  = new nsBorderColor[numCells]; 
-    borderColor = GetBorderColor();
-  }
-  
-  // create the children frames; skip content which isn't <frameset> or <frame>
-  nsIFrame* lastChild = nsnull;
-  if (firstTime) {
-    mChildCount = 0; // number of <frame> or <frameset> children
-    if (nsnull != mContent) {
-      nsIFrame* frame;
-      PRInt32 numChildren; // number of any type of children
-      mContent->ChildCount(numChildren);
-      for (int childX = 0; childX < numChildren; childX++) {
-        if (mChildCount == numCells) { // we have more <frame> or <frameset> than cells
-          break;
-        }
-        nsIContent* childCon;
-        mContent->ChildAt(childX, childCon);
-        nsIHTMLContent* child = nsnull;
-        childCon->QueryInterface(kIHTMLContentIID, (void**)&child);
-        NS_RELEASE(childCon);
-        if (nsnull == child) {
-          continue;
-        }
-        nsIAtom* tag;
-        child->GetTag(tag);
-        if ((nsHTMLAtoms::frameset == tag) || (nsHTMLAtoms::frame == tag)) {
-          nsIStyleContext* kidSC;
-          nsresult         result;
-
-          aPresContext->ResolveStyleContextFor(child, mStyleContext,
-                                              PR_FALSE, &kidSC);
-          if (nsHTMLAtoms::frameset == tag) {
-            result = NS_NewHTMLFramesetFrame(shell, &frame);
-            frame->Init(aPresContext, child, this, kidSC, nsnull);
-
-            childTypes[mChildCount] = FRAMESET;
-            nsHTMLFramesetFrame* childFrame = (nsHTMLFramesetFrame*)frame;
-            childFrame->SetParentFrameborder(frameborder);
-            childFrame->SetParentBorderWidth(borderWidth);
-            childFrame->SetParentBorderColor(borderColor);
-            childBorderColors[mChildCount].Set(childFrame->GetBorderColor());
-          } else { // frame
-            result = NS_NewHTMLFrameOuterFrame(shell, &frame);
-            frame->Init(aPresContext, child, this, kidSC, nsnull);
-
-            childTypes[mChildCount] = FRAME;
-            //
-            childFrameborder[mChildCount] = GetFrameBorder(child, PR_FALSE);
-            childBorderColors[mChildCount].Set(GetBorderColor(child));
-          }
-          NS_RELEASE(kidSC);
-
-          if (NS_OK != result) {
-            NS_RELEASE(tag);
-            NS_RELEASE(child);
-            return result;
-          }
-
-          if (nsnull == lastChild) {
-            mFrames.SetFrames(frame);
-          } else {
-            lastChild->SetNextSibling(frame);
-          }
-          lastChild = frame;
-          mChildCount++;
-        }
-        NS_RELEASE(child);
-        NS_IF_RELEASE(tag);
-      }
-      mNonBlankChildCount = mChildCount;
-      // add blank frames for frameset cells that had no content provided
-      for (int blankX = mChildCount; blankX < numCells; blankX++) {
-        // XXX the blank frame is using the content of its parent - at some point it 
-        // should just have null content, if we support that
-        nsHTMLFramesetBlankFrame* blankFrame = new (shell.get()) nsHTMLFramesetBlankFrame;
-        nsIStyleContext* pseudoStyleContext;
-        aPresContext->ResolvePseudoStyleContextFor(mContent, nsHTMLAtoms::framesetBlankPseudo,
-                                                  mStyleContext, PR_FALSE,
-                                                  &pseudoStyleContext);
-        if(blankFrame)
-          blankFrame->Init(aPresContext, mContent, this, pseudoStyleContext, nsnull);
-        NS_RELEASE(pseudoStyleContext);
-
-        if (nsnull == lastChild) {
-          mFrames.SetFrames(blankFrame);
-        } else {
-          lastChild->SetNextSibling(blankFrame);
-        }
-        lastChild = blankFrame;
-        childTypes[mChildCount] = BLANK;
-        childBorderColors[mChildCount].Set(NO_COLOR);
-        mChildCount++;
-      }
-      mNonBorderChildCount = mChildCount;
     }
   }
 
@@ -1117,6 +1112,7 @@ nsHTMLFramesetFrame::Reflow(nsIPresContext*          aPresContext,
   nsPoint offset(0,0);
   nsSize size, lastSize;
   nsIFrame* child = mFrames.FirstChild();
+  nsIFrame* lastChild = mFrames.LastChild();
 
   for (PRInt32 childX = 0; childX < mNonBorderChildCount; childX++) {
     nsPoint cellIndex;
@@ -1185,14 +1181,14 @@ nsHTMLFramesetFrame::Reflow(nsIPresContext*          aPresContext,
 
     if (firstTime) {
       PRInt32 childVis; 
-      if (FRAMESET == childTypes[childX]) {
+      if (FRAMESET == mChildTypes[childX]) {
         nsHTMLFramesetFrame* childFS = (nsHTMLFramesetFrame*)child; 
         childVis = childFS->mEdgeVisibility;
-        childBorderColors[childX] = childFS->mEdgeColors;
-      } else if (FRAME == childTypes[childX]) {
-        if (eFrameborder_Yes == childFrameborder[childX]) {
+        mChildBorderColors[childX] = childFS->mEdgeColors;
+      } else if (FRAME == mChildTypes[childX]) {
+        if (eFrameborder_Yes == mChildFrameborder[childX]) {
           childVis = ALL_VIS;
-        } else if (eFrameborder_No == childFrameborder[childX]) {
+        } else if (eFrameborder_No == mChildFrameborder[childX]) {
           childVis = NONE_VIS;
         } else {  // notset
           childVis = (eFrameborder_No == frameborder) ? NONE_VIS : ALL_VIS;
@@ -1200,7 +1196,7 @@ nsHTMLFramesetFrame::Reflow(nsIPresContext*          aPresContext,
       } else {  // blank 
         childVis = NONE_VIS;
       }
-      nsBorderColor childColors = childBorderColors[childX];
+      nsBorderColor childColors = mChildBorderColors[childX];
       // set the visibility, color of our edge borders based on children
       if (0 == cellIndex.x) {
         if (!(mEdgeVisibility & LEFT_VIS)) {
@@ -1249,16 +1245,16 @@ nsHTMLFramesetFrame::Reflow(nsIPresContext*          aPresContext,
       }
       // set the colors of borders that the child may affect
       if (NO_COLOR == verBorderColors[cellIndex.x]) {
-        verBorderColors[cellIndex.x] = childBorderColors[childX].mRight;
+        verBorderColors[cellIndex.x] = mChildBorderColors[childX].mRight;
       }
       if (NO_COLOR == horBorderColors[cellIndex.y]) {
-        horBorderColors[cellIndex.y] = childBorderColors[childX].mBottom;
+        horBorderColors[cellIndex.y] = mChildBorderColors[childX].mBottom;
       }
       if ((cellIndex.x > 0) && (NO_COLOR == verBorderColors[cellIndex.x-1])) {
-        verBorderColors[cellIndex.x-1] = childBorderColors[childX].mLeft;
+        verBorderColors[cellIndex.x-1] = mChildBorderColors[childX].mLeft;
       }
       if ((cellIndex.y > 0) && (NO_COLOR == horBorderColors[cellIndex.y-1])) {
-        horBorderColors[cellIndex.y-1] = childBorderColors[childX].mTop;
+        horBorderColors[cellIndex.y-1] = mChildBorderColors[childX].mTop;
       }
     }
     lastRow  = cellIndex.y;
@@ -1274,7 +1270,7 @@ nsHTMLFramesetFrame::Reflow(nsIPresContext*          aPresContext,
     for (int verX = 0; verX < mNumCols-1; verX++) {
       if (mVerBorders[verX]) {
         mVerBorders[verX]->SetVisibility(verBordersVis[verX]);
-        SetBorderResize(childTypes, mVerBorders[verX]);
+        SetBorderResize(mChildTypes, mVerBorders[verX]);
         childColor = (NO_COLOR == verBorderColors[verX]) ? borderColor : verBorderColors[verX];
         mVerBorders[verX]->SetColor(childColor);
       }
@@ -1282,7 +1278,7 @@ nsHTMLFramesetFrame::Reflow(nsIPresContext*          aPresContext,
     for (int horX = 0; horX < mNumRows-1; horX++) {
       if (mHorBorders[horX]) {
         mHorBorders[horX]->SetVisibility(horBordersVis[horX]);
-        SetBorderResize(childTypes, mHorBorders[horX]);
+        SetBorderResize(mChildTypes, mHorBorders[horX]);
         childColor = (NO_COLOR == horBorderColors[horX]) ? borderColor : horBorderColors[horX]; 
         mHorBorders[horX]->SetColor(childColor);
       }
@@ -1292,9 +1288,9 @@ nsHTMLFramesetFrame::Reflow(nsIPresContext*          aPresContext,
     delete[] verBorderColors;
     delete[] horBordersVis; 
     delete[] horBorderColors;
-    delete[] childTypes; 
-    delete[] childFrameborder;
-    delete[] childBorderColors;
+    delete[] mChildTypes; 
+    delete[] mChildFrameborder;
+    delete[] mChildBorderColors;
   }
 
   if (nsnull != aDesiredSize.maxElementSize) {

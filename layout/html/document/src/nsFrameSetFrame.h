@@ -277,6 +277,11 @@ protected:
   nsHTMLFramesetFrame* mTopLevelFrameset;
   nsHTMLFramesetBorderFrame** mVerBorders;  // vertical borders
   nsHTMLFramesetBorderFrame** mHorBorders;  // horizontal borders
+
+  PRInt32*         mChildTypes; // frameset/frame distinction of children  
+  nsFrameborder*   mChildFrameborder; // the frameborder attr of children 
+  nsBorderColor*   mChildBorderColors;
+  
 };
 
 
