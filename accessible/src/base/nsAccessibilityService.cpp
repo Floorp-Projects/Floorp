@@ -46,7 +46,7 @@
 #include "nsHTMLFormControlAccessible.h"
 #include "nsHTMLImageAccessible.h"
 #include "nsHTMLLinkAccessible.h"
-#include "nsHTMLObjectAccessible.h"
+//#include "nsHTMLObjectAccessible.h" -- this comes with a later checkin DOH! - jgaunt
 #include "nsHTMLSelectAccessible.h"
 #include "nsHTMLTableAccessible.h"
 #include "nsHTMLTextAccessible.h"
