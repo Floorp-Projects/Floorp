@@ -61,13 +61,16 @@ nsPresState::GetStateProperty(const nsString& aName, nsString& aResult)
   // Retrieve from hashtable.
   nsCOMPtr<nsISupportsString> str;
   nsStringKey key(aName);
-  str = dont_AddRef(NS_STATIC_CAST(nsISupportsString*, mPropertyTable->Get(&key)));
-  aResult = "";
+  if (mPropertyTable)
+    str = dont_AddRef(NS_STATIC_CAST(nsISupportsString*, mPropertyTable->Get(&key)));
+   
   if (str) {
     char* data;
     str->GetData(&data);
     aResult = data;
     nsAllocator::Free(data);
+  } else {
+    aResult = "";
   }
   return NS_OK;
 }
@@ -98,7 +101,9 @@ nsPresState::GetStatePropertyAsSupports(const nsString& aName, nsISupports** aRe
   // Retrieve from hashtable.
   nsCOMPtr<nsISupports> supp;
   nsStringKey key(aName);
-  supp = dont_AddRef(NS_STATIC_CAST(nsISupports*, mPropertyTable->Get(&key)));
+  if (mPropertyTable)
+    supp = dont_AddRef(NS_STATIC_CAST(nsISupports*, mPropertyTable->Get(&key)));
+
   *aResult = supp;
   NS_IF_ADDREF(*aResult);
   return NS_OK;
