@@ -1,0 +1,7 @@
+<!ENTITY closeCmd.label						"Close">  
+<!ENTITY closeCmd.key						"W">  
+<!ENTITY quitApplicationCmd.label			"Quit"> 
+<!ENTITY quitApplicationCmd.key				"Q"> 
+
+<!ENTITY redoCmd.label						"Redo">  
+<!ENTITY redoCmd.key						"Z">  
