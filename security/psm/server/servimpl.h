@@ -42,7 +42,7 @@
 #define PSM_DOC_DIR "./psmdata/doc/"
 #else
 #ifdef XP_MAC
-#define PSM_DOC_DIR ":doc:"
+#define PSM_DOC_DIR "psmdata/doc/"
 #else
 #define PSM_DOC_DIR ".\\psmdata\\doc\\"
 #endif

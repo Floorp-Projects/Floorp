@@ -1057,11 +1057,11 @@ prefs_list_js:
 {get_pref_list}
 
 var prefix = '<input type=hidden name="';
-var suffix = '">\\n';
+var suffix = '">';
 
 function writePrefInput(d, s)
 {
-    d.write(prefix + s + suffix);
+    d.writeln(prefix + s + suffix);
 }
 
 // creates the hidden buttons that are used to submit pref changes
@@ -6588,7 +6588,7 @@ pkcs12_action_followup_content:
 
 function showAlert() {
 	 PopUpAlert("%1$s");
-	 window.location = "get?baseRef=cert_mine";
+	 window.location = "get?baseRef=cert_mine&target=%2$d";
 }
 </script>
 </head>

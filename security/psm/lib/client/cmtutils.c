@@ -324,7 +324,7 @@ loser:
 CMTStatus CMT_TransmitMessage(PCMT_CONTROL control, CMTItem * message)
 {
     CMTMessageHeader header;
-	CMUint32 sent, rv;
+	CMUint32 sent;
 
     /* Set up the message header */
     header.type = htonl(message->type);
@@ -356,7 +356,7 @@ loser:
 CMTStatus CMT_ReceiveMessage(PCMT_CONTROL control, CMTItem * response)
 {
     CMTMessageHeader header;
-    CMUint32 numread, rv;
+    CMUint32 numread;
 
     /* Get the message header */
     numread = CMT_ReadThisMany(control, control->sock, 
