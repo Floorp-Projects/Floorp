@@ -1667,7 +1667,7 @@
                 secMan.checkLoadURIStr(sourceURI, aUrl,
                                        nsIScriptSecurityManager.STANDARD);
               } catch (e) {
-                // Stop even propagation right here.
+                // Stop event propagation right here.
                 aEvent.stopPropagation();
 
                 throw "Drop of " + aUrl + " denied.";
