@@ -44,6 +44,7 @@
 #include "nsIEditorController.h"
 #include "nsIElementFactory.h"
 #include "nsIHTMLContent.h"
+#include "nsFormFrame.h"
 
 
 #include "nsIContent.h"
@@ -78,7 +79,7 @@ static void RemoveNewlines(nsString &aString)
 
 
 
-class nsTextAreaSelectionImpl : public nsSupportsWeakReference, public nsISelectionController
+class nsTextAreaSelectionImpl : public nsSupportsWeakReference, public nsISelectionController, public nsIFrameSelection
 {
 public:
   NS_DECL_ISUPPORTS
@@ -93,6 +94,7 @@ public:
   NS_IMETHOD GetSelection(PRInt16 type, nsIDOMSelection **_retval);
   NS_IMETHOD ScrollSelectionIntoView(PRInt16 type, PRInt16 region);
   NS_IMETHOD RepaintSelection(PRInt16 type);
+  NS_IMETHOD RepaintSelection(nsIPresContext* aPresContext, SelectionType aSelectionType);
   NS_IMETHOD SetCaretEnabled(PRBool enabled);
   NS_IMETHOD GetCaretEnabled(PRBool *_retval);
   NS_IMETHOD CharacterMove(PRBool aForward, PRBool aExtend);
@@ -106,6 +108,27 @@ public:
   NS_IMETHOD ScrollLine(PRBool aForward){return NS_OK;}//*
   NS_IMETHOD ScrollHorizontal(PRBool aLeft){return NS_OK;}//*
   NS_IMETHOD SelectAll(void);
+
+  //NSIFRAMSELECTION INTERFACES
+  NS_IMETHOD Init(nsIFocusTracker *aTracker, nsIContent *aLimiter) ;
+  NS_IMETHOD ShutDown() ;
+  NS_IMETHOD HandleTextEvent(nsGUIEvent *aGuiEvent) ;
+  NS_IMETHOD HandleKeyEvent(nsIPresContext* aPresContext, nsGUIEvent *aGuiEvent);
+  NS_IMETHOD HandleClick(nsIContent *aNewFocus, PRUint32 aContentOffset, PRUint32 aContentEndOffset , 
+                       PRBool aContinueSelection, PRBool aMultipleSelection, PRBool aHint); 
+  NS_IMETHOD HandleDrag(nsIPresContext *aPresContext, nsIFrame *aFrame, nsPoint& aPoint);
+  NS_IMETHOD HandleTableSelection(nsIContent *aParentContent, PRInt32 aContentOffset, PRUint32 aTarget, nsMouseEvent *aMouseEvent);
+  NS_IMETHOD StartAutoScrollTimer(nsIPresContext *aPresContext, nsIFrame *aFrame, nsPoint& aPoint, PRUint32 aDelay);
+  NS_IMETHOD StopAutoScrollTimer();
+  NS_IMETHOD EnableFrameNotification(PRBool aEnable);
+  NS_IMETHOD LookUpSelection(nsIContent *aContent, PRInt32 aContentOffset, PRInt32 aContentLength,
+                             SelectionDetails **aReturnDetails, PRBool aSlowCheck);
+  NS_IMETHOD SetMouseDownState(PRBool aState);
+  NS_IMETHOD GetMouseDownState(PRBool *aState);
+  NS_IMETHOD GetTableCellSelection(PRBool *aState);
+  NS_IMETHOD GetTableCellSelectionStyleColor(const nsStyleColor **aStyleColor);
+  NS_IMETHOD GetFrameForNodeOffset(nsIContent *aNode, PRInt32 aOffset, nsIFrame **aReturnFrame, PRInt32 *aReturnOffset);
+
 private:
   nsCOMPtr<nsIFrameSelection> mFrameSelection;
   nsCOMPtr<nsIContent>        mLimiter;
@@ -113,7 +136,7 @@ private:
 };
 
 // Implement our nsISupports methods
-NS_IMPL_ISUPPORTS2(nsTextAreaSelectionImpl, nsISelectionController, nsISupportsWeakReference)
+NS_IMPL_ISUPPORTS3(nsTextAreaSelectionImpl, nsISelectionController, nsISupportsWeakReference, nsIFrameSelection)
 
 
 
@@ -180,7 +203,11 @@ nsTextAreaSelectionImpl::RepaintSelection(PRInt16 type)
   return NS_ERROR_FAILURE;
 }
 
-
+NS_IMETHODIMP
+nsTextAreaSelectionImpl::RepaintSelection(nsIPresContext* aPresContext, SelectionType aSelectionType)
+{
+  return RepaintSelection(aSelectionType);
+}
 
 NS_IMETHODIMP
 nsTextAreaSelectionImpl::SetCaretEnabled(PRBool enabled)
@@ -253,6 +280,124 @@ nsTextAreaSelectionImpl::SelectAll()
 }
 
 
+//nsTextAreaSelectionImpl::FRAMESELECTIONAPIS
+
+NS_IMETHODIMP
+nsTextAreaSelectionImpl::Init(nsIFocusTracker *aTracker, nsIContent *aLimiter)
+{
+  return mFrameSelection->Init(aTracker, aLimiter);
+}
+
+
+NS_IMETHODIMP
+nsTextAreaSelectionImpl::ShutDown()
+{
+  return mFrameSelection->ShutDown();
+}
+
+
+NS_IMETHODIMP
+nsTextAreaSelectionImpl::HandleTextEvent(nsGUIEvent *aGuiEvent)
+{
+  return mFrameSelection->HandleTextEvent(aGuiEvent);
+}
+
+
+NS_IMETHODIMP
+nsTextAreaSelectionImpl::HandleKeyEvent(nsIPresContext* aPresContext, nsGUIEvent *aGuiEvent)
+{
+  return mFrameSelection->HandleKeyEvent(aPresContext, aGuiEvent);
+}
+
+
+NS_IMETHODIMP
+nsTextAreaSelectionImpl::HandleClick(nsIContent *aNewFocus, PRUint32 aContentOffset, PRUint32 aContentEndOffset , 
+                     PRBool aContinueSelection, PRBool aMultipleSelection, PRBool aHint)
+{
+  return mFrameSelection->HandleClick(aNewFocus, aContentOffset, aContentEndOffset , 
+                     aContinueSelection, aMultipleSelection, aHint);
+}
+
+
+NS_IMETHODIMP
+nsTextAreaSelectionImpl::HandleDrag(nsIPresContext *aPresContext, nsIFrame *aFrame, nsPoint& aPoint)
+{
+  return mFrameSelection->HandleDrag(aPresContext, aFrame, aPoint);
+}
+
+
+NS_IMETHODIMP
+nsTextAreaSelectionImpl::HandleTableSelection(nsIContent *aParentContent, PRInt32 aContentOffset, PRUint32 aTarget, nsMouseEvent *aMouseEvent)
+{
+  return mFrameSelection->HandleTableSelection(aParentContent, aContentOffset, aTarget, aMouseEvent);
+}
+
+
+NS_IMETHODIMP
+nsTextAreaSelectionImpl::StartAutoScrollTimer(nsIPresContext *aPresContext, nsIFrame *aFrame, nsPoint& aPoint, PRUint32 aDelay)
+{
+  return mFrameSelection->StartAutoScrollTimer(aPresContext, aFrame, aPoint, aDelay);
+}
+
+
+NS_IMETHODIMP
+nsTextAreaSelectionImpl::StopAutoScrollTimer()
+{
+  return mFrameSelection->StopAutoScrollTimer();
+}
+
+
+NS_IMETHODIMP
+nsTextAreaSelectionImpl::EnableFrameNotification(PRBool aEnable)
+{
+  return mFrameSelection->EnableFrameNotification(aEnable);
+}
+
+
+NS_IMETHODIMP
+nsTextAreaSelectionImpl::LookUpSelection(nsIContent *aContent, PRInt32 aContentOffset, PRInt32 aContentLength,
+                           SelectionDetails **aReturnDetails, PRBool aSlowCheck)
+{
+  return mFrameSelection->LookUpSelection(aContent, aContentOffset, aContentLength, aReturnDetails, aSlowCheck);
+}
+
+
+NS_IMETHODIMP
+nsTextAreaSelectionImpl::SetMouseDownState(PRBool aState)
+{
+  return mFrameSelection->SetMouseDownState(aState);
+}
+
+
+NS_IMETHODIMP
+nsTextAreaSelectionImpl::GetMouseDownState(PRBool *aState)
+{
+  return mFrameSelection->GetMouseDownState(aState);
+}
+
+
+NS_IMETHODIMP
+nsTextAreaSelectionImpl::GetTableCellSelection(PRBool *aState)
+{
+  return mFrameSelection->GetTableCellSelection(aState);
+}
+
+
+NS_IMETHODIMP
+nsTextAreaSelectionImpl::GetTableCellSelectionStyleColor(const nsStyleColor **aStyleColor)
+{
+  return mFrameSelection->GetTableCellSelectionStyleColor(aStyleColor);
+}
+
+
+NS_IMETHODIMP
+nsTextAreaSelectionImpl::GetFrameForNodeOffset(nsIContent *aNode, PRInt32 aOffset, nsIFrame **aReturnFrame, PRInt32 *aReturnOffset)
+{
+  return mFrameSelection->GetFrameForNodeOffset(aNode, aOffset,aReturnFrame,aReturnOffset);
+}
+
+
+
 
 // END   nsTextAreaSelectionImpl
 
@@ -273,17 +418,40 @@ NS_NewGfxTextControlFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame)
   return NS_OK;
 }
 
-NS_IMPL_QUERY_INTERFACE_INHERITED1(nsGfxTextControlFrame2, nsHTMLContainerFrame,nsIAnonymousContentCreator);
 NS_IMPL_ADDREF_INHERITED(nsGfxTextControlFrame2, nsHTMLContainerFrame);
 NS_IMPL_RELEASE_INHERITED(nsGfxTextControlFrame2, nsHTMLContainerFrame);
  
 
+NS_IMETHODIMP
+nsGfxTextControlFrame2::QueryInterface(const nsIID& aIID, void** aInstancePtr)
+{
+  if (NULL == aInstancePtr) {
+    return NS_ERROR_NULL_POINTER;
+  }
+  if (aIID.Equals(NS_GET_IID(nsIFormControlFrame))) {
+    *aInstancePtr = (void*) ((nsIFormControlFrame*) this);
+    return NS_OK;
+  }
+  if (aIID.Equals(NS_GET_IID(nsIAnonymousContentCreator))) {
+    *aInstancePtr = (void*)(nsIAnonymousContentCreator*) this;
+    return NS_OK;
+  }
+  return nsHTMLContainerFrame::QueryInterface(aIID, aInstancePtr);
+}
+
 nsGfxTextControlFrame2::nsGfxTextControlFrame2()
 {
+  mIsProcessing=PR_FALSE;
+  mFormFrame = nsnull;
 }
 
 nsGfxTextControlFrame2::~nsGfxTextControlFrame2()
 {
+  if (mFormFrame) {
+    mFormFrame->RemoveFormControlFrame(*this);
+    mFormFrame = nsnull;
+  }
+
 }
 
 
@@ -370,7 +538,7 @@ nsGfxTextControlFrame2::CreateAnonymousContent(nsIPresContext* aPresContext,
 //create selection controller
     nsTextAreaSelectionImpl * textSelImpl = new nsTextAreaSelectionImpl(frameSel,shell,content);
     mSelCon =  do_QueryInterface((nsISupports *)(nsISelectionController *)textSelImpl);//this will addref it once
-
+    mSelCon->SetDisplaySelection(nsISelectionController::SELECTION_ON);
 //get the document
     nsCOMPtr<nsIDocument> doc;
     rv = shell->GetDocument(getter_AddRefs(doc));
@@ -537,6 +705,12 @@ NS_IMETHODIMP nsGfxTextControlFrame2::Reflow(nsIPresContext*          aPresConte
   if (kidReflowState.mComputedHeight != NS_INTRINSICSIZE)
       kidReflowState.mComputedHeight -= kidReflowState.mComputedBorderPadding.top + kidReflowState.mComputedBorderPadding.bottom;
 
+  if (aReflowState.reason == eReflowReason_Initial)
+  {
+    aDesiredSize.height = 10;
+    return nsHTMLContainerFrame::Reflow(aPresContext,aDesiredSize,aReflowState,aStatus);
+  }
+  else
   if (aReflowState.reason == eReflowReason_Incremental)
   {
     if (aReflowState.reflowCommand) {
@@ -583,6 +757,27 @@ nsGfxTextControlFrame2::GetSkipSides() const
   return 0;
 }
 
+//IMPLEMENTING NS_IFORMCONTROLFRAME
+NS_IMETHODIMP
+nsGfxTextControlFrame2::GetName(nsString* aResult)
+{
+  nsresult result = NS_FORM_NOTOK;
+  if (mContent) {
+    nsIHTMLContent* formControl = nsnull;
+    result = mContent->QueryInterface(NS_GET_IID(nsIHTMLContent),(void**)&formControl);
+    if (NS_SUCCEEDED(result) && formControl) {
+      nsHTMLValue value;
+      result = formControl->GetHTMLAttribute(nsHTMLAtoms::name, value);
+      if (NS_CONTENT_ATTR_HAS_VALUE == result) {
+        if (eHTMLUnit_String == value.GetUnit()) {
+          value.GetStringValue(*aResult);
+        }
+      }
+      NS_RELEASE(formControl);
+    }
+  }
+  return result;
+}
 
 NS_IMETHODIMP
 nsGfxTextControlFrame2::GetType(PRInt32* aType) const
@@ -599,6 +794,153 @@ nsGfxTextControlFrame2::GetType(PRInt32* aType) const
   return result;
 }
 
+
+void    nsGfxTextControlFrame2::SetFocus(PRBool aOn , PRBool aRepaint){}
+void    nsGfxTextControlFrame2::ScrollIntoView(nsIPresContext* aPresContext){}
+void    nsGfxTextControlFrame2::MouseClicked(nsIPresContext* aPresContext){}
+
+void    nsGfxTextControlFrame2::Reset(nsIPresContext* aPresContext){}
+PRInt32 nsGfxTextControlFrame2::GetMaxNumValues(){return 1;}/**/
+
+PRBool  nsGfxTextControlFrame2::GetNamesValues(PRInt32 aMaxNumValues, PRInt32& aNumValues,
+                                nsString* aValues, nsString* aNames)
+{
+  return PR_FALSE;
+}
+
+nscoord 
+nsGfxTextControlFrame2::GetVerticalInsidePadding(nsIPresContext* aPresContext,
+                                             float aPixToTwip, 
+                                             nscoord aInnerHeight) const
+{
+   return NSIntPixelsToTwips(0, aPixToTwip); 
+}
+
+
+//---------------------------------------------------------
+nscoord 
+nsGfxTextControlFrame2::GetHorizontalInsidePadding(nsIPresContext* aPresContext,
+                                               float aPixToTwip, 
+                                               nscoord aInnerWidth,
+                                               nscoord aCharWidth) const
+{
+  return GetVerticalInsidePadding(aPresContext, aPixToTwip, aInnerWidth);
+}
+
+
+void 
+nsGfxTextControlFrame2::SetFormFrame(nsFormFrame* aFormFrame) 
+{ 
+  mFormFrame = aFormFrame; 
+}
+
+
+//---------------------------------------------------------
+PRBool
+nsGfxTextControlFrame2::IsSuccessful(nsIFormControlFrame* aSubmitter)
+{
+  nsAutoString name;
+  return (NS_CONTENT_ATTR_HAS_VALUE == GetName(&name));
+}
+
+NS_IMETHODIMP 
+nsGfxTextControlFrame2::SetSuggestedSize(nscoord aWidth, nscoord aHeight)
+{
+  return NS_OK;
+}
+
+nsresult 
+nsGfxTextControlFrame2::RequiresWidget(PRBool& aRequiresWidget)
+{
+  aRequiresWidget = PR_FALSE;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsGfxTextControlFrame2::GetFont(nsIPresContext* aPresContext, 
+                            const nsFont*&  aFont)
+{
+  return nsFormControlHelper::GetFont(this, aPresContext, mStyleContext, aFont);
+}
+
+NS_IMETHODIMP
+nsGfxTextControlFrame2::GetFormContent(nsIContent*& aContent) const
+{
+  nsIContent* content;
+  nsresult    rv;
+
+  rv = GetContent(&content);
+  aContent = content;
+  return rv;
+}
+
+NS_IMETHODIMP nsGfxTextControlFrame2::SetProperty(nsIPresContext* aPresContext, nsIAtom* aName, const nsString& aValue)
+{
+  if (!mIsProcessing)//some kind of lock.
+  {
+    mIsProcessing = PR_TRUE;
+    
+    if (nsHTMLAtoms::value == aName) 
+    {
+      if (mEditor) {
+        mEditor->EnableUndo(PR_FALSE);    // wipe out undo info
+      }
+      SetTextControlFrameState(aValue);   // set new text value
+      if (mEditor)  {
+        mEditor->EnableUndo(PR_TRUE);     // fire up a new txn stack
+      }
+    }
+    else if (nsHTMLAtoms::select == aName && mSelCon)
+    {
+      // select all the text
+      mSelCon->SelectAll();
+    }
+    mIsProcessing = PR_FALSE;
+  }
+  return NS_OK;
+}      
+
+NS_IMETHODIMP nsGfxTextControlFrame2::GetProperty(nsIAtom* aName, nsString& aValue)
+{
+  // Return the value of the property from the widget it is not null.
+  // If widget is null, assume the widget is GFX-rendered and return a member variable instead.
+
+  if (nsHTMLAtoms::value == aName) {
+    GetTextControlFrameState(aValue);
+  }
+  return NS_OK;
+}  
+
+
+void nsGfxTextControlFrame2::GetTextControlFrameState(nsString& aValue)
+{
+  aValue.SetLength(0);  // initialize out param
+  
+  if (mEditor) 
+  {
+    nsString format; format.AssignWithConversion("text/plain");
+    PRUint32 flags = 0;
+
+    if (PR_TRUE==IsPlainTextControl()) {
+      flags |= nsIDocumentEncoder::OutputBodyOnly;   // OutputNoDoctype if head info needed
+    }
+
+    nsFormControlHelper::nsHTMLTextWrap wrapProp;
+    nsresult result = nsFormControlHelper::GetWrapPropertyEnum(mContent, wrapProp);
+    if (NS_CONTENT_ATTR_NOT_THERE != result) 
+    {
+      if (wrapProp == nsFormControlHelper::eHTMLTextWrap_Hard)
+      {
+        flags |= nsIDocumentEncoder::OutputFormatted;
+      }
+    }
+
+    mEditor->OutputToString(aValue, format, flags);
+  }
+}     
+
+
+// END IMPLEMENTING NS_IFORMCONTROLFRAME
 
 void
 nsGfxTextControlFrame2::SetTextControlFrameState(const nsString& aValue)
@@ -642,63 +984,7 @@ nsGfxTextControlFrame2::SetTextControlFrameState(const nsString& aValue)
       mEditor->SetFlags(savedFlags);
     }
   }
-  else {/*
-    mCachedState = aValue;
-    if (mDisplayContent)
-    {
-      const PRUnichar *text = mCachedStat.>GetUnicode();
-      PRInt32 len = mCachedStateLength();
-      mDisplayContent->SetText(text, len, PR_TRUE);
-      if (mContent)
-      {
-        nsIDocument *doc;
-        mContent->GetDocument(doc);
-        if (doc) 
-        {
-          doc->ContentChanged(mContent, nsnull);
-          NS_RELEASE(doc);
-        }
-      }
-    }*/
-  }
 }
-
-
-//XXX: this needs to be fixed for HTML output
-void nsGfxTextControlFrame2::GetTextControlFrameState(nsString& aValue)
-{
-  aValue.SetLength(0);  // initialize out param
-  
-  if (mEditor ) 
-  {
-    nsString format; format.AssignWithConversion("text/plain");
-    PRUint32 flags = 0;
-
-    if (PR_TRUE==IsPlainTextControl()) {
-      flags |= nsIDocumentEncoder::OutputBodyOnly;   // OutputNoDoctype if head info needed
-    }
-
-    nsFormControlHelper::nsHTMLTextWrap wrapProp;
-    nsresult result = nsFormControlHelper::GetWrapPropertyEnum(mContent, wrapProp);
-    if (NS_CONTENT_ATTR_NOT_THERE != result) 
-    {
-      if (wrapProp == nsFormControlHelper::eHTMLTextWrap_Hard)
-      {
-        flags |= nsIDocumentEncoder::OutputFormatted;
-      }
-    }
-
-    mEditor->OutputToString(aValue, format, flags);
-  }
-  // otherwise, just return our text attribute
-  else {
-/*    if (mCachedState) {
-      aValue = *mCachedState;
-    } else {
-      GetText(&aValue, PR_TRUE);
-    }*/
-  }
-}     
 
 
 NS_IMETHODIMP
@@ -731,7 +1017,7 @@ nsGfxTextControlFrame2::GetSelectionController(nsIPresContext *aPresContext, nsI
   return NS_OK;
 }
 
-//-----------------
+
 nsresult 
 nsGfxTextControlFrame2::GetColRowSizeAttr(nsIFormControlFrame*  aFrame,
                                          nsIAtom *     aColSizeAttr,
