@@ -482,26 +482,22 @@ nsTransactionManager::SetMaxTransactionCount(PRInt32 aMaxCount)
 
   LOCK_TX_MANAGER(this);
 
-  result = mDoStack.GetSize(&total);
-  if (NS_SUCCEEDED(result) && total) {
+  // It is illegal to call SetMaxTransactionCount() while the transaction
+  // manager is executing a  transaction's DoTransaction() method because
+  // the undo and redo stacks might get pruned! If this happens, the
+  // SetMaxTransactionCount() request is ignored, and we return
+  // NS_ERROR_FAILURE.
 
-    // It is illegal to call SetMaxTransactionCount() while the transaction
-    // manager is executing a  transaction's DoTransaction() method because
-    // the undo and redo stacks might get pruned! If this happens, the
-    // SetMaxTransactionCount() request is ignored, and we return
-    // NS_ERROR_FAILURE.
+  result = mDoStack.Peek(&tx);
 
-    result = mDoStack.Peek(&tx);
+  if (NS_FAILED(result)) {
+    UNLOCK_TX_MANAGER(this);
+    return result;
+  }
 
-    if (NS_FAILED(result)) {
-      UNLOCK_TX_MANAGER(this);
-      return result;
-    }
-
-    if (tx) {
-      UNLOCK_TX_MANAGER(this);
-      return NS_ERROR_FAILURE;
-    }
+  if (tx) {
+    UNLOCK_TX_MANAGER(this);
+    return NS_ERROR_FAILURE;
   }
 
   // If aMaxCount is less than zero, the user wants unlimited

@@ -101,14 +101,12 @@ nsTransactionStack::Peek(nsTransactionItem **aTransaction)
   if (!aTransaction)
     return NS_ERROR_NULL_POINTER;
 
-  if (!mQue.GetSize())
-    return NS_ERROR_NULL_POINTER;
+  if (!mQue.GetSize()) {
+    *aTransaction = 0;
+    return NS_OK;
+  }
 
-  /* nsDeque's End() method returns an iterator that is
-   * passed the last entry of the deque. We need to decrement
-   * to get to the last entry.
-   */
-  *aTransaction = (nsTransactionItem *)(--mQue.End());
+  *aTransaction = (nsTransactionItem *)(mQue.End().GetCurrent());
 
   return NS_OK;
 }
