@@ -15,6 +15,7 @@ content/mesenger-region,                             msg/content/messenger-regio
 content/messenger-smime,                             msg/content/messenger-smime
 content/messenger-views,                             msg/content/messenger-views
 content/messenger/messengercompose,                  msg/content/messenger/messengercompose
+content/editor/images,				     msg/content/messenger/messengercompose/icons
 content/messenger/addressbook,			     msg/content/messenger/addressbook
 
 #################################################################################################
@@ -23,7 +24,6 @@ content/messenger/addressbook,			     msg/content/messenger/addressbook
 
 content/editor,				              comm/content/editor
 content/editor-region,				      comm/content/editor-region
-content/editor/images,				      comm/content/editor/images
 content/communicator-region,                          comm/content/communicator-region,
 content/communicator-platform,                        comm/content/communicator-platform
 content/communicator/contents.rdf, 		      comm/content/communicator/contents.rdf
