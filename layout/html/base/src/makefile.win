@@ -29,7 +29,9 @@ CPPSRCS=				\
 	nsAbsoluteFrame.cpp		\
 	nsBRFrame.cpp			\
 	nsBlockFrame.cpp		\
+	nsBlockReflowContext.cpp	\
 	nsBodyFrame.cpp			\
+	nsBulletFrame.cpp		\
 	nsContainerFrame.cpp		\
 	nsFrame.cpp			\
 	nsFrameReflowState.cpp		\
@@ -45,12 +47,13 @@ CPPSRCS=				\
 	nsInlineFrame.cpp		\
 	nsInlineReflow.cpp		\
 	nsLeafFrame.cpp			\
+	nsLineBox.cpp			\
 	nsLineLayout.cpp		\
 	nsObjectFrame.cpp		\
 	nsPageFrame.cpp			\
 	nsPlaceholderFrame.cpp		\
 	nsPresShell.cpp			\
-	nsSimplePageSequence.cpp \
+	nsSimplePageSequence.cpp	\
 	nsScrollFrame.cpp		\
 	nsSpacerFrame.cpp		\
 	nsSplittableFrame.cpp		\
@@ -63,7 +66,9 @@ CPP_OBJS=					\
 	.\$(OBJDIR)\nsAbsoluteFrame.obj		\
 	.\$(OBJDIR)\nsBRFrame.obj		\
 	.\$(OBJDIR)\nsBlockFrame.obj		\
+	.\$(OBJDIR)\nsBlockReflowContext.obj	\
 	.\$(OBJDIR)\nsBodyFrame.obj		\
+	.\$(OBJDIR)\nsBulletFrame.obj		\
 	.\$(OBJDIR)\nsContainerFrame.obj	\
 	.\$(OBJDIR)\nsFrame.obj			\
 	.\$(OBJDIR)\nsFrameReflowState.obj	\
@@ -79,12 +84,13 @@ CPP_OBJS=					\
 	.\$(OBJDIR)\nsInlineFrame.obj		\
 	.\$(OBJDIR)\nsInlineReflow.obj		\
 	.\$(OBJDIR)\nsLeafFrame.obj		\
+	.\$(OBJDIR)\nsLineBox.obj		\
 	.\$(OBJDIR)\nsLineLayout.obj		\
 	.\$(OBJDIR)\nsObjectFrame.obj		\
 	.\$(OBJDIR)\nsPageFrame.obj		\
 	.\$(OBJDIR)\nsPlaceholderFrame.obj	\
 	.\$(OBJDIR)\nsPresShell.obj		\
-	.\$(OBJDIR)\nsSimplePageSequence.obj \
+	.\$(OBJDIR)\nsSimplePageSequence.obj	\
 	.\$(OBJDIR)\nsScrollFrame.obj		\
 	.\$(OBJDIR)\nsSpacerFrame.obj		\
 	.\$(OBJDIR)\nsSplittableFrame.obj	\
