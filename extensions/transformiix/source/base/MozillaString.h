@@ -36,6 +36,9 @@
 // TK  03/30/2000  Changed toChar to toCharArray and provided an overloaded
 //                 version which will instantiate its own character buffer.
 
+#ifndef MITRE_MOZILLA_STRING
+#define MITRE_MOZILLA_STRING
+
 #include "String.h"
 #include "MITREObject.h"
 #include "baseutils.h"
@@ -56,7 +59,7 @@ class MozillaString : public String
 
     //Create a new sting by assuming control of the provided nsString
     //
-    MozillaString::MozillaString(nsString* theNSString);
+    MozillaString(nsString* theNSString);
 
     //Create an empty string of a specific size
     //( nsString(), SetCapacity(initSize) )
@@ -204,3 +207,4 @@ class MozillaString : public String
     //String copies itself to the destination
     //void copyString(SPECIAL_CHAR* dest);
 };
+#endif
