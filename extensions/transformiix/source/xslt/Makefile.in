@@ -49,6 +49,7 @@ REQUIRES +=	  dom \
 		  windowwatcher \
 		  mimetype \
 		  intl \
+		  htmlparser \
 		  $(NULL)
 else
 REQUIRES +=	  expat \

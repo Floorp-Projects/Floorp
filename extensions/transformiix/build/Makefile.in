@@ -54,6 +54,7 @@ REQUIRES	= xpcom \
 		  windowwatcher \
 		  mimetype \
 		  intl \
+		  htmlparser \
 		  $(NULL)
 IS_COMPONENT	= 1
 MODULE_NAME	= TransformiixModule

@@ -29,6 +29,7 @@
 #include "nsIErrorService.h"
 #include "nsIExceptionService.h"
 #include "nsIGenericFactory.h"
+#include "nsIParserService.h"
 #include "nsIScriptNameSpaceManager.h"
 #include "nsIServiceManager.h"
 #include "nsXPathEvaluator.h"
@@ -183,6 +184,7 @@ RegisterTransformiix(nsIComponentManager *aCompMgr,
 static PRBool gInitialized = PR_FALSE;
 static nsIExceptionProvider *gXPathExceptionProvider = 0;
 nsINameSpaceManager *gTxNameSpaceManager = 0;
+nsIParserService *gTxParserService = 0;
 
 // Perform our one-time intialization for this module
 PR_STATIC_CALLBACK(nsresult)
@@ -218,6 +220,13 @@ Initialize(nsIModule* aSelf)
     rv = CallGetService(NS_NAMESPACEMANAGER_CONTRACTID, &gTxNameSpaceManager);
     if (NS_FAILED(rv)) {
         gTxNameSpaceManager = nsnull;
+        return rv;
+    }
+
+    rv = CallGetService("@mozilla.org/parser/parser-service;1",
+                        &gTxParserService);
+    if (NS_FAILED(rv)) {
+        gTxParserService = nsnull;
         return rv;
     }
 
@@ -260,6 +269,7 @@ Shutdown(nsIModule* aSelf)
 
     NS_IF_RELEASE(gTxSecurityManager);
     NS_IF_RELEASE(gTxNameSpaceManager);
+    NS_IF_RELEASE(gTxParserService);
 }
 
 // Component Table

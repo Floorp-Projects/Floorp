@@ -195,7 +195,7 @@ txToFragmentHandlerFactory::createHandlerWith(txOutputFormat* aFormat,
             NS_ASSERTION(domdoc, "unable to get ownerdocument");
             nsCOMPtr<nsIDocument> doc = do_QueryInterface(domdoc);
 
-            if (!doc && doc->IsCaseSensitive()) {
+            if (!doc || doc->IsCaseSensitive()) {
                 format.mMethod = eXMLOutput;
             } else {
                 format.mMethod = eHTMLOutput;

@@ -142,14 +142,17 @@ txAttribute::execute(txExecutionState& aEs)
     nsAutoString name;
     exprRes->stringValue(name);
 
-    if (!XMLUtils::isValidQName(name) ||
+    const PRUnichar* colon;
+    if (!XMLUtils::isValidQName(name, &colon) ||
         TX_StringEqualsAtom(name, txXMLAtoms::xmlns)) {
         // truncate name to indicate failure
         name.Truncate();
     }
 
     nsCOMPtr<nsIAtom> prefix;
-    XMLUtils::getPrefix(name, getter_AddRefs(prefix));
+    if (colon) {
+        prefix = do_GetAtom(Substring(name.get(), colon));
+    }
 
     PRInt32 nsId = kNameSpaceID_None;
     if (!name.IsEmpty()) {
@@ -664,7 +667,8 @@ txProcessingInstruction::execute(txExecutionState& aEs)
 
     // Check name validity (must be valid NCName and a PITarget)
     // XXX Need to check for NCName and PITarget
-    if (!XMLUtils::isValidQName(name)) {
+    const PRUnichar* colon;
+    if (!XMLUtils::isValidQName(name, &colon)) {
         // XXX ErrorReport: bad PI-target
         return NS_ERROR_FAILURE;
     }
@@ -916,7 +920,8 @@ txStartElement::execute(txExecutionState& aEs)
     nsAutoString name;
     exprRes->stringValue(name);
 
-    if (!XMLUtils::isValidQName(name)) {
+    const PRUnichar* colon;
+    if (!XMLUtils::isValidQName(name, &colon)) {
         // tunkate name to indicate failure
         name.Truncate();
     }
@@ -943,7 +948,9 @@ txStartElement::execute(txExecutionState& aEs)
         }
         else {
             nsCOMPtr<nsIAtom> prefix;
-            XMLUtils::getPrefix(name, getter_AddRefs(prefix));
+            if (colon) {
+                prefix = do_GetAtom(Substring(name.get(), colon));
+            }
             nsId = mMappings->lookupNamespace(prefix);
             if (nsId == kNameSpaceID_Unknown) {
                 // tunkate name to indicate failure
