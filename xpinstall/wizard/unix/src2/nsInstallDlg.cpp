@@ -198,9 +198,16 @@ nsInstallDlg::Next(GtkWidget *aWidget, gpointer aData)
     }
 
     PerformInstall();
+    while (bDLPause) {
+        // event loop ends with resume or cancel
+        gtk_main();
+        if (!bDLCancel)
+            PerformInstall();
+    }
+
     // mode auto has no call to gtk_main()
     if (gCtx->opt->mMode == nsXIOptions::MODE_DEFAULT)
-         gtk_main_quit();
+        gtk_main_quit();
     
     gCtx->bMoving = TRUE;
     return;
@@ -1087,8 +1094,6 @@ nsInstallDlg::DLPause(GtkWidget *aWidget, gpointer aData)
 
     // enable resume button
     gtk_widget_set_sensitive(gCtx->next, TRUE);
-
-    gtk_main();
 }
 
 void
@@ -1112,10 +1117,6 @@ nsInstallDlg::DLResume(GtkWidget *aWidget, gpointer aData)
     gtk_widget_set_sensitive(gCtx->back, TRUE);
 
     gtk_main_quit();
-
-    PerformInstall();
- 
-    return;
 }
 
 void
@@ -1137,7 +1138,8 @@ nsInstallDlg::DLCancel(GtkWidget *aWidget, gpointer aData)
     // already paused then take explicit action to quit
     if (bDLPause)
     {
-         gtk_main_quit();
+        bDLPause = FALSE;
+        gtk_main_quit();
     }
 }
 
