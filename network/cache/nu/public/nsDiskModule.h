@@ -37,10 +37,19 @@ public:
 
     // Cache module interface
     PRBool          AddObject(nsCacheObject* io_pObject);
-	PRBool          Contains(nsCacheObject* io_pObject) const;
+    
+    PRBool          Contains(nsCacheObject* io_pObject) const;
     PRBool          Contains(const char* i_url) const;
-	nsCacheObject*	GetObject(const PRUint32 i_index) const;
-	nsCacheObject*	GetObject(const char* i_url) const;
+    
+    void            GarbageCollect(void);
+
+    nsCacheObject*  GetObject(const PRUint32 i_index) const;
+    nsCacheObject*  GetObject(const char* i_url) const;
+
+    PRBool          Remove(const char* i_url);
+    PRBool          Remove(const PRUint32 i_index);
+
+    PRBool          Revalidate(void);
 
 private:
     enum sync_frequency

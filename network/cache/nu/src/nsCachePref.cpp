@@ -17,24 +17,41 @@
  */
 
 #include "nsCachePref.h"
+//#include "prefapi.h"
 
 static const PRUint32 MEM_CACHE_SIZE_DEFAULT = 1024*1024;
 static const PRUint32 DISK_CACHE_SIZE_DEFAULT = 5*MEM_CACHE_SIZE_DEFAULT;
-
+static const PRUint32 BKG_THREAD_SLEEP = 15*60; /*in seconds, 15 minutes */
 static nsCachePref ThePrefs;
 
-nsCachePref::nsCachePref(void)
+nsCachePref::nsCachePref(void):
+    m_BkgSleepTime(BKG_THREAD_SLEEP),
+    m_DiskCacheDBFilename(new char[6+1]),
+    m_DiskCacheFolder(0),
+    m_DiskCacheSize(DISK_CACHE_SIZE_DEFAULT),
+    m_MemCacheSize(MEM_CACHE_SIZE_DEFAULT),
+    m_RefreshFreq(ONCE)
 {
     //Read all the stuff from pref here. 
+    //If this changes to nsPref, here is all that needs to be changed.
+    PRUint32 nTemp;
+	//PREF_GetIntPref("browser.cache.memory_cache_size",&nTemp);
+    //*1024
 }
 
 nsCachePref::~nsCachePref()
 {
 }
 
+const PRUint32  
+nsCachePref::BkgSleepTime(void)
+{
+    return ThePrefs.m_BkgSleepTime; 
+}
+
 PRUint32 nsCachePref::DiskCacheSize()
 {
-    return DISK_CACHE_SIZE_DEFAULT;
+    return ThePrefs.m_DiskCacheSize;
 }
 
 const char* nsCachePref::DiskCacheDBFilename(void)
@@ -54,7 +71,12 @@ nsCachePref* nsCachePref::GetInstance()
 
 PRUint32 nsCachePref::MemCacheSize()
 {
-    return MEM_CACHE_SIZE_DEFAULT;
+    return ThePrefs.m_MemCacheSize;
+}
+
+PRBool nsCachePref::RevalidateInBkg(void)
+{
+    return ThePrefs.m_bRevalidateInBkg;
 }
 
 /*

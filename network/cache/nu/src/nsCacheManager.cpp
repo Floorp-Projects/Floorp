@@ -34,16 +34,22 @@
 #include "nsCacheModule.h"
 #include "nsMemModule.h"
 #include "nsDiskModule.h"
+#include "nsCacheBkgThd.h"
 
 static nsCacheManager TheManager;
 
-nsCacheManager::nsCacheManager(): m_pFirstModule(0)
+nsCacheManager::nsCacheManager(): m_pFirstModule(0), m_bOffline(PR_FALSE)
 {
     Init();
 }
 
 nsCacheManager::~nsCacheManager()
 {
+    if (m_pBkgThd)
+    {
+        m_pBkgThd->Stop();
+        delete m_pBkgThd;
+    }
     if (m_pFirstModule)
         delete m_pFirstModule;
 }
@@ -143,24 +149,14 @@ nsCacheManager::GetModule(PRInt32 i_index) const
     if ((i_index < 0) || (i_index >= Entries()))
         return 0;
     nsCacheModule* pModule = m_pFirstModule;
-    for (PRInt32 i=0; i<=i_index; pModule = pModule->Next())
-        i++;
     PR_ASSERT(pModule);
+    for (PRInt32 i=0; i<i_index; pModule = pModule->Next())
+    {
+        i++;
+        PR_ASSERT(pModule);
+    }
     return pModule;
 }
-
-nsMemModule* 
-nsCacheManager::GetMemModule() const
-{
-    return (nsMemModule*) m_pFirstModule;
-}
-
-nsDiskModule* 
-nsCacheManager::GetDiskModule() const
-{
-    return (m_pFirstModule) ? (nsDiskModule*) m_pFirstModule->Next() : NULL;
-}
-
 
 void 
 nsCacheManager::Init() 
@@ -169,8 +165,10 @@ nsCacheManager::Init()
         delete m_pFirstModule;
 
     m_pFirstModule = new nsMemModule(nsCachePref::MemCacheSize());
+    PR_ASSERT(m_pFirstModule);
      //  m_pFirstModule->Next((new nsDiskModule(nsCachePref::DiskCacheSize()));
-
+    m_pBkgThd = new nsCacheBkgThd(PR_SecondsToInterval(nsCachePref::BkgSleepTime()));
+    PR_ASSERT(m_pBkgThd);
 }
 
 nsCacheModule* 

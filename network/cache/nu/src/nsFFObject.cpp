@@ -16,52 +16,29 @@
  * Reserved.
  */
 
-#include <xp_core.h>
-#include <xp_str.h>
+#include "nsFFObject.h"
+#include <prlog.h>
 
-#include "nsCacheModule.h"
-#include "nsCacheTrace.h"
-
-
-/* 
- * nsCacheModule
- *
- * Gagan Saksena 02/02/98
- * 
- */
-
-
-#define DEFAULT_SIZE 10*0x100000L
-
-nsCacheModule::nsCacheModule(const PRUint32 i_size=DEFAULT_SIZE):
-    m_Size(i_size),
-    m_pNext(0),
-    m_Entries(0)
+nsFFObject::nsFFObject(PRUint32 i_ID, PRUint32 i_Offset, PRUint32 i_Size):
+    m_ID(i_ID), 
+    m_Offset(i_Offset),
+    m_Size(i_Size),
+    m_pNext(0)
 {
 }
 
-nsCacheModule::~nsCacheModule()
+nsFFObject::~nsFFObject()
 {
+}
+
+
+PRBool nsFFObject::Add(const nsFFObject* i_object)
+{
+    PR_ASSERT(i_object);
+    if (!i_object)
+        return PR_FALSE;
     if (m_pNext)
-    {
-        delete m_pNext;
-        m_pNext = 0;
-    }
-}
-
-void nsCacheModule::GarbageCollect(void) 
-{
-}
-
-const char* nsCacheModule::Trace() const
-{
-    char linebuffer[128];
-    char* total;
-
-    sprintf(linebuffer, "nsCacheModule: Objects = %d\n", Entries());
-
-    total = new char[strlen(linebuffer) + 1];
-    strcpy(total, linebuffer);
-
-    return total;
+        return m_pNext->Add(i_object);
+    m_pNext = (nsFFObject*) i_object;
+    return PR_TRUE;
 }

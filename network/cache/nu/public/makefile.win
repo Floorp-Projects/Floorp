@@ -20,9 +20,10 @@ IGNORE_MANIFEST=1
 
 MODULE=cache 
 
-EXPORTS=nsCacheObject.h nsMemModule.h nsCacheManager.h \
-    nsDiskModule.h nsCacheModule.h nsMemCacheObject.h  \
-    nsCachePref.h  				\
+EXPORTS=nsCacheObject.h nsMemModule.h nsCacheManager.h  \
+    nsDiskModule.h nsCacheModule.h nsMemCacheObject.h   \
+    nsCachePref.h nsCacheBkgThd.h nsBkgThread.h  	\
+    CacheStubs.h 				  	\
     $(NULL)
 
 include <$(DEPTH)\config\rules.mak>

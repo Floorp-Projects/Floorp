@@ -20,14 +20,16 @@
 #define _CacheManager_H_
 /* 
  * nsCacheManager
- *
- * Gagan Saksena 02/02/98
+ * Designed and original implementation 
+ * by Gagan Saksena 02/02/98
  * 
  */
 
 #if 0
-#include "nsISupports.h"
+#   include "nsISupports.h"
 #endif
+
+#include <prlog.h>
 
 #include "nsCacheModule.h"
 #include "nsCacheObject.h"
@@ -35,16 +37,19 @@
 class nsMemModule;
 class nsDiskModule;
 class nsCachePref;
+class nsCacheBkgThd;
 
 class nsCacheManager //: public nsISupports
 {
-    /* Change entries from 32 to 16 bit */
+
 public:
-   enum modules
-   {
+
+    //Reserved modules
+    enum modules
+    {
        MEM =0,
        DISK=1
-   };
+    };
 
     nsCacheManager();
     ~nsCacheManager();
@@ -66,6 +71,10 @@ public:
     nsMemModule*    GetMemModule() const;
     nsDiskModule*   GetDiskModule() const;
 
+    PRBool          IsOffline(void) const;
+
+    void            Offline(PRBool bSet);
+
     const char*     Trace() const;
 
     /* Performance measure- microseconds */
@@ -77,10 +86,38 @@ protected:
                     LastModule() const;
 
 private:
-    nsCacheModule* m_pFirstModule;
+    nsCacheModule*  m_pFirstModule;
 
     nsCacheManager(const nsCacheManager& cm);
     nsCacheManager& operator=(const nsCacheManager& cm);
+    nsCacheBkgThd*  m_pBkgThd;
+    PRBool          m_bOffline;
 };
+
+inline
+nsDiskModule* nsCacheManager::GetDiskModule() const
+{
+    PR_ASSERT(m_pFirstModule && m_pFirstModule->Next());
+    return (m_pFirstModule) ? (nsDiskModule*) m_pFirstModule->Next() : NULL;
+}
+
+inline
+nsMemModule* nsCacheManager::GetMemModule() const
+{
+    PR_ASSERT(m_pFirstModule);
+    return (nsMemModule*) m_pFirstModule;
+}
+
+inline
+PRBool nsCacheManager::IsOffline(void) const
+{
+    return m_bOffline;
+}
+
+inline
+void  nsCacheManager::Offline(PRBool i_bSet) 
+{
+    m_bOffline = i_bSet;
+}
 
 #endif

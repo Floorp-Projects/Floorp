@@ -18,6 +18,7 @@
 
 #include <prtypes.h>
 #include <plstr.h>
+#include <prlog.h>
 
 #include "nsMemModule.h"
 #include "nsMemCacheObject.h"
@@ -145,6 +146,35 @@ nsMemCacheObject* nsMemModule::LastObject(void) const
 			pLast = pLast->Next();
 	}
 	return pLast;
+}
+
+PRBool nsMemModule::Remove(const char* i_url)
+{
+    return PR_FALSE;
+}
+
+PRBool nsMemModule::Remove(const PRUint32 i_index)
+{
+    return PR_FALSE;
+}
+
+void nsMemModule::GarbageCollect(void)
+{
+    if (m_Entries > 0)
+    {
+        PRUint32 index = 0;
+        while (index < m_Entries)
+        {
+            //TODO change the iteration 
+            nsCacheObject* pObj = GetObject(index);
+            if (pObj->IsExpired())
+            {
+                PRBool status = Remove(index);
+                PR_ASSERT(status == PR_TRUE);
+            }
+            --index;
+        }
+    }
 }
 
 /*

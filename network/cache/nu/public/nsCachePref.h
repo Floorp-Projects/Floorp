@@ -28,7 +28,6 @@ class nsCachePref //: public nsISupports
 public:
     static nsCachePref* GetInstance(void);
     
-    // should really be protected/private
     nsCachePref(void);
     ~nsCachePref();
 
@@ -39,14 +38,21 @@ public:
         ALWAYS
     } r;
 
-    static const char*     DiskCacheDBFilename(void); /* like Fat.db */
-    static const char*     DiskCacheFolder(void);   /* Cache dir */
+    static const PRUint32   BkgSleepTime(void);
+    
+    static const char*      DiskCacheDBFilename(void); /* like Fat.db */
+    static const char*      DiskCacheFolder(void);   /* Cache dir */
 
-    static PRUint32        DiskCacheSize(void);
-    static PRUint32        MemCacheSize(void);
+    static PRUint32         DiskCacheSize(void);
+    static PRUint32         MemCacheSize(void);
 
     static nsCachePref::Refresh
-                    Frequency(void);
+                            Frequency(void);
+
+    /* Revalidating in background, makes IMS calls in the bkg thread to 
+       update cache entries. TODO, this should be at a bigger time period
+       than the cache cleanup routine */
+    static PRBool           RevalidateInBkg(void);
 
 /*
     NS_IMETHOD              QueryInterface(const nsIID& aIID, 
@@ -57,7 +63,14 @@ public:
 private:
     nsCachePref(const nsCachePref& o);
     nsCachePref& operator=(const nsCachePref& o);
-    static nsCachePref* m_pPref;
+
+    PRBool                  m_bRevalidateInBkg;
+    nsCachePref::Refresh    m_RefreshFreq;
+    PRUint32                m_MemCacheSize;
+    PRUint32                m_DiskCacheSize;
+    char*                   m_DiskCacheDBFilename;
+    char*                   m_DiskCacheFolder;
+    PRUint32                m_BkgSleepTime;
 };
 
 #endif // nsCachePref_h__
