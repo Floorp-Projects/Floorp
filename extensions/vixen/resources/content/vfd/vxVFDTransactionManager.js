@@ -40,16 +40,42 @@ vxVFDTransactionManager.prototype =
 
   mTransactionListeners: null,
 
-  doTransaction: function (aTransaction) 
+  setProperty: function (aSource, aProperty, aValue)
+  {
+    var valueAsLiteral = this.mDataSource.mRDFS.GetLiteral(aValue);
+    var currValue = this.mDataSource.GetTarget(aSource, aProperty, true);
+    if (currValue)
+      this.mDataSource.Change(aSource, aProperty, currValue, valueAsLiteral);
+    else
+      this.mDataSource.Assert(aSource, aProperty, valueAsLiteral, true);
+  },
+  
+  unsetProperty: function (aSource, aProperty, aValue) 
+  {
+    var currValue = !aValue ? this.mDataSource.GetTarget(aSource, aProperty, true) 
+                            : this.mDataSource.mRDFS.GetLiteral(aValue);
+    this.mDataSource.Unassert(aSource, aProperty, currValue, true);
+  },
+
+  getResourceForIndex: function (aIndex)
+  {
+    return this.mDataSource.mRDFS.GetResource(kTxnURI + aIndex);
+  },
+  
+  notifyListeners: function (aEvent, aTransaction, aIRQ) 
   {
     for (var i = 0; i < this.mTransactionListeners.length; i++) {
-      var interruptRequest = {};
-      if ("willDo" in this.mTransactionListeners[i]) {
-        this.mTransactionListeners[i].willDo(this, aTransaction, interruptRequest);
+      if (aEvent in this.mTransactionListeners[i]) {
+        this.mTransactionListeners[i][aEvent](this, aTransaction, aIRQ);
         // do something with irq here once we figure out what it does.
       }
     }
-
+  },
+  
+  doTransaction: function (aTransaction) 
+  {
+    this.notifyListeners("willDo", aTransaction, { });
+  
     // perform the transaction
     aTransaction.doTransaction();
     
@@ -64,58 +90,36 @@ vxVFDTransactionManager.prototype =
       
       // likewise with the RDF Seq.
       var seqCount = this.mTxnSeq.GetCount();
-      for (i = seqCount-1; i >= this.mTxnStack.index; i--)
+      for (var i = seqCount-1; i >= this.mTxnStack.index; i--)
         this.mTxnSeq.RemoveElementAt(i, true);
     }
     
     // append the transaction to our list
     this.mTxnStack.push(aTransaction);
 
-    var resource = this.mDataSource.mRDFS.GetResource(kTxnURI + (this.mTxnStack.index-1));
+    var currItem = this.getResourceForIndex(this.mTxnStack.index-1);
     // Set the Command string
-    var commandLiteral = this.mDataSource.mRDFS.GetLiteral(aTransaction.commandString);
-    this.mDataSource.Assert(resource, gVxTxnCommandString, commandLiteral, true);
+    this.setProperty(currItem, gVxTxnCommandString, aTransaction.commandString);
     // Set the Description string
-    var descriptionLiteral = this.mDataSource.mRDFS.GetLiteral(aTransaction.description);
-    this.mDataSource.Assert(resource, gVxTxnDescription, descriptionLiteral, true);
+    this.setProperty(currItem, gVxTxnDescription, aTransaction.description);
     // Set the Transaction state to that of the top undo item (which has the bottom border)
-    var lastundoStateLiteral = this.mDataSource.mRDFS.GetLiteral("last-undo");
-    this.mDataSource.Assert(resource, gVxTxnState, lastundoStateLiteral, true);
+    this.setProperty(currItem, gVxTxnState, "last-undo");
     // Set this item as the top of the stack
-    var topofStackLiteral = this.mDataSource.mRDFS.GetLiteral("top-of-stack");
-    this.mDataSource.Assert(resource, gVxTxnPosition, topofStackLiteral, true);
+    this.setProperty(currItem, gVxTxnPosition, "top-of-stack");
     // Change the Transaction state of the previous item to be plain undo, not 'last-undo'
-    var prevItem = this.mDataSource.mRDFS.GetResource(kTxnURI + (this.mTxnStack.index-2));
-    var undoStateLiteral = this.mDataSource.mRDFS.GetLiteral("undo");
-    this.mDataSource.Change(prevItem, gVxTxnState, lastundoStateLiteral, undoStateLiteral);
+    var prevItem = this.getResourceForIndex(this.mTxnStack.index-2);
+    this.setProperty(prevItem, gVxTxnState, "undo");
     // Change the Transaction position of the previous item so it's not top of stack
-    this.mDataSource.Unassert(prevItem, gVxTxnPosition, topofStackLiteral, true);
-    // Set the Transaction Stack Index
-//    var indexLiteral = this.mDataSource.mRDFS.GetLiteral(this.mTxnStack.index);
-//    this.mDataSource.Assert(resource, gVxTxnStackIndex, indexLiteral, true);
+    this.unsetProperty(prevItem, gVxTxnPosition, "top-of-stack");
     
     // Append to the transaction sequence. 
-    this.mTxnSeq.AppendElement(resource);
+    this.mTxnSeq.AppendElement(currItem);
     
-    for (i = 0; i < this.mTransactionListeners.length; i++) {
-      interruptRequest = {};
-      if ("didDo" in this.mTransactionListeners[i]) {
-        this.mTransactionListeners[i].didDo(this, aTransaction, interruptRequest);
-        // do something with irq here once we figure out what it does.
-      }
-    }
+    this.notifyListeners("didDo", aTransaction, { });
   },
   
   undoTransaction: function ()
   {  
-    for (var i = 0; i < this.mTransactionListeners.length; i++) {
-      var interruptRequest = {};
-      if ("willUndo" in this.mTransactionListeners[i]) {
-        this.mTransactionListeners[i].willUndo(this, aTransaction, interruptRequest);
-        // do something with irq here once we figure out what it does.
-      }
-    }
-    
     // retrieve the previous transaction
     var txn = null;
     if (this.mTxnStack.index-1 >= 0)
@@ -123,38 +127,22 @@ vxVFDTransactionManager.prototype =
 
     // undo the transaction
     if (txn) {
+      this.notifyListeners("willUndo", txn, { });
       txn.undoTransaction();
       
-      var resource = this.mDataSource.mRDFS.GetResource(kTxnURI + (--this.mTxnStack.index));
+      var resource = this.getResourceForIndex(--this.mTxnStack.index);
       // Set the Transaction state (undo/redo)
-      var undoStateLiteral = this.mDataSource.mRDFS.GetLiteral("undo");
-      var redoStateLiteral = this.mDataSource.mRDFS.GetLiteral("redo");
-      this.mDataSource.Change(resource, gVxTxnState, undoStateLiteral, redoStateLiteral);
+      this.setProperty(resource, gVxTxnState, "redo");
       // Set the state of the previous item to be last-undo. 
-      var prevItem = this.mDataSource.mRDFS.GetResource(kTxnURI + (this.mTxnStack.index-1));
-      var lastUndoItemLiteral = this.mDataSource.mRDFS.GetLiteral("last-undo");
-      var oldStateLiteral = this.mDataSource.GetTarget(prevItem, gVxTxnState, true);
-      this.mDataSource.Change(prevItem, gVxTxnState, oldStateLiteral, lastUndoItemLiteral);
-    }
+      var prevItem = this.getResourceForIndex(this.mTxnStack.index-1);
+      this.setProperty(prevItem, gVxTxnState, "last-undo");
 
-    for (i = 0; i < this.mTransactionListeners.length; i++) {
-      interruptRequest = {};
-      if ("didUndo" in this.mTransactionListeners[i]) {
-        this.mTransactionListeners[i].didUndo(this, aTransaction, interruptRequest);
-        // do something with irq here once we figure out what it does.
-      }
+      this.notifyListeners("didUndo", txn, { });
     }
   },
   
-  redoTransaction: function (aTransaction)
+  redoTransaction: function ()
   {
-    for (var i = 0; i < this.mTransactionListeners.length; i++) {
-      var interruptRequest = {};
-      if ("willRedo" in this.mTransactionListeners[i]) {
-        this.mTransactionListeners[i].willRedo(this, aTransaction, interruptRequest);
-        // do something with irq here once we figure out what it does.
-      }
-    }
 
     // retrieve the previous transaction
     var txn = null;
@@ -163,27 +151,19 @@ vxVFDTransactionManager.prototype =
 
     // redo the transaction
     if (txn) { 
+      this.notifyListeners("willRedo", txn, { });
       txn.redoTransaction();
 
-      var resource = this.mDataSource.mRDFS.GetResource(kTxnURI + (this.mTxnStack.index-1));
+      var resource = this.getResourceForIndex(this.mTxnStack.index-1);
       // Set the Transaction state (undo/redo)
-      var lastundoStateLiteral = this.mDataSource.mRDFS.GetLiteral("last-undo");
-      var undoStateLiteral = this.mDataSource.mRDFS.GetLiteral("undo");
-      this.mDataSource.Change(resource, gVxTxnState, lastundoStateLiteral, undoStateLiteral);
+      this.setProperty(resource, gVxTxnState, "undo");
       // Set the state of the previous item to be last-undo. 
-      var prevItem = this.mDataSource.mRDFS.GetResource(kTxnURI + (this.mTxnStack.index));
-      var undoItemLiteral = this.mDataSource.mRDFS.GetLiteral("last-undo");
-      var oldStateLiteral = this.mDataSource.GetTarget(prevItem, gVxTxnState, true);
-      this.mDataSource.Change(prevItem, gVxTxnState, oldStateLiteral, undoItemLiteral);
-      ++this.mTxnStack.index;
-    }
+      var prevItem = this.getResourceForIndex(this.mTxnStack.index);
+      this.setProperty(prevItem, gVxTxnState, "last-undo");
 
-    for (i = 0; i < this.mTransactionListeners.length; i++) {
-      interruptRequest = {};
-      if ("didRedo" in this.mTransactionListeners[i]) {
-        this.mTransactionListeners[i].didRedo(this, aTransaction, interruptRequest);
-        // do something with irq here once we figure out what it does.
-      }
+      ++this.mTxnStack.index;
+
+      this.notifyListeners("didRedo", txn, { });
     }
   },
   
