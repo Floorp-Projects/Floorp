@@ -163,8 +163,11 @@ NSRegisterSelf(nsISupports* serviceMgr, const char *fullpath)
 #ifdef DEBUG
     printf("messenger: NSRegisterSelf()\n");
 #endif
-    return nsRepository::RegisterFactory(kCMsgAppCoreCID, fullpath,
-                                         PR_TRUE, PR_TRUE);
+    return nsRepository::RegisterComponent(kCMsgAppCoreCID,
+                                           "Messenger AppCore",
+                                           "component://netscape/appcores/messenger",
+                                           fullpath,
+                                           PR_TRUE, PR_TRUE);
 }
     
 nsresult
@@ -173,5 +176,5 @@ NSUnregisterSelf(nsISupports* serviceMgr, const char *fullpath)
 #ifdef DEBUG
     printf("messenger: NSUnregisterSelf()\n");
 #endif
-    return nsRepository::UnregisterFactory(kCMsgAppCoreCID, fullpath);
+    return nsRepository::UnregisterComponent(kCMsgAppCoreCID, fullpath);
 }
