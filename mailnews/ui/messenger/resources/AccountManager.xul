@@ -8,8 +8,8 @@
   <script language="javascript" src="AccountManager.js"/>
 
 <frameset cols="25%,75%">
-  <frame name="accounttree" id="accounttree" src="am-test.xul" scrolling="auto"/>
-  <frame name="am-main" id="am-main" src="am-main.xul" resize="yes" scrolling="auto"/>
+  <frame name="accounttree" id="accounttree" src="accounttree.xul" scrolling="auto"/>
+  <frame name="prefframe" id="prefframe" src="am-main.xul" resize="yes" scrolling="auto"/>
 </frameset>
 
 </xul:window>

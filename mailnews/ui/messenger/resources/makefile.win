@@ -52,6 +52,7 @@ install::
 	$(MAKE_INSTALL) AccountManager.xul	$(DIST)\bin\res\mailnews\messenger
 	$(MAKE_INSTALL) AccountManager.js	$(DIST)\bin\res\mailnews\messenger
 	$(MAKE_INSTALL) accounttree.xul		$(DIST)\bin\res\mailnews\messenger
+	$(MAKE_INSTALL) accounttree.css		$(DIST)\bin\res\mailnews\messenger
 	$(MAKE_INSTALL) am-main.xul			$(DIST)\bin\res\mailnews\messenger
 	$(MAKE_INSTALL) am-test.xul			$(DIST)\bin\res\mailnews\messenger
 	$(MAKE_INSTALL) am-server.xul		$(DIST)\bin\res\mailnews\messenger
@@ -84,6 +85,7 @@ clobber::
 	rm -f $(DIST)\res\mailnews\messenger\AccountManager.xul
 	rm -f $(DIST)\res\mailnews\messenger\AccountManager.js
 	rm -f $(DIST)\res\mailnews\messenger\accounttree.xul
+	rm -f $(DIST)\res\mailnews\messenger\accounttree.css
 	rm -f $(DIST)\res\mailnews\messenger\am-main.xul
 	rm -f $(DIST)\res\mailnews\messenger\am-test.xul
 	rm -f $(DIST)\res\mailnews\messenger\am-server.xul

@@ -57,6 +57,7 @@ EXPORT_RESOURCE_SAMPLES = \
 	$(srcdir)/AccountManager.xul	\
 	$(srcdir)/AccountManager.js		\
 	$(srcdir)/accounttree.xul	\
+	$(srcdir)/accounttree.css		\
 	$(srcdir)/am-main.xul		\
 	$(srcdir)/am-test.xul		\
 	$(srcdir)/am-server.xul		\
@@ -69,6 +70,9 @@ EXPORT_RESOURCE_SAMPLES = \
 	$(srcdir)/am-advanced.xul	\
 	$(srcdir)/SearchDialog.xul	\
 	$(srcdir)/FilterListDialog.xul	\
+	$(srcdir)/FilterEditor.xul		\
+	$(srcdir)/FilterEditor.js		\
+	$(srcdir)/test1.html			\
 	$(NULL)
 
 EXPORT_RESOURCE_SAMPLES_TO_REMOVE := $(addprefix $(SAMPLES_DIR)/, $(EXPORT_RESOURCE_SAMPLES))

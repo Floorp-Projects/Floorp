@@ -1,58 +1,39 @@
 <?xml version="1.0"?>
 <?xml-stylesheet href="resource:/res/samples/xul.css" type="text/css"?>
 <?xml-stylesheet href="chrome://messenger/skin/" type="text/css"?>
+<?xml-stylesheet href="accounttree.css" type="text/css"?>
 
 <!DOCTYPE window>
 
 <xul:window xmlns:html="http://www.w3.org/TR/REC-html40"
         xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-        onload = ""> 
-
+        style="width:100%"
+        onload = "">
+<html:script language="JavaScript" src="AccountManager.js"/>
 <tree rdf:datasources="rdf:msgaccountmanager"
-  onclick="return ClickChangePanel(event.target);"> 
+  onclick="showPage(event)"
+  id="accounttree">
   <treecol rdf:resource="http://home.netscape.com/NC-rdf#Name"/>
   <treehead>
     <treecell>Name</treecell>
   </treehead>
 
-  <treebody rdf:containment="http://home.netscape.com/NC-rdf#settings">
-    <treeitem id="msgaccounts:/" open="true">
-      <treecell><treeindentation/>RealAccounts</treecell>
-    </treeitem>
-    <treeitem>
-      <treecell name="Account"><treeindentation/>FakeAccount1</treecell>
-	  <treechildren>
-        <treeitem>
-            <treecell name="MailServers">
-               <treeindentation/>Server
-            </treecell>
-        </treeitem>
-        <treeitem>
-            <treecell name="CopiesFolders">
-               <treeindentation/>Copies &amp; Folders
-            </treecell>
-        </treeitem>
-        <treeitem>
-            <treecell name="Advanced">
-               <treeindentation/>Advanced
-            </treecell>
-        </treeitem>
-      </treechildren>
-    
-    </treeitem>
-    
+  <treebody rdf:containment="http://home.netscape.com/NC-rdf#Settings">
+    <treeitem id="msgaccounts:/" open="true"/>
   </treebody>
   
 </tree>
-<html:form>
-<html:center>
-  <html:button type="button" name="Duplicate">Duplicate</html:button>
-  <html:button type="button" name="Delete">Delete</html:button>
-<html:br/>
-<html:button type="button" name="NewAccount">New Account</html:button>
-<html:br/>
-<html:button type="button" name="Default">Set as Default</html:button>
-</html:center>
-</html:form>
+<box align="vertical">
+<box align="horizontal">
+<titledbutton class="push" flex="50%" name="Duplicate" value="Duplicate"/>
+<titledbutton class="push" flex="50%" name="Delete" value="Delete"/>
+</box>
+<box align="horizontal">
+<titledbutton class="push" name="NewAccount" value="New Account" flex="100%"/>
+</box>
+<box align="horizontal">
+<titledbutton class="push" name="Default" value="Set As Default" flex="100%"/>
+</box>
+</box>
 </xul:window>
