@@ -1,5 +1,6 @@
 #include "gtkmozembed.h"
 #include <gtk/gtk.h>
+#include <string.h>
 
 typedef struct _TestGtkBrowser {
   GtkWidget  *topLevelWindow;
