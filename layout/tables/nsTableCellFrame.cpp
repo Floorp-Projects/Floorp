@@ -54,7 +54,6 @@
 #include "nsVoidArray.h"
 #include "nsIView.h"
 #include "nsLayoutAtoms.h"
-#include "nsIFrameManager.h"
 #include "nsIPresShell.h"
 #include "nsCOMPtr.h"
 #include "nsIHTMLTableCellElement.h"

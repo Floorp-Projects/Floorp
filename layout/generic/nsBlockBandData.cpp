@@ -40,7 +40,6 @@
 #include "nsHTMLReflowState.h"
 #include "nsIPresContext.h"
 #include "nsIPresShell.h"
-#include "nsIFrameManager.h"
 #include "nsLayoutAtoms.h"
 #include "nsVoidArray.h"
 

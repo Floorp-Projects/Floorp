@@ -46,7 +46,7 @@
 #include "nsIPresContext.h"
 #include "nsIRenderingContext.h"
 #include "nsIServiceManager.h"
-#include "nsIFrameManager.h"
+#include "nsFrameManager.h"
 #include "nsBidiFrames.h"
 #include "nsBidiUtils.h"
 
@@ -810,25 +810,24 @@ nsBidiPresUtils::RemoveBidiContinuation(nsIPresContext* aPresContext,
   nsIFrame* thisFramesNextBidiFrame;
   nsIFrame* previousFramesNextBidiFrame;
 
-  nsIFrameManager* frameManager = presShell->GetFrameManager();
-  if (frameManager) {
-    frameManager->GetFrameProperty(aFrame, nsLayoutAtoms::nextBidi,
-                                   0, (void**) &thisFramesNextBidiFrame);
-    if (thisFramesNextBidiFrame) {
-      // Remove nextBidi property, associated with the current frame
-      // and with all of its prev-in-flow.
-      frame = aFrame;
-      do {
-        frameManager->RemoveFrameProperty(frame, nsLayoutAtoms::nextBidi);
-        frame->GetPrevInFlow(&frame);
-        if (!frame) {
-          break;
-        }
-        frameManager->GetFrameProperty(frame, nsLayoutAtoms::nextBidi,
-                                       0, (void**) &previousFramesNextBidiFrame);
-      } while (thisFramesNextBidiFrame == previousFramesNextBidiFrame);
-    } // if (thisFramesNextBidiFrame)
-  } // if (frameManager)
+  nsFrameManager* frameManager = presShell->FrameManager();
+  thisFramesNextBidiFrame = NS_STATIC_CAST(nsIFrame*,
+    frameManager->GetFrameProperty(aFrame, nsLayoutAtoms::nextBidi, 0));
+
+  if (thisFramesNextBidiFrame) {
+    // Remove nextBidi property, associated with the current frame
+    // and with all of its prev-in-flow.
+    frame = aFrame;
+    do {
+      frameManager->RemoveFrameProperty(frame, nsLayoutAtoms::nextBidi);
+      frame->GetPrevInFlow(&frame);
+      if (!frame) {
+        break;
+      }
+      previousFramesNextBidiFrame = NS_STATIC_CAST(nsIFrame*,
+        frameManager->GetFrameProperty(frame, nsLayoutAtoms::nextBidi, 0));
+    } while (thisFramesNextBidiFrame == previousFramesNextBidiFrame);
+  } // if (thisFramesNextBidiFrame)
 }
 
 nsresult

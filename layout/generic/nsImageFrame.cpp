@@ -73,7 +73,6 @@
 #include "nsIDOMHTMLMapElement.h"
 #include "nsLayoutAtoms.h"
 #include "nsImageMapUtils.h"
-#include "nsIFrameManager.h"
 #include "nsIScriptSecurityManager.h"
 #ifdef ACCESSIBILITY
 #include "nsIAccessibilityService.h"

@@ -63,7 +63,6 @@
 #include "nsIEnumerator.h"
 
 #include "nsCOMPtr.h"
-#include "nsIFrameManager.h"
 #include "nsIPresShell.h"
 #include "nsIDocument.h"
 

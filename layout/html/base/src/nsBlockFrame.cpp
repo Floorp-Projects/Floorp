@@ -49,7 +49,7 @@
 #include "nsLineLayout.h"
 #include "nsPlaceholderFrame.h"
 #include "nsStyleConsts.h"
-#include "nsIFrameManager.h"
+#include "nsFrameManager.h"
 #include "nsIPresContext.h"
 #include "nsIPresShell.h"
 #include "nsReflowPath.h"
@@ -897,17 +897,13 @@ nsBlockFrame::Reflow(nsIPresContext*          aPresContext,
     // this is a leak of the space manager, but it's only in debug if verify reflow is enabled, so not a big deal
     nsIPresShell *shell = aPresContext->GetPresShell();
     if (shell) {
-      nsCOMPtr<nsIFrameManager>  frameManager;
-      shell->GetFrameManager(getter_AddRefs(frameManager));  
-      if (frameManager) {
-        nsHTMLReflowState&  reflowState = (nsHTMLReflowState&)aReflowState;
-        rv = frameManager->SetFrameProperty(
+      nsHTMLReflowState&  reflowState = (nsHTMLReflowState&)aReflowState;
+      rv = shell->FrameManager()->SetFrameProperty(
                              this, nsLayoutAtoms::spaceManagerProperty,
                              reflowState.mSpaceManager,
                              nsnull /* should be nsSpaceManagerDestroyer*/);
 
-        autoSpaceManager.DebugOrphanSpaceManager();
-      }
+      autoSpaceManager.DebugOrphanSpaceManager();
     }
   }
 #endif

@@ -159,7 +159,7 @@ static const char kPrintingPromptService[] = "@mozilla.org/embedcomp/printingpro
 #include "nsIFrameDebug.h"
 #include "nsILayoutHistoryState.h"
 #include "nsLayoutAtoms.h"
-#include "nsIFrameManager.h"
+#include "nsFrameManager.h"
 #include "nsIParser.h"
 #include "nsIPrintContext.h"
 #include "nsGUIEvent.h"
@@ -2690,11 +2690,8 @@ nsPrintEngine::ReflowPrintObject(nsPrintObject * aPO, PRBool aDoCalcShrink)
     nsCOMPtr<nsIWidget> widget = mParentWidget;
     // the top nsPrintObject's widget will always have scrollbars
     if (aPO->mParent != nsnull && aPO->mContent) {
-      nsCOMPtr<nsIFrameManager> frameMan;
-      aPO->mParent->mPresShell->GetFrameManager(getter_AddRefs(frameMan));
-      NS_ASSERTION(frameMan, "No Frame manager!");
-      nsIFrame* frame;
-      frameMan->GetPrimaryFrameFor(aPO->mContent, &frame);
+      nsFrameManager *frameMan = aPO->mParent->mPresShell->FrameManager();
+      nsIFrame* frame = frameMan->GetPrimaryFrameFor(aPO->mContent);
 
       if (frame) {
         nsIView* view = frame->GetView();
@@ -3057,35 +3054,31 @@ nsPrintEngine::PrintDocContent(nsPrintObject* aPO, nsresult& aStatus)
 static void GetIFramePosition(nsPrintObject * aPO, nscoord& aX, nscoord& aY)
 {
   if (aPO->mParent != nsnull) {
-    nsCOMPtr<nsIFrameManager> frameMan;
     // we would not have gotten here if any of these ptrs were null
-    aPO->mParent->mPresShell->GetFrameManager(getter_AddRefs(frameMan));
-    NS_ASSERTION(frameMan, "No Frame manager!");
-    if (frameMan) {
-      // This gets out HTMLIFrame
-      nsIFrame* frame;
-      frameMan->GetPrimaryFrameFor(aPO->mContent, &frame);
-      NS_ASSERTION(frame, "no primary frame for IFRAME");
-      // find the offset to the content rect
-      if (!frame)
-        return;
+    nsFrameManager *frameMan = aPO->mParent->mPresShell->FrameManager();
 
-      nsMargin borderPadding(0, 0, 0, 0);
-      frame->CalcBorderPadding(borderPadding);
-      aX += borderPadding.left;
-      aY += borderPadding.top;
+    // This gets our HTMLIFrame
+    nsIFrame* frame = frameMan->GetPrimaryFrameFor(aPO->mContent);
+    NS_ASSERTION(frame, "no primary frame for IFRAME");
+    if (!frame)
+      return;
 
-      // traverse out to the pageContentFrame
-      do {
-        nsPoint pt = frame->GetPosition();
-        aX += pt.x;
-        aY += pt.y;
-        if (nsLayoutAtoms::pageContentFrame == frame->GetType()) {
-          break;
-        }
-        frame = frame->GetParent();
-      } while (frame);
-    }
+    // find the offset to the content rect
+    nsMargin borderPadding(0, 0, 0, 0);
+    frame->CalcBorderPadding(borderPadding);
+    aX += borderPadding.left;
+    aY += borderPadding.top;
+
+    // traverse out to the pageContentFrame
+    do {
+      nsPoint pt = frame->GetPosition();
+      aX += pt.x;
+      aY += pt.y;
+      if (nsLayoutAtoms::pageContentFrame == frame->GetType()) {
+        break;
+      }
+      frame = frame->GetParent();
+    } while (frame);
   }
 }
 

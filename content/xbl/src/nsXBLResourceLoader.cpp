@@ -54,7 +54,7 @@
 #include "nsIURI.h"
 #include "nsNetUtil.h"
 #include "nsXBLAtoms.h"
-#include "nsIFrameManager.h"
+#include "nsFrameManager.h"
 #include "nsStyleContext.h"
 #include "nsXBLPrototypeBinding.h"
 
@@ -276,9 +276,9 @@ nsXBLResourceLoader::NotifyBoundElements()
           shell->GetPrimaryFrameFor(content, &childFrame);
           if (!childFrame) {
             // Check to see if it's in the undisplayed content map.
-            nsCOMPtr<nsIFrameManager> frameManager;
-            shell->GetFrameManager(getter_AddRefs(frameManager));
-            nsStyleContext* sc = frameManager->GetUndisplayedContent(content);
+            nsStyleContext* sc =
+              shell->FrameManager()->GetUndisplayedContent(content);
+
             if (!sc) {
               nsCOMPtr<nsIDocumentObserver> obs(do_QueryInterface(shell));
               obs->ContentInserted(doc, parent, content, index);

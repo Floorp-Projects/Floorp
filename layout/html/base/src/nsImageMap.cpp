@@ -57,7 +57,7 @@
 #include "nsIDOMEventReceiver.h"
 #include "nsIPresShell.h"
 #include "nsIFrame.h"
-#include "nsIFrameManager.h"
+#include "nsFrameManager.h"
 #include "nsIViewManager.h"
 #include "nsCoord.h"
 #include "nsIImageMap.h"
@@ -748,8 +748,7 @@ nsImageMap::GetBoundsForAreaContent(nsIContent *aContent,
 void
 nsImageMap::FreeAreas()
 {
-  nsCOMPtr<nsIFrameManager> frameManager;
-  mPresShell->GetFrameManager(getter_AddRefs(frameManager));
+  nsFrameManager *frameManager = mPresShell->FrameManager();
 
   PRInt32 i, n = mAreas.Count();
   for (i = 0; i < n; i++) {
@@ -859,9 +858,7 @@ nsImageMap::AddArea(nsIContent* aArea)
     rec->AddEventListenerByIID(this, NS_GET_IID(nsIDOMFocusListener));
   }
 
-  nsCOMPtr<nsIFrameManager> frameManager;
-  mPresShell->GetFrameManager(getter_AddRefs(frameManager));
-  frameManager->SetPrimaryFrameFor(aArea, mImageFrame);
+  mPresShell->FrameManager()->SetPrimaryFrameFor(aArea, mImageFrame);
 
   Area* area;
   if (shape.IsEmpty() ||

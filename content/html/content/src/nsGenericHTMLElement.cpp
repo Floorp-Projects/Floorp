@@ -88,7 +88,6 @@
 
 #include "nsIPresState.h"
 #include "nsILayoutHistoryState.h"
-#include "nsIFrameManager.h"
 
 #include "nsHTMLParts.h"
 #include "nsContentUtils.h"

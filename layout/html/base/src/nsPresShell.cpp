@@ -98,7 +98,7 @@
 #include "nsIDOMNSHTMLInputElement.h" //optimization for ::DoXXX commands
 #include "nsIDOMNSHTMLTextAreaElement.h"
 #include "nsViewsCID.h"
-#include "nsIFrameManager.h"
+#include "nsFrameManager.h"
 #include "nsXPCOM.h"
 #include "nsISupportsPrimitives.h"
 #include "nsILayoutHistoryState.h"
@@ -1119,8 +1119,6 @@ public:
   NS_IMETHOD SetIgnoreFrameDestruction(PRBool aIgnore);
   NS_IMETHOD NotifyDestroyingFrame(nsIFrame* aFrame);
   
-  NS_IMETHOD GetFrameManager(nsIFrameManager** aFrameManager) const;
-
   NS_IMETHOD DoCopy();
   NS_IMETHOD GetLinkLocation(nsIDOMNode* aNode, nsAString& aLocationString);
   NS_IMETHOD GetImageLocation(nsIDOMNode* aNode, nsAString& aLocationString);
@@ -1439,12 +1437,10 @@ PRLogModuleInfo* PresShell::gLog;
 
 #ifdef NS_DEBUG
 static void
-VerifyStyleTree(nsIPresContext* aPresContext, nsIFrameManager* aFrameManager)
+VerifyStyleTree(nsIPresContext* aPresContext, nsFrameManager* aFrameManager)
 {
-  if (aFrameManager && nsIFrameDebug::GetVerifyStyleTreeEnable()) {
-    nsIFrame* rootFrame;
-
-    aFrameManager->GetRootFrame(&rootFrame);
+  if (nsIFrameDebug::GetVerifyStyleTreeEnable()) {
+    nsIFrame* rootFrame = aFrameManager->GetRootFrame();
     aFrameManager->DebugVerifyStyleTree(rootFrame);
   }
 }
@@ -1711,14 +1707,12 @@ PresShell::Init(nsIDocument* aDocument,
     return result;
 
   // Create and initialize the frame manager
-  result = NS_NewFrameManager(&mFrameManager);
-  if (NS_FAILED(result)) {
-    return result;
+  mFrameManager = new nsFrameManager();
+  if (!mFrameManager) {
+    return NS_ERROR_OUT_OF_MEMORY;
   }
   result = mFrameManager->Init(this, mStyleSet);
-  if (NS_FAILED(result)) {
-    return result;
-  }
+  NS_ENSURE_SUCCESS(result, result);
 
   result = mSelection->Init((nsIFocusTracker *) this, nsnull);
   if (NS_FAILED(result))
@@ -1877,7 +1871,8 @@ PresShell::Destroy()
   // Destroy the frame manager. This will destroy the frame hierarchy
   if (mFrameManager) {
     mFrameManager->Destroy();
-    NS_RELEASE(mFrameManager);
+    delete mFrameManager;
+    mFrameManager = nsnull;
   }
 
   // Let the style set do its cleanup.
@@ -2753,8 +2748,7 @@ PresShell::InitialReflow(nscoord aWidth, nscoord aHeight)
   nsIContent *root = mDocument ? mDocument->GetRootContent() : nsnull;
 
   // Get the root frame from the frame manager
-  nsIFrame* rootFrame;
-  mFrameManager->GetRootFrame(&rootFrame);
+  nsIFrame* rootFrame = mFrameManager->GetRootFrame();
   
   if (root) {
     MOZ_TIMER_DEBUGLOG(("Reset and start: Frame Creation: PresShell::InitialReflow(), this=%p\n",
@@ -2918,8 +2912,7 @@ PresShell::ResizeReflow(nscoord aWidth, nscoord aHeight)
 
   // If we don't have a root frame yet, that means we haven't had our initial
   // reflow...
-  nsIFrame* rootFrame;
-  mFrameManager->GetRootFrame(&rootFrame);
+  nsIFrame* rootFrame = mFrameManager->GetRootFrame();
   if (rootFrame) {
     // Kick off a top-down reflow
     NS_FRAME_LOG(NS_FRAME_TRACE_CALLS,
@@ -3078,19 +3071,9 @@ PresShell::NotifyDestroyingFrame(nsIFrame* aFrame)
     CancelReflowCommandInternal(aFrame, nsnull);
 
     // Notify the frame manager
-    if (mFrameManager) {
-      mFrameManager->NotifyDestroyingFrame(aFrame);
-    }
+    mFrameManager->NotifyDestroyingFrame(aFrame);
   }
 
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-PresShell::GetFrameManager(nsIFrameManager** aFrameManager) const
-{
-  *aFrameManager = mFrameManager;
-  NS_IF_ADDREF(mFrameManager);
   return NS_OK;
 }
 
@@ -3444,8 +3427,7 @@ PresShell::StyleChangeReflow()
 
   WillCauseReflow();
 
-  nsIFrame* rootFrame;
-  mFrameManager->GetRootFrame(&rootFrame);
+  nsIFrame* rootFrame = mFrameManager->GetRootFrame();
   if (rootFrame) {
     // Kick off a top-down reflow
     NS_FRAME_LOG(NS_FRAME_TRACE_CALLS,
@@ -3514,7 +3496,8 @@ PresShell::StyleChangeReflow()
 NS_IMETHODIMP
 PresShell::GetRootFrame(nsIFrame** aResult) const
 {
-  return mFrameManager->GetRootFrame(aResult);
+  *aResult = mFrameManager->GetRootFrame();
+  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -3525,11 +3508,10 @@ PresShell::GetPageSequenceFrame(nsIPageSequenceFrame** aResult) const
     return NS_ERROR_NULL_POINTER;
   }
 
-  nsIFrame*             rootFrame;
   nsIPageSequenceFrame* pageSequence = nsnull;
 
   // The page sequence frame is the child of the rootFrame
-  mFrameManager->GetRootFrame(&rootFrame);
+  nsIFrame *rootFrame = mFrameManager->GetRootFrame();
   nsIFrame* child = rootFrame->GetFirstChild(nsnull);
 
   if (nsnull != child) {
@@ -3602,8 +3584,7 @@ PresShell::EndLoad(nsIDocument *aDocument)
 {
 
   // Restore frame state for the root scroll frame
-  nsIFrame* rootFrame = nsnull;
-  GetRootFrame(&rootFrame);
+  nsIFrame* rootFrame = mFrameManager->GetRootFrame();
   nsCOMPtr<nsISupports> container = mPresContext->GetContainer();
   if (!container)
     return;
@@ -3914,11 +3895,7 @@ PresShell::CreateRenderingContext(nsIFrame *aFrame,
 NS_IMETHODIMP
 PresShell::CantRenderReplacedElement(nsIFrame* aFrame)
 {
-  if (mFrameManager) {
-    return mFrameManager->CantRenderReplacedElement(aFrame);
-  }
-
-  return NS_OK;
+  return mFrameManager->CantRenderReplacedElement(aFrame);
 }
 
 NS_IMETHODIMP
@@ -4647,25 +4624,24 @@ PresShell::CaptureHistoryState(nsILayoutHistoryState** aState, PRBool aLeavingPa
   NS_IF_ADDREF(*aState);
   
   // Capture frame state for the entire frame hierarchy
-  nsIFrame* rootFrame = nsnull;
-  rv = GetRootFrame(&rootFrame);
-  if (NS_FAILED(rv) || nsnull == rootFrame) return rv;
+  nsIFrame* rootFrame = mFrameManager->GetRootFrame();
+  if (!rootFrame) return NS_OK;
   // Capture frame state for the root scroll frame
   // Don't capture state when first creating doc element heirarchy
   // As the scroll position is 0 and this will cause us to loose
   // our previously saved place!
   if (aLeavingPage) {
     nsIFrame* scrollFrame = nsnull;
-    rv = GetRootScrollFrame(mPresContext, rootFrame, &scrollFrame);
+    GetRootScrollFrame(mPresContext, rootFrame, &scrollFrame);
     if (scrollFrame) {
-      rv = mFrameManager->CaptureFrameStateFor(scrollFrame, historyState, nsIStatefulFrame::eDocumentScrollState);
+      mFrameManager->CaptureFrameStateFor(scrollFrame, historyState,
+                                       nsIStatefulFrame::eDocumentScrollState);
     }
   }
 
-
-  rv = mFrameManager->CaptureFrameState(rootFrame, historyState);  
+  mFrameManager->CaptureFrameState(rootFrame, historyState);  
  
-  return rv;
+  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -4850,16 +4826,12 @@ PresShell::UnsuppressAndInvalidate()
     }
   }
 
-  NS_ASSERTION(mFrameManager, "frameManager is already gone");
-  if (mFrameManager) {
-    mPaintingSuppressed = PR_FALSE;
-    nsIFrame* rootFrame;
-    mFrameManager->GetRootFrame(&rootFrame);
-    if (rootFrame) {
-      nsRect rect = rootFrame->GetRect();
-      if (!rect.IsEmpty()) {
-        ((nsFrame*)rootFrame)->Invalidate(mPresContext, rect, PR_FALSE);
-      }
+  mPaintingSuppressed = PR_FALSE;
+  nsIFrame* rootFrame = mFrameManager->GetRootFrame();
+  if (rootFrame) {
+    nsRect rect = rootFrame->GetRect();
+    if (!rect.IsEmpty()) {
+      ((nsFrame*)rootFrame)->Invalidate(mPresContext, rect, PR_FALSE);
     }
   }
 
@@ -5337,19 +5309,13 @@ PresShell::ReconstructStyleData()
 {
   mStylesHaveChanged = PR_FALSE;
 
-  nsIFrame* rootFrame;
-  GetRootFrame(&rootFrame);
+  nsIFrame* rootFrame = mFrameManager->GetRootFrame();
   if (!rootFrame)
     return NS_OK;
 
-  nsCOMPtr<nsIFrameManager> frameManager;
-  GetFrameManager(getter_AddRefs(frameManager));
-  
   nsStyleChangeList changeList;
-  nsChangeHint frameChange = NS_STYLE_HINT_NONE;
-  frameManager->ComputeStyleChangeFor(rootFrame, changeList,
-                                      NS_STYLE_HINT_NONE,
-                                      frameChange);
+  mFrameManager->ComputeStyleChangeFor(rootFrame, &changeList,
+                                       NS_STYLE_HINT_NONE);
 
   mFrameConstructor->ProcessRestyledFrames(changeList, mPresContext);
 
@@ -5424,17 +5390,8 @@ NS_IMETHODIMP
 PresShell::GetPrimaryFrameFor(nsIContent* aContent,
                               nsIFrame**  aResult) const
 {
-  nsresult  rv;
-
-  if (mFrameManager) {
-    rv = mFrameManager->GetPrimaryFrameFor(aContent, aResult);
-
-  } else {
-    *aResult = nsnull;
-    rv = NS_OK;
-  }
-
-  return rv;
+  *aResult = mFrameManager->GetPrimaryFrameFor(aContent);
+  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -5460,11 +5417,8 @@ NS_IMETHODIMP
 PresShell::GetPlaceholderFrameFor(nsIFrame*  aFrame,
                                   nsIFrame** aResult) const
 {
-  if (!mFrameManager) {
-    *aResult = nsnull;
-    return NS_OK;
-  }
-  return mFrameManager->GetPlaceholderFrameFor(aFrame, aResult);
+  *aResult = mFrameManager->GetPlaceholderFrameFor(aFrame);
+  return NS_OK;
 }
 
 #ifdef IBMBIDI
@@ -5502,8 +5456,7 @@ NS_IMETHODIMP
 PresShell::BidiStyleChangeReflow()
 {
   // Have the root frame's style context remap its style
-  nsIFrame* rootFrame;
-  mFrameManager->GetRootFrame(&rootFrame);
+  nsIFrame* rootFrame = mFrameManager->GetRootFrame();
   if (rootFrame) {
     mStyleSet->ClearStyleData(mPresContext);
     ReconstructFrames();
@@ -6340,8 +6293,7 @@ PresShell::ProcessReflowCommands(PRBool aInterruptible)
   if (0 != mReflowCommands.Count()) {
     nsHTMLReflowMetrics   desiredSize(nsnull);
     nsIRenderingContext*  rcx;
-    nsIFrame*             rootFrame;        
-    mFrameManager->GetRootFrame(&rootFrame);
+    nsIFrame*             rootFrame = mFrameManager->GetRootFrame();
     nsSize          maxSize = rootFrame->GetSize();
 
     nsresult rv=CreateRenderingContext(rootFrame, &rcx);
@@ -6765,21 +6717,21 @@ CompareTrees(nsIPresContext* aFirstPresContext, nsIFrame* aFirstFrame,
 
         // verify that neither frame has a space manager,
         // or they both do and the space managers are equivalent
-        nsCOMPtr<nsIFrameManager>fm1;
-        nsSpaceManager *sm1;
-        nsIPresShell *ps1 = aFirstPresContext->PresShell();
-        ps1->GetFrameManager(getter_AddRefs(fm1));
+        nsFrameManager *fm1 = aFirstPresContext->FrameManager();
         NS_ASSERTION(fm1, "no frame manager for primary tree!");
-        fm1->GetFrameProperty((nsIFrame*)k1, nsLayoutAtoms::spaceManagerProperty,
-                                     0, (void **)&sm1);
+
+        nsSpaceManager *sm1 =
+          NS_STATIC_CAST(nsSpaceManager*, fm1->GetFrameProperty(k1,
+                                      nsLayoutAtoms::spaceManagerProperty, 0));
+
         // look at the test frame
-        nsCOMPtr<nsIFrameManager>fm2;
-        nsSpaceManager *sm2;
-        nsIPresShell *ps2 = aSecondPresContext->PresShell();
-        ps2->GetFrameManager(getter_AddRefs(fm2));
+        nsFrameManager *fm2 = aSecondPresContext->FrameManager();
         NS_ASSERTION(fm2, "no frame manager for test tree!");
-        fm2->GetFrameProperty((nsIFrame*)k2, nsLayoutAtoms::spaceManagerProperty,
-                                     0, (void **)&sm2);
+
+        nsSpaceManager *sm2 =
+          NS_STATIC_CAST(nsSpaceManager*, fm2->GetFrameProperty(k2,
+                                      nsLayoutAtoms::spaceManagerProperty, 0));
+
         // now compare the space managers
         if (((nsnull == sm1) && (nsnull != sm2)) ||
             ((nsnull != sm1) && (nsnull == sm2))) {   // one is null, and the other is not
@@ -7093,8 +7045,7 @@ PresShell::VerifyIncrementalReflow()
 
   // Now that the document has been reflowed, use its frame tree to
   // compare against our frame tree.
-  nsIFrame* root1;
-  GetRootFrame(&root1);
+  nsIFrame* root1 = mFrameManager->GetRootFrame();
   nsIFrame* root2;
   sh->GetRootFrame(&root2);
   PRBool ok = CompareTrees(mPresContext, root1, cx, root2);

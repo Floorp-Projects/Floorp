@@ -56,7 +56,6 @@
 #include "nsMenuFrame.h"
 #include "nsIView.h"
 #include "nsIViewManager.h"
-#include "nsIFrameManager.h"
 #include "nsMenuPopupFrame.h"
 #include "nsGUIEvent.h"
 #include "nsUnicharUtils.h"

@@ -44,7 +44,6 @@ nsICaret.h \
 nsIFocusTracker.h \
 nsIFrame.h \
 nsIFrameDebug.h \
-nsIFrameManager.h \
 nsIFrameSelection.h \
 nsIFrameTraversal.h \
 nsIFrameUtil.h \

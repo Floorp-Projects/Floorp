@@ -99,7 +99,6 @@
 #include "nsIFrameDebug.h"
 #include "nsILayoutHistoryState.h"
 #include "nsLayoutAtoms.h"
-#include "nsIFrameManager.h"
 #include "nsIParser.h"
 #include "nsIPrintContext.h"
 #include "nsGUIEvent.h"

@@ -41,7 +41,7 @@
 #include "nsSpaceManager.h"
 #include "nsIFontMetrics.h"
 #include "nsIPresContext.h"
-#include "nsIFrameManager.h"
+#include "nsFrameManager.h"
 #include "nsIContent.h"
 #include "nsStyleContext.h"
 #include "nsHTMLReflowCommand.h"
@@ -382,11 +382,13 @@ nsBlockReflowContext::ReflowBlock(const nsRect&       aSpace,
 
   aComputedOffsets = aFrameRS.mComputedOffsets;
   if (NS_STYLE_POSITION_RELATIVE == display->mPosition) {
-    nsIFrameManager *frameManager = mPresContext->GetFrameManager();
-    nsPoint *offsets;
-    frameManager->GetFrameProperty(mFrame,
-                                   nsLayoutAtoms::computedOffsetProperty, 0,
-                                   (void**)&offsets);
+    nsFrameManager *frameManager = mPresContext->FrameManager();
+
+    nsPoint *offsets = NS_STATIC_CAST(nsPoint*,
+      frameManager->GetFrameProperty(mFrame,
+                                     nsLayoutAtoms::computedOffsetProperty,
+                                     0));
+
     if (offsets)
       offsets->MoveTo(aComputedOffsets.left, aComputedOffsets.top);
     else {
