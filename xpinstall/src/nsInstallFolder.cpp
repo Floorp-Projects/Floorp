@@ -56,7 +56,8 @@ struct DirectoryTable DirectoryTable[] =
 
 	{"Temporary",           104 },
 
-	{"Current User",        106 },
+	{"Profile",             106 },
+	{"Current User",        106 }, // "Current User" is deprecated
 	{"Preferences",         107 },
 	{"OS Drive",            108 },
 	{"file:///",            109 },
