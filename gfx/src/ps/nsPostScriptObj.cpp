@@ -67,7 +67,7 @@
 
 #ifdef VMS
 #include <stdlib.h>
-#endif
+#endif /* VMS */
 
 #ifdef MOZ_ENABLE_FREETYPE2
 #include "nsType8.h"
@@ -206,12 +206,6 @@ nsPostScriptObj::~nsPostScriptObj()
     if (mPrintSetup->out) {
       fclose(mPrintSetup->out);
       mPrintSetup->out = nsnull;
-#ifdef VMS
-      // if the file was still open and we have a print command, then it was
-      // a print preview operation and so we need to delete the temp file.
-      if (mPrintSetup->print_cmd)
-        remove(mPrintSetup->filename);
-#endif
     }
     if (mPrintSetup->tmpBody) {
       fclose(mPrintSetup->tmpBody);
@@ -373,16 +367,8 @@ nsPostScriptObj::Init( nsIDeviceContextSpecPS *aSpec )
         PR_SetEnv(envvar);
         
         aSpec->GetCommand(&mPrintSetup->print_cmd);
-#ifndef VMS
         mPrintSetup->out = tmpfile();
         mPrintSetup->filename = nsnull;  
-#else
-        // We can not open a pipe and print the contents of it. Instead
-        // we have to print to a file and then print that.
-        
-        mPrintSetup->filename = tempnam("SYS$SCRATCH:","MOZ_P");
-        mPrintSetup->out = fopen(mPrintSetup->filename, "w");
-#endif
       } else {
         const char *path;
         aSpec->GetPath(&path);
@@ -391,15 +377,9 @@ nsPostScriptObj::Init( nsIDeviceContextSpecPS *aSpec )
         if (!mPrintSetup->out)
           return NS_ERROR_GFX_PRINTER_COULD_NOT_OPEN_FILE;
       }
-#ifndef VMS
       mPrintSetup->tmpBody = tmpfile();
       NS_ENSURE_TRUE(mPrintSetup->tmpBody, NS_ERROR_FAILURE);
       mPrintSetup->tmpBody_filename = nsnull;
-#else
-      mPrintSetup->tmpBody_filename = tempnam("SYS$SCRATCH:", "MOZ_TT_P");
-      mPrintSetup->tmpBody = fopen(mPrintSetup->tmpBody_filename, "w");
-      NS_ENSURE_TRUE(mPrintSetup->tmpBody, NS_ERROR_FAILURE);
-#endif
     } else 
         return NS_ERROR_FAILURE;
 
@@ -2109,22 +2089,6 @@ nsPostScriptObj::end_document()
   fprintf(f, "%%%%Pages: %d\n", (int) mPageNumber - 1);
   fprintf(f, "%%%%EOF\n");
 
-#ifdef VMS
-  if ( mPrintSetup->print_cmd != nsnull ) {
-    char VMSPrintCommand[1024];
-    if (mPrintSetup->out) {
-      fclose(mPrintSetup->out);
-      mPrintSetup->out = nsnull;
-    }  
-    PR_snprintf(VMSPrintCommand, sizeof(VMSPrintCommand), "%s %s.",
-      mPrintSetup->print_cmd, mPrintSetup->filename);
-    PR_LOG(nsPostScriptObjLM, PR_LOG_DEBUG, ("VMS print command '%s'\n", VMSPrintCommand));
-    // FixMe: Check for error and return one of NS_ERROR_GFX_PRINTER_* on demand  
-    system(VMSPrintCommand);
-    free((void *)mPrintSetup->filename);
-  }
-#endif
-
   if (mPrintSetup->filename) {
     PR_LOG(nsPostScriptObjLM, PR_LOG_DEBUG, ("print to file completed.\n"));
   }  
@@ -2135,7 +2099,15 @@ nsPostScriptObj::end_document()
     char   buf[256];
     size_t len;
         
+#ifdef VMS
+    /* We can't print from a pipe, so we need to create a temporary file */
+    int VMSstatus;
+    char VMSPrintCommand[1024];
+    mPrintSetup->filename = tempnam("SYS$SCRATCH:","MOZ_P");
+    pipe = fopen(mPrintSetup->filename, "w");
+#else
     pipe = popen(mPrintSetup->print_cmd, "w");
+#endif /* VMS */
     /* XXX: We should look at |errno| in this case and return something
      * more specific here... */
     if (!pipe)
@@ -2153,7 +2125,23 @@ nsPostScriptObj::end_document()
       job_size += len;
     } while(len == sizeof(buf));
 
+#ifdef VMS
+    fclose(pipe);
+    /* Now we can print the temporary file */
+    PR_snprintf(VMSPrintCommand, sizeof(VMSPrintCommand), "%s %s.",
+      mPrintSetup->print_cmd, mPrintSetup->filename);
+    PR_LOG(nsPostScriptObjLM, PR_LOG_DEBUG, ("VMS print command '%s'\n", 
+      VMSPrintCommand));
+    VMSstatus = system(VMSPrintCommand);
+    free((void *)mPrintSetup->filename);
+    mPrintSetup->filename = NULL;
+    PR_LOG(nsPostScriptObjLM, PR_LOG_DEBUG, ("VMS print status = %d\n",
+      VMSstatus));
+    if (!WIFEXITED(VMSstatus))
+      return NS_ERROR_GFX_PRINTER_CMD_FAILURE;
+#else
     pclose(pipe);
+#endif /* VMS */
     PR_LOG(nsPostScriptObjLM, PR_LOG_DEBUG, ("piping done, copied %ld bytes.\n", job_size));
     if (errno != 0) {
       return NS_ERROR_GFX_PRINTER_CMD_FAILURE;
