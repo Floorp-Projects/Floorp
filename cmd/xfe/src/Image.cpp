@@ -187,7 +187,7 @@ XFE_Image::~XFE_Image(void)
 
 
 /* returns if the image has been completely loaded */
-Boolean 
+PRBool
 XFE_Image::isImageLoaded(void)
 {
      return (completelyLoaded);
