@@ -991,6 +991,7 @@ void nsAccessible::GetBounds(nsRect& aTotalBounds, nsIFrame** aBoundingFrame)
  */
 
   // Initialization area
+  *aBoundingFrame = nsnull;
   nsIFrame *firstFrame = GetBoundsFrame();
   if (!firstFrame)
     return;
