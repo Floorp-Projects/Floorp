@@ -47,7 +47,6 @@ CPPSRCS		= \
 		TestCOMPtrEq.cpp \
 		TestCRT.cpp \
 		TestFactory.cpp \
-		TestHashtables.cpp \
 		TestID.cpp \
 		TestObserverService.cpp \
 		TestPermanentAtoms.cpp \
