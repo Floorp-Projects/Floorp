@@ -41,7 +41,6 @@ EXPORTS =                          \
 	nsHashtableEnumerator.h    \
 	nsIArena.h                 \
 	nsIByteBuffer.h            \
-	nsISimpleEnumerator.h      \
 	nsISizeOfHandler.h         \
 	nsIUnicharBuffer.h         \
 	nsInt64.h                  \
