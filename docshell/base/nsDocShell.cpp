@@ -2838,6 +2838,9 @@ NS_IMETHODIMP nsDocShell::CreateFixupURI(const PRUnichar* aStringURI,
    nsAutoString uriString(aStringURI);
    uriString.Trim(" ");  // Cleanup the empty spaces that might be on each end.
 
+   // Eliminate embedded newlines, which single-line text fields now allow:
+   uriString.StripChars("\r\n");
+
    // XXX nasty hack to check for the view-source: prefix
    //
    // The long term way and probably CORRECT way to do this is to write a
