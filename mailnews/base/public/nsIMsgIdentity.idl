@@ -68,9 +68,10 @@ interface nsIMsgIdentity : nsISupports {
   attribute boolean attachVCard;
 
   /* the current signature */
-  attribute nsIFileSpec signature;
   /*  after PR1, let's make this a real object */
   /*  attribute nsIMsgSignature signature; */
+  attribute nsIFileSpec signature;
+  attribute long signatureDate;
 
   /* the current vcard */
   attribute nsIMsgVCard vCard;
@@ -85,6 +86,6 @@ interface nsIMsgIdentity : nsISupports {
   attribute string draftFolder;
   attribute string stationeryFolder;
   attribute string junkMailFolder;
-  
+ 
   wstring toString();
 };

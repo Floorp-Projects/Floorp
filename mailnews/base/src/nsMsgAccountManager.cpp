@@ -118,6 +118,8 @@ static NS_DEFINE_CID(kMsgFolderCacheCID, NS_MSGFOLDERCACHE_CID);
 #define PREF_4X_MAIL_IDENTITY_USERNAME "mail.identity.username"
 #define PREF_4X_MAIL_IDENTITY_REPLY_TO "mail.identity.reply_to"    
 #define PREF_4X_MAIL_IDENTITY_ORGANIZATION "mail.identity.organization"
+#define PREF_4X_MAIL_SIGNATURE_FILE "mail.signature_file"
+#define PREF_4X_MAIL_SIGNATURE_DATE "mail.signature_date"
 #define PREF_4X_MAIL_COMPOSE_HTML "mail.html_compose"
 #define PREF_4X_MAIL_POP_NAME "mail.pop_name"
 #define PREF_4X_MAIL_REMEMBER_PASSWORD "mail.remember_password"
@@ -174,6 +176,24 @@ static NS_DEFINE_CID(kMsgFolderCacheCID, NS_MSGFOLDERCACHE_CID);
   }	\
 }
 
+#define COPY_IDENTITY_FILE_VALUE(SRC_ID,DEST_ID,MACRO_GETTER,MACRO_SETTER) 	\
+	{	\
+		nsresult macro_rv;	\
+		nsCOMPtr <nsIFileSpec>macro_spec;   \
+        	macro_rv = SRC_ID->MACRO_GETTER(getter_AddRefs(macro_spec)); \
+        	if (NS_FAILED(macro_rv)) return macro_rv;	\
+        	DEST_ID->MACRO_SETTER(macro_spec);     \
+	}
+
+#define COPY_IDENTITY_INT_VALUE(SRC_ID,DEST_ID,MACRO_GETTER,MACRO_SETTER) 	\
+	{	\
+		    nsresult macro_rv;	\
+        	PRInt32 macro_oldInt;	\
+        	macro_rv = SRC_ID->MACRO_GETTER(&macro_oldInt);	\
+        	if (NS_FAILED(macro_rv)) return macro_rv;	\
+        	DEST_ID->MACRO_SETTER(macro_oldInt);     \
+	}
+
 #define COPY_IDENTITY_BOOL_VALUE(SRC_ID,DEST_ID,MACRO_GETTER,MACRO_SETTER) 	\
 	{	\
 		    nsresult macro_rv;	\
@@ -213,7 +233,26 @@ static const PRUnichar unicharEmptyString[] = { (PRUnichar)'\0' };
         	}	\
 	}
 
-#define MIGRATE_SIMPLE_FILE_PREF(PREFNAME,MACRO_OBJECT,MACRO_METHOD) \
+#define MIGRATE_SIMPLE_FILE_PREF_TO_BOOL_PREF(PREFNAME,MACRO_OBJECT,MACRO_METHOD) \
+  { \
+    nsresult macro_rv; \
+    nsCOMPtr <nsIFileSpec>macro_spec;	\
+    macro_rv = m_prefs->GetFilePref(PREFNAME, getter_AddRefs(macro_spec)); \
+    if (NS_SUCCEEDED(macro_rv)) { \
+	char *macro_oldStr = nsnull; \
+	macro_rv = macro_spec->GetUnixStyleFilePath(&macro_oldStr);	\
+    	if (NS_SUCCEEDED(macro_rv) && macro_oldStr && (PL_strlen(macro_oldStr) > 0)) { \
+		MACRO_OBJECT->MACRO_METHOD(PR_TRUE); \
+	}	\
+	else {	\
+		MACRO_OBJECT->MACRO_METHOD(PR_FALSE); \
+	}	\
+	PR_FREEIF(macro_oldStr); \
+    } \
+  }
+
+
+#define MIGRATE_SIMPLE_FILE_PREF_TO_CHAR_PREF(PREFNAME,MACRO_OBJECT,MACRO_METHOD) \
   { \
     nsresult macro_rv; \
     nsCOMPtr <nsIFileSpec>macro_spec;	\
@@ -225,6 +264,16 @@ static const PRUnichar unicharEmptyString[] = { (PRUnichar)'\0' };
 		MACRO_OBJECT->MACRO_METHOD(macro_oldStr); \
 	}	\
 	PR_FREEIF(macro_oldStr); \
+    } \
+  }
+
+#define MIGRATE_SIMPLE_FILE_PREF_TO_FILE_PREF(PREFNAME,MACRO_OBJECT,MACRO_METHOD) \
+  { \
+    nsresult macro_rv; \
+    nsCOMPtr <nsIFileSpec>macro_spec;	\
+    macro_rv = m_prefs->GetFilePref(PREFNAME, getter_AddRefs(macro_spec)); \
+    if (NS_SUCCEEDED(macro_rv)) { \
+	MACRO_OBJECT->MACRO_METHOD(macro_spec); \
     } \
   }
 
@@ -1386,18 +1435,20 @@ NS_IMETHODIMP nsMsgAccountManager::NotifyServerUnloaded(nsIMsgIncomingServer *se
 nsresult
 nsMsgAccountManager::MigrateIdentity(nsIMsgIdentity *identity)
 {
+  /* NOTE:  if you add prefs here, make sure you update CopyIdentity() */
   MIGRATE_SIMPLE_STR_PREF(PREF_4X_MAIL_IDENTITY_USEREMAIL,identity,SetEmail)
   MIGRATE_SIMPLE_WSTR_PREF(PREF_4X_MAIL_IDENTITY_USERNAME,identity,SetFullName)
   MIGRATE_SIMPLE_STR_PREF(PREF_4X_MAIL_IDENTITY_REPLY_TO,identity,SetReplyTo)
   MIGRATE_SIMPLE_WSTR_PREF(PREF_4X_MAIL_IDENTITY_ORGANIZATION,identity,SetOrganization)
   MIGRATE_SIMPLE_BOOL_PREF(PREF_4X_MAIL_COMPOSE_HTML,identity,SetComposeHtml)
   MIGRATE_SIMPLE_STR_PREF(PREF_4X_MAIL_DEFAULT_DRAFTS,identity,SetDraftFolder)
+  MIGRATE_SIMPLE_FILE_PREF_TO_FILE_PREF(PREF_4X_MAIL_SIGNATURE_FILE,identity,SetSignature);
+  MIGRATE_SIMPLE_FILE_PREF_TO_BOOL_PREF(PREF_4X_MAIL_SIGNATURE_FILE,identity,SetAttachSignature);
+  MIGRATE_SIMPLE_INT_PREF(PREF_4X_MAIL_SIGNATURE_DATE,identity,SetSignatureDate);
   CONVERT_4X_URI(identity,DEFAULT_4X_DRAFTS_FOLDER_NAME,GetDraftFolder,SetDraftFolder)
-    
   MIGRATE_SIMPLE_STR_PREF(PREF_4X_MAIL_DEFAULT_TEMPLATES,identity,SetStationeryFolder)
   CONVERT_4X_URI(identity,DEFAULT_4X_TEMPLATES_FOLDER_NAME,GetStationeryFolder,SetStationeryFolder)
-    
-  // what about the new 5.0 spam folder pref?
+  /* NOTE:  if you add prefs here, make sure you update CopyIdentity() */
   return NS_OK;
 }
 
@@ -1422,14 +1473,14 @@ nsMsgAccountManager::SetNewsCcAndFccValues(nsIMsgIdentity *identity)
   PRBool news_used_uri_for_sent_in_4x;
   rv = m_prefs->GetBoolPref(PREF_4X_NEWS_USE_IMAP_SENTMAIL, &news_used_uri_for_sent_in_4x);
   if (NS_FAILED(rv)) {
-	  MIGRATE_SIMPLE_FILE_PREF(PREF_4X_NEWS_DEFAULT_FCC,identity,SetFccFolder)
+	  MIGRATE_SIMPLE_FILE_PREF_TO_CHAR_PREF(PREF_4X_NEWS_DEFAULT_FCC,identity,SetFccFolder)
   }
   else {
 	  if (news_used_uri_for_sent_in_4x) {
 	    MIGRATE_SIMPLE_STR_PREF(PREF_4X_NEWS_IMAP_SENTMAIL_PATH,identity,SetFccFolder)
 	  }
 	  else {
-	    MIGRATE_SIMPLE_FILE_PREF(PREF_4X_NEWS_DEFAULT_FCC,identity,SetFccFolder)
+	    MIGRATE_SIMPLE_FILE_PREF_TO_CHAR_PREF(PREF_4X_NEWS_DEFAULT_FCC,identity,SetFccFolder)
 	  }
   }
   CONVERT_4X_URI(identity,DEFAULT_4X_SENT_FOLDER_NAME,GetFccFolder,SetFccFolder)
@@ -1450,14 +1501,14 @@ nsMsgAccountManager::SetMailCcAndFccValues(nsIMsgIdentity *identity)
   PRBool imap_used_uri_for_sent_in_4x;
   rv = m_prefs->GetBoolPref(PREF_4X_MAIL_USE_IMAP_SENTMAIL, &imap_used_uri_for_sent_in_4x);
   if (NS_FAILED(rv)) {
-	MIGRATE_SIMPLE_FILE_PREF(PREF_4X_MAIL_DEFAULT_FCC,identity,SetFccFolder)
+	MIGRATE_SIMPLE_FILE_PREF_TO_CHAR_PREF(PREF_4X_MAIL_DEFAULT_FCC,identity,SetFccFolder)
   }
   else {
 	if (imap_used_uri_for_sent_in_4x) {
 		MIGRATE_SIMPLE_STR_PREF(PREF_4X_MAIL_IMAP_SENTMAIL_PATH,identity,SetFccFolder)
 	}
 	else {
-		MIGRATE_SIMPLE_FILE_PREF(PREF_4X_MAIL_DEFAULT_FCC,identity,SetFccFolder)
+		MIGRATE_SIMPLE_FILE_PREF_TO_CHAR_PREF(PREF_4X_MAIL_DEFAULT_FCC,identity,SetFccFolder)
 	}
   }
   CONVERT_4X_URI(identity,DEFAULT_4X_SENT_FOLDER_NAME,GetFccFolder,SetFccFolder)
@@ -2170,6 +2221,9 @@ nsMsgAccountManager::CopyIdentity(nsIMsgIdentity *srcIdentity, nsIMsgIdentity *d
         COPY_IDENTITY_WSTR_VALUE(srcIdentity,destIdentity,GetOrganization,SetOrganization)
         COPY_IDENTITY_STR_VALUE(srcIdentity,destIdentity,GetDraftFolder,SetDraftFolder)
         COPY_IDENTITY_STR_VALUE(srcIdentity,destIdentity,GetStationeryFolder,SetStationeryFolder)
+	COPY_IDENTITY_BOOL_VALUE(srcIdentity,destIdentity,GetAttachSignature,SetAttachSignature)
+	COPY_IDENTITY_FILE_VALUE(srcIdentity,destIdentity,GetSignature,SetSignature)
+	COPY_IDENTITY_INT_VALUE(srcIdentity,destIdentity,GetSignatureDate,SetSignatureDate)
 
 	return NS_OK;
 }

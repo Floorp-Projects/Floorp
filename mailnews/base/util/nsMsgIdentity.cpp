@@ -385,6 +385,8 @@ NS_IMPL_IDPREF_BOOL(ComposeHtml, "compose_html");
 NS_IMPL_IDPREF_BOOL(AttachVCard, "attach_vcard");
 NS_IMPL_IDPREF_BOOL(AttachSignature, "attach_signature");
 
+NS_IMPL_IDPREF_INT(SignatureDate,"sig_date");
+
 NS_IMPL_IDPREF_BOOL(DoFcc, "fcc");
 NS_IMPL_IDPREF_STR(FccFolder, "fcc_folder");
 
