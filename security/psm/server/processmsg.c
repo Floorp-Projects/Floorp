@@ -272,7 +272,7 @@ SSMControlConnection_ProcessMiscRequest(SSMControlConnection * ctrl,
 {
     SingleNumMessage req;
     SingleItemMessage reply;
-    char *buf;
+    char *buf = NULL;
     SSMStatus rv = SSM_SUCCESS;
     SECStatus srv;
   
