@@ -1628,6 +1628,32 @@ XULSortServiceImpl::InsertContainerNode(nsIRDFCompositeDataSource *db, sortState
 		if (numChildren > 0)
 		{
 		        nsCOMPtr<nsIContent>	child;
+
+// #define	OPTIMIZED_BINARY_INSERTION
+#ifdef	OPTIMIZED_BINARY_INSERTION
+
+		        PRInt32			direction = 0, left = 1, right = numChildren, x;
+		        while (right >= 1)
+		        {
+		        	x = (1 + right) / 2;
+				container->ChildAt(x-1, *getter_AddRefs(child));
+				nsIContent	*theChild = child.get();
+				// Note: since cacheFirstHint is PR_TRUE, the first node passed
+				// into inplaceSortCallback() must be the node that doesn't change
+				direction = inplaceSortCallback(&node, &theChild, &sortInfo);
+				if (right - left <= 1 )
+				{
+					PRInt32		thePos = ((direction > 0) ? x : x-1);
+					container->InsertChildAt(node, thePos, aNotify);
+					childAdded = PR_TRUE;
+					break;
+				}
+		        	if (direction < 0)	right = x-1;
+		        	else			left = x+1;
+		        }
+
+#else
+
 			PRInt32			last = -1, current, direction = 0, delta = numChildren;
 			while(PR_TRUE)
 			{
@@ -1676,6 +1702,8 @@ XULSortServiceImpl::InsertContainerNode(nsIRDFCompositeDataSource *db, sortState
 				}
 				last = current;
 			}
+
+#endif
 		}
 	}
 
