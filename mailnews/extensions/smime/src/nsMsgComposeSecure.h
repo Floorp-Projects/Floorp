@@ -65,10 +65,10 @@ public:
   /* additional members */
   nsOutputFileStream *GetOutputStream() { return mStream;}
 private:
-  nsresult MimeInitMultipartSigned(PRBool aOuter);
-  nsresult MimeInitEncryption(PRBool aSign);
-  nsresult MimeFinishMultipartSigned (PRBool aOuter);
-  nsresult MimeFinishEncryption (PRBool aSign);
+  nsresult MimeInitMultipartSigned(PRBool aOuter, nsIMsgSendReport *sendReport);
+  nsresult MimeInitEncryption(PRBool aSign, nsIMsgSendReport *sendReport);
+  nsresult MimeFinishMultipartSigned (PRBool aOuter, nsIMsgSendReport *sendReport);
+  nsresult MimeFinishEncryption (PRBool aSign, nsIMsgSendReport *sendReport);
   nsresult MimeCryptoHackCerts(const char *aRecipients, nsIMsgSendReport *sendReport, PRBool aEncrypt, PRBool aSign);
   static void InitializeSMIMEBundle();
   nsresult GetSMIMEBundleString(const PRUnichar *name,
@@ -96,6 +96,10 @@ private:
 
   MimeEncoderData *mCryptoEncoderData;
   PRBool mIsDraft;
+
+  PRBool mErrorAlreadyReported;
+  void SetError(nsIMsgSendReport *sendReport, const PRUnichar *bundle_string);
+  void SetErrorWithParam(nsIMsgSendReport *sendReport, const PRUnichar *bundle_string, const char *param);
 };
 
 #endif

@@ -44,6 +44,6 @@ interface nsIMsgComposeSecure : nsISupports
     boolean requiresCryptoEncapsulation(in nsIMsgIdentity aIdentity, in nsIMsgCompFields aCompFields);
 
 	void beginCryptoEncapsulation(in nsOutputFileStream aStream, in string aRecipients, in nsIMsgCompFields aCompFields, in nsIMsgIdentity aIdentity, in nsIMsgSendReport sendReport, in boolean aIsDraft);
-	void finishCryptoEncapsulation(in boolean aAbort);
+	void finishCryptoEncapsulation(in boolean aAbort, in nsIMsgSendReport sendReport);
 	void mimeCryptoWriteBlock(in string aBuf, in long aLen);
 };
