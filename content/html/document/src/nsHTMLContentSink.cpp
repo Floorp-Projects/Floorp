@@ -101,6 +101,7 @@
 #include "nsICharsetAlias.h"
 #include "nsIChannel.h"
 #include "nsIHttpChannel.h"
+#include "nsCPrefetchService.h"
 
 #include "nsIWebShell.h"
 #include "nsIDocShell.h"
@@ -446,11 +447,16 @@ public:
 
   void AddBaseTagInfo(nsIHTMLContent* aContent);
 
-  nsresult ProcessLink(nsIHTMLContent* aElement, const nsAString& aLinkData);
+  nsresult ProcessLinkHeader(nsIHTMLContent* aElement, const nsAString& aLinkData);
+  nsresult ProcessLink(nsIHTMLContent* aElement,
+                       const nsString& aHref, const nsString& aRel,
+                       const nsString& aTitle, const nsString& aType,
+                       const nsString& aMedia);
   nsresult ProcessStyleLink(nsIHTMLContent* aElement,
-                            const nsString& aHref, const nsString& aRel,
+                            const nsString& aHref, const nsStringArray& aLinkTypes,
                             const nsString& aTitle, const nsString& aType,
                             const nsString& aMedia);
+  void     ProcessNextLink(const nsAString &aRel);
 
   void ProcessBaseHref(const nsAString& aBaseHref);
   void ProcessBaseTarget(const nsAString& aBaseTarget);
@@ -4167,7 +4173,7 @@ const PRUnichar kLessThanCh = PRUnichar('<');
 const PRUnichar kGreaterThanCh = PRUnichar('>');
 
 nsresult 
-HTMLContentSink::ProcessLink(nsIHTMLContent* aElement, const nsAString& aLinkData)
+HTMLContentSink::ProcessLinkHeader(nsIHTMLContent* aElement, const nsAString& aLinkData)
 {
   nsresult result = NS_OK;
   
@@ -4282,8 +4288,8 @@ HTMLContentSink::ProcessLink(nsIHTMLContent* aElement, const nsAString& aLinkDat
       }
     }
     if (kCommaCh == endCh) {  // hit a comma, process what we've got so far
-      if (!href.IsEmpty()) {
-        result = ProcessStyleLink(aElement, href, rel, title, type, media);
+      if (!href.IsEmpty() && !rel.IsEmpty()) {
+        result = ProcessLink(aElement, href, rel, title, type, media);
         if (NS_ERROR_HTMLPARSER_BLOCK == result) {
           didBlock = PR_TRUE;
         }
@@ -4298,8 +4304,8 @@ HTMLContentSink::ProcessLink(nsIHTMLContent* aElement, const nsAString& aLinkDat
     start = ++end;
   }
 
-  if (!href.IsEmpty()) {
-    result = ProcessStyleLink(aElement, href, rel, title, type, media);
+  if (!href.IsEmpty() && !rel.IsEmpty()) {
+    result = ProcessLink(aElement, href, rel, title, type, media);
     if (NS_SUCCEEDED(result) && didBlock) {
       result = NS_ERROR_HTMLPARSER_BLOCK;
     }
@@ -4308,106 +4314,137 @@ HTMLContentSink::ProcessLink(nsIHTMLContent* aElement, const nsAString& aLinkDat
 }
 
 nsresult
+HTMLContentSink::ProcessLink(nsIHTMLContent* aElement,
+                             const nsString& aHref, const nsString& aRel,
+                             const nsString& aTitle, const nsString& aType,
+                             const nsString& aMedia)
+{
+  nsresult result = NS_OK;
+
+  // XXX seems overkill to generate this string array
+  nsStringArray linkTypes;
+  nsStyleLinkElement::ParseLinkTypes(aRel, linkTypes);
+
+  if (-1 != linkTypes.IndexOf(NS_LITERAL_STRING("next"))) { // is it a next link?
+    ProcessNextLink(aHref);
+  }
+
+  if (-1 != linkTypes.IndexOf(NS_LITERAL_STRING("stylesheet"))) {  // is it a stylesheet link?
+    result = ProcessStyleLink(aElement, aHref, linkTypes, aTitle, aType, aMedia);
+  }
+
+  return result;
+}
+
+nsresult
 HTMLContentSink::ProcessStyleLink(nsIHTMLContent* aElement,
-                                  const nsString& aHref, const nsString& aRel,
+                                  const nsString& aHref, const nsStringArray& aLinkTypes,
                                   const nsString& aTitle, const nsString& aType,
                                   const nsString& aMedia)
 {
   nsresult result = NS_OK;
-
-  if (aHref.IsEmpty()) {
-    // if href is empty then just bail
-    return result;
-  }
-
-  nsStringArray linkTypes;
-  nsStyleLinkElement::ParseLinkTypes(aRel, linkTypes);
   PRBool isAlternate = PR_FALSE;
 
-  if (-1 != linkTypes.IndexOf(NS_LITERAL_STRING("stylesheet"))) {  // is it a stylesheet link?
-
-    if (-1 != linkTypes.IndexOf(NS_LITERAL_STRING("alternate"))) { // if alternate, does it have title?
-      if (0 == aTitle.Length()) { // alternates must have title
-        return NS_OK; //return without error, for now
-      } else {
-        isAlternate = PR_TRUE;
-      }
+  if (-1 != aLinkTypes.IndexOf(NS_LITERAL_STRING("alternate"))) { // if alternate, does it have title?
+    if (0 == aTitle.Length()) { // alternates must have title
+      return NS_OK; //return without error, for now
+    } else {
+      isAlternate = PR_TRUE;
     }
+  }
 
-    nsAutoString  mimeType;
-    nsAutoString  params;
-    nsParserUtils::SplitMimeType(aType, mimeType, params);
+  nsAutoString  mimeType;
+  nsAutoString  params;
+  nsParserUtils::SplitMimeType(aType, mimeType, params);
 
-    nsCompatibility mode;
-    mHTMLDocument->GetCompatibilityMode(mode);
+  nsCompatibility mode;
+  mHTMLDocument->GetCompatibilityMode(mode);
 
-    PRBool isStyleSheet = PR_FALSE;     // see bug 18817
-    if (eCompatibility_NavQuirks != mode) {
-      if (mimeType.EqualsIgnoreCase("text/css")) {
-        isStyleSheet = PR_TRUE;         // strict mode + good mime type
-      }
-      else {
-        if (mimeType.IsEmpty()) {
-          nsString extension;
-          aHref.Right(extension, 4);
-          if (extension.Equals(NS_LITERAL_STRING(".css"))) {
-              isStyleSheet = PR_TRUE;   // strict mode + no mime type + '.css' extension
-          }
-        }
-      }
+  PRBool isStyleSheet = PR_FALSE;     // see bug 18817
+  if (eCompatibility_NavQuirks != mode) {
+    if (mimeType.EqualsIgnoreCase("text/css")) {
+      isStyleSheet = PR_TRUE;         // strict mode + good mime type
     }
     else {
-      if (mimeType.IsEmpty() || mimeType.EqualsIgnoreCase("text/css")) {
-        isStyleSheet = PR_TRUE;         // quirks mode + good mime type or no mime type at all
+      if (mimeType.IsEmpty()) {
+        nsString extension;
+        aHref.Right(extension, 4);
+        if (extension.Equals(NS_LITERAL_STRING(".css"))) {
+            isStyleSheet = PR_TRUE;   // strict mode + no mime type + '.css' extension
+        }
+      }
+    }
+  }
+  else {
+    if (mimeType.IsEmpty() || mimeType.EqualsIgnoreCase("text/css")) {
+      isStyleSheet = PR_TRUE;         // quirks mode + good mime type or no mime type at all
+    }
+  }
+
+  if (isStyleSheet) {
+    nsIURI* url = nsnull;
+    {
+      result = NS_NewURI(&url, aHref, nsnull, mDocumentBaseURL);
+    }
+    if (NS_OK != result) {
+      return NS_OK; // The URL is bad, move along, don't propagate the error (for now)
+    }
+
+    if (!isAlternate) {
+      if (!aTitle.IsEmpty()) {  // possibly preferred sheet
+        nsAutoString preferredStyle;
+        mDocument->GetHeaderData(nsHTMLAtoms::headerDefaultStyle, preferredStyle);
+        if (preferredStyle.IsEmpty()) {
+          mDocument->SetHeaderData(nsHTMLAtoms::headerDefaultStyle, aTitle);
+        }
       }
     }
 
-    if (isStyleSheet) {
-      nsIURI* url = nsnull;
-      {
-        result = NS_NewURI(&url, aHref, nsnull, mDocumentBaseURL);
-      }
-      if (NS_OK != result) {
-        return NS_OK; // The URL is bad, move along, don't propagate the error (for now)
-      }
+    PRBool blockParser = kBlockByDefault;
+    if (isAlternate) {
+      blockParser = PR_FALSE;
+    }
 
-      if (-1 == linkTypes.IndexOf(NS_LITERAL_STRING("alternate"))) {
-        if (!aTitle.IsEmpty()) {  // possibly preferred sheet
-          nsAutoString preferredStyle;
-          mDocument->GetHeaderData(nsHTMLAtoms::headerDefaultStyle, preferredStyle);
-          if (preferredStyle.IsEmpty()) {
-            mDocument->SetHeaderData(nsHTMLAtoms::headerDefaultStyle, aTitle);
-          }
-        }
-      }
+    /* NOTE: no longer honoring the important keyword to indicate blocking
+             as it is proprietary and unnecessary since all non-alternate 
+             will block the parser now  -mja
+    if (-1 != linkTypes.IndexOf("important")) {
+      blockParser = PR_TRUE;
+    }
+    */
 
-      PRBool blockParser = kBlockByDefault;
-      if (isAlternate) {
-        blockParser = PR_FALSE;
-      }
-
-      /* NOTE: no longer honoring the important keyword to indicate blocking
-               as it is proprietary and unnecessary since all non-alternate 
-               will block the parser now  -mja
-      if (-1 != linkTypes.IndexOf("important")) {
-        blockParser = PR_TRUE;
-      }
-      */
-
-      PRBool doneLoading;
-      result = mCSSLoader->LoadStyleLink(aElement, url, aTitle, aMedia,
-                                         kNameSpaceID_Unknown,
-                                         mStyleSheetCount++, 
-                                         ((blockParser) ? mParser : nsnull),
-                                         doneLoading, 
-                                         this);
-      NS_RELEASE(url);
-      if (NS_SUCCEEDED(result) && blockParser && (! doneLoading)) {
-        result = NS_ERROR_HTMLPARSER_BLOCK;
-      }
+    PRBool doneLoading;
+    result = mCSSLoader->LoadStyleLink(aElement, url, aTitle, aMedia,
+                                       kNameSpaceID_Unknown,
+                                       mStyleSheetCount++, 
+                                       ((blockParser) ? mParser : nsnull),
+                                       doneLoading, 
+                                       this);
+    NS_RELEASE(url);
+    if (NS_SUCCEEDED(result) && blockParser && (! doneLoading)) {
+      result = NS_ERROR_HTMLPARSER_BLOCK;
     }
   }
   return result;
+}
+
+void
+HTMLContentSink::ProcessNextLink(const nsAString &aHref)
+{
+  nsCOMPtr<nsIPrefetchService> prefetchService(
+          do_GetService(NS_PREFETCHSERVICE_CONTRACTID));
+  if (prefetchService) {
+    // construct URI using document charset
+    nsAutoString charset;
+    mDocument->GetDocumentCharacterSet(charset);
+    nsCOMPtr<nsIURI> uri;
+    NS_NewURI(getter_AddRefs(uri), aHref,
+            charset.IsEmpty() ? nsnull
+                              : NS_LossyConvertUCS2toASCII(charset).get(),
+            mDocumentBaseURL);
+    if (uri)
+      prefetchService->PrefetchURI(uri);
+  }
 }
 
 nsresult
@@ -4460,6 +4497,22 @@ HTMLContentSink::ProcessLINKTag(const nsIParserNode& aNode)
         result = ssle->UpdateStyleSheet(nsnull, mStyleSheetCount);
         if (NS_SUCCEEDED(result) || (result == NS_ERROR_HTMLPARSER_BLOCK)) {
           mStyleSheetCount++;
+        }
+      }
+
+      // look for <link rel="next" href="url">
+      nsAutoString relVal;
+      element->GetAttr(kNameSpaceID_None, nsHTMLAtoms::rel, relVal);
+      if (!relVal.IsEmpty()) {
+        // XXX seems overkill to generate this string array
+        nsStringArray linkTypes;
+        nsStyleLinkElement::ParseLinkTypes(relVal, linkTypes);
+        if (-1 != linkTypes.IndexOf(NS_LITERAL_STRING("next"))) {
+          nsAutoString hrefVal;
+          element->GetAttr(kNameSpaceID_None, nsHTMLAtoms::href, hrefVal);
+          if (!hrefVal.IsEmpty()) {
+            ProcessNextLink(hrefVal);
+          }
         }
       }
     }
@@ -4668,7 +4721,7 @@ HTMLContentSink::ProcessHeaderData(nsIAtom* aHeader,const nsAString& aValue,nsIH
     if (NS_FAILED(rv)) return rv;
   } // END set-cookie
   else if (aHeader == nsHTMLAtoms::link) {
-    rv = ProcessLink(aContent, aValue);
+    rv = ProcessLinkHeader(aContent, aValue);
   }
   else if (mParser) {
     // we also need to report back HTTP-EQUIV headers to the channel

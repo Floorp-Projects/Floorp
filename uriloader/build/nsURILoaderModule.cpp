@@ -72,7 +72,7 @@ static const nsModuleComponentInfo components[] = {
   { "Netscape Default Protocol Handler", NS_EXTERNALPROTOCOLHANDLER_CID, NS_NETWORK_PROTOCOL_CONTRACTID_PREFIX"default", 
      nsExternalProtocolHandlerConstructor, },
   {  NS_PREFETCHSERVICE_CLASSNAME, NS_PREFETCHSERVICE_CID, NS_PREFETCHSERVICE_CONTRACTID,
-     nsPrefetchServiceConstructor, nsPrefetchService::RegisterProc, nsPrefetchService::UnregisterProc },
+     nsPrefetchServiceConstructor, },
 };
 
 
