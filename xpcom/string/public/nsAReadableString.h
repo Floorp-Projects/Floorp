@@ -779,7 +779,7 @@ class basic_nsLiteralString
 
     public:
     
-        // Note: _not_ explicit
+      explicit
       basic_nsLiteralString( const CharT* aLiteral )
           : mStart(aLiteral),
             mEnd(mStart ? (mStart + nsCharTraits<CharT>::length(mStart)) : mStart)
@@ -903,6 +903,7 @@ class basic_nsLiteralChar
 
     public:
 
+      explicit
       basic_nsLiteralChar( CharT aChar )
           : mChar(aChar)
         {
@@ -1363,7 +1364,7 @@ Compare( const CharT* lhs, const basic_nsAReadableString<CharT>& rhs )
 template <class CharT>
 inline
 nsPromiseConcatenation<CharT>
-operator+( const nsPromiseConcatenation<CharT>& lhs, const basic_nsAReadableString<CharT>& rhs )
+Concat( const nsPromiseConcatenation<CharT>& lhs, const basic_nsAReadableString<CharT>& rhs )
   {
     return nsPromiseConcatenation<CharT>(lhs, rhs, lhs.GetFragmentIdentifierMask()<<1);
   }
@@ -1371,9 +1372,25 @@ operator+( const nsPromiseConcatenation<CharT>& lhs, const basic_nsAReadableStri
 template <class CharT>
 inline
 nsPromiseConcatenation<CharT>
-operator+( const basic_nsAReadableString<CharT>& lhs, const basic_nsAReadableString<CharT>& rhs )
+Concat( const basic_nsAReadableString<CharT>& lhs, const basic_nsAReadableString<CharT>& rhs )
   {
     return nsPromiseConcatenation<CharT>(lhs, rhs);
+  }
+
+template <class CharT>
+inline
+nsPromiseConcatenation<CharT>
+operator+( const nsPromiseConcatenation<CharT>& lhs, const basic_nsAReadableString<CharT>& rhs )
+  {
+    return Concat(lhs, rhs);
+  }
+
+template <class CharT>
+inline
+nsPromiseConcatenation<CharT>
+operator+( const basic_nsAReadableString<CharT>& lhs, const basic_nsAReadableString<CharT>& rhs )
+  {
+    return Concat(lhs, rhs);
   }
 
 
