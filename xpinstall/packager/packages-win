@@ -200,9 +200,9 @@ bin\plugins\npnul32.dll
 ; chrome stuff
 bin\chrome\packages\core.jar
 bin\chrome\packages\widget-toolkit.jar
-bin\chrome\skins\modern.jar
 bin\chrome\skins\classic.jar
 bin\chrome\skins\blue.jar
+bin\chrome\skins\modern.jar
 ;-bin\chrome\packages\core\editor\content\EditorInitPage.html
 ;-bin\chrome\packages\core\editor\content\EditorInitPagePlain.html
 ;Include this for "debug" testing - remove for actual beta release:
