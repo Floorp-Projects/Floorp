@@ -198,7 +198,7 @@ public class Interpreter
 
         int theICodeTop = 0;
         theICodeTop = generateICode(tree, theICodeTop);
-        itsLabels.fixLabelGotos(itsData.itsICode);
+        fixLabelGotos();
         // add RETURN_POPV only to scripts as function always ends with RETURN
         if (itsData.itsFunctionType == 0) {
             theICodeTop = addToken(Token.RETURN_POPV, theICodeTop);
@@ -1153,23 +1153,42 @@ public class Interpreter
 
     private int getTargetLabel(Node.Target target)
     {
-        int targetLabel = target.labelId;
-        if (targetLabel == -1) {
-            targetLabel = itsLabels.acquireLabel();
-            target.labelId = targetLabel;
+        int label = target.labelId;
+        if (label != -1) {
+            return label;
         }
-        return targetLabel;
+        label = itsLabelTableTop;
+        if (itsLabelTable == null || label == itsLabelTable.length) {
+            if (itsLabelTable == null) {
+                itsLabelTable = new int[MIN_LABEL_TABLE_SIZE];
+            }else {
+                int[] tmp = new int[itsLabelTable.length * 2];
+                System.arraycopy(itsLabelTable, 0, tmp, 0, label);
+                itsLabelTable = tmp;
+            }
+        }
+        itsLabelTableTop = label + 1;
+        itsLabelTable[label] = -1;
+
+        target.labelId = label;
+        return label;
     }
 
     private void markTargetLabel(Node.Target target, int iCodeTop)
     {
         int label = getTargetLabel(target);
-        itsLabels.markLabel(label, iCodeTop);
+        if (itsLabelTable[label] != -1) {
+            // Can mark label only once
+            Kit.codeBug();
+        }
+        itsLabelTable[label] = iCodeTop;
     }
 
     private int addGoto(Node.Target target, int gotoOp, int iCodeTop)
     {
-        int targetLabel = getTargetLabel(target);
+        int label = getTargetLabel(target);
+        if (!(label < itsLabelTableTop)) Kit.codeBug();
+        int targetPC = itsLabelTable[label];
 
         int gotoPC = iCodeTop;
         if (gotoOp > BASE_ICODE) {
@@ -1177,15 +1196,50 @@ public class Interpreter
         } else {
             iCodeTop = addToken(gotoOp, iCodeTop);
         }
+        int jumpSite = iCodeTop;
         iCodeTop = addShort(0, iCodeTop);
 
-        int targetPC = itsLabels.getLabelPC(targetLabel);
         if (targetPC != -1) {
-            recordJumpOffset(gotoPC + 1, targetPC - gotoPC);
+            recordJumpOffset(jumpSite, targetPC - gotoPC);
         } else {
-            itsLabels.addLabelFixup(targetLabel, gotoPC + 1);
+            int top = itsFixupTableTop;
+            if (itsFixupTable == null || top == itsFixupTable.length) {
+                if (itsFixupTable == null) {
+                    itsFixupTable = new long[MIN_FIXUP_TABLE_SIZE];
+                } else {
+                    long[] tmp = new long[itsFixupTable.length * 2];
+                    System.arraycopy(itsFixupTable, 0, tmp, 0, top);
+                    itsFixupTable = tmp;
+                }
+            }
+            itsFixupTableTop = top + 1;
+            itsFixupTable[top] = ((long)label << 32) | jumpSite;
         }
         return iCodeTop;
+    }
+
+    private void fixLabelGotos()
+    {
+        byte[] codeBuffer = itsData.itsICode;
+        for (int i = 0; i < itsFixupTableTop; i++) {
+            long fixup = itsFixupTable[i];
+            int label = (int)(fixup >> 32);
+            int fixupSite = (int)fixup;
+            int pc = itsLabelTable[label];
+            if (pc == -1) {
+                // Unlocated label
+                throw new RuntimeException();
+            }
+            // -1 to get delta from instruction start
+            int offset = pc - (fixupSite - 1);
+            if ((short)offset != offset) {
+                throw new RuntimeException
+                    ("Program too complex: too big jump offset");
+            }
+            codeBuffer[fixupSite] = (byte)(offset >> 8);
+            codeBuffer[fixupSite + 1] = (byte)offset;
+        }
+        itsFixupTableTop = 0;
     }
 
     private int addForwardGoto(int gotoOp, int iCodeTop)
@@ -3244,11 +3298,18 @@ public class Interpreter
     private int itsStackDepth = 0;
     private int itsWithDepth = 0;
     private int itsLineNumber = 0;
-    private LabelTable itsLabels = new LabelTable();
     private int itsDoubleTableTop;
     private ObjToIntMap itsStrings = new ObjToIntMap(20);
     private String lastAddString;
     private int itsLocalTop;
+
+    private static final int MIN_LABEL_TABLE_SIZE = 32;
+    private static final int MIN_FIXUP_TABLE_SIZE = 40;
+    private int[] itsLabelTable;
+    private int itsLabelTableTop;
+// itsFixupTable[i] = (label_index << 32) | fixup_site
+    private long[] itsFixupTable;
+    private int itsFixupTableTop;
 
     private int itsExceptionTableTop;
     // 5 = space for try start/end, catch begin, finally begin and with depth

@@ -35,7 +35,6 @@
 
 package org.mozilla.classfile;
 
-import org.mozilla.javascript.LabelTable;
 import org.mozilla.javascript.ObjToIntMap;
 import org.mozilla.javascript.ObjArray;
 import org.mozilla.javascript.UintMap;
@@ -269,7 +268,7 @@ public class ClassFileWriter {
         if (itsCurrentMethod == null)
             throw new IllegalStateException("No method to stop");
 
-        itsLabels.fixLabelGotos(itsCodeBuffer);
+        fixLabelGotos();
 
         itsMaxLocals = maxLocals;
 
@@ -318,10 +317,19 @@ public class ClassFileWriter {
         if (itsExceptionTableTop > 0) {
             index = putInt16(itsExceptionTableTop, codeAttribute, index);
             for (int i = 0; i < itsExceptionTableTop; i++) {
-                short startPC = itsExceptionTable[i].getStartPC(itsLabels);
-                short endPC = itsExceptionTable[i].getEndPC(itsLabels);
-                short handlerPC = itsExceptionTable[i].getHandlerPC(itsLabels);
-                short catchType = itsExceptionTable[i].getCatchType();
+                ExceptionTableEntry ete = itsExceptionTable[i];
+                short startPC = (short)getLabelPC(ete.itsStartLabel);
+                short endPC = (short)getLabelPC(ete.itsEndLabel);
+                short handlerPC = (short)getLabelPC(ete.itsHandlerLabel);
+                short catchType = ete.itsCatchType;
+                if (startPC == -1)
+                    throw new IllegalStateException("start label not defined");
+                if (endPC == -1)
+                    throw new IllegalStateException("end label not defined");
+                if (handlerPC == -1)
+                    throw new IllegalStateException(
+                        "handler label not defined");
+
                 index = putInt16(startPC, codeAttribute, index);
                 index = putInt16(endPC, codeAttribute, index);
                 index = putInt16(handlerPC, codeAttribute, index);
@@ -390,7 +398,8 @@ public class ClassFileWriter {
         itsCurrentMethod = null;
         itsMaxStack = 0;
         itsStackTop = 0;
-        itsLabels.clearLabels();
+        itsLabelTableTop = 0;
+        itsFixupTableTop = 0;
     }
 
     /**
@@ -460,9 +469,9 @@ public class ClassFileWriter {
                         addToCodeInt16(theOperand);
                     }
                     else {  // a label
-                        int theLabel = theOperand & 0x7FFFFFFF;
-                        int targetPC = itsLabels.getLabelPC(theLabel);
+                        int targetPC = getLabelPC(theOperand);
                         if (DEBUGLABELS) {
+                            int theLabel = theOperand & 0x7FFFFFFF;
                             System.out.println("Fixing branch to " +
                                                theLabel + " at " + targetPC +
                                                " from " + branchPC);
@@ -472,7 +481,7 @@ public class ClassFileWriter {
                             addToCodeInt16(offset);
                         }
                         else {
-                            itsLabels.addLabelFixup(theLabel, branchPC + 1);
+                            addLabelFixup(theOperand, branchPC + 1);
                             addToCodeInt16(0);
                         }
                     }
@@ -1134,28 +1143,103 @@ public class ClassFileWriter {
         putInt32(jumpTarget - switchStart, itsCodeBuffer, caseOffset);
     }
 
-    public int acquireLabel() {
-        return itsLabels.acquireLabel() | 0x80000000;
+    public int acquireLabel()
+    {
+        int top = itsLabelTableTop;
+        if (itsLabelTable == null || top == itsLabelTable.length) {
+            if (itsLabelTable == null) {
+                itsLabelTable = new int[MIN_LABEL_TABLE_SIZE];
+            }else {
+                int[] tmp = new int[itsLabelTable.length * 2];
+                System.arraycopy(itsLabelTable, 0, tmp, 0, top);
+                itsLabelTable = tmp;
+            }
+        }
+        itsLabelTableTop = top + 1;
+        itsLabelTable[top] = -1;
+        return top | 0x80000000;
     }
 
-    public void markLabel(int label) {
-        if ((label & 0x80000000) != 0x80000000)
+    public void markLabel(int label)
+    {
+        if (!(label < 0))
             throw new IllegalArgumentException("Bad label, no biscuit");
 
-        itsLabels.markLabel(label & 0x7FFFFFFF, itsCodeBufferTop);
+        label &= 0x7FFFFFFF;
+        if (label > itsLabelTableTop)
+            throw new IllegalArgumentException("Bad label");
+
+        if (itsLabelTable[label] != -1) {
+            throw new IllegalStateException("Can only mark label once");
+        }
+
+        itsLabelTable[label] = itsCodeBufferTop;
     }
 
-    public void markLabel(int label, short stackTop) {
-        if ((label & 0x80000000) != 0x80000000)
-            throw new IllegalArgumentException("Bad label, no biscuit");
-
+    public void markLabel(int label, short stackTop)
+    {
+        markLabel(label);
         itsStackTop = stackTop;
-        itsLabels.markLabel(label & 0x7FFFFFFF, itsCodeBufferTop);
     }
 
     public void markHandler(int theLabel) {
         itsStackTop = 1;
         markLabel(theLabel);
+    }
+
+    private int getLabelPC(int label)
+    {
+        if (!(label < 0))
+            throw new IllegalArgumentException("Bad label, no biscuit");
+        label &= 0x7FFFFFFF;
+        if (!(label < itsLabelTableTop))
+            throw new IllegalArgumentException("Bad label");
+        return itsLabelTable[label];
+    }
+
+    private void addLabelFixup(int label, int fixupSite)
+    {
+        if (!(label < 0))
+            throw new IllegalArgumentException("Bad label, no biscuit");
+        label &= 0x7FFFFFFF;
+        if (!(label < itsLabelTableTop))
+            throw new IllegalArgumentException("Bad label");
+        int top = itsFixupTableTop;
+        if (itsFixupTable == null || top == itsFixupTable.length) {
+            if (itsFixupTable == null) {
+                itsFixupTable = new long[MIN_FIXUP_TABLE_SIZE];
+            }else {
+                long[] tmp = new long[itsFixupTable.length * 2];
+                System.arraycopy(itsFixupTable, 0, tmp, 0, top);
+                itsFixupTable = tmp;
+            }
+        }
+        itsFixupTableTop = top + 1;
+        itsFixupTable[top] = ((long)label << 32) | fixupSite;
+    }
+
+    private  void fixLabelGotos()
+    {
+        byte[] codeBuffer = itsCodeBuffer;
+        for (int i = 0; i < itsFixupTableTop; i++) {
+            long fixup = itsFixupTable[i];
+            int label = (int)(fixup >> 32);
+            int fixupSite = (int)fixup;
+            int pc = itsLabelTable[label];
+            if (pc == -1) {
+                // Unlocated label
+                throw new RuntimeException();
+            }
+            // -1 to get delta from instruction start
+            int offset = pc - (fixupSite - 1);
+            if ((short)offset != offset) {
+                throw new RuntimeException
+                    ("Program too complex: too big jump offset");
+            }
+            codeBuffer[fixupSite] = (byte)(offset >> 8);
+            codeBuffer[fixupSite + 1] = (byte)offset;
+        }
+        itsFixupTableTop = 0;
     }
 
     /**
@@ -2449,7 +2533,14 @@ public class ClassFileWriter {
     private short itsSuperClassIndex;
     private short itsSourceFileNameIndex;
 
-    private LabelTable itsLabels = new LabelTable();
+    private static final int MIN_LABEL_TABLE_SIZE = 32;
+    private int[] itsLabelTable;
+    private int itsLabelTableTop;
+
+// itsFixupTable[i] = (label_index << 32) | fixup_site
+    private static final int MIN_FIXUP_TABLE_SIZE = 40;
+    private long[] itsFixupTable;
+    private int itsFixupTableTop;
 
     private char[] tmpCharBuffer = new char[64];
 }
@@ -2466,39 +2557,10 @@ final class ExceptionTableEntry
         itsCatchType = catchType;
     }
 
-    short getStartPC(LabelTable table)
-    {
-        short pc = (short)table.getLabelPC(itsStartLabel & 0x7FFFFFFF);
-        if (pc == -1)
-            throw new RuntimeException("start label not defined");
-        return pc;
-    }
-
-    short getEndPC(LabelTable table)
-    {
-        short pc = (short)table.getLabelPC(itsEndLabel & 0x7FFFFFFF);
-        if (pc == -1)
-            throw new RuntimeException("end label not defined");
-        return pc;
-    }
-
-    short getHandlerPC(LabelTable table)
-    {
-        short pc = (short)table.getLabelPC(itsHandlerLabel & 0x7FFFFFFF);
-        if (pc == -1)
-            throw new RuntimeException("handler label not defined");
-        return pc;
-    }
-
-    short getCatchType()
-    {
-        return itsCatchType;
-    }
-
-    private int itsStartLabel;
-    private int itsEndLabel;
-    private int itsHandlerLabel;
-    private short itsCatchType;
+    int itsStartLabel;
+    int itsEndLabel;
+    int itsHandlerLabel;
+    short itsCatchType;
 }
 
 final class ClassFileField
