@@ -493,13 +493,7 @@ PRInt32 nsMailboxProtocol::ReadMessageResponse(nsIInputStream * inputStream, PRU
 			*/
 		
 			PL_strcat (outputBuffer, LINEBREAK);
-			/* Don't send content-type to mime parser if we're doing a cancel
-				because it confuses mime parser into not parsing.
-			*/
 
-			// for test purposes...we'd want to write this line out to an rfc-822 stream converter...
-			// we don't have one now so print the data out so we can verify that we got it....
-			printf("%s", outputBuffer);
 			if (m_tempMessageFile)
 				PR_Write(m_tempMessageFile,(void *) outputBuffer,PL_strlen(outputBuffer));
 		} 
