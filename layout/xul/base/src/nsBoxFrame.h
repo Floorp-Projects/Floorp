@@ -109,6 +109,8 @@ public:
                       const nsRect& aDirtyRect,
                       nsFramePaintLayer aWhichLayer);
 
+
+
   NS_IMETHOD Reflow(nsIPresContext*          aPresContext,
                     nsHTMLReflowMetrics&     aDesiredSize,
                     const nsHTMLReflowState& aReflowState,
@@ -152,6 +154,11 @@ public:
                              nsIRenderingContext& aRenderingContext,
                              const nsRect&        aDirtyRect,
                              nsIFrame*            aFrame,
+                             nsFramePaintLayer    aWhichLayer);
+
+  virtual void PaintChildren(nsIPresContext*      aPresContext,
+                             nsIRenderingContext& aRenderingContext,
+                             const nsRect&        aDirtyRect,
                              nsFramePaintLayer    aWhichLayer);
 
   // nsIBox methods

@@ -493,6 +493,7 @@ nsGfxScrollFrame::Reflow(nsIPresContext*          aPresContext,
   // Handle Incremental Reflow
   nsIFrame* incrementalChild = nsnull;
 
+  /*
   if (mInner->mNeverReflowed) {
        // on the initial reflow see if we are the root box.
        // the root box.
@@ -511,6 +512,7 @@ nsGfxScrollFrame::Reflow(nsIPresContext*          aPresContext,
             parent->GetParent(&parent);
        }
    }
+   */
   
    if ( aReflowState.reason == eReflowReason_Incremental ) {
 
@@ -530,6 +532,7 @@ nsGfxScrollFrame::Reflow(nsIPresContext*          aPresContext,
           {
             nsHTMLReflowState newState(aReflowState);
             newState.reason = eReflowReason_StyleChange;
+            newState.reflowCommand = nsnull;
             return Reflow(aPresContext, aDesiredSize, newState, aStatus);
           }
           break;
@@ -539,6 +542,7 @@ nsGfxScrollFrame::Reflow(nsIPresContext*          aPresContext,
           {
             nsHTMLReflowState newState(aReflowState);
             newState.reason = eReflowReason_Dirty;
+            newState.reflowCommand = nsnull;
             return Reflow(aPresContext, aDesiredSize, newState, aStatus);
           }
           break;
@@ -548,12 +552,13 @@ nsGfxScrollFrame::Reflow(nsIPresContext*          aPresContext,
       } 
     }
 
+    /*
     if (mInner->mIsRoot) 
       nsIBox::HandleRootBoxReflow(aPresContext, this, aReflowState);
 
     // then get the child we need to flow incrementally
     aReflowState.reflowCommand->GetNext(incrementalChild);
-
+    */
   }
 
 
@@ -1208,9 +1213,47 @@ nsGfxScrollFrameInner::ReflowFrame(    nsIPresContext*          aPresContext,
       PRBool needsReflow = PR_FALSE;
       nsReflowReason reason = aReflowState.reason;
 
+      nsFrameState childState;
+      aFrame->GetFrameState(&childState);
+
+      if (childState & NS_FRAME_FIRST_REFLOW) {
+          if (reason != eReflowReason_Initial)
+          {
+              // if incremental then make sure we send a initial reflow first.
+              if (reason == eReflowReason_Incremental) {
+                  nsHTMLReflowState state(aReflowState);
+                  state.reason = eReflowReason_Initial;
+                  state.reflowCommand = nsnull;
+                  ReflowFrame( aPresContext, aDesiredSize, state, aStatus, aFrame, aAvailable, aComputed, aResized, aIncrementalChild);
+              } else {
+                  // convert to initial if not incremental.
+                  reason = eReflowReason_Initial;
+              }
+
+          }
+      } else if (reason == eReflowReason_Initial) {
+          reason = eReflowReason_Resize;
+      }
+
+
       switch(reason)
       {
-         case eReflowReason_Incremental:
+      case eReflowReason_Incremental: {
+            // if incremental see if the next child in the chain is the child. If so then
+            // we will just let it go down. If not then convert it to a dirty. It will get picked 
+            // up later.
+            nsIFrame* incrementalChild = nsnull;
+            aReflowState.reflowCommand->GetNext(incrementalChild, PR_FALSE);
+            if (incrementalChild == aFrame) {
+                needsReflow = PR_TRUE;
+                aReflowState.reflowCommand->GetNext(incrementalChild);
+            } else {
+                nsHTMLReflowState state(aReflowState);
+                state.reason = eReflowReason_Dirty;
+                return ReflowFrame( aPresContext, aDesiredSize, state, aStatus, aFrame, aAvailable, aComputed, aResized, aIncrementalChild);
+            }
+
+             /*
              if (aIncrementalChild == aFrame) {
                needsReflow = PR_TRUE;
                aIncrementalChild = nsnull;
@@ -1218,22 +1261,40 @@ nsGfxScrollFrameInner::ReflowFrame(    nsIPresContext*          aPresContext,
                reason = eReflowReason_Resize;
                needsReflow = PR_FALSE;
              }
-         break;
+             */
+         } break;
          
          // if its dirty then see if the child we want to reflow is dirty. If it is then
          // mark it as needing to be reflowed.
-         case eReflowReason_Dirty:
+         case eReflowReason_Dirty: {
+             
+             // so look at the next child. If it is use convert back to incremental.
+             if (aReflowState.reflowCommand) {
+                nsIFrame* incrementalChild = nsnull;
+                aReflowState.reflowCommand->GetNext(incrementalChild, PR_FALSE);
+                if (incrementalChild == aFrame) {
+                     nsHTMLReflowState state(aReflowState);
+                     state.reason = eReflowReason_Incremental;
+                     return ReflowFrame( aPresContext, aDesiredSize, state, aStatus, aFrame, aAvailable, aComputed, aResized, aIncrementalChild);
+                } 
+              }
+ 
               // get the frame state to see if it needs reflow
-              nsFrameState state;
-              aFrame->GetFrameState(&state);
-              needsReflow = (state & NS_FRAME_IS_DIRTY) || (state & NS_FRAME_HAS_DIRTY_CHILDREN);
-         break;
+              needsReflow = (childState & NS_FRAME_IS_DIRTY) || (childState & NS_FRAME_HAS_DIRTY_CHILDREN);
+             
+         } break;
 
          // if the a resize reflow then it doesn't need to be reflowed. Only if the size is different
          // from the new size would we actually do a reflow
          case eReflowReason_Resize:
              needsReflow = PR_FALSE;
          break;
+
+         case eReflowReason_Initial:
+             needsReflow = PR_TRUE;
+         break;
+
+
 
          default:
              needsReflow = PR_TRUE;
@@ -1693,6 +1754,24 @@ nsGfxScrollFrame::InvalidateCache(nsIFrame* aChild)
 NS_IMETHODIMP
 nsGfxScrollFrame::GetBoxInfo(nsIPresContext* aPresContext, const nsHTMLReflowState& aReflowState, nsBoxInfo& aSize)
 {
+
+   nsIFrame* incrementalChild = nsnull;
+
+   // if incremental pop off the child if it is ours and mark it dirty.
+   if (aReflowState.reason == eReflowReason_Incremental) {
+      aReflowState.reflowCommand->GetNext(incrementalChild, PR_FALSE);
+      if (incrementalChild == mInner->mScrollAreaFrame || 
+          incrementalChild == mInner->mVScrollbarFrame ||
+          incrementalChild == mInner->mHScrollbarFrame) {
+             aReflowState.reflowCommand->GetNext(incrementalChild);
+             // mark it dirty
+             nsFrameState childState;
+             incrementalChild->GetFrameState(&childState);
+             childState |= NS_FRAME_IS_DIRTY;
+             incrementalChild->SetFrameState(childState);
+      }
+   }
+
   aSize.Clear();
 
   nsBoxInfo scrollAreaInfo, vboxInfo, hboxInfo;
