@@ -1081,6 +1081,7 @@ HaveAutoWidth(const nsHTMLReflowState& aReflowState)
 static PRBool
 IsPercentageAwareChild(const nsIFrame* aFrame)
 {
+  NS_ASSERTION(aFrame, "null frame is not allowed");
   nsresult rv;
 
   const nsStyleMargin* margin;
@@ -3464,6 +3465,8 @@ nsBlockFrame::ReflowInlineFrame(nsBlockReflowState& aState,
                                 nsIFrame* aFrame,
                                 PRUint8* aLineReflowStatus)
 {
+ NS_ENSURE_ARG_POINTER(aFrame);
+  
   *aLineReflowStatus = LINE_REFLOW_OK;
 
   // If it's currently ok to be reflowing in first-letter style then
