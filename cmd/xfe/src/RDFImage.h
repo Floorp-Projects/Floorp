@@ -20,9 +20,13 @@
    Created: Radha Kulkarni <radha@netscape.com>, 06-29-98
  */
 
+#ifndef _xfe_rdfimage_h
+#define _xfe_rdfimage_h
+
 #include "libimg.h"         /* Image library public API */
 #include "xfe.h"
 #include "View.h"
+#include "Image.h"
 
 extern "C" {
 
@@ -30,6 +34,14 @@ typedef void (* completeCallbackPtr)(void * client_data);
 void Icon_GetUrlExitRoutine(URL_Struct *pUrl, int iStatus, MWContext *pContext)  ;
 
 };
+
+typedef struct _RDFImageList {
+  void  * requestedObj;
+  class XFE_RDFImage * obj;
+  Widget  widget;
+  char * imageURL;
+  PRBool isSpaceAvailable;
+} RDFImageList;
 
 typedef struct  _callbackClientData {
 
@@ -42,48 +54,53 @@ typedef struct  _callbackClientData {
 
 
 
-class XFE_RDFImage {
+class XFE_RDFImage : XFE_Image
+{
 
 public:
-  XFE_RDFImage(XFE_Component * frame, char * imageUrl, fe_colormap *, Widget);
+  XFE_RDFImage(XFE_Component * frame, void * requestedObj, char * imageUrl, fe_colormap *, Widget);
   ~XFE_RDFImage();
-  void loadImage();
-  Pixmap  getPixmap();
-  Pixmap  getMask();
-  Boolean  isImageLoaded();
-  void     setCompleteCallback(completeCallbackPtr    callback, void * callbackData);
 
-  void XFE_RDFImage::RDFDisplayPixmap(IL_Pixmap * image, IL_Pixmap * mask, PRInt32  width, PRInt32  height);
-  void XFE_RDFImage::RDFNewPixmap(IL_Pixmap * image, Boolean isMask);
-  void XFE_RDFImage::RDFImageComplete(IL_Pixmap * image);
+  void     setCompleteCallback(completeCallbackPtr    callback, void * callbackData);
+  void  RDFDisplayPixmap(IL_Pixmap * image, IL_Pixmap * mask, PRInt32  width, PRInt32  height);
+  void RDFNewPixmap(IL_Pixmap * image, Boolean isMask);
+  void  RDFImageComplete(IL_Pixmap * image);
+  void  addListener(void * requestedObj, Widget w, char * imageURL);
+  PRBool  isrequestorAlive(Widget w);
+
+  virtual Pixmap  getPixmap();
+  virtual Pixmap  getMask();
+  virtual PRInt32 getImageWidth();
+  virtual PRInt32 getImageHeight();
+  virtual void     loadImage();
+  virtual Boolean  isImageLoaded();
+
+
+  static class XFE_RDFImage * isImageAvailable(char * imageURL);
+  static void  removeListener(void * obj);
+  static void  removeListener(Widget w);
+  static XFE_RDFImage* getRDFImageObject(Widget);
+
+
 
 
 private:
-  char * m_urlString;         // Url string
-  MWContext * m_imageContext; // Special MWContext
-  fe_ContextData * fec;       // FE specific data for MWContext
-  IL_Pixmap *  m_image;     
-  IL_Pixmap *  m_mask;
-  static Pixmap   m_badImage;   // Bad image to use if the image loading fails
-  XFE_Component * m_frame;
-
-
-  Boolean     badImage;     // Indicates whether to use the bad bitmap
-  Boolean     completelyLoaded;  // Indicates if image is completely loaded
   Boolean     frameLoaded;    // Indicates if frame is loaded
-  Boolean     cxtInitSucceeded;  // Indicates if MWcontext is initialized successfully
-  Boolean     imageDrawn;
-
-
-  int         pairCount;      // Specifies whether both pixmap and mask are available
+  int         pairCount;      // Specifies whether pixmap and mask are ready
   static int  refCount;      // Count of # of images loaded
+  static int  m_numRDFImagesLoaded;  // # of images in the cache
+  static RDFImageList * RDFImagesCache; // Images cache
+  static unsigned int MaxRdfImages;     // Max # of images the cache can hold
+  static unsigned int ImageListIncrSize;  // cache size  increment.
 
+  static void removeListener(int);
+  static void imageCacheInitialize();
   completeCallbackPtr    completeCallback;   // Callback to call after complete image has been obtained.
   void *      callbackData;
 
 };
 
-
+#endif  /* _xfe_rdfimage_h */
 
 
 

@@ -41,162 +41,74 @@ void fe_load_default_font(MWContext *context);
 
 
 int XFE_RDFImage::refCount = 0;
-Pixmap XFE_RDFImage::m_badImage = 0;
+int XFE_RDFImage::m_numRDFImagesLoaded = 0;
+RDFImageList * XFE_RDFImage::RDFImagesCache = (RDFImageList *) NULL;
+// Max number of images in cache - to be replaced with very clever hash table
+unsigned int XFE_RDFImage::MaxRdfImages = 30;
+unsigned int XFE_RDFImage::ImageListIncrSize = 20;
 
-XFE_RDFImage::XFE_RDFImage(XFE_Component * frame,  char * imageURL,fe_colormap * cmap, Widget  baseWidget) {
+
+//////////////////////////////////////////////////////////////////////////
+
+
+// Initialize the  images list. This s'd someday be a hash list
+void 
+XFE_RDFImage::imageCacheInitialize()
+{
+
+  /* The array way of indexing the cache only works for now when
+   * NavCenterView is the only client of RDFImage. This w'd break or
+   * corrupt if more clients come in for RDFImage. The cache needs
+   * to be a Doubly linked list. That will happen in the next round
+   * of changes to RDFImage.
+   */
+	if (RDFImagesCache == NULL)
+	{
+        m_numRDFImagesLoaded = 0;
+		RDFImagesCache = (RDFImageList *) XP_CALLOC(MaxRdfImages, sizeof(RDFImageList));
+	}
+}
+
+XFE_RDFImage::XFE_RDFImage(XFE_Component * frame,  
+                           void * requestedObj, 
+                           char * imageURL,
+                           fe_colormap * cmap, 
+                           Widget  baseWidget)
+    : XFE_Image(frame, imageURL, cmap, baseWidget)
+{
 
   // Initializations 
-  m_urlString = strdup(imageURL);
-  completelyLoaded = False;
-  //FrameLoaded = False;
-  badImage = False;
   pairCount = 0;
-  refCount = 0;
-  m_imageContext = NULL;
-  fec = NULL;
-  cxtInitSucceeded = False;
-  m_image = NULL;
-  m_mask = NULL;
   completeCallback = (completeCallbackPtr) NULL;
   callbackData = (void *) NULL;
-  m_frame = frame;
-  imageDrawn = False;
-  refCount++;
-
-  // Create new context
-  m_imageContext = XP_NewContext();
-  fec = XP_NEW_ZAP(fe_ContextData);
 
 
-  if (m_imageContext && fec) 
-  {
-    m_imageContext->type = MWContextIcon;
-    CONTEXT_DATA(m_imageContext) = fec;
-
-    // Set up the image library callbacks
-    CONTEXT_DATA(m_imageContext)->DisplayPixmap = (DisplayPixmapPtr)DisplayPixmap;
-    CONTEXT_DATA(m_imageContext)->NewPixmap = (NewPixmapPtr)NewPixmap;
-    CONTEXT_DATA(m_imageContext)->ImageComplete = (ImageCompletePtr)ImageComplete;
-
-   
-    /* Stolen from Frame.cpp. Maybe we s'd make a generic class for
-     * Creation and management of MWContexts 
-     */
-    CONTEXT_DATA (m_imageContext)->colormap = cmap;
-    CONTEXT_WIDGET (m_imageContext) = baseWidget; 
-    CONTEXT_DATA(m_imageContext)->drawing_area = baseWidget;
-
-    m_imageContext->funcs = fe_BuildDisplayFunctionTable();
-	m_imageContext->convertPixX = m_imageContext->convertPixY = 1;
-	m_imageContext->is_grid_cell = FALSE;
-	m_imageContext->grid_parent = NULL;
-
-    XP_AddContextToList(m_imageContext);
-    fe_InitIconColors(m_imageContext);
-
-	// Use colors from prefs
-
-	LO_Color *color;
-
-	color = &fe_globalPrefs.links_color;
-	CONTEXT_DATA(m_imageContext)->link_pixel = 
-		fe_GetPixel(m_imageContext, color->red, color->green, color->blue);
-
-	color = &fe_globalPrefs.vlinks_color;
-	CONTEXT_DATA(m_imageContext)->vlink_pixel = 
-		fe_GetPixel(m_imageContext, color->red, color->green, color->blue);
-
-	color = &fe_globalPrefs.text_color;
-	CONTEXT_DATA(m_imageContext)->default_fg_pixel = 
-		fe_GetPixel(m_imageContext, color->red, color->green, color->blue);
-
-	color = &fe_globalPrefs.background_color;
-	CONTEXT_DATA(m_imageContext)->default_bg_pixel = 
-		fe_GetPixel(m_imageContext, color->red, color->green, color->blue);
+  // Make sure the cache is up and running.
+  XFE_RDFImage::imageCacheInitialize();
 
 
-        SHIST_InitSession (m_imageContext);
-	
-        fe_load_default_font(m_imageContext);
-	{
-		Pixel unused_select_pixel;
-		XmGetColors (XtScreen (baseWidget),
-					 fe_cmap(m_imageContext),
-					 CONTEXT_DATA (m_imageContext)->default_bg_pixel,
-					 &(CONTEXT_DATA (m_imageContext)->fg_pixel),
-					 &(CONTEXT_DATA (m_imageContext)->top_shadow_pixel),
-					 &(CONTEXT_DATA (m_imageContext)->bottom_shadow_pixel),
-					 &unused_select_pixel);
-	}
-
-
-    /* Add mapping between MWContext and frame */
-    ViewGlue_addMapping((XFE_Frame *)m_frame, m_imageContext);
-
-
-    /* Initialize the Imagelib callbacks, Imagecontexts, 
-     * imageobserver and group contexts
-     */
-    if (!fe_init_image_callbacks(m_imageContext))
-    {
-       cxtInitSucceeded = False;
-       return;
-    }
-
-	
-    fe_InitColormap (m_imageContext);
-    cxtInitSucceeded = True;
-  }
-  else
-  {
-    cxtInitSucceeded = False;
-    return;
-  }
+  if (cxtInitSucceeded)
+    addListener(requestedObj, baseWidget, imageURL); 	
 
 }
 
 
 XFE_RDFImage::~XFE_RDFImage()
 {
+  int i = 0, j = 0;
 
-  free(m_urlString);
-  free (CONTEXT_DATA (m_imageContext));
-  free (m_imageContext);
-  refCount--;
  
-  // Delete the bad image if refcount = 0
-  if (refCount == 0)
+  // Delete the bad image if m_numRDFImagesLoaded = 0
+  if (m_numRDFImagesLoaded == 0)
   {
-       D(printf("Need to delete the bad image\n");)
-
+       D(printf("Need to delete the bad image here \n");)
+       XP_FREE(RDFImagesCache);
   }
 
-  // Destroy the Image groupcontexts and observers
-  if (m_imageContext)
-  {
-      PRBool observer_removed_p;
-
-      if (m_imageContext->color_space) 
-      {
-         D(printf("Deleting image color spaces\n");)
-	     IL_ReleaseColorSpace(m_imageContext->color_space);
-          m_imageContext->color_space = NULL;
-      }
-
-      /* Destroy the image group context after removing the image group 
-       * observer
-       */
-           D(printf("Deleting the image observer\n");)
-            observer_removed_p =
-                IL_RemoveGroupObserver(m_imageContext->img_cx,
-                                       fe_ImageGroupObserver,
-                                       (void *)m_imageContext);
-
-			IL_DestroyGroupContext(m_imageContext->img_cx);
-			m_imageContext->img_cx = NULL;
-		}
 }
 
+
+/* Set the callback for the requestor */
 void
 XFE_RDFImage::setCompleteCallback(completeCallbackPtr callback,  void * client_data)
 {
@@ -206,14 +118,19 @@ XFE_RDFImage::setCompleteCallback(completeCallbackPtr callback,  void * client_d
 }
 
 
+/* Image library callback with the image pixmap and mask. The mask
+ * mask part is not working right now.
+ */
 void 
 XFE_RDFImage::RDFDisplayPixmap(IL_Pixmap * image, IL_Pixmap * mask, PRInt32 width, PRInt32 height)
 {
 	m_image = image;
 	m_mask = mask;
+    imageWidth = width;
+    imageHeight = height;
     pairCount++;
 
-    if (!imageDrawn) 
+    if (!completelyLoaded) 
     {   
        callbackClientData * client_data = XP_NEW_ZAP(callbackClientData);
        client_data->widget = (Widget)callbackData;
@@ -221,13 +138,15 @@ XFE_RDFImage::RDFDisplayPixmap(IL_Pixmap * image, IL_Pixmap * mask, PRInt32 widt
        client_data->mask = getMask();
        client_data->width = width;
        client_data->height = height;
-       (*completeCallback)(client_data);
-       imageDrawn = True;
+       completelyLoaded = True;
+       if (isrequestorAlive)
+          (*completeCallback)(client_data);
+
     }
 	return;
 }
 
-
+/* Image library callback */
 void
 XFE_RDFImage::RDFNewPixmap(IL_Pixmap * image, Boolean isMask)
 {
@@ -237,15 +156,22 @@ XFE_RDFImage::RDFNewPixmap(IL_Pixmap * image, Boolean isMask)
 
 }
 
+/* This method is really useful when different images are
+ * requested. If a request for the same image is made
+ * in immediate succession like we do right now in NavCenterView.cpp
+ * this doesn't work. So commented off for now
+ */
+
+
 void
 XFE_RDFImage::RDFImageComplete(IL_Pixmap * image)
 {
-
 #ifdef UNDEF
 	// Will get a call for both the mask and for the image.  
 	if (m_image && m_mask)
 	{
 		if (pairCount == 2)
+          if (isrequestorAlive)
 			(*completeCallback)(getPixmap(), getMask(), callbackData);
 		else 
           pairCount++;
@@ -253,13 +179,14 @@ XFE_RDFImage::RDFImageComplete(IL_Pixmap * image)
 	else if (m_image)
 	{
 		// We have no mask.
-		(*completeCallback)(getPixmap(), getMask(), callbackData);
+        if (isrequestorAlive)
+		   (*completeCallback)(getPixmap(), getMask(), callbackData);
 	}
 #endif  /* UNDEF  */
 
 }
 
-
+/* returns if the image has been completely loaded */
 Boolean 
 XFE_RDFImage::isImageLoaded(void)
 {
@@ -267,47 +194,19 @@ XFE_RDFImage::isImageLoaded(void)
 
 }
 
-extern "C"
-{
-void
-Icon_GetUrlExitRoutine(URL_Struct *pUrl, int iStatus, MWContext *pContext)  
-{
-	//	Report any errors.
-	if(iStatus < 0 && pUrl->error_msg != NULL)	
-	{
-         printf("Couldn't load image. Need to put the bad image up\n");
-#ifdef UNDEF
-	     // Since we cannot load this url, replace it with a bad image.
-     	     theImage->m_BadImage = TRUE;
-			theImage->bits = 0;
-			theImage->maskbits = 0;
-			theImage->bmpInfo = 0;
-			if (!CRDFImage::m_hBadImageBitmap)
-				CRDFImage::m_hBadImageBitmap = ::LoadBitmap(AfxGetResourceHandle(), MAKEINTRESOURCE(IDB_IMAGE_BAD));
-			theImage->CompleteCallback();
-#endif    /* UNDEF   */
-	}
-}
-};  /* extern C */
 
-
-void 
-XFE_RDFImage::loadImage(void)
-{
-
-   if (cxtInitSucceeded)
-     NET_GetURL(NET_CreateURLStruct(m_urlString, NET_DONT_RELOAD), FO_CACHE_AND_PRESENT,   m_imageContext, Icon_GetUrlExitRoutine);
-
-}
-
-Pixmap XFE_RDFImage::getPixmap(void)
+/* return the image pixmap */
+Pixmap
+XFE_RDFImage::getPixmap(void)
 {
    if (m_image)
      return (Pixmap)(((fe_PixmapClientData *)(m_image->client_data))->pixmap);
    return (Pixmap)NULL;
 }
 
-Pixmap XFE_RDFImage::getMask(void)
+/* Return the image mask */
+Pixmap
+XFE_RDFImage::getMask(void)
 {
     if (m_mask)
        return (Pixmap)(((fe_PixmapClientData *)(m_mask->client_data))->pixmap);
@@ -315,376 +214,203 @@ Pixmap XFE_RDFImage::getMask(void)
 
 }
 
+/* Get image width */
+PRInt32
+XFE_RDFImage::getImageWidth(void)
+{
+  return(imageWidth);
+}
+
+/* Get image height */
+PRInt32
+XFE_RDFImage::getImageHeight(void)
+{
+  return(imageHeight);
+}
+
+
+/* Call NET_GetURL() to fetch the image */
+void 
+XFE_RDFImage::loadImage(void)
+{
+
+   if (cxtInitSucceeded)
+     NET_GetURL(NET_CreateURLStruct(m_urlString, NET_DONT_RELOAD), FO_CACHE_AND_PRESENT,   m_imageContext, Image_GetUrlExitRoutine);
+
+}
 
 
 
+/*
+ * Given a imageURL, this method goes thro' the cache and checks if
+ * is already available. If available, it returns a handle to the
+ * RDFImageobject, that holds the pixmap for the image.
+ * The lookup is currently a simple strcmp. But it can be replaced by
+ * a better system.
+ */
 
+XFE_RDFImage *
+XFE_RDFImage::isImageAvailable(char * imageURL)
+{
+int   i = 0;
 
+  for (i = 0; i< m_numRDFImagesLoaded; i++)
+  {
+     if (!XP_STRCMP(imageURL, RDFImagesCache[i].imageURL))
+     {
+       /* If the RDFImage object related to the url 
+        * is still around, and the pixmap has been completely loaded,
+        * return handle to the RDFImage object.
+        */
+
+       if (RDFImagesCache[i].obj && ((RDFImagesCache[i].obj)->isImageLoaded()))
+         return (RDFImagesCache[i].obj);
+     }
+   }   // for
+
+   return (XFE_RDFImage * ) NULL;
+
+}
+
+/*
+ * This method s'd be called from the requesting object's destructor. 
+ * It basically goes through the cache and deletes all the RDFImage
+ * objects that the requestor had requested.
+ */
+
+void
+XFE_RDFImage::removeListener(void * obj)
+{
+   int totalImages = m_numRDFImagesLoaded;
+   for (int i=0; i<totalImages; i++)
+   {
+     if (RDFImagesCache[i].requestedObj == obj) {
+       removeListener(i);
+     }
+   } 
+}
+
+/* free and reset an element in the cache */
+void
+XFE_RDFImage::removeListener(int i) {
+
+  if (!RDFImagesCache[i].isSpaceAvailable) {
+         // free the string
+    if (RDFImagesCache[i].imageURL) {
+         free(RDFImagesCache[i].imageURL);
+         RDFImagesCache[i].imageURL = (char *) NULL;
+    }
+
+         // Set the widget pointer to NULL
+         RDFImagesCache[i].widget = NULL;
+
+         /* I don't think I need to do this here. The RDFImage
+          * object can be deleted from the destructor
+          */
 #ifdef UNDEF
+     if (RDFImagesCache[i].obj) {
+         delete(RDFImagesCache[i].obj);  
+         RDFImagesCache[i].obj = (XFE_RDFImage *) NULL;
+     }
+#endif  /* UNDEF  */
 
-CRDFImage::~CRDFImage()
-{
-//	XP_FREE( bmpInfo);
-//	CDCCX::HugeFree(bits);
-//	CDCCX::HugeFree(maskbits);
-	free(pUrl);
-	
-	CRDFImage::refCount--;
-	if (refCount == 0)
-	{
-		if (CRDFImage::m_hBadImageBitmap)
-			VERIFY(::DeleteObject(CRDFImage::m_hBadImageBitmap));
-	}
-}
+         // reset the requestor's pointer 
+         RDFImagesCache[i].requestedObj = (void *)NULL;
 
-void CRDFImage::AddListener(CCustomImageObject* pObject, HT_Resource r)
-{
-	// We only want to have one copy of the same image in this list.
-	for (POSITION pos = resourceList.GetHeadPosition();
-		 pos != NULL; )
-	{
-		// Enumerate over the list and call remove listener on each image.
-		CIconCallbackInfo* pInfo = (CIconCallbackInfo*)resourceList.GetNext(pos);
-		if (pInfo->pObject == pObject &&
-			pInfo->pResource == r)
-			return; // We're already listening for this resource.
-	}
-	
-	// Add a listener.
-	CIconCallbackInfo* iconCallbackInfo = new CIconCallbackInfo(pObject, r);
-	resourceList.AddHead(iconCallbackInfo);  
-	pObject->AddLoadingImage(this);
-	m_nRefCount++;
-	if (iconContext == NULL)
-	{
-		// Kick off the load.
-		ProcessIcon();
-	}
-}
-
-void CRDFImage::RemoveListener(CCustomImageObject *pObject)
-{
-	// Listener has been destroyed.  Need to get all references to it out of the list.
-	// Just do this by NULLing out the pObject field of the iconcallbackinfo structs.
-	for (POSITION pos = resourceList.GetHeadPosition();
-		 pos != NULL; )
-	{
-		CIconCallbackInfo* pInfo = (CIconCallbackInfo*)resourceList.GetNext(pos);
-		if (pInfo->pObject == pObject)
-		{	
-			pInfo->pObject = NULL;
-			m_nRefCount--;
-			if (m_nRefCount == 0 && iconContext)
-			{
-				iconContext->Interrupt();
-				DestroyContext();
-				return;
-			}
-		}
-	}
-}
-
-void CRDFImage::RemoveListenerForSpecificResource(CCustomImageObject *pObject, HT_Resource r)
-{
-	// Listener has been destroyed.  Need to get all references to it out of the list.
-	// Just do this by NULLing out the pObject field of the iconcallbackinfo structs.
-	for (POSITION pos = resourceList.GetHeadPosition();
-		 pos != NULL; )
-	{
-		CIconCallbackInfo* pInfo = (CIconCallbackInfo*)resourceList.GetNext(pos);
-		if (pInfo->pObject == pObject && pInfo->pResource == r)
-		{	
-			pInfo->pObject = NULL;
-			m_nRefCount--;
-			if (m_nRefCount == 0 && iconContext)
-			{
-				iconContext->Interrupt();
-				DestroyContext();
-				return;
-			}
-		}
-	}
+         // Mark the space to be available
+         RDFImagesCache[i].isSpaceAvailable = True;
+         m_numRDFImagesLoaded--;
+  }
 }
 
 
-void CRDFImage::DestroyContext()
-{
-	iconContext->DeleteContextDC();
-	iconContext->NiceDestruction();
-	iconContext = NULL;
+/* 
+ * Remove a widget from the listener list.
+ * This s'd be called by the destroy callback of the
+ * widget that requested the image. This is to take care of cases
+ * where a specific widget associated with the image goes away, but the
+ * class that it originated from is not gone. This is suppose to
+ * work with isRequestorAlive()
+ */
 
-	resourceList.RemoveAll();
+void
+XFE_RDFImage::removeListener(Widget w)
+{
+   for (int i=0; i<m_numRDFImagesLoaded; i++)
+   {
+     if (RDFImagesCache[i].widget == w) {
+         RDFImagesCache[i].widget = NULL;
+     }
+   }
+
 }
 
-BOOL CRDFImage::FrameLoaded()
+/* Add a new image to the cache */
+void
+XFE_RDFImage::addListener(void * requestedObj, Widget w, char * imageURL)
 {
-	return (m_bFrameLoaded);
+
+   int i =0;
+  /* Go through the cache and see if there are any existing 
+   * space that is available.
+   */
+
+  for (i=0; i<m_numRDFImagesLoaded; i++) {
+    if (RDFImagesCache[i].isSpaceAvailable) {
+      break;
+    }
+  }
+
+  if (m_numRDFImagesLoaded == MaxRdfImages) {
+    /* The array is full. realloc */
+     RDFImagesCache =  (RDFImageList *) XP_REALLOC(RDFImagesCache, ((MaxRdfImages + ImageListIncrSize)*sizeof(RDFImageList)));
+     MaxRdfImages +=ImageListIncrSize;
+
+  }
+  
+  if (m_numRDFImagesLoaded < MaxRdfImages) {
+   RDFImagesCache[i].obj = this;
+   RDFImagesCache[i].requestedObj = requestedObj;
+   RDFImagesCache[i].widget  = w;
+   RDFImagesCache[i].imageURL  = (char *)XP_ALLOC(sizeof(char) * (strlen(imageURL) + 1));
+   strncpy(RDFImagesCache[i].imageURL, imageURL, strlen(imageURL));
+    RDFImagesCache[i].isSpaceAvailable = False;
+   m_numRDFImagesLoaded++;
+  }
+
 }
 
-BOOL CRDFImage::FrameSuccessfullyLoaded()
+/* 
+ * This is called by RDFDisplayPixmap(), 
+ * to make sure that the widget that
+ * requested the image is still around
+ */
+PRBool 
+XFE_RDFImage::isrequestorAlive(Widget w)
 {
-	return (m_bFrameLoaded && bits);
+  for(int i = 0; i<m_numRDFImagesLoaded; i++) {
+    if (RDFImagesCache[i].widget == w)
+      return (True);
+  }
+  return (False);
 }
 
-BOOL CRDFImage::CompletelyLoaded()
+/* 
+ * Given a widget id, get a handle to the corresponding RDFImage object 
+ * This is used by the Image library callbacks, for whom the widget id
+ * is the only  link to the XFE world
+ */
+
+XFE_RDFImage * 
+XFE_RDFImage::getRDFImageObject(Widget w)
 {
-	return m_bCompletelyLoaded;
+
+  for(int i = 0; i<m_numRDFImagesLoaded; i++) {
+    if (RDFImagesCache[i].widget == w)
+      return (RDFImagesCache[i].obj);
+  }
+  return (XFE_RDFImage *) NULL;
 }
 
 
 
-static BOOL IsImageMimeType(const CString& theFormat)
-{
-	BOOL val = FALSE;
-	if (theFormat.CompareNoCase(IMAGE_GIF) == 0)
-		val = TRUE;
-	else if (theFormat.CompareNoCase(IMAGE_JPG) == 0)
-		val = TRUE;
-	else if (theFormat.CompareNoCase(IMAGE_PJPG) == 0)
-		val = TRUE;
-	else if (theFormat.CompareNoCase(IMAGE_PPM) == 0)
-		val = TRUE;
-	else if (theFormat.CompareNoCase(IMAGE_PNG) == 0)
-		val = TRUE;
-	else if (theFormat.CompareNoCase(IMAGE_XBM) == 0)
-		val = TRUE;
-	else if (theFormat.CompareNoCase(IMAGE_XBM2) == 0)
-		val = TRUE;
-	else if (theFormat.CompareNoCase(IMAGE_XBM3) == 0)
-		val = TRUE;
-	return val;
-}
-
-static BOOL ValidNSBitmapFormat(char* extension)
-{
-	CPtrList* allHelpers = &(CHelperApp::m_cplHelpers);
-
-	for (POSITION pos = allHelpers->GetHeadPosition(); pos != NULL;)
-	{
-		CHelperApp* app = (CHelperApp*)allHelpers->GetNext(pos);
-		CString helperMime(app->cd_item->ci.type);
-
-		if (IsImageMimeType(helperMime))
-		{
-			if (app->cd_item->num_exts > 0)
-			{
-				for (int i = 0; i < app->cd_item->num_exts; i++)	
-				{
-					CString extString(app->cd_item->exts[i]);
-					if (extString == &extension[1])
-						return TRUE;
-				}
-			}
-		}
-	}
-	return FALSE;
-}
-
-void CRDFImage::ProcessIcon() 
-{
-	char *ext = FE_FindFileExt(pUrl);
-	if (ValidNSBitmapFormat(ext)) 
-	{
-		// If there is no context, create one for processing the image.
-		hSubDC = ::CreateCompatibleDC(NULL);
-
-		if (iconContext == NULL)
-		{
-			iconContext = new CXIcon(this);
-			iconContext->SubstituteDC(hSubDC);
-			iconContext->Initialize(FALSE, NULL, FALSE);
-			iconContext->SetUseDibPalColors(FALSE);
-		}
-
-// Temporary hack to disable loading RDF images for the layout integration
-// build.
-#ifndef MOZ_NGLAYOUT
-		//  Ask for this via client pull.
-		//  We may be in the call stack of the image lib, and doing
-		//  lots of fast small get urls causes it to barf due
-		//  to list management not being reentrant.
-		FEU_ClientPull(iconContext->GetContext(), 0, NET_CreateURLStruct(pUrl, NET_DONT_RELOAD), FO_CACHE_AND_PRESENT, FALSE);
-#endif
-	}
-	else 
-	{ // handle window internal format BMP
-		CString extension = ext;
-		if (extension.CompareNoCase(".bmp")) 
-		{
-		}
-		else  
-		{
-			// TODO: Error handling here, unknow bitmap format.
-		}
-	
-	}
-}
-
-void CRDFImage::CompleteCallback()
-{
-	m_bCompletelyLoaded = TRUE;
-	while (!resourceList.IsEmpty())
-	{
-		CIconCallbackInfo* callback = (CIconCallbackInfo*)(resourceList.RemoveHead());
-		if (callback->pObject)
-		{
-			callback->pObject->LoadComplete(callback->pResource);
-			callback->pObject->RemoveLoadingImage(this);
-		}
-		delete callback;
-	}
-	
-	DestroyContext();
-}
-
-void CRDFImage::CompleteFrameCallback()
-{
-	m_bFrameLoaded = TRUE;
-	for (POSITION pos = resourceList.GetHeadPosition(); pos != NULL; )
-	{
-		CIconCallbackInfo* callback = (CIconCallbackInfo*)(resourceList.GetNext(pos));
-		if (callback->pObject)
-		{
-			callback->pObject->LoadComplete(callback->pResource);
-		}
-	}
-}
-
-CXIcon::CXIcon(CRDFImage* theImage)
-{
-    MWContext *pContext = GetContext();
-    m_cxType = IconCX;
-    pContext->type = MWContextIcon;
-    m_MM = MM_TEXT;
-	m_hDC = 0;
-	m_icon = theImage;
-	m_image = NULL;
-	m_mask = NULL;
-}
-
-CXIcon::~CXIcon()
-{
-}
-
-BITMAPINFO * CXIcon::NewPixmap(NI_Pixmap *pImage, BOOL isMask)
-{
-	// remember which bitmap we have so we can get the bits later in imageComplete.
-	if (isMask)
-		m_mask = pImage;
-	else m_image = pImage;
-
-	return CDCCX::NewPixmap(pImage, isMask);
-}
-
-int CXIcon::DisplayPixmap(NI_Pixmap* image, NI_Pixmap* mask, int32 x, int32 y, int32 x_offset, int32 y_offset, int32 width, int32 height, int32 lScaleWidth, int32 lScaleHeight, LTRB& Rect)
-{
-	m_image = image;
-	m_mask = mask;
-
-	m_icon->bmpInfo = FillBitmapInfoHeader(image);
-	m_icon->bits = image->bits;
-	if (mask)
-		m_icon->maskbits = mask->bits;
-
-	m_icon->CompleteFrameCallback();
-	return 1;
-}
-
-void CXIcon::ImageComplete(NI_Pixmap* image)
-{
-	// Will get a call for both the mask and for the image.  
-	if (m_image && m_mask)
-	{
-		if (m_icon->pairCount == 2)
-			m_icon->CompleteCallback();
-		else m_icon->pairCount++;
-	}
-	else
-	{
-		// We have no mask.
-		m_icon->CompleteCallback();
-	}
-}
-
-	//	Don't display partial images.
-void CXIcon::AllConnectionsComplete(MWContext *pContext)
-{
-	CDCCX::AllConnectionsComplete(pContext);
-}
-
-void CXIcon::NiceDestruction()
-{
-	m_bIdleDestroy = TRUE;
-    FEU_RequestIdleProcessing(GetContext());
-}
-
-// ========================= CCustomImageObject Helpers =============================
-
-CRDFImage* CCustomImageObject::LookupImage(const char* url, HT_Resource r)
-{
-	// Find the image.
-	void* pData;
-	CRDFImage* pImage = NULL;
-	if (CHTFEData::m_CustomURLCache.Lookup(url, pData))
-	{
-		pImage = (CRDFImage*)pData;
-
-		// Add ourselves to the callback list if the image hasn't completely loaded.
-		if (!pImage->CompletelyLoaded())
-		{
-			// The image is currently loading.  Register ourselves with the image so that we will get called
-			// when the image finishes loading.
-			pImage->AddListener(this, r);
-		}
-	}
-	else
-	{
-		// Create a new NavCenter image.
-		pImage = new CRDFImage(url);
-		pImage->AddListener(this, r);
-		CHTFEData::m_CustomURLCache.SetAt(url, pImage);
-	}
-
-	return pImage;
-}
-
-CCustomImageObject::~CCustomImageObject()
-{
-	// The displayer of the image is being destroyed.  It should be removed as a listener from all 
-	// images.
-	for (POSITION pos = loadingImagesList.GetHeadPosition();
-		 pos != NULL; )
-	{
-		// Enumerate over the list and call remove listener on each image.
-		CRDFImage* pImage = (CRDFImage*)loadingImagesList.GetNext(pos);
-		pImage->RemoveListener(this);
-	}
-}
-
-void CCustomImageObject::AddLoadingImage(CRDFImage* pImage)
-{
-	// We only want to have one copy of the same image in this list.
-	for (POSITION pos = loadingImagesList.GetHeadPosition();
-		 pos != NULL; )
-	{
-		// Enumerate over the list and call remove listener on each image.
-		CRDFImage* pNavImage = (CRDFImage*)loadingImagesList.GetNext(pos);
-		if (pNavImage == pImage)
-			return;
-	}
-	
-	// Add the image to the list.
-	loadingImagesList.AddHead(pImage);
-}
-
-void CCustomImageObject::RemoveLoadingImage(CRDFImage* pImage)
-{
-	// Should only occur once in our list.  Find and remove.
-	POSITION pos = loadingImagesList.Find(pImage);
-	if (pos)
-		loadingImagesList.RemoveAt(pos);
-}
-
-
-
-#endif
