@@ -2,6 +2,8 @@
 /*   compose.c --- generation and delivery of MIME objects.
  */
 
+#include "msgCore.h"
+
 #include "rosetta_mailnews.h"
 #include "nsMsgLocalFolderHdrs.h"
 #include "nsMsgCompose.h"
@@ -11,10 +13,13 @@
 #include "nsMsgSendFact.h"
 #include "nsMsgSend.h"
 
+#include "nsISmtpService.h"  // for actually sending the message...
+
 /* use these macros to define a class IID for our component. Our object currently supports two interfaces 
    (nsISupports and nsIMsgCompose) so we want to define constants for these two interfaces */
 static NS_DEFINE_IID(kIMsgSend, NS_IMSGSEND_IID);
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
+static NS_DEFINE_CID(kSmtpServiceCID, NS_SMTPSERVICE_CID);
 
 #if 0 //JFD
 #include "msg.h"
@@ -4897,7 +4902,7 @@ nsMsgSendMimeDeliveryState::DeliverFileAsMail ()
 	  Fail (MK_OUT_OF_MEMORY, 0);
 	  return;
 	}
-  PL_strcpy (buf, "mailto:");
+  PL_strcpy (buf, "");
   buf2 = buf + PL_strlen (buf);
   if (m_fields->GetTo())
 	{
@@ -4913,6 +4918,20 @@ nsMsgSendMimeDeliveryState::DeliverFileAsMail ()
 	  if (*buf2) PL_strcat (buf2, ",");
 	  PL_strcat (buf2, m_fields->GetBcc());
 	}
+
+  nsISmtpService * smtpService = nsnull;
+  nsresult rv = nsServiceManager::GetService(kSmtpServiceCID, nsISmtpService::IID(), (nsISupports **)&smtpService);
+
+  nsFilePath filePath (m_msg_file_name ? m_msg_file_name : "");
+
+  if (NS_SUCCEEDED(rv) && smtpService)
+  {	
+	  // mscott --> eventually we want to pass buf (minus the mailto: part) into here....
+	  rv = smtpService->SendMailMessage(filePath, m_fields->GetFrom(), buf, nsnull);
+	  nsServiceManager::ReleaseService(kSmtpServiceCID, smtpService);
+  }
+
+  PR_FREEIF(buf); // free the buf because we are done with it....
 
 #if 0 //JFD
   url = NET_CreateURLStruct (buf, NET_DONT_RELOAD);
