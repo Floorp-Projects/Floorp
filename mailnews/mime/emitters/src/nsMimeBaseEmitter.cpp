@@ -114,7 +114,7 @@ nsMimeBaseEmitter::~nsMimeBaseEmitter(void)
       PR_FREEIF(attachInfo->contentType);
       PR_FREEIF(attachInfo->displayName);
       PR_FREEIF(attachInfo->urlSpec);
-	  delete attachInfo;
+      PR_FREEIF(attachInfo);
     }
     delete mAttachArray;
   }
@@ -141,7 +141,7 @@ nsMimeBaseEmitter::CleanupHeaderArray(nsVoidArray *aArray)
     
     PR_FREEIF(headerInfo->name);
     PR_FREEIF(headerInfo->value);
-    delete headerInfo;
+    PR_FREEIF(headerInfo);
   }
 }
 
@@ -347,6 +347,7 @@ NS_IMETHODIMP
 nsMimeBaseEmitter::Write(const char *buf, PRUint32 size, PRUint32 *amountWritten)
 {
   unsigned int        written = 0;
+  nsresult rv = NS_OK;
   PRUint32            rc = 0;
   PRUint32            needToWrite;
 
@@ -361,7 +362,7 @@ nsMimeBaseEmitter::Write(const char *buf, PRUint32 size, PRUint32 *amountWritten
   // First, handle any old buffer data...
   if (needToWrite > 0)
   {
-    rc += mOutStream->Write(mBufferMgr->GetBuffer(), 
+    rv = mOutStream->Write(mBufferMgr->GetBuffer(), 
                             needToWrite, &written);
 
     mTotalWritten += written;
@@ -373,21 +374,21 @@ nsMimeBaseEmitter::Write(const char *buf, PRUint32 size, PRUint32 *amountWritten
     if (mBufferMgr->GetSize() > 0)
     {
       mBufferMgr->IncreaseBuffer(buf, size);
-      return NS_OK;
+      return rv;
     }
   }
 
 
   // if we get here, we are dealing with new data...try to write
   // and then do the right thing...
-  rc = mOutStream->Write(buf, size, &written);
+  rv = mOutStream->Write(buf, size, &written);
   *amountWritten = written;
   mTotalWritten += written;
 
   if (written < size)
     mBufferMgr->IncreaseBuffer(buf+written, (size-written));
 
-  return rc;
+  return rv;
 }
 
 //
@@ -682,9 +683,13 @@ nsMimeBaseEmitter::Complete()
   // If we are here and still have data to write, we should try
   // to flush it...if we try and fail, we should probably return
   // an error!
-  PRUint32      written; 
-  while ( (mBufferMgr) && (mBufferMgr->GetSize() > 0))
-    Write("", 0, &written);
+  PRUint32      written;
+  char          *spec = nsnull;
+  char          *part = nsnull;
+
+  nsresult rv = NS_OK;
+  while ( NS_SUCCEEDED(rv) && (mBufferMgr) && (mBufferMgr->GetSize() > 0))
+    rv = Write("", 0, &written);
 
   if (mOutListener)
   {
