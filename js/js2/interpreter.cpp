@@ -383,8 +383,8 @@ JSValue Context::interpret(ICodeModule* iCode, const JSValues& args)
                     JSValue& r2 = (*registers)[src2(add)];
                     if (r1.isString() || r2.isString()) {
                         dest = r1.toString();
-                        JSString& str1(*dest.string);
-                        JSString& str2(*r2.toString().string);
+                        JSString& str1 = *dest.string;
+                        JSString& str2 = *r2.toString().string;
                         str1 += str2;
                     }
                     else {
