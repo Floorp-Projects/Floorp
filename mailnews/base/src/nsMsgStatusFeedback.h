@@ -23,7 +23,7 @@
 #ifndef _nsMsgStatusFeedback_h
 #define _nsMsgStatusFeedback_h
 
-#include "nsIDocumentLoaderObserver.h"
+#include "nsIWebProgressListener.h"
 #include "nsIDOMWindow.h"
 #include "nsIWebShell.h"
 #include "nsIWebShellWindow.h"
@@ -31,9 +31,11 @@
 #include "nsITimer.h"
 #include "nsCOMPtr.h"
 #include "nsIMsgStatusFeedback.h"
+#include "nsIProgressEventSink.h"
 
 class nsMsgStatusFeedback : public nsIMsgStatusFeedback,
-                            public nsIDocumentLoaderObserver
+                            public nsIProgressEventSink,
+                            public nsIWebProgressListener
 {
 public:
 	nsMsgStatusFeedback();
@@ -41,9 +43,8 @@ public:
 
 	NS_DECL_ISUPPORTS
   NS_DECL_NSIMSGSTATUSFEEDBACK
-    
-	// nsIDocumntLoaderObserver
-  NS_DECL_NSIDOCUMENTLOADEROBSERVER
+  NS_DECL_NSIWEBPROGRESSLISTENER
+  NS_DECL_NSIPROGRESSEVENTSINK
 
 protected:
 	nsIDOMWindow			*mWindow;

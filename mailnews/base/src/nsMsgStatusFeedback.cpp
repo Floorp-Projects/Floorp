@@ -21,6 +21,7 @@
  */
 
 #include "msgCore.h"
+#include "nsIWebProgress.h"
 #include "nsIDOMWindow.h"
 #include "nsPIDOMWindow.h"
 #include "nsMsgStatusFeedback.h"
@@ -29,7 +30,6 @@
 #include "nsIDocument.h"
 #include "nsIDOMElement.h"
 #include "nsIDOMXULDocument.h"
-#include "nsIObserverService.h"
 #include "nsIDocShell.h"
 
 
@@ -49,112 +49,67 @@ nsMsgStatusFeedback::~nsMsgStatusFeedback()
 {
 }
 
-//
-// nsISupports
-//
-NS_IMPL_THREADSAFE_ISUPPORTS2(nsMsgStatusFeedback,
-                              nsIMsgStatusFeedback,
-                              nsIDocumentLoaderObserver)
+NS_IMPL_THREADSAFE_ADDREF(nsMsgStatusFeedback);
+NS_IMPL_THREADSAFE_RELEASE(nsMsgStatusFeedback);
 
-// nsIDocumentLoaderObserver methods
+NS_INTERFACE_MAP_BEGIN(nsMsgStatusFeedback)
+   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIMsgStatusFeedback)
+   NS_INTERFACE_MAP_ENTRY(nsIMsgStatusFeedback)
+   NS_INTERFACE_MAP_ENTRY(nsIWebProgressListener) 
+NS_INTERFACE_MAP_END
 
-NS_IMETHODIMP
-nsMsgStatusFeedback::OnStartDocumentLoad(nsIDocumentLoader* aLoader, nsIURI* aURL, const char* aCommand)
+//////////////////////////////////////////////////////////////////////////////////
+// nsMsgStatusFeedback::nsIWebProgressListener
+//////////////////////////////////////////////////////////////////////////////////
+
+NS_IMETHODIMP nsMsgStatusFeedback::OnProgressChange(nsIChannel* aChannel,
+   PRInt32 aCurSelfProgress, PRInt32 aMaxSelfProgress, 
+   PRInt32 aCurTotalProgress, PRInt32 aMaxTotalProgress)
 {
-	NS_PRECONDITION(aLoader != nsnull, "null ptr");
-	if (! aLoader)
-	    return NS_ERROR_NULL_POINTER;
+  PRInt32 percentage = 0;
+  if (aMaxTotalProgress > 0)
+  {
+    percentage =  (aCurTotalProgress * 100) / aMaxTotalProgress;
+    if (percentage)
+      ShowProgress(percentage);
+  }
 
-	NS_PRECONDITION(aURL != nsnull, "null ptr");
-	if (! aURL)
-	    return NS_ERROR_NULL_POINTER;
-
-	nsresult rv = NS_OK;
-
-	if (mWindow)
-	{
-		nsIDOMWindow *aWindow = mWindow;
-		nsCOMPtr<nsIScriptGlobalObject>
-	  globalScript(do_QueryInterface(aWindow));
-    nsCOMPtr<nsIDocShell> docShell;
-		
-    if (globalScript)
-			globalScript->GetDocShell(getter_AddRefs(docShell));
-		
-    nsCOMPtr<nsIWebShell> webshell(do_QueryInterface(docShell));
-    nsCOMPtr<nsIWebShell> rootWebshell;
-		if (webshell)
-			webshell->GetRootWebShell(*getter_AddRefs(rootWebshell));
-		
-    if (rootWebshell) 
-		{
-		  // Kick start the throbber
-      StartMeteors();
-      ShowStatusString(NS_ConvertASCIItoUCS2("Loading Document...").GetUnicode());
-		  // Enable the Stop buton
-		  // setAttribute( rootWebshell, "canStop", "disabled", "" );
-		}
-	}
-	return rv;
+   return NS_OK;
+}
+      
+NS_IMETHODIMP nsMsgStatusFeedback::OnChildProgressChange(nsIChannel* aChannel,
+   PRInt32 aCurSelfProgress, PRInt32 aMaxSelfProgress)
+{
+   return NS_OK;
 }
 
-
-NS_IMETHODIMP
-nsMsgStatusFeedback::OnEndDocumentLoad(nsIDocumentLoader* aLoader, nsIChannel* channel, nsresult aStatus)
+NS_IMETHODIMP nsMsgStatusFeedback::OnStatusChange(nsIChannel* aChannel,
+   PRInt32 aProgressStatusFlags)
 {
-  NS_PRECONDITION(aLoader != nsnull, "null ptr");
-  if (! aLoader)
-    return NS_ERROR_NULL_POINTER;
+  if (aProgressStatusFlags & nsIWebProgress::flag_net_start)
+  {
+    m_lastPercent = 0;
+    StartMeteors();
+    ShowStatusString(NS_ConvertASCIItoUCS2("Loading Document...").GetUnicode());
+  }
+  if (aProgressStatusFlags & nsIWebProgress::flag_net_stop)
+  {
+    StopMeteors();
+    ShowStatusString(NS_ConvertASCIItoUCS2("Document: Done").GetUnicode());
+  }
 
-  NS_PRECONDITION(channel != nsnull, "null ptr");
-  if (! channel)
-    return NS_ERROR_NULL_POINTER;
-
-  nsresult rv = NS_OK;
-
-	if (mWindow)
-	{
-		nsIDOMWindow *aWindow = mWindow;
-		nsCOMPtr<nsIScriptGlobalObject>
-		globalScript(do_QueryInterface(aWindow));
-    nsCOMPtr<nsIDocShell> docShell;
-		if (globalScript)
-			globalScript->GetDocShell(getter_AddRefs(docShell));
-		
-    nsCOMPtr<nsIWebShell> webshell(do_QueryInterface(docShell));
-    nsCOMPtr<nsIWebShell> rootWebshell;
-		if (webshell)
-			webshell->GetRootWebShell(*getter_AddRefs(rootWebshell));
-		if (rootWebshell) 
-		{
-		  // stop the throbber
-      StopMeteors();
-      ShowStatusString(NS_ConvertASCIItoUCS2("Document: Done").GetUnicode());
-		  // Disable the Stop buton
-		  //setAttribute( rootWebshell, "canStop", "disabled", "true" );
-		}
-	}
-  return rv;
+  return NS_OK;
 }
 
-NS_IMETHODIMP nsMsgStatusFeedback::OnStartURLLoad(nsIDocumentLoader* loader, nsIChannel* channel)
+NS_IMETHODIMP nsMsgStatusFeedback::OnChildStatusChange(nsIChannel* aChannel,
+   PRInt32 aProgressStatusFlags)
 {
-	return NS_OK;
+   return NS_OK;
 }
 
-NS_IMETHODIMP nsMsgStatusFeedback::OnProgressURLLoad(nsIDocumentLoader* loader, nsIChannel* channel, PRUint32 aProgress, PRUint32 aProgressMax)
+NS_IMETHODIMP nsMsgStatusFeedback::OnLocationChange(nsIURI* aLocation)
 {
-	return NS_OK;
-}
-
-NS_IMETHODIMP nsMsgStatusFeedback::OnStatusURLLoad(nsIDocumentLoader* loader, nsIChannel* channel, nsString& aMsg)
-{
-	return NS_OK;
-}
-
-NS_IMETHODIMP nsMsgStatusFeedback::OnEndURLLoad(nsIDocumentLoader* loader, nsIChannel* channel, nsresult aStatus)
-{
-	return NS_OK;
+   return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -171,9 +126,12 @@ nsMsgStatusFeedback::ShowProgress(PRInt32 percentage)
 {
 	nsAutoString strPercentage;
 
-	if (percentage == m_lastPercent)
+  // if the percentage hasn't changed...OR if we are going from 0 to 100% in one step
+  // then don't bother....just fall out....
+	if (percentage == m_lastPercent || (m_lastPercent == 0 && percentage >= 100))
 		return NS_OK;
-	m_lastPercent = percentage;
+  
+  m_lastPercent = percentage;
 
 	PRInt64 nowMS;
 	LL_I2L(nowMS, 0);
@@ -194,6 +152,8 @@ nsMsgStatusFeedback::ShowProgress(PRInt32 percentage)
   
   if (mStatusFeedback)
     mStatusFeedback->ShowProgress(percentage);
+  if (mQueuedMeteorStarts <= 0)
+    mQueuedMeteorStarts++;
 	return NS_OK;
 }
 
@@ -222,14 +182,16 @@ nsMsgStatusFeedback::StartMeteors()
   //only run the start timer if the meteors aren't spinning.
   if(!m_meteorsSpinning)
   {
+    NotifyStartMeteors(nsnull);
+#if 0
 	  rv = NS_NewTimer(getter_AddRefs(mStartTimer));
 	  if (NS_FAILED(rv)) return rv;
 
 	  rv = mStartTimer->Init(notifyStartMeteors, (void *)this,
 							 MSGFEEDBACK_TIMER_INTERVAL);
 	  if (NS_FAILED(rv)) return rv;
-
-	  mQueuedMeteorStarts++;
+	  m_meteorsSpinning = PR_TRUE;
+#endif
   }
   return NS_OK;
 }
@@ -261,13 +223,15 @@ nsMsgStatusFeedback::StopMeteors()
   //only run the stop timer if the meteors are actually spinning.
   if(m_meteorsSpinning)
   {
+    NotifyStopMeteors(nsnull);
+#if 0
 	  rv = NS_NewTimer(getter_AddRefs(mStopTimer));
 	  if (NS_FAILED(rv)) return rv;
 
 	  rv = mStopTimer->Init(notifyStopMeteors, (void *)this,
 							MSGFEEDBACK_TIMER_INTERVAL);
 	  if (NS_FAILED(rv)) return rv;
-
+#endif
 	  mQueuedMeteorStops++;
   }
   return NS_OK;
@@ -354,4 +318,16 @@ nsMsgStatusFeedback::NotifyStopMeteors(nsITimer* aTimer)
   if (mStatusFeedback)
     mStatusFeedback->StopMeteors();
   m_meteorsSpinning = PR_FALSE;
+}
+
+NS_IMETHODIMP nsMsgStatusFeedback::OnProgress(nsIChannel* channel, nsISupports* ctxt, 
+                                          PRUint32 aProgress, PRUint32 aProgressMax)
+{
+  return OnProgressChange(channel, aProgress, aProgressMax, 
+                          aProgress /* current total progress */, aProgressMax /* max total progress */);
+}
+
+NS_IMETHODIMP nsMsgStatusFeedback::OnStatus(nsIChannel* channel, nsISupports* ctxt, const PRUnichar* aMsg)
+{
+  return ShowStatusString(aMsg);
 }
