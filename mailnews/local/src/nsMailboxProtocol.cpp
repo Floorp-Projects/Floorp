@@ -506,7 +506,7 @@ nsresult nsMailboxProtocol::LoadUrl(nsIURI * aURL, nsISupports * aConsumer)
       // find out from the url what action we are supposed to perform...
       rv = m_runningUrl->GetMailboxAction(&m_mailboxAction);
       
-      PRBool convertData;
+      PRBool convertData = PR_FALSE;
 
       if (m_mailboxAction == nsIMailboxUrl::ActionFetchMessage)
       {
@@ -521,11 +521,13 @@ nsresult nsMailboxProtocol::LoadUrl(nsIURI * aURL, nsISupports * aConsumer)
         // in that case, set up a text converter
         convertData = (queryStr.Find("header=filter") != kNotFound);
       }
-      else
+      else if (m_mailboxAction == nsIMailboxUrl::ActionFetchPart)
       {
         // when fetching a part, we need to insert a converter into the listener chain order to
-        // force just the part out of the message.
-        convertData = (m_mailboxAction == nsIMailboxUrl::ActionFetchPart);
+        // force just the part out of the message. Our channel listener is the consumer we'll
+        // pass in to AsyncConvertData.
+        convertData = PR_TRUE;
+        consumer = m_channelListener;
       }
       if (convertData)
       {
