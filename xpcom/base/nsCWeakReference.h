@@ -137,7 +137,7 @@ public:
 
   T& operator*() const {
        NS_ASSERTION(mProxy, "weak reference used without being set");
-       return (T&) *mProxy->Reference();
+       return (T&) *(T*)mProxy->Reference();
   }
 
   T* operator->() const {
