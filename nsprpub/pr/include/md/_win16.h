@@ -443,13 +443,6 @@ NSPR_API(void) _PR_UserDestroyThread(PRThread *thread);
 
 
 /*
- * _PR_ShutdownLinker unloads all dlls loaded by the application via
- * calls to PR_LoadLibrary
- */
-void _PR_ShutdownLinker(void);
-
-
-/*
 ** If thread emulation is used, then setjmp/longjmp stores the register
 ** state of each thread.
 **
