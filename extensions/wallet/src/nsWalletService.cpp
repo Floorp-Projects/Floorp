@@ -590,7 +590,7 @@ nsSingleSignOnPrompt::Init()
     if (!svc) return NS_ERROR_FAILURE;
     // The observer service holds the only ref to the observer
     // It thus has the lifespan of the observer service
-    svc->AddObserver(observer, "profile-before-change", PR_TRUE);
+    svc->AddObserver(observer, "profile-before-change", PR_FALSE);
     mgRegisteredObserver = PR_TRUE;
   }
   return NS_OK;
