@@ -1722,19 +1722,18 @@ var nsSpellingCommand =
 {
   isCommandEnabled: function(aCommand, dummy)
   {
-    return (window.editorShell != null) && !IsInHTMLSourceMode() && IsSpellCheckerInstalled();
+    return (window.editorShell && window.editorShell.documentEditable && 
+            !IsInHTMLSourceMode() && IsSpellCheckerInstalled());
   },
 
   doCommand: function(aCommand)
   {
-    window.spellCheckCompleted = false;
+    window.cancelSendMessage = false;
     try {
       window.openDialog("chrome://editor/content/EdSpellCheck.xul", "_blank",
-              "chrome,close,titlebar,modal", "");
+              "chrome,close,titlebar,modal", false);
     }
-    catch(ex) {
-      dump("*** Exception error: SpellChecker Dialog Closing\n");
-    }
+    catch(ex) {}
     window._content.focus();
   }
 };
