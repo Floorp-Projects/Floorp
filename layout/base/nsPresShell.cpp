@@ -758,6 +758,10 @@ PresShell::EndObservingDocument()
   return NS_OK;
 }
 
+#ifdef DEBUG_kipp
+char* nsPresShell_ReflowStackPointerTop;
+#endif
+
 NS_IMETHODIMP
 PresShell::InitialReflow(nscoord aWidth, nscoord aHeight)
 {
@@ -796,6 +800,9 @@ PresShell::InitialReflow(nscoord aWidth, nscoord aHeight)
     if (nsIFrame::GetVerifyTreeEnable()) {
       mRootFrame->VerifyTree();
     }
+#endif
+#ifdef DEBUG_kipp
+    nsPresShell_ReflowStackPointerTop = (char*) &aWidth;
 #endif
     nsRect                bounds;
     mPresContext->GetVisibleArea(bounds);
@@ -852,6 +859,9 @@ PresShell::ResizeReflow(nscoord aWidth, nscoord aHeight)
     if (nsIFrame::GetVerifyTreeEnable()) {
       mRootFrame->VerifyTree();
     }
+#endif
+#ifdef DEBUG_kipp
+    nsPresShell_ReflowStackPointerTop = (char*) &aWidth;
 #endif
     nsRect                bounds;
     mPresContext->GetVisibleArea(bounds);
