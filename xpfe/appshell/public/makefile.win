@@ -34,6 +34,7 @@ XPIDLSRCS =                        \
         .\nsIUserInfo.idl   \
 		.\nsITimingService.idl \
         .\nsINativeAppSupport.idl \
+        .\nsINativeAppSupportWin.idl \
 		$(NULL)
 
 EXPORTS =                         \
