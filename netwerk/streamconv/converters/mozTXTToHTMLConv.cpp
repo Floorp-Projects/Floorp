@@ -1138,6 +1138,10 @@ mozTXTToHTMLConv::ScanTXT(const PRUnichar *text, PRUint32 whattodo,
   // by setting a large capacity up front, we save time
   // when appending characters to the output string because we don't
   // need to reallocate and re-copy the characters already in the out String.
+  NS_ASSERTION(inLength, "ScanTXT passed 0 length string");
+  if (inLength == 0) {
+    return NS_ERROR_FAILURE;
+  }
   outString.SetCapacity(inLength * growthRate);
   ScanTXT(text, inLength, whattodo, outString);
 
