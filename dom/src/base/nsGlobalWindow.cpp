@@ -3038,12 +3038,16 @@ NS_IMETHODIMP GlobalWindowImpl::OpenInternal(JSContext *cx,
 
   if (!newDocShellItem) {
     windowIsNew = PR_TRUE;
-    if (chromeFlags & nsIWebBrowserChrome::CHROME_MODAL) {
+    PRBool weAreModal = PR_FALSE;
+    treeOwner->IsModal(&weAreModal);
+    if (weAreModal || (chromeFlags & nsIWebBrowserChrome::CHROME_MODAL)) {
       eventQService = do_GetService(kEventQueueServiceCID);
       if (eventQService &&
           NS_SUCCEEDED(eventQService->
                        PushThreadEventQueue(getter_AddRefs(modalEventQueue))))
           windowIsModal = PR_TRUE;
+          // in case we added this because weAreModal
+          chromeFlags |= nsIWebBrowserChrome::CHROME_MODAL | nsIWebBrowserChrome::CHROME_DEPENDENT;
     }
     treeOwner->GetNewWindow(chromeFlags, getter_AddRefs(newDocShellItem));
     NS_ENSURE_TRUE(newDocShellItem, NS_ERROR_FAILURE);
