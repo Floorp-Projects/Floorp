@@ -637,9 +637,6 @@ private:
   nsresult GetSelectionDocument(nsIDeviceContextSpec * aDevSpec,
                                 nsIDocument ** aNewDoc);
 
-  static void PR_CALLBACK HandlePLEvent(PLEvent* aEvent);
-  static void PR_CALLBACK DestroyPLEvent(PLEvent* aEvent);
-
   nsresult SetupToPrintContent(nsIWebShell*          aParent,
                                nsIDeviceContext*     aDContext,
                                nsIDOMWindowInternal* aCurrentFocusedDOMWin);
@@ -720,6 +717,12 @@ protected:
 
   PrintData*        mPrt;
   nsPagePrintTimer* mPagePrintTimer;
+
+  // These data member support delayed printing when the document is loading
+  nsCOMPtr<nsIPrintSettings>       mCachedPrintSettings;
+  nsCOMPtr<nsIWebProgressListener> mCachedPrintWebProgressListner;
+  PRPackedBool                     mPrintIsPending;
+  PRPackedBool                     mPrintDocIsFullyLoaded;
 
 #ifdef NS_PRINT_PREVIEW
   PRBool            mIsDoingPrintPreview; // per DocumentViewer
@@ -1104,6 +1107,8 @@ void DocumentViewerImpl::PrepareToStartLoad()
   mStopped          = PR_FALSE;
   mLoaded           = PR_FALSE;
   mPrt              = nsnull;
+  mPrintIsPending   = PR_FALSE;
+  mPrintDocIsFullyLoaded = PR_FALSE;
 
 #ifdef NS_PRINT_PREVIEW
   mIsDoingPrintPreview = PR_FALSE;
@@ -1546,6 +1551,15 @@ DocumentViewerImpl::LoadComplete(nsresult aStatus)
   }
 
   NS_RELEASE_THIS();
+
+  // Check to see if someone tried to print during the load
+  if (mPrintIsPending) {
+    mPrintIsPending        = PR_FALSE;
+    mPrintDocIsFullyLoaded = PR_TRUE;
+    Print(mCachedPrintSettings, mCachedPrintWebProgressListner);
+    mCachedPrintSettings           = nsnull;
+    mCachedPrintWebProgressListner = nsnull;
+  }
 
   return rv;
 }
@@ -5295,29 +5309,6 @@ DocumentViewerImpl::CreateDocumentViewerUsing(nsIPresContext* aPresContext,
   return rv;
 }
 
-void PR_CALLBACK DocumentViewerImpl::HandlePLEvent(PLEvent* aEvent)
-{
-  DocumentViewerImpl *viewer;
-
-  viewer = (DocumentViewerImpl*)PL_GetEventOwner(aEvent);
-
-  NS_ASSERTION(viewer, "The event owner is null.");
-  if (viewer) {
-    viewer->DocumentReadyForPrinting();
-  }
-}
-
-void PR_CALLBACK DocumentViewerImpl::DestroyPLEvent(PLEvent* aEvent)
-{
-  DocumentViewerImpl *viewer;
-
-  viewer = (DocumentViewerImpl*)PL_GetEventOwner(aEvent);
-  NS_IF_RELEASE(viewer);
-
-  delete aEvent;
-}
-
-
 nsresult DocumentViewerImpl::DocumentReadyForPrinting()
 {
   nsresult rv = NS_ERROR_FAILURE;
@@ -6795,6 +6786,21 @@ DocumentViewerImpl::Print(nsIPrintSettings*       aPrintSettings,
 
   nsCOMPtr<nsIDocShell> docShell(do_QueryInterface(mContainer));
   NS_ASSERTION(docShell, "This has to be a docshell");
+
+  // Check to see if this document is still busy
+  // If it is busy and we aren't already "queued" up to print then
+  // Indicate there is a print pending and cache the args for later
+  PRUint32 busyFlags = nsIDocShell::BUSY_FLAGS_NONE;
+  if ((NS_FAILED(docShell->GetBusyFlags(&busyFlags)) ||
+       busyFlags != nsIDocShell::BUSY_FLAGS_NONE) && 
+      !mPrintDocIsFullyLoaded) {
+    if (!mPrintIsPending) {
+      mCachedPrintSettings           = aPrintSettings;
+      mCachedPrintWebProgressListner = aWebProgressListener;
+      mPrintIsPending                = PR_TRUE;
+    }
+    return NS_OK;
+  }
 
   nsCOMPtr<nsIPresShell> presShell;
   docShell->GetPresShell(getter_AddRefs(presShell));
