@@ -1,4 +1,6 @@
 /*
+ * vim:ts=2:et:sw=2
+ *
  * The contents of this file are subject to the Mozilla Public
  * License Version 1.1 (the "License"); you may not use this file
  * except in compliance with the License. You may obtain a copy of
@@ -14,7 +16,7 @@
  * The Initial Developer of the Original Code is Christopher Blizzard.
  * Portions created by Christopher Blizzard are Copyright (C)
  * Christopher Blizzard.  All Rights Reserved.
- * 
+ *
  * Contributor(s):
  *   Christopher Blizzard <blizzard@mozilla.org>
  */
@@ -385,6 +387,10 @@ EmbedWindow::OnShowTooltip(PRInt32 aXCoords, PRInt32 aYCoords,
   root_y += 10;
   
   sTipWindow = gtk_window_new(GTK_WINDOW_POPUP);
+  gtk_widget_set_app_paintable(sTipWindow, TRUE);
+  gtk_window_set_policy(GTK_WINDOW(sTipWindow), FALSE, FALSE, TRUE);
+  // needed to get colors + fonts etc correctly
+  gtk_widget_set_name(sTipWindow, "gtk-tooltips");
   
   // set up the popup window as a transient of the widget.
   GtkWidget *toplevel_window;
@@ -404,12 +410,21 @@ EmbedWindow::OnShowTooltip(PRInt32 aXCoords, PRInt32 aYCoords,
   // wrap automatically
   gtk_label_set_line_wrap(GTK_LABEL(label), TRUE);
   gtk_container_add(GTK_CONTAINER(sTipWindow), label);
+  gtk_container_set_border_width(GTK_CONTAINER(sTipWindow), 3);
   // set the coords for the widget
   gtk_widget_set_uposition(sTipWindow, aXCoords + root_x,
 			   aYCoords + root_y);
 
   // and show it.
   gtk_widget_show_all(sTipWindow);
+
+  // draw tooltip style border around the text
+  gtk_paint_flat_box(sTipWindow->style, sTipWindow->window,
+           GTK_STATE_NORMAL, GTK_SHADOW_OUT, 
+           NULL, GTK_WIDGET(sTipWindow), "tooltip",
+           0, 0,
+           sTipWindow->allocation.width, sTipWindow->allocation.height);
+
   gtk_widget_popup(sTipWindow, aXCoords + root_x, aYCoords + root_y);
   
   nsMemory::Free( (void*)tipString );
