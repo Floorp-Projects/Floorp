@@ -90,17 +90,6 @@ function ListFields() {
 	}
 }
 
-function BoxClick( item)
-{	
-	body = document.getElementById("fieldBody");
-	try {
-		dump( "Value: " + body.childNodes[item].firstChild.firstChild.firstChild.checked + "\n");
-	}
-	catch( ex) {}
-
-	return( true);
-}
-
 
 function CreateField( name, index, on, cBoxIndex)
 {
@@ -115,7 +104,7 @@ function CreateField( name, index, on, cBoxIndex)
 	cBox.setAttribute( 'type', "checkbox");
 	if (on == true)
 		cBox.setAttribute( 'checked', "true");
-	cBox.onclick = new Function( "return BoxClick( " + cBoxIndex + ")");
+	// cBox.onclick = new Function( "return BoxClick( " + cBoxIndex + ")");
 
 	cCell.appendChild( cBox);
 	cCell.setAttribute( 'allowevents', "true");	
