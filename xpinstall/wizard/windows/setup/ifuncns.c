@@ -986,17 +986,28 @@ void UpdateJSProxyInfo()
       ZeroMemory(szBuf, sizeof(szBuf));
       if(*diAdvancedSettings.szProxyServer != '\0')
       {
-        lstrcpy(szBuf, "user_pref(\"network.proxy.ftp\", \"");
-        lstrcat(szBuf, diAdvancedSettings.szProxyServer);
-        lstrcat(szBuf, "\");\n");
+        if(diDownloadOptions.dwUseProtocol == UP_FTP)
+          wsprintf(szBuf,
+                   "user_pref(\"network.proxy.ftp\", \"%s\");\n",
+                   diAdvancedSettings.szProxyServer);
+        else
+          wsprintf(szBuf,
+                   "user_pref(\"network.proxy.http\", \"%s\");\n",
+                   diAdvancedSettings.szProxyServer);
       }
 
       if(*diAdvancedSettings.szProxyPort != '\0')
       {
-        lstrcat(szBuf, "user_pref(\"network.proxy.ftp_port\", ");
-        lstrcat(szBuf, diAdvancedSettings.szProxyPort);
-        lstrcat(szBuf, ");\n");
+        if(diDownloadOptions.dwUseProtocol == UP_FTP)
+          wsprintf(szBuf,
+                   "user_pref(\"network.proxy.ftp_port\", %s);\n",
+                   diAdvancedSettings.szProxyPort);
+        else
+          wsprintf(szBuf,
+                   "user_pref(\"network.proxy.http_port\", %s);\n",
+                   diAdvancedSettings.szProxyPort);
       }
+
       lstrcat(szBuf, "user_pref(\"network.proxy.type\", 1);\n");
 
       fwrite(szBuf, sizeof(char), lstrlen(szBuf), fJSFile);
