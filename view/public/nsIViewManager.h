@@ -547,9 +547,6 @@ public:
 
 };
 
-//update view as if a child view was being invalidated,
-//so the view should apply its 'child clip'
-#define NS_VMREFRESH_FORCHILD           0x0001
 //update view now?
 #define NS_VMREFRESH_IMMEDIATE          0x0002
 //prevent "sync painting"

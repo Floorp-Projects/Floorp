@@ -755,55 +755,6 @@ nsFrame::DisplaySelection(nsIPresContext* aPresContext, PRBool isOkToTurnOn)
 }
 
 void
-nsFrame::ComputeOverflowArea(nsRect& aOverflowArea,
-                             const nsRect& aCombinedChildren)
-{
-  // the frame's rect in its own coordinate system
-  nsRect r(0, 0, mRect.width, mRect.height);
-  // Make the default combined area: frame U children
-  aOverflowArea.UnionRect(aCombinedChildren, r);
-  // WARNING: aCombinedChildren might be the same rect as aOverflowArea.
-  // It may have been destroyed now. Don't use it below.
-
-  // Don't do the following mildly expensive stuff unless we have a view;
-  // any block frame with overflow:hidden will have a view
-  // (see nsContainerFrame::FrameNeedsView).
-  // HasView() is very cheap; it just checks a bit on mState.
-  if (HasView()) {
-    // The following code is temporarily disabled. We'll turn it on
-    // when proper support for 'outline' lands. Note that it assumes
-    // any frame with 'outline' has a view. --- roc
-#if 0
-    // Add in the outline width, which overflows our border area
-    const nsStyleOutline* outline;
-    ::GetStyleData(mStyleContext, &outline);
-    
-    nscoord width;
-    outline->GetOutlineWidth(width);
-    r.Inflate(width, width);
-#endif
-    
-    // overflow:hidden doesn't need to take account of the child area
-    const nsStyleDisplay* display;
-    ::GetStyleData(mStyleContext, &display);
-    if (NS_STYLE_OVERFLOW_HIDDEN == display->mOverflow
-        && (display->IsBlockLevel() || display->IsFloating())) {
-      aOverflowArea = r;
-    }
-  }
-
-  // Set state bit to indicate whether there is any overflow
-  if (aOverflowArea.x < 0
-      || aOverflowArea.y < 0
-      || aOverflowArea.XMost() > mRect.width
-      || aOverflowArea.YMost() > mRect.height) {
-    mState |= NS_FRAME_OUTSIDE_CHILDREN;
-  } else {
-    mState &= ~NS_FRAME_OUTSIDE_CHILDREN;
-  }
-}
-
-void
 nsFrame::SetOverflowClipRect(nsIRenderingContext& aRenderingContext)
 {
   // 'overflow-clip' only applies to block-level elements and replaced

@@ -1258,11 +1258,16 @@ nsLineLayout::ReflowFrame(nsIFrame* aFrame,
   nsIView*  view;
   aFrame->GetView(mPresContext, &view);
   if (view) {
-    nsCOMPtr<nsIViewManager> vm;
-    view->GetViewManager(*getter_AddRefs(vm));
+    nsIViewManager  *vm;
+    view->GetViewManager(vm);
 
+#if 0 // XXX This is the correct code. We'll turn it on later to mitigate risk.
     vm->ResizeView(view, pfd->mCombinedArea);
-    //nsContainerFrame::SyncFrameViewAfterSizeChange(mPresContext, pfd->mFrame, nsnull, view);
+#else // imitate the old, wrong code
+    nsRect r(0, 0, metrics.width, metrics.height);
+    vm->ResizeView(view, r);
+#endif
+    NS_RELEASE(vm);
   }
 
   // Tell the frame that we're done reflowing it
@@ -3318,26 +3323,20 @@ nsLineLayout::RelativePositionFrames(PerSpanData* psd, nsRect& aCombinedArea)
   }
 
   // If we just computed a spans combined area, we need to update its
-  // NS_FRAME_OUTSIDE_CHILDREN bit. We also may need to take into account
-  // an outline.
+  // NS_FRAME_OUTSIDE_CHILDREN bit..
   if (nsnull != psd->mFrame) {
     pfd = psd->mFrame;
     nsIFrame* frame = pfd->mFrame;
-
-    // We're conservative here; the combined area for this span/frame
-    // is the union of the area that the frame computed during reflow
-    // and the area that we computed for it here in RelativePositionFrames.
-    // We do this because relatively positioned frames that are also spans
-    // have two contributors to the overflow area: overflowing inline children
-    // and overflowing absolute children.
-    // This could be larger than necessary if inline alignment caused an inline child
-    // to overflow less, because its old overflow would still be counted in 
-    // pfd->mCombinedArea.
-    // But in practice it's OK to have an overflow area that's larger than necessary.
-    // (Although if it happens too often it could become a paint performance issue).
-    nsRect children;
-    children.UnionRect(pfd->mCombinedArea, aCombinedArea);
-    NS_STATIC_CAST(nsFrame*, frame)->ComputeOverflowArea(aCombinedArea, children);
+    nsFrameState oldState;
+    frame->GetFrameState(&oldState);
+    nsFrameState newState = oldState & ~NS_FRAME_OUTSIDE_CHILDREN;
+    if ((minX < 0) || (minY < 0) ||
+        (maxX > pfd->mBounds.width) || (maxY > pfd->mBounds.height)) {
+      newState |= NS_FRAME_OUTSIDE_CHILDREN;
+    }
+    if (newState != oldState) {
+      frame->SetFrameState(newState);
+    }
   }
 }
 
