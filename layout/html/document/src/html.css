@@ -408,12 +408,20 @@ noframes {
   display: none;
 }
 
-
 /* focusable content: anything w/ tabindex >=0 is focusable */
-*:focus { -moz-outline: 1px dotted invert; }
-
-/* Avoid extra focus outlines on input elements that already show focus */
-isindex:focus, input:focus, button:focus, select:focus { -moz-outline: none; }
+a:focus, abbr:focus, acronym:focus, address:focus, applet:focus, b:focus, 
+base:focus, big:focus, blockquote:focus, br:focus, caption:focus, center:focus, 
+cite:focus, code:focus, col:focus, colgroup:focus, dd:focus, del:focus, 
+dfn:focus, dir:focus, div:focus, dl:focus, dt:focus, em:focus, fieldset:focus, 
+font:focus, form:focus, h1:focus, h2:focus, h3:focus, h4:focus, 
+h5:focus, h6:focus, hr:focus, i:focus, img:focus, ins:focus, 
+kbd:focus, label:focus, legend:focus, li:focus, link:focus, menu:focus, 
+object:focus, ol:focus, p:focus, pre:focus, q:focus, s:focus, samp:focus, 
+small:focus, span:focus, strike:focus, strong:focus, sub:focus, sup:focus, 
+table:focus, tbody:focus, td:focus, tfoot:focus, th:focus, thead:focus, 
+tr:focus, tt:focus, u:focus, ul:focus, var:focus {
+   -moz-outline: 1px dotted invert;
+}
 
 /* hidden elements */
 area, base, basefont, head, meta, script, style, title,
