@@ -39,6 +39,20 @@
 
 #include "nsFontPackageService.h"
 #include "nsIComponentManager.h"
+#include "nsIServiceManager.h"
+#include "nsIFontEnumerator.h" 
+#include "plstr.h"
+
+enum {
+  eInit = 0,
+  eDownload,
+  eInstalled
+};
+
+static PRInt8 mJAState = eInit;
+static PRInt8 mKOState = eInit;
+static PRInt8 mZHTWState = eInit;
+static PRInt8 mZHCNState = eInit;
 
 NS_IMPL_THREADSAFE_ISUPPORTS2(nsFontPackageService, 
    nsIFontPackageService,
@@ -66,21 +80,73 @@ NS_IMETHODIMP nsFontPackageService::SetHandler(nsIFontPackageHandler *aHandler)
 /* void FontPackageHandled (in boolean aSuccess, in boolean aReloadPages, in string aFontPackID); */
 NS_IMETHODIMP nsFontPackageService::FontPackageHandled(PRBool aSuccess, PRBool aReloadPages, const char *aFontPackID)
 {
-    // add implementation later
-    return NS_OK;
+  if (strcmp(aFontPackID, "lang:ja") == 0) {
+    mJAState = (aSuccess) ? eInstalled : eInit;
+  }
+  else if (strcmp(aFontPackID, "lang:ko") == 0) {
+    mKOState = (aSuccess) ? eInstalled : eInit;
+  }
+  else if (strcmp(aFontPackID, "lang:zh-TW") == 0) {
+    mZHTWState = (aSuccess) ? eInstalled : eInit;
+  }
+  else if (strcmp(aFontPackID, "lang:zh-CN") == 0) {
+    mZHCNState = (aSuccess) ? eInstalled : eInit;
+  }
+
+  if (*aFontPackID == '\0' && (!aSuccess)) {
+    // if aFontPackID is empty and failed , then reset to eInit.
+    mJAState = mKOState = mZHTWState = mZHCNState = eInit;
+  }
+
+  return NS_OK;
 }
 
-/* from nsIFontPackageProxy.h */
+nsresult nsFontPackageService::CallDownload(const char *aFontPackID, PRInt8 aInState, PRInt8 *aOutState)
+{
+  nsresult rv = NS_OK;
+
+  if (aInState == eInit)  {
+    nsCOMPtr<nsIFontEnumerator> fontEnum = do_GetService("@mozilla.org/gfx/fontenumerator;1", &rv);
+    if (NS_SUCCEEDED(rv)) { 
+      PRBool have = PR_FALSE;
+      rv = fontEnum->HaveFontFor(aFontPackID, &have);
+      if (NS_SUCCEEDED(rv)) { 
+        if (!have)  {
+          *aOutState = eDownload;
+          rv = mHandler->NeedFontPackage(aFontPackID);
+        }
+        else  {
+          *aOutState = eInstalled;
+        }
+      }
+    }
+  }
+
+  return rv;
+}
 
 /* void NeedFontPackage (in string aFontPackID); */
 NS_IMETHODIMP nsFontPackageService::NeedFontPackage(const char *aFontPackID)
 {
+  nsresult rv = NS_OK;
   if (!mHandler) {
-    nsresult rv;
-    
     // create default handler
     mHandler = do_CreateInstance("@mozilla.org/locale/default-font-package-handler;1", &rv);
     if (NS_FAILED(rv)) return rv;
   }
-  return mHandler->NeedFontPackage(aFontPackID);
+
+  if (strcmp(aFontPackID, "lang:ja") == 0) {
+    rv = CallDownload(aFontPackID, mJAState, &mJAState);
+  }
+  else if (strcmp(aFontPackID, "lang:ko") == 0) {
+    rv = CallDownload(aFontPackID, mKOState, &mKOState);
+  }
+  else if (strcmp(aFontPackID, "lang:zh-TW") == 0) {
+    rv = CallDownload(aFontPackID, mZHTWState, &mZHTWState);
+  }
+  else if (strcmp(aFontPackID, "lang:zh-CN") == 0) {
+    rv = CallDownload(aFontPackID, mZHCNState, &mZHCNState);
+  }
+
+  return rv;
 }
