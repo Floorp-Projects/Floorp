@@ -67,10 +67,6 @@ var appCore = null;
 //cached elements
 var gBrowser = null;
 
-// focused frame URL
-var gFocusedURL = null;
-var gFocusedDocument = null;
-
 // Global variable that holds the nsContextMenu instance.
 var gContextMenu = null;
 
@@ -114,16 +110,6 @@ function getContentAreaFrameCount()
     saveFrameItem.setAttribute("hidden", "true");
   else
     saveFrameItem.removeAttribute("hidden");
-}
-
-// When a content area frame is focused, update the focused frame URL
-function contentAreaFrameFocus()
-{
-  var focusedWindow = document.commandDispatcher.focusedWindow;
-  if (isDocumentFrame(focusedWindow)) {
-    gFocusedURL = focusedWindow.location.href;
-    gFocusedDocument = focusedWindow.document;
-  }
 }
 
 //////////////////////////////// BOOKMARKS ////////////////////////////////////
@@ -282,7 +268,6 @@ function Startup()
   //  so we'll be notified when onloads complete.
   var contentArea = document.getElementById("browser");
   contentArea.addEventListener("load", loadEventHandlers, true);
-  contentArea.addEventListener("focus", contentAreaFrameFocus, true);
 
   var turboMode = false;
   // set default character set if provided
@@ -1463,7 +1448,7 @@ function SetPageProxyState(aState, aURI)
 function PageProxyDragGesture(aEvent)
 {
   if (!gURLBar)
-    return;
+    return false;
   if (gProxyButton.getAttribute("pageproxystate") == "valid") {
     nsDragAndDrop.startDrag(aEvent, proxyIconDNDObserver);
     return true;
