@@ -74,6 +74,7 @@ DEFINE_RDF_VOCAB(NC_NAMESPACE_URI, NC, child);
 DEFINE_RDF_VOCAB(NC_NAMESPACE_URI, NC, Name);
 DEFINE_RDF_VOCAB(NC_NAMESPACE_URI, NC, URL);
 DEFINE_RDF_VOCAB(NC_NAMESPACE_URI, NC, FileSystemObject);
+DEFINE_RDF_VOCAB(NC_NAMESPACE_URI, NC, pulse);
 DEFINE_RDF_VOCAB(RDF_NAMESPACE_URI, RDF, instanceOf);
 DEFINE_RDF_VOCAB(RDF_NAMESPACE_URI, RDF, type);
 DEFINE_RDF_VOCAB(RDF_NAMESPACE_URI, RDF, Seq);
@@ -89,6 +90,7 @@ nsIRDFResource		*FileSystemDataSource::kNC_Child;
 nsIRDFResource		*FileSystemDataSource::kNC_Name;
 nsIRDFResource		*FileSystemDataSource::kNC_URL;
 nsIRDFResource		*FileSystemDataSource::kNC_FileSystemObject;
+nsIRDFResource		*FileSystemDataSource::kNC_pulse;
 nsIRDFResource		*FileSystemDataSource::kRDF_InstanceOf;
 nsIRDFResource		*FileSystemDataSource::kRDF_type;
 
@@ -148,6 +150,7 @@ FileSystemDataSource::FileSystemDataSource(void)
 	gRDFService->GetResource(kURINC_Name, &kNC_Name);
 	gRDFService->GetResource(kURINC_URL, &kNC_URL);
 	gRDFService->GetResource(kURINC_FileSystemObject, &kNC_FileSystemObject);
+	gRDFService->GetResource(kURINC_pulse, &kNC_pulse);
 
 	gRDFService->GetResource(kURIRDF_instanceOf, &kRDF_InstanceOf);
 	gRDFService->GetResource(kURIRDF_type, &kRDF_type);
@@ -180,6 +183,7 @@ FileSystemDataSource::~FileSystemDataSource (void)
         NS_RELEASE(kNC_Name);
         NS_RELEASE(kNC_URL);
 	NS_RELEASE(kNC_FileSystemObject);
+	NS_RELEASE(kNC_pulse);
         NS_RELEASE(kRDF_InstanceOf);
         NS_RELEASE(kRDF_type);
 
@@ -261,15 +265,29 @@ FileSystemDataSource::GetTarget(nsIRDFResource *source,
                           nsIRDFNode **target /* out */)
 {
 	nsresult		rv = NS_RDF_NO_VALUE;
+	nsVoidArray		*array = nsnull;
 
 	// we only have positive assertions in the file system data source.
 	if (! tv)
 		return rv;
 
-	if (isFileURI(source))
+	if (peq(source, kNC_FileSystemRoot))
 	{
-		nsVoidArray		*array = nsnull;
-
+		if (peq(property, kNC_pulse))
+		{
+			nsAutoString	pulse("12");
+			nsIRDFLiteral	*pulseLiteral;
+			gRDFService->GetLiteral(pulse, &pulseLiteral);
+			array = new nsVoidArray();
+			if (array)
+			{
+				array->AppendElement(pulseLiteral);
+				rv = NS_OK;
+			}
+		}
+	}
+	else if (isFileURI(source))
+	{
 		if (peq(property, kNC_Name))
 		{
 			rv = GetName(source, &array);
@@ -280,7 +298,7 @@ FileSystemDataSource::GetTarget(nsIRDFResource *source,
 		}
 		else if (peq(property, kRDF_type))
 		{
-                    nsXPIDLCString uri;
+			nsXPIDLCString uri;
 			kNC_FileSystemObject->GetValue( getter_Copies(uri) );
 			if (uri)
 			{
@@ -292,17 +310,29 @@ FileSystemDataSource::GetTarget(nsIRDFResource *source,
 			}
 			return(rv);
 		}
-		if (array != nsnull)
+		else if (peq(property, kNC_pulse))
 		{
-			nsIRDFLiteral *literal = (nsIRDFLiteral *)(array->ElementAt(0));
-			*target = (nsIRDFNode *)literal;
-			delete array;
-			rv = NS_OK;
+			nsAutoString	pulse("12");
+			nsIRDFLiteral	*pulseLiteral;
+			gRDFService->GetLiteral(pulse, &pulseLiteral);
+			array = new nsVoidArray();
+			if (array)
+			{
+				array->AppendElement(pulseLiteral);
+				rv = NS_OK;
+			}
 		}
-		else
-		{
-			rv = NS_RDF_NO_VALUE;
-		}
+	}
+	if (array != nsnull)
+	{
+		nsIRDFLiteral *literal = (nsIRDFLiteral *)(array->ElementAt(0));
+		*target = (nsIRDFNode *)literal;
+		delete array;
+		rv = NS_OK;
+	}
+	else
+	{
+		rv = NS_RDF_NO_VALUE;
 	}
 	return(rv);
 }
@@ -328,6 +358,18 @@ FileSystemDataSource::GetTargets(nsIRDFResource *source,
 		{
 			rv = GetVolumeList(&array);
 		}
+		else if (peq(property, kNC_pulse))
+		{
+			nsAutoString	pulse("12");
+			nsIRDFLiteral	*pulseLiteral;
+			gRDFService->GetLiteral(pulse, &pulseLiteral);
+			array = new nsVoidArray();
+			if (array)
+			{
+				array->AppendElement(pulseLiteral);
+				rv = NS_OK;
+			}
+		}
 	}
 	else if (isFileURI(source))
 	{
@@ -345,7 +387,7 @@ FileSystemDataSource::GetTargets(nsIRDFResource *source,
 		}
 		else if (peq(property, kRDF_type))
 		{
-                    nsXPIDLCString uri;
+			nsXPIDLCString uri;
 			kNC_FileSystemObject->GetValue( getter_Copies(uri) );
 			if (uri)
 			{
@@ -358,6 +400,18 @@ FileSystemDataSource::GetTargets(nsIRDFResource *source,
 					array->AppendElement(literal);
 					rv = NS_OK;
 				}
+			}
+		}
+		else if (peq(property, kNC_pulse))
+		{
+			nsAutoString	pulse("12");
+			nsIRDFLiteral	*pulseLiteral;
+			gRDFService->GetLiteral(pulse, &pulseLiteral);
+			array = new nsVoidArray();
+			if (array)
+			{
+				array->AppendElement(pulseLiteral);
+				rv = NS_OK;
 			}
 		}
 	}
@@ -450,6 +504,7 @@ FileSystemDataSource::ArcLabelsOut(nsIRDFResource *source,
 			return NS_ERROR_OUT_OF_MEMORY;
 
 		temp->AppendElement(kNC_Child);
+		temp->AppendElement(kNC_pulse);
 		*labels = new FileSystemCursor(source, kNC_Child, PR_TRUE, temp);
 		if (nsnull != *labels)
 		{
@@ -472,6 +527,7 @@ FileSystemDataSource::ArcLabelsOut(nsIRDFResource *source,
 			if (fileSpec.IsDirectory())
 			{
 				temp->AppendElement(kNC_Child);
+				temp->AppendElement(kNC_pulse);
 			}
 		}
 

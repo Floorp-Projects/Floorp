@@ -85,6 +85,7 @@ private:
 	static nsIRDFResource		*kNC_Name;
 	static nsIRDFResource		*kNC_URL;
 	static nsIRDFResource		*kNC_FileSystemObject;
+	static nsIRDFResource		*kNC_pulse;
 	static nsIRDFResource		*kRDF_InstanceOf;
 	static nsIRDFResource		*kRDF_type;
 
