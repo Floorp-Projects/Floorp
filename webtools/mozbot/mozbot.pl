@@ -179,7 +179,7 @@ $cfgfile = $1; # untaint it -- we trust this, it comes from the admin.
 
 # - setup variables
 # note: owner is only used by the Mails module
-my ($server, $port, $localAddr, @nicks, @channels, %channelKeys, $owner, @modulenames, @ignoredUsers);
+my ($server, $port, $localAddr, @nicks, @channels, %channelKeys, $owner, @ignoredUsers);
 my $nick = 0;
 my $sleepdelay = 60;
 my $connectTimeout = 120;
@@ -188,7 +188,7 @@ my $variablepattern = '[-_:a-zA-Z0-9]+';
 my %users = ('admin' => &newPassword('password')); # default password for admin
 my %userFlags = ('admin' => 3); # bitmask; 0x1 = admin, 0x2 = delete user a soon as other admin authenticates
 my $helpline = 'see http://www.mozilla.org/projects/mozbot/'; # used in IRC name and in help
-my $modulenames = ('General');
+my @modulenames = ('General');
 
 # - which variables can be saved.
 &registerConfigVariables(
