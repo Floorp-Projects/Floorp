@@ -41,7 +41,7 @@ chrome_jars     1
 chrome_files    0
 use_jars        1
 transformiix    1
-mathml          1      MOZ_MATHML
+mathml          1      MOZ_MATHML 
 svg             0      MOZ_SVG
 # svg requires libart, which is an lgpl library. You need to pull it 
 # explicitly.
