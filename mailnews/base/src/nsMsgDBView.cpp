@@ -3920,7 +3920,7 @@ nsresult nsMsgDBView::ToggleExpansion(nsMsgViewIndex index, PRUint32 *numChanged
 
 	// if not a thread, or doesn't have children, no expand/collapse
 	// If we add sub-thread expand collapse, this will need to be relaxed
-	if (!(flags & MSG_VIEW_FLAG_ISTHREAD) || !(flags && MSG_VIEW_FLAG_HASCHILDREN))
+	if (!(flags & MSG_VIEW_FLAG_ISTHREAD) || !(flags & MSG_VIEW_FLAG_HASCHILDREN))
 		return NS_MSG_MESSAGE_NOT_FOUND;
 	if (flags & MSG_FLAG_ELIDED)
 		return ExpandByIndex(threadIndex, numChanged);
@@ -3952,23 +3952,28 @@ nsresult nsMsgDBView::ExpandAndSelectThreadByIndex(nsMsgViewIndex index, PRBool 
   nsMsgViewIndex threadIndex;
   PRBool inThreadedMode = (m_viewFlags & nsMsgViewFlagsType::kThreadedDisplay);
   
-  if (inThreadedMode) {
+  if (inThreadedMode) 
+  {
     threadIndex = ThreadIndexOfMsg(GetAt(index), index);
-    if (threadIndex == nsMsgViewIndex_None) {
+    if (threadIndex == nsMsgViewIndex_None) 
+    {
       NS_ASSERTION(PR_FALSE, "couldn't find thread");
       return NS_MSG_MESSAGE_NOT_FOUND;
     }
   }
-  else {
+  else 
+  {
     threadIndex = index;
   }
 
   PRInt32 flags = m_flags[threadIndex];
   PRInt32 count = 0;
 
-  if (inThreadedMode && (flags & MSG_VIEW_FLAG_ISTHREAD) && (flags && MSG_VIEW_FLAG_HASCHILDREN)) {
+  if (inThreadedMode && (flags & MSG_VIEW_FLAG_ISTHREAD) && (flags & MSG_VIEW_FLAG_HASCHILDREN)) 
+  {
     // if closed, expand this thread.
-    if (flags & MSG_FLAG_ELIDED) {
+    if (flags & MSG_FLAG_ELIDED) 
+    {
       PRUint32 numExpanded;
       rv = ExpandByIndex(threadIndex, &numExpanded);
       NS_ENSURE_SUCCESS(rv,rv);
@@ -3978,7 +3983,8 @@ nsresult nsMsgDBView::ExpandAndSelectThreadByIndex(nsMsgViewIndex index, PRBool 
     // so we know how many to select
     count = CountExpandedThread(threadIndex); 
   }
-  else {
+  else 
+  {
     count = 1;
   }
   NS_ASSERTION(count > 0, "bad count");
