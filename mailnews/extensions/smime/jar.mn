@@ -16,8 +16,10 @@ messenger.jar:
 *   content/messenger-smime/contents.rdf                             (resources/content/contents.rdf)
 
 en-US.jar:
+#ifndef MOZ_XUL_APP
     locale/en-US/messenger/am-smime.dtd                              (resources/locale/en-US/am-smime.dtd) 
     locale/en-US/messenger/am-smime.properties                       (resources/locale/en-US/am-smime.properties) 
+#endif
     locale/en-US/messenger-smime/msgCompSMIMEOverlay.dtd             (resources/locale/en-US/msgCompSMIMEOverlay.dtd)
     locale/en-US/messenger-smime/msgCompSMIMEOverlay.properties      (resources/locale/en-US/msgCompSMIMEOverlay.properties)
     locale/en-US/messenger-smime/msgReadSMIMEOverlay.dtd             (resources/locale/en-US/msgReadSMIMEOverlay.dtd)

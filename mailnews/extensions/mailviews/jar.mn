@@ -7,7 +7,9 @@ messenger.jar:
     content/messenger/mailViewList.js                                (resources/content/mailViewList.js)
 *   content/messenger-views/contents.rdf                             (resources/content/contents.rdf)
 
+#ifndef MOZ_XUL_APP
 en-US.jar:
     locale/en-US/messenger/msgViewPickerOverlay.dtd                  (resources/locale/en-US/msgViewPickerOverlay.dtd)
     locale/en-US/messenger/mailViewSetup.dtd                         (resources/locale/en-US/mailViewSetup.dtd)    
     locale/en-US/messenger/mailViewList.dtd                         (resources/locale/en-US/mailViewList.dtd) 
+#endif

@@ -3,8 +3,10 @@ messenger.jar:
     content/messenger/am-mdn.js                                      (resources/content/am-mdn.js)
 *   content/messenger-mdn/contents.rdf                               (resources/content/contents.rdf)
 
+#ifndef MOZ_XUL_APP
 en-US.jar:
     locale/en-US/messenger/am-mdn.dtd                                (resources/locale/en-US/am-mdn.dtd)  
     locale/en-US/messenger/am-mdn.properties                         (resources/locale/en-US/am-mdn.properties)  
 *   locale/en-US/messenger-mdn/contents.rdf                          (resources/locale/en-US/contents.rdf)
     locale/en-US/messenger/msgmdn.properties                         (resources/locale/en-US/msgmdn.properties)
+#endif

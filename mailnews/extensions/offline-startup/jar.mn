@@ -1,2 +1,5 @@
+#ifndef MOZ_XUL_APP
 en-US.jar:
   locale/en-US/messenger/offlineStartup.properties      (resources/locale/en-US/offlineStartup.properties)
+#endif
+
