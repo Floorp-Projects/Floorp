@@ -51,7 +51,11 @@ nsURLDataCallback::nsURLDataCallback() :
     m_szURL(NULL),
     m_nDataPos(0),
     m_nDataMax(0),
-    m_hPostData(NULL)
+    m_hPostData(NULL),
+    m_bSaveToTempFile(FALSE),
+    m_bNotifyOnWrite(TRUE),
+    m_szTempFileName(NULL),
+    m_pTempFile(NULL)
 {
     memset(&m_NPStream, 0, sizeof(m_NPStream));
     m_NPStream.ndata = this;
@@ -62,6 +66,15 @@ nsURLDataCallback::~nsURLDataCallback()
     SetPostData(NULL, 0);
     SetURL(NULL);
     SetContentType(NULL);
+    if (m_pTempFile)
+    {
+        fclose(m_pTempFile);
+        remove(m_szTempFileName);
+    }
+    if (m_szTempFileName)
+    {
+        free(m_szTempFileName);
+    }
 }
 
 void nsURLDataCallback::SetPostData(const void *pData, unsigned long nSize)
@@ -168,6 +181,27 @@ LRESULT nsURLDataCallback::OnNPPNewStream(UINT uMsg, WPARAM wParam, LPARAM lPara
             pNewStreamData->stream,
             pNewStreamData->seekable,
             pNewStreamData->stype);
+
+        // How does the plugin want its data?
+        switch (*(pNewStreamData->stype))
+        {
+        case NP_NORMAL:
+            m_bSaveToTempFile = FALSE;
+            m_bNotifyOnWrite = TRUE;
+            break;
+        case NP_ASFILEONLY:
+            m_bNotifyOnWrite = FALSE;
+            m_bSaveToTempFile = TRUE;
+            break;
+        case NP_ASFILE:
+            m_bNotifyOnWrite = TRUE;
+            m_bSaveToTempFile = TRUE;
+            break;
+        case NP_SEEK:
+            // TODO!!!
+            ATLASSERT(0);
+            break;
+        }
     }
     return 0;
 }
@@ -175,6 +209,49 @@ LRESULT nsURLDataCallback::OnNPPNewStream(UINT uMsg, WPARAM wParam, LPARAM lPara
 LRESULT nsURLDataCallback::OnNPPDestroyStream(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
 {
     _DestroyStreamData *pDestroyStreamData = (_DestroyStreamData *) lParam;
+
+    // Tell the plugin the name of the temporary file containing the data
+    if (m_bSaveToTempFile)
+    {
+        // Close the file
+        if (m_pTempFile)
+        {
+            fclose(m_pTempFile);
+        }
+
+        // Determine whether the plugin should be told the name of the temp
+        // file depending on whether it completed properly or not.
+        char *szTempFileName = NULL;
+        if (pDestroyStreamData->reason == NPRES_DONE &&
+            m_pTempFile)
+        {
+            szTempFileName = m_szTempFileName;
+        }
+        
+        // Notify the plugin
+        if (m_pOwner->m_NPPFuncs.asfile)
+        {
+            m_pOwner->m_NPPFuncs.asfile(
+                pDestroyStreamData->npp,
+                pDestroyStreamData->stream,
+                szTempFileName);
+        }
+
+        // Remove the file if it wasn't passed into the plugin
+        if (!szTempFileName ||
+            !m_pOwner->m_NPPFuncs.asfile)
+        {
+            remove(szTempFileName);
+        }
+
+        // Cleanup strings & pointers
+        if (m_szTempFileName)
+        {
+            free(m_szTempFileName);
+            m_szTempFileName = NULL;
+        }
+        m_pTempFile = NULL;
+    }
 
     // Notify the plugin that the stream has been closed
     if (m_pOwner->m_NPPFuncs.destroystream)
@@ -184,6 +261,7 @@ LRESULT nsURLDataCallback::OnNPPDestroyStream(UINT uMsg, WPARAM wParam, LPARAM l
             pDestroyStreamData->stream,
             pDestroyStreamData->reason);
     }
+
     return 0;
 }
 
@@ -206,7 +284,8 @@ LRESULT nsURLDataCallback::OnNPPURLNotify(UINT uMsg, WPARAM wParam, LPARAM lPara
 LRESULT nsURLDataCallback::OnNPPWriteReady(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
 {
     _WriteReadyData *pWriteReadyData = (_WriteReadyData *) lParam;
-    if (m_pOwner->m_NPPFuncs.writeready)
+    if (m_pOwner->m_NPPFuncs.writeready &&
+        m_bNotifyOnWrite)
     {
         pWriteReadyData->result = m_pOwner->m_NPPFuncs.writeready(
             pWriteReadyData->npp,
@@ -219,14 +298,70 @@ LRESULT nsURLDataCallback::OnNPPWriteReady(UINT uMsg, WPARAM wParam, LPARAM lPar
 LRESULT nsURLDataCallback::OnNPPWrite(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
 {
     _WriteData *pWriteData = (_WriteData *) lParam;
-    if (m_pOwner->m_NPPFuncs.write)
+
+#ifdef DUMP_STREAM_DATA_AS_HEX
+    // Dumps out the data to the display so you can see it's correct as its
+    // fed into the plugin.
+    const int kLineBreakAfter = 16;
+    const int kSpaceBreakAfter = 8;
+    ATLTRACE(_T("nsURLDataCallback::OnNPPWrite()\n"));
+    for (int i = 0; i < pWriteData->len; i++)
     {
-        m_pOwner->m_NPPFuncs.write(
+        TCHAR szLine[100];
+        TCHAR szTmp[20];
+        if (i % kLineBreakAfter == 0)
+        {
+            _stprintf(szLine, _T("%04x  "), i);
+        }
+        unsigned char b = ((unsigned char *) pWriteData->buffer)[i];
+        _stprintf(szTmp, _T("%02X "), (unsigned int) b);
+        _tcscat(szLine, szTmp);
+        
+        if (i == pWriteData->len - 1 ||
+            i % kLineBreakAfter == kLineBreakAfter - 1)
+        {
+            _tcscat(szLine, _T("\n"));
+            ATLTRACE(szLine);
+        }
+        else if (i % kSpaceBreakAfter == kSpaceBreakAfter - 1)
+        {
+            _tcscat(szLine, _T(" "));
+        }
+    }
+    ATLTRACE(_T("--\n"));
+#endif
+
+    if (m_bSaveToTempFile)
+    {
+        if (!m_szTempFileName)
+        {
+            m_szTempFileName = strdup(_tempnam(NULL, "moz"));
+        }
+        if (!m_pTempFile)
+        {
+            m_pTempFile = fopen(m_szTempFileName, "wb");
+        }
+        ATLASSERT(m_pTempFile);
+        if (m_pTempFile)
+        {
+            fwrite(pWriteData->buffer, 1, pWriteData->len, m_pTempFile);
+        }
+    }
+
+    if (m_pOwner->m_NPPFuncs.write &&
+        m_bNotifyOnWrite)
+    {
+        int32 nConsumed = m_pOwner->m_NPPFuncs.write(
             pWriteData->npp,
             pWriteData->stream,
             pWriteData->offset,
             pWriteData->len,
             pWriteData->buffer);
+        if (nConsumed < 0)
+        {
+            // TODO destroy the stream!
+        }
+        ATLASSERT(nConsumed == pWriteData->len);
     }
     return 0;
 }
@@ -261,6 +396,7 @@ HRESULT STDMETHODCALLTYPE nsURLDataCallback::OnStartBinding(
     /* [in] */ DWORD dwReserved,
     /* [in] */ IBinding __RPC_FAR *pib)
 {
+    ATLTRACE(_T("nsURLDataCallback::OnStartBinding()\n"));
     m_cpBinding = pib;
     return S_OK;
 }
@@ -309,6 +445,7 @@ HRESULT STDMETHODCALLTYPE nsURLDataCallback::OnStopBinding(
     /* [in] */ HRESULT hresult,
     /* [unique][in] */ LPCWSTR szError)
 {
+    ATLTRACE(_T("nsURLDataCallback::OnStopBinding()\n"));
     if (m_pOwner && m_pOwner->m_bPluginIsAlive)
     {
         // TODO check for aborted ops and send NPRES_USER_BREAK
@@ -368,6 +505,7 @@ HRESULT STDMETHODCALLTYPE nsURLDataCallback::OnStopBinding(
     /* [in] */ FORMATETC __RPC_FAR *pformatetc,
     /* [in] */ STGMEDIUM __RPC_FAR *pstgmed)
 {
+    ATLTRACE(_T("nsURLDataCallback::OnDataAvailable()\n"));
     if (pstgmed->tymed != TYMED_ISTREAM ||
         !pstgmed->pstm)
     {

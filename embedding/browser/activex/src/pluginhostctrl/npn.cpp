@@ -179,7 +179,18 @@ NPN_Status(NPP npp, const char *message)
     {
         return;
     }
-    // TODO status message
+
+    nsPluginHostCtrl *pCtrl = (nsPluginHostCtrl *) npp->ndata;
+    ATLASSERT(pCtrl);
+
+    // Update the status bar in the browser
+    CComPtr<IWebBrowserApp> cpBrowser;
+    pCtrl->GetWebBrowserApp(&cpBrowser);
+    if (cpBrowser)
+    {
+        USES_CONVERSION;
+        cpBrowser->put_StatusText(A2OLE(message));
+    }
 }
 
 

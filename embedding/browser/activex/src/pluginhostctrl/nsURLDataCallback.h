@@ -37,6 +37,8 @@
 
 #include "resource.h"       // main symbols
 
+#include <stdio.h>
+
 #include "npapi.h"
 
 class nsPluginHostCtrl;
@@ -142,6 +144,11 @@ protected:
 
     char *m_szContentType;
     char *m_szURL;
+
+    BOOL m_bSaveToTempFile;
+    BOOL m_bNotifyOnWrite;
+    FILE *m_pTempFile;
+    char *m_szTempFileName;
 
     CComPtr<IBinding> m_cpBinding;
 
