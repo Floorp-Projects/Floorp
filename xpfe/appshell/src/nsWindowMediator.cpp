@@ -93,24 +93,6 @@ static void GetAttribute( nsIXULWindow* inWindow,
 static void GetWindowType( nsIXULWindow* inWindow, nsAutoString& outType);
 static inline PRUint32 GetWindowZ( nsIXULWindow *inWindow);
 
-static nsresult NS_NewMediatorListRDFContainer(nsIRDFDataSource* aDataSource,
-                   nsIRDFResource* aResource,
-                   nsIRDFContainer** aResult)
-{
-    nsresult rv;
-  
-    rv = nsComponentManager::CreateInstance( 
-                                        kRDFContainerCID, NULL, NS_GET_IID(nsIRDFContainer),  (void**)aResult);
-    if (NS_FAILED(rv))
-    	return rv;
-
-    rv = (*aResult)->Init(aDataSource, aResource);
-    if (NS_FAILED(rv))
-    {
-    	NS_RELEASE(*aResult);
-    }
-    return rv;
-}
 
 nsresult GetDOMWindow( nsIXULWindow* inWindow, nsCOMPtr< nsIDOMWindowInternal>& outDOMWindow)
 {
@@ -187,6 +169,7 @@ nsIRDFResource	*nsWindowMediator::kNC_URL = NULL;
 nsIRDFResource	*nsWindowMediator::kNC_KeyIndex = NULL;
 
 PRInt32		nsWindowMediator::gRefCnt;
+nsIRDFContainer  *nsWindowMediator::mContainer = NULL;
 nsIRDFDataSource *nsWindowMediator::mInner = NULL;
 
 
@@ -220,6 +203,7 @@ nsWindowMediator::~nsWindowMediator()
     NS_IF_RELEASE(kNC_Name);
     NS_IF_RELEASE(kNC_URL);
     NS_IF_RELEASE(kNC_KeyIndex);
+    NS_IF_RELEASE(mContainer);
     NS_IF_RELEASE(mInner);
     if (mListLock)
       PR_DestroyLock(mListLock);
@@ -283,10 +267,7 @@ NS_IMETHODIMP nsWindowMediator::UnregisterWindow(nsWindowInfo *inInfo)
     ((nsAppShellWindowEnumerator*)mEnumeratorList[index])->WindowRemoved(inInfo);
 
   // Remove From RDF
-  nsCOMPtr<nsIRDFContainer> container;
-  nsresult rv = NS_NewMediatorListRDFContainer(mInner, kNC_WindowMediatorRoot, getter_AddRefs(container));
-  if (NS_SUCCEEDED(rv))
-    container->RemoveElement(inInfo->mRDFID, PR_TRUE);
+  mContainer->RemoveElement(inInfo->mRDFID, PR_TRUE);
  	
   // Remove from the lists and free up 
   if (inInfo == mOldestWindow)
@@ -810,36 +791,32 @@ nsWindowMediator::Init()
 
   if (gRefCnt++ == 0) {
 
-    mListLock = PR_NewLock();
-    if (!mListLock)
-      return NS_ERROR_OUT_OF_MEMORY;
+      mListLock = PR_NewLock();
+      if (!mListLock)
+          return NS_ERROR_OUT_OF_MEMORY;
 
-    rv = nsServiceManager::GetService( kRDFServiceCID, NS_GET_IID(nsIRDFService), (nsISupports**) &gRDFService );
-    if (NS_FAILED(rv)) return rv;
+      rv = nsServiceManager::GetService( kRDFServiceCID, NS_GET_IID(nsIRDFService), (nsISupports**) &gRDFService );
+      if (NS_FAILED(rv)) return rv;
+      if ( gRDFService == NULL )
+          return NS_ERROR_NULL_POINTER;
 
       gRDFService->GetResource( kURINC_WindowMediatorRoot,   &kNC_WindowMediatorRoot );
       gRDFService->GetResource( kURINC_Name, &kNC_Name );
       gRDFService->GetResource( kURINC_URL, &kNC_URL );
       gRDFService->GetResource( kURINC_KeyIndex, &kNC_KeyIndex );
+
+      rv = CallCreateInstance(kRDFInMemoryDataSourceCID, &mInner);
+      if (NS_FAILED(rv))
+          return rv;
+
+      nsCOMPtr<nsIRDFContainerUtils> rdfc = do_GetService(kRDFContainerUtilsCID, &rv);
+      if (NS_FAILED(rv))
+        return rv;
+      rv = rdfc->MakeSeq(mInner, kNC_WindowMediatorRoot, &mContainer );
+      NS_ASSERTION(NS_SUCCEEDED(rv), "Unable to make NC:WindowMediatorRoot a sequence");
+      if (NS_FAILED(rv))
+        return rv;
     }
-
-    if (NS_FAILED(rv = nsComponentManager::CreateInstance(kRDFInMemoryDataSourceCID,
-                                                        nsnull,
-                                                        NS_GET_IID(nsIRDFDataSource),
-                                                        (void**) &mInner)))
-      return rv;
-
-    nsCOMPtr<nsIRDFContainerUtils> rdfc = 
-             do_GetService(kRDFContainerUtilsCID, &rv);
-    if (NS_FAILED(rv))
-      return rv;
-
-    rv = rdfc->MakeSeq(mInner, kNC_WindowMediatorRoot, NULL );
-    NS_ASSERTION(NS_SUCCEEDED(rv), "Unable to make NC:WindowMediatorRoot a sequence");
-    if (NS_FAILED(rv))
-      return rv;
-    if ( gRDFService == NULL )
-      return NS_ERROR_NULL_POINTER;
 
     mWatcher = do_GetService("@mozilla.org/embedcomp/window-watcher;1", &rv);
     if (NS_FAILED(rv))
@@ -856,14 +833,8 @@ NS_IMETHODIMP nsWindowMediator::GetTarget(nsIRDFResource* source,
 {
     if (property == kNC_KeyIndex)
     {
-        nsCOMPtr<nsIRDFContainer> container;
-        nsresult rv = NS_NewMediatorListRDFContainer(mInner,
-            kNC_WindowMediatorRoot, getter_AddRefs(container));
-        if (NS_FAILED(rv)) return(rv);
-        if (!container) return(NS_ERROR_FAILURE);
-
-        PRInt32   theIndex = 0;
-        rv = container->IndexOf(source, &theIndex);
+        PRInt32  theIndex = 0;
+        nsresult rv = mContainer->IndexOf(source, &theIndex);
         if (NS_FAILED(rv)) return(rv);
 
         // only allow the range of 1 to 9 for single key access        
@@ -988,12 +959,7 @@ nsresult nsWindowMediator::AddWindowToRDF( nsWindowInfo* ioWindowInfo )
 	}
 	#endif
 	// Add the element to the container
-  nsCOMPtr<nsIRDFContainer> container;
-  rv = NS_NewMediatorListRDFContainer(mInner, kNC_WindowMediatorRoot, getter_AddRefs(container));
-  if (NS_FAILED(rv))
-  	return rv;
-
-	if (NS_FAILED(rv = container->AppendElement( window ) ) /* rdf_ContainerAppendElement(mInner, kNC_WindowMediatorRoot, window) */ )
+	if (NS_FAILED(rv = mContainer->AppendElement( window ) ) /* rdf_ContainerAppendElement(mInner, kNC_WindowMediatorRoot, window) */ )
 	{
 		NS_ERROR("unable to add window to container");
 		return rv;

@@ -45,6 +45,7 @@
 #include "nsXPIDLString.h"
 #include "nsCRT.h"
 #include "nsIRDFObserver.h"
+#include "nsIRDFContainer.h"
 #include "nsIRDFDataSource.h"
 
 class nsAppShellWindowEnumerator;
@@ -219,6 +220,7 @@ private:
   static nsIRDFResource* kNC_URL;
   static nsIRDFResource* kNC_KeyIndex;
   static PRInt32 gRefCnt;
+  static nsIRDFContainer*  mContainer;
   static nsIRDFDataSource* mInner;
 };
 
