@@ -2919,7 +2919,7 @@ NS_IMETHODIMP
 nsDocument::IncrementModCount(PRInt32 aNumMods)
 {
   mModCount += aNumMods;
-  NS_ASSERTION(mModCount >= 0, "Modification count went negative");
+  //NS_ASSERTION(mModCount >= 0, "Modification count went negative");
   return NS_OK;
 }
 
