@@ -395,7 +395,6 @@ PyG_Base::GetWeakReference(nsIWeakReference **ret)
 	}
 	NS_PRECONDITION(ret, "null pointer");
 	if (ret==nsnull) return NS_ERROR_INVALID_POINTER;
-	// explicit QI back to nsISupports
 	if (!m_pWeakRef) {
 		// First query for a weak reference - create it.
 		m_pWeakRef = new PyXPCOM_GatewayWeakReference(this);
