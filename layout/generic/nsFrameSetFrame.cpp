@@ -924,7 +924,7 @@ nsFrameborder nsHTMLFramesetFrame::GetFrameBorder(nsIContent* aContent)
 {
   nsFrameborder result = eFrameborder_Notset;
 
-  nsCOMPtr<nsIHTMLContent> content(do_QueryInterface(mContent));
+  nsCOMPtr<nsIHTMLContent> content(do_QueryInterface(aContent));
 
   if (content) {
     result = GetFrameBorderHelper(content);
