@@ -282,12 +282,19 @@ int strncasecmp(const char *, const char *, size_t);
 #define STRTOK( s1, s2, l )		strtok_r( s1, s2, l )
 #define HAVE_STRTOK_R
 #else /* UNIX */
-#if defined(sgi) || defined(HPUX9) || defined(LINUX1_2) || defined(SCOOS) || \
+#if (defined(AIX) && defined(_THREAD_SAFE)) || defined(OSF1)
+#define NSLDAPI_NETDB_BUF_SIZE	 sizeof(struct protoent_data) 
+#else
+#define NSLDAPI_NETDB_BUF_SIZE	1024
+#endif
+
+#if defined(sgi) || defined(HPUX9) || defined(SCOOS) || \
     defined(UNIXWARE) || defined(SUNOS4) || defined(SNI) || defined(BSDI) || \
     defined(NCR) || defined(OSF1) || defined(NEC) || defined(VMS) || \
     ( defined(HPUX10) && !defined(_REENTRANT)) || defined(HPUX11) || \
-    defined(UnixWare) || defined(LINUX) || defined(NETBSD) || \
+    defined(UnixWare) || defined(NETBSD) || \
     defined(FREEBSD) || defined(OPENBSD) || \
+    (defined(LINUX) && __GLIBC__ < 2) || \
     (defined(AIX) && !defined(USE_REENTRANT_LIBC))
 #define GETHOSTBYNAME( n, r, b, l, e )  gethostbyname( n )
 #elif defined(AIX)
@@ -296,16 +303,20 @@ int strncasecmp(const char *, const char *, size_t);
    Replaced with following to lines, stolen from the #else below
 #define GETHOSTBYNAME_BUF_T struct hostent_data
 */
-typedef char GETHOSTBYNAME_buf_t [BUFSIZ /* XXX might be too small */];
+typedef char GETHOSTBYNAME_buf_t [NSLDAPI_NETDB_BUF_SIZE];
 #define GETHOSTBYNAME_BUF_T GETHOSTBYNAME_buf_t
 #define GETHOSTBYNAME( n, r, b, l, e ) \
 	(memset (&b, 0, l), gethostbyname_r (n, r, &b) ? NULL : r)
 #elif defined(HPUX10)
 #define GETHOSTBYNAME_BUF_T struct hostent_data
 #define GETHOSTBYNAME( n, r, b, l, e )	nsldapi_compat_gethostbyname_r( n, r, (char *)&b, l, e )
+#elif defined(LINUX)
+typedef char GETHOSTBYNAME_buf_t [NSLDAPI_NETDB_BUF_SIZE];
+#define GETHOSTBYNAME_BUF_T GETHOSTBYNAME_buf_t
+#define GETHOSTBYNAME( n, r, b, l, rp, e )  gethostbyname_r( n, r, b, l, rp, e )
+#define GETHOSTBYNAME_R_RETURNS_INT
 #else
-#include <stdio.h> /* BUFSIZ */
-typedef char GETHOSTBYNAME_buf_t [BUFSIZ /* XXX might be too small */];
+typedef char GETHOSTBYNAME_buf_t [NSLDAPI_NETDB_BUF_SIZE];
 #define GETHOSTBYNAME_BUF_T GETHOSTBYNAME_buf_t
 #define GETHOSTBYNAME( n, r, b, l, e )  gethostbyname_r( n, r, b, l, e )
 #endif

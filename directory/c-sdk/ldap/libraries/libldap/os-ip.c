@@ -567,8 +567,14 @@ nsldapi_try_each_host( LDAP *ld, const char *hostlist,
 
 		if (( address = inet_addr( host )) == -1 ) {
 			if ( ld->ld_dns_gethostbyname_fn == NULL ) {
-				if (( hp = GETHOSTBYNAME( host, &hent, hbuf,
-				    sizeof(hbuf), &err )) != NULL ) {
+#ifdef GETHOSTBYNAME_R_RETURNS_INT
+				(void)GETHOSTBYNAME( host, &hent, hbuf,
+				    sizeof(hbuf), &hp, &err );
+#else
+				hp = GETHOSTBYNAME( host, &hent, hbuf,
+				    sizeof(hbuf), &err );
+#endif
+				if ( hp != NULL ) {
 					addrlist = hp->h_addr_list;
 				}
 			} else {
