@@ -61,6 +61,7 @@
 #include <shlobj.h>
 #elif defined(XP_BEOS)
 #include <Path.h>
+#include <Directory.h>
 #elif defined(XP_UNIX)
 #include <unistd.h>
 #endif
@@ -303,11 +304,11 @@ nsCommandLine::ResolveFile(const nsAString& aArgument, nsIFile* *aResult)
 
   BDirectory bwd(wd.get());
 
-  BPath resolved(bwd, carg.get(), true);
+  BPath resolved(&bwd, carg.get(), true);
   if (resolved.InitCheck() != B_OK)
     return NS_ERROR_FAILURE;
 
-  rv = lf->InitWithNativePath(BPath.Path());
+  rv = lf->InitWithNativePath(nsDependentCString(resolved.Path()));
   if (NS_FAILED(rv)) return rv;
 
   NS_ADDREF(*aResult = lf);
