@@ -21,10 +21,13 @@
  * Alec Flett <alecf@netscape.com>
  */
 
+#ifndef __nsMsgSearchValue_h
+#define __nsMsgSearchValue_h
+
 #include "nsIMsgSearchValue.h"
 #include "nsMsgSearchCore.h"
 
-class nsMsgSearchValueImpl : nsIMsgSearchValue {
+class nsMsgSearchValueImpl : public nsIMsgSearchValue {
   public:
     nsMsgSearchValueImpl(nsMsgSearchValue *aInitialValue);
     virtual ~nsMsgSearchValueImpl();
@@ -37,3 +40,4 @@ class nsMsgSearchValueImpl : nsIMsgSearchValue {
         
 };
 
+#endif
