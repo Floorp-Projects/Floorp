@@ -380,7 +380,7 @@ fe_font_list_metrics(MWContext *context, LO_FormElementStruct *form,
 	FE_FONT_EXTENTS(text->charset, font, ascentp, descentp);
 }
 
-static fe_Font fe_LoadFontForWidgetUnicodePseudoFont (MWContext *context,
+static fe_Font fe_LoadFontForWidgetUnicodePseudoFont (
                                      Widget parent,
 				     LO_TextAttr *text_attr,
 				     XmFontList *fontlist,
@@ -454,7 +454,7 @@ fe_FontlistAndXmStringForOptions( MWContext *context,
 
   if(use_UnicodePseudoFont)
   {
-      fe_font = fe_LoadFontForWidgetUnicodePseudoFont(context, parent, text_attr, fontlist, &type,
+      fe_font = fe_LoadFontForWidgetUnicodePseudoFont(parent, text_attr, fontlist, &type,
          				text_attr->fontmask);
       if(*fontlist)
          *fontlist = XmFontListCopy(*fontlist);
@@ -522,7 +522,7 @@ fe_FontlistAndXmStringForButton(MWContext *context,
 
   if( use_UnicodePseudoFont )
   {
-      fe_font = fe_LoadFontForWidgetUnicodePseudoFont(context, parent, 
+      fe_font = fe_LoadFontForWidgetUnicodePseudoFont( parent, 
                                     text_attr, fontlist, &type,
                                     text_attr->fontmask);
   
@@ -598,7 +598,7 @@ fe_FontlistAndXmStringForFormElement(MWContext *context,
 	*xmstring = NULL;
 
   if(use_UnicodePseudoFont)
-  	fe_font = fe_LoadFontForWidgetUnicodePseudoFont(context, parent, text_attr, fontlist, &type, mask);
+  	fe_font = fe_LoadFontForWidgetUnicodePseudoFont(parent, text_attr, fontlist, &type, mask);
   else
   	fe_font = fe_LoadFontForWidgetLocale(context, parent, text_attr, fontlist, &type, mask);
   
@@ -2106,7 +2106,7 @@ select_change(FEFormData *fed,
   if(use_UnicodePseudoFont)
   {
       Widget parent = CONTEXT_DATA(context)->drawing_area;
-      fe_font = fe_LoadFontForWidgetUnicodePseudoFont(context, parent, text_attr, &fontlist, &type,
+      fe_font = fe_LoadFontForWidgetUnicodePseudoFont( parent, text_attr, &fontlist, &type,
          				text_attr->fontmask);
       if(fontlist)
          fontlist = XmFontListCopy(fontlist);
