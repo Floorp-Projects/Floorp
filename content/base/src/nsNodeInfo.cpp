@@ -214,8 +214,6 @@ NS_IMETHODIMP_(PRBool)
 nsNodeInfo::Equals(const nsAString& aName, const nsAString& aPrefix,
                    PRInt32 aNamespaceID) const
 {
-  PRUnichar nullChar = '\0';
-
   if (!mInner.mNamespaceID == aNamespaceID ||
       !mInner.mName->Equals(aName))
     return PR_FALSE;
