@@ -99,9 +99,9 @@
               while (curr && curr.localName != 'menupopup')
                 curr = curr.nextSibling;
               if (!curr)
-                return;
+                return -1;
               if (curr.childNodes.length <= val)
-                return;
+                return -1;
               this.selectedItem = curr.childNodes[val];
             }
             return val;    
@@ -151,10 +151,32 @@
   -->
   <binding id="menulist-editable" extends="chrome://global/content/menulistBindings.xml#menulist">
     <content includes="menupopup">
-      <xul:image class="menu-icon" inherits="src"/>
-	    <html:input event="text" flex="1" class="menu-text" allowevents="true" inherits="value,disabled"/>
-      <xul:image class="menu-dropmarker"/>
+      <xul:box flex="1" class="menulist-editable-box">
+        <xul:image class="menu-icon" inherits="src"/>
+        <html:input type="text" flex="1" class="menulist-editable-text" allowevents="true" inherits="value,disabled"/>
+        <xul:image class="menu-dropmarker"/>
+      </xul:box>
     </content>
+    <implementation>
+      <property name="inputField" readonly="true">
+       <![CDATA[
+        var v = document.getAnonymousNodes(this);
+        var input = null;
+        for (var i = 0; i < v.length; i++) {
+          try {
+            var l = v[i].getElementsByTagNameNS("http://www.w3.org/1999/xhtml", "input");
+            if (l.length > 0) {
+              input = l[0];
+              break;
+            }
+          } catch (e) {} 
+        }
+        input;
+      ]]>
+      </property>
+      <property name="value"      onset="this.inputField.value = val; return val;"
+                                  onget="return this.inputField.value;"/>
+    </implementation>
   </binding>
   
 <!-- 
