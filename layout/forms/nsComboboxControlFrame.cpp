@@ -1608,6 +1608,9 @@ nsComboboxControlFrame::Reflow(nsIPresContext*          aPresContext,
   // dropdownRect will hold the content size (minus border padding) 
   // for the display area
   mDropdownFrame->GetRect(dropdownRect);
+  if (eReflowReason_Resize == aReflowState.reason) {
+    dropdownRect.Deflate(borderPadding);
+  }
 
   // Get maximum size of the largest item in the dropdown
   // The height of the display frame will be that height
