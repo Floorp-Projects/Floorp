@@ -27,20 +27,25 @@ VPATH		= @srcdir@
 include $(DEPTH)/config/autoconf.mk
 
 MODULE		= setuprsc
-#LIBRARY_NAME	= setuprsc
-#RESFILE		= setuprsc.res
+LIBRARY_NAME	= setuprsc
+RESFILE		= setuprsc.res
 
 USE_NON_MT_LIBS = 1
+
+NO_DIST_INSTALL = 1
 
 EXPORTS		= setuprsc.h
 
 CPPSRCS		= setuprsc.cpp
 
+GARBAGE		+= $(DIST)/install/$(SHARED_LIBRARY)
+
 include $(topsrcdir)/config/rules.mk
 
-#libs:: $(SHARED_LIBRARY)
-#	$(INSTALL) $< $(DIST)/install
+# Hack to get around the default rules insisting that .lib should exist
+$(IMPORT_LIBRARY):
+	touch $@
 
-clean clobber clobber_all realclean::
-	$(RM) $(DIST)/install/$(SHARED_LIBRARY)
+libs:: $(SHARED_LIBRARY)
+	$(INSTALL) $< $(DIST)/install
 
