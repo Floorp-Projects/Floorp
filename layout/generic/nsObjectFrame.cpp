@@ -1051,9 +1051,9 @@ nsObjectFrame::IsHidden() const
     // not to hide the <embed> once you'd put the 'hidden' attribute
     // on the tag...
     if (hidden.Length() &&
-        hidden != NS_LITERAL_STRING("false") &&
-        hidden != NS_LITERAL_STRING("no") &&
-        hidden != NS_LITERAL_STRING("off")) {
+        ! hidden.EqualsIgnoreCase(NS_LITERAL_STRING("false")) &&
+        ! hidden.EqualsIgnoreCase(NS_LITERAL_STRING("no")) &&
+        ! hidden.EqualsIgnoreCase(NS_LITERAL_STRING("off"))) {
       // The <embed> or <applet> is hidden.
       return PR_TRUE;
     }
