@@ -177,7 +177,13 @@ NS_IMETHODIMP nsMsgProtocol::OnStartRequest(nsIChannel * aChannel, nsISupports *
 	nsresult rv = NS_OK;
 	nsCOMPtr <nsIMsgMailNewsUrl> aMsgUrl = do_QueryInterface(ctxt, &rv);
 	if (NS_SUCCEEDED(rv) && aMsgUrl)
+	{
 		rv = aMsgUrl->SetUrlState(PR_TRUE, NS_OK);
+		nsCOMPtr <nsILoadGroup> loadGroup;
+		aMsgUrl->GetLoadGroup(getter_AddRefs(loadGroup));
+		if (loadGroup)
+			loadGroup->AddChannel(aChannel, nsnull /* context isupports */);
+	}
 
 	// if we are set up as a channel, we should notify our channel listener that we are starting...
 	// so pass in ourself as the channel and not the underlying socket or file channel the protocol
@@ -194,8 +200,13 @@ NS_IMETHODIMP nsMsgProtocol::OnStopRequest(nsIChannel * aChannel, nsISupports *c
 	nsresult rv = NS_OK;
 	nsCOMPtr <nsIMsgMailNewsUrl> aMsgUrl = do_QueryInterface(ctxt, &rv);
 	if (NS_SUCCEEDED(rv) && aMsgUrl)
+	{
 		rv = aMsgUrl->SetUrlState(PR_FALSE, aStatus);
-
+		nsCOMPtr <nsILoadGroup> loadGroup;
+		aMsgUrl->GetLoadGroup(getter_AddRefs(loadGroup));
+		if (loadGroup)
+			loadGroup->RemoveChannel(aChannel, nsnull, aStatus, nsnull);
+	}
 	// if we are set up as a channel, we should notify our channel listener that we are starting...
 	// so pass in ourself as the channel and not the underlying socket or file channel the protocol
 	// happens to be using
