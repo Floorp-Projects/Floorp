@@ -229,6 +229,7 @@ nsObjectFrame::~nsObjectFrame()
   NS_IF_RELEASE(mFullURL);
 }
 
+static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 static NS_DEFINE_IID(kViewCID, NS_VIEW_CID);
 static NS_DEFINE_IID(kIViewIID, NS_IVIEW_IID);
 static NS_DEFINE_IID(kWidgetCID, NS_CHILD_CID);
@@ -1140,7 +1141,7 @@ nsresult nsPluginInstanceOwner::QueryInterface(const nsIID& aIID,
     return NS_OK;
   }
 
-  if (aIID.Equals(::nsISupports::GetIID()))
+  if (aIID.Equals(kISupportsIID))
   {
     *aInstancePtrResult = (void *)((nsISupports *)((nsIPluginTagInfo *)this));
     AddRef();
