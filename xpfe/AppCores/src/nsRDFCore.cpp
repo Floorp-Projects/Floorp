@@ -36,6 +36,7 @@
 #include "nsIServiceManager.h"
 #include "nsRDFCID.h"
 #include "nsIXULSortService.h"
+#include "nsIBookmarkDataSource.h"
 
 
 // Globals
@@ -45,11 +46,14 @@ static NS_DEFINE_IID(kIRDFCoreIID,               NS_IDOMRDFCORE_IID);
 static NS_DEFINE_IID(kIDOMDocumentIID,           nsIDOMDocument::GetIID());
 static NS_DEFINE_IID(kIDocumentIID,              nsIDocument::GetIID());
 
-static NS_DEFINE_IID(kRDFCoreCID,                NS_RDFCORE_CID);
-static NS_DEFINE_IID(kBrowserWindowCID,          NS_BROWSER_WINDOW_CID);
+static NS_DEFINE_CID(kRDFCoreCID,                NS_RDFCORE_CID);
+static NS_DEFINE_CID(kBrowserWindowCID,          NS_BROWSER_WINDOW_CID);
 
-static NS_DEFINE_IID(kXULSortServiceCID,         NS_XULSORTSERVICE_CID);
+static NS_DEFINE_CID(kXULSortServiceCID,         NS_XULSORTSERVICE_CID);
 static NS_DEFINE_IID(kIXULSortServiceIID,        NS_IXULSORTSERVICE_IID);
+
+static NS_DEFINE_CID(kRDFBookmarkDataSourceCID,  NS_RDFBOOKMARKDATASOURCE_CID);
+static NS_DEFINE_CID(kIRDFBookmarkDataSourceIID, NS_IRDFBOOKMARKDATASOURCE_IID);
 
 
 /////////////////////////////////////////////////////////////////////////
@@ -135,33 +139,30 @@ NS_IMETHODIMP
 nsRDFCore::DoSort(nsIDOMNode* node, const nsString& sortResource,
                   const nsString &sortDirection)
 {
-  printf(" ***** nsRDFCore::DoSort entered!!! *****\n");
-
 /*
   if (nsnull == mScriptContext) {
     return NS_ERROR_FAILURE;
   }
 */
 
-  printf("----------------------------\n");
-  printf("-- Sort \n");
-  printf("----------------------------\n");
-  printf("Column: %s  \n", sortResource.ToNewCString());
-  printf("Direction: %s  \n", sortDirection.ToNewCString());
-  printf("----------------------------\n");
+        printf("----------------------------\n");
+        printf("-- Sort \n");
+        printf("-- Column: %s  \n", sortResource.ToNewCString());
+        printf("-- Direction: %s  \n", sortDirection.ToNewCString());
+        printf("----------------------------\n");
 
-	nsIXULSortService		*gXULSortService = nsnull;
+	nsIXULSortService		*XULSortService = nsnull;
 
 	nsresult rv = nsServiceManager::GetService(kXULSortServiceCID,
-		kIXULSortServiceIID, (nsISupports**) &gXULSortService);
-	if (nsnull != gXULSortService)
+		kIXULSortServiceIID, (nsISupports**) &XULSortService);
+	if (NS_SUCCEEDED(rv))
 	{
-		printf("\n******** YES, we got kXULSortServiceCID\n\n");
-		
-		gXULSortService->DoSort(node, sortResource, sortDirection);
-		nsServiceManager::ReleaseService(kXULSortServiceCID, gXULSortService);
+		if (nsnull != XULSortService)
+		{
+			XULSortService->DoSort(node, sortResource, sortDirection);
+			nsServiceManager::ReleaseService(kXULSortServiceCID, XULSortService);
+		}
 	}
-	else printf("\n******** unable to obtain kXULSortServiceCID\n\n");
 
 /*
   if (nsnull != mScriptContext) {
@@ -171,9 +172,37 @@ nsRDFCore::DoSort(nsIDOMNode* node, const nsString& sortResource,
     mScriptContext->EvaluateString(mScript, url, 0, rVal, &isUndefined);
   }
 */
-  return NS_OK;
+        return(rv);
 }
 
 
+NS_IMETHODIMP
+nsRDFCore::AddBookmark(const nsString& aUrl, const nsString& aOptionalTitle)
+{
+        printf("----------------------------\n");
+        printf("-- Add Bookmark \n");
+        printf("-- URL: %s  \n", aUrl.ToNewCString());
+        printf("-- Title (opt): %s  \n", aOptionalTitle.ToNewCString());
+        printf("----------------------------\n");
 
+	nsIRDFBookmarkDataSource	*RDFBookmarkDataSource = nsnull;
+
+	nsresult rv = nsServiceManager::GetService(kRDFBookmarkDataSourceCID,
+		kIRDFBookmarkDataSourceIID, (nsISupports**) &RDFBookmarkDataSource);
+	if (NS_SUCCEEDED(rv))
+	{
+		if (nsnull != RDFBookmarkDataSource)
+		{
+			char *url = aUrl.ToNewCString();
+			char *optionalTitle = aOptionalTitle.ToNewCString();
+			rv = RDFBookmarkDataSource->AddBookmark(url, optionalTitle);
+			if (url)		delete []url;
+			if (optionalTitle)	delete []optionalTitle;
+
+			nsServiceManager::ReleaseService(kRDFBookmarkDataSourceCID,
+							RDFBookmarkDataSource);
+		}
+	}
+        return(rv);
+}
 

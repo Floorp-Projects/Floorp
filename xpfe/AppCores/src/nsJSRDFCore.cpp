@@ -178,6 +178,45 @@ RDFCoreDoSort(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval
 }
 
 
+//
+// Native method AddBookmark
+//
+PR_STATIC_CALLBACK(JSBool)
+RDFCoreAddBookmark(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
+{
+  nsIDOMRDFCore *nativeThis = (nsIDOMRDFCore*)JS_GetPrivate(cx, obj);
+  JSBool rBool = JS_FALSE;
+  nsAutoString b0;
+  nsAutoString b1;
+
+  *rval = JSVAL_NULL;
+
+  // If there's no private data, this must be the prototype, so ignore
+  if (nsnull == nativeThis) {
+    return JS_TRUE;
+  }
+
+  if (argc >= 2) {
+
+    nsJSUtils::nsConvertJSValToString(b0, cx, argv[0]);
+
+    nsJSUtils::nsConvertJSValToString(b1, cx, argv[1]);
+
+    if (NS_OK != nativeThis->AddBookmark(b0, b1)) {
+      return JS_FALSE;
+    }
+
+    *rval = JSVAL_VOID;
+  }
+  else {
+    JS_ReportError(cx, "Function addBookmark requires 2 parameters");
+    return JS_FALSE;
+  }
+
+  return JS_TRUE;
+}
+
+
 /***********************************************************************/
 //
 // class for RDFCore
@@ -211,6 +250,7 @@ static JSPropertySpec RDFCoreProperties[] =
 static JSFunctionSpec RDFCoreMethods[] = 
 {
   {"doSort",          RDFCoreDoSort,     3},
+  {"addBookmark",          RDFCoreAddBookmark,     2},
   {0}
 };
 
