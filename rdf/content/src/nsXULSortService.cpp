@@ -699,7 +699,8 @@ getNodeValue(nsIContent *node1, nsIRDFResource *sortProperty, sortPtr sortInfo, 
 						{
 							if (modSortRes)
 							{
-								if (NS_SUCCEEDED(rv = (sortInfo->db)->GetTarget(res1, modSortRes, PR_TRUE, &target1)))
+								if (NS_SUCCEEDED(rv = (sortInfo->db)->GetTarget(res1, modSortRes, PR_TRUE, &target1)) &&
+									(rv != NS_RDF_NO_VALUE))
 								{
 									nsIRDFLiteral *literal1;
 									if (NS_SUCCEEDED(target1->QueryInterface(kIRDFLiteralIID, (void **) &literal1)))
@@ -720,7 +721,8 @@ getNodeValue(nsIContent *node1, nsIRDFResource *sortProperty, sortPtr sortInfo, 
 
 				if (cellVal1.Length() == 0)
 				{
-					if (NS_SUCCEEDED(rv = (sortInfo->db)->GetTarget(res1, sortProperty, PR_TRUE, &target1)))
+					if (NS_SUCCEEDED(rv = (sortInfo->db)->GetTarget(res1, sortProperty, PR_TRUE, &target1)) &&
+						(rv != NS_RDF_NO_VALUE))
 					{
 						nsIRDFLiteral *literal1;
 						if (NS_SUCCEEDED(target1->QueryInterface(kIRDFLiteralIID, (void **) &literal1)))
@@ -801,101 +803,6 @@ inplaceSortCallback(const void *data1, const void *data2, void *sortData)
 		sortOrder = -sortOrder;
 	}
 	return(sortOrder);
-
-#if 0
-	if (NS_SUCCEEDED(rv = node1->QueryInterface(kIDomXulElementIID, (void **)&dom1)))
-	{
-		if (NS_SUCCEEDED(rv = dom1->GetResource(&res1)))
-		{
-			if ((sortPtr->naturalOrderSort == PR_FALSE) && (sortPtr->sortProperty))
-			{
-				nsIRDFNode	*target1 = nsnull;
-				if (NS_SUCCEEDED(rv = (sortPtr->db)->GetTarget(res1, sortPtr->sortProperty, PR_TRUE, &target1)))
-				{
-					nsIRDFLiteral *literal1;
-					if (NS_SUCCEEDED(target1->QueryInterface(kIRDFLiteralIID, (void **) &literal1)))
-					{
-						const PRUnichar	*uniStr1 = nsnull;
-						literal1->GetValue(&uniStr1);
-						cellVal1 = uniStr1;
-						NS_RELEASE(literal1);
-					}
-					NS_RELEASE(target1);
-				}
-				else
-				{
-				        nsIContent	*cell1 = nsnull;
-					if (NS_SUCCEEDED(rv = GetTreeCell(sortPtr, node1, sortPtr->colIndex, &cell1)))
-					{
-						if (cell1)
-						{
-							if (NS_SUCCEEDED(rv = GetTreeCellValue(sortPtr, cell1, cellVal1)))
-							{
-							}
-						}
-					}
-				}
-			}
-			else if (sortPtr->naturalOrderSort == PR_TRUE)
-			{
-				if (NS_OK == node1->GetAttribute(kNameSpaceID_None, sortPtr->kNaturalOrderPosAtom, cellVal1))
-				{
-				}
-			}
-			NS_RELEASE(res1);
-		}
-		NS_RELEASE(dom1);
-	}
-	if (NS_SUCCEEDED(rv = node2->QueryInterface(kIDomXulElementIID, (void **)&dom2)))
-	{
-		if (NS_SUCCEEDED(rv = dom2->GetResource(&res2)))
-		{
-			if ((sortPtr->naturalOrderSort == PR_FALSE) && (sortPtr->sortProperty))
-			{
-				nsIRDFNode	*target2 = nsnull;
-				if (NS_SUCCEEDED(rv = (sortPtr->db)->GetTarget(res2, sortPtr->sortProperty, PR_TRUE, &target2)))
-				{
-					nsIRDFLiteral *literal2;
-					if (NS_SUCCEEDED(target2->QueryInterface(kIRDFLiteralIID, (void **) &literal2)))
-					{
-						const PRUnichar	*uniStr2 = nsnull;
-						literal2->GetValue(&uniStr2);
-						cellVal2 = uniStr2;
-						NS_RELEASE(literal2);
-					}
-					NS_RELEASE(target2);
-				}
-				else
-				{
-				        nsIContent	*cell2 = nsnull;
-					if (NS_SUCCEEDED(rv = GetTreeCell(sortPtr, node2, sortPtr->colIndex, &cell2)))
-					{
-						if (cell2)
-						{
-							if (NS_SUCCEEDED(rv = GetTreeCellValue(sortPtr, cell2, cellVal2)))
-							{
-							}
-						}
-					}
-				}
-			}
-			else if (sortPtr->naturalOrderSort == PR_TRUE)
-			{
-				if (NS_OK == node2->GetAttribute(kNameSpaceID_None, sortPtr->kNaturalOrderPosAtom, cellVal2))
-				{
-				}
-			}
-			NS_RELEASE(res2);
-		}
-		NS_RELEASE(dom2);
-	}
-	sortOrder = (int)cellVal1.Compare(cellVal2, PR_TRUE);
-	if (sortInfo->descendingSort == PR_TRUE)
-	{
-		sortOrder = -sortOrder;
-	}
-	return(sortOrder);
-#endif
 }
 
 
