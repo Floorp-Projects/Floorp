@@ -79,6 +79,8 @@ REQUIRES	=\
 			Microline \
 		  addr \
 		  applet \
+		  xpcom \
+		  caps \
 		  img \
 		  edtplug \
 		  jtools \
@@ -318,9 +320,12 @@ ifndef NO_LAYERS
 BASIC_LIBS	+= $(DIST)/lib/liblayer.a
 endif
 
+BASIC_LIBS += $(DIST)/lib/libxpcom.a
+
 ifdef MOZ_JAVA
 
 BASIC_LIBS	+= \
+                  $(DIST)/lib/libcaps.a \
 		  $(DIST)/lib/lib$(LITE_PREFIX)applet.a \
 		  $(DIST)/lib/libjrt.a \
 		  $(DIST)/lib/libjmd.a \
@@ -333,6 +338,8 @@ endif
 BASIC_LIBS	+= \
 		  $(DIST)/lib/libnsn.a \
 		  $(DIST)/lib/libnsc.a \
+		  $(DIST)/lib/libcaps.a \
+		  $(DIST)/lib/libxpcom.a \
 		  $(DIST)/lib/libjpw.a \
 		  $(DIST)/lib/libzpw.a \
 		  $(DIST)/lib/libiawt.a \
@@ -379,8 +386,6 @@ endif
 ifdef MOZ_LDAP
 BASIC_LIBS	+= $(DIST)/lib/libldap.a $(DIST)/lib/liblber.a 
 endif
-
-BASIC_LIBS += $(DIST)/lib/libxpcom.a
 
 LOCALES		= $(LOCALE_MAP) $(MAIL_IM_HACK) $(NEWS_IM_HACK)
 

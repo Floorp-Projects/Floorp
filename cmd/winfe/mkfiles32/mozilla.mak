@@ -382,6 +382,7 @@ LINK_LIBS= \
 !endif
     $(DIST)\lib\htmldg32.lib \
 !ifdef MOZ_JAVA
+    $(DIST)\lib\libcaps.lib \
     $(DIST)\lib\libnsc32.lib \
 !endif
     $(DIST)\lib\img32.lib \
@@ -2228,6 +2229,7 @@ BUILD_SOURCE: $(OBJ_FILES)
     $(DIST)\lib\nsldap.lib +
 !endif
 !if defined(MOZ_JAVA)
+    $(DIST)\lib\libcaps.lib +
     $(DIST)\lib\jrt16$(VERSION_NUMBER).lib +
     $(DIST)\lib\libapp~1.lib +
     $(DIST)\lib\jsj16$(VERSION_NUMBER).lib +
