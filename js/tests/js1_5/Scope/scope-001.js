@@ -19,18 +19,18 @@
 * Contributor(s): pschwartau@netscape.com
 *
 *
-*The idea behind bug 53268 is as follows. The item 'five' below is defined
-*as a const, hence is a read-only property of the global object. So if we set
+* The idea behind bug 53268 is as follows. The item 'five' below is defined
+* as const, hence is a read-only property of the global object. So if we set
 * obj.__proto__  = this,  'five' should become a read-only propery of obj.
 *
-*If we then change obj.__proto__  to null, obj.five should initially be
-*undefined. We should be able to define obj.five to whatever we want,
-*and be able to access this value as obj.five.
+* If we then change obj.__proto__  to null, obj.five should initially be
+* undefined. We should be able to define obj.five to whatever we want,
+* and be able to access this value as obj.five.
 *
-*Bug 53268 was filed because obj.five could not be set or accessed after
-*obj.__proto__  had been set to the global object and then to null.
+* Bug 53268 was filed because obj.five could not be set or accessed after
+* obj.__proto__  had been set to the global object and then to null.
 */
-//-------------------------------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
 var bug = '53268';
 var status = 'Testing scope after changing obj.__proto__';
 var expect= '';
@@ -39,9 +39,9 @@ var obj = {};
 const five = 5;
 
 
-//-------------------------------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
 test();
-//-------------------------------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
 
 
 function test()
