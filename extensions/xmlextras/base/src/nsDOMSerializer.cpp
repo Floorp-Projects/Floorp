@@ -133,14 +133,8 @@ static nsresult SetUpEncoder(nsIDOMNode *aRoot, const char* aCharset, nsIDocumen
   return rv;
 }
 
-NS_IMETHODIMP
-nsDOMSerializer::SerializeToString(nsIDOMNode *root, PRUnichar **_retval)
+nsresult CheckSameOrigin(nsIDOMNode *aRoot)
 {
-  NS_ENSURE_ARG_POINTER(root);
-  NS_ENSURE_ARG_POINTER(_retval);  
-  
-  *_retval = nsnull;
-
   // Get JSContext from stack.
   nsCOMPtr<nsIJSContextStack> stack =
     do_GetService("@mozilla.org/js/xpc/ContextStack;1");
@@ -157,10 +151,10 @@ nsDOMSerializer::SerializeToString(nsIDOMNode *root, PRUnichar **_retval)
     // We're called from script, make sure the caller and the root are
     // from the same origin...
 
-    nsCOMPtr<nsIDOMDocument> owner_doc(do_QueryInterface(root));
+    nsCOMPtr<nsIDOMDocument> owner_doc(do_QueryInterface(aRoot));
 
     if (!owner_doc) {
-      root->GetOwnerDocument(getter_AddRefs(owner_doc));
+      aRoot->GetOwnerDocument(getter_AddRefs(owner_doc));
     }
 
     nsCOMPtr<nsIDocument> doc(do_QueryInterface(owner_doc));
@@ -195,10 +189,22 @@ nsDOMSerializer::SerializeToString(nsIDOMNode *root, PRUnichar **_retval)
     }      
   }
 
-  // We're ok security wise...
+}
+
+NS_IMETHODIMP
+nsDOMSerializer::SerializeToString(nsIDOMNode *aRoot, PRUnichar **_retval)
+{
+  NS_ENSURE_ARG_POINTER(aRoot);
+  NS_ENSURE_ARG_POINTER(_retval);  
+  
+  *_retval = nsnull;
+
+  nsresult rv = CheckSameOrigin(aRoot);
+  if (NS_FAILED(rv))
+    return rv;
 
   nsCOMPtr<nsIDocumentEncoder> encoder;
-  rv = SetUpEncoder(root,nsnull,getter_AddRefs(encoder));
+  rv = SetUpEncoder(aRoot, nsnull, getter_AddRefs(encoder));
   if (NS_FAILED(rv))
     return rv;
 
@@ -215,19 +221,23 @@ nsDOMSerializer::SerializeToString(nsIDOMNode *root, PRUnichar **_retval)
 }
 
 NS_IMETHODIMP
-nsDOMSerializer::SerializeToStream(nsIDOMNode *root, 
-                                   nsIOutputStream *stream, 
-                                   const char *charset)
+nsDOMSerializer::SerializeToStream(nsIDOMNode *aRoot, 
+                                   nsIOutputStream *aStream, 
+                                   const char *aCharset)
 {
-  NS_ENSURE_ARG_POINTER(root);
-  NS_ENSURE_ARG_POINTER(stream);
+  NS_ENSURE_ARG_POINTER(aRoot);
+  NS_ENSURE_ARG_POINTER(aStream);
   // The charset arg can be null, in which case we get the document's
   // charset and use that when serializing.
-  
-  nsCOMPtr<nsIDocumentEncoder> encoder;
-  nsresult rv = SetUpEncoder(root,charset,getter_AddRefs(encoder));
+
+  nsresult rv = CheckSameOrigin(aRoot);
   if (NS_FAILED(rv))
     return rv;
 
-  return encoder->EncodeToStream(stream);
+  nsCOMPtr<nsIDocumentEncoder> encoder;
+  rv = SetUpEncoder(aRoot, aCharset, getter_AddRefs(encoder));
+  if (NS_FAILED(rv))
+    return rv;
+
+  return encoder->EncodeToStream(aStream);
 }
