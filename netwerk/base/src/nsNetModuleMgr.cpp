@@ -42,7 +42,7 @@ NS_IMPL_ISUPPORTS(nsNetModuleMgr, nsINetModuleMgr::GetIID());
 ///////////////////////////////////
 
 NS_IMETHODIMP
-nsNetModuleMgr::RegisterModule(const char *aTopic, nsIEventQueue *aEventQueue, nsINetNotify *aNotify, nsCID *aCID) {
+nsNetModuleMgr::RegisterModule(const char *aTopic, nsIEventQueue *aEventQueue, nsINetNotify *aNotify, const nsCID * aCID) {
     nsresult rv;
     PRUint32 cnt;
 
@@ -79,7 +79,7 @@ nsNetModuleMgr::RegisterModule(const char *aTopic, nsIEventQueue *aEventQueue, n
 }
 
 NS_IMETHODIMP
-nsNetModuleMgr::UnregisterModule(const char *aTopic, nsIEventQueue *aEventQueue, nsINetNotify *aNotify, nsCID *aCID) {
+nsNetModuleMgr::UnregisterModule(const char *aTopic, nsIEventQueue *aEventQueue, nsINetNotify *aNotify, const nsCID * aCID) {
 
     //PR_Lock(mLock);
     nsresult rv;
@@ -141,6 +141,8 @@ nsNetModuleMgr::EnumerateModules(const char *aTopic, nsISimpleEnumerator **aEnum
         }
 
         if (!PL_strcmp(aTopic, topic)) {
+            delete [] topic;
+            topic = nsnull;
             // found a match, add it to the list
             rv = topicEntries->AppendElement(NS_STATIC_CAST(nsISupports*, entry));
             if (NS_FAILED(rv)) {
@@ -149,6 +151,8 @@ nsNetModuleMgr::EnumerateModules(const char *aTopic, nsISimpleEnumerator **aEnum
                 return rv;
             }
         }
+        delete [] topic;
+        topic = nsnull;
         NS_RELEASE(entry);
     }
 
