@@ -127,6 +127,10 @@ public:
                              jsval *vp);
   static nsresult ThrowJSException(JSContext *cx, nsresult aResult);
 
+  static nsresult InitDOMJSClass(JSContext *cx, JSObject *obj);
+
+  static JSClass sDOMJSClass;
+
 protected:
   const nsDOMClassInfoData* mData;
 
@@ -134,6 +138,8 @@ protected:
   static nsresult RegisterClassName(PRInt32 aDOMClassInfoID);
   static nsresult RegisterClassProtos(PRInt32 aDOMClassInfoID);
   static nsresult RegisterExternalClasses();
+  nsresult ResolveConstructor(JSContext *cx, JSObject *obj,
+                              JSObject **objp);
 
   // Checks if id is a number and returns the number, if aIsNumber is
   // non-null it's set to true if the id is a number and false if it's
@@ -176,6 +182,7 @@ protected:
                                  PRUint32 accessMode, PRBool isWindow);
 
   static JSClass sDOMConstructorProtoClass;
+  static JSFunctionSpec sDOMJSClass_methods[];
 
   static nsIXPConnect *sXPConnect;
   static nsIScriptSecurityManager *sSecMan;
@@ -189,6 +196,7 @@ protected:
   static jsval sScrollbars_id;
   static jsval sLocation_id;
   static jsval sComponents_id;
+  static jsval sConstructor_id;
   static jsval s_content_id;
   static jsval sContent_id;
   static jsval sSidebar_id;
@@ -309,8 +317,6 @@ protected:
   static nsresult GlobalResolve(nsISupports *aNative, JSContext *cx,
                                 JSObject *obj, JSString *str, PRUint32 flags,
                                 PRBool *did_resolve);
-  static nsresult DefineInterfaceProperty(JSContext *cx, JSObject *obj,
-                                          JSString *str);
 
 public:
   NS_IMETHOD PreCreate(nsISupports *nativeObj, JSContext *cx,
