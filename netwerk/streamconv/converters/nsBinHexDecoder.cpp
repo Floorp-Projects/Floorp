@@ -414,9 +414,11 @@ nsresult nsBinHexDecoder::ProcessNextChunk(nsIRequest * aRequest, nsISupports * 
 			
 		/* handle decoded characters -- run length encoding (rle) detection */
 
-#if defined(XP_MAC) || defined(XP_MACOSX)
-		mOctetBuf.val = PR_ntohl(mOctetBuf.val);
-#endif
+		// We put decoded chars into mOctetBuf.val in order from high to low (via
+		// bitshifting, above).  But we want to byte-address them, so we want the
+		// first byte to correspond to the high byte.  In other words, we want
+		// these bytes to be in network order.
+		mOctetBuf.val = PR_htonl(mOctetBuf.val);
 
 		for (octetpos = 0; octetpos < mDonePos; ++octetpos) 
 		{
