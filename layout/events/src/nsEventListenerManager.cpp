@@ -237,10 +237,9 @@ nsresult nsEventListenerManager::AddEventListener(nsIDOMEventListener *aListener
       ls->mFlags = aFlags;
       ls->mSubType = aSubType;
       (*listeners)->InsertElementAt((void*)ls, (*listeners)->Count());
+      NS_ADDREF(aListener);
     }
   }
-
-  NS_ADDREF(aListener);
 
   return NS_OK;
 }
