@@ -59,6 +59,8 @@ mailnews/local/src/Makefile
 mailnews/local/build/Makefile
 mailnews/local/resources/Makefile
 mailnews/local/resources/skin/Makefile
+mailnews/local/resources/locale/Makefile
+mailnews/local/resources/locale/en-US/Makefile
 mailnews/local/tests/Makefile
 mailnews/local/tests/pop3/Makefile
 mailnews/local/tests/mailbox/Makefile
