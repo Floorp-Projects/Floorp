@@ -73,8 +73,6 @@ LIBS		+= \
 		-lmozreg \
 		-lraptorwebwidget \
 		-lraptorhtmlpars \
-		-lexpat \
-		-lxmltok \
 		-ljsdom \
 		-ljsurl \
 		-lsecfree \

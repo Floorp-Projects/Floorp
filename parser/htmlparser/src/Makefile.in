@@ -22,8 +22,6 @@ VPATH		= .:@srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-include $(topsrcdir)/config/config.mk
-
 LIBRARY_NAME = raptorhtmlpars
 
 DEFINES += -D_IMPL_NS_HTMLPARS -DXML_DTD
@@ -104,6 +102,12 @@ EXPORTS := $(addprefix $(srcdir)/, $(EXPORTS))
 MODULE=htmlparser
 
 REQUIRES = xpcom netlib raptor
+
+EXTRA_DSO_LDOPTS =\
+		-L$(DIST)/lib \
+		-lexpat_s \
+		-lxmltok_s \
+		$(NULL)
 
 include $(topsrcdir)/config/rules.mk
 

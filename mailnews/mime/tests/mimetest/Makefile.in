@@ -37,8 +37,6 @@ BASE_LIBS	= \
 
 GECKO_LIBS	= \
 		-lraptorhtmlpars \
-		-lexpat \
-		-lxmltok \
 		-ljsdom \
 		-lraptorplugin \
 		$(NULL)

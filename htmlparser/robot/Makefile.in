@@ -35,8 +35,6 @@ endif
 ifndef NECKO
 LIBS		= \
 		-lraptorhtmlpars \
-		-lexpat \
-		-lxmltok \
 		-lsecfree \
 		-lpref \
 		-lxp \

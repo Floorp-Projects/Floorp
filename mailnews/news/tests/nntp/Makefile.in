@@ -34,8 +34,6 @@ LIBS = \
 	-lmozjs	\
 	-lsecfree \
 	-lraptorhtmlpars	\
-	-lexpat \
-	-lxmltok \
 	-ljsdom	\
 	-ljsurl	\
 	-limg	\

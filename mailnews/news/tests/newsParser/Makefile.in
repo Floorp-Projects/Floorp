@@ -48,8 +48,6 @@ LIBS		= \
 		-ljsdom \
 		-ljsurl \
 		-lraptorhtmlpars \
-		-lexpat \
-		-lxmltok \
 		-lraptorgfx \
 		-limg \
 		-lmozutil \

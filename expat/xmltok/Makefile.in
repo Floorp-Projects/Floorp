@@ -22,7 +22,7 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-LIBRARY_NAME = xmltok
+LIBRARY_NAME = xmltok_s
 
 ifdef MOZ_STRIP_NOT_EXPORTED
 DEFINES += -DXMLTOKAPI="__attribute__ ((dllexport))"
@@ -38,7 +38,11 @@ EXPORTS = \
 
 EXPORTS := $(addprefix $(srcdir)/, $(EXPORTS))
 
-include $(topsrcdir)/config/config.mk
+MKSHLIB :=
+
+# We want only the static lib, not the shared lib
+override NO_SHARED_LIB=1
+override NO_STATIC_LIB=
 
 include $(topsrcdir)/config/rules.mk
 

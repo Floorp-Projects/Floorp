@@ -52,10 +52,19 @@ else
 NET_LIBS	= -lneckoutil_s
 endif
 
+GECKO_LIBS = \
+		$(DIST)/lib/libraptorhtmlbase_s.a \
+		$(DIST)/lib/libnglhtmlcon_s.a \
+		$(DIST)/lib/libraptorhtmldoc_s.a \
+		$(DIST)/lib/libraptorhtmlstyle_s.a \
+		$(DIST)/lib/libraptorhtmltable_s.a \
+		$(DIST)/lib/libraptorlayout_s.a \
+		$(DIST)/lib/libraptorevents_s.a \
+		$(NULL)
+
 LIBS		= \
+		$(GECKO_LIBS) \
 		-limg \
-		$(PNG_LIBS) \
-		$(JPEG_LIBS) \
 		-lmozutil \
 		-lpref \
 		-lsecfree \
@@ -65,9 +74,6 @@ LIBS		= \
 		-lxpcom \
 		-lxp \
 		-lraptorhtmlpars \
-		$(DIST)/bin/components/libraptorhtml.$(DLL_SUFFIX) \
-		-lexpat \
-		-lxmltok \
 		-ljsurl \
 		$(TIMER_LIBS) \
 		$(TK_LIBS) \

@@ -56,8 +56,6 @@ LIBS		= \
 		-lsecfree \
 		-lmozutil \
 		-limg \
-		$(PNG_LIBS) \
-		$(JPEG_LIBS) \
 		-lxpcom \
 		-lmozreg \
 		-lmozjs \
@@ -65,14 +63,10 @@ LIBS		= \
 		-lraptorgfx \
 		$(MOZ_GFX_TOOLKIT_LDFLAGS) \
 		$(TIMER_LIBS) \
-		-lxp \
 		-lraptorhtmlpars \
-		-lexpat \
-		-lxmltok \
 		-ljsurl \
 		-ljsdom \
 		$(NET_LIBS) \
-		$(ZLIB_LIBS) \
 		$(NSPR_LIBS) \
 		$(TK_LIBS) \
 		$(NULL)

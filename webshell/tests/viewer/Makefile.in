@@ -105,8 +105,6 @@ GECKO_LIBS		= \
 			$(MOZ_GFX_TOOLKIT_LDFLAGS) \
 			$(TIMER_LIBS) \
 			-lraptorhtmlpars \
-			-lexpat \
-			-lxmltok \
 			-ljsdom \
 			$(NULL)
 
