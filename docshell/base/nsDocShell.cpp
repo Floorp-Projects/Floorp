@@ -5800,10 +5800,10 @@ nsDocShell::ScrollIfAnchor(nsIURI * aURI, PRBool * aWasAnchor, PRUint32 aLoadTyp
         if (aLoadType == LOAD_HISTORY || aLoadType == LOAD_RELOAD_NORMAL)
             return rv;
         //An empty anchor. Scroll to the top of the page.
-        SetCurScrollPosEx(0, 0);
+        rv = SetCurScrollPosEx(0, 0);
     }
 
-    return NS_OK;
+    return rv;
 }
 
 
