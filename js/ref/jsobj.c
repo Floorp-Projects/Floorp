@@ -1098,18 +1098,36 @@ JSObject *
 js_ConstructObject(JSContext *cx, JSClass *clasp, JSObject *proto,
 		   JSObject *parent)
 {
-    JSObject *obj;
+    JSObject *obj, *ctor;
     JSBool ok;
     jsval cval, *sp, *oldsp, rval;
     void *mark;
     JSStackFrame *fp;
 
+    ok = FindConstructor(cx, clasp->name, &cval);
+    if (!ok)
+    	return NULL;
+
+    /*
+     * If proto or parent are NULL, set them to Constructor.prototype and/or
+     * Constructor.__parent__, just like JSOP_NEW does.
+     */
+    ctor = JSVAL_TO_OBJECT(cval);
+    if (!parent)
+        parent = OBJ_GET_PARENT(cx, ctor);
+    if (!proto) {
+        if (!OBJ_GET_PROPERTY(cx, ctor,
+                              (jsid)cx->runtime->atomState.classPrototypeAtom,
+                              &rval)) {
+            return NULL;
+        }
+        if (JSVAL_IS_OBJECT(rval))
+            proto = JSVAL_TO_OBJECT(rval);
+    }
+
     obj = js_NewObject(cx, clasp, proto, parent);
     if (!obj)
 	return NULL;
-    ok = FindConstructor(cx, clasp->name, &cval);
-    if (!ok)
-    	goto bad;
 
     /* Allocate stack space for cval and obj, then push them. */
     sp = js_AllocStack(cx, 2, &mark);
