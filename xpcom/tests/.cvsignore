@@ -19,6 +19,7 @@ TestID
 TestObserverService
 TestPipes
 TestThreads 
+TestVoidBTree
 TestXPIDLString
 TestServMgr
 nsIFileTest
