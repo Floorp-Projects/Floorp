@@ -44,9 +44,12 @@
 #include "nsIServiceManager.h"
 #include "nsIURL.h"
 #include "nsXULAttributes.h"
+#include "nsLayoutCID.h"
 
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 static NS_DEFINE_CID(kDOMScriptObjectFactoryCID, NS_DOM_SCRIPT_OBJECT_FACTORY_CID);
+static NS_DEFINE_CID(kCSSParserCID, NS_CSSPARSER_CID);
+static NS_DEFINE_CID(kICSSParserIID, NS_ICSS_PARSER_IID);
 
 
 ////////////////////////////////////////////////////////////////////////
@@ -577,7 +580,10 @@ nsresult nsXULAttributes::UpdateStyleRule(nsIURL* aDocURL, const nsString& aValu
     }
 
     nsICSSParser* css;
-    nsresult result = NS_NewCSSParser(&css);
+    nsresult result = nsComponentManager::CreateInstance(kCSSParserCID,
+                                                         nsnull,
+                                                         kICSSParserIID,
+                                                         (void**)&css);
     if (NS_OK != result) {
       return result;
     }
