@@ -31,8 +31,8 @@
 const nsPoint *gPts;
 
 // comparison routines for qsort 
-PRInt32 compare_ind(const void *u,const void *v){return gPts[(PRInt32)*((PRInt32*)u)].y <= gPts[(PRInt32)*((PRInt32*)v)].y ? -1 : 1;}
-PRInt32 compare_active(const void *u,const void *v){return ((Edge*)u)->x <= ((Edge*)v)->x ? -1 : 1;}
+PRInt32 PR_CALLBACK compare_ind(const void *u,const void *v){return gPts[(PRInt32)*((PRInt32*)u)].y <= gPts[(PRInt32)*((PRInt32*)v)].y ? -1 : 1;}
+PRInt32 PR_CALLBACK compare_active(const void *u,const void *v){return ((Edge*)u)->x <= ((Edge*)v)->x ? -1 : 1;}
 
 
 /** ---------------------------------------------------
