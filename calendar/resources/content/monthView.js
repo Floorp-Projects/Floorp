@@ -783,18 +783,6 @@ MonthView.prototype.doubleClickDay = function monthView_doubleClickDay( event )
 }
 
 
-/** PUBLIC  -- monthview only
-*
-*   Called when an event box item is single clicked
-*/
-
-MonthView.prototype.clickEventBox = function monthView_clickEventBox( eventBox, event )
-{
-   this.calendarWindow.selectedDate.setDate( eventBox.calendarEventDisplay.event.start.day );
-
-   this.calendarWindow.EventSelection.replaceSelection( eventBox.calendarEventDisplay.event );
-}
-
 MonthView.prototype.clearSelectedEvent = function monthView_clearSelectedEvent( )
 {
    var ArrayOfBoxes = document.getElementsByAttribute( "eventselected", "true" );
