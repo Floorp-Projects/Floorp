@@ -666,6 +666,9 @@ nsJARChannel::GetContentType(char* *aContentType)
 {
     nsresult rv = NS_OK;
     if (mContentType == nsnull) {
+        if (!mJAREntry)
+          return NS_ERROR_FAILURE;
+
         char* fileName = new char[PL_strlen(mJAREntry)+1];
         PL_strcpy(fileName, mJAREntry);
 
@@ -688,7 +691,7 @@ nsJARChannel::GetContentType(char* *aContentType)
             else 
                 rv = NS_ERROR_FAILURE;
 		
-            nsCRT::free(fileName);
+            delete []fileName;
         } 
         else {
             rv = NS_ERROR_FAILURE;
