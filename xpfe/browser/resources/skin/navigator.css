@@ -1,6 +1,8 @@
 /** Contains style definitions for the navigator application 
  **/
 
+@import url(chrome://global/skin/);
+
 box#sidebar-parent {
 	margin-right: 2px;
 }
