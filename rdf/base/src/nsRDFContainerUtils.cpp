@@ -105,8 +105,8 @@ RDFContainerUtilsImpl::IsOrdinalProperty(nsIRDFResource *aProperty, PRBool *_ret
 
     nsresult rv;
 
-    nsXPIDLCString propertyStr;
-    rv = aProperty->GetValue( getter_Copies(propertyStr) );
+    const char	*propertyStr;
+    rv = aProperty->GetValueConst( &propertyStr );
     if (NS_FAILED(rv)) return rv;
 
     if (PL_strncmp(propertyStr, kRDFNameSpaceURI, sizeof(kRDFNameSpaceURI) - 1) != 0) {
@@ -169,8 +169,8 @@ RDFContainerUtilsImpl::OrdinalResourceToIndex(nsIRDFResource *aOrdinal, PRInt32 
     if (! aOrdinal)
         return NS_ERROR_NULL_POINTER;
 
-    nsXPIDLCString ordinalStr;
-    if (NS_FAILED(aOrdinal->GetValue( getter_Copies(ordinalStr) )))
+    const char	*ordinalStr;
+    if (NS_FAILED(aOrdinal->GetValueConst( &ordinalStr )))
         return PR_FALSE;
 
     const char* s = ordinalStr;
