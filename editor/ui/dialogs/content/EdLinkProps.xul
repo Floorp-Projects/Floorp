@@ -57,7 +57,7 @@
     <xul:spring class="bigspacer"/>
 
     <fieldset><legend align="left"> &LinkURLFieldset.label; </legend>
-    <!-- xul:box align="vertical" -->
+    <xul:box align="vertical"  style="width: 100%; height: 100%">
       <xul:box align="horizontal">
         <div> &LinkURLEditField.label;</div>
         <xul:spring flex="100%"/>
@@ -66,9 +66,10 @@
 	    <xul:box align="horizontal">
   	    <input type="text" size="25" length="25" id="hrefInput"></input>
         <xul:spring flex="100%"/>
-	      <xul:titledbutton class="hspaced" id="ChooseFile" onclick="ChooseFile()" value="&LinkChooseFileButton.label;"/>
+	      <!-- The div prevents button from being the same height as the input field -->
+        <div><xul:titledbutton class="hspaced" id="ChooseFile" onclick="ChooseFile()" value="&LinkChooseFileButton.label;"/></div>
       </xul:box>
-    <!-- /xul:box -->
+    </xul:box>
     </fieldset>
   </xul:box>
   <xul:spring class="bigspacer"/>

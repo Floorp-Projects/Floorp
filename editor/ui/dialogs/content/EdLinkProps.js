@@ -145,11 +145,11 @@ function initDialog()
   }
 }
 
-function chooseFile()
+function ChooseFile()
 {
   // Get a local file, converted into URL format
   fileName = editorShell.GetLocalFileURL(window, "html");
-  if (fileName != "") {
+  if (StringExists(fileName)) {
     hrefInput.value = fileName;
   }
   // Put focus into the input field

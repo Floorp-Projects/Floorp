@@ -178,6 +178,18 @@
 <!ENTITY stylesheetChocolateCmd.label "Chocolate">
 <!ENTITY stylesheetSteelyCmd.label "Steely">
 
+<!ENTITY tableMenu.label "Table">
+<!ENTITY tableInsertMenu.label "Insert">
+<!ENTITY tableTable.label "Table">
+<!ENTITY tableRow.label "Row">
+<!ENTITY tableColumn.label "Column">
+<!ENTITY tableCell.label "Cell">
+<!ENTITY tableCellBefore.label "Cell before">
+<!ENTITY tableCellAfter.label "Cell after">
+<!ENTITY tableDeleteMenu.label "Delete">
+<!ENTITY tableJoinCells.label "Join Cells">
+<!ENTITY properties.label "Properties...">
+
 <!ENTITY toolsMenu.label "Tools">
 <!ENTITY newBrowserCmd.label "New Browser Window">
 <!ENTITY newPlaintextEditorCmd.label "New Plaintext Editor">
@@ -531,9 +543,34 @@
 		</menupopup>
     </menu>
 
-    <menu value="&toolsMenu.label;">
+    <!-- PUT THESE SUBMENUS IN AN OVERLAY FOR RESUSE IN CONTEXT MENUS -->
+    <menu value="&tableMenu.label;">
       <menupopup>
-	  <menuitem value="&newBrowserCmd.label;" onaction="EditorNewBrowser()"/>
+        <menu value="&tableInsertMenu.label;">
+          <menupopup>
+            <menuitem value="&tableTable.label;" onaction="EditorInsertTable()"/>
+            <menuitem value="&tableRow.label;" onaction="EditorInsertTableRow()"/>
+            <menuitem value="&tableColumn.label;" onaction="EditorInsertTableColumn()"/>
+            <menuitem value="&tableCell.label;" onaction="EditorInsertTableCell(false)"/>
+          </menupopup>
+        </menu>
+        <menu value="&tableDeleteMenu.label;">
+          <menupopup>
+            <menuitem value="&tableTable.label;" onaction="EditorDeleteTable()"/>
+            <menuitem value="&tableRow.label;" onaction="EditorDeleteTableRow()"/>
+            <menuitem value="&tableColumn.label;" onaction="EditorDeleteTableColumn()"/>
+            <menuitem value="&tableCell.label;" onaction="EditorDeleteTableCell()"/>
+          </menupopup>
+        </menu>
+        <menuseparator />
+        <menuitem value="&tableJoinCells.label;" onaction="EditorJoinTableCells()"/>
+        <menuitem value="&properties.label;" onaction="EditorInsertOrEditTable(false)"/>
+      </menupopup>
+    </menu>
+
+    <menu value="&toolsMenu.label;">
+    <menupopup>
+      <menuitem value="&newBrowserCmd.label;" onaction="EditorNewBrowser()"/>
       <menuitem value="&newPlaintextEditorCmd.label;" onaction="EditorNewPlaintext()"/>
       <menuseparator />
       <menuitem value="&checkSpellingCmd.label;" onaction="CheckSpelling()"/>
@@ -583,7 +620,7 @@
 	      <titledbutton src="&imageIcon.url;" value="&imageToolbarCmd.label;" onclick="EditorInsertImage()"/>
 	      <titledbutton src="&targetIcon.url;" value="&anchorToolbarCmd.label;" onclick="EditorInsertNamedAnchor()"/>
 	      <titledbutton src="&hlineIcon.url;" value="&hruleToolbarCmd.label;" onclick="EditorInsertHLine()"/>
-	      <titledbutton src="&tableIcon.url;" value="&tableToolbarCmd.label;" onclick="EditorInsertTable()"/>
+	      <titledbutton src="&tableIcon.url;" value="&tableToolbarCmd.label;" onclick="EditorInsertOrEditTable(true)"/>
 	      <titledbutton src="&spellingIcon.url;" value="&spellToolbarCmd.label;" onclick="CheckSpelling()"/>
   		  <spring flex="100%"/>
 	      <titledbutton id="DisplayStyleButton" src="&previewIcon.url;" value="&previewToolbarCmd.label;" class="popup" onclick="EditorToggleDisplayStyle()"/>
