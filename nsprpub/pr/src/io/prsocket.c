@@ -473,23 +473,8 @@ static PRStatus PR_CALLBACK SocketBind(PRFileDesc *fd, const PRNetAddr *addr)
 			PR_SetError(PR_INVALID_ARGUMENT_ERROR, 0);
 			return PR_FAILURE;
 		}
-	} else {
-#endif
-
-#ifdef HAVE_SOCKET_REUSEADDR
-	if ( setsockopt (fd->secret->md.osfd, (int)SOL_SOCKET, SO_REUSEADDR, 
-#ifdef XP_OS2_VACPP
-	    (char *)&one, sizeof(one) ) < 0) {
-#else
-	    (const void *)&one, sizeof(one) ) < 0) {
-#endif
-		return PR_FAILURE;
 	}
-#endif
-
-#ifdef XP_UNIX
-	}
-#endif
+#endif /* XP_UNIX */
 
 	result = _PR_MD_BIND(fd, addr, PR_NETADDR_SIZE(addr));
 	if (result < 0) {

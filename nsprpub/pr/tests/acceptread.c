@@ -108,10 +108,19 @@ static void AcceptingThread(void *arg)
     PRUint8 buf[BUF_SIZE + (20 * sizeof(PRNetAddr))];
     PRNetAddr *accept_addr, *listen_addr = (PRNetAddr*)arg;
     PRFileDesc *accept_sock, *listen_sock = PR_NewTCPSocket();
+    PRSocketOptionData sock_opt;
 
     if (NULL == listen_sock)
     {
         PL_FPrintError(err_out, "PR_NewTCPSocket (server) failed");
+        PR_ProcessExit(1);        
+    }
+    sock_opt.option = PR_SockOpt_Reuseaddr;
+    sock_opt.value.reuse_addr = PR_TRUE;
+    rv = PR_SetSocketOption(listen_sock, &sock_opt);
+    if (PR_FAILURE == rv)
+    {
+        PL_FPrintError(err_out, "PR_SetSocketOption (server) failed");
         PR_ProcessExit(1);        
     }
     rv = PR_Bind(listen_sock, listen_addr);

@@ -123,6 +123,7 @@ _server_thread(void *arg_id)
 	PRThread *thread;
 	int *id =  (int *)arg_id;
 	PRFileDesc *sock;
+	PRSocketOptionData sockopt;
 	PRNetAddr sa;
 	PRFileDesc * newsock;
 	char *data_buffer = NULL;
@@ -152,6 +153,13 @@ _server_thread(void *arg_id)
 		goto done;
 	}
 
+	sockopt.option = PR_SockOpt_Reuseaddr;
+	sockopt.value.reuse_addr = PR_TRUE;
+	if ( PR_SetSocketOption(sock, &sockopt) == PR_FAILURE) {
+		fprintf(stderr, "Error setting socket option in server thread %d\n", *id);
+		goto done;
+	}
+
 	memset(&sa, 0 , sizeof(sa));
 	sa.inet.family = PR_AF_INET;
 	sa.inet.port = PR_htons(PORT_BASE + *id);
@@ -161,13 +169,6 @@ _server_thread(void *arg_id)
 		fprintf(stderr, "Error binding socket in server thread %d errno = %d\n", *id, errno);
 		goto done;
 	}
-
-#if 0
-	{
-		int one = 1;
-		setsockopt(sock, SOL_SOCKET, SO_REUSEADDR, (const char *)&one, sizeof(one));
-	}
-#endif
 
 	if ( PR_Listen(sock, 32) < 0 ) {
 		fprintf(stderr, "Error listening to socket in server thread %d\n", *id);
