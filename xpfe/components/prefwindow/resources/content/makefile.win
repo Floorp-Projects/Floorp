@@ -39,7 +39,6 @@ CHROME_CONTENT = \
 	.\pref-cache.xul \
 	.\pref-colors.js \
 	.\pref-colors.xul \
-	.\pref-cookies.xul \
 	.\pref-themes.xul \
 	.\pref-themes.js \
 	.\pref-charset.js \
@@ -51,7 +50,6 @@ CHROME_CONTENT = \
 	.\pref-fonts.xul \
 	.\pref-fonts.js \
 	.\pref-history.xul \
-	.\pref-images.xul \
 	.\pref-languages.xul \
 	.\pref-languages-add.xul \
 	.\pref-languages.js \
@@ -65,8 +63,6 @@ CHROME_CONTENT = \
 	.\pref-search.xul \
 	.\pref-smart_browsing.xul \
 	.\pref-smartupdate.xul \
-	.\pref-wallet.xul \
-	.\pref-passwords.xul \
 	.\pref.xul \
 	.\nsPrefWindow.js \
 	.\preftree.xul \

@@ -88,50 +88,6 @@ function goEditCardDialog(abURI, card, okCallback)
 					  {abURI:abURI, card:card, okCallback:okCallback});
 }
 
-
-function okToCapture2(formsArray) {
-  if (!formsArray) {
-    return false;
-  }
-  var form;
-  for (form=0; form<formsArray.length; form++) {
-    var elementsArray = formsArray[form].elements;
-    var element;
-    for (element=0; element<elementsArray.length; element++) {
-      var type = elementsArray[element].type;
-      var value = elementsArray[element].value;
-      if ((type=="" || type=="text") && value!="") {
-        return true;
-      } 
-    }
-  }
-  return false;
-}
-
-function okToPrefill2(formsArray) {
-  if (!formsArray) {
-    return false;
-  }
-  var form;
-  for (form=0; form<formsArray.length; form++) {
-    var elementsArray = formsArray[form].elements;
-    var element;
-    for (element=0; element<elementsArray.length; element++) {
-      var type = elementsArray[element].type;
-      if (type=="" || type=="text" || type=="select-one") {
-        /* prefill-able element found, see if there is a saved value for it */
-        var walletService = Components.classes["@mozilla.org/wallet/wallet-service;1"].getService(Components.interfaces.nsIWalletService);
-        var value = walletService.WALLET_PrefillOneElement
-          (window._content, elementsArray[element]);
-        if (value != "") {
-          return true;
-        }
-      }
-    }
-  }
-  return false;
-}
-
 function goPreferences(containerID, paneURL, itemID)
 {
   var prefWindowModalityPref;
@@ -145,96 +101,6 @@ function goPreferences(containerID, paneURL, itemID)
   var modality = prefWindowModalityPref ? "yes" : "no";
   
   var prefWindow = openDialog("chrome://communicator/content/pref/pref.xul","PrefWindow", "chrome,titlebar,modal=" + modality+ ",resizable=yes", paneURL, containerID, itemID);
-}
-
-function okToCapture() {
-  var capture = document.getElementById("menu_capture");
-  if (!capture) {
-    return;
-  }
-  if (!window._content || !window._content.document) {
-    capture.setAttribute("disabled", "true");
-    return;
-  }
-
-  // process frames if any
-  var formsArray;
-  var framesArray = window._content.frames;
-  if (framesArray.length != 0) {
-    var frame;
-    for (frame=0; frame<framesArray.length; frame++) {
-      formsArray = framesArray[frame].document.forms;
-      if (okToCapture2(formsArray)) {
-        capture.setAttribute("disabled", "false");
-        return;
-      }
-    }
-  }
-
-  // process top-level document
-  formsArray = window._content.document.forms;
-  if (okToCapture2(formsArray)) {
-    capture.setAttribute("disabled", "false");
-  } else {
-    capture.setAttribute("disabled", "true");
-  }
-  return;
-}
-
-function okToPrefill() {
-  var prefill = document.getElementById("menu_prefill");
-  if (!prefill) {
-    return;
-  }
-  if (!window._content || !window._content.document) {
-    prefill.setAttribute("disabled", "true");
-    return;
-  }
-
-  // process frames if any
-  var formsArray;
-  var framesArray = window._content.frames;
-  if (framesArray.length != 0) {
-    var frame;
-    for (frame=0; frame<framesArray.length; frame++) {
-      formsArray = framesArray[frame].document.forms;
-      if (okToPrefill2(formsArray)) {
-        prefill.setAttribute("disabled", "false");
-        return;
-      }
-    }
-  }
-
-  // process top-level document
-  formsArray = window._content.document.forms;
-  if (okToPrefill2(formsArray)) {
-    prefill.setAttribute("disabled", "false");
-  } else {
-    prefill.setAttribute("disabled", "true");
-  }
-  return;
-}
-
-function capture()
-{
-    var walletService = Components.classes["@mozilla.org/wallet/wallet-service;1"].getService(Components.interfaces.nsIWalletService);
-    
-    walletService.WALLET_RequestToCapture(window._content);
-}  
-
-function prefill()
-{
-    walletPreview(window._content);
-}
-
-// eventually should be moved into wallet code
-function walletPreview(aForm) {
-
-    var walletService = Components.classes["@mozilla.org/wallet/wallet-service;1"].getService(Components.interfaces.nsIWalletService);
-    walletService.WALLET_Prefill(false, aForm);
-
-    window.openDialog("chrome://communicator/content/wallet/WalletPreview.xul",
-                      "_blank", "chrome,modal=yes,dialog=yes,all, width=504, height=436");
 }
 
 function goToggleToolbar( id, elementID )
@@ -353,11 +219,6 @@ function goUpdateGlobalEditMenuItems()
 	goUpdateCommand('cmd_paste');
 	goUpdateCommand('cmd_selectAll');
 	goUpdateCommand('cmd_delete');
-}
-
-function goUpdateFormsEditMenuItems() {
-	okToCapture();
-	okToPrefill();
 }
 
 // update menu items that rely on the current selection

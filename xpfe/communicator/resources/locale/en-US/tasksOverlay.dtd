@@ -28,74 +28,11 @@
 <!ENTITY javaScriptConsoleCmd.label                             "JavaScript Console">
 <!ENTITY javaScriptConsoleCmd.accesskey				"s">
 
-
-<!-- LOCALIZATION NOTE (walletMenu.label): DONT_TRANSLATE -->
-<!ENTITY walletMenu.label "Privacy and Security">
-<!ENTITY walletMenu.accesskey "p">
-<!ENTITY walletFormManager.label "Form Manager">
-<!ENTITY walletFormManager.accesskey "f">
-<!ENTITY walletPasswordManager.label "Password Manager">
-<!ENTITY walletPasswordManager.accesskey "p">
-<!ENTITY walletSafeFillCmd.label "Prefill Form">
-<!ENTITY walletSafeFillCmd.accesskey "f">
-<!ENTITY walletQuickFillCmd.label "Prefill Form Quickly">
-<!ENTITY walletQuickFillCmd.accesskey "q">
-<!ENTITY walletRequestToCaptureCmd.label "Save Form Data">
-<!ENTITY walletRequestToCaptureCmd.accesskey "S">
-<!-- LOCALIZATION NOTE (walletContentsCmd.label): Do NOT translate "Wallet"-->
-<!ENTITY walletContentsCmd.label "View Stored Form Data">
-<!ENTITY walletContentsCmd.accesskey "v">
-<!ENTITY walletSitesCmd.label "View Sites">
-<!ENTITY walletSitesCmd.accesskey "w">
-<!ENTITY walletDisplaySignonsCmd.label "View Stored Passwords">
-<!ENTITY walletDisplaySignonsCmd.accesskey "v">
-<!ENTITY walletDisplayCookiesCmd.label "View Stored Cookies">
-<!ENTITY walletDisplayCookiesCmd.accesskey "v">
-<!ENTITY walletAllowCookiesCmd.label "Unblock Cookies from this Site">
-<!ENTITY walletAllowCookiesCmd.accesskey "u">
-<!ENTITY walletAllowCookiesMsg.label "Cookies from this site will not be blocked">
-<!ENTITY walletBlockCookiesCmd.label "Block Cookies from this Site">
-<!ENTITY walletBlockCookiesCmd.accesskey "b">
-<!ENTITY walletBlockCookiesMsg.label "Cookies from this site will always be rejected">
-<!ENTITY walletDisplayImagesCmd.label "View Sites that can/cannot Display Images">
-<!ENTITY walletDisplayImagesCmd.accesskey "v">
-<!ENTITY walletAllowImagesCmd.label "Unblock Images from this Site">
-<!ENTITY walletAllowImagesCmd.accesskey "u">
-<!ENTITY walletAllowImagesMsg.label "Images from this site will always be downloaded">
-<!ENTITY walletBlockImagesCmd.label "Block Images from this Site">
-<!ENTITY walletBlockImagesCmd.accesskey "b">
-<!ENTITY walletBlockImagesMsg.label "Images from this site will never be downloaded">
-<!ENTITY walletInterviewCmd.label "Interview">
-<!ENTITY walletInterviewCmd.accesskey "i">
-<!ENTITY walletSamplesCmd.label "Demonstration">
-<!ENTITY walletSamplesCmd.accesskey "d">
-<!ENTITY walletTutorialCmd.label "Understanding Privacy">
-<!ENTITY walletTutorialCmd.accesskey "u">
-<!ENTITY walletChangePasswordCmd.label "Change Personal Security Password...">
-<!ENTITY walletChangePasswordCmd.accesskey "c">
-<!ENTITY walletExpirePasswordCmd.label "Log Out">
-<!ENTITY walletExpirePasswordCmd.accesskey "l">
-<!ENTITY walletEncryptCmd.label "Encrypt Sensitive Information">
-<!ENTITY walletEncryptCmd.accesskey "e">
-<!ENTITY walletObscureCmd.label "Obscure Sensitive Information">
-<!ENTITY walletObscureCmd.accesskey "o">
-<!ENTITY walletClearCmd.label "Clear Sensitive Information">
-<!ENTITY walletClearCmd.accesskey "r">
-<!ENTITY walletCookieManager.label "Cookie Manager">
-<!ENTITY walletCookieManager.accesskey "c">
-<!ENTITY walletImageManager.label "Image Manager">
-<!ENTITY walletImageManager.accesskey "i">
+<!-- LOCALIZATION NOTE (privacyMenu.label): DONT_TRANSLATE -->
+<!ENTITY privacyMenu.label "Privacy and Security">
+<!ENTITY privacyMenu.accesskey "p">
 
 <!ENTITY taskNavigator.tooltip  "Navigator">
 <!ENTITY taskComposer.tooltip  "Composer">
 <!ENTITY taskAddressBook.tooltip  "Address Book">
 <!ENTITY taskBar.tooltip  "Taskbar">
-
-<!ENTITY PasswordNotChanged "Unable to change the password that protects your sensitive information.">
-<!ENTITY PasswordExpired "Your sensitive information is now locked.">
-<!ENTITY PasswordNotExpired "Unable to lock your sensitive information.">
-<!ENTITY AllDataWillBeCleared "All stored data will be erased.">
-<!ENTITY UnableToCapture "Unable to capture data.">
-<!ENTITY Captured "Data has been captured.">
-<!ENTITY NotCaptured "There is nothing to capture.">
-<!ENTITY noPrefills "There are no fields that can be prefilled.">

@@ -104,10 +104,6 @@
                 value="&viewImageCmd.label;"
                 accesskey=""
                 oncommand="contextMenu.viewImage();"/>
-      <menuitem id="context-blockimage"
-                value="&blockImageCmd.label;"
-                accesskey=""
-                oncommand="contextMenu.blockImage();"/>
       <menuseparator id="context-sep-view"/>
       <!-- Misc ==================================== -->
       <menuitem id="context-bookmarkpage"
@@ -159,14 +155,6 @@
                 value="&pasteCmd.label;"
                 accesskey="&pasteCmd.accesskey;"
                 observes="cmd_paste"/>
-      <menuitem id="context-capture"
-                value="&captureCmd.label;"
-                accesskey=""
-                oncommand="contextMenu.capture();"/>
-      <menuitem id="context-prefill"
-                value="&prefillCmd.label;"
-                accesskey=""
-                oncommand="contextMenu.prefill();"/>
       <menuitem id="context-copylink"
                 value="&copyLinkCmd.label;"
                 accesskey="&copyLinkCmd.accesskey;"

@@ -26,3 +26,7 @@ DEPTH=..\..
 DIRS=public src editor signonviewer cookieviewer walletpreview build
 
 include <$(DEPTH)\config\rules.mak>
+
+chrome::
+	$(REGCHROME) content wallet comm.jar
+	$(REGCHROME) locale en-US/wallet en-US.jar

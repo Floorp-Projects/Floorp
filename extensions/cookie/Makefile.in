@@ -29,7 +29,7 @@ include $(DEPTH)/config/autoconf.mk
 MODULE		= cookie
 LIBRARY_NAME	= cookie
 IS_COMPONENT	= 1
-REQUIRES	= xpcom necko caps dom js widget layout appshell pref intl locale profile
+REQUIRES	= xpcom necko caps dom js widget layout appshell pref intl locale
 
 ifdef ENABLE_TESTS
 DIRS		= tests
@@ -57,3 +57,6 @@ EXTRA_DSO_LDOPTS = \
 
 include $(topsrcdir)/config/rules.mk
 
+chrome::
+	@$(REGCHROME) content cookie comm.jar
+	@$(REGCHROME) locale en-US/cookie en-US.jar

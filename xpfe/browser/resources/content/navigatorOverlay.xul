@@ -117,8 +117,6 @@
 	<broadcaster id="cmd_paste"/>
 	<broadcaster id="cmd_delete"/>
 	<broadcaster id="cmd_selectAll"/>
-	<broadcaster id="cmd_capture"/>
-	<broadcaster id="cmd_prefill"/>
 	<broadcaster id="cmd_preferences"/>
 	
 	<!-- View Menu -->
@@ -178,7 +176,7 @@
 	</menu>
 
   <menu id="menu_Edit">
-    <menupopup>
+    <menupopup id="menu_Edit_Popup">
       <menuitem id="menu_undo"/>
       <menuitem id="menu_redo"/>
       <menuseparator/>
@@ -188,9 +186,6 @@
       <menuitem id="menu_delete"/>
       <menuseparator/>
       <menuitem id="menu_selectAll"/>
-      <menuseparator /> 
-      <menuitem id="menu_capture" oncommand="capture()"/>
-      <menuitem id="menu_prefill" oncommand="prefill()"/>
       <menuseparator /> 
       <menuitem id="menu_preferences" oncommand="goPreferences('navigator.xul', 'chrome://communicator/content/pref/pref-navigator.xul', 'navigator')"/>
     </menupopup>
