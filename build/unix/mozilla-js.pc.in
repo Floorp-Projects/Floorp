@@ -8,4 +8,4 @@ Description: The Mozilla JavaScript Library
 Version: %MOZILLA_VERSION%
 Requires: mozilla-nspr = %MOZILLA_VERSION%
 Libs: -L${libdir} -js
-Cflags: -I${includedir}/js
+Cflags: -I${includedir}/js -DXP_UNIX
