@@ -322,7 +322,7 @@ nsMathMLmpaddedFrame::UpdateValue(nsIPresContext*      aPresContext,
     to 0 if it would otherwise become negative. Dimensions which are 
     initially 0 can be made negative
     */
-    if (0 <= oldValue) aValueToUpdate = PR_MAX(0, aValueToUpdate);
+    if (0 <= oldValue && 0 > aValueToUpdate) aValueToUpdate = 0;
 
   }
 }
@@ -372,7 +372,7 @@ nsMathMLmpaddedFrame::Reflow(nsIPresContext*          aPresContext,
               mDepthSign, pseudoUnit, mDepth,
               lspace, aDesiredSize, depth);
 
-  // update lspace
+  // update lspace -- should be *last* because lspace is overwritten!!
   pseudoUnit = (mLeftSpacePseudoUnit == NS_MATHML_PSEUDO_UNIT_ITSELF)
              ? NS_MATHML_PSEUDO_UNIT_LSPACE : mLeftSpacePseudoUnit;
   UpdateValue(aPresContext, mStyleContext,
