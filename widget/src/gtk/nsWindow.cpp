@@ -623,7 +623,31 @@ NS_IMETHODIMP nsWindow::Update(void)
   else {
     //  g_print("nsWidget::Update(this=%p): avoided update of empty area\n", this);
   }
- 
+
+  // The view manager also expects us to force our
+  // children to update too!
+
+  nsCOMPtr<nsIEnumerator> children;
+
+  children = dont_AddRef(GetChildren());
+
+  if (children) {
+    nsCOMPtr<nsISupports> isupp;
+
+    while (NS_SUCCEEDED(children->CurrentItem(getter_AddRefs(isupp))) && isupp) {
+
+      nsCOMPtr<nsIWidget> child = do_QueryInterface(isupp);
+
+      if (child) {
+        child->Update();
+      }
+
+      if (NS_FAILED(children->Next())) {
+        break;
+      }
+    }
+  }
+
   // While I'd think you should NS_RELEASE(aPaintEvent.widget) here,
   // if you do, it is a NULL pointer.  Not sure where it is getting
   // released.
