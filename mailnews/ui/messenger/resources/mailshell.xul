@@ -140,7 +140,7 @@
 <!ENTITY markFlaggedCmd.label ".Flag">  
 <!ENTITY ignoreThreadCmd.label ".Ignore Thread">  
 <!ENTITY watchThreadCmd.label ".Watch Thread">  
-<!ENTITY communicatorMenu.label "Communicator">  
+<!ENTITY taskMenu.label "Tasks">
 <!ENTITY navigatorCmd.label "Navigator">  
 <!ENTITY messengerCmd.label ".Messenger">  
 <!ENTITY composerCmd.label ".Composer">  
@@ -384,7 +384,7 @@
       <menuitem name="&ignoreThreadCmd.label;" onclick="MsgIgnoreThread();"/>
       <menuitem name="&watchThreadCmd.label;" onclick="MsgWatchThread();"/>
     </menu>
-    <menu name="&communicatorMenu.label;">
+    <menu name="&taskMenu.label;">
       <menuitem name="&navigatorCmd.label;" onclick="NavigatorWindow();"/>
       <menuitem name="&messengerCmd.label;" onclick="MessengerWindow();"/>
       <menuitem name="&composerCmd.label;" onclick="ComposerWindow();"/>
