@@ -123,8 +123,6 @@ interface nsIEditorShell : nsISupports
   */
   void UnregisterDocumentStateListener(in nsIDocumentStateListener docListener);
   
-  void Init();
-  
   /* Do any cleanup that needs the content window here
    *   because it's gone by the time destructor is called
   */
