@@ -205,7 +205,7 @@ GetString(PRArenaPool *arena, char *prompt, SECItem *value)
 }
 
 static CERTCertificateRequest *
-GetCertRequest(PRFileDesc *inFile)
+GetCertRequest(PRFileDesc *inFile, PRBool ascii)
 {
     CERTCertificateRequest *certReq = NULL;
     CERTSignedData signedData;
@@ -220,7 +220,7 @@ GetCertRequest(PRFileDesc *inFile)
 	    GEN_BREAK (SEC_ERROR_NO_MEMORY);
 	}
 	
- 	rv = SECU_ReadDERFromFile(&reqDER, inFile, PR_FALSE);
+ 	rv = SECU_ReadDERFromFile(&reqDER, inFile, ascii);
 	if (rv) 
 	    break;
         certReq = (CERTCertificateRequest*) PORT_ArenaZAlloc
@@ -1909,6 +1909,7 @@ CreateCert(
 	int     serialNumber, 
 	int     warpmonths,
 	int     validitylength,
+	PRBool  ascii,
 	PRBool  selfsign,
 	PRBool	keyUsage, 
 	PRBool  extKeyUsage,
@@ -1934,7 +1935,7 @@ CreateCert(
 	}
 	
 	/* Create a certrequest object from the input cert request der */
-	certReq = GetCertRequest(inFile);
+	certReq = GetCertRequest(inFile, ascii);
 	if (certReq == NULL) {
 	    GEN_BREAK (SECFailure)
 	}
@@ -1995,9 +1996,14 @@ CreateCert(
 
 	certDER = SignCert (handle, subjectCert, selfsign, selfsignprivkey, issuerNickName,pwarg);
 
-	if (certDER)
-	   PR_Write(outFile, certDER->data, certDER->len);
-   	   /*fwrite (certDER->data, 1, certDER->len, outFile);*/
+	if (certDER) {
+	   if (ascii) {
+		PR_fprintf(outFile, "%s\n%s\n%s\n", NS_CERT_HEADER, 
+		        BTOA_DataToAscii(certDER->data, certDER->len), NS_CERT_TRAILER);
+	   } else {
+		PR_Write(outFile, certDER->data, certDER->len);
+	   }
+	}
 
     } while (0);
     CERT_DestroyCertificateRequest (certReq);
@@ -2348,6 +2354,15 @@ main(int argc, char **argv)
 	return -1;
     }
 
+    /*  For now, deny -C -x combination */
+    if (certutil.commands[cmd_CreateNewCert].activated &&
+        certutil.options[opt_SelfSign].activated) {
+	PR_fprintf(PR_STDERR,
+	           "%s: self-signing a cert request is not supported.\n",
+	           progName);
+	return -1;
+    }
+
     /*  If making a cert request, need a subject.  */
     if ((certutil.commands[cmd_CertReq].activated ||
          certutil.commands[cmd_CreateAndAddCert].activated) &&
@@ -2599,6 +2614,7 @@ main(int argc, char **argv)
 	                certutil.options[opt_IssuerName].arg,
 	                inFile, outFile, privkey, &pwdata,
 	                serialNumber, warpmonths, validitylength,
+	                certutil.options[opt_ASCIIForIO].activated,
 	                certutil.options[opt_SelfSign].activated,
 	                certutil.options[opt_AddKeyUsageExt].activated,
 	                certutil.options[opt_AddExtKeyUsageExt].activated,
