@@ -50,11 +50,20 @@
 #include "nsFontMetricsGTK.h"
 #endif
 
+#ifdef MOZ_ENABLE_PANGO
+#include "nsFontMetricsPango.h"
+#endif
+
 #include "nsFontMetricsUtils.h"
 
 PRUint32
 NS_FontMetricsGetHints(void)
 {
+#ifdef MOZ_ENABLE_PANGO
+    if (NS_IsPangoEnabled()) {
+        return nsFontMetricsPango::GetHints();
+    }
+#endif
 #ifdef MOZ_ENABLE_XFT
     if (NS_IsXftEnabled()) {
         return nsFontMetricsXft::GetHints();
@@ -69,6 +78,11 @@ NS_FontMetricsGetHints(void)
 nsresult
 NS_FontMetricsFamilyExists(nsIDeviceContext *aDevice, const nsString &aName)
 {
+#ifdef MOZ_ENABLE_PANGO
+    if (NS_IsPangoEnabled()) {
+        return nsFontMetricsPango::FamilyExists(aDevice, aName);
+    }
+#endif
 #ifdef MOZ_ENABLE_XFT
     // try to fall through to the core fonts if xft fails
     if (NS_IsXftEnabled()) {
@@ -121,3 +135,17 @@ NS_IsXftEnabled(void)
 }
 
 #endif /* MOZ_ENABLE_XFT */
+
+#ifdef MOZ_ENABLE_PANGO
+
+PRBool
+NS_IsPangoEnabled(void)
+{
+    char *val = PR_GetEnv("MOZ_DISABLE_PANGO");
+    if (val)
+        return FALSE;
+
+    return TRUE;
+}
+
+#endif

@@ -42,9 +42,12 @@
 extern PRUint32 NS_FontMetricsGetHints    (void);
 extern nsresult NS_FontMetricsFamilyExists(nsIDeviceContext *aDevice,
                                            const nsString &aName);
-
 #ifdef MOZ_ENABLE_XFT
 extern PRBool   NS_IsXftEnabled(void);
+#endif
+
+#ifdef MOZ_ENABLE_PANGO
+extern PRBool   NS_IsPangoEnabled(void);
 #endif
 
 #endif /* __nsFontMetricsUtils_h */

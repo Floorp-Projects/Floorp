@@ -3455,6 +3455,34 @@ AC_SUBST(MOZ_XFT_CFLAGS)
 AC_SUBST(MOZ_XFT_LIBS)
 
 dnl ========================================================
+dnl = pango font rendering
+dnl ========================================================
+MOZ_ARG_ENABLE_BOOL(pango,
+[  --enable-pango          Enable Pango font rendering support],
+    MOZ_ENABLE_PANGO=1,
+    MOZ_ENABLE_PANGO=)
+
+if test "$MOZ_ENABLE_PANGO"
+then
+    AC_DEFINE(MOZ_ENABLE_PANGO)
+    PKG_CHECK_MODULES(MOZ_PANGO, pango >= 1.5.0)
+
+    dnl Make sure that the pango version is _actually_ new enough
+    _SAVE_CFLAGS=$CFLAGS
+    _SAVE_LDFLAGS=$LDFLAGS
+    CFLAGS="$MOZ_PANGO_CFLAGS $CFLAGS"
+    LDFLAGS="$MOZ_PANGO_LIBS $LDFLAGS"
+    AC_CHECK_LIB(pangoft2-1.0, pango_fc_font_map_add_decoder_find_func,,
+                 AC_MSG_ERROR([Your Pango is too old. Sorry.]))
+    CFLAGS=$_SAVE_CFLAGS
+    LDFLAGS=$_SAVE_LDFLAGS
+
+    AC_SUBST(MOZ_ENABLE_PANGO)
+    AC_SUBST(MOZ_PANGO_CFLAGS)
+    AC_SUBST(MOZ_PANGO_LIBS)
+fi
+
+dnl ========================================================
 dnl = disabling x11 core support, enabled by default
 dnl ========================================================
 MOZ_ENABLE_COREXFONTS=${MOZ_ENABLE_COREXFONTS-1}

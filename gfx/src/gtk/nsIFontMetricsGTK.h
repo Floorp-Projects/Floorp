@@ -121,6 +121,9 @@ public:
     // particular handle.
     virtual GdkFont* GetCurrentGDKFont(void) = 0;
 
+    // Set the direction of the text rendering
+    virtual nsresult SetRightToLeftText(PRBool aIsRTL) = 0;
+
 };
 
 #endif /* __nsIFontMetricsGTK_h */

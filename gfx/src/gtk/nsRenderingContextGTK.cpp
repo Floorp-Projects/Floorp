@@ -548,6 +548,9 @@ void nsRenderingContextGTK::UpdateGC()
 
   values.foreground.pixel =
     gdk_rgb_xpixel_from_rgb(NS_TO_GDK_RGB(mCurrentColor));
+  values.foreground.red = (NS_GET_R(mCurrentColor) << 8) | NS_GET_R(mCurrentColor);
+  values.foreground.green = (NS_GET_G(mCurrentColor) << 8) | NS_GET_G(mCurrentColor);
+  values.foreground.blue = (NS_GET_B(mCurrentColor) << 8) | NS_GET_B(mCurrentColor);
   valuesMask = GDK_GC_FOREGROUND;
 
 #ifdef MOZ_ENABLE_COREXFONTS
@@ -1439,6 +1442,11 @@ nsRenderingContextGTK::GetBoundingMetrics(const PRUnichar*   aString,
 }
 
 #endif /* MOZ_MATHML */
+
+NS_IMETHODIMP nsRenderingContextGTK::SetRightToLeftText(PRBool aIsRTL)
+{
+  return mFontMetrics->SetRightToLeftText(aIsRTL);
+}
 
 NS_IMETHODIMP nsRenderingContextGTK::DrawImage(imgIContainer *aImage, const nsRect & aSrcRect, const nsRect & aDestRect)
 {
