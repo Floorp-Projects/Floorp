@@ -378,14 +378,6 @@ var gEditorDocumentObserver =
         // Things for just the Web Composer application
         if (IsWebComposer())
         {
-          // Get the window command controller created in SetupComposerWindowCommands()
-          if (gComposerWindowControllerID)
-          {
-            try { 
-              var controller = window.controllers.getControllerById(gComposerWindowControllerID);
-              controller.setCommandRefCon(editor);
-            } catch (e) {}
-          }
           // Call EditorSetDefaultPrefsAndDoctype first so it gets the default author before initing toolbars
           EditorSetDefaultPrefsAndDoctype();
 
