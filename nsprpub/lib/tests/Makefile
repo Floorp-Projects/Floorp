@@ -74,6 +74,17 @@ ifeq ($(OS_ARCH), IRIX)
 LDOPTS += -rpath $(PWD)/$(DIST)/lib
 endif
 
+ifeq ($(OS_ARCH), Linux)
+    ifeq ($(OS_RELEASE), 1.2)
+        EXTRA_LIBS = -ldl
+    else
+        LDOPTS += -Xlinker -rpath $(PWD)/$(DIST)/lib
+        ifeq ($(USE_PTHREADS),1)
+            EXTRA_LIBS = -lpthread
+        endif
+    endif
+endif
+
 ifeq ($(OS_ARCH), OSF1)
 LDOPTS += -rpath $(PWD)/$(DIST)/lib -lpthread
 endif

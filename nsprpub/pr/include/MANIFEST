@@ -11,7 +11,9 @@ prcountr.h
 prcvar.h
 prdtoa.h
 prenv.h
+prerr.h
 prerror.h
+prerrorplugin.h
 prinet.h
 prinit.h
 prinrval.h
@@ -28,6 +30,7 @@ prolock.h
 prpdce.h
 prprf.h
 prproces.h
+prrwlock.h
 prsystem.h
 prthread.h
 prtime.h

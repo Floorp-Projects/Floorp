@@ -72,7 +72,7 @@ static PRIntn PR_CALLBACK RealMain(PRIntn argc, char **argv)
         answer = PR_strtod(number, NULL);
         PR_fprintf(err, "Translation = %20.0f\n", answer);
     }
-    return 2;
+    return 0;
 }
 
 

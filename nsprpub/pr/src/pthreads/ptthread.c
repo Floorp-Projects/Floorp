@@ -342,7 +342,12 @@ static PRThread* _PR_CreateThread(
         PR_Unlock(pt_book.ml);
 
         if (thred->state & PT_THREAD_BOUND) {
+			/*
+			 * should a Posix feature test be used here?
+			 */
+#ifdef PTHREAD_SCOPE_SYSTEM
     		rv = pthread_attr_setscope(&tattr, PTHREAD_SCOPE_SYSTEM);
+#endif
 		}
         /*
          * We pass a pointer to a local copy (instead of thred->id)

@@ -17,7 +17,6 @@
  */
 
 #include "nspr.h"
-#include "prrwlock.h"
 
 #include <string.h>
 
@@ -46,9 +45,9 @@ struct PRRWLock {
 
 #ifdef _PR_RWLOCK_RANK_ORDER_DEBUG
 
-static PRUintn	ps_thread_rwlock_initialized;
-static PRUintn	ps_thread_rwlock;				/* TPD key for lock stack */
-static PRUintn	ps_thread_rwlock_alloc_failed;
+static PRUintn	pr_thread_rwlock_initialized;
+static PRUintn	pr_thread_rwlock;				/* TPD key for lock stack */
+static PRUintn	pr_thread_rwlock_alloc_failed;
 
 #define	_PR_RWLOCK_RANK_ORDER_LIMIT	10
 
@@ -291,7 +290,7 @@ PRThread *me = PR_GetCurrentThread();
  *		per-thread list, which is anchored off a thread-private data key.
  */
 
-void
+static void
 _PR_SET_THREAD_RWLOCK_RANK(PRThread *me, PRRWLock *rwlock)
 {
 thread_rwlock_stack *lock_stack;
@@ -300,15 +299,15 @@ PRStatus rv;
 	/*
 	 * allocated thread-private-data for rwlock list, if not already allocated
 	 */
-	if (!ps_thread_rwlock_initialized) {
+	if (!pr_thread_rwlock_initialized) {
 		/*
 		 * allocate tpd, only if not failed already
 		 */
-		if (!ps_thread_rwlock_alloc_failed) {
-			if (PR_NewThreadPrivateIndex(&ps_thread_rwlock,
+		if (!pr_thread_rwlock_alloc_failed) {
+			if (PR_NewThreadPrivateIndex(&pr_thread_rwlock,
 										_PR_RELEASE_LOCK_STACK)
 												== PR_FAILURE) {
-				ps_thread_rwlock_alloc_failed = 1;
+				pr_thread_rwlock_alloc_failed = 1;
 				return;
 			}
 		} else
@@ -317,18 +316,18 @@ PRStatus rv;
 	/*
 	 * allocate a lock stack
 	 */
-	if ((lock_stack = PR_GetThreadPrivate(ps_thread_rwlock)) == NULL) {
+	if ((lock_stack = PR_GetThreadPrivate(pr_thread_rwlock)) == NULL) {
 		lock_stack = (thread_rwlock_stack *)
 						PR_CALLOC(1 * sizeof(thread_rwlock_stack));
 		if (lock_stack) {
-			rv = PR_SetThreadPrivate(ps_thread_rwlock, lock_stack);
+			rv = PR_SetThreadPrivate(pr_thread_rwlock, lock_stack);
 			if (rv == PR_FAILURE) {
 				PR_DELETE(lock_stack);
-				ps_thread_rwlock_alloc_failed = 1;
+				pr_thread_rwlock_alloc_failed = 1;
 				return;
 			}
 		} else {
-			ps_thread_rwlock_alloc_failed = 1;
+			pr_thread_rwlock_alloc_failed = 1;
 			return;
 		}
 	}
@@ -339,10 +338,10 @@ PRStatus rv;
 		if (lock_stack->trs_index < _PR_RWLOCK_RANK_ORDER_LIMIT)
 			lock_stack->trs_stack[lock_stack->trs_index++] = rwlock;	
 	}
-	ps_thread_rwlock_initialized = 1;
+	pr_thread_rwlock_initialized = 1;
 }
 
-void
+static void
 _PR_RELEASE_LOCK_STACK(void *lock_stack)
 {
 	PR_ASSERT(lock_stack);
@@ -356,13 +355,13 @@ _PR_RELEASE_LOCK_STACK(void *lock_stack)
  *		stack is not allocated, return PR_RWLOCK_RANK_NONE.
  */
 	
-PRUint32
+static PRUint32
 _PR_GET_THREAD_RWLOCK_RANK(PRThread *me)
 {
 	thread_rwlock_stack *lock_stack;
 
-	if (ps_thread_rwlock_initialized) {
-		if ((lock_stack = PR_GetThreadPrivate(ps_thread_rwlock)) == NULL)
+	if (pr_thread_rwlock_initialized) {
+		if ((lock_stack = PR_GetThreadPrivate(pr_thread_rwlock)) == NULL)
 			return (PR_RWLOCK_RANK_NONE);
 		else
 			return(lock_stack->trs_stack[lock_stack->trs_index - 1]->rw_rank);
@@ -378,16 +377,16 @@ _PR_GET_THREAD_RWLOCK_RANK(PRThread *me)
  *		unlocked in a FIFO order, the entire lock stack is searched.
  */
 	
-void
+static void
 _PR_UNSET_THREAD_RWLOCK_RANK(PRThread *me, PRRWLock *rwlock)
 {
 	thread_rwlock_stack *lock_stack;
 	int new_index = 0, index, done = 0;
 
-	if (!ps_thread_rwlock_initialized)
+	if (!pr_thread_rwlock_initialized)
 		return;
 
-	lock_stack = PR_GetThreadPrivate(ps_thread_rwlock);
+	lock_stack = PR_GetThreadPrivate(pr_thread_rwlock);
 
 	PR_ASSERT(lock_stack != NULL);
 

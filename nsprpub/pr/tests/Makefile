@@ -38,6 +38,7 @@ endif
 
 CSRCS =             \
 	accept.c		\
+	acceptread.c	\
 	alarm.c			\
 	atomic.c		\
 	attach.c		\
@@ -99,10 +100,9 @@ CSRCS =             \
 	prftest2.c		\
 	priotest.c		\
 	provider.c		\
-	ranfile.c       \
-	rwlocktest.c    \
 	prpoll.c		\
 	ranfile.c       \
+	rwlocktest.c    \
 	sel_spd.c  		\
 	selct_er.c	    \
 	selct_nm.c	    \
