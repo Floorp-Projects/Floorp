@@ -342,7 +342,7 @@ void nsFileSpec::RecursiveCopy(nsFileSpec newDir) const
 
 
 //----------------------------------------------------------------------------------------
-nsresult nsFileSpec::Truncate(const PRInt32 offset) const
+nsresult nsFileSpec::Truncate(PRInt32 offset) const
 //----------------------------------------------------------------------------------------
 {
     char* Path = nsCRT::strdup(mPath);
