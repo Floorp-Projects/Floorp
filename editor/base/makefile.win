@@ -121,6 +121,7 @@ LCFLAGS = \
 # These are the libraries we need to link with to create the dll
 LLIBS=				\
  $(DIST)\lib\xpcom.lib	\
+ $(DIST)\lib\js3250.lib	\
  $(DIST)\lib\gkparser.lib		\
  $(DIST)\lib\raptorwidget_s.lib		\
 !ifdef NECKO

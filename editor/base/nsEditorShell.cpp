@@ -67,7 +67,6 @@
 
 #include "nsIFileWidget.h"
 #include "nsFileSpec.h"
-#include "nsIDOMToolkitCore.h"
 #include "nsIFindComponent.h"
 #include "nsIPrompt.h"
 #include "nsICommonDialogs.h"
@@ -1069,46 +1068,44 @@ nsEditorShell::SetWebShellWindow(nsIDOMWindow* aWin)
   return rv;
 }
 
+// Utility function to open an editor window and pass a URL to it.
+static nsresult OpenWindow( const char *chrome, const PRUnichar *url ) {
+    nsCOMPtr<nsIDOMWindow> hiddenWindow;
+    JSContext *jsContext;
+    nsresult rv;
+    NS_WITH_SERVICE( nsIAppShellService, appShell, kAppShellServiceCID, &rv )
+    if ( NS_SUCCEEDED( rv ) ) {
+        rv = appShell->GetHiddenWindowAndJSContext( getter_AddRefs( hiddenWindow ),
+                                                    &jsContext );
+        if ( NS_SUCCEEDED( rv ) ) {
+            // Set up arguments for "window.openDialog"
+            void *stackPtr;
+            jsval *argv = JS_PushArguments( jsContext,
+                                            &stackPtr,
+                                            "sssW",
+                                            chrome,
+                                            "_blank",
+                                            "chrome,dialog=no,all",
+                                            url );
+            if ( argv ) {
+                nsCOMPtr<nsIDOMWindow> newWindow;
+                rv = hiddenWindow->OpenDialog( jsContext,
+                                               argv,
+                                               4,
+                                               getter_AddRefs( newWindow ) );
+                JS_PopArguments( jsContext, stackPtr );
+            }
+        }
+    }
+    return rv;
+}
+
 NS_IMETHODIMP
 nsEditorShell::CreateWindowWithURL(const char* urlStr)
 {
   nsresult rv = NS_OK;
   
-#if 0
-  /*
-   * Create the Application Shell instance...
-   */
-  NS_WITH_SERVICE(nsIAppShellService, appShell, kAppShellServiceCID, &rv);
-  if (NS_FAILED(rv)) { return rv; }
-
-  nsCOMPtr<nsIURI> url = nsnull;
-  nsCOMPtr<nsIWebShellWindow> newWindow;
-  
-  rv = NS_NewURL(getter_AddRefs(url), urlStr);
-  if (NS_FAILED(rv)) return rv;
-  if (!url) { return NS_ERROR_NULL_POINTER; }
-  
-  // XXX: does CreateTopLevelWindow return a result we should be returning?
-  appShell->CreateTopLevelWindow(nsnull, url, PR_TRUE, NS_CHROME_ALL_CHROME,
-              nsnull, 615, 480, getter_AddRefs(newWindow));
-  
-#else
-
-
-  // This code is to ensure that the editor's pseudo-onload handler is always called.
-  static NS_DEFINE_CID(kToolkitCoreCID,           NS_TOOLKITCORE_CID);
-
-  /*
-   * Create the toolkit core instance...
-   */
-  NS_WITH_SERVICE(nsIDOMToolkitCore, toolkit, kToolkitCoreCID, &rv);
-  if (NS_FAILED(rv)) { return rv; }
-
-  //nsIWebShellWindow* newWindow = nsnull;
-  
-  toolkit->ShowWindowWithArgs( urlStr, nsnull, "chrome://editor/content/EditorInitPage.html" );
-  
-#endif
+  rv = OpenWindow( urlStr, nsString("chrome://editor/content/EditorInitPage.html").GetUnicode() );
 
   return rv;
 }
@@ -1139,20 +1136,8 @@ nsEditorShell::Open()
       if (NS_FAILED(result) || !fileURLString || !*fileURLString)
         return result;
 
-      // all I want to do is call a method on nsToolkitCore that would normally
-      // be static. But I have to go through all this crap. XPCOM sucks so bad.
-      static NS_DEFINE_IID(kToolkitCoreCID, NS_TOOLKITCORE_CID);
-      nsCOMPtr<nsIDOMToolkitCore>  toolkitCore;
-      result = nsComponentManager::CreateInstance(kToolkitCoreCID,
-                                        nsnull,
-                                        nsIDOMToolkitCore::GetIID(),
-                                        getter_AddRefs(toolkitCore));
-      if (NS_SUCCEEDED(result) && toolkitCore)
-      {
-        // at some point we need to be passing nsFileSpecs around. When nsIURI is fileSpec-
-        // savvy, we should use that.
-        result = toolkitCore->ShowWindowWithArgs("chrome://editor/content", nsnull, fileURLString/*fileURL.GetAsString()*/);
-      }
+      // Open a new editor window on the specified file.
+      result = OpenWindow( "chrome://editor/content", fileURLString );
 
       // delete the string
 
