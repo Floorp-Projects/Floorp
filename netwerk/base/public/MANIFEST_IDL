@@ -12,4 +12,3 @@ nsISocketTransportService.idl
 nsIFileTransportService.idl
 nsIFileSystem.idl
 nsIUnicharStreamLoader.idl
-nsIURLParser.idl

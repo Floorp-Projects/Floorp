@@ -637,7 +637,7 @@ static const char kResourceURIPrefix[] = "resource:";
 
     // XXX this is a hack: any "file:" URI is considered writable. All
     // others are considered read-only.
-    char* realURL = nsnull;
+    char* realURL;
     mURL->GetSpec(&realURL);
     if ((PL_strncmp(realURL, kFileURIPrefix, sizeof(kFileURIPrefix) - 1) != 0) &&
         (PL_strncmp(realURL, kResourceURIPrefix, sizeof(kResourceURIPrefix) - 1) != 0)) {

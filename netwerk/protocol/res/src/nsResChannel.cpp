@@ -121,7 +121,7 @@ nsResChannel::Substitutions::Init()
     
     NS_ASSERTION(mSubstitutions == nsnull, "failed to call destructor");
 
-    char* root = nsnull;
+    char* root;
     rv = channel->mResourceURI->GetHost(&root);
     if (NS_SUCCEEDED(rv)) {
         rv = channel->mHandler->GetSubstitutions(root, &mSubstitutions);

@@ -854,6 +854,3 @@ $(CHROME_L10N:.\=CLOBBER\.\):
 
 !endif # CONFIG_RULES_MAK
 
-# Easier than typing it by hand, works from any directory:
-debug::
-        start msdev $(DIST)\bin\mozilla.exe

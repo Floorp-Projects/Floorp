@@ -40,20 +40,6 @@ interface nsILoadGroupObserver;
 interface nsIIOService : nsISupports
 {
     /**
-     * constants for the Escape mask in the call to URLEscape
-     */
-    const short url_Scheme        = (1<<0);
-    const short url_Username      = (1<<1);
-    const short url_Password      = (1<<2);
-    const short url_Host          = (1<<3);
-    const short url_Directory     = (1<<4);
-    const short url_FileBaseName  = (1<<5);
-    const short url_FileExtension = (1<<6);
-    const short url_Param         = (1<<7);
-    const short url_Query         = (1<<8);
-    const short url_Ref           = (1<<9);
-
-    /**
      * Returns a protocol handler for a given URI scheme.
      */
     nsIProtocolHandler getProtocolHandler(in string scheme);
@@ -174,18 +160,6 @@ interface nsIIOService : nsISupports
      * causing the dialer to come up).
      */
     attribute boolean offline;
-
-    /**
-     * escapes the string str with mask
-     */
-    void URLEscape (in  string str, 
-                    in  short mask, 
-                    out string result);
-    /**
-     * unescapes str
-     */
-    void URLUnescape(in  string str, 
-                     out string result);
 };
 
 %{C++

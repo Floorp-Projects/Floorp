@@ -411,16 +411,4 @@ nsIOService::SetOffline(PRBool offline)
     return NS_OK;
 }
 
-NS_IMETHODIMP
-nsIOService::URLEscape(const char* str, PRInt16 mask, char **result)
-{
-    return nsURLEscape((char*)str,mask,result);
-}
-
-NS_IMETHODIMP 
-nsIOService::URLUnescape(const char* str, char **result)
-{
-    return nsURLUnescape((char*)str,result);
-}
-
 ////////////////////////////////////////////////////////////////////////////////
