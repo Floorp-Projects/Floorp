@@ -106,6 +106,8 @@ int CopyIfNecessary(char *oldFile, char *newFile)
     }
 
 copy_file:
+    printf("+++ makecopy: Installing %s into %s\n", oldFile, newFile);
+
     if( ! CopyFile(oldFile, newFile, FALSE) ) {
         return 1;
     }
@@ -150,8 +152,6 @@ int main( int argc, char *argv[] )
         fprintf(stderr, "\n+++ makecopy: no such file: %s\n", argv[1]);
         return 1;
     }
-
-    printf("+++ makecopy: Installing %s into directory %s\n", argv[1], argv[2]);
 
     do {
         strcpy(oldFileName, findFileData.cFileName);
