@@ -341,8 +341,8 @@ typedef unsigned long PRUptrdiff;
 **      juast as you would C int-valued conditions. 
 ************************************************************************/
 typedef PRIntn PRBool;
-#define PR_TRUE (PRIntn)1
-#define PR_FALSE (PRIntn)0
+#define PR_TRUE 1
+#define PR_FALSE 0
 
 /************************************************************************
 ** TYPES:       PRPackedBool
