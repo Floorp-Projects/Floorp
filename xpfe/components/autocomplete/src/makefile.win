@@ -34,6 +34,7 @@ REQUIRES	= xpcom \
 		  dom \
 		  mozldap \
 		  necko \
+		  intl \
 		  $(NULL)
 
 include <$(DEPTH)/config/config.mak>
