@@ -36,6 +36,7 @@ menupopup, popup
     border-right          : 1px solid threeddarkshadow;
     border-bottom         : 1px solid threeddarkshadow;
     color                 : menutext !important;
+    max-width             : 14em;
   }
 
 .popup-internal-box
