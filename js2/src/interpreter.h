@@ -103,8 +103,8 @@ namespace Interpreter {
         ListenerList mListeners;
         Activation* mActivation;
         ICodeModule* mICode;
-        JSClosure* mCurrentClosure;
         bool mHasOperatorsPackageLoaded;
+        JSClosure* mCurrentClosure;
 
         InstructionIterator mPC;
         
