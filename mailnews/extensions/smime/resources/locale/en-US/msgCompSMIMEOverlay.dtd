@@ -1,0 +1,7 @@
+<!--LOCALIZATION NOTE msgCompSMIMEOverlay.dtd UI for s/mime hooks in message composition -->
+
+<!ENTITY securityMenu.label "Security">
+<!ENTITY menu_securityEncryptIfPossible.label "Encrypt if Possible">
+<!ENTITY menu_securityEncryptAlways.label "Always Encrypt">
+<!ENTITY menu_securitySign.label "Sign">
+

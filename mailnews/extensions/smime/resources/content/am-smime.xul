@@ -1,0 +1,97 @@
+<?xml version="1.0"?>
+
+<!--
+
+The contents of this file are subject to the Netscape Public
+License Version 1.1 (the "License"); you may not use this file
+except in compliance with the License. You may obtain a copy of
+the License at http://www.mozilla.org/NPL/
+
+Software distributed under the License is distributed on an "AS
+IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+implied. See the License for the specific language governing
+rights and limitations under the License.
+
+The Initial Developer of the Original Code is Netscape
+Communications Corporation. Portions created by Netscape are
+ Copyright (C) 1998-2001 Netscape Communications Corporation. All
+Rights Reserved.
+
+Contributors:
+    ddrinan@netscape.com
+    Scott MacGregor <mscott@netscape.com>
+
+-->
+
+<?xml-stylesheet href="chrome://messenger/skin/accountManage.css" type="text/css"?>
+<?xul-overlay href="chrome://global/content/dialogOverlay.xul"?>
+
+<!DOCTYPE window SYSTEM "chrome://messenger/locale/am-smime.dtd">
+
+<page xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        xmlns:html="http://www.w3.org/1999/xhtml"
+        class="color-dialog"
+        onload="parent.onPanelLoaded('am-smime.xul');"
+        orient="vertical">
+ 
+  <stringbundle id="bundle_smime" src="chrome://messenger/locale/am-smime.properties"/> 
+  <script type="application/x-javascript" src="chrome://messenger/content/AccountManager.js"/>
+  <script type="application/x-javascript" src="chrome://messenger/content/am-smime.js"/>
+    
+  <hbox class="box-smallheader" title="&securityTitle.label;" />
+
+  <groupbox orient="vertical" id="encryption.titlebox">
+    <caption label="&encryptionGroupTitle.label;"/>
+
+    <label value="&encryptionCert.message;"/>
+    <separator class="thin"/>
+
+    <textbox id="identity.encryption_cert_name" iscontrolcontainer="true" wsm_persist="true" genericattr="true" flex="1" 
+             pref="true" preftype="wstring" prefattribute="value" 
+             prefstring="mail.identity.%identitykey%.encryption_cert_name" readonly="true" disabled="true"/>
+
+    <separator class="thin"/>
+    <hbox>
+      <spacer flex="1"/>
+      <button id="encryptionCertSelectButton"
+              label="&certificate.button;"
+              oncommand="smimeSelectCert('identity.encryption_cert_name')"/>
+    </hbox>
+
+    <checkbox id="identity.encrypt_mail_if_possible" iscontrolcontainer="true" wsm_persist="true" genericattr="true" pref="true" 
+              preftype="bool" prefattribute="value" 
+              prefstring="mail.identity.%identitykey%.encrypt_mail_if_possible"
+              label="&ifPossibleEncryptMessage.label;" />
+
+    <checkbox id="identity.encrypt_mail_always" iscontrolcontainer="true" wsm_persist="true" genericattr="true" pref="true"
+              preftype="bool" prefattribute="value"  
+              prefstring="mail.identity.%identitykey%.encrypt_mail_always"
+              label="&alwaysEncryptMessage.label;" />
+  </groupbox>    
+    
+  <separator class="thin"/>
+  <groupbox orient="vertical" id="signing.titlebox">
+    <caption label="&signingGroupTitle.label;"/>
+      
+    <label value="&signingCert.message;"/>
+    <separator class="thin"/>
+
+    <textbox id="identity.signing_cert_name" iscontrolcontainer="true" wsm_persist="true" genericattr="true" flex="1" 
+             pref="true" preftype="wstring" prefattribute="value" 
+             prefstring="mail.identity.%identitykey%.signing_cert_name" readonly="true" disabled="true"/>
+
+    <separator class="thin"/>
+    
+    <hbox>
+      <spacer flex="1"/>
+      <button id="signingCertSelectButton"
+              label="&certificate.button;"
+              oncommand="smimeSelectCert('identity.signing_cert_name')"/>
+    </hbox>
+
+    <checkbox id="identity.sign_mail" iscontrolcontainer="true" wsm_persist="true" genericattr="true" pref="true"
+              preftype="bool" prefattribute="value"  
+              prefstring="mail.identity.%identitykey%.sign_mail"
+              label="&signMessage.label;"/>
+  </groupbox>
+</page>
