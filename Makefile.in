@@ -54,6 +54,7 @@ DIRS		+= \
 		caps \
 		expat \
 		htmlparser \
+		widget/timer \
 		gfx \
 		dom \
 		view \
