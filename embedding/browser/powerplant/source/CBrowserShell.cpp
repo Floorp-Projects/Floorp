@@ -1220,7 +1220,7 @@ NS_METHOD CBrowserShell::SaveInternal(nsIURI* inURI, nsIDOMDocument* inDocument,
 
     webPersist->SetProgressListener(sniffer);  // owned
     
-    return webPersist->SaveURI(inURI, nsnull, tmpFile);
+    return webPersist->SaveURI(inURI, nsnull, nsnull, nsnull, nsnull, tmpFile);
 }
 
 

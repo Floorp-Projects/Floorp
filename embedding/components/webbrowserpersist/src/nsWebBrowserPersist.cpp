@@ -40,6 +40,7 @@
 #include "nsIHttpChannel.h"
 #include "nsIEncodedChannel.h"
 #include "nsIUploadChannel.h"
+#include "nsICachingChannel.h"
 #include "nsEscape.h"
 #include "nsUnicharUtils.h"
 #include "nsCRT.h"
@@ -61,6 +62,8 @@
 #include "nsIWebProgressListener.h"
 #include "nsIAuthPrompt.h"
 #include "nsIPrompt.h"
+#include "nsISHEntry.h"
+#include "nsIWebPageDescriptor.h"
 
 #include "nsIDOMNodeFilter.h"
 #include "nsIDOMProcessingInstruction.h"
@@ -336,9 +339,11 @@ NS_IMETHODIMP nsWebBrowserPersist::SetProgressListener(
     return NS_OK;
 }
 
-/* void saveURI (in nsIURI aURI, in string aFileName); */
+/* void saveURI (in nsIURI aURI, in nsIURI aReferrer,
+   in nsIInputStream aPostData, in wstring aExtraHeaders,
+   in nsISupports aFile); */
 NS_IMETHODIMP nsWebBrowserPersist::SaveURI(
-    nsIURI *aURI, nsIInputStream *aPostData, nsISupports *aFile)
+    nsIURI *aURI, nsISupports *aCacheKey, nsIURI *aReferrer, nsIInputStream *aPostData, const char *aExtraHeaders, nsISupports *aFile)
 {
     NS_ENSURE_TRUE(mFirstAndOnlyUse, NS_ERROR_FAILURE);
     mFirstAndOnlyUse = PR_FALSE; // Stop people from reusing this object!
@@ -348,9 +353,8 @@ NS_IMETHODIMP nsWebBrowserPersist::SaveURI(
     rv = GetValidURIFromObject(aFile, getter_AddRefs(fileAsURI));
     NS_ENSURE_SUCCESS(rv, NS_ERROR_INVALID_ARG);
 
-    return SaveURIInternal(aURI, aPostData, fileAsURI, PR_FALSE);
+    return SaveURIInternal(aURI, aCacheKey, aReferrer, aPostData, aExtraHeaders, fileAsURI, PR_FALSE);
 }
-
 
 /* void saveDocument (in nsIDOMDocument aDocument, in nsIURI aFileURI,
    in nsIURI aDataPathURI, in string aOutputContentType,
@@ -1070,7 +1074,9 @@ nsresult nsWebBrowserPersist::AppendPathToURI(nsIURI *aURI, const nsAString & aP
 }
 
 nsresult nsWebBrowserPersist::SaveURIInternal(
-    nsIURI *aURI, nsIInputStream *aPostData, nsIURI *aFile, PRBool aCalcFileExt)
+    nsIURI *aURI, nsISupports *aCacheKey, nsIURI *aReferrer,
+    nsIInputStream *aPostData, const char *aExtraHeaders,
+    nsIURI *aFile, PRBool aCalcFileExt)
 {
     NS_ENSURE_ARG_POINTER(aURI);
     NS_ENSURE_ARG_POINTER(aFile);
@@ -1087,6 +1093,34 @@ nsresult nsWebBrowserPersist::SaveURIInternal(
     else if (mPersistFlags & PERSIST_FLAGS_FROM_CACHE)
     {
         loadFlags |= nsIRequest::LOAD_FROM_CACHE;
+    }
+
+    // Extract the cache key
+    nsCOMPtr<nsISupports> cacheKey;
+    if (aCacheKey)
+    {
+        // Test if the cache key is actually a web page descriptor (docshell)
+        nsCOMPtr<nsIWebPageDescriptor> webPageDescriptor = do_QueryInterface(aCacheKey);
+        if (webPageDescriptor)
+        {
+            nsCOMPtr<nsISupports> currentDescriptor;
+            webPageDescriptor->GetCurrentDescriptor(getter_AddRefs(currentDescriptor));
+            if (currentDescriptor)
+            {
+                // Descriptor is actually a session history entry
+                nsCOMPtr<nsISHEntry> shEntry = do_QueryInterface(currentDescriptor);
+                NS_ASSERTION(shEntry, "The descriptor is meant to be a session history entry");
+                if (shEntry)
+                {
+                    shEntry->GetCacheKey(getter_AddRefs(cacheKey));
+                }
+            }
+        }
+        else
+        {
+            // Assume a plain cache key
+            cacheKey = aCacheKey;
+        }
     }
 
     // Open a channel to the URI
@@ -1111,11 +1145,18 @@ nsresult nsWebBrowserPersist::SaveURIInternal(
         }
     }
 
-    // Post data
-    if (aPostData)
+    // Set the referrer, post data and headers if any
+    nsCOMPtr<nsIHttpChannel> httpChannel(do_QueryInterface(inputChannel));
+    if (httpChannel)
     {
-        nsCOMPtr<nsIHttpChannel> httpChannel(do_QueryInterface(inputChannel));
-        if (httpChannel)
+        // Referrer
+        if (aReferrer)
+        {
+            httpChannel->SetReferrer(aReferrer);
+        }
+
+        // Post data
+        if (aPostData)
         {
             nsCOMPtr<nsISeekableStream> stream(do_QueryInterface(aPostData));
             if (stream)
@@ -1126,6 +1167,48 @@ nsresult nsWebBrowserPersist::SaveURIInternal(
                 NS_ASSERTION(uploadChannel, "http must support nsIUploadChannel");
                 // Attach the postdata to the http channel
                 uploadChannel->SetUploadStream(aPostData, NS_LITERAL_CSTRING(""), -1);
+            }
+        }
+
+        // Cache key
+        nsCOMPtr<nsICachingChannel> cacheChannel(do_QueryInterface(httpChannel));
+        if (cacheChannel && cacheKey)
+        {
+            cacheChannel->SetCacheKey(cacheKey);
+        }
+
+        // Headers
+        if (aExtraHeaders)
+        {
+            nsCAutoString oneHeader;
+            nsCAutoString headerName;
+            nsCAutoString headerValue;
+            PRInt32 crlf = 0;
+            PRInt32 colon = 0;
+            const char *kWhitespace = "\b\t\r\n ";
+            nsCAutoString extraHeaders(aExtraHeaders);
+            while (PR_TRUE)
+            {
+                crlf = extraHeaders.Find("\r\n", PR_TRUE);
+                if (crlf == -1)
+                    break;
+                extraHeaders.Mid(oneHeader, 0, crlf);
+                extraHeaders.Cut(0, crlf + 2);
+                colon = oneHeader.Find(":");
+                if (colon == -1)
+                    break; // Should have a colon
+                oneHeader.Left(headerName, colon);
+                colon++;
+                oneHeader.Mid(headerValue, colon, oneHeader.Length() - colon);
+                headerName.Trim(kWhitespace);
+                headerValue.Trim(kWhitespace);
+                // Add the header (merging if required)
+                rv = httpChannel->SetRequestHeader(headerName, headerValue, PR_TRUE);
+                if (NS_FAILED(rv))
+                {
+                    EndDownload(NS_ERROR_FAILURE);
+                    return NS_ERROR_FAILURE;
+                }
             }
         }
     }
@@ -2117,7 +2200,7 @@ nsWebBrowserPersist::EnumPersistURIs(nsHashKey *aKey, void *aData, void* closure
     rv = pthis->AppendPathToURI(fileAsURI, data->mFilename);
     NS_ENSURE_SUCCESS(rv, PR_FALSE);
 
-    rv = pthis->SaveURIInternal(uri, nsnull, fileAsURI, PR_TRUE);
+    rv = pthis->SaveURIInternal(uri, nsnull, nsnull, nsnull, nsnull, fileAsURI, PR_TRUE);
 
     // Store the actual object because once it's persisted this
     // will be fixed up with the right file extension.
