@@ -30,9 +30,9 @@
 *
 *  myArray[0].toLocaleString()  +  ','  +  myArray[1].toLocaleString()  +  etc.
 *
-* In this testcase, toLocaleString() is defined locally as a property of each array
-* element, thus is the function that gets invoked. This function increments a
-* global variable by one. The end-value of this variable should be myArray.length.
+* In this testcase toLocaleString is a user-defined property of each array element;
+* therefore it is the function that should be invoked. This function increments a
+* global variable. Therefore the end value of this variable should be myArray.length.
 */
 //-------------------------------------------------------------------------------------------------
 var bug = 56883;
@@ -46,7 +46,7 @@ var myArray = [obj, obj, obj];
 
 myArray.toLocaleString();
 actual = n;
-expect = myArray.length;
+expect = 3; // (see explanation above)
 
 
 //-------------------------------------------------------------------------------------------------
