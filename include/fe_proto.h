@@ -533,6 +533,10 @@ BOOL   FE_FileType(char * path,
 			(*context->funcs->SetFormElementToggle)(context, form_element,toggle)
 #define FE_FreeEmbedElement(context, data) \
 			(*context->funcs->FreeEmbedElement)(context, data)
+#ifdef SHACK
+#define FE_FreeBuiltinElement(context, data) \
+                        (*context->funcs->FreeBuiltinElement)(context, data)
+#endif
 #define FE_CreateEmbedWindow(context, data) \
             (*context->funcs->CreateEmbedWindow)(context, data)
 #define FE_SaveEmbedWindow(context, data) \
@@ -566,6 +570,10 @@ BOOL   FE_FileType(char * path,
 			(*context->funcs->DisplayText)(context, iLocation, text, need_bg)
 #define FE_DisplayEmbed(context, iLocation , embed_struct) \
 			(*context->funcs->DisplayEmbed)(context, iLocation ,embed_struct)
+#ifdef SHACK
+#define FE_DisplayBuiltin(context, iLocation , builtin_struct) \
+                        (*context->funcs->DisplayBuiltin)(context, iLocation ,builtin_struct)
+#endif
 #define FE_DisplayJavaApp(context, iLocation , java_struct) \
 			(*context->funcs->DisplayJavaApp)(context, iLocation ,java_struct)
 #define FE_DisplayEdge(context, iLocation ,edge_struct) \
@@ -710,6 +718,9 @@ void            FE_GetFormElementValue(MWContext * context, LO_FormElementStruct
 void            FE_ResetFormElement(MWContext * context, LO_FormElementStruct * form_element);
 void            FE_SetFormElementToggle(MWContext * context, LO_FormElementStruct * form_element, Bool toggle);
 void            FE_FreeEmbedElement(MWContext *context, LO_EmbedStruct *);
+#ifdef SHACK
+void            FE_FreeBuiltinElement(MWContext *context, LO_BuiltinStruct *);
+#endif
 void            FE_FreeJavaAppElement(MWContext *context, struct LJAppletData *appletData);
 void            FE_HideJavaAppElement(MWContext *context, void*);
 void            FE_FreeEdgeElement(MWContext *context, LO_EdgeStruct *);
@@ -730,6 +741,9 @@ void            FE_SetBackgroundColor(MWContext *context, uint8 red, uint8 green
 extern void FE_DisplaySubtext(MWContext * context, int iLocation, LO_TextStruct *text, int32 start_pos, int32 end_pos, Bool need_bg);
 extern void FE_DisplayText(MWContext * context, int iLocation, LO_TextStruct *text, Bool need_bg);
 void        FE_DisplayEmbed(MWContext * context, int iLocation ,LO_EmbedStruct *embed_struct);
+#ifdef SHACK
+void        FE_DisplayBuiltin(MWContext * context, int iLocation ,LO_BuiltinStruct *builtin_struct);
+#endif
 void        FE_DisplayJavaApp(MWContext * context, int iLocation ,LO_JavaAppStruct *java_struct);
 void        FE_DisplayEdge(MWContext * context, int iLocation ,LO_EdgeStruct *edge_struct);
 void        FE_DisplayTable(MWContext * context, int iLocation ,LO_TableStruct *table_struct);
