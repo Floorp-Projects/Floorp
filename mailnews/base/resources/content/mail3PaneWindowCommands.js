@@ -265,7 +265,6 @@ var DefaultController =
       case "cmd_synchronizeOffline":
       case "cmd_close":
       case "cmd_selectThread":
-      case "cmd_selectFlagged":
 				return true;
 
       case "cmd_watchThread":
@@ -421,9 +420,6 @@ var DefaultController =
         return IsAccountOfflineEnabled();       
       case "cmd_settingsOffline":
         return (MailAreaHasFocus() && IsAccountOfflineEnabled());
-      case "cmd_selectFlagged":
-        // disable select flagged until I finish the code in nsMsgDBView.cpp
-        return false;
       default:
         return false;
     }
@@ -633,9 +629,6 @@ var DefaultController =
                 break;
             case "cmd_selectThread":
                 gDBView.doCommand(nsMsgViewCommandType.selectThread);
-                break;
-            case "cmd_selectFlagged":
-                gDBView.doCommand(nsMsgViewCommandType.selectFlagged);
                 break;
 		}
 	},

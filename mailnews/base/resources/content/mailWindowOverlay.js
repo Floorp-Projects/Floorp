@@ -1331,7 +1331,6 @@ function MsgSynchronize() {}
 function MsgGetSelectedMsg() {}
 function MsgGetFlaggedMsg() {}
 function MsgSelectThread() {}
-function MsgSelectFlaggedMsg() {}
 function MsgShowFolders(){}
 function MsgShowLocationbar() {}
 function MsgViewAttachInline() {}
