@@ -1,12 +1,12 @@
 /*
 	TODO:
-	
+
 		* Add semantic feedback to lexer for:
 		    * JS 1.x regexps
 			* Capturing blocks that have syntax errors
 		* Add semicolon abbreviation
 		* Ensure that optional function parameters do not precede required function parameters
-*/		
+*/
 
 {
 import java.io.*;
@@ -87,7 +87,7 @@ simple_expression returns [ExpressionNode e]
 	|	"this"      { e = new JSValue("object", "this"); }
 	|	"super"     { e = new JSValue("object", "super"); }
 	|	e = qualified_identifier_or_parenthesized_expression
-	|	REGEXP
+	|	opR:REGEXP  { e = new JSValue("regexp", opR.getText()); }
 	|	e = array_literal
 	;
 
@@ -104,15 +104,15 @@ function_expression returns [ExpressionNode e]
 // ********* Object Literals **********
 object_literal returns [ExpressionNode e]
     { e = null; }
-	:	"{" (field_list)? "}" ;
+	:	"{" (e = field_list)? "}" ;
 
 field_list returns [ExpressionNode e]
-    { e = null; }
-	:	literal_field ("," literal_field)* ;
+    { e = null; ExpressionNode e2 = null; }
+	:	e = literal_field ("," e2 = literal_field  { e = new BinaryNode(",", e, e2); } )* ;
 
 literal_field returns [ExpressionNode e]
-    { e = null; }
-	:	qualified_identifier ":" assignment_expression[false, true]
+    { e = null; ExpressionNode e2 = null; }
+	:	e = qualified_identifier ":" e = assignment_expression[false, true] { e = new BinaryNode(":", e, e2); }
 	;
 
 // ********* Array Literals **********
@@ -124,7 +124,8 @@ element_list
 	:	literal_element ("," literal_element)* ;
 
 literal_element
-	:	assignment_expression[false, true] ;
+    { ExpressionNode e = null; }
+	:	e = assignment_expression[false, true] ;
 
 // ********* Postfix Unary Operators **********
 postfix_expression[boolean initial] returns [ExpressionNode e]
@@ -145,9 +146,9 @@ new_expression returns [ExpressionNode e]
     { e = null; }
 	:	"new"
 		(
-			new_expression
+			e = new_expression
 		|	(
-				primary_expression[false]
+				e = primary_expression[false]
 				(
 					// There's an ambiguity here:
 					//  Consider the input 'new f.x'.  Is that equivalent to '(new f).x' or 'new (f.x)' ?
@@ -156,7 +157,7 @@ new_expression returns [ExpressionNode e]
 					options {
                     	warnWhenFollowAmbig=false;
                     }
-				:	member_operator
+				:	e = member_operator
 				)*
 			)
 		)
@@ -169,7 +170,7 @@ new_expression returns [ExpressionNode e]
 			options {
                	warnWhenFollowAmbig=false;
             }
-		:	arguments
+		:	e = arguments
 		)*
 	;
 
@@ -182,11 +183,11 @@ member_operator returns [ExpressionNode e]
 
 arguments returns [ExpressionNode e]
     { e = null; }
-	:	"(" argument_list ")" ;
+	:	"(" e = argument_list ")" ;
 
 argument_list returns [ExpressionNode e]
-    { e = null; }
-	:	(assignment_expression[false, true] ("," assignment_expression[false, true])*)? ;
+    { e = null; ExpressionNode e2 = null; }
+	:	(e = assignment_expression[false, true] (","  e2 = assignment_expression[false, true] { e = new BinaryNode(",", e, e2); } )*)? ;
 
 // ********* Prefix Unary Operators **********
 unary_expression[boolean initial] returns [ExpressionNode e]
@@ -302,7 +303,7 @@ logical_or_expression[boolean initial, boolean allowIn] returns [ExpressionNode 
 
 // ********* Conditional Operators **********
 conditional_expression[boolean initial, boolean allowIn] returns [ExpressionNode e]
-    { e = null; }
+    { e = null; ExpressionNode e1 = null; ExpressionNode e2 = null; }
 	:	e = logical_or_expression[initial, allowIn]
 		// There's an ambiguity here:
 		//  Consider the input 'a ? b : c ? d : e'.  Is that equivalent to '(a ? b : c) ? d : e' or
@@ -311,12 +312,15 @@ conditional_expression[boolean initial, boolean allowIn] returns [ExpressionNode
 		//  soon as possible and quell the resultant warning.
 		(
 			options {warnWhenFollowAmbig=false;}
-		:	"?" assignment_expression[false, allowIn] ":" assignment_expression[false, allowIn]
+		:	"?" e1 = assignment_expression[false, allowIn] ":" e2 = assignment_expression[false, allowIn]
+    		{
+    		    e = new BinaryNode("?", e, new BinaryNode(":", e1, e2));
+    		}
 		)*
 	;
 
 non_assignment_expression[boolean initial, boolean allowIn] returns [ExpressionNode e]
-    { e = null; }
+    { e = null; ExpressionNode e1 = null; ExpressionNode e2 = null; }
 	:	e = logical_or_expression[initial, allowIn]
 		// There's an ambiguity here:
 		//  Consider the input 'a ? b : c ? d : e'.  Is that equivalent to '(a ? b : c) ? d : e' or
@@ -327,7 +331,10 @@ non_assignment_expression[boolean initial, boolean allowIn] returns [ExpressionN
 			options {
            		warnWhenFollowAmbig=false;
             }
-		:	"?" non_assignment_expression[false, allowIn] ":" non_assignment_expression[false, allowIn]
+		:	"?" e1 = non_assignment_expression[false, allowIn] ":" e2 = non_assignment_expression[false, allowIn]
+    		{
+    		    e = new BinaryNode("?", e, new BinaryNode(":", e1, e2));
+    		}
 		)*
 	;
 
@@ -365,12 +372,14 @@ expression[boolean initial, boolean allowIn] returns [ExpressionNode e]
 	;
 
 optional_expression
-	:	(expression[false, true])?
+    { ExpressionNode e = null; }
+	:	( e = expression[false, true])?
 	;
 
 // ********* Type Expressions **********
 type_expression[boolean initial, boolean allowIn]
-	:	non_assignment_expression[initial, allowIn]
+    { ExpressionNode e = null; }
+	:	e = non_assignment_expression[initial, allowIn]
 	;
 
 // ********* Statements **********
@@ -383,19 +392,19 @@ statement[int scope, boolean non_empty, ControlNodeGroup prev] returns [ControlN
 
 code_statement[boolean non_empty, ControlNodeGroup prev] returns [ControlNodeGroup c]
     { c = null; }
-	:	empty_statement[non_empty]
-	|	(identifier ":") => labeled_statement[non_empty, prev]
+	:	c = empty_statement[non_empty]
+	|	(identifier ":") => c = labeled_statement[non_empty, prev]
 
 // Bogus predicate required to eliminate ANTLR nondeterminism warning
 // on lookahead of '{' between expression_statement and block, even
 // though the symantic predicate in the primary_expression rule disambiguates
 // the two.
 	|	{true}? c = expression_statement[prev] semicolon
-	|	(identifier ":") => labeled_statement[non_empty, prev]
-	|	block[BlockScope]
+	|	(identifier ":") => c = labeled_statement[non_empty, prev]
+	|	c = block[BlockScope]
 	|	c = if_statement[non_empty, prev]
 	|	switch_statement
-	|	do_statement semicolon
+	|	c = do_statement[prev] semicolon
 	|	c = while_statement[non_empty, prev]
 	|	for_statement[non_empty]
 	|	with_statement[non_empty]
@@ -414,7 +423,7 @@ semicolon
 
 // ********* Empty Statement **********
 // FIXME
-empty_statement[boolean non_empty]returns [ControlNode c]
+empty_statement[boolean non_empty]returns [ControlNodeGroup c]
     { c = null; }
 	:	";"
 	;
@@ -452,8 +461,9 @@ statements[int scope] returns [ControlNodeGroup c]
 	;
 
 // ********* Labeled Statements **********
-labeled_statement[boolean non_empty, ControlNodeGroup prev]
-	:	identifier ":" code_statement[non_empty, prev]
+labeled_statement[boolean non_empty, ControlNodeGroup prev] returns [ControlNodeGroup c]
+    { c = null; ExpressionNode e = null; }
+	:	e = identifier ":" c = code_statement[non_empty, prev]
 	;
 
 if_statement[boolean non_empty, ControlNodeGroup prev] returns [ControlNodeGroup c]
@@ -483,7 +493,8 @@ if_statement[boolean non_empty, ControlNodeGroup prev] returns [ControlNodeGroup
 
 // ********* Switch statement **********
 switch_statement
-	:	"switch" parenthesized_expression "{" (case_groups)? "}"
+    { ExpressionNode e = null; }
+	:	"switch" e = parenthesized_expression "{" (case_groups)? "}"
 	;
 
 case_groups
@@ -491,67 +502,97 @@ case_groups
 	;
 
 case_group
-	:	(case_guard)+ (code_statement[true, null])+
+    { ControlNodeGroup c = null; }
+	:	(case_guard)+ (c = code_statement[true, null])+
 	;
 
 case_guard
-	:	"case" expression[false, true] ":"
+    { ExpressionNode e = null; }
+	:	"case" e = expression[false, true] ":"
 	|	"default" ":"
 	;
 
 // FIXME
 case_statements
-	:	(code_statement[false, null])+
+    { ControlNodeGroup c = null; }
+	:	(c = code_statement[false, null])+
 	;
 
 // ********* Do-While statement **********
-do_statement
-	:	"do" code_statement[true, null] "while" parenthesized_expression
+do_statement[ControlNodeGroup prev] returns [ControlNodeGroup c]
+    { c = null; ConditionalNode t = null; ExpressionNode e = null; }
+	:	"do" c = code_statement[true, null] "while" e = parenthesized_expression
+	{
+	    t = new ConditionalNode(e, c.getHead());
+	    if (prev != null) {
+            prev.fixTails(c.getHead());
+            c.setHead(prev.getHead());
+        }
+        c.fixTails(t);
+        c.addTail(t);
+	}
 	;
 
 // ********* While statement **********
 while_statement[boolean non_empty, ControlNodeGroup prev] returns [ControlNodeGroup c]
-    { c = null; }
-	:	"while" parenthesized_expression code_statement[non_empty, null]
+    { c = null; ConditionalNode t = null; ExpressionNode e = null; }
+	:	"while" e = parenthesized_expression c = code_statement[non_empty, null]
+	    {
+	        t = new ConditionalNode(e, c.getHead());
+            if (prev != null) {
+                prev.fixTails(t);
+                c.setHead(prev.getHead());
+            }
+            else
+                c.setHead(t);
+            c.fixTails(t);
+            c.addTail(t);
+	    }
 	;
 
 // ********* For statement **********
 for_statement[boolean non_empty]
+    { ExpressionNode e = null; ControlNodeGroup c = null; }
 	:	"for" "("
 		(
 			(for_initializer ";") => for_initializer ";" optional_expression ";" optional_expression
-		|	for_in_binding "in" expression[false, true]
+		|	for_in_binding "in" e = expression[false, true]
 		)
 		")"
-		code_statement[non_empty, null]
+		c = code_statement[non_empty, null]
 	;
 
 for_initializer
+    { ExpressionNode e = null; }
 	:	(
-			expression[false, true]
+			e = expression[false, true]
 		|	("var" | "const") variable_binding_list[false]
 		)?
 	;
 
 for_in_binding
+    { ExpressionNode e = null; }
 	:	(
-			postfix_expression[false]
+			e = postfix_expression[false]
 		|	("var" | "const") variable_binding_list[false]
 		)
 	;
 
 // ********* With statement **********
 with_statement[boolean non_empty]
-	:	"with" parenthesized_expression code_statement[non_empty, null]
+    { ExpressionNode e = null; ControlNodeGroup c = null; }
+	:	"with" e = parenthesized_expression c = code_statement[non_empty, null]
 	;
 
 // ********* Continue and Break statement **********
 continue_statement
-	:	"continue" (identifier)?
+    { ExpressionNode e = null; }
+	:	"continue" (e = identifier)?
 	;
 
 break_statement
-	:	"break" (identifier)?
+    { ExpressionNode e = null; }
+	:	"break" (e = identifier)?
 	;
 
 // ********* Return statement **********
@@ -561,24 +602,28 @@ return_statement
 
 // ********* Throw statement **********
 throw_statement
-	:	"throw" expression[false, true]
+    { ExpressionNode e = null; }
+	:	"throw" e = expression[false, true]
 	;
 
 // ********* Try statement **********
 try_statement
-	:	"try"	block[BlockScope] (catch_clause)* ("finally" block[BlockScope])?
+    { ControlNodeGroup c = null; }
+	:	"try"	c = block[BlockScope] (catch_clause)* ("finally" c = block[BlockScope])?
 	;
 
 catch_clause
-	:	"catch"	"(" typed_identifier[true] ")" block[BlockScope]
+    { ControlNodeGroup c = null; }
+	:	"catch"	"(" typed_identifier[true] ")" c = block[BlockScope]
 	;
 
 // ********* Import statement **********
 import_statement[boolean non_empty]
+    { ControlNodeGroup c = null; }
 	:	"import" import_list
 		(
 			";"
-		|	block[BlockScope] ("else" code_statement[non_empty, null])
+		|	c = block[BlockScope] ("else" c = code_statement[non_empty, null])
 		)
 	;
 
@@ -587,13 +632,15 @@ import_list
 	;
 
 import_item
-	:	(identifier "=") => identifier "=" import_source
+    { ExpressionNode e = null; }
+	:	(identifier "=") => e = identifier "=" import_source
 	|	import_source
-	|	"protected" identifier "=" import_source
+	|	"protected" e = identifier "=" import_source
 	;
 
 import_source
-	:	non_assignment_expression[false, false] (":" Version)
+    { ExpressionNode e = null; }
+	:	e = non_assignment_expression[false, false] (":" Version)
 	;
 
 // ********* Definitions **********
@@ -603,20 +650,22 @@ definition[int scope]
 	;
 
 global_definition
+    { ExpressionNode e = null; }
 	:	version_definition semicolon
 	|	variable_definition semicolon
 
 	// Syntactic predicate is required to disambiguate between getter/setter methods
 	// and getter/setter functions
-	|	("traditional" | "function" | (("getter" | "setter") "function")) => function_definition
+	|	("traditional" | "function" | (("getter" | "setter") "function")) => e = function_definition
 	|	member_definition
 	|	class_definition
 	;
 
 local_definition[int scope]
+    { ExpressionNode e = null; }
 	:	{scope == TopLevelScope || scope == ClassScope}? (class_definition | member_definition)
 	|	variable_definition semicolon
-	|	function_definition
+	|	e = function_definition
 	;
 
 // ********* Visibility Specifications **********
@@ -634,7 +683,8 @@ versions_and_renames:
 	;
 
 version_range_and_alias
-	:	version_range (":" identifier)
+    { ExpressionNode e = null; }
+	:	version_range (":" e = identifier)
 	;
 
 version_range
@@ -666,38 +716,43 @@ variable_binding_list[boolean allowIn]
 	;
 
 variable_binding[boolean allowIn]
-	:	typed_identifier[allowIn] ("=" assignment_expression[false, allowIn])?
+    { ExpressionNode e = null; }
+	:	typed_identifier[allowIn] ("=" e = assignment_expression[false, allowIn])?
 	;
 
 typed_identifier[boolean allowIn]
-	:	(type_expression[false, allowIn] identifier) => type_expression[false, allowIn] identifier
-	|	identifier
+    { ExpressionNode e = null; }
+	:	(type_expression[false, allowIn] identifier) => type_expression[false, allowIn] e = identifier
+	|	e = identifier
 	;
 
 // ********* Function Definition **********
-function_definition
-	:	named_function
-	|	"getter" named_function
-	|	"setter" named_function
+function_definition returns [ExpressionNode e]
+    { e = null; }
+	:	e = named_function
+	|	"getter" e = named_function
+	|	"setter" e = named_function
 	|	traditional_function
 	;
 
-anonymous_function
-	:	function[false]
+anonymous_function returns [ExpressionNode e]
+    { e = null; }
+	:	e = function[false]
 	;
 
-named_function
-	:	function[true]
+named_function returns [ExpressionNode e]
+    { e = null; }
+	:	e = function[true]
 	;
 
 function[boolean nameRequired] returns [ExpressionNode e]
-    { e = null; }
+    { e = null; ControlNodeGroup c = null; }
 	:	"function"
 		(
-			{nameRequired}? identifier
-		|	identifier
+			{nameRequired}? e = identifier
+		|	e = identifier
 		)
-		function_signature block[BlockScope]
+		function_signature c = block[BlockScope]
 	;
 
 function_signature
@@ -714,11 +769,13 @@ parameters
 
 // FIXME - Required parameters cannot follow optional parameters
 parameter
-	:	typed_identifier[true] ("=" (assignment_expression[false, true])? )?
+    { ExpressionNode e = null; }
+	:	typed_identifier[true] ("=" (e = assignment_expression[false, true])? )?
 	;
 
 rest_parameter
-	:	"..." (identifier)?
+    { ExpressionNode e = null; }
+	:	"..." (e = identifier)?
 	;
 
 
@@ -734,11 +791,13 @@ result_signature
 	;
 
 traditional_function
-	: "traditional" "function" identifier "(" traditional_parameter_list ")" block[BlockScope]
+    { ExpressionNode e = null; ControlNodeGroup c = null; }
+	: "traditional" "function" e = identifier "(" traditional_parameter_list ")" c = block[BlockScope]
 	;
 
 traditional_parameter_list
-	:	(identifier ("," identifier)* )?
+    { ExpressionNode e = null; ExpressionNode e2 = null; }
+    :	(e = identifier ("," e2 = identifier { e = new BinaryNode(",", e, e2); } )* )?
 	;
 
 // ********* Class Member Definitions **********
@@ -753,7 +812,8 @@ field_definition
 	;
 
 method_definition
-	:	method_prefix identifier function_signature (block[BlockScope] | semicolon)
+    { ExpressionNode e = null; ControlNodeGroup c = null; }
+	:	method_prefix e = identifier function_signature (c = block[BlockScope] | semicolon)
 	;
 
 method_prefix
@@ -761,23 +821,26 @@ method_prefix
 	;
 
 constructor_definition
-	:	"constructor" ("new" | identifier) parameter_signature block[BlockScope]
+    { ExpressionNode e = null; ControlNodeGroup c = null; }
+	:	"constructor" ("new" | e = identifier) parameter_signature c = block[BlockScope]
 	;
 
 // ********* Class Definition **********
 class_definition
+    { ExpressionNode e = null; ControlNodeGroup c = null; }
 	:	"class"
 		(
 			"extends" type_expression[true, true]
-		|	identifier ("extends" type_expression[true, true])?
+		|	e = identifier ("extends" type_expression[true, true])?
 		)
-		block[ClassScope]
+		c = block[ClassScope]
 	;
 
 // ********* Programs **********
 // Start symbol for JS programs
-program
-	:	statements[TopLevelScope]
+program returns [ControlNodeGroup c]
+    { c = null; }
+	:	c = statements[TopLevelScope]
 	;
 
 // ************************************************************************************************
