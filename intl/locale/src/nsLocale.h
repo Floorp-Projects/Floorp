@@ -18,6 +18,19 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *
+ *
+ * This Original Code has been modified by IBM Corporation.
+ * Modifications made by IBM described herein are
+ * Copyright (c) International Business Machines
+ * Corporation, 2000
+ *
+ * Modifications to Mozilla code or documentation
+ * identified per MPL Section 3.3
+ *
+ * Date         Modified by     Description of modification
+ * 03/27/2000   IBM Corp.       Added PR_CALLBACK for Optlink
+ *                               use in OS2
  */
 #ifndef nsLocale_h__
 #define nsLocale_h__
@@ -46,10 +59,10 @@ protected:
 	
 	NS_IMETHOD AddCategory(const PRUnichar* category, const PRUnichar* value);
 
-	static PLHashNumber Hash_HashFunction(const void* key);
-	static PRIntn Hash_CompareNSString(const void* s1, const void* s2);
-	static PRIntn Hash_EnmerateDelete(PLHashEntry *he, PRIntn hashIndex, void *arg);
-	static PRIntn Hash_EnumerateCopy(PLHashEntry *he, PRIntn hashIndex, void *arg);
+	static PLHashNumber PR_CALLBACK Hash_HashFunction(const void* key);
+	static PRIntn PR_CALLBACK Hash_CompareNSString(const void* s1, const void* s2);
+	static PRIntn PR_CALLBACK Hash_EnmerateDelete(PLHashEntry *he, PRIntn hashIndex, void *arg);
+	static PRIntn PR_CALLBACK Hash_EnumerateCopy(PLHashEntry *he, PRIntn hashIndex, void *arg);
 
 	PLHashTable*	fHashtable;
 	PRUint32		fCategoryCount;
