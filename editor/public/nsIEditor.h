@@ -37,7 +37,7 @@ class nsIPresShell;
 class nsIDOMNode;
 class nsIDOMElement;
 class nsIDOMDocument;
-class nsIDOMSelection;
+class nsISelection;
 class nsITransaction;
 class nsITransactionManager;
 class nsIOutputStream;
@@ -47,6 +47,7 @@ class nsIDocumentStateListener;
 class nsFileSpec;
 class nsISelectionController;
 class nsIContent;
+class nsIDOMEvent;
 
 class nsIEditor  : public nsISupports
 {
@@ -122,7 +123,7 @@ public:
    * (or most recently had focus.)
    * @param aSelection [OUT] the dom interface for the selection
    */
-  NS_IMETHOD GetSelection(nsIDOMSelection **aSelection)=0;
+  NS_IMETHOD GetSelection(nsISelection **aSelection)=0;
 
 
   /* ------------ Selected content removal -------------- */

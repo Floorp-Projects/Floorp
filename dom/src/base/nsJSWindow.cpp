@@ -40,7 +40,6 @@
 #include "nsIDOMDocumentView.h"
 #include "nsIDOMCSSStyleDeclaration.h"
 #include "nsIDOMDocument.h"
-#include "nsIDOMSelection.h"
 #include "nsIDOMBarProp.h"
 #include "nsIDOMAbstractView.h"
 #include "nsIDOMScreen.h"
@@ -53,6 +52,7 @@
 #include "nsISidebar.h"
 #include "nsIDOMPkcs11.h"
 #include "nsIDOMViewCSS.h"
+#include "nsISelection.h"
 #include "nsIDOMCrypto.h"
 #include "nsIDOMWindow.h"
 #include "nsIControllers.h"
@@ -68,7 +68,6 @@ static NS_DEFINE_IID(kIElementIID, NS_IDOMELEMENT_IID);
 static NS_DEFINE_IID(kIDocumentViewIID, NS_IDOMDOCUMENTVIEW_IID);
 static NS_DEFINE_IID(kICSSStyleDeclarationIID, NS_IDOMCSSSTYLEDECLARATION_IID);
 static NS_DEFINE_IID(kIDocumentIID, NS_IDOMDOCUMENT_IID);
-static NS_DEFINE_IID(kISelectionIID, NS_IDOMSELECTION_IID);
 static NS_DEFINE_IID(kIBarPropIID, NS_IDOMBARPROP_IID);
 static NS_DEFINE_IID(kIAbstractViewIID, NS_IDOMABSTRACTVIEW_IID);
 static NS_DEFINE_IID(kIScreenIID, NS_IDOMSCREEN_IID);
@@ -81,6 +80,7 @@ static NS_DEFINE_IID(kIEventTargetIID, NS_IDOMEVENTTARGET_IID);
 static NS_DEFINE_IID(kISidebarIID, NS_ISIDEBAR_IID);
 static NS_DEFINE_IID(kIPkcs11IID, NS_IDOMPKCS11_IID);
 static NS_DEFINE_IID(kIViewCSSIID, NS_IDOMVIEWCSS_IID);
+static NS_DEFINE_IID(kISelectionIID, NS_ISELECTION_IID);
 static NS_DEFINE_IID(kICryptoIID, NS_IDOMCRYPTO_IID);
 static NS_DEFINE_IID(kIWindowIID, NS_IDOMWINDOW_IID);
 static NS_DEFINE_IID(kIControllersIID, NS_ICONTROLLERS_IID);
@@ -2727,6 +2727,43 @@ WindowScrollBy(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rva
 
 
 //
+// Native method GetSelection
+//
+PR_STATIC_CALLBACK(JSBool)
+WindowGetSelection(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
+{
+  nsIDOMWindow *nativeThis = (nsIDOMWindow*)nsJSUtils::nsGetNativeThis(cx, obj);
+  nsresult result = NS_OK;
+  nsISelection* nativeRet;
+  // If there's no private data, this must be the prototype, so ignore
+  if (nsnull == nativeThis) {
+    return JS_TRUE;
+  }
+
+  {
+    *rval = JSVAL_NULL;
+    nsIScriptSecurityManager *secMan = nsJSUtils::nsGetSecurityManager(cx, obj);
+    if (!secMan)
+        return PR_FALSE;
+    result = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_WINDOW_GETSELECTION, PR_FALSE);
+    if (NS_FAILED(result)) {
+      return nsJSUtils::nsReportError(cx, obj, result);
+    }
+
+    result = nativeThis->GetSelection(&nativeRet);
+    if (NS_FAILED(result)) {
+      return nsJSUtils::nsReportError(cx, obj, result);
+    }
+
+    // n.b., this will release nativeRet
+    nsJSUtils::nsConvertXPCObjectToJSVal(nativeRet, NS_GET_IID(nsISelection), cx, obj, rval);
+  }
+
+  return JS_TRUE;
+}
+
+
+//
 // Native method ScrollByLines
 //
 PR_STATIC_CALLBACK(JSBool)
@@ -2806,42 +2843,6 @@ WindowScrollByPages(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval
     }
 
     *rval = JSVAL_VOID;
-  }
-
-  return JS_TRUE;
-}
-
-
-//
-// Native method GetSelection
-//
-PR_STATIC_CALLBACK(JSBool)
-WindowGetSelection(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
-{
-  nsIDOMWindow *nativeThis = (nsIDOMWindow*)nsJSUtils::nsGetNativeThis(cx, obj);
-  nsresult result = NS_OK;
-  nsIDOMSelection* nativeRet;
-  // If there's no private data, this must be the prototype, so ignore
-  if (nsnull == nativeThis) {
-    return JS_TRUE;
-  }
-
-  {
-    *rval = JSVAL_NULL;
-    nsIScriptSecurityManager *secMan = nsJSUtils::nsGetSecurityManager(cx, obj);
-    if (!secMan)
-        return PR_FALSE;
-    result = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_WINDOW_GETSELECTION, PR_FALSE);
-    if (NS_FAILED(result)) {
-      return nsJSUtils::nsReportError(cx, obj, result);
-    }
-
-    result = nativeThis->GetSelection(&nativeRet);
-    if (NS_FAILED(result)) {
-      return nsJSUtils::nsReportError(cx, obj, result);
-    }
-
-    nsJSUtils::nsConvertObjectToJSVal(nativeRet, cx, obj, rval);
   }
 
   return JS_TRUE;
@@ -4672,9 +4673,9 @@ static JSFunctionSpec WindowMethods[] =
 {
   {"scrollTo",          WindowScrollTo,     2},
   {"scrollBy",          WindowScrollBy,     2},
+  {"getSelection",          WindowGetSelection,     0},
   {"scrollByLines",          WindowScrollByLines,     1},
   {"scrollByPages",          WindowScrollByPages,     1},
-  {"getSelection",          WindowGetSelection,     0},
   {"dump",          WindowInternalDump,     1},
   {"alert",          WindowInternalAlert,     0},
   {"confirm",          WindowInternalConfirm,     0},

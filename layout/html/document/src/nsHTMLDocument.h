@@ -145,7 +145,7 @@ public:
   /*
    * Like nsDocument::IsInSelection except it always includes the body node
    */
-  virtual PRBool IsInSelection(nsIDOMSelection* aSelection, const nsIContent *aContent) const;
+  virtual PRBool IsInSelection(nsISelection* aSelection, const nsIContent *aContent) const;
 
   virtual nsresult Reset(nsIChannel* aChannel, nsILoadGroup* aLoadGroup);
 protected:

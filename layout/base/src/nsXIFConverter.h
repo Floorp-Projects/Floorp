@@ -26,7 +26,7 @@
 #include "nsWeakReference.h"
 #include "nsIXIFConverter.h"
 
-class nsIDOMSelection;
+class nsISelection;
 
 class nsXIFConverter :public nsIXIFConverter
 {
@@ -142,9 +142,9 @@ public:
   NS_IMETHOD AppendWithEntityConversion(const nsAReadableString& aName,
                                         nsAWritableString& aOutStr);
 
-  NS_IMETHOD SetSelection(nsIDOMSelection* aSelection);
+  NS_IMETHOD SetSelection(nsISelection* aSelection);
 
-  NS_IMETHOD GetSelection(nsIDOMSelection** aSelection);
+  NS_IMETHOD GetSelection(nsISelection** aSelection);
 //helper
   NS_IMETHOD WriteDebugFile();        // saves to a temp file
 };

@@ -31,7 +31,7 @@
 { 0x558b93cd, 0x95c1, 0x417d, { 0xa6, 0x6e, 0xf9, 0xca, 0x66, 0xdc, 0x98, 0xa8 } }
 
 
-class nsIDOMSelection;
+class nsISelection;
 
 class nsIAutoCopyService : public nsISupports
 {
@@ -39,7 +39,7 @@ public:
   static const nsIID& GetIID() { static nsIID iid = NS_IAUTOCOPYSERVICE_IID; return iid; }
   
   //This will add this service as a selection listener.
-  NS_IMETHOD Listen(nsIDOMSelection *aDomSelection)=0;
+  NS_IMETHOD Listen(nsISelection *aDomSelection)=0;
 
 };
 

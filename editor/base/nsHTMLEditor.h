@@ -298,7 +298,7 @@ public:
   virtual PRBool TagCanContainTag(const nsString &aParentTag, const nsString &aChildTag);
   
   /** make the given selection span the entire document */
-  NS_IMETHOD SelectEntireDocument(nsIDOMSelection *aSelection);
+  NS_IMETHOD SelectEntireDocument(nsISelection *aSelection);
 
   /** join together any afjacent editable text nodes in the range */
   NS_IMETHOD CollapseAdjacentTextNodes(nsIDOMRange *aInRange);
@@ -312,7 +312,7 @@ public:
   /** returns the absolute position of the end points of aSelection
     * in the document as a text stream.
     */
-  nsresult GetTextSelectionOffsets(nsIDOMSelection *aSelection,
+  nsresult GetTextSelectionOffsets(nsISelection *aSelection,
                                    PRInt32 &aStartOffset, 
                                    PRInt32 &aEndOffset);
 
@@ -330,7 +330,7 @@ public:
   // This will stop at a table, however, since we don't want to
   //  "drill down" into nested tables.
   // aSelection is optional -- if null, we get current seletion
-  nsresult CollapseSelectionToDeepestNonTableFirstChild(nsIDOMSelection *aSelection, nsIDOMNode *aNode);
+  nsresult CollapseSelectionToDeepestNonTableFirstChild(nsISelection *aSelection, nsIDOMNode *aNode);
 
   nsresult IsEmptyNode(nsIDOMNode *aNode, PRBool *outIsEmptyBlock, 
                        PRBool aMozBRDoesntCount = PR_FALSE,
@@ -401,7 +401,7 @@ protected:
   // Move all contents from aCellToMerge into aTargetCell (append at end)
   NS_IMETHOD MergeCells(nsCOMPtr<nsIDOMElement> aTargetCell, nsCOMPtr<nsIDOMElement> aCellToMerge, PRBool aDeleteCellToMerge);
 
-  NS_IMETHOD DeleteTable2(nsIDOMElement *aTable, nsIDOMSelection *aSelection);
+  NS_IMETHOD DeleteTable2(nsIDOMElement *aTable, nsISelection *aSelection);
   NS_IMETHOD SetColSpan(nsIDOMElement *aCell, PRInt32 aColSpan);
   NS_IMETHOD SetRowSpan(nsIDOMElement *aCell, PRInt32 aRowSpan);
 
@@ -421,7 +421,7 @@ protected:
   // Input: *aCell is a known cell,
   //        if null, cell is obtained from the anchor node of the selection
   // Returns NS_EDITOR_ELEMENT_NOT_FOUND if cell is not found even if aCell is null
-  NS_IMETHOD GetCellContext(nsIDOMSelection **aSelection,
+  NS_IMETHOD GetCellContext(nsISelection **aSelection,
                             nsIDOMElement   **aTable,
                             nsIDOMElement   **aCell,
                             nsIDOMNode      **aCellParent, PRInt32 *aCellOffset,
@@ -444,7 +444,7 @@ protected:
 
   // Fallback method: Call this after using ClearSelection() and you
   //  failed to set selection to some other content in the document
-  NS_IMETHOD SetSelectionAtDocumentStart(nsIDOMSelection *aSelection);
+  NS_IMETHOD SetSelectionAtDocumentStart(nsISelection *aSelection);
 
 // End of Table Editing utilities
   
@@ -489,7 +489,7 @@ protected:
   void ResetTextSelectionForRange(nsIDOMNode *aParent,
                                   PRInt32     aStartOffset,
                                   PRInt32     aEndOffset,
-                                  nsIDOMSelection *aSelection);
+                                  nsISelection *aSelection);
 
 
   // Methods for handling plaintext quotations

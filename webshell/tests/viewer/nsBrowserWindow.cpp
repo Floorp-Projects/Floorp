@@ -98,7 +98,7 @@
 #include <ctype.h> // tolower
 
 // For Copy
-#include "nsIDOMSelection.h"
+#include "nsISelection.h"
 
 // XXX For font setting below
 #include "nsFont.h"

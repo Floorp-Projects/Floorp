@@ -31,7 +31,7 @@
 #include "nsIXIFConverter.h"
 #include "nsRange.h"
 
-#include "nsIDOMSelection.h"
+#include "nsISelection.h"
 #include "nsIEnumerator.h"
 
 

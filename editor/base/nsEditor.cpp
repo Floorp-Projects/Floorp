@@ -47,7 +47,8 @@
 #include "nsIPresShell.h"
 #include "nsIPresContext.h"
 #include "nsIViewManager.h"
-#include "nsIDOMSelection.h"
+#include "nsISelection.h"
+#include "nsISelectionPrivate.h"
 #include "nsIEnumerator.h"
 #include "nsIAtom.h"
 #include "nsISupportsArray.h"
@@ -160,7 +161,7 @@ nsSelectionState::~nsSelectionState()
 }
 
 nsresult  
-nsSelectionState::SaveSelection(nsIDOMSelection *aSel)
+nsSelectionState::SaveSelection(nsISelection *aSel)
 {
   if (!aSel) return NS_ERROR_NULL_POINTER;
   nsresult res = NS_OK;
@@ -203,7 +204,7 @@ nsSelectionState::SaveSelection(nsIDOMSelection *aSel)
 }
 
 nsresult  
-nsSelectionState::RestoreSelection(nsIDOMSelection *aSel)
+nsSelectionState::RestoreSelection(nsISelection *aSel)
 {
   if (!aSel) return NS_ERROR_NULL_POINTER;
   nsresult res = NS_OK;
@@ -211,7 +212,7 @@ nsSelectionState::RestoreSelection(nsIDOMSelection *aSel)
   nsRangeStore *item;
 
   // clear out selection
-  aSel->ClearSelection();
+  aSel->RemoveAllRanges();
   
   // set the selection ranges anew
   for (i=0; i<arrayCount; i++)
@@ -1086,7 +1087,7 @@ nsEditor::GetSelectionController(nsISelectionController **aSel)
 
 
 NS_IMETHODIMP
-nsEditor::GetSelection(nsIDOMSelection **aSelection)
+nsEditor::GetSelection(nsISelection **aSelection)
 {
   if (!aSelection)
     return NS_ERROR_NULL_POINTER;
@@ -1139,12 +1140,13 @@ nsEditor::Do(nsITransaction *aTxn)
   if (aTxn)
   {  
     // get the selection and start a batch change
-    nsCOMPtr<nsIDOMSelection>selection;
+    nsCOMPtr<nsISelection>selection;
     result = GetSelection(getter_AddRefs(selection));
     if (NS_FAILED(result)) { return result; }
     if (!selection) { return NS_ERROR_NULL_POINTER; }
+    nsCOMPtr<nsISelectionPrivate>selPrivate(do_QueryInterface(selection));
 
-    selection->StartBatchChanges();
+    selPrivate->StartBatchChanges();
     if (mTxnMgr) {
       result = mTxnMgr->Do(aTxn);
     }
@@ -1155,7 +1157,7 @@ nsEditor::Do(nsITransaction *aTxn)
       result = DoAfterDoTransaction(aTxn);
     }
   
-    selection->EndBatchChanges(); // no need to check result here, don't lose result of operation
+    selPrivate->EndBatchChanges(); // no need to check result here, don't lose result of operation
   }
  
   NS_POSTCONDITION((NS_SUCCEEDED(result)), "transaction did not execute properly\n");
@@ -1343,7 +1345,7 @@ nsEditor::BeginPlaceHolderTransaction(nsIAtom *aName)
     BeginUpdateViewBatch();
     mPlaceHolderTxn = nsnull;
     mPlaceHolderName = aName;
-    nsCOMPtr<nsIDOMSelection> selection;
+    nsCOMPtr<nsISelection> selection;
     nsresult res = GetSelection(getter_AddRefs(selection));
     if (NS_FAILED(res)) return res;
     mSelState = new nsSelectionState();
@@ -1410,7 +1412,7 @@ NS_IMETHODIMP nsEditor::SelectAll()
   if (!mDocWeak || !mPresShellWeak) { return NS_ERROR_NOT_INITIALIZED; }
   ForceCompositionEnd();
 
-  nsCOMPtr<nsIDOMSelection> selection;
+  nsCOMPtr<nsISelection> selection;
   nsCOMPtr<nsISelectionController> selCon = do_QueryReferent(mSelConWeak);
   if (!selCon) return NS_ERROR_NOT_INITIALIZED;
   nsresult result = selCon->GetSelection(nsISelectionController::SELECTION_NORMAL, getter_AddRefs(selection));
@@ -1425,7 +1427,7 @@ NS_IMETHODIMP nsEditor::BeginningOfDocument()
 {
   if (!mDocWeak || !mPresShellWeak) { return NS_ERROR_NOT_INITIALIZED; }
 
-  nsCOMPtr<nsIDOMSelection> selection;
+  nsCOMPtr<nsISelection> selection;
   if (!mPresShellWeak) return NS_ERROR_NOT_INITIALIZED;
   nsCOMPtr<nsISelectionController> selCon = do_QueryReferent(mSelConWeak);
   if (!selCon) return NS_ERROR_NOT_INITIALIZED;
@@ -1487,7 +1489,7 @@ nsEditor::EndOfDocument()
   nsresult res; 
   
   // get selection 
-  nsCOMPtr<nsIDOMSelection> selection; 
+  nsCOMPtr<nsISelection> selection; 
   res = GetSelection(getter_AddRefs(selection)); 
   if (NS_FAILED(res)) return res; 
   if (!selection)   return NS_ERROR_NULL_POINTER; 
@@ -2385,7 +2387,7 @@ nsEditor::ArePreservingSelection()
 }
 
 nsresult 
-nsEditor::PreserveSelectionAcrossActions(nsIDOMSelection *aSel)
+nsEditor::PreserveSelectionAcrossActions(nsISelection *aSel)
 {
   mSavedSel.SaveSelection(aSel);
   mRangeUpdater.RegisterSelectionState(mSavedSel);
@@ -2393,7 +2395,7 @@ nsEditor::PreserveSelectionAcrossActions(nsIDOMSelection *aSel)
 }
 
 nsresult 
-nsEditor::RestorePreservedSelection(nsIDOMSelection *aSel)
+nsEditor::RestorePreservedSelection(nsISelection *aSel)
 {
   if (mSavedSel.IsEmpty()) return NS_ERROR_FAILURE;
   mSavedSel.RestoreSelection(aSel);
@@ -2422,7 +2424,7 @@ NS_IMETHODIMP
 nsEditor::QueryComposition(nsTextEventReply* aReply)
 {
   nsresult result;
-  nsCOMPtr<nsIDOMSelection> selection;
+  nsCOMPtr<nsISelection> selection;
   nsCOMPtr<nsISelectionController> selcon = do_QueryReferent(mSelConWeak);
   if (selcon)
     selcon->GetSelection(nsISelectionController::SELECTION_NORMAL, getter_AddRefs(selection));
@@ -2980,7 +2982,7 @@ NS_IMETHODIMP nsEditor::InsertTextIntoTextNodeImpl(const nsString& aStringToInse
 }
 
 
-NS_IMETHODIMP nsEditor::SelectEntireDocument(nsIDOMSelection *aSelection)
+NS_IMETHODIMP nsEditor::SelectEntireDocument(nsISelection *aSelection)
 {
   nsresult result;
   if (!aSelection) { return NS_ERROR_NULL_POINTER; }
@@ -3256,7 +3258,7 @@ nsEditor::SplitNodeImpl(nsIDOMNode * aExistingRightNode,
       (nsnull!=aParent))
   {
     // get selection
-    nsCOMPtr<nsIDOMSelection> selection;
+    nsCOMPtr<nsISelection> selection;
     result = GetSelection(getter_AddRefs(selection));
     if (NS_FAILED(result)) return result;
     if (!selection) return NS_ERROR_NULL_POINTER;
@@ -3374,7 +3376,7 @@ nsEditor::JoinNodesImpl(nsIDOMNode * aNodeToKeep,
   if (aNodeToKeep && aNodeToJoin && aParent)
   {
     // get selection
-    nsCOMPtr<nsIDOMSelection> selection;
+    nsCOMPtr<nsISelection> selection;
     GetSelection(getter_AddRefs(selection));
     if (NS_FAILED(result)) return result;
     if (!selection) return NS_ERROR_NULL_POINTER;
@@ -4866,7 +4868,7 @@ nsEditor::NextNodeInBlock(nsIDOMNode *aNode, IterDirection aDir)
 // GetStartNodeAndOffset: returns whatever the start parent & offset is of 
 //                        the first range in the selection.
 nsresult 
-nsEditor::GetStartNodeAndOffset(nsIDOMSelection *aSelection,
+nsEditor::GetStartNodeAndOffset(nsISelection *aSelection,
                                        nsCOMPtr<nsIDOMNode> *outStartNode,
                                        PRInt32 *outStartOffset)
 {
@@ -4875,7 +4877,9 @@ nsEditor::GetStartNodeAndOffset(nsIDOMSelection *aSelection,
     
   nsCOMPtr<nsIEnumerator> enumerator;
   nsresult result;
-  result = aSelection->GetEnumerator(getter_AddRefs(enumerator));
+  nsCOMPtr<nsISelection> sel(aSelection);
+  nsCOMPtr<nsISelectionPrivate>selPrivate(do_QueryInterface(sel));
+  result = selPrivate->GetEnumerator(getter_AddRefs(enumerator));
   if (NS_FAILED(result) || !enumerator)
     return NS_ERROR_FAILURE;
     
@@ -4902,7 +4906,7 @@ nsEditor::GetStartNodeAndOffset(nsIDOMSelection *aSelection,
 // GetEndNodeAndOffset: returns whatever the end parent & offset is of 
 //                        the first range in the selection.
 nsresult 
-nsEditor::GetEndNodeAndOffset(nsIDOMSelection *aSelection,
+nsEditor::GetEndNodeAndOffset(nsISelection *aSelection,
                                        nsCOMPtr<nsIDOMNode> *outEndNode,
                                        PRInt32 *outEndOffset)
 {
@@ -4910,7 +4914,9 @@ nsEditor::GetEndNodeAndOffset(nsIDOMSelection *aSelection,
     return NS_ERROR_NULL_POINTER;
     
   nsCOMPtr<nsIEnumerator> enumerator;
-  nsresult result = aSelection->GetEnumerator(getter_AddRefs(enumerator));
+  nsCOMPtr<nsISelection> sel(aSelection);
+  nsCOMPtr<nsISelectionPrivate>selPrivate(do_QueryInterface(sel));
+  nsresult result = selPrivate->GetEnumerator(getter_AddRefs(enumerator));
   if (NS_FAILED(result) || !enumerator)
     return NS_ERROR_FAILURE;
     
@@ -5282,11 +5288,12 @@ nsresult nsEditor::BeginUpdateViewBatch()
 {
   NS_PRECONDITION(mUpdateCount>=0, "bad state");
 
-  nsCOMPtr<nsIDOMSelection>selection;
+  nsCOMPtr<nsISelection>selection;
   nsresult rv = GetSelection(getter_AddRefs(selection));
   if (NS_SUCCEEDED(rv) && selection) 
   {
-    selection->StartBatchChanges();
+    nsCOMPtr<nsISelectionPrivate>selPrivate(do_QueryInterface(selection));
+    selPrivate->StartBatchChanges();
   }
 
   if (nsnull!=mViewManager)
@@ -5327,10 +5334,11 @@ nsresult nsEditor::EndUpdateViewBatch()
     return rv?rv:NS_ERROR_FAILURE;
   StCaretHider caretHider(caret);
         
-  nsCOMPtr<nsIDOMSelection>selection;
+  nsCOMPtr<nsISelection>selection;
   nsresult selectionResult = GetSelection(getter_AddRefs(selection));
   if (NS_SUCCEEDED(selectionResult) && selection) {
-    selection->EndBatchChanges();
+    nsCOMPtr<nsISelectionPrivate>selPrivate(do_QueryInterface(selection));
+    selPrivate->EndBatchChanges();
   }
 
   if (mViewManager)
@@ -5406,7 +5414,7 @@ nsEditor::DeleteSelectionImpl(nsIEditor::EDirection aAction)
   EditAggregateTxn *txn;
   PRInt32 i;
   nsIEditActionListener *listener;
-  nsCOMPtr<nsIDOMSelection>selection;
+  nsCOMPtr<nsISelection>selection;
   res = GetSelection(getter_AddRefs(selection));
   if (NS_FAILED(res)) return res;
   res = CreateTxnForDeleteSelection(aAction, &txn);
@@ -5604,7 +5612,7 @@ NS_IMETHODIMP nsEditor::CreateTxnForDeleteElement(nsIDOMNode * aElement,
 
     // Get current selection and setup txn to delete it,
     //  but only if selection exists (is not a collapsed "caret" state)
-    nsCOMPtr<nsIDOMSelection> selection;
+    nsCOMPtr<nsISelection> selection;
     if (!mPresShellWeak) return NS_ERROR_NOT_INITIALIZED;
     nsCOMPtr<nsIPresShell> ps = do_QueryReferent(mPresShellWeak);
     if (!ps) return NS_ERROR_NOT_INITIALIZED;
@@ -5689,7 +5697,7 @@ nsEditor::CreateTxnForDeleteSelection(nsIEditor::EDirection aAction,
 #endif
 
   nsresult result;
-  nsCOMPtr<nsIDOMSelection> selection;
+  nsCOMPtr<nsISelection> selection;
   nsCOMPtr<nsISelectionController> selCon = do_QueryReferent(mSelConWeak);
   if (!selCon) return NS_ERROR_NOT_INITIALIZED;
   result = selCon->GetSelection(nsISelectionController::SELECTION_NORMAL, getter_AddRefs(selection));
@@ -5708,7 +5716,8 @@ nsEditor::CreateTxnForDeleteSelection(nsIEditor::EDirection aAction,
     }
 
     nsCOMPtr<nsIEnumerator> enumerator;
-    result = selection->GetEnumerator(getter_AddRefs(enumerator));
+    nsCOMPtr<nsISelectionPrivate>selPrivate(do_QueryInterface(selection));
+    result = selPrivate->GetEnumerator(getter_AddRefs(enumerator));
     if (NS_SUCCEEDED(result) && enumerator)
     {
       for (enumerator->First(); NS_OK!=enumerator->IsDone(); enumerator->Next())
@@ -6000,7 +6009,7 @@ nsresult
 nsEditor::AppendNodeToSelectionAsRange(nsIDOMNode *aNode)
 {
   if (!aNode) return NS_ERROR_NULL_POINTER;
-  nsCOMPtr<nsIDOMSelection> selection;
+  nsCOMPtr<nsISelection> selection;
   nsresult res = GetSelection(getter_AddRefs(selection));
   if (NS_FAILED(res)) return res;
   if(!selection) return NS_ERROR_FAILURE;
@@ -6024,11 +6033,11 @@ nsEditor::AppendNodeToSelectionAsRange(nsIDOMNode *aNode)
 
 nsresult nsEditor::ClearSelection()
 {
-  nsCOMPtr<nsIDOMSelection> selection;
+  nsCOMPtr<nsISelection> selection;
   nsresult res = nsEditor::GetSelection(getter_AddRefs(selection));
   if (NS_FAILED(res)) return res;
   if (!selection) return NS_ERROR_FAILURE;
-  return selection->ClearSelection();  
+  return selection->RemoveAllRanges();  
 }
 
 nsresult

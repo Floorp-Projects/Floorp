@@ -23,6 +23,14 @@
         command="cmd_selectBeginLine"/>
       <handler event="keypress" id="key_endshift" keycode="VK_END" modifiers="shift"
         command="cmd_selectEndLine"/>
+      <handler event="keypress" id="key_homecontrolshift" keycode="VK_HOME" shift="true" alt="false" control="true"
+        command="cmd_selectTop"/>
+      <handler event="keypress" id="key_endcontrolshift" keycode="VK_END" shift="true" alt="false" control="true"
+        command="cmd_selectBottom"/>
+      <handler event="keypress" id="key_homecontrol" keycode="VK_HOME" shift="false" alt="false" control="true"
+        command="cmd_moveTop"/>
+      <handler event="keypress" id="key_endcontrol" keycode="VK_END" shift="false" alt="false" control="true"
+        command="cmd_moveBottom"/>
       <handler event="keypress" id="key_leftcontrol" keycode="VK_LEFT" modifiers="control"
         command="cmd_wordPrevious"/>
       <handler event="keypress" id="key_rightcontrol" keycode="VK_RIGHT" modifiers="control"
@@ -53,6 +61,14 @@
         command="cmd_selectBeginLine"/>
       <handler event="keypress" id="key_endshift" keycode="VK_END" modifiers="shift"
         command="cmd_selectEndLine"/>
+      <handler event="keypress" id="key_homecontrolshift" keycode="VK_HOME" shift="true" alt="false" control="true"
+        command="cmd_selectTop"/>
+      <handler event="keypress" id="key_endcontrolshift" keycode="VK_END" shift="true" alt="false" control="true"
+        command="cmd_selectBottom"/>
+      <handler event="keypress" id="key_homecontrol" keycode="VK_HOME" shift="false" alt="false" control="true"
+        command="cmd_moveTop"/>
+      <handler event="keypress" id="key_endcontrol" keycode="VK_END" shift="false" alt="false" control="true"
+        command="cmd_moveBottom"/>
       <handler event="keypress" id="key_leftcontrol" keycode="VK_LEFT" modifiers="control"
         command="cmd_wordPrevious"/>
       <handler event="keypress" id="key_rightcontrol" keycode="VK_RIGHT" modifiers="control"

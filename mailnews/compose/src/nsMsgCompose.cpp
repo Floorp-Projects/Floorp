@@ -28,7 +28,7 @@
 #include "nsIDOMNodeList.h"
 #include "nsIDOMHTMLInputElement.h"
 #include "nsIDOMDocument.h"
-#include "nsIDOMSelection.h"
+#include "nsISelection.h"
 #include "nsIDOMNamedNodeMap.h"
 #include "nsMsgI18N.h"
 #include "nsICharsetConverterManager.h"
@@ -318,7 +318,7 @@ nsresult nsMsgCompose::ConvertAndLoadComposeWindow(nsIEditorShell *aEditorShell,
             break;
           }
 
-          nsCOMPtr<nsIDOMSelection> selection = nsnull; 
+          nsCOMPtr<nsISelection> selection = nsnull; 
           nsCOMPtr<nsIDOMNode>      parent = nsnull; 
           PRInt32                   offset;
           nsresult                  rv;

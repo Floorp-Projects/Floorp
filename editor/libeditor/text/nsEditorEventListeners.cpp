@@ -30,7 +30,7 @@
 #include "nsIDocument.h"
 #include "nsIPresShell.h"
 #include "nsIDOMElement.h"
-#include "nsIDOMSelection.h"
+#include "nsISelection.h"
 #include "nsIDOMCharacterData.h"
 #include "nsIEditProperty.h"
 #include "nsISupportsArray.h"
@@ -394,7 +394,7 @@ nsTextEditorMouseListener::MouseClick(nsIDOMEvent* aMouseEvent)
         if (!NS_SUCCEEDED(nsuiEvent->GetRangeOffset(&offset)))
           return NS_ERROR_NULL_POINTER;
 
-        nsCOMPtr<nsIDOMSelection> selection;
+        nsCOMPtr<nsISelection> selection;
         if (NS_SUCCEEDED(editor->GetSelection(getter_AddRefs(selection))))
           (void)selection->Collapse(parent, offset);
 
@@ -704,7 +704,7 @@ nsTextEditorDragListener::DragDrop(nsIDOMEvent* aMouseEvent)
        selection, nothing should happen. 
        cmanske: But do this only if drag source is not the same as target (current) document!
     */
-    nsCOMPtr<nsIDOMSelection> selection;
+    nsCOMPtr<nsISelection> selection;
     rv = mEditor->GetSelection(getter_AddRefs(selection));
     if (NS_FAILED(rv) || !selection) 
       return rv?rv:NS_ERROR_FAILURE;

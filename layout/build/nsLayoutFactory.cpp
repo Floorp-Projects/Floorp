@@ -29,7 +29,7 @@
 #include "nsITextContent.h"
 #include "nsIPresShell.h"
 #include "nsIPresContext.h"
-#include "nsIDOMSelection.h"
+#include "nsISelection.h"
 #include "nsIFrameUtil.h"
 
 #include "nsHTMLAtoms.h"
@@ -125,7 +125,7 @@ static NS_DEFINE_CID(kComputedDOMStyleCID, NS_COMPUTEDDOMSTYLE_CID);
 
 
 extern nsresult NS_NewSelection(nsIFrameSelection** aResult);
-extern nsresult NS_NewDomSelection(nsIDOMSelection** aResult);
+extern nsresult NS_NewDomSelection(nsISelection** aResult);
 extern nsresult NS_NewRange(nsIDOMRange** aResult);
 extern nsresult NS_NewContentIterator(nsIContentIterator** aResult);
 extern nsresult NS_NewGenRegularIterator(nsIContentIterator** aResult);
@@ -271,7 +271,7 @@ nsLayoutFactory::CreateInstance(nsISupports *aOuter,
     }
   }
   else if (mClassID.Equals(kDOMSelectionCID)) {
-    res = NS_NewDomSelection((nsIDOMSelection**)&inst);
+    res = NS_NewDomSelection((nsISelection**)&inst);
     if (NS_FAILED(res)) {
       LOG_NEW_FAILURE("NS_NewDomSelection", res);
       return res;

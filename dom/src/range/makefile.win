@@ -29,12 +29,10 @@ DEFINES=-D_IMPL_NS_DOM -DWIN32_LEAN_AND_MEAN
 
 CPPSRCS =				\
 	nsJSRange.cpp		\
-	nsJSSelection.cpp		\
-	nsJSSelectionListener.cpp			\
 	$(NULL)
 
 CPP_OBJS= \
-	.\$(OBJDIR)\nsJSRange.obj .\$(OBJDIR)\nsJSSelection.obj .\$(OBJDIR)\nsJSSelectionListener.obj
+	.\$(OBJDIR)\nsJSRange.obj 
 
 LINCS=-I$(XPDIST)\public\xpcom -I$(XPDIST)\public\raptor -I$(XPDIST)\public\dom -I$(XPDIST)\public\js
 

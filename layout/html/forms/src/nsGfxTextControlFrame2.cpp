@@ -37,7 +37,8 @@
 #include "nsFormControlHelper.h"
 #include "nsIDocumentEncoder.h"
 #include "nsICaret.h"
-#include "nsIDOMSelectionListener.h"
+#include "nsISelectionListener.h"
+#include "nsISelectionPrivate.h"
 #include "nsIController.h"
 #include "nsIControllers.h"
 #include "nsIEditorController.h"
@@ -124,7 +125,7 @@ static nsresult GetElementFactoryService(nsIElementFactory **aFactory)
 
 
 class nsTextInputListener : public nsIDOMKeyListener,
-                            public nsIDOMSelectionListener,
+                            public nsISelectionListener,
                             public nsIDOMFocusListener,
                             public nsIEditorObserver,
                             public nsITransactionListener,
@@ -154,9 +155,9 @@ public:
   virtual nsresult KeyUp(nsIDOMEvent* aKeyEvent);
   virtual nsresult KeyPress(nsIDOMEvent* aKeyEvent);
 /*END interfaces from nsIDOMKeyListener*/
-/*BEGIN nsIDOMSelectionListener Interface*/
-  NS_IMETHOD    NotifySelectionChanged(nsIDOMDocument* aDoc, nsIDOMSelection* aSel, PRInt16 aReason);
-/*END nsIDOMSelectionListener*/
+/*BEGIN nsISelectionListener Interface*/
+  NS_IMETHOD    NotifySelectionChanged(nsIDOMDocument* aDoc, nsISelection* aSel, PRInt16 aReason);
+/*END nsISelectionListener*/
 
 /* BEGIN EditorObserver*/
   NS_IMETHOD EditAction();
@@ -234,7 +235,7 @@ nsTextInputListener::~nsTextInputListener()
 
 NS_IMPL_QUERY_INTERFACE6(nsTextInputListener,
                           nsIDOMKeyListener,
-                          nsIDOMSelectionListener,
+                          nsISelectionListener,
                           nsIDOMFocusListener,
                           nsIEditorObserver,
                           nsITransactionListener,
@@ -299,7 +300,7 @@ nsTextInputListener::KeyPress(nsIDOMEvent* aKeyEvent)
 //BEGIN NS_IDOMSELECTIONLISTENER
 
 NS_IMETHODIMP
-nsTextInputListener::NotifySelectionChanged(nsIDOMDocument* aDoc, nsIDOMSelection* aSel, PRInt16 aReason)
+nsTextInputListener::NotifySelectionChanged(nsIDOMDocument* aDoc, nsISelection* aSel, PRInt16 aReason)
 {
   PRBool collapsed;
   if (!mFrame || !aDoc || !aSel || NS_FAILED(aSel->GetIsCollapsed(&collapsed)))
@@ -319,9 +320,9 @@ nsTextInputListener::NotifySelectionChanged(nsIDOMDocument* aDoc, nsIDOMSelectio
   //          was previously selected, becase technically select all will first collapse
   //          and then extend. Mozilla will never create an event if the selection 
   //          collapses to nothing.
-  if (!collapsed && (aReason & (nsIDOMSelectionListener::MOUSEUP_REASON | 
-                                nsIDOMSelectionListener::KEYPRESS_REASON |
-                                nsIDOMSelectionListener::SELECTALL_REASON)))
+  if (!collapsed && (aReason & (nsISelectionListener::MOUSEUP_REASON | 
+                                nsISelectionListener::KEYPRESS_REASON |
+                                nsISelectionListener::SELECTALL_REASON)))
   {
     nsCOMPtr<nsIContent> content;
     mFrame->GetFormContent(*getter_AddRefs(content));
@@ -552,7 +553,7 @@ public:
   NS_IMETHOD GetDisplaySelection(PRInt16 *_retval);
   NS_IMETHOD SetDisplayNonTextSelection(PRBool toggle);
   NS_IMETHOD GetDisplayNonTextSelection(PRBool *_retval);
-  NS_IMETHOD GetSelection(PRInt16 type, nsIDOMSelection **_retval);
+  NS_IMETHOD GetSelection(PRInt16 type, nsISelection **_retval);
   NS_IMETHOD ScrollSelectionIntoView(PRInt16 type, PRInt16 region);
   NS_IMETHOD RepaintSelection(PRInt16 type);
   NS_IMETHOD RepaintSelection(nsIPresContext* aPresContext, SelectionType aSelectionType);
@@ -660,7 +661,7 @@ nsTextInputSelectionImpl::GetDisplayNonTextSelection(PRBool *aToggle)
 }
 
 NS_IMETHODIMP
-nsTextInputSelectionImpl::GetSelection(PRInt16 type, nsIDOMSelection **_retval)
+nsTextInputSelectionImpl::GetSelection(PRInt16 type, nsISelection **_retval)
 {
   if (mFrameSelection)
     return mFrameSelection->GetSelection(type, _retval);
@@ -706,7 +707,7 @@ nsTextInputSelectionImpl::SetCaretEnabled(PRBool enabled)
   if (!shell) return NS_ERROR_FAILURE;
   
   // first, tell the caret which selection to use
-  nsCOMPtr<nsIDOMSelection> domSel;
+  nsCOMPtr<nsISelection> domSel;
   GetSelection(nsISelectionController::SELECTION_NORMAL, getter_AddRefs(domSel));
   if (!domSel) return NS_ERROR_FAILURE;
   
@@ -752,7 +753,7 @@ nsTextInputSelectionImpl::SetCaretReadOnly(PRBool aReadOnly)
     nsCOMPtr<nsICaret> caret;
     if (NS_SUCCEEDED(result = shell->GetCaret(getter_AddRefs(caret))))
     {
-      nsCOMPtr<nsIDOMSelection> domSel;
+      nsCOMPtr<nsISelection> domSel;
       if (NS_SUCCEEDED(result = mFrameSelection->GetSelection(nsISelectionController::SELECTION_NORMAL, getter_AddRefs(domSel))))
       {
         return caret->SetCaretReadOnly(aReadOnly);
@@ -774,7 +775,7 @@ nsTextInputSelectionImpl::GetCaretEnabled(PRBool *_retval)
     nsCOMPtr<nsICaret> caret;
     if (NS_SUCCEEDED(result = shell->GetCaret(getter_AddRefs(caret))))
     {
-      nsCOMPtr<nsIDOMSelection> domSel;
+      nsCOMPtr<nsISelection> domSel;
       if (NS_SUCCEEDED(result = mFrameSelection->GetSelection(nsISelectionController::SELECTION_NORMAL, getter_AddRefs(domSel))))
       {
         return caret->GetCaretVisible(_retval);
@@ -1886,21 +1887,22 @@ nsGfxTextControlFrame2::CreateAnonymousContent(nsIPresContext* aPresContext,
     
   // Get the caret and make it a selection listener.
 
-  nsCOMPtr<nsIDOMSelection> domSelection;
+  nsCOMPtr<nsISelection> domSelection;
   if (NS_SUCCEEDED(mSelCon->GetSelection(nsISelectionController::SELECTION_NORMAL, getter_AddRefs(domSelection))) && domSelection)
   {
+    nsCOMPtr<nsISelectionPrivate> selPriv(do_QueryInterface(domSelection));
     nsCOMPtr<nsICaret> caret;
-    nsCOMPtr<nsIDOMSelectionListener> listener;
+    nsCOMPtr<nsISelectionListener> listener;
     if (NS_SUCCEEDED(shell->GetCaret(getter_AddRefs(caret))) && caret)
     {
       listener = do_QueryInterface(caret);
       if (listener)
       {
-        domSelection->AddSelectionListener(listener);
+        selPriv->AddSelectionListener(listener);
       }
     }
 
-    domSelection->AddSelectionListener(NS_STATIC_CAST(nsIDOMSelectionListener *, mTextListener));
+    selPriv->AddSelectionListener(NS_STATIC_CAST(nsISelectionListener *, mTextListener));
   }
   
   // also set up the text listener as a transaction listener on the editor
@@ -2476,7 +2478,7 @@ nsGfxTextControlFrame2::SetSelectionEndPoints(PRInt32 aSelStart, PRInt32 aSelEnd
   firstTextNode->GetLength(&nodeLengthU);
   PRInt32 nodeLength = (PRInt32)nodeLengthU;
     
-  nsCOMPtr<nsIDOMSelection> selection;
+  nsCOMPtr<nsISelection> selection;
   mTextSelImpl->GetSelection(nsISelectionController::SELECTION_NORMAL,getter_AddRefs(selection));  
   if (!selection) return NS_ERROR_FAILURE;
 
@@ -2494,7 +2496,7 @@ nsGfxTextControlFrame2::SetSelectionEndPoints(PRInt32 aSelStart, PRInt32 aSelEnd
       aSelEnd = 0;
 
     // remove existing ranges
-    selection->ClearSelection();  
+    selection->RemoveAllRanges();  
 
     nsCOMPtr<nsIDOMRange> selectionRange;
     NS_NewRange(getter_AddRefs(selectionRange));
@@ -2602,7 +2604,7 @@ nsGfxTextControlFrame2::GetSelectionRange(PRInt32* aSelectionStart, PRInt32* aSe
   if (!mEditor) 
     return NS_ERROR_NOT_INITIALIZED;
   
-  nsCOMPtr<nsIDOMSelection> selection;
+  nsCOMPtr<nsISelection> selection;
   mTextSelImpl->GetSelection(nsISelectionController::SELECTION_NORMAL,getter_AddRefs(selection));  
   if (!selection) return NS_ERROR_FAILURE;
 
@@ -3002,10 +3004,15 @@ nsGfxTextControlFrame2::SetTextControlFrameState(const nsAReadableString& aValue
     }
     if (PR_FALSE==currentValue.Equals(aValue))  // this is necessary to avoid infinite recursion
     {
-      nsCOMPtr<nsIDOMSelection> domSel;
+      nsCOMPtr<nsISelection> domSel;
+      nsCOMPtr<nsISelectionPrivate> selPriv;
       mSelCon->GetSelection(nsISelectionController::SELECTION_NORMAL, getter_AddRefs(domSel));
       if (domSel)
-        domSel->StartBatchChanges();
+      {
+        selPriv = do_QueryInterface(domSel);
+        if (selPriv)
+          selPriv->StartBatchChanges();
+      }
       // \r is an illegal character in the dom, but people use them,
       // so convert windows and mac platform linebreaks to \n:
       // Unfortunately aValue is declared const, so we have to copy
@@ -3033,8 +3040,8 @@ nsGfxTextControlFrame2::SetTextControlFrameState(const nsAReadableString& aValue
       else
         htmlEditor->InsertText(currentValue);
       mEditor->SetFlags(savedFlags);
-      if (domSel)
-        domSel->EndBatchChanges();
+      if (selPriv)
+        selPriv->EndBatchChanges();
     }
 
     if (mScrollableView)

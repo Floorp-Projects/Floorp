@@ -32,7 +32,7 @@
 #include "nsIDOMDocument.h"
 #include "nsIDiskDocument.h"
 #include "nsIDOMElement.h"
-#include "nsIDOMSelection.h"
+#include "nsISelection.h"
 #include "nsIDOMAttr.h"
 #include "nsIScriptGlobalObject.h"
 #include "nsIDOMWindowInternal.h"
@@ -97,7 +97,7 @@ nsInterfaceState::~nsInterfaceState()
 
 NS_IMPL_ADDREF(nsInterfaceState);
 NS_IMPL_RELEASE(nsInterfaceState);
-NS_IMPL_QUERY_INTERFACE4(nsInterfaceState, nsIDOMSelectionListener, nsIDocumentStateListener, nsITransactionListener, nsITimerCallback);
+NS_IMPL_QUERY_INTERFACE4(nsInterfaceState, nsISelectionListener, nsIDocumentStateListener, nsITransactionListener, nsITimerCallback);
 
 NS_IMETHODIMP
 nsInterfaceState::Init(nsIHTMLEditor* aEditor, nsIDOMDocument *aChromeDoc)
@@ -149,7 +149,7 @@ nsInterfaceState::NotifyDocumentStateChanged(PRBool aNowDirty)
 }
 
 NS_IMETHODIMP
-nsInterfaceState::NotifySelectionChanged(nsIDOMDocument *, nsIDOMSelection *, short)
+nsInterfaceState::NotifySelectionChanged(nsIDOMDocument *, nsISelection *, short)
 {
   return PrimeUpdateTimer();
 }
@@ -383,7 +383,7 @@ nsInterfaceState::SelectionIsCollapsed()
   nsCOMPtr<nsIEditor> editor = do_QueryInterface(mEditor, &rv);
   if (NS_SUCCEEDED(rv))
   {
-    nsCOMPtr<nsIDOMSelection> domSelection;
+    nsCOMPtr<nsISelection> domSelection;
     rv = editor->GetSelection(getter_AddRefs(domSelection));
     if (NS_SUCCEEDED(rv))
     {    
@@ -398,7 +398,7 @@ nsInterfaceState::SelectionIsCollapsed()
 nsresult
 nsInterfaceState::UpdateParagraphState(const char* observerName, const char* attributeName)
 {
-  nsCOMPtr<nsIDOMSelection> domSelection;
+  nsCOMPtr<nsISelection> domSelection;
   nsCOMPtr<nsIEditor> editor = do_QueryInterface(mEditor);
   // Get the nsIEditor pointer (mEditor is nsIHTMLEditor)
   if (!editor) return NS_ERROR_NULL_POINTER;
@@ -664,7 +664,7 @@ nsInterfaceState::Notify(nsITimer *timer)
 #endif
 
 
-nsresult NS_NewInterfaceState(nsIHTMLEditor* aEditor, nsIDOMDocument* aChromeDoc, nsIDOMSelectionListener** aInstancePtrResult)
+nsresult NS_NewInterfaceState(nsIHTMLEditor* aEditor, nsIDOMDocument* aChromeDoc, nsISelectionListener** aInstancePtrResult)
 {
   nsInterfaceState* newThang = new nsInterfaceState;
   if (!newThang)
@@ -678,5 +678,5 @@ nsresult NS_NewInterfaceState(nsIHTMLEditor* aEditor, nsIDOMDocument* aChromeDoc
     return rv;
   }
       
-  return newThang->QueryInterface(NS_GET_IID(nsIDOMSelectionListener), (void **)aInstancePtrResult);
+  return newThang->QueryInterface(NS_GET_IID(nsISelectionListener), (void **)aInstancePtrResult);
 }

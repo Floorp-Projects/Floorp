@@ -25,7 +25,8 @@
 #include "nsEditor.h"
 #include "nsIDOMCharacterData.h"
 #include "nsIPrivateTextRange.h"
-#include "nsIDOMSelection.h"
+#include "nsISelection.h"
+#include "nsISelectionPrivate.h"
 #include "nsIPresShell.h"
 #include "EditAggregateTxn.h"
 #include "nsLayoutCID.h"
@@ -33,7 +34,7 @@
 // #define DEBUG_IMETXN
 static NS_DEFINE_IID(kRangeCID, NS_RANGE_CID);
 
-static NS_DEFINE_IID(kIDOMSelectionIID, NS_IDOMSELECTION_IID);
+static NS_DEFINE_IID(kIDOMSelectionIID, NS_ISELECTION_IID);
 
 nsIAtom *IMETextTxn::gIMETextTxnName = nsnull;
 
@@ -121,7 +122,7 @@ NS_IMETHODIMP IMETextTxn::Undo(void)
   result = mElement->DeleteData(mOffset, length);
   if (NS_SUCCEEDED(result))
   { // set the selection to the insertion point where the string was removed
-    nsCOMPtr<nsIDOMSelection> selection;
+    nsCOMPtr<nsISelection> selection;
     result = selCon->GetSelection(nsISelectionController::SELECTION_NORMAL, getter_AddRefs(selection));
     if (NS_SUCCEEDED(result) && selection) {
       result = selection->Collapse(mElement, mOffset);
@@ -321,12 +322,13 @@ NS_IMETHODIMP IMETextTxn::CollapseTextSelection(void)
     result = mRangeList->GetLength(&textRangeListLength);
     if(NS_FAILED(result))
         return result;
-    nsCOMPtr<nsIDOMSelection> selection;
+    nsCOMPtr<nsISelection> selection;
     result = selCon->GetSelection(nsISelectionController::SELECTION_NORMAL, getter_AddRefs(selection));
-    nsCOMPtr<nsIDOMSelection> imeSel;
+    nsCOMPtr<nsISelection> imeSel;
     if(NS_SUCCEEDED(result))
     {
-      result = selection->StartBatchChanges();
+      nsCOMPtr<nsISelectionPrivate> selPriv(do_QueryInterface(selection));
+      result = selPriv->StartBatchChanges();
       if (NS_SUCCEEDED(result))
       {
         for(PRInt8 selIdx = 0; selIdx < 4;selIdx++)
@@ -334,7 +336,7 @@ NS_IMETHODIMP IMETextTxn::CollapseTextSelection(void)
           result = selCon->GetSelection(sel[selIdx], getter_AddRefs(imeSel));
             if(NS_SUCCEEDED(result))
             {
-             result = imeSel->ClearSelection();
+               result = imeSel->RemoveAllRanges();
                NS_ASSERTION(NS_SUCCEEDED(result), "Cannot ClearSelection");
                // we just ignore the result and clean up the next one here
             }
@@ -412,7 +414,7 @@ NS_IMETHODIMP IMETextTxn::CollapseTextSelection(void)
           result = selection->Collapse(mElement,mOffset+mStringToInsert.Length());
           NS_ASSERTION(NS_SUCCEEDED(result), "Cannot Collapse");
         }
-        result = selection->EndBatchChanges();
+        result = selPriv->EndBatchChanges();
         NS_ASSERTION(NS_SUCCEEDED(result), "Cannot EndBatchChanges");
       } // if StartBatchChanges
     } // if GetSelection

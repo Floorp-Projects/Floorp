@@ -30,7 +30,8 @@
 #include "nsIXIFConverter.h"
 #include "nsRange.h"
 #include "nsTextContentChangeData.h"
-#include "nsIDOMSelection.h"
+#include "nsISelection.h"
+#include "nsISelectionPrivate.h"
 #include "nsIEnumerator.h"
 #include "nsReadableUtils.h"
 
@@ -558,13 +559,14 @@ nsGenericDOMDataNode::ConvertContentToXIF(const nsIContent *aOuterContent,
                                           nsIXIFConverter* aConverter) const
 {
   const nsIContent* content = aOuterContent;
-  nsCOMPtr<nsIDOMSelection> sel;
+  nsCOMPtr<nsISelection> sel;
   aConverter->GetSelection(getter_AddRefs(sel));
 
   if (sel && mDocument && mDocument->IsInSelection(sel,content))
   {
     nsCOMPtr<nsIEnumerator> enumerator;
-    if (NS_SUCCEEDED(sel->GetEnumerator(getter_AddRefs(enumerator)))) {
+    nsCOMPtr<nsISelectionPrivate> selPrivate(do_QueryInterface(sel));
+    if (NS_SUCCEEDED(selPrivate->GetEnumerator(getter_AddRefs(enumerator)))) {
       for (enumerator->First();NS_OK != enumerator->IsDone(); enumerator->Next()) {
         nsIDOMRange* range = nsnull;
         if (NS_SUCCEEDED(enumerator->CurrentItem((nsISupports**)&range))) {

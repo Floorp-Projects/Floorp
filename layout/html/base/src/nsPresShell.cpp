@@ -61,13 +61,14 @@
 #include "nsIEventStateManager.h"
 #include "nsDOMEvent.h"
 #include "nsHTMLParts.h"
-#include "nsIDOMSelection.h"
+#include "nsISelection.h"
 #include "nsISelectionController.h"
 #include "nsLayoutCID.h"
 #include "nsLayoutAtoms.h"
 #include "nsIDOMRange.h"
 #include "nsIDOMDocument.h"
 #include "nsIDOMNode.h"
+#include "nsIDOMNodeList.h"
 #include "nsIDOMElement.h"
 #include "nsHTMLAtoms.h"
 #include "nsCOMPtr.h"
@@ -745,7 +746,7 @@ public:
 
   NS_IMETHOD SetDisplaySelection(PRInt16 aToggle);
   NS_IMETHOD GetDisplaySelection(PRInt16 *aToggle);
-  NS_IMETHOD GetSelection(SelectionType aType, nsIDOMSelection** aSelection);
+  NS_IMETHOD GetSelection(SelectionType aType, nsISelection** aSelection);
   NS_IMETHOD ScrollSelectionIntoView(SelectionType aType, SelectionRegion aRegion);
   NS_IMETHOD RepaintSelection(SelectionType aType);
   NS_IMETHOD GetFrameSelection(nsIFrameSelection** aSelection);  
@@ -1597,7 +1598,7 @@ PresShell::GetDisplaySelection(PRInt16 *aToggle)
 }
 
 NS_IMETHODIMP
-PresShell::GetSelection(SelectionType aType, nsIDOMSelection **aSelection)
+PresShell::GetSelection(SelectionType aType, nsISelection **aSelection)
 {
   if (!aSelection || !mSelection)
     return NS_ERROR_NULL_POINTER;
@@ -1651,7 +1652,7 @@ PresShell::EndObservingDocument()
     mDocument->RemoveObserver(this);
   }
   if (mSelection){
-    nsCOMPtr<nsIDOMSelection> domselection;
+    nsCOMPtr<nsISelection> domselection;
     nsresult result;
     result = mSelection->GetSelection(nsISelectionController::SELECTION_NORMAL, getter_AddRefs(domselection));
     if (NS_FAILED(result))
@@ -2334,7 +2335,50 @@ PresShell::CompleteScroll(PRBool aForward)
 NS_IMETHODIMP
 PresShell::CompleteMove(PRBool aForward, PRBool aExtend)
 {
-  return CompleteScroll(aForward);
+  nsCOMPtr<nsIDocument> document;
+  if (NS_FAILED(GetDocument(getter_AddRefs(document))) || !document)
+    return NS_ERROR_FAILURE;
+  
+  nsCOMPtr<nsIDOMNodeList>nodeList; 
+  nsAutoString bodyTag; bodyTag.AssignWithConversion("body"); 
+
+  nsCOMPtr<nsIDOMDocument> doc = do_QueryInterface(document);
+  if (!doc) 
+    return NS_ERROR_FAILURE;
+  nsresult result = doc->GetElementsByTagName(bodyTag, getter_AddRefs(nodeList));
+
+  if (NS_FAILED(result) || !nodeList)
+    return result?result:NS_ERROR_NULL_POINTER;
+
+  PRUint32 count; 
+  nodeList->GetLength(&count);
+
+  if (count < 1)
+    return NS_ERROR_FAILURE;
+
+  // Use the first body node in the list:
+  nsCOMPtr<nsIDOMNode> node;
+  result = nodeList->Item(0, getter_AddRefs(node)); 
+  if (NS_SUCCEEDED(result) && node)
+  {
+    //return node->QueryInterface(NS_GET_IID(nsIDOMElement), (void **)aBodyElement);
+    // Is above equivalent to this:
+    nsCOMPtr<nsIDOMElement> bodyElement = do_QueryInterface(node);
+    if (bodyElement)
+    {
+      nsCOMPtr<nsIContent> bodyContent = do_QueryInterface(bodyElement);
+      if (bodyContent)
+      {
+        PRInt32 offset = 0;
+        if (aForward)
+        {
+          bodyContent->ChildCount(offset);
+        }
+        result = mSelection->HandleClick(bodyContent,offset,offset,aExtend, PR_FALSE,aExtend);
+      }
+    }
+  }
+  return result;
 }
 
 NS_IMETHODIMP 
@@ -3020,7 +3064,7 @@ PresShell::DoCopy()
   nsString buffer;
   nsresult rv;
 
-  nsCOMPtr<nsIDOMSelection> sel;
+  nsCOMPtr<nsISelection> sel;
   
   nsCOMPtr<nsIEventStateManager> manager;
   nsCOMPtr<nsIContent> content;

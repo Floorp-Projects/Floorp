@@ -277,7 +277,7 @@ public:
   NS_IMETHOD DeleteSelectionAndCreateNode(const nsString& aTag, nsIDOMNode ** aNewNode)=0;
 
   /* ------------ Selection manipulation -------------- */
-  /* Should these be moved to nsIDOMSelection? */
+  /* Should these be moved to nsISelection? */
   
   /** Set the selection at the suppled element
     *

@@ -1311,7 +1311,7 @@ nsWebShell::SelectAll(void)
   nsCOMPtr<nsISelectionController> selCon = do_QueryInterface(presShell);
   if (NS_FAILED(rv) || !selCon) return rv;
 
-  nsCOMPtr<nsIDOMSelection> selection;
+  nsCOMPtr<nsISelection> selection;
   rv = selCon->GetSelection(nsISelectionController::SELECTION_NORMAL, getter_AddRefs(selection));
   if (NS_FAILED(rv) || !selection) return rv;
 
@@ -1341,7 +1341,7 @@ nsWebShell::SelectAll(void)
   if (NS_FAILED(rv) || !range) return rv;
 #endif
 
-  rv = selection->ClearSelection();
+  rv = selection->RemoveAllRanges();
   if (NS_FAILED(rv)) return rv;
 
   nsCOMPtr<nsIDOMRange> range;

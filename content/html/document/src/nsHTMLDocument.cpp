@@ -93,6 +93,7 @@
 #include "nsIEventListenerManager.h"
 #include "nsISelectElement.h"
 #include "nsIFrameSelection.h"
+#include "nsISelectionPrivate.h"//for toStringwithformat code
 
 #include "nsICharsetDetector.h"
 #include "nsICharsetDetectionAdaptor.h"
@@ -2842,13 +2843,14 @@ nsHTMLDocument::GetSelection(nsAWritableString& aReturn)
   if (!selection)
     return NS_OK;
 
-  nsCOMPtr<nsIDOMSelection> domSelection;
+  nsCOMPtr<nsISelection> domSelection;
 
   selection->GetSelection(nsISelectionController::SELECTION_NORMAL,
                           getter_AddRefs(domSelection));
 
   if (!domSelection)
     return NS_OK;
+  nsCOMPtr<nsISelectionPrivate> privSel(do_QueryInterface(domSelection));
 
   nsCOMPtr<nsIConsoleService> consoleService
     (do_GetService("mozilla.consoleservice.1"));
@@ -2856,8 +2858,14 @@ nsHTMLDocument::GetSelection(nsAWritableString& aReturn)
   if (consoleService) {
     consoleService->LogStringMessage(NS_LITERAL_STRING("Deprecated method document.getSelection() called.  Please use window.getSelection() instead.").get());
   }
-
-  return domSelection->ToString(NS_ConvertASCIItoUCS2("text/plain"), nsIDocumentEncoder::OutputFormatted |nsIDocumentEncoder::OutputSelectionOnly, 0, aReturn);
+  PRUnichar *tmp;
+  nsresult rv = privSel->ToStringWithFormat("text/plain", nsIDocumentEncoder::OutputFormatted |nsIDocumentEncoder::OutputSelectionOnly, 0, &tmp);
+  if (tmp)
+  {
+    aReturn.Assign(tmp);
+    nsMemory::Free(tmp);
+  }
+  return rv;
 }
 
 NS_IMETHODIMP    
@@ -4138,7 +4146,7 @@ nsHTMLDocument::GetForms(nsIDOMHTMLCollection** aForms)
 }
 
 PRBool
-nsHTMLDocument::IsInSelection(nsIDOMSelection* aSelection,
+nsHTMLDocument::IsInSelection(nsISelection* aSelection,
                               const nsIContent* aContent) const
 {
   nsIAtom* tag;

@@ -241,7 +241,7 @@ mozXMLTermKeyListener::KeyPress(nsIDOMEvent* aKeyEvent)
   nsCOMPtr<nsIPresShell> presShell;
   result = mXMLTerminal->GetPresShell(getter_AddRefs(presShell));
   if (NS_SUCCEEDED(result) && presShell) {
-    nsCOMPtr<nsIDOMSelection> selection;
+    nsCOMPtr<nsISelection> selection;
     result = presShell->GetSelection(SELECTION_NORMAL,
                                      getter_AddRefs(selection));
     if (NS_SUCCEEDED(result) && selection) {
@@ -637,7 +637,7 @@ mozXMLTermMouseListener::MouseClick(nsIDOMEvent* aMouseEvent)
   selCon = do_QueryInterface(presShell);
   if (!selCon)
     return NS_ERROR_FAILURE;
-  nsCOMPtr<nsIDOMSelection> selection;
+  nsCOMPtr<nsISelection> selection;
   result = selCon->GetSelection(nsISelectionController::SELECTION_NORMAL,
                                      getter_AddRefs(selection));
 

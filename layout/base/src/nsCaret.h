@@ -23,7 +23,7 @@
 
 
 #include "nsCoord.h"
-#include "nsIDOMSelectionListener.h"
+#include "nsISelectionListener.h"
 #include "nsIRenderingContext.h"
 #include "nsITimer.h"
 #include "nsICaret.h"
@@ -40,7 +40,7 @@ class nsISelectionController;
 //-----------------------------------------------------------------------------
 
 class nsCaret : public nsICaret,
-                public nsIDOMSelectionListener
+                public nsISelectionListener
 {
   public:
 
@@ -54,17 +54,18 @@ class nsCaret : public nsICaret,
     // nsICaret interface
     NS_IMETHOD    Init(nsIPresShell *inPresShell);
 
-    NS_IMETHOD    SetCaretDOMSelection(nsIDOMSelection *inDOMSel);
+    NS_IMETHOD    SetCaretDOMSelection(nsISelection *inDOMSel);
     NS_IMETHOD    GetCaretVisible(PRBool *outMakeVisible);
-    NS_IMETHOD    SetCaretVisible(PRBool intMakeVisible);
-    NS_IMETHOD    SetCaretReadOnly(PRBool inMakeReadonly);
-    NS_IMETHOD    GetWindowRelativeCoordinates(nsRect& outCoordinates, PRBool& outIsCollapsed, nsIDOMSelection *inDOMSel);
-    NS_IMETHOD    ClearFrameRefs(nsIFrame* aFrame);
-    NS_IMETHOD    EraseCaret();
+ 		NS_IMETHOD    SetCaretVisible(PRBool intMakeVisible);
+  	NS_IMETHOD    SetCaretReadOnly(PRBool inMakeReadonly);
+		NS_IMETHOD 		GetWindowRelativeCoordinates(nsRect& outCoordinates, PRBool& outIsCollapsed, nsISelection *inDOMSel);
+		NS_IMETHOD 		ClearFrameRefs(nsIFrame* aFrame);
+		NS_IMETHOD 		EraseCaret();
+
     NS_IMETHOD    SetCaretWidth(nscoord aPixels);
-  
-    //nsIDOMSelectionListener interface
-    NS_IMETHOD    NotifySelectionChanged(nsIDOMDocument *aDoc, nsIDOMSelection *aSel, short aReason);
+
+    //nsISelectionListener interface
+    NS_IMETHOD    NotifySelectionChanged(nsIDOMDocument *aDoc, nsISelection *aSel, short aReason);
                               
     static void   CaretBlinkCallback(nsITimer *aTimer, void *aClosure);
   

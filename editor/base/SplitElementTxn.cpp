@@ -23,7 +23,7 @@
 #include "SplitElementTxn.h"
 #include "nsEditor.h"
 #include "nsIDOMNode.h"
-#include "nsIDOMSelection.h"
+#include "nsISelection.h"
 #include "nsIDOMCharacterData.h"
 
 #ifdef NS_DEBUG
@@ -82,7 +82,7 @@ NS_IMETHODIMP SplitElementTxn::Do(void)
   result = mEditor->SplitNodeImpl(mExistingRightNode, mOffset, mNewLeftNode, mParent);
   if (NS_SUCCEEDED(result) && mNewLeftNode)
   {
-    nsCOMPtr<nsIDOMSelection>selection;
+    nsCOMPtr<nsISelection>selection;
     mEditor->GetSelection(getter_AddRefs(selection));
     if (NS_FAILED(result)) return result;
     if (!selection) return NS_ERROR_NULL_POINTER;

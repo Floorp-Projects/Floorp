@@ -269,6 +269,7 @@ var personalToolbarObserver = {
 var contentAreaDNDObserver = {
   onDragStart: function (aEvent)
     {  
+      dump("dragstart\n");
       var htmlstring = null;
       var textstring = null;
       var isLink = false;
@@ -276,12 +277,18 @@ var contentAreaDNDObserver = {
       if (domselection && !domselection.isCollapsed && 
           domselection.containsNode(aEvent.target,false))
         {
-          // the window has a selection so we should grab that rather than looking for specific elements
-          htmlstring = domselection.toString("text/html", 128+256, 0);
-          textstring = domselection.toString("text/plain", 0, 0);
+          var privateSelection = domselection.QueryInterface(Components.interfaces.nsISelectionPrivate);
+          if (privateSelection)
+          {
+            // the window has a selection so we should grab that rather than looking for specific elements
+            htmlstring = privateSelection.toStringWithFormat("text/html", 128+256, 0);
+            textstring = privateSelection.toStringWithFormat("text/plain", 0, 0);
+            dump("we cool?\n");
+          }
         }
       else 
         {
+          dump("didnt get here\n");
           switch (aEvent.target.localName) 
             {
               case 'AREA':

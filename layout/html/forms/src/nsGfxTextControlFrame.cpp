@@ -79,7 +79,7 @@
 #include "nsIDOMNode.h"
 #include "nsIDOMElement.h"
 #include "nsIDOMNodeList.h"
-#include "nsIDOMSelection.h"
+#include "nsISelection.h"
 #include "nsIDOMCharacterData.h"
 #include "nsIDocument.h"
 #include "nsIDOMDocument.h"
@@ -275,11 +275,11 @@ nsGfxTextControlFrame::~nsGfxTextControlFrame()
     if (mEditor)
     {
       // remove selection listener
-      nsCOMPtr<nsIDOMSelection> selection;
+      nsCOMPtr<nsISelection> selection;
       result = mEditor->GetSelection(getter_AddRefs(selection));
       if (NS_SUCCEEDED(result) && selection) 
       {
-        nsCOMPtr<nsIDOMSelectionListener> selListener = do_QueryInterface(mEventListener);
+        nsCOMPtr<nsISelectionListener> selListener = do_QueryInterface(mEventListener);
         if (selListener)
           selection->RemoveSelectionListener(selListener); 
       }
@@ -564,7 +564,7 @@ nsGfxTextControlFrame::SetSelectionEndPoints(PRInt32 aSelStart, PRInt32 aSelEnd)
   firstTextNode->GetLength(&nodeLengthU);
   PRInt32 nodeLength = (PRInt32)nodeLengthU;
     
-  nsCOMPtr<nsIDOMSelection> selection;
+  nsCOMPtr<nsISelection> selection;
   mEditor->GetSelection(getter_AddRefs(selection));  
   if (!selection) return NS_ERROR_FAILURE;
 
@@ -725,7 +725,7 @@ nsGfxTextControlFrame::GetSelectionRange(PRInt32* aSelectionStart, PRInt32* aSel
   NS_ASSERTION(mEditor, "Should have an editor here");
   NS_ASSERTION(mDoc, "Should have an editor here");
   
-  nsCOMPtr<nsIDOMSelection> selection;
+  nsCOMPtr<nsISelection> selection;
   mEditor->GetSelection(getter_AddRefs(selection));  
   if (!selection) return NS_ERROR_FAILURE;
 
@@ -3142,11 +3142,11 @@ nsGfxTextControlFrame::InstallEventListeners()
   // add the selection listener
   if (mEditor && mEventListener)
   {
-    nsCOMPtr<nsIDOMSelection>selection;
+    nsCOMPtr<nsISelection>selection;
     result = mEditor->GetSelection(getter_AddRefs(selection));
     if (NS_FAILED(result)) { return result; }
     if (!selection) { return NS_ERROR_NULL_POINTER; }
-    nsCOMPtr<nsIDOMSelectionListener> selectionListener = do_QueryInterface(mEventListener);
+    nsCOMPtr<nsISelectionListener> selectionListener = do_QueryInterface(mEventListener);
     if (!selectionListener) { return NS_ERROR_NO_INTERFACE; }
     result = selection->AddSelectionListener(selectionListener);
     if (NS_FAILED(result)) { return result; }
@@ -3397,7 +3397,7 @@ nsGfxTextControlFrame::InitializeTextControl(nsIPresShell *aPresShell, nsIDOMDoc
   NS_ASSERTION(editor, "bad QI to nsIEditor from mEditor");
   if (editor)
   {
-    nsCOMPtr<nsIDOMSelection>selection;
+    nsCOMPtr<nsISelection>selection;
     result = editor->GetSelection(getter_AddRefs(selection));
     if (NS_FAILED(result)) { return result; }
     if (!selection) { return NS_ERROR_NULL_POINTER; }
@@ -3505,7 +3505,7 @@ nsresult nsGfxTextControlFrame::UpdateTextControlCommands(const nsString& aComma
   {  
     if (aCommand == NS_ConvertASCIItoUCS2("select"))   // optimize select updates
     {
-      nsCOMPtr<nsIDOMSelection> domSelection;
+      nsCOMPtr<nsISelection> domSelection;
       rv = mEditor->GetSelection(getter_AddRefs(domSelection));
       if (NS_FAILED(rv)) return rv;
       if (!domSelection) return NS_ERROR_UNEXPECTED;
@@ -3995,8 +3995,8 @@ nsEnderEventListener::QueryInterface(REFNSIID aIID, void** aInstancePtr)
     NS_ADDREF_THIS();
     return NS_OK;
   }
-  if (aIID.Equals(NS_GET_IID(nsIDOMSelectionListener))) {
-    *aInstancePtr = (void*)(nsIDOMSelectionListener*)this;
+  if (aIID.Equals(NS_GET_IID(nsISelectionListener))) {
+    *aInstancePtr = (void*)(nsISelectionListener*)this;
     NS_ADDREF_THIS();
     return NS_OK;
   }
@@ -4601,7 +4601,7 @@ nsEnderEventListener::Blur(nsIDOMEvent* aEvent)
 }
 
 NS_IMETHODIMP
-nsEnderEventListener::NotifySelectionChanged(nsIDOMDocument *, nsIDOMSelection *, short)
+nsEnderEventListener::NotifySelectionChanged(nsIDOMDocument *, nsISelection *, short)
 {
   nsGfxTextControlFrame *gfxFrame = mFrame.Reference();
   if (gfxFrame && mContent)

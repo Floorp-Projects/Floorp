@@ -95,6 +95,8 @@ XPIDLSRCS	= \
 		nsIChromeEventHandler.idl	\
 		nsIContentPolicy.idl        \
 		nsISelectionController.idl  \
+		nsISelectionListener.idl  \
+		nsISelection.idl  \
 		nsIPrintListener.idl        \
 		$(NULL)
 

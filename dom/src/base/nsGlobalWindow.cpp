@@ -87,7 +87,7 @@
 #include "nsIScriptGlobalObjectOwner.h"
 #include "nsIScriptSecurityManager.h"
 #include "nsISelectionController.h"
-#include "nsIDOMSelection.h"
+#include "nsISelection.h"
 #include "nsIFrameSelection.h"
 #include "nsISidebar.h"         // XXX for sidebar HACK, see bug 20721
 #include "nsIPrompt.h"
@@ -2213,7 +2213,7 @@ NS_IMETHODIMP GlobalWindowImpl::Unescape(const nsAReadableString& aStr,
   return NS_OK;
 }
 
-NS_IMETHODIMP GlobalWindowImpl::GetSelection(nsIDOMSelection** aSelection)
+NS_IMETHODIMP GlobalWindowImpl::GetSelection(nsISelection** aSelection)
 {
   NS_ENSURE_ARG_POINTER(aSelection);
   *aSelection = nsnull;

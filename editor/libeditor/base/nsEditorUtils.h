@@ -27,7 +27,7 @@
 
 #include "nsCOMPtr.h"
 #include "nsIDOMNode.h"
-#include "nsIDOMSelection.h"
+#include "nsISelection.h"
 #include "nsIEditor.h"
 #include "nsIAtom.h"
 #include "nsVoidArray.h"
@@ -69,12 +69,12 @@ class nsAutoSelectionReset
 {
   private:
     /** ref-counted reference to the selection that we are supposed to restore */
-    nsCOMPtr<nsIDOMSelection> mSel;
+    nsCOMPtr<nsISelection> mSel;
     nsEditor *mEd;  // non-owning ref to nsEditor
 
   public:
     /** constructor responsible for remembering all state needed to restore aSel */
-    nsAutoSelectionReset(nsIDOMSelection *aSel, nsEditor *aEd);
+    nsAutoSelectionReset(nsISelection *aSel, nsEditor *aEd);
     
     /** destructor restores mSel to its former state */
     ~nsAutoSelectionReset();
