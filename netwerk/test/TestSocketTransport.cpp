@@ -618,7 +618,15 @@ main(int argc, char* argv[])
     } else {
       gKeepRunning = FALSE;
     }
-#endif
+#else
+#ifdef XP_MAC
+    /* Mac stuff is missing here! */
+#else
+    PLEvent *gEvent;
+    rv = gEventQ->GetEvent(&gEvent);
+    PL_HandleEvent(gEvent);
+#endif /* XP_UNIX */
+#endif /* !WIN32 */
   }
 
 
