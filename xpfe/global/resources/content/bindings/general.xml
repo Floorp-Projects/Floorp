@@ -206,6 +206,9 @@
       <property name="documentCharsetInfo"
                 readonly="true"
                 onget="return this.docShell.documentCharsetInfo;"/>
+      <property name="contentDocument"
+                readonly="true"
+                onget="return this.webNavigation.document;"/>
     </implementation>
   </binding>
 
