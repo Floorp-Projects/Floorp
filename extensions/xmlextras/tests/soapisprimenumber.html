@@ -3,7 +3,7 @@
 </HEAD>
 <BODY>
 <H1>SOAP Test: Is It a Prime Number</H1>
-Type slowly and the number will change color depending upon whether the soap call 
+The number typed in the text field will change color depending upon whether the soap call 
 reports <font color="green">prime</font> or <font  color="red">nonprime</font>.  
 <p>This works by calling a SOAP service listed on 
 <A href="http://www.xmethods.com">X Methods Website</A>.  View the source of this 
@@ -16,6 +16,8 @@ string.
 <p>Experimenters may wish to add other tests which exercize services, with specific 
 user interfaces such as the one in this test.
 <SCRIPT>
+
+  var currentCall;
 
 // Passed in as the response handler in the asynchronous case
 // and called directly (see below) in the synchronous case
@@ -38,15 +40,15 @@ function oncompletion(resp, call, status) {
     var ret = resp.getParameters(false, {});
     var val = ret[0].value;
     if (val == "true") {
-      document.getElementById("NUMBER").style.color="green"
+      document.getElementById("NUMBER").style.color="green";
     } else {
-      document.getElementById("NUMBER").style.color="red"
+      document.getElementById("NUMBER").style.color="red";
     }
   }
   return true;
 }
 
-function makeCall(syncCall, value) {
+function makeCall(value) {
   var s = new SOAPCall();
   // The targetObjectURI, methodName and destinatioName are mandatory.
   // The actionURI is optional.
@@ -59,17 +61,14 @@ function makeCall(syncCall, value) {
   // we don't need it to be named
   s.encode(0, "isPrimeNumber", "urn:SpheonJSOAPStatistics", 0, null, 1, new Array(new SOAPParameter(value,"number")));
 
-  if (syncCall) {
-	  var r = s.invoke();
-    oncompletion(r, s, 0);
-  }
-  else {
-    s.asyncInvoke(oncompletion);
-  }
+  if (currentCall != null) { currentCall.abort(); }
+  document.getElementById("NUMBER").style.color="black";
+  currentCall = s.asyncInvoke(oncompletion);
+  
 }
 </SCRIPT>
 <P>
 <FORM>
-<INPUT ID=NUMBER TYPE="text" onkeyup="makeCall(false, value);">
+<INPUT ID=NUMBER TYPE="text" onkeyup="makeCall(value);">
 </BODY>
 </HTML>
