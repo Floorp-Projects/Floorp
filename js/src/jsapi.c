@@ -99,6 +99,7 @@ JS_ConvertArguments(JSContext *cx, uintN argc, jsval *argv, const char *format,
     uintN i;
     JSBool required;
     const char *cp;
+    char c;
     JSFunction *fun;
     jsdouble d;
     JSString *str;
@@ -130,7 +131,7 @@ JS_ConvertArguments(JSContext *cx, uintN argc, jsval *argv, const char *format,
 	    }
 	    break;
 	}
-	switch (*cp) {
+	switch ((c = *cp)) {
 	  case 'b':
 	    if (!js_ValueToBoolean(cx, argv[i], va_arg(ap, JSBool *)))
 		return JS_FALSE;
@@ -161,18 +162,18 @@ JS_ConvertArguments(JSContext *cx, uintN argc, jsval *argv, const char *format,
 	    *va_arg(ap, jsdouble *) = js_DoubleToInteger(d);
 	    break;
 	  case 's':
-	    str = js_ValueToString(cx, argv[i]);
-	    if (!str)
-		return JS_FALSE;
-	    argv[i] = STRING_TO_JSVAL(str);
-	    *va_arg(ap, char **) = JS_GetStringBytes(str);
-	    break;
 	  case 'S':
+	  case 'W':
 	    str = js_ValueToString(cx, argv[i]);
 	    if (!str)
 		return JS_FALSE;
 	    argv[i] = STRING_TO_JSVAL(str);
-	    *va_arg(ap, JSString **) = str;
+	    if (c == 's')
+		*va_arg(ap, char **) = JS_GetStringBytes(str);
+	    else if (c == 'W')
+		*va_arg(ap, jschar **) = str->chars;
+	    else
+		*va_arg(ap, JSString **) = str;
 	    break;
 	  case 'o':
 	    if (!js_ValueToObject(cx, argv[i], &obj))
