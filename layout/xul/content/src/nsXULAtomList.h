@@ -110,6 +110,13 @@ XUL_ATOM(resizebefore, "resizebefore")
 XUL_ATOM(resizeafter, "resizeafter")
 XUL_ATOM(state, "state")
 
+// toolbar & toolbar d&d atoms
+XUL_ATOM(tbDropLocation, "tb-droplocation")
+XUL_ATOM(tbDropLocationCoord, "tb-droplocationcoord")
+XUL_ATOM(tbDropOn, "tb-dropon")
+XUL_ATOM(tbTriggerRepaint, "tb-triggerrepaint")
+XUL_ATOM(container, "container")
+
 
 XUL_ATOM(widget, "widget")
 XUL_ATOM(window, "window")
