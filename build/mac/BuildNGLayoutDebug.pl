@@ -47,11 +47,11 @@ $build{nglayout} = 1;
 chdir("::::");
 $MOZ_SRC = cwd();
 
+OpenErrorLog("NGLayoutDebugBuildLog");
+#OpenErrorLog("Mozilla.BuildLog");		# Tinderbox requires that name
+
 Moz::StopForErrors();
 #Moz::DontStopForErrors();
-
-#OpenErrorLog("::NGLayoutBuildLog");
-OpenErrorLog(":::Mozilla.BuildLog");		# Tinderbox requires that name
 
 if ($pull{all}) { 
    Checkout();
