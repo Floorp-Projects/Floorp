@@ -1577,7 +1577,7 @@ TextFrame::GetPosition(nsIPresContext& aCX,
   GetOrigin(origin);
   PRBool found = BinarySearchForPosition(aRendContext, text, origin.x, 0, 0,
                                          PRInt32(textLength),
-                                         PRInt32(aEvent->point.x),
+                                         PRInt32(aEvent->point.x) , //go to local coordinates
                                          index, textWidth);
   if (found) {
     PRInt32 charWidth;

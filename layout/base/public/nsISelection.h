@@ -50,7 +50,7 @@ public:
    *  @param aContentOffset is the offset in the node of the aFrame that is reflected be aOffset
    *  @param aContinueSelection is the flag that tells the selection to keep the old anchor point or not.
    */
-  virtual nsresult TakeFocus(nsIFocusTracker *aTracker, nsIFrame *aFrame, PRUint32 aOffset, PRInt32 aContentOffset, PRBool aContinueSelection) = 0;
+  virtual nsresult TakeFocus(nsIFocusTracker *aTracker, nsIFrame *aFrame, PRInt32 aOffset, PRInt32 aContentOffset, PRBool aContinueSelection) = 0;
 
 };
 
