@@ -35,9 +35,17 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+/**
+ * VersionCheckSoapBindingImpl.java
+ *
+ * This file was auto-generated from WSDL
+ * by the Apache Axis WSDL2Java emitter.
+ */
+
 package org.mozilla.update.extensions;
 
 import java.sql.*;
+import java.util.*;
 
 public class VersionCheck
 {
@@ -45,24 +53,30 @@ public class VersionCheck
   {
   }
 
-  protected Connection getConnection()
+  public static void main(String[] args) throws Exception 
   {
-    Connection c = null;
     try 
     {
-      Class.forName("com.mysql.jdbc.Driver");
-      c = DriverManager.getConnection("jdbc:mysql://localhost/", "", "");
+      VersionCheckSoapBindingImpl impl = new VersionCheckSoapBindingImpl();
+      int id = impl.getNewestExtension("{bb8ee064-ccb9-47fc-94ae-ec335af3fe2d}", "3.0", "{ec8030f7-c20a-464f-9b0e-13a3a9e97384}", "0.8.0+");
+      System.out.println("result = " + impl.getProperty(id, "xpiurl"));
     }
-    catch (Exception e)
+    catch (Exception e) 
     {
+      System.out.println("e = " + e.getMessage());
     }
-    return c;
+  }
+
+  protected Connection getConnection() throws Exception
+  {
+    Class.forName("com.mysql.jdbc.Driver");
+    return DriverManager.getConnection("jdbc:mysql://localhost/umo_extensions", "root", "");
   }
 
   public String getProperty(int aRowID, String aProperty)
   {
     String result = null;
-    try 
+    try
     {
       Connection c = getConnection();
       Statement s = c.createStatement();
@@ -71,38 +85,44 @@ public class VersionCheck
       ResultSet rs = s.executeQuery(sql);
 
       result = rs.next() ? rs.getString(aProperty) : null;
+      if (result == null)
+        result = "query succeeded, but null!";
     }
-    catch (Exception e) 
+    catch (Exception e)
     {
+      result = e.getMessage();
     }
     return result;
   }
 
   public int getNewestExtension(String aExtensionGUID, 
-                                String aInstalledVersion, 
-                                String aTargetApp, 
-                                String aTargetAppVersion)
+    String aInstalledVersion, 
+    String aTargetApp, 
+    String aTargetAppVersion)
   {
     int id = -1;
+    int extensionVersionParts = getPartCount(aInstalledVersion);
+    int targetAppVersionParts = getPartCount(aTargetAppVersion);
+
+    int extensionVersion = parseVersion(aInstalledVersion, extensionVersionParts);
+    int targetAppVersion = parseVersion(aTargetAppVersion, targetAppVersionParts);
+
+    Connection c;
+    Statement s;
+    ResultSet rs;
     try 
     {
-      int extensionVersionParts = getPartCount(aInstalledVersion);
-      int targetAppVersionParts = getPartCount(aTargetAppVersion);
-
-      int extensionVersion = parseVersion(aInstalledVersion, extensionVersionParts);
-      int targetAppVersion = parseVersion(aTargetAppVersion, targetAppVersionParts);
-
-      Connection c = getConnection();
-
-      Statement s = c.createStatement();
-
+      c = getConnection();
+      s = c.createStatement();
+  
       // We need to find all rows matching aExtensionGUID, and filter like so:
       // 1) version > extensionVersion
       // 2) targetapp == aTargetApp
       // 3) mintargetappversion <= targetAppVersion <= maxtargetappversion
-      String sql = "SELECT * FROM extensions WHERE targetapp = '" + aTargetAppVersion + "'AND guid = '" + aExtensionGUID + "'";
+      String sql = "SELECT * FROM extensions WHERE guid = '" + aExtensionGUID + "' AND targetapp = '" + aTargetApp + "'";
 
-      ResultSet rs = s.executeQuery(sql);
+      boolean goat = s.execute(sql);
+      rs = s.getResultSet();
 
       int newestExtensionVersion = extensionVersion;
 
@@ -122,6 +142,8 @@ public class VersionCheck
         }
       }
       rs.close();
+      s.close();
+      c.close();
     }
     catch (Exception e) 
     {
@@ -133,23 +155,30 @@ public class VersionCheck
   protected int parseVersion(String aVersionString, int aPower)
   {
     int version = 0;
-    String[] parts = aVersionString.split(".");
+    StringTokenizer tokenizer = new StringTokenizer(aVersionString, ".");
 
     if (aPower == 0)
-      aPower = parts.length;
+      aPower = tokenizer.countTokens();
     
-    for (int i = 0; i < parts.length; ++i) 
+    for (int i = 0; tokenizer.hasMoreTokens(); ++i) 
     {
-      if (parts[i] != "+") 
+      String token = tokenizer.nextToken();
+      if (token.endsWith("+")) 
       {
-        version += Integer.parseInt(parts[i]) * Math.pow(10, aPower - i);
+        token = token.substring(0, token.lastIndexOf("+"));
+        version += 1;
+        if (token.length() == 0)
+          continue;
       }
+
+      version += Integer.parseInt(token) * Math.pow(10, aPower - i);
     }
     return version;
   }
 
   protected int getPartCount(String aVersionString)
   {
-    return aVersionString.split(".").length;
+    return (new StringTokenizer(aVersionString, ".")).countTokens();
   }
 }
+
