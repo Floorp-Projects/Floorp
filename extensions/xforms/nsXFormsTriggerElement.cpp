@@ -48,6 +48,8 @@
 #include "nsIXTFXMLVisualWrapper.h"
 #include "nsXFormsUtils.h"
 #include "nsXFormsControlStub.h"
+#include "nsIXFormsSubmitElement.h"
+#include "nsIXFormsSubmissionElement.h"
 
 class nsXFormsTriggerElement : public nsXFormsControlStub
 {
@@ -128,12 +130,20 @@ nsXFormsTriggerElement::TryFocus(PRBool* aOK)
 
 //-----------------------------------------------------------------------------
 
-class nsXFormsSubmitElement : public nsXFormsTriggerElement
+class nsXFormsSubmitElement : public nsXFormsTriggerElement,
+                              public nsIXFormsSubmitElement
 {
 public:
+  NS_DECL_ISUPPORTS_INHERITED
+  NS_DECL_NSIXFORMSSUBMITELEMENT
+
   // nsIXTFElement overrides
   NS_IMETHOD HandleDefault(nsIDOMEvent *aEvent, PRBool *aHandled);
 };
+
+NS_IMPL_ISUPPORTS_INHERITED1(nsXFormsSubmitElement,
+                             nsXFormsTriggerElement,
+                             nsIXFormsSubmitElement)
 
 // nsIXTFElement
 
@@ -163,30 +173,24 @@ nsXFormsSubmitElement::HandleDefault(nsIDOMEvent *aEvent, PRBool *aHandled)
 
   nsCOMPtr<nsIDOMElement> submissionElement;
   ownerDoc->GetElementById(submissionID, getter_AddRefs(submissionElement));
+  nsCOMPtr<nsIXFormsSubmissionElement> xfSubmission(do_QueryInterface(submissionElement));
   
-  if (!submissionElement ||
-      !nsXFormsUtils::IsXFormsElement(submissionElement, submission)) {
+  if (!xfSubmission) {
     return nsXFormsUtils::DispatchEvent(mElement, eEvent_BindingException);
   }
 
-  nsCOMPtr<nsIDOMEventTarget> targ = do_QueryInterface(submissionElement);
-  NS_ASSERTION(targ, "All elements should support nsIDOMEventTarget");
-
-  nsCOMPtr<nsIDOMDocumentEvent> docEvent = do_QueryInterface(ownerDoc);
-  NS_ASSERTION(targ, "All documents should support nsIDOMDocumentEvent");
-
-  nsCOMPtr<nsIDOMEvent> event;
-  docEvent->CreateEvent(NS_LITERAL_STRING("Events"), getter_AddRefs(event));
-  NS_ENSURE_STATE(event);
-
-  rv = event->InitEvent(NS_LITERAL_STRING("xforms-submit"), PR_TRUE, PR_TRUE);
-  NS_ENSURE_SUCCESS(rv, NS_ERROR_UNEXPECTED);
-
-  PRBool unused;
-  rv = targ->DispatchEvent(event, &unused);
-  NS_ENSURE_SUCCESS(rv, NS_ERROR_UNEXPECTED);
+  xfSubmission->SetActivator(this);
+  nsXFormsUtils::DispatchEvent(submissionElement, eEvent_Submit);
 
   *aHandled = PR_TRUE;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsXFormsSubmitElement::SetDisabled(PRBool aDisable)
+{
+  if (mButton)
+    mButton->SetDisabled(aDisable);
   return NS_OK;
 }
 

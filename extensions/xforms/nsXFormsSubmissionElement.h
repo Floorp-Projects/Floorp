@@ -44,6 +44,8 @@
 #include "nsIInputStream.h"
 #include "nsCOMPtr.h"
 #include "nsIModelElementPrivate.h"
+#include "nsIXFormsSubmitElement.h"
+#include "nsIXFormsSubmissionElement.h"
 
 class nsIMultiplexInputStream;
 class nsIDOMElement;
@@ -60,11 +62,13 @@ class SubmissionAttachmentArray;
  * @see http://www.w3.org/TR/xforms/slice3.html#structure-model-submission
  */
 class nsXFormsSubmissionElement : public nsXFormsStubElement,
-                                  public nsIRequestObserver
+                                  public nsIRequestObserver,
+                                  public nsIXFormsSubmissionElement
 {
 public:
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_NSIREQUESTOBSERVER
+  NS_DECL_NSIXFORMSSUBMISSIONELEMENT
 
   nsXFormsSubmissionElement()
     : mElement(nsnull)
@@ -81,7 +85,6 @@ public:
   NS_HIDDEN_(nsresult) LoadReplaceInstance(nsIChannel *);
   NS_HIDDEN_(nsresult) LoadReplaceAll(nsIChannel *);
   NS_HIDDEN_(nsresult) Submit();
-  NS_HIDDEN_(nsresult) SubmitEnd(PRBool succeeded);
   NS_HIDDEN_(PRBool)   GetBooleanAttr(const nsAString &attrName, PRBool defaultVal = PR_FALSE);
   NS_HIDDEN_(void)     GetDefaultInstanceData(nsIDOMNode **result);
   NS_HIDDEN_(nsresult) GetSelectedInstanceData(nsIDOMNode **result);
@@ -102,6 +105,7 @@ public:
 private:
   nsIDOMElement *mElement;
   PRBool         mSubmissionActive;
+  nsCOMPtr<nsIXFormsSubmitElement> mActivator;
 
   // input end of pipe, which contains response data.
   nsCOMPtr<nsIInputStream> mPipeIn;

@@ -85,6 +85,8 @@ XPIDLSRCS	= \
 		nsIXFormsValueElement.idl \
 		nsIXFormsRepeatElement.idl \
 		nsIXFormsRepeatItemElement.idl \
+		nsIXFormsSubmitElement.idl \
+		nsIXFormsSubmissionElement.idl \
 		$(NULL)
 
 CPPSRCS		= \

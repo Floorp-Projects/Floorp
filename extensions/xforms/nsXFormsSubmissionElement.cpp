@@ -261,9 +261,10 @@ public:
 
 // nsISupports
 
-NS_IMPL_ISUPPORTS_INHERITED1(nsXFormsSubmissionElement,
+NS_IMPL_ISUPPORTS_INHERITED2(nsXFormsSubmissionElement,
                              nsXFormsStubElement,
-                             nsIRequestObserver)
+                             nsIRequestObserver,
+                             nsIXFormsSubmissionElement)
 
 // nsIXTFElement
 
@@ -280,14 +281,31 @@ nsXFormsSubmissionElement::HandleDefault(nsIDOMEvent *aEvent, PRBool *aHandled)
   nsAutoString type;
   aEvent->GetType(type);
   if (type.EqualsLiteral("xforms-submit")) {
-    nsresult rv = Submit();
-    if (NS_FAILED(rv))
-      SubmitEnd(PR_FALSE);
+    // If the submission is already active, do nothing.
+    if (!mSubmissionActive && NS_FAILED(Submit())) {
+      mSubmissionActive = PR_FALSE;
+      if (mActivator) {
+        mActivator->SetDisabled(PR_FALSE);
+        mActivator = nsnull;
+      }
+      nsXFormsUtils::DispatchEvent(mElement, eEvent_SubmitError);
+    }
+
     *aHandled = PR_TRUE;
   } else {
     *aHandled = PR_FALSE;
   }
 
+  return NS_OK;
+}
+
+// nsIXFormsSubmissionElement
+
+NS_IMETHODIMP
+nsXFormsSubmissionElement::SetActivator(nsIXFormsSubmitElement* aActivator)
+{
+  if (!mActivator && !mSubmissionActive)
+    mActivator = aActivator;
   return NS_OK;
 }
 
@@ -348,7 +366,13 @@ nsXFormsSubmissionElement::OnStopRequest(nsIRequest *request, nsISupports *ctx, 
 
   mPipeIn = 0;
 
-  SubmitEnd(succeeded);
+  mSubmissionActive = PR_FALSE;
+  if (mActivator) {
+    mActivator->SetDisabled(PR_FALSE);
+    mActivator = nsnull;
+  }
+  nsXFormsUtils::DispatchEvent(mElement, succeeded ?
+                               eEvent_SubmitDone : eEvent_SubmitError);
   return NS_OK;
 }
 
@@ -466,6 +490,9 @@ nsXFormsSubmissionElement::Submit()
   // 1. ensure that we are not currently processing a xforms-submit (see E37)
   NS_ENSURE_STATE(!mSubmissionActive);
   mSubmissionActive = PR_TRUE;
+  
+  if (mActivator)
+    mActivator->SetDisabled(PR_TRUE);
 
   // XXX seems to be required by 
   // http://www.w3.org/TR/2003/REC-xforms-20031014/slice4.html#evt-revalidate
@@ -508,36 +535,6 @@ nsXFormsSubmissionElement::Submit()
   NS_ENSURE_SUCCESS(rv, rv);
 
   return rv;
-}
-
-nsresult
-nsXFormsSubmissionElement::SubmitEnd(PRBool succeeded)
-{
-  LOG(("xforms submission complete [%s]\n", succeeded ? "success" : "failure"));
-
-  // XForms 1.0 errata (E37) limits a <submission> element to performing
-  // only one submission at a time, contrary to the spec which places the
-  // limitation on the <model> element.
-  mSubmissionActive = PR_FALSE;
-
-  nsCOMPtr<nsIDOMDocument> domDoc;
-  mElement->GetOwnerDocument(getter_AddRefs(domDoc));
-  nsCOMPtr<nsIDOMDocumentEvent> doc = do_QueryInterface(domDoc);
-
-  nsCOMPtr<nsIDOMEvent> event;
-  doc->CreateEvent(NS_LITERAL_STRING("Events"), getter_AddRefs(event));
-  NS_ENSURE_TRUE(event, NS_ERROR_OUT_OF_MEMORY);
-
-  event->InitEvent(succeeded ? NS_LITERAL_STRING("xforms-submit-done")
-                             : NS_LITERAL_STRING("xforms-submit-error"),
-                   PR_TRUE, PR_FALSE);
-
-  // XForms 1.0 errata (E10) states that the target of the xforms-submit-error
-  // event is the <submission> element instead of the <model> element.
-  nsCOMPtr<nsIDOMEventTarget> target = do_QueryInterface(mElement);
-
-  PRBool cancelled;
-  return target->DispatchEvent(event, &cancelled);
 }
 
 nsresult
