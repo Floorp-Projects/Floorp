@@ -756,31 +756,38 @@ nsresult nsRange::PopRanges(nsCOMPtr<nsIDOMNode> aDestNode, PRInt32 aOffset, nsC
     if (theRangeList)
     {
        nsRange* theRange;
-       PRInt32 loop = 0;
-       while (nsnull != (theRange = NS_STATIC_CAST(nsRange*, (theRangeList->ElementAt(loop)))))
+       PRInt32  theCount = theRangeList->Count();
+       while (theCount)
        {
-          nsCOMPtr<nsIDOMNode> domNode;
-          res = GetDOMNodeFromContent(cN, &domNode);
-          NS_PRECONDITION(NS_SUCCEEDED(res), "error updating range list");
-          NS_PRECONDITION(domNode, "error updating range list");
-          // sanity check - do range and content agree over ownership?
-          res = theRange->ContentOwnsUs(domNode);
-          NS_PRECONDITION(NS_SUCCEEDED(res), "range and content disagree over range ownership");
+          theRange = NS_STATIC_CAST(nsRange*, (theRangeList->ElementAt(0)));
+          if (theRange)
+          {
+            nsCOMPtr<nsIDOMNode> domNode;
+            res = GetDOMNodeFromContent(cN, &domNode);
+            NS_PRECONDITION(NS_SUCCEEDED(res), "error updating range list");
+            NS_PRECONDITION(domNode, "error updating range list");
+            // sanity check - do range and content agree over ownership?
+            res = theRange->ContentOwnsUs(domNode);
+            NS_PRECONDITION(NS_SUCCEEDED(res), "range and content disagree over range ownership");
 
-          if (theRange->mStartParent == domNode)
-          {
-            // promote start point up to replacement point
-            theRange->SetStart(aDestNode, aOffset);
+            if (theRange->mStartParent == domNode)
+            {
+              // promote start point up to replacement point
+              theRange->SetStart(aDestNode, aOffset);
+            }
+            if (theRange->mEndParent == domNode)
+            {
+              // promote end point up to replacement point
+              theRange->SetEnd(aDestNode, aOffset);
+            }          
           }
-          if (theRange->mEndParent == domNode)
-          {
-            // promote end point up to replacement point
-            theRange->SetEnd(aDestNode, aOffset);
-          }
-          
-          loop++;
+          // must refresh theRangeList - it might have gone away!
+          cN->GetRangeList(theRangeList);
+          if (theRangeList)
+            theCount = theRangeList->Count();
+          else
+            theCount = 0;
        } 
-      
     }
     iter->Next();
     res = iter->CurrentNode(getter_AddRefs(cN));
