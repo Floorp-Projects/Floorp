@@ -42,6 +42,17 @@
 
 #include "nsAccessible.h"
 #include "nsBaseWidgetAccessible.h"
+#include "nsIAccessibleTable.h"
+#include "nsIServiceManager.h"
+#include "nsIDocument.h"
+#include "nsIDOMElement.h"
+#include "nsIDOMHTMLTableElement.h"
+#include "nsIDOMHTMLTableCaptionElem.h"
+#include "nsIDOMHTMLTableRowElement.h"
+#include "nsIDOMHTMLTableCellElement.h"
+#include "nsIDOMHTMLTableSectionElem.h"
+#include "nsIDOMHTMLCollection.h"
+#include "nsITableLayout.h"
 
 class nsHTMLTableCellAccessible : public nsBlockAccessible
 {
@@ -51,14 +62,53 @@ public:
   NS_IMETHOD GetAccState(PRUint32 *aResult); 
 };
 
+class nsHTMLTableCaptionAccessible : public nsAccessible
+{
+public:
+  nsHTMLTableCaptionAccessible(nsIDOMNode* aDomNode, nsIWeakReference* aShell);
+  NS_IMETHOD GetAccState(PRUint32 *aResult);
+  NS_IMETHOD GetAccValue(nsAString& aResult);
+};
 
-class nsHTMLTableAccessible : public nsBlockAccessible
+class nsHTMLTableAccessible : public nsBlockAccessible,
+                              public nsIAccessibleTable
 {
 public:
   nsHTMLTableAccessible(nsIDOMNode* aDomNode, nsIWeakReference* aShell);
+
+  /* nsIAccessible */
   NS_IMETHOD GetAccRole(PRUint32 *aResult); 
   NS_IMETHOD GetAccState(PRUint32 *aResult); 
   NS_IMETHOD GetAccName(nsAString& aResult);
+
+  /* nsIAccessibleTable */
+  NS_DECL_ISUPPORTS
+  NS_DECL_NSIACCESSIBLETABLE
+
+protected:
+
+  nsresult GetTableNode(nsIDOMNode **_retval);
+  nsresult GetTableLayout(nsITableLayout **aLayoutObject);
+  nsresult GetCellAt(PRInt32        aRowIndex,
+                     PRInt32        aColIndex,
+                     nsIDOMElement* &aCell);
+};
+
+class nsHTMLTableHeadAccessible : public nsHTMLTableAccessible
+{
+public:
+  nsHTMLTableHeadAccessible(nsIDOMNode *aDomNode, nsIWeakReference *aShell);
+
+  /* nsIAccessible */
+  NS_IMETHOD GetAccRole(PRUint32 *aResult);
+
+  /* nsIAccessibleTable */
+  NS_IMETHOD GetCaption(nsIAccessible **aCaption);
+  NS_IMETHOD SetCaption(nsIAccessible *aCaption);
+  NS_IMETHOD GetSummary(nsAString &aSummary);
+  NS_IMETHOD SetSummary(const nsAString &aSummary);
+  NS_IMETHOD GetColumnHeader(nsIAccessibleTable **aColumnHeader);
+  NS_IMETHOD GetRows(PRInt32 *aRows);
 };
 
 #endif  

@@ -61,6 +61,7 @@
 #include "nsIDOMHTMLOptionElement.h"
 #include "nsIDOMHTMLOptGroupElement.h"
 #include "nsIDOMHTMLLegendElement.h"
+#include "nsIDOMHTMLTableElement.h"
 #include "nsIDOMNode.h"
 #include "nsIDOMXULCheckboxElement.h"
 #include "nsIFrame.h"
@@ -639,6 +640,50 @@ nsAccessibilityService::CreateHTMLTableAccessible(nsISupports *aFrame, nsIAccess
 
   NS_ADDREF(*_retval);
   return NS_OK;
+}
+
+NS_IMETHODIMP
+nsAccessibilityService::CreateHTMLTableCaptionAccessible(nsIDOMNode *aDOMNode, nsIAccessible **_retval)
+{
+  NS_ENSURE_ARG_POINTER(aDOMNode);
+
+  nsresult rv = NS_OK;
+
+  nsCOMPtr<nsIWeakReference> weakShell;
+  rv = GetShellFromNode(aDOMNode, getter_AddRefs(weakShell));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsHTMLTableCaptionAccessible* accTableCaption =
+    new nsHTMLTableCaptionAccessible(aDOMNode, weakShell);
+
+  NS_ENSURE_TRUE(accTableCaption, NS_ERROR_OUT_OF_MEMORY);
+
+  *_retval = NS_STATIC_CAST(nsIAccessible *, accTableCaption);
+  NS_IF_ADDREF(*_retval);
+
+  return rv;
+}
+
+NS_IMETHODIMP
+nsAccessibilityService::CreateHTMLTableHeadAccessible(nsIDOMNode *aDOMNode, nsIAccessible **_retval)
+{
+  NS_ENSURE_ARG_POINTER(aDOMNode);
+
+  nsresult rv = NS_OK;
+
+  nsCOMPtr<nsIWeakReference> weakShell;
+  rv = GetShellFromNode(aDOMNode, getter_AddRefs(weakShell));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsHTMLTableHeadAccessible* accTableHead =
+    new nsHTMLTableHeadAccessible(aDOMNode, weakShell);
+
+  NS_ENSURE_TRUE(accTableHead, NS_ERROR_OUT_OF_MEMORY);
+
+  *_retval = NS_STATIC_CAST(nsIAccessible *, accTableHead);
+  NS_IF_ADDREF(*_retval);
+
+  return rv;
 }
 
 NS_IMETHODIMP
