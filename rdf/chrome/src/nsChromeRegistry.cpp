@@ -1404,11 +1404,11 @@ NS_IMETHODIMP nsChromeRegistry::UpdateDynamicDataSources(nsIRDFDataSource *aData
     rv = arcs->GetNext(getter_AddRefs(supports));
     if (NS_FAILED(rv)) return rv;
 
-    nsCOMPtr<nsIRDFResource> resource = do_QueryInterface(supports, &rv);
+    nsCOMPtr<nsIRDFResource> resource2 = do_QueryInterface(supports, &rv);
 
     if (NS_SUCCEEDED(rv))
     {
-      rv = UpdateDynamicDataSource(aDataSource, resource, aIsOverlay, aUseProfile, aRemove);
+      rv = UpdateDynamicDataSource(aDataSource, resource2, aIsOverlay, aUseProfile, aRemove);
       if (NS_FAILED(rv)) return rv;
     }
 
@@ -1883,15 +1883,15 @@ NS_IMETHODIMP nsChromeRegistry::InstallProvider(const nsCString& aProviderType,
         // and package arcs.
         if (val.Find(":packages") != -1 && !aProviderType.Equals(nsCAutoString("package"))) {
           // Iterate over our kids a second time.
-          nsCOMPtr<nsISimpleEnumerator> seqKids;
-          rv = container->GetElements(getter_AddRefs(seqKids));
+          nsCOMPtr<nsISimpleEnumerator> seqKids2;
+          rv = container->GetElements(getter_AddRefs(seqKids2));
           if (NS_FAILED(rv)) return rv;
-          PRBool moreKids;
-          rv = seqKids->HasMoreElements(&moreKids);
+          PRBool moreKids2;
+          rv = seqKids2->HasMoreElements(&moreKids2);
           if (NS_FAILED(rv)) return rv;
-          while (moreKids) {
+          while (moreKids2) {
             nsCOMPtr<nsISupports> supp;
-            rv = seqKids->GetNext(getter_AddRefs(supp));
+            rv = seqKids2->GetNext(getter_AddRefs(supp));
             if (NS_FAILED(rv)) return rv;
             nsCOMPtr<nsIRDFResource> entry(do_QueryInterface(supp));
             if (entry) {
@@ -1903,15 +1903,15 @@ NS_IMETHODIMP nsChromeRegistry::InstallProvider(const nsCString& aProviderType,
               }
               
               // Now set up the package arc.
-              const char* val;
-              rv = entry->GetValueConst(&val);
+              const char* val2;
+              rv = entry->GetValueConst(&val2);
               if (NS_FAILED(rv)) return rv;
-              nsCAutoString value(val);
-              PRInt32 index = value.RFind(":");
+              nsCAutoString value2(val2);
+              PRInt32 index = value2.RFind(":");
               if (index != -1) {
                 // Peel off the package name.
                 nsCAutoString packageName;
-                value.Right(packageName, value.Length() - index - 1);
+                value2.Right(packageName, value2.Length() - index - 1);
 
                 nsCAutoString resourceName("urn:mozilla:package:");
                 resourceName += packageName;
@@ -1925,7 +1925,7 @@ NS_IMETHODIMP nsChromeRegistry::InstallProvider(const nsCString& aProviderType,
               }
             }
 
-            rv = seqKids->HasMoreElements(&moreKids);
+            rv = seqKids2->HasMoreElements(&moreKids2);
             if (NS_FAILED(rv)) return rv;
           }
         }
