@@ -93,8 +93,8 @@ OPDEF(JSOP_SETCONST,  14, "setconst",   NULL,         3,  1,  1,  1,  JOF_CONST|
 OPDEF(JSOP_BITOR,     15, "bitor",      "|",          1,  2,  1,  2,  JOF_BYTE|JOF_LEFTASSOC)
 OPDEF(JSOP_BITXOR,    16, "bitxor",     "^",          1,  2,  1,  3,  JOF_BYTE|JOF_LEFTASSOC)
 OPDEF(JSOP_BITAND,    17, "bitand",     "&",          1,  2,  1,  4,  JOF_BYTE|JOF_LEFTASSOC)
-OPDEF(JSOP_EQ,        18, "eq",         "==",         1,  2,  1,  5,  JOF_BYTE|JOF_LEFTASSOC)
-OPDEF(JSOP_NE,        19, "ne",         "!=",         1,  2,  1,  5,  JOF_BYTE|JOF_LEFTASSOC)
+OPDEF(JSOP_EQ,        18, "eq",         "==",         1,  2,  1,  5,  JOF_BYTE|JOF_LEFTASSOC|JOF_DETECTING)
+OPDEF(JSOP_NE,        19, "ne",         "!=",         1,  2,  1,  5,  JOF_BYTE|JOF_LEFTASSOC|JOF_DETECTING)
 OPDEF(JSOP_LT,        20, "lt",         "<",          1,  2,  1,  6,  JOF_BYTE|JOF_LEFTASSOC)
 OPDEF(JSOP_LE,        21, "le",         "<=",         1,  2,  1,  6,  JOF_BYTE|JOF_LEFTASSOC)
 OPDEF(JSOP_GT,        22, "gt",         ">",          1,  2,  1,  6,  JOF_BYTE|JOF_LEFTASSOC)
@@ -114,7 +114,7 @@ OPDEF(JSOP_NEW,       35, js_new_str,   NULL,         3, -1,  1, 10,  JOF_UINT16
 OPDEF(JSOP_DELNAME,   36, "delname",    NULL,         3,  0,  1, 10,  JOF_CONST|JOF_NAME|JOF_DEL)
 OPDEF(JSOP_DELPROP,   37, "delprop",    NULL,         3,  1,  1, 10,  JOF_CONST|JOF_PROP|JOF_DEL)
 OPDEF(JSOP_DELELEM,   38, "delelem",    NULL,         1,  2,  1, 10,  JOF_BYTE |JOF_ELEM|JOF_DEL)
-OPDEF(JSOP_TYPEOF,    39, js_typeof_str,NULL,         1,  1,  1, 10,  JOF_BYTE)
+OPDEF(JSOP_TYPEOF,    39, js_typeof_str,NULL,         1,  1,  1, 10,  JOF_BYTE|JOF_DETECTING)
 OPDEF(JSOP_VOID,      40, js_void_str,  NULL,         1,  1,  1, 10,  JOF_BYTE)
 OPDEF(JSOP_INCNAME,   41, "incname",    NULL,         3,  0,  1, 10,  JOF_CONST|JOF_NAME|JOF_INC)
 OPDEF(JSOP_INCPROP,   42, "incprop",    NULL,         3,  1,  1, 10,  JOF_CONST|JOF_PROP|JOF_INC)
@@ -151,8 +151,8 @@ OPDEF(JSOP_TABLESWITCH,  70, "tableswitch",  NULL,   -1,  1,  0,  0,  JOF_TABLES
 OPDEF(JSOP_LOOKUPSWITCH, 71, "lookupswitch", NULL,   -1,  1,  0,  0,  JOF_LOOKUPSWITCH)
 
 /* New, infallible/transitive identity ops. */
-OPDEF(JSOP_NEW_EQ,    72, "eq",         NULL,         1,  2,  1,  5,  JOF_BYTE)
-OPDEF(JSOP_NEW_NE,    73, "ne",         NULL,         1,  2,  1,  5,  JOF_BYTE)
+OPDEF(JSOP_NEW_EQ,    72, "eq",         NULL,         1,  2,  1,  5,  JOF_BYTE|JOF_DETECTING)
+OPDEF(JSOP_NEW_NE,    73, "ne",         NULL,         1,  2,  1,  5,  JOF_BYTE|JOF_DETECTING)
 
 /* Lexical closure constructor. */
 OPDEF(JSOP_CLOSURE,   74, "closure",    NULL,         3,  0,  0,  0,  JOF_CONST)
