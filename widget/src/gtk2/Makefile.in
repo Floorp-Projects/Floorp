@@ -61,6 +61,7 @@ CPPSRCS		= \
 		nsGtkKeyUtils.cpp \
 		nsGtkMozRemoteHelper.cpp \
 		nsClipboard.cpp \
+		nsDragService.cpp \
 		$(NULL)
 
 SHARED_LIBRARY_LIBS = $(DIST)/lib/libxpwidgets_s.a

@@ -48,6 +48,7 @@
 #include "nsClipboardHelper.h"
 #include "nsHTMLFormatConverter.h"
 #include "nsClipboard.h"
+#include "nsDragService.h"
 #ifdef IBMBIDI
 #include "nsBidiKeyboard.h"
 #endif
@@ -64,6 +65,7 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsGtkXRemoteWidgetHelper)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsClipboardHelper)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsHTMLFormatConverter)
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsClipboard, Init)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsDragService)
 
 static
 nsresult nsHorizScrollbarConstructor (nsISupports *aOuter,
@@ -165,6 +167,10 @@ static const nsModuleComponentInfo components[] =
     NS_CLIPBOARDHELPER_CID,
     "@mozilla.org/widget/clipboardhelper;1",
     nsClipboardHelperConstructor },
+  { "Gtk Drag Service",
+    NS_DRAGSERVICE_CID,
+    "@mozilla.org/widget/dragservice;1",
+    nsDragServiceConstructor },
   { "HTML Format Converter",
     NS_HTMLFORMATCONVERTER_CID,
     "@mozilla.org/widget/htmlformatconverter/gtk;1",
