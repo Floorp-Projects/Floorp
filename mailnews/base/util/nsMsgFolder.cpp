@@ -1452,7 +1452,11 @@ NS_IMETHODIMP nsMsgFolder::OnFlagChange(PRUint32 flag)
 
 NS_IMETHODIMP nsMsgFolder::SetFlags(PRUint32 aFlags)
 {
-  mFlags = aFlags;
+  if (mFlags != aFlags)
+  {
+    mFlags = aFlags;
+	OnFlagChange(mFlags);
+  }
   return NS_OK;
 }
 
