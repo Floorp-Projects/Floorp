@@ -1,18 +1,11 @@
 /* zutil.c -- target dependent utility functions for the compression library
- * Copyright (C) 1995-1996 Jean-loup Gailly.
+ * Copyright (C) 1995-2002 Jean-loup Gailly.
  * For conditions of distribution and use, see copyright notice in zlib.h 
  */
-/* This file was modified since it was taken from the zlib distribution */
-/* $Id: zutil.c,v 1.1 2000/03/31 20:13:18 relyea%netscape.com Exp $ */
 
-#include <stdio.h>
+/* @(#) $Id: zutil.c,v 1.2 2003/02/08 08:50:42 wtc%netscape.com Exp $ */
 
 #include "zutil.h"
-
-#ifdef MOZILLA_CLIENT
-#include "prtypes.h"
-#include "prlog.h"
-#endif
 
 struct internal_state      {int dummy;}; /* for buggy compilers */
 
@@ -33,24 +26,41 @@ const char *z_errmsg[10] = {
 ""};
 
 
-PR_PUBLIC_API(const char *) zlibVersion()
+const char * ZEXPORT zlibVersion()
 {
     return ZLIB_VERSION;
 }
 
-#if defined(DEBUG) && defined(MOZILLA_CLIENT)
+#ifdef DEBUG
+
+#  ifndef verbose
+#    define verbose 0
+#  endif
+int z_verbose = verbose;
+
 void z_error (m)
     char *m;
 {
-    PR_ASSERT(0);	  	
+    fprintf(stderr, "%s\n", m);
+    exit(1);
 }
 #endif
+
+/* exported to allow conversion of error code to string for compress() and
+ * uncompress()
+ */
+const char * ZEXPORT zError(err)
+    int err;
+{
+    return ERR_MSG(err);
+}
+
 
 #ifndef HAVE_MEMCPY
 
 void zmemcpy(dest, source, len)
     Bytef* dest;
-    Bytef* source;
+    const Bytef* source;
     uInt  len;
 {
     if (len == 0) return;
@@ -60,8 +70,8 @@ void zmemcpy(dest, source, len)
 }
 
 int zmemcmp(s1, s2, len)
-    Bytef* s1;
-    Bytef* s2;
+    const Bytef* s1;
+    const Bytef* s2;
     uInt  len;
 {
     uInt j;
@@ -168,7 +178,7 @@ void  zcfree (voidpf opaque, voidpf ptr)
 
 #  define MY_ZCALLOC
 
-#if (!defined(_MSC_VER) || (_MSC_VER < 600))
+#if (!defined(_MSC_VER) || (_MSC_VER <= 600))
 #  define _halloc  halloc
 #  define _hfree   hfree
 #endif
