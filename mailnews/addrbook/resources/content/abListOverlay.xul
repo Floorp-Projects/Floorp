@@ -25,7 +25,10 @@ Rights Reserved.
 <overlay id="editListOverlay"
 		 xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
-<script language="JavaScript" src="chrome://messenger/content/addressbook/abMailListDialog.js"/>
+  <stringbundleset id="stringbundleset">
+    <stringbundle id="bundle_addressBook" src="chrome://messenger/locale/addressbook/addressBook.properties"/>
+  </stringbundleset>
+  <script type="text/javascript" src="chrome://messenger/content/addressbook/abMailListDialog.js"/>
 
 
 <box id="editlist" align="vertical">

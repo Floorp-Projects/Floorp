@@ -49,7 +49,7 @@ var currentPageId;
 
 var pendingServerId;
 var pendingPageId;
-var Bundle = srGetStrBundle("chrome://messenger/locale/prefs.properties");
+var gPrefsBundle;
 
 // services used
 var RDF;
@@ -65,6 +65,7 @@ var setDefaultButton;
 // called when the whole document loads
 // perform initialization here
 function onLoad() {
+  gPrefsBundle = document.getElementById("bundle_prefs");
   
   var selectedServer;
   if (window.arguments && window.arguments[0])
@@ -201,7 +202,7 @@ function onDuplicateAccount() {
               accountManager.duplicateAccount(account);
             }
 			catch (ex) {
-				var alertText = Bundle.GetStringFromName("failedDuplicateAccount");
+				var alertText = gPrefsBundle.getString("failedDuplicateAccount");
                 window.alert(alertText); 
 			}
         }
@@ -242,7 +243,7 @@ function onDeleteAccount(event) {
     if (!canDelete) return;
 
     var confirmDeleteAccount =
-      Bundle.GetStringFromName("confirmDeleteAccount");
+      gPrefsBundle.getString("confirmDeleteAccount");
     if (!window.confirm(confirmDeleteAccount)) return;
     
     try {
@@ -256,7 +257,7 @@ function onDeleteAccount(event) {
     }
     catch (ex) {
       dump("failure to delete account: " + ex + "\n");
-      var alertText = Bundle.GetStringFromName("failedDeleteAccount");
+      var alertText = gPrefsBundle.getString("failedDeleteAccount");
       window.alert(alertText);
     }
 }

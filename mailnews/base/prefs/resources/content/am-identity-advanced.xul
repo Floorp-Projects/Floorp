@@ -33,7 +33,6 @@
   onload="onLoad();">
 
   <script language="javascript" src="am-identity-advanced.js"/>
-  <script language="javascript" src="chrome://global/content/strres.js"/>
   
   <html style="width: 20em; ">&smtpDesc.label;</html>
   <separator class="thin"/>

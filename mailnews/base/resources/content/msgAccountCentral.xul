@@ -36,7 +36,9 @@ Rights Reserved.
   xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
   onload="OnInit();">
 
-  <script language="javascript" src="chrome://global/content/strres.js"/>
+  <stringbundle id="bundle_brand" src="chrome://global/locale/brand.properties"/>
+  <stringbundle id="bundle_messenger" src="chrome://messenger/locale/messenger.properties"/>
+  <stringbundle id="bundle_prefs" src="chrome://messenger/locale/prefs.properties"/>
   <script type="text/javascript" src="chrome://messenger/content/AccountManager.js"/>
   <script type="text/javascript" src="chrome://messenger/content/accountUtils.js"/>
   <script type="text/javascript" src="chrome://messenger/content/mailCommands.js"/>

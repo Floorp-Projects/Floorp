@@ -20,23 +20,25 @@
 
 /*  This file contains the js functions necessary to implement view navigation within the 3 pane. */
 
+//NOTE: gMessengerBundle must be defined and set or this Overlay won't work
+
 // These are the types of navigation you can do
 var navigateAny=0;
 var navigateUnread = 1;
 var navigateFlagged = 2;
 var navigateNew = 3;
 
-var Bundle = srGetStrBundle("chrome://messenger/locale/messenger.properties");
 var commonDialogs = Components.classes["@mozilla.org/appshell/commonDialogs;1"].getService();
 commonDialogs = commonDialogs.QueryInterface(Components.interfaces.nsICommonDialogs);
 var accountManager = Components.classes["@mozilla.org/messenger/account-manager;1"].getService(Components.interfaces.nsIMsgAccountManager);
+
 
 function FindNextFolder(originalFolderURI)
 {
     if (!originalFolderURI) return null;
 
     var originalFolderResource = RDF.GetResource(originalFolderURI);
-	var folder = originalFolderResource.QueryInterface(Components.interfaces.nsIFolder);
+    var folder = originalFolderResource.QueryInterface(Components.interfaces.nsIFolder);
     if (!folder) return null;
     dump("folder = " + folder.URI + "\n");
 
@@ -168,7 +170,8 @@ function GoNextMessage(type, startFromBeginning )
                     break;
                     
                 case 1:
-                    var promptText = Bundle.formatStringFromName("advanceNextPrompt", [ nextFolder.name ], 1); 
+                    var promptText = gMessengerBundle.getFormattedString("advanceNextPrompt",
+                                                                         [ nextFolder.name ]); 
                     if (commonDialogs.Confirm(window, promptText, promptText)) {
                         gNextMessageAfterLoad = true;
                         SelectFolder(nextFolderURI);

@@ -38,7 +38,7 @@
   style="width: 30em;"
 >
 
-<script language="javascript" src="chrome://global/content/strres.js"/>
+<stringbundle id="bundle_messenger" src="chrome://messenger/locale/messenger.properties"/>
 <script language="javascript" src="SmtpServerList.js"/>
 
 <keyset id="keyset"/>

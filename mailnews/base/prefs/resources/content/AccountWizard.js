@@ -83,7 +83,7 @@ var accountCount = accounts.Count();
 
 var nsIMsgIdentity = Components.interfaces.nsIMsgIdentity;
 var nsIMsgIncomingServer = Components.interfaces.nsIMsgIncomingServer;
-var Bundle = srGetStrBundle("chrome://messenger/locale/prefs.properties"); 
+var gPrefsBundle;
 var commonDialogsService = Components.classes["@mozilla.org/appshell/commonDialogs;1"].getService();
 commonDialogsService = commonDialogsService.QueryInterface(Components.interfaces.nsICommonDialogs);
 
@@ -96,6 +96,7 @@ var gCurrentAccountData;
 
 // event handlers
 function onLoad() {
+    gPrefsBundle = document.getElementById("bundle_prefs");
 
     // wizard stuff
     // instantiate the Wizard Manager
@@ -164,8 +165,8 @@ function onCancel()
 		// really cancel if the user hits the "cancel" button
 
     if (!(accountCount > 0)) {
-        var confirmTitle = Bundle.GetStringFromName("accountWizard");
-        var confirmMsg = Bundle.GetStringFromName("cancelWizard");
+        var confirmTitle = gPrefsBundle.getString("accountWizard");
+        var confirmMsg = gPrefsBundle.getString("cancelWizard");
         if (commonDialogsService.Confirm(window,confirmTitle,confirmMsg))
           window.close();
         else 
@@ -571,18 +572,15 @@ function setDefaultCopiesAndFoldersPrefs(identity, server)
 
 function AccountExists(userName,hostName,serverType)
 {
-  dump("AccountExists("+userName+","+hostName+","+serverType+")\n");
   var accountExists = false;
   var accountManager = Components.classes["@mozilla.org/messenger/account-manager;1"].getService(Components.interfaces.nsIMsgAccountManager);
   try {
         var server = accountManager.FindServer(userName,hostName,serverType);
         if (server) {
-		dump("account exists\n");
                 accountExists = true;
         }
   }
   catch (ex) {
-	dump("AccountExists() failed: "+ex+"\n");
         accountExists = false;
   }
   return accountExists;

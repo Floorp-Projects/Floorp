@@ -27,6 +27,7 @@ var parentURI;
 var editList;
 var hitReturnInList = false;
 var oldListName = "";
+var gAddressBookBundle;
 
 function handleKeyPress(element, event)
 {
@@ -42,8 +43,7 @@ function mailingListExists(listname)
 	var addressbook = Components.classes["@mozilla.org/addressbook;1"].createInstance(Components.interfaces.nsIAddressBook);
 	if (addressbook.mailListNameExists(listname))
 	{
-		var strBundle = srGetStrBundle("chrome://messenger/locale/addressbook/addressBook.properties");
-		var alertText = strBundle.GetStringFromName("mailListNameExists");
+		var alertText = gAddressBookBundle.getString("mailListNameExists");
 		alert(alertText);
 		return true;
 	}
@@ -56,8 +56,7 @@ function GetListValue(mailList, doAdd)
 
 	if (mailList.listName.length == 0)
 	{
-		var strBundle = srGetStrBundle("chrome://messenger/locale/addressbook/addressBook.properties");
-		var alertText = strBundle.GetStringFromName("emptyListName");
+		var alertText = gAddressBookBundle.getString("emptyListName");
 		alert(alertText);
 		return false;
 	}
@@ -160,6 +159,8 @@ function MailListOKButton()
 
 function OnLoadMailList()
 {
+  //XXX: gAddressBookBundle is set in 2 places because of different callers
+  gAddressBookBundle = document.getElementById("bundle_addressBook");
 	doSetOKCancel(MailListOKButton, 0);
 
 	var selectedAB;
@@ -219,6 +220,8 @@ function EditListOKButton()
 
 function OnLoadEditList()
 {
+  //XXX: gAddressBookBundle is set in 2 places because of different callers
+  gAddressBookBundle = document.getElementById("bundle_addressBook");
 	doSetOKCancel(EditListOKButton, 0);
 	
 	parentURI  = window.arguments[0].abURI;
@@ -311,7 +314,7 @@ function awNotAnEmptyArea(event)
 
 function awClickEmptySpace(targ, setFocus)
 {
-	if (targ.localName != 'treechildren')
+	if ("localName" in targ && targ.localName != 'treechildren')
 		return;
 
 	dump("awClickEmptySpace\n");

@@ -27,15 +27,20 @@ var msgCompFields = 0;
 var editCardCallback = 0;
 var gDialogResultsPaneSelectionChanged = 0;
 
-var Bundle = srGetStrBundle("chrome://messenger/locale/addressbook/addressBook.properties");
+var gAddressBookBundle;
 
 // localization strings
-var prefixTo = Bundle.GetStringFromName("prefixTo") + ": ";
-var prefixCc = Bundle.GetStringFromName("prefixCc") + ": ";
-var prefixBcc = Bundle.GetStringFromName("prefixBcc") + ": ";
+var prefixTo;
+var prefixCc;
+var prefixBcc;
 
 function OnLoadSelectAddress()
 {
+  gAddressBookBundle = document.getElementById("bundle_addressBook");
+  prefixTo = gAddressBookBundle.getString("prefixTo") + ": ";
+  prefixCc = gAddressBookBundle.getString("prefixCc") + ": ";
+  prefixBcc = gAddressBookBundle.getString("prefixBcc") + ": ";
+
 	InitCommonJS();
 
 	var toAddress="", ccAddress="", bccAddress="";
@@ -144,8 +149,7 @@ function SelectAddressOKButton()
 	}
 	if(emptyEmail)
 	{	
-		var Bundle = srGetStrBundle("chrome://messenger/locale/addressbook/addressBook.properties");
-		var alertText = Bundle.GetStringFromName("emptyEmailCard");
+		var alertText = gAddressBookBundle.getString("emptyEmailCard");
 		alert(alertText + emptyEmail);
 		return false;
 	}

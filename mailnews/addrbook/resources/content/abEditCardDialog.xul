@@ -30,6 +30,8 @@ Rights Reserved.
 		class="dialog"
 		align="vertical">
 
+  <stringbundleset id="stringbundleset"/>
+
 	<keyset id="keyset"/>
 
 	<box id="editcard"/>

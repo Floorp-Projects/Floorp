@@ -23,13 +23,13 @@
  */
 
 var protocolinfo = null;
-var Bundle = srGetStrBundle("chrome://messenger/locale/prefs.properties");
+var gPrefsBundle;
 
 function validate() {
   var username = document.getElementById("username").value;
 
   if (protocolinfo && protocolinfo.requiresUsername && (!username || username == "")) { 
-      var alertText = Bundle.GetStringFromName("enterUserName");
+      var alertText = gPrefsBundle.getString("enterUserName");
       window.alert(alertText);
       return false;
   }
@@ -39,7 +39,7 @@ function validate() {
   var hostName = parent.getCurrentHostname(pageData);
 
   if (parent.AccountExists(username,hostName,serverType)) {
-    alertText = Bundle.GetStringFromName("accountExists");
+    alertText = gPrefsBundle.getString("accountExists");
     window.alert(alertText);
     return false;
   }
@@ -47,6 +47,7 @@ function validate() {
 }
 
 function onInit() {
+    gPrefsBundle = document.getElementById("bundle_prefs");
     var loginNameInput = document.getElementById("username");
     
     if (loginNameInput.value == "") {

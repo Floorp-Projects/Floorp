@@ -11,6 +11,7 @@
      onload="parent.onPanelLoaded('am-main.xul');"
      orient="vertical">
 
+    <!-- XXX: Replace strres.js when prefutilities is converted -->
     <script src="chrome://global/content/strres.js"/>
     <script src="chrome://communicator/content/pref/prefutilities.js"/>
     <script src="chrome://messenger/content/am-main.js"/>

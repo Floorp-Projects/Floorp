@@ -42,6 +42,7 @@ Rights Reserved.
         screenY="10000"
 		    windowtype="mail:printEngine">
 
+<!-- XXX: utilityOverlay.xul uses strres.js - once it is converted, this should be  removed-->
 <html:script src="chrome://global/content/strres.js"/>
 <html:script src="chrome://messenger/content/msgPrintEngine.js"/>
 

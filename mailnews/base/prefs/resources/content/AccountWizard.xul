@@ -33,7 +33,9 @@ Rights Reserved.
 
   <keyset id="keyset"/>
 
-  <script src="chrome://global/content/strres.js"/>
+  <!-- XXX: strres.js is included so that WizardManager.js will work -->
+  <script type="text/javascript" src="chrome://global/content/strres.js"/>
+  <stringbundle id="bundle_prefs" src="chrome://messenger/locale/prefs.properties"/>
   <script src="chrome://global/content/wizardOverlay.js"/>
   <script src="chrome://global/content/wizardHandlerSet.js"/>
   <script src="chrome://global/content/wizardManager.js"/>

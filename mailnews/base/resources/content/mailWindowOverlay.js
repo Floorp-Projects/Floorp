@@ -21,8 +21,12 @@
  *               slucy@objectivesw.co.uk
  */
 
+var gMessengerBundle;
+
 function file_init()
 {
+    if (!gMessengerBundle)
+        gMessengerBundle = document.getElementById("bundle_messenger");
     file_attachments();
 /* file_attachments() can return false to indicate a load failure,
    but if you return false to oncreate then
@@ -53,6 +57,8 @@ function file_attachments()
 
 function view_init()
 {
+    if (!gMessengerBundle)
+        gMessengerBundle = document.getElementById("bundle_messenger");
     var message_menuitem=document.getElementById('menu_showMessage');
 
     if (message_menuitem)
@@ -593,10 +599,9 @@ function MsgSubscribe()
 
 function ConfirmUnsubscribe(folder)
 {
-    var sBundle = srGetStrBundle("chrome://messenger/locale/messenger.properties"); 
-    var titleMsg = sBundle.GetStringFromName("confirmUnsubscribeTitle");
-    var dialogMsg = sBundle.formatStringFromName("confirmUnsubscribeText",
-                                        [ folder.name], 1);
+    var titleMsg = gMessengerBundle.getString("confirmUnsubscribeTitle");
+    var dialogMsg = gMessengerBundle.getFormattedString("confirmUnsubscribeText",
+                                                        [ folder.name]);
 
     var commonDialogService = nsJSComponentManager.getService("@mozilla.org/appshell/commonDialogs;1",
                                                                     "nsICommonDialogs");
@@ -607,7 +612,7 @@ function MsgUnsubscribe()
 {
     var folder = GetFirstSelectedMsgFolder();
     if (ConfirmUnsubscribe(folder)) {
-    	UnSubscribe(folder);
+        UnSubscribe(folder);
     }
 }
 
@@ -921,8 +926,8 @@ function IsGetNextNMessagesEnabled()
     var menuItem = document.getElementById("menu_getnextnmsg");
     if((serverType == "nntp")) {
         var newsServer = server.QueryInterface(Components.interfaces.nsINntpIncomingServer);
-        var menuValue = Bundle.formatStringFromName("getNextNMessages",
-                                        [ newsServer.maxArticles], 1);
+        var menuValue = gMessengerBundle.getFormattedString("getNextNMessages",
+                                                            [ newsServer.maxArticles ]);
         menuItem.setAttribute("value",menuValue);
         menuItem.setAttribute("hidden","false");
         return true;
@@ -947,7 +952,7 @@ function IsCompactFolderEnabled()
     if (numFolders <= 0 )
         return false;
 
-	var folder = selectedFolders[0];
+    var folder = selectedFolders[0];
     if (!folder) 
         return false;
 

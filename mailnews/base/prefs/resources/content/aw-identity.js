@@ -23,14 +23,14 @@
  */
 
 var currentDomain;
-var Bundle = srGetStrBundle("chrome://messenger/locale/prefs.properties");
+var gPrefsBundle;
 
 function validate(data)
 {
   var name = document.getElementById("fullName").value;
 
   if (! name || name=="") {
-    var alertText = Bundle.GetStringFromName("enterName");
+    var alertText = gPrefsBundle.getString("enterName");
     window.alert(alertText);
     return false;
   }
@@ -64,7 +64,7 @@ function validateEmail() {
     }
     
     if (email.length =="") {
-      var alertText = Bundle.GetStringFromName("enterValidEmailPrefix");
+      var alertText = gPrefsBundle.getString("enterValidEmailPrefix");
       window.alert(alertText);
       return false;
     }
@@ -74,7 +74,7 @@ function validateEmail() {
     if (emailArray.length != 2 ||
         emailArray[0] == "" ||
         emailArray[1] == "") {
-      alertText = Bundle.GetStringFromName("enterValidEmail");
+      alertText = gPrefsBundle.getString("enterValidEmail");
       window.alert(alertText);
       return false;
     }
@@ -85,6 +85,7 @@ function validateEmail() {
 
 function onInit()
 {
+  gPrefsBundle = document.getElementById("bundle_prefs");
   setEmailDescriptionText();
   checkForDomain();
   checkForFullName(); 
@@ -120,7 +121,7 @@ function setEmailDescriptionText()
             emailIDTitle)
         {
             // Get email description data
-            displayText = Bundle.GetStringFromName("customizedEmailText")
+            displayText = gPrefsBundle.getString("customizedEmailText")
                                 .replace(/%emailProvider%/g, emailProvider)
                                 .replace(/%mailIDDesc%/g, emailIDDesc)
                                 .replace(/%sampleEmail%/, sampleEmail)
@@ -138,10 +139,10 @@ function setEmailDescriptionText()
     if (setDefaultEmailDescStrings)
     {
         // Check for obtained values and set with default values if needed
-        var username        = Bundle.GetStringFromName("exampleEmailUserName"); 
-        var domain          = Bundle.GetStringFromName("exampleEmailDomain"); 
+        var username        = gPrefsBundle.getString("exampleEmailUserName"); 
+        var domain          = gPrefsBundle.getString("exampleEmailDomain"); 
 
-        displayText = Bundle.GetStringFromName("defaultEmailText")
+        displayText = gPrefsBundle.getString("defaultEmailText")
                             .replace(/%username%/, username)
                             .replace(/%domain%/, domain);
     }

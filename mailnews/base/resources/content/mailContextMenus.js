@@ -20,6 +20,8 @@
  *
  */
 
+//NOTE: gMessengerBundle must be defined and set or this Overlay won't work
+
 function fillThreadPaneContextMenu()
 {
 	var selectedMessages = GetSelectedMessages();
@@ -139,13 +141,13 @@ function SetupDeleteMenuItem(menuID, numSelected, isNewsgroup, forceHide)
 		EnableMenuItem(menuID, (numSelected > 0));
 		if(!isNewsgroup)
 		{
-			SetMenuItemValue(menuID, Bundle.GetStringFromName("delete"));
-			SetMenuItemAccessKey(menuID, Bundle.GetStringFromName("deleteAccessKey"));
+			SetMenuItemValue(menuID, gMessengerBundle.getString("delete"));
+			SetMenuItemAccessKey(menuID, gMessengerBundle.getString("deleteAccessKey"));
 		}
 		else
 		{
-			SetMenuItemValue(menuID, Bundle.GetStringFromName("cancel"));
-			SetMenuItemAccessKey(menuID, Bundle.GetStringFromName("cancelAccessKey"));
+			SetMenuItemValue(menuID, gMessengerBundle.getString("cancel"));
+			SetMenuItemAccessKey(menuID, gMessengerBundle.getString("cancelAccessKey"));
 		}
 	}
 }
@@ -232,7 +234,7 @@ function SetupRenameMenuItem(targetFolder, numSelected, isServer, serverType, sp
 
 	if(canRename)
 	{
-		SetMenuItemValue("folderPaneContext-rename", Bundle.GetStringFromName("renameFolder"));
+		SetMenuItemValue("folderPaneContext-rename", gMessengerBundle.getString("renameFolder"));
 	}
 }
 
@@ -249,7 +251,7 @@ function SetupRemoveMenuItem(targetFolder, numSelected, isServer, serverType, sp
 
 	if(isMail && !isSpecialFolder)
 	{
-		SetMenuItemValue("folderPaneContext-remove", Bundle.GetStringFromName("removeFolder"));
+		SetMenuItemValue("folderPaneContext-remove", gMessengerBundle.getString("removeFolder"));
 	}
 }
 
@@ -261,7 +263,7 @@ function SetupCompactMenuItem(targetFolder, numSelected)
 
 	if(canCompact)
 	{
-		SetMenuItemValue("folderPaneContext-compact", Bundle.GetStringFromName("compactFolder"));
+		SetMenuItemValue("folderPaneContext-compact", gMessengerBundle.getString("compactFolder"));
 	}
 }
 
@@ -276,9 +278,9 @@ function SetupNewMenuItem(targetFolder, numSelected, isServer, serverType, speci
 	if(showNew)
 	{
 		if(isServer || isInbox)
-			SetMenuItemValue("folderPaneContext-new", Bundle.GetStringFromName("newFolder"));
+			SetMenuItemValue("folderPaneContext-new", gMessengerBundle.getString("newFolder"));
 		else
-			SetMenuItemValue("folderPaneContext-new", Bundle.GetStringFromName("newSubfolder"));
+			SetMenuItemValue("folderPaneContext-new", gMessengerBundle.getString("newSubfolder"));
 	}
 }
 
@@ -431,7 +433,3 @@ function IsMenuItemShowingWithStyle(menuID)
 	}
 	return false;
 }
-
-
-
-

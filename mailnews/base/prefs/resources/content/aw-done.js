@@ -18,9 +18,10 @@
  * Rights Reserved.
  */
 
-var Bundle = srGetStrBundle("chrome://messenger/locale/prefs.properties");
+var gPrefsBundle;
 
 function onInit() {
+    gPrefsBundle = document.getElementById("bundle_prefs");
     var pageData = parent.wizardManager.WSM.PageData;
     var showMailServerDetails = true; 
 
@@ -65,7 +66,7 @@ function onInit() {
         {
             var prettyName = currentAccountData.incomingServer.prettyName; 
             // Get the polished account name 
-            accountName = Bundle.GetStringFromName("accountName")
+            accountName = gPrefsBundle.getString("accountName")
                                 .replace(/%prettyName%/, prettyName)
                                 .replace(/%username%/, userName);  
 

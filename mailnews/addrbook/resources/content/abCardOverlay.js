@@ -23,7 +23,7 @@
 var editCard;
 var gOnSaveListeners = new Array;
 
-var Bundle = srGetStrBundle("chrome://messenger/locale/addressbook/addressBook.properties");
+var gAddressBookBundle;
 
 function OnLoadNewCard()
 {
@@ -121,9 +121,9 @@ function OnLoadEditCard()
 	
 	GetCardValues(editCard.card, document);
 
-    var displayName = editCard.card.displayName;
-	top.window.title = Bundle.formatStringFromName(editCard.titleProperty,
-                                                   [ displayName ], 1);
+  var displayName = editCard.card.displayName;
+  top.window.title = gAddressBookBundle.getFormattedString(editCard.titleProperty,
+                                                           [ displayName ]);
 }
 
 function RegisterSaveListener(func)
@@ -140,6 +140,7 @@ function CallSaveListeners()
 
 function InitEditCard()
 {
+  gAddressBookBundle = document.getElementById("bundle_addressBook");
 	// create editCard object that contains global variables for editCard.js
 	editCard = new Object;
 	
@@ -364,8 +365,8 @@ function GenerateDisplayName()
 			displayName = firstNameField.value + separator + lastNameField.value;
 			
 		displayNameField.value = displayName;
-		top.window.title = Bundle.formatStringFromName(editCard.titleProperty,
-                                                       [ displayName ], 1);
+        top.window.title = gAddressBookBundle.getFormattedString(editCard.titleProperty,
+                                                                 [ displayName ]);
 	}
 }
 
@@ -375,8 +376,8 @@ function DisplayNameChanged()
 	editCard.generateDisplayName = false;
 
     var displayName = document.getElementById('DisplayName').value;
-	var title = Bundle.formatStringFromName(editCard.titleProperty,
-                                            [ displayName ], 1);
+    var title = gAddressBookBundle.getFormattedString(editCard.titleProperty,
+                                                      [ displayName ]);
 	if ( top.window.title != title )
 		top.window.title = title;
 }

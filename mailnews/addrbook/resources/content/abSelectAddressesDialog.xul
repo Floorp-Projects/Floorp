@@ -38,11 +38,12 @@ Rights Reserved.
         onload="OnLoadSelectAddress()"
         align="vertical">
 
-<script language="JavaScript" src="chrome://global/content/strres.js"/>
-<script language="JavaScript" src="chrome://messenger/content/addressbook/abCommon.js"/>
-<script language="JavaScript" src="chrome://messenger/content/addressbook/abSelectAddressesDialog.js"/>
-<script language="JavaScript" src="chrome://messenger/content/messengercompose/MsgComposeCommands.js"/>
-<script language="JavaScript" src="chrome://global/content/globalOverlay.js"/>
+  <stringbundle id="bundle_addressBook" src="chrome://messenger/locale/addressbook/addressBook.properties"/>
+  <stringbundle id="bundle_composeMsgs" src="chrome://messenger/locale/messengercompose/composeMsgs.properties"/>
+  <script type="text/javascript" src="chrome://messenger/content/addressbook/abCommon.js"/>
+  <script type="text/javascript" src="chrome://messenger/content/addressbook/abSelectAddressesDialog.js"/>
+  <script type="text/javascript" src="chrome://messenger/content/messengercompose/MsgComposeCommands.js"/>
+  <script type="text/javascript" src="chrome://global/content/globalOverlay.js"/>
 
 
 	<keyset id="keyset"/>

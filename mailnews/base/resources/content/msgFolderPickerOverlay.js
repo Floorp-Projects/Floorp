@@ -21,12 +21,11 @@
  * Alec Flett <alecf@netscape.com>
  */
 
-var pickerBundle = srGetStrBundle("chrome://messenger/locale/messenger.properties");
+var gMessengerBundle;
 
 // call this from dialog onload() to set the menu item to the correct value
 function MsgFolderPickerOnLoad(pickerID)
 {
-	//dump("in MsgFolderPickerOnLoad()\n");
 	var uri = null;
 	try { 
 		uri = window.arguments[0].preselectedURI;
@@ -72,6 +71,9 @@ function PickedMsgFolder(selection,pickerID)
 
 function SetFolderPicker(uri,pickerID)
 {
+  if (!gMessengerBundle)
+    gMessengerBundle = document.getElementById("bundle_messenger");
+
 	var picker = document.getElementById(pickerID);
 	var msgfolder = GetMsgFolderFromUri(uri);
 
@@ -90,7 +92,7 @@ function SetFolderPicker(uri,pickerID)
 			serverName = "???";
 		}
 
-		selectedValue = pickerBundle.GetStringFromName("verboseFolderFormat")
+		selectedValue = gMessengerBundle.getString("verboseFolderFormat")
 		                            .replace(/%folderName%/, msgfolder.name)
 		                            .replace(/%serverName%/, serverName);
 	}

@@ -44,6 +44,10 @@ Rights Reserved.
 		persist="width height screenX screenY sizemode"
 		onload="OnLoadAddressBook()">
 
+  <stringbundleset id="stringbundleset">
+    <stringbundle id="bundle_addressBook" src="chrome://messenger/locale/addressbook/addressBook.properties"/>
+    <stringbundle id="bundle_messenger" src="chrome://messenger/locale/messenger.properties"/>
+  </stringbundleset>
 <script language="JavaScript" src="chrome://messenger/content/accountUtils.js"/>
 <script language="JavaScript" src="chrome://messenger/content/widgetglue.js"/>
 <script language="JavaScript" src="chrome://messenger/content/addressbook/addressbook.js"/>

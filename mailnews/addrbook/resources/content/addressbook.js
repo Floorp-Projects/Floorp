@@ -1,9 +1,11 @@
 var cvPrefs = 0;
 var addressbook = 0;
 var gUpdateCardView = 0;
+var gAddressBookBundle;
 
 function OnLoadAddressBook()
 {
+  gAddressBookBundle = document.getElementById("bundle_addressBook");
 	verifyAccounts(); 	// this will do migration, if we need to.
 
 	top.addressbook = Components.classes["@mozilla.org/addressbook;1"].createInstance();
@@ -289,8 +291,8 @@ function AbDeleteDirectory()
             if (commonDialogsService)
             {
                 commonDialogsService.Alert(window,
-                    Bundle.GetStringFromName("cannotDeleteTitle"), 
-                    Bundle.GetStringFromName("cannotDeleteMessage"));
+                    gAddressBookBundle.getString("cannotDeleteTitle"), 
+                    gAddressBookBundle.getString("cannotDeleteMessage"));
             }
 
             isPersonalOrCollectedAbsSelectedForDeletion = true;
@@ -300,7 +302,7 @@ function AbDeleteDirectory()
 
     if (!isPersonalOrCollectedAbsSelectedForDeletion) {
         var confirmDeleteAddressbook =
-            Bundle.GetStringFromName("confirmDeleteAddressbook");
+            gAddressBookBundle.getString("confirmDeleteAddressbook");
 
         if(!window.confirm(confirmDeleteAddressbook))
             return;

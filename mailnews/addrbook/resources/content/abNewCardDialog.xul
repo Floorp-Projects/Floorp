@@ -26,7 +26,6 @@ Rights Reserved.
 
 <!DOCTYPE window SYSTEM "chrome://messenger/locale/addressbook/abNewCardDialog.dtd">
 
-
 <window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
 		xmlns:nc="http://home.netscape.com/NC-rdf#"
 		xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
@@ -34,6 +33,8 @@ Rights Reserved.
 		onload="OnLoadNewCard()"
 		class="dialog"
 		align="vertical">
+
+  <stringbundleset id="stringbundleset"/>
 
 	<keyset id="keyset"/>
 

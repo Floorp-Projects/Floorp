@@ -37,7 +37,7 @@
         width="200" height="180"
         onload="onLoad();">
 
-  <script type="text/javascript" src="chrome://global/content/strres.js"/>
+  <stringbundleset id="stringbundleset"/>
   <script type="text/javascript" src="chrome://messenger/content/mailCommands.js"/>
   <script type="text/javascript" src="chrome://messenger/content/newFolderDialog.js"/>
 

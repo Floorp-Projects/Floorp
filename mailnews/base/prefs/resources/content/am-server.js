@@ -45,8 +45,8 @@ function initServerType() {
   
   var propertyName = "serverType-" + serverType;
 
-  var stringBundle = document.getElementById("bundle_messenger");
-  var verboseName = stringBundle.getString(propertyName);
+  var messengerBundle = document.getElementById("bundle_messenger");
+  var verboseName = messengerBundle.getString(propertyName);
 
   setDivText("servertype.verbose", verboseName);
 }

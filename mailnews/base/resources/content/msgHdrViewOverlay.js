@@ -32,6 +32,8 @@
 //
 ////////////////////////////////////////////////////////////////////////////////////
 
+//NOTE: gMessengerBundle must be defined and set or this Overlay won't work
+
 var msgHeaderParserContractID		   = "@mozilla.org/messenger/headerparser;1";
 var abAddressCollectorContractID	 = "@mozilla.org/addressbook/services/addressCollecter;1";
 
@@ -64,6 +66,7 @@ var numOfEmailsInCcField = 0;
 // var used to determine whether to show the toggle button at the
 // beginning or at the end of a list of emails in to/cc fields.
 var gNumOfEmailsToShowToggleButtonInFront = 15;
+
 
 function OnLoadMsgHeaderPane()
 {
@@ -217,7 +220,7 @@ var messageHeaderSink = {
 
       if (notDownloaded)
       {
-        screenDisplayName += " " + Bundle.GetStringFromName("notDownloaded");
+        screenDisplayName += " " + gMessengerBundle.getString("notDownloaded");
       }
 
       AddAttachmentToMenu(screenDisplayName, commandString);
@@ -850,4 +853,3 @@ function hdrViewSetVisible(boxNode, visible)
 	else
 		boxNode.setAttribute("collapsed", "true");
 }
-

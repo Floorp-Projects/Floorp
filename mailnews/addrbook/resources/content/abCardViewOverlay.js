@@ -21,26 +21,39 @@
  * Alec Flett <alecf@netscape.com>
  */
 
-var Bundle = srGetStrBundle("chrome://messenger/locale/addressbook/addressBook.properties")
+//NOTE: gAddressBookBundle must be defined and set or this Overlay won't work
 
-var zName = Bundle.GetStringFromName("propertyName") + ": ";
-var zNickname = Bundle.GetStringFromName("propertyNickname") + ": ";
-var zDisplayName = Bundle.GetStringFromName("propertyDisplayName") + ": ";
-var zWork = Bundle.GetStringFromName("propertyWork") + ": ";
-var zHome = Bundle.GetStringFromName("propertyHome") + ": ";
-var zFax = Bundle.GetStringFromName("propertyFax") + ": ";
-var zCellular = Bundle.GetStringFromName("propertyCellular") + ": ";
-var zPager = Bundle.GetStringFromName("propertyPager") + ": ";
-var zCustom1 = Bundle.GetStringFromName("propertyCustom1") + ": ";
-var zCustom2 = Bundle.GetStringFromName("propertyCustom2") + ": ";
-var zCustom3 = Bundle.GetStringFromName("propertyCustom3") + ": ";
-var zCustom4 = Bundle.GetStringFromName("propertyCustom4") + ": ";
+var zName;
+var zNickname;
+var zDisplayName;
+var zWork;
+var zHome;
+var zFax;
+var zCellular;
+var zPager;
+var zCustom1;
+var zCustom2;
+var zCustom3;
+var zCustom4;
 
 var rdf;
 var cvData;
 
 function OnLoadCardView()
 {
+  zName = gAddressBookBundle.getString("propertyName") + ": ";
+  zNickname = gAddressBookBundle.getString("propertyNickname") + ": ";
+  zDisplayName = gAddressBookBundle.getString("propertyDisplayName") + ": ";
+  zWork = gAddressBookBundle.getString("propertyWork") + ": ";
+  zHome = gAddressBookBundle.getString("propertyHome") + ": ";
+  zFax = gAddressBookBundle.getString("propertyFax") + ": ";
+  zCellular = gAddressBookBundle.getString("propertyCellular") + ": ";
+  zPager = gAddressBookBundle.getString("propertyPager") + ": ";
+  zCustom1 = gAddressBookBundle.getString("propertyCustom1") + ": ";
+  zCustom2 = gAddressBookBundle.getString("propertyCustom2") + ": ";
+  zCustom3 = gAddressBookBundle.getString("propertyCustom3") + ": ";
+  zCustom4 = gAddressBookBundle.getString("propertyCustom4") + ": ";
+
 	rdf = Components.classes["@mozilla.org/rdf/rdf-service;1"].getService();
 	rdf = rdf.QueryInterface(Components.interfaces.nsIRDFService);
 
@@ -133,7 +146,7 @@ function DisplayCardViewPane(abNode)
 
 	// set fields in card view pane
 
-	cvSetNode(data.CardTitle, Bundle.formatStringFromName("viewCardTitle", [ cardTitle], 1));
+	cvSetNode(data.CardTitle, gAddressBookBundle.getFormattedString("viewCardTitle", [ cardTitle]));
 	
 	// Name section
 	cvSetNode(data.cvhName, nameHeader);

@@ -22,13 +22,13 @@
  * Seth Spitzer <sspitzer@netscape.com>
  */
 
-var Bundle = srGetStrBundle("chrome://messenger/locale/prefs.properties");
+var gPrefsBundle;
 
 function validate() {
   var accountname = document.getElementById("prettyName").value;
 
   if (!accountname || accountname =="") {
-      var alertText = Bundle.GetStringFromName("enterAccountName");
+      var alertText = gPrefsBundle.getString("enterAccountName");
       window.alert(alertText);
       return false;
   }
@@ -36,6 +36,7 @@ function validate() {
 }
 
 function onInit() {
+    gPrefsBundle = document.getElementById("bundle_prefs");
     var accountNameInput = document.getElementById("prettyName");
     if (accountNameInput.value=="") {
         var pageData = parent.GetPageData();

@@ -22,7 +22,7 @@
  * Seth Spitzer <sspitzer@netscape.com>
  */
 
-var Bundle = srGetStrBundle("chrome://messenger/locale/prefs.properties");
+var gPrefsBundle;
 
 function validate() {
   var servername = document.getElementById("hostname");
@@ -30,7 +30,7 @@ function validate() {
 
   if ((servername && servername.value =="") ||
       (smtpserver && smtpserver.value == "")) {
-    var alertText = Bundle.GetStringFromName("enterValidHostname");
+    var alertText = gPrefsBundle.getString("enterValidHostname");
     window.alert(alertText);
     return false;
   }
@@ -47,7 +47,7 @@ function validate() {
     var hostName = servername.value;
 
     if (parent.AccountExists(userName,hostName,serverType)) {
-      alertText = Bundle.GetStringFromName("accountExists");
+      alertText = gPrefsBundle.getString("accountExists");
       window.alert(alertText);
       return false;
     }
@@ -57,7 +57,7 @@ function validate() {
 }
 
 function onInit() {
-  
+  gPrefsBundle = document.getElementById("bundle_prefs");
   var smtpTextField = document.getElementById("smtphostname");
 
   var smtpServer = parent.smtpService.defaultServer;

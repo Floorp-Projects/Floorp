@@ -18,9 +18,7 @@
  * Rights Reserved.
  */
 
-var selectedServer = null; 
-var brandBundle    = null;
-var msgBundle      = null;
+var selectedServer   = null; 
 
 function OnInit()
 {
@@ -29,6 +27,8 @@ function OnInit()
     var brandName    = null;
     var acctType     = null;
     var acctName     = null;
+    var brandBundle;
+    var messengerBundle;
 
     // Set the header for the page.
     // Title containts the brand name of the application and the account
@@ -38,22 +38,22 @@ function OnInit()
         titleElement = document.getElementById("AccountCentralTitle");
 
         // Get the brand name
-        brandBundle = srGetStrBundle("chrome://global/locale/brand.properties");
-        brandName   = brandBundle.GetStringFromName("brandShortName"); 
+        brandBundle = document.getElementById("bundle_brand");
+        brandName    = brandBundle.getString("brandShortName"); 
 
         // Get the account type
-        msgBundle      = srGetStrBundle("chrome://messenger/locale/messenger.properties");
+        messengerBundle = document.getElementById("brand_messenger");
         selectedServer = GetSelectedServer(); 
         var serverType = selectedServer.type; 
         if (serverType == "nntp")
-            acctType = msgBundle.GetStringFromName("newsAcctType");
+            acctType = messengerBundle.getString("newsAcctType");
         else
-            acctType = msgBundle.GetStringFromName("mailAcctType");
+            acctType = messengerBundle.getString("mailAcctType");
 
         // Get the account name
         acctName = GetSelectedMsgFolderName();
 
-        title = msgBundle.GetStringFromName("acctCentralTitleFormat")
+        title = messengerBundle.getString("acctCentralTitleFormat")
                          .replace(/%brandName%/, brandName)
                          .replace(/%accountType%/, acctType)
                          .replace(/%accountName%/, acctName);

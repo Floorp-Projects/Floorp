@@ -25,18 +25,20 @@
 
 //The eventual goal is for this file to go away and for the functions to either be brought into
 //mailCommands.js or into 3pane specific code.
+
+//NOTE: gMessengerBundle and gBrandBundle must be defined and set
+//      for this Overlay to work properly
+
 var gFolderJustSwitched = false;
 var gBeforeFolderLoadTime;
 var gRDFNamespace = "http://www.w3.org/1999/02/22-rdf-syntax-ns#";
+
 function OpenURL(url)
 {
   //dump("\n\nOpenURL from XUL\n\n\n");
   messenger.SetWindow(window, msgWindow);
   messenger.OpenURL(url);
 }
-
-
-
 
 function GetMsgFolderFromNode(folderNode)
 {
@@ -141,7 +143,7 @@ function setTitleFromFolder(msgfolder, subject)
         var end;
         if (server.type == "nntp") {
             // <folder> on <hostname>
-            middle = Bundle.GetStringFromName("titleNewsPreHost");
+            middle = gMessengerBundle.getString("titleNewsPreHost");
             end = server.hostName;
         } else {
             var identity;
@@ -150,7 +152,7 @@ function setTitleFromFolder(msgfolder, subject)
 
                 identity = identities.QueryElementAt(0, Components.interfaces.nsIMsgIdentity);
                 // <folder> for <email>
-                middle = Bundle.GetStringFromName("titleMailPreHost");
+                middle = gMessengerBundle.getString("titleMailPreHost");
                 end = identity.email;
             } catch (ex) {
             }
@@ -162,7 +164,7 @@ function setTitleFromFolder(msgfolder, subject)
         if (end) title += " " + end;
     }
 
-    title += " - " + BrandBundle.GetStringFromName("brandShortName");
+    title += " - " + gBrandBundle.getString("brandShortName");
     window.title = title;
 }
 
@@ -327,14 +329,14 @@ function SetSentFolderColumns(isSentFolder)
 
 	if(isSentFolder)
 	{
-		senderColumn.setAttribute("value", Bundle.GetStringFromName("recipientColumnHeader"));
+		senderColumn.setAttribute("value", gMessengerBundle.getString("recipientColumnHeader"));
 		senderColumn.setAttribute("onclick", "return top.MsgSortByRecipient();");
 		senderColumnTemplate.setAttribute("value", "rdf:http://home.netscape.com/NC-rdf#Recipient");
 		authorColumnHeader.setAttribute("resource", "http://home.netscape.com/NC-rdf#Recipient");
 	}
 	else
 	{
-		senderColumn.setAttribute("value", Bundle.GetStringFromName("senderColumnHeader"));
+		senderColumn.setAttribute("value", gMessengerBundle.getString("senderColumnHeader"));
 		senderColumn.setAttribute("onclick", "return top.MsgSortBySender();");
 		senderColumnTemplate.setAttribute("value", "rdf:http://home.netscape.com/NC-rdf#Sender");
 		authorColumnHeader.setAttribute("resource", "http://home.netscape.com/NC-rdf#Sender");
@@ -352,14 +354,14 @@ function SetNewsFolderColumns(isNewsFolder)
 
         if (isNewsFolder)
         { 
-               sizeColumn.setAttribute("value",Bundle.GetStringFromName("linesColumnHeader"));
+               sizeColumn.setAttribute("value", gMessengerBundle.getString("linesColumnHeader"));
                sizeColumn.setAttribute("onclick", "return top.MsgSortByLines();");
                sizeColumnTemplate.setAttribute("value", "rdf:http://home.netscape.com/NC-rdf#Lines");
                memoryColumnHeader.setAttribute("resource","http://home.netscape.com/NC-rdf#Lines");
         }
         else
         {
-               sizeColumn.setAttribute("value", Bundle.GetStringFromName("sizeColumnHeader"));
+               sizeColumn.setAttribute("value", gMessengerBundle.getString("sizeColumnHeader"));
                sizeColumn.setAttribute("onclick", "return top.MsgSortBySize();");
                sizeColumnTemplate.setAttribute("value", "rdf:http://home.netscape.com/NC-rdf#Size");
                memoryColumnHeader.setAttribute("resource","http://home.netscape.com/NC-rdf#Size");
@@ -376,11 +378,11 @@ function UpdateStatusMessageCounts(folder)
 	if(folder && unreadElement && totalElement)
 	{
 		var numUnread =
-            Bundle.formatStringFromName("unreadMsgStatus",
-                                        [ folder.getNumUnread(false)], 1);
+            gMessengerBundle.getFormattedString("unreadMsgStatus",
+                                                [ folder.getNumUnread(false)]);
 		var numTotal =
-            Bundle.formatStringFromName("totalMsgStatus",
-                                        [folder.getTotalMessages(false)], 1);
+            gMessengerBundle.getFormattedString("totalMsgStatus",
+                                                [folder.getTotalMessages(false)]);
 
 		unreadElement.setAttribute("value", numUnread);
 		totalElement.setAttribute("value", numTotal);
@@ -1001,4 +1003,3 @@ function Redo()
 {
     messenger.Redo(msgWindow);
 }
-

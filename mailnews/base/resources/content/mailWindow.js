@@ -43,8 +43,8 @@ var msgComposeFormat;
 
 var mailSession;
 
-var Bundle;
-var BrandBundle;
+var gMessengerBundle;
+var gBrandBundle;
 
 var datasourceContractIDPrefix = "@mozilla.org/rdf/datasource;1?name=";
 var accountManagerDSContractID = datasourceContractIDPrefix + "msgaccountmanager";
@@ -152,8 +152,8 @@ function CreateMailWindowGlobals()
 	msgComposeType = Components.interfaces.nsIMsgCompType;
 	msgComposeFormat = Components.interfaces.nsIMsgCompFormat;
 
-	Bundle = srGetStrBundle("chrome://messenger/locale/messenger.properties");
-  BrandBundle = srGetStrBundle("chrome://global/locale/brand.properties");
+	gMessengerBundle = document.getElementById("bundle_messenger");
+  gBrandBundle = document.getElementById("bundle_brand");
 
 	//Create datasources
 	accountManagerDataSource = Components.classes[accountManagerDSContractID].createInstance();
@@ -338,8 +338,8 @@ nsMsgStatusFeedback.prototype =
       this.ensureStatusFields();
 	    // Record page loading time.
 	    var elapsed = ( (new Date()).getTime() - this.startTime ) / 1000;
-      var msg = Bundle.GetStringFromName("documentDonePrefix") +
-                elapsed + Bundle.GetStringFromName("documentDonePostfix");
+      var msg = gMessengerBundle.getString("documentDonePrefix") +
+                elapsed + gMessengerBundle.getString("documentDonePostfix");
 
       this.showStatusString(msg);
       defaultStatus = msg;

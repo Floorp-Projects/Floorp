@@ -28,15 +28,14 @@ var addButton;
 var editButton;
 var deleteButton;
 var setDefaultButton;
-var messengerStrings;
+var gMessengerBundle;
 
 var hasEdited=false;            // whether any kind of edits have occured
 
 // event handlersn
 function onLoad()
 {
-    if (!messengerStrings)
-        messengerStrings = srGetStrBundle("chrome://messenger/locale/messenger.properties");    
+    gMessengerBundle = document.getElementById("bundle_messenger");
     if (!smtpService)
         smtpService = Components.classes["@mozilla.org/messengercompose/smtp;1"].getService(Components.interfaces.nsISmtpService);
 
@@ -167,7 +166,7 @@ function createSmtpTreeItem(server, isDefault)
 
     var hostname = server.hostname;
     if (isDefault)
-        hostname += " " + messengerStrings.GetStringFromName("defaultServerTag");
+        hostname += " " + gMessengerBundle.getString("defaultServerTag");
     
     treecell.setAttribute("value", hostname);
     treeitem.setAttribute("key", server.key);
