@@ -1167,10 +1167,37 @@ NS_IMETHODIMP
 nsScriptSecurityManager::CheckLoadURI(nsIURI *aSourceURI, nsIURI *aTargetURI,
                                       PRUint32 aFlags)
 {
-    nsresult rv;
+    NS_PRECONDITION(aSourceURI, "CheckLoadURI called with null source URI");
+    NS_ENSURE_ARG_POINTER(aSourceURI);
+    
+    nsCOMPtr<nsIPrincipal> sourcePrincipal;
+    nsresult rv = CreateCodebasePrincipal(aSourceURI,
+                                          getter_AddRefs(sourcePrincipal));
+    NS_ENSURE_SUCCESS(rv, rv);
+    return CheckLoadURIWithPrincipal(sourcePrincipal, aTargetURI, aFlags);
+}
+
+NS_IMETHODIMP
+nsScriptSecurityManager::CheckLoadURIWithPrincipal(nsIPrincipal* aPrincipal,
+                                                   nsIURI *aTargetURI,
+                                                   PRUint32 aFlags)
+{
+    NS_PRECONDITION(aPrincipal, "CheckLoadURIWithPrincipal must have a principal");
+    NS_ENSURE_ARG_POINTER(aPrincipal);
+
+    if (aPrincipal == mSystemPrincipal) {
+        // Allow access
+        return NS_OK;
+    }
+    
+    nsCOMPtr<nsIURI> sourceURI;
+    aPrincipal->GetURI(getter_AddRefs(sourceURI));
+
+    NS_ASSERTION(sourceURI, "Non-system principals passed to CheckLoadURIWithPrincipal must have a URI!");
+    
     //-- get the source scheme
     nsXPIDLCString sourceScheme;
-    rv = GetBaseURIScheme(aSourceURI, getter_Copies(sourceScheme));
+    nsresult rv = GetBaseURIScheme(sourceURI, getter_Copies(sourceScheme));
     if (NS_FAILED(rv)) return rv;
 
     // Some loads are not allowed from mail/news messages
@@ -1257,7 +1284,7 @@ nsScriptSecurityManager::CheckLoadURI(nsIURI *aSourceURI, nsIURI *aTargetURI,
                             (PL_strcmp(sourceScheme, "resource") == 0))
                             return NS_OK;
 
-                        ReportError(nsnull, errorTag, aSourceURI, aTargetURI);
+                        ReportError(nsnull, errorTag, sourceURI, aTargetURI);
                         return NS_ERROR_DOM_BAD_URI;
                     }
                     return NS_OK;
@@ -1269,11 +1296,11 @@ nsScriptSecurityManager::CheckLoadURI(nsIURI *aSourceURI, nsIURI *aTargetURI,
                 if ((PL_strcmp(sourceScheme, "chrome") == 0) ||
                     (PL_strcmp(sourceScheme, "resource") == 0))
                     return NS_OK;
-                ReportError(nsnull, errorTag, aSourceURI, aTargetURI);
+                ReportError(nsnull, errorTag, sourceURI, aTargetURI);
                 return NS_ERROR_DOM_BAD_URI;
             case DenyProtocol:
                 // Deny access
-                ReportError(nsnull, errorTag, aSourceURI, aTargetURI);
+                ReportError(nsnull, errorTag, sourceURI, aTargetURI);
                 return NS_ERROR_DOM_BAD_URI;
             }
         }

@@ -3842,8 +3842,9 @@ HTMLContentSink::ProcessBaseHref(const nsAString& aBaseHref)
     nsIScriptSecurityManager *securityManager =
       nsContentUtils::GetSecurityManager();
 
-    rv = securityManager->CheckLoadURI(mDocumentBaseURI, baseHrefURI,
-                                       nsIScriptSecurityManager::STANDARD);
+    rv = securityManager->
+      CheckLoadURIWithPrincipal(mDocument->GetPrincipal(), baseHrefURI,
+                                nsIScriptSecurityManager::STANDARD);
     if (NS_FAILED(rv)) {
       return;
     }

@@ -60,6 +60,7 @@
 #include "XMLUtils.h"
 #include "txUnknownHandler.h"
 #include "txXSLTProcessor.h"
+#include "nsIPrincipal.h"
 
 static NS_DEFINE_CID(kXMLDocumentCID, NS_XMLDOCUMENT_CID);
 
@@ -642,9 +643,9 @@ txMozillaXSLTProcessor::Reset()
 
 NS_IMETHODIMP
 txMozillaXSLTProcessor::LoadStyleSheet(nsIURI* aUri, nsILoadGroup* aLoadGroup,
-                                       nsIURI* aReferrerUri)
+                                       nsIPrincipal* aCallerPrincipal)
 {
-    nsresult rv = TX_LoadSheet(aUri, this, aLoadGroup, aReferrerUri);
+    nsresult rv = TX_LoadSheet(aUri, this, aLoadGroup, aCallerPrincipal);
     if (NS_FAILED(rv) && mObserver) {
         // This is most likely a network or security error, just
         // use the uri as context.

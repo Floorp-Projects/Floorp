@@ -1443,8 +1443,14 @@ XULContentSinkImpl::OpenScript(const PRUnichar** aAttributes,
               if (!mSecMan)
                   mSecMan = do_GetService(NS_SCRIPTSECURITYMANAGER_CONTRACTID, &rv);
               if (NS_SUCCEEDED(rv)) {
-                  rv = mSecMan->CheckLoadURI(mDocumentURL, script->mSrcURI,
-                                             nsIScriptSecurityManager::ALLOW_CHROME);
+                  nsCOMPtr<nsIDocument> doc = do_QueryReferent(mDocument, &rv);
+
+                  if (NS_SUCCEEDED(rv)) {
+                      rv = mSecMan->
+                          CheckLoadURIWithPrincipal(doc->GetPrincipal(),
+                                                    script->mSrcURI,
+                                                    nsIScriptSecurityManager::ALLOW_CHROME);
+                  }
               }
           }
 

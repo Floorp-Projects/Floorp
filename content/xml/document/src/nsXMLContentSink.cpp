@@ -628,7 +628,7 @@ nsXMLContentSink::LoadXSLStyleSheet(nsIURI* aUrl)
     return NS_ERROR_FAILURE;
   }
 
-  return mXSLTProcessor->LoadStyleSheet(aUrl, loadGroup, mDocumentURI);
+  return mXSLTProcessor->LoadStyleSheet(aUrl, loadGroup, mDocument->GetPrincipal());
 }
 
 nsresult
@@ -664,8 +664,9 @@ nsXMLContentSink::ProcessStyleLink(nsIContent* aElement,
     NS_ENSURE_SUCCESS(rv, rv);
 
     nsIScriptSecurityManager *secMan = nsContentUtils::GetSecurityManager();
-    rv = secMan->CheckLoadURI(mDocumentURI, url,
-                              nsIScriptSecurityManager::ALLOW_CHROME);
+    rv = secMan->
+      CheckLoadURIWithPrincipal(mDocument->GetPrincipal(), url,
+                                nsIScriptSecurityManager::ALLOW_CHROME);
     NS_ENSURE_SUCCESS(rv, NS_OK);
 
     rv = secMan->CheckSameOriginURI(mDocumentURI, url);

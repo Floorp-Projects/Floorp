@@ -56,6 +56,7 @@
 class nsIURI;
 class nsIXMLContentSink;
 class nsIDOMNode;
+class nsIPrincipal;
 
 /* bacd8ad0-552f-11d3-a9f7-000064657374 */
 #define TRANSFORMIIX_XSLT_PROCESSOR_CID   \
@@ -138,7 +139,7 @@ public:
     // nsIDocumentTransformer interface
     NS_IMETHOD SetTransformObserver(nsITransformObserver* aObserver);
     NS_IMETHOD LoadStyleSheet(nsIURI* aUri, nsILoadGroup* aLoadGroup,
-                              nsIURI* aReferrerUri);
+                              nsIPrincipal* aCallerPrincipal);
     NS_IMETHOD SetSourceContentModel(nsIDOMNode* aSource);
     NS_IMETHOD CancelLoads() {return NS_OK;};
 
@@ -167,7 +168,8 @@ private:
 };
 
 extern nsresult TX_LoadSheet(nsIURI* aUri, txMozillaXSLTProcessor* aProcessor,
-                             nsILoadGroup* aLoadGroup, nsIURI* aReferrerUri);
+                             nsILoadGroup* aLoadGroup,
+                             nsIPrincipal* aCallerPrincipal);
 
 extern nsresult TX_CompileStylesheet(nsIDOMNode* aNode,
                                      txStylesheet** aStylesheet);

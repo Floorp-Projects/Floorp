@@ -453,12 +453,13 @@ nsScriptLoader::ProcessScriptElement(nsIDOMHTMLScriptElement *aElement,
     }
 
     // Check that the containing page is allowed to load this URI.
-    nsIURI *docURI = mDocument->GetDocumentURI();
-    if (!docURI) {
+    nsIPrincipal *docPrincipal = mDocument->GetPrincipal();
+    if (!docPrincipal) {
       return FireErrorNotification(NS_ERROR_UNEXPECTED, aElement, aObserver);
     }
     rv = nsContentUtils::GetSecurityManager()->
-      CheckLoadURI(docURI, scriptURI, nsIScriptSecurityManager::ALLOW_CHROME);
+      CheckLoadURIWithPrincipal(docPrincipal, scriptURI,
+                                nsIScriptSecurityManager::ALLOW_CHROME);
 
     if (NS_FAILED(rv)) {
       return FireErrorNotification(rv, aElement, aObserver);
