@@ -113,11 +113,9 @@ install::
 	$(MAKE_INSTALL) .\charsetalias.properties $(DIST)\bin\res
 	$(MAKE_INSTALL) .\wincharset.properties $(DIST)\bin\res
 	$(MAKE_INSTALL) charsetData.properties $(DIST)\bin\res
-        $(MAKE_INSTALL) .\acceptlanguage.properties $(DIST)\bin\res
 
 clobber::
 	rm -f $(DIST)\bin\res\charsetalias.properties
 	rm -f $(DIST)\bin\res\wincharset.properties
 	rm -f $(DIST)\bin\res\charsetData.properties
-        rm -f $(DIST)\bin\res\acceptlanguage.properties
     

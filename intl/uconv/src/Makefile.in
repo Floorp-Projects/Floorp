@@ -73,7 +73,6 @@ CPPSRCS		= \
 EXPORT_RESOURCE	= \
 		$(srcdir)/charsetalias.properties \
 		$(srcdir)/charsetData.properties \
-		$(srcdir)/acceptlanguage.properties \
 		$(NULL)
 
 ifeq ($(MOZ_WIDGET_TOOLKIT),os2)

@@ -269,7 +269,6 @@ bin/defaults/wallet/PositionalSchema.tbl
 bin/defaults/wallet/StateSchema.tbl
 bin/res/arrow.gif
 bin/res/charsetalias.properties
-bin/res/acceptlanguage.properties
 bin/res/unixcharset.properties
 bin/res/charsetData.properties
 bin/res/langGroups.properties
