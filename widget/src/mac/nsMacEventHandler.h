@@ -45,7 +45,7 @@ public:
 	nsMacEventDispatchHandler();
 	virtual			~nsMacEventDispatchHandler();
 
-	void			DispatchGuiEvent(PRUint32 aEventType);
+	void			DispatchGuiEvent(nsWindow *aWidget, PRUint32 aEventType);
 
     void 			SetFocus(nsWindow *aFocusedWidget);
 

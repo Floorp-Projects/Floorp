@@ -90,21 +90,21 @@ nsMacEventDispatchHandler::~nsMacEventDispatchHandler()
 //-------------------------------------------------------------------------
 //
 //-------------------------------------------------------------------------
-void nsMacEventDispatchHandler::DispatchGuiEvent(PRUint32 aEventType)
+void nsMacEventDispatchHandler::DispatchGuiEvent(nsWindow *aWidget, PRUint32 aEventType)
 {
-	if (mActiveWidget)
-	{
-		nsGUIEvent	guiEvent;
-		guiEvent.eventStructType = NS_GUI_EVENT;
-		guiEvent.point.x = 0;
-		guiEvent.point.y = 0;
-		guiEvent.time = PR_IntervalNow();
-		guiEvent.widget = nsnull;
-		guiEvent.nativeMsg = nsnull;
-		guiEvent.message = aEventType;
-		guiEvent.widget = mActiveWidget;
-		mActiveWidget->DispatchWindowEvent(guiEvent);
-	}
+	NS_ASSERTION(aWidget,"attempted to dispatch gui event to null widget");
+	if (!aWidget)
+		return;
+
+	nsGUIEvent	guiEvent;
+	guiEvent.eventStructType = NS_GUI_EVENT;
+	guiEvent.point.x = 0;
+	guiEvent.point.y = 0;
+	guiEvent.time = PR_IntervalNow();
+	guiEvent.nativeMsg = nsnull;
+	guiEvent.message = aEventType;
+	guiEvent.widget = aWidget;
+	aWidget->DispatchWindowEvent(guiEvent);
 }
 
 //-------------------------------------------------------------------------
@@ -120,7 +120,7 @@ void nsMacEventDispatchHandler::SetFocus(nsWindow *aFocusedWidget)
 	if (mActiveWidget)
 	{
 		mActiveWidget->RemoveDeleteObserver(this);
-		DispatchGuiEvent(NS_LOSTFOCUS);
+		DispatchGuiEvent(mActiveWidget, NS_LOSTFOCUS);
 	}
 
 	mActiveWidget = aFocusedWidget;
@@ -129,7 +129,7 @@ void nsMacEventDispatchHandler::SetFocus(nsWindow *aFocusedWidget)
 	if (mActiveWidget)
 	{
 		mActiveWidget->AddDeleteObserver(this);
-		DispatchGuiEvent(NS_GOTFOCUS);
+		DispatchGuiEvent(mActiveWidget, NS_GOTFOCUS);
 	}
 }
 
@@ -147,7 +147,7 @@ void nsMacEventDispatchHandler::SetActivated(nsWindow *aActivatedWidget)
 	if (mActiveWidget)
 	{
 		mActiveWidget->AddDeleteObserver(this);
-		DispatchGuiEvent(NS_ACTIVATE);
+		DispatchGuiEvent(mActiveWidget, NS_ACTIVATE);
 	}
 }
 
@@ -159,7 +159,7 @@ void nsMacEventDispatchHandler::SetDeactivated(nsWindow *aDeactivatedWidget)
 	// let the old one know it lost activation
 	if (mActiveWidget)
 	{	
-		DispatchGuiEvent(NS_DEACTIVATE);		
+		DispatchGuiEvent(mActiveWidget, NS_DEACTIVATE);		
 		mActiveWidget->RemoveDeleteObserver(this);
 		mActiveWidget = nsnull;
 	}
@@ -1087,8 +1087,8 @@ PRBool nsMacEventHandler::HandleMouseDownEvent(
 			if (nsnull != gRollupListener && (nsnull != gRollupWidget) ) {
 				gRollupListener->Rollup();
 			}
-			gEventDispatchHandler.DispatchGuiEvent(NS_XUL_CLOSE);		
-//			mTopLevelWidget->Destroy();
+			gEventDispatchHandler.DispatchGuiEvent(mTopLevelWidget, NS_XUL_CLOSE);		
+			// mTopLevelWidget->Destroy(); (this, by contrast, would immediately close the window)
 			break;
 		}
 
