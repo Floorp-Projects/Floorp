@@ -99,10 +99,6 @@ nsProfileAccess::~nsProfileAccess()
 
     PRBool openalready = PR_FALSE;
 
-    m_registry->IsOpen( &openalready);
-    if (openalready)
-		m_registry->Close();   
-
 	// Release all resources.
 	CRTFREEIF(mCurrentProfile);
 	CRTFREEIF(mVersion);
@@ -133,11 +129,8 @@ nsProfileAccess::FreeProfileMembers(nsVoidArray *profiles, PRInt32 numElems)
 nsresult
 nsProfileAccess::CloseRegistry()
 {
-	nsresult rv = NS_OK;
-	
-	rv = m_registry->Close();
-
-	return rv;
+    m_registry = 0;
+    return NS_OK;
 }
 
 // Open the registry.
@@ -163,7 +156,7 @@ nsProfileAccess::OpenRegistry()
     if (NS_FAILED(rv)) return rv;
 
     if (!openalready)
-        rv = m_registry->OpenDefault();   
+        rv = m_registry->OpenWellKnownRegistry(nsIRegistry::ApplicationRegistry);   
 
     return rv;
 }
@@ -329,10 +322,10 @@ nsProfileAccess::FillProfileInfo()
 	}
 
 	// Get the current profile
-	rv = m_registry->GetString(profilesTreeKey, REGISTRY_CURRENT_PROFILE_STRING, &mCurrentProfile);
+	rv = m_registry->GetStringUTF8(profilesTreeKey, REGISTRY_CURRENT_PROFILE_STRING, &mCurrentProfile);
 
 	// Get the profile version
-	rv = m_registry->GetString(profilesTreeKey, REGISTRY_VERSION_STRING, &mVersion);
+	rv = m_registry->GetStringUTF8(profilesTreeKey, REGISTRY_VERSION_STRING, &mVersion);
 
 	if (mVersion == nsnull)
 	{
@@ -342,7 +335,7 @@ nsProfileAccess::FillProfileInfo()
 	}
 
 	// Get the preg info
-	rv = m_registry->GetString(profilesTreeKey, REGISTRY_HAVE_PREG_INFO_STRING, &mHavePREGInfo);
+	rv = m_registry->GetStringUTF8(profilesTreeKey, REGISTRY_HAVE_PREG_INFO_STRING, &mHavePREGInfo);
 	
 	if (mHavePREGInfo == nsnull)
 	{
@@ -393,19 +386,19 @@ nsProfileAccess::FillProfileInfo()
             rv = m_registry->GetSubtree(profilesTreeKey, profile, &profKey);
 			if (NS_FAILED(rv)) return rv;
                                                     
-            rv = m_registry->GetString(profKey, REGISTRY_DIRECTORY_STRING, &directory);
+            rv = m_registry->GetStringUTF8(profKey, REGISTRY_DIRECTORY_STRING, &directory);
 			if (NS_FAILED(rv)) return rv;
 
 			if (mFixRegEntries)
 				FixRegEntry(&directory);
 
-            rv = m_registry->GetString(profKey, REGISTRY_MIGRATED_STRING, getter_Copies(isMigrated));
+            rv = m_registry->GetStringUTF8(profKey, REGISTRY_MIGRATED_STRING, getter_Copies(isMigrated));
 			if (NS_FAILED(rv)) return rv;
 
-            rv = m_registry->GetString(profKey, REGISTRY_NC_PROFILE_NAME_STRING, getter_Copies(NCProfileName));
-            rv = m_registry->GetString(profKey, REGISTRY_NC_SERVICE_DENIAL_STRING, getter_Copies(NCDeniedService));
-            rv = m_registry->GetString(profKey, REGISTRY_NC_USER_EMAIL_STRING, getter_Copies(NCEmailAddress));
-            rv = m_registry->GetString(profKey, REGISTRY_NC_HAVE_PREG_INFO_STRING, getter_Copies(NCHavePregInfo));
+            rv = m_registry->GetStringUTF8(profKey, REGISTRY_NC_PROFILE_NAME_STRING, getter_Copies(NCProfileName));
+            rv = m_registry->GetStringUTF8(profKey, REGISTRY_NC_SERVICE_DENIAL_STRING, getter_Copies(NCDeniedService));
+            rv = m_registry->GetStringUTF8(profKey, REGISTRY_NC_USER_EMAIL_STRING, getter_Copies(NCEmailAddress));
+            rv = m_registry->GetStringUTF8(profKey, REGISTRY_NC_HAVE_PREG_INFO_STRING, getter_Copies(NCHavePregInfo));
 
             ProfileStruct*	profileItem	= new ProfileStruct();
             if (!profileItem)
@@ -663,15 +656,15 @@ nsProfileAccess::UpdateRegistry()
 	if (NS_FAILED(rv)) return rv;
 
 	// Set the current profile
-	rv = m_registry->SetString(profilesTreeKey, REGISTRY_CURRENT_PROFILE_STRING, mCurrentProfile);
+	rv = m_registry->SetStringUTF8(profilesTreeKey, REGISTRY_CURRENT_PROFILE_STRING, mCurrentProfile);
 	if (NS_FAILED(rv)) return rv;
 
 	// Set the registry version
-	rv = m_registry->SetString(profilesTreeKey, REGISTRY_VERSION_STRING, mVersion);
+	rv = m_registry->SetStringUTF8(profilesTreeKey, REGISTRY_VERSION_STRING, mVersion);
 	if (NS_FAILED(rv)) return rv;
 
 	// Set preg info
-	rv = m_registry->SetString(profilesTreeKey, REGISTRY_HAVE_PREG_INFO_STRING, mHavePREGInfo);
+	rv = m_registry->SetStringUTF8(profilesTreeKey, REGISTRY_HAVE_PREG_INFO_STRING, mHavePREGInfo);
 	if (NS_FAILED(rv)) return rv;
 
 	rv = m_registry->EnumerateSubtrees(profilesTreeKey, getter_AddRefs(enumKeys));
@@ -721,16 +714,16 @@ nsProfileAccess::UpdateRegistry()
 			rv = m_registry->GetSubtree(profilesTreeKey, profile, &profKey);
 			if (NS_FAILED(rv)) return rv;
                                             
-			rv = m_registry->SetString(profKey, REGISTRY_DIRECTORY_STRING, profileItem->profileLocation);
+			rv = m_registry->SetStringUTF8(profKey, REGISTRY_DIRECTORY_STRING, profileItem->profileLocation);
 			if (NS_FAILED(rv)) return rv;
 
-			rv = m_registry->SetString(profKey, REGISTRY_MIGRATED_STRING, profileItem->isMigrated);
+			rv = m_registry->SetStringUTF8(profKey, REGISTRY_MIGRATED_STRING, profileItem->isMigrated);
 			if (NS_FAILED(rv)) return rv;
 
-            rv = m_registry->SetString(profKey, REGISTRY_NC_PROFILE_NAME_STRING, profileItem->NCProfileName);
-            rv = m_registry->SetString(profKey, REGISTRY_NC_SERVICE_DENIAL_STRING, profileItem->NCDeniedService);
-            rv = m_registry->SetString(profKey, REGISTRY_NC_USER_EMAIL_STRING, profileItem->NCEmailAddress);
-            rv = m_registry->SetString(profKey, REGISTRY_NC_HAVE_PREG_INFO_STRING, profileItem->NCHavePregInfo);
+            rv = m_registry->SetStringUTF8(profKey, REGISTRY_NC_PROFILE_NAME_STRING, profileItem->NCProfileName);
+            rv = m_registry->SetStringUTF8(profKey, REGISTRY_NC_SERVICE_DENIAL_STRING, profileItem->NCDeniedService);
+            rv = m_registry->SetStringUTF8(profKey, REGISTRY_NC_USER_EMAIL_STRING, profileItem->NCEmailAddress);
+            rv = m_registry->SetStringUTF8(profKey, REGISTRY_NC_HAVE_PREG_INFO_STRING, profileItem->NCHavePregInfo);
 
 			profileItem->updateProfileEntry = PR_FALSE;
 		}
@@ -749,16 +742,16 @@ nsProfileAccess::UpdateRegistry()
 			rv = m_registry->AddSubtree(profilesTreeKey, profileItem->profileName, &profKey);
 			if (NS_FAILED(rv)) return rv;
 
-			rv = m_registry->SetString(profKey, REGISTRY_DIRECTORY_STRING, profileItem->profileLocation);
+			rv = m_registry->SetStringUTF8(profKey, REGISTRY_DIRECTORY_STRING, profileItem->profileLocation);
 			if (NS_FAILED(rv)) return rv;
 
-			rv = m_registry->SetString(profKey, REGISTRY_MIGRATED_STRING, profileItem->isMigrated);
+			rv = m_registry->SetStringUTF8(profKey, REGISTRY_MIGRATED_STRING, profileItem->isMigrated);
 			if (NS_FAILED(rv)) return rv;
 
-            rv = m_registry->SetString(profKey, REGISTRY_NC_PROFILE_NAME_STRING, profileItem->NCProfileName);
-            rv = m_registry->SetString(profKey, REGISTRY_NC_SERVICE_DENIAL_STRING, profileItem->NCDeniedService);
-            rv = m_registry->SetString(profKey, REGISTRY_NC_USER_EMAIL_STRING, profileItem->NCEmailAddress);
-            rv = m_registry->SetString(profKey, REGISTRY_NC_HAVE_PREG_INFO_STRING, profileItem->NCHavePregInfo);
+            rv = m_registry->SetStringUTF8(profKey, REGISTRY_NC_PROFILE_NAME_STRING, profileItem->NCProfileName);
+            rv = m_registry->SetStringUTF8(profKey, REGISTRY_NC_SERVICE_DENIAL_STRING, profileItem->NCDeniedService);
+            rv = m_registry->SetStringUTF8(profKey, REGISTRY_NC_USER_EMAIL_STRING, profileItem->NCEmailAddress);
+            rv = m_registry->SetStringUTF8(profKey, REGISTRY_NC_HAVE_PREG_INFO_STRING, profileItem->NCHavePregInfo);
 
 			profileItem->updateProfileEntry = PR_FALSE;
 		}
@@ -878,7 +871,7 @@ nsProfileAccess::Get4xProfileInfo(const char *registryName)
         
         nsXPIDLCString profLoc;
         
-        rv = oldReg->GetString( key, "ProfileLocation", getter_Copies(profLoc));
+        rv = oldReg->GetStringUTF8( key, "ProfileLocation", getter_Copies(profLoc));
 		if (NS_FAILED(rv)) return rv;
         
 #if defined(DEBUG_profile)
@@ -911,7 +904,6 @@ nsProfileAccess::Get4xProfileInfo(const char *registryName)
         rv = enumKeys->Next();
         if (NS_FAILED(rv)) return rv;
     }
-    oldReg->Close();
 
 #elif defined (XP_BEOS)
 #else

@@ -334,56 +334,56 @@ nsCharDetModule::RegisterSelf(nsIComponentManager *aCompMgr,
   rv = registry -> AddSubtree(nsIRegistry::Common, 
                               NS_CHARSET_DETECTOR_REG_BASE "off" ,&key);
   if (NS_SUCCEEDED(rv)) {
-    rv = registry-> SetString(key, "type", "off");
-    rv = registry-> SetString(key, "defaultEnglishText", "Off");
+    rv = registry-> SetStringUTF8(key, "type", "off");
+    rv = registry-> SetStringUTF8(key, "defaultEnglishText", "Off");
   }
   rv = registry -> AddSubtree(nsIRegistry::Common, 
                               NS_CHARSET_DETECTOR_REG_BASE "japsm" ,&key);
   if (NS_SUCCEEDED(rv)) {
-    rv = registry-> SetString(key, "type", "japsm");
-    rv = registry-> SetString(key, "defaultEnglishText", "Japanese");
+    rv = registry-> SetStringUTF8(key, "type", "japsm");
+    rv = registry-> SetStringUTF8(key, "defaultEnglishText", "Japanese");
   }
   rv = registry -> AddSubtree(nsIRegistry::Common, 
                               NS_CHARSET_DETECTOR_REG_BASE "kopsm" ,&key);
   if (NS_SUCCEEDED(rv)) {
-    rv = registry-> SetString(key, "type", "kopsm");
-    rv = registry-> SetString(key, "defaultEnglishText", "Korean");
+    rv = registry-> SetStringUTF8(key, "type", "kopsm");
+    rv = registry-> SetStringUTF8(key, "defaultEnglishText", "Korean");
   }
   rv = registry -> AddSubtree(nsIRegistry::Common, 
                            NS_CHARSET_DETECTOR_REG_BASE "zhtwpsm" ,&key);
   if (NS_SUCCEEDED(rv)) {
-    rv = registry-> SetString(key, "type", "zhtwpsm");
-    rv = registry-> SetString(key, "defaultEnglishText", "Traditional Chinese");
+    rv = registry-> SetStringUTF8(key, "type", "zhtwpsm");
+    rv = registry-> SetStringUTF8(key, "defaultEnglishText", "Traditional Chinese");
   }
   rv = registry -> AddSubtree(nsIRegistry::Common, 
                            NS_CHARSET_DETECTOR_REG_BASE "zhcnpsm" ,&key);
   if (NS_SUCCEEDED(rv)) {
-    rv = registry-> SetString(key, "type", "zhtwpsm");
-    rv = registry-> SetString(key, "defaultEnglishText", "Simplified Chinese");
+    rv = registry-> SetStringUTF8(key, "type", "zhtwpsm");
+    rv = registry-> SetStringUTF8(key, "defaultEnglishText", "Simplified Chinese");
   }
   rv = registry -> AddSubtree(nsIRegistry::Common, 
                            NS_CHARSET_DETECTOR_REG_BASE "zhpsm" ,&key);
   if (NS_SUCCEEDED(rv)) {
-    rv = registry-> SetString(key, "type", "zhpsm");
-    rv = registry-> SetString(key, "defaultEnglishText", "Chinese");
+    rv = registry-> SetStringUTF8(key, "type", "zhpsm");
+    rv = registry-> SetStringUTF8(key, "defaultEnglishText", "Chinese");
   }
   rv = registry -> AddSubtree(nsIRegistry::Common, 
                            NS_CHARSET_DETECTOR_REG_BASE "cjkpsm" ,&key);
   if (NS_SUCCEEDED(rv)) {
-    rv = registry-> SetString(key, "type", "cjkpsm");
-    rv = registry-> SetString(key, "defaultEnglishText", "East Asian");
+    rv = registry-> SetStringUTF8(key, "type", "cjkpsm");
+    rv = registry-> SetStringUTF8(key, "defaultEnglishText", "East Asian");
   }
   rv = registry -> AddSubtree(nsIRegistry::Common, 
                            NS_CHARSET_DETECTOR_REG_BASE "ruprob" ,&key);
   if (NS_SUCCEEDED(rv)) {
-    rv = registry-> SetString(key, "type", "ruprob");
-    rv = registry-> SetString(key, "defaultEnglishText", "Russian");
+    rv = registry-> SetStringUTF8(key, "type", "ruprob");
+    rv = registry-> SetStringUTF8(key, "defaultEnglishText", "Russian");
   }
   rv = registry -> AddSubtree(nsIRegistry::Common, 
                            NS_CHARSET_DETECTOR_REG_BASE "ukprob" ,&key);
   if (NS_SUCCEEDED(rv)) {
-    rv = registry-> SetString(key, "type", "ukprob");
-    rv = registry-> SetString(key, "defaultEnglishText", "Ukrainian");
+    rv = registry-> SetStringUTF8(key, "type", "ukprob");
+    rv = registry-> SetStringUTF8(key, "defaultEnglishText", "Ukrainian");
   }
 
  done:

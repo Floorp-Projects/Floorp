@@ -59,6 +59,10 @@ static NS_DEFINE_IID(kStringBundleServiceCID, NS_STRINGBUNDLESERVICE_CID);
 
 static NS_DEFINE_CID(kDialogParamBlockCID, NS_DialogParamBlock_CID);
 
+#include "nsIEventQueueService.h"
+
+static NS_DEFINE_CID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);
+
 #define XPINSTALL_BUNDLE_URL "chrome://xpinstall/locale/xpinstall.properties"
 
 nsXPInstallManager::nsXPInstallManager()
@@ -261,6 +265,7 @@ nsXPInstallManager::InitManager(nsXPITriggerInfo* aTriggers)
     return rv;
 }
 
+
 NS_IMETHODIMP nsXPInstallManager::DialogOpened(nsISupports* aWindow)
 {
   nsresult rv;
@@ -422,6 +427,21 @@ void nsXPInstallManager::Shutdown()
 
     mDlg = 0;
 
+    // Clean up downloaded files
+    nsXPITriggerItem* item;
+    nsFileSpec        tmpSpec;
+    for (PRUint32 i = 0; i < mTriggers->Size(); i++ )
+    {
+        item = NS_STATIC_CAST(nsXPITriggerItem*, mTriggers->Get(i));
+
+        if ( item && item->mFile && !item->IsFileURL() )
+        {
+            item->mFile->GetFileSpec(&tmpSpec);
+            tmpSpec.Delete(PR_FALSE);
+        }
+    }
+
+
     NS_RELEASE_THIS();
 }
 
@@ -534,6 +554,8 @@ nsXPInstallManager::OnStopRequest(nsIChannel* channel, nsISupports *ctxt,
     DownloadNext();
     return rv;
 }
+
+
 NS_IMETHODIMP
 nsXPInstallManager::OnDataAvailable(nsIChannel* channel, nsISupports *ctxt, 
                                     nsIInputStream *pIStream,
@@ -543,7 +565,7 @@ nsXPInstallManager::OnDataAvailable(nsIChannel* channel, nsISupports *ctxt,
     PRUint32 amt;
     PRInt32  result;
     nsresult err;
-    char buffer[1025];
+    char buffer[8*1024];
     
     if (mCancelled)
     {
@@ -554,7 +576,7 @@ nsXPInstallManager::OnDataAvailable(nsIChannel* channel, nsISupports *ctxt,
 
     do 
     {
-        err = pIStream->Read(buffer, 1024, &amt);
+        err = pIStream->Read(buffer, sizeof(buffer), &amt);
         if (amt == 0) break;
         if (NS_FAILED(err)) 
         {
@@ -568,7 +590,8 @@ nsXPInstallManager::OnDataAvailable(nsIChannel* channel, nsISupports *ctxt,
             //printf("mItem->mFile->Write Failed!  err:%d   amt:%d    result:%d\n", err, amt, result);
             return NS_ERROR_FAILURE;
         }
-    } while (amt > 0);
+        length -= amt;
+    } while (length > 0);
 
     return NS_OK;
 }

@@ -397,9 +397,9 @@ NS_IMETHODIMP nsConverterModule::RegisterSelf(nsIComponentManager *aCompMgr,
     nsCRT::free(cid_string);
     res = registry -> AddSubtree(nsIRegistry::Common, buff, &key);
     if (NS_FAILED(res)) goto done;
-    res = registry -> SetString(key, "source", g_FactoryData[i].mCharsetSrc);
+    res = registry -> SetStringUTF8(key, "source", g_FactoryData[i].mCharsetSrc);
     if (NS_FAILED(res)) goto done;
-    res = registry -> SetString(key, "destination", g_FactoryData[i].mCharsetDest);
+    res = registry -> SetStringUTF8(key, "destination", g_FactoryData[i].mCharsetDest);
     if (NS_FAILED(res)) goto done;
   }
 

@@ -157,7 +157,7 @@ PR_PUBLIC_API(nsresult) XPI_Init(
     NS_NewFileSpecWithSpec( dirSpec, getter_AddRefs(iDirSpec) );    
     
     if (hook && iDirSpec)
-        hook->SetProgramDirectory( iDirSpec );
+        hook->StubInitialize( iDirSpec );
     else
         return NS_ERROR_NULL_POINTER;
 
@@ -217,7 +217,7 @@ PR_PUBLIC_API(PRInt32) XPI_Install(
     nsFileURL               URL(file);
     nsString                URLstr(URL.GetURLString());
 
-    gInstallStatus = -322; // nsInstall::UNEXPECTED_ERROR
+    gInstallStatus = -322; // unique stub error code
 
     NS_NewFileSpecWithSpec( file, getter_AddRefs(iFile) );
 

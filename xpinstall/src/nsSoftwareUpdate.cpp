@@ -104,7 +104,8 @@ nsSoftwareUpdate::GetInstance()
 
 nsSoftwareUpdate::nsSoftwareUpdate()
 : mInstalling(PR_FALSE),
-  mStubLockout(PR_FALSE)
+  mStubLockout(PR_FALSE),
+  mReg(0)
 {
     NS_INIT_ISUPPORTS();
 
@@ -195,6 +196,11 @@ nsSoftwareUpdate::QueryInterface( REFNSIID anIID, void **anInstancePtr )
 NS_IMETHODIMP
 nsSoftwareUpdate::Initialize( nsIAppShellService *anAppShell, nsICmdLineService  *aCmdLineService ) 
 {
+    // Close the registry if open. We left it open through most of startup
+    // so it wouldn't get opened and closed a lot by different services
+    if (mReg) 
+        NR_RegClose(mReg);
+
     // prevent use of nsPIXPIStubHook by browser
     mStubLockout = PR_TRUE;
 
@@ -303,9 +309,17 @@ nsSoftwareUpdate::InstallJarCallBack()
 
 
 NS_IMETHODIMP
-nsSoftwareUpdate::StartupTasks()
+nsSoftwareUpdate::StartupTasks( PRBool* outAutoreg )
 {
-    PerformScheduledTasks(0);
+    if (outAutoreg) *outAutoreg = PR_FALSE;
+
+    if ( REGERR_OK == NR_RegOpen("", &mReg) )
+    {
+        // XXX get a return val and if not all replaced autoreg again later
+        PerformScheduledTasks(mReg);
+    }
+
+
     return NS_OK;
 }
 
@@ -368,19 +382,23 @@ nsSoftwareUpdate::RegisterNameset()
 
 
 NS_IMETHODIMP
-nsSoftwareUpdate::SetProgramDirectory(nsIFileSpec *aDir)
+nsSoftwareUpdate::StubInitialize(nsIFileSpec *aDir)
 {
     if (mStubLockout)
         return NS_ERROR_ABORT;
     else if ( !aDir )
         return NS_ERROR_NULL_POINTER;
 
-    // only allow once, it would be a mess if we've already started installing
+    // only allow once, it could be a mess if we've already started installing
     mStubLockout = PR_TRUE;
 
     // fix GetFolder return path
     mProgramDir = aDir;
     NS_ADDREF(mProgramDir);
+
+    // Create the logfile observer
+    nsLoggingProgressNotifier *logger = new nsLoggingProgressNotifier();
+    RegisterNotifier(logger);
 
     // setup version registry path
     char*    path;
@@ -493,8 +511,8 @@ RegisterSoftwareUpdate( nsIComponentManager *aCompMgr,
                                    &key );
         nsServiceManager::ReleaseService(NS_REGISTRY_PROGID, registry);
     }
-
     return rv;
+
 }
 
 
@@ -507,7 +525,7 @@ static nsModuleComponentInfo components[] =
        nsSoftwareUpdateConstructor,
        RegisterSoftwareUpdate
     },
-   
+	   
     { "InstallTrigger Component", 
        NS_SoftwareUpdateInstallTrigger_CID,
        NS_INSTALLTRIGGERCOMPONENT_PROGID, 

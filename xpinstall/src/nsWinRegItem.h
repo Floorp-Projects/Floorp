@@ -54,7 +54,7 @@ public:
                PRInt32          val,
                PRInt32*         aReturn);
   
-  ~nsWinRegItem();
+  virtual ~nsWinRegItem();
 
   PRInt32 Prepare(void);
 

@@ -165,7 +165,7 @@ static int TranslateReturnValue(nsresult aResult)
 #include "nsCommandLineServiceMac.h"
 #endif
 
-extern "C" void NS_SetupRegistry_1();
+extern "C" void NS_SetupRegistry_1(PRBool aNeedAutoreg);
 
 static void
 PrintUsage(void)
@@ -220,6 +220,7 @@ static nsresult OpenChromURL( const char * urlstr, PRInt32 height = NS_SIZETOCON
   NS_IF_RELEASE( url );
   return rv;
 }
+
 
 static void DumpArbitraryHelp() 
 {
@@ -476,6 +477,27 @@ static nsresult main1(int argc, char* argv[], nsISplashScreen *splashScreen )
   // the JS engine.  See bugzilla bug 9967 details.
   fpsetmask(0);
 #endif
+
+  //----------------------------------------------------------------
+  // XPInstall needs to clean up after any updates that couldn't
+  // be completed because components were in use. This must be done 
+  // **BEFORE** any other libraries are loaded!
+  //
+  // Will also check to see if AutoReg is required due to version
+  // change or installation of new components. If for some reason
+  // XPInstall can't be loaded we assume Autoreg is required.
+  //
+  // (scoped in a block to force release of COMPtr)
+  //----------------------------------------------------------------
+  PRBool needAutoreg = PR_TRUE;
+  {
+    nsCOMPtr<nsISoftwareUpdate> su = do_GetService(kSoftUpdateCID,&rv);
+    if (NS_SUCCEEDED(rv))
+    {
+      su->StartupTasks( &needAutoreg );
+    }
+  }
+//  nsServiceManager::UnregisterService(kSoftUpdateCID);
    
  #if XP_MAC 
     stTSMCloser  tsmCloser;
@@ -485,7 +507,9 @@ static nsresult main1(int argc, char* argv[], nsISplashScreen *splashScreen )
  #endif
 
   // XXX: This call will be replaced by a registry initialization...
-  NS_SetupRegistry_1();
+  NS_SetupRegistry_1( needAutoreg );
+
+  // Start up the core services:
 
   // Initialize the cmd line service
   NS_WITH_SERVICE(nsICmdLineService, cmdLineArgs, kCmdLineServiceCID, &rv);
@@ -706,23 +730,9 @@ int main(int argc, char* argv[])
   rv = NS_InitXPCOM(NULL, NULL);
   NS_ASSERTION( NS_SUCCEEDED(rv), "NS_InitXPCOM failed" );
 
-  {
-    //----------------------------------------------------------------
-    // XPInstall needs to clean up after any updates that couldn't
-    // be completed because components were in use. This must be done 
-    // **BEFORE** any other components are loaded!
-    //
-    // Will also check to see if AutoReg is required due to version
-    // change or installation of new components
-    //
-    // (scoped in a block to force release of COMPtr)
-    //----------------------------------------------------------------
-    nsCOMPtr<nsISoftwareUpdate> su = do_GetService(kSoftUpdateCID,&rv);
-    if (NS_SUCCEEDED(rv))
-      su->StartupTasks();
-  }
-  
+
   nsresult result = main1( argc, argv, splash );
+
 
   {
         // Scoping this in a block to force the pref service to be           

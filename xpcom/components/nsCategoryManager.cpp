@@ -215,7 +215,7 @@ nsCategoryManager::initialize()
                 }
                 
                 nsXPIDLCString value;
-                mRegistry->GetString(categoryKey, entryName, getter_Copies(value));
+                mRegistry->GetStringUTF8(categoryKey, entryName, getter_Copies(value));
                 AddCategoryEntry(categoryName, entryName, value, PR_FALSE, PR_FALSE, 0);
               }
           }
@@ -247,7 +247,7 @@ nsCategoryManager::persist( const char* aCategoryName, const char* aKey, const c
       status = mRegistry->AddSubtreeRaw(mCategoriesRegistryKey, aCategoryName, &categoryRegistryKey);
 
     if ( NS_SUCCEEDED(status) )
-      status = mRegistry->SetString(categoryRegistryKey, aKey, aValue);
+      status = mRegistry->SetStringUTF8(categoryRegistryKey, aKey, aValue);
 
     return status;
   }

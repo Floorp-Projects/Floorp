@@ -406,7 +406,7 @@ nsExtensibleStringBundle::nsExtensibleStringBundle(const char * aRegistryKey,
     res = node->GetKey(&key);
     if (NS_FAILED(res)) goto done1;
 
-    res = registry->GetString(key, "name", &name);
+    res = registry->GetStringUTF8(key, "name", &name);
     if (NS_FAILED(res)) goto done1;
 
     res = sbServ->CreateBundle(name, aLocale, &bundle);

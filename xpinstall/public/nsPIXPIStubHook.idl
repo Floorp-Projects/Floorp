@@ -34,5 +34,5 @@
 [uuid(089929F0-4ED9-11d3-ABDD-000064657374)]
 interface nsPIXPIStubHook : nsISupports
 {
-        void    SetProgramDirectory(in nsIFileSpec dir);
+        void    StubInitialize(in nsIFileSpec dir);
 };

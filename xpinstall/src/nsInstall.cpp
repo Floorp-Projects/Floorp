@@ -2225,7 +2225,7 @@ nsInstall::CleanUp(void)
         mPatchList = nsnull;
     }
     
-    if (mPackageFolder != nsnull) 
+    if (mPackageFolder != nsnull)
     {
       delete (mPackageFolder);
       mPackageFolder = nsnull;

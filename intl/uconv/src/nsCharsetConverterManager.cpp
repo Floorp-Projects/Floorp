@@ -228,7 +228,7 @@ nsresult nsCharsetConverterManager::RegisterConverterTitles(
   res = aRegistry->AddSubtree(nsIRegistry::Common, p, &key);
   nsAllocator::Free(p);
   if (NS_FAILED(res)) return res;
-  res = aRegistry->SetString(key, "name", "resource:/res/charsetTitles.properties");
+  res = aRegistry->SetStringUTF8(key, "name", "resource:/res/charsetTitles.properties");
   if (NS_FAILED(res)) return res;
 
   return NS_OK;
@@ -248,7 +248,7 @@ nsresult nsCharsetConverterManager::RegisterConverterData(
   res = aRegistry->AddSubtree(nsIRegistry::Common, p, &key);
   nsAllocator::Free(p);
   if (NS_FAILED(res)) return res;
-  res = aRegistry->SetString(key, "name", "resource:/res/charsetData.properties");
+  res = aRegistry->SetStringUTF8(key, "name", "resource:/res/charsetData.properties");
   if (NS_FAILED(res)) return res;
 
   return NS_OK;
@@ -314,10 +314,10 @@ void nsCharsetConverterManager::FillInfoArrays()
     res = node->GetKey(&key);
     if (NS_FAILED(res)) goto done1;
 
-    res = registry->GetString(key, "source", &src);
+    res = registry->GetStringUTF8(key, "source", &src);
     if (NS_FAILED(res)) goto done1;
 
-    res = registry->GetString(key, "destination", &dest);
+    res = registry->GetStringUTF8(key, "destination", &dest);
     if (NS_FAILED(res)) goto done1;
 
     // XXX do an alias resolution here instead

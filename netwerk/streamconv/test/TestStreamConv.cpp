@@ -249,7 +249,7 @@ main(int argc, char* argv[])
     rv = registry->AddSubtreeRaw(key, "?from=t/foo?to=k/foo", &key1);
     if (NS_FAILED(rv)) return rv;
 
-    registry->Close();
+    registry = 0; // close the registry
 
     NS_WITH_SERVICE(nsIStreamConverterService, StreamConvService, kStreamConverterServiceCID, &rv);
     if (NS_FAILED(rv)) return rv;
