@@ -22,7 +22,6 @@
   -->
 
 <?xml-stylesheet href="chrome://communicator/skin/" type="text/css"?>
-<?xml-stylesheet href="chrome://communicator/skin/dialogOverlay.css" type="text/css"?>
 
 <!DOCTYPE window [
   <!ENTITY % brandDTD SYSTEM "chrome://global/locale/brand.dtd">
@@ -32,7 +31,8 @@
 ]>
 
 <page xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-      onload="parent.initPanel('chrome://pippki/content/pref-masterpass.xul'); onMasterPasswordLoad();">
+      onload="parent.initPanel('chrome://pippki/content/pref-masterpass.xul'); onMasterPasswordLoad();"
+      headertitle="&lheader;">
 
   <script type="application/x-javascript" src="chrome://pippki/content/pref-masterpass.js"/>
 
@@ -47,9 +47,6 @@
   ]]>
   </script>
             
-  <!-- Fancy panel header -->
-  <hbox class="box-smallheader" title="&lheader;"/>
-
   <!-- Change Password -->
   <groupbox>
     <caption label="&changepassword.label;"/>
