@@ -47,6 +47,7 @@ public:
     NS_IMETHOD DoSort(nsIDOMNode* node, const nsString& sortResource, const nsString& sortDirection) = 0;
     NS_IMETHOD OpenContainer(nsIRDFCompositeDataSource *db, nsIContent *container,
 			nsIRDFResource **flatArray, PRInt32 numElements, PRInt32 elementSize) = 0;
+    NS_IMETHOD InsertContainerNode(nsIContent *container, nsIContent *child) = 0;
 };
 
 

@@ -101,7 +101,8 @@ static NS_DEFINE_IID(kIXULSortServiceIID,        NS_IXULSORTSERVICE_IID);
 
 ////////////////////////////////////////////////////////////////////////
 
-nsrefcnt RDFGenericBuilderImpl::gRefCnt = 0;
+nsrefcnt		RDFGenericBuilderImpl::gRefCnt = 0;
+nsIXULSortService*	RDFGenericBuilderImpl::XULSortService = nsnull;
 
 nsIAtom* RDFGenericBuilderImpl::kContainerAtom;
 nsIAtom* RDFGenericBuilderImpl::kItemContentsGeneratedAtom;
@@ -182,6 +183,9 @@ static const char kRDFNameSpaceURI[]
             NS_ERROR("couldnt' get RDF service");
         }
 
+	rv = nsServiceManager::GetService(kXULSortServiceCID,
+		kIXULSortServiceIID, (nsISupports**) &XULSortService);
+
         NS_VERIFY(NS_SUCCEEDED(gRDFService->GetResource(kURINC_Title,  &kNC_Title)),
                   "couldn't get resource");
 
@@ -227,6 +231,7 @@ RDFGenericBuilderImpl::~RDFGenericBuilderImpl(void)
         NS_RELEASE(kNC_Column);
 
         nsServiceManager::ReleaseService(kRDFServiceCID, gRDFService);
+	nsServiceManager::ReleaseService(kXULSortServiceCID, XULSortService);
         NS_RELEASE(gNameSpaceManager);
     }
 
@@ -556,14 +561,9 @@ RDFGenericBuilderImpl::CreateContents(nsIContent* aElement)
         	        for (loop=0; loop<numElements; loop++)
 				flatArray[loop] = (nsIRDFResource *)tempArray->ElementAt(loop);
 
-			nsIXULSortService		*gXULSortService = nsnull;
-
-			nsresult rv = nsServiceManager::GetService(kXULSortServiceCID,
-				kIXULSortServiceIID, (nsISupports**) &gXULSortService);
-			if (nsnull != gXULSortService)
+			if (nsnull != XULSortService)
 			{
-				gXULSortService->OpenContainer(mDB, aElement, flatArray, numElements/2, 2*sizeof(nsIRDFResource *));
-				nsServiceManager::ReleaseService(kXULSortServiceCID, gXULSortService);
+				XULSortService->OpenContainer(mDB, aElement, flatArray, numElements/2, 2*sizeof(nsIRDFResource *));
 			}
 
         		for (loop=0; loop<numElements; loop+=2)

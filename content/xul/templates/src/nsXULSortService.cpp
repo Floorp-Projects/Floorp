@@ -192,6 +192,7 @@ public:
     NS_IMETHOD DoSort(nsIDOMNode* node, const nsString& sortResource, const nsString& sortDirection);
     NS_IMETHOD OpenContainer(nsIRDFCompositeDataSource *db, nsIContent *container, nsIRDFResource **flatArray,
 				PRInt32 numElements, PRInt32 elementSize);
+    NS_IMETHOD InsertContainerNode(nsIContent *container, nsIContent *node);
 };
 
 nsIXULSortService* XULSortServiceImpl::gXULSortService = nsnull;
@@ -610,8 +611,8 @@ openSortCallback(const void *data1, const void *data2, void *sortData)
 
 	nsIRDFResource	*res1;
 	nsIRDFResource	*res2;
-    nsXPIDLString uniStr1;
-    nsXPIDLString uniStr2;
+	nsXPIDLString	uniStr1;
+	nsXPIDLString	uniStr2;
 
 	if (NS_SUCCEEDED(node1->QueryInterface(kIRDFResourceIID, (void **) &res1)))
 	{
@@ -950,7 +951,90 @@ XULSortServiceImpl::OpenContainer(nsIRDFCompositeDataSource *db, nsIContent *con
 			sortInfo.descendingSort = PR_TRUE;
 		else
 			sortInfo.descendingSort = PR_FALSE;
-        nsQuickSort((void *)flatArray, numElements, elementSize, openSortCallback, (void *)&sortInfo);
+		nsQuickSort((void *)flatArray, numElements, elementSize, openSortCallback, (void *)&sortInfo);
+	}
+	return(NS_OK);
+}
+
+
+
+NS_IMETHODIMP
+XULSortServiceImpl::InsertContainerNode(nsIContent *container, nsIContent *node)
+{
+	nsresult	rv;
+	nsIContent	*treeNode;
+	nsString	sortResource, sortDirection;
+	_sortStruct	sortInfo;
+
+	// get sorting info (property to sort on, direction to sort, etc)
+
+	if (NS_FAILED(rv = FindTreeElement(container, &treeNode)))	return(rv);
+
+	// get composite db for tree
+	nsIDOMXULTreeElement	*domXulTree;
+	sortInfo.rdfService = gRDFService;
+	sortInfo.db = nsnull;
+	if (NS_SUCCEEDED(rv = treeNode->QueryInterface(kIDomXulTreeElementIID, (void**)&domXulTree)))
+	{
+		if (NS_SUCCEEDED(rv = domXulTree->GetDatabase(&sortInfo.db)))
+		{
+		}
+	}
+
+	sortInfo.kNaturalOrderPosAtom = kNaturalOrderPosAtom;
+	sortInfo.kTreeCellAtom = kTreeCellAtom;
+	sortInfo.kNameSpaceID_XUL = kNameSpaceID_XUL;
+
+	if (NS_FAILED(rv = GetSortColumnInfo(treeNode, sortResource, sortDirection)))	return(rv);
+	char *uri = sortResource.ToNewCString();
+	if (uri)
+	{
+		rv = gRDFService->GetResource(uri, &sortInfo.sortProperty);
+		delete [] uri;
+		if (NS_FAILED(rv))	return(rv);
+	}
+	if (sortDirection.EqualsIgnoreCase("natural"))
+	{
+		sortInfo.naturalOrderSort = PR_TRUE;
+		sortInfo.descendingSort = PR_FALSE;
+		// no need to sort for natural order
+		container->AppendChildTo(node, PR_TRUE);
+	}
+	else
+	{
+		sortInfo.naturalOrderSort = PR_FALSE;
+		if (sortDirection.EqualsIgnoreCase("descending"))
+			sortInfo.descendingSort = PR_TRUE;
+		else
+			sortInfo.descendingSort = PR_FALSE;
+// crap
+		// figure out where to insert the node when a sort order is being imposed
+		PRInt32			childIndex = 0, numChildren = 0, nameSpaceID;
+	        nsCOMPtr<nsIContent>	child;
+		nsresult		rv;
+		PRBool			childAdded = PR_FALSE;
+
+		if (NS_FAILED(rv = container->ChildCount(numChildren)))	return(rv);
+		for (childIndex=0; childIndex<numChildren; childIndex++)
+		{
+			if (NS_FAILED(rv = container->ChildAt(childIndex, *getter_AddRefs(child))))	return(rv);
+			if (NS_FAILED(rv = child->GetNameSpaceID(nameSpaceID)))	return(rv);
+			if (nameSpaceID == kNameSpaceID_XUL)
+			{
+				nsIContent	*theChild = child.get();
+				PRInt32 sortVal = inplaceSortCallback(&node, &theChild, &sortInfo);
+				if (sortVal <= 0)
+				{
+					container->InsertChildAt(node, childIndex, PR_TRUE);
+					childAdded = PR_TRUE;
+					break;
+				}
+			}
+		}
+		if (childAdded == PR_FALSE)
+		{
+			container->AppendChildTo(node, PR_TRUE);
+		}
 	}
 	return(NS_OK);
 }

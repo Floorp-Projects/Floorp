@@ -69,6 +69,7 @@
 #include "nsRDFGenericBuilder.h"
 #include "prtime.h"
 #include "prlog.h"
+#include "nsIXULSortService.h"
 
 ////////////////////////////////////////////////////////////////////////
 
@@ -95,7 +96,10 @@ static NS_DEFINE_IID(kISupportsIID,               NS_ISUPPORTS_IID);
 static NS_DEFINE_CID(kNameSpaceManagerCID,        NS_NAMESPACEMANAGER_CID);
 static NS_DEFINE_CID(kRDFServiceCID,              NS_RDFSERVICE_CID);
 
-static NS_DEFINE_IID(kIDomXulElementIID,         NS_IDOMXULELEMENT_IID);
+static NS_DEFINE_IID(kIDomXulElementIID,          NS_IDOMXULELEMENT_IID);
+
+static NS_DEFINE_IID(kXULSortServiceCID,          NS_XULSORTSERVICE_CID);
+static NS_DEFINE_IID(kIXULSortServiceIID,         NS_IXULSORTSERVICE_IID);
 
 #define	BUILDER_NOTIFY_MINIMUM_TIMEOUT	5000L
 
@@ -225,11 +229,14 @@ public:
     static nsIAtom* kPulseAtom;
     static nsIAtom* kLastPulseAtom;
     static nsIAtom* kOpenAtom;
+
+    static nsIXULSortService		*XULSortService;
 };
 
 ////////////////////////////////////////////////////////////////////////
 
-nsrefcnt RDFTreeBuilderImpl::gRefCnt = 0;
+nsrefcnt		RDFTreeBuilderImpl::gRefCnt = 0;
+nsIXULSortService*	RDFTreeBuilderImpl::XULSortService = nsnull;
 
 nsIAtom* RDFTreeBuilderImpl::kPropertyAtom;
 nsIAtom* RDFTreeBuilderImpl::kTreeAtom;
@@ -284,6 +291,9 @@ RDFTreeBuilderImpl::RDFTreeBuilderImpl(void)
         kPulseAtom           = NS_NewAtom("pulse");
         kLastPulseAtom       = NS_NewAtom("lastPulse");
         kOpenAtom            = NS_NewAtom("open");
+
+	nsresult rv = nsServiceManager::GetService(kXULSortServiceCID,
+		kIXULSortServiceIID, (nsISupports**) &XULSortService);
     }
     ++gRefCnt;
 
@@ -311,6 +321,9 @@ RDFTreeBuilderImpl::~RDFTreeBuilderImpl(void)
         NS_RELEASE(kPulseAtom);
         NS_RELEASE(kLastPulseAtom);
         NS_RELEASE(kOpenAtom);
+
+	nsServiceManager::ReleaseService(kXULSortServiceCID, XULSortService);
+	XULSortService = nsnull;
     }
 }
 
@@ -1082,7 +1095,14 @@ RDFTreeBuilderImpl::AddWidgetItem(nsIContent* aElement,
         return rv;
 
     // Add the <xul:treeitem> to the <xul:treechildren> element.
-    treeChildren->AppendChildTo(treeItem, PR_TRUE);
+	if (nsnull != XULSortService)
+	{
+		XULSortService->InsertContainerNode(treeChildren, treeItem);
+	}
+	else
+	{
+		treeChildren->AppendChildTo(treeItem, PR_TRUE);
+	}
 
     // Add miscellaneous attributes by iterating _all_ of the
     // properties out of the resource.
