@@ -208,6 +208,7 @@ bin\components\wallet.xpt
 bin\components\walleteditor.xpt
 bin\components\walletpreview.xpt
 bin\components\webbrwsr.dll
+bin\components\webBrowser_core.xpt
 bin\components\webshell_idls.xpt
 bin\components\widget.xpt
 bin\components\windowwatcher.xpt

@@ -153,6 +153,7 @@ bin/components/libucvtw.so
 bin/components/libucvtw2.so
 bin/components/liburiloader.so
 bin/components/libwebbrwsr.so
+bin/components/webBrowser_core.xpt
 bin/components/libwallet.so
 bin/components/libwalletviewers.so
 bin/components/libwidget_gtk.so
