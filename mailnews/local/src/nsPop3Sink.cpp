@@ -151,7 +151,14 @@ nsPop3Sink::BeginMailDelivery(PRBool* aBool)
     if (NS_FAILED(rv)) return rv;
 
     rv = m_newMailParser->Init(serverFolder, fileSpec, m_outFileStream);
-    if (NS_FAILED(rv)) return rv;
+	// if we failed to initialize the parser, then just don't use it!!!
+	// we can still continue without one...
+    if (NS_FAILED(rv))
+	{
+		delete m_newMailParser;
+		m_newMailParser = nsnull;
+		rv = NS_OK;
+	}
 
 #ifdef DEBUG
     printf("Begin mail message delivery.\n");
