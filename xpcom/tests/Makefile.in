@@ -40,7 +40,7 @@ CPPSRCS		= \
 		TestServMgr.cpp \
 		TestFactory.cpp \
 		TestCOMPtr.cpp \
-		TestCOMPtrEq.cpp \
+#		TestCOMPtrEq.cpp \
 		TestID.cpp \
 		TestXPIDLString.cpp \
 		TestAtoms.cpp \

@@ -3401,9 +3401,9 @@ AC_CACHE_CHECK(for bug where toplevel cv-qualifiers are used in overload resolut
 AC_LANG_C
 CXXFLAGS="$_SAVE_CXXFLAGS"
 
-if test "$ac_cv_quals_ambig_bug" = "yes" ; then
-    AC_DEFINE(CPP_CV_QUALIFIERS_CAUSE_AMBIGUITY)
-fi
+dnl if test "$ac_cv_quals_ambig_bug" = "yes" ; then
+dnl     AC_DEFINE(CPP_CV_QUALIFIERS_CAUSE_AMBIGUITY)
+dnl fi
 
 dnl pass -Wno-long-long to the compiler
 MOZ_ARG_ENABLE_BOOL(long-long-warning,
