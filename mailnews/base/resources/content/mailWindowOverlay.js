@@ -1813,6 +1813,12 @@ function MsgSearchMessages()
     OpenOrFocusWindow(args, "mailnews:search", "chrome://messenger/content/SearchDialog.xul");
 }
 
+function MsgJunkMail()
+{
+  var args = { folder: null };
+  OpenOrFocusWindow(args, "mailnews:junk", "chrome://messenger/content/junkMail.xul");
+}
+
 function MsgSearchAddresses()
 {
   var args = { directory: null };
