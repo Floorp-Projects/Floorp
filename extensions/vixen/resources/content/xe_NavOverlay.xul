@@ -15,7 +15,7 @@ function loadXULEdit()
 <menupopup id="taskPopup">
 	<menuitem
         position="7"
-        value="XULEDIT"
+        value="ViXEn"
         oncommand="loadXULEdit();"/>
 </menupopup>
 
