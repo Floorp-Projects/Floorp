@@ -74,6 +74,8 @@ static NS_DEFINE_CID(kSelectionCID, NS_SELECTION_CID);
 static NS_DEFINE_IID(kFrameSelectionCID, NS_FRAMESELECTION_CID);
 static NS_DEFINE_IID(kRangeCID,     NS_RANGE_CID);
 static NS_DEFINE_IID(kContentIteratorCID, NS_CONTENTITERATOR_CID);
+static NS_DEFINE_IID(kGeneratedContentIteratorCID, NS_GENERATEDCONTENTITERATOR_CID);
+static NS_DEFINE_IID(kGeneratedSubtreeIteratorCID, NS_GENERATEDSUBTREEITERATOR_CID);
 static NS_DEFINE_IID(kSubtreeIteratorCID, NS_SUBTREEITERATOR_CID);
 
 static NS_DEFINE_CID(kPresShellCID,  NS_PRESSHELL_CID);
@@ -93,7 +95,9 @@ static NS_DEFINE_CID(kXBLServiceCID, NS_XBLSERVICE_CID);
 extern nsresult NS_NewSelection(nsIFrameSelection** aResult);
 extern nsresult NS_NewRange(nsIDOMRange** aResult);
 extern nsresult NS_NewContentIterator(nsIContentIterator** aResult);
+extern nsresult NS_NewGenRegularIterator(nsIContentIterator** aResult);
 extern nsresult NS_NewContentSubtreeIterator(nsIContentIterator** aResult);
+extern nsresult NS_NewGenSubtreeIterator(nsIContentIterator** aInstancePtrResult);
 
 extern nsresult NS_NewLayoutDocumentLoaderFactory(nsIDocumentLoaderFactory** aResult);
 #ifdef NS_DEBUG
@@ -227,10 +231,24 @@ nsLayoutFactory::CreateInstance(nsISupports *aOuter,
       return res;
     }
   }
+  else if (mClassID.Equals(kGeneratedContentIteratorCID)) {
+    res = NS_NewGenRegularIterator((nsIContentIterator **)&inst);
+    if (NS_FAILED(res)) {
+      LOG_NEW_FAILURE("NS_NewGenRegularIterator", res);
+      return res;
+    }
+  }
   else if (mClassID.Equals(kSubtreeIteratorCID)) {
     res = NS_NewContentSubtreeIterator((nsIContentIterator **)&inst);
     if (NS_FAILED(res)) {
       LOG_NEW_FAILURE("NS_NewContentSubtreeIterator", res);
+      return res;
+    }
+  }
+  else if (mClassID.Equals(kGeneratedSubtreeIteratorCID)) {
+    res = NS_NewGenSubtreeIterator((nsIContentIterator **)&inst);
+    if (NS_FAILED(res)) {
+      LOG_NEW_FAILURE("NS_NewGenSubtreeIterator", res);
       return res;
     }
   }
