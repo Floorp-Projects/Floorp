@@ -233,3 +233,4 @@
 <!ENTITY fastSpeechRate.label               "fast">
 <!ENTITY xfastSpeechRate.label              "x-fast">
 
+<!ENTITY opacity.label                      "Opacity:">

@@ -513,6 +513,14 @@ function InitTextTabPanel()
   else
     gDialog.fontSizeInput.value = fontSize;
   AddStyleToElement(gDialog.brownFoxLabel, "font-size", fontSize);
+
+  /* INIT LINE-HEIGHT */
+  var lineHeight = getSpecifiedStyle("line-height");
+  if (!lineHeight || lineHeight == "")
+    gDialog.lineHeightInput.value = "";
+  else
+    gDialog.lineHeightInput.value = lineHeight;
+  
 }
 
 // * Utility function to check if the four side values of a property
@@ -551,8 +559,8 @@ function InitAuralTabPanel()
     return;
 
   // observe the scrollbar and call onScrollbarAttrModified when an attribute is modified
-  gDialog.volumeScrollbar.removeEventListener("DOMAttrModified", onScrollbarAttrModified, false);
-  gDialog.volumeScrollbar.addEventListener("DOMAttrModified", onScrollbarAttrModified, false);
+  gDialog.volumeScrollbar.removeEventListener("DOMAttrModified", onVolumeScrollbarAttrModified, false);
+  gDialog.volumeScrollbar.addEventListener("DOMAttrModified", onVolumeScrollbarAttrModified, false);
   var volume = getSpecifiedStyle("volume");
   if (volume == "silent") {
     gDialog.muteVolumeCheckbox.checked = true;
@@ -573,7 +581,7 @@ function InitAuralTabPanel()
 
 // * this is a callback of a listener set on the scrollbar for volume setting
 //   param DOMMutationEvent aEvent
-function onScrollbarAttrModified(aEvent)
+function onVolumeScrollbarAttrModified(aEvent)
 {
   if (aEvent.attrName == "curpos") {
     var e = gDialog.volumeMenulist;
@@ -581,6 +589,16 @@ function onScrollbarAttrModified(aEvent)
     var v = Math.floor(aEvent.newValue / 10);
     e.value = v;
     AddStyleToElement(gDialog.selectedObject, "volume", v);
+    SetModifiedFlagOnStylesheet();
+  }
+}
+
+function onOpacityScrollbarAttrModified(aEvent)
+{
+  if (aEvent.attrName == "curpos") {
+    var v = aEvent.newValue / 1000;
+    doDump("opacity", v);
+    AddStyleToElement(gDialog.selectedObject, "-moz-opacity", v);
     SetModifiedFlagOnStylesheet();
   }
 }
@@ -740,6 +758,13 @@ function InitBackgroundTabPanel()
   if (!gDialog.selectedObject || !gDialog.selectedObject.style)
     return;
 
+  gDialog.opacityScrollbar.removeEventListener("DOMAttrModified", onOpacityScrollbarAttrModified, false);
+  var opacity = getSpecifiedStyle("-moz-opacity");
+  if (opacity == "")
+    opacity = 1;
+  gDialog.opacityScrollbar.setAttribute("curpos", opacity*1000);
+  gDialog.opacityScrollbar.addEventListener("DOMAttrModified", onOpacityScrollbarAttrModified, false);
+  
   /* INIT BACKGROUND-COLOR */
   backgroundColor = ConvertRGBColorIntoHEXColor(getSpecifiedStyle("background-color"));
   gDialog.backgroundColorInput.setAttribute("value", backgroundColor);

@@ -35,10 +35,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-var objectsArray = null;
-var gTimerID;
-var gAsyncLoadingTimerID;
-
 const SHEET        = 1;
 const STYLE_RULE   = 2;
 const IMPORT_RULE  = 3;
@@ -60,19 +56,20 @@ const CLASS_SELECTOR        = 2;
 
 const kUrlString = "url(";
 
+const kAsyncTimeout = 1500; // 1.5 second
+
+var objectsArray = null;
+var gTimerID;
+var gAsyncLoadingTimerID;
+
 var gHaveDocumentUrl = false;
 var predefSelector = "";
 
-// * Debug only...
-function doDump(text, value) {
-  dump("===> " + text + " : " + value + "\n");
-}
+var gInsertIndex = -1;
 
 // * dialog initialization code
 function Startup()
 {
-  // let's just check we have an editor... We don't store it
-  // because we prefer calling GetCurrentEditor() every time
   if (!GetCurrentEditor()) {
     window.close();
     return;
@@ -110,6 +107,7 @@ function Startup()
   gDialog.customFontFamilyInput         = document.getElementById("customFontFamilyInput");
   gDialog.predefFontFamilyMenulist      = document.getElementById("predefFontFamilyMenulist");
   gDialog.fontSizeInput                 = document.getElementById("fontSizeInput");
+  gDialog.lineHeightInput               = document.getElementById("lineHeightInput");
   gDialog.textUnderlineCheckbox         = document.getElementById("underlineTextDecorationCheckbox");
   gDialog.textOverlineCheckbox          = document.getElementById("overlineTextDecorationCheckbox");
   gDialog.textLinethroughCheckbox       = document.getElementById("linethroughTextDecorationCheckbox");
@@ -138,6 +136,8 @@ function Startup()
   gDialog.volumeScrollbar               = document.getElementById("volumeScrollbar");
   gDialog.volumeMenulist                = document.getElementById("volumeMenulist");
   gDialog.muteVolumeCheckbox            = document.getElementById("muteVolumeCheckbox");
+
+  gDialog.opacityScrollbar              = document.getElementById("opacityScrollbar");
 
   gDialog.sheetInfoTabGridRows          = document.getElementById("sheetInfoTabGridRows");
   gDialog.sheetInfoTabGrid              = document.getElementById("sheetInfoTabGrid");
@@ -191,6 +191,7 @@ function toggleExpertMode()
 
 // * This function recreates the contents of the STYLE elements and
 //   of the stylesheets local to the filesystem
+// XXXX : this function is about to disappear due to last code cleanup
 function FlushChanges()
 {
   if (gDialog.modified) {
@@ -231,6 +232,68 @@ function CleanSheetsTree(sheetsTreeChildren)
   }
 }
 
+function AddSheetEntryToTree(sheetsTree, ownerNode)
+{
+  if (ownerNode.nodeType == Node.ELEMENT_NODE) {
+    var ownerTag  = ownerNode.nodeName.toLowerCase()
+    var relType   = ownerNode.getAttribute("rel");
+    if (ownerTag == "style" ||
+        (ownerTag == "link" && 
+         (relType == "stylesheet" || relType == "alternate stylesheet"))) {
+
+      var treeitem  = document.createElementNS(XUL_NS, "treeitem");
+      var treerow   = document.createElementNS(XUL_NS, "treerow");
+      var treecell  = document.createElementNS(XUL_NS, "treecell");
+
+      // what kind of owner node do we have here ?
+      // a style element indicates an embedded stylesheet,
+      // while a link element indicates an external stylesheet;
+      // the case of an XML Processing Instruction is not handled, we
+      // are supposed to be in HTML 4
+      var external = false;
+      if (ownerTag == "style") {
+        treecell.setAttribute("label", "internal stylesheet");
+      }
+      else if (ownerTag == "link") {
+        // external stylesheet, let's present its URL to user
+        treecell.setAttribute("label", ownerNode.href);
+        external = true;
+        if ( /(\w*):.*/.test(ownerNode.href) ) {
+          if (RegExp.$1 == "file") {
+            external = false;
+          }
+        }
+        else
+          external = false;
+      }
+      // add a new entry to the tree
+      var o = newObject( treeitem, external, SHEET, ownerNode.sheet, false, 0 );
+      PushInObjectsArray(o);
+      
+      treerow.appendChild(treecell);
+      treeitem.appendChild(treerow);
+      treeitem.setAttribute("container", "true");
+      // add enties to the tree for the rules in the current stylesheet
+      var rules = null;
+      if (ownerNode.sheet)
+        rules = ownerNode.sheet.cssRules;
+      AddRulesToTreechildren(treeitem, rules, external, 1);
+
+      sheetsTree.appendChild(treeitem);
+    }
+  }
+}
+
+function PushInObjectsArray(o)
+{
+  if (gInsertIndex == -1)
+    objectsArray.push(o);
+  else {
+    objectsArray.splice(gInsertIndex, 0, o);
+    gInsertIndex++;
+  }
+}
+
 // * populates the tree in the dialog with entries
 //   corresponding to all stylesheets and css rules attached to
 //   document
@@ -244,62 +307,15 @@ function InitSheetsTree(sheetsTree)
   // the LINK element is always here while the corresponding sheet might be
   // delayed by network
   var headNode = GetHeadElement();
-  var o;
   if ( headNode && headNode.hasChildNodes() ) {
     var ssn = headNode.childNodes.length;
     objectsArray = new Array();
     if (ssn) {
       var i;
+      gInsertIndex = -1;
       for (i=0; i<ssn; i++) {
         var ownerNode = headNode.childNodes[i];
-        if (ownerNode.nodeType == Node.ELEMENT_NODE) {
-          var ownerTag  = ownerNode.nodeName.toLowerCase()
-          var relType   = ownerNode.getAttribute("rel");
-          if (ownerTag == "style" ||
-              (ownerTag == "link" && 
-               (relType == "stylesheet" || relType == "alternate stylesheet"))) {
-
-            var treeitem  = document.createElementNS(XUL_NS, "treeitem");
-            var treerow   = document.createElementNS(XUL_NS, "treerow");
-            var treecell  = document.createElementNS(XUL_NS, "treecell");
-
-            // what kind of owner node do we have here ?
-            // a style element indicates an embedded stylesheet,
-            // while a link element indicates an external stylesheet;
-            // the case of an XML Processing Instruction is not handled, we
-            // are supposed to be in HTML 4
-            var external = false;
-            if (ownerTag == "style") {
-              treecell.setAttribute("label", "internal stylesheet");
-            }
-            else if (ownerTag == "link") {
-              // external stylesheet, let's present its URL to user
-              treecell.setAttribute("label", ownerNode.href);
-              external = true;
-              if ( /(\w*):.*/.test(ownerNode.href) ) {
-                if (RegExp.$1 == "file") {
-                  external = false;
-                }
-              }
-              else
-                external = false;
-            }
-            // add a new entry to the tree
-            o = newObject( treeitem, external, SHEET, ownerNode.sheet, false, 0 );
-            objectsArray.push(o);
-
-            treerow.appendChild(treecell);
-            treeitem.appendChild(treerow);
-            treeitem.setAttribute("container", "true");
-            // add enties to the tree for the rules in the current stylesheet
-            var rules = null;
-            if (ownerNode.sheet)
-              rules = ownerNode.sheet.cssRules;
-            AddRulesToTreechildren(treeitem, rules, external, 1);
-
-            sheetsTree.appendChild(treeitem);
-          }
-        }
+        AddSheetEntryToTree(sheetsTree, ownerNode); 
       }
     }
   }
@@ -324,6 +340,47 @@ function newObject( xulElt, external, type, cssElt, modified, depth)
           depth:depth};
 }
 
+function AddStyleRuleToTreeChildren(rule, external, depth)
+{
+  var subtreeitem  = document.createElementNS(XUL_NS, "treeitem");
+  var subtreerow   = document.createElementNS(XUL_NS, "treerow");
+  var subtreecell  = document.createElementNS(XUL_NS, "treecell");
+  // show the selector attached to the rule
+  subtreecell.setAttribute("label", rule.selectorText);
+  var o = newObject( subtreeitem, external, STYLE_RULE, rule, false, depth );
+  PushInObjectsArray(o);
+  if (external) {
+    subtreecell.setAttribute("properties", "external");
+  }
+  subtreerow.appendChild(subtreecell);
+  subtreeitem.appendChild(subtreerow);
+
+  return subtreeitem;
+}
+
+function AddImportRuleToTreeChildren(rule, external, depth)
+{
+  var subtreeitem  = document.createElementNS(XUL_NS, "treeitem");
+  var subtreerow   = document.createElementNS(XUL_NS, "treerow");
+  var subtreecell  = document.createElementNS(XUL_NS, "treecell");
+  // show "@import" and the URL
+  subtreecell.setAttribute("label", "@import "+rule.href, external);
+  var o = newObject( subtreeitem, external, IMPORT_RULE, rule, false, depth );
+  PushInObjectsArray(o);
+  if (external) {
+    subtreecell.setAttribute("properties", "external");
+  }
+  subtreerow.appendChild(subtreecell);
+  subtreeitem.appendChild(subtreerow);
+  subtreeitem.setAttribute("container", "true");
+  if (rule.styleSheet) {
+    // if we have a stylesheet really imported, let's browse it too
+    // increasing the depth and marking external
+    AddRulesToTreechildren(subtreeitem , rule.styleSheet.cssRules, true, depth+1);
+  }
+  return subtreeitem;
+}
+
 // * adds subtreeitems for the CSS rules found
 //   into rules; in case of an at-rule, the method calls itself with
 //   a subtreeitem, the rules in the at-rule, a boolean specifying if
@@ -345,39 +402,12 @@ function AddRulesToTreechildren(treeItem, rules, external, depth)
       switch (rules[j].type) {
         case CSSRule.STYLE_RULE:
           // this is a CSSStyleRule
-          subtreeitem  = document.createElementNS(XUL_NS, "treeitem");
-          subtreerow   = document.createElementNS(XUL_NS, "treerow");
-          subtreecell  = document.createElementNS(XUL_NS, "treecell");
-          // show the selector attached to the rule
-          subtreecell.setAttribute("label", rules[j].selectorText);
-          o = newObject( subtreeitem, external, STYLE_RULE, rules[j], false, depth );
-          objectsArray.push(o);
-          if (external) {
-            subtreecell.setAttribute("properties", "external");
-          }
-          subtreerow.appendChild(subtreecell);
-          subtreeitem.appendChild(subtreerow);
+          subtreeitem  = AddStyleRuleToTreeChildren(rules[j], external, depth);
           subtreechildren.appendChild(subtreeitem);
           break;
         case CSSRule.IMPORT_RULE:
           // this is CSSImportRule for @import
-          subtreeitem  = document.createElementNS(XUL_NS, "treeitem");
-          subtreerow   = document.createElementNS(XUL_NS, "treerow");
-          subtreecell  = document.createElementNS(XUL_NS, "treecell");
-          // show "@import" and the URL
-          subtreecell.setAttribute("label", "@import "+rules[j].href, external);
-          o = newObject( subtreeitem, external, IMPORT_RULE, rules[j], false, depth );
-          objectsArray.push(o);
-          if (external) {
-            subtreecell.setAttribute("properties", "external");
-          }
-          subtreerow.appendChild(subtreecell);
-          subtreeitem.appendChild(subtreerow);
-          subtreeitem.setAttribute("container", "true");
-          if (rules[j].styleSheet)
-            // if we have a stylesheet really imported, let's browse it too
-            // increasing the depth and marking external
-            AddRulesToTreechildren(subtreeitem, rules[j].styleSheet.cssRules, true, depth+1);
+          subtreeitem  = AddImportRuleToTreeChildren(rules[j], external, depth);
           subtreechildren.appendChild(subtreeitem);
           break;
         case CSSRule.MEDIA_RULE:
@@ -388,7 +418,7 @@ function AddRulesToTreechildren(treeItem, rules, external, depth)
           // show "@media" and media list
           subtreecell.setAttribute("label", "@media "+rules[j].media.mediaText, external);
           o = newObject( subtreeitem, external, MEDIA_RULE, rules[j], false, depth );
-          objectsArray.push(o);
+          PushInObjectsArray(o, insertIndex);
           if (external) {
             subtreecell.setAttribute("properties", "external");
           }
@@ -397,7 +427,8 @@ function AddRulesToTreechildren(treeItem, rules, external, depth)
           subtreeitem.setAttribute("container", "true");
           // let's browse the rules attached to this CSSMediaRule, keeping the
           // current external and increasing depth
-          AddRulesToTreechildren(subtreeitem, rules[j].cssRules, external, depth+1);
+          AddRulesToTreechildren(subtreeitem, rules[j].cssRules, external, depth+1,
+                                 (insertIndex == -1) ? insertIndex : insertIndex+1 );
           subtreechildren.appendChild(subtreeitem);
           break;
         case CSSRule.CHARSET_RULE:
@@ -408,7 +439,7 @@ function AddRulesToTreechildren(treeItem, rules, external, depth)
           // show "@charset" and the encoding
           subtreecell.setAttribute("label", "@charset "+rules[j].encoding, external);
           o = newObject( subtreeitem, external, CHARSET_RULE, rules[j], false, depth );
-          objectsArray.push(o);
+          PushInObjectsArray(o, insertIndex);
           if (external) {
             subtreecell.setAttribute("properties", "external");
           }
@@ -422,20 +453,8 @@ function AddRulesToTreechildren(treeItem, rules, external, depth)
   }
 }
 
-// * selects either a tree item (sheet, rule) or a tab
-//   in the former case, the parameter is null ; in the latter,
-//   the parameter is a string containing the name of the selected tab
-//   param String tab
-function onSelectCSSTreeItem(tab)
+function GetSelectedItemData()
 {
-  // convert the tab string into a tab id
-  if      (tab == "general")     tab = GENERAL_TAB;
-  else if (tab == "text")        tab = TEXT_TAB;
-  else if (tab == "background")  tab = BACKGROUND_TAB;
-  else if (tab == "border")      tab = BORDER_TAB;
-  else if (tab == "box")         tab = BOX_TAB;
-  else if (tab == "aural")       tab = AURAL_TAB;
-
   // get the selected tree item (if any)
   var selectedItem =  getSelectedItem(gDialog.sheetsTree);
   gDialog.selectedIndex  = -1;
@@ -458,6 +477,24 @@ function onSelectCSSTreeItem(tab)
       }
     }
   }
+}
+
+// * selects either a tree item (sheet, rule) or a tab
+//   in the former case, the parameter is null ; in the latter,
+//   the parameter is a string containing the name of the selected tab
+//   param String tab
+function onSelectCSSTreeItem(tab)
+{
+  // convert the tab string into a tab id
+  if      (tab == "general")     tab = GENERAL_TAB;
+  else if (tab == "text")        tab = TEXT_TAB;
+  else if (tab == "background")  tab = BACKGROUND_TAB;
+  else if (tab == "border")      tab = BORDER_TAB;
+  else if (tab == "box")         tab = BOX_TAB;
+  else if (tab == "aural")       tab = AURAL_TAB;
+
+  GetSelectedItemData();
+
   if (gDialog.selectedIndex == -1) {
     // there is no tree item selected, let's fallback to the Info tab
     // but there is nothing we can display in that tab...
@@ -531,8 +568,7 @@ function onSelectCSSTreeItem(tab)
       // corresponding stylesheet is not loaded yet
       if (gDialog.selectedObject.sheet) {
         var index = gDialog.selectedIndex;
-        Restart();
-        selectTreeItem(objectsArray[index].xulElt);
+        sheetLoadedTimeoutCallback(index);
         onSelectCSSTreeItem(tab);
         return;
       }
@@ -581,7 +617,7 @@ function onSelectCSSTreeItem(tab)
       if (cssObject.style.length) {
         AddDeclarationToInfobox(gridrows, "Declarations:", GetDeclarationText(cssObject, 0),
                                 GetDeclarationImportance(cssObject, 0), false);
-        for (i=1; i<cssObject.style.length; i++) {
+        for (var i=1; i<cssObject.style.length; i++) {
           AddDeclarationToInfobox(gridrows, "", GetDeclarationText(cssObject, i),
                                   GetDeclarationImportance(cssObject, i), false);
         }
@@ -787,17 +823,6 @@ function AddDeclarationToInfobox(rows, label, value, importance)
   rows.appendChild(row);
 }
 
-// * retrieves the index of the selected entry in a tree
-//   param XULElement tree
-//   return integer
-function getSelectedItem(tree)
-{
-  if (tree.treeBoxObject.selection.count == 1)
-    return tree.contentView.getItemAtIndex(tree.currentIndex);
-  else
-    return null;
-}
-
 // * retrieves the index-nth style declaration in a rule
 //   param DOMCSSRule styleRule
 //   param integer index
@@ -806,16 +831,6 @@ function GetDeclarationText(styleRule, index)
 {
   var pName = styleRule.style.item(index);
   return pName + ": " + styleRule.style.getPropertyValue(pName);
-}
-
-// * retrieves the importance of the index-nth style declaration in a rule
-//   param DOMCSSRule styleRule
-//   param integer index
-//   return String
-function GetDeclarationImportance(styleRule, index)
-{
-  var pName = styleRule.style.item(index);
-  return styleRule.style.getPropertyPriority(pName);
 }
 
 // * retrieves the stylesheet containing the selected tree entry
@@ -885,6 +900,7 @@ function CreateNewStyleRule()
   gDialog.newType      = STYLE_RULE;
   gDialog.newSelector  = "";
   gDialog.sheetInfoTabPanelTitle.setAttribute("value", "New Style Rule");
+  gDialog.newSelectorType = CLASS_SELECTOR;
 
   var radiogroup = AddRadioGroupToInfoBox(gridrows, "Create a new:");
   // offer choice between class selector and type element selector
@@ -896,10 +912,6 @@ function CreateNewStyleRule()
   if (gDialog.expertMode) {
     AddRadioToRadioGroup(radiogroup, "style applied to all elements matching the following selector",
                          "onCreationStyleRuleTypeChange", GENERIC_SELECTOR, false);
-    gDialog.newSelectorType = GENERIC_SELECTOR;
-  }
-  else {
-    gDialog.newSelectorType = CLASS_SELECTOR;
   }
   AddEditableZoneToInfobox(gridrows, " ", gDialog.newSelector,  "onNewSelectorChange", true);
 
@@ -1060,6 +1072,23 @@ function onStylesheetMediaChange(elt)
   SetModifiedFlagOnStylesheet();
 }
 
+function GetSubtreeChildren(elt)
+{
+  var subtreechildren = null;
+  if (!elt) return null;
+  if (elt.hasChildNodes()) {
+    subtreechildren = elt.lastChild;
+    while (subtreechildren && subtreechildren .nodeName.toLowerCase() != "treechildren") {
+      subtreechildren = subtreechildren .previousSibling;
+    }
+  }
+  if (!subtreechildren) {
+    subtreechildren = document.createElementNS(XUL_NS, "treechildren");
+    elt.appendChild(subtreechildren);
+  }
+  return subtreechildren;
+}
+
 // * here, we create a new sheet or rule
 function onConfirmCreateNewObject()
 {
@@ -1096,12 +1125,13 @@ function onConfirmCreateNewObject()
       gDialog.newSelector     = selector;
     }
   }
-  var containerIndex;
+  var containerIndex, sheetIndex;
   var cssObject;
   var l;
   var ruleIndex;
   var newSheetOwnerNode;
   var headNode;
+  var newCssRule;
   switch (gDialog.newType) {
     case STYLE_RULE:
       if (gDialog.newSelector != "") {
@@ -1109,8 +1139,7 @@ function onConfirmCreateNewObject()
         while (objectsArray[containerIndex].type != SHEET &&
                objectsArray[containerIndex].type != MEDIA_RULE)
           containerIndex--;
-        cssObject = objectsArray[containerIndex].cssElt;
-        l = cssObject.cssRules.length;
+
         switch (gDialog.newSelectorType) {
           case TYPE_ELEMENT_SELECTOR:
           case GENERIC_SELECTOR:
@@ -1120,44 +1149,106 @@ function onConfirmCreateNewObject()
             selector = "." + gDialog.newSelector;
             break;
         }
+        cssObject = objectsArray[containerIndex].cssElt;
+        l = cssObject.cssRules.length;
         cssObject.insertRule(selector + " { }", l);
-        /* find inserted rule's index in objectsArray */
-        var depth = objectsArray[containerIndex].depth;
-        ruleIndex = containerIndex + 1;
-        while (ruleIndex < objectsArray.length &&
-               objectsArray[ruleIndex].depth > depth) {
-          ruleIndex++;
+
+        if (cssObject.cssRules.length > l) {
+          // hmmm, there's always the bad case of a wrong rule, dropped by the
+          // parser ; that's why we need to check we really inserted something
+
+          /* find inserted rule's index in objectsArray */
+          var depth    = objectsArray[containerIndex].depth;
+          var external = objectsArray[containerIndex].external;
+
+          ruleIndex = containerIndex + 1;
+          while (ruleIndex < objectsArray.length &&
+                 objectsArray[ruleIndex].depth > depth) {
+            ruleIndex++;
+          }
+          var subtreechildren = GetSubtreeChildren(objectsArray[containerIndex].xulElt);
+          gInsertIndex = ruleIndex;
+          var subtreeitem = AddStyleRuleToTreeChildren(cssObject.cssRules[l], external, depth);
+          subtreechildren.appendChild(subtreeitem);
+          selectTreeItem(subtreeitem);
+          SetModifiedFlagOnStylesheet();
         }
-        Restart();
-        selectTreeItem(objectsArray[ruleIndex].xulElt);
-        objectsArray[containerIndex].modified = true;
       }
       break;
     case IMPORT_RULE:
       if (gDialog.newURL != "") {
-        containerIndex = gDialog.selectedIndex;
-        while (objectsArray[containerIndex].type != SHEET &&
-               objectsArray[containerIndex].type != MEDIA_RULE)
-          containerIndex--;
-        cssObject = objectsArray[containerIndex].cssElt;
-        l = cssObject.cssRules.length;
-        ruleIndex = containerIndex + 1;
-        while (ruleIndex < objectsArray.length &&
-               (objectsArray[ruleIndex].type == CHARSET_RULE ||
-                objectsArray[ruleIndex].type == IMPORT_RULE))
-          ruleIndex++;
-        cssObject.insertRule('@import url("'+ gDialog.newURL + '") ' + gDialog.newMediaList + ";",
-                             ruleIndex - containerIndex - 1);
-        doDump("RULEINDEX", ruleIndex);
-        doDump("OBJECTSARRAY", objectsArray.length);
-        Restart();
-        doDump("OBJECTSARRAY", objectsArray.length);
-        selectTreeItem(objectsArray[ruleIndex].xulElt);
+
+        containerIndex     = GetSheetContainer();
+        // **must** clear the selection before changing the tree
+        gDialog.sheetsTree.treeBoxObject.selection.clearSelection();
+
+        var containerCssObject = objectsArray[containerIndex].cssElt;
+        var containerDepth     = objectsArray[containerIndex].depth;
+        var containerExternal  = objectsArray[containerIndex].external;
+
+        var cssRuleIndex = -1;
+        if (containerCssObject.cssRules)
+          for (i=0; i < containerCssObject.cssRules.length; i++)
+            if (containerCssObject.cssRules[i].type != CSSRule.IMPORT_RULE &&
+                containerCssObject.cssRules[i].type != CSSRule.CHARSET_RULE) {
+              cssRuleIndex = i;
+              break;
+            }
+        if (cssRuleIndex == -1) {
+          // no rule in the sheet for the moment or only charset and import rules
+          containerCssObject.insertRule('@import url("'+ gDialog.newURL + '") ' + gDialog.newMediaList + ";",
+                                        containerCssObject.cssRules.length);
+          newCssRule = containerCssObject.cssRules[containerCssObject.cssRules.length - 1];
+
+          subtreechildren = GetSubtreeChildren(objectsArray[containerIndex].xulElt);
+
+          gInsertIndex = ruleIndex;
+          subtreeitem = AddImportRuleToTreeChildren(newCssRule,
+                                                    containerExternal,
+                                                    containerDepth + 1);
+          
+          subtreechildren.appendChild(subtreeitem);
+          ruleIndex = FindObjectIndexInObjectsArray(newCssRule);
+        }
+        else {
+          // cssRuleIndex is the index of the first not charset and not import rule in the sheet
+          ruleIndex = FindObjectIndexInObjectsArray(containerCssObject.cssRules[cssRuleIndex]);
+          // and ruleIndex represents the index of the corresponding object in objectsArray
+          var refObject  = objectsArray[ruleIndex];
+
+          containerCssObject.insertRule('@import url("'+ gDialog.newURL + '") ' + gDialog.newMediaList + ";",
+                                        cssRuleIndex);
+          newCssRule = containerCssObject.cssRules[cssRuleIndex];
+          gInsertIndex = ruleIndex;
+          subtreeitem = AddImportRuleToTreeChildren(newCssRule, containerExternal, containerDepth + 1);
+
+          var refNode = refObject.xulElt;
+          refNode.parentNode.insertBefore(subtreeitem, refNode);
+        }
+
+          
+        selectTreeItem(subtreeitem);
         SetModifiedFlagOnStylesheet();
+        if (gAsyncLoadingTimerID)
+          clearTimeout(gAsyncLoadingTimerID);
+        if (!newCssRule.styleSheet)
+          gAsyncLoadingTimerID = setTimeout("sheetLoadedTimeoutCallback(" + ruleIndex + ")", kAsyncTimeout);
       }
       break;
     case SHEET:
+      gInsertIndex = -1;
+
+      gDialog.sheetsTree.treeBoxObject.selection.clearSelection();
+
       if (gDialog.newExternal && gDialog.newURL != "") {
+        subtreeitem  = document.createElementNS(XUL_NS, "treeitem");
+        var subtreerow   = document.createElementNS(XUL_NS, "treerow");
+        var subtreecell  = document.createElementNS(XUL_NS, "treecell");
+        subtreeitem.setAttribute("container", "true");
+        subtreerow.appendChild(subtreecell);
+        subtreeitem.appendChild(subtreerow);
+        gDialog.sheetsTreechildren.appendChild(subtreeitem);
+
         newSheetOwnerNode = GetCurrentEditor().document.createElement("link");
         newSheetOwnerNode.setAttribute("type", "text/css");
         newSheetOwnerNode.setAttribute("href", gDialog.newURL);
@@ -1176,35 +1267,30 @@ function onConfirmCreateNewObject()
         headNode = GetHeadElement();
         headNode.appendChild(newSheetOwnerNode);
 
+        subtreecell.setAttribute("label", gDialog.newURL);
+        external = true;
+        if ( /(\w*):.*/.test(gDialog.newURL) ) {
+          if (RegExp.$1 == "file") {
+            external = false;
+          }
+        }
+        if (external)
+          subtreecell.setAttribute("properties", "external");
+
         if (!newSheetOwnerNode.sheet) {
           /* hack due to asynchronous load of external stylesheet */        
-          var subtreeitem  = document.createElementNS(XUL_NS, "treeitem");
-          var subtreerow   = document.createElementNS(XUL_NS, "treerow");
-          var subtreecell  = document.createElementNS(XUL_NS, "treecell");
-          subtreecell.setAttribute("label", gDialog.newURL);
-          var external = true;
-          if ( / (\w*):.* /.test(gDialog.newURL) ) {
-            if (RegExp.$1 != "file") {
-              external = false;
-            }
-          }
           var o = newObject( subtreeitem, external, OWNER_NODE, newSheetOwnerNode, false, 0 );
-          objectsArray.push(o);
-          subtreeitem.setAttribute("container", "true");
-          subtreecell.setAttribute("properties", "external");
-          subtreerow.appendChild(subtreecell);
-          subtreeitem.appendChild(subtreerow);
-          gDialog.sheetsTreechildren.appendChild(subtreeitem);
+          PushInObjectsArray(o)
           if (gAsyncLoadingTimerID)
             clearTimeout(gAsyncLoadingTimerID);
-          var sheetIndex = objectsArray.length - 1;
-          gAsyncLoadingTimerID = setTimeout("sheetLoadedTimeoutCallback(" + sheetIndex + ")", 500);
+          sheetIndex = objectsArray.length - 1;
+          
+          //gAsyncLoadingTimerID = setTimeout("sheetLoadedTimeoutCallback(" + sheetIndex + ")", kAsyncTimeout);
         }
         else {
-          var index = objectsArray.length;
-          Restart();
-          selectTreeItem(objectsArray[index].xulElt);
-          objectsArray[index].modified = true;
+          o = newObject( subtreeitem, external, SHEET, newSheetOwnerNode.sheet, false, 0 );
+          PushInObjectsArray(o)
+          AddRulesToTreechildren(subtreeitem, newSheetOwnerNode.sheet.cssRules, external, 1);
         }
       }
       else if (!gDialog.newExternal) {
@@ -1218,59 +1304,36 @@ function onConfirmCreateNewObject()
         }
         headNode = GetHeadElement();
         headNode.appendChild(newSheetOwnerNode);
-        FlushChanges();
-        Restart();
+        AddSheetEntryToTree(gDialog.sheetsTreechildren, newSheetOwnerNode);
+
         selectTreeItem(objectsArray[objectsArray.length - 1].xulElt);
       }
+      selectTreeItem(subtreeitem);
       break;
   }
 }
 
 // * we need that to refresh the tree after async sheet load
 //   param integer index
-function sheetLoadedTimeoutCallback(index) {
-  if (objectsArray[index].cssElt.sheet != null) {
-    Restart();
-    selectTreeItem(objectsArray[index].xulElt);
-    objectsArray[index].modified = true;
-  }
-}
-
-// * selects a entry in the tree
-//   param XULElement aItem
-function selectTreeItem(aItem)
+function sheetLoadedTimeoutCallback(index)
 {
-  /* first make sure item's containers are open */
-  var tmp = aItem.parentNode;
-  while (tmp && tmp.nodeName != "tree") {
-    if (tmp.nodeName == "treeitem")
-      tmp.setAttribute("open", "true");
-    tmp = tmp.parentNode;
+  var subtreeitem = objectsArray[index].xulElt;
+  gInsertIndex = index+1;
+  gDialog.sheetsTree.treeBoxObject.selection.clearSelection();
+  if (objectsArray[index].type == OWNER_NODE && objectsArray[index].cssElt.sheet != null) {
+    var sheet = objectsArray[index].cssElt.sheet;
+    AddRulesToTreechildren(subtreeitem , sheet.cssRules, objectsArray[index].external,
+                           objectsArray[index].depth+1);
+    objectsArray[index].type = SHEET;
+    objectsArray[index].cssElt = sheet;
   }
-
-  /* then select the item */
-  var itemIndex = gDialog.sheetsTree.contentView.getIndexOfItem(aItem);
-  gDialog.sheetsTree.treeBoxObject.selection.select(itemIndex);
-  /* and make sure it is visible in the clipping area of the tree */
-  gDialog.sheetsTree.treeBoxObject.ensureRowIsVisible(itemIndex);
-}
-
-// * gets a rule's index in its DOMCSSRuleList container
-//   param DOMCSSRuleList rulelist
-//   param DOMCSSRule rule
-//   return integer
-function getRuleIndexInRulesList(rulelist, rule)
-{
-  if (!rule || !rulelist)
-    return -1;
-
-  var i;
-  for (i=0; i<rulelist.length; i++) {
-    if (rulelist.item(i) == rule) {
-      return i;
-    }
+  else if (objectsArray[index].type == IMPORT_RULE && objectsArray[index].cssElt.styleSheet != null) {
+    AddRulesToTreechildren(subtreeitem , objectsArray[index].cssElt.styleSheet.cssRules, true,
+                           objectsArray[index].depth+1)
   }
-  return -1;
+  else
+    return;
+  selectTreeItem(subtreeitem);
 }
 
 // * gets the object's index corresponding to an entry in the tree
@@ -1290,33 +1353,38 @@ function FindObjectIndexInObjectsArray(object)
 //   an @import rule to remove all the contained rules
 function RemoveObject()
 {
-  var objectIndex = FindObjectIndexInObjectsArray(gDialog.selectedObject);
+  GetSelectedItemData();
+  var objectIndex = gDialog.selectedIndex;
   if (objectIndex == -1) return;
+  var depth = gDialog.depthObject;
 
-  var ruleIndex;
+  var ruleIndex, i, ruleIndexInTree, toSplice;
+
   switch (gDialog.selectedType) {
     case SHEET:
       var ownerNode = gDialog.selectedObject.ownerNode;
       ownerNode.parentNode.removeChild(ownerNode);
-      Restart();
-      if (objectIndex < objectsArray.length )
-        selectTreeItem(objectsArray[objectIndex].xulElt);
+
+      for (i=objectIndex+1; i<objectsArray.length && objectsArray[i].depth > depth; i++);
+      toSplice = i - objectIndex;
       break;
+
     case IMPORT_RULE:
-      var ruleIndexInTree = FindObjectIndexInObjectsArray(gDialog.selectedObject.parentStyleSheet);
+    case MEDIA_RULE:
+      for (ruleIndexInTree=objectIndex-1; objectsArray[ruleIndexInTree].depth >= depth; ruleIndexInTree--);
+
       objectsArray[ruleIndexInTree].modified = true;
       ruleIndex = getRuleIndexInRulesList(gDialog.selectedObject.parentStyleSheet.cssRules,
                                           gDialog.selectedObject);
       if (ruleIndex != -1) {
         gDialog.selectedObject.parentStyleSheet.deleteRule(ruleIndex);
       }
-      Restart();
-      objectsArray[ruleIndexInTree].modified = true;
-      if (objectIndex < objectsArray.length )
-        selectTreeItem(objectsArray[objectIndex].xulElt);
+      for (i=objectIndex+1; i<objectsArray.length && objectsArray[i].depth > depth; i++);
+      toSplice = i - objectIndex;
       break;
+
     case STYLE_RULE:
-      ruleIndexInTree = FindObjectIndexInObjectsArray(gDialog.selectedObject.parentStyleSheet);
+      for (ruleIndexInTree=objectIndex-1; objectsArray[ruleIndexInTree].depth; ruleIndexInTree--);
       objectsArray[ruleIndexInTree].modified = true;
       if (gDialog.selectedObject.parentRule) {
         /* this style rule is contained in an at-rule */
@@ -1334,11 +1402,16 @@ function RemoveObject()
           gDialog.selectedObject.parentStyleSheet.deleteRule(ruleIndex);
         }
       }
-      objectsArray[objectIndex].xulElt.parentNode.removeChild(objectsArray[objectIndex].xulElt);
-      objectsArray.splice(objectIndex, 1);
-      selectTreeItem(objectsArray[Math.min(objectIndex, objectsArray.length - 1)].xulElt);
+      toSplice = 1;
       break;
   }
+  // let's remove the whole treeitem
+  gDialog.treeItem.parentNode.removeChild(gDialog.treeItem);
+  // and then remove the objects from our array
+  objectsArray.splice(objectIndex, toSplice);
+  // can we select an item ?
+  if (objectsArray.length)
+    selectTreeItem(objectsArray[Math.min(objectIndex, objectsArray.length - 1)].xulElt);
 }
 
 // * moves a sheet/rule up in the tree
@@ -1347,7 +1420,6 @@ function MoveObjectUp()
   /* NOT YET IMPLEMENTED */
   var objectIndex = FindObjectIndexInObjectsArray(gDialog.selectedObject);
   if (objectIndex == -1) return;
-  doDump("position", objectIndex);
 }
 
 // * moves a sheet/rule down in the tree
@@ -1356,7 +1428,6 @@ function MoveObjectDown()
   /* NOT YET IMPLEMENTED */
   var objectIndex = FindObjectIndexInObjectsArray(gDialog.selectedObject);
   if (objectIndex == -1) return;
-  doDump("position", objectIndex);
 }
 
 // * opens a file picker and returns the file:/// URL in gDialog.newURL
@@ -1393,48 +1464,4 @@ function onExportStylesheet() {
   gAsyncLoadingTimerID = setTimeout("Refresh()", 500);
 }
 
-// * ok, now let's try if the exported sheet is here
-//   param integer index
-function sheetExportedTimeoutCallback(index) {
-  if (objectsArray[index].cssElt.sheet != null) {
-    // yep, found it ! Let's update everything
-    Restart();
-    selectTreeItem(objectsArray[index].xulElt);
-    objectsArray[index].modified = true;
-  }
-}
 
-// * opens a file picker and returns a file: URL. If openOnly is true,
-//   the filepicker's mode is "open"; it is "save" instead and that allows
-//   to pick new filenames
-//   param boolean openOnly
-function getLocalFileURL(openOnly)
-{
-  var fp = Components.classes["@mozilla.org/filepicker;1"].createInstance(nsIFilePicker);
-  var fileType = "*";
-  if (openOnly)
-    fp.init(window, "Select a CSS file", nsIFilePicker.modeOpen);
-  else
-    fp.init(window, "Select a CSS file", nsIFilePicker.modeSave);
-  
-  // Default or last filter is "All Files"
-  fp.appendFilters(nsIFilePicker.filterAll);
-
-  // set the file picker's current directory to last-opened location saved in prefs
-  SetFilePickerDirectory(fp, fileType);
-
-  /* doesn't handle *.shtml files */
-  try {
-    var ret = fp.show();
-    if (ret == nsIFilePicker.returnCancel)
-      return null;
-  }
-  catch (ex) {
-    dump("filePicker.chooseInputFile threw an exception\n");
-    return null;
-  }
-  // SaveFilePickerDirectory(fp, fileType);
-  
-  var ioService = GetIOService();
-  return fp.file ? ioService.getURLSpecFromFile(fp.file) : null;
-}
