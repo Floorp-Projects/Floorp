@@ -366,14 +366,14 @@ public:
 
   void AddBaseTagInfo(nsIHTMLContent* aContent);
 
-  nsresult ProcessLink(nsIHTMLContent* aElement, const nsString& aLinkData);
+  nsresult ProcessLink(nsIHTMLContent* aElement, const nsAReadableString& aLinkData);
   nsresult ProcessStyleLink(nsIHTMLContent* aElement,
                             const nsString& aHref, const nsString& aRel,
                             const nsString& aTitle, const nsString& aType,
                             const nsString& aMedia);
 
-  void ProcessBaseHref(const nsString& aBaseHref);
-  void ProcessBaseTarget(const nsString& aBaseTarget);
+  void ProcessBaseHref(const nsAReadableString& aBaseHref);
+  void ProcessBaseTarget(const nsAReadableString& aBaseTarget);
 
   nsresult RefreshIfEnabled(nsIViewManager* vm);
 
@@ -387,7 +387,7 @@ public:
   nsresult ProcessSCRIPTTag(const nsIParserNode& aNode);
   nsresult ProcessSTYLETag(const nsIParserNode& aNode);
 
-  nsresult ProcessHeaderData(nsIAtom* aHeader,nsString& aValue,nsIHTMLContent* aContent=nsnull);
+  nsresult ProcessHeaderData(nsIAtom* aHeader,const nsAReadableString& aValue,nsIHTMLContent* aContent=nsnull);
   nsresult ProcessHTTPHeaders(nsIChannel* aChannel);
 
   // Script processing related routines
@@ -3752,25 +3752,29 @@ HTMLContentSink::ProcessAREATag(const nsIParserNode& aNode)
 }
 
 void 
-HTMLContentSink::ProcessBaseHref(const nsString& aBaseHref)
+HTMLContentSink::ProcessBaseHref(const nsAReadableString& aBaseHref)
 {
   //-- Make sure this page is allowed to load this URL
   nsresult rv;
-  NS_WITH_SERVICE(nsIScriptSecurityManager, securityManager, 
-                  NS_SCRIPTSECURITYMANAGER_CONTRACTID, &rv);
-  if (NS_FAILED(rv)) return;
   nsCOMPtr<nsIURI> baseHrefURI;
   rv = NS_NewURI(getter_AddRefs(baseHrefURI), aBaseHref, nsnull);
   if (NS_FAILED(rv)) return;
-  rv = securityManager->CheckLoadURI(mDocumentBaseURL, baseHrefURI, nsIScriptSecurityManager::STANDARD);
-  if (NS_FAILED(rv)) return;
 
   if (nsnull == mBody) {  // still in real HEAD
-    mHTMLDocument->SetBaseURL(aBaseHref);
-    NS_RELEASE(mDocumentBaseURL);
-    mDocument->GetBaseURL(mDocumentBaseURL);
+    rv = mDocument->SetBaseURL(baseHrefURI); // The document checks if it is legal to set this base
+    if (NS_SUCCEEDED(rv)) {
+      NS_RELEASE(mDocumentBaseURL);
+      mDocument->GetBaseURL(mDocumentBaseURL);
+    }
   }
   else {  // NAV compatibility quirk
+    NS_WITH_SERVICE(nsIScriptSecurityManager, securityManager, 
+                    NS_SCRIPTSECURITYMANAGER_CONTRACTID, &rv);
+    if (NS_FAILED(rv)) return;
+
+    rv = securityManager->CheckLoadURI(mDocumentBaseURL, baseHrefURI, nsIScriptSecurityManager::STANDARD);
+    if (NS_FAILED(rv)) return;
+
     mBaseHREF = aBaseHref;
   }
 }
@@ -3795,10 +3799,10 @@ HTMLContentSink::RefreshIfEnabled(nsIViewManager* vm)
 }
 
 void 
-HTMLContentSink::ProcessBaseTarget(const nsString& aBaseTarget)
+HTMLContentSink::ProcessBaseTarget(const nsAReadableString& aBaseTarget)
 {
   if (nsnull == mBody) { // still in real HEAD
-    mHTMLDocument->SetBaseTarget(aBaseTarget);
+    mDocument->SetBaseTarget(aBaseTarget);
   }
   else {  // NAV compatibility quirk
     mBaseTarget = aBaseTarget;
@@ -3859,7 +3863,7 @@ const PRUnichar kLessThanCh = PRUnichar('<');
 const PRUnichar kGreaterThanCh = PRUnichar('>');
 
 nsresult 
-HTMLContentSink::ProcessLink(nsIHTMLContent* aElement, const nsString& aLinkData)
+HTMLContentSink::ProcessLink(nsIHTMLContent* aElement, const nsAReadableString& aLinkData)
 {
   nsresult result = NS_OK;
   
@@ -4371,7 +4375,7 @@ HTMLContentSink::ProcessHTTPHeaders(nsIChannel* aChannel) {
 }
 
 nsresult
-HTMLContentSink::ProcessHeaderData(nsIAtom* aHeader,nsString& aValue,nsIHTMLContent* aContent)
+HTMLContentSink::ProcessHeaderData(nsIAtom* aHeader,const nsAReadableString& aValue,nsIHTMLContent* aContent)
 {
   nsresult rv=NS_OK;
   // XXX necko isn't going to process headers coming in from the parser          
@@ -4404,7 +4408,7 @@ HTMLContentSink::ProcessHeaderData(nsIAtom* aHeader,nsString& aValue,nsIHTMLCont
     nsCOMPtr<nsIWebNavigation> webNav = do_QueryInterface(docShell);
     rv = webNav->GetCurrentURI(getter_AddRefs(baseURI));
     if (NS_FAILED(rv)) return rv;
-    char *cookie = aValue.ToNewCString();
+    char *cookie = ToNewUTF8String(aValue);
     nsCOMPtr<nsIScriptGlobalObject> globalObj;
     nsCOMPtr<nsIPrompt> prompt;
     mDocument->GetScriptGlobalObject(getter_AddRefs(globalObj));

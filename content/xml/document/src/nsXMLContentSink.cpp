@@ -34,7 +34,7 @@
 #include "nsIScriptObjectOwner.h"
 #include "nsIScriptGlobalObject.h"
 #include "nsIURL.h"
-#include "nsIURL.h"
+#include "nsIRefreshURI.h"
 #include "nsNetUtil.h"
 #include "nsIWebShell.h"
 #include "nsIDocShell.h"
@@ -74,6 +74,7 @@
 #include "nsParserUtils.h"
 #include "nsIDocumentViewer.h"
 #include "nsIScrollable.h"
+#include "nsIWebNavigation.h"
 
 // XXX misnamed header file, but oh well
 #include "nsHTMLTokens.h"
@@ -90,13 +91,10 @@ nsINameSpaceManager* nsXMLContentSink::gNameSpaceManager = nsnull;
 PRUint32 nsXMLContentSink::gRefCnt = 0;
 
 // XXX Open Issues:
-// 1) html:base - Should we allow a base tag? If so, the content
-//    sink needs to maintain the base when resolving URLs for
-//    loaded scripts and style sheets. Should it be allowed anywhere?
-// 2) what's not allowed - We need to figure out which HTML tags
+// 1) what's not allowed - We need to figure out which HTML tags
 //    (prefixed with a HTML namespace qualifier) are explicitly not
 //    allowed (if any).
-// 3) factoring code with nsHTMLContentSink - There's some amount of
+// 2) factoring code with nsHTMLContentSink - There's some amount of
 //    common code between this and the HTML content sink. This will
 //    increase as we support more and more HTML elements. How can code
 //    from the code be factored?
@@ -615,6 +613,18 @@ nsXMLContentSink::OpenContainer(const nsIParserNode& aNode)
       mTextAreaElement = do_QueryInterface(htmlContent);
     } else if (tagAtom.get() == nsHTMLAtoms::style) {
       mStyleElement = htmlContent;
+    } else if (tagAtom.get() == nsHTMLAtoms::base) {
+      if (!mBaseElement) {
+        mBaseElement = htmlContent; // The first base wins
+      }
+    } else if (tagAtom.get() == nsHTMLAtoms::meta) {
+      if (!mMetaElement) {
+        mMetaElement = htmlContent;
+      }
+    } else if (tagAtom.get() == nsHTMLAtoms::link) {
+      if (!mLinkElement) {
+        mLinkElement = htmlContent;
+      }
     }
   }
   else {
@@ -725,6 +735,20 @@ nsXMLContentSink::CloseContainer(const nsIParserNode& aNode)
         result = ProcessSTYLETag(aNode);
         mStyleElement=nsnull;
         mStyleText.Truncate();
+      }
+    } else if (tagAtom.get() == nsHTMLAtoms::base) {
+      if (mBaseElement) {
+        result = ProcessBASETag();
+      }
+    } else if (tagAtom.get() == nsHTMLAtoms::meta) {
+      if (mMetaElement) {
+        result = ProcessMETATag();
+        mMetaElement = nsnull;  // HTML can have more than one meta so clear this now
+      }
+    } else if (tagAtom.get() == nsHTMLAtoms::link) {
+      if (mLinkElement) {
+        result = ProcessLINKTag();
+        mLinkElement = nsnull;  // HTML can have more than one link so clear this now
       }
     }
   }
@@ -978,7 +1002,7 @@ nsXMLContentSink::LoadXSLStyleSheet(nsIURI* aUrl, const nsString& aType)
   // Hook up the content sink to the parser's output and ask the parser
   // to start parsing the URL specified by aURL.
   parser->SetContentSink(sink);
-  nsAutoString utf8(NS_ConvertASCIItoUCS2("UTF-8"));
+  nsAutoString utf8(NS_LITERAL_STRING("UTF-8"));
   styleDoc->SetDocumentCharacterSet(utf8);
   parser->SetDocumentCharset(utf8, kCharsetFromDocTypeDefault);
   parser->Parse(aUrl);
@@ -1205,6 +1229,113 @@ nsXMLContentSink::ProcessSTYLETag(const nsIParserNode& aNode)
   return rv;
 }
 
+nsresult
+nsXMLContentSink::ProcessBASETag()
+{
+  nsresult rv = NS_OK;
+
+  if (mDocument) {
+    nsAutoString value;
+  
+    if (NS_CONTENT_ATTR_HAS_VALUE == mBaseElement->GetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::target, value)) {
+      mDocument->SetBaseTarget(value);
+    }
+
+    if (NS_CONTENT_ATTR_HAS_VALUE == mBaseElement->GetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::href, value)) {
+      nsCOMPtr<nsIURI> baseURI;
+      rv = NS_NewURI(getter_AddRefs(baseURI), value, nsnull);
+      if (NS_SUCCEEDED(rv)) {
+        rv = mDocument->SetBaseURL(baseURI); // The document checks if it is legal to set this base
+        if (NS_SUCCEEDED(rv)) {
+          NS_IF_RELEASE(mDocumentBaseURL);
+          mDocument->GetBaseURL(mDocumentBaseURL);
+        }
+      }
+    }
+  }
+
+  return rv;
+}
+
+nsresult
+nsXMLContentSink::ProcessHeaderData(nsIAtom* aHeader,const nsAReadableString& aValue,nsIHTMLContent* aContent)
+{
+  nsresult rv=NS_OK;
+  // XXX necko isn't going to process headers coming in from the parser          
+  //NS_WARNING("need to fix how necko adds mime headers (in HTMLContentSink::ProcessMETATag)");
+  
+  // see if we have a refresh "header".
+  if (aHeader == nsHTMLAtoms::refresh) {
+    // first get our baseURI
+    nsCOMPtr<nsIDocShell> docShell = do_QueryInterface(mWebShell, &rv);
+    if (NS_FAILED(rv)) return rv;
+    
+    nsCOMPtr<nsIURI> baseURI;
+    nsCOMPtr<nsIWebNavigation> webNav = do_QueryInterface(docShell);
+    rv = webNav->GetCurrentURI(getter_AddRefs(baseURI));
+    if (NS_FAILED(rv)) return rv;
+
+    nsCOMPtr<nsIRefreshURI> reefer = do_QueryInterface(mWebShell);
+    if (reefer) {
+      rv = reefer->RefreshURIFromHeader(baseURI, aValue);
+      if (NS_FAILED(rv)) return rv;
+    }
+  } // END refresh
+  return rv;
+}
+
+nsresult
+nsXMLContentSink::ProcessMETATag()
+{
+  nsresult rv = NS_OK;
+
+  // set any HTTP-EQUIV data into document's header data as well as url
+  nsAutoString header;
+  mMetaElement->GetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::httpEquiv, header);
+  if (header.Length() > 0) {
+    nsAutoString result;
+    mMetaElement->GetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::content, result);
+    if (result.Length() > 0) {
+      header.ToLowerCase();
+      nsCOMPtr<nsIAtom> fieldAtom(dont_AddRef(NS_NewAtom(header)));
+      rv=ProcessHeaderData(fieldAtom,result,mMetaElement); 
+    }//if (result.Length() > 0) 
+  }//if (header.Length() > 0) 
+
+  return rv;
+}
+
+nsresult
+nsXMLContentSink::ProcessLINKTag()
+{
+  nsresult  result = NS_OK;
+
+  nsAutoString href;
+  nsAutoString rel; 
+  nsAutoString title; 
+  nsAutoString type; 
+  nsAutoString media; 
+
+  mLinkElement->GetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::href, href);
+  mLinkElement->GetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::rel, rel);
+  mLinkElement->GetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::title, title);
+  mLinkElement->GetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::type, type);
+  mLinkElement->GetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::media, media);
+
+  href.CompressWhitespace();
+  rel.CompressWhitespace();
+  title.CompressWhitespace();
+  type.CompressWhitespace();
+  media.CompressWhitespace();
+  media.ToLowerCase(); // HTML4.0 spec is inconsistent, make it case INSENSITIVE
+
+  if (!href.IsEmpty()) {
+    result = ProcessStyleLink(mLinkElement, href, rel.Find("alternate") == 0, title, type, media);
+  }
+
+  return result;
+}
+
 
 NS_IMETHODIMP
 nsXMLContentSink::AddProcessingInstruction(const nsIParserNode& aNode)
@@ -1231,8 +1362,8 @@ nsXMLContentSink::AddProcessingInstruction(const nsIParserNode& aNode)
       result = nsParserUtils::GetQuotedAttributeValue(text, NS_ConvertASCIItoUCS2("href"), href);
       // If there was an error or there's no href, we can't do
       // anything with this PI
-      if ((NS_OK != result) || (0 == href.Length())) {
-        return result;
+      if ((NS_OK != result) || href.IsEmpty()) {
+        return NS_OK;
       }
       result = nsParserUtils::GetQuotedAttributeValue(text, NS_ConvertASCIItoUCS2("type"), type);
       if (NS_FAILED(result)) {
@@ -1247,7 +1378,7 @@ nsXMLContentSink::AddProcessingInstruction(const nsIParserNode& aNode)
         media.ToLowerCase();
       }
       result = nsParserUtils::GetQuotedAttributeValue(text, NS_ConvertASCIItoUCS2("alternate"), alternate);
-      result = ProcessStyleLink(node, href, alternate.EqualsWithConversion("yes"),
+      result = ProcessStyleLink(node, href, alternate.Equals(NS_LITERAL_STRING("yes")),
                                 title, type, media);
     }
   }

@@ -136,6 +136,11 @@ protected:
   nsresult ProcessStartSCRIPTTag(const nsIParserNode& aNode);
   nsresult ProcessSTYLETag(const nsIParserNode& aNode);
 
+  nsresult ProcessBASETag();
+  nsresult ProcessMETATag();
+  nsresult ProcessLINKTag();
+  nsresult ProcessHeaderData(nsIAtom* aHeader,const nsAReadableString& aValue,nsIHTMLContent* aContent);
+
   nsresult RefreshIfEnabled(nsIViewManager* vm);
   
   nsresult ProcessCSSStyleLink(nsIContent* aElement,
@@ -182,8 +187,6 @@ protected:
   PRInt32 mTextSize;
   PRPackedBool mConstrainSize;
 
-  // XXX Special processing for HTML SCRIPT tags. We may need
-  // something similar for STYLE.
   PRPackedBool mInScript;
   PRPackedBool mInTitle;
   nsString mScriptText;
@@ -201,6 +204,9 @@ protected:
   nsString mTextareaText; 
   nsCOMPtr<nsIDOMHTMLTextAreaElement> mTextAreaElement;
   nsCOMPtr<nsIHTMLContent> mStyleElement;
+  nsCOMPtr<nsIHTMLContent> mBaseElement;
+  nsCOMPtr<nsIHTMLContent> mMetaElement;
+  nsCOMPtr<nsIHTMLContent> mLinkElement;
 };
 
 #endif // nsXMLContentSink_h__
