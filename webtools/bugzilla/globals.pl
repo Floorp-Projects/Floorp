@@ -76,7 +76,6 @@ use DBI;
 
 use Date::Format;               # For time2str().
 use Date::Parse;               # For str2time().
-use Bugzilla::RelationSet;
 
 # Use standard Perl libraries for cross-platform file/directory manipulation.
 use File::Spec;

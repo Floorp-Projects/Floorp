@@ -40,7 +40,6 @@ require "CGI.pl";
 use Bugzilla::Bug;
 use Bugzilla::User;
 use Bugzilla::Util;
-use Bugzilla::RelationSet;
 
 # Use the Flag module to modify flag data if the user set flags.
 use Bugzilla::Flag;
