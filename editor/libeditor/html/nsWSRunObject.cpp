@@ -748,30 +748,40 @@ nsWSRunObject::GetWSNodes()
         PRInt32 len;
         res = textNode->GetTextLength(&len);
         NS_ENSURE_SUCCESS(res, res);
-        PRInt32 pos;
-        for (pos=len-1; pos>=0; pos--)
+
+        if (len < 1)
         {
-          PRUnichar theChar = textFrag->CharAt(pos);
-          if (!nsCRT::IsAsciiSpace(theChar))
+          // Zero length text node. Set start point to it
+          // so we can get past it!
+          start.SetPoint(priorNode,0);
+        }
+        else
+        {
+          PRInt32 pos;
+          for (pos=len-1; pos>=0; pos--)
           {
-            if (theChar != nbsp)
+            PRUnichar theChar = textFrag->CharAt(pos);
+            if (!nsCRT::IsAsciiSpace(theChar))
             {
-              mStartNode = priorNode;
-              mStartOffset = pos+1;
-              mStartReason = eText;
-              break;
+              if (theChar != nbsp)
+              {
+                mStartNode = priorNode;
+                mStartOffset = pos+1;
+                mStartReason = eText;
+                break;
+              }
+              // as we look backwards update our earliest found nbsp
+              mFirstNBSPNode = priorNode;
+              mFirstNBSPOffset = pos;
+              // also keep track of latest nbsp so far
+              if (!mLastNBSPNode)
+              {
+                mLastNBSPNode = priorNode;
+                mLastNBSPOffset = pos;
+              }
             }
-            // as we look backwards update our earliest found nbsp
-            mFirstNBSPNode = priorNode;
-            mFirstNBSPOffset = pos;
-            // also keep track of latest nbsp so far
-            if (!mLastNBSPNode)
-            {
-              mLastNBSPNode = priorNode;
-              mLastNBSPOffset = pos;
-            }
+            start.SetPoint(priorNode,pos);
           }
-          start.SetPoint(priorNode,pos);
         }
       }
       else
@@ -859,30 +869,40 @@ nsWSRunObject::GetWSNodes()
         PRInt32 len;
         res = textNode->GetTextLength(&len);
         NS_ENSURE_SUCCESS(res, res);
-        PRInt32 pos;
-        for (pos=0; pos<len; pos++)
+
+        if (len < 1)
         {
-          PRUnichar theChar = textFrag->CharAt(pos);
-          if (!nsCRT::IsAsciiSpace(theChar))
+          // Zero length text node. Set end point to it
+          // so we can get past it!
+          end.SetPoint(nextNode,0);
+        }
+        else
+        {
+          PRInt32 pos;
+          for (pos=0; pos<len; pos++)
           {
-            if (theChar != nbsp)
+            PRUnichar theChar = textFrag->CharAt(pos);
+            if (!nsCRT::IsAsciiSpace(theChar))
             {
-              mEndNode = nextNode;
-              mEndOffset = pos;
-              mEndReason = eText;
-              break;
+              if (theChar != nbsp)
+              {
+                mEndNode = nextNode;
+                mEndOffset = pos;
+                mEndReason = eText;
+                break;
+              }
+              // as we look forwards update our latest found nbsp
+              mLastNBSPNode = nextNode;
+              mLastNBSPOffset = pos;
+              // also keep track of earliest nbsp so far
+              if (!mFirstNBSPNode)
+              {
+                mFirstNBSPNode = nextNode;
+                mFirstNBSPOffset = pos;
+              }
             }
-            // as we look forwards update our latest found nbsp
-            mLastNBSPNode = nextNode;
-            mLastNBSPOffset = pos;
-            // also keep track of earliest nbsp so far
-            if (!mFirstNBSPNode)
-            {
-              mFirstNBSPNode = nextNode;
-              mFirstNBSPOffset = pos;
-            }
+            end.SetPoint(nextNode,pos+1);
           }
-          end.SetPoint(nextNode,pos+1);
         }
       }
       else
