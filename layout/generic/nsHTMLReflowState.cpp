@@ -1577,7 +1577,7 @@ nsHTMLReflowState::ComputeContainingBlockRectangle(nsIPresContext*          aPre
       aPresContext->GetCompatibilityMode(&mode);
       if (eCompatibility_NavQuirks == mode &&
           mStylePosition->mHeight.GetUnit() == eStyleUnit_Percent) {
-        aContainingBlockHeight = CalcQuirkContainingBlockHeight(*aContainingBlockRS, PR_TRUE);
+        aContainingBlockHeight = CalcQuirkContainingBlockHeight(*aContainingBlockRS, PR_FALSE);
         // NOTE: passing PR_TRUE for the aRestrictToFirstLevel argument, to restrict the search
         //       for the containing block height to only the immediate parent block or area
         //       frame. In the case that we need to go further, we would need to pass PR_TRUE
