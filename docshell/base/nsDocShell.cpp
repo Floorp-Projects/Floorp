@@ -35,6 +35,7 @@
 #include "prprf.h"
 #include "nsIFrame.h"
 #include "nsIMarkupDocumentViewer.h"
+#include "nsXPIDLString.h"
 
 #ifdef XXX_NS_DEBUG       // XXX: we'll need a logging facility for debugging
 #define WEB_TRACE(_bit,_args)            \
