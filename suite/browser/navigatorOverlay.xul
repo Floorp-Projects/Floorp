@@ -69,7 +69,7 @@ Contributor(s): ______________________________________. -->
   
  
   <broadcaster id="Browser:Close"  value="&closeCmd.label;"    oncommand="BrowserClose();"/>
-  <broadcaster id="Browser:Quit"  value="&quitCmd.label;"      oncommand="BrowserExit"/>
+  <broadcaster id="Browser:Quit"  value="&quitCmd.label;"      oncommand="BrowserExit();"/>
   
   
   <broadcaster id="canGoBack" 	 value="&goBackCmd.label;" 		disabled="true" 		oncommand="BrowserBack();"/>
