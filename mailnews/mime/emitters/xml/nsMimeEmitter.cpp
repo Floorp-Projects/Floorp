@@ -80,10 +80,6 @@ nsMimeEmitter::nsMimeEmitter()
   mReallyOutput = PR_FALSE;
 #endif
 
-#ifdef NS_DEBUG
-printf("Prefs not working on multiple threads...must find a solution\n"); 
-#endif
-
   mHeaderDisplayType = NormalHeaders;
 
   nsresult rv = nsServiceManager::GetService(kPrefCID, kIPrefIID, (nsISupports**)&(mPrefs));

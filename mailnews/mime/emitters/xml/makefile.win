@@ -121,6 +121,7 @@ LINCS=$(LINCS)  -I.                         		\
 include <$(DEPTH)/config/rules.mak>
 
 install:: $(DLL)
+        $(MAKE_INSTALL) .\$(OBJDIR)\$(DLLNAME).dll $(DIST)\bin\components
 
 clobber::
 	rm -f $(DIST)\bin\$(DLLNAME).dll
