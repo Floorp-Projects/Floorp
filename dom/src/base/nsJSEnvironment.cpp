@@ -34,6 +34,11 @@
 #include "nsDOMCID.h"
 #include "nsIServiceManager.h"
 
+#if defined(OJI) && defined(XP_MAC)
+#include "nsIJVMManager.h"
+#include "nsILiveConnectManager.h"
+#endif
+
 const uint32 gGCSize = 4L * 1024L * 1024L;
 const size_t gStackSize = 8192;
 
@@ -306,6 +311,23 @@ nsJSEnvironment::GetScriptingEnvironment()
 nsJSEnvironment::nsJSEnvironment()
 {
   mRuntime = JS_Init(gGCSize);
+
+#if defined(OJI) && defined(XP_MAC)
+  // Initialize LiveConnect.
+  static NS_DEFINE_IID(kJVMManagerCID, NS_JVMMANAGER_CID);
+  static NS_DEFINE_IID(kILiveConnectManagerIID, NS_ILIVECONNECTMANAGER_IID);
+  nsILiveConnectManager* manager = NULL;
+  nsresult result = nsServiceManager::GetService(kJVMManagerCID,
+                                        kILiveConnectManagerIID,
+                                        (nsISupports **)&manager);
+
+  // Should the JVM manager perhaps define methods for starting up LiveConnect?
+  if (result == NS_OK && manager != NULL) {
+    PRBool started = PR_FALSE;
+    result = manager->StartupLiveConnect(mRuntime, started);
+    result = nsServiceManager::ReleaseService(kJVMManagerCID, manager);
+  }
+#endif
 }
 
 nsJSEnvironment::~nsJSEnvironment()
