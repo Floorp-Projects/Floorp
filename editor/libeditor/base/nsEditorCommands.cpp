@@ -359,8 +359,10 @@ nsSelectionMoveCommands::DoCommand(const nsAReadableString & aCommandName, nsISu
     
   nsCOMPtr<nsISelectionController> selCont;
   rv = aEditor->GetSelectionController(getter_AddRefs(selCont)); 
-  if (NS_FAILED(rv) || !selCont)
-    return rv?rv:NS_ERROR_FAILURE;
+  if (NS_FAILED(rv))
+    return rv;
+  if (!selCont)
+    return NS_ERROR_FAILURE;
   
   nsAutoString cmdString(aCommandName);
   

@@ -294,7 +294,7 @@ NS_IMETHODIMP nsPlaintextEditor::InsertFromDrop(nsIDOMEvent* aDropEvent)
         PRInt32 rangeCount;
         rv = selection->GetRangeCount(&rangeCount);
         if (NS_FAILED(rv)) 
-          return rv?rv:NS_ERROR_FAILURE;
+          return rv;
 
         for (PRInt32 j = 0; j < rangeCount; j++)
         {
