@@ -27,7 +27,7 @@ interface Range {
     void selectNode(in Node n);
     void selectNodeContents(in Node n);
 
-	int  compareEndPoints(in unsigned short how, in Range srcRange);
+    int  compareEndPoints(in unsigned short how, in Range srcRange);
 
     void deleteContents();
 
