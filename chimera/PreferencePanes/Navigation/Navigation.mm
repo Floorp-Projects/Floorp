@@ -34,22 +34,6 @@ const int kDefaultExpireDays = 9;
 
 @implementation OrgMozillaChimeraPreferenceNavigation
 
-- (void) dealloc
-{
-  NS_IF_RELEASE(mPrefService);
-}
-
-- (id) initWithBundle:(NSBundle *) bundle
-{
-  self = [super initWithBundle:bundle] ;
-  
-  nsCOMPtr<nsIPref> prefService ( do_GetService(NS_PREF_CONTRACTID) );
-  NS_ASSERTION(prefService, "Could not get pref service, pref panel left uninitialized");
-  mPrefService = prefService.get();
-  NS_IF_ADDREF(mPrefService);
-  
-  return self;
-}
 
 - (void)mainViewDidLoad
 {
@@ -231,64 +215,5 @@ const int kDefaultExpireDays = 9;
   return [self getStringPref: "browser.startup.homepage" withSuccess:&gotPref];
 }
 
-// convenience routines for mozilla prefs
-- (NSString*)getStringPref: (const char*)prefName withSuccess:(BOOL*)outSuccess
-{
-  NSMutableString *prefValue = [[[NSMutableString alloc] init] autorelease];
-  
-  char *buf = nsnull;
-  nsresult rv = mPrefService->GetCharPref(prefName, &buf);
-  if (NS_SUCCEEDED(rv) && buf) {
-    [prefValue setString:[NSString stringWithCString:buf]];
-    free(buf);
-    if (outSuccess) *outSuccess = YES;
-  } else {
-    if (outSuccess) *outSuccess = NO;
-  }
-  
-  return prefValue;
-}
-
-// convenience routines for mozilla prefs
-- (BOOL)getBooleanPref: (const char*)prefName withSuccess:(BOOL*)outSuccess
-{
-  PRBool boolPref = PR_FALSE;
-  nsresult rv = mPrefService->GetBoolPref(prefName, &boolPref);
-  if (outSuccess)
-    *outSuccess = NS_SUCCEEDED(rv);
-
-  return boolPref ? YES : NO;
-}
-
-- (int)getIntPref: (const char*)prefName withSuccess:(BOOL*)outSuccess
-{
-  PRInt32 intPref = 0;
-  nsresult rv = mPrefService->GetIntPref(prefName, &intPref);
-  if (outSuccess)
-    *outSuccess = NS_SUCCEEDED(rv);
-  return intPref;
-}
-
-- (void)setPref: (const char*)prefName toString:(NSString*)value
-{
-  if (mPrefService) {
-    mPrefService->SetCharPref(prefName, [value cString]);
-  }
-}
-
-- (void)setPref: (const char*)prefName toBoolean:(BOOL)value
-{
-  if (mPrefService) {
-    mPrefService->SetBoolPref(prefName, value ? PR_TRUE : PR_FALSE);
-  }
-}
-
-- (void)setPref: (const char*)prefName toInt:(int)value
-{
-  if (mPrefService) {
-    PRInt32 prefValue = value;
-    mPrefService->SetIntPref(prefName, prefValue);
-  }
-}
 
 @end

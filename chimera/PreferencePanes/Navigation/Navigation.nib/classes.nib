@@ -34,8 +34,9 @@
                 textFieldHistoryDays = NSTextField; 
                 textFieldHomePage = NSTextField; 
             }; 
-            SUPERCLASS = NSPreferencePane; 
-        }
+            SUPERCLASS = PreferencePaneBase; 
+        }, 
+        {CLASS = PreferencePaneBase; LANGUAGE = ObjC; SUPERCLASS = NSPreferencePane; }
     ); 
     IBVersion = 1; 
 }
