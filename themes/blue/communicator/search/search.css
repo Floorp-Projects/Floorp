@@ -104,5 +104,10 @@ titledbutton.panelbtn {
     margin-left           : 0px;
     margin-right          : 0px;
   }
+
+#stopButton
+  {
+    list-style-image      : url("resource:/res/rdf/loading.gif");
+  }
   
   

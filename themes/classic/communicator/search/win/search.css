@@ -53,4 +53,9 @@
   {
     border-right          : 1px solid threedshadow;
     border-left           : 1px solid threedhighlight;
-  }  
+  }
+
+#stopButton
+  {
+    list-style-image      : url("resource:/res/rdf/loading.gif");
+  }

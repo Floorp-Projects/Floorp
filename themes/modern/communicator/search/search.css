@@ -109,3 +109,8 @@ titledbutton.panelbtn {
   {
     font-weight         : normal;
   }
+
+#stopButton
+  {
+    list-style-image      : url("resource:/res/rdf/loading.gif");
+  }
