@@ -555,7 +555,7 @@ MapToCCMapExt(PRUint32* aBmpPlaneMap, PRUint32** aOtherPlaneMaps, PRUint32 aOthe
   // testing for BMP plane
   for (k=0; k<NUM_UNICODE_CHARS; k++) {
     oldb = IS_REPRESENTABLE(aBmpPlaneMap, k);
-    newb = CCMAP_HAS_CHAR(ccmap, k);
+    newb = CCMAP_HAS_CHAR_EXT(ccmap, k);
     NS_ASSERTION(oldb==newb,"failed to generate map correctly");
   }
 

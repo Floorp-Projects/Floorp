@@ -320,7 +320,7 @@ protected:
 #define CCMAP_SIZE(m) (*((m)-1))
 #define CCMAP_FLAG(m) (*((m)-2))
 #define CCMAP_EXTRA    (sizeof(ALU_TYPE)/sizeof(PRUint16)>2? sizeof(ALU_TYPE)/sizeof(PRUint16): 2)
-#define CCMAP_SURROGATE_FLAG         0X0001  
+#define CCMAP_SURROGATE_FLAG         0x0001  
 #define CCMAP_NONE_FLAG              0x0000
 
 // non-bmp unicode support extension
@@ -339,10 +339,11 @@ protected:
 #define CCMAP_FOR_PLANE_EXT(m, i)  ((m) + ((PRUint32*)((m) + CCMAP_SIZE(m)))[(i)-1])
 
 // test the bit for surrogate pair
-#define CCMAP_HAS_CHAR_EXT2(m, h, l)  (CCMAP_FLAG(m)&CCMAP_SURROGATE_FLAG && \
+#define CCMAP_HAS_CHAR_EXT2(m, h, l)  (CCMAP_FLAG(m) & CCMAP_SURROGATE_FLAG && \
                                       CCMAP_HAS_CHAR(CCMAP_FOR_PLANE_EXT((m), CCMAP_PLANE_FROM_SURROGATE(h)), CCMAP_INPLANE_OFFSET(h, l)))
 // test the bit for a character in UCS4
-#define CCMAP_HAS_CHAR_EXT(m, ucs4)  (!((ucs4)&0xffff0000) && CCMAP_HAS_CHAR(m, (PRUnichar)(ucs4)) ||  \
-                                      CCMAP_FLAG(m)&CCMAP_SURROGATE_FLAG && CCMAP_HAS_CHAR(CCMAP_FOR_PLANE_EXT((m), CCMAP_PLANE(ucs4)), (ucs4)&0xffff))
+#define CCMAP_HAS_CHAR_EXT(m, ucs4)  (((ucs4)&0xffff0000) ?  \
+                                      (CCMAP_FLAG(m) & CCMAP_SURROGATE_FLAG) && CCMAP_HAS_CHAR(CCMAP_FOR_PLANE_EXT((m), CCMAP_PLANE(ucs4)), (ucs4) & 0xffff) : \
+                                      CCMAP_HAS_CHAR(m, (PRUnichar)(ucs4)) )
 
 #endif // NSCOMPRESSEDCHARMAP_H 
