@@ -20,10 +20,15 @@ Rights Reserved.
 
 <!ENTITY toField.label "To: ">
 <!ENTITY fromField.label "From: ">
+<!ENTITY replyToField.label "Reply-To: ">
+
 <!ENTITY subjectField.label "Subject: ">
 <!--# LOCALIZATION NOTE (ccField.label): DONT_TRANSLATE -->
 <!ENTITY ccField.label "Cc: ">
 <!ENTITY newsgroupsField.label "Newsgroups: ">
+<!ENTITY followupToField.label "Followup-To: ">
+
 <!ENTITY dateField.label "Date: ">
 <!ENTITY userAgentField.label "User-Agent: ">
 <!ENTITY saveAll.label "Save All..">
+
