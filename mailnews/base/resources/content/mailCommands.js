@@ -110,13 +110,14 @@ function getIdentityForServer(server)
 	var newsgroup = null;
 	var server;
 
+	dump("ComposeMessage folder="+folder+"\n");
 	try 
 	{
 		server = folder.server;
 		if(folder)
 		{
 			// get the incoming server associated with this uri
-			var server = loadedFolder.server;
+			var server = folder.server;
 
 			// if they hit new or reply and they are reading a newsgroup
 			// turn this into a new post or a reply to group.
@@ -129,7 +130,7 @@ function getIdentityForServer(server)
 			        {
 					    type = msgComposeType.NewsPost;
 
-   					if (loadedFolder.isServer) 
+   					if (folder.isServer) 
     						newsgroup = "";
     					else 
           					newsgroup = folder.name; 
@@ -143,7 +144,7 @@ function getIdentityForServer(server)
 	}
 	catch (ex) 
 	{
-        // dump("failed to get an identity to pre-select: " + ex + "\n");
+        	dump("failed to get an identity to pre-select: " + ex + "\n");
 	}
 
 	dump("\nComposeMessage from XUL: " + identity + "\n");
