@@ -865,93 +865,19 @@ nsXBLPrototypeBinding::GetImmediateChild(nsIAtom* aTag, nsIContent** aResult)
 }
  
 NS_IMETHODIMP
-nsXBLPrototypeBinding::InitClass(const nsCString& aClassName, nsIScriptContext * aContext, void * aScriptObject, void ** aClassObject)
+nsXBLPrototypeBinding::InitClass(const nsCString& aClassName,
+                                 nsIScriptContext * aContext,
+                                 void * aScriptObject, void ** aClassObject)
 {
   NS_ENSURE_ARG_POINTER (aClassObject); 
 
   *aClassObject = nsnull;
 
-  JSContext* jscontext = (JSContext*)aContext->GetNativeContext();
-  JSObject* global = ::JS_GetGlobalObject(jscontext);
+  JSContext* cx = (JSContext*)aContext->GetNativeContext();
   JSObject* scriptObject = (JSObject*) aScriptObject;
 
-  // First ensure our JS class is initialized.
-  jsval vp;
-  JSObject* proto;
-
-  if ((! ::JS_LookupProperty(jscontext, global, aClassName.get(), &vp)) || JSVAL_IS_PRIMITIVE(vp))  {
-    // We need to initialize the class.
-    nsXBLJSClass* c;
-    void* classObject;
-    nsCStringKey key(aClassName);
-    classObject = (nsXBLService::gClassTable)->Get(&key);
-
-    if (classObject) {
-      c = NS_STATIC_CAST(nsXBLJSClass*, classObject);
-      // If c is on the LRU list (i.e., not linked to itself), remove it now!
-      JSCList* link = NS_STATIC_CAST(JSCList*, c);
-      if (c->next != link) {
-        JS_REMOVE_AND_INIT_LINK(link);
-        nsXBLService::gClassLRUListLength--;
-      }
-    } 
-    else {
-      if (JS_CLIST_IS_EMPTY(&nsXBLService::gClassLRUList)) {
-        // We need to create a struct for this class.
-        c = new nsXBLJSClass(aClassName);
-        if (!c)
-          return NS_ERROR_OUT_OF_MEMORY;
-      } 
-      else  {
-        // Pull the least recently used class struct off the list.
-        JSCList* lru = (nsXBLService::gClassLRUList).next;
-        JS_REMOVE_AND_INIT_LINK(lru);
-        nsXBLService::gClassLRUListLength--;
-
-        // Remove any mapping from the old name to the class struct.
-        c = NS_STATIC_CAST(nsXBLJSClass*, lru);
-        nsCStringKey oldKey(c->name);
-        (nsXBLService::gClassTable)->Remove(&oldKey);
-
-        // Change the class name and we're done.
-        nsMemory::Free((void*) c->name);
-        c->name = ToNewCString(aClassName);
-      }
-
-      // Add c to our table.
-      (nsXBLService::gClassTable)->Put(&key, (void*)c);
-    }
-    
-    // Retrieve the current prototype of the JS object.
-    JSObject* parent_proto = ::JS_GetPrototype(jscontext, scriptObject);
-
-    // Make a new object prototyped by parent_proto and parented by global.
-    proto = ::JS_InitClass(jscontext,           // context
-                           global,              // global object
-                           parent_proto,        // parent proto 
-                           c,                   // JSClass
-                           NULL,                // JSNative ctor
-                           0,                   // ctor args
-                           nsnull,              // proto props
-                           nsnull,              // proto funcs
-                           nsnull,              // ctor props (static)
-                           nsnull);             // ctor funcs (static)
-    if (!proto) {
-      (nsXBLService::gClassTable)->Remove(&key);
-      delete c;
-      return NS_ERROR_OUT_OF_MEMORY;
-    }
-
-    // The prototype holds a strong reference to its class struct.
-    c->Hold();
-    *aClassObject = (void *) proto;
-  }
-  else
-    proto = JSVAL_TO_OBJECT(vp);
-
-  ::JS_SetPrototype(jscontext, scriptObject, proto);
-
-  return NS_OK;
+  return nsXBLBinding::DoInitJSClass(cx, ::JS_GetGlobalObject(cx),
+                                     scriptObject, aClassName, aClassObject);
 }
 
 void

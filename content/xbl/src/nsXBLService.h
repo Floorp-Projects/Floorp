@@ -148,7 +148,7 @@ private:
   nsrefcnt Destroy();
 
 public:
-  nsXBLJSClass(const nsCString& aClassName);
+  nsXBLJSClass(const nsAFlatCString& aClassName);
   ~nsXBLJSClass() { nsMemory::Free((void*) name); }
 
   nsrefcnt Hold() { return ++mRefCnt; }

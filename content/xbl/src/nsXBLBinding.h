@@ -50,6 +50,7 @@ class nsSupportsHashtable;
 class nsIXBLService;
 class nsFixedSizeAllocator;
 class nsXBLEventHandler;
+struct JSContext;
 
 // *********************************************************************/
 // The XBLBinding class
@@ -131,7 +132,11 @@ public:
   void InstallAnonymousContent(nsIContent* aAnonParent, nsIContent* aElement);
 
   static nsresult GetTextData(nsIContent *aParent, nsString& aResult);
-  
+
+  static nsresult DoInitJSClass(JSContext *cx, JSObject *global, JSObject *obj,
+                                const nsAFlatCString& aClassName,
+                                void **aClassObject);
+
 // Static members
   static PRUint32 gRefCnt;
   
