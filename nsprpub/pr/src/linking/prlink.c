@@ -55,7 +55,7 @@
  * On these platforms, symbols have a leading '_'.
  */
 #if defined(SUNOS4) || defined(RHAPSODY) || defined(NEXTSTEP) \
-    || defined(WIN16) || defined(OPENBSD)
+    || defined(OPENBSD) || defined(WIN16)
 #define NEED_LEADING_UNDERSCORE
 #endif
 
@@ -596,8 +596,7 @@ PR_LoadLibrary(const char *name)
         CInfoPBRec pb;
         FSSpec fileSpec;
         PRUint32 index;
-
-		Boolean tempUnusedBool;	// rjc
+        Boolean tempUnusedBool;
 
         /* Copy the name: we'll change it */
         cMacPath = strdup(name);    
@@ -649,10 +648,11 @@ PR_LoadLibrary(const char *name)
             goto unlock;
         fileSpec.parID = pb.dirInfo.ioDrDirID;
 
-		// resolve an alias if this was one (rjc)
-		err = ResolveAliasFile(&fileSpec, true, &tempUnusedBool, &tempUnusedBool);
-		if (err != noErr)
-			goto unlock;
+        /* Resolve an alias if this was one */
+        err = ResolveAliasFile(&fileSpec, true, &tempUnusedBool,
+                &tempUnusedBool);
+        if (err != noErr)
+            goto unlock;
 
         /* Finally, try to load the library */
         err = GetDiskFragment(&fileSpec, 0, kCFragGoesToEOF, fileSpec.name, 
