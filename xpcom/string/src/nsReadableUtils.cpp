@@ -120,7 +120,7 @@ class LossyConvertEncoding
       typedef FromCharT input_type;
       typedef ToCharT   output_type;
 
-      typedef nsCharTraits<FromCharT>::unsigned_char_type unsigned_input_type;
+      typedef typename nsCharTraits<FromCharT>::unsigned_char_type unsigned_input_type;
 
     public:
       LossyConvertEncoding( output_type* aDestination ) : mDestination(aDestination) { }
