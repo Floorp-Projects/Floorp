@@ -51,6 +51,8 @@ NS_XULATOM(object);
 NS_XULATOM(open);
 NS_XULATOM(parent);
 NS_XULATOM(persist);
+NS_XULATOM(popup);
+NS_XULATOM(popupset);
 NS_XULATOM(predicate);
 NS_XULATOM(property);
 NS_XULATOM(resource);
