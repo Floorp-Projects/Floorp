@@ -349,7 +349,7 @@ nsLabelFrame::FindForControl(nsIFormControlFrame*& aResultFrame)
   if (!domElement)
     return PR_FALSE;
 
-  nsIPresShell *shell = iDoc->GetShellAt(0);
+  nsCOMPtr<nsIPresShell> shell = getter_AddRefs(iDoc->GetShellAt(0));
   if (nsnull == shell)
     return PR_FALSE;
 
@@ -378,8 +378,6 @@ nsLabelFrame::FindForControl(nsIFormControlFrame*& aResultFrame)
       }
     }
   }
-        
-  NS_RELEASE(shell);
 
   return returnValue;
 }
