@@ -1531,14 +1531,21 @@ NS_METHOD nsTableFrame::Reflow(nsIPresContext* aPresContext,
     rv = IncrementalReflow(aPresContext, aDesiredSize, aReflowState, aStatus);
   }
 
+  // If this is a style change reflow, then invalidate the pass 1 cache
+  if (eReflowReason_StyleChange == aReflowState.reason) {
+    InvalidateFirstPassCache();
+  }
+
   // NeedsReflow and IsFirstPassValid take into account reflow type = Initial_Reflow
   if (NeedsReflow(aReflowState)) {
     PRBool needsRecalc = PR_FALSE;
     if ((NS_UNCONSTRAINEDSIZE == aReflowState.availableWidth) || 
         (PR_FALSE==IsFirstPassValid())) {
       nsReflowReason reason = aReflowState.reason;
-      if (eReflowReason_Initial != reason)
+      if ((eReflowReason_Initial != reason) &&
+          (eReflowReason_StyleChange != reason)) {
         reason = eReflowReason_Resize;
+      }
       if (mBorderCollapser) {
         mBorderCollapser->ComputeVerticalBorders(aPresContext, 0, -1);
       }

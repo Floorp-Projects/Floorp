@@ -1553,6 +1553,10 @@ nsBlockFrame::Reflow(nsIPresContext*          aPresContext,
     }
     break;
 
+  case eReflowReason_StyleChange:
+    rv = PrepareStyleChangedReflow(state);
+    break;
+
   case eReflowReason_Resize:
   default:
 #ifdef NOISY_REFLOW_REASON
