@@ -462,6 +462,9 @@ CERT_CopyName(PRArenaPool *arena, CERTName *to, CERTName *from)
     CERTRDN **rdns, *frdn, *trdn;
     SECStatus rv;
 
+    if (!to || !from)
+	return SECFailure;
+
     CERT_DestroyName(to);
     to->arena = arena;
 
