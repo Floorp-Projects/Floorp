@@ -106,6 +106,7 @@
 
 static NS_DEFINE_CID(kCRangeCID,            NS_RANGE_CID);
 static NS_DEFINE_CID(kCContentIteratorCID,  NS_CONTENTITERATOR_CID);
+static NS_DEFINE_CID(kCDOMRangeCID,         NS_RANGE_CID);
 
 // transaction manager
 static NS_DEFINE_CID(kCTransactionManagerCID, NS_TRANSACTIONMANAGER_CID);
@@ -4947,5 +4948,102 @@ nsEditor::CreateTxnForDeleteInsertionPoint(nsIDOMRange         *aRange,
     }
   }
   return result;
+}
+
+nsresult 
+nsEditor::CreateRange(nsIDOMNode *aStartParent, PRInt32 aStartOffset,
+                      nsIDOMNode *aEndParent, PRInt32 aEndOffset,
+                      nsIDOMRange **aRange)
+{
+  nsresult result;
+  result = nsComponentManager::CreateInstance(kCDOMRangeCID, nsnull,
+                                              NS_GET_IID(nsIDOMRange), 
+                                              (void **)aRange);
+
+  if (NS_FAILED(result))
+    return result;
+
+  if (!*aRange)
+    return NS_ERROR_NULL_POINTER;
+
+  result = (*aRange)->SetStart(aStartParent, aStartOffset);
+
+  if (NS_SUCCEEDED(result))
+    result = (*aRange)->SetEnd(aEndParent, aEndOffset);
+
+  if (NS_FAILED(result))
+  {
+    NS_RELEASE((*aRange));
+    *aRange = 0;
+  }
+  return result;
+}
+
+nsresult 
+nsEditor::GetFirstNodeInRange(nsIDOMRange *aRange, nsIDOMNode **aNode)
+{
+  if (!aRange || !aNode) return NS_ERROR_NULL_POINTER;
+
+  *aNode = nsnull;
+
+  nsCOMPtr<nsIDOMNode> startParent;
+  nsresult res = aRange->GetStartParent(getter_AddRefs(startParent));
+  if (NS_FAILED(res)) return res;
+  if (!startParent) return NS_ERROR_FAILURE;
+
+  nsCOMPtr<nsIDOMNode> startNode;
+  PRInt32 offset;
+  res = aRange->GetStartOffset(&offset);
+  if (NS_FAILED(res)) return res;
+
+  nsCOMPtr<nsIDOMNodeList> nodeList;
+  res = startParent->GetChildNodes(getter_AddRefs(nodeList));
+  if (NS_FAILED(res)) return res;
+  if (!nodeList) return NS_ERROR_FAILURE;
+
+  nsCOMPtr<nsIDOMNode> child;
+  res = nodeList->Item(offset,getter_AddRefs(child));
+  if (NS_FAILED(res)) return res;
+  if (!child) return NS_ERROR_FAILURE;
+
+  *aNode = child.get();
+  NS_ADDREF(*aNode);
+
+  return res;
+}
+
+nsresult 
+nsEditor::AppendNodeToSelectionAsRange(nsIDOMNode *aNode)
+{
+  if (!aNode) return NS_ERROR_NULL_POINTER;
+  nsCOMPtr<nsIDOMSelection> selection;
+  nsresult res = GetSelection(getter_AddRefs(selection));
+  if (NS_FAILED(res)) return res;
+  if(!selection) return NS_ERROR_FAILURE;
+
+  nsCOMPtr<nsIDOMNode> parentNode;
+  res = aNode->GetParentNode(getter_AddRefs(parentNode));
+  if (NS_FAILED(res)) return res;
+  if (!parentNode) return NS_ERROR_NULL_POINTER;
+  
+  PRInt32 offset;
+  res = GetChildOffset(aNode, parentNode, offset);
+  if (NS_FAILED(res)) return res;
+  
+  nsCOMPtr<nsIDOMRange> range;
+  res = CreateRange(parentNode, offset, parentNode, offset+1, getter_AddRefs(range));
+  if (NS_FAILED(res)) return res;
+  if (!range) return NS_ERROR_NULL_POINTER;
+
+  return selection->AddRange(range);
+}
+
+nsresult nsEditor::ClearSelection()
+{
+  nsCOMPtr<nsIDOMSelection> selection;
+  nsresult res = nsEditor::GetSelection(getter_AddRefs(selection));
+  if (NS_FAILED(res)) return res;
+  if (!selection) return NS_ERROR_FAILURE;
+  return selection->ClearSelection();  
 }
 

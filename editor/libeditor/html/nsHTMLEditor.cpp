@@ -2636,7 +2636,9 @@ NODE_FOUND:
       NS_ADDREF(*aReturn);
     }
   }
-  return NS_OK;
+  else res = NS_EDITOR_ELEMENT_NOT_FOUND;
+
+  return res;
 }
 
 NS_IMETHODIMP
@@ -2835,7 +2837,9 @@ nsHTMLEditor::GetSelectedElement(const nsString& aTagName, nsIDOMElement** aRetu
       // Getters must addref
       NS_ADDREF(*aReturn);
     }
-  }
+  } 
+  else res = NS_EDITOR_ELEMENT_NOT_FOUND;
+
   return res;
 }
 
@@ -4990,7 +4994,7 @@ void nsHTMLEditor::ResetTextSelectionForRange(nsIDOMNode *aParent,
 //================================================================
 // HTML Editor methods
 //
-// Note: Table Editing methods are implemented in EditTable.cpp
+// Note: Table Editing methods are implemented in nsTableEditor.cpp
 //
 
 NS_IMETHODIMP 
@@ -7375,6 +7379,19 @@ nsHTMLEditor::GetNextElementByTagName(nsIDOMElement    *aCurrentElement,
   return res;
 }
 
+NS_IMETHODIMP 
+nsHTMLEditor::SetSelectionAtDocumentStart(nsIDOMSelection *aSelection)
+{
+	nsCOMPtr<nsIDOMElement> bodyElement;
+	nsresult res = GetBodyElement(getter_AddRefs(bodyElement));  
+	if (NS_SUCCEEDED(res))
+  {
+  	if (!bodyElement) return NS_ERROR_NULL_POINTER;
+    res = aSelection->Collapse(bodyElement,0);
+  }
+  return res;
+}
+
 #ifdef XP_MAC
 #pragma mark -
 #endif
@@ -7738,5 +7755,4 @@ nsHTMLEditor::InsertContainerAbove(nsIDOMNode *inNode,
 
   return NS_OK;
 }
-
 

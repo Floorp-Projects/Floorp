@@ -1248,15 +1248,7 @@ nsEditorShell::CheckAndSaveDocument(const PRUnichar *reasonToSave, PRBool *_retv
         nsAutoString tmp2 = GetString("DontSave");
         nsAutoString title;
         GetDocumentTitleString(title);
-        nsAutoString saveMsg = GetString("SaveFilePrompt")+" "+"\""+title+"\"";
-        if (ReasonToSave.Length() > 0) 
-        {
-          saveMsg += " ";
-          saveMsg += ReasonToSave;
-          saveMsg += GetString("QuestionMark");
-        } else {
-          saveMsg += GetString("QuestionMark");
-        }
+        nsAutoString saveMsg = ((GetString("SaveFilePrompt")).ReplaceSubstring("%title%",title)).ReplaceSubstring("%reason%",ReasonToSave);
 
         EConfirmResult result = ConfirmWithCancel(GetString("SaveDocument"), saveMsg,
                                                   &tmp1, &tmp2);
@@ -3096,6 +3088,101 @@ nsEditorShell::JoinTableCells()
         nsCOMPtr<nsITableEditor> tableEditor = do_QueryInterface(mEditor);
         if (tableEditor)
           result = tableEditor->JoinTableCells();
+      }
+      break;
+    default:
+      result = NS_ERROR_NOT_IMPLEMENTED;
+  }
+  return result;
+}
+
+NS_IMETHODIMP    
+nsEditorShell::SelectTableCell()
+{
+  nsresult  result = NS_NOINTERFACE;
+  switch (mEditorType)
+  {
+    case eHTMLTextEditorType:
+      {
+        nsCOMPtr<nsITableEditor> tableEditor = do_QueryInterface(mEditor);
+        if (tableEditor)
+          result = tableEditor->SelectTableCell();
+      }
+      break;
+    default:
+      result = NS_ERROR_NOT_IMPLEMENTED;
+  }
+  return result;
+}
+
+NS_IMETHODIMP    
+nsEditorShell::SelectTableRow()
+{
+  nsresult  result = NS_NOINTERFACE;
+  switch (mEditorType)
+  {
+    case eHTMLTextEditorType:
+      {
+        nsCOMPtr<nsITableEditor> tableEditor = do_QueryInterface(mEditor);
+        if (tableEditor)
+          result = tableEditor->SelectTableRow();
+      }
+      break;
+    default:
+      result = NS_ERROR_NOT_IMPLEMENTED;
+  }
+  return result;
+}
+
+NS_IMETHODIMP    
+nsEditorShell::SelectTableColumn()
+{
+  nsresult  result = NS_NOINTERFACE;
+  switch (mEditorType)
+  {
+    case eHTMLTextEditorType:
+      {
+        nsCOMPtr<nsITableEditor> tableEditor = do_QueryInterface(mEditor);
+        if (tableEditor)
+          result = tableEditor->SelectTableColumn();
+      }
+      break;
+    default:
+      result = NS_ERROR_NOT_IMPLEMENTED;
+  }
+  return result;
+}
+
+NS_IMETHODIMP    
+nsEditorShell::SelectTable()
+{
+  nsresult  result = NS_NOINTERFACE;
+  switch (mEditorType)
+  {
+    case eHTMLTextEditorType:
+      {
+        nsCOMPtr<nsITableEditor> tableEditor = do_QueryInterface(mEditor);
+        if (tableEditor)
+          result = tableEditor->SelectTable();
+      }
+      break;
+    default:
+      result = NS_ERROR_NOT_IMPLEMENTED;
+  }
+  return result;
+}
+
+NS_IMETHODIMP    
+nsEditorShell::SelectAllTableCells()
+{
+  nsresult  result = NS_NOINTERFACE;
+  switch (mEditorType)
+  {
+    case eHTMLTextEditorType:
+      {
+        nsCOMPtr<nsITableEditor> tableEditor = do_QueryInterface(mEditor);
+        if (tableEditor)
+          result = tableEditor->SelectAllTableCells();
       }
       break;
     default:

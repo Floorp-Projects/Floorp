@@ -41,8 +41,9 @@
 
 <!-- Display Mode Toolbar -->
 <!ENTITY displayMode.label "Edit Mode:">
-<!ENTITY editModeButton.label "Normal">
-<!ENTITY browserModeButton.label "Browser">
+<!ENTITY showExtraMarkup.label "Show Extra Markup">
+<!ENTITY extraMarkup.accesskey "e">
+<!ENTITY hideExtraMarkup.label "Hide Extra Markup">
 <!ENTITY viewModeButton.label "View Mode:">
 <!ENTITY htmlModeButton.label "HTML Source">
 <!ENTITY treeModeButton.label "Tag Tree">

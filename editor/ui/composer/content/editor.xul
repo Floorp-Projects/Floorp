@@ -74,14 +74,16 @@
 
   <menubar id="main-menubar" chromeclass="menubar">
     <menu id="fileMenu"/>
-    <menu id="editMenu"/>
+    <menu id="editMenu" oncreate="EditorInitEditMenu()"/>
 
     <menu value="&viewMenu.label;" accesskey="&viewmenu.accesskey;">
     <!-- id pulls in "Show Sidebar" item from sidebarOverlay -->
     <menupopup id="menu_View_Popup">
       <menu id="viewToolbar"/>
-
       <menuseparator/>
+      <!-- item with "disable=true" will be hidden -->
+      <menuitem id="ShowExtraMarkup" value="&showExtraMarkup.label;" accesskey="&extraMarkup.accesskey;" oncommand="EditorSetDisplayStyle(0)" hidden="true"/>
+      <menuitem id="HideExtraMarkup" value="&hideExtraMarkup.label;" accesskey="&extraMarkup.accesskey;" oncommand="EditorSetDisplayStyle(1)"/>
       <menuitem id="viewSourceMenuitem"/>
       <menuseparator />
       <menu id="charsetMenu"/>
@@ -97,7 +99,8 @@
 
     <menu id="formatMenu" value="&formatMenu.label;" accesskey="&formatmenu.accesskey;">
       <menupopup id="formatMenuPopup">
-        <!-- Property items that are only in web composer -->
+        <menuitem id="objectProperties" hidden="true"/>
+        <menuitem id="colorsAndBackground"/>
         <menuitem id="pageProperties"/>
       </menupopup>
     </menu>
@@ -124,11 +127,10 @@
     <titledbutton id="newButton"/>
     <titledbutton id="openButton"/>
     <titledbutton id="saveButton"/>
-    <toolbarseparator/>
-    <titledbutton id="printButton"/>
+    <titledbutton id="previewButton"/>
+    <titledbutton id="printButton" />
     <titledbutton id="findButton"/>
     <titledbutton id="spellingButton"/>
-    <toolbarseparator/>
     <titledbutton id="imageButton"/>
     <titledbutton id="hlineButton"/>
     <titledbutton id="tableButton"/>
@@ -143,6 +145,21 @@
 		</box>
   </toolbar>
     
+  <toolbar id="TitleToolbar" persist="collapsed">
+    <box align="vertical">
+      <spring flex="1"/>
+      <html:label>Title:</html:label>
+      <spring flex="1"/>
+    </box>
+    <html:input type="text" id="PageTitleInput" flex="70%"/>
+    <box align="vertical">
+      <spring flex="3"/>
+      <html:label>Author:</html:label>
+      <spring flex="2"/>
+    </box>
+    <html:input type="text" id="PageAuthorInput" flex="30%"/>
+    <spring class="spacer-throbber" flex="5%"/>
+  </toolbar>
   <toolbar id="FormatToolbar" persist="collapsed">
     <html:div>
       <!-- items are filled out from editorOverlay -->
@@ -187,8 +204,8 @@
         <html:div>&displayMode.label;</html:div>
       </box>
       <spring class="spacer3"/>
-      <titledbutton id="EditModeButton"    class="DisplayModeButton" selected="1" value="&editModeButton.label;"    onclick="EditorSetDisplayStyle(0)"/>
-      <titledbutton id="BrowserModeButton" class="DisplayModeButton" selected="0" value="&browserModeButton.label;" onclick="EditorSetDisplayStyle(1)"/>
+      <titledbutton id="EditModeButton"    class="DisplayModeButton" selected="1" value="&showExtraMarkup.label;"    onclick="EditorSetDisplayStyle(0)"/>
+      <titledbutton id="BrowserModeButton" class="DisplayModeButton" selected="0" value="&hideExtraMarkup.label;" onclick="EditorSetDisplayStyle(1)"/>
       <html:div class="VerticalSeparator"/>
       <spring flex="100%"/>
 <!--

@@ -182,6 +182,11 @@ public:
   NS_IMETHOD DeleteTableCellContents();
   NS_IMETHOD DeleteTableColumn(PRInt32 aNumber);
   NS_IMETHOD DeleteTableRow(PRInt32 aNumber);
+  NS_IMETHOD SelectTableCell();
+  NS_IMETHOD SelectTableRow();
+  NS_IMETHOD SelectTableColumn();
+  NS_IMETHOD SelectTable();
+  NS_IMETHOD SelectAllTableCells();
   NS_IMETHOD JoinTableCells();
   NS_IMETHOD NormalizeTable(nsIDOMElement *aTable);
   NS_IMETHOD GetCellIndexes(nsIDOMElement *aCell, PRInt32& aRowIndex, PRInt32& aColIndex);
@@ -321,7 +326,7 @@ protected:
   NS_IMETHOD CreateBR(nsIDOMNode *aNode, PRInt32 aOffset, nsCOMPtr<nsIDOMNode> *outBRNode);
   NS_IMETHOD InsertBR(nsCOMPtr<nsIDOMNode> *outBRNode);
 
-// Table Editing (implemented in EditTable.cpp)
+// Table Editing (implemented in nsTableEditor.cpp)
 
   // Table utilities
 
@@ -346,8 +351,15 @@ protected:
                             nsCOMPtr<nsIDOMNode> &aCellParent, PRInt32& aCellOffset, 
                             PRInt32& aRow, PRInt32& aCol);
 
-  // Use the selection iterator to find the first cell in the selection
-  NS_IMETHOD GetFirstSelectedCell(nsCOMPtr<nsIDOMElement> &aCell);
+  // Finds the first selected cell in first range of selection
+  // This is in the *order of selection*, not order in the table
+  // (i.e., each cell added to selection is added in another range 
+  //  in the selection's rangelist, independent of location in table)
+  NS_IMETHOD GetFirstSelectedCell(nsIDOMElement **aCell);
+
+  // Fallback method: Call this after using ClearSelection() and you
+  //  failed to set selection to some other content in the document
+  NS_IMETHOD SetSelectionAtDocumentStart(nsIDOMSelection *aSelection);
 
   NS_IMETHOD ReParentContentOfNode(nsIDOMNode *aNode, 
                                    nsString   &aParentTag,

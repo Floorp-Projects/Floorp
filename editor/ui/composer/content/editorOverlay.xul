@@ -148,13 +148,15 @@
     <broadcaster id="Editor:Font:Size" fontsize=""/>
 
     <!-- Command Broadcaster nodes -->
-    <broadcaster id="Editor:Open"         value="&openCmd.label;"                           oncommand="EditorOpen()"/>
-    <broadcaster id="Editor:Save"         value="&saveCmd.label;"         disabled="true"   oncommand="EditorSave()"/>
+    <!-- Don't set value on items whose text should be different for different observers -->
+    <broadcaster id="Editor:Open"                                          oncommand="EditorOpen()"/>
+    <broadcaster id="Editor:Save"         value="&saveCmd.label;"          oncommand="EditorSave()" disabled="true"/>
     <broadcaster id="Editor:SaveAs"       value="&saveAsCmd.label;"        oncommand="EditorSaveAs()"/>
+    <broadcaster id="Editor:Preview"      value="&previewCmd.label;"       oncommand="EditorPreview()"/>
     <broadcaster id="Editor:Close"        value="&closeCmd.label;"         oncommand="EditorClose()"/>
-    <broadcaster id="Editor:PrintSetup"   value="&printSetupCmd.label;"    oncommand="_EditorNotImplemented()"/>
-    <broadcaster id="Editor:PrintPreview" value="&printPreviewCmd.label;"  oncommand="EditorPrintPreview()"/>
-    <broadcaster id="Editor:Print"        value="&printCmd.label;"         oncommand="EditorPrint()"/>
+    <broadcaster id="Editor:PrintSetup"   value="&printSetupCmd.label;"    oncommand="EditorPrintSetup()"   disabled="true"/>
+    <broadcaster id="Editor:PrintPreview" value="&printPreviewCmd.label;"  oncommand="EditorPrintPreview()" disabled="true"/>
+    <broadcaster id="Editor:Print"                                         oncommand="EditorPrint()"/>
     <broadcaster id="Editor:Exit"         value="&exitCmd.label;"          oncommand="EditorExit()"/>
   
     <broadcaster id="Editor:Undo"         value="&undoCmd.label;"          oncommand="EditorUndo()"/>
@@ -163,15 +165,15 @@
     <broadcaster id="Editor:Copy"         value="&copyCmd.label;"          oncommand="EditorCopy()"/>
     <broadcaster id="Editor:Paste"        value="&pasteCmd.label;"         oncommand="EditorPaste()"/>
     <broadcaster id="Editor:PasteQuote"   value="&pasteAsQuotationCmd.label;"  oncommand="EditorPasteAsQuotation()"/>
-    <broadcaster id="Editor:Clear"        value="&clearCmd.label;"         oncommand="_EditorNotImplemented()"/>
+    <broadcaster id="Editor:Clear"        value="&clearCmd.label;"         oncommand="_EditorNotImplemented()" disabled="true"/>
     <broadcaster id="Editor:SelectAll"    value="&selectAllCmd.label;"     oncommand="EditorSelectAll()"/>
-    <broadcaster id="Editor:Find"         value="&findCmd.label;"                           oncommand="EditorFind()"/>
+    <broadcaster id="Editor:Find"                                          oncommand="EditorFind()"/>
     <broadcaster id="Editor:FindNext"     value="&findAgainCmd.label;"     oncommand="EditorFindNext()"/>
     <broadcaster id="Editor:CheckSpelling" value="&checkSpellingCmd.label;"  oncommand="CheckSpelling()"/>
   
     <!-- need to toggle the menu item text through style -->
-    <broadcaster id="Editor:ToggleCompositionToolbar" value="&hideCompositionToolbarCmd.label;" showing="true" oncommand="_EditorNotImplemented()"/>
-    <broadcaster id="Editor:ToggleFormattingToolbar"  value="&hideFormattingToolbarCmd.label;"  showing="true" oncommand="_EditorNotImplemented()"/>
+    <broadcaster id="Editor:ToggleCompositionToolbar" value="&hideCompositionToolbarCmd.label;" showing="true" oncommand="_EditorNotImplemented()" disabled="true"/>
+    <broadcaster id="Editor:ToggleFormattingToolbar"  value="&hideFormattingToolbarCmd.label;"  showing="true" oncommand="_EditorNotImplemented()" disabled="true"/>
   
     <broadcaster id="Editor:InsertLink"   value="&insertLinkCmd.label;"    oncommand="EditorInsertOrEditLink()"/>
     <broadcaster id="Editor:InsertAnchor" value="&insertAnchorCmd.label;"  oncommand="EditorInsertOrEditNamedAnchor()"/>
@@ -179,8 +181,8 @@
     <broadcaster id="Editor:InsertHLine"  value="&insertHLineCmd.label;"   oncommand="EditorInsertOrEditHLine()"/>
     <broadcaster id="Editor:InsertTable"  value="&insertTableCmd.label;"   oncommand="EditorInsertTable()"/>
     <broadcaster id="Editor:InsertHTML"   value="&insertHTMLSourceCmd.label;"   oncommand="EditorInsertHTML()"/>
-    <broadcaster id="Editor:InsertBreak"  value="&insertLineBreakCmd.label;"    oncommand="_EditorNotImplemented()"/>
-    <broadcaster id="Editor:InsertBreakAll"  value="&insertBreakBelowImagesCmd.label;"    oncommand="_EditorNotImplemented()"/>
+    <broadcaster id="Editor:InsertBreak"  value="&insertLineBreakCmd.label;"    oncommand="_EditorNotImplemented()" disabled="true"/>
+    <broadcaster id="Editor:InsertBreakAll"  value="&insertBreakBelowImagesCmd.label;"    oncommand="_EditorNotImplemented()" disabled="true"/>
   	<broadcaster id="cmd_preferences"/>
   </broadcasterset>
 
@@ -202,15 +204,18 @@
 				</menupopup>
 			</menu>
       <menuitem accesskey="&fileopenremote.accesskey;" value="&openremoteCmd.label;" key="openremoteeditorkb" oncommand="EditorOpenRemote()"/>
-      <menuitem accesskey="&fileopen.accesskey;"            key="openeditorkb"   observes="Editor:Open"/>
+      <menuitem accesskey="&fileopen.accesskey;"            key="openeditorkb"   observes="Editor:Open" value="&openFileCmd.label;"/>
       <menuseparator />
       <menuitem accesskey="&fileclose.accesskey;"           key="closekb"        observes="Editor:Close"/>
       <menuitem accesskey="&filesave.accesskey;"            key="savekb"         observes="Editor:Save"/>
       <menuitem accesskey="&filesaveas.accesskey;"                               observes="Editor:SaveAs"/>
       <menuseparator />
-      <menuitem accesskey="&fileprintsetup.accesskey;"                           observes="Editor:PrintSetup"/>
+      <!-- SEND PAGE, FRAME, LINK should go here, but nav must put them in global files -->
+      <menuitem accesskey="&filepreview.accesskey;"                              observes="Editor:Preview"/>
+      <menuseparator />
+      <menuitem accesskey="&fileprintsetup.accesskey;"                           observes="Editor:PrintSetup" />
       <menuitem accesskey="&fileprintpreview.accesskey;"                         observes="Editor:PrintPreview"/>
-      <menuitem accesskey="&fileprint.accesskey;"           key="printkb"        observes="Editor:Print"/>
+      <menuitem accesskey="&fileprint.accesskey;"           key="printkb"        observes="Editor:Print" value="&printCmd.label;"/>
       <menuseparator />
       <menuitem accesskey="&fileexit.accesskey;"            key="exitkb"         observes="Editor:Exit"/>
     </menupopup>
@@ -229,7 +234,7 @@
       <menuseparator />
       <menuitem accesskey="&editselectall.accesskey;"       key="selectallkb"    observes="Editor:SelectAll"/>
       <menuseparator />
-      <menuitem accesskey="&editfind.accesskey;"            key="findkb"         observes="Editor:Find"/>
+      <menuitem accesskey="&editfind.accesskey;"            key="findkb"         observes="Editor:Find" value="&findCmd.label;"/>
       <menuitem accesskey="&editfindnext.accesskey;"        key="findnextkb"     observes="Editor:FindNext"/>
       <menuseparator />
       <menuitem accesskey="&editcheckspelling.accesskey;"   key="checkspellingkb" observes="Editor:CheckSpelling"/>
@@ -240,14 +245,14 @@
     </menu>
 
     <!-- view menu items -->
-      <menu id="viewToolbar" value="&viewToolbarsMenu.label;" accesskey="viewToolbarsMenu.accesskey">
+      <menu id="viewToolbar" value="&viewToolbarsMenu.label;" accesskey="&viewToolbarsMenu.accesskey;">
         <menupopup> 
           <menuitem id="compToolbarMenuitem" accesskey="&viewcompositiontb.accesskey;" observes="Editor:ToggleCompositionToolbar"/>
           <menuitem id="formatToolbarMenuitem" accesskey="&viewformattingtb.accesskey;"  observes="Editor:ToggleFormattingToolbar"/>
           <menuitem id="editorTaskBar" value="&showTaskbarCmd.label;" accesskey="&showTaskbarCmd.accesskey;" oncommand="goToggleToolbar('taskbar','cmd_viewtaskbar');" checked="true"/>
         </menupopup>
       </menu>
-      <menuitem id="viewSourceMenuitem" value="&viewPageSource.label;" accesskey="&viewpagesource.accesskey;" oncommand="EditorViewSource();" />
+      <menuitem id="viewSourceMenuitem" value="&viewPageSource.label;" accesskey="&viewpagesource.accesskey;" oncommand="EditorViewSource();"/>
 
       <menu  id="charsetMenu" value="&dcharMenu.label;" accesskey="&viewcharsetmenu.accesskey;">
         <menupopup>
@@ -340,13 +345,13 @@
       <menuitem accesskey="&inserttable.accesskey;"                              observes="Editor:InsertTable"/>
       <menuitem accesskey="&insertsource.accesskey;" key="inserthtmlkb"          observes="Editor:InsertHTML"/>
       <menuseparator />
-      <menuitem accesskey="&insertlinebreak.accesskey;"                          observes="Editor:InsertBreak"/>
-      <menuitem accesskey="&insertbreak.accesskey;"                              observes="Editor:InsertBreakAll"/>
+      <menuitem accesskey="&insertlinebreak.accesskey;"  disabled="true"         observes="Editor:InsertBreak"/>
+      <menuitem accesskey="&insertbreak.accesskey;"      disabled="true"         observes="Editor:InsertBreakAll"/>
     </menupopup>
     </menu>
     
     <!-- Format Menu -->
-  <menupopup id="formatMenuPopup">
+  <menupopup id="formatMenuPopup" oncreate="EditorInitFormatMenu()">
     <!-- Font face submenu -->
     <menu id="fontFaceMenu" value="&fontfaceMenu.label;" 
           accesskey="&formatfontmenu.accesskey;" position="1">
@@ -465,7 +470,7 @@
           position="10">
     <menupopup>
       <menuitem value="&paragraphNormalCmd.label;"      accesskey="&paragraphnormal.accesskey;"     oncommand="EditorSetParagraphFormat('normal')"/>
-      <menuitem value="&paragraphParagraphCmd.label;"   accesskey="&paragraphparagraph.accesskey;"  oncommand="EditorSetParagraphFormat('p')"/>
+      <menuitem value="&paragraphParagraphCmd.label;"   accesskey="&paragraphparagraph.accesskey;"  oncommand="EditorSetParagraphFormat('p')" disabled="true"/>
       <menuitem value="&paragraphBlockquoteCmd.label;"  accesskey="&paragraphblockquote.accesskey;" oncommand="EditorSetParagraphFormat('blockquote')"/>
       <menuitem value="&paragraphAddressCmd.label;"     accesskey="&paragraphaddress.accesskey;"    oncommand="EditorSetParagraphFormat('address')"/>
       <menuitem value="&paragraphPreformatCmd.label;"   accesskey="&paragraphpreformat.accesskey;"  oncommand="EditorSetParagraphFormat('pre')"/>
@@ -484,7 +489,7 @@
     <!-- Stylesheet submenu -->
     <menu id="stylesheetMenu" value="&stylesheetMenu.label;"
           accesskey="&formatstylesheetmenu.accesskey;"
-          position="13">
+          position="13" hidden="true" disabled="true">
     <menupopup>
       <menuitem value="&stylesheetOldstyleCmd.label;"      accesskey="&ssoldstyle.accesskey;"    oncommand="EditorApplyStyleSheet('http://www.w3.org/StyleSheets/Core/Oldstyle')"/>
       <menuitem value="&stylesheetModernistCmd.label;"     accesskey="&ssmodernist.accesskey;"   oncommand="EditorApplyStyleSheet('http://www.w3.org/StyleSheets/Core/Modernist')"/>
@@ -519,20 +524,20 @@
               oncommand="EditorIndent('outdent')"
               position="17"/>
     <menuseparator position="18"/>
-    <menuitem id="objectProperties" value="&properties.label;"
-              accesskey="&properties.accesskey;"
-              oncommand="EditorObjectProperties()"
-              position="19"/>
-    <menuitem id="colorsAndBackground" value="&colorsAndBackground.label;"
-              accesskey="&colorsandbackground.accesskey;"
-              oncommand="EditorPageProperties('ColorTab')"
-              position="20"/>
-    <!-- Merge page property items here -->
+    <!-- Merge Table Menu and separator in Messenger Composer here -->
+    <!-- Merge property items here -->
   </menupopup>
 
+  <!-- Items to append at the bottom of the formatMenuPopup -->
+  <menuitem id="objectProperties" value="&properties.label;"
+            accesskey="&properties.accesskey;"
+            oncommand="EditorObjectProperties()"/>
   <menuitem id="pageProperties" value="&pageProperties.label;"
             accesskey="&pageproperties.accesskey;"
             oncommand="EditorPageProperties('GeneralTab')"/>
+  <menuitem id="colorsAndBackground" value="&colorsAndBackground.label;"
+            accesskey="&colorsandbackground.accesskey;"
+            oncommand="EditorPageProperties('ColorTab')"/>
 
   <menu id="tableMenu" value="&tableMenu.label;" accesskey="&tablemenu.accesskey;">
   <menupopup>
@@ -568,9 +573,9 @@
     </menupopup>
     </menu>
     <menuseparator />
-    <menuitem id="tableFixupMenuitem"      value="&tableFixup.label;"     accesskey="&tablefixup.accesskey;"   oncommand="EditorNormalizeTable()"/>
-    <menuitem id="tableJoinCellsMenuitem"  value="&tableJoinCells.label;" accesskey="&tablejoin.accesskey;"    oncommand="EditorJoinTableCells()"/>
-    <menuitem id="tablePropertiesMenuitem" value="&properties.label;"     accesskey="&properties.accesskey;"   oncommand="EditorInsertOrEditTable(false)"/>
+    <menuitem id="tableFixupMenuitem"      value="&tableFixup.label;"      accesskey="&tablefixup.accesskey;"   oncommand="EditorNormalizeTable()"/>
+    <menuitem id="tableJoinCellsMenuitem"  value="&tableJoinCells.label;"  accesskey="&tablejoin.accesskey;"    oncommand="EditorJoinTableCells()"/>
+    <menuitem id="tablePropertiesMenuitem" value="&tableProperties.label;" accesskey="&properties.accesskey;"   oncommand="EditorInsertOrEditTable(false)"/>
   </menupopup>
   </menu>
 
@@ -625,11 +630,12 @@
 
     <!-- Editor toolbar items -->
     <!-- note that we override the submenu item label "Blank Window" with "New" used for the menu -->
-    <titledbutton id="newButton"         class="button28" observes="cmd_newEditor" value="&newMenu.label;" />
-    <titledbutton id="openButton"        class="button28" observes="Editor:Open"/>
+    <titledbutton id="newButton"         class="button28" observes="cmd_newEditor"     value="&newMenu.label;" />
+    <titledbutton id="openButton"        class="button28" observes="Editor:Open"       value="&openToolbarCmd.label;"/>
     <titledbutton id="saveButton"        class="button28" observes="Editor:Save"/>
-    <titledbutton id="printButton"       class="other28"  observes="Editor:Print"/>
-    <titledbutton id="findButton"        class="other28"  observes="Editor:Find"/>
+    <titledbutton id="previewButton"     class="button28" observes="Editor:Preview"/>
+    <titledbutton id="printButton"       class="other28"  observes="Editor:Print"      value="&printToolbarCmd.label;"/>
+    <titledbutton id="findButton"        class="other28"  observes="Editor:Find"       value="&findToolbarCmd.label;"/>
     <titledbutton id="spellingButton"    class="other28"  value="&spellToolbarCmd.label;" onclick="CheckSpelling()"/>
 
     <titledbutton id="imageButton"       class="other28" value="&imageToolbarCmd.label;"  onclick="EditorInsertOrEditImage()"/>

@@ -505,6 +505,160 @@ nsHTMLEditorLog::SetBodyAttribute(const nsString& aAttr, const nsString& aValue)
 }
 
 NS_IMETHODIMP
+nsHTMLEditorLog:: InsertTableCell(PRInt32 aNumber, PRBool aAfter)
+{
+  nsAutoHTMLEditorLogLock logLock(this);
+
+  if (!mLocked && mFileSpec)
+  {
+    Write("window.editorShell.InsertTableCell(\"");
+    Write("\");\n");
+    Flush();
+  }
+
+  return nsHTMLEditor::InsertTableCell(aNumber, aAfter);
+}
+
+
+NS_IMETHODIMP
+nsHTMLEditorLog:: InsertTableColumn(PRInt32 aNumber, PRBool aAfter)
+{
+  nsAutoHTMLEditorLogLock logLock(this);
+
+  if (!mLocked && mFileSpec)
+  {
+    Write("window.editorShell.InsertTableColumn(\"");
+    Write("\");\n");
+    Flush();
+  }
+
+  return nsHTMLEditor::InsertTableColumn(aNumber, aAfter);
+}
+
+
+NS_IMETHODIMP
+nsHTMLEditorLog:: InsertTableRow(PRInt32 aNumber, PRBool aAfter)
+{
+  nsAutoHTMLEditorLogLock logLock(this);
+
+  if (!mLocked && mFileSpec)
+  {
+    Write("window.editorShell.InsertTableRow(\"");
+    Write("\");\n");
+    Flush();
+  }
+
+  return nsHTMLEditor::InsertTableRow(aNumber, aAfter);
+}
+
+NS_IMETHODIMP
+nsHTMLEditorLog:: DeleteTable()
+{
+  nsAutoHTMLEditorLogLock logLock(this);
+
+  if (!mLocked && mFileSpec)
+  {
+    Write("window.editorShell.DeleteTable();\n");
+    Flush();
+  }
+
+  return nsHTMLEditor::DeleteTable();
+}
+
+NS_IMETHODIMP
+nsHTMLEditorLog:: DeleteTableCell(PRInt32 aNumber)
+{
+  nsAutoHTMLEditorLogLock logLock(this);
+
+  if (!mLocked && mFileSpec)
+  {
+    Write("window.editorShell.DeleteTableCell(\"");
+    Write("\");\n");
+    Flush();
+  }
+
+  return nsHTMLEditor::DeleteTableCell(aNumber);
+}
+
+NS_IMETHODIMP
+nsHTMLEditorLog:: DeleteTableCellContents()
+{
+  nsAutoHTMLEditorLogLock logLock(this);
+
+  if (!mLocked && mFileSpec)
+  {
+    Write("window.editorShell.DeleteTableCellContents();\n");
+    Flush();
+  }
+
+  return nsHTMLEditor::DeleteTableCellContents();
+}
+
+
+NS_IMETHODIMP
+nsHTMLEditorLog:: DeleteTableColumn(PRInt32 aNumber)
+{
+  nsAutoHTMLEditorLogLock logLock(this);
+
+  if (!mLocked && mFileSpec)
+  {
+    Write("window.editorShell.DeleteTableColumn(\"");
+    Write("\");\n");
+    Flush();
+  }
+
+  return nsHTMLEditor::DeleteTableColumn(aNumber);
+}
+
+
+NS_IMETHODIMP
+nsHTMLEditorLog:: DeleteTableRow(PRInt32 aNumber)
+{
+  nsAutoHTMLEditorLogLock logLock(this);
+
+  if (!mLocked && mFileSpec)
+  {
+    Write("window.editorShell.DeleteTableRow(\"");
+    Write("\");\n");
+    Flush();
+  }
+
+  return nsHTMLEditor::DeleteTableRow(aNumber);
+}
+
+
+NS_IMETHODIMP
+nsHTMLEditorLog:: JoinTableCells()
+{
+  nsAutoHTMLEditorLogLock logLock(this);
+
+  if (!mLocked && mFileSpec)
+  {
+    Write("window.editorShell.JoinTableCells();\n");
+    Flush();
+  }
+
+  return nsHTMLEditor::JoinTableCells();
+}
+
+
+NS_IMETHODIMP
+nsHTMLEditorLog:: NormalizeTable(nsIDOMElement *aTable)
+{
+  nsAutoHTMLEditorLogLock logLock(this);
+
+  if (!mLocked && mFileSpec)
+  {
+    Write("window.editorShell.NormalizeTable(\"");
+    Write("\");\n");
+    Flush();
+  }
+
+  return nsHTMLEditor::NormalizeTable(aTable);
+}
+
+
+NS_IMETHODIMP
 nsHTMLEditorLog::MakeOrChangeList(const nsString& aListType)
 {
   nsAutoHTMLEditorLogLock logLock(this);
