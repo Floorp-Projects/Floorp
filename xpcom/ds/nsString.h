@@ -765,7 +765,7 @@ public:
 
 };
 
-#ifdef NEW_STRING_APIS
+#if 0//def NEW_STRING_APIS
 #ifndef STASTANDALONE_STRING_TESTS
 NS_DEF_NON_TEMPLATE_STRING_COMPARISON_OPERATORS(const nsCString&, const nsCString&);
 #endif
@@ -825,7 +825,7 @@ public:
     char mBuffer[kDefaultStringSize];
 };
 
-#ifdef NEW_STRING_APIS
+#if 0//def NEW_STRING_APIS
 NS_DEF_NON_TEMPLATE_STRING_COMPARISON_OPERATORS(const nsCAutoString&, const char*)
 NS_DEF_NON_TEMPLATE_STRING_COMPARISON_OPERATORS(const char*, const nsCAutoString&)
 #endif

@@ -393,7 +393,7 @@ operator==( const nsReadingIterator<CharT>& lhs, const nsReadingIterator<CharT>&
   {
     return lhs.operator->() == rhs.operator->();
   }
-
+#if 0
 template <class CharT>
 inline
 PRBool
@@ -401,7 +401,7 @@ operator!=( const nsReadingIterator<CharT>& lhs, const nsReadingIterator<CharT>&
   {
     return lhs.operator->() != rhs.operator->();
   }
-
+#endif
 
 #define NS_DEF_1_STRING_COMPARISON_OPERATOR(comp, T1, T2) \
   inline                                        \
@@ -670,7 +670,7 @@ inline
 int
 basic_nsAReadableString<CharT>::Compare( const CharT* rhs ) const
   {
-    return ::Compare(*this, basic_nsLiteralString<CharT>(rhs));
+    return ::Compare(*this, NS_STATIC_CAST(basic_nsAReadableString<CharT>, basic_nsLiteralString<CharT>(rhs)));
   }
 
 template <class CharT>
@@ -678,7 +678,7 @@ inline
 int
 basic_nsAReadableString<CharT>::Compare( const CharT* rhs, PRUint32 rhs_length ) const
   {
-    return ::Compare(*this, basic_nsLiteralString<CharT>(rhs, rhs_length));
+    return ::Compare(*this, NS_STATIC_CAST(basic_nsAReadableString<CharT>, basic_nsLiteralString<CharT>(rhs, rhs_length)));
   }
 
 
