@@ -1,5 +1,5 @@
 #############################################################################
-# $Id: Entry.pm,v 1.4 1998/07/30 22:12:24 leif Exp $
+# $Id: Entry.pm,v 1.5 1998/08/03 06:58:21 leif Exp $
 #
 # The contents of this file are subject to the Mozilla Public License
 # Version 1.0 (the "License"); you may not use this file except in
@@ -49,9 +49,9 @@ sub TIEHASH
 #############################################################################
 # Destructor, does nothing really...
 #
-sub DESTROY
-{
-}
+#sub DESTROY
+#{
+#}
 
 
 #############################################################################
