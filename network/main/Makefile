@@ -39,6 +39,7 @@ CSRCS		= \
 	mkselect.c	\
 	mksockrw.c	\
 	mksort.c	\
+	mkstream.c	\
 	mktrace.c	\
 	mkutils.c	\
 	prefetch.c	\
@@ -48,7 +49,6 @@ CSRCS		= \
 ifndef MODULAR_NETLIB
 CSRCS += \
 	mkinit.c	\
-	mkstream.c	\
 	$(NULL)
 endif
 

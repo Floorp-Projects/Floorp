@@ -57,9 +57,7 @@ OBJS=   \
 	.\$(OBJDIR)\mkselect.obj	\
 	.\$(OBJDIR)\mksockrw.obj	\
 	.\$(OBJDIR)\mksort.obj		\
-!ifndef MODULAR_NETLIB
 	.\$(OBJDIR)\mkstream.obj	\
-!endif
 	.\$(OBJDIR)\mktrace.obj		\
 	.\$(OBJDIR)\mkutils.obj		\
 	.\$(OBJDIR)\prefetch.obj	\
