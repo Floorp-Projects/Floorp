@@ -477,133 +477,184 @@ XFE_BrowserFrame::hideEditorToolbar()
     m_editorStyleToolbar->hide();
 }
 #endif /* ENDER */
-
+//////////////////////////////////////////////////////////////////////////
+//
+// isCommandEnabled()
+//
+//////////////////////////////////////////////////////////////////////////
 XP_Bool
-XFE_BrowserFrame::isCommandEnabled(CommandType cmd,
-								   void *calldata, XFE_CommandInfo*)
+XFE_BrowserFrame::isCommandEnabled(CommandType			cmd,
+								   void *				calldata,
+								   XFE_CommandInfo *	/* info */)
 {
-  if (cmd == xfeCmdToggleLocationToolbar
+	if (cmd == xfeCmdToggleLocationToolbar
 #ifdef OLD_PERSONALTOOLBAR
-      || cmd == xfeCmdTogglePersonalToolbar
+		|| cmd == xfeCmdTogglePersonalToolbar
 #endif /*OLD_PERSONALTOOLBAR*/
-      || cmd == xfeCmdToggleNavCenter
-      )
-    return True;
-  else
-    return XFE_Frame::isCommandEnabled(cmd, calldata);
+		|| cmd == xfeCmdToggleNavCenter
+		)
+	{
+		return True;
+	}
+	else if (cmd == xfeCmdClearUrlBar)
+	{
+		return (m_urlBar != NULL);
+	}
+	else
+	{
+		return XFE_Frame::isCommandEnabled(cmd, calldata);
+	}
 }
-
+//////////////////////////////////////////////////////////////////////////
+//
+// doCommand()
+//
+//////////////////////////////////////////////////////////////////////////
 void
-XFE_BrowserFrame::doCommand(CommandType cmd,
-                            void *calldata, XFE_CommandInfo* info)
+XFE_BrowserFrame::doCommand(CommandType			cmd,
+                            void *				calldata,
+							XFE_CommandInfo *	info)
 {
-  if (cmd == xfeCmdToggleLocationToolbar)
+	if (cmd == xfeCmdToggleLocationToolbar)
     {
-      if (m_urlBar)
+		if (m_urlBar)
         {
-          m_urlBar->toggleShowingState();
-		  
-		  // Configure the logo
-		  configureLogo();
-		  
-		  // Update prefs
-		  toolboxItemChangeShowing(m_urlBar);
-
-		  notifyInterested(XFE_View::chromeNeedsUpdating);
+			m_urlBar->toggleShowingState();
+			
+			// Configure the logo
+			configureLogo();
+			
+			// Update prefs
+			toolboxItemChangeShowing(m_urlBar);
+			
+			notifyInterested(XFE_View::chromeNeedsUpdating);
         }
-      return;
+		return;
     }
 #ifdef OLD_PERSONALTOOLBAR
-  else if (cmd == xfeCmdTogglePersonalToolbar)
+	else if (cmd == xfeCmdTogglePersonalToolbar)
     {
-      if (m_personalToolbar)
+		if (m_personalToolbar)
         {
-          m_personalToolbar->toggleShowingState();
-
-		  // Configure the logo
-		  configureLogo();
-		  
-		  // Update prefs
-		  toolboxItemChangeShowing(m_personalToolbar);
-
-		  notifyInterested(XFE_View::chromeNeedsUpdating);
+			m_personalToolbar->toggleShowingState();
+			
+			// Configure the logo
+			configureLogo();
+			
+			// Update prefs
+			toolboxItemChangeShowing(m_personalToolbar);
+			
+			notifyInterested(XFE_View::chromeNeedsUpdating);
         }
 
-      // XXX not implemented
-      return;
+		return;
     }
 #endif /*OLD_PERSONALTOOLBAR*/
-  else if (cmd == xfeCmdToggleNavCenter)
+	else if (cmd == xfeCmdToggleNavCenter)
     {
-      if (((XFE_BrowserView*)m_view)->isNavCenterShown())
-          ((XFE_BrowserView *)m_view)->hideNavCenter();
-      else
-        ((XFE_BrowserView *) m_view)->showNavCenter();
+		if (((XFE_BrowserView*)m_view)->isNavCenterShown())
+		{
+			((XFE_BrowserView *)m_view)->hideNavCenter();
+		}
+		else
+		{
+			((XFE_BrowserView *) m_view)->showNavCenter();
+		}
     }
+	else if (cmd == xfeCmdClearUrlBar)
+	{
+		XP_ASSERT( m_urlBar != NULL );
+		
+		if (m_urlBar == NULL)
+		{
+			XBell(XtDisplay(m_widget),100);
 
-  else
-    XFE_Frame::doCommand(cmd, calldata, info);
+			return;
+		}
+
+		m_urlBar->clearText();
+	}
+	else
+	{
+		XFE_Frame::doCommand(cmd, calldata, info);
+	}
 }
-
+//////////////////////////////////////////////////////////////////////////
+//
+// handlesCommand()
+//
+//////////////////////////////////////////////////////////////////////////
 XP_Bool
-XFE_BrowserFrame::handlesCommand(CommandType cmd,
-				 void *calldata, XFE_CommandInfo*)
+XFE_BrowserFrame::handlesCommand(CommandType		cmd,
+								 void *				calldata,
+								 XFE_CommandInfo *	/* info */)
 {
-  if (cmd == xfeCmdToggleLocationToolbar
+	if (cmd == xfeCmdToggleLocationToolbar
 #ifdef OLD_PERSONALTOOLBAR
-      || cmd == xfeCmdTogglePersonalToolbar
+		|| cmd == xfeCmdTogglePersonalToolbar
 #endif /*OLD_PERSONALTOOLBAR*/
-      || cmd == xfeCmdToggleNavCenter
-      )
-
-    return True;
-  else
-    return XFE_Frame::handlesCommand(cmd, calldata);
+		|| cmd == xfeCmdToggleNavCenter)
+	{
+		return True;
+	}
+	else if (cmd == xfeCmdClearUrlBar)
+	{
+		return (m_urlBar != NULL);
+	}
+	else
+	{
+		return XFE_Frame::handlesCommand(cmd, calldata);
+	}
 }
-
+//////////////////////////////////////////////////////////////////////////
+//
+// commandToString()
+//
+//////////////////////////////////////////////////////////////////////////
 char *
-XFE_BrowserFrame::commandToString(CommandType cmd,
-								  void *calldata, XFE_CommandInfo* info)
+XFE_BrowserFrame::commandToString(CommandType		cmd,
+								  void *			calldata,
+								  XFE_CommandInfo *	info)
 {
-#ifdef OLD_PERSONALTOOLBAR
-    if (cmd == xfeCmdTogglePersonalToolbar)
-    {
-      char *res = NULL;
-      
-      if (m_personalToolbar->isShown())
-        res = "hidePersonalToolbarCmdString";
-      else
-        res = "showPersonalToolbarCmdString";
-      
-      return stringFromResource(res);
-    }
-    else
-#endif /*OLD_PERSONALTOOLBAR*/
-        if (cmd == xfeCmdToggleLocationToolbar)
+	if (cmd == xfeCmdToggleLocationToolbar)
     {
         char *res = NULL;
-
+		
         if (m_urlBar->isShown())
             res = "hideLocationToolbarCmdString";
         else
             res = "showLocationToolbarCmdString";
-
+		
         return stringFromResource(res);
     }
-    else if (cmd == xfeCmdToggleNavCenter)
+	
+#ifdef OLD_PERSONALTOOLBAR
+    else if (cmd == xfeCmdTogglePersonalToolbar)
+    {
+		char *res = NULL;
+		
+		if (m_personalToolbar->isShown())
+			res = "hidePersonalToolbarCmdString";
+		else
+			res = "showPersonalToolbarCmdString";
+		
+		return stringFromResource(res);
+    }
+#endif /*OLD_PERSONALTOOLBAR*/
+	else if (cmd == xfeCmdToggleNavCenter)
     {
         char *res = NULL;
-
+		
         if (((XFE_BrowserView *)m_view)->isNavCenterShown())
             res = "hideNavCenterCmdString";
         else
             res = "showNavCenterCmdString";
-
+		
         return stringFromResource(res);
     }
-  else
+	else
     {
-      return XFE_Frame::commandToString(cmd, calldata, info);
+		return XFE_Frame::commandToString(cmd, calldata, info);
     }
 }
 

@@ -557,3 +557,7 @@ xfeCmdPersonalToolbarItemProperties                                personalToolb
 
 # Nav Center
 xfeCmdChangeRDFView		changeRDFVIEW
+
+# URL bar
+xfeCmdClearUrlBar		clearUrlBar
+
