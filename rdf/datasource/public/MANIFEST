@@ -3,6 +3,5 @@ nsILocalStore.h
 nsIRDFFileSystem.h
 nsIRDFFind.h
 nsIRDFFTP.h
-nsIRelatedLinksDataSource.h
 nsIXULContentSink.h
 
