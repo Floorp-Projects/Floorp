@@ -47,7 +47,7 @@ CPPSRCS		= \
 		nsFileSpecStreaming.cpp \
 		nsFileStream.cpp \
 		nsIFileStream.cpp \
-		nsIStringStream.cpp \
+		nsStringStream.cpp \
 		nsInputStreamTee.cpp \
 		nsLinebreakConverter.cpp \
 		nsLocalFileCommon.cpp \
@@ -82,7 +82,6 @@ EXPORTS		= \
 		nsFileSpecStreaming.h \
 		nsFileStream.h \
 		nsIFileStream.h \
-		nsIStringStream.h \
 		nsIUnicharInputStream.h \
 		nsLinebreakConverter.h \
 		nsLocalFile.h \
@@ -123,6 +122,7 @@ XPIDLSRCS	= \
 		nsISeekableStream.idl \
 		nsIStorageStream.idl \
 		nsIStreamBufferAccess.idl \
+		nsIStringStream.idl \
 		$(NULL)
 
 EXPORTS		:= $(addprefix $(srcdir)/, $(EXPORTS))

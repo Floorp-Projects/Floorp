@@ -40,7 +40,6 @@ EXPORTS =                               \
         nsFileSpecStreaming.h           \
         nsFileStream.h                  \
         nsIFileStream.h                 \
-        nsIStringStream.h               \
         nsIUnicharInputStream.h         \
         nsLinebreakConverter.h          \
         nsScriptableInputStream.h       \
@@ -73,6 +72,7 @@ XPIDLSRCS =                             \
         .\nsISeekableStream.idl         \
         .\nsIStorageStream.idl          \
         .\nsIStreamBufferAccess.idl     \
+        .\nsIStringStream.idl           \
         $(NULL)
 
 ################################################################################
@@ -95,7 +95,7 @@ CPP_OBJS =                                        \
         .\$(OBJDIR)\nsFileSpecStreaming.obj       \
         .\$(OBJDIR)\nsFileStream.obj              \
         .\$(OBJDIR)\nsIFileStream.obj             \
-        .\$(OBJDIR)\nsIStringStream.obj           \
+        .\$(OBJDIR)\nsStringStream.obj            \
         .\$(OBJDIR)\nsInputStreamTee.obj          \
         .\$(OBJDIR)\nsLinebreakConverter.obj      \
         .\$(OBJDIR)\nsLocalFileCommon.obj         \
