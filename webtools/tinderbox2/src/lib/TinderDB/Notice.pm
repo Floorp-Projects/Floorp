@@ -78,7 +78,7 @@ use Utils;
 use HTMLPopUp;
 use TinderDB::BasicTxtDB;
 
-$VERSION = ( qw $Revision: 1.17 $ )[1];
+$VERSION = ( qw $Revision: 1.18 $ )[1];
 
 @ISA = qw(TinderDB::BasicTxtDB);
 
@@ -122,7 +122,7 @@ EOF
 
 
 sub status_table_header {
-  return ("\t<th>Notices</th>\n");
+  return ("\t<th>Notes</th>\n");
 }
 
 
