@@ -29,17 +29,19 @@ DIRS	=
 
 OBJS	= $(CPPSRCS:.cpp=.o)
 
-EX_LIBS = $(DIST)/lib/libshell_s.a \
-	$(DIST)/bin/libxpcom.so	\
-	$(DIST)/bin/libreg.so	\
+EX_LIBS = \
+	$(DIST)/lib/libshell_s.a \
+	$(DIST)/bin/libshell.so \
 	$(DIST)/bin/libgfxunix.so	\
+	$(DIST)/bin/libwidgetunix.so	\
 	$(DIST)/bin/libraptorbase.so	\
 	$(DIST)/bin/libraptorgfx.so	\
-	$(DIST)/bin/libimg.so	\
-	$(DIST)/lib/libplc21.a	\
-	$(DIST)/lib/libplds21.a	\
-	$(DIST)/lib/libnspr21.a	\
-	$(DIST)/bin/libshell.so \
+	$(DIST)/bin/libxpcom.so	\
+	$(DIST)/bin/libreg.so	\
+	$(DIST)/bin/libnspr21.so	\
+	$(DIST)/bin/libplc21.so	\
+	$(DIST)/bin/libplds21.so	\
+	$(DIST)/bin/libnspr21.so	\
 	$(NULL)
 
 
