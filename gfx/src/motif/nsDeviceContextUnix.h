@@ -78,11 +78,12 @@ protected:
 
   nsDrawingSurfaceUnix * mSurface ;
 
-  PRUint32 mDepth;
-  Visual * mVisual;
-  PRBool   mWriteable;
-  PRUint32 mNumCells;
-  Colormap mColormap;
+  PRUint32      mDepth;
+  Visual      * mVisual;
+  PRBool        mWriteable;
+  PRUint32      mNumCells;
+  Colormap      mColormap;
+  nsPaletteInfo mPaletteInfo;
 
 public:
   void InstallColormap(void);
