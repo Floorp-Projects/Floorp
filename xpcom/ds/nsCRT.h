@@ -247,6 +247,8 @@ public:
 
   static PRBool IsLower(PRUnichar aChar);
 
+  static PRBool IsAscii(PRUnichar aChar);
+  static PRBool IsAscii(PRUnichar* aString);
   static PRBool IsAsciiAlpha(PRUnichar aChar);
   static PRBool IsAsciiDigit(PRUnichar aChar);
   static PRBool IsAsciiSpace(PRUnichar aChar);
