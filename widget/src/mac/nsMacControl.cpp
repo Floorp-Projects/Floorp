@@ -106,13 +106,17 @@ PRBool nsMacControl::OnPaint(nsPaintEvent &aEvent)
 
 		if (mBounds != mLastBounds)
 		{
-			mLastBounds = mBounds;
 			nsRect ctlRect;
 			GetRectForMacControl(ctlRect);
 			Rect macRect;
 			nsRectToMacRect(ctlRect, macRect);
-			::MoveControl(mControl, macRect.left, macRect.top);
-			::SizeControl(mControl, ctlRect.width, ctlRect.height);
+
+			if ((mBounds.x != mLastBounds.x) || (mBounds.y != mLastBounds.y))
+				::MoveControl(mControl, macRect.left, macRect.top);
+			if ((mBounds.width != mLastBounds.width) || (mBounds.height != mLastBounds.height))
+				::SizeControl(mControl, ctlRect.width, ctlRect.height);
+
+			mLastBounds = mBounds;
 		}
 
 		if (mValue != mLastValue)
@@ -138,6 +142,16 @@ PRBool nsMacControl::OnPaint(nsPaintEvent &aEvent)
 		::SetControlVisibility(mControl, isVisible, false);
 		::DrawOneControl(mControl);
 		::ValidRect(&(*mControl)->contrlRect);
+
+#if 0
+		RGBColor rgbRed = {65535, 0, 0};
+		::RGBForeColor(&rgbRed);
+		Rect macRect;
+		nsRectToMacRect(mBounds, macRect);
+		::OffsetRect(&macRect, -mBounds.x, -mBounds.y);
+		::InsetRect(&macRect, 1, 1);
+		::FrameRect(&macRect);
+#endif
 	}
 	return PR_FALSE;
 }
