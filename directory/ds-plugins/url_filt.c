@@ -1,6 +1,6 @@
 /*  -*- Mode: C; eval: (c-set-style "GNU") -*-
  ******************************************************************************
- * $Id: url_filt.c,v 1.1 2000/01/12 06:15:45 leif%netscape.com Exp $
+ * $Id: url_filt.c,v 1.2 2000/01/14 22:25:29 leif%netscape.com Exp $
  *
  * The contents of this file are subject to the Mozilla Public License
  * Version 1.1 (the "License"); you may not use this file except in
@@ -45,7 +45,7 @@
  *  Defines, for this particular plugin only.
  */
 #define PLUGIN_NAME	"url_filt"
-#define PLUGIN_VERS	"1.0"
+#define PLUGIN_VERS	"1.1"
 
 #define ERR_NOMATCH	"An entry does not match a server LDAP URL rule.\n"
 #define ERR_MATCH	"An entry already matches a server LDAP URL rule.\n"
@@ -55,28 +55,30 @@
  *  Typedefs and structures. Note that some of the members of this structure
  *  are for performance reason, e.g. the "len" fields.
  */
-typedef struct _UrlFilter
+typedef struct _URL_Filter
 {
   char *string;		/* Original LDAP URL string, not used.		*/
-  BOOL match;		/* Should we pass if URL matches (yes/no)?	*/
+  int match;		/* Should we pass if URL matches (yes/no)?	*/
   LDAPURLDesc *url;	/* The components of the URL, parsed.		*/
   char *dn;		/* The DN component.				*/
-  int dnLen;		/* Length of the DN component.			*/
+  int dn_len;		/* Length of the DN component.			*/
   char *search;		/* The LDAP filter/search component.		*/
-  int searchLen;	/* Length of the filter component.		*/
-  int numDNSubs;	/* The number of $$'s in the Base-DN		*/
-  int numSearchSubs;	/* The number of $$'s in the search filter.	*/
-  PluginAttrs *attrs;	/* Attributes to apply this filter to.		*/
-  struct _UrlFilter *next;
-} UrlFilter;
+  int search_len;	/* Length of the filter component.		*/
+  int num_dn_subs;	/* The number of $$'s in the Base-DN		*/
+  int num_search_subs;	/* The number of $$'s in the search filter.	*/
+  Plugin_Attrs *attrs;	/* Attributes to apply this filter to.		*/
+  struct _URL_Filter *next;
+} URL_Filter;
 
 
 /******************************************************************************
  *  Globals, "private" to this module.
  */
-PRIVATE int urlNumFilters = 0;		/* Number of filters we have.	*/
-PRIVATE UrlFilter *urlFilters = NULL;	/* Pointer to first filter.	*/
-PRIVATE Slapi_PluginDesc urlDesc = { PLUGIN_NAME, THE_AUTHOR, PLUGIN_VERS,
+PRIVATE int url_num_filters = 0;		/* Number of filters.	*/
+PRIVATE URL_Filter *url_filter_list = NULL;	/* List of filters.	*/
+PRIVATE Slapi_PluginDesc urlDesc = { PLUGIN_NAME,
+				     "Leif Hedstrom",
+				     PLUGIN_VERS,
 				     "LDAP URL filter plugin" };
 PRIVATE char *urlAttrs[2] = { "dn", NULLCP };
 
@@ -85,7 +87,7 @@ PRIVATE char *urlAttrs[2] = { "dn", NULLCP };
  *  Count the number of $$'s in a string, if any.
  */
 PRIVATE int
-urlCountSubs(char *str)
+count_subs(char *str)
 {
   int count = 0;
 
@@ -103,7 +105,7 @@ urlCountSubs(char *str)
  *  of doing this (remember, the $$ can occur more than once)...
  */
 PRIVATE INLINE char *
-urlDoSubs(char *str, int len, char *val, int valLen)
+do_subs(char *str, int len, char *val, int valLen)
 {
   char *sub, *tmp;
 
@@ -137,52 +139,52 @@ urlDoSubs(char *str, int len, char *val, int valLen)
  *  Setup a filter structure, used when parsing the plugin arguments from the
  *  registration routien.
  */
-PRIVATE BOOL
-urlCreateFilter(UrlFilter *filter, char *attributes, char *string)
+PRIVATE int
+create_filter(URL_Filter *filter, char *attributes, char *string)
 {
   int res;
 
   if (!filter || filter->attrs || !attributes || !string)
-    return FALSE;
+    return 0;
 
   if (!(filter->string = slapi_ch_strdup(string)))
-    return FALSE;
+    return 0;
 
-  if (!(filter->attrs = parseAttributes(attributes)))
+  if (!(filter->attrs = parse_attributes(attributes)))
     {
       slapi_ch_free((void **)&(filter->string));
 
-      return FALSE;
+      return 0;
     }
 
   /* Parse the URL, and make sure it's of proper syntax.		*/
   if ((res = ldap_url_parse(filter->string, &(filter->url))))
     {
       /* Produce a proper Error Message... */
-      freeAttributes(filter->attrs);
+      free_attributes(filter->attrs);
 
-      return FALSE;
+      return 0;
     }
 
   /* Let's fill in some more stuff about the filter.			*/
   filter->dn = filter->url->lud_dn;
   filter->search = filter->url->lud_filter;
 
-  filter->dnLen = strlen(filter->dn);
-  filter->searchLen = strlen(filter->search);
-  filter->numDNSubs = urlCountSubs(filter->dn);
-  filter->numSearchSubs = urlCountSubs(filter->search);
+  filter->dn_len = strlen(filter->dn);
+  filter->search_len = strlen(filter->search);
+  filter->num_dn_subs = count_subs(filter->dn);
+  filter->num_search_subs = count_subs(filter->search);
 
-  return TRUE;
+  return 1;
 }
 
 
 /******************************************************************************
  *  Perform the URL LDAP test, and set the return code properly if we do have
- *  have a violation. Return TRUE if we did run trigger a rule.
+ *  have a violation. Return 1 if we did run trigger a rule.
  */
-PRIVATE INLINE BOOL
-urlTestFilter(Slapi_PBlock *pb, UrlFilter *filter, char *type, char *value,
+PRIVATE INLINE int
+test_filter(Slapi_PBlock *pb, URL_Filter *filter, char *type, char *value,
 	      int len)
 {
   Slapi_PBlock *resPB;
@@ -191,22 +193,22 @@ urlTestFilter(Slapi_PBlock *pb, UrlFilter *filter, char *type, char *value,
   int res, retval;
 
   /* Let's first do the appropriate substitutions, on DN and Filters.	*/
-  if (filter->numDNSubs)
+  if (filter->num_dn_subs)
     {
-      if (!(tmpDN = urlDoSubs(filter->dn, filter->dnLen +
-			      filter->numDNSubs * len, value, len)))
-	return FALSE;
+      if (!(tmpDN = do_subs(filter->dn, filter->dn_len +
+			      filter->num_dn_subs * len, value, len)))
+	return 0;
     }
   else
     tmpDN = filter->dn;
-  if (filter->numSearchSubs)
+  if (filter->num_search_subs)
     {
-      if (!(tmpSearch = urlDoSubs(filter->search, filter->searchLen +
-				  filter->numSearchSubs * len, value, len)))
+      if (!(tmpSearch = do_subs(filter->search, filter->search_len +
+				  filter->num_search_subs * len, value, len)))
 	{
 	  slapi_ch_free((void **)&tmpDN);
 
-	  return FALSE;
+	  return 0;
 	}
     }
   else
@@ -237,37 +239,37 @@ urlTestFilter(Slapi_PBlock *pb, UrlFilter *filter, char *type, char *value,
   else
     res = LDAP_OPERATIONS_ERROR;
 
-  retval = FALSE;
+  retval = 0;
   if ((!res && !filter->match) || (res && filter->match))
     {
       slapi_log_error(LOG_FACILITY, PLUGIN_NAME,
 		      "Violation: %s on '%s: %s'\n",
 		      filter->string, type, value);
-      sendConstraintErr(pb, filter->match ? ERR_NOMATCH : ERR_MATCH);
+      send_constraint_err(pb, filter->match ? ERR_NOMATCH : ERR_MATCH);
 
-      retval = TRUE;
+      retval = 1;
     }
 
-  if (filter->numDNSubs)
+  if (filter->num_dn_subs)
     slapi_ch_free((void **)&tmpDN);
-  if (filter->numSearchSubs)
+  if (filter->num_search_subs)
     slapi_ch_free((void **)&tmpSearch);
 
   return retval;
 }
 
-PRIVATE INLINE BOOL
-urlLoopBValues(Slapi_PBlock *pb, UrlFilter *filter, BerVal **bvals, char *type)
+PRIVATE INLINE int
+loop_ber_values(Slapi_PBlock *pb, URL_Filter *filter, BerVal **bvals, char *type)
 {
   while (*bvals)
     {
-      if (urlTestFilter(pb, filter, type, (*bvals)->bv_val, (*bvals)->bv_len))
-	return TRUE;
+      if (test_filter(pb, filter, type, (*bvals)->bv_val, (*bvals)->bv_len))
+	return 1;
 
       bvals++;
     }
 
-  return FALSE;
+  return 0;
 }
 
 
@@ -275,18 +277,18 @@ urlLoopBValues(Slapi_PBlock *pb, UrlFilter *filter, BerVal **bvals, char *type)
  *  Handle ADD operations.
  */
 PUBLIC int
-urlAddFilter(Slapi_PBlock *pb)
+eval_add_filter(Slapi_PBlock *pb)
 {
-  UrlFilter *filter;
-  PluginAttrs *attrs;
+  URL_Filter *filter;
+  Plugin_Attrs *attrs;
   Slapi_Entry *entry;
   Slapi_Attr *att;
   BerVal **bvals;
 
-  if (!getAddEntry(pb, &entry, PLUGIN_NAME))
+  if (!get_add_entry(pb, &entry, PLUGIN_NAME))
     return (-1);
 
-  filter = urlFilters;
+  filter = url_filter_list;
   while (filter)
     {
       attrs = filter->attrs;
@@ -295,7 +297,7 @@ urlAddFilter(Slapi_PBlock *pb)
 	  if (!slapi_entry_attr_find(entry, attrs->type, &att))
 	    {
 	      slapi_attr_get_values(att, &bvals);
-	      if (urlLoopBValues(pb, filter, bvals, attrs->type))
+	      if (loop_ber_values(pb, filter, bvals, attrs->type))
 		return (-1);
 	    }
 	  attrs = attrs->next;
@@ -311,23 +313,23 @@ urlAddFilter(Slapi_PBlock *pb)
  *  Handle MOD operations.
  */
 PUBLIC int
-urlModFilter(Slapi_PBlock *pb)
+eval_mod_filter(Slapi_PBlock *pb)
 {
-  UrlFilter *filter;
+  URL_Filter *filter;
   LDAPMod **mods, *mod;
 
-  if (!getModifyMods(pb, &mods, PLUGIN_NAME))
+  if (!get_modify_mods(pb, &mods, PLUGIN_NAME))
     return (-1);
 
   while ((mod = *mods))
     {
       if (!(mod->mod_op & LDAP_MOD_DELETE))
 	{
-	  filter = urlFilters;
+	  filter = url_filter_list;
 	  while (filter)
 	    {
-	      if (listHasAttribute(filter->attrs, mod->mod_type) &&
-		  urlLoopBValues(pb, filter, mod->mod_bvalues, mod->mod_type))
+	      if (list_has_attribute(filter->attrs, mod->mod_type) &&
+		  loop_ber_values(pb, filter, mod->mod_bvalues, mod->mod_type))
 		return (-1);
 
 	      filter = filter->next;
@@ -344,17 +346,17 @@ urlModFilter(Slapi_PBlock *pb)
  *  Register the pre-op functions.
  */
 PUBLIC int
-urlPlugInit(Slapi_PBlock *pb)
+url_filter_init(Slapi_PBlock *pb)
 {
   char **argv;
   int argc;
-  UrlFilter *new, *last;
+  URL_Filter *new, *last;
 
-  if (!getSlapiArgs(pb, &argc, &argv, 3, PLUGIN_NAME))
+  if (!get_slapi_args(pb, &argc, &argv, 3, PLUGIN_NAME))
     return (-1);
 
   /* Allocate memory for the new Filter rule.				*/
-  if (!(new = (UrlFilter *)slapi_ch_malloc(sizeof(UrlFilter))))
+  if (!(new = (URL_Filter *)slapi_ch_malloc(sizeof(URL_Filter))))
     {
       slapi_log_error(LOG_FACILITY, PLUGIN_NAME, ERR_MALLOC);
 
@@ -362,10 +364,10 @@ urlPlugInit(Slapi_PBlock *pb)
     }
 
   /* Create the new filter, using the filter options in argv.		*/
-  new->next = (UrlFilter *)NULL;
-  new->attrs = (PluginAttrs *)NULL;
-  new->match = (*(argv[1]) == '0' ? FALSE : TRUE);
-  if (!urlCreateFilter(new, argv[0], argv[2]) || !new || !new->attrs)
+  new->next = (URL_Filter *)NULL;
+  new->attrs = (Plugin_Attrs *)NULL;
+  new->match = (*(argv[1]) == '0' ? 0 : 1);
+  if (!create_filter(new, argv[0], argv[2]) || !new || !new->attrs)
     {
       slapi_ch_free((void **)&new);
       slapi_log_error(LOG_FACILITY, PLUGIN_NAME, ERR_SYNTAX);
@@ -374,7 +376,7 @@ urlPlugInit(Slapi_PBlock *pb)
     }
 
   /* Find the last filter in the chain of filters, and link in the new. */
-  if ((last = urlFilters))
+  if ((last = url_filter_list))
     {
       while (last && last->next)
 	last = last->next;
@@ -382,18 +384,18 @@ urlPlugInit(Slapi_PBlock *pb)
       last->next = new;
     }
   else
-    urlFilters = new;
-  urlNumFilters++;
+    url_filter_list = new;
+  url_num_filters++;
 
   /* Ok, everything looks grovy, so let's register the filter, but
      only if we haven't done so already...				*/
-  if (urlNumFilters > 1)
+  if (url_num_filters > 1)
     return 0;
 
   if (slapi_pblock_set(pb, SLAPI_PLUGIN_VERSION, SLAPI_PLUGIN_VERSION_01) ||
       slapi_pblock_set(pb, SLAPI_PLUGIN_DESCRIPTION, &urlDesc) ||
-      slapi_pblock_set(pb, SLAPI_PLUGIN_PRE_MODIFY_FN, (void *)&urlModFilter) ||
-      slapi_pblock_set(pb, SLAPI_PLUGIN_PRE_ADD_FN, (void *)&urlAddFilter))
+      slapi_pblock_set(pb, SLAPI_PLUGIN_PRE_MODIFY_FN, (void *)&eval_mod_filter) ||
+      slapi_pblock_set(pb, SLAPI_PLUGIN_PRE_ADD_FN, (void *)&eval_add_filter))
     {
       slapi_log_error(LOG_FACILITY, PLUGIN_NAME, ERR_REG);
 

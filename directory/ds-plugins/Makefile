@@ -1,5 +1,5 @@
 ###############################################################################
-# $Id: Makefile,v 1.2 2000/01/12 06:26:59 leif%netscape.com Exp $
+# $Id: Makefile,v 1.3 2000/01/14 22:25:14 leif%netscape.com Exp $
 #
 # The contents of this file are subject to the Mozilla Public License
 # Version 1.1 (the "License"); you may not use this file except in
@@ -28,7 +28,7 @@
 ###############################################################################
 # Build configuration is done here!
 #
-DS		= /opt/suitespot/plugins/slapd/slapi
+#DS		= /opt/suitespot/plugins/slapd/slapi
 DS		= /server/server4/plugins/slapd/slapi
 
 ETAGS		= etags
@@ -66,10 +66,9 @@ INCLUDE		= -I. -I$(DS)/include
 CFLAGS		= $(FLAGS) $(OPT) $(INCLUDE) $(SH_OPTS)
 LDFLAGS		= $(LD_OPTS)
 
-TARGETS		= rex_filt.so url_filt.so comb_filt.so quick_auth.so \
-		  uid_auth.so
+TARGETS		= rex_filt.so url_filt.so
 INCFILES	= lulu.h
-CFILES		= rex_filt.c url_filt.c lulu.c quick_auth.c uid_auth.c
+CFILES		= rex_filt.c url_filt.c lulu.c
 MISCFILES	= Makefile
 
 
@@ -86,15 +85,6 @@ rex_filt.so:	rex_filt.o lulu.o lulu.h
 
 url_filt.so:	url_filt.o lulu.o lulu.h
 	$(LD) $(LDFLAGS) -o $@ url_filt.o lulu.o
-
-comb_filt.so:	rex_filt.o url_filt.o lulu.o lulu.h
-	$(LD) $(LDFLAGS) -o $@ rex_filt.o url_filt.o lulu.o
-
-quick_auth.so:	quick_auth.o lulu.o lulu.h
-	$(LD) $(LDFLAGS) -o $@ quick_auth.o lulu.o
-
-uid_auth.so:	uid_auth.o lulu.o lulu.h
-	$(LD) $(LDFLAGS) -o $@ uid_auth.o lulu.o
 
 
 ###############################################################################

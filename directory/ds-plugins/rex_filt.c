@@ -1,7 +1,6 @@
 /*  -*- Mode: C; eval: (c-set-style "GNU") -*-
- */
  ******************************************************************************
- * $Id: rex_filt.c,v 1.2 2000/01/12 06:27:00 leif%netscape.com Exp $
+ * $Id: rex_filt.c,v 1.3 2000/01/14 22:25:27 leif%netscape.com Exp $
  *
  * The contents of this file are subject to the Mozilla Public License
  * Version 1.1 (the "License"); you may not use this file except in
@@ -33,139 +32,47 @@
  *    * Support the /.../i  syntax, for case insensitive regexps.
  *
  *****************************************************************************/
-#include <stdio.h>
-#include <string.h>
-#include <stdlib.h>
-#include <ctype.h>
-#include <sys/types.h>
-#include <slapi-plugin.h>
-#include <regex.h>
 
-#define LOG_FACILITY	SLAPI_LOG_PLUGIN
+#include <stdio.h>
+#include <regex.h>
+#include "lulu.h"
+
+/******************************************************************************
+ *  Defines, for this particular plugin only.
+ */
 #define PLUGIN_NAME	"rex_filter"
+#define PLUGIN_VERS	"1.1"
 
 #define ERR_NOMATCH	"An attribute does not match a server regex rule.\n"
 #define ERR_MATCH	"An attribute matches a server regex rule.\n"
 
-#define ERR_MALLOC	"Can't allocate memory, which is a Bad Thing(tm).\n"
-#define ERR_NOMODS	"Could not get the modifications.\n"
-#define ERR_NOENTRY	"Could not get entry.\n"
 
-#ifdef __GNUC__
-#  define INLINE inline
-#else /* not __GNUC__ */
-#  define INLINE
-#endif /* __GNUC__     */
-
-typedef struct berval BerVal;
-
-typedef struct _Rex_Filter_Attrs
-{
-  char *type;
-  char first;
-  int len;
-  struct _Rex_Filter_Attrs *next;
-} Rex_Filter_Attrs;
-
+/******************************************************************************
+ *  Typedefs and structures. Note that some of the members of this structure
+ *  are for performance reason, e.g. the "len" fields.
+ */
 typedef struct _Rex_Filter
 {
   char *string;
   char *attributes;
   regex_t *regex;
   int match;
-  Rex_Filter_Attrs *attrs;
+  Plugin_Attrs *attrs;
   struct _Rex_Filter *next;
 } Rex_Filter;
 
+
+/******************************************************************************
+ *  Globals, "private" to this module.
+ */
 static int rex_num_filters = 0;
 static Rex_Filter *rex_filter_list = NULL;
 static Slapi_PluginDesc rex_descript = { PLUGIN_NAME,
 					 "Leif Hedstrom",
-					 "1.0",
+					 PLUGIN_VERS,
 					 "Regex filter plugin" };
 
-static int
-free_attributes(Rex_Filter_Attrs *attrs)
-{
-  Rex_Filter_Attrs *cur;
 
-  if (!attrs)
-    return 0;
-
-  while (attrs)
-    {
-      cur = attrs;
-      attrs = cur->next;
-      slapi_ch_free((void **)&cur);
-    }
-
-  return 1;
-}
-
-static Rex_Filter_Attrs *
-parse_attributes(char *str)
-{
-  char *tmp;
-  Rex_Filter_Attrs *cur, *ret;
-
-  if (!str)
-    return (Rex_Filter_Attrs *)NULL;
-
-  tmp = str;
-  while (*tmp)
-    {
-      *tmp = tolower((int)*tmp);
-      tmp++;
-    }
-  if (!(ret = (Rex_Filter_Attrs *)slapi_ch_malloc(sizeof(Rex_Filter_Attrs))))
-    return (Rex_Filter_Attrs *)NULL;
-
-  cur = ret;
-  tmp = strtok(str, ",");
-  while (tmp)
-    {
-      if (!cur)
-	{
-	  free_attributes(ret);
-	  return (Rex_Filter_Attrs *)NULL;
-	}
-
-      cur->type = tmp;
-      cur->first = *tmp;
-      cur->len = strlen(tmp);
-
-      if ((tmp = strtok(NULL, ",")))
-	cur->next = (Rex_Filter_Attrs *)
-	  slapi_ch_malloc(sizeof(Rex_Filter_Attrs));
-      else
-	cur->next = (Rex_Filter_Attrs *)NULL;
-
-      cur = cur->next;
-    }
-
-  return ret;
-}
-
-static INLINE int
-list_has_attribute(Rex_Filter_Attrs *attrs, char *type)
-{
-  int len;
-
-  if (!attrs || !type)
-    return 0;
-
-  len = strlen(type);
-  while (attrs)
-    {
-      if ((attrs->first == *type) &&
-	  (attrs->len == len) && (!strcmp(attrs->type, type)))
-	return 1;
-
-      attrs = attrs->next;
-    }
-
-  return 0;
-}
 
 static int
 create_filter(Rex_Filter *filter, char *attributes, char *string)
@@ -230,7 +137,7 @@ int
 eval_add_filter(Slapi_PBlock *pb)
 {
   Rex_Filter *filter;
-  Rex_Filter_Attrs *attrs;
+  Plugin_Attrs *attrs;
   Slapi_Entry *entry;
   Slapi_Attr *att;
   BerVal **bvals;
@@ -331,7 +238,7 @@ rex_filter_init(Slapi_PBlock *pb)
     }
 
   new->next = (Rex_Filter *)NULL;
-  new->attrs = (Rex_Filter_Attrs *)NULL;
+  new->attrs = (Plugin_Attrs *)NULL;
   new->match = (*(argv[1]) == '0' ? 0 : 1);
   if (!create_filter(new, argv[0], argv[2]) || !new->attrs)
     {

@@ -1,6 +1,6 @@
 /*  -*- Mode: C; eval: (c-set-style "GNU") -*-
  ******************************************************************************
- * $Id: lulu.h,v 1.2 2000/01/12 06:27:00 leif%netscape.com Exp $
+ * $Id: lulu.h,v 1.3 2000/01/14 22:25:23 leif%netscape.com Exp $
  *
  * The contents of this file are subject to the Mozilla Public License
  * Version 1.1 (the "License"); you may not use this file except in
@@ -35,7 +35,6 @@
  *  Configurations, you might want to look at these...
  */
 #define LOG_FACILITY	SLAPI_LOG_PLUGIN
-#define THE_AUTHOR	"IS-Architorture"
 
 
 /******************************************************************************
@@ -59,7 +58,6 @@
 #define STATIC static
 
 #define NULLCP (char *)NULL
-
 #define ATTR_SEPARATOR	","
 
 
@@ -76,17 +74,13 @@
 /******************************************************************************
  *  Typedefs and structures.
  */
-typedef int BOOL;
-#define TRUE (1)
-#define FALSE (0)
-
-typedef struct _PluginAttrs
+typedef struct _Plugin_Attrs
 {
   char *type;		/* Name/type of the attribute, all lower case.	*/
   char first;		/* First character in the attribute name.	*/
   int len;		/* Length of the name/string.			*/
-  struct _PluginAttrs *next;
-} PluginAttrs;
+  struct _Plugin_Attrs *next;
+} Plugin_Attrs;
 
 typedef struct berval BerVal;
 
@@ -94,12 +88,12 @@ typedef struct berval BerVal;
 /******************************************************************************
  *  Public functions.
  */
-PUBLIC PluginAttrs *parseAttributes(char *);
-PUBLIC BOOL listHasAttribute(PluginAttrs *, char *);
-PUBLIC BOOL freeAttributes(PluginAttrs *);
-PUBLIC BOOL sendConstraintErr(Slapi_PBlock *, char *);
-PUBLIC BOOL sendOperationsErr(Slapi_PBlock *, char *);
-PUBLIC BOOL getAddEntry(Slapi_PBlock *, Slapi_Entry **, char *);
-PUBLIC BOOL getModifyMods(Slapi_PBlock *, LDAPMod ***, char *);
-PUBLIC BOOL getSlapiArgs(Slapi_PBlock *, int *, char ***, int, char *);
-PUBLIC int setSimpleAuthInfo(Slapi_PBlock *, char *, char *, char *);
+PUBLIC Plugin_Attrs *parse_attributes(char *);
+PUBLIC int list_has_attribute(Plugin_Attrs *, char *);
+PUBLIC int free_attributes(Plugin_Attrs *);
+PUBLIC int send_constraint_err(Slapi_PBlock *, char *);
+PUBLIC int send_operations_err(Slapi_PBlock *, char *);
+PUBLIC int get_add_entry(Slapi_PBlock *, Slapi_Entry **, char *);
+PUBLIC int get_modify_mods(Slapi_PBlock *, LDAPMod ***, char *);
+PUBLIC int get_slapi_args(Slapi_PBlock *, int *, char ***, int, char *);
+PUBLIC int set_simple_auth_info(Slapi_PBlock *, char *, char *, char *);
