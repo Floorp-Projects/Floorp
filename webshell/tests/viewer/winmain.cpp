@@ -35,6 +35,8 @@
 #include "nsIScriptContextOwner.h"
 #include "nsITimer.h"
 
+#include "nsIBrowserWindow.h"
+#include "plevent.h"
 
 #include <fstream.h>
 #include "nsIParser.h"
@@ -453,6 +455,9 @@ RunViewer(HANDLE instance, HANDLE prevInstance, LPSTR cmdParam, int nCmdShow, ns
 
 void main(int argc, char **argv)
 {
+#ifdef XP_PC
+  PL_InitializeEventsLib("");
+#endif
   nsWin32Viewer* viewer = new nsWin32Viewer();
   viewer->ProcessArguments(argc, argv);
   RunViewer(GetModuleHandle(NULL), NULL, 0, SW_SHOW, viewer);
