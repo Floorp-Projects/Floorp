@@ -74,6 +74,7 @@
 #include "nsVoidArray.h"
 #include "nsIScrollableFrame.h"
 #include "nsIDOMEventTarget.h"
+#include "nsIDOMNSEvent.h"
 #include "nsGUIEvent.h"
 #ifdef ACCESSIBILITY
 #include "nsIAccessibilityService.h"
@@ -2551,8 +2552,13 @@ nsListControlFrame::MouseUp(nsIDOMEvent* aMouseEvent)
     if (IsInDropDownMode() == PR_TRUE) {
       if (!IsClickingInCombobox(aMouseEvent)) {
         aMouseEvent->PreventDefault();
-        aMouseEvent->PreventCapture();
-        aMouseEvent->PreventBubble();
+
+        nsCOMPtr<nsIDOMNSEvent> nsevent(do_QueryInterface(aMouseEvent));
+
+        if (nsevent) {
+          nsevent->PreventCapture();
+          nsevent->PreventBubble();
+        }
       } else {
         CaptureMouseEvents(mPresContext, PR_FALSE);
         return NS_OK;
@@ -2597,8 +2603,14 @@ nsListControlFrame::MouseUp(nsIDOMEvent* aMouseEvent)
       IsOptionDisabled(selectedIndex, isDisabled);
       if (isDisabled) {
         aMouseEvent->PreventDefault();
-        aMouseEvent->PreventCapture();
-        aMouseEvent->PreventBubble();
+
+        nsCOMPtr<nsIDOMNSEvent> nsevent(do_QueryInterface(aMouseEvent));
+
+        if (nsevent) {
+          nsevent->PreventCapture();
+          nsevent->PreventBubble();
+        }
+
         CaptureMouseEvents(mPresContext, PR_FALSE);
         return NS_ERROR_FAILURE;
       }
@@ -2725,8 +2737,13 @@ nsListControlFrame::MouseDown(nsIDOMEvent* aMouseEvent)
     if (IsInDropDownMode()) {
       if (!IsClickingInCombobox(aMouseEvent)) {
         aMouseEvent->PreventDefault();
-        aMouseEvent->PreventCapture();
-        aMouseEvent->PreventBubble();
+
+        nsCOMPtr<nsIDOMNSEvent> nsevent(do_QueryInterface(aMouseEvent));
+
+        if (nsevent) {
+          nsevent->PreventCapture();
+          nsevent->PreventBubble();
+        }
       } else {
         return NS_OK;
       }
@@ -3068,8 +3085,13 @@ nsListControlFrame::KeyPress(nsIDOMEvent* aKeyEvent)
           mComboboxFrame->IsDroppedDown(&isDroppedDown);
           mComboboxFrame->ShowDropDown(!isDroppedDown);
           aKeyEvent->PreventDefault();
-          aKeyEvent->PreventCapture();
-          aKeyEvent->PreventBubble();
+
+          nsCOMPtr<nsIDOMNSEvent> nsevent(do_QueryInterface(aKeyEvent));
+
+          if (nsevent) {
+            nsevent->PreventCapture();
+            nsevent->PreventBubble();
+          }
         }
       }
 #endif
@@ -3093,9 +3115,14 @@ nsListControlFrame::KeyPress(nsIDOMEvent* aKeyEvent)
   } else {
     return rv;
   }
-      
-  // We are handling this so don't let it bubble up
-  aKeyEvent->PreventBubble();
+
+  nsCOMPtr<nsIDOMNSEvent> nsevent(do_QueryInterface(aKeyEvent));
+
+  if (nsevent) {
+    // We are handling this so don't let it bubble up
+
+    nsevent->PreventBubble();
+  }
 
   // this is the new index to set
   // DOM_VK_RETURN & DOM_VK_ESCAPE will not set this
@@ -3175,7 +3202,7 @@ nsListControlFrame::KeyPress(nsIDOMEvent* aKeyEvent)
 
     default: { // Select option with this as the first character
                // XXX Not I18N compliant
-      code = (PRUint32)nsCRT::ToLower((PRUnichar)code);
+      code = (PRUint32)nsCRT::ToLower((char)code);
       PRInt32 selectedIndex;
       GetSelectedIndex(&selectedIndex);
       if (selectedIndex == kNothingSelected) {

@@ -44,6 +44,7 @@
 #include "nsIDOMEventReceiver.h"
 #include "nsIDOMEventListener.h"
 #include "nsIDOMNSUIEvent.h"
+#include "nsIDOMNSEvent.h"
 #include "nsGUIEvent.h"
 
 // Drag & Drop, Clipboard
@@ -156,8 +157,13 @@ nsMenuBarListener::KeyUp(nsIDOMEvent* aKeyEvent)
 
     PRBool active = mMenuBarFrame->IsActive();
     if (active) {
-      aKeyEvent->PreventBubble();
-      aKeyEvent->PreventCapture();
+      nsCOMPtr<nsIDOMNSEvent> nsevent(do_QueryInterface(aKeyEvent));
+
+      if (nsevent) {
+        nsevent->PreventBubble();
+        nsevent->PreventCapture();
+      }
+
       aKeyEvent->PreventDefault();
       return NS_ERROR_BASE; // I am consuming event
     }
@@ -186,6 +192,8 @@ nsMenuBarListener::KeyPress(nsIDOMEvent* aKeyEvent)
   if (mAccessKey)
   {
     nsCOMPtr<nsIDOMNSUIEvent> nsUIEvent = do_QueryInterface(aKeyEvent);
+    nsCOMPtr<nsIDOMNSEvent> nsevent(do_QueryInterface(aKeyEvent));
+
     PRBool preventDefault;
 
     nsUIEvent->GetPreventDefault(&preventDefault);
@@ -207,8 +215,11 @@ nsMenuBarListener::KeyPress(nsIDOMEvent* aKeyEvent)
         mMenuBarFrame->ShortcutNavigation(theChar, active);
 
         if (active) {
-          aKeyEvent->PreventBubble();
-          aKeyEvent->PreventCapture();
+          if (nsevent) {
+            nsevent->PreventBubble();
+            nsevent->PreventCapture();
+          }
+
           aKeyEvent->PreventDefault();
           
           retVal = NS_ERROR_BASE;       // I am consuming event
@@ -227,8 +238,11 @@ nsMenuBarListener::KeyPress(nsIDOMEvent* aKeyEvent)
           // In Windows, both of these activate the menu bar.
           mMenuBarFrame->ToggleMenuActiveState();
 
-          aKeyEvent->PreventBubble();
-          aKeyEvent->PreventCapture();
+          if (nsevent) {
+            nsevent->PreventBubble();
+            nsevent->PreventCapture();
+          }
+
           aKeyEvent->PreventDefault();
           return NS_ERROR_BASE; // consume the event
         }
