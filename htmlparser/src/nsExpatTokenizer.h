@@ -102,6 +102,8 @@ protected:
     const XML_Char *target, 
     const XML_Char *data);
   static void HandleDefault(void *userData, const XML_Char *s, int len);
+  static void HandleStartCdataSection(void *userData);
+  static void HandleEndCdataSection(void *userData);
   static void HandleUnparsedEntityDecl(void *userData, 
     const XML_Char *entityName, 
     const XML_Char *base, 

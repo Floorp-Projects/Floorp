@@ -138,6 +138,9 @@ void nsExpatTokenizer::SetupExpatCallbacks(void) {
     XML_SetExternalEntityRefHandler(mExpatParser, HandleExternalEntityRef);
     XML_SetCommentHandler(mExpatParser, HandleComment);
     XML_SetUnknownEncodingHandler(mExpatParser, HandleUnknownEncoding, NULL);
+    XML_SetCdataSectionHandler(mExpatParser, HandleStartCdataSection,
+                               HandleEndCdataSection);
+
     XML_SetDoctypeDeclHandler(mExpatParser, HandleStartDoctypeDecl, HandleEndDoctypeDecl);
   }
 }
@@ -399,31 +402,13 @@ void nsExpatTokenizer::HandleEndElement(void *userData, const XML_Char *name) {
 
 void nsExpatTokenizer::HandleCharacterData(void *userData, const XML_Char *s, int len) { 
   CCDATASectionToken* currentCDataToken = (CCDATASectionToken*) userData;
-  PRBool StartOfCDataSection = (!currentCDataToken && len == 0);
-  PRBool EndOfCDataSection = (currentCDataToken && len == 0);
 
-  // Either create a new token (if not currently within a CDATA section) or add the
-  // current string from expat to the current CDATA token.
-
-  if (StartOfCDataSection) {
-    // Set up state so that we know that we are within a CDATA section.
-    currentCDataToken = (CCDATASectionToken*) gTokenRecycler->CreateTokenOfType(eToken_cdatasection,eHTMLTag_unknown);
-    XML_SetUserData(gExpatParser, (void *) currentCDataToken);
-  }
-  else if (EndOfCDataSection) {
-    // We've reached the end of the current CDATA section. Push the current CDATA token
-    // onto the token queue and reset state to being outside a CDATA section.
-    CToken* tempCDATAToken = (CToken*) currentCDataToken;
-    AddToken(tempCDATAToken,NS_OK,*gTokenDeque,gTokenRecycler);
-    currentCDataToken = 0;
-    XML_SetUserData(gExpatParser, 0);
-  }
-  else if (currentCDataToken) {
-    // While there exists a current CDATA token, keep appending all strings from expat into it.
+  if (currentCDataToken) {
+    // While there exists a current CDATA token, keep appending all strings
+    // from expat into it.
     nsString& theString = currentCDataToken->GetStringValueXXX();
     theString.Append((PRUnichar *) s,len);
-  }
-  else {
+  } else {
     CToken* newToken = 0;
 
     switch(s[0]){
@@ -460,6 +445,23 @@ void nsExpatTokenizer::HandleComment(void *userData, const XML_Char *name) {
   else{
     //THROW A HUGE ERROR IF WE CANT CREATE A TOKEN!
   }
+}
+
+void nsExpatTokenizer::HandleStartCdataSection(void *userData) {
+  CToken* cdataToken = gTokenRecycler->CreateTokenOfType(eToken_cdatasection,
+                                                         eHTMLTag_unknown);
+
+  XML_SetUserData(gExpatParser, (void *) cdataToken);
+}
+
+void nsExpatTokenizer::HandleEndCdataSection(void *userData) {
+  CToken* currentCDataToken = (CToken*) userData;
+
+  // We've reached the end of the current CDATA section. Push the current
+  // CDATA token onto the token queue 
+  AddToken(currentCDataToken,NS_OK,*gTokenDeque,gTokenRecycler);
+
+  XML_SetUserData(gExpatParser, nsnull);
 }
 
 void nsExpatTokenizer::HandleProcessingInstruction(void *userData, const XML_Char *target, const XML_Char *data){
