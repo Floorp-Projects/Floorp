@@ -82,7 +82,7 @@
       }
       var winhooksService = Components.classes["@mozilla.org/winhooks;1"].getService(Components.interfaces.nsIWindowsHooks);
       if (winhooksService) {
-        parent.isTurboEnabled = winhooksService.isStartupTurboEnabled();
+        parent.isTurboEnabled = winhooksService.isOptionEnabled("-turbo");
         document.getElementById("enableTurbo").checked = parent.isTurboEnabled;
       }
 
@@ -111,9 +111,9 @@
       var winhooksService = Components.classes["@mozilla.org/winhooks;1"].getService(Components.interfaces.nsIWindowsHooks);
       if (winhooksService && parent.isTurboEnabled != -1) {
         if (parent.isTurboEnabled)
-          winhooksService.startupTurboEnable();
+          winhooksService.startupAddOption("-turbo");
         else 
-          winhooksService.startupTurboDisable();
+          winhooksService.startupRemoveOption("-turbo");
         var appShell = Components.classes['@mozilla.org/appshell/appShellService;1'].getService();
         appShell = appShell.QueryInterface( Components.interfaces.nsIAppShellService );
         var nativeAppSupport = null;
