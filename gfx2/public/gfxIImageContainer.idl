@@ -95,6 +95,9 @@ interface gfxIImageContainer : nsISupports
 
   void clear();
 
+  void startAnimation();
+
+  void stopAnimation();
 
   /* animation stuff */
 

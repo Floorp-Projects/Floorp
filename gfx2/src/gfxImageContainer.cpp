@@ -139,7 +139,7 @@ NS_IMETHODIMP gfxImageContainer::AppendFrame(gfxIImageFrame *item)
         
         mTimer->Init(NS_STATIC_CAST(nsITimerCallback*, this),
                      //                     timeout, NS_PRIORITY_NORMAL, NS_TYPE_ONE_SHOT);
-                     timeout, NS_PRIORITY_NORMAL, NS_TYPE_REPEATING_PRECISE);
+                     timeout, NS_PRIORITY_NORMAL, NS_TYPE_REPEATING_SLACK);
       }
     }
   }
@@ -153,28 +153,6 @@ NS_IMETHODIMP gfxImageContainer::AppendFrame(gfxIImageFrame *item)
 
 /* void removeFrame (in gfxIImageFrame item); */
 NS_IMETHODIMP gfxImageContainer::RemoveFrame(gfxIImageFrame *item)
-{
-    return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-/* nsIEnumerator enumerate (); */
-NS_IMETHODIMP gfxImageContainer::Enumerate(nsIEnumerator **_retval)
-{
-    return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-/* void clear (); */
-NS_IMETHODIMP gfxImageContainer::Clear()
-{
-  return mFrames.Clear();
-}
-
-/* attribute long loopCount; */
-NS_IMETHODIMP gfxImageContainer::GetLoopCount(PRInt32 *aLoopCount)
-{
-    return NS_ERROR_NOT_IMPLEMENTED;
-}
-NS_IMETHODIMP gfxImageContainer::SetLoopCount(PRInt32 aLoopCount)
 {
     return NS_ERROR_NOT_IMPLEMENTED;
 }
@@ -194,9 +172,81 @@ NS_IMETHODIMP gfxImageContainer::DecodingComplete(void)
   return NS_OK;
 }
 
+/* nsIEnumerator enumerate (); */
+NS_IMETHODIMP gfxImageContainer::Enumerate(nsIEnumerator **_retval)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+/* void clear (); */
+NS_IMETHODIMP gfxImageContainer::Clear()
+{
+  return mFrames.Clear();
+}
+
+/* void startAnimation () */
+NS_IMETHODIMP gfxImageContainer::StartAnimation()
+{
+  if (mTimer)
+    return NS_OK;
+
+  printf("gfxImageContainer::StartAnimation()\n");
+
+  PRUint32 numFrames;
+  this->GetNumFrames(&numFrames);
+
+  if (numFrames > 0) {
+  
+    mTimer = do_CreateInstance("@mozilla.org/timer;1");
+
+    PRInt32 timeout;
+    nsCOMPtr<gfxIImageFrame> currentFrame;
+    this->GetCurrentFrame(getter_AddRefs(currentFrame));
+    currentFrame->GetTimeout(&timeout);
+    if (timeout != -1 &&
+        timeout >= 0) { // -1 means display this frame forever
+
+      mTimer->Init(NS_STATIC_CAST(nsITimerCallback*, this),
+                   timeout, NS_PRIORITY_NORMAL, NS_TYPE_REPEATING_SLACK);
+    }
+  }
+}
+
+/* void stopAnimation (); */
+NS_IMETHODIMP gfxImageContainer::StopAnimation()
+{
+  if (!mTimer)
+    return NS_OK;
+
+  printf("gfxImageContainer::StopAnimation()\n");
+
+  if (mTimer)
+    mTimer->Cancel();
+  
+  mTimer = nsnull;
+
+  // don't bother trying to change the frame (to 0, etc.) here.
+  // No one is listening.
+
+  return NS_OK;
+}
+
+/* attribute long loopCount; */
+NS_IMETHODIMP gfxImageContainer::GetLoopCount(PRInt32 *aLoopCount)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+NS_IMETHODIMP gfxImageContainer::SetLoopCount(PRInt32 aLoopCount)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+
 
 NS_IMETHODIMP_(void) gfxImageContainer::Notify(nsITimer *timer)
 {
+  NS_ASSERTION(mTimer == timer, "uh");
+
   nsCOMPtr<gfxIImageFrame> nextFrame;
   PRInt32 timeout = 100;
       
