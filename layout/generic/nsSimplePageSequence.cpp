@@ -50,6 +50,7 @@
 #include "nsIPrintSettings.h"
 #include "nsPageFrame.h"
 #include "nsIPrintPreviewContext.h"
+#include "nsIPrintContext.h"
 #include "nsStyleConsts.h"
 #include "nsIRegion.h"
 
@@ -235,6 +236,23 @@ nsSimplePageSequenceFrame::Reflow(nsIPresContext*          aPresContext,
   aStatus = NS_FRAME_COMPLETE;  // we're always complete
 
   nsCOMPtr<nsIPrintPreviewContext> ppContext = do_QueryInterface(aPresContext);
+
+  // See if we can get a Print Settings from the Context
+  if (!mPageData->mPrintSettings) {
+    if (ppContext) {
+      ppContext->GetPrintSettings(getter_AddRefs(mPageData->mPrintSettings));
+    } else {
+      nsCOMPtr<nsIPrintContext> prtContext = do_QueryInterface(aPresContext);
+      if (prtContext) {
+        prtContext->GetPrintSettings(getter_AddRefs(mPageData->mPrintSettings));
+      }
+    }
+  }
+
+  // now get out margins
+  if (mPageData->mPrintSettings) {
+    mPageData->mPrintSettings->GetMarginInTwips(mMargin);
+  }
 
   // *** Special Override ***
   // If this is a sub-sdoc (meaning it doesn't take the whole page)
