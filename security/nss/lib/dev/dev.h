@@ -35,7 +35,7 @@
 #define DEV_H
 
 #ifdef DEBUG
-static const char DEV_CVS_ID[] = "@(#) $RCSfile: dev.h,v $ $Revision: 1.9 $ $Date: 2001/10/12 17:54:47 $ $Name:  $";
+static const char DEV_CVS_ID[] = "@(#) $RCSfile: dev.h,v $ $Revision: 1.10 $ $Date: 2001/10/17 14:39:10 $ $Name:  $";
 #endif /* DEBUG */
 
 #ifndef DEVT_H
@@ -246,6 +246,12 @@ nssToken_AddRef
   NSSToken *tok
 );
 
+NSS_EXTERN NSSUTF8 *
+nssToken_GetName
+(
+  NSSToken *tok
+);
+
 /* Given a raw attribute template, import an object 
  * (certificate, public key, private key, symmetric key)
  */
@@ -293,6 +299,7 @@ nssToken_FindObjectByTemplate
   CK_ULONG ctsize
 );
 
+/* this is traverse not find */
 NSS_EXTERN PRStatus
 nssToken_FindCertificatesByTemplate
 (
