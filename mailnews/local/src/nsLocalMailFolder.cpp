@@ -2240,6 +2240,8 @@ NS_IMETHODIMP nsMsgLocalMailFolder::GetNewMessages(nsIMsgWindow *aWindow, nsIUrl
   {
     PRUint32 numFolders;
     rv = rootFolder->GetFoldersWithFlag(MSG_FOLDER_FLAG_INBOX, 1, &numFolders, getter_AddRefs(inbox));
+    if (!inbox)
+
   }
   nsCOMPtr<nsIMsgLocalMailFolder> localInbox = do_QueryInterface(inbox, &rv);
   if (NS_SUCCEEDED(rv) && localInbox)
@@ -2940,7 +2942,7 @@ nsresult nsMsgLocalMailFolder::CopyMessageTo(nsISupports *message,
 NS_IMETHODIMP
 nsMsgLocalMailFolder::MarkMsgsOnPop3Server(nsISupportsArray *aMessages, PRBool aDeleteMsgs)
 {
-  char      *uidl, *accountKey;
+  const char      *uidl, *accountKey;
   char      *header = nsnull;
   PRUint32  size = 0, len = 0;
   nsCOMPtr <nsIMsgDBHdr> hdr;
