@@ -45,6 +45,8 @@
 #include "nsCOMPtr.h"
 #include "nsIFileLocator.h"
 #include "nsFileLocations.h"
+#include "nsIMsgAccountManager.h"
+#include "nsINntpIncomingServer.h"
 
 #undef GetPort  // XXX Windows!
 #undef SetPort  // XXX Windows!
@@ -58,9 +60,11 @@ static NS_DEFINE_CID(kCNNTPNewsgroupCID, NS_NNTPNEWSGROUP_CID);
 static NS_DEFINE_CID(kCNNTPNewsgroupPostCID, NS_NNTPNEWSGROUPPOST_CID);
 static NS_DEFINE_CID(kCNetSupportDialogCID, NS_NETSUPPORTDIALOG_CID);   
 static NS_DEFINE_CID(kCPrefServiceCID, NS_PREF_CID); 
-static NS_DEFINE_IID(kIFileLocatorIID,      NS_IFILELOCATOR_IID);
 static NS_DEFINE_CID(kFileLocatorCID,       NS_FILELOCATOR_CID);
-                     
+static NS_DEFINE_CID(kMsgAccountManagerCID, NS_MSGACCOUNTMANAGER_CID);
+
+static NS_DEFINE_IID(kIFileLocatorIID,      NS_IFILELOCATOR_IID);
+                    
 nsNntpService::nsNntpService()
 {
     NS_INIT_REFCNT();
@@ -317,21 +321,80 @@ nsresult nsNntpService::CopyMessage(const char * aSrcMailboxURI, nsIStreamListen
 	return rv;
 }
 
+typedef struct _findNewsServerEntry {
+  const char *newsgroup;
+  nsINntpIncomingServer *server;
+} findNewsServerEntry;
+
+PRBool 
+nsNntpService::findNewsServerWithGroup(nsISupports *aElement, void *data)
+{
+	nsresult rv;
+
+	nsCOMPtr<nsINntpIncomingServer> newsserver = do_QueryInterface(aElement, &rv);
+	if (NS_FAILED(rv) || ! newsserver) return PR_TRUE;
+
+	nsCOMPtr<nsIMsgIncomingServer> server = do_QueryInterface(aElement, &rv);
+	if (NS_FAILED(rv) || ! server) return PR_TRUE;
+
+	findNewsServerEntry *entry = (findNewsServerEntry*) data;
+
+	nsCOMPtr<nsIFolder> folder;
+	rv  = server->GetRootFolder(getter_AddRefs(folder));
+	if (NS_FAILED(rv) || !folder ) return PR_TRUE;
+
+	nsCOMPtr<nsIMsgFolder> msgfolder = do_QueryInterface(folder, &rv);
+	if (NS_FAILED(rv) || !msgfolder) return PR_TRUE;
+
+	PRBool containsGroup = PR_FALSE;
+	rv = msgfolder->ContainsChildNamed((const char *)(entry->newsgroup), &containsGroup);
+	if (NS_FAILED(rv)) return PR_TRUE;
+
+	if (containsGroup) {	
+		entry->server = newsserver;
+		return PR_FALSE;            // stop on first find
+	}
+	else {
+		return PR_TRUE;
+	}
+}
+
+void 
+nsNntpService::FindServerWithNewsgroup(nsCString &host, nsCString &groupName)
+{
+	nsresult rv;
+
+ 	NS_WITH_SERVICE(nsIMsgAccountManager, accountManager, kMsgAccountManagerCID, &rv);
+	if (NS_FAILED(rv)) return;
+	nsCOMPtr<nsISupportsArray> servers;
+	
+	rv = accountManager->GetAllServers(getter_AddRefs(servers));
+	if (NS_FAILED(rv)) return;
+
+	findNewsServerEntry serverInfo;
+	serverInfo.server = nsnull;
+  	serverInfo.newsgroup = (const char *)groupName;
+
+	servers->EnumerateForwards(findNewsServerWithGroup, (void *)&serverInfo);
+	if (serverInfo.server) {
+		nsCOMPtr<nsIMsgIncomingServer> server = do_QueryInterface(serverInfo.server);
+		nsXPIDLCString thisHostname;
+  		rv = server->GetHostName(getter_Copies(thisHostname));
+		if (NS_FAILED(rv)) return;
+
+		host = (const char *)thisHostname;
+	}
+}
+
 nsresult nsNntpService::FindHostFromGroup(nsCString &host, nsCString &groupName)
 {
   nsresult rv = NS_OK;
   // host always comes in as ""
   NS_ASSERTION(host.IsEmpty(), "host is not empty");
   if (!host.IsEmpty()) return NS_ERROR_FAILURE;
-  
-  if (0) {
-    // groupName is "foobar"
-    // todo:  look for "foobar" in the newsrc files of all the hosts,
-    // starting with the default nntp host.
-    //
-    // for now, leave host blank so we'll just use the default nntp host.
-  }
-  
+ 
+  FindServerWithNewsgroup(host, groupName);
+
   if (host.IsEmpty()) {
     NS_WITH_SERVICE(nsIPref, prefs, kCPrefServiceCID, &rv);
     if (NS_FAILED(rv) || (!prefs)) {
@@ -355,7 +418,8 @@ nsresult nsNntpService::FindHostFromGroup(nsCString &host, nsCString &groupName)
     return NS_OK;
 }
 
-nsresult nsNntpService::DetermineHostForPosting(nsCString &host, const char *newsgroupsNames)
+nsresult 
+nsNntpService::DetermineHostForPosting(nsCString &host, const char *newsgroupsNames)
 {
   nsresult rv = NS_OK;
   
@@ -431,8 +495,10 @@ nsresult nsNntpService::DetermineHostForPosting(nsCString &host, const char *new
       else {
         // theRest is "group"
         rv = FindHostFromGroup(currentHost, str);
-        PR_FREEIF(list);
-        if (NS_FAILED(rv)) return rv;
+        if (NS_FAILED(rv)) {
+		PR_FREEIF(list);
+		return rv;
+	}
       }
 
       if (host.IsEmpty()) {
@@ -641,9 +707,7 @@ nsresult nsNntpService::PostMessage(nsIFileSpec *fileToPost, const char *newsgro
   
   if (NS_FAILED(rv) || (host.IsEmpty())) return rv;
 
-#ifdef DEBUG_NEWS
   printf("post to this host: %s\n",host.GetBuffer());
-#endif
 
   char *urlstr = PR_smprintf("%s/%s",kNewsRootURI,host.GetBuffer());
   nsCOMPtr<nsIMsgMailNewsUrl> mailnewsurl = do_QueryInterface(nntpUrl);

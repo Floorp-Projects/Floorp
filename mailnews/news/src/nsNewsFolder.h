@@ -67,7 +67,6 @@ public:
 	NS_IMETHOD Rename (const char *newName);
 	NS_IMETHOD Adopt(nsIMsgFolder *srcFolder, PRUint32 *outPos);
 
-  NS_IMETHOD GetChildNamed(const char* name, nsISupports ** aChild);
 	NS_IMETHODIMP GetAbbreviatedName(PRUnichar * *aAbbreviatedName);
 
   NS_IMETHOD GetFolderURL(char **url);

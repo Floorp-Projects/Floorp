@@ -58,11 +58,13 @@ protected:
   
   nsresult DetermineHostForPosting(nsCString &host, const char *newsgroupNames);
   nsresult FindHostFromGroup(nsCString &host, nsCString &groupName);
+  void FindServerWithNewsgroup(nsCString &host, nsCString &groupName);
   
   // a convience routine used to put together news urls.
   nsresult ConstructNntpUrl(const char * urlString, const char * newsgroupName, nsMsgKey key, nsIUrlListener *aUrlListener,  nsIURI ** aUrl);
   // a convience routine to run news urls
   nsresult RunNewsUrl (nsIURI * aUrl, nsISupports * aConsumer);
+  static PRBool findNewsServerWithGroup(nsISupports *aElement, void *data);
 };
 
 #endif /* nsNntpService_h___ */

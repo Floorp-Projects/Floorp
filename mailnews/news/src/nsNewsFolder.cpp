@@ -560,42 +560,6 @@ NS_IMETHODIMP nsMsgNewsFolder::Adopt(nsIMsgFolder *srcFolder, PRUint32 *outPos)
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
-NS_IMETHODIMP 
-nsMsgNewsFolder::GetChildNamed(const char *name, nsISupports ** aChild)
-{
-  NS_ASSERTION(aChild, "NULL child");
-
-  // will return nsnull if we can't find it
-  *aChild = nsnull;
-
-  nsCOMPtr <nsIMsgFolder> folder;
-
-  PRUint32 cnt;
-  nsresult rv = mSubFolders->Count(&cnt);
-  if (NS_FAILED(rv)) return rv;
-  PRUint32 count = cnt;
-
-  for (PRUint32 i = 0; i < count; i++) {
-    nsCOMPtr <nsISupports> supports;
-    supports = mSubFolders->ElementAt(i);
-
-    if(NS_SUCCEEDED(supports->QueryInterface(kISupportsIID, getter_AddRefs(folder)))) {
-      PRUnichar *folderName;
-      
-      folder->GetName(&folderName);
-      
-      // case-insensitive compare is probably LCD across OS filesystems
-      if (folderName && nsCRT::strcasecmp(folderName, name)!=0) {
-        *aChild = folder;
-        PR_FREEIF(folderName);
-        return NS_OK;
-      }
-      PR_FREEIF(folderName);
-    }
-  }
-  return NS_OK;
-}
-
 NS_IMETHODIMP nsMsgNewsFolder::GetAbbreviatedName(PRUnichar * *aAbbreviatedName)
 {
   nsresult rv = NS_OK;
@@ -878,10 +842,10 @@ NS_IMETHODIMP nsMsgNewsFolder::DeleteMessages(nsISupportsArray *messages,
   NS_WITH_SERVICE(nsINntpService, nntpService, kNntpServiceCID, &rv);
   
   if (NS_SUCCEEDED(rv) && nntpService) {
-    char *hostname;
+    char *hostname = nsnull;
     rv = GetHostname(&hostname);
     if (NS_FAILED(rv)) return rv;
-    PRUnichar *newsgroupname;
+    PRUnichar *newsgroupname = nsnull;
     rv = GetName(&newsgroupname);
 	nsCString asciiName(newsgroupname);
     if (NS_FAILED(rv)) {
