@@ -191,7 +191,10 @@ endif
 ####################################
 # CVS defines for PSM
 #
-PSM_CO_MODULE= mozilla/security/psm mozilla/security/manager mozilla/security/Makefile.in
+PSM_CO_MODULE= mozilla/security/manager
+ifndef MOZ_NSS_AUTOCONF
+PSM_CO_MODULE += mozilla/security/psm mozilla/security/Makefile.in
+endif
 PSM_CO_FLAGS := -P -A
 ifdef PSM_CO_TAG
   PSM_CO_FLAGS := $(PSM_CO_FLAGS) -r $(PSM_CO_TAG)
@@ -201,7 +204,23 @@ CVSCO_PSM = cvs $(CVS_FLAGS) co $(PSM_CO_FLAGS) $(CVS_CO_DATE_FLAGS) $(PSM_CO_MO
 ####################################
 # CVS defines for NSS
 #
-NSS_CO_MODULE= mozilla/security/nss mozilla/security/coreconf
+NSS_CO_MODULE = mozilla/security/nss \
+		mozilla/security/coreconf \
+		$(NULL)
+
+ifdef MOZ_NSS_AUTOCONF
+NSS_CO_MODULE += \
+		mozilla/security/build \
+		mozilla/security/Makefile.in \
+		mozilla/security/configure \
+		mozilla/security/configure.in \
+		mozilla/security/secmakefiles.sh \
+		mozilla/security/aclocal.m4 \
+		$(NULL)
+
+NSS_CO_TAG = NSS_AUTOCONF_BRANCH
+endif
+		
 NSS_CO_FLAGS := -P
 ifdef NSS_CO_TAG
    NSS_CO_FLAGS := $(NSS_CO_FLAGS) -r $(NSS_CO_TAG)
@@ -276,8 +295,10 @@ ifeq (,$(filter $(NSPRPUB_DIR), $(BUILD_MODULE_CVS)))
   CVSCO_NSPR :=
 endif
 ifeq (,$(filter security security/manager, $(BUILD_MODULE_CVS)))
+ifndef MOZ_NSS_AUTOCONF
   CVSCO_PSM :=
   CVSCO_NSS :=
+endif
 endif
 ifeq (,$(filter directory/c-sdk, $(BUILD_MODULE_CVS)))
   CVSCO_LDAPCSDK :=
@@ -292,9 +313,11 @@ ifeq (,$(filter modules/libpr0n, $(BUILD_MODULE_CVS)))
   CVSCO_IMGLIB2 :=
 endif
 else
+ifndef MOZ_NSS_AUTOCONF
   # Do not pull PSM/NSS by default
   CVSCO_PSM :=
   CVSCO_NSS :=
+endif
 endif
 
 ####################################
