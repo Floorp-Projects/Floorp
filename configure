@@ -105,7 +105,7 @@ ac_help="$ac_help
 ac_help="$ac_help
   --with-debug-modules    Enable/disable debug for specific modules only"
 ac_help="$ac_help
-  --with-dbgrinfo-modules    Enable/disable generation of debugger info for specific modules only"
+  --with-dbgrinfo-modules Enable/disable generation of debugger info for specific modules only"
 ac_help="$ac_help
   --with-extensions       Enable extensions (dirs in extensions/)"
 ac_help="$ac_help
