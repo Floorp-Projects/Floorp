@@ -2525,7 +2525,7 @@ NS_IMETHODIMP nsDocShell::DoURILoad(nsIURI* aURI, nsIURI* aReferrerURI,
       if(aPostData)
          {
          httpChannel->SetRequestMethod(HM_POST);
-         httpChannel->SetPostDataStream(aPostData);
+         httpChannel->SetUploadStream(aPostData);
          }
       // Set the referrer explicitly
       if(aReferrerURI) // Referrer is currenly only set for link clicks here.
