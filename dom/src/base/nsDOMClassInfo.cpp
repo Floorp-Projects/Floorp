@@ -3769,7 +3769,7 @@ nsHTMLDocumentSH::GetProperty(nsIXPConnectWrappedNative *wrapper,
 // HTMLElement helper
 
 // static
-JSBool
+JSBool JS_DLL_CALLBACK
 nsHTMLElementSH::ScrollIntoView(JSContext *cx, JSObject *obj, uintN argc,
                                 jsval *argv, jsval *rval)
 {
