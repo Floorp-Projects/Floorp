@@ -49,7 +49,7 @@ classic.jar:
         skin/classic/browser/newwindow-small.png      (skin/newwindow-small.png)
         skin/classic/browser/search-large.png         (skin/search-large.png)
         skin/classic/browser/go-large.png             (skin/go-large.png)
-        skin/classic/browser/bookmarks-icons.png      (skin/bookmarks-icons.png)
+        skin/classic/browser/bookmarks-menuicons.png  (skin/bookmarks-menuicons.png)
         skin/classic/browser/dropmarker.png           (skin/dropmarker.png)
         skin/classic/browser/close.png                (skin/close.png)
         skin/classic/browser/browser.xml              (skin/browser.xml)
