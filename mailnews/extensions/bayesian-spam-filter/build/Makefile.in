@@ -26,13 +26,13 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-MODULE		= msgmdn
-LIBRARY_NAME	= msgmdn
+MODULE		= bayesian
+LIBRARY_NAME	= bayesian
 META_COMPONENT = mail
 EXPORT_LIBRARY = 1
-SHORT_LIBNAME	= msgmdn
+SHORT_LIBNAME	= bayesian
 IS_COMPONENT	= 1
-MODULE_NAME	= nsMsgMdnModule
+MODULE_NAME	= nsBayesian
 REQUIRES	= xpcom \
 		  string \
 		  mailnews \
@@ -49,11 +49,11 @@ else
 EXTRA_DSO_LIBS = msgbaseutil
 endif
 
-CPPSRCS		= nsMsgMdnFactory.cpp
-EXPORTS		= nsMsgMdnCID.h
+CPPSRCS		= nsBayesianFilterFactory.cpp
+EXPORTS		= nsBayesianFilterCID.h
 
 SHARED_LIBRARY_LIBS = \
-		$(DIST)/lib/$(LIB_PREFIX)msgmdn_s.$(LIB_SUFFIX) \
+		$(DIST)/lib/$(LIB_PREFIX)bayesian_s.$(LIB_SUFFIX) \
 		$(NULL)
 
 EXTRA_DSO_LDOPTS = \
