@@ -59,6 +59,7 @@ SHARED_LIBRARY_LIBS = $(DIST)/lib/libxpwidgets_s.a
 EXTRA_DSO_LDOPTS = \
 		$(MOZ_COMPONENT_LIBS) \
 		-lgkgfx \
+		$(MOZ_JS_LIBS) \
 		$(NULL)
 
 ifndef MOZ_MONOLITHIC_TOOLKIT
