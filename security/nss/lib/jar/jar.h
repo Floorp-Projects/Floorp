@@ -42,6 +42,7 @@
 
 /* security includes */
 #include "cert.h"
+#include "hasht.h"
 
 /* nspr 2.0 includes */
 #include "prio.h"

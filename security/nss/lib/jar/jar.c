@@ -113,8 +113,6 @@ loser:
 
 void PR_CALLBACK JAR_destroy (JAR *jar)
   {
-  JAR *z;
-
   PORT_Assert( jar != NULL );
 
   if (jar == NULL)
@@ -394,7 +392,7 @@ void JAR_find_end (JAR_Context *ctx)
 int JAR_find_next (JAR_Context *ctx, JAR_Item **it)
   {
   JAR *jar;
-  ZZList *list;
+  ZZList *list = NULL;
 
   int finding;
 

@@ -217,7 +217,6 @@ int JAR_extract
   {
   int result;
 
-  JAR_FILE fp;
   JAR_Physical *phy;
 
   if (jar->fp == NULL && jar->filename)
@@ -744,6 +743,10 @@ static int jar_gen_index (JAR *jar, jarArch format, JAR_FILE fp)
     case jarArchTar:
       result = jar_listtar (jar, fp);
       break;
+
+    case jarArchGuess:
+    case jarArchNone:
+      return JAR_ERR_GENERAL;
     }
 
   JAR_FSEEK (fp, 0, (PRSeekWhence)0);
@@ -982,8 +985,6 @@ static int jar_listtar (JAR *jar, JAR_FILE fp)
 
   /* phy things */
 
-  ZZLink  *ent;
-  JAR_Item *it;
   JAR_Physical *phy;
 
   while (1)
