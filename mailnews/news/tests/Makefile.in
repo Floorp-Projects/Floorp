@@ -25,7 +25,7 @@ include $(DEPTH)/config/autoconf.mk
 MODULE=nntp
 LIBRARY_NAME=nntpTest
 
-DIRS = nntp
+# DIRS = nntp
 
 EXPORTS = \
 	$(NULL)
