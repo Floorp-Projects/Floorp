@@ -19,6 +19,7 @@
 #include "nsIContentDelegate.h"
 #include "nsIPresContext.h"
 #include "nsIPtr.h"
+#include "nsIScrollableView.h"
 #include "nsIStyleContext.h"
 #include "nsIView.h"
 #include "nsIViewManager.h"
@@ -28,6 +29,7 @@
 #include "nsViewsCID.h"
 
 static NS_DEFINE_IID(kStylePositionSID, NS_STYLEPOSITION_SID);
+static NS_DEFINE_IID(kIScrollableViewIID, NS_ISCROLLABLEVIEW_IID);
 
 NS_DEF_PTR(nsIStyleContext);
 
@@ -81,9 +83,23 @@ nsIView* AbsoluteFrame::CreateView(nsIFrame* aContainingBlock, const nsRect& aRe
     // Initialize the view
     NS_ASSERTION(nsnull != viewManager, "null view manager");
 
-    view->Init(viewManager, aRect, containingView);
-    viewManager->InsertChild(containingView, view, 0);
+    // See if the containing view is a scroll view
+    nsIScrollableView*  scrollView = nsnull;
+    nsresult            result;
+     
+    result = containingView->QueryInterface(kIScrollableViewIID, (void**)&scrollView);
+    if (NS_OK == result) {
+      nsIView* scrolledView = scrollView->GetScrolledView();
 
+      view->Init(viewManager, aRect, scrolledView);
+      viewManager->InsertChild(scrolledView, view, 0);
+      NS_RELEASE(scrolledView);
+      NS_RELEASE(scrollView);
+    } else {
+      view->Init(viewManager, aRect, containingView);
+      viewManager->InsertChild(containingView, view, 0);
+    }
+  
     NS_RELEASE(viewManager);
   }
   NS_RELEASE(containingView);
@@ -104,27 +120,26 @@ void AbsoluteFrame::ComputeViewsRect(nsIFrame* aContainingBlock, nsRect& aRect)
 
   // Compute the offset and size for the view based on the position properties
   nsStylePosition*  position = (nsStylePosition*)mStyleContext->GetData(kStylePositionSID);
-  nsRect            rect;
 
   if (NS_STYLE_POSITION_VALUE_AUTO == position->mLeftOffsetFlags) {
     // Left offset should be automatically computed
     if (NS_STYLE_POSITION_VALUE_AUTO == position->mWidthFlags) {
       // When both properties are 'auto' the width is the same as the width of
       // the containing block
-      rect.width = containingRect.width;
-      rect.x = 0;
+      aRect.width = containingRect.width;
+      aRect.x = 0;
 
     } else {
-      rect.width = position->mWidth;
-      rect.x = containingRect.width - rect.width;
+      aRect.width = position->mWidth;
+      aRect.x = containingRect.width - aRect.width;
     }
   } else {
-    rect.x = position->mLeftOffset;
+    aRect.x = position->mLeftOffset;
 
     if (NS_STYLE_POSITION_VALUE_AUTO == position->mWidthFlags) {
-      rect.width = containingRect.width - rect.x;
+      aRect.width = containingRect.width - aRect.x;
     } else {
-      rect.width = position->mWidth;
+      aRect.width = position->mWidth;
     }
   }
 
@@ -133,20 +148,20 @@ void AbsoluteFrame::ComputeViewsRect(nsIFrame* aContainingBlock, nsRect& aRect)
     if (NS_STYLE_POSITION_VALUE_AUTO == position->mHeightFlags) {
       // When both properties are 'auto' the height is the same as the height of
       // the containing block
-      rect.height = containingRect.height;
-      rect.y = 0;
+      aRect.height = containingRect.height;
+      aRect.y = 0;
 
     } else {
-      rect.height = position->mHeight;
-      rect.y = containingRect.height - rect.height;
+      aRect.height = position->mHeight;
+      aRect.y = containingRect.height - aRect.height;
     }
   } else {
-    rect.y = position->mTopOffset;
+    aRect.y = position->mTopOffset;
 
     if (NS_STYLE_POSITION_VALUE_AUTO == position->mHeightFlags) {
-      rect.height = containingRect.height - rect.y;
+      aRect.height = containingRect.height - aRect.y;
     } else {
-      rect.height = position->mHeight;
+      aRect.height = position->mHeight;
     }
   }
 }
