@@ -1221,16 +1221,18 @@ BasicTableLayoutStrategy::CalcPctAdjTableWidth(const nsHTMLReflowState& aReflowS
       if (eStyleUnit_Percent == cellPosition->mWidth.GetUnit()) {
         float percent = cellPosition->mWidth.GetPercentValue();
         if (percent > 0.0f) {
-          // calculate the preferred width of the cell based on fixWidth and desWidth
+          // calculate the preferred width of the cell based on fix, des, widths of the cols it spans
           nscoord cellDesWidth  = 0;
           float spanPct = percent / float(colSpan);
           for (PRInt32 spanX = 0; spanX < colSpan; spanX++) {
             nsTableColFrame* spanFrame = mTableFrame->GetColFrame(colX + spanX);
             if (!spanFrame) continue;
             cellDesWidth += spanFrame->GetWidth(DES_CON); // don't consider DES_ADJ
+            // crudely allocate pct values to the spanning cols so that we can check if they exceed 100 pct below
             rawPctValues[colX + spanX] = PR_MAX(rawPctValues[colX + spanX], spanPct);
           }
-          // figure the basis using the cell's desired width and percent
+          // consider the cell's preferred width 
+          cellDesWidth = PR_MAX(cellDesWidth, cellFrame->GetMaximumWidth());
           nscoord colBasis = nsTableFrame::RoundToPixel(NSToCoordRound((float)cellDesWidth / percent), aPixelToTwips);
           maxColBasis = PR_MAX(maxColBasis, colBasis);
         }
@@ -1278,11 +1280,11 @@ BasicTableLayoutStrategy::CalcPctAdjTableWidth(const nsHTMLReflowState& aReflowS
   // If there are no pct cells or cols, there is nothing to do.
   if ((0 == numPerCols) || (0.0f == perTotal)) {
     NS_ASSERTION(PR_FALSE, "invalid call");
-    return 0; 
+    return basis; 
   }
   // If there is only one col and it is % based, it won't affect anything
   if ((1 == numCols) && (numCols == numPerCols)) {
-    return 0; 
+    return basis; 
   }
 
   // compute a basis considering total percentages and the desired width of everything else
@@ -1321,104 +1323,14 @@ BasicTableLayoutStrategy::AssignPctColumnWidths(const nsHTMLReflowState& aReflow
   nscoord spacingX = mTableFrame->GetCellSpacingX();
   PRInt32 colX, rowX; 
 
-  nscoord basis; // basis to use for percentage based calculations
-  if (aTableIsAutoWidth) {
-    basis = CalcPctAdjTableWidth(aReflowState, aAvailWidth, aPixelToTwips);
-  }
-  else {
-    // For an auto table, determine the potentially new percent adjusted width based 
-    // on percent cells/cols. This probably should only be a NavQuirks thing, since
-    // a percentage based cell or column on an auto table should force the column to auto
-    basis = 0;                 
-    float* rawPctValues = new float[numCols]; // store the raw pct values, allow for spans past the effective numCols
-    if (!rawPctValues) return NS_ERROR_OUT_OF_MEMORY;
-    //XXX not sure if this really sets each element to 0.0f
-    //memset(rawPctValues, 0.0f, numCols * sizeof(float));
-    for (colX = 0; colX < numEffCols; colX++) {
-      rawPctValues[colX] = 0.0f;
-    }
+  NS_ASSERTION(NS_UNCONSTRAINEDSIZE != aAvailWidth, "AssignPctColumnWidths has unconstrained avail width");  
+  // For an auto table, determine the potentially new percent adjusted width based 
+  // on percent cells/cols. This probably should only be a NavQuirks thing, since
+  // a percentage based cell or column on an auto table should force the column to auto
+  nscoord basis = (aTableIsAutoWidth) 
+                  ? CalcPctAdjTableWidth(aReflowState, aAvailWidth, aPixelToTwips)
+                  : aAvailWidth;
 
-    for (colX = 0; colX < numCols; colX++) { 
-      nsTableColFrame* colFrame = mTableFrame->GetColFrame(colX);
-      if (!colFrame) continue;
-      nscoord maxColBasis = -1;
-      // Scan the cells in the col 
-      for (rowX = 0; rowX < numRows; rowX++) {
-        PRBool originates;
-        PRInt32 colSpan;
-        nsTableCellFrame* cellFrame = mTableFrame->GetCellInfoAt(rowX, colX, &originates, &colSpan);
-        if (!originates) { // skip  cells that don't originate in the col
-          continue;
-        }
-        // see if the cell has a style percent width specified
-        const nsStylePosition* cellPosition;
-        cellFrame->GetStyleData(eStyleStruct_Position, (const nsStyleStruct *&)cellPosition);
-        if (eStyleUnit_Percent == cellPosition->mWidth.GetUnit()) {
-          float percent = cellPosition->mWidth.GetPercentValue();
-          if (percent > 0.0f) {
-            // calculate the preferred width of the cell based on fixWidth and desWidth
-            nscoord cellDesWidth  = 0;
-            float spanPct = percent / float(colSpan);
-            for (PRInt32 spanX = 0; spanX < colSpan; spanX++) {
-              nsTableColFrame* spanFrame = mTableFrame->GetColFrame(colX + spanX);
-              if (!spanFrame) continue;
-              cellDesWidth += spanFrame->GetWidth(DES_CON); // don't consider DES_ADJ
-              rawPctValues[colX + spanX] = PR_MAX(rawPctValues[colX + spanX], spanPct);
-            }
-            // figure the basis using the cell's desired width and percent
-            nscoord colBasis = nsTableFrame::RoundToPixel(NSToCoordRound((float)cellDesWidth / percent), aPixelToTwips);
-            maxColBasis = PR_MAX(maxColBasis, colBasis);
-          }
-        }
-      }
-      if (-1 == maxColBasis) {
-        // see if the col has a style percent width specified
-        nsStyleCoord colStyleWidth = colFrame->GetStyleWidth();
-        if (eStyleUnit_Percent == colStyleWidth.GetUnit()) {
-          float percent = colStyleWidth.GetPercentValue();
-          maxColBasis = 0;
-          if (percent > 0.0f) {
-            rawPctValues[colX] = PR_MAX(rawPctValues[colX], percent);
-            nscoord desWidth = colFrame->GetWidth(DES_CON); // don't consider DES_ADJ
-            maxColBasis = nsTableFrame::RoundToPixel(NSToCoordRound((float)desWidth / percent), aPixelToTwips);
-          }
-        }
-      }
-      basis = PR_MAX(basis, maxColBasis);
-    } // end for (colX ..
-
-    float   perTotal         = 0.0f; // total of percentage constrained cols and/or cells in cols
-    PRInt32 numPerCols       = 0;    // number of colums that have percentage constraints
-    nscoord fixDesTotal      = 0;    // total of fix or des widths of cols 
-    nscoord fixDesTotalNoPct = 0;    // total of fix or des widths of cols without pct
-
-    for (colX = 0; colX < numEffCols; colX++) {
-      nsTableColFrame* colFrame = mTableFrame->GetColFrame(colX);
-      nscoord fixWidth = colFrame->GetFixWidth();
-      nscoord fixDesWidth = (fixWidth > 0) ? fixWidth : colFrame->GetDesWidth();
-      fixDesTotal += fixDesWidth;
-      if (rawPctValues[colX] + perTotal > 1.0f) {
-        rawPctValues[colX] = PR_MAX(1.0f - perTotal, 0.0f);
-      }
-      if (rawPctValues[colX] > 0.0f) {
-        numPerCols++;
-        perTotal += rawPctValues[colX];
-      }
-      else {
-        fixDesTotalNoPct += fixDesWidth;
-      }
-    }
-    delete [] rawPctValues; // destroy the raw pct values
-    // If there are no pct cells or cols, there is nothing to do.
-    if ((0 == numPerCols) || (0.0f == perTotal)) {
-      return WrapupAssignPctColumnWidths(mTableFrame, aReflowState, 0); 
-    }
-    // If there is only one col and it is % based, it won't affect anything
-    if ((1 == numCols) && (numCols == numPerCols)) {
-      return WrapupAssignPctColumnWidths(mTableFrame, aReflowState, 0); 
-    }
-    basis = aAvailWidth;
-  }
   // adjust the basis to exclude table border, padding and cell spacing
   nsMargin borderPadding = mTableFrame->GetBorderPadding(aReflowState);
   basis -= borderPadding.left + borderPadding.right + mCellSpacingTotal;
