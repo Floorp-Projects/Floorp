@@ -59,11 +59,9 @@ my $comment;
 
 $vars->{'form'} = \%::FORM;
 
-# We can't use ValidateOutputFormat here because it defaults to HTML.
-my $template_name = "bug/create/comment";
-$template_name .= ($::FORM{'format'} ? "-$::FORM{'format'}" : "");
+my $format = GetFormat("bug/create/comment", $::FORM{'format'}, "txt");
 
-$template->process("$template_name.txt.tmpl", $vars, \$comment)
+$template->process($format->{'template'}, $vars, \$comment)
   || ThrowTemplateError($template->error());
 
 ValidateComment($comment);

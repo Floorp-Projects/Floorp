@@ -363,7 +363,7 @@ $default{'querytype'} = $deforder || 'Importance';
 $vars->{'default'} = \%default;
 
 # Generate and return the UI (HTML page) from the appropriate template.
-my $format = ValidateOutputFormat($::FORM{'format'}, "search");
-print "Content-type: text/html\n\n";
-$template->process("search/$format->{'template'}", $vars)
+my $format = GetFormat("search/search", $::FORM{'format'}, $::FORM{'ctype'});
+print "Content-Type: $format->{'ctype'}\n\n";
+$template->process($format->{'template'}, $vars)
   || ThrowTemplateError($template->error());

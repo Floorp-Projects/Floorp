@@ -202,12 +202,13 @@ $vars->{'product'} = $product;
 $vars->{'products'} = \@::legal_product;
 
 
-my $format = ValidateOutputFormat($::FORM{'format'}, "duplicates", "reports");
+my $format = 
+  GetFormat("reports/duplicates", $::FORM{'format'}, $::FORM{'ctype'});
  
-print "Content-Type: $format->{'contenttype'}\n\n";
+print "Content-Type: $format->{'ctype'}\n\n";
 
 # Generate and return the UI (HTML page) from the appropriate template.
-$template->process("reports/$format->{'template'}", $vars)
+$template->process($format->{'template'}, $vars)
   || ThrowTemplateError($template->error());
 
 
