@@ -29,7 +29,7 @@
 #include "nsIPref.h"
 #include "nsIObserver.h"
 #include "nsWeakReference.h"
-#include "nsHashTable.h"
+#include "nsHashtable.h"
 
 class nsIDocument;
 class nsIScrollableView;
