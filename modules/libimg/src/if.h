@@ -22,7 +22,7 @@
 
 /*   if.h --- Top-level image library internal routines
  *
- * $Id: if.h,v 3.18 2000/02/12 01:49:35 pnunn%netscape.com Exp $
+ * $Id: if.h,v 3.19 2000/02/29 21:41:41 mkaply%us.ibm.com Exp $
  */
 
 #ifndef _if_h
@@ -62,7 +62,7 @@ typedef struct il_container_struct il_container;
 #include "il.h"
 
 
-#ifdef XP_WIN
+#if defined(XP_WIN) || defined(XP_OS2)
 #define _USD 1              /* scanlines upside-down */ 
 #endif
 
