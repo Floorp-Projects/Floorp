@@ -4,7 +4,6 @@ comm.jar:
 	content/editor/editor.xul                                (ui/composer/content/editor.xul) 
 	content/editor/TextEditorAppShell.xul                    (ui/composer/content/TextEditorAppShell.xul) 
 	content/editor/editor.js                                 (ui/composer/content/editor.js) 
-	content/editor/publish.js                                (ui/composer/content/publish.js) 
 	content/editor/publishprefs.js                           (ui/composer/content/publishprefs.js) 
 	content/editor/editorUtilities.js                        (ui/composer/content/editorUtilities.js) 
 	content/editor/ComposerCommands.js                       (ui/composer/content/ComposerCommands.js) 

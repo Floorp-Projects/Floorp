@@ -25,7 +25,6 @@
 editor.xul
 TextEditorAppShell.xul
 editor.js
-publish.js
 PublishPrefs.js
 ComposerCommands.js
 EditorCommandsDebug.js
