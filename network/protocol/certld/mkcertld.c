@@ -85,7 +85,9 @@ net_ProcessCertLdap(ActiveEntry *ce)
 	    ce->status = err;
 	}
 #ifdef XP_UNIX
+#ifdef MOZ_SECURITY
 	NET_ClearReadSelect(ce->window_id, connData->fd);
+#endif
 	NET_TotalNumberOfOpenConnections--;
 #else
         NET_ClearCallNetlibAllTheTime(ce->window_id, "mkcertld");
