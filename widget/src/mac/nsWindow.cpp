@@ -34,6 +34,9 @@
 #include "nsIEnumerator.h"
 #include <Appearance.h>
 
+#include "nsplugindefs.h"
+#include "nsMacEventHandler.h"
+
 NS_IMPL_ADDREF(ChildWindow);
 NS_IMPL_RELEASE(ChildWindow);
 
@@ -72,6 +75,8 @@ nsWindow::nsWindow() : nsBaseWidget() , nsDeleteObserved(this)
 
 	SetBackgroundColor(NS_RGB(255, 255, 255));
 	SetForegroundColor(NS_RGB(0, 0, 0));
+	
+	mPluginPort = nsnull;
 }
 
 
@@ -93,7 +98,11 @@ nsWindow::~nsWindow()
 	}
 			
 	NS_IF_RELEASE(mTempRenderingContext);
-  NS_IF_RELEASE(mMenuListener);
+	NS_IF_RELEASE(mMenuListener);
+	
+	if (mPluginPort != nsnull) {
+		delete mPluginPort;
+	}
 }
 
 
@@ -215,12 +224,12 @@ nsIWidget* nsWindow::GetParent(void)
 //-------------------------------------------------------------------------
 void* nsWindow::GetNativeData(PRUint32 aDataType)
 {
-		nsPoint		point;
-		void*			retVal = nsnull;
+	nsPoint		point;
+	void*		retVal = nsnull;
 
   switch (aDataType) 
 	{
-		case NS_NATIVE_WIDGET:
+	case NS_NATIVE_WIDGET:
     case NS_NATIVE_WINDOW:
     	retVal = (void*)this;
     	break;
@@ -249,6 +258,22 @@ void* nsWindow::GetNativeData(PRUint32 aDataType)
     	LocalToWindowCoordinate(point);
     	retVal = (void*)point.y;
     	break;
+    
+    case NS_NATIVE_PLUGIN_PORT:
+    	// this needs to be a combination of the port and the offsets.
+    	if (mPluginPort == nsnull)
+    		mPluginPort = new nsPluginPort;
+    		
+		point.MoveTo(mBounds.x, mBounds.y);
+		LocalToWindowCoordinate(point);
+
+		// for compatibility with 4.X, this origin is what you'd pass
+		// to SetOrigin.
+		mPluginPort->port = CGrafPtr(mWindowPtr);
+		mPluginPort->portx = -point.x;
+		mPluginPort->porty = -point.y;
+		
+    	retVal = (void*)mPluginPort;
 	}
 
   return retVal;
@@ -773,7 +798,7 @@ void nsWindow::UpdateWidget(nsRect& aRect, nsIRenderingContext* aContext)
 	paintEvent.eventStructType	= NS_PAINT_EVENT;		// nsEvent
 	paintEvent.message			= NS_PAINT;
 	paintEvent.widget			= this;					// nsGUIEvent
-	paintEvent.nativeMsg		= nsnull;
+	paintEvent.nativeMsg		= NULL;
 	paintEvent.renderingContext	= aContext;				// nsPaintEvent
 	paintEvent.rect				= &aRect;
 
@@ -912,7 +937,7 @@ NS_IMETHODIMP nsWindow::DispatchEvent(nsGUIEvent* event, nsEventStatus& aStatus)
 	    aStatus = (*mEventCallback)(event);
 
 		// Dispatch to event listener if event was not consumed
-	  if ((aStatus != nsEventStatus_eIgnore) && (mEventListener != nsnull))
+	  if ((aStatus != nsEventStatus_eConsumeNoDefault) && (mEventListener != nsnull))
 	    aStatus = mEventListener->ProcessEvent(*event);
 
 		NS_IF_RELEASE(aWidget);
