@@ -54,12 +54,14 @@ pull_platform:
 	cd $(MOZ_SRC)
 
 pull_julian:
+ifeq($(MOZ_ZULU_FREE),1)
 	cd $(MOZ_SRC); \
 	$(CVST) ns/client.mk; \
 	cd $(MOZ_SRC)/ns/.; \
 	$(CVST) -d config ns/clientconfig; \
 	cd $(MOZ_SRC); \
 	$(CVST) $(LIBNLS_BRANCH) $(LIBNLS_DIR); \
+endif
 	cd $(MOZ_SRC)
 
 pull_trex:
@@ -78,8 +80,10 @@ build_platform:
 
 
 build_julian:: 
+ifeq($(MOZ_ZULU_FREE),1)
 	cd $(MOZ_SRC)/ns/modules/libnls; \
 	gmake; \
+endif
 	cd $(MOZ_SRC)
 
 
