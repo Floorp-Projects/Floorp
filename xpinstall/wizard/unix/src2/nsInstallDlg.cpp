@@ -335,7 +335,7 @@ nsInstallDlg::XPIProgressCB(const char *aMsg, int aVal, int aMax)
 
     static int updates = 0;
     char msg[64];
-    char *colon = NULL, *lastSlash = NULL;
+    const char *colon = NULL, *lastSlash = NULL;
 
     if (aMax > 0)
     {
