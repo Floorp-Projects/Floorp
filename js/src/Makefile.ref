@@ -117,7 +117,7 @@ endif
 ifdef JS_READLINE
 # For those platforms with the readline library installed.
 DEFINES += -DEDITLINE
-PROG_LIBS += -lreadline
+PROG_LIBS += -lreadline -ltermcap
 else
 ifdef JS_EDITLINE
 # Use the editline library, built locally.
