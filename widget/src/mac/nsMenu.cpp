@@ -66,6 +66,8 @@ extern Handle gMDEF; // Our stub MDEF
 extern Handle gSystemMDEFHandle;
 PRInt16 mMacMenuIDCount = kMacMenuID;
 
+static PRBool gConstructingMenu = PR_FALSE;
+  
 // CIDs
 #include "nsWidgetsCID.h"
 static NS_DEFINE_CID(kMenuBarCID,  NS_MENUBAR_CID);
@@ -302,6 +304,7 @@ NS_METHOD nsMenu::AddMenuItem(nsIMenuItem * aMenuItem)
 	  nsString label;
 	  aMenuItem->GetLabel(label);
 	  //printf("%s \n", label.ToNewCString());
+	  //printf("%d = mMacMenuID\n", mMacMenuID);
 	  mNumMenuItems++;
 	  
 	  if(mIsHelpMenu) {
@@ -780,11 +783,13 @@ nsEventStatus nsMenu::MenuConstruct(
     void              * menuNode,
 	  void              * aWebShell)
 {
+  gConstructingMenu = PR_TRUE;
+  
   // reset destroy handler flag so that we'll know to fire it next time this menu goes away.
   mDestroyHandlerCalled = PR_FALSE;
   
-   //printf("nsMenu::MenuConstruct called for %s = %d \n", mLabel.ToNewCString(), mMacMenuHandle);
-   // Begin menuitem inner loop
+  //printf("nsMenu::MenuConstruct called for %s = %d \n", mLabel.ToNewCString(), mMacMenuHandle);
+  // Begin menuitem inner loop
   
   // Open the node.
   nsCOMPtr<nsIDOMElement> domElement = do_QueryInterface(mDOMNode);
@@ -803,7 +808,7 @@ nsEventStatus nsMenu::MenuConstruct(
   nsCOMPtr<nsIDOMNode> menuitemNode;
   menuPopupNode->GetFirstChild(getter_AddRefs(menuitemNode));
 
-	unsigned short menuIndex = 0;
+  unsigned short menuIndex = 0;
 
   // Fire our oncreate handler. If we're told to stop, don't build the menu at all
   PRBool keepProcessing = OnCreate();
@@ -836,13 +841,11 @@ nsEventStatus nsMenu::MenuConstruct(
     } // end menu item innner loop
   }
   
+  gConstructingMenu = PR_FALSE;
   //printf("  Done building, mMenuItemVoidArray.Count() = %d \n", mMenuItemVoidArray.Count());
   
   gCurrentMenuDepth--;
-    
-	//PreviousMenuStackUnwind(this, mMacMenuHandle);
-	//PushMenu(this);
-             
+              
   return nsEventStatus_eIgnore;
 }
 
@@ -1482,6 +1485,9 @@ nsMenu::AttributeChanged(
   PRInt32       aHint)
 {
   //printf("AttributeChanged\n");
+  
+  if(gConstructingMenu)
+    return NS_OK;
 
   nsCOMPtr<nsIAtom> openAtom = NS_NewAtom("open");
   if(aAttribute != openAtom.get()) {
@@ -1578,6 +1584,9 @@ nsMenu::ContentRemoved(
   nsIContent  * aChild,
   PRInt32       aIndexInContainer)
 {  
+  if(gConstructingMenu)
+    return NS_OK;
+    
   nsCOMPtr<nsIDOMElement> element(do_QueryInterface(mDOMNode));
   if(!element) {
     NS_ERROR("Unable to QI dom element.");

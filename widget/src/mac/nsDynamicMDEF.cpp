@@ -39,13 +39,9 @@ extern Handle gSystemMDEFHandle;
 RoutineDescriptorPtr gOriginaldesc;
 RoutineDescriptorPtr gmdefUPP;
 
-
-
-
-
 // Caching the Mac menu
 nsVoidArray gPreviousMenuHandleStack;
-nsVoidArray gPreviousMenuStack;
+nsVoidArray gPreviousMenuStack; // Strong references kept!
 
 nsIMenuBar * gCachedMacMenubar;
 
@@ -189,6 +185,8 @@ if (gPreviousMenuHandleStack.Count()) {
 		    listener->MenuDeselected(mevent);
 		    
 		    gPreviousMenuStack.RemoveElementAt(gPreviousMenuStack.Count() - 1);
+		    NS_IF_RELEASE(menu);
+		    
 	        //printf("%d items now on gPreviousMenuStack \n", gPreviousMenuStack.Count());
 	        gPreviousMenuHandleStack.RemoveElementAt(gPreviousMenuHandleStack.Count() - 1);
 	      
@@ -385,6 +383,8 @@ void nsPostBuild(nsIMenu * menu, MenuHandle theMenu, PRBool isChild)
 	// it is built now
 	if(isChild || (gPreviousMenuHandleStack[gPreviousMenuHandleStack.Count() - 1] != theMenu)) {
 	  nsPushMenu(menu);
+	  NS_IF_ADDREF(menu);
+	  
 	  nsPushMenuHandle(theMenu);
 	  
 	  //printf("Push: %d items in gMenuHandleStack \n", gMenuHandleStack.Count());
@@ -464,6 +464,8 @@ void nsPreviousMenuStackUnwind(nsIMenu * aMenuJustBuilt, MenuHandle aMenuHandleJ
 		    listener->MenuDeselected(mevent);
 		    
 		    gPreviousMenuStack.RemoveElementAt(gPreviousMenuStack.Count() - 1);
+		    NS_IF_RELEASE(menu);
+		    
 	        //printf("%d items now on gPreviousMenuStack \n", gPreviousMenuStack.Count());
 	        gPreviousMenuHandleStack.RemoveElementAt(gPreviousMenuHandleStack.Count() - 1);
 	      
@@ -491,76 +493,5 @@ void nsPopMenuHandle(MenuHandle * aMenu)
   *aMenu = (MenuHandle) gPreviousMenuHandleStack[gPreviousMenuHandleStack.Count() - 1];
   gPreviousMenuHandleStack.RemoveElementAt(gPreviousMenuHandleStack.Count() - 1);
 }
-
-/*
-//------------------------------------------------------------------------------
-void TestPreviousMenuStackUnwind(nsIMenu * aMenuJustBuilt, MenuHandle aMenuHandleJustBuilt)
-{
-  //printf("PreviousMenuStackUnwind called \n");
-  //printf("%d items on gPreviousMenuStack \n", gPreviousMenuStack.Count());
-  while (gPreviousMenuHandleStack.Count()) {
-    MenuHandle menuHandle = (MenuHandle) gPreviousMenuHandleStack[gPreviousMenuHandleStack.Count() - 1];
-    
-    //printf("  gPreviousMenuHandleStack.Count() = %d \n", gPreviousMenuHandleStack.Count()); 
-          
-    if( menuHandle != aMenuHandleJustBuilt) {
-            ::DeleteMenuItem(menuHandle, 3);
-            ::DeleteMenuItem(menuHandle, 2);
-            ::DeleteMenuItem(menuHandle, 1);
-            
-	        //printf("%d items now on gPreviousMenuStack \n", gPreviousMenuStack.Count());
-	        gPreviousMenuHandleStack.RemoveElementAt(gPreviousMenuHandleStack.Count() - 1);
-	      
-
-	  } else {
-        //printf("  gPreviousMenuHandleStack.Count() = %d \n", gPreviousMenuHandleStack.Count()); 
-	    return;
-	  }
-	}
-    //printf("  gPreviousMenuHandleStack.Count() = %d \n", gPreviousMenuHandleStack.Count()); 
-}
-
-//------------------------------------------------------------------------------
-void TestPostBuild(nsIMenu * menu, MenuHandle theMenu, PRBool isChild)
-{
-	// it is built now
-	if(isChild || (gPreviousMenuHandleStack[gPreviousMenuHandleStack.Count() - 1] != theMenu)) {
-	  PushMenuHandle(theMenu);
-	  
-	  //printf("Push: %d items in gMenuHandleStack \n", gMenuHandleStack.Count());
-	} 
-}
-
-//------------------------------------------------------------------------------
-void TestBuild(MenuHandle theMenu, PRBool isChild)
-{ 
-  // Add item
-  ::InsertMenuItem(theMenu, "\pFooItem", 1);
-  
-  // Add item with sub menu
-  ::InsertMenuItem(theMenu, "\pSubmenu", 2);
-
-  if(theMenu == gLevel2HierMenu) {
-    gCurrentMenuDepth = 3;
-  } else if(theMenu == gLevel3HierMenu) {
-    gCurrentMenuDepth = 4;
-  } else if(theMenu == gLevel4HierMenu) {
-    gCurrentMenuDepth = 5;
-  } else if(theMenu == gLevel5HierMenu) {
-    gCurrentMenuDepth = 6;
-  } else {
-    gCurrentMenuDepth = 2;
-  }
-  
-  ::SetMenuItemHierarchicalID(theMenu, 2, gCurrentMenuDepth);
-  // Add fake item to sub menu so we get the size message
-  ::DeleteMenuItem(::GetMenuHandle(gCurrentMenuDepth), 1);
-  ::InsertMenuItem(::GetMenuHandle(gCurrentMenuDepth), "\pFakeItem", 1);
-  
-  gCurrentMenuDepth--;
-  
-  TestPostBuild(nsnull, theMenu, isChild);
-}
-*/
 
 #pragma options align=reset
