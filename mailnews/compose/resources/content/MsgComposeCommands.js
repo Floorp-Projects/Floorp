@@ -1624,13 +1624,15 @@ function DetermineHTMLAction(convertible)
     {
         //Well, before we ask, see if we can figure out what to do for ourselves
         
-        var noHtmlRecipients = new String("");
+        var noHtmlRecipients;
         var noHtmlnewsgroups;
         var preferFormat;
 
         //Check the address book for the HTML property for each recipient
         try {
-            preferFormat = msgCompose.CheckAndPopulateRecipients(true, true, noHtmlRecipients);
+            var obj = new Object;
+            preferFormat = msgCompose.CheckAndPopulateRecipients(true, true, obj);
+            noHtmlRecipients = obj.value;
         } catch(ex)
         {
             var msgCompFields = msgCompose.compFields;
