@@ -64,7 +64,6 @@ CPP_OBJS =                            \
         .\$(OBJDIR)\nsDebug.obj       \
         .\$(OBJDIR)\nsAllocator.obj   \
         .\$(OBJDIR)\nsCOMPtr.obj      \
-        .\$(OBJDIR)\nsDebug.obj       \
         .\$(OBJDIR)\nsID.obj          \
         .\$(OBJDIR)\nsTraceRefcnt.obj \
         $(NULL)
