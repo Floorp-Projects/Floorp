@@ -40,8 +40,8 @@
 # Contributor(s): 
 
 
-# $Revision: 1.64 $ 
-# $Date: 2002/05/10 23:14:30 $ 
+# $Revision: 1.65 $ 
+# $Date: 2002/05/10 23:21:23 $ 
 # $Author: kestes%walrus.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/lib/TinderDB/VC_Bonsai.pm,v $ 
 # $Name:  $ 
@@ -102,7 +102,7 @@ use VCDisplay;
 use TinderDB::Notice;
 
 
-$VERSION = ( qw $Revision: 1.64 $ )[1];
+$VERSION = ( qw $Revision: 1.65 $ )[1];
 
 @ISA = qw(TinderDB::BasicTxtDB);
 
@@ -444,6 +444,15 @@ sub render_authors {
             my ($num_rows) = 0;
             my ($max_length) = 0;
             
+            # This is a Netscape.com/Mozilla.org specific CVS/Bonsai
+            # issue. Most users do not have '%' in their CVS names. Do
+            # not display the full mail address in the status column,
+            # it takes up too much space.
+            # Keep only the user name.
+
+            my $display_author=$author;
+            $display_author =~ s/\%.*//;
+            
             my $mailto_author=$author;
             $mailto_author =~ s/\%/\@/;
             
@@ -527,21 +536,12 @@ sub render_authors {
             $link_choices .= 
               HTMLPopUp::Link(
                               "href" => "mailto: $mailto_author",
-                              "linktxt" => $display_author,
+                              "linktxt" => "Send Mail",
                               );
 
             $link_choices .= "<br>";
 
 
-            # This is a Netscape.com/Mozilla.org specific CVS/Bonsai
-            # issue. Most users do not have '%' in their CVS names. Do
-            # not display the full mail address in the status column,
-            # it takes up too much space.
-            # Keep only the user name.
-
-            my $display_author=$author;
-            $display_author =~ s/\%.*//;
-            
             # we display the list of names in 'teletype font' so that the
             # names do not bunch together. It seems to make a difference if
             # there is a <cr> between each link or not, but it does make a
