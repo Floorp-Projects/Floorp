@@ -238,7 +238,7 @@ my $modules = [
     },
     { 
         name => 'Template', 
-        version => '2.07' 
+        version => '2.08' 
     }, 
     { 
         name => 'Text::Wrap', 
@@ -957,6 +957,7 @@ END
          js => sub { return $_; },
          html_linebreak => sub { return $_; },
          url_quote => sub { return $_; },
+         xml => sub { return $_; },
          quoteUrls => sub { return $_; },
          bug_link => [ sub { return sub { return $_; } }, 1],
          csv => sub { return $_; },

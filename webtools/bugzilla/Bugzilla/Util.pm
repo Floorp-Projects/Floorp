@@ -25,15 +25,15 @@
 
 package Bugzilla::Util;
 
-use Bugzilla::Config;
+use strict;
 
 use base qw(Exporter);
 @Bugzilla::Util::EXPORT = qw(is_tainted trick_taint detaint_natural
-                             html_quote url_quote value_quote
+                             html_quote url_quote value_quote xml_quote
                              lsearch max min
                              trim format_time);
 
-use strict;
+use Bugzilla::Config;
 
 # This is from the perlsec page, slightly modifed to remove a warning
 # From that page:
@@ -89,6 +89,16 @@ sub value_quote {
     return $var;
 }
 
+sub xml_quote {
+    my ($var) = (@_);
+    $var =~ s/\&/\&amp;/g;
+    $var =~ s/</\&lt;/g;
+    $var =~ s/>/\&gt;/g;
+    $var =~ s/\"/\&quot;/g;
+    $var =~ s/\'/\&apos;/g;
+    return $var;
+}
+
 sub lsearch {
     my ($list,$item) = (@_);
     my $count = 0;
@@ -124,7 +134,6 @@ sub trim {
     return $str;
 }
 
-# Bug 67077
 sub format_time {
     my ($time) = @_;
 
@@ -149,7 +158,8 @@ sub format_time {
     }
 
     if (defined $year) {
-        $time = "$year-$month-$day $hour:$min " . &::Param('timezone');
+        $time = "$year-$month-$day $hour:$min";
+        $time .= " " . &::Param('timezone') if &::Param('timezone');
     }
     return $time;
 }
@@ -175,6 +185,7 @@ Bugzilla::Util - Generic utility functions for bugzilla
   html_quote($var);
   url_quote($var);
   value_quote($var);
+  xml_quote($var);
 
   # Functions for searching
   $loc = lsearch(\@arr, $val);
@@ -251,6 +262,12 @@ Quotes characters so that they may be included as part of a url.
 
 As well as escaping html like C<html_quote>, this routine converts newlines
 into &#013;, suitable for use in html attributes.
+
+=item C<xml_quote($val)>
+
+This is similar to C<html_quote>, except that ' is escaped to &apos;. This
+is kept separate from html_quote partly for compatibility with previous code
+(for &apos;) and partly for future handling of non-ASCII characters.
 
 =back
 

@@ -32,7 +32,6 @@ use vars qw($unconfirmedstate $legal_keywords @legal_platform
             @enterable_products %milestoneurl %prodmaxvotes);
 
 use CGI::Carp qw(fatalsToBrowser);
-my %ok_field;
 
 use Attachment;
 use Bugzilla::Config;
@@ -42,18 +41,33 @@ use Bugzilla::FlagType;
 use Bugzilla::User;
 use Bugzilla::Util;
 
-for my $key (qw (bug_id alias product version rep_platform op_sys bug_status 
-                 resolution priority bug_severity component assigned_to
-                 reporter bug_file_loc short_desc target_milestone 
-                 qa_contact status_whiteboard creation_ts keywords
-                 delta_ts votes whoid usergroupset comment query error
-                 longdescs cc milestoneurl attachments dependson blocked
-                 cclist_accessible reporter_accessible
-                 isopened isunconfirmed assigned_to_name assigned_to_email
-                 qa_contact_name qa_contact_email reporter_name
-                 reporter_email flag_types num_attachment_flag_types
-                 show_attachment_flags use_keywords any_flags_requesteeble
-                 estimated_time remaining_time actual_time) ) {
+sub fields {
+    # Keep this ordering in sync with bugzilla.dtd
+    my @fields = qw(bug_id alias creation_ts short_desc delta_ts
+                    reporter_accessible cclist_accessible
+                    product component version rep_platform op_sys
+                    bug_status resolution
+                    bug_file_loc status_whiteboard keywords
+                    priority bug_severity target_milestone
+                    dependson blocked votes
+                    reporter assigned_to qa_contact cc
+                   );
+
+    if (Param('timetrackinggroup')) {
+        push @fields, qw(estimated_time remaining_time actual_time);
+    }
+
+    return @fields;
+}
+
+my %ok_field;
+foreach my $key (qw(error groups
+                    longdescs milestoneurl attachments
+                    isopened isunconfirmed
+                    flag_types num_attachment_flag_types
+                    show_attachment_flags use_keywords any_flags_requesteeble
+                   ),
+                 fields()) {
     $ok_field{$key}++;
 }
 
@@ -81,8 +95,6 @@ sub new {
   return $self;
 }
 
-
-
 # dump info about bug into hash unless user doesn't have permission
 # user_id 0 is used when person is not logged in.
 #
@@ -90,10 +102,13 @@ sub initBug  {
   my $self = shift();
   my ($bug_id, $user_id) = (@_);
 
+  $bug_id = trim($bug_id);
+
+  my $old_bug_id = $bug_id;
+
   # If the bug ID isn't numeric, it might be an alias, so try to convert it.
   $bug_id = &::BugAliasToID($bug_id) if $bug_id !~ /^[1-9][0-9]*$/;
-  
-  my $old_bug_id = $bug_id;
+
   if ((! defined $bug_id) || (!$bug_id) || (!detaint_natural($bug_id))) {
       # no bug number given or the alias didn't match a bug
       $self->{'bug_id'} = $old_bug_id;
@@ -232,7 +247,7 @@ sub initBug  {
   my @depends = EmitDependList("blocked", "dependson", $bug_id);
   if (@depends) {
       $self->{'dependson'} = \@depends;
-  }  
+  }
   my @blocked = EmitDependList("dependson", "blocked", $bug_id);
   if (@blocked) {
     $self->{'blocked'} = \@blocked;
@@ -327,6 +342,7 @@ sub groups {
               && ($membercontrol == CONTROLMAPMANDATORY);
 
             push (@groups, { "bit" => $groupid,
+                             "name" => $name,
                              "ison" => $ison,
                              "ingroup" => $ingroup,
                              "mandatory" => $ismandatory,
@@ -427,77 +443,6 @@ sub choices {
     return $self->{'choices'};
 }
 
-# given a bug hash, emit xml for it. with file header provided by caller
-#
-sub emitXML {
-  ( $#_ == 0 ) || confess("invalid number of arguments");
-  my $self = shift();
-  my $xml;
-
-
-  if (exists $self->{'error'}) {
-    $xml .= "<bug error=\"$self->{'error'}\">\n";
-    $xml .= "  <bug_id>$self->{'bug_id'}</bug_id>\n";
-    $xml .= "</bug>\n";
-    return $xml;
-  }
-
-  $xml .= "<bug>\n";
-
-  foreach my $field ("bug_id", "alias", "bug_status", "product",
-      "priority", "version", "rep_platform", "assigned_to", "delta_ts", 
-      "component", "reporter", "target_milestone", "bug_severity", 
-      "creation_ts", "qa_contact", "op_sys", "resolution", "bug_file_loc",
-      "short_desc", "keywords", "status_whiteboard") {
-    if ($self->{$field}) {
-      $xml .= "  <$field>" . QuoteXMLChars($self->{$field}) . "</$field>\n";
-    }
-  }
-
-  foreach my $field ("dependson", "blocked", "cc") {
-    if (defined $self->{$field}) {
-      for (my $i=0 ; $i < @{$self->{$field}} ; $i++) {
-        $xml .= "  <$field>" . $self->{$field}[$i] . "</$field>\n";
-      }
-    }
-  }
-
-    if (defined $self->{'longdescs'}) {
-        for (my $i=0 ; $i < @{$self->{'longdescs'}} ; $i++) {
-            next if ($self->{'longdescs'}[$i]->{'isprivate'} 
-                     && Param("insidergroup")
-                     && !&::UserInGroup(Param("insidergroup")));
-            $xml .= "  <long_desc>\n"; 
-            $xml .= "   <who>" . $self->{'longdescs'}[$i]->{'email'} 
-                               . "</who>\n"; 
-            $xml .= "   <bug_when>" . $self->{'longdescs'}[$i]->{'time'} 
-                                    . "</bug_when>\n"; 
-            $xml .= "   <thetext>" . QuoteXMLChars($self->{'longdescs'}[$i]->{'body'})
-                                   . "</thetext>\n"; 
-            $xml .= "  </long_desc>\n"; 
-        }
-    }
-
-    if (defined $self->{'attachments'}) {
-        for (my $i=0 ; $i < @{$self->{'attachments'}} ; $i++) {
-            next if ($self->{'attachments'}[$i]->{'isprivate'} 
-                     && Param("insidergroup")
-                     && !&::UserInGroup(Param("insidergroup")));
-            $xml .= "  <attachment>\n"; 
-            $xml .= "    <attachid>" . $self->{'attachments'}[$i]->{'attachid'}
-                                    . "</attachid>\n"; 
-            $xml .= "    <date>" . $self->{'attachments'}[$i]->{'date'} . "</date>\n"; 
-            $xml .= "    <desc>" . QuoteXMLChars($self->{'attachments'}[$i]->{'description'}) . "</desc>\n"; 
-          # $xml .= "    <type>" . $self->{'attachments'}[$i]->{'type'} . "</type>\n"; 
-          # $xml .= "    <data>" . $self->{'attachments'}[$i]->{'data'} . "</data>\n"; 
-            $xml .= "  </attachment>\n"; 
-        }
-    }
-
-    $xml .= "</bug>\n";
-    return $xml;
-}
-
 sub EmitDependList {
   my ($myfield, $targetfield, $bug_id) = (@_);
   my @list;
@@ -511,41 +456,6 @@ sub EmitDependList {
     push @list, $i;
   }
   return @list;
-}
-
-sub QuoteXMLChars {
-  $_[0] =~ s/&/&amp;/g;
-  $_[0] =~ s/</&lt;/g;
-  $_[0] =~ s/>/&gt;/g;
-  $_[0] =~ s/\'/&apos;/g;
-  $_[0] =~ s/\"/&quot;/g;
-# $_[0] =~ s/([\x80-\xFF])/&XmlUtf8Encode(ord($1))/ge;
-  return($_[0]);
-}
-
-sub XML_Header {
-  my ($urlbase, $version, $maintainer, $exporter) = (@_);
-
-  my $xml;
-  $xml = "<?xml version=\"1.0\" standalone=\"yes\"?>\n";
-  $xml .= "<!DOCTYPE bugzilla SYSTEM \"$urlbase";
-  if (! ($urlbase =~ /.+\/$/)) {
-    $xml .= "/";
-  }
-  $xml .= "bugzilla.dtd\">\n";
-  $xml .= "<bugzilla";
-  if (defined $exporter) {
-    $xml .= " exporter=\"$exporter\"";
-  }
-  $xml .= " version=\"$version\"";
-  $xml .= " urlbase=\"$urlbase\"";
-  $xml .= " maintainer=\"$maintainer\">\n";
-  return ($xml);
-}
-
-
-sub XML_Footer {
-  return ("</bugzilla>\n");
 }
 
 sub AUTOLOAD {

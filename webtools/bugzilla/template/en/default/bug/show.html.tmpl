@@ -21,6 +21,9 @@
   #                 Bradley Baetz <bbaetz@student.usyd.edu.au>
   #%]
 
+[%# This script/template only handles one bug #%]
+[% bug = bugs.0 %]
+
 [% filtered_desc = bug.short_desc FILTER html %]
 [% filtered_timestamp = bug.delta_ts FILTER time %]
 [% PROCESS global/header.html.tmpl 

@@ -28,7 +28,7 @@ require "CGI.pl";
 
 ConnectToDatabase();
 
-use vars qw($template $vars $userid);
+use vars qw($cgi $template $vars $userid);
 
 use Bug;
 
@@ -38,36 +38,38 @@ if ($::FORM{'GoAheadAndLogIn'}) {
     quietly_check_login();
 }
 
-######################################################################
-# Begin Data/Security Validation
-######################################################################
+# Editable, 'single' HTML bugs are treated slightly specially in a few places
+my $single = !$cgi->param('format')
+  && (!$cgi->param('ctype') || $cgi->param('ctype') eq 'html');
 
-unless (defined ($::FORM{'id'})) {
-    my $format = GetFormat("bug/choose", $::FORM{'format'}, $::FORM{'ctype'});
-
-    print "Content-type: $format->{'contenttype'}\n\n";
-    $template->process("$format->{'template'}", $vars) ||
+# If we don't have an ID, _AND_ we're only doing a single bug, then prompt
+if (!defined $cgi->param('id') && $single) {
+    print "Content-type: text/html\n\n";
+    $template->process("bug/choose.html.tmpl", $vars) ||
       ThrowTemplateError($template->error());
     exit;
 }
 
 my $format = GetFormat("bug/show", $::FORM{'format'}, $::FORM{'ctype'});
 
-# Make sure the bug ID is a positive integer representing an existing
-# bug that the user is authorized to access.
-ValidateBugID($::FORM{'id'});
-
-######################################################################
-# End Data/Security Validation
-######################################################################
-
 GetVersionTable();
 
-my $bug = new Bug($::FORM{'id'}, $userid);
+my @bugs = ();
 
-$vars->{'bug'} = $bug;
+if ($single) {
+    my $id = $cgi->param('id');
+    # Its a bit silly to do the validation twice - that functionality should
+    # probably move into Bug.pm at some point
+    ValidateBugID($id);
+    push @bugs, new Bug($id, $userid);
+} else {
+    foreach my $id ($cgi->param('id')) {
+        my $bug = new Bug($id, $userid);
+        push @bugs, $bug;
+    }
+}
 
-ThrowCodeError("bug_error") if $bug->error;
+$vars->{'bugs'} = \@bugs;
 
 # Next bug in list (if there is one)
 my @bug_list;

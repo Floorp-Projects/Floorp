@@ -19,11 +19,9 @@
   # Contributor(s): Gervase Markham <gerv@gerv.net>
   #%]
 
-[% UNLESS header_done %]
-  [% PROCESS global/header.html.tmpl 
-     title = "Search by bug number"
-   %]
-[% END %]
+[% PROCESS global/header.html.tmpl 
+   title = "Search by bug number"
+ %]
 
 <form method="get" action="show_bug.cgi">
   <p>

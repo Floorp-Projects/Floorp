@@ -28,30 +28,15 @@ use lib qw(.);
 
 require "CGI.pl";
 
-use Bug;
+our $cgi;
 
-use vars qw($template $vars $userid %COOKIE);
+# Convert comma/space separated elements into separate params
+my @ids = ();
 
-ConnectToDatabase();
-quietly_check_login();
-
-if (!defined $::FORM{'id'} || !$::FORM{'id'}) {
-    print "Content-Type: text/html\n\n";
-    $template->process("bug/choose-xml.html.tmpl", $vars)
-      || ThrowTemplateError($template->error());
-    exit;
+if (defined $cgi->param('id')) {
+    @ids = split (/[, ]+/, $cgi->param('id'));
 }
 
-my $exporter = $::COOKIE{"Bugzilla_login"} || undef;
+my $ids = join('', map { $_ = "&id=" . $_ } @ids);
 
-my @ids = split (/[, ]+/, $::FORM{'id'});
-
-print "Content-type: text/xml\n\n";
-print Bug::XML_Header(Param("urlbase"), $Bugzilla::Config::VERSION, 
-                      Param("maintainer"), $exporter);
-foreach my $id (@ids) {
-  my $bug = new Bug(trim($id), $::userid);
-  print $bug->emitXML;
-}
-
-print Bug::XML_Footer;
+print $cgi->redirect("show_bug.cgi?ctype=xml$ids");

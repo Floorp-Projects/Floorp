@@ -5,12 +5,14 @@
 	maintainer CDATA #REQUIRED
 	exporter CDATA #IMPLIED
 >
-<!ELEMENT bug (bug_id, (alias?, bug_status, product, priority, version, rep_platform, assigned_to, delta_ts, component, reporter, target_milestone?, bug_severity, creation_ts, qa_contact?, op_sys, resolution?, bug_file_loc?, short_desc?, keywords*, status_whiteboard?, dependson*, blocked*, cc*, long_desc*, attachment*)?)>
+<!ELEMENT bug (bug_id, (alias?, creation_ts, short_desc, delta_ts, reporter_accessible, cclist_accessible, product, component, version, rep_platform, op_sys, bug_status, resolution?, bug_file_loc?, status_whiteboard?, keywords*, priority, bug_severity, target_milestone?, dependson*, blocked*, votes?, reporter, assigned_to, qa_contact?, cc*, (estimated_time, remaining_time, actual_time)?, groups*, long_desc*, attachment*)?)>
 <!ATTLIST bug
 	error (NotFound | NotPermitted | InvalidBugId) #IMPLIED
 >
 <!ELEMENT bug_id (#PCDATA)>
 <!ELEMENT alias (#PCDATA)>
+<!ELEMENT reporter_accessible (#PCDATA)>
+<!ELEMENT cclist_accessible (#PCDATA)>
 <!ELEMENT exporter (#PCDATA)>
 <!ELEMENT urlbase (#PCDATA)>
 <!ELEMENT bug_status (#PCDATA)>
@@ -35,6 +37,10 @@
 <!ELEMENT dependson (#PCDATA)>
 <!ELEMENT blocked (#PCDATA)>
 <!ELEMENT cc (#PCDATA)>
+<!ELEMENT group (#PCDATA)>
+<!ELEMENT estimated_time (#PCDATA)>
+<!ELEMENT remaining_time (#PCDATA)>
+<!ELEMENT actual_time (#PCDATA)>
 <!ELEMENT long_desc (who, bug_when, thetext)>
 <!ELEMENT who (#PCDATA)>
 <!ELEMENT bug_when (#PCDATA)>

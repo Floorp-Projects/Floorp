@@ -1794,6 +1794,8 @@ $::template ||= Template->new(
         # characters that need encoding.
         url_quote => \&Bugzilla::Util::url_quote ,
 
+        xml => \&Bugzilla::Util::xml_quote ,
+
         quoteUrls => \&quoteUrls ,
 
         bug_link => [ sub {

@@ -27,7 +27,7 @@ use lib qw(.);
 
 require "CGI.pl";
 
-use vars qw($userid %COOKIE);
+use vars qw($template $userid %COOKIE);
 
 use Bug;
 
@@ -96,13 +96,12 @@ unless ($exporter =~ /($movers)/) {
   exit;
 }
 
-my $xml = "";
-$xml .= Bug::XML_Header( Param("urlbase"), $Bugzilla::Config::VERSION, 
-                         Param("maintainer"), $exporter );
+my @bugs;
+
 print "<P>\n";
 foreach my $id (split(/:/, $::FORM{'buglist'})) {
   my $bug = new Bug($id, $::userid);
-  $xml .= $bug->emitXML;
+  push @bugs, $bug;
   if (!$bug->error) {
     my $exporterid = DBNameToIdAndCheck($exporter);
 
@@ -137,7 +136,6 @@ foreach my $id (split(/:/, $::FORM{'buglist'})) {
   }
 }
 print "<P>\n";
-$xml .= Bug::XML_Footer;
 
 my $buglist = $::FORM{'buglist'};
 $buglist =~ s/:/,/g;
@@ -150,7 +148,11 @@ my $from = Param("moved-from-address");
 $from =~ s/@/\@/;
 $msg .= "From: Bugzilla <" . $from . ">\n";
 $msg .= "Subject: Moving bug(s) $buglist\n\n";
-$msg .= $xml . "\n";
+
+$template->process("bug/show.xml.tmpl", { bugs => \@bugs }, \$msg)
+  || ThrowTemplateError($template->error());
+
+$msg .= "\n";
 
 open(SENDMAIL,
   "|/usr/lib/sendmail -ODeliveryMode=background -t -i") ||
