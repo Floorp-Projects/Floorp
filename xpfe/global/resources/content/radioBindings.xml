@@ -34,7 +34,8 @@
         <setter>
         <![CDATA[
           var aDOMElement = val;
-          val.setAttribute("focused", "true");
+          if (this.getAttribute("focused") == "true") 
+            val.setAttribute("focused", "true");
           this.data = aDOMElement.data;
 
           aDOMElement.checked = true;
@@ -131,9 +132,11 @@
            it is not (Windows platform behaviour is for the group to receive focus,
            not the item -->
       <handler event="focus">
+        this.setAttribute("focused", "true");
         this.selectedItem.setAttribute("focused", "true");
       </handler>
       <handler event="blur">
+        this.removeAttribute("focused");
         this.selectedItem.removeAttribute("focused");
       </handler>
     </handlers>
