@@ -110,7 +110,7 @@ public:
                                  nsIFactory *aFactory);
 
     // Manually unregister a dynamically loaded factory for a class
-    nsresult UnregisterFactory(const nsCID &aClass,
+    NS_IMETHOD UnregisterFactory(const nsCID &aClass,
                                       const char *aLibrary);
 
     // Manually unregister a dynamically loaded component
