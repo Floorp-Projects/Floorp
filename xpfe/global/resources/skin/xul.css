@@ -29,7 +29,7 @@ checkbox,radio,tree,menulist {
 }
 
   
-menupopup, splitter {
+menupopup, popup, splitter {
   user-focus: ignore;
 }
 
