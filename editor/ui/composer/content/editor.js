@@ -65,7 +65,7 @@ var gEditorDisplayMode = -1;
 var gDocWasModified = false;  // Check if clean document, if clean then unload when user "Opens"
 var gContentWindow = 0;
 var gSourceContentWindow = 0;
-var gHTMLSourceChanged = false;
+var gSourceTextEditor = null;
 var gContentWindowDeck;
 var gFormatToolbar;
 var gFormatToolbarHidden = false;
@@ -245,7 +245,48 @@ function EditorOnLoad()
 
     // Continue with normal startup.
     EditorStartup();
+
+    // Initialize our source text <editor>
+    try {
+      gSourceContentWindow = document.getElementById("content-source");
+      gSourceContentWindow.makeEditable("text", false);
+      gSourceTextEditor = gSourceContentWindow.getEditor(gSourceContentWindow.contentWindow);
+      gSourceTextEditor.QueryInterface(Components.interfaces.nsIPlaintextEditor);
+      gSourceTextEditor.enableUndo(false);
+      gSourceTextEditor.rootElement.style.fontFamily = "-moz-fixed";
+      gSourceTextEditor.rootElement.style.whiteSpace = "pre";
+      gSourceTextEditor.rootElement.style.margin = 0;
+      var controller = Components.classes["@mozilla.org/embedcomp/base-command-controller;1"]
+                                 .createInstance(Components.interfaces.nsIControllerContext);
+      controller.init(null);
+      controller.setCommandContext(gSourceContentWindow);
+      gSourceContentWindow.contentWindow.controllers.insertControllerAt(0, controller);
+      var commandTable = controller.QueryInterface(Components.interfaces.nsIInterfaceRequestor)
+                                   .getInterface(Components.interfaces.nsIControllerCommandTable);
+      commandTable.registerCommand("cmd_find",        nsFindCommand);
+      commandTable.registerCommand("cmd_findNext",    nsFindAgainCommand);
+      commandTable.registerCommand("cmd_findPrev",    nsFindAgainCommand);
+    } catch (e) { dump("makeEditable failed: "+e+"\n"); }
 }
+
+const gSourceTextListener =
+{
+  NotifyDocumentCreated: function NotifyDocumentCreated() {},
+  NotifyDocumentWillBeDestroyed: function NotifyDocumentWillBeDestroyed() {},
+  NotifyDocumentStateChanged: function NotifyDocumentStateChanged(isChanged)
+  {
+    window.updateCommands("save");
+  }
+};
+
+const gSourceTextObserver =
+{
+  observe: function observe(aSubject, aTopic, aData)
+  {
+    // we currently only use this to update undo
+    window.updateCommands("undo");
+  }
+};
 
 function TextEditorOnLoad()
 {
@@ -351,16 +392,6 @@ var gEditorDocumentObserver =
         if (editorStatus)
           return; 
 
-        var editorType = GetCurrentEditorType();
-        if (editorType != "htmlmail"
-            && editorType != "textmail")
-        {
-          // Set focus to content window if not a mail composer
-          // Race conditions prevent us from setting focus here
-          //   when loading a url into blank window
-          setTimeout("SetFocusOnStartup()", 0);
-        }
-
         if (!("InsertCharWindow" in window))
           window.InsertCharWindow = null;
 
@@ -374,6 +405,11 @@ var gEditorDocumentObserver =
         // Things for just the Web Composer application
         if (IsWebComposer())
         {
+          // Set focus to content window if not a mail composer
+          // Race conditions prevent us from setting focus here
+          //   when loading a url into blank window
+          setTimeout(SetFocusOnStartup, 0);
+
           // Call EditorSetDefaultPrefsAndDoctype first so it gets the default author before initing toolbars
           EditorSetDefaultPrefsAndDoctype();
 
@@ -492,8 +528,6 @@ function EditorStartup()
   var is_HTMLEditor = IsHTMLEditor();
   if (is_HTMLEditor)
   {
-    gSourceContentWindow = document.getElementById("content-source");
-
     // XUL elements we use when switching from normal editor to edit source
     gContentWindowDeck = document.getElementById("ContentWindowDeck");
     gFormatToolbar = document.getElementById("FormatToolbar");
@@ -693,12 +727,12 @@ function CheckAndSaveDocument(command, allowDontSave)
       return true;
   } catch (e) { return true; }
 
-  if (!IsDocumentModified() && !gHTMLSourceChanged)
+  if (!IsDocumentModified() && !IsHTMLSourceChanged())
     return true;
 
   // call window.focus, since we need to pop up a dialog
   // and therefore need to be visible (to prevent user confusion)
-  window.focus();  
+  top.document.commandDispatcher.focusedWindow.focus();  
 
   var scheme = GetScheme(GetDocumentUrl());
   var doPublish = (scheme && scheme != "file");
@@ -762,7 +796,7 @@ function CheckAndSaveDocument(command, allowDontSave)
   if (result == 0)
   {
     // Save, but first finish HTML source mode
-    if (gHTMLSourceChanged) {
+    if (IsHTMLSourceChanged()) {
       try {
         FinishHTMLSource();
       } catch (e) { return false;}
@@ -1740,17 +1774,18 @@ function SetEditMode(mode)
     var source = editor.outputToString(kHTMLMimeType, flags);
     var start = source.search(/<html/i);
     if (start == -1) start = 0;
-    gSourceContentWindow.value = source.slice(start);
-    gSourceContentWindow.focus();
-
-    // Add input handler so we know if user made any changes
-    gSourceContentWindow.addEventListener("input", oninputHTMLSource, false);
-    gHTMLSourceChanged = false;
+    gSourceTextEditor.insertText(source.slice(start));
+    gSourceTextEditor.resetModificationCount();
+    gSourceTextEditor.addDocumentStateListener(gSourceTextListener);
+    gSourceTextEditor.enableUndo(true);
+    gSourceContentWindow.commandManager.addCommandObserver(gSourceTextObserver, "cmd_undo");
+    gSourceContentWindow.contentWindow.focus();
+    goDoCommand("cmd_moveTop");
   }
   else if (previousMode == kDisplayModeSource)
   {
     // Only rebuild document if a change was made in source window
-    if (gHTMLSourceChanged)
+    if (IsHTMLSourceChanged())
     {
       // Reduce the undo count so we don't use too much memory
       //   during multiple uses of source window 
@@ -1763,7 +1798,7 @@ function SetEditMode(mode)
       try {
         // We are comming from edit source mode,
         //   so transfer that back into the document
-        source = gSourceContentWindow.value;
+        source = gSourceTextEditor.outputToString(kTextMimeType, 0);
         editor.rebuildDocumentFromSource(source);
 
         // Get the text for the <title> from the newly-parsed document
@@ -1788,36 +1823,24 @@ function SetEditMode(mode)
       try {
         editor.transactionManager.maxTransactionCount = -1;
       } catch (e) {}
-    } else {
-      // We don't need to call this again, so remove handler
-      gSourceContentWindow.removeEventListener("input", oninputHTMLSource, false);
     }
-    gHTMLSourceChanged = false;
 
     // Clear out the string buffers
-    gSourceContentWindow.value = null;
+    gSourceContentWindow.commandManager.removeCommandObserver(gSourceTextObserver, "cmd_undo");
+    gSourceTextEditor.removeDocumentStateListener(gSourceTextListener);
+    gSourceTextEditor.enableUndo(false);
+    gSourceTextEditor.selectAll();
+    gSourceTextEditor.deleteSelection(gSourceTextEditor.eNone);
+    gSourceTextEditor.resetModificationCount();
 
     gContentWindow.focus();
   }
 }
 
-function oninputHTMLSource()
-{
-  gHTMLSourceChanged = true;
-
-  // Trigger update of "Save" and "Publish" buttons
-  goUpdateCommand("cmd_save");
-  goUpdateCommand("cmd_publish");
-
-  // We don't need to call this again, so remove handler
-  gSourceContentWindow.removeEventListener("input", oninputHTMLSource, false);
-}
-
 function CancelHTMLSource()
 {
   // Don't convert source text back into the DOM document
-  gSourceContentWindow.value = "";
-  gHTMLSourceChanged = false;
+  gSourceTextEditor.resetModificationCount();
   SetDisplayMode(gPreviousNonSourceDisplayMode);
 }
 
@@ -1827,7 +1850,7 @@ function FinishHTMLSource()
   //Or RebuildDocumentFromSource() will fail.
   if (IsInHTMLSourceMode())
   {
-    var htmlSource = gSourceContentWindow.value;
+    var htmlSource = gSourceTextEditor.outputToString(kTextMimeType, 0);
     if (htmlSource.length > 0)
     {
       var beginHead = htmlSource.indexOf("<head");
@@ -1880,7 +1903,7 @@ function SetDisplayMode(mode)
     gFormatToolbar.hidden = true;
     gViewFormatToolbar.hidden = true;
 
-    gSourceContentWindow.focus();
+    gSourceContentWindow.contentWindow.focus();
   }
   else
   {
@@ -3070,7 +3093,7 @@ function EditorOnFocus()
     // Switch the dialog to current window
     // this sets focus to dialog, so bring focus back to editor window
     if (SwitchInsertCharToThisWindow(windowWithDialog))
-      window.focus();
+      top.document.commandDispatcher.focusedWindow.focus();
   }
 }
 

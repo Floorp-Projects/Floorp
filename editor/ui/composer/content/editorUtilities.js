@@ -293,8 +293,7 @@ function IsHTMLEditor()
 
 function PageIsEmptyAndUntouched()
 {
-  return IsDocumentEmpty() && !IsDocumentModified()
-         && !gHTMLSourceChanged;
+  return IsDocumentEmpty() && !IsDocumentModified() && !IsHTMLSourceChanged();
 }
 
 function IsInHTMLSourceMode()
@@ -335,6 +334,11 @@ function IsDocumentModified()
     return GetCurrentEditor().documentModified;
   } catch (e) {}
   return false;
+}
+
+function IsHTMLSourceChanged()
+{
+  return gSourceTextEditor.documentModified;
 }
 
 function newCommandParams()
