@@ -4835,7 +4835,7 @@ nsGlobalHistory::WriteURLData(nsAString& aURL, PRFloat64* aURLFeatures)
   fprintf(mURLDataFile, "<url id='%s'", IDStr.get());
   if (mDataCaptureMode == UDC_WITH_URL_INFO)
   {
-    fprintf(mURLDataFile, " path='%s'", NS_ConvertUCS2toUTF8(aURL));
+    fprintf(mURLDataFile, " path='%s'", NS_ConvertUCS2toUTF8(aURL).get());
   }
   PRInt64ToChars(PR_Now(), dateStr);
   fprintf(mURLDataFile, " time='%s'>\n", dateStr.get());
@@ -4908,7 +4908,7 @@ nsGlobalHistory::OnAutoComplete(const PRUnichar *searchString,
       fprintf(mURLDataFile, "<autocomplete time='%s'", nowStr.get());
 
       if (mDataCaptureMode == UDC_WITH_URL_INFO)
-        fprintf(mURLDataFile, " url='%s'", NS_ConvertUCS2toUTF8(searchString));
+        fprintf(mURLDataFile, " url='%s'", NS_ConvertUCS2toUTF8(searchString).get());
           
       if (NS_SUCCEEDED(FindRowAndID(kToken_URLColumn, 
                          NS_ConvertUCS2toUTF8(searchString).get(), 
