@@ -49,7 +49,6 @@ DIRS = \
   modules\libjar        \
   modules\libutil		\
   sun-java			\
-  timer				\
   js				\
   modules\security\freenav	\
   modules\libimg		\
