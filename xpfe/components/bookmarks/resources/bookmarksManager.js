@@ -120,3 +120,13 @@ function onViewMenuColumnItemSelected(aEvent)
 
   aEvent.preventBubble();
 }
+
+function OpenBookmarksFile()
+{
+  const nsIFilePicker = Components.interfaces.nsIFilePicker;
+  var fp = Components.classes["@mozilla.org/filepicker;1"].createInstance(nsIFilePicker);
+  fp.init(window, BookmarksUtils.getLocaleString("SelectOpen"), nsIFilePicker.modeOpen);
+  fp.appendFilters(nsIFilePicker.filterHTML);
+  if (fp.show() == nsIFilePicker.returnOK)
+    PREF.setCharPref("browser.bookmarks.file", fp.file.path);
+}

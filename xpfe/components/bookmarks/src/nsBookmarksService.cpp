@@ -193,7 +193,6 @@ nsIRDFService        *gRDF;
 nsIRDFContainerUtils *gRDFC;
 nsICharsetAlias      *gCharsetAlias;
 nsICollation         *gCollation;
-PRBool                gLoadedBookmarks = PR_FALSE;
 PRBool                gImportedSystemBookmarks = PR_FALSE;
 
 static nsresult
@@ -1675,7 +1674,6 @@ ElementArray::Clear()
 nsBookmarksService::nsBookmarksService() :
     mInner(nsnull),
     mUpdateBatchNest(0),
-    mBookmarksAvailable(PR_FALSE),
     mDirty(PR_FALSE)
 
 #if defined(XP_MAC) || defined(XP_MACOSX)
@@ -2093,7 +2091,7 @@ nsBookmarksService::FireTimer(nsITimer* aTimer, void* aClosure)
     if (!bmks)  return;
     nsresult            rv;
 
-    if ((bmks->mBookmarksAvailable == PR_TRUE) && (bmks->mDirty == PR_TRUE))
+    if (bmks->mBookmarksFile && bmks->mDirty)
     {
         bmks->Flush();
     }
@@ -2560,17 +2558,13 @@ NS_IMETHODIMP nsBookmarksService::Observe(nsISupports *aSubject, const char *aTo
     
         if (!nsCRT::strcmp(someData, NS_LITERAL_STRING("shutdown-cleanse").get()))
         {
-            nsCOMPtr<nsIFile> bookmarksFile;
-
-            rv = GetBookmarksFile(getter_AddRefs(bookmarksFile));
-
-            if (bookmarksFile)
+            if (mBookmarksFile)
             {
-                bookmarksFile->Remove(PR_FALSE);
+                mBookmarksFile->Remove(PR_FALSE);
             }
         }
     }    
-    else if (!nsCRT::strcmp(aTopic, "profile-after-change"))
+    else if (mBookmarksFile && !nsCRT::strcmp(aTopic, "profile-after-change"))
     {
         // The profile has aleady changed.
         rv = LoadBookmarks();
@@ -2581,6 +2575,12 @@ NS_IMETHODIMP nsBookmarksService::Observe(nsISupports *aSubject, const char *aTo
         rv = Flush();
     }
 #endif
+    else if (!nsCRT::strcmp(aTopic, "nsPref:changed"))
+    {
+        rv = Flush();
+        if (NS_SUCCEEDED(rv))
+            rv = LoadBookmarks();
+    }
 
     return rv;
 }
@@ -5001,16 +5001,9 @@ nsBookmarksService::Flush()
 {
     nsresult    rv = NS_OK;
 
-    if (mBookmarksAvailable == PR_TRUE)
+    if (mBookmarksFile)
     {
-        nsCOMPtr<nsIFile> bookmarksFile;
-        rv = GetBookmarksFile(getter_AddRefs(bookmarksFile));
-
-        // Oh well, couldn't get the bookmarks file. Guess there
-        // aren't any bookmarks for us to write out.
-        if (NS_FAILED(rv))  return NS_OK;
-
-        rv = WriteBookmarks(bookmarksFile, mInner, kNC_BookmarksRoot);
+        rv = WriteBookmarks(mBookmarksFile, mInner, kNC_BookmarksRoot);
     }
     return rv;
 }
@@ -5045,10 +5038,9 @@ nsBookmarksService::SetPropagateChanges(PRBool aPropagateChanges)
 // Implementation methods
 
 nsresult
-nsBookmarksService::GetBookmarksFile(nsIFile* *aResult)
+nsBookmarksService::EnsureBookmarksFile()
 {
     nsresult rv;
-    nsCOMPtr<nsIFile> bookmarksFile;
 
     // First we see if the user has set a pref for the location of the 
     // bookmarks file.
@@ -5060,13 +5052,10 @@ nsBookmarksService::GetBookmarksFile(nsIFile* *aResult)
                                     getter_Copies(prefVal));      
         if (NS_SUCCEEDED(rv))
         {
-            rv = NS_NewNativeLocalFile(prefVal, PR_TRUE,
-                                       (nsILocalFile**)(nsIFile**) getter_AddRefs(bookmarksFile));
+            rv = NS_NewNativeLocalFile(prefVal, PR_TRUE, getter_AddRefs(mBookmarksFile));
 
             if (NS_SUCCEEDED(rv))
             {
-                *aResult = bookmarksFile;
-                NS_ADDREF(*aResult);
                 return NS_OK;
             }
         }
@@ -5075,7 +5064,7 @@ nsBookmarksService::GetBookmarksFile(nsIFile* *aResult)
 
     // Otherwise, we look for bookmarks.html in the current profile
     // directory using the magic directory service.
-    rv = NS_GetSpecialDirectory(NS_APP_BOOKMARKS_50_FILE, aResult);
+    rv = NS_GetSpecialDirectory(NS_APP_BOOKMARKS_50_FILE, (nsIFile **)(nsILocalFile **)getter_AddRefs(mBookmarksFile));
     NS_ENSURE_SUCCESS(rv, rv);
 
     return NS_OK;
@@ -5147,13 +5136,16 @@ nsBookmarksService::ReadFavorites()
 NS_IMETHODIMP
 nsBookmarksService::ReadBookmarks(PRBool *didLoadBookmarks)
 {
-    if (!gLoadedBookmarks)
+    *didLoadBookmarks = PR_FALSE;
+    if (!mBookmarksFile)
     {
         LoadBookmarks();
-        gLoadedBookmarks = PR_TRUE;
-        *didLoadBookmarks = PR_TRUE;
-    } else {
-        *didLoadBookmarks = PR_FALSE;
+        if (mBookmarksFile) {
+            *didLoadBookmarks = PR_TRUE;
+            nsCOMPtr<nsIPref> prefServ(do_GetService(kPrefCID));
+            if (prefServ)
+                prefServ->AddObserver("browser.bookmarks.file", this, true);
+        }
     }
     return NS_OK;
 }
@@ -5205,8 +5197,7 @@ nsBookmarksService::LoadBookmarks()
     rv = initDatasource();
     if (NS_FAILED(rv)) return NS_OK;
 
-    nsCOMPtr<nsIFile> bookmarksFile;
-    rv = GetBookmarksFile(getter_AddRefs(bookmarksFile));
+    rv = EnsureBookmarksFile();
 
     // Lack of Bookmarks file is non-fatal
     if (NS_FAILED(rv)) return NS_OK;
@@ -5281,7 +5272,7 @@ nsBookmarksService::LoadBookmarks()
 #endif
     {
         BookmarkParser parser;
-        parser.Init(bookmarksFile, mInner);
+        parser.Init(mBookmarksFile, mInner);
         if (useDynamicSystemBookmarks)
         {
 #if defined(XP_MAC) || defined(XP_MACOSX)
@@ -5295,7 +5286,6 @@ nsBookmarksService::LoadBookmarks()
         BeginUpdateBatch();
         parser.Parse(kNC_BookmarksRoot, kNC_Bookmark);
         EndUpdateBatch();
-        mBookmarksAvailable = PR_TRUE;
         
         PRBool foundPTFolder = PR_FALSE;
         parser.ParserFoundPersonalToolbarFolder(&foundPTFolder);
