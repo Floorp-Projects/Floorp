@@ -402,15 +402,8 @@ nsresult nsTypeAheadFind::HandleFocusInternal(nsIDOMEventTarget *aDOMEventTarget
   nsCOMPtr<nsIDOMWindow> domWin(do_QueryInterface(ourGlobal));
   nsCOMPtr<nsIDOMEventTarget> rootTarget(do_QueryInterface(domWin));
 
-  if (!gIsFindingText) { // prevents listener callbacks from resetting us during typeahead find processing
-    nsCOMPtr<nsIDOMWindow> isDomWin(do_QueryInterface(aDOMEventTarget));
-    nsCOMPtr<nsIDOMDocument> isDomDoc(do_QueryInterface(aDOMEventTarget));\
-    // CancelFind() only when we're in a new window or we're focusing on 
-    // something other than a window or doc. This rule helps us behave 
-    // better with sloppy focus on Unix window managers.
-    if (domWin != mFocusedWindow || (!isDomWin && !isDomDoc))
-      CancelFind();
-  }
+  if (domWin != mFocusedWindow)
+    CancelFind();
 
   if (!rootTarget || (domWin == mFocusedWindow && docTarget != aDOMEventTarget))
     return NS_OK;  // Return early for elements focused within currently focused  document
