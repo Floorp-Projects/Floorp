@@ -21,20 +21,22 @@
 
 DEPTH=..\..\..\..
 
+CHROME_DIR=communicator
+CHROME_SKIN_DIR=skin
+
+CHROME_TYPE=skin
+
+CHROME_SKIN= \
+	.\box.css \
+	.\brand.css \
+	.\button.css \
+	.\communicator.css \
+	.\menu.css \
+	.\menubutton.css \
+	.\splitter.css \
+	.\toolbar.css \
+	.\navbar-endbox.gif \
+	$(NULL)
+
 include <$(DEPTH)\config\rules.mak>
 
-DISTBROWSER=$(DIST)\bin\chrome\communicator\skin
-
-install::
-	$(MAKE_INSTALL) box.css $(DISTBROWSER)
-	$(MAKE_INSTALL) brand.css $(DISTBROWSER)
-	$(MAKE_INSTALL) button.css $(DISTBROWSER)
-	$(MAKE_INSTALL) communicator.css $(DISTBROWSER)
-	$(MAKE_INSTALL) menu.css $(DISTBROWSER)
-	$(MAKE_INSTALL) menubutton.css $(DISTBROWSER)
-	$(MAKE_INSTALL) splitter.css $(DISTBROWSER)
-	$(MAKE_INSTALL) toolbar.css $(DISTBROWSER)
-	$(MAKE_INSTALL) navbar-endbox.gif $(DISTBROWSER)
-
-clobber::
-  rm -f $(DIST)\bin\chrome\communicator\skin\*.*

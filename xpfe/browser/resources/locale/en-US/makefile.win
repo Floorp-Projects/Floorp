@@ -21,21 +21,19 @@
 
 DEPTH=..\..\..\..\..
 
+CHROME_DIR=navigator
+CHROME_L10N_DIR=locale
+CHROME_TYPE=locale
+
+CHROME_L10N = \
+	.\openLocation.dtd \
+	.\openLocation.properties \
+	.\viewSource.dtd \
+	.\navigator.dtd \
+	.\NetSupportConfirmCheckYN.dtd \
+	.\navigator.properties \
+	$(NULL)
+
+
 include <$(DEPTH)\config\rules.mak>
-
-DISTBROWSER=$(DIST)\bin\chrome\navigator\locale
-
-install::
-    $(MAKE_INSTALL) openLocation.dtd $(DISTBROWSER)
-    $(MAKE_INSTALL) openLocation.properties $(DISTBROWSER)
-	$(MAKE_INSTALL) viewSource.dtd $(DISTBROWSER)
-	$(MAKE_INSTALL) navigator.dtd $(DISTBROWSER)
-	$(MAKE_INSTALL) NetSupportConfirmCheckYN.dtd $(DISTBROWSER)
-	$(MAKE_INSTALL) navigator.properties $(DISTBROWSER)
-
-clobber::
-  rm -f $(DISTBROWSER)\viewSource.dtd
-  rm -f $(DISTBROWSER)\navigator.dtd
-  rm -f $(DISTBROWSER)\NetSupportConfirmCheckYN.dtd
-  rm -f $(DISTBROWSER)\navigator.properties
 

@@ -24,47 +24,49 @@ DEPTH=..\..\..\..
 
 DIRS=win
 
+CHROME_DIR=global
+CHROME_CONTENT_DIR=content
+
+CHROME_TYPE=content
+
+CHROME_CONTENT= \
+	.\browserBindings.xul \
+	.\editorBindings.xul \
+	.\inputBindings.xul \
+	.\textAreaBindings.xul \
+	.\hiddenWindow.xul \
+	.\globalBindings.xml \
+	.\globalOverlay.xul \
+	.\globalOverlay.js \
+	.\tasksOverlay.xul \
+	.\tasksOverlay.js \
+	.\taskbarOverlay.xul \
+	.\dialogOverlay.xul \
+	.\dialogOverlay.js \
+	.\dialogBindings.xml \
+	.\commonDialog.xul \
+	.\commonDialog.js \
+	.\strres.js \
+	.\builtinURLs.js \
+	.\about.html \
+	.\logo.gif \
+	.\about.xul \
+	.\mozilla.html \
+	.\credits.html \
+	.\charsetOverlay.xul \
+	.\charsetOverlay.js \
+	.\charsetDetectorsOverlay.js \
+	.\charsetDetectorsOverlay.xul \
+	.\selectDialog.js \
+	.\selectDialog.xul \
+	.\nsWidgetStateManager.js \
+	.\widgetStateManager.js \
+	.\wizardHandlerSet.js \
+	.\wizardManager.js \
+	.\wizardOverlay.js \
+	.\wizardOverlay.xul \
+	.\treePopups.js \
+	$(NULL)
+
 include <$(DEPTH)\config\rules.mak>
 
-DISTBROWSER=$(DIST)\bin\chrome\global\content
-
-install::
-	$(MAKE_INSTALL) browserBindings.xul $(DISTBROWSER)
-	$(MAKE_INSTALL) editorBindings.xul $(DISTBROWSER)
-	$(MAKE_INSTALL) inputBindings.xul $(DISTBROWSER)
-	$(MAKE_INSTALL) textAreaBindings.xul $(DISTBROWSER)
-	$(MAKE_INSTALL) hiddenWindow.xul $(DISTBROWSER)
-	$(MAKE_INSTALL) globalBindings.xml $(DISTBROWSER)
-	$(MAKE_INSTALL) globalOverlay.xul $(DISTBROWSER)
-	$(MAKE_INSTALL) globalOverlay.js $(DISTBROWSER)
-	$(MAKE_INSTALL) tasksOverlay.xul $(DISTBROWSER)
-	$(MAKE_INSTALL) tasksOverlay.js $(DISTBROWSER)
-	$(MAKE_INSTALL) taskbarOverlay.xul $(DISTBROWSER)
-	$(MAKE_INSTALL) dialogOverlay.xul $(DISTBROWSER)
-	$(MAKE_INSTALL) dialogOverlay.js $(DISTBROWSER)
-	$(MAKE_INSTALL) dialogBindings.xml $(DISTBROWSER)
-	$(MAKE_INSTALL) commonDialog.xul $(DISTBROWSER)
-	$(MAKE_INSTALL) commonDialog.js $(DISTBROWSER)
-	$(MAKE_INSTALL) strres.js $(DISTBROWSER)
-	$(MAKE_INSTALL) builtinURLs.js $(DISTBROWSER)
-	$(MAKE_INSTALL) about.html $(DISTBROWSER)
-	$(MAKE_INSTALL) logo.gif $(DISTBROWSER)
-	$(MAKE_INSTALL) about.xul $(DISTBROWSER)
-	$(MAKE_INSTALL) mozilla.html $(DISTBROWSER)
-	$(MAKE_INSTALL) credits.html $(DISTBROWSER)
-	$(MAKE_INSTALL) charsetOverlay.xul $(DISTBROWSER)
-	$(MAKE_INSTALL) charsetOverlay.js $(DISTBROWSER)
-	$(MAKE_INSTALL) charsetDetectorsOverlay.js $(DISTBROWSER)
-	$(MAKE_INSTALL) charsetDetectorsOverlay.xul $(DISTBROWSER)
-	$(MAKE_INSTALL) selectDialog.js $(DISTBROWSER)
-	$(MAKE_INSTALL) selectDialog.xul $(DISTBROWSER)
-	$(MAKE_INSTALL) nsWidgetStateManager.js $(DISTBROWSER)
-	$(MAKE_INSTALL) widgetStateManager.js $(DISTBROWSER)
-	$(MAKE_INSTALL) wizardHandlerSet.js $(DISTBROWSER)
-	$(MAKE_INSTALL) wizardManager.js $(DISTBROWSER)
-	$(MAKE_INSTALL) wizardOverlay.js $(DISTBROWSER)
-	$(MAKE_INSTALL) wizardOverlay.xul $(DISTBROWSER)
-	$(MAKE_INSTALL) treePopups.js $(DISTBROWSER)
-  
-clobber::
-  rm -f $(DIST)\bin\chrome\global\content\*.*

@@ -23,6 +23,9 @@
 
 DEPTH=..\..\..
 
+CHROME_DIR=communicator
+CHROME_TYPE=content locale
+
 DIRS= skin
 
 include <$(DEPTH)\config\rules.mak>

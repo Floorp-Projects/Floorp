@@ -21,34 +21,24 @@
 
 DEPTH=..\..\..\..
 
+CHROME_DIR=navigator
+CHROME_CONTENT_DIR=content
+CHROME_TYPE=content
+
+CHROME_CONTENT = \
+	.\openLocation.js \
+	.\openLocation.xul \
+	.\viewsource.js \
+	.\viewSource.xul \
+	.\navigator.xul \
+	.\navigatorOverlay.xul \
+	.\navigator.js \
+	.\navigatorDD.js \
+	.\NetSupportConfirmYN.xul \
+	.\NetSupportConfirmCheckYN.xul \
+	.\tooltip.js \
+	.\nsContextMenu.js \
+	$(NULL)
+
 include <$(DEPTH)\config\rules.mak>
 
-DISTBROWSWER=$(DIST)\bin\chrome\navigator\content
-
-install::
-	$(MAKE_INSTALL) openLocation.js $(DISTBROWSWER)
-    $(MAKE_INSTALL) openLocation.xul $(DISTBROWSWER)
-	$(MAKE_INSTALL) viewsource.js $(DISTBROWSWER)
-	$(MAKE_INSTALL) viewSource.xul $(DISTBROWSWER)
-	$(MAKE_INSTALL) navigator.xul $(DISTBROWSWER)
-	$(MAKE_INSTALL) navigatorOverlay.xul $(DISTBROWSWER)
-	$(MAKE_INSTALL) navigator.js $(DISTBROWSWER)
-	$(MAKE_INSTALL) navigatorDD.js $(DISTBROWSWER)
-	$(MAKE_INSTALL) NetSupportConfirmYN.xul $(DISTBROWSWER)
-	$(MAKE_INSTALL) NetSupportConfirmCheckYN.xul $(DISTBROWSWER)
-	$(MAKE_INSTALL) tooltip.js $(DISTBROWSWER)
-	$(MAKE_INSTALL) nsContextMenu.js $(DISTBROWSWER)
-
-
-clobber::
-  rm -f $(DISTBROWSER)\openLocation.js
-  rm -f $(DISTBROWSER)\openLocation.xul
-  rm -f $(DISTBROWSER)\viewsource.js
-  rm -f $(DISTBROWSER)\viewSource.xul
-  rm -f $(DISTBROWSER)\navigator.xul
-   rm -f $(DISTBROWSER)\navigatorOverlay.xul
-  rm -f $(DISTBROWSER)\navigator.js
-  rm -f $(DISTBROWSER)\NetSupportConfirmYN.xul
-  rm -f $(DISTBROWSER)\NetSupportConfirmCheckYN.xul
-  rm -f $(DISTBROWSER)\tooltip.js
-  rm -f $(DISTBROWSER)\nsContextMenu.js
