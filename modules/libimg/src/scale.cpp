@@ -22,10 +22,15 @@
 */
 
 
-
 #include "if.h"                 /* Image library internal declarations */
 #include "il.h"                 /* Image library external API */
 #include "il_strm.h"            /* For image types. */
+
+#include "nsVoidArray.h"        
+#include "nsITimer.h"
+#include "nsITimerCallback.h"
+
+
 
 /* Approximate size of pixel data chunks sent to the FE for display */
 #ifdef XP_OS2
@@ -45,6 +50,9 @@ typedef struct _IL_IRGBGA {
      uint8 index;
     uint8 red, green, blue, gray, alpha;
 } IL_IRGBGA;
+
+
+static nsVoidArray *gTimeouts = NULL;
 
 static void
 il_timeout_callback(void *closure)
@@ -194,7 +202,7 @@ il_flush_image_data(il_container *ic)
 		}
     }
 #endif /* XP_UNIX */
-
+   
     /* Draw whatever is leftover after sending the chunks */
 #ifdef STANDALONE_IMAGE_LIB
     img_cx->img_cb->UpdatePixmap(img_cx->dpy_cx, image, 
@@ -809,7 +817,6 @@ il_emit_row(
 
             uint8 *tmpbuf;
             int i;
-
             il_alpha_mask(1,rgbbuf, (int)len, dcolumn_start, 
                 maskp, column_count,draw_mode);                
 
@@ -820,7 +827,7 @@ il_emit_row(
                 *rgbbuf++ = *tmpbuf++;
                 tmpbuf++;  /* strip off alpha channel */
             }
-        
+      
         }
 #ifdef STANDALONE_IMAGE_LIB
         img_cx->img_cb->ControlPixmapBits(img_cx->dpy_cx, mask,
