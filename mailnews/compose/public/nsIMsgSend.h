@@ -137,7 +137,7 @@ class nsIMsgSend : public nsISupports {
 						  const struct nsMsgAttachmentData  *attachments,
 						  const struct nsMsgAttachedFile    *preloaded_attachments,
 						  void                              *relatedPart, /* nsMsgSendPart  */
-						  void                              (*message_delivery_done_callback)(void *context, void *fe_data,
+						  void                              (*message_delivery_done_callback)(void *fe_data,
 								                                                                  int status, const char *error_message)) = 0;
 
 #ifdef XPIDL_JS_STUBS

@@ -8,7 +8,7 @@
 #include "xp_qsort.h"
 #include "msgcom.h"
 #include "rosetta_mailnews.h"
-
+#include "nsMsgZapIt.h"
 
 // These are some defines that we used to get out of allxpstr. But we can't do that anymore...
 
@@ -149,12 +149,7 @@ protected:
 	uint32			m_outputBufferIndex;
 };
 
-class MSG_ZapIt
-{
-	void* unused;
-};
-
-class MSG_Prefs : public MSG_ZapIt 
+class MSG_Prefs : public nsMsgZapIt 
 {
 public:
 	PRBool         GetDefaultBccSelf(PRBool newsBcc) {return PR_FALSE;}
@@ -176,7 +171,7 @@ public:
 	virtual MSG_IMAPFolderInfoMail	*GetIMAPFolderInfoMail() {return NULL;}
 };
 
-class MSG_PostDeliveryActionInfo : public MSG_ZapIt
+class MSG_PostDeliveryActionInfo : public nsMsgZapIt
 {
 public:
 	MSG_PostDeliveryActionInfo(MSG_FolderInfo *folderInfo) {;}
