@@ -859,14 +859,11 @@ function awRecipientKeyPress(event, element)
       var addresses = element.value;
       element.value = ""; // clear out the current line so we don't try to autocomplete it..
       parseAndAddAddresses(addresses, awGetPopupElement(awGetRowByInputElement(element)).selectedItem.getAttribute("value"));
-      return;
     }
-    
+    else if (event.keyCode == KeyEvent.DOM_VK_TAB)
+      awTabFromRecipient(element, event);
     break;
-  }
-  case 9:
-    awTabFromRecipient(element, event);
-    break;
+    }
   }
 }
 
