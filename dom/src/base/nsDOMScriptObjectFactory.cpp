@@ -39,9 +39,11 @@
 #include "nsJSEnvironment.h"
 #include "nsJSEventListener.h"
 #include "nsGlobalWindow.h"
-#include "nsIXULPrototypeCache.h"
 #include "nsIJSContextStack.h"
 #include "nsDOMException.h"
+#ifdef MOZ_XUL
+#include "nsIXULPrototypeCache.h"
+#endif
 
 nsDOMScriptObjectFactory::nsDOMScriptObjectFactory()
 {
