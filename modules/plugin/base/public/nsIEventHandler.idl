@@ -56,5 +56,5 @@ interface nsIEventHandler : nsISupports
      * @param event - the event to be handled
      * @result - PR_TRUE if event was handled
      */
-    boolean HandleEvent(in nsPluginEventPtr event);
+    boolean handleEvent(in nsPluginEventPtr event);
 };
