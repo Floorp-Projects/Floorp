@@ -963,8 +963,11 @@ nsTreeRowGroupFrame::IR_TargetIsChild(nsIPresContext*      aPresContext,
     // Place the child
     FinishReflowChild(aNextFrame, aPresContext, desiredSize, xpos, 0, 0);
 
-    // Return our desired width
+    // Return our desired width and height
+    nsRect rect;
+    GetRect(rect);
     aDesiredSize.width = aReflowState.reflowState.availableWidth;
+    aDesiredSize.height = rect.height;
 
     if (mNextInFlow) {
       aStatus = NS_FRAME_NOT_COMPLETE;
