@@ -837,7 +837,9 @@
           if (this._isScrolling) {
             stopScroll();
           } else if (event.button == 1) {
-          if (!this.autoscrollEnabled || this.isAutoscrollBlocker(event.originalTarget))
+          if (!this.autoscrollEnabled  ||
+              this.currentURI.spec == "about:blank"|| 
+              this.isAutoscrollBlocker(event.originalTarget))
             return;
 
               this._startX = event.clientX;
