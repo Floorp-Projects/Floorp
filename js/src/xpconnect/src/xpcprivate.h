@@ -227,6 +227,7 @@ public:
         IDX_VALUE                   ,
         IDX_QUERY_INTERFACE         ,
         IDX_COMPONENTS              ,
+        IDX_WRAPPED_JSOBJECT        ,
         IDX_TOTAL_COUNT // just a count of the above
     };
 
