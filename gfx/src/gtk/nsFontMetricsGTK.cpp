@@ -1069,6 +1069,11 @@ nsFontMetricsGTK::~nsFontMetricsGTK()
 
   mWesternFont = nsnull;
 
+  if (mDeviceContext) {
+    mDeviceContext->FontMetricsDeleted(this);
+    mDeviceContext = nsnull;
+  }
+
   if (!--gFontMetricsGTKCount) {
     FreeGlobals();
   }
@@ -1237,7 +1242,7 @@ NS_IMETHODIMP nsFontMetricsGTK::Init(const nsFont& aFont, nsIAtom* aLangGroup,
 
 NS_IMETHODIMP  nsFontMetricsGTK::Destroy()
 {
-//  NS_IF_RELEASE(mDeviceContext);
+  mDeviceContext = nsnull;
   return NS_OK;
 }
 

@@ -45,6 +45,8 @@
 #include "nsCOMPtr.h"
 #include "nsIAtom.h"
 #include "nsVoidArray.h"
+#include "nsIObserver.h"
+#include "nsIObserverService.h"
 
 class nsIImageRequest;
 class nsHashtable;
@@ -59,6 +61,9 @@ public:
   NS_IMETHOD GetDeviceContext(nsIDeviceContext *&aContext) const;
   NS_IMETHOD GetMetricsFor(const nsFont& aFont, nsIAtom* aLangGroup,
                            nsIFontMetrics *&aMetrics);
+
+  nsresult   FontMetricsDeleted(const nsIFontMetrics* aFontMetrics);
+  nsresult   Compact();
   nsresult   Flush();
   /* printer device context classes may create their own
    * subclasses of nsFontCache (and override this method) and override 
@@ -72,12 +77,14 @@ protected:
                               // ownership is implied. MMP.
 };
 
-class NS_GFX DeviceContextImpl : public nsIDeviceContext
+class NS_GFX DeviceContextImpl : public nsIDeviceContext,
+                                 public nsIObserver
 {
 public:
   DeviceContextImpl();
 
   NS_DECL_ISUPPORTS
+  NS_DECL_NSIOBSERVER
 
   NS_IMETHOD  Init(nsNativeWidget aWidget);
 
@@ -119,7 +126,7 @@ public:
                               PRBool& aAliased);
 
   NS_IMETHOD CreateFontCache();
-
+  NS_IMETHOD FontMetricsDeleted(const nsIFontMetrics* aFontMetrics);
   NS_IMETHOD FlushFontCache(void);
 
   NS_IMETHOD GetDepth(PRUint32& aDepth);

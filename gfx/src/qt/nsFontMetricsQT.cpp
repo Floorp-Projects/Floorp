@@ -684,6 +684,10 @@ nsFontMetricsQT::~nsFontMetricsQT()
     delete mUserDefinedFont;
     mUserDefinedFont = nsnull;
   } 
+  if (mDeviceContext) {
+    mDeviceContext->FontMetricsDeleted(this);
+    mDeviceContext = nsnull;
+  }
   if (!--gFontMetricsQTCount) {
     FreeGlobals();
     if (mQFontDB) {
@@ -893,6 +897,7 @@ QFontDatabase *nsFontMetricsQT::GetQFontDB()
  
 NS_IMETHODIMP nsFontMetricsQT::Destroy()
 {
+  mDeviceContext = nsnull;
   return NS_OK;
 }
 

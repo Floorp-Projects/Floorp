@@ -274,10 +274,12 @@ nsFontMetricsOS2::nsFontMetricsOS2()
 
 nsFontMetricsOS2::~nsFontMetricsOS2()
 {
-   Destroy();
-
    delete mFont;
    delete mFontHandle;
+  if (mDeviceContext) {
+    mDeviceContext->FontMetricsDeleted(this);
+    mDeviceContext = nsnull;
+  }
   if (0 == --gFontMetricsOS2Count) {
     FreeGlobals();
   }
@@ -321,6 +323,7 @@ nsFontMetricsOS2::Init( const nsFont &aFont,  nsIAtom* aLangGroup,
 
 nsresult nsFontMetricsOS2::Destroy()
 {
+   mDeviceContext = nsnull;
    return NS_OK;
 }
 

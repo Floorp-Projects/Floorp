@@ -66,8 +66,10 @@ nsFontMetricsPS :: ~nsFontMetricsPS()
     mAFMInfo = nsnull;
   }
 
-
-  mDeviceContext = nsnull;
+  if (mDeviceContext) {
+    mDeviceContext->FontMetricsDeleted(this);
+    mDeviceContext = nsnull;
+  }
 }
 
 NS_IMPL_ISUPPORTS1(nsFontMetricsPS, nsIFontMetrics)
