@@ -84,31 +84,29 @@ nsCacheMetaData::GetElement(const nsAReadableCString * key)
 
 
 nsresult
-nsCacheMetaData::SetElement(const nsAReadableCString * key,
-                            const nsAReadableCString * value)
+nsCacheMetaData::SetElement(const nsAReadableCString& key,
+                            const nsAReadableCString& value)
 {
   nsCacheMetaDataHashTableEntry * metaEntry;
 
   NS_ASSERTION(initialized, "nsCacheMetaDataHashTable not initialized");
-  if (!key) return NS_ERROR_NULL_POINTER;
-  //** should value == nsnull remove the key?
+
+  //** should empty value remove the key?
 
   metaEntry = (nsCacheMetaDataHashTableEntry *)
-      PL_DHashTableOperate(&table, key, PL_DHASH_ADD);
+      PL_DHashTableOperate(&table, &key, PL_DHASH_ADD);
   if (metaEntry->key == nsnull) {
-      metaEntry->key = new nsCString(*key);
+      metaEntry->key = new nsCString(key);
       if (metaEntry->key == nsnull)
           return NS_ERROR_OUT_OF_MEMORY;
   }
   if (metaEntry->value != nsnull)
       delete metaEntry->value;
 
-  if (value) {
-      metaEntry->value = new nsCString(*value);
-      if (metaEntry->value == nsnull)
-          return NS_ERROR_OUT_OF_MEMORY;
-  } else {
-      metaEntry->value = nsnull;
+  metaEntry->value = new nsCString(value);
+  if (metaEntry->value == nsnull) {
+      //** remove key?
+      return NS_ERROR_OUT_OF_MEMORY;
   }
 
   return NS_OK;
