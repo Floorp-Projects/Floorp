@@ -1,4 +1,4 @@
-# -*- Mode: Java; tab-width: 4; c-basic-offset: 4; -*-
+/* -*- Mode: Java; tab-width: 4; c-basic-offset: 4; -*-
 # 
 # The contents of this file are subject to the Netscape Public License
 # Version 1.0 (the "NPL"); you may not use this file except in
@@ -17,6 +17,7 @@
 # 
 # Contributor(s):
 #   Ben "Count XULula" Goodger <ben@netscape.com>
+*/
 
 const _DEBUG = false; 
  

@@ -21,7 +21,7 @@ browser.jar:
 *   content/browser/pref/pref-privacy.xul                  (content/pref-privacy.xul)
 *   content/browser/pref/pref-popups.xul                   (content/pref-popups.xul)
 *   content/browser/pref/pref.xul                          (content/pref.xul)
-*   content/browser/pref/nsPrefWindow.js                   (content/nsPrefWindow.js)
+    content/browser/pref/nsPrefWindow.js                   (content/nsPrefWindow.js)
 *   content/browser/pref/pref-winhooks.xul                 (content/pref-winhooks.xul)
 *   content/browser/pref/pref-winhooks.js                  (content/pref-winhooks.js)
 *   content/browser/pref/pref-tabs.xul                     (content/pref-tabs.xul)
