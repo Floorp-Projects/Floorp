@@ -105,7 +105,7 @@ HTML2text(nsString& inString, nsString& inType, nsString& outType,
     rv = NS_New_HTML_ContentSinkStream(&sink, &outString, flags);
 
   else  // default to plaintext
-    rv = NS_New_HTMLToTXT_SinkStream(&sink, &outString, wrapCol, flags);
+    rv = NS_New_HTMLToTXT_SinkStream(&sink, &outString, nsnull, wrapCol, flags);
 
   if (NS_FAILED(rv))
   {
