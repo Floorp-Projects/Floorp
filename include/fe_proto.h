@@ -1124,7 +1124,7 @@ void FE_UpdateEnableStates(MWContext * pMWContext);
  *   so FEs don't need to worry about removing selection,
  *   but you must call EDT_CancelSizing or EDT_EndSizing for final removal.
 */
-void FE_DisplayAddRowOrColBorder(MWContext * pMWContext, XP_Rect *pRect, XP_Bool bErase);
+void FE_DisplayAddRowOrColBorder(MWContext * pMWContext, void *pRect, XP_Bool bErase);
 
 /* This should invalidate the entire table or cell rect to cause redrawing of backgrounds
  *  and all table or cell contents. Use to unselect table/cell selection feedback
