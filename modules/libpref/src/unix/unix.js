@@ -47,8 +47,15 @@ pref("security.warn_accept_cookie", false);
 pref("editor.disable_spell_checker", false);
 pref("editor.dont_lock_spell_files", true);
 
+// Middle-mouse handling
+pref("middlemouse.paste", true);
+pref("middlemouse.openNewWindow", true);
+
 // Instead of "delay_images"
 pref("browser.autoload_images", true);
+
+// Most Unix people think modal pref windows are stupid:
+pref("browser.prefWindowModal", false);
 
 // Unix only
 pref("mail.use_movemail", true);
