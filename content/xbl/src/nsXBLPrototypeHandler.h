@@ -84,6 +84,7 @@ protected:
   
   inline PRInt32 GetMatchingKeyCode(const nsString& aKeyName);
   void ConstructMask();
+  void GetEventType(nsAWritableString& type);
   PRBool ModifiersMatchMask(nsIDOMUIEvent* aEvent);
 
   inline PRBool KeyEventMatched(nsIDOMKeyEvent* aKeyEvent);
