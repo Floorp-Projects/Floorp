@@ -290,9 +290,8 @@ NS_IMETHODIMP
 nsXMLMIMEDataSource::Serialize() {
 return NS_ERROR_FAILURE;
 #if 0
-	nsresult rv = NS_OK;
-	
-	nsCOMPtr<nsIChannel> channel;
+  nsresult rv = NS_OK;
+  nsCOMPtr<nsIChannel> channel;
   NS_WITH_SERVICE(nsIFileTransportService, fts, kFileTransportServiceCID, &rv) ;
   if(NS_FAILED(rv)) return rv ;
  
@@ -495,6 +494,9 @@ nsXMLMIMEDataSource::InitFromHack() {
     rv = AddMapping( "application/x-arj", "arj", "ARJ file", nsnull);
     if (NS_FAILED(rv)) return rv;
     
+    rv = AddMapping(APPLICATION_XPINSTALL, "xpi", "XPInstall Install", nsnull, 'xpi*','MOSS');
+    if (NS_FAILED(rv)) return rv;
+    
     return NS_OK;
 }
 
@@ -503,6 +505,7 @@ nsXMLMIMEDataSource::InitFromHack() {
 NS_IMETHODIMP
 nsXMLMIMEDataSource::GetFromExtension(const char *aFileExt, nsIMIMEInfo **_retval) {
     // for now we're assuming file extensions are case insensitive.
+
     nsCAutoString fileExt(aFileExt);
     fileExt.ToLowerCase();
 
