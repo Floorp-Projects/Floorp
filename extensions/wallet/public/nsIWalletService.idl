@@ -72,7 +72,6 @@ interface nsIWalletService : nsISupports {
   wstring WALLET_PrefillOneElement
     (in nsIDOMWindowInternal win, in nsIDOMNode elementNode);
   [noscript]void WALLET_PrefillReturn(in nsAutoString results);
-  void WALLET_FetchFromNetCenter();
   boolean WALLET_ExpirePassword();
   void WALLET_InitReencryptCallback(in nsIDOMWindowInternal win);
 

@@ -4150,8 +4150,3 @@ WLLT_OnSubmit(nsIContent* currentForm, nsIDOMWindowInternal* window) {
     }
   }
 }
-
-PUBLIC void
-WLLT_FetchFromNetCenter() {
-//  wallet_FetchFromNetCenter();
-}

@@ -109,9 +109,6 @@ extern void
 WLLT_OnSubmit(nsIContent* formNode, nsIDOMWindowInternal* window);
 
 extern void
-WLLT_FetchFromNetCenter();
-
-extern void
 WLLT_ExpirePassword(PRBool* status);
 
 extern void

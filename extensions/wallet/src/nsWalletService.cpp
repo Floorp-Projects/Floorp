@@ -168,11 +168,6 @@ NS_IMETHODIMP nsWalletlibService::WALLET_PrefillReturn(nsAutoString results){
   return NS_OK;
 }
 
-NS_IMETHODIMP nsWalletlibService::WALLET_FetchFromNetCenter(){
-  ::WLLT_FetchFromNetCenter();
-  return NS_OK;
-}
-
 NS_IMETHODIMP nsWalletlibService::WALLET_ExpirePassword(PRBool* status){
   ::WLLT_ExpirePassword(status);
   return NS_OK;
