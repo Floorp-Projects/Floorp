@@ -53,13 +53,9 @@
 #include "nsIMsgAccount.h"
 #include "nsIMsgAccountManager.h"
 
-// this should eventually be moved to the pop3 server for upgrading
 #include "nsIPop3IncomingServer.h"
-// this should eventually be moved to the imap server for upgrading
 #include "nsIImapIncomingServer.h"
-// this should eventually be moved to the nntp server for upgrading
 #include "nsINntpIncomingServer.h"
-// this should eventually be moved to the no server for upgrading
 #include "nsINoIncomingServer.h"
 
 #define BUF_STR_LEN 1024
@@ -1909,17 +1905,12 @@ nsMessengerMigrator::MigrateOldNntpPrefs(nsIMsgIncomingServer *server, const cha
   MIGRATE_SIMPLE_BOOL_PREF(PREF_4X_NEWS_NOTIFY_ON,nntpServer,SetNotifyOn)
   MIGRATE_SIMPLE_BOOL_PREF(PREF_4X_NEWS_MARK_OLD_READ,nntpServer,SetMarkOldRead)
   MIGRATE_SIMPLE_INT_PREF(PREF_4X_NEWS_MAX_ARTICLES,nntpServer,SetMaxArticles)
-            
-    
-#ifdef SUPPORT_SNEWS
-#error THIS_CODE_ISNT_DONE_YET
-#ifdef CAN_UPGRADE_4x_PASSWORDS
-  MIGRATE_STR_PREF("???nntp.server.%s.password",hostAndPort,server,SetPassword)
-#else
-  rv = server->SetPassword(nsnull);
+ 
+  /* in 4.x, news username and passwords did not persist beyond the session
+   * so when we migrate them, we make sure to set this to false
+   * the user can always change it in the prefs UI if they want */
+  rv = server->SetRememberPassword(PR_FALSE);          
   if (NS_FAILED(rv)) return rv;
-#endif /* CAN_UPGRADE_4x_PASSWORDS */
-#endif /* SUPPORT_SNEWS */
 	
   nsCOMPtr <nsIFileSpec> path;
   rv = NS_NewFileSpecWithSpec(newsrcfile, getter_AddRefs(path));
