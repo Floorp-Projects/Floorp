@@ -1461,17 +1461,6 @@ nsHTMLGenericContent::ToHTMLString(nsString& aBuf) const
 
 //----------------------------------------------------------------------
 
-// XXX this is REALLY temporary code
-
-extern nsresult NS_NewBRFrame(nsIContent* aContent, nsIFrame* aParentFrame,
-                              nsIFrame*& aNewFrame);
-extern nsresult NS_NewHRFrame(nsIContent* aContent, nsIFrame* aParentFrame,
-                              nsIFrame*& aNewFrame);
-extern nsresult NS_NewObjectFrame(nsIContent* aContent, nsIFrame* aParentFrame,
-                                  nsIFrame*& aNewFrame);
-
-//----------------------------------------------------------------------
-
 // nsIScriptObjectOwner implementation
 
 nsresult

@@ -1431,25 +1431,19 @@ HTMLStyleSheetImpl::ContentAppended(nsIPresContext* aPresContext,
   return NS_OK;
 }
 
-NS_IMETHODIMP
-HTMLStyleSheetImpl::ContentInserted(nsIPresContext* aPresContext,
-                                    nsIDocument*    aDocument,
-                                    nsIContent*     aContainer,
-                                    nsIContent*     aChild,
-                                    PRInt32         aIndexInContainer)
+static nsIFrame*
+FindPreviousSibling(nsIPresShell* aPresShell,
+                    nsIContent*   aContainer,
+                    PRInt32       aIndexInContainer)
 {
-  nsIPresShell* shell = aPresContext->GetShell();
-  nsresult      rv = NS_OK;
-
-  // Find the frame that precedes the insertion point.
   nsIFrame* prevSibling = nsnull;
 
   // Note: not all content objects are associated with a frame so
   // keep looking until we find a previous frame
-  for (PRInt32 index = aIndexInContainer; index > 0; index--) {
+  for (PRInt32 index = aIndexInContainer - 1; index > 0; index--) {
     nsIContent* precedingContent;
-    aContainer->ChildAt(index - 1, precedingContent);
-    prevSibling = shell->FindFrameWithContent(precedingContent);
+    aContainer->ChildAt(index, precedingContent);
+    prevSibling = aPresShell->FindFrameWithContent(precedingContent);
     NS_RELEASE(precedingContent);
 
     if (nsnull != prevSibling) {
@@ -1466,27 +1460,101 @@ HTMLStyleSheetImpl::ContentInserted(nsIPresContext* aPresContext,
     }
   }
 
-  // Get the geometric parent.
-  // XXX Deal with frame moved out of the flow, e.g., floated and absolutely
-  // positioned frames...
-  nsIFrame* parentFrame;
+  return prevSibling;
+}
+
+static nsIFrame*
+FindNextSibling(nsIPresShell* aPresShell,
+                nsIContent*   aContainer,
+                PRInt32       aIndexInContainer)
+{
+  nsIFrame* nextSibling = nsnull;
+
+  // Note: not all content objects are associated with a frame so
+  // keep looking until we find a next frame
+  PRInt32 count;
+  aContainer->ChildCount(count);
+  for (PRInt32 index = aIndexInContainer + 1; index < count; index++) {
+    nsIContent* nextContent;
+    aContainer->ChildAt(index, nextContent);
+    nextSibling = aPresShell->FindFrameWithContent(nextContent);
+    NS_RELEASE(nextContent);
+
+    if (nsnull != nextSibling) {
+      // The frame may have a next-in-flow. Get the last-in-flow
+      nsIFrame* nextInFlow;
+      do {
+        nextSibling->GetNextInFlow(nextInFlow);
+        if (nsnull != nextInFlow) {
+          nextSibling = nextInFlow;
+        }
+      } while (nsnull != nextInFlow);
+
+      break;
+    }
+  }
+
+  return nextSibling;
+}
+
+NS_IMETHODIMP
+HTMLStyleSheetImpl::ContentInserted(nsIPresContext* aPresContext,
+                                    nsIDocument*    aDocument,
+                                    nsIContent*     aContainer,
+                                    nsIContent*     aChild,
+                                    PRInt32         aIndexInContainer)
+{
+  nsIPresShell* shell = aPresContext->GetShell();
+
+  // Find the frame that precedes the insertion point.
+  nsIFrame* prevSibling = FindPreviousSibling(shell, aContainer, aIndexInContainer);
+  nsIFrame* nextSibling = nsnull;
+  PRBool    isAppend = PR_FALSE;
+
+  // If there is no previous sibling, then find the frame that follows
   if (nsnull == prevSibling) {
+    nextSibling = FindNextSibling(shell, aContainer, aIndexInContainer);
+  }
+
+  // Get the geometric parent.
+  nsIFrame* parentFrame;
+  if ((nsnull == prevSibling) && (nsnull == nextSibling)) {
+    // No previous or next sibling so treat this like an appended frame.
+    // XXX This won't always be true if there's auto-generated before/after
+    // content
+    isAppend = PR_TRUE;
     parentFrame = shell->FindFrameWithContent(aContainer);
+
   } else {
-    prevSibling->GetGeometricParent(parentFrame);
+    // Use the prev sibling if we have it; otherwise use the next sibling.
+    // Note that we use the content parent, and not the geometric parent,
+    // in case the frame has been moved out of the flow...
+    if (nsnull != prevSibling) {
+      prevSibling->GetContentParent(parentFrame);
+    } else {
+      nextSibling->GetContentParent(parentFrame);
+    }
   }
 
   // Construct a new frame
+  nsresult  rv = NS_OK;
   if (nsnull != parentFrame) {
     nsIFrame* newFrame;
     rv = ConstructFrame(aPresContext, aChild, parentFrame, newFrame);
 
-    // Notify the parent frame with a reflow command, passing it the
-    // new child frame
     if (NS_SUCCEEDED(rv) && (nsnull != newFrame)) {
-      nsIReflowCommand* reflowCmd;
+      nsIReflowCommand* reflowCmd = nsnull;
 
-      rv = NS_NewHTMLReflowCommand(&reflowCmd, parentFrame, newFrame, prevSibling);
+      // Notify the parent frame with a reflow command.
+      if (isAppend) {
+        // Generate a FrameAppended reflow command
+        rv = NS_NewHTMLReflowCommand(&reflowCmd, parentFrame,
+                                     nsIReflowCommand::FrameAppended, newFrame);
+      } else {
+        // Generate a FrameInserted reflow command
+        rv = NS_NewHTMLReflowCommand(&reflowCmd, parentFrame, newFrame, prevSibling);
+      }
+
       if (NS_SUCCEEDED(rv)) {
         shell->AppendReflowCommand(reflowCmd);
         NS_RELEASE(reflowCmd);
