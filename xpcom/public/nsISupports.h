@@ -50,6 +50,14 @@ typedef nsID nsIID;
 #define NS_DEFINE_IID(_name, _iidspec) \
   const nsIID _name = _iidspec
 
+/**
+ * A macro to build the static const IID accessor method
+ */
+
+#define NS_DEFINE_STATIC_IID_ACCESSOR(the_iid) \
+  public: \
+  static const nsIID& IID() {static nsIID iid = the_iid; return iid;}
+
 //----------------------------------------------------------------------
 
 /**
