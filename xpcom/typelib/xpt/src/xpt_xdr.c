@@ -117,7 +117,8 @@ XPT_HashTableDestroy(XPTHashTable *table) {
 
 static void *
 XPT_HashTableAdd(XPTHashTable *table, void *key, void *value) {
-    XPTHashRecord **bucketloc = table->buckets + (((PRInt32)key) % XPT_HASHSIZE);
+    XPTHashRecord **bucketloc = table->buckets +
+        (((PRUint32)key) % XPT_HASHSIZE);
     XPTHashRecord *bucket;
 
     while (*bucketloc != NULL)
@@ -133,7 +134,7 @@ XPT_HashTableAdd(XPTHashTable *table, void *key, void *value) {
 
 static void *
 XPT_HashTableLookup(XPTHashTable *table, void *key) {
-    XPTHashRecord *bucket = table->buckets[(PRInt32)key % XPT_HASHSIZE];
+    XPTHashRecord *bucket = table->buckets[(PRUint32)key % XPT_HASHSIZE];
     while (bucket != NULL) {
         if (bucket->key == key)
             return bucket->value;
