@@ -1754,26 +1754,6 @@ NS_IMETHODIMP GlobalWindowImpl::Unescape(const nsString& aStr, nsString& aReturn
    return NS_OK;
 }
 
-NS_IMETHODIMP GlobalWindowImpl::AddXPConnectObject(const nsString& aId, 
-   nsISupports* aXPConnectObj)
-{
-   NS_ERROR("XXX: Someone Still Calling the deprecated nsIDOMWindow AddXPConnectObject\r\n");
-   return SetXPConnectObject(aId.GetUnicode(), aXPConnectObj);
-}
-
-NS_IMETHODIMP GlobalWindowImpl::RemoveXPConnectObject(const nsString& aId)
-{
-   NS_ERROR("XXX: Someone Still Calling the deprecated nsIDOMWindow RemoveXPConnectObject\r\n");
-   return SetXPConnectObject(aId.GetUnicode(), nsnull);
-}
-
-NS_IMETHODIMP GlobalWindowImpl::GetXPConnectObject(const nsString& aId,
-   nsISupports** aXPConnectObj)
-{
-   NS_ERROR("XXX: Someone Still Calling the deprecated nsIDOMWindow GetXPConnectObject\r\n");
-   return GetXPConnectObject(aId.GetUnicode(), aXPConnectObj);
-}
-
 //*****************************************************************************
 // GlobalWindowImpl::nsIJSScriptObject
 //*****************************************************************************   
@@ -2179,9 +2159,6 @@ NS_IMETHODIMP GlobalWindowImpl::GetLocation(nsIDOMLocation** aLocation)
 
    return NS_OK;
 }
-
-// NS_IMETHODIMP GlobalWindowImpl::GetDocShell(nsIDocShell** aDocShell)
-// Implemented by nsIScriptGlobalObject
 
 NS_IMETHODIMP GlobalWindowImpl::SetXPConnectObject(const PRUnichar* aProperty, 
    nsISupports* aXPConnectObj)
