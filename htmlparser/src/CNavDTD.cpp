@@ -706,7 +706,7 @@ nsresult CNavDTD::HandleToken(CToken* aToken,nsIParser* aParser){
       if(!FindTagInSet(theTag,passThru,sizeof(passThru)/sizeof(eHTMLTag_unknown))){
         if(!gHTMLElements[eHTMLTag_html].SectionContains(theTag,PR_FALSE)) {
           if((!mHadBody) && (!mHadFrameset)){
-            if(mHasOpenHead) {
+            if(mHasOpenHead) { 
               //just fall through and handle current token
               if(!gHTMLElements[eHTMLTag_head].IsChildOfHead(theTag)){
 
@@ -1333,6 +1333,7 @@ nsresult CNavDTD::HandleStartToken(CToken* aToken) {
           break;
 
         case eHTMLTag_userdefined:
+        case eHTMLTag_noscript:     //HACK XXX! Throw noscript on the floor for now.
           isTokenHandled=PR_TRUE;
           break;
 
@@ -2515,6 +2516,7 @@ nsresult CNavDTD::OpenHead(const nsIParserNode *aNode){
  */
 nsresult CNavDTD::CloseHead(const nsIParserNode *aNode){
   nsresult result=NS_OK;
+
   if(mHasOpenHead) {
     if(0==--mHasOpenHead){
 
@@ -3198,11 +3200,11 @@ nsresult CNavDTD::AddHeadLeaf(nsIParserNode *aNode){
   //this code has been added to prevent <meta> tags from being processed inside
   //the document if the <meta> tag itself was found in a <noframe>, <nolayer>, or <noscript> tag.
   eHTMLTags theTag=(eHTMLTags)aNode->GetNodeType();
+
   if(eHTMLTag_meta==theTag)
     if(HasOpenContainer(gNoXTags,sizeof(gNoXTags)/sizeof(eHTMLTag_unknown))) {
       return result;
     }
-
 
   if(mSink) {
     result=OpenHead(aNode);
