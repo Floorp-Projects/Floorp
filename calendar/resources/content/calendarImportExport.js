@@ -184,7 +184,11 @@ function addEventsToCalendar( calendarEventArray, silent )
 
       // open the event dialog with the event to add
       if( silent )
-         gICalLib.addEvent( calendarEvent );
+      {
+         var DefaultServer = gCalendarWindow.calendarManager.getDefaultServer();
+
+         gICalLib.addEvent( calendarEvent, DefaultServer.path );
+      }
       else
          editNewEvent( calendarEvent );
    }

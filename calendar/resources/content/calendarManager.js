@@ -301,6 +301,11 @@ calendarManager.prototype.refreshAllRemoteCalendars = function calMan_refreshAll
    }
 }
 
+calendarManager.prototype.getDefaultServer = function calMan_getDefaultServer()
+{
+   return( this.calendars[0] );
+}
+
 
 function onResponseAndRefresh( )
 {
