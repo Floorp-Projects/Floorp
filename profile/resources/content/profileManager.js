@@ -245,9 +245,11 @@ function SwitchProfileManagerMode()
       captionLine = "Manage Profiles *";
     }
     
-    var manage = document.getElementById( "manage" );       // hide the manage profiles button...
-    var manageParent = manage.parentNode;
-    manageParent.removeChild( manage );
+    var profileList = document.getElementById("profiles");
+    profileList.focus();
+
+    // hide the manage profiles button...
+    document.documentElement.getButton("extra2").hidden = true;
     profileManagerMode = "manager";                         // swap the mode
   } 
   else {
@@ -283,7 +285,7 @@ function DoEnabling()
 {
   var renbutton = document.getElementById( "renbutton" );
   var delbutton = document.getElementById( "delbutton" );
-  var start     = document.getElementById( "ok" );
+  var start     = document.documentElement.getButton( "accept" );
   
   var profileList = document.getElementById( "profiles" );
   if (profileList.view.selection.count == 0)
@@ -326,7 +328,7 @@ function HandleKeyEvent( aEvent )
       return;
     ConfirmDelete();
     break;
-  case "VK_F2":
+  case KeyEvent.DOM_VK_F2:
     if( profileManagerMode != "manager" )
       return;
     RenameProfile();

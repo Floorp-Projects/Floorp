@@ -71,7 +71,7 @@ dialogheader {
 
 .header-large {
   -moz-box-orient: vertical;
-  margin: 0;
+  margin: -7px -5px 5px -7px;
   border-left: none;
   border-right: none;
   border-top: none;

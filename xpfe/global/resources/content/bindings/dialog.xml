@@ -19,12 +19,13 @@
           
       <xul:hbox class="dialog-button-box" pack="end" anonid="buttons"
                 xbl:inherits="pack=buttonpack,align=buttonalign,dir=buttondir,orient=buttonorient">
-        <xul:button dlgtype="accept" class="dialog-button"/>
-        <xul:button dlgtype="extra1" class="dialog-button" hidden="true" label=""/>
-        <xul:button dlgtype="extra2" class="dialog-button" hidden="true" label=""/>
-        <xul:button dlgtype="cancel" class="dialog-button"/>
-        <xul:button dlgtype="help" class="dialog-button" hidden="true"/>
-        <xul:button dlgtype="disclosure" class="dialog-button" hidden="true"/>
+        <xul:button dlgtype="extra2" class="dialog-button" hidden="true" label="" xbl:inherits="label=buttonlabelextra2,accesskey=buttonaccesskeyextra2"/>
+        <xul:spacer xbl:inherits="flex=spacerflex"/>
+        <xul:button dlgtype="accept" class="dialog-button" xbl:inherits="label=buttonlabelaccept,accesskey=buttonaccesskeyaccept"/>
+        <xul:button dlgtype="extra1" class="dialog-button" hidden="true" label="" xbl:inherits="label=buttonlabelextra1,accesskey=buttonaccesskeyextra1"/>
+        <xul:button dlgtype="cancel" class="dialog-button" xbl:inherits="label=buttonlabelcancel,accesskey=buttonaccesskeycancel"/>
+        <xul:button dlgtype="help" class="dialog-button" hidden="true" xbl:inherits="label=buttonlabelhelp,accesskey=buttonaccesskeyhelp"/>
+        <xul:button dlgtype="disclosure" class="dialog-button" hidden="true" xbl:inherits="label=buttonlabeldisclosure,accesskey=buttonaccesskeydisclosure"/>
       </xul:hbox>
     </content>
 
@@ -243,22 +244,6 @@
       </method>
       
       <method name="_doButtonCommand">
-        <parameter name="aDlgType"/>
-        <body>
-        <![CDATA[
-          // calling window.close() while an oncommand event
-          // call is on the stack fails to close the window, 
-          // so we need to do this ugly setTimeout hack
-          window.setTimeout(
-            function(aDlgType) {
-              document.documentElement._reallyDoButtonCommand(aDlgType);
-            },
-            0, aDlgType);
-        ]]>
-        </body>
-      </method>
-      
-      <method name="_reallyDoButtonCommand">
         <parameter name="aDlgType"/>
         <body>
         <![CDATA[
