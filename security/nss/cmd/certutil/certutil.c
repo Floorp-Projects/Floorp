@@ -740,6 +740,11 @@ ValidateCert(CERTCertDBHandle *handle, char *name, char *date,
     SECCertificateUsage usage;
     CERTVerifyLog reallog;
     CERTVerifyLog *log = NULL;
+
+    if (!certUsage) {
+	    PORT_SetError (SEC_ERROR_INVALID_ARGS);
+	    return (SECFailure);
+    }
     
     switch (*certUsage) {
 	case 'C':
