@@ -386,6 +386,8 @@ void
 nsAppShell::HandleButtonEvent(XEvent *event, nsWidget *aWidget)
 {
   nsMouseEvent mevent;
+  mevent.isShift = 0;
+  mevent.isControl = 0;
   PRUint32 eventType = 0;
 
   PR_LOG(XlibWidgetsLM, PR_LOG_DEBUG, ("Button event for window 0x%lx button %d type %s\n",
