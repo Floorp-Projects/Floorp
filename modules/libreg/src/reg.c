@@ -1992,6 +1992,8 @@ static REGERR nr_RegAddKey( REGFILE *reg, RKEY key, char *path, RKEY *newKey, Bo
 
     /* have to translate again in case this is an internal call */
     start = nr_TranslateKey( reg, key );
+    if ( start == 0 )
+        return REGERR_PARAM;
 
     /* Get starting desc */
     err = nr_ReadDesc( reg, start, &desc );
@@ -2060,8 +2062,6 @@ static REGERR nr_RegDeleteKey( REGFILE *reg, RKEY key, char *path, Bool raw )
 
     XP_ASSERT( regStartCount > 0 );
     XP_ASSERT( reg != NULL );
-    XP_ASSERT( path != NULL );
-    XP_ASSERT( *path != '\0' );
     XP_ASSERT( VALID_FILEHANDLE( reg->fh ) );
 
     start = nr_TranslateKey( reg, key );
@@ -2237,30 +2237,45 @@ static REGERR nr_RegClose( HREG hReg )
 {
     REGERR      err = REGERR_OK;
     REGHANDLE*  reghnd = (REGHANDLE*)hReg;
+    REGFILE*    reg;
+    XP_Bool     needDelete = FALSE;
 
     XP_ASSERT( regStartCount > 0 );
 
     /* verify handle */
     err = VERIFY_HREG( hReg );
+    if ( err != REGERR_OK )
+        return err;
+
+    reg = reghnd->pReg;
+
+    PR_Lock( reg->lock );
     if ( err == REGERR_OK )
     {
-        XP_ASSERT( VALID_FILEHANDLE(reghnd->pReg->fh) );
+        XP_ASSERT( VALID_FILEHANDLE(reg->fh) );
 
         /* lower REGFILE user count */
-        reghnd->pReg->refCount--;
+        reg->refCount--;
 
         /* if registry is no longer in use */
-        if ( reghnd->pReg->refCount < 1 ) {
+        if ( reg->refCount < 1 ) 
+        {
             /* ...then close the file */
-            if ( reghnd->pReg->hdrDirty ) {
-                nr_WriteHdr( reghnd->pReg );
+            if ( reg->hdrDirty ) {
+                nr_WriteHdr( reg );
             }
-            nr_CloseFile( &(reghnd->pReg->fh) );
-            /* ...and delete REGFILE node from list */
-            nr_DeleteNode( reghnd->pReg );
+            nr_CloseFile( &(reg->fh) );
+
+            /* ...and mark REGFILE node for deletion from list */
+            needDelete = TRUE;
         }
 
         reghnd->magic = 0;    /* prevent accidental re-use */  
+        PR_Unlock( reg->lock );
+
+        if ( needDelete )
+            nr_DeleteNode( reg );
+
         XP_FREE( reghnd );
     }
 
@@ -2475,6 +2490,10 @@ VR_INTERFACE(REGERR) NR_RegAddKey( HREG hReg, RKEY key, char *path, RKEY *newKey
     REGOFF      start;
     REGFILE*    reg;
 
+    /* prevent use of return value in case errors aren't checked */
+    if ( newKey != NULL )
+        *newKey = 0;
+
     /* verify parameters */
     err = VERIFY_HREG( hReg );
     if ( err != REGERR_OK )
@@ -2528,6 +2547,10 @@ VR_INTERFACE(REGERR) NR_RegAddKeyRaw( HREG hReg, RKEY key, char *keyname, RKEY *
     REGERR      err;
     REGOFF      start;
     REGFILE*    reg;
+
+    /* prevent use of return value in case errors aren't checked */
+    if ( newKey != NULL )
+        *newKey = 0;
 
     /* verify parameters */
     err = VERIFY_HREG( hReg );
@@ -2660,6 +2683,10 @@ VR_INTERFACE(REGERR) NR_RegGetKey( HREG hReg, RKEY key, char *path, RKEY *result
 
     XP_ASSERT( regStartCount > 0 );
 
+    /* prevent use of return value in case errors aren't checked */
+    if ( result != NULL )
+        *result = (RKEY)0;
+
     /* verify parameters */
     err = VERIFY_HREG( hReg );
     if ( err != REGERR_OK )
@@ -2667,8 +2694,6 @@ VR_INTERFACE(REGERR) NR_RegGetKey( HREG hReg, RKEY key, char *path, RKEY *result
 
     if ( path == NULL || result == NULL )
         return REGERR_PARAM;
-
-    *result = (RKEY)0;
 
     reg = ((REGHANDLE*)hReg)->pReg;
 
@@ -2719,6 +2744,10 @@ VR_INTERFACE(REGERR) NR_RegGetKeyRaw( HREG hReg, RKEY key, char *keyname, RKEY *
 
     XP_ASSERT( regStartCount > 0 );
 
+    /* prevent use of return value in case errors aren't checked */
+    if ( result != NULL )
+        *result = (RKEY)0;
+
     /* verify parameters */
     err = VERIFY_HREG( hReg );
     if ( err != REGERR_OK )
@@ -2726,8 +2755,6 @@ VR_INTERFACE(REGERR) NR_RegGetKeyRaw( HREG hReg, RKEY key, char *keyname, RKEY *
 
     if ( keyname == NULL || result == NULL )
         return REGERR_PARAM;
-
-    *result = (RKEY)0;
 
     reg = ((REGHANDLE*)hReg)->pReg;
 
@@ -2782,7 +2809,7 @@ VR_INTERFACE(REGERR) NR_RegGetEntryInfo( HREG hReg, RKEY key, char *name,
     if ( err != REGERR_OK )
         return err;
 
-    if ( name == NULL || *name == '\0' || info == NULL )
+    if ( name == NULL || *name == '\0' || info == NULL || key == 0 )
         return REGERR_PARAM;
 
     reg = ((REGHANDLE*)hReg)->pReg;
@@ -2848,7 +2875,7 @@ VR_INTERFACE(REGERR) NR_RegGetEntryString( HREG  hReg, RKEY  key, char  *name,
     if ( err != REGERR_OK )
         return err;
 
-    if ( name == NULL || *name == '\0' || buffer == NULL || bufsize == 0 )
+    if ( name==NULL || *name=='\0' || buffer==NULL || bufsize==0 || key==0 )
         return REGERR_PARAM;
 
     reg = ((REGHANDLE*)hReg)->pReg;
@@ -2919,7 +2946,7 @@ VR_INTERFACE(REGERR) NR_RegGetEntry( HREG hReg, RKEY key, char *name,
     if ( err != REGERR_OK )
         return err;
 
-    if ( name == NULL || *name == '\0' || buffer == NULL || size == NULL )
+    if ( name==NULL || *name=='\0' || buffer==NULL || size==NULL || key==0 )
         return REGERR_PARAM;
 
     reg = ((REGHANDLE*)hReg)->pReg;
@@ -3048,7 +3075,7 @@ VR_INTERFACE(REGERR) NR_RegSetEntryString( HREG hReg, RKEY key, char *name,
     if ( err != REGERR_OK )
         return err;
 
-    if ( name == NULL || *name == '\0' || buffer == NULL )
+    if ( name == NULL || *name == '\0' || buffer == NULL || key == 0 )
         return REGERR_PARAM;
 
     reg = ((REGHANDLE*)hReg)->pReg;
@@ -3123,7 +3150,7 @@ VR_INTERFACE(REGERR) NR_RegSetEntry( HREG hReg, RKEY key, char *name, uint16 typ
     if ( err != REGERR_OK )
         return err;
 
-    if ( name == NULL || *name == '\0' || buffer == NULL || size == 0 )
+    if ( name==NULL || *name=='\0' || buffer==NULL || size==0 || key==0 )
         return REGERR_PARAM;
 
     reg = ((REGHANDLE*)hReg)->pReg;
@@ -3250,7 +3277,7 @@ VR_INTERFACE(REGERR) NR_RegDeleteEntry( HREG hReg, RKEY key, char *name )
     if ( err != REGERR_OK )
         return err;
 
-    if ( name == NULL || *name == '\0' )
+    if ( name == NULL || *name == '\0' || key == 0)
         return REGERR_PARAM;
 
     reg = ((REGHANDLE*)hReg)->pReg;
@@ -3336,17 +3363,23 @@ VR_INTERFACE(REGERR) NR_RegEnumSubkeys( HREG hReg, RKEY key, REGENUM *state,
     if ( err != REGERR_OK )
         return err;
 
+    if ( key == 0 || state == NULL || buffer == NULL )
+        return REGERR_PARAM;
+
     reg = ((REGHANDLE*)hReg)->pReg;
 
-    /* lcok registry */
+    /* lock registry */
     err = nr_Lock( reg );
     if ( err != REGERR_OK )
         return err;
 
-    key = nr_TranslateKey( reg, key );
-
     /* verify starting key */
-    err = nr_ReadDesc( reg, key, &desc);
+    key = nr_TranslateKey( reg, key );
+    if ( key == 0 )
+        err = REGERR_PARAM;
+    else
+        err = nr_ReadDesc( reg, key, &desc);
+
     if ( err == REGERR_OK )
     {
         /* if in initial state and no children return now */
@@ -3522,6 +3555,8 @@ VR_INTERFACE(REGERR) NR_RegEnumSubkeys( HREG hReg, RKEY key, REGENUM *state,
  *    eState   - enumerations state, must contain NULL to start
  *    buffer   - location to store entry names
  *    bufsize  - size of buffer for names
+ *    info     - optional REGINFO for the entry. If not NULL must be 
+ *               initialized as in NR_RegGetEntryInfo()
  * ---------------------------------------------------------------------
  */
 VR_INTERFACE(REGERR) NR_RegEnumEntries( HREG hReg, RKEY key, REGENUM *state,
@@ -3538,9 +3573,12 @@ VR_INTERFACE(REGERR) NR_RegEnumEntries( HREG hReg, RKEY key, REGENUM *state,
     if ( err != REGERR_OK )
         return err;
 
+    if ( key == 0 || state == NULL || buffer == NULL )
+        return REGERR_PARAM;
+
     reg = ((REGHANDLE*)hReg)->pReg;
 
-    /* lcok registry */
+    /* lock registry */
     err = nr_Lock( reg );
     if ( err != REGERR_OK )
         return err;
