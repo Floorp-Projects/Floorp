@@ -17,3 +17,5 @@ en-US.jar:
   locale/en-US/mozapps/downloads/editAction.dtd             (downloads/locale/editAction.dtd)
   locale/en-US/mozapps/contents.rdf                         (contents-locale.rdf)
 
+classic.jar:
+  skin/classic/mozapps/contents.rdf                         (contents-skin.rdf)
