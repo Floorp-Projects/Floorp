@@ -23,7 +23,7 @@
 #include "nsIScrollbar.h"
 
 /**
- * Native GTK scrollbar wrapper.
+ * Native GTK+ scrollbar wrapper.
  */
 
 class nsScrollbar : public nsWidget,

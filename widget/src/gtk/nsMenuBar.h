@@ -24,7 +24,7 @@
 class nsIWidget;
 
 /**
- * Native Motif MenuBar wrapper
+ * Native GTK+ MenuBar wrapper
  */
 
 class nsMenuBar : public nsIMenuBar

@@ -23,7 +23,7 @@
 #include <gtk/gtk.h>
 
 /**
- * Native GTK Application shell wrapper
+ * Native GTK+ Application shell wrapper
  */
 
 class nsAppShell : public nsIAppShell

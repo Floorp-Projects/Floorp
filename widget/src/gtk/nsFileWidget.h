@@ -25,7 +25,7 @@
 #include "nsWidget.h"
 
 /**
- * Native Motif FileSelector wrapper
+ * Native GTK+ FileSelector wrapper
  */
 
 class nsFileWidget : public nsWidget, public nsIFileWidget

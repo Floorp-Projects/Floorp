@@ -23,7 +23,7 @@
 #include "nsICheckButton.h"
 
 /**
- * Native Motif Checkbox wrapper
+ * Native GTK+ Checkbox wrapper
  */
 
 class nsCheckButton : public nsWidget,

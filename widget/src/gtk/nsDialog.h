@@ -19,13 +19,13 @@
 #ifndef nsDialog_h__
 #define nsDialog_h__
 
-#include "nsWidget.h"
+#include "nsWindow.h"
 #include "nsIDialog.h"
 
 /**
- * Native Motif Dialog wrapper
+ * Native GTK+ Dialog wrapper
  */
-class nsDialog :  public nsWidget,
+class nsDialog :  public nsWindow,
                   public nsIDialog
 {
 
@@ -48,12 +48,7 @@ public:
   //virtual void PreCreateWidget(nsWidgetInitData *aInitData);
 
 protected:
-
   NS_IMETHOD  nsDialog::CreateNative(GtkWidget *parentWindow);
-
-private:
-  GtkWidget *mShell;
-
 };
 
 #endif // nsDialog_h__
