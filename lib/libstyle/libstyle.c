@@ -623,8 +623,9 @@ Tag_GetProperty(JSContext *mc, JSObject *obj, jsval id, jsval *vp)
 		StyleTag 	  *tag = JS_GetPrivate(mc, obj);
 		StyleProperty *prop;
 	
-		XP_ASSERT(tag);
-		
+		if(!tag)
+			return JS_TRUE;
+
 		LO_LockLayout();
 		prop = jss_TagGetProperty(mc, tag, name);
 		if (prop)
@@ -647,8 +648,6 @@ Tag_SetProperty(JSContext *mc, JSObject *obj, jsval id, jsval *vp)
 		char		  *name = JS_GetStringBytes(JSVAL_TO_STRING(id));
 		StyleTag 	  *tag = JS_GetPrivate(mc, obj);
 
-		XP_ASSERT(tag);
-	
 		if (tag) {
 			LO_LockLayout();
 			jss_TagSetProperty(mc, tag, name, vp);
@@ -694,8 +693,6 @@ Tag_Margin(JSContext *mc, JSObject *obj, unsigned argc, jsval *argv, jsval *rval
 		return JS_FALSE;
 	}
 
-	XP_ASSERT(tag);
-
 	/*
 	 * The arguments apply to top, right, bottom, and left in that order. If there is
 	 * only one argument it applies to all sides, if there are two or three, the missing
@@ -736,8 +733,6 @@ Tag_Padding(JSContext *mc, JSObject *obj, unsigned argc, jsval *argv, jsval *rva
 		JS_ReportError(mc, "Function padding() requires at least one argument.");
 		return JS_FALSE;
 	}
-
-	XP_ASSERT(tag);
 
 	/*
 	 * The arguments apply to top, right, bottom, and left in that order. If there is
@@ -878,7 +873,8 @@ jss_Contextual(JSContext *mc, JSObject *obj, unsigned argc, jsval *argv, jsval *
 		}
 
 		tag = JS_GetPrivate(mc, (JSObject *)argv[argc - 1]);
-		XP_ASSERT(tag);
+		if(!tag)
+			return JS_TRUE;
 
 		LO_LockLayout();
 		
