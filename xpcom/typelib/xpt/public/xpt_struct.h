@@ -51,6 +51,9 @@ typedef struct XPTAnnotation XPTAnnotation;
 typedef struct XPTAnnotationPrefix XPTAnnotationPrefix;
 typedef struct XPTPrivateAnnotation XPTPrivateAnnotation;
 
+/*
+ * Every XPCOM typelib file begins with a header.
+ */
 struct XPTHeader {
     char                        magic[16];
     uint8                       major_version;
@@ -61,16 +64,27 @@ struct XPTHeader {
     uint8                       *data_pool;
     XPTAnnotation               *annotations;
 };
+#define XPT_HEADER_BASE_SIZE (16 + 1 + 1 + 2 + 4 + 4 + 4)
 
+
+/*
+ * A contiguous array of fixed-size InterfaceDirectoryEntry records begins at 
+ * the byte offset identified by the interface_directory field in the file 
+ * header.  The array is used to quickly locate an interface description 
+ * using its IID.  No interface should appear more than once in the array.
+ */
 struct XPTInterfaceDirectoryEntry {
     uint128                iid;
-    char                   *name;
+    char                   *name; 
     char                   *namespace;
     XPTInterfaceDescriptor *interface_descriptor;
 };
-
 #define XPT_IDE_SIZE (16 + 4 + 4 + 4)
 
+/*
+ * An InterfaceDescriptor is a variable-size record used to describe a 
+ * single XPCOM interface, including all of its methods. 
+ */
 struct XPTInterfaceDescriptor {
     XPTInterfaceDescriptorEntry *parent_interface;
     uint16                      num_methods;
@@ -78,55 +92,17 @@ struct XPTInterfaceDescriptor {
     uint16                      num_constants;
     XPTConstDescriptor          *const_descriptors;
 };
+#define XPT_ID_BASE_SIZE (4 + 2 + 2)
 
 /*
- * A ConstDescriptor is a variable-size record that records the name and 
- * value of a scoped interface constant. 
- *
- * The types of the method parameter are restricted to the following subset 
- * of TypeDescriptors: 
- *
- * int8, uint8, int16, uint16, int32, uint32, 
- * int64, uint64, wchar_t, char, string
- * 
- * The type (and thus the size) of the value record is determined by the 
- * contents of the associated TypeDescriptor record. For instance, if type 
- * corresponds to int16, then value is a two-byte record consisting of a 
- * 16-bit signed integer.  For a ConstDescriptor type of string, the value 
- * record is of type String*, i.e. an offset within the data pool to a 
- * String record containing the constant string.
+ * This is our special string struct with a length value associated with it,
+ * which means that it can contains embedded NULs.
  */
-struct XPTConstDescriptor {
-    char                *name;
-    XPTTypeDescriptor   type;
-    union {
-        int8      i8;
-        uint8     ui8; 
-        int16     i16; 
-        uint16    ui16;
-        int32     i32; 
-        uint32    ui32;
-        int64     i64; 
-        uint64    ui64; 
-        uint16    wch;
-        char      ch; 
-        XPTstring *string;
-    } value; /* varies according to type */
+struct XPTString {
+    uint16 length;
+    char   *bytes;
 };
-
-struct XPTMethodDescriptor {
-    uint8               is_getter:1, is_setter:1, is_varargs:1,
-                        is_constructor:1, is_hidden:1, reserved:3;
-    char                *name;
-    uint8               num_args;
-    XPTParamDescriptor  *params;
-    XPTParamDescriptor  *result;
-};
-
-struct XPTParamDescriptor {
-    uint8             in:1, out:1, retval:1, reserved:5;
-    XPTTypeDescriptor type;
-};
+#define XPT_STRING_SIZE (2 + 4)
 
 /* 
  * A TypeDescriptor is a variable-size record used to identify the type of a 
@@ -151,6 +127,7 @@ struct XPTTypeDescriptorPrefix {
     uint8 is_pointer:1, is_unique_pointer:1, is_reference:1,
           tag:5;
 };
+#define XPT_TDP_SIZE 1
 
 struct XPTTypeDescriptor {
     XPTTypeDescriptorPrefix prefix;
@@ -159,11 +136,67 @@ struct XPTTypeDescriptor {
         uint8                      argnum;
     } type;
 }
+#define XPT_TD_SIZE (XPT_TDP_SIZE + 4)
 
-struct XPTString {
-    uint16 length;
-    char   *bytes;
+/*
+ * A ConstDescriptor is a variable-size record that records the name and 
+ * value of a scoped interface constant. 
+ *
+ * The types of the method parameter are restricted to the following subset 
+ * of TypeDescriptors: 
+ *
+ * int8, uint8, int16, uint16, int32, uint32, 
+ * int64, uint64, wchar_t, char, string
+ * XPT_HEADER_SIZE
+ * The type (and thus the size) of the value record is determined by the 
+ * contents of the associated TypeDescriptor record. For instance, if type 
+ * corresponds to int16, then value is a two-byte record consisting of a 
+ * 16-bit signed integer.  For a ConstDescriptor type of string, the value 
+ * record is of type String*, i.e. an offset within the data pool to a 
+ * String record containing the constant string.
+ */
+struct XPTConstDescriptor {
+    char                *name;
+    XPTTypeDescriptor   type;
+    union {
+        int8      i8;
+        uint8     ui8; 
+        int16     i16; 
+        uint16    ui16;
+        int32     i32; 
+        uint32    ui32;
+        int64     i64; 
+        uint64    ui64; 
+        uint16    wch;
+        char      ch; 
+        XPTstring *string;
+    } value; /* varies according to type */
 };
+#define XPT_CD_SIZE (4 + XPT_TD_SIZE + 8)
+
+/*
+ * A ParamDescriptor is a variable-size record used to describe either a 
+ * single argument to a method or a method's result.
+ */
+struct XPTParamDescriptor {
+    uint8             in:1, out:1, retval:1, reserved:5;
+    XPTTypeDescriptor type;
+};
+#define XPT_PD_SIZE (1 + XPT_TD_SIZE)
+
+/*
+ * A MethodDescriptor is a variable-size record used to describe a single 
+ * interface method.
+ */
+struct XPTMethodDescriptor {
+    uint8               is_getter:1, is_setter:1, is_varargs:1,
+                        is_constructor:1, is_hidden:1, reserved:3;
+    char                *name;
+    uint8               num_args;
+    XPTParamDescriptor  *params;
+    XPTParamDescriptor  result;
+};
+#define XPT_MD_BASE_SIZE (1 + 4 + 1 + XPT_PD_SIZE)
 
 /*
  * Annotation records are variable-size records used to store secondary 
@@ -189,15 +222,18 @@ struct XPTString {
 struct XPTAnnotationPrefix {
     uint8 is_last:1, tag:7;
 };
+#define XPT_AP_SIZE 1
 
 struct XPTPrivateAnnotation {
-    XPTString *creator;
-    XPTString *private_data;
+    XPTString creator;
+    XPTString private_data;
 };
+#define XPT_PA_SIZE (4 + XPT_STRING_SIZE*2)
 
 struct XPTAnnotation {
     XPTAnnotationPrefix prefix;
     XPTPrivateAnnotation private;
 };
+#define XPT_A_SIZE (XPT_AP_SIZE + XPT_PA_SIZE)
 
 #endif /* __xpt_struct_h__ */
