@@ -319,7 +319,38 @@ nsMsgIdentity::ToString(PRUnichar **aResult)
 /* Identity attribute accessors */
 
 // XXX - these are a COM objects, use NS_ADDREF
-NS_IMPL_GETSET(nsMsgIdentity, Signature, nsIMsgSignature*, m_signature);
+//NS_IMPL_GETSET(nsMsgIdentity, Signature, nsIMsgSignature*, m_signature);
+NS_IMETHODIMP
+nsMsgIdentity::GetSignature(nsIFileSpec **sig) {
+  nsresult rv = getPrefService();
+  if (NS_FAILED(rv)) return rv;
+  
+  char *prefName = getPrefName(m_identityKey, "sig_file");
+  return m_prefs->GetFilePref(prefName, sig);
+}
+
+NS_IMETHODIMP
+nsMsgIdentity::SetSignature(nsIFileSpec *sig)
+{
+
+  nsresult rv = getPrefService();
+  if (NS_FAILED(rv)) return rv;
+  
+  rv = NS_OK;
+  char *prefName = getPrefName(m_identityKey, "sig_file");
+  if (sig) 
+    rv = m_prefs->SetFilePref(NS_CONST_CAST(const char*,prefName), sig,
+                              PR_FALSE);
+  /*
+  else
+    m_prefs->ClearFilePref(prefName);
+  */
+  PR_Free(prefName);
+  return rv;
+  
+  return NS_OK;
+}
+
 NS_IMPL_GETSET(nsMsgIdentity, VCard, nsIMsgVCard*, m_vCard);
   
 NS_IMPL_GETTER_STR(nsMsgIdentity::GetKey, m_identityKey);

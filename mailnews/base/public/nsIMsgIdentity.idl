@@ -18,6 +18,7 @@
 
 #include "nsISupports.idl"
 #include "nsIMsgSignature.idl"
+#include "nsIFileSpec.idl"
 #include "nsIMsgVCard.idl"
 
 /*
@@ -63,7 +64,9 @@ interface nsIMsgIdentity : nsISupports {
   attribute boolean attachVCard;
 
   /* the current signature */
-  attribute nsIMsgSignature signature;
+  attribute nsIFileSpec signature;
+  /*  after PR1, let's make this a real object */
+  /*  attribute nsIMsgSignature signature; */
 
   /* the current vcard */
   attribute nsIMsgVCard vCard;
