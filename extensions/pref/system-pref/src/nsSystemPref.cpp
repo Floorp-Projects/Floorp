@@ -73,6 +73,13 @@ static const char *sSysPrefList[] = {
     "network.proxy.http_port",
     "network.proxy.ftp",
     "network.proxy.ftp_port",
+    "network.proxy.ssl",
+    "network.proxy.ssl_port",
+    "network.proxy.socks",
+    "network.proxy.socks_port",
+    "network.proxy.no_proxies_on",
+    "network.proxy.autoconfig_url",
+    "network.proxy.type",
     "config.use_system_prefs.accessibility",
 };
 
