@@ -72,8 +72,9 @@
 #ifndef XP_MACOSX
 #include <DiskInit.h>
 #endif
-#include <LowMem.h>
 #include <Devices.h>
+#include <LowMem.h>
+#include <Sound.h>
 #include <Quickdraw.h>
 #include "nsCarbonHelpers.h"
 #include "nsWatchTask.h"
@@ -590,8 +591,13 @@ void nsMacMessagePump::DoMouseDown(EventRecord &anEvent)
                 sink->DragEvent ( NS_DRAGDROP_GESTURE, anEvent.where.h, anEvent.where.v, 0L, &handled );                
               }
             }
-            else
-              macWindow->ComeToFront();
+            else {
+              PRBool enabled;
+              if (NS_SUCCEEDED(topWidget->IsEnabled(&enabled)) && !enabled)
+                ::SysBeep(1);
+              else
+                macWindow->ComeToFront();
+            }
           }
         }
         break;
@@ -601,8 +607,6 @@ void nsMacMessagePump::DoMouseDown(EventRecord &anEvent)
       {
         nsGraphicsUtils::SafeSetPortWindowPort(whichWindow);
 
-        // grrr... DragWindow calls SelectWindow, no way to stop it. For now,
-        // we'll just let it come to the front and then push it back if necessary.
         Point   oldTopLeft = {0, 0};
         ::LocalToGlobal(&oldTopLeft);
         
@@ -611,10 +615,28 @@ void nsMacMessagePump::DoMouseDown(EventRecord &anEvent)
         // roll up popups BEFORE we start the drag
         if ( gRollupListener && gRollupWidget )
           gRollupListener->Rollup();
-        
-        Rect screenRect;
-        ::GetRegionBounds(::GetGrayRgn(), &screenRect);
-        ::DragWindow(whichWindow, anEvent.where, &screenRect);
+
+        /* Do the drag, but not if the window is disabled or if the command key
+           is not down. (DragWindow itself will activate the window if
+           the command key isn't down.) However, allow the drag on OSX.
+           On OSX we disable only the single parent of a window with a sheet,
+           so it's a safe-ish assumption that the disabled window can be
+           dragged and brought to the foreground. */
+        nsCOMPtr<nsIWidget> topWidget;
+        PRBool              enabled;
+        nsToolkit::GetTopWidget(whichWindow, getter_AddRefs(topWidget));
+        if (
+#if TARGET_CARBON
+            nsToolkit::OnMacOSX() ||
+#endif
+            !topWidget || NS_FAILED(topWidget->IsEnabled(&enabled)) || enabled ||
+            (anEvent.modifiers & cmdKey)) {
+          Rect screenRect;
+          ::GetRegionBounds(::GetGrayRgn(), &screenRect);
+          ::DragWindow(whichWindow, anEvent.where, &screenRect);
+        } else
+          ::SysBeep(1);
+
         nsWatchTask::GetTask().Resume();
 
         Point   newTopLeft = {0, 0};
@@ -623,8 +645,6 @@ void nsMacMessagePump::DoMouseDown(EventRecord &anEvent)
         // only activate if the command key is not down
         if (!(anEvent.modifiers & cmdKey))
         {
-          nsCOMPtr<nsIWidget> topWidget;
-          nsToolkit::GetTopWidget ( whichWindow, getter_AddRefs(topWidget) );
           nsCOMPtr<nsPIWidgetMac> macWindow ( do_QueryInterface(topWidget) );
           if ( macWindow )
             macWindow->ComeToFront();
