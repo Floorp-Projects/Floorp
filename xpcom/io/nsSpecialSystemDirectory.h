@@ -32,6 +32,9 @@
 #include "Types.h"
 #endif
 
+// SEE ALSO:
+//      mozilla/xpfe/appshell/public/nsFileLocations.h
+
 class NS_BASE nsSpecialSystemDirectory : public nsFileSpec
 {
 
@@ -52,6 +55,7 @@ class NS_BASE nsSpecialSystemDirectory : public nsFileSpec
         ,   Mac_ExtensionDirectory    =   108
         ,   Mac_FontsDirectory        =   109
         ,   Mac_PreferencesDirectory  =   110
+        ,   Mac_DocumentsDirectory    =   111
         
         ,   Win_SystemDirectory       =   201
         ,   Win_WindowsDirectory      =   202
