@@ -3142,7 +3142,14 @@ then
     MOC=$HOST_MOC
 
     QT_CFLAGS="-I${QTDIR}${QTINCDIR} -DQT_GENUINE_STR -DQT_NO_STL"
-    QT_LIBS="-L/usr/X11R6/lib -L${QTDIR}/lib -lqt -lXext -lX11"
+    _SAVE_LDFLAGS=$LDFLAGS
+    QT_LDFLAGS=-L${QTDIR}/lib
+    LDFLAGS="$LDFLAGS $QT_LDFLAGS"
+    AC_CHECK_LIB(qt, main, QT_LIB=-lqt,
+      AC_CHECK_LIB(qt-mt, main, QT_LIB=-lqt-mt)
+    )
+    LDFLAGS=$_SAVE_LDFLAGS
+    QT_LIBS="-L/usr/X11R6/lib $QT_LDFLAGS $QT_LIB -lXext -lX11"
 dnl    AM_PATH_QT($QT_VERSION,,
 dnl      AC_MSG_ERROR(Test for QT failed.))
 
