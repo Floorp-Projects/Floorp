@@ -59,7 +59,6 @@ public:
 	CShowTestResults(CWnd* pParent = NULL);   // standard constructor
 	void AddItemToList(LPCTSTR szTestCaseName, BOOL bResult);
 
-<<<<<<< QaUtils.h
 // Dialog Data
 	//{{AFX_DATA(CShowTestResults)
 	enum { IDD = IDD_RUNTESTSDLG };
@@ -78,17 +77,6 @@ public:
 private:
 	LPCTSTR m_TitleString ;
 protected:
-=======
-	void static RvTestResult(nsresult, const char *, int displayMethod=1);
-	void static WriteToOutputFile(const char *);
-	void static QAOutput(const char *pLine, int displayMethod=1);
-	void static FormatAndPrintOutput(const char *, const char *, int);
-	void static FormatAndPrintOutput(const char *, int, int);
-	void static RequestName(nsIRequest *, nsCString &, int displayMethod=1);
-	void static WebProgDOMWindowTest(nsIWebProgress *, const char *, 
-									 int displayMethod=1);
-	void static GetTheUri(nsIURI *, int displayMethod=1);
->>>>>>> 1.8
 
 	// Generated message map functions
 	//{{AFX_MSG(CShowTestResults)

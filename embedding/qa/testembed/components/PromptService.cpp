@@ -136,18 +136,7 @@ NS_IMETHODIMP CPromptService::AlertCheck(nsIDOMWindow *parent,
                                          const PRUnichar *checkboxMsg,
                                          PRBool *checkValue)
 {
-  ResourceState setState;
-  USES_CONVERSION;
-
-  CWnd *wnd = CWndForDOMWindow(parent);
-  CAlertCheckDialog dlg(wnd, W2T(dialogTitle), W2T(text),
-                    W2T(checkboxMsg), checkValue ? *checkValue : 0);
-
-  dlg.DoModal();
-
-  *checkValue = dlg.m_bCheckBoxValue;
-
-  return NS_OK;
+  return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP CPromptService::Confirm(nsIDOMWindow *parent,
@@ -178,21 +167,7 @@ NS_IMETHODIMP CPromptService::ConfirmCheck(nsIDOMWindow *parent,
                                            PRBool *checkValue,
                                            PRBool *_retval)
 {
-    ResourceState setState;
-    USES_CONVERSION;
-
-    CWnd *wnd = CWndForDOMWindow(parent);
-    CConfirmCheckDialog dlg(wnd, W2T(dialogTitle), W2T(text),
-                    W2T(checkboxMsg), checkValue ? *checkValue : 0,
-                    "Yes", "No", NULL);
-
-    int iBtnClicked = dlg.DoModal();
-
-    *checkValue = dlg.m_bCheckBoxValue;
-
-    *_retval = iBtnClicked == 0 ? PR_TRUE : PR_FALSE;
-
-    return NS_OK;
+  return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP CPromptService::Prompt(nsIDOMWindow *parent,
@@ -334,58 +309,7 @@ NS_IMETHODIMP CPromptService::ConfirmEx(nsIDOMWindow *parent,
                                         PRBool *checkValue,
                                         PRInt32 *buttonPressed)
 {
-    ResourceState setState;
-    USES_CONVERSION;
-
-    // First, determine the button titles based on buttonFlags
-    const PRUnichar* buttonStrings[] = { button0Title, button1Title, button2Title };
-    CString csBtnTitles[3];
-
-    for(int i=0; i<3; i++)
-    {
-        switch(buttonFlags & 0xff) {
-            case BUTTON_TITLE_OK:
-                csBtnTitles[i] = "Ok";
-                break;
-            case BUTTON_TITLE_CANCEL:
-                csBtnTitles[i] = "Cancel";
-                break;
-            case BUTTON_TITLE_YES:
-                csBtnTitles[i] = "Yes";
-                break;
-            case BUTTON_TITLE_NO:
-                csBtnTitles[i] = "No";
-                break;
-            case BUTTON_TITLE_SAVE:
-                csBtnTitles[i] = "Save";
-                break;
-            case BUTTON_TITLE_DONT_SAVE:
-                csBtnTitles[i] = "DontSave";
-                break;
-            case BUTTON_TITLE_REVERT:
-                csBtnTitles[i] = "Revert";
-                break;
-            case BUTTON_TITLE_IS_STRING:
-                csBtnTitles[i] = W2T(buttonStrings[i]);
-                break;
-        }
-   
-        buttonFlags >>= 8;    
-    }
-
-    CWnd *wnd = CWndForDOMWindow(parent);
-    CConfirmCheckDialog dlg(wnd, W2T(dialogTitle), W2T(text),
-        checkMsg ? W2T(checkMsg) : NULL, checkValue ? *checkValue : 0,
-                    csBtnTitles[0].IsEmpty() ? NULL : (LPCTSTR)csBtnTitles[0], 
-                    csBtnTitles[1].IsEmpty() ? NULL : (LPCTSTR)csBtnTitles[1], 
-                    csBtnTitles[2].IsEmpty() ? NULL : (LPCTSTR)csBtnTitles[2]);
-
-    *buttonPressed = dlg.DoModal();
-
-    if(checkValue)
-        *checkValue = dlg.m_bCheckBoxValue;
-
-    return NS_OK;    
+  return NS_ERROR_NOT_IMPLEMENTED;
 }
  
 //*****************************************************************************

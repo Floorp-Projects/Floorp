@@ -59,7 +59,6 @@
 #include "nsIWebProgress.h"
 #include "nsIWindowCreator.h"
 #include "nsIInterfaceRequestor.h"
-#include "nsIInterfaceRequestorUtils.h"
 #include "nsIDocShellTreeOwner.h"
 #include "nsIDocShellTreeItem.h"
 #include "nsIClipboardCommands.h"
@@ -101,7 +100,6 @@
 #include "nsIDOMDocumentType.h"
 #include "nsIURIContentListener.h"
 #include "nsIHelperAppLauncherDialog.h"
-<<<<<<< StdAfx.h
 
 #include "nsIDOMWindow.h"
 #include "nsIDOMRange.h"
@@ -109,9 +107,6 @@
 #include "nsIDOMWindowCollection.h"
 #include "nsISelection.h"
 #include "nsITooltipListener.h"
-=======
-//#include "nsIStreamObserver.h"
->>>>>>> 1.8
 
 //{{AFX_INSERT_LOCATION}}
 // Microsoft Visual C++ will insert additional declarations immediately before the previous line.

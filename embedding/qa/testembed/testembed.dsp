@@ -174,17 +174,10 @@ SOURCE=.\Selection.cpp
 # End Source File
 # Begin Source File
 
-<<<<<<< testembed.dsp
 SOURCE=.\StdAfx.cpp
 # End Source File
 # Begin Source File
 
-=======
-SOURCE=.\TestCallbacks.cpp
-# End Source File
-# Begin Source File
-
->>>>>>> 1.3
 SOURCE=.\TestEmbed.cpp
 # End Source File
 # Begin Source File

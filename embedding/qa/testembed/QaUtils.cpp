@@ -207,7 +207,6 @@ void WebProgDOMWindowTest(nsIWebProgress *progress, const char *inString,
 	else
 		RvTestResult(rv, totalStr2, displayMethod);
 }
-<<<<<<< QaUtils.cpp
 
 void GetTheUri(nsIURI *theUri, int displayMethod)
 {
@@ -284,15 +283,3 @@ void CShowTestResults::AddItemToList(LPCTSTR szTestCaseName, BOOL bResult)
 	//m_ListResults.InsertItem(&lvitem);
 
 }
-=======
-
-void CQaUtils::GetTheUri(nsIURI *theUri, int displayMethod)
-{
-	nsresult rv;
-    char *uriSpec;
-
-	rv = theUri->GetSpec(&uriSpec);
-    RvTestResult(rv, "nsIURI::GetSpec() test", displayMethod);
-    FormatAndPrintOutput("the uri = ", uriSpec, displayMethod);
-}
->>>>>>> 1.7
