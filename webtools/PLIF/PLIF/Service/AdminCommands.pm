@@ -75,6 +75,7 @@ sub cmdSetup {
     if (not $result) {
         $result = $app->getSelectingServiceList('setup.install')->setupInstall($app);
     }
+    # the setupConfigure and setupInstall methods can call $app->output->setupProgress('name of component');
     if ($result) {
         $app->output->setupFailed($result);
     } else {
@@ -101,14 +102,26 @@ sub outputSetupFailed {
     });
 }
 
+# dispatcher.output.generic as well
+sub outputSetupProgress {
+    my $self = shift;
+    my($app, $output, $component) = @_;
+    $output->output(undef, 'setup.progress', {
+        'component' => $component,
+    });
+}
+
 # dataSource.strings.default
 sub getDefaultString {
     my $self = shift;
     my($app, $protocol, $string) = @_;
-    if ($protocol eq 'stdout' and $string eq 'setup') {
-        return '<text><if lvalue="(data.failed)" condition="=" rvalue="1">Failed with:<br/><text variable="(data.result)"/></if><else>Succeeded!</else><br/></text>';
-    } else {
-        return; # nope, sorry
+    if ($protocol eq 'stdout') {
+        if ($string eq 'setup') {
+            return '<text><if lvalue="(data.failed)" condition="=" rvalue="1">Failed with:<br/><text variable="(data.result)"/></if><else>Succeeded!</else><br/></text>';
+        } elsif ($string eq 'setup.progress') {
+            return '<text>Setup: configuring <text value="(data.component)"/>...<br/></text>';
+        }
     }
+    return; # nope, sorry
 }
 

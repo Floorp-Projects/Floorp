@@ -56,6 +56,7 @@ sub setupInstall {
     $self->dump(9, 'about to configure string data source...');
     if (not $helper->tableExists($app, $self->database($app), 'stringVariants')) {
         $self->debug('going to create \'stringVariants\' table');
+        $app->output->setupProgress('strings data source (creating stringVariants database)');
         $self->database($app)->execute('
             CREATE TABLE stringVariants (
                                          id integer unsigned auto_increment NOT NULL PRIMARY KEY,
@@ -76,6 +77,7 @@ sub setupInstall {
     }
     if (not $helper->tableExists($app, $self->database($app), 'strings')) {
         $self->debug('going to create \'strings\' table');
+        $app->output->setupProgress('strings data source (creating strings database)');
         $self->database($app)->execute('
             CREATE TABLE strings (
                                   variant integer unsigned NOT NULL,

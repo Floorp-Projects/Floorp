@@ -67,6 +67,7 @@ sub setupConfigure {
         # well, that didn't go down too well. Let's create a brand
         # spanking new configuration file, since they clearly don't
         # have one.
+        $app->output->setupProgress('configuration');
         $self->database($app)->assumeRead(); # new file at the ready
         # options should now be set by the users of the datasource.
     }

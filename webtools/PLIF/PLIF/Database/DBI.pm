@@ -106,6 +106,7 @@ sub setupConfigure {
     my $self = shift;
     my($app) = @_;
     $self->dump(9, 'about to configure DBI...');
+    $app->output->setupProgress('database');
     my $prefix = 'database.'.$self->class;
     foreach my $property ($self->settings) {
         # XXX need to be able to offer current configuration as default values!

@@ -293,24 +293,24 @@ sub evaluateCondition {
     my $self = shift;
     my($lvalue, $rvalue, $condition) = @_;
     if (defined($condition) and defined($lvalue) and defined($rvalue)) {
-             if ($condition eq '=') {
-            return $lvalue == $rvalue;
+        if ($condition eq '=' or $condition eq '==') {
+            return eval { $lvalue == $rvalue; }; # could fail with non numeric arguments 
         } elsif ($condition eq '!=') {
-            return $lvalue != $rvalue;
+            return eval { $lvalue != $rvalue; };
         } elsif ($condition eq '<') {
-            return $lvalue < $rvalue;
+            return eval { $lvalue < $rvalue; };
         } elsif ($condition eq '>') {
-            return $lvalue > $rvalue;
+            return eval { $lvalue > $rvalue; };
         } elsif ($condition eq '<=') {
-            return $lvalue <= $rvalue;
+            return eval { $lvalue <= $rvalue; };
         } elsif ($condition eq '>=') {
-            return $lvalue >= $rvalue;
+            return eval { $lvalue >= $rvalue; };
         } elsif ($condition eq 'eq') {
-            return $lvalue eq $rvalue;
+            return eval { $lvalue eq $rvalue; };
         } elsif ($condition eq 'ne') {
-            return $lvalue ne $rvalue;
+            return eval { $lvalue ne $rvalue; };
         } elsif ($condition eq '=~') {
-            return eval { $lvalue =~ /$rvalue/; }; # XXX does this actually work? ;-)
+            return eval { $lvalue =~ /$rvalue/; };
         } elsif ($condition eq '!~') {
             return eval { $lvalue !~ /$rvalue/; };
         } elsif ($condition eq 'is') {
