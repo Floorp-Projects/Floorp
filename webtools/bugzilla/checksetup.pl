@@ -3577,7 +3577,7 @@ my $series_exists = $dbh->selectrow_array("SELECT 1 FROM series LIMIT 1");
 if (!$series_exists) {
     print "Migrating old chart data into database ...\n" unless $silent;
     
-    use Bugzilla::Series;
+    require Bugzilla::Series;
       
     # We prepare the handle to insert the series data    
     my$seriesdatasth = $dbh->prepare("INSERT INTO series_data " . 
