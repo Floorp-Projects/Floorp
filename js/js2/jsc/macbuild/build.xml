@@ -517,7 +517,7 @@
                 <!-- Settings for "FTP Panel" panel -->
                 <SETTING><NAME>MWFTP_Post_hostName</NAME><VALUE></VALUE></SETTING>
                 <SETTING><NAME>MWFTP_Post_username</NAME><VALUE></VALUE></SETTING>
-                <SETTING><NAME>MWFTP_Post_password</NAME><VALUE>86358be8639njei634nk380634nk380634nc7n6358tei&#158;/t</VALUE></SETTING>
+                <SETTING><NAME>MWFTP_Post_password</NAME><VALUE>35jgbe85pwjei5iwk38&#248;</VALUE></SETTING>
                 <SETTING><NAME>MWFTP_Post_remoteDir</NAME><VALUE></VALUE></SETTING>
                 <SETTING><NAME>MWFTP_Post_ftp_PathVersion</NAME><VALUE>0</VALUE></SETTING>
                 <SETTING><NAME>MWFTP_Post_ftp_PathType</NAME><VALUE>0</VALUE></SETTING>
@@ -529,8 +529,8 @@
                 <SETTING><NAME>MWFTP_Post_ShouldLog</NAME><VALUE>1</VALUE></SETTING>
 
                 <!-- Settings for "Java Command Line" panel -->
-                <SETTING><NAME>MWCommandLine_Java_clsName</NAME><VALUE></VALUE></SETTING>
-                <SETTING><NAME>MWCommandLine_Java_args</NAME><VALUE></VALUE></SETTING>
+                <SETTING><NAME>MWCommandLine_Java_clsName</NAME><VALUE>Main</VALUE></SETTING>
+                <SETTING><NAME>MWCommandLine_Java_args</NAME><VALUE>test</VALUE></SETTING>
 
                 <!-- Settings for "Java Language" panel -->
                 <SETTING><NAME>MWJava_Language_optimize</NAME><VALUE>false</VALUE></SETTING>
@@ -592,8 +592,8 @@
                 <SETTING><NAME>MWJava_Output_consoleApp</NAME><VALUE>2</VALUE></SETTING>
 
                 <!-- Settings for "Java Project" panel -->
-                <SETTING><NAME>MWJava_Proj_projtype</NAME><VALUE>Library</VALUE></SETTING>
-                <SETTING><NAME>MWJava_Proj_mainClassName</NAME><VALUE>Shell</VALUE></SETTING>
+                <SETTING><NAME>MWJava_Proj_projtype</NAME><VALUE>Application</VALUE></SETTING>
+                <SETTING><NAME>MWJava_Proj_mainClassName</NAME><VALUE>Main</VALUE></SETTING>
                 <SETTING><NAME>MWJava_Proj_HTMLAppCreator</NAME><VALUE>1145457748</VALUE></SETTING>
                 <SETTING><NAME>MWJava_Proj_HTMLAppName</NAME><VALUE>Metrowerks Java</VALUE></SETTING>
                 <SETTING><NAME>MWJava_Proj_PathVersion</NAME><VALUE>1</VALUE></SETTING>
