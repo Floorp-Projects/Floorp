@@ -116,6 +116,8 @@ function LoadDirectories(popup)
   var arrayOfDirectories;
   var position = 0;
   var dirType = 1;
+  var directoriesList;
+  var directoryDescription;
   if (!gPrefInt) { 
     try {
       gPrefInt = Components.classes["@mozilla.org/preferences-service;1"]
@@ -183,8 +185,8 @@ function LoadDirectories(popup)
       popup.appendChild(item);
       if (gRefresh) {  
       // gRefresh is true if user edits, removes or adds a directory.
-        var directoriesList =  document.getElementById("directoriesList");
-        var directoryDescription = null;
+        directoriesList =  document.getElementById("directoriesList");
+        directoryDescription = null;
         if(directoriesList.value != "") {
           // make sure the selected directory still exists
           try {
@@ -197,7 +199,7 @@ function LoadDirectories(popup)
         if(!directoryDescription) {
           // if selected directory doesn't exist, set it to none
           directoriesList.value = "";
-          var addressBookBundle = document.getElementById("bundle_addressBook");
+          addressBookBundle = document.getElementById("bundle_addressBook");
           directoriesList.label = addressBookBundle.
                           getString("directoriesListItemNone");
         }
@@ -209,10 +211,10 @@ function LoadDirectories(popup)
     }
     if (popup && gFromGlobalPref) {
     // we are in global preferences-> Addressing pane.
-      var directoriesList =  document.getElementById("directoriesList");
+      directoriesList =  document.getElementById("directoriesList");
       if (gRefresh) {
         // gRefresh is true if user edits, removes or adds a directory.
-        var directoryDescription = null;
+        directoryDescription = null;
         if(directoriesList.label != "") {
           // make sure the selected directory still exists
           try {
