@@ -461,7 +461,9 @@ NET_StreamBuilder  (FO_Present_Types format_out,
 
             /* Notify the data consumer that Binding is beginning...*/
             /* XXX: check result to terminate connection if necessary */
+#ifdef NOISY
             printf("+++ Created a stream for %s\n", URL_s->address);
+#endif
             if (pConn->pConsumer) {
                 pConn->pConsumer->OnStartBinding();
             }
