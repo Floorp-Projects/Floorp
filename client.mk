@@ -368,7 +368,8 @@ endif
 # need a better check for win32
 # and we need to get OBJDIR earlier
 ifdef MOZ_TOOLS
-_OBJ2SRCPATH := $(shell perl -e 'use File::Spec::Unix; print File::Spec::Unix->abs2rel("$(TOPSRCDIR)","$(shell cygpath -u $(OBJDIR))");')
+_tmpobjdir := $(shell cygpath -u $(OBJDIR))
+_OBJ2SRCPATH := $(shell $(TOPSRCDIR)/build/unix/abs2rel.pl $(TOPSRCDIR) $(_tmpobjdir))
 endif 
 
 #######################################################################
