@@ -202,6 +202,7 @@ var DefaultController =
 			case "cmd_forwardInline":
 			case "cmd_forwardAttachment":
 			case "cmd_editAsNew":
+      case "cmd_canHaveFilter":
 			case "cmd_delete":
 			case "button_delete":
 			case "cmd_shiftDelete":
@@ -330,6 +331,10 @@ var DefaultController =
       case "cmd_forwardInline":
       case "cmd_forwardAttachment":
       case "cmd_editAsNew":
+      case "cmd_canHaveFilter":
+        var loadedFolder = GetLoadedMsgFolder();
+        if (!(loadedFolder && loadedFolder.server.canHaveFilters) || !(IsMessageDisplayedInMessagePane()))
+          return false;
       case "cmd_openMessage":
       case "button_print":
       case "cmd_print":
@@ -372,7 +377,7 @@ var DefaultController =
         return(MailAreaHasFocus() && IsFolderSelected());
       case "cmd_find":
       case "cmd_findAgain":
-        return IsFindEnabled();
+        return IsMessageDisplayedInMessagePane();
         break;
       // these are enabled on when we are in threaded mode
       case "cmd_selectThread":
@@ -478,6 +483,9 @@ var DefaultController =
 			case "cmd_editAsNew":
 				MsgEditMessageAsNew();
 				break;
+      case "cmd_canHaveFilter":
+        MsgCreateFilter();
+        break;        
 			case "button_delete":
 			case "cmd_delete":
         SetNextMessageAfterDelete();
@@ -867,7 +875,7 @@ function IsFolderSelected()
         return false;
 }
 
-function IsFindEnabled()
+function IsMessageDisplayedInMessagePane()
 {
 	return (!IsThreadAndMessagePaneSplitterCollapsed() && (GetNumSelectedMessages() > 0));
 }

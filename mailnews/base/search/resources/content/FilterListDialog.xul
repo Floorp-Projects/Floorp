@@ -122,7 +122,7 @@ Contributor(s):  Håkan Waara <hwaara@chello.se>
         </vbox>
 
         <vbox>
-          <button id="newButton" label="&newButton.label;" oncommand="onNewFilter();"/>
+          <button id="newButton" label="&newButton.label;" oncommand="onNewFilter(null);"/>
           <button id="editButton" label="&editButton.label;" oncommand="onEditFilter();"/>
           <button id="deleteButton" label="&deleteButton.label;" oncommand="onDeleteFilter();"/>
           <spacer flex="1"/>

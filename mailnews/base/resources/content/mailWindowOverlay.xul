@@ -188,7 +188,7 @@ Rights Reserved.
   <command id="cmd_forwardInline" oncommand="goDoCommand('cmd_forwardInline')"/>
   <command id="cmd_forwardAttachment" oncommand="goDoCommand('cmd_forwardAttachment')"/>
   <command id="cmd_editAsNew" oncommand="goDoCommand('cmd_editAsNew')"/>
-  
+  <command id="cmd_canHaveFilter" oncommand="goDoCommand('cmd_canHaveFilter')"/>
   <command id="cmd_killThread" oncommand="goDoCommand('cmd_killThread')"/>
   <command id="cmd_watchThread" oncommand="goDoCommand('cmd_watchThread')"/>
 
@@ -900,7 +900,7 @@ Rights Reserved.
       <menuseparator/>
       <menuitem label="&filtersCmd.label;"
                       accesskey="&filtersCmd.accesskey;"
-                      oncommand="MsgFilters();"/>
+                      oncommand="MsgFilters(null);"/>
             <menuitem id="menu_properties" label="&folderPropsCmd.label;"
                       accesskey="&folderPropsCmd.accesskey;"
                       observes="cmd_properties"/>
@@ -1063,6 +1063,10 @@ Rights Reserved.
             accesskey="&editMsgAsNewCmd.accesskey;"
             key="key_editAsNew"
             observes="cmd_editAsNew"/>
+    <menuseparator/>
+    <menuitem id="createFilter" label="&createFilter.label;"
+      accesskey="&createFilter.accesskey;"
+      observes="cmd_canHaveFilter"/>
     <menuseparator/>
     <menu label="&moveMsgMenu.label;" accesskey="&moveMsgMenu.accesskey;" id="moveMenu" datasources="rdf:null"
      sortResource="http://home.netscape.com/NC-rdf#FolderTreeName"

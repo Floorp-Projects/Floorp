@@ -654,6 +654,24 @@ function MsgEditMessageAsNew()
     ComposeMessage(msgComposeType.Template, msgComposeFormat.Default, loadedFolder, messageArray);
 }
 
+function MsgCreateFilter()
+{
+  var emailAddressNode;
+
+  if (gCollapsedHeaderViewMode)
+    emailAddressNode = document.getElementById("collapsedfromValue");
+  else
+    emailAddressNode = document.getElementById("expandedfromValue");
+  
+  if (emailAddressNode)
+  {
+     var emailAddress = emailAddressNode.getTextAttribute("emailAddress");
+     if (emailAddress){
+         top.MsgFilters(emailAddress);
+     }
+  }
+}
+
 function MsgHome(url)
 {
   window.open(url, "_blank", "chrome,dependent=yes,all");
@@ -926,26 +944,43 @@ function MsgSearchMessages()
                           "chrome,resizable,centerscreen,dialog=no", { folder: preselectedFolder });
 }
 
-function MsgFilters()
+function MsgFilters(emailAddress)
 {
     var preselectedFolder = GetFirstSelectedMsgFolder();
     var windowManagerInterface = GetWindowMediator();
     var filterList = windowManagerInterface.getMostRecentWindow("mailnews:filterlist");
+    var args = { folder: preselectedFolder };
+    if (emailAddress)
+      args.prefillValue = emailAddress;
 
     if (filterList)
     {
-        var filterEditor = windowManagerInterface.getMostRecentWindow("mailnews:filtereditor");
+      var filterEditor = windowManagerInterface.getMostRecentWindow("mailnews:filtereditor");
 
-        // If the filtereditor is open, then we focus that because it is modal and
-        // thus blocking the filterlist from focusing.
-        if (filterEditor)
-            filterEditor.focus();
-        else
-            filterList.focus();
+      // If the filtereditor is open, then we focus that because it is modal and
+      // thus blocking the filterlist from focusing.
+      if (filterEditor)
+      {
+        if(emailAddress)
+        {
+          if(!gPromptService) {
+            gPromptService = Components.classes["@mozilla.org/embedcomp/prompt-service;1"].getService();
+            gPromptService = gPromptService.QueryInterface(Components.interfaces.nsIPromptService);
+          }
+
+          gPromptService.alert(window,
+                gBrandBundle.getString("brandShortName"),
+                gMessengerBundle.getString('cannotHaveTwoFilterRulesText')
+          );
+        }
+        filterEditor.focus();
+      }
+      else
+      filterList.openPrefillOnExistingFilterList(emailAddress);
     }
     else
-        window.openDialog("chrome://messenger/content/FilterListDialog.xul", "", 
-                          "chrome,resizable,centerscreen,dialog=yes", { folder: preselectedFolder });
+      window.openDialog("chrome://messenger/content/FilterListDialog.xul", "", 
+                          "chrome,resizable,centerscreen,dialog=yes", args);
 }
 
 function MsgViewAllHeaders()

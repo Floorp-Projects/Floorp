@@ -39,7 +39,6 @@
 
 // the actual filter that we're editing
 var gFilter;
-
 // cache the key elements we need
 var gFilterList;
 var gFilterNameElement;
@@ -49,10 +48,14 @@ var gActionValueDeck;
 var gActionPriority;
 var gActionLabel;
 var gFilterBundle;
-
+var gPreFillName;
 var nsMsgSearchScope = Components.interfaces.nsMsgSearchScope;
 
 var nsMsgFilterAction = Components.interfaces.nsMsgFilterAction;
+
+/* the okCallback is used for sending a callback to the Filter Dialog to close incase the user cancels from pre-fill.*/
+var okCallback=null;
+
 var gFilterEditorMsgWindow=null;
      
 function filterEditorOnLoad()
@@ -63,16 +66,45 @@ function filterEditorOnLoad()
     gFilterBundle = document.getElementById("bundle_filter");
     if ("arguments" in window && window.arguments[0]) {
         var args = window.arguments[0];
+        if("okCallback" in args ) {
+          top.okCallback = window.arguments[0].okCallback;
+        }
+
         if ("filter" in args) {
-            gFilter = window.arguments[0].filter;
+          // editing a filter
+          gFilter = window.arguments[0].filter;
+          initializeDialog(gFilter);
+        } 
+        else {
+          gFilterList = args.filterList;
+          if (gFilterList)
+              setSearchScope(getScopeFromFilterList(gFilterList));
+
+          // if doing prefill filter create a new filter and populate it.
+          if ("filterName" in args) {
+            gPreFillName = args.filterName;
+            gFilter = gFilterList.createFilter(gPreFillName);
+            var term = gFilter.createTerm();
+
+            term.attrib = Components.interfaces.nsMsgSearchAttrib.Sender;
+            term.op = Components.interfaces.nsMsgSearchOp.Is;
+
+            var termValue = term.value;
+            termValue.attrib = term.attrib;
+            termValue.str = gPreFillName;
+
+            term.value = termValue;
+
+            gFilter.appendTerm(term);
+            gFilter.action = nsMsgFilterAction.MoveToFolder;
 
             initializeDialog(gFilter);
-        } else {
-            gFilterList = args.filterList;
-            if (gFilterList)
-                setSearchScope(getScopeFromFilterList(gFilterList));
+          }
+          else{
             // fake the first more button press
             onMore(null);
+          }
+
         }
     }
     if (!gFilter)
@@ -90,7 +122,7 @@ function filterEditorOnLoad()
       gFilterNameElement.value = name;
     }
     gFilterNameElement.focus();
-    doSetOKCancel(onOk, null);
+    doSetOKCancel(onOk, onCancel);
     moveToAlertPosition();
 }
 
@@ -125,6 +157,13 @@ function onOk()
     // are displayed in the filter dialog, like the filter name
     window.arguments[0].refresh = true;
     window.close();
+}
+
+function onCancel()
+{
+  if (top.okCallback)
+    top.okCallback();
+  window.close();
 }
 
 function duplicateFilterNameExists(filterName)
@@ -261,7 +300,15 @@ function saveFilter() {
         gFilter.enabled=true;
     } else {
         gFilter.filterName = gFilterNameElement.value;
-        isNewFilter = false;
+        
+        //Prefilter is treated as a new filter.
+        if (gPreFillName) {
+          isNewFilter = true;
+          gFilter.enabled=true;
+        }
+        else {
+          isNewFilter = false;
+        }
     }
 
     gFilter.action = action;

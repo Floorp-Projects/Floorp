@@ -40,7 +40,8 @@ Contributor(s):
   windowtype="mailnews:filtereditor"
   width="510" height="360"
   persist="width height screenX screenY"
-  onload="filterEditorOnLoad();">
+  onload="filterEditorOnLoad();"
+  onclose="onCancel();">
 
   <dummy class="usesMailWidgets"/>
   <stringbundleset id="stringbundleset">

@@ -29,7 +29,7 @@ const nsMsgFilterMotion = Components.interfaces.nsMsgFilterMotion;
 
 var gFilterBundle;
 var gPromptService;
-
+var gFilterListDialogAlreadyOpen = false;
 function onLoad()
 {
     rdf = Components.classes["@mozilla.org/rdf/rdf-service;1"].getService(Components.interfaces.nsIRDFService);
@@ -44,7 +44,7 @@ function onLoad()
     reorderUpButton = document.getElementById("reorderUpButton");
     reorderDownButton = document.getElementById("reorderDownButton");
 
-    doSetOKCancel(onOk, null);
+    doSetOKCancel(onOk, onCancel);
 
     updateButtons();
 
@@ -62,14 +62,30 @@ function onLoad()
     }
 
     moveToAlertPosition();
+
+    if (("arguments" in window) && window.arguments[0] && ("prefillValue" in window.arguments[0])) 
+        onNewFilter(window.arguments[0].prefillValue);
 }
 
+function openPrefillOnExistingFilterList(emailAddress)
+{
+  gFilterListDialogAlreadyOpen = true;
+  onNewFilter(emailAddress);
+}
+function onCancel()
+{
+  if(gFilterListDialogAlreadyOpen)
+    gFilterListDialogAlreadyOpen = false;
+  else
+    window.close();
+}
+  
 function onOk()
 {
-    // make sure to save the filter to disk
-    var filterList = currentFilterList();
-    if (filterList) filterList.saveToDefaultFile();
-    window.close();
+  // make sure to save the filter to disk
+  var filterList = currentFilterList();
+  if (filterList) filterList.saveToDefaultFile();
+  window.close();
 }
 
 function onServerClick(event)
@@ -157,11 +173,15 @@ function onEditFilter() {
         refreshFilterList();
 }
 
-function onNewFilter()
+function onNewFilter(emailAddress)
 {
-    var curFilterList = currentFilterList();
-    var args = {filterList: curFilterList};
-
+  var curFilterList = currentFilterList();
+  var args = {filterList: curFilterList};
+  if(emailAddress) {
+    args.okCallback = onCancel;
+    args.filterName = emailAddress;
+  }
+    
   window.openDialog("chrome://messenger/content/FilterEditor.xul", "FilterEditor", "chrome,modal,titlebar,resizable,centerscreen", args);
 
   if ("refresh" in args && args.refresh)

@@ -130,6 +130,10 @@ Rights Reserved.
       <menuitem label="&CopyEmailAddress.label;"
                 accesskey="&CopyEmailAddress.accesskey;"
                 oncommand="CopyEmailAddress(document.popupNode)"/>  
+      <menuitem label="&CreateFilter.label;"
+                accesskey="&CreateFilter.accesskey;"
+                oncommand="CreateFilter(document.popupNode)"
+                observes="cmd_canHaveFilter"/>  
   </popup>
 
   <popup id="allHeadersPopup"  onpopupshowing="return fillAllHeadersPopup(document.popupNode);" popupanchor="bottomleft">

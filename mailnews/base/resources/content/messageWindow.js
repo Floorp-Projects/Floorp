@@ -420,6 +420,7 @@ var MessageWindowController =
 			case "cmd_forwardInline":
 			case "cmd_forwardAttachment":
 			case "cmd_editAsNew":
+      case "cmd_canHaveFilter":
 			case "cmd_delete":
       case "cmd_undo":
       case "cmd_redo":
@@ -499,6 +500,11 @@ var MessageWindowController =
 			case "cmd_forwardInline":
 			case "cmd_forwardAttachment":
 			case "cmd_editAsNew":
+      case "cmd_canHaveFilter":
+        var loadedFolder = GetLoadedMsgFolder();
+        if (!(loadedFolder && loadedFolder.server.canHaveFilters))
+          return false;
+
 			case "button_delete":
 			case "cmd_shiftDelete":
 			case "cmd_print":
@@ -600,6 +606,9 @@ var MessageWindowController =
 			case "cmd_editAsNew":
 				MsgEditMessageAsNew();
 				break;
+      case "cmd_canHaveFilter":
+        MsgCreateFilter();
+				break;        
 			case "cmd_delete":
 				MsgDeleteMessageFromMessageWindow(false, false);
 				break;

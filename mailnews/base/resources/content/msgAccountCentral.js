@@ -236,7 +236,7 @@ function SearchMessages()
 // Open filters window
 function CreateMsgFilters()
 {
-    window.parent.MsgFilters();
+    window.parent.MsgFilters(null);
 } 
 
 // Open Subscribe dialog

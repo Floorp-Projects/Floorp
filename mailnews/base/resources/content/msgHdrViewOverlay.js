@@ -712,6 +712,20 @@ function CopyEmailAddress(emailAddressNode)
   }
 }
 
+// CreateFilter opens the Message Filters and Filter Rules dialogs.
+//The Filter Rules dialog has focus. The window is prefilled with filtername <email address>
+//Sender condition is selected and the value is prefilled <email address>
+function CreateFilter(emailAddressNode)
+{
+  if (emailAddressNode)
+  {
+     var emailAddress = emailAddressNode.getAttribute("emailAddress");
+     if (emailAddress){
+         top.MsgFilters(emailAddress);
+     }
+  }
+}
+
 // createnewAttachmentInfo --> constructor method for creating new attachment object which goes into the
 // data attachment array.
 function createNewAttachmentInfo(contentType, url, displayName, uri, notDownloaded)
