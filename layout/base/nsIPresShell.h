@@ -85,16 +85,6 @@ public:
 
   virtual void ProcessReflowCommands() = 0;
 
-  /**
-   * Place some cached data into the shell's cache. The key for
-   * the cache is the given frame.
-   */
-  virtual void PutCachedData(nsIFrame* aKeyFrame, void* aData) = 0;
-
-  virtual void* GetCachedData(nsIFrame* aKeyFrame) = 0;
-
-  virtual void* RemoveCachedData(nsIFrame* aKeyFrame) = 0;
-
   // XXX events
   // XXX selection
 };
