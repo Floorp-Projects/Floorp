@@ -784,11 +784,11 @@ function ComposeStartup()
               cleanBody = unescape(body);
             } catch(e) { cleanBody = body;}
 
-            msgCompFields.SetBody('<a href="' + body +
+            msgCompFields.SetBody('<br><a href="' + body +
                                   '">' + cleanBody + '</a><br>');
           }
           else
-            msgCompFields.SetBody('<' + body + '>\n');
+            msgCompFields.SetBody('\n<' + body + '>\n');
         }
 
 				var subjectValue = msgCompFields.GetSubject();
