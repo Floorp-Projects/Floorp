@@ -501,6 +501,7 @@
 #define XmRPixmapTable					"PixmapTable"
 #define XmRProgressBarMode				"ProgressBarMode"
 #define XmRRulesType					"RulesType"
+#define XmRShellPlacement				"ShellPlacement"
 #define XmRToolBarIndicatorLocation		"ToolBarIndicatorLocation"
 #define XmRToolBarSelectionPolicy		"ToolBarSelectionPolicy"
 #define XmRToolBarToggleBehavior		"ToolBarToggleBehavior"

@@ -356,3 +356,119 @@ XfeShellPlaceAtLocation(Widget			shell,
 	}
 }
 /*----------------------------------------------------------------------*/
+/* extern */ void
+XfeRectPlaceOnRootWindow(Widget			relative,
+						 Dimension		offset,
+						 Dimension		margin_bottom,
+						 Dimension		margin_top,
+						 Dimension		margin_left,
+						 Dimension		margin_right,
+						 XRectangle *	rect_in_out,
+                         unsigned char	location,
+						 Boolean		allow_swap)
+{
+	XRectangle r;
+	
+	Dimension	max_width;
+	Dimension	max_height;
+	Dimension	screen_width;
+	Dimension	screen_height;
+	Position	max_x;
+	Position	max_y;
+	Position	min_x;
+	Position	min_y;
+
+	r.x			= rect_in_out->x;
+	r.y			= rect_in_out->y;
+	r.width		= rect_in_out->width;
+	r.height	= rect_in_out->height;
+
+	screen_width  = XfeScreenWidth(relative);
+	screen_height = XfeScreenHeight(relative);
+
+	max_width  = screen_width - margin_left - margin_right;
+	max_height = screen_height - margin_top - margin_bottom;
+
+	min_x = margin_left;
+	min_y = margin_top;
+
+	max_x = screen_width - margin_right;
+	max_y = screen_height - margin_bottom;
+
+	/* Make sure the width fits */
+	if (rect_in_out->width > max_width)
+	{
+		rect_in_out->width = max_width;
+	}
+
+	/* Make sure the height fits */
+	if (rect_in_out->height > max_height)
+	{
+		rect_in_out->height = max_height;
+	}
+
+	/* Place horizontally */
+	if (location == XmSHELL_PLACEMENT_BOTTOM ||
+		location == XmSHELL_PLACEMENT_TOP)
+	{
+		rect_in_out->x = XfeRootX(relative);
+
+		/* Make sure the rect does not go over the right border */
+		if ((rect_in_out->x + rect_in_out->width) > max_x)
+		{
+			rect_in_out->x -= ((rect_in_out->x + rect_in_out->width) - max_x);
+		}
+
+		if (location == XmSHELL_PLACEMENT_BOTTOM)
+		{
+			rect_in_out->y = 
+				XfeRootY(relative) +
+				XfeHeight(relative) +
+				offset;				
+
+			/* Make sure the rect does not go over the bottom border */
+			if ((rect_in_out->y + rect_in_out->height) > max_y)
+			{
+				rect_in_out->height -= ((rect_in_out->y + rect_in_out->height) - 
+										max_y);
+			}
+		}
+	}
+	/* Place vertically */
+	else if (location == XmSHELL_PLACEMENT_LEFT ||
+			 location == XmSHELL_PLACEMENT_RIGHT)
+	{
+		rect_in_out->y = XfeRootY(relative);
+		
+		/* Make sure the rect does not go over the bottom border */
+		if ((rect_in_out->y + rect_in_out->height) > max_y)
+		{
+			rect_in_out->y -= ((rect_in_out->y + rect_in_out->height) - max_y);
+		}
+	}
+#ifdef DEBUG_ramiro
+	else
+	{
+		assert( 0 );
+	}
+#endif
+
+	switch(location)
+	{
+	case XmSHELL_PLACEMENT_BOTTOM:
+
+		
+		
+		break;
+
+	case XmSHELL_PLACEMENT_LEFT:
+		break;
+
+	case XmSHELL_PLACEMENT_RIGHT:
+		break;
+
+	case XmSHELL_PLACEMENT_TOP:
+		break;
+	}
+}
+/*----------------------------------------------------------------------*/
