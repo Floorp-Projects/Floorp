@@ -60,6 +60,11 @@ static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
 #include <sys/types.h>
 #include <sys/stat.h>
 #endif
+#ifdef XP_OS2
+#include <os2.h>
+#include <sys/types.h>
+#include <sys/stat.h>
+#endif
 
 class StreamToFile : public nsIStreamListener {
 public:
@@ -257,6 +262,14 @@ PageGrabber::Grab(const nsAFlatCString& aURL)
       if (PeekMessage(&msg, NULL, 0, 0, PM_REMOVE)) {
         TranslateMessage(&msg);
         DispatchMessage(&msg);
+      }
+    }
+  #endif
+  #ifdef XP_OS2
+    QMSG qmsg;
+    while ( !copier->IsDone() ) {
+      if (WinPeekMsg(0, &qmsg, NULL, 0, 0, PM_REMOVE)) {
+        WinDispatchMsg(0, &qmsg);
       }
     }
   #endif
