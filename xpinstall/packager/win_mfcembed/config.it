@@ -486,7 +486,7 @@ $InstallSize$:gre
 $InstallSizeSystem$
 $InstallSizeArchive$:gre-win32-installer.zip
 Attributes=SELECTED|UNCOMPRESS|SUPERSEDE|LAUNCHAPP|INVISIBLE
-Parameter=-mmi -app $ProductName$ -app_path "[SETUP PATH]\$MainExeFile$"
+Parameter=-ms -mmi -app $ProductName$ -app_path "[SETUP PATH]\$MainExeFile$"
 SupersedeType=GRE
 SupersedeWinReg0=HKEY_LOCAL_MACHINE\Software\mozilla.org\GRE
 SupersedeVersion0=$GreFileVersion$
