@@ -120,7 +120,6 @@ protected:
   nsRect                mClientRect;
   nsIDeviceContextSpec  *mSpec;
   PRBool                mSupportsRasterFonts;
-  PRUint32              mPelsPerMeter;
 
   nsCOMPtr<nsIScreenManager> mScreenManager;
   static PRUint32 sNumberOfScreens;
@@ -128,9 +127,6 @@ protected:
 public:
   HDC                   mPrintDC;
   HPS                   mPrintPS;
-
-  static PRBool gRound;
-  static int    PrefChanged(const char* aPref, void* aClosure);
 
   enum nsPrintState
   {

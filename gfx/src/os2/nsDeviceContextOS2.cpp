@@ -27,7 +27,6 @@
 #ifdef COLOR_256
 #include "il_util.h"
 #endif
-#include "nsIPref.h"
 #include "nsIServiceManager.h"
 #include "nsCOMPtr.h"
 #include "nsIScreenManager.h"
@@ -43,12 +42,7 @@
 #define NOT_SETUP 0x33
 static PRBool gIsWarp4 = NOT_SETUP;
 
-static NS_DEFINE_CID(kPrefCID, NS_PREF_CID);
-
-PRBool nsDeviceContextOS2::gRound = PR_FALSE;
 PRUint32 nsDeviceContextOS2::sNumberOfScreens = 0;
-
-static char* nav4rounding = "font.size.nav4rounding";
 
 nsDeviceContextOS2 :: nsDeviceContextOS2()
   : DeviceContextImpl()
@@ -68,7 +62,6 @@ nsDeviceContextOS2 :: nsDeviceContextOS2()
   mCachedFullRect = PR_FALSE;
   mSupportsRasterFonts = PR_FALSE;
   mPrintingStarted = PR_FALSE;
-  mPelsPerMeter = 0;
 #ifdef XP_OS2
   mPrintState = nsPrintState_ePreBeginDoc;
 #endif
@@ -80,19 +73,6 @@ nsDeviceContextOS2 :: nsDeviceContextOS2()
                      ulValues, sizeof(ulValues));
     gIsWarp4 = (ulValues[0] >= 20) && (ulValues[1] >= 40);
   }
-
-#ifndef XP_OS2
-  nsresult res = NS_ERROR_FAILURE;
-  nsCOMPtr<nsIPref> prefs(do_GetService(kPrefCID, &res));
-  if (NS_SUCCEEDED(res)) {
-    static PRBool roundingInitialized = PR_FALSE;
-    if (!roundingInitialized) {
-      roundingInitialized = PR_TRUE;
-      PrefChanged(nav4rounding, this);
-    }
-    prefs->RegisterCallback(nav4rounding, PrefChanged, this);
-  }
-#endif
 }
 
 nsDeviceContextOS2::~nsDeviceContextOS2()
@@ -181,8 +161,6 @@ void nsDeviceContextOS2 :: CommonInit(HDC aDC)
   mTwipsToPixels = ((float)alArray [CAPS_VERTICAL_FONT_RES]) / (float)NSIntPointsToTwips(72);
 
   mPixelsToTwips = 1.0f / mTwipsToPixels;
-
-  mPelsPerMeter = alArray[CAPS_VERTICAL_RESOLUTION];
 
   mDepth = alArray[CAPS_COLOR_BITCOUNT];
 #ifdef COLOR_256
