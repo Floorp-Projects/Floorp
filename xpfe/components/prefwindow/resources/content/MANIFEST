@@ -23,6 +23,8 @@ pref-fonts.xul
 pref-fonts.js
 pref-help.js
 pref-history.xul
+pref-http.xul
+pref-http.js
 pref-languages.xul
 pref-languages-add.xul
 pref-languages.js
