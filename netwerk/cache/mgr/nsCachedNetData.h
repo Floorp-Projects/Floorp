@@ -134,11 +134,11 @@ protected:
     friend class CacheOutputStream;
     friend class InterceptStreamListener;
 
-private:
-
+protected:
     nsCachedNetData() {};
     virtual ~nsCachedNetData() {};
 
+private:
     // Initialize internal fields of this nsCachedNetData instance from the
     // underlying raw cache database record.
     nsresult Deserialize(PRBool aDeserializeFlags);
