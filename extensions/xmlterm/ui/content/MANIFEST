@@ -1,8 +1,10 @@
-xmlterm.html
 xmlterm.xul
 xmlterm2.xul
+XMLTermOverlay.xul
 XMLTermChrome.js
 XMLTermCommands.js
+XMLTermOverlay.js
+xmlterm.html
 xmltermTips.html
 xmltermAbout.html
 xmltblank.html
