@@ -40,8 +40,7 @@ class nsIAppShell;
  * Native GTK++ window wrapper.
  */
 
-class nsWindow : public nsWidget,
-                 public nsITimerCallback
+class nsWindow : public nsWidget
 {
 
 public:
@@ -51,9 +50,6 @@ public:
   virtual ~nsWindow();
 
   NS_DECL_ISUPPORTS_INHERITED
-
-  // nsITimerCallback
-  NS_IMETHOD_(void) Notify(nsITimer* aTimer);
 
   NS_IMETHOD           WidgetToScreen(const nsRect &aOldRect, nsRect &aNewRect);
 
@@ -254,14 +250,15 @@ private:
   nsresult     SetIcon(GdkPixmap *window_pixmap, 
                        GdkBitmap *window_mask);
   nsresult     SetIcon();
+  void         SendExposeEvent();
+
   PRBool       mIsUpdating;
   // when this is PR_TRUE we will block focus
   // events to prevent recursion
   PRBool       mBlockFocusEvents;
-  PRInt32      mScrollExposeCounter;
+
   void DestroyNativeChildren(void);
 
-  nsITimer *mExposeTimer;
 };
 
 //

@@ -108,7 +108,7 @@ static GtkTargetEntry target_table[] = {
 static guint n_targets = sizeof(target_table) / sizeof(target_table[0]);
 
 
-NS_IMPL_ISUPPORTS_INHERITED(nsWindow, nsWidget, nsITimerCallback)
+NS_IMPL_ISUPPORTS_INHERITED0(nsWindow, nsWidget)
 
 //-------------------------------------------------------------------------
 //
@@ -130,11 +130,9 @@ nsWindow::nsWindow()
   mSuperWin = 0;
   mMozArea = 0;
   mMozAreaClosestParent = 0;
-  mScrollExposeCounter = 0;
   mIsTooSmall = PR_FALSE;
   mIsUpdating = PR_FALSE;
   mBlockFocusEvents = PR_FALSE;
-  mExposeTimer = nsnull;
   // init the hash table if it hasn't happened already
   if (mWindowLookupTable == NULL) {
     mWindowLookupTable = g_hash_table_new(g_int_hash, g_int_equal);
@@ -668,13 +666,13 @@ NS_IMETHODIMP nsWindow::CaptureRollupEvents(nsIRollupListener * aListener,
   grabWidget = mWidget;
   // XXX we need a visible widget!!
 
-  if (aDoCapture)
-  {
-    GdkCursor *cursor = gdk_cursor_new (GDK_ARROW);
-    if (!mSuperWin) {
-    } else {
+  if (aDoCapture) {
+
+    if (mSuperWin) {
       mIsGrabbing = PR_TRUE;
       mGrabWindow = this;
+
+      GdkCursor *cursor = gdk_cursor_new (GDK_ARROW);
 
       gdk_pointer_grab (GDK_SUPERWIN(mSuperWin)->bin_window, PR_TRUE,(GdkEventMask)
                         (GDK_BUTTON_PRESS_MASK | GDK_BUTTON_RELEASE_MASK |
@@ -684,6 +682,10 @@ NS_IMETHODIMP nsWindow::CaptureRollupEvents(nsIRollupListener * aListener,
 
       gdk_cursor_destroy(cursor);
     }
+    gRollupConsumeRollupEvent = PR_TRUE;
+    gRollupListener = aListener;
+    gRollupWidget = this;
+
   } else {
     // make sure that the grab window is marked as released
     if (mGrabWindow == this) {
@@ -691,23 +693,9 @@ NS_IMETHODIMP nsWindow::CaptureRollupEvents(nsIRollupListener * aListener,
     }
     mIsGrabbing = PR_FALSE;
     gdk_pointer_ungrab(GDK_CURRENT_TIME);
-    //    gtk_grab_remove(grabWidget);
-  }
-  
-  if (aDoCapture) {
-    //    gtk_grab_add(mWidget);
-    NS_IF_RELEASE(gRollupListener);
-    NS_IF_RELEASE(gRollupWidget);
-    gRollupConsumeRollupEvent = PR_TRUE;
-    gRollupListener = aListener;
-    NS_ADDREF(aListener);
-    gRollupWidget = this;
-    NS_ADDREF(gRollupWidget);
-  } else {
-    //    gtk_grab_remove(mWidget);
-    NS_IF_RELEASE(gRollupListener);
-    //gRollupListener = nsnull;
-    NS_IF_RELEASE(gRollupWidget);
+
+    gRollupListener = nsnull;
+    gRollupWidget = nsnull;
   }
   
   return NS_OK;
@@ -1772,19 +1760,6 @@ void * nsWindow::GetNativeData(PRUint32 aDataType)
   return nsWidget::GetNativeData(aDataType);
 }
 
-#ifdef DEBUG_pavlov
-#define OH_I_LOVE_SCROLLING_SMOOTHLY
-struct GtkLayoutChild {
-  GtkWidget *widget;
-  gint x;
-  gint y;
-};
-
-#define IS_ONSCREEN(x,y) ((x >= G_MINSHORT) && (x <= G_MAXSHORT) && \
-                          (y >= G_MINSHORT) && (y <= G_MAXSHORT))
-
-#endif
-
 //-------------------------------------------------------------------------
 //
 // Scroll the bits of a window
@@ -1795,8 +1770,6 @@ NS_IMETHODIMP nsWindow::Scroll(PRInt32 aDx, PRInt32 aDy, nsRect *aClipRect)
 {
   UnqueueDraw();
   mUpdateArea->Offset(aDx, aDy);
-  //  printf("mScrollExposeCounter++ = %i\n", mScrollExposeCounter);
-  mScrollExposeCounter++;
 
   if (mSuperWin) {
     // save the old backing color
@@ -1824,8 +1797,6 @@ NS_IMETHODIMP nsWindow::ScrollWidgets(PRInt32 aDx, PRInt32 aDy)
 {
   UnqueueDraw();
   mUpdateArea->Offset(aDx, aDy);
-  //  printf("mScrollExposeCounter++ = %i\n", mScrollExposeCounter);
-  mScrollExposeCounter++;
 
   if (mSuperWin) {
     // save the old backing color
@@ -1846,81 +1817,6 @@ NS_IMETHODIMP nsWindow::ScrollWidgets(PRInt32 aDx, PRInt32 aDy)
 
 NS_IMETHODIMP nsWindow::ScrollRect(nsRect &aSrcRect, PRInt32 aDx, PRInt32 aDy)
 {
-#ifdef OH_I_LOVE_SCROLLING_SMOOTHLY
-  // copy our off screen pixmap onto the window.
-  GdkWindow *window = nsnull;
-  GdkGC *gc = nsnull;
-
-  window = GTK_LAYOUT(mWidget)->bin_window;
-
-  gc = gdk_gc_new(window);
-
-  printf("nsWindow::Scroll(%i, %i\n", aDx, aDy);
-
-  if (aDx > 0) {                        /* moving left */
-    if (abs(aDx) < aSrcRect.width) { /* only copy if we arn't moving further than our width */
-      gdk_window_copy_area(window, gc,
-                           aDx, aDy,                              // source coords
-                           window,                                // source window
-                           aSrcRect.x, aSrcRect.y,                // dest coords
-                           aSrcRect.width - aDx,                  // width
-                           aSrcRect.height - aDy);                // height
-
-      nsRect rect(0, 0, aDx, aSrcRect.height);
-      Invalidate(rect, PR_TRUE);
-    } else {
-      Invalidate(aSrcRect, PR_TRUE); /* redraw the area of the widget if we are jumping more than our width */
-    }
-  } else if (aDx < 0) {                 /* moving right */
-    if (abs(aDx) < aSrcRect.width) { /* only copy if we arn't moving further than our width */
-      gdk_window_copy_area(window, gc,
-                           aSrcRect.x, aSrcRect.y,                // source coords
-                           window,                                // source window
-                           -aDx, -aDy,                            // dest coords
-                           aSrcRect.width + aDx,                  // width
-                           aSrcRect.height + aDy);                // height
-      nsRect rect(aSrcRect.width + aDx, 0, -aDx, aSrcRect.height);
-      Invalidate(rect, PR_TRUE);
-    } else {
-      Invalidate(aSrcRect, PR_TRUE); /* redraw the area of the widget if we are jumping more than our width */
-    }
-  }
-  if (aDy > 0) {                        /* moving up */
-    if (abs(aDy) < aSrcRect.height) { /* only copy if we arn't moving further than our height */
-      gdk_window_copy_area(window, gc,
-                           aDx, aDy,                              // source coords
-                           window,                                // source window
-                           aSrcRect.x, aSrcRect.y,                // dest coords
-                           aSrcRect.width - aDx,                  // width
-                           aSrcRect.height - aDy);                // height
-      nsRect rect(0, 0, aSrcRect.width, aDy);
-      Invalidate(rect, PR_TRUE);
-    } else {
-      Invalidate(aSrcRect, PR_TRUE); /* redraw the area of the widget if we are jumping more than our height */
-    }
-  } else if (aDy < 0) {                 /* moving down */
-    if (abs(aDy) < aSrcRect.height) { /* only copy if we arn't moving further than our height */
-      gdk_window_copy_area(window, gc,
-                           aSrcRect.x, aSrcRect.y,                // source coords
-                           window,                                // source window
-                           -aDx, -aDy,                            // dest coords
-                           aSrcRect.width + aDx,                  // width
-                           aSrcRect.height + aDy);                // height
-      nsRect rect(0, aSrcRect.height + aDy, aSrcRect.width, -aDy);
-      Invalidate(rect, PR_TRUE);
-    } else {
-      Invalidate(aSrcRect, PR_TRUE); /* redraw the area of the widget if we are jumping more than our height */
-    }
-  }
-
-  gdk_gc_destroy(gc);
-
-#else
-
-  printf("uhh, you don't use good scrolling and you want to scroll a rect?  too bad.\n");
-
-#endif
-
   return NS_OK;
 }
 
@@ -1952,8 +1848,7 @@ NS_IMETHODIMP nsWindow::SetTitle(const nsString& aTitle)
             converter = nsnull;
           }
           else if (converter) {
-            result = converter->SetOutputErrorBehavior(
-                                                       nsIUnicodeEncoder::kOnError_Replace, nsnull, '?');
+            result = converter->SetOutputErrorBehavior(nsIUnicodeEncoder::kOnError_Replace, nsnull, '?');
           }
         }
       }
@@ -2051,25 +1946,9 @@ nsresult nsWindow::SetIcon(GdkPixmap *pixmap,
 
 
 
-NS_IMETHODIMP_(void) nsWindow::Notify(nsITimer* aTimer)
+void nsWindow::SendExposeEvent()
 {
-  //  printf("%p nsWindow::Notify()\n", this);
   mUpdateArea->Intersect(0, 0, mBounds.width, mBounds.height);
-
-#if 0
-
-  //    NS_ADDREF(mUpdateArea);
-  //    event.region = mUpdateArea;
-  if (mScrollExposeCounter > 1) {
-    //printf("mScrollExposeCounter-- = %i\n", mScrollExposeCounter);
-    mScrollExposeCounter--;
-    return NS_OK;
-  }
-
-  //    printf("mScrollExposeCounter   = 0\n");
-  mScrollExposeCounter = 0;
-
-#endif
 
   nsPaintEvent event;
 
@@ -2083,20 +1962,15 @@ NS_IMETHODIMP_(void) nsWindow::Notify(nsITimer* aTimer)
   /* XXX fix this */
   event.time = 0;
 
-  //    printf("\n\n");
   PRInt32 x, y, w, h;
   mUpdateArea->GetBoundingBox(&x,&y,&w,&h);
 
-  //    printf("\n\n");
   event.rect->x = x;
   event.rect->y = y;
   event.rect->width = w;
   event.rect->height = h;
   
-  if (event.rect->width == 0 || event.rect->height == 0)
-  {
-    NS_IF_RELEASE(aTimer);
-    mExposeTimer = nsnull;
+  if (event.rect->width == 0 || event.rect->height == 0) {
     delete event.rect;
     return;
   }
@@ -2117,7 +1991,6 @@ NS_IMETHODIMP_(void) nsWindow::Notify(nsITimer* aTimer)
   if (event.renderingContext) {
     DispatchWindowEvent(&event);
     NS_RELEASE(event.renderingContext);
-    //      NS_RELEASE(mUpdateArea);
   }
 
 
@@ -2148,9 +2021,6 @@ NS_IMETHODIMP_(void) nsWindow::Notify(nsITimer* aTimer)
   }
 #endif // NS_DEBUG
 
-  NS_IF_RELEASE(aTimer);
-  mExposeTimer = nsnull;
-
   delete event.rect;
 }
 
@@ -2173,14 +2043,7 @@ PRBool nsWindow::OnExpose(nsPaintEvent &event)
     // expose.. we didn't get an Invalidate, so we should up the count here
     mUpdateArea->Union(event.rect->x, event.rect->y, event.rect->width, event.rect->height);
 
-#ifdef MODAL_TIMERS_BROKEN
-    Notify(nsnull);
-#else
-    if (!mExposeTimer) {
-      if (NS_NewTimer(&mExposeTimer) == NS_OK)
-        mExposeTimer->Init(this, 15);
-    }
-#endif
+    SendExposeEvent();
   }
 
   return result;
@@ -2652,45 +2515,13 @@ gint handle_toplevel_focus_out(GtkWidget *      aWidget,
 void
 nsWindow::HandleXlibExposeEvent(XEvent *event)
 {
-
-#if 0
-  if (event->xexpose.count != 0) {
-    XEvent       extra_event;
-    do {
-      XWindowEvent(event->xany.display, event->xany.window, ExposureMask, (XEvent *)&extra_event);
-      pevent.rect->UnionRect(*pevent.rect, nsRect(extra_event.xexpose.x, extra_event.xexpose.y,
-                                                  extra_event.xexpose.width, extra_event.xexpose.height));
-      if (mScrollExposeCounter > 0) {
-        int delta = MIN(mScrollExposeCounter, extra_event.xexpose.count);
-        //printf("delta = %i\n", delta);
-        mScrollExposeCounter -= delta;
-      }
-    } while (extra_event.xexpose.count > 0);
-  }
-#endif
-
-  NS_ADDREF_THIS();
-
-  // call the event callback
-  if (mEventCallback) 
-  {
-    // expose.. we didn't get an Invalidate, so we should up the count here
+  // expose.. we didn't get an Invalidate, so we should up the count here
+  do {
     mUpdateArea->Union(event->xexpose.x, event->xexpose.y,
                        event->xexpose.width, event->xexpose.height);
-
-    //    printf("%p nsWindow::HandleXlibExposeEvent: mExposeTimer = %p\n", this, mExposeTimer);
-#ifdef MODAL_TIMERS_BROKEN
-    Notify(nsnull);
-#else
-    if (!mExposeTimer) {
-      if (NS_NewTimer(&mExposeTimer) == NS_OK)
-        mExposeTimer->Init(this, 15);
-    }
-#endif
-  }
-
-
-  NS_RELEASE_THIS();
+  } while (XCheckWindowEvent(event->xany.display, event->xany.window, ExposureMask, event));
+  
+  SendExposeEvent();
 }
  
 void

@@ -421,8 +421,8 @@ protected:
   void GetXYFromPosition(unsigned long *aX, unsigned long *aY);
 
   // this is the rollup listener variables
-  static nsIRollupListener *gRollupListener;
-  static nsIWidget         *gRollupWidget;
+  static nsCOMPtr<nsIRollupListener> gRollupListener;
+  static nsCOMPtr<nsIWidget>         gRollupWidget;
   static PRBool             gRollupConsumeRollupEvent;
 
   nsITimer* mICSpotTimer;
