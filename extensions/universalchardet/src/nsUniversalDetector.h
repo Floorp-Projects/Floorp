@@ -1,16 +1,21 @@
-/* -*- Mode: C; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
-/*
- * CONFIDENTIAL AND PROPRIETARY SOURCE CODE
- * OF NETSCAPE COMMUNICATIONS CORPORATION
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
  *
- * Copyright (c) 2000 Netscape Communications Corporation.
- * All Rights Reserved.
+ * The contents of this file are subject to the Netscape Public
+ * License Version 1.1 (the "License"); you may not use this file
+ * except in compliance with the License. You may obtain a copy of
+ * the License at http://www.mozilla.org/NPL/
  *
- * Use of this Source Code is subject to the terms of the applicable
- * license agreement from Netscape Communications Corporation.
+ * Software distributed under the License is distributed on an "AS
+ * IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+ * implied. See the License for the specific language governing
+ * rights and limitations under the License.
  *
- * The copyright notice(s) in this Source Code does not indicate actual
- * or intended publication of this Source Code.
+ * The Original Code is Mozilla Communicator client code.
+ *
+ * The Initial Developer of the Original Code is Netscape Communications
+ * Corporation.  Portions created by Netscape are
+ * Copyright (C) 1998 Netscape Communications Corporation. All
+ * Rights Reserved.
  */
 
 #ifndef nsUniversalDetector_h__
@@ -50,6 +55,7 @@ public:
 
 protected:
    virtual void Report(const char* aCharset) = 0;
+   virtual void Reset();
    nsInputState  mInputState;
    PRBool  mAvailable;		//the model is not available for this instance
    PRBool  mDone;
