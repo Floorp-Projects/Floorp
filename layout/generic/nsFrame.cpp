@@ -70,7 +70,9 @@ nsIDocument      *gDoc = nsnull;
 
 // [HACK] Foward Declarations
 void ForceDrawFrame(nsFrame * aFrame);
+#if 0
 static void RefreshContentFrames(nsIPresContext& aPresContext, nsIContent * aStartContent, nsIContent * aEndContent);
+#endif
 
 PRBool      nsFrame::mDoingSelection = PR_FALSE;
 PRBool      nsFrame::mDidDrag        = PR_FALSE;
@@ -1696,12 +1698,13 @@ NS_IMETHODIMP
 nsFrame::DumpRegressionData(FILE* out, PRInt32 aIndent)
 {
   IndentBy(out, aIndent);
-  fprintf(out, "<frame type=\"");
+  fprintf(out, "<frame va=\"%ld\" type=\"", PRUptrdiff(this));
   nsAutoString name;
   GetFrameName(name);
   XMLQuote(name);
   fputs(name, out);
-  fprintf(out, "\">\n");
+  fprintf(out, "\" state=\"%d\" parent=\"%ld\">\n",
+          mState, PRUptrdiff(mParent));
 
   aIndent++;
   DumpBaseRegressionData(out, aIndent);
@@ -1716,27 +1719,14 @@ nsFrame::DumpRegressionData(FILE* out, PRInt32 aIndent)
 void
 nsFrame::DumpBaseRegressionData(FILE* out, PRInt32 aIndent)
 {
-  IndentBy(out, aIndent);
-  fprintf(out, "<ident addr=\"%p\"/>\n", this);
-
-  if (nsnull != mParent) {
-    IndentBy(out, aIndent);
-    fprintf(out, "<parent addr=\"%p\"/>\n", mParent);
-  }
-
   if (nsnull != mNextSibling) {
     IndentBy(out, aIndent);
-    fprintf(out, "<next-sibling addr=\"%p\"/>\n", mNextSibling);
-  }
-
-  if (0 != mState) {
-    IndentBy(out, aIndent);
-    fprintf(out, "<flags value=\"%x\"/>\n", mState);
+    fprintf(out, "<next-sibling va=\"%ld\"/>\n", PRUptrdiff(mNextSibling));
   }
 
   if (nsnull != mView) {
     IndentBy(out, aIndent);
-    fprintf(out, "<view addr=\"%p\">\n", mView);
+    fprintf(out, "<view va=\"%ld\">\n", PRUptrdiff(mView));
     aIndent++;
     // XXX add in code to dump out view state too...
     aIndent--;
@@ -1745,7 +1735,7 @@ nsFrame::DumpBaseRegressionData(FILE* out, PRInt32 aIndent)
   }
 
   IndentBy(out, aIndent);
-  fprintf(out, "<bbox x=\"%d\" y=\"%d\" width=\"%d\" height=\"%d\"/>\n",
+  fprintf(out, "<bbox x=\"%d\" y=\"%d\" w=\"%d\" h=\"%d\"/>\n",
           mRect.x, mRect.y, mRect.width, mRect.height);
 
   // Now dump all of the children on all of the child lists
@@ -1956,6 +1946,7 @@ static void RefreshAllContentFrames(nsIFrame * aFrame, nsIContent * aContent)
 /********************************************************
 * Refreshes each content's frame
 *********************************************************/
+#if 0
 static void RefreshContentFrames(nsIPresContext& aPresContext,
                           nsIContent * aStartContent,
                           nsIContent * aEndContent)
@@ -1991,6 +1982,7 @@ static void RefreshContentFrames(nsIPresContext& aPresContext,
   NS_RELEASE(shell);
   //-------------------------------------
 }
+#endif
 
 /********************************************************
 * Handles a when the cursor enters new content that is After
@@ -2161,6 +2153,7 @@ void ForceDrawFrame(nsFrame * aFrame)//, PRBool)
 //----------------------------
 //
 //----------------------------
+#if 0
 static void resetContentTrackers() {
   PRInt32 i;
   for (i=0;i<fTrackerRemoveListMax;i++) {
@@ -2172,10 +2165,12 @@ static void resetContentTrackers() {
   fTrackerRemoveListMax = 0;
   fTrackerAddListMax    = 0;
 }
+#endif
 
 //----------------------------
 //
 //----------------------------
+#if 0
 static void RefreshFromContentTrackers(nsIPresContext& aPresContext) {
 
   PRInt32 i;
@@ -2185,21 +2180,23 @@ static void RefreshFromContentTrackers(nsIPresContext& aPresContext) {
   for (i=0;i<fTrackerRemoveListMax;i++) {
     RefreshAllContentFrames(rootFrame, fTrackerContentArrayRemoveList[i]);
     //ForceDrawFrame((nsFrame *)shell->FindFrameWithContent(fTrackerContentArrayRemoveList[i]));
-    if (SELECTION_DEBUG) printf("ForceDrawFrame (remove) content 0x%X\n", fTrackerContentArrayRemoveList[i]);
+    if (SELECTION_DEBUG) printf("ForceDrawFrame (remove) content %p\n", fTrackerContentArrayRemoveList[i]);
   }
   for (i=0;i<fTrackerAddListMax;i++) {
     //nsIFrame * frame = shell->FindFrameWithContent(fTrackerContentArrayAddList[i]);
     //ForceDrawFrame((nsFrame *)frame);
     RefreshAllContentFrames(rootFrame, fTrackerContentArrayAddList[i]);
-    if (SELECTION_DEBUG) printf("ForceDrawFrame (add) content 0x%X\n", fTrackerContentArrayAddList[i]);
+    if (SELECTION_DEBUG) printf("ForceDrawFrame (add) content %p\n", fTrackerContentArrayAddList[i]);
   }
   NS_RELEASE(shell);
   resetContentTrackers();
 }
+#endif
 
 //----------------------------
 //
 //----------------------------
+#if 0
 static void addRangeToSelectionTrackers(nsIContent * aStartContent, nsIContent * aEndContent, PRUint32 aType) 
 {
   if (aStartContent == nsnull || aEndContent == nsnull) {
@@ -2233,6 +2230,7 @@ static void addRangeToSelectionTrackers(nsIContent * aStartContent, nsIContent *
     fTrackerAddListMax = inx;
   }
 }
+#endif
 
 
 #ifdef NS_DEBUG
