@@ -62,7 +62,8 @@ echo >$RSH_FILE
 TMPFILES="$TMPFILES $WARNINGLIST $RSH_FILE "
 RSH_WAIT_TIME=80 #maximum time allowed for the 2 rsh to finish...
 #TOTAL_TESTS=106
-TOTAL_TESTS=123 #3.3.2
+TOTAL_TESTS=220 #3.4
+#TOTAL_TESTS=123 #3.3.2
 BCT_TOTAL_TESTS=122 #3.2.2
 #TOTAL_TESTS=133 #tip
 
@@ -435,6 +436,7 @@ qa_errorlist()
         ${MACHINES_TO_CHECK}*/output.log | 
         grep -v selfserv |
         grep -v '0 cache hits; 1 cache misses, 0 cache not reusable' | 
+        grep -v '0 cache hits; 2 cache misses, 0 cache not reusable' | 
         grep -v '0 cache hits; 0 cache misses, 0 cache not reusable' | 
         grep -v ' cache hits; 1 cache misses, 0 cache not reusable'
     grep -vi "write to SSL socket" ${MACHINES_TO_CHECK}*/output.log |
