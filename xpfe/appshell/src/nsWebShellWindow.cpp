@@ -393,13 +393,6 @@ nsresult nsWebShellWindow::Initialize(nsIWebShellWindow* aParent,
                                     nsIPref::GetIID(), 
                                     (nsISupports **)&prefs);
   if (NS_SUCCEEDED(rv)) {
-    // XXX Enforce the STANDARD compatibility mode? Nav Quirks causes
-    // the chrome to malfunction. Having this be a general pref applied
-    // everywhere seems bogus to me.  We certainly don't want it on for
-    // the chrome.
-    prefs->SetIntPref("nglayout.compatibility.mode", eCompatibility_Standard);
-    prefs->SavePrefFile();
-
     // Set the prefs in the outermost webshell.
     mWebShell->SetPrefs(prefs);
     nsServiceManager::ReleaseService(kPrefCID, prefs);
@@ -1551,6 +1544,7 @@ nsWebShellWindow::NewWebShell(PRUint32 aChromeMask, PRBool aVisible,
 
   return rv;
 }
+
 
 /**
  * FindWebShellWithName - recursively search for any open window
