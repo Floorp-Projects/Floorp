@@ -119,7 +119,6 @@ class nsStrPrivate {
   */
   static void StrInsert1into1( nsStr& aDest,PRUint32 aDestOffset,const nsStr& aSource,PRUint32 aSrcOffset,PRInt32 aCount);
   static void StrInsert1into2( nsStr& aDest,PRUint32 aDestOffset,const nsStr& aSource,PRUint32 aSrcOffset,PRInt32 aCount);
-  static void StrInsert2into1( nsStr& aDest,PRUint32 aDestOffset,const nsStr& aSource,PRUint32 aSrcOffset,PRInt32 aCount);
   static void StrInsert2into2( nsStr& aDest,PRUint32 aDestOffset,const nsStr& aSource,PRUint32 aSrcOffset,PRInt32 aCount);
 
 
@@ -208,8 +207,6 @@ class nsStrPrivate {
    */
   static PRInt32 StrCompare1To1(const nsStr& aDest,const nsStr& aSource,
                                 PRInt32 aCount,PRBool aIgnoreCase);
-  static PRInt32 StrCompare1To2(const nsStr& aDest, const nsStr& aSource,
-                                PRInt32 aCount, PRBool aIgnoreCase);
   static PRInt32 StrCompare2To1(const nsStr& aDest, const nsStr& aSource,
                                 PRInt32 aCount, PRBool aIgnoreCase);
   static PRInt32 StrCompare2To2(const nsStr& aDest, const nsStr& aSource,
@@ -227,7 +224,6 @@ class nsStrPrivate {
   */
   static PRInt32 FindSubstr1in1(const nsStr& aDest,const nsStr& aSource, PRBool aIgnoreCase,PRInt32 anOffset,PRInt32 aCount);
   static PRInt32 FindSubstr1in2(const nsStr& aDest,const nsStr& aSource, PRBool aIgnoreCase,PRInt32 anOffset,PRInt32 aCount);
-  static PRInt32 FindSubstr2in1(const nsStr& aDest,const nsStr& aSource, PRBool aIgnoreCase,PRInt32 anOffset,PRInt32 aCount);
   static PRInt32 FindSubstr2in2(const nsStr& aDest,const nsStr& aSource, PRBool aIgnoreCase,PRInt32 anOffset,PRInt32 aCount);
   
   static PRInt32 FindChar1(const nsStr& aDest,PRUnichar aChar, PRInt32 anOffset,PRInt32 aCount);
@@ -237,7 +233,6 @@ class nsStrPrivate {
   static PRInt32 FindCharInSet2(const nsStr& aDest,const nsStr& aSet,PRInt32 anOffset);
   
   static PRInt32 RFindSubstr1in1(const nsStr& aDest,const nsStr& aSource, PRBool aIgnoreCase,PRInt32 anOffset,PRInt32 aCount);
-  static PRInt32 RFindSubstr2in1(const nsStr& aDest,const nsStr& aSource, PRBool aIgnoreCase,PRInt32 anOffset,PRInt32 aCount);
   static PRInt32 RFindSubstr1in2(const nsStr& aDest,const nsStr& aSource, PRBool aIgnoreCase,PRInt32 anOffset,PRInt32 aCount);
   static PRInt32 RFindSubstr2in2(const nsStr& aDest,const nsStr& aSource, PRBool aIgnoreCase,PRInt32 anOffset,PRInt32 aCount);
   

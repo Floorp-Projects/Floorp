@@ -60,7 +60,7 @@ Compare(nsString& str, nsString& aFileName)
   int different = 0;
   while ((c = getc(file)) != EOF)
   {
-    inString.AppendWithConversion((char)c);
+    inString.Append(PRUnichar(c));
     // CVS isn't doing newline comparisons on these files for some reason.
     // So compensate for possible newline problems in the CVS file:
     if (c == '\n' && str[index] == '\r')
@@ -301,7 +301,7 @@ Usage: %s [-i intype] [-o outtype] [-f flags] [-w wrapcol] [-c comparison_file] 
   nsString inString;
   int c;
   while ((c = getc(file)) != EOF)
-    inString.AppendWithConversion((char)c);
+    inString.Append(PRUnichar(c));
 
   if (file != stdin)
     fclose(file);

@@ -330,45 +330,6 @@ void nsStrPrivate::StrInsert1into2( nsStr& aDest,PRUint32 aDestOffset,const nsSt
   }
 }
 
-void nsStrPrivate::StrInsert2into1( nsStr& aDest,PRUint32 aDestOffset,const nsStr& aSource,PRUint32 aSrcOffset,PRInt32 aCount){
-  NS_ASSERTION(aSource.GetCharSize() == eTwoByte, "Must be 2 byte");
-  NS_ASSERTION(aDest.GetCharSize() == eOneByte, "Must be 1 byte");
-  //there are a few cases for insert:
-  //  1. You're inserting chars into an empty string (assign)
-  //  2. You're inserting onto the end of a string (append)
-  //  3. You're inserting onto the 1..n-1 pos of a string (the hard case).
-  if(0<aSource.mLength){
-    if(aDest.mLength){
-      if(aDestOffset<aDest.mLength){
-        PRInt32 theLength = GetSegmentLength(aSource, aSrcOffset, aCount);
-
-        if(aSrcOffset<aSource.mLength) {
-            //here's the only new case we have to handle. 
-            //chars are really being inserted into our buffer...
-
-          if(aDest.mLength+theLength > aDest.GetCapacity())
-            AppendForInsert(aDest, aDestOffset, aSource, aSrcOffset, theLength);
-          else {
-            //shift the chars right by theDelta...
-            ShiftCharsRight(aDest.mStr, aDest.mLength, aDestOffset, theLength);
-      
-            //now insert new chars, starting at offset
-            CopyChars2To1(aDest.mStr,aDestOffset,aSource.mStr,aSrcOffset,theLength);
-          }
-
-            //finally, make sure to update the string length...
-          aDest.mLength+=theLength;
-          AddNullTerminator(aDest);
-          NSSTR_SEEN(aDest);
-        }//if
-        //else nothing to do!
-      }
-      else StrAppend(aDest,aSource,0,aCount);
-    }
-    else StrAppend(aDest,aSource,0,aCount);
-  }
-}
-
 void nsStrPrivate::StrInsert2into2( nsStr& aDest,PRUint32 aDestOffset,const nsStr& aSource,PRUint32 aSrcOffset,PRInt32 aCount){
   NS_ASSERTION(aSource.GetCharSize() == eTwoByte, "Must be 1 byte");
   NS_ASSERTION(aDest.GetCharSize() == eTwoByte, "Must be 2 byte");
@@ -646,45 +607,6 @@ PRInt32 nsStrPrivate::FindSubstr1in1(const nsStr& aDest,const nsStr& aTarget, PR
   return kNotFound;
 }
 
-PRInt32 nsStrPrivate::FindSubstr2in1(const nsStr& aDest,const nsStr& aTarget, PRBool aIgnoreCase,PRInt32 anOffset,PRInt32 aCount) {
-  
-  NS_ASSERTION(aDest.GetCharSize() == eOneByte, "Must be 1 byte");
-  NS_ASSERTION(aTarget.GetCharSize() == eTwoByte, "Must be 2 byte");
-  
-  PRInt32 theMaxPos = aDest.mLength-aTarget.mLength;  //this is the last pos that is feasible for starting the search, with given lengths...
-
-  if (theMaxPos<0) return kNotFound;
-
-  if(anOffset<0)
-    anOffset=0;
-
-  if((aDest.mLength<=0) || (anOffset>theMaxPos) || (aTarget.mLength==0))
-    return kNotFound;
-  
-  if(aCount<0)
-    aCount = MaxInt(theMaxPos,1);
-
-  if (aCount <= 0)
-    return kNotFound;
-
-  const char* root  = aDest.mStr; 
-  const char* left  = root+anOffset;
-  const char* last  = left+aCount;
-  const char* max   = root+theMaxPos;
-  const char* right = (last<max) ? last : max;
-
-  while(left<=right){
-    PRInt32 cmp=Compare1To2(left,aTarget.mUStr,aTarget.mLength,aIgnoreCase);
-    if(0==cmp) {
-      return (left-root);
-    }
-    left++;
-  } //while
-
-
-  return kNotFound;
-}
-
 PRInt32 nsStrPrivate::FindSubstr1in2(const nsStr& aDest,const nsStr& aTarget, PRBool aIgnoreCase,PRInt32 anOffset,PRInt32 aCount) {
   
   NS_ASSERTION(aDest.GetCharSize() == eTwoByte, "Must be 2 byte");
@@ -884,46 +806,6 @@ PRInt32 nsStrPrivate::RFindSubstr1in1(const nsStr& aDest,const nsStr& aTarget,PR
     //don't forget to divide by delta in next text (bug found by rhp)...
     if(aTarget.mLength<=PRUint32(destLast-rightmost)) {
       PRInt32 result=Compare1To1(rightmost,aTarget.mStr,aTarget.mLength,aIgnoreCase);
-      
-      if(0==result) {
-        return (rightmost-root);
-      }
-    } //if
-    rightmost--;
-  } //while
-
-  return kNotFound;
-}
-
-PRInt32 nsStrPrivate::RFindSubstr2in1(const nsStr& aDest,const nsStr& aTarget,PRBool aIgnoreCase,PRInt32 anOffset,PRInt32 aCount) {
-
-  NS_ASSERTION(aDest.GetCharSize() == eOneByte, "Must be 1 byte");
-  NS_ASSERTION(aTarget.GetCharSize() == eTwoByte, "Must be 2 byte");
-  
-  if(anOffset<0)
-    anOffset=(PRInt32)aDest.mLength-1;
-
-  if(aCount<0)
-    aCount = aDest.mLength;
-
-  if ((aDest.mLength <= 0) || (PRUint32(anOffset)>=aDest.mLength) || (aTarget.mLength==0))
-    return kNotFound;
-  
-  if (aCount<=0)
-    return kNotFound;
-  
-  const char* root      = aDest.mStr;
-  const char* destLast  = root+aDest.mLength; //pts to last char in aDest (likely null)
-  
-  const char* rightmost = root+anOffset;
-  const char* min       = rightmost-aCount+1;
-  
-  const char* leftmost  = (min<root) ? root: min;
-
-  while(leftmost<=rightmost) {
-    //don't forget to divide by delta in next text (bug found by rhp)...
-    if(aTarget.mLength<=PRUint32(destLast-rightmost)) {
-      PRInt32 result=Compare1To2(rightmost,aTarget.mUStr,aTarget.mLength,aIgnoreCase);
       
       if(0==result) {
         return (rightmost-root);
@@ -1145,20 +1027,6 @@ PRInt32 nsStrPrivate::StrCompare1To1(const nsStr& aDest,const nsStr& aSource,PRI
   if (aCount) {
     PRInt32 theCount = GetCompareCount(aDest.mLength, aSource.mLength, aCount);
     PRInt32 result = Compare1To1(aDest.mStr, aSource.mStr, theCount, aIgnoreCase);
-    result = TranslateCompareResult(aDest.mLength, aSource.mLength, result, aCount);
-    return result;
-  }
-  
-  return 0;
-}
-
-PRInt32 nsStrPrivate::StrCompare1To2(const nsStr& aDest,const nsStr& aSource,PRInt32 aCount,PRBool aIgnoreCase) {
-  
-  NS_ASSERTION(aDest.GetCharSize() == eOneByte, "Must be 1 byte");
-  NS_ASSERTION(aSource.GetCharSize() == eTwoByte, "Must be 2 byte");
-  if (aCount) {
-    PRInt32 theCount = GetCompareCount(aDest.mLength, aSource.mLength, aCount);
-    PRInt32 result = Compare1To2(aDest.mStr, aSource.mUStr, theCount, aIgnoreCase);
     result = TranslateCompareResult(aDest.mLength, aSource.mLength, result, aCount);
     return result;
   }

@@ -180,9 +180,6 @@ public:
    */
   void StripChars( const char* aSet );
   void StripChar( PRUnichar aChar, PRInt32 anOffset=0 );
-  void StripChar( char aChar, PRInt32 anOffset=0 )       { StripChar((PRUnichar) (unsigned char)aChar,anOffset); }
-  void StripChar( PRInt32 anInt, PRInt32 anOffset=0 )    { StripChar((PRUnichar)anInt,anOffset); }
-
   /**
    *  This method strips whitespace throughout the string
    *  
@@ -213,17 +210,6 @@ public:
    *  @return  this
    */
   void Trim(const char* aSet,PRBool aEliminateLeading=PR_TRUE,PRBool aEliminateTrailing=PR_TRUE,PRBool aIgnoreQuotes=PR_FALSE);
-
-  /**
-   *  This method strips whitespace from string.
-   *  You can control whether whitespace is yanked from
-   *  start and end of string as well.
-   *  
-   *  @param   aEliminateLeading controls stripping of leading ws
-   *  @param   aEliminateTrailing controls stripping of trailing ws
-   *  @return  this
-   */
-  void CompressSet(const char* aSet, PRUnichar aChar,PRBool aEliminateLeading=PR_TRUE,PRBool aEliminateTrailing=PR_TRUE);
 
   /**
    *  This method strips whitespace from string.
@@ -284,7 +270,6 @@ public:
   nsString& operator=( const PRUnichar* aPtr )                                { Assign(aPtr); return *this; }
   nsString& operator=( PRUnichar aChar )                                      { Assign(aChar); return *this; }
 
-  void AssignWithConversion(char);
   void AssignWithConversion(const char*);
   void AssignWithConversion(const char*, PRInt32);
 
@@ -300,7 +285,6 @@ public:
   void AppendInt(PRInt32, PRInt32=10); //radix=8,10 or 16
   void AppendFloat(double);
   void AppendWithConversion(const char*, PRInt32=-1);
-  void AppendWithConversion(char);
 
   virtual void do_AppendFromElement( PRUnichar );
 
@@ -352,7 +336,6 @@ public:
    */
   PRInt32 RFind(const char* aCString,PRBool aIgnoreCase=PR_FALSE,PRInt32 anOffset=-1,PRInt32 aCount=-1) const;
   PRInt32 RFind(const nsString& aString,PRBool aIgnoreCase=PR_FALSE,PRInt32 anOffset=-1,PRInt32 aCount=-1) const;
-  PRInt32 RFind(const nsCString& aString,PRBool aIgnoreCase=PR_FALSE,PRInt32 anOffset=-1,PRInt32 aCount=-1) const;
   PRInt32 RFind(const PRUnichar* aString,PRBool aIgnoreCase=PR_FALSE,PRInt32 anOffset=-1,PRInt32 aCount=-1) const;
 
 
@@ -375,10 +358,7 @@ public:
    *  @param   anOffset tells us where in this strig to start searching (counting from left)
    * @return -1 if not found, else the offset in this
    */
-  PRInt32 RFindCharInSet(const char* aString,PRInt32 anOffset=-1) const;
   PRInt32 RFindCharInSet(const PRUnichar* aString,PRInt32 anOffset=-1) const;
-  PRInt32 RFindCharInSet(const nsString& aString,PRInt32 anOffset=-1) const;
-  PRInt32 RFindCharInSet(const nsCString& aString,PRInt32 anOffset=-1) const;
 
 
   /**********************************************************************
@@ -394,8 +374,7 @@ public:
    * @return  -1,0,1
    */
 
-  PRInt32 CompareWithConversion(const char* aString,PRBool aIgnoreCase=PR_FALSE,PRInt32 aCount=-1) const;
-  PRInt32 CompareWithConversion(const nsString& aString,PRBool aIgnoreCase=PR_FALSE,PRInt32 aCount=-1) const;
+  PRInt32 CompareWithConversion(const char* aString, PRBool aIgnoreCase=PR_FALSE, PRInt32 aCount=-1) const;
   PRInt32 CompareWithConversion(const PRUnichar* aString,PRBool aIgnoreCase=PR_FALSE,PRInt32 aCount=-1) const;
   /* a hack to make sure things that used to compile continue to compile
      even on compilers that don't have proper |explicit| support */
@@ -405,24 +384,12 @@ public:
       return CompareWithConversion(aString.get(), aIgnoreCase, aCount);
     }
 
-  PRBool  EqualsWithConversion(const nsString &aString,PRBool aIgnoreCase=PR_FALSE,PRInt32 aCount=-1) const;
   PRBool  EqualsWithConversion(const char* aString,PRBool aIgnoreCase=PR_FALSE,PRInt32 aCount=-1) const;
-  PRBool  EqualsWithConversion(const PRUnichar* aString,PRBool aIgnoreCase=PR_FALSE,PRInt32 aCount=-1) const;
-  /* a hack to make sure things that used to compile continue to compile
-     even on compilers that don't have proper |explicit| support */
-  inline PRBool
-  EqualsWithConversion(const nsXPIDLString &aString, PRBool aIgnoreCase=PR_FALSE, PRInt32 aCount=-1) const
-    {
-      return EqualsWithConversion(aString.get(), aIgnoreCase, aCount);
-    }
-
 
   PRBool  EqualsAtom(/*FIX: const */nsIAtom* anAtom,PRBool aIgnoreCase) const;   
 
   PRBool  EqualsIgnoreCase(const nsString& aString) const;
   PRBool  EqualsIgnoreCase(const char* aString,PRInt32 aCount=-1) const;
-  PRBool  EqualsIgnoreCase(/*FIX: const */nsIAtom *aAtom) const;
-
 
   /**
    *  Determine if given buffer is plain ascii
@@ -440,22 +407,6 @@ public:
    */
   static  PRBool IsSpace(PRUnichar ch);
 
-  /**
-   *  Determine if given char in valid alpha range
-   *  
-   *  @param   aChar is character to be tested
-   *  @return  TRUE if in alpha range
-   */
-  static  PRBool IsAlpha(PRUnichar ch);
-
-  /**
-   *  Determine if given char is valid digit
-   *  
-   *  @param   aChar is character to be tested
-   *  @return  TRUE if char is a valid digit
-   */
-  static  PRBool IsDigit(PRUnichar ch);
-
 #ifdef DEBUG
   /**
    * Retrieve the size of this string
@@ -468,9 +419,7 @@ private:
     // NOT TO BE IMPLEMENTED
     //  these signatures help clients not accidentally call the wrong thing helped by C++ automatic integral promotion
   void operator=( char );
-  void AssignWithConversion( PRUnichar );
   void AssignWithConversion( const PRUnichar*, PRInt32=-1 );
-  void AppendWithConversion( PRUnichar );
   void AppendWithConversion( const PRUnichar*, PRInt32=-1 );
   void InsertWithConversion( const PRUnichar*, PRUint32, PRInt32=-1 );
 };

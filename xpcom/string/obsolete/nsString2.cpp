@@ -472,20 +472,15 @@ nsString::Trim(const char* aTrimSet, PRBool aEliminateLeading,PRBool aEliminateT
 }
 
 /**
- *  This method strips chars in given set from string.
- *  You can control whether chars are yanked from
- *  start and end of string as well.
- *  
- *  @update  gess 3/31/98
- *  @param   aEliminateLeading controls stripping of leading ws
- *  @param   aEliminateTrailing controls stripping of trailing ws
- *  @return  this
+ * This method strips chars in given set from string.
  */
-void
-nsString::CompressSet(const char* aSet, PRUnichar aChar,PRBool aEliminateLeading,PRBool aEliminateTrailing){
-  if(aSet){
-    ReplaceChar(aSet,aChar);
-    nsStrPrivate::CompressSet2(*this,aSet,aEliminateLeading,aEliminateTrailing);
+static void
+CompressSet(nsString& aStr, const char* aSet, PRUnichar aChar,
+            PRBool aEliminateLeading, PRBool aEliminateTrailing) {
+  if (aSet) {
+    aStr.ReplaceChar(aSet, aChar);
+    nsStrPrivate::CompressSet2(aStr, aSet,
+                               aEliminateLeading, aEliminateTrailing);
   }
 }
 
@@ -501,7 +496,7 @@ nsString::CompressSet(const char* aSet, PRUnichar aChar,PRBool aEliminateLeading
  */
 void
 nsString::CompressWhitespace( PRBool aEliminateLeading,PRBool aEliminateTrailing){
-  CompressSet(kWhitespace,' ',aEliminateLeading,aEliminateTrailing);
+  CompressSet(*this, kWhitespace,' ', aEliminateLeading, aEliminateTrailing);
 }
 
 /**********************************************************************
@@ -696,18 +691,6 @@ void nsString::AssignWithConversion(const char* aCString) {
 
 
 /**
- * assign given char to this string
- * @update  gess 01/04/99
- * @param   aChar: char to be assignd to this
- * @return  this
- */
-void nsString::AssignWithConversion(char aChar) {
-  nsStrPrivate::StrTruncate(*this,0);
-  AppendWithConversion(aChar);
-}
-
-
-/**
  * append given c-string to this string
  * @update  gess 01/04/99
  * @param   aString : string to be appended to this
@@ -741,23 +724,6 @@ void nsString::AppendWithConversion(const char* aCString,PRInt32 aCount) {
     if(0<aCount)
       nsStrPrivate::StrAppend(*this,temp,0,aCount);
   }
-}
-
-/**
- * append given char to this string
- * @update  gess 01/04/99
- * @param   aChar: char to be appended 
- * @return  this
- */
-void nsString::AppendWithConversion(char aChar) {
-  char buf[2]={0,0};
-  buf[0]=aChar;
-
-  nsStr temp;
-  nsStrPrivate::Initialize(temp,eOneByte);
-  temp.mStr=buf;
-  temp.mLength=1;
-  nsStrPrivate::StrAppend(*this,temp,0,1);
 }
 
 /**
@@ -917,21 +883,6 @@ PRInt32 nsString::Find(const PRUnichar* aString,PRBool aIgnoreCase,PRInt32 anOff
 }
 
 /**
- *  Search for given string within this string
- *  
- *  @update  gess 3/25/98
- *  @param   aString - substr to be found
- *  @param   aIgnoreCase tells us whether or not to do caseless compare
- *  @param   anOffset tells us where in this string to start searching
- *  @param   aCount tells us how many iterations to make starting at the given offset
- *  @return  offset in string, or -1 (kNotFound)
- */
-PRInt32 nsString::Find(const nsCString& aString,PRBool aIgnoreCase,PRInt32 anOffset,PRInt32 aCount) const{
-  PRInt32 result=nsStrPrivate::FindSubstr1in2(*this,aString,aIgnoreCase,anOffset,aCount);
-  return result;
-}
-
-/**
  *  search for given string within this string
  *  
  *  @update  gess 3/25/98
@@ -993,41 +944,6 @@ PRInt32 nsString::FindCharInSet(const PRUnichar* aStringSet,PRInt32 anOffset) co
 }
 
 /**
- *  This method finds the offset of the first char in this string that is
- *  a member of the given charset, starting the search at anOffset
- *  
- *  @update  gess 3/25/98
- *  @param   aCStringSet
- *  @param   anOffset -- where in this string to start searching
- *  @return  
- */
-PRInt32 nsString::FindCharInSet(const nsString& aSet,PRInt32 anOffset) const{
-  PRInt32 result=nsStrPrivate::FindCharInSet2(*this,aSet,anOffset);
-  return result;
-}
-
-PRInt32 nsString::FindCharInSet(const nsCString& aSet,PRInt32 anOffset) const{
-  PRInt32 result=nsStrPrivate::FindCharInSet1(*this,aSet,PR_FALSE,anOffset);
-  return result;
-}
-
-
-/**
- *  Reverse search for given string within this string
- *  
- *  @update  gess 3/25/98
- *  @param   aString - substr to be found
- *  @param   aIgnoreCase tells us whether or not to do caseless compare
- *  @param   anOffset tells us where in this string to start searching
- *  @param   aCount tells us how many iterations to make starting at the given offset
- *  @return  offset in string, or -1 (kNotFound)
- */
-PRInt32 nsString::RFind(const nsCString& aString,PRBool aIgnoreCase,PRInt32 anOffset,PRInt32 aCount) const{
-  PRInt32 result=nsStrPrivate::RFindSubstr1in2(*this,aString,aIgnoreCase,anOffset,aCount);
-  return result;
-}
-
-/**
  *  Reverse search for given string within this string
  *  
  *  @update  gess 3/25/98
@@ -1039,6 +955,19 @@ PRInt32 nsString::RFind(const nsCString& aString,PRBool aIgnoreCase,PRInt32 anOf
  */
 PRInt32 nsString::RFind(const nsString& aString,PRBool aIgnoreCase,PRInt32 anOffset,PRInt32 aCount) const{
   PRInt32 result=nsStrPrivate::RFindSubstr2in2(*this,aString,aIgnoreCase,anOffset,aCount);
+  return result;
+}
+
+PRInt32 nsString::RFind(const PRUnichar* aString, PRBool aIgnoreCase, PRInt32 anOffset, PRInt32 aCount) const
+{
+  PRInt32 result=kNotFound;
+  if (aString) {
+    nsStr temp;
+    nsStrPrivate::Initialize(temp, eTwoByte);
+    temp.mLength = nsCRT::strlen(aString);
+    temp.mUStr = NS_CONST_CAST(PRUnichar*, aString);
+    result=nsStrPrivate::RFindSubstr2in2(*this,temp,aIgnoreCase,anOffset,aCount);
+  }
   return result;
 }
 
@@ -1077,48 +1006,6 @@ PRInt32 nsString::RFind(const char* aString,PRBool aIgnoreCase,PRInt32 anOffset,
  */
 PRInt32 nsString::RFindChar(PRUnichar aChar,PRInt32 anOffset,PRInt32 aCount) const{
   PRInt32 result=nsStrPrivate::RFindChar2(*this,aChar,anOffset,aCount);
-  return result;
-}
-
-/**
- *  Reverse search for char in this string that is also a member of given charset
- *  
- *  @update  gess 3/25/98
- *  @param   aCStringSet
- *  @param   anOffset
- *  @return  offset of found char, or -1 (kNotFound)
- */
-PRInt32 nsString::RFindCharInSet(const char* aCStringSet,PRInt32 anOffset) const{
-  NS_ASSERTION(0!=aCStringSet,kNullPointerError);
-
-  PRInt32 result=kNotFound;
-  if(aCStringSet) {
-    nsStr temp;
-    nsStrPrivate::Initialize(temp,eOneByte);
-    temp.mLength=strlen(aCStringSet);
-    temp.mStr=(char*)aCStringSet;
-    result=nsStrPrivate::RFindCharInSet1(*this,temp,PR_FALSE,anOffset);
-  }
-  return result;
-}
-
-/**
- *  Reverse search for a first char in this string that is a
- *  member of the given char set
- *  
- *  @update  gess 3/25/98
- *  @param   aSet
- *  @param   aIgnoreCase
- *  @param   anOffset
- *  @return  offset of found char, or -1 (kNotFound)
- */
-PRInt32 nsString::RFindCharInSet(const nsString& aSet,PRInt32 anOffset) const{
-  PRInt32 result=nsStrPrivate::RFindCharInSet2(*this,aSet,anOffset);
-  return result;
-}
-
-PRInt32 nsString::RFindCharInSet(const nsCString& aSet,PRInt32 anOffset) const{
-  PRInt32 result=nsStrPrivate::RFindCharInSet1(*this,aSet,PR_FALSE,anOffset);
   return result;
 }
 
@@ -1176,20 +1063,7 @@ PRInt32 nsString::CompareWithConversion(const char *aCString,PRBool aIgnoreCase,
 }
 
 /**
- * Compares given cstring to this string. 
- * @update  gess 01/04/99
- * @param   aCString pts to a cstring
- * @param   aIgnoreCase tells us how to treat case
- * @param   aCount tells us how many chars to test; -1 implies full length
- * @return  -1,0,1
- */
-PRInt32 nsString::CompareWithConversion(const nsString& aString,PRBool aIgnoreCase,PRInt32 aCount) const {
-  PRInt32 result=nsStrPrivate::StrCompare2To2(*this,aString,aCount,aIgnoreCase);
-  return result;
-}
-
-/**
- * Compares given unistring to this string. 
+ * Compares given unistring to this string.
  * @update  gess 01/04/99
  * @param   aString pts to a uni-string
  * @param   aIgnoreCase tells us how to treat case
@@ -1210,29 +1084,12 @@ PRInt32 nsString::CompareWithConversion(const PRUnichar* aString,PRBool aIgnoreC
    return 0;
 }
 
-
-
 PRBool nsString::EqualsIgnoreCase(const nsString& aString) const {
-  return EqualsWithConversion(aString,PR_TRUE);
+  return CompareWithConversion(aString.get(), PR_TRUE) == 0;
 }
 
 PRBool nsString::EqualsIgnoreCase(const char* aString,PRInt32 aLength) const {
   return EqualsWithConversion(aString,PR_TRUE,aLength);
-}
-
-/**
- * Compare this to given string; note that we compare full strings here.
- * 
- * @update gess 01/04/99
- * @param  aString is the other nsString to be compared to
- * @param   aCount tells us how many chars to test; -1 implies full length
- * @return TRUE if equal
- */
-PRBool nsString::EqualsWithConversion(const nsString& aString,PRBool aIgnoreCase,PRInt32 aCount) const {
-  PRInt32 theAnswer=nsStrPrivate::StrCompare2To2(*this,aString,aCount,aIgnoreCase);
-  PRBool  result=PRBool(0==theAnswer);
-  return result;
-
 }
 
 /**
@@ -1244,20 +1101,6 @@ PRBool nsString::EqualsWithConversion(const nsString& aString,PRBool aIgnoreCase
  * @return TRUE if equal
  */
 PRBool nsString::EqualsWithConversion(const char* aString,PRBool aIgnoreCase,PRInt32 aCount) const {
-  PRInt32 theAnswer=CompareWithConversion(aString,aIgnoreCase,aCount);
-  PRBool  result=PRBool(0==theAnswer);
-  return result;
-}
-
-/**
- * Compare this to given unicode string; note that we compare full strings here.
- *
- * @param  aString is the U-String to be compared 
- * @param  aIgnorecase tells us whether to be case sensitive
- * @param   aCount tells us how many chars to test; -1 implies full length
- * @return TRUE if equal
- */
-PRBool nsString::EqualsWithConversion(const PRUnichar* aString,PRBool aIgnoreCase,PRInt32 aCount) const {
   PRInt32 theAnswer=CompareWithConversion(aString,aIgnoreCase,aCount);
   PRBool  result=PRBool(0==theAnswer);
   return result;
@@ -1288,26 +1131,6 @@ PRBool nsString::EqualsAtom(/*FIX: const */nsIAtom* aAtom,PRBool aIgnoreCase) co
   }
 
    return result;
-}
-
-PRBool nsString::EqualsIgnoreCase(/*FIX: const */nsIAtom *aAtom) const {
-  return EqualsAtom(aAtom,PR_TRUE);
-}
-
-
-/**
- *  Determine if given char in valid alpha range
- *  
- *  @update  gess 3/31/98
- *  @param   aChar is character to be tested
- *  @return  TRUE if in alpha range
- */
-PRBool nsString::IsAlpha(PRUnichar aChar) {
-  // XXX i18n
-  if (((aChar >= 'A') && (aChar <= 'Z')) || ((aChar >= 'a') && (aChar <= 'z'))) {
-    return PR_TRUE;
-  }
-  return PR_FALSE;
 }
 
 /**
@@ -1356,19 +1179,6 @@ PRBool nsString::IsASCII(const PRUnichar* aBuffer) {
     }
   }
   return PR_TRUE;
-}
-
-
-/**
- *  Determine if given char is valid digit
- *  
- *  @update  gess 3/31/98
- *  @param   aChar is character to be tested
- *  @return  TRUE if char is a valid digit
- */
-PRBool nsString::IsDigit(PRUnichar aChar) {
-  // XXX i18n
-  return PRBool((aChar >= '0') && (aChar <= '9'));
 }
 
 

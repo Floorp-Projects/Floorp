@@ -39,7 +39,7 @@
 #include "nsNetUtil.h"
 #include "nsIStringStream.h"
 
-#define TOKEN_DELIMITERS "\t\r\n "
+#define TOKEN_DELIMITERS NS_LITERAL_STRING("\t\r\n ").get()
 
 // nsISupports methods
 NS_IMPL_THREADSAFE_ISUPPORTS4(nsTXTToHTMLConv,

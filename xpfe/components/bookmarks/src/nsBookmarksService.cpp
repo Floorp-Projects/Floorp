@@ -2182,15 +2182,15 @@ nsBookmarksService::OnStopRequest(nsIRequest* request, nsISupports *ctxt,
 	nsCOMPtr<nsIHttpChannel>	httpChannel = do_QueryInterface(channel);
 	if (httpChannel)
 	{
-		nsCAutoString			eTagValue, lastModValue, contentLengthValue;
+        nsAutoString            eTagValue, lastModValue, contentLengthValue;
 
         nsXPIDLCString val;
         if (NS_SUCCEEDED(httpChannel->GetResponseHeader("ETag", getter_Copies(val))))
-            eTagValue = val;
+            CopyASCIItoUCS2(val, eTagValue);
         if (NS_SUCCEEDED(httpChannel->GetResponseHeader("Last-Modified", getter_Copies(val))))
-            lastModValue = val;
+            CopyASCIItoUCS2(val, lastModValue);
         if (NS_SUCCEEDED(httpChannel->GetResponseHeader("Content-Length", getter_Copies(val))))
-            contentLengthValue = val;
+            CopyASCIItoUCS2(val, contentLengthValue);
         val.Adopt(0);
 
 		PRBool		changedFlag = PR_FALSE;
@@ -2203,7 +2203,7 @@ nsBookmarksService::OnStopRequest(nsIRequest* request, nsISupports *ctxt,
 				if (eTagValue.Length() > 0)
 				{
 #ifdef	DEBUG_BOOKMARK_PING_OUTPUT
-					printf("eTag: '%s'\n", eTagValue.get());
+					printf("eTag: '%s'\n", NS_LossyConvertASCIItoUCS2(eTagValue).get());
 #endif
 					nsAutoString		eTagStr;
 					nsCOMPtr<nsIRDFNode>	currentETagNode;
@@ -2213,13 +2213,15 @@ nsBookmarksService::OnStopRequest(nsIRequest* request, nsISupports *ctxt,
 						nsCOMPtr<nsIRDFLiteral>	currentETagLit = do_QueryInterface(currentETagNode);
 						if (currentETagLit)
 						{
-							const PRUnichar	*currentETagStr = nsnull;
+							const PRUnichar* currentETagStr = nsnull;
 							currentETagLit->GetValueConst(&currentETagStr);
-							if ((currentETagStr) && (!eTagValue.EqualsIgnoreCase(currentETagStr)))
+							if ((currentETagStr) &&
+                                !eTagValue.Equals(nsDependentString(currentETagStr),
+                                                  nsCaseInsensitiveStringComparator()))
 							{
 								changedFlag = PR_TRUE;
 							}
-							eTagStr.AssignWithConversion(eTagValue.get());
+							eTagStr.Assign(eTagValue);
 							nsCOMPtr<nsIRDFLiteral>	newETagLiteral;
 							if (NS_SUCCEEDED(rv = gRDF->GetLiteral(eTagStr.get(),
 								getter_AddRefs(newETagLiteral))))
@@ -2231,7 +2233,7 @@ nsBookmarksService::OnStopRequest(nsIRequest* request, nsISupports *ctxt,
 					}
 					else
 					{
-						eTagStr.AssignWithConversion(eTagValue.get());
+						eTagStr.Assign(eTagValue);
 						nsCOMPtr<nsIRDFLiteral>	newETagLiteral;
 						if (NS_SUCCEEDED(rv = gRDF->GetLiteral(eTagStr.get(),
 							getter_AddRefs(newETagLiteral))))
@@ -2257,13 +2259,15 @@ nsBookmarksService::OnStopRequest(nsIRequest* request, nsISupports *ctxt,
 				nsCOMPtr<nsIRDFLiteral>	currentLastModLit = do_QueryInterface(currentLastModNode);
 				if (currentLastModLit)
 				{
-					const PRUnichar	*currentLastModStr = nsnull;
+                    const PRUnichar* currentLastModStr = nsnull;
 					currentLastModLit->GetValueConst(&currentLastModStr);
-					if ((currentLastModStr) && (!lastModValue.EqualsIgnoreCase(currentLastModStr)))
+					if ((currentLastModStr) &&
+                        !lastModValue.Equals(nsDependentString(currentLastModStr),
+                                             nsCaseInsensitiveStringComparator()))
 					{
 						changedFlag = PR_TRUE;
 					}
-					lastModStr.AssignWithConversion(lastModValue.get());
+					lastModStr.Assign(lastModValue);
 					nsCOMPtr<nsIRDFLiteral>	newLastModLiteral;
 					if (NS_SUCCEEDED(rv = gRDF->GetLiteral(lastModStr.get(),
 						getter_AddRefs(newLastModLiteral))))
@@ -2275,7 +2279,7 @@ nsBookmarksService::OnStopRequest(nsIRequest* request, nsISupports *ctxt,
 			}
 			else
 			{
-				lastModStr.AssignWithConversion(lastModValue.get());
+				lastModStr.Assign(lastModValue);
 				nsCOMPtr<nsIRDFLiteral>	newLastModLiteral;
 				if (NS_SUCCEEDED(rv = gRDF->GetLiteral(lastModStr.get(),
 					getter_AddRefs(newLastModLiteral))))
@@ -2301,11 +2305,13 @@ nsBookmarksService::OnStopRequest(nsIRequest* request, nsISupports *ctxt,
 				{
 					const PRUnichar	*currentContentLengthStr = nsnull;
 					currentContentLengthLit->GetValueConst(&currentContentLengthStr);
-					if ((currentContentLengthStr) && (!contentLengthValue.EqualsIgnoreCase(currentContentLengthStr)))
+					if ((currentContentLengthStr) &&
+                        !contentLengthValue.Equals(nsDependentString(currentContentLengthStr),
+                                                   nsCaseInsensitiveStringComparator()))
 					{
 						changedFlag = PR_TRUE;
 					}
-					contentLenStr.AssignWithConversion(contentLengthValue.get());
+					contentLenStr.Assign(contentLengthValue);
 					nsCOMPtr<nsIRDFLiteral>	newContentLengthLiteral;
 					if (NS_SUCCEEDED(rv = gRDF->GetLiteral(contentLenStr.get(),
 						getter_AddRefs(newContentLengthLiteral))))
@@ -2317,7 +2323,7 @@ nsBookmarksService::OnStopRequest(nsIRequest* request, nsISupports *ctxt,
 			}
 			else
 			{
-				contentLenStr.AssignWithConversion(contentLengthValue.get());
+				contentLenStr.Assign(contentLengthValue);
 				nsCOMPtr<nsIRDFLiteral>	newContentLengthLiteral;
 				if (NS_SUCCEEDED(rv = gRDF->GetLiteral(contentLenStr.get(),
 					getter_AddRefs(newContentLengthLiteral))))

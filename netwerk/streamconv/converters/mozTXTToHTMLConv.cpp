@@ -198,7 +198,7 @@ mozTXTToHTMLConv::FindURLStart(const PRUnichar * aInString, PRInt32 aInLength,
   case RFC2396E:
   {
     nsString temp(aInString, aInLength);
-    PRInt32 i = pos <= 0 ? kNotFound : temp.RFindCharInSet("<>\"", pos - 1);
+    PRInt32 i = pos <= 0 ? kNotFound : temp.RFindCharInSet(NS_LITERAL_STRING("<>\"").get(), pos - 1);
     if (i != kNotFound && (temp[PRUint32(i)] == '<' ||
                            temp[PRUint32(i)] == '"'))
     {
@@ -272,7 +272,7 @@ mozTXTToHTMLConv::FindURLEnd(const PRUnichar * aInString, PRInt32 aInStringLengt
   {
     nsString temp(aInString, aInStringLength);
 
-    PRInt32 i = temp.FindCharInSet("<>\"", pos + 1);
+    PRInt32 i = temp.FindCharInSet(NS_LITERAL_STRING("<>\"").get(), pos + 1);
     if (i != kNotFound && temp[PRUint32(i--)] ==
         (check == RFC1738 || temp[start - 1] == '<' ? '>' : '"'))
     {

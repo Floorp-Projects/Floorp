@@ -187,7 +187,7 @@ void String::append(UNICODE_CHAR source)
 //
 void String::append(char source)
 {
-  ptrNSString->AppendWithConversion(source);
+  ptrNSString->Append(PRUnichar(source));
 }
 
 //
@@ -538,7 +538,7 @@ MBool String::isEqual(const String& data) const
     return MB_FALSE;
   else
   {
-    if (ptrNSString->EqualsWithConversion(data.getConstNSString()) == PR_TRUE)
+    if (ptrNSString->Equals(data.getConstNSString()) == PR_TRUE)
       return MB_TRUE;
     else
       return MB_FALSE;

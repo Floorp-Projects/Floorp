@@ -638,7 +638,7 @@ nsInstallFolder::ToString(nsAutoString* outString)
   if (!flagIsFile)
   {
       // assume directory, thus end with slash.
-      outString->AppendWithConversion(FILESEP);
+      outString->Append(PRUnichar(FILESEP));
   }
 
   return rv;

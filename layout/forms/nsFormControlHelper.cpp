@@ -401,10 +401,10 @@ nsFormControlHelper::GetTextSize(nsIPresContext* aPresContext, nsIFormControlFra
   GetRepChars(aPresContext, char1, char2);
   int i;
   for (i = 0; i < aNumChars; i+=2) {
-    val.AppendWithConversion(char1);  
+    val.Append(PRUnichar(char1));
   }
   for (i = 1; i < aNumChars; i+=2) {
-    val.AppendWithConversion(char2);  
+    val.Append(PRUnichar(char2));
   }
   return GetTextSize(aPresContext, aFrame, val, aSize, aRendContext);
 }
