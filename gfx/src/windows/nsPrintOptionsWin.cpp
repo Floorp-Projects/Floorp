@@ -61,93 +61,12 @@ nsPrintOptionsWin::~nsPrintOptionsWin()
 }
 
 /* nsIPrintSettings CreatePrintSettings (); */
-NS_IMETHODIMP nsPrintOptionsWin::CreatePrintSettings(nsIPrintSettings **_retval)
+nsresult nsPrintOptionsWin::_CreatePrintSettings(nsIPrintSettings **_retval)
 {
   nsresult rv = NS_OK;
   nsPrintSettingsWin* printSettings = new nsPrintSettingsWin(); // does not initially ref count
   NS_ASSERTION(printSettings, "Can't be NULL!");
 
-  rv = printSettings->QueryInterface(NS_GET_IID(nsIPrintSettings), (void**)_retval); // ref counts
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  // nsPrintOptionImpl actually initials with "kInitSaveAll", but that is a 
-  // little extreme for Windows, so here we will initialize with a sub-set of 
-  // the settings
-  PRUint32 flags = nsIPrintSettings.kInitSaveHeaderLeft | 
-                   nsIPrintSettings.kInitSaveHeaderCenter |
-                   nsIPrintSettings.kInitSaveHeaderRight |
-                   nsIPrintSettings.kInitSaveFooterLeft | 
-                   nsIPrintSettings.kInitSaveFooterCenter |
-                   nsIPrintSettings.kInitSaveFooterRight |
-                   nsIPrintSettings.kInitSaveBGColors |
-                   nsIPrintSettings.kInitSaveBGImages |
-                   nsIPrintSettings.kInitSaveMargins;
-
-  InitPrintSettingsFromPrefs(*_retval, PR_FALSE, flags); // ignore return value
-
-  return rv;
-}
-
-/* readonly attribute nsIPrintSettings globalPrintSettings; */
-NS_IMETHODIMP 
-nsPrintOptionsWin::GetGlobalPrintSettings(nsIPrintSettings * *aGlobalPrintSettings)
-{
-  if (!mGlobalPrintSettings) {
-    CreatePrintSettings(getter_AddRefs(mGlobalPrintSettings));
-    NS_ASSERTION(mGlobalPrintSettings, "Can't be NULL!");
-    // If this still NULL, we have some very big problems going on
-    NS_ENSURE_TRUE(mGlobalPrintSettings, NS_ERROR_FAILURE);
-
-    // The very first time we should initialize from the default printer
-    nsresult rv;
-    nsCOMPtr<nsIPrinterEnumerator> prtEnum = do_GetService(kPrinterEnumeratorContractID, &rv);
-    if (NS_SUCCEEDED(rv)) {
-      PRUnichar* printerName = nsnull;
-      // Not sure if all platforms will return the proper error code
-      // so for insurance, make sure there is a printer name
-      if (NS_SUCCEEDED(prtEnum->GetDefaultPrinterName(&printerName)) && printerName && *printerName) {
-        prtEnum->InitPrintSettingsFromPrinter(printerName, mGlobalPrintSettings);
-        nsMemory::Free(printerName);
-      }
-    }
-  }
-
-  *aGlobalPrintSettings = mGlobalPrintSettings;
-  NS_ADDREF(*aGlobalPrintSettings);
-
-  return NS_OK;
-}
-
-/* readonly attribute nsIPrintSettings newPrintSettings; */
-NS_IMETHODIMP
-nsPrintOptionsWin::GetNewPrintSettings(nsIPrintSettings * *aNewPrintSettings)
-{
-    NS_ENSURE_ARG_POINTER(aNewPrintSettings);
-
-    nsresult rv = CreatePrintSettings(aNewPrintSettings);
-    NS_ENSURE_SUCCESS(rv, rv);
-    return InitPrintSettingsFromPrinter(nsnull, *aNewPrintSettings);
-}
-
-//-----------------------------------------------------------------------
-NS_IMETHODIMP
-nsPrintOptionsWin::InitPrintSettingsFromPrinter(const PRUnichar *aPrinterName, nsIPrintSettings *aPrintSettings)
-{
-    NS_ENSURE_ARG_POINTER(aPrintSettings);
-
-    PRUnichar* printerName = nsnull;
-    if (!aPrinterName) {
-        GetDefaultPrinterName(&printerName);
-        if (!printerName || !*printerName) return NS_OK;
-    }
-    nsresult rv;
-    nsCOMPtr<nsIPrinterEnumerator> prtEnum = do_GetService(kPrinterEnumeratorContractID, &rv);
-    if (prtEnum) {
-        rv = prtEnum->InitPrintSettingsFromPrinter(aPrinterName?aPrinterName:printerName, aPrintSettings);
-    }
-    if (printerName) {
-        nsMemory::Free(printerName);
-    }
-    return rv;
+  return printSettings->QueryInterface(NS_GET_IID(nsIPrintSettings), (void**)_retval); // ref counts
 }
 

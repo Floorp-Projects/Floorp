@@ -914,12 +914,29 @@ nsPrintOptions::InitPrintSettingsFromPrinter(const PRUnichar *aPrinterName, nsIP
     NS_ENSURE_ARG_POINTER(aPrintSettings);
     NS_ENSURE_ARG_POINTER(aPrinterName);
 
-    nsresult rv;
-    nsCOMPtr<nsIPrinterEnumerator> prtEnum = do_GetService(kPrinterEnumeratorCID, &rv);
-    if (prtEnum) {
-      rv = prtEnum->InitPrintSettingsFromPrinter(aPrinterName, aPrintSettings);
+#ifdef NS_DEBUG
+    nsXPIDLString printerName;
+    aPrintSettings->GetPrinterName(getter_Copies(printerName));
+    if (!printerName.Equals(aPrinterName)) {
+      NS_WARNING("Printer names should match!");
     }
-    return rv;
+#endif
+
+    PRBool isInitialized;
+    aPrintSettings->GetIsInitializedFromPrinter(&isInitialized);
+    if (!isInitialized) {
+        nsresult rv = NS_ERROR_FAILURE;
+        nsCOMPtr<nsIPrinterEnumerator> prtEnum = do_GetService(kPrinterEnumeratorCID, &rv);
+        if (prtEnum) {
+            rv = prtEnum->InitPrintSettingsFromPrinter(aPrinterName, aPrintSettings);
+            if (NS_SUCCEEDED(rv)) {
+                aPrintSettings->SetIsInitializedFromPrinter(PR_TRUE);
+            }
+        }
+        return rv;
+    }
+
+    return NS_OK;
 }
 
 /** ---------------------------------------------------
@@ -929,7 +946,7 @@ static void GetAdjustedPrinterName(nsIPrintSettings* aPS, PRBool aUsePNP, nsStri
 {
   aPrinterName.SetLength(0);
 
-  // Get the Printer Name from the PtinerSettings 
+  // Get the Printer Name from the PrintSettings 
   // to use as a prefix for Pref Names
   PRUnichar* prtName = nsnull;
   if (aUsePNP && NS_SUCCEEDED(aPS->GetPrinterName(&prtName))) {
@@ -976,18 +993,27 @@ NS_IMETHODIMP nsPrintOptions::GetPrinterPrefInt(nsIPrintSettings *aPrintSettings
 NS_IMETHODIMP 
 nsPrintOptions::InitPrintSettingsFromPrefs(nsIPrintSettings* aPS, PRBool aUsePNP, PRUint32 aFlags)
 {
-  nsString prtName;
-  // read any non printer specific prefs
-  // with empty printer name
-  nsresult rv = ReadPrefs(aPS, prtName, aFlags);
-  NS_ENSURE_SUCCESS(rv, rv);
+  NS_ENSURE_ARG_POINTER(aPS);
 
-  // Get the Printer Name from the PtinerSettings 
-  // to use as a prefix for Pref Names
-  GetAdjustedPrinterName(aPS, aUsePNP, prtName);
-  if (prtName.Length()) {
-    // Now read any printer specific prefs
-    return ReadPrefs(aPS, prtName, aFlags);
+  PRBool isInitialized;
+  aPS->GetIsInitializedFromPrefs(&isInitialized);
+  if (!isInitialized) {
+    nsString prtName;
+    // read any non printer specific prefs
+    // with empty printer name
+    nsresult rv = ReadPrefs(aPS, prtName, aFlags);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    // Get the Printer Name from the PrintSettings 
+    // to use as a prefix for Pref Names
+    GetAdjustedPrinterName(aPS, aUsePNP, prtName);
+    if (prtName.Length()) {
+      // Now read any printer specific prefs
+      rv = ReadPrefs(aPS, prtName, aFlags);
+      if (NS_SUCCEEDED(rv)) {
+        aPS->SetIsInitializedFromPrefs(PR_TRUE);
+      }
+    }
   }
   return NS_OK;
 }

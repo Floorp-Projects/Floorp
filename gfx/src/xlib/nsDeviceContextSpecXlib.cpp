@@ -673,6 +673,7 @@ NS_IMETHODIMP nsPrinterEnumeratorXlib::InitPrintSettingsFromPrinter(const PRUnic
   DO_PR_DEBUG_LOG(("Setting default filename to '%s'\n", filename.get()));
   aPrintSettings->SetToFileName(NS_ConvertUTF8toUCS2(filename).get());
 
+  aPrintSettings->SetIsInitializedFromPrinter(PR_TRUE);
 #ifdef USE_XPRINT
   if (type == pmXprint) {
     DO_PR_DEBUG_LOG(("InitPrintSettingsFromPrinter() for Xprint printer\n"));
