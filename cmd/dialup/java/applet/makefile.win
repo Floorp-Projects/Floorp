@@ -15,7 +15,7 @@
 #
 DEPTH=..\..\..\..
 
-JAVA_SOURCEPATH=$(MOZ_OUT)\x86Dbg\java\classes\java40.jar
+!include <$(DEPTH)\config\config.mak>
 
 JSRCS=  \
 !ifdef MOZ_PRIV
@@ -25,7 +25,8 @@ JSRCS=  \
 	CPGeneratorProgress.java \
 	$(NULL)
 
-JAVA_DESTPATH=$(DEPTH)\dist\classes
 PACKAGE=netscape\asw
+
+export:: $(JAVA_DESTPATH)\$(PACKAGE)
 
 !include <$(DEPTH)\config\rules.mak>
