@@ -40,8 +40,8 @@ sub main {
 
   my $post_status = 'success';  # Success until we report a failure.
   my $status = 0;
-  my $galeon_alive_test = 0;
-  my $galeon_test8_test = 0;
+  my $galeon_alive_test = 1;
+  my $galeon_test8_test = 1;
   my $galeon_dir = "$mozilla_build_dir/galeon";
 
   # Checkout/update the galeon code.
@@ -57,17 +57,22 @@ sub main {
 	chdir $galeon_dir;
 	
 	# Make sure we have a configure
-	unless (-e "configure") {
+	unless (-e "configure" and $post_status ne 'busted') {
 	  $status = TinderUtils::run_shell_command("./autogen.sh");
+	  
 	}
 
 	# Not sure how to only do this when we need to.
 	# Force a configure for now.
-	$status = TinderUtils::run_shell_command("./configure --sysconfdir=/etc --with-mozilla-libs=$mozilla_build_dir/mozilla/dist/bin --with-mozilla-includes=$mozilla_build_dir/mozilla/dist/include --with-nspr-includes=$mozilla_build_dir/mozilla/dist/include/nspr --with-mozilla-home=$mozilla_build_dir/mozilla/dist/bin");
-	
-	TinderUtils::DeleteBinary("$galeon_dir/src/galeon-bin");
-	$status = TinderUtils::run_shell_command("gmake");
-	
+	if ($status != 0) {
+	  $status = TinderUtils::run_shell_command("./configure --sysconfdir=/etc --with-mozilla-libs=$mozilla_build_dir/mozilla/dist/bin --with-mozilla-includes=$mozilla_build_dir/mozilla/dist/include --with-nspr-includes=$mozilla_build_dir/mozilla/dist/include/nspr --with-mozilla-home=$mozilla_build_dir/mozilla/dist/bin");
+	}
+
+	if ($status != 0) {
+	  TinderUtils::DeleteBinary("$galeon_dir/src/galeon-bin");
+	  $status = TinderUtils::run_shell_command("gmake");
+	}
+
 	if ($status != 0) {
 	  $post_status = 'busted';
 	} elsif (not TinderUtils::BinaryExists("$galeon_dir/src/galeon-bin")) {
