@@ -32,7 +32,7 @@
  */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: pki3hack.c,v $ $Revision: 1.57 $ $Date: 2002/06/25 22:33:37 $ $Name:  $";
+static const char CVS_ID[] = "@(#) $RCSfile: pki3hack.c,v $ $Revision: 1.58 $ $Date: 2002/06/25 22:58:13 $ $Name:  $";
 #endif /* DEBUG */
 
 /*
@@ -692,7 +692,10 @@ stan_GetCERTCertificate(NSSCertificate *c, PRBool forceUpdate)
 NSS_IMPLEMENT CERTCertificate *
 STAN_ForceCERTCertificateUpdate(NSSCertificate *c)
 {
-    return stan_GetCERTCertificate(c, PR_TRUE);
+    if (c->decoding) {
+	return stan_GetCERTCertificate(c, PR_TRUE);
+    }
+    return NULL;
 }
 
 NSS_IMPLEMENT CERTCertificate *
