@@ -21,4 +21,4 @@
 /* Common defines for NSStartup */
 
 /* Turn this on to use the GC based leak detector. */
-#define GC_LEAK_DETECTOR 1
+/* #define GC_LEAK_DETECTOR 1 */
