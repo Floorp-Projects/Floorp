@@ -725,6 +725,7 @@ nsresult nsImapProtocol::SetupWithUrl(nsIURI * aURL, nsISupports* aConsumer)
     // as the event sink queue
     if (aRealStreamListener)
     {
+      NS_ASSERTION(!m_channelListener, "shouldn't already have a channel listener");
         rv = NS_NewAsyncStreamListener(getter_AddRefs(m_channelListener), aRealStreamListener, m_sinkEventQueue);
     }
 
@@ -871,6 +872,13 @@ void nsImapProtocol::ReleaseUrlState()
      m_mockChannel = nsnull;
   }
   m_channelContext = nsnull; // this might be the url - null it out before the final release of the url
+  m_imapMessageSink = nsnull;
+  m_imapExtensionSink = nsnull;
+  m_imapMiscellaneousSink = nsnull;
+  m_channelListener = nsnull;
+  
+  m_channelInputStream = nsnull;
+  m_channelOutputStream = nsnull;
   if (m_runningUrl)
   {
     nsCOMPtr<nsIMsgMailNewsUrl>  mailnewsurl = do_QueryInterface(m_runningUrl);
@@ -898,17 +906,12 @@ void nsImapProtocol::ReleaseUrlState()
       // at this point in time, we MUST have released all of our references to 
       // the url from the imap protocol. otherwise this whole exercise is moot.
       m_imapMailFolderSink->ReleaseObject();
+      m_imapMailFolderSink = nsnull;
     }
   }
+  else
+    m_imapMailFolderSink = nsnull;
 
-  m_imapMailFolderSink = nsnull;
-  m_imapMessageSink = nsnull;
-  m_imapExtensionSink = nsnull;
-  m_imapMiscellaneousSink = nsnull;
-  m_channelListener = nsnull;
-  
-  m_channelInputStream = nsnull;
-  m_channelOutputStream = nsnull;
 }
 
 
@@ -7650,7 +7653,10 @@ NS_IMETHODIMP nsImapMockChannel::Close()
       nsCOMPtr<nsICacheEntryDescriptor>  cacheEntry;
       mailnewsUrl->GetMemCacheEntry(getter_AddRefs(cacheEntry));
       if (cacheEntry)
+      {
+        nsCOMPtr <nsIImapUrl> imapUrl = do_QueryInterface(m_url);
         cacheEntry->MarkValid();
+      }
     }
   }
 
@@ -7788,7 +7794,11 @@ nsImapMockChannel::OnCacheEntryAvailable(nsICacheEntryDescriptor *entry, nsCache
   // make sure we didn't close the channel before the async call back came in...
   // hmmm....if we had write access and we canceled this mock channel then I wonder if we should
   // be invalidating the cache entry before kicking out...
-  if (mChannelClosed) return NS_OK;
+  if (mChannelClosed) 
+  {
+    entry->Doom();
+    return NS_OK;
+  }
 
   NS_ENSURE_ARG(m_url); // kick out if m_url is null for some reason. 
 
@@ -7834,11 +7844,16 @@ nsImapMockChannel::OnCacheEntryAvailable(nsICacheEntryDescriptor *entry, nsCache
     {
       rv = ReadFromMemCache(entry);
       NotifyStartEndReadFromCache(PR_TRUE);
-      if (access & nsICache::ACCESS_WRITE)
-        entry->MarkValid();
-      if (NS_SUCCEEDED(rv)) return NS_OK; // kick out if reading from the cache succeeded...
-      mailnewsUrl->SetMemCacheEntry(nsnull); // we aren't going to be reading from the cache
+      if (NS_SUCCEEDED(rv))
+      {
+        if (access & nsICache::ACCESS_WRITE)
+          entry->MarkValid();
+        return NS_OK; // kick out if reading from the cache succeeded...
+      }
+      nsCOMPtr <nsIImapUrl> imapUrl = do_QueryInterface(m_url);
 
+      entry->Doom(); // doom entry if we failed to read from mem cache
+      mailnewsUrl->SetMemCacheEntry(nsnull); // we aren't going to be reading from the cache
     }
   } // if we got a valid entry back from the cache...
 
@@ -7944,6 +7959,12 @@ nsresult nsImapMockChannel::ReadFromMemCache(nsICacheEntryDescriptor *entry)
     nsCOMPtr<nsIInputStream> in;
     rv = entry->OpenInputStream(0, getter_AddRefs(in));
     if (NS_FAILED(rv)) return rv;
+     // if mem cache entry is broken or empty, return error.
+    PRUint32 bytesAvailable;
+    rv = in->Available(&bytesAvailable);
+    NS_ENSURE_SUCCESS(rv, rv);
+    if (!bytesAvailable)
+      return NS_ERROR_FAILURE;
 
     nsCOMPtr<nsIInputStreamPump> pump;
     rv = NS_NewInputStreamPump(getter_AddRefs(pump), in);
@@ -8094,6 +8115,7 @@ NS_IMETHODIMP nsImapMockChannel::AsyncOpen(nsIStreamListener *listener, nsISuppo
     
   // set the stream listener and then load the url
   m_channelContext = ctxt;
+  NS_ASSERTION(!m_channelListener, "shouldn't already have a listener");
   m_channelListener = listener;
   nsCOMPtr<nsIImapUrl> imapUrl  (do_QueryInterface(m_url));
 
