@@ -864,7 +864,7 @@ nsresult nsJAR::CalculateDigest(nsISignatureVerifier* verifier,
   nsresult rv;
   
   //-- Calculate the digest
-  PRUint32 id;
+  HASHContextStr* id;
   rv = verifier->HashBegin(nsISignatureVerifier::SHA1, &id);
   if (NS_FAILED(rv)) return rv;
 
