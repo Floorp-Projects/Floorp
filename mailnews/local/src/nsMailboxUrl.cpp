@@ -69,9 +69,7 @@ nsMailboxUrl::nsMailboxUrl(nsISupports* aContainer, nsIURLGroup* aGroup)
 	m_runningUrl = PR_FALSE;
 
 	m_urlListeners = nsnull;
-	nsServiceManager::GetService(kUrlListenerManagerCID, nsIUrlListenerManager::GetIID(),
-								 (nsISupports **)&m_urlListeners);
-
+	nsComponentManager::CreateInstance(kUrlListenerManagerCID, nsnull, nsIUrlListenerManager::GetIID(), (void **) &m_urlListeners);
     m_container = aContainer;
     NS_IF_ADDREF(m_container);
 }
