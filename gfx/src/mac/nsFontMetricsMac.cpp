@@ -21,11 +21,14 @@
  */
 
 #include <Fonts.h>		// for FetchFontInfo 
+#include <LowMem.h>   // forgive me father
+
 #include "nsCarbonHelpers.h"
 
 #include "nsFontMetricsMac.h"
 #include "nsDeviceContextMac.h"
 #include "nsUnicodeFontMappingMac.h"
+#include "nsGfxUtils.h"
 
 static NS_DEFINE_IID(kIFontMetricsIID, NS_IFONT_METRICS_IID);
 
@@ -53,6 +56,51 @@ nsFontMetricsMac :: ~nsFontMetricsMac()
 
 NS_IMPL_ISUPPORTS(nsFontMetricsMac, kIFontMetricsIID);
 
+
+//------------------------------------------------------------------------
+// FetchFontInfo moved from the FontManager lib to InterfaceLib between
+// Mac OS 8.5 and 8.6. The build expects it to be in InterfaceLib, so
+// when running on 8.5, we have to go grovel for it manually.
+//------------------------------------------------------------------------
+typedef pascal OSErr (*FetchFontInfoProc)(SInt16, SInt16, SInt16, FontInfo *);
+
+static OSErr MyFetchFontInfo(SInt16 fontID, SInt16 fontSize, SInt16 fontStyle, FontInfo* fInfo)
+{
+  static Boolean            sTriedToGetSymbol = false;
+  static FetchFontInfoProc  sFetchFontInfoCall = FetchFontInfo;
+
+  if (!sFetchFontInfoCall && !sTriedToGetSymbol)    // this happens on 8.5
+  {
+	  CFragConnectionID    connectionID;
+	  Str255               errName;
+	  
+	  OSErr err = ::GetSharedLibrary("\pFontManager", kCompiledCFragArch, kReferenceCFrag, &connectionID, nsnull, errName);
+	  if (err == noErr && connectionID)
+	  {
+	  	err = ::FindSymbol(connectionID, "\pFetchFontInfo", (Ptr *)&sFetchFontInfoCall, nsnull);
+	  	if (err != noErr)
+  	  	sFetchFontInfoCall = nsnull;
+	  }
+
+    ::CloseConnection(&connectionID);
+    sTriedToGetSymbol = true;
+  }
+  
+  if (sFetchFontInfoCall)
+    return (*sFetchFontInfoCall)(fontID, fontSize, fontStyle, fInfo);
+  
+  // evil hack
+  {
+    StPortSetter      portSetter(::LMGetWMgrPort());
+    StTextStyleSetter styleSetter(fontID, fontSize, fontStyle);
+    GetFontInfo(fInfo);
+  }
+  
+  return cfragNoSymbolErr;
+}
+
+
+
 NS_IMETHODIMP nsFontMetricsMac :: Init(const nsFont& aFont, nsIAtom* aLangGroup, nsIDeviceContext* aCX)
 {
   NS_ASSERTION(!(nsnull == aCX), "attempt to init fontmetrics with null device context");
@@ -67,16 +115,16 @@ NS_IMETHODIMP nsFontMetricsMac :: Init(const nsFont& aFont, nsIAtom* aLangGroup,
 	
   FontInfo fInfo;
   // FetchFontInfo gets the font info without having to touch a grafport. It's 8.5 only
-  #if !TARGET_CARBON
-  OSErr	err = ::FetchFontInfo(mFontNum, theStyle.tsSize, theStyle.tsFace, &fInfo);
-  NS_ASSERTION(err == noErr, "Error in FetchFontInfo");
-  #else
+#if !TARGET_CARBON
+	OSErr error = MyFetchFontInfo(mFontNum, theStyle.tsSize, theStyle.tsFace, &fInfo);
+  NS_ASSERTION(error == noErr, "Error in FetchFontInfo");
+#else
   // pinkerton - hack because this routine isn't yet in carbon.
   fInfo.ascent = theStyle.tsSize;
   fInfo.descent = 3;
   fInfo.widMax = 12;
   fInfo.leading = 3;
-  #endif
+#endif
   
   float  dev2app;
   mContext->GetDevUnitsToAppUnits(dev2app);
@@ -98,19 +146,10 @@ NS_IMETHODIMP nsFontMetricsMac :: Init(const nsFont& aFont, nsIAtom* aLangGroup,
 		return NS_ERROR_FAILURE;
 	}
 
-	short saveFont = ::GetPortTextFont(thePort);
- 	short saveFace = ::GetPortTextFace(thePort);
- 	short saveSize = ::GetPortTextSize(thePort);		
-	::TextFont(theStyle.tsFont);
-	::TextSize(theStyle.tsSize);
-	::TextFace(theStyle.tsFace);
-
+  StTextStyleSetter styleSetter(theStyle);
+  
   mMaxAdvance = NSToCoordRound(float(::CharWidth('M')) * dev2app);	// don't use fInfo.widMax here
   mSpaceWidth = NSToCoordRound(float(::CharWidth(' ')) * dev2app);
-
-	::TextFont(saveFont);
-	::TextSize(saveSize);
-	::TextFace(saveFace);
 
   return NS_OK;
 }

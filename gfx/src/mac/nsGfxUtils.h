@@ -53,6 +53,48 @@ protected:
 };
 
 
+//------------------------------------------------------------------------
+// utility text state save/restore class
+//------------------------------------------------------------------------
+
+class StTextStyleSetter
+{
+public:
+	StTextStyleSetter(SInt16 fontID, SInt16 fontSize, SInt16 fontFace)
+	{
+	  GrafPtr curPort;
+	  ::GetPort(&curPort);
+	  
+    mFontID = ::GetPortTextFont(curPort);
+    mFontSize = ::GetPortTextSize(curPort);
+    mFontSize = ::GetPortTextFace(curPort);		
+	  
+  	::TextFont(fontID);
+  	::TextSize(fontSize);
+  	::TextFace(fontFace);
+	}
+	
+	StTextStyleSetter(TextStyle& theStyle)
+	{
+	  StTextStyleSetter(theStyle.tsFont, theStyle.tsSize, theStyle.tsFace);
+	}
+	
+	~StTextStyleSetter()
+	{
+  	::TextFont(mFontID);
+  	::TextSize(mFontSize);
+  	::TextFace(mFontFace);
+	}
+
+protected:
+	SInt16		mFontID;
+	SInt16		mFontSize;
+	SInt16    mFontFace;
+};
+
+
+
+
 
 /** ------------------------------------------------------------
  *	Utility class for saving, locking, and restoring pixel state
