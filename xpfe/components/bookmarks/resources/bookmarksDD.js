@@ -21,33 +21,6 @@
  */
 
 
-//
-// Determine if d&d is on or not, off by default for beta but we want mozilla
-// folks to be able to turn it on if they so desire.
-//
-var gDragDropEnabled = false;
-var pref = null;
-try {
-  pref = Components.classes['component://netscape/preferences'];
-  pref = pref.getService();
-  pref = pref.QueryInterface(Components.interfaces.nsIPref);
-}
-catch (ex) {
-  dump("failed to get prefs service!\n");
-  pref = null;
-}
-
-try {
-  gDragDropEnabled = pref.GetBoolPref("xpfe.dragdrop.enable");
-}
-catch (ex) {
-  dump("assuming d&d is off for Bookmarks\n");
-}  
-
-
-// XXX this currently controls whether bookmarks D&D is enabled or not
-gDragDropEnabled = true;
-
 
 function TopLevelDrag ( event )
 {
@@ -58,9 +31,6 @@ function TopLevelDrag ( event )
 
 function BeginDragTree ( event )
 {
-  if ( !gDragDropEnabled )
-    return;
-    
   //XXX we rely on a capturer to already have determined which item the mouse was over
   //XXX and have set an attribute.
     
@@ -162,9 +132,6 @@ dump("genData is " + genData.data + " len is " + genData.data.length + "\n");
 
 function DragOverTree ( event )
 {
-  if ( !gDragDropEnabled )
-    return(false);
-
   var validFlavor = false;
   var dragSession = null;
   var retVal = true;
@@ -207,9 +174,6 @@ function DragOverTree ( event )
 
 function DropOnTree ( event )
 {
-  if ( !gDragDropEnabled )
-    return(false);
-
   var treeRoot = document.getElementById("bookmarksTree");
   if (!treeRoot)  return(false);
   var treeDatabase = treeRoot.database;
@@ -255,6 +219,31 @@ function DropOnTree ( event )
   var containerItem = treeItem;
   if (dropAction != "on")
     containerItem = treeItem.parentNode.parentNode;
+
+	// magical fix for bug # 33546
+	if (treeItem.getAttribute("container") == "true")
+	{
+		if (treeItem.getAttribute("open") == "true")
+		{
+			if (dropAction == "after")
+			{
+				containerItem = treeItem;
+				if (treeItem.childNodes.length > 0)
+				{
+					treeItem = treeItem.childNodes[0].childNodes[0];
+				}
+				else
+				{
+					treeItem = null;
+				}
+				if (!treeItem)
+				{
+					dropAction = "on";
+					containerItem = treeItem.parentNode.parentNode;
+				}
+			}
+		}
+	}
 
   var containerID = getAbsoluteID(treeRoot, containerItem);
   if (!containerID) return(false);
