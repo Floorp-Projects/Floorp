@@ -35,6 +35,7 @@ class nsIDOMWindow;
 class nsIDocument;
 
 #include "nsIRDFCompositeDataSource.h"
+#include "nsICSSStyleSheet.h"
 
 class nsChromeRegistry : public nsIChromeRegistry
 {
@@ -63,6 +64,9 @@ protected:
                             nsAutoString aProvider,
                             nsIRDFContainer *aContainer,
                             nsIRDFDataSource *aDataSource);
+  
+  void LoadStyleSheet(nsICSSStyleSheet** aSheet, const nsCString & aURL);
+  void GetUserSheetURL(nsCString & aURL);
 
 private:
   NS_IMETHOD ReallyRemoveOverlayFromDataSource(const PRUnichar *aDocURI, char *aOverlayURI);
@@ -127,4 +131,8 @@ protected:
   nsCOMPtr<nsIRDFResource> mBaseURL;
   nsCOMPtr<nsIRDFResource> mPackages;
   nsCOMPtr<nsIRDFResource> mPackage;
+
+  // Style Sheets
+  nsCOMPtr<nsICSSStyleSheet> mScrollbarSheet;
+  nsCOMPtr<nsICSSStyleSheet> mUserSheet;
 };
