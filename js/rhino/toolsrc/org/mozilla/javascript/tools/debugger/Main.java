@@ -642,16 +642,15 @@ class FindFunction extends JDialog implements ActionListener {
             ScriptItem item = (ScriptItem)functionNames.get(value);
             if (item != null) {
                 SourceInfo si = item.getSourceInfo();
-                String sourceName = si.getSourceName();
-                if (sourceName.endsWith("(eval)")) {
+                String url = si.getUrl();
+                if (url.endsWith("(eval)")) {
                     return;
                 }
                 int lineNumber = item.getFirstLine();
-                FileWindow w = db.getFileWindow(sourceName);
+                FileWindow w = db.getFileWindow(url);
                 if (w == null) {
-                    (new CreateFileWindow(db, sourceName, si.getSource(),
-                                          lineNumber)).run();
-                    w = db.getFileWindow(sourceName);
+                    CreateFileWindow.action(db, si, lineNumber).run();
+                    w = db.getFileWindow(url);
                     w.setPosition(-1);
                 }
                 int start = w.getPosition(lineNumber-1);
@@ -833,13 +832,10 @@ class FileHeader extends JPanel implements MouseListener {
                 pos = textArea.getLineStartOffset(i);
             } catch (BadLocationException ignored) {
             }
-            boolean isBreakPoint = false;
-            if (fileWindow.breakpoints.get(new Integer(pos)) != null) {
-                isBreakPoint = true;
-            }
+            boolean isBreakPoint = fileWindow.isBreakPoint(i + 1);
             text = Integer.toString(i + 1) + " ";
             int w = metrics.stringWidth(text);
-            int y = i *h;
+            int y = i * h;
             g.setColor(Color.blue);
             g.drawString(text, 0, y + ascent);
             int x = width - ascent;
@@ -877,12 +873,11 @@ class FileHeader extends JPanel implements MouseListener {
 class FileWindow extends JInternalFrame implements ActionListener {
 
     Main db;
+    SourceInfo sourceInfo;
     FileTextArea textArea;
     FileHeader fileHeader;
     JScrollPane p;
     int currentPos;
-    Hashtable breakpoints;
-    String url;
     JLabel statusBar;
 
     public void actionPerformed(ActionEvent e) {
@@ -896,19 +891,9 @@ class FileWindow extends JInternalFrame implements ActionListener {
         }
     }
 
-    public void dispose() {
-        Enumeration e = breakpoints.keys();
-        while (e.hasMoreElements()) {
-            Integer line = (Integer)breakpoints.get(e.nextElement());
-            db.clearBreakPoint(url, line.intValue());
-        }
-        db.removeWindow(this);
-        super.dispose();
-    }
-
     void runToCursor(ActionEvent e) {
         try {
-            db.runToCursor(url,
+            db.runToCursor(getUrl(),
                            textArea.getLineOfOffset(textArea.getCaretPosition()) + 1,
                            e);
         } catch (BadLocationException exc) {
@@ -920,10 +905,9 @@ class FileWindow extends JInternalFrame implements ActionListener {
         if (scope == null) {
             MessageDialogWrapper.showMessageDialog(db, "Can't load scripts: no scope available", "Run", JOptionPane.ERROR_MESSAGE);
         } else {
-            String fileName = url;
-            if (fileName != null) {
-                new Thread(new LoadFile(db,scope,
-                                        fileName)).start();
+            String url = getUrl();
+            if (url != null) {
+                new Thread(new LoadFile(db,scope,url)).start();
             }
         }
     }
@@ -938,14 +922,11 @@ class FileWindow extends JInternalFrame implements ActionListener {
     }
 
     boolean isBreakPoint(int line) {
-        int pos = getPosition(line - 1);
-        return breakpoints.get(new Integer(pos)) != null;
+        return sourceInfo.hasBreakpoint(line);
     }
 
     void toggleBreakPoint(int line) {
-        int pos = getPosition(line - 1);
-        Integer i = new Integer(pos);
-        if (breakpoints.get(i) == null) {
+        if (!isBreakPoint(line)) {
             setBreakPoint(line);
         } else {
             clearBreakPoint(line);
@@ -953,33 +934,23 @@ class FileWindow extends JInternalFrame implements ActionListener {
     }
 
     void setBreakPoint(int line) {
-        int actualLine = db.setBreakPoint(url, line);
-        if (actualLine != -1) {
-            int pos = getPosition(actualLine - 1);
-            breakpoints.put(new Integer(pos), new Integer(line));
+        if (sourceInfo.placeBreakpoint(line)) {
             fileHeader.repaint();
         }
     }
 
     void clearBreakPoint(int line) {
-        db.clearBreakPoint(url, line);
-        int pos = getPosition(line - 1);
-        Integer loc = new Integer(pos);
-        if (breakpoints.get(loc) != null) {
-            breakpoints.remove(loc);
+        if (sourceInfo.removeBreakpoint(line)) {
             fileHeader.repaint();
         }
     }
 
-    FileWindow(Main db, String fileName, String text) {
-        super(new File(fileName).getName(), true, true, true, true);
+    FileWindow(Main db, SourceInfo sourceInfo) {
+        super(SourceInfo.getShortName(sourceInfo.getUrl()),
+              true, true, true, true);
         this.db = db;
-        breakpoints = (Hashtable)db.breakpointsMap.get(fileName);
-        if (breakpoints == null) {
-            breakpoints = new Hashtable();
-            db.breakpointsMap.put(fileName, breakpoints);
-        }
-        setUrl(fileName);
+        this.sourceInfo = sourceInfo;
+        updateToolTip();
         currentPos = -1;
         textArea = new FileTextArea(this);
         textArea.setRows(24);
@@ -990,25 +961,25 @@ class FileWindow extends JInternalFrame implements ActionListener {
         p.setRowHeaderView(fileHeader);
         setContentPane(p);
         pack();
-        setText(text);
+        updateText();
         textArea.select(0);
     }
 
-    public void setUrl(String fileName) {
+    private void updateToolTip() {
         // in case fileName is very long, try to set tool tip on frame
         Component c = getComponent(1);
         // this will work at least for Metal L&F
         if (c != null && c instanceof JComponent) {
-            ((JComponent)c).setToolTipText(fileName);
+            ((JComponent)c).setToolTipText(getUrl());
         }
-        url = fileName;
     }
 
     public String getUrl() {
-        return url;
+        return sourceInfo.getUrl();
     }
 
-    void setText(String newText) {
+    void updateText() {
+        String newText = sourceInfo.getSource();
         if (!textArea.getText().equals(newText)) {
             textArea.setText(newText);
             int pos = 0;
@@ -1016,14 +987,6 @@ class FileWindow extends JInternalFrame implements ActionListener {
                 pos = currentPos;
             }
             textArea.select(pos);
-        }
-        Enumeration e = breakpoints.keys();
-        while (e.hasMoreElements()) {
-            Object key = e.nextElement();
-            Integer line = (Integer)breakpoints.get(key);
-            if (db.setBreakPoint(url, line.intValue()) == -1) {
-                breakpoints.remove(key);
-            }
         }
         fileHeader.update();
         fileHeader.repaint();
@@ -1592,31 +1555,35 @@ class ContextWindow extends JPanel implements ActionListener {
 class CreateFileWindow implements Runnable {
 
     Main db;
-    String url;
-    String text;
+    SourceInfo sourceInfo;
     int line;
     boolean activate;
 
-    CreateFileWindow(Main db,
-                     String url, String text, int line) {
-        this.db = db;
-        this.url = url;
-        this.text = text;
-        this.line = line;
-        this.activate = true;
+    private CreateFileWindow() { }
+
+    static Runnable action(Main db, SourceInfo sourceInfo, int line) {
+        CreateFileWindow obj = new CreateFileWindow();
+        obj.db = db;
+        obj.sourceInfo = sourceInfo;
+        obj.line = line;
+        obj.activate = true;
+        return obj;
     }
 
-    CreateFileWindow(Main db,
-                     String url, String text, int line, boolean activate) {
-        this.db = db;
-        this.url = url;
-        this.text = text;
-        this.line = line;
-        this.activate = activate;
+    static Runnable action(Main db,
+                           SourceInfo sourceInfo, int line, boolean activate)
+    {
+        CreateFileWindow obj = new CreateFileWindow();
+        obj.db = db;
+        obj.sourceInfo = sourceInfo;
+        obj.line = line;
+        obj.activate = activate;
+        return obj;
     }
 
     public void run() {
-        FileWindow w = new FileWindow(db, url, text);
+        String url = sourceInfo.getUrl();
+        FileWindow w = new FileWindow(db, sourceInfo);
         db.fileWindows.put(url, w);
         if (line != -1) {
             if (db.currentWindow != null) {
@@ -1703,17 +1670,20 @@ class SetFilePosition implements Runnable {
     }
 }
 
-class SetFileText implements Runnable {
+class UpdateFileText implements Runnable {
 
-    FileWindow w;
-    String text;
+    private FileWindow w;
 
-    SetFileText(FileWindow w, String text) {
-        this.w = w; this.text = text;
+    private UpdateFileText() {}
+
+    static Runnable action(FileWindow w) {
+        UpdateFileText obj = new UpdateFileText();
+        obj.w = w;
+        return obj;
     }
 
     public void run() {
-        w.setText(text);
+        w.updateText();
     }
 }
 
@@ -1735,7 +1705,7 @@ class UpdateContext implements Runnable {
         toolTips.removeAllElements();
         for (int i = 0; i < frameCount; i++) {
             FrameHelper frame = contextData.getFrame(i);
-            String sourceName = frame.getSourceName();
+            String sourceName = frame.getUrl();
             if (sourceName != null && sourceName.endsWith("(eval)")) {
                 sourceName = sourceName.substring(0, sourceName.length() - 6);
             }
@@ -1750,7 +1720,7 @@ class UpdateContext implements Runnable {
                 }
             } else {
                 if (sourceName.length() > 20) {
-                    shortName = new File(sourceName).getName();
+                    shortName = SourceInfo.getShortName(sourceName);
                 }
             }
             location = "\"" + shortName + "\", line " + lineNumber;
@@ -1908,7 +1878,7 @@ class Menubar extends JMenuBar implements ActionListener {
         }
     }
 
-    public void addFile(String fileName) {
+    void addFile(String url) {
         int count = windowMenu.getItemCount();
         JMenuItem item;
         if (count == 4) {
@@ -1933,16 +1903,16 @@ class Menubar extends JMenuBar implements ActionListener {
                 count--;
                 windowMenu.remove(lastItem);
             }
-            File f = new File(fileName);
+            String shortName = SourceInfo.getShortName(url);
 
-            windowMenu.add(item = new JMenuItem((char)('0' + (count-4)) + " " + f.getName(), '0' + (count - 4)));
+            windowMenu.add(item = new JMenuItem((char)('0' + (count-4)) + " " + shortName, '0' + (count - 4)));
             if (hasMoreWin) {
                 windowMenu.add(lastItem);
             }
         } else {
             return;
         }
-        item.setActionCommand(fileName);
+        item.setActionCommand(url);
         item.addActionListener(this);
     }
 
@@ -2128,12 +2098,12 @@ class ContextData {
 
 class FrameHelper implements DebugFrame {
 
-    FrameHelper(Context cx, Main master, DebuggableScript fnOrScript)
+    FrameHelper(Context cx, Main db, DebuggableScript fnOrScript)
     {
-        this.master = master;
+        this.db = db;
         this.contextData = ContextData.get(cx);
         this.fnOrScript = fnOrScript;
-        ScriptItem item = master.getScriptItem(fnOrScript);
+        ScriptItem item = db.getScriptItem(fnOrScript);
         if (item != null) {
             this.sourceInfo = item.getSourceInfo();
             this.lineNumber = item.getFirstLine();
@@ -2145,8 +2115,8 @@ class FrameHelper implements DebugFrame {
                         Scriptable thisObj, Object[] args)
     {
         this.activation = activation;
-        if (master.breakOnEnter) {
-            master.handleBreakpointHit(cx);
+        if (db.breakOnEnter) {
+            db.handleBreakpointHit(cx);
         }
     }
 
@@ -2155,26 +2125,30 @@ class FrameHelper implements DebugFrame {
         if (contextData.breakNextLine
             || (sourceInfo != null && sourceInfo.hasBreakpoint(lineno)))
         {
-            master.handleBreakpointHit(cx);
+            db.handleBreakpointHit(cx);
         }
     }
 
     public void onExceptionThrown(Context cx, Throwable exception) {
-        master.handleExceptionThrown(cx, exception, this);
+        db.handleExceptionThrown(cx, exception, this);
     }
 
     public void onExit(Context cx, boolean byThrow, Object resultOrException) {
-        if (master.breakOnReturn && !byThrow) {
-            master.handleBreakpointHit(cx);
+        if (db.breakOnReturn && !byThrow) {
+            db.handleBreakpointHit(cx);
         }
         contextData.popFrame();
+    }
+
+    SourceInfo getSourceInfo() {
+        return sourceInfo;
     }
 
     Scriptable getVariableObject() {
         return activation;
     }
 
-    String getSourceName() {
+    String getUrl() {
         return fnOrScript.getSourceName();
     }
 
@@ -2186,7 +2160,7 @@ class FrameHelper implements DebugFrame {
         return fnOrScript;
     }
 
-    private Main master;
+    private Main db;
     private ContextData contextData;
     private Scriptable activation;
     private DebuggableScript fnOrScript;
@@ -2222,13 +2196,25 @@ class ScriptItem {
 
 class SourceInfo {
 
-    SourceInfo(String sourceName, String source) {
-        this.sourceName = sourceName;
+    static String getShortName(String url) {
+        int lastSlash = url.lastIndexOf('/');
+        if (lastSlash < 0) {
+            lastSlash = url.lastIndexOf('\\');
+        }
+        String shortName = url;
+        if (lastSlash >= 0 && lastSlash + 1 < url.length()) {
+            shortName = url.substring(lastSlash + 1);
+        }
+        return shortName;
+    }
+
+    SourceInfo(String sourceUrl, String source) {
+        this.sourceUrl = sourceUrl;
         this.source = source;
     }
 
-    String getSourceName() {
-        return sourceName;
+    String getUrl() {
+        return sourceUrl;
     }
 
     String getSource() {
@@ -2240,7 +2226,14 @@ class SourceInfo {
             this.source = source;
             endLine = 0;
             breakableLines = null;
-            breakpoints = null;
+
+            if (breakpoints != null) {
+                for (int i = breakpoints.length - 1; i >= 0; --i) {
+                    if (breakpoints[i] == BREAK_FLAG) {
+                        breakpoints[i] = OLD_BREAK_FLAG;
+                    }
+                }
+            }
         }
     }
 
@@ -2270,20 +2263,22 @@ class SourceInfo {
             int newLength = 20;
             if (newLength < endLine) { newLength = endLine; }
             breakableLines = new boolean[newLength];
-            breakpoints = new boolean[newLength];
         }else if (breakableLines.length < endLine) {
             int newLength = breakableLines.length * 2;
             if (newLength < endLine) { newLength = endLine; }
             boolean[] tmp = new boolean[newLength];
             System.arraycopy(breakableLines, 0, tmp, 0, breakableLines.length);
             breakableLines = tmp;
-            tmp = new boolean[newLength];
-            System.arraycopy(breakpoints, 0, tmp, 0, breakpoints.length);
-            breakpoints = tmp;
         }
+        int breakpointsEnd = (breakpoints == null) ? 0 : breakpoints.length;
         for (int i = 0; i != lines.length; ++i) {
             int line = lines[i];
             breakableLines[line] = true;
+            if (line < breakpointsEnd) {
+                if (breakpoints[line] == OLD_BREAK_FLAG) {
+                    breakpoints[line] = BREAK_FLAG;
+                }
+            }
         }
     }
 
@@ -2296,33 +2291,50 @@ class SourceInfo {
     }
 
     boolean hasBreakpoint(int line) {
-        boolean[] breakpoints = this.breakpoints;
+        byte[] breakpoints = this.breakpoints;
         if (breakpoints != null && line < breakpoints.length) {
-            return breakpoints[line];
+            return breakpoints[line] == BREAK_FLAG;
         }
         return false;
     }
 
     synchronized boolean placeBreakpoint(int line) {
         if (breakableLine(line)) {
-            breakpoints[line] = true;
+            if (breakpoints == null) {
+                breakpoints = new byte[endLine];
+            }else if (line >= breakpoints.length) {
+                byte[] tmp = new byte[endLine];
+                System.arraycopy(breakpoints, 0, tmp, 0, breakpoints.length);
+                breakpoints = tmp;
+            }
+            breakpoints[line] = BREAK_FLAG;
             return true;
         }
         return false;
     }
 
-    synchronized void removeBreakpoint(int line) {
+    synchronized boolean removeBreakpoint(int line) {
+        boolean wasBreakpoint = false;
         if (breakpoints != null && line < breakpoints.length) {
-            breakpoints[line] = false;
+            wasBreakpoint = (breakpoints[line] != BREAK_FLAG);
+            breakpoints[line] = 0;
         }
+        return wasBreakpoint;
     }
 
-    private String sourceName;
+    synchronized void removeAllBreakpoints() {
+        breakpoints = null;
+    }
+
+    private String sourceUrl;
     private String source;
 
     private int endLine;
     private boolean[] breakableLines;
-    private boolean[] breakpoints;
+
+    private static final byte BREAK_FLAG = 1;
+    private static final byte OLD_BREAK_FLAG = 2;
+    private byte[] breakpoints;
 
 }
 
@@ -2425,23 +2437,9 @@ public class Main extends JFrame implements Debugger, ContextListener {
     private Hashtable sourceNames = new Hashtable();
 
     Hashtable functionNames = new Hashtable();
-    Hashtable breakpointsMap = new Hashtable();
 
     ScriptItem getScriptItem(DebuggableScript fnOrScript) {
         return (ScriptItem)scriptItems.get(fnOrScript);
-    }
-
-    void doClearBreakpoints() {
-        Enumeration e = breakpointsMap.keys();
-        while (e.hasMoreElements()) {
-            String url = (String)e.nextElement();
-            Hashtable h =(Hashtable)breakpointsMap.get(url);
-            Enumeration he = h.keys();
-            while (he.hasMoreElements()) {
-                Integer line = (Integer)h.get(he.nextElement());
-                clearBreakPoint(url, line.intValue());
-            }
-        }
     }
 
     /* Debugger Interface */
@@ -2474,7 +2472,7 @@ public class Main extends JFrame implements Debugger, ContextListener {
                 functionNames.put(name, item);
             }
         }
-           loadedFile(si);
+        loadedFile(si);
     }
 
     void handleBreakpointHit(Context cx) {
@@ -2508,27 +2506,27 @@ public class Main extends JFrame implements Debugger, ContextListener {
 
     void handleExceptionThrown(Context cx, Throwable ex, FrameHelper frame) {
         if (breakOnExceptions) {
-            String sourceName = frame.getSourceName();
-            if (sourceName != null && sourceName.endsWith("(eval)")) {
-                sourceName = sourceName.substring(0, sourceName.length() - 6);
+            String url = frame.getUrl();
+            if (url != null && url.endsWith("(eval)")) {
+                url = url.substring(0, url.length() - 6);
             }
             int lineNumber = frame.getLineNumber();
             FileWindow w = null;
-            if (sourceName == null) {
+            if (url == null) {
                 if (lineNumber == -1) {
-                    sourceName = "<eval>";
+                    url = "<eval>";
                 } else {
-                    sourceName = "<stdin>";
+                    url = "<stdin>";
                 }
             } else {
-                w = getFileWindow(sourceName);
+                w = getFileWindow(url);
             }
             Object e = unwrapException(ex);
             String msg = e.toString();
             if (msg == null || msg.length() == 0) {
                 msg = e.getClass().toString();
             }
-            msg += " (" + sourceName + ", line " + lineNumber + ")";
+            msg += " (" + url + ", line " + lineNumber + ")";
             if (w != null) {
                 swingInvoke(new SetFilePosition(this, w, lineNumber));
             }
@@ -2694,34 +2692,19 @@ public class Main extends JFrame implements Debugger, ContextListener {
         if (fileName == null || fileName.equals("<stdin>") || fileName.equals("<eval>")) {
             return null;
         }
-        String file = fileName;
-        Enumeration e = fileWindows.keys();
-        for (; e.hasMoreElements(); ) {
-            String name = (String)e.nextElement();
-            if (file.equals(name)) {
-                FileWindow w = (FileWindow)fileWindows.get(name);
-                w.setUrl(fileName);
-                return w;
-            }
-        }
         return (FileWindow)fileWindows.get(fileName);
     }
 
     void loadedFile(SourceInfo si) {
-        String fileName = si.getSourceName();
-        String text = si.getSource();
+        String fileName = si.getUrl();
         FileWindow w = getFileWindow(fileName);
         if (w != null) {
-            swingInvoke(new SetFileText(w, text));
+            swingInvoke(UpdateFileText.action(w));
             w.show();
         } else if (!fileName.equals("<stdin>")
                    && !fileName.endsWith("(eval)"))
         {
-            swingInvoke(new CreateFileWindow(this,
-                                             fileName,
-                                             text,
-                                             -1));
-
+            swingInvoke(CreateFileWindow.action(this, si, -1));
         }
     }
 
@@ -2760,7 +2743,7 @@ public class Main extends JFrame implements Debugger, ContextListener {
             }
             this.frameIndex = frameIndex;
             FrameHelper frame = contextData.getFrame(frameIndex);
-            String sourceName = frame.getSourceName();
+            String sourceName = frame.getUrl();
             if (sourceName == null || sourceName.equals("<stdin>")) {
                 console.show();
                 helper.reset();
@@ -2781,13 +2764,8 @@ public class Main extends JFrame implements Debugger, ContextListener {
                     new SetFilePosition(this, w, lineNumber);
                 action.run();
             } else {
-                SourceInfo si = (SourceInfo)sourceNames.get(sourceName);
-                String source = si.getSource();
-                CreateFileWindow action = new CreateFileWindow(this,
-                                                               sourceName,
-                                                               source,
-                                                               lineNumber);
-                action.run();
+                SourceInfo si = frame.getSourceInfo();
+                CreateFileWindow.action(this, si, lineNumber).run();
             }
             helper.reset();
         }
@@ -2867,18 +2845,18 @@ public class Main extends JFrame implements Debugger, ContextListener {
                 int frameCount = contextData.getFrameCount();
                 if (frameCount > 0) {
                     FrameHelper frame = contextData.getFrame(0);
-                    String sourceName = frame.getSourceName();
-                    if (sourceName != null) {
-                        if (sourceName.endsWith("(eval)")) {
-                            sourceName = sourceName.substring(0, sourceName.length() - 6);
+                    String url = frame.getUrl();
+                    if (url != null) {
+                        if (url.endsWith("(eval)")) {
+                            url = url.substring(0, url.length() - 6);
                         }
-                        if (sourceName.equals(runToCursorFile)) {
+                        if (url.equals(runToCursorFile)) {
                             int lineNumber = frame.getLineNumber();
                             if (lineNumber == runToCursorLine) {
                                 stopAtFrameDepth = -1;
                                 runToCursorFile = null;
                             } else {
-                                FileWindow w = getFileWindow(sourceName);
+                                FileWindow w = getFileWindow(url);
                                 if (w == null ||
                                    !w.isBreakPoint(lineNumber)) {
                                     return;
@@ -2907,9 +2885,9 @@ public class Main extends JFrame implements Debugger, ContextListener {
                 break;
             }
             FrameHelper frame = contextData.getFrame(0);
-            String fileName = frame.getSourceName();
-            if (fileName.endsWith("(eval)")) {
-                fileName = fileName.substring(0, fileName.length() - 6);
+            String url = frame.getUrl();
+            if (url.endsWith("(eval)")) {
+                url = url.substring(0, url.length() - 6);
             }
             contextData.breakNextLine = false;
             line = frame.getLineNumber();
@@ -2926,20 +2904,15 @@ public class Main extends JFrame implements Debugger, ContextListener {
                     enterCount++;
                 }
             }
-            if (fileName != null && !fileName.equals("<stdin>")) {
-                FileWindow w = (FileWindow)getFileWindow(fileName);
+            if (url != null && !url.equals("<stdin>")) {
+                FileWindow w = (FileWindow)getFileWindow(url);
                 if (w != null) {
                     SetFilePosition action =
                         new SetFilePosition(this, w, line);
                     swingInvoke(action);
                 } else {
-                    SourceInfo si = (SourceInfo)sourceNames.get(fileName);
-                    String source = si.getSource();
-                    CreateFileWindow action = new CreateFileWindow(this,
-                                                                   fileName,
-                                                                   source,
-                                                                   line);
-                    swingInvoke(action);
+                    SourceInfo si = frame.getSourceInfo();
+                    swingInvoke(CreateFileWindow.action(this, si, line));
                 }
             } else {
                 if (console.isVisible()) {
@@ -3249,22 +3222,6 @@ public class Main extends JFrame implements Debugger, ContextListener {
         }
     }
 
-    int setBreakPoint(String sourceName, int lineNumber) {
-        SourceInfo si = (SourceInfo)sourceNames.get(sourceName);
-        if (si == null) return -1;
-        int result = -1;
-        if (si.placeBreakpoint(lineNumber)) {
-            result = lineNumber;
-        }
-        return result;
-    }
-
-    void clearBreakPoint(String sourceName, int lineNumber) {
-        SourceInfo si = (SourceInfo)sourceNames.get(sourceName);
-        if (si == null) return;
-        si.removeBreakpoint(lineNumber);
-    }
-
     JMenu getWindowMenu() {
         return menubar.getMenu(3);
     }
@@ -3274,7 +3231,7 @@ public class Main extends JFrame implements Debugger, ContextListener {
         JMenu windowMenu = getWindowMenu();
         int count = windowMenu.getItemCount();
         JMenuItem lastItem = windowMenu.getItem(count -1);
-        String name = new File(w.getUrl()).getName();
+        String name = SourceInfo.getShortName(w.getUrl());
         for (int i = 5; i < count; i++) {
             JMenuItem item = windowMenu.getItem(i);
             if (item == null) continue; // separator
@@ -3456,7 +3413,11 @@ public class Main extends JFrame implements Debugger, ContextListener {
      * Remove all breakpoints
      */
     public void clearAllBreakpoints() {
-        doClearBreakpoints();
+        Enumeration e = sourceNames.keys();
+        while (e.hasMoreElements()) {
+            SourceInfo si = (SourceInfo)e.nextElement();
+            si.removeAllBreakpoints();
+        }
     }
 
     /**
