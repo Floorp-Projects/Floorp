@@ -70,6 +70,7 @@ function calendarPreferences( CalendarWindow )
      this.calendarPref.setIntPref( "date.format", 0 );
      this.calendarPref.setIntPref( "week.start", 0 );
      this.calendarPref.setIntPref( "event.defaultlength", 60 );
+     this.calendarPref.setIntPref( "alarms.defaultsnoozelength", 10 );
      this.loadPreferences();
   }
   
@@ -87,6 +88,8 @@ calendarPreferences.prototype.loadPreferences = function()
    this.arrayOfPrefs.weekstart = this.calendarPref.getIntPref( "week.start" );
 
    this.arrayOfPrefs.defaulteventlength = this.calendarPref.getIntPref( "event.defaultlength" );
+
+   this.arrayOfPrefs.defaultsnoozelength = this.calendarPref.getIntPref( "alarms.defaultsnoozelength" );
 }
 
 calendarPreferences.prototype.getPref = function( Preference )

@@ -78,7 +78,7 @@
 */
 
 //the next line needs XX-DATE-XY but last X instead of Y
-var gDateMade = XX-DATE-XX;
+var gDateMade = 20020411;
 
 // turn on debuging
 
