@@ -149,8 +149,16 @@ NS_IMETHODIMP nsMacWindow::Create(nsNativeWidget aNativeParent,		// this is a wi
 //-------------------------------------------------------------------------
 NS_IMETHODIMP nsMacWindow::Show(PRBool bState)
 {
-	nsWindow::Show(bState);
-	::ShowHide(mWindowPtr, bState);
+  nsWindow::Show(bState);
+	
+  // we need to make sure we call ::Show/HideWindow() to generate the 
+  // necessary activate/deactivate events. Calling ::ShowHide() is
+  // not adequate (pinkerton).
+  if ( bState )
+    ::ShowWindow(mWindowPtr);
+  else
+    ::HideWindow(mWindowPtr);
+
   return NS_OK;
 }
 
