@@ -32,19 +32,6 @@ class nsIFocusTracker : public nsISupports
 public:
   static const nsIID& GetIID() { static nsIID iid = NS_IFOCUSTRACKER_IID; return iid; }
 
-  /** SetFocus will keep track of the new frame as the focus frame. 
-   *  as well as keeping track of the anchor frame; <BR>
-   *  @param aFrame will be the focus frame
-   *  @param aAnchorFrame will be the anchor frame
-   */
-  NS_IMETHOD SetFocus(nsIFrame *aFrame, nsIFrame *aAnchorFrame) = 0;
-
-  /** GetFocus give the frame and the anchor frame.
-   *  @param aFrame will be the focus frame
-   *  @param aAnchorFrame will be the anchor frame
-   */
-  NS_IMETHOD GetFocus(nsIFrame **aFrame, nsIFrame **aAnchorFrame) = 0;
-
   /** ScrollFrameIntoView
    *  limited version of nsPresShell::ScrollFrameIntoView
    *  @param aFrame will be the frame to scroll into view.
