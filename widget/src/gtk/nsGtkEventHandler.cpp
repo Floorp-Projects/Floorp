@@ -32,97 +32,97 @@
 
 #define DBG 0
 
+#include <gdk/gdkkeysyms.h>
 #include <X11/Xlib.h>
 #include <X11/Xutil.h>
-#include <X11/keysym.h>
 
 struct nsKeyConverter {
   int vkCode; // Platform independent key code
-  XID keysym; // X keysym key code
+  int keysym; // GDK keysym key code
 };
 
-struct nsKeyConverter nsKeycodes[] = {
-  NS_VK_CANCEL,     XK_Cancel,
-  NS_VK_BACK,       XK_BackSpace,
-  NS_VK_TAB,        XK_Tab,
-  NS_VK_CLEAR,      XK_Clear,
-  NS_VK_RETURN,     XK_Return,
-  NS_VK_SHIFT,      XK_Shift_L,
-  NS_VK_SHIFT,      XK_Shift_R,
-  NS_VK_CONTROL,    XK_Control_L,
-  NS_VK_CONTROL,    XK_Control_R,
-  NS_VK_ALT,        XK_Alt_L,
-  NS_VK_ALT,        XK_Alt_R,
-  NS_VK_PAUSE,      XK_Pause,
-  NS_VK_CAPS_LOCK,  XK_Caps_Lock,
-  NS_VK_ESCAPE,     XK_Escape,
-  NS_VK_SPACE,      XK_space,
-  NS_VK_PAGE_UP,    XK_Page_Up,
-  NS_VK_PAGE_DOWN,  XK_Page_Down,
-  NS_VK_END,        XK_End,
-  NS_VK_HOME,       XK_Home,
-  NS_VK_LEFT,       XK_Left,
-  NS_VK_UP,         XK_Up,
-  NS_VK_RIGHT,      XK_Right,
-  NS_VK_DOWN,       XK_Down,
-  NS_VK_PRINTSCREEN, XK_Print,
-  NS_VK_INSERT,     XK_Insert,
-  NS_VK_DELETE,     XK_Delete,
+struct nsKeyConverter nsKeycodes[] = { 
+  NS_VK_CANCEL,     GDK_Cancel, 
+  NS_VK_BACK,       GDK_BackSpace,
+  NS_VK_TAB,        GDK_Tab,
+  NS_VK_CLEAR,      GDK_Clear,
+  NS_VK_RETURN,     GDK_Return,
+  NS_VK_SHIFT,      GDK_Shift_L,      
+  NS_VK_SHIFT,      GDK_Shift_R,      
+  NS_VK_CONTROL,    GDK_Control_L,
+  NS_VK_CONTROL,    GDK_Control_R,
+  NS_VK_ALT,        GDK_Alt_L,
+  NS_VK_ALT,        GDK_Alt_R,
+  NS_VK_PAUSE,      GDK_Pause,
+  NS_VK_CAPS_LOCK,  GDK_Caps_Lock,
+  NS_VK_ESCAPE,     GDK_Escape,
+  NS_VK_SPACE,      GDK_space,
+  NS_VK_PAGE_UP,    GDK_Page_Up,
+  NS_VK_PAGE_DOWN,  GDK_Page_Down,
+  NS_VK_END,        GDK_End,
+  NS_VK_HOME,       GDK_Home,
+  NS_VK_LEFT,       GDK_Left,
+  NS_VK_UP,         GDK_Up,
+  NS_VK_RIGHT,      GDK_Right,
+  NS_VK_DOWN,       GDK_Down, 
+  NS_VK_PRINTSCREEN, GDK_Print,
+  NS_VK_INSERT,     GDK_Insert,
+  NS_VK_DELETE,     GDK_Delete,
 
-  NS_VK_NUMPAD0,    XK_KP_0,
-  NS_VK_NUMPAD1,    XK_KP_1,
-  NS_VK_NUMPAD2,    XK_KP_2,
-  NS_VK_NUMPAD3,    XK_KP_3,
-  NS_VK_NUMPAD4,    XK_KP_4,
-  NS_VK_NUMPAD5,    XK_KP_5,
-  NS_VK_NUMPAD6,    XK_KP_6,
-  NS_VK_NUMPAD7,    XK_KP_7,
-  NS_VK_NUMPAD8,    XK_KP_8,
-  NS_VK_NUMPAD9,    XK_KP_9,
+  NS_VK_NUMPAD0,    GDK_KP_0, 
+  NS_VK_NUMPAD1,    GDK_KP_1,
+  NS_VK_NUMPAD2,    GDK_KP_2,
+  NS_VK_NUMPAD3,    GDK_KP_3,
+  NS_VK_NUMPAD4,    GDK_KP_4,
+  NS_VK_NUMPAD5,    GDK_KP_5,
+  NS_VK_NUMPAD6,    GDK_KP_6,
+  NS_VK_NUMPAD7,    GDK_KP_7,
+  NS_VK_NUMPAD8,    GDK_KP_8,
+  NS_VK_NUMPAD9,    GDK_KP_9,
 
-  NS_VK_MULTIPLY,   XK_KP_Multiply,
-  NS_VK_ADD,        XK_KP_Add,
-  NS_VK_SEPARATOR,  XK_KP_Separator,
-  NS_VK_SUBTRACT,   XK_KP_Subtract,
-  NS_VK_DECIMAL,    XK_KP_Decimal,
-  NS_VK_DIVIDE,     XK_KP_Divide,
-  NS_VK_F1,         XK_F1,
-  NS_VK_F2,         XK_F2,
-  NS_VK_F3,         XK_F3,
-  NS_VK_F4,         XK_F4,
-  NS_VK_F5,         XK_F5,
-  NS_VK_F6,         XK_F6,
-  NS_VK_F7,         XK_F7,
-  NS_VK_F8,         XK_F8,
-  NS_VK_F9,         XK_F9,
-  NS_VK_F10,        XK_F10,
-  NS_VK_F11,        XK_F11,
-  NS_VK_F12,        XK_F12,
-  NS_VK_F13,        XK_F13,
-  NS_VK_F14,        XK_F14,
-  NS_VK_F15,        XK_F15,
-  NS_VK_F16,        XK_F16,
-  NS_VK_F17,        XK_F17,
-  NS_VK_F18,        XK_F18,
-  NS_VK_F19,        XK_F19,
-  NS_VK_F20,        XK_F20,
-  NS_VK_F21,        XK_F21,
-  NS_VK_F22,        XK_F22,
-  NS_VK_F23,        XK_F23,
-  NS_VK_F24,        XK_F24,
+  NS_VK_MULTIPLY,   GDK_KP_Multiply,
+  NS_VK_ADD,        GDK_KP_Add,
+  NS_VK_SEPARATOR,  GDK_KP_Separator,
+  NS_VK_SUBTRACT,   GDK_KP_Subtract,
+  NS_VK_DECIMAL,    GDK_KP_Decimal,
+  NS_VK_DIVIDE,     GDK_KP_Divide,
+  NS_VK_F1,         GDK_F1,
+  NS_VK_F2,         GDK_F2,
+  NS_VK_F3,         GDK_F3,
+  NS_VK_F4,         GDK_F4,
+  NS_VK_F5,         GDK_F5,
+  NS_VK_F6,         GDK_F6,
+  NS_VK_F7,         GDK_F7,
+  NS_VK_F8,         GDK_F8,
+  NS_VK_F9,         GDK_F9,
+  NS_VK_F10,        GDK_F10,
+  NS_VK_F11,        GDK_F11,
+  NS_VK_F12,        GDK_F12,
+  NS_VK_F13,        GDK_F13,
+  NS_VK_F14,        GDK_F14,
+  NS_VK_F15,        GDK_F15,
+  NS_VK_F16,        GDK_F16,
+  NS_VK_F17,        GDK_F17,
+  NS_VK_F18,        GDK_F18,
+  NS_VK_F19,        GDK_F19,
+  NS_VK_F20,        GDK_F20,
+  NS_VK_F21,        GDK_F21,
+  NS_VK_F22,        GDK_F22,
+  NS_VK_F23,        GDK_F23,
+  NS_VK_F24,        GDK_F24,
 
-  NS_VK_COMMA,      XK_comma,
-  NS_VK_PERIOD,     XK_period,
-  NS_VK_SLASH,      XK_slash,
-//XXX: How do you get a BACK_QUOTE?  NS_VK_BACK_QUOTE, XK_backquote,
-  NS_VK_OPEN_BRACKET, XK_bracketleft,
-  NS_VK_CLOSE_BRACKET, XK_bracketright,
-  NS_VK_QUOTE, XK_quotedbl
+  NS_VK_COMMA,      GDK_comma,
+  NS_VK_PERIOD,     GDK_period, 
+  NS_VK_SLASH,      GDK_slash, 
+//XXX: How do you get a BACK_QUOTE?  NS_VK_BACK_QUOTE, GDK_backquote, 
+  NS_VK_OPEN_BRACKET, GDK_bracketleft, 
+  NS_VK_CLOSE_BRACKET, GDK_bracketright, 
+  NS_VK_QUOTE, GDK_quotedbl
+  
+}; 
 
-};
 
-
-int nsConvertKey(XID keysym)
+int nsConvertKey(int keysym)
 {
  int i;
  int length = sizeof(nsKeycodes) / sizeof(struct nsKeyConverter);
@@ -532,48 +532,37 @@ void nsGtkWidget_FSBOk_Callback(GtkWidget *w, gpointer p)
 
 //==============================================================
 void nsGtkWidget_InitNSKeyEvent(int aEventType, nsKeyEvent& aKeyEvent,
-                                GtkWidget *w, gpointer p, GdkEvent * event, gboolean * b)
+                                GtkWidget *w, gpointer p, GdkEvent * event)
 {
-#if 0
   nsWindow * widgetWindow = (nsWindow *) p ;
-  Modifiers modout = 0;
-  KeySym res;
+  char *res;
 
   nsGtkWidget_InitNSEvent(event, p, aKeyEvent, aEventType);
-  XKeyEvent* xKeyEvent =  (XKeyEvent*)event;
+  GdkEventKey *eventKey = (GdkEventKey*)event;
 
-   // Get the modout to test for shift + control
-  XtTranslateKeycode(xKeyEvent->display,xKeyEvent->keycode, xKeyEvent->state, &modout, &res);
-  res = XKeycodeToKeysym(xKeyEvent->display, xKeyEvent->keycode, 0);
-
-  aKeyEvent.keyCode   = nsConvertKey(res) & 0x00FF;
-  aKeyEvent.time      = xKeyEvent->time;
-  aKeyEvent.isShift   = (xKeyEvent->state & ShiftMask) ? PR_TRUE : PR_FALSE;
-  aKeyEvent.isControl = (xKeyEvent->state & ControlMask) ? PR_TRUE : PR_FALSE;
-  aKeyEvent.isAlt     = (xKeyEvent->state & Mod1Mask) ? PR_TRUE : PR_FALSE;
-#endif
+  aKeyEvent.keyCode   = nsConvertKey(eventKey->keyval) & 0x00FF;
+  aKeyEvent.time      = eventKey->time; 
+  aKeyEvent.isShift   = (eventKey->state & ShiftMask) ? PR_TRUE : PR_FALSE; 
+  aKeyEvent.isControl = (eventKey->state & ControlMask) ? PR_TRUE : PR_FALSE;
+  aKeyEvent.isAlt     = (eventKey->state & Mod1Mask) ? PR_TRUE : PR_FALSE;
 }
 
 //==============================================================
 void nsGtkWidget_KeyPressMask_EventHandler(GtkWidget *w, GdkEvent * event, gpointer p)
 {
-#if 0
   nsKeyEvent kevent;
-  nsGtkWidget_InitNSKeyEvent(NS_KEY_DOWN, kevent, w, p, event, b);
+  nsGtkWidget_InitNSKeyEvent(NS_KEY_DOWN, kevent, w, p, event);
   nsWindow * widgetWindow = (nsWindow *) p ;
   widgetWindow->OnKey(NS_KEY_DOWN, kevent.keyCode, &kevent);
-#endif
 }
 
 //==============================================================
 void nsGtkWidget_KeyReleaseMask_EventHandler(GtkWidget *w, GdkEvent * event, gpointer p)
 {
-#if 0
   nsKeyEvent kevent;
-  nsGtkWidget_InitNSKeyEvent(NS_KEY_UP, kevent, w, p, event, b);
+  nsGtkWidget_InitNSKeyEvent(NS_KEY_UP, kevent, w, p, event);
   nsWindow * widgetWindow = (nsWindow *) p ;
   widgetWindow->OnKey(NS_KEY_UP, kevent.keyCode, &kevent);
-#endif
 }
 
 //==============================================================
