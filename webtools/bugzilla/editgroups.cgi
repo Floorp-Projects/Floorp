@@ -121,7 +121,7 @@ unless ($action) {
         print "<td>$desc</td>\n";
         print "<td>$regexp&nbsp</td>\n";
         print "<td align=center>";
-        print "X" if $isactive;
+        print "X" if (($isactive != 0) && ($isbuggroup != 0));
         print "&nbsp</td>\n";
         print "<td> &nbsp ";
         print (($isbuggroup == 0 ) ? "system" : "user"); 
