@@ -137,6 +137,10 @@ ifdef MOZ_ENABLE_GTK
 XP_LIBS		+= $(XLDFLAGS) -lXt
 endif
 
+ifdef MOZ_ENABLE_XINERAMA
+XP_LIBS		+= $(MOZ_XINERAMA_LIBS)
+endif
+
 endif
 
 XP_LIBS		+= \
