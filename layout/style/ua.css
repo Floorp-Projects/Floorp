@@ -254,10 +254,12 @@ NOBR {
 // Lists
 
 UL {
+  display: block;
   padding-left: 40px;
   list-style-type: disc;
 }
 OL {
+  display: block;
   padding-left: 40px;
   list-style-type: decimal;
 }
