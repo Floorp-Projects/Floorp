@@ -1,7 +1,7 @@
 <!ENTITY view.header.name.label           "Name">
 <!ENTITY view.header.progress.label       "Progress">
 <!ENTITY view.header.status.label         "Status">
-<!ENTITY view.header.timeremaining.label  "Time Remaining">
+<!ENTITY view.header.timeremaining.label  "Time Left">
 <!ENTITY view.header.transferred.label    "Transferred">
 <!ENTITY view.header.transferrate.label   "Speed">
 <!ENTITY view.header.timeelapsed.label    "Time Elapsed">
