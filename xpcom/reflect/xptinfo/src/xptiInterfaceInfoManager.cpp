@@ -903,9 +903,7 @@ xptiInterfaceInfoManager::AddOnlyNewFilesFromFileList(nsISupportsArray* aSearchP
     if(NS_FAILED(aFileList->Count(&countOfFilesInFileList)))
         return PR_FALSE;
     NS_ASSERTION(countOfFilesInFileList, "loser!");
-    
-    PRUint32 countOfFilesInWorkingSet = aWorkingSet->GetFileCount();
-    NS_ASSERTION(countOfFilesInFileList > countOfFilesInWorkingSet,"loser!");
+    NS_ASSERTION(countOfFilesInFileList > aWorkingSet->GetFileCount(), "loser!");
 
     orderedFileArray = BuildOrderedFileArray(aSearchPath, aFileList, aWorkingSet);
 
