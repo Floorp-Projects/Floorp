@@ -324,6 +324,7 @@ bin/res/dtd/*
 bin/res/samples/*
 bin/res/builtin/htmlBindings.xml
 bin/res/builtin/platformHTMLBindings.xml
+bin/res/xml/*
 
 
 [mail]
