@@ -119,9 +119,20 @@ nsresult nsImapMoveCoalescer::PlaybackMoves(nsIEventQueue *eventQueue)
         nsCString messageIds;
         
         nsImapMailFolder::AllocateUidStringFromKeys(keysToAdd->GetArray(), keysToAdd->GetSize(), messageIds);
+        PRUint32 numKeysToAdd = keysToAdd->GetSize();
         
-        destFolder->SetNumNewMessages(keysToAdd->GetSize());
+        destFolder->SetNumNewMessages(numKeysToAdd);
         destFolder->SetHasNewMessages(PR_TRUE);
+
+        // adjust the new message count on the source folder
+        PRInt32 oldNewMessageCount = 0;
+        m_sourceFolder->GetNumNewMessages(PR_FALSE, &oldNewMessageCount);
+        if (oldNewMessageCount >= numKeysToAdd)
+          oldNewMessageCount -= numKeysToAdd;
+        else
+          oldNewMessageCount = 0;
+
+        m_sourceFolder->SetNumNewMessages(oldNewMessageCount);
         
         nsCOMPtr <nsISupports> sourceSupports = do_QueryInterface(m_sourceFolder, &rv);
         nsCOMPtr <nsIUrlListener> urlListener(do_QueryInterface(sourceSupports));
