@@ -264,11 +264,13 @@ button.calendar-management-button:hover:active
    -moz-box-align           : start;
 }
 /*<<-------------------------------------------------/\/\/\ Month*/
+
 #month-controls-box{
     -moz-box-align:center;
     -moz-box-pack:center;
     margin:0px 15px;
 }
+
 #month-view-box{
     -moz-box-align: center;
     -moz-box-pack: center;
@@ -535,7 +537,11 @@ button.calendar-management-button:hover:active
 #day-view-box
 {
 	background-color			: white;
-   padding-top             :10px;
+}
+
+#inner-day-view-box
+{
+	margin						: 15px;
 }
 
 /*--------------------------------------------------------------------
@@ -663,12 +669,11 @@ button.calendar-management-button:hover:active
 {
    overflow             : auto;
    background-color     : white;
-   margin-bottom        : 5px;
+   border             : 1px solid #2085c4;
 }
 
 #day-view-content-board
 {
-   border             : 1px solid #2085c4;
 }
 
 /*--------------------------------------------------------------------
@@ -755,11 +760,11 @@ button.calendar-management-button:hover:active
 #week-view-box
 {
 	background-color			: white;
-   padding-top             :10px;
 }
 
-#week-view-content-board
+#inner-week-view-box
 {
+	margin						: 15px;
 }
 
 #week-view-day-gradient
