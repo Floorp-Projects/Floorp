@@ -18,7 +18,6 @@
 #import <Cocoa/Cocoa.h>
 
 @interface CHSplashScreenWindow : NSWindow {
-    NSImage        *_splashImage;
     BOOL	        _fades;
     BOOL           __didFadeIn;
     int             _fadeIndex;

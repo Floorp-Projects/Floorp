@@ -44,9 +44,11 @@
     }
 
     splashRect		  = NSMakeRect(0.0, 0.0, [splashImage size].width, [splashImage size].height);
+    contentImageView  = [[[NSImageView alloc] initWithFrame:splashRect] autorelease];
+#if USE_STATUS_FIELD
     statusFieldRect   = NSMakeRect(0.0, 170.0, (splashRect.size.width - 5.0), 16.0);
-    contentImageView  = [[NSImageView alloc] initWithFrame:splashRect];
-    _statusField      = [[NSTextField alloc] initWithFrame:statusFieldRect];
+    _statusField      = [[[NSTextField alloc] initWithFrame:statusFieldRect];
+#endif
 
     if ( (self = [super initWithContentRect:splashRect
                             styleMask:NSBorderlessWindowMask
@@ -56,6 +58,7 @@
         [contentImageView setImage:splashImage];
         _fadeThreadLock = nil;
 
+#if USE_STATUS_FIELD
         [_statusField setDrawsBackground:NO];
         [_statusField setEditable:NO];
         [_statusField setSelectable:NO];
@@ -65,9 +68,12 @@
         [_statusField setTextColor:[NSColor whiteColor]];
         [_statusField setAlignment:NSRightTextAlignment];
         [_statusField setStringValue:@"Loading..."];
+#endif
 
         [[self contentView] addSubview:contentImageView];
+#if USE_STATUS_FIELD
         [[self contentView] addSubview:_statusField];
+#endif
         [self setOpaque:NO];
         [self setHasShadow:YES];
         [self setReleasedWhenClosed:YES];
@@ -90,8 +96,10 @@
 
 -(void)setStatusText:(NSString *)newText
 {
+#if USE_STATUS_FIELD
     [_statusField setStringValue:newText];
     [_statusField display];
+#endif
 }
 
 -(void)fadeIn
@@ -157,6 +165,10 @@
 
 -(void)close
 {
+#if USE_STATUS_FIELD
+    [_statusField release];
+#endif
+
 //  if ( __didFadeIn ) {
     if (      NO     ) { //Fade out is still problematic...
         [self fadeOut];
@@ -166,10 +178,6 @@
 
 -(void)dealloc
 {
-    if (_splashImage) {
-        [_splashImage release];
-    }
-
     [_fadeThreadLock release];
 
     [super dealloc];
