@@ -217,6 +217,8 @@ BOOL CPlugin::init(HWND hWndParent)
                              (PVOID)this,
                              0);
 
+    WinSetPresParam(m_hWnd, PP_FONTNAMESIZE, 10, "9.WarpSans");
+
     assert(m_hWnd != NULL);
     if((m_hWnd == NULL) || (!WinIsWindow((HAB)0, m_hWnd)))
       return FALSE;
@@ -535,27 +537,22 @@ static void DrawCommandMessage(HPS hPS, PSZ szString, PRECTL lprc)
 
   POINTL ptls[5];
   GpiQueryTextBox(hPS, strlen(szString), szString, 5, ptls);
-  POINTL pt;
-  pt.x = ptls[TXTBOX_CONCAT].x;
-  pt.y = ptls[TXTBOX_TOPLEFT].y - ptls[TXTBOX_BOTTOMLEFT].y;
 
-  int iY = (lprc->yTop / 2) - ((32) / 2) + 36;
-  int iX = 0;
+  /* If the text won't fit, don't draw anything */
+  if (ptls[TXTBOX_CONCAT].x > lprc->xRight)
+     return;
 
-  if(lprc->xRight > pt.x)
-    iX = lprc->xRight/2 - pt.x/2;
-  else
-    iX = 1;
+  RECTL rcText = rcText = *lprc; 
 
-  RECTL rcText;
-  rcText.xLeft   = iX;
-  rcText.xRight  = rcText.xLeft + pt.x;
-  rcText.yBottom    = iY;
-  rcText.yTop = rcText.yBottom + pt.y;
+  /* Reduce top of rectangle by twice the icon size so the */
+  /* text draws below the icon */
+  rcText.yTop -= 80;
 
   WinDrawText(hPS, strlen(szString), szString, &rcText, 0, 0,
               DT_TEXTATTRS | DT_CENTER | DT_VCENTER);
 }
+
+#define INSET 1
 
 void CPlugin::onPaint(HWND hWnd)
 {
@@ -567,41 +564,101 @@ void CPlugin::onPaint(HWND hWnd)
   GpiErase(hPS);
   WinQueryWindowRect(hWnd, &rc);
 
-  x = (rc.xRight / 2) - (32 / 2);
-  y = (rc.yTop / 2) - ((32) / 2);
+  x = (rc.xRight / 2) - (40 / 2);
+  y = (rc.yTop / 2) - ((40) / 2);
 
-  if(rc.xRight > 34 && rc.yTop > 34)
+  /* Only draw the icon if it fits */
+  if(rc.xRight > (40 + 6 + INSET) && rc.yTop > (40 + 6 + INSET) )
   {
     if(m_hIcon != NULL)
       WinDrawPointer(hPS, x, y, m_hIcon, DP_NORMAL);
-
-    POINTL pt[5];
-
-    // left vert and top horiz highlight
-    pt[0].x = 1;            pt[0].y = rc.yTop-1;
-    pt[1].x = 1;            pt[1].y = 1;
-    pt[2].x = rc.xRight-1; pt[2].y = 1;
-
-    GpiPolyLine(hPS, 3, pt);
-
-    // left vert and top horiz shadow
-    pt[0].x = 2;            pt[0].y = rc.yTop-3;
-    pt[1].x = 2;            pt[1].y = 2;
-    pt[2].x = rc.xRight-2; pt[2].y = 2;
-    GpiPolyLine(hPS, 3, pt);
-
-    // right vert and bottom horiz highlight
-    pt[0].x = rc.xRight-3; pt[0].y = 2;
-    pt[1].x = rc.xRight-3; pt[1].y = rc.yTop-3;
-    pt[2].x = 2;            pt[2].y = rc.yTop-3;
-    GpiPolyLine(hPS, 3, pt);
-
-    // right vert and bottom horiz shadow
-    pt[0].x = rc.xRight-1; pt[0].y = 1;
-    pt[1].x = rc.xRight-1; pt[1].y = rc.yTop-1;
-    pt[2].x = 0;            pt[2].y = rc.yTop-1;
-    GpiPolyLine(hPS, 3, pt);
   }
+
+  POINTL pt[5];
+
+  // white piece
+  GpiSetColor(hPS, CLR_WHITE);
+
+  pt[0].x = 1 + INSET;
+  pt[0].y = 1 + INSET;
+  GpiMove(hPS, &pt[0]);
+
+  pt[0].x = rc.xRight - 2 - INSET;
+  pt[0].y = 1 + INSET;
+  pt[1].x = rc.xRight - 2 - INSET;
+  pt[1].y = rc.yTop -1 - INSET;
+
+  GpiPolyLine(hPS, 2, pt);
+
+  pt[0].x = 2 + INSET;
+  pt[0].y = 3 + INSET;
+  GpiMove(hPS, &pt[0]);
+
+  pt[0].x = 2 + INSET;
+  pt[0].y = rc.yTop - 3 - INSET;
+  pt[1].x = rc.xRight - 4 - INSET;
+  pt[1].y = rc.yTop - 3 - INSET;
+
+  GpiPolyLine(hPS, 2, pt);
+
+  // pale gray pieces 
+  GpiSetColor(hPS, CLR_PALEGRAY);
+  pt[0].x = INSET;
+  pt[0].y = 1 + INSET;
+  GpiMove(hPS, &pt[0]);
+
+  pt[0].x = INSET;
+  pt[0].y = rc.yTop - 1 - INSET;
+  pt[1].x = rc.xRight - 2 - INSET;
+  pt[1].y = rc.yTop - 1 - INSET;
+
+  GpiPolyLine(hPS, 2, pt);
+
+  pt[0].x = rc.xRight - 3 - INSET;
+  pt[0].y = rc.yTop - 2 - INSET;
+  GpiMove(hPS, &pt[0]);
+
+  pt[0].x = rc.xRight - 3 - INSET;
+  pt[0].y = 2 + INSET;
+  pt[1].x = 2 + INSET;
+  pt[1].y = 2 + INSET;
+
+  GpiPolyLine(hPS, 2, pt);
+
+  // dark gray piece
+  GpiSetColor(hPS, CLR_DARKGRAY);
+
+  pt[0].x = 1 + INSET;
+  pt[0].y = 2 + INSET;
+  GpiMove(hPS, &pt[0]);
+
+  pt[0].x = 1 + INSET;
+  pt[0].y = rc.yTop - 2 - INSET;
+  pt[1].x = rc.xRight - 4 - INSET;
+  pt[1].y = rc.yTop - 2 - INSET;
+
+  GpiPolyLine(hPS, 2, pt);
+
+  // black piece
+  GpiSetColor(hPS, CLR_BLACK);
+
+  pt[0].x = rc.xRight - 1 - INSET;
+  pt[0].y = rc.yTop - 1 - INSET;
+  GpiMove(hPS, &pt[0]);
+
+  pt[0].x = rc.xRight - 1 - INSET;
+  pt[0].y = 0 + INSET;
+  pt[1].x = 0 + INSET;
+  pt[1].y = 0 + INSET;
+
+  GpiPolyLine(hPS, 2, pt);
+
+  /* Offset rectangle by size of highlight(3) + 1 as well as inset */
+  /* so that text is not drawn over the border */
+  rc.xLeft += 4+INSET;
+  rc.xRight -= 4+INSET;
+  rc.yTop -= 4+INSET;
+  rc.yBottom += 4+INSET;
 
   DrawCommandMessage(hPS, m_szCommandMessage, &rc);
 
