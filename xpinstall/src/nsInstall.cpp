@@ -995,14 +995,24 @@ nsInstall::LoadResources(JSContext* cx, const nsString& aBaseName, jsval* aRetur
     // get the string bundle using the extracted properties file
 #if 1
     {
+#ifndef NECKO
       const char* spec = nsnull;
+#else
+      char* spec = nsnull;
+#endif /* NECKO */
       ret = url->GetSpec(&spec);
       if (NS_FAILED(ret)) {
         printf("cannot get url spec\n");
         nsServiceManager::ReleaseService(kStringBundleServiceCID, service);
+#ifdef NECKO
+        nsCRT::free(spec);
+#endif /* NECKO */
         return ret;
       }
       ret = service->CreateBundle(spec, locale, &bundle);
+#ifdef NECKO
+      nsCRT::free(spec);
+#endif /* NECKO */
     }
 #else
     ret = service->CreateBundle(url, locale, &bundle);
