@@ -388,14 +388,16 @@ nsBufferedOutputStream::WriteSegments(nsReadSegmentFun reader, void * closure, P
 NS_IMETHODIMP
 nsBufferedOutputStream::GetNonBlocking(PRBool *aNonBlocking)
 {
-    NS_NOTREACHED("GetNonBlocking");
+    if (mStream)
+        return Sink()->GetNonBlocking(aNonBlocking);
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
 nsBufferedOutputStream::SetNonBlocking(PRBool aNonBlocking)
 {
-    NS_NOTREACHED("SetNonBlocking");
+    if (mStream)
+        return Sink()->SetNonBlocking(aNonBlocking);
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 
