@@ -29,7 +29,7 @@ class nsRegionMotif : public nsIRegion
 {
 public:
   nsRegionMotif();
-  ~nsRegionMotif();
+  virtual ~nsRegionMotif();
 
   NS_DECL_ISUPPORTS
 

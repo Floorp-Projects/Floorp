@@ -51,7 +51,7 @@ class nsRenderingContextMotif : public nsIRenderingContext
 {
 public:
   nsRenderingContextMotif();
-  ~nsRenderingContextMotif();
+  virtual ~nsRenderingContextMotif();
 
   NS_DECL_AND_IMPL_ZEROING_OPERATOR_NEW
 
@@ -188,4 +188,4 @@ private:
 
 };
 
-#endif /* nsRenderingContextMotif_h___ */
+#endif // nsRenderingContextMotif_h___

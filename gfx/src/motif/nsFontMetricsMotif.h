@@ -32,7 +32,7 @@ class nsFontMetricsMotif : public nsIFontMetrics
 {
 public:
   nsFontMetricsMotif();
-  ~nsFontMetricsMotif();
+  virtual ~nsFontMetricsMotif();
 
   NS_DECL_AND_IMPL_ZEROING_OPERATOR_NEW
 
@@ -77,8 +77,4 @@ protected:
   nscoord           mMaxAdvance;
 };
 
-#endif
-
-
-
-
+#endif // nsFontMetricsMotif_h__

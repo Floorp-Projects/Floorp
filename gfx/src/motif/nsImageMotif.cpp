@@ -186,7 +186,7 @@ void nsImageMotif :: ImageUpdated(nsIDeviceContext *aContext, PRUint8 aFlags, ns
 NS_IMETHODIMP nsImageMotif :: Draw(nsIRenderingContext &aContext, nsDrawingSurface aSurface, PRInt32 aSX, PRInt32 aSY, PRInt32 aSWidth, PRInt32 aSHeight,
                                   PRInt32 aDX, PRInt32 aDY, PRInt32 aDWidth, PRInt32 aDHeight)
 {
-  nsDrawingSurfaceMotif	*unixdrawing =(nsDrawingSurfaceMotif*) aSurface;
+  nsDrawingSurfaceMotif	*motifdrawing =(nsDrawingSurfaceMotif*) aSurface;
 
   if ((PR_FALSE==mStaticImage) || (nsnull == mImage)) {
     BuildImage(aSurface);
@@ -195,7 +195,7 @@ NS_IMETHODIMP nsImageMotif :: Draw(nsIRenderingContext &aContext, nsDrawingSurfa
   if (nsnull == mImage)
     return NS_ERROR_FAILURE;
 
-  XPutImage(unixdrawing->display,unixdrawing->drawable,unixdrawing->gc,mImage,
+  XPutImage(motifdrawing->display,motifdrawing->drawable,motifdrawing->gc,mImage,
                     aSX,aSY,aDX,aDY,aDWidth,aDHeight);  
 
   return NS_OK;
@@ -209,7 +209,7 @@ NS_IMETHODIMP nsImageMotif :: Draw(nsIRenderingContext &aContext,
                                   PRInt32 aX, PRInt32 aY, 
                                   PRInt32 aWidth, PRInt32 aHeight)
 {
-  nsDrawingSurfaceMotif	*unixdrawing =(nsDrawingSurfaceMotif*) aSurface;
+  nsDrawingSurfaceMotif	*motifdrawing =(nsDrawingSurfaceMotif*) aSurface;
 
   BuildImage(aSurface);
 
@@ -221,7 +221,7 @@ NS_IMETHODIMP nsImageMotif :: Draw(nsIRenderingContext &aContext,
   if (nsnull == mImage)
     return NS_ERROR_FAILURE;
 
-  XPutImage(unixdrawing->display,unixdrawing->drawable,unixdrawing->gc,mImage,
+  XPutImage(motifdrawing->display,motifdrawing->drawable,motifdrawing->gc,mImage,
                     0,0,aX,aY,aWidth,aHeight);  
   return NS_OK;
 }
@@ -242,7 +242,7 @@ void nsImageMotif::AllocConvertedBits(PRUint32 aSize)
 
 void nsImageMotif::ConvertImage(nsDrawingSurface aDrawingSurface)
 {
-nsDrawingSurfaceMotif	*unixdrawing =(nsDrawingSurfaceMotif*) aDrawingSurface;
+nsDrawingSurfaceMotif	*motifdrawing =(nsDrawingSurfaceMotif*) aDrawingSurface;
 PRUint8                 *tempbuffer,*cursrc,*curdest;
 PRInt32                 x,y;
 PRUint16                red,green,blue,*cur16;
@@ -250,7 +250,7 @@ PRUint16                red,green,blue,*cur16;
   mBitsForCreate = mImageBits;
 
 #if 0
-  if((unixdrawing->depth==24) &&  (mOriginalDepth==8))
+  if((motifdrawing->depth==24) &&  (mOriginalDepth==8))
     {
     // convert this nsImage to a 24 bit image
     mDepth = 24;
@@ -293,7 +293,7 @@ PRUint16                red,green,blue,*cur16;
     }
  
   // convert the 8 bit image to 16 bit
-  if((unixdrawing->depth==16) && (mOriginalDepth==8))
+  if((motifdrawing->depth==16) && (mOriginalDepth==8))
     {
     mDepth = 16;
     ComputePaletteSize(mDepth);
@@ -361,15 +361,15 @@ void nsImageMotif::CreateImage(nsDrawingSurface aSurface)
   PRUint32 wdepth;
   Visual * visual ;
   PRUint32 format ;
-  nsDrawingSurfaceMotif	*unixdrawing =(nsDrawingSurfaceMotif*) aSurface;
+  nsDrawingSurfaceMotif	*motifdrawing =(nsDrawingSurfaceMotif*) aSurface;
   
   if(mImageBits) {
     format = ZPixmap;
 
 #if 0
     /* Need to support monochrome too */
-    if (unixdrawing->visual->c_class == TrueColor || 
-        unixdrawing->visual->c_class == DirectColor) {
+    if (motifdrawing->visual->c_class == TrueColor || 
+        motifdrawing->visual->c_class == DirectColor) {
       format = ZPixmap;
     } 
     else {
@@ -380,11 +380,11 @@ printf("Format XYPixmap\n");
 
 /* printf("Width %d  Height %d Visual Depth %d  Image Depth %d\n", 
                   mWidth, mHeight,  
-                  unixdrawing->depth, mDepth); */
+                  motifdrawing->depth, mDepth); */
 
-    mImage = ::XCreateImage(unixdrawing->display,
-			    unixdrawing->visual,
-			    unixdrawing->depth,
+    mImage = ::XCreateImage(motifdrawing->display,
+			    motifdrawing->visual,
+			    motifdrawing->depth,
 			    format,
 			    0,
 			    (char *)mBitsForCreate,
@@ -392,9 +392,9 @@ printf("Format XYPixmap\n");
 			    (unsigned int)mHeight,
 			    32,mRowBytes);
 
-    mImage->byte_order       = ImageByteOrder(unixdrawing->display);
-    mImage->bits_per_pixel   = unixdrawing->depth;
-    mImage->bitmap_bit_order = BitmapBitOrder(unixdrawing->display);
+    mImage->byte_order       = ImageByteOrder(motifdrawing->display);
+    mImage->bits_per_pixel   = motifdrawing->depth;
+    mImage->bitmap_bit_order = BitmapBitOrder(motifdrawing->display);
     mImage->bitmap_unit      = 32;
   }	
   return ;
