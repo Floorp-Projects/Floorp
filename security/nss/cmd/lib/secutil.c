@@ -1988,8 +1988,9 @@ printflags(char *trusts, unsigned int flags)
     return;
 }
 
-static SECStatus
-secu_PrintCertNickname(CERTCertificate *cert, SECItem *k, void *data)
+/* callback for listing certs through pkcs11 */
+SECStatus
+SECU_PrintCertNickname(CERTCertificate *cert, void *data)
 {
     CERTCertTrust *trust;
     FILE *out;
@@ -2011,13 +2012,12 @@ secu_PrintCertNickname(CERTCertificate *cert, SECItem *k, void *data)
 	printflags(trusts, trust->emailFlags);
 	PORT_Strcat(trusts, ",");
 	printflags(trusts, trust->objectSigningFlags);
-	fprintf(out, "%-35s %-5s\n", name, trusts);
+	fprintf(out, "%-60s %-5s\n", name, trusts);
     }
 
     return (SECSuccess);
 }
 
-#if 1
 typedef struct {
     char *		name;
     CERTCertTrust	trust;
@@ -2099,8 +2099,8 @@ sec_name_and_trust_compare_by_trust(const void *p1, const void *p2)
 }
 
 SECStatus
-SECU_PrintCertificateNames_(CERTCertDBHandle *handle, FILE *out, PRBool sortByName, 
-                            PRBool sortByTrust)
+SECU_PrintCertificateNames(CERTCertDBHandle *handle, PRFileDesc *out, 
+                           PRBool sortByName, PRBool sortByTrust)
 {
     certNameAndTrustList certNames = { 0, NULL };
     int numCerts, i;
@@ -2123,12 +2123,6 @@ SECU_PrintCertificateNames_(CERTCertDBHandle *handle, FILE *out, PRBool sortByNa
     if (rv != SECSuccess)
 	return SECFailure;
 
-#if 0
-    rv = PK11_TraverseSlotCerts(sec_CountCerts, &numCerts, NULL);
-    certs = (CERTCertificate**)PORT_Alloc(numCerts*sizeof(CERTCertificate*));
-    rv = PK11_TraverseSlotCerts(sec_CollectCerts, certs, NULL);
-#endif
-
     if (sortByName)
 	comparefn = sec_name_and_trust_compare_by_name;
     else if (sortByTrust)
@@ -2140,6 +2134,7 @@ SECU_PrintCertificateNames_(CERTCertDBHandle *handle, FILE *out, PRBool sortByNa
 	qsort(certNames.nameAndTrustEntries, certNames.numCerts, 
 			    sizeof(certNameAndTrustEntry), comparefn);
 
+    PR_fprintf(out, "\n%-60s %-5s\n\n", "Certificate Name", "Trust Attributes");
     for (i = 0; i < certNames.numCerts; i++) {
 	PORT_Memset (trusts, 0, sizeof(trusts));
 	printflags(trusts, certNames.nameAndTrustEntries[i].trust.sslFlags);
@@ -2147,37 +2142,23 @@ SECU_PrintCertificateNames_(CERTCertDBHandle *handle, FILE *out, PRBool sortByNa
 	printflags(trusts, certNames.nameAndTrustEntries[i].trust.emailFlags);
 	PORT_Strcat(trusts, ",");
 	printflags(trusts, certNames.nameAndTrustEntries[i].trust.objectSigningFlags);
-	fprintf(out, "%-60s %-5s\n", certNames.nameAndTrustEntries[i].name, trusts);
+	PR_fprintf(out, "%-60s %-5s\n", 
+	           certNames.nameAndTrustEntries[i].name, trusts);
     }
+    PR_fprintf(out, "\n");
+    PR_fprintf(out, "p    Valid peer\n");
+    PR_fprintf(out, "P    Trusted peer (implies p)\n");
+    PR_fprintf(out, "c    Valid CA\n");
+    PR_fprintf(out, "T    Trusted CA to issue client certs (implies c)\n");
+    PR_fprintf(out, "C    Trusted CA to certs(only server certs for ssl) (implies c)\n");
+    PR_fprintf(out, "u    User cert\n");
+    PR_fprintf(out, "w    Send warning\n");
 
     for (i = 0; i < certNames.numCerts; i++)
 	PORT_Free(certNames.nameAndTrustEntries[i].name);
     PORT_Free(certNames.nameAndTrustEntries);
 
     return rv;
-}
-#endif
-
-int
-SECU_PrintCertificateNames(CERTCertDBHandle *handle, FILE *out)
-{
-    int rv;
-
-    SECU_Indent(out, 0);
-    fprintf(out, "\n%-30s %-5s\n\n", "Certificate Name", "Trust Attributes");
-    rv = SEC_TraversePermCerts(handle, secu_PrintCertNickname, out);
-    if (rv)
-	return -1;
-
-    fprintf(out, "\n");
-    fprintf(out, "p    Valid peer\n");
-    fprintf(out, "P    Trusted peer (implies p)\n");
-    fprintf(out, "c    Valid CA\n");
-    fprintf(out, "T    Trusted CA to issue client certs (implies c)\n");
-    fprintf(out, "C    Trusted CA to certs(only server certs for ssl) (implies c)\n");
-    fprintf(out, "u    User cert\n");
-    fprintf(out, "w    Send warning\n");
-    return 0;
 }
 
 int
