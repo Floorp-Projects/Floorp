@@ -24,11 +24,6 @@ interface nsISimpleEnumerator;
 interface nsIFileChannel : nsIChannel
 {
     /**
-     * Returns the creation date of the URL.
-     */
-    readonly attribute PRTime CreationDate;
-
-    /**
      * Returns the last modification date of the URL.
      */
     readonly attribute PRTime ModDate;
@@ -108,9 +103,9 @@ interface nsIFileChannel : nsIChannel
     nsIFileChannel ResolveLink();
 
     /**
-     * Returns a unique file name for the directory of the current URL.
+     * Returns a new unique unique file channel for the directory of the current URL.
      */
-    string MakeUniqueFileName(in string baseName);
+    nsIFileChannel MakeUnique(in string baseName);
 
     /**
      * Executes a program specified by the file channel. 
