@@ -60,7 +60,6 @@ DIRS =                         \
   modules\zlib                 \
   intl                         \
   netwerk                      \
-  widget\timer                 \
   js                           \
   js\src\xpconnect             \
 !ifdef MOZ_OJI

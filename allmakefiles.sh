@@ -526,17 +526,6 @@ widget/src/qt/Makefile
 widget/src/xlibxtbin/Makefile
 widget/src/xpwidgets/Makefile
 widget/src/support/Makefile
-widget/timer/Makefile
-widget/timer/public/Makefile
-widget/timer/src/Makefile
-widget/timer/src/beos/Makefile
-widget/timer/src/rhapsody/Makefile
-widget/timer/src/unix/Makefile
-widget/timer/src/unix/gtk/Makefile
-widget/timer/src/unix/photon/Makefile
-widget/timer/src/unix/xlib/Makefile
-widget/timer/src/unix/qt/Makefile
-widget/timer/src/os2/Makefile
 "
 
 MAKEFILES_xpcom="
