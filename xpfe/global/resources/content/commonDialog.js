@@ -67,6 +67,35 @@ function showControls()
   }
 }
 
+function setLabelForNode(aNode, aLabel, aIsLabelFlag)
+{
+  // This is for labels with possible accesskeys
+  var accessKeyIndex;
+  if (aLabel.charAt(0) == '&') {
+   accessKeyIndex = 0;
+  } else {
+    accessKeyIndex = aLabel.search(/[^\&]\&[^\&]/) + 1;
+    if (accessKeyIndex == 0) {
+      accessKeyIndex = -1; // magic value for no accesskey
+    }
+  }
+
+  // If a character has an & before it, then it should become an accesskey
+  if (accessKeyIndex >= 0 && accessKeyIndex < aLabel.length - 1) {
+    // This will also cause the accesskey attribute to be set via xbl
+    aNode.accessKey = aLabel.charAt(accessKeyIndex + 1);
+    // Set the label to the string without the &
+    aLabel = aLabel.substr(0, accessKeyIndex) + 
+             aLabel.substr(accessKeyIndex + 1);
+  }
+  aLabel = aLabel.replace(/\&\&/, "&");
+  if (aIsLabelFlag) {    // Set text for <label> element
+    aNode.setAttribute("value", aLabel);
+  } else {    // Set text for other xul elements
+    aNode.label = aLabel;
+  }
+}
+
 function commonDialogOnLoad()
 {
   // set the window title
@@ -106,25 +135,32 @@ function commonDialogOnLoad()
     iconClass = "message-icon";
   iconElement.setAttribute("class", iconElement.getAttribute("class") + " " + iconClass);
 
-  // set the number of command buttons
-  nButtons = gCommonDialogParam.GetInt(2);
+  var firstButton = null;
+  var newButton;
   switch (nButtons) {
     case 4:
-      document.documentElement.getButton("extra2").label = gCommonDialogParam.GetString(11);
+      setLabelForNode(firstButton = document.documentElement.getButton("extra2"), 
+                      gCommonDialogParam.GetString(11));               
       // fall through
     case 3:
-      document.documentElement.getButton("extra1").label = gCommonDialogParam.GetString(10);
+      newButton = document.documentElement.getButton("extra1");
+      firstButton = firstButton || newButton;
+      setLabelForNode(button, gCommonDialogParam.GetString(10));
       // fall through
     default:
     case 2:
+      newButton = document.documentElement.getButton("accept");
+      firstButton = firstButton || newButton;
       var string = gCommonDialogParam.GetString(8);
       if (string)
-        document.documentElement.getButton("accept").label = string;
+        setLabelForNode(newButton, string);
       // fall through
     case 1:
+      newButton = document.documentElement.getButton("cancel");
+      firstButton = firstButton || newButton;
       string = gCommonDialogParam.GetString(9);
       if (string)
-        document.documentElement.getButton("cancel").label = string;
+        setLabelForNode(newButton, string);
       break;
   }
 
@@ -132,7 +168,8 @@ function commonDialogOnLoad()
   gCommonDialogParam.SetInt(0, 1); 
 
   // initialize the checkbox
-  setCheckbox(gCommonDialogParam.GetString(1), gCommonDialogParam.GetInt(1));
+  if (setCheckbox(gCommonDialogParam.GetString(1), gCommonDialogParam.GetInt(1)))
+    firstButton.focus(); // Don't focus checkbox, focus first button instead
 
   getAttention();
 }
@@ -153,10 +190,11 @@ function initTextbox(aName, aLabelIndex, aValueIndex, aAlwaysLabel)
 function setElementText(aElementID, aValue, aChildNodeFlag)
 {
   var element = document.getElementById(aElementID);
-  if (!aChildNodeFlag && element)
-    element.setAttribute("value", aValue);
-  else if (aChildNodeFlag && element)
+  if (!aChildNodeFlag && element) {
+    setLabelForNode(element, aValue, true);
+  } else if (aChildNodeFlag && element) {
     element.appendChild(document.createTextNode(aValue));
+  }
 }
 
 function setCheckbox(aChkMsg, aChkValue)
@@ -167,9 +205,11 @@ function setCheckbox(aChkMsg, aChkValue)
     document.getElementById("checkboxContainer").removeAttribute("collapsed");
     
     var checkboxElement = document.getElementById("checkbox");
-    checkboxElement.label = aChkMsg;
+    setLabelForNode(checkboxElement, aChkMsg);
     checkboxElement.checked = aChkValue > 0;
+    return true;
   }
+  return false;
 }
 
 function unHideElementById(aElementID)
