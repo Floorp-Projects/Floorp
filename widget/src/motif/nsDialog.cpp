@@ -148,7 +148,7 @@ NS_METHOD nsDialog::SetLabel(const nsString& aText)
   XtVaSetValues(mShell, XmNtitle, label, nsnull);
   NS_FREE_STR_BUF(label);
   XmStringFree(str);
-
+  return NS_OK;
 }
 
 //-------------------------------------------------------------------------
@@ -168,6 +168,7 @@ NS_METHOD nsDialog::GetLabel(nsString& aBuffer)
   }
 
   XmStringFree(str);
+  return NS_OK;
 
 }
 

@@ -227,6 +227,7 @@ PRBool nsFileWidget::Show()
     mFile.Append(fileBuffer);
   }
  */ 
+ return PR_TRUE;
 }
 
 //-------------------------------------------------------------------------
