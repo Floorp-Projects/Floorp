@@ -1674,7 +1674,9 @@ ComputeBackgroundAnchorPoint(const nsStyleColor& aColor,
     }
     else if (x != 0) {
       x %= aTileWidth;
-      x = x - aTileWidth;
+      if (x > 0) {
+        x = x - aTileWidth;
+      }
     }
 
     NS_POSTCONDITION((x >= -(aTileWidth - 1)) && (x <= 0), "bad computed anchor value");
@@ -1708,7 +1710,9 @@ ComputeBackgroundAnchorPoint(const nsStyleColor& aColor,
     }
     else if (y != 0) {
       y %= aTileHeight;
-      y = y - aTileHeight;
+      if (y > 0) {
+        y = y - aTileHeight;
+      }
     }
     
     NS_POSTCONDITION((y >= -(aTileHeight - 1)) && (y <= 0), "bad computed anchor value");
