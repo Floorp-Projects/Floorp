@@ -84,11 +84,23 @@ function EditorTestSelection()
 
   dump("Selection contains:\n");
   // 3rd param = column to wrap
-  dump(selection.toStringWithFormat("text/plain",
+  dump(selection.QueryInterface(Components.interfaces.nsISelectionPrivate).toStringWithFormat("text/plain",
                                     3,  // OutputFormatted & gOutputSelectionOnly
                                     0) + "\n");
 
   var output;
+
+  dump("====== Selection as node and offsets==========\n");
+  dump("rangeCount = " + selection.rangeCount + "\n");
+  for (i = 0; i < selection.rangeCount; i++)
+  {
+    var range = selection.getRangeAt(i);
+    if (range)
+    {
+      dump("Range "+i+": StartParent="+range.startContainer.nodeName+", offset="+range.startOffset+"\n");
+      dump("Range "+i+":   EndParent="+range.endContainer.nodeName+", offset="+range.endOffset+"\n\n");
+    }
+  }
 
   dump("====== Selection as unformatted text ==========\n");
   output = editorShell.GetContentsAs("text/plain", 1);
