@@ -8,8 +8,8 @@
   button, button.left
     {
       behavior            : url("chrome://global/skin/buttonBindings.xml#buttonleft");
-      border-left         : 1px solid buttonhighlight;
-      border-top          : 1px solid buttonhighlight;
+      border-left         : 1px solid threedface;
+      border-top          : 1px solid threedface;
       border-right        : 1px solid threeddarkshadow;
       border-bottom       : 1px solid threeddarkshadow;
       margin              : 1px 5px 2px 5px;
@@ -21,16 +21,15 @@
   
   .button-box-1  
     {
-      border-left         : 1px solid buttonhighlight;
-      border-top          : 1px solid buttonhighlight;
-      border-right        : 1px solid buttonshadow;
-      border-bottom       : 1px solid buttonshadow;
+      border-left         : 1px solid threedhighlight;
+      border-top          : 1px solid threedhighlight;
+      border-right        : 1px solid threedshadow;
+      border-bottom       : 1px solid threedshadow;
     }
 
   .button-box-2
     {
-      
-			border              : 1px solid ButtonFace;	
+			border              : 1px solid threedface;	
     }
     
   button:hover:active 
@@ -53,11 +52,6 @@
       padding             : 1px 2px 0px 3px; 
     }
   
-  .button-box-text
-    {
-      /*debug */
-    }
-  
   button[disabled="true"],
   button[disabled="true"]:hover:active 
     {
@@ -77,7 +71,7 @@
       text-align          : center;
       vertical-align      : middle;
       padding             : 0px 3px 1px 2px;
-      border              : 1px solid buttonface;
+      border              : 1px solid threedface;
       margin              : 1px;
     }
 

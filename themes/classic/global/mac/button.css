@@ -8,40 +8,39 @@
   button, button.left
     {
       behavior            : url("chrome://global/skin/buttonBindings.xml#buttonleft");
-      border              : 1px solid #000000;
+      border-left         : 1px solid #DDDDDD;
+      border-top          : 1px solid #DDDDDD;
+      border-right        : 1px solid black;
+      border-bottom       : 1px solid black;
       margin              : 1px 5px 2px 5px;
       background-color    : #DDDDDD;
       min-width           : 8em;
-      font                : sans-serif;
-      color               : #000000;
-      -moz-border-radius  : 2px;
+      font                : Geneva 7pt;
+      color               : black;
+      -moz-border-radius  : 3px 2px 2px 3px;
     }
   
   .button-box-1  
     {
-      border-left         : 1px solid #FFFFFF;
-      border-top          : 1px solid #FFFFFF;
+      border-left         : 1px solid white;
+      border-top          : 1px solid white;
       border-right        : 1px solid #9D9D9D;
       border-bottom       : 1px solid #9D9D9D;
     }
 
   .button-box-2
     {
-      
 			border              : 1px solid #DDDDDD;	
     }
     
   button:hover:active 
     {
-      border              : 1px solid #000000;
+      border              : 1px solid black;
     }
 
   button:hover:active > .button-box-1
     {
-      border-left         : 1px solid #9D9D9D;
-      border-top          : 1px solid #9D9D9D;
-      border-right        : 1px solid #FFFFFF;
-      border-bottom       : 1px solid #FFFFFF;
+      border              : 1px solid #9D9D9D;
     }
 
   button:hover:active > .button-box-1 > .button-box-2
@@ -54,15 +53,10 @@
       padding             : 1px 2px 0px 3px; 
     }
   
-  .button-box-text
-    {
-      /*debug */
-    }
-  
   button[disabled="true"],
   button[disabled="true"]:hover:active 
     {
-      color               : #9D9D9D;
+      color               : #999999;
     }
         
   button[disabled="true"] > .button-box-1 > .button-box-2 > .button-box-text,
@@ -84,7 +78,7 @@
 
   button:focus > .button-box-1 > .button-box-2 > .button-box-text
     {
-      border              : 1px dotted #000000;
+      border              : 1px dotted black;
     }    
     
 /** Styles for "DEFAULT" buttons (usually 'OK' or equivalent in dialogs. 
@@ -94,16 +88,16 @@
 /* outer frame */  
   button[default], button:focus
     {
-      border              : 1px solid #000000;
+      border              : 1px solid black;
     }
 
   button[default] > .button-box-1,
   button:focus > .button-box-1
     {
-      border-left         : 1px solid #FFFFFF;
-      border-top          : 1px solid #FFFFFF;
-      border-right        : 1px solid #000000;
-      border-bottom       : 1px solid #000000;
+      border-left         : 1px solid white;
+      border-top          : 1px solid white;
+      border-right        : 1px solid black;
+      border-bottom       : 1px solid black;
     }
 
   button[default] > .button-box-1 > .button-box-2,

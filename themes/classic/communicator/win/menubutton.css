@@ -53,13 +53,13 @@
    }
 
 /* toolbar menubuttons */   
-menubutton.button-toolbar-4
+menubutton.button-toolbar, menubutton.button-toolbar-4
   {
     behavior                : url("chrome://communicator/skin/menubuttonBindings.xml#menubutton-toolbar-single");
     border                  : 1px solid threedface;
   }
   
-menubutton.button-toolbar-4:hover
+menubutton.button-toolbar:hover, menubutton.button-toolbar-4:hover
   {
     border                  : 1px solid threeddarkshadow;
   }
@@ -70,6 +70,7 @@ menubutton.button-toolbar-4:hover
     padding                 : 1px 4px 1px 4px;
   }  
   
+menubutton.button-toolbar:hover > .menubutton-toolbar-single-internal-box,
 menubutton.button-toolbar-4:hover > .menubutton-toolbar-single-internal-box
   {
     border-left             : 1px solid threedhighlight;
@@ -78,6 +79,8 @@ menubutton.button-toolbar-4:hover > .menubutton-toolbar-single-internal-box
     border-bottom           : 1px solid threedshadow;
   }  
   
+menubutton.button-toolbar:hover:active > .menubutton-toolbar-single-internal-box,
+menubutton.button-toolbar[open="true"] > .menubutton-toolbar-single-internal-box,
 menubutton.button-toolbar-4:hover:active > .menubutton-toolbar-single-internal-box,
 menubutton.button-toolbar-4[open="true"] > .menubutton-toolbar-single-internal-box
   {

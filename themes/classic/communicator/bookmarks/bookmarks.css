@@ -30,6 +30,11 @@
     list-style-image      : url("chrome://communicator/skin/bookmarks/bookmark-folder-closed.gif");
   }
 
+.bookmarkfolder > .menubutton-toolbar-single-internal-box > .menubutton-toolbar-single-dropmarker
+  {
+    display: none;
+  }
+  
 .bookmarkfolder[open="true"]
   {
     list-style-image      : url("chrome://communicator/skin/bookmarks/bookmark-folder-open.gif");

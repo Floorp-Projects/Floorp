@@ -2,7 +2,7 @@
 #navigator-throbber
   {
     behavior              : url("chrome://global/content/xulBindings.xml#buttontop");
-    border                : 1px solid threedface;
+    border                : 1px solid #DDDDDD;
     list-style-image      : url("chrome://global/skin/animthrob_single.gif");
     margin                : 0px;
     cursor                : pointer;
@@ -10,24 +10,24 @@
   
 #navigator-throbber:hover
   {
-    border                : 1px solid threeddarkshadow;
+    border                : 1px solid black;
   }
   
 #navigator-throbber > .button-internal-box
   {
-    border-left           : 1px solid threedhighlight;
-    border-top            : 1px solid threedhighlight;
-    border-right          : 1px solid threedshadow;
-    border-bottom         : 1px solid threedshadow;
+    border-left           : 1px solid white;
+    border-top            : 1px solid white;
+    border-right          : 1px solid #9D9D9D;
+    border-bottom         : 1px solid #9D9D9D;
     padding               : 1px;
   }  
 
 #navigator-throbber:hover:active > .button-internal-box
   {
-    border-left           : 1px solid threedshadow;
-    border-top            : 1px solid threedshadow;
-    border-right          : 1px solid threedhighlight;
-    border-bottom         : 1px solid threedhighlight;
+    border-left           : 1px solid #9D9D9D;
+    border-top            : 1px solid #9D9D9D;
+    border-right          : 1px solid white;
+    border-bottom         : 1px solid white;
     padding               : 2px 0xp 0xp 2px;
   }  
   

@@ -21,8 +21,6 @@
 #taskbar 
   {
 	  margin-top            : 2px;
-	  min-height            : 1em;
-  	user-focus            : ignore;
   }
 
 .taskbutton 
@@ -36,7 +34,7 @@
     width                 : 1em;
   }
 
-#taskbar > toolbargrippy
+#taskbar-toolbar > toolbargrippy
   {
     display               : none;
   }

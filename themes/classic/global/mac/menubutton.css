@@ -13,7 +13,7 @@
 .menubutton-dual[buttonover="true"],
 .menubutton-dual[buttondown="true"]
   {
-    border                : 1px solid threeddarkshadow;
+    border                : 1px solid black;
   }
 
 .classic-dropmarker-box,
@@ -26,8 +26,8 @@
   
 .menubutton-dual:hover > .classic-dropmarker-box 
   {
-    border-left           : 1px solid #FFFFFF;
-    border-top            : 1px solid #FFFFFF;
+    border-left           : 1px solid white;
+    border-top            : 1px solid white;
     border-right          : 1px solid #9D9D9D;
     border-bottom         : 1px solid #9D9D9D;
   } 
@@ -36,8 +36,8 @@
   {
     border-left           : 1px solid #9D9D9D;
     border-top            : 1px solid #9D9D9D;
-    border-right          : 1px solid #FFFFFF;
-    border-bottom         : 1px solid #FFFFFF;
+    border-right          : 1px solid white;
+    border-bottom         : 1px solid white;
   }
 
 .classic-simplebutton,
@@ -50,27 +50,26 @@
   {
     behavior              : url("chrome://global/skin/menubuttonBindings.xml#buttontop");
     margin                : 0px;
-    border                : 1px solid #DDDDDD !important;
+    border                : 1px solid #DDDDDD;
     min-width             : 0px;
     padding               : 2px 8px 2px 7px;
     text-align            : center;
-    background-color      : #DDDDDD;
   }  
   
 .classic-simplebutton:hover,
 .menubutton-dual:hover > .classic-simplebutton,
 .menubutton-dual[open="true"] > .classic-simplebutton
   {
-    border-left           : 1px solid #FFFFFF !important;
-    border-top            : 1px solid #FFFFFF !important;
-    border-right          : 1px solid #9D9D9D !important;
-    border-bottom         : 1px solid #9D9D9D !important;
+    border-left           : 1px solid white;
+    border-top            : 1px solid white;
+    border-right          : 1px solid #9D9D9D;
+    border-bottom         : 1px solid #9D9D9D;
   }  
   
 .menubutton-dual[buttonover="true"] > .classic-dropmarker-box
   {
-    border-left           : 1px solid #FFFFFF;
-    border-top            : 1px solid #FFFFFF;
+    border-left           : 1px solid white;
+    border-top            : 1px solid white;
     border-right          : 1px solid #9D9D9D;
     border-bottom         : 1px solid #9D9D9D;
   } 
@@ -79,8 +78,8 @@
   {
     border-left           : 1px solid #9D9D9D;
     border-top            : 1px solid #9D9D9D;
-    border-right          : 1px solid #FFFFFF;
-    border-bottom         : 1px solid #FFFFFF;
+    border-right          : 1px solid white;
+    border-bottom         : 1px solid white;
     padding               : 3px 7px 1px 8px;
   }  
   
@@ -88,8 +87,8 @@
   {
     border-left           : 1px solid #9D9D9D;
     border-top            : 1px solid #9D9D9D;
-    border-right          : 1px solid #FFFFFF;
-    border-bottom         : 1px solid #FFFFFF;
+    border-right          : 1px solid white;
+    border-bottom         : 1px solid white;
   }  
   
 .classic-dropmarker

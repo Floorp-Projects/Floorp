@@ -52,37 +52,48 @@
      border-bottom          : 1px solid #CCCCCC;
    }
 
-/** 
- * Navigation bar style menubuttons 
- **/
-.toolbar.menubutton-dual,
-.toolbar.menubutton-dual
+/* toolbar menubuttons */   
+ menubutton.button-toolbar, menubutton.button-toolbar-4
   {
-    border                  : none ! important;
+    behavior                : url("chrome://communicator/skin/menubuttonBindings.xml#menubutton-toolbar-single");
+    border                  : 1px solid #DDDDDD;
   }
-
-.button-toolbar-1.menubutton-dual-button
-  {
-    list-style-image        : inherit;
-  }
-
-.menubutton-dual-dropmarker
-  {
-    background              : transparent;
-    list-style-image        : url("chrome://communicator/skin/tb-menubutton-dm.gif");
-  } 
-
-.menubutton-dual-dropmarker[disabled="true"]
-  {
-    background              : transparent;
-    list-style-image        : url("chrome://communicator/skin/tb-menubutton-dm-disabled.gif");
-  } 
   
-.menubutton-dual-dropmarker-box
+menubutton.button-toolbar:hover,menubutton.button-toolbar-4:hover
   {
-    margin-left             : 32px;
-    margin-bottom           : 1px;
+    border                  : 1px solid black;
   }
-
+  
+.menubutton-toolbar-single-internal-box
+  {
+    border                  : 1px solid #DDDDDD;
+    padding                 : 1px 4px 1px 4px;
+  }  
+  
+menubutton.button-toolbar:hover > .menubutton-toolbar-single-internal-box, menubutton.button-toolbar-4:hover > .menubutton-toolbar-single-internal-box
+  {
+    border-left             : 1px solid white;
+    border-top              : 1px solid white;
+    border-right            : 1px solid #9D9D9D;
+    border-bottom           : 1px solid #9D9D9D;
+  }  
+  
+menubutton.button-toolbar:hover:active > .menubutton-toolbar-single-internal-box,
+menubutton.button-toolbar[open="true"] > .menubutton-toolbar-single-internal-box,
+menubutton.button-toolbar-4:hover:active > .menubutton-toolbar-single-internal-box,
+menubutton.button-toolbar-4[open="true"] > .menubutton-toolbar-single-internal-box
+  {
+    border-left             : 1px solid #9D9D9D;
+    border-top              : 1px solid #9D9D9D;
+    border-right            : 1px solid white;
+    border-bottom           : 1px solid white;
+    padding                 : 2px 3px 0px 5px;
+  }  
+  
+.menubutton-toolbar-single-dropmarker
+  {
+    padding-left            : 4px;
+    list-style-image        : url("chrome://global/skin/scroll-up.gif");
+  } 
   
   
