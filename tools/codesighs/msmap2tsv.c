@@ -67,6 +67,85 @@
 #define CLEANUP(ptr)    do { if(NULL != ptr) { free(ptr); ptr = NULL; } } while(0)
 
 
+typedef struct __struct_SymDB_Size
+/*
+**  The size of the symbol.
+**  The size is nested withing a symbols structures to produce a fast
+**      lookup path.
+**  The objects are listed in case the client of the symdb needs to
+**      match the object name in the scenario where multiple symbol
+**      sizes are present.
+**
+**  mSize           The size of the symbol in these objects.
+**  mObjects        A list of objects containing said symbol.
+**  mObjectCount    Number of objects.
+*/
+{
+    unsigned            mSize;
+    char**              mObjects;
+    unsigned            mObjectCount;
+}
+SymDB_Size;
+
+
+typedef struct __struct_SymDB_Section
+/*
+**  Each section for a symbol has a list of sizes.
+**  Should there be exactly one size for the symbol, then that
+**      is the size that should be accepted.
+**  If there is more than one size, then a match on the object
+**      should be attempted, held withing each size.
+**
+**  mName           The section name.
+**  mSizes          The varoius sizes of the symbol in this section.
+**  mSizeCount      The number of available sizes.
+*/
+{
+    char*               mName;
+    SymDB_Size*         mSizes;
+    unsigned            mSizeCount;
+}
+SymDB_Section;
+
+
+typedef struct __struct_SymDB_Symbol
+/*
+**  Each symbol has at least one section.
+**  The section indicates what type of symbol a client may be looking for.
+**  If there is no match on the section, then the client should not trust
+**      the symbdb.
+**
+**  mName           The mangled name of the symbol.
+**  mSections       Various sections this symbol belongs to.
+**  mSectionCount   The number of sections.
+*/
+{
+    char*               mName;
+    SymDB_Section*      mSections;
+    unsigned            mSectionCount;
+}
+SymDB_Symbol;
+
+
+typedef struct __struct_SymDB_Container
+/*
+**  The symbol DB container object.
+**  The goal of the symbol DB is to have exactly one SymDB_Symbol for each
+**      mangled name, no matter how ever many identical mangled names there
+**      are in the input.
+**  The input is already expected to be well sorted, futher this leads to
+**      the ability to binary search for symbol name matches.
+**
+**  mSymbols        The symbols.
+**  mSymbolCount    The number of symbols in the DB.
+*/
+{
+    SymDB_Symbol*       mSymbols;
+    unsigned            mSymbolCount;
+}
+SymDB_Container;
+
+
 typedef struct __struct_Options
 /*
 **  Options to control how we perform.
@@ -82,6 +161,7 @@ typedef struct __struct_Options
 **  mAddress            Wether or not to output addresses.
 **  mMatchModules       Array of strings which the module name should match.
 **  mMatchModuleCount   Number of items in array.
+**  mSymDBName          Symbol DB filename.
 */
 {
     const char* mProgramName;
@@ -93,6 +173,8 @@ typedef struct __struct_Options
     int mAddresses;
     char** mMatchModules;
     unsigned mMatchModuleCount;
+    char* mSymDBName;
+    SymDB_Container* mSymDB;
 }
 Options;
 
@@ -117,12 +199,14 @@ static Switch gOutputSwitch = {"--output", "-o", 1, NULL, "Specify output file."
 static Switch gHelpSwitch = {"--help", "-h", 0, NULL, "Information on usage."};
 static Switch gAddressesSwitch = {"--addresses", "-a", 0, NULL, "Output segment addresses." DESC_NEWLINE "Helps reveal symbol ordering." DESC_NEWLINE "Lack of simplifies size diffing."};
 static Switch gMatchModuleSwitch = {"--match-module", "-mm", 1, NULL, "Specify a valid module name." DESC_NEWLINE "Multiple specifications allowed." DESC_NEWLINE "If a module name does not match one of the names specified then no output will occur."};
+static Switch gSymDBSwitch = {"--symdb", "-sdb", 1, NULL, "Specify a symbol tsv db input file." DESC_NEWLINE "Such a symdb is produced using the tool msdump2symdb." DESC_NEWLINE "This allows better symbol size approximations." DESC_NEWLINE "The symdb file must be pre-sorted."};
 
 static Switch* gSwitches[] = {
         &gInputSwitch,
         &gOutputSwitch,
         &gAddressesSwitch,
         &gMatchModuleSwitch,
+        &gSymDBSwitch,
         &gHelpSwitch
 };
 
@@ -210,6 +294,70 @@ char* lastWord(char* inString)
     }
 
     return inString + len + mod;
+}
+
+
+int readSymDB(const char* inDBName, SymDB_Container** outDB)
+/*
+**  Intialize the symbol DB.
+**  Only call if the symbol DB should be initialized.
+*/
+{
+    int retval = 0;
+
+    /*
+    **  Initialize out arguments.
+    */
+    if(NULL != outDB)
+    {
+        *outDB = NULL;
+    }
+
+    if(NULL != outDB && NULL != inDBName)
+    {
+        /*
+        **  TODO
+        */
+    }
+    else
+    {
+        retval = __LINE__;
+        ERROR_REPORT(retval, "(NULL)", "Invalid arguments.");
+    }
+
+    return retval;
+}
+
+
+int fillSymbolSizeFromDB(Options* inOptions, MSMap_Symbol* inoutSymbol, const char* inMangledName)
+/*
+**  If we have a symbol DB, attempt to determine the real size of the symbol
+**      up front.
+**  This helps us later in the game to avoid performing size guesses by
+**      offset.
+*/
+{
+    int retval = 0;
+
+    /*
+    **  May need to initialize symdb.
+    */
+    if(NULL == inOptions->mSymDB && NULL != inOptions->mSymDBName)
+    {
+        retval = readSymDB(inOptions->mSymDBName, &inOptions->mSymDB);
+    }
+
+    /*
+    **  Optional
+    */
+    if(0 == retval && NULL != inOptions->mSymDB)
+    {
+        /*
+        **  TODO
+        */
+    }
+
+    return retval;
 }
 
 
@@ -694,7 +842,15 @@ int readmap(Options* inOptions, MSMap_Module* inModule)
                                                 char *last = lastWord(current);
                                                 
                                                 theSymbol->mObject = strdup(last);
-                                                if(NULL == theSymbol->mObject)
+                                                if(NULL != theSymbol->mObject)
+                                                {
+                                                    /*
+                                                    **  Finally, attempt to lookup the actual size of the symbol
+                                                    **      if there is a symbol DB available.
+                                                    */
+                                                    retval = fillSymbolSizeFromDB(inOptions, theSymbol, symbolBuf);
+                                                }
+                                                else
                                                 {
                                                     retval = __LINE__;
                                                     ERROR_REPORT(retval, last, "Unable to copy object name.");
@@ -1400,6 +1556,16 @@ int initOptions(Options* outOptions, int inArgc, char** inArgv)
                 {
                     retval = __LINE__;
                     ERROR_REPORT(retval, current->mValue, "Unable to allocate space for string.");
+                }
+            }
+            else if(current == &gSymDBSwitch)
+            {
+                CLEANUP(outOptions->mSymDBName);
+                outOptions->mSymDBName = strdup(current->mValue);
+                if(NULL == outOptions->mSymDBName)
+                {
+                    retval = __LINE__;
+                    ERROR_REPORT(retval, current->mValue, "Unable to duplicate symbol db name.");
                 }
             }
             else

@@ -95,6 +95,27 @@ MYTMPDIR=`mktemp -d ./codesighs.tmp.XXXXXXXX`
 
 
 #
+#   Find all object files.
+#
+ALLOBJSFILE="$MYTMPDIR/allobjs.list"
+find ./mozilla -type f -name "*.obj" > $ALLOBJSFILE
+
+
+#
+#   Get a dump of the symbols in every object file.
+#
+ALLOBJSYMSFILE="$MYTMPDIR/allobjsyms.list"
+xargs -n 1 dumpbin.exe /symbols < $ALLOBJSFILE > $ALLOBJSYMSFILE 2> /dev/null
+
+
+#
+#   Produce the symdb for the symbols in all object files.
+#
+SYMDBFILE="$MYTMPDIR/symdb.tsv"
+./mozilla/dist/bin/msdump2symdb --input $ALLOBJSYMSFILE | sort > $SYMDBFILE 2> /dev/null
+
+
+#
 #   Find all map files.
 #
 ALLMAPSFILE="$MYTMPDIR/allmaps.list"
@@ -105,7 +126,7 @@ find ./mozilla -type f -name "*.map" > $ALLMAPSFILE
 #   Produce the TSV output.
 #
 RAWTSVFILE="$MYTMPDIR/raw.tsv"
-xargs -n 1 ./mozilla/dist/bin/msmap2tsv --input < $ALLMAPSFILE > $RAWTSVFILE 2> /dev/null
+xargs -n 1 ./mozilla/dist/bin/msmap2tsv --symdb $SYMDBFILE --input < $ALLMAPSFILE > $RAWTSVFILE 2> /dev/null
 
 
 #
