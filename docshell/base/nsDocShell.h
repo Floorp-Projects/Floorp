@@ -52,6 +52,8 @@
 #include "nsString.h"
 
 #define SH_IN_FRAMES 1
+// Threshold value in ms for META refresh based redirects
+#define REFRESH_REDIRECT_TIMER 15000
 
 // Interfaces Needed
 #include "nsIDocumentCharsetInfo.h"
@@ -113,6 +115,7 @@ public:
    nsCOMPtr<nsIURI>        mURI;
    PRBool                  mRepeat;
    PRInt32                 mDelay;
+   PRBool                  mMetaRefresh;
 
 protected:
    virtual ~nsRefreshTimer();

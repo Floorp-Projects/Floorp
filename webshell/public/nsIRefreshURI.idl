@@ -31,8 +31,9 @@ interface nsIRefreshURI : nsISupports {
       * @param uri The uri to refresh.
       * @param millis The number of milliseconds to wait.
       * @param repeat Do you want the uri to be repeatedly refreshed every millis milliseconds.
+      * @param flag to check if this is for a META refresh
       */
-	void refreshURI(in nsIURI aURI, in long aMillis, in boolean aRepeat);
+	void refreshURI(in nsIURI aURI, in long aMillis, in boolean aRepeat, in boolean aMetaRefresh);
 
     /**
 	  * Checks the passed in channel to see if there is a refresh header, if there is, 
