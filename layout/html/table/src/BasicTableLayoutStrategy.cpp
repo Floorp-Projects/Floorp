@@ -1418,9 +1418,12 @@ void BasicTableLayoutStrategy::CalculateTotals(PRInt32& aCellSpacing,
 
     // desired alone is lowest priority
     aTotalCounts[DES_CON]++;
-    aTotalWidths[DES_CON] += colFrame->GetDesWidth();
-    aTotalAvailWidths[DES_CON] = aTotalWidths[DES_CON];
-    aMinWidths[DES_CON] += minCol;
+    nscoord desWidth = colFrame->GetDesWidth();
+    if (desWidth > 0) {
+      aTotalWidths[DES_CON] += desWidth;
+      aTotalAvailWidths[DES_CON] = aTotalWidths[DES_CON];
+      aMinWidths[DES_CON] += minCol;
+    }
   }
   // if it is not a degenerate table, add the last spacing on the right
   if (numCols > 0) {
