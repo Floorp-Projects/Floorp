@@ -57,10 +57,6 @@
 #define DEBUG_ACCOUNTMANAGER 1
 #endif
 
-#ifdef DEBUG_seth
-#define HEED_DIR_PREFS 1
-#endif 
-
 static NS_DEFINE_CID(kMsgAccountCID, NS_MSGACCOUNT_CID);
 static NS_DEFINE_CID(kMsgIdentityCID, NS_MSGIDENTITY_CID);
 static NS_DEFINE_CID(kPrefServiceCID, NS_PREF_CID);
@@ -1521,12 +1517,9 @@ nsMsgAccountManager::MigrateLocalMailAccount(nsIMsgIdentity *identity)
   PRBool dirExists;
 
   char *mail_directory_value = nsnull;
-#ifdef HEED_DIR_PREFS
-  rv = m_prefs->CopyCharPref(PREF_MAIL_DIRECTORY, &mail_directory_value);
-#else
-  rv = NS_ERROR_FAILURE;
-#endif /* HEED_DIR_PREFS */
   // if the "mail.directory" pref is set, use that.
+  // if they used -installer, this pref will point to where their files got copied
+  rv = m_prefs->CopyCharPref(PREF_MAIL_DIRECTORY, &mail_directory_value);
   if (NS_SUCCEEDED(rv) && mail_directory_value && (PL_strlen(mail_directory_value) > 0)) {
     dir = mail_directory_value;
     PR_FREEIF(mail_directory_value);
@@ -1636,11 +1629,8 @@ nsMsgAccountManager::MigratePopAccount(nsIMsgIdentity *identity)
   if (NS_FAILED(rv)) return rv;
 
   char *mail_directory_value = nsnull;
-#ifdef HEED_DIR_PREFS
+  // if they used -installer, this pref will point to where their files got copied
   rv = m_prefs->CopyCharPref(PREF_MAIL_DIRECTORY, &mail_directory_value);
-#else
-  rv = NS_ERROR_FAILURE;
-#endif /* HEED_DIR_PREFS */
   // create the directory structure for old 4.x pop mail
   // under <profile dir>/Mail/<pop host name> or
   // <"mail.directory" pref>/<pop host name>
@@ -1831,11 +1821,8 @@ nsMsgAccountManager::MigrateImapAccount(nsIMsgIdentity *identity, const char *ho
   PRBool dirExists;
 
   char *imap_directory_value = nsnull;
-#ifdef HEED_DIR_PREFS
+  // if they used -installer, this pref will point to where their files got copied
   rv = m_prefs->CopyCharPref(PREF_IMAP_DIRECTORY, &imap_directory_value);
-#else
-  rv = NS_ERROR_FAILURE;
-#endif /* HEED_DIR_PREFS */
   // if the "mail.imap.root_dir" pref is set, use that.
   if (NS_SUCCEEDED(rv) && imap_directory_value && (PL_strlen(imap_directory_value) > 0)) {
     dir = imap_directory_value;
@@ -1941,11 +1928,8 @@ nsMsgAccountManager::MigrateNewsAccounts(nsIMsgIdentity *identity)
     // in 4.x, on UNIX, the "news.directory" pref pointed to the directory to where
     // the newsrc files lived.  we don't want that for the newsHostsDir.
 #ifdef USE_NEWSRC_MAP_FILE
-#ifdef HEED_DIR_PREFS
+  // if they used -installer, this pref will point to where their files got copied
     rv = m_prefs->CopyCharPref(PREF_NEWS_DIRECTORY, &news_directory_value);
-#else
-    rv = NS_ERROR_FAILURE;
-#endif /* HEED_DIR_PREFS */
 #else
     rv = NS_ERROR_FAILURE;
 #endif /* USE_NEWSRC_MAP_FILE */
