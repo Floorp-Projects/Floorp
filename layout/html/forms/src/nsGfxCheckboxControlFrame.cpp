@@ -46,6 +46,8 @@
 #include "nsHTMLAtoms.h"
 #include "nsINameSpaceManager.h"
 #include "nsIPresState.h"
+#include "nsIPresShell.h"
+#include "nsIDocument.h"
 #include "nsCSSRendering.h"
 #ifdef ACCESSIBILITY
 #include "nsIAccessibilityService.h"
@@ -284,7 +286,24 @@ void
 nsGfxCheckboxControlFrame::InitializeControl(nsIPresContext* aPresContext)
 {
   nsFormControlFrame::InitializeControl(aPresContext);
-  nsFormControlHelper::Reset(this, aPresContext);
+
+  // Only reset on init if this is the primary shell
+  // Temporary workaround until checkbox state is in content
+  nsCOMPtr<nsIPresShell> presShell;
+  aPresContext->GetShell(getter_AddRefs(presShell));
+  if (!presShell) return;
+
+  nsCOMPtr<nsIDocument> doc;
+  presShell->GetDocument(getter_AddRefs(doc));
+  if (!doc) return;
+
+  nsCOMPtr<nsIPresShell> primaryPresShell;
+  doc->GetShellAt(0, getter_AddRefs(primaryPresShell));
+  if (!primaryPresShell) return;
+
+  if (presShell.get() == primaryPresShell.get()) {
+    nsFormControlHelper::Reset(this, aPresContext);
+  }
 }
 
 //------------------------------------------------------------
