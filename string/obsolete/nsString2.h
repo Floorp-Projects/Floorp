@@ -143,25 +143,9 @@ public:
   void SetCapacity(PRUint32 aLength);
 
 
-  /**
-   *  Determine whether or not the characters in this
-   *  string are in store as 1 or 2 byte (unicode) strings.
-   *  
-   *  @return  TRUE if ordered.
-   */
-  PRBool IsUnicode(void) const {
-    PRBool result=PRBool(mCharSize==eTwoByte);
-    return result;
-  }
-
   /**********************************************************************
     Getters/Setters...
    *********************************************************************/
-
-   /**
-     * Retrieve const ptr to internal buffer; DO NOT TRY TO FREE IT!
-     */
-  const char* GetBuffer(void) const;
 
    /**
      * Set nth character.
@@ -273,12 +257,6 @@ public:
   /**********************************************************************
     string conversion methods...
    *********************************************************************/
-
-  /**
-   * This method constructs a new nsString is a clone of this string.
-   * 
-   */
-  nsString* ToNewString() const;
 
   /**
    * Copies data from internal buffer onto given char* buffer

@@ -525,15 +525,6 @@ nsCString::CompressWhitespace( PRBool aEliminateLeading,PRBool aEliminateTrailin
  *********************************************************************/
 
 /**
- * Creates a duplicate clone (ptr) of this string.
- * @update  gess 01/04/99
- * @return  ptr to clone of this string
- */
-nsCString* nsCString::ToNewString() const {
-  return new nsCString(*this);
-}
-
-/**
  * Copies contents of this string into he given buffer
  * Note that if you provide me a buffer that is smaller than the length of
  * this string, only the number of bytes that will fit are copied. 
