@@ -2158,8 +2158,6 @@ LRESULT CALLBACK DlgProcQuickLaunch(HWND hDlg, UINT msg, WPARAM wParam, LONG lPa
   RECT  rDlg;
   LPSTR szMessage = NULL;
   char  szBuf[MAX_BUF];
-  char  szKey[MAX_BUF];
-  char  szData[MAX_BUF];
 
   switch(msg)
   {
@@ -2216,20 +2214,12 @@ LRESULT CALLBACK DlgProcQuickLaunch(HWND hDlg, UINT msg, WPARAM wParam, LONG lPa
       switch(LOWORD(wParam))
       {
         case IDWIZNEXT:
-          wsprintf(szKey, SETUP_STATE_REG_KEY, sgProduct.szCompanyName, sgProduct.szProductName,
-            sgProduct.szUserAgent);
-           
           if(diQuickLaunch.bTurboModeEnabled)
           {
-            if(IsDlgButtonChecked(hDlg, IDC_CHECK_TURBO_MODE) == BST_CHECKED) {
-              strcpy( szData, "turbo=yes" );
+            if(IsDlgButtonChecked(hDlg, IDC_CHECK_TURBO_MODE) == BST_CHECKED)
               diQuickLaunch.bTurboMode = TRUE;
-            }
-            else {
-              strcpy( szData, "turbo=no" );
+            else
               diQuickLaunch.bTurboMode = FALSE;
-            }
-            AppendWinReg(HKEY_CURRENT_USER, szKey, "browserargs", REG_SZ, szData, 0, strlen( szData ) + 1, FALSE, FALSE );
           }
  
           DestroyWindow(hDlg);
@@ -2264,8 +2254,6 @@ LRESULT CALLBACK DlgProcStartInstall(HWND hDlg, UINT msg, WPARAM wParam, LONG lP
 {
   RECT  rDlg;
   LPSTR szMessage = NULL;
-  char  szKey[MAX_BUF];
-  char  szData[MAX_BUF];
 
   switch(msg)
   {
@@ -2316,22 +2304,6 @@ LRESULT CALLBACK DlgProcStartInstall(HWND hDlg, UINT msg, WPARAM wParam, LONG lP
       switch(LOWORD(wParam))
       {
         case IDWIZNEXT:
-          wsprintf(szKey, SETUP_STATE_REG_KEY, sgProduct.szCompanyName, sgProduct.szProductName,
-            sgProduct.szUserAgent);
-           
-          if(diQuickLaunch.bTurboModeEnabled)
-          {
-            if(diQuickLaunch.bTurboMode == TRUE) {
-              strcpy( szData, "turbo=yes" );
-              diQuickLaunch.bTurboMode = TRUE;
-            }
-            else {
-              strcpy( szData, "turbo=no" );
-              diQuickLaunch.bTurboMode = FALSE;
-            }
-            AppendWinReg(HKEY_CURRENT_USER, szKey, "browserargs", REG_SZ, szData, 0, strlen( szData ) + 1, FALSE, FALSE );
-          }
- 
           DestroyWindow(hDlg);
           DlgSequenceNext();
           break;
@@ -2587,6 +2559,44 @@ BOOL CheckWizardStateCustom(DWORD dwDefault)
   return(TRUE);
 }
 
+/*
+ * Check to see if turbo is enabled.  If so, do the following:
+ *   * Log the turbo status that use had chosen.
+ *   * Set the appropriate Windows registry keys/values.
+ */
+void SetTurboArgs(void)
+{
+  char szData[MAX_BUF];
+  char szKey[MAX_BUF];
+
+  if(diQuickLaunch.bTurboModeEnabled)
+  {
+    /* log if the user selected the turbo mode or not */
+    LogISTurboMode(diQuickLaunch.bTurboMode);
+    LogMSTurboMode(diQuickLaunch.bTurboMode);
+
+    if(diQuickLaunch.bTurboMode)
+      strcpy( szData, "turbo=yes" );
+    else
+      strcpy( szData, "turbo=no" );
+
+    wsprintf(szKey,
+             SETUP_STATE_REG_KEY,
+             sgProduct.szCompanyName,
+             sgProduct.szProductName,
+             sgProduct.szUserAgent);
+    AppendWinReg(HKEY_CURRENT_USER,
+                 szKey,
+                 "browserargs",
+                 REG_SZ,
+                 szData,
+                 0,
+                 strlen( szData ) + 1,
+                 FALSE,
+                 FALSE );
+  }
+}
+
 void DlgSequenceNext()
 {
   HRESULT hrValue;
@@ -2802,15 +2812,12 @@ void DlgSequenceNext()
         /* PRE_DOWNLOAD process file manipulation functions */
         ProcessFileOps(T_PRE_DOWNLOAD, NULL);
 
-        /* log if the user selected the turbo mode or not */
-        if(diQuickLaunch.bTurboModeEnabled)
-        {
-          LogISTurboMode(diQuickLaunch.bTurboMode);
-          LogMSTurboMode(diQuickLaunch.bTurboMode);
-        }
-
         if(RetrieveArchives() == WIZ_OK)
         {
+          /* Check to see if Turbo is required.  If so, set the
+           * appropriate Windows registry keys */
+          SetTurboArgs();
+
           /* POST_DOWNLOAD process file manipulation functions */
           ProcessFileOps(T_POST_DOWNLOAD, NULL);
           /* PRE_XPCOM process file manipulation functions */
