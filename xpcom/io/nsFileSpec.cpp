@@ -595,7 +595,9 @@ nsOutputStream& operator << (nsOutputStream& s, const nsFileURL& url)
 //                                nsFilePath implementation
 //========================================================================================
 
+//----------------------------------------------------------------------------------------
 nsFilePath::nsFilePath(const nsFilePath& inPath)
+//----------------------------------------------------------------------------------------
     : mPath(inPath.mPath)
 #ifdef XP_MAC
     , mFileSpec(inPath.mFileSpec)
