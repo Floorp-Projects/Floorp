@@ -49,6 +49,7 @@
 #include "plstr.h"
 #include "prprf.h"
 
+#include "nsIJSRuntimeService.h"
 #include "jsapi.h"
 
 #ifdef _WIN32
@@ -243,78 +244,7 @@ NS_IMETHODIMP nsPref::StartUp()
 // It must be safe to call this multiple times.
 //----------------------------------------------------------------------------------------
 {
-    nsresult rv = NS_OK;
-    
-    /* --ML hash test */
-    if (!gHashTable)
-        gHashTable = PR_NewHashTable(2048, PR_HashString, PR_CompareStrings,
-                         PR_CompareValues, &pref_HashAllocOps, NULL);
-    if (!gHashTable)
-        return NS_ERROR_FAILURE;
-
-    if (!gMochaTaskState)
-        gMochaTaskState = JS_Init((PRUint32) 0xffffffffL);
-
-    if (!gMochaContext)
-    {
-        gMochaContext = JS_NewContext(gMochaTaskState, 8192);  /* ???? What size? */
-        if (!gMochaContext)
-            return NS_ERROR_FAILURE;
-
-        JS_BeginRequest(gMochaContext);
-
-        gGlobalConfigObject = JS_NewObject(gMochaContext, &global_class, NULL, NULL);
-        if (!gGlobalConfigObject)
-        {
-            JS_EndRequest(gMochaContext);
-            return NS_ERROR_FAILURE;
-        }
-
-        /* MLM - need a global object for set version call now. */
-        JS_SetGlobalObject(gMochaContext, gGlobalConfigObject);
-
-        JS_SetVersion(gMochaContext, JSVERSION_1_5);
-
-        if (!JS_InitStandardClasses(gMochaContext, 
-                        gGlobalConfigObject))
-        {
-            JS_EndRequest(gMochaContext);
-            return NS_ERROR_FAILURE;
-        }
-
-        JS_SetBranchCallback(gMochaContext, pref_BranchCallback);
-        JS_SetErrorReporter(gMochaContext, NULL);
-
-        gMochaPrefObject = JS_DefineObject(gMochaContext, 
-                            gGlobalConfigObject, 
-                            "PrefConfig",
-                            &autoconf_class, 
-                            NULL, 
-                            JSPROP_ENUMERATE|JSPROP_READONLY);
-        
-        if (gMochaPrefObject)
-        {
-            if (!JS_DefineProperties(gMochaContext,
-                         gMochaPrefObject,
-                         autoconf_props))
-            {
-                JS_EndRequest(gMochaContext);
-                return NS_ERROR_FAILURE;
-            }
-            if (!JS_DefineFunctions(gMochaContext,
-                        gMochaPrefObject,
-                        autoconf_methods))
-            {
-                JS_EndRequest(gMochaContext);
-                return NS_ERROR_FAILURE;
-            }
-        }
-
-        if (!pref_InitInitialObjects())
-        	rv = NS_ERROR_FAILURE;
-		JS_EndRequest(gMochaContext);
-    }
-	return rv;
+    return PREF_Init(nsnull) ? NS_OK : NS_ERROR_FAILURE;
 } // nsPref::StartUp
 
 //----------------------------------------------------------------------------------------
@@ -1310,6 +1240,21 @@ CreateNewPref(nsISupports *aDelegate, REFNSIID aIID, void **aResult)
 static nsModuleComponentInfo components[] = {
     { NS_PREF_CLASSNAME, NS_PREF_CID, NS_PREF_PROGID, CreateNewPref, },
 };
+
+
+extern "C" JSRuntime* PREF_GetJSRuntime()
+{
+    nsresult rv;
+
+    NS_WITH_SERVICE(nsIJSRuntimeService, rtsvc, "nsJSRuntimeService", &rv);
+    if (NS_FAILED(rv)) return nsnull;
+
+    JSRuntime* rt;
+    rv = rtsvc->GetRuntime(&rt);
+    if (NS_FAILED(rv)) return nsnull;
+
+    return rt;
+}
 
 ////////////////////////////////////////////////////////////////////////
 // Implement the NSGetModule() exported function for your module
