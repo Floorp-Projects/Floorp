@@ -23,14 +23,23 @@ REQUIRES=xpcom raptor
 
 DEFINES=-D_IMPL_NS_HTML -DWIN32_LEAN_AND_MEAN
 
-CPPSRCS=nsHTMLContentSink.cpp nsHTMLDocument.cpp nsHTMLIFrame.cpp
+CPPSRCS=					\
+	nsHTMLContentSink.cpp			\
+	nsHTMLDocument.cpp			\
+	nsHTMLIFrame.cpp			\
+	nsHTMLParts.cpp				\
+	$(NULL)
 
-CPP_OBJS=.\$(OBJDIR)\nsHTMLContentSink.obj \
-    .\$(OBJDIR)\nsHTMLDocument.obj .\$(OBJDIR)\nsHTMLIFrame.obj
+CPP_OBJS=					\
+	.\$(OBJDIR)\nsHTMLContentSink.obj	\
+	.\$(OBJDIR)\nsHTMLDocument.obj		\
+	.\$(OBJDIR)\nsHTMLIFrame.obj		\
+	.\$(OBJDIR)\nsHTMLParts.obj		\
+	$(NULL)
 
-EXPORTS =		\
- nsIHTMLDocument.h	\
- $(NULL)
+EXPORTS =					\
+	nsIHTMLDocument.h			\
+	$(NULL)
 
 LINCS=-I$(PUBLIC)\xpcom -I$(PUBLIC)\raptor -I$(PUBLIC)\js \
   -I..\..\base\src -I..\..\forms\src \
@@ -51,3 +60,12 @@ libs:: $(LIBRARY)
 clobber::
 	rm -f $(DIST)\lib\$(LIBRARY_NAME).lib
 	rm -f $(DIST)\bin\res\ua.css
+	rm -f builtintags.h
+
+.\$(OBJDIR)\nsHTMLParts.obj: builtintags.h
+
+GENTAGS = $(DEPTH)\htmlparser\tools\gentags.pl
+
+builtintags.h: $(GENTAGS)
+	rm -f builtintags.h
+	$(PERL) $(GENTAGS) > builtintags.h
