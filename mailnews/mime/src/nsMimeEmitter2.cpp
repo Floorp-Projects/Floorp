@@ -21,15 +21,15 @@
 #include "nsMimeEmitter2.h"
 #include "plstr.h"
 #include "nsIMimeEmitter.h"
-#include "nsEmitterUtils.h"
 #include "nsMailHeaders.h"
 #include "nscore.h"
 #include "nsIPref.h"
 #include "nsIServiceManager.h"
 #include "nsEscape.h"
+#include "prmem.h"
+#include "nsEmitterUtils.h"
 
 // For the new pref API's
-static NS_DEFINE_IID(kIPrefIID, NS_IPREF_IID);
 static NS_DEFINE_CID(kPrefCID, NS_PREF_CID);
 
 /*
@@ -149,9 +149,10 @@ nsMimeEmitter2::StartHeader(PRBool rootMailHeader, PRBool headerOnly, const char
   {
     if ( (!headerOnly) && (outCharset) && (*outCharset) )
     {
-      UtilityWrite("<META HTTP-EQUIV=\"Content-Type\" CONTENT=\"text/html; charset=");
-      UtilityWrite(outCharset);
-      UtilityWrite("\">");
+      // This seems to choke Ender so I am going to leave it out for now.
+      //UtilityWrite("<META HTTP-EQUIV=\"Content-Type\" CONTENT=\"text/html; charset=");
+      //UtilityWrite(outCharset);
+      //UtilityWrite("\">");
     }
     UtilityWrite("<BLOCKQUOTE><table BORDER=0>");
   }  
