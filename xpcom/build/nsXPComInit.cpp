@@ -201,7 +201,7 @@ nsXPTIInterfaceInfoManagerGetSingleton(nsISupports* outer,
 
 
 PR_STATIC_CALLBACK(nsresult)
-RegisterGenericFactory(nsIComponentManager* compMgr,
+RegisterGenericFactory(nsIComponentRegistrar* registrar,
                        const nsModuleComponentInfo *info)
 {
     nsresult rv;
@@ -209,14 +209,10 @@ RegisterGenericFactory(nsIComponentManager* compMgr,
     rv = NS_NewGenericFactory(&fact, info);
     if (NS_FAILED(rv)) return rv;
 
-    // what I want to do here is QI for a Component Registration Manager.  Since this
-    // has not been invented yet, QI to the obsolete manager.  Kids, don't do this at home.
-    nsCOMPtr<nsIComponentRegistrar> registrar = do_QueryInterface(compMgr, &rv);
-    if (registrar)
-        rv = registrar->RegisterFactory(info->mCID, 
-                                        info->mDescription,
-                                        info->mContractID, 
-                                        fact);
+    rv = registrar->RegisterFactory(info->mCID, 
+                                    info->mDescription,
+                                    info->mContractID, 
+                                    fact);
     NS_RELEASE(fact);
     return rv;
 }
@@ -519,9 +515,14 @@ nsresult NS_COM NS_InitXPCOM2(nsIServiceManager* *result,
       if ( NS_FAILED(rv) ) return rv;
     }
 
-    for (int i = 0; i < components_length; i++)
-        RegisterGenericFactory(compMgr, &components[i]);
-
+    // what I want to do here is QI for a Component Registration Manager.  Since this
+    // has not been invented yet, QI to the obsolete manager.  Kids, don't do this at home.
+    nsCOMPtr<nsIComponentRegistrar> registrar = do_QueryInterface(
+        NS_STATIC_CAST(nsIComponentManager*,compMgr), &rv);
+    if (registrar) {
+        for (int i = 0; i < components_length; i++)
+            RegisterGenericFactory(registrar, &components[i]);
+    }
     rv = nsComponentManagerImpl::gComponentManager->ReadPersistentRegistry();
 #ifdef DEBUG    
     if (NS_FAILED(rv)) {
