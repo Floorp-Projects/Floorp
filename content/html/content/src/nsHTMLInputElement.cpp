@@ -2687,7 +2687,7 @@ nsHTMLInputElement::WillRemoveFromRadioGroup()
 nsresult
 nsHTMLInputElement::VisitGroup(nsIRadioVisitor* aVisitor)
 {
-  nsresult rv;
+  nsresult rv = NS_OK;
   nsCOMPtr<nsIRadioGroupContainer> container = GetRadioGroupContainer();
   if (container) {
     nsAutoString name;
