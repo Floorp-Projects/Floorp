@@ -355,29 +355,3 @@ nsEmbedChromeRegistry::ConvertChromeURL(nsIURI* aChromeURL, nsACString& aResult)
     
     return NS_OK;
 }
-
-NS_IMETHODIMP
-nsEmbedChromeRegistry::GetStyleSheets(nsIURI* aChromeURL, nsISupportsArray** aResult)
-{
-    *aResult = mEmptyArray;
-    NS_ADDREF(*aResult);
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-nsEmbedChromeRegistry::GetAgentSheets(nsIDocShell* aDocShell,
-                                      nsISupportsArray** aResult)
-{
-    *aResult = mEmptyArray;
-    NS_ADDREF(*aResult);
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-nsEmbedChromeRegistry::GetUserSheets(PRBool aUseChromeSheets,
-                                     nsISupportsArray** aResult)
-{
-    *aResult = mEmptyArray;
-    NS_ADDREF(*aResult);
-    return NS_OK;
-}
