@@ -72,6 +72,9 @@
 **  multiplier              Some numbers prefer conversion.
 **  option_help             Help text to explain the option.
 **
+**  NOTE! that the multiplier should be applied to the default value if you
+**      are going to assign the default_value into anything.
+**
 **  The actual definition of the WEB and CMD macros however is left to the
 **      end user.
 **  We cover those that you do not define herein.
