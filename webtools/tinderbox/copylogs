@@ -6,12 +6,14 @@ for $br (last_successful_builds($tree)) {
   next unless $br->{buildname} =~ /^$warning_buildnames_pat$/;
 
   my $logfile = "$tree/$br->{logfile}";
-  unless (-e $logfile) {
+  if (-e $logfile) {
+    print "Log previously copied for $br->{buildname}, $logfile\n";
+  } else {
     chdir "$tree";
     system "wget http://tinderbox.mozilla.org/$logfile";
     chdir '..';
+    print "Log copied for $br->{buildname}, $logfile\n";
   }
-  last;
 }
 
 sub last_successful_builds {
