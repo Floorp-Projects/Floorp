@@ -1236,12 +1236,6 @@ nsDNSService::Shutdown()
     // Have to break the cycle here, otherwise nsDNSService holds onto the thread
     // and the thread holds onto the nsDNSService via its mRunnable
     mThread = nsnull;
-
-	if (mMonitor) 
-	{
-        nsAutoMonitor::DestroyMonitor(mMonitor);
-		mMonitor = nsnull;
-    }
     
     return rv;
 }
