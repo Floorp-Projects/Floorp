@@ -56,7 +56,7 @@ endif
 endif
 
 
-ifeq (,$(filter mac cocoa,$(MOZ_WIDGET_TOOLKIT)))
+ifeq ($(OS_ARCH),WINNT)
 ifndef BUILD_STATIC_LIBS
 ifndef MOZ_TIMELINE
 GRE_BUILD       = 1;
