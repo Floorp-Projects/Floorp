@@ -748,15 +748,19 @@ CSSLoaderImpl::DidLoadStyle(nsIUnicharStreamLoader* aLoader,
       Cleanup(key, aLoadData);
     }
   }
-  else {  // load failed, cleanup    
-    // Dump error message to console.
-    const char *url;
-    if (nsnull != aLoadData->mURL) 
-      aLoadData->mURL->GetSpec(&url);
-    else
-      url = "";      
-    cerr << "CSSLoaderImpl::DidLoadStyle: Load of URL '" << url 
-      << "' failed.  Error code: " << NS_ERROR_GET_CODE(aStatus) << "\n";
+  else {  // load failed or document now gone, cleanup    
+    if (mDocument) {  // still have doc, must have failed
+      // Dump error message to console.
+      const char *url;
+      if (nsnull != aLoadData->mURL) {
+        aLoadData->mURL->GetSpec(&url);
+      }
+      else {
+        url = "";      
+      }
+      cerr << "CSSLoaderImpl::DidLoadStyle: Load of URL '" << url 
+        << "' failed.  Error code: " << NS_ERROR_GET_CODE(aStatus) << "\n";
+    }
 
     URLKey  key(aLoadData->mURL);
     Cleanup(key, aLoadData);
