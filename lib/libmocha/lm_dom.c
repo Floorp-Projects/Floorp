@@ -40,6 +40,12 @@ PR_BEGIN_MACRO                                                                \
     LO_UnlockLayout();                                                        \
 PR_END_MACRO
 
+JSBool
+lm_CheckNodeDocId(MWContext *context, DOM_HTMLElementPrivate *priv)
+{
+    return priv->doc_id == context->doc_id;
+}
+
 /* from et_moz.c */
 int
 ET_DOMReflow(MWContext *context, LO_Element *element, PRBool reflow,
@@ -99,6 +105,19 @@ DOM_NodeOps lm_NodeOps = {
     lm_DOMAppendChild, DOM_DestroyNodeStub, lm_DOMReflectNode
 };
 
+/*
+ * Signal an exception on doc_id mismatch.  Must be called with layout lock
+ * held (unlocks on failure).
+ */
+#define CHECK_DOC_ID(context, priv)                                           \
+PR_BEGIN_MACRO                                                                \
+    if (!lm_CheckNodeDocId(context, priv)) {                                  \
+        DOM_SignalException(cx, DOM_WRONG_DOCUMENT_ERR);                      \
+        LO_UnlockLayout();                                                    \
+        return JS_FALSE;                                                      \
+    }                                                                         \
+PR_END_MACRO
+
 static JSBool
 lm_DOMSetAttributes(JSContext *cx, DOM_Element *element, const char *name,
                     const char *value)
@@ -107,21 +126,50 @@ lm_DOMSetAttributes(JSContext *cx, DOM_Element *element, const char *name,
     MochaDecoder *decoder;
     MWContext *context;
     DOM_HTMLElementPrivate *priv;
-    void *ele1, *ele2;
+    void *ele;
+    lo_DocState *doc; 
 
     decoder = (MochaDecoder *)JS_GetPrivate(cx, JS_GetGlobalObject(cx));
     context = decoder->window_context;
+    doc = (lo_FetchTopState(context->doc_id))->doc_state;
     priv = (DOM_HTMLElementPrivate *)element->node.data;
 
     switch(priv->tagtype) {
-      case P_TABLE_DATA:
-        if (!XP_STRCASECMP("valign", name) ||
-            !XP_STRCASECMP("halign", name) ||
-            !XP_STRCASECMP("bgcolor", name)) {
-            ele1 = priv->ele_start;
-            matched = JS_TRUE;
+      case P_TABLE_DATA: {
+        LO_Element *iter, *start, *end;
+        lo_TableCell *cell;
+
+        LO_LockLayout();
+        CHECK_DOC_ID(context, priv);
+        cell = (lo_TableCell *)priv->ele_start;
+        if (!cell)
+            goto out_unlock;
+            
+        if (!XP_STRCASECMP("valign", name)) {
+            /* tweak valign */
+        } else if(!XP_STRCASECMP("halign", name)) {
+            /* tweak halign */
+        } else if(!XP_STRCASECMP("bgcolor", name)) {
+            LO_Color rgb;
+            start = cell->cell->cell_list;
+            end = cell->cell->cell_list_end;
+            if (!start ||
+                !LO_ParseRGB((char *)value, &rgb.red, &rgb.green, &rgb.blue))
+                goto out_unlock;
+            for (iter = start; iter && iter != end; iter = iter->lo_any.next)
+                lo_SetColor(iter, &rgb, doc, TRUE);
+            if (iter != start)
+                lo_SetColor(start, &rgb, doc, TRUE);
+        } else {
+            /* No match */
+            matched = JS_FALSE;
+            LO_UnlockLayout();
+            break;
         }
+        LO_UnlockLayout();
+        matched = JS_TRUE;
         break;
+      }
       default:;
     }
 
@@ -130,9 +178,10 @@ lm_DOMSetAttributes(JSContext *cx, DOM_Element *element, const char *name,
         return JS_FALSE;
     }
 
-    ET_DOMSetAttributes(context, priv->tagtype, ele1, ele2,
-                        name, value, decoder->doc_id);
-
+    return (JSBool)ET_DOMReflow(context, (LO_Element *)ele, PR_TRUE,
+                                decoder->doc_id);
+  out_unlock:
+    LO_UnlockLayout();
     return JS_TRUE;
 }
 
@@ -199,7 +248,10 @@ lm_CDataOp(JSContext *cx, DOM_CharacterData *cdata, DOM_CDataOperationCode op)
              * sure we're not a subdoc, etc.  All this logic lives in
              * lo_process_title_tag, and should be refactored.
              */
-            FE_SetDocTitle(context, data);
+            LAYLOCKED(
+                CHECK_DOC_ID(context, ELEMENT_PRIV(node));
+                FE_SetDocTitle(context, data);
+                );
             return JS_TRUE;
         }
     }
@@ -257,25 +309,21 @@ lm_NodeForTag(PA_Tag *tag, DOM_Node *current, MWContext *context, int16 csid)
         return NULL;
       default:
         /* just a regular old element */
-        element = XP_NEW_ZAP(DOM_Element);
-        if (!element) {
+        node = (DOM_Node *)
+            DOM_NewElement(PA_TagString(tag->type), &lm_ElementOps,
+                           (char *)PA_FetchParamValue(tag, "name", csid),
+                           &lm_NodeOps, 0);
+        if (!node)
             return NULL;
-        }
-        element->ops = &lm_ElementOps;
-        element->tagName = PA_TagString(tag->type);
-
-        node = (DOM_Node *)element;
-        node->type = NODE_TYPE_ELEMENT;
-        /* what about ID? */
-        node->name = (char *)PA_FetchParamValue(tag, "name", csid);
-        node->ops = &lm_NodeOps;
     }
+
     elepriv = XP_NEW_ZAP(DOM_HTMLElementPrivate);
     if (!elepriv) {
         XP_FREE(element);
         return NULL;
     }
     elepriv->tagtype = tag->type;
+    elepriv->doc_id = context->doc_id;
     node->data = elepriv;
     return node;
 }
@@ -403,6 +451,8 @@ LM_ReflectTagNode(PA_Tag *tag, void *doc_state, MWContext *context)
         }
         last_node = (DOM_Node *)DOM_HTMLPopElementByType(tag->type,
                                            (DOM_Element *)CURRENT_NODE(doc));
+        if (!last_node)
+            return NULL;
         CURRENT_NODE(doc) = last_node->parent;
         return last_node;
     }
@@ -414,7 +464,7 @@ LM_ReflectTagNode(PA_Tag *tag, void *doc_state, MWContext *context)
             fprintf(stderr, "bad push of node %d for tag %d\n",
                     node->type, tag->type);
 #endif
-            if (node->ops->destroyNode)
+            if (node->ops && node->ops->destroyNode)
                 node->ops->destroyNode(context->mocha_context,
                                        node);
             return NULL;
@@ -435,7 +485,7 @@ LM_ReflectTagNode(PA_Tag *tag, void *doc_state, MWContext *context)
                 tag->type);
 #endif
     }
-    PR_ASSERT(!CURRENT_NODE(doc)->parent || 
+    XP_ASSERT(!CURRENT_NODE(doc)->parent || 
               CURRENT_NODE(doc)->parent->type != NODE_TYPE_TEXT);
 
     return node;
@@ -499,7 +549,7 @@ DOM_HTMLPopElementByType(TagType type, DOM_Element *element)
         /* really, we're closing the enclosing parent */
         element = (DOM_Element *)element->node.parent;
 
-    PR_ASSERT(element->node.type == NODE_TYPE_ELEMENT);
+    XP_ASSERT(element->node.type == NODE_TYPE_ELEMENT);
     if (element->node.type != NODE_TYPE_ELEMENT)
         return NULL;
 

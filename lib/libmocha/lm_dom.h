@@ -30,6 +30,7 @@ typedef struct DOM_HTMLElementPrivate {
     TagType 		tagtype;
     LO_Element *	ele_start;
     LO_Element *	ele_end;
+    uint32			doc_id;
 } DOM_HTMLElementPrivate;
 
 #define ELEMENT_PRIV(e) ((DOM_HTMLElementPrivate *)(((DOM_Node *)(e))->data))
@@ -53,6 +54,9 @@ lm_DOMInitAttribute(MochaDecoder *decoder);
 
 void
 lm_DestroyDocumentNodes(MWContext *context);
+
+JSBool
+lm_CheckDocId(MWContext *context, DOM_HTMLElementPrivate *priv);
 
 #endif /* DOM */
 
