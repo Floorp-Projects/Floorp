@@ -1487,7 +1487,7 @@ nsresult nsRange::OwnerChildInserted(nsIContent* aParentNode, PRInt32 aOffset)
   nsresult res;
   
   res = GetDOMNodeFromContent(parent, &domNode);
-  if (NS_SUCCEEDED(res))  return res;
+  if (NS_FAILED(res))  return res;
   if (!domNode) return NS_ERROR_UNEXPECTED;
 
   while (theRange = do_QueryInterface(NS_STATIC_CAST(nsRange*, (theRangeList->ElementAt(loop))))) 
@@ -1533,7 +1533,7 @@ nsresult nsRange::OwnerChildRemoved(nsIContent* aParentNode, PRInt32 aOffset, ns
   nsresult res;
   
   res = GetDOMNodeFromContent(parent, &domNode);
-  if (NS_SUCCEEDED(res))  return res;
+  if (NS_FAILED(res))  return res;
   if (!domNode) return NS_ERROR_UNEXPECTED;
 
   // any ranges that are in the parentNode may need to have offsets updated
@@ -1584,7 +1584,7 @@ nsresult nsRange::OwnerChildReplaced(nsIContent* aParentNode, PRInt32 aOffset, n
   nsresult res;
   
   res = GetDOMNodeFromContent(parent, &parentDomNode);
-  if (NS_SUCCEEDED(res))  return res;
+  if (NS_FAILED(res))  return res;
   if (!parentDomNode) return NS_ERROR_UNEXPECTED;
   
   res = PopRanges(parentDomNode, aOffset, replaced);
@@ -1609,7 +1609,7 @@ nsresult nsRange::TextOwnerChanged(nsIContent* aTextNode, PRInt32 aStartChanged,
   nsresult res;
   
   res = GetDOMNodeFromContent(textNode, &domNode);
-  if (NS_SUCCEEDED(res))  return res;
+  if (NS_FAILED(res))  return res;
   if (!domNode) return NS_ERROR_UNEXPECTED;
 
   // any ranges that are in the textNode may need to have offsets updated
