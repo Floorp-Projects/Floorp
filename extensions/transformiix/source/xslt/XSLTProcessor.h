@@ -246,11 +246,6 @@ private:
     **/
     String xslVersion;
 
-    /**
-     * Named Map for quick reference to XSL Types
-    **/
-    NamedMap xslTypes;
-    
     /*
      * Used as default expression for some elements
      */
@@ -268,12 +263,6 @@ private:
      * Processes the xsl:with-param elements of the given xsl action
     **/
     NamedMap* processParameters(Element* xslAction, Node* context, ProcessorState* ps);
-
-    /**
-     * Looks up the given XSLType with the given name
-     * The ProcessorState is used to get the current XSLT namespace
-    **/
-    short getElementType(Element* aElement, ProcessorState* aPs);
 
 #ifdef TX_EXE
     /**
@@ -388,49 +377,5 @@ private:
     nsCOMPtr<nsIObserver> mObserver;
 #endif
 }; //-- XSLTProcessor
-
-class XSLType : public TxObject {
-
-public:
-    enum types {
-        APPLY_IMPORTS = 1,
-        APPLY_TEMPLATES,
-        ATTRIBUTE,
-        ATTRIBUTE_SET,
-        CALL_TEMPLATE,
-        CHOOSE,
-        COMMENT,
-        COPY,
-        COPY_OF,
-        DECIMAL_FORMAT,
-        ELEMENT,
-        IF,
-        IMPORT,
-        INCLUDE,
-        KEY,
-        FOR_EACH,
-        LITERAL,
-        MESSAGE,
-        NUMBER,
-        OTHERWISE,
-        OUTPUT,
-        PARAM,
-        PROC_INST,
-        PRESERVE_SPACE,
-        SORT,
-        STRIP_SPACE,
-        TEMPLATE,
-        TEXT,
-        VALUE_OF,
-        VARIABLE,
-        WHEN,
-        WITH_PARAM
-    };
-
-    XSLType(const XSLType& xslType);
-    XSLType();
-    XSLType(short type);
-    short type;
-};
 
 #endif
