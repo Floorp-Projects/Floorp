@@ -75,61 +75,21 @@ nsXULIFrameElement::GetDocShell(nsIDocShell** aDocShell)
 {
    NS_ENSURE_ARG_POINTER(aDocShell);
 
-   NS_ERROR("Not Yet Implemented");
+   nsCOMPtr<nsIContent> content(do_QueryInterface(mOuter));
+   nsCOMPtr<nsIDocument> document;
+   content->GetDocument(*getter_AddRefs(document));
 
+   // First we need to obtain the popup set frame that encapsulates the target popup.
+   // Without a popup set, we're dead in the water.
+   nsCOMPtr<nsIPresShell> presShell = getter_AddRefs(document->GetShellAt(0));
+   if(!presShell)
+      return NS_OK;
+
+   nsCOMPtr<nsISupports> subShell;
+   presShell->GetSubShellFor(content, getter_AddRefs(subShell));
+   if(!subShell)
+      return NS_OK;
+
+   CallQueryInterface(subShell, aDocShell);
    return NS_OK;
-/*
-
-  nsresult rv = NS_OK;
-
-  nsCOMPtr<nsIContent> content(do_QueryInterface(mOuter));
-  nsCOMPtr<nsIDocument> document;
-  content->GetDocument(*getter_AddRefs(document));
-
-  // First we need to obtain the popup set frame that encapsulates the target popup.
-  // Without a popup set, we're dead in the water.
-  nsCOMPtr<nsIPresShell> presShell = getter_AddRefs(document->GetShellAt(0));
-  if (!presShell)
-    return NS_OK;
-
-  // Get the parent of the popup content.
-  nsCOMPtr<nsIDOMNode> popupSet;
-  mOuter->GetParentNode(getter_AddRefs(popupSet));
-  if (!popupSet)
-    return NS_OK;
-
-  // Do a sanity check to ensure we have a popup set or menu element.
-  nsString tagName;
-  nsCOMPtr<nsIDOMElement> popupSetElement = do_QueryInterface(popupSet);
-  popupSetElement->GetTagName(tagName);
-  if (tagName != "popupset" && tagName != "menu")
-    return NS_OK;
-
-  // Now obtain the popup set frame.
-  nsCOMPtr<nsIContent> popupSetContent = do_QueryInterface(popupSet);
-  nsIFrame* frame;
-  presShell->GetPrimaryFrameFor(popupSetContent, &frame);  
-  if (!frame)
-    return NS_OK;
-
-  // Obtain the element frame.
-  nsCOMPtr<nsIContent> elementContent = do_QueryInterface(aElement);
-  nsIFrame* elementFrame;
-  presShell->GetPrimaryFrameFor(elementContent, &elementFrame);  
-  if (!elementFrame)
-    return NS_OK;
-
-  //XXX Once we have the frame we need to get to the inner frame and then 
-  // extract the object the inner frame is holding on to.
-  
-  nsCOMPtr<nsIHTMLInnerFrame> innerFrame;
-  elementFrame->GetInnerFrame(getter_AddRefs(innerFrame));
-
-  nsCOMPtr<nsIHTMLIFrameInnerFrame> iframeInnerFrame(do_QueryInterface(innerFrame));
-  if(!iframeInnerFrame)
-    return NS_OK;
-
-  iframeInnerFrame->GetDocShell(aDocShell);
-
-  return NS_OK; */
 }
