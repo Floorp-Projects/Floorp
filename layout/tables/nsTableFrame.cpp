@@ -4236,22 +4236,8 @@ nscoord nsTableFrame::ComputeDesiredHeight(nsIPresContext& aPresContext,
         const nsStyleDisplay *rowGroupDisplay;
         rowGroupFrame->GetStyleData(eStyleStruct_Display, ((const nsStyleStruct *&)rowGroupDisplay));
         if (PR_TRUE==IsRowGroup(rowGroupDisplay->mDisplay))
-        { // the rows in rowGroupFrame need to be expanded by rowHeightDelta[i]
-          // and the rowgroup itself needs to be expanded by SUM(row height deltas)
-          nsIFrame * rowFrame=nsnull;
-          rv = rowGroupFrame->FirstChild(nsnull, &rowFrame);
-          while ((NS_SUCCEEDED(rv)) && (nsnull!=rowFrame))
-          {
-            const nsStyleDisplay *rowDisplay;
-            rowFrame->GetStyleData(eStyleStruct_Display, ((const nsStyleStruct *&)rowDisplay));
-            if (NS_STYLE_DISPLAY_TABLE_ROW == rowDisplay->mDisplay)
-            { // the row needs to be expanded by the proportion this row contributed to the original height
-              nsRect rowRect;
-              rowFrame->GetRect(rowRect);
-              sumOfRowHeights += rowRect.height;
-            }
-            rowFrame->GetNextSibling(&rowFrame);
-          }
+        { 
+          ((nsTableRowGroupFrame*)rowGroupFrame)->GetHeightOfRows(sumOfRowHeights);
         }
         rowGroupFrame->GetNextSibling(&rowGroupFrame);
       }
