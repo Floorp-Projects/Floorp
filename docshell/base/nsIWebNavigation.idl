@@ -77,8 +77,8 @@ interface nsIWebNavigation : nsISupports
 	Definitions for the reload types.
 	*/
 	const long reloadNormal=0;  // Does a normal reload
-	const long reloadBypassCache=2; // Reloads bypassing the cache
-	const long reloadBypassProxy=3; // Reloads bypassing the proxy
+	const long reloadBypassCache=1; // Reloads bypassing the cache
+	const long reloadBypassProxy=2; // Reloads bypassing the proxy
 	const long reloadBypassProxyAndCache=3; // Reloads bypassing proxy and cache
 
 	/*
