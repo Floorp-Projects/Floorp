@@ -469,7 +469,7 @@ void nsStrPrivate::Trim(nsStr& aDest,const char* aSet,PRBool aEliminateLeading,P
     if(aEliminateLeading) {
       while(++theIndex<=theMax) {
         PRUnichar theChar=aDest.GetCharAt(theIndex);
-        PRInt32 thePos=::FindChar1(aSet,theSetLen,0,theChar,PR_FALSE,theSetLen);
+        PRInt32 thePos=::FindChar1(aSet,theSetLen,0,theChar,theSetLen);
         if(kNotFound==thePos)
           break;
       }
@@ -490,7 +490,7 @@ void nsStrPrivate::Trim(nsStr& aDest,const char* aSet,PRBool aEliminateLeading,P
       PRInt32 theNewLen=theIndex;
       while(--theIndex>=0) {
         PRUnichar theChar=aDest.GetCharAt(theIndex);  //read at end now...
-        PRInt32 thePos=::FindChar1(aSet,theSetLen,0,theChar,PR_FALSE,theSetLen);
+        PRInt32 thePos=::FindChar1(aSet,theSetLen,0,theChar,theSetLen);
         if(kNotFound<thePos) 
           theNewLen=theIndex;
         else break;
@@ -706,7 +706,7 @@ PRInt32 nsStrPrivate::FindSubstr2in2(const nsStr& aDest,const nsStr& aTarget, PR
 
 PRInt32 nsStrPrivate::FindChar1(const nsStr& aDest,PRUnichar aChar, PRInt32 anOffset,PRInt32 aCount) {
   NS_ASSERTION(aDest.GetCharSize() == eOneByte, "Must be 1 byte");
-  return ::FindChar1(aDest.mStr,aDest.mLength,anOffset,aChar,PR_FALSE,aCount);
+  return ::FindChar1(aDest.mStr,aDest.mLength,anOffset,aChar,aCount);
 }
 
 PRInt32 nsStrPrivate::FindChar2(const nsStr& aDest,PRUnichar aChar, PRInt32 anOffset,PRInt32 aCount) {
