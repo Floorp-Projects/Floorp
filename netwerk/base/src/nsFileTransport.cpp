@@ -929,7 +929,7 @@ nsFileTransport::Process(nsIProgressEventSink *progressSink)
         if (mTransferAmount >= 0)
             transferAmt = PR_MIN(transferAmt, (PRUint32)mTransferAmount);
 
-        PRUint32 total, offset = mSinkWrapper->GetBytesWritten();
+        PRUint32 total = 0, offset = mSinkWrapper->GetBytesWritten();
 
         // Ask the provider for data
         nsresult status = mProvider->OnDataWritable(this, mContext,

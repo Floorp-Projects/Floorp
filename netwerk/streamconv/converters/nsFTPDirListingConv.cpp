@@ -927,7 +927,7 @@ nsFTPDirListingConv::DigestBufferLines(char *aBuffer, nsCString &aString) {
             int flagcwd = 0;
             int when = 0;
             int flagsize = 0;
-            unsigned long size;
+            unsigned long size = 0;
             PRBool processing = PR_TRUE;
             while (*line && processing)
                 switch (*line) {

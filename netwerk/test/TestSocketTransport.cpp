@@ -419,7 +419,7 @@ TestConnection::Run(void)
 
 nsresult TestConnection::WriteBuffer(void)
 {
-  nsresult rv;
+  nsresult rv = NS_ERROR_FAILURE;
   char *buffer;
   PRInt32 size;
   PRUint32 bytesWritten;

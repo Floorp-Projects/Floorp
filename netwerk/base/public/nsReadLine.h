@@ -60,7 +60,7 @@ NS_ReadLine (nsIInputStream* aStream, nsLineBuffer * aBuffer,
   nsAutoString temp;
   *more = PR_TRUE;
   PRBool eolStarted = PR_FALSE;
-  char eolchar;
+  char eolchar = '\0';
   aLine.Truncate();
   while (1) { // will be returning out of this loop on eol or eof
     if (aBuffer->empty) { // buffer is empty.  Read into it.
