@@ -132,13 +132,13 @@ public:
         LOG(("got FORWARD\n"));
 
         ipcMessageCast<ipcmMessageForward> msg(rawMsg);
-        ipcClient *dest = IPC_GetClientByID(msg->DestClientID());
+        PRUint32 destID = msg->DestClientID();
 
         ipcMessage *newMsg = new ipcMessage();
         newMsg->Init(msg->InnerTarget(),
                      msg->InnerData(),
                      msg->InnerDataLen());
-        IPC_SendMsg(dest, newMsg);
+        IPC_SendMsg(destID, newMsg);
     }
 
     //
