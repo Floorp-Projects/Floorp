@@ -35,24 +35,37 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include <Foundation/NSUserDefaults.h>
 #include <mach-o/dyld.h>
+#include <sys/utsname.h>
 
+#import "NSString+Utils.h"
+
+#import "ChimeraUIConstants.h"
 #import "MainController.h"
 #import "BrowserWindowController.h"
+#import "BookmarksMenu.h"
 #import "BookmarksService.h"
+#import "BookmarkInfoController.h";
 #import "CHBrowserService.h"
 #import "AboutBox.h"
 #import "UserDefaults.h"
+#import "KeychainService.h"
+#import "RemoteDataProvider.h"
+#import "ProgressDlgController.h"
+#import "JSConsole.h"
+#import "NetworkServices.h"
 
 #include "nsCOMPtr.h"
 #include "nsEmbedAPI.h"
 
+#include "nsIWebBrowserChrome.h"
 #include "nsIServiceManager.h"
 #include "nsIIOService.h"
 #include "nsIPref.h"
 #include "nsIChromeRegistry.h"
-
+#include "nsIObserverService.h"
+#include "nsIGenericFactory.h"
+#include "nsIEventQueueService.h"
 
 #ifdef _BUILD_STATIC_BIN
 #include "nsStaticComponent.h"
@@ -60,53 +73,88 @@ nsresult PR_CALLBACK
 app_getModuleInfo(nsStaticModuleInfo **info, PRUint32 *count);
 #endif
 
+extern const nsModuleComponentInfo* GetAppComponents(unsigned int * outNumComponents);
+
 static const char* ioServiceContractID = "@mozilla.org/network/io-service;1";
+
+// Constants on how to behave when we are asked to open a URL from
+// another application. These are values of the "browser.reuse_window" pref.
+const int kOpenNewWindowOnAE = 0;
+const int kOpenNewTabOnAE = 1;
+const int kReuseWindowOnAE = 2;
+
+// Because of bug #2751274, on Mac OS X 10.1.x the sender for this action method when called from
+// a dock menu item is always the NSApplication object, not the actual menu item.  This ordinarily 
+// makes it impossible to take action based on which menu item was selected, because we don't know
+// which menu item called our action method. We have a workaround
+// in this sample for the bug (using NSInvocations), but we set up a #define here for the AppKit
+// version that is fixed (in a future release of Mac OS X) so that the code can automatically switch
+// over to doing things the right way when the time comes.
+#define kFixedDockMenuAppKitVersion 632
+
+@interface MainController(MainControllerPrivate)
+
+- (void)setupStartpage;
+- (void)setupNetworkBrowser;
+- (void)foundService:(NSNetService*)inService moreComing:(BOOL)more;
+- (void)rebuildNetServiceMenu;
+
+@end
+
 
 @implementation MainController
 
 -(id)init
 {
-    if ( (self = [super init]) ) {
-        NSUserDefaults* defaults = [NSUserDefaults standardUserDefaults];
-        if ([defaults boolForKey:USER_DEFAULTS_AUTOREGISTER_KEY]) {
-            // This option causes us to simply initialize embedding and exit.
-            NSString *path = [[[NSBundle mainBundle] executablePath] stringByDeletingLastPathComponent];
-            setenv("MOZILLA_FIVE_HOME", [path fileSystemRepresentation], 1);
+  if ( (self = [super init]) )
+  {
+    NSUserDefaults* defaults = [NSUserDefaults standardUserDefaults];
+    if ([defaults boolForKey:USER_DEFAULTS_AUTOREGISTER_KEY]) 
+    {
+      // This option causes us to simply initialize embedding and exit.
+      NSString *path = [[[NSBundle mainBundle] executablePath] stringByDeletingLastPathComponent];
+      setenv("MOZILLA_FIVE_HOME", [path fileSystemRepresentation], 1);
 
 #ifdef _BUILD_STATIC_BIN
-            NSGetStaticModuleInfo = app_getModuleInfo;
+      NSGetStaticModuleInfo = app_getModuleInfo;
 #endif
 
-            if (NS_SUCCEEDED(NS_InitEmbedding(nsnull, nsnull))) {
-                // Register new chrome
-                nsCOMPtr<nsIChromeRegistry> chromeReg =
-                  do_GetService("@mozilla.org/chrome/chrome-registry;1");
-                if (chromeReg) {
-                  chromeReg->CheckForNewChrome();
-                  chromeReg = 0;
-                }
-                NS_TermEmbedding();
-            }
-
-            [NSApp terminate:self];
-            return self;
+      if (NS_SUCCEEDED(NS_InitEmbedding(nsnull, nsnull))) {
+        // Register new chrome
+        nsCOMPtr<nsIChromeRegistry> chromeReg =
+          do_GetService("@mozilla.org/chrome/chrome-registry;1");
+        if (chromeReg) {
+          chromeReg->CheckForNewChrome();
+          chromeReg = 0;
         }
+        NS_TermEmbedding();
+      }
 
-        NSString* url = [defaults stringForKey:USER_DEFAULTS_URL_KEY];
-        mStartURL = url ? [url retain] : nil;
-        mSplashScreen = [[SplashScreenWindow alloc] splashImage:nil withFade:NO withStatusRect:NSMakeRect(0,0,0,0)];
-        mFindDialog = nil;
-        mMenuBookmarks = nil;
-        
-        [NSApp setServicesProvider:self];
-
+      [NSApp terminate:self];
+      return self;
     }
-    return self;
+
+    NSString* url = [defaults stringForKey:USER_DEFAULTS_URL_KEY];
+    mStartURL = url ? [url retain] : nil;
+    mSplashScreen = [[SplashScreenWindow alloc] initWithImage:[NSImage imageNamed:@"splash"] withFade:NO];
+    mFindDialog = nil;
+    mMenuBookmarks = nil;
+    
+    [NSApp setServicesProvider:self];
+        
+    // Initialize shared menu support
+    mSharedMenusObj = [[SharedMenusObj alloc] init];
+  }
+  return self;
 }
 
 -(void)dealloc
 {
+  // Terminate shared menus
+  [mSharedMenusObj release];
+
   [mFindDialog release];
+  [mKeychainService release];
   [super dealloc];
 #if DEBUG
   NSLog(@"Main controller died");
@@ -118,8 +166,19 @@ static const char* ioServiceContractID = "@mozilla.org/network/io-service;1";
 #ifdef _BUILD_STATIC_BIN
   [self updatePrebinding];
 #endif
+  
   // initialize if we haven't already.
   [self preferenceManager];
+  
+	[self setupStartpage];
+
+  // register our app components with the embed layer
+  unsigned int numComps = 0;
+  const nsModuleComponentInfo* comps = GetAppComponents(&numComps);
+  CHBrowserService::RegisterAppComponents(comps, numComps);
+
+  // make sure we have a bookmarks manager
+  BookmarksManager* bmManager = [BookmarksManager sharedBookmarksManager];
 
   // don't open a new browser window if we already have one
   // (for example, from an GetURL Apple Event)
@@ -130,11 +189,33 @@ static const char* ioServiceContractID = "@mozilla.org/network/io-service;1";
   [mSplashScreen close];
 
   [mBookmarksMenu setAutoenablesItems: NO];
-  mMenuBookmarks = new BookmarksService((BookmarksDataSource*)nil);
-  mMenuBookmarks->AddObserver();
-  BookmarksService::ConstructBookmarksMenu(mBookmarksMenu, nsnull);
-  BookmarksService::gMainController = self;
-    
+
+  // menubar bookmarks
+  int firstBookmarkItem = [mBookmarksMenu indexOfItemWithTag:kBookmarksDividerTag] + 1;
+  mMenuBookmarks = [[BookmarksMenu alloc] initWithMenu: mBookmarksMenu
+                                             firstItem: firstBookmarkItem
+                                           rootContent: [bmManager getRootContent]
+                                         watchedFolder: eBookmarksFolderRoot];
+  [bmManager addBookmarksClient:mMenuBookmarks];
+
+  // dock bookmarks. Note that we disable them on 10.1 because of a bug noted here:
+  // http://developer.apple.com/samplecode/Sample_Code/Cocoa/DeskPictAppDockMenu.htm
+  if (NSAppKitVersionNumber >= kFixedDockMenuAppKitVersion)
+  {
+    [mDockMenu setAutoenablesItems:NO];
+    mDockBookmarks = [[BookmarksMenu alloc] initWithMenu: mDockMenu
+                                              firstItem: 0
+                                            rootContent: [bmManager getDockMenuRoot]
+                                          watchedFolder: eBookmarksFolderDockMenu];
+    [bmManager addBookmarksClient:mDockBookmarks];
+  }
+  else
+  {
+    // just empty the menu
+    while ([mDockMenu numberOfItems] > 0)
+      [mDockMenu removeItemAtIndex:0];
+  }
+  
   // Initialize offline mode.
   mOffline = NO;
   nsCOMPtr<nsIIOService> ioService(do_GetService(ioServiceContractID));
@@ -144,36 +225,121 @@ static const char* ioServiceContractID = "@mozilla.org/network/io-service;1";
   ioService->GetOffline(&offline);
   mOffline = offline;
     
-  // Set the menu item's text to "Go Online" if we're currently
-  // offline.
-/*
-  if (mOffline)
-    [mOfflineMenuItem setTitle: @"Go Online"];	// XXX localize me
-*/
+  // Initialize the keychain service.
+  mKeychainService = [KeychainService instance];
+  
+  // bring up the JS console service
+  BOOL success;
+  if ([[PreferenceManager sharedInstance] getBooleanPref:"chimera.log_js_to_console" withSuccess:&success])
+    [JSConsole sharedJSConsole];
+
+  BOOL doingRendezvous = NO;
+  
+  if ([[PreferenceManager sharedInstance] getBooleanPref:"chimera.enable_rendezvous" withSuccess:&success])
+  {
+    // are we on 10.2.3 or higher? The DNS resolution stuff is broken before 10.2.3
+    long systemVersion;
+    OSErr err = ::Gestalt(gestaltSystemVersion, &systemVersion);
+    if ((err == noErr) && (systemVersion >= 0x00001023))
+    {
+      mNetworkServices = [[NetworkServices alloc] init];
+      [mNetworkServices registerClient:self];
+      [mNetworkServices startServices];
+      doingRendezvous = YES;
+    }
+  }
+  
+  if (!doingRendezvous)
+  {
+    // remove rendezvous items
+    int itemIndex;
+    while ((itemIndex = [mGoMenu indexOfItemWithTag:kRendezvousRelatedItemTag]) != -1)
+      [mGoMenu removeItemAtIndex:itemIndex];
+  }
+}
+
+- (NSApplicationTerminateReply)applicationShouldTerminate:(NSApplication *)sender
+{
+  if ([ProgressDlgController numDownloadInProgress] > 0)
+  {
+    NSString *alert     = NSLocalizedString(@"QuitWithDownloadsMsg", @"Really Quit?");
+    NSString *message   = NSLocalizedString(@"QuitWithDownloadsExpl", @"");
+    NSString *okButton  = NSLocalizedString(@"QuitWithdownloadsButtonDefault",@"Cancel");
+    NSString *altButton = NSLocalizedString(@"QuitWithdownloadsButtonAlt",@"Quit");
+    // while the panel is up, download dialogs won't update (no timers firing) but
+    // downloads continue (PLEvents being processed)
+    if (NSRunAlertPanel(alert, message, okButton, altButton, nil) == NSAlertDefaultReturn)
+      return NSTerminateCancel;
+  }
+  
+  return NSTerminateNow;
 }
 
 -(void)applicationWillTerminate: (NSNotification*)aNotification
 {
 #if DEBUG
-    NSLog(@"Termination notification");
+  NSLog(@"App will terminate notification");
 #endif
-
-    // Autosave one of the windows.
-    [[[mApplication mainWindow] windowController] autosaveWindowFrame];
-    
-    mMenuBookmarks->RemoveObserver();
-    delete mMenuBookmarks;
-    mMenuBookmarks = nsnull;
-    
-    // Release before calling TermEmbedding since we need to access XPCOM
-    // to save preferences
-    [mPreferencesController release];
-    [mPreferenceManager release];
-
-    CHBrowserService::TermEmbedding();
-    
-    [self autorelease];
+  
+  [mNetworkServices unregisterClient:self];
+  [mNetworkServices release];
+  
+  // Autosave one of the windows.
+  [[[mApplication mainWindow] windowController] autosaveWindowFrame];
+  
+  // Cancel outstanding site icon loads
+  [[RemoteDataProvider sharedRemoteDataProvider] cancelOutstandingRequests];
+  
+  // make sure the info window is closed
+  [BookmarkInfoController closeBookmarkInfoController];
+  
+  BookmarksManager* bmManager = [BookmarksManager sharedBookmarksManagerDontAlloc];
+  if (bmManager)
+  {
+    [bmManager removeBookmarksClient:mMenuBookmarks];
+    [bmManager removeBookmarksClient:mDockBookmarks];
+  }
+  
+  // Release before calling TermEmbedding since we need to access XPCOM
+  // to save preferences
+  [mPreferencesController release];
+  [mPreferenceManager release];
+  
+  CHBrowserService::TermEmbedding();
+  
+  [self autorelease];
 }
+
+- (NSMenu *)applicationDockMenu:(NSApplication *)sender
+{
+  return mDockMenu;
+}
+
+- (void)setupStartpage
+{
+  // for non-nightly builds, show a special start page
+  PreferenceManager* prefManager = [PreferenceManager sharedInstance];
+
+  NSString* vendorSubString = [prefManager getStringPref:"general.useragent.vendorSub" withSuccess:NULL];
+  if (![vendorSubString hasSuffix:@"+"])
+  {
+    // has the user seen this already?
+    NSString* startPageRev = [prefManager getStringPref:"browser.startup_page_override.version" withSuccess:NULL];
+    if (![vendorSubString isEqualToString:startPageRev])
+    {
+      NSString* startPage = NSLocalizedStringFromTable( @"StartPageDefault", @"WebsiteDefaults", nil);
+      if ([startPage length] && ![startPage isEqualToString:@"StartPageDefault"])
+      {
+        [mStartURL release];
+        mStartURL = [startPage retain];
+      }
+      
+      // set the pref to say they've seen it
+      [prefManager setPref:"browser.startup_page_override.version" toString:vendorSubString];
+    }
+  }
+}
+
 
 -(IBAction)newWindow:(id)aSender
 {
@@ -203,28 +369,28 @@ static const char* ioServiceContractID = "@mozilla.org/network/io-service;1";
 {
   BrowserWindowController* browserController = [self getMainWindowBrowserController];
   if (browserController)
-    [browserController newTab:eNewTabAboutBlank];
+    [browserController newTab:aSender];
 }
 
 -(IBAction)closeTab:(id)aSender
 {
   BrowserWindowController* browserController = [self getMainWindowBrowserController];
   if (browserController)
-    [browserController closeTab];
+    [browserController closeCurrentTab:aSender];
 }
 
 -(IBAction) previousTab:(id)aSender
 {
   BrowserWindowController* browserController = [self getMainWindowBrowserController];
   if (browserController)
-    [browserController previousTab];
+    [browserController previousTab:aSender];
 }
 
 -(IBAction) nextTab:(id)aSender;
 {
   BrowserWindowController* browserController = [self getMainWindowBrowserController];
   if (browserController)
-    [browserController nextTab];
+    [browserController nextTab:aSender];
 }
 
 -(IBAction) openFile:(id)aSender
@@ -273,7 +439,14 @@ static const char* ioServiceContractID = "@mozilla.org/network/io-service;1";
 {
   BrowserWindowController* browserController = [self getMainWindowBrowserController];
   if (browserController)
-    [browserController saveDocument: mFilterView filterList: mFilterList];
+    [browserController saveDocument:NO filterView:mFilterView filterList: mFilterList];
+}
+
+-(IBAction) pageSetup:(id)aSender
+{
+  BrowserWindowController* browserController = [self getMainWindowBrowserController];
+  if (browserController)
+    [browserController pageSetup:aSender];
 }
 
 -(IBAction) printPage:(id)aSender
@@ -281,13 +454,6 @@ static const char* ioServiceContractID = "@mozilla.org/network/io-service;1";
   BrowserWindowController* browserController = [self getMainWindowBrowserController];
   if (browserController)
     [browserController printDocument:aSender];
-}
-
--(IBAction) printPreview:(id)aSender
-{
-  BrowserWindowController* browserController = [self getMainWindowBrowserController];
-  if (browserController)
-    [browserController printPreview];
 }
 
 -(IBAction) toggleOfflineMode:(id)aSender
@@ -313,6 +479,14 @@ static const char* ioServiceContractID = "@mozilla.org/network/io-service;1";
     // Indicate that we are working offline.
     [[NSNotificationCenter defaultCenter] postNotificationName:@"offlineModeChanged" object:nil];
 }
+
+- (IBAction)sendURL:(id)aSender
+{
+  BrowserWindowController* browserController = [self getMainWindowBrowserController];
+  if (browserController)
+    [browserController sendURL:aSender];
+}
+
 
 // Edit menu actions.
 
@@ -428,14 +602,22 @@ static const char* ioServiceContractID = "@mozilla.org/network/io-service;1";
   {
     NSWindow*	thisWindow = [windowList objectAtIndex:i];
     
-    if ([[thisWindow windowController] isMemberOfClass:[BrowserWindowController class]] &&
-       ([[thisWindow windowController] chromeMask] == 0))		// only get windows with full chrome
-    {
-      foundWindow = thisWindow;
-      break;
+    // not all browser windows are created equal. We only consider those with
+    // an empty chrome mask, or ones with a toolbar, status bar, and resize control
+    // to be real top-level browser windows for purposes of saving size and 
+    // loading urls in. Others are popups and are transient.
+    if ([[thisWindow windowController] isMemberOfClass:[BrowserWindowController class]]) {
+      unsigned int chromeMask = [[thisWindow windowController] chromeMask];
+      if (chromeMask == 0 || 
+            (chromeMask & nsIWebBrowserChrome::CHROME_TOOLBAR &&
+              chromeMask & nsIWebBrowserChrome::CHROME_STATUSBAR &&
+              chromeMask & nsIWebBrowserChrome::CHROME_WINDOW_RESIZE)) {
+        foundWindow = thisWindow;
+        break;
+      }
     }
   }
-  
+
   return foundWindow;
 }
 
@@ -460,21 +642,32 @@ static const char* ioServiceContractID = "@mozilla.org/network/io-service;1";
   // make sure we're initted
   [self preferenceManager];
   
-  PRBool reuseWindow = PR_FALSE;
+  PRInt32 reuseWindow = 0;
   PRBool loadInBackground = PR_FALSE;
   
   nsCOMPtr<nsIPref> prefService ( do_GetService(NS_PREF_CONTRACTID) );
   if ( prefService ) {
-    prefService->GetBoolPref("browser.always_reuse_window", &reuseWindow);
+    prefService->GetIntPref("browser.reuse_window", &reuseWindow);
     prefService->GetBoolPref("browser.tabs.loadInBackground", &loadInBackground);
   }
   
-  // reuse the main window if there is one. The user may have closed all of 
+  // reuse the main window (if there is one) based on the pref in the 
+  // tabbed browsing panel. The user may have closed all of 
   // them or we may get this event at startup before we've had time to load
   // our window.
-  BrowserWindowController* controller = [self getMainWindowBrowserController];
-  if (reuseWindow && controller && [controller newTabsAllowed]) {
-    [controller openNewTabWithURL:inURLString referrer:aReferrer loadInBackground:loadInBackground];
+  BrowserWindowController* controller = (BrowserWindowController*)[[self getFrontmostBrowserWindow] windowController];
+  if (reuseWindow > kOpenNewWindowOnAE && controller) {
+    if (reuseWindow == kOpenNewTabOnAE) {
+      // if we have room for a new tab, open one, otherwise open a new window. if
+      // we don't do this, and just reuse the current tab, people will lose the urls
+      // as they get replaced in the current tab.
+      if ([controller newTabsAllowed])
+        [controller openNewTabWithURL:inURLString referrer:aReferrer loadInBackground:loadInBackground];
+      else
+        controller = [self openBrowserWindowWithURL: inURLString andReferrer:aReferrer];
+    }
+    else
+      [controller loadURL: inURLString referrer:nil activate:YES];
   }
   else {
     // should use BrowserWindowController openNewWindowWithURL, but that method
@@ -491,7 +684,7 @@ static const char* ioServiceContractID = "@mozilla.org/network/io-service;1";
   // IE favorites: ~/Library/Preferences/Explorer/Favorites.html
   // Omniweb favorites: ~/Library/Application Support/Omniweb/Bookmarks.html
   // For now, open the panel to IE's favorites.
-  NSOpenPanel* openPanel = [[[NSOpenPanel alloc] init] autorelease];
+  NSOpenPanel* openPanel = [NSOpenPanel openPanel];
   [openPanel setCanChooseFiles: YES];
   [openPanel setCanChooseDirectories: NO];
   [openPanel setAllowsMultipleSelection: NO];
@@ -515,6 +708,21 @@ static const char* ioServiceContractID = "@mozilla.org/network/io-service;1";
   }
 }
 
+-(IBAction) exportBookmarks:(id)aSender
+{
+  NSSavePanel* savePanel = [NSSavePanel savePanel];
+  [savePanel setPrompt:@"Export"];		// XXX localize
+  [savePanel setRequiredFileType:@"html"];
+  
+  int saveResult = [savePanel runModalForDirectory:@"" file:@"Exported Bookmarks"];
+  if (saveResult != NSFileHandlingPanelOKButton)
+    return;
+
+  nsAutoString filePath;
+  [[savePanel filename] assignTo_nsAString:filePath];
+  BookmarksService::ExportBookmarksToHTML(filePath);
+}
+
 -(IBAction) addBookmark:(id)aSender
 {
   BrowserWindowController* browserController = [self getMainWindowBrowserController];
@@ -535,17 +743,51 @@ static const char* ioServiceContractID = "@mozilla.org/network/io-service;1";
 }
 
 -(IBAction) openMenuBookmark:(id)aSender
-{
-    NSWindow* browserWindow = [self getFrontmostBrowserWindow];
-    if (!browserWindow) {
-        [self openBrowserWindowWithURL: @"about:blank" andReferrer:nil];
-        browserWindow = [mApplication mainWindow];
-    }
+{	
+  if ([aSender isMemberOfClass:[NSApplication class]])
+    return;		// 10.1. Don't do anything.
 
-    BookmarksService::OpenMenuBookmark([browserWindow windowController], aSender);
+  BookmarksManager* bmManager = [BookmarksManager sharedBookmarksManager];
+  BookmarkItem*     item = [bmManager getWrapperForID:[aSender tag]];
+
+  if ([item isGroup])
+  {
+    NSWindow* browserWindow = [self getFrontmostBrowserWindow];
+    if (browserWindow)
+    {
+      if (![browserWindow isMainWindow])
+        [browserWindow makeKeyAndOrderFront:self];
+    }
+    else
+    {
+      [self newWindow:self];
+      browserWindow = [self getFrontmostBrowserWindow];
+    }
+  
+    BrowserWindowController* browserController = (BrowserWindowController*)[browserWindow delegate];
+    
+    NSArray* uriList = [bmManager getBookmarkGroupURIs:item];
+    [browserController openTabGroup:uriList replaceExistingTabs:YES];
+  }
+  else
+  {
+    NSString* url = [item url];
+    BrowserWindowController* browserController = [self getMainWindowBrowserController];
+    if (browserController)
+      [browserController loadURL:url referrer:nil activate:YES];
+    else
+      [self openBrowserWindowWithURL:url andReferrer:nil];
+  }
+
 }
 
--(IBAction)manageBookmarks: (id)aSender
+//
+// manageSizebar:
+//
+// opens the appropriate sidebar panel (creating a new window if needed)
+// depending on the tag of the menu item
+//
+-(IBAction)manageSidebar: (id)aSender
 {
   NSWindow* browserWindow = [self getFrontmostBrowserWindow];
   if (!browserWindow) {
@@ -553,7 +795,10 @@ static const char* ioServiceContractID = "@mozilla.org/network/io-service;1";
     browserWindow = [mApplication mainWindow];
   }
 
-  [[browserWindow windowController] manageBookmarks: aSender];
+  if ( [aSender tag] == 0 )
+    [[browserWindow windowController] manageBookmarks: aSender];
+  else
+    [[browserWindow windowController] manageHistory: aSender];
 }
 
 - (PreferenceManager *)preferenceManager
@@ -606,31 +851,34 @@ static const char* ioServiceContractID = "@mozilla.org/network/io-service;1";
 {
   BrowserWindowController* browserController = [self getMainWindowBrowserController];
   if (browserController)
-    [browserController biggerTextSize];
+    [browserController biggerTextSize:aSender];
 }
 
 - (IBAction)smallerTextSize:(id)aSender
 {
   BrowserWindowController* browserController = [self getMainWindowBrowserController];
   if (browserController)
-    [browserController smallerTextSize];
+    [browserController smallerTextSize:aSender];
 }
 
 -(IBAction) viewSource:(id)aSender
 {
   BrowserWindowController* browserController = [self getMainWindowBrowserController];
   if (browserController)
-    [browserController viewSource: aSender];
+    [browserController viewPageSource: aSender];		// top-level page, not focussed frame
 }
 
 -(BOOL)isMainWindowABrowserWindow
 {
-  // see also getFrontmostBrowserWindow
+  // see also getFrontmostBrowserWindow. That will always return a browser
+  // window if one exists. This will only return one if it is frontmost.
   return [[[mApplication mainWindow] windowController] isMemberOfClass:[BrowserWindowController class]];
 }
 
 - (BrowserWindowController*)getMainWindowBrowserController
 {
+  // note that [NSApp mainWindow] will return NULL if we are not
+  // frontmost
   NSWindowController* mainWindowController = [[mApplication mainWindow] windowController];
   if (mainWindowController && [mainWindowController isMemberOfClass:[BrowserWindowController class]])
     return (BrowserWindowController*)mainWindowController;
@@ -681,10 +929,9 @@ static const char* ioServiceContractID = "@mozilla.org/network/io-service;1";
         /* ... many more items go here ... */
         /* action == @selector(goHome:) || */			// always enabled
         /* action == @selector(doSearch:) || */		// always enabled
+        action == @selector(pageSetup:) ||
         action == @selector(findInPage:) ||
         action == @selector(doReload:) ||
-        action == @selector(biggerTextSize:) ||
-        action == @selector(smallerTextSize:) ||
         action == @selector(viewSource:) ||
         action == @selector(savePage:))
   {
@@ -726,9 +973,9 @@ static const char* ioServiceContractID = "@mozilla.org/network/io-service;1";
           if (sidebar) {
               int sidebarState = [sidebar state]; 
               if (sidebarState == NSDrawerOpenState)
-                  [mToggleSidebarMenuItem setTitle: NSLocalizedString(@"Hide Sidebar",@"")];
+                  [mToggleSidebarMenuItem setTitle: NSLocalizedString(@"HideSidebarMenuItem",@"")];
               else
-                  [mToggleSidebarMenuItem setTitle: NSLocalizedString(@"Show Sidebar",@"")];
+                  [mToggleSidebarMenuItem setTitle: NSLocalizedString(@"ShowSidebarMenuItem",@"")];
               return YES;
           }
           else
@@ -749,6 +996,19 @@ static const char* ioServiceContractID = "@mozilla.org/network/io-service;1";
     return (browserController && [[browserController getTabBrowser] numberOfTabViewItems] > 1);
   }
 
+  if ( action == @selector(addBookmark:) )
+    return (browserController && ![[browserController getBrowserWrapper] isEmpty]);
+  
+  if ( action == @selector(biggerTextSize:) )
+    return (browserController &&
+            ![[browserController getBrowserWrapper] isEmpty] &&
+            [[[browserController getBrowserWrapper] getBrowserView] canMakeTextBigger]);
+
+  if ( action == @selector(smallerTextSize:) )
+    return (browserController &&
+            ![[browserController getBrowserWrapper] isEmpty] &&
+            [[[browserController getBrowserWrapper] getBrowserView] canMakeTextSmaller]);
+  
   if ( action == @selector(doStop:) )
     return (browserController && [[browserController getBrowserWrapper] isBusy]);
 
@@ -764,6 +1024,14 @@ static const char* ioServiceContractID = "@mozilla.org/network/io-service;1";
       return NO;
   }
   
+  if ( action == @selector(sendURL:) )
+  {
+    NSString* titleString = nil;
+    NSString* urlString = nil;
+    [[[self getMainWindowBrowserController] getBrowserWrapper] getTitle:&titleString andHref:&urlString];
+    return [urlString length] > 0 && ![urlString isEqualToString:@"about:blank"];
+  }
+
   // default return
   return YES;
 }
@@ -862,6 +1130,15 @@ static const char* ioServiceContractID = "@mozilla.org/network/io-service;1";
 
 - (void) updatePrebinding
 {
+  // For MacOS 10.2 and higher, don't do anything, since
+  // the OS updates our prebinding automatically.
+  struct utsname u;
+  uname(&u);
+
+  float osVersion = atof(u.release);
+  if (osVersion >= 6.0)   // MacOS 10.2 is based on Darwin 6.0
+    return;
+
   // Check our prebinding status.  If we didn't launch prebound,
   // fork the update script.
 
@@ -917,6 +1194,124 @@ static const char* ioServiceContractID = "@mozilla.org/network/io-service;1";
   }
   
   [self openNewWindowOrTabWithURL:urlString andReferrer:nil];
+}
+
+
+#pragma mark -
+
+
+static int SortByProtocolAndName(NSDictionary* item1, NSDictionary* item2, void *context)
+{
+  NSComparisonResult protocolCompare = [[item1 objectForKey:@"name"] compare:[item2 objectForKey:@"name"] options:NSCaseInsensitiveSearch];
+  if (protocolCompare != NSOrderedSame)
+    return protocolCompare;
+    
+  return [[item1 objectForKey:@"protocol"] compare:[item2 objectForKey:@"protocol"] options:NSCaseInsensitiveSearch];
+}
+
+- (void)rebuildNetServiceMenu
+{
+  // rebuild the submenu, leaving the first item
+  while ([mServersSubmenu numberOfItems] > 1)
+    [mServersSubmenu removeItemAtIndex:[mServersSubmenu numberOfItems] - 1];
+  
+  NSEnumerator* keysEnumerator = [mNetworkServices serviceEnumerator];
+  // build an array of dictionaries, so we can sort it
+  
+  NSMutableArray* servicesArray = [[NSMutableArray alloc] initWithCapacity:10];
+  
+  id key;
+  while ((key = [keysEnumerator nextObject]))
+  {
+    NSDictionary* serviceDict = [NSDictionary dictionaryWithObjectsAndKeys:
+                                                           key, @"id",
+                 [mNetworkServices serviceName:[key intValue]], @"name",
+             [mNetworkServices serviceProtocol:[key intValue]], @"protocol",
+                                                                nil];
+    
+    [servicesArray addObject:serviceDict];
+  }
+
+  if ([servicesArray count] == 0)
+  {
+    // add a separator
+    [mServersSubmenu addItem:[NSMenuItem separatorItem]];
+
+    NSMenuItem* newItem = [mServersSubmenu addItemWithTitle:NSLocalizedString(@"NoServicesFound", @"") action:nil keyEquivalent:@""];
+    [newItem setTag:-1];
+    [newItem setTarget:self];
+  }
+  else
+  {
+    // add a separator
+    [mServersSubmenu addItem:[NSMenuItem separatorItem]];
+    
+    // sort on protocol, then name
+    [servicesArray sortUsingFunction:SortByProtocolAndName context:NULL];
+    
+    for (unsigned int i = 0; i < [servicesArray count]; i ++)
+    {
+      NSDictionary* serviceDict = [servicesArray objectAtIndex:i];
+      NSString* itemName = [[serviceDict objectForKey:@"name"] stringByAppendingString:NSLocalizedString([serviceDict objectForKey:@"protocol"], @"")];
+      
+      id newItem = [mServersSubmenu addItemWithTitle:itemName action:@selector(connectToServer:) keyEquivalent:@""];
+      [newItem setTag:[[serviceDict objectForKey:@"id"] intValue]];
+      [newItem setTarget:self];
+    }
+  }
+}
+
+// NetworkServicesClient implementation
+
+- (void)availableServicesChanged:(NetworkServices*)servicesProvider
+{
+  [self rebuildNetServiceMenu];
+}
+
+- (void)serviceResolved:(int)serviceID withURL:(NSString*)url
+{
+	[self openNewWindowOrTabWithURL:url andReferrer:nil];
+}
+
+- (void)serviceResolutionFailed:(int)serviceID
+{
+  NSString* serviceName = [mNetworkServices serviceName:serviceID];
+  
+  NSBeginAlertSheet(NSLocalizedString(@"ServiceResolutionFailedTitle", @""),
+                                      @"",		// default button
+                                      nil,		// cancel buttton
+                                      nil,		// other button
+                                      [NSApp mainWindow],		// window
+                                      nil,		// delegate 
+                                      nil,		// end sel
+                                      nil,		// dismiss sel
+                                      NULL,		// context
+                                      [NSString stringWithFormat:NSLocalizedString(@"ServiceResolutionFailedMsgFormat", @""), serviceName]
+                                      );
+}
+
+-(IBAction) connectToServer:(id)aSender
+{
+  [mNetworkServices attemptResolveService:[aSender tag]];
+}
+
+-(IBAction) aboutServers:(id)aSender
+{
+  NSString *pageToLoad = NSLocalizedStringFromTable(@"RendezvousPageDefault", @"WebsiteDefaults", nil);
+  if (![pageToLoad isEqualToString:@"RendezvousPageDefault"])
+    [self openNewWindowOrTabWithURL:pageToLoad andReferrer:nil];
+}
+
+// currently unused
+- (void)pumpGeckoEventQueue
+{
+  nsCOMPtr<nsIEventQueueService> service = do_GetService(NS_EVENTQUEUESERVICE_CONTRACTID);
+  if (!service) return;
+  
+  nsCOMPtr<nsIEventQueue> queue;
+  service->GetThreadEventQueue(NS_CURRENT_THREAD, getter_AddRefs(queue));
+  if (queue)
+    queue->ProcessPendingEvents();
 }
 
 @end

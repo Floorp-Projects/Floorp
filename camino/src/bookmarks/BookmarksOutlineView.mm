@@ -34,31 +34,32 @@
 
 - (void)awakeFromNib
 {
-  [self registerForDraggedTypes:[NSArray arrayWithObjects:@"MozURLType", @"MozBookmarkType", NSStringPboardType, nil]];
+  [self registerForDraggedTypes:[NSArray arrayWithObjects:@"MozURLType", @"MozBookmarkType", NSStringPboardType, NSURLPboardType, nil]];
 }
 
 - (void)draggedImage:(NSImage *)anImage endedAt:(NSPoint)aPoint operation:(NSDragOperation)operation
 {
-  if (operation == NSDragOperationDelete) {
+  if (operation == NSDragOperationDelete)
+  {
     NSArray* contentIds = nil;
     NSPasteboard* pboard = [NSPasteboard pasteboardWithName:NSDragPboard];
     contentIds = [pboard propertyListForType: @"MozBookmarkType"];
     if (contentIds) {
-      for (unsigned int i = 0; i < [contentIds count]; ++i) {
-        BookmarkItem* item = [BookmarksService::gDictionary objectForKey: [contentIds objectAtIndex:i]];
-        nsCOMPtr<nsIDOMElement> bookmarkElt = do_QueryInterface([item contentNode]);
-        BookmarksService::DeleteBookmark(bookmarkElt);
+      for (unsigned int i = 0; i < [contentIds count]; ++i)
+      {
+        BookmarkItem* item = BookmarksService::GetWrapperFor([[contentIds objectAtIndex:i] unsignedIntValue]);
+        [item remove];
       }
     }
   }
 }
 
-- (unsigned int)draggingSourceOperationMaskForLocal:(BOOL)flag
+- (unsigned int)draggingSourceOperationMaskForLocal:(BOOL)localFlag
 {
-  unsigned int result = [super draggingSourceOperationMaskForLocal:flag];
-  if (flag == NO)
-    result &= NSDragOperationDelete;
-  return result;
+  if (localFlag)
+    return (NSDragOperationCopy | NSDragOperationGeneric | NSDragOperationMove);
+  
+	return (NSDragOperationDelete | NSDragOperationGeneric);
 }
 
 @end

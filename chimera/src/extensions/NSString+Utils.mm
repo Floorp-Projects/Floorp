@@ -36,6 +36,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 #import <AppKit/AppKit.h>		// for NSStringDrawing.h
+
 #import "NSString+Utils.h"
 
 #include "nsString.h"
@@ -142,6 +143,30 @@
 
   return [[self copy] autorelease];
 }
+
+- (NSString *)stringByTrimmingWhitespace
+{
+  if ([self respondsToSelector:@selector(stringByTrimmingCharactersInSet:)])
+    // 10.2 and later
+    return [self stringByTrimmingCharactersInSet:[NSCharacterSet whitespaceCharacterSet]];
+
+  // 10.1
+  NSMutableString *trimmedString = [[[NSMutableString alloc] initWithString:self] autorelease];
+  // roll over that toll-free bridge
+  ::CFStringTrimWhitespace((CFMutableStringRef)trimmedString);
+  return trimmedString;
+}
+
+
+- (PRUnichar*)createNewUnicodeBuffer
+{
+  PRUint32 length = [self length];
+  PRUnichar* retStr = (PRUnichar*)nsMemory::Alloc((length + 1) * sizeof(PRUnichar));
+  [self getCharacters:retStr];
+  retStr[length] = PRUnichar(0);
+  return retStr;
+}
+
 
 @end
 

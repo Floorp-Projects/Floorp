@@ -38,10 +38,12 @@
 * ***** END LICENSE BLOCK ***** */
 
 #import "NSString+Utils.h"
+#import "NSPasteboard+Utils.h"
 
 #import "BrowserTabView.h"
 #import "BookmarksService.h"
-#import "BookmarksDataSource.h"
+#import "BrowserWrapper.h"
+#import "BrowserWindowController.h"
 
 #include "nsCOMPtr.h"
 #include "nsIDOMElement.h"
@@ -89,7 +91,7 @@
 {
     [self showOrHideTabsAsAppropriate];
     [self registerForDraggedTypes:[NSArray arrayWithObjects:
-        @"MozURLType", @"MozBookmarkType", NSStringPboardType, NSFilenamesPboardType, nil]];
+        @"MozURLType", @"MozBookmarkType", NSStringPboardType, NSFilenamesPboardType, NSURLPboardType, nil]];
 }
 
 /******************************************/
@@ -135,6 +137,23 @@
 {
   [super insertTabViewItem:tabViewItem atIndex:index];
   [self showOrHideTabsAsAppropriate];
+}
+
+- (BrowserTabViewItem*)itemWithTag:(int)tag
+{
+  NSArray* tabViewItems = [self tabViewItems];
+
+  for (unsigned int i = 0; i < [tabViewItems count]; i ++)
+  {
+    id tabItem = [tabViewItems objectAtIndex:i];
+    if ([tabItem isMemberOfClass:[BrowserTabViewItem class]] &&
+      	([(BrowserTabViewItem*)tabItem tag] == tag))
+    {
+      return tabItem;
+    }
+  }
+
+  return nil;
 }
 
 /******************************************/
@@ -183,7 +202,6 @@
     {
       if ( [self tabViewType] != NSNoTabsBezelBorder )
       {
-        [self setFrameSize:NSMakeSize( NSWidth([self frame]), NSHeight([self frame]) + 10 )];
         [self setTabViewType:NSNoTabsBezelBorder];
         tabVisibilityChanged = YES;
       }
@@ -193,7 +211,6 @@
     {
       if ( [self tabViewType] != NSTopTabsBezelBorder )
       {
-        [self setFrameSize:NSMakeSize( NSWidth([self frame]), NSHeight([self frame]) - 10 )];
         [self setTabViewType:NSTopTabsBezelBorder];
         tabVisibilityChanged = YES;
       }
@@ -210,10 +227,30 @@
     }
     
     if (tabVisibilityChanged)
+    {
+      [[[[self window] windowController] bookmarksToolbar] setDrawBottomBorder:!tabsVisible];
+
+      // tell the superview to resize its subviews
+      [[self superview] resizeSubviewsWithOldSize:[[self superview] frame].size];
       [self setNeedsDisplay:YES];
+    }
 	}
 }
 
+
+// return the frame we want to have to make us display correctly in the supplied frame.
+const float kTabsVisibleTopGap    = 4.0;    // space above the tabs
+const float kTabsInvisibleTopGap  = -7.0;		// space removed to push tab content up when no tabs are visible
+
+- (float)getExtraTopSpace;
+{
+	return ([self tabsVisible]) ? kTabsVisibleTopGap : kTabsInvisibleTopGap;
+}
+
+- (BOOL)tabsVisible
+{
+  return ([[self tabViewItems] count] > 1);
+}
 
 - (BOOL)handleDropOnTab:(NSTabViewItem*)overTabViewItem overContent:(BOOL)overContentArea withURL:(NSString*)url
 {
@@ -323,30 +360,29 @@
   NSArray*        pasteBoardTypes = [[sender draggingPasteboard] types];
 
   [self hideDragDestinationIndicator];
-
+  
   if ([pasteBoardTypes containsObject: @"MozBookmarkType"])
   {
     NSArray* contentIds = [[sender draggingPasteboard] propertyListForType: @"MozBookmarkType"];
-    if (contentIds) {
+    if (contentIds)
+    {
+      BookmarksManager* bmManager = [BookmarksManager sharedBookmarksManager];
+      
       // drag type is chimera bookmarks
-      for (unsigned int i = 0; i < [contentIds count]; ++i) {
-        BookmarkItem* item = [BookmarksService::gDictionary objectForKey: [contentIds objectAtIndex:i]];
-        nsCOMPtr<nsIDOMElement> bookmarkElt = do_QueryInterface([item contentNode]);
-  
-        nsCOMPtr<nsIAtom> tagName;
-        [item contentNode]->GetTag(*getter_AddRefs(tagName));
-        
-        nsAutoString href;
-        bookmarkElt->GetAttribute(NS_LITERAL_STRING("href"), href);
-        NSString* url = [NSString stringWith_nsAString: href];
-  
-        nsAutoString group;
-        bookmarkElt->GetAttribute(NS_LITERAL_STRING("group"), group);
-        if (!group.IsEmpty()) {
-          BookmarksService::OpenBookmarkGroup(self, bookmarkElt);
-        } else {
-          return [self handleDropOnTab:overTabViewItem overContent:overContentArea withURL:url];
+      for (unsigned int i = 0; i < [contentIds count]; ++i)
+      {
+        BookmarkItem* item = [bmManager getWrapperForNumber:[contentIds objectAtIndex:i]];
+        if ([item isGroup])
+        {
+          NSArray* groupURLs = [bmManager getBookmarkGroupURIs:item];
+          [[[self window] windowController] openTabGroup:groupURLs replaceExistingTabs:YES];
         }
+        else
+        {
+          // handle multiple items?
+          return [self handleDropOnTab:overTabViewItem overContent:overContentArea withURL:[item url]];
+        }
+
       }	// for each item
     }
   }
@@ -382,14 +418,7 @@
 
 -(void)addTabForURL:(NSString*)aURL referrer:(NSString*)aReferrer
 {
-  // We need to make a new tab.
-  BrowserTabViewItem *tabViewItem= [BrowserTabView makeNewTabItem];
-  BrowserWrapper *newView = [[[BrowserWrapper alloc] initWithTab: tabViewItem andWindow: [self window]] autorelease];
-  [tabViewItem setLabel: NSLocalizedString(@"UntitledPageTitle", @"")];
-  [tabViewItem setView: newView];
-  [self addTabViewItem: tabViewItem];
-
-  [[tabViewItem view] loadURI: aURL referrer:aReferrer flags: NSLoadFlagsNone activate:NO];
+  [[[self window] windowController] openNewTabWithURL:aURL referrer:aReferrer loadInBackground:YES];
 }
 
 #pragma mark -

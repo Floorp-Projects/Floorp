@@ -45,6 +45,7 @@
 #include "nsICacheSession.h"
 #include "nsICacheService.h"
 #include "nsICacheEntryDescriptor.h"
+#include "nsICachingChannel.h"
 
 NSString* RemoteDataLoadRequestNotificationName = @"remoteload_notification_name";
 NSString* RemoteDataLoadRequestURIKey           = @"remoteload_uri_key";
@@ -88,7 +89,7 @@ protected:
 };
 
 
-NS_IMPL_ISUPPORTS1(StreamLoaderContext, nsISupports)
+NS_IMPL_THREADSAFE_ISUPPORTS1(StreamLoaderContext, nsISupports)
 
 void StreamLoaderContext::LoadComplete(nsresult inLoadStatus, const void* inData, unsigned int inDataLength)
 {
@@ -102,6 +103,7 @@ void StreamLoaderContext::LoadComplete(nsresult inLoadStatus, const void* inData
   }
 }
 
+#pragma mark -
 
 class RemoteURILoadManager : public nsIStreamLoaderObserver
 {
@@ -115,11 +117,13 @@ public:
 
   nsresult              Init();
   nsresult              RequestURILoad(const nsAString& inURI, id<RemoteLoadListener> loadListener, id userData, id target, PRBool allowNetworking);
+  nsresult              CancelAllRequests();
   
 protected:
 
   nsSupportsHashtable		mStreamLoaderHash;		// hash of active stream loads, keyed on URI
   nsCOMPtr<nsICacheSession> mCacheSession;
+  nsCOMPtr<nsILoadGroup>    mLoadGroup;
 
 };
 
@@ -169,52 +173,59 @@ nsresult RemoteURILoadManager::RequestURILoad(const nsAString& inURI, id<RemoteL
 {
   nsresult rv;
   
-#if 0
-  // if no networking is allowed, make sure it's in the cache
-  if (!allowNetworking)
-  {
-    if (!mCacheSession)
-      return NS_ERROR_FAILURE;
-    
-    nsCOMPtr<nsICacheEntryDescriptor> entryDesc;
-    rv = mCacheSession->OpenCacheEntry(NS_ConvertUCS2toUTF8(inURI).get(), nsICache::ACCESS_READ, nsICache::NON_BLOCKING, getter_AddRefs(entryDesc));
-    if (NS_FAILED(rv) || !entryDesc)
-      return NS_ERROR_FAILURE;
-  }
-#endif
-
   nsStringKey	uriKey(inURI);
 
   // first make sure that there isn't another entry in the hash for this
   nsCOMPtr<nsISupports> foundStreamSupports = mStreamLoaderHash.Get(&uriKey);
   if (foundStreamSupports)
+  {
     return NS_OK;
-  
+  }
+
   nsCOMPtr<nsIURI> uri;
   rv = NS_NewURI(getter_AddRefs(uri), inURI);
   if (NS_FAILED(rv))
     return rv;
   
+  // create a load group, that we can use to cancel all the requests on quit
+  if (!mLoadGroup)
+    mLoadGroup = do_CreateInstance(NS_LOADGROUP_CONTRACTID);
+    
   nsCOMPtr<nsISupports> loaderContext = new StreamLoaderContext(loadListener, userData, target, inURI);
    
   nsLoadFlags loadFlags = (allowNetworking) ? nsIRequest::LOAD_NORMAL : nsIRequest::LOAD_FROM_CACHE;
   loadFlags |= nsIRequest::LOAD_BACKGROUND;		// don't show progress or cookie dialogs
+  if (!allowNetworking)
+    loadFlags |= nsICachingChannel::LOAD_ONLY_FROM_CACHE;
+
+  // we have to make a channel ourselves for the streamloader, so that we can 
+  // do the nsICachingChannel stuff.
+  nsCOMPtr<nsIChannel> channel;
+  rv = NS_NewChannel(getter_AddRefs(channel), uri, nsnull, mLoadGroup,
+                     nsnull, loadFlags);
+  if (NS_FAILED(rv)) return rv;
+  
   nsCOMPtr<nsIStreamLoader> streamLoader;
-  rv = NS_NewStreamLoader(getter_AddRefs(streamLoader), uri, this, loaderContext, nsnull, nsnull, loadFlags);
+  rv = NS_NewStreamLoader(getter_AddRefs(streamLoader), channel, this, loaderContext) ; // , mLoadGroup, nsnull, loadFlags);
   if (NS_FAILED(rv))
   {
+#if DEBUG
     NSLog(@"NS_NewStreamLoader for favicon failed");
+#endif
     return rv;
   }
-
-#ifdef DEBUG_smfr
-  NSLog(@"RequestURILoad called for %@", [NSString stringWith_nsAString: inURI]);
-#endif
 
   // put the stream loader into the hash table
   nsCOMPtr<nsISupports> streamLoaderAsSupports = do_QueryInterface(streamLoader);
   mStreamLoaderHash.Put(&uriKey, streamLoaderAsSupports);
-  
+
+  return NS_OK;
+}
+
+nsresult RemoteURILoadManager::CancelAllRequests()
+{
+	if (mLoadGroup)
+    mLoadGroup->Cancel(NS_BINDING_ABORTED);
   return NS_OK;
 }
 
@@ -245,6 +256,12 @@ nsresult RemoteURILoadManager::RequestURILoad(const nsAString& inURI, id<RemoteL
   {
     mLoadManager = new RemoteURILoadManager;
     NS_ADDREF(mLoadManager);
+    nsresult rv = mLoadManager->Init();
+    if (NS_FAILED(rv))
+    {
+      NS_RELEASE(mLoadManager);
+      mLoadManager = nil;
+    }
   }
   
   return self;
@@ -259,18 +276,14 @@ nsresult RemoteURILoadManager::RequestURILoad(const nsAString& inURI, id<RemoteL
 - (BOOL)loadURI:(NSString*)inURI forTarget:(id)target withListener:(id<RemoteLoadListener>)inListener
       withUserData:(id)userData allowNetworking:(BOOL)inNetworkOK
 {
-  //NSLog(@"loadURI called with %@", inURI);
   if (mLoadManager && [inURI length] > 0)
   {
     nsAutoString uriString;
     [inURI assignTo_nsAString:uriString];
-
+    
     nsresult rv = mLoadManager->RequestURILoad(uriString, inListener, userData, target, (PRBool)inNetworkOK);
     if (NS_FAILED(rv))
-    {
-      NSLog(@"RequestURILoad failed for @%", inURI);
       return NO;
-    }
   }
   
   return YES;
@@ -280,6 +293,14 @@ nsresult RemoteURILoadManager::RequestURILoad(const nsAString& inURI, id<RemoteL
 {
   return [self loadURI:inURI forTarget:target withListener:self withUserData:userData allowNetworking:inNetworkOK];
 }
+
+
+- (void)cancelOutstandingRequests
+{
+  if (mLoadManager)
+    mLoadManager->CancelAllRequests();
+}
+
 
 // our own load listener callback
 - (void)doneRemoteLoad:(NSString*)inURI forTarget:(id)target withUserData:(id)userData data:(NSData*)data status:(nsresult)status
@@ -291,7 +312,6 @@ nsresult RemoteURILoadManager::RequestURILoad(const nsAString& inURI, id<RemoteL
     [NSNumber numberWithInt:status], RemoteDataLoadRequestResultKey,
                                      nil];
   
-  // NSLog(@"remoteLoadDone with status %d and length %d", status, [data length]);
   [[NSNotificationCenter defaultCenter] postNotificationName: RemoteDataLoadRequestNotificationName
       	object:target userInfo:notificationData];
 }

@@ -176,13 +176,13 @@ static nsresult MakeFaviconURIFromURI(const nsAString& inURIString, nsAString& o
   PRInt32 port;
   uri->GetPort(&port);
 
-  nsXPIDLCString scheme;
+  nsCAutoString scheme;
   uri->GetScheme(scheme);
   
-  nsXPIDLCString host;
+  nsCAutoString host;
   uri->GetHost(host);
   
-  nsCAutoString faviconURI = scheme;
+  nsCAutoString faviconURI(scheme);
   faviconURI.Append("://");
   faviconURI.Append(host);
   if (port != -1) {
@@ -232,7 +232,6 @@ static nsresult MakeFaviconURIFromURI(const nsAString& inURIString, nsAString& o
   if (mMissedIconsCacheHelper)
   {
     nsresult rv = mMissedIconsCacheHelper->PutInCache(NS_ConvertUCS2toUTF8(inURI), inExpSeconds);
-    //NSLog(@"Putting %@ in missed icon cache", [NSString stringWith_nsAString:inURI]);
   }
 
 }
@@ -244,10 +243,8 @@ static nsresult MakeFaviconURIFromURI(const nsAString& inURIString, nsAString& o
   if (mMissedIconsCacheHelper)
   	mMissedIconsCacheHelper->ExistsInCache(NS_ConvertUCS2toUTF8(inURI), &inCache);
 
-  //NSLog(@"%@ in missed icon cache: %d", [NSString stringWith_nsAString:inURI], inCache);
   return inCache;
 }
-
 
 - (BOOL)loadFavoriteIcon:(id)sender forURI:(NSString *)inURI withUserData:(id)userData allowNetwork:(BOOL)inAllowNetwork
 {
@@ -264,7 +261,9 @@ static nsresult MakeFaviconURIFromURI(const nsAString& inURIString, nsAString& o
   
   // is this uri already in the missing icons cache?
   if ([self inMissedIconsCache:faviconURIString])
+  {
     return NO;
+  }
   
   RemoteDataProvider* dataProvider = [RemoteDataProvider sharedRemoteDataProvider];
   return [dataProvider loadURI:faviconString forTarget:sender withListener:self withUserData:userData allowNetworking:inAllowNetwork];
@@ -294,12 +293,17 @@ static nsresult MakeFaviconURIFromURI(const nsAString& inURIString, nsAString& o
   NS_ENDHANDLER
 
   BOOL gotImageData = loadOK && (faviconImage != nil);
-  if (!gotImageData)
+  if (NS_SUCCEEDED(status) && !gotImageData)		// error status indicates that load was attempted from cache
+  {	
     [self addToMissedIconsCache:uriString withExpirationSeconds:SITE_ICON_EXPIRATION_SECONDS];
-
-  [faviconImage setDataRetained:YES];
-  [faviconImage setScalesWhenResized:YES];
-  [faviconImage setSize:NSMakeSize(16, 16)];
+  }
+  
+  if (gotImageData)
+  {
+    [faviconImage setDataRetained:YES];
+    [faviconImage setScalesWhenResized:YES];
+    [faviconImage setSize:NSMakeSize(16, 16)];
+  }
   
   // we always send out the notification, so that clients know
   // about failed requests

@@ -22,9 +22,13 @@
 *   David Haas <haasd@cae.wisc.edu> 
 */
 
+#import "NSString+Utils.h"
+
 #import "AutoCompleteTextField.h"
 #import "BrowserWindowController.h"
 #import "PageProxyIcon.h"
+#import "CHBrowserService.h"
+
 #include "nsIServiceManager.h"
 #include "nsMemory.h"
 #include "nsString.h"
@@ -38,6 +42,7 @@ static const int kFrameMargin = 1;
 @end
 
 @implementation AutoCompleteWindow
+
 - (BOOL)isKeyWindow
 {
   return YES;
@@ -49,7 +54,7 @@ class AutoCompleteListener : public nsIAutoCompleteListener
 public:
   AutoCompleteListener(AutoCompleteTextField* aTextField)
   {
-    NS_INIT_REFCNT();
+    NS_INIT_ISUPPORTS();
     mTextField = aTextField;
   }
   
@@ -72,6 +77,9 @@ private:
 NS_IMPL_ISUPPORTS1(AutoCompleteListener, nsIAutoCompleteListener)
 
 ////////////////////////////////////////////////////////////////////////
+@interface AutoCompleteTextField(Private)
+- (void)cleanup;
+@end
 
 @implementation AutoCompleteTextField
 
@@ -159,6 +167,11 @@ NS_IMPL_ISUPPORTS1(AutoCompleteListener, nsIAutoCompleteListener)
   [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(onUndoOrRedo:)
                                                name:NSUndoManagerDidUndoChangeNotification
                                              object:[[self fieldEditor] undoManager]];
+
+  [[NSNotificationCenter defaultCenter] addObserver:  self
+                                        selector:     @selector(shutdown:)
+                                        name:         XPCOMShutDownNotificationName
+                                        object:       nil];
   
   // read the user default on if we should auto-complete the text field as the user
   // types or make them pick something from a list (a-la mozilla).
@@ -168,18 +181,24 @@ NS_IMPL_ISUPPORTS1(AutoCompleteListener, nsIAutoCompleteListener)
 - (void) dealloc
 {
   [[NSNotificationCenter defaultCenter] removeObserver:self];
+  [self cleanup];
+  [super dealloc];
+}
 
-  if (mSearchString)
-    [mSearchString release];
-    
-  [mPopupWin release];
-  [mDataSource release];
+- (void)cleanup
+{
+  [mSearchString release]; mSearchString = nil;
+  [mPopupWin release];     mPopupWin = nil;
+  [mDataSource release];   mDataSource = nil;
 
   NS_IF_RELEASE(mSession);
   NS_IF_RELEASE(mResults);
   NS_IF_RELEASE(mListener);
-  
-  [super dealloc];
+}
+
+- (void)shutdown: (NSNotification*)aNotification
+{
+  [self cleanup];
 }
 
 - (void) setSession:(NSString *)aSession
@@ -246,11 +265,9 @@ NS_IMPL_ISUPPORTS1(AutoCompleteListener, nsIAutoCompleteListener)
 
 - (void) performSearch
 {
-  PRUnichar* chars = nsMemory::Alloc(([mSearchString length]+1) * sizeof(PRUnichar));
-  [mSearchString getCharacters:chars];
-  chars[[mSearchString length]] = 0; // I shouldn't have to do this
-  nsresult rv = mSession->OnStartLookup(chars, mResults, mListener);
-  nsMemory::Free(chars);
+  nsAutoString searchString;
+  [mSearchString assignTo_nsAString:searchString];
+  nsresult rv = mSession->OnStartLookup(searchString.get(), mResults, mListener);
 
   if (NS_FAILED(rv))
     NSLog(@"Unable to perform autocomplete lookup");
@@ -433,9 +450,11 @@ NS_IMPL_ISUPPORTS1(AutoCompleteListener, nsIAutoCompleteListener)
 - (void) setStringUndoably:(NSString *)aString fromLocation:(unsigned int)aLocation
 {
   NSTextView *fieldEditor = [self fieldEditor];
-  NSRange aRange = NSMakeRange(aLocation,[[fieldEditor string] length] - aLocation);
-  if ([fieldEditor shouldChangeTextInRange:aRange replacementString:aString]) {
-    [[fieldEditor textStorage] replaceCharactersInRange:aRange withString:aString];
+	if ( aLocation > [[fieldEditor string] length] )			// sanity check or AppKit crashes
+    return;
+  NSRange range = NSMakeRange(aLocation,[[fieldEditor string] length] - aLocation);
+  if ([fieldEditor shouldChangeTextInRange:range replacementString:aString]) {
+    [[fieldEditor textStorage] replaceCharactersInRange:range withString:aString];
     // Whenever we send [self didChangeText], we trigger the
     // textDidChange method, which will begin a new search with
     // a new search string (which we just inserted) if the selection
@@ -444,8 +463,14 @@ NS_IMPL_ISUPPORTS1(AutoCompleteListener, nsIAutoCompleteListener)
     [fieldEditor setSelectedRange:NSMakeRange(0,0)];    
     [fieldEditor didChangeText];
   }
-  aRange = NSMakeRange(aLocation,[[fieldEditor string] length] - aLocation);
-  [fieldEditor setSelectedRange:aRange];
+  
+  // sanity check and don't update the highlight if we're starting from the
+  // beginning of the string. There's no need for that since no autocomplete
+  // result would ever replace the string from location 0.
+	if ( aLocation > [[fieldEditor string] length] || !aLocation )
+    return;
+  range = NSMakeRange(aLocation,[[fieldEditor string] length] - aLocation);
+  [fieldEditor setSelectedRange:range];
 }
 
 // selecting rows /////////////////////////////////////////
@@ -457,8 +482,12 @@ NS_IMPL_ISUPPORTS1(AutoCompleteListener, nsIAutoCompleteListener)
     if ([mPopupWin isVisible] == NO)
       [mPopupWin orderFront:nil];
 
-    [mTableView selectRow:aRow byExtendingSelection:NO];
-    [mTableView scrollRowToVisible: aRow];
+    if ( aRow == -1 )
+      [mTableView deselectAll:self];
+    else {
+      [mTableView selectRow:aRow byExtendingSelection:NO];
+      [mTableView scrollRowToVisible: aRow];
+    }
   }
 }
 
@@ -470,8 +499,8 @@ NS_IMPL_ISUPPORTS1(AutoCompleteListener, nsIAutoCompleteListener)
     // if nothing is selected and you scroll up, go to last row
     row = [mTableView numberOfRows]-1;
   } else if (row == [mTableView numberOfRows]-1 && aRows == 1) {
-    // if the last row is selected and you scroll down, go to first row
-    row = 0;
+    // if the last row is selected and you scroll down, do nothing. pins
+    // the selection at the bottom.
   } else if (aRows+row < 0) {
     // if you scroll up beyond first row...
     if (row == 0)
@@ -502,6 +531,10 @@ NS_IMPL_ISUPPORTS1(AutoCompleteListener, nsIAutoCompleteListener)
 
 - (void) onBlur:(NSNotification *)aNote
 {
+  // close up the popup and make sure we clear any past selection. We cannot
+  // use |selectAt:-1| because that would show the popup, even for a brief instant
+  // and cause flashing.
+  [mTableView deselectAll:self];
   [self closePopup];
 }
 
@@ -512,8 +545,10 @@ NS_IMPL_ISUPPORTS1(AutoCompleteListener, nsIAutoCompleteListener)
 
 - (void) onUndoOrRedo:(NSNotification *)aNote
 {
+  [mTableView deselectAll:self];
   [self clearResults];
 }
+
 
 // NSTextField delegate //////////////////////////////////
 - (void)controlTextDidChange:(NSNotification *)aNote
@@ -548,6 +583,7 @@ NS_IMPL_ISUPPORTS1(AutoCompleteListener, nsIAutoCompleteListener)
 {
   if (command == @selector(insertNewline:)) {
     [self enterResult:[mTableView selectedRow]];
+    [mTableView deselectAll:self];
   } else if (command == @selector(moveUp:)) {
     [self selectRowBy:-1];
     [self completeSelectedResult];
@@ -578,8 +614,10 @@ NS_IMPL_ISUPPORTS1(AutoCompleteListener, nsIAutoCompleteListener)
              command == @selector(deleteForward:)) {
     // if the user deletes characters, we need to know so that
     // we can prevent autocompletion later when search results come in
-    if ([[textView string] length] > 1)
-      mBackspaced = YES;    
+    if ([[textView string] length] > 1) {
+    	[self selectRowAt:-1];
+      mBackspaced = YES;
+    }
   }
   
   return NO;

@@ -48,7 +48,7 @@ class NeckoCacheHelper;
 
 @interface SiteIconProvider : NSObject<RemoteLoadListener>
 {
-  NeckoCacheHelper*	mMissedIconsCacheHelper;
+  NeckoCacheHelper* mMissedIconsCacheHelper;
 }
 
 + (SiteIconProvider*)sharedFavoriteIconProvider;
@@ -64,6 +64,7 @@ class NeckoCacheHelper;
 // This method returns YES if the uri request was dispatched (i.e. if we know
 // that we've looked for, and failed to find, this icon before). If it returns
 // YES, then the 'SiteIconLoadNotificationName' notification will be sent out.
+// userData is not retained.
 - (BOOL)loadFavoriteIcon:(id)sender forURI:(NSString *)inURI withUserData:(id)userData allowNetwork:(BOOL)inAllowNetwork;
 
 @end

@@ -24,7 +24,8 @@
 #import <AppKit/AppKit.h>
 #import "BookmarksService.h"
 
-@interface BookmarkInfoController : NSWindowController {
+@interface BookmarkInfoController : NSWindowController<BookmarksClient>
+{
     IBOutlet NSTextField* mNameField;
     IBOutlet NSTextField* mLocationField;
     IBOutlet NSTextField* mKeywordField;
@@ -34,13 +35,22 @@
     IBOutlet NSTextField* mKeywordLabel;
     IBOutlet NSTextField* mDescriptionLabel;
     
-    BookmarkItem* mBookmarkItem;
-    NSTextView* mFieldEditor;
+    IBOutlet NSView*      mVariableFieldsContainer;
+
+    IBOutlet NSButton*    mDockMenuCheckbox;
+    IBOutlet NSButton*    mTabgroupCheckbox;
+    
+    BookmarkItem*         mBookmarkItem;
+    NSTextView*           mFieldEditor;
 }
 
 + (id)sharedBookmarkInfoController;
++ (void)closeBookmarkInfoController;
 
 -(void)setBookmark:(BookmarkItem*)aBookmark;
+-(BookmarkItem*)bookmark;
 
+- (IBAction)dockMenuCheckboxClicked:(id)sender;
+- (IBAction)tabGroupCheckboxClicked:(id)sender;
 
 @end

@@ -36,19 +36,33 @@
  * ***** END LICENSE BLOCK ***** */
 
 #import "NSString+Utils.h"
+#import "CHClickListener.h"
 
 #include "nsCWebBrowser.h"
 #include "nsIBaseWindow.h"
 #include "nsIWebNavigation.h"
+#include "nsIWebBrowserSetup.h"
 #include "nsComponentManagerUtils.h"
 
 #include "nsIURI.h"
 #include "nsIDOMWindow.h"
+#include "nsPIDOMWindow.h"
+#include "nsIChromeEventHandler.h"
+#include "nsIDOMEventReceiver.h"
 #include "nsIWidget.h"
+#include "nsIPrefBranch.h"
 
 // Printing
 #include "nsIWebBrowserPrint.h"
-//#include "nsIPrintSettings.h"
+#include "nsIPrintSettings.h"
+#include "nsIPrintingPromptService.h"
+#include "nsIPrintSettingsService.h"
+
+// bigger/smaller text
+#include "nsIScriptGlobalObject.h"
+#include "nsIDocShell.h"
+#include "nsIMarkupDocumentViewer.h"
+#include "nsIContentViewer.h"
 
 // Saving of links/images/docs
 #include "nsIWebBrowserFocus.h"
@@ -61,13 +75,12 @@
 #include "nsISHistory.h"
 #include "nsIHistoryEntry.h"
 #include "nsISHEntry.h"
+#include "nsIWebBrowserFind.h"
 #include "nsNetUtil.h"
 #include "SaveHeaderSniffer.h"
 
-#import "BrowserWrapper.h"
 #import "CHBrowserView.h"
 
-#import "FindDlgController.h"
 #import "CHBrowserService.h"
 #import "CHBrowserListener.h"
 
@@ -88,6 +101,17 @@ typedef unsigned int DragReference;
 const char kPersistContractID[] = "@mozilla.org/embedding/browser/nsWebBrowserPersist;1";
 const char kDirServiceContractID[] = "@mozilla.org/file/directory_service;1";
 
+#define MIN_TEXT_ZOOM 0.01f
+#define MAX_TEXT_ZOOM 20.0f
+
+@interface CHBrowserView(Private)
+
+- (nsIContentViewer*)getContentViewer;		// addrefs return value
+- (float)getTextZoom;
+- (void)incrementTextZoom:(float)increment min:(float)min max:(float)max;
+
+@end
+
 @implementation CHBrowserView
 
 - (id)initWithFrame:(NSRect)frame andWindow:(NSWindow*)aWindow
@@ -95,6 +119,7 @@ const char kDirServiceContractID[] = "@mozilla.org/file/directory_service;1";
   mWindow = aWindow;
   return [self initWithFrame:frame];
 }
+
 
 - (id)initWithFrame:(NSRect)frame
 {
@@ -126,29 +151,59 @@ const char kDirServiceContractID[] = "@mozilla.org/file/directory_service;1";
     
 // Hook up the widget hierarchy with us as the parent
     nsCOMPtr<nsIBaseWindow> baseWin = do_QueryInterface(_webBrowser);
-    baseWin->InitWindow((NSView*)self, nsnull, 0, 0,
-                        frame.size.width, frame.size.height);
+    baseWin->InitWindow((NSView*)self, nsnull, 0, 0, (int)frame.size.width, (int)frame.size.height);
     baseWin->Create();
     
 // register the view as a drop site for text, files, and urls. 
     [self registerForDraggedTypes: [NSArray arrayWithObjects:
               @"MozURLType", NSStringPboardType, NSURLPboardType, NSFilenamesPboardType, nil]];
+              
+    // The value of mUseGlobalPrintSettings can't change during our lifetime. 
+    nsCOMPtr<nsIPrefBranch> pref(do_GetService("@mozilla.org/preferences-service;1"));
+    PRBool tempBool = PR_TRUE;
+    pref->GetBoolPref("print.use_global_printsettings", &tempBool);
+    mUseGlobalPrintSettings = tempBool;
+              
+    // hookup the listener for creating our own native menus on <SELECTS>
+    CHClickListener* clickListener = new CHClickListener();
+    if (!clickListener)
+      return nil;
+    
+    nsCOMPtr<nsIDOMWindow> contentWindow = getter_AddRefs([self getContentWindow]);
+    nsCOMPtr<nsPIDOMWindow> piWindow(do_QueryInterface(contentWindow));
+    nsCOMPtr<nsIChromeEventHandler> chromeHandler;
+    piWindow->GetChromeEventHandler(getter_AddRefs(chromeHandler));
+    nsCOMPtr<nsIDOMEventReceiver> rec(do_QueryInterface(chromeHandler));
+    if ( rec )
+      rec->AddEventListenerByIID(clickListener, NS_GET_IID(nsIDOMMouseListener));
   }
   return self;
 }
 
 - (void)destroyWebBrowser
 {
-  nsCOMPtr<nsIBaseWindow> baseWin = do_QueryInterface(_webBrowser);
-  baseWin->Destroy();
+  NS_IF_RELEASE(mPrintSettings);
+
+  { // scope...
+    nsCOMPtr<nsIBaseWindow> baseWin = do_QueryInterface(_webBrowser);
+    if ( baseWin ) {
+      // clean up here rather than in the dtor so that if anyone tries to get our
+      // web browser, it won't get a garbage object that's past its prime. As a result,
+      // this routine MUST be called otherwise we will leak.
+      baseWin->Destroy();
+      NS_IF_RELEASE(_webBrowser);
+      NS_IF_RELEASE(_listener);
+    }
+  } // matters
+
+  CHBrowserService::BrowserClosed();
 }
 
 - (void)dealloc 
 {
-  NS_RELEASE(_listener);
-  NS_IF_RELEASE(_webBrowser);
-  
-  CHBrowserService::BrowserClosed();
+  // it is imperative that |destroyWebBrowser()| be called before we get here, otherwise
+  // we will leak the webBrowser.
+	NS_ASSERTION(!_webBrowser, "BrowserView going away, destroyWebBrowser not called; leaking webBrowser!");
   
 #if DEBUG
   NSLog(@"CHBrowserView died.");
@@ -168,26 +223,30 @@ const char kDirServiceContractID[] = "@mozilla.org/file/directory_service;1";
   }
 }
 
-- (void)addListener:(id <NSBrowserListener>)listener
+- (void)addListener:(id <CHBrowserListener>)listener
 {
-  _listener->AddListener(listener);
+  if ( _listener )
+    _listener->AddListener(listener);
 }
 
-- (void)removeListener:(id <NSBrowserListener>)listener
+- (void)removeListener:(id <CHBrowserListener>)listener
 {
-  _listener->RemoveListener(listener);
+  if ( _listener )
+    _listener->RemoveListener(listener);
 }
 
-- (void)setContainer:(id <NSBrowserContainer>)container
+- (void)setContainer:(id <CHBrowserContainer>)container
 {
-  _listener->SetContainer(container);
+  if ( _listener )
+    _listener->SetContainer(container);
 }
 
 - (nsIDOMWindow*)getContentWindow
 {
-  nsIDOMWindow* window;
+  nsIDOMWindow* window = nsnull;
 
-  _webBrowser->GetContentDOMWindow(&window);
+  if ( _webBrowser )
+    _webBrowser->GetContentDOMWindow(&window);
 
   return window;
 }
@@ -196,10 +255,8 @@ const char kDirServiceContractID[] = "@mozilla.org/file/directory_service;1";
 {
   nsCOMPtr<nsIWebNavigation> nav = do_QueryInterface(_webBrowser);
   
-  int length = [urlSpec length];
-  PRUnichar* specStr = nsMemory::Alloc((length+1) * sizeof(PRUnichar));
-  [urlSpec getCharacters:specStr];
-  specStr[length] = PRUnichar(0);
+  nsAutoString specStr;
+  [urlSpec assignTo_nsAString:specStr];
   
   nsCOMPtr<nsIURI> referrerURI;
   if ( referrer )
@@ -217,24 +274,24 @@ const char kDirServiceContractID[] = "@mozilla.org/file/directory_service;1";
                 nsIWebNavigation::LOAD_FLAGS_BYPASS_PROXY;
   }
 
-  nsresult rv = nav->LoadURI(specStr, navFlags, referrerURI, nsnull, nsnull);
+  nsresult rv = nav->LoadURI(specStr.get(), navFlags, referrerURI, nsnull, nsnull);
   if (NS_FAILED(rv)) {
     // XXX need to throw
   }
-
-  nsMemory::Free(specStr);
 }
 
 - (void)reload:(unsigned int)flags
 {
   nsCOMPtr<nsIWebNavigation> nav = do_QueryInterface(_webBrowser);
+  if ( !nav )
+    return;
 
   PRUint32 navFlags = nsIWebNavigation::LOAD_FLAGS_NONE;
   if (flags & NSLoadFlagsBypassCacheAndProxy) {
     navFlags |= nsIWebNavigation::LOAD_FLAGS_BYPASS_CACHE | 
                 nsIWebNavigation::LOAD_FLAGS_BYPASS_PROXY;
   }
-
+  
   nsresult rv = nav->Reload(navFlags);
   if (NS_FAILED(rv)) {
     // XXX need to throw
@@ -244,6 +301,8 @@ const char kDirServiceContractID[] = "@mozilla.org/file/directory_service;1";
 - (BOOL)canGoBack
 {
   nsCOMPtr<nsIWebNavigation> nav = do_QueryInterface(_webBrowser);
+  if ( !nav )
+    return NO;
 
   PRBool can;
   nav->GetCanGoBack(&can);
@@ -254,6 +313,8 @@ const char kDirServiceContractID[] = "@mozilla.org/file/directory_service;1";
 - (BOOL)canGoForward
 {
   nsCOMPtr<nsIWebNavigation> nav = do_QueryInterface(_webBrowser);
+  if ( !nav )
+    return NO;
 
   PRBool can;
   nav->GetCanGoForward(&can);
@@ -264,6 +325,8 @@ const char kDirServiceContractID[] = "@mozilla.org/file/directory_service;1";
 - (void)goBack
 {
   nsCOMPtr<nsIWebNavigation> nav = do_QueryInterface(_webBrowser);
+  if ( !nav )
+    return;
 
   nsresult rv = nav->GoBack();
   if (NS_FAILED(rv)) {
@@ -274,6 +337,8 @@ const char kDirServiceContractID[] = "@mozilla.org/file/directory_service;1";
 - (void)goForward
 {
   nsCOMPtr<nsIWebNavigation> nav = do_QueryInterface(_webBrowser);
+  if ( !nav )
+    return;
 
   nsresult rv = nav->GoForward();
   if (NS_FAILED(rv)) {
@@ -284,6 +349,8 @@ const char kDirServiceContractID[] = "@mozilla.org/file/directory_service;1";
 - (void)gotoIndex:(int)index
 {
   nsCOMPtr<nsIWebNavigation> nav = do_QueryInterface(_webBrowser);
+  if ( !nav )
+    return;
 
   nsresult rv = nav->GotoIndex(index);
   if (NS_FAILED(rv)) {
@@ -294,6 +361,8 @@ const char kDirServiceContractID[] = "@mozilla.org/file/directory_service;1";
 - (void)stop:(unsigned int)flags
 {
   nsCOMPtr<nsIWebNavigation> nav = do_QueryInterface(_webBrowser);
+  if ( !nav )
+    return;
 
   nsresult rv = nav->Stop(flags);
   if (NS_FAILED(rv)) {
@@ -301,24 +370,28 @@ const char kDirServiceContractID[] = "@mozilla.org/file/directory_service;1";
   }    
 }
 
-// XXXbryner This isn't used anywhere. how is it different from getCurrentURLSpec?
+- (void)setProperty:(unsigned int)property toValue:(unsigned int)value
+{
+	nsCOMPtr<nsIWebBrowserSetup> browserSetup = do_QueryInterface(_webBrowser);
+	if (browserSetup)
+    browserSetup->SetProperty(property, value);
+}
+
+// how does this differ from getCurrentURLSpec?
 - (NSString*)getCurrentURI
 {
-  nsCOMPtr<nsIURI> uri;
   nsCOMPtr<nsIWebNavigation> nav = do_QueryInterface(_webBrowser);
+  if (!nav)
+    return nil;
 
+  nsCOMPtr<nsIURI> uri;
   nav->GetCurrentURI(getter_AddRefs(uri));
-  if (!uri) {
-    return nsnull;
-  }
+  if (!uri)
+    return nil;
 
   nsCAutoString spec;
   uri->GetSpec(spec);
-  
-  const char* cstr = spec.get();
-  NSString* str = [NSString stringWithCString:cstr];
-  
-  return str;
+	return [NSString stringWithUTF8String:spec.get()];
 }
 
 - (CHBrowserListener*)getCocoaBrowserListener
@@ -334,19 +407,19 @@ const char kDirServiceContractID[] = "@mozilla.org/file/directory_service;1";
 
 - (void)setWebBrowser:(nsIWebBrowser*)browser
 {
+  NS_IF_ADDREF(browser);				// prevents destroying |browser| if |browser| == |_webBrowser|
+  NS_IF_RELEASE(_webBrowser);
   _webBrowser = browser;
 
   if (_webBrowser) {
     // Set the container nsIWebBrowserChrome
-    _webBrowser->SetContainerWindow(NS_STATIC_CAST(nsIWebBrowserChrome *, 
-               _listener));
+    _webBrowser->SetContainerWindow(NS_STATIC_CAST(nsIWebBrowserChrome *, _listener));
 
     NSRect frame = [self frame];
  
     // Hook up the widget hierarchy with us as the parent
     nsCOMPtr<nsIBaseWindow> baseWin = do_QueryInterface(_webBrowser);
-    baseWin->InitWindow((NSView*)self, nsnull, 0, 0, 
-      frame.size.width, frame.size.height);
+    baseWin->InitWindow((NSView*)self, nsnull, 0, 0, (int)frame.size.width, (int)frame.size.height);
     baseWin->Create();
   }
 
@@ -354,7 +427,7 @@ const char kDirServiceContractID[] = "@mozilla.org/file/directory_service;1";
 
 -(void) saveInternal: (nsIURI*)aURI
         withDocument: (nsIDOMDocument*)aDocument
-        suggestedFilename: (const char*)aFilename
+        suggestedFilename: (NSString*)aFileName
         bypassCache: (BOOL)aBypassCache
         filterView: (NSView*)aFilterView
         filterList: (NSPopUpButton*)aFilterList
@@ -383,22 +456,25 @@ const char kDirServiceContractID[] = "@mozilla.org/file/directory_service;1";
     nsCOMPtr<nsIInputStream> postData;
     if (aDocument) {
       nsCOMPtr<nsIWebNavigation> webNav(do_QueryInterface(_webBrowser));
-      nsCOMPtr<nsISHistory> sessionHistory;
-      webNav->GetSessionHistory(getter_AddRefs(sessionHistory));
-      nsCOMPtr<nsIHistoryEntry> entry;
-      PRInt32 sindex;
-      sessionHistory->GetIndex(&sindex);
-      sessionHistory->GetEntryAtIndex(sindex, PR_FALSE, getter_AddRefs(entry));
-      nsCOMPtr<nsISHEntry> shEntry(do_QueryInterface(entry));
-      if (shEntry)
-          shEntry->GetPostData(getter_AddRefs(postData));
+      if (webNav) {
+        nsCOMPtr<nsISHistory> sessionHistory;
+        webNav->GetSessionHistory(getter_AddRefs(sessionHistory));
+        nsCOMPtr<nsIHistoryEntry> entry;
+        PRInt32 sindex;
+        sessionHistory->GetIndex(&sindex);
+        sessionHistory->GetEntryAtIndex(sindex, PR_FALSE, getter_AddRefs(entry));
+        nsCOMPtr<nsISHEntry> shEntry(do_QueryInterface(entry));
+        if (shEntry)
+            shEntry->GetPostData(getter_AddRefs(postData));
+      }
     }
 
     // when saving, we first fire off a save with a nsHeaderSniffer as a progress
     // listener. This allows us to look for the content-disposition header, which
     // can supply a filename, and maybe has something to do with CGI-generated
     // content (?)
-    nsCAutoString fileName(aFilename);
+    nsAutoString fileName;
+    [aFileName assignTo_nsAString:fileName];
     nsHeaderSniffer* sniffer = new nsHeaderSniffer(webPersist, tmpFile, aURI, 
                                                    aDocument, postData, fileName, aBypassCache,
                                                    aFilterView, aFilterList);
@@ -410,17 +486,65 @@ const char kDirServiceContractID[] = "@mozilla.org/file/directory_service;1";
 
 -(void)printDocument
 {
-    nsCOMPtr<nsIDOMWindow> domWindow;
-    _webBrowser->GetContentDOMWindow(getter_AddRefs(domWindow));
-    nsCOMPtr<nsIInterfaceRequestor> ir(do_QueryInterface(domWindow));
-    nsCOMPtr<nsIWebBrowserPrint> print;
-    ir->GetInterface(NS_GET_IID(nsIWebBrowserPrint), getter_AddRefs(print));
-    print->Print(nsnull, nsnull);
+  if (!_webBrowser)
+    return;
+  nsCOMPtr<nsIDOMWindow> domWindow;
+  _webBrowser->GetContentDOMWindow(getter_AddRefs(domWindow));
+  nsCOMPtr<nsIInterfaceRequestor> ir(do_QueryInterface(domWindow));
+  nsCOMPtr<nsIWebBrowserPrint> print;
+  ir->GetInterface(NS_GET_IID(nsIWebBrowserPrint), getter_AddRefs(print));
+  [self ensurePrintSettings];
+  print->Print(mPrintSettings, nsnull);
+}
+
+-(void)pageSetup
+{
+  if (!_webBrowser)
+    return;
+  nsCOMPtr<nsIDOMWindow> domWindow;
+  _webBrowser->GetContentDOMWindow(getter_AddRefs(domWindow));
+
+  nsCOMPtr<nsIPrintingPromptService> ppService =
+      do_GetService("@mozilla.org/embedcomp/printingprompt-service;1");
+  if (!ppService)
+    return;
+  [self ensurePrintSettings];
+  if (NS_SUCCEEDED(ppService->ShowPageSetup(domWindow, mPrintSettings, nsnull)) &&
+      mUseGlobalPrintSettings) {
+      nsCOMPtr<nsIPrintSettingsService> psService =
+          do_GetService("@mozilla.org/gfx/printsettings-service;1");
+      if (!psService)
+        return;
+      psService->SavePrintSettingsToPrefs(mPrintSettings, PR_FALSE,
+                                          nsIPrintSettings::kInitSaveNativeData);
+  }
+}
+
+- (void)ensurePrintSettings
+{
+  if (mPrintSettings)
+    return;
+  
+  nsCOMPtr<nsIPrintSettingsService> psService =
+      do_GetService("@mozilla.org/gfx/printsettings-service;1");
+  if (!psService)
+    return;
+    
+  if (mUseGlobalPrintSettings) {
+    psService->GetGlobalPrintSettings(&mPrintSettings);
+    if (mPrintSettings)
+      psService->InitPrintSettingsFromPrefs(mPrintSettings, PR_FALSE,
+                                            nsIPrintSettings::kInitSaveNativeData);
+  }
+  else
+    psService->GetNewPrintSettings(&mPrintSettings);
 }
 
 - (BOOL)findInPageWithPattern:(NSString*)inText caseSensitive:(BOOL)inCaseSensitive
     wrap:(BOOL)inWrap backwards:(BOOL)inBackwards
 {
+    if (!_webBrowser)
+      return NO;
     PRBool found =  PR_FALSE;
     
     nsCOMPtr<nsIWebBrowserFocus> wbf(do_QueryInterface(_webBrowser));
@@ -440,14 +564,10 @@ const char kDirServiceContractID[] = "@mozilla.org/file/directory_service;1";
       webFind->SetWrapFind(inWrap ? PR_TRUE : PR_FALSE);
       webFind->SetFindBackwards(inBackwards ? PR_TRUE : PR_FALSE);
     
-      PRUnichar* text = (PRUnichar*)nsMemory::Alloc(([inText length]+1)*sizeof(PRUnichar));
-      if ( text ) {
-        [inText getCharacters:text];
-        text[[inText length]] = 0;
-        webFind->SetSearchString(text);
-        webFind->FindNext(&found);
-        nsMemory::Free(text);
-      }
+      nsAutoString findString;
+      [inText assignTo_nsAString:findString];
+      webFind->SetSearchString(findString.get());
+      webFind->FindNext(&found);
     }
     return found;
 }
@@ -462,7 +582,7 @@ const char kDirServiceContractID[] = "@mozilla.org/file/directory_service;1";
   
   [self saveInternal: url.get()
         withDocument: nsnull
-   suggestedFilename: (([aFilename length] > 0) ? [aFilename fileSystemRepresentation] : "")
+   suggestedFilename: aFilename
          bypassCache: YES
           filterView: aFilterView
           filterList: aFilterList];
@@ -470,6 +590,8 @@ const char kDirServiceContractID[] = "@mozilla.org/file/directory_service;1";
 
 -(NSString*)getFocusedURLString
 {
+  if (!_webBrowser)
+    return @"";
   nsCOMPtr<nsIWebBrowserFocus> wbf(do_QueryInterface(_webBrowser));
   nsCOMPtr<nsIDOMWindow> domWindow;
   wbf->GetFocusedWindow(getter_AddRefs(domWindow));
@@ -494,66 +616,59 @@ const char kDirServiceContractID[] = "@mozilla.org/file/directory_service;1";
   return [NSString stringWith_nsAString: urlStr];
 }
 
-- (void)saveDocument: (NSView*)aFilterView filterList: (NSPopUpButton*)aFilterList
+- (void)saveDocument:(BOOL)focusedFrame filterView:(NSView*)aFilterView filterList: (NSPopUpButton*)aFilterList
 {
+  if (!_webBrowser)
+    return;
+  
+  nsCOMPtr<nsIDOMWindow> domWindow;
+  if (focusedFrame)
+  {
     nsCOMPtr<nsIWebBrowserFocus> wbf(do_QueryInterface(_webBrowser));
-    nsCOMPtr<nsIDOMWindow> domWindow;
     wbf->GetFocusedWindow(getter_AddRefs(domWindow));
-    if (!domWindow)
-        _webBrowser->GetContentDOMWindow(getter_AddRefs(domWindow));
-    if (!domWindow)
-        return;
-    
-    nsCOMPtr<nsIDOMDocument> domDocument;
-    domWindow->GetDocument(getter_AddRefs(domDocument));
-    if (!domDocument)
-        return;
-    nsCOMPtr<nsIDOMNSDocument> nsDoc(do_QueryInterface(domDocument));
-    if (!nsDoc)
-        return;
-    nsCOMPtr<nsIDOMLocation> location;
-    nsDoc->GetLocation(getter_AddRefs(location));
-    if (!location)
-        return;
-    nsAutoString urlStr;
-    location->GetHref(urlStr);
-    nsCAutoString urlCStr; urlCStr.AssignWithConversion(urlStr);
-    nsCOMPtr<nsIURI> url;
-    nsresult rv = NS_NewURI(getter_AddRefs(url), urlCStr.get());
-    if (NS_FAILED(rv))
-        return;
-    
-    [self saveInternal: url.get()
-          withDocument: domDocument
-          suggestedFilename: ""
-          bypassCache: NO
-          filterView: aFilterView
-          filterList: aFilterList];
+  }
+  else
+    _webBrowser->GetContentDOMWindow(getter_AddRefs(domWindow));
+
+  if (!domWindow)
+      return;
+  
+  nsCOMPtr<nsIDOMDocument> domDocument;
+  domWindow->GetDocument(getter_AddRefs(domDocument));
+  if (!domDocument)
+      return;
+  nsCOMPtr<nsIDOMNSDocument> nsDoc(do_QueryInterface(domDocument));
+  if (!nsDoc)
+      return;
+  nsCOMPtr<nsIDOMLocation> location;
+  nsDoc->GetLocation(getter_AddRefs(location));
+  if (!location)
+      return;
+  nsAutoString urlStr;
+  location->GetHref(urlStr);
+
+  nsCOMPtr<nsIURI> url;
+  nsresult rv = NS_NewURI(getter_AddRefs(url), NS_ConvertUCS2toUTF8(urlStr).get());
+  if (NS_FAILED(rv))
+      return;
+  
+  [self saveInternal: url.get()
+        withDocument: domDocument
+        suggestedFilename: @""
+        bypassCache: NO
+        filterView: aFilterView
+        filterList: aFilterList];
 }
 
 -(void)doCommand:(const char*)commandName
 {
   nsCOMPtr<nsICommandManager> commandMgr(do_GetInterface(_webBrowser));
   if (commandMgr) {
-    nsCOMPtr<nsICommandParams> commandParams = do_CreateInstance("@mozilla.org/embedcomp/command-params;1");
-    if (commandParams) {
-      nsresult rv;
-      
-      nsAutoString commandNameStr;
-      commandNameStr.AssignWithConversion(commandName);
-      
-      rv = commandParams->SetStringValue(NS_LITERAL_STRING("cmd_name"), commandNameStr);
-      rv = commandMgr->DoCommand(commandParams);
+    nsresult rv = commandMgr->DoCommand(commandName, nsnull, nsnull);
 #if DEBUG
-      if (NS_FAILED(rv))
-        NSLog(@"DoCommand failed");
+    if (NS_FAILED(rv))
+      NSLog(@"DoCommand failed");
 #endif
-    }
-    else {
-#if DEBUG
-      NSLog(@"Failed to make command params");
-#endif
-    }
   }
   else {
 #if DEBUG
@@ -567,9 +682,8 @@ const char kDirServiceContractID[] = "@mozilla.org/file/directory_service;1";
   PRBool	isEnabled = PR_FALSE;
   nsCOMPtr<nsICommandManager> commandMgr(do_GetInterface(_webBrowser));
   if (commandMgr) {
-    nsAutoString commandNameStr;
-    commandNameStr.AssignWithConversion(commandName);
-    nsresult rv = commandMgr->IsCommandEnabled(commandNameStr, &isEnabled);
+    nsresult rv = commandMgr->IsCommandEnabled(commandName, nsnull,
+                                               &isEnabled);
 #if DEBUG
     if (NS_FAILED(rv))
       NSLog(@"IsCommandEnabled failed");
@@ -580,7 +694,6 @@ const char kDirServiceContractID[] = "@mozilla.org/file/directory_service;1";
     NSLog(@"No command manager");
 #endif
   }
-  
   return (isEnabled) ? YES : NO;
 }
 
@@ -588,42 +701,48 @@ const char kDirServiceContractID[] = "@mozilla.org/file/directory_service;1";
 -(IBAction)cut:(id)aSender
 {
   nsCOMPtr<nsIClipboardCommands> clipboard(do_GetInterface(_webBrowser));
-  clipboard->CutSelection();
+  if ( clipboard )
+    clipboard->CutSelection();
 }
 
 -(BOOL)canCut
 {
   PRBool canCut = PR_FALSE;
   nsCOMPtr<nsIClipboardCommands> clipboard(do_GetInterface(_webBrowser));
-  clipboard->CanCutSelection(&canCut);
+  if ( clipboard )
+    clipboard->CanCutSelection(&canCut);
   return canCut;
 }
 
 -(IBAction)copy:(id)aSender
 {
   nsCOMPtr<nsIClipboardCommands> clipboard(do_GetInterface(_webBrowser));
-  clipboard->CopySelection();
+  if ( clipboard )
+    clipboard->CopySelection();
 }
 
 -(BOOL)canCopy
 {
   PRBool canCut = PR_FALSE;
   nsCOMPtr<nsIClipboardCommands> clipboard(do_GetInterface(_webBrowser));
-  clipboard->CanCopySelection(&canCut);
+  if ( clipboard )
+    clipboard->CanCopySelection(&canCut);
   return canCut;
 }
 
 -(IBAction)paste:(id)aSender
 {
   nsCOMPtr<nsIClipboardCommands> clipboard(do_GetInterface(_webBrowser));
-  clipboard->Paste();
+  if ( clipboard )
+    clipboard->Paste();
 }
 
 -(BOOL)canPaste
 {
   PRBool canCut = PR_FALSE;
   nsCOMPtr<nsIClipboardCommands> clipboard(do_GetInterface(_webBrowser));
-  clipboard->CanPaste(&canCut);
+  if ( clipboard )
+    clipboard->CanPaste(&canCut);
   return canCut;
 }
 
@@ -640,7 +759,8 @@ const char kDirServiceContractID[] = "@mozilla.org/file/directory_service;1";
 -(IBAction)selectAll:(id)aSender
 {
   nsCOMPtr<nsIClipboardCommands> clipboard(do_GetInterface(_webBrowser));
-  clipboard->SelectAll();
+  if ( clipboard )
+    clipboard->SelectAll();
 }
 
 -(IBAction)undo:(id)aSender
@@ -663,9 +783,54 @@ const char kDirServiceContractID[] = "@mozilla.org/file/directory_service;1";
   return [self isCommandEnabled: "cmd_redo"];
 }
 
+- (void)biggerTextSize
+{
+  [self incrementTextZoom:0.25 min:MIN_TEXT_ZOOM max:MAX_TEXT_ZOOM];
+}
+
+- (void)smallerTextSize
+{
+  [self incrementTextZoom:-0.25 min:MIN_TEXT_ZOOM max:MAX_TEXT_ZOOM];
+}
+
+- (BOOL)canMakeTextBigger
+{
+  float zoom = [self getTextZoom];
+  return zoom < MAX_TEXT_ZOOM;
+}
+
+- (BOOL)canMakeTextSmaller
+{
+  float zoom = [self getTextZoom];
+  return zoom > MIN_TEXT_ZOOM;
+}
+
+- (void)moveToBeginningOfDocument:(id)sender
+{
+  [self doCommand: "cmd_moveTop"];
+}
+
+- (void)moveToEndOfDocument:(id)sender
+{
+  [self doCommand: "cmd_moveBottom"];
+}
+
+- (void)moveToBeginningOfDocumentAndModifySelection:(id)sender
+{
+  [self doCommand: "cmd_selectMoveTop"];
+}
+
+- (void)moveToEndOfDocumentAndModifySelection:(id)sender
+{
+  [self doCommand: "cmd_selectMoveBottom"];
+}
+
+// how does this differ from getCurrentURI?
 -(NSString*)getCurrentURLSpec
 {
   NSString* empty = @"";
+  if (!_webBrowser)
+    return empty;
   nsCOMPtr<nsIDOMWindow> domWindow;
   _webBrowser->GetContentDOMWindow(getter_AddRefs(domWindow));
   if (!domWindow)
@@ -693,17 +858,19 @@ const char kDirServiceContractID[] = "@mozilla.org/file/directory_service;1";
 - (void)setActive: (BOOL)aIsActive
 {
   nsCOMPtr<nsIWebBrowserFocus> wbf(do_QueryInterface(_webBrowser));
-  if (aIsActive)
-    wbf->Activate();
-  else
-    wbf->Deactivate();
+  if (wbf) {
+    if (aIsActive)
+      wbf->Activate();
+    else
+      wbf->Deactivate();
+  }
 }
 
 -(NSMenu*)getContextMenu
 {
-  if ([[self superview] conformsToProtocol:@protocol(NSBrowserContainer)])
+  if ([[self superview] conformsToProtocol:@protocol(CHBrowserContainer)])
   {
-    id<NSBrowserContainer> browserContainer = [self superview];
+    id<CHBrowserContainer> browserContainer = [self superview];
   	return [browserContainer getContextMenu];
   }
   
@@ -723,9 +890,9 @@ const char kDirServiceContractID[] = "@mozilla.org/file/directory_service;1";
   
   // Finally, see if our parent responds to the getNativeWindow selector,
   // and if they do, let them handle it.
-  if ([[self superview] conformsToProtocol:@protocol(NSBrowserContainer)])
+  if ([[self superview] conformsToProtocol:@protocol(CHBrowserContainer)])
   {
-    id<NSBrowserContainer> browserContainer = [self superview];
+    id<CHBrowserContainer> browserContainer = [self superview];
     return [browserContainer getNativeWindow];
   }
     
@@ -752,13 +919,66 @@ const char kDirServiceContractID[] = "@mozilla.org/file/directory_service;1";
   }
 }
 
+
+- (nsIContentViewer*)getContentViewer		// addrefs return value
+{
+  if (!_webBrowser)
+    return NULL;
+  nsCOMPtr<nsIDOMWindow> domWindow;
+  _webBrowser->GetContentDOMWindow(getter_AddRefs(domWindow));
+  nsCOMPtr<nsIScriptGlobalObject> global(do_QueryInterface(domWindow));
+  if (!global)
+    return NULL;
+  nsCOMPtr<nsIDocShell> docShell;
+  global->GetDocShell(getter_AddRefs(docShell));
+  if (!docShell)
+    return NULL;
+  
+  nsIContentViewer* cv = NULL;
+  docShell->GetContentViewer(&cv);		// addrefs
+  return cv;
+}
+
+- (float)getTextZoom
+{
+  nsCOMPtr<nsIContentViewer> contentViewer = getter_AddRefs([self getContentViewer]);
+  nsCOMPtr<nsIMarkupDocumentViewer> markupViewer(do_QueryInterface(contentViewer));
+  if (!markupViewer)
+    return 1.0;
+
+  float zoom;
+  markupViewer->GetTextZoom(&zoom);
+  return zoom;
+}
+
+- (void)incrementTextZoom:(float)increment min:(float)min max:(float)max
+{
+  nsCOMPtr<nsIContentViewer> contentViewer = getter_AddRefs([self getContentViewer]);
+  nsCOMPtr<nsIMarkupDocumentViewer> markupViewer(do_QueryInterface(contentViewer));
+  if (!markupViewer)
+    return;
+
+  float zoom;
+  markupViewer->GetTextZoom(&zoom);
+  zoom += increment;
+  
+  if (zoom < min)
+    zoom = min;
+
+  if (zoom > max)
+    zoom = max;
+
+  markupViewer->SetTextZoom(zoom);
+}
+
+
 #pragma mark -
 
 - (BOOL)shouldAcceptDrag:(id <NSDraggingInfo>)sender
 {
-  if ([[self superview] conformsToProtocol:@protocol(NSBrowserContainer)])
+  if ([[self superview] conformsToProtocol:@protocol(CHBrowserContainer)])
   {
-    id<NSBrowserContainer> browserContainer = [self superview];
+    id<CHBrowserContainer> browserContainer = [self superview];
     return [browserContainer shouldAcceptDragFromSource:[sender draggingSource]];
   }
   return YES;
@@ -867,6 +1087,87 @@ const char kDirServiceContractID[] = "@mozilla.org/file/directory_service;1";
     return YES;
   
   return NO;
+}
+
+#pragma mark -
+
+// ******** services support *************** //
+
+// this needs to be efficient.
+// if sendType is nil, the service doesn't require input from us.
+// if returnType is nil, the service doesn't return data
+- (id)validRequestorForSendType:(NSString *)sendType returnType:(NSString *)returnType
+{
+  if (sendType && returnType)
+  {
+    // service needs to both get and put data
+    if (([sendType isEqual:NSStringPboardType] && [self isCommandEnabled:"cmd_getContents"]) &&
+        ([returnType isEqual:NSStringPboardType] && [self isCommandEnabled:"cmd_insertText"]))
+      return self;
+  }
+  else if (sendType)
+  {
+    if ([sendType isEqual:NSStringPboardType] && [self isCommandEnabled:"cmd_getContents"])
+      return self;
+  }
+  else if (returnType)
+  {
+    if ([returnType isEqual:NSStringPboardType] && [self isCommandEnabled:"cmd_insertText"])
+      return self;
+  }
+
+  return [super validRequestorForSendType:sendType returnType:returnType];
+}
+
+- (BOOL)writeSelectionToPasteboard:(NSPasteboard *)pboard types:(NSArray *)types
+{
+  if ([types containsObject:NSStringPboardType] == NO)
+    return NO;
+
+  nsCOMPtr<nsICommandManager> cmdManager = do_GetInterface(_webBrowser);
+  if (!cmdManager) return NO;
+  
+  nsCOMPtr<nsICommandParams> params = do_CreateInstance(NS_COMMAND_PARAMS_CONTRACTID);
+  if (!params) return NO;
+  
+  params->SetStringValue("format",   NS_LITERAL_STRING("text/plain"));
+  params->SetBooleanValue("selection_only", PR_TRUE);
+  
+  nsresult rv = cmdManager->DoCommand("cmd_getContents", params, nsnull);
+  if (NS_FAILED(rv))
+    return NO;
+ 
+  nsAutoString selectedText;
+  params->GetStringValue("result", selectedText);
+
+  NSString* seletedText = [NSString stringWith_nsAString:selectedText];
+  
+  NSArray* typesDeclared = [NSArray arrayWithObject:NSStringPboardType];
+  [pboard declareTypes:typesDeclared owner:nil];
+    
+  return [pboard setString:seletedText forType:NSStringPboardType];
+}
+
+- (BOOL)readSelectionFromPasteboard:(NSPasteboard *)pboard
+{
+  NSArray* types = [pboard types];
+  if (![types containsObject:NSStringPboardType])
+    return NO;
+
+  NSString* theText = [pboard stringForType:NSStringPboardType];
+  nsAutoString textString;
+  [theText assignTo_nsAString:textString];
+  
+  nsCOMPtr<nsICommandManager> cmdManager = do_GetInterface(_webBrowser);
+  if (!cmdManager) return NO;
+
+  nsCOMPtr<nsICommandParams> params = do_CreateInstance(NS_COMMAND_PARAMS_CONTRACTID);
+  if (!params) return NO;
+  
+  params->SetStringValue("data", textString);
+  nsresult rv = cmdManager->DoCommand("cmd_insertText", params, nsnull);
+  
+  return (BOOL)NS_SUCCEEDED(rv);
 }
 
 @end

@@ -41,12 +41,10 @@
 @class BrowserWindowController;
 @class ToolTip;
 
-@interface BrowserWrapper : NSView <NSBrowserListener, NSBrowserContainer>
+@interface BrowserWrapper : NSView <CHBrowserListener, CHBrowserContainer>
 {
   NSTextField*              mUrlbar;
   NSTextField*              mStatus;
-  NSProgressIndicator*      mProgress;
-  NSView*                   mProgressSuper;
   BrowserWindowController*  mWindowController;
   NSTabViewItem*            mTabItem;
   NSWindow*                 mWindow;
@@ -61,12 +59,16 @@
     // the title associated with this tab's url. We need to hold it so that we
     // can set the window title whenever we become the primary. 
   NSString*                 mTitle;
+    // the title we use for the tab. This differs for mTitle when the tab is loading
+  NSString*                 mTabTitle;
 
   CHBrowserView*            mBrowserView;
   NSString*                 mDefaultStatusString;
   NSString*                 mLoadingStatusString;
   ToolTip*                  mToolTip;
 
+  double                    mProgress;
+  
   BOOL mIsPrimary;
   BOOL mIsBusy;
   BOOL mOffline;
@@ -84,21 +86,25 @@
 - (void)setFrame:(NSRect)frameRect;
 - (CHBrowserView*)getBrowserView;
 - (BOOL)isBusy;
+- (BOOL)isEmpty;                      // is about:blank loaded?
 - (void)windowClosed;
 
 - (NSString*)getCurrentURLSpec;
 
 - (void)loadURI:(NSString *)urlSpec referrer:(NSString*)referrer flags:(unsigned int)flags activate:(BOOL)activate;
 - (void)makePrimaryBrowserView: (id)aUrlbar status: (id)aStatus
-    progress: (id)aProgress windowController: (BrowserWindowController*)aWindowController;
+          windowController: (BrowserWindowController*)aWindowController;
 - (void)disconnectView;
 - (void)setTab: (NSTabViewItem*)tab;
+- (NSTabViewItem*) tab;
 
 - (NSWindow*)getNativeWindow;
 - (NSMenu*)getContextMenu;
 - (void)setIsBookmarksImport:(BOOL)aIsImport;
 
-// NSBrowserListener messages
+- (void)getTitle:(NSString **)outTitle andHref:(NSString**)outHrefString;
+
+// CHBrowserListener messages
 - (void)onLoadingStarted;
 - (void)onLoadingCompleted:(BOOL)succeeded;
 - (void)onProgressChange:(int)currentBytes outOf:(int)maxBytes;
@@ -108,7 +114,7 @@
 - (void)onShowTooltip:(NSPoint)where withText:(NSString*)text;
 - (void)onHideTooltip;
 
-// NSBrowserContainer messages
+// CHBrowserContainer messages
 - (void)setStatus:(NSString *)statusString ofType:(NSStatusType)type;
 - (NSString *)title;
 - (void)setTitle:(NSString *)title;

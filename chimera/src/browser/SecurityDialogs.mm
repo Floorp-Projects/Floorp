@@ -57,16 +57,16 @@ SecurityDialogs::~SecurityDialogs()
 {
 }
 
-NS_IMPL_ISUPPORTS3(SecurityDialogs, nsIBadCertListener,
-                   nsISecurityWarningDialogs, nsINSSDialogs);
+NS_IMPL_ISUPPORTS2(SecurityDialogs, nsIBadCertListener, nsISecurityWarningDialogs)
 
 // nsIBadCertListener implementation
-/* boolean unknownIssuer (in nsITransportSecurityInfo socketInfo,
-   in nsIX509Cert cert, out addType); */
+/* boolean confirmUnknownIssuer (in nsIInterfaceRequestor socketInfo,
+                                 in nsIX509Cert cert,
+                                 out short certAddType); */
 NS_IMETHODIMP
-SecurityDialogs::UnknownIssuer(nsITransportSecurityInfo *socketInfo,
-                               nsIX509Cert *cert, PRInt16 *outAddType,
-                               PRBool *_retval)
+SecurityDialogs::ConfirmUnknownIssuer(nsIInterfaceRequestor *socketInfo,
+                                      nsIX509Cert *cert, PRInt16 *outAddType,
+                                      PRBool *_retval)
 {
   *_retval = PR_TRUE;
   *outAddType = ADD_TRUSTED_FOR_SESSION;
@@ -91,13 +91,13 @@ SecurityDialogs::UnknownIssuer(nsITransportSecurityInfo *socketInfo,
   return NS_OK;
 }
 
-/* boolean mismatchDomain (in nsITransportSecurityInfo socketInfo,
-                              in wstring targetURL,
-                              in nsIX509Cert cert); */
+/* boolean confirmMismatchDomain (in nsIInterfaceRequestor socketInfo,
+                                  in nsAUTF8String targetURL,
+                                  in nsIX509Cert cert); */
 NS_IMETHODIMP
-SecurityDialogs::MismatchDomain(nsITransportSecurityInfo *socketInfo,
-                                const PRUnichar *targetURL,
-                                nsIX509Cert *cert, PRBool *_retval)
+SecurityDialogs::ConfirmMismatchDomain(nsIInterfaceRequestor *socketInfo,
+                                       const nsACString& targetURL,
+                                       nsIX509Cert *cert, PRBool *_retval)
 {
   nsAlertController* controller = CHBrowserService::GetAlertController();
   if (!controller)
@@ -112,11 +112,11 @@ SecurityDialogs::MismatchDomain(nsITransportSecurityInfo *socketInfo,
 }
 
 
-/* boolean certExpired (in nsITransportSecurityInfo socketInfo,
-   in nsIX509Cert cert); */
+/* boolean confirmCertExpired (in nsIInterfaceRequestor socketInfo,
+                               in nsIX509Cert cert); */
 NS_IMETHODIMP
-SecurityDialogs::CertExpired(nsITransportSecurityInfo *socketInfo,
-                             nsIX509Cert *cert, PRBool *_retval)
+SecurityDialogs::ConfirmCertExpired(nsIInterfaceRequestor *socketInfo,
+                                    nsIX509Cert *cert, PRBool *_retval)
 {
   nsAlertController* controller = CHBrowserService::GetAlertController();
   if (!controller)
@@ -131,8 +131,9 @@ SecurityDialogs::CertExpired(nsITransportSecurityInfo *socketInfo,
 }
 
 NS_IMETHODIMP
-SecurityDialogs::CrlNextupdate(nsITransportSecurityInfo *socketInfo,
-                               const PRUnichar * targetURL, nsIX509Cert *cert)
+SecurityDialogs::NotifyCrlNextupdate(nsIInterfaceRequestor *socketInfo,
+                                     const nsACString& targetURL,
+                                     nsIX509Cert *cert)
 {
   // what does this do!?
   return NS_OK;
@@ -148,7 +149,8 @@ SecurityDialogs::CrlNextupdate(nsITransportSecurityInfo *socketInfo,
 #define INSECURE_SUBMIT_PREF "security.warn_submit_insecure"
 
 NS_IMETHODIMP
-SecurityDialogs::AlertEnteringSecure(nsIInterfaceRequestor *ctx)
+SecurityDialogs::ConfirmEnteringSecure(nsIInterfaceRequestor *ctx,
+                                       PRBool *canceled)
 {
   // I don't think any user cares they're entering a secure site.
   #if 0
@@ -157,20 +159,25 @@ SecurityDialogs::AlertEnteringSecure(nsIInterfaceRequestor *ctx)
                    NS_LITERAL_STRING("EnterSecureShowAgain").get());
   #endif
 
+  *canceled = PR_FALSE;
   return NS_OK;
 }
 
 NS_IMETHODIMP
-SecurityDialogs::AlertEnteringWeak(nsIInterfaceRequestor *ctx)
+SecurityDialogs::ConfirmEnteringWeak(nsIInterfaceRequestor *ctx,
+                                     PRBool *canceled)
 {
+  *canceled = PR_FALSE;
   return AlertDialog(ctx, WEAK_SITE_PREF,
                      NS_LITERAL_STRING("WeakSecureMessage").get(),
                      NS_LITERAL_STRING("WeakSecureShowAgain").get());
 }
 
 NS_IMETHODIMP
-SecurityDialogs::AlertLeavingSecure(nsIInterfaceRequestor *ctx)
+SecurityDialogs::ConfirmLeavingSecure(nsIInterfaceRequestor *ctx,
+                                      PRBool *canceled)
 {
+  *canceled = PR_FALSE;
   return AlertDialog(ctx, LEAVE_SITE_PREF,
                      NS_LITERAL_STRING("LeaveSecureMessage").get(),
                      NS_LITERAL_STRING("LeaveSecureShowAgain").get());
@@ -178,8 +185,9 @@ SecurityDialogs::AlertLeavingSecure(nsIInterfaceRequestor *ctx)
 
 
 NS_IMETHODIMP
-SecurityDialogs::AlertMixedMode(nsIInterfaceRequestor *ctx)
+SecurityDialogs::ConfirmMixedMode(nsIInterfaceRequestor *ctx, PRBool *canceled)
 {
+  *canceled = PR_FALSE;
   return AlertDialog(ctx, MIXEDCONTENT_PREF,
                      NS_LITERAL_STRING("MixedContentMessage").get(),
                      NS_LITERAL_STRING("MixedContentShowAgain").get());

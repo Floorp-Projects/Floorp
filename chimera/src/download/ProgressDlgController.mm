@@ -79,6 +79,13 @@ static NSString *ProgressWindowFrameSaveName      = @"ProgressWindow";
 
 @implementation ProgressDlgController
 
+static int gNumActiveDownloads = 0;
+
++ (int)numDownloadInProgress
+{
+  return gNumActiveDownloads;
+}
+
 - (void)dealloc
 {
   // if we get here because we're quitting, the listener will still be alive
@@ -95,12 +102,17 @@ static NSString *ProgressWindowFrameSaveName      = @"ProgressWindow";
   [super windowDidLoad];
   
   mDownloadIsComplete = NO;
+  mDoingAutoFileDownload = NO;
 
   if (!mIsFileSave) {
     nsCOMPtr<nsIPref> prefs(do_GetService(NS_PREF_CONTRACTID));
     PRBool save = PR_FALSE;
     prefs->GetBoolPref("browser.download.progressDnldDialog.keepAlive", &save);
     mSaveFileDialogShouldStayOpen = save;
+    
+    PRBool autoHelperDispatch = PR_FALSE;
+    prefs->GetBoolPref("browser.download.autoDispatch", &autoHelperDispatch);
+    mDoingAutoFileDownload = autoHelperDispatch;
   }
   
   [self setupToolbar];
@@ -167,37 +179,48 @@ static NSString *ProgressWindowFrameSaveName      = @"ProgressWindow";
 {
     NSToolbarItem *toolbarItem = [[[NSToolbarItem alloc] initWithItemIdentifier:itemIdent] autorelease];
 
-    if ( [itemIdent isEqual:CancelToolbarItemIdentifier] ) {
+    if ( [itemIdent isEqual:CancelToolbarItemIdentifier] )
+    {
         [toolbarItem setLabel:NSLocalizedString(@"Cancel",@"Cancel")];
         [toolbarItem setPaletteLabel:NSLocalizedString(@"CancelPaletteLabel",@"Cancel Download")];
         [toolbarItem setToolTip:NSLocalizedString(@"CancelToolTip",@"Cancel this file download")];
         [toolbarItem setImage:[NSImage imageNamed:@"saveCancel"]];
         [toolbarItem setTarget:self];
         [toolbarItem setAction:@selector(cancel)];
-    } else if ( [itemIdent isEqual:ShowFileToolbarItemIdentifier] ) {
+    }
+    else if ( [itemIdent isEqual:ShowFileToolbarItemIdentifier] )
+    {
         [toolbarItem setLabel:NSLocalizedString(@"Show File",@"Show File")];
         [toolbarItem setPaletteLabel:NSLocalizedString(@"Show File",@"Show File")];
         [toolbarItem setToolTip:NSLocalizedString(@"ShowToolTip",@"Show the saved file in the Finder")];
         [toolbarItem setImage:[NSImage imageNamed:@"saveShowFile"]];
         [toolbarItem setTarget:self];
         [toolbarItem setAction:@selector(showFile)];
-    } else if ( [itemIdent isEqual:OpenFileToolbarItemIdentifier] ) {
+    }
+    else if ( [itemIdent isEqual:OpenFileToolbarItemIdentifier] )
+    {
         [toolbarItem setLabel:NSLocalizedString(@"Open File",@"Open File")];
         [toolbarItem setPaletteLabel:NSLocalizedString(@"Open File",@"Open File")];
         [toolbarItem setToolTip:NSLocalizedString(@"OpenToolTip",@"Open the saved file in its default application.")];
         [toolbarItem setImage:[NSImage imageNamed:@"saveOpenFile"]];
         [toolbarItem setTarget:self];
         [toolbarItem setAction:@selector(openFile)];
-    } else if ( [itemIdent isEqual:LeaveOpenToolbarItemIdentifier] ) {
-        if ( !mIsFileSave ) {
-            if ( mSaveFileDialogShouldStayOpen ) {
+    }
+    else if ( [itemIdent isEqual:LeaveOpenToolbarItemIdentifier] )
+    {
+        if ( !mIsFileSave && !mDoingAutoFileDownload )
+        {
+            if ( mSaveFileDialogShouldStayOpen )
+            {
                 [toolbarItem setLabel:NSLocalizedString(@"Leave Open",@"Leave Open")];
                 [toolbarItem setPaletteLabel:NSLocalizedString(@"Toggle Close Behavior",@"Toggle Close Behavior")];
                 [toolbarItem setToolTip:NSLocalizedString(@"LeaveOpenToolTip",@"Window will stay open when download finishes.")];
                 [toolbarItem setImage:[NSImage imageNamed:@"saveLeaveOpenYES"]];
                 [toolbarItem setTarget:self];
                 [toolbarItem setAction:@selector(toggleLeaveOpen)];
-            } else {
+            }
+            else
+            {
                 [toolbarItem setLabel:NSLocalizedString(@"Close When Done",@"Close When Done")];
                 [toolbarItem setPaletteLabel:NSLocalizedString(@"Toggle Close Behavior",@"Toggle Close Behavior")];
                 [toolbarItem setToolTip:NSLocalizedString(@"CloseWhenDoneToolTip",@"Window will close automatically when download finishes.")];
@@ -205,11 +228,13 @@ static NSString *ProgressWindowFrameSaveName      = @"ProgressWindow";
                 [toolbarItem setTarget:self];
                 [toolbarItem setAction:@selector(toggleLeaveOpen)];
             }
-            if ( willBeInserted ) {
+            if ( willBeInserted )
+            {
                 leaveOpenToggleToolbarItem = toolbarItem; //establish reference
-         }
+            }
         }
-    } else {
+    } else
+    {
         toolbarItem = nil;
     }
 
@@ -228,7 +253,7 @@ static NSString *ProgressWindowFrameSaveName      = @"ProgressWindow";
     // if we delete it, fantastic.  if not, oh well.  better to move to trash instead?
     [fileManager removeFileAtPath:thePath handler:nil];
   
-  // we can _not_ set the |mIsDownloadComplete| flag here because the download really
+  // we can _not_ set the |mDownloadIsComplete| flag here because the download really
   // isn't done yet. We'll probably continue to process more PLEvents that are already
   // in the queue until we get a STATE_STOP state change. As a result, we just keep
   // going until that comes in (and it will, because we called CancelDownload() above).
@@ -423,7 +448,7 @@ static NSString *ProgressWindowFrameSaveName      = @"ProgressWindow";
     mDownloadIsComplete = YES;            // all done. we got a STATE_STOP
     [mTimeLeftLabel setStringValue:@""];
     [self setProgressTo:mCurrentProgress ofMax:mCurrentProgress];
-    if (!mSaveFileDialogShouldStayOpen)
+    if (!mSaveFileDialogShouldStayOpen || mDoingAutoFileDownload)
       [[self window] performClose:self];  // close window
     else
       [[self window] update];             // redraw window
@@ -445,18 +470,22 @@ static NSString *ProgressWindowFrameSaveName      = @"ProgressWindow";
 
   [self showWindow: self];
   [self setupDownloadTimer];
+  
+  gNumActiveDownloads++;
 }
 
 - (void)onEndDownload
 {
+  gNumActiveDownloads --;
+  
   // if we're quitting, our progress window is already gone and we're in the
   // process of shutting down gecko and all the d/l listeners. The timer, at 
   // that point, is the only thing keeping us alive. Killing it will cause
   // us to go away immediately, so kung-fu deathgrip it until we're done twiddling
   // bits on ourself.
   [self retain];                           // Enter The Dragon!
-    [self killDownloadTimer];
-    [self setDownloadProgress:nil];
+  [self killDownloadTimer];
+  [self setDownloadProgress:nil];
   [self release];
 }
 

@@ -40,7 +40,18 @@
 @interface BrowserWindow : NSWindow
 {
   IBOutlet id mAutoCompleteTextField;
+  
+  // mSuppressSetVisible is used to overcome a problem of communication between
+  // gecko and the front end. Gecko tries to make the window visible and frontmost
+  // on every focus() call, and we don't want that.
+  BOOL       	mSuppressMakeKeyFront;
 }
 
--(BOOL) makeFirstResponder:(NSResponder*) responder;
+- (BOOL)makeFirstResponder:(NSResponder*) responder;
+
+- (BOOL)suppressMakeKeyFront;
+- (void)setSuppressMakeKeyFront:(BOOL)inSuppress;
+
+- (NSString*)getURL;
+
 @end

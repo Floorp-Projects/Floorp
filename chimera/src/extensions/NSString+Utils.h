@@ -59,7 +59,11 @@ typedef enum
 - (NSString *)stringByRemovingCharactersInSet:(NSCharacterSet*)characterSet;
 - (NSString *)stringByReplacingCharactersInSet:(NSCharacterSet*)characterSet withString:(NSString*)string;
 - (NSString *)stringByTruncatingTo:(unsigned int)maxCharacters at:(ETruncationType)truncationType;
+- (NSString *)stringByTrimmingWhitespace;
 
+// allocate a new unicode buffer with the contents of the current string. Caller
+// is responsible for freeing the buffer.
+- (PRUnichar*)createNewUnicodeBuffer;
 @end
 
 @interface NSMutableString (ChimeraMutableStringUtils)

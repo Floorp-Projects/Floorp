@@ -129,7 +129,8 @@ static AboutBox *sharedInstance = nil;
     return;
   }
 
-  [window setTitle:[NSString stringWithFormat: @"About %@", NSLocalizedStringFromTable(@"CFBundleName", @"InfoPlist", nil)]];
+  [window setTitle:[NSString stringWithFormat: NSLocalizedString(@"AboutWindowTitleFormat", @""),
+        NSLocalizedStringFromTable(@"CFBundleName", @"InfoPlist", nil)]];
 
   creditsPath = [[NSBundle mainBundle] pathForResource:@"Credits" ofType:@"rtf"];
   creditsString = [[NSAttributedString alloc] initWithPath:creditsPath documentAttributes:nil];

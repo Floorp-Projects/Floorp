@@ -66,7 +66,7 @@ NS_IMPL_ISUPPORTS_INHERITED2(nsDownloadListener, CHDownloader, nsIDownload, nsIW
 /* void init (in nsIURI aSource, in nsILocalFile aTarget, in wstring aDisplayName, in wstring openingWith, in long long startTime, in nsIWebBrowserPersist aPersist); */
 NS_IMETHODIMP
 nsDownloadListener::Init(nsIURI *aSource, nsILocalFile *aTarget, const PRUnichar *aDisplayName,
-        const PRUnichar *openingWith, PRInt64 startTime, nsIWebBrowserPersist *aPersist)
+        nsIMIMEInfo *aMIMEInfo, PRInt64 startTime, nsIWebBrowserPersist *aPersist)
 { 
   CreateDownloadDisplay(); // call the base class to make the download UI
   
@@ -82,6 +82,8 @@ nsDownloadListener::Init(nsIURI *aSource, nsILocalFile *aTarget, const PRUnichar
   mDestination = aTarget;
   mURI = aSource;
   mStartTime = startTime;
+
+  mHelperAppLauncher = nsnull;
 
   InitDialog();
   return NS_OK;
@@ -143,9 +145,9 @@ nsDownloadListener::GetStartTime(PRInt64 *aStartTime)
   return NS_OK;
 }
 
-/* readonly attribute wstring openingWith; */
+/* readonly attribute nsIMIMEInfo MIMEInfo; */
 NS_IMETHODIMP
-nsDownloadListener::GetOpeningWith(PRUnichar * *aOpeningWith)
+nsDownloadListener::GetMIMEInfo(nsIMIMEInfo * *aMIMEInfo)
 {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
@@ -175,7 +177,9 @@ nsDownloadListener::GetObserver(nsIObserver * *aObserver)
 NS_IMETHODIMP
 nsDownloadListener::SetObserver(nsIObserver * aObserver)
 {
-  return NS_ERROR_NOT_IMPLEMENTED;
+  if (aObserver)
+    mHelperAppLauncher = do_QueryInterface(aObserver);
+  return NS_OK;
 }
 
 #pragma mark -
@@ -191,7 +195,9 @@ nsDownloadListener::OnProgressChange(nsIWebProgress *aWebProgress,
 {
   if (mUserCanceled)
   {
-    if (aRequest)
+    if (mHelperAppLauncher)
+      mHelperAppLauncher->Cancel();
+    else if (aRequest)
       aRequest->Cancel(NS_BINDING_ABORTED);
       
     mUserCanceled = false;
@@ -234,6 +240,7 @@ nsDownloadListener::OnStateChange(nsIWebProgress *aWebProgress,  nsIRequest *aRe
                                     PRUint32 aStatus)
 {
   // NSLog(@"State changed: state %u, status %u", aStateFlags, aStatus);  
+
   if (!mGotFirstStateChange) {
     mNetworkTransfer = ((aStateFlags & STATE_IS_NETWORK) != 0);
     mGotFirstStateChange = PR_TRUE;
@@ -305,6 +312,8 @@ nsDownloadListener::DownloadDone()
     mWebPersist->SetProgressListener(nsnull);
     mWebPersist = nsnull;
   }
+  
+  mHelperAppLauncher = nsnull;
 
   [mDownloadDisplay onEndDownload];
 }

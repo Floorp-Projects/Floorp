@@ -37,6 +37,8 @@
  * ***** END LICENSE BLOCK ***** */
 
 #import "NSString+Utils.h"
+#import "NSBezierPath+Utils.h"
+#import "NSPasteboard+Utils.h"
 
 #import "BrowserTabViewItem.h"
 
@@ -46,50 +48,9 @@
 
 
 @interface BrowserTabViewItem(Private)
-- (void)buildTabContents;
+- (void)setTag:(int)tag;
 - (void)relocateTabContents:(NSRect)inRect;
 - (BOOL)draggable;
-@end
-
-#pragma mark -
-
-@interface NSBezierPath (ChimeraBezierPathUtils)
-
-+ (NSBezierPath*)bezierPathWithRoundCorneredRect:(NSRect)rect cornerRadius:(float)cornerRadius;
-
-@end
-
-@implementation NSBezierPath (ChimeraBezierPathUtils)
-
-+ (NSBezierPath*)bezierPathWithRoundCorneredRect:(NSRect)rect cornerRadius:(float)cornerRadius
-{
-  float maxRadius = cornerRadius;
-  if (NSWidth(rect) / 2.0 < maxRadius)
-    maxRadius = NSWidth(rect) / 2.0;
-
-  if (NSHeight(rect) / 2.0 < maxRadius)
-    maxRadius = NSHeight(rect) / 2.0;
-
-  NSBezierPath*	newPath = [NSBezierPath bezierPath];
-  [newPath moveToPoint:NSMakePoint(NSMinX(rect) + maxRadius, NSMinY(rect))];
-
-  [newPath appendBezierPathWithArcWithCenter:NSMakePoint(NSMaxX(rect) - maxRadius, NSMinY(rect) + maxRadius)
-      radius:maxRadius startAngle:270.0 endAngle:0.0];
-
-  [newPath appendBezierPathWithArcWithCenter:NSMakePoint(NSMaxX(rect) - maxRadius, NSMaxY(rect) - maxRadius)
-      radius:maxRadius startAngle:0.0 endAngle:90.0];
-
-  [newPath appendBezierPathWithArcWithCenter:NSMakePoint(NSMinX(rect) + maxRadius, NSMaxY(rect) - maxRadius)
-      radius:maxRadius startAngle:90.0 endAngle:180.0];
-
-  [newPath appendBezierPathWithArcWithCenter:NSMakePoint(NSMinX(rect) + maxRadius, NSMinY(rect) + maxRadius)
-      radius:maxRadius startAngle:180.0 endAngle:270.0];
-  
-  [newPath closePath];
-  
-  return newPath;
-}
-
 @end
 
 #pragma mark -
@@ -235,7 +196,7 @@
 #pragma mark -
 
 // a container view for the items in the tab view item. We use a subclass of
-// NSView to handle drag and drop
+// NSView to handle drag and drop, and context menus
 @interface BrowserTabItemContainerView : NSView
 {
   BrowserTabViewItem*           mTabViewItem;
@@ -264,9 +225,9 @@
     [mLabelCell setControlSize:NSSmallControlSize];		// doesn't work?
     [mLabelCell setImagePadding:0.0];
     [mLabelCell setImageSpace:2.0];
-    
+
     [self registerForDraggedTypes:[NSArray arrayWithObjects:
-        @"MozURLType", @"MozBookmarkType", NSStringPboardType, NSFilenamesPboardType, nil]];
+        @"MozURLType", @"MozBookmarkType", NSStringPboardType, NSFilenamesPboardType, NSURLPboardType, nil]];
   }
   return self;
 }
@@ -280,6 +241,17 @@
 - (NSTruncatingTextAndImageCell*)labelCell
 {
   return mLabelCell;
+}
+
+// allow clicks in background windows to switch tabs
+- (BOOL)acceptsFirstMouse:(NSEvent *)theEvent
+{
+  return YES;
+}
+
+- (BOOL)mouseDownCanMoveWindow
+{
+  return NO;
 }
 
 - (void)drawRect:(NSRect)aRect
@@ -431,22 +403,11 @@
   
   NSString     *url = [browserView getCurrentURLSpec];
   NSString     *title = [mLabelCell stringValue];
-
   NSString     *cleanedTitle = [title stringByReplacingCharactersInSet:[NSCharacterSet controlCharacterSet] withString:@" "];
 
-  NSArray      *dataVals = [NSArray arrayWithObjects: url, cleanedTitle, nil];
-  NSArray      *dataKeys = [NSArray arrayWithObjects: @"url", @"title", nil];
-  NSDictionary *data = [NSDictionary dictionaryWithObjects:dataVals forKeys:dataKeys];
-
   NSPasteboard *pboard = [NSPasteboard pasteboardWithName:NSDragPboard];
-  [pboard declareTypes:[NSArray arrayWithObjects:@"MozURLType", NSURLPboardType, NSStringPboardType, nil] owner:self];
-  
-  // MozURLType
-  [pboard setPropertyList:data forType: @"MozURLType"];
-  // NSURLPboardType type
-  [[NSURL URLWithString:url] writeToPasteboard: pboard];
-  // NSStringPboardType
-  [pboard setString:url forType: NSStringPboardType];
+  [pboard declareURLPasteboardWithAdditionalTypes:[NSArray array] owner:self];
+  [pboard setDataForURL:url title:cleanedTitle];
   
   NSPoint dragOrigin = [self frame].origin;
   dragOrigin.y += [self frame].size.height;
@@ -454,6 +415,16 @@
   [self dragImage: [MainController createImageForDragging:[mLabelCell image] title:title]
                     at:NSMakePoint(0, 0) offset:NSMakeSize(0, 0)
                     event:theEvent pasteboard:pboard source:self slideBack:YES];
+}
+
+- (void)setMenu:(NSMenu *)aMenu
+{
+  // set the tag of every menu item to the tab view item's tag,
+  // so that the target of the menu commands know which one they apply to.
+  for (unsigned int i = 0; i < [aMenu numberOfItems]; i ++)
+    [[aMenu itemAtIndex:i] setTag:[mTabViewItem tag]];
+
+  [super setMenu:aMenu];
 }
 
 @end
@@ -466,6 +437,11 @@
 {
   if ( (self = [super initWithIdentifier:identifier withTabIcon:tabIcon]) )
   {
+    static int sTabItemTag = 1; // used to uniquely identify tabs for context menus
+  
+    [self setTag:sTabItemTag];
+    sTabItemTag++;
+
     mTabContentsView = [[BrowserTabItemContainerView alloc]
                             initWithFrame:NSMakeRect(0, 0, 100, 16) andTabItem:self];
     mDraggable = NO;
@@ -491,6 +467,16 @@
 - (NSView*)tabItemContentsView
 {
   return mTabContentsView;
+}
+
+- (void)setTag:(int)tag
+{
+  mTag = tag;
+}
+
+- (int)tag
+{
+  return mTag;
 }
 
 - (void)updateTabVisibility:(BOOL)nowVisible
@@ -530,7 +516,7 @@
 
 - (void)setLabel:(NSString *)label
 {
-  NSAttributedString* labelString = [[NSAttributedString alloc] initWithString:label attributes:mLabelAttributes];
+  NSAttributedString* labelString = [[[NSAttributedString alloc] initWithString:label attributes:mLabelAttributes] autorelease];
   [[mTabContentsView labelCell] setAttributedStringValue:labelString];
 
   [super setLabel:label];
@@ -553,5 +539,22 @@
   mDraggable = draggable;
   [[mTabContentsView labelCell] setImageAlpha:(draggable ? 1.0 : 0.6)];  
 }
+
+#define NO_TOOLTIPS_ON_TABS 1
+
+#ifdef NO_TOOLTIPS_ON_TABS
+// bug 168719 covers crashes in AppKit after using a lot of tabs because
+// the tooltip code internal to NSTabView/NSTabViewItem gets confused and
+// tries to set a tooltip for a (probably) deallocated object. Since we can't
+// easily get into the guts, all we can do is disable tooltips to fix this
+// topcrash by stubbing out the NSTabViewItem's method that sets up the
+// toolip rects.
+//
+// It is my opinion that this is Apple's bug, but just try proving that to them.
+-(void)_resetToolTipIfNecessary
+{
+  // no-op
+}
+#endif
 
 @end

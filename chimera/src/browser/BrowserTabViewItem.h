@@ -48,10 +48,12 @@
   NSRect                       mLastDrawRect;  // cached draw rect, used for dragging location
   BrowserTabItemContainerView* mTabContentsView;
   BOOL                         mDraggable;
+  int                          mTag;
 }
 
 - (void)updateTabVisibility:(BOOL)nowVisible;
 - (NSView*)tabItemContentsView;
+- (int)tag;
 - (void)setTabIcon:(NSImage *)newIcon isDraggable:(BOOL)draggable;
 
 @end

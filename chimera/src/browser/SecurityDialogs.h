@@ -41,25 +41,23 @@
 
 #include "nsIBadCertListener.h"
 #include "nsISecurityWarningDialogs.h"
-#include "nsINSSDialogs.h"
 #include "nsIStringBundle.h"
+#include "nsCOMPtr.h"
 
 class SecurityDialogs : public nsIBadCertListener,
-                        public nsISecurityWarningDialogs,
-                        public nsINSSDialogs
+                        public nsISecurityWarningDialogs
 {
 public:
   SecurityDialogs();
   virtual ~SecurityDialogs();
 
   NS_DECL_ISUPPORTS;
-  NS_DECL_NSIBADCERTLISTENER;
-  NS_DECL_NSISECURITYWARNINGDIALOGS;
-  NS_DECL_NSINSSDIALOGS;
+  NS_DECL_NSIBADCERTLISTENER
+  NS_DECL_NSISECURITYWARNINGDIALOGS
 
 private:
   nsresult EnsureSecurityStringBundle();
-
+ 
   nsresult AlertDialog(nsIInterfaceRequestor* ctx, const char* prefName,
                        const PRUnichar* messageName,
                        const PRUnichar* showAgainName);

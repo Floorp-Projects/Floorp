@@ -63,6 +63,7 @@ class nsDownloadListener;
     NSToolbarItem *leaveOpenToggleToolbarItem;
 
     BOOL      mSaveFileDialogShouldStayOpen;
+    BOOL      mDoingAutoFileDownload;
     BOOL      mIsFileSave;
     BOOL      mDownloadIsComplete;
     long      mCurrentProgress; // if progress bar is indeterminate, can still calc stats.
@@ -70,6 +71,8 @@ class nsDownloadListener;
     CHDownloader        *mDownloader;   // we hold a ref to this
     NSTimer             *mDownloadTimer;
 }
+
++ (int)numDownloadInProgress;
 
 -(void)autosaveWindowFrame;
 

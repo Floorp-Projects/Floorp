@@ -40,6 +40,10 @@
 #import "Find.h"
 #import "BookmarksToolbar.h"
 
+#include "nsIBrowserHistory.h"
+
+class nsIURIFixup;
+class nsIBrowserHistory;
 class nsIDOMEvent;
 class nsIDOMNode;
 
@@ -87,6 +91,8 @@ typedef enum
 @class HistoryDataSource;
 @class BrowserTabView;
 @class PageProxyIcon;
+@class BrowserContentView;
+@class BrowserTabViewItem;
 
 @interface BrowserWindowController : NSWindowController<Find>
 {
@@ -97,14 +103,14 @@ typedef enum
   IBOutlet NSView*            mLocationToolbarView;
   IBOutlet NSTextField*       mURLBar;
   IBOutlet NSTextField*       mStatus;
-  IBOutlet NSProgressIndicator* mProgress;
+  IBOutlet NSProgressIndicator* mProgress;              // STRONG reference
   IBOutlet NSImageView*       mLock;
   IBOutlet NSWindow*          mLocationSheetWindow;
   IBOutlet NSTextField*       mLocationSheetURLField;
   IBOutlet NSView*            mStatusBar;     // contains the status text, progress bar, and lock
   IBOutlet PageProxyIcon*     mProxyIcon;
-
-  IBOutlet id                   mSidebarBrowserView;  // currently unused
+  IBOutlet BrowserContentView* mContentView;
+  
   IBOutlet BookmarksDataSource* mSidebarBookmarksDataSource;
   IBOutlet HistoryDataSource* mHistoryDataSource;
 
@@ -121,12 +127,15 @@ typedef enum
   IBOutlet NSMenu*              mInputMenu;
   IBOutlet NSMenu*              mLinkMenu;
   IBOutlet NSMenu*              mImageLinkMenu;
+  IBOutlet NSMenu*              mTabMenu;
 
   // Context menu item outlets
   IBOutlet NSMenuItem*          mBackItem;
   IBOutlet NSMenuItem*          mForwardItem;
+  IBOutlet NSMenuItem*          mCopyItem;
   
   NSToolbarItem*                mSidebarToolbarItem;
+  NSToolbarItem*                mBookmarkToolbarItem;
 
   BOOL mInitialized;
   NSString* mPendingURL;
@@ -136,7 +145,7 @@ typedef enum
   BrowserWrapper* mBrowserView;
 
   BOOL mMoveReentrant;
-  NSModalSession mModalSession;
+  BOOL mClosingWindow;
 
   BOOL mShouldAutosave;
   BOOL mShouldLoadHomePage;
@@ -154,7 +163,7 @@ typedef enum
   nsIDOMNode* mContextMenuNode;
 
   // Cached bookmark ds used when adding through a sheet
-  id mCachedBMDS;
+  BookmarksDataSource* mCachedBMDS;
 
   // Throbber state variables.
   ThrobberHandler* mThrobberHandler;
@@ -162,6 +171,14 @@ typedef enum
 
   // Funky field editor for URL bar
   NSTextView *mURLFieldEditor;
+  
+  // cached superview for progress meter so we know where to add/remove it. This
+  // could be an outlet, but i figure it's easier to get it at runtime thereby saving
+  // someone from messing up in the nib when making changes.
+  NSView* mProgressSuperview;                // WEAK ptr
+  
+  nsIURIFixup* mURIFixer;                   // [STRONG] should be nsCOMPtr, but can't
+  nsIBrowserHistory* mGlobalHistory;        // [STRONG] should be nsCOMPtr, but can't
 }
 
 - (void)dealloc;
@@ -187,41 +204,51 @@ typedef enum
 
 - (IBAction)cancelAddBookmarkSheet:(id)sender;
 - (IBAction)endAddBookmarkSheet:(id)sender;
-- (void)cacheBookmarkDS: (id)aDS;
+- (void)cacheBookmarkDS:(BookmarksDataSource*)aDS;
 
 - (NSSize)windowWillResize:(NSWindow *)sender toSize:(NSSize)proposedFrameSize;
 
-- (IBAction)viewSource:(id)aSender;
+- (IBAction)viewSource:(id)aSender;			// focussed frame or page
+- (IBAction)viewPageSource:(id)aSender;	// top-level page
 
-- (void)saveDocument: (NSView*)aFilterView filterList: (NSPopUpButton*)aFilterList;
+- (void)saveDocument:(BOOL)focusedFrame filterView:(NSView*)aFilterView filterList: (NSPopUpButton*)aFilterList;
 - (void)saveURL: (NSView*)aFilterView filterList: (NSPopUpButton*)aFilterList
             url: (NSString*)aURLSpec suggestedFilename: (NSString*)aFilename;
 - (IBAction)printDocument:(id)aSender;
-- (void)printPreview;
+- (IBAction)pageSetup:(id)aSender;
 - (IBAction)performSearch:(id)aSender;
+- (IBAction)sendURL:(id)aSender;
 
 - (void)startThrobber;
 - (void)stopThrobber;
 - (void)clickThrobber:(id)aSender;
 
-- (void)biggerTextSize;
-- (void)smallerTextSize;
-- (void)getInfo:(id)sender;
+- (IBAction)biggerTextSize:(id)aSender;
+- (IBAction)smallerTextSize:(id)aSender;
 
+- (void)getInfo:(id)sender;
 - (BOOL)canGetInfo;
 
 - (BOOL)shouldShowBookmarkToolbar;
 
 - (void)addBookmarkExtended: (BOOL)aIsFromMenu isFolder:(BOOL)aIsFolder URL:(NSString*)aURL title:(NSString*)aTitle;
 - (IBAction)manageBookmarks: (id)aSender;
+- (IBAction)manageHistory: (id)aSender;
 - (void)importBookmarks: (NSString*)aURLSpec;
 - (IBAction)toggleSidebar:(id)aSender;
 - (BOOL)bookmarksAreVisible:(BOOL)inRequireSelection;
 
-- (void)newTab:(ENewTabContents)contents;
-- (void)closeTab;
-- (void)previousTab;
-- (void)nextTab;
+- (void)createNewTab:(ENewTabContents)contents;
+
+- (IBAction)newTab:(id)sender;
+- (IBAction)closeCurrentTab:(id)sender;
+- (IBAction)previousTab:(id)sender;
+- (IBAction)nextTab:(id)sender;
+
+- (IBAction)closeSendersTab:(id)sender;
+- (IBAction)closeOtherTabs:(id)sender;
+- (IBAction)reloadSendersTab:(id)sender;
+- (IBAction)moveTabToNewWindow:(id)sender;
 
 - (IBAction)back:(id)aSender;
 - (IBAction)forward:(id)aSender;
@@ -229,11 +256,19 @@ typedef enum
 - (IBAction)stop:(id)aSender;
 - (IBAction)home:(id)aSender;
 
--(void)enterModalSession;
+- (IBAction)frameToNewWindow:(id)sender;
+- (IBAction)frameToNewTab:(id)sender;
+- (IBAction)frameToThisWindow:(id)sender;
 
--(void)openNewWindowWithURL: (NSString*)aURLSpec referrer:(NSString*)aReferrer loadInBackground: (BOOL)aLoadInBG;
--(void)openNewWindowWithGroup: (nsIDOMElement*)aFolderElement loadInBackground: (BOOL)aLoadInBG;
--(void)openNewTabWithURL: (NSString*)aURLSpec referrer: (NSString*)aReferrer loadInBackground: (BOOL)aLoadInBG;
+- (void)openNewWindowWithURL: (NSString*)aURLSpec referrer:(NSString*)aReferrer loadInBackground: (BOOL)aLoadInBG;
+- (void)openNewWindowWithGroup: (nsIContent*)aFolderContent loadInBackground: (BOOL)aLoadInBG;
+- (void)openNewTabWithURL: (NSString*)aURLSpec referrer: (NSString*)aReferrer loadInBackground: (BOOL)aLoadInBG;
+
+- (void)openTabGroup:(NSArray*)urlArray replaceExistingTabs:(BOOL)replaceExisting;
+
+-(BrowserTabViewItem*)createNewTabItem;
+
+- (void)closeBrowserWindow:(BrowserWrapper*)inBrowser;
 
 -(void)autosaveWindowFrame;
 -(void)disableAutosave;
@@ -257,17 +292,23 @@ typedef enum
 - (void)openLinkInNewWindowOrTab: (BOOL)aUseWindow;
 
 - (IBAction)savePageAs:(id)aSender;
+- (IBAction)saveFrameAs:(id)aSender;
 - (IBAction)saveLinkAs:(id)aSender;
 - (IBAction)saveImageAs:(id)aSender;
+
+- (IBAction)viewOnlyThisImage:(id)aSender;
 
 - (IBAction)bookmarkPage: (id)aSender;
 - (IBAction)bookmarkLink: (id)aSender;
 
 - (IBAction)copyLinkLocation:(id)aSender;
-
-- (IBAction)viewOnlyThisImage:(id)aSender;
+- (IBAction)copyImageLocation:(id)sender;
 
 - (BookmarksToolbar*) bookmarksToolbar;
+
+- (NSProgressIndicator*) progressIndicator;
+- (void) showProgressIndicator;
+- (void) hideProgressIndicator;
 
 - (BOOL) isResponderGeckoView:(NSResponder*) responder;
 
@@ -288,6 +329,9 @@ typedef enum
 
 // Accessor to get the proxy icon view
 - (PageProxyIcon *)proxyIconView;
+
+// Accessor for the bm data source
+- (BookmarksDataSource*)bookmarksDataSource;
 
 @end
 

@@ -41,8 +41,12 @@
 #import "SplashScreenWindow.h"
 #import "FindDlgController.h"
 #import "PreferenceManager.h"
+#import "SharedMenusObj.h"
+#import "NetworkServices.h"
 
-class BookmarksService;
+@class BookmarksMenu;
+@class KeychainService;
+@class NetworkServices;
 
 @interface MainController : NSObject 
 {
@@ -57,9 +61,11 @@ class BookmarksService;
     IBOutlet NSMenuItem*    mCloseTabMenuItem;
     IBOutlet NSMenuItem*    mToggleSidebarMenuItem;
 
-    // The bookmarks menu.
+    IBOutlet NSMenu*        mGoMenu;
     IBOutlet NSMenu*        mBookmarksMenu;
-
+    IBOutlet NSMenu*        mDockMenu;
+    IBOutlet NSMenu*        mServersSubmenu;
+	
     IBOutlet NSMenuItem*    mBookmarksToolbarMenuItem;
     IBOutlet NSMenuItem*    mAddBookmarkMenuItem;
     IBOutlet NSMenuItem*    mCreateBookmarksFolderMenuItem;
@@ -67,29 +73,34 @@ class BookmarksService;
     
     BOOL                    mOffline;
 
-    SplashScreenWindow*   mSplashScreen;
+    SplashScreenWindow*   	mSplashScreen;
     
-    PreferenceManager*    mPreferenceManager;
+    PreferenceManager*    	mPreferenceManager;
 
-    BookmarksService*       mMenuBookmarks;
+    BookmarksMenu*          mMenuBookmarks;
+    BookmarksMenu*          mDockBookmarks;
     
+    KeychainService*        mKeychainService;
+
     FindDlgController*      mFindDialog;
 
     MVPreferencesController* mPreferencesController;
 
     NSString*               mStartURL;
+    
+    SharedMenusObj*         mSharedMenusObj;
+    NetworkServices*        mNetworkServices;
 }
-
--(void)dealloc;
 
 // File menu actions.
 -(IBAction) newWindow:(id)aSender;
 -(IBAction) openFile:(id)aSender;
 -(IBAction) openLocation:(id)aSender;
 -(IBAction) savePage:(id)aSender;
--(IBAction) printPreview:(id)aSender;
+-(IBAction) pageSetup:(id)aSender;
 -(IBAction) printPage:(id)aSender;
 -(IBAction) toggleOfflineMode:(id)aSender;
+-(IBAction) sendURL:(id)aSender;
 
 // Edit menu actions.
 -(IBAction) findInPage:(id)aSender;
@@ -104,6 +115,10 @@ class BookmarksService;
 -(IBAction) previousTab:(id)aSender;
 -(IBAction) nextTab:(id)aSender;
 
+// Local servers submenu
+-(IBAction) aboutServers:(id)aSender;
+-(IBAction) connectToServer:(id)aSender;
+
 // View menu actions.
 -(IBAction) toggleSidebar:(id)sender;
 -(IBAction) toggleBookmarksToolbar:(id)aSender;
@@ -112,12 +127,13 @@ class BookmarksService;
 -(IBAction) biggerTextSize:(id)aSender;
 -(IBAction) smallerTextSize:(id)aSender;
 -(IBAction) viewSource:(id)aSender;
+-(IBAction) manageSidebar: (id)aSender;
 
 // Bookmarks menu actions.
 -(IBAction) importBookmarks:(id)aSender;
+-(IBAction) exportBookmarks:(id)aSender;
 -(IBAction) addBookmark:(id)aSender;
 -(IBAction) openMenuBookmark:(id)aSender;
--(IBAction) manageBookmarks: (id)aSender;
 -(IBAction) addFolder:(id)aSender;
 -(IBAction) addSeparator:(id)aSender;
 
@@ -154,5 +170,7 @@ class BookmarksService;
 
 - (void)updatePrebinding;
 - (void)prebindFinished:(NSNotification *)aNotification;
+
+- (void)pumpGeckoEventQueue;
 
 @end

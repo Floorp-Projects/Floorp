@@ -36,11 +36,11 @@
  * ***** END LICENSE BLOCK ***** */
 
 #import <Cocoa/Cocoa.h>
-#import <Cocoa/Cocoa.h>
 
 #import <SystemConfiguration/SystemConfiguration.h>
 #import "PreferenceManager.h"
 #import "UserDefaults.h"
+#import "CHBrowserService.h"
 
 #include "nsIServiceManager.h"
 #include "nsIProfile.h"
@@ -58,45 +58,98 @@ nsresult PR_CALLBACK
 app_getModuleInfo(nsStaticModuleInfo **info, PRUint32 *count);
 #endif
 
+@interface PreferenceManager(PreferenceManagerPrivate)
+
+- (void)registerNotificationListener;
+
+- (void)termEmbedding: (NSNotification*)aNotification;
+- (void)xpcomTerminate: (NSNotification*)aNotification;
+
+@end
+
+
+
 @implementation PreferenceManager
 
+static PreferenceManager* gSharedInstance = nil;
+#if DEBUG
+static BOOL gMadePrefManager;
+#endif
 
-+ (PreferenceManager *) sharedInstance {
-  static PreferenceManager *sSharedInstance = nil;
-	return ( sSharedInstance ? sSharedInstance : (sSharedInstance = [[[PreferenceManager alloc] init] autorelease] ));
++ (PreferenceManager *) sharedInstance
+{
+  if (!gSharedInstance)
+  {
+#if DEBUG
+    if (gMadePrefManager)
+      NSLog(@"Recreating preferences manager on shutdown!");
+    gMadePrefManager = YES;
+#endif
+    gSharedInstance = [[PreferenceManager alloc] init];
+  }
+    
+	return gSharedInstance;
 }
-
 
 - (id) init
 {
-    if ((self = [super init])) {
-        if ([self initInternetConfig] == NO) {
-            // XXXw. throw here
-            NSLog (@"Failed to initialize Internet Config");
-        }
-        if ([self initMozillaPrefs] == NO) {
-            // XXXw. throw here too
-            NSLog (@"Failed to initialize mozilla prefs");
-        }
-        
-        mDefaults = [NSUserDefaults standardUserDefaults];
+  if ((self = [super init]))
+  {
+    [self registerNotificationListener];
+
+    if ([self initInternetConfig] == NO) {
+      // XXXw. throw here
+      NSLog (@"Failed to initialize Internet Config");
     }
-    return self;
+
+    if ([self initMozillaPrefs] == NO) {
+      // XXXw. throw here too
+      NSLog (@"Failed to initialize mozilla prefs");
+    }
+    
+    mDefaults = [NSUserDefaults standardUserDefaults];
+  }
+  return self;
 }
 
 - (void) dealloc
 {
-    ::ICStop(mInternetConfig);
-    NS_IF_RELEASE(mPrefs);
+  [[NSNotificationCenter defaultCenter] removeObserver:self];
+  [super dealloc];
+}
 
-    nsresult rv;
-    nsCOMPtr<nsIPrefService> pref(do_GetService(NS_PREF_CONTRACTID, &rv));
-    if (NS_SUCCEEDED(rv)) {
-        //NSLog(@"Saving prefs file");
-        pref->SavePrefFile(nsnull);
-    }
-    
-    [super dealloc];
+- (void)termEmbedding: (NSNotification*)aNotification
+{
+  ::ICStop(mInternetConfig);
+  mInternetConfig = nil;
+  NS_IF_RELEASE(mPrefs);
+}
+
+- (void)xpcomTerminate: (NSNotification*)aNotification
+{
+  // save prefs now, in case any termination listeners set prefs.
+  [self savePrefsFile];
+  [gSharedInstance release];
+}
+
+- (void)registerNotificationListener
+{
+  [[NSNotificationCenter defaultCenter] addObserver:  self
+                                        selector:     @selector(termEmbedding:)
+                                        name:         TermEmbeddingNotificationName
+                                        object:       nil];
+
+  [[NSNotificationCenter defaultCenter] addObserver:  self
+                                        selector:     @selector(xpcomTerminate:)
+                                        name:         XPCOMShutDownNotificationName
+                                        object:       nil];
+}
+
+- (void) savePrefsFile
+{
+  nsCOMPtr<nsIPrefService> prefsService = do_GetService(NS_PREF_CONTRACTID);
+  if (prefsService)
+      prefsService->SavePrefFile(nsnull);
 }
 
 - (BOOL) initInternetConfig
@@ -145,8 +198,10 @@ app_getModuleInfo(nsStaticModuleInfo **info, PRUint32 *count);
     // Supply our own directory service provider so we can control where
     // the registry and profiles are located.
     AppDirServiceProvider *provider = new AppDirServiceProvider(nsDependentCString(profileDirName));
-    NS_ASSERTION(provider, "Failed to create AppDirServiceProvider");
-    rv = NS_InitEmbedding(binDir, provider);
+    if (!provider) return NO;
+
+    nsCOMPtr<nsIDirectoryServiceProvider> dirProvider = (nsIDirectoryServiceProvider*)provider;
+    rv = NS_InitEmbedding(binDir, dirProvider);
     if (NS_FAILED(rv)) {
       NSLog(@"Embedding init failed.");
       return NO;
@@ -179,6 +234,9 @@ app_getModuleInfo(nsStaticModuleInfo **info, PRUint32 *count);
       }
       return NO;
     }
+    else if (rv == NS_ERROR_PROFILE_SETLOCK_FAILED) {
+      NSLog(@"SetCurrentProfile returned NS_ERROR_PROFILE_SETLOCK_FAILED");
+    }
 
     nsCOMPtr<nsIPref> prefs(do_GetService(NS_PREF_CONTRACTID));
     mPrefs = prefs;
@@ -202,6 +260,11 @@ app_getModuleInfo(nsStaticModuleInfo **info, PRUint32 *count);
         return;
     }
 
+    // set the universal charset detector pref. we can't set it in chimera.js
+    // because it's a funky locale-specific pref.
+    static const char* const kUniversalCharsetDetectorPref = "intl.charset.detector";
+    mPrefs->SetCharPref(kUniversalCharsetDetectorPref, "universal_charset_detector");
+    
     // fix up the cookie prefs. If 'p3p' or 'accept foreign cookies' are on, remap them to
     // something that chimera can deal with.
     PRInt32 acceptCookies = 0;
@@ -384,6 +447,23 @@ app_getModuleInfo(nsStaticModuleInfo **info, PRUint32 *count);
   return intPref;
 }
 
+- (void)setPref:(const char*)prefName toString:(NSString*)value
+{
+  if (mPrefs)
+    (void)mPrefs->SetCharPref(prefName, [value UTF8String]);
+}
+
+- (void)setPref:(const char*)prefName toInt:(int)value
+{
+  if (mPrefs)
+    (void)mPrefs->SetIntPref(prefName, (PRInt32)value);
+}
+
+- (void)setPref:(const char*)prefName toBoolean:(BOOL)value
+{
+  if (mPrefs)
+    (void)mPrefs->SetBoolPref(prefName, (PRBool)value);
+}
 
 
 //- (BOOL) getICBoolPref:(ConstStr255Param) prefKey;
@@ -409,7 +489,7 @@ app_getModuleInfo(nsStaticModuleInfo **info, PRUint32 *count);
     char *buf;
 
     do {
-        if ((buf = malloc ((unsigned int)size)) == NULL) {
+        if ((buf = (char*)malloc((unsigned int)size)) == NULL) {
             NSLog (@"malloc failed in [PreferenceManager getICStringPref]");
             return nil;
         }
@@ -428,7 +508,7 @@ app_getModuleInfo(nsStaticModuleInfo **info, PRUint32 *count);
     }
     CopyPascalStringToC ((ConstStr255Param) buf, buf);
     string = [NSString stringWithCString:buf];
-    free (buf);
+    free(buf);
     return string;
 }
 
@@ -459,7 +539,8 @@ app_getModuleInfo(nsStaticModuleInfo **info, PRUint32 *count);
     
     NSString* homepagePref = nil;
     PRInt32 haveUserPref;
-    if (NS_FAILED(prefBranch->PrefHasUserValue("browser.startup.homepage", &haveUserPref)) || !haveUserPref) {
+    if (NS_FAILED(prefBranch->PrefHasUserValue("browser.startup.homepage", &haveUserPref)) || !haveUserPref)
+    {
       // no home page pref is set in user prefs.
       homepagePref = NSLocalizedStringFromTable( @"HomePageDefault", @"WebsiteDefaults", nil);
       // and let's copy this into the homepage pref if it's not bad
@@ -476,6 +557,42 @@ app_getModuleInfo(nsStaticModuleInfo **info, PRUint32 *count);
   
   return @"about:blank";
 }
+
+- (NSString *)searchPage
+{
+  NSString* resultString = @"http://www.google.com/";
+  if (!mPrefs)
+    return resultString;
+
+  PRBool boolPref;
+  if (NS_SUCCEEDED(mPrefs->GetBoolPref("chimera.use_system_home_page", &boolPref)) && boolPref)
+    return [self getICStringPref:kICWebSearchPagePrefs];
+
+  nsCOMPtr<nsIPrefBranch> prefBranch = do_QueryInterface(mPrefs);
+  if (!prefBranch)
+    return resultString;
+
+  NSString* searchPagePref = nil;
+  PRBool haveUserPref = PR_FALSE;
+  prefBranch->PrefHasUserValue("chimera.search_page", &haveUserPref);
+  if (haveUserPref)
+    searchPagePref = [self getStringPref:"chimera.search_page" withSuccess:NULL];
+  
+  if (!haveUserPref || (searchPagePref == NULL) || ([searchPagePref length] == 0))
+  {
+    // no home page pref is set in user prefs, or it's an empty string
+    searchPagePref = NSLocalizedStringFromTable( @"SearchPageDefault", @"WebsiteDefaults", nil);
+    // and let's copy this into the homepage pref if it's not bad
+    if (![searchPagePref isEqualToString:@"SearchPageDefault"])
+      mPrefs->SetCharPref("chimera.search_page", [searchPagePref UTF8String]);
+  }
+
+  if (searchPagePref && [searchPagePref length] > 0 && ![searchPagePref isEqualToString:@"SearchPageDefault"])
+    return searchPagePref;
+  
+  return resultString;
+}
+
 
 @end
 

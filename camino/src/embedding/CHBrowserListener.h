@@ -46,14 +46,14 @@ public:
   NS_DECL_NSICONTEXTMENULISTENER
   NS_DECL_NSITOOLTIPLISTENER
     
-  void AddListener(id <NSBrowserListener> aListener);
-  void RemoveListener(id <NSBrowserListener> aListener);
-  void SetContainer(id <NSBrowserContainer> aContainer);
+  void AddListener(id <CHBrowserListener> aListener);
+  void RemoveListener(id <CHBrowserListener> aListener);
+  void SetContainer(id <CHBrowserContainer> aContainer);
 
 private:
   CHBrowserView*          mView;     // WEAK - it owns us
   NSMutableArray*         mListeners;
-  id <NSBrowserContainer> mContainer;
+  id <CHBrowserContainer> mContainer;
   PRBool                  mIsModal;
   PRUint32                mChromeFlags;
 };

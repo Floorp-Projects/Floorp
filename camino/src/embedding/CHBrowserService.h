@@ -35,8 +35,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef __nsCocoaBrowserService_h__
-#define __nsCocoaBrowserService_h__
+#ifndef __CHBrowserService_h__
+#define __CHBrowserService_h__
 
 #import "nsAlertController.h"
 #include "nsCOMPtr.h"
@@ -44,9 +44,17 @@
 #include "nsIHelperAppLauncherDialog.h"
 #include "nsIFactory.h"
 
+// two shutdown notifcations exist to allow listeners to guarantee ordering of
+// notifcations, such that they can save state before xpcom-reliant data structures
+// are torn down.
+extern NSString* TermEmbeddingNotificationName;   // someone called TermEmbedding
+extern NSString* XPCOMShutDownNotificationName;   // XPCOM is about to shut down
+
+class nsModuleComponentInfo;
+
 class CHBrowserService :  public nsIWindowCreator,
-                               public nsIFactory, 
-                               public nsIHelperAppLauncherDialog
+                          public nsIFactory, 
+                          public nsIHelperAppLauncherDialog
 {
 public:
   CHBrowserService();
@@ -60,6 +68,12 @@ public:
   static nsresult InitEmbedding();
   static void TermEmbedding();
   static void BrowserClosed();
+
+  // Call to override Gecko components with ones implemented by the
+  // embedding application. Some examples are security dialogs, password
+  // manager, and Necko prompts. This can be called at any time after
+  // XPCOM has been initialized.
+  static void RegisterAppComponents(const nsModuleComponentInfo* inComponents, const int inNumComponents);
   
   static void SetAlertController(nsAlertController* aController);
   static nsAlertController* GetAlertController();
@@ -68,10 +82,13 @@ public:
   static PRUint32 sNumBrowsers;
 
 private:
+  static void ShutDown();
+
   static CHBrowserService* sSingleton;
   static nsAlertController* sController;
   static PRBool sCanTerminate;
 };
 
 
-#endif
+#endif // __CHBrowserService_h__
+

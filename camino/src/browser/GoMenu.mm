@@ -28,6 +28,8 @@
 #import "BrowserWindowController.h"
 #import "BrowserWrapper.h"
 #import "CHBrowserView.h"
+#import "ChimeraUIConstants.h"
+
 #include "nsCOMPtr.h"
 #include "nsString.h"
 #include "nsIWebBrowser.h"
@@ -36,8 +38,6 @@
 #include "nsIHistoryEntry.h"
 #include "nsCRT.h"
 
-// the tag of the separator after which to insert history menu items
-static const int kDividerTag = 4000;
 // the maximum number of history entry menuitems to display
 static const int kMaxItems = 15;
 // the maximum number of characters in a menu title before cropping it
@@ -64,7 +64,7 @@ static const unsigned int kMaxTitleLength = 80;
   if (!wrapper) return nsnull;
   CHBrowserView* view = [wrapper getBrowserView];
   if (!view) return nsnull;
-  nsCOMPtr<nsIWebBrowser> webBrowser = [view getWebBrowser];
+  nsCOMPtr<nsIWebBrowser> webBrowser = getter_AddRefs([view getWebBrowser]);
   if (!webBrowser) return nsnull;
   nsCOMPtr<nsIWebNavigation> webNav(do_QueryInterface(webBrowser));
   return webNav.get();

@@ -54,7 +54,7 @@ public:
   
   // The DOM mouse listener interface.  We only care about clicks.
   NS_IMETHOD HandleEvent(nsIDOMEvent* aEvent) { return NS_OK; };
-  NS_IMETHOD MouseDown(nsIDOMEvent* aMouseEvent);
+  NS_IMETHOD MouseDown(nsIDOMEvent* aMouseEvent) { return NS_OK; };
   NS_IMETHOD MouseUp(nsIDOMEvent* aMouseEvent) { return NS_OK; };
   NS_IMETHOD MouseClick(nsIDOMEvent* aMouseEvent);
   NS_IMETHOD MouseDblClick(nsIDOMEvent* aMouseEvent) { return NS_OK; };

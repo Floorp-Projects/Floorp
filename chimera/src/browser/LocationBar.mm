@@ -40,7 +40,8 @@
 
 @implementation LocationBar
 
-- (void)drawRect:(NSRect)aRect {
+- (void)drawRect:(NSRect)aRect
+{
   // Frame the border.
   //NSDrawLightBezel([self bounds], aRect);
 

@@ -247,14 +247,18 @@ CocoaPromptService::Prompt(nsIDOMWindow *parent,
 
   *_retval = (PRBool)[controller prompt:window title:titleStr text:textStr promptText:valueStr checkMsg:msgStr checkValue:&valueBool doCheck:(checkValue != nsnull)];
 
-  if (checkValue) {
-    *checkValue = (valueBool == YES) ? PR_TRUE : PR_FALSE;
+  // the caller only cares about |value| and |checkValue| if |_retval| 
+  // is something other than cancel. If it is, we'd leak any string we allocated
+  // to fill in |value|. 
+  if (*_retval) {
+    if (checkValue) {
+      *checkValue = (valueBool == YES) ? PR_TRUE : PR_FALSE;
+    }
+
+    *value = [valueStr createNewUnicodeBuffer];
   }
-  PRUint32 length = [valueStr length];
-  PRUnichar* retStr = (PRUnichar*)nsMemory::Alloc((length + 1) * sizeof(PRUnichar));
-  [valueStr getCharacters:retStr];
-  retStr[length] = PRUnichar(0);
-  *value = retStr;
+  else
+    *value = nsnull;
 
   return NS_OK;
 }
@@ -289,21 +293,19 @@ CocoaPromptService::PromptUsernameAndPassword(nsIDOMWindow *parent,
 
   *_retval = (PRBool)[controller promptUserNameAndPassword:window title:titleStr text:textStr userNameText:userNameStr passwordText:passwordStr checkMsg:msgStr checkValue:&valueBool doCheck:(checkValue != nsnull)];
 
-  if (checkValue) {
-    *checkValue = (valueBool == YES) ? PR_TRUE : PR_FALSE;
-  }
+  // the caller only cares about |username|, |password|, and |checkValue| if |_retval|
+  // is something other than cancel. If it is, we'd leak any string we allocated
+  // to fill in |value|. 
+  if (*_retval) {
+    if (checkValue)
+      *checkValue = (valueBool == YES) ? PR_TRUE : PR_FALSE;
 
-  PRUint32 length = [userNameStr length];
-  PRUnichar* retStr = (PRUnichar*)nsMemory::Alloc((length + 1) * sizeof(PRUnichar));
-  [userNameStr getCharacters:retStr];
-  retStr[length] = PRUnichar(0);
-  *username = retStr;
-
-  length = [passwordStr length];
-  retStr = (PRUnichar*)nsMemory::Alloc((length + 1) * sizeof(PRUnichar));
-  [passwordStr getCharacters:retStr];
-  retStr[length] = PRUnichar(0);
-  *password = retStr;
+    *username = [userNameStr createNewUnicodeBuffer];
+    *password = [passwordStr createNewUnicodeBuffer];
+  } else {
+    *username = nsnull;
+    *password = nsnull;
+ }
 
   return NS_OK;
 }
@@ -336,15 +338,17 @@ CocoaPromptService::PromptPassword(nsIDOMWindow *parent,
 
   *_retval = (PRBool)[controller promptPassword:window title:titleStr text:textStr passwordText:passwordStr checkMsg:msgStr checkValue:&valueBool doCheck:(checkValue != nsnull)];
 
-  if (checkValue) {
-    *checkValue = (valueBool == YES) ? PR_TRUE : PR_FALSE;
-  }
+  // the caller only cares about |password| and |checkValue| if |_retval|
+  // is something other than cancel. If it is, we'd leak any string we allocated
+  // to fill in |value|. 
+  if (*_retval) {
+    if (checkValue)
+      *checkValue = (valueBool == YES) ? PR_TRUE : PR_FALSE;
 
-  PRUint32 length = [passwordStr length];
-  PRUnichar* retStr = (PRUnichar*)nsMemory::Alloc((length + 1) * sizeof(PRUnichar));
-  [passwordStr getCharacters:retStr];
-  retStr[length] = PRUnichar(0);
-  *password = retStr;
+    *password = [passwordStr createNewUnicodeBuffer];
+  }
+  else
+    *password = nsnull;
 
   return NS_OK;
 }
