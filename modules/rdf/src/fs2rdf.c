@@ -72,6 +72,13 @@ getVolume(int volNum)
 	}
 #endif
 
+#ifdef  XP_UNIX
+    if(volNum == 0) {
+      sprintf(buffer, "file:///");
+      return buffer;
+    }
+#endif
+
 	if (buffer != NULL)
 	{
 		freeMem(buffer);
