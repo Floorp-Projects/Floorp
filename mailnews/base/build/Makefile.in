@@ -24,7 +24,7 @@ include $(DEPTH)/config/autoconf.mk
 
 MODULE=mailnews
 LIBRARY_NAME=mailnews
-
+IS_COMPONENT=1
 CPPSRCS= \
 		nsMsgFactory.cpp \
 		$(NULL)
@@ -38,7 +38,21 @@ SHARED_LIBRARY_LIBS = \
 		$(NULL)
 
 EXTRA_DSO_LDOPTS = \
+		$(MKSHLIB_FORCE_ALL)	\
 		$(SHARED_LIBRARY_LIBS)	\
+		$(MKSHLIB_UNFORCE_ALL)	\
+		-lmailnewsmsgdb			\
+		-ljs					\
+		-lxp					\
+		-lraptorbase			\
+		-lrdfutil_s				\
+		-lxpcom					\
+		-lreg					\
+		-lnspr21				\
+		-lplc21					\
+		-lplds21				\
+		-L$(DIST)/bin			\
+		-L$(DIST)/lib			\
 		$(NULL)
 
 $(SHARED_LIBRARY): $(SHARED_LIBRARY_LIBS) Makefile
