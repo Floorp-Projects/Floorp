@@ -1792,7 +1792,12 @@ nsresult nsWebBrowser::DoPrintOrPrintPreview(nsIDOMWindow *aDOMWindow,
        nsCOMPtr<nsIContentViewerFile> contentViewerFile(do_QueryInterface(contentViewer));
        if (contentViewerFile) {
          if (aDoPrinting) {
-           rv = contentViewerFile->Print(PR_FALSE, aThePrintSettings, aProgressListener);
+           // should we print silent?
+           PRBool printSilent = PR_FALSE;
+           if (aThePrintSettings) {
+             aThePrintSettings->GetPrintSilent(&printSilent);
+           }
+           rv = contentViewerFile->Print(printSilent, aThePrintSettings, aProgressListener);
          } else {
            rv = contentViewerFile->PrintPreview(aThePrintSettings);
          }
