@@ -23,10 +23,6 @@
 // Simple page sequence frame class. Used when we're in paginated mode
 class nsSimplePageSequenceFrame : public nsContainerFrame {
 public:
-  NS_IMETHOD SetInitialChildList(nsIPresContext& aPresContext,
-                                 nsIAtom*        aListName,
-                                 nsIFrame*       aChildList);
-
   NS_IMETHOD  Reflow(nsIPresContext&      aPresContext,
                      nsHTMLReflowMetrics& aDesiredSize,
                      const nsHTMLReflowState& aMaxSize,

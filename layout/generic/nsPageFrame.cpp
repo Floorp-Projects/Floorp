@@ -155,3 +155,16 @@ nsPageFrame::GetFrameName(nsString& aResult) const
   return MakeFrameName("Page", aResult);
 }
 
+//----------------------------------------------------------------------
+
+nsresult
+NS_NewPageFrame(nsIFrame*& aResult)
+{
+  nsPageFrame*  it = new nsPageFrame;
+  if (nsnull == it) {
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
+  aResult = it;
+  return NS_OK;
+}
+

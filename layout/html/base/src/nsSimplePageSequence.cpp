@@ -24,31 +24,6 @@
 #include "nsIStyleContext.h"
 #include "nsHTMLAtoms.h"
 
-NS_IMETHODIMP
-nsSimplePageSequenceFrame::SetInitialChildList(nsIPresContext& aPresContext,
-                                               nsIAtom*        aListName,
-                                               nsIFrame*       aChildList)
-{
-  // Create a page frame and initialize it
-  mFirstChild = new nsPageFrame;
-
-  // XXX This is all wrong...
-  nsIStyleContext* pseudoStyleContext =
-   aPresContext.ResolvePseudoStyleContextFor(mContent, nsHTMLAtoms::columnPseudo, mStyleContext);
-  mFirstChild->Init(aPresContext, mContent, this, pseudoStyleContext);
-  NS_RELEASE(pseudoStyleContext);
-
-  // Set the geometric and content parent for each of the child frames to be the
-  // page frame
-  for (nsIFrame* frame = aChildList; nsnull != frame; frame->GetNextSibling(frame)) {
-    frame->SetGeometricParent(mFirstChild);
-    frame->SetContentParent(mFirstChild);
-  }
-
-  // Queue up the frames for the page frame
-  return mFirstChild->SetInitialChildList(aPresContext, nsnull, aChildList);
-}
-
 // XXX Hack
 #define PAGE_SPACING_TWIPS 100
 
@@ -159,6 +134,8 @@ nsSimplePageSequenceFrame::Reflow(nsIPresContext&          aPresContext,
         nsIFrame*  continuingPage;
         nsresult rv = kidFrame->CreateContinuingFrame(aPresContext, this,
                                                       kidSC, continuingPage);
+        nsHTMLContainerFrame::CreateViewForFrame(aPresContext, continuingPage,
+                                                 kidSC, PR_TRUE);
         NS_RELEASE(kidSC);
         reflowReason = eReflowReason_Initial;
 
