@@ -33,16 +33,11 @@
  */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: utf8.c,v $ $Revision: 1.7 $ $Date: 2004/01/20 19:57:17 $ $Name:  $";
+static const char CVS_ID[] = "@(#) $RCSfile: utf8.c,v $ $Revision: 1.8 $ $Date: 2004/01/28 03:48:43 $ $Name:  $";
 #endif /* DEBUG */
 
 #include "seccomon.h"
 #include "secport.h"
-
-/*
- * Define this if you want to support UTF-16 in UCS-2
- */
-#define UTF16
 
 /*
  * From RFC 2044:
@@ -99,6 +94,50 @@ static const char CVS_ID[] = "@(#) $RCSfile: utf8.c,v $ $Revision: 1.7 $ $Date: 
 #define H_0 0
 #define H_1 1
 
+#define BAD_UTF8 ((PRUint32)-1)
+
+static PRUint32
+sec_port_read_utf8(unsigned int *index, unsigned char *inBuf, unsigned int inBufLen)
+{
+  PRUint32 result;
+  unsigned int i = *index;
+  int bytes_left;
+  PRUint32 min_value;
+
+  if ( (inBuf[i] & 0x80) == 0x00 ) {
+    result = inBuf[i++];
+    bytes_left = 0;
+    min_value = 0;
+  } else if ( (inBuf[i] & 0xE0) == 0xC0 ) {
+    result = inBuf[i++] & 0x1F;
+    bytes_left = 1;
+    min_value = 0x80;
+  } else if ( (inBuf[i] & 0xF0) == 0xE0) {
+    result = inBuf[i++] & 0x0F;
+    bytes_left = 2;
+    min_value = 0x800;
+  } else if ( (inBuf[i] & 0xF8) == 0xF0) {
+    result = inBuf[i++] & 0x07;
+    bytes_left = 3;
+    min_value = 0x10000;
+  } else {
+    return BAD_UTF8;
+  }
+
+  while (bytes_left--) {
+    if (i >= inBufLen || (inBuf[i] & 0xC0) != 0x80) return BAD_UTF8;
+    result = (result << 6) | (inBuf[i++] & 0x3F);
+  }
+
+  /* Check for overlong sequences, surrogates, and outside unicode range */
+  if (result < min_value || (result & 0xFFFFF800) == 0xD800 || result > 0x10FFFF) {
+    return BAD_UTF8;
+  }
+
+  *index = i;
+  return result;
+}
+
 PR_IMPLEMENT(PRBool)
 sec_port_ucs4_utf8_conversion_function
 (
@@ -116,14 +155,13 @@ sec_port_ucs4_utf8_conversion_function
 
   if( toUnicode ) {
     unsigned int i, len = 0;
+    PRUint32 ucs4;
 
     for( i = 0; i < inBufLen; ) {
       if( (inBuf[i] & 0x80) == 0x00 ) i += 1;
       else if( (inBuf[i] & 0xE0) == 0xC0 ) i += 2;
       else if( (inBuf[i] & 0xF0) == 0xE0 ) i += 3;
       else if( (inBuf[i] & 0xF8) == 0xF0 ) i += 4;
-      else if( (inBuf[i] & 0xFC) == 0xF8 ) i += 5;
-      else if( (inBuf[i] & 0xFE) == 0xFC ) i += 6;
       else return PR_FALSE;
 
       len += 4;
@@ -137,98 +175,14 @@ sec_port_ucs4_utf8_conversion_function
     len = 0;
 
     for( i = 0; i < inBufLen; ) {
-      if( (inBuf[i] & 0x80) == 0x00 ) {
-        /* 0000 0000-0000 007F <- 0xxxxxx */
-        /* 0abcdefg -> 
-           00000000 00000000 00000000 0abcdefg */
+      ucs4 = sec_port_read_utf8(&i, inBuf, inBufLen);
 
-        outBuf[len+L_0] = 0x00;
-        outBuf[len+L_1] = 0x00;
-        outBuf[len+L_2] = 0x00;
-        outBuf[len+L_3] = inBuf[i+0] & 0x7F;
-
-        i += 1;
-      } else if( (inBuf[i] & 0xE0) == 0xC0 ) {
-
-        if( (inBuf[i+1] & 0xC0) != 0x80 ) return PR_FALSE;
-
-        /* 0000 0080-0000 07FF <- 110xxxxx 10xxxxxx */
-        /* 110abcde 10fghijk ->
-           00000000 00000000 00000abc defghijk */
-
-        outBuf[len+L_0] = 0x00;
-        outBuf[len+L_1] = 0x00;
-        outBuf[len+L_2] = ((inBuf[i+0] & 0x1C) >> 2);
-        outBuf[len+L_3] = ((inBuf[i+0] & 0x03) << 6) | ((inBuf[i+1] & 0x3F) >> 0);
-
-        i += 2;
-      } else if( (inBuf[i] & 0xF0) == 0xE0 ) {
-
-        if( (inBuf[i+1] & 0xC0) != 0x80 ) return PR_FALSE;
-        if( (inBuf[i+2] & 0xC0) != 0x80 ) return PR_FALSE;
-
-        /* 0000 0800-0000 FFFF <- 1110xxxx 10xxxxxx 10xxxxxx */
-        /* 1110abcd 10efghij 10klmnop ->
-           00000000 00000000 abcdefgh ijklmnop */
-
-        outBuf[len+L_0] = 0x00;
-        outBuf[len+L_1] = 0x00;
-        outBuf[len+L_2] = ((inBuf[i+0] & 0x0F) << 4) | ((inBuf[i+1] & 0x3C) >> 2);
-        outBuf[len+L_3] = ((inBuf[i+1] & 0x03) << 6) | ((inBuf[i+2] & 0x3F) >> 0);
-
-        i += 3;
-      } else if( (inBuf[i] & 0xF8) == 0xF0 ) {
-
-        if( (inBuf[i+1] & 0xC0) != 0x80 ) return PR_FALSE;
-        if( (inBuf[i+2] & 0xC0) != 0x80 ) return PR_FALSE;
-        if( (inBuf[i+3] & 0xC0) != 0x80 ) return PR_FALSE;
-
-        /* 0001 0000-001F FFFF <- 11110xxx 10xxxxxx 10xxxxxx 10xxxxxx */
-        /* 11110abc 10defghi 10jklmno 10pqrstu -> 
-           00000000 000abcde fghijklm nopqrstu */
+      if (ucs4 == BAD_UTF8) return PR_FALSE;
            
-        outBuf[len+L_0] = 0x00;
-        outBuf[len+L_1] = ((inBuf[i+0] & 0x07) << 2) | ((inBuf[i+1] & 0x30) >> 4);
-        outBuf[len+L_2] = ((inBuf[i+1] & 0x0F) << 4) | ((inBuf[i+2] & 0x3C) >> 2);
-        outBuf[len+L_3] = ((inBuf[i+2] & 0x03) << 6) | ((inBuf[i+3] & 0x3F) >> 0);
-
-        i += 4;
-      } else if( (inBuf[i] & 0xFC) == 0xF8 ) {
-
-        if( (inBuf[i+1] & 0xC0) != 0x80 ) return PR_FALSE;
-        if( (inBuf[i+2] & 0xC0) != 0x80 ) return PR_FALSE;
-        if( (inBuf[i+3] & 0xC0) != 0x80 ) return PR_FALSE;
-        if( (inBuf[i+4] & 0xC0) != 0x80 ) return PR_FALSE;
-
-        /* 0020 0000-03FF FFFF <- 111110xx 10xxxxxx ... 10xxxxxx */
-        /* 111110ab 10cdefgh 10ijklmn 10opqrst 10uvwxyz -> 
-           000000ab cdefghij klmnopqr stuvwxyz */
-
-        outBuf[len+L_0] = inBuf[i+0] & 0x03;
-        outBuf[len+L_1] = ((inBuf[i+1] & 0x3F) << 2) | ((inBuf[i+2] & 0x30) >> 4);
-        outBuf[len+L_2] = ((inBuf[i+2] & 0x0F) << 4) | ((inBuf[i+3] & 0x3C) >> 2);
-        outBuf[len+L_3] = ((inBuf[i+3] & 0x03) << 6) | ((inBuf[i+4] & 0x3F) >> 0);
-
-        i += 5;
-      } else /* if( (inBuf[i] & 0xFE) == 0xFC ) */ {
-
-        if( (inBuf[i+1] & 0xC0) != 0x80 ) return PR_FALSE;
-        if( (inBuf[i+2] & 0xC0) != 0x80 ) return PR_FALSE;
-        if( (inBuf[i+3] & 0xC0) != 0x80 ) return PR_FALSE;
-        if( (inBuf[i+4] & 0xC0) != 0x80 ) return PR_FALSE;
-        if( (inBuf[i+5] & 0xC0) != 0x80 ) return PR_FALSE;
-
-        /* 0400 0000-7FFF FFFF <- 1111110x 10xxxxxx ... 10xxxxxx */
-        /* 1111110a 10bcdefg 10hijklm 10nopqrs 10tuvwxy 10zABCDE -> 
-           0abcdefg hijklmno pqrstuvw xyzABCDE */
-
-        outBuf[len+L_0] = ((inBuf[i+0] & 0x01) << 6) | ((inBuf[i+1] & 0x3F) >> 0);
-        outBuf[len+L_1] = ((inBuf[i+2] & 0x3F) << 2) | ((inBuf[i+3] & 0x30) >> 4);
-        outBuf[len+L_2] = ((inBuf[i+3] & 0x0F) << 4) | ((inBuf[i+4] & 0x3C) >> 2);
-        outBuf[len+L_3] = ((inBuf[i+4] & 0x03) << 6) | ((inBuf[i+5] & 0x3F) >> 0);
-
-        i += 6;
-      }
+      outBuf[len+L_0] = 0x00;
+      outBuf[len+L_1] = (ucs4 >> 16);
+      outBuf[len+L_2] = (ucs4 >> 8);
+      outBuf[len+L_3] = ucs4;
 
       len += 4;
     }
@@ -244,9 +198,10 @@ sec_port_ucs4_utf8_conversion_function
     }
 
     for( i = 0; i < inBufLen; i += 4 ) {
-      if( inBuf[i+L_0] >= 0x04 ) len += 6;
-      else if( (inBuf[i+L_0] > 0x00) || (inBuf[i+L_1] >= 0x20) ) len += 5;
-      else if( inBuf[i+L_1] >= 0x01 ) len += 4;
+      if( (inBuf[i+L_0] > 0x00) || (inBuf[i+L_1] > 0x10) ) {
+	*outBufLen = 0;
+	return PR_FALSE;
+      } else if( inBuf[i+L_1] >= 0x01 ) len += 4;
       else if( inBuf[i+L_2] >= 0x08 ) len += 3;
       else if( (inBuf[i+L_2] > 0x00) || (inBuf[i+L_3] >= 0x80) ) len += 2;
       else len += 1;
@@ -260,36 +215,7 @@ sec_port_ucs4_utf8_conversion_function
     len = 0;
 
     for( i = 0; i < inBufLen; i += 4 ) {
-      if( inBuf[i+L_0] >= 0x04 ) {
-        /* 0400 0000-7FFF FFFF -> 1111110x 10xxxxxx ... 10xxxxxx */
-        /* 0abcdefg hijklmno pqrstuvw xyzABCDE ->
-           1111110a 10bcdefg 10hijklm 10nopqrs 10tuvwxy 10zABCDE */
-
-        outBuf[len+0] = 0xFC | ((inBuf[i+L_0] & 0x40) >> 6);
-        outBuf[len+1] = 0x80 | ((inBuf[i+L_0] & 0x3F) >> 0);
-        outBuf[len+2] = 0x80 | ((inBuf[i+L_1] & 0xFC) >> 2);
-        outBuf[len+3] = 0x80 | ((inBuf[i+L_1] & 0x03) << 4)
-                             | ((inBuf[i+L_2] & 0xF0) >> 4);
-        outBuf[len+4] = 0x80 | ((inBuf[i+L_2] & 0x0F) << 2)
-                             | ((inBuf[i+L_3] & 0xC0) >> 6);
-        outBuf[len+5] = 0x80 | ((inBuf[i+L_3] & 0x3F) >> 0);
-
-        len += 6;
-      } else if( (inBuf[i+L_0] > 0x00) || (inBuf[i+L_1] >= 0x20) ) {
-        /* 0020 0000-03FF FFFF -> 111110xx 10xxxxxx ... 10xxxxxx */
-        /* 000000ab cdefghij klmnopqr stuvwxyz ->
-           111110ab 10cdefgh 10ijklmn 10opqrst 10uvwxyz */
-
-        outBuf[len+0] = 0xF8 | ((inBuf[i+L_0] & 0x03) >> 0);
-        outBuf[len+1] = 0x80 | ((inBuf[i+L_1] & 0xFC) >> 2);
-        outBuf[len+2] = 0x80 | ((inBuf[i+L_1] & 0x03) << 4)
-                             | ((inBuf[i+L_2] & 0xF0) >> 4);
-        outBuf[len+3] = 0x80 | ((inBuf[i+L_2] & 0x0F) << 2)
-                             | ((inBuf[i+L_3] & 0xC0) >> 6);
-        outBuf[len+4] = 0x80 | ((inBuf[i+L_3] & 0x3F) >> 0);
-
-        len += 5;
-      } else if( inBuf[i+L_1] >= 0x01 ) {
+      if( inBuf[i+L_1] >= 0x01 ) {
         /* 0001 0000-001F FFFF -> 11110xxx 10xxxxxx 10xxxxxx 10xxxxxx */
         /* 00000000 000abcde fghijklm nopqrstu ->
            11110abc 10defghi 10jklmno 10pqrstu */
@@ -356,6 +282,7 @@ sec_port_ucs2_utf8_conversion_function
 
   if( toUnicode ) {
     unsigned int i, len = 0;
+    PRUint32 ucs4;
 
     for( i = 0; i < inBufLen; ) {
       if( (inBuf[i] & 0x80) == 0x00 ) {
@@ -367,18 +294,9 @@ sec_port_ucs2_utf8_conversion_function
       } else if( (inBuf[i] & 0xF0) == 0xE0 ) {
         i += 3;
         len += 2;
-#ifdef UTF16
       } else if( (inBuf[i] & 0xF8) == 0xF0 ) { 
         i += 4;
         len += 4;
-
-        if( (inBuf[i] & 0x04) && 
-            ((inBuf[i] & 0x03) || (inBuf[i+1] & 0x30)) ) {
-          /* Not representable as UTF16 */
-          return PR_FALSE;
-        }
-
-#endif /* UTF16 */
       } else return PR_FALSE;
     }
 
@@ -390,73 +308,22 @@ sec_port_ucs2_utf8_conversion_function
     len = 0;
 
     for( i = 0; i < inBufLen; ) {
-      if( (inBuf[i] & 0x80) == 0x00 ) {
-        /* 0000-007F <- 0xxxxxx */
-        /* 0abcdefg -> 00000000 0abcdefg */
+      ucs4 = sec_port_read_utf8(&i, inBuf, inBufLen);
 
-        outBuf[len+H_0] = 0x00;
-        outBuf[len+H_1] = inBuf[i+0] & 0x7F;
+      if (ucs4 == BAD_UTF8) return PR_FALSE;
 
-        i += 1;
+      if( ucs4 < 0x10000) {
+        outBuf[len+H_0] = (ucs4 >> 8);
+        outBuf[len+H_1] = ucs4;
         len += 2;
-      } else if( (inBuf[i] & 0xE0) == 0xC0 ) {
-
-        if( (inBuf[i+1] & 0xC0) != 0x80 ) return PR_FALSE;
-
-        /* 0080-07FF <- 110xxxxx 10xxxxxx */
-        /* 110abcde 10fghijk -> 00000abc defghijk */
-
-        outBuf[len+H_0] = ((inBuf[i+0] & 0x1C) >> 2);
-        outBuf[len+H_1] = ((inBuf[i+0] & 0x03) << 6) | ((inBuf[i+1] & 0x3F) >> 0);
-
-        i += 2;
-        len += 2;
-      } else if( (inBuf[i] & 0xF0) == 0xE0 ) {
-
-        if( (inBuf[i+1] & 0xC0) != 0x80 ) return PR_FALSE;
-        if( (inBuf[i+2] & 0xC0) != 0x80 ) return PR_FALSE;
-
-        /* 0800-FFFF <- 1110xxxx 10xxxxxx 10xxxxxx */
-        /* 1110abcd 10efghij 10klmnop -> abcdefgh ijklmnop */
-
-        outBuf[len+H_0] = ((inBuf[i+0] & 0x0F) << 4) | ((inBuf[i+1] & 0x3C) >> 2);
-        outBuf[len+H_1] = ((inBuf[i+1] & 0x03) << 6) | ((inBuf[i+2] & 0x3F) >> 0);
-
-        i += 3;
-        len += 2;
-#ifdef UTF16
-      } else if( (inBuf[i] & 0xF8) == 0xF0 ) { 
-        int abcde, BCDE;
-
-        if( (inBuf[i+1] & 0xC0) != 0x80 ) return PR_FALSE;
-        if( (inBuf[i+2] & 0xC0) != 0x80 ) return PR_FALSE;
-        if( (inBuf[i+3] & 0xC0) != 0x80 ) return PR_FALSE;
-
-        /* 0001 0000-001F FFFF <- 11110xxx 10xxxxxx 10xxxxxx 10xxxxxx */
-        /* 11110xxx 10xxxxxx 10xxxxxx 10xxxxxx -> [D800-DBFF] [DC00-DFFF] */
-           
-        /* 11110abc 10defghi 10jklmno 10pqrstu -> 
-           { Let 0BCDE = abcde - 1 }
-           110110BC DEfghijk 110111lm nopqrstu */
-
-        abcde = ((inBuf[i+0] & 0x07) << 2) | ((inBuf[i+1] & 0x30) >> 4);
-        BCDE = abcde - 1;
-
-#ifndef TEST_UTF8
-        PORT_Assert(BCDE < 0x10); /* should have been caught above */
-#endif /* TEST_UTF8 */
-
-        outBuf[len+0+H_0] = 0xD8 | ((BCDE & 0x0C) >> 2);
-        outBuf[len+0+H_1] = ((BCDE & 0x03) << 6) 
-                      | ((inBuf[i+1] & 0x0F) << 2)
-                      | ((inBuf[i+2] & 0x30) >> 4);
-        outBuf[len+2+H_0] = 0xDC | ((inBuf[i+2] & 0x0C) >> 2);
-        outBuf[len+2+H_1] = ((inBuf[i+2] & 0x03) << 6) | ((inBuf[i+3] & 0x3F) >> 0);
-
-        i += 4;
-        len += 4;
-#endif /* UTF16 */
-      } else return PR_FALSE;
+      } else {
+	ucs4 -= 0x10000;
+        outBuf[len+0+H_0] = 0xD8 | ((ucs4 >> 18) & 0x3);
+        outBuf[len+0+H_1] = (ucs4 >> 10);
+        outBuf[len+2+H_0] = 0xDC | ((ucs4 >> 8) & 0x3);
+        outBuf[len+2+H_1] = ucs4;
+	len += 4;
+      }
     }
 
     *outBufLen = len;
@@ -472,7 +339,6 @@ sec_port_ucs2_utf8_conversion_function
     for( i = 0; i < inBufLen; i += 2 ) {
       if( (inBuf[i+H_0] == 0x00) && ((inBuf[i+H_0] & 0x80) == 0x00) ) len += 1;
       else if( inBuf[i+H_0] < 0x08 ) len += 2;
-#ifdef UTF16
       else if( ((inBuf[i+0+H_0] & 0xDC) == 0xD8) ) {
         if( ((inBuf[i+2+H_0] & 0xDC) == 0xDC) && ((inBufLen - i) > 2) ) {
           i += 2;
@@ -481,7 +347,6 @@ sec_port_ucs2_utf8_conversion_function
           return PR_FALSE;
         }
       }
-#endif /* UTF16 */
       else len += 3;
     }
 
@@ -509,7 +374,6 @@ sec_port_ucs2_utf8_conversion_function
         outBuf[len+1] = 0x80 | ((inBuf[i+H_1] & 0x3F) >> 0);
 
         len += 2;
-#ifdef UTF16
       } else if( (inBuf[i+H_0] & 0xDC) == 0xD8 ) {
         int abcde, BCDE;
 
@@ -535,7 +399,6 @@ sec_port_ucs2_utf8_conversion_function
 
         i += 2;
         len += 4;
-#endif /* UTF16 */
       } else {
         /* 0800-FFFF -> 1110xxxx 10xxxxxx 10xxxxxx */
         /* abcdefgh ijklmnop -> 1110abcd 10efghij 10klmnop */
@@ -629,7 +492,6 @@ struct ucs2 {
   char *utf8;
 };
 
-#ifdef UTF16
 /*
  * UTF-16 vectors
  */
@@ -638,7 +500,6 @@ struct utf16 {
   PRUint32 c;
   PRUint16 w[2];
 };
-#endif /* UTF16 */
 
 
 /*
@@ -874,288 +735,7 @@ struct ucs4 ucs4[] = {
   { 0x00102000, "\xF4\x82\x80\x80" },
   { 0x00104000, "\xF4\x84\x80\x80" },
   { 0x00108000, "\xF4\x88\x80\x80" },
-  { 0x00110000, "\xF4\x90\x80\x80" },
-  { 0x00120000, "\xF4\xA0\x80\x80" },
-  { 0x00140000, "\xF5\x80\x80\x80" },
-  { 0x00180000, "\xF6\x80\x80\x80" },
-  { 0x001FFFFF, "\xF7\xBF\xBF\xBF" },
-          
-  { 0x00200000, "\xF8\x88\x80\x80\x80" },
-  { 0x00200001, "\xF8\x88\x80\x80\x81" },
-  { 0x00200002, "\xF8\x88\x80\x80\x82" },
-  { 0x00200004, "\xF8\x88\x80\x80\x84" },
-  { 0x00200008, "\xF8\x88\x80\x80\x88" },
-  { 0x00200010, "\xF8\x88\x80\x80\x90" },
-  { 0x00200020, "\xF8\x88\x80\x80\xA0" },
-  { 0x00200040, "\xF8\x88\x80\x81\x80" },
-  { 0x00200080, "\xF8\x88\x80\x82\x80" },
-  { 0x00200100, "\xF8\x88\x80\x84\x80" },
-  { 0x00200200, "\xF8\x88\x80\x88\x80" },
-  { 0x00200400, "\xF8\x88\x80\x90\x80" },
-  { 0x00200800, "\xF8\x88\x80\xA0\x80" },
-  { 0x00201000, "\xF8\x88\x81\x80\x80" },
-  { 0x00202000, "\xF8\x88\x82\x80\x80" },
-  { 0x00204000, "\xF8\x88\x84\x80\x80" },
-  { 0x00208000, "\xF8\x88\x88\x80\x80" },
-  { 0x00210000, "\xF8\x88\x90\x80\x80" },
-  { 0x00220000, "\xF8\x88\xA0\x80\x80" },
-  { 0x00240000, "\xF8\x89\x80\x80\x80" },
-  { 0x00280000, "\xF8\x8A\x80\x80\x80" },
-  { 0x00300000, "\xF8\x8C\x80\x80\x80" },
-  { 0x003FFFFF, "\xF8\x8F\xBF\xBF\xBF" },
-  { 0x00400000, "\xF8\x90\x80\x80\x80" },
-  { 0x00400001, "\xF8\x90\x80\x80\x81" },
-  { 0x00400002, "\xF8\x90\x80\x80\x82" },
-  { 0x00400004, "\xF8\x90\x80\x80\x84" },
-  { 0x00400008, "\xF8\x90\x80\x80\x88" },
-  { 0x00400010, "\xF8\x90\x80\x80\x90" },
-  { 0x00400020, "\xF8\x90\x80\x80\xA0" },
-  { 0x00400040, "\xF8\x90\x80\x81\x80" },
-  { 0x00400080, "\xF8\x90\x80\x82\x80" },
-  { 0x00400100, "\xF8\x90\x80\x84\x80" },
-  { 0x00400200, "\xF8\x90\x80\x88\x80" },
-  { 0x00400400, "\xF8\x90\x80\x90\x80" },
-  { 0x00400800, "\xF8\x90\x80\xA0\x80" },
-  { 0x00401000, "\xF8\x90\x81\x80\x80" },
-  { 0x00402000, "\xF8\x90\x82\x80\x80" },
-  { 0x00404000, "\xF8\x90\x84\x80\x80" },
-  { 0x00408000, "\xF8\x90\x88\x80\x80" },
-  { 0x00410000, "\xF8\x90\x90\x80\x80" },
-  { 0x00420000, "\xF8\x90\xA0\x80\x80" },
-  { 0x00440000, "\xF8\x91\x80\x80\x80" },
-  { 0x00480000, "\xF8\x92\x80\x80\x80" },
-  { 0x00500000, "\xF8\x94\x80\x80\x80" },
-  { 0x00600000, "\xF8\x98\x80\x80\x80" },
-  { 0x007FFFFF, "\xF8\x9F\xBF\xBF\xBF" },
-  { 0x00800000, "\xF8\xA0\x80\x80\x80" },
-  { 0x00800001, "\xF8\xA0\x80\x80\x81" },
-  { 0x00800002, "\xF8\xA0\x80\x80\x82" },
-  { 0x00800004, "\xF8\xA0\x80\x80\x84" },
-  { 0x00800008, "\xF8\xA0\x80\x80\x88" },
-  { 0x00800010, "\xF8\xA0\x80\x80\x90" },
-  { 0x00800020, "\xF8\xA0\x80\x80\xA0" },
-  { 0x00800040, "\xF8\xA0\x80\x81\x80" },
-  { 0x00800080, "\xF8\xA0\x80\x82\x80" },
-  { 0x00800100, "\xF8\xA0\x80\x84\x80" },
-  { 0x00800200, "\xF8\xA0\x80\x88\x80" },
-  { 0x00800400, "\xF8\xA0\x80\x90\x80" },
-  { 0x00800800, "\xF8\xA0\x80\xA0\x80" },
-  { 0x00801000, "\xF8\xA0\x81\x80\x80" },
-  { 0x00802000, "\xF8\xA0\x82\x80\x80" },
-  { 0x00804000, "\xF8\xA0\x84\x80\x80" },
-  { 0x00808000, "\xF8\xA0\x88\x80\x80" },
-  { 0x00810000, "\xF8\xA0\x90\x80\x80" },
-  { 0x00820000, "\xF8\xA0\xA0\x80\x80" },
-  { 0x00840000, "\xF8\xA1\x80\x80\x80" },
-  { 0x00880000, "\xF8\xA2\x80\x80\x80" },
-  { 0x00900000, "\xF8\xA4\x80\x80\x80" },
-  { 0x00A00000, "\xF8\xA8\x80\x80\x80" },
-  { 0x00C00000, "\xF8\xB0\x80\x80\x80" },
-  { 0x00FFFFFF, "\xF8\xBF\xBF\xBF\xBF" },
-  { 0x01000000, "\xF9\x80\x80\x80\x80" },
-  { 0x01000001, "\xF9\x80\x80\x80\x81" },
-  { 0x01000002, "\xF9\x80\x80\x80\x82" },
-  { 0x01000004, "\xF9\x80\x80\x80\x84" },
-  { 0x01000008, "\xF9\x80\x80\x80\x88" },
-  { 0x01000010, "\xF9\x80\x80\x80\x90" },
-  { 0x01000020, "\xF9\x80\x80\x80\xA0" },
-  { 0x01000040, "\xF9\x80\x80\x81\x80" },
-  { 0x01000080, "\xF9\x80\x80\x82\x80" },
-  { 0x01000100, "\xF9\x80\x80\x84\x80" },
-  { 0x01000200, "\xF9\x80\x80\x88\x80" },
-  { 0x01000400, "\xF9\x80\x80\x90\x80" },
-  { 0x01000800, "\xF9\x80\x80\xA0\x80" },
-  { 0x01001000, "\xF9\x80\x81\x80\x80" },
-  { 0x01002000, "\xF9\x80\x82\x80\x80" },
-  { 0x01004000, "\xF9\x80\x84\x80\x80" },
-  { 0x01008000, "\xF9\x80\x88\x80\x80" },
-  { 0x01010000, "\xF9\x80\x90\x80\x80" },
-  { 0x01020000, "\xF9\x80\xA0\x80\x80" },
-  { 0x01040000, "\xF9\x81\x80\x80\x80" },
-  { 0x01080000, "\xF9\x82\x80\x80\x80" },
-  { 0x01100000, "\xF9\x84\x80\x80\x80" },
-  { 0x01200000, "\xF9\x88\x80\x80\x80" },
-  { 0x01400000, "\xF9\x90\x80\x80\x80" },
-  { 0x01800000, "\xF9\xA0\x80\x80\x80" },
-  { 0x01FFFFFF, "\xF9\xBF\xBF\xBF\xBF" },
-  { 0x02000000, "\xFA\x80\x80\x80\x80" },
-  { 0x02000001, "\xFA\x80\x80\x80\x81" },
-  { 0x02000002, "\xFA\x80\x80\x80\x82" },
-  { 0x02000004, "\xFA\x80\x80\x80\x84" },
-  { 0x02000008, "\xFA\x80\x80\x80\x88" },
-  { 0x02000010, "\xFA\x80\x80\x80\x90" },
-  { 0x02000020, "\xFA\x80\x80\x80\xA0" },
-  { 0x02000040, "\xFA\x80\x80\x81\x80" },
-  { 0x02000080, "\xFA\x80\x80\x82\x80" },
-  { 0x02000100, "\xFA\x80\x80\x84\x80" },
-  { 0x02000200, "\xFA\x80\x80\x88\x80" },
-  { 0x02000400, "\xFA\x80\x80\x90\x80" },
-  { 0x02000800, "\xFA\x80\x80\xA0\x80" },
-  { 0x02001000, "\xFA\x80\x81\x80\x80" },
-  { 0x02002000, "\xFA\x80\x82\x80\x80" },
-  { 0x02004000, "\xFA\x80\x84\x80\x80" },
-  { 0x02008000, "\xFA\x80\x88\x80\x80" },
-  { 0x02010000, "\xFA\x80\x90\x80\x80" },
-  { 0x02020000, "\xFA\x80\xA0\x80\x80" },
-  { 0x02040000, "\xFA\x81\x80\x80\x80" },
-  { 0x02080000, "\xFA\x82\x80\x80\x80" },
-  { 0x02100000, "\xFA\x84\x80\x80\x80" },
-  { 0x02200000, "\xFA\x88\x80\x80\x80" },
-  { 0x02400000, "\xFA\x90\x80\x80\x80" },
-  { 0x02800000, "\xFA\xA0\x80\x80\x80" },
-  { 0x03000000, "\xFB\x80\x80\x80\x80" },
-  { 0x03FFFFFF, "\xFB\xBF\xBF\xBF\xBF" },
-          
-  { 0x04000000, "\xFC\x84\x80\x80\x80\x80" },
-  { 0x04000001, "\xFC\x84\x80\x80\x80\x81" },
-  { 0x04000002, "\xFC\x84\x80\x80\x80\x82" },
-  { 0x04000004, "\xFC\x84\x80\x80\x80\x84" },
-  { 0x04000008, "\xFC\x84\x80\x80\x80\x88" },
-  { 0x04000010, "\xFC\x84\x80\x80\x80\x90" },
-  { 0x04000020, "\xFC\x84\x80\x80\x80\xA0" },
-  { 0x04000040, "\xFC\x84\x80\x80\x81\x80" },
-  { 0x04000080, "\xFC\x84\x80\x80\x82\x80" },
-  { 0x04000100, "\xFC\x84\x80\x80\x84\x80" },
-  { 0x04000200, "\xFC\x84\x80\x80\x88\x80" },
-  { 0x04000400, "\xFC\x84\x80\x80\x90\x80" },
-  { 0x04000800, "\xFC\x84\x80\x80\xA0\x80" },
-  { 0x04001000, "\xFC\x84\x80\x81\x80\x80" },
-  { 0x04002000, "\xFC\x84\x80\x82\x80\x80" },
-  { 0x04004000, "\xFC\x84\x80\x84\x80\x80" },
-  { 0x04008000, "\xFC\x84\x80\x88\x80\x80" },
-  { 0x04010000, "\xFC\x84\x80\x90\x80\x80" },
-  { 0x04020000, "\xFC\x84\x80\xA0\x80\x80" },
-  { 0x04040000, "\xFC\x84\x81\x80\x80\x80" },
-  { 0x04080000, "\xFC\x84\x82\x80\x80\x80" },
-  { 0x04100000, "\xFC\x84\x84\x80\x80\x80" },
-  { 0x04200000, "\xFC\x84\x88\x80\x80\x80" },
-  { 0x04400000, "\xFC\x84\x90\x80\x80\x80" },
-  { 0x04800000, "\xFC\x84\xA0\x80\x80\x80" },
-  { 0x05000000, "\xFC\x85\x80\x80\x80\x80" },
-  { 0x06000000, "\xFC\x86\x80\x80\x80\x80" },
-  { 0x07FFFFFF, "\xFC\x87\xBF\xBF\xBF\xBF" },
-  { 0x08000000, "\xFC\x88\x80\x80\x80\x80" },
-  { 0x08000001, "\xFC\x88\x80\x80\x80\x81" },
-  { 0x08000002, "\xFC\x88\x80\x80\x80\x82" },
-  { 0x08000004, "\xFC\x88\x80\x80\x80\x84" },
-  { 0x08000008, "\xFC\x88\x80\x80\x80\x88" },
-  { 0x08000010, "\xFC\x88\x80\x80\x80\x90" },
-  { 0x08000020, "\xFC\x88\x80\x80\x80\xA0" },
-  { 0x08000040, "\xFC\x88\x80\x80\x81\x80" },
-  { 0x08000080, "\xFC\x88\x80\x80\x82\x80" },
-  { 0x08000100, "\xFC\x88\x80\x80\x84\x80" },
-  { 0x08000200, "\xFC\x88\x80\x80\x88\x80" },
-  { 0x08000400, "\xFC\x88\x80\x80\x90\x80" },
-  { 0x08000800, "\xFC\x88\x80\x80\xA0\x80" },
-  { 0x08001000, "\xFC\x88\x80\x81\x80\x80" },
-  { 0x08002000, "\xFC\x88\x80\x82\x80\x80" },
-  { 0x08004000, "\xFC\x88\x80\x84\x80\x80" },
-  { 0x08008000, "\xFC\x88\x80\x88\x80\x80" },
-  { 0x08010000, "\xFC\x88\x80\x90\x80\x80" },
-  { 0x08020000, "\xFC\x88\x80\xA0\x80\x80" },
-  { 0x08040000, "\xFC\x88\x81\x80\x80\x80" },
-  { 0x08080000, "\xFC\x88\x82\x80\x80\x80" },
-  { 0x08100000, "\xFC\x88\x84\x80\x80\x80" },
-  { 0x08200000, "\xFC\x88\x88\x80\x80\x80" },
-  { 0x08400000, "\xFC\x88\x90\x80\x80\x80" },
-  { 0x08800000, "\xFC\x88\xA0\x80\x80\x80" },
-  { 0x09000000, "\xFC\x89\x80\x80\x80\x80" },
-  { 0x0A000000, "\xFC\x8A\x80\x80\x80\x80" },
-  { 0x0C000000, "\xFC\x8C\x80\x80\x80\x80" },
-  { 0x0FFFFFFF, "\xFC\x8F\xBF\xBF\xBF\xBF" },
-  { 0x10000000, "\xFC\x90\x80\x80\x80\x80" },
-  { 0x10000001, "\xFC\x90\x80\x80\x80\x81" },
-  { 0x10000002, "\xFC\x90\x80\x80\x80\x82" },
-  { 0x10000004, "\xFC\x90\x80\x80\x80\x84" },
-  { 0x10000008, "\xFC\x90\x80\x80\x80\x88" },
-  { 0x10000010, "\xFC\x90\x80\x80\x80\x90" },
-  { 0x10000020, "\xFC\x90\x80\x80\x80\xA0" },
-  { 0x10000040, "\xFC\x90\x80\x80\x81\x80" },
-  { 0x10000080, "\xFC\x90\x80\x80\x82\x80" },
-  { 0x10000100, "\xFC\x90\x80\x80\x84\x80" },
-  { 0x10000200, "\xFC\x90\x80\x80\x88\x80" },
-  { 0x10000400, "\xFC\x90\x80\x80\x90\x80" },
-  { 0x10000800, "\xFC\x90\x80\x80\xA0\x80" },
-  { 0x10001000, "\xFC\x90\x80\x81\x80\x80" },
-  { 0x10002000, "\xFC\x90\x80\x82\x80\x80" },
-  { 0x10004000, "\xFC\x90\x80\x84\x80\x80" },
-  { 0x10008000, "\xFC\x90\x80\x88\x80\x80" },
-  { 0x10010000, "\xFC\x90\x80\x90\x80\x80" },
-  { 0x10020000, "\xFC\x90\x80\xA0\x80\x80" },
-  { 0x10040000, "\xFC\x90\x81\x80\x80\x80" },
-  { 0x10080000, "\xFC\x90\x82\x80\x80\x80" },
-  { 0x10100000, "\xFC\x90\x84\x80\x80\x80" },
-  { 0x10200000, "\xFC\x90\x88\x80\x80\x80" },
-  { 0x10400000, "\xFC\x90\x90\x80\x80\x80" },
-  { 0x10800000, "\xFC\x90\xA0\x80\x80\x80" },
-  { 0x11000000, "\xFC\x91\x80\x80\x80\x80" },
-  { 0x12000000, "\xFC\x92\x80\x80\x80\x80" },
-  { 0x14000000, "\xFC\x94\x80\x80\x80\x80" },
-  { 0x18000000, "\xFC\x98\x80\x80\x80\x80" },
-  { 0x1FFFFFFF, "\xFC\x9F\xBF\xBF\xBF\xBF" },
-  { 0x20000000, "\xFC\xA0\x80\x80\x80\x80" },
-  { 0x20000001, "\xFC\xA0\x80\x80\x80\x81" },
-  { 0x20000002, "\xFC\xA0\x80\x80\x80\x82" },
-  { 0x20000004, "\xFC\xA0\x80\x80\x80\x84" },
-  { 0x20000008, "\xFC\xA0\x80\x80\x80\x88" },
-  { 0x20000010, "\xFC\xA0\x80\x80\x80\x90" },
-  { 0x20000020, "\xFC\xA0\x80\x80\x80\xA0" },
-  { 0x20000040, "\xFC\xA0\x80\x80\x81\x80" },
-  { 0x20000080, "\xFC\xA0\x80\x80\x82\x80" },
-  { 0x20000100, "\xFC\xA0\x80\x80\x84\x80" },
-  { 0x20000200, "\xFC\xA0\x80\x80\x88\x80" },
-  { 0x20000400, "\xFC\xA0\x80\x80\x90\x80" },
-  { 0x20000800, "\xFC\xA0\x80\x80\xA0\x80" },
-  { 0x20001000, "\xFC\xA0\x80\x81\x80\x80" },
-  { 0x20002000, "\xFC\xA0\x80\x82\x80\x80" },
-  { 0x20004000, "\xFC\xA0\x80\x84\x80\x80" },
-  { 0x20008000, "\xFC\xA0\x80\x88\x80\x80" },
-  { 0x20010000, "\xFC\xA0\x80\x90\x80\x80" },
-  { 0x20020000, "\xFC\xA0\x80\xA0\x80\x80" },
-  { 0x20040000, "\xFC\xA0\x81\x80\x80\x80" },
-  { 0x20080000, "\xFC\xA0\x82\x80\x80\x80" },
-  { 0x20100000, "\xFC\xA0\x84\x80\x80\x80" },
-  { 0x20200000, "\xFC\xA0\x88\x80\x80\x80" },
-  { 0x20400000, "\xFC\xA0\x90\x80\x80\x80" },
-  { 0x20800000, "\xFC\xA0\xA0\x80\x80\x80" },
-  { 0x21000000, "\xFC\xA1\x80\x80\x80\x80" },
-  { 0x22000000, "\xFC\xA2\x80\x80\x80\x80" },
-  { 0x24000000, "\xFC\xA4\x80\x80\x80\x80" },
-  { 0x28000000, "\xFC\xA8\x80\x80\x80\x80" },
-  { 0x30000000, "\xFC\xB0\x80\x80\x80\x80" },
-  { 0x3FFFFFFF, "\xFC\xBF\xBF\xBF\xBF\xBF" },
-  { 0x40000000, "\xFD\x80\x80\x80\x80\x80" },
-  { 0x40000001, "\xFD\x80\x80\x80\x80\x81" },
-  { 0x40000002, "\xFD\x80\x80\x80\x80\x82" },
-  { 0x40000004, "\xFD\x80\x80\x80\x80\x84" },
-  { 0x40000008, "\xFD\x80\x80\x80\x80\x88" },
-  { 0x40000010, "\xFD\x80\x80\x80\x80\x90" },
-  { 0x40000020, "\xFD\x80\x80\x80\x80\xA0" },
-  { 0x40000040, "\xFD\x80\x80\x80\x81\x80" },
-  { 0x40000080, "\xFD\x80\x80\x80\x82\x80" },
-  { 0x40000100, "\xFD\x80\x80\x80\x84\x80" },
-  { 0x40000200, "\xFD\x80\x80\x80\x88\x80" },
-  { 0x40000400, "\xFD\x80\x80\x80\x90\x80" },
-  { 0x40000800, "\xFD\x80\x80\x80\xA0\x80" },
-  { 0x40001000, "\xFD\x80\x80\x81\x80\x80" },
-  { 0x40002000, "\xFD\x80\x80\x82\x80\x80" },
-  { 0x40004000, "\xFD\x80\x80\x84\x80\x80" },
-  { 0x40008000, "\xFD\x80\x80\x88\x80\x80" },
-  { 0x40010000, "\xFD\x80\x80\x90\x80\x80" },
-  { 0x40020000, "\xFD\x80\x80\xA0\x80\x80" },
-  { 0x40040000, "\xFD\x80\x81\x80\x80\x80" },
-  { 0x40080000, "\xFD\x80\x82\x80\x80\x80" },
-  { 0x40100000, "\xFD\x80\x84\x80\x80\x80" },
-  { 0x40200000, "\xFD\x80\x88\x80\x80\x80" },
-  { 0x40400000, "\xFD\x80\x90\x80\x80\x80" },
-  { 0x40800000, "\xFD\x80\xA0\x80\x80\x80" },
-  { 0x41000000, "\xFD\x81\x80\x80\x80\x80" },
-  { 0x42000000, "\xFD\x82\x80\x80\x80\x80" },
-  { 0x44000000, "\xFD\x84\x80\x80\x80\x80" },
-  { 0x48000000, "\xFD\x88\x80\x80\x80\x80" },
-  { 0x50000000, "\xFD\x90\x80\x80\x80\x80" },
-  { 0x60000000, "\xFD\xA0\x80\x80\x80\x80" },
-  { 0x7FFFFFFF, "\xFD\xBF\xBF\xBF\xBF\xBF" }
+  { 0x0010FFFF, "\xF4\x8F\xBF\xBF" },
 };
 
 /*
@@ -1298,7 +878,6 @@ struct ucs2 ucs2[] = {
 
 };
 
-#ifdef UTF16
 /*
  * UTF-16 vectors
  */
@@ -1552,7 +1131,49 @@ struct utf16 utf16[] = {
   { 0x0010FFFF, { 0xDBFF, 0xDFFF } }
 
 };
-#endif /* UTF16 */
+
+/* illegal utf8 sequences */
+char *utf8_bad[] = {
+  "\xC0\x80",
+  "\xC1\xBF",
+  "\xE0\x80\x80",
+  "\xE0\x9F\xBF",
+  "\xF0\x80\x80\x80",
+  "\xF0\x8F\xBF\xBF",
+  "\xF4\x90\x80\x80",
+  "\xF7\xBF\xBF\xBF",
+  "\xF8\x80\x80\x80\x80",
+  "\xF8\x88\x80\x80\x80",
+  "\xF8\x92\x80\x80\x80",
+  "\xF8\x9F\xBF\xBF\xBF",
+  "\xF8\xA0\x80\x80\x80",
+  "\xF8\xA8\x80\x80\x80",
+  "\xF8\xB0\x80\x80\x80",
+  "\xF8\xBF\xBF\xBF\xBF",
+  "\xF9\x80\x80\x80\x88",
+  "\xF9\x84\x80\x80\x80",
+  "\xF9\xBF\xBF\xBF\xBF",
+  "\xFA\x80\x80\x80\x80",
+  "\xFA\x90\x80\x80\x80",
+  "\xFB\xBF\xBF\xBF\xBF",
+  "\xFC\x84\x80\x80\x80\x81",
+  "\xFC\x85\x80\x80\x80\x80",
+  "\xFC\x86\x80\x80\x80\x80",
+  "\xFC\x87\xBF\xBF\xBF\xBF",
+  "\xFC\x88\xA0\x80\x80\x80",
+  "\xFC\x89\x80\x80\x80\x80",
+  "\xFC\x8A\x80\x80\x80\x80",
+  "\xFC\x90\x80\x80\x80\x82",
+  "\xFD\x80\x80\x80\x80\x80",
+  "\xFD\xBF\xBF\xBF\xBF\xBF",
+  "\x80",
+  "\xC3",
+  "\xC3\xC3\x80",
+  "\xED\xA0\x80",
+  "\xED\xBF\x80",
+  "\xED\xBF\xBF",
+  "\xED\xA0\x80\xE0\xBF\xBF",
+};
 
 static void
 dump_utf8
@@ -1683,7 +1304,6 @@ test_ucs2_chars
   return rv;
 }
 
-#ifdef UTF16
 static PRBool
 test_utf16_chars
 (
@@ -1791,7 +1411,42 @@ test_utf16_chars
 
   return rv;
 }
-#endif /* UTF16 */
+
+static PRBool
+test_utf8_bad_chars
+(
+  void
+)
+{
+  PRBool rv = PR_TRUE;
+  int i;
+
+  for( i = 0; i < sizeof(utf8_bad)/sizeof(utf8_bad[0]); i++ ) {
+    PRBool result;
+    unsigned char destbuf[30];
+    unsigned int len = 0;
+
+    result = sec_port_ucs2_utf8_conversion_function(PR_TRUE,
+      (unsigned char *)utf8_bad[i], strlen(utf8_bad[i]), destbuf, sizeof(destbuf), &len);
+
+    if( result ) {
+      dump_utf8("Failed to detect bad UTF-8 string converting to UCS2: ", utf8_bad[i], "\n");
+      rv = PR_FALSE;
+      continue;
+    }
+    result = sec_port_ucs4_utf8_conversion_function(PR_TRUE,
+      (unsigned char *)utf8_bad[i], strlen(utf8_bad[i]), destbuf, sizeof(destbuf), &len);
+
+    if( result ) {
+      dump_utf8("Failed to detect bad UTF-8 string converting to UCS4: ", utf8_bad[i], "\n");
+      rv = PR_FALSE;
+      continue;
+    }
+
+  }
+
+  return rv;
+}
 
 static PRBool
 test_iso88591_chars
@@ -2082,9 +1737,7 @@ test_multichars
     goto loser;
   }
 
-#ifdef UTF16
-  /* implement me */
-#endif /* UTF16 */
+  /* implement UTF16 */
 
   result = PR_TRUE;
   goto done;
@@ -2127,14 +1780,12 @@ byte_order
     e->c = htons(e->c);
   }
 
-#ifdef UTF16
   for( i = 0; i < sizeof(utf16)/sizeof(utf16[0]); i++ ) {
     struct utf16 *e = &utf16[i];
     e->c = htonl(e->c);
     e->w[0] = htons(e->w[0]);
     e->w[1] = htons(e->w[1]);
   }
-#endif /* UTF16 */
 
   return;
 }
@@ -2150,9 +1801,8 @@ main
 
   if( test_ucs4_chars() &&
       test_ucs2_chars() &&
-#ifdef UTF16
       test_utf16_chars() &&
-#endif /* UTF16 */
+      test_utf8_bad_chars() &&
       test_iso88591_chars() &&
       test_zeroes() &&
       test_multichars() &&
