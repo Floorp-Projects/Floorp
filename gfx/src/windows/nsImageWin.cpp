@@ -1058,14 +1058,22 @@ nsImageWin :: CleanUpDDB()
 nsresult 
 nsImageWin::PrintDDB(nsDrawingSurface aSurface,PRInt32 aX, PRInt32 aY, PRInt32 aWidth, PRInt32 aHeight,PRUint32 aROP)
 {
-HDC theHDC;
+HDC   theHDC;
+UINT  palType;
 
   if (mIsOptimized == PR_TRUE){
     if (mHBitmap != nsnull){
       ConvertDDBtoDIB(aWidth,aHeight);
       ((nsDrawingSurfaceWin *)aSurface)->GetDC(&theHDC);
+
+      if (mBHead->biBitCount == 8) {
+        palType = DIB_PAL_COLORS;
+      } else {
+        palType = DIB_RGB_COLORS;
+      }
+
       ::StretchDIBits(theHDC, aX, aY, aWidth, aHeight,
-		      0, 0, mBHead->biWidth, mBHead->biHeight, mImageBits,(LPBITMAPINFO)mBHead,DIB_RGB_COLORS, aROP);
+		      0, 0, mBHead->biWidth, mBHead->biHeight, mImageBits,(LPBITMAPINFO)mBHead,palType, aROP);
 
       // we are finished with this, so delete it           
       if (mImageBits != nsnull) {
@@ -1090,6 +1098,7 @@ PRInt32             numbytes;
 BITMAP              srcinfo;
 HBITMAP             oldbits;
 HDC                 memPrDC;
+UINT                palType;
 
   if (mIsOptimized == PR_TRUE){
 
@@ -1106,7 +1115,14 @@ HDC                 memPrDC;
 
       // Allocate the image bits
       mImageBits = new unsigned char[mSizeImage];
-      numbytes = ::GetDIBits(memPrDC,mHBitmap,0,srcinfo.bmHeight,mImageBits,(LPBITMAPINFO)mBHead,DIB_RGB_COLORS);
+
+      if (mBHead->biBitCount == 8) {
+        palType = DIB_PAL_COLORS;
+      } else {
+        palType = DIB_RGB_COLORS;
+      }
+
+      numbytes = ::GetDIBits(memPrDC,mHBitmap,0,srcinfo.bmHeight,mImageBits,(LPBITMAPINFO)mBHead,palType);
       ::SelectObject(memPrDC,oldbits);
       DeleteDC(memPrDC);
     }
