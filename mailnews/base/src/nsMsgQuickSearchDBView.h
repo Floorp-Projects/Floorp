@@ -58,6 +58,8 @@ public:
   NS_IMETHOD SetSearchSession(nsIMsgSearchSession *aSearchSession);
   NS_IMETHOD GetSearchSession(nsIMsgSearchSession* *aSearchSession);
   NS_IMETHOD Sort(nsMsgViewSortTypeValue sortType, nsMsgViewSortOrderValue sortOrder);
+  NS_IMETHOD OnKeyChange(nsMsgKey aKeyChanged, PRUint32 aOldFlags, 
+                         PRUint32 aNewFlags, nsIDBChangeListener *aInstigator);
 
 protected:
   nsWeakPtr m_searchSession;
