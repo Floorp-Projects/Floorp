@@ -64,8 +64,7 @@ nsCharsetAlias2::nsCharsetAlias2()
 {
   NS_INIT_REFCNT();
   PR_AtomicIncrement(&g_InstanceCount);
-  nsAutoString propertyURL("resource:/res/charsetalias.properties");
-  mDelegate = new nsURLProperties( propertyURL );
+  mDelegate = nsnull; // delay the load of mDelegate untill we need it.
 }
 //--------------------------------------------------------------
 nsCharsetAlias2::~nsCharsetAlias2()
@@ -80,6 +79,24 @@ NS_IMETHODIMP nsCharsetAlias2::GetPreferred(const nsString& aAlias, nsString& oR
    nsAutoString aKey;
    aAlias.ToLowerCase(aKey);
    oResult = "";
+   if(nsnull ==  mDelegate) {
+      if(aKey == "utf-8") {
+        oResult = "UTF-8";
+        return NS_OK;
+      } 
+      if(aKey == "iso-8859-1") {
+        oResult = "ISO-8859-1";
+        return NS_OK;
+      } 
+	  nsAutoString propertyURL("resource:/res/charsetalias.properties");
+
+	  // we may need to protect the following section with a lock so we won't call the 
+	  // 'new nsURLProperties' from two different threads
+      mDelegate = new nsURLProperties( propertyURL );
+	  NS_ASSERTION(mDelegate, "cannot create nsURLProperties");
+	  if(nsnull == mDelegate)
+		  return NS_ERROR_OUT_OF_MEMORY;
+   }
    return mDelegate->Get(aKey, oResult);
 }
 //--------------------------------------------------------------
