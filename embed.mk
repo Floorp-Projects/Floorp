@@ -27,102 +27,120 @@ VPATH		= .
 
 include $(DEPTH)/config/autoconf.mk
 
-DIRS		= config build
+include $(topsrcdir)/build/unix/modules.mk
+
+EMBEDDING_EXPORTS = \
+	dbm \
+	modules/libreg \
+	js \
+	xpcom \
+	js/src/xpconnect \
+	js/src/liveconnect \
+	modules/zlib \
+	widget/timer \
+	include \
+	modules/libutil \
+	netwerk \
+	security \
+	uriloader \
+	uriloader/exthandler \
+	intl \
+	modules/libpref \
+	modules/libimg \
+	gfx \
+	widget \
+	modules/oji \
+	modules/plugin \
+	modules/libjar \
+	modules/libimg/png \
+	caps \
+	expat \
+	htmlparser \
+	dom \
+	view \
+	content \
+	layout \
+	db \
+	rdf \
+	docshell \
+	webshell \
+	embedding \
+	editor \
+	sun-java \
+	profile \
+	xpfe \
+	extensions \
+	mailnews \
+	xpinstall \
+	$(NULL)
+
+EMBEDDING_INSTALLS = \
+	dbm \
+	modules/libreg \
+	js \
+	xpcom \
+	js/src/xpconnect \
+	js/src/liveconnect \
+	modules/libutil \
+	modules/zlib \
+	modules/zlib/standalone \
+	netwerk \
+	security \
+	uriloader \
+	intl \
+	modules/libpref \
+	modules/libimg \
+	gfx \
+	modules/oji \
+	modules/libjar \
+	caps \
+	expat \
+	htmlparser \
+	dom \
+	view \
+	content \
+	layout \
+	rdf \
+	docshell \
+	webshell \
+	widget \
+	embedding \
+	editor \
+	xpfe/appshell \
+	xpfe/components/shistory \
+	extensions/cookie \
+	extensions/psm-glue \
+	embedding/config \
+	$(NULL)
+
+DIRS             = $(NULL)
+DIRS		+= config build
+
+ifdef MOZ_L10N
+DIRS		+= l10n
+endif
 
 ifdef USE_ELF_DYNSTR_GC
 DIRS		+= tools/elf-dynstr-gc
 endif
 
-DIRS		+= nsprpub
+DIRS		+= $(NSPRPUB_DIR)
 
 ifeq ($(exporting),1)
-	DIRS += \
-		dbm \
-		modules/libreg \
-		js \
-		xpcom \
-		js/src/xpconnect \
-		js/src/liveconnect \
-		modules/zlib \
-		widget/timer \
-		include \
-		modules/libutil \
-		netwerk \
-		modules/appfilelocprovider \
-		security \
-		uriloader \
-                uriloader/exthandler \
-		intl \
-		modules/libpref \
-		modules/libimg \
-		gfx \
-		widget \
-		modules/oji \
-		modules/plugin \
-		modules/libjar \
-		modules/libimg/png \
-		caps \
-		expat \
-		htmlparser \
-		dom \
-		view \
-		layout \
-		db \
-		rdf \
-		docshell \
-		webshell \
-		embedding \
-		editor \
-		sun-java \
-		profile \
-		xpfe \
-		extensions \
-		mailnews \
-		xpinstall \
-		$(NULL)
+DIRS += \
+	$(EMBEDDING_EXPORTS) \
+	$(NULL)
 else
-	DIRS += \
-		dbm \
-		modules/libreg \
-		js \
-		xpcom \
-		js/src/xpconnect \
-		js/src/liveconnect \
-		modules/libutil \
-		modules/zlib \
-		modules/zlib/standalone \
-		netwerk \
-		security \
-		uriloader \
-		intl \
-		modules/libpref \
-		modules/libimg \
-		gfx \
-		modules/oji \
-		modules/libjar \
-		caps \
-		expat \
-		htmlparser \
-		dom \
-		view \
-		layout \
-		modules/appfilelocprovider \
-		rdf \
-		docshell \
-		webshell \
-		widget \
-		embedding \
-		editor \
-		xpfe/appshell \
-		xpfe/components/shistory \
-		extensions/cookie \
-		extensions/psm-glue \
-		$(NULL)
+DIRS += \
+	$(EMBEDDING_INSTALLS) \
+	$(NULL)
 endif
 
 ifdef MOZ_STATIC_COMPONENTS
 DIRS   += modules/staticmod
 endif
+
+STATIC_MAKEFILES := $(NSPRPUB_DIR)
 
 GARBAGE += dist
 DIST_GARBAGE = config.cache config.log config.status config-defs.h \
@@ -133,7 +151,7 @@ include $(topsrcdir)/config/rules.mk
 
 # rdf chrome are not included, but could be.  I did not include them because you may disable INCLUDE_XUL
 # lwbrk unicharutil are not include because they are busted right now.
-CONFIG_RELEASE_SMALL_OPTIONS :=  \
+CONFIG_RELEASE_EMBED_OPTIONS :=  \
 	--enable-gfx-toolkit=gtk \
 	--enable-optimize        \
 	--enable-strip-libs      \
@@ -144,15 +162,14 @@ CONFIG_RELEASE_SMALL_OPTIONS :=  \
 	--enable-static-components=necko,necko2,cookie,psmglue,caps,docshell,editor,txmgr,txtsvc,jar50,jsurl,nspng,nsgif,pref,shistory,strres,uriloader \
 	$(NULL)
 
-config_release_small:
-	$(DEPTH)/configure $(CONFIG_RELEASE_SMALL_OPTIONS) 
+config_release_embed:
+	$(DEPTH)/configure $(CONFIG_RELEASE_EMBED_OPTIONS) 
 
-build_small:
-	$(MAKE) -f embed.mk config_release_small
+build_embed:
 	$(MAKE) -f embed.mk export exporting=1
 	$(MAKE) -f embed.mk
 
-### does not seam to work....
+### does not seem to work....
 # I was hoping that we could just pull SeaMonkeyCore, but I think I need editor and l10n :-(
 
 NSPR_CO_MODULE = mozilla/nsprpub
