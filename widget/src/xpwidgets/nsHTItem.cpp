@@ -36,8 +36,8 @@ nsHTItem::nsHTItem(nsIContent* pContent, nsHierarchicalDataModel* pDataModel)
 	mIndentationLevel = 0;
 
   if (nsnull == kOpenAtom) {
-    kOpenAtom = NS_NewAtom("open");
-    kSelectedAtom = NS_NewAtom("open");
+    kOpenAtom = NS_NewAtom("OPEN");
+    kSelectedAtom = NS_NewAtom("OPEN");
   }
   else {
     NS_ADDREF(kOpenAtom);
