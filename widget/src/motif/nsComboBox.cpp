@@ -42,7 +42,7 @@ nsComboBox::nsComboBox(nsISupports *aOuter) : nsWindow(aOuter)
   mBackground  = NS_RGB(124, 124, 124);
 
   mMaxNumItems = INITIAL_MAX_ITEMS;
-  mItems       = new long[INITIAL_MAX_ITEMS];
+  mItems       = (Widget *)new long[INITIAL_MAX_ITEMS];
   mNumItems    = 0;
 }
 
@@ -194,7 +194,7 @@ void nsComboBox::GetSelectedItem(nsString& aItem)
   XtVaGetValues(mWidget, XmNmenuHistory, &w, NULL);
   int i;
   for (i=0;i<mNumItems;i++) {
-    if (((Widget)mItems[i]) == w) {
+    if (mItems[i] == w) {
       GetItemAt(aItem, i);
     }
   }
@@ -212,7 +212,7 @@ PRInt32 nsComboBox::GetSelectedIndex()
     XtVaGetValues(mWidget, XmNmenuHistory, &w, NULL);
     int i;
     for (i=0;i<mNumItems;i++) {
-      if (((Widget)mItems[i]) == w) {
+      if (mItems[i] == w) {
         return (PRInt32)i;
       }
     }
@@ -232,7 +232,7 @@ void nsComboBox::SelectItem(PRInt32 aPosition)
   if (!mMultiSelect) { 
     if (aPosition >= 0 && aPosition < mNumItems) {
       XtVaSetValues(mWidget,
-		    XmNmenuHistory, (Widget)mItems[aPosition],
+		    XmNmenuHistory, mItems[aPosition],
 		    NULL);
     }
   } else {

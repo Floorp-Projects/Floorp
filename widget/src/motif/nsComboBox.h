@@ -74,7 +74,7 @@ protected:
     Widget  mOptionMenu;
     PRBool  mMultiSelect;
 
-    long    * mItems; // an array of Widgets
+    Widget  * mItems; // an array of Widgets
     int       mMaxNumItems;
     int       mNumItems;
 
