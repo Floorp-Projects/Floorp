@@ -43,19 +43,29 @@ $log_line = 0;
 #############################################################
 # CGI inputs
 
-$tree = $form{tree};
-$errorparser = $form{errorparser};
-$logfile = $form{logfile};
-$buildname = $form{buildname};
-$buildtime = $form{buildtime};
+if (defined($args = $form{exerpt})) {
+  ($full_logfile, $linenum) = split /:/,  $args;
+  ($tree, $logfile)        = split /\//, $full_logfile;
+
+  my $br = find_build_record($tree, $logfile);
+  $errorparser = $br->{errorparser};
+  $buildname   = $br->{buildname};
+  $buildtime   = $br->{buildtime};
+
+  $numlines = 50;
+  $numlines = $form{numlines} if exists $form{numlines};
+} else {
+  $tree        = $form{tree};
+  $errorparser = $form{errorparser};
+  $logfile     = $form{logfile};
+  $buildname   = $form{buildname};
+  $buildtime   = $form{buildtime};
+  $fulltext    = $form{fulltext};
+}
 $enc_buildname = &url_encode($buildname);
-$fulltext = $form{fulltext};
-$linenum = $form{line};
-$numlines = $form{numlines};
 
 die "the \"tree\" parameter must be provided\n" unless $tree;
 require "$tree/treedata.pl";
-
 
 $time_str = print_time( $buildtime );
 
