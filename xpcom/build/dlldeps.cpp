@@ -89,6 +89,7 @@
 #include "nsEscape.h"
 #include "nsStreamUtils.h"
 #include "nsNativeCharsetUtils.h"
+#include "nsComponentManagerObsolete.h"
 
 void XXXNeverCalled()
 {
@@ -183,4 +184,11 @@ void XXXNeverCalled()
     }
     NS_CopyNativeToUnicode(str2, str1);
     NS_CopyUnicodeToNative(str1, str2);
+    {
+      nsID id;
+      nsComponentManager::CreateInstance(id, nsnull, id, nsnull);
+      nsComponentManager::CreateInstance("", nsnull, id, nsnull);
+      nsComponentManager::GetClassObject(id, id, nsnull);
+      nsComponentManager::GetClassObjectByContractID("", id, nsnull);
+    }
 }
