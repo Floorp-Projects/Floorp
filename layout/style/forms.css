@@ -109,7 +109,7 @@ textarea > scrollbar {
 select {
   font: list;
   background-color: -moz-Field;
-  border: 2px inset ThreeDFace;
+  border: 2px inset ThreeDFace !important;
   margin: 0;
   vertical-align: text-bottom;
   color: -moz-FieldText;
@@ -200,7 +200,7 @@ optgroup:before {
 
 *|*:-moz-dropdown-list {
   background-color: inherit;
-  border: 1px outset black; 
+  border: 1px outset black !important; 
   z-index: 2147483647;
   -moz-user-select: none;
 } 
