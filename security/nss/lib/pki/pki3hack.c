@@ -32,7 +32,7 @@
  */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: pki3hack.c,v $ $Revision: 1.32 $ $Date: 2002/02/06 20:18:18 $ $Name:  $";
+static const char CVS_ID[] = "@(#) $RCSfile: pki3hack.c,v $ $Revision: 1.33 $ $Date: 2002/02/12 01:33:41 $ $Name:  $";
 #endif /* DEBUG */
 
 /*
@@ -69,6 +69,7 @@ static const char CVS_ID[] = "@(#) $RCSfile: pki3hack.c,v $ $Revision: 1.32 $ $D
 #include "cert.h"
 #include "pk11func.h"
 #include "pkistore.h"
+#include "secmod.h"
 
 /* if it's got more than 10 certs, it better handle traversal well */
 #define NSSTOKEN_MAX_LOCAL_CERTS 10
@@ -133,6 +134,9 @@ static void cert_destructor(void *el)
 NSS_IMPLEMENT void
 nssToken_DestroyCertList(NSSToken *token)
 {
+    if (!token->certList) {
+	return;
+    }
     nssList_Clear(token->certList, cert_destructor);
     nssList_Destroy(token->certList);
     token->certList = NULL;
@@ -174,10 +178,9 @@ nssToken_SearchCerts
 )
 {
     if (!nssToken_IsPresent(token)) {
-	STAN_DestroyNSSToken(token); /* will free cached certs */
-    } else {
-	return (token->certList == NULL);
-    }
+	nssToken_DestroyCertList(token); /* will free cached certs */
+    } 
+    return (PRBool) (token->certList == NULL);
 }
 
 NSS_IMPLEMENT PRStatus
@@ -190,23 +193,24 @@ STAN_LoadDefaultNSS3TrustDomain
     NSSToken *token;
     PK11SlotList *list;
     PK11SlotListElement *le;
+    SECMODModuleList *mlp;
+    SECMODListLock *moduleLock = SECMOD_GetDefaultModuleListLock();
+    int i;
+
     td = NSSTrustDomain_Create(NULL, NULL, NULL, NULL);
     if (!td) {
 	return PR_FAILURE;
     }
     td->tokenList = nssList_Create(td->arena, PR_TRUE);
-    list = PK11_GetAllTokens(CKM_INVALID_MECHANISM, PR_FALSE, PR_FALSE, NULL);
-    if (list) {
-	for (le = list->head; le; le = le->next) {
-	    token = nssToken_CreateFromPK11SlotInfo(td, le->slot);
-	    PK11Slot_SetNSSToken(le->slot, token);
+    SECMOD_GetReadLock(moduleLock);
+    for (mlp = SECMOD_GetDefaultModuleList(); mlp != NULL; mlp=mlp->next) {
+	for (i=0; i < mlp->module->slotCount; i++) {
+	    token = nssToken_CreateFromPK11SlotInfo(td, mlp->module->slots[i]);
+	    PK11Slot_SetNSSToken(mlp->module->slots[i], token);
 	    nssList_Add(td->tokenList, token);
 	}
-	/* okay to free this, as the last reference is maintained in the
-	 * global slot lists
-	 */
-	PK11_FreeSlotList(list);
     }
+    SECMOD_ReleaseReadLock(moduleLock);
     g_default_trust_domain = td;
     g_default_crypto_context = NSSTrustDomain_CreateCryptoContext(td, NULL);
     /* Cache hardware token certs with the token to make them persistent */
@@ -263,8 +267,10 @@ STAN_RemoveModuleFromDefaultTrustDomain
     td = STAN_GetDefaultTrustDomain();
     for (i=0; i<module->slotCount; i++) {
 	token = PK11Slot_GetNSSToken(module->slots[i]);
-	nssList_Remove(td->tokenList, token);
-	STAN_DestroyNSSToken(token);
+	if (token) {
+	    nssList_Remove(td->tokenList, token);
+	    STAN_DestroyNSSToken(token);
+ 	}
     }
     nssListIterator_Destroy(td->tokens);
     td->tokens = nssList_CreateIterator(td->tokenList);
