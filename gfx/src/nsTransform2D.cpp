@@ -539,8 +539,8 @@ void nsTransform2D :: TransformCoord(nscoord *aX, nscoord *aY, nscoord *aWidth, 
 
     case MG_2DSCALE | MG_2DTRANSLATION:
       // first transform the X and Y locations
-      x = *aX * m00 + m20;  
-      y = *aY * m11 + m21;
+      x = *aX * m00 + NSToCoordRound(m20);
+      y = *aY * m11 + NSToCoordRound(m21);
       *aX =  NSToCoordRound(x);
       *aY =  NSToCoordRound(y);
 
