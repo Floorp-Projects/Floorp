@@ -1712,6 +1712,13 @@ Wallet_SetKey(PRBool isNewkey) {
   PRBool useDefaultKey = PR_FALSE;
 
   if (Wallet_KeySize() < 0) { /* no key has yet been established */
+
+// following lines are temporary for the beta1 release
+PRUnichar * message0 = Wallet_Localize("disclaimer");
+res = Wallet_Confirm(message0);
+if (res) {
+// end of temporary lines
+
     PRUnichar * message = Wallet_Localize("firstPassword");
     PRUnichar * message1 = Wallet_Localize("enterPassword");
     PRUnichar * message2 = Wallet_Localize("confirmPassword");
@@ -1736,6 +1743,15 @@ Wallet_SetKey(PRBool isNewkey) {
     PR_FREEIF(message);
     Recycle(message1);
     PR_FREEIF(message2);
+
+// following lines are temporary for the beta1 release
+} else {
+Recycle(message0);
+return FALSE;
+}
+Recycle(message0);
+// end of temporary lines
+
   } else { /* key has previously been established */
     PRUnichar * message;
     PRUnichar * message1 = Wallet_Localize("enterPassword");
