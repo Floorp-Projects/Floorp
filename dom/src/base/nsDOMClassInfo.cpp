@@ -153,7 +153,7 @@
 #include "nsIDOMHTMLOptionsCollection.h"
 
 // ContentList includes
-#include "nsIContentList.h"
+#include "nsContentList.h"
 
 // Event related includes
 #include "nsIEventListenerManager.h"
@@ -5590,8 +5590,11 @@ nsresult
 nsContentListSH::PreCreate(nsISupports *nativeObj, JSContext *cx,
                            JSObject *globalObj, JSObject **parentObj)
 {
-  nsCOMPtr<nsIContentList> contentList(do_QueryInterface(nativeObj));
-  NS_ASSERTION(contentList, "Why does something not implementing nsIContentList use nsContentListSH??");
+  nsCOMPtr<nsIDOMNodeList> nodeList(do_QueryInterface(nativeObj));
+  nsContentList *contentList =
+    NS_STATIC_CAST(nsContentList*, NS_STATIC_CAST(nsIDOMNodeList*, nodeList));
+
+  NS_ASSERTION(contentList, "Why does something not implementing nsIDOMNodeList use nsContentListSH??");
 
   nsISupports *native_parent = contentList->GetParentObject();
 
