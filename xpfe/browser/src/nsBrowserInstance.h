@@ -99,6 +99,7 @@ class nsBrowserInstance : public nsIBrowserInstance,
 
     nsIWebShellWindow  *mWebShellWin;								// weak reference
     nsIDocShell *       mDocShell;									// weak reference
+    nsIDOMWindow*       mDOMWindow;                         // weak reference
     nsIWebShell *       mContentAreaWebShell;				// weak reference
     nsIDocumentLoader * mContentAreaDocLoader;          // weak reference
 

@@ -42,8 +42,8 @@ catch (ex) {
   var appCore = null;
   var defaultStatus = bundle.GetStringFromName( "defaultStatus" ); 
   var explicitURL = false;
-  var webBrowserChrome = null;
   var statusTextFld = null;
+  var xulBrowserWin = null;
 
 
 function UpdateHistory(event)
@@ -149,8 +149,47 @@ function createBrowserInstance()
     }
   }
 
-  function Startup()
+function nsXULBrowserWindow()
+{
+}
+
+nsXULBrowserWindow.prototype = 
+{
+	QueryInterface : function(iid)
+		{
+		if(iid.equals(Components.interfaces.nsIXULBrowserWindow))
+			return this;
+		throw Components.results.NS_NOINTERFACE;
+		},
+	setStatus : function(status)
+		{
+		if(status == "")
+			status = defaultStatus;
+		if(!statusTextFld)
+			statusTextFld = document.getElementById("statusText");
+
+		statusTextFld.setAttribute("value", status);
+		},
+	setDefaultStatus : function(status)
+		{
+		//XXX Should do something here.
+		},
+	setOverLink : function(link)
+		{
+		if(link == "")
+			link = defaultStatus;
+
+		if(!statusTextFld)
+			statusTextFld = document.getElementById("statusText");
+
+		statusTextFld.setAttribute("value", link);
+		}
+}
+
+function Startup()
   {
+	 xulBrowserWin = new nsXULBrowserWindow();
+    window.addXPConnectObject("XULBrowserWindow", xulBrowserWin);
     //  TileWindow();
     // Make sure window fits on screen initially
     //FitToScreen();
@@ -949,46 +988,6 @@ function BrowserEditBookmarks()
 
 
         var bindCount = 0;
-        function onStatus() {
-				if(!webBrowserChrome)
-				   webBrowserChrome = document.getElementById("WebBrowserChrome");
-            if ( webBrowserChrome ) {
-                var text = webBrowserChrome.getAttribute("status");
-                if ( text == "" ) {
-//dump( "Setting default status text\n" );                    
-                    text = defaultStatus;
-                }
-					 if(!statusTextFld)
-                   statusText = document.getElementById("statusText");
-                if ( statusText ) {
-//dump( "Setting status text: " + text + "\n" );
-                    statusText.setAttribute( "value", text );
-                } else {
-//dump( "Missing statusText when setting status text: " + text + "\n" );
-                }
-            } else {
-                dump("Can't find status broadcaster!\n");
-            }
-        }
-
-		  function onOverLink() {
-		  if(!webBrowserChrome)
-			 webBrowserChrome = document.getElementById("WebBrowserChrome");
-
-		  var text = webBrowserChrome.getAttribute("overLink");
-
-		  if(text == "")
-		    text = defaultStatus;
-
-		  if(!statusTextFld)
-			 statusTextFld = document.getElementById("statusText");
-
-		  statusTextFld = statusTextFld.setAttribute("value", text);
-		  }
-
-		  function onDefaultStatus() {
-		  // XXX Probably should do something here
-		  }
 
         function doTests() {
         }
@@ -1010,14 +1009,11 @@ function BrowserEditBookmarks()
                     // Update status bar.
                 } else if ( busy == "false" && wasBusy == "true" ) {
                     // Record page loading time.
-                    var webBrowserChrome = document.getElementById("WebBrowserChrome");
-                    if ( webBrowserChrome ) {
 						var elapsed = ( (new Date()).getTime() - startTime ) / 1000;
 						var msg = bundle.GetStringFromName("nv_done") + " (" + elapsed + " secs)";
 						dump( msg + "\n" );
-                        webBrowserChrome.setAttribute("status",msg);
-                        defaultStatus = msg;
-                    }
+						xulBrowserWin.setStatus(msg);
+                  defaultStatus = msg;
                     // Turn progress meter off.
                     meter.setAttribute("mode","normal");
                 }

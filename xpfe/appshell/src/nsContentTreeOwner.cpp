@@ -27,14 +27,15 @@
 // Helper Classes
 #include "nsIGenericFactory.h"
 
-
 // Interfaces needed to be included
 #include "nsIDOMNode.h"
 #include "nsIDOMElement.h"
 #include "nsIDOMNodeList.h"
+#include "nsIDOMWindow.h"
 #include "nsIDOMXULElement.h"
 #include "nsIPrompt.h"
 #include "nsIWindowMediator.h"
+#include "nsIXULBrowserWindow.h"
 
 // CIDs
 static NS_DEFINE_CID(kWindowMediatorCID, NS_WINDOWMEDIATOR_CID);
@@ -193,29 +194,49 @@ NS_IMETHODIMP nsContentTreeOwner::GetNewWindow(PRInt32 aChromeFlags,
 
 NS_IMETHODIMP nsContentTreeOwner::SetJSStatus(const PRUnichar* aStatus)
 {
-   nsCOMPtr<nsIDOMElement> window;
-   mXULWindow->GetDOMElementById("WebBrowserChrome", getter_AddRefs(window));
-   if(window)
-      window->SetAttribute("status", aStatus);
+   nsCOMPtr<nsIDOMWindow> domWindow;
+   mXULWindow->GetWindowDOMWindow(getter_AddRefs(domWindow));
+   if(!domWindow)
+      return NS_OK;
+
+   nsCOMPtr<nsISupports> xpConnectObj;
+   domWindow->GetXPConnectObject("XULBrowserWindow", getter_AddRefs(xpConnectObj));
+   nsCOMPtr<nsIXULBrowserWindow> xulBrowserWindow(do_QueryInterface(xpConnectObj));
+
+   if(xulBrowserWindow)
+      xulBrowserWindow->SetStatus(aStatus);
    return NS_OK;
 }
 
 NS_IMETHODIMP nsContentTreeOwner::SetJSDefaultStatus(const PRUnichar* aStatus)
 {
-   nsCOMPtr<nsIDOMElement> window;
-   mXULWindow->GetDOMElementById("WebBrowserChrome", getter_AddRefs(window));
-   if(window)
-      window->SetAttribute("defaultStatus", aStatus);
+   nsCOMPtr<nsIDOMWindow> domWindow;
+   mXULWindow->GetWindowDOMWindow(getter_AddRefs(domWindow));
+   if(!domWindow)
+      return NS_OK;
+
+   nsCOMPtr<nsISupports> xpConnectObj;
+   domWindow->GetXPConnectObject("XULBrowserWindow", getter_AddRefs(xpConnectObj));
+   nsCOMPtr<nsIXULBrowserWindow> xulBrowserWindow(do_QueryInterface(xpConnectObj));
+
+   if(xulBrowserWindow)
+      xulBrowserWindow->SetDefaultStatus(aStatus);
    return NS_OK;
 }
 
 NS_IMETHODIMP nsContentTreeOwner::SetOverLink(const PRUnichar* aLink)
 {
-   nsCOMPtr<nsIDOMElement> window;
-   mXULWindow->GetDOMElementById("WebBrowserChrome", getter_AddRefs(window));
-   if(window)
-      window->SetAttribute("overLink", aLink);
+   nsCOMPtr<nsIDOMWindow> domWindow;
+   mXULWindow->GetWindowDOMWindow(getter_AddRefs(domWindow));
+   if(!domWindow)
+      return NS_OK;
 
+   nsCOMPtr<nsISupports> xpConnectObj;
+   domWindow->GetXPConnectObject("XULBrowserWindow", getter_AddRefs(xpConnectObj));
+   nsCOMPtr<nsIXULBrowserWindow> xulBrowserWindow(do_QueryInterface(xpConnectObj));
+
+   if(xulBrowserWindow)
+      xulBrowserWindow->SetOverLink(aLink);
    return NS_OK;
 }
 
