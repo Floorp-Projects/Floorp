@@ -749,7 +749,7 @@ nsVoidBTree::Dump(Node* aNode, PRInt32 aIndent)
 // nsVoidBTree::ConstIterator and Iterator methods
 //
 
-PRWord nsVoidBTree::kDummyLast;
+void* nsVoidBTree::kDummyLast;
 
 void
 nsVoidBTree::ConstIterator::Next()
