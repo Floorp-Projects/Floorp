@@ -23,11 +23,14 @@ $BloatTest         = 0;
 $DomToTextConversionTest = 0;
 $MailNewsTest      = 0;
 $EmbedTest         = 0;      # Assumes you wanted $BuildEmbed=1
-$MozConfigFileName = 'mozconfig';
-$MozProfileName = 'default';
+
 $BloatTestTimeout  = 120;    # seconds
 $DomTestTimeout	   = 45;     # seconds
-$LayoutPerformanceTestTimeout  = 1200;    # seconds
+$LayoutPerformanceTestTimeout   = 1200;  # seconds
+$StartupPerformanceTestTimeout  = 60;    # seconds
+
+$MozConfigFileName = 'mozconfig';
+$MozProfileName = 'default';
 
 #- Set these to what makes sense for your system
 $Make          = 'gmake';       # Must be GNU make
