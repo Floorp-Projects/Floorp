@@ -40,7 +40,7 @@
 #include "nsCSSDeclaration.h"
 #include "nsIDocument.h"
 #include "nsHTMLAtoms.h"
-#include "nsIHTMLContent.h"
+#include "nsIStyledContent.h"
 #include "nsIDOMMutationEvent.h"
 #include "nsHTMLValue.h"
 #include "nsICSSStyleRule.h"
@@ -54,7 +54,7 @@
 
 MOZ_DECL_CTOR_COUNTER(nsDOMCSSAttributeDeclaration)
 
-nsDOMCSSAttributeDeclaration::nsDOMCSSAttributeDeclaration(nsIHTMLContent *aContent)
+nsDOMCSSAttributeDeclaration::nsDOMCSSAttributeDeclaration(nsIStyledContent *aContent)
 {
   MOZ_COUNT_CTOR(nsDOMCSSAttributeDeclaration);
 
@@ -81,25 +81,16 @@ nsresult
 nsDOMCSSAttributeDeclaration::DeclarationChanged()
 {
   NS_ASSERTION(mContent, "Must have content node to set the decl!");
-  nsHTMLValue val;
-#ifdef DEBUG
-  nsresult rv =
-#endif
-  mContent->GetHTMLAttribute(nsHTMLAtoms::style, val);
-  NS_ASSERTION(rv == NS_CONTENT_ATTR_HAS_VALUE &&
-               eHTMLUnit_ISupports == val.GetUnit(),
-               "content must have rule");
-  nsCOMPtr<nsICSSStyleRule> oldRule =
-    do_QueryInterface(nsCOMPtr<nsISupports>(val.GetISupportsValue()));
+  nsCOMPtr<nsICSSStyleRule> oldRule;
+  mContent->GetInlineStyleRule(getter_AddRefs(oldRule));
+  NS_ASSERTION(oldRule, "content must have rule");
 
   nsCOMPtr<nsICSSStyleRule> newRule = oldRule->DeclarationChanged(PR_FALSE);
   if (!newRule) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
     
-  return mContent->SetHTMLAttribute(nsHTMLAtoms::style,
-                                    nsHTMLValue(newRule),
-                                    PR_TRUE);
+  return mContent->SetInlineStyleRule(newRule, PR_TRUE);
 }
 
 nsresult
@@ -110,15 +101,10 @@ nsDOMCSSAttributeDeclaration::GetCSSDeclaration(nsCSSDeclaration **aDecl,
 
   *aDecl = nsnull;
   if (mContent) {
-    nsHTMLValue val;
-    result = mContent->GetHTMLAttribute(nsHTMLAtoms::style, val);
-    if (result == NS_CONTENT_ATTR_HAS_VALUE &&
-        eHTMLUnit_ISupports == val.GetUnit()) {
-      nsCOMPtr<nsISupports> rule = val.GetISupportsValue();
-      nsCOMPtr<nsICSSStyleRule> cssRule = do_QueryInterface(rule, &result);
-      if (cssRule) {
-        *aDecl = cssRule->GetDeclaration();
-      }
+    nsCOMPtr<nsICSSStyleRule> cssRule;
+    mContent->GetInlineStyleRule(getter_AddRefs(cssRule));
+    if (cssRule) {
+      *aDecl = cssRule->GetDeclaration();
     }
     else if (aAllocate) {
       nsCSSDeclaration *decl = new nsCSSDeclaration();
@@ -136,9 +122,7 @@ nsDOMCSSAttributeDeclaration::GetCSSDeclaration(nsCSSDeclaration **aDecl,
         return result;
       }
         
-      result = mContent->SetHTMLAttribute(nsHTMLAtoms::style,
-                                          nsHTMLValue(cssRule),
-                                          PR_FALSE);
+      result = mContent->SetInlineStyleRule(cssRule, PR_FALSE);
       if (NS_SUCCEEDED(result)) {
         *aDecl = decl;
       }

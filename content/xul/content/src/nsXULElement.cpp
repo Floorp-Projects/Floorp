@@ -98,7 +98,7 @@
 #include "nsIScriptGlobalObject.h"
 #include "nsIScriptGlobalObjectOwner.h"
 #include "nsIServiceManager.h"
-#include "nsIStyleRule.h"
+#include "nsICSSStyleRule.h"
 #include "nsIStyleSheet.h"
 #include "nsIStyledContent.h"
 #include "nsISupportsArray.h"
@@ -125,6 +125,7 @@
 #include "nsRuleWalker.h"
 #include "nsIDOMViewCSS.h"
 #include "nsIDOMCSSStyleDeclaration.h"
+#include "nsCSSDeclaration.h"
 #include "nsXULAtoms.h"
 #include "nsIListBoxObject.h"
 #include "nsContentUtils.h"
@@ -155,6 +156,8 @@ class nsIDocShell;
 nsICSSParser* nsXULPrototypeElement::sCSSParser = nsnull;
 nsIXULPrototypeCache* nsXULPrototypeScript::sXULPrototypeCache = nsnull;
 nsIXBLService * nsXULElement::gXBLService = nsnull;
+nsICSSOMFactory* nsXULElement::gCSSOMFactory = nsnull;
+
 
 //----------------------------------------------------------------------
 
@@ -162,6 +165,7 @@ static NS_DEFINE_CID(kEventListenerManagerCID,    NS_EVENTLISTENERMANAGER_CID);
 static NS_DEFINE_CID(kRDFServiceCID,              NS_RDFSERVICE_CID);
 
 static NS_DEFINE_CID(kXULPopupListenerCID,        NS_XULPOPUPLISTENER_CID);
+static NS_DEFINE_CID(kCSSOMFactoryCID,            NS_CSSOMFACTORY_CID);
 
 //----------------------------------------------------------------------
 
@@ -2299,6 +2303,8 @@ nsXULElement::UnregisterAccessKey(const nsAString& aOldValue)
 // XXX attribute code swiped from nsGenericContainerElement
 // this class could probably just use nsGenericContainerElement
 // needed to maintain attribute namespace ID as well as ordering
+// NOTE: Changes to this function may need to be made in
+// |SetInlineStyleRule| as well.
 NS_IMETHODIMP
 nsXULElement::SetAttr(nsINodeInfo* aNodeInfo,
                       const nsAString& aValue,
@@ -2366,7 +2372,10 @@ nsXULElement::SetAttr(nsINodeInfo* aNodeInfo,
     // to unhook the old one.
 
     // Save whether this is a modification before we muck with the attr pointer.
-    PRBool modification = attr || protoattr; 
+
+    PRInt32 modHint = (attr || protoattr)
+        ? PRInt32(nsIDOMMutationEvent::MODIFICATION)
+        : PRInt32(nsIDOMMutationEvent::ADDITION);
 
     if (attr) {
         attr->SetValueInternal(aValue);
@@ -2391,12 +2400,22 @@ nsXULElement::SetAttr(nsINodeInfo* aNodeInfo,
     if (aNodeInfo->Equals(nsXULAtoms::accesskey, kNameSpaceID_None))
         UnregisterAccessKey(oldValue);
 
+    FinishSetAttr(attrns, attrName, oldValue, aValue, modHint, aNotify);
+
+    return NS_OK;
+}
+
+void
+nsXULElement::FinishSetAttr(PRInt32 aAttrNS, nsIAtom* aAttrName,
+                            const nsAString& aOldValue, const nsAString& aValue,
+                            PRInt32 aModHint, PRBool aNotify)
+{
     if (mDocument) {
       nsCOMPtr<nsIXBLBinding> binding;
       mDocument->GetBindingManager()->GetBinding(NS_STATIC_CAST(nsIStyledContent*, this), getter_AddRefs(binding));
 
       if (binding)
-        binding->AttributeChanged(attrName, attrns, PR_FALSE, aNotify);
+        binding->AttributeChanged(aAttrName, aAttrNS, PR_FALSE, aNotify);
 
       if (HasMutationListeners(NS_STATIC_CAST(nsIStyledContent*, this), NS_EVENT_BITS_MUTATION_ATTRMODIFIED)) {
         nsCOMPtr<nsIDOMEventTarget> node(do_QueryInterface(NS_STATIC_CAST(nsIStyledContent*, this)));
@@ -2406,34 +2425,25 @@ nsXULElement::SetAttr(nsINodeInfo* aNodeInfo,
         mutation.mTarget = node;
 
         nsAutoString attrName2;
-        attrName->ToString(attrName2);
+        aAttrName->ToString(attrName2);
         nsCOMPtr<nsIDOMAttr> attrNode;
         GetAttributeNode(attrName2, getter_AddRefs(attrNode));
         mutation.mRelatedNode = attrNode;
 
-        mutation.mAttrName = attrName;
-        if (!oldValue.IsEmpty())
-          mutation.mPrevAttrValue = do_GetAtom(oldValue);
+        mutation.mAttrName = aAttrName;
+        if (!aOldValue.IsEmpty())
+          mutation.mPrevAttrValue = do_GetAtom(aOldValue);
         if (!aValue.IsEmpty())
           mutation.mNewAttrValue = do_GetAtom(aValue);
-        if (modification)
-          mutation.mAttrChange = nsIDOMMutationEvent::MODIFICATION;
-        else
-          mutation.mAttrChange = nsIDOMMutationEvent::ADDITION;
+        mutation.mAttrChange = aModHint;
         nsEventStatus status = nsEventStatus_eIgnore;
         HandleDOMEvent(nsnull, &mutation, nsnull, NS_EVENT_FLAG_INIT, &status);
       }
 
       if (aNotify) {
-        PRInt32 modHint = modification
-            ? PRInt32(nsIDOMMutationEvent::MODIFICATION)
-            : PRInt32(nsIDOMMutationEvent::ADDITION);
-
-        mDocument->AttributeChanged(this, attrns, attrName, modHint);
+        mDocument->AttributeChanged(this, aAttrNS, aAttrName, aModHint);
       }
     }
-
-    return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -3516,7 +3526,7 @@ nsXULElement::WalkContentStyleRules(nsRuleWalker* aRuleWalker)
 }
 
 NS_IMETHODIMP
-nsXULElement::GetInlineStyleRule(nsIStyleRule** aStyleRule)
+nsXULElement::GetInlineStyleRule(nsICSSStyleRule** aStyleRule)
 {
     // Fetch the cached style rule from the attributes.
     nsresult result = NS_OK;
@@ -3531,6 +3541,73 @@ nsXULElement::GetInlineStyleRule(nsIStyleRule** aStyleRule)
     }
 
     return result;
+}
+
+NS_IMETHODIMP
+nsXULElement::SetInlineStyleRule(nsICSSStyleRule* aStyleRule, PRBool aNotify)
+{
+    // Fault everything, for the same reason as |GetAttributes|, and
+    // force the creation of the attributes struct.
+    nsCOMPtr<nsIDOMNamedNodeMap> domattrs;
+    nsresult rv = GetAttributes(getter_AddRefs(domattrs));
+    if (NS_FAILED(rv)) return rv;
+
+    aNotify = aNotify && mDocument;
+
+    // This function does roughly the same things that |SetAttr| does.
+
+    mozAutoDocUpdate updateBatch(mDocument, UPDATE_CONTENT_MODEL, aNotify);
+    if (aNotify) {
+        mDocument->AttributeWillChange(this, kNameSpaceID_None,
+                                       nsXULAtoms::style);
+    }
+
+    PRInt32 modHint;
+    nsCOMPtr<nsICSSStyleRule> oldRule;
+    nsAutoString oldValue;
+    GetInlineStyleRule(getter_AddRefs(oldRule));
+    if (oldRule) {
+      modHint = PRInt32(nsIDOMMutationEvent::MODIFICATION);
+      oldRule->GetDeclaration()->ToString(oldValue);
+    } else {
+      modHint = PRInt32(nsIDOMMutationEvent::ADDITION);
+    }
+
+    rv = Attributes()->SetInlineStyleRule(aStyleRule);
+
+    nsAutoString stringValue;
+    aStyleRule->GetDeclaration()->ToString(stringValue);
+
+    // Fix the copy stored as a string too.
+    nsXULAttribute* attr = FindLocalAttribute(kNameSpaceID_None,
+                                              nsXULAtoms::style);
+    if (attr) {
+        attr->SetValueInternal(stringValue);
+    }
+    else {
+        nsCOMPtr<nsINodeInfoManager> nimgr;
+        NodeInfo()->GetNodeInfoManager(getter_AddRefs(nimgr));
+        NS_ENSURE_TRUE(nimgr, NS_ERROR_FAILURE);
+
+        nsCOMPtr<nsINodeInfo> ni;
+        rv = nimgr->GetNodeInfo(nsXULAtoms::style, nsnull, kNameSpaceID_None,
+                                getter_AddRefs(ni));
+        NS_ENSURE_SUCCESS(rv, rv);
+
+        // Need to create a local attr
+        rv = nsXULAttribute::Create(NS_STATIC_CAST(nsIStyledContent*, this),
+                                    ni, stringValue, &attr);
+        if (NS_FAILED(rv)) return rv;
+
+        // transfer ownership here...
+        nsXULAttributes *attrs = mSlots->GetAttributes();
+        attrs->AppendElement(attr);
+    }
+
+    FinishSetAttr(kNameSpaceID_None, nsXULAtoms::style,
+                  oldValue, stringValue, modHint, aNotify);
+
+    return rv;
 }
 
 NS_IMETHODIMP
@@ -4056,8 +4133,33 @@ nsXULElement::SetStatusText(const nsAString& aAttr)
 nsresult
 nsXULElement::GetStyle(nsIDOMCSSStyleDeclaration** aStyle)
 {
-  NS_NOTYETIMPLEMENTED("write me!");
-  return NS_ERROR_NOT_IMPLEMENTED;
+    // Fault everything, for the same reason as |GetAttributes|, and
+    // force the creation of the attributes struct.
+    nsCOMPtr<nsIDOMNamedNodeMap> domattrs;
+    nsresult rv = GetAttributes(getter_AddRefs(domattrs));
+    if (NS_FAILED(rv)) return rv;
+
+    nsXULAttributes *attrs = Attributes();
+    if (!attrs->GetDOMStyle()) {
+        if (!gCSSOMFactory) {
+            rv = CallGetService(kCSSOMFactoryCID, &gCSSOMFactory);
+            if (NS_FAILED(rv)) {
+                return rv;
+            }
+        }
+
+        nsRefPtr<nsDOMCSSDeclaration> domStyle;
+        rv = gCSSOMFactory->CreateDOMCSSAttributeDeclaration(this,
+                getter_AddRefs(domStyle));
+        if (NS_FAILED(rv)) {
+            return rv;
+        }
+        attrs->SetDOMStyle(domStyle);
+    }
+
+    // Why bother with QI?
+    NS_IF_ADDREF(*aStyle = attrs->GetDOMStyle());
+    return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -4520,6 +4622,7 @@ nsXULElement::Slots::~Slots()
 
 nsXULPrototypeAttribute::~nsXULPrototypeAttribute()
 {
+    MOZ_COUNT_DTOR(nsXULPrototypeAttribute);
     if (mEventHandler)
         RemoveJSGCRoot(&mEventHandler);
 }

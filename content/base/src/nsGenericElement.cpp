@@ -2111,10 +2111,18 @@ nsGenericElement::WalkContentStyleRules(nsRuleWalker* aRuleWalker)
 }
 
 NS_IMETHODIMP
-nsGenericElement::GetInlineStyleRule(nsIStyleRule** aStyleRule)
+nsGenericElement::GetInlineStyleRule(nsICSSStyleRule** aStyleRule)
 {
   *aStyleRule = nsnull;
   return NS_OK;
+}
+
+NS_IMETHODIMP
+nsGenericElement::SetInlineStyleRule(nsICSSStyleRule* aStyleRule,
+                                     PRBool aNotify)
+{
+  NS_NOTYETIMPLEMENTED("nsGenericElement::SetInlineStyleRule");
+  return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP_(PRBool)

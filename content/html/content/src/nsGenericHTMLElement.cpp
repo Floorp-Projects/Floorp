@@ -2294,7 +2294,7 @@ nsGenericHTMLElement::WalkContentStyleRules(nsRuleWalker* aRuleWalker)
 }
 
 nsresult
-nsGenericHTMLElement::GetInlineStyleRule(nsIStyleRule** aStyleRule)
+nsGenericHTMLElement::GetInlineStyleRule(nsICSSStyleRule** aStyleRule)
 {
   *aStyleRule = nsnull;
   
@@ -2315,6 +2315,14 @@ nsGenericHTMLElement::GetInlineStyleRule(nsIStyleRule** aStyleRule)
   }
 
   return NS_OK;
+}
+
+nsresult
+nsGenericHTMLElement::SetInlineStyleRule(nsICSSStyleRule* aStyleRule,
+                                         PRBool aNotify)
+{
+  return SetHTMLAttribute(nsHTMLAtoms::style, nsHTMLValue(aStyleRule),
+                          aNotify);
 }
 
 nsresult
@@ -3120,7 +3128,7 @@ nsGenericHTMLElement::ParseStyleAttribute(const nsAString& aValue, nsHTMLValue& 
         nsCOMPtr<nsIURI> baseURL;
         GetBaseURL(getter_AddRefs(baseURL));
 
-        nsCOMPtr<nsIStyleRule> rule;
+        nsCOMPtr<nsICSSStyleRule> rule;
         result = cssParser->ParseStyleAttribute(aValue, baseURL,
                                                 getter_AddRefs(rule));
         if (cssLoader) {

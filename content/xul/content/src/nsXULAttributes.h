@@ -53,6 +53,8 @@
 #include "nsIAtom.h"
 #include "nsVoidArray.h"
 #include "nsXULAttributeValue.h"
+#include "nsDOMCSSDeclaration.h"
+#include "nsAutoPtr.h"
 
 class nsIURI;
 class nsINodeInfo;
@@ -186,8 +188,11 @@ public:
     nsresult UpdateClassList(const nsAString& aValue);
     nsresult UpdateStyleRule(nsIURI* aDocURL, const nsAString& aValue);
 
-    nsresult SetInlineStyleRule(nsIStyleRule* aRule);
-    nsresult GetInlineStyleRule(nsIStyleRule*& aRule);
+    nsresult SetInlineStyleRule(nsICSSStyleRule* aRule);
+    nsresult GetInlineStyleRule(nsICSSStyleRule*& aRule);
+
+    void SetDOMStyle(nsDOMCSSDeclaration *aDOMDecl) { mDOMStyle = aDOMDecl; }
+    nsDOMCSSDeclaration* GetDOMStyle() { return mDOMStyle; }
 
 protected:
     nsXULAttributes(nsIContent* aContent);
@@ -195,7 +200,8 @@ protected:
 
     nsIContent*            mContent;
     nsClassList*           mClassList;
-    nsCOMPtr<nsIStyleRule> mStyleRule;
+    nsCOMPtr<nsICSSStyleRule> mStyleRule;
+    nsRefPtr<nsDOMCSSDeclaration> mDOMStyle;
     nsAutoVoidArray        mAttributes;
 private:
     // Hide so that all construction and destruction use Create and Destroy.

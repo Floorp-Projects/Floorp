@@ -111,9 +111,9 @@ public:
                    nsIURI*                aInputURL,
                    nsICSSStyleSheet*&     aResult);
 
-  NS_IMETHOD ParseStyleAttribute(const nsAString& aAttributeValue,
-                                 nsIURI*          aBaseURL,
-                                 nsIStyleRule**   aResult);
+  NS_IMETHOD ParseStyleAttribute(const nsAString&  aAttributeValue,
+                                 nsIURI*           aBaseURL,
+                                 nsICSSStyleRule** aResult);
   
   NS_IMETHOD ParseAndAppendDeclaration(const nsAString&  aBuffer,
                                        nsIURI*           aBaseURL,
@@ -596,7 +596,7 @@ CSSParserImpl::Parse(nsIUnicharInputStream* aInput,
 NS_IMETHODIMP
 CSSParserImpl::ParseStyleAttribute(const nsAString& aAttributeValue,
                                    nsIURI*                  aBaseURL,
-                                   nsIStyleRule**           aResult)
+                                   nsICSSStyleRule**        aResult)
 {
   NS_ASSERTION(nsnull != aBaseURL, "need base URL");
 

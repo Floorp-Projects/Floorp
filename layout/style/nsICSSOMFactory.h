@@ -42,7 +42,7 @@
 
 #include "nsISupports.h"
 class nsDOMCSSDeclaration;
-class nsIHTMLContent;
+class nsIStyledContent;
 
 // bfdd87bd-79c8-4041-ae14-91fa8536ce61
 #define NS_ICSSOMFACTORY_IID \
@@ -58,7 +58,7 @@ class nsICSSOMFactory : public nsISupports {
 public:
     NS_DEFINE_STATIC_IID_ACCESSOR(NS_ICSSOMFACTORY_IID)
 
-    NS_IMETHOD CreateDOMCSSAttributeDeclaration(nsIHTMLContent *aContent,
+    NS_IMETHOD CreateDOMCSSAttributeDeclaration(nsIStyledContent *aContent,
                                                 nsDOMCSSDeclaration **aResult) = 0;
 };
 

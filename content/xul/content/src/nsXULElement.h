@@ -56,6 +56,7 @@
 #include "nsINodeInfo.h"
 #include "nsIControllers.h"
 #include "nsICSSParser.h"
+#include "nsICSSStyleRule.h"
 #include "nsIDOMElement.h"
 #include "nsIDOMEventReceiver.h"
 #include "nsIDOM3EventTarget.h"
@@ -78,6 +79,7 @@
 #include "nsIChromeEventHandler.h"
 #include "nsXULAttributeValue.h"
 #include "nsIXBLService.h"
+#include "nsICSSOMFactory.h"
 #include "nsLayoutCID.h"
 
 #include "nsGenericElement.h" // for nsCheapVoidArray
@@ -113,6 +115,8 @@ static NS_DEFINE_CID(kCSSParserCID, NS_CSSPARSER_CID);
 
  */
 
+MOZ_DECL_CTOR_COUNTER(nsXULPrototypeAttribute)
+
 class nsXULPrototypeAttribute
 {
 public:
@@ -120,6 +124,7 @@ public:
         : mEventHandler(nsnull)
     {
         XUL_PROTOTYPE_ATTRIBUTE_METER(gNumAttributes);
+        MOZ_COUNT_CTOR(nsXULPrototypeAttribute);
     }
 
     ~nsXULPrototypeAttribute();
@@ -271,7 +276,7 @@ public:
     PRUint32                 mNumAttributes;
     nsXULPrototypeAttribute* mAttributes;         // [OWNER]
 
-    nsCOMPtr<nsIStyleRule>   mInlineStyleRule;    // [OWNER]
+    nsCOMPtr<nsICSSStyleRule> mInlineStyleRule;    // [OWNER]
     nsClassList*             mClassList;
 
     nsresult GetAttr(PRInt32 aNameSpaceID, nsIAtom* aName, nsAString& aValue);
@@ -387,12 +392,17 @@ public:
             CallGetService("@mozilla.org/xbl;1", &gXBLService);
         return gXBLService;
     }
-    static void ReleaseGlobals() { NS_IF_RELEASE(gXBLService); }
+    static void ReleaseGlobals() {
+        NS_IF_RELEASE(gXBLService);
+        NS_IF_RELEASE(gCSSOMFactory);
+    }
 
 protected:
     static nsrefcnt             gRefCnt;
     // pseudo-constants
     static nsIRDFService*       gRDFService;
+    static nsIXBLService*       gXBLService;
+    static nsICSSOMFactory*     gCSSOMFactory;
 
 public:
     static nsresult
@@ -473,7 +483,8 @@ public:
     NS_IMETHOD_(PRBool) HasClass(nsIAtom* aClass, PRBool aCaseSensitive) const;
 
     NS_IMETHOD WalkContentStyleRules(nsRuleWalker* aRuleWalker);
-    NS_IMETHOD GetInlineStyleRule(nsIStyleRule** aStyleRule);
+    NS_IMETHOD GetInlineStyleRule(nsICSSStyleRule** aStyleRule);
+    NS_IMETHOD SetInlineStyleRule(nsICSSStyleRule* aStyleRule, PRBool aNotify);
     NS_IMETHOD GetAttributeChangeHint(const nsIAtom* aAttribute,
                                       PRInt32 aModType,
                                       nsChangeHint& aHint) const;
@@ -651,6 +662,10 @@ protected:
 
     nsresult HideWindowChrome(PRBool aShouldHide);
 
+    void FinishSetAttr(PRInt32 aAttrNS, nsIAtom* aAttrName,
+                       const nsAString& aOldValue, const nsAString& aNewValue,
+                       PRInt32 aModHint, PRBool aNotify);
+
 protected:
     // Internal accessors. These shadow the 'Slots', and return
     // appropriate default values if there are no slots defined in the
@@ -660,8 +675,6 @@ protected:
     nsXULAttributes *Attributes() const  { return mSlots ? mSlots->GetAttributes()    : nsnull; }
 
     void UnregisterAccessKey(const nsAString& aOldValue);
-
-    static nsIXBLService *gXBLService;
 };
 
 

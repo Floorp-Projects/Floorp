@@ -51,7 +51,7 @@ nsCSSOMFactory::~nsCSSOMFactory()
 NS_IMPL_ISUPPORTS1(nsCSSOMFactory, nsICSSOMFactory)
 
 NS_IMETHODIMP
-nsCSSOMFactory::CreateDOMCSSAttributeDeclaration(nsIHTMLContent *aContent,
+nsCSSOMFactory::CreateDOMCSSAttributeDeclaration(nsIStyledContent *aContent,
                                                  nsDOMCSSDeclaration **aResult)
 {
     nsDOMCSSDeclaration *result = new nsDOMCSSAttributeDeclaration(aContent);
