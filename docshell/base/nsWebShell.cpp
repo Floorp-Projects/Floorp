@@ -1842,7 +1842,8 @@ nsWebShell::DoLoadURL(const nsString& aUrlSpec,
   // If it's a normal reload that uses the cache, look at the destination anchor
   // and see if it's an element within the current document
 #ifdef NECKO
-  if ((aType == nsIChannel::LOAD_NORMAL) && (nsnull != mContentViewer))
+  if ((aType == nsIChannel::LOAD_NORMAL) && (nsnull != mContentViewer) &&
+    (nsnull == aPostData))
 #else
   if ((aType == nsURLReload || aType == nsURLReloadFromHistory) && 
     (nsnull != mContentViewer) && (nsnull == aPostData))
