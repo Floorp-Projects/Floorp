@@ -849,67 +849,28 @@ nsHTMLReflowState::CalculateHypotheticalBox(nsIPresContext*    aPresContext,
   const nsStyleVisibility* blockVis;
   aBlockFrame->GetStyleData(eStyleStruct_Visibility, (const nsStyleStruct*&)blockVis);
 
-  // How we determine the hypothetical box depends on whether the element
-  // would have been inline-level or block-level
-  if (NS_STYLE_DISPLAY_INLINE == mStyleDisplay->mOriginalDisplay) {
-    nsPoint placeholderOffset;
+  // Get the placeholder x-offset and y-offset in the coordinate
+  // space of the block frame that contains it
+  nsPoint placeholderOffset;
+  GetPlaceholderOffset(aPlaceholderFrame, aBlockFrame, placeholderOffset);
 
-    // Get the placeholder x-offset and y-offset in the coordinate
-    // space of the block frame that contains it
-    GetPlaceholderOffset(aPlaceholderFrame, aBlockFrame, placeholderOffset);
+  // First, determine the hypothetical box's mTop
+  if (aBlockFrame) {
+    // We need the immediate child of the block frame, and that may not be
+    // the placeholder frame
+    nsBlockFrame* blockFrame = NS_STATIC_CAST(nsBlockFrame*, aBlockFrame);
+    nsIFrame *blockChild = FindImmediateChildOf(aBlockFrame, aPlaceholderFrame);
+    nsBlockFrame::line_iterator lineBox = blockFrame->FindLineFor(blockChild);
 
-    // Use the top of the inline box which the placeholder lives in as the
-    // hypothetical box's top.
-    nsPoint  offset;
-    aPlaceholderFrame->GetOrigin(offset);
-    placeholderOffset.y -= offset.y;
-
-    aHypotheticalBox.mTop = placeholderOffset.y;
-
-    // To determine the left and right offsets we need to look at the block's 'direction'
-    if (NS_STYLE_DIRECTION_LTR == blockVis->mDirection) {
-      // The placeholder represents the left edge of the hypothetical box
-      aHypotheticalBox.mLeft = placeholderOffset.x;
-      aHypotheticalBox.mLeftIsExact = PR_TRUE;
-
-      if (knowBoxWidth) {
-        aHypotheticalBox.mRight = aHypotheticalBox.mLeft + boxWidth;
-        aHypotheticalBox.mRightIsExact = PR_TRUE;
-      } else {
-        // We can't compute the right edge because we don't know the desired
-        // width. So instead use the right content edge of the block parent,
-        // but remember it's not exact
-        aHypotheticalBox.mRight = aBlockContentArea.right;
-        aHypotheticalBox.mRightIsExact = PR_FALSE;
-      }
-      
+    // How we determine the hypothetical box depends on whether the element
+    // would have been inline-level or block-level
+    if (NS_STYLE_DISPLAY_INLINE == mStyleDisplay->mOriginalDisplay) {
+      // Use the top of the inline box which the placeholder lives in as the
+      // hypothetical box's top.
+      aHypotheticalBox.mTop = lineBox->mBounds.y;
     } else {
-      // The placeholder represents the right edge of the hypothetical box
-      aHypotheticalBox.mRight = placeholderOffset.x;
-      aHypotheticalBox.mRightIsExact = PR_TRUE;
-      
-      if (knowBoxWidth) {
-        aHypotheticalBox.mLeft = aHypotheticalBox.mRight - boxWidth;
-        aHypotheticalBox.mLeftIsExact = PR_TRUE;
-      } else {
-        // We can't compute the left edge because we don't know the desired
-        // width. So instead use the left content edge of the block parent,
-        // but remember it's not exact
-        aHypotheticalBox.mLeft = aBlockContentArea.left;
-        aHypotheticalBox.mLeftIsExact = PR_FALSE;
-      }
-    }
-
-  } else {
-    // The element would have been block-level which means it would be below
-    // the line containing the placeholder frame
-    if (aBlockFrame) {
-      nsBlockFrame* blockFrame = NS_STATIC_CAST(nsBlockFrame*, aBlockFrame);
-
-      // We need the immediate child of the block frame, and that may not be
-      // the placeholder frame
-      nsIFrame *blockChild = FindImmediateChildOf(aBlockFrame, aPlaceholderFrame);
-      nsBlockFrame::line_iterator lineBox = blockFrame->FindLineFor(blockChild);
+      // The element would have been block-level which means it would be below
+      // the line containing the placeholder frame
       if (lineBox != blockFrame->end_lines()) {
         // The top of the hypothetical box is just below the line containing
         // the placeholder
@@ -918,44 +879,55 @@ nsHTMLReflowState::CalculateHypotheticalBox(nsIPresContext*    aPresContext,
         nsPoint placeholderOffset;
         
         // Just use the placeholder's y-offset
-        GetPlaceholderOffset(aPlaceholderFrame, aBlockFrame, placeholderOffset);
         aHypotheticalBox.mTop = placeholderOffset.y;
       }
     }
+  }
 
-    // To determine the left and right offsets we need to look at the block's 'direction'
-    if (NS_STYLE_DIRECTION_LTR == blockVis->mDirection) {
+  // Second, determine the hypothetical box's mLeft & mRight
+  // To determine the left and right offsets we need to look at the block's 'direction'
+  if (NS_STYLE_DIRECTION_LTR == blockVis->mDirection) {
+    // How we determine the hypothetical box depends on whether the element
+    // would have been inline-level or block-level
+    if (NS_STYLE_DISPLAY_INLINE == mStyleDisplay->mOriginalDisplay) {
+      // The placeholder represents the left edge of the hypothetical box
+      aHypotheticalBox.mLeft = placeholderOffset.x;
+    } else {
       aHypotheticalBox.mLeft = aBlockContentArea.left;
-      aHypotheticalBox.mLeftIsExact = PR_TRUE;
+    }
+    aHypotheticalBox.mLeftIsExact = PR_TRUE;
 
-      // If we know the box width then we can determine the right edge
-      if (knowBoxWidth) {
-        aHypotheticalBox.mRight = aHypotheticalBox.mLeft + boxWidth;
-        aHypotheticalBox.mRightIsExact = PR_TRUE;
-      } else {
-        // We can't compute the right edge because we don't know the intrinsic
-        // width yet. So instead use the right content edge of the block parent,
-        // but remember it's not exact
-        aHypotheticalBox.mRight = aBlockContentArea.right;
-        aHypotheticalBox.mRightIsExact = PR_FALSE;
-      }
+    if (knowBoxWidth) {
+      aHypotheticalBox.mRight = aHypotheticalBox.mLeft + boxWidth;
+      aHypotheticalBox.mRightIsExact = PR_TRUE;
+    } else {
+      // We can't compute the right edge because we don't know the desired
+      // width. So instead use the right content edge of the block parent,
+      // but remember it's not exact
+      aHypotheticalBox.mRight = aBlockContentArea.right;
+      aHypotheticalBox.mRightIsExact = PR_FALSE;
+    }
 
+  } else {
+    // The placeholder represents the right edge of the hypothetical box
+    if (NS_STYLE_DISPLAY_INLINE == mStyleDisplay->mOriginalDisplay) {
+      aHypotheticalBox.mRight = placeholderOffset.x;
     } else {
       aHypotheticalBox.mRight = aBlockContentArea.right;
-      aHypotheticalBox.mRightIsExact = PR_TRUE;
-
-      // If we know the box width then we can determine the left edge
-      if (knowBoxWidth) {
-        aHypotheticalBox.mLeft = aHypotheticalBox.mRight - boxWidth;
-        aHypotheticalBox.mLeftIsExact = PR_TRUE;
-      } else {
-        // We can't compute the left edge because we don't know the intrinsic
-        // width yet. So instead use the left content edge of the block parent,
-        // but remember it's not exact
-        aHypotheticalBox.mLeft = aBlockContentArea.left;
-        aHypotheticalBox.mLeftIsExact = PR_FALSE;
-      }
     }
+    aHypotheticalBox.mRightIsExact = PR_TRUE;
+    
+    if (knowBoxWidth) {
+      aHypotheticalBox.mLeft = aHypotheticalBox.mRight - boxWidth;
+      aHypotheticalBox.mLeftIsExact = PR_TRUE;
+    } else {
+      // We can't compute the left edge because we don't know the desired
+      // width. So instead use the left content edge of the block parent,
+      // but remember it's not exact
+      aHypotheticalBox.mLeft = aBlockContentArea.left;
+      aHypotheticalBox.mLeftIsExact = PR_FALSE;
+    }
+
   }
 
   // The current coordinate space is that of the nearest block to the placeholder.
