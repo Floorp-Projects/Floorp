@@ -20,7 +20,8 @@
 #define ___nsNetModuleMgr_h__
 
 #include "nsINetModuleMgr.h"
-#include "prlock.h"
+//#include "prlock.h"
+#include "nspr.h"
 #include "nsISupportsArray.h"
 
 class nsNetModuleMgr : public nsINetModuleMgr {
@@ -29,18 +30,18 @@ public:
     NS_DECL_ISUPPORTS
 
     // nsINetModuleMgr
-    NS_IMETHOD RegisterModule(const char *aTopic, nsIEventQueue *aEventQueue, nsINetNotify *aNotify);
-    NS_IMETHOD UnregisterModule(const char *aTopic, nsIEventQueue *aEventQueue, nsINetNotify *aNotify);
+    NS_IMETHOD RegisterModule(const char *aTopic, nsIEventQueue *aEventQueue, nsINetNotify *aNotify, const nsCID * aCID);
+    NS_IMETHOD UnregisterModule(const char *aTopic, nsIEventQueue *aEventQueue, nsINetNotify *aNotify, const nsCID * aCID);
     NS_IMETHOD EnumerateModules(const char *aTopic, nsISimpleEnumerator **aEnumerator);
     
     // nsNetModuleMgr
     nsNetModuleMgr();
     ~nsNetModuleMgr();
 
-private:
+
     nsISupportsArray    *mEntries;
-    PR_Lock             *mLock;
-}
+    //PR_Lock             *mLock;
+};
 
 
 #endif // ___nsNetModuleMgr_h__
