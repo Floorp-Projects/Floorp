@@ -28,10 +28,11 @@ var gSpellChecker = null;
 var gAllowSelectWord = true;
 var gPreviousReplaceWord = "";
 var gFirstTime = true;
-var gSendMailMessageMode = false;
 
 function Startup()
 {
+  var sendMailMessageMode = false;
+
   if (!GetCurrentEditor())
   {
     window.close();
@@ -51,8 +52,10 @@ function Startup()
   try {
     // TxtSrv Filter Contract Id
     var filterContractId;
-    gSendMailMessageMode = window.arguments[0];
-    if (gSendMailMessageMode)
+    sendMailMessageMode = window.arguments[0];
+    var skipBlockQuotes = window.arguments[1];
+
+    if (skipBlockQuotes)
       filterContractId = "@mozilla.org/editor/txtsrvfiltermail;1";
     else
       filterContractId = "@mozilla.org/editor/txtsrvfilter;1";
@@ -98,7 +101,7 @@ function Startup()
 
   // When startup param is true, setup different UI when spell checking 
   //   just before sending mail message  
-  if (gSendMailMessageMode)
+  if (sendMailMessageMode)
   {
     // If no misspelled words found, simply close dialog and send message
     if (!gMisspelledWord)
