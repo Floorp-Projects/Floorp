@@ -547,7 +547,7 @@ nsLDAPChannel::Run(void)
   nsXPIDLCString spec;
 
 #ifdef DEBUG_dmose  
-  PR_fprintf(PR_STDERR, "nsLDAPService::Run() entered!\n");
+  PR_fprintf(PR_STDERR, "nsLDAPChannel::Run() entered!\n");
 #endif
 
   // XXX how does this get destroyed?
@@ -614,7 +614,7 @@ nsLDAPChannel::Run(void)
   return NS_OK;
 }
 
-// XXX should this function should go away?
+// XXXdmose should this function should go away?
 //
 nsresult
 nsLDAPChannel::pipeWrite(char *str)
@@ -631,29 +631,36 @@ nsLDAPChannel::pipeWrite(char *str)
   return NS_OK;
 }
 
-// methods for nsILDAPMessageListener
+// method for nsILDAPMessageListener
 //
-// void OnLDAPSearchEntry (in nsILDAPMessage aMessage); 
+// void OnLDAPMessage (in nsILDAPMessage aMessage, ); 
 //
 NS_IMETHODIMP 
-nsLDAPChannel::OnLDAPSearchEntry(nsILDAPMessage *aMessage)
+nsLDAPChannel::OnLDAPMessage(nsILDAPMessage *aMessage, PRInt32 aRetVal)
 {
-    return NS_ERROR_NOT_IMPLEMENTED;
-}
+    switch (aRetVal) {
 
-// void OnLDAPSearchReference (in nsILDAPMessage aMessage);
-//
-NS_IMETHODIMP 
-nsLDAPChannel::OnLDAPSearchReference(nsILDAPMessage *aMessage)
-{
-    return NS_ERROR_NOT_IMPLEMENTED;
+    // a search entry has been returned
+    //
+    case LDAP_RES_SEARCH_ENTRY:
+	return OnLDAPSearchEntry(aMessage);
+	break;
+
+    // the search is finished; we're all done
+    //	
+    case LDAP_RES_SEARCH_RESULT:
+	return OnLDAPSearchResult(aMessage);
+	break;
+    }
+
+    return NS_ERROR_UNEXPECTED;
 }
 
 // void OnLDAPSearchResult (in nsILDAPMessage aMessage);
 //
 // XXX need to addref my message? deal with scope?
 //
-NS_IMETHODIMP 
+nsresult
 nsLDAPChannel::OnLDAPSearchResult(nsILDAPMessage *aMessage)
 {
     PRInt32 errorCode;	// the LDAP error code
@@ -697,19 +704,83 @@ nsLDAPChannel::OnLDAPSearchResult(nsILDAPMessage *aMessage)
     return NS_OK;
 }
 
-// void OnLDAPError ();
+// void OnLDAPSearchEntry (in nsILDAPMessage aMessage);
 //
-NS_IMETHODIMP 
-nsLDAPChannel::OnLDAPError()
-{
-    return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-// void OnLDAPTimeout ();
+// XXX need to addref my message? deal with scope?
+// XXXdmose most of this function should live in nsILDAPMessage::toString
 //
-NS_IMETHODIMP 
-nsLDAPChannel::OnLDAPTimeout()
+nsresult
+nsLDAPChannel::OnLDAPSearchEntry(nsILDAPMessage *aMessage)
 {
-    return NS_ERROR_NOT_IMPLEMENTED;
-}
+    nsresult rv;
+    char *dn, *attr;
 
+#ifdef DEBUG_dmose
+    PR_fprintf(PR_STDERR, "\nentry returned!\n");
+#endif
+
+    // get the DN
+    // XXX better err handling
+    //
+    rv = aMessage->GetDn(&dn);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    this->pipeWrite("dn: ");
+    this->pipeWrite(dn);
+    this->pipeWrite("\n");
+
+    ldap_memfree(dn);
+
+    // fetch the attributes
+    //
+    for (rv = aMessage->FirstAttribute(&attr);
+	 attr != NULL;
+	 rv = aMessage->NextAttribute(&attr)) {
+
+	if ( NS_FAILED(rv) ) {
+#ifdef DEBUG
+	    PR_fprintf(PR_STDERR, "failure getting attribute\n");
+#endif		    
+	    return rv;
+	}
+
+	int i;
+	char **vals;
+	PRUint32 attrCount;
+
+	// get the values of this attribute
+	// XXX better failure handling
+	//
+	rv = aMessage->GetValues(attr, &attrCount, &vals);
+	if (NS_FAILED(rv)) {
+	    PR_fprintf(PR_STDERR, "aMessage->GetValues\n");
+	    return rv;;
+	}
+
+	// print all values of this attribute
+	for ( i=0 ; vals[i] != NULL; i++ ) {
+	    this->pipeWrite(attr);
+	    this->pipeWrite(": ");
+	    this->pipeWrite(vals[i]);
+	    this->pipeWrite("\n");
+	}
+
+	ldap_value_free(vals);
+	ldap_memfree(attr);
+    }
+
+    // XXXdmose better error handling
+    //
+    if (NS_FAILED(rv)) {
+#ifdef DEBUG
+	PR_fprintf(PR_STDERR, "aMessage: error getting attribute\n");
+#endif
+	return rv;
+    }
+
+    // separate this entry from the next
+    //
+    this->pipeWrite("\n");
+
+    return NS_OK;
+}

@@ -50,7 +50,6 @@ lds(class nsLDAPChannel *chan, const char *url)
     nsCOMPtr<nsILDAPOperation> myOperation;
     PRInt32 returnCode;
     char *errString;
-    PRInt32 lden;
     nsresult rv;
 
     // create an LDAP connection
@@ -147,8 +146,6 @@ lds(class nsLDAPChannel *chan, const char *url)
     returnCode = LDAP_SUCCESS;
     while ( returnCode != LDAP_RES_SEARCH_RESULT ) {
 
-	char *dn, *attr;
-
 	PR_fprintf(PR_STDERR,".");
 
 	// XXX is 0 the right value?
@@ -169,100 +166,10 @@ lds(class nsLDAPChannel *chan, const char *url)
 	case 0: // nothing's been returned yet
 	    break; 	
 
-	case LDAP_RES_SEARCH_ENTRY:
-#ifdef DEBUG_dmose
-	    PR_fprintf(PR_STDERR, "\nentry returned!\n");
-#endif
-
-	    // get the DN
-	    // XXX better err handling
-	    //
-	    rv = myMessage->GetDn(&dn);
-	    NS_ENSURE_SUCCESS(rv, rv);
-
-	    chan->pipeWrite("dn: ");
-	    chan->pipeWrite(dn);
-	    chan->pipeWrite("\n");
-
-	    ldap_memfree(dn);
-
-	    // fetch the attributes
-	    for (rv = myMessage->FirstAttribute(&attr);
-		 attr != NULL;
-		 rv = myMessage->NextAttribute(&attr)) {
-
-		if ( NS_FAILED(rv) ) {
-#ifdef DEBUG
-		    PR_fprintf(PR_STDERR, "failure getting attribute\n");
-#endif		    
-		    return rv;
-		}
-
-		int i;
-		char **vals;
-		PRUint32 attrCount;
-
-		// get the values of this attribute
-		// XXX better failure handling
-		//
-		rv = myMessage->GetValues(attr, &attrCount, &vals);
-		if (NS_FAILED(rv)) {
-		    (void)myConnection->GetErrorString(&errString);
-#ifdef DEBUG
-		    PR_fprintf(PR_STDERR, "myMessage->GetValues: %s\n", 
-			       errString); 
-#endif
-		    return rv;;
-		}
-
-		// print all values of this attribute
-		for ( i=0 ; vals[i] != NULL; i++ ) {
-		    chan->pipeWrite(attr);
-		    chan->pipeWrite(": ");
-		    chan->pipeWrite(vals[i]);
-		    chan->pipeWrite("\n");
-		}
-
-		ldap_value_free(vals);
-		ldap_memfree(attr);
-	    }
-	  
-	    // did we reach this statement because of an error?
-	    (void)myConnection->GetLdErrno(NULL, NULL, &lden);
-	    if ( lden != LDAP_SUCCESS ) {
-
-#ifdef DEBUG
-		(void)myConnection->GetErrorString(&errString);
-		PR_fprintf(PR_STDERR, 
-			   "myMessage: error getting attribute: %s\n", 
-			   errString);
-#endif
-		return NS_ERROR_FAILURE;
-	    }
-
-	    // separate this entry from the next
-	    chan->pipeWrite("\n");
-
-	    // continue polling
-#ifdef DEBUG_dmose	    
-	    PR_fprintf(PR_STDERR, "polling search operation");
-#endif
-	    break;
-
-	case LDAP_RES_SEARCH_REFERENCE: // referral
-	    PR_fprintf(PR_STDERR, 
-		    "LDAP_RES_SEARCH_REFERENCE returned; not implemented!");
-	    return NS_ERROR_FAILURE;
-	    break;
-
-	case LDAP_RES_SEARCH_RESULT: // all done (the while condition sees this)
-	    chan->OnLDAPSearchResult(myMessage);
-	    break;
-	  
 	default:
-	    PR_fprintf(PR_STDERR, "unexpected result returned");
-	    return NS_ERROR_FAILURE;
+	    chan->OnLDAPMessage(myMessage, returnCode);
 	    break;
+
 	}
 	myMessage = 0;
 

@@ -67,6 +67,11 @@ public:
   static NS_METHOD
   Create(nsISupports* aOuter, REFNSIID aIID, void **aResult);
 
+  // these are internal functions, called by the dispatcher function
+  // OnLDAPMessage()
+  //
+  nsresult OnLDAPSearchResult(nsILDAPMessage *aMessage);
+  nsresult OnLDAPSearchEntry(nsILDAPMessage *aMessage);
   // XXX - should go away
   //
   nsresult pipeWrite(char *str);
