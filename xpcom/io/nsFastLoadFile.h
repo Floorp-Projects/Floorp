@@ -38,7 +38,9 @@
 #include "nsVoidArray.h"
 
 #include "nsIFastLoadFileControl.h"
+#include "nsIFastLoadService.h"
 #include "nsISeekableStream.h"
+#include "nsISupportsArray.h"
 
 /**
  * FastLoad file Object ID (OID) is an identifier for multiply and cyclicly
@@ -114,8 +116,8 @@ typedef PRUint32 NSFastLoadOID;         // nsFastLoadFooter::mObjectMap index
 
 /**
  * Magic "number" at start of a FastLoad file.  Inspired by the PNG "magic"
- * string, which inspired XPCOM's typelib (.xpt) file magic.  Guaranteed to
- * be corrupted by FTP-as-ASCII and other likely errors, meaningful to savvy
+ * string, which inspired XPCOM's typelib (.xpt) file magic.  Guaranteed to be
+ * corrupted by FTP-as-ASCII and other likely errors, meaningful to clued-in
  * humans, and ending in ^Z to terminate erroneous text input on Windows.
  */
 #define MFL_FILE_MAGIC          "XPCOM\nMozFASL\r\n\032"
@@ -202,34 +204,18 @@ struct nsFastLoadMuxedDocumentInfo {
     PRUint32    mInitialSegmentOffset;
 };
 
-// Specialize nsVoidArray to avoid gratuitous string copying, yet not leak.
-class NS_COM nsFastLoadDependencyArray : public nsVoidArray {
-  public:
-    ~nsFastLoadDependencyArray() {
-        for (PRInt32 i = 0, n = Count(); i < n; i++)
-            nsMemory::Free(ElementAt(i));
-    }
-
-    /**
-     * Append aFileName to this dependency array.  Hand off the memory at
-     * aFileName if aCopy is false, otherwise clone it with nsMemory.
-     */
-    PRBool AppendDependency(const char* aFileName, PRBool aCopy = PR_TRUE) {
-        char* s = NS_CONST_CAST(char*, aFileName);
-        if (aCopy) {
-            s = NS_REINTERPRET_CAST(char*, nsMemory::Clone(s, strlen(s) + 1));
-            if (!s) return PR_FALSE;
-        }
-        PRBool ok = AppendElement(s);
-        if (!ok && aCopy)
-            nsMemory::Free(s);
-        return ok;
-    }
-};
-
 // forward declarations of opaque types defined in nsFastLoadFile.cpp
 struct nsDocumentMapReadEntry;
 struct nsDocumentMapWriteEntry;
+
+// So nsFastLoadFileUpdater can verify that its nsIObjectInputStream parameter
+// is an nsFastLoadFileReader.
+#define NS_FASTLOADFILEREADER_IID \
+    {0x7d37d1bb,0xcef3,0x4c5f,{0x97,0x68,0x0f,0x89,0x7f,0x1a,0xe1,0x40}}
+
+struct nsIFastLoadFileReader : public nsISupports {
+    NS_DEFINE_STATIC_IID_ACCESSOR(NS_FASTLOADFILEREADER_IID)
+};
 
 /**
  * Inherit from the concrete class nsBinaryInputStream, which inherits from
@@ -239,10 +225,12 @@ struct nsDocumentMapWriteEntry;
  */
 class NS_COM nsFastLoadFileReader
     : public nsBinaryInputStream,
-      public nsIFastLoadFileControl,
-      public nsISeekableStream
+      public nsIFastLoadReadControl,
+      public nsISeekableStream,
+      public nsIFastLoadFileReader
 {
   public:
+
     nsFastLoadFileReader(nsIInputStream *aStream)
       : nsBinaryInputStream(aStream),
         mCurrentDocumentMapEntry(nsnull) {
@@ -263,6 +251,9 @@ class NS_COM nsFastLoadFileReader
 
     // nsIFastLoadFileControl methods
     NS_DECL_NSIFASTLOADFILECONTROL
+
+    // nsIFastLoadReadControl methods
+    NS_DECL_NSIFASTLOADREADCONTROL
 
     // nsISeekableStream methods
     NS_DECL_NSISEEKABLESTREAM
@@ -323,20 +314,6 @@ class NS_COM nsFastLoadFileReader
             return mObjectMap[index];
         }
 
-        const char* GetDependency(PRUint32 aIndex) const {
-            static const char dummy[] = "no such file";
-            NS_ASSERTION(aIndex < mNumDependencies, "aIndex out of range");
-            if (aIndex >= mNumDependencies)
-                return dummy;
-            PRInt32 index = aIndex;
-            return NS_REINTERPRET_CAST(const char*,
-                                       mDependencies.ElementAt(PRInt32(index)));
-        }
-
-        PRBool AppendDependency(const char* aFileName, PRBool aCopy = PR_TRUE) {
-            return mDependencies.AppendDependency(aFileName, aCopy);
-        }
-
         // Map from dense, zero-based, uint32 NSFastLoadID to 16-byte nsID.
         nsID* mIDMap;
 
@@ -355,7 +332,7 @@ class NS_COM nsFastLoadFileReader
 
         // List of source filename dependencies that should trigger regeneration
         // of the FastLoad file.
-        nsFastLoadDependencyArray mDependencies;
+        nsCOMPtr<nsISupportsArray> mDependencies;
     };
 
     nsresult ReadFooter(nsFastLoadFooter *aFooter);
@@ -383,11 +360,6 @@ NS_NewFastLoadFileReader(nsIObjectInputStream* *aResult,
                          nsIInputStream* aSrcStream);
 
 /**
- * XXX tuneme
- */
-#define MFL_CHECKSUM_BUFSIZE    8192
-
-/**
  * Inherit from the concrete class nsBinaryInputStream, which inherits from
  * abstract nsIObjectInputStream but does not implement its direct methods.
  * Though the names are not as clear as I'd like, this seems to be the best
@@ -395,21 +367,23 @@ NS_NewFastLoadFileReader(nsIObjectInputStream* *aResult,
  */
 class NS_COM nsFastLoadFileWriter
     : public nsBinaryOutputStream,
-      public nsIFastLoadFileControl,
+      public nsIFastLoadWriteControl,
       public nsISeekableStream
 {
   public:
-    nsFastLoadFileWriter(nsIOutputStream *aStream)
+    nsFastLoadFileWriter(nsIOutputStream *aStream, nsIFastLoadFileIO* aFileIO)
       : nsBinaryOutputStream(aStream),
-        mChecksumCursor(0),
-        mCheckedByteCount(0),
-        mCurrentDocumentMapEntry(nsnull) {
+        mCurrentDocumentMapEntry(nsnull),
+        mFileIO(aFileIO)
+    {
         mHeader.mChecksum = 0;
         mIDMap.ops = mObjectMap.ops = mDocumentMap.ops = mURIMap.ops = nsnull;
+        mDependencyMap.ops = nsnull;
         MOZ_COUNT_CTOR(nsFastLoadFileWriter);
     }
 
-    virtual ~nsFastLoadFileWriter() {
+    virtual ~nsFastLoadFileWriter()
+    {
         if (mIDMap.ops)
             PL_DHashTableFinish(&mIDMap);
         if (mObjectMap.ops)
@@ -418,18 +392,9 @@ class NS_COM nsFastLoadFileWriter
             PL_DHashTableFinish(&mDocumentMap);
         if (mURIMap.ops)
             PL_DHashTableFinish(&mURIMap);
+        if (mDependencyMap.ops)
+            PL_DHashTableFinish(&mDependencyMap);
         MOZ_COUNT_DTOR(nsFastLoadFileWriter);
-    }
-
-    PRUint32 GetDependencyCount() { return PRUint32(mDependencies.Count()); }
-
-    const char* GetDependency(PRUint32 i) {
-        return NS_REINTERPRET_CAST(const char*,
-                                   mDependencies.ElementAt(PRInt32(i)));
-    }
-
-    PRBool AppendDependency(const char* aFileName) {
-        return mDependencies.AppendDependency(aFileName);
     }
 
   private:
@@ -447,12 +412,11 @@ class NS_COM nsFastLoadFileWriter
     // nsIFastLoadFileControl methods
     NS_DECL_NSIFASTLOADFILECONTROL
 
+    // nsIFastLoadWriteControl methods
+    NS_DECL_NSIFASTLOADWRITECONTROL
+
     // nsISeekableStream methods
     NS_DECL_NSISEEKABLESTREAM
-
-    // Override Write so we can compute our checksum in one pass.
-    NS_IMETHOD Write(const char* aBuffer, PRUint32 aCount,
-                     PRUint32 *aBytesWritten);
 
     nsresult MapID(const nsID& aSlowID, NSFastLoadID *aResult);
 
@@ -490,25 +454,29 @@ class NS_COM nsFastLoadFileWriter
                          PRUint32 aNumber,
                          void *aData);
 
+    static PLDHashOperator PR_CALLBACK
+    DependencyMapEnumerate(PLDHashTable *aTable,
+                           PLDHashEntryHdr *aHdr,
+                           PRUint32 aNumber,
+                           void *aData);
+
   protected:
     nsFastLoadHeader mHeader;
-    PRUint8          mChecksumBuffer[MFL_CHECKSUM_BUFSIZE];
-    PRUint32         mChecksumCursor;
-    PRUint32         mCheckedByteCount;
 
     PLDHashTable mIDMap;
     PLDHashTable mObjectMap;
     PLDHashTable mDocumentMap;
     PLDHashTable mURIMap;
+    PLDHashTable mDependencyMap;
 
     nsDocumentMapWriteEntry* mCurrentDocumentMapEntry;
-
-    nsFastLoadDependencyArray mDependencies;
+    nsCOMPtr<nsIFastLoadFileIO> mFileIO;
 };
 
 NS_COM nsresult
 NS_NewFastLoadFileWriter(nsIObjectOutputStream* *aResult,
-                         nsIOutputStream* aDestStream);
+                         nsIOutputStream* aDestStream,
+                         nsIFastLoadFileIO* aFileIO);
 
 /**
  * Subclass of nsFastLoadFileWriter, friend of nsFastLoadFileReader which it
@@ -518,11 +486,12 @@ NS_NewFastLoadFileWriter(nsIObjectOutputStream* *aResult,
  * that maps all data on Close.
  */
 class NS_COM nsFastLoadFileUpdater
-    : public nsFastLoadFileWriter
+    : public nsFastLoadFileWriter,
+             nsIFastLoadFileIO
 {
   public:
     nsFastLoadFileUpdater(nsIOutputStream* aOutputStream)
-      : nsFastLoadFileWriter(aOutputStream) {
+      : nsFastLoadFileWriter(aOutputStream, nsnull) {
         MOZ_COUNT_CTOR(nsFastLoadFileUpdater);
     }
 
@@ -534,6 +503,9 @@ class NS_COM nsFastLoadFileUpdater
     // nsISupports methods
     NS_DECL_ISUPPORTS_INHERITED
 
+    // nsIFastLoadFileIO methods
+    NS_DECL_NSIFASTLOADFILEIO
+
     nsresult Open(nsFastLoadFileReader* aReader);
 
     static PLDHashOperator PR_CALLBACK
@@ -543,11 +515,14 @@ class NS_COM nsFastLoadFileUpdater
                                       void *aData);
 
     friend class nsFastLoadFileReader;
+
+  protected:
+    nsCOMPtr<nsIInputStream> mInputStream;
 };
 
 NS_COM nsresult
 NS_NewFastLoadFileUpdater(nsIObjectOutputStream* *aResult,
                           nsIOutputStream* aOutputStream,
-                          nsFastLoadFileReader* aReader);
+                          nsIObjectInputStream* aReaderAsStream);
 
 #endif // nsFastLoadFile_h___

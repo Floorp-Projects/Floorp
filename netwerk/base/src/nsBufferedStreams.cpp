@@ -36,12 +36,13 @@ static struct {
     PRUint32            mSeeksOutsideBuffer;
     PRUint32            mBufferReadUponSeek;
     PRUint32            mBufferUnreadUponSeek;
+    PRUint32            mBytesReadFromBuffer;
     PRUint32            mBigSeekIndex;
     struct {
         PRUint32        mOldOffset;
         PRUint32        mNewOffset;
     } mBigSeek[MAX_BIG_SEEKS];
-} stats;
+} bufstats;
 #else
 # define METER(x)       /* nothing */
 #endif
@@ -54,7 +55,9 @@ nsBufferedStream::nsBufferedStream()
       mBufferStartOffset(0),
       mCursor(0), 
       mFillPoint(0),
-      mStream(nsnull)
+      mStream(nsnull),
+      mBufferDisabled(PR_FALSE),
+      mGetBufferCount(0)
 {
     NS_INIT_REFCNT();
 }
@@ -126,28 +129,28 @@ nsBufferedStream::Seek(PRInt32 whence, PRInt32 offset)
         return NS_ERROR_UNEXPECTED;
     }
 
-    // Let mCursor point into the existing buffer if the new position is at
-    // the mFillPoint "fencepost" -- the client may never get around to Read
-    // or Write after this seek.  Let Read and Write worry about flushing and
-    // filling in that event.
+    // Let mCursor point into the existing buffer if the new position is
+    // between the current cursor and the mFillPoint "fencepost" -- the
+    // client may never get around to a Read or Write after this Seek.
+    // Read and Write worry about flushing and filling in that event.
     PRUint32 offsetInBuffer = PRUint32(absPos - mBufferStartOffset);
     if (offsetInBuffer <= mFillPoint) {
-        METER(stats.mSeeksWithinBuffer++);
+        METER(bufstats.mSeeksWithinBuffer++);
         mCursor = offsetInBuffer;
         return NS_OK;
     }
 
-    METER(stats.mSeeksOutsideBuffer++);
-    METER(stats.mBufferReadUponSeek += mCursor);
-    METER(stats.mBufferUnreadUponSeek += mFillPoint - mCursor);
+    METER(bufstats.mSeeksOutsideBuffer++);
+    METER(bufstats.mBufferReadUponSeek += mCursor);
+    METER(bufstats.mBufferUnreadUponSeek += mFillPoint - mCursor);
     rv = Flush();
     if (NS_FAILED(rv)) return rv;
 
     rv = ras->Seek(whence, offset);
     if (NS_FAILED(rv)) return rv;
 
-    METER(if (stats.mBigSeekIndex < MAX_BIG_SEEKS)
-              stats.mBigSeek[stats.mBigSeekIndex].mOldOffset =
+    METER(if (bufstats.mBigSeekIndex < MAX_BIG_SEEKS)
+              bufstats.mBigSeek[bufstats.mBigSeekIndex].mOldOffset =
                   mBufferStartOffset + mCursor);
     if (absPos == -1) {
         // then we had the SEEK_END case, above
@@ -157,12 +160,11 @@ nsBufferedStream::Seek(PRInt32 whence, PRInt32 offset)
     else {
         mBufferStartOffset = absPos;
     }
-    METER(if (stats.mBigSeekIndex < MAX_BIG_SEEKS)
-              stats.mBigSeek[stats.mBigSeekIndex++].mNewOffset =
+    METER(if (bufstats.mBigSeekIndex < MAX_BIG_SEEKS)
+              bufstats.mBigSeek[bufstats.mBigSeekIndex++].mNewOffset =
                   mBufferStartOffset);
 
-    mCursor = 0;
-    mFillPoint = 0;
+    mFillPoint = mCursor = 0;
     return Fill();
 }
 
@@ -265,6 +267,7 @@ nsBufferedInputStream::Read(char * buf, PRUint32 count, PRUint32 *result)
                 break;
         }
     }
+    METER(if (read > 0) bufstats.mBytesReadFromBuffer += read);
     *result = read;
     return (read > 0) ? NS_OK : rv;
 }
@@ -391,6 +394,7 @@ nsBufferedInputStream::PutBuffer(char* aBuffer, PRUint32 aLength)
 NS_IMETHODIMP
 nsBufferedInputStream::DisableBuffering()
 {
+    NS_ASSERTION(!mBufferDisabled, "redundant call to DisableBuffering!");
     NS_ASSERTION(mGetBufferCount == 0,
                  "DisableBuffer call between GetBuffer and PutBuffer!");
     if (mGetBufferCount != 0)
@@ -406,17 +410,31 @@ nsBufferedInputStream::DisableBuffering()
 NS_IMETHODIMP
 nsBufferedInputStream::EnableBuffering()
 {
+    NS_ASSERTION(mBufferDisabled, "gratuitous call to EnableBuffering!");
     mBufferDisabled = PR_FALSE;
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsBufferedInputStream::GetUnbufferedStream(nsISupports* *aStream)
+{
+    // Empty the buffer so subsequent i/o trumps any buffered data.
+    mBufferStartOffset += mCursor;
+    mFillPoint = mCursor = 0;
+
+    *aStream = mStream;
+    NS_IF_ADDREF(*aStream);
     return NS_OK;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 // nsBufferedOutputStream
 
-NS_IMPL_ISUPPORTS_INHERITED2(nsBufferedOutputStream, 
+NS_IMPL_ISUPPORTS_INHERITED3(nsBufferedOutputStream, 
                              nsBufferedStream,
                              nsIOutputStream,
-                             nsIBufferedOutputStream)
+                             nsIBufferedOutputStream,
+                             nsIStreamBufferAccess)
  
 NS_METHOD
 nsBufferedOutputStream::Create(nsISupports *aOuter, REFNSIID aIID, void **aResult)
@@ -468,50 +486,21 @@ nsBufferedOutputStream::Write(const char *buf, PRUint32 count, PRUint32 *result)
             written += amt;
             count -= amt;
             mCursor += amt;
+            if (mFillPoint < mCursor)
+                mFillPoint = mCursor;
         }
         else {
-            NS_ASSERTION(mCursor, "looping in nsBufferedOutputStream::Write!");
+            NS_ASSERTION(mFillPoint, "iloop in nsBufferedOutputStream::Write!");
             rv = Flush();
             if (NS_FAILED(rv)) break;
         }
     }
-    if (mFillPoint < mCursor)
-        mFillPoint = mCursor;
     *result = written;
     return (written > 0) ? NS_OK : rv;
 }
 
 NS_IMETHODIMP
-nsBufferedOutputStream::Fill()
-{
-    nsCOMPtr<nsISeekableOutputStream> sos(do_QueryInterface(mStream));
-    if (!sos) {
-        // XXXbe not OK!  Seek back and write less than a buffer case fails!
-        return NS_OK;
-    }
-
-    nsresult rv;
-    PRUint32 rem = mFillPoint - mCursor;
-    if (rem > 0) {
-        // slide the remainder down to the start of the buffer
-        // |<------------->|<--rem-->|<--->|
-        // b               c         f     s
-        nsCRT::memcpy(mBuffer, mBuffer + mCursor, rem);
-    }
-    mBufferStartOffset += mCursor;
-    mFillPoint = rem;
-    mCursor = 0;
-
-    PRUint32 amt;
-    rv = sos->Fill(mBuffer + mFillPoint, mBufferSize - mFillPoint, &amt);
-    if (NS_FAILED(rv)) return rv;
-
-    mFillPoint += amt;
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-nsBufferedOutputStream::Flush(void)
+nsBufferedOutputStream::Flush()
 {
     nsresult rv;
     PRUint32 amt;
@@ -519,20 +508,20 @@ nsBufferedOutputStream::Flush(void)
         // Stream already cancelled/flushed; probably because of error.
         return NS_OK;
     }
-    rv = Sink()->Write(mBuffer, mCursor, &amt);
+    rv = Sink()->Write(mBuffer, mFillPoint, &amt);
     if (NS_FAILED(rv)) return rv;
     mBufferStartOffset += amt;
-    if (mCursor == amt) {
-        mCursor = 0;
+    if (amt == mFillPoint) {
+        mFillPoint = mCursor = 0;
         return NS_OK;   // flushed everything
     }
 
     // slide the remainder down to the start of the buffer
     // |<-------------->|<---|----->|
     // b                a    c      s
-    PRUint32 rem = mCursor - amt;
+    PRUint32 rem = mFillPoint - amt;
     nsCRT::memcpy(mBuffer, mBuffer + amt, rem);
-    mCursor = rem;
+    mFillPoint = mCursor = rem;
     return NS_ERROR_FAILURE;        // didn't flush all
 }
     
@@ -578,6 +567,97 @@ nsBufferedOutputStream::SetObserver(nsIOutputStreamObserver * aObserver)
 {
     NS_NOTREACHED("SetObserver");
     return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP_(char*)
+nsBufferedOutputStream::GetBuffer(PRUint32 aLength, PRUint32 aAlignMask)
+{
+    NS_ASSERTION(mGetBufferCount == 0, "nested GetBuffer!");
+    if (mGetBufferCount != 0)
+        return nsnull;
+
+    if (mBufferDisabled)
+        return nsnull;
+
+    char* buf = mBuffer + mCursor;
+    PRUint32 rem = mBufferSize - mCursor;
+    if (rem == 0) {
+        if (NS_FAILED(Flush()))
+            return nsnull;
+        buf = mBuffer + mCursor;
+        rem = mBufferSize - mCursor;
+    }
+
+    PRUint32 mod = (NS_PTR_TO_INT32(buf) & aAlignMask);
+    if (mod) {
+        PRUint32 pad = aAlignMask + 1 - mod;
+        if (pad > rem)
+            return nsnull;
+
+        memset(buf, 0, pad);
+        mCursor += pad;
+        buf += pad;
+        rem -= pad;
+    }
+
+    if (aLength > rem)
+        return nsnull;
+    mGetBufferCount++;
+    return buf;
+}
+
+NS_IMETHODIMP_(void)
+nsBufferedOutputStream::PutBuffer(char* aBuffer, PRUint32 aLength)
+{
+    NS_ASSERTION(mGetBufferCount == 1, "stray PutBuffer!");
+    if (--mGetBufferCount != 0)
+        return;
+
+    NS_ASSERTION(mCursor + aLength <= mBufferSize, "PutBuffer botch");
+    mCursor += aLength;
+    if (mFillPoint < mCursor)
+        mFillPoint = mCursor;
+}
+
+NS_IMETHODIMP
+nsBufferedOutputStream::DisableBuffering()
+{
+    NS_ASSERTION(!mBufferDisabled, "redundant call to DisableBuffering!");
+    NS_ASSERTION(mGetBufferCount == 0,
+                 "DisableBuffer call between GetBuffer and PutBuffer!");
+    if (mGetBufferCount != 0)
+        return NS_ERROR_UNEXPECTED;
+
+    // Empty the buffer so nsBufferedStream::Tell works.
+    nsresult rv = Flush();
+    if (NS_FAILED(rv))
+        return rv;
+
+    mBufferDisabled = PR_TRUE;
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsBufferedOutputStream::EnableBuffering()
+{
+    NS_ASSERTION(mBufferDisabled, "gratuitous call to EnableBuffering!");
+    mBufferDisabled = PR_FALSE;
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsBufferedOutputStream::GetUnbufferedStream(nsISupports* *aStream)
+{
+    // Empty the buffer so subsequent i/o trumps any buffered data.
+    if (mFillPoint) {
+        nsresult rv = Flush();
+        if (NS_FAILED(rv))
+            return rv;
+    }
+
+    *aStream = mStream;
+    NS_IF_ADDREF(*aStream);
+    return NS_OK;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
