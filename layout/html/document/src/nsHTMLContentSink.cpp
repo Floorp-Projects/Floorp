@@ -287,7 +287,7 @@ PRBool HTMLContentSink::CloseHTML(const nsIParserNode& aNode)
   }
   NS_IF_RELEASE(mCurrentForm);
 
-  return PR_TRUE;
+  return PR_TRUE; 
 }
 
 PRBool HTMLContentSink::OpenHead(const nsIParserNode& aNode)
@@ -702,7 +702,7 @@ PRBool HTMLContentSink::AddLeaf(const nsIParserNode& aNode)
   eHTMLTags parentType;
   nsIHTMLContent* parent = GetCurrentContainer(&parentType);
 
-  switch (parentType) {
+/*  switch (parentType) {
   case eHTMLTag_table:
   case eHTMLTag_tr:
   case eHTMLTag_tbody:
@@ -723,7 +723,7 @@ PRBool HTMLContentSink::AddLeaf(const nsIParserNode& aNode)
     }
     break;
   }
-
+*/
   nsresult rv = NS_OK;
   nsIHTMLContent* leaf = nsnull;
   switch (aNode.GetTokenType()) {
