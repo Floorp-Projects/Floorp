@@ -151,7 +151,14 @@ public class Context
      */
     public static Context enter(Context cx)
     {
-        Context old = getCurrentContext();
+        Context[] storage = getThreadContextStorage();
+        Context old;
+        if (storage != null) {
+            old = storage[0];
+        } else {
+            old = getCurrentContext_jdk11();
+        }
+
         if (old != null) {
             if (cx != null && cx != old && cx.enterCount != 0) {
                 // The suplied context must be the context for
@@ -165,30 +172,20 @@ public class Context
                 cx = new Context();
             if (cx.enterCount != 0) Kit.codeBug();
 
-            if (!cx.hideFromContextListeners && !cx.creationEventWasSent) {
+            if (!cx.creationEventWasSent) {
                 cx.creationEventWasSent = true;
-                Object listeners = contextListeners;
-                for (int i = 0; ; ++i) {
-                    Object l = Kit.getListener(listeners, i);
-                    if (l == null)
-                        break;
-                    ((ContextListener)l).contextCreated(cx);
-                }
+                cx.runListeners(CONTEXT_CREATED_EVENT);
             }
         }
 
-        if (!cx.hideFromContextListeners) {
-            Object listeners = contextListeners;
-            for (int i = 0; ; ++i) {
-                Object l = Kit.getListener(listeners, i);
-                if (l == null)
-                    break;
-                ((ContextListener)l).contextEntered(cx);
-            }
-        }
+        cx.runListeners(CONTEXT_ENTER_EVENT);
 
         if (old == null) {
-            setThreadContext(cx);
+            if (storage != null) {
+                storage[0] = cx;
+            } else {
+                setThreadContext_jdk11(cx);
+            }
         }
         ++cx.enterCount;
 
@@ -210,7 +207,13 @@ public class Context
      */
     public static void exit()
     {
-        Context cx = getCurrentContext();
+        Context[] storage = getThreadContextStorage();
+        Context cx;
+        if (storage != null) {
+            cx = storage[0];
+        } else {
+            cx = getCurrentContext_jdk11();
+        }
         if (cx == null) {
             throw new IllegalStateException(
                 "Calling Context.exit without previous Context.enter");
@@ -218,25 +221,16 @@ public class Context
         if (Context.check && cx.enterCount < 1) Kit.codeBug();
         --cx.enterCount;
         if (cx.enterCount == 0) {
-            setThreadContext(null);
+            if (storage != null) {
+                storage[0] = null;
+            } else {
+                setThreadContext_jdk11(null);
+            }
         }
 
-        if (!cx.hideFromContextListeners) {
-            Object listeners = contextListeners;
-            for (int i = 0; ; ++i) {
-                Object l = Kit.getListener(listeners, i);
-                if (l == null)
-                    break;
-                ((ContextListener)l).contextExited(cx);
-            }
-            if (cx.enterCount == 0) {
-                for (int i = 0; ; ++i) {
-                    Object l = Kit.getListener(listeners, i);
-                    if (l == null)
-                        break;
-                    ((ContextListener)l).contextReleased(cx);
-                }
-            }
+        cx.runListeners(CONTEXT_EXIT_EVENT);
+        if (cx.enterCount == 0) {
+            cx.runListeners(CONTEXT_RELEASED_EVENT);
         }
     }
 
@@ -261,16 +255,36 @@ public class Context
         }
     }
 
-    /**
-     * Do not notify any listener registered with
-     * {@link #addContextListener(ContextListener)} about this Context instance.
-     * The function can only be called if this Context is not associated with
-     * any thread.
-     */
-    public final void hideFromContextListeners()
+    private static final int CONTEXT_CREATED_EVENT   = 1;
+    private static final int CONTEXT_ENTER_EVENT     = 2;
+    private static final int CONTEXT_EXIT_EVENT      = 3;
+    private static final int CONTEXT_RELEASED_EVENT  = 4;
+
+    private void runListeners(int reason)
     {
-        if (enterCount != 0) throw new IllegalStateException();
-        hideFromContextListeners = true;
+        Object listeners = contextListeners;
+        for (int i = 0; ; ++i) {
+            ContextListener l;
+            l = (ContextListener)Kit.getListener(listeners, i);
+            if (l == null)
+                break;
+            switch (reason) {
+              case CONTEXT_CREATED_EVENT:
+                l.contextCreated(this);
+                break;
+              case CONTEXT_ENTER_EVENT:
+                l.contextEntered(this);
+                break;
+              case CONTEXT_EXIT_EVENT:
+                l.contextExited(this);
+                break;
+              case CONTEXT_RELEASED_EVENT:
+                l.contextReleased(this);
+                break;
+              default:
+                Kit.codeBug();
+            }
+        }
     }
 
     /**
@@ -285,23 +299,40 @@ public class Context
      * @see org.mozilla.javascript.Context#enter
      * @see org.mozilla.javascript.Context#exit
      */
-    public static Context getCurrentContext() {
+    public static Context getCurrentContext()
+    {
+        Context[] storage = getThreadContextStorage();
+        if (storage != null) {
+            return storage[0];
+        }
+        return getCurrentContext_jdk11();
+    }
+
+    private static Context[] getThreadContextStorage()
+    {
         if (threadLocalCx != null) {
             try {
-                return (Context)threadLocalGet.invoke(threadLocalCx, null);
+                Context[] storage
+                    = (Context[])threadLocalGet.invoke(threadLocalCx, null);
+                if (storage == null) {
+                    storage = new Context[1];
+                    threadLocalSet.invoke(threadLocalCx,
+                                          new Object[] { storage });
+                }
+                return storage;
             } catch (Exception ex) { }
         }
+        return null;
+    }
+
+    private static Context getCurrentContext_jdk11()
+    {
         Thread t = Thread.currentThread();
         return (Context) threadContexts.get(t);
     }
 
-    private static void setThreadContext(Context cx) {
-        if (threadLocalCx != null) {
-            try {
-                threadLocalSet.invoke(threadLocalCx, new Object[] { cx });
-                return;
-            } catch (Exception ex) { }
-        }
+    private static void setThreadContext_jdk11(Context cx)
+    {
         Thread t = Thread.currentThread();
         if (cx != null) {
             threadContexts.put(t, cx);
@@ -379,7 +410,7 @@ public class Context
      * @param version the version as specified by VERSION_1_0, VERSION_1_1, etc.
      */
     public void setLanguageVersion(int version) {
-        Object listeners = instanceListeners;
+        Object listeners = propertyListeners;
         if (listeners != null && version != this.version) {
             firePropertyChangeImpl(listeners, languageVersionProperty,
                                new Integer(this.version),
@@ -428,7 +459,7 @@ public class Context
      */
     public ErrorReporter setErrorReporter(ErrorReporter reporter) {
         ErrorReporter result = errorReporter;
-        Object listeners = instanceListeners;
+        Object listeners = propertyListeners;
         if (listeners != null && errorReporter != reporter) {
             firePropertyChangeImpl(listeners, errorReporterProperty,
                                    errorReporter, reporter);
@@ -470,7 +501,7 @@ public class Context
      */
     public void addPropertyChangeListener(PropertyChangeListener listener)
     {
-        instanceListeners = Kit.addListener(instanceListeners, listener);
+        propertyListeners = Kit.addListener(propertyListeners, listener);
     }
 
     /**
@@ -482,7 +513,7 @@ public class Context
      */
     public void removePropertyChangeListener(PropertyChangeListener listener)
     {
-        instanceListeners = Kit.removeListener(instanceListeners, listener);
+        propertyListeners = Kit.removeListener(propertyListeners, listener);
     }
 
     /**
@@ -498,7 +529,7 @@ public class Context
     void firePropertyChange(String property, Object oldValue,
                             Object newValue)
     {
-        Object listeners = instanceListeners;
+        Object listeners = propertyListeners;
         if (listeners != null) {
             firePropertyChangeImpl(listeners, property, oldValue, newValue);
         }
@@ -2187,10 +2218,9 @@ public class Context
     Debugger debugger;
     private Object debuggerData;
     private int enterCount;
-    private Object instanceListeners;
+    private Object propertyListeners;
     private Hashtable hashtable;
     private ClassLoader applicationClassLoader;
-    private boolean hideFromContextListeners;
     private boolean creationEventWasSent;
 
     /**
