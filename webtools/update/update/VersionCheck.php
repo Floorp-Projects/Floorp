@@ -106,6 +106,13 @@ function vercmp ($a, $b) {
     return 0;
 }
 
+// XXX PUT VALUES IN
+mysql_connect($db_server, $db_user, $db_pass)
+    || bail ("Failed to connect to database.");
+
+mysql_select_db ($db_name)
+    || bail ("Failed to select database.");
+
 
 //
 // These are passed in the GET string
@@ -142,13 +149,6 @@ if ($reqVersion == 1) {
 if (empty($reqItemGuid) || empty($reqItemVersion) || empty($reqTargetAppGuid)) {
     bail ("Invalid request.");
 }
-
-// XXX PUT VALUES IN
-mysql_connect($db_server, $db_user, $db_pass)
-    || bail ("Failed to connect to database.");
-
-mysql_select_db ($db_name)
-    || bail ("Failed to select database.");
 
 // We need to fetch two things for the database:
 // 1) The current extension version's info, for a possibly updated max version
