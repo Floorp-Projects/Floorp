@@ -39,6 +39,7 @@ class nsStringArray;
 class nsICaret;
 class nsIStyleContext;
 class nsIFrameSelection;
+class nsIFrameManager;
 
 #define NS_IPRESSHELL_IID     \
 { 0x76e79c60, 0x944e, 0x11d1, \
@@ -268,6 +269,11 @@ public:
    * This allows any outstanding references to the frame to be cleaned up
    */
   NS_IMETHOD NotifyDestroyingFrame(nsIFrame* aFrame) = 0;
+
+  /**
+   * Returns the frame manager object
+   */
+  NS_IMETHOD GetFrameManager(nsIFrameManager** aFrameManager) const = 0;
 
   /**
    * Notify the Clipboard that we have something to copy.

@@ -27,7 +27,6 @@
 #include "nsIReflowCommand.h"
 #include "nsIViewManager.h"
 #include "nsCRT.h"
-#include "plhash.h"
 #include "prlog.h"
 #include "prthread.h"
 #include "prinrval.h"
@@ -62,9 +61,7 @@
 #include "nsXIFDTD.h"
 #include "nsIFrameSelection.h"
 #include "nsViewsCID.h"
-#include "nsLayoutAtoms.h"
-#include "nsPlaceholderFrame.h"
-#include "nsDST.h"
+#include "nsIFrameManager.h"
 
 // Drag & Drop, Clipboard
 #include "nsWidgetsCID.h"
@@ -84,133 +81,6 @@ static PRBool gsNoisyRefs = PR_FALSE;
 
 // comment out to hide caret
 #define SHOW_CARET
-
-static PLHashNumber
-HashKey(void* key)
-{
-  return (PLHashNumber)key;
-}
-
-static PRIntn
-CompareKeys(void* key1, void* key2)
-{
-  return key1 == key2;
-}
-
-class FrameHashTable {
-public:
-  FrameHashTable(PRUint32 aNumBuckets = 16);
-  ~FrameHashTable();
-
-  void* Get(void* aKey);
-  void* Put(void* aKey, void* aValue);
-  void* Remove(void* aKey);
-  void  Clear();  // remove all entries
-
-#ifdef NS_DEBUG
-  void  Dump(FILE* fp);
-#endif
-
-protected:
-  PLHashTable* mTable;
-};
-
-FrameHashTable::FrameHashTable(PRUint32 aNumBuckets)
-{
-  mTable = PL_NewHashTable(aNumBuckets, (PLHashFunction)HashKey,
-                           (PLHashComparator)CompareKeys,
-                           (PLHashComparator)nsnull,
-                           nsnull, nsnull);
-}
-
-FrameHashTable::~FrameHashTable()
-{
-  PL_HashTableDestroy(mTable);
-}
-
-/**
- * Get the data associated with a frame.
- */
-void*
-FrameHashTable::Get(void* aKey)
-{
-  PRInt32 hashCode = (PRInt32) aKey;
-  PLHashEntry** hep = PL_HashTableRawLookup(mTable, hashCode, aKey);
-  PLHashEntry* he = *hep;
-  if (nsnull != he) {
-    return he->value;
-  }
-  return nsnull;
-}
-
-/**
- * Create an association between a key and some data. This call
- * returns an old association if there was one (or nsnull if there
- * wasn't).
- */
-void*
-FrameHashTable::Put(void* aKey, void* aData)
-{
-  PRInt32 hashCode = (PRInt32) aKey;
-  PLHashEntry** hep = PL_HashTableRawLookup(mTable, hashCode, aKey);
-  PLHashEntry* he = *hep;
-  if (nsnull != he) {
-    void* oldValue = he->value;
-    he->value = aData;
-    return oldValue;
-  }
-  PL_HashTableRawAdd(mTable, hep, hashCode, aKey, aData);
-  return nsnull;
-}
-
-/**
- * Remove an association between a key and it's data. This returns
- * the old associated data.
- */
-void*
-FrameHashTable::Remove(void* aKey)
-{
-  PRInt32 hashCode = (PRInt32) aKey;
-  PLHashEntry** hep = PL_HashTableRawLookup(mTable, hashCode, aKey);
-  PLHashEntry* he = *hep;
-  void* oldValue = nsnull;
-  if (nsnull != he) {
-    oldValue = he->value;
-    PL_HashTableRawRemove(mTable, hep, he);
-  }
-  return oldValue;
-}
-
-static PRIntn
-RemoveEntry(PLHashEntry* he, PRIntn i, void* arg)
-{
-  // Remove and free this entry and continue enumerating
-  return HT_ENUMERATE_REMOVE | HT_ENUMERATE_NEXT;
-}
-
-/**
- * Remove all the entries in the hash table
- */
-void
-FrameHashTable::Clear()
-{
-  PL_HashTableEnumerateEntries(mTable, RemoveEntry, 0);
-}
-
-#ifdef NS_DEBUG
-static PRIntn
-EnumEntries(PLHashEntry* he, PRIntn i, void* arg)
-{
-  // Continue enumerating
-  return HT_ENUMERATE_NEXT;
-}
-
-void
-FrameHashTable::Dump(FILE* fp)
-{
-  PL_HashTableDump(mTable, EnumEntries, fp);
-}
-#endif
 
 //----------------------------------------------------------------------
 
@@ -308,6 +178,8 @@ public:
                                  PRIntn   aHPercent) const;
 
   NS_IMETHOD NotifyDestroyingFrame(nsIFrame* aFrame);
+  
+  NS_IMETHOD GetFrameManager(nsIFrameManager** aFrameManager) const;
 
   NS_IMETHOD DoCopy();
  
@@ -432,9 +304,8 @@ protected:
   nsCOMPtr<nsICaret>            mCaret;
   PRBool                        mDisplayNonTextSelection;
   PRBool                        mScrollingEnabled; //used to disable programmable scrolling from outside
-  nsDST*                        mPrimaryFrameMap;
-  FrameHashTable*               mPlaceholderMap;
   CantRenderReplacedElementEvent* mPostedEvents;
+  nsIFrameManager*              mFrameManager;
 
 private:
   void RevokePostedEvents();
@@ -602,6 +473,7 @@ PresShell::~PresShell()
   }
   // Revoke any events posted to the event queue that we haven't processed yet
   RevokePostedEvents();
+  mFrameManager->Release();
   if (mRootFrame)
     mRootFrame->Destroy(*mPresContext);
   if (mDocument)
@@ -612,8 +484,6 @@ PresShell::~PresShell()
     mPrimaryFrameMap->Dump(stdout);
   }
 #endif
-  delete mPrimaryFrameMap;
-  delete mPlaceholderMap;
 }
 
 /**
@@ -654,6 +524,13 @@ PresShell::Init(nsIDocument* aDocument,
                                                  getter_AddRefs(mSelection));
   if (!NS_SUCCEEDED(result))
     return result;
+
+  // Create and initialize the frame manager
+  result = NS_NewFrameManager(&mFrameManager);
+  if (NS_FAILED(result)) {
+    return result;
+  }
+  mFrameManager->Init(this);
 
   nsCOMPtr<nsIDOMSelection> domSelection;
   mSelection->GetSelection(SELECTION_NORMAL, getter_AddRefs(domSelection));
@@ -1072,6 +949,14 @@ PresShell::NotifyDestroyingFrame(nsIFrame* aFrame)
 
   // Dequeue and destroy and posted events for this frame
   DequeuePostedEventFor(aFrame);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+PresShell::GetFrameManager(nsIFrameManager** aFrameManager) const
+{
+  *aFrameManager = mFrameManager;
+  NS_IF_ADDREF(mFrameManager);
   return NS_OK;
 }
 
@@ -1977,66 +1862,20 @@ NS_IMETHODIMP
 PresShell::GetPrimaryFrameFor(nsIContent* aContent,
                               nsIFrame**  aResult) const
 {
-  NS_PRECONDITION(nsnull != aResult, "null ptr");
-  NS_PRECONDITION(nsnull != aContent, "no content object");
-  if (nsnull == aResult) {
-    return NS_ERROR_NULL_POINTER;
-  }
-
-  if (nsnull == mPrimaryFrameMap) {
-    *aResult = nsnull;
-  } else {
-    *aResult = (nsIFrame*)mPrimaryFrameMap->Search(aContent);
-    if (!*aResult) {
-      // Give the frame construction code the opportunity to return the
-      // frame that maps the content object
-      mStyleSet->FindPrimaryFrameFor(mPresContext, aContent, aResult);
-    }
-  }
-  
-  return NS_OK;
+  return mFrameManager->GetPrimaryFrameFor(aContent, aResult);
 }
 
 NS_IMETHODIMP
 PresShell::SetPrimaryFrameFor(nsIContent* aContent,
                               nsIFrame*   aPrimaryFrame)
 {
-  NS_PRECONDITION(aContent, "no content object");
-
-  // If aPrimaryFrame is NULL, then remove the mapping
-  if (!aPrimaryFrame) {
-    if (mPrimaryFrameMap) {
-      mPrimaryFrameMap->Remove(aContent);
-    }
-  } else {
-    // Create a new DST if necessary
-    if (!mPrimaryFrameMap) {
-      mPrimaryFrameMap = new nsDST;
-      if (!mPrimaryFrameMap) {
-        return NS_ERROR_OUT_OF_MEMORY;
-      }
-    }
-
-    // Add a mapping to the hash table
-    nsIFrame* oldPrimaryFrame;
-     
-    oldPrimaryFrame = (nsIFrame*)mPrimaryFrameMap->Insert(aContent, (void*)aPrimaryFrame);
-#ifdef NS_DEBUG
-    if (oldPrimaryFrame && (oldPrimaryFrame != aPrimaryFrame)) {
-      NS_WARNING("overwriting current primary frame");
-    }
-#endif
-  }
-  return NS_OK;
+  return mFrameManager->SetPrimaryFrameFor(aContent, aPrimaryFrame);
 }
 
 NS_IMETHODIMP
 PresShell::ClearPrimaryFrameMap()
 {
-  if (mPrimaryFrameMap) {
-    mPrimaryFrameMap->Clear();
-  }
-  return NS_OK;
+  return mFrameManager->ClearPrimaryFrameMap();
 }
 
 NS_IMETHODIMP 
@@ -2072,64 +1911,20 @@ NS_IMETHODIMP
 PresShell::GetPlaceholderFrameFor(nsIFrame*  aFrame,
                                   nsIFrame** aResult) const
 {
-  NS_PRECONDITION(nsnull != aResult, "null ptr");
-  NS_PRECONDITION(nsnull != aFrame, "no frame");
-  if ((nsnull == aResult) || (nsnull == aFrame)) {
-    return NS_ERROR_NULL_POINTER;
-  }
-
-  if (nsnull == mPlaceholderMap) {
-    *aResult = nsnull;
-  } else {
-    *aResult = (nsIFrame*)mPlaceholderMap->Get(aFrame);
-  }
-
-  return NS_OK;
+  return mFrameManager->GetPlaceholderFrameFor(aFrame, aResult);
 }
 
 NS_IMETHODIMP
 PresShell::SetPlaceholderFrameFor(nsIFrame* aFrame,
                                   nsIFrame* aPlaceholderFrame)
 {
-  NS_PRECONDITION(aFrame, "no frame");
-#ifdef NS_DEBUG
-  // Verify that the placeholder frame is of the correct type
-  if (aPlaceholderFrame) {
-    nsIAtom*  frameType;
-  
-    aPlaceholderFrame->GetFrameType(&frameType);
-    NS_PRECONDITION(nsLayoutAtoms::placeholderFrame == frameType, "unexpected frame type");
-    NS_IF_RELEASE(frameType);
-  }
-#endif
-
-  // If aPlaceholderFrame is NULL, then remove the mapping
-  if (!aPlaceholderFrame) {
-    if (mPlaceholderMap) {
-      mPlaceholderMap->Remove(aFrame);
-    }
-  } else {
-    // Create a new hash table if necessary
-    if (!mPlaceholderMap) {
-      mPlaceholderMap = new FrameHashTable;
-      if (!mPlaceholderMap) {
-        return NS_ERROR_OUT_OF_MEMORY;
-      }
-    }
-    
-    // Add a mapping to the hash table
-    mPlaceholderMap->Put(aFrame, (void*)aPlaceholderFrame);
-  }
-  return NS_OK;
+  return mFrameManager->SetPlaceholderFrameFor(aFrame, aPlaceholderFrame);
 }
 
 NS_IMETHODIMP
 PresShell::ClearPlaceholderFrameMap()
 {
-  if (mPlaceholderMap) {
-    mPlaceholderMap->Clear();
-  }
-  return NS_OK;
+  return mFrameManager->ClearPlaceholderFrameMap();
 }
 
 //nsIViewObserver
