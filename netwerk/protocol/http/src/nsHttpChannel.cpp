@@ -69,6 +69,7 @@ nsHttpChannel::nsHttpChannel()
     , mCachedContentIsValid(PR_FALSE)
     , mResponseHeadersModified(PR_FALSE)
     , mCanceled(PR_FALSE)
+    , mUploadStreamHasHeaders(PR_FALSE)
 {
     LOG(("Creating nsHttpChannel @%x\n", this));
 
@@ -435,7 +436,7 @@ nsHttpChannel::SetupTransaction()
         mRequestHead.SetHeader(nsHttp::Cache_Control, "max-age=0");
     }
 
-    return mTransaction->SetupRequest(&mRequestHead, mUploadStream);
+    return mTransaction->SetupRequest(&mRequestHead, mUploadStream, mUploadStreamHasHeaders);
 }
 
 void
@@ -2171,11 +2172,38 @@ nsHttpChannel::GetUploadStream(nsIInputStream **stream)
 NS_IMETHODIMP
 nsHttpChannel::SetUploadStream(nsIInputStream *stream, const char* contentType, PRInt32 contentLength)
 {
+    // NOTE: for backwards compatibility and for compatibility with old style
+    // plugins, |stream| may include headers, specifically Content-Type and
+    // Content-Length headers.  in this case, |contentType| and |contentLength|
+    // would be unspecified.  this is traditionally the case of a POST request,
+    // and so we select POST as the request method if contentType and
+    // contentLength are unspecified.
+    
+    if (mUploadStream) {
+        if (contentType) {
+            if (contentLength < 0) {
+                stream->Available((PRUint32 *) &contentLength);
+                if (contentLength < 0) {
+                    NS_ERROR("unable to determine content length");
+                    return NS_ERROR_FAILURE;
+                }
+            }
+            nsCAutoString buf; buf.AppendInt(contentLength);
+            mRequestHead.SetHeader(nsHttp::Content_Length, buf.get());
+            mRequestHead.SetHeader(nsHttp::Content_Type, contentType);
+            mUploadStreamHasHeaders = PR_FALSE;
+            mRequestHead.SetMethod(nsHttp::Put); // PUT request
+        }
+        else {
+            mUploadStreamHasHeaders = PR_TRUE;
+            mRequestHead.SetMethod(nsHttp::Post); // POST request
+        }
+    }
+    else {
+        mUploadStreamHasHeaders = PR_FALSE;
+        mRequestHead.SetMethod(nsHttp::Get); // revert to GET request
+    }
     mUploadStream = stream;
-    if (mUploadStream)
-        mRequestHead.SetMethod(nsHttp::Post);
-    else
-        mRequestHead.SetMethod(nsHttp::Get);
     return NS_OK;
 }
 

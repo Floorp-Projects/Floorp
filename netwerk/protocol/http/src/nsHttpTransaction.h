@@ -60,7 +60,9 @@ public:
     virtual ~nsHttpTransaction();
 
     // Called to initialize the transaction
-    nsresult SetupRequest(nsHttpRequestHead *, nsIInputStream *);
+    nsresult SetupRequest(nsHttpRequestHead *requestHeaders,
+                          nsIInputStream    *requestBody,
+                          PRBool             requestBodyIncludesHeaders);
 
     nsIStreamListener     *Listener()       { return mListener; }
     nsAHttpConnection     *Connection()     { return mConnection; }

@@ -62,7 +62,7 @@ public:
     nsresult GetHeader(nsHttpAtom h, char **v)      { return mHeaders.GetHeader(h, v); }
     void     ClearHeaders()                         { mHeaders.Clear(); }
 
-    void     SetContentType(const char *s) { CRTFREEIF(mContentType); mContentType = (s ? nsCRT::strdup(s) : 0); }
+    void     SetContentType(const char *s) { CRTFREEIF(mContentType); mContentType = strdup_if(s); }
     void     SetContentLength(PRInt32);
 
     // write out the response status line and headers as a single text block,
