@@ -583,11 +583,15 @@ main(int argc, char* argv[])
         }
     }
 
-    {
+    if (argv[i]) {
         char* p = argv[i];
         wchar_t* q = process_name;
         while (*q++ = wchar_t(*p++))
             continue;
+    }
+    else {
+        fprintf(stderr, "no image name specified\n");
+        exit(1);
     }
 
     init_entries();
