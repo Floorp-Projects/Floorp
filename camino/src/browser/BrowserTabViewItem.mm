@@ -310,7 +310,7 @@ const double kJaguarAppKitVersion = 663;
     sTabItemTag++;
 
     mTabContentsView = [[BrowserTabItemContainerView alloc]
-                            initWithFrame:NSMakeRect(0, 0, 100, 16) andTabItem:self];
+                            initWithFrame:NSMakeRect(0, 0, 0, 0) andTabItem:self];
 
     // create progress wheel. keep a strong ref as view goes in and out of view hierarchy. We
     // cannot use |NSProgressIndicatorSpinningStyle| on 10.1, so don't bother even creating it
