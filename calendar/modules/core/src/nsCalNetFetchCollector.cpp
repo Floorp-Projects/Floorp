@@ -20,14 +20,22 @@
 #include "nsCoreCIID.h"
 #include "nsxpfcCIID.h"
 
+static PRInt32 gsiID = 0;
+
+PRInt32 nsCalNetFetchCollector::GetNextID()
+{
+  return gsiID++;
+}
+
 nsCalNetFetchCollector::nsCalNetFetchCollector(nsISupports* outer)
 {
   NS_INIT_REFCNT();
   mpFetchList = nsnull;
 }
 
-NS_IMPL_ADDREF(nsLayerCollection)
-NS_IMPL_RELEASE(nsLayerCollection)
+// is this needed for a singleton?
+NS_IMPL_ADDREF(nsCalNetFetchCollector)
+NS_IMPL_RELEASE(nsCalNetFetchCollector)
 
 nsCalNetFetchCollector::~nsCalNetFetchCollector()
 {

@@ -36,10 +36,40 @@ public:
 
   NS_DECL_ISUPPORTS
 
+  /**
+   *  Register a fetch by range, but don't perform it yet.
+   *  @param nsIUser user making the request
+   *  @param d1  start date/time of range
+   *  @param d2  end date/time of range
+   */
   NS_IMETHOD QueueFetchByRange(nsIUser* pUser, nsILayer* pLayer, DateTime d1, DateTime d2);
+
+  /**
+   *  Perform all the queued fetches.
+   *  @param pID the returned ID number associated with this set of fetches.
+   */
   NS_IMETHOD FlushFetchByRange(PRInt32* pID);
+
+  /**
+   *  Set the priority of the fetches belonging to the supplied ID number
+   *  @param id    the ID number of the fetches as returned by FlushFetchByRange.
+   *  @param iPri  the priority for their threads
+   */
   NS_IMETHOD SetPriority(PRInt32 id, PRInt32 iPri);
+
+  /**
+   *  Get the state associated with the ID'd fetches
+   *  @param id  the id of the fetch
+   *  @param d1  its current state
+   */
   NS_IMETHOD GetState(PRInt32 ID, eCalNetFetchState *pState);
+
+  /**
+   *  Cancel everything associated with the fetch
+   *  @param nsIUser user making the request
+   *  @param d1  start date/time of range
+   *  @param d2  end date/time of range
+   */
   NS_IMETHOD Cancel(nsILayer * aLayer);
 };
 
