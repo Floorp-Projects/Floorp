@@ -266,7 +266,7 @@ HRESULT CBrowseDlg::CreateWebBrowser()
 
 //	GetDlgItem(IDC_BROWSER_MARKER)->DestroyWindow();
 
-	CControlSiteInstance::CreateInstance(&m_pControlSite);
+	CBrowserCtlSiteInstance::CreateInstance(&m_pControlSite);
 	if (m_pControlSite == NULL)
 	{
 		OutputString(_T("Error: could not create control site"));

@@ -8,6 +8,7 @@
 #include "Cbrowse_i.c"
 #include "TestScriptHelper.h"
 #include "ControlEventSink.h"
+#include "CBrowserCtlSite.h"
 
 
 #ifdef _DEBUG
@@ -94,6 +95,7 @@ CBrowseModule _Module;
 BEGIN_OBJECT_MAP(ObjectMap)
 	OBJECT_ENTRY(CLSID_TestScriptHelper, CTestScriptHelper)
 //	OBJECT_ENTRY(CLSID_ControlEventSink, CControlEventSink)
+//	OBJECT_ENTRY(CLSID_CBrowserCtlSite, CCBrowserCtlSite)
 END_OBJECT_MAP()
 
 LONG CBrowseModule::Unlock()

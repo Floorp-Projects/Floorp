@@ -30,7 +30,6 @@ typedef enum
 		[propget, id(5), helpstring("property TestCGI")] HRESULT TestCGI([out, retval] BSTR *pVal);
 	};
 
-
 [
 	uuid(5B209213-F756-11D2-A27F-000000000000),
 	version(1.0),
@@ -55,6 +54,14 @@ library CbrowseLib
 	coclass ControlEventSink
 	{
 		[default] interface IDispatch;
+	};
+	[
+		uuid(8EC06081-21DE-11D3-941E-000000000000),
+		helpstring("CBrowserCtlSite Class")
+	]
+	coclass CBrowserCtlSite
+	{
+		[default] interface IUnknown;
 	};
 };
 

@@ -112,6 +112,10 @@ SOURCE=.\CBrowseDlg.cpp
 # End Source File
 # Begin Source File
 
+SOURCE=.\CBrowserCtlSite.cpp
+# End Source File
+# Begin Source File
+
 SOURCE=.\ControlEventSink.cpp
 # End Source File
 # Begin Source File
@@ -174,6 +178,10 @@ SOURCE=.\Cbrowse_i.h
 # Begin Source File
 
 SOURCE=.\CBrowseDlg.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\CBrowserCtlSite.h
 # End Source File
 # Begin Source File
 
@@ -275,6 +283,10 @@ SOURCE=.\Scripts\Post.vbs
 # Begin Source File
 
 SOURCE=.\Cbrowse.rgs
+# End Source File
+# Begin Source File
+
+SOURCE=.\CBrowserCtlSite.rgs
 # End Source File
 # Begin Source File
 
