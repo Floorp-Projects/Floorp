@@ -442,7 +442,7 @@ function serv_messto (code, target, msg, ctcpCode)
 
     if (ctcpCode)
     {
-        pfx = "\01" + ctcpCode + " ";
+        pfx = "\01" + ctcpCode;
         sfx = "\01";
     }
 
@@ -464,8 +464,12 @@ function serv_messto (code, target, msg, ctcpCode)
             
         if ((lines[i] != "") || ctcpCode)
         {
+            var line = code + " " + target + " :" + pfx;
             this.sendsThisRound++;
-            var line = code + " " + target + " :" + pfx + lines[i] + sfx;
+            if (lines[i] != "")
+                line += " " + lines[i] + sfx;
+            else
+                line += sfx;
             //dd ("-*- irc sending '" +  line + "'");
             this.sendData (line + "\n");
         }
