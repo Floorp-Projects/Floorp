@@ -428,13 +428,12 @@ nsresult nsMsgNotificationManager::BuildNewMailURI(nsIMsgFolder *folder, nsCAuto
 	if(!folderResource)
 		return NS_ERROR_NO_INTERFACE;
 
-	char *folderURI;
-	rv = folderResource->GetValue(&folderURI);
+	const char *folderURI;
+	rv = folderResource->GetValueConst(&folderURI);
 	if(!(NS_SUCCEEDED(rv) && folderURI))
 		return rv;
 
 	newMailURI = "newmail:";
 	newMailURI += folderURI;
-	nsMemory::Free(folderURI);
 	return NS_OK;
 }

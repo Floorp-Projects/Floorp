@@ -788,11 +788,10 @@ nsMsgFolderDataSource::DoCommand(nsISupportsArray/*<nsIRDFResource>*/* aSources,
         nsCOMPtr<nsIRDFLiteral> literal = do_QueryInterface(elem, &rv);
         if(NS_SUCCEEDED(rv))
 		{
-          PRUnichar *name;
-          literal->GetValue(&name);
+          nsXPIDLString name;
+          literal->GetValue(getter_Copies(name));
 
-          rv = folder->Rename(name,mWindow);
-          PR_FREEIF(name);
+          rv = folder->Rename(name.get(),mWindow);
 		}
       }
     }
@@ -1990,12 +1989,11 @@ nsresult nsMsgFolderDataSource::DoFolderAssert(nsIMsgFolder *folder, nsIRDFResou
     nsCOMPtr<nsIRDFLiteral> literal(do_QueryInterface(target));
     if(literal)
     {
-      PRUnichar *value;
-      rv = literal->GetValue(&value);
+      nsXPIDLString value;
+      rv = literal->GetValue(getter_Copies(value));
       if(NS_SUCCEEDED(rv))
       {
-        rv = folder->SetCharset(value);
-        nsMemory::Free(value);
+        rv = folder->SetCharset(value.get());
       }
     }
     else
