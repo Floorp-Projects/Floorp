@@ -76,7 +76,7 @@
  * Stream converter contractid format (the stream converter root key is defined in this
  * file):
  *
- * <pre>Software/Netscape/streamconv/?from=FROM_MIME_TYPE&to=TO_MIME_TYPE</pre>
+ * <pre>@mozilla.org/streamconv;1?from=FROM_MIME_TYPE&to=TO_MIME_TYPE</pre>
  *
  * @author Jud Valeski
  * @see nsIStreamConverterService
@@ -101,10 +101,9 @@ interface nsIStreamConverter : nsIStreamListener {
      *                      implementation will converter data on demand rather than
      *                      buffering the converted data until it is used.
      */
-	
     nsIInputStream Convert(in nsIInputStream aFromStream,
-						   in wstring aFromType,
-						   in wstring aToType,
+                           in wstring aFromType,
+                           in wstring aToType,
                            in nsISupports aCtxt);
 
     /**
@@ -122,10 +121,10 @@ interface nsIStreamConverter : nsIStreamListener {
      * @param aCtxt         Either an opaque context, or a converter specific context
      *                      (implementation specific).
      */
-	void AsyncConvertData(in wstring aFromType,
-				 in wstring aToType,
-				 in nsIStreamListener aListener,
-                 in nsISupports aCtxt);
+    void AsyncConvertData(in wstring aFromType,
+                          in wstring aToType,
+                          in nsIStreamListener aListener,
+                          in nsISupports aCtxt);
 };
 
 %{C++
