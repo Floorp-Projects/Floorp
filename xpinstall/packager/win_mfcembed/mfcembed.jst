@@ -158,6 +158,13 @@ if(verifyDiskSpace(fProgram, srDest))
   fSubdir = getFolder("Program", "components");
   File.dirCreate(fSubdir);
 
+  // Let the uninstaller know about this generated file.
+  logComment("Installing: "    + fProgram + ".autoreg");
+  logComment("Create Folder: " + fProgram + "components");
+  logComment("Installing: "    + fProgram + "components\\xpti.dat");
+  logComment("Installing: "    + fProgram + "components\\xptitemp.dat");
+  logComment("Installing: "    + fProgram + "components\\compreg.dat");
+
   // check return value
   if( err == SUCCESS )
   {

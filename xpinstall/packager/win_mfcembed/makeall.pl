@@ -75,7 +75,27 @@ ParseArgv(@ARGV);
 
 $gDirPackager             = "$topsrcdir/xpinstall/packager";
 $gDirDistInstall          = "$inDistPath/inst_mfcembed";
-$gDirStageProduct         = "$inStagePath";
+$gDirDistInstGre          = "$inDistPath/inst_gre";
+$gDirStageProduct         = "$inStagePath/mfcembed";
+$seiFileNameGeneric       = "nsinstall.exe";
+$seiFileNameSpecific      = "mfcembed-win32-installer.exe";
+$seiStubRootName          = "mfcembed-win32-stub-installer";
+$seiFileNameSpecificStub  = "$seiStubRootName.exe";
+$seuFileNameSpecific      = "MfcEmbedUninstall.exe";
+$seuzFileNameSpecific     = "mfcembeduninstall.zip";
+$seiGreFileNameSpecific   = "gre-win32-installer.exe";
+$seizGreFileNameSpecific  = "gre-win32-installer.zip";
+
+# set environment vars for use by other .pl scripts called from this script.
+if($versionParts[2] eq "0")
+{
+   $versionMain = "$versionParts[0]\.$versionParts[1]";
+}
+else
+{
+   $versionMain = "$versionParts[0]\.$versionParts[1]\.$versionParts[2]";
+}
+print "The display version is: $versionMain\n";
 
 
 # Build GRE installer package first before building Mozilla!  GRE installer is required by the mozilla installer.
@@ -91,30 +111,21 @@ if(system("perl \"$gDirPackager/make_stage.pl\" -pn mfcembed -os win -sd \"$inSt
   die "\n Error: perl \"$gDirPackager/make_stage.pl\" -pn mfcembed -os win -sd \"$inStagePath\" -dd \"$inDistPath\"\n";
 }
 
+# Copy the GRE installer to the Ns' stage area
+if(!(-e "$gDirDistInstGre/$seiGreFileNameSpecific"))
+{
+  die "\"$gDirDistInstGre/$seiGreFileNameSpecific\": file missing\n";
+}
+mkdir "$gDirStageProduct/gre";
+copy("$gDirDistInstGre/$seiGreFileNameSpecific", "$gDirStageProduct/gre") ||
+  die "copy(\"$gDirDistInstGre/$seiGreFileNameSpecific\", \"$gDirStageProduct/gre\"): $!\n";
+
 # Until we really figure out what to do with this batch file, this will get it
 #   into the installer, at least
 print "\n Copying runapp.bat $gDirStageProduct/mfcembed/gre_app_support\n";
 copy("runapp.bat", "$gDirStageProduct/mfcembed/gre_app_support") ||
   die "copy runapp.bat $gDirStageProduct/mfcembed/gre_app_support: $!\n";
 
-
-$seiFileNameGeneric       = "nsinstall.exe";
-$seiFileNameSpecific      = "mfcembed-win32-installer.exe";
-$seiStubRootName          = "mfcembed-win32-stub-installer";
-$seiFileNameSpecificStub  = "$seiStubRootName.exe";
-$seuFileNameSpecific      = "MfcEmbedUninstall.exe";
-$seuzFileNameSpecific     = "mfcembeduninstall.zip";
-
-# set environment vars for use by other .pl scripts called from this script.
-if($versionParts[2] eq "0")
-{
-   $versionMain = "$versionParts[0]\.$versionParts[1]";
-}
-else
-{
-   $versionMain = "$versionParts[0]\.$versionParts[1]\.$versionParts[2]";
-}
-print "The display version is: $versionMain\n";
 $ENV{WIZ_nameCompany}          = "mozilla.org";
 $ENV{WIZ_nameProduct}          = "MfcEmbed";
 $ENV{WIZ_nameProductInternal}  = "MfcEmbed"; # product name without any version string
@@ -140,7 +151,8 @@ if(!(-d "$gDirStageProduct"))
 }
 
 # List of components for to create xpi files from
-@gComponentList = ("mfcembed");
+@gComponentList = ("xpcom",
+                   "mfcembed");
 
 if(VerifyComponents()) # return value of 0 means no errors encountered
 {
@@ -180,18 +192,16 @@ else
   mkdir ("$gDirDistInstall/setup",0775);
 }
 
+if(!(-e "$inDistPath/inst_gre/$seiGreFileNameSpecific"))
+{
+  die "\"$inDistPath/inst_gre/$seiGreFileNameSpecific\": file missing\n";
+}
+MakeExeZip("$inDistPath/inst_gre", $seiGreFileNameSpecific, $seizGreFileNameSpecific);
 
 if(MakeXpiFile())
 {
   exit(1);
 }
-
-# Grab xpcom from mozilla build
-copy("$gDirDistInstall/../install/xpi/xpcom.xpi", "$gDirDistInstall") ||
-  die "copy $gDirDistInstall/../install/xpi/xpcom.xpi $gDirDistInstall: $!\n";
-copy("$gDirDistInstall/../install/xpi/xpcom.xpi", "$gDirDistInstall/xpi") ||
-  die "copy $gDirDistInstall/../install/xpi/xpcom.xpi $gDirDistInstall/xpi: $!\n";
-
 
 if(MakeUninstall())
 {

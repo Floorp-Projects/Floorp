@@ -49,18 +49,21 @@ sub StageProduct
 
   StageUtils::CleanupStage($aDirStage, $aProductName);
   StageUtils::CleanupDistPackages("$aDirSrcDist/packages", $aProductName);
-  StageUtils::CopyAdditionalPackage("$dirMozPackager/pkgs-mfcembed-win",               $dirDistPackagesProductName);
-  StageUtils::CopyAdditionalPackage("$dirMozPackager/pkgs-mfcembed-win-supp",          $dirDistPackagesProductName);
+  StageUtils::CopyAdditionalPackage("$dirMozPackager/xpcom-win.pkg",                     $dirDistPackagesProductName);
+  StageUtils::CopyAdditionalPackage("$dirMozPackager/pkgs-mfcembed-win",                 $dirDistPackagesProductName);
+  StageUtils::CopyAdditionalPackage("$dirMozPackager/pkgs-mfcembed-win-supp",            $dirDistPackagesProductName);
   StageUtils::CopyAdditionalPackage("$dirMozRoot/embedding/config/basebrowser-win-supp", $dirDistPackagesProductName);
   StageUtils::CopyAdditionalPackage("$dirMozRoot/embedding/config/gre-win-supp",         $dirDistPackagesProductName);
 
-  mkdir("$aDirStage", 775) if (!(-e "$aDirStage"));
-  mkdir("$aDirStage/$aProductName", 775) if (!(-e "$aDirStage/$aProductName"));
+  mkdir("$aDirStage", 775)                        if (!(-e "$aDirStage"));
+  mkdir("$aDirStage/$aProductName", 775)          if (!(-e "$aDirStage/$aProductName"));
+  mkdir("$aDirStage/$aProductName/mfcembed", 775) if (!(-e "$aDirStage/$aProductName/mfcembed"));
 
   # Call pkgcp.pl on each of the package list
-  system("perl \"$dirMozPackager/pkgcp.pl\" -s \"$aDirSrcDist/bin\"             -d \"$dirStageProductName\" -f \"$dirDistPackagesProductName/pkgs-mfcembed-win\" -o $aOsPkg -v");
-  system("perl \"$dirMozPackager/pkgcp.pl\" -s \"$aDirSrcDist/gre_app_support\" -d \"$dirStageProductName\" -f \"$dirDistPackagesProductName/pkgs-mfcembed-win-supp\" -o $aOsPkg -v");
-  system("perl \"$dirMozPackager/pkgcp.pl\" -s \"$aDirSrcDist/bin\"             -d \"$dirStageProductName\" -f \"$dirDistPackagesProductName/basebrowser-win-supp\" -o $aOsPkg -v");
-  system("perl \"$dirMozPackager/pkgcp.pl\" -s \"$aDirSrcDist/bin\"             -d \"$dirStageProductName\" -f \"$dirDistPackagesProductName/gre-win-supp\" -o $aOsPkg -v");
+  system("perl \"$dirMozPackager/pkgcp.pl\" -s \"$aDirSrcDist\"                 -d \"$dirStageProductName\"          -f \"$dirDistPackagesProductName/xpcom-win.pkg\" -o $aOsPkg -v");
+  system("perl \"$dirMozPackager/pkgcp.pl\" -s \"$aDirSrcDist/bin\"             -d \"$dirStageProductName/mfcembed\" -f \"$dirDistPackagesProductName/pkgs-mfcembed-win\" -o $aOsPkg -v");
+  system("perl \"$dirMozPackager/pkgcp.pl\" -s \"$aDirSrcDist/gre_app_support\" -d \"$dirStageProductName/mfcembed\" -f \"$dirDistPackagesProductName/pkgs-mfcembed-win-supp\" -o $aOsPkg -v");
+  system("perl \"$dirMozPackager/pkgcp.pl\" -s \"$aDirSrcDist/bin\"             -d \"$dirStageProductName/mfcembed\" -f \"$dirDistPackagesProductName/basebrowser-win-supp\" -o $aOsPkg -v");
+  system("perl \"$dirMozPackager/pkgcp.pl\" -s \"$aDirSrcDist/bin\"             -d \"$dirStageProductName/mfcembed\" -f \"$dirDistPackagesProductName/gre-win-supp\" -o $aOsPkg -v");
 }
 
