@@ -64,9 +64,9 @@ char* nsFileSpecHelpers::StringDup(
 	int allocLength)
 //----------------------------------------------------------------------------------------
 {
-	if (!allocLength)
+	if (!allocLength && inString)
 		allocLength = strlen(inString);
-	char* newPath = new char[allocLength + 1];
+	char* newPath = inString || allocLength ? new char[allocLength + 1] : NULL;
 	if (!newPath)
 		return NULL;
 	strcpy(newPath, inString);
@@ -79,6 +79,10 @@ char* nsFileSpecHelpers::AllocCat(
 	const char* inString2)
 //----------------------------------------------------------------------------------------
 {
+	if (!inString1)
+		return StringDup(inString2);
+	if (!inString2)
+		return StringDup(inString1);
 	char* outString = StringDup(inString1, strlen(inString1) + strlen(inString2));
 	if (outString)
 		strcat(outString, inString2);
@@ -91,7 +95,12 @@ char* nsFileSpecHelpers::StringAssign(
 	const char* inString2)
 //----------------------------------------------------------------------------------------
 {
-	if (strlen(inString2) > strlen(ioString))
+	if (!inString2)
+	{
+		delete [] ioString;
+		ioString = NULL;
+	}
+	else if (!ioString || (ioString && strlen(inString2) > strlen(ioString)))
 	{
 		delete [] ioString;
 		ioString = StringDup(inString2);
@@ -111,6 +120,11 @@ void nsFileSpecHelpers::LeafReplace(
 	// Find the existing leaf name
 	if (!ioPath)
 		return;
+	if (!inLeafName)
+	{
+		*ioPath = '\0';
+		return;
+	}
 	char* lastSeparator = strrchr(ioPath, inSeparator);
 	int oldLength = strlen(ioPath);
 	*(++lastSeparator) = '\0'; // strip the current leaf name
@@ -129,6 +143,8 @@ char* nsFileSpecHelpers::GetLeaf(const char* inPath, char inSeparator)
 // Returns a pointer to an allocated string representing the leaf.
 //----------------------------------------------------------------------------------------
 {
+	if (!inPath)
+		return NULL;
 	char* lastSeparator = strrchr(inPath, inSeparator);
 	if (lastSeparator)
 		return StringDup(lastSeparator);
