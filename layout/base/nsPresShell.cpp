@@ -942,6 +942,7 @@ public:
                                  PRIntn   aVPercent, 
                                  PRIntn   aHPercent) const;
 
+  NS_IMETHOD SetIgnoreFrameDestruction(PRBool aIgnore);
   NS_IMETHOD NotifyDestroyingFrame(nsIFrame* aFrame);
   
   NS_IMETHOD GetFrameManager(nsIFrameManager** aFrameManager) const;
@@ -1184,6 +1185,7 @@ protected:
   PRPackedBool mIsReflowing;
   PRPackedBool mIsDestroying;
   PRPackedBool mDidInitialReflow;
+  PRPackedBool mIgnoreFrameDestruction;
   nsIFrame* mCurrentEventFrame;
   nsIContent* mCurrentEventContent;
   nsVoidArray mCurrentEventFrameStack;
@@ -1431,38 +1433,14 @@ NS_NewPresShell(nsIPresShell** aInstancePtrResult)
                             (void **) aInstancePtrResult);
 }
 
-PresShell::PresShell():mAnonymousContentTable(nsnull),
-                       mStackArena(nsnull),
-                       mFirstDOMEventRequest(nsnull),
-                       mLastDOMEventRequest(nsnull),
-                       mFirstAttributeRequest(nsnull),
-                       mLastAttributeRequest(nsnull),
-                       mFirstCallbackEventRequest(nsnull),
-                       mLastCallbackEventRequest(nsnull),
-                       mPaintingSuppressed(PR_FALSE),
-                       mShouldUnsuppressPainting(PR_FALSE)
-{
-  NS_INIT_REFCNT();
-  mIsDocumentGone = PR_FALSE;
-  mIsDestroying = PR_FALSE;
-  mDidInitialReflow = PR_FALSE;
-  mCaretEnabled = PR_FALSE;
-  mDisplayNonTextSelection = PR_FALSE;
-  mCurrentEventContent = nsnull;
-  mCurrentEventFrame = nsnull;
-  EnableScrolling();
-#ifdef NS_DEBUG
-  mCurrentTargetView = nsnull;
+PresShell::PresShell():
+#ifdef IBMBIDI
+  mBidiLevel(BIDI_LEVEL_UNDEFINED),
 #endif
-  mPendingReflowEvent = PR_FALSE;    
-  mBatchReflows = PR_FALSE;
-  mDocumentLoading = PR_FALSE;
-  mSubShellMap = nsnull;
-  mRCCreatedDuringLoad = 0;
-  mDummyLayoutRequest = nsnull;
-  mPrefStyleSheet = nsnull;
-  mEnablePrefStyleSheet = PR_TRUE;
-
+  mScrollingEnabled(PR_TRUE),
+  mEnablePrefStyleSheet(PR_TRUE)
+{
+  NS_INIT_ISUPPORTS();
 #ifdef MOZ_REFLOW_PERF
   mReflowCountMgr = new ReflowCountMgr();
   mReflowCountMgr->SetPresContext(mPresContext);
@@ -1757,6 +1735,7 @@ PresShell::Destroy()
     mEventQueue->RevokeEvents(this);
   }
 
+  CancelAllReflowCommands();
   KillResizeEventTimer();
 
   return NS_OK;
@@ -3002,16 +2981,25 @@ PresShell::ScrollFrameIntoView(nsIFrame *aFrame)
 }
 
 NS_IMETHODIMP
+PresShell::SetIgnoreFrameDestruction(PRBool aIgnore)
+{
+  mIgnoreFrameDestruction = aIgnore;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 PresShell::NotifyDestroyingFrame(nsIFrame* aFrame)
 {
-  // Cancel any pending reflow commands targeted at this frame
-  CancelReflowCommandInternal(aFrame, nsnull, mReflowCommands);
-  CancelReflowCommandInternal(aFrame, nsnull, mTimeoutReflowCommands);
+  if (!mIgnoreFrameDestruction) {
+    // Cancel any pending reflow commands targeted at this frame
+    CancelReflowCommandInternal(aFrame, nsnull, mReflowCommands);
+    CancelReflowCommandInternal(aFrame, nsnull, mTimeoutReflowCommands);
 
 
-  // Notify the frame manager
-  if (mFrameManager) {
-    mFrameManager->NotifyDestroyingFrame(aFrame);
+    // Notify the frame manager
+    if (mFrameManager) {
+      mFrameManager->NotifyDestroyingFrame(aFrame);
+    }
   }
 
   return NS_OK;
