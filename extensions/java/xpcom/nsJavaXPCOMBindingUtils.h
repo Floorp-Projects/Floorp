@@ -135,11 +135,27 @@ nsresult GetIIDForMethodParam(nsIInterfaceInfo *iinfo,
 void ThrowXPCOMException(JNIEnv* env, const nsresult aErrorCode,
                          const char* aMessage);
 
-// java.lang.String to nsAString/nsACString
+/**
+ * Helper functions for converting from java.lang.String to
+ * nsAString/nsACstring.
+ *
+ * @param env       Java environment pointer
+ * @param aString   Java string to convert
+ *
+ * @return  nsAString/nsACString with same content as given Java string
+ */
 nsAString* jstring_to_nsAString(JNIEnv* env, jstring aString);
 nsACString* jstring_to_nsACString(JNIEnv* env, jstring aString);
 
-// java.io.File to nsILocalFile
+/**
+ * Helper function for converting from java.io.File to nsILocalFile.
+ *
+ * @param env         Java environment pointer
+ * @param aFile       Java File to convert
+ * @param aLocalFile  returns the converted nsILocalFile
+ *
+ * @return  NS_OK for success; other values indicate error in conversion
+ */
 nsresult File_to_nsILocalFile(JNIEnv* env, jobject aFile,
                               nsILocalFile** aLocalFile);
 
