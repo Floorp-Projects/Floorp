@@ -401,7 +401,9 @@ endif
 # all public include files go in subdirectories of PUBLIC:
 PUBLIC		= $(XPDIST)/public
 
-ifndef USE_AUTOCONF
+ifdef USE_AUTOCONF
+DEPENDENCIES	= .md
+else
 VPATH		= $(OBJDIR)
 DEPENDENCIES	= $(OBJDIR)/.md
 endif

@@ -743,7 +743,7 @@ endif
 
 ifdef USE_AUTOCONF
 ALL_TRASH := $(filter-out $(OBJDIR), $(ALL_TRASH))
-else
+endif
 -include $(DEPENDENCIES)
 
 ifneq (,$(filter-out OS2 WINNT,$(OS_ARCH)))
@@ -778,7 +778,6 @@ ifneq (,$(filter-out OS2 WINNT,$(OS_ARCH)))
 		exit(1);                                                      \
 	    }'
 endif
-endif # USE_AUTOCONF
 
 #############################################################################
 # X dependency system
@@ -792,6 +791,7 @@ $(MKDEPENDENCIES)::
 	$(MKDEPEND) -p$(OBJDIR_NAME)/ -o'.o' -f$(MKDEPENDENCIES) $(INCLUDES) $(CSRCS) $(CPPSRCS)
 
 $(MKDEPEND)::
+	cd $(DEPTH)/config; make nsinstall
 	cd $(MKDEPEND_DIR); $(MAKE)
 
 # Rules to for detection
