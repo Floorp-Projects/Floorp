@@ -1,13 +1,16 @@
 Wed Dec  2 14:35:41 EST 1998
 
 xpidl depends on Andrew Veliath and Elliot Lee's libIDL, a part of the
-GNOME ORBit C ORB.  We currently require libIDL >= 0.6.1, which in turn
+GNOME ORBit C ORB.  We currently require libIDL >= 0.6.3, which in turn
 requires glib >= 1.2.0.
 
-libIDL builds for Linux and Win32 can be found, along with source tarballs,
-at http://www.rpi.edu/~veliaa/libIDL/, and Win32 users will need glib 1.1 and
-glib 1.1-dev from http://user.sgic.fi/~tml/gimp/win32/.  There are currently
-no projects for Mac, but people _are_ building on this platform, so
-hopefully they'll check their magic in soon.
+libIDL builds for Linux and Win32 can be found, along with source
+tarballs, at http://www.rpi.edu/~veliaa/libIDL/, and Win32 users will
+need glib 1.2 and glib 1.2-dev from
+http://user.sgic.fi/~tml/gimp/win32/.  Source and Linux RPMs are also
+available from ftp://ftp.mozilla.org/pub/mozilla/libraries, and Win32
+binaries are included in the wintools.zip file at
+ftp://ftp.mozilla.org/pub/mozilla/source/wintools.zip.  A Mac project
+is in progress, and should be appearing shortly.
 
 glib tarballs and RPMs for Linux can be found through http://www.gtk.org.
