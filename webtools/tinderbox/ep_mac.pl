@@ -27,11 +27,14 @@ sub has_error {
   local $_ = $_[0];
   /fatal error/                       # Link error
     or /Error  /                      # C error
+    or /Link Error/                   # Link error
+    or /Error:/                       # perl error
     or /\[checkout aborted\]/         # cvs error
     or /Couldn\'t find project file / # CW project error
     or /Can\'t create /               # CW project error
     or /Can\'t open /                 # CW project error
     or /Can\'t find /                 # CW project error
+    or /Died./                        # perl death
     ;
 }
 
