@@ -55,7 +55,8 @@ nsEditorShellMouseListener::QueryInterface(REFNSIID aIID, void** aInstancePtr)
   }
 
   if (aIID.Equals(NS_GET_IID(nsISupports))) {
-    *aInstancePtr = (void*)(nsISupports*)this;
+    *aInstancePtr = (void*)(nsIDOMEventListener*)this;
+    *aInstancePtr = (nsISupports*)*aInstancePtr;
     NS_ADDREF_THIS();
     return NS_OK;
   }
@@ -66,6 +67,11 @@ nsEditorShellMouseListener::QueryInterface(REFNSIID aIID, void** aInstancePtr)
   }
   if (aIID.Equals(NS_GET_IID(nsIDOMMouseListener))) {
     *aInstancePtr = (void*)(nsIDOMMouseListener*)this;
+    NS_ADDREF_THIS();
+    return NS_OK;
+  }
+  if (aIID.Equals(NS_GET_IID(nsISupportsWeakReference))) {
+    *aInstancePtr = (void*)(nsISupportsWeakReference*)this;
     NS_ADDREF_THIS();
     return NS_OK;
   }
