@@ -32,7 +32,7 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  *
- * $Id: loader.h,v 1.6 2002/11/16 06:09:58 nelsonb%netscape.com Exp $
+ * $Id: loader.h,v 1.7 2003/01/16 00:15:21 nelsonb%netscape.com Exp $
  */
 
 #ifndef _LOADER_H_
@@ -40,7 +40,7 @@
 
 #include "blapi.h"
 
-#define FREEBL_VERSION 0x0303
+#define FREEBL_VERSION 0x0304
 
 struct FREEBLVectorStr {
 
@@ -311,6 +311,23 @@ struct FREEBLVectorStr {
  SHA384Context * (* p_SHA384_Resurrect)(unsigned char *space, void *arg);
 
   /* Version 3.003 came to here */
+
+ AESKeyWrapContext * (* p_AESKeyWrap_CreateContext)(const unsigned char *key, 
+                   const unsigned char *iv, int encrypt, unsigned int keylen);
+
+ void (* p_AESKeyWrap_DestroyContext)(AESKeyWrapContext *cx, PRBool freeit);
+
+ SECStatus (* p_AESKeyWrap_Encrypt)(AESKeyWrapContext *cx, 
+            unsigned char *output,
+            unsigned int *outputLen, unsigned int maxOutputLen,
+            const unsigned char *input, unsigned int inputLen);
+
+ SECStatus (* p_AESKeyWrap_Decrypt)(AESKeyWrapContext *cx, 
+            unsigned char *output,
+            unsigned int *outputLen, unsigned int maxOutputLen,
+            const unsigned char *input, unsigned int inputLen);
+
+  /* Version 3.004 came to here */
 
 };
 

@@ -32,7 +32,7 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  *
- * $Id: blapi.h,v 1.12 2002/11/16 06:09:57 nelsonb%netscape.com Exp $
+ * $Id: blapi.h,v 1.13 2003/01/16 00:15:19 nelsonb%netscape.com Exp $
  */
 
 #ifndef _BLAPI_H_
@@ -468,6 +468,62 @@ AES_Encrypt(AESContext *cx, unsigned char *output,
 */
 extern SECStatus 
 AES_Decrypt(AESContext *cx, unsigned char *output,
+            unsigned int *outputLen, unsigned int maxOutputLen,
+            const unsigned char *input, unsigned int inputLen);
+
+/******************************************/
+/*
+** AES key wrap algorithm, RFC 3394
+*/
+
+/*
+** Create a new AES context suitable for AES encryption/decryption.
+** 	"key" raw key data
+**      "iv"  The 8 byte "initial value"
+**      "encrypt", a boolean, true for key wrapping, false for unwrapping.
+** 	"keylen" the number of bytes of key data (16, 24, or 32)
+*/
+extern AESKeyWrapContext *
+AESKeyWrap_CreateContext(const unsigned char *key, const unsigned char *iv, 
+                         int encrypt, unsigned int keylen);
+
+/*
+** Destroy a AES KeyWrap context.
+**	"cx" the context
+**	"freeit" if PR_TRUE then free the object as well as its sub-objects
+*/
+extern void 
+AESKeyWrap_DestroyContext(AESKeyWrapContext *cx, PRBool freeit);
+
+/*
+** Perform AES key wrap.
+**	"cx" the context
+**	"output" the output buffer to store the encrypted data.
+**	"outputLen" how much data is stored in "output". Set by the routine
+**	   after some data is stored in output.
+**	"maxOutputLen" the maximum amount of data that can ever be
+**	   stored in "output"
+**	"input" the input data
+**	"inputLen" the amount of input data
+*/
+extern SECStatus 
+AESKeyWrap_Encrypt(AESKeyWrapContext *cx, unsigned char *output,
+            unsigned int *outputLen, unsigned int maxOutputLen,
+            const unsigned char *input, unsigned int inputLen);
+
+/*
+** Perform AES key unwrap.
+**	"cx" the context
+**	"output" the output buffer to store the decrypted data.
+**	"outputLen" how much data is stored in "output". Set by the routine
+**	   after some data is stored in output.
+**	"maxOutputLen" the maximum amount of data that can ever be
+**	   stored in "output"
+**	"input" the input data
+**	"inputLen" the amount of input data
+*/
+extern SECStatus 
+AESKeyWrap_Decrypt(AESKeyWrapContext *cx, unsigned char *output,
             unsigned int *outputLen, unsigned int maxOutputLen,
             const unsigned char *input, unsigned int inputLen);
 
