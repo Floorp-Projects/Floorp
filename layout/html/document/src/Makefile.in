@@ -69,7 +69,9 @@ override NO_STATIC_LIB=
 include $(topsrcdir)/config/rules.mk
 
 GARBAGE		+= $(DIST)/bin/res/ua.css
+GARBAGE		+= $(DIST)/bin/res/arrow.gif
 
 install:: $(TARGETS)
 	$(INSTALL) $(srcdir)/ua.css $(DIST)/bin/res
+	$(INSTALL) $(srcdir)/arrow.gif $(DIST)/bin/res
 
