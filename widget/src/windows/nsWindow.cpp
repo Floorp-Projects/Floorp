@@ -178,8 +178,8 @@ static inline PRBool IsAlphaTranslucencySupported() { return pUpdateLayeredWindo
 #endif
 
 static PRBool IsCursorTranslucencySupported() {
-  static didCheck = PR_FALSE;
-  static isSupported = PR_FALSE;
+  static PRBool didCheck = PR_FALSE;
+  static PRBool isSupported = PR_FALSE;
   if (!didCheck) {
     didCheck = PR_TRUE;
     // Cursor translucency is supported on Windows XP and newer
