@@ -55,7 +55,7 @@
 #include "nsIPref.h"
 #include "nsIPromptService.h"
 #include "nsNetCID.h"
-#include "nsIHttpProtocolHandler.h"
+#include "nsIObserverService.h"
 
 // These are needed to load a URL in a browser window.
 #include "nsIDOMLocation.h"
