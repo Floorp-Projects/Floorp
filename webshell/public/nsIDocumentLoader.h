@@ -23,17 +23,15 @@
 #include "prtypes.h"
 #include "nsISupports.h"
 
-
 /* Forward declarations... */
 class nsString;
 class nsIURL;
 class nsIFactory;
 class nsIPostData;
 class nsIContentViewer;
-class nsIViewerContainer;
+class nsIContentViewerContainer;
 class nsIStreamListener;
 class nsIStreamObserver;
-
 
 /* f43ba260-0737-11d2-beb9-00805f8a66dc */
 #define NS_IDOCUMENTLOADERFACTORY_IID   \
@@ -41,8 +39,8 @@ class nsIStreamObserver;
   {0xbe, 0xb9, 0x00, 0x80, 0x5f, 0x8a, 0x66, 0xdc} }
 
 /*
- *
- *
+ * The factory API for creating a content viewer for a given
+ * content-type and command.
  */
 class nsIDocumentLoaderFactory : public nsISupports
 {
@@ -50,33 +48,10 @@ public:
     NS_IMETHOD CreateInstance(nsIURL* aURL,
                               const char* aContentType, 
                               const char *aCommand,
-                              nsIViewerContainer* aContainer,
-                              nsIStreamListener** aDocListener,
-                              nsIContentViewer** aDocViewer) = 0;
+                              nsIContentViewerContainer* aContainer,
+                              nsIStreamListener** aDocListenerResult,
+                              nsIContentViewer** aDocViewerResult) = 0;
 };
-
-
-
-/* b0e73260-0739-11d2-beb9-00805f8a66dc */
-#define NS_IVIEWERCONTAINER_IID   \
-{ 0xb0e73260, 0x0739, 0x11d2, \
-  {0xbe, 0xb9, 0x00, 0x80, 0x5f, 0x8a, 0x66, 0xdc} }
-
-/*
- *
- *
- */
-class nsIViewerContainer : public nsISupports
-{
-public:
-
-    NS_IMETHOD QueryCapability(const nsIID &aIID, void** aResult) = 0;
-
-    NS_IMETHOD Embed(nsIContentViewer* aDocViewer, 
-                     const char* aCommand,
-                     nsISupports* aExtraInfo) = 0;
-};
-
 
 /* b9d685e0-fcae-11d1-beb9-00805f8a66dc */
 #define NS_IDOCUMENTLOADER_IID   \
@@ -94,14 +69,11 @@ public:
 
     NS_IMETHOD LoadURL(const nsString& aURLSpec, 
                        const char* aCommand,
-                       nsIViewerContainer* aContainer,
+                       nsIContentViewerContainer* aContainer,
                        nsIPostData* aPostData = nsnull,
                        nsISupports* aExtraInfo = nsnull,
                        nsIStreamObserver* anObserver = nsnull) = 0;
 };
-
-
-
 
 /* 057b04d0-0ccf-11d2-beba-00805f8a66dc */
 #define NS_DOCUMENTLOADER_CID   \
