@@ -372,11 +372,11 @@ private:
      *  @param   aParseMode  -- Used with aMimeType to choose the correct DTD.
      *  @return  NS_OK if succeeded else ERROR.
      */
-    static nsresult nsParser::CreateCompatibleDTD(nsIDTD** aDTD, 
+    static nsresult CreateCompatibleDTD(nsIDTD** aDTD, 
                                        nsString* aDocTypeStr,
                                        eParserCommands aCommand,
                                        const nsString* aMimeType=nsnull, 
-                                       nsDTDMode aDTDMode);
+                                       nsDTDMode aDTDMode=eDTDMode_unknown);
 protected:
     //*********************************************
     // And now, some data members...
