@@ -233,7 +233,9 @@ nsInlineReflow::SetFrame(nsIFrame* aFrame)
 }
 
 nsresult
-nsInlineReflow::ReflowFrame(nsIFrame* aFrame, nsReflowStatus& aReflowStatus)
+nsInlineReflow::ReflowFrame(nsIFrame* aFrame,
+                            PRBool aIsAdjacentWithTop,
+                            nsReflowStatus& aReflowStatus)
 {
   nsSize innerMaxElementSize;
   nsHTMLReflowMetrics metrics(mComputeMaxElementSize
@@ -264,7 +266,7 @@ nsInlineReflow::ReflowFrame(nsIFrame* aFrame, nsReflowStatus& aReflowStatus)
 
   // Reflow the frame. If the frame must be placed somewhere else
   // then we return immediately.
-  if (ReflowFrame(metrics, aReflowStatus)) {
+  if (ReflowFrame(aIsAdjacentWithTop, metrics, aReflowStatus)) {
     // See if we can place the frame. If we can't fit it, then we
     // return now.
     if (CanPlaceFrame(metrics, aReflowStatus)) {
@@ -380,7 +382,8 @@ nsInlineReflow::ComputeAvailableSize()
  * Reflow the frame, choosing the appropriate reflow method.
  */
 PRBool
-nsInlineReflow::ReflowFrame(nsHTMLReflowMetrics& aMetrics,
+nsInlineReflow::ReflowFrame(PRBool aIsAdjacentWithTop,
+                            nsHTMLReflowMetrics& aMetrics,
                             nsReflowStatus& aStatus)
 {
   PerFrameData* pfd = mFrameData;
@@ -408,6 +411,9 @@ nsInlineReflow::ReflowFrame(nsHTMLReflowMetrics& aMetrics,
                                 mFrameAvailSize);
   reflowState.lineLayout = &mLineLayout;
   reflowState.reason = reason;
+  if (!aIsAdjacentWithTop) {
+    reflowState.isTopOfPage = PR_FALSE;  // make sure this is cleared
+  }
   mLineLayout.SetUnderstandsWhiteSpace(PR_FALSE);
 
   // Capture this state *before* we reflow the frame in case it clears
