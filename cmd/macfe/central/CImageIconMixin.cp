@@ -137,6 +137,39 @@ CImageIconMixin :: SetImageURL ( const string & inNewURL )
 } // SetImageURL
 
 
+//
+// GetImageDimensions
+//
+// If the image has been loaded, this returns true and the dimensions of the
+// image in |outDimensions|
+//
+bool
+CImageIconMixin :: GetImageDimensions ( SDimension16 & outDimensions )
+{
+	bool imagePresent = false;
+	
+	try { 
+		if ( gImageCache().RequestIcon(mURL, this) == CImageCache::kDataPresent ) {
+
+			DrawingState state;
+			state.copyMode = srcCopy;
+			gImageCache().FetchImageData ( mURL, &state.pixmap, &state.mask );
+			
+			outDimensions.width = state.pixmap->pixmap.bounds.right;
+			outDimensions.height = state.pixmap->pixmap.bounds.bottom;
+			
+			imagePresent = true;
+		}
+	}
+	catch ( invalid_argument & ia ) {
+		DebugStr("\pData requested for something not in cache");
+	}
+	
+	return imagePresent;
+	
+} // GetImageDimensions
+
+
 #pragma mark -
 
 

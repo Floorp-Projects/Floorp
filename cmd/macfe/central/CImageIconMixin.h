@@ -57,6 +57,10 @@ public:
 	void DrawImage ( const Point & inTopLeft, IconTransformType inTransform,
 						Uint32 inWidth, Uint32 inHeight ) const;
 	
+		// If the image has been loaded, this returns true and the dimensions of the
+		// image in |outDimensions|
+	bool GetImageDimensions ( SDimension16 & outDimensions ) ;
+	
 protected:
 
 		// catch the message that the image is ready to draw
