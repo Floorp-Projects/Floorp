@@ -271,6 +271,7 @@ nsEditorShell::Init()
   } else {
     printf("ERROR: Failed to get StringBundle Service instance.\n");
   }
+
   return NS_OK;
 }
 
@@ -500,6 +501,8 @@ nsEditorShell::RemoveTextProperty(const PRUnichar *prop, const PRUnichar *attr)
 {
   // OK, I'm really hacking now. This is just so that we can accept 'all' as input.
   // this logic should live elsewhere.
+  //TODO: FIX THIS! IT IS WRONG! IT DOESN'T CONSIDER ALL THE 
+  //  OTHER POSSIBLE TEXT ATTRIBUTES!
   static const char*  sAllKnownStyles[] = {
     "B",
     "I",
@@ -792,6 +795,10 @@ nsEditorShell::PrepareDocumentForEditing(nsIURI *aUrl)
   }
 #endif
   
+  //TODO: TEMPORARY -- THIS IS NOT THE RIGHT THING TO DO!
+  nsAutoString styleURL("chrome://editor/content/EditorContent.css");
+  ApplyStyleSheet(styleURL.GetUnicode());
+
   // Force initial focus to the content window -- HOW?
 //  mWebShellWin->SetFocus();
   return NS_OK;
@@ -1205,7 +1212,18 @@ nsEditorShell::CloseWindow()
 NS_IMETHODIMP    
 nsEditorShell::Print()
 { 
-  return NS_ERROR_NOT_IMPLEMENTED;
+  if (!mContentAreaWebShell)
+    return NS_ERROR_NOT_INITIALIZED;
+
+  nsIContentViewer *viewer = nsnull;
+
+  mContentAreaWebShell->GetContentViewer(&viewer);
+
+  if (nsnull != viewer) {
+    viewer->Print();
+    NS_RELEASE(viewer);
+  }
+  return NS_OK;
 }
 
 NS_IMETHODIMP    
