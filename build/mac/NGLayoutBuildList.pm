@@ -182,7 +182,7 @@ sub _copy($$)
 
 sub Checkout()
 {
-	unless ( $main::pull{all} || $main::pull{runtime} ) { return;}
+	unless ( $main::pull{all} || $main::pull{moz} || $main::pull{runtime} ) { return;}
 
 	# give application activation a chance to happen
 	WaitNextEvent();
@@ -197,15 +197,15 @@ sub Checkout()
 	# activate MacCVS
 	ActivateApplication('Mcvs');
 
+	my($nsprpub_tag) = "NSPRPUB_20000208";
+	
 	#//
 	#// Checkout commands
 	#//
-	if ($main::pull{all})
+	if ($main::pull{moz})
 	{
 		$session->checkout("SeaMonkeyAll")							|| die "checkout failure";
-	
-		#// Check out the MRJ OJI plugin. Needs to be added to the "SeaMonkeyAll" module.
-		$session->checkout("mozilla/plugin/oji/MRJ")				|| die "checkout failure";
+		$session->checkout("mozilla/nsprpub",	$nsprpub_tag)		|| die "checkout failure";
 	}
 	elsif ($main::pull{runtime})
 	{
@@ -216,7 +216,7 @@ sub Checkout()
 		$session->checkout("mozilla/lib/mac/NSRuntime")				|| die "checkout failure";
 		$session->checkout("mozilla/lib/mac/MoreFiles")				|| die "checkout failure";
 		$session->checkout("mozilla/lib/mac/MacMemoryAllocator")	|| die "checkout failure";
-		$session->checkout("mozilla/nsprpub")						|| die "checkout failure";	
+		$session->checkout("mozilla/nsprpub",	$nsprpub_tag)		|| die "checkout failure";	
 	}
 }
 
