@@ -41,6 +41,13 @@
 #include "windows.h"
 #include "windowsx.h"
 
+// XXXbz windowsx.h defines GetFirstChild, GetNextSibling,
+// GetPrevSibling are macros, apparently... Eeevil.  We have functions
+// called that on some classes, so undef them.
+#undef GetFirstChild
+#undef GetNextSibling
+#undef GetPrevSibling
+
 #include "nsDebug.h"
 
 #include "plevent.h"
