@@ -106,6 +106,12 @@ JNIEXPORT void JNICALL Java_org_mozilla_webclient_wrapper_1native_CurrentPageImp
   nsCOMPtr<nsIDOMWindow> domWindow;
   if (initContext->docShell != nsnull) {
       nsCOMPtr<nsIInterfaceRequestor> interfaceRequestor(do_QueryInterface(initContext->docShell));
+      nsCOMPtr<nsIURI> url;
+      rv = initContext->docShell->GetCurrentURI(getter_AddRefs(url));
+      if (NS_FAILED(rv) || nsnull == url)  {
+          ::util_ThrowExceptionToJava(env, "Exception: NULL URL passed to Find call");
+          return;
+      } 
 
       if (interfaceRequestor != nsnull) {
           rv = interfaceRequestor->GetInterface(NS_GET_IID(nsIDOMWindow), getter_AddRefs(domWindow));
@@ -199,6 +205,9 @@ JNIEXPORT void JNICALL Java_org_mozilla_webclient_wrapper_1native_CurrentPageImp
         ::util_ThrowExceptionToJava(env, "Exception: NULL SearchContext received for FindNext");
         return;
   }
+
+  // Set the forward flag as per input parameter
+  searchContext->SetSearchBackwards(!forward);
 
   // Pass searchContext to findComponent for the actual find call
   PRBool found = PR_TRUE;
