@@ -22,35 +22,26 @@
 DEPTH=..\..\..
 
 MAKE_OBJ_TYPE   = EXE
-PROGRAM = .\$(OBJDIR)\test_main.exe
+PROGRAM = .\$(OBJDIR)\StringFactoringTest.exe
 
 OBJS =  \
 	.\$(OBJDIR)\test_main.obj		\
-	.\$(OBJDIR)\nsString2.obj		\
-	.\$(OBJDIR)\nsStr.obj		\
-	.\$(OBJDIR)\nsString.obj		\
-	.\$(OBJDIR)\nsCRT.obj		\
-	.\$(OBJDIR)\nsAllocator.obj		\
-	.\$(OBJDIR)\nsDeque.obj		\
-	$(NULL)
-
-CPPSRCS =				\
-	test_main.cpp			\
-	$(DEPTH)\xpcom\nsString2.cpp \
-	$(DEPTH)\xpcom\ds\nsStr.cpp \
-	$(DEPTH)\xpcom\ds\nsString.cpp \
-	$(DEPTH)\xpcom\ds\nsCRT.cpp \
-	$(DEPTH)\xpcom\ds\nsAllocator.cpp \
-	$(DEPTH)\xpcom\ds\nsDeque.cpp \
+	.\$(DEPTH)\xpcom\ds\$(OBJDIR)\nsSharedBufferList.obj	\
 	$(NULL)
 
 LCFLAGS = \
-        -DNEW_STRING_APIS -DSTANDALONE_STRING_TESTS -DNDEBUG -GX\
+        -DNEW_STRING_APIS -DNDEBUG -GX\
         $(DEFINES) \
         $(NULL)
 
 LINCS=-I$(PUBLIC)\xpcom	\
+	-I$(DEPTH)\xpcom\ds	\
 	-I$(MOZ_TOOLS)\include	\
+	$(NULL)
+
+LLIBS = \
+	$(LIBNSPR)	\
+	$(DIST)\lib\xpcom.lib	\
 	$(NULL)
 
 include <$(DEPTH)\config\rules.mak>
@@ -59,6 +50,9 @@ export:: $(PROGRAM)
 	$(MAKE_INSTALL) $(PROGRAM) $(DIST)\bin
 
 clobber::
-	rm -f $(DIST)\bin\test_main.exe
+	rm -f $(DIST)\bin\StringFactoringTest.exe
 
 $(PROGRAM):: $(OBJS) $(MYLIBS)
+
+all-tests::
+	$(DIST)\bin\StringFactoringTest
