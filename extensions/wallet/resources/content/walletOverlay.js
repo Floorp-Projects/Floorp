@@ -17,6 +17,9 @@
  *
  * Contributor(s):
  */
+ 
+ var gIsEncrypted = -1;
+ var gWalletService = -1;
 
     // Set the disabled attribute of specified item.
     //   If the value is false, then it removes the attribute
@@ -137,8 +140,7 @@
 /*
     // Prefill the form being displayed without bringing up the preview window.
     function formQuickPrefill() {
-      var walletService = Components.classes["@mozilla.org/wallet/wallet-service;1"].getService(Components.interfaces.nsIWalletService);
-      walletService.WALLET_Prefill(true, window._content);
+      gWalletService.WALLET_Prefill(true, window._content);
     }
 */
 
@@ -156,7 +158,7 @@
     //      captureOrPrefill = capture, prefill
     //   returned value:
     //      hide, disable, enable
-    function getStateFromFormsArray(formsArray, captureOrPrefill, threshhold, walletService) {
+    function getStateFromFormsArray(formsArray, captureOrPrefill, threshhold) {
       if (!formsArray) {
         return hide;
       }
@@ -181,7 +183,9 @@
              * the password whenever user clicks on edit menu or context menu
              */
             try {
-              if (this.pref.GetBoolPref("wallet.crypto")) {
+              if (gIsEncrypted == -1)
+                gIsEncrypted = this.pref.GetBoolPref("wallet.crypto");
+              if (gIsEncrypted) {
                 // database is encrypted, see if it is still locked
 //              if (locked) { -- there's currently no way to make such a test
                   // it's encrypted and locked, we lose
@@ -191,7 +195,7 @@
             } catch(e) {
               // there is no crypto pref so database could not possible be encrypted
             }
-
+            
             if (bestState == hide) {
               bestState = disable;
             }
@@ -199,7 +203,7 @@
 
             // obtain saved values if any and store in array called valueList
             var valueList;
-            var valueSequence = walletService.WALLET_PrefillOneElement
+            var valueSequence = gWalletService.WALLET_PrefillOneElement
               (window._content, elementsArray[element]);
             // result is a linear sequence of values, each preceded by a separator character
             // convert linear sequence of values into an array of values
@@ -258,9 +262,10 @@
       }
 
       // test for wallet service being available
-      var walletService = Components.classes["@mozilla.org/wallet/wallet-service;1"]
-        .getService(Components.interfaces.nsIWalletService);
-      if (!walletService) {
+      if (gWalletService == -1)
+        gWalletService = Components.classes["@mozilla.org/wallet/wallet-service;1"]
+                                   .getService(Components.interfaces.nsIWalletService);
+      if (!gWalletService) {
         return hide;
       }
 
@@ -273,12 +278,13 @@
       var framesArray = window._content.frames;
       if (framesArray.length != 0) {
         var frame;
-        for (frame=0; frame<framesArray.length; frame++) {
+        for (frame=0; frame<framesArray.length; ++frame) {
           formsArray = framesArray[frame].document.forms;
           state =
-            getStateFromFormsArray(formsArray, captureOrPrefill, threshhold, walletService);
+            getStateFromFormsArray(formsArray, captureOrPrefill, threshhold);
           if (state == enable) {
             if (elementCount > threshhold) {
+              gIsEncrypted = -1;
               return enable;
             }
             bestState = enable;
@@ -287,11 +293,11 @@
           }
         }
       }
-
       // process top-level document
       formsArray = document.forms;
       state =
-        getStateFromFormsArray(formsArray, captureOrPrefill, threshhold, walletService);
+        getStateFromFormsArray(formsArray, captureOrPrefill, threshhold);
+      gIsEncrypted = -1;
       if (state == enable) {
         if (elementCount > threshhold) {
           return enable;
