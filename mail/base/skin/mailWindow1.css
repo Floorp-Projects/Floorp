@@ -409,10 +409,6 @@ treechildren::-moz-tree-image(subjectCol, news, replied, forwarded) {
   list-style-image: url("chrome://messenger/skin/icons/message-news-replied-forw.png");
 }
 
-treechildren::-moz-tree-image(subjectCol, news, attach, offline) {
-  list-style-image: url("chrome://messenger/skin/icons/message-news-attach-offl.gif");
-}
-
 treechildren::-moz-tree-image(subjectCol, news, new) {
   list-style-image: url("chrome://messenger/skin/icons/message-news-new.png");
 }
