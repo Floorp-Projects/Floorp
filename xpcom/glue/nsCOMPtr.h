@@ -417,7 +417,6 @@ class nsCOMPtr
     public:
       typedef T element_type;
 
-      explicit
       nsCOMPtr( nsISupports* aRawPtr = 0 )
       		: mRawPtr(0),
       			mIsAwaitingAddRef(0)
