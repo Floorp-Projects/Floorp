@@ -461,7 +461,7 @@ CSSLoaderImpl::CSSLoaderImpl(void)
   mCaseSensitive = PR_FALSE;
   mNavQuirkMode = PR_FALSE;
   mParsers = nsnull;
-  SetCharset(nsString(""));
+  SetCharset(nsAutoString());
 }
 
 static PRBool ReleaseSheet(nsHashKey* aKey, void* aData, void* aClosure)
