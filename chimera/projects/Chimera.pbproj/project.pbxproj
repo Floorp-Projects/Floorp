@@ -461,6 +461,7 @@
 				F51B70B5026EC8A601A80166,
 				F541496402714F9A01A80166,
 				F541496502714F9A01A80166,
+				F5DA444B027DD5AA01A80166,
 			);
 			isa = PBXResourcesBuildPhase;
 			name = "Bundle Resources";
@@ -2689,6 +2690,24 @@
 			settings = {
 			};
 		};
+		F5DA444A027DD5AA01A80166 = {
+			isa = PBXFileReference;
+			name = "installed-chrome.txt";
+			path = "../dist/Embed/chrome/installed-chrome.txt";
+			refType = 2;
+		};
+		F5DA444B027DD5AA01A80166 = {
+			fileRef = F5DA444A027DD5AA01A80166;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		F5DA444C027DD5AA01A80166 = {
+			fileRef = F5DA444A027DD5AA01A80166;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
 		F5DAB15002698C0D01A80166 = {
 			isa = PBXFileReference;
 			path = bookmark_on.tif;
@@ -2967,18 +2986,6 @@
 		};
 		F655020401B4812301A962F7 = {
 			fileRef = F655020201B480F201A962F7;
-			isa = PBXBuildFile;
-			settings = {
-			};
-		};
-		F6901D3F01B70DB301A962F7 = {
-			isa = PBXFileReference;
-			name = "installed-chrome.txt";
-			path = "../embedding/config/installed-chrome.txt";
-			refType = 2;
-		};
-		F6901D4001B70DB301A962F7 = {
-			fileRef = F6901D3F01B70DB301A962F7;
 			isa = PBXBuildFile;
 			settings = {
 			};
@@ -4780,7 +4787,7 @@
 				F6BD650001B3184301A962F7,
 				F54EF7ED022A2F9C01A80165,
 				F54EF7EE022A2F9C01A80165,
-				F6901D3F01B70DB301A962F7,
+				F5DA444A027DD5AA01A80166,
 			);
 			isa = PBXGroup;
 			name = "Gecko Chrome";
@@ -4876,7 +4883,7 @@
 			dstSubfolderSpec = 6;
 			files = (
 				F6BD652401B3184301A962F7,
-				F6901D4001B70DB301A962F7,
+				F5DA444C027DD5AA01A80166,
 			);
 			isa = PBXCopyFilesBuildPhase;
 			name = "Copy Files";
