@@ -131,44 +131,51 @@ static const EntityNode gEntityArray[] = {
 
 #define NS_HTML_ENTITY_COUNT ((PRInt32)NS_ARRAY_LENGTH(gEntityArray))
 
-void
+nsresult
 nsHTMLEntities::AddRefTable(void) 
 {
-  if (++gTableRefCnt != 1)
-    return;
+  if (!gTableRefCnt) {
+    if (!PL_DHashTableInit(&gEntityToUnicode, &EntityToUnicodeOps,
+                           nsnull, sizeof(EntityNodeEntry),
+                           PRUint32(NS_HTML_ENTITY_COUNT / 0.75))) {
+      gEntityToUnicode.ops = nsnull;
+      return NS_ERROR_OUT_OF_MEMORY;
+    }
+    if (!PL_DHashTableInit(&gUnicodeToEntity, &UnicodeToEntityOps,
+                           nsnull, sizeof(EntityNodeEntry),
+                           PRUint32(NS_HTML_ENTITY_COUNT / 0.75))) {
+      PL_DHashTableFinish(&gEntityToUnicode);
+      gEntityToUnicode.ops = gUnicodeToEntity.ops = nsnull;
+      return NS_ERROR_OUT_OF_MEMORY;
+    }
+    for (const EntityNode *node = gEntityArray,
+                 *node_end = gEntityArray + NS_ARRAY_LENGTH(gEntityArray);
+         node < node_end; ++node) {
 
-  PL_DHashTableInit(&gEntityToUnicode, &EntityToUnicodeOps,
-                    nsnull, sizeof(EntityNodeEntry),
-                    PRUint32(NS_HTML_ENTITY_COUNT / 0.75));
-  PL_DHashTableInit(&gUnicodeToEntity, &UnicodeToEntityOps,
-                    nsnull, sizeof(EntityNodeEntry),
-                    PRUint32(NS_HTML_ENTITY_COUNT / 0.75));
+      // add to Entity->Unicode table
+      EntityNodeEntry* entry =
+        NS_STATIC_CAST(EntityNodeEntry*,
+                       PL_DHashTableOperate(&gEntityToUnicode,
+                                            node->mStr,
+                                            PL_DHASH_ADD));
+      NS_ASSERTION(entry, "Error adding an entry");
+      // Prefer earlier entries when we have duplication.
+      if (!entry->node)
+        entry->node = node;
 
-  for (const EntityNode *node = gEntityArray,
-                    *node_end = gEntityArray + NS_ARRAY_LENGTH(gEntityArray);
-       node < node_end; ++node) {
-    EntityNodeEntry* entry;
-
-    // add to Entity->Unicode table
-    entry = NS_STATIC_CAST(EntityNodeEntry*,
-                           PL_DHashTableOperate(&gEntityToUnicode,
-                                                node->mStr,
-                                                PL_DHASH_ADD));
-    NS_ASSERTION(entry, "Error adding an entry");
-    // Prefer earlier entries when we have duplication.
-    if (!entry->node)
-      entry->node = node;
-
-    // add to Unicode->Entity table
-    entry = NS_STATIC_CAST(EntityNodeEntry*,
-                           PL_DHashTableOperate(&gUnicodeToEntity,
-                                                NS_INT32_TO_PTR(node->mUnicode),
-                                                PL_DHASH_ADD));
-    NS_ASSERTION(entry, "Error adding an entry");
-    // Prefer earlier entries when we have duplication.
-    if (!entry->node)
-      entry->node = node;
+      // add to Unicode->Entity table
+      entry = NS_STATIC_CAST(EntityNodeEntry*,
+                             PL_DHashTableOperate(&gUnicodeToEntity,
+                                                  NS_INT32_TO_PTR(node->mUnicode),
+                                                  PL_DHASH_ADD));
+      NS_ASSERTION(entry, "Error adding an entry");
+      // Prefer earlier entries when we have duplication.
+      if (!entry->node)
+        entry->node = node;
+    }
   }
+  ++gTableRefCnt;
+  return NS_OK;
 }
 
 void

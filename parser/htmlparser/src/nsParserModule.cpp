@@ -108,7 +108,11 @@ Initialize(nsIModule* aSelf)
     nsresult rv = nsHTMLTags::AddRefTable();
     NS_ENSURE_SUCCESS(rv, rv);
 
-    nsHTMLEntities::AddRefTable();
+    rv = nsHTMLEntities::AddRefTable();
+    if (NS_FAILED(rv)) {
+      nsHTMLTags::ReleaseTable();
+      return rv;
+    }
     InitializeElementTable();
     CNewlineToken::AllocNewline();
     gInitialized = PR_TRUE;
