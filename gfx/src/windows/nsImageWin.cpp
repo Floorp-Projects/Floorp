@@ -828,11 +828,16 @@ NS_IMETHODIMP nsImageWin::DrawTile(nsIRenderingContext &aContext,
   } else if ( (imageScaledWidth>MAX_BUFFER_WIDTH) || (imageScaledHeight>MAX_BUFFER_HEIGHT)) {
     if(PR_TRUE != gIsWinNT){
       // CASE 2 -- THE PLATFORM IS NOT ON NT AND CAN NOT USE A PATBLT
-      useSlow = PR_TRUE;
+      useSlow = PR_TRUE; 
     } else {
       if( (imageScaledWidth < MAX_BUFFER_WIDTH) || (imageScaledHeight < MAX_BUFFER_HEIGHT) ) {
         // CASE 3 -- THE PLATFORM IS ON NT AND WE HAVE ONE LARGE AND ONE SMALL WIDTH AND HEIGHT
-        return ( PatBltTile(aContext,aSurface,aX0,aY0,aX1,aY1) );
+        if (PatBltTile(aContext,aSurface,aX0,aY0,aX1,aY1)) {
+          return(PR_TRUE);
+        }
+        // If PatBltTile returns PR_FALSE then we must drop through to the slow tiling
+        // code because either the width or height of the tiling buffer has been exceeded
+        useSlow = PR_TRUE; 
       } else {
       // CASE 4 -- THE PLATFORM IS ON NT AND BOTH THE WIDTH AND HEIGHT ARE LARGE.  
       //        -- THIS IS AN ODD CASE.. SEEMS PATBLT WITH LARGER BRUSHES HAS A DIFFICULT TIME
