@@ -853,8 +853,8 @@ nsresult nsViewManager2::CreateBlendingBuffers(nsIRenderingContext &aRC)
 		mBlender->Init(mContext);
 	}
 
-	gBlendWidth = mTranslucentBounds.width * mPixelsToTwips;
-	gBlendHeight = mTranslucentBounds.height * mPixelsToTwips;
+	gBlendWidth = (PRInt32)(mTranslucentBounds.width * mPixelsToTwips);
+	gBlendHeight = (PRInt32)(mTranslucentBounds.height * mPixelsToTwips);
 
 	return NS_OK;
 }
@@ -946,6 +946,15 @@ NS_IMETHODIMP nsViewManager2::UpdateView(nsIView *aView, PRUint32 aUpdateFlags)
 NS_IMETHODIMP nsViewManager2::UpdateView(nsIView *aView, const nsRect &aRect, PRUint32 aUpdateFlags)
 {
 	NS_PRECONDITION(nsnull != aView, "null view");
+
+   // If the rectangle is not visible then abort
+   // without invalidating. This is a performance 
+   // enhancement since invalidating a native widget
+   // can be expensive.
+  if (! IsRectVisible(aView, aRect)) {
+    return NS_OK;
+  }
+
 	if (!mRefreshEnabled) {
 		// accumulate this rectangle in the view's dirty region, so we can process it later.
 		if (aRect.width != 0 && aRect.height != 0) {
@@ -2368,3 +2377,95 @@ void nsViewManager2::ViewToWidget(nsIView *aView, nsIView* aWidgetView, nsRect &
 	mContext->GetAppUnitsToDevUnits(t2p);
 	aRect.ScaleRoundOut(t2p);
 }
+
+nsresult nsViewManager2::GetVisibleRect(nsRect& aVisibleRect)
+{
+  nsresult rv = NS_OK;
+
+  // Get the viewport scroller
+  nsIScrollableView* scrollingView;
+  GetRootScrollableView(&scrollingView);
+
+  if (scrollingView) {     
+    // Determine the visible rect in the scrolled view's coordinate space.
+    // The size of the visible area is the clip view size
+    const nsIView*  clipView;
+    nsRect          visibleRect;
+
+    scrollingView->GetScrollPosition(aVisibleRect.x, aVisibleRect.y);
+    scrollingView->GetClipView(&clipView);
+    clipView->GetDimensions(&aVisibleRect.width, &aVisibleRect.height);
+  } else {
+    rv = NS_ERROR_FAILURE;
+  }
+
+  return rv;
+}
+
+nsresult nsViewManager2::GetAbsoluteRect(nsIView *aView, const nsRect &aRect, 
+                                         nsRect& aAbsRect)
+{
+  nsIScrollableView* scrollingView = nsnull;
+  nsIView* scrolledView = nsnull;
+  GetRootScrollableView(&scrollingView);
+  if (nsnull == scrollingView) { 
+    return NS_ERROR_FAILURE;
+  }
+
+  scrollingView->GetScrolledView(scrolledView);
+
+   // Calculate the absolute coordinates of the aRect passed in.
+   // aRects values are relative to aView
+  aAbsRect = aRect;
+  nsIView *parentView = aView;
+  while ((parentView != nsnull) && (parentView != scrolledView)) {
+    nscoord x, y;
+    parentView->GetPosition(&x, &y);
+    aAbsRect.MoveBy(x, y);
+    parentView->GetParent(parentView);
+  }
+
+  if (parentView != scrolledView) {
+    return NS_ERROR_FAILURE;
+  }
+
+  return NS_OK;
+}
+
+
+PRBool nsViewManager2::IsRectVisible(nsIView *aView, const nsRect &aRect)
+{
+   // Calculate the absolute coordinates for the visible rectangle   
+  nsRect visibleRect;
+  if (GetVisibleRect(visibleRect) == NS_ERROR_FAILURE) {
+    return PR_TRUE;
+  }
+
+   // Calculate the absolute coordinates of the aRect passed in.
+   // aRects values are relative to aView
+  nsRect absRect;
+  if ((GetAbsoluteRect(aView, aRect, absRect)) == NS_ERROR_FAILURE) {
+    return PR_TRUE;
+  }
+ 
+    // Compare the visible rect against the rect passed in.
+  PRBool overlaps = absRect.IntersectRect(absRect, visibleRect);
+
+#if 0
+  // Debugging code
+  static int toggle = 0;
+  for (int i = 0; i < toggle; i++) {
+    printf(" ");
+  }
+  if (toggle == 10) {
+    toggle = 0;
+  } else {
+   toggle++;
+  }
+  printf("***overlaps %d\n", overlaps);
+#endif
+
+  return overlaps;
+}
+
+
