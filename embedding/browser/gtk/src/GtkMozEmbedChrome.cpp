@@ -227,8 +227,7 @@ NS_IMETHODIMP GtkMozEmbedChrome::OpenStream (const char *aBaseURI, const char *a
   // combination
 
   docLoaderContractID  = NS_DOCUMENT_LOADER_FACTORY_CONTRACTID_PREFIX;
-  docLoaderContractID += "view";
-  docLoaderContractID += "/";
+  docLoaderContractID += "view;1?type=";
   docLoaderContractID += aContentType;
 
   docLoaderFactory = do_CreateInstance(docLoaderContractID, &rv);
@@ -245,7 +244,7 @@ NS_IMETHODIMP GtkMozEmbedChrome::OpenStream (const char *aBaseURI, const char *a
 					nsnull,
 					getter_AddRefs(mStreamListener),
 					getter_AddRefs(contentViewer));
-					
+
   if (NS_FAILED(rv))
     return rv;
 

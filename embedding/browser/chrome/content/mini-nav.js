@@ -23,7 +23,7 @@
 var appCore = null;
 var locationFld = null;
 var commandHandler = null;
-
+var gURLBar = null;
 
 function nsCommandHandler()
 {
@@ -38,11 +38,12 @@ nsCommandHandler.prototype =
         return this;
       }
       throw Components.results.NS_NOINTERFACE;
+      return null;
     },
 
     exec : function(command, params)
       {
-      }
+      },
     query : function(command, params, result)
       {
         result = "";
@@ -62,6 +63,7 @@ nsXULBrowserWindow.prototype =
     if(iid.equals(Components.interfaces.nsIXULBrowserWindow))
       return this;
     throw Components.results.NS_NOINTERFACE;
+    return null;
     },
   setJSStatus : function(status)
     {
@@ -78,7 +80,10 @@ nsXULBrowserWindow.prototype =
   onProgress : function (channel, current, max)
     {
     },
-  onStatusChange : function(channel, status)
+  onStateChange : function (progress, request, state, status)
+    {
+    },
+  onStatus : function(url, message)
     {
     },
   onLocationChange : function(location)
@@ -93,8 +98,9 @@ nsXULBrowserWindow.prototype =
 }
 
 
-function Startup()
+function MiniNavStartup()
 {
+  dump("*** MiniNavStartup\n");
   window.XULBrowserWindow = new nsXULBrowserWindow();
 
   // Create the browser instance component.
@@ -120,10 +126,12 @@ function Startup()
   commandHandler = commandHandlerInit.QueryInterface(Components.interfaces.nsICommandHandler);
 
   gURLBar = document.getElementById("urlbar");
+  dump("gURLBar " + gURLBar + "\n");
 }
 
-function Shutdown()
+function MiniNavShutdown()
 {
+  dump("*** MiniNavShutdown\n");
   // Close the app core.
   if ( appCore )
     appCore.close();
@@ -191,6 +199,7 @@ function SetMenuItemAttr( id, attr, val )
 
 function BrowserLoadURL()
 {
+  dump("browserloadurl: " + gURLBar.value + '\n');
   try {
     appCore.loadUrl(gURLBar.value);
   }
