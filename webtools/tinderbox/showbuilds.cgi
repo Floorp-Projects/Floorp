@@ -698,15 +698,22 @@ sub do_quickparse {
             }
         }
         close( BUILDLOG );
+        
+        if( -r "$tree/ignorebuilds.pl" ){
+            require "$tree/ignorebuilds.pl";
+        }
+        foreach my $z (keys(%$ignore_builds)) {
+            delete $build{$z};  # We're supposed to ignore this build entirely.
+        }
         my @keys = sort keys %build;
-        my $keycount = @keys;
+
         my $maxtime = 0;
         for my $buildname (@keys) {
             if ($maxtime < $times{$buildname}) {
                 $maxtime = $times{$buildname};
             }
         }
-        
+
         for my $buildname (@keys ){
             if ($times{$buildname} < $maxtime - 12*60*60) {
                 # This build is more than 12 hours old.  Ignore it.
