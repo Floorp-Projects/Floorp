@@ -247,6 +247,14 @@ function Commit()
 		{
 			endHourRange = endHourRangeNode.options[endHourRangeNode.selectedIndex].value;
 		}
+
+		if (startHourRange > endHourRange)
+		{
+			var temp = startHourRange;
+			startHourRange = endHourRange;
+			endHourRange = temp;
+		}
+
 		var duration = document.getElementById("duration").value;
 		if (duration == "")
 		{
