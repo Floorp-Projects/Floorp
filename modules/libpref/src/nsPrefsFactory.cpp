@@ -47,6 +47,7 @@ extern NS_IMETHODIMP nsPrefConstructor(nsISupports *aOuter, REFNSIID aIID, void 
 
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsPrefService, Init)
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsPrefLocalizedString, Init)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsRelativeFilePref)
  
 // The list of components we register
 static const nsModuleComponentInfo components[] = 
@@ -63,6 +64,13 @@ static const nsModuleComponentInfo components[] =
     NS_PREFLOCALIZEDSTRING_CID,
     NS_PREFLOCALIZEDSTRING_CONTRACTID, 
     nsPrefLocalizedStringConstructor
+  },
+
+  {
+    NS_RELATIVEFILEPREF_CLASSNAME, 
+    NS_RELATIVEFILEPREF_CID,
+    NS_RELATIVEFILEPREF_CONTRACTID, 
+    nsRelativeFilePrefConstructor
   },
 
   { // remove this when nsPref goes away

@@ -41,6 +41,7 @@
 #include "nsILocalFile.h"
 #include "nsIObserverService.h"
 #include "nsISupportsPrimitives.h"
+#include "nsIDirectoryService.h"
 #include "nsString.h"
 #include "nsReadableUtils.h"
 #include "nsXPIDLString.h"
@@ -334,6 +335,44 @@ NS_IMETHODIMP nsPrefBranch::GetComplexValue(const char *aPrefName, const nsIID &
     return rv;
   }
 
+  if (aType.Equals(NS_GET_IID(nsIRelativeFilePref))) {
+    nsACString::const_iterator keyBegin, strEnd;
+    utf8String.BeginReading(keyBegin);
+    utf8String.EndReading(strEnd);    
+
+    // The pref has the format: [fromKey]a/b/c
+    if (*keyBegin++ != '[')        
+        return NS_ERROR_FAILURE;
+    nsACString::const_iterator keyEnd(keyBegin);
+    if (!FindCharInReadable(']', keyEnd, strEnd))
+        return NS_ERROR_FAILURE;
+    nsCAutoString key(Substring(keyBegin, keyEnd));
+    
+    nsCOMPtr<nsILocalFile> fromFile;        
+    nsCOMPtr<nsIProperties> directoryService(do_GetService(NS_DIRECTORY_SERVICE_CONTRACTID, &rv));
+    if (NS_FAILED(rv))
+      return rv;
+    rv = directoryService->Get(key.get(), NS_GET_IID(nsILocalFile), getter_AddRefs(fromFile));
+    if (NS_FAILED(rv))
+      return rv;
+    
+    nsCOMPtr<nsILocalFile> theFile;
+    rv = NS_NewLocalFile(nsnull, PR_TRUE, getter_AddRefs(theFile));
+    if (NS_FAILED(rv))
+      return rv;
+    rv = theFile->SetRelativeDescriptor(fromFile, Substring(++keyEnd, strEnd));
+    if (NS_FAILED(rv))
+      return rv;
+    nsCOMPtr<nsIRelativeFilePref> relativePref;
+    rv = NS_NewRelativeFilePref(theFile, key, getter_AddRefs(relativePref));
+    if (NS_FAILED(rv))
+      return rv;
+
+    *_retval = relativePref;
+    NS_ADDREF(NS_STATIC_CAST(nsIRelativeFilePref*, *_retval));
+    return NS_OK;
+  }
+
   if (aType.Equals(NS_GET_IID(nsISupportsWString))) {
     nsCOMPtr<nsISupportsWString> theString(do_CreateInstance(NS_SUPPORTS_WSTRING_CONTRACTID, &rv));
 
@@ -388,6 +427,39 @@ NS_IMETHODIMP nsPrefBranch::SetComplexValue(const char *aPrefName, const nsIID &
       rv = SetCharPref(aPrefName, descriptorString);
     }
     return rv;
+  }
+
+  if (aType.Equals(NS_GET_IID(nsIRelativeFilePref))) {
+    nsCOMPtr<nsIRelativeFilePref> relFilePref = do_QueryInterface(aValue);
+    if (!relFilePref)
+      return NS_NOINTERFACE;
+    
+    nsCOMPtr<nsILocalFile> file;
+    relFilePref->GetFile(getter_AddRefs(file));
+    if (!file)
+      return NS_ERROR_FAILURE;
+    nsCAutoString relativeToKey;
+    (void) relFilePref->GetRelativeToKey(relativeToKey);
+
+    nsCOMPtr<nsILocalFile> relativeToFile;        
+    nsCOMPtr<nsIProperties> directoryService(do_GetService(NS_DIRECTORY_SERVICE_CONTRACTID, &rv));
+    if (NS_FAILED(rv))
+      return rv;
+    rv = directoryService->Get(relativeToKey.get(), NS_GET_IID(nsILocalFile), getter_AddRefs(relativeToFile));
+    if (NS_FAILED(rv))
+      return rv;
+
+    nsCAutoString relDescriptor;
+    rv = file->GetRelativeDescriptor(relativeToFile, relDescriptor);
+    if (NS_FAILED(rv))
+      return rv;
+    
+    nsCAutoString descriptorString;
+    descriptorString.Append('[');
+    descriptorString.Append(relativeToKey);
+    descriptorString.Append(']');
+    descriptorString.Append(relDescriptor);
+    return SetCharPref(aPrefName, descriptorString.get());
   }
 
   if (aType.Equals(NS_GET_IID(nsISupportsWString))) {
@@ -890,6 +962,9 @@ NS_IMETHODIMP nsPrefBranch::SecurityClearUserPref(const char *pref_name)
   return _convertRes(PREF_ClearUserPref(getPrefName(pref_name)));
 }
 
+//----------------------------------------------------------------------------
+// nsPrefLocalizedString
+//----------------------------------------------------------------------------
 
 nsPrefLocalizedString::nsPrefLocalizedString()
 : mUnicodeString(nsnull)
@@ -927,3 +1002,43 @@ nsresult nsPrefLocalizedString::Init()
   return rv;
 }
 
+//----------------------------------------------------------------------------
+// nsRelativeFilePref
+//----------------------------------------------------------------------------
+
+NS_IMPL_THREADSAFE_ISUPPORTS1(nsRelativeFilePref, nsIRelativeFilePref);
+
+nsRelativeFilePref::nsRelativeFilePref()
+{
+    NS_INIT_ISUPPORTS();
+}
+
+nsRelativeFilePref::~nsRelativeFilePref()
+{
+}
+
+NS_IMETHODIMP nsRelativeFilePref::GetFile(nsILocalFile * *aFile)
+{
+    NS_ENSURE_ARG_POINTER(aFile);
+    *aFile = mFile;
+    NS_IF_ADDREF(*aFile);
+    return *aFile ? NS_OK : NS_ERROR_NULL_POINTER;
+}
+
+NS_IMETHODIMP nsRelativeFilePref::SetFile(nsILocalFile * aFile)
+{
+    mFile = aFile;
+    return NS_OK;
+}
+
+NS_IMETHODIMP nsRelativeFilePref::GetRelativeToKey(nsACString& aRelativeToKey)
+{
+    aRelativeToKey.Assign(mRelativeToKey);
+    return NS_OK;
+}
+
+NS_IMETHODIMP nsRelativeFilePref::SetRelativeToKey(const nsACString& aRelativeToKey)
+{
+    mRelativeToKey.Assign(aRelativeToKey);
+    return NS_OK;
+}

@@ -30,6 +30,7 @@ XPIDLSRCS = \
     .\nsIPrefLocalizedString.idl	\
     .\nsIPrefService.idl \
     .\nsISecurityPref.idl \
+    .\nsIRelativeFilePref.idl \
     $(NULL)
 
 include <$(DEPTH)\config\config.mak>
