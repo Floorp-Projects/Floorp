@@ -32,7 +32,7 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  *
- * $Id: nss.h,v 1.16 2002/01/23 04:42:20 relyea%netscape.com Exp $
+ * $Id: nss.h,v 1.17 2002/02/02 19:39:45 ian.mcgreer%sun.com Exp $
  */
 
 #ifndef __nss_h_
@@ -141,6 +141,12 @@ void PK11_ConfigurePKCS11(const char *man, const char *libdes,
 	const char *tokdes, const char *ptokdes, const char *slotdes, 
 	const char *pslotdes, const char *fslotdes, const char *fpslotdes,
         int minPwd, int pwRequired);
+
+/*
+ * Dump the contents of the certificate cache and the temporary cert store.
+ * Use to detect leaked references of certs at shutdown time.
+ */
+void nss_DumpCertificateCacheInfo();
 
 SEC_END_PROTOS
 

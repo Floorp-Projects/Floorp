@@ -632,6 +632,8 @@ NSS_Get_SEC_UTF8StringTemplate;
 PK11_ImportDERPrivateKeyInfoAndReturnKey;
 PK11_ImportPrivateKeyInfoAndReturnKey;
 SECKEY_DecodeDERSubjectPublicKeyInfo;
+;+# for debugging
+nss_DumpCertificateCacheInfo;
 ;+    local:
 ;+       *;
 ;+};
