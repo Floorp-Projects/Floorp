@@ -1,4 +1,4 @@
-/* -*- Mode: IDL; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+/* -*- Mode: IDL; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*-
  *
  * The contents of this file are subject to the Netscape Public License
  * Version 1.0 (the "NPL"); you may not use this file except in
@@ -27,17 +27,37 @@ interface nsIMsgFolderCache;
 [scriptable, uuid(6ed2cc00-e623-11d2-b7fc-00805f05ffa5)]
 interface nsIMsgAccountManager : nsISupports {
 
-  /* createAccount creates a new account and assigns a new accountKey */
-  nsIMsgAccount CreateAccount(in nsIMsgIncomingServer server,
-                              in nsIMsgIdentity identity);
+  nsIMsgAccount createAccount();
+  nsIMsgAccount getAccount(in string key);
+    
+  /* void AddAccount(in nsIMsgAccount account); */
+  void RemoveAccount(in nsIMsgAccount account);
 
-  /* similar to createAccount, but we already know the account key */
-  nsIMsgAccount CreateAccountWithKey(in nsIMsgIncomingServer server,
-                                     in nsIMsgIdentity identity,
-                                     in string accountKey);
+  /*
+   * creates a new identity and assigns it a new, unique "key"
+   */
+  nsIMsgIdentity createIdentity();
 
-  void AddAccount(in nsIMsgAccount account);
+  /*
+   * creates a new server and assigns it a new, unique "key"
+   * the given type will be used to construct a ProgID
+   */
+  nsIMsgIncomingServer createIncomingServer(in string type);
+  
+  /*
+   * get the identity with the given key
+   * if the identity does not exist, it will be created
+   */
+  nsIMsgIdentity getIdentity(in string key);
 
+  /*
+   * Gets the existing incoming server with the given key
+   * if the server's type does not exist in the preference,
+   * an error is returned/thrown
+   */
+  nsIMsgIncomingServer getIncomingServer(in string key);
+
+  
   /* account list stuff */
 
   /* defaultAccount should always be set if there are any accounts
@@ -63,10 +83,6 @@ interface nsIMsgAccountManager : nsISupports {
    * array of nsIMsgIncomingServer
    */
   readonly attribute nsISupportsArray allServers;
-
-  /* given the preferences key for an identity, find the identity in the
-   * account manager */
-  nsIMsgIdentity GetIdentityByKey(in string key);
 
   /*
    * search for the server with the given username, hostname, and type
