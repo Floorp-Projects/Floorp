@@ -4204,6 +4204,11 @@ NPL_LoadPluginByType(const char* typeAttribute)
             return NULL;
         }
         loaded = PR_TRUE;
+
+        // Give the handle a ref so we know not to load it again.
+        // XXX How do we ever _unload_ it once this routine
+        // has been called???
+        handle->refs = 1;
 #ifdef JAVA
         /*
         ** Don't use npn_getJavaEnv here. We don't want to start the
