@@ -244,8 +244,10 @@ NET_StreamBuilder  (FO_Present_Types format_out,
 	          }
       }
 
+#ifdef DEBUG_pnunn
     TRACEMSG(("Alert! did not find a converter or decoder\n"));
     FE_Alert(context, XP_GetString(XP_ALERT_CANTFIND_CONVERTER));
+#endif
 
     return(0);  /* Uh-oh. didn't find a converter.  VERY VERY BAD! */
 }
