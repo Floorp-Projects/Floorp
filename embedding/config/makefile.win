@@ -42,6 +42,8 @@ embed_chrome: embed-jar.mn
 	unzip -d $(DIST)\Embed\tmpchrome\en-unix $(DIST)\bin\chrome\en-unix.jar
 	nsinstall -D $(DIST)\Embed\tmpchrome\en-win
 	unzip -d $(DIST)\Embed\tmpchrome\en-win $(DIST)\bin\chrome\en-win.jar
+	nsinstall -D $(DIST)\Embed\tmpchrome\messenger
+	unzip -d $(DIST)\Embed\tmpchrome\messenger $(DIST)\bin\chrome\messenger.jar
 	nsinstall -D $(DIST)\Embed\tmpchrome\modern
 	unzip -d $(DIST)\Embed\tmpchrome\modern $(DIST)\bin\chrome\modern.jar
 	nsinstall -D $(DIST)\Embed\tmpchrome\toolkit
