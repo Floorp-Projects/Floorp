@@ -318,43 +318,43 @@
       </xul:box>
     </content>
     <interface>
-      <property name="value"      onset="this.anonymousContent[0].firstChild.value = val; return val;"
-                                  onget="return this.anonymousContent[0].firstChild.value;"/>
-      <property name="type"       onset="this.anonymousContent[0].firstChild.type = val; return val;"
-                                  onget="return this.anonymousContent[0].firstChild.type;"/>
-      <property name="maxlength"  onset="this.anonymousContent[0].firstChild.maxlength = val; return val;"
-                                  onget="return this.anonymousContent[0].firstChild.maxlength;"/>
-      <property name="disabled"   onset="this.anonymousContent[0].firstChild.disabled = val; return val;"
-                                  onget="return this.anonymousContent[0].firstChild.disabled;"/>
-      <property name="size"       onset="this.anonymousContent[0].firstChild.size = val; return val;"
-                                  onget="return this.anonymousContent[0].firstChild.size;"/>
-      <property name="readonly"   onset="this.anonymousContent[0].firstChild.readonly = val; return val;"
-                                  onget="return this.anonymousContent[0].firstChild.readonly;"/>
+      <property name="value"      onset="document.getAnonymousNodes(this)[0].firstChild.value = val; return val;"
+                                  onget="return document.getAnonymousNodes(this)[0].firstChild.value;"/>
+      <property name="type"       onset="document.getAnonymousNodes(this)[0].firstChild.type = val; return val;"
+                                  onget="return document.getAnonymousNodes(this)[0].firstChild.type;"/>
+      <property name="maxlength"  onset="document.getAnonymousNodes(this)[0].firstChild.maxlength = val; return val;"
+                                  onget="return document.getAnonymousNodes(this)[0].firstChild.maxlength;"/>
+      <property name="disabled"   onset="document.getAnonymousNodes(this)[0].firstChild.disabled = val; return val;"
+                                  onget="return document.getAnonymousNodes(this)[0].firstChild.disabled;"/>
+      <property name="size"       onset="document.getAnonymousNodes(this)[0].firstChild.size = val; return val;"
+                                  onget="return document.getAnonymousNodes(this)[0].firstChild.size;"/>
+      <property name="readonly"   onset="document.getAnonymousNodes(this)[0].firstChild.readonly = val; return val;"
+                                  onget="return document.getAnonymousNodes(this)[0].firstChild.readonly;"/>
 
       <method name="select">
         <body>
-          this.anonymousContent[0].firstChild.select();
+          document.getAnonymousNodes(this)[0].firstChild.select();
         </body>
       </method>
 
-      <property name="controllers"    onget="return this.anonymousContent[0].firstChild.controllers;"/>
-      <property name="textLength"     onget="return this.anonymousContent[0].firstChild.textLength;"/>
-      <property name="selectionStart" onset="this.anonymousContent[0].firstChild.selectionStart = val; return val;"
-                                      onget="return this.anonymousContent[0].firstChild.selectionStart;"/>
-      <property name="selectionEnd"   onset="this.anonymousContent[0].firstChild.selectionEnd = val; return val;"
-                                      onget="return this.anonymousContent[0].firstChild.selectionEnd;"/>
+      <property name="controllers"    onget="return document.getAnonymousNodes(this)[0].firstChild.controllers;"/>
+      <property name="textLength"     onget="return document.getAnonymousNodes(this)[0].firstChild.textLength;"/>
+      <property name="selectionStart" onset="document.getAnonymousNodes(this)[0].firstChild.selectionStart = val; return val;"
+                                      onget="return document.getAnonymousNodes(this)[0].firstChild.selectionStart;"/>
+      <property name="selectionEnd"   onset="document.getAnonymousNodes(this)[0].firstChild.selectionEnd = val; return val;"
+                                      onget="return document.getAnonymousNodes(this)[0].firstChild.selectionEnd;"/>
 
       <method name="setSelectionRange">
         <argument name="aSelectionStart"/>
         <argument name="aSelectionEnd"/>
         <body>
-          this.anonymousContent[0].firstChild.setSelectionRange( aSelectionStart, aSelectionEnd );
+          document.getAnonymousNodes(this)[0].firstChild.setSelectionRange( aSelectionStart, aSelectionEnd );
         </body>
       </method>
     </interface>
     <handlers>
-      <handler type="focus" value="this.setAttribute('focused','true'); this.anonymousContent[0].firstChild.focus(); "/>
-      <handler type="blur" value="this.removeAttribute('focused'); this.anonymousContent[0].firstChild.blur();"/>
+      <handler type="focus" value="this.setAttribute('focused','true'); document.getAnonymousNodes(this)[0].firstChild.focus(); "/>
+      <handler type="blur" value="this.removeAttribute('focused'); document.getAnonymousNodes(this)[0].firstChild.blur();"/>
     </handlers>    
   </binding>
 
@@ -407,13 +407,13 @@
         <argument name="toolbar"/>
         <body>
           var v = this.removeChild(toolbar);
-          this.anonymousContent[1].appendChild(v);
+          document.getAnonymousNodes(this)[1].appendChild(v);
         </body>
       </method>
       <method name="expandToolbar">
         <argument name="toolbar"/>
         <body>
-          var v = this.anonymousContent[1].removeChild(toolbar);
+          var v = document.getAnonymousNodes(this)[1].removeChild(toolbar);
           this.appendChild(v);
         </body>
       </method>
