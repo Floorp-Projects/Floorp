@@ -65,7 +65,7 @@
 
   <statusbarpanel id="component-bar">
     <toolbarbutton class="taskbutton" id="mini-comp" command="Tasks:Editor" 
-                   tooltiptext="&taskComposer.tooltip;"/>
+                   tooltiptext="&taskComposer.tooltip;" insertafter="mini-nav"/>
   </statusbarpanel>
   
   <menupopup id="windowPopup">
