@@ -858,7 +858,7 @@ nsSelectControlFrame::PaintSelectControl(nsIPresContext& aPresContext,
 
       nsRect srect(mRect.width-scrollbarWidth-onePixel, onePixel, scrollbarWidth, mRect.height-(onePixel*2));
       nsFormControlHelper::PaintArrow(nsFormControlHelper::eArrowDirection_Down, aRenderingContext,aPresContext, 
-                      aDirtyRect, srect, onePixel, *arrowColor, *arrowSpacing, this, mRect);
+                      aDirtyRect, srect, onePixel, arrowStyle, *arrowSpacing, this, mRect);
     } else {
       nsRect srect(mRect.width-scrollbarWidth-onePixel, onePixel, scrollbarWidth, mRect.height-(onePixel*2));
 
