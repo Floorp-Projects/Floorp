@@ -100,7 +100,10 @@ const char* nsGetTypeName(void* ptr)
 
 #endif
 
-#if defined(linux)
+// New, more "portable" Linux code is below, but this might be a useful
+// model for other platforms, so keeping.
+//#if defined(linux)
+#if 0
 
 #include <signal.h>
 #include <setjmp.h>
@@ -237,6 +240,45 @@ const char* nsGetTypeName(void* ptr)
         }
     }
     return "void*";
+}
+
+#endif
+
+#if defined(linux)
+
+#define __USE_GNU
+#include <dlfcn.h>
+#include <ctype.h>
+#include <string.h>
+
+const char* nsGetTypeName(void* ptr)
+{
+#if defined(__GXX_ABI_VERSION) && __GXX_ABI_VERSION >= 100 /* G++ V3 ABI */
+    const int expected_offset = 8;
+    const char vtable_sym_start[] = "_ZTV";
+    const int vtable_sym_start_length = sizeof(vtable_sym_start) - 1;
+#else
+    const int expected_offset = 0;
+    const char vtable_sym_start[] = "__vt_";
+    const int vtable_sym_start_length = sizeof(vtable_sym_start) - 1;
+#endif
+    // sanity check the vtable pointer, before trying to use RTTI on the object.
+    void* vt = *(void**)ptr;
+    Dl_info info;
+    // If dladdr fails, if we're not at the expected offset in the vtable,
+    // or if the symbol name isn't a vtable symbol name, return "void*".
+    if ( !dladdr(vt, &info) ||
+         ((char*)info.dli_saddr) + expected_offset != vt ||
+         !info.dli_sname ||
+         strncmp(info.dli_sname, vtable_sym_start, vtable_sym_start_length))
+        return "void*";
+
+    // skip the garbage at the beginning of things like
+    // __vt_14nsRootBoxFrame (gcc 2.96) or _ZTV14nsRootBoxFrame (gcc 3.0)
+    const char* rv = info.dli_sname + vtable_sym_start_length;
+    while (*rv && isdigit(*rv))
+        ++rv;
+    return rv;
 }
 
 #endif
