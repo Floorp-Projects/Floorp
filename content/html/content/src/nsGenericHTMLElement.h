@@ -954,6 +954,10 @@ public:
                            nsIAtom* aPrefix, const nsAString& aValue,
                            PRBool aNotify);
 
+  // nsIDOMNSHTMLElement 
+  NS_IMETHOD GetTabIndex(PRInt32 *aTabIndex);
+  NS_IMETHOD SetTabIndex(PRInt32 aTabIndex);
+
 protected:
   // This doesn't really ensure a frame loade in all cases, only when
   // it makes sense.
