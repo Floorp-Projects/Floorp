@@ -1900,7 +1900,7 @@ nsFrameManager::GetFrameProperty(const nsIFrame* aFrame,
                                  nsresult*       aResult)
 {
   NS_PRECONDITION(aPropertyName && aFrame, "unexpected null param");
-  nsresult rv = NS_ERROR_FAILURE;
+  nsresult rv = NS_IFRAME_MGR_PROP_NOT_THERE;
   void *propValue = nsnull;
 
   PropertyList* propertyList = GetPropertyListFor(aPropertyName);
