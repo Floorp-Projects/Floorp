@@ -96,7 +96,7 @@ static int posix_locale_category[LocaleListLength] =
 
 #ifdef XP_MACOSX
 #if !defined(__COREFOUNDATION_CFLOCALE__)
-typedef void* CFLocaleRef
+typedef void* CFLocaleRef;
 #endif
 typedef CFLocaleRef (*fpCFLocaleCopyCurrent_type) (void);
 typedef CFStringRef (*fpCFLocaleGetIdentifier_type) (CFLocaleRef);
