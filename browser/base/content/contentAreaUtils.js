@@ -342,7 +342,7 @@ function getTargetFile(aData, aSniffer, aContentType, aIsDocument, aSkipPrompt, 
       function getDesktopKey()
       {      
 #ifdef XP_WIN
-        return "DeskV";
+        return "DeskP";
 #endif
 #ifdef XP_MACOSX
         return "UsrDsk";
