@@ -229,7 +229,7 @@ NS_IMETHODIMP nsHTMLEditor::InsertBreak()
 // of an error in Gecko which is not rendering the
 // document after a change via the DOM - gpk 2/13/99
   // BEGIN HACK!!!
-  HACKForceRedraw();
+  // HACKForceRedraw();
   // END HACK
 
   return result;
@@ -258,7 +258,7 @@ NS_IMETHODIMP nsHTMLEditor::SetParagraphFormat(const nsString& aParagraphFormat)
 // of an error in Gecko which is not rendering the
 // document after a change via the DOM - gpk 2/13/99
   // BEGIN HACK!!!
-  HACKForceRedraw();
+  // HACKForceRedraw();
   // END HACK
 
   return result;
@@ -1846,7 +1846,7 @@ nsHTMLEditor::InsertElement(nsIDOMElement* aElement, PRBool aDeleteSelection, ns
 // of an error in Gecko which is not rendering the
 // document after a change via the DOM - gpk 2/13/99
   // BEGIN HACK!!!
-  HACKForceRedraw();
+  // HACKForceRedraw();
   // END HACK
 
   return result;
