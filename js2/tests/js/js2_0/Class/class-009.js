@@ -43,45 +43,70 @@ var expectedvalues = [];
  */
 class A
 {
-  function m(){}
+  function m()
+  {
+  }
 }
 
 class AA extends A
 {
-  var M = m;
+  var M:Function = m;
 }
 
 
 class B
 {
-  function m(){}
+  function m()
+  {
+  }
 }
 
 class BB extends B
 {
-  var M = this.m;
+  var M:Function;
+
+  constructor function BB()
+  {
+    M = this.m;
+  }
 }
 
 
 class C
 {
-  function m(){return 'Output defined in class C method "m"';}
+  function m()
+  {
+    return 'Output defined in class C method "m"';
+  }
 }
 
 class CC extends C
 {
-  var M = m;
+  var M:Function;
+
+  constructor function CC()
+  {
+    M = this.m;
+  }
 }
 
 
 class D
 {
-  function m(){return 'Output defined in class D method "m"';}
+  function m()
+  {
+    return 'Output defined in class D method "m"';
+  }
 }
 
 class DD extends D
 {
-  var M = this.m;
+  var M:Function;
+
+  constructor function DD()
+  {
+    M = this.m;
+  }
 }
 
 
