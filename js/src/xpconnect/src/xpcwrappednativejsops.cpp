@@ -594,6 +594,14 @@ XPC_WN_Shared_Enumerate(JSContext *cx, JSObject *obj)
     for(PRUint16 i = 0; i < interface_count; i++)
     {
         XPCNativeInterface* interface = interfaceArray[i];
+#ifdef XPC_IDISPATCH_SUPPORT
+        if (nsXPConnect::GetXPConnect()->IsIDispatchEnabled() && 
+            interface->GetIID()->Equals(NSID_IDISPATCH))
+        {
+            XPCIDispatchExtension::Enumerate(ccx, obj, wrapper);
+            continue;
+        }
+#endif
         PRUint16 member_count = interface->GetMemberCount();
         for(PRUint16 k = 0; k < member_count; k++)
         {
@@ -609,12 +617,6 @@ XPC_WN_Shared_Enumerate(JSContext *cx, JSObject *obj)
                 return JS_FALSE;
         }
     }
-#ifdef XPC_IDISPATCH_SUPPORT
-    if(nsXPConnect::GetXPConnect()->IsIDispatchEnabled())
-    {
-        return XPCIDispatchExtension::Enumerate(ccx, obj, wrapper);
-    }
-#endif
     return JS_TRUE;
 }
 
