@@ -114,7 +114,7 @@
 #endif
 
 #include "nsITimelineService.h"
-#ifdef MOZ_PHOENIX
+#ifdef MOZ_XUL_APP
 #include "nsXULAppAPI.h"
 #include "nsXREDirProvider.h"
 #endif
@@ -1019,7 +1019,7 @@ static nsresult VerifyInstallation(int argc, char **argv)
 // Note: nativeApp is an owning reference that this function has responsibility
 //       to release.  This responsibility is delegated to the app shell service
 //       (see nsAppShellService::Initialize call, below).
-#ifdef MOZ_PHOENIX
+#ifdef MOZ_XUL_APP
 static nsresult main1(int argc, char* argv[], nsISupports *nativeApp,
                       const nsXREAppData& aAppData)
 #else
@@ -1201,7 +1201,7 @@ static nsresult main1(int argc, char* argv[], nsISupports *nativeApp)
 
   PRBool windowOpened = PR_FALSE;
   PRBool defaultStartup;
-#ifdef MOZ_PHOENIX
+#ifdef MOZ_XUL_APP
   defaultStartup = aAppData.GetUseStartupPrefs();
 #else
 #if defined(XP_MAC) || defined(XP_MACOSX)
@@ -1226,7 +1226,7 @@ static nsresult main1(int argc, char* argv[], nsISupports *nativeApp)
 #else
   defaultStartup = (argc == 1);
 #endif
-#endif /* MOZ_PHOENIX */
+#endif /* MOZ_XUL_APP */
   rv = DoCommandLines(cmdLineArgs, defaultStartup, &windowOpened);
   if (NS_FAILED(rv))
   {
@@ -1509,7 +1509,7 @@ static PRBool GetWantSplashScreen(int argc, char* argv[], PRBool aDefault)
   return dosplash;
 }
 
-#ifdef MOZ_PHOENIX
+#ifdef MOZ_XUL_APP
 int xre_main(int argc, char* argv[], const nsXREAppData& aAppData)
 #else
 int main(int argc, char* argv[])
@@ -1586,7 +1586,7 @@ int main(int argc, char* argv[])
   nsresult rv = GRE_Startup();
 #else
   nsresult rv;
-#ifdef MOZ_PHOENIX
+#ifdef MOZ_XUL_APP
   {
     nsCOMPtr<nsIDirectoryServiceProvider> provider;
     provider = new nsXREDirProvider(aAppData.GetProductName());
@@ -1594,7 +1594,7 @@ int main(int argc, char* argv[])
   }
 #else
   rv = NS_InitXPCOM2(nsnull, nsnull, nsnull);
-#endif /* MOZ_PHOENIX */
+#endif /* MOZ_XUL_APP */
 #endif /* XPCOM_GLUE */
   NS_TIMELINE_MARK("...GRE_Startup done");
 
@@ -1628,7 +1628,7 @@ int main(int argc, char* argv[])
   //       has responsibility to release it.
   nsISplashScreen *splash = 0;
   PRBool defaultSplash;
-#ifdef MOZ_PHOENIX
+#ifdef MOZ_XUL_APP
   defaultSplash = aAppData.GetSplashEnabled();
 #else
 #ifdef XP_UNIX && !defined(MOZ_WIDGET_PHOTON)
@@ -1636,7 +1636,7 @@ int main(int argc, char* argv[])
 #else
   defaultSplash = PR_TRUE;
 #endif /* XP_UNIX && !defined(MOZ_WIDGET_PHOTON) */
-#endif /* MOZ_PHOENIX */
+#endif /* MOZ_XUL_APP */
 
   PRBool dosplash = GetWantSplashScreen(argc, argv, defaultSplash);
 
@@ -1671,7 +1671,7 @@ int main(int argc, char* argv[])
   }
 #endif
 
-#ifdef MOZ_PHOENIX
+#ifdef MOZ_XUL_APP
   // Check for -register, which registers chrome and then exits immediately.
   for (int i = 0; i < argc; ++i) {
     if (!strcmp(argv[i], "-register")) {
@@ -1709,7 +1709,7 @@ int main(int argc, char* argv[])
   return TranslateReturnValue(mainResult);
 }
 
-#if defined( XP_PC ) && defined( WIN32 ) && !defined(MOZ_PHOENIX)
+#if defined( XP_PC ) && defined( WIN32 ) && !defined(MOZ_XUL_APP)
 // We need WinMain in order to not be a console app.  This function is
 // unused if we are a console application.
 int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR args, int)
