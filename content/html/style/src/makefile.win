@@ -1,0 +1,113 @@
+#!nmake
+#
+# The contents of this file are subject to the Netscape Public
+# License Version 1.1 (the "License"); you may not use this file
+# except in compliance with the License. You may obtain a copy of
+# the License at http://www.mozilla.org/NPL/
+#
+# Software distributed under the License is distributed on an "AS
+# IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+# implied. See the License for the specific language governing
+# rights and limitations under the License.
+#
+# The Original Code is mozilla.org code.
+#
+# The Initial Developer of the Original Code is Netscape
+# Communications Corporation.  Portions created by Netscape are
+# Copyright (C) 1998 Netscape Communications Corporation. All
+# Rights Reserved.
+#
+# Contributor(s): 
+
+DEPTH=..\..\..\.. 
+
+LIBRARY_NAME=contenthtmlstyle_s 
+MODULE=raptor 
+
+DEFINES=-D_IMPL_NS_HTML -DWIN32_LEAN_AND_MEAN
+
+EXPORTS =			\
+	nsCSSKeywords.h 		\
+	nsCSSKeywordList.h 		\
+	nsCSSProps.h 		\
+	nsCSSPropList.h 		\
+	nsCSSValue.h 		\
+	nsICSSStyleRuleProcessor.h 		\
+	nsICSSRule.h 	\
+	nsICSSGroupRule.h 	\
+	nsICSSStyleRule.h 	\
+	nsICSSCharsetRule.h \
+	nsICSSImportRule.h \
+	nsICSSMediaRule.h \
+	nsICSSNameSpaceRule.h \
+	nsICSSDeclaration.h 	\
+	nsIHTMLCSSStyleSheet.h 	\
+	nsHTMLValue.h 		\
+	nsDOMCSSDeclaration.h 	\
+	nsIHTMLAttributes.h 	\
+	$(NULL)
+
+CPPSRCS=				\
+	nsHTMLStyleSheet.cpp 	\
+	nsCSSAtoms.cpp 		\
+	nsCSSKeywords.cpp 		\
+	nsCSSDeclaration.cpp 		\
+	nsCSSLoader.cpp   \
+	nsCSSParser.cpp 		\
+	nsCSSProps.cpp			\
+	nsCSSScanner.cpp 		\
+	nsCSSRule.cpp 		\
+	nsCSSStyleRule.cpp 		\
+	nsCSSRules.cpp 		\
+	nsCSSStyleSheet.cpp 		\
+	nsCSSValue.cpp			\
+	nsHTMLAttributes.cpp 		\
+	nsHTMLCSSStyleSheet.cpp		\
+	nsHTMLValue.cpp 		\
+	nsStyleUtil.cpp 		\
+	nsDOMCSSDeclaration.cpp		\
+	nsComputedDOMStyle.cpp		\
+	nsROCSSPrimitiveValue.cpp	\
+	$(NULL)
+
+CPP_OBJS =					\
+	.\$(OBJDIR)\nsHTMLStyleSheet.obj 		\
+	.\$(OBJDIR)\nsCSSAtoms.obj 		\
+	.\$(OBJDIR)\nsCSSKeywords.obj 		\
+	.\$(OBJDIR)\nsCSSDeclaration.obj 	\
+	.\$(OBJDIR)\nsCSSLoader.obj  \
+	.\$(OBJDIR)\nsCSSParser.obj 		\
+	.\$(OBJDIR)\nsCSSProps.obj 		\
+	.\$(OBJDIR)\nsCSSScanner.obj 		\
+	.\$(OBJDIR)\nsCSSRule.obj 		\
+	.\$(OBJDIR)\nsCSSStyleRule.obj 		\
+	.\$(OBJDIR)\nsCSSRules.obj 		\
+	.\$(OBJDIR)\nsCSSStyleSheet.obj 	\
+	.\$(OBJDIR)\nsCSSValue.obj 		\
+	.\$(OBJDIR)\nsHTMLAttributes.obj 	\
+	.\$(OBJDIR)\nsHTMLCSSStyleSheet.obj 	\
+	.\$(OBJDIR)\nsHTMLValue.obj 		\
+	.\$(OBJDIR)\nsStyleUtil.obj 		\
+	.\$(OBJDIR)\nsDOMCSSDeclaration.obj 	\
+	.\$(OBJDIR)\nsComputedDOMStyle.obj 	\
+	.\$(OBJDIR)\nsROCSSPrimitiveValue.obj 	\
+	$(NULL)
+
+LINCS=  -I..\..\..\base\src \
+	-I..\..\..\xul\content\src \
+	-I..\..\..\xul\base\src \
+	-I..\..\base\src -I..\..\content\src
+
+LCFLAGS = \
+        -DENDER_LITE \
+        $(LCFLAGS) \
+        $(DEFINES) \
+        $(NULL)
+
+include <$(DEPTH)\config\rules.mak>
+
+install:: $(LIBRARY)
+	$(MAKE_INSTALL) $(LIBRARY) $(DIST)\lib
+
+clobber::
+	rm -f $(DIST)\lib\$(LIBRARY_NAME).lib

@@ -1,0 +1,110 @@
+#
+# The contents of this file are subject to the Netscape Public
+# License Version 1.1 (the "License"); you may not use this file
+# except in compliance with the License. You may obtain a copy of
+# the License at http://www.mozilla.org/NPL/
+#
+# Software distributed under the License is distributed on an "AS
+# IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+# implied. See the License for the specific language governing
+# rights and limitations under the License.
+#
+# The Original Code is mozilla.org code.
+#
+# The Initial Developer of the Original Code is Netscape
+# Communications Corporation.  Portions created by Netscape are
+# Copyright (C) 1998 Netscape Communications Corporation. All
+# Rights Reserved.
+#
+# Contributor(s): 
+#
+
+DEPTH		= ../../../..
+topsrcdir	= @top_srcdir@
+srcdir		= @srcdir@
+VPATH		= @srcdir@
+
+include $(DEPTH)/config/autoconf.mk
+
+MODULE		= layout
+LIBRARY_NAME	= gkconhtmlstyle_s
+REQUIRES	= xpcom dom widget timer caps editor locale js view necko webshell pref rdf htmlparser txmgr docshell uriloader unicharutil uconv
+
+CPPSRCS		= \
+		nsCSSAtoms.cpp \
+		nsCSSKeywords.cpp \
+		nsCSSDeclaration.cpp \
+		nsCSSLoader.cpp \
+		nsCSSParser.cpp \
+		nsCSSProps.cpp \
+		nsCSSScanner.cpp \
+		nsCSSRule.cpp \
+		nsCSSStyleRule.cpp \
+		nsCSSRules.cpp \
+		nsCSSStyleSheet.cpp \
+		nsCSSValue.cpp \
+		nsDOMCSSDeclaration.cpp \
+		nsHTMLAttributes.cpp \
+		nsHTMLStyleSheet.cpp \
+		nsHTMLCSSStyleSheet.cpp \
+		nsHTMLValue.cpp \
+		nsStyleUtil.cpp \
+		nsComputedDOMStyle.cpp \
+		nsROCSSPrimitiveValue.cpp \
+		$(NULL)
+
+EXPORTS		= \
+		nsDOMCSSDeclaration.h \
+		nsCSSKeywords.h \
+		nsCSSKeywordList.h \
+		nsCSSProps.h \
+		nsCSSPropList.h \
+		nsCSSValue.h \
+		nsICSSStyleRuleProcessor.h \
+		nsICSSRule.h \
+		nsICSSGroupRule.h \
+		nsICSSStyleRule.h \
+		nsICSSCharsetRule.h \
+		nsICSSImportRule.h \
+		nsICSSMediaRule.h \
+		nsICSSNameSpaceRule.h \
+		nsICSSDeclaration.h \
+		nsHTMLValue.h \
+		nsIHTMLCSSStyleSheet.h \
+		nsIHTMLAttributes.h \
+		$(NULL)
+
+EXPORTS		:= $(addprefix $(srcdir)/, $(EXPORTS))
+
+# we don't want the shared lib, but we want to force the creation of a static lib.
+override NO_SHARED_LIB=1
+override NO_STATIC_LIB=
+
+include $(topsrcdir)/config/rules.mk
+
+DEFINES		+= -D_IMPL_NS_HTML
+
+ifdef MOZ_ENDER_LITE
+DEFINES		+= -DENDER_LITE
+endif
+
+INCLUDES	+= \
+		-I$(srcdir)/../../base/src \
+		-I$(srcdir)/../../../base/src \
+		-I$(srcdir)/../../content/src \
+		-I$(srcdir)/../../../xul/content/src \
+		-I$(srcdir)/. \
+		-I$(srcdir)/../../../xul/base/src \
+		$(NULL)
+
+ifdef MOZ_MATHML
+INCLUDES += \
+        -I$(srcdir)/../../../mathml/content/src \
+        -I$(srcdir)/../../../mathml/base/src
+endif
+
+ifdef MOZ_SVG
+INCLUDES += \
+        -I$(srcdir)/../../../svg/content/src \
+        -I$(srcdir)/../../../svg/base/src
+endif
