@@ -172,6 +172,10 @@ function DropOnFolderTree(event)
 	var treeItem = event.target.parentNode.parentNode;
 	if (!treeItem)	return(false);
 
+	if (event.ctrlKey)
+		ctrlKeydown = true;
+	else
+		ctrlKeydown = false;
 	// drop action is always "on" not "before" or "after"
 	// get drop hint attributes
 	var dropBefore = treeItem.getAttribute("dd-droplocation");
@@ -274,21 +278,23 @@ function DropOnFolderTree(event)
 			else
 				gNextMessageAfterDelete = null;
 
-			if (ctrlKeydown)
-				messenger.CopyMessages(treeDatabase,
+			messenger.CopyMessages(treeDatabase,
 									   sourceRescource,
-									   targetNode, messageList, false);
-			else
-				messenger.CopyMessages(treeDatabase,
-									   sourceRescource,
-									   targetNode, messageList, true);
+									   targetNode, messageList, !ctrlKeydown);
         }
 	}
 	else
 	{
- 		messenger.CopyMessages(treeDatabase,
-                           sourceRescource,
-                           targetNode, messageList, false);
+
+		messageTree = GetThreadTree();
+		var nextMessage = GetNextMessageAfterDelete(messageTree.selectedItems);
+		if(nextMessage)
+			gNextMessageAfterDelete = nextMessage.getAttribute('id');
+		else
+			gNextMessageAfterDelete = null;
+		messenger.CopyMessages(treeDatabase,
+							   sourceRescource,
+							   targetNode, messageList, !ctrlKeydown);
 	}
 
 	return(false);
