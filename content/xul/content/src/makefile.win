@@ -27,7 +27,6 @@ MODULE=raptor
 DEFINES=-D_IMPL_NS_HTML -DWIN32_LEAN_AND_MEAN
 
 CPPSRCS=					\
-        nsAnonymousElement.cpp                  \
         nsRDFDOMNodeList.cpp                    \
         nsXULAttributeValue.cpp                 \
         nsXULAttributes.cpp                     \
@@ -37,7 +36,6 @@ CPPSRCS=					\
 	$(NULL)
 
 CPP_OBJS=					        \
-        .\$(OBJDIR)\nsAnonymousElement.obj              \
         .\$(OBJDIR)\nsRDFDOMNodeList.obj                \
         .\$(OBJDIR)\nsXULAttributeValue.obj             \
         .\$(OBJDIR)\nsXULAttributes.obj                 \
