@@ -736,7 +736,7 @@ EOF
 	echo ${UNAME_MACHINE}-pc-mingw32
 	exit 0 ;;
 # Netscape's hacked uname
-    xx:WINNT:*)
+    xx:WINNT:* | xx:WIN95:*)
 	echo i586-pc-msvc
 	exit 0 ;;
     i*:PW*:*)
