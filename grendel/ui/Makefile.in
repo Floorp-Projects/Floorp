@@ -46,6 +46,8 @@ SRCS=						\
 	MessagePanelListener.java		\
 	MultiMessageDisplayManager.java		\
 	NewFolderDialog.java			\
+	PageUI.java				\
+	PageModel.java				\
 	PrefsDialog.java			\
 	ProgressFactory.java			\
 	ProgressFrame.java			\
