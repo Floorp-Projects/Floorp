@@ -67,7 +67,7 @@ nsresult auxLoad(char *uriBuf);
 static NS_DEFINE_CID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);
 static nsIEventQueue* gEventQ = nsnull;
 static PRBool gKeepRunning = PR_FALSE;
-static nsString globalStream;
+static nsCString globalStream;
 //static char urlBuf[256];
 static nsCOMPtr<nsIURI> baseURI;
 static nsCOMPtr<nsISupportsArray> uriList;
@@ -92,7 +92,7 @@ static NS_METHOD streamParse (nsIInputStream* in,
   char *tmp;
 
   if(!globalStream.IsEmpty()) {
-    globalStream.AppendWithConversion(fromRawSegment);
+    globalStream.Append(fromRawSegment);
     tmp = ToNewCString(globalStream);
     //printf("\n>>NOW:\n^^^^^\n%s\n^^^^^^^^^^^^^^", tmp);
   } else {
@@ -281,7 +281,7 @@ int getStrLine(const char *src, char *str, int ind, int max) {
   }
   str[i]='\0';
   if(i==max || c=='\0') {
-    globalStream.AssignWithConversion(str);
+    globalStream.Assign(str);
     //printf("\nCarryover (%d|%d):\n------------\n%s\n-------\n",i,max,str);
     return -1;
   }

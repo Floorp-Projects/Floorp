@@ -105,7 +105,7 @@ nsHttpBasicAuth::GenerateCredentials(nsIHttpChannel *httpChannel,
 
     // we work with ASCII around here
     nsCAutoString userpass;
-    userpass.AssignWithConversion(user);
+    LossyCopyUTF16toASCII(user, userpass);
     userpass.Append(':'); // always send a ':' (see bug 129565)
     if (password)
         userpass.AppendWithConversion(password);
