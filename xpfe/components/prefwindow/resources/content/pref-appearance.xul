@@ -37,41 +37,7 @@
   <script type="application/x-javascript">
   <![CDATA[
     var panel = "chrome://communicator/content/pref/pref-appearance.xul";
-   // the first elements in this array will be poked from chromeregistry loaded
-   // overlays once overlays.rdf works properly 
-    var _elementIDs = ["generalStartupBrowser", "showHideTooltips", "useSiteIcons", "languageList"];
-
-    function Startup()
-    {
-      parent.hPrefWindow.registerOKCallbackFunc( switchUILanguage );
-    }
-
-    function switchUILanguage()
-    {
-      var oldLangCode = parent.hPrefWindow.getPref( "localizedstring", "general.useragent.locale");
-      var newLangCode;
-
-      try {
-        var languageList = document.getElementById('languageList');
-        newLangCode = languageList ? 
-          languageList.selectedItem.value : 
-          parent.hPrefWindow.wsm.dataManager.getItemData( "chrome://communicator/content/pref/pref-appearance.xul", "languageList" ).value;
-      }
-      catch (e) {}
-      if (newLangCode != oldLangCode) {
-        try {
-          var chromeRegistry = Components.classes["@mozilla.org/chrome/chrome-registry;1"].getService(Components.interfaces.nsIChromeRegistry);
-          var observerService = Components.classes["@mozilla.org/observer-service;1"].getService(Components.interfaces.nsIObserverService);
-          chromeRegistry.selectLocale(newLangCode, true);
-          observerService.notifyObservers(null, "locale-selected", null);
-        }
-        catch(e) {
-          return false;
-        }
-      }
-      
-      return true;	
-    }
+    var _elementIDs = ["generalStartupBrowser", "showHideTooltips", "useSiteIcons"];
   ]]>
   </script>
           
