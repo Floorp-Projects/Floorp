@@ -153,12 +153,12 @@ void SSM_HandleFilePathReply(SSMControlConnection *ctrl,
 void SSM_HandleUserPromptReply(SSMControlConnection *ctrl,
 			       SECItem              *msg);
 			       
-char * SSM_ConvertStringToHTMLString(char * string);
-
 SSMStatus SSM_CopyCMTItem(CMTItem *dest, CMTItem *source);
 
 SSMStatus
 SSM_PrettyPrintDER(PRFileDesc *out, SECItem *derItem, PRBool raw);
+PRBool
+SSM_IsCRLPresent(SSMControlConnection *ctrl);
 
 #ifdef XP_UNIX
 void SSM_ReleaseLockFile();
