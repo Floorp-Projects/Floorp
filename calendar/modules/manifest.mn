@@ -10,5 +10,11 @@
 GDEPTH = ../..
 DEPTH  = ../..
 
-DIRS = util network parser core ui shell test
+ifeq ($(MOZ_ZULU_FREE), 1)
+DIRS += nls
+endif
+
+DIRS += util network parser core ui shell test
+
+
 
