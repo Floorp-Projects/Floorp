@@ -24,9 +24,10 @@ include $(DEPTH)/config/autoconf.mk
 
 DEFINES =
 
-EXPORTS =		\
-    nsITransaction.h	\
-    nsITransactionManager.h	\
+EXPORTS =						\
+    nsITransaction.h			\
+    nsITransactionListener.h	\
+    nsITransactionManager.h		\
     $(NULL)
 
 EXPORTS := $(addprefix $(srcdir)/, $(EXPORTS))

@@ -17,9 +17,10 @@
 
 DEPTH=../../..
 
-EXPORTS =		\
-    nsITransaction.h	\
-    nsITransactionManager.h	\
+EXPORTS =						\
+    nsITransaction.h			\
+    nsITransactionListener.h	\
+    nsITransactionManager.h		\
     $(NULL)
 
 MODULE = txmgr
