@@ -801,7 +801,7 @@ nsMsgSendLater::BuildHeaders()
         if (headLen == end - buf &&
           !PL_strncasecmp(HEADER_X_MOZILLA_STATUS2, buf, end - buf))
           prune_p = PR_TRUE;
-        else if (headLen == end - buf &&
+        else if (PL_strlen(HEADER_X_MOZILLA_STATUS) == end - buf &&
           !PL_strncasecmp(HEADER_X_MOZILLA_STATUS, buf, end - buf))
           prune_p = do_flags_p = PR_TRUE;
         else if (!PL_strncasecmp(HEADER_X_MOZILLA_DRAFT_INFO, buf, end - buf))
