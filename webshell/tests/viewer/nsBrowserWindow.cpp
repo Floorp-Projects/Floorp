@@ -963,24 +963,42 @@ nsBrowserWindow::DumpFrames(FILE* out)
 }
 
 void
+DumpViewsRecurse(nsBrowserWindow* aBrowser, nsIWebShell* aWebShell, FILE* out)
+{
+  if (nsnull != aWebShell) {
+    nsIPresShell* shell = aBrowser->GetPresShell();
+    if (nsnull != shell) {
+      nsIViewManager* vm = shell->GetViewManager();
+      if (nsnull != vm) {
+        nsIView* root = vm->GetRootView();
+        if (nsnull != root) {
+          root->List(out);
+          NS_RELEASE(root);
+        }
+        NS_RELEASE(vm);
+      }
+      NS_RELEASE(shell);
+    }
+    else {
+      fputs("null pres shell\n", out);
+    }
+    // dump the views of the sub documents
+    PRInt32 i, n;
+    aWebShell->GetChildCount(n);
+    for (i = 0; i < n; i++) {
+      nsIWebShell* child;
+      aWebShell->ChildAt(i, child);
+      if (nsnull != child) {
+        DumpViewsRecurse(aBrowser, child, out);
+      }
+    }
+  }
+}
+
+void
 nsBrowserWindow::DumpViews(FILE* out)
 {
-  nsIPresShell* shell = GetPresShell();
-  if (nsnull != shell) {
-    nsIViewManager* vm = shell->GetViewManager();
-    if (nsnull != vm) {
-      nsIView* root = vm->GetRootView();
-      if (nsnull != root) {
-        root->List(out);
-        NS_RELEASE(root);
-      }
-      NS_RELEASE(vm);
-    }
-    NS_RELEASE(shell);
-  }
-  else {
-    fputs("null pres shell\n", out);
-  }
+  DumpViewsRecurse(this, mWebShell, out);
 }
 
 static void DumpAWebShell(nsIWebShell* aShell, FILE* out, PRInt32 aIndent)

@@ -63,6 +63,8 @@ public:
 
   static nsHTMLFramesetFrame* GetFramesetParent(nsIFrame* aChild);
 
+  NS_IMETHOD List(FILE* out = stdout, PRInt32 aIndent = 0) const;
+
   NS_IMETHOD Paint(nsIPresContext& aPresContext,
                    nsIRenderingContext& aRenderingContext,
                    const nsRect& aDirtyRect);
@@ -80,6 +82,8 @@ protected:
                               const nsReflowState& aReflowState,
                               nsReflowMetrics& aDesiredSize);
 
+  PRInt32 GetBorderWidth(nsIPresContext* aPresContext);
+
   virtual PRIntn GetSkipSides() const;
 
   void ParseRowCol(nsIAtom* aAttrType, PRInt32& aNumSpecs, nsFramesetSpec** aSpecs); 
@@ -87,12 +91,18 @@ protected:
   PRInt32 ParseRowColSpec(nsString& aSpec, PRInt32 aMaxNumValues,
                           nsFramesetSpec* aSpecs);
 
+  void ReflowPlaceChild(nsIFrame*            aChild,
+                         nsIPresContext&      aPresContext,
+                         const nsReflowState& aReflowState,
+                         nsPoint&             aOffset,
+                         nsSize&              aSize);
   PRInt32          mNumRows;
   nsFramesetSpec*  mRowSpecs;  // parsed, non-computed dimensions
   nscoord*         mRowSizes;  // currently computed row sizes 
   PRInt32          mNumCols;
   nsFramesetSpec*  mColSpecs;  // parsed, non-computed dimensions
   nscoord*         mColSizes;  // currently computed col sizes 
+  PRInt32          mNonBorderChildCount; 
 };
 
 /*******************************************************************************
@@ -106,6 +116,7 @@ public:
                                 nsIStyleContext* aStyleContext,
                                 nsIFrame*&       aResult);
 
+  virtual void  List(FILE* out = stdout, PRInt32 aIndent = 0) const;
   virtual void MapAttributesInto(nsIStyleContext* aContext,
                                  nsIPresContext* aPresContext);
   virtual void SetAttribute(nsIAtom* aAttribute, const nsString& aValue);

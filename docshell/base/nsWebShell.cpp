@@ -175,6 +175,8 @@ protected:
   nsString mOverURL;
   nsString mOverTarget;
 
+  nsScrollPreference mScrollPref;
+
   void ReleaseChildren();
 };
 
@@ -208,7 +210,7 @@ nsWebShell::nsWebShell()
 {
   NS_INIT_REFCNT();
   mHistoryIndex = -1;
-
+  mScrollPref = nsScrollPreference_kAuto;
   mScriptGlobal = nsnull;
   mScriptContext = nsnull;
 }
@@ -327,7 +329,8 @@ nsWebShell::Embed(nsIContentViewer* aContentViewer,
   bounds.x = bounds.y = 0;
   rv = mContentViewer->Init(mWindow->GetNativeData(NS_NATIVE_WIDGET), 
                             mDeviceContext, 
-                            bounds);
+                            bounds,
+                            mScrollPref);
   if (NS_OK == rv) {
     mContentViewer->Show();
   }
@@ -343,6 +346,8 @@ nsWebShell::Init(nsNativeWidget aNativeParent,
                  const nsRect& aBounds,
                  nsScrollPreference aScrolling)
 {
+  mScrollPref = aScrolling;
+
   WEB_TRACE(WEB_TRACE_CALLS,
             ("nsWebShell::Init: this=%p", this));
 

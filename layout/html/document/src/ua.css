@@ -340,7 +340,7 @@ WBR {
 }
 IFRAME {
   display: inline;
-  border: 1px solid black;
+  border: 2px solid black;
 }
 INPUT {
   vertical-align: bottom;

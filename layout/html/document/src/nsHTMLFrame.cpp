@@ -102,6 +102,8 @@ class nsHTMLFrameOuterFrame : public nsHTMLContainerFrame {
 public:
   nsHTMLFrameOuterFrame(nsIContent* aContent, nsIFrame* aParent);
 
+  NS_IMETHOD List(FILE* out = stdout, PRInt32 aIndent = 0) const;
+
   NS_IMETHOD Paint(nsIPresContext& aPresContext,
                    nsIRenderingContext& aRenderingContext,
                    const nsRect& aDirtyRect);
@@ -128,6 +130,8 @@ class nsHTMLFrameInnerFrame : public nsLeafFrame, public nsIWebFrame {
 public:
 
   nsHTMLFrameInnerFrame(nsIContent* aContent, nsIFrame* aParentFrame);
+
+  NS_IMETHOD List(FILE* out = stdout, PRInt32 aIndent = 0) const;
 
   NS_IMETHOD QueryInterface(REFNSIID aIID, void** aInstancePtr);
 
@@ -184,6 +188,7 @@ public:
 
   PRBool GetURL(nsString& aURLSpec);
   PRBool GetName(nsString& aName);
+  virtual void List(FILE* out = stdout, PRInt32 aIndent = 0) const;
   nsScrollPreference GetScrolling();
   virtual void MapAttributesInto(nsIStyleContext* aContext,
                                  nsIPresContext* aPresContext);
@@ -219,17 +224,16 @@ nsHTMLFrameOuterFrame::nsHTMLFrameOuterFrame(nsIContent* aContent, nsIFrame* aPa
 nscoord
 nsHTMLFrameOuterFrame::GetBorderWidth(nsIPresContext& aPresContext)
 {
-  if (nsnull == mStyleContext) {// make sure the style context is set
-    GetStyleContext(&aPresContext, mStyleContext);
-  }
-  const nsStyleSpacing* spacing =
-    (const nsStyleSpacing*)mStyleContext->GetStyleData(eStyleStruct_Spacing);
-  nsStyleCoord leftBorder;
-  spacing->mBorder.GetLeft(leftBorder);
-  nsStyleUnit unit = leftBorder.GetUnit(); 
-  if (eStyleUnit_Coord == unit) {
-    return leftBorder.GetCoordValue();
-  }
+  if (IsInline()) {
+    const nsStyleSpacing* spacing =
+      (const nsStyleSpacing*)mStyleContext->GetStyleData(eStyleStruct_Spacing);
+    nsStyleCoord leftBorder;
+    spacing->mBorder.GetLeft(leftBorder);
+    nsStyleUnit unit = leftBorder.GetUnit(); 
+    if (eStyleUnit_Coord == unit) {
+      return leftBorder.GetCoordValue();
+    }
+  } 
   return 0;
 }
 
@@ -274,11 +278,22 @@ nsHTMLFrameOuterFrame::Paint(nsIPresContext& aPresContext,
                          nsIRenderingContext& aRenderingContext,
                          const nsRect& aDirtyRect)
 {
-//printf("outer paint %d (%d,%d,%d,%d) ", this, aDirtyRect.x, aDirtyRect.y, aDirtyRect.width, aDirtyRect.height);
+  //printf("outer paint %d (%d,%d,%d,%d) ", this, aDirtyRect.x, aDirtyRect.y, aDirtyRect.width, aDirtyRect.height);
   if (nsnull != mFirstChild) {
     mFirstChild->Paint(aPresContext, aRenderingContext, aDirtyRect);
   }
-  return nsHTMLContainerFrame::Paint(aPresContext, aRenderingContext, aDirtyRect);
+  if (IsInline()) {
+    return nsHTMLContainerFrame::Paint(aPresContext, aRenderingContext, aDirtyRect);
+  } else {
+    return NS_OK;
+  }
+}
+
+NS_IMETHODIMP nsHTMLFrameOuterFrame::List(FILE* out, PRInt32 aIndent) const
+{
+  for (PRInt32 i = aIndent; --i >= 0; ) fputs("  ", out);   // Indent
+  fprintf(out, "%X OUTER \n", this);
+  return nsHTMLContainerFrame::List(out, aIndent);
 }
 
 NS_IMETHODIMP
@@ -300,17 +315,17 @@ nsHTMLFrameOuterFrame::Reflow(nsIPresContext&      aPresContext,
     mFirstChild->SetStyleContext(&aPresContext, mStyleContext);
     mChildCount = 1;
   }
-  
+ 
+  // nsContainerFrame::PaintBorder has some problems, kludge it here
   nscoord borderWidth  = GetBorderWidth(aPresContext);
-  nscoord borderWidth2 = 2 * borderWidth;
-  nsSize innerSize(aDesiredSize.width - borderWidth2, aDesiredSize.height - borderWidth2);
+  nscoord kludge = borderWidth/2;
+  nsSize innerSize(aDesiredSize.width - borderWidth - kludge, aDesiredSize.height - borderWidth - kludge);
 
   // Reflow the child and get its desired size
+  nsReflowMetrics kidMetrics(aDesiredSize.maxElementSize);
   nsReflowState kidReflowState(mFirstChild, aReflowState, innerSize);
   mFirstChild->WillReflow(aPresContext);
-  aStatus = ReflowChild(mFirstChild, &aPresContext, aDesiredSize, kidReflowState);
-//  nsReflowMetrics ignore(nsnull);
-//  aStatus = ReflowChild(mFirstChild, &aPresContext, ignore, kidReflowState);
+  aStatus = ReflowChild(mFirstChild, &aPresContext, kidMetrics, kidReflowState);
   NS_ASSERTION(NS_FRAME_IS_COMPLETE(aStatus), "bad status");
   
   // Place and size the child
@@ -325,7 +340,6 @@ nsHTMLFrameOuterFrame::Reflow(nsIPresContext&      aPresContext,
     aDesiredSize.maxElementSize->width = aDesiredSize.width;
     aDesiredSize.maxElementSize->height = aDesiredSize.height;
   }
-
 
   return NS_OK;
 }
@@ -401,6 +415,13 @@ float nsHTMLFrameInnerFrame::GetTwipsToPixels()
 #endif
 
 
+NS_IMETHODIMP nsHTMLFrameInnerFrame::List(FILE* out, PRInt32 aIndent) const
+{
+  for (PRInt32 i = aIndent; --i >= 0; ) fputs("  ", out);   // Indent
+  fprintf(out, "%X INNER \n", this);
+  return nsFrame::List(out, aIndent);
+}
+
 NS_METHOD
 nsHTMLFrameInnerFrame::MoveTo(nscoord aX, nscoord aY)
 {
@@ -410,7 +431,7 @@ nsHTMLFrameInnerFrame::MoveTo(nscoord aX, nscoord aY)
 NS_METHOD
 nsHTMLFrameInnerFrame::SizeTo(nscoord aWidth, nscoord aHeight)
 {
-  return nsLeafFrame::SizeTo(aWidth, aWidth);
+  return nsLeafFrame::SizeTo(aWidth, aHeight);
 }
 
 NS_IMETHODIMP
@@ -418,7 +439,7 @@ nsHTMLFrameInnerFrame::Paint(nsIPresContext& aPresContext,
                          nsIRenderingContext& aRenderingContext,
                          const nsRect& aDirtyRect)
 {
-//printf("inner paint %d (%d,%d,%d,%d) ", this, aDirtyRect.x, aDirtyRect.y, aDirtyRect.width, aDirtyRect.height);
+  //printf("inner paint %d (%d,%d,%d,%d) ", this, aDirtyRect.x, aDirtyRect.y, aDirtyRect.width, aDirtyRect.height);
   if (nsnull != mWebShell) {
     //mWebShell->Show();
   }
@@ -566,6 +587,14 @@ nsHTMLFrameInnerFrame::Reflow(nsIPresContext&      aPresContext,
   aDesiredSize.ascent = aDesiredSize.height;
   aDesiredSize.descent = 0;
 
+  // resize the sub document
+  float t2p = aPresContext.GetTwipsToPixels();
+  nsRect subBounds;
+  mWebShell->GetBounds(subBounds);
+  subBounds.width  = NS_TO_INT_ROUND(aDesiredSize.width * t2p);
+  subBounds.height = NS_TO_INT_ROUND(aDesiredSize.height * t2p);
+  mWebShell->SetBounds(subBounds);
+
   aStatus = NS_FRAME_COMPLETE;
   return rv;
 }
@@ -596,6 +625,18 @@ nsHTMLFrame::~nsHTMLFrame()
   mParentWebWidget = nsnull;
 }
 
+void nsHTMLFrame::List(FILE* out, PRInt32 aIndent) const
+{
+  for (PRInt32 i = aIndent; --i >= 0; ) fputs("  ", out);   // Indent
+  fprintf(out, "%X ", this);
+  if (mInline) {
+    fprintf(out, "INLINE \n", this);
+  } else {
+    fprintf(out, "\n");
+  }
+  nsHTMLContent::List(out, aIndent);
+}
+
 void nsHTMLFrame::SetAttribute(nsIAtom* aAttribute, const nsString& aString)
 {
   nsHTMLValue val;
@@ -606,11 +647,11 @@ void nsHTMLFrame::SetAttribute(nsIAtom* aAttribute, const nsString& aString)
   nsHTMLContainer::SetAttribute(aAttribute, aString);
 }
 
+
 void nsHTMLFrame::MapAttributesInto(nsIStyleContext* aContext, 
                                      nsIPresContext* aPresContext)
 {
   MapImagePropertiesInto(aContext, aPresContext);
-  MapImageBorderInto(aContext, aPresContext, nsnull);
 }
 
 nsresult

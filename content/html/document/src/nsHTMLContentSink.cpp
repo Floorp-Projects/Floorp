@@ -1053,11 +1053,23 @@ HTMLContentSink::StartLayout()
       }
     }
 
-    // If the document we are loading has a reference, disable the
-    // scroll bars on the views.
+    // If the document we are loading has a reference or it is a top level
+    // frameset document, disable the scroll bars on the views.
     const char* ref = mDocumentURL->GetRef();
     if (nsnull != ref) {
       mRef = new nsString(ref);
+    }
+    PRBool topLevelFrameset = PR_FALSE;
+    if (mFrameset && mWebShell) {
+      nsIWebShell* rootWebShell;
+      mWebShell->GetRootWebShell(rootWebShell);
+      if (mWebShell == rootWebShell) {
+        topLevelFrameset = PR_TRUE;
+      }
+      NS_IF_RELEASE(rootWebShell);
+    }
+
+    if ((nsnull != ref) || topLevelFrameset) {
       // XXX support more than one presentation-shell here
 
       // Get initial scroll preference and save it away; disable the
@@ -1073,7 +1085,9 @@ HTMLContentSink::StartLayout()
               nsIScrollableView* sview = nsnull;
               rootView->QueryInterface(kIScrollableViewIID, (void**) &sview);
               if (nsnull != sview) {
-                mOriginalScrollPreference = sview->GetScrollPreference();
+                mOriginalScrollPreference = (topLevelFrameset) 
+                  ? nsScrollPreference_kNeverScroll 
+                  : sview->GetScrollPreference();
                 sview->SetScrollPreference(nsScrollPreference_kNeverScroll);
                 NS_RELEASE(sview);
               }
@@ -2109,7 +2123,7 @@ HTMLContentSink::ProcessFRAMESETTag(nsIHTMLContent** aInstancePtrResult,
   nsAutoString tmp("FRAMESET");
   nsIAtom* atom = NS_NewAtom(tmp);
 
-  nsresult rv = NS_NewHTMLIFrame(aInstancePtrResult, atom, mWebShell);
+  nsresult rv = NS_NewHTMLFrameset(aInstancePtrResult, atom, mWebShell);
 
   NS_RELEASE(atom);
   return rv;
