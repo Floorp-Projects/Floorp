@@ -664,7 +664,17 @@ nsBoxFrame::FlowChildren(nsIPresContext*   aPresContext,
         if (count == changedIndex)
             break;
 
-        if (!info->collapsed)
+	// We need to give our child at least the initial reflow.
+	// This is needed for iframes to create their webshell (bug 11762)
+        if (info->collapsed)
+	{
+	  if (eReflowReason_Initial == aReflowState.reason)
+	  {
+            FlowChildAt(childFrame, aPresContext, aDesiredSize, aReflowState, aStatus, *info, redraw, reason);
+	  }
+	}
+
+	else
         {
         // reflow if the child needs it or we are on a second pass
           FlowChildAt(childFrame, aPresContext, aDesiredSize, aReflowState, aStatus, *info, redraw, reason);
@@ -1610,6 +1620,8 @@ nsBoxFrame::GetBoxInfo(nsIPresContext* aPresContext, const nsHTMLReflowState& aR
           info->frame->GetStyleData(eStyleStruct_Display, ((const nsStyleStruct *&)disp));
 
           // if collapsed then the child will have no size
+	  // don't unset needsRecalc - therefore cause us
+	  // to be recalculated when we are uncollapsed
           if (disp->mVisible == NS_STYLE_VISIBILITY_COLLAPSE) 
              info->collapsed = PR_TRUE;
           else {
@@ -1649,10 +1661,10 @@ nsBoxFrame::GetBoxInfo(nsIPresContext* aPresContext, const nsHTMLReflowState& aR
 
             if (info->maxSize.height != NS_INTRINSICSIZE)
                info->maxSize.height += b.height;
-          }
 
-          // ok we don't need to calc this guy again
-          info->needsRecalc = PR_FALSE;
+            // ok we don't need to calc this guy again
+            info->needsRecalc = PR_FALSE;
+          }
         } 
 
         AddChildSize(aSize, *info);
