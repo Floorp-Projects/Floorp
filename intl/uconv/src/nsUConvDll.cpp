@@ -20,6 +20,8 @@
 #include "nsRepository.h"
 #include "nsICharsetConverterManager.h"
 #include "nsCharsetConverterManager.h"
+#include "nsIUnicodeEncodeHelper.h"
+#include "nsUnicodeEncodeHelper.h"
 #include "nsIPlatformCharset.h"
 #include "nsPlatformCharsetFactory.h"
 
@@ -56,6 +58,20 @@ extern "C" NS_EXPORT nsresult NSGetFactory(const nsCID &aCID, nsISupports* servi
 
     return res;
   }
+
+  // the Unicode Encode helper
+  if (aCID.Equals(kUnicodeEncodeHelperCID)) {
+    nsEncodeHelperFactory *factory = new nsEncodeHelperFactory();
+    nsresult res = factory->QueryInterface(kIFactoryIID, (void **) aFactory);
+
+    if (NS_FAILED(res)) {
+      *aFactory = NULL;
+      delete factory;
+    }
+
+    return res;
+  }
+
   if (aCID.Equals(kPlatformCharsetCID)) {
     *aFactory = NEW_PLATFORMCHARSETFACTORY();
   }
@@ -67,8 +83,14 @@ extern "C" NS_EXPORT nsresult NSRegisterSelf(const char * path)
 {
   nsresult res;
 
+  res = nsRepository::RegisterFactory(kUnicodeEncodeHelperCID, path, 
+      PR_TRUE, PR_TRUE);
+  if(NS_FAILED(res) && (NS_ERROR_FACTORY_EXISTS != res)) return res;
+
   res = nsRepository::RegisterFactory(kCharsetConverterManagerCID, path, 
       PR_TRUE, PR_TRUE);
+  if(NS_FAILED(res) && (NS_ERROR_FACTORY_EXISTS != res)) return res;
+
   res = nsRepository::RegisterFactory(kPlatformCharsetCID, path, 
       PR_TRUE, PR_TRUE);
   return res;
@@ -78,7 +100,12 @@ extern "C" NS_EXPORT nsresult NSUnregisterSelf(const char * path)
 {
   nsresult res;
 
+  res = nsRepository::UnregisterFactory(kUnicodeEncodeHelperCID, path);
+  if(NS_FAILED(res)) return res;
+
   res = nsRepository::UnregisterFactory(kCharsetConverterManagerCID, path);
+  if(NS_FAILED(res)) return res;
+
   res = nsRepository::UnregisterFactory(kPlatformCharsetCID, path);
   return res;
 }
