@@ -1158,6 +1158,7 @@ if ($my_webservergroup) {
     fixPerms('Bugzilla', $<, $webservergid, 027, 1);
     fixPerms('template', $<, $webservergid, 027, 1);
     fixPerms('css', $<, $webservergid, 027, 1);
+    fixPerms('js', $<, $webservergid, 027, 1);
     chmod 0644, 'globals.pl';
     chmod 0644, 'RelationSet.pm';
 
@@ -1183,6 +1184,7 @@ if ($my_webservergroup) {
     fixPerms('Bugzilla', $<, $gid, 022, 1);
     fixPerms('template', $<, $gid, 022, 1);
     fixPerms('css', $<, $gid, 022, 1);
+    fixPerms('js', $<, $gid, 022, 1);
 
     # Don't use fixPerms here, because it won't change perms on the directory
     # unless its using recursion
