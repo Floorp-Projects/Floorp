@@ -655,32 +655,67 @@ si_CompareEncryptedToEncrypted(const nsString& crypt1, const nsString& crypt2) {
  * Managing Signon List *
  ************************/
 
+MOZ_DECL_CTOR_COUNTER(si_SignonDataStruct);
+
 class si_SignonDataStruct {
 public:
-  si_SignonDataStruct() : isPassword(PR_FALSE) {}
+  si_SignonDataStruct() : isPassword(PR_FALSE)
+  {
+    MOZ_COUNT_CTOR(si_SignonDataStruct);
+  }
+  ~si_SignonDataStruct()
+  {
+    MOZ_COUNT_DTOR(si_SignonDataStruct);
+  }
   nsAutoString name;
   nsAutoString value;
   PRBool isPassword;
 };
 
+MOZ_DECL_CTOR_COUNTER(si_SignonUserStruct);
+
 class si_SignonUserStruct {
 public:
-  si_SignonUserStruct() : signonData_list(NULL) {}
+  si_SignonUserStruct() : signonData_list(NULL)
+  {
+    MOZ_COUNT_CTOR(si_SignonUserStruct);
+  }
+  ~si_SignonUserStruct()
+  {
+    MOZ_COUNT_DTOR(si_SignonUserStruct);
+  }
   nsVoidArray * signonData_list;
 };
 
+MOZ_DECL_CTOR_COUNTER(si_SignonURLStruct);
+
 class si_SignonURLStruct {
 public:
-  si_SignonURLStruct() : passwordRealm(NULL), chosen_user(NULL), signonUser_list(NULL) {}
+  si_SignonURLStruct() : passwordRealm(NULL), chosen_user(NULL), signonUser_list(NULL)
+  {
+    MOZ_COUNT_CTOR(si_SignonURLStruct);
+  }
+  ~si_SignonURLStruct()
+  {
+    MOZ_COUNT_DTOR(si_SignonURLStruct);
+  }
   char * passwordRealm;
   si_SignonUserStruct* chosen_user; /* this is a state variable */
   nsVoidArray * signonUser_list;
 };
 
+MOZ_DECL_CTOR_COUNTER(si_Reject);
 
 class si_Reject {
 public:
-  si_Reject() : passwordRealm(NULL) {}
+  si_Reject() : passwordRealm(NULL)
+  {
+    MOZ_COUNT_CTOR(si_Reject);
+  }
+  ~si_Reject()
+  {
+    MOZ_COUNT_DTOR(si_Reject);
+  }
   char * passwordRealm;
   nsAutoString userName;
 };

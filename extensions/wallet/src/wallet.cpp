@@ -454,17 +454,35 @@ NS_NewURItoFile(const char *in, nsFileSpec dirSpec, const char *out)
 
 enum PlacementType {DUP_IGNORE, DUP_OVERWRITE, DUP_BEFORE, DUP_AFTER, AT_END};
 
+MOZ_DECL_CTOR_COUNTER(wallet_MapElement);
+
 class wallet_MapElement {
 public:
-  wallet_MapElement() : itemList(nsnull) {}
+  wallet_MapElement() : itemList(nsnull)
+  {
+    MOZ_COUNT_CTOR(wallet_MapElement);
+  }
+  ~wallet_MapElement()
+  {
+    MOZ_COUNT_DTOR(wallet_MapElement);
+  }
   nsString  item1;
   nsString  item2;
   nsVoidArray * itemList;
 };
 
+MOZ_DECL_CTOR_COUNTER(wallet_Sublist);
+
 class wallet_Sublist {
 public:
-  wallet_Sublist() {}
+  wallet_Sublist()
+  {
+    MOZ_COUNT_CTOR(wallet_Sublist);
+  }
+  ~wallet_Sublist()
+  {
+    MOZ_COUNT_DTOR(wallet_Sublist);
+  }
   nsString item;
 };
 
@@ -3466,10 +3484,19 @@ WLLT_RequestToCapture(nsIPresShell* shell, nsIDOMWindowInternal* win, PRUint32* 
   Recycle(message);
 }
 
+MOZ_DECL_CTOR_COUNTER(si_SignonDataStruct);
+
 /* should move this to an include file */
 class si_SignonDataStruct {
 public:
-  si_SignonDataStruct() : isPassword(PR_FALSE) {}
+  si_SignonDataStruct() : isPassword(PR_FALSE)
+  {
+    MOZ_COUNT_CTOR(si_SignonDataStruct);
+  }
+  ~si_SignonDataStruct()
+  {
+    MOZ_COUNT_DTOR(si_SignonDataStruct);
+  }
   nsAutoString name;
   nsAutoString value;
   PRBool isPassword;
