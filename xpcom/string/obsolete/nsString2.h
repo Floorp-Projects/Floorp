@@ -482,7 +482,7 @@ public:
     PRUnichar mBuffer[kDefaultStringSize];
 };
 
-class nsVoidableString : public nsAutoString
+class NS_COM nsVoidableString : public nsAutoString
 {
 public:
   nsVoidableString() :
