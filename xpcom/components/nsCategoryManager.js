@@ -241,7 +241,7 @@ CategoryEnumerator.prototype = {
         return this.index !== this.contents.length;
     },
     
-    getNext: function() {
+    GetNext: function() {
         if (!this.hasMoreElements())
             return null;        // XXX?
         var str = Components.classes["component://netscape/supports-string"]
