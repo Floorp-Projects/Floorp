@@ -1675,6 +1675,13 @@ nsCSSFrameConstructor::ConstructTableCellFrameOnly(nsIPresContext*          aPre
     rv = ProcessChildren(aPresContext, aState, aContent, aNewCellBodyFrame,
                          PR_TRUE, childItems);
     if (NS_FAILED(rv)) return rv;
+
+    // if there are any anonymous children create frames for them
+    nsCOMPtr<nsIAtom> tagName;
+    aContent->GetTag(*getter_AddRefs(tagName));
+    CreateAnonymousFrames(aPresContext, tagName, aState, aContent, aNewCellBodyFrame,
+                          childItems);
+
     aNewCellBodyFrame->SetInitialChildList(*aPresContext, nsnull, childItems.childList);
     if (aState.mFloatedItems.childList) {
       aNewCellBodyFrame->SetInitialChildList(*aPresContext,
@@ -3261,7 +3268,8 @@ nsCSSFrameConstructor::CreateAnonymousFrames(nsIPresContext*          aPresConte
       aTag !=  nsXULAtoms::splitter &&
       aTag !=  nsXULAtoms::scrollbar &&
       aTag !=  nsXULAtoms::menu &&
-      aTag !=  nsXULAtoms::menuitem
+      aTag !=  nsXULAtoms::menuitem &&
+      aTag !=  nsXULAtoms::treecell
      ) {
      return NS_OK;
 
@@ -3275,14 +3283,53 @@ nsCSSFrameConstructor::CreateAnonymousFrames(nsIPresContext*          aPresConte
   
   nsCOMPtr<nsIAnonymousContentCreator> creator(do_QueryInterface(aNewFrame));
 
-  if (!creator)
+  if (!creator && aTag != nsXULAtoms::treecell)
      return NS_OK;
 
   // see if the frame implements anonymous content
   nsCOMPtr<nsISupportsArray> anonymousItems;
   NS_NewISupportsArray(getter_AddRefs(anonymousItems));
 
-  creator->CreateAnonymousContent(*anonymousItems);
+  if (aTag == nsXULAtoms::treecell) {
+
+    PRInt32 childCount;
+    aContent->ChildCount(childCount);
+    if (childCount == 0) {
+      // Have to do it right here, since the inner cell frame isn't mine, 
+      // and i can't have it creating anonymous content.
+      nsCOMPtr<nsIDOMNSDocument> nsDocument(do_QueryInterface(doc));
+      nsCOMPtr<nsIDOMDocument> document(do_QueryInterface(doc));
+
+      nsString xulNamespace = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
+      nsString htmlNamespace = "http://www.w3.org/TR/REC-html40";  
+      nsCOMPtr<nsIAtom> classAtom = dont_AddRef(NS_NewAtom("class"));
+    
+      nsCOMPtr<nsIDOMElement> node;
+      nsCOMPtr<nsIContent> content;
+
+      nsDocument->CreateElementWithNameSpace("titledbutton", xulNamespace, getter_AddRefs(node));
+      content = do_QueryInterface(node);
+      content->SetAttribute(kNameSpaceID_None, classAtom, "tree-button", PR_FALSE);
+      nsAutoString value;
+
+      nsCOMPtr<nsIDOMElement> parentNode = do_QueryInterface(aContent);
+      parentNode->GetAttribute("value", value);
+      if (value != "")
+        content->SetAttribute(kNameSpaceID_None, nsHTMLAtoms::value, value, PR_FALSE);
+    
+      nsAutoString crop;
+      parentNode->GetAttribute("crop", crop);
+      if (crop == "") crop = "right";
+      content->SetAttribute(kNameSpaceID_None, nsXULAtoms::crop, crop, PR_FALSE);
+
+      nsAutoString align;
+      parentNode->GetAttribute("align", align);
+      if (align == "") align = "left";
+      content->SetAttribute(kNameSpaceID_None, nsHTMLAtoms::align, align, PR_FALSE);
+      anonymousItems->AppendElement(content);
+    }
+  }
+  else creator->CreateAnonymousContent(*anonymousItems);
   
   PRUint32 count = 0;
   anonymousItems->Count(&count);
