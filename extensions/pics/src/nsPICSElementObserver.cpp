@@ -28,6 +28,7 @@
 #include "nsIPICS.h"
 #include "nspics.h"
 #include "nsIWebShellServices.h"
+#include "plstr.h"
 #include "prenv.h"
 
 //static NS_DEFINE_IID(kIObserverIID, NS_IOBSERVER_IID);
@@ -108,10 +109,15 @@ NS_IMETHODIMP nsPICSElementObserver::QueryInterface(REFNSIID aIID, void** aInsta
   return NS_NOINTERFACE;
 }
 
-const char* nsPICSElementObserver::GetTagName()
+const char* nsPICSElementObserver::GetTagNameAt(PRUint32 aTagIndex)
 {
-  return "META";
- // return NS_OK;
+  if (aTagIndex == 0) {
+    return "META";
+  } if (aTagIndex == 1) {
+    return "BODY";
+  }else {
+    return nsnull;
+  }
 }
 
 NS_IMETHODIMP nsPICSElementObserver::Notify(PRUint32 aDocumentID, eHTMLTags aTag, 
@@ -126,42 +132,44 @@ NS_IMETHODIMP nsPICSElementObserver::Notify(PRUint32 aDocumentID, eHTMLTags aTag
   nsIURL* uaURL = nsnull;
 //  rv = NS_NewURL(&uaURL, nsString(aSpec));
  
-  if(numOfAttributes >= 2) {
-    const nsString& theValue1=valueArray[0];
-    char *val1 = theValue1.ToNewCString();
-    if(theValue1.EqualsIgnoreCase("\"PICS-LABEL\"")) {
-      printf("\nReceived notification for a PICS-LABEl\n");
-      const nsString& theValue2=valueArray[1];
-      char *label = theValue2.ToNewCString();
-      if (valueArray[numOfAttributes]) {
-        const nsString& theURLValue=valueArray[numOfAttributes];
-        rv = NS_NewURL(&uaURL, theURLValue);
-      }
-      nsIPICS *pics = NULL;
-      rv = nsRepository::CreateInstance(kPICSCID,
-								      NULL,
-								      kIPICSIID,
-								      (void **) &pics);
-      if(rv == NS_OK) {
-        pics->GetWebShell(aDocumentID, ws);
-        if(ws) {
-          status = pics->ProcessPICSLabel(label);
-          if(uaURL)
-            pics->SetNotified(ws, uaURL, PR_TRUE);
+  if(aTag == eHTMLTag_meta) {
+    if(numOfAttributes >= 2) {
+      const nsString& theValue1=valueArray[0];
+      char *val1 = theValue1.ToNewCString();
+      if(theValue1.EqualsIgnoreCase("\"PICS-LABEL\"")) {
+        printf("\nReceived notification for a PICS-LABEl\n");
+        const nsString& theValue2=valueArray[1];
+        char *label = theValue2.ToNewCString();
+        if (valueArray[numOfAttributes]) {
+          const nsString& theURLValue=valueArray[numOfAttributes];
+          rv = NS_NewURL(&uaURL, theURLValue);
+        }
+        nsIPICS *pics = NULL;
+        rv = nsRepository::CreateInstance(kPICSCID,
+								        NULL,
+								        kIPICSIID,
+								        (void **) &pics);
+        if(rv == NS_OK) {
+          pics->GetWebShell(aDocumentID, ws);
+          if(ws) {
+            status = pics->ProcessPICSLabel(label);
+            if(uaURL)
+              pics->SetNotified(ws, uaURL, PR_TRUE);
 
-          if(status) {
-            if(ws) {
-              char * text = PR_GetEnv("NGLAYOUT_HOME");
-              nsString mtemplateURL = text ? text : "resource:/res/samples/picstest1.html";
-            //  ws->LoadURL(mtemplateURL, nsnull, nsnull);
-              nsCharsetSource s;
-              ws->SetRendering(PR_TRUE);
-              ws->StopDocumentLoad();
-              ws->LoadDocument("resource:/res/samples/picstest1.html", nsnull, s);
+            if(status) {
+              if(ws) {
+                char * text = PR_GetEnv("NGLAYOUT_HOME");
+                nsString mtemplateURL = text ? text : "resource:/res/samples/picstest1.html";
+              //  ws->LoadURL(mtemplateURL, nsnull, nsnull);
+                nsCharsetSource s;
+                ws->SetRendering(PR_TRUE);
+                ws->StopDocumentLoad();
+                ws->LoadDocument("resource:/res/samples/picstest1.html", nsnull, s);
+              }
             }
           }
-        }
-      } 
+        } 
+      }
     }
   }
   return NS_OK;
