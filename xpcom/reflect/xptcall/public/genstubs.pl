@@ -16,18 +16,20 @@ $def_name  = "xptcstubsdef.inc";
 
 die "Can't open $decl_name" if !open(OUTFILE, ">$decl_name");
 
-print OUTFILE "// generated file - DO NOT EDIT \n\n";
-print OUTFILE "// includes ",$entry_count," stub entries, and ",
-              $sentinel_count," sentinel entries\n\n";
-print OUTFILE "// declarations of normal stubs...\n";
-print OUTFILE "// 0 is QueryInterface\n";
-print OUTFILE "// 1 is AddRef\n";
-print OUTFILE "// 2 is Release\n";
+print OUTFILE "/* generated file - DO NOT EDIT */\n\n";
+print OUTFILE "/* includes ",$entry_count," stub entries, and ",
+              $sentinel_count," sentinel entries */\n\n";
+print OUTFILE "/*\n";
+print OUTFILE "*  declarations of normal stubs...\n";
+print OUTFILE "*  0 is QueryInterface\n";
+print OUTFILE "*  1 is AddRef\n";
+print OUTFILE "*  2 is Release\n";
+print OUTFILE "*/\n";
 for($i = 0; $i < $entry_count; $i++) {
     print OUTFILE "XPTC_EXPORT NS_IMETHOD Stub",$i+3,"();\n";
 }
 
-print OUTFILE "\n// declarations of sentinel stubs\n";
+print OUTFILE "\n/* declarations of sentinel stubs */\n";
 
 for($i = 0; $i < $sentinel_count; $i++) {
     print OUTFILE "XPTC_EXPORT NS_IMETHOD Sentinel",$i,"();\n";
@@ -42,9 +44,9 @@ close(OUTFILE);
 
 die "Can't open $def_name" if !open(OUTFILE, ">$def_name");
 
-print OUTFILE "// generated file - DO NOT EDIT \n\n";
-print OUTFILE "// includes ",$entry_count," stub entries, and ",
-              $sentinel_count," sentinel entries\n\n";
+print OUTFILE "/* generated file - DO NOT EDIT */\n\n";
+print OUTFILE "/* includes ",$entry_count," stub entries, and ",
+              $sentinel_count," sentinel entries */\n\n";
 
 for($i = 0; $i < $entry_count; $i++) {
     print OUTFILE "STUB_ENTRY(",$i+3,")\n";

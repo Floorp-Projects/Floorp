@@ -1,11 +1,13 @@
-// generated file - DO NOT EDIT 
+/* generated file - DO NOT EDIT */
 
-// includes 256 stub entries, and 10 sentinel entries
+/* includes 256 stub entries, and 10 sentinel entries */
 
-// declarations of normal stubs...
-// 0 is QueryInterface
-// 1 is AddRef
-// 2 is Release
+/*
+*  declarations of normal stubs...
+*  0 is QueryInterface
+*  1 is AddRef
+*  2 is Release
+*/
 XPTC_EXPORT NS_IMETHOD Stub3();
 XPTC_EXPORT NS_IMETHOD Stub4();
 XPTC_EXPORT NS_IMETHOD Stub5();
@@ -263,7 +265,7 @@ XPTC_EXPORT NS_IMETHOD Stub256();
 XPTC_EXPORT NS_IMETHOD Stub257();
 XPTC_EXPORT NS_IMETHOD Stub258();
 
-// declarations of sentinel stubs
+/* declarations of sentinel stubs */
 XPTC_EXPORT NS_IMETHOD Sentinel0();
 XPTC_EXPORT NS_IMETHOD Sentinel1();
 XPTC_EXPORT NS_IMETHOD Sentinel2();
