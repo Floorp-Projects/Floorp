@@ -138,8 +138,8 @@
 <!ENTITY UuencodeAttachmentCmd.label "Uuencode instead of MIME for Attachments">
 
 
-<!ENTITY fileCarbonCopyCmd.label "File Sent Message">
-<!ENTITY fileCarbonCopyCmd.accesskey "i">
+<!ENTITY fileCarbonCopyCmd.label "Send a Copy To">
+<!ENTITY fileCarbonCopyCmd.accesskey "d">
 <!ENTITY fileHereMenu.label "File Here">
 
 <!--LOCALIZATION NOTE Debug Menu Don't translate anything in the Debug menu section -->
