@@ -289,7 +289,7 @@ nsresult nsMsgHeaderParser::ParseHeaderAddresses (const char *charset, const cha
 {
   char *utf8Str, *outStrings;
   MimeCharsetConverterClass *converter = nsnull;
-  nsresult rv;
+  nsresult rv=NS_OK;
 
   if (nsnull == line || MIME_ConvertString(CHARSET(charset), "UTF-8", line, &utf8Str) != 0) {
     utf8Str = nsnull;

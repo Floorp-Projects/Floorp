@@ -464,8 +464,8 @@ HG09091
     PR_FREEIF(charset);
 
 	// setting up truncated message html fotter function
-	char *xmoz = MimeHeaders_get(msg->hdrs, HEADER_X_MOZILLA_STATUS, FALSE,
-								 FALSE);
+	char *xmoz = MimeHeaders_get(msg->hdrs, HEADER_X_MOZILLA_STATUS, PR_FALSE,
+								 PR_FALSE);
 	if (xmoz)
 	{
 		PRUint32 flags = 0;
