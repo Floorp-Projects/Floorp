@@ -397,12 +397,6 @@ NS_IMETHODIMP nsImageGTK::Draw(nsIRenderingContext &aContext,
   return NS_OK;
 }
 
-//------------------------------------------------------------
-
-void nsImageGTK::CompositeImage(nsIImage *aTheImage, nsPoint *aULLocation,nsBlendQuality aBlendQuality)
-{
-  printf("nsImageGTK::CompositeImage called!\n");
-}
 
 //------------------------------------------------------------
 
