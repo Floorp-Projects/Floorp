@@ -83,9 +83,9 @@
 /*
 ** Sorting order
 */
-#define ST_WEIGHT   0 /* size * interval */
+#define ST_WEIGHT   0 /* size * timeval */
 #define ST_SIZE     1
-#define ST_INTERVAL 2
+#define ST_TIMEVAL  2
 
 /*
 ** Callsite loop direction flags.
@@ -107,6 +107,22 @@
 */
 #define ST_DEFAULT_LIFETIME_MIN 10
 
+/*
+** Allocations fall to this boundry size by default.
+*/
+#define ST_DEFAULT_ALIGNMENT_SIZE 16
+
+/*
+** Set the desired resolution of the timevals.
+** Too large, and you'll wrap uint32.
+** A value of 1 would mean report in seconds.
+** A value of 1000 would mean to report in milliseconds.
+*/
+#define ST_TIMEVAL_RESOLUTION 1000
+#define ST_TIMEVAL_FORMAT "%.3f"
+#define ST_TIMEVAL_PRINTABLE(timeval) ((PRFloat64)(timeval) / (PRFloat64)ST_TIMEVAL_RESOLUTION)
+#define ST_TIMEVAL_PRINTABLE64(timeval) ((PRFloat64)((PRInt64)(timeval)) / (PRFloat64)ST_TIMEVAL_RESOLUTION)
+#define ST_TIMEVAL_MAX ((PRUint32)-1 - ((PRUint32)-1 % ST_TIMEVAL_RESOLUTION))
 
 /*
 ** STAllocEvent
@@ -120,7 +136,7 @@ typedef struct __struct_STAllocEvent
         **  relation to other allocation events.  This is a time stamp
         **  of sorts.
         */
-        PRUint32 mInterval;
+        PRUint32 mTimeval;
         
         /*
         ** The type of allocation event.
@@ -170,8 +186,8 @@ typedef struct __struct_STAllocation
         /*
         ** The lifetime/lifespan of the allocation.
         */
-        PRUint32 mMinInterval;
-        PRUint32 mMaxInterval;
+        PRUint32 mMinTimeval;
+        PRUint32 mMaxTimeval;
 
         /*
         ** Index of this allocation in the global run.
@@ -193,10 +209,10 @@ typedef struct __struct_STCallsiteStats
         PRUint32 mSize;
 
         /*
-        ** Sum interval of the allocations.
+        ** Sum timeval of the allocations.
         ** Callsite runs total all allocations below the callsite.
         */
-        PRUint64 mInterval64;
+        PRUint64 mTimeval64;
 
         /*
         ** Sum weight of the allocations.
@@ -286,16 +302,21 @@ typedef struct __struct_STOptions
         PRUint32 mOrderBy;
 
         /*
-        ** Interval control.
+        ** Memory alignment size.
         */
-        PRUint32 mIntervalMin;
-        PRUint32 mIntervalMax;
+        PRUint32 mAlignBy;
 
         /*
-        ** Allocation Interval control.
+        ** Timeval control.
         */
-        PRUint32 mAllocationIntervalMin;
-        PRUint32 mAllocationIntervalMax;
+        PRUint32 mTimevalMin;
+        PRUint32 mTimevalMax;
+
+        /*
+        ** Allocation timeval control.
+        */
+        PRUint32 mAllocationTimevalMin;
+        PRUint32 mAllocationTimevalMax;
 
         /*
         ** Size control.
@@ -304,7 +325,7 @@ typedef struct __struct_STOptions
         PRUint32 mSizeMax;
 
         /*
-        ** Lifetime interval control.
+        ** Lifetime timeval control.
         */
         PRUint32 mLifetimeMin;
         PRUint32 mLifetimeMax;
@@ -316,10 +337,10 @@ typedef struct __struct_STOptions
         PRUint64 mWeightMax64;
 
         /*
-        ** Graph interval control.
+        ** Graph timeval control.
         */
-        PRUint32 mGraphIntervalMin;
-        PRUint32 mGraphIntervalMax;
+        PRUint32 mGraphTimevalMin;
+        PRUint32 mGraphTimevalMax;
 
         /*
         ** Restrict callsite backtraces to those containing text.
@@ -376,10 +397,10 @@ typedef struct __struct_STCache
         PRUint32 mFootprintYData[STGD_SPACE_X];
 
         /*
-        ** Interval graph cache.
+        ** Timeval graph cache.
         */
-        int mIntervalCached;
-        PRUint32 mIntervalYData[STGD_SPACE_X];
+        int mTimevalCached;
+        PRUint32 mTimevalYData[STGD_SPACE_X];
 
         /*
         ** Lifespan graph cache.
@@ -435,12 +456,12 @@ typedef struct __struct_STGlobals
         STRun mRun;
 
         /*
-        ** Operation minimum/maximum intervals.
-        ** So that we can determine the overall interval of the run.
+        ** Operation minimum/maximum timevals.
+        ** So that we can determine the overall timeval of the run.
         ** NOTE:  These are NOT the options to control the data set.
         */
-        PRUint32 mMinInterval;
-        PRUint32 mMaxInterval;
+        PRUint32 mMinTimeval;
+        PRUint32 mMaxTimeval;
 
         /*
         ** Set to non-zero when the httpd server should stop accepting
