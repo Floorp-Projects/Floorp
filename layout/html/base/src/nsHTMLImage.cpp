@@ -540,6 +540,7 @@ ImageFrame::DisplayAltText(nsIPresContext&      aPresContext,
     y += height;
   }
 
+  NS_RELEASE(fm);
   aRenderingContext.PopState();
 }
 
