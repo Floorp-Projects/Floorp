@@ -85,24 +85,12 @@ static const char sPrintOptionsContractID[] = "@mozilla.org/gfx/printsettings-se
 //
 static NS_DEFINE_CID(kRegionCID, NS_REGION_CID);
 
-
-
-#if defined(DEBUG_rods) || defined(DEBUG_dcone)
-#define DEBUG_PRINTING
-#endif
-
-#ifdef DEBUG_PRINTING
-#define PRINT_DEBUG_MSG1(_msg1) fprintf(mDebugFD, (_msg1))
-#define PRINT_DEBUG_MSG2(_msg1, _msg2) fprintf(mDebugFD, (_msg1), (_msg2))
-#define PRINT_DEBUG_MSG3(_msg1, _msg2, _msg3) fprintf(mDebugFD, (_msg1), (_msg2), (_msg3))
-#define PRINT_DEBUG_MSG4(_msg1, _msg2, _msg3, _msg4) fprintf(mDebugFD, (_msg1), (_msg2), (_msg3), (_msg4))
-#define PRINT_DEBUG_MSG5(_msg1, _msg2, _msg3, _msg4, _msg5) fprintf(mDebugFD, (_msg1), (_msg2), (_msg3), (_msg4), (_msg5))
-#else //--------------
-#define PRINT_DEBUG_MSG1(_msg) 
-#define PRINT_DEBUG_MSG2(_msg1, _msg2) 
-#define PRINT_DEBUG_MSG3(_msg1, _msg2, _msg3) 
-#define PRINT_DEBUG_MSG4(_msg1, _msg2, _msg3, _msg4) 
-#define PRINT_DEBUG_MSG5(_msg1, _msg2, _msg3, _msg4, _msg5) 
+#include "prlog.h"
+#ifdef PR_LOGGING 
+PRLogModuleInfo * kPrintingLogMod = PR_NewLogModule("printing");
+#define PR_PL(_p1)  PR_LOG(kPrintingLogMod, PR_LOG_DEBUG, _p1)
+#else
+#define PR_PL(_p1)
 #endif
 
 // This object a shared by all the nsPageFrames 
@@ -184,10 +172,6 @@ nsSimplePageSequenceFrame::nsSimplePageSequenceFrame() :
   // Doing this here so we only have to go get these formats once
   SetPageNumberFormat("pagenumber",  "%1$d", PR_TRUE);
   SetPageNumberFormat("pageofpages", "%1$d of %2$d", PR_FALSE);
-
-#ifdef NS_DEBUG
-  mDebugFD = stdout;
-#endif
 }
 
 nsSimplePageSequenceFrame::~nsSimplePageSequenceFrame()
@@ -440,7 +424,7 @@ nsSimplePageSequenceFrame::Reflow(nsIPresContext*          aPresContext,
 
       kidReflowState.mComputedWidth  = kidReflowState.availableWidth;
       //kidReflowState.mComputedHeight = kidReflowState.availableHeight;
-      PRINT_DEBUG_MSG3("AV W: %d   H: %d\n", kidReflowState.availableWidth, kidReflowState.availableHeight);
+      PR_PL(("AV W: %d   H: %d\n", kidReflowState.availableWidth, kidReflowState.availableHeight));
 
       // Set the shared data into the page frame before reflow
       nsPageFrame * pf = NS_STATIC_CAST(nsPageFrame*, kidFrame);
@@ -715,14 +699,14 @@ nsSimplePageSequenceFrame::StartPrint(nsIPresContext*   aPresContext,
     GetView(aPresContext, &seqView);
     nsRect rect;
     GetRect(rect);
-    fprintf(mDebugFD, "Seq Frame: %p - [%5d,%5d,%5d,%5d] ", this, rect.x, rect.y, rect.width, rect.height);
-    fprintf(mDebugFD, "view: %p ", seqView);
+    PR_PL(("Seq Frame: %p - [%5d,%5d,%5d,%5d] ", this, rect.x, rect.y, rect.width, rect.height));
+    PR_PL(("view: %p ", seqView));
     nsRect viewRect;
     if (seqView) {
       seqView->GetBounds(viewRect);
-      fprintf(mDebugFD, " [%5d,%5d,%5d,%5d]", viewRect.x, viewRect.y, viewRect.width, viewRect.height);
+      PR_PL((" [%5d,%5d,%5d,%5d]", viewRect.x, viewRect.y, viewRect.width, viewRect.height));
     }
-    fprintf(mDebugFD, "\n");
+    PR_PL(("\n"));
   }
 
   {
@@ -735,8 +719,8 @@ nsSimplePageSequenceFrame::StartPrint(nsIPresContext*   aPresContext,
       page->GetRect(rect);
       nsRect viewRect;
       view->GetBounds(viewRect);
-      fprintf(mDebugFD, " Page: %p  No: %d - [%5d,%5d,%5d,%5d] ", page, pageNum, rect.x, rect.y, rect.width, rect.height);
-      fprintf(mDebugFD, " [%5d,%5d,%5d,%5d]\n", viewRect.x, viewRect.y, viewRect.width, viewRect.height);
+      PR_PL((" Page: %p  No: %d - [%5d,%5d,%5d,%5d] ", page, pageNum, rect.x, rect.y, rect.width, rect.height));
+      PR_PL((" [%5d,%5d,%5d,%5d]\n", viewRect.x, viewRect.y, viewRect.width, viewRect.height));
       pageNum++;
     }
   }
@@ -941,7 +925,8 @@ nsSimplePageSequenceFrame::PrintNextPage(nsIPresContext*  aPresContext)
 
     while (continuePrinting) {
       if (!mSkipPageBegin) {
-        PRINT_DEBUG_MSG1("\n***************** BeginPage *****************\n");
+        PR_PL(("\n"));
+        PR_PL(("***************** BeginPage *****************\n"));
         rv = dc->BeginPage();
         if (NS_FAILED(rv)) {
           return rv;
@@ -964,8 +949,8 @@ nsSimplePageSequenceFrame::PrintNextPage(nsIPresContext*  aPresContext)
 
       NS_ASSERTION(nsnull != view, "no page view");
 
-      PRINT_DEBUG_MSG4("SeqFr::Paint -> %p PageNo: %d  View: %p", pf, mPageNum, view);
-      PRINT_DEBUG_MSG3(" At: %d,%d\n", mMargin.left+mOffsetX, mMargin.top+mOffsetY);
+      PR_PL(("SeqFr::Paint -> %p PageNo: %d  View: %p", pf, mPageNum, view));
+      PR_PL((" At: %d,%d\n", mMargin.left+mOffsetX, mMargin.top+mOffsetY));
 
       vm->SetViewContentTransparency(view, PR_FALSE);
 
@@ -980,7 +965,7 @@ nsSimplePageSequenceFrame::PrintNextPage(nsIPresContext*  aPresContext)
       //view->SetVisibility(nsViewVisibility_kHide);
 
       if (!mSkipPageEnd) {
-        PRINT_DEBUG_MSG1("***************** End Page (PrintNextPage) *****************\n");
+        PR_PL(("***************** End Page (PrintNextPage) *****************\n"));
         rv = dc->EndPage();
         if (NS_FAILED(rv)) {
           return rv;
@@ -1031,7 +1016,7 @@ nsSimplePageSequenceFrame::DoPageEnd(nsIPresContext*  aPresContext)
     NS_ASSERTION(dc, "nsIDeviceContext can't be NULL!");
 
     if(mSkipPageEnd){
-	    PRINT_DEBUG_MSG1("***************** End Page (DoPageEnd) *****************\n");
+	    PR_PL(("***************** End Page (DoPageEnd) *****************\n"));
       nsresult rv = dc->EndPage();
 	    if (NS_FAILED(rv)) {
 	      return rv;
@@ -1076,21 +1061,6 @@ nsSimplePageSequenceFrame::SetClipRect(nsIPresContext*  aPresContext, nsRect* aR
   }
   return NS_OK;
 }
-
-#ifdef NS_DEBUG
-NS_IMETHODIMP 
-nsSimplePageSequenceFrame::SetDebugFD(FILE* aFD)
-{
-  mDebugFD = aFD;
-  for (nsIFrame* f = mFrames.FirstChild(); f != nsnull; f->GetNextSibling(&f)) {
-    nsPageFrame * pf = NS_STATIC_CAST(nsPageFrame*, f);
-    if (pf != nsnull) {
-      pf->SetDebugFD(aFD);
-    }
-  }
-  return NS_OK;
-}
-#endif
 
 //------------------------------------------------------------------------------
 NS_IMETHODIMP

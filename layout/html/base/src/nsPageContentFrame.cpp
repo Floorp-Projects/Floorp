@@ -51,7 +51,7 @@
 #include "nsIView.h"
 
 #if defined(DEBUG_rods) || defined(DEBUG_dcone)
-#define DEBUG_PRINTING
+//#define DEBUG_PRINTING
 #endif
 
 

@@ -202,44 +202,44 @@ static NS_DEFINE_CID(kStyleSetCID,  NS_STYLESET_CID);
 #undef NOISY_VIEWER
 #endif
 
-#if defined(DEBUG_rods) || defined(DEBUG_dcone)
-#define DEBUG_PRINTING
+//-----------------------------------------------------
+// PR LOGGING
+#ifdef MOZ_LOGGING
+#define FORCE_PR_LOG /* Allow logging in the release build */
 #endif
 
-#ifdef DEBUG_PRINTING
-// XXX NOTE: I am including a header from the layout directory
-// merely to set up a file pointer for debug logging. This is
-// fragile and may break in the future, which means it can be
-// removed if necessary
-#if defined(XP_PC)
-#include "../../../layout/html/base/src/nsSimplePageSequence.h"
+#include "prlog.h"
+
+#ifdef PR_LOGGING
+
+#ifdef NS_DEBUG
+// PR_LOGGING is force to always be on (even in release builds)
+// but we only want some of it on,
+//#define EXTENDED_DEBUG_PRINTING 
 #endif
+
+#define DUMP_LAYOUT_LEVEL 9 // this turns on the dumping of each doucment's layout info
+
+static PRLogModuleInfo * kPrintingLogMod = PR_NewLogModule("printing");
+#define PR_PL(_p1)  PR_LOG(kPrintingLogMod, PR_LOG_DEBUG, _p1);
+
+#ifdef EXTENDED_DEBUG_PRINTING
+static PRUint32 gDumpFileNameCnt   = 0;
+static PRUint32 gDumpLOFileNameCnt = 0;
+#endif
+
 #define PRT_YESNO(_p) ((_p)?"YES":"NO")
-
 static const char * gFrameTypesStr[]       = {"eDoc", "eFrame", "eIFrame", "eFrameSet"};
 static const char * gPrintFrameTypeStr[]   = {"kNoFrames", "kFramesAsIs", "kSelectedFrame", "kEachFrameSep"};
 static const char * gFrameHowToEnableStr[] = {"kFrameEnableNone", "kFrameEnableAll", "kFrameEnableAsIsAndEach"};
 static const char * gPrintRangeStr[]       = {"kRangeAllPages", "kRangeSpecifiedPageRange", "kRangeSelection", "kRangeFocusFrame"};
-static PRUint32     gDumpFileNameCnt   = 0;
-static PRUint32     gDumpLOFileNameCnt = 0;
-
-#define PRINT_DEBUG_MSG1(_msg1) if (mPrt && mPrt->mDebugFD) fprintf(mPrt->mDebugFD, (_msg1)); 
-#define PRINT_DEBUG_MSG2(_msg1, _msg2) if (mPrt && mPrt->mDebugFD) fprintf(mPrt->mDebugFD, (_msg1), (_msg2)); 
-#define PRINT_DEBUG_MSG3(_msg1, _msg2, _msg3) if (mPrt && mPrt->mDebugFD) fprintf(mPrt->mDebugFD, (_msg1), (_msg2), (_msg3)); 
-#define PRINT_DEBUG_MSG4(_msg1, _msg2, _msg3, _msg4) if (mPrt && mPrt->mDebugFD) fprintf(mPrt->mDebugFD, (_msg1), (_msg2), (_msg3), (_msg4)); 
-#define PRINT_DEBUG_MSG5(_msg1, _msg2, _msg3, _msg4, _msg5) if (mPrt && mPrt->mDebugFD) fprintf(mPrt->mDebugFD, (_msg1), (_msg2), (_msg3), (_msg4), (_msg5)); 
-#define PRINT_DEBUG_FLUSH if (mPrt && mPrt->mDebugFD) fflush(mPrt->mDebugFD);
-#else //--------------
+#else
 #define PRT_YESNO(_p)
-#define PRINT_DEBUG_MSG1(_msg)
-#define PRINT_DEBUG_MSG2(_msg1, _msg2)
-#define PRINT_DEBUG_MSG3(_msg1, _msg2, _msg3)
-#define PRINT_DEBUG_MSG4(_msg1, _msg2, _msg3, _msg4)
-#define PRINT_DEBUG_MSG5(_msg1, _msg2, _msg3, _msg4, _msg5)
-#define PRINT_DEBUG_FLUSH
-
+#define PR_PL(_p1)
 #endif
+//-----------------------------------------------------
 
+// PrintObject Document Type
 enum PrintObjectType  {eDoc = 0, eFrame = 1, eIFrame = 2, eFrameSet = 3};
 
 class DocumentViewerImpl;
@@ -474,10 +474,6 @@ public:
   CachedPresentationObj*      mCachedPresObj;
 
   PRUnichar*            mBrandName; //  needed as a substitute name for a document
-
-#ifdef DEBUG_PRINTING
-  FILE *           mDebugFD;
-#endif
 
 private:
   PrintData() {}
@@ -902,9 +898,6 @@ PrintData::PrintData(ePrintDataType aType) :
   mShrinkRatio(1.0), mOrigDCScale(1.0), mOrigTextZoom(1.0), mOrigZoom(1.0), mPPEventListeners(NULL), 
   mIsCachingPresentation(PR_FALSE), mCachedPresObj(nsnull), mBrandName(nsnull)
 {
-#ifdef DEBUG_PRINTING
-  mDebugFD = fopen("printing.log", "w");
-#endif
 
   nsCOMPtr<nsIStringBundle> brandBundle;
   nsCOMPtr<nsIStringBundleService> svc( do_GetService( NS_STRINGBUNDLE_CONTRACTID ) );
@@ -947,9 +940,8 @@ PrintData::~PrintData()
   }
 
   if (mPrintDC && !mDebugFilePtr) {
-#ifdef DEBUG_PRINTING
-    fprintf(mDebugFD, "****************** End Document ************************\n");
-#endif
+    PR_PL(("****************** End Document ************************\n"));
+    PR_PL(("\n"));
     PRBool isCancelled = PR_FALSE;
     mPrintSettings->GetIsCancelled(&isCancelled);
 
@@ -976,10 +968,6 @@ PrintData::~PrintData()
   if (mBrandName) {
     nsCRT::free(mBrandName);
   }
-
-#ifdef DEBUG_PRINTING
-  fclose(mDebugFD);
-#endif
 
   DocumentViewerImpl::mIsDoingPrinting = PR_FALSE;
 
@@ -2212,7 +2200,7 @@ GetPresShellFor(nsIDocShell* aDocShell)
 //-- Debug helper routines
 //---------------------------------------------------------------
 //---------------------------------------------------------------
-#if defined(XP_PC) && defined(DEBUG_rods) && defined(DEBUG_PRINTING)
+#if defined(XP_PC) && defined(EXTENDED_DEBUG_PRINTING)
 #include "windows.h"
 #include "process.h"
 #include "direct.h"
@@ -2251,7 +2239,7 @@ int RemoveFilesInDir(const char * aDir)
 					// skip
 			}
 			else if (!ISDIR(data_ptr)) {
-        if (!strncmp(MY_FILENAME(data_ptr), "dump", 4)) {
+        if (!strncmp(MY_FILENAME(data_ptr), "print_dump", 10)) {
           char fileName[MAX_PATH];
           strcpy(fileName, aDir);
           strcat(fileName, "\\");
@@ -2267,7 +2255,7 @@ int RemoveFilesInDir(const char * aDir)
 }
 #endif
 
-#ifdef DEBUG_PRINTING
+#ifdef EXTENDED_DEBUG_PRINTING
 
 /** ---------------------------------------------------
  *  Dumps Frames for Printing
@@ -2392,6 +2380,8 @@ void DumpLayoutData(char*              aTitleStr,
                     nsIWebShell *      aWebShell,
                     FILE*              aFD = nsnull)
 {
+  if (!kPrintingLogMod || kPrintingLogMod->level != DUMP_LAYOUT_LEVEL) return;
+
   if (aPresContext == nsnull || aDC == nsnull) {
     return;
   }
@@ -2408,7 +2398,7 @@ void DumpLayoutData(char*              aTitleStr,
 
   // Dump all the frames and view to a a file
   char filename[256];
-  sprintf(filename, "dump_layout_%d.txt", gDumpLOFileNameCnt++);
+  sprintf(filename, "print_dump_layout_%d.txt", gDumpLOFileNameCnt++);
   FILE * fd = aFD?aFD:fopen(filename, "w");
   if (fd) {
     fprintf(fd, "Title: %s\n", aTitleStr?aTitleStr:"");
@@ -2440,16 +2430,16 @@ void DumpLayoutData(char*              aTitleStr,
   }
 }
 
-
-static void DumpPrintObjectsList(nsVoidArray * aDocList, FILE* aFD = nsnull)
+//-------------------------------------------------------------
+static void DumpPrintObjectsList(nsVoidArray * aDocList)
 {
+  if (!kPrintingLogMod || kPrintingLogMod->level != DUMP_LAYOUT_LEVEL) return;
+
   NS_ASSERTION(aDocList, "Pointer is null!");
 
-  FILE * fd = aFD?aFD:stdout;
-
   char * types[] = {"DC", "FR", "IF", "FS"};
-  fprintf(fd, "Doc List\n***************************************************\n");
-  fprintf(fd, "T  P A H    PO    WebShell   Seq     Page      Root     Page#    Rect\n");
+  PR_PL(("Doc List\n***************************************************\n"));
+  PR_PL(("T  P A H    PO    WebShell   Seq     Page      Root     Page#    Rect\n"));
   PRInt32 cnt = aDocList->Count();
   for (PRInt32 i=0;i<cnt;i++) {
     PrintObject* po = (PrintObject*)aDocList->ElementAt(i);
@@ -2466,18 +2456,17 @@ static void DumpPrintObjectsList(nsVoidArray * aDocList, FILE* aFD = nsnull)
       }
     }
 
-    fprintf(fd, "%s %d %d %d %p %p %p %p %p   %d   %d,%d,%d,%d\n", types[po->mFrameType],
+    PR_PL(("%s %d %d %d %p %p %p %p %p   %d   %d,%d,%d,%d\n", types[po->mFrameType],
             po->IsPrintable(), po->mPrintAsIs, po->mHasBeenPrinted, po, po->mWebShell, po->mSeqFrame,
-            po->mPageFrame, rootFrame, po->mPageNum, po->mRect.x, po->mRect.y, po->mRect.width, po->mRect.height);
-    if (fd != nsnull && fd != stdout) {
-      fprintf(stdout, "%s %d %d %d %p %p %p %p %p   %d   %d,%d,%d,%d\n", types[po->mFrameType],
-              po->IsPrintable(), po->mPrintAsIs, po->mHasBeenPrinted, po, po->mWebShell, po->mSeqFrame,
-              po->mPageFrame, rootFrame, po->mPageNum, po->mRect.x, po->mRect.y, po->mRect.width, po->mRect.height);
-    }
+            po->mPageFrame, rootFrame, po->mPageNum, po->mRect.x, po->mRect.y, po->mRect.width, po->mRect.height));
   }
 }
+
+//-------------------------------------------------------------
 static void DumpPrintObjectsTree(PrintObject * aPO, int aLevel= 0, FILE* aFD = nsnull)
 {
+  if (!kPrintingLogMod || kPrintingLogMod->level != DUMP_LAYOUT_LEVEL) return;
+
   NS_ASSERTION(aPO, "Pointer is null!");
 
   FILE * fd = aFD?aFD:stdout;
@@ -2496,8 +2485,8 @@ static void DumpPrintObjectsTree(PrintObject * aPO, int aLevel= 0, FILE* aFD = n
   }
 }
 
-static void GetDocTitleAndURL(PrintObject* aPO, char *& aDocStr,
-                              char *& aURLStr)
+//-------------------------------------------------------------
+static void GetDocTitleAndURL(PrintObject* aPO, char *& aDocStr, char *& aURLStr)
 {
   aDocStr = nsnull;
   aURLStr = nsnull;
@@ -2526,10 +2515,13 @@ static void GetDocTitleAndURL(PrintObject* aPO, char *& aDocStr,
   }
 }
 
+//-------------------------------------------------------------
 static void DumpPrintObjectsTreeLayout(PrintObject * aPO,
                                        nsIDeviceContext * aDC,
                                        int aLevel= 0, FILE * aFD = nsnull)
 {
+  if (!kPrintingLogMod || kPrintingLogMod->level != DUMP_LAYOUT_LEVEL) return;
+
   NS_ASSERTION(aPO, "Pointer is null!");
   NS_ASSERTION(aDC, "Pointer is null!");
 
@@ -2573,17 +2565,19 @@ static void DumpPrintObjectsTreeLayout(PrintObject * aPO,
   }
 }
 
-static void DumpPrintObjectsListStart(char * aStr, nsVoidArray * aDocList, FILE* aFD = nsnull)
+//-------------------------------------------------------------
+static void DumpPrintObjectsListStart(char * aStr, nsVoidArray * aDocList)
 {
+  if (!kPrintingLogMod || kPrintingLogMod->level != DUMP_LAYOUT_LEVEL) return;
+
   NS_ASSERTION(aStr, "Pointer is null!");
   NS_ASSERTION(aDocList, "Pointer is null!");
 
-  FILE * fd = aFD?aFD:stdout;
-  fprintf(fd, "%s\n", aStr);
-  DumpPrintObjectsList(aDocList, aFD);
+  PR_PL(("%s\n", aStr));
+  DumpPrintObjectsList(aDocList);
 }
 
-#define DUMP_DOC_LIST(_title) DumpPrintObjectsListStart((_title), mPrt->mPrintDocList, mPrt->mDebugFD);
+#define DUMP_DOC_LIST(_title) DumpPrintObjectsListStart((_title), mPrt->mPrintDocList);
 #define DUMP_DOC_TREE DumpPrintObjectsTree(mPrt->mPrintObject);
 #define DUMP_DOC_TREELAYOUT DumpPrintObjectsTreeLayout(mPrt->mPrintObject, mPrt->mPrintDC);
 #else
@@ -3017,14 +3011,14 @@ PRBool
 DocumentViewerImpl::DonePrintingPages(PrintObject* aPO)
 {
   //NS_ASSERTION(aPO, "Pointer is null!");
-  PRINT_DEBUG_MSG3("****** In DV::DonePrintingPages PO: %p (%s)\n", aPO, aPO?gFrameTypesStr[aPO->mFrameType]:"");
+  PR_PL(("****** In DV::DonePrintingPages PO: %p (%s)\n", aPO, aPO?gFrameTypesStr[aPO->mFrameType]:""));
 
   if (aPO != nsnull) {
     aPO->mHasBeenPrinted = PR_TRUE;
     nsresult rv;
     PRBool didPrint = PrintDocContent(mPrt->mPrintObject, rv);
     if (NS_SUCCEEDED(rv) && didPrint) {
-      PRINT_DEBUG_MSG4("****** In DV::DonePrintingPages PO: %p (%s) didPrint:%s (Not Done Printing)\n", aPO, gFrameTypesStr[aPO->mFrameType], PRT_YESNO(didPrint));
+      PR_PL(("****** In DV::DonePrintingPages PO: %p (%s) didPrint:%s (Not Done Printing)\n", aPO, gFrameTypesStr[aPO->mFrameType], PRT_YESNO(didPrint)));
       return PR_FALSE;
     }
   }
@@ -3061,8 +3055,8 @@ DocumentViewerImpl::PrintPage(nsIPresContext*   aPresContext,
     return PR_TRUE; // means we are done printing
   }
 
-  PRINT_DEBUG_MSG1("-----------------------------------\n");
-  PRINT_DEBUG_MSG3("------ In DV::PrintPage PO: %p (%s)\n", aPO, gFrameTypesStr[aPO->mFrameType]);
+  PR_PL(("-----------------------------------\n"));
+  PR_PL(("------ In DV::PrintPage PO: %p (%s)\n", aPO, gFrameTypesStr[aPO->mFrameType]));
 
   PRBool isCancelled = PR_FALSE;
 
@@ -3107,7 +3101,7 @@ DocumentViewerImpl::PrintPage(nsIPresContext*   aPresContext,
       toPage = numPages;
     }
 
-    PRINT_DEBUG_MSG4("****** Printing Page %d printing from %d to page %d\n", pageNum, fromPage, toPage);
+    PR_PL(("****** Printing Page %d printing from %d to page %d\n", pageNum, fromPage, toPage));
 
     donePrinting = pageNum >= toPage;
     aInRange = pageNum >= fromPage && pageNum <= toPage;
@@ -3118,7 +3112,7 @@ DocumentViewerImpl::PrintPage(nsIPresContext*   aPresContext,
     PRInt32 numPages;
     mPageSeqFrame->GetNumPages(&numPages);
 
-    PRINT_DEBUG_MSG3("****** Printing Page %d of %d page(s)\n", pageNum, numPages);
+    PR_PL(("****** Printing Page %d of %d page(s)\n", pageNum, numPages));
 
     donePrinting = pageNum >= numPages;
     curPage = pageNum+1;
@@ -3643,8 +3637,8 @@ DocumentViewerImpl::SetClipRect(PrintObject*  aPO,
   }
 
 
-  PRINT_DEBUG_MSG3("In DV::SetClipRect PO: %p (%9s) ", aPO, gFrameTypesStr[aPO->mFrameType]);
-  PRINT_DEBUG_MSG5("%5d,%5d,%5d,%5d\n", aPO->mClipRect.x, aPO->mClipRect.y,aPO->mClipRect.width, aPO->mClipRect.height);
+  PR_PL(("In DV::SetClipRect PO: %p (%9s) ", aPO, gFrameTypesStr[aPO->mFrameType]));
+  PR_PL(("%5d,%5d,%5d,%5d\n", aPO->mClipRect.x, aPO->mClipRect.y,aPO->mClipRect.width, aPO->mClipRect.height));
 
   PRInt32 cnt = aPO->mKids.Count();
   for (PRInt32 i=0;i<cnt;i++) {
@@ -3781,7 +3775,7 @@ DocumentViewerImpl::ReflowPrintObject(PrintObject * aPO, PRBool aDoCalcShrink)
     height = aPO->mRect.height;
   }
 
-  PRINT_DEBUG_MSG5("In DV::ReflowPrintObject PO: %p (%9s) Setting w,h to %d,%d\n", aPO, gFrameTypesStr[aPO->mFrameType], width, height);
+  PR_PL(("In DV::ReflowPrintObject PO: %p (%9s) Setting w,h to %d,%d\n", aPO, gFrameTypesStr[aPO->mFrameType], width, height));
 
   nsCOMPtr<nsIDOMWindowInternal> domWinIntl =
     do_QueryInterface(mPrt->mPrintDocDW);
@@ -4007,7 +4001,7 @@ DocumentViewerImpl::ReflowPrintObject(PrintObject * aPO, PRBool aDoCalcShrink)
               ratio = float(overMaxRectWidth) / float(overallMaxWidth);
               aPO->mXMost = overallMaxWidth;
               aPO->mShrinkRatio = PR_MIN(ratio, 1.0f);
-#ifdef DEBUG_PRINTING
+#ifdef EXTENDED_DEBUG_PRINTING
               printf("PO %p ****** RW: %d MW: %d  xMost %d  width: %d  %10.4f\n", aPO, overMaxRectWidth, overallMaxWidth, aPO->mXMost, overMaxRectWidth, ratio*100.0);
 #endif
             }
@@ -4016,13 +4010,13 @@ DocumentViewerImpl::ReflowPrintObject(PrintObject * aPO, PRBool aDoCalcShrink)
       }
     }
 
-#ifdef DEBUG_rods
-    {
+#ifdef EXTENDED_DEBUG_PRINTING
+    if (kPrintingLogMod && kPrintingLogMod->level == DUMP_LAYOUT_LEVEL) {
       char * docStr;
       char * urlStr;
       GetDocTitleAndURL(aPO, docStr, urlStr);
       char filename[256];
-      sprintf(filename, "dump_%d.txt", gDumpFileNameCnt++);
+      sprintf(filename, "print_dump_%d.txt", gDumpFileNameCnt++);
       // Dump all the frames and view to a a file
       FILE * fd = fopen(filename, "w");
       if (fd) {
@@ -4131,12 +4125,12 @@ DocumentViewerImpl::EnablePOsForPrinting()
   PRInt16 printRangeType = nsIPrintSettings::kRangeAllPages;
   mPrt->mPrintSettings->GetPrintRange(&printRangeType);
 
-  PRINT_DEBUG_MSG1("\n********* DocumentViewerImpl::EnablePOsForPrinting *********\n");
-  PRINT_DEBUG_MSG2("PrintFrameType:     %s \n", gPrintFrameTypeStr[mPrt->mPrintFrameType]);
-  PRINT_DEBUG_MSG2("HowToEnableFrameUI: %s \n", gFrameHowToEnableStr[printHowEnable]);
-  PRINT_DEBUG_MSG2("PrintRange:         %s \n", gPrintRangeStr[printRangeType]);
-  PRINT_DEBUG_MSG1("----\n");
-  PRINT_DEBUG_FLUSH
+  PR_PL(("\n"));
+  PR_PL(("********* DocumentViewerImpl::EnablePOsForPrinting *********\n"));
+  PR_PL(("PrintFrameType:     %s \n", gPrintFrameTypeStr[mPrt->mPrintFrameType]));
+  PR_PL(("HowToEnableFrameUI: %s \n", gFrameHowToEnableStr[printHowEnable]));
+  PR_PL(("PrintRange:         %s \n", gPrintRangeStr[printRangeType]));
+  PR_PL(("----\n"));
 
   // ***** This is the ultimate override *****
   // if we are printing the selection (either an IFrame or selection range)
@@ -4170,9 +4164,9 @@ DocumentViewerImpl::EnablePOsForPrinting()
         // ***** Another override *****
         mPrt->mPrintFrameType = nsIPrintSettings::kFramesAsIs;
       }
-      PRINT_DEBUG_MSG2("PrintFrameType:     %s \n", gPrintFrameTypeStr[mPrt->mPrintFrameType]);
-      PRINT_DEBUG_MSG2("HowToEnableFrameUI: %s \n", gFrameHowToEnableStr[printHowEnable]);
-      PRINT_DEBUG_MSG2("PrintRange:         %s \n", gPrintRangeStr[printRangeType]);
+      PR_PL(("PrintFrameType:     %s \n", gPrintFrameTypeStr[mPrt->mPrintFrameType]));
+      PR_PL(("HowToEnableFrameUI: %s \n", gFrameHowToEnableStr[printHowEnable]));
+      PR_PL(("PrintRange:         %s \n", gPrintRangeStr[printRangeType]));
       return NS_OK;
     }
 
@@ -4204,9 +4198,9 @@ DocumentViewerImpl::EnablePOsForPrinting()
             printRangeType = nsIPrintSettings::kRangeAllPages;
             mPrt->mPrintSettings->SetPrintRange(printRangeType);
           }
-          PRINT_DEBUG_MSG2("PrintFrameType:     %s \n", gPrintFrameTypeStr[mPrt->mPrintFrameType]);
-          PRINT_DEBUG_MSG2("HowToEnableFrameUI: %s \n", gFrameHowToEnableStr[printHowEnable]);
-          PRINT_DEBUG_MSG2("PrintRange:         %s \n", gPrintRangeStr[printRangeType]);
+          PR_PL(("PrintFrameType:     %s \n", gPrintFrameTypeStr[mPrt->mPrintFrameType]));
+          PR_PL(("HowToEnableFrameUI: %s \n", gFrameHowToEnableStr[printHowEnable]));
+          PR_PL(("PrintRange:         %s \n", gPrintRangeStr[printRangeType]));
           return NS_OK;
         }
       } else {
@@ -4251,9 +4245,9 @@ DocumentViewerImpl::EnablePOsForPrinting()
           printRangeType = nsIPrintSettings::kRangeAllPages;
           mPrt->mPrintSettings->SetPrintRange(printRangeType);
         }
-        PRINT_DEBUG_MSG2("PrintFrameType:     %s \n", gPrintFrameTypeStr[mPrt->mPrintFrameType]);
-        PRINT_DEBUG_MSG2("HowToEnableFrameUI: %s \n", gFrameHowToEnableStr[printHowEnable]);
-        PRINT_DEBUG_MSG2("PrintRange:         %s \n", gPrintRangeStr[printRangeType]);
+        PR_PL(("PrintFrameType:     %s \n", gPrintFrameTypeStr[mPrt->mPrintFrameType]));
+        PR_PL(("HowToEnableFrameUI: %s \n", gFrameHowToEnableStr[printHowEnable]));
+        PR_PL(("PrintRange:         %s \n", gPrintRangeStr[printRangeType]));
         return NS_OK;
       }
     }
@@ -4422,7 +4416,7 @@ DocumentViewerImpl::FindXMostPO()
     }
   }
 
-#ifdef DEBUG_PRINTING
+#ifdef EXTENDED_DEBUG_PRINTING
   if (xMostPO) printf("*PO: %p  Type: %d  XM: %d  XM2: %d  %10.3f\n", xMostPO, xMostPO->mFrameType, xMostPO->mRect.XMost(), xMostPO->mXMost, xMostPO->mShrinkRatio);
 #endif
   return xMostPO;
@@ -4499,6 +4493,16 @@ DocumentViewerImpl::SetupToPrintContent(nsIWebShell*          aParent,
         po->DestroyPresentation();
       }
 
+#if defined(XP_PC) && defined(EXTENDED_DEBUG_PRINTING)
+      // We need to clear all the output files here
+      // because they will be re-created with second reflow of the docs
+      if (kPrintingLogMod && kPrintingLogMod->level == DUMP_LAYOUT_LEVEL) {
+        RemoveFilesInDir(".\\");
+        gDumpFileNameCnt   = 0;
+        gDumpLOFileNameCnt = 0;
+      }
+#endif
+
       // Here we reflow all the PrintObjects a second time
       // this time using the shrinkage values
       // The last param here tells reflow to NOT calc the shrinkage values
@@ -4506,7 +4510,8 @@ DocumentViewerImpl::SetupToPrintContent(nsIWebShell*          aParent,
         return NS_ERROR_FAILURE;
       }
     }
-#ifdef DEBUG_rods
+
+#ifdef PR_LOGGING
     {
       float calcRatio;
       if (mPrt->mPrintDocList->Count() > 1 && mPrt->mPrintObject->mFrameType == eFrameSet) {
@@ -4525,47 +4530,30 @@ DocumentViewerImpl::SetupToPrintContent(nsIWebShell*          aParent,
         // Single document so use the Shrink as calculated for the PO
         calcRatio = mPrt->mPrintObject->mShrinkRatio;
       }
-      printf("**************************************************************************\n");
-      printf("STF Ratio is: %8.5f Effective Ratio: %8.5f Diff: %8.5f\n", mPrt->mShrinkRatio, calcRatio,  mPrt->mShrinkRatio-calcRatio);
-      printf("**************************************************************************\n");
+      PR_PL(("**************************************************************************\n"));
+      PR_PL(("STF Ratio is: %8.5f Effective Ratio: %8.5f Diff: %8.5f\n", mPrt->mShrinkRatio, calcRatio,  mPrt->mShrinkRatio-calcRatio));
+      PR_PL(("**************************************************************************\n"));
     }
 #endif
   }
 
-  DUMP_DOC_LIST("\nAfter Reflow------------------------------------------");
-  PRINT_DEBUG_MSG1("\n-------------------------------------------------------\n\n");
+  DUMP_DOC_LIST(("\nAfter Reflow------------------------------------------"));
+  PR_PL(("\n"));
+  PR_PL(("-------------------------------------------------------\n"));
+  PR_PL(("\n"));
 
   // Set up the clipping rectangle for all documents
   // When frames are being printed as part of a frame set and also IFrames,
   // they are reflowed with a very large page height. We need to setup the
   // clipping so they do not rpint over top of anything else
-  PRINT_DEBUG_MSG1("SetClipRect-------------------------------------------------------\n");
+  PR_PL(("SetClipRect-------------------------------------------------------\n"));
   nsRect clipRect(-1,-1,-1, -1);
   SetClipRect(mPrt->mPrintObject, clipRect, 0, 0, PR_FALSE);
 
   CalcNumPrintableDocsAndPages(mPrt->mNumPrintableDocs, mPrt->mNumPrintablePages);
 
-  PRINT_DEBUG_MSG3("--- Printing %d docs and %d pages\n", mPrt->mNumPrintableDocs, mPrt->mNumPrintablePages);
+  PR_PL(("--- Printing %d docs and %d pages\n", mPrt->mNumPrintableDocs, mPrt->mNumPrintablePages));
   DUMP_DOC_TREELAYOUT;
-  PRINT_DEBUG_FLUSH;
-
-#ifdef DEBUG_PRINTING_X
-#if defined(XP_PC)
-  for (PRInt32 i=0;i<mPrt->mPrintDocList->Count();i++) {
-    PrintObject* po = (PrintObject*)mPrt->mPrintDocList->ElementAt(i);
-    NS_ASSERTION(po, "PrintObject can't be null!");
-    if (po->mPresShell) {
-      nsIPageSequenceFrame* pageSequence;
-      po->mPresShell->GetPageSequenceFrame(&pageSequence);
-      if (pageSequence != nsnull) {
-        // install the debugging file pointer
-        nsSimplePageSequenceFrame * sf = NS_STATIC_CAST(nsSimplePageSequenceFrame*, pageSequence);
-        sf->SetDebugFD(mPrt->mDebugFD);
-      }
-    }
-  }
-#endif
-#endif
 
   mPrt->mPrintDocDW = aCurrentFocusedDOMWin;
 
@@ -4605,7 +4593,7 @@ DocumentViewerImpl::SetupToPrintContent(nsIWebShell*          aParent,
     rv = mPrt->mPrintDC->BeginDocument(docTitleStr, fileName, startPage, endPage);
   }
 
-  PRINT_DEBUG_MSG1("****************** Begin Document ************************\n");
+  PR_PL(("****************** Begin Document ************************\n"));
 
   if (docTitleStr) nsMemory::Free(docTitleStr);
   if (docURLStr) nsMemory::Free(docURLStr);
@@ -4630,8 +4618,9 @@ DocumentViewerImpl::DoPrint(PrintObject * aPO, PRBool aDoSyncPrinting, PRBool& a
 {
   NS_ASSERTION(mPrt->mPrintDocList, "Pointer is null!");
 
-  PRINT_DEBUG_MSG2("\n**************************** %s ****************************\n", gFrameTypesStr[aPO->mFrameType]);
-  PRINT_DEBUG_MSG3("****** In DV::DoPrint   PO: %p aDoSyncPrinting: %s \n", aPO, PRT_YESNO(aDoSyncPrinting));
+  PR_PL(("\n"));
+  PR_PL(("**************************** %s ****************************\n", gFrameTypesStr[aPO->mFrameType]));
+  PR_PL(("****** In DV::DoPrint   PO: %p aDoSyncPrinting: %s \n", aPO, PRT_YESNO(aDoSyncPrinting)));
 
   nsIWebShell*    webShell      = aPO->mWebShell.get();
   nsIPresShell*   poPresShell   = aPO->mPresShell;
@@ -4753,9 +4742,9 @@ DocumentViewerImpl::DoPrint(PrintObject * aPO, PRBool aDoSyncPrinting, PRBool& a
       }
     }
 
-    PRINT_DEBUG_MSG5("*** skipPageEjectOnly: %s  skipAllPageAdjustments: %s  doOffsetting: %s  doAddInParentsOffset: %s\n",
+    PR_PL(("*** skipPageEjectOnly: %s  skipAllPageAdjustments: %s  doOffsetting: %s  doAddInParentsOffset: %s\n",
                       PRT_YESNO(skipPageEjectOnly), PRT_YESNO(skipAllPageAdjustments),
-                      PRT_YESNO(doOffsetting), PRT_YESNO(doAddInParentsOffset));
+                      PRT_YESNO(doOffsetting), PRT_YESNO(doAddInParentsOffset)));
 
     // We are done preparing for printing, so we can turn this off
     mPrt->mPreparingForPrint = PR_FALSE;
@@ -4777,7 +4766,7 @@ DocumentViewerImpl::DoPrint(PrintObject * aPO, PRBool aDoSyncPrinting, PRBool& a
       nsIFrame* rootFrame;
       poPresShell->GetRootFrame(&rootFrame);
 
-#if defined(DEBUG_rods) || defined(DEBUG_dconeX)
+#ifdef EXTENDED_DEBUG_PRINTING
       if (aPO->IsPrintable()) {
         char * docStr;
         char * urlStr;
@@ -4893,12 +4882,12 @@ DocumentViewerImpl::DoPrint(PrintObject * aPO, PRBool aDoSyncPrinting, PRBool& a
             mPrt->mPrintSettings->GetPrintPageDelay(&printPageDelay);
 
             // Schedule Page to Print
-            PRINT_DEBUG_MSG3("Scheduling Print of PO: %p (%s) \n", aPO, gFrameTypesStr[aPO->mFrameType]);
+            PR_PL(("Scheduling Print of PO: %p (%s) \n", aPO, gFrameTypesStr[aPO->mFrameType]));
             StartPagePrintTimer(poPresContext, mPrt->mPrintSettings, aPO, printPageDelay);
           } else {
             DoProgressForAsIsFrames();
             // Print the page synchronously
-            PRINT_DEBUG_MSG3("Async Print of PO: %p (%s) \n", aPO, gFrameTypesStr[aPO->mFrameType]);
+            PR_PL(("Async Print of PO: %p (%s) \n", aPO, gFrameTypesStr[aPO->mFrameType]));
             PRBool inRange;
             aDonePrinting = PrintPage(poPresContext, mPrt->mPrintSettings, aPO, inRange);
           }
@@ -6412,9 +6401,11 @@ DocumentViewerImpl::PrintPreview(nsIPrintSettings* aPrintSettings,
 
   nsresult rv = NS_OK;
 
-#if defined(XP_PC) && defined(DEBUG_rods) && defined(DEBUG_PRINTING)
+#if defined(XP_PC) && defined(EXTENDED_DEBUG_PRINTING)
   if (!mIsDoingPrintPreview) {
-    RemoveFilesInDir(".\\");
+    if (kPrintingLogMod && kPrintingLogMod->level == DUMP_LAYOUT_LEVEL) {
+      RemoveFilesInDir(".\\");
+    }
   }
 #endif
 
@@ -6549,21 +6540,20 @@ DocumentViewerImpl::PrintPreview(nsIPrintSettings* aPrintSettings,
     mPrt->mPrintSettings->SetPrintOptions(nsIPrintSettings::kEnableSelectionRB, isSelection || mPrt->mIsIFrameSelected);
   }
 
-#ifdef DEBUG_PRINTING
+#ifdef PR_LOGGING
   if (mPrt->mPrintSettings) {
     PRInt16 printHowEnable = nsIPrintSettings::kFrameEnableNone;
     mPrt->mPrintSettings->GetHowToEnableFrameUI(&printHowEnable);
     PRBool val;
     mPrt->mPrintSettings->GetPrintOptions(nsIPrintSettings::kEnableSelectionRB, &val);
 
-    PRINT_DEBUG_MSG1("********* DocumentViewerImpl::Print *********\n");
-    PRINT_DEBUG_MSG2("IsParentAFrameSet:   %s \n", PRT_YESNO(mPrt->mIsParentAFrameSet));
-    PRINT_DEBUG_MSG2("IsIFrameSelected:    %s \n", PRT_YESNO(mPrt->mIsIFrameSelected));
-    PRINT_DEBUG_MSG2("Main Doc Frame Type: %s \n", gFrameTypesStr[mPrt->mPrintObject->mFrameType]);
-    PRINT_DEBUG_MSG2("HowToEnableFrameUI:  %s \n", gFrameHowToEnableStr[printHowEnable]);
-    PRINT_DEBUG_MSG2("EnableSelectionRB:   %s \n", PRT_YESNO(val));
-    PRINT_DEBUG_MSG1("*********************************************\n");
-    PRINT_DEBUG_FLUSH
+    PR_PL(("********* DocumentViewerImpl::Print *********\n"));
+    PR_PL(("IsParentAFrameSet:   %s \n", PRT_YESNO(mPrt->mIsParentAFrameSet)));
+    PR_PL(("IsIFrameSelected:    %s \n", PRT_YESNO(mPrt->mIsIFrameSelected)));
+    PR_PL(("Main Doc Frame Type: %s \n", gFrameTypesStr[mPrt->mPrintObject->mFrameType]));
+    PR_PL(("HowToEnableFrameUI:  %s \n", gFrameHowToEnableStr[printHowEnable]));
+    PR_PL(("EnableSelectionRB:   %s \n", PRT_YESNO(val)));
+    PR_PL(("*********************************************\n"));
   }
 #endif
 
@@ -6797,11 +6787,16 @@ NS_IMETHODIMP
 DocumentViewerImpl::Print(nsIPrintSettings*       aPrintSettings,
                           nsIWebProgressListener* aWebProgressListener)
 {
-#ifdef DEBUG_PRINTING
+#ifdef EXTENDED_DEBUG_PRINTING
   // need for capturing result on each doc and sub-doc that is printed
   gDumpFileNameCnt   = 0;
   gDumpLOFileNameCnt = 0;
-#endif
+#if defined(XP_PC)
+  if (kPrintingLogMod && kPrintingLogMod->level == DUMP_LAYOUT_LEVEL) {
+    RemoveFilesInDir(".\\");
+  }
+#endif // XP_PC
+#endif // EXTENDED_DEBUG_PRINTING
 
   // Temporary code for Bug 136185
   nsCOMPtr<nsIXULDocument> xulDoc(do_QueryInterface(mDocument));
@@ -6820,7 +6815,7 @@ DocumentViewerImpl::Print(nsIPrintSettings*       aPrintSettings,
 
   if (!presShell) {
     // A frame that's not displayed can't be printed!
-    PRINT_DEBUG_MSG1("Printing Stopped - PreShell was NULL!");
+    PR_PL(("Printing Stopped - PreShell was NULL!"));
     return NS_OK;
   }
 
@@ -6849,7 +6844,7 @@ DocumentViewerImpl::Print(nsIPrintSettings*       aPrintSettings,
   
   mPrt = new PrintData(PrintData::eIsPrinting);
   if (!mPrt) {
-    PRINT_DEBUG_MSG1("NS_ERROR_OUT_OF_MEMORY - Creating PrintData");
+    PR_PL(("NS_ERROR_OUT_OF_MEMORY - Creating PrintData"));
     return NS_ERROR_OUT_OF_MEMORY;
   }
 
@@ -6869,7 +6864,7 @@ DocumentViewerImpl::Print(nsIPrintSettings*       aPrintSettings,
   }
   if (NS_FAILED(rv)) {
     delete mPrt;
-    PRINT_DEBUG_MSG1("NS_ERROR_FAILURE - CheckForPrinters for Printers failed");
+    PR_PL(("NS_ERROR_FAILURE - CheckForPrinters for Printers failed"));
     mPrt = nsnull;
     return NS_ERROR_FAILURE;
   }
@@ -6904,7 +6899,7 @@ DocumentViewerImpl::Print(nsIPrintSettings*       aPrintSettings,
       mIsDoingPrinting = PR_FALSE;
       delete mPrt;
       mPrt = nsnull;
-      PRINT_DEBUG_MSG1("NS_ERROR_FAILURE - Couldn't create mPrintDocList");
+      PR_PL(("NS_ERROR_FAILURE - Couldn't create mPrintDocList"));
       return NS_ERROR_FAILURE;
     }
   } else {
@@ -6954,21 +6949,20 @@ DocumentViewerImpl::Print(nsIPrintSettings*       aPrintSettings,
   // Now determine how to set up the Frame print UI
   mPrt->mPrintSettings->SetPrintOptions(nsIPrintSettings::kEnableSelectionRB, isSelection || mPrt->mIsIFrameSelected);
 
-#ifdef DEBUG_PRINTING
+#ifdef PR_LOGGING
   if (mPrt->mPrintSettings) {
     PRInt16 printHowEnable = nsIPrintSettings::kFrameEnableNone;
     mPrt->mPrintSettings->GetHowToEnableFrameUI(&printHowEnable);
     PRBool val;
     mPrt->mPrintSettings->GetPrintOptions(nsIPrintSettings::kEnableSelectionRB, &val);
 
-    PRINT_DEBUG_MSG1("********* DocumentViewerImpl::Print *********\n");
-    PRINT_DEBUG_MSG2("IsParentAFrameSet:   %s \n", PRT_YESNO(mPrt->mIsParentAFrameSet));
-    PRINT_DEBUG_MSG2("IsIFrameSelected:    %s \n", PRT_YESNO(mPrt->mIsIFrameSelected));
-    PRINT_DEBUG_MSG2("Main Doc Frame Type: %s \n", gFrameTypesStr[mPrt->mPrintObject->mFrameType]);
-    PRINT_DEBUG_MSG2("HowToEnableFrameUI:  %s \n", gFrameHowToEnableStr[printHowEnable]);
-    PRINT_DEBUG_MSG2("EnableSelectionRB:   %s \n", PRT_YESNO(val));
-    PRINT_DEBUG_MSG1("*********************************************\n");
-    PRINT_DEBUG_FLUSH
+    PR_PL(("********* DocumentViewerImpl::Print *********\n"));
+    PR_PL(("IsParentAFrameSet:   %s \n", PRT_YESNO(mPrt->mIsParentAFrameSet)));
+    PR_PL(("IsIFrameSelected:    %s \n", PRT_YESNO(mPrt->mIsIFrameSelected)));
+    PR_PL(("Main Doc Frame Type: %s \n", gFrameTypesStr[mPrt->mPrintObject->mFrameType]));
+    PR_PL(("HowToEnableFrameUI:  %s \n", gFrameHowToEnableStr[printHowEnable]));
+    PR_PL(("EnableSelectionRB:   %s \n", PRT_YESNO(val)));
+    PR_PL(("*********************************************\n"));
   }
 #endif
 
@@ -7033,7 +7027,7 @@ DocumentViewerImpl::Print(nsIPrintSettings*       aPrintSettings,
       }
       delete mPrt;
       mPrt = nsnull;
-      PRINT_DEBUG_MSG1("**** Printing Stopped before CreateDeviceContextSpec");
+      PR_PL(("**** Printing Stopped before CreateDeviceContextSpec"));
       return rv;
     }
 
@@ -7051,7 +7045,7 @@ DocumentViewerImpl::Print(nsIPrintSettings*       aPrintSettings,
       if (rv != NS_ERROR_ABORT) {
         ShowPrintErrorDialog(NS_ERROR_GFX_PRINTER_DOC_WAS_DESTORYED);
       }
-      PRINT_DEBUG_MSG2("**** mDocWasToBeDestroyed - %s", rv != NS_ERROR_ABORT?"NS_ERROR_GFX_PRINTER_DOC_WAS_DESTORYED":"NS_ERROR_ABORT");
+      PR_PL(("**** mDocWasToBeDestroyed - %s", rv != NS_ERROR_ABORT?"NS_ERROR_GFX_PRINTER_DOC_WAS_DESTORYED":"NS_ERROR_ABORT"));
       return NS_ERROR_ABORT;
     }
 
@@ -7178,6 +7172,8 @@ DocumentViewerImpl::Print(nsIPrintSettings*       aPrintSettings,
             PRUnichar * docURLStr;
 
             GetDisplayTitleAndURL(mPrt->mPrintObject, mPrt->mPrintSettings, mPrt->mBrandName, &docTitleStr, &docURLStr, eDocTitleDefURLDoc); 
+            PR_PL(("Title: %s\n", docTitleStr?NS_LossyConvertUCS2toASCII(docTitleStr).get():""));
+            PR_PL(("URL:   %s\n", docURLStr?NS_LossyConvertUCS2toASCII(docURLStr).get():""));
 
             rv = mPrt->mPrintDC->PrepareDocument(docTitleStr, fileName);
 
@@ -7193,7 +7189,7 @@ DocumentViewerImpl::Print(nsIPrintSettings*       aPrintSettings,
             }
 
             rv = DocumentReadyForPrinting();
-            PRINT_DEBUG_MSG1("PRINT JOB ENDING, OBSERVER WAS NOT CALLED\n");
+            PR_PL(("PRINT JOB ENDING, OBSERVER WAS NOT CALLED\n"));
           }
         }
       }
@@ -7225,7 +7221,7 @@ DocumentViewerImpl::Print(nsIPrintSettings*       aPrintSettings,
     if (rv != NS_ERROR_ABORT) {
       ShowPrintErrorDialog(rv);
     }
-    PRINT_DEBUG_MSG2("**** Printing Failed - rv 0x%X", rv);
+    PR_PL(("**** Printing Failed - rv 0x%X", rv));
   }
 
   return rv;
@@ -7294,6 +7290,10 @@ DocumentViewerImpl::ShowPrintErrorDialog(nsresult aPrintError, PRBool aIsPrintin
       NS_ERROR_TO_LOCALIZED_PRINT_ERROR_MSG(NS_ERROR_FAILURE)
 #undef NS_ERROR_TO_LOCALIZED_PRINT_ERROR_MSG
   }
+
+  PR_PL(("*******************************************\n"));
+  PR_PL(("*** ShowPrintErrorDialog %s\n", NS_LossyConvertUCS2toASCII(stringName).get()));
+  PR_PL(("*******************************************\n"));
 
   myStringBundle->GetStringFromName(stringName.get(), getter_Copies(msg));
   if (aIsPrinting) {

@@ -220,7 +220,7 @@ protected:
   }
 
   PRBool HaveOutsideBullet() const {
-#ifdef DEBUG
+#if defined(DEBUG) && !defined(DEBUG_rods)
     if(mState & NS_BLOCK_FRAME_HAS_OUTSIDE_BULLET) {
       NS_ASSERTION(mBullet,"NS_BLOCK_FRAME_HAS_OUTSIDE_BULLET flag set and no mBullet");
     }

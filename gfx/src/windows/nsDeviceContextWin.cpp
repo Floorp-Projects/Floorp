@@ -58,6 +58,14 @@ PRUint32 nsDeviceContextWin::sNumberOfScreens = 0;
 
 static char* nav4rounding = "font.size.nav4rounding";
 
+#include "prlog.h"
+#ifdef PR_LOGGING 
+PRLogModuleInfo * kPrintingLogMod = PR_NewLogModule("printing");
+#define PR_PL(_p1)  PR_LOG(kPrintingLogMod, PR_LOG_DEBUG, _p1)
+#else
+#define PR_PL(_p1)
+#endif
+
 nsDeviceContextWin :: nsDeviceContextWin()
   : DeviceContextImpl()
 {
@@ -796,6 +804,7 @@ NS_IMETHODIMP nsDeviceContextWin :: BeginDocument(PRUnichar * aTitle, PRUnichar*
     } else {
       DISPLAY_LAST_ERROR
       rv = NS_ERROR_GFX_PRINTER_STARTDOC;
+      PR_PL(("nsDeviceContextWin::BeginDocument - StartDoc Error!\n"));
     }
 
     if (title != nsnull) delete [] title;
@@ -813,6 +822,7 @@ NS_IMETHODIMP nsDeviceContextWin :: EndDocument(void)
       return NS_OK;
     } else {
       DISPLAY_LAST_ERROR
+      PR_PL(("nsDeviceContextWin::EndDocument - EndDoc Error!\n"));
       return NS_ERROR_GFX_PRINTER_ENDDOC;
     }
   }
@@ -828,6 +838,7 @@ NS_IMETHODIMP nsDeviceContextWin :: AbortDocument(void)
       return NS_OK;
     } else {
       DISPLAY_LAST_ERROR
+      PR_PL(("nsDeviceContextWin::AbortDocument - AbortDoc Error!\n"));
       return NS_ERROR_ABORT;
     }
   }
@@ -843,6 +854,7 @@ NS_IMETHODIMP nsDeviceContextWin :: BeginPage(void)
       return NS_OK;
     else {
       DISPLAY_LAST_ERROR
+      PR_PL(("nsDeviceContextWin::BeginPage - StartPage Error!\n"));
       return NS_ERROR_GFX_PRINTER_STARTPAGE;
     }
   }
@@ -858,6 +870,7 @@ NS_IMETHODIMP nsDeviceContextWin :: EndPage(void)
       return NS_OK;
     } else {
       DISPLAY_LAST_ERROR
+      PR_PL(("nsDeviceContextWin::EndPage - EndPage Error!\n"));
       return NS_ERROR_GFX_PRINTER_ENDPAGE;
     }
   }
