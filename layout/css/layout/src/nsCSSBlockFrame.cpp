@@ -166,7 +166,7 @@ protected:
 #endif
   virtual PRBool DeleteNextInFlowsFor(nsIFrame* aNextInFlow);
 
-  nsresult DrainOverflowLines();
+  PRBool DrainOverflowLines();
 
   PRBool RemoveChild(LineData* aLines, nsIFrame* aChild);
 
@@ -1230,8 +1230,12 @@ nsCSSBlockFrame::Reflow(nsIPresContext&      aPresContext,
 
   nsresult rv = NS_OK;
   if (eReflowReason_Initial == state.reason) {
-    DrainOverflowLines();
-    rv = InitialReflow(state);
+    if (!DrainOverflowLines()) {
+      rv = InitialReflow(state);
+    }
+    else {
+      rv = ResizeReflow(state);
+    }
     mState &= ~NS_FRAME_FIRST_REFLOW;
   }
   else if (eReflowReason_Incremental == state.reason) {
@@ -2731,14 +2735,17 @@ nsCSSBlockFrame::PushLines(nsCSSBlockReflowState& aState)
 #endif
 }
 
-nsresult
+PRBool
 nsCSSBlockFrame::DrainOverflowLines()
 {
+  PRBool drained = PR_FALSE;
+
   // First grab the prev-in-flows overflow lines
   nsCSSBlockFrame* prevBlock = (nsCSSBlockFrame*) mPrevInFlow;
   if (nsnull != prevBlock) {
     LineData* line = prevBlock->mOverflowLines;
     if (nsnull != line) {
+      drained = PR_TRUE;
       NS_FRAME_TRACE(NS_FRAME_TRACE_CALLS,
          ("nsCSSBlockFrame::DrainOverflowLines: line=%p prevInFlow=%p",
           line, prevBlock));
@@ -2803,6 +2810,7 @@ nsCSSBlockFrame::DrainOverflowLines()
       lastLine->LastChild()->GetContentIndex(mLastContentOffset);
     }
     mOverflowLines = nsnull;
+    drained = PR_TRUE;
   }
 
 #ifdef NS_DEBUG
@@ -2810,7 +2818,7 @@ nsCSSBlockFrame::DrainOverflowLines()
     VerifyChildCount(mLines, PR_TRUE);
   }
 #endif
-  return NS_OK;
+  return drained;
 }
 
 // XXX a copy of nsHTMLContainerFrame's
