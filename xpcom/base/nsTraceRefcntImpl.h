@@ -177,7 +177,7 @@ public:
   };
 
   static NS_COM nsresult DumpStatistics(StatisticsType type = ALL_STATS,
-                                        nsIOutputStream* out = nsnull);
+                                        nsIOutputStream* out = 0);
   
   static NS_COM void ResetStatistics(void);
 
