@@ -1382,11 +1382,7 @@ void CNetscapeEditView::OnRButtonDown(UINT uFlags, CPoint cpPoint)
     // Get what types are available on the clipboard
     BOOL bHaveText, bHaveLink, bHaveImage, bHaveTable;
     BOOL bCanPaste = wfe_GetClipboardTypes(pMWContext, bHaveText, bHaveImage, bHaveLink, bHaveTable );
-
-#ifdef DEBUG
-    if( bHaveLink )
-        XP_ASSERT(!m_csRBLink.IsEmpty());
-#endif
+    BOOL bIsLink = !m_csRBLink.IsEmpty();
 
     // Pasting a table in a table offers a submenu of options
     BOOL bCanPasteTableInTable = bInTable ? bHaveTable : FALSE;
@@ -1421,7 +1417,7 @@ void CNetscapeEditView::OnRButtonDown(UINT uFlags, CPoint cpPoint)
         csEntry.LoadString(IDS_POPUP_LOAD_LINK_EDT);
         CString csAppend = m_csRBLink;
     
-	    if(bHaveLink) {
+	    if(bIsLink) {
     	    WFE_CondenseURL(csAppend, 25);
     	    csEntry += csAppend;		
     	    csAppend.Empty();
@@ -1460,7 +1456,7 @@ void CNetscapeEditView::OnRButtonDown(UINT uFlags, CPoint cpPoint)
         {
             // TODO: ltabb bug -- a selected image with no HREF
             //  should have TF_HREF mask bit set
-            if( bHaveLink )
+            if( bIsLink )
             {
                 bOneLink = TRUE;
             } else {
@@ -1477,7 +1473,7 @@ void CNetscapeEditView::OnRButtonDown(UINT uFlags, CPoint cpPoint)
         switch( type )
         {
             case ED_ELEMENT_IMAGE:
-        	    if(bHaveLink)
+        	    if(bIsLink)
                 {
             	    nIDS = IDS_PROPS_IMAGE_LINK;
                 } else {
@@ -1507,7 +1503,7 @@ void CNetscapeEditView::OnRButtonDown(UINT uFlags, CPoint cpPoint)
                 // TODO: TEST THIS IF SELECTION STARTS IN LINK VS.
                 //       SELECTION ENDS IN LINKS
                 // TODO: How to Test for IMAGE-ONLY selected block?
-        	    if(bHaveLink)
+        	    if(bIsLink)
                 {
                     nIDS = IDS_PROPS_LINK; 
                     nID = ID_PROPS_LINK;
@@ -1605,7 +1601,7 @@ void CNetscapeEditView::OnRButtonDown(UINT uFlags, CPoint cpPoint)
 
 	if( (type == ED_ELEMENT_TEXT || 
 	     type == ED_ELEMENT_SELECTION) &&
-	     bHaveLink)
+	     bIsLink)
     {
         // Open link into a browse window
     	cmPopup.AppendMenu(uMailtoState, ID_POPUP_LOADLINKNEWWINDOW, csEntry);
