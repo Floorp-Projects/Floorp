@@ -9,6 +9,8 @@ var gNameField = null;
 var gNameFieldLabel = null;
 var gFolderDelimiter = ".";
 var gStatusFeedback = new nsMsgStatusFeedback;
+var gTimelineEnabled = false;
+var gMessengerBundle = null;
 var gSubscribeDeck = null;
 var gSearchView = null;
 var gSearchTreeBoxObject = null;
@@ -91,10 +93,8 @@ function SetUpServerMenu()
 }
 
 var MySubscribeListener = {
-	OnDonePopulating: function() {
-		gStatusFeedback.showProgress(0);
-		gStatusFeedback.showStatusString("");
-		gStatusBar.setAttribute("mode","normal");
+    OnDonePopulating: function() {
+        gStatusFeedback._stopMeteors();
 
         // only re-root the tree, if it is null.
         // otherwise, we are in here because we are populating
@@ -136,9 +136,8 @@ function SetUpTree(forceToServer)
           gSubscribeTree.database.RemoveDataSource(subscribeDS);
           gSubscribableServer.subscribeListener = MySubscribeListener;
 
-          gStatusFeedback.showProgress(0);
+          gStatusFeedback._startMeteors();
           gStatusFeedback.showStatusString(gSubscribeBundle.getString("pleaseWaitString"));
-          gStatusBar.setAttribute("mode","undetermined");
 
           gSubscribableServer.startPopulating(msgWindow, forceToServer);
 	}
@@ -175,6 +174,7 @@ function SubscribeOnLoad()
 {
   //dump("SubscribeOnLoad()\n");
   gSubscribeBundle = document.getElementById("bundle_subscribe");
+  gMessengerBundle = document.getElementById("bundle_messenger");
 	
   gSubscribeTree = document.getElementById("subscribeTree");
   gSearchTree = document.getElementById("searchTree");
@@ -424,9 +424,8 @@ function SubscribeOnClick(event)
         if (gSubscribeTree.view.isContainerOpen(row.value)) {
           var uri = gSubscribeTree.builderView.getResourceAtIndex(row.value).Value;
 
-          gStatusFeedback.showProgress(0);
+          gStatusFeedback._startMeteors();
           gStatusFeedback.showStatusString(gSubscribeBundle.getString("pleaseWaitString"));
-          gStatusBar.setAttribute("mode", "undetermined");
 
           gSubscribableServer.startPopulatingWithUri(msgWindow, true /* force to server */, uri);
         }
