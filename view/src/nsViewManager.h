@@ -50,6 +50,7 @@
 #include "nsIScrollableView.h"
 #include "nsIRegion.h"
 #include "nsIBlender.h"
+#include "nsIEventQueueService.h"
 #include "nsIEventQueue.h"
 #include "nsView.h"
 
@@ -420,8 +421,8 @@ protected:
   nscoord           mY;
   PRBool            mAllowDoubleBuffering;
   PRBool            mHasPendingInvalidates;
-  PRBool            mPendingInvalidateEvent;
-  nsCOMPtr<nsIEventQueue>  mEventQueue;
+  nsCOMPtr<nsIEventQueueService>  mEventQueueService;
+  nsCOMPtr<nsIEventQueue>         mInvalidateEventQueue;
   void PostInvalidateEvent();
 
 #ifdef NS_VM_PERF_METRICS
