@@ -15,15 +15,11 @@
 # Copyright (C) 1998 Netscape Communications Corporation.  All Rights
 # Reserved.
 
-IGNORE_MANIFEST=1
-
-# 
-
 #VERBOSE	= 1
 DEPTH=..\..\..\.. 
 
 #cannot define PROGRAM in manifest compatibly with NT and UNIX
-PROGRAM= .\$(OBJDIR)\nsdiff.exe
+PROGRAM= .\$(OBJDIR)\nsunbind.exe
 include <$(DEPTH)\config\config.mak>
 
 # let manifest generate C_OBJS, it will prepend ./$(OBJDIR)/
@@ -33,13 +29,11 @@ include <$(DEPTH)\config\config.mak>
 PDBFILE	= nsdiff.pdb
 MAPFILE = nsdiff.map
 
-REQUIRES=softupdt zlib 
-CSRCS=nsdiff.c crc32.c
-C_OBJS=.\$(OBJDIR)\nsdiff.obj .\$(OBJDIR)\crc32.obj
+REQUIRES=softupdt
+CSRCS=nsunbind.c
+C_OBJS=.\$(OBJDIR)\nsunbind.obj 
 !if "$(MOZ_BITS)" != "16"
-LINCS= \
-   -I$(XPDIST)\public\softupdt \
-   -I$(XPDIST)\public\zlib
+LINCS=-I$(XPDIST)\public\softupdt 
 !endif
 
 include <$(DEPTH)\config\rules.mak>
@@ -66,6 +60,3 @@ symbols:
 	@echo "DBM_LIB	= $(DBM_LIB)"
 	@echo "INSTALL	= $(INSTALL)"
 
-crc32.c:  $(DEPTH)/modules/zlib/src/crc32.c
-        @$(RM) $@
-        copy $(DEPTH)\modules\zlib\src\crc32.c $@

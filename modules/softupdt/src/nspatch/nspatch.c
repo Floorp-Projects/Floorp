@@ -30,10 +30,9 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "gdiff.h"
 
 /*--------------------------------------
- *  constants
+ *  constants / macros
  *------------------------------------*/
 
 #define BUFSIZE     32768
@@ -56,9 +55,13 @@ typedef unsigned long   uint32;
 typedef long            int32;
 typedef unsigned short  uint16;
 typedef short           int16;
-typedef unsigned char   uchar;
 typedef unsigned char   BOOL;
+typedef unsigned char   XP_Bool;
+typedef unsigned char   uint8;
+typedef FILE*           XP_File;
 
+
+#include "gdiff.h"
 
 
 /*--------------------------------------
@@ -113,7 +116,7 @@ int main( int argc, char *argv[] )
     /* Parse command line */
 
     if ( !validateArgs( argc, argv ) ) {
-        err = ERR_ARGS;
+        err = GDIFF_ERR_ARGS;
     }
     else {
         err = openFiles();
@@ -122,7 +125,7 @@ int main( int argc, char *argv[] )
 
     /* Process the patchfile */
 
-    if ( err == ERR_OK ) {
+    if ( err == GDIFF_OK ) {
         err = doPatch();
     }
 
@@ -134,21 +137,21 @@ int main( int argc, char *argv[] )
 
     /* Report status */
 
-    if ( err == ERR_OK ) {
+    if ( err == GDIFF_OK ) {
 
     }
     else {
         switch (err) {
-            case ERR_ARGS:
+            case GDIFF_ERR_ARGS:
                 fprintf( stderr, "Invalid arguments\n" );
                 usage();
                 break;
 
-            case ERR_ACCESS:
+            case GDIFF_ERR_ACCESS:
                 fprintf( stderr, "Error opening file\n" );
                 break;
 
-            case ERR_MEM:
+            case GDIFF_ERR_MEM:
                 fprintf( stderr, "Insufficient memory\n" );
                 break;
 
@@ -169,7 +172,7 @@ int main( int argc, char *argv[] )
 
 int add( uint32 count )
 {
-    int     err = ERR_OK;
+    int     err = GDIFF_OK;
     uint32  nRead;
     uint32  chunksize;
 
@@ -177,7 +180,7 @@ int add( uint32 count )
         chunksize = ( count > BUFSIZE) ? BUFSIZE : count;
         nRead = fread( databuf, 1, chunksize, diffile );
         if ( nRead != chunksize ) {
-            err = ERR_BADDIFF;
+            err = GDIFF_ERR_BADDIFF;
             break;
         }
 
@@ -222,7 +225,7 @@ void cleanup()
 
 int copy( uint32 position, uint32 count )
 {
-    int err = ERR_OK;
+    int err = GDIFF_OK;
     uint32 nRead;
     uint32 chunksize;
 
@@ -233,7 +236,7 @@ int copy( uint32 position, uint32 count )
 
         nRead = fread( databuf, 1, chunksize, oldfile );
         if ( nRead != chunksize ) {
-            err = ERR_OLDFILE;
+            err = GDIFF_ERR_OLDFILE;
             break;
         }
 
@@ -260,20 +263,20 @@ int doPatch()
 
     databuf = (uchar*)malloc(BUFSIZE);
     if ( databuf == NULL ) {
-        err = ERR_MEM;
+        err = GDIFF_ERR_MEM;
         goto fail;
     }
 
     err = parseHeader();
-    if (err != ERR_OK)
+    if (err != GDIFF_OK)
         goto fail;
 
     err = validateOldFile();
-    if ( err != ERR_OK )
+    if ( err != GDIFF_OK )
         goto fail;
 
     err = parseAppdata();
-    if ( err != ERR_OK )
+    if ( err != GDIFF_OK )
         goto fail;
 
 
@@ -282,7 +285,7 @@ int doPatch()
     done = feof(diffile);
     while ( !done ) {
         err = getcmd( &opcode, OPSIZE );
-        if ( err != ERR_OK )
+        if ( err != GDIFF_OK )
             break;
 
         switch (opcode)
@@ -293,63 +296,63 @@ int doPatch()
 
             case ADD16:
                 err = getcmd( cmdbuf, ADD16SIZE );
-                if ( err == ERR_OK ) {
+                if ( err == GDIFF_OK ) {
                     err = add( getshort( cmdbuf ) );
                 }
                 break;
 
             case ADD32:
                 err = getcmd( cmdbuf, ADD32SIZE );
-                if ( err == ERR_OK ) {
+                if ( err == GDIFF_OK ) {
                     err = add( getlong( cmdbuf ) );
                 }
                 break;
 
             case COPY16BYTE:
                 err = getcmd( cmdbuf, COPY16BYTESIZE );
-                if ( err == ERR_OK ) {
+                if ( err == GDIFF_OK ) {
                     err = copy( getshort(cmdbuf), *(cmdbuf+sizeof(short)) );
                 }
                 break;
 
             case COPY16SHORT:
                 err = getcmd( cmdbuf, COPY16SHORTSIZE );
-                if ( err == ERR_OK ) {
+                if ( err == GDIFF_OK ) {
                     err = copy(getshort(cmdbuf),getshort(cmdbuf+sizeof(short)));
                 }
                 break;
 
             case COPY16LONG:
                 err = getcmd( cmdbuf, COPY16LONGSIZE );
-                if ( err == ERR_OK ) {
+                if ( err == GDIFF_OK ) {
                     err = copy(getshort(cmdbuf),getlong(cmdbuf+sizeof(short)));
                 }
                 break;
 
             case COPY32BYTE:
                 err = getcmd( cmdbuf, COPY32BYTESIZE );
-                if ( err == ERR_OK ) {
+                if ( err == GDIFF_OK ) {
                     err = copy( getlong(cmdbuf), *(cmdbuf+sizeof(long)) );
                 }
                 break;
 
             case COPY32SHORT:
                 err = getcmd( cmdbuf, COPY32SHORTSIZE );
-                if ( err == ERR_OK ) {
+                if ( err == GDIFF_OK ) {
                     err = copy( getlong(cmdbuf),getshort(cmdbuf+sizeof(long)) );
                 }
                 break;
 
             case COPY32LONG:
                 err = getcmd( cmdbuf, COPY32LONGSIZE );
-                if ( err == ERR_OK ) {
+                if ( err == GDIFF_OK ) {
                     err = copy( getlong(cmdbuf), getlong(cmdbuf+sizeof(long)) );
                 }
                 break;
 
             case COPY64:
                 /* we don't support 64-bit file positioning yet */
-                err = ERR_OPCODE;
+                err = GDIFF_ERR_OPCODE;
                 break;
 
             default:
@@ -357,11 +360,11 @@ int doPatch()
                 break;
         }
 
-        if ( err != ERR_OK )
+        if ( err != GDIFF_OK )
             done = TRUE;
     }
 
-    if ( err == ERR_OK ) {
+    if ( err == GDIFF_OK ) {
         err = validateNewFile();
     }
     
@@ -385,9 +388,9 @@ int getcmd( uchar *buffer, uint32 length )
 
     bytesRead = fread( buffer, 1, length, diffile );
     if ( bytesRead != length )
-        return ERR_BADDIFF;
+        return GDIFF_ERR_BADDIFF;
 
-    return ERR_OK;
+    return GDIFF_OK;
 }
 
 
@@ -401,13 +404,13 @@ char openFiles()
     oldfile = fopen( oldname, "rb" );
     if ( oldfile == NULL ) {
         fprintf( stderr, "Can't open %s for reading\n", oldname );
-        return ERR_ACCESS;
+        return GDIFF_ERR_ACCESS;
     }
 
     diffile = fopen( difname, "rb" );
     if ( diffile == NULL ) {
         fprintf( stderr, "Can't open %s for reading\n", difname );
-        return ERR_ACCESS;
+        return GDIFF_ERR_ACCESS;
     }
 
     if ( outname == NULL || *outname == '\0' ) {
@@ -418,10 +421,10 @@ char openFiles()
     }
     if ( outfile == NULL ) {
         fprintf( stderr, "Can't open %s for writing\n", outname );
-        return ERR_ACCESS;
+        return GDIFF_ERR_ACCESS;
     }
 
-    return ERR_OK;
+    return GDIFF_OK;
 }
 
 
@@ -432,7 +435,7 @@ char openFiles()
 
 int     parseHeader( void )
 {
-    int     err = ERR_OK;
+    int     err = GDIFF_OK;
     uint32  cslen;
     uint32  oldcslen;
     uint32  newcslen;
@@ -441,20 +444,20 @@ int     parseHeader( void )
 
     nRead = fread( header, 1, GDIFF_HEADERSIZE, diffile );
     if ( nRead != GDIFF_HEADERSIZE ) {
-        err = ERR_HEADER;
+        err = GDIFF_ERR_HEADER;
     }
     else if (memcmp( header, GDIFF_MAGIC, GDIFF_MAGIC_LEN ) != 0 ) {
-        err = ERR_HEADER;
+        err = GDIFF_ERR_HEADER;
     }
     else if ( header[GDIFF_VER_POS] != GDIFF_VER ) {
-        err = ERR_HEADER;
+        err = GDIFF_ERR_HEADER;
     }
     else {
         checksumType = header[GDIFF_CS_POS];
         cslen = header[GDIFF_CSLEN_POS];
 
         if ( checksumType > 0 ) {
-            err = ERR_CHKSUMTYPE;
+            err = GDIFF_ERR_CHKSUMTYPE;
         }
         else if ( cslen > 0 ) {
             oldcslen = cslen / 2;
@@ -468,15 +471,15 @@ int     parseHeader( void )
                 if ( nRead == oldcslen ) {
                     nRead = fread( finalChecksum, 1, newcslen, diffile );
                     if ( nRead != newcslen ) {
-                        err = ERR_HEADER;
+                        err = GDIFF_ERR_HEADER;
                     }
                 }
                 else {
-                    err = ERR_HEADER;
+                    err = GDIFF_ERR_HEADER;
                 }
             }
             else {
-                err = ERR_MEM;
+                err = GDIFF_ERR_MEM;
             }
         }
     }
@@ -493,14 +496,14 @@ int     parseHeader( void )
 
 int     parseAppdata( void )
 {
-    int     err = ERR_OK;
+    int     err = GDIFF_OK;
     uint32  nRead;
     uint32  appdataSize;
     uchar   lenbuf[GDIFF_APPDATALEN];
 
     nRead = fread( lenbuf, 1, GDIFF_APPDATALEN, diffile );
     if ( nRead != GDIFF_APPDATALEN ) {
-        err = ERR_HEADER;
+        err = GDIFF_ERR_HEADER;
     }
     else {
         appdataSize = getlong(lenbuf);
@@ -581,9 +584,9 @@ char validateArgs( int argc, char *argv[] )
 int validateNewFile()
 {
     if ( checksumType > 0 )
-        return ERR_CHKSUMTYPE;
+        return GDIFF_ERR_CHKSUMTYPE;
     else
-        return ERR_OK;
+        return GDIFF_OK;
 }
 
 
@@ -593,8 +596,8 @@ int validateNewFile()
 int validateOldFile()
 {
     if ( checksumType > 0 )
-        return ERR_CHKSUMTYPE;
+        return GDIFF_ERR_CHKSUMTYPE;
     else
-        return ERR_OK;
+        return GDIFF_OK;
 }
 

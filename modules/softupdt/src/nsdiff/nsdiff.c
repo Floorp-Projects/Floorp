@@ -20,9 +20,9 @@
  *
  *  A binary file diffing utility that creates diffs in GDIFF format
  *
- *       nsdiff [-b"blocksize"] [-o"outfile"] oldfile newfile
+ *       nsdiff [-b#] [-d] [-c#] [-o"outfile"] oldfile newfile
  *
- *  Blocksize defaults to 32.
+ *  Blocksize defaults to 64
  *  The outfile defaults to "newfile" with a .GDF extension
  *
  *------------------------------------------------------------------*/
@@ -31,34 +31,26 @@
 #include <stdlib.h>
 #include <string.h>
 #include <assert.h>
-
-#include "gdiff.h"
-
-/*--------------------------------------
- *  constants
- *------------------------------------*/
-
-#define IGNORE_SIZE         7
-#define DEFAULT_BLOCKSIZE   32
-#define FILENAMESIZE        513
-#define OLDBUFSIZE          0x1FFF
-#define MAXBUFSIZE          0xFFFF  /* more requires long adds, wasting space */
-#define CHKMOD              65536
-#define HTBLSIZE            65521
-
-#define destroyFdata(fd)  { if ((fd)->data != NULL) free((fd)->data); }
-
+#include "zlib.h"
 
 /*--------------------------------------
  *  types
  *------------------------------------*/
 
+#if 0
+/* zlib.h appears to define these now. If it stops remove the #if */
 typedef unsigned long   uint32;
 typedef long            int32;
 typedef unsigned short  uint16;
 typedef short           int16;
-typedef unsigned char   uchar;
-typedef unsigned char   BOOL;
+typedef unsigned char   uint8;
+#endif
+typedef unsigned char   XP_Bool;
+typedef FILE*           XP_File;
+
+
+#include "gdiff.h"
+
 
 typedef struct hnode {
     uint32          chksum;  /* true checksum of the block */
@@ -74,8 +66,31 @@ typedef struct filedata {
     uint32  bufsize;        /* the physical size of the memory buffer */
     uchar * data;           /* a "bufsize" memory block for data */
     FILE  * file;           /* file handle */
-    BOOL    bDoAdds;        /* If true check for "add" data before reading */
+    XP_Bool bDoAdds;        /* If true check for "add" data before reading */
 } FILEDATA;
+
+
+/*--------------------------------------
+ *  constants
+ *------------------------------------*/
+
+#define IGNORE_SIZE         8
+#define DEFAULT_BLOCKSIZE   64
+#define FILENAMESIZE        513
+#define OLDBUFSIZE          0x1FFF
+#define MAXBUFSIZE          0xFFFF  /* more requires long adds, wasting space */
+#define CHKMOD              65536
+#define HTBLSIZE            65521
+
+#define destroyFdata(fd)    do { if ((fd)->data != NULL) free((fd)->data); } while (0)
+
+#define writelong(n,buf)   do { \
+            *((buf))   = (uchar)( (n) >> 24 );                        \
+            *((buf)+1) = (uchar)( ( (n) >> 16 ) & 0x00FF );           \
+            *((buf)+2) = (uchar)( ( (n) >> 8 ) & 0x00FF );            \
+            *((buf)+3) = (uchar)( (n) & 0x00FF ); } while(0)
+
+
 
 /*--------------------------------------
  *  prototypes
@@ -83,6 +98,7 @@ typedef struct filedata {
 
 void    add( uchar *data, uint32 count, FILE *outf );
 void    adddata( FILEDATA *fd );
+void    calchash( uint8 type, FILE *fh, uchar *outbuf, int *outlen );
 void    copy( uint32 offset, uint32 count, FILE *outf );
 uint32  checksum( uchar *buffer, uint32 offset, uint32 count );
 HPTR    *chunkOldFile( FILE *fh, uint32 blocksize );
@@ -90,19 +106,27 @@ void    cleanup( void );
 uint32  compareFdata( FILEDATA *oldfd, uint32 oldpos, FILEDATA *newfd );
 void    diff( FILE *oldf, FILE *newf, FILE *outf );
 uint32  getChecksum( FILEDATA *fd );
-BOOL    getFdata( FILEDATA *fdata, uint32 position );
-BOOL    initFdata( FILEDATA *fdata, FILE *file, uint32 bufsize, BOOL bDoAdds );
-BOOL    moreFdata( FILEDATA *fdata );
+XP_Bool getFdata( FILEDATA *fdata, uint32 position );
+XP_Bool initFdata( FILEDATA *fdata, FILE *file, uint32 bufsize, XP_Bool bDoAdds );
+XP_Bool moreFdata( FILEDATA *fdata );
 int     openFiles( void );
 void    readFdata( FILEDATA *fdata, uint32 position );
 void    usage( void );
-BOOL    validateArgs( int argc, char *argv[] );
-void    writeHeader( FILE *outf );
+XP_Bool validateArgs( int argc, char *argv[] );
+void    writeHeader( FILE *oldf, FILE *newf, FILE *outf );
+
+#ifdef XP_PC
+XP_Bool unbind( FILE *oldf );
+XP_Bool unbindFile( char *name );
+XP_Bool hasImports( FILE *oldf );
+#endif
 
 
 /*--------------------------------------
  *  Global data
  *------------------------------------*/
+
+XP_Bool bDebug = FALSE;
 
 char    *oldname = NULL,
         *newname = NULL,
@@ -112,9 +136,18 @@ FILE    *oldfile,
         *newfile,
         *outfile;
 
-uint32  blocksize = DEFAULT_BLOCKSIZE;
+uint32  blocksize  = DEFAULT_BLOCKSIZE;
+uint8   chksumtype = GDIFF_CS_CRC32;
+
 
 HPTR    *htbl;
+
+uint32  addtotal = 0,
+        addmax   = 0,
+        addnum   = 0,
+        copymax  = 0,
+        copynum  = 0,
+        copytotal = 0;
 
   /* for hashing stats */
 uint32  slotsused = 0,
@@ -123,6 +156,10 @@ uint32  slotsused = 0,
         hashhits = 0,
         partialmatch = 0,
         cmpfailed = 0;
+
+#ifdef XP_PC
+XP_Bool bUnbind = TRUE;
+#endif /* XP_PC */
 
 
 /*--------------------------------------
@@ -136,26 +173,31 @@ int main( int argc, char *argv[] )
     /* Parse command line */
 
     if ( !validateArgs( argc, argv ) ) {
-        err = ERR_ARGS;
+        err = GDIFF_ERR_ARGS;
     }
     else {
         err = openFiles();
     }
 
+#ifdef XP_PC
+    /* unbind windows executables if requested */
+    if ( bUnbind )
+        bUnbind = (err == GDIFF_OK) ? unbind( oldfile ) : FALSE;
+#endif /* XP_PC */
 
     /* Calculate block checksums in old file */
 
-    if ( err == ERR_OK ) {
+    if ( err == GDIFF_OK ) {
         htbl = chunkOldFile( oldfile, blocksize );
         if ( htbl == NULL )
-            err = ERR_MEM;
+            err = GDIFF_ERR_MEM;
     }
 
 
     /* Do the diff */
 
-    if ( err == ERR_OK ) {
-        writeHeader( outfile );
+    if ( err == GDIFF_OK ) {
+        writeHeader( oldfile, newfile, outfile );
         diff( oldfile, newfile, outfile );
     }
 
@@ -167,26 +209,18 @@ int main( int argc, char *argv[] )
 
     /* Report status */
 
-    if ( err == ERR_OK ) {
-        fprintf( stderr, "\nHashed %ld blocks into %ld slots (out of %ld)\n",
-            blockshashed, slotsused, HTBLSIZE );
-        fprintf( stderr, "Blocks found: %ld\n", blocksfound );
-        fprintf( stderr, "Hashtable hits: %ld\n", hashhits );
-        fprintf( stderr, "memcmps failed: %ld\n", cmpfailed );
-        fprintf( stderr, "partial matches: %ld\n", partialmatch );
-    }
-    else {
+    if ( err != GDIFF_OK ) {
         switch (err) {
-            case ERR_ARGS:
+            case GDIFF_ERR_ARGS:
                 fprintf( stderr, "Invalid arguments\n" );
                 usage();
                 break;
 
-            case ERR_ACCESS:
+            case GDIFF_ERR_ACCESS:
                 fprintf( stderr, "Error opening file\n" );
                 break;
 
-            case ERR_MEM:
+            case GDIFF_ERR_MEM:
                 fprintf( stderr, "Insufficient memory\n" );
                 break;
 
@@ -194,6 +228,16 @@ int main( int argc, char *argv[] )
                 fprintf( stderr, "Unknown error %d\n", err );
                 break;
         }
+    }
+    else if ( bDebug ) {
+        fprintf( stderr, "\nHashed %ld blocks into %ld slots (out of %ld)\n",
+            blockshashed, slotsused, HTBLSIZE );
+        fprintf( stderr, "Blocks found: %ld\n", blocksfound );
+        fprintf( stderr, "Hashtable hits: %ld\n", hashhits );
+        fprintf( stderr, "memcmps failed: %ld\n", cmpfailed );
+        fprintf( stderr, "partial matches: %ld\n", partialmatch );
+        fprintf( stderr, "\n%ld bytes in %ld ADDs (%ld in largest)\n", addtotal, addnum, addmax );
+        fprintf( stderr, "%ld bytes in %ld COPYs (%ld in largest)\n", copytotal, copynum, copymax );
     }
 
     return (err);
@@ -208,8 +252,15 @@ void add( uchar *data, uint32 count, FILE *outf )
 {
     uchar numbuf[5];
 
+    addnum++;
+    addtotal += count;
+    if ( count > addmax )
+        addmax = count;
+
 #ifdef DEBUG
-    fprintf( stderr, "Adding %ld bytes\n", count );
+    if ( bDebug ) {
+        fprintf( stderr, "Adding %ld bytes\n", count );
+    }
 #endif
 
     if ( count == 0 )
@@ -245,8 +296,16 @@ void add( uchar *data, uint32 count, FILE *outf )
 void copy( uint32 offset, uint32 count, FILE *outf )
 {
     uchar numbuf[9];
+
+    copynum++;
+    copytotal += count;
+    if ( count > copymax )
+        copymax = count;
+
 #ifdef DEBUG
-    fprintf( stderr, "Copying %ld bytes from offset %ld\n", count, offset );
+    if ( bDebug ) {
+        fprintf( stderr, "Copying %ld bytes from offset %ld\n", count, offset );
+    }
 #endif
 
     if ( count == 0 )
@@ -343,7 +402,9 @@ HPTR *chunkOldFile( FILE *fh, uint32 blocksize )
 
     bufsize = ( MAXBUFSIZE / blocksize ) * blocksize ;
 #ifdef DEBUG
-    fprintf( stderr, "bufsize: %ld, tblsize: %ld\n", bufsize, HTBLSIZE*sizeof(HPTR) );
+    if ( bDebug ) {
+        fprintf( stderr, "bufsize: %ld, tblsize: %ld\n", bufsize, HTBLSIZE*sizeof(HPTR) );
+    }
 #endif
 
     table = (HPTR*)malloc( HTBLSIZE * sizeof(HPTR) );
@@ -361,9 +422,6 @@ HPTR *chunkOldFile( FILE *fh, uint32 blocksize )
         filepos = 0;
         do {
             bytesRead = fread( buffer, 1, bufsize, fh );
-#ifdef DEBUG
-            fprintf( stderr, "read %ld bytes\n", bytesRead );
-#endif
 
             i = 0;
             while ( i < bytesRead ) {
@@ -452,10 +510,14 @@ void cleanup()
 
         free( htbl );
     }
+#ifdef XP_PC
+    if ( bUnbind )
+        unlink( oldname );
+#endif
 }
 
 
-#ifndef OLDDIFF
+
 /*--------------------------------------
  *  diff
  *------------------------------------*/
@@ -558,7 +620,7 @@ bail:
 }
 
 
-BOOL initFdata( FILEDATA *fdata, FILE *file, uint32 bufsize, BOOL bDoAdds )
+XP_Bool initFdata( FILEDATA *fdata, FILE *file, uint32 bufsize, XP_Bool bDoAdds )
 {
     fdata->filepos  = 0;
     fdata->offset   = 0;
@@ -577,7 +639,7 @@ BOOL initFdata( FILEDATA *fdata, FILE *file, uint32 bufsize, BOOL bDoAdds )
     return (TRUE);
 }
 
-BOOL moreFdata( FILEDATA *fd )
+XP_Bool moreFdata( FILEDATA *fd )
 {
     if ( fd->offset < fd->datalen ) {
         /* pointer still in buffer */
@@ -595,7 +657,7 @@ BOOL moreFdata( FILEDATA *fd )
     }
 }
 
-BOOL getFdata( FILEDATA *fd, uint32 position )
+XP_Bool getFdata( FILEDATA *fd, uint32 position )
 {
     if ( (position >= fd->filepos) && (position < (fd->filepos+fd->datalen)) ) {
         /* the position is available in the current buffer */
@@ -631,9 +693,6 @@ void readFdata( FILEDATA *fd, uint32 position )
     fd->filepos     = position;
     fd->offset      = 0;
     fd->unwritten   = 0;
-#ifdef DEBUG
-    fprintf(stderr,"Read %ld %s bytes\n",fd->datalen, fd->bDoAdds?"NEW":"old");
-#endif
 }
 
 void adddata( FILEDATA *fd )
@@ -723,118 +782,6 @@ uint32  getChecksum( FILEDATA *fd )
 }
 
 
-#else  /* !NEWDIFF, i.e. old buggy diff */
-/*--------------------------------------
- *  diff
- *------------------------------------*/
-
-void diff( FILE *oldf, FILE *newf, FILE *outf )
-{
-    uchar   *olddata,
-            *newdata;
-
-    uint32  rChk,
-            i,
-            unwritten,
-            hash,
-            maxShifts,
-            oldbytes,
-            bytesRead;
-
-    HPTR    node;
-
-    olddata = (uchar*)malloc(blocksize);
-    newdata = (uchar*)malloc(MAXBUFSIZE);
-
-    if (olddata == NULL || newdata == NULL ) {
-        fprintf( stderr, "Out of memory!\n" );
-        goto bail;
-    }
-
-    do {
-        bytesRead = fread( newdata, 1, MAXBUFSIZE, newf );
-        if ( bytesRead >= blocksize )
-            maxShifts = (bytesRead - blocksize + 1);
-        else
-            maxShifts = 0;
-#ifdef DEBUG
-        fprintf( stderr, "read %ld new bytes\n", bytesRead );
-#endif
-
-        unwritten = 0;
-        for ( i=0; i < maxShifts ; i++ ) {
-            /* wastefully slow, convert to rolling checksum */
-            rChk = checksum( newdata, i, blocksize );
-            hash = rChk % HTBLSIZE;
-
-            node = htbl[hash];
-            while( node != NULL ) {
-                hashhits++;
-                /* compare checksums to see if this might really be a match */
-                if ( rChk != node->chksum ) {
-                    /* can't be a match */
-                    node = node->next;
-                }
-                else {
-                    /* might be a match, compare actual bits */
-                    fseek( oldf, node->offset, SEEK_SET );
-                    oldbytes = fread( olddata, 1, blocksize, oldf );
-                    if ( memcmp( olddata, newdata+i, oldbytes ) != 0 ) {
-                        cmpfailed++;
-                        node = node->next;
-                    }
-                    else {
-                        blocksfound++;
-
-                        /* add any unmatched bytes from new file */
-                        if ( i > unwritten )
-                            add( newdata+unwritten, i-unwritten, outf );
-
-                        /* copy the matched block from old file */
-                        copy( node->offset, oldbytes, outf );
-
-                        /* skip the copied bytes */
-                        unwritten = (i + oldbytes);
-                        /* "i" gets one less, the "for" increments it */
-                        i = unwritten - 1;
-
-                        /* done with this hash entry */
-                        node = NULL;
-                    }
-                }
-            }
-        }
-
-        /* prepare to read another block */
-
-        if ( unwritten < i ) {
-            /* add the unmatched data */
-            add( newdata+unwritten, i-unwritten, outf );
-        }
-
-#if 0
-        if ( i < bytesRead ) {
-            /* shift filepointer back so uncompared data isn't missed */
-            fseek( newf, (i - bytesRead), SEEK_CUR );
-        }
-#endif
-
-    } while ( bytesRead > 0 );
-
-
-    /* Terminate the GDIFF file */
-
-    fwrite( GDIFF_EOF, 1, 1, outf );
-
-
-bail:
-    if ( olddata != NULL )
-        free( olddata );
-    if (newdata != NULL )
-        free( newdata );
-}
-#endif /* NEWDIFF */
-
 
 /*--------------------------------------
  *  openFiles
@@ -847,13 +794,13 @@ int openFiles()
     oldfile = fopen( oldname, "rb" );
     if ( oldfile == NULL ) {
         fprintf( stderr, "Can't open %s for reading\n", oldname );
-        return ERR_ACCESS;
+        return GDIFF_ERR_ACCESS;
     }
 
     newfile = fopen( newname, "rb" );
     if ( newfile == NULL ) {
         fprintf( stderr, "Can't open %s for reading\n", newname );
-        return ERR_ACCESS;
+        return GDIFF_ERR_ACCESS;
     }
 
     if ( outname == NULL || *outname == '\0' ) {
@@ -864,10 +811,10 @@ int openFiles()
     outfile = fopen( outname, "wb" );
     if ( outfile == NULL ) {
         fprintf( stderr, "Can't open %s for writing\n", outname );
-        return ERR_ACCESS;
+        return GDIFF_ERR_ACCESS;
     }
 
-    return ERR_OK;
+    return GDIFF_OK;
 }
 
 
@@ -880,7 +827,17 @@ void usage ()
     fprintf( stderr, "\n  NSDiff [-b#] [-o\"outfile\"] oldfile newfile\n\n" );
     fprintf( stderr, "       -b   size of blocks to compare in bytes, " \
             "default %d\n", DEFAULT_BLOCKSIZE );
-    fprintf( stderr, "       -o   name of output diff file\n\n" );
+    fprintf( stderr, "       -c#  checksum type\n");
+    fprintf( stderr, "            1:  MD5 (not supported yet)\n");
+    fprintf( stderr, "            2:  SHA (not supported yet)\n");
+    fprintf( stderr, "            32: CRC-32 (default)\n");
+    fprintf( stderr, "       -d   diagnostic output\n" );
+    fprintf( stderr, "       -o   name of output diff file\n" );
+#ifdef XP_PC
+    fprintf( stderr, "       -wb- turn off special handling for Win32 bound images\n" );
+#endif
+    fprintf( stderr, "\n" );
+
 }
 
 
@@ -888,7 +845,7 @@ void usage ()
  *  validateArgs
  *------------------------------------*/
 
-BOOL validateArgs( int argc, char *argv[] )
+XP_Bool validateArgs( int argc, char *argv[] )
 {
     int i;
     for ( i = 1; i < argc; i++ ) {
@@ -898,9 +855,33 @@ BOOL validateArgs( int argc, char *argv[] )
                     blocksize = atoi( argv[i]+2 );
                     break;
 
+                case 'c':
+                    chksumtype = atoi( argv[i]+2 );
+                    break;
+
                 case 'o':
                     outname = argv[i]+2;
                     break;
+
+                case 'd':
+                    bDebug = TRUE;
+                    break;
+
+#ifdef XP_PC
+                /* windows only option. -wb to set-up for bound
+                 * images (the default) -wb- to turn it off     */
+                case 'w':
+                    if ( *(argv[i]+2) == 'b' ) {
+                        if ( *(argv[i]+3) == '-' )
+                            bUnbind = FALSE;
+                        else
+                            bUnbind = TRUE;
+                    }
+                    else {
+                        fprintf( stderr, "Unknown windows option %s\n", argv[i] );
+                        return (FALSE);
+                    }
+#endif /* XP_PC */
 
                 default:
                     fprintf( stderr, "Unknown option %s\n", argv[i] );
@@ -918,12 +899,6 @@ BOOL validateArgs( int argc, char *argv[] )
             return (FALSE);
         }
     }
-#ifdef DEBUG
-    fprintf( stderr, "Blocksize: %d\n", blocksize );
-    fprintf( stderr, "Old file: %s\n", oldname );
-    fprintf( stderr, "New file: %s\n", newname );
-    fprintf( stderr, "diff file: %s\n", outname );
-#endif
 
     /* validate arguments */
 
@@ -945,8 +920,381 @@ BOOL validateArgs( int argc, char *argv[] )
  *  writeHeader
  *------------------------------------*/
 
-void writeHeader( FILE *outf )
+void writeHeader( FILE *oldf, FILE *newf, FILE *outf )
 {
-    fwrite( "\xd1\xff\xd1\xff\05\0\0\0\0\0\0", 1, 11, outf );
+    uchar databuf[512];
+    int   datalen;
+    int   oldlen, newlen, applen;
+    uchar *plen;
+
+    /* magic number and version */
+    memcpy( databuf, "\xd1\xff\xd1\xff\05", 5 );
+    datalen = 5;
+
+
+    /* calculate and store checksum info */
+    databuf[datalen] = chksumtype;
+    datalen++;
+
+    databuf[datalen] = 0; /* initial checksum length */
+    plen = databuf+datalen;
+    datalen++;
+
+    calchash( chksumtype, oldf, databuf+datalen, &oldlen );
+    datalen += oldlen;
+
+    calchash( chksumtype, newf, databuf+datalen, &newlen );
+    datalen += newlen;
+
+    *plen = oldlen+newlen;
+
+    
+    /* application-specific data */
+    applen = 0;
+#ifdef XP_PC
+    if ( bUnbind ) {
+        strcpy( databuf+datalen+4, APPFLAG_W32BOUND );
+        applen = strlen( APPFLAG_W32BOUND ) + 1;
+    }
+#endif /* XP_PC */
+    writelong( applen, databuf+datalen );
+    datalen += (applen + 4);
+
+
+    /* write out the header */
+    fwrite( databuf, 1, datalen, outf );
 }
 
+
+/*------------------------------------------
+ *  calchash
+ *----------------------------------------*/
+#define BUFSIZE  8192
+
+void calchash( uint8 type, FILE *fh, uchar *outbuf, int *outlen )
+{
+    uchar buffer[BUFSIZE];
+    switch (type) 
+    {
+        case GDIFF_CS_CRC32:
+        {
+            uint32 crc;
+            uint32 nRead;
+
+            fseek( fh, 0, SEEK_SET );
+            crc = crc32( 0L, Z_NULL, 0 );
+
+            nRead = fread( buffer, 1, BUFSIZE, fh );
+            while ( nRead > 0 ) {
+                crc = crc32( crc, buffer, nRead );
+                nRead = fread( buffer, 1, BUFSIZE, fh );
+            }
+
+
+            fseek( fh, 0, SEEK_SET );
+
+            *(outbuf)   = (uchar)( crc >> 24 );
+            *(outbuf+1) = (uchar)( ( crc >> 16 ) & 0x00FF );
+            *(outbuf+2) = (uchar)( ( crc >> 8 ) & 0x00FF );
+            *(outbuf+3) = (uchar)( crc & 0x00FF );
+
+            *outlen = 4;
+
+            break;
+        }
+
+
+        case GDIFF_CS_NONE:
+        default:
+            *outlen = 0;
+            break;
+    }
+}
+
+
+#ifdef XP_PC
+
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <windows.h>
+#include <winnt.h>
+
+XP_Bool unbind( FILE *oldf )
+{
+    int             i;
+    struct _stat    st;
+    char            filename[MAX_PATH];
+    XP_Bool         unbound = FALSE;
+
+    if ( hasImports( oldf ) ) 
+    {
+        strcpy( filename, oldname );
+        for ( i = strlen(filename); i > 0; i-- ) {
+            filename[i-1] = '~';
+            if ( _stat( filename, &st ) != 0 )
+                break;
+        }
+
+        if ( CopyFile( oldname, filename, FALSE ) ) {
+            strcpy( oldname, filename ); /* save new name */
+            if ( unbindFile( oldname ) ) {
+                oldfile = fopen( oldname, "rb" );
+                unbound = TRUE;
+            }
+        }
+    }
+
+    fseek( oldfile, 0, SEEK_SET );
+    return unbound;
+}
+
+
+
+XP_Bool hasImports( FILE *fh )
+{
+    int     i;
+    DWORD   nRead;
+    IMAGE_DOS_HEADER            mz;
+    IMAGE_NT_HEADERS            nt;
+    IMAGE_SECTION_HEADER        sec;
+
+    /* read and validate the MZ header */
+    fseek( fh, 0, SEEK_SET );
+    nRead = fread( &mz, 1, sizeof(mz), fh );
+    if ( nRead != sizeof(mz) || mz.e_magic != IMAGE_DOS_SIGNATURE )
+        goto bail;
+
+    /* read and validate the NT header */
+    fseek( fh, mz.e_lfanew, SEEK_SET );
+    nRead = fread( &nt, 1, sizeof(nt), fh );
+    if ( nRead != sizeof(nt) || 
+         nt.Signature != IMAGE_NT_SIGNATURE ||
+         nt.OptionalHeader.Magic != IMAGE_NT_OPTIONAL_HDR_MAGIC ) 
+    {
+        goto bail;
+    }
+
+    /* find .idata section */
+    for (i = nt.FileHeader.NumberOfSections; i > 0; i--) {
+        nRead = fread( &sec, 1, sizeof(sec), fh );
+        if ( nRead != sizeof(sec) ) 
+            goto bail;
+
+        if ( memcmp( sec.Name, ".idata", 6 ) == 0 ) {
+            /* found imports! */
+            return TRUE;
+        }
+    }
+
+bail:   
+    /* not a Win32 PE image or no import section */
+    return FALSE;
+}
+
+
+XP_Bool unbindFile( char* fname )
+{
+    int     i;
+    DWORD   nRead;
+    PDWORD  pOrigThunk;
+    PDWORD  pBoundThunk;
+    FILE    *fh;
+    char    *buf;
+    BOOL    bModified = FALSE;
+    BOOL    bImports = FALSE;
+
+    IMAGE_DOS_HEADER            mz;
+    IMAGE_NT_HEADERS            nt;
+    IMAGE_SECTION_HEADER        sec;
+
+    PIMAGE_DATA_DIRECTORY       pDir;
+    PIMAGE_IMPORT_DESCRIPTOR    pImp;
+
+    typedef BOOL (__stdcall *BINDIMAGEEX)(DWORD Flags,
+									  LPSTR ImageName,
+									  LPSTR DllPath,
+									  LPSTR SymbolPath,
+									  PVOID StatusRoutine);
+    HINSTANCE   hImageHelp;
+    BINDIMAGEEX pfnBindImageEx;
+
+
+    /* call BindImage() first to make maximum room for a possible
+     * NT-style Bound Import Descriptors which can change various
+     * offsets in the file */
+	hImageHelp = LoadLibrary("IMAGEHLP.DLL");
+	if ( hImageHelp > (HINSTANCE)HINSTANCE_ERROR ) {
+    	pfnBindImageEx = (BINDIMAGEEX)GetProcAddress(hImageHelp, "BindImageEx");
+    	if (pfnBindImageEx) {
+            if (!pfnBindImageEx(0, fname, NULL, NULL, NULL))
+                fprintf( stderr, "    ERROR: Pre-binding failed\n" );
+        }
+        else {
+            fprintf( stderr, "    ERROR: Couldn't find BindImageEx()\n" );
+        }
+		FreeLibrary(hImageHelp);
+	}
+    else {
+        fprintf( stderr, "    ERROR: Could not load ImageHlp.dll\n" );
+        goto bail;
+    }
+    
+
+    fh = fopen( fname, "r+b" );
+    if ( fh == NULL ) {
+        fprintf( stderr, "    ERROR: Couldn't open %s\n", fname );
+        goto bail;
+    }
+
+
+    /* read and validate the MZ header */
+
+    nRead = fread( &mz, 1, sizeof(mz), fh );
+    if ( nRead != sizeof(mz) ) {
+        fprintf( stderr, "    ERROR: Unexpected EOF reading DOS header\n" );
+        goto bail;
+    }
+    else if ( mz.e_magic != IMAGE_DOS_SIGNATURE ) {
+        fprintf( stderr, "    ERROR: Invalid DOS header\n" );
+        goto bail;
+    }
+
+
+
+    /* read and validate the NT header */
+
+    fseek( fh, mz.e_lfanew, SEEK_SET );
+    nRead = fread( &nt, 1, sizeof(nt), fh );
+    if ( nRead != sizeof(nt) ) {
+        fprintf( stderr, "    ERROR: Unexpected EOF reading PE headers\n" );
+        goto bail;
+    }
+
+    if ( nt.Signature != IMAGE_NT_SIGNATURE ) {
+        fprintf( stderr, "    ERROR: Not a Win32 Portable Executable (PE) file\n" );
+        goto bail;
+    }
+    else if ( nt.OptionalHeader.Magic != IMAGE_NT_OPTIONAL_HDR_MAGIC ) {
+        fprintf( stderr, "    ERROR: Invalid PE Optional Header\n" );
+        goto bail;
+    }
+
+
+
+    /* find .idata section */
+
+    for (i = nt.FileHeader.NumberOfSections; i > 0; i--)
+    {
+        nRead = fread( &sec, 1, sizeof(sec), fh );
+        if ( nRead != sizeof(sec) ) {
+            fprintf( stderr, "    ERROR: EOF reading section headers\n" );
+            goto bail;
+        }
+
+        if ( memcmp( sec.Name, ".idata", 6 ) == 0 ) {
+            bImports = TRUE;
+            break;
+        }
+    }
+
+
+
+    /* Zap any binding in the imports section */
+
+    if ( bImports ) 
+    {
+        buf = (char*)malloc( sec.SizeOfRawData );
+        if ( buf == NULL ) {
+            fprintf( stderr, "    ERROR: Memory allocation problem\n" );
+            goto bail;
+        }
+
+        fseek( fh, sec.PointerToRawData, SEEK_SET );
+        nRead = fread( buf, 1, sec.SizeOfRawData, fh );
+        if ( nRead != sec.SizeOfRawData ) {
+            fprintf( stderr, "    ERROR: Unexpected EOF reading .idata\n" );
+            goto bail;
+        }
+
+        pImp = (PIMAGE_IMPORT_DESCRIPTOR)buf;
+        while ( pImp->OriginalFirstThunk != 0 )
+        {
+            if ( pImp->TimeDateStamp != 0 || pImp->ForwarderChain != 0 )
+            {
+                /* found a bound .DLL */
+                pImp->TimeDateStamp = 0;
+                pImp->ForwarderChain = 0;
+                bModified = TRUE;
+
+                pOrigThunk = (PDWORD)(buf + (DWORD)(pImp->OriginalFirstThunk) - sec.VirtualAddress);
+                pBoundThunk = (PDWORD)(buf + (DWORD)(pImp->FirstThunk) - sec.VirtualAddress);
+
+                for ( ; *pOrigThunk != 0; pOrigThunk++, pBoundThunk++ ) {
+                    *pBoundThunk = *pOrigThunk;
+                }
+
+                fprintf( stdout, "    %s bindings removed\n",
+                    buf + (pImp->Name - sec.VirtualAddress) );
+            }
+
+            pImp++;
+        }
+
+        if ( bModified ) 
+        {
+            /* it's been changed, write out the section */
+            fseek( fh, sec.PointerToRawData, SEEK_SET );
+            fwrite( buf, 1, sec.SizeOfRawData, fh );
+        }
+
+        free( buf );
+    }
+
+
+
+    /* Check for a Bound Import Directory in the headers */
+    
+    pDir = &nt.OptionalHeader.DataDirectory[IMAGE_DIRECTORY_ENTRY_BOUND_IMPORT];
+    if ( pDir->VirtualAddress != 0 ) 
+    {
+        /* we've got one, so stomp it */
+        fprintf( stdout, "    Deleting NT Bound Import Directory\n" );
+
+        buf = (char*)calloc( pDir->Size, 1 );
+        if ( buf == NULL ) {
+            fprintf( stderr, "    ERROR: Memory allocation problem\n" );
+            goto bail;
+        }
+
+        fseek( fh, pDir->VirtualAddress, SEEK_SET );
+        fwrite( buf, pDir->Size, 1, fh );
+        free( buf );
+
+        pDir->VirtualAddress = 0;
+        pDir->Size = 0;
+
+        bModified = TRUE;
+    }
+
+
+
+    /* Write out changed headers if necessary */
+    
+    if ( bModified )
+    {
+        /* zap checksum since it's now invalid */
+        nt.OptionalHeader.CheckSum = 0;
+
+        fseek( fh, mz.e_lfanew, SEEK_SET );
+        fwrite( &nt, 1, sizeof(nt), fh );
+    }
+
+    fclose(fh);
+    return TRUE;
+
+bail:
+    fclose(fh);
+    return FALSE;
+}
+
+#endif
