@@ -47,10 +47,13 @@ pref("font.name.sans-serif.el", "Arial");
 pref("font.name.monospace.el", "Courier New");
 pref("font.name.cursive.el", "Comic Sans MS");
 
-pref("font.name.serif.he", "Times New Roman");
+pref("font.name.serif.he", "Narkisim");
 pref("font.name.sans-serif.he", "Arial");
-pref("font.name.monospace.he", "Courier New");
-pref("font.name.cursive.he", "Comic Sans MS");
+pref("font.name.monospace.he", "Fixed Miriam Transparent");
+pref("font.name.cursive.he", "Gutmann Yad");
+pref("font.name-list.serif.he", "Narkisim, David");
+pref("font.name-list.monospace.he", "Fixed Miriam Transparent, Miriam Fixed, Rod, Courier New");
+pref("font.name-list.cursive.he", "Gutmann Yad, Ktav, Arial");
 
 pref("font.name.serif.ja", "ＭＳ Ｐ明朝"); // "MS PMincho"
 pref("font.name.sans-serif.ja", "ＭＳ Ｐゴシック"); // "MS PGothic"
