@@ -49,7 +49,7 @@ var userTreeView;
 function LoadCerts()
 {
   certdb = Components.classes[nsX509CertDB].getService(nsIX509CertDB);
-  certcache = Components.classes[nsNSSCertCache].createInstance(nsINSSCertCache);
+  var certcache = Components.classes[nsNSSCertCache].createInstance(nsINSSCertCache);
   
   certcache.cacheAllCerts();
 
@@ -76,8 +76,6 @@ function LoadCerts()
   userTreeView.loadCertsFromCache(certcache, nsIX509Cert.USER_CERT);
   document.getElementById('user-tree')
    .treeBoxObject.view = userTreeView;
-
-  certcache = null;
 
   var rowCnt = userTreeView.rowCount;
   var enableBackupAllButton=document.getElementById('mine_backupAllButton');
@@ -306,10 +304,14 @@ function restoreCerts()
   fp.appendFilter("PKCS12 Files", "*.p12; *.pfx");
   fp.appendFilters(nsIFilePicker.filterAll);
   if (fp.show() == nsIFilePicker.returnOK) {
-    var certdb = Components.classes[nsX509CertDB].getService(nsIX509CertDB);
     certdb.importPKCS12File(null, fp.file);
-    userTreeView.loadCerts(nsIX509Cert.USER_CERT);
+
+    var certcache = Components.classes[nsNSSCertCache].createInstance(nsINSSCertCache);
+    certcache.cacheAllCerts();
+    userTreeView.loadCertsFromCache(certcache, nsIX509Cert.USER_CERT);
     userTreeView.selection.clearSelection();
+    caTreeView.loadCertsFromCache(certcache, nsIX509Cert.CA_CERT);
+    caTreeView.selection.clearSelection();
   }
 }
 
@@ -421,7 +423,6 @@ function addCACerts()
   fp.appendFilter("Certificate Files", "*.crt; *.cert; *.cer; *.pem; *.der");
   fp.appendFilters(nsIFilePicker.filterAll);
   if (fp.show() == nsIFilePicker.returnOK) {
-    var certdb = Components.classes[nsX509CertDB].getService(nsIX509CertDB);
     certdb.importCertsFromFile(null, fp.file, nsIX509Cert.CA_CERT);
     caTreeView.loadCerts(nsIX509Cert.CA_CERT);
     caTreeView.selection.clearSelection();
@@ -438,10 +439,13 @@ function addEmailCert()
   fp.appendFilter("Certificate Files", "*.crt; *.cert; *.cer; *.pem; *.der");
   fp.appendFilters(nsIFilePicker.filterAll);
   if (fp.show() == nsIFilePicker.returnOK) {
-    var certdb = Components.classes[nsX509CertDB].getService(nsIX509CertDB);
     certdb.importCertsFromFile(null, fp.file, nsIX509Cert.EMAIL_CERT);
-    emailTreeView.loadCerts(nsIX509Cert.EMAIL_CERT);
+    var certcache = Components.classes[nsNSSCertCache].createInstance(nsINSSCertCache);
+    certcache.cacheAllCerts();
+    emailTreeView.loadCertsFromCache(certcache, nsIX509Cert.EMAIL_CERT);
     emailTreeView.selection.clearSelection();
+    caTreeView.loadCertsFromCache(certcache, nsIX509Cert.CA_CERT);
+    caTreeView.selection.clearSelection();
   }
 }
 
@@ -455,9 +459,13 @@ function addWebSiteCert()
   fp.appendFilter("Certificate Files", "*.crt; *.cert; *.cer; *.pem; *.der");
   fp.appendFilters(nsIFilePicker.filterAll);
   if (fp.show() == nsIFilePicker.returnOK) {
-    var certdb = Components.classes[nsX509CertDB].getService(nsIX509CertDB);
     certdb.importCertsFromFile(null, fp.file, nsIX509Cert.SERVER_CERT);
-    serverTreeView.loadCerts(nsIX509Cert.SERVER_CERT);
+
+    var certcache = Components.classes[nsNSSCertCache].createInstance(nsINSSCertCache);
+    certcache.cacheAllCerts();
+    serverTreeView.loadCertsFromCache(certcache, nsIX509Cert.SERVER_CERT);
     serverTreeView.selection.clearSelection();
+    caTreeView.loadCertsFromCache(certcache, nsIX509Cert.CA_CERT);
+    caTreeView.selection.clearSelection();
   }
 }
