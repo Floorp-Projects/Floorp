@@ -26,7 +26,6 @@
 #include "nsIPtr.h"
 #include "nsCRT.h"
 #include "nsString.h"
-#include "nsVector.h"
 #include "nsIDOMInstallVersion.h"
 #include "nsIDOMInstallTriggerGlobal.h"
 #include "nsXPITriggerInfo.h"

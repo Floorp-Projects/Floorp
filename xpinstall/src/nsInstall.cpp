@@ -32,7 +32,6 @@
 #include "nsRepository.h"
 #include "nsIServiceManager.h"
 
-#include "nsVector.h"
 #include "nsHashtable.h"
 #include "nsFileSpec.h"
 #include "nsFileStream.h"
@@ -219,10 +218,9 @@ nsInstall::InternalAbort(PRInt32 errcode)
     nsInstallObject* ie;
     if (mInstalledFiles != nsnull) 
     {
-        PRUint32 i=0;
-        for (i=0; i < mInstalledFiles->GetSize(); i++) 
+        for (PRInt32 i=0; i < mInstalledFiles->Count(); i++) 
         {
-            ie = (nsInstallObject *)mInstalledFiles->Get(i);
+            ie = (nsInstallObject *)mInstalledFiles->ElementAt(i);
             if (ie) 
                 ie->Abort();
         }
@@ -301,7 +299,7 @@ nsInstall::AddDirectory(const nsString& aRegName,
     }
 
     
-    nsVector *paths = new nsVector();
+    nsVoidArray *paths = new nsVoidArray();
     
     if (paths == nsnull)
     {
@@ -316,9 +314,9 @@ nsInstall::AddDirectory(const nsString& aRegName,
         return NS_OK;
     }
     
-    for (PRUint32 i=0; i < paths->GetSize(); i++)
+    for (PRInt32 i=0; i < paths->Count(); i++)
     {
-        nsString *thisPath = (nsString *)paths->Get(i);
+        nsString *thisPath = (nsString *)paths->ElementAt(i);
 
         nsString newJarSource = aJarSource;
         newJarSource += "/";
@@ -698,7 +696,7 @@ nsInstall::FinalizeInstall(PRInt32* aReturn)
     }
     
 
-    if ( mInstalledFiles == NULL || mInstalledFiles->GetSize() > 0 )
+    if ( mInstalledFiles == NULL || mInstalledFiles->Count() > 0 )
     {
         if ( mUninstallPackage )
         {
@@ -722,22 +720,12 @@ nsInstall::FinalizeInstall(PRInt32* aReturn)
         PRInt32 result;
         nsInstallObject* ie = nsnull;
 
-        PRUint32 i=0;
-        for (i=0; i < mInstalledFiles->GetSize(); i++) 
+        for (PRInt32 i=0; i < mInstalledFiles->Count(); i++) 
         {
-            ie = (nsInstallObject*)mInstalledFiles->Get(i);
+            ie = (nsInstallObject*)mInstalledFiles->ElementAt(i);
             NS_ASSERTION(ie, "NULL object in install queue!");
             if (ie == NULL)
                 continue;
-
-            char *objString = ie->toString();
-    
-            if (mNotifier)
-                mNotifier->FinalizeProgress(nsAutoString(objString).GetUnicode(),
-                                            i, mInstalledFiles->GetSize());
-
-            if (objString)
-                delete [] objString;
 
             result = ie->Complete();
 
@@ -754,6 +742,17 @@ nsInstall::FinalizeInstall(PRInt32* aReturn)
                     break;
                 }
             }
+
+            if (mNotifier)
+            {
+                char *objString = ie->toString();
+                if (objString)
+                {
+                    mNotifier->FinalizeProgress(nsAutoString(objString).GetUnicode(),
+                                               (i+1), mInstalledFiles->Count());
+                    delete [] objString;
+                }
+            }
         }
 
         if ( result != SUCCESS )
@@ -765,7 +764,7 @@ nsInstall::FinalizeInstall(PRInt32* aReturn)
             mNotifier->FinalStatus(mInstallURL.GetUnicode(), *aReturn);
 
     } 
-    else if ( mInstalledFiles == NULL || mInstalledFiles->GetSize() == 0 ) 
+    else if ( mInstalledFiles == NULL || mInstalledFiles->Count() == 0 ) 
     {
         // no actions queued: don't register the package version
         // and no need for user confirmation
@@ -1252,7 +1251,7 @@ nsInstall::StartInstall(const nsString& aUserPackageName, const nsString& aRegis
 
     mVersionInfo->Init(aVersion);
 
-    mInstalledFiles = new nsVector();
+    mInstalledFiles = new nsVoidArray();
     mPatchList      = new nsHashtable();
     
     if (mInstalledFiles == nsnull || mPatchList == nsnull)
@@ -1264,7 +1263,7 @@ nsInstall::StartInstall(const nsString& aUserPackageName, const nsString& aRegis
     /* this function should also check security!!! */
     *aReturn = OpenJARFile();
 
-    if (*aReturn != nsInstall::SUCCESS)
+    if (*aReturn != nsInstall::SUCCESS) // XXX must use NS_SUCCEEDED macro!
     {
         /* if we can not continue with the javascript return a JAR error*/
         return -1;  /* FIX: need real error code */
@@ -1727,7 +1726,7 @@ nsInstall::ScheduleForInstall(nsInstallObject* ob)
     if (error == nsInstall::SUCCESS) 
     {
         // Add to installation list
-        mInstalledFiles->Add( ob );
+        mInstalledFiles->AppendElement( ob );
 
         // turn on flags for creating the uninstall node and
         // the package node for each InstallObject
@@ -1961,15 +1960,14 @@ nsInstall::CleanUp(void)
     
     if ( mInstalledFiles != NULL ) 
     {
-        PRUint32 i=0;
-        for (; i < mInstalledFiles->GetSize(); i++) 
+        for (PRInt32 i=0; i < mInstalledFiles->Count(); i++) 
         {
-            ie = (nsInstallObject*)mInstalledFiles->Get(i);
+            ie = (nsInstallObject*)mInstalledFiles->ElementAt(i);
             if (ie)
                 delete (ie);
         }
 
-        mInstalledFiles->RemoveAll();
+        mInstalledFiles->Clear();
         delete (mInstalledFiles);
         mInstalledFiles = nsnull;
     }
@@ -2136,7 +2134,7 @@ nsInstall::ExtractFileFromJar(const nsString& aJarfile, nsFileSpec* aSuggestedNa
 
 
 PRInt32 
-nsInstall::ExtractDirEntries(const nsString& directory, nsVector *paths)
+nsInstall::ExtractDirEntries(const nsString& directory, nsVoidArray *paths)
 {
     char                *buf;
     nsISimpleEnumerator *jarEnum = nsnull;
@@ -2170,7 +2168,8 @@ nsInstall::ExtractDirEntries(const nsString& directory, nsVector *paths)
 
                     if ( buf[namelen-1] != '/' ) 
                     {
-                        paths->Add( new nsString(buf+prefix_length) ); // XXX manipulation should be in caller
+                        // XXX manipulation should be in caller
+                        paths->AppendElement( new nsString(buf+prefix_length) );
                     }
 
                     PR_FREEIF( buf );
@@ -2191,19 +2190,18 @@ handle_err:
 }
 
 void
-nsInstall::DeleteVector(nsVector* vector)
+nsInstall::DeleteVector(nsVoidArray* vector)
 {
     if (vector != nsnull)
     {
-        PRUint32 i=0;
-        for (; i < vector->GetSize(); i++) 
+        for (PRInt32 i=0; i < vector->Count(); i++) 
         {
-            nsString* element = (nsString*)vector->Get(i);
+            nsString* element = (nsString*)vector->ElementAt(i);
             if (element != nsnull)
                 delete element;
         }
 
-        vector->RemoveAll();
+        vector->Clear();
         delete (vector);
         vector = nsnull;
     }

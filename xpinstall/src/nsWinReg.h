@@ -31,7 +31,6 @@
 
 #include "nsString.h"
 #include "nsFileSpec.h"
-#include "nsVector.h"
 #include "nsHashtable.h"
 
 #include "nsSoftwareUpdate.h"

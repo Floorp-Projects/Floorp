@@ -26,7 +26,7 @@
 #define nsXPITriggerInfo_h
 
 #include "nsString.h"
-#include "nsVector.h"
+#include "nsVoidArray.h"
 #include "nsCOMPtr.h"
 #include "nsISupportsUtils.h"
 #include "nsIXPINotifier.h"
@@ -81,23 +81,23 @@ class nsXPITriggerInfo
     virtual ~nsXPITriggerInfo();
 
     void                Add( nsXPITriggerItem *aItem ) 
-                        { if ( aItem ) mItems.Add( (void*)aItem ); }
+                        { if ( aItem ) mItems.AppendElement( (void*)aItem ); }
 
     nsXPITriggerItem*   Get( PRUint32 aIndex )
-                        { return (nsXPITriggerItem*)mItems.Get(aIndex);}
+                        { return (nsXPITriggerItem*)mItems.ElementAt(aIndex);}
 
     void                SaveCallback( JSContext *aCx, jsval aVal );
 
-    PRUint32            Size() { return mItems.GetSize(); }
+    PRUint32            Size() { return mItems.Count(); }
 
     void                SendStatus(const PRUnichar* URL, PRInt32 status);
 
   private:
-    nsVector mItems;
-    JSContext *mCx;
-    jsval     mGlobal;
-    jsval     mCbval;
-    PRThread* mThread;
+    nsVoidArray mItems;
+    JSContext   *mCx;
+    jsval       mGlobal;
+    jsval       mCbval;
+    PRThread*   mThread;
 
     //-- prevent inadvertent copies and assignments
     nsXPITriggerInfo& operator=(const nsXPITriggerInfo& rhs);
