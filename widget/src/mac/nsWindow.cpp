@@ -39,6 +39,35 @@
 #include "nsplugindefs.h"
 #include "nsMacEventHandler.h"
 #include "nsMacResources.h"
+#include "nsRegionMac.h"
+
+
+class StRegionFromPool 
+{
+public:
+  StRegionFromPool();
+  ~StRegionFromPool();
+
+  operator RgnHandle() const { return mRegionH; }
+
+private:
+  RgnHandle mRegionH;
+}; 
+
+
+StRegionFromPool :: StRegionFromPool ( )
+{
+  mRegionH = sNativeRegionPool.GetNewRegion();
+} 
+
+StRegionFromPool :: ~StRegionFromPool ( )
+{
+  if ( mRegionH )
+    sNativeRegionPool.ReleaseRegion(mRegionH);
+}
+
+
+#pragma mark -
 
 
 //-------------------------------------------------------------------------
@@ -1013,7 +1042,9 @@ nsWindow :: ScrollBits ( Rect & inRectToScroll, PRInt32 inLeftDelta, PRInt32 inT
 	inTopDelta *= -1;
 	
 	// Get Frame in local coords from clip rect (there might be a border around view)
-	RgnHandle clipRgn = ::NewRgn();	
+	StRegionFromPool clipRgn;
+	if ( !clipRgn )
+	  return;
 	::GetClip(clipRgn);
 #if TARGET_CARBON
 	Rect frame;
@@ -1021,7 +1052,9 @@ nsWindow :: ScrollBits ( Rect & inRectToScroll, PRInt32 inLeftDelta, PRInt32 inT
 #else
 	Rect frame = (**clipRgn).rgnBBox;
 #endif
-	RgnHandle totalView = ::NewRgn();
+	StRegionFromPool totalView;
+	if ( !totalView )
+	  return;
 	::RectRgn(totalView, &frame);
 	
 	Rect source = inRectToScroll;
@@ -1046,9 +1079,13 @@ nsWindow :: ScrollBits ( Rect & inRectToScroll, PRInt32 inLeftDelta, PRInt32 inT
 	}
 	
 	// compute the area that is to be updated by subtracting the dest from the visible area
-	RgnHandle updateRgn = ::NewRgn();
+	StRegionFromPool updateRgn;
+	if ( !updateRgn )
+	  return;
 	::RectRgn(updateRgn, &frame);
-	RgnHandle destRgn = ::NewRgn();
+	StRegionFromPool destRgn;
+	if ( !destRgn )
+	  return;
 	::RectRgn(destRgn, &dest);		
 	::DiffRgn ( updateRgn, destRgn, updateRgn );
 		
@@ -1065,7 +1102,9 @@ nsWindow :: ScrollBits ( Rect & inRectToScroll, PRInt32 inLeftDelta, PRInt32 inT
 	else
 	{
 		// compute the non-visable region
-		RgnHandle nonVisableRgn = ::NewRgn();
+		StRegionFromPool nonVisableRgn;
+		if ( !nonVisableRgn )
+		  return;
 		::DiffRgn ( totalView, mWindowPtr->visRgn, nonVisableRgn );
 		
 		// compute the extra area that may need to be updated
@@ -1073,7 +1112,9 @@ nsWindow :: ScrollBits ( Rect & inRectToScroll, PRInt32 inLeftDelta, PRInt32 inT
 		::OffsetRgn ( nonVisableRgn, -inLeftDelta, -inTopDelta );
 		
 		// calculate a mask region to not copy the non-visble portions of the window from the port
-		RgnHandle copyMaskRgn = ::NewRgn();
+		StRegionFromPool copyMaskRgn;
+		if ( !copyMaskRgn )
+		  return;
 		::DiffRgn(totalView, nonVisableRgn, copyMaskRgn);
 		
 		// use copybits to simulate a ScrollRect()
@@ -1093,9 +1134,6 @@ nsWindow :: ScrollBits ( Rect & inRectToScroll, PRInt32 inLeftDelta, PRInt32 inT
 			
 		// union the update regions together and invalidate them
 		::UnionRgn(nonVisableRgn, updateRgn, updateRgn);
-		
-		::DisposeRgn ( nonVisableRgn );
-		::DisposeRgn ( copyMaskRgn );
 	}
 	
 #if TARGET_CARBON
@@ -1104,11 +1142,8 @@ nsWindow :: ScrollBits ( Rect & inRectToScroll, PRInt32 inLeftDelta, PRInt32 inT
 	::InvalRgn(updateRgn);
 #endif
 
-	::DisposeRgn ( clipRgn );
-	::DisposeRgn ( totalView );
-	::DisposeRgn ( updateRgn );
-	::DisposeRgn ( destRgn );
-	
+  // NOTE: regions are cleaned up for us automagically by dtor's.
+  
 } // ScrollBits
 
 
