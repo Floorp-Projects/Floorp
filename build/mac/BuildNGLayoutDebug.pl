@@ -86,6 +86,7 @@ $build{runtime}			= 0;
 $build{common} 			= 0;
 $build{imglib} 			= 0;
 $build{necko} 			= 0;
+$build{security}        = 0;
 $build{browserutils} 	= 0;
 $build{intl} 			= 0;
 $build{nglayout} 		= 0;
@@ -160,6 +161,7 @@ if ($build{most})
 	$build{common}		= 1;
 	$build{imglib} 		= 1;
 	$build{necko} 		= 1;
+    $build{security}    = 1;
 	$build{browserutils} = 1;
 	$build{intl}		= 1; 
 	$build{nglayout}	= 1;
