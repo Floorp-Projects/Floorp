@@ -60,6 +60,7 @@
 #include "nsExceptionService.h"
 
 #include "nsComponentManager.h"
+#include "nsCategoryManagerUtils.h"
 #include "nsIServiceManager.h"
 #include "nsGenericFactory.h"
 
@@ -579,6 +580,11 @@ nsresult NS_COM NS_InitXPCOM2(nsIServiceManager* *result,
 
     rv = eventQService->CreateThreadEventQueue();
     if ( NS_FAILED(rv) ) return rv;
+
+    // Notify observers of xpcom autoregistration start
+    NS_CreateServicesFromCategory(NS_XPCOM_STARTUP_OBSERVER_ID, 
+                                  nsnull,
+                                  NS_XPCOM_STARTUP_OBSERVER_ID);
     
     return rv;
 }
