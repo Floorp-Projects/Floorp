@@ -33,6 +33,7 @@
 #include "nsTextAreaWidget.h"
 #include "nsFileWidget.h"
 #include "nsListBox.h"
+#include "nsComboBox.h"
 
 static NS_DEFINE_IID(kCWindow,        NS_WINDOW_CID);
 static NS_DEFINE_IID(kCChild,         NS_CHILD_CID);
@@ -46,6 +47,7 @@ static NS_DEFINE_IID(kCTextAreaWidgetCID, NS_TEXTAREA_CID);
 static NS_DEFINE_IID(kCFileWidgetCID, NS_FILEWIDGET_CID);
 static NS_DEFINE_IID(kCButtonCID,     NS_BUTTON_CID);
 static NS_DEFINE_IID(kCListBoxCID,    NS_LISTBOX_CID);
+static NS_DEFINE_IID(kCComboBoxCID,    NS_COMBOBOX_CID);
 
 
 static NS_DEFINE_IID(kIWidget,        NS_IWIDGET_IID);
@@ -162,6 +164,9 @@ nsresult nsWidgetFactory::CreateInstance(nsISupports *aOuter,
     }
     else if (mClassID.Equals(kCListBoxCID)) {
         inst = new nsListBox(aOuter);
+    }
+    else if (mClassID.Equals(kCComboBoxCID)) {
+        inst = new nsComboBox(aOuter);
     }
     else if (mClassID.Equals(kCFileWidgetCID)) {
         inst = new nsFileWidget(aOuter);

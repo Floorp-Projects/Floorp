@@ -181,6 +181,10 @@ nsWindow::nsWindow(nsISupports *aOuter):
   else
     mOuter = &mInner;
   mGC = nsnull ;
+  mShown = PR_FALSE;
+  mVisible = PR_FALSE;
+  mDisplayed = PR_FALSE;
+  mLowerLeft = PR_FALSE;
 }
 
 
@@ -509,10 +513,9 @@ void nsWindow::RemoveChild(nsIWidget* aChild)
 //-------------------------------------------------------------------------
 void nsWindow::Show(PRBool bState)
 {
-  if (bState)
-    XtManageChild(mWidget);
-  else
-    XtUnmanageChild(mWidget);
+  mShown = bState;
+  UpdateVisibilityFlag();
+  UpdateDisplay();
 }
 
 //-------------------------------------------------------------------------
@@ -522,8 +525,11 @@ void nsWindow::Show(PRBool bState)
 //-------------------------------------------------------------------------
 void nsWindow::Move(PRUint32 aX, PRUint32 aY)
 {
-  XtVaSetValues(mWidget, XmNx, aX, XmNy, aY, nsnull);
-
+  mBounds.x = aX;
+  mBounds.y = aY;
+  UpdateVisibilityFlag();
+  UpdateDisplay();
+  XtVaSetValues(mWidget, XmNx, aX, XmNy, GetYCoord(aY), nsnull);
 }
 
 //-------------------------------------------------------------------------
@@ -537,6 +543,8 @@ void nsWindow::Resize(PRUint32 aWidth, PRUint32 aHeight, PRBool aRepaint)
                   gInstanceClassName, aWidth, aHeight, (aRepaint?"true":"false"));
   mBounds.width  = aWidth;
   mBounds.height = aHeight;
+  UpdateVisibilityFlag();
+  UpdateDisplay();
   XtVaSetValues(mWidget, XmNwidth, aWidth, XmNheight, aHeight, nsnull);
 }
 
@@ -552,7 +560,9 @@ void nsWindow::Resize(PRUint32 aX, PRUint32 aY, PRUint32 aWidth, PRUint32 aHeigh
   mBounds.y      = aY;
   mBounds.width  = aWidth;
   mBounds.height = aHeight;
-  XtVaSetValues(mWidget, XmNx, aX, XmNy, aY, 
+  UpdateVisibilityFlag();
+  UpdateDisplay();
+  XtVaSetValues(mWidget, XmNx, aX, XmNy, GetYCoord(aY),
                          XmNwidth, aWidth, XmNheight, aHeight, nsnull);
 }
 
@@ -690,6 +700,29 @@ nsIFontMetrics* nsWindow::GetFont(void)
 //-------------------------------------------------------------------------
 void nsWindow::SetFont(const nsFont &aFont)
 {
+#if 0
+    if (mContext == nsnull) {
+      return;
+    }
+
+    nsIFontCache* fontCache = mContext->GetFontCache();
+    if (fontCache != nsnull) {
+      nsIFontMetrics* metrics = fontCache->GetMetricsFor(aFont);
+      if (metrics != nsnull) {
+        //HFONT hfont = metrics->GetFontHandle();
+
+        // Draw in the new font
+        //XtVaSetValues(mWidget, XmNfont, metrics->GetFontHandle(), NULL);
+
+        NS_RELEASE(metrics);
+      } else {
+        printf("****** Error: Metrics is NULL!\n");
+      }
+      NS_RELEASE(fontCache);
+    } else {
+      printf("****** Error: FontCache is NULL!\n");
+    }
+#endif
 }
 
     
@@ -930,7 +963,8 @@ PRBool nsWindow::ConvertStatus(nsEventStatus aStatus)
 PRBool nsWindow::DispatchEvent(nsGUIEvent* event)
 {
   PRBool result = PR_FALSE;
- 
+  event->widgetSupports = mOuter;
+
   if (nsnull != mEventCallback) {
     result = ConvertStatus((*mEventCallback)(event));
   }
@@ -958,45 +992,15 @@ PRBool nsWindow::DispatchMouseEvent(nsMouseEvent aEvent)
 
   // call the event callback 
   if (nsnull != mEventCallback) {
-
     result = DispatchEvent(&aEvent);
-
-    //printf("**result=%d%\n",result);
-    /*if (aEventType == NS_MOUSE_MOVE) {
-
-      //MouseTrailer * mouseTrailer = MouseTrailer::GetMouseTrailer(0);
-      //MouseTrailer::SetMouseTrailerWindow(this);
-      //mouseTrailer->CreateTimer();
-
-      nsRect rect;
-      GetBounds(rect);
-      rect.x = 0;
-      rect.y = 0;
-      //printf("Rect[%d, %d, %d, %d]  Point[%d,%d]\n", rect.x, rect.y, rect.width, rect.height, event.position.x, event.position.y);
-      //printf("mCurrentWindow 0x%X\n", mCurrentWindow);
-
-      if (rect.Contains(event.point.x, event.point.y)) {
-        if (mCurrentWindow == NULL || mCurrentWindow != this) {
-          if ((nsnull != mCurrentWindow) && (!mCurrentWindow->mIsDestroying)) {
-            mCurrentWindow->DispatchMouseEvent(NS_MOUSE_EXIT);
-          }
-          mCurrentWindow = this;
-          mCurrentWindow->DispatchMouseEvent(NS_MOUSE_ENTER);
-        }
-      } 
-    } else if (aEventType == NS_MOUSE_EXIT) {
-      if (mCurrentWindow == this) {
-        mCurrentWindow = nsnull;
-      }
-    }*/
 
     return result;
   }
 
-  /*if (nsnull != mMouseListener) {
-    switch (aEventType) {
+  if (nsnull != mMouseListener) {
+    switch (aEvent.message) {
       case NS_MOUSE_MOVE: {
-        result = ConvertStatus(mMouseListener->MouseMoved(event));
+        /*result = ConvertStatus(mMouseListener->MouseMoved(event));
         nsRect rect;
         GetBounds(rect);
         if (rect.Contains(event.point.x, event.point.y)) {
@@ -1006,24 +1010,24 @@ PRBool nsWindow::DispatchMouseEvent(nsMouseEvent aEvent)
           }
         } else {
           //printf("Mouse exit");
-        }
+        }*/
 
       } break;
 
       case NS_MOUSE_LEFT_BUTTON_DOWN:
       case NS_MOUSE_MIDDLE_BUTTON_DOWN:
       case NS_MOUSE_RIGHT_BUTTON_DOWN:
-        result = ConvertStatus(mMouseListener->MousePressed(event));
+        result = ConvertStatus(mMouseListener->MousePressed(aEvent));
         break;
 
       case NS_MOUSE_LEFT_BUTTON_UP:
       case NS_MOUSE_MIDDLE_BUTTON_UP:
       case NS_MOUSE_RIGHT_BUTTON_UP:
-        result = ConvertStatus(mMouseListener->MouseReleased(event));
-        result = ConvertStatus(mMouseListener->MouseClicked(event));
+        result = ConvertStatus(mMouseListener->MouseReleased(aEvent));
+        result = ConvertStatus(mMouseListener->MouseClicked(aEvent));
         break;
     } // switch
-  } */
+  } 
   return result;
 }
 
@@ -1149,4 +1153,50 @@ PRBool nsWindow::GetResized()
   return(mResized);
 }
 
+void nsWindow::UpdateVisibilityFlag()
+{
+  Widget parent = XtParent(mWidget);
+
+  if (parent) {
+    PRUint32 pWidth = 0;
+    PRUint32 pHeight = 0; 
+    XtVaGetValues(parent, XmNwidth, &pWidth, XmNheight, &pHeight, nsnull);
+    if ((mBounds.y + mBounds.height) > pHeight) {
+      mVisible = PR_FALSE;
+      return;
+    }
+ 
+    if (mBounds.y < 0)
+     mVisible = PR_FALSE;
+  }
+  
+  mVisible = PR_TRUE;
+}
+
+void nsWindow::UpdateDisplay()
+{
+    // If not displayed and needs to be displayed
+  if ((PR_FALSE==mDisplayed) &&
+     (PR_TRUE==mShown) && 
+     (PR_TRUE==mVisible)) {
+    XtManageChild(mWidget);
+    mDisplayed = PR_TRUE;
+  }
+
+    // Displayed and needs to be removed
+  if (PR_TRUE==mDisplayed) { 
+    if ((PR_FALSE==mShown) || (PR_FALSE==mVisible)) {
+      XtUnmanageChild(mWidget);
+      mDisplayed = PR_FALSE;
+    }
+  }
+}
+
+PRUint32 nsWindow::GetYCoord(PRUint32 aNewY)
+{
+  if (PR_TRUE==mLowerLeft) {
+    return(aNewY - 12 /*KLUDGE fix this later mBounds.height */);
+  }
+  return(aNewY);
+}
 

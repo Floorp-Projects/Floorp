@@ -35,6 +35,7 @@ nsCheckButton::nsCheckButton(nsISupports *aOuter) :
   nsWindow(aOuter),
   mIsArmed(PR_FALSE)
 {
+  mLowerLeft = PR_TRUE;
 }
 
 //-------------------------------------------------------------------------
@@ -58,6 +59,7 @@ void nsCheckButton::Create(nsIWidget *aParent,
                       nsIToolkit *aToolkit,
                       nsWidgetInitData *aInitData)
 {
+
   Widget parentWidget = nsnull;
 
   if (DBG) fprintf(stderr, "aParent 0x%x\n", aParent);
@@ -70,6 +72,7 @@ void nsCheckButton::Create(nsIWidget *aParent,
 
   if (DBG) fprintf(stderr, "Parent 0x%x\n", parentWidget);
 
+
   mWidget = ::XtVaCreateManagedWidget("",
                                     xmToggleButtonWidgetClass,
                                     parentWidget,
@@ -79,7 +82,16 @@ void nsCheckButton::Create(nsIWidget *aParent,
                                     XmNhighlightOnEnter, False,
                                     XmNx, aRect.x,
                                     XmNy, aRect.y,
-                                    nsnull);
+                                    XmNresizeHeight, False,
+                                    XmNresizeWidth, False,
+                                    XmNmarginHeight, 0,
+                                    XmNmarginWidth, 0,
+                                    XmNadjustMargin, False,
+                                    XmNspacing, 0,
+                                    XmNisAligned, False,
+                                    XmNentryBorder, 0,
+                                    XmNborderWidth, 0,
+                                    0);
 
   if (DBG) fprintf(stderr, "Button 0x%x  this 0x%x\n", mWidget, this);
 

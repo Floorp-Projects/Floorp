@@ -21,6 +21,7 @@
 
 #include "nsWindow.h"
 #include "nsCheckButton.h"
+#include "nsRadioButton.h"
 #include "nsFileWidget.h"
 #include "nsGUIEvent.h"
 
@@ -40,10 +41,12 @@ void nsXtWidget_InitNSEvent(XEvent   * anXEv,
   anEvent.message = aEventType;
   anEvent.widget  = (nsWindow *) p;
 
-  anEvent.point.x = anXEv->xbutton.x;
-  anEvent.point.y = anXEv->xbutton.y;
+  if (anXEv != NULL) {
+    anEvent.point.x = anXEv->xbutton.x;
+    anEvent.point.y = anXEv->xbutton.y;
+  }
 
-  anEvent.time    = 0; //TBD
+  anEvent.time = 0; //TBD
 
 }
 
@@ -56,10 +59,11 @@ void nsXtWidget_InitNSMouseEvent(XEvent   * anXEv,
   // Do base initialization
   nsXtWidget_InitNSEvent(anXEv, p, anEvent, aEventType);
 
-  // Do Mouse Event specific intialization
-  anEvent.time      = anXEv->xbutton.time;
-  anEvent.isShift   = anXEv->xbutton.state | ShiftMask;
-  anEvent.isControl = anXEv->xbutton.state | ControlMask;
+  if (anXEv != NULL) { // Do Mouse Event specific intialization
+    anEvent.time      = anXEv->xbutton.time;
+    anEvent.isShift   = anXEv->xbutton.state | ShiftMask;
+    anEvent.isControl = anXEv->xbutton.state | ControlMask;
+  }
 
   //anEvent.isAlt      = GetKeyState(VK_LMENU) < 0    || GetKeyState(VK_RMENU) < 0;
   ////anEvent.clickCount = (aEventType == NS_MOUSE_LEFT_DOUBLECLICK ||
@@ -350,6 +354,46 @@ void nsXtWidget_Toggle_DisArmCallback(Widget w, XtPointer p, XtPointer call_data
   if (DBG) fprintf(stderr, "Out ***************** nsXtWidget_Scrollbar_Callback\n");
   
 }
+
+//==============================================================
+void nsXtWidget_RadioButton_ArmCallback(Widget w, XtPointer p, XtPointer call_data)
+{
+  if (DBG) fprintf(stderr, "In ***************** nsXtWidget_RadioButton_ArmCallback\n");
+  nsRadioButton * radioBtn = (nsRadioButton *) p ;
+
+  XmToggleButtonCallbackStruct * cbs = (XmToggleButtonCallbackStruct*)call_data;
+
+  if (DBG) fprintf(stderr, "Callback struct 0x%x Set %d\n", cbs, cbs->set);fflush(stderr);
+  radioBtn->Armed();
+
+  nsMouseEvent mevent;
+  nsXtWidget_InitNSMouseEvent(cbs->event, p, mevent, NS_MOUSE_LEFT_BUTTON_DOWN);
+  radioBtn->DispatchMouseEvent(mevent);
+
+
+}
+
+//==============================================================
+void nsXtWidget_RadioButton_DisArmCallback(Widget w, XtPointer p, XtPointer call_data)
+{
+  if (DBG) fprintf(stderr, "In ***************** nsXtWidget_RadioButton_DisArmCallback\n");
+  nsRadioButton * radioBtn = (nsRadioButton *) p ;
+
+  nsScrollbarEvent sevent;
+
+  XmToggleButtonCallbackStruct * cbs = (XmToggleButtonCallbackStruct*)call_data;
+
+  if (DBG) fprintf(stderr, "Callback struct 0x%x  Set %d\n", cbs, cbs->set);fflush(stderr);
+
+  radioBtn->DisArmed();
+  if (DBG) fprintf(stderr, "Out ***************** nsXtWidget_Scrollbar_Callback\n");
+
+  nsMouseEvent mevent;
+  nsXtWidget_InitNSMouseEvent(cbs->event, p, mevent, NS_MOUSE_LEFT_BUTTON_UP);
+  radioBtn->DispatchMouseEvent(mevent);
+
+}
+
 
 //==============================================================
 void nsXtWidget_Scrollbar_Callback(Widget w, XtPointer p, XtPointer call_data)

@@ -52,7 +52,6 @@ void nsListBox::AddItemAt(nsString &aItem, PRInt32 aPosition)
 
   str = XmStringCreateLocalized(val);
 
-  printf("String being added [%s] %d\n", val, aPosition);
   XmListAddItem(mWidget, str, (int)aPosition);
   NS_FREE_STR_BUF(val);
 }
@@ -228,12 +227,12 @@ nsresult nsListBox::QueryObject(const nsIID& aIID, void** aInstancePtr)
     static NS_DEFINE_IID(kInsListWidgetIID, NS_ILISTWIDGET_IID);
     if (result == NS_NOINTERFACE) {
       if (aIID.Equals(kInsListBoxIID)) {
-        *aInstancePtr = (void*) ((nsIListBox*)this);
+        *aInstancePtr = (void*) ((nsIListBox*)&mAggWidget);
         AddRef();
         result = NS_OK;
       }
       else if (aIID.Equals(kInsListWidgetIID)) {
-        *aInstancePtr = (void*) ((nsIListWidget*)this);
+        *aInstancePtr = (void*) ((nsIListWidget*)&mAggWidget);
         AddRef();
         result = NS_OK;
       }
