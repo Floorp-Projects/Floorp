@@ -42,6 +42,11 @@
 [scriptable, uuid(a6cf906d-15b3-11d2-932e-00805f8add32)]
 interface nsIDOMLocation : nsISupports
 {
+           /**
+            * These properties refer to the current location of the document.
+            * This will correspond to the URI shown in the location bar, which
+            * can be different from the documentURI of the document.
+            */
            attribute DOMString        hash;
            attribute DOMString        host;
            attribute DOMString        hostname;
