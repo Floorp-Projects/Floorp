@@ -38,54 +38,45 @@
 #ifndef nsMemoryImpl_h__
 #define nsMemoryImpl_h__
 
-#include "nsMemory.h"
-#include "nsISupportsArray.h"
-#include "nsIRunnable.h"
-#include "nsIThread.h"
-#include "nsCOMPtr.h"
+#include "nsIMemory.h"
+#include "prlock.h"
 #include "plevent.h"
 
-struct PRLock;
-class MemoryFlusher;
+// nsMemoryImpl is a static object. We can do this because it doesn't have
+// a constructor/destructor or any instance members. Please don't add
+// instance member variables, only static member variables.
 
 class nsMemoryImpl : public nsIMemory
 {
 public:
-    NS_DECL_ISUPPORTS
+    // We don't use the generic macros because we are a special static object
+    NS_IMETHOD QueryInterface(REFNSIID aIID, void** aResult);
+    NS_IMETHOD_(nsrefcnt) AddRef(void) { return 1; }
+    NS_IMETHOD_(nsrefcnt) Release(void) { return 1; }
+
     NS_DECL_NSIMEMORY
 
-    nsMemoryImpl();
+    static NS_HIDDEN_(nsresult) Startup();
+    static NS_HIDDEN_(void)     Shutdown();
+    static NS_METHOD Create(nsISupports* outer,
+                            const nsIID& aIID, void **aResult);
 
-    nsresult FlushMemory(const PRUnichar* aReason, PRBool aImmediate);
-
-    // called from xpcom initialization/finalization:
-    static nsresult Startup();
-    static nsresult Shutdown();
-
-    static NS_METHOD
-    Create(nsISupports* outer, const nsIID& aIID, void* *aInstancePtr);
-
-private:
-    ~nsMemoryImpl();
+    NS_HIDDEN_(nsresult) FlushMemory(const PRUnichar* aReason, PRBool aImmediate);
 
 protected:
-    MemoryFlusher* mFlusher;
-    nsCOMPtr<nsIThread> mFlusherThread;
-
-    PRLock* mFlushLock;
-    PRBool  mIsFlushing;
-
     struct FlushEvent {
         PLEvent mEvent;
         const PRUnichar* mReason;
     };
 
-    FlushEvent mFlushEvent;
+    NS_HIDDEN_(nsresult) RunFlushers(const PRUnichar* aReason);
+    static NS_HIDDEN_(void*) PR_CALLBACK HandleFlushEvent(PLEvent* aEvent);
+    static NS_HIDDEN_(void)  PR_CALLBACK DestroyFlushEvent(PLEvent* aEvent);
 
-    static nsresult RunFlushers(nsMemoryImpl* aSelf, const PRUnichar* aReason);
+    static PRLock* sFlushLock;
+    static PRBool  sIsFlushing;
 
-    static void* PR_CALLBACK HandleFlushEvent(PLEvent* aEvent);
-    static void  PR_CALLBACK DestroyFlushEvent(PLEvent* aEvent);
+    static FlushEvent sFlushEvent;
 };
 
 #endif // nsMemoryImpl_h__

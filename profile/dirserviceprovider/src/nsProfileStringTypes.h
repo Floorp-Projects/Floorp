@@ -50,6 +50,7 @@
  */
 
 #ifdef STANDALONE_PROFILEDIRSERVICE
+#define MOZILLA_STRICT_API
 #include "nsEmbedString.h"
 
 typedef nsEmbedString nsString;

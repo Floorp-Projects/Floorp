@@ -41,6 +41,7 @@
 
 #include "nsProfileStringTypes.h"
 #include "nsProfileLock.h"
+#include "nsCOMPtr.h"
 
 #if defined(XP_MAC) || defined(XP_MACOSX)
 #include <Processes.h>

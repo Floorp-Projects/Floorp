@@ -41,6 +41,7 @@
 #include "nsILocalFile.h"
 
 #ifdef STANDALONE_PROFILEDIRSERVICE
+#define MOZILLA_STRICT_API
 #include "nsEmbedString.h"
 #else
 #include "nsString.h"

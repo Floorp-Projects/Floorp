@@ -43,11 +43,11 @@
 #ifndef MOZILLA_STRICT_API
 # define NS_RegisterXPCOMExitRoutine        NS_RegisterXPCOMExitRoutine_P
 # define NS_UnregisterXPCOMExitRoutine      NS_UnregisterXPCOMExitRoutine_P
-# define NS_GetFrozenFunctions              NS_GetFrozenFunctions_P
 #endif
 
 #include "nscore.h"
 #include "nsXPCOM.h"
+#include "nsStringAPI.h"
 
 class nsStringContainer;
 class nsCStringContainer;
@@ -111,8 +111,12 @@ typedef nsresult   (* CStringSetDataFunc)(nsACString&, const char*, PRUint32);
 typedef nsresult   (* CStringSetDataRangeFunc)(nsACString&, PRUint32, PRUint32, const char*, PRUint32);
 typedef nsresult   (* CStringCopyFunc)(nsACString &, const nsACString &);
 
-typedef nsresult   (* CStringToUTF16)(const nsACString &, PRUint32, const nsAString &);
-typedef nsresult   (* UTF16ToCString)(const nsAString &, PRUint32, const nsACString &);
+typedef nsresult   (* CStringToUTF16)(const nsACString &, nsCStringEncoding, nsAString &);
+typedef nsresult   (* UTF16ToCString)(const nsAString &, nsCStringEncoding, nsACString &);
+
+typedef void*      (* AllocFunc)(PRSize size);
+typedef void*      (* ReallocFunc)(void* ptr, PRSize size);
+typedef void       (* FreeFunc)(void* ptr);
 
 // PRIVATE
 typedef nsresult   (* RegisterXPCOMExitRoutineFunc)(XPCOMExitRoutine exitRoutine, PRUint32 priority);
@@ -155,6 +159,9 @@ typedef struct XPCOMFunctions{
     UTF16ToCString utf16ToCString;
     StringCloneDataFunc stringCloneData;
     CStringCloneDataFunc cstringCloneData;
+    AllocFunc allocFunc;
+    ReallocFunc reallocFunc;
+    FreeFunc freeFunc;
    
 } XPCOMFunctions;
 

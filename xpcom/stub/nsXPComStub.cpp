@@ -19,6 +19,7 @@
  *
  * Contributor(s):
  *   Darin Fisher <darin@meer.net>
+ *   Benjamin Smedberg <bsmedberg@covad.net>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -37,6 +38,70 @@
 #include "nsXPCOM.h"
 #include "nsXPCOMPrivate.h"
 #include "nsStringAPI.h"
+
+#include <string.h>
+
+static const XPCOMFunctions kFrozenFunctions = {
+    XPCOM_GLUE_VERSION,
+    sizeof(XPCOMFunctions),
+    &NS_InitXPCOM2_P,
+    &NS_ShutdownXPCOM_P,
+    &NS_GetServiceManager_P,
+    &NS_GetComponentManager_P,
+    &NS_GetComponentRegistrar_P,
+    &NS_GetMemoryManager_P,
+    &NS_NewLocalFile_P,
+    &NS_NewNativeLocalFile_P,
+    &NS_RegisterXPCOMExitRoutine_P,
+    &NS_UnregisterXPCOMExitRoutine_P,
+
+    // these functions were added post 1.4
+    &NS_GetDebug_P,
+    &NS_GetTraceRefcnt_P,
+
+    // these functions were added post 1.6
+    &NS_StringContainerInit,
+    &NS_StringContainerFinish,
+    &NS_StringGetData,
+    &NS_StringSetData,
+    &NS_StringSetDataRange,
+    &NS_StringCopy,
+    &NS_CStringContainerInit,
+    &NS_CStringContainerFinish,
+    &NS_CStringGetData,
+    &NS_CStringSetData,
+    &NS_CStringSetDataRange,
+    &NS_CStringCopy,
+    &NS_CStringToUTF16,
+    &NS_UTF16ToCString,
+    &NS_StringCloneData,
+    &NS_CStringCloneData,
+
+    // these functions were added post 1.7 (Firefox 1.0)
+    &NS_Alloc_P,
+    &NS_Realloc_P,
+    &NS_Free_P
+};  
+
+extern "C" NS_EXPORT nsresult
+NS_GetFrozenFunctions(XPCOMFunctions *functions, const char* /* libraryPath */)
+{
+    if (!functions)
+        return NS_ERROR_OUT_OF_MEMORY;
+
+    if (functions->version != XPCOM_GLUE_VERSION)
+        return NS_ERROR_FAILURE;
+
+    PRUint32 size = functions->size;
+    if (size > sizeof(XPCOMFunctions))
+        size = sizeof(XPCOMFunctions);
+
+    size -= offsetof(XPCOMFunctions, init);
+
+    memcpy(&functions->init, &kFrozenFunctions.init, size);
+
+    return NS_OK;
+}
 
 /*
  * Stubs for nsXPCOM.h
@@ -136,9 +201,23 @@ NS_UnregisterXPCOMExitRoutine(XPCOMExitRoutine exitRoutine)
   return NS_UnregisterXPCOMExitRoutine_P(exitRoutine);
 }
 
-#undef NS_GetFrozenFunctions
-extern "C" NS_EXPORT nsresult
-NS_GetFrozenFunctions(XPCOMFunctions *entryPoints, const char* libraryPath)
+#undef NS_Alloc
+extern "C" NS_EXPORT void*
+NS_Alloc(PRSize size)
 {
-  return NS_GetFrozenFunctions_P(entryPoints, libraryPath);
+  return NS_Alloc_P(size);
+}
+
+#undef NS_Realloc
+extern "C" NS_EXPORT void*
+NS_Realloc(void* ptr, PRSize size)
+{
+  return NS_Realloc_P(ptr, size);
+}
+
+#undef NS_Free
+extern "C" NS_EXPORT void
+NS_Free(void* ptr)
+{
+  NS_Free_P(ptr);
 }
