@@ -29,6 +29,9 @@
   var bundle = srGetStrBundle("chrome://global/locale/filepicker.properties");
 */
 
+/**** NAMESPACES ****/
+const XUL_NS = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
+
 // Each editor window must include this file
 // Variables  shared by all dialogs:
 var editorShell;
@@ -437,7 +440,6 @@ function GetAppropriatePercentString(elementForAtt, elementInDoc)
     return GetString("PercentOfTable");
 
   // Check if element is within a table cell
-  // Check if current selection anchor node is within a table cell
   if (editorShell.GetElementOrParentByTagName("td", elementInDoc))
     return GetString("PercentOfCell");
   else
@@ -498,7 +500,7 @@ function AppendStringToMenulist(menulist, string)
     // May not have any popup yet -- so create one
     if (!menupopup)
     {
-      menupopup = document.createElementNS("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul", "menupopup");
+      menupopup = document.createElementNS(XUL_NS, "menupopup");
       if (menupopup)
         menulist.appendChild(menupopup);
       else
@@ -507,7 +509,7 @@ function AppendStringToMenulist(menulist, string)
         return null;
       }
     }
-    var menuItem = document.createElementNS("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul", "menuitem");
+    var menuItem = document.createElementNS(XUL_NS, "menuitem");
     if (menuItem)
     {
       menuItem.setAttribute("label", string);
@@ -526,7 +528,7 @@ function AppendLabelAndValueToMenulist(menulist, labelStr, valueStr)
     // May not have any popup yet -- so create one
     if (!menupopup)
     {
-      menupopup = document.createElementNS("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul", "menupopup");
+      menupopup = document.createElementNS(XUL_NS, "menupopup");
       if (menupopup)
         menulist.appendChild(menupopup);
       else
@@ -535,7 +537,7 @@ function AppendLabelAndValueToMenulist(menulist, labelStr, valueStr)
         return null;
       }
     }
-    var menuItem = document.createElementNS("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul", "menuitem");
+    var menuItem = document.createElementNS(XUL_NS, "menuitem");
     if (menuItem)
     {
       menuItem.setAttribute("label", labelStr);
@@ -587,7 +589,7 @@ function AppendStringToTreelist(tree, string)
     var treechildren = treecols.nextSibling;
     if (!treechildren)
     {
-      treechildren = document.createElementNS("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul", "treechildren");
+      treechildren = document.createElementNS(XUL_NS, "treechildren");
       if (treechildren)
       {
         treechildren.setAttribute("flex","1");
@@ -599,9 +601,9 @@ function AppendStringToTreelist(tree, string)
         return null;
       }
     }
-    var treeitem = document.createElementNS("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul", "treeitem");
-    var treerow = document.createElementNS("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul", "treerow");
-    var treecell = document.createElementNS("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul", "treecell");
+    var treeitem = document.createElementNS(XUL_NS, "treeitem");
+    var treerow = document.createElementNS(XUL_NS, "treerow");
+    var treecell = document.createElementNS(XUL_NS, "treecell");
     if (treeitem && treerow && treecell)
     {
       treerow.appendChild(treecell);

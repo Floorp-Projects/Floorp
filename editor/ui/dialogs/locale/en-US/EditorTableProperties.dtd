@@ -69,8 +69,7 @@
 <!ENTITY cellAlignJustify.label           "Justify">
 <!ENTITY cellAlignAtChar.label            "At Character:">
 <!ENTITY cellInheritColor.label           "(Let table color show through)">
-<!-- Don't translate <html:br/> -->
-<!ENTITY cellUseCheckboxHelp.label        "Use checkboxes to determine which properties<html:br/>are applied to all selected cells">
+<!ENTITY cellUseCheckboxHelp.label        "Use checkboxes to determine which properties are applied to all selected cells">
 
 <!-- Used in both Table and Cell panels  -->
 <!ENTITY size.label                       "Size">

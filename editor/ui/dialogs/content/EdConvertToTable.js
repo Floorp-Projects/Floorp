@@ -47,13 +47,13 @@ function Startup()
   {
     case gCommaIndex:
     default:
-      document.getElementById("comma").checked = true;
+      gDialog.sepRadioGroup.selectedItem = document.getElementById("comma");
       break;
     case gSpaceIndex:
-      document.getElementById("space").checked = true;
+      gDialog.sepRadioGroup.selectedItem = document.getElementById("space");
       break;
     case gOtherIndex:
-      document.getElementById("other").checked = true;
+      gDialog.sepRadioGroup.selectedItem = document.getElementById("other");
       break;
   }
 

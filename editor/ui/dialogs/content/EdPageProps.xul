@@ -68,6 +68,7 @@
     </rows>
   </grid>
   <spacer class="bigspacer"/>
-  <description class="wrap" flex="1">&EditHEADSource.label;</description>
+  <label value="&EditHEADSource1.label;"/>
+  <description class="wrap" flex="1">&EditHEADSource2.label;</description>
   <separator class="groove"/>
 </dialog>

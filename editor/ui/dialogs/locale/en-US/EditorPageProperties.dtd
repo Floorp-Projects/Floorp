@@ -28,4 +28,5 @@
 <!ENTITY authorInput.label "Author:">
 <!ENTITY descriptionInput.label "Description:">
 <!ENTITY locationNewPage.label "[New page, not saved yet]">
-<!ENTITY EditHEADSource.label "Advanced users:<html:br/>To edit other contents of the &lt;head&gt; region, use &quot;HTML Source&quot; in the View Menu or Edit Mode Toolbar.">
+<!ENTITY EditHEADSource1.label "Advanced users:">
+<!ENTITY EditHEADSource2.label "To edit other contents of the &lt;head&gt; region, use &quot;HTML Source&quot; in the View Menu or Edit Mode Toolbar.">

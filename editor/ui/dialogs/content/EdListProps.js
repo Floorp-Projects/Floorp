@@ -66,9 +66,9 @@ function Startup()
   {
     // Radio button index is persistant
     if (gDialog.RadioGroup.getAttribute("index") == "1")
-      gDialog.ChangeSelectedRadio.checked = true;
+      gDialog.RadioGroup.selectedItem = gDialog.ChangeSelectedRadio;
     else
-      gDialog.ChangeAllRadio.checked = true;
+      gDialog.RadioGroup.selectedItem = gDialog.ChangeAllRadio;
   }
 
   InitDialog();
@@ -322,12 +322,12 @@ function onOK()
     editorShell.BeginBatchChanges();
 
 
-    // Remember which radio button was checked
+    // Remember which radio button was selected
     if (ListElement)
-      gDialog.RadioGroup.setAttribute("index", gDialog.ChangeAllRadio.checked ? "0" : "1");
+      gDialog.RadioGroup.setAttribute("index", gDialog.ChangeAllRadio.selected ? "0" : "1");
 
     var changeList;
-    if (ListElement && gDialog.ChangeAllRadio.checked)
+    if (ListElement && gDialog.ChangeAllRadio.selected)
     {
       changeList = true;
     }
@@ -336,7 +336,7 @@ function onOK()
 
     if (changeList)
     {
-      editorShell.MakeOrChangeList(ListType, gDialog.ChangeAllRadio.checked);
+      editorShell.MakeOrChangeList(ListType, gDialog.ChangeAllRadio.selected);
 
       if (ListType)
       {

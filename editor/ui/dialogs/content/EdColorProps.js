@@ -74,6 +74,7 @@ function Startup()
   gDialog.LinkText = document.getElementById("LinkText");
   gDialog.ActiveLinkText = document.getElementById("ActiveLinkText");
   gDialog.VisitedLinkText = document.getElementById("VisitedLinkText");
+  gDialog.PageColorGroup = document.getElementById("PageColorGroup");
   gDialog.DefaultColorsRadio = document.getElementById("DefaultColorsRadio");
   gDialog.CustomColorsRadio = document.getElementById("CustomColorsRadio");
   gDialog.BackgroundImageInput = document.getElementById("BackgroundImageInput");
@@ -108,10 +109,7 @@ function Startup()
 
   InitDialog();
 
-  if (gDialog.DefaultColorsRadio.checked)
-    gDialog.DefaultColorsRadio.focus();
-  else
-    gDialog.CustomColorsRadio.focus();
+  gDialog.PageColorGroup.focus();
 
   SetWindowLocation();
 }
@@ -155,12 +153,12 @@ function InitDialog()
   if (haveCustomColor)
   {
     // If any colors are set, then check the "Custom" radio button
-    gDialog.CustomColorsRadio.checked = true;
+    gDialog.PageColorGroup.selectedItem = gDialog.CustomColorsRadio;
     UseCustomColors();
   }
   else 
   {
-    gDialog.DefaultColorsRadio.checked = true;
+    gDialog.PageColorGroup.selectedItem = gDialog.DefaultColorsRadio;
     UseDefaultColors();
   }
 }
@@ -168,7 +166,7 @@ function InitDialog()
 function GetColorAndUpdate(ColorWellID)
 {
   // Only allow selecting when in custom mode
-  if (!gDialog.CustomColorsRadio.checked) return;
+  if (!gDialog.CustomColorsRadio.selected) return;
 
   var colorObj = new Object;
   var colorWell = document.getElementById(ColorWellID);
@@ -380,7 +378,7 @@ function ValidateAndPreviewImage(ShowErrorMessage)
 function ValidateData()
 {
   // Colors values are updated as they are picked, no validation necessary
-  if (gDialog.DefaultColorsRadio.checked)
+  if (gDialog.DefaultColorsRadio.selected)
   {
     globalElement.removeAttribute(textStr);
     globalElement.removeAttribute(linkStr);

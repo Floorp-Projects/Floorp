@@ -35,7 +35,8 @@
 <window class="dialog" title="&windowTitle.label;"
    xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
    onload = "Startup()"
-   onunload="onCancel()">
+   onunload="onCancel()"
+   style="min-width:20em">
 
   <!-- Methods common to all editor dialogs -->
   <script type="application/x-javascript" src="chrome://editor/content/EdDialogCommon.js"/>
@@ -46,7 +47,8 @@
   <spacer id="location" offsetY="50" persist="offsetX offsetY"/>
   <keyset id="dialogKeys"/>
   <popupset id="aTooltipSet"/>
-  <description flex="1">&instructions.label;</description>
+  <description class="wrap" flex="1">&instructions1.label;</description>
+  <description class="wrap" flex="1">&instructions2.label;</description>
   <radiogroup id="SepRadioGroup" persist="index character" index="0" character="">
     <radio id="comma" label="&commaRadio.label;" oncommand="SelectCharacter('0');"/>
     <vbox>

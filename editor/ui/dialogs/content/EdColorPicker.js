@@ -50,6 +50,7 @@ function Startup()
   gDialog.ColorInput       = document.getElementById("ColorInput");
   gDialog.LastPickedButton = document.getElementById("LastPickedButton");
   gDialog.LastPickedColor  = document.getElementById("LastPickedColor");
+  gDialog.CellOrTableGroup = document.getElementById("CellOrTableGroup");
   gDialog.TableRadio       = document.getElementById("TableRadio");
   gDialog.CellRadio        = document.getElementById("CellRadio");
   gDialog.Ok               = document.getElementById("ok");
@@ -96,13 +97,13 @@ function Startup()
       if (gColorObj.TableColor)
       {
         gColor = gColorObj.TableColor;
-        gDialog.TableRadio.checked = true;
+        gDialog.CellOrTableGroup.selectedItem = gDialog.TableRadio;
         gDialog.TableRadio.focus();
       }
       else 
       {
         gColor = gColorObj.CellColor;
-        gDialog.CellRadio.checked = true;
+        gDialog.CellOrTableGroup.selectedItem = gDialog.CellRadio;
         gDialog.CellRadio.focus();
       }
       break;
@@ -275,7 +276,7 @@ function onOK()
       gColorObj.LastBackgroundColor = gColor;
     }
     // If table or cell requested, tell caller which element to set on
-    if (TableOrCell && gDialog.TableRadio.checked)
+    if (TableOrCell && gDialog.TableRadio.selected)
       gColorObj.Type = "Table";
   }
   SaveWindowLocation();
