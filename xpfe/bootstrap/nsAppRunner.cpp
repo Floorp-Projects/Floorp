@@ -243,7 +243,7 @@ app_getModuleInfo(nsStaticModuleInfo **info, PRUint32 *count);
 #if defined(XP_OS2)
 /* Adding globals that OS/2 doesn't have so we can port the DDE code */
 char **__argv;
-int   __argc;
+int   *__pargc;
 #endif /* XP_OS2 */
 
 #if defined(XP_BEOS)
@@ -1397,7 +1397,7 @@ static void DumpHelp(char *appname)
   printf("%s-SelectProfile%sStart with profile selection dialog.\n",HELP_SPACER_1,HELP_SPACER_2);
   printf("%s-UILocale <locale>%sStart with <locale> resources as UI Locale.\n",HELP_SPACER_1,HELP_SPACER_2);
   printf("%s-contentLocale <locale>%sStart with <locale> resources as content Locale.\n",HELP_SPACER_1,HELP_SPACER_2);
-#ifdef XP_WIN32
+#if defined(XP_WIN32) || defined(XP_OS2)
   printf("%s-console%sStart Mozilla with a debugging console.\n",HELP_SPACER_1,HELP_SPACER_2);
 #endif
 #ifdef MOZ_ENABLE_XREMOTE
@@ -1612,6 +1612,18 @@ static PRBool GetWantSplashScreen(int argc, char* argv[])
   return dosplash;
 }
 
+#if defined(XP_OS2)
+// because we use early returns, we use a stack-based helper to un-set the OS2 FP handler
+class ScopedFPHandler {
+private:
+  EXCEPTIONREGISTRATIONRECORD excpreg;
+
+public:
+  ScopedFPHandler() { PR_OS2_SetFloatExcpHandler(&excpreg); }
+  ~ScopedFPHandler() { PR_OS2_UnsetFloatExcpHandler(&excpreg); }
+};
+#endif
+
 int main(int argc, char* argv[])
 {
   NS_TIMELINE_MARK("enter main");
@@ -1630,21 +1642,14 @@ int main(int argc, char* argv[])
 #endif
 
 #if defined(XP_OS2)
-  __argc = argc;
+  __pargc = &argc;
   __argv = argv;
 
-  ULONG    ulMaxFH = 0;
-  LONG     ulReqCount = 0;
+  PRBool StartOS2App(int aArgc, char **aArgv);
+  if (!StartOS2App(argc, argv))
+    return 1;
 
-  DosSetRelMaxFH(&ulReqCount,
-                 &ulMaxFH);
-
-  if (ulMaxFH < 256) {
-    DosSetMaxFH(256);
-  }
-
-  EXCEPTIONREGISTRATIONRECORD excpreg;
-  PR_OS2_SetFloatExcpHandler(&excpreg);
+  ScopedFPHandler handler();
 #endif /* XP_OS2 */
 
 #if defined(XP_BEOS)
@@ -1821,10 +1826,6 @@ int main(int argc, char* argv[])
 #else
   rv = NS_ShutdownXPCOM(nsnull);
   NS_ASSERTION(NS_SUCCEEDED(rv), "NS_ShutdownXPCOM failed");
-#endif
-
-#ifdef XP_OS2
-  PR_OS2_UnsetFloatExcpHandler(&excpreg);
 #endif
 
   return TranslateReturnValue(mainResult);

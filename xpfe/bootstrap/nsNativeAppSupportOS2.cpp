@@ -23,6 +23,7 @@
  * Contributor(s):
  *   Bill Law       law@netscape.com
  *   IBM Corp.
+ *   Rich Walsh     dragtext@e-vertise.com
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -91,8 +92,8 @@
 #include "prprf.h"
 
 // getting from nsAppRunner.  Use to help track down arguments.
-extern char ** __argv;
-extern int    __argc;
+extern char **__argv;
+extern int   *__pargc;
 
 /* trying to keep this like Window's COPYDATASTRUCT, but a compiler error is
  * forcing me to add chBuff so that we can append the data to the end of the
@@ -671,18 +672,11 @@ nsNativeAppSupportOS2::CheckConsole() {
     DosQueryModuleName(ppib->pib_hmte, CCHMAXPATH, pszAppPath);
     *strrchr(pszAppPath, '\\') = '\0'; // XXX DBCS misery
 
-    for ( int i = 1; i < __argc; i++ ) {
-        if ( strcmp( "-console", __argv[i] ) == 0
-             ||
-             strcmp( "/console", __argv[i] ) == 0 ) {
-            /* Figure out some magic way to create a console on OS/2 */
-        } else if ( strcmp( "-turbo", __argv[i] ) == 0
-                    ||
-                    strcmp( "/turbo", __argv[i] ) == 0
-                    ||
-                    strcmp( "-server", __argv[i] ) == 0                                              
-                    ||
-                    strcmp( "/server", __argv[i] ) == 0 ) {         
+    for ( int i = 1; i < *__pargc; i++ ) {
+        if ( strcmp( "-turbo", __argv[i] )  == 0 ||
+             strcmp( "/turbo", __argv[i] )  == 0 ||
+             strcmp( "-server", __argv[i] ) == 0 ||
+             strcmp( "/server", __argv[i] ) == 0 ) {         
 
             struct stat st;
             CHAR pszTurboPath[CCHMAXPATH];
@@ -717,7 +711,7 @@ nsNativeAppSupportOS2::CheckConsole() {
         }
     }
 
-    for ( int j = 1; j < __argc; j++ ) {
+    for ( int j = 1; j < *__pargc; j++ ) {
         if (strcmp("-killAll", __argv[j]) == 0 || strcmp("/killAll", __argv[j]) == 0 ||
             strcmp("-kill", __argv[j]) == 0 || strcmp("/kill", __argv[j]) == 0) {
 
@@ -794,7 +788,7 @@ NS_CreateSplashScreen( nsISplashScreen **aResult ) {
         if (pBuffer[0] == '0') {
           doSplashScreen = FALSE;
         } /* endif */
-        for ( int i = 1; i < __argc; i++ ) {
+        for ( int i = 1; i < *__pargc; i++ ) {
             if ( strcmp( "-quiet", __argv[i] ) == 0
                  ||
                  strcmp( "/quiet", __argv[i] ) == 0 ) {
@@ -1191,20 +1185,34 @@ nsNativeAppSupportOS2::Start( PRBool *aResult ) {
     NS_ENSURE_ARG( aResult );
     NS_ENSURE_TRUE( mInstance == 0, NS_ERROR_NOT_INITIALIZED );
 
-    if (getenv("MOZ_NO_REMOTE"))
-    {
-        *aResult = PR_TRUE;
-        return NS_OK;
-    }
-
     nsresult rv = NS_ERROR_FAILURE;
     *aResult = PR_FALSE;
 
-    for ( int i = 1; i < __argc; i++ ) {
-        if ( strcmp( "-dde", __argv[i] ) == 0 ||
-             strcmp( "/dde", __argv[i] ) == 0 ) {
+    // see if DDE should be enabled AND remove OS/2-specific
+    // options the app's commandline handler won't recognize
+    // (-console was handled earlier by StartOS2App())
+    for (int i = 1; i < *__pargc; i++ ) {
+        if (stricmp("-dde", __argv[i]) == 0 ||
+            stricmp("/dde", __argv[i]) == 0)
             mUseDDE = PR_TRUE;
-        }
+        else
+            if (stricmp("-console", __argv[i]) != 0 &&
+                stricmp("/console", __argv[i]) != 0)
+                continue;
+
+        for (int j = i; j < *__pargc; j++)
+            __argv[j] = __argv[j+1];
+
+        (*__pargc)--;
+        i--;
+    }
+
+    // if this is a standalone instance, turn off DDE regardless of the
+    // commandline, then skip out before we look for another instance
+    if (getenv("MOZ_NO_REMOTE")) {
+        mUseDDE = PR_FALSE;
+        *aResult = PR_TRUE;
+        return NS_OK;
     }
 
     // Grab mutex first.
@@ -1234,12 +1242,6 @@ nsNativeAppSupportOS2::Start( PRBool *aResult ) {
                                         sizeof( MQINFO ) );
     if( !hmqCurrent )
     {
-        /* Set our app to be a PM app before attempting Win calls */
-        PPIB ppib;
-        PTIB ptib;
-        DosGetInfoBlocks(&ptib, &ppib);
-        ppib->pib_ultype = 3;
-
         hab = WinInitialize( 0 );
         hmqCurrent = WinCreateMsgQueue( hab, 0 );
     }
@@ -2470,3 +2472,100 @@ nsNativeAppSupportOS2::OnLastWindowClosing() {
 
     return NS_OK;
 }
+
+// This is a public function called by nsAppRunner.cpp.  Its primary
+// purpose is to determine if any commandline options require a VIO
+// ("console") window.  If so and one isn't present, it will restart
+// the app in a VIO session.  It is intended to be called as early as
+// possible during startup and before any other commandline processing.
+// It returns TRUE if the current instance should continue running and
+// FALSE if it should terminate upon this function's return.
+
+PRBool     StartOS2App( int aArgc, char **aArgv)
+{
+  PRBool    rv = PR_TRUE;
+  PPIB      ppib;
+  PTIB      ptib;
+
+  DosGetInfoBlocks(&ptib, &ppib);
+
+  // if this isn't a PM session, reset the session type to enable use
+  // of PM functions;  if it is PM, look for args that require a VIO
+  // session - however, ignore them if any of the turbo-mode args are
+  // also present (why restart as VIO just to launch a detached process)
+  if (ppib->pib_ultype != SSF_TYPE_PM)
+    ppib->pib_ultype = SSF_TYPE_PM;
+  else {
+    for (int i = 1; i < aArgc; i++ ) {
+      char *arg = aArgv[i];
+      if (*arg != '-' && *arg != '/')
+        continue;
+      arg++;
+
+      // as soon as we find a turbo-mode arg, we're done;  OTOH, if we
+      // find a VIO-mode arg, keep looking so we don't miss a turbo arg
+      if (stricmp("turbo", arg) == 0 ||
+        stricmp("server", arg)  == 0 ||
+        stricmp("kill", arg)    == 0 ||
+        stricmp("killall", arg) == 0) {
+        rv = PR_TRUE;
+        break;
+      }
+      else {
+        if (stricmp("?", arg)  == 0 ||
+          stricmp("h", arg)    == 0 ||
+          stricmp("v", arg)    == 0 ||
+          stricmp("help", arg) == 0 ||
+          stricmp("version", arg) == 0 ||
+          stricmp("console", arg) == 0)
+          rv = PR_FALSE;
+      }
+    }
+  }
+
+  // if the session type is OK, increase the number of 
+  // file handles available to the app, then exit
+  if (rv) {
+    ULONG    ulMaxFH = 0;
+    LONG     ulReqCount = 0;
+
+    DosSetRelMaxFH(&ulReqCount, &ulMaxFH);
+    if (ulMaxFH < 256)
+      DosSetMaxFH(256);
+
+    return rv;
+  }
+
+  // the app has to be restarted in a VIO session
+  char        szErrObj[64] = "";
+  STARTDATA   x;
+
+  memset(&x, 0, sizeof(x));
+  x.Length = sizeof(x);
+  x.InheritOpt = SSF_INHERTOPT_PARENT;
+  x.SessionType = SSF_TYPE_WINDOWABLEVIO;
+  x.PgmControl = SSF_CONTROL_NOAUTOCLOSE;
+  x.ObjectBuffer = szErrObj;
+  x.ObjectBuffLen = sizeof(szErrObj);
+
+  // the f/q exename is the string preceding ppib->pib_pchcmd;
+  // the original commandline is the string following it
+  char * ptr = ppib->pib_pchcmd - 2;
+  while (*ptr)
+    ptr--;
+  x.PgmName = ptr + 1;
+  x.PgmInputs = strchr(ppib->pib_pchcmd, 0) + 1;
+
+  // restart the app;  if this session is in the background, trying
+  // to start in the foreground will produce an error, but the app
+  // will still start; if DosStartSession has a real failure, forget
+  // the console and let the current instance keep running
+  ULONG ulSession;
+  PID   pid;
+  ULONG rc = DosStartSession(&x, &ulSession, &pid);
+  if (rc && rc != ERROR_SMG_START_IN_BACKGROUND)
+    rv = PR_TRUE;
+
+  return rv;
+}
+
