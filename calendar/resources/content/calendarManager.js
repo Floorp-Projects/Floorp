@@ -115,7 +115,9 @@ function calendarManager( CalendarWindow )
    
    /* Refresh remote calendars */
 
-   var RefreshServers = getBoolPref(this.CalendarWindow.calendarPreferences.calendarPref, "servers.reloadonlaunch", false );
+   var categoriesStringBundle = srGetStrBundle("chrome://calendar/locale/calendar.properties");
+   
+   var RefreshServers = getBoolPref(this.CalendarWindow.calendarPreferences.calendarPref, "servers.reloadonlaunch", categoriesStringBundle.GetStringFromName("reloadServersOnLaunch" ) );
    
    if( RefreshServers == true )
       this.refreshAllRemoteCalendars( );

@@ -90,9 +90,18 @@ function calendarPreferences( CalendarWindow )
 
    this.calendarPref = prefService.getBranch("calendar."); // preferences calendar node
 
+   var categoriesStringBundle = srGetStrBundle("chrome://calendar/locale/calendar.properties");
+   
    //go through all the preferences and set default values?
+   getBoolPref( this.calendarPref, "servers.reloadonlaunch", categoriesStringBundle.GetStringFromName("reloadServersOnLaunch" ) );
+   getBoolPref( this.calendarPref, "alarms.show", categoriesStringBundle.GetStringFromName("showAlarms" ) );
+   getBoolPref( this.calendarPref, "alarms.playsound", categoriesStringBundle.GetStringFromName("playAlarmSound" ) );
    getCharPref( this.calendarPref, "categories.names", getDefaultCategories() );
-   getIntPref( this.calendarPref, "event.defaultlength", 60 );
-   getIntPref( this.calendarPref, "event.defaultsnoozelength", 60 );
+   getIntPref( this.calendarPref, "event.defaultlength", categoriesStringBundle.GetStringFromName("defaultEventLength" ) );
+   getIntPref( this.calendarPref, "alarms.defaultsnoozelength", categoriesStringBundle.GetStringFromName("defaultSnoozeAlarmLength" ) );
+   getIntPref( this.calendarPref, "date.format", categoriesStringBundle.GetStringFromName("dateFormat" ) );
+   getIntPref( this.calendarPref, "event.defaultstarthour", categoriesStringBundle.GetStringFromName("defaultStartHour" ) );
+   getIntPref( this.calendarPref, "event.defaultendhour", categoriesStringBundle.GetStringFromName("defaultEndHour" ) );
+   getIntPref( this.calendarPref, "week.start", categoriesStringBundle.GetStringFromName("defaultWeekStart" ) );
 }
 

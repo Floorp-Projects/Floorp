@@ -149,7 +149,9 @@ function createAlarmBox( Event )
    var prefService = Components.classes["@mozilla.org/preferences-service;1"]
                             .getService(Components.interfaces.nsIPrefService);
    
-   OuterBox.getElementsByAttribute( "name", "alarm-length-field" )[0].value = getIntPref(prefService.getBranch("calendar."), "event.defaultsnoozelength", 60 );
+   var categoriesStringBundle = srGetStrBundle("chrome://calendar/locale/calendar.properties");
+   
+   OuterBox.getElementsByAttribute( "name", "alarm-length-field" )[0].value = getIntPref(prefService.getBranch("calendar."), "alarms.defaultsnoozelength", categoriesStringBundle.GetStringFromName("defaultSnoozeAlarmLength" ) );
       
    kungFooDeathGripOnEventBoxes.push( OuterBox.getElementsByAttribute( "name", "SnoozeButton" )[0] );
    

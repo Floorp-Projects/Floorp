@@ -244,7 +244,9 @@ function pasteFromClipboard()
             
             //change the date of all the events to now
             startDate = gCalendarWindow.currentView.getNewEventDate();
-            MinutesToAddOn = getIntPref(gCalendarWindow.calendarPreferences.calendarPref, "event.defaultlength", 60 );
+            var categoriesStringBundle = srGetStrBundle("chrome://calendar/locale/calendar.properties");
+   
+            MinutesToAddOn = getIntPref(gCalendarWindow.calendarPreferences.calendarPref, "event.defaultlength", categoriesStringBundle.GetStringFromName("defaultEventLength" ) );
    
             endDateTime = startDate.getTime() + ( 1000 * 60 * MinutesToAddOn );
    

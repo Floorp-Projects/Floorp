@@ -209,7 +209,7 @@
                             <label for="uri-field" value="&newevent.uri.label;"/>
                         </hbox>
                         <hbox>
-                          <textbox id="uri-field" flex="1"/>
+                          <textbox id="uri-field" type="autocomplete" searchSessions="history" timeout="50" flex="1"/>
                           <button label="&newevent.uri.visit.label;" oncommand="launchBrowser()"/>
                         </hbox>
                      </row>

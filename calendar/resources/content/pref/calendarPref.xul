@@ -94,7 +94,7 @@
          <menulist id="dateformat" crop="none" prefstring="calendar.date.format">
              <menupopup id="dateformat">
                <menuitem id="dateformat-long-menuitem"  label="&pref.dateformat.long;" value="0"/>
-               <menuitem id="dateformat-short-menuitem" label="&pref.dateformat.short;" value="1"/>
+               <menuitem id="dateformat-short-menuitem" label="&pref.dateformat.short;" value="1" selected="true"/>
              </menupopup>
            </menulist>
       </hbox>
@@ -109,17 +109,17 @@
             <menuitem label="&pref.weekstarts.wednesday;" value="3"/>
             <menuitem label="&pref.weekstarts.thursday;"  value="4"/>
             <menuitem label="&pref.weekstarts.friday;"    value="5"/>
-            <menuitem label="&pref.weekstarts.saturday;"  value="6"/>
+            <menuitem label="&pref.weekstarts.saturday;"  value="6" selected="true"/>
           </menupopup>
         </menulist>   
       </hbox>
       
       <hbox align="center">
          <description>Unless there are events, restrict day view to </description>
-         <textbox id="daystarthour" preftype="int" prefstring="calendar.event.defaultstarthour" maxlength="2" size="2"/>
-         <description>:00 AM and </description>
-         <textbox id="dayendhour" preftype="int" prefstring="calendar.event.defaultendhour" maxlength="2" size="2"/>
-         <description>:00 PM ( 0 - 24 ) </description>
+         <textbox id="daystarthour" preftype="int" prefstring="calendar.event.defaultstarthour" maxlength="2" size="2" value="8"/>
+         <description>:00 and </description>
+         <textbox id="dayendhour" preftype="int" prefstring="calendar.event.defaultendhour" maxlength="2" size="2" value="17"/>
+         <description>:00 ( 0 - 24 ) </description>
       </hbox>
       
       <hbox align="center">

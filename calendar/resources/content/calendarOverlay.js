@@ -109,7 +109,9 @@ function addEventToDialog( Event )
    {
       gAllowWindowOpen = false;
       
-      if( getBoolPref(gCalendarWindow.calendarPreferences.calendarPref, "alarms.show", true ) )
+      var categoriesStringBundle = srGetStrBundle("chrome://calendar/locale/calendar.properties");
+   
+      if( getBoolPref(gCalendarWindow.calendarPreferences.calendarPref, "alarms.show", categoriesStringBundle.GetStringFromName("showAlarms" ) ) )
       {
          calendarAlarmWindow = openCalendarAlarmWindow( Event );
       }

@@ -557,7 +557,9 @@ function newEvent( startDate, endDate )
    
    if( !endDate )
    {
-      var MinutesToAddOn = getIntPref(gCalendarWindow.calendarPreferences.calendarPref, "event.defaultlength", 60 );
+      var categoriesStringBundle = srGetStrBundle("chrome://calendar/locale/calendar.properties");
+   
+      var MinutesToAddOn = getIntPref(gCalendarWindow.calendarPreferences.calendarPref, "event.defaultlength", categoriesStringBundle.GetStringFromName("defaultEventLength" ) );
    
       var endDateTime = startDate.getTime() + ( 1000 * 60 * MinutesToAddOn );
    

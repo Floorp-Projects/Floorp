@@ -156,7 +156,7 @@ DayView.prototype.refreshEvents = function dayview_refreshEvents( )
    
    //refresh the array and the current spot.
    var LowestStartHour = getIntPref( this.calendarWindow.calendarPreferences.calendarPref, "event.defaultstarthour", 8 );
-   var HighestEndHour = getIntPref( this.calendarWindow.calendarPreferences.calendarPref, "event.defaultendhour", 17 );;
+   var HighestEndHour = getIntPref( this.calendarWindow.calendarPreferences.calendarPref, "event.defaultendhour", 17 );
    for ( var i = 0; i < dayEventList.length; i++ ) 
    {
       dayEventList[i].OtherSpotArray = new Array('0');

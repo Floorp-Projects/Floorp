@@ -647,7 +647,9 @@ CalendarAlarmObserver.prototype.fireAlarm = function calAlarm_fireAlarm( calenda
       return;
    }
       
-   if( getBoolPref(gCalendarWindow.calendarPreferences.calendarPref, "alarms.playsound", false ) )
+   var categoriesStringBundle = srGetStrBundle("chrome://calendar/locale/calendar.properties");
+   
+   if( getBoolPref(gCalendarWindow.calendarPreferences.calendarPref, "alarms.playsound", categoriesStringBundle.GetStringFromName("playAlarmSound" ) ) )
    {
       playSound();
    }
