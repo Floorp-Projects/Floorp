@@ -187,8 +187,8 @@ nsresult nsMsgThreadedDBView::SortThreads(nsMsgViewSortTypeValue sortType, nsMsg
       {
         m_keys.SetAt(numThreads, m_keys[i]);
         m_flags[numThreads] = m_flags[i];
-        m_levels[numThreads] = 0;
       }
+      m_levels[numThreads] = 0;
       numThreads++;
     }
   }
