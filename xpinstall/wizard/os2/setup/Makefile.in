@@ -71,11 +71,9 @@ LDFLAGS += /PM:PM
 
 libs:: $(PROGRAM)
 	$(INSTALL) $(PROGRAM) $(DIST)/install
-	$(INSTALL) $(srcdir)/icons/mozilla.ico $(DIST)/install
 
 install:: $(PROGRAM)
 	$(INSTALL) $(PROGRAM) $(DESTDIR)$(mozappdir)/install
-	$(INSTALL) $(srcdir)/icons/mozilla.ico $(DESTDIR)$(mozappdir)/install
 
 clean clobber realclean clobber_all::
 	$(RM) $(DIST)/install/$(PROGRAM)
