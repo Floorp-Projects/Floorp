@@ -63,13 +63,11 @@ public:
   NS_IMETHOD Paint(nsIPresContext&      aPresContext,
                    nsIRenderingContext& aRenderingContext,
                    const nsRect&        aDirtyRect);
-  NS_IMETHOD IsPercentageBase(PRBool& aBase) const {
-    aBase = PR_TRUE;
-    return NS_OK;
-  }
+  NS_IMETHOD IsPercentageBase(PRBool& aBase) const;
   NS_IMETHOD List(FILE* out, PRInt32 aIndent, nsIListFilter *aFilter) const;
   NS_IMETHOD GetFrameName(nsString& aResult) const;
   NS_IMETHOD VerifyTree() const;
+  NS_IMETHOD GetFrameForPoint(const nsPoint& aPoint, nsIFrame** aFrame);
 
   // nsIHTMLReflow
   NS_IMETHOD Reflow(nsIPresContext&          aPresContext,

@@ -1605,6 +1605,13 @@ nsBlockFrame::GetAdditionalChildListName(PRInt32   aIndex,
 //////////////////////////////////////////////////////////////////////
 // Reflow methods
 
+NS_IMETHODIMP
+nsBlockFrame::IsPercentageBase(PRBool& aBase) const
+{
+  aBase = PR_TRUE;
+  return NS_OK;
+}
+
 void
 nsBlockFrame::TakeRunInFrames(nsBlockFrame* aRunInFrame)
 {
@@ -5061,6 +5068,29 @@ nsBlockFrame::PaintChildren(nsIPresContext& aPresContext,
       }
     }
   }
+}
+
+NS_IMETHODIMP
+nsBlockFrame::GetFrameForPoint(const nsPoint& aPoint, nsIFrame** aFrame)
+{
+  nsresult rv = GetFrameForPointUsing(aPoint, nsnull, aFrame);
+  if (NS_OK == rv) {
+    return NS_OK;
+  }
+  if (nsnull != mBullet) {
+    rv = GetFrameForPointUsing(aPoint, gBulletAtom, aFrame);
+    if (NS_OK == rv) {
+      return NS_OK;
+    }
+  }
+  if (nsnull != mFloaters) {
+    rv = GetFrameForPointUsing(aPoint, gFloaterAtom, aFrame);
+    if (NS_OK == rv) {
+      return NS_OK;
+    }
+  }
+  *aFrame = this;
+  return NS_ERROR_FAILURE;
 }
 
 //////////////////////////////////////////////////////////////////////
