@@ -296,6 +296,8 @@ void InitKeyEvent(GdkEventKey *aGEK,
     anEvent.isControl = (aGEK->state & GDK_CONTROL_MASK) ? PR_TRUE : PR_FALSE;
     anEvent.isAlt = (aGEK->state & GDK_MOD1_MASK) ? PR_TRUE : PR_FALSE;
     anEvent.time = aGEK->time;
+    anEvent.point.x = 0;
+    anEvent.point.y = 0;
   }
 }
 
@@ -303,6 +305,17 @@ void InitKeyEvent(GdkEventKey *aGEK,
   ==============================================================
   =============================================================
   ==============================================================*/
+
+static gboolean reset_resize_handler (gpointer data)
+{
+  nsWindow *win = (nsWindow *)data;
+  GtkWidget *w = GTK_WIDGET(win->GetNativeData(NS_NATIVE_WIDGET));
+  gtk_signal_connect_after(GTK_OBJECT(w),
+                       "size_allocate",
+                       GTK_SIGNAL_FUNC(handle_size_allocate),
+                       win);
+  return FALSE;
+}
 
 void handle_size_allocate(GtkWidget *w, GtkAllocation *alloc, gpointer p)
 {
@@ -313,6 +326,7 @@ void handle_size_allocate(GtkWidget *w, GtkAllocation *alloc, gpointer p)
   
   nsSizeEvent sevent;
   InitAllocationEvent(alloc, p, sevent, NS_SIZE);
+
   sevent.mWinWidth = alloc->width;
   sevent.mWinHeight = alloc->height;
 /*  sevent.mWinWidth = gtk_widget_get_toplevel(w)->allocation.width;
@@ -320,8 +334,16 @@ void handle_size_allocate(GtkWidget *w, GtkAllocation *alloc, gpointer p)
 */
 
   nsWindow *win = (nsWindow *)p;
-
   win->OnResize(sevent);
+
+
+  /* block the signal for a few nanosecs */
+/*
+  gtk_signal_disconnect_by_func(GTK_OBJECT(w),
+          GTK_SIGNAL_FUNC(handle_size_allocate),
+	  win);
+  gtk_timeout_add (10, reset_resize_handler, win);
+*/
 }
 
 gint handle_configure_event(GtkWidget *w, GdkEventConfigure *conf, gpointer p)
