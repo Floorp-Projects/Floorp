@@ -32,6 +32,8 @@
 */
 #include "nsISupports.idl"
 
+#include "nsIStringBundle.idl"
+
 [scriptable, uuid(6AC107B1-D558-11d3-98B1-001083010E9B)]
 interface nsIMsgStringService : nsISupports {
   /* GetStringByID --> pass in the ID for the string you are
@@ -39,6 +41,7 @@ interface nsIMsgStringService : nsISupports {
      of course release
   */
   wstring getStringByID (in long aStringID);
+  readonly attribute nsIStringBundle bundle;
 };
 
 %{C++

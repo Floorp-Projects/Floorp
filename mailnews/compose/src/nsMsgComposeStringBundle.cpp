@@ -65,6 +65,21 @@ nsComposeStringService::GetStringByID(PRInt32 aStringID, PRUnichar ** aString)
   return rv;
 }
 
+NS_IMETHODIMP
+nsComposeStringService::GetBundle(nsIStringBundle **aResult)
+{
+  NS_ENSURE_ARG_POINTER(aResult);
+  nsresult rv;
+  if (!mComposeStringBundle)
+    rv = InitializeStringBundle();
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  *aResult = mComposeStringBundle;
+  NS_IF_ADDREF(*aResult);
+  return NS_OK;
+}
+
+
 nsresult
 nsComposeStringService::InitializeStringBundle()
 {

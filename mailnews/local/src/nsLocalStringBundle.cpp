@@ -63,6 +63,20 @@ nsLocalStringService::GetStringByID(PRInt32 aStringID, PRUnichar ** aString)
   return rv;
 }
 
+NS_IMETHODIMP
+nsLocalStringService::GetBundle(nsIStringBundle **aResult)
+{
+  NS_ENSURE_ARG_POINTER(aResult);
+  nsresult rv;
+  if (!mLocalStringBundle)
+    rv = InitializeStringBundle();
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  *aResult = mLocalStringBundle;
+  NS_IF_ADDREF(*aResult);
+  return NS_OK;
+}
+
 nsresult
 nsLocalStringService::InitializeStringBundle()
 {
