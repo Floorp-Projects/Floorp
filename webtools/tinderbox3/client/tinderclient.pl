@@ -830,7 +830,7 @@ sub new {
   if ($this->{OS} =~ /^WIN/) {
     $this->{PS_COMMAND} = "ps aux";
   } else {
-    $this->{PS_COMMAND} = "ps -eo 'pid,ppid,command'";
+    $this->{PS_COMMAND} = "ps -e -o 'pid,ppid'";
   }
   return $this;
 }
