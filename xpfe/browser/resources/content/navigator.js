@@ -197,8 +197,8 @@
   } // DragOverPersonalToolbar
 
 
-  function UpdateHistory(event)
-  {
+function UpdateHistory(event)
+{
     // This is registered as a capturing "load" event handler. When a
     // document load completes in the content window, we'll be
     // notified here. This allows us to update the global history and
@@ -207,28 +207,36 @@
     //dump("UpdateHistory: content's location is '" + window.content.location.href + "',\n");
     //dump("                         title is '" + window.content.document.title + "'\n");
 
-    var history = Components.classes["component://netscape/browser/global-history"].getService();
-    if (history) history = history.QueryInterface(Components.interfaces.nsIGlobalHistory);
-    try {
-	if (history) history.SetPageTitle(window.content.location.href, window.content.document.title);
-    }
-    catch (ex) {
-	dump("failed to set the page title.\n");
-    }
-  }
+	if (window.content.location.href && window.content.location.href != "")
+	{
+		var history = Components.classes["component://netscape/browser/global-history"].getService();
+		if (history) history = history.QueryInterface(Components.interfaces.nsIGlobalHistory);
+		try
+		{
+			if (history)	history.SetPageTitle(window.content.location.href, window.content.document.title);
+		}
+		catch (ex)
+		{
+			dump("failed to set the page title.\n");
+		}
+	}
+}
 
 function UpdateBookmarksLastVisitedDate(event)
 {
-	// if the URL is bookmarked, update its "Last Visited" date
-	var bmks = Components.classes["component://netscape/browser/bookmarks-service"].getService();
-	if (bmks)	bmks = bmks.QueryInterface(Components.interfaces.nsIBookmarksService);
-	try
+	if (window.content.location.href && window.content.location.href != "")
 	{
-		if (bmks)	bmks.UpdateBookmarkLastVisitedDate(window.content.location.href);
-	}
-	catch(ex)
-	{
-		dump("failed to update bookmark last visited date.\n");
+		// if the URL is bookmarked, update its "Last Visited" date
+		var bmks = Components.classes["component://netscape/browser/bookmarks-service"].getService();
+		if (bmks)	bmks = bmks.QueryInterface(Components.interfaces.nsIBookmarksService);
+		try
+		{
+			if (bmks)	bmks.UpdateBookmarkLastVisitedDate(window.content.location.href);
+		}
+		catch(ex)
+		{
+			dump("failed to update bookmark last visited date.\n");
+		}
 	}
 }
 
