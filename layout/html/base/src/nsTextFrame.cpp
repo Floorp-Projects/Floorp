@@ -168,13 +168,17 @@ public:
                             PRInt32* aIndicies, PRInt32 aTextLength,
                             SelectionInfo& aResult);
 
-  PRUnichar* PrepareUnicodeText(PRInt32* aIndicies,
+  PRUnichar* PrepareUnicodeText(nsIRenderingContext& aRenderingContext,
+                                PRInt32* aIndicies,
                                 PRUnichar* aBuffer, PRInt32 aBufSize,
-                                PRInt32& aStrLen);
+                                PRInt32& aStrLen,
+                                nscoord& aNewWidth);
 
-  char* PrepareAsciiText(PRInt32* aIndexes,
+  char* PrepareAsciiText(nsIRenderingContext& aRenderingContext,
+                         PRInt32* aIndexes,
                          char* aBuffer, PRInt32 aBufSize,
-                         PRInt32& aStrLen);
+                         PRInt32& aStrLen,
+                         nscoord& aDeltaWidthResult);
 
   void PaintTextDecorations(nsIRenderingContext& aRenderingContext,
                             PRUint8 aDecorations, 
@@ -630,9 +634,11 @@ TextFrame::ComputeSelectionInfo(nsIRenderingContext& aRenderingContext,
  * the prepared output.
  */
 PRUnichar*
-TextFrame::PrepareUnicodeText(PRInt32* aIndexes,
+TextFrame::PrepareUnicodeText(nsIRenderingContext& aRenderingContext,
+                              PRInt32* aIndexes,
                               PRUnichar* aBuffer, PRInt32 aBufSize,
-                              PRInt32& aStrLen)
+                              PRInt32& aStrLen,
+                              nscoord& aNewWidth)
 {
   PRUnichar* s = aBuffer;
   PRUnichar* s0 = s;
@@ -747,6 +753,23 @@ TextFrame::PrepareUnicodeText(PRInt32* aIndexes,
     }
   }
 
+  // Now remove trailing whitespace
+  PRIntn zapped = 0;
+  while (s > s0) {
+    if (s[-1] == ' ') {
+      s--;
+      length--;
+      zapped++;
+    }
+    else
+      break;
+  }
+  if (0 != zapped) {
+    nscoord spaceWidth;
+    aRenderingContext.GetWidth(' ', spaceWidth);
+    aNewWidth = aNewWidth - spaceWidth*zapped;
+  }
+
   aStrLen = length;
   return s0;
 }
@@ -757,9 +780,11 @@ TextFrame::PrepareUnicodeText(PRInt32* aIndexes,
  * the prepared output.
  */
 char*
-TextFrame::PrepareAsciiText(PRInt32* aIndexes,
+TextFrame::PrepareAsciiText(nsIRenderingContext& aRenderingContext,
+                            PRInt32* aIndexes,
                             char* aBuffer, PRInt32 aBufSize,
-                            PRInt32& aStrLen)
+                            PRInt32& aStrLen,
+                            nscoord& aNewWidth)
 {
   char* s = aBuffer;
   char* s0 = s;
@@ -872,6 +897,23 @@ TextFrame::PrepareAsciiText(PRInt32* aIndexes,
         strInx++;
       }
     }
+  }
+
+  // Now remove trailing whitespace
+  PRIntn zapped = 0;
+  while (s > s0) {
+    if (s[-1] == ' ') {
+      s--;
+      length--;
+      zapped++;
+    }
+    else
+      break;
+  }
+  if (0 != zapped) {
+    nscoord spaceWidth;
+    aRenderingContext.GetWidth(' ', spaceWidth);
+    aNewWidth = aNewWidth - spaceWidth*zapped;
   }
 
   aStrLen = length;
@@ -993,14 +1035,16 @@ TextFrame::PaintUnicodeText(nsIPresContext& aPresContext,
     ip = new PRInt32[mContentLength];
   }
   PRUnichar buf[500];
-  PRUnichar* text = PrepareUnicodeText(displaySelection ? ip : nsnull,
-                                       buf, 500, textLength);
+  nscoord width = mRect.width;
+  PRUnichar* text = PrepareUnicodeText(aRenderingContext,
+                                       displaySelection ? ip : nsnull,
+                                       buf, 500, textLength, width);
   if (0 != textLength) {
     if (!displaySelection) {
       // When there is no selection showing, use the fastest and
       // simplest rendering approach
-      aRenderingContext.DrawString(text, textLength, dx, dy, mRect.width);
-      PaintTextDecorations(aRenderingContext, aDecorations, dx, dy, mRect.width);
+      aRenderingContext.DrawString(text, textLength, dx, dy, width);
+      PaintTextDecorations(aRenderingContext, aDecorations, dx, dy, width);
     }
     else {
       SelectionInfo si;
@@ -1009,8 +1053,8 @@ TextFrame::PaintUnicodeText(nsIPresContext& aPresContext,
       nscoord textWidth;
       nsIFontMetrics * fm = aRenderingContext.GetFontMetrics();
       if (si.mEmptySelection) {
-        aRenderingContext.DrawString(text, textLength, dx, dy, mRect.width);
-        PaintTextDecorations(aRenderingContext, aDecorations, dx, dy, mRect.width);
+        aRenderingContext.DrawString(text, textLength, dx, dy, width);
+        PaintTextDecorations(aRenderingContext, aDecorations, dx, dy, width);
         aRenderingContext.GetWidth(text, PRUint32(si.mStartOffset), textWidth);
         RenderSelectionCursor(aRenderingContext,
                               dx + textWidth, dy, mRect.height,
@@ -1088,14 +1132,16 @@ TextFrame::PaintAsciiText(nsIPresContext& aPresContext,
     ip = new PRInt32[mContentLength];
   }
   char buf[500];
-  char* text = PrepareAsciiText(displaySelection ? ip : nsnull,
-                                buf, 500, textLength);
+  nscoord width = mRect.width;
+  char* text = PrepareAsciiText(aRenderingContext,
+                                displaySelection ? ip : nsnull,
+                                buf, 500, textLength, width);
   if (0 != textLength) {
     if (!displaySelection) {
       // When there is no selection showing, use the fastest and
       // simplest rendering approach
-      aRenderingContext.DrawString(text, textLength, dx, dy, mRect.width);
-      PaintTextDecorations(aRenderingContext, aDecorations, dx, dy, mRect.width);
+      aRenderingContext.DrawString(text, textLength, dx, dy, width);
+      PaintTextDecorations(aRenderingContext, aDecorations, dx, dy, width);
     }
     else {
       SelectionInfo si;
@@ -1104,8 +1150,8 @@ TextFrame::PaintAsciiText(nsIPresContext& aPresContext,
       nscoord textWidth;
       nsIFontMetrics * fm = aRenderingContext.GetFontMetrics();
       if (si.mEmptySelection) {
-        aRenderingContext.DrawString(text, textLength, dx, dy, mRect.width);
-        PaintTextDecorations(aRenderingContext, aDecorations, dx, dy, mRect.width);
+        aRenderingContext.DrawString(text, textLength, dx, dy, width);
+        PaintTextDecorations(aRenderingContext, aDecorations, dx, dy, width);
         aRenderingContext.GetWidth(text, PRUint32(si.mStartOffset), textWidth);
         RenderSelectionCursor(aRenderingContext,
                               dx + textWidth, dy, mRect.height,
@@ -1247,7 +1293,10 @@ TextFrame::GetPosition(nsIPresContext& aCX,
     ip = new PRInt32[mContentLength+1];
   }
   PRUnichar buf[kNumIndices];
-  PRUnichar* text = PrepareUnicodeText(ip, buf, kNumIndices, textLength);
+  nscoord width = 0;
+  PRUnichar* text = PrepareUnicodeText(*aRendContext,
+                                       ip, buf, kNumIndices, textLength,
+                                       width);
   ip[mContentLength] = ip[mContentLength-1]+1;
 
   // Find the font metrics for this text
