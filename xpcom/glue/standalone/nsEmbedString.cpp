@@ -36,8 +36,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#include <stdlib.h>
 #include "nsEmbedString.h"
-#include "nsMemory.h"
 
 const PRUnichar gCommonEmptyBuffer[1] = { 0 };
 
@@ -93,7 +93,7 @@ void
 nsEmbedString::Free()
 {
   if (OwnsBuffer())
-    nsMemory::Free(mStr);
+    free(mStr);
 }
 
 PRBool
@@ -102,7 +102,7 @@ nsEmbedString::Realloc(size_type aNewSize)
   PRBool result = PR_TRUE;
   if (OwnsBuffer())
   {
-    char_type* temp = (char_type*)nsMemory::Realloc(mStr, (aNewSize + 1) * sizeof(char_type));
+    char_type* temp = (char_type*)realloc(mStr, (aNewSize + 1) * sizeof(char_type));
     if (temp)
     {
       mStr = temp;
@@ -113,7 +113,7 @@ nsEmbedString::Realloc(size_type aNewSize)
   }
   else
   {
-    char_type* temp = (char_type*)nsMemory::Alloc((aNewSize + 1) * sizeof(char_type));
+    char_type* temp = (char_type*)malloc((aNewSize + 1) * sizeof(char_type));
     if (temp)
     {
       memcpy(temp, mStr, mLength * sizeof(char_type));
@@ -299,7 +299,7 @@ void
 nsEmbedCString::Free()
 {
   if (OwnsBuffer())
-    nsMemory::Free(mStr);
+    free(mStr);
 }
 
 PRBool
@@ -308,7 +308,7 @@ nsEmbedCString::Realloc(size_type aNewSize)
   PRBool result = PR_TRUE;
   if (OwnsBuffer())
   {
-    char_type* temp = (char_type*)nsMemory::Realloc(mStr, (aNewSize + 1) * sizeof(char_type));
+    char_type* temp = (char_type*)realloc(mStr, (aNewSize + 1) * sizeof(char_type));
     if (temp)
     {
       mStr = temp;
@@ -319,7 +319,7 @@ nsEmbedCString::Realloc(size_type aNewSize)
   }
   else
   {
-    char_type* temp = (char_type*)nsMemory::Alloc((aNewSize + 1) * sizeof(char_type));
+    char_type* temp = (char_type*)malloc((aNewSize + 1) * sizeof(char_type));
     if (temp)
     {
       memcpy(temp, mStr, mLength * sizeof(char_type));
@@ -464,7 +464,7 @@ template <class CharT>
 void
 XPCOM_StringAllocator<CharT>::Deallocate( CharT* aBuffer ) const
 {
-    nsMemory::Free(aBuffer);
+    free(aBuffer);
 }
 
 NS_COM
