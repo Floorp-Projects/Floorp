@@ -99,8 +99,14 @@ public:
         {return flags <= T_WCHAR;}
 
     PRBool IsInterfacePointer() const
-        {return (PRBool) (TagPart() == T_INTERFACE ||
-                          TagPart() == T_INTERFACE_IS);}
+        {  switch (TagPart()) {
+             default:
+               return PR_FALSE;
+             case T_INTERFACE:
+             case T_INTERFACE_IS:
+               return PR_TRUE;
+           }
+        }
 
     PRBool IsArray() const
         {return (PRBool) TagPart() == T_ARRAY;}
@@ -109,8 +115,16 @@ public:
     // params. e.g. an T_INTERFACE_IS is dependent upon some other param at 
     // runtime to say what the interface type of this param really is.
     PRBool IsDependent() const
-        {return (PRBool) (TagPart() == T_INTERFACE_IS ||
-                          TagPart() == TD_ARRAY);}
+        {  switch (TagPart()) {
+             default:
+               return PR_FALSE;
+             case T_INTERFACE_IS:
+             case TD_ARRAY:
+             case T_PSTRING_SIZE_IS:
+             case T_PWSTRING_SIZE_IS:
+               return PR_TRUE;
+           }
+        }
 
     uint8 TagPart() const
         {return (uint8) (flags & XPT_TDP_TAGMASK);}
