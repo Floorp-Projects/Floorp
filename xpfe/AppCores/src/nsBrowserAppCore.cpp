@@ -861,19 +861,28 @@ nsBrowserAppCore::OpenWindow()
   fileWidget->SetFilterList(5, titles, filters);
 
   fileWidget->Create(nsnull, title, eMode_load, nsnull, nsnull);
-  PRBool result = fileWidget->Show();
 
+#if 0 // Old way
+  nsAutoString fileURL;
+  PRBool result = fileWidget->Show();
   if (result) {
     nsString fileName;
     nsString dirName;
     fileWidget->GetFile(fileName);
 
-    nsAutoString fileURL;
     BuildFileURL(nsAutoCString(fileName), fileURL);
-    printf("If I could open a new window with [%s] I would.\n", (const char *)nsAutoCString(fileURL));
   }
+  printf("If I could open a new window with [%s] I would.\n", (const char *)nsAutoCString(fileURL));
+#else  // New Way
+  nsFileSpec fileSpec;
+  fileWidget->GetFile(fileSpec);
+
+  nsFileURL fileURL(fileSpec);
+  printf("If I could open a new window with [%s] I would.\n", (const char *)nsAutoCString(fileURL.GetAsString()));
+#endif
   NS_RELEASE(fileWidget);
 
+  return NS_OK;
   return NS_OK;
 }
 
