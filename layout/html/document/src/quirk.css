@@ -114,6 +114,13 @@ input[type="checkbox"] {
 }
 
 
+button, 
+input[type="reset"],
+input[type="button"],
+input[type="submit"] { 
+  vertical-align: bottom;
+}
+
 /* Quirk: special top and bottom margins for inputs in tables */
 
 td select[size] {
