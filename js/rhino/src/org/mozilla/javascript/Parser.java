@@ -736,7 +736,6 @@ class Parser {
         }
         case TokenStream.RETURN: {
             Object retExpr = null;
-            int lineno = 0;
 
             sourceAdd((char)ts.RETURN);
 
@@ -749,8 +748,8 @@ class Parser {
             tt = ts.peekTokenSameLine();
             ts.flags &= ~ts.TSF_REGEXP;
 
+            int lineno = ts.getLineno();
             if (tt != ts.EOF && tt != ts.EOL && tt != ts.SEMI && tt != ts.RC) {
-                lineno = ts.getLineno();
                 retExpr = expr(ts, false);
                 if (ts.getLineno() == lineno)
                     wellTerminated(ts, ts.ERROR);
