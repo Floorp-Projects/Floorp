@@ -36,7 +36,6 @@ License File=MPL-1.1.txt
 ;-------------------------------------------------------------------------
 [Dialog Setup Type]
 ;-------------------------------------------------------------------------
-Show Dialog=TRUE
 Title=Mozilla Installer
 ; *** LOCALIZE ME BABY ***
 Message0=Please select the setup type you wish to install.
@@ -109,7 +108,6 @@ C11=Component11
 ;-------------------------------------------------------------------------
 [Dialog Select Components]
 ;-------------------------------------------------------------------------
-Show Dialog=TRUE
 Title=Mozilla Installer
 ; *** LOCALIZE ME BABY ***
 Message0=Please select the components you wish to install.

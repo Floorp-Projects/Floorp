@@ -528,6 +528,14 @@ nsInstallDlg::Show()
     gtk_widget_show(gCtx->back);
     gtk_widget_show(gCtx->next);
 
+    if (!mShowDlg)
+    {
+       gCtx->bMoving = FALSE;
+       nsInstallDlg::Next((GtkWidget *)NULL, gCtx->idlg);
+       return err;
+    }
+   
+
     return err;
 }
 

@@ -116,7 +116,13 @@ BAIL:
 int
 nsWelcomeDlg::Show()
 {
-    int err = 0;
+    int err = OK;
+    if (!mShowDlg)
+    {
+       gCtx->ldlg->Show();
+       return err;
+    }
+   
     char *readmeContents = NULL;
 
     XI_VERIFY(gCtx);
