@@ -48,6 +48,37 @@
 
 JS_BEGIN_EXTERN_C
 
+#if __GNUC__ >= 2
+/* This version of the macros is safe for the alias optimizations
+ * that gcc does, but uses gcc-specific extensions.
+ */
+
+typedef union {
+    double value;
+    struct {
+#ifdef IS_LITTLE_ENDIAN
+        u_int32_t lsw;
+        u_int32_t msw;
+#else
+        u_int32_t msw;
+        u_int32_t lsw;
+#endif
+    } parts;
+} js_ieee_double_shape_type;
+
+#define JSDOUBLE_HI32(x)   (__extension__ ({ js_ieee_double_shape_type sh_u; \
+                                             sh_u.value = (x); \
+                                             sh_u.parts.msw; }))
+#define JSDOUBLE_LO32(x)   (__extension__ ({ js_ieee_double_shape_type sh_u; \
+                                             sh_u.value = (x); \
+                                             sh_u.parts.lsw; }))
+
+#else /* GNUC */
+
+/* We don't know of any non-gcc compilers that perform alias optimization,
+ * so this code should work.
+ */
+
 #ifdef IS_LITTLE_ENDIAN
 #define JSDOUBLE_HI32(x)        (((uint32 *)&(x))[1])
 #define JSDOUBLE_LO32(x)        (((uint32 *)&(x))[0])
@@ -55,6 +86,9 @@ JS_BEGIN_EXTERN_C
 #define JSDOUBLE_HI32(x)        (((uint32 *)&(x))[0])
 #define JSDOUBLE_LO32(x)        (((uint32 *)&(x))[1])
 #endif
+
+#endif /* GNUC */
+
 #define JSDOUBLE_HI32_SIGNBIT   0x80000000
 #define JSDOUBLE_HI32_EXPMASK   0x7ff00000
 #define JSDOUBLE_HI32_MANTMASK  0x000fffff
