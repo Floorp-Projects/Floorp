@@ -30,7 +30,6 @@ dnl ========================================================
 
 AC_PREREQ(2.12)
 AC_INIT(config/config.mk)
-dnl AC_CONFIG_HEADER(include/config.h nsprpub/include/config.h)
 AC_CONFIG_AUX_DIR(${srcdir}/build/autoconf)
 AC_CANONICAL_SYSTEM
 
@@ -561,6 +560,198 @@ AM_PATH_LIBIDL($LIBIDL_VERSION,BUILD_XPIDL=1,
   [echo before your tree is HOSED.]
   [echo See http://www.rpi.edu/~veliaa/libIDL/ for more information.]
   [AC_MSG_ERROR(libIDL not installed.)])
+
+dnl ========================================================
+dnl =
+dnl = pthread support
+dnl = 
+dnl ========================================================
+dnl 
+dnl Start by checking whether the system support pthreads
+dnl 
+
+USE_PTHREADS=
+PTHREAD_LDFLAGS=""
+
+dnl 
+dnl Try lib pthread
+dnl 
+AC_CHECK_LIB(pthread, pthread_attr_init, 
+             USE_PTHREADS=1 PTHREAD_LDFLAGS="-lpthread")
+
+dnl 
+dnl If the above test failed, try lib c_r
+dnl 
+if test "x$ac_cv_lib_pthread_pthread_attr_init" = "xno" -a \
+"x$ac_cv_lib_c_r_gethostbyname_r" = "xno"
+then
+  AC_CHECK_LIB(c_r, pthread_attr_init,
+               USE_PTHREADS=1 PTHREAD_LDFLAGS="-lc_r")
+fi
+
+dnl
+dnl Check the command line for --with-pthreads 
+dnl
+AC_ARG_WITH(pthreads,
+[  --with-pthreads         use system pthread library ],
+        [if test "$withval" = "yes"
+         then
+           if test "$USE_PTHREADS"x = x
+           then
+             AC_MSG_ERROR([ --with-pthreads specified for a system without pthread support ]);
+           fi
+         else
+           USE_PTHREADS=
+           PTHREAD_LDFLAGS=""
+         fi] )
+
+dnl
+dnl Do the platform specific pthread hackery
+dnl
+if test "$USE_PTHREADS"x != x
+then
+	case "$target" in
+	    *-*-solaris*) 
+    			AC_DEFINE(_REENTRANT) 
+			;;
+
+	    *-*-linux*) 
+			AC_DEFINE(_REENTRANT) 
+			;;
+
+	    alpha*-*-osf*)
+			AC_DEFINE(_REENTRANT)
+			if test ! "$GNU_CC"; then
+				CFLAGS="$CFLAGS -pthread" 
+				CXXFLAGS="$CXXFLAGS -pthread" 
+			fi
+			;;
+
+	    *-*-freebsd*)
+			AC_DEFINE(_REENTRANT)
+			AC_DEFINE(_THREAD_SAFE)
+			CFLAGS="$CFLAGS -pthread"
+			CXXFLAGS="$CXXFLAGS -pthread"
+			dnl -pthread links in -lc_r, so don't specify it explicitly.
+			PTHREAD_LDFLAGS=""
+			;;
+	esac
+fi
+
+dnl
+dnl Add the pthread flags to the nspr libs
+dnl ========================================================
+NSPR_LIBS="$NSPR_LIBS $PTHREAD_LDFLAGS"
+
+dnl Check for NSPR.
+dnl ========================================================
+dnl 
+dnl We always use the system NSPR from now on...this option
+dnl tells where to find NSPR rather than whether to use it.
+dnl ========================================================
+AC_ARG_WITH(nspr,
+[  --with-nspr=\$dir        location of nspr headers and libraries],
+	NSPR_DIR=$withval)
+
+AC_ARG_WITH(nsprlib,
+[  --with-nsprlib=\$dir        location of nspr libraries],
+	NSPR_LIBDIR=$withval)
+
+_SAVE_CFLAGS=$CFLAGS
+_SAVE_LDFLAGS=$LDFLAGS
+_SAVE_LIBS=$LIBS
+CFLAGS="$CFLAGS -I${NSPR_DIR}/include"
+if test "$NSPR_LIBDIR"x = x; then
+   LDFLAGS="$LDFLAGS -L${NSPR_DIR}/lib $NSPR_LIBS"
+else
+   LDFLAGS="$LDFLAGS -L${NSPR_LIBDIR} $NSPR_LIBS"
+fi
+
+AC_MSG_CHECKING("for PR_GetCurrentThread in -lnspr3")
+LIBS="-lnspr3 $NSPR_LIBS $LIBS"
+AC_TRY_RUN(
+	#include <stdio.h>
+	#include <nspr.h>
+	int main () {
+	    PRThread *dummy = PR_GetCurrentThread();
+	    exit(0);
+	}
+	, [NSPR_LIBS="-lnspr3 $NSPR_LIBS" result="yes"],
+	[_NSPR_NEEDS_THREAD_LIB=1 result="no"], 
+	[_NSPR_NEEDS_THREAD_LIB=1 result="no"] )
+rm -f core
+AC_MSG_RESULT("$result")
+
+dnl XXX - Is this really the best way to do this check? - cls
+if test "$_NSPR_NEEDS_THREAD_LIB" = 1; then
+
+LIBS=$_SAVE_LIBS
+AC_MSG_CHECKING("for PR_GetCurrentThread in -lnspr3 with thread lib")
+    LIBS="-lnspr3 $NSPR_LIBS $LIBS"
+    AC_TRY_RUN(
+	#include <stdio.h>
+	#include <nspr.h>
+	int main () {
+	    PRThread *dummy = PR_GetCurrentThread();
+	    exit(0);
+	}
+	, [NSPR_LIBS="-lnspr3 $NSPR_LIBS" result="yes"],
+	[MISSING_NSPR="$MISSING_NSPR -lnspr3" result="no"], 
+	[MISSING_NSPR="$MISSING_NSPR -lnspr3" result="no"] )
+    rm -f core
+AC_MSG_RESULT("$result")
+fi
+
+dnl AC_CHECK_LIB(nspr3, PR_GetUniqueIdentity, NSPR_LIBS="-lnspr3 $NSPR_LIBS",
+dnl	[MISSING_NSPR="$MISSING_NSPR -lnspr3"], $NSPR_LIBS)
+
+AC_CHECK_LIB(plc3, PL_CreateOptState, NSPR_LIBS="-lplc3 $NSPR_LIBS",
+	[MISSING_NSPR="$MISSING_NSPR -lplc3"], $NSPR_LIBS)
+AC_CHECK_LIB(plds3, PL_GetEvent, NSPR_LIBS="-lplds3 $NSPR_LIBS",
+	[MISSING_NSPR="$MISSING_NSPR -lplds3"], $NSPR_LIBS)
+
+CFLAGS=$_SAVE_CFLAGS
+LDFLAGS=$_SAVE_LDFLAGS
+LIBS=$_SAVE_LIBS
+if test "${NSPR_DIR}" -a -d "${NSPR_DIR}"; then
+    NSPR_INCLUDE_DIR="${NSPR_DIR}/include"
+    NSPR_CFLAGS="-I${NSPR_INCLUDE_DIR}"
+    if test "$NSPR_LIBDIR"x != x; then
+        NSPR_LIBS="-L${NSPR_LIBDIR} ${NSPR_LIBS}"
+    else
+        NSPR_LIBS="-L${NSPR_DIR}/lib ${NSPR_LIBS}"
+    fi
+fi
+
+dnl
+dnl If NSPR was not detected in the system, use the one in the source
+dnl tree (mozilla/nsprpub)
+dnl
+dnl NSPR_INCLUDE_DIR and NSPR_CFLAGS are blank because NSPR built as
+dnl part of the mozilla build, will install its headers and libs in
+dnl the same place as mozilla.
+dnl
+if test "$MISSING_NSPR"; then
+
+dnl   AC_MSG_ERROR([Could not find the following nspr libraries or could not run sample program: $MISSING_NSPR]);
+
+   echo
+   echo "*** NSPR was not detected in your system.  This is not a problem."
+   echo "*** I will use the one in the current source tree instead. "
+   echo
+   sleep 3
+
+   NSPR_INCLUDE_DIR=
+   NSPR_CFLAGS=
+   NSPR_LIBS="-lplds3 -lplc3 -lnspr3 $PTHREAD_LDFLAGS"
+dnl
+dnl Otherwise, we are using an NSPR installed in the system.
+dnl
+dnl We need to set MOZ_NATIVE_NSPR so that mozilla/nsprpub is not built.
+dnl
+else
+   MOZ_NATIVE_NSPR=1
+fi
 
 dnl Checks for typedefs, structures, and compiler characteristics.
 dnl ========================================================
@@ -1385,210 +1576,6 @@ fi
 
 fi
 
-dnl ========================================================
-dnl =
-dnl = pthread support
-dnl = 
-dnl ========================================================
-
-dnl 
-dnl Start by checking whether the system support pthreads
-dnl 
-
-USE_PTHREADS=
-PTHREAD_LDFLAGS=""
-
-dnl 
-dnl Try lib pthread
-dnl 
-AC_CHECK_LIB(pthread, pthread_attr_init, 
-             USE_PTHREADS=1 PTHREAD_LDFLAGS="-lpthread")
-
-dnl 
-dnl If the above test failed, try lib c_r
-dnl 
-if test "x$ac_cv_lib_pthread_pthread_attr_init" = "xno" -a \
-"x$ac_cv_lib_c_r_gethostbyname_r" = "xno"
-then
-  AC_CHECK_LIB(c_r, pthread_attr_init,
-               USE_PTHREADS=1 PTHREAD_LDFLAGS="-lc_r")
-fi
-
-
-dnl
-dnl Check the command line for --with-pthreads 
-dnl
-AC_ARG_WITH(pthreads,
-[  --with-pthreads         use system pthread library ],
-        [if test "$withval" = "yes"
-         then
-           if test "$USE_PTHREADS"x = x
-           then
-             AC_MSG_ERROR([ --with-pthreads specified for a system without pthread support ]);
-           fi
-         else
-           USE_PTHREADS=
-           PTHREAD_LDFLAGS=""
-         fi] )
-
-dnl
-dnl Do the platform specific pthread hackery
-dnl
-if test "$USE_PTHREADS"x != x
-then
-	case "$target" in
-	    *-*-solaris*) 
-    			AC_DEFINE(_REENTRANT) 
-			;;
-
-	    *-*-linux*) 
-			AC_DEFINE(_REENTRANT) 
-			;;
-
-	    alpha*-*-osf*)
-			AC_DEFINE(_REENTRANT)
-			if test ! "$GNU_CC"; then
-				CFLAGS="$CFLAGS -pthread" 
-				CXXFLAGS="$CXXFLAGS -pthread" 
-			fi
-			;;
-
-	    *-*-freebsd*)
-			AC_DEFINE(_REENTRANT)
-			AC_DEFINE(_THREAD_SAFE)
-			CFLAGS="$CFLAGS -pthread"
-			CXXFLAGS="$CXXFLAGS -pthread"
-			dnl -pthread links in -lc_r, so don't specify it explicitly.
-			PTHREAD_LDFLAGS=""
-			;;
-	esac
-fi
-
-dnl
-dnl Add the pthread flags to the nspr libs
-dnl ========================================================
-NSPR_LIBS="$NSPR_LIBS $PTHREAD_LDFLAGS"
-
-
-dnl system NSPR support
-dnl we always use the system NSPR from now on...this option
-dnl tells where to find nspr rather than whether to use it
-dnl ========================================================
-AC_ARG_WITH(nspr,
-[  --with-nspr=\$dir        location of nspr headers and libraries],
-	NSPR_DIR=$withval)
-
-AC_ARG_WITH(nsprlib,
-[  --with-nsprlib=\$dir        location of nspr libraries],
-	NSPR_LIBDIR=$withval)
-
-_SAVE_CFLAGS=$CFLAGS
-_SAVE_LDFLAGS=$LDFLAGS
-_SAVE_LIBS=$LIBS
-CFLAGS="$CFLAGS -I${NSPR_DIR}/include"
-if test "$NSPR_LIBDIR"x = x; then
-   LDFLAGS="$LDFLAGS -L${NSPR_DIR}/lib $NSPR_LIBS"
-else
-   LDFLAGS="$LDFLAGS -L${NSPR_LIBDIR} $NSPR_LIBS"
-fi
-
-AC_MSG_CHECKING("for PR_GetCurrentThread in -lnspr3")
-LIBS="-lnspr3 $NSPR_LIBS $LIBS"
-AC_TRY_RUN(
-	#include <stdio.h>
-	#include <nspr.h>
-	int main () {
-	    PRThread *dummy = PR_GetCurrentThread();
-	    exit(0);
-	}
-	, [NSPR_LIBS="-lnspr3 $NSPR_LIBS" result="yes"],
-	[_NSPR_NEEDS_THREAD_LIB=1 result="no"], 
-	[_NSPR_NEEDS_THREAD_LIB=1 result="no"] )
-rm -f core
-AC_MSG_RESULT("$result")
-
-dnl XXX - Is this really the best way to do this check? - cls
-if test "$_NSPR_NEEDS_THREAD_LIB" = 1; then
-
-LIBS=$_SAVE_LIBS
-case "$target" in
-*-*-solaris*) 
-	AC_CHECK_LIB(pthread, pthread_attr_init, 
-		NSPR_LIBS="-lpthread $NSPR_LIBS") ;;
-*-*-linux*) 
-	AC_CHECK_LIB(pthread, pthread_attr_init, 
-		NSPR_LIBS="-lpthread $NSPR_LIBS") ;;
-esac
-
-AC_MSG_CHECKING("for PR_GetCurrentThread in -lnspr3 with thread lib")
-    LIBS="-lnspr3 $NSPR_LIBS $LIBS"
-    AC_TRY_RUN(
-	#include <stdio.h>
-	#include <nspr.h>
-	int main () {
-	    PRThread *dummy = PR_GetCurrentThread();
-	    exit(0);
-	}
-	, [NSPR_LIBS="-lnspr3 $NSPR_LIBS" result="yes"],
-	[MISSING_NSPR="$MISSING_NSPR -lnspr3" result="no"], 
-	[MISSING_NSPR="$MISSING_NSPR -lnspr3" result="no"] )
-    rm -f core
-AC_MSG_RESULT("$result")
-fi
-
-dnl AC_CHECK_LIB(nspr3, PR_GetUniqueIdentity, NSPR_LIBS="-lnspr3 $NSPR_LIBS",
-dnl	[MISSING_NSPR="$MISSING_NSPR -lnspr3"], $NSPR_LIBS)
-
-AC_CHECK_LIB(plc3, PL_CreateOptState, NSPR_LIBS="-lplc3 $NSPR_LIBS",
-	[MISSING_NSPR="$MISSING_NSPR -lplc3"], $NSPR_LIBS)
-AC_CHECK_LIB(plds3, PL_GetEvent, NSPR_LIBS="-lplds3 $NSPR_LIBS",
-	[MISSING_NSPR="$MISSING_NSPR -lplds3"], $NSPR_LIBS)
-
-CFLAGS=$_SAVE_CFLAGS
-LDFLAGS=$_SAVE_LDFLAGS
-LIBS=$_SAVE_LIBS
-if test "${NSPR_DIR}" -a -d "${NSPR_DIR}"; then
-    NSPR_INCLUDE_DIR="${NSPR_DIR}/include"
-    NSPR_CFLAGS="-I${NSPR_INCLUDE_DIR}"
-    if test "$NSPR_LIBDIR"x != x; then
-        NSPR_LIBS="-L${NSPR_LIBDIR} ${NSPR_LIBS}"
-    else
-        NSPR_LIBS="-L${NSPR_DIR}/lib ${NSPR_LIBS}"
-    fi
-fi
-dnl End of nspr tests
-dnl ========================================================
-
-dnl
-dnl If NSPR was not detected in the system, use the one in the source
-dnl tree (mozilla/nsprpub)
-dnl
-dnl NSPR_INCLUDE_DIR and NSPR_CFLAGS are blank because NSPR built as
-dnl part of the mozilla build, will install its headers and libs in
-dnl the same place as mozilla.
-dnl
-if test "$MISSING_NSPR"; then
-
-dnl   AC_MSG_ERROR([Could not find the following nspr libraries or could not run sample program: $MISSING_NSPR]);
-
-   echo
-   echo "*** NSPR was not detected in your system.  This is not a problem."
-   echo "*** I will use the one in the current source tree instead. "
-   echo
-   sleep 3
-
-   NSPR_INCLUDE_DIR=
-   NSPR_CFLAGS=
-   NSPR_LIBS="-lplds3 -lplc3 -lnspr3 $PTHREAD_LDFLAGS"
-dnl
-dnl Otherwise, we are using an NSPR installed in the system.
-dnl
-dnl We need to set MOZ_NATIVE_NSPR so that mozilla/nsprpub 
-dnl is not built.
-dnl
-else
-   MOZ_NATIVE_NSPR=1
-fi
 
 LDFLAGS=`echo \
 	$_WARNINGS_CFLAGS \
