@@ -602,28 +602,32 @@ nsHTMLDocument::StartDocumentLoad(const char* aCommand,
     nsCOMPtr<nsIFile> file;
     rv = fileChannel->GetFile(getter_AddRefs(file));
     if (NS_FAILED(rv)) { return rv; }
+    // if we failed to get a last modification date, then we don't want to necessarily
+    // fail to create a document for this file. Just don't set the last modified date on it...
     rv = file->GetLastModificationDate(&modDate);
-    if (NS_FAILED(rv)) { return rv; }
-    PRExplodedTime prtime;
-    char buf[100];
-    PRInt64 intermediateValue;
+    if (NS_SUCCEEDED(rv))
+    {
+      PRExplodedTime prtime;
+      char buf[100];
+      PRInt64 intermediateValue;
 
-    LL_I2L(intermediateValue, PR_USEC_PER_MSEC);
-    LL_MUL(usecs, modDate, intermediateValue);
-    PR_ExplodeTime(usecs, PR_LocalTimeParameters, &prtime);
+      LL_I2L(intermediateValue, PR_USEC_PER_MSEC);
+      LL_MUL(usecs, modDate, intermediateValue);
+      PR_ExplodeTime(usecs, PR_LocalTimeParameters, &prtime);
 
-    // Use '%#c' for windows, because '%c' is backward-compatible and
-    // non-y2k with msvc; '%#c' requests that a full year be used in the
-    // result string.  Other OSes just use "%c".
-    PR_FormatTime(buf, sizeof buf,
+      // Use '%#c' for windows, because '%c' is backward-compatible and
+      // non-y2k with msvc; '%#c' requests that a full year be used in the
+      // result string.  Other OSes just use "%c".
+      PR_FormatTime(buf, sizeof buf,
 #if defined(XP_PC) && !defined(XP_OS2)
                   "%#c",
 #else
                   "%c",
 #endif
                   &prtime);
-    lastModified.AssignWithConversion(buf);
-    SetLastModified(lastModified);
+      lastModified.AssignWithConversion(buf);
+      SetLastModified(lastModified);
+    }
   }
 
   static NS_DEFINE_IID(kCParserIID, NS_IPARSER_IID);
