@@ -22,7 +22,6 @@
 #include "nsxpfc.h"
 #include "nsIXPFCToolkit.h"
 #include "nsIApplicationShell.h"
-#include "nsIXPFCObserverManager.h"
 #include "nsIXPFCCanvasManager.h"
 #include "nsIViewManager.h"
 
@@ -34,9 +33,6 @@ public:
   NS_DECL_ISUPPORTS
 
   NS_IMETHOD Init(nsIApplicationShell * aApplicationShell) ;
-
-  NS_IMETHOD SetObserverManager(nsIXPFCObserverManager * aObserverManager);
-  NS_IMETHOD_(nsIXPFCObserverManager *) GetObserverManager();
 
   NS_IMETHOD SetCanvasManager(nsIXPFCCanvasManager * aCanvasManager);
   NS_IMETHOD_(nsIXPFCCanvasManager *) GetCanvasManager();
@@ -54,7 +50,6 @@ protected:
 
 private:
   nsIApplicationShell * mApplicationShell;
-  nsIXPFCObserverManager * mObserverManager;
   nsIXPFCCanvasManager * mCanvasManager;
 
 };

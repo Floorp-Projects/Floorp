@@ -23,12 +23,17 @@
 #include "nsCalToolkit.h"
 #include "nsIXPFCCommand.h"
 #include "nscalstrings.h"
+#include "nsxpfcCIID.h"
+#include "nsIXPFCObserverManager.h"
+#include "nsIServiceManager.h"
 
 static NS_DEFINE_IID(kISupportsIID,  NS_ISUPPORTS_IID);
 static NS_DEFINE_IID(kCalContextControllerIID, NS_ICAL_CONTEXT_CONTROLLER_IID);
 static NS_DEFINE_IID(kXPFCSubjectIID, NS_IXPFC_SUBJECT_IID);
 static NS_DEFINE_IID(kXPFCCommandIID, NS_IXPFC_COMMAND_IID);
 static NS_DEFINE_IID(kXPFCCommandCID, NS_XPFC_COMMAND_CID);
+static NS_DEFINE_IID(kCXPFCObserverManagerCID, NS_XPFC_OBSERVERMANAGER_CID);
+static NS_DEFINE_IID(kIXPFCObserverManagerIID, NS_IXPFC_OBSERVERMANAGER_IID);
 
 #define kNotFound -1
 
@@ -131,7 +136,14 @@ nsresult nsCalContextController :: Notify(nsIXPFCCommand * aCommand)
   if (res != NS_OK)
     return res;
 
-  return(gXPFCToolkit->GetObserverManager()->Notify(subject,aCommand));
+  nsIXPFCObserverManager* om;
+  nsServiceManager::GetService(kCXPFCObserverManagerCID, kIXPFCObserverManagerIID, (nsISupports**)&om);
+  
+  res = om->Notify(subject,aCommand);
+
+  nsServiceManager::ReleaseService(kCXPFCObserverManagerCID, om);
+
+  return(res);
 }
 
 nsresult nsCalContextController :: SetDuration(nsDuration * aDuration)

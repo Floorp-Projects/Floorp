@@ -20,7 +20,6 @@
 #define nsIXPFCToolkit_h___
 
 #include "nsISupports.h"
-#include "nsIXPFCObserverManager.h"
 #include "nsIXPFCCanvasManager.h"
 #include "nsIXPFCCanvas.h"
 
@@ -39,9 +38,6 @@ class nsIXPFCToolkit : public nsISupports
 public:
 
   NS_IMETHOD Init(nsIApplicationShell * aApplicationShell) = 0;
-
-  NS_IMETHOD SetObserverManager(nsIXPFCObserverManager * aObserverManager) = 0;
-  NS_IMETHOD_(nsIXPFCObserverManager *) GetObserverManager() = 0;
 
   NS_IMETHOD SetCanvasManager(nsIXPFCCanvasManager * aCanvasManager) = 0;
   NS_IMETHOD_(nsIXPFCCanvasManager *) GetCanvasManager() = 0;

@@ -47,6 +47,8 @@ nsXPFCObserverManager :: nsXPFCObserverManager()
   NS_INIT_REFCNT();
   mList = nsnull;
   monitor = nsnull;
+
+  Init();
 }
 
 nsXPFCObserverManager :: ~nsXPFCObserverManager()  
@@ -202,7 +204,7 @@ nsresult nsXPFCObserverManager::Unregister(nsISupports * aSubjectObserver)
 nsresult nsXPFCObserverManager::Notify(nsIXPFCSubject * aSubject, nsIXPFCCommand * aCommand)
 {
   PR_EnterMonitor(monitor);
-  
+
   nsIIterator * iterator;
 
   mList->CreateIterator(&iterator);

@@ -21,7 +21,6 @@
 #include "nsISupports.h"
 #include "nsIApplicationShell.h"
 #include "nscore.h"
-#include "nsIXPFCObserverManager.h"
 #include "nsIAppShell.h"
 
 #include "capi.h"
@@ -43,9 +42,6 @@ public:
   NS_IMETHOD Logoff() = 0;
   NS_IMETHOD LoadUI() = 0;
   NS_IMETHOD LoadPreferences() = 0;
-
-  NS_IMETHOD SetObserverManager(nsIXPFCObserverManager * aObserverManager) = 0;
-  NS_IMETHOD_(nsIXPFCObserverManager *) GetObserverManager() = 0;
 
   NS_IMETHOD SetCAPISession(CAPISession aCAPISession) = 0;
   NS_IMETHOD_(CAPISession) GetCAPISession() = 0;

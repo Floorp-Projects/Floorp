@@ -21,7 +21,6 @@
 
 #include "nsICalToolkit.h"
 #include "nsICalendarShell.h"
-#include "nsIXPFCObserverManager.h"
 #include "nsIXPFCCanvasManager.h"
 #include "nsXPFCToolkit.h"
 

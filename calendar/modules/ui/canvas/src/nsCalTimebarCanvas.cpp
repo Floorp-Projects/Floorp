@@ -20,9 +20,14 @@
 #include "nsCalUICIID.h"
 #include "nsXPFCToolkit.h"
 #include "nsBoxLayout.h"
+#include "nsxpfcCIID.h"
+#include "nsIXPFCObserverManager.h"
+#include "nsIServiceManager.h"
 
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 static NS_DEFINE_IID(kCalTimebarCanvasCID, NS_CAL_TIMEBARCANVAS_CID);
+static NS_DEFINE_IID(kCXPFCObserverManagerCID, NS_XPFC_OBSERVERMANAGER_CID);
+static NS_DEFINE_IID(kIXPFCObserverManagerIID, NS_IXPFC_OBSERVERMANAGER_IID);
 
 #define LOCAL_INSET 1
 
@@ -317,8 +322,12 @@ nsresult nsCalTimebarCanvas :: SetChildTimeContext(nsCalTimebarCanvas * aCanvas,
   aContext->QueryInterface(kXPFCSubjectIID, (void **)&context_subject);
   context->QueryInterface(kXPFCObserverIID, (void **)&context_observer);
 
-  gXPFCToolkit->GetObserverManager()->Register(context_subject, context_observer);
+  nsIXPFCObserverManager* om;
+  nsServiceManager::GetService(kCXPFCObserverManagerCID, kIXPFCObserverManagerIID, (nsISupports**)&om);
 
+  om->Register(context_subject, context_observer);
+
+  nsServiceManager::ReleaseService(kCXPFCObserverManagerCID, om);
 
   /*
    * TODO:  Add the increment here for the appropriate period

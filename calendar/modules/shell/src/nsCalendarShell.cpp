@@ -29,8 +29,6 @@
 #include "icalfrdr.h"
 #include "nsIPref.h"
 #include "nsCurlParser.h"
-//#include "nsCalUser.h"
-//#include "nsCalLoggedInUser.h"
 #include "nsCalendarShell.h"
 #include "nscalstrings.h"
 #include "nsxpfcCIID.h"
@@ -44,6 +42,7 @@
 #include "prcvar.h"
 #include "nsXPFCToolkit.h"
 #include "nsX400Parser.h"
+#include "nsxpfcCIID.h"
 
 #include "capi.h"
 #include "nsICapi.h"
@@ -54,6 +53,8 @@
 #include "nsCalUser.h"
 #include "nsCalendarUser.h"
 #include "nsCalendarModel.h"
+#include "nsIServiceManager.h"
+
 
 /* for CAPI to work in general form */
 #include "nsCapiCallbackReader.h"
@@ -141,7 +142,7 @@ nsCalendarShell::~nsCalendarShell()
 
   Logoff();
 
-  NS_IF_RELEASE(mObserverManager);
+  nsServiceManager::ReleaseService(kCXPFCObserverManagerCID, mObserverManager);
 
   if (mCAPIPassword)
     PR_Free(mCAPIPassword);
@@ -577,15 +578,7 @@ nsresult nsCalendarShell::LoadUI()
    * First, create the ObserverManager
    */
 
-  nsresult res = nsRepository::CreateInstance(kCXPFCObserverManagerCID, 
-                               nsnull, 
-                               kIXPFCObserverManagerIID, 
-                               (void **)&mObserverManager);
-
-  if (NS_OK != res)
-    return res ;
-
-  mObserverManager->Init();
+  nsServiceManager::GetService(kCXPFCObserverManagerCID, kIXPFCObserverManagerIID, (nsISupports**)&mObserverManager);
   
   /*
    * Now create an actual window into the world
@@ -599,7 +592,7 @@ nsresult nsCalendarShell::LoadUI()
 
   nsIAppShell * appshell = nsnull;
 
-  res = QueryInterface(kIAppShellIID,(void**)&appshell);
+  nsresult res = QueryInterface(kIAppShellIID,(void**)&appshell);
 
   if (NS_OK != res)
     return res ;
@@ -644,18 +637,6 @@ nsresult nsCalendarShell::LoadUI()
 
   return res ;
 }
-
-nsresult nsCalendarShell::SetObserverManager(nsIXPFCObserverManager * aObserverManager)
-{
-  mObserverManager = aObserverManager;
-  return NS_OK;
-}
-
-nsIXPFCObserverManager * nsCalendarShell::GetObserverManager()
-{
-  return (mObserverManager);
-}
-
 
 nsresult nsCalendarShell::SetCAPIPassword(char * aCAPIPassword)
 {

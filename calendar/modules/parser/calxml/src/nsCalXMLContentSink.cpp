@@ -35,6 +35,9 @@
 #include "nsxpfcCIID.h"
 #include "nsCalendarContainer.h"
 #include "nsXPFCToolkit.h"
+#include "nsIServiceManager.h"
+#include "nsxpfcCIID.h"
+#include "nsIXPFCObserverManager.h"
 
 static NS_DEFINE_IID(kISupportsIID,             NS_ISUPPORTS_IID);                 
 static NS_DEFINE_IID(kIContentSinkIID,          NS_ICONTENT_SINK_IID);
@@ -64,6 +67,8 @@ static NS_DEFINE_IID(kIXPFCXMLContentSinkIID,  NS_IXPFC_XML_CONTENT_SINK_IID);
 static NS_DEFINE_IID(kCXPFolderCanvas,         NS_XP_FOLDER_CANVAS_CID);
 static NS_DEFINE_IID(kCXPItem,                 NS_XP_ITEM_CID);
 
+static NS_DEFINE_IID(kCXPFCObserverManagerCID, NS_XPFC_OBSERVERMANAGER_CID);
+static NS_DEFINE_IID(kIXPFCObserverManagerIID, NS_IXPFC_OBSERVERMANAGER_IID);
 
 
 class ControlListEntry {
@@ -779,6 +784,10 @@ NS_IMETHODIMP nsCalXMLContentSink::DidBuildModel(PRInt32 aQualityLevel)
   nsIXPFCObserver * observer2;
   nsICalTimeContext * context;
 
+
+  nsIXPFCObserverManager* om;
+  nsServiceManager::GetService(kCXPFCObserverManagerCID, kIXPFCObserverManagerIID, (nsISupports**)&om);
+
   while(!(iterator->IsDone()))
   {
     item = (ControlListEntry *) iterator->CurrentItem();
@@ -829,7 +838,7 @@ NS_IMETHODIMP nsCalXMLContentSink::DidBuildModel(PRInt32 aQualityLevel)
 
               if (res == NS_OK)
               {
-                gXPFCToolkit->GetObserverManager()->Register(subject, observer);
+                om->Register(subject, observer);
               
                 NS_RELEASE(observer);
               }
@@ -848,7 +857,7 @@ NS_IMETHODIMP nsCalXMLContentSink::DidBuildModel(PRInt32 aQualityLevel)
                 if (res == NS_OK)
                 {
 
-                  gXPFCToolkit->GetObserverManager()->Register(subject2, observer2);
+                  om->Register(subject2, observer2);
 
                   NS_RELEASE(observer2);
 
@@ -907,7 +916,7 @@ NS_IMETHODIMP nsCalXMLContentSink::DidBuildModel(PRInt32 aQualityLevel)
                 if (res == NS_OK)
                 {
 
-                  gXPFCToolkit->GetObserverManager()->Register(subject, observer);
+                  om->Register(subject, observer);
 
                   NS_RELEASE(observer);
                 }
@@ -949,6 +958,8 @@ NS_IMETHODIMP nsCalXMLContentSink::DidBuildModel(PRInt32 aQualityLevel)
 
 
   NS_RELEASE(root);
+
+  nsServiceManager::ReleaseService(kCXPFCObserverManagerCID, om);
 
   // XXX: Should we clean up everything here?
   return NS_OK;

@@ -26,6 +26,10 @@
 #include "math.h"
 #include "nscalstrings.h"
 #include "nsIXMLParserObject.h"
+#include "nsxpfcCIID.h"
+#include "nsIXPFCObserverManager.h"
+#include "nsIServiceManager.h"
+
 
 static NS_DEFINE_IID(kXPFCSubjectIID, NS_IXPFC_SUBJECT_IID);
 static NS_DEFINE_IID(kXPFCCommandIID, NS_IXPFC_COMMAND_IID);
@@ -36,6 +40,9 @@ static NS_DEFINE_IID(kCalTimeContextIID, NS_ICAL_TIME_CONTEXT_IID);
 
 static NS_DEFINE_IID(kCalDateTimeCID, NS_DATETIME_CID);
 static NS_DEFINE_IID(kCalDateTimeIID, NS_IDATETIME_IID);
+
+static NS_DEFINE_IID(kCXPFCObserverManagerCID, NS_XPFC_OBSERVERMANAGER_CID);
+static NS_DEFINE_IID(kIXPFCObserverManagerIID, NS_IXPFC_OBSERVERMANAGER_IID);
 
 // XXX: TODO: Simplify this code!
 // XXX: TODO: Much of this code should be in a nsCalTimebarContext
@@ -60,7 +67,12 @@ nsCalTimeContext :: nsCalTimeContext()
 nsCalTimeContext :: ~nsCalTimeContext()  
 {
 
-  gXPFCToolkit->GetObserverManager()->Unregister((nsISupports*)(nsICalTimeContext*)this);
+  nsIXPFCObserverManager* om;
+  nsServiceManager::GetService(kCXPFCObserverManagerCID, kIXPFCObserverManagerIID, (nsISupports**)&om);
+
+  om->Unregister((nsISupports*)(nsICalTimeContext*)this);
+
+  nsServiceManager::ReleaseService(kCXPFCObserverManagerCID, om);
 
   NS_IF_RELEASE(mStartTime);
   NS_IF_RELEASE(mEndTime);
@@ -792,7 +804,14 @@ nsresult nsCalTimeContext :: Notify(nsIXPFCCommand * aCommand)
   if (res != NS_OK)
     return res;
 
-  return(gXPFCToolkit->GetObserverManager()->Notify(subject,aCommand));
+  nsIXPFCObserverManager* om;
+  nsServiceManager::GetService(kCXPFCObserverManagerCID, kIXPFCObserverManagerIID, (nsISupports**)&om);
+
+  res = om->Notify(subject,aCommand);
+
+  nsServiceManager::ReleaseService(kCXPFCObserverManagerCID, om);
+
+  return(res);
 }
 
 

@@ -36,7 +36,6 @@ class nsICalendarShell;
 #include "nsICalTimeContext.h"
 #include "nsICalComponent.h"
 #include "nsIXPFCObserver.h"
-#include "nsIXPFCObserverManager.h"
 #include "nsIXPFCCanvasManager.h"
 #include "nsIXPFCCommand.h"
 #include "nsCalDurationCommand.h"
@@ -137,8 +136,6 @@ nsresult nsCalendarWidget::Init(nsIView * aParent,
   mCalendarShell = aCalendarShell;
 
   NS_ADDREF(((nsIApplicationShell *)mCalendarShell));
-
-  gXPFCToolkit->SetObserverManager(mCalendarShell->GetObserverManager());
 
   return NS_OK;
 

@@ -62,9 +62,6 @@ public:
   NS_METHOD LoadPreferences();
   NS_METHOD EnsureUserPath( JulianString& sPath );
 
-  NS_IMETHOD SetObserverManager(nsIXPFCObserverManager * aObserverManager);
-  NS_IMETHOD_(nsIXPFCObserverManager *) GetObserverManager();
-
   NS_IMETHOD SetCAPISession(CAPISession aCAPISession);
   NS_IMETHOD_(CAPISession) GetCAPISession();
 
@@ -94,11 +91,13 @@ private:
   NS_METHOD SetDefaultPreferences();
   NS_METHOD EnvVarsToValues(JulianString& s);
 
+private:
+  nsIXPFCObserverManager * mObserverManager;
+
 // XXX Should be private
 public:
   nsIShellInstance * mShellInstance ;
   nsICalendarContainer * mDocumentContainer ;
-  nsIXPFCObserverManager * mObserverManager;
 
   CAPISession mCAPISession;
   CAPIHandle mCAPIHandle;
