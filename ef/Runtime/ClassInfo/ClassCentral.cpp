@@ -365,7 +365,7 @@ ClassFileSummary &ClassCentral::loadClass(Vector<ClassFileSummary *> &components
     fileReader = new DiskFileReader(staticPool, fileName);
   else {
     if (!(fileReader = resolveClassName(className)))
-      verifyError(VerifyError::badClassFormat);
+      verifyError(VerifyError::noClassDefFound);
   }
   
   return newSummary(className, 
