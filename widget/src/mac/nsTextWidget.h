@@ -21,9 +21,9 @@
 
 #include "nsMacControl.h"
 #include "nsITextWidget.h"
-#include <LPeriodical.h>
+#include "nsRepeater.h"
 
-class nsTextWidget : public nsMacControl, public nsITextWidget, public LPeriodical
+class nsTextWidget : public nsMacControl, public nsITextWidget, public Repeater
 {
 private:
 	typedef nsMacControl Inherited;
@@ -66,7 +66,7 @@ public:
   NS_IMETHOD        GetCaretPosition(PRUint32& aPosition);
 
 	// LPeriodical interface
-	virtual	void	SpendTime(const EventRecord& inMacEvent);
+	virtual	void	RepeatAction(const EventRecord& inMacEvent);
 
 protected:
 	PRBool		mIsPassword;

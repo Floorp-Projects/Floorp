@@ -249,7 +249,7 @@ extern char * XP_FileReadLine(char * dest, int32 bufferSize, XP_File file)
 	return retBuf;
 }
 
-#include "ufilemgr.h"
+#include "nsFileSpec.h"
 /* Netlib utility routine, should be ripped out */
 void	FE_FileType(char * path, 
 					Bool * useDefault, 
@@ -267,8 +267,8 @@ void	FE_FileType(char * path,
 	if (pathPart == NULL)
 		return;
 
-	FSSpec spec;
-	OSErr err = CFileMgr::FSSpecFromLocalUnixPath(pathPart, &spec);	// Skip file://
+	nsFilePath thePath(pathPart);
+	nsNativeFileSpec spec(thePath);
 	XP_FREE(pathPart);
 
 #if 0
