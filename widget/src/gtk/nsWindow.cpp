@@ -208,6 +208,10 @@ NS_IMETHODIMP nsWindow::WidgetToScreen(const nsRect& aOldRect, nsRect& aNewRect)
 void
 nsWindow::DestroyNative(void)
 {
+#ifdef USE_XIM
+  IMEDestroyIC();
+#endif // USE_XIM 
+
   // destroy all of the children that are nsWindow() classes
   // preempting the gdk destroy system.
   DestroyNativeChildren();
@@ -844,34 +848,9 @@ nsWindow::SetFocus(void)
   // check to see if we need to send a focus out event for the old window
   if (focusWindow)
   {
-    if(mIMEEnable == PR_FALSE)
-    {
-#ifdef NOISY_XIM
-      printf("  IME is not usable on this window\n");
-#endif
-    }
-    if (mIC)
-    {
-      GdkWindow *gdkWindow = (GdkWindow*) focusWindow->GetNativeData(NS_NATIVE_WINDOW);
-      focusWindow->KillICSpotTimer();
-      if (gdkWindow)
-      {
-        gdk_im_end();
-      }
-      else
-      {
-#ifdef NOISY_XIM
-        printf("gdkWindow is not usable\n");
-#endif
-      }
-    }
-    else
-    {
-#ifdef NOISY_XIM
-      printf("mIC isn't created yet\n");
-#endif
-    }
-
+#ifdef USE_XIM
+    focusWindow->IMEUnsetFocusWidget();
+#endif // USE_XIM 
     // let the current window loose its focus
     focusWindow->LooseFocus();
   }
@@ -880,6 +859,10 @@ nsWindow::SetFocus(void)
 
   focusWindow = this;
   mHasFocus = PR_TRUE;
+
+#ifdef USE_XIM
+  if (focusWindow) focusWindow->IMESetFocusWidget();
+#endif // USE_XIM 
 
   // don't recurse
   if (mBlockFocusEvents)
@@ -911,40 +894,6 @@ nsWindow::SetFocus(void)
 
   mBlockFocusEvents = PR_FALSE;
 
-  if(mIMEEnable == PR_FALSE)
-  {
-#ifdef NOISY_XIM
-    printf("  IME is not usable on this window\n");
-#endif
-    return NS_OK;
-  }
-
-  if (!mIC)
-    GetXIC();
-
-  if (mIC)
-  {
-    GdkWindow *gdkWindow = (GdkWindow*) GetNativeData(NS_NATIVE_WINDOW);
-    if (gdkWindow)
-    {
-      gdk_im_begin ((GdkIC*)mIC, gdkWindow);
-      UpdateICSpot();
-      PrimeICSpotTimer();
-    }
-    else
-    {
-#ifdef NOISY_XIM
-      printf("gdkWindow is not usable\n");
-#endif
-    }
-  }
-  else
-  {
-#ifdef NOISY_XIM
-    printf("mIC can't created yet\n");
-#endif
-  }
-
   if(gJustGotDeactivate){
     gJustGotDeactivate = PR_FALSE;
     nsGUIEvent eventActivate;
@@ -961,6 +910,10 @@ nsWindow::SetFocus(void)
     AddRef();
     DispatchFocus(eventActivate);
     Release();
+
+#ifdef USE_XIM
+    IMEActivateWidget();
+#endif // USE_XIM 
   }
   return NS_OK;
 }
@@ -992,43 +945,6 @@ nsWindow::OnFocusInSignal(GdkEventFocus * aGdkFocusEvent)
   DispatchFocus(event);
   
   Release();
-
-
-  if(mIMEEnable == PR_FALSE)
-  {
-#ifdef NOISY_XIM
-    printf("  IME is not usable on this window\n");
-#endif
-    return;
-  }
-
-  if (!mIC)
-    GetXIC();
-
-  if (mIC)
-  {
-    GdkWindow *gdkWindow = (GdkWindow*) GetNativeData(NS_NATIVE_WINDOW);
-    if (gdkWindow)
-    {
-      gdk_im_begin ((GdkIC*)mIC, gdkWindow);
-      UpdateICSpot();
-      PrimeICSpotTimer();
-    }
-    else
-    {
-#ifdef NOISY_XIM
-      printf("gdkWindow is not usable\n");
-#endif
-    }
-  }
-  else
-  {
-#ifdef NOISY_XIM
-    printf("mIC can't created yet\n");
-#endif
-  }
-
-
 }
 //////////////////////////////////////////////////////////////////////
 /* virtual */ void
@@ -1055,37 +971,6 @@ nsWindow::OnFocusOutSignal(GdkEventFocus * aGdkFocusEvent)
   DispatchFocus(event);
   
   Release();
-
-
-
-  if(mIMEEnable == PR_FALSE)
-  {
-#ifdef NOISY_XIM
-    printf("  IME is not usable on this window\n");
-#endif
-    return;
-  }
-  if (mIC)
-  {
-    GdkWindow *gdkWindow = (GdkWindow*) GetNativeData(NS_NATIVE_WINDOW);
-    KillICSpotTimer();
-    if (gdkWindow)
-    {
-      gdk_im_end();
-    }
-    else
-    {
-#ifdef NOISY_XIM
-      printf("gdkWindow is not usable\n");
-#endif
-    }
-  }
-  else
-  {
-#ifdef NOISY_XIM
-    printf("mIC isn't created yet\n");
-#endif
-  }
 }
 
 //////////////////////////////////////////////////////////////////
@@ -2490,6 +2375,10 @@ gint handle_toplevel_focus_out(GtkWidget *      aWidget,
   if (!widget) {
     return PR_TRUE;
   }
+
+#ifdef USE_XIM
+  widget->IMEDeactivateWidget();
+#endif // USE_XIM 
 
   // Dispatch NS_DEACTIVATE
   nsGUIEvent event;
