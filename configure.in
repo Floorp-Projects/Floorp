@@ -1255,13 +1255,11 @@ MOZ_ARG_ENABLE_BOOL(pics,
 
 AC_DEFINE(ENABLE_PICS)
 
-dnl Build browsing profile by default
-MOZ_BRPROF=1
-MOZ_ARG_DISABLE_BOOL(brprof,
-[  --disable-brprof        Disable browsing profile cookie],
-  [MOZ_BRPROF= ] )
-
-AC_DEFINE(MOZ_BRPROF)
+dnl Build browsing profile; off by default
+MOZ_ARG_ENABLE_BOOL(brprof,
+[  --enable-brprof        Enable browsing profile cookie],
+  MOZ_BRPROF=1
+  AC_DEFINE(MOZ_BRPROF))
 
 dnl ========================================================
 dnl =
