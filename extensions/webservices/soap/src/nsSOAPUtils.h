@@ -75,6 +75,7 @@ public:
   static nsDependentString kXSDPrefix;
   static nsDependentString kEncodingStyleAttribute;
   static nsDependentString kActorAttribute;
+  static nsDependentString kMustUnderstandAttribute;
   static nsDependentString kEnvelopeTagName;
   static nsDependentString kHeaderTagName;
   static nsDependentString kBodyTagName;

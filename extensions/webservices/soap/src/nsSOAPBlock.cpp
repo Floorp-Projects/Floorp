@@ -149,8 +149,9 @@ NS_IMETHODIMP nsSOAPBlock::GetValue(nsIVariant* * aValue)
   }
   *aValue = mValue;
   NS_IF_ADDREF(*aValue);
-  return NS_OK;
+  return mElement ? mStatus : NS_OK;
 }
+
 NS_IMETHODIMP nsSOAPBlock::SetValue(nsIVariant* aValue)
 {
   nsresult rc = SetElement(nsnull);

@@ -70,13 +70,16 @@ interface nsISOAPBlock : nsISupports {
 
   /**
    * The encoding that was / will be applied to the
-   * block.
+   * block.  If this is blank and element is non-null,
+   * it becomes impossible to decode the block when
+   * the value is requested.
    */
   attribute nsISOAPEncoding encoding;
 
   /**
    * The schema type used to encode or decode the
-   *   block.
+   *   block.  If this is null, then the default
+   *   encoder or decoder may 
    */
   attribute nsISchemaType schemaType;
 

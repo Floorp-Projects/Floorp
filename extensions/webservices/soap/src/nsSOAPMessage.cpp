@@ -221,6 +221,7 @@ NS_IMETHODIMP nsSOAPMessage::Encode(const nsAString & aMethodName, const nsAStri
     nsAutoString name;
     nsAutoString namespaceURI;
     nsAutoString actorURI;
+    PRBool mustUnderstand;
     for (PRUint32 i = 0; i < aHeaderBlockCount; i++) {
       header = aHeaderBlocks[i];
       if (!header) return NS_ERROR_FAILURE;
@@ -241,6 +242,8 @@ NS_IMETHODIMP nsSOAPMessage::Encode(const nsAString & aMethodName, const nsAStri
         if (NS_FAILED(rv)) return rv;
         rv = header->GetActorURI(actorURI);
         if (NS_FAILED(rv)) return rv;
+        rv = header->GetMustUnderstand(&mustUnderstand);
+        if (NS_FAILED(rv)) return rv;
         rv = header->GetEncoding(getter_AddRefs(encoding));
         if (NS_FAILED(rv)) return rv;
         if (!encoding) {
@@ -256,7 +259,12 @@ NS_IMETHODIMP nsSOAPMessage::Encode(const nsAString & aMethodName, const nsAStri
         if (NS_FAILED(rv)) return rv;
         if (!actorURI.IsEmpty()) {
 	  element->SetAttributeNS(nsSOAPUtils::kSOAPEnvPrefix, nsSOAPUtils::kActorAttribute, actorURI);
+          if (NS_FAILED(rv)) return rv;
         }
+	if (mustUnderstand) {
+	  element->SetAttributeNS(nsSOAPUtils::kSOAPEnvPrefix, nsSOAPUtils::kMustUnderstandAttribute, nsSOAPUtils::kTrue);
+          if (NS_FAILED(rv)) return rv;
+	}
         if (mEncoding != encoding) {
           nsAutoString enc;
           encoding->GetStyleURI(enc);

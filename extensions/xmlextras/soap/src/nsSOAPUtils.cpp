@@ -38,6 +38,7 @@ NS_NAMED_LITERAL_STRING(nsSOAPUtils::kXSPrefix,"xs");
 NS_NAMED_LITERAL_STRING(nsSOAPUtils::kXSDPrefix,"xsd");
 NS_NAMED_LITERAL_STRING(nsSOAPUtils::kEncodingStyleAttribute,"encodingStyle");
 NS_NAMED_LITERAL_STRING(nsSOAPUtils::kActorAttribute,"actor");
+NS_NAMED_LITERAL_STRING(nsSOAPUtils::kMustUnderstandAttribute,"mustUnderstand");
 NS_NAMED_LITERAL_STRING(nsSOAPUtils::kEnvelopeTagName,"Envelope");
 NS_NAMED_LITERAL_STRING(nsSOAPUtils::kHeaderTagName,"Header");
 NS_NAMED_LITERAL_STRING(nsSOAPUtils::kBodyTagName,"Body");

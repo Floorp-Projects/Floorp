@@ -47,10 +47,4 @@ public:
 protected:
   nsCOMPtr<nsIDOMElement> mFaultElement;
 };
-
-#define NS_SOAPFAULT_CID                   \
- { /* cb8cd1ae-1dd1-11b2-9954-e393ae604c08 */      \
- 0xcb8cd1ae, 0x1dd2, 0x11b2,                       \
- {0x99, 0x54, 0xe3, 0x93, 0xae, 0x60, 0x4c, 0x08} }
-#define NS_SOAPFAULT_CONTRACTID "@mozilla.org/xmlextras/soap/fault;1"
 #endif

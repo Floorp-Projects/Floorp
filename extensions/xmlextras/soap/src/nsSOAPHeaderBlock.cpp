@@ -75,7 +75,7 @@ NS_IMETHODIMP nsSOAPHeaderBlock::GetMustUnderstand(PRBool * aMustUnderstand)
   NS_ENSURE_ARG_POINTER(&aMustUnderstand);
   if (mElement) {
     nsAutoString m;
-    nsresult rc = mElement->GetAttributeNS(nsSOAPUtils::kSOAPEnvURI,nsSOAPUtils::kActorAttribute,m);
+    nsresult rc = mElement->GetAttributeNS(nsSOAPUtils::kSOAPEnvURI,nsSOAPUtils::kMustUnderstandAttribute,m);
     if (NS_FAILED(rc)) return rc;
     if (m.Length() == 0) *aMustUnderstand = PR_FALSE;
     else if (m.Equals(nsSOAPUtils::kTrueA) || m.Equals(nsSOAPUtils::kTrueA)) *aMustUnderstand = PR_TRUE;
