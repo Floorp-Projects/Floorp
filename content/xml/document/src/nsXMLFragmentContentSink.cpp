@@ -331,6 +331,10 @@ nsXMLFragmentContentSink::ReportError(const PRUnichar* aErrorText,
     }
   }
 
+  // Clear any buffered-up text we have
+  mText = nsnull;
+  mTextLength = 0;
+
   return NS_OK; 
 }
 
@@ -405,7 +409,9 @@ nsXMLFragmentContentSink::DidBuildContent()
   if (!mAllContent) {
     // Note: we need to FlushText() here because if we don't, we might not get
     // an end element to do it for us, so make sure.
-    FlushText();
+    if (!mParseError) {
+      FlushText();
+    }
     PopContent();
   }
 
