@@ -427,7 +427,15 @@ nsHTMLInputElement::GetValue(nsAWritableString& aValue)
     }
       
     return NS_OK;
+  } else if (type == NS_FORM_INPUT_RADIO) {
+    // The value of a radio input is always "on". Why you ask? Well, I
+    // don't know but that's how it appears to work in older
+    // browsers. -- jst@netscape.com
+    aValue.Assign(NS_LITERAL_STRING("on"));
+
+    return NS_OK;
   }
+
   // Treat value == defaultValue for other input elements
   return nsGenericHTMLLeafFormElement::GetAttribute(kNameSpaceID_HTML,
                                                     nsHTMLAtoms::value,
