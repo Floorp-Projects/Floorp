@@ -36,7 +36,7 @@ var msgHeaderParserProgID		   = "component://netscape/messenger/headerparser";
 var abAddressCollectorProgID	 = "component://netscape/addressbook/services/addressCollecter";
 
 var msgPaneData;
-var currentHeaderData;
+var currentHeaderData = {};
 var gNumAddressesToShow = 3;
 var gShowUserAgent = false;
 
@@ -55,8 +55,6 @@ function OnLoadMsgHeaderPane()
   // if you add more document elements with ids to msgHeaderPane.xul, you should add 
   // to this object...
   msgPaneData = new Object;
-  currentHeaderData = new Object;
-
   if (msgPaneData)
   {
     // First group of headers
@@ -146,37 +144,13 @@ var messageHeaderSink = {
       // for consistancy sake, let's force all header names to be lower case so
       // we don't have to worry about looking for: Cc and CC, etc.
       headerName = headerName.toLowerCase();
-
-      if (headerName == "subject")
+      currentHeaderData[headerName] = headerValue;
+      if (headerName == "from")
       {
-        currentHeaderData.SubjectValue = headerValue;
-      }
-      else if (headerName == "from")
-      {
-        currentHeaderData.FromValue = headerValue;
         if (headerValue && abAddressCollector)
           abAddressCollector.collectUnicodeAddress(headerValue);  
       }
-      else if (headerName == "date")
-      {
-        currentHeaderData.DateValue = headerValue; 
-      }
-      else if (headerName == "to")
-      {
-        currentHeaderData.ToValue = headerValue; 
-      }
-      else if (headerName == "cc")
-      {
-         currentHeaderData.CcValue = headerValue;  
-      }
-      else if (headerName == "newsgroups")
-      {
-         currentHeaderData.NewsgroupsValue = headerValue;   
-      }
-      else if (headerName == "user-agent")
-      {
-        currentHeaderData.UserAgentValue = headerValue;
-      } 
+ 
     },
 
     handleAttachment: function(url, displayName, uri, notDownloaded) 
@@ -458,28 +432,21 @@ function InsertEmailAddressUnderEnclosingBox(parentBox, parentDiv, emailAddress,
 
 function UpdateMessageHeaders()
 {
-  hdrViewSetNodeWithBox(msgPaneData.SubjectBox, msgPaneData.SubjectValue, currentHeaderData.SubjectValue);
-  // hdrViewSetNodeWithButton(msgPaneData.FromBox, msgPaneData.FromValue, currentHeaderData.FromValue);
-  OutputEmailAddresses(msgPaneData.FromBox, msgPaneData.FromValue, currentHeaderData.FromValue, false, "", ""); 
-  hdrViewSetNodeWithBox(msgPaneData.DateBox, msgPaneData.DateValue, currentHeaderData.DateValue); 
-  OutputEmailAddresses(msgPaneData.ToBox, msgPaneData.ToValueShort, currentHeaderData.ToValue, true, msgPaneData.ToValueLong, msgPaneData.ToValueToggleIcon );
-  OutputEmailAddresses(msgPaneData.CcBox, msgPaneData.CcValueShort, currentHeaderData.CcValue, true, msgPaneData.CcValueLong, msgPaneData.CcValueToggleIcon );
-  hdrViewSetNodeWithBox(msgPaneData.NewsgroupBox, msgPaneData.NewsgroupValue, currentHeaderData.NewsgroupsValue); 
+  hdrViewSetNodeWithBox(msgPaneData.SubjectBox, msgPaneData.SubjectValue, currentHeaderData["subject"]);
+  OutputEmailAddresses(msgPaneData.FromBox, msgPaneData.FromValue, currentHeaderData["from"], false, "", ""); 
+  hdrViewSetNodeWithBox(msgPaneData.DateBox, msgPaneData.DateValue, currentHeaderData["date"]); 
+  OutputEmailAddresses(msgPaneData.ToBox, msgPaneData.ToValueShort, currentHeaderData["to"], true, msgPaneData.ToValueLong, msgPaneData.ToValueToggleIcon );
+  OutputEmailAddresses(msgPaneData.CcBox, msgPaneData.CcValueShort, currentHeaderData["cc"], true, msgPaneData.CcValueLong, msgPaneData.CcValueToggleIcon );
+  hdrViewSetNodeWithBox(msgPaneData.NewsgroupBox, msgPaneData.NewsgroupValue, currentHeaderData["newsgroups"]); 
 
   if (gShowUserAgent)
-    hdrViewSetNodeWithBox(msgPaneData.UserAgentBox, msgPaneData.UserAgentValue, currentHeaderData.UserAgentValue);
+    hdrViewSetNodeWithBox(msgPaneData.UserAgentBox, msgPaneData.UserAgentValue, currentHeaderData["user-agent"]);
   FinishEmailProcessing();
 }
 
 function ClearCurrentHeaders()
 {
-  currentHeaderData.SubjectValue = "";
-  currentHeaderData.FromValue = "";
-  currentHeaderData.DateValue = "";
-  currentHeaderData.ToValue = "";
-  currentHeaderData.CcValue = "";
-  currentHeaderData.NewsgroupsValue = "";
-  currentHeaderData.UserAgentValue = "";
+  currentHeaderData = {};
 }
 
 function ShowMessageHeaderPane()
