@@ -1817,28 +1817,30 @@ static JSFunctionSpec InstallMethods[] =
   {"TRACE",                     InstallTRACE,                   1},
 /*END HACK FOR DEBUGGING UNTIL ALERTS WORK*/
   // -- new forms that match prevailing javascript style --
-  {"abortInstall",              InstallAbortInstall,            1},
   {"addDirectory",              InstallAddDirectory,            6},
   {"addFile",                   InstallAddSubcomponent,         6},
   {"alert",                     InstallAlert,                   1},
+  {"cancelInstall",             InstallAbortInstall,            1},
   {"confirm",                   InstallConfirm,                 2},
   {"deleteRegisteredFile",      InstallDeleteComponent,         1},
   {"execute",                   InstallExecute,                 2},
-  {"finalizeInstall",           InstallFinalizeInstall,         0},
   {"gestalt",                   InstallGestalt,                 1},
   {"getComponentFolder",        InstallGetComponentFolder,      2},
   {"getFolder",                 InstallGetFolder,               2},
   {"getLastError",              InstallGetLastError,            0},
   {"getWinProfile",             InstallGetWinProfile,           2},
   {"getWinRegistry",            InstallGetWinRegistry,          0},
+  {"initInstall",               InstallStartInstall,            4},
   {"loadResources",             InstallLoadResources,           1},
   {"logComment",                InstallLogComment,              1},
   {"patch",                     InstallPatch,                   5},
+  {"performInstall",            InstallFinalizeInstall,         0},
   {"resetError",                InstallResetError,              0},
   {"setPackageFolder",          InstallSetPackageFolder,        1},
-  {"startInstall",              InstallStartInstall,            4},
   {"uninstall",                 InstallUninstall,               1},
+
   // -- new forms for the file/dir methods --
+  // (Access via Install object is deprecated)
   {"dirCreate",                 InstallFileOpDirCreate,                1},
   {"dirGetParent",              InstallFileOpDirGetParent,             1},
   {"dirRemove",                 InstallFileOpDirRemove,                2},
@@ -1859,7 +1861,11 @@ static JSFunctionSpec InstallMethods[] =
   {"fileWindowsShortcut",       InstallFileOpFileWindowsShortcut,      7},
   {"fileMacAlias",              InstallFileOpFileMacAlias,             2},
   {"fileUnixLink",              InstallFileOpFileUnixLink,             2},
+
   // -- obsolete forms for temporary compatibility --
+  {"abortInstall",              InstallAbortInstall,            1}, 
+  {"finalizeInstall",           InstallFinalizeInstall,         0},
+  {"startInstall",              InstallStartInstall,            4},
   {"AbortInstall",              InstallAbortInstall,            1},
   {"AddDirectory",              InstallAddDirectory,            6},
   {"AddSubcomponent",           InstallAddSubcomponent,         6},
