@@ -54,6 +54,7 @@ particular environments. */
 /***
  * Mozilla specific defines listed below
  */
+#ifdef MOZILLA_CLIENT
 
 #include "nspr.h"
 #define malloc(x) PR_Malloc((size_t)(x))
@@ -71,4 +72,6 @@ typedef PRInt32 int;
 /* Enable external paramter entity parsing in expat */
 #ifndef XML_DTD
 #define XML_DTD 1
+#endif
+
 #endif
