@@ -35,6 +35,7 @@ NS_IMPL_ISUPPORTS(nsMenuBar, kMenuBarIID)
 //-------------------------------------------------------------------------
 nsEventStatus nsMenuBar::MenuSelected(const nsGUIEvent & aMenuEvent)
 {
+  return nsEventStatus_eIgnore;
 }
 
 //-------------------------------------------------------------------------
