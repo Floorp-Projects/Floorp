@@ -55,7 +55,7 @@ public:
   * To get a plugin instance owner
   */
   NS_IMETHOD
-  GetOwner(nsCOMPtr<nsIPluginInstanceOwner> &aOwner) = 0;
+  GetOwner(nsIPluginInstanceOwner **aOwner) = 0;
 };
 
 #endif /* nsPIPluginInstancePeer_h___ */

@@ -506,10 +506,11 @@ nsActivePlugin::~nsActivePlugin()
     if(mPeer)
     {
       nsresult rv = NS_OK;
-      nsPluginInstancePeerImpl * peer = (nsPluginInstancePeerImpl *)mPeer;
+      nsCOMPtr<nsPIPluginInstancePeer> peer(do_QueryInterface(mPeer));
       nsCOMPtr<nsIPluginInstanceOwner> owner;
-      rv = peer->GetOwner(*getter_AddRefs(owner));
-      owner->SetInstance(nsnull);
+      rv = peer->GetOwner(getter_AddRefs(owner));
+      if (owner)
+        owner->SetInstance(nsnull);
     }
 
     // now check for cached plugins because they haven't had nsIPluginInstance::Destroy()
@@ -711,9 +712,9 @@ void nsActivePluginList::stopRunning(nsISupportsArray* aReloadDocs)
       // removing duplicates. These will be reframed (embedded) or reloaded (full-page) later 
       // to kickstart our instances.
       if (aReloadDocs && p->mPeer) {
-        nsPluginInstancePeerImpl * peer = (nsPluginInstancePeerImpl *)p->mPeer;
+        nsCOMPtr<nsPIPluginInstancePeer> peer(do_QueryInterface(p->mPeer));
         nsCOMPtr<nsIPluginInstanceOwner> owner;
-        peer->GetOwner(*getter_AddRefs(owner));
+        peer->GetOwner(getter_AddRefs(owner));
         if (owner) {
           nsCOMPtr<nsIDocument> doc;
           owner->GetDocument(getter_AddRefs(doc));
@@ -3027,17 +3028,14 @@ NS_IMETHODIMP nsPluginHostImpl::GetURLWithHeaders(nsISupports* pluginInst,
   {
     if (nsnull != target)
     {
-      nsPluginInstancePeerImpl *peer;
-
-      rv = instance->GetPeer(NS_REINTERPRET_CAST(nsIPluginInstancePeer **, &peer));
-
+      nsCOMPtr<nsIPluginInstancePeer> peer;
+      rv = instance->GetPeer(getter_AddRefs(peer));
       if (NS_SUCCEEDED(rv) && peer)
       {
+        nsCOMPtr<nsPIPluginInstancePeer> privpeer(do_QueryInterface(peer));
         nsCOMPtr<nsIPluginInstanceOwner> owner;
-
-        rv = peer->GetOwner(*getter_AddRefs(owner));
-
-        if (NS_SUCCEEDED(rv))
+        rv = privpeer->GetOwner(getter_AddRefs(owner));
+        if (owner)
         {
           if ((0 == PL_strcmp(target, "newwindow")) || 
               (0 == PL_strcmp(target, "_new")))
@@ -3045,19 +3043,14 @@ NS_IMETHODIMP nsPluginHostImpl::GetURLWithHeaders(nsISupports* pluginInst,
           else if (0 == PL_strcmp(target, "_current"))
             target = "_self";
 
-          rv = owner->GetURL(url, target, nsnull, 0, (void *) getHeaders, 
-                             getHeadersLength);
+          rv = owner->GetURL(url, target, nsnull, 0, (void *) getHeaders, getHeadersLength);
         }
-
-        NS_RELEASE(peer);
       }
     }
 
     if (nsnull != streamListener)
       rv = NewPluginURLStream(string, instance, streamListener, nsnull, 
                               PR_FALSE, nsnull, getHeaders, getHeadersLength);
-
-    NS_RELEASE(instance);
   }
 
   return rv;
@@ -3112,16 +3105,15 @@ NS_IMETHODIMP nsPluginHostImpl::PostURL(nsISupports* pluginInst,
 
       if (nsnull != target)
         {
-          nsPluginInstancePeerImpl *peer;          
-          rv = instance->GetPeer(NS_REINTERPRET_CAST(nsIPluginInstancePeer **, &peer));
+          nsCOMPtr<nsIPluginInstancePeer> peer;          
+          rv = instance->GetPeer(getter_AddRefs(peer));
           
           if (NS_SUCCEEDED(rv) && peer)
             {
+              nsCOMPtr<nsPIPluginInstancePeer> privpeer(do_QueryInterface(peer));
               nsCOMPtr<nsIPluginInstanceOwner> owner;
-              
-              rv = peer->GetOwner(*getter_AddRefs(owner));
-              
-              if (NS_SUCCEEDED(rv))
+              rv = privpeer->GetOwner(getter_AddRefs(owner));
+              if (owner)
                 {
                   if (!target) {
                     target = "_self";
@@ -3137,8 +3129,6 @@ NS_IMETHODIMP nsPluginHostImpl::PostURL(nsISupports* pluginInst,
                   rv = owner->GetURL(url, target, (void*)dataToPost, postDataLen,
                                      (void*) postHeaders, postHeadersLength, isFile);
                 }
-              
-              NS_RELEASE(peer);
             }
         }
     
@@ -5063,8 +5053,9 @@ NS_IMETHODIMP nsPluginHostImpl::LoadPlugins()
 nsresult nsPluginHostImpl::FindPlugins(PRBool aCreatePluginList, PRBool * aPluginsChanged)
 {
   // let's start timing if we are only really creating the plugin list
-  if (aCreatePluginList)
-  NS_TIMELINE_START_TIMER("LoadPlugins");
+  if (aCreatePluginList) {
+    NS_TIMELINE_START_TIMER("LoadPlugins");
+  }
 
 #ifdef CALL_SAFETY_ON
   // check preferences on whether or not we want to try safe calls to plugins
@@ -5614,13 +5605,15 @@ NS_IMETHODIMP nsPluginHostImpl::NewPluginURLStream(const nsString& aURL,
   // get the full URL of the document that the plugin is embedded
   //   in to create an absolute url in case aURL is relative
   nsCOMPtr<nsIDocument> doc;
-  nsPluginInstancePeerImpl *peer;
+  nsCOMPtr<nsIPluginInstancePeer> peer;
+  rv = aInstance->GetPeer(getter_AddRefs(peer));
   rv = aInstance->GetPeer(NS_REINTERPRET_CAST(nsIPluginInstancePeer **, &peer));
   if (NS_SUCCEEDED(rv) && peer)
   {
+    nsCOMPtr<nsPIPluginInstancePeer> privpeer(do_QueryInterface(peer));
     nsCOMPtr<nsIPluginInstanceOwner> owner;
-    rv = peer->GetOwner(*getter_AddRefs(owner));
-    if (NS_SUCCEEDED(rv) && owner)
+    rv = privpeer->GetOwner(getter_AddRefs(owner));
+    if (owner)
     {
       rv = owner->GetDocument(getter_AddRefs(doc));
       if (NS_SUCCEEDED(rv) && doc)
@@ -5633,7 +5626,6 @@ NS_IMETHODIMP nsPluginHostImpl::NewPluginURLStream(const nsString& aURL,
         rv = NS_MakeAbsoluteURI(absUrl, aURL, docURL);
       }
     }
-    NS_RELEASE(peer);
   }
 
   if (absUrl.IsEmpty())
@@ -6107,10 +6099,11 @@ NS_IMETHODIMP nsPluginHostImpl::HandleBadPlugin(PRLibrary* aLibrary, nsIPluginIn
   nsCOMPtr<nsIPluginInstanceOwner> owner;
   
   if (instance) {
-    nsPluginInstancePeerImpl *peer;
-    rv =instance->GetPeer(NS_REINTERPRET_CAST(nsIPluginInstancePeer **, &peer));            
+    nsCOMPtr<nsIPluginInstancePeer> peer;
+    rv =instance->GetPeer(getter_AddRefs(peer));
     if (NS_SUCCEEDED(rv) && peer) {        
-      peer->GetOwner(*getter_AddRefs(owner));
+      nsCOMPtr<nsPIPluginInstancePeer> privpeer(do_QueryInterface(peer));
+      privpeer->GetOwner(getter_AddRefs(owner));
     }
   }
 
@@ -6544,20 +6537,18 @@ nsresult nsPluginStreamListenerPeer::ServeStreamAsFile(nsIRequest *request,
   // mInstance->Stop calls mPStreamListener->CleanUpStream(), so stream will be properly clean up 
   mInstance->Stop();
   mInstance->Start();      
-  nsPluginInstancePeerImpl *peer;
-  mInstance->GetPeer(NS_REINTERPRET_CAST(nsIPluginInstancePeer **, &peer));
+  nsCOMPtr<nsIPluginInstancePeer> peer;
+  mInstance->GetPeer(getter_AddRefs(peer));
   if (peer) {
+    nsCOMPtr<nsPIPluginInstancePeer> privpeer(do_QueryInterface(peer));
     nsCOMPtr<nsIPluginInstanceOwner> owner;
-    peer->GetOwner(*getter_AddRefs(owner));
+    privpeer->GetOwner(getter_AddRefs(owner));
     if (owner) {
       nsPluginWindow    *window = nsnull;
       owner->GetWindow(window);
       if (window->window)
         mInstance->SetWindow(window);
     }
-    // because we are starting plugin using existing peer 
-    // it'll get one extra RefCnt, release it here.
-    NS_RELEASE(peer);
   }
   
   mPluginStreamInfo->SetSeekable(0);
