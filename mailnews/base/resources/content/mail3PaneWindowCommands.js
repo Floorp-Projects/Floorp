@@ -1077,7 +1077,7 @@ function SetFocusThreadPane()
 
 function SetFocusMessagePane()
 {
-	var messagePaneFrame = GetMessagePane();
+	var messagePaneFrame = GetMessagePaneFrame();
   messagePaneFrame.focus();
 	return;
 }
