@@ -99,27 +99,29 @@ InitMinimalScope(JSScope *scope)
 static JSBool
 CreateScopeTable(JSScope *scope)
 {
-    uint32 size;
+    int sizeLog2;
     JSScopeProperty *sprop, **spp;
 
     JS_ASSERT(!scope->table);
     JS_ASSERT(scope->lastProp);
 
-    size = MIN_SCOPE_TABLE_SIZE;
     if (scope->entryCount > SCOPE_HASH_THRESHOLD) {
         /*
          * Ouch: calloc failed at least once already -- let's try again,
          * overallocating to hold at least twice the current population.
          */
-        scope->sizeLog2 = JS_CeilingLog2(2 * scope->entryCount);
-        scope->hashShift = JS_DHASH_BITS - scope->sizeLog2;
-        size = JS_BIT(scope->sizeLog2);
+        sizeLog2 = JS_CeilingLog2(2 * scope->entryCount);
+    } else {
+        sizeLog2 = MIN_SCOPE_SIZE_LOG2;
     }
 
-    scope->table = (JSScopeProperty **) calloc(size, 1);
+    scope->table = (JSScopeProperty **)
+        calloc(JS_BIT(sizeLog2), sizeof(JSScopeProperty *));
     if (!scope->table)
         return JS_FALSE;
 
+    scope->sizeLog2 = sizeLog2;
+    scope->hashShift = JS_DHASH_BITS - sizeLog2;
     for (sprop = scope->lastProp; sprop; sprop = sprop->parent) {
         spp = js_SearchScope(scope, sprop->id, JS_TRUE);
         SPROP_STORE_PRESERVING_COLLISION(spp, sprop);
