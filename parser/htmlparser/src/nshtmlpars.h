@@ -32,6 +32,12 @@
 #define NS_HTMLPARS NS_IMPORT
 #endif
 
+#if defined(XP_MAC)
+  #define CLASS_EXPORT_HTMLPARS NS_HTMLPARS class
+#else
+  #define CLASS_EXPORT_HTMLPARS class NS_HTMLPARS
+#endif
+
 #endif /* nshtmlpars_h___ */
 
 

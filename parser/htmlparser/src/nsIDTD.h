@@ -26,6 +26,7 @@
 #ifndef NS_IDTD__
 #define NS_IDTD__
 
+#include "nshtmlpars.h"
 #include "nsISupports.h"
 #include "prtypes.h"
 
@@ -43,8 +44,20 @@ class nsString;
 
 enum eAutoDetectResult {eUnknownDetect, eValidDetect, eInvalidDetect};
 
-class nsIDTD : public nsISupports {
-            
+// XXX: Disable warning message about nsISupports not being exported. I *believe* this
+// to be a harmless warning message on windows, a better fix would be to export
+// the nsISupports interface.
+
+#if defined(XP_PC)
+#pragma warning( disable : 4275 )  
+#endif
+
+CLASS_EXPORT_HTMLPARS nsIDTD : public nsISupports {
+
+#if defined(XP_PC)
+#pragma warning( default : 4275 )
+#endif
+           
   public:
 
     /**
