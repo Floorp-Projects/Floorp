@@ -1,4 +1,4 @@
-#!nmake
+#!gmake
 #
 # The contents of this file are subject to the Netscape Public License
 # Version 1.0 (the "NPL"); you may not use this file except in
@@ -18,42 +18,49 @@
 DEPTH=../../..
 IGNORE_MANIFEST=1
 
-MAKE_OBJ_TYPE   = EXE
-PROGRAM = ./$(OBJDIR)/viewer.exe
-RESFILE = viewer.res
+MAKE_OBJ_TYPE=EXE
+PROGRAM=./$(OBJDIR)/viewer
 
-MISCDEP=                        \
- $(DIST)/lib/raptorweb.a        \
- $(DIST)/lib/xpcom32.a          \
- $(LIBNSPR)                     \
- $(DIST)/lib/libplc21.a
 
+include $(DEPTH)/config/config.mk
 
 CPPSRCS = \
-	main.cpp	\
-	nsViewer.cpp  \
+	main.cpp \
+        nsViewer.cpp \
 	nsDocLoader.cpp \
 	$(NULL)
 
+INCLUDES+= -I$(PUBLIC)/raptor -I$(PUBLIC)/xpcom  -I$(PUBLIC)/dom -I$(PUBLIC)/netlib -I$(PUBLIC)/js
+
+DIRS	=
+
 OBJS	= $(CPPSRCS:.cpp=.o)
 
-REQUIRES = xpcom raptor dom netlib js
+EX_LIBS = \
+	$(DIST)/bin/libwidgetunix.so	\
+	$(DIST)/bin/libgfxunix.so	\
+	$(DIST)/bin/libraptorbase.so	\
+	$(DIST)/bin/libxpcom.so	\
+	$(DIST)/bin/libreg.so	\
+	$(DIST)/bin/libplc21.so	\
+	$(DIST)/bin/libplds21.so	\
+	$(DIST)/bin/libnspr21.so	\
+	$(NULL)
 
-MYLIBS=                         \
- $(DIST)/lib/raptorbase.a      \
- $(DIST)/lib/raptorgfx.a       \
- $(DIST)/lib/raptorhtml.a     \
- $(DIST)/lib/raptorweb.a      \
- $(DIST)/lib/xpcom32.a        \
- $(DIST)/lib/js3240.a         \
- $(LIBNSPR)                     \
- $(DIST)/lib/libplc21.a       \
- $(DIST)/lib/netlib.a         \
- $(NULL)
+#PROGS	= $(addprefix $(OBJDIR)/, $(CPPSRCS:.cpp=))
 
-LLIBS= $(MYLIBS)                
+#TARGETS = $(PROGS)
 
 include $(DEPTH)/config/rules.mk
+
+#$(OBJDIR)/%.o: %.cpp
+#	@$(MAKE_OBJDIR)
+#	$(CCC) -o $@ $(CFLAGS) -c $*.cpp
+
+#$(PROGS):$(OBJDIR)/%: $(OBJDIR)/%.o $(EX_LIBS)
+#	@$(MAKE_OBJDIR)
+#	$(CCC) -o $@ $@.o $(LDFLAGS) $(EX_LIBS) $(OS_LIBS) -lXm -lXt -lX11
+
 
 install:: $(PROGRAM)
 	$(MAKE_INSTALL) $(PROGRAM) $(DIST)/bin
@@ -91,3 +98,4 @@ clobber::
 	rm -f $(DIST)/bin/res/samples/gear1.gif
 	rm -f $(DIST)/bin/res/samples/rock_gra.gif
 	rm -f $(DIST)/bin/res/samples/bg.jpg
+
