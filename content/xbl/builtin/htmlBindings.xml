@@ -47,6 +47,7 @@ Can't yet put script tags in XBL (hyatt has the bug)
       <handler event="keypress" key="c" command="cmd_copy" modifiers="accel"/>
       <handler event="keypress" key="v" command="cmd_paste" modifiers="accel"/>
       <handler event="keypress" key="z" command="cmd_undo" modifiers="accel"/>
+      <handler event="keypress" key="z" command="cmd_redo" modifiers="accel,shift" />
       <handler event="keypress" key="a" command="cmd_selectAll" modifiers="accel"/>
 
       <handler event="keypress" key="k" command="cmd_toggleBrowseWithCaret" modifiers="accel,shift"/>
@@ -66,6 +67,7 @@ Can't yet put script tags in XBL (hyatt has the bug)
       <handler event="keypress" keycode="VK_UP" command="cmd_selectLinePrevious" modifiers="shift"/>
       <handler event="keypress" keycode="VK_DOWN" command="cmd_selectLineNext" modifiers="shift"/>
       <handler event="keypress" key="z" command="cmd_undo" modifiers="accel"/>
+      <handler event="keypress" key="z" command="cmd_redo" modifiers="accel,shift" />
       <handler event="keypress" key="x" command="cmd_cut" modifiers="accel"/>
       <handler event="keypress" key="c" command="cmd_copy" modifiers="accel"/>
       <handler event="keypress" key="v" command="cmd_paste" modifiers="accel"/>
@@ -91,6 +93,7 @@ Can't yet put script tags in XBL (hyatt has the bug)
     <handler event="keypress" key="c" modifiers="accel" command="cmd_copy"/>
     <handler event="keypress" key="x" modifiers="accel" command="cmd_cut"/>
     <handler event="keypress" key="v" modifiers="accel" command="cmd_paste"/>
+    <handler event="keypress" key="z" command="cmd_redo" modifiers="accel,shift" />
     <handler event="keypress" key="z" modifiers="accel" command="cmd_undo"/>
     <handler event="keypress" key="a" modifiers="accel" command="cmd_selectAll"/>
 
@@ -118,6 +121,7 @@ Can't yet put script tags in XBL (hyatt has the bug)
     <handler event="keypress" key="x" modifiers="accel" command="cmd_cut"/>
     <handler event="keypress" key="v" modifiers="accel" command="cmd_paste"/>
     <handler event="keypress" key="z" modifiers="accel" command="cmd_undo"/>
+    <handler event="keypress" key="z" command="cmd_redo" modifiers="accel,shift" />
     <handler event="keypress" key="a" modifiers="accel" command="cmd_selectAll"/>
 
     </handlers>
