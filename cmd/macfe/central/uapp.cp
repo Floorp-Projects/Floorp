@@ -26,6 +26,11 @@
 
 #include "fullsoft.h"
 
+//#define USE_NAV_SERVICES
+#ifdef USE_NAV_SERVICES	
+	#include "UNavServices.h"
+#endif
+
 #include "uapp.h"
 
 #include "CAppleEventHandler.h"
@@ -36,7 +41,6 @@
 #include <LGACheckbox.h>
 
 	// macfe
-//#include "NavigationServicesSupport.h"
 #include "earlmgr.h"
 #include "macutil.h"
 #include "macgui.h"	// HyperStyle
@@ -793,7 +797,7 @@ CFrontApp::CFrontApp()
 	// Performance
 	// We really should be adjusting this dynamically
 {
-	// Set environment features
+	// Set environment features as well as register for Appearance Manager
 	
 	CEnvironment::SetAllFeatures();
 
@@ -2227,17 +2231,26 @@ LModelObject* CFrontApp::MakeNewDocument()
 //
 void CFrontApp::ChooseDocument()
 {
-	static const OSType myTypes[] = { 'TEXT', 'JPEG', 'GIFf'};
-	
+	static const OSType myTypes[] = { 'TEXT', 'JPEG', 'GIFf' };
+
+#ifdef USE_NAV_SERVICES	
+
+	if ( UNavServices::GetFile("\pChoose a file to open", fileSpec) )
+		OpenDocument(&fileSpec);
+		
+#else
+
 	UDesktop::Deactivate();	// Always bracket this
 	
 	FSSpec fileSpec;
 	Boolean fileSelected = SimpleOpenDlog ( 3, myTypes, &fileSpec );
-
+	
 	if ( fileSelected )
 		OpenDocument(&fileSpec);
-
+	
 	UDesktop::Activate();
+	
+#endif
 	
 } // ChooseDocument
 
@@ -2583,16 +2596,23 @@ Boolean CFrontApp::ObeyCommand(CommandT inCommand, void* ioParam)
 //			StandardFileReply myReply;
 		
 			static const OSType myTypes[] = { 'TEXT'};
+			FSSpec fileSpec;
 			
+#ifdef USE_NAV_SERVICES	
+
+			if ( UNavServices::GetFile("\pChoose a file to open", fileSpec) )
+				OpenDocument(&fileSpec);
+		
+#else
 			UDesktop::Deactivate();	// Always bracket this
 			
-			FSSpec fileSpec;
 			Boolean fileSelected = SimpleOpenDlog ( 1, myTypes, &fileSpec );
 				
 			UDesktop::Activate();
 			
 			if (!fileSelected) return TRUE;			// we handled it... we just didn't do anything!
-					
+#endif
+				
 			char* localURL = CFileMgr::GetURLFromFileSpec(fileSpec);
 			if (localURL == NULL) return TRUE;		
 			

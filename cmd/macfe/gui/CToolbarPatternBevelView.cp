@@ -29,7 +29,7 @@
 // Bug #79175
 // Change the update command status so that the "Show/Hide Component Bar" works
 CToolbarPatternBevelView::CToolbarPatternBevelView(LStream* inStream)
-:	CPatternBevelView(inStream)
+:	CAMSavvyBevelView(inStream)
 {
 	LCommander::SetUpdateCommandStatus(true);
 }
@@ -110,7 +110,8 @@ void CToolbarPatternBevelView::CalcArrangement( Boolean inRotateArrangement, Int
 
 				if ( !inRotateArrangement )
 					{
-						button->ChangeMode(inNewMode, SDimension16());
+						SDimension16 unused;
+						button->ChangeMode(inNewMode, unused);
 
 							// ...and the post-ChangeMode size for |new_cell_size|
 						button->GetFrameSize(button_size);

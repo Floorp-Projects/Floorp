@@ -20,6 +20,8 @@
 
 #include <UEnvironment.h>
 #include <Gestalt.h>
+#include <Appearance.h>
+
 
 // ---------------------------------------------------------------------------
 //		¥ SetFeature
@@ -31,6 +33,11 @@ CEnvironment::SetAllFeatures()
 {
 	Int32	theResponse;
 	OSErr	theErr = ::Gestalt(gestaltDragMgrAttr, &theResponse);
+
+	// for Appearance Manager support, register as a client of the appearance mgr
+	UEnvironment::InitEnvironment();
+	if ( UEnvironment::HasFeature(env_HasAppearance) )
+		::RegisterAppearanceClient();
 
 	UEnvironment::SetFeature(
 			env_HasDragMgrImageSupport,

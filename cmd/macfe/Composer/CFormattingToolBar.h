@@ -18,7 +18,7 @@
 
 #pragma once
 
-#include "CPatternBevelView.h"
+#include "CAMSavvyBevelView.h"
 #include <LListener.h>
 
 class CEditView;
@@ -26,7 +26,7 @@ class CEditView;
 
 // used in Editor window and Mail Compose windows
 
-class CFormattingToolBar : public CPatternBevelView, public LListener
+class CFormattingToolBar : public CAMSavvyBevelView, public LListener
 {
 public:
 	enum {class_ID = 'FoTB'};

@@ -25,11 +25,11 @@
 //
 
 #include "htrdf.h"
-#include "CGrayBevelView.h"
+#include "CAMSavvyBevelView.h"
 
 
 class CNavCenterTitle 
-	: public CGrayBevelView, public LListener
+	: public CAMSavvyBevelView, public LListener
 {
 public:
 	
@@ -50,7 +50,7 @@ protected:
 		// Provide access to the LCaption that displays the title
 	LCaption& TitleCaption ( ) { return *mTitle; }
 	const LCaption& TitleCaption ( ) const { return *mTitle; }
-		
+	
 private:
 
 	LCaption* mTitle;

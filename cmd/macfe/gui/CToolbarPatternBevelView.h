@@ -20,11 +20,11 @@
 
 #pragma once
 
-#include "CPatternBevelView.h"
+#include "CAMSavvyBevelView.h"
 #include "CToolbarModeManager.h"
 
 class CToolbarPatternBevelView
-	:	public CPatternBevelView,
+	:	public CAMSavvyBevelView,
 		public CToolbarButtonContainer
 {
 	public:

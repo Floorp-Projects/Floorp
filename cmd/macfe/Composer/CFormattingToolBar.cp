@@ -22,7 +22,7 @@
 #include "edt.h"
 
 CFormattingToolBar::CFormattingToolBar(LStream * inStream) 
-							: CPatternBevelView(inStream)
+							: CAMSavvyBevelView(inStream)
 {
 }
 

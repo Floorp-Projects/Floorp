@@ -51,8 +51,7 @@
 // еее General Purpose UI Classes
 	#include "CBevelButton.h"
 	#include "CPatternButton.h"	
-	#include "CGrayBevelView.h"
-	#include "CPatternBevelView.h"
+	#include "CAMSavvyBevelView.h"
 	#include "CPatternButtonPopup.h"
 	#include "CGuidePopupMenu.h"
 	#include "CNavigationButtonPopup.h"
@@ -219,8 +218,7 @@ void RegisterAllBrowserClasses(void)
 	RegisterClass_(CDeluxeBevelButton);
 	RegisterClass_(CPatternButton);
 	RegisterClass_(CPatternButtonPopup);
-	RegisterClass_(CGrayBevelView);
-	RegisterClass_(CPatternBevelView);
+	RegisterClass_(CAMSavvyBevelView);
 	
 		
 	RegisterClass_(CIncludeView);
