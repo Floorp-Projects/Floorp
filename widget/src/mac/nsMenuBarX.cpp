@@ -72,6 +72,7 @@ nsMenuBarX::nsMenuBarX()
     mNumMenus       = 0;
     mParent         = nsnull;
     mIsMenuBarAdded = PR_FALSE;
+    mDocument       = nsnull;
 
     OSStatus status = ::CreateNewMenu(0, 0, &mRootMenu);
     NS_ASSERTION(status == noErr, "nsMenuBarX::nsMenuBarX:  creation of root menu failed.");
@@ -90,12 +91,9 @@ nsMenuBarX::~nsMenuBarX()
     mMenusArray.Clear();    // release all menus
 
     // make sure we unregister ourselves as a document observer
-    nsCOMPtr<nsIWebShell> webShell ( do_QueryReferent(mWebShellWeakRef) );
-    nsCOMPtr<nsIDocument> doc;
-    GetDocument(webShell, getter_AddRefs(doc));
-    if ( doc ) {
+    if ( mDocument ) {
         nsCOMPtr<nsIDocumentObserver> observer ( do_QueryInterface(NS_STATIC_CAST(nsIMenuBar*,this)) );
-        doc->RemoveObserver(observer);
+        mDocument->RemoveObserver(observer);
     }
 
     if (mRootMenu != NULL) {
@@ -227,6 +225,9 @@ nsMenuBarX :: RegisterAsDocumentObserver ( nsIWebShell* inWebShell )
     // register ourselves
     nsCOMPtr<nsIDocumentObserver> observer ( do_QueryInterface(NS_STATIC_CAST(nsIMenuBar*,this)) );
     doc->AddObserver(observer);
+    // also get pointer to doc, just in case webshell goes away
+    // we can still remove ourself as doc observer directly from doc
+    mDocument = doc;
 } // RegisterAsDocumentObesrver
 
 
@@ -584,6 +585,7 @@ nsMenuBarX::StyleRuleRemoved(nsIDocument * aDocument, nsIStyleSheet * aStyleShee
 NS_IMETHODIMP
 nsMenuBarX::DocumentWillBeDestroyed( nsIDocument * aDocument )
 {
+  mDocument = nsnull;
   return NS_OK;
 }
 
