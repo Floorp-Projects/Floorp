@@ -606,7 +606,12 @@ sub on_connect {
     # tell the modules to set up the scheduled commands
     &debug('setting up scheduler...');
     foreach my $module (@modules) {
-        $module->Schedule($event);
+        eval {
+            $module->Schedule($event);
+        };
+        if ($@) {
+            &debug("Warning: An error occured while loading the module:\n$@");
+        }
     }
 
     # enable the drainmsgqueue
@@ -2906,7 +2911,15 @@ sub LoadModule {
         # configure module
         $newmodule->{'channels'} = [@channels];
         &Configuration::Get($cfgfile, $newmodule->configStructure());
-        $newmodule->Schedule($event);
+        eval {
+            $newmodule->Schedule($event);
+        };
+        if ($@) {
+            $self->debug("Warning: An error occured while loading the module:\n$@");
+            if ($requested) {
+                $self->say($event, "Warning: an error occured while loading module '$name'. Ignored.");
+            }
+        }
         $newmodule->saveConfig();
         $self->debug("Successfully loaded module '$name'.");
         if ($requested) {
