@@ -752,7 +752,13 @@ nsBlockFrame::Reflow(nsIPresContext*          aPresContext,
   nsBlockReflowState state(aReflowState, aPresContext, this, aMetrics,
                            NS_BLOCK_MARGIN_ROOT & mState);
 
-  if (eReflowReason_Resize != aReflowState.reason) {
+  // The condition for doing Bidi resolutions includes a test for the
+  // dirtiness flags, because blocks sometimes send a resize reflow
+  // even though they have dirty children, An example where this can
+  // occur is when adding lines to a text control (bugs 95228 and 95400
+  // were caused by not doing Bidi resolution in these cases)
+  if (eReflowReason_Resize != aReflowState.reason ||
+      mState & NS_FRAME_IS_DIRTY || mState & NS_FRAME_HAS_DIRTY_CHILDREN) {
 #ifdef IBMBIDI
     if (! mLines.empty()) {
       PRBool bidiEnabled;
