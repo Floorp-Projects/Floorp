@@ -2786,7 +2786,6 @@ NS_IMETHODIMP nsChromeRegistry::UninstallPackage(const nsACString& aPackageName,
 
           // This overlay entry is for a package that is being uninstalled. Remove the
           // entry from the overlay list.
-          printf("*** uninstall = %s; target = %s\n", uninstallHost.get(), targetHost.get());
           if (targetHost.Equals(uninstallHost))
             container->RemoveElement(element, PR_TRUE);
         }
