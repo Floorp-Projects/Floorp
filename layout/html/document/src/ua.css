@@ -317,6 +317,11 @@ FIELDSET {
 
 // Lists
 
+:BULLET {
+  display: inline;
+  margin-right: 8px;
+}
+
 UL, MENU, DIR {
   display: block;
   margin-right: 0;
@@ -325,6 +330,7 @@ UL, MENU, DIR {
   list-style-type: disc;
   margin-left: 40px;
 }
+
 OL {
   display: block;
   margin-right: 0;
@@ -332,6 +338,25 @@ OL {
   margin-top: auto;
   list-style-type: decimal;
   margin-left: 40px;
+}
+
+LI {
+  display: list-item;
+  list-style-position: inside;
+}
+
+UL LI, OL LI, MENU LI, DIR LI {
+  list-style-position: outside;
+}
+
+// Nested lists have no top/bottom margins
+UL UL,   UL OL,   UL MENU,   UL DIR,
+MENU UL, MENU OL, MENU MENU, MENU DIR,
+DIR UL,  DIR OL,  DIR MENU,  DIR DIR,
+OL UL,   OL OL,   OL MENU,   OL DIR
+{
+  margin-top: 0;
+  margin-bottom: 0;
 }
 
 // 2 deep unordered lists use a circle
@@ -361,26 +386,6 @@ DIR OL DIR,  DIR UL DIR,  DIR MENU DIR,  DIR DIR DIR
 {
   list-style-type: square;
 }
-
-LI {
-  display: list-item;
-  list-style-position: inside;
-  margin-bottom: 0;
-  margin-top: 0;
-}
-UL LI, OL LI, MENU LI, DIR LI {
-  list-style-position: outside;
-}
-:BULLET {
-  display: inline;
-  // Make this be 1/2 the "UL LI { padding-left:}" value above!
-  margin-right: 10px;
-}
-UL UL, UL OL, OL UL, OL OL  {
-  margin-top: 0;
-  margin-bottom: 0;
-}
-
 
 DL {
   display: block;
