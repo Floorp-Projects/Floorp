@@ -83,8 +83,12 @@ sub status
 			}
 		elsif ($type eq "Build")
 			{
-			$state = "Horked" unless ($state ne "Success");
-			$info{$tree}{$build} = $state;
+				if ($state =~ /success/i) {
+					$state = "Success";
+				} else {
+					$state = "Horked";
+				}
+				$info{$tree}{$build} = $state;
 			}
 		}
 	
