@@ -104,7 +104,8 @@ nsXBLEventHandler::~nsXBLEventHandler()
   }
 }
 
-NS_IMPL_ISUPPORTS5(nsXBLEventHandler, nsIDOMKeyListener, nsIDOMMouseListener, nsIDOMMenuListener, nsIDOMFocusListener, nsIDOMScrollListener)
+NS_IMPL_ISUPPORTS6(nsXBLEventHandler, nsIDOMKeyListener, nsIDOMMouseListener, nsIDOMMenuListener, 
+                                      nsIDOMFocusListener, nsIDOMScrollListener, nsIDOMFormListener)
 
 NS_IMETHODIMP
 nsXBLEventHandler::BindingAttached()
@@ -391,6 +392,51 @@ nsresult nsXBLEventHandler::Destroy(nsIDOMEvent* aEvent)
   return NS_OK;
 }
 
+nsresult nsXBLEventHandler::Submit(nsIDOMEvent* aEvent)
+{
+  if (mEventName != NS_LITERAL_STRING("submit"))
+    return NS_OK;
+
+  ExecuteHandler(NS_LITERAL_STRING("submit"), aEvent);
+  return NS_OK;
+}
+
+nsresult nsXBLEventHandler::Reset(nsIDOMEvent* aEvent)
+{
+  if (mEventName != NS_LITERAL_STRING("reset"))
+    return NS_OK;
+
+  ExecuteHandler(NS_LITERAL_STRING("reset"), aEvent);
+  return NS_OK;
+}
+
+nsresult nsXBLEventHandler::Select(nsIDOMEvent* aEvent)
+{
+  if (mEventName != NS_LITERAL_STRING("select"))
+    return NS_OK;
+
+  ExecuteHandler(NS_LITERAL_STRING("select"), aEvent);
+  return NS_OK;
+}
+
+nsresult nsXBLEventHandler::Change(nsIDOMEvent* aEvent)
+{
+  if (mEventName != NS_LITERAL_STRING("change"))
+    return NS_OK;
+
+  ExecuteHandler(NS_LITERAL_STRING("change"), aEvent);
+  return NS_OK;
+}
+
+nsresult nsXBLEventHandler::Input(nsIDOMEvent* aEvent)
+{
+  if (mEventName != NS_LITERAL_STRING("input"))
+    return NS_OK;
+
+  ExecuteHandler(NS_LITERAL_STRING("input"), aEvent);
+  return NS_OK;
+}
+
 
 NS_IMETHODIMP
 nsXBLEventHandler::ExecuteHandler(const nsAReadableString & aEventName, nsIDOMEvent* aEvent)
@@ -566,22 +612,40 @@ nsXBLEventHandler::RemoveEventHandlers()
  
   // Figure out our type.
   PRBool mouse = nsXBLBinding::IsMouseHandler(type);
-  PRBool key = nsXBLBinding::IsKeyHandler(type);
-  PRBool focus = nsXBLBinding::IsFocusHandler(type);
-  PRBool xul = nsXBLBinding::IsXULHandler(type);
-  PRBool scroll = nsXBLBinding::IsScrollHandler(type);
-
-  // Remove the event listener.
-  if (mouse)
+  if (mouse) {
     mEventReceiver->RemoveEventListener(type, (nsIDOMMouseListener*)this, useCapture);
-  else if(key)
+    return;
+  }
+
+  PRBool key = nsXBLBinding::IsKeyHandler(type);
+  if (key) {
     mEventReceiver->RemoveEventListener(type, (nsIDOMKeyListener*)this, useCapture);
-  else if(focus)
+    return;
+  }
+
+  PRBool focus = nsXBLBinding::IsFocusHandler(type);
+  if (focus) {
     mEventReceiver->RemoveEventListener(type, (nsIDOMFocusListener*)this, useCapture);
-  else if(scroll)
-    mEventReceiver->RemoveEventListener(type, (nsIDOMScrollListener*)this, useCapture);
-  else if (xul)
+    return;
+  }
+
+  PRBool xul = nsXBLBinding::IsXULHandler(type);
+  if (xul) {
     mEventReceiver->RemoveEventListener(type, (nsIDOMMenuListener*)this, useCapture);
+    return;
+  }
+
+  PRBool scroll = nsXBLBinding::IsScrollHandler(type);
+  if (scroll) {
+    mEventReceiver->RemoveEventListener(type, (nsIDOMScrollListener*)this, useCapture);
+    return;
+  }
+
+  PRBool form = nsXBLBinding::IsFormHandler(type);
+  if (form) {
+    mEventReceiver->RemoveEventListener(type, (nsIDOMFormListener*)this, useCapture);
+    return;
+  }
 }
 
 /// Helpers that are relegated to the end of the file /////////////////////////////
