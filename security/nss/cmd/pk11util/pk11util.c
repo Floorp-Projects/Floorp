@@ -36,13 +36,16 @@
 #include <string.h>
 
 #if defined(WIN32)
+#undef __STDC__
+#include "fcntl.h"
 #include "io.h"
+#else
+#include <unistd.h>
+#include <sys/fcntl.h>
 #endif
 
 #include "secutil.h"
 
-#include <unistd.h>
-#include <sys/fcntl.h>
 
 #include "nspr.h"
 #include "prtypes.h"
@@ -379,7 +382,7 @@ CK_RV ArrayTemplate(char *bp, char *attributes)
 	char *cur = ap;
 	ConstType type;
 
-	ap = index(ap,',');
+	ap = strchr(ap,',');
 	if (ap) {
 	    *ap++ = 0;
 	}
