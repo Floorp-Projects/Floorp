@@ -161,8 +161,15 @@ function js_who_menu(n,extra,d) {
     }
     l = document.layers['popup'];
     l.src="../registry/who.cgi?email="+n+extra;
-    l.top = d.target.y - 6;
+
+    if(d.target.y > window.innerHeight + window.pageYOffset - l.clip.height) { 
+         l.top = (window.innerHeight + window.pageYOffset - l.clip.height);
+    } else {
+         l.top = d.target.y - 6;
+    }
+
     l.left = d.target.x - 6;
+
     if( l.left + l.clipWidth > window.width ){
         l.left = window.width - l.clipWidth;
     }
@@ -176,12 +183,19 @@ function js_file_menu(dir,file,rev,root,d) {
     }
     l = document.layers['popup'];
     l.src="../registry/file.cgi?file="+file+"&dir="+dir+"&rev="+rev+"&cvsroot="+root+"&linked_text="+d.target.text;
+    
+    if(d.target.y > window.innerHeight + window.pageYOffset - l.clip.height) { 
+         l.top = (window.innerHeight + window.pageYOffset - l.clip.height);
+    } else {
+         l.top = d.target.y - 6;
+    }
 
-    l.top = d.target.y - 6;
     l.left = d.target.x - 6;
+
     if( l.left + l.clipWidth > window.width ){
         l.left = window.width - l.clipWidth;
     }
+
     l.visibility="show";
     return false;
 }
