@@ -165,22 +165,44 @@ nsInstallFolder::SetDirectoryPath(const nsString& aFolderID, const nsString& aRe
     }
     else
     {
+        nsresult rv = NS_OK;
         PRInt32 folderDirSpecID = MapNameToEnum(aFolderID);
         
         switch (folderDirSpecID) 
 		{
             case 100: ///////////////////////////////////////////////////////////  Plugins
-                SetAppShellDirectory(nsSpecialFileSpec::App_PluginsDirectory );
+                if (!nsSoftwareUpdate::GetProgramDirectory())
+                {
+                    SetAppShellDirectory(nsSpecialFileSpec::App_PluginsDirectory );
+                }
+                else
+                {
+                    rv = nsSoftwareUpdate::GetProgramDirectory()->GetFileSpec(mFileSpec);
+                    if (NS_SUCCEEDED(rv))
+                    {
+#ifdef XP_MAC
+                        *mFileSpec += "Plugins";
+#else
+                        *mFileSpec += "plugins";
+                    }
+                    else
+                        mFileSpec = nsnull;
+#endif
+                }
                 break; 
 
             case 101: ///////////////////////////////////////////////////////////  Program
-                mFileSpec = new nsFileSpec( nsSpecialSystemDirectory( nsSpecialSystemDirectory::OS_CurrentProcessDirectory ));
+            case 102: ///////////////////////////////////////////////////////////  Communicator
+                if (!nsSoftwareUpdate::GetProgramDirectory())
+                    mFileSpec = new nsFileSpec( nsSpecialSystemDirectory( nsSpecialSystemDirectory::OS_CurrentProcessDirectory ));
+                else
+                {
+                    rv = nsSoftwareUpdate::GetProgramDirectory()->GetFileSpec(mFileSpec);
+                    if (!NS_SUCCEEDED(rv))
+                        mFileSpec = nsnull;
+                }
                 break;
             
-            case 102: ///////////////////////////////////////////////////////////  Communicator
-                mFileSpec = new nsFileSpec( nsSpecialSystemDirectory( nsSpecialSystemDirectory::OS_CurrentProcessDirectory ));
-                break;
-
             case 103: ///////////////////////////////////////////////////////////  User Pick
                 // we should never be here.
                 mFileSpec = nsnull;
@@ -230,11 +252,41 @@ nsInstallFolder::SetDirectoryPath(const nsString& aFolderID, const nsString& aRe
                 break;
 
             case 110: ///////////////////////////////////////////////////////////  Components
-                SetAppShellDirectory(nsSpecialFileSpec::App_ComponentsDirectory );
+                if (!nsSoftwareUpdate::GetProgramDirectory())
+                    SetAppShellDirectory(nsSpecialFileSpec::App_ComponentsDirectory );
+                else
+                {
+                    rv = nsSoftwareUpdate::GetProgramDirectory()->GetFileSpec(mFileSpec);
+                    if (!NS_SUCCEEDED(rv))
+                        mFileSpec = nsnull;
+                    else
+                    {
+#ifdef XP_MAC
+                        *mFileSpec += "Components";
+#else
+                        *mFileSpec += "components";
+#endif
+                    }
+                }
                 break;
             
             case 111: ///////////////////////////////////////////////////////////  Chrome
-                SetAppShellDirectory(nsSpecialFileSpec::App_ChromeDirectory );
+                if (!nsSoftwareUpdate::GetProgramDirectory())
+                    SetAppShellDirectory(nsSpecialFileSpec::App_ChromeDirectory );
+                else
+                {
+                    rv = nsSoftwareUpdate::GetProgramDirectory()->GetFileSpec(mFileSpec);
+                    if (!NS_SUCCEEDED(rv))
+                        mFileSpec = nsnull;
+                    else
+                    {
+#ifdef XP_MAC
+                        *mFileSpec += "Chrome";
+#else
+                        *mFileSpec += "chrome";
+#endif
+                    }
+                }
                 break;
 
             case 200: ///////////////////////////////////////////////////////////  Win System

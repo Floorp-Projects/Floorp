@@ -31,7 +31,7 @@ include $(DEPTH)/config/autoconf.mk
 
 MODULE = nsxpi
 
-XPIDLSRCS = nsIXPINotifier.idl nsIXPIProgressDlg.idl
+XPIDLSRCS = nsIXPINotifier.idl nsIXPIProgressDlg.idl nsPvtIXPIStubHook.idl
 
 EXPORTS =		             \
         nsIDOMInstallTriggerGlobal.h \
