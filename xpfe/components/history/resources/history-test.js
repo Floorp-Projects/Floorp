@@ -20,8 +20,8 @@
  * Contributor(s): 
  */
 
-function ShowLastPageVisted() {
-    dump("start of ShowLastPageVisted()\n");
+function ShowLastPageVisited() {
+    dump("start of ShowLastPageVisited()\n");
 
     var lastpagevisited = "failure...not set";
     
@@ -34,7 +34,7 @@ function ShowLastPageVisted() {
     }
     if (history) {
       try {
-	lastpagevisited = history.GetLastPageVisted();
+	lastpagevisited = history.GetLastPageVisited();
 	document.getElementById('result').value =  lastpagevisited;
       } 
       catch (ex) {

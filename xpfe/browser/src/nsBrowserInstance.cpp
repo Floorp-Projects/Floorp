@@ -2241,7 +2241,7 @@ nsBrowserContentHandler::~nsBrowserContentHandler()
 {
 }
 
-CMDLINEHANDLER_OTHERS_IMPL(nsBrowserContentHandler,"-chrome","general.startup.browser","Start with browser.",NS_BROWSERSTARTUPHANDLER_CONTRACTID,"Browser Startup Handler", PR_TRUE, PR_FALSE)
+CMDLINEHANDLER_OTHERS_IMPL(nsBrowserContentHandler,"-chrome","general.startup.browser","Load the specified chrome.",NS_BROWSERSTARTUPHANDLER_CONTRACTID,"Browser Startup Handler", PR_TRUE, PR_FALSE)
 
 NS_IMETHODIMP nsBrowserContentHandler::GetChromeUrlForTask(char **aChromeUrlForTask) {
 
@@ -2330,7 +2330,7 @@ NS_IMETHODIMP nsBrowserContentHandler::GetDefaultArgs(PRUnichar **aDefaultArgs)
                 case 2:
                     if (history) {
                         nsXPIDLCString curl;
-                        rv = history->GetLastPageVisted(getter_Copies(curl));
+                        rv = history->GetLastPageVisited(getter_Copies(curl));
                         tmp = NS_ConvertUTF8toUCS2((const char *)curl);
                     }
                     break;

@@ -686,7 +686,7 @@ nsGlobalHistory::SaveLastPageVisited(const char *aURL)
 }
 
 NS_IMETHODIMP
-nsGlobalHistory::GetLastPageVisted(char **_retval)
+nsGlobalHistory::GetLastPageVisited(char **_retval)
 { 
   nsresult rv;
 
