@@ -21,7 +21,7 @@
  * Keith Visco, kvisco@ziplink.net
  *    -- original author.
  *
- * $Id: ProcessorState.h,v 1.12 2001/04/08 14:33:28 peterv%netscape.com Exp $
+ * $Id: ProcessorState.h,v 1.13 2001/04/12 14:04:52 peterv%netscape.com Exp $
  */
 
 
@@ -43,7 +43,7 @@
 /**
  * Class used for keeping the current state of the XSL Processor
  * @author <a href="mailto:kvisco@ziplink.net">Keith Visco</a>
- * @version $Revision: 1.12 $ $Date: 2001/04/08 14:33:28 $
+ * @version $Revision: 1.13 $ $Date: 2001/04/12 14:04:52 $
 **/
 class ProcessorState : public ContextState {
 
@@ -126,17 +126,6 @@ public:
      * Gets the default Namespace URI stack.
     **/ 
     Stack* getDefaultNSURIStack();
-
-    /**
-     * Returns the document base for resolving relative URIs
-    **/ 
-    const String& getDocumentBase();
-
-    /**
-     * Returns the href for the given xsl document by returning
-     * it's reference from the include or import list
-    **/
-    void getDocumentHref(Document* xslDocument, String& documentBase);
 
     /**
      * @return the included xsl document that was associated with the
@@ -241,11 +230,6 @@ public:
      * Sets a new default Namespace URI. This is used for the Result Tree
     **/ 
     void setDefaultNameSpaceURIForResult(const String& nsURI);
-
-    /**
-     * Sets the document base for including and importing stylesheets
-    **/
-    void setDocumentBase(const String& documentBase);
 
     /**
      * Sets the output method. Valid output method options are,
@@ -434,8 +418,6 @@ private:
     //-- default templates
     Element*      dfWildCardTemplate;
     Element*      dfTextTemplate;
-
-    String documentBase;
 
     /**
      * Returns the closest xml:space value for the given node

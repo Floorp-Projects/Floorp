@@ -25,13 +25,13 @@
  *   -- added code in ::resolveFunctionCall to support the
  *      document() function.
  *
- * $Id: ProcessorState.cpp,v 1.24 2001/04/11 15:01:05 axel%pike.org Exp $
+ * $Id: ProcessorState.cpp,v 1.25 2001/04/12 14:04:49 peterv%netscape.com Exp $
  */
 
 /**
  * Implementation of ProcessorState
  * Much of this code was ported from XSL:P
- * @version $Revision: 1.24 $ $Date: 2001/04/11 15:01:05 $
+ * @version $Revision: 1.25 $ $Date: 2001/04/12 14:04:49 $
 **/
 
 #include "ProcessorState.h"
@@ -400,40 +400,6 @@ Stack* ProcessorState::getDefaultNSURIStack() {
 } //-- getDefaultNSURIStack
 
 /**
- * Returns the global document base for resolving relative URIs within
- * the XSL stylesheets
-**/
-const String& ProcessorState::getDocumentBase() {
-    return documentBase;
-} //-- getDocumentBase
-
-/**
- * Returns the href for the given XSL document by looking in the
- * includes and imports lists
- **/
-void ProcessorState::getDocumentHref
-    (Document* xslDocument, String& documentBase)
-{
-
-  documentBase.clear();
-
-  //-- lookup includes
-  StringList* keys = includes.keys();
-  StringListIterator* iter = keys->iterator();
-  while (iter->hasNext()) {
-      String* key = iter->next();
-      TxObjectWrapper* objWrapper
-          = (TxObjectWrapper*)includes.get(*key);
-      if (xslDocument == objWrapper->object) {
-          documentBase.append(*key);
-          break;
-      }
-  }
-  delete iter;
-  delete keys;
-} //-- getDocumentBase
-
-/**
  * @return the included xsl document that was associated with the
  * given href, or null if no document is found
 **/
@@ -674,10 +640,6 @@ void ProcessorState::setDefaultNameSpaceURIForResult(const String& nsURI) {
 /**
  * Sets the document base for use when resolving relative URIs
 **/
-void ProcessorState::setDocumentBase(const String& documentBase) {
-     this->documentBase = documentBase;
-} //-- setDocumentBase
-
 /**
  * Sets the output method. Valid output method options are,
  * "xml", "html", or "text".
