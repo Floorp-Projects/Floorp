@@ -180,40 +180,40 @@ WrapFactory#wrap(Context cx, Scriptable scope, Object obj, Class)}
         return "JavaObject";
     }
 
-    Function getConverter(String converterName) {
-        Object converterFunction = get(converterName, this);
-        if (converterFunction instanceof Function) {
-            return (Function) converterFunction;
-        }
-        return null;
-    }
-
-    Object callConverter(Function converterFunction)
+    public Object getDefaultValue(Class hint)
     {
-        Function f = (Function) converterFunction;
-        return f.call(Context.getContext(), f.getParentScope(),
-                      this, ScriptRuntime.emptyArgs);
-    }
-
-    Object callConverter(String converterName)
-    {
-        Function converter = getConverter(converterName);
-        if (converter == null) {
-            return javaObject.toString();
-        }
-        return callConverter(converter);
-    }
-
-    public Object getDefaultValue(Class hint) {
         Object value;
+        if (hint == null) {
+            if (javaObject instanceof Boolean) {
+                hint = ScriptRuntime.BooleanClass;
+            }
+        }
         if (hint == null || hint == ScriptRuntime.StringClass) {
             value = javaObject.toString();
-        } else if (hint == ScriptRuntime.BooleanClass) {
-            value = callConverter("booleanValue");
-        } else if (hint == ScriptRuntime.NumberClass) {
-            value = callConverter("doubleValue");
         } else {
-            throw Context.reportRuntimeError0("msg.default.value");
+            String converterName;
+            if (hint == ScriptRuntime.BooleanClass) {
+                converterName = "booleanValue";
+            } else if (hint == ScriptRuntime.NumberClass) {
+                converterName = "doubleValue";
+            } else {
+                throw Context.reportRuntimeError0("msg.default.value");
+            }
+            Object converterObject = get(converterName, this);
+            if (converterObject instanceof Function) {
+                Function f = (Function)converterObject;
+                value = f.call(Context.getContext(), f.getParentScope(),
+                               this, ScriptRuntime.emptyArgs);
+            } else {
+                if (hint == ScriptRuntime.NumberClass
+                    && javaObject instanceof Boolean)
+                {
+                    boolean b = ((Boolean)javaObject).booleanValue();
+                    value = ScriptRuntime.wrapNumber(b ? 1.0 : 0.0);
+                } else {
+                    value = javaObject.toString();
+                }
+            }
         }
         return value;
     }
