@@ -235,7 +235,7 @@ GetTreeOwner(nsIDocShell* aDocShell, nsIBaseWindow** aBaseWindow)
 /////////////////////////////////////////////////////////////////////////
 
 nsEditorShell::nsEditorShell()
-:  mMailCompose(0)
+:  mMailCompose(PR_FALSE)
 ,  mDisplayMode(eDisplayModeNormal)
 ,  mHTMLSourceMode(PR_FALSE)
 ,  mWebShellWindow(nsnull)
@@ -1622,15 +1622,15 @@ nsEditorShell::SaveDocument(PRBool saveAs, PRBool saveCopy, PRBool *_retval)
         
         // Get existing document title
         nsAutoString title;
-        nsCOMPtr<nsIDOMHTMLDocument> HTMLDoc = do_QueryInterface(doc);
-        if (!HTMLDoc) return NS_ERROR_FAILURE;
-        res = HTMLDoc->GetTitle(title);
+        nsCOMPtr<nsIDOMHTMLDocument> htmlDoc = do_QueryInterface(doc);
+        if (!htmlDoc) return NS_ERROR_FAILURE;
+        res = htmlDoc->GetTitle(title);
         if (NS_FAILED(res)) return res;
         
         if (mustShowFileDialog)
         {
           // Prompt for title ONLY if existing title is empty
-          if ( title.Length() == 0)
+          if (!mMailCompose && (mEditorType == eHTMLTextEditorType) && (title.Length() == 0))
           {
             // Use a "prompt" common dialog to get title string from user
             NS_WITH_SERVICE(nsICommonDialogs, dialog, kCommonDialogsCID, &res); 
@@ -1719,10 +1719,10 @@ nsEditorShell::SaveDocument(PRBool saveAs, PRBool saveCopy, PRBool *_retval)
             {
               // check the current url, use that file name if possible
               nsString urlstring;
-              res = HTMLDoc->GetURL(urlstring);
+              res = htmlDoc->GetURL(urlstring);
 
      //         ?????
-     //         res = HTMLDoc->GetSourceDocumentURL(jscx, uri);
+     //         res = htmlDoc->GetSourceDocumentURL(jscx, uri);
      //         do a QI to get an nsIURL and then call GetFileName()
 
               // if it's not a local file already, grab the current file name
