@@ -26,21 +26,25 @@
 #include "nsIDOMMsgAppCore.idl"
 
 native nsString(nsString*);
+native nsAutoString(nsAutoString&);
 
 [object, uuid(D4779C9A-CAA6-11d2-A6F2-0060B0EB39B5)]
 interface nsIDOMComposeAppCore : nsIDOMBaseAppCore {
 
     void SetWindow(in nsIDOMWindow ptr);
     void SetEditor(in nsIDOMEditorAppCore ptr);
-		void CompleteCallback(in nsString script);
-    void NewMessage(in nsString url, in nsIDOMXULTreeElement tree,
-										in nsIDOMNodeList node, 
-										in nsIDOMMsgAppCore msgAppCore,
-										in long messageType);
-	void SendMessage(in nsString addrTo, in nsString addrCc,
-									 in nsString addrBcc,
-									 in nsString subject, in nsString msg);
-	long SendMessage2();
+    void CompleteCallback(in nsAutoString script);
+    void NewMessage(in nsAutoString url, 
+			in nsIDOMXULTreeElement tree, 
+			in nsIDOMNodeList node, 
+			in nsIDOMMsgAppCore msgAppCore, 
+			in long messageType);
+    void SendMessage(in nsAutoString addrTo, 
+			in nsAutoString addrCc, 
+			in nsAutoString addrBcc, 
+			in nsAutoString subject, 
+			in nsAutoString msg);
+    long SendMessage2();
 };
 
 /* hack to make MsgAppCore visible from AppCore */
