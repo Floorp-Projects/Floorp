@@ -1019,15 +1019,6 @@ nsresult nsBrowserInstance::EndDocumentLoad(nsIDOMWindow *aDOMWindow,
   // XXX Ignore rv for now. They are using nsIEnumerator instead of
   // nsISimpleEnumerator.
 
-  /* To satisfy a request from the QA group */
-  nsCOMPtr<nsIInputStream> postData;
-  if (NS_SUCCEEDED(aStatus)) {
-    // Remember post data for http channels.
-    nsCOMPtr<nsIHTTPChannel> httpChannel(do_QueryInterface(aChannel));
-    if (httpChannel)
-      httpChannel->GetUploadStream(getter_AddRefs(postData));
-  }
-
 //#ifdef DEBUG
   if (NS_SUCCEEDED(aStatus)) {
     fprintf(stdout, "Document %s loaded successfully\n", urlCString.get());
@@ -1037,8 +1028,6 @@ nsresult nsBrowserInstance::EndDocumentLoad(nsIDOMWindow *aDOMWindow,
     fflush(stdout);
   }
 //#endif
-
-  SetPostData(postData);
 
   return NS_OK;
 }
@@ -1616,17 +1605,3 @@ static nsModuleComponentInfo components[] = {
 
 NS_IMPL_NSGETMODULE("nsBrowserModule", components)
 
-
-NS_IMETHODIMP
-nsBrowserInstance::GetPostData( nsIInputStream **aResult ) {
-    NS_ENSURE_ARG_POINTER( aResult );
-    *aResult = mPostData;
-    NS_IF_ADDREF( *aResult );
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-nsBrowserInstance::SetPostData( nsIInputStream *aInputStream ) {
-    mPostData = aInputStream;
-    return NS_OK;
-}

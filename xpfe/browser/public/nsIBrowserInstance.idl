@@ -44,7 +44,6 @@ interface nsIBrowserInstance : nsISupports {
     void getContentDocShell(out nsIDocShell aDocShell);
     void setWebShellWindow( in nsIDOMWindowInternal aWindow );
       attribute nsIUrlbarHistory urlbarHistory;
-      attribute nsIInputStream   postData;
     
     // File.
 
