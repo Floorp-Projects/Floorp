@@ -40,11 +40,11 @@ LCFLAGS = \
         $(NULL)
 
 LLIBS = \
-	$(DIST)\lib\raptorweb.lib \
+	$(DIST)\lib\gkweb.lib \
 	$(DIST)\lib\raptorbasewidget_s.lib \
-	$(DIST)\lib\raptorwidget.lib \
+	$(DIST)\lib\gkwidget.lib \
 	$(DIST)\lib\xpcom.lib \
-	$(DIST)\lib\raptorgfxwin.lib \
+	$(DIST)\lib\gkgfxwin.lib \
 	$(DIST)\lib\nsreg.lib \
 	$(DIST)\lib\nspr3.lib \
 	$(DIST)\lib\plds3.lib \
