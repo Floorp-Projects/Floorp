@@ -3023,9 +3023,6 @@ PresShell::NotifyDestroyingFrame(nsIFrame* aFrame)
 
     // Remove frame properties
     mPresContext->PropertyTable()->DeleteAllPropertiesFor(aFrame);
-
-    // Clear anonymous content if any
-    SetAnonymousContentFor(aFrame->GetContent(), nsnull);
   }
 
   return NS_OK;
@@ -4635,10 +4632,7 @@ PresShell::SetAnonymousContentFor(nsIContent* aContent, nsISupportsArray* aAnony
           continue;
         
         content->SetDocument(nsnull, PR_TRUE, PR_TRUE);
-        nsCOMPtr<nsISupports> old_ref = mDocument->RemoveReference(content);
       }
-
-      mAnonymousContentTable->Remove(&key);
     }
   }
 
