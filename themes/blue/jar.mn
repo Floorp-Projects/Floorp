@@ -1,4 +1,4 @@
-skins/modern.jar:
+skins/blue.jar:
     manifest.rdf                                               
     preview.png                                               
     communicator/skin/box.css                                  (communicator/box.css)
@@ -246,6 +246,10 @@ skins/modern.jar:
     messenger/skin/smile.gif                                   (messenger/smile.gif)
     messenger/skin/subscribe.css                               (messenger/subscribe.css)
     messenger/skin/threadPane.css                              (messenger/threadPane.css)
+    messenger/skin/thread-open.gif                             (messenger/thread-open.gif)
+    messenger/skin/thread-closed.gif                           (messenger/thread-closed.gif)
+    messenger/skin/thread-new-open.gif                         (messenger/thread-new-open.gif)
+    messenger/skin/thread-new-closed.gif                       (messenger/thread-new-closed.gif)
     messenger/skin/threadcol.gif                               (messenger/threadcol.gif)
     messenger/skin/trash.gif                                   (messenger/trash.gif)
     messenger/skin/unreadmail.gif                              (messenger/unreadmail.gif)

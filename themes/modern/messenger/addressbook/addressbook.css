@@ -106,11 +106,6 @@ tree {
 	border-left: 1px solid transparent;
 }
 
-treeitem[selected="true"] > treerow { 
-	color: black;
-	background-color: #CCCCCC;
-}
-
 tree[class="abDirectory"] treeitem > treerow > treecell > .tree-icon {
 	list-style-image: url("chrome://messenger/skin/addressbook/myaddrbk.gif");
 }

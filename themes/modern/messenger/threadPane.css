@@ -85,6 +85,22 @@
   list-style-image: url("chrome://messenger/skin/flaggedmail.gif");
 }
 
+treeitem > treerow > .threadcol[value="thread"]{
+  list-style-image: url("chrome://messenger/skin/thread-closed.gif");
+}
+
+treeitem[open="true"] > treerow > .threadcol[value="thread"]{
+  list-style-image: url("chrome://messenger/skin/thread-open.gif");
+}
+
+treeitem > treerow > .threadcol[value="threadWithUnread"]{
+  list-style-image: url("chrome://messenger/skin/thread-new-closed.gif");
+}
+
+treeitem[open="true"] > treerow > .threadcol[value="threadWithUnread"]{
+  list-style-image: url("chrome://messenger/skin/thread-new-open.gif");
+}
+
 treecell.threadColumnHeader[currentView="threaded"] > .tree-header-image {
   list-style-image: url("chrome://messenger/skin/threadcol.gif");
 }
