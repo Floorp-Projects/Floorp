@@ -29,6 +29,10 @@
   list-style-image: url("chrome://editor/skin/icons/btn1.gif");
 }
 
+.toolbarseparator-primary {
+  width: 9px !important;
+}
+
 #newButton {
   -moz-image-region: rect(0 16px 16px 0);
 }
@@ -75,6 +79,22 @@
 
 #saveButton[disabled="true"] {
   -moz-image-region: rect(80px 64px 96px 48px) !important;
+}
+
+#publishButton {
+  -moz-image-region: rect(209px 16px 224px 0);
+}
+
+#publishButton:hover {
+  -moz-image-region: rect(209px 32px 224px 16px);
+}
+
+#publishButton:hover:active {
+  -moz-image-region: rect(209px 48px 224px 32px);
+}
+
+#publishButton[disabled="true"] {
+  -moz-image-region: rect(209px 64px 224px 48px) !important;
 }
 
 #previewButton {

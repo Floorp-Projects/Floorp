@@ -41,12 +41,21 @@
 
 #EditToolbar > .toolbar-holder > .toolbar-primary-icon {
   background-image: url("chrome://editor/skin/icons/mast-editor.gif");
+  width: 57px;
+}
+
+.toolbar-primary-icon {
+  width: 57px;
 }
 
 /* ::::: primary toolbar buttons ::::: */
 
 .toolbarbutton-1 {
   list-style-image: url("chrome://editor/skin/icons/btn1.gif");
+}
+
+.toolbarseparator-primary {
+  width: 9px !important;
 }
 
 #newButton {
@@ -95,6 +104,22 @@
 
 #saveButton[disabled="true"] {
   -moz-image-region: rect(238px 199px 271px 150px) !important;
+}
+
+#publishButton {
+  -moz-image-region: rect(340px 49px 373px 0);
+}
+
+#publishButton:hover {
+  -moz-image-region: rect(340px 99px 373px 50px);
+}
+
+#publishButton:hover:active {
+  -moz-image-region: rect(340px 149px 373px 100px);
+}
+
+#publishButton[disabled="true"] {
+  -moz-image-region: rect(340px 199px 373px 150px) !important;
 }
 
 #previewButton {
