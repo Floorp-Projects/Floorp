@@ -175,6 +175,7 @@ void nsToolkit::Kill()
 
     // interrupt message flow
     close_port(eventport);
+    delete_sem(syncsem);
   }
 }
 

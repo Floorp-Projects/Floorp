@@ -225,8 +225,12 @@ NS_IMETHODIMP nsAppShell::Run()
 
 NS_IMETHODIMP nsAppShell::Exit()
 {
+#ifdef DEBUG
+  fprintf(stderr, "nsAppShell::Exit() called\n");
+#endif
   // interrupt message flow
   close_port(eventport);
+  delete_sem(syncsem);
 
   return NS_OK;
 }
