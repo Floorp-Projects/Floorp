@@ -30,34 +30,33 @@ DEFINES += -D_IMPL_NS_HTML
 
 # Note the sophisticated alphabetical ordering :-|
 CPPSRCS =				\
-	nsFormControlHelper.cpp			\
-	nsComboboxControlFrame.cpp			\
-	nsListControlFrame.cpp			\
-	nsFormFrame.cpp			\
-	nsFormControlFrame.cpp		\
-	nsButtonControlFrame.cpp	\
-	nsCheckboxControlFrame.cpp	\
-	nsFileControlFrame.cpp		\
-	nsRadioControlFrame.cpp		\
-  nsTextControlFrame.cpp  	\
-	nsNativeTextControlFrame.cpp  	\
-  nsGfxTextControlFrame.cpp  	\
-	nsNativeSelectControlFrame.cpp        \
-	nsFieldSetFrame.cpp   \
-	nsLegendFrame.cpp   \
-	nsHTMLButtonControlFrame.cpp   \
-	nsLabelFrame.cpp   \
+	nsButtonControlFrame.cpp \
+	nsButtonFrameRenderer.cpp \
+	nsCheckboxControlFrame.cpp \
+	nsComboboxControlFrame.cpp \
+	nsFieldSetFrame.cpp \
+	nsFileControlFrame.cpp \
+	nsFormControlFrame.cpp \
+	nsFormControlHelper.cpp \
+	nsFormFrame.cpp \
+	nsGfxButtonControlFrame.cpp \
+	nsGfxCheckboxControlFrame.cpp \
+	nsGfxRadioControlFrame.cpp \
+	nsGfxTextControlFrame.cpp \
+	nsHTMLButtonControlFrame.cpp \
 	nsImageControlFrame.cpp \
-  nsButtonFrameRenderer.cpp \
-  nsGfxButtonControlFrame.cpp \
-  nsGfxCheckboxControlFrame.cpp \
-  nsGfxRadioControlFrame.cpp \
-  nsNativeButtonControlFrame.cpp \
-  nsNativeCheckboxControlFram.cpp \
-  nsNativeFormControlFrame.cpp \
-  nsNativeRadioControlFrame.cpp \
-  nsNativeSelectControlFrame.cpp \
-  nsRadioControlGroup.cpp \
+	nsLabelFrame.cpp \
+	nsLegendFrame.cpp \
+	nsListControlFrame.cpp \
+	nsNativeButtonControlFrame.cpp \
+	nsNativeCheckboxControlFram.cpp \
+	nsNativeFormControlFrame.cpp \
+	nsNativeRadioControlFrame.cpp \
+	nsNativeSelectControlFrame.cpp \
+	nsNativeTextControlFrame.cpp \
+	nsRadioControlFrame.cpp \
+	nsRadioControlGroup.cpp \
+	nsTextControlFrame.cpp \
 	$(NULL)
 
 MODULE=layout
