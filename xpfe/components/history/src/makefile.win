@@ -25,7 +25,6 @@ REQUIRES	= xpcom string rdf mork pref necko intl timer appcomps
 
 CPP_OBJS=                               \
  .\$(OBJDIR)\nsGlobalHistory.obj        \
- .\$(OBJDIR)\nsHistoryLoadListener.obj   \
  $(NULL)
 
 LIBRARY_NAME=history_s
