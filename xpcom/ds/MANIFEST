@@ -1,4 +1,3 @@
-nsAVLTree.h
 nsAtomService.h
 nsCppSharedAllocator.h
 nsCRT.h

@@ -42,7 +42,6 @@ CPPSRCS		= \
 		nsArena.cpp \
 		nsAtomTable.cpp \
 		nsAtomService.cpp \
-		nsAVLTree.cpp \
 		nsByteBuffer.cpp \
 		nsCRT.cpp \
 		nsConjoiningEnumerator.cpp \
@@ -75,7 +74,6 @@ CPPSRCS		= \
 		$(NULL)
 
 EXPORTS		= \
-		nsAVLTree.h \
 		nsAtomService.h \
 		nsCppSharedAllocator.h \
 		nsCRT.h \

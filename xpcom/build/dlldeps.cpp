@@ -65,7 +65,6 @@
 #include "nsIFileSpec.h"
 #include "nsILocalFile.h"
 #include "nsIGenericFactory.h"
-#include "nsAVLTree.h"
 #include "nsHashtableEnumerator.h"
 #include "nsIPipe.h"
 #include "nsCWeakReference.h"
@@ -94,14 +93,6 @@
 #endif
 #include "nsVariant.h"
 
-class dummyComparitor: public nsAVLNodeComparitor {
-public:
-  virtual PRInt32 operator()(void* anItem1,void* anItem2)
-  {
-    return 0;
-  }
-}; 
-
 #ifdef DEBUG
 extern NS_COM void
 TestSegmentedBuffer();
@@ -112,7 +103,6 @@ void XXXNeverCalled()
     nsTextFormatter::snprintf(nsnull,0,nsnull);
     nsTextFormatter::smprintf(nsnull, nsnull);
     nsTextFormatter::smprintf_free(nsnull);
-    dummyComparitor dummy;
     nsVoidArray();
     nsSmallVoidArray();
     nsStringHashSet();
@@ -120,7 +110,6 @@ void XXXNeverCalled()
     nsInt32HashSet();
     nsVoidHashSet();
     nsValueArray(0);
-    nsAVLTree(dummy, nsnull);
     nsSupportsArray();
     NS_GetNumberOfAtoms();
     nsFileURL(NULL);
