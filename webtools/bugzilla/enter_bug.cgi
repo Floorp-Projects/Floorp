@@ -180,7 +180,7 @@ sub pickos {
             /\(.*Windows 2000.*\)/ && do {return "Windows 2000";};
             /\(.*Windows NT 5.*\)/ && do {return "Windows 2000";};
             /\(.*Windows.*NT.*\)/ && do {return "Windows NT";};
-            /\(.*Win.*98.*4\.9.*\)/ && do {return "Windows ME";};
+            /\(.*Win.*9[8x].*4\.9.*\)/ && do {return "Windows ME";};
             /\(.*Win98.*\)/ && do {return "Windows 98";};
             /\(.*Win95.*\)/ && do {return "Windows 95";};
             /\(.*Win16.*\)/ && do {return "Windows 3.1";};
