@@ -409,27 +409,14 @@ void PR_CALLBACK ProxyEvent::DestroyPLEvent(PLEvent* aEvent)
   delete ev;
 }
 
-/*
-#if defined(XP_UNIX)
-extern PLEventQueue* gWebShell_UnixEventQueue;
-#endif
-*/
 
 void ProxyEvent::Fire(PLEventQueue* aEventQ) 
 {
-  PLEventQueue* eventQueue;
   InitEvent();
 
-#if defined(XP_PC) || defined (XP_UNIX)
   NS_PRECONDITION(nsnull != aEventQ, "PLEventQueue for thread is null");
-  eventQueue = aEventQ;
-/*
-#elif defined(XP_UNIX)
-  eventQueue = gWebShell_UnixEventQueue;
-*/
-#endif
 
-  PL_PostEvent(eventQueue, this);
+  PL_PostEvent(aEventQ, this);
 }
 
 
