@@ -94,6 +94,7 @@ void  nsSBCSGroupProber::Reset(void)
     mProbers[i]->Reset();
     mIsActive[i] = PR_TRUE;
   }
+  mActiveNum = NUM_OF_SBCS_PROBERS;
   mBestGuess = -1;
   mState = eDetecting;
 }
