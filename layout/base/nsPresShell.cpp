@@ -3969,60 +3969,61 @@ PresShell::GoToAnchor(const nsAString& aAnchorName, PRBool aScroll)
   if (content) {
     // Flush notifications so we scroll to the right place
     if (aScroll) {
-      mDocument->FlushPendingNotifications(Flush_Layout);
-    }
-    
-    // Get the primary frame
-    nsIFrame* frame = nsnull;
-    if (aScroll &&
-        NS_SUCCEEDED(GetPrimaryFrameFor(content, &frame)) &&
-        frame) {
+      mDocument->FlushPendingNotifications(Flush_Layout);   
+      // Get the primary frame
+      nsIFrame* frame = nsnull;
+      GetPrimaryFrameFor(content, &frame);
+      NS_ENSURE_TRUE(frame, NS_ERROR_FAILURE);
       rv = ScrollFrameIntoView(frame, NS_PRESSHELL_SCROLL_TOP,
                                NS_PRESSHELL_SCROLL_ANYWHERE);
+      NS_ENSURE_SUCCESS(rv, rv);
+    }
 
-      if (NS_SUCCEEDED(rv)) {
-        // Should we select the target? This action is controlled by a
-        // preference: the default is to not select.
-        PRBool selectAnchor =
-          nsContentUtils::GetBoolPref("layout.selectanchor");
+    // Should we select the target? This action is controlled by a
+    // preference: the default is to not select.
+    PRBool selectAnchor = nsContentUtils::GetBoolPref("layout.selectanchor");
 
-        // Even if select anchor pref is false, we must still move the
-        // caret there. That way tabbing will start from the new
-        // location
-        if (!jumpToRange) {
-          jumpToRange = do_CreateInstance(kRangeCID);
-          nsCOMPtr<nsIDOMNode> node(do_QueryInterface(content));
-          if (jumpToRange && node) 
-            jumpToRange->SelectNode(node);
+    // Even if select anchor pref is false, we must still move the
+    // caret there. That way tabbing will start from the new
+    // location
+    if (!jumpToRange) {
+      jumpToRange = do_CreateInstance(kRangeCID);
+      if (jumpToRange) {
+        while (content && content->GetChildCount() > 0) {
+          content = content->GetChildAt(0);
         }
-        if (jumpToRange) {
-          if (!selectAnchor)
-            jumpToRange->Collapse(PR_TRUE);
-
-          nsCOMPtr<nsISelection> sel;
-          if (NS_SUCCEEDED(
-              GetSelection(nsISelectionController::SELECTION_NORMAL,
-                           getter_AddRefs(sel))) &&
-              sel) {
-            sel->RemoveAllRanges();
-            sel->AddRange(jumpToRange);
-          }
-          
-          if (selectAnchor && xpointerResult) {
-            // Select the rest (if any) of the ranges in XPointerResult
-            PRUint32 count, i;
-            xpointerResult->GetLength(&count);
-            for (i = 1; i < count; i++) { // jumpToRange is i = 0
-              nsCOMPtr<nsIDOMRange> range;
-              xpointerResult->Item(i, getter_AddRefs(range));
-              sel->AddRange(range);
-            }
-          }
-        }
-        
-        PRBool isSelectionWithFocus;
-        esm->ChangeFocusWith(nsnull, nsIEventStateManager::eEventFocusedByApplication);
+        nsCOMPtr<nsIDOMNode> node(do_QueryInterface(content));
+        NS_ASSERTION(node, "No nsIDOMNode for descendent of anchor");
+        jumpToRange->SelectNodeContents(node);
       }
+    }
+    if (jumpToRange) {
+      // Select the anchor
+      nsCOMPtr<nsISelection> sel;
+      if (NS_SUCCEEDED(
+          GetSelection(nsISelectionController::SELECTION_NORMAL,
+                        getter_AddRefs(sel))) &&
+          sel) {
+        sel->RemoveAllRanges();
+        sel->AddRange(jumpToRange);
+        if (!selectAnchor) {
+          // Use a caret (collapsed selection) at the start of the anchor
+          sel->CollapseToStart();
+        }
+      }  
+
+      if (selectAnchor && xpointerResult) {
+        // Select the rest (if any) of the ranges in XPointerResult
+        PRUint32 count, i;
+        xpointerResult->GetLength(&count);
+        for (i = 1; i < count; i++) { // jumpToRange is i = 0
+          nsCOMPtr<nsIDOMRange> range;
+          xpointerResult->Item(i, getter_AddRefs(range));
+          sel->AddRange(range);
+        }
+      }
+      // Selection is at anchor, but put focus on the document
+      esm->ChangeFocusWith(nsnull, nsIEventStateManager::eEventFocusedByApplication);
     }
   } else {
     rv = NS_ERROR_FAILURE; //changed to NS_OK in quirks mode if ScrollTo is called
