@@ -27,6 +27,8 @@
 
 #include "nsMailboxUrl.h"
 #include "nsMailboxProtocol.h"
+#include "nsMailDatabase.h"
+#include "nsMsgKeyArray.h"
 
 nsMailboxService::nsMailboxService()
 {
@@ -115,6 +117,37 @@ nsresult nsMailboxService::DisplayMessage(const nsFilePath& aMailboxPath, nsMsgK
 	}
 
 	NS_UNLOCK_INSTANCE();
+
+	return rv;
+}
+
+nsresult nsMailboxService::DisplayMessageNumber(const nsFilePath& aMailboxPath, PRUint32 aMessageNumber, nsISupports * aDisplayConsumer,
+									nsIUrlListener * aUrlListener, nsIURL ** aURL)
+{
+	nsMsgKeyArray msgKeys;
+	nsresult rv = NS_OK;
+	// extract the message key for this message number and turn around and call the other displayMessage method on it...
+	nsMailDatabase * mailDb = nsnull;
+	rv = nsMailDatabase::Open((nsFilePath&) aMailboxPath, PR_FALSE, &mailDb);
+
+	if (NS_SUCCEEDED(rv) && mailDb)
+	{
+		// extract the message key array
+		mailDb->ListAllKeys(msgKeys);
+		if (aMessageNumber < msgKeys.GetSize()) 
+		{
+			nsMsgKey msgKey = msgKeys[aMessageNumber];
+			// okay, we have the msgKey so let's get rid of our db state...
+			mailDb->Release();
+			mailDb = nsnull;
+			rv = DisplayMessage(aMailboxPath, msgKey, nsnull, aDisplayConsumer, aUrlListener, aURL);
+		}
+		else
+			rv = NS_ERROR_FAILURE;
+	}
+
+	if (mailDb) // in case we slipped through the cracks without releasing the db...
+		mailDb->Release();
 
 	return rv;
 }

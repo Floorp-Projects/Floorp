@@ -77,6 +77,14 @@ public:
 	NS_IMETHOD DisplayMessage(const nsFilePath& aMailboxPath, nsMsgKey aMessageKey, const char * aMessageID,
 		nsISupports * aDisplayConsumer, nsIUrlListener * aUrlListener, nsIURL ** aURL) = 0;
 
+	/////////////////////////////////////////////////////////////////////////////////////////////
+	// This is more of a convience function for testing purposes. We want to able to say: display 
+	// message number 'n' in this mailbox without having to go out and get the key for message number 
+	// 'n'. this function simply makes that possible. 
+	/////////////////////////////////////////////////////////////////////////////////////////////
+	NS_IMETHOD DisplayMessageNumber(const nsFilePath& aMailboxPath, PRUint32 aMessageNumber, 
+		nsISupports * aDisplayConsumer,	nsIUrlListener * aUrlListener, nsIURL ** aURL) = 0;
+
 };
 
 #endif /* nsIMailboxService_h___ */

@@ -54,6 +54,9 @@ public:
 	NS_IMETHOD DisplayMessage(const nsFilePath& aMailboxPath, nsMsgKey aMessageKey, const char * aMessageID,
 							  nsISupports * aDisplayConsumer, nsIUrlListener * aUrlListener, nsIURL ** aURL);
 
+	NS_IMETHOD DisplayMessageNumber(const nsFilePath& aMailboxPath, PRUint32 aMessageNumber, nsISupports * aDisplayConsumer,
+									nsIUrlListener * aUrlListener, nsIURL ** aURL);
+
 	////////////////////////////////////////////////////////////////////////////////////////
 	// End suppport for the nsIMailboxService Interface
 	////////////////////////////////////////////////////////////////////////////////////////
