@@ -191,7 +191,7 @@ EXTRA_LIBS = -lsocket
 export LD_RUN_PATH = $(PWD)/$(DIST)/lib
 endif
 
-ifeq ($(OS_ARCH),ReliantUNIX)
+ifeq ($(OS_ARCH),SINIX)
 EXTRA_LIBS = -lsocket -lnsl -lgen -ldl -lresolv /usr/ucblib/libucb.a
 # This hardcodes in the executable programs the directory to find
 # libnspr.so etc. at program startup.  Equivalent to the -R or -rpath
