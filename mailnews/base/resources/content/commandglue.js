@@ -448,6 +448,8 @@ function UpdateStatusMessageCounts(folder)
 
     unreadElement.setAttribute("label", numUnread);
     totalElement.setAttribute("label", numTotal);
+    unreadElement.hidden = false;
+    totalElement.hidden = false;
 
   }
 

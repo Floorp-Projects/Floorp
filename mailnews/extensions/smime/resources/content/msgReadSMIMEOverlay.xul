@@ -52,7 +52,7 @@
       accesskey="&menu_securityStatus.accesskey;" observes="cmd_viewSecurityStatus"/>
   </menupopup>
 
-  <hbox id="status-bar-end-box">
+  <statusbar id="status-bar">
     <statusbarpanel insertbefore="offline-status" class="statusbarpanel-iconic"
       id="signed-status" collapsed="true" oncommand="showMessageReadSecurityInfo();"/>
     <statusbarpanel insertbefore="offline-status" class="statusbarpanel-iconic"
@@ -60,6 +60,6 @@
 
     <stringbundle id="bundle_read_smime" src="chrome://messenger-smime/locale/msgReadSMIMEOverlay.properties"/>
     <stringbundle id="bundle_brand" src="chrome://global/locale/brand.properties"/>
-  </hbox>
+  </statusbar>
 
 </overlay>

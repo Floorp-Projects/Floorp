@@ -1773,16 +1773,14 @@ Rights Reserved.
 </hbox>
 
 <statusbar class="chromeclass-status" id="status-bar"> 
-  <hbox insertbefore="unreadMessageCount" flex="1">
-    <statusbarpanel id="component-bar"/>
-    <statusbarpanel id="statusText" label="&statusText.label;" flex="1"/>
-    <statusbarpanel class="statusbarpanel-progress">
-      <progressmeter class="progressmeter-statusbar" id="statusbar-icon" mode="normal" value="0" oncommand="dumpProgress()"/>
-    </statusbarpanel>
-  </hbox>
-  <hbox insertafter="totalMessageCount" id="status-bar-end-box">
-    <statusbarpanel checkfunc="MailCheckBeforeOfflineChange()" id="offline-status" class="statusbarpanel-iconic"/> 
-  </hbox>
+  <statusbarpanel id="component-bar"/>
+  <statusbarpanel id="statusText" label="&statusText.label;" crop="right" flex="1"/>
+  <statusbarpanel class="statusbarpanel-progress">
+    <progressmeter class="progressmeter-statusbar" id="statusbar-icon" mode="normal" value="0" oncommand="dumpProgress()"/>
+  </statusbarpanel>
+  <statusbarpanel id="unreadMessageCount" hidden="true"/>
+  <statusbarpanel id="totalMessageCount" hidden="true"/>
+  <statusbarpanel checkfunc="MailCheckBeforeOfflineChange()" id="offline-status" class="statusbarpanel-iconic"/> 
 </statusbar> 
 
 

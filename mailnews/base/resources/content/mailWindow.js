@@ -525,6 +525,8 @@ function ShowAccountCentral()
     {
         var acctCentralPage = pref.getComplexValue("mailnews.account_central_page.url",
                                                    Components.interfaces.nsIPrefLocalizedString).data;
+        GetUnreadCountElement().hidden = true;
+        GetTotalCountElement().hidden = true;
         switch (gPaneConfig)
         {
             case 0:

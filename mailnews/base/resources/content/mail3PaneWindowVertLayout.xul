@@ -190,10 +190,6 @@ Rights Reserved.
 
   </hbox>
 
-	<statusbar id="status-bar" class="mailwindow-statusbar">
-		<statusbarpanel id="unreadMessageCount" style="min-width: 5px"/>
-		<statusbarpanel id="totalMessageCount" style="min-width: 5px"/>
-	</statusbar>
-	
+  <statusbar id="status-bar" class="chromeclass-status mailwindow-statusbar"/>
 	
 </window>
