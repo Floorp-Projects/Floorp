@@ -127,6 +127,16 @@ use Bugzilla::Config qw(:DEFAULT :admin);
 use vars qw( $db_name %answer );
 
 ###########################################################################
+# Non-interactive override
+###########################################################################
+my $silent;
+if ($ARGV[0]) {
+    do $ARGV[0] 
+        or ($@ && die("Error $@ processing $ARGV[0]"))
+        or die("Error $! processing $ARGV[0]");
+    $silent = 1;
+}
+###########################################################################
 # Check required module
 ###########################################################################
 
@@ -134,7 +144,7 @@ use vars qw( $db_name %answer );
 # Here we check for --MODULES--
 #
 
-print "\nChecking perl modules ...\n";
+print "\nChecking perl modules ...\n" unless $silent;
 unless (eval "require 5.005") {
     die "Sorry, you need at least Perl 5.005\n";
 }
@@ -175,7 +185,7 @@ sub have_vers {
   my ($pkg, $wanted) = @_;
   my ($msg, $vnum, $vstr);
   no strict 'refs';
-  printf("Checking for %15s %-9s ", $pkg, !$wanted?'(any)':"(v$wanted)");
+  printf("Checking for %15s %-9s ", $pkg, !$wanted?'(any)':"(v$wanted)") unless $silent;
 
   eval { my $p; ($p = $pkg . ".pm") =~ s!::!/!g; require $p; };
 
@@ -193,7 +203,7 @@ sub have_vers {
   }
 
   my $vok = (vers_cmp($vnum,$wanted) > -1);
-  print ((($vok) ? "ok: " : " "), "$vstr\n");
+  print ((($vok) ? "ok: " : " "), "$vstr\n") unless $silent;
   return $vok;
 }
 
@@ -253,21 +263,21 @@ unless (have_vers("CGI::Carp",0))    { $missing{'CGI::Carp'} = 0 }
 $::SIG{__DIE__} = $saved_die_handler;
 $::SIG{__WARN__} = $saved_warn_handler;
 
-print "\nThe following Perl modules are optional:\n";
+print "\nThe following Perl modules are optional:\n" unless $silent;
 my $charts = 0;
 $charts++ if have_vers("GD","1.19");
 $charts++ if have_vers("Chart::Base","0.99");
 my $xmlparser = have_vers("XML::Parser",0);
 
-print "\n";
-if ($charts != 2) {
+print "\n" unless $silent;
+if (($charts != 2) && !$silent) {
     print "If you you want to see graphical bug dependency charts, you may install\n",
     "the optional libgd and the Perl modules GD-1.19 and Chart::Base-0.99b, e.g. by\n",
     "running (as root)\n\n",
     "   perl -MCPAN -e'install \"LDS/GD-1.19.tar.gz\"'\n",
     "   perl -MCPAN -e'install \"N/NI/NINJAZ/Chart-0.99b.tar.gz\"'\n\n";
 }
-if (!$xmlparser) {
+if (!$xmlparser && !$silent) {
     print "If you want to use the bug import/export feature to move bugs to or from\n",
     "other bugzilla installations, you will need to install the XML::Parser module by\n",
     "running (as root)\n\n",
@@ -318,13 +328,8 @@ if (%missing) {
 # Cute, ey?
 #
 
-print "Checking user setup ...\n";
+print "Checking user setup ...\n" unless $silent;
 $@ = undef;
-if ($ARGV[0]) {
-    do $ARGV[0] 
-        or ($@ && die("Error $@ processing $ARGV[0]"))
-        or die("Error $! processing $ARGV[0]");
-}
 do 'localconfig';
 if ($@) { # capture errors in localconfig, bug 97290
    print STDERR <<EOT;
@@ -605,7 +610,7 @@ my @my_priorities = @{*{$main::{'priorities'}}{ARRAY}};
 my @my_platforms = @{*{$main::{'platforms'}}{ARRAY}};
 my @my_opsys = @{*{$main::{'opsys'}}{ARRAY}};
 
-if ($my_webservergroup) {
+if ($my_webservergroup && !$silent) {
     if ($< != 0) { # zach: if not root, yell at them, bug 87398 
         print <<EOF;
 
@@ -624,7 +629,7 @@ EOF
     # However, if we're being run on windows, then this option doesn't
     # really make sense. Doesn't make it any more secure either, though,
     # but don't print the message, since they can't do anything about it.
-    if ($^O !~ /MSWin32/i) {
+    if (($^O !~ /MSWin32/i) && !$silent) {
         print <<EOF;
 
 ********************************************************************************
@@ -963,7 +968,7 @@ END
     }
 
     {
-        print "Precompiling templates ...\n";
+        print "Precompiling templates ...\n" unless $silent;
 
         use File::Find;
 
@@ -1210,7 +1215,7 @@ if ($my_db_check) {
       or die "Can't connect to the $db_base database. Is the database " .
         "installed and\nup and running?  Do you have the correct username " .
         "and password selected in\nlocalconfig?\n\n";
-    printf("Checking for %15s %-9s ", "MySQL Server", "(v$sql_want)");
+    printf("Checking for %15s %-9s ", "MySQL Server", "(v$sql_want)") unless $silent;
     my $qh = $dbh->prepare("SELECT VERSION()");
     $qh->execute;
     my ($sql_vers) = $qh->fetchrow_array;
@@ -1219,7 +1224,7 @@ if ($my_db_check) {
     # Check what version of MySQL is installed and let the user know
     # if the version is too old to be used with Bugzilla.
     if ( vers_cmp($sql_vers,$sql_want) > -1 ) {
-        print "ok: found v$sql_vers\n";
+        print "ok: found v$sql_vers\n" unless $silent;
     } else {
         die "Your MySQL server v$sql_vers is too old./n" . 
             "   Bugzilla requires version $sql_want or later of MySQL.\n" . 
@@ -1283,7 +1288,7 @@ if( Param('webdotbase') && Param('webdotbase') !~ /^https?:/ ) {
     }
 }
 
-print "\n";
+print "\n" unless $silent;
 
 
 ###########################################################################
@@ -1979,7 +1984,9 @@ if ($sth->rows == 0) {
   while(! $admin_ok ) {
     while( $login eq "" ) {
       print "Enter the e-mail address of the administrator: ";
-      $login = $answer{'ADMIN_EMAIL'} or <STDIN>;
+      $login = $answer{'ADMIN_EMAIL'} 
+          || ($silent && die("cant preload ADMIN_EMAIL")) 
+          || <STDIN>;
       chomp $login;
       if(! $login ) {
         print "\nYou DO want an administrator, don't you?\n";
@@ -2003,7 +2010,9 @@ _End_Of_SQL_
     if ($sth->rows > 0) {
       print "$login already has an account.\n";
       print "Make this user the administrator? [Y/n] ";
-      my $ok = $answer{'ADMIN_OK'} or <STDIN>;
+      my $ok = $answer{'ADMIN_OK'} 
+          || ($silent && die("cant preload ADMIN_OK")) 
+          || <STDIN>;
       chomp $ok;
       if ($ok !~ /^n/i) {
         $admin_ok = 1;
@@ -2014,7 +2023,9 @@ _End_Of_SQL_
       }
     } else {
       print "You entered $login.  Is this correct? [Y/n] ";
-      my $ok = $answer{'ADMIN_OK'} or <STDIN>;
+      my $ok = $answer{'ADMIN_OK'} 
+          || ($silent && die("cant preload ADMIN_OK")) 
+          || <STDIN>;
       chomp $ok;
       if ($ok !~ /^n/i) {
         $admin_ok = 1;
@@ -2029,7 +2040,9 @@ _End_Of_SQL_
 
     while( $realname eq "" ) {
       print "Enter the real name of the administrator: ";
-      $realname = $answer{'ADMIN_REALNAME'} or <STDIN>;
+      $realname = $answer{'ADMIN_REALNAME'} 
+          || ($silent && die("cant preload ADMIN_REALNAME")) 
+          || <STDIN>;
       chomp $realname;
       if(! $realname ) {
         print "\nReally.  We need a full name.\n";
@@ -2047,7 +2060,9 @@ _End_Of_SQL_
     while( $pass1 ne $pass2 ) {
       while( $pass1 eq "" || $pass1 !~ /^[a-zA-Z0-9-_]{3,16}$/ ) {
         print "Enter a password for the administrator account: ";
-        $pass1 = $answer{'ADMIN_PASSWORD'} or <STDIN>;
+        $pass1 = $answer{'ADMIN_PASSWORD'} 
+            || ($silent && die("cant preload ADMIN_PASSWORD")) 
+            || <STDIN>;
         chomp $pass1;
         if(! $pass1 ) {
           print "\n\nIt's just plain stupid to not have a password.  Try again!\n";
@@ -2056,7 +2071,9 @@ _End_Of_SQL_
         }
       }
       print "\nPlease retype the password to verify: ";
-      $pass2 = $answer{'ADMIN_PASSWORD'} or <STDIN>;
+      $pass2 = $answer{'ADMIN_PASSWORD'} 
+          || ($silent && die("cant preload ADMIN_PASSWORD")) 
+          || <STDIN>;
       chomp $pass2;
       if ($pass1 ne $pass2) {
         print "\n\nPasswords don't match.  Try again!\n";
@@ -2779,7 +2796,7 @@ $sth = $dbh->prepare("SELECT count(*) from duplicates");
 $sth->execute();
 if (!($sth->fetchrow_arrayref()->[0])) {
         # populate table
-        print("Populating duplicates table...\n");
+        print("Populating duplicates table...\n") unless $silent;
 
         $sth = $dbh->prepare("SELECT longdescs.bug_id, thetext FROM longdescs left JOIN bugs using(bug_id) WHERE (thetext " . 
                 "regexp '[.*.]{3,3} This bug has been marked as a duplicate of [[:digit:]]{1,5} [.*.]{3,3}') AND (resolution = 'DUPLICATE') ORDER" .
@@ -3224,4 +3241,4 @@ if (($fielddef = GetFieldDef("attachments", "creation_ts")) &&
 
 unlink "data/versioncache";
 
-print "Reminder: Bugzilla now requires version 8.7 or later of sendmail.\n";
+print "Reminder: Bugzilla now requires version 8.7 or later of sendmail.\n" unless $silent;
