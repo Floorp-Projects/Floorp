@@ -118,15 +118,6 @@ nsresult nsDeviceContextOS2::Init( nsNativeWidget aWidget)
 
   CommonInit(::WinOpenWindowDC((HWND)aWidget));
 
-// It would seem that Mozilla basically requires that mTwipsToPixels = 1/15 and 
-// mPixelsToTwips = 15. Some side effects from not doing this are boxes drawing
-// wrong and fonts coming out incorrect. We only want to do this for screen,
-// not printing.
-
-  mTwipsToPixels = 1.0f / 15.0f;
-
-  mPixelsToTwips = 1.0f / mTwipsToPixels;
-
   return retval;
 }
 
