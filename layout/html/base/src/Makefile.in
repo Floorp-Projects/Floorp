@@ -66,6 +66,7 @@ CPPSRCS=				\
 EXPORTS =				\
 	nsIHTMLContent.h		\
 	nsILineIterator.h		\
+	nsHTMLParts.h			\
 	$(NULL)
 
 EXPORTS :=  $(addprefix $(srcdir)/, $(EXPORTS))

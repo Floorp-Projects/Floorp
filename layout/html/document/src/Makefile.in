@@ -40,6 +40,7 @@ INCLUDES += \
 # Note the sophisticated alphabetical ordering :-|
 CPPSRCS =				\
 	nsHTMLContentSink.cpp		\
+	nsHTMLFragmentContentSink.cpp	\
 	nsHTMLDocument.cpp		\
 	nsFrameFrame.cpp			\
 	nsFrameSetFrame.cpp		\

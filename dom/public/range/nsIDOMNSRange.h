@@ -24,6 +24,7 @@
 #include "nsString.h"
 #include "nsIScriptContext.h"
 
+class nsIDOMDocumentFragment;
 
 #define NS_IDOMNSRANGE_IID \
  { 0xa6cf90f2, 0x15b3, 0x11d2, \
@@ -33,20 +34,20 @@ class nsIDOMNSRange : public nsISupports {
 public:
   static const nsIID& GetIID() { static nsIID iid = NS_IDOMNSRANGE_IID; return iid; }
 
-  NS_IMETHOD    InsertFragment(const nsString& aFragment)=0;
+  NS_IMETHOD    CreateContextualFragment(const nsString& aFragment, nsIDOMDocumentFragment** aReturn)=0;
 
   NS_IMETHOD    IsValidFragment(const nsString& aFragment, PRBool* aReturn)=0;
 };
 
 
 #define NS_DECL_IDOMNSRANGE   \
-  NS_IMETHOD    InsertFragment(const nsString& aFragment);  \
+  NS_IMETHOD    CreateContextualFragment(const nsString& aFragment, nsIDOMDocumentFragment** aReturn);  \
   NS_IMETHOD    IsValidFragment(const nsString& aFragment, PRBool* aReturn);  \
 
 
 
 #define NS_FORWARD_IDOMNSRANGE(_to)  \
-  NS_IMETHOD    InsertFragment(const nsString& aFragment) { return _to InsertFragment(aFragment); }  \
+  NS_IMETHOD    CreateContextualFragment(const nsString& aFragment, nsIDOMDocumentFragment** aReturn) { return _to CreateContextualFragment(aFragment, aReturn); }  \
   NS_IMETHOD    IsValidFragment(const nsString& aFragment, PRBool* aReturn) { return _to IsValidFragment(aFragment, aReturn); }  \
 
 

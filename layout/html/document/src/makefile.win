@@ -29,6 +29,7 @@ DEFINES = $(DEFINES) -DXP_NEW_SELECTION
 CPPSRCS=					\
 	nsHTMLContentSink.cpp			\
 	nsHTMLDocument.cpp			\
+	nsHTMLFragmentContentSink.cpp		\
 	nsFrameFrame.cpp				\
 	nsFrameSetFrame.cpp			\
 	nsImageDocument.cpp			\
@@ -38,6 +39,7 @@ CPPSRCS=					\
 CPP_OBJS=					\
 	.\$(OBJDIR)\nsHTMLContentSink.obj	\
 	.\$(OBJDIR)\nsHTMLDocument.obj		\
+	.\$(OBJDIR)\nsHTMLFragmentContentSink.cpp	\
 	.\$(OBJDIR)\nsFrameFrame.obj		\
 	.\$(OBJDIR)\nsFrameSetFrame.obj		\
 	.\$(OBJDIR)\nsImageDocument.obj		\

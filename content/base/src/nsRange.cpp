@@ -36,6 +36,9 @@
 #include "nsIParser.h"
 #include "nsIComponentManager.h"
 #include "nsParserCIID.h"
+#include "nsIHTMLFragmentContentSink.h"
+// XXX Temporary inclusion to deal with fragment parsing
+#include "nsHTMLParts.h"
 
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 static NS_DEFINE_IID(kIScriptObjectOwnerIID, NS_ISCRIPTOBJECTOWNER_IID);
@@ -1713,13 +1716,97 @@ nsresult nsRange::TextOwnerChanged(nsIContent* aTextNode, PRInt32 aStartChanged,
 
 // nsIDOMNSRange interface
 NS_IMETHODIMP    
-nsRange::InsertFragment(const nsString& aFragment)
+nsRange::CreateContextualFragment(const nsString& aFragment, 
+                                  nsIDOMDocumentFragment** aReturn)
 {
-#ifdef NS_DEBUG
-  printf("InsertFragment: not yet implemented!!\n");
-#endif
+  nsresult result = NS_OK;
+  nsCOMPtr<nsIParser> parser;
+  nsITagStack* tagStack;
 
-  return NS_OK;
+  if (!mIsPositioned) {
+    return NS_ERROR_FAILURE;
+  }
+
+  // Create a new parser for this entire operation
+  result = nsComponentManager::CreateInstance(kCParserCID, 
+                                              nsnull, 
+                                              kCParserIID, 
+                                              (void **)getter_AddRefs(parser));
+  if (NS_SUCCEEDED(result)) {
+    result = parser->CreateTagStack(&tagStack);
+
+    if (NS_SUCCEEDED(result)) {
+      nsCOMPtr<nsIDOMNode> parent;
+      nsCOMPtr<nsIContent> content(do_QueryInterface(mStartParent, &result));
+
+      if (NS_SUCCEEDED(result)) {
+        nsCOMPtr<nsIDocument> document;
+        
+        result = content->GetDocument(*getter_AddRefs(document));
+        
+        if (NS_SUCCEEDED(result)) {
+          nsCOMPtr<nsIDOMDocument> domDocument(do_QueryInterface(document, &result));
+
+          if (NS_SUCCEEDED(result)) {
+            parent = mStartParent;
+            while (parent && 
+                   (parent != domDocument) && 
+                   NS_SUCCEEDED(result)) {
+              nsCOMPtr<nsIDOMNode> temp;
+              nsAutoString tagName;
+              PRUnichar* name = nsnull;
+              
+              parent->GetNodeName(tagName);
+              // XXX Wish we didn't have to allocate here
+              name = tagName.ToNewUnicode();
+              if (nsnull != name) {
+                tagStack->Push(name);
+                temp = parent;
+                result = temp->GetParentNode(getter_AddRefs(parent));
+              }
+              else {
+                result = NS_ERROR_OUT_OF_MEMORY;
+              }
+            }
+            
+            if (NS_SUCCEEDED(result)) {
+              nsAutoString contentType;
+              nsIHTMLFragmentContentSink* sink;
+                
+              result = NS_NewHTMLFragmentContentSink(&sink);
+              if (NS_SUCCEEDED(result)) {
+                parser->SetContentSink(sink);
+                document->GetContentType(contentType);
+
+                result = parser->ParseFragment(aFragment, (void*)0,
+                                               *tagStack,
+                                               0, contentType);
+                
+                if (NS_SUCCEEDED(result)) {
+                  sink->GetFragment(aReturn);
+                }
+                
+                NS_RELEASE(sink);
+              }
+            }
+          }
+        }
+      }
+        
+      // XXX Ick! Delete strings we allocated above.
+      PRUnichar* str = nsnull;
+      str = tagStack->Pop();
+      while (nsnull != str) {
+        delete[] str;
+        str = tagStack->Pop();
+      }
+      
+      // XXX Double Ick! Deleting something that someone else newed.
+      delete tagStack;
+    }
+  }
+
+  return result;
 }
 
 NS_IMETHODIMP    
