@@ -115,10 +115,12 @@ button.edit-mode > .button-internal-box > .button.icon:hover:active
 
 .button-toolbar
     {
+      behavior			  : url(chrome://global/content/xulBindings.xml#buttonleft);
       min-width           : 24px;
       margin              : 1px 0px;
       border              : 1px solid transparent;
       background-color	  : transparent;
+      padding			  : 0px;
     }
 
 .button-toolbar:hover
@@ -132,6 +134,7 @@ button.edit-mode > .button-internal-box > .button.icon:hover:active
       vertical-align      : middle;
       text-align          : center;
       border              : 1px solid transparent;
+      background-color	  : transparent;
   }
 
 .button-toolbar > .button-internal-box > .button-text-container
@@ -154,7 +157,12 @@ button.edit-mode > .button-internal-box > .button.icon:hover:active
       border-top          : 1px solid #FFFFFF;
       border-right        : 1px solid #9D9D9D;
       border-bottom       : 1px solid #9D9D9D;
-      background-color	  : #D8D8D8;
+      background-color	  : transparent;
+    }
+
+  .button-toolbar:hover:active
+    {
+    	padding			  : 0px;
     }
 
   .button-toolbar:hover:active > .button-internal-box

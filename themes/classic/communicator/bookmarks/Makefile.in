@@ -44,6 +44,7 @@ EXPORT_RESOURCE_SAMPLES = \
         personal-folder-closed.gif \
         personal-folder-open.gif \
         location.gif \
+        location-hover.gif \
         $(NULL)
 
 include $(topsrcdir)/config/rules.mk

@@ -171,7 +171,13 @@ window[chromehidden~="extrachrome"] .chromeclass-extrachrome {
   {
 	  list-style-image      : url("chrome://communicator/skin/bookmarks/location.gif"); 
 	  cursor                : grab;
+      margin                : 0px 2px 0px 0px;
   } 
+
+#page-proxy-button:hover
+  {
+	  list-style-image      : url("chrome://communicator/skin/bookmarks/location-hover.gif");
+  }
 
 #ubhist-keyword-popup 
   {

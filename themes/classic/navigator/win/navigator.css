@@ -183,6 +183,11 @@ window[chromehidden~="extrachrome"] .chromeclass-extrachrome {
     margin                : 0px 2px 0px 0px;
   } 
 
+#page-proxy-button:hover
+  {
+	  list-style-image      : url("chrome://communicator/skin/bookmarks/location-hover.gif");
+  }
+
 #content-frame 
   {
     min-width             : 0px;

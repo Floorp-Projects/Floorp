@@ -156,7 +156,7 @@
   .button-toolbar-2[disabled="true"]:hover > .button-internal-box,
   .button-toolbar-2[disabled="true"]:hover:active > .button-internal-box
     {
-      padding             : 2px 6px 2px 5px !important;
+      padding             : 2px 6px 2px 5px;
       border              : 1px solid transparent !important;
       color				  : #777777;
       background-color	  : transparent;
