@@ -69,4 +69,53 @@ NET_CookieWarningPrefChanged(const char * newpref, void * data);
 MODULE_PRIVATE int PR_CALLBACK
 NET_CookieScriptPrefChanged(const char * newpref, void * data);
 
+
+/*============================================================================================
+    THIS IS THE BEGINNING OF TRUST.H WHICH IDEALLY SHOULD BE A SEPERATE FILE
+  ============================================================================================*/
+#ifndef TRUSTLABEL_H
+#define TRUSTLABEL_H 1
+#ifdef TRUST_LABELS
+
+/* the structure that the iterators use to pass back the processed trust label
+ * associated with this struct is a constructor and destructor and some methods */
+typedef struct {
+	short purpose;			/* the purpose range encoded in bits 0-5 */
+	short ID;			/* the id value */
+	short recipients;		/* the Recipients value */
+	Bool  isGeneric;		/* true if this is a generic label i.e. applies to all cookies */
+	Bool  isSigned;			/* true if this label was signed and the signature verified */ 
+	PRTime ExpDate;			/* the expiration date in local time */
+	char  *signatory;		/* who signed the label if it was signed */
+	char  *domainName;		/* the applicable domain for the label */
+	char  *path;			/* the path for the label */
+	char  *szTrustAuthority;	/* the trust authority rating service  */
+	XP_List  *nameList;		/* the list of names of the specific cookies that this label is for */
+	char  *szBy;			/* the by field from the PICS label */
+	char  *szURL;			/* the url that this trust label is for */
+	time_t TimeStamp;		/* when the entry was created, used for cleaning up stall entries */
+} TrustLabel;
+
+TrustLabel *TL_Construct();
+void TL_Destruct( TrustLabel *ALabel );
+void TL_ProcessForAttrib( TrustLabel *ALabel, char *szFor);
+void TL_SetSignatory( TrustLabel *ALabel, char *Signatory );
+void TL_SetTrustAuthority( TrustLabel *ALabel, char *TrustAuthority );
+void TL_SetByField( TrustLabel *ALabel, char *ByField );
+void TL_SetURLField( TrustLabel *ALabel, char *URLField );
+
+/* utility function that use TrustLabel */
+void PICS_ExtractTrustLabel( URL_Struct *URL_s, char *value );
+Bool IsTrustLabelsEnabled(void);
+PUBLIC Bool MatchCookieToLabel2(  char *CurURL,  char *CookieName,
+	char *CookiePath, char *CookieHost, 
+	TrustLabel **TheLabel );
+
+#endif
+
+#endif
+
+
+
+
 #endif /* MKACCESS_H */
