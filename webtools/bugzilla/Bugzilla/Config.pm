@@ -25,6 +25,7 @@
 #                 J. Paul Reed <preed@sigkill.com>
 #                 Bradley Baetz <bbaetz@student.usyd.edu.au>
 #                 Christopher Aillon <christopher@aillon.com>
+#                 Erik Stambaugh <erik@dasbistro.com>
 
 package Bugzilla::Config;
 
@@ -215,6 +216,12 @@ sub UpdateParams {
     # Modularise auth code
     if (exists $param{'useLDAP'} && !exists $param{'loginmethod'}) {
         $param{'loginmethod'} = $param{'useLDAP'} ? "LDAP" : "DB";
+    }
+
+    # set verify method to whatever loginmethod was
+    if (exists $param{'loginmethod'} && !exists $param{'user_verify_method'}) {
+        $param{'user_verify_method'} = $param{'loginmethod'};
+        delete $param{'loginmethod'};
     }
 
     # --- DEFAULTS FOR NEW PARAMS ---

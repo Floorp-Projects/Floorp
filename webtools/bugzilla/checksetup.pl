@@ -27,6 +27,7 @@
 #                 Bradley Baetz <bbaetz@student.usyd.edu.au>
 #                 Tobias Burnus <burnus@net-b.de>
 #                 Gervase Markham <gerv@gerv.net>
+#                 Erik Stambaugh <erik@dasbistro.com>
 #
 #
 # Direct any questions on this source code to
@@ -1492,10 +1493,12 @@ END { $dbh->disconnect if $dbh }
 # Check for LDAP
 ###########################################################################
 
-if (Param('loginmethod') eq 'LDAP') {
-    my $netLDAP = have_vers("Net::LDAP", 0);
-    if (!$netLDAP && !$silent) {
-        print "If you wish to use LDAP authentication, then you must install Net::LDAP\n\n";
+for my $verifymethod (split /,\s*/, Param('user_verify_method')) {
+    if ($verifymethod eq 'LDAP') {
+        my $netLDAP = have_vers("Net::LDAP", 0);
+        if (!$netLDAP && !$silent) {
+            print "If you wish to use LDAP authentication, then you must install Net::LDAP\n\n";
+        }
     }
 }
 

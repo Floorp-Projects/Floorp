@@ -18,6 +18,7 @@
 # Rights Reserved.
 #
 # Contributor(s): Bradley Baetz <bbaetz@student.usyd.edu.au>
+#                 Erik Stambaugh <erik@dasbistro.com>
 #
 
 package Bugzilla;
@@ -52,6 +53,10 @@ sub user {
     return $_user;
 }
 
+
+
+my $current_login_method = undef;
+
 sub login {
     my ($class, $type) = @_;
 
@@ -66,12 +71,18 @@ sub login {
 
     $type = LOGIN_NORMAL unless defined $type;
 
-    # For now, we can only log in from a cgi
-    # One day, we'll be able to log in via apache auth, an email message's
-    # PGP signature, and so on
+    # Log in using whatever methods are defined in user_info_method
 
-    use Bugzilla::Auth::CGI;
-    my $userid = Bugzilla::Auth::CGI->login($type);
+    my $userid;
+    for my $method (split(/,\s*/, Param('user_info_method'))) {
+        require "Bugzilla/Auth/Login/" . $method . ".pm";
+        $userid = "Bugzilla::Auth::Login::$method"->login($type);
+        if ($userid) {
+            $current_login_method = "Bugzilla::Auth::Login::$method";
+            last;
+        }
+    }
+
     if ($userid) {
         $_user = new Bugzilla::User($userid);
 
@@ -97,11 +108,14 @@ sub logout {
     }
     $option = LOGOUT_CURRENT unless defined $option;
 
-    use Bugzilla::Auth::CGI;
-    Bugzilla::Auth::CGI->logout($_user, $option);
-    if ($option != LOGOUT_KEEP_CURRENT) {
-        Bugzilla::Auth::CGI->clear_browser_cookies();
-        logout_request();
+    # $current_login_method is defined when the user's login information is
+    # found.  If it's not defined, the user shouldn't be logged in.
+    if ($current_login_method) {
+        $current_login_method->logout($_user, $option);
+        if ($option != LOGOUT_KEEP_CURRENT) {
+                $current_login_method->clear_browser_cookies();
+            logout_request();
+        }
     }
 }
 
@@ -109,8 +123,9 @@ sub logout_user {
     my ($class, $user) = @_;
     # When we're logging out another user we leave cookies alone, and
     # therefore avoid calling logout() directly.
-    use Bugzilla::Auth::CGI;
-    Bugzilla::Auth::CGI->logout($user, LOGOUT_ALL);
+    if ($current_login_method) {
+        $current_login_method->logout($_user, LOGOUT_ALL);
+    }
 }
 
 # just a compatibility front-end to logout_user that gets a user by id
@@ -127,7 +142,7 @@ sub logout_request {
     # XXX clean these up eventually
     delete $::COOKIE{"Bugzilla_login"};
     # NB - Can't delete from $cgi->cookie, so the logincookie data will
-    # remain there; it's only used in Bugzilla::Auth::CGI->logout anyway
+    # remain there; it's only used in Bugzilla::Auth::Login::CGI->logout anyway
     # People shouldn't rely on the cookie param for the username
     # - use Bugzilla->user instead!
 }
