@@ -476,8 +476,9 @@ ImageFrame::TriggerLink(nsIPresContext& aPresContext,
                         const nsString& aTargetSpec,
                         PRBool aClick)
 {
-  nsILinkHandler* handler;
-  if (NS_OK == aPresContext.GetLinkHandler(&handler)) {
+  nsILinkHandler* handler = nsnull;
+  aPresContext.GetLinkHandler(&handler);
+  if (nsnull != handler) {
     if (aClick) {
       handler->OnLinkClick(this, aURLSpec, aTargetSpec);
     }
