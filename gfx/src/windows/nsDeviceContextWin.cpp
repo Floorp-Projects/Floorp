@@ -319,7 +319,7 @@ NS_IMETHODIMP nsDeviceContextWin :: GetScrollBarDimensions(float &aWidth, float 
   return NS_OK;
 }
 
-nsresult GetSysFontInfo(HDC aHDC, nsSystemAttrID anID, nsFont* aFont) 
+nsresult nsDeviceContextWin :: GetSysFontInfo(HDC aHDC, nsSystemAttrID anID, nsFont* aFont) const
 {
   NONCLIENTMETRICS ncm;
   HGDIOBJ hGDI;
@@ -433,8 +433,19 @@ nsresult GetSysFontInfo(HDC aHDC, nsSystemAttrID anID, nsFont* aFont)
     aFont->decorations |= NS_FONT_DECORATION_LINE_THROUGH;
   }
 
-  // Do Size
-  int pointSize = -MulDiv(ptrLogFont->lfHeight, 72, ::GetDeviceCaps(aHDC, LOGPIXELSY));
+  // Do Point Size
+  //
+  // The lfHeight is in pixel and it needs to be adjusted for the
+  // device it will be "displayed" on
+  // Screens and Printers will differe in DPI
+  //
+  // So this accounts for the difference in the DeviceContexts
+  // The mPixelScale will be a "1" for the screen and could be
+  // any value when going to a printer, for example mPixleScale is
+  // 6.25 when going to a 600dpi printer.
+  LONG logHeight = LONG((float(ptrLogFont->lfHeight) * mPixelScale)+0.5); // round up
+
+  int pointSize = -MulDiv(logHeight, 72, ::GetDeviceCaps(aHDC, LOGPIXELSY));
   //printf("\n\n Default Font size: %dpt\n", pointSize);
   // As far as I can tell the Default size 8pt
   // increase it by 2 points to match Windows GUI
