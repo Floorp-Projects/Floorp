@@ -24,14 +24,15 @@
 
 #include "nsISupports.idl"
 
+interface nsIDOMWindow;
+
 [scriptable, uuid(577CB745-8CAF-11d3-AAEF-00805F8A4905)]
 interface nsISidebar : nsISupports
 {
-    void init();
-    void open();
+
+    void setWindow (in nsIDOMWindow aWindow);
     void addPanel(in wstring aTitle, in string aContentURL,
                   in string aCustomizeURL);
-    void setPanelTitle(in wstring aTitle);
 };
 
 %{ C++
