@@ -784,7 +784,7 @@ sub BuildDist()
         
         DelayFor(5);
         
-        print "\nClobbering all files inside :mozilla:dist:\n";
+        print "Clobbering all files inside :mozilla:dist:\n";
         EmptyTree($distdirectory.":");
     }
     else

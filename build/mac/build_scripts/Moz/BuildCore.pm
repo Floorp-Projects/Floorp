@@ -341,7 +341,9 @@ sub RunBuild($$$$)
         $package_name =~ s/\.pm$//;
         
         chdir($main::MOZ_SRC);
+        my($dist_time) = TimeStart();
         &{$package_name."::BuildDist"}();
+        TimeEnd($dist_time, "Building dist");
         
         chdir($main::MOZ_SRC);
         &{$package_name."::BuildProjects"}();
