@@ -447,10 +447,6 @@ static SECStatus DecodeItem(void* dest,
                      const SEC_ASN1Template* templateEntry,
                      SECItem* src, QuickAlloc* pool, PRBool checkTag);
 
-static SECStatus DecodePointer(void* dest,
-                     const SEC_ASN1Template* templateEntry,
-                     SECItem* src, QuickAlloc* pool, PRBool checkTag);
-
 static SECStatus DecodeSequence(void* dest,
                      const SEC_ASN1Template* templateEntry,
                      SECItem* src, QuickAlloc* pool)
@@ -511,25 +507,6 @@ static SECStatus DecodeInline(void* dest,
                             inlineTemplate, src, pool, PR_TRUE);
 }
 
-static SECStatus DecodeImplicit(void* dest,
-                     const SEC_ASN1Template* templateEntry,
-                     SECItem* src, QuickAlloc* pool)
-{
-    if (templateEntry->kind & SEC_ASN1_POINTER)
-    {
-        return DecodePointer((void*)((char*)dest ),
-                             templateEntry, src, pool, PR_FALSE);
-    }
-    else
-    {
-        const SEC_ASN1Template* implicitTemplate =
-            SEC_ASN1GetSubtemplate (templateEntry, dest, PR_FALSE);
-
-        return DecodeItem((void*)((char*)dest + templateEntry->offset),
-                          implicitTemplate, src, pool, PR_FALSE);
-    }
-}
-
 static SECStatus DecodePointer(void* dest,
                      const SEC_ASN1Template* templateEntry,
                      SECItem* src, QuickAlloc* pool, PRBool checkTag)
@@ -546,6 +523,25 @@ static SECStatus DecodePointer(void* dest,
     {
         PORT_SetError(SEC_ERROR_NO_MEMORY);
         return SECFailure;
+    }
+}
+
+static SECStatus DecodeImplicit(void* dest,
+                     const SEC_ASN1Template* templateEntry,
+                     SECItem* src, QuickAlloc* pool)
+{
+    if (templateEntry->kind & SEC_ASN1_POINTER)
+    {
+        return DecodePointer((void*)((char*)dest ),
+                             templateEntry, src, pool, PR_FALSE);
+    }
+    else
+    {
+        const SEC_ASN1Template* implicitTemplate =
+            SEC_ASN1GetSubtemplate (templateEntry, dest, PR_FALSE);
+
+        return DecodeItem((void*)((char*)dest + templateEntry->offset),
+                          implicitTemplate, src, pool, PR_FALSE);
     }
 }
 
