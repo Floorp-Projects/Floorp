@@ -253,7 +253,7 @@ static JSValue String_indexOf(Context *cx, const JSValue& thisValue, JSValue *ar
         if (arg1 < 0)
             pos = 0;
         else
-            if (arg1 >= str->size()) 
+            if ((uint32)arg1 >= str->size()) 
                 pos = str->size();
             else
                 pos = arg1;
