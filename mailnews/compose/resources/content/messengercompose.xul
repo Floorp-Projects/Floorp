@@ -255,49 +255,28 @@
 	</toolbar>
 
     <!-- The Following toolbar has been imported from editorAppShell.xul -->
-    <toolbar>
-      <!-- Most of the message handlers don't work! -->
-      <html:select class="combobox" size="1" id="paraFormat" onchange="OnChangeParaFormat()">
-        <html:optgroup>
-          <html:option onclick="SetParagraphFormat('normal')">Normal </html:option>
-          <html:option onclick="SetParagraphFormat('h1')">Heading 1 </html:option>
-          <html:option onclick="SetParagraphFormat('h2')">Heading 2 </html:option>
-          <html:option onclick="SetParagraphFormat('h3')">Heading 3 </html:option>
-          <html:option onclick="SetParagraphFormat('h4')">Heading 4 </html:option>
-          <html:option onclick="SetParagraphFormat('h5')">Heading 5 </html:option>
-          <html:option onclick="SetParagraphFormat('h6')">Heading 6 </html:option>
-          <html:option onclick="SetParagraphFormat('address')">Address </html:option>
-          <html:option onclick="SetParagraphFormat('li')">List Item</html:option>
-          <html:option onclick="SetParagraphFormat('dt')">Definition Term </html:option>
-          <html:option onclick="SetParagraphFormat('dd')">Definition Description </html:option>
-        </html:optgroup>
-      </html:select>
-      <html:select class="combobox" size="1" id="fontSize" onchange="OnChangeFontSize()">
-        <html:optgroup label="fontSize">
-          <!-- The ... after number compensates for input width bug -->
-          <html:option>-2...</html:option>
-          <html:option>-1...</html:option>
-          <html:option> 0...</html:option>
-          <html:option>+1...</html:option>
-          <html:option>+2...</html:option>
-          <html:option>+3...</html:option>
-          <html:option>+4...</html:option>
-        </html:optgroup>
-      </html:select>
-		  <titledbutton align="left" class="popup" value="Color"/>
-      <titledbutton src="chrome://editor/skin/images/ED_Bold.gif" align="bottom" onclick="EditorApplyStyle('b')">
-		    <observes element="Editor:Style:IsBold" attribute="bold" onchange="onBoldChange()"/>
-      </titledbutton>
-	    <titledbutton src="chrome://editor/skin/images/ED_Italic.gif" align="bottom" onclick="EditorApplyStyle('i')"/>
-	    <titledbutton src="chrome://editor/skin/images/ED_Underline.gif" align="bottom" onclick="EditorApplyStyle('u')"/>
-	    <titledbutton src="chrome://editor/skin/images/ED_ClearStyle.gif" align="bottom" onclick="EditorRemoveStyle('all')"/>
-	    <titledbutton src="chrome://editor/skin/images/ED_Bullets.gif" align="bottom" onclick="EditorInsertList('ul')"/>
-	    <titledbutton src="chrome://editor/skin/images/ED_Numbers.gif" align="bottom" onclick="EditorInsertList('ol')"/>
-	    <titledbutton src="chrome://editor/skin/images/ED_Indent.gif" align="bottom" onclick="EditorIndent('indent')"/>
-	    <titledbutton src="chrome://editor/skin/images/ED_Left.gif" align="bottom" class="popup" onclick="EditorAlign('left')"/>
-	    <titledbutton src="chrome://editor/skin/images/ED_Link.gif" align="bottom" onclick="EditorInsertLink()"/>
-	    <titledbutton src="chrome://editor/skin/images/ED_Image.gif" align="bottom" onclick= "EditorInsertImage()"/>
-    </toolbar>
+      <toolbar>
+		    <titledbutton id="ParagraphPopup" value="Paragraph" class="popup" align="left" popup="ParagraphMenu"/>
+		    <titledbutton id="FontFacePopup" value="Font" class="popup" align="left" popup="FontFaceMenu"/>
+		    <titledbutton id="FontSizePopup" value="Size" class="popup" align="left" popup="FontSizeMenu"/>
+		    <titledbutton id="TextColorPopup" src="chrome://editor/skin/images/ED_TextColor.gif" class="popup" popup="TextColorMenu"/>
+		    <titledbutton id="BackColorPopup" src="chrome://editor/skin/images/ED_BackColor.gif" class="popup" popup="BackColorMenu"/>
+        <titledbutton id="BoldButton" src="chrome://editor/skin/images/ED_Bold.gif" align="bottom" onclick="EditorApplyStyle('b')">
+		      <observes element="Editor:Style:IsBold" attribute="bold" onchange="onBoldChange()"/>
+        </titledbutton>
+	      <titledbutton src="chrome://editor/skin/images/ED_Italic.gif" align="bottom" onclick="EditorApplyStyle('i')"/>
+	      <titledbutton src="chrome://editor/skin/images/ED_Underline.gif" align="bottom" onclick="EditorApplyStyle('u')"/>
+	      <titledbutton src="chrome://editor/skin/images/ED_ClearStyle.gif" align="bottom" onclick="EditorRemoveStyle('all')"/>
+	      <titledbutton src="chrome://editor/skin/images/ED_Bullets.gif" align="bottom" onclick="EditorInsertList('ul')"/>
+	      <titledbutton src="chrome://editor/skin/images/ED_Numbers.gif" align="bottom" onclick="EditorInsertList('ol')"/>
+	      <titledbutton src="chrome://editor/skin/images/ED_Outdent.gif" align="bottom" onclick="EditorIndent('outdent')"/>
+	      <titledbutton src="chrome://editor/skin/images/ED_Indent.gif" align="bottom" onclick="EditorIndent('indent')"/>
+	      <titledbutton src="chrome://editor/skin/images/ED_Align.gif" align="bottom" class="popup" popup="AlignmentMenu"/>
+	      <titledbutton src="chrome://editor/skin/images/ED_Link.gif" align="bottom" onclick="EditorInsertLink()"/>
+	      <titledbutton src="chrome://editor/skin/images/ED_Image.gif" align="bottom" onclick= "EditorInsertImage()"/>
+	      <titledbutton src="chrome://editor/skin/images/ED_HLine.gif" align="bottom" onclick= "EditorInsertHLine()"/>
+	      <titledbutton src="chrome://editor/skin/images/ED_Spell.gif" align="bottom" class="popup" onclick="CheckSpelling()"/>
+      </toolbar>
 </toolbox>
 
     <!-- The main mail three pane frame -->
