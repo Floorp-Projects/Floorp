@@ -480,6 +480,8 @@ NS_IMETHODIMP nsWebBrowser::Create()
 {
    NS_ENSURE_STATE(!mDocShell && (mParentNativeWindow || mParentWidget));
 
+   NS_ENSURE_SUCCESS(EnsureDocShellTreeOwner(), NS_ERROR_FAILURE);
+
    nsCOMPtr<nsIWidget> docShellParentWidget(mParentWidget);
    if(!mParentWidget) // We need to create a widget
       {
@@ -519,6 +521,7 @@ NS_IMETHODIMP nsWebBrowser::Create()
 
    mDocShellAsItem->SetName(mInitInfo->name.GetUnicode());
    mDocShellAsItem->SetItemType(nsIDocShellTreeItem::typeContent);
+   mDocShellAsItem->SetTreeOwner(mDocShellTreeOwner);
 
    if(!mInitInfo->sessionHistory)
       mInitInfo->sessionHistory = do_CreateInstance(NS_SHISTORY_PROGID);
