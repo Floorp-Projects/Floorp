@@ -255,6 +255,12 @@ class nsXIFDTD : public nsIDTD {
     virtual PRBool Verify(nsString& aURLRef,nsIParser* aParser);
 
     /**
+     * Give rest of world access to our tag enums, so that CanContain(), etc,
+     * become useful.
+     */
+    NS_IMETHOD StringTagToIntTag(nsString &aTag, PRInt32* aIntTag) const;
+
+    /**
      * Set this to TRUE if you want the DTD to verify its
      * context stack.
      * @update	gess 7/23/98
