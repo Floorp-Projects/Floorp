@@ -627,18 +627,65 @@ PRBool DoDoubleBuffering(void)
   return doDoublebuffering;
 }
 
+static void ConvertNativeRegionToAppRegion(nsIRegion* aIn, nsRegion* aOut,
+                                           nsIDeviceContext* context)
+{
+  nsRegionRectSet* rects = nsnull;
+  aIn->GetRects(&rects);
+  if (!rects)
+    return;
+  
+  float  p2t;
+  context->GetDevUnitsToAppUnits(p2t);
+
+  PRUint32 i;
+  for (i = 0; i < rects->mNumRects; i++) {
+    const nsRegionRect& inR = rects->mRects[i];
+    nsRect outR(inR.x, inR.y, inR.width, inR.height);
+    outR.ScaleRoundOut(p2t);
+    aOut->Or(*aOut, outR);
+  }
+
+  aIn->FreeRects(rects);
+}
+
 /**
    aRegion is given in device coordinates!!
 */
-void nsViewManager::Refresh(nsView *aView, nsIRenderingContext *aContext, nsIRegion *aRegion, PRUint32 aUpdateFlags)
+void nsViewManager::Refresh(nsView *aView, nsIRenderingContext *aContext,
+                            nsIRegion *aRegion, PRUint32 aUpdateFlags)
 {
-  nsCOMPtr<nsIRenderingContext> localcx;
-  nsDrawingSurface    ds = nsnull;
-
   NS_ASSERTION(aRegion != nsnull, "Null aRegion");
 
   if (PR_FALSE == mRefreshEnabled)
     return;
+
+  nsRect viewRect;
+  aView->GetDimensions(viewRect);
+  // move the view rect into widget pixel coordinates
+  nsRect viewRectInPixels = viewRect;
+  viewRectInPixels.MoveTo(0, 0);
+  float t2p;
+  mContext->GetAppUnitsToDevUnits(t2p);
+  viewRectInPixels.ScaleRoundOut(t2p);
+
+  // Get the damaged area into app coordinates (twips), but the origin is
+  // still the widget origin
+  nsRegion damageRegion;
+  ConvertNativeRegionToAppRegion(aRegion, &damageRegion, mContext);
+  damageRegion.MoveBy(viewRect.x, viewRect.y);
+
+  // Clip it to the view; shouldn't be necessary, but do it for sanity
+  damageRegion.And(damageRegion, viewRect);
+  if (damageRegion.IsEmpty()) {
+#ifdef DEBUG_roc
+    nsRect damageRect = damageRegion.GetBounds();
+    printf("XXX Damage rectangle (%d,%d,%d,%d) does not intersect the widget's view (%d,%d,%d,%d)!\n",
+           damageRect.x, damageRect.y, damageRect.width, damageRect.height,
+           viewRect.x, viewRect.y, viewRect.width, viewRect.height);
+#endif
+    return;
+  }
 
 #ifdef NS_VM_PERF_METRICS
   MOZ_TIMER_DEBUGLOG(("Reset nsViewManager::Refresh(region), this=%p\n", this));
@@ -648,12 +695,11 @@ void nsViewManager::Refresh(nsView *aView, nsIRenderingContext *aContext, nsIReg
   MOZ_TIMER_START(mWatch);
 #endif
 
-  NS_ASSERTION(!(PR_TRUE == mPainting), "recursive painting not permitted");
+  NS_ASSERTION(!mPainting, "recursive painting not permitted");
   if (mPainting) {
     mRecursiveRefreshPending = PR_TRUE;
     return;
   }  
-
   mPainting = PR_TRUE;
 
   //printf("refreshing region...\n");
@@ -662,9 +708,8 @@ void nsViewManager::Refresh(nsView *aView, nsIRenderingContext *aContext, nsIReg
   if (mTransCnt > 0)
     aUpdateFlags |= NS_VMREFRESH_DOUBLE_BUFFER;
 
-  if (!DoDoubleBuffering()) {
+  if (!DoDoubleBuffering())
     aUpdateFlags &= ~NS_VMREFRESH_DOUBLE_BUFFER;
-  }
 
   // check if the rendering context wants double-buffering or not
   if (aContext) {
@@ -678,6 +723,9 @@ void nsViewManager::Refresh(nsView *aView, nsIRenderingContext *aContext, nsIReg
     // Turn off double-buffering of the display
     aUpdateFlags &= ~NS_VMREFRESH_DOUBLE_BUFFER;
   }
+
+  nsCOMPtr<nsIRenderingContext> localcx;
+  nsDrawingSurface    ds = nsnull;
 
   if (nsnull == aContext)
     {
@@ -706,76 +754,48 @@ void nsViewManager::Refresh(nsView *aView, nsIRenderingContext *aContext, nsIReg
     }
   }
 
-  nsRect damageRectInPixels;
-  aRegion->GetBoundingBox(&damageRectInPixels.x, &damageRectInPixels.y,
-                          &damageRectInPixels.width, &damageRectInPixels.height);
+  nsRect damageRect = damageRegion.GetBounds();
+  nsRect damageRectInPixels = damageRect;
+  damageRectInPixels.ScaleRoundOut(t2p);
 
   if (aUpdateFlags & NS_VMREFRESH_DOUBLE_BUFFER)
   {
     nsRect maxWidgetSize;
     GetMaxWidgetBounds(maxWidgetSize);
-    if NS_FAILED(localcx->GetBackbuffer(nsRect(0, 0, damageRectInPixels.width, damageRectInPixels.height), maxWidgetSize, ds)) {
+
+    nsRect r(0, 0, damageRectInPixels.width, damageRectInPixels.height);
+    if (NS_FAILED(localcx->GetBackbuffer(r, maxWidgetSize, ds))) {
       //Failed to get backbuffer so turn off double buffering
       aUpdateFlags &= ~NS_VMREFRESH_DOUBLE_BUFFER;
     }
   }
 
-  nsRect viewRect;
-  aView->GetDimensions(viewRect);
+  if ((aUpdateFlags & NS_VMREFRESH_DOUBLE_BUFFER) && ds) {
+    // backbuffer's (0,0) is mapped to damageRect.x, damageRect.y
+    localcx->Translate(-damageRect.x, -damageRect.y);
+    aRegion->Offset(-damageRectInPixels.x, -damageRectInPixels.y);
+  }
 
-  nsRect damageRect;
-  nsRect paintRect;
-  float  p2t;
-  mContext->GetDevUnitsToAppUnits(p2t);
-  damageRect.x = NSToIntRound(damageRectInPixels.x * p2t);
-  damageRect.y = NSToIntRound(damageRectInPixels.y * p2t);
-  damageRect.width = NSToIntRound(damageRectInPixels.width * p2t);
-  damageRect.height = NSToIntRound(damageRectInPixels.height * p2t);
-  
-  // move the view rect into widget coordinates
-  viewRect.x = 0;
-  viewRect.y = 0;
+  PRBool result;
+  // Note that nsIRenderingContext::SetClipRegion always works in pixel coordinates,
+  // and nsIRenderingContext::SetClipRect always works in app coordinates. Stupid huh?
+  // Also, SetClipRegion doesn't subject its argument to the current transform, but
+  // SetClipRect does.
+  localcx->SetClipRegion(*aRegion, nsClipCombine_kReplace, result);
+  localcx->SetClipRect(damageRect, nsClipCombine_kIntersect, result);
 
-  if (paintRect.IntersectRect(damageRect, viewRect)) {
+  // painting will be done in aView's coordinates, so shift them back to widget coordinates
+  localcx->Translate(-viewRect.x, -viewRect.y);
+  RenderViews(aView, *localcx, damageRegion, result);
+  localcx->Translate(viewRect.x, viewRect.y);
 
-    if ((aUpdateFlags & NS_VMREFRESH_DOUBLE_BUFFER) && ds) {  
-      // backbuffer's (0,0) is mapped to damageRect.x, damageRect.y
-      localcx->Translate(-damageRect.x, -damageRect.y);
-      aRegion->Offset(-damageRectInPixels.x, -damageRectInPixels.y);
-    }
-
-    PRBool result;
-    // Note that nsIRenderingContext::SetClipRegion always works in pixel coordinates,
-    // and nsIRenderingContext::SetClipRect always works in app coordinates. Stupid huh?
+  if ((aUpdateFlags & NS_VMREFRESH_DOUBLE_BUFFER) && ds) {
+    // Setup the region relative to the destination's coordinates
+    aRegion->Offset(damageRectInPixels.x, damageRectInPixels.y);
     localcx->SetClipRegion(*aRegion, nsClipCombine_kReplace, result);
-    localcx->SetClipRect(paintRect, nsClipCombine_kIntersect, result);
-
-    // pass in a damage rectangle in aView's coordinates.
-    nsRect r = paintRect;
-    nsRect dims;
-    aView->GetDimensions(dims);
-    r.x += dims.x;
-    r.y += dims.y;
-
-    // painting will be done in aView's coordinates, so shift them back to widget coordinates
-    localcx->Translate(-dims.x, -dims.y);
-    RenderViews(aView, *localcx, r, result);
-    localcx->Translate(dims.x, dims.y);
-
-    if ((aUpdateFlags & NS_VMREFRESH_DOUBLE_BUFFER) && ds) {
-      // Setup the region relative to the destination's coordinates 
-      aRegion->Offset(damageRectInPixels.x, damageRectInPixels.y);
-      localcx->SetClipRegion(*aRegion, nsClipCombine_kReplace, result);
-      localcx->Translate(damageRect.x, damageRect.y);
-      localcx->SetClipRect(paintRect, nsClipCombine_kIntersect, result);
-      localcx->CopyOffScreenBits(ds, 0, 0, damageRectInPixels, NS_COPYBITS_USE_SOURCE_CLIP_REGION);
-    }
-  } else {
-#ifdef DEBUG_roc
-    printf("XXX Damage rectangle (%d,%d,%d,%d) does not intersect the widget's view (%d,%d,%d,%d)!\n",
-           damageRect.x, damageRect.y, damageRect.width, damageRect.height,
-           viewRect.x, viewRect.y, viewRect.width, viewRect.height);
-#endif
+    localcx->Translate(damageRect.x, damageRect.y);
+    localcx->SetClipRect(damageRect, nsClipCombine_kIntersect, result);
+    localcx->CopyOffScreenBits(ds, 0, 0, damageRectInPixels, NS_COPYBITS_USE_SOURCE_CLIP_REGION);
   }
 
   mPainting = PR_FALSE;
@@ -1036,7 +1056,7 @@ void nsViewManager::AddCoveringWidgetsToOpaqueRegion(nsRegion &aRgn, nsIDeviceCo
   // 
   // NB: we must NOT add widgets that correspond to floating views!
   // We may be required to paint behind them
-  aRgn.Empty();
+  aRgn.SetEmpty();
 
   nsCOMPtr<nsIWidget> widget;
   GetWidgetForView(aRootView, getter_AddRefs(widget));
@@ -1090,16 +1110,17 @@ void nsViewManager::AddCoveringWidgetsToOpaqueRegion(nsRegion &aRgn, nsIDeviceCo
   } while (NS_SUCCEEDED(children->Next()));
 }
 
-void nsViewManager::RenderViews(nsView *aRootView, nsIRenderingContext& aRC, const nsRect& aRect, PRBool &aResult)
+void nsViewManager::RenderViews(nsView *aRootView, nsIRenderingContext& aRC,
+                                const nsRegion& aRegion, PRBool &aResult)
 {
-  BuildDisplayList(aRootView, aRect, PR_FALSE, PR_FALSE);
+  BuildDisplayList(aRootView, aRegion.GetBounds(), PR_FALSE, PR_FALSE);
 
   PRBool anyRendered;
   nsRect finalTransparentRect;
 
   nsRegion opaqueRgn;
   AddCoveringWidgetsToOpaqueRegion(opaqueRgn, mContext, aRootView);
-  OptimizeDisplayList(aRect, finalTransparentRect, opaqueRgn);
+  OptimizeDisplayList(aRegion, finalTransparentRect, opaqueRgn);
 
 #ifdef DEBUG_roc
   // ShowDisplayList(mDisplayListCount);
@@ -1123,6 +1144,12 @@ void nsViewManager::RenderViews(nsView *aRootView, nsIRenderingContext& aRC, con
   PRInt32 index = 0;
   nsRect fakeClipRect;
   OptimizeDisplayListClipping(PR_FALSE, fakeClipRect, index, anyRendered);
+
+#ifdef DEBUG_roc
+  printf("*** mTranslucentArea=%d,%d,%d,%d\n", mTranslucentArea.x, mTranslucentArea.y,
+         mTranslucentArea.width, mTranslucentArea.height);
+  printf("*** gOffscreenSize=%d,%d\n", gOffScreenSize.width, gOffScreenSize.height);
+#endif
     
   // We keep a list of all the rendering contexts whose clip rects
   // need to be updated.
@@ -1133,7 +1160,7 @@ void nsViewManager::RenderViews(nsView *aRootView, nsIRenderingContext& aRC, con
   // create blending buffers, if necessary.
   if (mTranslucentViewCount > 0) {
     nsresult rv = CreateBlendingBuffers(aRC);
-    NS_ASSERTION((rv == NS_OK), "not enough memory to blend");
+    NS_ASSERTION(NS_SUCCEEDED(rv), "not enough memory to blend");
     if (NS_FAILED(rv)) {
       // fall back by just rendering with transparency.
       mTranslucentViewCount = 0;
@@ -1155,8 +1182,8 @@ void nsViewManager::RenderViews(nsView *aRootView, nsIRenderingContext& aRC, con
       mOffScreenCX->FillRect(nsRect(0, 0, gOffScreenSize.width, gOffScreenSize.height));
     }
     // DEBUGGING:  fill in complete offscreen image in green, to see if we've got a blending bug.
-    //mOffScreenCX->SetColor(NS_RGB(0, 255, 0));
-    //mOffScreenCX->FillRect(nsRect(0, 0, gOffScreenSize.width, gOffScreenSize.height));
+    // mOffScreenCX->SetColor(NS_RGB(0, 255, 0));
+    // mOffScreenCX->FillRect(nsRect(0, 0, gOffScreenSize.width, gOffScreenSize.height));
   }
 
   // draw all views in the display list, from back to front.
@@ -1192,13 +1219,13 @@ void nsViewManager::RenderViews(nsView *aRootView, nsIRenderingContext& aRC, con
   // Must flush back when no clipping is in effect.
   if (mTranslucentViewCount > 0) {
     // DEBUG: is this getting through?
-    // mOffScreenCX->SetColor(NS_RGB(0, 0, 0));
-    // mOffScreenCX->DrawRect(nsRect(0, 0, mTranslucentArea.width, mTranslucentArea.height));
+    // mOffScreenCX->SetColor(NS_RGB(177, 177, 0));
+    // mOffScreenCX->FillRect(nsRect(1, 1, mTranslucentArea.width-2, mTranslucentArea.height-2));
     aRC.CopyOffScreenBits(gOffScreen, 0, 0, mTranslucentArea,
                           NS_COPYBITS_XFORM_DEST_VALUES |
                           NS_COPYBITS_TO_BACK_BUFFER);
     // DEBUG: what rectangle are we blitting?
-    // aRC.SetColor(NS_RGB(0, 0, 0));
+    // aRC.SetColor(NS_RGB(0, 177, 177));
     // aRC.DrawRect(mTranslucentArea);
   }
     
@@ -1278,6 +1305,7 @@ void nsViewManager::RenderDisplayListElement(DisplayListElement2* element, nsIRe
         if (NS_FAILED(rv)) {
           NS_WARNING("Blend failed!");
           // let's paint SOMETHING. Paint opaquely
+          damageRect.MoveBy(-viewX, -viewY);
           PaintView(view, *mOffScreenCX, viewX, viewY, damageRect);
         }
       }
@@ -1750,75 +1778,63 @@ NS_IMETHODIMP nsViewManager::DispatchEvent(nsGUIEvent *aEvent, nsEventStatus *aS
       {
         nsView *view = nsView::GetViewFor(aEvent->widget);
 
-        if (nsnull != view)
-          {
-            // Do an immediate refresh
-            if (nsnull != mContext)
-              {
-                // The rect is in device units, and it's in the coordinate space of its
-                // associated window.
-                nsRect& damrect = *((nsPaintEvent*)aEvent)->rect;
+        if (!view || !mContext)
+          break;
 
-                if (damrect.width > 0 && damrect.height > 0)
-                  {
-                    PRUint32   updateFlags = NS_VMREFRESH_DOUBLE_BUFFER;
-                    PRBool     doDefault = PR_TRUE;
+        // The rect is in device units, and it's in the coordinate space of its
+        // associated window.
+        nsCOMPtr<nsIRegion> region = ((nsPaintEvent*)aEvent)->region;
+        if (!region) {
+          if (NS_FAILED(CreateRegion(getter_AddRefs(region))))
+            break;
 
-                    // printf("refreshing: view: %x, %d, %d, %d, %d\n", view, damrect.x, damrect.y, damrect.width, damrect.height);
-                    // Refresh the view
-                    if (mRefreshEnabled) {
-                      nsCOMPtr<nsIRegion> rgn;
-                      nsresult rv = CreateRegion(getter_AddRefs(rgn));
-                      if (NS_SUCCEEDED(rv)) {
-                          // Eventually we would like the platform paint event to include a region
-                          // we can use. This could improve paint performance when the invalid area
-                          // is more complicated than a rectangle. Right now the event's region field
-                          // just contains garbage on some platforms so we can't trust it at all.
-                          // When that gets fixed, we can just change the code right here.
-                          rgn->SetTo(damrect.x, damrect.y, damrect.width, damrect.height);
-                          Refresh(view, ((nsPaintEvent*)aEvent)->renderingContext, rgn, updateFlags);
-                          doDefault = PR_FALSE;
-                      }
-                    }
+          const nsRect& damrect = *((nsPaintEvent*)aEvent)->rect;
+          region->SetTo(damrect.x, damrect.y, damrect.width, damrect.height);
+        }
+        
+        if (region->IsEmpty())
+          break;
 
-                    // since we got an NS_PAINT event, we need to
-                    // draw something so we don't get blank areas.
-                    if (doDefault) {
-                      float p2t;
-                      mContext->GetDevUnitsToAppUnits(p2t);
-                      damrect.ScaleRoundOut(p2t);
-                      DefaultRefresh(view, &damrect);
-
-                      // Clients like the editor can trigger multiple
-                      // reflows during what the user perceives as a single
-                      // edit operation, so it disables view manager
-                      // refreshing until the edit operation is complete
-                      // so that users don't see the intermediate steps.
-                      // 
-                      // Unfortunately some of these reflows can trigger
-                      // nsScrollPortView and nsScrollingView Scroll() calls
-                      // which in most cases force an immediate BitBlt and
-                      // synchronous paint to happen even if the view manager's
-                      // refresh is disabled. (Bug 97674)
-                      //
-                      // Calling UpdateView() here, is neccessary to add
-                      // the exposed region specified in the synchronous paint
-                      // event to  the view's damaged region so that it gets
-                      // painted properly when refresh is enabled.
-                      //
-                      // Note that calling UpdateView() here was deemed
-                      // to have the least impact on performance, since the
-                      // other alternative was to make Scroll() post an
-                      // async paint event for the *entire* ScrollPort or
-                      // ScrollingView's viewable area. (See bug 97674 for this
-                      // alternate patch.)
-
-                      UpdateView(view, damrect, NS_VMREFRESH_NO_SYNC);
-                    }
-                  }
-              }
-            *aStatus = nsEventStatus_eConsumeNoDefault;
-          }
+        // Refresh the view
+        if (mRefreshEnabled) {
+          Refresh(view, ((nsPaintEvent*)aEvent)->renderingContext, region,
+                  NS_VMREFRESH_DOUBLE_BUFFER);
+        } else {
+          // since we got an NS_PAINT event, we need to
+          // draw something so we don't get blank areas.
+          nsRect damRect;
+          region->GetBoundingBox(&damRect.x, &damRect.y, &damRect.width, &damRect.height);
+          float p2t;
+          mContext->GetDevUnitsToAppUnits(p2t);
+          damRect.ScaleRoundOut(p2t);
+          DefaultRefresh(view, &damRect);
+        
+          // Clients like the editor can trigger multiple
+          // reflows during what the user perceives as a single
+          // edit operation, so it disables view manager
+          // refreshing until the edit operation is complete
+          // so that users don't see the intermediate steps.
+          // 
+          // Unfortunately some of these reflows can trigger
+          // nsScrollPortView and nsScrollingView Scroll() calls
+          // which in most cases force an immediate BitBlt and
+          // synchronous paint to happen even if the view manager's
+          // refresh is disabled. (Bug 97674)
+          //
+          // Calling UpdateView() here, is neccessary to add
+          // the exposed region specified in the synchronous paint
+          // event to  the view's damaged region so that it gets
+          // painted properly when refresh is enabled.
+          //
+          // Note that calling UpdateView() here was deemed
+          // to have the least impact on performance, since the
+          // other alternative was to make Scroll() post an
+          // async paint event for the *entire* ScrollPort or
+          // ScrollingView's viewable area. (See bug 97674 for this
+          // alternate patch.)
+          
+          UpdateView(view, damRect, NS_VMREFRESH_NO_SYNC);
+        }
 
         break;
       }
@@ -2619,7 +2635,7 @@ NS_IMETHODIMP nsViewManager::SetViewChildClipRegion(nsIView *aView, const nsRegi
   // and it is set to no more than the bounds of the view.
   if (aRegion != nsnull) {
     newClipFlag = PR_TRUE;
-    aRegion->GetBoundRect(newClipRect);
+    newClipRect = aRegion->GetBounds();
     if (IsClipView(view)) {
       nsRect dims;
       view->GetDimensions(dims);
@@ -2801,7 +2817,7 @@ PRBool nsViewManager::CanScrollWithBitBlt(nsView* aView)
         v->ConvertToParentCoords(&deltaX, &deltaY);
         v = v->GetParent();
       }
-      opaqueRegion.Offset(-deltaX, -deltaY);
+      opaqueRegion.MoveBy(-deltaX, -deltaY);
     }
   }
 
@@ -2811,7 +2827,7 @@ PRBool nsViewManager::CanScrollWithBitBlt(nsView* aView)
 
   // (Of course it's possible that aView's parent is actually in front of aView (if aView has a negative
   // z-index) but if so, this code still does the right thing. Yay for the display list based approach!)
-  OptimizeDisplayList(r, finalTransparentRect, opaqueRegion);
+  OptimizeDisplayList(nsRegion(r), finalTransparentRect, opaqueRegion);
 
   PRBool anyUnscrolledViews = PR_FALSE;
   PRBool anyUnblittableViews = PR_FALSE;
@@ -3287,7 +3303,7 @@ NS_IMETHODIMP nsViewManager::Display(nsIView* aView, nscoord aX, nscoord aY, con
 
   // Paint the view. The clipping rect was set above set don't clip again.
   //aView->Paint(*localcx, trect, NS_VIEW_FLAG_CLIP_SET, result);
-  RenderViews(view, *localcx, trect, result);
+  RenderViews(view, *localcx, nsRegion(trect), result);
 
   NS_RELEASE(localcx);
 
@@ -3662,23 +3678,22 @@ void nsViewManager::ReapplyClipInstructions(PRBool aHaveClip, nsRect& aClipRect,
        Usually this will be empty, but nothing really prevents someone
        from creating a set of views that are (for example) all transparent.
 */
-nsresult nsViewManager::OptimizeDisplayList(const nsRect& aDamageRect, nsRect& aFinalTransparentRect,
+nsresult nsViewManager::OptimizeDisplayList(const nsRegion& aDamageRegion,
+                                            nsRect& aFinalTransparentRect,
                                             nsRegion &aOpaqueRegion)
 {
-  aFinalTransparentRect = aDamageRect;
-
   PRInt32 count = mDisplayListCount;
   for (PRInt32 i = count - 1; i >= 0; i--) {
     DisplayListElement2* element = NS_STATIC_CAST(DisplayListElement2*, mDisplayList.ElementAt(i));
     if (element->mFlags & VIEW_RENDERED) {
       nsRegion tmpRgn;
-      tmpRgn.Copy(element->mBounds);
-      tmpRgn.Sub(tmpRgn, aOpaqueRegion);
+      tmpRgn.Sub(element->mBounds, aOpaqueRegion);
+      tmpRgn.And(tmpRgn, aDamageRegion);
 
       if (tmpRgn.IsEmpty()) {
         element->mFlags &= ~VIEW_RENDERED;
       } else {
-        tmpRgn.GetBoundRect(element->mBounds);
+        element->mBounds = tmpRgn.GetBounds();
 
         // a view is opaque if it is neither transparent nor transluscent
         if (!(element->mFlags & (VIEW_TRANSPARENT | VIEW_TRANSLUCENT))) {
@@ -3689,9 +3704,8 @@ nsresult nsViewManager::OptimizeDisplayList(const nsRect& aDamageRect, nsRect& a
   }
 
   nsRegion tmpRgn;
-  tmpRgn.Copy(aDamageRect);
-  tmpRgn.Sub(tmpRgn, aOpaqueRegion);
-  tmpRgn.GetBoundRect(aFinalTransparentRect);
+  tmpRgn.Sub(aDamageRegion, aOpaqueRegion);
+  aFinalTransparentRect = tmpRgn.GetBounds();
 
   return NS_OK;
 }

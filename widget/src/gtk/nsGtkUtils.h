@@ -94,7 +94,7 @@ struct nsGtkUtils
   static void gdk_window_flash(GdkWindow *     aGdkWindow,
                                unsigned int    aTimes,
                                unsigned long   aInterval,
-                               GdkRectangle *  aArea);
+                               GdkRegion *     aArea);
 };
 
 #endif  // __nsGtkEventHandler.h

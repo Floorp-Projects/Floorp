@@ -110,7 +110,8 @@ class NS_GFX nsRegion
 
 
 public:
-  nsRegion ();
+  nsRegion () { Init(); }
+  nsRegion (const nsRectFast& aRect) { Init(); Copy(aRect); }
  ~nsRegion () { SetToElements (0); }
 
   nsRegion& Copy (const nsRegion& aRegion);
@@ -173,14 +174,13 @@ public:
   }
 
 
-  PRBool GetBoundRect (nsRect& aBound) const
+  nsRect GetBounds () const
   {
-    aBound = mBoundRect;
-    return !mBoundRect.IsEmpty ();
+    return mBoundRect;
   }
 
-  void Offset (PRInt32 aXOffset, PRInt32 aYOffset);
-  void Empty () 
+  void MoveBy (PRInt32 aXOffset, PRInt32 aYOffset);
+  void SetEmpty () 
   { 
     SetToElements (0);
     mBoundRect.SetRect (0, 0, 0, 0);
@@ -196,6 +196,8 @@ private:
   RgnRect*    mCurRect;
   RgnRect     mRectListHead;
   nsRectFast  mBoundRect;
+
+  void Init ();
 
   void InsertBefore (RgnRect* aNewRect, RgnRect* aRelativeRect)
   {

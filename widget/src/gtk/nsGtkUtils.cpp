@@ -156,7 +156,7 @@ nsGtkUtils::gdk_keyboard_get_modifiers()
 nsGtkUtils::gdk_window_flash(GdkWindow *    aGdkWindow,
                              unsigned int   aTimes,
                              unsigned long  aInterval,
-                             GdkRectangle * aArea)
+                             GdkRegion * aRegion)
 {
   gint         x;
   gint         y;
@@ -185,18 +185,8 @@ nsGtkUtils::gdk_window_flash(GdkWindow *    aGdkWindow,
   gdk_gc_set_function(gc,GDK_XOR);
   gdk_gc_set_subwindow(gc,GDK_INCLUDE_INFERIORS);
   
-  /* 
-   * If an area is given, use that.  Notice how out of whack coordinates
-   * and dimentsions are not checked!!!
-   */
-  if (aArea)
-  {
-    x += aArea->x;
-    y += aArea->y;
-    
-    width = aArea->width;
-    height = aArea->height;
-  }
+  gdk_region_offset(aRegion, x, y);
+  gdk_gc_set_clip_region(gc, aRegion);
 
   /*
    * Need to do this twice so that the XOR effect can replace 
@@ -218,5 +208,7 @@ nsGtkUtils::gdk_window_flash(GdkWindow *    aGdkWindow,
   }
 
   gdk_gc_destroy(gc);
+
+  gdk_region_offset(aRegion, -x, -y);
 }
 //////////////////////////////////////////////////////////////////

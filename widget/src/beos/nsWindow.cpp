@@ -2645,6 +2645,7 @@ PRBool nsWindow::OnPaint(nsRect &r)
 			nsPaintEvent event;
 
 			InitEvent(event, NS_PAINT);
+			event.region = nsnull;
 			event.rect = &r;
 			event.eventStructType = NS_PAINT_EVENT;
 

@@ -152,10 +152,7 @@ inline void nsRegion::RgnRect::operator delete (void* aRect, size_t)
   gRectPool.Free (NS_STATIC_CAST (RgnRect*, aRect)); 
 }
 
-
-
-
-nsRegion::nsRegion ()
+void nsRegion::Init()
 {
   mRectListHead.prev = mRectListHead.next = &mRectListHead;
   mCurRect = &mRectListHead;
@@ -477,7 +474,7 @@ nsRegion& nsRegion::Copy (const nsRegion& aRegion)
     return *this;
 
   if (aRegion.mRectCount == 0)
-    Empty ();
+    SetEmpty ();
   else
   {
     SetToElements (aRegion.mRectCount);
@@ -504,7 +501,7 @@ nsRegion& nsRegion::Copy (const nsRegion& aRegion)
 nsRegion& nsRegion::Copy (const nsRectFast& aRect)
 {
   if (aRect.IsEmpty ())
-    Empty ();
+    SetEmpty ();
   else
   {
     SetToElements (1);
@@ -522,7 +519,7 @@ nsRegion& nsRegion::And (const nsRegion& aRgn1, const nsRegion& aRgn2)
     Copy (aRgn1);
   else
   if (aRgn1.mRectCount == 0 || aRgn2.mRectCount == 0)         // If either region is empty then result is empty
-    Empty ();
+    SetEmpty ();
   else
   {
     nsRectFast TmpRect;
@@ -534,7 +531,7 @@ nsRegion& nsRegion::And (const nsRegion& aRgn1, const nsRegion& aRgn2)
     } else
     {
       if (!aRgn1.mBoundRect.Intersects (aRgn2.mBoundRect))    // Regions do not intersect
-        Empty ();
+        SetEmpty ();
       else
       {
         // Region is simple rectangle and it fully overlays other region
@@ -624,7 +621,7 @@ nsRegion& nsRegion::And (const nsRegion& aRegion, const nsRectFast& aRect)
 {
   // If either region or rectangle is empty then result is empty
   if (aRegion.mRectCount == 0 || aRect.IsEmpty ())      
-    Empty ();
+    SetEmpty ();
   else                            // Intersect region with rectangle
   {
     nsRectFast TmpRect;
@@ -636,7 +633,7 @@ nsRegion& nsRegion::And (const nsRegion& aRegion, const nsRectFast& aRect)
     } else                        // Intersect complex region with rectangle
     {
       if (!aRect.Intersects (aRegion.mBoundRect))  // Rectangle does not intersect region
-        Empty ();
+        SetEmpty ();
       else
       {
         if (aRect.Contains (aRegion.mBoundRect))   // Rectangle fully overlays region
@@ -747,7 +744,7 @@ nsRegion& nsRegion::Or (const nsRegion& aRegion, const nsRectFast& aRect)
 nsRegion& nsRegion::Xor (const nsRegion& aRgn1, const nsRegion& aRgn2)
 {
   if (&aRgn1 == &aRgn2)                 // Xor with self
-    Empty ();
+    SetEmpty ();
   else
   if (aRgn1.mRectCount == 0)            // Region empty. Result is equal to other region
     Copy (aRgn2);
@@ -832,10 +829,10 @@ nsRegion& nsRegion::Xor (const nsRegion& aRegion, const nsRectFast& aRect)
 nsRegion& nsRegion::Sub (const nsRegion& aRgn1, const nsRegion& aRgn2)
 {
   if (&aRgn1 == &aRgn2)         // Sub from self
-    Empty ();
+    SetEmpty ();
   else
   if (aRgn1.mRectCount == 0)    // If source is empty then result is empty, too
-    Empty ();
+    SetEmpty ();
   else
   if (aRgn2.mRectCount == 0)    // Nothing to subtract
     Copy (aRgn1);
@@ -857,7 +854,7 @@ nsRegion& nsRegion::Sub (const nsRegion& aRgn1, const nsRegion& aRgn2)
 nsRegion& nsRegion::Sub (const nsRegion& aRegion, const nsRectFast& aRect)
 {
   if (aRegion.mRectCount == 0)    // If source is empty then result is empty, too
-    Empty ();
+    SetEmpty ();
   else
   if (aRect.IsEmpty ())           // Nothing to subtract
     Copy (aRegion);
@@ -868,7 +865,7 @@ nsRegion& nsRegion::Sub (const nsRegion& aRegion, const nsRectFast& aRect)
     else
     {
       if (aRect.Contains (aRegion.mBoundRect))   // Rectangle fully overlays region
-        Empty ();
+        SetEmpty ();
       else
       {
         aRegion.SubRect (aRect, *this);
@@ -891,7 +888,7 @@ void nsRegion::SubRegion (const nsRegion& aRegion, nsRegion& aResult) const
   if (aRegion.mRectCount == 1)    // Subtract simple rectangle
   {
     if (aRegion.mBoundRect.Contains (mBoundRect))
-      aResult.Empty ();
+      aResult.SetEmpty ();
     else
       SubRect (*aRegion.mRectListHead.next, aResult);
   } else
@@ -1127,7 +1124,7 @@ PRBool nsRegion::IsEqual (const nsRegion& aRegion) const
 }
 
 
-void nsRegion::Offset (PRInt32 aXOffset, PRInt32 aYOffset)
+void nsRegion::MoveBy (PRInt32 aXOffset, PRInt32 aYOffset)
 {
   if (aXOffset || aYOffset)
   {

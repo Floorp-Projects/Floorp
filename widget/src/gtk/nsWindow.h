@@ -126,8 +126,7 @@ public:
 
   void                 QueueDraw();
   void                 UnqueueDraw();
-  void                 DoPaint(PRInt32 x, PRInt32 y, PRInt32 width, PRInt32 height,
-                               nsIRegion *aClipRegion);
+  void                 DoPaint(nsIRegion *aClipRegion);
   static gboolean      UpdateIdle (gpointer data);
   // get the toplevel window for this widget
   virtual GtkWindow   *GetTopLevelWindow(void);
