@@ -106,10 +106,10 @@ PRBool IsCollapsingBlockParentFrame(const nsIFrame* aFrame)
   if (!aFrame) return PR_FALSE;
   nsCOMPtr<nsIAtom> frameType;
   aFrame->GetFrameType(getter_AddRefs(frameType));
-  if (frameType==nsLayoutAtoms::blockFrame ||
-      frameType==nsLayoutAtoms::areaFrame  ||
-      frameType==nsLayoutAtoms::tableCellFrame ||
-      frameType==nsLayoutAtoms::tableCaptionFrame) {
+  if (frameType.get()==nsLayoutAtoms::blockFrame ||
+      frameType.get()==nsLayoutAtoms::areaFrame  ||
+      frameType.get()==nsLayoutAtoms::tableCellFrame ||
+      frameType.get()==nsLayoutAtoms::tableCaptionFrame) {
     return PR_TRUE;
   }
   return PR_FALSE;
