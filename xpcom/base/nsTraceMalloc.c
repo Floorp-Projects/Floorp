@@ -58,6 +58,7 @@
 #include "prmon.h"
 #include "prprf.h"
 #include "prenv.h"
+#include "prnetdb.h"
 #include "nsTraceMalloc.h"
 #include "nscore.h"
 
@@ -72,11 +73,6 @@
 #define WRITE_FLAGS "w"
 
 #endif /* WIN32 */
-
-/*
- * Record the intervals in a platform independent manner.
- */
-#define MILLISECONDS_NOW PR_IntervalToMilliseconds(PR_IntervalNow())
 
 #ifdef XP_UNIX
 #define WRITE_FLAGS "w"
@@ -474,6 +470,13 @@ static void log_event7(logfile *fp, char event, uint32 serial, uint32 ui2,
     log_uint32(fp, ui7);
 }
 
+static void log_event8(logfile *fp, char event, uint32 serial, uint32 ui2,
+                       uint32 ui3, uint32 ui4, uint32 ui5, uint32 ui6,
+                       uint32 ui7, uint32 ui8)
+{
+    log_event7(fp, event, serial, ui2, ui3, ui4, ui5, ui6, ui7);
+    log_uint32(fp, ui8);
+}
 
 typedef struct callsite callsite;
 
@@ -1301,12 +1304,15 @@ static PLHashTable *new_allocations(void)
 
 __ptr_t malloc(size_t size)
 {
+    PRUint32 start, end;
     __ptr_t *ptr;
     callsite *site;
     PLHashEntry *he;
     allocation *alloc;
 
+    start = PR_IntervalNow();
     ptr = __libc_malloc(size);
+    end = PR_IntervalNow();
     TM_ENTER_MONITOR();
     tmstats.malloc_calls++;
     if (!ptr) {
@@ -1314,8 +1320,8 @@ __ptr_t malloc(size_t size)
     } else if (suppress_tracing == 0) {
         site = backtrace(1);
         if (site)
-            log_event4(logfp, TM_EVENT_MALLOC,
-                       site->serial, MILLISECONDS_NOW,
+            log_event5(logfp, TM_EVENT_MALLOC,
+                       site->serial, start, end - start,
                        (uint32)NS_PTR_TO_INT32(ptr), size);
         if (get_allocations()) {
             suppress_tracing++;
@@ -1333,12 +1339,15 @@ __ptr_t malloc(size_t size)
 
 __ptr_t calloc(size_t count, size_t size)
 {
+    PRUint32 start, end;
     __ptr_t *ptr;
     callsite *site;
     PLHashEntry *he;
     allocation *alloc;
 
+    start = PR_IntervalNow();
     ptr = __libc_calloc(count, size);
+    end = PR_IntervalNow();
     TM_ENTER_MONITOR();
     tmstats.calloc_calls++;
     if (!ptr) {
@@ -1347,8 +1356,8 @@ __ptr_t calloc(size_t count, size_t size)
         site = backtrace(1);
         size *= count;
         if (site)
-            log_event4(logfp, TM_EVENT_CALLOC,
-                       site->serial, MILLISECONDS_NOW,
+            log_event5(logfp, TM_EVENT_CALLOC,
+                       site->serial, start, end - start,
                        (uint32)NS_PTR_TO_INT32(ptr), size);
         if (get_allocations()) {
             suppress_tracing++;
@@ -1366,6 +1375,7 @@ __ptr_t calloc(size_t count, size_t size)
 
 __ptr_t realloc(__ptr_t ptr, size_t size)
 {
+    PRUint32 start, end;
     __ptr_t oldptr;
     callsite *oldsite, *site;
     size_t oldsize;
@@ -1393,7 +1403,9 @@ __ptr_t realloc(__ptr_t ptr, size_t size)
     }
     TM_EXIT_MONITOR();
 
+    start = PR_IntervalNow();
     ptr = __libc_realloc(ptr, size);
+    end = PR_IntervalNow();
 
     TM_ENTER_MONITOR();
     if (!ptr && size) {
@@ -1405,8 +1417,8 @@ __ptr_t realloc(__ptr_t ptr, size_t size)
     } else if (suppress_tracing == 0) {
         site = backtrace(1);
         if (site) {
-            log_event7(logfp, TM_EVENT_REALLOC,
-                       site->serial, MILLISECONDS_NOW,
+            log_event8(logfp, TM_EVENT_REALLOC,
+                       site->serial, start, end - start,
                        (uint32)NS_PTR_TO_INT32(ptr), size,
                        oldsite ? oldsite->serial : 0,
                        (uint32)NS_PTR_TO_INT32(oldptr), oldsize);
@@ -1448,6 +1460,8 @@ void free(__ptr_t ptr)
     PLHashEntry **hep, *he;
     callsite *site;
     allocation *alloc;
+    uint32 serial = 0, size = 0;
+    PRUint32 start, end;
 
     TM_ENTER_MONITOR();
     tmstats.free_calls++;
@@ -1461,21 +1475,39 @@ void free(__ptr_t ptr)
                 site = (callsite*) he->value;
                 if (site) {
                     alloc = (allocation*) he;
-                    log_event4(logfp, TM_EVENT_FREE,
-                               site->serial, MILLISECONDS_NOW,
-                               (uint32)NS_PTR_TO_INT32(ptr), alloc->size);
+                    serial = site->serial;
+                    size = alloc->size;
                 }
                 PL_HashTableRawRemove(allocations, hep, he);
             }
         }
     }
     TM_EXIT_MONITOR();
+
+    start = PR_IntervalNow();
     __libc_free(ptr);
+    end = PR_IntervalNow();
+   
+    if (size != 0) {
+        TM_ENTER_MONITOR();
+        log_event5(logfp, TM_EVENT_FREE,
+                   serial, start, end - start,
+                   (uint32)NS_PTR_TO_INT32(ptr), size);
+        TM_EXIT_MONITOR();
+    }
 }
 
 #endif /* XP_UNIX */
 
 static const char magic[] = NS_TRACE_MALLOC_MAGIC;
+
+static void
+log_header(int logfd)
+{
+    uint32 ticksPerSec = PR_htonl(PR_TicksPerSecond());
+    (void) write(logfd, magic, NS_TRACE_MALLOC_MAGIC_SIZE);
+    (void) write(logfd, &ticksPerSec, sizeof ticksPerSec);
+}
 
 PR_IMPLEMENT(void) NS_TraceMallocStartup(int logfd)
 {
@@ -1490,8 +1522,7 @@ PR_IMPLEMENT(void) NS_TraceMallocStartup(int logfd)
         logfile_list = &default_logfile;
         logfp->prevp = &logfile_list;
         logfile_tail = &logfp->next;
-        (void) write(logfd, magic, NS_TRACE_MALLOC_MAGIC_SIZE);
-        flush_logfile(logfp);
+        log_header(logfd);
     }
 
     atexit(NS_TraceMallocShutdown);
@@ -1562,7 +1593,9 @@ PR_IMPLEMENT(int) NS_TraceMallocStartupArgs(int argc, char* argv[])
     }
 
     if (tmlogname) {
+#ifdef XP_UNIX
         int pipefds[2];
+#endif
 
         switch (*tmlogname) {
 #ifdef XP_UNIX
@@ -1716,7 +1749,7 @@ PR_IMPLEMENT(int) NS_TraceMallocChangeLogFD(int fd)
         if (!fp)
             return -2;
         if (fd >= 0 && fstat(fd, &sb) == 0 && sb.st_size == 0)
-            (void) write(fd, magic, NS_TRACE_MALLOC_MAGIC_SIZE);
+            log_header(fd);
         logfp = fp;
     }
     TM_EXIT_MONITOR();
@@ -1883,7 +1916,7 @@ NS_TraceMallocFlushLogfiles()
 #ifdef XP_WIN32
 
 PR_IMPLEMENT(void)
-MallocCallback(void *ptr, size_t size)
+MallocCallback(void *ptr, size_t size, PRUint32 start, PRUint32 end)
 {
     callsite *site;
     PLHashEntry *he;
@@ -1896,8 +1929,8 @@ MallocCallback(void *ptr, size_t size)
     } else if (suppress_tracing == 0) {
         site = backtrace(4);
         if (site)
-            log_event4(logfp, TM_EVENT_MALLOC,
-                       site->serial, MILLISECONDS_NOW,
+            log_event5(logfp, TM_EVENT_MALLOC,
+                       site->serial, start, end - start,
                        (uint32)NS_PTR_TO_INT32(ptr), size);
         if (get_allocations()) {
             suppress_tracing++;
@@ -1913,7 +1946,7 @@ MallocCallback(void *ptr, size_t size)
 }
 
 PR_IMPLEMENT(void)
-CallocCallback(void *ptr, size_t count, size_t size)
+CallocCallback(void *ptr, size_t count, size_t size, PRUint32 start, PRUint32 end)
 {
     callsite *site;
     PLHashEntry *he;
@@ -1927,8 +1960,8 @@ CallocCallback(void *ptr, size_t count, size_t size)
         site = backtrace(1);
         size *= count;
         if (site)
-            log_event4(logfp, TM_EVENT_CALLOC,
-                       site->serial, MILLISECONDS_NOW,
+            log_event5(logfp, TM_EVENT_CALLOC,
+                       site->serial, start, end - start,
                        (uint32)NS_PTR_TO_INT32(ptr), size);
         if (get_allocations()) {
             suppress_tracing++;
@@ -1944,7 +1977,7 @@ CallocCallback(void *ptr, size_t count, size_t size)
 }
 
 PR_IMPLEMENT(void)
-ReallocCallback(void * oldptr, void *ptr, size_t size)
+ReallocCallback(void * oldptr, void *ptr, size_t size, PRUint32 start, PRUint32 end)
 {
     callsite *oldsite, *site;
     size_t oldsize;
@@ -1979,8 +2012,8 @@ ReallocCallback(void * oldptr, void *ptr, size_t size)
     } else if (suppress_tracing == 0) {
         site = backtrace(1);
         if (site) {
-            log_event7(logfp, TM_EVENT_REALLOC,
-                       site->serial, MILLISECONDS_NOW,
+            log_event8(logfp, TM_EVENT_REALLOC,
+                       site->serial, start, end - start,
                        (uint32)NS_PTR_TO_INT32(ptr), size,
                        oldsite ? oldsite->serial : 0,
                        (uint32)NS_PTR_TO_INT32(oldptr), oldsize);
@@ -2016,7 +2049,7 @@ ReallocCallback(void * oldptr, void *ptr, size_t size)
 }
 
 PR_IMPLEMENT(void)
-FreeCallback(void * ptr)
+FreeCallback(void * ptr, PRUint32 start, PRUint32 end)
 {
     PLHashEntry **hep, *he;
     callsite *site;
@@ -2034,8 +2067,8 @@ FreeCallback(void * ptr)
                 site = (callsite*) he->value;
                 if (site) {
                     alloc = (allocation*) he;
-                    log_event4(logfp, TM_EVENT_FREE,
-                               site->serial, MILLISECONDS_NOW,
+                    log_event5(logfp, TM_EVENT_FREE,
+                               site->serial, start, end - start,
                                (uint32)NS_PTR_TO_INT32(ptr), alloc->size);
                 }
                 PL_HashTableRawRemove(allocations, hep, he);
