@@ -53,9 +53,10 @@ CVSCO = cvs -q co -P
 
 # Branch tags we use
 IMGLIB_BRANCH = MODULAR_IMGLIB_BRANCH
+XPCOM_BRANCH = XPCOM_BRANCH
 
 # CVS commands to pull the appropriate branch versions
-CVSCO_XPCOM = $(CVSCO)
+CVSCO_XPCOM = $(CVSCO) -r $(XPCOM_BRANCH)
 CVSCO_IMGLIB = $(CVSCO) -r $(IMGLIB_BRANCH)
 CVSCO_RAPTOR = $(CVSCO)
 CVSCO_LIZARD = $(CVSCO)
