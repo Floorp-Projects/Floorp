@@ -33,7 +33,7 @@ include $(DEPTH)/config/autoconf.mk
 # to add .rpm (RPM) and .deb (DEB) later.
 #
 ifndef MOZ_PKG_FORMAT
-ifeq ($(OS_ARCH),WINNT)
+ifeq (,$(filter-out OS2 WINNT, $(OS_ARCH)))
 MOZ_PKG_FORMAT  = ZIP
 else
 MOZ_PKG_FORMAT	= TGZ
@@ -44,6 +44,10 @@ MOZ_PKG_APPNAME = mozilla
 endif
 
 MAKE_PACKAGE	= echo "Sorry, don't know how to build a $(MOZ_PKG_FORMAT) file yet...."
+
+ifeq ($(MOZ_OS2_TOOLS),VACPP)
+TARGET_OS = os2-vacpp
+endif
 
 PKG_BASENAME	:= $(MOZ_PKG_APPNAME)-$(TARGET_CPU)-$(TARGET_VENDOR)-$(TARGET_OS)
 PACKAGE		= $(PKG_BASENAME)$(PKG_SUFFIX)
@@ -114,10 +118,10 @@ STRIP_FLAGS	= -g
 PLATFORM_EXCLUDE_LIST = ! -name "*.stub" ! -name "mozilla-bin"
 endif
 ifeq ($(OS_ARCH),OS2)
-STRIP		= lxlite.exe
-STRIP_FLAGS	= -u
-MOZILLA_BIN	= $(DIST)/bin/mozilla$(BIN_SUFFIX)
+STRIP		= dllrname.exe
+STRIP_FLAGS	= cpprmi36=mozrmi36
 OSPACKAGE	= os2
+TAR_CREATE_FLAGS = -cvf
 endif
 
 $(PACKAGE): $(MOZILLA_BIN)
@@ -133,6 +137,10 @@ ifndef EXCLUDE_NSPR_LIBS
 	@cp -p $(NSPR_LDIR)/*$(DLL_SUFFIX) $(DIST)/$(MOZ_PKG_APPNAME)
 	@chmod 755 $(DIST)/$(MOZ_PKG_APPNAME)/*$(DLL_SUFFIX)
 endif
+endif
+ifeq ($(MOZ_OS2_TOOLS),VACPP)
+# Copy the C runtime
+	@cp -p $(VACPP365)/runtime/cpprmi36.dll $(DIST)/$(MOZ_PKG_APPNAME)
 endif
 	@echo "Stripping package directory..."
 	@cd $(DIST)/$(MOZ_PKG_APPNAME); find . ! -type d \
