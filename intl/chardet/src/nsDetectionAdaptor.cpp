@@ -23,6 +23,7 @@
 #include "nsDetectionAdaptor.h"
 #include "nsICharsetDetector.h"
 #include "nsIWebShellServices.h"
+#include "plstr.h"
 #include "pratom.h"
 #include "nsCharDetDll.h"
 #ifdef IMPL_NS_IPARSERFILTER
@@ -47,6 +48,7 @@ class nsMyObserver : public nsICharsetDetectionObserver
      NS_INIT_REFCNT();
      PR_AtomicIncrement(& g_InstanceCount);
      mWebShellSvc = nsnull;
+     mCommand[0] = '\0';
    }
    virtual  ~nsMyObserver( void )
    {
@@ -56,13 +58,13 @@ class nsMyObserver : public nsICharsetDetectionObserver
 
 
    // Methods to support nsICharsetDetectionAdaptor
-   NS_IMETHOD Init(nsIWebShellServices* aWebShellSvc);
+   NS_IMETHOD Init(nsIWebShellServices* aWebShellSvc, const char* aCommand);
 
    // Methods to support nsICharsetDetectionObserver
    NS_IMETHOD Notify(const char* aCharset, nsDetectionConfident aConf);
  private:
      nsIWebShellServices* mWebShellSvc;
-
+     char mCommand[32];
 };
 //--------------------------------------------------------------
 NS_IMETHODIMP nsMyObserver::Notify(
@@ -70,12 +72,18 @@ NS_IMETHODIMP nsMyObserver::Notify(
 {
     nsresult rv = NS_OK;
     rv = mWebShellSvc->SetRendering( PR_FALSE);
-    rv = mWebShellSvc->ReloadDocument( aCharset, kCharsetFromAutoDetection);
+    rv = mWebShellSvc->StopDocumentLoad();
+    rv = mWebShellSvc->ReloadDocument( aCharset, kCharsetFromAutoDetection,
+                       mCommand[0] ?  mCommand : nsnull);
     return NS_OK;
 }
 //--------------------------------------------------------------
-NS_IMETHODIMP nsMyObserver::Init( nsIWebShellServices* aWebShellSvc)
+NS_IMETHODIMP nsMyObserver::Init( nsIWebShellServices* aWebShellSvc, 
+                                  const char* aCommand)
 {
+    if(aCommand) {
+        PL_strncpy(mCommand, aCommand, 31);
+    }
     if(nsnull != aWebShellSvc)
     {
         NS_IF_ADDREF(aWebShellSvc);
@@ -102,7 +110,8 @@ class nsDetectionAdaptor :
    virtual  ~nsDetectionAdaptor( void );
 
    // Methods to support nsICharsetDetectionAdaptor
-   NS_IMETHOD Init(nsIWebShellServices* aWebShellSvc, nsICharsetDetector *aDetector);
+   NS_IMETHOD Init(nsIWebShellServices* aWebShellSvc, nsICharsetDetector *aDetector, 
+                   const char* aCommand=nsnull);
   
    // Methode to suppor nsIParserFilter
    NS_IMETHOD RawBuffer(char * buffer, PRUint32 * buffer_length) ;
@@ -118,7 +127,7 @@ class nsDetectionAdaptor :
      PRBool mDontFeedToDetector;
 };
 //--------------------------------------------------------------
-nsDetectionAdaptor::nsDetectionAdaptor( void )
+nsDetectionAdaptor::nsDetectionAdaptor( void ) 
 {
      NS_INIT_REFCNT();
      PR_AtomicIncrement(& g_InstanceCount);
@@ -166,7 +175,8 @@ NS_IMETHODIMP nsDetectionAdaptor::QueryInterface(REFNSIID aIID, void**aInstanceP
 
 //--------------------------------------------------------------
 NS_IMETHODIMP nsDetectionAdaptor::Init(
-    nsIWebShellServices* aWebShellSvc, nsICharsetDetector *aDetector)
+    nsIWebShellServices* aWebShellSvc, nsICharsetDetector *aDetector,
+    const char* aCommand)
 {
     if((nsnull != aWebShellSvc) && (nsnull != aDetector))
     {
@@ -180,7 +190,7 @@ NS_IMETHODIMP nsDetectionAdaptor::Init(
                                   (void**) &aObserver);
         
          if(NS_SUCCEEDED(rv)) {
-            rv = mobs->Init(aWebShellSvc);
+            rv = mobs->Init(aWebShellSvc, aCommand);
             if(NS_SUCCEEDED(rv)) {
                rv = aDetector->Init(aObserver);
             }
