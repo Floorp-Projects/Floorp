@@ -274,6 +274,4 @@ function HandleClickEvent( aEvent )
         aEvent.target.parentNode.parentNode.nodeName.toLowerCase() != "treehead" )
       return onStart(); 
   }
-  else 
-    return showSelection(aEvent.target.parentNode.parentNode);
 }

@@ -85,6 +85,7 @@
     <box orient="vertical" flex="1">
       <tree id="profiles" class="inset" flex="1"
             onclick="HandleClickEvent( event );"
+            onselect="DoEnabling();"
             onkeypress="HandleKeyEvent( event );">
         <treecolgroup>
           <treecol flex="1"/>
