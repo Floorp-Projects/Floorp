@@ -96,6 +96,7 @@ class nsMsgCompose : public nsIMsgCompose
   nsresult BuildMailListArray(nsIAddrDatabase* database, nsIAbDirectory* parentDir, nsISupportsArray* array);
   nsresult GetMailListAddresses(nsString& name, nsISupportsArray* mailListArray, nsISupportsArray** addresses);
   nsresult TagConvertible(nsIDOMNode *node,  PRInt32 *_retval);
+  nsresult _BodyConvertible(nsIDOMNode *node, PRInt32 *_retval);
        // Helper function. Parameters are not checked.
   PRBool mConvertStructs;  // for TagConvertible
 

@@ -164,9 +164,9 @@ interface nsIMsgCompose : nsISupports {
     wstring GetNoHtmlNewsgroups(in wstring newsgroups);
     
     /* bodyConvertible: The level of "convertibility" to plaintext
-     * @return a value from nsIMsgCompConvertible
+     * @return a value from nsIMsgCompConvertible.
     */
-    long bodyConvertible(in nsIDOMNode node);
+    long bodyConvertible();
 
     /* SetSignature: will replace the curr.
     */

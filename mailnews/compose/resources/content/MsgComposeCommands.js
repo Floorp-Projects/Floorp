@@ -1522,8 +1522,7 @@ function DetermineConvertibility()
         return msgCompConvertible.Plain;
 
     try {
-        return msgCompose.bodyConvertible(
-             window.editorShell.contentWindow.document.childNodes[1]);
+        return msgCompose.bodyConvertible();
     } catch(ex) {}
     return msgCompConvertible.No;
 }

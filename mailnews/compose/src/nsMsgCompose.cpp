@@ -2906,13 +2906,13 @@ nsresult nsMsgCompose::TagConvertible(nsIDOMNode *node,  PRInt32 *_retval)
     return rv;
 }
 
-nsresult nsMsgCompose::BodyConvertible(nsIDOMNode *node,  PRInt32 *_retval)
+nsresult nsMsgCompose::_BodyConvertible(nsIDOMNode *node, PRInt32 *_retval)
 {
     NS_ENSURE_TRUE(node && _retval, NS_ERROR_NULL_POINTER);
 
     nsresult rv;
     PRInt32 result;
-
+    
     // Check this node
     rv = TagConvertible(node, &result);
     if (NS_FAILED(rv))
@@ -2935,7 +2935,7 @@ nsresult nsMsgCompose::BodyConvertible(nsIDOMNode *node,  PRInt32 *_retval)
               && pItem)
           {
             PRInt32 curresult;
-            rv = BodyConvertible(pItem, &curresult);
+            rv = _BodyConvertible(pItem, &curresult);
             if (NS_SUCCEEDED(rv) && curresult > result)
               result = curresult;
           }
@@ -2945,6 +2945,29 @@ nsresult nsMsgCompose::BodyConvertible(nsIDOMNode *node,  PRInt32 *_retval)
 
     *_retval = result;
     return rv;
+}
+
+nsresult nsMsgCompose::BodyConvertible(PRInt32 *_retval)
+{
+    NS_ENSURE_TRUE(_retval, NS_ERROR_NULL_POINTER);
+
+    nsresult rv;
+    
+    nsCOMPtr<nsIEditor> editor;
+    rv = m_editor->GetEditor(getter_AddRefs(editor));
+    if (NS_FAILED(rv) || nsnull == editor)
+      return rv;
+
+    nsCOMPtr<nsIDOMElement> rootElement;
+    rv = editor->GetRootElement(getter_AddRefs(rootElement));
+    if (NS_FAILED(rv) || nsnull == rootElement)
+      return rv;
+      
+    nsCOMPtr<nsIDOMNode> node = do_QueryInterface(rootElement);
+    if (nsnull == node)
+      return NS_ERROR_FAILURE;
+      
+    return _BodyConvertible(node, _retval);
 }
 
 nsresult nsMsgCompose::SetSignature(nsIMsgIdentity *identity)
