@@ -481,7 +481,6 @@ nsresult nsTableRowFrame::ResizeReflow(nsIPresContext&  aPresContext,
 
         if (NS_OK == kidFrame->QueryInterface(kIHTMLReflowIID, (void**)&htmlReflow)) {
           htmlReflow->WillReflow(aPresContext);
-          kidFrame->MoveTo(aState.x, kidMargin.top);
           nsHTMLReflowState kidReflowState(kidFrame, aState.reflowState, kidAvailSize,
                                            eReflowReason_Resize);
           if (gsDebug) printf ("%p RR: avail=%d\n", this, availWidth);
@@ -855,7 +854,6 @@ nsresult nsTableRowFrame::IncrementalReflow(nsIPresContext&  aPresContext,
 
   if (NS_OK == kidFrame->QueryInterface(kIHTMLReflowIID, (void**)&htmlReflow)) {
     htmlReflow->WillReflow(aPresContext);
-    kidFrame->MoveTo(aState.x, kidMargin.top);
 
     // XXX Unfortunately we need to reflow the child several times.
     // The first time is for the incremental reflow command. We can't pass in

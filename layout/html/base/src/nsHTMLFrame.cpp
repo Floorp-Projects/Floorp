@@ -422,7 +422,6 @@ RootContentFrame::Reflow(nsIPresContext&          aPresContext,
           // max width then center it horizontally
           if (NS_OK == kidFrame->QueryInterface(kIHTMLReflowIID, (void**)&htmlReflow)) {
             htmlReflow->WillReflow(aPresContext);
-            kidFrame->MoveTo(x, y);
             status = ReflowChild(kidFrame, &aPresContext, kidSize,
                                  kidReflowState);
             kidFrame->SetRect(nsRect(x, y, kidSize.width, kidSize.height));

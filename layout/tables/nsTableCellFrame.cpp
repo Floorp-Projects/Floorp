@@ -330,7 +330,6 @@ NS_METHOD nsTableCellFrame::Reflow(nsIPresContext& aPresContext,
 
   if (NS_OK == mFirstChild->QueryInterface(kIHTMLReflowIID, (void**)&htmlReflow)) {
     htmlReflow->WillReflow(aPresContext);
-    mFirstChild->MoveTo(leftInset, topInset);
     aStatus = ReflowChild(mFirstChild, &aPresContext, kidSize, kidReflowState);
 #ifdef NS_DEBUG
       if (kidSize.width > availSize.width)

@@ -1688,7 +1688,6 @@ nsReflowStatus nsTableFrame::ResizeReflowPass1(nsIPresContext* aPresContext,
         if (NS_UNCONSTRAINEDSIZE!=yCoord)
           yCoord+= topInset;
         htmlReflow->WillReflow(*aPresContext);
-        kidFrame->MoveTo(leftInset, yCoord);
         result = ReflowChild(kidFrame, aPresContext, kidSize, kidReflowState);
 
         // Place the child since some of its content fit in us.
@@ -2005,7 +2004,6 @@ PRBool nsTableFrame::ReflowMappedChildren( nsIPresContext*        aPresContext,
         htmlReflow->WillReflow(*aPresContext);
         nscoord x = aState.leftInset + kidMargin.left;
         nscoord y = aState.topInset + aState.y + topMargin;
-        kidFrame->MoveTo(x, y);
         status = ReflowChild(kidFrame, aPresContext, desiredSize, kidReflowState);
         // Did the child fit?
         if ((kidFrame != mFirstChild) && (desiredSize.height > kidAvailSize.height))

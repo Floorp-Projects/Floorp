@@ -255,7 +255,6 @@ nsBodyFrame::Reflow(nsIPresContext&          aPresContext,
 
     if (NS_OK == mFirstChild->QueryInterface(kIHTMLReflowIID, (void**)&htmlReflow)) {
       htmlReflow->WillReflow(aPresContext);
-      mFirstChild->MoveTo(borderPadding.left, borderPadding.top);
       htmlReflow->Reflow(aPresContext, aDesiredSize, reflowState, aStatus);
     }
 
