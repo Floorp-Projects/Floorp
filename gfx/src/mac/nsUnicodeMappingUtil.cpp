@@ -41,6 +41,7 @@
 #include "nsUnicodeMappingUtil.h"
 #include "nsDeviceContextMac.h"
 #include "nsReadableUtils.h"
+#include "nsString.h"
 #include "nsCRT.h"
 static NS_DEFINE_CID(kPrefCID, NS_PREF_CID);
 
