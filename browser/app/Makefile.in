@@ -158,7 +158,7 @@ endif
 ifdef DEBUG
 RCFLAGS += -DDEBUG
 endif
-RCFLAGS += -DFIREFOX_ICO="$(DIST)/branding/firefox.ico" -DDOCUMENT_ICO="$(DIST)/branding/document.ico"
+RCFLAGS += -DFIREFOX_ICO=\"$(DIST)/branding/firefox.ico\" -DDOCUMENT_ICO=\"$(DIST)/branding/document.ico\"
 endif
 
 include $(topsrcdir)/config/rules.mk
