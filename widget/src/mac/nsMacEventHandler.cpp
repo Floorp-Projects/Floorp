@@ -213,8 +213,11 @@ PRBool nsMacEventHandler::HandleMenuCommand(
 }
 
 
+//-------------------------------------------------------------------------
 //
 // DragEvent
+//
+//-------------------------------------------------------------------------
 //
 // Someone on the outside told us that something related to a drag is happening. The
 // exact event type is passed in as |aMessage|. We need to send this event into Gecko 
@@ -346,13 +349,13 @@ enum
 	
 	kInsertKeyCode					= 0x72,				// also help key
 	kDeleteKeyCode					= 0x75,				// also forward delete key
-	kTabKeyCode						= 0x30,
-	kHomeKeyCode					= 0x73,	
-	kEndKeyCode						= 0x77,
+	kTabKeyCode							= 0x30,
+	kHomeKeyCode						= 0x73,	
+	kEndKeyCode							= 0x77,
 	kPageUpKeyCode					= 0x74,
 	kPageDownKeyCode				= 0x79,
 	kLeftArrowKeyCode				= 0x7B,
-	kRightArrowKeyCode				= 0x7C,
+	kRightArrowKeyCode			= 0x7C,
 	kUpArrowKeyCode					= 0x7E,
 	kDownArrowKeyCode				= 0x7D
 	
@@ -477,12 +480,13 @@ static PRUint32 ConvertMacToRaptorKeyCode(UInt32 eventMessage, UInt32 eventModif
 	return raptorKeyCode;
 }
 
+
 //-------------------------------------------------------------------------
 //
-// HandleKeyEvent
+// InitializeKeyEvent
 //
 //-------------------------------------------------------------------------
-#if 1
+
 void nsMacEventHandler::InitializeKeyEvent(nsKeyEvent& aKeyEvent, EventRecord& aOSEvent, nsWindow* focusedWidget, PRUint32 message)
 {
 	//
@@ -490,31 +494,38 @@ void nsMacEventHandler::InitializeKeyEvent(nsKeyEvent& aKeyEvent, EventRecord& a
 	//
 	aKeyEvent.eventStructType = NS_KEY_EVENT;
 	aKeyEvent.message 		= message;
-	aKeyEvent.point.x		= 0;
-	aKeyEvent.point.y		= 0;
-	aKeyEvent.time			= PR_IntervalNow();
+	aKeyEvent.point.x			= 0;
+	aKeyEvent.point.y			= 0;
+	aKeyEvent.time				= PR_IntervalNow();
 	
 	//
 	// initalize the GUI event parts
 	//
-	aKeyEvent.widget		= focusedWidget;
+	aKeyEvent.widget			= focusedWidget;
 	aKeyEvent.nativeMsg		= (void*)&aOSEvent;
 	
 	//
 	// nsInputEvent parts
 	//
-	aKeyEvent.isShift		= ((aOSEvent.modifiers & shiftKey) != 0);
+	aKeyEvent.isShift			= ((aOSEvent.modifiers & shiftKey) != 0);
 	aKeyEvent.isControl		= ((aOSEvent.modifiers & controlKey) != 0);
-	aKeyEvent.isAlt			= ((aOSEvent.modifiers & optionKey) != 0);
+	aKeyEvent.isAlt				= ((aOSEvent.modifiers & optionKey) != 0);
 	aKeyEvent.isCommand		= ((aOSEvent.modifiers & cmdKey) != 0);
 	
 	//
 	// nsKeyEvent parts
 	//
-  	aKeyEvent.keyCode		= ConvertMacToRaptorKeyCode(aOSEvent.message, aOSEvent.modifiers);
-  	aKeyEvent.charCode		= 0;
- }
-	
+	aKeyEvent.keyCode		= ConvertMacToRaptorKeyCode(aOSEvent.message, aOSEvent.modifiers);
+	aKeyEvent.charCode	= aOSEvent.message & charCodeMask;		// will be translated to Unicode, see ConvertKeyEventToUnicode
+}
+
+
+//-------------------------------------------------------------------------
+//
+// IsSpecialRaptorKey
+//
+//-------------------------------------------------------------------------
+
 PRBool nsMacEventHandler::IsSpecialRaptorKey(UInt32 macKeyCode)
 {
 	PRBool	isSpecial;
@@ -528,7 +539,7 @@ PRBool nsMacEventHandler::IsSpecialRaptorKey(UInt32 macKeyCode)
 // modifiers. We don't get separate events for these
 		case kEscapeKeyCode:				isSpecial = PR_TRUE; break;
 		case kShiftKeyCode:					isSpecial = PR_TRUE; break;
-		case kCapsLockKeyCode:				isSpecial = PR_TRUE; break;
+		case kCapsLockKeyCode:			isSpecial = PR_TRUE; break;
 		case kControlKeyCode:				isSpecial = PR_TRUE; break;
 		case kOptionkeyCode:				isSpecial = PR_TRUE; break;
 		case kClearKeyCode:					isSpecial = PR_TRUE; break;
@@ -546,9 +557,9 @@ PRBool nsMacEventHandler::IsSpecialRaptorKey(UInt32 macKeyCode)
 		case kF10KeyCode:					isSpecial = PR_TRUE; break;
 		case kF11KeyCode:					isSpecial = PR_TRUE; break;
 		case kF12KeyCode:					isSpecial = PR_TRUE; break;
-		case kPauseKeyCode:					isSpecial = PR_TRUE; break;
-		case kScrollLockKeyCode:			isSpecial = PR_TRUE; break;
-		case kPrintScreenKeyCode:			isSpecial = PR_TRUE; break;
+		case kPauseKeyCode:				isSpecial = PR_TRUE; break;
+		case kScrollLockKeyCode:	isSpecial = PR_TRUE; break;
+		case kPrintScreenKeyCode:	isSpecial = PR_TRUE; break;
 	
 // keypad
 		case kKeypad0KeyCode:				isSpecial = PR_TRUE; break;
@@ -563,21 +574,21 @@ PRBool nsMacEventHandler::IsSpecialRaptorKey(UInt32 macKeyCode)
 		case kKeypad9KeyCode:				isSpecial = PR_TRUE; break;
 
 		case kKeypadMultiplyKeyCode:		isSpecial = PR_TRUE; break;
-		case kKeypadAddKeyCode:				isSpecial = PR_TRUE; break;
+		case kKeypadAddKeyCode:					isSpecial = PR_TRUE; break;
 		case kKeypadSubtractKeyCode:		isSpecial = PR_TRUE; break;
 		case kKeypadDecimalKeyCode:			isSpecial = PR_TRUE; break;
 		case kKeypadDivideKeyCode:			isSpecial = PR_TRUE; break;	
 
 
 		case kDeleteKeyCode:				isSpecial = PR_TRUE; break;
-		case kTabKeyCode:					isSpecial = PR_TRUE; break;
+		case kTabKeyCode:						isSpecial = PR_TRUE; break;
 
 		case kHomeKeyCode:					isSpecial = PR_TRUE; break;	
-		case kEndKeyCode:					isSpecial = PR_TRUE; break;
+		case kEndKeyCode:						isSpecial = PR_TRUE; break;
 		case kPageUpKeyCode:				isSpecial = PR_TRUE; break;
-		case kPageDownKeyCode:				isSpecial = PR_TRUE; break;
+		case kPageDownKeyCode:			isSpecial = PR_TRUE; break;
 		case kLeftArrowKeyCode:			isSpecial = PR_TRUE; break;
-		case kRightArrowKeyCode:			isSpecial = PR_TRUE; break;
+		case kRightArrowKeyCode:		isSpecial = PR_TRUE; break;
 		case kUpArrowKeyCode:				isSpecial = PR_TRUE; break;
 		case kDownArrowKeyCode:			isSpecial = PR_TRUE; break;
 		
@@ -585,123 +596,103 @@ PRBool nsMacEventHandler::IsSpecialRaptorKey(UInt32 macKeyCode)
 	}
 	return isSpecial;
 }
-		
-void nsMacEventHandler::ConvertKeyEventToUnicode(nsKeyEvent& aKeyEvent,EventRecord& aOSEvent)
+
+
+//-------------------------------------------------------------------------
+//
+// ConvertKeyEventToUnicode
+//
+//-------------------------------------------------------------------------
+
+void nsMacEventHandler::ConvertKeyEventToUnicode(nsKeyEvent& aKeyEvent, EventRecord& aOSEvent)
 {
-	TextToUnicodeInfo	textToUnicodeInfo;
-	TextEncoding		textEncodingFromScript;
-	ByteCount			result_size, source_read;
-	OSErr				err;
-	PRUnichar			unicharResult;
-	char				charResult = aOSEvent.message & charCodeMask;
-	ScriptCode			textScript;
+	aKeyEvent.charCode = 0;
+
+	char charResult = aOSEvent.message & charCodeMask;
 	
 	//
 	// get the script of text for Unicode conversion
 	//
-	textScript = (ScriptCode)GetScriptManagerVariable(smKeyScript);
+	ScriptCode textScript = (ScriptCode)GetScriptManagerVariable(smKeyScript);
 
 	//
 	// convert our script code (smKeyScript) to a TextEncoding 
 	//
-	err = ::UpgradeScriptInfoToTextEncoding(textScript,kTextLanguageDontCare,kTextRegionDontCare,nsnull,
+	TextEncoding textEncodingFromScript;
+	OSErr err = ::UpgradeScriptInfoToTextEncoding(textScript, kTextLanguageDontCare, kTextRegionDontCare, nsnull,
 											&textEncodingFromScript);
-	NS_ASSERTION(err==noErr,"nsMacEventHandler::ConvertKeyEventToUnicode: UpgradeScriptInfoToTextEncoding failed.");
-	if (err!=noErr) { aKeyEvent.charCode=0; return; }
+	NS_ASSERTION(err == noErr, "nsMacEventHandler::ConvertKeyEventToUnicode: UpgradeScriptInfoToTextEncoding failed.");
+	if (err != noErr) return;
 	
+	TextToUnicodeInfo	textToUnicodeInfo;
 	err = ::CreateTextToUnicodeInfoByEncoding(textEncodingFromScript,&textToUnicodeInfo);
-	NS_ASSERTION(err==noErr,"nsMacEventHandler::ConvertKeyEventToUnicode: CreateUnicodeToTextInfoByEncoding failed.");
-	if (err!=noErr) { aKeyEvent.charCode=0; return; }
+	NS_ASSERTION(err == noErr, "nsMacEventHandler::ConvertKeyEventToUnicode: CreateUnicodeToTextInfoByEncoding failed.");
+	if (err != noErr) return;
 
 	//
 	// convert to Unicode
 	//
+	ByteCount result_size, source_read;
+	PRUnichar unicharResult;
 	err = ::ConvertFromTextToUnicode(textToUnicodeInfo,
 									sizeof(char),&charResult,
 									kUnicodeLooseMappingsMask,
 									0,NULL,NULL,NULL,
 									sizeof(PRUnichar),&source_read,
 									&result_size,&unicharResult);
-	NS_ASSERTION(err==noErr,"nsMacEventHandler::ConvertKeyEventToUnicode: ConverFromTextToUnicode failed.");
-	if (err==noErr) aKeyEvent.charCode = unicharResult;
-	
 	::DisposeTextToUnicodeInfo(&textToUnicodeInfo);
+	NS_ASSERTION(err == noErr, "nsMacEventHandler::ConvertKeyEventToUnicode: ConverFromTextToUnicode failed.");
+	if (err != noErr) return;
 
+	aKeyEvent.charCode = unicharResult;
 }
-	
+
+
+//-------------------------------------------------------------------------
+//
+// HandleKeyEvent
+//
+//-------------------------------------------------------------------------
+
 PRBool nsMacEventHandler::HandleKeyEvent(EventRecord& aOSEvent)
 {
 	nsresult result;
+
 	// get the focused widget
 	nsWindow* focusedWidget = mTopLevelWidget;	
 	nsCOMPtr<nsToolkit> toolkit ( dont_AddRef((nsToolkit*)mTopLevelWidget->GetToolkit()) );
 	if (toolkit)
 		focusedWidget = toolkit->GetFocus();
 	
-	if (!focusedWidget) return PR_FALSE;
+	if (!focusedWidget)
+		return PR_FALSE;
 
 	// nsEvent
 	nsKeyEvent	keyEvent;
 	switch (aOSEvent.what)
 	{
-		case keyUp:		InitializeKeyEvent(keyEvent,aOSEvent,focusedWidget,NS_KEY_UP);
-						result = focusedWidget->DispatchWindowEvent(keyEvent);
-						break;
+		case keyUp:
+			InitializeKeyEvent(keyEvent,aOSEvent,focusedWidget,NS_KEY_UP);
+			result = focusedWidget->DispatchWindowEvent(keyEvent);
+			break;
+
 		case keyDown:	
-		case autoKey:	InitializeKeyEvent(keyEvent,aOSEvent,focusedWidget,NS_KEY_DOWN);
-						result = focusedWidget->DispatchWindowEvent(keyEvent);
-						if (PR_FALSE==IsSpecialRaptorKey((aOSEvent.message & keyCodeMask) >> 8)) {
-							InitializeKeyEvent(keyEvent,aOSEvent,focusedWidget,NS_KEY_PRESS);
-							ConvertKeyEventToUnicode(keyEvent,aOSEvent);
-							result = focusedWidget->DispatchWindowEvent(keyEvent);
-						}
-						break;
+		case autoKey:
+			InitializeKeyEvent(keyEvent,aOSEvent,focusedWidget,NS_KEY_DOWN);
+			result = focusedWidget->DispatchWindowEvent(keyEvent);
+			if (! IsSpecialRaptorKey((aOSEvent.message & keyCodeMask) >> 8))
+			{
+				InitializeKeyEvent(keyEvent,aOSEvent,focusedWidget,NS_KEY_PRESS);
+				ConvertKeyEventToUnicode(keyEvent,aOSEvent);
+				result = focusedWidget->DispatchWindowEvent(keyEvent);
+			}
+			break;
 	}
 
 	return result;
 }
-#else
-PRBool nsMacEventHandler::HandleKeyEvent(EventRecord& aOSEvent)
-{
-	// get the focused widget
-	nsWindow* focusedWidget = mTopLevelWidget;	
-	nsCOMPtr<nsToolkit> toolkit ( dont_AddRef((nsToolkit*)mTopLevelWidget->GetToolkit()) );
-	if (toolkit)
-		focusedWidget = toolkit->GetFocus();
-	
-	if (!focusedWidget) return PR_FALSE;
 
-	// nsEvent
-	nsKeyEvent	keyEvent;
-	keyEvent.eventStructType = NS_KEY_EVENT;
-	switch (aOSEvent.what)
-	{
-		case keyUp:		keyEvent.message = NS_KEY_UP;			break;
-		case keyDown:	keyEvent.message = NS_KEY_DOWN;		break;
-		case autoKey:	keyEvent.message = NS_KEY_DOWN;		break;
-	}
-	keyEvent.point.x		= 0;
-	keyEvent.point.y		= 0;
-	keyEvent.time				= PR_IntervalNow();
-
-	// nsGUIEvent
-	keyEvent.widget			= focusedWidget;
-	keyEvent.nativeMsg	= (void*)&aOSEvent;
-
-	// nsInputEvent
-	keyEvent.isShift		= ((aOSEvent.modifiers & shiftKey) != 0);
-	keyEvent.isControl	= ((aOSEvent.modifiers & controlKey) != 0);
-	keyEvent.isAlt			= ((aOSEvent.modifiers & optionKey) != 0);
-	keyEvent.isCommand	= ((aOSEvent.modifiers & cmdKey) != 0);
-
-	// nsKeyEvent
-  keyEvent.keyCode		= ConvertMacToRaptorKeyCode(aOSEvent.message, aOSEvent.modifiers);
-    keyEvent.charCode    = (aOSEvent.message & charCodeMask);
-
-	return(focusedWidget->DispatchWindowEvent(keyEvent));
-}
-#endif
-
+#pragma mark -
 //-------------------------------------------------------------------------
 //
 // HandleActivateEvent
@@ -842,10 +833,13 @@ PRBool nsMacEventHandler::HandleMouseDownEvent(
 			nsWindow* widgetHit = (nsWindow*)mouseEvent.widget;
 			if (widgetHit)
 			{
-				// set the focus on the widget hit
-				nsCOMPtr<nsToolkit> toolkit ( dont_AddRef((nsToolkit*)widgetHit->GetToolkit()) );
-				if (toolkit)
-					toolkit->SetFocus(widgetHit);
+				// set the focus on the widget hit, if it accepts it
+				if (widgetHit->AcceptFocusOnClick())
+				{
+					nsCOMPtr<nsToolkit> toolkit ( dont_AddRef((nsToolkit*)widgetHit->GetToolkit()) );
+					if (toolkit)
+						toolkit->SetFocus(widgetHit);
+				}
 
 				// dispatch the event
 				retVal = widgetHit->DispatchMouseEvent(mouseEvent);
