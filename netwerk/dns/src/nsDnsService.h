@@ -111,6 +111,9 @@ protected:
     // Called by the DNS thread to get the next lookup to process.
     // Blocks until a lookup is available.
     nsresult DequeueLookup(nsDNSLookup **);
+
+    // Needed if the DNS thread is not already waiting on the lookup monitor.
+    PRBool mShutdownInProgress;
 #endif
 
 #ifdef DNS_TIMING
