@@ -112,13 +112,13 @@ real_install:
 
 real_clobber:
 	cd $(MOZ_SRC)/ns; \
-	$(MAKE) -f $(THIS_MAKEFILE) clobber; \
-	$(MAKE) -f $(THIS_MAKEFILE) RAPTOR_PASS2=pass2 clobber; \
+	$(MAKE) -f $(THIS_MAKEFILE) clobber_all; \
+	$(MAKE) -f $(THIS_MAKEFILE) RAPTOR_PASS2=pass2 clobber_all; \
 	$(MAKE) -f $(THIS_MAKEFILE) final_clobber
 
 final_clobber:
 	cd $(MOZ_SRC)/ns; \
-	-rd /s /q dist
+	$(RM) -r dist
 
 real_depend:
 	cd $(MOZ_SRC)/ns; \
