@@ -29,14 +29,16 @@ PACKAGE_LIB=$(PACKAGE_DIR)/lib
 PACKAGE_EXAMPLE=$(PACKAGE_DIR)/example
 
 ifeq ($(PACKAGE_VER),)
-PACKAGE_VER=1.0
+PACKAGE_VER=1_1
 endif
 
 
 ifeq ($(OS_ARCH),Linux)
 PACKAGE_OS=linux
+SET_CLASSPATH="export CLASSPATH="
 else
 PACKAGE_OS=solaris
+SET_CLASSPATH="setenv CLASSPATH "
 endif
 
 buildRunems:
@@ -50,7 +52,7 @@ ifneq ($(BUILD_DOM_ONLY),)
 	cp -R $(DIST)/classes/org/mozilla/util $(DIST)/../java/build/org/mozilla
 	cp -R $(DIST)/classes/org/w3c $(DIST)/../java/build/org
 	cd $(DIST)/../java/build
-	jar -cvfM0 JavaDOM_$(PACKAGE_VER)_$(PACKAGE_OS).jar org 
+	$(JDKHOME)/bin/jar -cvfM0 JavaDOM_$(PACKAGE_VER)_$(PACKAGE_OS).jar org 
 	cp JavaDOM_$(PACKAGE_VER)_$(PACKAGE_OS).jar $(PACKAGE_LIB)/JavaDOM_$(PACKAGE_VER)_$(PACKAGE_OS).jar
 	rm -Rf $(DIST)/../java/build/org
 	rm -f $(DIST)/../java/build/JavaDOM_$(PACKAGE_VER)_$(PACKAGE_OS).jar
@@ -76,7 +78,7 @@ ifneq ($(BUILD_PLUGLETS_ONLY),)
 	cp -R $(DIST)/classes/org/mozilla/plugins $(DIST)/../java/build/org/mozilla
 	cp -R $(DIST)/classes/org/w3c $(DIST)/../java/build/org
 	cd $(DIST)/../java/build
-	jar -cvfM0 Pluglet_$(PACKAGE_VER)_$(PACKAGE_OS).jar org 
+	$(JDKHOME)/bin/jar -cvfM0 Pluglet_$(PACKAGE_VER)_$(PACKAGE_OS).jar org 
 	cp Pluglet_$(PACKAGE_VER)_$(PACKAGE_OS).jar $(PACKAGE_LIB)/Pluglet_$(PACKAGE_VER)_$(PACKAGE_OS).jar
 	rm -Rf $(DIST)/../java/build/org
 	rm -f $(DIST)/../java/build/Pluglet_$(PACKAGE_VER)_$(PACKAGE_OS).jar
@@ -107,40 +109,38 @@ ifneq ($(BUILD_WEBCLIENT_ONLY),)
 	cp -R $(DIST)/classes/org/mozilla/xpcom $(DIST)/../java/build/org/mozilla
 	cp -R $(DIST)/classes/org/w3c $(DIST)/../java/build/org
 	cd $(DIST)/../java/build
-	jar -cvfM0 Webclient_$(PACKAGE_VER)_$(PACKAGE_OS).jar org 
-	cp Webclient_$(PACKAGE_VER)_$(PACKAGE_OS).jar $(PACKAGE_LIB)/Webclient_$(PACKAGE_VER)_$(PACKAGE_OS).jar
+	$(JDKHOME)/bin/jar -cvfM0 webclient_$(PACKAGE_VER)_$(PACKAGE_OS).jar org 
+	cp webclient_$(PACKAGE_VER)_$(PACKAGE_OS).jar $(PACKAGE_LIB)/webclient_$(PACKAGE_VER)_$(PACKAGE_OS).jar
 	rm -Rf $(DIST)/../java/build/org
-	rm -f $(DIST)/../java/build/Webclient_$(PACKAGE_VER)_$(PACKAGE_OS).jar
+	rm -f $(DIST)/../java/build/webclient_$(PACKAGE_VER)_$(PACKAGE_OS).jar
 	cp $(DIST)/bin/libjavadomjni.so $(PACKAGE_LIB)/libjavadomjni.so
 	cp $(DIST)/bin/components/libjavadom.so $(PACKAGE_LIB)/libjavadom.so
 	cp $(DIST)/bin/libwebclient.so $(PACKAGE_LIB)/libwebclient.so
 	cp $(DIST)/bin/libwebclientstub.so $(PACKAGE_LIB)/libwebclientstub.so
-	cp $(DIST)/lib/libwc_share.so $(PACKAGE_LIB)/libwc_share.so
 	cp $(DIST)/bin/components/libbcorb.so $(PACKAGE_LIB)/libbcorb.so
+	cp $(DIST)/bin/libblackconnectjni.so $(PACKAGE_LIB)/libblackconnectjni.so
 	cp $(DIST)/bin/components/libbcjavastubs.so $(PACKAGE_LIB)/libbcjavastubs.so
 	cp $(DIST)/bin/components/libjavaloader.so $(PACKAGE_LIB)/libjavaloader.so
-	cp $(DIST)/bin/components/libjavaSample.so $(PACKAGE_LIB)/libjavaSample.so
 	cp $(DIST)/bin/components/libbcxpcomstubs.so $(PACKAGE_LIB)/libbcxpcomstubs.so
 	cp $(DIST)/bin/regxpcom $(PACKAGE_LIB)/regxpcom
 	chmod 775 $(PACKAGE_LIB)/libbcorb.so
 	chmod 775 $(PACKAGE_LIB)/libbcjavastubs.so
 	chmod 775 $(PACKAGE_LIB)/libjavaloader.so
-	chmod 775 $(PACKAGE_LIB)/libjavaSample.so
 	chmod 775 $(PACKAGE_LIB)/libbcxpcomstubs.so
 	chmod 775 $(PACKAGE_LIB)/regxpcom
 	chmod 775 $(PACKAGE_LIB)/libjavadomjni.so
 	chmod 775 $(PACKAGE_LIB)/libjavadom.so
 	chmod 775 $(PACKAGE_LIB)/libwebclient.so
 	chmod 775 $(PACKAGE_LIB)/libwebclientstub.so
-	chmod 775 $(PACKAGE_LIB)/libwc_share.so
 	@echo +++ Creating Commercial Package. Use runem.bat to run the test browser.
 	rm -f runem_unix_commercial.bat
-	@echo copy ../lib/libwebclient.so ../.. >> runem_unix_commercial.bat
-	@echo copy ../lib/libwebclientstub.so ../.. >> runem_unix_commercial.bat
-	@echo copy ../lib/libjavadom.so ../../components >> runem_unix_commercial.bat
-	@echo copy ../lib/libjavadomjni.so ../.. >> runem_unix_commercial.bat
-	@echo setenv CLASSPATH ../lib/Webclient_$(PACKAGE_VER)_$(PACKAGE_OS).jar>> runem_unix_commercial.bat
-	@echo $(PERL) ./runem.pl org.mozilla.webclient.test.EmbeddedMozilla $(DEPTH) %1% >> runem_unix_commercial.bat
+	@echo cp ../lib/libwebclient.so ../.. >> runem_unix_commercial.bat
+	@echo cp ../lib/libwebclientstub.so ../.. >> runem_unix_commercial.bat
+	@echo cp ../lib/libjavadom.so ../../components >> runem_unix_commercial.bat
+	@echo cp ../lib/libjavadomjni.so ../.. >> runem_unix_commercial.bat
+	@echo cp ../lib/libblackconnectjni.so ../.. >> runem_unix_commercial.bat
+	@echo $(SET_CLASSPATH)../lib/webclient_$(PACKAGE_VER)_$(PACKAGE_OS).jar>> runem_unix_commercial.bat
+	@echo $(PERL) ./runem.pl org.mozilla.webclient.test.EmbeddedMozillaImpl $(DEPTH) %1% >> runem_unix_commercial.bat
 	cp -f runem_unix_commercial.bat $(PACKAGE_EXAMPLE)/runem.bat
 	cp -f $(DIST)/../java/webclient/src_share/runem.pl $(PACKAGE_EXAMPLE)/runem.pl
 	chmod 775 $(PACKAGE_EXAMPLE)/runem.bat
@@ -150,7 +150,7 @@ ifneq ($(BUILD_WEBCLIENT_ONLY),)
 	chmod 775 $(DIST)/symlink.sh
 	cp $(DIST)/../java/build/README.WEBCLIENT $(PACKAGE_DIR)/README.WEBCLIENT
 	cd $(DIST) ; \
-	zip -r Webclient_$(PACKAGE_VER)_$(PACKAGE_OS).xpi install.js symlink.sh javadev
+	zip -r webclient_$(PACKAGE_VER)_$(PACKAGE_OS).xpi install.js symlink.sh javadev
 else
 ifneq ($(BUILD_BLACKCONNECT_ONLY),)
 	if test ! -d $(PACKAGE_DIR) ; then mkdir $(PACKAGE_DIR) ; else true ; fi ;
@@ -161,7 +161,7 @@ ifneq ($(BUILD_BLACKCONNECT_ONLY),)
 	cp -R $(DIST)/classes/org/mozilla/util $(DIST)/../java/build/org/mozilla
 	cp -R $(DIST)/classes/org/mozilla/xpcom $(DIST)/../java/build/org/mozilla
 	cd $(DIST)/../java/build
-	jar -cvfM0 Blackconnect_$(PACKAGE_VER)_$(PACKAGE_OS).jar org 
+	$(JDKHOME)/bin/jar -cvfM0 Blackconnect_$(PACKAGE_VER)_$(PACKAGE_OS).jar org 
 	cp Blackconnect_$(PACKAGE_VER)_$(PACKAGE_OS).jar $(PACKAGE_LIB)/Blackconnect_$(PACKAGE_VER)_$(PACKAGE_OS).jar
 	rm -Rf $(DIST)/../java/build/org
 	rm -f $(DIST)/../java/build/Blackconnect_$(PACKAGE_VER)_$(PACKAGE_OS).jar
@@ -193,7 +193,7 @@ ifneq ($(BUILD_BLACKWOOD),)
 	cp -R $(DIST)/classes/org/mozilla $(DIST)/../java/build/org
 	cp -R $(DIST)/classes/org/w3c $(DIST)/../java/build/org
 	cd $(DIST)/../java/build
-	jar -cvfM0 Blackwood_$(PACKAGE_VER)_$(PACKAGE_OS).jar org 
+	$(JDKHOME)/bin/jar -cvfM0 Blackwood_$(PACKAGE_VER)_$(PACKAGE_OS).jar org 
 	cp Blackwood_$(PACKAGE_VER)_$(PACKAGE_OS).jar $(PACKAGE_LIB)/Blackwood_$(PACKAGE_VER)_$(PACKAGE_OS).jar
 	rm -Rf $(DIST)/../java/build/org
 	rm -f $(DIST)/../java/build/Blackwood_$(PACKAGE_VER)_$(PACKAGE_OS).jar
@@ -203,7 +203,6 @@ ifneq ($(BUILD_BLACKWOOD),)
 	cp $(DIST)/bin/components/libpluglet.so $(PACKAGE_LIB)/libpluglet.so
 	cp $(DIST)/bin/libwebclient.so $(PACKAGE_LIB)/libwebclient.so
 	cp $(DIST)/bin/libwebclientstub.so $(PACKAGE_LIB)/libwebclientstub.so
-	cp $(DIST)/lib/libwc_share.so $(PACKAGE_LIB)/libwc_share.so
 	cp $(DIST)/bin/components/libbcorb.so $(PACKAGE_LIB)/libbcorb.so
 	cp $(DIST)/bin/components/libbcjavastubs.so $(PACKAGE_LIB)/libbcjavastubs.so
 	cp $(DIST)/bin/components/libjavaloader.so $(PACKAGE_LIB)/libjavaloader.so
@@ -216,7 +215,6 @@ ifneq ($(BUILD_BLACKWOOD),)
 	chmod 775 $(PACKAGE_LIB)/libpluglet.so
 	chmod 775 $(PACKAGE_LIB)/libwebclient.so
 	chmod 775 $(PACKAGE_LIB)/libwebclientstub.so
-	chmod 775 $(PACKAGE_LIB)/libwc_share.so
 	chmod 775 $(PACKAGE_LIB)/libbcorb.so
 	chmod 775 $(PACKAGE_LIB)/libbcjavastubs.so
 	chmod 775 $(PACKAGE_LIB)/libjavaloader.so
@@ -225,14 +223,14 @@ ifneq ($(BUILD_BLACKWOOD),)
 	chmod 775 $(PACKAGE_LIB)/regxpcom
 	@echo +++ Creating Commercial Package. Use runem.bat to run the test browser.
 	rm -f runem_unix_commercial.bat
-	@echo copy ../lib/libwebclient.so ../.. >> runem_unix_commercial.bat
-	@echo copy ../lib/libwebclientstub.so ../.. >> runem_unix_commercial.bat
-	@echo copy ../lib/libjavadom.so ../../components >> runem_unix_commercial.bat
-	@echo copy ../lib/libjavadomjni.so ../.. >> runem_unix_commercial.bat
-	@echo copy ../lib/libplugletjni.so ../.. >> runem_unix_commercial.bat
-	@echo copy ../lib/libpluglet.so ../../components >> runem_unix_commercial.bat
-	@echo setenv CLASSPATH ../lib/Blackwood_$(PACKAGE_VER)_$(PACKAGE_OS).jar>> runem_unix_commercial.bat
-	@echo $(PERL) ./runem.pl org.mozilla.webclient.test.EmbeddedMozilla $(DEPTH) %1% >> runem_unix_commercial.bat
+	@echo cp ../lib/libwebclient.so ../.. >> runem_unix_commercial.bat
+	@echo cp ../lib/libwebclientstub.so ../.. >> runem_unix_commercial.bat
+	@echo cp ../lib/libjavadom.so ../../components >> runem_unix_commercial.bat
+	@echo cp ../lib/libjavadomjni.so ../.. >> runem_unix_commercial.bat
+	@echo cp ../lib/libplugletjni.so ../.. >> runem_unix_commercial.bat
+	@echo cp ../lib/libpluglet.so ../../components >> runem_unix_commercial.bat
+	@echo $(SET_CLASSPATH)../lib/Blackwood_$(PACKAGE_VER)_$(PACKAGE_OS).jar>> runem_unix_commercial.bat
+	@echo $(PERL) ./runem.pl org.mozilla.webclient.test.EmbeddedMozillaImpl $(DEPTH) %1% >> runem_unix_commercial.bat
 	cp -f runem_unix_commercial.bat $(PACKAGE_EXAMPLE)/runem.bat
 	cp -f $(DIST)/../java/webclient/src_share/runem.pl $(PACKAGE_EXAMPLE)/runem.pl
 	chmod 775 $(PACKAGE_EXAMPLE)/runem.bat
