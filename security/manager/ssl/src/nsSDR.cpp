@@ -73,8 +73,6 @@ nsSDRContext::~nsSDRContext()
 /* void getInterface (in nsIIDRef uuid, [iid_is (uuid), retval] out nsQIResult result); */
 NS_IMETHODIMP nsSDRContext::GetInterface(const nsIID & uuid, void * *result)
 {
-  nsresult rv;
-
   if (uuid.Equals(NS_GET_IID(nsIPrompt))) {
     nsCOMPtr<nsIProxyObjectManager> proxyman(do_GetService(NS_XPCOMPROXY_CONTRACTID));
     if (!proxyman) return NS_ERROR_FAILURE;
@@ -93,10 +91,10 @@ NS_IMETHODIMP nsSDRContext::GetInterface(const nsIID & uuid, void * *result)
       }
     }
   } else {
-    rv = NS_ERROR_NO_INTERFACE;
+    return NS_ERROR_NO_INTERFACE;
   }
 
-  return rv;
+  return NS_OK;
 }
 
 // Standard ISupports implementation
