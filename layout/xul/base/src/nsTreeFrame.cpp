@@ -60,7 +60,7 @@ NS_NewTreeFrame (nsIFrame** aNewFrame)
 
 // Constructor
 nsTreeFrame::nsTreeFrame()
-:nsTableFrame(),mSlatedForReflow(PR_FALSE), mTwistyListener(nsnull) { }
+:nsTableFrame(),mSlatedForReflow(PR_FALSE), mTwistyListener(nsnull), mGeneration(0), mMaxGeneration(0) { }
 
 // Destructor
 nsTreeFrame::~nsTreeFrame()
@@ -304,6 +304,19 @@ nsTreeFrame::Reflow(nsIPresContext&          aPresContext,
 							      nsReflowStatus&          aStatus)
 {
   mSlatedForReflow = PR_FALSE;
+  
+  nsRect rect;
+  GetRect(rect);
+  if (rect.width != aReflowState.mComputedWidth && aReflowState.reason == eReflowReason_Resize) {
+    // We're doing a resize and changing the width of the table. All rows must
+    // reflow. Reset our generation.
+    mGeneration = 0;
+  }
+  else {
+    ++mGeneration;
+    mMaxGeneration = mGeneration;
+  }
+
   nsresult rv = nsTableFrame::Reflow(aPresContext, aDesiredSize, aReflowState, aStatus);
   
   if (aReflowState.mComputedWidth != NS_UNCONSTRAINEDSIZE) 
@@ -315,6 +328,9 @@ nsTreeFrame::Reflow(nsIPresContext&          aPresContext,
        aReflowState.mComputedBorderPadding.top + aReflowState.mComputedBorderPadding.bottom;
 
   aDesiredSize.ascent = aDesiredSize.height;
+  
+  if (mGeneration == 0)
+    mGeneration = mMaxGeneration;
 
   return rv;
 }
@@ -350,7 +366,6 @@ nsTreeFrame::DidReflow(nsIPresContext&   aPresContext,
       NS_RELEASE(reflowCmd);
     }
   }
-
   return rv;
 }
 

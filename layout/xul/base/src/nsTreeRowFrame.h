@@ -35,6 +35,11 @@ public:
                                       nsReflowStatus&      aStatus,
                                       nsIFrame *           aNextFrame);
 
+  NS_IMETHOD     Reflow(nsIPresContext&          aPresContext,
+							         nsHTMLReflowMetrics&     aDesiredSize,
+							         const nsHTMLReflowState& aReflowState,
+							         nsReflowStatus&          aStatus);
+
   NS_IMETHOD Init(nsIPresContext&  aPresContext,
                   nsIContent*      aContent,
                   nsIFrame*        aParent,
@@ -50,4 +55,5 @@ protected:
 
 protected: // Data Members
   PRBool mIsHeader;
+  PRInt32 mGeneration;
 }; // class nsTreeRowFrame

@@ -81,8 +81,8 @@ protected:
 
   virtual PRBool RowGroupReceivesExcessSpace();
   
-  void DestroyRows(nsIPresContext& aPresContext, PRInt32& rowsToLose);
-  void ReverseDestroyRows(nsIPresContext& aPresContext, PRInt32& rowsToLose);
+  void DestroyRows(nsTableFrame* aTableFrame, nsIPresContext& aPresContext, PRInt32& rowsToLose);
+  void ReverseDestroyRows(nsTableFrame* aTableFrame, nsIPresContext& aPresContext, PRInt32& rowsToLose);
 
   NS_IMETHOD     ReflowBeforeRowLayout(nsIPresContext&      aPresContext,
                                       nsHTMLReflowMetrics& aDesiredSize,
