@@ -367,7 +367,7 @@ NSGETMODULE_ENTRY_POINT(NSMODULEINFO(_name))
 #else // DEPENDENT_LIBS
 
 #define NS_IMPL_NSGETMODULE_WITH_CTOR_DTOR(_name, _components, _ctor, _dtor)  \
-const char* gDependlibs[]={DEPENDENT_LIBS "\0"};                             \
+NSDEPENDENT_LIBS(_name)                                                       \
 nsModuleInfo NSMODULEINFO(_name) = {                                          \
     NS_MODULEINFO_VERSION,                                                    \
     (#_name),                                                                 \
