@@ -132,7 +132,7 @@ interface nsIFile : nsISupports
      *       which case the current leaf name will be used.
      */
     void copyTo(in nsIFile newParentDir, in AString newName);
-    [noscrpit] void CopyToNative(in nsIFile newParentDir, in ACString newName);
+    [noscript] void CopyToNative(in nsIFile newParentDir, in ACString newName);
 
     /**
      *  copyToFollowingLinks[Native]
