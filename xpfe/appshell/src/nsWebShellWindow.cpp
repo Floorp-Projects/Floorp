@@ -1859,9 +1859,9 @@ void nsWebShellWindow::ShowAppropriateChrome()
   // get this window's document
   if (NS_FAILED(ConvertWebShellToDOMWindow(mWebShell, getter_AddRefs(domWindow))))
     return;
-  if (NS_FAILED(domWindow->GetDocument(getter_AddRefs(chromeDoc))))
+  if (NS_FAILED(domWindow->GetDocument(getter_AddRefs(chromeDoc))) || !chromeDoc)
     return;
-  if (NS_FAILED(chromeDoc->GetDocumentElement(getter_AddRefs(rootElement))))
+  if (NS_FAILED(chromeDoc->GetDocumentElement(getter_AddRefs(rootElement))) || !rootElement)
     return;
 
   // get a list of this document's elements with the chromeclass attribute specified
