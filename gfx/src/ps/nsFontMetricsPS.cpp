@@ -716,9 +716,16 @@ nsFontPSFreeType::CSSFontEnumCallback(const nsString& aFamily, PRBool aGeneric,
     if (!value.get())
       return PR_TRUE; // keep trying
     // strip down to just the family name
-    PRUint32 startFamily = value.FindChar('-') + 1;
-    PRUint32 endFamily = value.FindChar('-', startFamily);
-    familyname.Append(Substring(value, startFamily, endFamily - startFamily));
+    PRInt32 startFamily = value.FindChar('-') + 1;
+    if (startFamily < 0) // 1st '-' not found. Not FFRE but just familyName.
+      familyname = value;
+    else { 
+      PRInt32 endFamily = value.FindChar('-', startFamily);
+      if (endFamily < 0) // 2nd '-' not found
+        familyname.Append(Substring(value, startFamily));
+      else  // FFRE 
+        familyname.Append(Substring(value, startFamily, endFamily - startFamily));
+    }
     FIND_FONTPS_PRINTF(("generic font \"%s\" -> \"%s\"", name.get(),
                         familyname.get()));
   }
@@ -758,9 +765,16 @@ nsFontPSFreeType::AddUserPref(nsIAtom *aLang, const nsFont& aFont,
     return PR_FALSE;
 
   // strip down to just the family name
-  PRUint32 startFamily = value.FindChar('-') + 1;
-  PRUint32 endFamily = value.FindChar('-', startFamily);
-  fontName.Append(Substring(value, startFamily, endFamily - startFamily));
+  PRInt32 startFamily = value.FindChar('-') + 1;
+  if (startFamily < 0) // '-' not found. Not FFRE but just familyName 
+    fontName = value;
+  else {
+    PRInt32 endFamily = value.FindChar('-', startFamily);
+    if (endFamily < 0) // 2nd '-' not found
+      fontName.Append(Substring(value, startFamily));
+    else  // FFRE
+      fontName.Append(Substring(value, startFamily, endFamily - startFamily));
+  }
 
   AddFontEntries(fontName, fpi->lang, fpi->weight,
                  nsIFontCatalogService::kFCWidthAny, fpi->slant,
