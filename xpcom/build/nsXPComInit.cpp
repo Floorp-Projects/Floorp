@@ -35,7 +35,7 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "nsXPCom.h"
+#include "nsXPCOM.h"
 #include "nsIRegistry.h"
 #include "nscore.h"
 #include "nsCOMPtr.h"
