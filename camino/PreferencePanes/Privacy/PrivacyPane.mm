@@ -13,6 +13,7 @@
 #include "nsIURI.h"
 #include "nsNetUtil.h"
 #include "nsString.h"
+#include "STFPopUpButtonCell.h"
 
 // we should really get this from "CHBrowserService.h",
 // but that requires linkage and extra search paths.
@@ -262,6 +263,10 @@ PR_STATIC_CALLBACK(int) compareValues(nsICookie* aCookie1, nsICookie* aCookie2, 
   NSPopUpButtonCell *popupButtonCell = [mPermissionColumn dataCell];
   [popupButtonCell setEditable:YES];
   [popupButtonCell addItemsWithTitles:[NSArray arrayWithObjects:[self getLocalizedString:@"Allow"], [self getLocalizedString:@"Deny"], nil]];
+  
+  //remove the popup from the filter input fields
+  [[mPermissionFilterField cell] setHasPopUpButton: NO];
+  [[mCookiesFilterField cell] setHasPopUpButton: NO];
 }
 
 -(void) mapCookiePrefToGUI: (int)pref
@@ -324,6 +329,10 @@ PR_STATIC_CALLBACK(int) compareValues(nsICookie* aCookie1, nsICookie* aCookie2, 
         [[[columns objectAtIndex:i] dataCell] setDrawsBackground:NO];
     }
   }
+  
+  //clear the filter field
+  //
+  [mCookiesFilterField setStringValue: @""];  
   
   // we shouldn't need to do this, but the scrollbar won't enable unless we
   // force the table to reload its data. Oddly it gets the number of rows correct,
@@ -441,6 +450,10 @@ PR_STATIC_CALLBACK(int) compareValues(nsICookie* aCookie1, nsICookie* aCookie2, 
   // use alternating row colors on 10.3+
   if ([mPermissionsTable respondsToSelector:@selector(setUsesAlternatingRowBackgroundColors:)])
     [mPermissionsTable setUsesAlternatingRowBackgroundColors:YES];
+  
+  //clear the filter field
+  //
+  [mPermissionFilterField setStringValue: @""];
   
   // we shouldn't need to do this, but the scrollbar won't enable unless we
   // force the table to reload its data. Oddly it gets the number of rows correct,
@@ -800,4 +813,44 @@ PR_STATIC_CALLBACK(int) compareValues(nsICookie* aCookie1, nsICookie* aCookie2, 
     CFRelease(fileSystemURL);
   }
 }
+
+- (void)controlTextDidChange:(NSNotification *)aNotification
+{
+  NSString *filterString = [[aNotification object] stringValue];
+  nsCAutoString host;
+  
+  // find out if we are filtering the permission or the cookies
+  if (([aNotification object] == mPermissionFilterField) && mCachedPermissions && mPermissionManager) {
+    // the user wants to filter down the list of cookies. Reinitialize the list of permission in case
+    // they deleted or replaced a letter.
+    [self populatePermissionCache];
+    if ([filterString length]) {
+      for (int row = mCachedPermissions->Count() - 1; row >= 0; row--) {
+        mCachedPermissions->ObjectAt(row)->GetHost(host);
+        if ([[NSString stringWithUTF8String: host.get()] rangeOfString: filterString].location == NSNotFound)
+          // remove from cookie permissions list
+          mCachedPermissions->RemoveObjectAt(row);
+      }
+    }
+    [mPermissionsTable deselectAll: self];   // don't want any traces of previous selection
+    [mPermissionsTable reloadData];
+  } 
+  else if (([aNotification object] == mCookiesFilterField) && mCachedCookies && mCookieManager) {
+    // reinitialize the list of cookies in case user deleted a letter or replaced a letter
+    [self populateCookieCache];
+    
+    if ([filterString length]) {
+      for (int row = mCachedCookies->Count() - 1; row >= 0; row--) {
+        // only search on the host
+        mCachedCookies->ObjectAt(row)->GetHost(host);
+
+        if ([[NSString stringWithUTF8String: host.get()] rangeOfString: filterString].location == NSNotFound)
+          mCachedCookies->RemoveObjectAt(row);
+      }
+    }
+    [mCookiesTable deselectAll: self];   // don't want any traces of previous selection
+    [mCookiesTable reloadData];
+  }
+}
+
 @end

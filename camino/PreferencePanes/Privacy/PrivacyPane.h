@@ -3,6 +3,7 @@
 #import "PreferencePaneBase.h"
 #include "nsCOMArray.h"
 #import "ExtendedTableView.h"
+#import "SearchTextField.h"
 
 class nsIPref;
 class nsIPermissionManager;
@@ -27,7 +28,7 @@ class nsICookie;
   IBOutlet id                 mPermissionsPanel;
   IBOutlet ExtendedTableView* mPermissionsTable;
   IBOutlet NSTableColumn*     mPermissionColumn;
-
+  IBOutlet SearchTextField*   mPermissionFilterField;
   nsIPermissionManager*       mPermissionManager;   // STRONG (should be nsCOMPtr)
   nsCOMArray<nsIPermission>*  mCachedPermissions;   // parallel list for speed, STRONG
       
@@ -35,7 +36,7 @@ class nsICookie;
   IBOutlet id                 mCookiesPanel;
   IBOutlet ExtendedTableView* mCookiesTable;
   IBOutlet NSButton*          mRemoveCookiesButton;
-
+  IBOutlet SearchTextField*   mCookiesFilterField;
   nsICookieManager*           mCookieManager;
   nsCOMArray<nsICookie>*      mCachedCookies;
 }

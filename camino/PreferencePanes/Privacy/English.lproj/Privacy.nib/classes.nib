@@ -36,9 +36,11 @@
                 mAskAboutCookies = NSButton; 
                 mAutoFillPasswords = NSButton; 
                 mCookieBehavior = NSMatrix; 
+                mCookiesFilterField = SearchTextField; 
                 mCookiesPanel = id; 
                 mCookiesTable = ExtendedTableView; 
                 mPermissionColumn = NSTableColumn; 
+                mPermissionFilterField = SearchTextField; 
                 mPermissionsPanel = id; 
                 mPermissionsTable = ExtendedTableView; 
                 mRemoveCookiesButton = NSButton; 
@@ -46,7 +48,13 @@
             }; 
             SUPERCLASS = PreferencePaneBase; 
         }, 
-        {CLASS = PreferencePaneBase; LANGUAGE = ObjC; SUPERCLASS = NSPreferencePane; }
+        {CLASS = PreferencePaneBase; LANGUAGE = ObjC; SUPERCLASS = NSPreferencePane; }, 
+        {
+            ACTIONS = {selectText = id; }; 
+            CLASS = SearchTextField; 
+            LANGUAGE = ObjC; 
+            SUPERCLASS = NSTextField; 
+        }
     ); 
     IBVersion = 1; 
 }
