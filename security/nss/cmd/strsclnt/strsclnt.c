@@ -295,6 +295,8 @@ printSecurityInfo(PRFileDesc *fd)
 	    fprintf(stderr, "strsclnt: issuer  DN: %s\n", ip);
 	    PR_Free(ip);
 	}
+    }
+    if (cert) {
 	CERT_DestroyCertificate(cert);
 	cert = NULL;
     }
