@@ -266,7 +266,7 @@ friend	NS_IMETHODIMP	NS_NewInternetSearchService(nsISupports* aOuter, REFNSIID a
 static	nsresult	GetData(nsString &data, const char *sectionToFind, const char *attribToFind, nsString &value);
 	nsresult	GetInputs(const nsString &data, nsString &userVar, const nsString &text, nsString &input);
 	nsresult	GetURL(nsIRDFResource *source, nsIRDFLiteral** aResult);
-	nsresult	ParseHTML(nsIURI *aURL, nsIRDFResource *mParent, nsIRDFResource *engine, const nsString &htmlResults, PRBool useAllHREFsFlag, PRUint32 &numResults);
+	nsresult	ParseHTML(nsIURI *aURL, nsIRDFResource *mParent, nsIRDFResource *engine, nsString &htmlResults, PRBool useAllHREFsFlag, PRUint32 &numResults);
 
 			InternetSearchDataSource(void);
 	virtual		~InternetSearchDataSource(void);
@@ -2350,7 +2350,7 @@ InternetSearchDataSource::OnStopRequest(nsIChannel* channel, nsISupports *ctxt,
 
 NS_IMETHODIMP
 InternetSearchDataSource::ParseHTML(nsIURI *aURL, nsIRDFResource *mParent, nsIRDFResource *mEngine,
-	const nsString &htmlResults, PRBool useAllHREFsFlag, PRUint32 &numResults)
+	nsString &htmlResults, PRBool useAllHREFsFlag, PRUint32 &numResults)
 {
 	nsAutoString	data, engineStr;
 	nsAutoString	resultListStartStr, resultListEndStr;
