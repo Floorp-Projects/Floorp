@@ -55,6 +55,10 @@
 
 #include "nsIDocumentViewer.h"
 #include "nsIDOMHTMLImageElement.h"
+#include "nsICmdLineService.h"
+#include "nsIGlobalHistory.h"
+
+
 #include "nsIPresContext.h"
 #include "nsIPresShell.h"
 #include "nsFileSpec.h"  // needed for nsAutoCString
@@ -69,21 +73,16 @@ static NS_DEFINE_IID(kIWalletServiceIID, NS_IWALLETSERVICE_IID);
 static NS_DEFINE_IID(kWalletServiceCID, NS_WALLETSERVICE_CID);
 #endif
 
-// For history
-#include "nsRDFCID.h"
-#include "nsIHistoryDataSource.h"
-#include "nsIRDFService.h"
-static NS_DEFINE_CID(kRDFServiceCID, NS_RDFSERVICE_CID);
 
 static NS_DEFINE_IID(kIDocumentViewerIID, NS_IDOCUMENT_VIEWER_IID);
-
-#include "nsICmdLineService.h"
 
 
 /* Define Class IDs */
 static NS_DEFINE_IID(kAppShellServiceCID,        NS_APPSHELL_SERVICE_CID);
 static NS_DEFINE_IID(kBrowserAppCoreCID,         NS_BROWSERAPPCORE_CID);
 static NS_DEFINE_IID(kCmdLineServiceCID,    NS_COMMANDLINE_SERVICE_CID);
+static NS_DEFINE_IID(kCGlobalHistoryCID,       NS_GLOBALHISTORY_CID);
+
 /* Define Interface IDs */
 static NS_DEFINE_IID(kICmdLineServiceIID,   NS_ICOMMANDLINE_SERVICE_IID);
 static NS_DEFINE_IID(kIAppShellServiceIID,       NS_IAPPSHELL_SERVICE_IID);
@@ -95,6 +94,7 @@ static NS_DEFINE_IID(kINetSupportIID,            NS_INETSUPPORT_IID);
 static NS_DEFINE_IID(kIStreamObserverIID,        NS_ISTREAMOBSERVER_IID);
 static NS_DEFINE_IID(kIWebShellWindowIID,        NS_IWEBSHELL_WINDOW_IID);
 static NS_DEFINE_IID(kIURLListenerIID,           NS_IURL_LISTENER_IID);
+static NS_DEFINE_IID(kIGlobalHistoryIID,       NS_IGLOBALHISTORY_IID);
 
 #define APP_DEBUG 0
 
@@ -116,7 +116,7 @@ nsBrowserAppCore::nsBrowserAppCore()
   mWebShellWin          = nsnull;
   mWebShell             = nsnull;
   mContentAreaWebShell  = nsnull;
-  mHistory              = nsnull;
+  mGHistory             = nsnull;
 
   IncInstanceCount();
   NS_INIT_REFCNT();
@@ -132,7 +132,7 @@ nsBrowserAppCore::~nsBrowserAppCore()
   NS_IF_RELEASE(mWebShellWin);
   NS_IF_RELEASE(mWebShell);
   NS_IF_RELEASE(mContentAreaWebShell);
-  NS_IF_RELEASE(mHistory);
+  NS_IF_RELEASE(mGHistory);
   DecInstanceCount();  
 }
 
@@ -226,20 +226,7 @@ nsBrowserAppCore::Init(const nsString& aId)
    
   nsBaseAppCore::Init(aId);
 
-  // Grab the history data source and hold on to it so we can track
-  // document loads
-  nsIRDFService* rdf;
-  if (NS_SUCCEEDED(nsServiceManager::GetService(kRDFServiceCID,
-                                                nsIRDFService::GetIID(),
-                                                (nsISupports**) &rdf))) {
-    nsCOMPtr<nsIRDFDataSource> ds;
-    static const char* kHistoryDataSourceURI = "rdf:history";
-    if (NS_SUCCEEDED(rdf->GetDataSource(kHistoryDataSourceURI,
-                                        getter_AddRefs(ds)))) {
-      ds->QueryInterface(nsIHistoryDataSource::GetIID(), (void**) &mHistory);
-    }
-    nsServiceManager::ReleaseService(kRDFServiceCID, rdf);
-  }
+
 
   // register object into Service Manager
   static NS_DEFINE_IID(kIDOMAppCoresManagerIID, NS_IDOMAPPCORESMANAGER_IID);
@@ -252,9 +239,13 @@ nsBrowserAppCore::Init(const nsString& aId)
   if (NS_OK == rv) {
 	  appCoreManager->Add((nsIDOMBaseAppCore *)(nsBaseAppCore *)this);
   }
-	return rv;
 
-	return NS_OK;
+  // Get the Global history service  
+   nsServiceManager::GetService(kCGlobalHistoryCID, kIGlobalHistoryIID,
+					(nsISupports **)&mGHistory);
+
+   return rv;
+
 }
 
 NS_IMETHODIMP    
@@ -652,14 +643,14 @@ nsBrowserAppCore::EndLoadURL(nsIWebShell* aWebShell, const PRUnichar* aURL,
                              PRInt32 aStatus)
 {
     // Update global history.
-    NS_ASSERTION(mHistory != nsnull, "history not initialized");
-    if (mHistory) {
+    NS_ASSERTION(mGHistory != nsnull, "history not initialized");
+    if (mGHistory) {
         nsresult rv;
 
         nsAutoString url(aURL);
         char* urlSpec = url.ToNewCString();
         do {
-            if (NS_FAILED(rv = mHistory->AddPage(urlSpec, /* XXX referrer? */ nsnull, PR_Now()))) {
+            if (NS_FAILED(rv = mGHistory->AddPage(urlSpec, /* XXX referrer? */ nsnull, PR_Now()))) {
                 NS_ERROR("unable to add page to history");
                 break;
             }
@@ -670,7 +661,7 @@ nsBrowserAppCore::EndLoadURL(nsIWebShell* aWebShell, const PRUnichar* aURL,
                 break;
             }
 
-            if (NS_FAILED(rv = mHistory->SetPageTitle(urlSpec, title))) {
+            if (NS_FAILED(rv = mGHistory->SetPageTitle(urlSpec, title))) {
                 NS_ERROR("unable to set doc title");
                 break;
             }
