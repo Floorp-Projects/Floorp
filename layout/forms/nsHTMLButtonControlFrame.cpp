@@ -220,6 +220,9 @@ nsHTMLButtonControlFrame::ReParentFrameList(nsFrameManager* aFrameManager,
     // now reparent the contexts for the reparented frame too
     aFrameManager->ReParentStyleContext(frame, newParentContext);
   }
+
+  // Set NS_FRAME_HAS_CHILD_WITH_VIEW on the area frame if needed, bug 276236.
+  mFrames.FirstChild()->AddStateBits(GetStateBits() & NS_FRAME_HAS_CHILD_WITH_VIEW);
 }
 
 PRBool
