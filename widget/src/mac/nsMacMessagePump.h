@@ -30,41 +30,46 @@ class nsWindow;
 class nsMacMessagePump
 {
 	// CLASS MEMBERS
-  private:
-	PRBool						mRunning;
-	Point							mMousePoint;				// keep track of where the mouse is at all times
-	PRBool						mInBackground;
-	nsToolkit					*mToolkit;
-  static  nsWindow	*gCurrentWindow;
-  static  nsWindow  *gGrabWindow;
+private:
+	PRBool					mRunning;
+	Point					mMousePoint;	// keep track of where the mouse is at all times
+	PRBool					mInBackground;
+	nsToolkit*				mToolkit;
+
+	static nsWindow*		gCurrentWindow;
+	static nsWindow*		gGrabWindow;
 
 
 	// CLASS METHODS
-	private:		    
 		    	    
-  public:
-    				nsMacMessagePump(nsToolkit	*aTookKit);
-    virtual ~nsMacMessagePump();
+public:
+					nsMacMessagePump(nsToolkit	*aTookKit);
+	virtual 		~nsMacMessagePump();
   
-		PRBool			DoMessagePump();
-  		void			StopRunning() {mRunning = PR_FALSE;}
+	PRBool			DoMessagePump();
+	void			StopRunning() {mRunning = PR_FALSE;}
 
-		void 			DoMouseDown(EventRecord *aTheEvent);
-		void			DoMouseUp(EventRecord *aTheEvent);
-		void			DoMouseMove(EventRecord *aTheEvent);
-		void			DoPaintEvent(EventRecord *aTheEvent);
-		void 			DoKey(EventRecord *aTheEvent);
-		void 			DoMenu(EventRecord *aTheEvent, long menuResult);
-		void 			DoIdleWidgets();
+private:
+	void 			DoMouseDown(EventRecord &anEvent);
+	void			DoMouseUp(EventRecord &anEvent);
+	void			DoMouseMove(EventRecord &anEvent);
+	void			DoUpdate(EventRecord &anEvent);
+	void 			DoKey(EventRecord &anEvent);
+	void 			DoMenu(EventRecord &anEvent, long menuResult);
+	void			DoActivate(EventRecord &anEvent);
+
+	void			DispatchOSEventToRaptor(EventRecord &anEvent, WindowPtr aWindow);
+	void			DispatchMenuCommandToRaptor(EventRecord &anEvent, long menuResult);
 
 
-  	void 				SetCurrentWindow(nsWindow *aTheWin) { gCurrentWindow = aTheWin;}
-  	nsWindow* 			GetCurrentWindow(void) {return(gCurrentWindow);}
+  	void 				SetCurrentWindow(nsWindow *aTheWin)	{gCurrentWindow = aTheWin;}
+  	nsWindow* 			GetCurrentWindow(void)				{return(gCurrentWindow);}
 
+public:
 	typedef void (*nsWindowlessMenuEventHandler) (PRInt32 menuResult);
 	static nsWindowlessMenuEventHandler gWindowlessMenuEventHandler;
 	static void SetWindowlessMenuEventHandler(nsWindowlessMenuEventHandler func)
-						{gWindowlessMenuEventHandler = func;}
+									{gWindowlessMenuEventHandler = func;}
 };
 
 

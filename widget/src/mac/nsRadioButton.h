@@ -19,59 +19,27 @@
 #ifndef nsRadioButton_h__
 #define nsRadioButton_h__
 
-#include "nsWindow.h"
+#include "nsMacControl.h"
 #include "nsIRadioButton.h"
 
-/**-------------------------------------------------------------------------------
- * nsRadioButton Class definition
- * @update dc 10/16/98 
- */
-class nsRadioButton :  public nsWindow, public nsIRadioButton
+
+class nsRadioButton :  public nsMacControl, public nsIRadioButton
 {
 
 public:
   nsRadioButton();
   virtual ~nsRadioButton();
 
-	NS_DECL_ISUPPORTS
-
-  NS_IMETHOD Create(nsIWidget *aParent,
-              const nsRect &aRect,
-              EVENT_CALLBACK aHandleEventFunction,
-              nsIDeviceContext *aContext = nsnull,
-              nsIAppShell *aAppShell = nsnull,
-              nsIToolkit *aToolkit = nsnull,
-              nsWidgetInitData *aInitData = nsnull);
-  NS_IMETHOD Create(nsNativeWidget aParent,
-              const nsRect &aRect,
-              EVENT_CALLBACK aHandleEventFunction,
-              nsIDeviceContext *aContext = nsnull,
-              nsIAppShell *aAppShell = nsnull,
-              nsIToolkit *aToolkit = nsnull,
-              nsWidgetInitData *aInitData = nsnull);
-
+	// nsISupports
+	NS_IMETHOD_(nsrefcnt) AddRef();
+	NS_IMETHOD_(nsrefcnt) Release();
+	NS_IMETHOD QueryInterface(const nsIID& aIID, void** aInstancePtr);
 
     // nsIRadioButton part
   NS_IMETHOD     SetLabel(const nsString& aText);
   NS_IMETHOD     GetLabel(nsString& aBuffer);
   NS_IMETHOD 		 SetState(const PRBool aState);
   NS_IMETHOD     GetState(PRBool& aState);
-  NS_IMETHOD     Resize(PRUint32 aWidth,PRUint32 aHeight, PRBool aRepaint);
-  NS_IMETHOD     Resize(PRUint32 aX, PRUint32 aY,PRUint32 aWidth,PRUint32 aHeight, PRBool aRepaint);
-
-  virtual PRBool OnPaint(nsPaintEvent & aEvent);
-  virtual PRBool OnResize(nsSizeEvent &aEvent);
-  virtual PRBool DispatchMouseEvent(nsMouseEvent &aEvent);
-    
-
-private:
-	void DrawWidget(PRBool	aMouseInside);
-
-  
-  nsString			mLabel;
-  PRBool				mMouseDownInButton;
-  PRBool				mWidgetArmed;
-  PRBool				mButtonSet;
 };
 
 #endif // nsRadioButton_h__

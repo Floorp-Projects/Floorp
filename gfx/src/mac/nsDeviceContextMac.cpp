@@ -160,6 +160,8 @@ NS_IMETHODIMP nsDeviceContextMac :: CheckFontExistence(const nsString& aFontName
 
 bool nsDeviceContextMac :: GetMacFontNumber(const nsString& aFontName, short &fontNum)
 {
+	//¥TODO: We need to optimize this. Some kind of caching would be nice.
+
 	Str255 	systemFontName;
 	Str255	aStr;
 

@@ -24,6 +24,7 @@
 
 #include "nsToolkit.h"
 #include "nsWindow.h"
+#include "nsMacWindow.h"
 #include "nsAppShell.h"
 #include "nsButton.h"
 #include "nsRadioButton.h"
@@ -52,10 +53,12 @@ static NS_DEFINE_IID(kCFileWidgetCID, NS_FILEWIDGET_CID);
 static NS_DEFINE_IID(kCButtonCID,     NS_BUTTON_CID);
 static NS_DEFINE_IID(kCListBoxCID,    NS_LISTBOX_CID);
 static NS_DEFINE_IID(kCComboBoxCID,    NS_COMBOBOX_CID);
+static NS_DEFINE_IID(kCToolkit,       NS_TOOLKIT_CID);
 static NS_DEFINE_IID(kCLookAndFeelCID, NS_LOOKANDFEEL_CID);
 
 
 static NS_DEFINE_IID(kIWidget,        NS_IWIDGET_IID);
+static NS_DEFINE_IID(kIWindow,        NS_IWINDOW_IID);	//¥¥¥
 static NS_DEFINE_IID(kIAppShellIID,   NS_IAPPSHELL_IID);
 static NS_DEFINE_IID(kIButton,        NS_IBUTTON_IID);
 static NS_DEFINE_IID(kICheckButton,   NS_ICHECKBUTTON_IID);
@@ -141,11 +144,16 @@ nsresult nsWidgetFactory::CreateInstance(nsISupports *aOuter,
     nsWindow *inst = nsnull;
     if (aIID.Equals(kCWindow)) 
     	{
-      inst = new nsWindow();
+      inst = new nsMacWindow();
+    	}
+	 	else if (aIID.Equals(kIWindow)) 
+    	{
+     	inst = new nsMacWindow();
     	}
 	 	else if (aIID.Equals(kIWidget)) 
     	{
-     	inst = new nsWindow();
+     	//¥¥¥inst = new nsWindow();
+     	inst = new ChildWindow();
     	}
     else if (mClassID.Equals(kCAppShellCID)) 
 			{
@@ -161,11 +169,11 @@ nsresult nsWidgetFactory::CreateInstance(nsISupports *aOuter,
 				}
 			return res;
 			}
+    else if (mClassID.Equals(kCToolkit)) {
+        inst = (nsWindow*)new nsToolkit();
+    }
     else if ( mClassID.Equals(kCButtonCID)) {
         inst = new nsButton();
-    }
-    else if (aIID.Equals(kIWidget)) {
-        inst = new nsWindow();
     }
     else if (mClassID.Equals(kCChild)) {
         inst = new ChildWindow();

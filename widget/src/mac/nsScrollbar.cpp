@@ -17,13 +17,15 @@
  */
 
 #include "nsScrollbar.h"
+#include "nsMacWindow.h"
 #include "nsToolkit.h"
 #include "nsGUIEvent.h"
 #include "nsUnitConversion.h"
 #include "nsIDeviceContext.h"
 
-NS_IMPL_ADDREF(nsScrollbar)
-NS_IMPL_RELEASE(nsScrollbar)
+NS_IMPL_ADDREF(nsScrollbar);
+NS_IMPL_RELEASE(nsScrollbar);
+
 
 /**-------------------------------------------------------------------------------
  * nsScrollbar Constructor
@@ -32,10 +34,11 @@ NS_IMPL_RELEASE(nsScrollbar)
  */
 nsScrollbar::nsScrollbar(PRBool aIsVertical)
 {
-    strcpy(gInstanceClassName, "nsScrollbar");
-    mIsVertical  = aIsVertical;
-    mLineIncrement = 0;
-
+  NS_INIT_REFCNT();
+	strcpy(gInstanceClassName, "nsScrollbar");
+	mIsVertical = aIsVertical;
+	mLineIncrement = 0;
+	mWidgetArmed = PR_FALSE;
 }
 
 /**-------------------------------------------------------------------------------
@@ -58,84 +61,14 @@ NS_IMETHODIMP nsScrollbar::Create(nsIWidget *aParent,
                       nsIToolkit *aToolkit,
                       nsWidgetInitData *aInitData)
 {
-  mParent = aParent;
-  aParent->AddChild(this);
-	
-	WindowPtr window = nsnull;
-
-  if (aParent) {
-    window = (WindowPtr) aParent->GetNativeData(NS_NATIVE_WIDGET);
-  } else if (aAppShell) {
-   		window = (WindowPtr) aAppShell->GetNativeData(NS_NATIVE_SHELL);
-  }
-
-  mIsMainWindow = PR_FALSE;
-  mWindowMadeHere = PR_TRUE;
-	mWindowRecord = (WindowRecord*)window;
-	mWindowPtr = (WindowPtr)window;
+	nsWindow::Create(aParent, aRect, aHandleEventFunction,
+						aContext, aAppShell, aToolkit, aInitData);
   
-  NS_ASSERTION(window!=nsnull,"The WindowPtr for the widget cannot be null")
-	if (window){
-	  InitToolkit(aToolkit, aParent);
-	  // InitDeviceContext(aContext, parentWidget);
-		
-		// Set the bounds to the local rect
-		SetBounds(aRect);
-		
-		// Convert to macintosh coordinates		
-		Rect r;
-		nsRectToMacRect(aRect,r);
-				
-		mWindowRegion = NewRgn();
-		SetRectRgn(mWindowRegion,aRect.x,aRect.y,aRect.x+aRect.width,aRect.y+aRect.height);		 
 
-	  // save the event callback function
-	  mEventCallback = aHandleEventFunction;
-	  
-	  mMouseDownInScroll = PR_FALSE;
-	  mWidgetArmed = PR_FALSE;
+	//¥TODO: create the native control here
 
-	  //InitCallbacks("nsButton");
-	  InitDeviceContext(mContext, (nsNativeWidget)mWindowPtr);
-	}
+
 	return NS_OK;
-}
-
-/**-------------------------------------------------------------------------------
- * The create method for a button, using a nsNativeWidget as the parent
- * @update  dc 08/31/98
- * @param  aParent -- the widget which will be this widgets parent in the tree
- * @param  aRect -- The bounds in parental coordinates of this widget
- * @param  aHandleEventFunction -- Procedures to be executed for this widget
- * @param  aContext -- device context to be used by this widget
- * @param  aAppShell -- 
- * @param  aToolkit -- toolkit to be used by this widget
- * @param  aInitData -- Initialization data used by frames
- * @return -- NS_OK if everything was created correctly
- */ 
-NS_IMETHODIMP nsScrollbar::Create(nsNativeWidget aParent,
-                      const nsRect &aRect,
-                      EVENT_CALLBACK aHandleEventFunction,
-                      nsIDeviceContext *aContext,
-                      nsIAppShell *aAppShell,
-                      nsIToolkit *aToolkit,
-                      nsWidgetInitData *aInitData)
-{
-nsWindow		*theNsWindow=nsnull;
-nsRefData		*theRefData;
-
-	if(0!=aParent){
-		theRefData = (nsRefData*)(((WindowPeek)aParent)->refCon);
-		theNsWindow = (nsWindow*)theRefData->GetCurWidget();
-	}
-		
-	if(nsnull!=theNsWindow){
-		Create(theNsWindow, aRect,aHandleEventFunction, aContext, aAppShell, aToolkit, aInitData);
-	}
-
-	//NS_ERROR("This Widget must not use this Create method");
-	return NS_OK;
-
 }
 
 /**-------------------------------------------------------------------------------
@@ -498,7 +431,8 @@ PRBool nsScrollbar::OnPaint(nsPaintEvent & aEvent)
  */ 
 PRBool nsScrollbar::OnResize(nsSizeEvent &aEvent)
 {
-  return nsWindow::OnResize(aEvent);
+	//return nsWindow::OnResize(aEvent);
+	return PR_FALSE;
 }
 
 /**-------------------------------------------------------------------------------
@@ -521,8 +455,8 @@ NS_IMETHODIMP nsScrollbar::Resize(PRUint32 aWidth, PRUint32 aHeight, PRBool aRep
 	SetRectRgn(mWindowRegion,mBounds.x,mBounds.y,mBounds.x+mBounds.width,mBounds.y+mBounds.height);		 
  
   if (aRepaint){
-  	UpdateVisibilityFlag();
-  	UpdateDisplay();
+  	//UpdateVisibilityFlag();
+  	//UpdateDisplay();
   	}
   return(NS_OK);
 }
@@ -552,8 +486,8 @@ nsSizeEvent 	event;
 	SetRectRgn(mWindowRegion,mBounds.x,mBounds.y,mBounds.x+mBounds.width,mBounds.y+mBounds.height);
 
   if (aRepaint){
-  	UpdateVisibilityFlag();
-  	UpdateDisplay();
+  	//UpdateVisibilityFlag();
+  	//UpdateDisplay();
   }
  	return(NS_OK);
 }

@@ -59,7 +59,7 @@ nsMenuBar::~nsMenuBar()
 NS_METHOD nsMenuBar::Create(nsIWidget *aParent)
 {
   mParent = aParent;
-  NS_ADDREF(mParent);
+  NS_IF_ADDREF(mParent);
 
   //Widget parentWidget = (Widget)mParent->GetNativeData(NS_NATIVE_WIDGET);
 
@@ -77,6 +77,7 @@ NS_METHOD nsMenuBar::GetParent(nsIWidget *&aParent)
 {
 
   aParent = mParent;
+  NS_IF_ADDREF(aParent);
 
   return NS_OK;
 }

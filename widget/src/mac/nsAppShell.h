@@ -40,6 +40,7 @@ class nsAppShell : public nsIAppShell
     nsDispatchListener		*mDispatchListener;
     nsToolkit				*mToolKit;
     nsMacMessagePump		*mMacPump;
+		PRBool							mExitCalled;
 
 	// CLASS METHODS
 	private:		    

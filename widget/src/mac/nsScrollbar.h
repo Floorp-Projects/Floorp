@@ -48,14 +48,6 @@ public:
               nsIToolkit *aToolkit = nsnull,
               nsWidgetInitData *aInitData = nsnull);
 
-  NS_IMETHODIMP Create(nsNativeWidget aParent,
-              const nsRect &aRect,
-              EVENT_CALLBACK aHandleEventFunction,
-              nsIDeviceContext *aContext = nsnull,
-              nsIAppShell *aAppShell = nsnull,
-              nsIToolkit *aToolkit = nsnull,
-              nsWidgetInitData *aInitData = nsnull);
-
 
   // nsIScrollbar part
   NS_IMETHOD      SetMaxRange(PRUint32 aEndRange);

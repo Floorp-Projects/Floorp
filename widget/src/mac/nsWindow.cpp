@@ -17,6 +17,7 @@
  */
 
 #include "nsWindow.h"
+#include "nsMacWindow.h"
 #include "nsIFontMetrics.h"
 #include "nsGUIEvent.h"
 #include "nsIRenderingContext.h"
@@ -24,17 +25,17 @@
 #include "nsRect.h"
 #include "nsTransform2D.h"
 #include "nsGfxCIID.h"
-#include "stdio.h"
+#include "nsMacEventHandler.h"
+#include "nsFontMetricsMac.h"
 
-#define DBG 0
+NS_IMPL_ADDREF(ChildWindow)
+NS_IMPL_RELEASE(ChildWindow)
 
-
-static NS_DEFINE_IID(kIWidgetIID, NS_IWIDGET_IID);
-
-NS_IMPL_ADDREF(nsWindow)
-NS_IMPL_RELEASE(nsWindow)
-
-
+ChildWindow::ChildWindow() : nsWindow()
+{
+	NS_INIT_REFCNT();
+  strcpy(gInstanceClassName, "ChildWindow");
+}
 
 
 //-------------------------------------------------------------------------
@@ -42,30 +43,23 @@ NS_IMPL_RELEASE(nsWindow)
 // nsWindow constructor
 //
 //-------------------------------------------------------------------------
-nsWindow::nsWindow() : nsBaseWidget(),
-  mParent(nsnull)
+nsWindow::nsWindow() : nsBaseWidget()
 {
-  strcpy(gInstanceClassName, "nsWindow");
-  // XXX Til can deal with ColorMaps!
-  SetForegroundColor(1);
-  SetBackgroundColor(2);
-  mBounds.x = 0;
-  mBounds.y = 0;
-  mBounds.width = 0;
-  mBounds.height = 0;
-  mResized = PR_FALSE;
+	strcpy(gInstanceClassName, "nsWindow");
 
-   // Setup for possible aggregation
-  NS_INIT_REFCNT();
+  mParent = nsnull;
+  mBounds.SetRect(0,0,0,0);
+  mVisible = PR_TRUE;
+  mEnabled = PR_TRUE;
+	SetPreferredSize(0,0);
 
-  mShown = PR_FALSE;
-  mVisible = PR_FALSE;
-  mDisplayed = PR_FALSE;
-  mLowerLeft = PR_FALSE;
-  mClientData = nsnull;
+	SetBackgroundColor(NS_RGB(255, 255, 255));
+	SetForegroundColor(NS_RGB(0, 0, 0));
+
+	mFontMetrics = nsnull;
   mWindowRegion = nsnull;
-  mChildren      = NULL;
-  
+  mWindowPtr = nsnull;
+  mPainting = PR_FALSE;
 }
 
 
@@ -76,32 +70,53 @@ nsWindow::nsWindow() : nsBaseWidget(),
 //-------------------------------------------------------------------------
 nsWindow::~nsWindow()
 {
-nsRefData	*theRefData;
-
-	if(mWindowRegion!=nsnull)
-		{
-		DisposeRgn(mWindowRegion);
-		mWindowRegion = nsnull;	
-		}
-
-	if (mParent == nsnull)
-	{
-		theRefData = (nsRefData*)(((WindowPeek)mWindowPtr)->refCon);
-		if(theRefData)
-			delete theRefData;
-		
-		CloseWindow(mWindowPtr);
-		delete[] mWindowRecord;
-
-		mWindowPtr = nsnull;
-		mWindowRecord = nsnull;
-	}
+	//Destroy();
 }
 
 
 //-------------------------------------------------------------------------
 //
-// create a nswindow, if aParent is null, we will create the main parent
+// Utility method for implementing both Create(nsIWidget ...) and
+// Create(nsNativeWidget...)
+//-------------------------------------------------------------------------
+
+nsresult nsWindow::StandardCreate(nsIWidget *aParent,
+                      const nsRect &aRect,
+                      EVENT_CALLBACK aHandleEventFunction,
+                      nsIDeviceContext *aContext,
+                      nsIAppShell *aAppShell,
+                      nsIToolkit *aToolkit,
+                      nsWidgetInitData *aInitData,
+                      nsNativeWidget aNativeParent)	// should always be nil here
+{
+	mParent = aParent;
+
+	mBounds = aRect;
+	mWindowRegion = ::NewRgn();
+	::SetRectRgn(mWindowRegion, aRect.x, aRect.y, aRect.x + aRect.width, aRect.y + aRect.height);		 
+
+	BaseCreate(aParent, aRect, aHandleEventFunction, 
+							aContext, aAppShell, aToolkit, aInitData);
+
+
+	if (mParent)
+	{
+		SetBackgroundColor(mParent->GetBackgroundColor());
+		SetForegroundColor(mParent->GetForegroundColor());
+	}
+
+	if (mWindowPtr == nsnull) {
+		if (aParent)
+			mWindowPtr = (WindowPtr)aParent->GetNativeData(NS_NATIVE_DISPLAY);
+		else if (aAppShell)
+			mWindowPtr = (WindowPtr)aAppShell->GetNativeData(NS_NATIVE_SHELL);
+	}
+	return NS_OK;
+}
+
+//-------------------------------------------------------------------------
+//
+// create a nswindow
 //
 //-------------------------------------------------------------------------
 NS_IMETHODIMP nsWindow::Create(nsIWidget *aParent,
@@ -112,22 +127,17 @@ NS_IMETHODIMP nsWindow::Create(nsIWidget *aParent,
                       nsIToolkit *aToolkit,
                       nsWidgetInitData *aInitData)
 {	 
-	 mParent = aParent;
-	  
-	// now create our stuff
-	if (0==aParent)
-    CreateMainWindow(0, 0, aRect, aHandleEventFunction, aContext, aAppShell, aToolkit, aInitData);
-  else
-		CreateChildWindow(aParent->GetNativeData(NS_NATIVE_WINDOW), aParent, aRect,aHandleEventFunction, aContext, aAppShell, aToolkit, aInitData);
-	return NS_OK;
+	return(StandardCreate(aParent, aRect, aHandleEventFunction,
+													aContext, aAppShell, aToolkit, aInitData,
+														nsnull));
 }
 
 //-------------------------------------------------------------------------
 //
-// Creates a main nsWindow using the native platforms window or widget
+// Creates a main nsWindow using a native widget
 //
 //-------------------------------------------------------------------------
-NS_IMETHODIMP nsWindow::Create(nsNativeWidget aParent,    						// this is a windowPtr, 
+NS_IMETHODIMP nsWindow::Create(nsNativeWidget aNativeParent,		// this is a nsWindow*
                       const nsRect &aRect,
                       EVENT_CALLBACK aHandleEventFunction,
                       nsIDeviceContext *aContext,
@@ -135,198 +145,12 @@ NS_IMETHODIMP nsWindow::Create(nsNativeWidget aParent,    						// this is a win
                       nsIToolkit *aToolkit,
                       nsWidgetInitData *aInitData)
 {
-nsRefData				*theRefData;
-
-	if (0==aParent)
-	{
-		mParent = nsnull;
-		CreateMainWindow(aParent,0 , aRect, aHandleEventFunction, aContext, aAppShell, aToolkit, aInitData);
-	}
-	else
-	{
-		theRefData = (nsRefData*)(((WindowPeek)aParent)->refCon);
-		mParent = (nsWindow*)theRefData->GetCurWidget();
-		CreateChildWindow(aParent,mParent, aRect,aHandleEventFunction, aContext, aAppShell, aToolkit, aInitData);
-	}		
+	// On Mac, a native widget is a nsWindow* because 
+	// nsWindow::GetNativeData(NS_NATIVE_WIDGET) returns 'this'
+	nsIWidget* aParent = (nsIWidget*)aNativeParent;
 	
-	return NS_OK;
-}
-
-//-------------------------------------------------------------------------
-//
-// 
-//
-//-------------------------------------------------------------------------
-void 
-nsWindow::InitToolkit(nsIToolkit *aToolkit,nsIWidget  *aWidgetParent) 
-{
-  if (nsnull == mToolkit) 
-  	{ 
-    if (nsnull != aToolkit) 
-    	{
-      mToolkit = (nsToolkit*)aToolkit;
-      mToolkit->AddRef();
-   		}
-    else 
-    	{
-      if (nsnull != aWidgetParent) 
-      	{
-        mToolkit = (nsToolkit*)(aWidgetParent->GetToolkit()); // the call AddRef's, we don't have to
-      	}
-      else 
-      	{				// it's some top level window with no toolkit passed in.
-        mToolkit = new nsToolkit();
-        mToolkit->AddRef();
-        mToolkit->Init(PR_GetCurrentThread());
-      	}
-    	}
-  	}
-
-}
-
-
-//-------------------------------------------------------------------------
-//
-// Create a new windowptr since we do not have a main window yet
-//
-//-------------------------------------------------------------------------
-void 
-nsWindow::CreateMainWindow(nsNativeWidget aNativeParent, 
-                      nsIWidget *aWidgetParent,
-                      const nsRect &aRect,
-                      EVENT_CALLBACK aHandleEventFunction,
-                      nsIDeviceContext *aContext,
-                      nsIAppShell *aAppShell,
-                      nsIToolkit *aToolkit,
-                      nsWidgetInitData *aInitData)
-{
-PRInt32			top;
-Rect				bounds;
-nsRefData		*theReferenceData;
-	
-  mAppShell = aAppShell;
-  NS_IF_ADDREF(mAppShell);
-	
-	InitToolkit(aToolkit, aWidgetParent);
-	
-	// save the event callback function
-  mEventCallback = aHandleEventFunction;
-
-  strcpy(gInstanceClassName, "Parent nsWindow");
-	
-	// build the main native window
-	if(0==aNativeParent)
-		{
-		top = aRect.x + LMGetMBarHeight() + 20; ;				// offset arect by the menubar and the dragbar
-		
-		
-		bounds.top = top; 
-		bounds.left = aRect.y;
-		bounds.bottom = bounds.top+aRect.height;
-		bounds.right = bounds.left+aRect.width;
-		
-		mWindowRecord = (WindowRecord*)new char[sizeof(WindowRecord)];   // allocate our own windowrecord space
-			
-		theReferenceData = new nsRefData();	
-		theReferenceData->SetTopWidget(this);
-		mWindowPtr = NewCWindow(mWindowRecord,&bounds,"\ptestwindow",TRUE,0,(GrafPort*)-1,TRUE,(long)theReferenceData);
-		
-		// the bounds of the widget is the mac content region in global coordinates
-		::SetPort(mWindowPtr);
-		bounds = mWindowPtr->portRect;
-		LocalToGlobal(&topLeft(bounds));
-		LocalToGlobal(&botRight(bounds));
-		this->SetBounds(bounds);
-
-		mWindowMadeHere = PR_TRUE;
-		mIsMainWindow = PR_TRUE;
-		}
-	else
-		{
-		mWindowRecord = (WindowRecord*)aNativeParent;
-		mWindowPtr = (WindowPtr)aNativeParent;
-		mWindowMadeHere = PR_FALSE;
-		mIsMainWindow = PR_TRUE;		
-		}
-	
-	// the widow region is going to be the size of the content region, local coordinates	
-	mWindowRegion = NewRgn();
-	SetRectRgn(mWindowRegion,0,0,mWindowPtr->portRect.right,mWindowPtr->portRect.bottom);
-	
-  InitDeviceContext(aContext, (nsNativeWidget)mWindowPtr);
-}
-
-//-------------------------------------------------------------------------
-//
-// Create a nsWindow, a WindowPtr will not be created here
-//
-//-------------------------------------------------------------------------
-void nsWindow::CreateChildWindow(nsNativeWidget  aNativeParent, 
-                      nsIWidget *aWidgetParent,
-                      const nsRect &aRect,
-                      EVENT_CALLBACK aHandleEventFunction,
-                      nsIDeviceContext *aContext,
-                      nsIAppShell *aAppShell,
-                      nsIToolkit *aToolkit,
-                      nsWidgetInitData *aInitData)
-{
-
-
-	// bounds of this child
-  mBounds = aRect;
-  mAppShell = aAppShell;
-  NS_IF_ADDREF(mAppShell);
-  mIsMainWindow = PR_FALSE;
-  mWindowMadeHere = PR_TRUE;
-  strcpy(gInstanceClassName, "Child nswindow");
-
-  InitToolkit(aToolkit, aWidgetParent);
-  
-	// save the event callback function
-  mEventCallback = aHandleEventFunction;
-  
-  // add this new nsWindow to the parents list
-	if (aWidgetParent) 
-		{
-		aWidgetParent->AddChild(this);
-		mWindowRecord = (WindowRecord*)aNativeParent;
-		mWindowPtr = (WindowPtr)aNativeParent;
-		}
- 
-	mWindowRegion = NewRgn();
-	SetRectRgn(mWindowRegion,aRect.x,aRect.y,aRect.x+aRect.width,aRect.y+aRect.height);		 
-  InitDeviceContext(aContext,(nsNativeWidget)mWindowPtr);
-}
-
-//-------------------------------------------------------------------------
-//
-// 
-//
-//-------------------------------------------------------------------------
-void nsWindow::InitDeviceContext(nsIDeviceContext *aContext,nsNativeWidget aParentWidget) 
-{
-
-  // keep a reference to the toolkit object
-  if (aContext) {
-    mContext = aContext;
-    mContext->AddRef();
-  }
-  else {
-    nsresult  res;
-
-    static NS_DEFINE_IID(kDeviceContextCID, NS_DEVICE_CONTEXT_CID);
-    static NS_DEFINE_IID(kDeviceContextIID, NS_IDEVICE_CONTEXT_IID);
-
-    res = nsRepository::CreateInstance(kDeviceContextCID,
-                                       nsnull, 
-                                       kDeviceContextIID, 
-                                       (void **)&mContext);
-    if (NS_OK == res) 
-    	{
-      mContext->Init(aParentWidget);
-    	}
-  }
-
+	return(Create(aParent, aRect, aHandleEventFunction,
+									aContext, aAppShell, aToolkit, aInitData));
 }
 
 //-------------------------------------------------------------------------
@@ -336,28 +160,22 @@ void nsWindow::InitDeviceContext(nsIDeviceContext *aContext,nsNativeWidget aPare
 //-------------------------------------------------------------------------
 NS_IMETHODIMP nsWindow::Destroy()
 {
-nsRefData		*theRefData;
-
-	if (mWindowMadeHere==PR_TRUE && mIsMainWindow==PR_TRUE)
-		{
-		theRefData = (nsRefData*)(((WindowPeek)mWindowPtr)->refCon);
-		delete theRefData;
-		
-		CloseWindow(mWindowPtr);
-		delete mWindowRecord;
-		}
-	
-	if(mWindowRegion!=nsnull)
-		{
-		DisposeRgn(mWindowRegion);
+	if (mWindowRegion != nsnull)
+	{
+		::DisposeRgn(mWindowRegion);
 		mWindowRegion = nsnull;	
-		}
+	}
 
 	nsBaseWidget::Destroy();
+
+	nsBaseWidget::OnDestroy();
+
+	ReportDestroyEvent();
 
 	return NS_OK;
 }
 
+#pragma mark -
 //-------------------------------------------------------------------------
 //
 // Get this nsWindow parent
@@ -371,121 +189,71 @@ nsIWidget* nsWindow::GetParent(void)
 
 //-------------------------------------------------------------------------
 //
+// Return some native data according to aDataType
+//
+//-------------------------------------------------------------------------
+void* nsWindow::GetNativeData(PRUint32 aDataType)
+{
+		nsPoint		point;
+		void*			retVal = nsnull;
+
+  switch (aDataType) 
+	{
+		case NS_NATIVE_WIDGET:
+    case NS_NATIVE_WINDOW:
+    	retVal = (void*)this;
+    	break;
+
+    case NS_NATIVE_GRAPHIC:
+    case NS_NATIVE_DISPLAY:
+      retVal = (void*)mWindowPtr;
+    	break;
+
+    case NS_NATIVE_REGION:
+    	retVal = (void*)mWindowRegion;
+    	break;
+
+    case NS_NATIVE_COLORMAP:
+    	//¥TODO
+    	break;
+
+    case NS_NATIVE_OFFSETX:
+    	point.MoveTo(mBounds.x, mBounds.y);
+    	LocalToWindowCoordinate(point);
+    	retVal = (void*)point.x;
+    	break;
+
+    case NS_NATIVE_OFFSETY:
+    	point.MoveTo(mBounds.x, mBounds.y);
+    	LocalToWindowCoordinate(point);
+    	retVal = (void*)point.y;
+    	break;
+	}
+
+  return retVal;
+}
+
+#pragma mark -
+//-------------------------------------------------------------------------
+//
+// Return PR_TRUE if the whether the component is visible, PR_FALSE otherwise
+//
+//-------------------------------------------------------------------------
+NS_METHOD nsWindow::IsVisible(PRBool & bState)
+{
+  bState = mVisible;
+  return NS_OK;
+}
+
+//-------------------------------------------------------------------------
+//
 // Hide or show this component
 //
 //-------------------------------------------------------------------------
 NS_IMETHODIMP nsWindow::Show(PRBool bState)
 {
-	// set the state
-  mShown = bState;
-  
-  // if its a main window, do the thing
-  if (bState) 
-  	{		// visible
-  	if(mIsMainWindow)			// mac WindowPtr
-  		{
-  		}
-  	}
-  else
-  	{		// hidden
-  	if(mIsMainWindow)			// mac WindowPtr
-  		{
-  		}  	
-  	}
-    	
-  // update the change
+  mVisible = bState;
   return NS_OK;
-}
-
-//-------------------------------------------------------------------------
-//
-// Move this component
-//
-//-------------------------------------------------------------------------
-NS_IMETHODIMP nsWindow::Move(PRUint32 aX, PRUint32 aY)
-{
-  mBounds.x = aX;
-  mBounds.y = aY;
-  
-  // if its a main window, move the window,
-  
-  // else is a child, so change its relative position
-  
-  
-  // update this change
-  return NS_OK;
-}
-
-//-------------------------------------------------------------------------
-//
-// Resize this component
-//
-//-------------------------------------------------------------------------
-NS_IMETHODIMP nsWindow::Resize(PRUint32 aWidth, PRUint32 aHeight, PRBool aRepaint)
-{
-nsSizeEvent 	event;
-
-	if( (mBounds.width != aWidth) || (mBounds.width != aWidth) ){
-	  mBounds.width  = aWidth;
-	  mBounds.height = aHeight;
-	  
-	   if(nsnull!=mWindowRegion)
-	  	::DisposeRgn(mWindowRegion);
-		mWindowRegion = NewRgn();
-		SetRectRgn(mWindowRegion,mBounds.x,mBounds.y,mBounds.x+mBounds.width,mBounds.y+mBounds.height);		 
-	 
-	  if (aRepaint){
-	  	UpdateVisibilityFlag();
-	  	UpdateDisplay();
-	  }
-	  
-	  event.message = NS_SIZE;
-	  event.point.x = 0;
-	  event.point.y = 0;
-	  event.windowSize = &mBounds;
-	  event.eventStructType = NS_SIZE_EVENT;
-	  event.widget = this;
-	  
-	 	return ( this->DispatchWindowEvent(&event) ? NS_OK : NS_ERROR_FAILURE );
-	}
-	return(NS_OK);
-}
-
-    
-//-------------------------------------------------------------------------
-//
-// Resize this component
-//
-//-------------------------------------------------------------------------
-NS_IMETHODIMP nsWindow::Resize(PRUint32 aX, PRUint32 aY, PRUint32 aWidth, PRUint32 aHeight, PRBool aRepaint)
-{
-nsSizeEvent 	event;
-
-	if( (mBounds.width != aWidth) || (mBounds.height != aHeight) || 
-				(mBounds.x != aX) || (mBounds.x != aY)){
-	  mBounds.x      = aX;
-	  mBounds.y      = aY;
-	  mBounds.width  = aWidth;
-	  mBounds.height = aHeight;
-	  if(nsnull!=mWindowRegion)
-	  	::DisposeRgn(mWindowRegion);
-		mWindowRegion = NewRgn();
-		SetRectRgn(mWindowRegion,mBounds.x,mBounds.y,mBounds.x+mBounds.width,mBounds.y+mBounds.height);
-
-	  if (aRepaint){
-	  	UpdateVisibilityFlag();
-	  	UpdateDisplay();
-	  }
-	  
-	  event.message = NS_SIZE;
-	  event.point.x = 0;
-	  event.point.y = 0;
-	  event.windowSize = &mBounds;
-	  event.widget = this;
-	  event.eventStructType = NS_SIZE_EVENT;
-	 	return ( this->DispatchWindowEvent(&event) ? NS_OK : NS_ERROR_FAILURE );
-	}
-	return(NS_OK);
 }
 
     
@@ -496,53 +264,23 @@ nsSizeEvent 	event;
 //-------------------------------------------------------------------------
 NS_IMETHODIMP nsWindow::Enable(PRBool bState)
 {
+	mEnabled = bState;
 	return NS_OK;
 }
 
     
 //-------------------------------------------------------------------------
-/*  Set this widgets port, clipping, etc, it is in focus
- *  @update  dc 09/11/98
- *  @param   NONE
- *  @return  NONE
- */
+//
+// Set the focus on this component
+//
+//-------------------------------------------------------------------------
 NS_IMETHODIMP nsWindow::SetFocus(void)
 {
-nsRect							therect;
-Rect								macrect;
-
-	::SetPort(mWindowPtr);
-	GetBounds(therect);
-	nsRectToMacRect(therect,macrect);
-	::ClipRect(&macrect);
-	return NS_OK;
-	
-}
-
-    
-//-------------------------------------------------------------------------
-//
-// Get this component dimension
-//
-//-------------------------------------------------------------------------
-NS_IMETHODIMP nsWindow::SetBounds(const nsRect &aRect)
-{
-	mBounds = aRect;
+	if (mToolkit)
+		((nsToolkit*)mToolkit)->SetFocus(this);
 	return NS_OK;
 }
 
-//-------------------------------------------------------------------------
-//
-// Get this component dimension
-//
-//-------------------------------------------------------------------------
-NS_IMETHODIMP nsWindow::GetBounds(nsRect &aRect)
-{
-	aRect = mBounds;
-	return NS_OK;
-}
-
-    
 //-------------------------------------------------------------------------
 //
 // Get this component font
@@ -550,8 +288,7 @@ NS_IMETHODIMP nsWindow::GetBounds(nsRect &aRect)
 //-------------------------------------------------------------------------
 nsIFontMetrics* nsWindow::GetFont(void)
 {
-    NS_NOTYETIMPLEMENTED("GetFont not yet implemented"); // to be implemented
-    return nsnull;
+	return mFontMetrics;
 }
 
     
@@ -562,120 +299,10 @@ nsIFontMetrics* nsWindow::GetFont(void)
 //-------------------------------------------------------------------------
 NS_IMETHODIMP nsWindow::SetFont(const nsFont &aFont)
 {
-  if (mContext == nsnull) {
-    return NS_OK;
-  }
-  nsIFontMetrics* metrics;
-  mContext->GetMetricsFor(aFont, metrics);
-  if (metrics != nsnull) {
-
-    NS_RELEASE(metrics);
-  } else {
-    printf("****** Error: Metrics is NULL!\n");
-  }
- 
+	NS_IF_RELEASE(mFontMetrics);
+	if (mContext)
+		mContext->GetMetricsFor(aFont, mFontMetrics);
  	return NS_OK;
-}
- 
-//-------------------------------------------------------------------------
-//
-// Invalidate this component visible area
-//
-//-------------------------------------------------------------------------
-NS_IMETHODIMP nsWindow::Invalidate(const nsRect &aRect, PRBool aIsSynchronous)
-{
-GrafPtr		curport;
-RgnHandle	thergn;
-
-
-	if(mWindowRegion)
-		{
-		::GetPort(&curport);
-		::SetPort(mWindowPtr);
-		thergn = ::NewRgn();
-		::SetRectRgn(thergn,aRect.x,aRect.y,aRect.x+aRect.width,aRect.y+aRect.height);
-		::SectRgn(thergn,mWindowRegion,thergn);
-		::InvalRgn(thergn);
-		::DisposeRgn(thergn);
-		::SetPort(curport);
-		}
-	return NS_OK;
-  
-}
-   
-//-------------------------------------------------------------------------
-//
-// Invalidate this component visible area
-//
-//-------------------------------------------------------------------------
-NS_IMETHODIMP nsWindow::Invalidate(PRBool aIsSynchronous)
-{
-GrafPtr	curport;
-
-	if(mWindowRegion)
-		{
-		::GetPort(&curport);
-		::SetPort(mWindowPtr);
-		::InvalRgn(mWindowRegion);
-		::SetPort(curport);
-		}
-	return NS_OK;
-  
-}
-
-//-------------------------------------------------------------------------
-//
-// Force a synchronous repaint of the window
-//
-//-------------------------------------------------------------------------
-NS_IMETHODIMP nsWindow::Update()
-{
-  return NS_OK;
-}
-
-//-------------------------------------------------------------------------
-//
-// Return some native data according to aDataType
-//
-//-------------------------------------------------------------------------
-void* nsWindow::GetNativeData(PRUint32 aDataType)
-{
-PRInt32		offx,offy;
-nsRefData	*theRefData;
-
-  switch(aDataType) 
-  	{
-		case NS_NATIVE_WIDGET:
-    case NS_NATIVE_WINDOW:
-    case NS_NATIVE_GRAPHIC:
-    case NS_NATIVE_DISPLAY:
-			// set the refcon up with the current widget we are referencing
-			theRefData = (nsRefData*)(((WindowPeek)mWindowPtr)->refCon);
-			if(theRefData)
-				{
-				theRefData->SetCurWidget(this);
-				}				
-				
-      return (void*)mWindowPtr;
-    	break;
-    case NS_NATIVE_REGION:
-    	return (void*) mWindowRegion;
-    	break;
-    case NS_NATIVE_COLORMAP:
-    	break;
-    case NS_NATIVE_OFFSETX:
-    	this->CalcOffset(offx,offy);
-    	return (void*) offx;
-    	break;
-    case NS_NATIVE_OFFSETY:
-    	this->CalcOffset(offx,offy);
-    	return (void*) offy;
-    	break;
-    default:
-      break;
-  }
-
-  return NULL;
 }
 
 
@@ -686,8 +313,292 @@ nsRefData	*theRefData;
 //-------------------------------------------------------------------------
 NS_IMETHODIMP nsWindow::SetColorMap(nsColorMap *aColorMap)
 {
+	//¥TODO
+	// We may need to move this to nsMacWindow:
+	// I'm not sure all the individual widgets
+	// can have each their own colorMap on Mac.
 	return NS_OK;
 }
+
+//-------------------------------------------------------------------------
+//
+// Set the widget's MenuBar.
+// Must be called after Create.
+//
+// @param aTitle string displayed as the title of the widget
+//
+//-------------------------------------------------------------------------
+NS_IMETHODIMP nsWindow::SetMenuBar(nsIMenuBar * aMenuBar)
+{
+	mMenuBar = aMenuBar;
+  return NS_OK;
+}
+
+//-------------------------------------------------------------------------
+//
+// Get the widget's MenuBar.
+//
+//-------------------------------------------------------------------------
+nsIMenuBar* nsWindow::GetMenuBar()
+{
+  return mMenuBar;
+}
+
+#pragma mark -
+//-------------------------------------------------------------------------
+//
+// Get this component dimension
+//
+//-------------------------------------------------------------------------
+NS_IMETHODIMP nsWindow::GetBounds(nsRect &aRect)
+{
+  aRect = mBounds;
+  return NS_OK;
+}
+
+//-------------------------------------------------------------------------
+//
+// Move this component
+//
+//-------------------------------------------------------------------------
+NS_IMETHODIMP nsWindow::Move(PRUint32 aX, PRUint32 aY)
+{
+	if ((mBounds.x != aX) || (mBounds.y != aY))
+	{
+		mBounds.x = aX;
+		mBounds.y = aY;
+		ReportMoveEvent();
+	}
+	return NS_OK;
+}
+
+//-------------------------------------------------------------------------
+//
+// Resize this component
+//
+//-------------------------------------------------------------------------
+NS_IMETHODIMP nsWindow::Resize(PRUint32 aWidth, PRUint32 aHeight, PRBool aRepaint)
+{
+	if ((mBounds.width != aWidth) || (mBounds.height != aHeight))
+	{
+	  mBounds.width  = aWidth;
+	  mBounds.height = aHeight;
+	 
+		if (mWindowRegion)
+			::SetRectRgn(mWindowRegion, mBounds.x, mBounds.y, mBounds.x + aWidth, mBounds.y + aHeight);		 
+	 
+	  if (aRepaint)
+	  	Invalidate(true);
+
+		ReportSizeEvent();
+	}
+	return NS_OK;
+}
+
+//-------------------------------------------------------------------------
+//
+// Resize this component
+//
+//-------------------------------------------------------------------------
+NS_IMETHODIMP nsWindow::Resize(PRUint32 aX, PRUint32 aY, PRUint32 aWidth, PRUint32 aHeight, PRBool aRepaint)
+{
+	Move(aX, aY);
+	Resize(aWidth, aHeight, aRepaint);
+	return NS_OK;
+}
+
+
+NS_METHOD nsWindow::GetPreferredSize(PRInt32& aWidth, PRInt32& aHeight)
+{
+  aWidth  = mPreferredWidth;
+  aHeight = mPreferredHeight;
+  return NS_ERROR_FAILURE;
+}
+
+NS_METHOD nsWindow::SetPreferredSize(PRInt32 aWidth, PRInt32 aHeight)
+{
+  mPreferredWidth  = aWidth;
+  mPreferredHeight = aHeight;
+  return NS_OK;
+}
+
+//-------------------------------------------------------------------------
+// 
+//
+//-------------------------------------------------------------------------
+NS_IMETHODIMP nsWindow::BeginResizingChildren(void)
+{
+	return NS_OK;
+}
+
+//-------------------------------------------------------------------------
+// 
+//
+//-------------------------------------------------------------------------
+NS_IMETHODIMP nsWindow::EndResizingChildren(void)
+{
+	return NS_OK;
+}
+
+#pragma mark -
+ 
+//-------------------------------------------------------------------------
+//
+// Invalidate this component visible area
+//
+//-------------------------------------------------------------------------
+NS_IMETHODIMP nsWindow::Invalidate(const nsRect &aRect, PRBool aIsSynchronous)
+{
+	if (!mWindowPtr)
+		return NS_OK;
+
+	if (aIsSynchronous && !mPainting)
+	{
+		mPainting = PR_TRUE;	// no reentrance please
+		Update();
+		mPainting = PR_FALSE;
+	}
+	else
+	{
+		nsRect wRect = aRect;
+		Rect macRect;
+		LocalToWindowCoordinate(wRect);
+		nsRectToMacRect(wRect, macRect);
+
+		::SetPort(mWindowPtr);
+		::InvalRect(&macRect);
+	}
+	return NS_OK;
+}
+   
+//-------------------------------------------------------------------------
+//
+// Invalidate this component visible area
+//
+//-------------------------------------------------------------------------
+NS_IMETHODIMP nsWindow::Invalidate(PRBool aIsSynchronous)
+{
+	nsRect wRect = mBounds;
+	if (mParent == nsnull)		// the topLeft corner of the window is in global coordinates
+		wRect.x = wRect.y = 0;
+	Invalidate(wRect, aIsSynchronous);
+	return NS_OK;
+}
+
+
+//-------------------------------------------------------------------------
+//	PrepareToDraw
+//		Initialize graphic attributes.
+//		When they receive a Paint event, XP Widgets rely
+//		on these attributes to be set.
+//
+//-------------------------------------------------------------------------
+//¥TODO: some of that work is done by the rendering context -> do some cleanup
+void nsWindow::PrepareToDraw()
+{
+	// set the font
+	if (mFontMetrics)
+	{
+		nsFont* font;
+		mFontMetrics->GetFont(font);
+		nsFontMetricsMac::SetFont(*font, mContext);
+	}
+
+	// set the background & foreground colors
+	#define COLOR8TOCOLOR16(color8)	 (color8 == 0xFF ? 0xFFFF : (color8 << 8))
+	nscolor color = GetBackgroundColor();
+	RGBColor macColor;
+	macColor.red   = COLOR8TOCOLOR16(NS_GET_R(color));
+	macColor.green = COLOR8TOCOLOR16(NS_GET_G(color));
+	macColor.blue  = COLOR8TOCOLOR16(NS_GET_B(color));
+	::RGBBackColor(&macColor);
+
+	color = GetForegroundColor();
+	macColor.red   = COLOR8TOCOLOR16(NS_GET_R(color));
+	macColor.green = COLOR8TOCOLOR16(NS_GET_G(color));
+	macColor.blue  = COLOR8TOCOLOR16(NS_GET_B(color));
+	::RGBForeColor(&macColor);
+}
+
+
+//-------------------------------------------------------------------------
+//
+//
+//-------------------------------------------------------------------------
+PRBool nsWindow::OnPaint(nsPaintEvent &event)
+{
+	// override this
+  return PR_TRUE;
+}
+
+
+//-------------------------------------------------------------------------
+//	Update
+//		Called by the event handler to redraw the widgets.
+//		The window visRgn is expected to be set to whatever needs to be drawn
+//		(ie. if we are not between BeginUpdate/EndUpdate, we redraw the whole widget)
+//-------------------------------------------------------------------------
+NS_IMETHODIMP	nsWindow::Update()
+{
+	RgnHandle updateRgn = ::NewRgn();
+	::SectRgn(mWindowPtr->visRgn, mWindowRegion, updateRgn);
+	if (!::EmptyRgn(updateRgn))
+	{
+		nsIRenderingContext* renderingContext = GetRenderingContext();	// this sets the origin
+		if (renderingContext)
+		{
+			// initialize the paint event for that widget
+			nsRect rect;
+			Rect macRect;
+			GetBounds(rect);					//¥TODO¥: for complex objects, maybe we should clip to the widgetRgn
+			rect.x = rect.y = 0;	// the origin is set on the topLeft corner of the widget
+			nsRectToMacRect(rect, macRect);
+			::ClipRect(&macRect);			//¥TODO? shouldn't this be done in the rendering context?
+
+			// 			nsEvent
+			nsPaintEvent paintEvent;
+			paintEvent.eventStructType = NS_PAINT_EVENT;
+			paintEvent.message		= NS_PAINT;
+			paintEvent.point.x		= 0;
+			paintEvent.point.y		= 0;
+			paintEvent.time				= PR_IntervalNow();
+
+			// 			nsGUIEvent
+			paintEvent.widget			= this;
+			paintEvent.nativeMsg	= nsnull;
+
+			// 			nsPaintEvent
+			paintEvent.renderingContext	= renderingContext;
+			paintEvent.rect							= &rect;
+
+
+			// draw the widget
+			renderingContext->PushState();
+			PrepareToDraw();
+			OnPaint(paintEvent);
+			DispatchWindowEvent(paintEvent);
+			renderingContext->PopState();
+
+			// recursively scan through its children to draw them too
+			nsIEnumerator* children = GetChildren();
+			if (children)
+			{
+				children->Reset();
+				nsWindow* child = (nsWindow*)children->Next();
+				while (child)
+				{
+					child->Update();
+					child = (nsWindow*)children->Next();
+				}
+				delete children;
+			}
+			NS_RELEASE(renderingContext);		// this restores the origin to (0, 0)
+		}
+	}
+	::DisposeRgn(updateRgn);
+	return NS_OK;
+}
+
 
 //-------------------------------------------------------------------------
 //
@@ -699,15 +610,19 @@ NS_IMETHODIMP nsWindow::Scroll(PRInt32 aDx, PRInt32 aDy, nsRect *aClipRect)
 	return NS_OK;
 }
 
+//-------------------------------------------------------------------------
+//
+// Scroll the bits of a window
+//
+//-------------------------------------------------------------------------
+
 PRBool nsWindow::ConvertStatus(nsEventStatus aStatus)
 {
-  switch(aStatus) {
-    case nsEventStatus_eIgnore:
-      return(PR_FALSE);
-    case nsEventStatus_eConsumeNoDefault:
-      return(PR_TRUE);
-    case nsEventStatus_eConsumeDoDefault:
-      return(PR_FALSE);
+  switch (aStatus)
+  {
+    case nsEventStatus_eIgnore:							return(PR_FALSE);
+    case nsEventStatus_eConsumeNoDefault:		return(PR_TRUE);	// don't do default processing
+    case nsEventStatus_eConsumeDoDefault:		return(PR_FALSE);
     default:
       NS_ASSERTION(0, "Illegal nsEventStatus enumeration value");
       break;
@@ -720,29 +635,29 @@ PRBool nsWindow::ConvertStatus(nsEventStatus aStatus)
 // Invokes callback and  ProcessEvent method on Event Listener object
 //
 //-------------------------------------------------------------------------
-NS_IMETHODIMP nsWindow::DispatchEvent(nsGUIEvent* event, nsEventStatus & aStatus)
+NS_IMETHODIMP nsWindow::DispatchEvent(nsGUIEvent* event, nsEventStatus& aStatus)
 {
-	NS_ADDREF(event->widget);
+	nsIWidget* aWidget = event->widget;
+	NS_IF_ADDREF(aWidget);
+
   aStatus = nsEventStatus_eIgnore;
-  if (nsnull != mEventCallback) {
+  if (mEventCallback)
     aStatus = (*mEventCallback)(event);
-  }
 
-    // Dispatch to event listener if event was not consumed
-  if ((aStatus != nsEventStatus_eIgnore) && (nsnull != mEventListener)) {
+	// Dispatch to event listener if event was not consumed
+  if ((aStatus != nsEventStatus_eIgnore) && (mEventListener != nsnull))
     aStatus = mEventListener->ProcessEvent(*event);
-  }
 
-	NS_RELEASE(event->widget);
+	NS_IF_RELEASE(aWidget);
 
   return NS_OK;
 }
 
 //-------------------------------------------------------------------------
-PRBool nsWindow::DispatchWindowEvent(nsGUIEvent* event)
+PRBool nsWindow::DispatchWindowEvent(nsGUIEvent &event)
 {
   nsEventStatus status;
-  DispatchEvent(event, status);
+  DispatchEvent(&event, status);
   return ConvertStatus(status);
 }
 
@@ -762,7 +677,7 @@ PRBool nsWindow::DispatchMouseEvent(nsMouseEvent &aEvent)
   // call the event callback 
   if (nsnull != mEventCallback) 
   	{
-    result = (DispatchWindowEvent(&aEvent));
+    result = (DispatchWindowEvent(aEvent));
     return result;
   	}
 
@@ -804,408 +719,80 @@ PRBool nsWindow::DispatchMouseEvent(nsMouseEvent &aEvent)
   return result;
 }
 
+#pragma mark -
 
 //-------------------------------------------------------------------------
 //
-// Invokes callback and  ProcessEvent method on Event Listener object
 //
 //-------------------------------------------------------------------------
-/**
- * Processes an Expose Event
- *
- **/
-PRBool nsWindow::OnPaint(nsPaintEvent &event)
+PRBool nsWindow::ReportDestroyEvent()
 {
-nsresult				result;
-nsRect 					rr;
+	// nsEvent
+	nsGUIEvent moveEvent;
+	moveEvent.eventStructType = NS_GUI_EVENT;
+	moveEvent.message			= NS_DESTROY;
+	moveEvent.point.x			= 0;
+	moveEvent.point.y			= 0;
+	moveEvent.time				= PR_IntervalNow();
 
-  // call the event callback 
-  if (mEventCallback) 
-  	{
-  	// currently we only update the entire widget instead of just the invalidated region
-    GetBounds(rr);
-    event.rect = &rr;
+	// nsGUIEvent
+	moveEvent.widget			= this;
+	moveEvent.nativeMsg		= nsnull;
 
-      {
-      PRInt32					offx,offy;
-			GrafPtr					theport;
-			Rect						macrect;
-			nsRect					therect;
-			RgnHandle				thergn;
-        
-        CalcTotalOffset(offx,offy);
-				GetPort(&theport);
-				::SetPort(mWindowPtr);
-				::SetOrigin(-offx,-offy);
-				GetBounds(therect);
-        
-        if(mParent)
-        	{
-					nsRectToMacRect(therect,macrect);
-					thergn = ::NewRgn();
-					::GetClip(thergn);
-					::ClipRect(&macrect);
-					::PenNormal();
-					//::RGBForeColor(&greencolor);
-	        //::FrameRect(&macrect); 
-					}
-				else
-					{
-					macrect.top = 0;
-					macrect.left = 0;
-					macrect.bottom = therect.height;
-					macrect.right = therect.width;
-					
-					thergn = ::NewRgn();
-					::GetClip(thergn);
-					::ClipRect(&macrect);
-					}							
-
-        result = (DispatchWindowEvent(&event));
-        SetOrigin(0,0);
-        SetPort(theport);
-      }
-  }
-  return result;
+	// dispatch event
+	return (DispatchWindowEvent(moveEvent));
 }
 
 //-------------------------------------------------------------------------
 //
-// 
 //
 //-------------------------------------------------------------------------
-NS_IMETHODIMP nsWindow::BeginResizingChildren(void)
+PRBool nsWindow::ReportMoveEvent()
 {
-	return NS_OK;
+	// nsEvent
+	nsGUIEvent moveEvent;
+	moveEvent.eventStructType = NS_GUI_EVENT;
+	moveEvent.message			= NS_MOVE;
+	moveEvent.point.x			= mBounds.x;
+	moveEvent.point.y			= mBounds.y;
+	moveEvent.time				= PR_IntervalNow();
+
+	// nsGUIEvent
+	moveEvent.widget			= this;
+	moveEvent.nativeMsg		= nsnull;
+
+	// dispatch event
+	return (DispatchWindowEvent(moveEvent));
 }
 
 //-------------------------------------------------------------------------
 //
-// 
 //
 //-------------------------------------------------------------------------
-NS_IMETHODIMP nsWindow::EndResizingChildren(void)
+PRBool nsWindow::ReportSizeEvent()
 {
-	return NS_OK;
-}
+	// nsEvent
+	nsSizeEvent sizeEvent;
+	sizeEvent.eventStructType = NS_SIZE_EVENT;
+	sizeEvent.message			= NS_SIZE;
+	sizeEvent.point.x			= 0;
+	sizeEvent.point.y			= 0;
+	sizeEvent.time				= PR_IntervalNow();
 
-//-------------------------------------------------------------------------
-//
-// 
-//
-//-------------------------------------------------------------------------
-PRBool nsWindow::OnResize(nsSizeEvent &aEvent)
-{
-  nsRect* size = aEvent.windowSize;
-  if (mEventCallback) {
-    return(DispatchWindowEvent(&aEvent));
-  }
+	// nsGUIEvent
+	sizeEvent.widget			= this;
+	sizeEvent.nativeMsg		= nsnull;
 
-  return FALSE;
-}
-
-//-------------------------------------------------------------------------
-//
-// 
-//
-//-------------------------------------------------------------------------
-PRBool nsWindow::OnKey(PRUint32 aEventType, PRUint32 aKeyCode, nsKeyEvent* aEvent)
-{
-  if (mEventCallback) {
-    return(DispatchWindowEvent(aEvent));
-  }
-  else
-   return FALSE;
-}
-
-//-------------------------------------------------------------------------
-//
-// 
-//
-//-------------------------------------------------------------------------
-PRBool nsWindow::DispatchFocus(nsGUIEvent &aEvent)
-{
-  if (mEventCallback) {
-    return(DispatchWindowEvent(&aEvent));
-  }
-
- return FALSE;
-}
-
-//-------------------------------------------------------------------------
-//
-// 
-//
-//-------------------------------------------------------------------------
-PRBool nsWindow::OnScroll(nsScrollbarEvent & aEvent, PRUint32 cPos)
-{
- return FALSE;
-}
-
-//-------------------------------------------------------------------------
-//
-// 
-//
-//-------------------------------------------------------------------------
-void nsWindow::SetResizeRect(nsRect& aRect) 
-{
-  mResizeRect = aRect;
-}
-
-void nsWindow::GetResizeRect(nsRect* aRect)
-{
-  aRect->x = mResizeRect.x;
-  aRect->y = mResizeRect.y;
-  aRect->width = mResizeRect.width;
-  aRect->height = mResizeRect.height;
-} 
-
-//-------------------------------------------------------------------------
-//
-// 
-//
-//-------------------------------------------------------------------------
-void 
-nsWindow::SetResized(PRBool aResized)
-{
-  mResized = aResized;
-}
-
-//-------------------------------------------------------------------------
-//
-// 
-//
-//-------------------------------------------------------------------------
-PRBool 
-nsWindow::GetResized()
-{
-  return(mResized);
-}
-
-#ifdef NOTNOW
-/*
- *  @update  gpk 08/27/98
- *  @param   aX -- x offset in widget local coordinates
- *  @param   aY -- y offset in widget local coordinates
- *  @return  PR_TRUE if the pt is contained in the widget
- */
-PRBool
-nsWindow::PtInWindow(PRInt32 aX,PRInt32 aY)
-{
-PRBool	result = PR_FALSE;
-Point		hitpt;
-
-	hitpt.h = aX;
-	hitpt.v = aY;
-	
-	if( PtInRgn( hitpt,mWindowRegion) )
-		result = TRUE;
-	return(result);
-}
-#endif
-
-/*
- *  Finds if a point in local coordinates is inside this object
- */
-PRBool
-nsWindow::PtInWindow(PRInt32 aX,PRInt32 aY)
-{
-PRBool	result = PR_FALSE;
-nsPoint	hitPt(aX,aY);
-nsRect	bounds,newbounds;
-PRInt32	offx,offy;
-	
-	GetBounds(bounds);
-
-	if(this->GetParent())
-		{
-		CalcOffset(offx,offy);
-		bounds.x +=offx;
-		bounds.y +=offy;
-		}
-	else
-		{
-		// no parent, the bounds in global, so make a local coorinate system at 0,0
-		bounds.x = 0;
-		bounds.y = 0;
-		}
-	
-	if(bounds.Contains(hitPt))
-		result = PR_TRUE;
-	return(result);
-}
-
-
-/*
- *  @update  gpk 08/27/98
- *  @param   aX -- x offset in widget local coordinates
- *  @param   aY -- y offset in widget local coordinates
- *  @return  PR_TRUE if the pt is contained in the widget
- */
-NS_IMETHODIMP nsWindow::SetBounds(const Rect& aMacRect)
-{
-	MacRectToNSRect(aMacRect,mBounds);
-	return NS_OK;
-}
-
-
-/*
- *  Set a Mac Rect to the value of an nsRect 
- *  The source rect is assumed to be in pixels not TWIPS
- *  @update  gpk 08/27/98
- *  @param   aRect -- The nsRect that is the source
- *  @param   aMacRect -- The Mac Rect destination
- */
-void nsWindow::nsRectToMacRect(const nsRect& aRect, Rect& aMacRect) const
-{
-		aMacRect.left = aRect.x;
-		aMacRect.top = aRect.y;
-		aMacRect.right = aRect.x + aRect.width;
-		aMacRect.bottom = aRect.y + aRect.height;
-}
-
-/*
- *  Set an nsRect to the value of a Mac Rect 
- *  The source rect is assumed to be in pixels not TWIPS
- *  @update  gpk 08/27/98
- *  @param   aMacRect -- The Mac Rect that is the source
- *  @param   aRect -- The nsRect coming in
- */
-void nsWindow::MacRectToNSRect(const Rect& aMacRect, nsRect& aRect) const
-{
-	aRect.x = aMacRect.left;
-	aRect.y = aMacRect.top;
-	aRect.width = aMacRect.right-aMacRect.left;
-	aRect.height = aMacRect.bottom-aMacRect.top;
+	// nsSizeEvent
+	sizeEvent.windowSize	= &mBounds;
+  
+	// dispatch event
+	return(DispatchWindowEvent(sizeEvent));
 }
 
 
 
-//========================================================================
-/*
- * Find the widget hit
- @param aThePoint -- a point in local coordinats to test for the hit. 
- */
-nsWindow* 
-nsWindow::FindWidgetHit(Point aThePoint)
-{
-nsWindow	*child = this;
-nsWindow	*deeperWindow;
-nsRect		rect;
-
-	if (this->PtInWindow(aThePoint.h,aThePoint.v))
-		{
-		
-		// traverse through all the nsWindows to find out who got hit, lowest level of course
-		if (mChildren) 
-			{
-	    mChildren->ResetToLast();
-	    child = (nsWindow*)mChildren->Previous();
-	    while(child)
-        {
-        if (child->PtInWindow(aThePoint.h,aThePoint.v) ) 
-          {
-          // go down this windows list
-          deeperWindow = child->FindWidgetHit(aThePoint);
-          if (deeperWindow)
-            return(deeperWindow);
-          else
-            return(child);
-          }
-        child = (nsWindow*)mChildren->Previous();	
-        }
-			}
-			return this;
-		}
-	return nsnull;
-}
-
-//-------------------------------------------------------------------------
-/*  Go thru this widget and its childern and find out who intersects the region, and generate paint event.
- *  @update  dc 08/28/98
- *  @param   aTheRegion -- The region to paint
- *  @return  nothing is returned
- */
-void 
-nsWindow::DoPaintWidgets(RgnHandle	aTheRegion,nsIRenderingContext	*aRC)
-{
-nsWindow			*child = this;
-nsRect				rect;
-RgnHandle			thergn;
-Rect					bounds;
-nsPaintEvent 	pevent;
-
-
-	thergn = NewRgn();
-	::SectRgn(aTheRegion,this->mWindowRegion,thergn);
-	
-	if (!::EmptyRgn(thergn))
-		{		
-		// traverse through all the nsWindows to find who needs to be painted
-		if (mChildren) 
-			{
-	    mChildren->Reset();
-	    child = (nsWindow*)mChildren->Next();
-	    while(child)
-        { 
-        if (child->RgnIntersects(aTheRegion,thergn) ) 
-          {
-          // first paint or update this widget
-          bounds = (**thergn).rgnBBox;
-          rect.x = bounds.left;
-          rect.y = bounds.top;
-          rect.width = bounds.left + (bounds.right-bounds.left);
-          rect.height = bounds.top + (bounds.bottom-bounds.top);
-          
-					// generate a paint event
-					pevent.message = NS_PAINT;
-					pevent.renderingContext = aRC;
-					pevent.widget = child;
-					pevent.eventStructType = NS_PAINT_EVENT;
-					pevent.point.x = 0;
-			    pevent.point.y = 0;
-			    pevent.rect = &rect;
-			    pevent.time = 0; 
-			    child->OnPaint(pevent);
-			    
-			    // now go check out the childern
-          child->DoPaintWidgets(aTheRegion,aRC);
-          }
-        child = (nsWindow*)mChildren->Next();	
-        }
-			}
-		}
-	DisposeRgn(thergn);
-}
-
-//-------------------------------------------------------------------------
-/*  Go thru this widget and its children and generate resize event.
- *  @update  ps 09/17/98
- *  @param   aEvent -- The resize event
- *  @return  nothing is returned
- */
-void 
-nsWindow::DoResizeWidgets(nsSizeEvent &aEvent)
-{
-		nsWindow	*child = this;
-
-	// traverse through all the nsWindows to resize them
-	if (mChildren) 
-	{
-	    mChildren->Reset();
-	    child = (nsWindow*)mChildren->Next();
-	    while (child)
-	    { 
-			aEvent.widget = child;
-			child->OnResize(aEvent);
-				    
-			// now go check out the childern
-			child->DoResizeWidgets(aEvent);
-		    child = (nsWindow*)mChildren->Next();	
-		}
-	}
-}
-
+#pragma mark -
 //-------------------------------------------------------------------------
 /*
  *  @update  dc 08/28/98
@@ -1226,28 +813,6 @@ PRBool			result = PR_FALSE;
 }
 
 
-//-------------------------------------------------------------------------
-
-NS_IMETHODIMP nsWindow::UpdateVisibilityFlag()
-{
-  //Widget parent = XtParent(mWidget);
-
-  if (TRUE) {
-    PRUint32 pWidth = 0;
-    PRUint32 pHeight = 0; 
-    //XtVaGetValues(parent, XmNwidth, &pWidth, XmNheight, &pHeight, nsnull);
-    if ((mBounds.y + mBounds.height) > pHeight) {
-      mVisible = PR_FALSE;
-      return NS_OK;
-    }
- 
-    if (mBounds.y < 0)
-     mVisible = PR_FALSE;
-  }
-  
-  mVisible = PR_TRUE;
-  return NS_OK;
-}
 
 //-------------------------------------------------------------------------
 /*  Calculate the x and y offsets for this particular widget
@@ -1264,18 +829,18 @@ nsRect		therect;
 	aX = 0;
 	aY = 0;
 	theparent = this->GetParent();
-	while(theparent)
-		{
+	while (theparent)
+	{
 		theparent->GetBounds(therect);
 		child = theparent->GetParent();
-		if(child)
-			{
+		if (child)
+		{
 			aX += therect.x;
 			aY += therect.y;
-			}
-		theparent = child;
 		}
-
+		NS_IF_RELEASE(theparent);
+		theparent = child;
+	}
 	return NS_OK;
 }
 
@@ -1294,92 +859,84 @@ nsRect		therect;
 	aX = mBounds.x;
 	aY = mBounds.y;
 	theparent = this->GetParent();
-	while(theparent)
-		{
+	while (theparent)
+	{
 		theparent->GetBounds(therect);
 		child = theparent->GetParent();
-		if(child)
-			{
+		if (child)
+		{
 			aX += therect.x;
 			aY += therect.y;
-			}
-		theparent = child;
 		}
+		NS_IF_RELEASE(theparent);
+		theparent = child;
+	}
 
 	return NS_OK;
 }
 
-//-------------------------------------------------------------------------
-//
-// 
-//
-//-------------------------------------------------------------------------
-NS_IMETHODIMP nsWindow::UpdateDisplay()
-{
-    // If not displayed and needs to be displayed
-  if ((PR_FALSE==mDisplayed) &&
-     (PR_TRUE==mShown) && 
-     (PR_TRUE==mVisible)) {
-    //XtManageChild(mWidget);
-    mDisplayed = PR_TRUE;
-  }
-
-    // Displayed and needs to be removed
-  if (PR_TRUE==mDisplayed) { 
-    if ((PR_FALSE==mShown) || (PR_FALSE==mVisible)) {
-      //XtUnmanageChild(mWidget);
-      mDisplayed = PR_FALSE;
-    }
-  }
-  
-  return NS_OK;
-}
 
 //-------------------------------------------------------------------------
-//
-// 
-//
+// PointInWidget
+//		Find if a point in local coordinates is inside this object
 //-------------------------------------------------------------------------
-PRUint32 nsWindow::GetYCoord(PRUint32 aNewY)
+PRBool nsWindow::PointInWidget(Point aThePoint)
 {
-  if (PR_TRUE==mLowerLeft) {
-    return(aNewY - 12 /*KLUDGE fix this later mBounds.height */);
-  }
-  return(aNewY);
+	// get the origin in local coordinates
+	nsPoint widgetOrigin(0, 0);
+	ConvertToDeviceCoordinates(widgetOrigin.x, widgetOrigin.y);
+
+	// get rectangle relatively to the parent
+	nsRect widgetRect;
+	GetBounds(widgetRect);
+
+	// convert the topLeft corner to local coordinates
+	widgetRect.MoveBy(widgetOrigin.x, widgetOrigin.y);
+
+	// finally tell whether it's a hit
+	return(widgetRect.Contains(aThePoint.h, aThePoint.v));
 }
 
 
-
-/**
- * Implement the standard QueryInterface for NS_IWIDGET_IID and NS_ISUPPORTS_IID
- * @param aIID -- the name of the 
- * @param _classiiddef The name of the #define symbol that defines the IID
- * for the class (e.g. NS_ISUPPORTS_IID)
-*/ 
-nsresult nsWindow::QueryInterface(const nsIID& aIID, void** aInstancePtr)
+//-------------------------------------------------------------------------
+// FindWidgetHit
+//		Recursively look for the widget hit
+//		@param aParent   -- parent widget. 
+//		@param aThePoint -- a point in local coordinates to test for the hit. 
+//-------------------------------------------------------------------------
+nsWindow*  nsWindow::FindWidgetHit(Point aThePoint)
 {
-    if (NULL == aInstancePtr) {
-        return NS_ERROR_NULL_POINTER;
-    }
+		nsWindow*	widgetHit;
 
-    static NS_DEFINE_IID(kIWidgetIID, NS_IWIDGET_IID);
-    if (aIID.Equals(kIWidgetIID)) {
-        *aInstancePtr = (void*) ((nsIWidget*)(nsISupports*)this);
-        AddRef();
-        return NS_OK;
-    }
+	if (PointInWidget(aThePoint))
+	{
+		widgetHit = this;
+		nsIEnumerator* children = GetChildren();
+		if (children)
+		{
+			children->Reset();
+			nsWindow* child = (nsWindow*)children->Next();
+			while (child)
+			{
+				nsWindow* deeperHit = child->FindWidgetHit(aThePoint);
+				if (deeperHit)
+				{
+					widgetHit = deeperHit;
+					break;
+				}
+				else
+					child = (nsWindow*)children->Next();
+			}
+			delete children;
+		}
+	}
+	else
+		widgetHit = nsnull;
 
-    static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
-    if (aIID.Equals(kISupportsIID)) {
-        *aInstancePtr = (void*) ((nsISupports*)this);
-        AddRef();
-        return NS_OK;
-    }
-
-    return NS_NOINTERFACE;
+	return widgetHit;
 }
 
-
+#pragma mark -
 //-------------------------------------------------------------------------
 //
 // 
@@ -1401,6 +958,22 @@ NS_IMETHODIMP nsWindow::ScreenToWidget(const nsRect& aOldRect, nsRect& aNewRect)
 } 
 
 
+/*
+ *  Set a Mac Rect to the value of an nsRect 
+ *  The source rect is assumed to be in pixels not TWIPS
+ *  @update  gpk 08/27/98
+ *  @param   aRect -- The nsRect that is the source
+ *  @param   aMacRect -- The Mac Rect destination
+ */
+void nsWindow::nsRectToMacRect(const nsRect& aRect, Rect& aMacRect) const
+{
+		aMacRect.left = aRect.x;
+		aMacRect.top = aRect.y;
+		aMacRect.right = aRect.x + aRect.width;
+		aMacRect.bottom = aRect.y + aRect.height;
+}
+
+
 //=================================================================
 /*  Convert the coordinates to some device coordinates so GFX can draw.
  *  @update  dc 09/16/98
@@ -1408,7 +981,7 @@ NS_IMETHODIMP nsWindow::ScreenToWidget(const nsRect& aOldRect, nsRect& aNewRect)
  *  @param   nscoord -- Y coordinate to convert
  *  @return  NONE
  */
-void  nsWindow::ConvertToDeviceCoordinates(nscoord	&aX,nscoord	&aY)
+void  nsWindow::ConvertToDeviceCoordinates(nscoord &aX,nscoord &aY)
 {
 PRInt32	offX,offY;
         
@@ -1420,7 +993,7 @@ PRInt32	offX,offY;
 }
 
 /*
- * Convert an nsPoint into mac local coordinated.
+ * Convert an nsPoint into mac local coordinates.
  * The tree hierarchy is navigated upwards, changing
  * the x,y offset by the parent's coordinates
  *
@@ -1428,34 +1001,72 @@ PRInt32	offX,offY;
 void nsWindow::LocalToWindowCoordinate(nsPoint& aPoint)
 {
 	nsIWidget* 	parent = GetParent();
+	nsIWidget* 	grandParent;
   nsRect 			bounds;
   
 	while (parent)
 	{
 		parent->GetBounds(bounds);
-		aPoint.x += bounds.x;
-		aPoint.y += bounds.y;	
-		parent = parent->GetParent();
+		grandParent = parent->GetParent();
+		NS_IF_RELEASE(parent);
+		parent = grandParent;
+		if (parent)		// don't add the topLeft corner of the window: it's in global coordinates
+		{
+			aPoint.x += bounds.x;
+			aPoint.y += bounds.y;
+		}
 	}
 }
 
 /* 
- * Convert an nsRect's local coordinates to global coordinates
+ * Convert widget local coordinates into mac local coordinates
  */
-void nsWindow::LocalToWindowCoordinate(nsRect& aRect)
+void nsWindow::LocalToWindowCoordinate(nscoord& aX, nscoord& aY)
 {
 	nsIWidget* 	parent = GetParent();
+	nsIWidget* 	grandParent;
   nsRect 			bounds;
   
 	while (parent)
 	{
 		parent->GetBounds(bounds);
-		aRect.x += bounds.x;
-		aRect.y += bounds.y;	
-		parent = parent->GetParent();
+		grandParent = parent->GetParent();
+		NS_IF_RELEASE(parent);
+		parent = grandParent;
+		if (parent)		// don't add the topLeft corner of the window: it's in global coordinates
+		{
+			aX += bounds.x;
+			aY += bounds.y;
+		}
 	}
 }
 
+/* 
+ * Convert an nsRect into mac local coordinates
+ */
+void nsWindow::LocalToWindowCoordinate(nsRect& aRect)
+{
+	nsIWidget* 	parent = GetParent();
+	nsIWidget* 	grandParent;
+  nsRect 			bounds;
+  
+	while (parent)
+	{
+		parent->GetBounds(bounds);
+		grandParent = parent->GetParent();
+		NS_IF_RELEASE(parent);
+		parent = grandParent;
+		if (parent)		// don't add the topLeft corner of the window: it's in global coordinates
+		{
+			aRect.x += bounds.x;
+			aRect.y += bounds.y;
+		}
+	}
+}
+
+
+#pragma mark -
+#pragma mark - will be gone -
 /* 
  * Convert a nsString to a PascalStr255
  */
@@ -1485,42 +1096,4 @@ void nsWindow::Str255ToString(const Str255& aStr255, nsString& aText)
 	buffer[len] = 0;
 
 	aText = buffer;		
-}
-
-//-------------------------------------------------------------------------
-//
-// Return PR_TRUE if the whether the component is visible, PR_FALSE otherwise
-//
-//-------------------------------------------------------------------------
-NS_METHOD nsWindow::IsVisible(PRBool & bState)
-{
-  bState = mVisible;
-  return NS_OK;
-}
-
-/**
- * Set the widget's MenuBar.
- * Must be called after Create.
- *
- * @param aTitle string displayed as the title of the widget
- */
-
-NS_IMETHODIMP nsWindow::SetMenuBar(nsIMenuBar * aMenuBar)
-{
-  return NS_OK;
-}
-
-
-NS_METHOD nsWindow::GetPreferredSize(PRInt32& aWidth, PRInt32& aHeight)
-{
-  aWidth  = mPreferredWidth;
-  aHeight = mPreferredHeight;
-  return NS_ERROR_FAILURE;
-}
-
-NS_METHOD nsWindow::SetPreferredSize(PRInt32 aWidth, PRInt32 aHeight)
-{
-  mPreferredWidth  = aWidth;
-  mPreferredHeight = aHeight;
-  return NS_OK;
 }

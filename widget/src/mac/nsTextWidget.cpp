@@ -17,16 +17,17 @@
  */
 
 #include "nsTextWidget.h"
+#include "nsMacWindow.h"
 #include "nsToolkit.h"
 #include "nsColor.h"
 #include "nsGUIEvent.h"
 #include "nsString.h"
 
 
-NS_IMPL_ADDREF(nsTextWidget)
-NS_IMPL_RELEASE(nsTextWidget)
-
 #define DBG 0
+
+NS_IMPL_ADDREF(nsTextWidget);
+NS_IMPL_RELEASE(nsTextWidget);
 
 
 /**-------------------------------------------------------------------------------
@@ -35,6 +36,7 @@ NS_IMPL_RELEASE(nsTextWidget)
  */
 nsTextWidget::nsTextWidget(): nsWindow()
 {
+  NS_INIT_REFCNT();
   mIsPasswordCallBacksInstalled = PR_FALSE;
   mMakeReadOnly=PR_FALSE;
   mMakePassword=PR_FALSE;
@@ -64,41 +66,15 @@ PRUint32		teFlags=0;
 GrafPtr			curport;
 PRInt32			offx,offy;
 
+	nsWindow::Create(aParent, aRect, aHandleEventFunction,
+						aContext, aAppShell, aToolkit, aInitData);
 
-  mParent = aParent;
-  aParent->AddChild(this);
-
-  if (DBG) fprintf(stderr, "aParent 0x%x\n", aParent);
-	
-	WindowPtr window = nsnull;
-
-  if (aParent) {
-    window = (WindowPtr) aParent->GetNativeData(NS_NATIVE_WIDGET);
-  }
-	else if (aAppShell){
-  		 	window = (WindowPtr) aAppShell->GetNativeData(NS_NATIVE_SHELL);
-  }
-
-  mIsMainWindow = PR_FALSE;
-  mWindowMadeHere = PR_TRUE;
-	mWindowRecord = (WindowRecord*)window;
-	mWindowPtr = (WindowPtr)window;
+	mWindowPtr = nsnull;
+	if (aParent)
+		mWindowPtr = (WindowPtr)aParent->GetNativeData(NS_NATIVE_DISPLAY);
+	else if (aAppShell)
+		mWindowPtr = (WindowPtr)aAppShell->GetNativeData(NS_NATIVE_SHELL);
   
-  NS_ASSERTION(window!=nsnull,"The WindowPtr for the widget cannot be null")
-	if (window){
-	  InitToolkit(aToolkit, aParent);
-
-	  if (DBG) fprintf(stderr, "Parent 0x%x\n", window);
-
-		// Set the bounds to the local rect
-		SetBounds(aRect);
-		
-		mWindowRegion = NewRgn();
-		SetRectRgn(mWindowRegion,aRect.x,aRect.y,aRect.x+aRect.width,aRect.y+aRect.height);		 
-
-	  // save the event callback function
-	  mEventCallback = aHandleEventFunction;
-	  	  
 	  // Initialize the TE record
 	  CalcOffset(offx,offy);
 	  
@@ -114,44 +90,6 @@ PRInt32			offx,offy;
 		//::SetOrigin(0,0);
 		::SetPort(curport);
 		
-	  InitDeviceContext(mContext, (nsNativeWidget)mWindowPtr);
-	}
-	return NS_OK;
-}
-
-/**-------------------------------------------------------------------------------
- * The create method for a button, using a nsNativeWidget as the parent
- * @update  dc 09/10/98
- * @param  aParent -- the widget which will be this widgets parent in the tree
- * @param  aRect -- The bounds in parental coordinates of this widget
- * @param  aHandleEventFunction -- Procedures to be executed for this widget
- * @param  aContext -- device context to be used by this widget
- * @param  aAppShell -- 
- * @param  aToolkit -- toolkit to be used by this widget
- * @param  aInitData -- Initialization data used by frames
- * @return -- NS_OK if everything was created correctly
- */ 
-NS_IMETHODIMP nsTextWidget::Create(nsNativeWidget aParent,
-                      const nsRect &aRect,
-                      EVENT_CALLBACK aHandleEventFunction,
-                      nsIDeviceContext *aContext,
-                      nsIAppShell *aAppShell,
-                      nsIToolkit *aToolkit,
-                      nsWidgetInitData *aInitData)
-{
-nsWindow		*theNsWindow=nsnull;
-nsRefData		*theRefData;
-
-	if(0!=aParent){
-		theRefData = (nsRefData*)(((WindowPeek)aParent)->refCon);
-		theNsWindow = (nsWindow*)theRefData->GetCurWidget();
-	}
-		
-	if(nsnull!=theNsWindow){
-		Create(theNsWindow, aRect,aHandleEventFunction, aContext, aAppShell, aToolkit, aInitData);
-	}
-
-	//NS_ERROR("This Widget must not use this Create method");
 	return NS_OK;
 }
 
@@ -291,6 +229,48 @@ GrafPtr		theport;
 	return result;
 }
 
+//-------------------------------------------------------------------------
+PRBool nsTextWidget::DispatchWindowEvent(nsGUIEvent &event)
+{
+	PRBool keyHandled = nsWindow::DispatchWindowEvent(event);
+
+	if (! keyHandled)
+	{
+	  if (event.eventStructType == NS_KEY_EVENT)
+	  {
+	  	if (event.message == NS_KEY_DOWN)
+	  	{
+	  		char theChar;
+	  		short theModifiers;
+	  		EventRecord* theOSEvent = (EventRecord*)event.nativeMsg;
+	  		if (theOSEvent)
+	  		{
+	  			theChar = (theOSEvent->message & charCodeMask);
+	  			theModifiers = theOSEvent->modifiers;
+	  		}
+	  		else
+	  		{
+	  			nsKeyEvent* keyEvent = (nsKeyEvent*)&event;
+	  			theChar = keyEvent->keyCode;
+	  			if (keyEvent->isShift)
+	  				theModifiers = shiftKey;
+	  			if (keyEvent->isControl)
+	  				theModifiers |= controlKey;
+	  			if (keyEvent->isAlt)
+	  				theModifiers |= optionKey;
+	  		}
+	  		if (theChar != NS_VK_RETURN)	// don't pass Return: nsTextWidget is a single line editor
+	  		{
+	  			PrimitiveKeyDown(theChar, theModifiers);
+	  			keyHandled = PR_TRUE;
+	  		}
+	  	}
+	  }
+	}
+
+	return (keyHandled);
+}
+
 /**-------------------------------------------------------------------------------
  * Resizes the TEXT, currently handles by nsWindow
  * @update  dc 08/31/98
@@ -408,8 +388,7 @@ LongRect			macRect;
 	}
 			 
   if (aRepaint){
-  	UpdateVisibilityFlag();
-  	UpdateDisplay();
+  	//¥TODO
   }
   
   event.message = NS_SIZE;
@@ -457,8 +436,7 @@ LongRect			macRect;
 	}
 
   if (aRepaint){
-  	UpdateVisibilityFlag();
-  	UpdateDisplay();
+  	//¥TODO
   }
   
   event.message = NS_SIZE;

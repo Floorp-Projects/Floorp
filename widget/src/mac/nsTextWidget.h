@@ -39,8 +39,6 @@ public:
   nsTextWidget();
   virtual ~nsTextWidget();
 
-	NS_DECL_ISUPPORTS
-
   NS_IMETHOD Create(nsIWidget *aParent,
               const nsRect &aRect,
               EVENT_CALLBACK aHandleEventFunction,
@@ -49,13 +47,10 @@ public:
               nsIToolkit *aToolkit = nsnull,
               nsWidgetInitData *aInitData = nsnull);
 
-  NS_IMETHOD Create(nsNativeWidget aParent,
-              const nsRect &aRect,
-              EVENT_CALLBACK aHandleEventFunction,
-              nsIDeviceContext *aContext = nsnull,
-              nsIAppShell *aAppShell = nsnull,
-              nsIToolkit *aToolkit = nsnull,
-              nsWidgetInitData *aInitData = nsnull);
+	// nsISupports
+	NS_IMETHOD_(nsrefcnt) AddRef();
+	NS_IMETHOD_(nsrefcnt) Release();
+	NS_IMETHOD QueryInterface(const nsIID& aIID, void** aInstancePtr);
 
 	// nsITextWidget interface
   NS_IMETHOD        SelectAll();
@@ -80,6 +75,7 @@ public:
   // nsTextHelper Interface
   virtual PRBool    AutoErase();
   virtual PRBool 		DispatchMouseEvent(nsMouseEvent &aEvent);
+  virtual PRBool 		DispatchWindowEvent(nsGUIEvent& event);
 
   void							PrimitiveKeyDown(PRInt16	aKey,PRInt16 aModifiers);
 

@@ -36,19 +36,19 @@ class nsToolkit : public nsIToolkit
 
 public:
   nsToolkit();
-  virtual                 ~nsToolkit();
+  virtual			~nsToolkit();
   
   NS_DECL_ISUPPORTS
     
-  NS_IMETHOD           Init(PRThread *aThread);
+  NS_IMETHOD  		Init(PRThread *aThread);
   
 public:
-	void 			SetFocus(nsWindow *aFocusWidget); //{ mFocusedWidget =  aFocusWidget;}
-	nsWindow *GetFocus() {return(mFocusedWidget);}
+	void 			SetFocus(nsWindow *aFocusWidget);
+	nsWindow*		GetFocus() {return(mFocusedWidget);}
 
 private:
-	static PRBool		  mInit;
-	static nsWindow  *mFocusedWidget;
+	static PRBool		mInit;
+	static nsWindow*	mFocusedWidget;
 
 };
 

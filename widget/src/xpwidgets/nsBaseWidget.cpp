@@ -124,8 +124,8 @@ void nsBaseWidget::BaseCreate(nsIWidget *aParent,
                res = nsRepository::CreateInstance(kToolkitCID, nsnull, kToolkitIID, (void **)&mToolkit);
                if (NS_OK != res)
                   NS_ASSERTION(PR_FALSE, "Can not create a toolkit in nsBaseWidget::Create");
-                
-               mToolkit->Init(PR_GetCurrentThread());
+               if (mToolkit)
+	               mToolkit->Init(PR_GetCurrentThread());
             }
         }
 
@@ -223,16 +223,16 @@ nsIEnumerator* nsBaseWidget::GetChildren()
     // Reset the current position to 0
     mChildren->Reset();
 
-    // XXX Does this copy of our enumerator work? It looks like only
-    // the first widget in the list is added...
+    // Make a copy of our enumerator
     Enumerator * children = new Enumerator;
     NS_ADDREF(children);
     nsISupports   * next = mChildren->Next();
-    if (next) {
+    while (next) {
       nsIWidget *widget;
       if (NS_OK == next->QueryInterface(kIWidgetIID, (void**)&widget)) {
         children->Append(widget);
       }
+      next = mChildren->Next();
     }
 
     return (nsIEnumerator*)children;

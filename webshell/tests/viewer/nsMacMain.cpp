@@ -52,6 +52,36 @@ enum
 
 static nsNativeViewerApp* gTheApp;
 
+
+static long ConvertOSMenuResultToPPMenuResult(long menuResult);
+static long ConvertOSMenuResultToPPMenuResult(long menuResult)
+{
+	// Convert MacOS menu item to PowerPlant menu item because
+	// in our sample app, we use Constructor for resource editing
+	long menuID = HiWord(menuResult);
+	long menuItem = LoWord(menuResult);
+	Int16**	theMcmdH = (Int16**) ::GetResource('Mcmd', menuID);
+	if (theMcmdH != nil)
+	{
+		if (::GetHandleSize((Handle)theMcmdH) > 0)
+		{
+			Int16 numCommands = (*theMcmdH)[0];
+			if (numCommands >= menuItem)
+			{
+				CommandT* theCommandNums = (CommandT*)(&(*theMcmdH)[1]);
+				menuItem = theCommandNums[menuItem-1];
+			}
+		}
+		::ReleaseResource((Handle) theMcmdH);
+	}
+	menuResult = (menuID << 16) + menuItem;
+	return (menuResult);
+}
+
+
+#pragma mark -
+//----------------------------------------------------------------------
+
 nsNativeViewerApp::nsNativeViewerApp()
 {
 	nsMacMessagePump::SetWindowlessMenuEventHandler(DispatchMenuItemWithoutWindow);
@@ -71,6 +101,8 @@ nsNativeViewerApp::Run()
 
 void nsNativeViewerApp::DispatchMenuItemWithoutWindow(PRInt32 menuResult)
 {
+	menuResult = ConvertOSMenuResultToPPMenuResult(menuResult);
+
 	long menuID = HiWord(menuResult);
 	long menuItem = LoWord(menuResult);
 	switch (menuID)
@@ -109,6 +141,7 @@ void nsNativeViewerApp::DispatchMenuItemWithoutWindow(PRInt32 menuResult)
 	}
 }
 
+#pragma mark -
 //----------------------------------------------------------------------
 
 nsNativeBrowserWindow::nsNativeBrowserWindow()
@@ -135,6 +168,8 @@ nsNativeBrowserWindow::CreateMenuBar(PRInt32 aWidth)
 nsEventStatus
 nsNativeBrowserWindow::DispatchMenuItem(PRInt32 aID)
 {
+	aID = ConvertOSMenuResultToPPMenuResult(aID);
+
 	PRInt32 xpID = 0;
 	long menuID = HiWord(aID);
 	long menuItem = LoWord(aID);
@@ -162,7 +197,7 @@ nsNativeBrowserWindow::DispatchMenuItem(PRInt32 aID)
 				case cmd_Open:		xpID = VIEWER_FILE_OPEN;		break;
 				case cmd_Close:
 					  WindowPtr whichwindow = FrontWindow();
-				      nsIWidget* raptorWindow = (nsIWidget*)GetWRefCon(whichwindow);
+				      nsIWidget* raptorWindow = *(nsIWidget**)::GetWRefCon(whichwindow);
 				      raptorWindow->Destroy();
 					break;
 				case cmd_Save:		/*n.a.*/						break;
@@ -203,8 +238,8 @@ nsNativeBrowserWindow::DispatchMenuItem(PRInt32 aID)
 		return nsEventStatus_eIgnore;
 }
 
+#pragma mark -
 //----------------------------------------------------------------------
-
 int main(int argc, char **argv)
 {
 

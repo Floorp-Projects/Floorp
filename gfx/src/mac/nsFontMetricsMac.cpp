@@ -166,8 +166,13 @@ NS_IMETHODIMP nsFontMetricsMac :: GetWidths(const nscoord *&aWidths)
 
 NS_IMETHODIMP nsFontMetricsMac :: GetFontHandle(nsFontHandle &aHandle)
 {
-  aHandle = nsnull;
-  return NS_ERROR_NOT_IMPLEMENTED;	//XXX
+	// We have no 'font handles' on Mac like they have on Windows
+	// so let's use it for the fontNum.
+	short fontNum;
+	nsDeviceContextMac::GetMacFontNumber(mFont->name, fontNum);
+
+	aHandle = (nsFontHandle)fontNum;
+	return NS_OK;
 }
 
 //------------------------------------------------------------------------

@@ -142,9 +142,12 @@ static NS_DEFINE_IID(kCTextFieldCID, NS_TEXTFIELD_CID);
 static NS_DEFINE_IID(kCTabWidgetCID, NS_TABWIDGET_CID);
 static NS_DEFINE_IID(kCTooltipWidgetCID, NS_TOOLTIPWIDGET_CID);
 static NS_DEFINE_IID(kCAppShellCID, NS_APPSHELL_CID);
+static NS_DEFINE_IID(kCToolkitCID, NS_TOOLKIT_CID);
+static NS_DEFINE_IID(kCRenderingContextIID, NS_RENDERING_CONTEXT_CID);
 
 
 // interface ids
+static NS_DEFINE_IID(kIWindowIID, 				NS_IWINDOW_IID);		//еее
 static NS_DEFINE_IID(kIWidgetIID,         NS_IWIDGET_IID);
 static NS_DEFINE_IID(kIButtonIID,         NS_IBUTTON_IID);
 static NS_DEFINE_IID(kIScrollbarIID,      NS_ISCROLLBAR_IID);
@@ -1247,6 +1250,7 @@ nsresult WidgetTest(int *argc, char **argv)
     // register widget classes
     nsRepository::RegisterFactory(kCWindowCID, WIDGET_DLL, PR_FALSE, PR_FALSE);
     nsRepository::RegisterFactory(kCAppShellCID, WIDGET_DLL, PR_FALSE, PR_FALSE);
+	  nsRepository::RegisterFactory(kCToolkitCID, WIDGET_DLL, PR_FALSE, PR_FALSE);
     nsRepository::RegisterFactory(kCChildCID, WIDGET_DLL, PR_FALSE, PR_FALSE);
     nsRepository::RegisterFactory(kCButtonCID, WIDGET_DLL, PR_FALSE, PR_FALSE);
     nsRepository::RegisterFactory(kCCheckButtonCID, WIDGET_DLL, PR_FALSE, PR_FALSE);
@@ -1255,6 +1259,7 @@ nsresult WidgetTest(int *argc, char **argv)
     nsRepository::RegisterFactory(kCHorzScrollbarCID, WIDGET_DLL, PR_FALSE, PR_FALSE);
     nsRepository::RegisterFactory(kCVertScrollbarCID, WIDGET_DLL, PR_FALSE, PR_FALSE);
 
+  nsRepository::RegisterFactory(kCRenderingContextIID, GFX_DLL, PR_FALSE, PR_FALSE);
     
 #ifdef NOTNOW       
     nsRepository::RegisterFactory(kCComboBoxCID, WIDGET_DLL, PR_FALSE, PR_FALSE);
@@ -1309,7 +1314,8 @@ nsresult WidgetTest(int *argc, char **argv)
     //
     // create the main window
     //
-    nsRepository::CreateInstance(kCWindowCID, nsnull, kIWidgetIID, (void**)&window);
+    nsRepository::CreateInstance(kCWindowCID, nsnull, kIWindowIID,	//еее
+    																	(void**)&window);
     nsRect rect(100, 100, 600, 700);
     //nsRect rect(100, 100, 600, 600);
     window->Create((nsIWidget*) nsnull, rect, HandleEvent, 

@@ -58,13 +58,20 @@ NS_IMETHODIMP nsAppShell::Create(int* argc, char ** argv)
 nsresult nsAppShell::Run()
 {
 	mMacPump = new nsMacMessagePump(mToolKit);
-		mMacPump->DoMessagePump();
+	mMacPump->DoMessagePump();
+
 	delete mMacPump;
 	mMacPump = nsnull;
 
+  //if (mDispatchListener)
+    //mDispatchListener->AfterDispatch();
 
-    //if (mDispatchListener)
-      //mDispatchListener->AfterDispatch();
+	if (mExitCalled)	// hack: see below
+	{
+		mRefCnt --;
+		if (mRefCnt == 0)
+			delete this;
+	}
 
   return NS_OK;
 }
@@ -77,7 +84,15 @@ nsresult nsAppShell::Run()
 NS_IMETHODIMP nsAppShell::Exit()
 {
 	if (mMacPump)
+	{
 		mMacPump->StopRunning();
+
+		mExitCalled = PR_TRUE;
+		mRefCnt ++;			// hack: since the applications are likely to delete us
+										// after calling this method (see nsViewerApp::Exit()),
+										// we temporarily bump the refCnt to let the message pump
+										// exit properly. The object will delete itself afterwards.
+	}
 	return NS_OK;
 }
 
@@ -91,6 +106,7 @@ nsAppShell::nsAppShell()
   mRefCnt = 0;
   mDispatchListener = 0;
   mMacPump = nsnull;
+  mExitCalled = PR_FALSE;
 }
 
 //-------------------------------------------------------------------------
