@@ -1,3 +1,5 @@
+extern "C" int verbose=4;	// kedl, need this while using Bobby's test render lib...
+
 /* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
  *
  * The contents of this file are subject to the Netscape Public
@@ -30,6 +32,7 @@
 #include <Pt.h>
 #include <photon/PhRender.h>
 
+#include <errno.h>
 #include "libimg.h"
 #include "nsDeviceContextPh.h"
 #include "prprf.h"
@@ -80,7 +83,9 @@ int X,Y,DEPTH;
 int real_depth;
 int scale=1;
 
-void do_bmp(char *ptr,int bpl,int x,int y);
+extern "C" {
+void do_bmp(unsigned char *ptr,int bpl,int x,int y);
+};
 #endif
 
 #include <prlog.h>
@@ -1405,7 +1410,7 @@ NS_IMETHODIMP nsRenderingContextPh :: GetWidth(const char* aString,
   if (nsnull != mFontMetrics)
   {
     PhRect_t      extent;
-	
+
     if (PfExtentText(&extent, NULL, mPhotonFontName, aString, aLength))
     {
       aWidth = (int) ((extent.lr.x - extent.ul.x + 1) * mP2T);
@@ -1458,24 +1463,11 @@ NS_IMETHODIMP nsRenderingContextPh :: GetWidth(const PRUnichar *aString,
   if (nsnull != mFontMetrics)
   {
     PhRect_t      extent;
-//    nsFontHandle  fontHandle;			/* really a (nsString  *) */
-//    nsString      *pFontHandle = nsnull;
-//    char          *PhotonFontName =  nsnull;
 
-//    mFontMetrics->GetFontHandle(fontHandle);
-//    pFontHandle = (nsString *) fontHandle;
-//    PhotonFontName =  pFontHandle->ToNewCString();
-	
     if (PfExtentWideText(&extent, NULL, mPhotonFontName, (wchar_t *) aString, (aLength*2)))
     {
-//	  photonWidth = (extent.lr.x - extent.ul.x + 1);
-// 	  aWidth = (int) ((float) photonWidth * mP2T);
       aWidth = (int) ((extent.lr.x - extent.ul.x + 1) * mP2T);
-     
-//      PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("nsRenderingContextPh::GetWidth4 PhotonWidth=<%d> aWidth=<%d> PhotonFontName=<%s>\n",photonWidth, aWidth, PhotonFontName));
-
       ret_code = NS_OK;
-//	  delete [] PhotonFontName;
     }
   }
   else
@@ -1555,6 +1547,36 @@ NS_IMETHODIMP nsRenderingContextPh :: DrawString(const char *aString, PRUint32 a
 }
 
 
+/* This replaces the standard wcstombs in Neutrino */
+/* Mozilla needed a version that included the size of the string. */
+size_t my_wcstombs(char *s, char *wc, size_t n, int max) 
+{
+size_t                  num;
+int                     len;
+char                    buff[MB_CUR_MAX];
+int count=0;
+
+	for (num = 0; n; n -= len) 
+	{
+		len = wctomb(buff, *wc);
+	        if(len == -1) { return -1; }
+		if(len == 0) 
+		{
+			*s++ = '\0';
+			break;
+		}
+		if(len > n) { break; }
+		memcpy(s, buff, len);
+		s += len;
+		num += len;
+		count++;
+		if (count>max) break;
+		wc++;
+		wc++;
+	}
+	return num;
+}
+
 NS_IMETHODIMP nsRenderingContextPh :: DrawString(const PRUnichar *aString, PRUint32 aLength,
                                                   nscoord aX, nscoord aY,
                                                   PRInt32 aFontID,
@@ -1563,8 +1585,10 @@ NS_IMETHODIMP nsRenderingContextPh :: DrawString(const PRUnichar *aString, PRUin
   const int BUFFER_SIZE = (aLength * 3);
   char buffer[BUFFER_SIZE];
   int len;
-  
-  len = wcstombs(buffer, (wchar_t *) aString, BUFFER_SIZE);
+
+  // kedl, using my copy of wcstombs because theirs doesn't let you set a limit on the input
+  // but this is still a hack....
+  len = my_wcstombs(buffer, (char *) aString, BUFFER_SIZE,aLength);
   return DrawString( (char *) buffer, aLength, aX, aY, aSpacing);
 }
 
@@ -1833,7 +1857,7 @@ NS_IMETHODIMP nsRenderingContextPh :: CopyOffScreenBits(nsDrawingSurface aSrcSur
     PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("nsRenderingContextPh::CopyOffScreenBits dump offscreen buffer as BMP image=<%p> area=<%d,%d>\n",image, w,h));
     if (image)
 	{
-      ptr = image->image;
+      ptr = (unsigned char *)image->image;
       if (ptr)
        do_bmp(ptr,image->bpl/3,w,h);
     }
@@ -1842,7 +1866,7 @@ NS_IMETHODIMP nsRenderingContextPh :: CopyOffScreenBits(nsDrawingSurface aSrcSur
     PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("nsRenderingContextPh::CopyOffScreenBits dump onscreen buffer as BMP image2=<%p> area=<%d,%d>\n", image2,w,h));
     if ((image2) && (image !=image2))
     {
-      ptr = image2->image;
+      ptr = (unsigned char *)image2->image;
   	  if (ptr)
       {
         do_bmp(ptr,image2->bpl/3,w,h);
@@ -1885,7 +1909,7 @@ NS_IMETHODIMP nsRenderingContextPh :: CopyOffScreenBits(nsDrawingSurface aSrcSur
     abort();
   } 
 
-   ptr = image->image;
+   ptr = (unsigned char *)image->image;
    ptr += image->bpl * srcY + srcX*3 ;
 	  
    if (aSrcSurf != destsurf)
@@ -1927,86 +1951,69 @@ void nsRenderingContextPh :: PushClipState(void)
 
 void nsRenderingContextPh::ApplyClipping( PhGC_t *gc )
 {
-  PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("nsRenderingContextPh::ApplyClipping this=<%p> gc=<%p> mClipRegion=<%p>\n",this,  gc, mClipRegion));
+	PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("nsRenderingContextPh::ApplyClipping this=<%p> gc=<%p> mClipRegion=<%p>\n",this,  gc, mClipRegion));
 
-  if (!gc)
-  {
-	NS_ASSERTION(0,"nsRenderingContextPh::ApplyClipping gc is NULL");
-    abort(); /* Is this an error? Try Test10 */
-	return;
-  }
+	if (!gc)
+	{
+		NS_ASSERTION(0,"nsRenderingContextPh::ApplyClipping gc is NULL");
+		abort(); /* Is this an error? Try Test10 */
+		return;
+	}
 
-  PgSetGC(mGC);	/* new */
+	PgSetGC(mGC);	/* new */
   
-  if (mClipRegion)
-  {
-    int         err;
-    PhTile_t    *tiles = nsnull;
-    PhRect_t    *rects = nsnull;
-    int         rect_count;
+	if (mClipRegion)
+	{
+	int         err;
+	PhTile_t    *tiles = nsnull;
+	PhRect_t    *rects = nsnull;
+	int         rect_count;
 
+		/* no offset needed use the normal tile list */
+		mClipRegion->GetNativeRegion((void*&)tiles);
+
+		PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("nsRenderingContextPh::ApplyClipping tiles=<%p>\n", tiles));
+
+		if (tiles != nsnull)
+		{
+			rects = PhTilesToRects(tiles, &rect_count);
+			PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("nsRenderingContextPh::ApplyClipping Calling PgSetMultiClipping with %d rects\n", rect_count));
 #if 0
-    PhRegion_t  my_region;
-    PhRect_t    rect = {{0,0},{0,0}};
-    int rid;
+			/* Print out the new Clipping rects */
+			PhTile_t	*tile = tiles;
+			int		rect_index=0;
 
-    rid = gc->rid;
-
-     err = PhRegionQuery(rid, &my_region, &rect, NULL, 0);
-	 if (err == -1)
-	 {
-       PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("nsRenderingContextPh::ApplyClipping PhRegionQuery returned -1\n"));
-	   return;	 
-	 }
-#endif
-	 	   
-     /* no offset needed use the normal tile list */
-     mClipRegion->GetNativeRegion((void*&)tiles);
-
-     PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("nsRenderingContextPh::ApplyClipping tiles=<%p>\n", tiles));
-
-     if (tiles != nsnull)
-     {
-       rects = PhTilesToRects(tiles, &rect_count);
-       PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("nsRenderingContextPh::ApplyClipping Calling PgSetMultiClipping with %d rects\n", rect_count));
-#if 1
-       /* Print out the new Clipping rects */
-	   PhTile_t    *tile = tiles;
-       int			rect_index=0;
-	   while (tile)
-	   {
-         PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("nsRenderingContextPh::ApplyClipping rect %d is from (%d,%d) to (%d,%d)\n", rect_index++, tile->rect.ul.x, tile->rect.ul.y, tile->rect.lr.x,tile->rect.lr.y )); 
-		 tile = tile->next;		 	   
-	   }
+			while (tile)
+			{
+				PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("nsRenderingContextPh::ApplyClipping rect %d is from (%d,%d) to (%d,%d)\n", rect_index++, tile->rect.ul.x, tile->rect.ul.y, tile->rect.lr.x,tile->rect.lr.y )); 
+//				printf("nsRenderingContextPh::ApplyClipping rect %d is from (%d,%d) to (%d,%d)\n", rect_index++, tile->rect.ul.x, tile->rect.ul.y, tile->rect.lr.x,tile->rect.lr.y ); 
+				tile = tile->next;		 	   
+			}
 #endif
 
-#if 0
-       PgSetClipping(rect_count,rects);
-#else
-       err=PgSetMultiClip(rect_count,rects);
-	   if (err == -1)
-	   {
-		 PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("nsRenderingContextPh::ApplyClipping Error in PgSetMultiClip probably not enough memory"));
-	   	 NS_ASSERTION(0,"nsRenderingContextPh::ApplyClipping Error in PgSetMultiClip probably not enough memory");
-		 abort();
-	   }
-#endif
+			err=PgSetMultiClip(rect_count,rects);
+	
+			if (err == -1)
+			{
+				PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("nsRenderingContextPh::ApplyClipping Error in PgSetMultiClip probably not enough memory"));
+				NS_ASSERTION(0,"nsRenderingContextPh::ApplyClipping Error in PgSetMultiClip probably not enough memory");
+				abort();
+			}
 	   
-       free(rects);
-     }
-     else
-     {
-       PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("nsRenderingContextPh::ApplyClipping tiles are null\n"));
-       //PgSetMultiClip( 0, NULL );
-     }
-  }
-  else
-  {
-    PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("nsRenderingContextPh::ApplyClipping  mClipRegion is NULL"));
-    //NS_ASSERTION(mClipRegion,"nsRenderingContextPh::ApplyClipping mClipRegion is NULL");
-  }
-  
-  //PgSetMultiClip( 0, NULL );
+			free(rects);
+		}
+		else
+		{
+			PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("nsRenderingContextPh::ApplyClipping tiles are null\n"));
+			PgSetMultiClip( 0, NULL );
+		}
+	}
+	else
+	{
+		PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("nsRenderingContextPh::ApplyClipping  mClipRegion is NULL"));
+		printf("nsRenderingContextPh::ApplyClipping  mClipRegion is NULL");
+//		NS_ASSERTION(mClipRegion,"nsRenderingContextPh::ApplyClipping mClipRegion is NULL");
+	}
 }
 
 
@@ -2019,11 +2026,11 @@ void nsRenderingContextPh::SetPhLineStyle()
     break;
 
   case nsLineStyle_kDashed:
-    PgSetStrokeDash( "\10\4", 2, 0x10000 );
+    PgSetStrokeDash( (const unsigned char *)"\10\4", 2, 0x10000 );
     break;
 
   case nsLineStyle_kDotted:
-    PgSetStrokeDash( "\1", 1, 0x10000 );
+    PgSetStrokeDash( (const unsigned char *)"\1", 1, 0x10000 );
     break;
 
   case nsLineStyle_kNone:
@@ -2135,7 +2142,7 @@ static void writeBMP24(FILE *fp, unsigned char *pic24,int w,int h)
   }
 }
 
-void do_bmp(char *ptr, int bpl, int W, int H)
+extern "C" void do_bmp(unsigned char *ptr, int bpl, int W, int H)
 {
   char *p;
   FILE *fp;
@@ -2143,7 +2150,8 @@ void do_bmp(char *ptr, int bpl, int W, int H)
   int w=W;
   int h=H;
   unsigned long aperature=0;
-  unsigned char filename[255]="grab.bmp";
+  //  bobbyc unsigned char filename[255]="grab.bmp";
+  unsigned char filename[255]="/fs/hd0-dos/grab.bmp";
   int c;
   static int loop=1;
   char out[255];
@@ -2153,11 +2161,10 @@ void do_bmp(char *ptr, int bpl, int W, int H)
   int fildes;
   FILE *test;
 
-	X=bpl;
+	X=bpl/3; 		// kedl?????  need this for Bobby's version of phrender
+	X=bpl; 			// kedl, need this for my version here in renderingcontextph
 	Y=H;
 	DEPTH=24;
-
-PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("nsRenderingContextPh::do_bmp 1\n"));
 
 	// don't write bmp file if not wanted
 	test = fopen ("/dev/shmem/grab","r");
@@ -2166,7 +2173,7 @@ PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("nsRenderingContextPh::do_bmp 1\n"));
 
 	fclose(test);
 
-	p = ptr;
+	p = (char *)ptr;
 	x=0;
 	y=0;
 	if (x+w>X || w==0) 
@@ -2192,7 +2199,7 @@ PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("nsRenderingContextPh::do_bmp x:%d y:%d w:%d h:%
 
 	if (loop)
 	{
-		cp = strstr(filename,".");
+		cp = strstr((const char *)filename,".");
 		if (cp==0)
 			sprintf (buf,"%s%d",filename,loop++);
 		else
@@ -2204,7 +2211,7 @@ PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("nsRenderingContextPh::do_bmp x:%d y:%d w:%d h:%
 	}
 	else
 	{
-		strcpy(buf,filename);
+		strcpy((char *)buf,(const char *)filename);
 	}
 
 	printf ("bmp file: %s\n",buf);
@@ -2247,7 +2254,7 @@ PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("nsRenderingContextPh::do_bmp x:%d y:%d w:%d h:%
   if (buffer)
 	writeBMP24(fp,buffer,w,h);
   else
-	writeBMP24(fp,p,w,h);
+	writeBMP24(fp,(unsigned char *)p,w,h);
 	}
 	fclose(fp);
 }
