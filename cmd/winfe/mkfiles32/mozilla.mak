@@ -2674,9 +2674,8 @@ LINK_CL:
 !if defined(NETSCAPE_OFFICIAL)
 DISPATCHER : $(OUTDIR)/symbols.txt
 !if "$(MOZ_BITS)"=="32"
-	$(PERL) gendisp.pl $(OUTDIR)\symbols.txt $(OUTDIR)\dispwin.h $(OUTDIR)\dispwin.c $(OUTDIR)\cmoffset.h
-	copy $(OUTDIR)\cmoffset.h $(DEPTH)\include\cmoffset.h
-	@cl -c -MT -Fo"$(OUTDIR)/" -I"$(DIST)\include" $(OUTDIR)\dispwin.c
+	$(PERL) gendisp.pl $(OUTDIR)\symbols.txt $(OUTDIR)\dispwin.h $(OUTDIR)\dispwin.c
+	@cl -c $(MOZ_DEBUG_FLAG) -MT -Fo"$(OUTDIR)/" -I"$(DIST)\include" $(OUTDIR)\dispwin.c
 	@echo $(OUTDIR)\dispwin.obj>>$(OUTDIR)\link.cl
 !endif
 !endif
