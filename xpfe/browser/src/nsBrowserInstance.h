@@ -97,6 +97,14 @@ class nsBrowserInstance : public nsIBrowserInstance,
 };
 
 #ifndef MOZ_XUL_APP
+class nsChromeStartupHandler : public nsICmdLineHandler
+{
+public:
+  NS_DECL_NSICMDLINEHANDLER
+  NS_DECL_ISUPPORTS
+  CMDLINEHANDLER_REGISTERPROC_DECLS
+};
+
 class nsBrowserContentHandler : public nsIContentHandler, public nsICmdLineHandler
 {
 public:
@@ -104,9 +112,6 @@ public:
   NS_DECL_NSICMDLINEHANDLER
   NS_DECL_ISUPPORTS
   CMDLINEHANDLER_REGISTERPROC_DECLS
-
-  nsBrowserContentHandler();
-  virtual ~nsBrowserContentHandler();
 
 protected:
   PRBool NeedHomepageOverride(nsIPref *aPrefService);

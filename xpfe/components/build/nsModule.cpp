@@ -383,9 +383,11 @@ static const nsModuleComponentInfo components[] = {
     nsBrowserContentHandler::UnregisterProc,
   },
   { "Chrome Startup Handler",
-    NS_BROWSERCONTENTHANDLER_CID,
-    "@mozilla.org/commandlinehandler/general-startup;1?type=chrome",
-    nsBrowserContentHandlerConstructor,
+    NS_CHROMESTARTUPHANDLER_CID,
+    NS_CHROMESTARTUPHANDLER_CONTRACTID,
+    nsChromeStartupHandlerConstructor,
+    nsChromeStartupHandler::RegisterProc,
+    nsChromeStartupHandler::UnregisterProc
   },
 #endif //!defined(MOZ_XUL_APP) && !defined(MOZ_MACBROWSER)
 };
