@@ -109,9 +109,13 @@ public:
     NS_DECL_NSIFILEINPUTSTREAM
     NS_DECL_NSILINEINPUTSTREAM
     
+    // Overrided from nsFileStream
+    NS_IMETHOD Seek(PRInt32 aWhence, PRInt32 aOffset);
+
     nsFileInputStream() : nsFileStream() 
     {
         mLineBuffer = nsnull;
+        mBehaviorFlags = 0;
     }
     virtual ~nsFileInputStream() 
     {
@@ -123,7 +127,37 @@ public:
 
 protected:
     nsLineBuffer     *mLineBuffer;
-    nsCOMPtr<nsIFile> mFileToDelete;
+
+    /**
+     * The file being opened.  Only stored when DELETE_ON_CLOSE or
+     * REOPEN_ON_REWIND are true.
+     */
+    nsCOMPtr<nsIFile> mFile;
+    /**
+     * The IO flags passed to Init() for the file open.
+     * Only set for REOPEN_ON_REWIND.
+     */
+    PRInt32 mIOFlags;
+    /**
+     * The permissions passed to Init() for the file open.
+     * Only set for REOPEN_ON_REWIND.
+     */
+    PRInt32 mPerm;
+    /**
+     * Flags describing our behavior.  See the IDL file for possible values.
+     */
+    PRInt32 mBehaviorFlags;
+
+protected:
+    /**
+     * Internal, called to open a file.  Parameters are the same as their
+     * Init() analogues.
+     */
+    nsresult Open(nsIFile* file, PRInt32 ioFlags, PRInt32 perm);
+    /**
+     * Reopen the file (for OPEN_ON_READ only!)
+     */
+    nsresult Reopen() { return Open(mFile, mIOFlags, mPerm); }
 };
 
 ////////////////////////////////////////////////////////////////////////////////

@@ -533,36 +533,64 @@ nsFileInputStream::Create(nsISupports *aOuter, REFNSIID aIID, void **aResult)
     return rv;
 }
 
-NS_IMETHODIMP
-nsFileInputStream::Init(nsIFile* file, PRInt32 ioFlags, PRInt32 perm, PRBool deleteOnClose)
+nsresult
+nsFileInputStream::Open(nsIFile* aFile, PRInt32 aIOFlags, PRInt32 aPerm)
 {   
-    NS_ENSURE_TRUE(mFD == nsnull, NS_ERROR_ALREADY_INITIALIZED);
-
     nsresult rv = NS_OK;
-    nsCOMPtr<nsILocalFile> localFile = do_QueryInterface(file, &rv);
+
+    // If the previous file is open, close it
+    if (mFD) {
+        rv = Close();
+        if (NS_FAILED(rv)) return rv;
+    }
+
+    // Open the file
+    nsCOMPtr<nsILocalFile> localFile = do_QueryInterface(aFile, &rv);
     if (NS_FAILED(rv)) return rv;
-    if (ioFlags == -1)
-        ioFlags = PR_RDONLY;
-    if (perm == -1)
-        perm = 0;
+    if (aIOFlags == -1)
+        aIOFlags = PR_RDONLY;
+    if (aPerm == -1)
+        aPerm = 0;
 
     PRFileDesc* fd;
-    rv = localFile->OpenNSPRFileDesc(ioFlags, perm, &fd);
+    rv = localFile->OpenNSPRFileDesc(aIOFlags, aPerm, &fd);
     if (NS_FAILED(rv)) return rv;
 
     mFD = fd;
 
-    if (deleteOnClose) {
+    if (mBehaviorFlags & DELETE_ON_CLOSE) {
         // POSIX compatible filesystems allow a file to be unlinked while a
         // file descriptor is still referencing the file.  since we've already
         // opened the file descriptor, we'll try to remove the file.  if that
         // fails, then we'll just remember the nsIFile and remove it after we
         // close the file descriptor.
-        nsresult rv = file->Remove(PR_FALSE);
-        if (NS_FAILED(rv))
-            mFileToDelete = file;
+        rv = aFile->Remove(PR_FALSE);
+        if (NS_FAILED(rv) && !(mBehaviorFlags & REOPEN_ON_REWIND)) {
+            // If REOPEN_ON_REWIND is not happenin', we haven't saved the file yet
+            mFile = aFile;
+        }
     }
+
     return NS_OK;
+}
+
+NS_IMETHODIMP
+nsFileInputStream::Init(nsIFile* aFile, PRInt32 aIOFlags, PRInt32 aPerm,
+                        PRInt32 aBehaviorFlags)
+{
+    NS_ENSURE_TRUE(!mFD, NS_ERROR_ALREADY_INITIALIZED);
+    NS_ENSURE_TRUE(!mParent, NS_ERROR_ALREADY_INITIALIZED);
+
+    mBehaviorFlags = aBehaviorFlags;
+
+    // If the file will be reopened on rewind, save the info to open the file
+    if (mBehaviorFlags & REOPEN_ON_REWIND) {
+        mFile = aFile;
+        mIOFlags = aIOFlags;
+        mPerm = aPerm;
+    }
+
+    return Open(aFile, aIOFlags, aPerm);
 }
 
 NS_IMETHODIMP
@@ -572,70 +600,74 @@ nsFileInputStream::Close()
     mLineBuffer = nsnull;       // in case Close() is called again after failing
     nsresult rv = nsFileStream::Close();
     if (NS_FAILED(rv)) return rv;
-    if (mFileToDelete) {
-        rv = mFileToDelete->Remove(PR_FALSE);
+    if (mFile && (mBehaviorFlags & DELETE_ON_CLOSE)) {
+        rv = mFile->Remove(PR_FALSE);
         NS_ASSERTION(NS_SUCCEEDED(rv), "failed to delete file");
+        // If we don't need to save the file for reopening, free it up
+        if (!(mBehaviorFlags & REOPEN_ON_REWIND)) {
+          mFile = nsnull;
+        }
     }
     return rv;
 }
 
 NS_IMETHODIMP
-nsFileInputStream::Available(PRUint32 *result)
+nsFileInputStream::Available(PRUint32* aResult)
 {
-    if (mFD == nsnull)
+    if (!mFD) {
         return NS_BASE_STREAM_CLOSED;
+    }
 
     PRInt32 avail = PR_Available(mFD);
     if (avail == -1) {
         return NS_ErrorAccordingToNSPR();
     }
-    *result = avail;
+    *aResult = avail;
     return NS_OK;
 }
 
 NS_IMETHODIMP
-nsFileInputStream::Read(char * buf, PRUint32 count, PRUint32 *result)
+nsFileInputStream::Read(char* aBuf, PRUint32 aCount, PRUint32* aResult)
 {
-    if (mFD == nsnull)
+    if (!mFD) {
         return NS_BASE_STREAM_CLOSED;
+    }
 
-    PRInt32 cnt = PR_Read(mFD, buf, count);
-    if (cnt == -1) {
+    PRInt32 bytesRead = PR_Read(mFD, aBuf, aCount);
+    if (bytesRead == -1) {
         return NS_ErrorAccordingToNSPR();
     }
-    *result = cnt;
+    // Check if we're at the end of file and need to close
+    if (mBehaviorFlags & CLOSE_ON_EOF) {
+        if (bytesRead == 0) {
+            Close();
+        }
+    }
+
+    *aResult = bytesRead;
     return NS_OK;
 }
 
 NS_IMETHODIMP
-nsFileInputStream::ReadLine(nsAString & aLine, PRBool *_retval)
+nsFileInputStream::ReadLine(nsAString& aLine, PRBool* aResult)
 {
     if (!mLineBuffer) {
         nsresult rv = NS_InitLineBuffer(&mLineBuffer);
         if (NS_FAILED(rv)) return rv;
     }
-    return NS_ReadLine(this, mLineBuffer, aLine, _retval);
+    return NS_ReadLine(this, mLineBuffer, aLine, aResult);
 }
 
 NS_IMETHODIMP
-nsFileInputStream::ReadSegments(nsWriteSegmentFun writer, void * closure, PRUint32 count, PRUint32 *_retval)
+nsFileInputStream::ReadSegments(nsWriteSegmentFun aWriter, void* aClosure,
+                                PRUint32 aCount, PRUint32* aResult)
 {
-     PRUint32 nBytes;
-     char *readBuf = (char *)nsMemory::Alloc(count);
-     if (!readBuf)
-         return NS_ERROR_OUT_OF_MEMORY;
-     
-     nsresult rv = Read(readBuf, count, &nBytes);
-   
-     *_retval = 0;
-     if (NS_SUCCEEDED(rv)) {
-         rv = writer(this, closure, readBuf, 0, nBytes, _retval);
-         NS_ASSERTION(NS_SUCCEEDED(rv) ? nBytes == *_retval : PR_TRUE, "Didn't write all Data.");
-         // XXX this assertion is invalid!
-     }
-   
-     nsMemory::Free(readBuf);
-     return rv;
+    // ReadSegments is not implemented because it would be inefficient when
+    // the writer does not consume all data.  If you want to call ReadSegments,
+    // wrap a BufferedInputStream around the file stream.  That will call
+    // Read().
+    NS_NOTREACHED("ReadSegments");
+    return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
@@ -643,6 +675,23 @@ nsFileInputStream::IsNonBlocking(PRBool *aNonBlocking)
 {
     *aNonBlocking = PR_FALSE;
     return NS_OK;
+}
+
+NS_IMETHODIMP
+nsFileInputStream::Seek(PRInt32 aWhence, PRInt32 aOffset)
+{
+    if (!mFD) {
+        if (mBehaviorFlags & REOPEN_ON_REWIND) {
+            nsresult rv = Reopen();
+            if (NS_FAILED(rv)) {
+                return rv;
+            }
+        } else {
+            return NS_BASE_STREAM_CLOSED;
+        }
+    }
+
+    return nsFileStream::Seek(aWhence, aOffset);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -668,7 +717,8 @@ nsFileOutputStream::Create(nsISupports *aOuter, REFNSIID aIID, void **aResult)
 }
 
 NS_IMETHODIMP
-nsFileOutputStream::Init(nsIFile* file, PRInt32 ioFlags, PRInt32 perm)
+nsFileOutputStream::Init(nsIFile* file, PRInt32 ioFlags, PRInt32 perm,
+                         PRInt32 behaviorFlags)
 {
     NS_ENSURE_TRUE(mFD == nsnull, NS_ERROR_ALREADY_INITIALIZED);
 

@@ -147,7 +147,7 @@ NS_NewPluginPostDataStream(nsIInputStream **result,
                                      file,
                                      PR_RDONLY,
                                      0600,
-                                     PR_TRUE))
+                                     nsIFileInputStream::DELETE_ON_CLOSE))
                                      ) 
     {
       // wrap the file stream with a buffered input stream

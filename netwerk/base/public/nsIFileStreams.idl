@@ -41,19 +41,49 @@
 
 interface nsIFile;
 
+/**
+ * An input stream that allows you to read from a file.
+ */
 [scriptable, uuid(e3d56a20-c7ec-11d3-8cda-0060b0fc14a3)]
 interface nsIFileInputStream : nsIInputStream
 {
     /**
-     * @param file          - file to read from (must QI to nsILocalFile)
-     * @param ioFlags       - file open flags listed in prio.h
-     * @param perm          - file mode bits listed in prio.h
-     * @param deleteOnClose - if true, the file is deleted from the filesystem
-     *                        after the file stream is closed.
+     * @param file          file to read from (must QI to nsILocalFile)
+     * @param ioFlags       file open flags listed in prio.h
+     * @param perm          file mode bits listed in prio.h
+     * @param behaviorFlags flags specifying various behaviors of the class
+     *        (see enumerations in the class)
      */
-    void init(in nsIFile file, in long ioFlags, in long perm, in boolean deleteOnClose);
+    void init(in nsIFile file, in long ioFlags, in long perm,
+              in long behaviorFlags);
+
+    /**
+     * If this is set, the file will be deleted by the time the stream is
+     * closed.  It may be removed before the stream is closed if it is possible
+     * to delete it and still read from it.
+     *
+     * If OPEN_ON_READ is defined, and the file was recreated after the first
+     * delete, the file will be deleted again when it is closed again.
+     */
+    const long DELETE_ON_CLOSE = 1<<1;
+
+    /**
+     * If this is set, the file will close automatically when the end of the
+     * file is reached.
+     */
+    const long CLOSE_ON_EOF = 1<<2;
+
+    /**
+     * If this is set, the file will be reopened whenever Seek(0) occurs.  If
+     * the file is already open and the seek occurs, it will happen naturally.
+     * (The file will only be reopened if it is closed for some reason.)
+     */
+    const long REOPEN_ON_REWIND = 1<<3;
 };
 
+/**
+ * An output stream that lets you stream to a file.
+ */
 [scriptable, uuid(e6f68040-c7ec-11d3-8cda-0060b0fc14a3)]
 interface nsIFileOutputStream : nsIOutputStream
 {
@@ -61,10 +91,17 @@ interface nsIFileOutputStream : nsIOutputStream
      * @param file          - file to write to (must QI to nsILocalFile)
      * @param ioFlags       - file open flags listed in prio.h
      * @param perm          - file mode bits listed in prio.h
+     * @param behaviorFlags flags specifying various behaviors of the class
+     *        (currently none supported)
      */
-    void init(in nsIFile file, in long ioFlags, in long perm);
+    void init(in nsIFile file, in long ioFlags, in long perm,
+              in long behaviorFlags);
 };
 
+/**
+ * An input stream that reads ahead and keeps a buffer coming from another input
+ * stream so that fewer accesses to the underlying stream are necessary.
+ */
 [scriptable, uuid(616f5b48-da09-11d3-8cda-0060b0fc14a3)]
 interface nsIBufferedInputStream : nsIInputStream
 {
@@ -76,6 +113,11 @@ interface nsIBufferedInputStream : nsIInputStream
               in unsigned long bufferSize);
 };
 
+/**
+ * An output stream that stores up data to write out to another output stream
+ * and does the entire write only when the buffer is full, so that fewer writes
+ * to the underlying output stream are necessary.
+ */
 [scriptable, uuid(6476378a-da09-11d3-8cda-0060b0fc14a3)]
 interface nsIBufferedOutputStream : nsIOutputStream
 {
@@ -149,10 +191,10 @@ interface nsIBufferedOutputStream : nsIOutputStream
 
 // This will QI the file argument to an nsILocalFile in the Init method.
 inline nsresult
-NS_NewLocalFileChannel(nsIFileChannel **result,
-                       nsIFile* file,
-                       PRInt32 ioFlags = -1,
-                       PRInt32 perm = -1)
+NS_NewLocalFileChannel(nsIFileChannel** aResult,
+                       nsIFile* aFile,
+                       PRInt32 aIOFlags = -1,
+                       PRInt32 aPerm = -1)
 {
     nsresult rv;
     nsCOMPtr<nsIFileChannel> channel;
@@ -162,21 +204,21 @@ NS_NewLocalFileChannel(nsIFileChannel **result,
                                             NS_GET_IID(nsIFileChannel),
                                             getter_AddRefs(channel));
     if (NS_FAILED(rv)) return rv;
-    rv = channel->Init(file, ioFlags, perm);
+    rv = channel->Init(aFile, aIOFlags, aPerm);
     if (NS_FAILED(rv)) return rv;
 
-    *result = channel;
-    NS_ADDREF(*result);
+    *aResult = channel;
+    NS_ADDREF(*aResult);
     return NS_OK;
 }
 
 // This will QI the file argument to an nsILocalFile in the Init method.
 inline nsresult
-NS_NewLocalFileInputStream(nsIInputStream* *result,
-                           nsIFile* file, 
-                           PRInt32 ioFlags = -1,
-                           PRInt32 perm = -1,
-                           PRBool deleteOnClose = PR_FALSE)
+NS_NewLocalFileInputStream(nsIInputStream** aResult,
+                           nsIFile* aFile,
+                           PRInt32 aIOFlags = -1,
+                           PRInt32 aPerm = -1,
+                           PRInt32 aBehaviorFlags = 0)
 {
     nsresult rv;
     nsCOMPtr<nsIFileInputStream> in;
@@ -186,20 +228,21 @@ NS_NewLocalFileInputStream(nsIInputStream* *result,
                                             NS_GET_IID(nsIFileInputStream),
                                             getter_AddRefs(in));
     if (NS_FAILED(rv)) return rv;
-    rv = in->Init(file, ioFlags, perm, deleteOnClose);
+    rv = in->Init(aFile, aIOFlags, aPerm, aBehaviorFlags);
     if (NS_FAILED(rv)) return rv;
 
-    *result = in;
-    NS_ADDREF(*result);
+    *aResult = in;
+    NS_ADDREF(*aResult);
     return NS_OK;
 }
 
 // This will QI the file argument to an nsILocalFile in the Init method.
 inline nsresult
-NS_NewLocalFileOutputStream(nsIOutputStream* *result,
-                            nsIFile* file,
-                            PRInt32 ioFlags = -1,
-                            PRInt32 perm = -1)
+NS_NewLocalFileOutputStream(nsIOutputStream** aResult,
+                            nsIFile* aFile,
+                            PRInt32 aIOFlags = -1,
+                            PRInt32 aPerm = -1,
+                            PRInt32 aBehaviorFlags = 0)
 {
     nsresult rv;
     nsCOMPtr<nsIFileOutputStream> out;
@@ -209,20 +252,20 @@ NS_NewLocalFileOutputStream(nsIOutputStream* *result,
                                             NS_GET_IID(nsIFileOutputStream),
                                             getter_AddRefs(out));
     if (NS_FAILED(rv)) return rv;
-    rv = out->Init(file, ioFlags, perm);
+    rv = out->Init(aFile, aIOFlags, aPerm, aBehaviorFlags);
     if (NS_FAILED(rv)) return rv;
 
-    *result = out;
-    NS_ADDREF(*result);
+    *aResult = out;
+    NS_ADDREF(*aResult);
     return NS_OK;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
 inline nsresult
-NS_NewBufferedInputStream(nsIInputStream* *result,
-                          nsIInputStream* str,
-                          PRUint32 bufferSize)
+NS_NewBufferedInputStream(nsIInputStream** aResult,
+                          nsIInputStream* aStr,
+                          PRUint32 aBufferSize)
 {
     nsresult rv;
     nsCOMPtr<nsIBufferedInputStream> in;
@@ -232,18 +275,18 @@ NS_NewBufferedInputStream(nsIInputStream* *result,
                                             NS_GET_IID(nsIBufferedInputStream),
                                             getter_AddRefs(in));
     if (NS_FAILED(rv)) return rv;
-    rv = in->Init(str, bufferSize);
+    rv = in->Init(aStr, aBufferSize);
     if (NS_FAILED(rv)) return rv;
 
-    *result = in;
-    NS_ADDREF(*result);
+    *aResult = in;
+    NS_ADDREF(*aResult);
     return NS_OK;
 }
 
 inline nsresult
-NS_NewBufferedOutputStream(nsIOutputStream* *result,
-                           nsIOutputStream* str,
-                           PRUint32 bufferSize)
+NS_NewBufferedOutputStream(nsIOutputStream** aResult,
+                           nsIOutputStream* aStr,
+                           PRUint32 aBufferSize)
 {
     nsresult rv;
     nsCOMPtr<nsIBufferedOutputStream> out;
@@ -253,11 +296,11 @@ NS_NewBufferedOutputStream(nsIOutputStream* *result,
                                             NS_GET_IID(nsIBufferedOutputStream),
                                             getter_AddRefs(out));
     if (NS_FAILED(rv)) return rv;
-    rv = out->Init(str, bufferSize);
+    rv = out->Init(aStr, aBufferSize);
     if (NS_FAILED(rv)) return rv;
 
-    *result = out;
-    NS_ADDREF(*result);
+    *aResult = out;
+    NS_ADDREF(*aResult);
     return NS_OK;
 }
 

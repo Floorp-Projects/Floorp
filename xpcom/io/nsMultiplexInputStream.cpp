@@ -240,13 +240,8 @@ nsMultiplexInputStream::ReadSegments(nsWriteSegmentFun aWriter, void *aClosure,
     while (mCurrentStream < len) {
         nsCOMPtr<nsIInputStream> stream(do_QueryElementAt(&mStreams,
                                                           mCurrentStream));
-        PRUint32 avail, read, count;
-        rv = stream->Available(&avail);
-        if (NS_FAILED(rv)) return rv;
-
-        count = PR_MIN(avail, aCount);
-
-        rv = stream->ReadSegments(ReadSegCb, &state, count, &read);
+        PRUint32 read;
+        rv = stream->ReadSegments(ReadSegCb, &state, aCount, &read);
         // If we got an NS_BASE_STREAM_WOULD_BLOCK error since the reader
         // didn't want any more data. This might not be an error for us if
         // data was read from a previous stream in this run
@@ -254,23 +249,32 @@ nsMultiplexInputStream::ReadSegments(nsWriteSegmentFun aWriter, void *aClosure,
             !read && state.mOffset)
             break;
 
-        NS_ENSURE_SUCCESS(rv, rv);
-        if (read > count) {
-            NS_ERROR("Read more than requested");
-            read = count; // truncate and hope for the best...
+        // If the return value is NS_BASE_STREAM_CLOSED, we are done with this
+        // stream.
+        if (rv == NS_BASE_STREAM_CLOSED) {
+            ++mCurrentStream;
+            mStartedReadingCurrent = PR_FALSE;
+            continue;
         }
+
+        NS_ENSURE_SUCCESS(rv, rv);
+        NS_ASSERTION(aCount >= read, "Read more than requested");
         mStartedReadingCurrent = PR_TRUE;
         state.mOffset += read;
-        count -= read;
         aCount -= read;
         if (state.mDone || // writer doesn't want anymore data
-            aCount == 0 || // already read total amount requested
-            count > 0)     // the current stream still has data
+            aCount == 0)     // the current stream still has data
             break;
         
-        ++mCurrentStream;
-        mStartedReadingCurrent = PR_FALSE;
+        // If the writer accepted all data but we didn't read any, this stream
+        // is finished.  Go on to the next stream.  These aren't the droids
+        // you're looking for.
+        if (read == 0) {
+            ++mCurrentStream;
+            mStartedReadingCurrent = PR_FALSE;
+        }
     }
+
     *_retval = state.mOffset;
     return NS_OK;
 }
@@ -290,7 +294,7 @@ nsMultiplexInputStream::ReadSegCb(nsIInputStream* aIn, void* aClosure,
                           aCount,
                           aWriteCount);
     if (rv == NS_BASE_STREAM_WOULD_BLOCK ||
-        (NS_SUCCEEDED(rv) && *aWriteCount == 0 && aCount != 0))
+        (NS_SUCCEEDED(rv) && *aWriteCount < aCount && aCount != 0))
         state->mDone = PR_TRUE;
 
     return rv;

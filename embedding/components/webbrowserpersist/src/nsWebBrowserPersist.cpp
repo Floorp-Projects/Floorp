@@ -1597,7 +1597,8 @@ nsWebBrowserPersist::MakeOutputStreamFromFile(
         do_CreateInstance(NS_LOCALFILEOUTPUTSTREAM_CONTRACTID, &rv);
     NS_ENSURE_SUCCESS(rv, NS_ERROR_FAILURE);
 
-    rv = fileOutputStream->Init(aFile, -1, -1);  // brade:  get the right flags here! XXX
+    // XXX brade:  get the right flags here!
+    rv = fileOutputStream->Init(aFile, -1, -1, 0);
     NS_ENSURE_SUCCESS(rv, rv);
 
     NS_ENSURE_SUCCESS(CallQueryInterface(fileOutputStream, aOutputStream), NS_ERROR_FAILURE);

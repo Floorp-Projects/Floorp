@@ -2220,21 +2220,28 @@ nsHTMLInputElement::SubmitNamesValues(nsIFormSubmission* aFormSubmission,
           //
           // Get input stream
           //
-          nsCOMPtr<nsIInputStream> rawStream;
-          rv = NS_NewLocalFileInputStream(getter_AddRefs(rawStream), file);
-          if (rawStream) {
+          nsCOMPtr<nsIInputStream> fileStream;
+          rv = NS_NewLocalFileInputStream(getter_AddRefs(fileStream),
+                                          file, -1, -1,
+                                          nsIFileInputStream::CLOSE_ON_EOF |
+                                          nsIFileInputStream::REOPEN_ON_REWIND);
+          if (fileStream) {
+            //
+            // Create buffered stream (for efficiency)
+            //
             nsCOMPtr<nsIInputStream> bufferedStream;
             rv = NS_NewBufferedInputStream(getter_AddRefs(bufferedStream),
-                                           rawStream, 8192);
+                                           fileStream, 8192);
             NS_ENSURE_SUCCESS(rv, rv);
-
-            //
-            // Submit
-            //
-            aFormSubmission->AddNameFilePair(this, name, filename,
-                                             bufferedStream, contentType,
-                                             PR_FALSE);
-            return rv;
+            if (bufferedStream) {
+              //
+              // Submit
+              //
+              aFormSubmission->AddNameFilePair(this, name, filename,
+                                               bufferedStream, contentType,
+                                               PR_FALSE);
+              return rv;
+            }
           }
         }
 

@@ -525,15 +525,13 @@ nsFSMultipartFormData::AddNameFilePair(nsIDOMHTMLElement* aSource,
        + NS_LITERAL_CSTRING(CRLF CRLF);
 
   //
-  // We need to dump the data up to this point into the POST data stream here,
-  // since we're about to add the file input stream
-  //
-  AddPostDataStream();
-
-  //
   // Add the file to the stream
   //
   if (aStream) {
+    // We need to dump the data up to this point into the POST data stream here,
+    // since we're about to add the file input stream
+    AddPostDataStream();
+
     mPostDataStream->AppendStream(aStream);
   }
 
