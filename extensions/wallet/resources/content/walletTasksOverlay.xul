@@ -55,7 +55,7 @@
   <!-- tasksOverlay menu items -->
   <menupopup id="taskPopup">
     <menu id="menu_passwordManager"
-          insertafter="search"
+          insertbefore="downloadmgr"
           label="&walletPasswordManager.label;"
           accesskey="&walletPasswordManager.accesskey;"
           PasswordNotChanged = "&PasswordNotChanged;"

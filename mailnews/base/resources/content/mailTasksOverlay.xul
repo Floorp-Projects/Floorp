@@ -43,35 +43,6 @@
       {
         window.openDialog("chrome://messenger/content/importDialog.xul","importDialog","chrome, modal, titlebar", {importType: "addressbook"});
       }
-      
-    function MsgSearchMessages()
-    {
-        var preselectedFolder = null;
-        if ("GetFirstSelectedMsgFolder" in window)
-          preselectedFolder = GetFirstSelectedMsgFolder();
-        var windowManager = Components.classes['@mozilla.org/appshell/window-mediator;1'].getService();
-        var windowManagerInterface = windowManager.QueryInterface(Components.interfaces.nsIWindowMediator);
-        var searchWindow = windowManagerInterface.getMostRecentWindow("mailnews:search");
-    
-        if (searchWindow)
-            searchWindow.focus();
-        else
-            window.openDialog("chrome://messenger/content/SearchDialog.xul", "", 
-                              "chrome,resizable,status,centerscreen,dialog=no", { folder: preselectedFolder });
-    }
-
-    function MsgSearchAddresses()
-    {
-        var windowManager = Components.classes['@mozilla.org/appshell/window-mediator;1'].getService();
-        var windowManagerInterface = windowManager.QueryInterface(Components.interfaces.nsIWindowMediator);
-        var abSearchWindow = windowManagerInterface.getMostRecentWindow("mailnews:absearch");
-    
-        if (abSearchWindow)
-            abSearchWindow.focus();
-        else
-            window.openDialog("chrome://messenger/content/ABSearchDialog.xul", "", 
-                              "chrome,resizable,status,centerscreen,dialog=no", {directory: null});
-    }      
 
   ]]>
   </script>         
@@ -79,15 +50,12 @@
   <keyset id="tasksKeys">
     <key id="key_mail"  key="&messengerCmd.commandkey;" command="Tasks:Mail" modifiers="accel"/>
     <key id="key_addressbook"  key="&addressBookCmd.commandkey;" command="Tasks:AddressBook" modifiers="accel"/>
-    <key id="key_searchMail" key="&searchMailCmd.key;" command="cmd_searchMsgs" modifiers="accel, shift"/>
-
   </keyset>
 
 
   <commandset id="tasksCommands">
     <command id="Tasks:Mail" oncommand="toMessengerWindow();"/>
     <command id="Tasks:AddressBook" oncommand="toAddressBook();"/>
-    <command id="cmd_searchMsgs" oncommand="MsgSearchMessages();"/>
   </commandset>
   
 
@@ -98,11 +66,6 @@
     <toolbarbutton class="taskbutton" id="mini-addr" oncommand="toAddressBook();"
             insertafter="mini-comp" tooltiptext="&taskAddressBook.tooltip;"/>
   </statusbarpanel>
-  
-  <menupopup id="searchMenu">
-    <menuitem label="&searchMailCmd.label;" key="key_searchMail" accesskey="&searchMailCmd.accesskey;" command="cmd_searchMsgs" position="2"/>
-    <menuitem label="&searchAddressesCmd.label;" accesskey="&searchAddressesCmd.accesskey;" oncommand="MsgSearchAddresses(null)" position="3"/>
-  </menupopup>
 
   <menupopup id="windowPopup">
     <menuitem accesskey="&messengerCmd.accesskey;" label="&messengerCmd.label;"  key="key_mail" command="Tasks:Mail" id="tasksMenuMail" insertafter="tasksMenuNavigator" class="menuitem-iconic icon-mail16 menu-iconic"/>

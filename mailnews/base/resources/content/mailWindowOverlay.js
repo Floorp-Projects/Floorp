@@ -1657,3 +1657,32 @@ function SetupUndoRedoCommand(command)
     return canUndoOrRedo;
 }
 
+function MsgSearchMessages()
+{
+    var preselectedFolder = null;
+    if ("GetFirstSelectedMsgFolder" in window)
+      preselectedFolder = GetFirstSelectedMsgFolder();
+    var windowManager = Components.classes['@mozilla.org/rdf/datasource;1?name=window-mediator'].getService();
+    var windowManagerInterface = windowManager.QueryInterface(Components.interfaces.nsIWindowMediator);
+    var searchWindow = windowManagerInterface.getMostRecentWindow("mailnews:search");
+
+    if (searchWindow)
+        searchWindow.focus();
+    else
+        window.openDialog("chrome://messenger/content/SearchDialog.xul", "", 
+                          "chrome,resizable,status,centerscreen,dialog=no", { folder: preselectedFolder });
+}
+
+function MsgSearchAddresses()
+{
+    var windowManager = Components.classes['@mozilla.org/rdf/datasource;1?name=window-mediator'].getService();
+    var windowManagerInterface = windowManager.QueryInterface(Components.interfaces.nsIWindowMediator);
+    var abSearchWindow = windowManagerInterface.getMostRecentWindow("mailnews:absearch");
+
+    if (abSearchWindow)
+        abSearchWindow.focus();
+    else
+        window.openDialog("chrome://messenger/content/ABSearchDialog.xul", "", 
+                          "chrome,resizable,status,centerscreen,dialog=no", {directory: null});
+}
+ 

@@ -264,6 +264,10 @@ Rights Reserved.
     <command id="cmd_label5" oncommand="goDoCommand('cmd_label5');" disabled="true"/>
 </commandset>
 
+<commandset id="tasksCommands">
+  <command id="cmd_searchMsgs" oncommand="MsgSearchMessages();"/>
+</commandset>
+
 <keyset id="mailKeys">
     <key id="space" key=" " oncommand="SpaceHit()"/>
 
@@ -328,6 +332,8 @@ Rights Reserved.
   <key id="key_label3" charcode="&labelCmd3.key;"  oncommand="goDoCommand('cmd_label3')"/>
   <key id="key_label4" charcode="&labelCmd4.key;"  oncommand="goDoCommand('cmd_label4')"/>
   <key id="key_label5" charcode="&labelCmd5.key;"  oncommand="goDoCommand('cmd_label5')"/>
+
+  <key id="key_searchMail" key="&searchMailCmd.key;" command="cmd_searchMsgs" modifiers="accel, shift"/>
 
 </keyset>
 
@@ -1397,11 +1403,19 @@ Rights Reserved.
 
 <menu id="tasksMenu">
   <menupopup id="taskPopup">
-    <menuitem label="&searchMailCmd.label;" key="key_searchMail" accesskey="&searchMailCmd.accesskey;" command="cmd_searchMsgs"/>
+    <menuitem label="&searchMailCmd.label;" 
+              key="key_searchMail" 
+              accesskey="&searchMailCmd.accesskey;" 
+              command="cmd_searchMsgs"/>
+    <menuitem label="&searchAddressesCmd.label;" 
+              accesskey="&searchAddressesCmd.accesskey;" 
+              oncommand="MsgSearchAddresses()"/>
     <menuitem label="&filtersCmd.label;"
               accesskey="&filtersCmd.accesskey;"
               oncommand="MsgFilters(null);"/>
-    <menuitem label="&importCmd.label;" accesskey="&importCmd.accesskey;" oncommand="toImport();"/>
+    <menuitem label="&importCmd.label;" 
+              accesskey="&importCmd.accesskey;" 
+              oncommand="toImport();"/>
     <menuseparator/>
   </menupopup>
 </menu>

@@ -238,10 +238,6 @@ Rights Reserved.
 <!ENTITY searchParentParentCmd.label ".Search in &lt;parent parent&gt;">
 <!ENTITY searchParentParentCmd.accesskey "">
 
-<!-- searchInternetCmd is also used by addressbook -->
-<!ENTITY searchInternetCmd.label "Search the Web">
-<!ENTITY searchInternetCmd.accesskey "W">
-
 <!ENTITY searchMailCmd.label "Search Messages...">
 <!ENTITY searchMailCmd.accesskey "M">
 <!ENTITY searchMailCmd.key "f">
