@@ -31,6 +31,9 @@
 #include "nsUConvDll.h"
 #include "nsCharsetMenu.h"
 #include "nsICharsetConverterManager.h"
+#include "nsIStringBundle.h"
+#include "nsILocaleFactory.h"
+#include "nsLocaleCID.h"
 
 static NS_DEFINE_IID(kIRDFServiceIID, NS_IRDFSERVICE_IID);
 static NS_DEFINE_CID(kRDFServiceCID, NS_RDFSERVICE_CID);
@@ -41,6 +44,8 @@ static NS_DEFINE_CID(kRDFContainerUtilsCID, NS_RDFCONTAINERUTILS_CID);
 static NS_DEFINE_CID(kRDFContainerCID, NS_RDFCONTAINER_CID);
 static NS_DEFINE_CID(kCharsetConverterManagerCID, NS_ICHARSETCONVERTERMANAGER_CID);
 static NS_DEFINE_IID(kICharsetConverterManagerIID, NS_ICHARSETCONVERTERMANAGER_IID);
+static NS_DEFINE_CID(kStringBundleServiceCID, NS_STRINGBUNDLESERVICE_CID);
+static NS_DEFINE_CID(kLocaleFactoryCID, NS_LOCALEFACTORY_CID);
 
 static const char * kURINC_BSCharsetMenuRoot = "NC:BSCharsetMenuRoot";
 static const char * kURINC_BDCharsetMenuRoot = "NC:BDCharsetMenuRoot";
@@ -71,13 +76,19 @@ private:
   nsresult Init();
   nsresult Done();
   nsresult CreateBrowserMenu();
-  nsresult CreateBrowserMoreMenu();
-  nsresult CreateBrowserStaticMenu();
-  nsresult FillRDFContainer(nsIRDFResource * aResource, nsString ** aList, 
-      PRInt32 aCount);
+  nsresult CreateBrowserMoreMenu(nsIRDFService * aRDFServ, 
+      nsIStringBundle * aTitles, nsIStringBundle * aData);
+  nsresult CreateBrowserStaticMenu(nsIRDFService * aRDFServ, 
+      nsIStringBundle * aTitles, nsIStringBundle * aData);
+  nsresult FillRDFContainer(nsIRDFService * aRDFServ, nsIRDFResource * aResource, 
+      nsIStringBundle * aTitles, nsString ** aList, PRInt32 aCount);
+  nsresult RemoveFlaggedCharsets(nsString ** aList, PRInt32 aCount, 
+      nsIStringBundle * aData, char * aProp, PRBool value);
 
   nsresult NewRDFContainer(nsIRDFDataSource * aDataSource, 
       nsIRDFResource * aResource, nsIRDFContainer ** aResult);
+
+  nsresult GetAppLocale(nsILocale ** aLocale);
 
 public:
   nsCharsetMenu();
@@ -256,36 +267,40 @@ done:
   return res;
 }
 
-nsresult nsCharsetMenu::FillRDFContainer(nsIRDFResource * aResource, 
+nsresult nsCharsetMenu::FillRDFContainer(nsIRDFService * aRDFServ,
+                                         nsIRDFResource * aResource, 
+                                         nsIStringBundle * aTitles,
                                          nsString ** aList, PRInt32 aCount) 
 {
   nsresult res = NS_OK;
-  nsIRDFService * rdfServ = NULL;
   nsCOMPtr<nsIRDFResource> node;
   nsCOMPtr<nsIRDFContainer> container;
   PRInt32 i;
 
-  res = nsServiceManager::GetService(kRDFServiceCID, kIRDFServiceIID, 
-      (nsISupports **)&rdfServ);
-  if (NS_FAILED(res)) goto done;
-
   res = NewRDFContainer(mInner, aResource, getter_AddRefs(container));
-  if (NS_FAILED(res)) goto done;
+  if (NS_FAILED(res)) return res;
 
   for (i = 0; i < aCount; i++) {
-    nsString * str = aList[i];
-    if (str == NULL) continue;
+    nsString * cs = aList[i];
+    if (cs == NULL) continue;
 
     // Make up a unique ID and create the RDF NODE
-    char cID[256];
-    str->ToCString(cID, 256);
-    res = rdfServ->GetResource(cID, getter_AddRefs(node));
+    char csID[256];
+    cs->ToCString(csID, 256);
+    res = aRDFServ->GetResource(csID, getter_AddRefs(node));
     if (NS_FAILED(res)) continue;
 
-    // Get the RDF literal and add it to our node
-    // XXX here get and use the human readable name for this charset
+    nsAutoString csKey(cs->GetUnicode());
+    csKey.Append(".title");
+
+    PRUnichar * title = NULL;
+    if (aTitles != NULL) 
+      aTitles->GetStringFromName(csKey.GetUnicode(), &title);
+    if (title == NULL) 
+      title = (PRUnichar *)cs->GetUnicode();
+
     nsCOMPtr<nsIRDFLiteral> titleLiteral;
-    res = rdfServ->GetLiteral(str->GetUnicode(), getter_AddRefs(titleLiteral));
+    res = aRDFServ->GetLiteral(title, getter_AddRefs(titleLiteral));
     if (NS_FAILED(res)) continue;
     res = Assert(node, kNC_Name, titleLiteral, PR_TRUE);
     if (NS_FAILED(res)) continue;
@@ -295,21 +310,65 @@ nsresult nsCharsetMenu::FillRDFContainer(nsIRDFResource * aResource,
     if (NS_FAILED(res)) continue;
   }
 
-done:
-  if (rdfServ != NULL) nsServiceManager::ReleaseService(kRDFServiceCID, rdfServ);
+  return res;
+}
+
+nsresult nsCharsetMenu::RemoveFlaggedCharsets(nsString ** aList, PRInt32 aCount,
+                                              nsIStringBundle * aData, 
+                                              char * aProp, PRBool value)
+{
+  nsresult res = NS_OK;
+
+  for (PRInt32 i = 0; i < aCount; i++) {
+    nsString * cs = aList[i];
+    if (cs == NULL) continue;
+
+    nsAutoString csKey(cs->GetUnicode());
+    csKey.Append(aProp);
+
+    PRUnichar * data = NULL;
+    if (aData != NULL) 
+      aData->GetStringFromName(csKey.GetUnicode(), &data);
+    if (data == NULL) continue;
+
+    aList[i] = NULL;
+  }
 
   return res;
 }
 
+// XXX change "xuconv" to "uconv" when the new enc&dec trees are in place
 nsresult nsCharsetMenu::CreateBrowserMenu() 
 {
-  CreateBrowserMoreMenu();
-  CreateBrowserStaticMenu();
+  nsresult res = NS_OK;
+  nsCOMPtr<nsIStringBundle> titles = nsnull;
+  nsCOMPtr<nsIStringBundle> data = nsnull;
+  nsCOMPtr<nsILocale> locale = nsnull;
+
+  NS_WITH_SERVICE(nsIRDFService, rdfServ, kRDFServiceCID, &res);
+  if (NS_FAILED(res)) return res;
+
+  NS_WITH_SERVICE(nsIStringBundleService, sbServ, kStringBundleServiceCID, &res);
+  if (NS_FAILED(res)) return res;
+
+  res = GetAppLocale(getter_AddRefs(locale));
+  if (NS_FAILED(res)) return res;
+
+  res = sbServ->CreateExtensibleBundle("software/netscape/intl/xuconv/titles/", locale, getter_AddRefs(titles));
+  if (NS_FAILED(res)) return res;
+
+  res = sbServ->CreateExtensibleBundle("software/netscape/intl/xuconv/data/", locale, getter_AddRefs(data));
+  if (NS_FAILED(res)) return res;
+
+  CreateBrowserMoreMenu(rdfServ, titles, data);
+  CreateBrowserStaticMenu(rdfServ, titles, data);
 
   return NS_OK;
 }
 
-nsresult nsCharsetMenu::CreateBrowserMoreMenu() 
+nsresult nsCharsetMenu::CreateBrowserMoreMenu(nsIRDFService * aRDFServ, 
+                                              nsIStringBundle * aTitles, 
+                                              nsIStringBundle * aData) 
 {
   nsresult res = NS_OK;
   nsICharsetConverterManager * ccMan = NULL;
@@ -323,9 +382,10 @@ nsresult nsCharsetMenu::CreateBrowserMoreMenu()
   res = ccMan->GetDecoderList(&decs, &count);
   if (NS_FAILED(res)) goto done;
 
-  // XXX put the flagged charsets on null
+  // put the flagged charsets on null
+  RemoveFlaggedCharsets(decs, count, aData, ".notForBrowser", PR_TRUE);
 
-  res = FillRDFContainer(kNC_BMCharsetMenuRoot, decs, count);
+  res = FillRDFContainer(aRDFServ, kNC_BMCharsetMenuRoot, aTitles, decs, count);
   if (NS_FAILED(res)) goto done;
 
 done:
@@ -336,17 +396,19 @@ done:
   return res;
 }
 
-nsresult nsCharsetMenu::CreateBrowserStaticMenu() 
+nsresult nsCharsetMenu::CreateBrowserStaticMenu(nsIRDFService * aRDFServ, 
+                                                nsIStringBundle * aTitles, 
+                                                nsIStringBundle * aData) 
 {
   nsresult res = NS_OK;
   PRInt32 count = 2;
   nsString ** decs = new nsString * [count];
-  decs[0] = new nsString("UTF-8");
-  decs[1] = new nsString("Shift-JIS");
+  decs[0] = new nsString("utf-8");
+  decs[1] = new nsString("shift_jis");
 
-  // XXX put the flagged charsets on null
+  // note that we allow ALL the charsets to be placed here!
 
-  res = FillRDFContainer(kNC_BSCharsetMenuRoot, decs, count);
+  res = FillRDFContainer(aRDFServ, kNC_BSCharsetMenuRoot, aTitles, decs, count);
   if (NS_FAILED(res)) goto done;
 
 done:
@@ -373,6 +435,20 @@ nsresult nsCharsetMenu::NewRDFContainer(nsIRDFDataSource * aDataSource,
     NS_RELEASE(*aResult);
   }
 
+  return res;
+}
+
+nsresult nsCharsetMenu::GetAppLocale(nsILocale ** aLocale)
+{
+  nsresult res = NS_OK;
+  nsILocaleFactory * localeFactory;
+  
+  res = nsComponentManager::FindFactory(kLocaleFactoryCID, 
+      (nsIFactory**)&localeFactory);
+  if (NS_FAILED(res)) return res;
+
+  res = localeFactory->GetApplicationLocale(aLocale);
+  NS_RELEASE(localeFactory);
   return res;
 }
 

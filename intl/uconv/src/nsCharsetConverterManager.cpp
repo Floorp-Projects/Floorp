@@ -33,6 +33,7 @@
 #include "nsIUnicodeEncodeHelper.h"
 
 static NS_DEFINE_IID(kRegistryNodeIID, NS_IREGISTRYNODE_IID);
+static NS_DEFINE_CID(kRegistryCID, NS_REGISTRY_CID);
 
 //----------------------------------------------------------------------------
 // Class nsObject [declaration]
@@ -114,13 +115,17 @@ private:
   nsresult GetConverterList(nsObjectArray * aArray, nsString *** aResult, 
       PRInt32 * aCount);
 
-  static nsresult RegisterConverterPresenceData(char * aRegistryPath, 
-      PRBool aPresence);
+  static nsresult RegisterConverterTitles(nsIRegistry * aRegistry, 
+      char * aRegistryPath);
+
+  static nsresult RegisterConverterData(nsIRegistry * aRegistry, 
+      char * aRegistryPath);
 
 public:
 
   nsCharsetConverterManager();
   virtual ~nsCharsetConverterManager();
+
   static nsresult RegisterConverterManagerData();
 
   //--------------------------------------------------------------------------
@@ -161,6 +166,11 @@ NS_IMETHODIMP NS_NewCharsetConverterManager(nsISupports* aOuter,
     delete inst;
   }
   return res;
+}
+
+NS_IMETHODIMP NS_RegisterConverterManagerData()
+{
+  return nsCharsetConverterManager::RegisterConverterManagerData();
 }
 
 //----------------------------------------------------------------------------
@@ -274,49 +284,65 @@ nsCharsetConverterManager::~nsCharsetConverterManager()
 
 nsresult nsCharsetConverterManager::RegisterConverterManagerData()
 {
+  nsresult res = NS_OK;
+
+  NS_WITH_SERVICE(nsIRegistry, registry, kRegistryCID, &res);
+  if (NS_FAILED(res)) return res;
+
+  // open registry if necessary
+  PRBool regOpen = PR_FALSE;
+  registry->IsOpen(&regOpen);
+  if (!regOpen) {
+    res = registry->OpenWellKnownRegistry(nsIRegistry::ApplicationComponentRegistry);
+    if (NS_FAILED(res)) return res;
+  }
+
   // XXX take these konstants out of here
   // XXX change "xuconv" to "uconv" when the new enc&dec trees are in place
-  RegisterConverterPresenceData("software/netscape/intl/xuconv/not-for-browser", PR_FALSE);
+  RegisterConverterTitles(registry, "software/netscape/intl/xuconv/titles/");
+  RegisterConverterData(registry, "software/netscape/intl/xuconv/data/");
 
   return NS_OK;
 }
 
-nsresult nsCharsetConverterManager::RegisterConverterPresenceData(
-                                    char * aRegistryPath, 
-                                    PRBool aPresence)
+nsresult nsCharsetConverterManager::RegisterConverterTitles(
+                                    nsIRegistry * aRegistry,
+                                    char * aRegistryPath)
 {
   nsresult res;
-  nsIRegistry * registry = NULL;
   nsRegistryKey key;
 
-  // get the registry
-  res = nsServiceManager::GetService(NS_REGISTRY_PROGID, 
-    nsIRegistry::GetIID(), (nsISupports**)&registry);
-  if (NS_FAILED(res)) goto done;
+  nsAutoString str(aRegistryPath);
+  str.Append("defaultFile");
 
-  // open the registry
-  res = registry->OpenWellKnownRegistry(
-    nsIRegistry::ApplicationComponentRegistry);
-  if (NS_FAILED(res)) goto done;
+  char * p = str.ToNewCString();
+  res = aRegistry->AddSubtree(nsIRegistry::Common, p, &key);
+  nsAllocator::Free(p);
+  if (NS_FAILED(res)) return res;
+  res = aRegistry->SetString(key, "name", "resource:/res/charsetTitles.properties");
+  if (NS_FAILED(res)) return res;
 
-  res = registry -> AddSubtree(nsIRegistry::Common, aRegistryPath, &key);
-  if (NS_FAILED(res)) goto done;
+  return NS_OK;
+}
 
-  // XXX instead of these hardcoded values, I should read from a property file
-  res = registry -> SetInt(key, "x-fake-1999", 1);
-  if (NS_FAILED(res)) goto done;
-  res = registry -> SetInt(key, "x-fake-2000", 1);
-  if (NS_FAILED(res)) goto done;
-  res = registry -> SetInt(key, "x-euc-tw", 1);
-  if (NS_FAILED(res)) goto done;
+nsresult nsCharsetConverterManager::RegisterConverterData(
+                                    nsIRegistry * aRegistry,
+                                    char * aRegistryPath)
+{
+  nsresult res;
+  nsRegistryKey key;
 
-done:
-  if (registry != NULL) {
-    registry -> Close();
-    nsServiceManager::ReleaseService(NS_REGISTRY_PROGID, registry);
-  }
+  nsAutoString str(aRegistryPath);
+  str.Append("defaultFile");
 
-  return res;
+  char * p = str.ToNewCString();
+  res = aRegistry->AddSubtree(nsIRegistry::Common, p, &key);
+  nsAllocator::Free(p);
+  if (NS_FAILED(res)) return res;
+  res = aRegistry->SetString(key, "name", "resource:/res/charsetData.properties");
+  if (NS_FAILED(res)) return res;
+
+  return NS_OK;
 }
 
 // XXX rethink the registry structure(tree) for these converters
@@ -330,11 +356,19 @@ void nsCharsetConverterManager::FillInfoArrays()
   nsIEnumerator * components = NULL;
   nsIRegistry * registry = NULL;
   nsRegistryKey uconvKey, key;
+  PRBool regOpen = PR_FALSE;
 
   // get the registry
   res = nsServiceManager::GetService(NS_REGISTRY_PROGID, 
     nsIRegistry::GetIID(), (nsISupports**)&registry);
   if (NS_FAILED(res)) goto done;
+
+  // open registry if necessary
+  registry->IsOpen(&regOpen);
+  if (!regOpen) {
+    res = registry->OpenWellKnownRegistry(nsIRegistry::ApplicationComponentRegistry);
+    if (NS_FAILED(res)) goto done;
+  }
 
   // get subtree
   res = registry->GetSubtree(nsIRegistry::Common,  
@@ -377,11 +411,14 @@ void nsCharsetConverterManager::FillInfoArrays()
     res = registry->GetString(key, "destination", &dest);
     if (NS_FAILED(res)) goto done1;
 
+    // XXX do an alias resolution here instead
     if (!strcmp(src, "Unicode")) {
       ci->mName = new nsString(dest);
+      ci->mName->ToLowerCase();
       mEncoderArray.AddObject(ci);
     } else if (!strcmp(dest, "Unicode")) {
       ci->mName = new nsString(src);
+      ci->mName->ToLowerCase();
       mDecoderArray.AddObject(ci);
     } else goto done1;
 

@@ -201,6 +201,8 @@ nsUConvModule::RegisterSelf(nsIComponentManager *aCompMgr,
     cp++;
   }
 
+  rv = NS_RegisterConverterManagerData();
+
   return rv;
 }
 
