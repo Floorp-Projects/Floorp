@@ -32,6 +32,7 @@ CHROME_CONTENT 	= \
 		$(NULL)
 
 SKINFILES 	= \
+		$(srcdir)/simple-shell.css \
 		$(srcdir)/embedding.css \
 		$(srcdir)/back.gif \
 		$(srcdir)/forward.gif \
