@@ -2044,7 +2044,10 @@ GlobalWindowImpl::HandleDOMEvent(nsIPresContext& aPresContext,
   //Bubbling stage
   if (NS_EVENT_FLAG_CAPTURE != aFlags && mChromeDocument) {
     // Bubble to a chrome document if it exists
-    mChromeDocument->HandleDOMEvent(aPresContext, aEvent, aDOMEvent, NS_EVENT_FLAG_BUBBLE, aEventStatus);
+    // XXX Need a way to know if an event should really bubble or not.
+    // For now filter out load and unload, since they cause problems.
+    if (aEvent->message != NS_PAGE_LOAD && aEvent->message != NS_PAGE_UNLOAD)
+      mChromeDocument->HandleDOMEvent(aPresContext, aEvent, aDOMEvent, NS_EVENT_FLAG_BUBBLE, aEventStatus);
   }
 
   if (NS_EVENT_FLAG_INIT == aFlags) {
