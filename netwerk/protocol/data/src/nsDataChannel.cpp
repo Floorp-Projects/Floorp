@@ -142,6 +142,20 @@ nsDataChannel::ParseData() {
         if (semiColon)
             *semiColon = ';';
     }
+
+    char *dataBuffer = nsnull;
+    PRBool cleanup = PR_FALSE;
+    mContentType.StripWhitespace();
+    if (!mContentType.Find("text")) {
+        // it's text, don't compress spaces
+        dataBuffer = comma+1;
+    } else {
+        // it's ascii encoded binary, don't let any spaces in
+        nsCAutoString dataBuf(comma+1);
+        dataBuf.StripWhitespace();
+        dataBuffer = dataBuf.ToNewCString();
+        cleanup = PR_TRUE;
+    }
     
     nsCOMPtr<nsIBufferInputStream> bufInStream;
     nsCOMPtr<nsIBufferOutputStream> bufOutStream;
@@ -149,7 +163,7 @@ nsDataChannel::ParseData() {
     rv = NS_NewPipe(getter_AddRefs(bufInStream), getter_AddRefs(bufOutStream));
     if (NS_FAILED(rv)) return rv;
 
-    PRUint32 dataLen = PL_strlen(comma+1);
+    PRUint32 dataLen = PL_strlen(dataBuffer);
     PRUint32 wrote;
     writeData *dataToWrite = (writeData*)nsAllocator::Alloc(sizeof(writeData));
     if (!dataToWrite) return NS_ERROR_OUT_OF_MEMORY;
@@ -157,8 +171,8 @@ nsDataChannel::ParseData() {
     if (lBase64) {
         *base64 = 'b';
         PRInt32 resultLen = 0;
-        if (comma[dataLen-1] == '=') {
-            if (comma[dataLen-2] == '=')
+        if (dataBuffer[dataLen-1] == '=') {
+            if (dataBuffer[dataLen-2] == '=')
                 resultLen = dataLen-2;
             else
                 resultLen = dataLen-1;
@@ -166,7 +180,7 @@ nsDataChannel::ParseData() {
             resultLen = dataLen;
         }
 
-        char * decodedData = PL_Base64Decode(comma+1, dataLen, nsnull);
+        char * decodedData = PL_Base64Decode(dataBuffer, dataLen, nsnull);
         if (!decodedData) return NS_ERROR_OUT_OF_MEMORY;
 
         dataToWrite->dataLen = resultLen;
@@ -177,7 +191,7 @@ nsDataChannel::ParseData() {
         nsAllocator::Free(decodedData);
     } else {
         dataToWrite->dataLen = dataLen;
-        dataToWrite->data = comma + 1;
+        dataToWrite->data = dataBuffer;
 
         rv = bufOutStream->WriteSegments(nsReadData, dataToWrite, dataLen, &wrote);
     }
@@ -192,6 +206,7 @@ nsDataChannel::ParseData() {
     *comma = ',';
 
     nsAllocator::Free(dataToWrite);
+    if (cleanup) nsAllocator::Free(dataBuffer);
     return NS_OK;
 }
 
