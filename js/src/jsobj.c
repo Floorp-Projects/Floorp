@@ -1717,7 +1717,7 @@ js_FreeSlot(JSContext *cx, JSObject *obj, uint32 slot)
                     (_oldIndex < (JSVAL_INT_MAX / 10) ||                      \
                      (_oldIndex == (JSVAL_INT_MAX / 10) &&                    \
                       _c <= (JSVAL_INT_MAX % 10)))) {                         \
-                    if (_negative) _index = -_index;                          \
+                    if (_negative) _index = 0 - _index;                       \
                     id = INT_TO_JSVAL((jsint)_index);                         \
                 }                                                             \
             } else {                                                          \
