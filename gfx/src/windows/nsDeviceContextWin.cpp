@@ -113,6 +113,10 @@ void nsDeviceContextWin :: CommonInit(HDC aDC)
   mPaletteInfo.sizePalette = (PRUint8)::GetDeviceCaps(aDC, SIZEPALETTE);
   mPaletteInfo.numReserved = (PRUint8)::GetDeviceCaps(aDC, NUMRESERVED);
 
+  // Weird little dance ensues. width is stored in pixels, converted to twips
+  // (and stored) on the occasion of the first call of the accessor method.
+  // Not feeling much like that's a useful optimization and wanting to store
+  // two versions of clientrect as well, clientrect is just stored in twips.
   mClientRect.width = ::GetDeviceCaps(aDC, HORZRES);
   mClientRect.height = ::GetDeviceCaps(aDC, VERTRES);
   mWidthFloat = (float)mClientRect.width;
@@ -121,11 +125,13 @@ void nsDeviceContextWin :: CommonInit(HDC aDC)
   {
     RECT workArea;
     ::SystemParametersInfo(SPI_GETWORKAREA, 0, &workArea, 0);
-    mClientRect.x = workArea.left;
-    mClientRect.y = workArea.top;
+    mClientRect.x = NSToIntRound(workArea.left * mDevUnitsToAppUnits);
+    mClientRect.y = NSToIntRound(workArea.top * mDevUnitsToAppUnits);
     mClientRect.width = workArea.right - workArea.left;
     mClientRect.height = workArea.bottom - workArea.top;
   }
+  mClientRect.width = NSToIntRound(mClientRect.width * mDevUnitsToAppUnits);
+  mClientRect.height = NSToIntRound(mClientRect.height * mDevUnitsToAppUnits);
 
   DeviceContextImpl::CommonInit();
 }
