@@ -855,6 +855,9 @@ NS_IMETHODIMP nsImapUrl::AddOnlineDirectoryIfNecessary(const char *onlineMailbox
                             // make sure the last character is the delimiter
                             if ( onlineDirWithDelimiter.Last() != delimiter )
 		  	        onlineDirWithDelimiter += delimiter;
+                            if ( !*onlineMailboxName )
+                                onlineDirWithDelimiter.SetLength(
+                                           onlineDirWithDelimiter.Length()-1);
                         }
 
 			// The namespace for this mailbox is the root ("").
@@ -1093,17 +1096,13 @@ NS_IMETHODIMP nsImapUrl::CreateCanonicalSourceFolderPathString(char **result)
 // this method is called from the imap thread AND the UI thread...
 NS_IMETHODIMP nsImapUrl::CreateServerDestinationFolderPathString(char **result)
 {
-	nsresult rv = NS_OK;
   NS_ENSURE_ARG_POINTER(result);
-	nsAutoCMonitor(this);
-	// its possible for the destination folder path to be the root
-	if (!m_destinationCanonicalFolderPathSubString)
-    *result = nsCRT::strdup("");
-	else
-		rv = AllocateServerPath(m_destinationCanonicalFolderPathSubString, kOnlineHierarchySeparatorUnknown, result);
-	return (*result) ? rv : NS_ERROR_OUT_OF_MEMORY;
+  nsAutoCMonitor(this);
+  nsresult rv = AllocateServerPath(m_destinationCanonicalFolderPathSubString,
+                                   kOnlineHierarchySeparatorUnknown,
+                                   result);
+  return (*result) ? rv : NS_ERROR_OUT_OF_MEMORY;
 }
-
 
 // for enabling or disabling mime parts on demand. Setting this to PR_TRUE says we
 // can use mime parts on demand, if we chose.
