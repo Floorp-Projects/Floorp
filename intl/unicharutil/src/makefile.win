@@ -19,6 +19,7 @@
 #
 # Contributor(s): 
 DEPTH=..\..\..
+include <$(DEPTH)\config\config.mak>
 
 
 LCFLAGS= $(LCFLAGS) -D__STDC__
@@ -61,7 +62,7 @@ CPP_OBJS= \
 MODULE=unicharutil
 
 
-INCS=-I$(PUBLIC)\xpcom -I$(PUBLIC)\unicharutil -I$(PUBLIC)\raptor
+LINCS=-I$(PUBLIC)\xpcom -I$(PUBLIC)\unicharutil -I$(PUBLIC)\raptor
 
 MAKE_OBJ_TYPE=DLL
 DLLNAME=ucharuti
