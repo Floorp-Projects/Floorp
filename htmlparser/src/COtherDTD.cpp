@@ -503,8 +503,6 @@ PRBool COtherDTD::CanContainIndirect(PRInt32 aParent,PRInt32 aChild) const {
       }
       break;
 
-      result=PR_TRUE; break;
-
     default:
       break;
   }

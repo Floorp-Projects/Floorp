@@ -321,12 +321,13 @@ nsBTree& nsRBTree::ReBalance(nsNode& aNode){
         node2=node1->mParent->mRight;
       }
     
-      if((node2->mLeft->mColor=nsNode::eBlack) && (node2->mRight->mColor=nsNode::eBlack)) {
+      if((node2->mLeft->mColor == nsNode::eBlack) &&
+	 (node2->mRight->mColor == nsNode::eBlack)) {
         node2->mColor=nsNode::eRed;
         node1=node1->mParent;
       } 
       else {
-        if(node2->mRight->mColor=nsNode::eBlack) {
+        if(node2->mRight->mColor == nsNode::eBlack) {
           node2->mLeft->mColor=nsNode::eBlack;
           node2->mColor=nsNode::eRed;
           ShiftRight(*node2);
@@ -349,12 +350,13 @@ nsBTree& nsRBTree::ReBalance(nsNode& aNode){
         node2=node1->mParent->mLeft;
       }
 
-      if((node2->mRight->mColor=nsNode::eBlack) && (node2->mLeft->mColor=nsNode::eBlack)) {
+      if((node2->mRight->mColor == nsNode::eBlack) &&
+	 (node2->mLeft->mColor == nsNode::eBlack)) {
         node2->mColor=nsNode::eRed;
         node1=node1->mParent;
       }
       else {
-        if(node2->mLeft->mColor=nsNode::eBlack){
+        if(node2->mLeft->mColor == nsNode::eBlack){
           node2->mRight->mColor=nsNode::eBlack;
           node2->mColor=nsNode::eRed;
           ShiftLeft(*node2);

@@ -530,15 +530,15 @@ float nsString::ToFloat(PRInt32* aErrorCode) const
 {
   char buf[40];
   if (mLength > sizeof(buf)-1) {
-    *aErrorCode = NS_ERROR_ILLEGAL_VALUE;
+    *aErrorCode = (PRInt32) NS_ERROR_ILLEGAL_VALUE;
     return 0.0f;
   }
   char* cp = ToCString(buf, sizeof(buf));
   float f = (float) PR_strtod(cp, &cp);
   if (*cp != 0) {
-    *aErrorCode = NS_ERROR_ILLEGAL_VALUE;
+    *aErrorCode = (PRInt32) NS_ERROR_ILLEGAL_VALUE;
   }
-  *aErrorCode = NS_OK;
+  *aErrorCode = (PRInt32) NS_OK;
   return f;
 }
 
@@ -562,7 +562,7 @@ PRInt32 nsString::ToInteger(PRInt32* aErrorCode) const {
     cp++;
   }
   if (cp == end) {
-    *aErrorCode = NS_ERROR_ILLEGAL_VALUE;
+    *aErrorCode = (PRInt32) NS_ERROR_ILLEGAL_VALUE;
     return rv;
   }
 
@@ -572,7 +572,7 @@ PRInt32 nsString::ToInteger(PRInt32* aErrorCode) const {
     sign = *cp++;
   }
   if (cp == end) {
-    *aErrorCode = NS_ERROR_ILLEGAL_VALUE;
+    *aErrorCode = (PRInt32) NS_ERROR_ILLEGAL_VALUE;
     return rv;
   }
 
@@ -580,7 +580,7 @@ PRInt32 nsString::ToInteger(PRInt32* aErrorCode) const {
   while (cp < end) {
     PRUnichar ch = *cp++;
     if ((ch < '0') || (ch > '9')) {
-      *aErrorCode = NS_ERROR_ILLEGAL_VALUE;
+      *aErrorCode = (PRInt32) NS_ERROR_ILLEGAL_VALUE;
       break;
     }
     rv = rv * 10 + (ch - '0');
