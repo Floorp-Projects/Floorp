@@ -61,7 +61,9 @@ ifdef USE_N32
 # merely adds _PTH to coreconf's OBJDIR name.
 DEFAULT_GMAKE_FLAGS += USE_N32=1 USE_PTHREADS=1
 endif
-# coreconf also uses USE_64.
+ifdef HAVE_64BIT_OS
+DEFAULT_GMAKE_FLAGS += USE_64=1
+endif
 
 SUBMAKEFILES = ssl/Makefile pki/Makefile
 else
@@ -83,8 +85,10 @@ install::
 	$(INSTALL) -m 755 $(DIST)/lib/$(LOADABLE_ROOT_MODULE) $(DIST)/bin
 ifneq (,$(filter SunOS HP-UX,$(OS_ARCH)))
 ifneq ($(OS_TEST),i86pc)
+ifndef HAVE_64BIT_OS
 	$(INSTALL) -m 755 $(DIST)/lib/$(FREEBL_PURE32_MODULE) $(DIST)/bin
 	$(INSTALL) -m 755 $(DIST)/lib/$(FREEBL_HYBRID_MODULE) $(DIST)/bin
+endif
 endif
 endif
 	$(MAKE) -C ssl $@
