@@ -1986,7 +1986,7 @@ nsHTMLDocument::GetSourceDocumentURI(nsIURI** sourceURI)
 
 // XXX TBI: accepting arguments to the open method.
 nsresult
-nsHTMLDocument::OpenCommon(nsIURI* aSourceURI)
+nsHTMLDocument::OpenCommon(nsIURI* aSourceURI, PRBool aReplace)
 {
   // If we already have a parser we ignore the document.open call.
   if (mParser) {
@@ -2128,6 +2128,24 @@ nsHTMLDocument::OpenCommon(nsIURI* aSourceURI)
   // out of band document.write()
   if (docshell) {
     docshell->PrepareForNewContentModel();
+
+    // Now check whether we were opened with a "replace" argument.  If
+    // so, we need to tell the docshell to not create a new history
+    // entry for this load.
+    // XXXbz we're basically duplicating the MAKE_LOAD_TYPE macro from
+    // nsDocShell.h.  All this stuff needs better apis.
+    PRUint32 loadType;
+    if (aReplace) {
+      loadType = nsIDocShell::LOAD_CMD_NORMAL |
+        (nsIWebNavigation::LOAD_FLAGS_REPLACE_HISTORY << 16);
+    } else {
+      // Make sure that we're doing a normal load, not whatever type
+      // of load was previously done on this docshell.
+      loadType = nsIDocShell::LOAD_CMD_NORMAL |
+        (nsIWebNavigation::LOAD_FLAGS_NONE << 16);
+    }
+    docshell->SetLoadType(loadType);
+    
     nsCOMPtr<nsIContentViewer> cv;
     docshell->GetContentViewer(getter_AddRefs(cv));
     nsCOMPtr<nsIDocumentViewer> docViewer = do_QueryInterface(cv);
@@ -2147,11 +2165,11 @@ NS_IMETHODIMP
 nsHTMLDocument::Open()
 {
   nsCOMPtr<nsIDOMDocument> doc;
-  return Open(getter_AddRefs(doc));
+  return Open(PR_FALSE, getter_AddRefs(doc));
 }
 
 NS_IMETHODIMP
-nsHTMLDocument::Open(nsIDOMDocument** aReturn)
+nsHTMLDocument::Open(PRBool aReplace, nsIDOMDocument** aReturn)
 {
   // XXX The URI of the newly created document will match
   // that of the source document. Is this right?
@@ -2167,7 +2185,7 @@ nsHTMLDocument::Open(nsIDOMDocument** aReturn)
   }
   NS_ENSURE_SUCCESS(rv, rv);
 
-  rv = OpenCommon(sourceURI);
+  rv = OpenCommon(sourceURI, aReplace);
   NS_ENSURE_SUCCESS(rv, rv);
 
   return CallQueryInterface(this, aReturn);

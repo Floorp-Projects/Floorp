@@ -39,7 +39,7 @@
 
 #include "domstubs.idl"
 
-[scriptable, uuid(a6cf90c5-15b3-11d2-932e-00805f8add32)]
+[scriptable, uuid(79beb289-3644-4b54-9432-9fb993945629)]
 interface nsIDOMNSHTMLDocument : nsISupports
 {
   readonly attribute long                 width;
@@ -55,8 +55,13 @@ interface nsIDOMNSHTMLDocument : nsISupports
 
   DOMString                 getSelection();
 
-  // Scriptable versions of open(), write(), writeln().
-  nsIDOMDocument            open();
+  // This is the internal version of open(); note that the version
+  // scriptable with JS is defined entirely in classinfo.
+  // Pass aReplace = true to trigger a replacement of the previous
+  // document in session history; pass false for normal history handling.
+  nsIDOMDocument            open(in boolean aReplace);
+
+  // Scriptable versions of write(), writeln(), clear().
   void                      write();
   void                      writeln();
   void                      clear();
