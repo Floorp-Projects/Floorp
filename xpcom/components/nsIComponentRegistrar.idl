@@ -35,7 +35,7 @@
 
 /**
  * The nsIComponentRegistrar interface.
- * @status UNDER_REVIEW
+ * @status UNDER_REVIEW - Will Freeze for mozilla 1.0!!
  */
 
 #include "nsISupports.idl"
@@ -52,17 +52,17 @@ interface nsIComponentRegistrar : nsISupports
      *
      * Register a component file or all component files in a directory.  
      *
-     * These files must have an associated loader and export the required
+     * Component files must have an associated loader and export the required
      * symbols which this loader defines.  For example, if the given file is a
      * native library (which is built into XPCOM), it must export the symbol 
-     * "NSGetModule".  Other loaders may have different semantecs.
+     * "NSGetModule".  Other loaders may have different semantics.
      * 
-     * @param aSpec    : Filename spec for component file's location. If the 
-     *                   file is a directory, the every file in the directory 
-     *                   will be registered.  If the file is null, then the 
-     *                   application component's directory will be registred
-     *                   as defined by NS_XPCOM_COMPONENT_DIR (see 
-     *                   nsIDirectoryService.idl)
+     * @param aSpec    : Filename spec for component file's location. If aSpec 
+     *                   is a directory, then every component file in the
+     *                   directory will be registered.  
+     *                   If the aSpec is null, then the application component's
+     *                   directory as defined by NS_XPCOM_COMPONENT_DIR will be 
+     *                   registered  (see nsIDirectoryService.idl)
      *
      * @return NS_OK   : Registration was successful.
      *         NS_ERROR: Method failure.
@@ -74,14 +74,12 @@ interface nsIComponentRegistrar : nsISupports
      *
      * Unregister a component file or all component files in a directory.  
      *
-     * Disassociate component file references by file specification.  
-     *
-     * @param aSpec    : Filename spec for component file's location. If the 
-     *                   file is a directory, the every file in the directory 
-     *                   will be registered.  If the file is null, then the 
-     *                   application component's directory will be registred
-     *                   as defined by NS_XPCOM_COMPONENT_DIR (see 
-     *                   nsIDirectoryService.idl)
+     * @param aSpec    : Filename spec for component file's location. If aSpec 
+     *                   is a directory, the every component file in the directory 
+     *                   will be registered.  
+     *                   If aSpec is null, then the application component's 
+     *                   directory as defined by NS_XPCOM_COMPONENT_DIR will be 
+     *                   registered. (see nsIDirectoryService.idl)
      *
      * @return NS_OK     Unregistration was successful.
      *         NS_ERROR* Method failure.
@@ -112,9 +110,9 @@ interface nsIComponentRegistrar : nsISupports
      *
      * Unregister a factory associated with CID aClass.
      *
-     * @param aClass   : ClassID being unregistered
+     * @param aClass   : CID being unregistered
      * @param aFactory : Factory previously registered to create instances of
-     *                   ClassID aClass.
+     *                   CID aClass.
      *
      * @return NS_OK     Unregistration was successful.
      *         NS_ERROR* Method failure.
@@ -132,7 +130,7 @@ interface nsIComponentRegistrar : nsISupports
      * @param aContractID : ContractID associated with CID aClass
      * @param aFile       : Component File. This file must have an associated 
      *                      loader and export the required symbols which this 
-     *                      loader defines.
+     *                      loader specifies.
      * @param aLoaderStr  : Opaque loader specific string.  This value is
      *                      passed into the nsIModule's registerSelf
      *                      callback and must be fowarded unmodified when
@@ -157,7 +155,7 @@ interface nsIComponentRegistrar : nsISupports
      *
      * Unregister a factory associated with CID aClass.
      *
-     * @param aClass   : ClassID being unregistered
+     * @param aClass   : CID being unregistered
      * @param aFile    : Component File previously registered
      *
      * @return NS_OK     Unregistration was successful.
@@ -172,7 +170,7 @@ interface nsIComponentRegistrar : nsISupports
      * Returns true if a factory is registered for the CID.
      *
      * @param aClass : CID queried for registeration
-     * @return       : true if a factory or module is registered for CID 
+     * @return       : true if a factory is registered for CID 
      *                 false otherwise.
      */
     boolean isCIDRegistered(in nsCIDRef aClass);
@@ -183,10 +181,10 @@ interface nsIComponentRegistrar : nsISupports
      * Returns true if a factory is registered for the contract id.
      *
      * @param aClass : contract id queried for registeration
-     * @return       : true if a factory or module is registered for contract id 
+     * @return       : true if a factory is registered for contract id 
      *                 false otherwise.
      */
-    boolean isContractIDRegistered(in string aClass);
+    boolean isContractIDRegistered(in string aContractID);
 
     /**
      * enumerateCIDs
