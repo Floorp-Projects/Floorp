@@ -20,6 +20,8 @@
 
 #include "IEHtmlNode.h"
 
+class CIEHtmlElement;
+
 class CIEHtmlElementCollection : public CComObjectRootEx<CComSingleThreadModel>,
 							  public IDispatchImpl<IHTMLElementCollection, &IID_IHTMLElementCollection, &LIBID_MSHTML>
 {
@@ -30,12 +32,17 @@ public:
 protected:
 	virtual ~CIEHtmlElementCollection();
 
+	CIEHtmlNode *m_pParent;
+
 public:
 	// Adds a node to the collection
 	virtual HRESULT AddNode(IDispatch *pNode);
 
+	// Sets the parent node of this collection
+	virtual HRESULT SetParentNode(CIEHtmlNode *pParent);
+
 	// Helper method creates a collection from a parent node
-	static HRESULT CreateFromParentNode(nsIDOMNode *pParentNode, CIEHtmlElementCollection **pInstance);
+	static HRESULT CreateFromParentNode(CIEHtmlNode *pParentNode, CIEHtmlElementCollection **pInstance);
 
 BEGIN_COM_MAP(CIEHtmlElementCollection)
 	COM_INTERFACE_ENTRY_IID(IID_IDispatch, IHTMLElementCollection)

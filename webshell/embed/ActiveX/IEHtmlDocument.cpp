@@ -41,17 +41,6 @@ HRESULT STDMETHODCALLTYPE CIEHtmlDocument::get_Script(IDispatch __RPC_FAR *__RPC
 // IHTMLDocument2 methods
 HRESULT STDMETHODCALLTYPE CIEHtmlDocument::get_all(IHTMLElementCollection __RPC_FAR *__RPC_FAR *p)
 {
-	// Get the associated document
-	nsIDOMNode *pIDOMNode = nsnull;
-	if (m_pIDOMNode != nsnull)
-	{
-		m_pIDOMNode->QueryInterface(kIDOMNodeIID, (void **) &pIDOMNode);
-	}
-	if (pIDOMNode == nsnull)
-	{
-		return E_UNEXPECTED;
-	}
-
 	// Validate parameters
 	if (p == NULL)
 	{
@@ -61,14 +50,12 @@ HRESULT STDMETHODCALLTYPE CIEHtmlDocument::get_all(IHTMLElementCollection __RPC_
 	*p = NULL;
 
 	CIEHtmlElementCollectionInstance *pCollection = NULL;
-	CIEHtmlElementCollection::CreateFromParentNode(pIDOMNode, (CIEHtmlElementCollection **) &pCollection);
+	CIEHtmlElementCollection::CreateFromParentNode(this, (CIEHtmlElementCollection **) &pCollection);
 	if (pCollection)
 	{
 		pCollection->AddRef();
 		*p = pCollection;
 	}
-
-	pIDOMNode->Release();
 
 	return S_OK;
 }

@@ -99,7 +99,18 @@ HRESULT STDMETHODCALLTYPE CIEHtmlElement::get_tagName(BSTR __RPC_FAR *p)
 
 HRESULT STDMETHODCALLTYPE CIEHtmlElement::get_parentElement(IHTMLElement __RPC_FAR *__RPC_FAR *p)
 {
-	return E_NOTIMPL;
+	if (p == NULL)
+	{
+		return E_INVALIDARG;
+	}
+
+	*p = NULL;
+	if (m_pParent)
+	{
+//		m_pParent->QueryInterface(IID_IHTMLElement, (void **) p);
+	}
+
+	return S_OK;
 }
 
 HRESULT STDMETHODCALLTYPE CIEHtmlElement::get_style(IHTMLStyle __RPC_FAR *__RPC_FAR *p)
@@ -484,22 +495,6 @@ HRESULT STDMETHODCALLTYPE CIEHtmlElement::get_onfilterchange(VARIANT __RPC_FAR *
 
 HRESULT STDMETHODCALLTYPE CIEHtmlElement::get_children(IDispatch __RPC_FAR *__RPC_FAR *p)
 {
-	return E_NOTIMPL;
-}
-
-HRESULT STDMETHODCALLTYPE CIEHtmlElement::get_all(IDispatch __RPC_FAR *__RPC_FAR *p)
-{
-	// Get the associated document
-	nsIDOMNode *pIDOMNode = nsnull;
-	if (m_pIDOMNode != nsnull)
-	{
-		m_pIDOMNode->QueryInterface(kIDOMNodeIID, (void **) &pIDOMNode);
-	}
-	if (pIDOMNode == nsnull)
-	{
-		return E_UNEXPECTED;
-	}
-
 	// Validate parameters
 	if (p == NULL)
 	{
@@ -509,14 +504,35 @@ HRESULT STDMETHODCALLTYPE CIEHtmlElement::get_all(IDispatch __RPC_FAR *__RPC_FAR
 	*p = NULL;
 
 	CIEHtmlElementCollectionInstance *pCollection = NULL;
-	CIEHtmlElementCollection::CreateFromParentNode(pIDOMNode, (CIEHtmlElementCollection **) &pCollection);
+	CIEHtmlElementCollection::CreateFromParentNode(this, (CIEHtmlElementCollection **) &pCollection);
 	if (pCollection)
 	{
 		pCollection->AddRef();
 		*p = pCollection;
 	}
 
-	pIDOMNode->Release();
+	return S_OK;
+}
+
+HRESULT STDMETHODCALLTYPE CIEHtmlElement::get_all(IDispatch __RPC_FAR *__RPC_FAR *p)
+{
+	// Validate parameters
+	if (p == NULL)
+	{
+		return E_INVALIDARG;
+	}
+
+	*p = NULL;
+
+	// TODO get ALL contained elements, not just the immediate children
+
+	CIEHtmlElementCollectionInstance *pCollection = NULL;
+	CIEHtmlElementCollection::CreateFromParentNode(this, (CIEHtmlElementCollection **) &pCollection);
+	if (pCollection)
+	{
+		pCollection->AddRef();
+		*p = pCollection;
+	}
 
 	return S_OK;
 }
