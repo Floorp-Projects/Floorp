@@ -1194,7 +1194,7 @@ JS_DefineConstDoubles(JSContext *cx, JSObject *obj, JSConstDoubleSpec *cds)
         /* We can't do a (jsint) cast to check against JSDOUBLE_IS_INT until we
          * know that d is not NaN, or we risk a FPE on some platforms.
          */
-        if (JSDOUBLE_IS_NaN(d)) {
+        if (JSDOUBLE_IS_NaN(d) || !JSDOUBLE_IS_FINITE(d)) {
             value = DOUBLE_TO_JSVAL(&cds->dval);
         } else {
             jsint i = (jsint)d;
