@@ -29,7 +29,7 @@
 #include "nsCOMPtr.h"
 #include "nsIXPINotifier.h"
 #include "nsVoidArray.h"
-
+#include "prlock.h"
 
 class nsTopProgressListener : public nsIXPIListener
 {
@@ -50,8 +50,8 @@ class nsTopProgressListener : public nsIXPIListener
    
    private:
         nsVoidArray     *mListeners;
+        PRLock          *mLock;
         nsCOMPtr<nsIXPIListener>  mActive;
-
 };
 
 #endif
