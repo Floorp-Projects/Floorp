@@ -12,8 +12,8 @@
 # the completed string before it is returned.
 
 
-# $Revision: 1.10 $ 
-# $Date: 2001/11/14 21:59:55 $ 
+# $Revision: 1.11 $ 
+# $Date: 2001/12/03 19:48:47 $ 
 # $Author: kestes%walrus.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/lib/HTMLPopUp.pm,v $ 
 # $Name:  $ 
@@ -119,6 +119,34 @@ $DEFAULT_POPUP_WIDTH = 425;
 # You should not need to configure anything below this line
 #-----------------------------------------------------------
 
+
+
+# People who use the text browser 'links'
+# (http://artax.karlin.mff.cuni.cz/~mikulas/links/) would like to
+# see colors in the tinderbox table cells. Links will not render
+# background colors but it will render foreground colors. So we
+# add characters in the same color as the background just for
+# these browsers, others will not see these characters because
+# they will disapear into the background color.
+
+sub text_browser_color_string {
+    my ($cell_color, $char) = @_;
+
+    my $cell_options;
+    if ( $cell_color ) {
+        $cell_options = "color=$cell_color";
+    }
+
+    my $out = (
+                
+                "<font $cell_options>".
+                "$char".
+                "</font>".
+                
+                "");
+
+    return $out;
+}
 
 
 # Turn a time in 'time() format' into a string suitable for html
