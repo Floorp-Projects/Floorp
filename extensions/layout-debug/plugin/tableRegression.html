@@ -84,7 +84,7 @@ var myArray = new Array(15);
 
 function CompareFiles(aBaseDir,aVerDir,aBaselineFile,aVerFile)
 {
-  err = embed.CompareLayoutFiles(aBaseDir,aVerDir,aBaselineFile,aVerFile,1);
+  var err = embed.CompareLayoutFiles(aBaseDir,aVerDir,aBaselineFile,aVerFile,1);
 
   if(err == 0) {
     WriteOutput("File \" "+aVerFile + "\" PASSED",false,"success",true,true );
@@ -97,7 +97,7 @@ function CompareFiles(aBaseDir,aVerDir,aBaselineFile,aVerFile)
 
 function ClearOutput()
 {
-  textarea = document.getElementById('output');
+  var textarea = document.getElementById('output');
   textarea.innerHTML = "";
 }
 
@@ -106,10 +106,10 @@ function ClearOutput()
 function WriteOutput( aText, aReplace, aTextColor,aToStatus, aToOutPut )
 {
 
-  textarea = document.getElementById('output');
-  statusarea = document.getElementById('status'); 
+  var textarea = document.getElementById('output');
+  var statusarea = document.getElementById('status'); 
 
-  thecolor = "<font color=black>";
+  var thecolor = "<font color=black>";
   if(aTextColor == "failure")
     thecolor = "<font color=red>";
   if(aTextColor == "success")
@@ -155,10 +155,10 @@ function  placeWindows(aOutputWindow,aTestWindow)
   aOutputWindow.statusbar.visible = false;
   aOutputWindow.toolbar.visible = false;
 
-  top = window.screen.availTop;
-  left = window.screen.availLeft;
-  height = window.screen.availHeight;
-  width = window.screen.availWidth;
+  var top    = window.screen.availTop;
+  var left   = window.screen.availLeft;
+  var height = window.screen.availHeight;
+  var width  = window.screen.availWidth;
   if (height > 1000) {
     height = 800;
   } else {
@@ -238,6 +238,8 @@ function DumpDirectoryies(aTestType)
     baseExt = ".bas";
     verExt = ".ver";
 
+    var dirURL;
+    var err;
     // create the output directories 
     if ( testType == 1 ) {
       dirURL = "file:///"+ baseDir;

@@ -38,6 +38,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "nsISupports.h"
+#include "nsDebugObject.h"
 
 #include "nsXPIDLString.h"
 #include "nsReadableUtils.h"
@@ -45,7 +46,6 @@
 #include "nsIWindowWatcher.h"
 #include "nsVoidArray.h"
 #include "prmem.h"
-#include "nsDebugObject.h"
 #include "nsIDocShellTreeItem.h"
 #include "nsIDOMWindowInternal.h"
 #include "nsIPresShell.h"
@@ -61,8 +61,11 @@
 #include "nsIFrameUtil.h"
 #include "nsLayoutCID.h"
 #include "nsNetUtil.h"
+#include "nsIFile.h"
+#include "nsIPref.h"
 
 NS_IMPL_ISUPPORTS1(nsDebugObject, nsIDebugObject)
+
 static NS_DEFINE_IID(kFrameUtilCID, NS_FRAME_UTIL_CID);
 static NS_DEFINE_IID(kIFrameUtilIID, NS_IFRAME_UTIL_IID);
 
@@ -70,7 +73,11 @@ static NS_DEFINE_IID(kIFrameUtilIID, NS_IFRAME_UTIL_IID);
  *  See documentation in nsDebugObject.h
  *	@update 5/16/02 dwc
  */
-nsDebugObject::nsDebugObject() 
+nsDebugObject::nsDebugObject() :
+  mRuntimeTestIsOn(PR_FALSE),
+  mPrintAsIs(PR_FALSE),
+  mRuntimeTestId(nsIDebugObject::PRT_RUNTIME_NONE),
+  mFileName(nsnull)
 {
   NS_INIT_ISUPPORTS();
 }
@@ -81,7 +88,9 @@ nsDebugObject::nsDebugObject()
  */
 nsDebugObject::~nsDebugObject() 
 {
-
+  if (mFileName) {
+    nsMemory::Free(mFileName);
+  }
 }
 
 /** ---------------------------------------------------
@@ -92,20 +101,24 @@ NS_IMETHODIMP
 nsDebugObject::CreateDirectory( const PRUnichar *aFilePath, PRUint32 aFlags) 
 {
   nsresult                rv,result = NS_ERROR_FAILURE;
-  nsCAutoString           dirPathAS;
   PRBool exists =         PR_TRUE;
 
-  // see if the directory exists, if not create it
-  dirPathAS.AssignWithConversion(aFilePath);
-  char* dirPath = ToNewCString(dirPathAS);
-
-  nsCOMPtr<nsILocalFile> localFile = do_CreateInstance(NS_LOCAL_FILE_CONTRACTID);
-  rv = NS_InitFileFromURLSpec( localFile,nsDependentCString(dirPath));
-  if ( rv == NS_OK) {
+  nsCString dirStr;
+  dirStr.AssignWithConversion(aFilePath);
+  nsCOMPtr<nsIFile> localFile;
+  rv = NS_GetFileFromURLSpec(dirStr, getter_AddRefs(localFile));
+  if ( NS_SUCCEEDED(rv) ) {
     rv = localFile->Exists(&exists);
     if (!exists){
       rv = localFile->Create(nsIFile::DIRECTORY_TYPE, 0600);
+      if (NS_FAILED(rv)) {
+        printf("Failed to create directory [%s]\n", NS_LossyConvertUCS2toASCII(nsAutoString(aFilePath)).get());
+      }
+    } else {
+      printf("OK - Directory Exists [%s]\n", NS_LossyConvertUCS2toASCII(nsAutoString(aFilePath)).get());
     }
+  } else {
+    printf("Failed to init path for local file in CreateDirectory [%s]\n", NS_LossyConvertUCS2toASCII(nsAutoString(aFilePath)).get());
   }
     
   return result;
@@ -218,4 +231,65 @@ FILE            *bp,*vp;
 
   return result;
 }
+
+/* attribute boolean doRuntimeTests; */
+NS_IMETHODIMP 
+nsDebugObject::GetDoRuntimeTests(PRBool *aDoRuntimeTests)
+{
+  NS_ENSURE_ARG_POINTER(aDoRuntimeTests);
+  *aDoRuntimeTests = mRuntimeTestIsOn;
+  return NS_OK;
+}
+NS_IMETHODIMP 
+nsDebugObject::SetDoRuntimeTests(PRBool aDoRuntimeTests)
+{
+  mRuntimeTestIsOn = aDoRuntimeTests;
+  return NS_OK;
+}
+
+/* attribute short testId; */
+NS_IMETHODIMP 
+nsDebugObject::GetTestId(PRInt16 *aTestId)
+{
+  NS_ENSURE_ARG_POINTER(aTestId);
+  *aTestId = mRuntimeTestId;
+  return NS_OK;
+}
+NS_IMETHODIMP 
+nsDebugObject::SetTestId(PRInt16 aTestId)
+{
+  mRuntimeTestId = aTestId;
+  return NS_OK;
+}
+
+/* attribute boolean printAsIs; */
+NS_IMETHODIMP 
+nsDebugObject::GetPrintAsIs(PRBool *aPrintAsIs)
+{
+  NS_ENSURE_ARG_POINTER(aPrintAsIs);
+  *aPrintAsIs = mPrintAsIs;
+  return NS_OK;
+}
+NS_IMETHODIMP 
+nsDebugObject::SetPrintAsIs(PRBool aPrintAsIs)
+{
+  mPrintAsIs = aPrintAsIs;
+  return NS_OK;
+}
+
+/* attribute wstring printFileName; */
+NS_IMETHODIMP nsDebugObject::GetPrintFileName(PRUnichar * *aPrintFileName)
+{
+  *aPrintFileName = nsCRT::strdup(mFileName);
+  return NS_OK;
+}
+NS_IMETHODIMP nsDebugObject::SetPrintFileName(const PRUnichar * aPrintFileName)
+{
+  if (mFileName) {
+    nsMemory::Free(mFileName);
+  }
+  mFileName = nsCRT::strdup(aPrintFileName);
+  return NS_OK;
+}
+
 

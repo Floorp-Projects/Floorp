@@ -36,6 +36,11 @@ public:
   nsDebugObject();
   virtual ~nsDebugObject();
 
+protected:
+  PRBool     mRuntimeTestIsOn; 
+  PRBool     mPrintAsIs; 
+  PRInt16    mRuntimeTestId; 
+  PRUnichar* mFileName;
 };
 
 

@@ -1,0 +1,428 @@
+<HTML>
+<HEAD>
+<TITLE>Debug Plug-in Test</TITLE>
+</HEAD>
+
+
+
+<BODY bgcolor="#c0d0f0" onload="clearAllPrefs();" onunload="clearAllPrefs();">
+<center>
+<h2>Printing XPConnect Scriptable Debug Plug-in Regression Page</h2>
+</center>
+<embed type="application/debug-plugin" width=1 height=1 hidden="true"><br>
+<script>
+var gDebugIFace = Components.interfaces.nsIDebugObject;
+var embed = document.embeds[0];
+var started = false;
+var theWindow;
+var fileDirectory;
+var baseExt;
+var verExt;
+var baseDir;
+var verDir;
+var testType;
+var changed = false;
+var lb,mb,pb,sb,stb,tb;
+var origLeft;
+var origTop;
+var origWidth;
+var origHeight;
+var dirType;
+var curIndex;
+var startIndex;
+var endIndex;
+var dumpStyle;
+
+var gPrtInx        = 0;
+var gDoingSecondFS = false;
+var gTestTotal     = 0;
+var gTestCnt       = 0;
+var gBaseDir       = "";
+var gOrigBaseDir   = "/printing";
+
+var gLocation = "";
+
+var myArray = [gDebugIFace.PRT_RUNTIME_CHECKFORPRINTERS, 
+               gDebugIFace.PRT_RUNTIME_CREATEPRTSESSION, 
+               gDebugIFace.PRT_RUNTIME_INITPRTOBJ, 
+               gDebugIFace.PRT_RUNTIME_CREATESPECFACTORY, 
+               gDebugIFace.PRT_RUNTIME_NOPROMPTSERVICE, 
+               gDebugIFace.PRT_RUNTIME_NODEVSPEC, 
+               gDebugIFace.PRT_RUNTIME_NEXTPAGE,
+               gDebugIFace.PRT_RUNTIME_REFLOWDOCLIST,
+               gDebugIFace.PRT_RUNTIME_PREPAREDOC,
+               gDebugIFace.PRT_RUNTIME_BEGINDOC,
+               ];
+
+var myDesc = ["Check for no Printers", 
+              "Creating Print Session", 
+              "Initializing Print Obj", 
+              "Create DC Spec Factory", 
+              "No Prompt Service", 
+              "No Device Spec", 
+              "After Next Page",
+              "After Reflow Doc List",
+              "Prepare Document",
+              "Begin Document",
+              ];
+
+var myURLs = [
+              "long_pages/2_pages.html",
+              "misc/scaled_scrollbars.html",
+              "misc/embed_obj_tag.html",
+              "misc/abs_pos.html",
+              "misc/page_with_long_title.html",
+              "misc/font_size_scaling.html",
+              "iframe_2nd_page/index.html",
+              "zeropos_iframes/index.html",
+              "hidden_iframe/index.html",
+              "frameset/frameset1/simple_main.html",
+              "frameset/frameset2/simple_main.html",
+              "noframes/simple_main.html",
+              "shrink_to_fit/test1/simple_main.html",
+              "shrink_to_fit/test2/simple_main.html",
+              "shrink_to_fit/test3/simple_main.html",
+              "shrink_to_fit/test4/index.html",
+              "shrink_to_fit/test5/simple_main.html",
+              "shrink_to_fit/test6/index.html",
+              "shrink_to_fit/test7/simple_main.html",
+              ];
+
+var myIsFRMSets = [
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              true,
+              true,
+              true,
+              true,
+              true,
+              true,
+              true,
+              true,
+              true,
+              true,
+              ];
+
+var gTestInx = 0;
+
+//=============================================================================
+function getFileNameNoExt(str)
+{
+  var start = str.lastIndexOf("/");
+  var end   = str.lastIndexOf(".");
+  return str.substr(start, end-start);
+}
+
+//=============================================================================
+function getFileName(str)
+{
+  var start = str.lastIndexOf("/") + 1;
+  return str.substr(start, str.length-start);
+}
+
+//=============================================================================
+function clearAllPrefs()
+{
+  var i;
+  ClearOutput();
+  embed.SetBoolPref("print.show_print_progress", true);
+  WriteOutput("Done Initializing...", false, true, true);
+}
+
+//=============================================================================
+function ClearOutput()
+{
+  var textarea = document.getElementById('output');
+  textarea.value = "";
+}
+
+//=============================================================================
+function WriteOutput( aText, aReplace, aToStatus, aToOutPut )
+{
+
+  var textarea   = document.getElementById('output');
+  var statusarea = document.getElementById('status'); 
+
+  if ( aToStatus ) {
+    statusarea.value = aText;
+  }
+
+  if (aToOutPut) {
+    if( aReplace ) {
+      textarea.value = aText;
+    } else {
+      textarea.value = textarea.value + "\n" + aText;
+    }
+  }
+}
+
+//=============================================================================
+function placeWindows(aOutputWindow, aTestWindow)
+{
+  var top    = window.screen.availTop;
+  var left   = window.screen.availLeft;
+  var height = window.screen.availHeight;
+  var width  = window.screen.availWidth;
+  if (height > 1000) {
+    height = 800;
+  } else {
+    height = height - 200;
+  }
+  if (width > 800) {
+    width = 800;
+  }
+
+  // size the window to the largest possible
+  aTestWindow.moveTo(left,200);
+  aTestWindow.resizeTo(width,height);
+
+  aOutputWindow.focus();
+}
+
+//=============================================================================
+function startErrorTests()
+{
+  ClearOutput();
+  gTestInx = 0;
+  runTests();
+  document.getElementById('nxtErrBtn').removeAttribute("disabled");
+ 
+}
+
+//=============================================================================
+function runTests()
+{
+
+  try {
+    embed.doRuntimeTests = true;
+    WriteOutput((gTestInx+1) + "/"+myArray.length+" - "+myDesc[gTestInx], false, true, true);
+    embed.testId = myArray[gTestInx];
+    window.print();
+  } catch(e) {}
+
+  embed.doRuntimeTests = false;
+  embed.SetBoolPref("print.show_print_progress", true);
+
+  gTestInx++;
+  if (gTestInx == myArray.length) {
+    document.getElementById('nxtErrBtn').setAttribute("disabled","true");
+    WriteOutput("Print Error Tests Complete.", false, true, true);
+  }
+
+}
+
+//=============================================================================
+function indvTest()
+{
+  var inx = document.getElementById('indexValue').value;
+  if (inx < 1 || inx > myArray.length) {
+    alert("Test # must be > 0 and <= "+myArray.length);
+    return;
+  }
+  // adjust for index starting at zero
+  inx--;
+
+  try {
+    ClearOutput();
+    WriteOutput("Individual Test: "+myDesc[inx], false, true, true);
+    embed.doRuntimeTests = true;
+    embed.testId         = myArray[inx];
+    window.print();
+  } catch(e) {}
+  window.setTimeout("clearIndvTest()", 10000);
+}
+
+//=============================================================================
+function clearIndvTest()
+{
+  WriteOutput("Individual Test - Clearing Test:"+myDesc[inx], false, true, true);
+  embed.doRuntimeTests = false;
+  embed.SetBoolPref("print.show_print_progress", true);
+}
+
+//=============================================================================
+function doPrintTests()
+{
+  embed.testId = gDebugIFace.PRT_RUNTIME_NONE;
+  if (myIsFRMSets.length != myURLs.length) {
+    alert("myIsFRMSets length is different from myURLs\nNot running tests.");
+    return
+  }
+
+  var drive  = document.getElementById('driveloc').value;
+  var custom = document.getElementById('drivecustom').value;
+  if (drive == "custom") {
+    gLocation = "file:///"+custom+"/mozilla/layout/html/tests/printer/";
+    gBaseDir  = "/"+gOrigBaseDir;
+  } else {
+    gLocation = "file:///"+drive+"/mozilla/layout/html/tests/printer/";
+    gBaseDir  = drive+gOrigBaseDir;
+  }
+
+  ClearOutput();
+
+  WriteOutput("Creating Dir: "+gBaseDir, false, true, true);
+
+  var dirURL = "file:///" + gBaseDir;
+  var err = embed.CreateDirectory(dirURL,0);
+  if (err != 0)  {
+    alert("Couldn`t create directory["+dirURL+"]");
+  } else {
+    WriteOutput("Created directory: "+gBaseDir, false, false, true);
+  }
+
+  gTestTotal = 0;
+  gTestCnt   = 0;
+  var i;
+  for (i=0;i<myIsFRMSets.length;i++) {
+    if (myIsFRMSets[i]) {
+      gTestTotal++;
+    }
+    gTestTotal++;
+  }
+
+  embed.doRuntimeTests = true;
+  document.getElementById('stoptests').removeAttribute("disabled");
+  embed.SetBoolPref("print.show_print_progress", false);
+  gPrtInx = 0;
+  gDoingSecondFS = false;
+  doNextPrintTests();
+}
+
+//=============================================================================
+
+function doNextPrintTests()
+{
+  if (gPrtInx == myURLs.length) {
+    if (theWindow) {
+      theWindow.close();
+      theWindow = null;
+    }
+    embed.SetBoolPref("print.always_print_silent", false);
+    embed.printFileName = null;
+    WriteOutput("Done.", false, true, true);
+    embed.SetBoolPref("print.show_print_progress", true);
+    document.getElementById('stoptests').setAttribute("disabled","true");
+    embed.doRuntimeTests = false;
+    return;
+  }
+
+  var outputName = gBaseDir+"/test"+gTestCnt;
+
+  var extraTxt = "";
+  if (myIsFRMSets[gPrtInx]) {
+    embed.printAsIs = gDoingSecondFS;
+    extraTxt = gDoingSecondFS?" (As Is)":" (Each Separately)";
+    //outputName += gDoingSecondFS?"_AsIs":"_EachSep";
+  }
+  outputName += ".ps";
+  embed.printFileName = outputName;
+
+  var testName = getFileName(myURLs[gPrtInx]);
+  WriteOutput("Writing to: "+outputName, false, true, false);
+  WriteOutput((gTestCnt+1) + "/"+gTestTotal+" - "+testName+" -> "+outputName+extraTxt, false, false, true);
+
+  theWindow = window.open(gLocation+myURLs[gPrtInx], 0);
+  window.setTimeout("doPrintWindow();", 2000);
+  if (gPrtInx == 0) {
+    embed.SetBoolPref("print.always_print_silent", true);
+    placeWindows(window, theWindow);
+  }
+
+  if (!gDoingSecondFS && myIsFRMSets[gPrtInx]) {
+    gDoingSecondFS = true;
+  } else {
+    gDoingSecondFS = false;
+    gPrtInx++;
+  }
+  gTestCnt++;
+}
+
+//=============================================================================
+function doPrintWindow()
+{
+  theWindow.print();
+  window.setTimeout("doNextPrintTests();", 2000);
+}
+
+//=============================================================================
+function doCloseWindow()
+{
+  //theWindow.close();
+}
+
+//=============================================================================
+function doStopTests()
+{
+  embed.doRuntimeTests = false;
+  WriteOutput("Tests Stoppped...", false, true, true);
+  document.getElementById('stoptests').setAttribute("disabled","true");
+  gPrtInx = myURLs.length;
+  window.clearTimeout();
+  if (theWindow) {
+    theWindow.close();
+    theWindow = null;
+  }
+}
+
+
+//=============================================================================
+
+
+</script>
+
+<center>
+<form>
+  <table>
+  <tr>
+  <td colspan=2 align=center style="background-color:#cFdFfF">Error Tests</td>
+  <td></td>
+  <td colspan=2 align=center style="background-color:#cFdFfF">Print out Tests</td>
+  </tr>
+  <tr>
+  <td><input type=button id=errorBtn value="Start Error Tests" onclick='startErrorTests()'></td>
+  <td><input type=button id=nxtErrBtn value="Next Error Test" onclick='runTests()' disabled>&nbsp;
+      <input type=text   id=indexValue value="" size=2>
+      <input type=button id=indvTstBtn value="Indv Test" onclick='indvTest()'><br>
+  <td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</td>
+  <td><input type=button value="Print Tests" onclick='doPrintTests()'></td>
+  <td><input type=button id=stoptests value="Stop Print" onclick='doStopTests()' disabled></td>
+  </tr>
+  <tr><td></td><td></td><td></td>
+    <td colspan=2>
+    <table>
+      <tr>
+        <td align=right>Drive:</td>
+        <td>
+          <select id=driveloc>
+            <option value="S:" selected>S:</option>
+            <option value="custom">Custom</option>
+            <option value="C:">C:</option>
+            <option value="D:">D:</option>
+            <option value="E:">E:</option>
+            <option value="F:">F:</option>
+            <option value="G:">G:</option>
+          </select><br>
+        </td>
+        <td align=right>Custom:</td>
+        <td><input type=text value="" id=drivecustom></td>
+      </tr>
+    </table>
+    </td></tr>
+  </table>
+</form>
+
+<input type=text id="status" value="OUTPUT IDLE" size=60 style="border: black 1px solid;background-color:lightgray;text-align:center;">
+<textarea id="output" style="width:700; height:200;">
+</textarea>
+
+
+</BODY>
+</HTML>

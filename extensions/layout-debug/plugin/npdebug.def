@@ -1,4 +1,4 @@
-LIBRARY   NPSIMPLE
+LIBRARY   npdebug
 
 EXPORTS
 	NP_GetEntryPoints   @1
