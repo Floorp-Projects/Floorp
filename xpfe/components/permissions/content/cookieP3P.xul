@@ -43,14 +43,17 @@
 <!DOCTYPE window SYSTEM "chrome://cookie/locale/p3p.dtd">
 
 <dialog id="privacySettings"
+        buttons="accept,cancel,help"
         class="dialog"
         title="&windowtitle.label;"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         orient="vertical"
         onload="init();"
         ondialogaccept="return onOK(event);"
+        ondialoghelp="return doHelpButton();"
         style="width: 45em;">
 
+  <script type="application/x-javascript" src="chrome://help/content/contextHelp.js" />
   <script type="application/x-javascript">
   <![CDATA[
 
@@ -133,6 +136,11 @@
       }
     }
 
+  }
+
+  function doHelpButton()
+  {
+    openHelp('privacy_levels');
   }
 
   ]]>
@@ -255,5 +263,4 @@
   </groupbox>
 
   <separator class="thin"/>
-
 </dialog>
