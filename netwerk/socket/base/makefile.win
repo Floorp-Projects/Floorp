@@ -42,7 +42,7 @@ LIBRARY_NAME=neckosocket_s
 
 OBJS = \
 	.\$(OBJDIR)\nsSocketProviderService.obj \
-	.\$(OBJDIR)\nsSOCKSProviderService.obj \
+	.\$(OBJDIR)\nsSOCKSSocketProvider.obj \
 	.\$(OBJDIR)\nsSOCKSIOLayer.obj \
 	$(NULL)
 
