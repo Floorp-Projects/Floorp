@@ -70,7 +70,7 @@ var cmdFileController =
                     this.content += aContent;
                     return aCount;
                 };
-                serial.init(view.memoryDataSource);
+                serial.init(view.mResultDS);
                 serial.QueryInterface(nsIRDFXMLSource);
                 serial.Serialize(sink);
                 if (!sink.content.length) {
@@ -103,14 +103,12 @@ var cmdFileController =
 
                 if (res == nsIFilePicker.returnOK) {
                     var fl = fp.file;
-                    if (view.previousResults) {
-                        view.database.RemoveDataSource(view.previousResults);
-                        view.previousResults = null;
+                    if (view.mPreviousResultDS) {
+                        view.database.RemoveDataSource(view.mPreviousResultDS);
+                        view.mPreviousResultDS = null;
                     }
-                    view.database.RemoveDataSource(view.memoryDataSource);
-                    view.previousResults = kRDFSvc.GetDataSource(fp.fileURL.spec);
-                    view.database.AddDataSource(view.previousResults);
-                    view.database.AddDataSource(view.memoryDataSource);
+                    view.mPreviousResultDS = kRDFSvc.GetDataSource(fp.fileURL.spec);
+                    view.database.AddDataSource(view.mPreviousResultDS);
                 }
 
                 document.getElementById('obs_orig_success')

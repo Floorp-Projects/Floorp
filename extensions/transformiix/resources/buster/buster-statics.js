@@ -63,9 +63,12 @@ const nsIFilePicker = Components.interfaces.nsIFilePicker;
 const nsIXULTreeBuilder = Components.interfaces.nsIXULTreeBuilder;
 const nsIXULTemplateBuilder = Components.interfaces.nsIXULTemplateBuilder;
 const kIOSvc = Components.classes[kIOSvcContractID]
-  .getService(Components.interfaces.nsIIOService);
+    .getService(Components.interfaces.nsIIOService);
 const nsIRDFService = Components.interfaces.nsIRDFService;
 const nsIRDFDataSource = Components.interfaces.nsIRDFDataSource;
+const nsIRDFRemoteDataSource = Components.interfaces.nsIRDFRemoteDataSource;
+const nsIRDFPurgeableDataSource =
+    Components.interfaces.nsIRDFPurgeableDataSource;
 const nsIRDFResource = Components.interfaces.nsIRDFResource;
 const nsIRDFLiteral = Components.interfaces.nsIRDFLiteral;
 const nsIRDFInt = Components.interfaces.nsIRDFInt;
