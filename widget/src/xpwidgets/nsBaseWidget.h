@@ -69,6 +69,9 @@ public:
   NS_IMETHOD              SetZIndex(PRInt32 aZIndex);
   NS_IMETHOD              GetZIndex(PRInt32* aZIndex);
 
+  NS_IMETHOD              SetSizeMode(PRInt32 aMode);
+  NS_IMETHOD              GetSizeMode(PRInt32* aMode);
+
   virtual nscolor         GetForegroundColor(void);
   NS_IMETHOD              SetForegroundColor(const nscolor &aColor);
   virtual nscolor         GetBackgroundColor(void);
@@ -140,6 +143,7 @@ protected:
   PRBool            mOnDestroyCalled;
   nsRect            mBounds;
   PRInt32           mZIndex;
+  nsSizeMode        mSizeMode;
 
     // keep the list of children
   nsCOMPtr<nsISupportsArray> mChildren;

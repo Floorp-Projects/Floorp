@@ -72,7 +72,8 @@ nsBaseWidget::nsBaseWidget()
 ,	mIsDestroying(PR_FALSE)
 ,	mOnDestroyCalled(PR_FALSE)
 ,	mBounds(0,0,0,0)
-,   mZIndex(0)
+,	mZIndex(0)
+,	mSizeMode(nsSizeMode_Normal)
 {
 #ifdef NOISY_WIDGET_LEAKS
   gNumWidgets++;
@@ -333,6 +334,34 @@ NS_IMETHODIMP nsBaseWidget::GetZIndex(PRInt32* aZIndex)
 {
 	*aZIndex = mZIndex;
 	return NS_OK;
+}
+
+//-------------------------------------------------------------------------
+//
+// Maximize, minimize or restore the window. The BaseWidget implementation
+// merely stores the state.
+//
+//-------------------------------------------------------------------------
+NS_IMETHODIMP nsBaseWidget::SetSizeMode(PRInt32 aMode) {
+
+  if (aMode == nsSizeMode_Normal || aMode == nsSizeMode_Minimized ||
+      aMode == nsSizeMode_Maximized) {
+
+    mSizeMode = (nsSizeMode) aMode;
+    return NS_OK;
+  }
+  return NS_ERROR_ILLEGAL_VALUE;
+}
+
+//-------------------------------------------------------------------------
+//
+// Get the size mode (minimized, maximized, that sort of thing...)
+//
+//-------------------------------------------------------------------------
+NS_IMETHODIMP nsBaseWidget::GetSizeMode(PRInt32* aMode) {
+
+  *aMode = mSizeMode;
+  return NS_OK;
 }
 
 //-------------------------------------------------------------------------
