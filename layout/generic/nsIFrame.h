@@ -26,14 +26,15 @@
 #include "nsStyleStruct.h"
 
 class nsIContent;
+class nsIFrame;
 class nsIPresContext;
 class nsIPresShell;
 class nsIRenderingContext;
+class nsISizeOfHandler;
 class nsISpaceManager;
 class nsIStyleContext;
 class nsIView;
 class nsIWidget;
-class nsIFrame;
 class nsReflowCommand;
 
 struct nsPoint;
@@ -216,6 +217,13 @@ public:
    * function of nsISupports that is public.
    */
   NS_IMETHOD  QueryInterface(const nsIID& aIID, void** aInstancePtr) = 0;
+
+  /**
+   * Add this object's size information to the sizeof handler. Note that
+   * this does <b>not</b> add in the size of content, style, or view's
+   * (those are sized seperately).
+   */
+  NS_IMETHOD SizeOf(nsISizeOfHandler* aHandler) const = 0;
 
   /**
    * Deletes this frame and each of its child frames (recursively calls

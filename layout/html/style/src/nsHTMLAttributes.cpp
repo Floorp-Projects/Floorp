@@ -25,6 +25,7 @@
 #include "nsIStyleContext.h"
 #include "nsHTMLAtoms.h"
 #include "nsIHTMLContent.h"
+#include "nsISizeOfHandler.h"
 
 static NS_DEFINE_IID(kIHTMLAttributesIID, NS_IHTML_ATTRIBUTES_IID);
 static NS_DEFINE_IID(kIStyleRuleIID, NS_ISTYLE_RULE_IID);
@@ -59,6 +60,8 @@ struct HTMLAttribute {
   {
     NS_IF_RELEASE(mAttribute);
   }
+
+  void SizeOf(nsISizeOfHandler* aHandler) const;
 
   HTMLAttribute& operator=(const HTMLAttribute& aCopy)
   {
@@ -117,6 +120,16 @@ struct HTMLAttribute {
   HTMLAttribute*  mNext;
 };
 
+void
+HTMLAttribute::SizeOf(nsISizeOfHandler* aHandler) const
+{
+  // XXX mAttribute
+  aHandler->Add(sizeof(*this));
+  if (!aHandler->HaveSeen(mNext)) {
+    mNext->SizeOf(aHandler);
+  }
+}
+
 // ----------------
 
 
@@ -151,6 +164,11 @@ public:
   virtual nsIAtom*  GetClass(void) const;  // XXX this will have to change for CSS2
 
   virtual void MapStyleInto(nsIStyleContext* aContext, nsIPresContext* aPresContext);
+
+  /**
+   * Add this object's size information to the sizeof handler.
+   */
+  NS_IMETHOD SizeOf(nsISizeOfHandler* aHandler) const;
 
   virtual void List(FILE* out = stdout, PRInt32 aIndent = 0) const;
 
@@ -524,6 +542,17 @@ void HTMLAttributesImpl::MapStyleInto(nsIStyleContext* aContext, nsIPresContext*
   }
 }
 
+NS_IMETHODIMP
+HTMLAttributesImpl::SizeOf(nsISizeOfHandler* aHandler) const
+{
+  aHandler->Add(sizeof(*this));
+  // XXX mID
+  // XXX mClass
+  if (!aHandler->HaveSeen(mFirst)) {
+    mFirst->SizeOf(aHandler);
+  }
+  return NS_OK;
+}
 
 void HTMLAttributesImpl::List(FILE* out, PRInt32 aIndent) const
 {

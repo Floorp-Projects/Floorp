@@ -22,6 +22,7 @@
 #include "nsIRenderingContext.h"
 #include "nsIPresContext.h"
 #include "nsIURL.h"
+#include "nsISizeOfHandler.h"
 
 #undef SCALE
 #define SCALE(a,b) nscoord((a) * (b))
@@ -48,6 +49,8 @@ public:
   const nsString& GetAltText() const { return mAltText; }
   PRBool GetSuppress() const { return mSuppressFeedback; }
 
+  virtual void SizeOf(nsISizeOfHandler* aHandler) const;
+
   nsString mBase;
   nsString mHREF;
   nsString mTarget;
@@ -70,6 +73,14 @@ Area::Area(const nsString& aBaseURL, const nsString& aHREF,
 Area::~Area()
 {
   delete [] mCoords;
+}
+
+void
+Area::SizeOf(nsISizeOfHandler* aHandler) const
+{
+  aHandler->Add(sizeof(*this));
+  // XXX mBase, mHREF, mTarget, mAltText
+  aHandler->Add(mNumCoords * sizeof(nscoord));
 }
 
 // XXX move into nsCRT
@@ -592,6 +603,8 @@ public:
 
   NS_IMETHOD Draw(nsIPresContext& aCX, nsIRenderingContext& aRC);
 
+  NS_IMETHOD SizeOf(nsISizeOfHandler* aHandler) const;
+
   nsString mName;
   nsIAtom* mTag;
   nsVoidArray mAreas;
@@ -691,6 +704,21 @@ NS_IMETHODIMP ImageMapImpl::Draw(nsIPresContext& aCX, nsIRenderingContext& aRC)
   for (i = 0; i < n; i++) {
     Area* area = (Area*) mAreas.ElementAt(i);
     area->Draw(aCX, aRC);
+  }
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+ImageMapImpl::SizeOf(nsISizeOfHandler* aHandler) const
+{
+  aHandler->Add(sizeof(*this));
+  // XXX mName
+  // XXX mTag
+  // XXX mAreas array slots
+  PRInt32 i, n = mAreas.Count();
+  for (i = 0; i < n; i++) {
+    Area* area = (Area*) mAreas[i];
+    area->SizeOf(aHandler);
   }
   return NS_OK;
 }

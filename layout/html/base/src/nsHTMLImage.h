@@ -23,6 +23,7 @@
 class nsIFrame;
 class nsIFrameImageLoader;
 class nsIPresContext;
+class nsISizeOfHandler;
 struct nsReflowState;
 struct nsReflowMetrics;
 struct nsSize;
@@ -58,6 +59,8 @@ public:
   PRBool GetLoadImageFailed() {
     return mLoadImageFailed;
   }
+
+  void SizeOf(nsISizeOfHandler* aHandler) const;
 
 protected:
   nsIFrameImageLoader* mImageLoader;

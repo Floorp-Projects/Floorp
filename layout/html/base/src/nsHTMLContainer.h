@@ -27,6 +27,7 @@ class nsHTMLContainer : public nsHTMLTagContent {
 public:
   nsHTMLContainer(nsIAtom* aTag);
 
+  NS_IMETHOD SizeOf(nsISizeOfHandler* aHandler) const;
   virtual PRBool CanContainChildren() const;
   virtual PRInt32 ChildCount() const;
   virtual nsIContent* ChildAt(PRInt32 aIndex) const;
@@ -59,6 +60,7 @@ public:
 protected:
   nsHTMLContainer();
   virtual ~nsHTMLContainer();
+  void SizeOfWithoutThis(nsISizeOfHandler* aHandler) const;
 
   virtual nsContentAttr AttributeToString(nsIAtom* aAttribute,
                                           nsHTMLValue& aValue,

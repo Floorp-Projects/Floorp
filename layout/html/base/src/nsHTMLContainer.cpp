@@ -32,6 +32,7 @@
 #include "nsUnitConversion.h"
 #include "nsIURL.h"
 #include "prprf.h"
+#include "nsISizeOfHandler.h"
 
 nsresult
 NS_NewHTMLContainer(nsIHTMLContent** aInstancePtrResult,
@@ -70,6 +71,28 @@ nsHTMLContainer::~nsHTMLContainer()
   for (PRInt32 i = 0; i < n; i++) {
     nsIContent* kid = (nsIContent*) mChildren.ElementAt(i);
     NS_RELEASE(kid);
+  }
+}
+
+NS_IMETHODIMP
+nsHTMLContainer::SizeOf(nsISizeOfHandler* aHandler) const
+{
+  aHandler->Add(sizeof(*this));
+  nsHTMLContainer::SizeOfWithoutThis(aHandler);
+  return NS_OK;
+}
+
+void
+nsHTMLContainer::SizeOfWithoutThis(nsISizeOfHandler* aHandler) const
+{
+  // XXX children array's array of pointers
+
+  PRInt32 i, n = mChildren.Count();
+  for (i = 0; i < n; i++) {
+    nsIContent* child = (nsIContent*) mChildren[i];
+    if (!aHandler->HaveSeen(child)) {
+      child->SizeOf(aHandler);
+    }
   }
 }
 

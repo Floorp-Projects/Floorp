@@ -98,7 +98,7 @@ public:
 
   virtual void List(FILE* out, PRInt32 aIndent) const;
 
-  virtual PRUint32 SizeOf(nsISizeofHandler* aHandler) const;
+  NS_IMETHOD SizeOf(nsISizeOfHandler* aHandler) const;
 
   virtual nsIAtom* GetTag() const;
 
@@ -130,6 +130,7 @@ protected:
   nsHTMLContent();
   virtual ~nsHTMLContent();
   virtual void ListAttributes(FILE* out) const;
+  void SizeOfWithoutThis(nsISizeOfHandler* aHandler) const;
 
   PRUint32 mInHeap : 1;
   PRUint32 mRefCnt : 31;

@@ -31,11 +31,12 @@ class nsIStyleContext;
  */
 class nsHTMLTagContent : public nsHTMLContent, public nsIDOMElement {
 public:
-  /** 
-   * Return nsnull if no tag set.
-   */
-  virtual nsIAtom* GetTag() const;
 
+  // nsIContent
+  virtual nsIAtom* GetTag() const;
+  NS_IMETHOD SizeOf(nsISizeOfHandler* aHandler) const;
+
+  // nsIHTMLContent
   /**
    * Translate the content object into it's source html format
    */
@@ -190,10 +191,9 @@ public:
 
 protected:
   nsHTMLTagContent();
-
   nsHTMLTagContent(nsIAtom* aTag);
-
   virtual ~nsHTMLTagContent();
+  void SizeOfWithoutThis(nsISizeOfHandler* aHandler) const;
 
   /**
    * Helper method used by GetAttribute to map an attribute

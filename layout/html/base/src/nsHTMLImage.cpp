@@ -39,6 +39,7 @@
 #include "nsCSSLayout.h"
 #include "nsHTMLFrame.h"
 #include "prprf.h"
+#include "nsISizeOfHandler.h"
 
 #define BROKEN_IMAGE_URL "resource:/res/html/broken-image.gif"
 
@@ -47,10 +48,12 @@
 
 static NS_DEFINE_IID(kIHTMLDocumentIID, NS_IHTMLDOCUMENT_IID);
 
-class ImagePart : public nsHTMLTagContent {
+#define nsHTMLImageSuper nsHTMLTagContent
+class nsHTMLImage : public nsHTMLImageSuper {
 public:
-  ImagePart(nsIAtom* aTag);
+  nsHTMLImage(nsIAtom* aTag);
 
+  NS_IMETHOD SizeOf(nsISizeOfHandler* aHandler) const;
   virtual nsresult CreateFrame(nsIPresContext* aPresContext,
                                nsIFrame* aParentFrame,
                                nsIStyleContext* aStyleContext,
@@ -81,38 +84,39 @@ public:
   nsString* mUseMap;
 
 protected:
-  virtual ~ImagePart();
+  virtual ~nsHTMLImage();
+  void SizeOfWithoutThis(nsISizeOfHandler* aHandler) const;
 
   virtual nsContentAttr AttributeToString(nsIAtom* aAttribute,
                                           nsHTMLValue& aValue,
                                           nsString& aResult) const;
 };
 
-class ImageFrame : public nsLeafFrame {
+#define ImageFrameSuper nsLeafFrame
+class ImageFrame : public ImageFrameSuper {
 public:
   ImageFrame(nsIContent* aContent, nsIFrame* aParentFrame);
 
   NS_IMETHOD DeleteFrame();
-
+  NS_IMETHOD SizeOf(nsISizeOfHandler* aHandler) const;
   NS_IMETHOD Paint(nsIPresContext& aPresContext,
                    nsIRenderingContext& aRenderingContext,
                    const nsRect& aDirtyRect);
-
   NS_METHOD HandleEvent(nsIPresContext& aPresContext,
                         nsGUIEvent* aEvent,
                         nsEventStatus& aEventStatus);
-
   NS_IMETHOD GetCursorAt(nsIPresContext& aPresContext,
                          const nsPoint& aPoint,
                          nsIFrame** aFrame,
                          PRInt32& aCursor);
 
   PRBool IsServerImageMap() {
-    return ((ImagePart*)mContent)->IsMap();
+    return ((nsHTMLImage*)mContent)->IsMap();
   }
 
 protected:
   virtual ~ImageFrame();
+  void SizeOfWithoutThis(nsISizeOfHandler* aHandler) const;
 
   virtual void GetDesiredSize(nsIPresContext* aPresContext,
                               const nsReflowState& aReflowState,
@@ -153,6 +157,18 @@ nsHTMLImageLoader::~nsHTMLImageLoader()
   NS_IF_RELEASE(mImageLoader);
   if (nsnull != mURLSpec) {
     delete mURLSpec;
+  }
+}
+
+void
+nsHTMLImageLoader::SizeOf(nsISizeOfHandler* aHandler) const
+{
+  aHandler->Add(sizeof(*this));
+  if (!aHandler->HaveSeen(mURLSpec)) {
+    aHandler->Add(sizeof(*mURLSpec));/* XXX approximation */
+  }
+  if (!aHandler->HaveSeen(mImageLoader)) {
+    mImageLoader->SizeOf(aHandler);
   }
 }
 
@@ -333,6 +349,24 @@ ImageFrame::DeleteFrame()
   return nsLeafFrame::DeleteFrame();
 }
 
+NS_IMETHODIMP
+ImageFrame::SizeOf(nsISizeOfHandler* aHandler) const
+{
+  aHandler->Add(sizeof(*this));
+  ImageFrame::SizeOfWithoutThis(aHandler);
+  return NS_OK;
+}
+
+void
+ImageFrame::SizeOfWithoutThis(nsISizeOfHandler* aHandler) const
+{
+  ImageFrameSuper::SizeOfWithoutThis(aHandler);
+  mImageLoader.SizeOf(aHandler);
+  if (!aHandler->HaveSeen(mImageMap)) {
+    mImageMap->SizeOf(aHandler);
+  }
+}
+
 void
 ImageFrame::GetDesiredSize(nsIPresContext* aPresContext,
                            const nsReflowState& aReflowState,
@@ -402,7 +436,7 @@ nsIImageMap*
 ImageFrame::GetImageMap()
 {
   if (nsnull == mImageMap) {
-    ImagePart* part = (ImagePart*)mContent;
+    nsHTMLImage* part = (nsHTMLImage*)mContent;
     if (nsnull == part->mUseMap) {
       return nsnull;
     }
@@ -493,10 +527,10 @@ ImageFrame::HandleEvent(nsIPresContext& aPresContext,
         }
       }
       else {
-        suppress = ((ImagePart*)mContent)->GetSuppress();
+        suppress = ((nsHTMLImage*)mContent)->GetSuppress();
         nsAutoString baseURL;/* XXX */
         nsAutoString src;
-        nsString* srcp = ((ImagePart*)mContent)->mSrc;
+        nsString* srcp = ((nsHTMLImage*)mContent)->mSrc;
         if (nsnull != srcp) {
           src.Append(*srcp);
         }
@@ -553,14 +587,14 @@ ImageFrame::GetCursorAt(nsIPresContext& aPresContext,
 
 //----------------------------------------------------------------------
 
-ImagePart::ImagePart(nsIAtom* aTag)
+nsHTMLImage::nsHTMLImage(nsIAtom* aTag)
   : nsHTMLTagContent(aTag)
 {
   mAlign = ALIGN_UNSET;
   mSuppress = SUPPRESS_UNSET;
 }
 
-ImagePart::~ImagePart()
+nsHTMLImage::~nsHTMLImage()
 {
   if (nsnull != mAltText) delete mAltText;
   if (nsnull != mSrc) delete mSrc;
@@ -568,7 +602,20 @@ ImagePart::~ImagePart()
   if (nsnull != mUseMap) delete mUseMap;
 }
 
-void ImagePart::SetAttribute(nsIAtom* aAttribute, const nsString& aString)
+NS_IMETHODIMP
+nsHTMLImage::SizeOf(nsISizeOfHandler* aHandler) const
+{
+  aHandler->Add(sizeof(*this));
+  nsHTMLImage::SizeOfWithoutThis(aHandler);
+  return NS_OK;
+}
+
+void
+nsHTMLImage::SizeOfWithoutThis(nsISizeOfHandler* aHandler) const
+{
+}
+
+void nsHTMLImage::SetAttribute(nsIAtom* aAttribute, const nsString& aString)
 {
   if (aAttribute == nsHTMLAtoms::ismap) {
     mIsMap = PR_TRUE;
@@ -645,8 +692,8 @@ void ImagePart::SetAttribute(nsIAtom* aAttribute, const nsString& aString)
   nsHTMLTagContent::SetAttribute(aAttribute, aString);
 }
 
-nsContentAttr ImagePart::GetAttribute(nsIAtom* aAttribute,
-                                      nsHTMLValue& aResult) const
+nsContentAttr nsHTMLImage::GetAttribute(nsIAtom* aAttribute,
+                                        nsHTMLValue& aResult) const
 {
   nsContentAttr ca = eContentAttr_NotThere;
   aResult.Reset();
@@ -701,7 +748,7 @@ nsContentAttr ImagePart::GetAttribute(nsIAtom* aAttribute,
   return ca;
 }
 
-void ImagePart::UnsetAttribute(nsIAtom* aAttribute)
+void nsHTMLImage::UnsetAttribute(nsIAtom* aAttribute)
 {
   if (aAttribute == nsHTMLAtoms::ismap) {
     mIsMap = PR_FALSE;
@@ -741,9 +788,9 @@ void ImagePart::UnsetAttribute(nsIAtom* aAttribute)
   }
 }
 
-nsContentAttr ImagePart::AttributeToString(nsIAtom* aAttribute,
-                                           nsHTMLValue& aValue,
-                                           nsString& aResult) const
+nsContentAttr nsHTMLImage::AttributeToString(nsIAtom* aAttribute,
+                                             nsHTMLValue& aValue,
+                                             nsString& aResult) const
 {
   nsContentAttr ca = eContentAttr_NotThere;
   if (aAttribute == nsHTMLAtoms::align) {
@@ -770,8 +817,8 @@ nsContentAttr ImagePart::AttributeToString(nsIAtom* aAttribute,
   return ca;
 }
 
-void ImagePart::MapAttributesInto(nsIStyleContext* aContext, 
-                                  nsIPresContext* aPresContext)
+void nsHTMLImage::MapAttributesInto(nsIStyleContext* aContext, 
+                                    nsIPresContext* aPresContext)
 {
   if (ALIGN_UNSET != mAlign) {
     nsStyleDisplay* display = (nsStyleDisplay*)
@@ -795,10 +842,10 @@ void ImagePart::MapAttributesInto(nsIStyleContext* aContext,
 }
 
 nsresult
-ImagePart::CreateFrame(nsIPresContext* aPresContext,
-                       nsIFrame* aParentFrame,
-                       nsIStyleContext* aStyleContext,
-                       nsIFrame*& aResult)
+nsHTMLImage::CreateFrame(nsIPresContext* aPresContext,
+                         nsIFrame* aParentFrame,
+                         nsIStyleContext* aStyleContext,
+                         nsIFrame*& aResult)
 {
   ImageFrame* frame = new ImageFrame(this, aParentFrame);
   if (nsnull == frame) {
@@ -817,7 +864,7 @@ NS_NewHTMLImage(nsIHTMLContent** aInstancePtrResult,
   if (nsnull == aInstancePtrResult) {
     return NS_ERROR_NULL_POINTER;
   }
-  nsIHTMLContent* img = new ImagePart(aTag);
+  nsIHTMLContent* img = new nsHTMLImage(aTag);
   if (nsnull == img) {
     return NS_ERROR_OUT_OF_MEMORY;
   }

@@ -20,6 +20,7 @@
 #include "nsIContentDelegate.h"
 #include "nsIPresContext.h"
 #include "nsIStyleContext.h"
+#include "nsISizeOfHandler.h"
 
 nsSplittableFrame::nsSplittableFrame(nsIContent* aContent,
                                      nsIFrame*   aParent)
@@ -29,12 +30,32 @@ nsSplittableFrame::nsSplittableFrame(nsIContent* aContent,
 
 nsSplittableFrame::~nsSplittableFrame()
 {
-  // XXX write me
+}
+
+NS_IMETHODIMP
+nsSplittableFrame::SizeOf(nsISizeOfHandler* aHandler) const
+{
+  aHandler->Add(sizeof(*this));
+  nsSplittableFrame::SizeOfWithoutThis(aHandler);
+  return NS_OK;
+}
+
+void
+nsSplittableFrame::SizeOfWithoutThis(nsISizeOfHandler* aHandler) const
+{
+  nsFrame::SizeOfWithoutThis(aHandler);
+  if (!aHandler->HaveSeen(mPrevInFlow)) {
+    mPrevInFlow->SizeOf(aHandler);
+  }
+  if (!aHandler->HaveSeen(mNextInFlow)) {
+    mNextInFlow->SizeOf(aHandler);
+  }
 }
 
 // Flow member functions
 
-NS_METHOD nsSplittableFrame::IsSplittable(nsSplittableType& aIsSplittable) const
+NS_IMETHODIMP
+nsSplittableFrame::IsSplittable(nsSplittableType& aIsSplittable) const
 {
   aIsSplittable = NS_FRAME_SPLITTABLE;
   return NS_OK;

@@ -81,7 +81,7 @@ public:
   nsIContentDelegate* GetDelegate(nsIPresContext* aCX) {return nsnull;}
 
   void List(FILE* out = stdout, PRInt32 aIndent = 0) const {;}
-  PRUint32 SizeOf(nsISizeofHandler* aHandler) const { return 0; }
+  NS_IMETHOD SizeOf(nsISizeOfHandler* aHandler) const { return NS_OK; }
 
   NS_DECL_ISUPPORTS
 
