@@ -42,6 +42,7 @@
 #include "nsContentUtils.h"
 #include "nsCRT.h"
 #include "nsCOMArray.h"
+#include "nsISupportsArray.h"
 #include "nsCOMPtr.h"
 #include "nsIScriptSecurityManager.h"
 #include "nsContentPolicyUtils.h"
@@ -1061,14 +1062,25 @@ CSSLoaderImpl::CreateSheet(nsIURI* aURI,
 nsresult
 CSSLoaderImpl::PrepareSheet(nsICSSStyleSheet* aSheet,
                             const nsAString& aTitle,
-                            const nsAString& aMedia)
+                            const nsAString& aMedia,
+                            nsISupportsArray* aMediaArr)
 {
   NS_PRECONDITION(aSheet, "Must have a sheet!");
+  NS_PRECONDITION(aMedia.IsEmpty() || !aMediaArr,
+                  "Can't have media array _and_ media string!");
 
   nsresult rv = NS_OK;
   aSheet->ClearMedia();
   if (!aMedia.IsEmpty()) {
     rv = EnumerateMediaString(aMedia, MediumEnumFunc, aSheet);
+  } else if (aMediaArr) {
+    PRUint32 count;
+    aMediaArr->Count(&count);
+    for (PRUint32 i = 0; i < count; ++i) {
+      nsCOMPtr<nsIAtom> medium = do_QueryElementAt(aMediaArr, i);
+      NS_ASSERTION(medium, "Null medium in media array!");
+      aSheet->AppendMedium(medium);
+    }
   }
   NS_ENSURE_SUCCESS(rv, rv);
 
@@ -1593,7 +1605,7 @@ CSSLoaderImpl::LoadInlineStyle(nsIContent* aElement,
   NS_ASSERTION(state == eSheetNeedsParser,
                "Inline sheets should not be cached");
 
-  rv = PrepareSheet(sheet, aTitle, aMedia);
+  rv = PrepareSheet(sheet, aTitle, aMedia, nsnull);
   NS_ENSURE_SUCCESS(rv, rv);
   
   rv = InsertSheetInDoc(sheet, aElement, mDocument);
@@ -1651,7 +1663,7 @@ CSSLoaderImpl::LoadStyleLink(nsIContent* aElement,
                    getter_AddRefs(sheet));
   NS_ENSURE_SUCCESS(rv, rv);
 
-  rv = PrepareSheet(sheet, aTitle, aMedia);
+  rv = PrepareSheet(sheet, aTitle, aMedia, nsnull);
   NS_ENSURE_SUCCESS(rv, rv);
   
   rv = InsertSheetInDoc(sheet, aElement, mDocument);
@@ -1699,7 +1711,7 @@ CSSLoaderImpl::LoadStyleLink(nsIContent* aElement,
 NS_IMETHODIMP
 CSSLoaderImpl::LoadChildSheet(nsICSSStyleSheet* aParentSheet,
                               nsIURI* aURL, 
-                              const nsAString& aMedia,
+                              nsISupportsArray* aMedia,
                               nsICSSImportRule* aParentRule)
 {
   LOG(("CSSLoaderImpl::LoadChildSheet"));
@@ -1760,7 +1772,8 @@ CSSLoaderImpl::LoadChildSheet(nsICSSStyleSheet* aParentSheet,
                    state, getter_AddRefs(sheet));
   NS_ENSURE_SUCCESS(rv, rv);
 
-  rv = PrepareSheet(sheet, NS_LITERAL_STRING(""), aMedia);
+  NS_NAMED_LITERAL_STRING(empty, "");
+  rv = PrepareSheet(sheet, empty, empty, aMedia);
   NS_ENSURE_SUCCESS(rv, rv);
   
   rv = InsertChildSheet(sheet, aParentSheet, aParentRule);
@@ -1832,7 +1845,7 @@ CSSLoaderImpl::InternalLoadAgentSheet(nsIURI* aURL,
   NS_ENSURE_SUCCESS(rv, rv);
 
   NS_NAMED_LITERAL_STRING(empty, "");
-  rv = PrepareSheet(sheet, empty, empty);
+  rv = PrepareSheet(sheet, empty, empty, nsnull);
   NS_ENSURE_SUCCESS(rv, rv);
   
   if (aSheet) {

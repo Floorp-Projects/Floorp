@@ -53,6 +53,7 @@ class nsIParser;
 class nsIDocument;
 class nsIUnicharInputStream;
 class nsICSSLoaderObserver;
+class nsISupportsArray;
 
 // IID for the nsIStyleSheetLoader interface {a6cf9101-15b3-11d2-932e-00805f8add32}
 #define NS_ICSS_LOADER_IID     \
@@ -107,7 +108,7 @@ public:
   // Load a child style sheet (@import)
   NS_IMETHOD LoadChildSheet(nsICSSStyleSheet* aParentSheet,
                             nsIURI* aURL, 
-                            const nsAString& aMedia,
+                            nsISupportsArray* aMedia,
                             nsICSSImportRule* aRule) = 0;
 
   // Load a user agent or user sheet.  The sheet is loaded

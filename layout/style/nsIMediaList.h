@@ -44,13 +44,6 @@ public:
   NS_IMETHOD MatchesMedium(nsIAtom* aMedium, PRBool* aMatch); \
   NS_IMETHOD DropReference(void);
 
-nsresult 
-NS_NewMediaList(const nsAString& aMediaText,
-                nsIMediaList** aInstancePtrResult);
-
-nsresult 
-NS_NewMediaList(nsIMediaList** aInstancePtrResult);
-
 nsresult
 NS_NewMediaList(nsISupportsArray* aArray, nsICSSStyleSheet* aSheet,
                 nsIMediaList** aInstancePtrResult);

@@ -347,7 +347,7 @@ class CSSImportRuleImpl : public nsCSSRule,
                           public nsIDOMCSSImportRule
 {
 public:
-  CSSImportRuleImpl(void);
+  CSSImportRuleImpl(nsISupportsArray* aMedia);
   CSSImportRuleImpl(const CSSImportRuleImpl& aCopy);
   virtual ~CSSImportRuleImpl(void);
 
@@ -385,11 +385,14 @@ protected:
   nsCOMPtr<nsICSSStyleSheet> mChildSheet;
 };
 
-CSSImportRuleImpl::CSSImportRuleImpl(void)
+CSSImportRuleImpl::CSSImportRuleImpl(nsISupportsArray* aMedia)
   : nsCSSRule(),
     mURLSpec()
 {
-  NS_NewMediaList(getter_AddRefs(mMedia));
+  // XXXbz This is really silly.... the mMedia we create here will be
+  // clobbered if we manage to load a sheet.  Which should really
+  // never fail nowadays, in sane cases.
+  NS_NewMediaList(aMedia, nsnull, getter_AddRefs(mMedia));
 }
 
 CSSImportRuleImpl::CSSImportRuleImpl(const CSSImportRuleImpl& aCopy)
@@ -397,16 +400,12 @@ CSSImportRuleImpl::CSSImportRuleImpl(const CSSImportRuleImpl& aCopy)
     mURLSpec(aCopy.mURLSpec)
 {
   
+  nsCOMPtr<nsICSSStyleSheet> sheet;
   if (aCopy.mChildSheet) {
     aCopy.mChildSheet->Clone(nsnull, this, nsnull, nsnull,
-                             getter_AddRefs(mChildSheet));
+                             getter_AddRefs(sheet));
   }
-
-  NS_NewMediaList(getter_AddRefs(mMedia));
-  
-  if (aCopy.mMedia && mMedia) {
-    mMedia->AppendElement(aCopy.mMedia);
-  }
+  SetSheet(sheet);
 }
 
 CSSImportRuleImpl::~CSSImportRuleImpl(void)
@@ -529,18 +528,17 @@ CSSImportRuleImpl::SetSheet(nsICSSStyleSheet* aSheet)
 nsresult
 NS_NewCSSImportRule(nsICSSImportRule** aInstancePtrResult, 
                     const nsString& aURLSpec,
-                    const nsString& aMedia)
+                    nsISupportsArray* aMedia)
 {
   NS_ENSURE_ARG_POINTER(aInstancePtrResult);
 
-  CSSImportRuleImpl* it = new CSSImportRuleImpl();
+  CSSImportRuleImpl* it = new CSSImportRuleImpl(aMedia);
 
   if (! it) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
 
   it->SetURLSpec(aURLSpec);
-  it->SetMedia(aMedia);
   return CallQueryInterface(it, aInstancePtrResult);
 }
 

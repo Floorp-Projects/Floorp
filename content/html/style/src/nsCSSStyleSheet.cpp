@@ -1074,33 +1074,9 @@ DOMMediaListImpl::~DOMMediaListImpl()
 }
 
 nsresult
-NS_NewMediaList(nsIMediaList** aInstancePtrResult) {
-  return NS_NewMediaList(NS_LITERAL_STRING(""), aInstancePtrResult);
-}
-
-nsresult
-NS_NewMediaList(const nsAString& aMediaText, nsIMediaList** aInstancePtrResult) {
-  nsresult rv;
-  NS_ASSERTION(aInstancePtrResult, "Null out param.");
-
-  nsCOMPtr<nsISupportsArray> array;
-  rv = NS_NewISupportsArray(getter_AddRefs(array));
-  if (NS_FAILED(rv)) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
-  DOMMediaListImpl* medialist = new DOMMediaListImpl(array, nsnull);
-  *aInstancePtrResult = medialist;
-  NS_ENSURE_TRUE(medialist, NS_ERROR_OUT_OF_MEMORY);
-  NS_ADDREF(*aInstancePtrResult);
-  rv = medialist->SetMediaText(aMediaText);
-  if (NS_FAILED(rv)) {
-    NS_RELEASE(*aInstancePtrResult);
-    *aInstancePtrResult = nsnull;
-  }
-  return rv;
-}
-
-nsresult NS_NewMediaList(nsISupportsArray* aArray, nsICSSStyleSheet* aSheet, nsIMediaList** aInstancePtrResult)
+NS_NewMediaList(nsISupportsArray* aArray,
+                nsICSSStyleSheet* aSheet,
+                nsIMediaList** aInstancePtrResult)
 {
   NS_ASSERTION(aInstancePtrResult, "Null out param.");
   DOMMediaListImpl* medialist = new DOMMediaListImpl(aArray, NS_STATIC_CAST(CSSStyleSheetImpl*, aSheet));
@@ -1137,6 +1113,8 @@ DOMMediaListImpl::GetText(nsAString& aMediaText)
   return NS_OK;
 }
 
+// XXXbz this is so ill-defined in the spec, it's not clear quite what
+// it should be doing....
 NS_IMETHODIMP
 DOMMediaListImpl::SetText(const nsAString& aMediaText)
 {
