@@ -1262,6 +1262,7 @@ nsObjectFrame::DidReflow(nsIPresContext* aPresContext,
       if (NS_OK == mInstanceOwner->GetWindow(window)) {
         nsIView           *parentWithView;
         nsPoint           origin;
+        nsIPluginInstance *inst;
         float             t2p;
         aPresContext->GetTwipsToPixels(&t2p);
         nscoord           offx, offy;
@@ -1297,6 +1298,10 @@ nsObjectFrame::DidReflow(nsIPresContext* aPresContext,
         // window info to reflect the current widget location.
         mInstanceOwner->FixUpPluginWindow();
 #endif
+        if (NS_OK == mInstanceOwner->GetInstance(inst)) {
+          inst->SetWindow(window);
+          NS_RELEASE(inst);
+        }
 
         //~~~
         mInstanceOwner->ReleasePluginPort((nsPluginPort *)window->window);
