@@ -197,10 +197,10 @@ enum { kOKButton = 0, kCancelButton = 1, kOtherButton = 2 };
   if (doCheck) {
     int state = (*checkValue ? NSOnState : NSOffState);
     [usernamePanelCheck setState:state];
-    [usernamePanelCheck setEnabled:YES];
+    [usernamePanelCheck setTransparent:NO];
   }
   else {
-    [usernamePanelCheck setEnabled:NO];
+    [usernamePanelCheck setTransparent:YES];
   }  
   [usernamePanelCheck setTitle:checkMsg];
   [usernamePanelPassword setStringValue:passwordText];
@@ -242,10 +242,10 @@ enum { kOKButton = 0, kCancelButton = 1, kOtherButton = 2 };
   if (doCheck) {
     int state = (*checkValue ? NSOnState : NSOffState);
     [passwordPanelCheck setState:state];
-    [passwordPanelCheck setEnabled:YES];
+    [passwordPanelCheck setTransparent:NO];
   }
   else {
-    [passwordPanelCheck setEnabled:NO];
+    [passwordPanelCheck setTransparent:YES];
   }  
   [passwordPanelCheck setTitle:checkMsg];
   [passwordPanelInput setStringValue:passwordText];
