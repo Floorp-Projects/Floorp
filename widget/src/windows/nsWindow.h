@@ -361,8 +361,8 @@ protected:
 
     BOOL                    OnChar(UINT mbcsCharCode, UINT virtualKeyCode, bool isMultibyte);
 
-    BOOL                    OnKeyDown( UINT aVirtualKeyCode, UINT aScanCode);
-    BOOL                    OnKeyUp( UINT aVirtualKeyCode, UINT aScanCode);
+    BOOL                    OnKeyDown( UINT aVirtualKeyCode, UINT aScanCode, LPARAM aKeyCode);
+    BOOL                    OnKeyUp( UINT aVirtualKeyCode, UINT aScanCode, LPARAM aKeyCode);
     UINT                    MapFromNativeToDOM(UINT aNativeKeyCode);
 
 
@@ -379,7 +379,7 @@ protected:
     BOOL                    OnIMEReconvert(LPARAM aData, LRESULT *oResult, PRBool aUseUnicode);
 
     ULONG                   IsSpecialChar(UINT aVirtualKeyCode, WORD *aAsciiKey);
-    virtual PRBool          DispatchKeyEvent(PRUint32 aEventType, WORD aCharCode, UINT aVirtualCharCode);
+    virtual PRBool          DispatchKeyEvent(PRUint32 aEventType, WORD aCharCode, UINT aVirtualCharCode, LPARAM aKeyCode);
 
     virtual PRBool          DispatchFocus(PRUint32 aEventType, PRBool isMozWindowTakingFocus);
     virtual PRBool          OnScroll(UINT scrollCode, int cPos);
