@@ -209,7 +209,7 @@ sub disable_builds {
 
 sub set_message {
     $m = $form{'message'};
-    $m =~ s/\'/\\'/g;
+    $m =~ s/\'/\\\'/g;
     open(MOD, ">$tree/mod.pl");
     print MOD "\$message_of_day = \'$m\'\;\n1;";
     close(MOD);
