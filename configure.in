@@ -346,11 +346,11 @@ DIRENT_INO=d_ino
 NEED_BASE_DLL_NAME_ALSO=
 
 MOZ_JPEG_CFLAGS=
-MOZ_JPEG_LIBS='-L$(DIST)/lib -ljpeg'
+MOZ_JPEG_LIBS='$(DIST)/lib/libjpeg.$(LIB_SUFFIX)'
 MOZ_ZLIB_CFLAGS=
-MOZ_ZLIB_LIBS='-L$(DIST)/lib -lzlib'
+MOZ_ZLIB_LIBS='$(DIST)/lib/libzlib.$(LIB_SUFFIX)'
 MOZ_PNG_CFLAGS=
-MOZ_PNG_LIBS='-L$(DIST)/lib -lpng'
+MOZ_PNG_LIBS='$(DIST)/lib/libpng.$(LIB_SUFFIX)'
 
 MOZ_JS_LIBS='-lmozjs'
 XPCOM_LIBS='-L$(DIST)/bin -lxpcom'
