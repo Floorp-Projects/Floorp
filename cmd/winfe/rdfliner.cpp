@@ -2291,6 +2291,8 @@ int CRDFOutliner::DrawPipes ( int iLineNo, int iColNo, int offset, HDC hdc, void
 		HT_Resource r = (HT_Resource)pLineData;
 		if (!HT_IsSeparator(r))
 		{
+			rect.top += 1; // Handle the padding.
+
 			if (idx == HTFE_USE_CUSTOM_IMAGE)
 				DrawArbitraryURL(r, rect.left, rect.top, 16, 16, hdc, ::GetBkColor(hdc), this, FALSE);
 			else if (idx == HTFE_LOCAL_FILE)
