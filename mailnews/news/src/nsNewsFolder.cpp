@@ -999,7 +999,7 @@ NS_IMETHODIMP nsMsgNewsFolder::UserNeedsToAuthenticateForFolder(PRBool displayOn
   return NS_OK;
 }
 
-NS_IMETHODIMP nsMsgNewsFolder::RememberPassword(char *password)
+NS_IMETHODIMP nsMsgNewsFolder::RememberPassword(const char *password)
 {
 #ifdef HAVE_DB
   NewsDB *newsDb = NULL;
