@@ -655,6 +655,7 @@
                 </menupopup>
             </menu>
             <menuseparator/>
+            <menuitem accesskey="&pageSourceCmd.accesskey;" label="&pageSourceCmd.label;" key="key_viewSource" command="View:PageSource"/>
               <menuitem accesskey="&fullScreenCmd.accesskey;"
                         label="&fullScreenCmd.label;" key="key_fullScreen"
                         command="View:FullScreen"/>
@@ -738,7 +739,6 @@
           <menuitem id="javascriptConsole" label="&javaScriptConsoleCmd.label;" accesskey="&javaScriptConsoleCmd.accesskey;" oncommand="toJavaScriptConsole();"/>
           <menuseparator id="firstSep"/>
           <menuitem accesskey="&pageInfoCmd.accesskey;"   label="&pageInfoCmd.label;"   key="key_viewInfo"   command="View:PageInfo"/>          
-          <menuitem accesskey="&pageSourceCmd.accesskey;" label="&pageSourceCmd.label;" key="key_viewSource" command="View:PageSource"/>
           <menuseparator id="secondSep"/>
           <menuitem label="&preferencesCmd.label;"
                     accesskey="&preferencesCmd.accesskey;"
