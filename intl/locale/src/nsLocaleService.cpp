@@ -164,7 +164,7 @@ protected:
 };
 
 
-nsILocaleService* nsLocaleService::gLocaleService = NS_STATIC_CAST(nsILocaleService*,nsnull);
+nsILocaleService* nsLocaleService::gLocaleService = nsnull;
 
 
 //
@@ -272,24 +272,12 @@ nsLocaleService::nsLocaleService(void)
 
 nsLocaleService::~nsLocaleService(void)
 {
-	gLocaleService = NS_STATIC_CAST(nsILocaleService*,nsnull);
+	gLocaleService = nsnull;
 	if (mSystemLocale) mSystemLocale->Release();
 	if (mApplicationLocale) mApplicationLocale->Release();
 }
 
-NS_IMETHODIMP_(nsrefcnt)
-nsLocaleService::AddRef(void)
-{
-    return 2;
-}
-
-NS_IMETHODIMP_(nsrefcnt)
-nsLocaleService::Release(void)
-{
-    return 1;
-}
-
-NS_IMPL_QUERY_INTERFACE(nsLocaleService, kILocaleServiceIID);
+NS_IMPL_ISUPPORTS(nsLocaleService, kILocaleServiceIID);
 
 NS_IMETHODIMP
 nsLocaleService::NewLocale(const PRUnichar *aLocale, nsILocale **_retval)
