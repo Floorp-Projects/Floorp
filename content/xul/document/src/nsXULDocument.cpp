@@ -539,7 +539,19 @@ nsXULDocument::StartDocumentLoad(const char* aCommand, nsIChannel* aChannel,
     mDocumentTitle.Truncate();
 
     nsresult rv = aChannel->GetOriginalURI(getter_AddRefs(mDocumentURI));
-    if (NS_FAILED(rv)) return rv;
+    NS_ENSURE_SUCCESS(rv, rv);
+    
+    // XXXbz this code is repeated from nsDocument::Reset; we
+    // really need to refactor this part better.
+    PRBool isChrome = PR_FALSE;
+    PRBool isRes = PR_FALSE;
+    rv = mDocumentURI->SchemeIs("chrome", &isChrome);
+    rv |= mDocumentURI->SchemeIs("resource", &isRes);
+
+    if (NS_SUCCEEDED(rv) && !isChrome && !isRes) {
+        rv = aChannel->GetURI(getter_AddRefs(mDocumentURI));
+        NS_ENSURE_SUCCESS(rv, rv);
+    }
 
     rv = ResetStylesheetsToURI(mDocumentURI);
     if (NS_FAILED(rv)) return rv;
