@@ -24,7 +24,6 @@
 DEPTH=..\..\..\..
 MODULE		= imgpng
 REQUIRES	= xpcom \
-		  necko \
 		  gfx \
 		  gfx2 \
 		  imglib2 \

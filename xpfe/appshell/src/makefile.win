@@ -39,10 +39,7 @@ REQUIRES	= xpcom \
 		  xpconnect \
 		  timer \
 		  intl \
-		  xul \
 		  windowwatcher \
-		  browser \
-		  appcomps \
 		  caps \
 		  profile \
 		  gfx \

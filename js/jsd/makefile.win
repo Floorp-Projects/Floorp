@@ -31,7 +31,6 @@ REQUIRES = js \
 		  string \
 		  xpconnect \
 		  widget \
-		  appshell \
 		   dom \
 !endif
 		  $(NULL)

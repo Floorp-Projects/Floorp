@@ -33,7 +33,6 @@ REQUIRES	= xpcom \
 		  rdf \
 		  intl \
 		  mime \
-		  dom \
 		  rdfutil \
 		  txmgr \
 		  docshell \

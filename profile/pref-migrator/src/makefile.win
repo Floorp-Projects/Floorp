@@ -30,12 +30,10 @@ REQUIRES	= xpcom \
 		  docshell \
 		  dom \
 		  necko \
-		  rdf \
 		  widget \
 		  webBrowser_core \
 		  uconv \
 		  windowwatcher \
-		  raptor \
 		  prefmigr \
 		  $(NULL)
 include <$(DEPTH)/config/config.mak>

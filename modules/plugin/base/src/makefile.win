@@ -34,7 +34,6 @@ REQUIRES	= xpcom \
 		  java \
 		  pref \
 		  necko \
-		  gtkxtbin \
 		  webshell \
 		  caps \
 		  intl \

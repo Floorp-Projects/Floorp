@@ -110,11 +110,7 @@ include <$(DEPTH)/config/rules.mak>
 LCFLAGS=$(LCFLAGS) ^
 	$(JAVA_DEFINES) 
 
-!if "$(MOZ_BITS)" == "32"
 PUBLIC_HEADER_DIR=$(PUBLIC)\ojiimpl
-!else
-PUBLIC_HEADER_DIR=$(PUBLIC)\win16
-!endif
 
 #export::
 #    $(MAKE_INSTALL) $(EXPORTS) $(PUBLIC_HEADER_DIR)

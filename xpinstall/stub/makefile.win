@@ -26,8 +26,6 @@ DEPTH=..\..
 REQUIRES	= xpcom \
 		  string \
 		  dom \
-		  appshell \
-		  appcomps \
 		  xpinstall \
 		  $(NULL)
 MAKE_OBJ_TYPE   = DLL

@@ -36,7 +36,6 @@ REQUIRES	= xpcom \
 		  locale \
 		  uconv \
 		  unicharutil \
-		  layout \
 		  msgbaseutil \
 		  msgdb \
 		  rdf \

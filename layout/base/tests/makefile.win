@@ -21,7 +21,6 @@
 
 DEPTH=..\..\..
 REQUIRES	= xpcom \
-		  layout \
 		  gfx \
 		  $(NULL)
 MAKE_OBJ_TYPE	= EXE

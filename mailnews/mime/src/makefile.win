@@ -43,7 +43,6 @@ REQUIRES	= xpcom \
 		  uriloader \
 		  xpconnect \
 		  pipnss \
-		  windowwatcher \
 		  $(NULL)
 
 include <$(DEPTH)\config\config.mak>

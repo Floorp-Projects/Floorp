@@ -33,11 +33,9 @@ REQUIRES	= xpcom \
 		  necko \
 		  webshell \
 		  htmlparser \
-		  docshell \
 		  uconv \
 		  unicharutil \
 		  xpconnect \
-		  pref \
 		  layout \
 		  gfx \
 		  content_xul \

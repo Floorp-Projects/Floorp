@@ -24,8 +24,6 @@ MODULE = xpcom
 XPIDL_MODULE = xpcom_glue
 LIBRARY_NAME=xpcomglue
 
-REQUIRES=string
-
 ################################################################################
 ## exports
 

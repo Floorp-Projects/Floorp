@@ -42,7 +42,6 @@ REQUIRES	= xpcom \
 		  mime \
 		  msgcompo \
 		  appcomps \
-		  gfx \
 		  content \
 		  mozldap \
 		  intl \

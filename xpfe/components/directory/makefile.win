@@ -42,7 +42,6 @@ REQUIRES	= xpcom \
 		  necko \
 		  necko2 \
 		  rdf \
-		  layout \
 		  timer \
 		  js \
 		  xpconnect \
@@ -55,7 +54,6 @@ REQUIRES	= xpcom \
 		  uriloader \
 		  windowwatcher \
 		  content \
-		  raptor \
 		  $(NULL)
 
 XPIDL_MODULE=directory

@@ -30,8 +30,6 @@ REQUIRES	= xpcom \
 		  webshell \
 		  helperAppDlg \
 		  plugin \
-		  pref \
-		  raptor \
 		  $(NULL)
 
 include <$(DEPTH)\config\config.mak>

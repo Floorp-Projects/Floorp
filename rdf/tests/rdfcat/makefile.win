@@ -29,7 +29,6 @@ REQUIRES	= xpcom \
 		  view \
 		  dom \
 		  uriloader \
-		  layout \
 		  gfx \
 		  $(NULL)
 MODULE=rdfcat

@@ -25,18 +25,12 @@ LIBRARY_NAME=raptorxulgrid_s
 MODULE=layout_xul
 REQUIRES	= xpcom \
 		  string \
-		  dom \
 		  widget \
-		  timer \
 		  locale \
 		  view \
-		  rdf \
 		  necko \
-		  gfx2 \
-		  imglib2 \
 		  gfx \
 		  content \
-		  content_xul \
 		  $(NULL)
 
 DEFINES=-D_IMPL_NS_HTML -DWIN32_LEAN_AND_MEAN

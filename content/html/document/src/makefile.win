@@ -45,7 +45,6 @@ REQUIRES	= xpcom \
 		  rdf \
 		  chardet \
 		  nkcache \
-		  appcomps \
 		  lwbrk \
 		  gfx2 \
 		  imglib2 \

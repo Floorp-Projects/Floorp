@@ -34,7 +34,6 @@ REQUIRES	= xpcom \
 		  dom \
 		  rdf \
 		  docshell \
-		  layout \
 		  pref \
 		  uriloader \
 		  appshell \
@@ -46,7 +45,6 @@ REQUIRES	= xpcom \
 		  rdfutil \
 		  nkcache \
 		  windowwatcher \
-		  raptor \
 		  layout_xul \
 		  $(NULL)
 

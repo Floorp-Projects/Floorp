@@ -38,10 +38,8 @@ REQUIRES	= xpcom \
 		  pref \
 		  uriloader \
 		  nkcache \
-		  layout \
 		  dom \
 		  intl \
-		  raptor \
 		  layout_xul \
 		  $(NULL)
 

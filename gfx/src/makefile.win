@@ -28,18 +28,11 @@ MODULE=gfx
 REQUIRES= 	xpcom \
 			string \
 			widget \
-			util \
-			dom \
             locale \
             view \
-            uriloader \
             pref \
-			timer \
             gfx2 \
 			imglib2 \
-            mimetype \
-            content \
-			layout \
 			unicharutil \
 			$(NULL)
 

@@ -27,7 +27,6 @@ REQUIRES	= xpcom \
 		  msgbase \
 		  intl \
 		  addrbook \
-		  dom \
 		  mork \
 		  $(NULL)
 LIBRARY_NAME=absyncsv

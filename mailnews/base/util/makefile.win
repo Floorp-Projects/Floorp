@@ -42,7 +42,6 @@ REQUIRES	= xpcom \
 		  docshell \
 		  webshell \
 		  wallet \
-		  dom \
 		  uriloader \
 		  appshell \
 		  msgimap \
@@ -55,7 +54,6 @@ REQUIRES	= xpcom \
 		  mimetype \
 		  windowwatcher \
 		  msgsearch \
-		  raptor \
 		  $(NULL)
 
 include <$(DEPTH)\config\config.mak>

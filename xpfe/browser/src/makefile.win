@@ -45,7 +45,6 @@ REQUIRES	= xpcom \
 		  uconv \
 		  chardet \
 		  windowwatcher \
-		  raptor \
 		  urlbarhistory \
 		  content \
 		  gfx \

@@ -48,7 +48,6 @@ REQUIRES	= xpcom \
 		  locale \
 		  uriloader \
 		  sidebar \
-		  xuldoc \
 		  timer \
 		  webshell \
 		  view \

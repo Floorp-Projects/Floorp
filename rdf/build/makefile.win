@@ -25,7 +25,6 @@ LIBRARY_NAME=rdf
 MODULE_NAME=nsRDFModule
 REQUIRES	= xpcom \
 		  string \
-		  layout \
 		  htmlparser \
 		  necko \
 		  content \

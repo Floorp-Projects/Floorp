@@ -32,7 +32,6 @@ REQUIRES	= xpcom \
 		  locale \
 		  necko \
 		  htmlparser \
-		  webshell \
 		  uconv \
 		  unicharutil \
 		  gfx \

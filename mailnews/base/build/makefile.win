@@ -49,8 +49,6 @@ REQUIRES	= xpcom \
 		  appshell \
 		  msgnews \
 		  msgimap \
-		  raptor \
-		  gfx \
 		  layout_xul \
 		  $(NULL)
 

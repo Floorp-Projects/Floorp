@@ -36,7 +36,6 @@ REQUIRES	= xpcom \
 		  windowwatcher \
 		  gfx \
 		  content \
-		  mimetype \
                   webbrowserpersist \
 		  $(NULL)
 
