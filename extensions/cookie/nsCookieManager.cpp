@@ -69,7 +69,7 @@ class nsCookieEnumerator : public nsISimpleEnumerator
       mCookieIndex(0)
     {
       PRInt32 temp;
-      COOKIE_RemoveExpiredCookies(nsTime() / PR_USEC_PER_SEC, temp);
+      COOKIE_RemoveExpiredCookies(NOW_IN_SECONDS, temp);
       mCookieCount = sCookieList->Count();
     }
 
@@ -164,7 +164,7 @@ NS_IMETHODIMP nsCookieManager::Add(const nsACString &aDomain,
     return NS_ERROR_OUT_OF_MEMORY;
   }
 
-  nsInt64 currentTime = nsTime() / PR_USEC_PER_SEC;
+  nsInt64 currentTime = NOW_IN_SECONDS;
   cookie->host = aDomain;
   cookie->path = aPath;
   cookie->name = aName;
