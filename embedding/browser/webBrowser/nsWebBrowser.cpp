@@ -1467,39 +1467,6 @@ nsEventStatus PR_CALLBACK nsWebBrowser::HandleEvent(nsGUIEvent *aEvent)
     break;
   }
 
-  case NS_GOTFOCUS: {
-    // try to set focus on the last focused window as stored in the
-    // focus controller object.
-    nsCOMPtr<nsIDOMWindow> domWindowExternal;
-    browser->GetContentDOMWindow(getter_AddRefs(domWindowExternal));
-    nsCOMPtr<nsIDOMWindowInternal> domWindow;
-    domWindow = do_QueryInterface(domWindowExternal);
-    nsCOMPtr<nsPIDOMWindow> piWin(do_QueryInterface(domWindow));
-    nsCOMPtr<nsIFocusController> focusController;
-    piWin->GetRootFocusController(getter_AddRefs(focusController));
-    if (focusController) {
-      nsCOMPtr<nsIDOMWindowInternal> focusedWindow;
-      focusController->GetFocusedWindow(getter_AddRefs(focusedWindow));
-      if (focusedWindow) {
-        focusController->SetSuppressFocus(PR_TRUE);
-        domWindow->Focus(); // This sets focus, but we'll ignore it.  
-                           // A subsequent activate will cause us to stop suppressing.
-        break;
-      }
-    }
-
-    // If there wasn't a focus controller and focused window just set
-    // focus on the primary content shell.  If that wasn't focused,
-    // try and just set it on the toplevel DOM window.
-    nsCOMPtr<nsIDOMWindowInternal> contentDomWindow;
-    browser->GetPrimaryContentWindow(getter_AddRefs(contentDomWindow));
-    if (contentDomWindow)
-      contentDomWindow->Focus();
-    else if (domWindow)
-      domWindow->Focus();
-    break;
-  }
-
   case NS_PAINT: {
       nsRect *rect = NS_STATIC_CAST(nsPaintEvent *, aEvent)->rect;
       browser->FillBackground(*rect);
@@ -1543,12 +1510,49 @@ NS_IMETHODIMP nsWebBrowser::GetPrimaryContentWindow(nsIDOMWindowInternal **aDOMW
 /* void activate (); */
 NS_IMETHODIMP nsWebBrowser::Activate(void)
 {
-  nsCOMPtr<nsIDOMWindow> domWindow;
-  GetContentDOMWindow(getter_AddRefs(domWindow));
-  if (domWindow) {
+  // try to set focus on the last focused window as stored in the
+  // focus controller object.
+  nsCOMPtr<nsIDOMWindow> domWindowExternal;
+  GetContentDOMWindow(getter_AddRefs(domWindowExternal));
+  nsCOMPtr<nsIDOMWindowInternal> domWindow;
+  domWindow = do_QueryInterface(domWindowExternal);
+  nsCOMPtr<nsPIDOMWindow> piWin(do_QueryInterface(domWindow));
+  nsCOMPtr<nsIFocusController> focusController;
+  piWin->GetRootFocusController(getter_AddRefs(focusController));
+  PRBool needToFocus = PR_TRUE;
+  if (focusController) {
+    // Go ahead and mark the focus controller as being active.  We have
+    // to do this even before the activate message comes in.
+    focusController->SetActive(PR_TRUE);
+
+    nsCOMPtr<nsIDOMWindowInternal> focusedWindow;
+    focusController->GetFocusedWindow(getter_AddRefs(focusedWindow));
+    if (focusedWindow) {
+      needToFocus = PR_FALSE;
+      focusController->SetSuppressFocus(PR_TRUE, "Activation Suppression");
+      domWindow->Focus(); // This sets focus, but we'll ignore it.  
+                         // A subsequent activate will cause us to stop suppressing.
+    }
+  }
+
+  // If there wasn't a focus controller and focused window just set
+  // focus on the primary content shell.  If that wasn't focused,
+  // try and just set it on the toplevel DOM window.
+  if (needToFocus) {
+    nsCOMPtr<nsIDOMWindowInternal> contentDomWindow;
+    GetPrimaryContentWindow(getter_AddRefs(contentDomWindow));
+    if (contentDomWindow)
+      contentDomWindow->Focus();
+    else if (domWindow)
+      domWindow->Focus();
+  }
+
+  nsCOMPtr<nsIDOMWindow> win;
+  GetContentDOMWindow(getter_AddRefs(win));
+  if (win) {
     // tell windowwatcher about the new active window
     if (mWWatch)
-      mWWatch->SetActiveWindow(domWindow);
+      mWWatch->SetActiveWindow(win);
 
     /* Activate the window itself. Do this only if the PresShell has
        been created, since DOMWindow->Activate asserts otherwise.
@@ -1559,7 +1563,7 @@ NS_IMETHODIMP nsWebBrowser::Activate(void)
     nsCOMPtr<nsIPresShell> presShell;
     mDocShell->GetPresShell(getter_AddRefs(presShell));
     if(presShell) {
-      nsCOMPtr<nsPIDOMWindow> privateDOMWindow = do_QueryInterface(domWindow);
+      nsCOMPtr<nsPIDOMWindow> privateDOMWindow = do_QueryInterface(win);
       if(privateDOMWindow)
         privateDOMWindow->Activate();
     }
