@@ -36,6 +36,11 @@ function Init(sidebardb, sidebar_resource)
 
   sb_datasource.Init(registry, RDF.GetResource(sidebar_resource));
   
+  var sidebar_title = createSidebarTitle('Sidebar');
+  if (sidebar_title) {
+      document.documentElement.appendChild(sidebar_title);
+  }
+
   // Now enumerate all of the flash datasources.
   var enumerator = sb_datasource.GetElements();
 
@@ -50,6 +55,24 @@ function Init(sidebardb, sidebar_resource)
   }
 }
 
+function createSidebarTitle(title) {
+  var div = document.createElement('html:div');
+  var titleB = document.createElement('titledbutton');
+  var customizeB = document.createElement('titledbutton');
+  var spring = document.createElement('spring');
+  var toolbar = document.createElement('toolbar');
+  titleB.setAttribute('value', title);
+  customizeB.setAttribute('value', 'Customize');
+  //customize.setAttribute('onclick', '');
+  spring.setAttribute('flex', '100%');
+
+  toolbar.appendChild(titleB);
+  toolbar.appendChild(spring);
+  toolbar.appendChild(customizeB);
+  div.appendChild(toolbar);
+  return div;
+}
+
 function createPanel(registry, service) {
   var panel_title = getAttr(registry, service, 'title');
   var panel_content = getAttr(registry, service, 'content');
@@ -59,20 +82,22 @@ function createPanel(registry, service) {
   var div = document.createElement('html:div');
   var title = document.createElement('titledbutton');
   var customize = document.createElement('titledbutton');
+  var spring = document.createElement('spring');
   var toolbar = document.createElement('toolbar');
-  var newline1 = document.createElement('html:br');
   var iframe = document.createElement('html:iframe');
-  var newline2 = document.createElement('html:br');
+  var newline = document.createElement('html:br');
   title.setAttribute('value', panel_title);
   customize.setAttribute('value', 'Customize');
+  //customize.setAttribute('onclick', '');
+  spring.setAttribute('flex', '100%');
   iframe.setAttribute('src', panel_content);
 
   toolbar.appendChild(title);
+  toolbar.appendChild(spring);
   toolbar.appendChild(customize);
   div.appendChild(toolbar);
-  div.appendChild(newline1);
   div.appendChild(iframe);
-  div.appendChild(newline2);
+  div.appendChild(newline);
   return div;
 }
 

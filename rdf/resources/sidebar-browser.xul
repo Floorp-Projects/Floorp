@@ -1,18 +1,12 @@
 <?xml version="1.0"?>
 <?xml-stylesheet href="resource:/res/samples/xul.css" type="text/css"?>
 <?xml-stylesheet href="resource:/res/rdf/sidebar.css" type="text/css"?>
+<?xml-stylesheet href="resource:/res/rdf/sidebar-browser.css" type="text/css"?>
 
 <window
   xmlns:html="http://www.w3.org/TR/REC-html40"
   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
   xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
-
-<html:style>
-iframe {
-  height: 100;
-  border: 0;
-}
-</html:style>
 
 <html:script src="sidebar.js" />
 

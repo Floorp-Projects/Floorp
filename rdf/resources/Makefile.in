@@ -63,6 +63,7 @@ FILES = \
 	sidebar.css			\
 	sidebar.js			\
 	sidebar.xul			\
+	sidebar-browser.css		\
 	sidebar-browser.rdf		\
 	sidebar-browser.xul		\
 	sidebarcontainer.xul		\
