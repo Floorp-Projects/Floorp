@@ -92,7 +92,7 @@ static bool getStage(const char *stageName, CompileStage &stage)
  * -n, -noinvoke : do not invoke compiled method. This is automatically true
  *             if the compile stage is anything other than genInstructions.
  * -l, -lib <libname> : canonical name of native library to load at init time
- * -sys, -system : Initialize system class on start-up
+ * -nosys, -nosystem : Don't initialize system class on start-up
  * -ta, -traceAll: enable method tracing for all methods
  * -t, -trace <className> <methodName> <signature>: Enable tracing for a method with the given fully
  *                           qualified className, simple methodName and java signature.
@@ -175,7 +175,7 @@ inline Options::Options():
 	stage(csGenInstructions),
 	compileAll(false),
 	verbose(false),
-	initialize(false),
+	initialize(true),
 	invokeMethod(true),
 	emitHTML(0),
     traceAllMethods(false),
@@ -289,8 +289,8 @@ bool Options::parse(int argc, const char **argv)
             
             if (stage != csGenInstructions)
                 invokeMethod = false;
-        } else if (!PL_strcmp(argv[i], "-sys") || !PL_strcmp(argv[i], "-system")) {
-            initialize = true;
+        } else if (!PL_strcmp(argv[i], "-nosys") || !PL_strcmp(argv[i], "-nosystem")) {
+            initialize = false;
         } else if (!PL_strcmp(argv[i], "-ta") || !PL_strcmp(argv[i], "-traceAll")) {
             traceAllMethods = true;
         } else if (!PL_strcmp(argv[i], "-log")) {
@@ -488,12 +488,14 @@ void realMain(void* arg)
         VM::theVM.setVerbose(options.verbose);
 		VM::theVM.setCatchHardwareExceptions(options.catchHardwareExceptions);
 
-        VM::staticInit(options.initialize);
         
 #ifdef DEBUG
         // Don't bother tracing system staticInit
         VM::theVM.setTraceAllMethods(options.traceAllMethods);
 #endif
+
+        VM::staticInit(options.initialize);
+
     } catch (VerifyError err) {
         printf("Error initializing VM: %d\n", err.cause);
         MAIN_WRAPPER_RETURN(mainWrapper, 1);
