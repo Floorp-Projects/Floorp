@@ -41,7 +41,8 @@ extern int iLowerColors;
 extern int colorCubeSize;
 
 #ifdef ENDER
-class CEnderBar;
+class CEditToolBarController;
+class CComboToolBar;
 #endif //ENDER
 
 class CMainFrame : public CGenericFrame
@@ -67,7 +68,7 @@ private:
 	CCommandToolbar *m_pCommandToolbar;
 #ifdef ENDER
     //CEditToolBarController * m_pToolBarController;
-    CEnderBar * m_pToolBarController;
+    CEditToolBarController * m_pToolBarController;
 #endif //ENDER
 
 
@@ -82,7 +83,7 @@ public :
 	enum  { TAB_FOCUS_IN_NULL, TAB_FOCUS_IN_CHROME,TAB_FOCUS_IN_GRID };
 	void SetTabFocusFlag( int nn ) { m_tabFocusInMainFrm = nn; }
 #ifdef ENDER
-    CEnderBar *getComposeToolBar(){return m_pToolBarController;}
+    CComboToolBar *getComposeToolBar();
 #endif //ENDER
 //#endif /* NO_TAB_NAVIGATION */
 

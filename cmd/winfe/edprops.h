@@ -1132,6 +1132,7 @@ public:
                      RECT      * pCallerRect = NULL,  // If null, use mouse position to locate toolbar
                      UINT      nCallerID = 0,         // For tooltip over caller 
                      UINT      nInitialID = 0);
+    DECLARE_DYNAMIC(CDropdownToolbar)
 
     virtual ~CDropdownToolbar();
 

@@ -263,7 +263,7 @@ int CComposeFrame::CreateHtmlToolbars()
    // toolbars.. one for formats and another for character operations.
    m_pToolBarController = new CEditToolBarController(this);
    ASSERT(m_pToolBarController);
-   if (!m_pToolBarController->CreateEditBars(GetMainContext()->GetContext(), DISPLAY_CHARACTER_TOOLBAR))
+   if (!m_pToolBarController->CreateEditBars(GetMainContext()->GetContext(), FALSE, DISPLAY_CHARACTER_TOOLBAR))
       return -1;      // fail to create
    return 0;
 }

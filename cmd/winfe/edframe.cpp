@@ -123,6 +123,27 @@ static UINT BASED_CODE nIDCharButtonBarArray[] =
 };
 #define CHARBUTTONBAR_ID_COUNT ((sizeof(nIDCharButtonBarArray))/sizeof(UINT))
 
+static UINT BASED_CODE nIDCharFloatButtonBarArray[] =
+{
+	// same order as in the bitmap for toolbar
+    ID_SEPARATOR,
+    ID_FORMAT_CHAR_BOLD,
+    ID_FORMAT_CHAR_ITALIC,
+    ID_FORMAT_CHAR_UNDERLINE,
+    ID_CHECK_SPELLING,
+    ID_SEPARATOR,
+    ID_UNUM_LIST,
+    ID_NUM_LIST,
+    ID_FORMAT_OUTDENT,
+    ID_FORMAT_INDENT,
+    ID_SEPARATOR,
+    ID_ALIGN_POPUP,
+    ID_INSERT_POPUP
+};
+#define CHARBUTTONBARFLOAT_ID_COUNT ((sizeof(nIDCharFloatButtonBarArray))/sizeof(UINT))
+
+
+
 #define COLOR_COMBO_INDEX 3 // Location of color combo we hide in Win16/NT3.51
 
 // Global strings for dropdown property combos
@@ -395,7 +416,7 @@ CEditToolBarController::~CEditToolBarController()
 	    delete m_pCharacterToolbar;
 }
 
-BOOL CEditToolBarController::CreateEditBars(MWContext *pMWContext, unsigned ett)
+BOOL CEditToolBarController::CreateEditBars(MWContext *pMWContext, BOOL bIsFloating, unsigned ett)
 {
     // Initialize things needed by both CNetscapeEditFrame and CComposeFrame
 	CGenericFrame *pParent = (CGenericFrame*)GetParent();
@@ -434,15 +455,28 @@ BOOL CEditToolBarController::CreateEditBars(MWContext *pMWContext, unsigned ett)
 	if( ett & DISPLAY_CHARACTER_TOOLBAR ){
         // We don't use the "Insert Object" last item if we are displaying the edit toolbar,
         //  which has these items
-        if (!m_wndCharacterBar.Create(ett & DISPLAY_EDIT_TOOLBAR, GetParent(), IDW_PARA_TOOLBAR, IDS_CHAR_TOOLBAR_CAPTION,
-								   nIDCharacterBarArray, CHARBAR_ID_COUNT,
-								   IDB_NEW_FORMAT_TOOLBAR,
-								   CSize(8, ED_TB_BUTTON_HEIGHT),
-								   CSize(1,ED_TB_BITMAP_HEIGHT) ) )
-            return FALSE;
-		m_pCharacterToolbar = CreateCharacterToolbar((ett & DISPLAY_EDIT_TOOLBAR) ?  CHARBUTTONBAR_ID_COUNT-1 : CHARBUTTONBAR_ID_COUNT);
+        if (!bIsFloating)
+        {
+            if (!m_wndCharacterBar.Create(ett & DISPLAY_EDIT_TOOLBAR, GetParent(), IDW_PARA_TOOLBAR, IDS_CHAR_TOOLBAR_CAPTION,
+								       nIDCharacterBarArray, CHARBAR_ID_COUNT,
+								       IDB_NEW_FORMAT_TOOLBAR,
+								       CSize(8, ED_TB_BUTTON_HEIGHT),
+								       CSize(1,ED_TB_BITMAP_HEIGHT) ) )
+                return FALSE;
+    		m_pCharacterToolbar = CreateCharacterToolbar((ett & DISPLAY_EDIT_TOOLBAR) ?  CHARBUTTONBAR_ID_COUNT-1 : CHARBUTTONBAR_ID_COUNT);
+    		m_wndCharacterBar.SetCNSToolbar(m_pCharacterToolbar);
+        }
+        else
+        {
+            if (!m_wndCharacterBar.CreateFloater(GetParent(), IDW_PARA_TOOLBAR, IDS_CHAR_TOOLBAR_CAPTION,
+								       nIDCharacterBarArray, CHARBAR_ID_COUNT, nIDCharFloatButtonBarArray,CHARBUTTONBARFLOAT_ID_COUNT ,
+								       IDB_EDIT_FLOAT_TOOLBAR,
+								       CSize(27, 22),
+								       CSize(20, 16) ) )
+                return FALSE;
+        }
 
-		m_wndCharacterBar.SetCNSToolbar(m_pCharacterToolbar);
+
 
 
 	    // Paragraph styles Combo
@@ -539,7 +573,8 @@ BOOL CEditToolBarController::CreateEditBars(MWContext *pMWContext, unsigned ett)
         // Note that we use Scroll Width to get size of combobox since users
         //  can change that in Win95 and NT4.0 and that size determines width
         //  of combobox dropdown button
-	    m_wndCharacterBar.SetComboBox( ID_COMBO_PARA, &m_ParagraphCombo, 
+	    if (m_wndCharacterBar)
+            m_wndCharacterBar.SetComboBox( ID_COMBO_PARA, &m_ParagraphCombo, 
 								       sysInfo.m_iScrollWidth+61, iMaxParaWidth + 4, 0 );
         m_ParagraphCombo.SetCurSel(0);
 
@@ -780,7 +815,7 @@ int CEditFrame::OnCreate(LPCREATESTRUCT lpCreateStruct)
 
 	GetChrome()->CreateCustomizableToolbar("Composer"/*ID_COMPOSER*/, 2, FALSE);
 
-    if ( !m_pToolBarController->CreateEditBars(GetMainContext()->GetContext()) )
+    if ( !m_pToolBarController->CreateEditBars(GetMainContext()->GetContext(), FALSE) )
         return -1;      // fail to create
 
     // Need to do this to get accurate toolbar size info

@@ -90,6 +90,145 @@ BEGIN_MESSAGE_MAP(CComboToolBar, CToolBar)
 END_MESSAGE_MAP()
 
 
+
+
+/////////////////////////////////////////////////////////////////////////////
+BOOL CComboToolBar::CreateFloater(CWnd* pParent, UINT nIDBar, UINT nIDCaption,
+                            UINT * pIDArray, int nIDCount,      // Command ID array and count
+                            UINT * pIDArray2,int nIDCount2,
+                            UINT nIDBitmap, SIZE sizeButton, SIZE sizeImage )
+{
+    ASSERT( pParent );
+	ASSERT(nIDCount >= 1);  // must be at least one of them
+	ASSERT(pIDArray == NULL ||
+		AfxIsValidAddress(pIDArray, sizeof(UINT) * nIDCount, FALSE));
+
+    DWORD dwStyle = WS_CHILD|CBRS_TOOLTIPS|CBRS_BOTTOM|CBRS_FLYBY|CBRS_SIZE_DYNAMIC;
+
+	// Toolbar is NOT initially visible
+	if (!CToolBar::Create(pParent,
+	                      dwStyle,
+	                      nIDBar ) )
+	{
+		TRACE0("Failed to create CToolBar for CComboToolBar\n");
+		return FALSE;   
+	}
+       
+    if ( nIDBitmap && !LoadBitmap(nIDBitmap) )
+	{
+		TRACE0("Failed to load bitmap for CComboToolBar\n");
+		return FALSE;   
+	}
+
+    // Allocate space for buttons in base class
+    if ( ! SetButtons( NULL, nIDCount+nIDCount2 ) ){
+        return FALSE;
+    }
+
+    // Allocate memory for our info structues
+    m_pInfo = new TB_CONTROLINFO[nIDCount+nIDCount2];
+    ASSERT( m_pInfo );
+    
+    // clear out!
+  	memset( (void*)m_pInfo, 0, (nIDCount+nIDCount2) * sizeof(TB_CONTROLINFO) );
+
+    // Allocate memory for config array
+    m_pEnableConfig = new BOOL[nIDCount+nIDCount2];
+    ASSERT( m_pEnableConfig );
+  	memset( (void*)m_pEnableConfig, 0, (nIDCount+nIDCount2) * sizeof(BOOL) );
+
+    // Fill our info array and set each item's info in base class
+    UINT * pID = pIDArray;
+    // Save it
+    m_sizeButton = sizeButton;
+
+    // Set the size of the toolbar buttons and images
+    SetSizes(sizeButton, sizeImage );
+
+    // Save stuff
+    m_sizeImage = sizeImage;
+    m_nIDBitmap = nIDBitmap;    
+    
+    // Extra margin to try to center any comboboxes (Buttons are at + 5)
+    // (Approximate -- probably depends on font etc...)
+    // m_nComboTop = 5 + ( (sizeButton.cy - 22 ) / 2);
+
+    LPTB_CONTROLINFO pInfo = m_pInfo;    
+
+    for ( int i=0; i < nIDCount; i++, pID++, pInfo++ ) {
+        pInfo->nID =  *pID;
+        if ( pInfo->nID == ID_SEPARATOR ) {
+            pInfo->nWidth = SEPARATOR_WIDTH;     // Default separator
+            SetButtonInfo( i, pInfo->nID, TBBS_SEPARATOR, pInfo->nWidth );
+        }
+        else if ( *pID == ID_COMBOBOX ) {
+            pInfo->bComboBox = TRUE;
+
+            // Set base class info - probably not really needed
+            //   since we must fill in ComboBox data later!
+            // Last param = width, which we set later with SetComboBox()
+            // ***** SetButtonInfo( i, 0, TBBS_SEPARATOR, 0 ); // CAUSES CRASH??
+            m_nComboBoxCount++;
+            pInfo->pComboBox = NULL;  // Owner of toolbar must set this later!
+        }
+        else {
+            SetButtonInfo( i, pInfo->nID, TBBS_BUTTON, m_nButtonCount );
+            pInfo->nImageIndex = m_nButtonCount++;
+            pInfo->bIsButton = TRUE;
+            pInfo->nWidth = sizeImage.cx;
+        }
+        pInfo->bShow = TRUE;
+
+        // Default is to show allow configuring all items        
+        m_pEnableConfig[i] = TRUE;
+    }
+
+    pID = pIDArray2;
+    for ( i=nIDCount; i < (nIDCount2+nIDCount); i++, pID++, pInfo++ ) {
+        pInfo->nID =  *pID;
+        if ( pInfo->nID == ID_SEPARATOR ) {
+            pInfo->nWidth = SEPARATOR_WIDTH;     // Default separator
+            SetButtonInfo( i, pInfo->nID, TBBS_SEPARATOR, pInfo->nWidth );
+        }
+        else if ( *pID == ID_COMBOBOX ) {
+            pInfo->bComboBox = TRUE;
+
+            // Set base class info - probably not really needed
+            //   since we must fill in ComboBox data later!
+            // Last param = width, which we set later with SetComboBox()
+            // ***** SetButtonInfo( i, 0, TBBS_SEPARATOR, 0 ); // CAUSES CRASH??
+            m_nComboBoxCount++;
+            pInfo->pComboBox = NULL;  // Owner of toolbar must set this later!
+        }
+        else {
+            SetButtonInfo( i, pInfo->nID, TBBS_BUTTON, m_nButtonCount );
+            pInfo->nImageIndex = m_nButtonCount++;
+            pInfo->bIsButton = TRUE;
+            pInfo->nWidth = sizeImage.cx;
+        }
+        pInfo->bShow = TRUE;
+
+        // Default is to show allow configuring all items        
+        m_pEnableConfig[i] = TRUE;
+    }
+
+    m_nControlCount = m_nButtonCount + m_nComboBoxCount;
+    
+    // Upper limit imposed by resource ID allocation range
+    //  for configuring which controls show on toolbar
+    ASSERT( m_nControlCount<= MAX_TOOLBAR_CONTROLS );
+    
+    // ASSUME WE WANT DOCKING AND TOOLTIPS!
+
+    EnableDocking(CBRS_ALIGN_BOTTOM);
+
+    // Set caption that shows if toolbar is floating
+    if ( nIDCaption ) {
+        SetWindowText(szLoadString(nIDCaption));
+    }
+    return TRUE;
+}
+
 /////////////////////////////////////////////////////////////////////////////
 BOOL CComboToolBar::Create( BOOL bIsPageComposer, CWnd* pParent, UINT nIDBar, UINT nIDCaption,
                             UINT * pIDArray, int nIDCount,      // Command ID array and count
@@ -582,7 +721,8 @@ void CComboToolBar::SetCNSToolbar(CNSToolbar2 *pToolbar)
 
 void CComboToolBar::OnUpdateCmdUI( CFrameWnd* pTarget, BOOL bDisableIfNoHndler )
 {
-	m_pToolbar->OnUpdateCmdUI(pTarget, bDisableIfNoHndler);
+	if (m_pToolbar)
+        m_pToolbar->OnUpdateCmdUI(pTarget, bDisableIfNoHndler);
 
 	CToolBar::OnUpdateCmdUI(pTarget, bDisableIfNoHndler);
 }
@@ -594,14 +734,16 @@ CSize CComboToolBar::CalcDynamicLayout(int nLength, DWORD dwMode )
 #ifdef XP_WIN32
 	size = CToolBar::CalcDynamicLayout(nLength, dwMode);
 #endif
-	
-	int nHeight = m_pToolbar->GetHeight();
+	if (m_pToolbar)
+    {
+	    int nHeight = m_pToolbar->GetHeight();
 
-	if(size.cy < nHeight)
-	{
-		// 6 is what a CToolbar starts off as without any buttons
-		size.cy = nHeight + 8;
-	}
+	    if(size.cy < nHeight)
+	    {
+		    // 6 is what a CToolbar starts off as without any buttons
+		    size.cy = nHeight + 8;
+	    }
+    }
 
 	return size;
 

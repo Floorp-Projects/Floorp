@@ -908,7 +908,7 @@ void CNetscapeEditView::OnSetFocus(CWnd *pOldWin)
     if (GetEmbedded())
     {
         CMainFrame * pFrame = (CMainFrame*)GetParentFrame();
-        CEnderBar *pControler = pFrame->getComposeToolBar();
+        CComboToolBar *pControler = pFrame->getComposeToolBar();
         if (pControler)
         {
             //must calculate position for toolbar
@@ -934,6 +934,42 @@ void CNetscapeEditView::OnSetFocus(CWnd *pOldWin)
 void CNetscapeEditView::OnKillFocus(CWnd *pOldWin)  
 {
     MWContext * pMWContext=NULL;
+
+#ifdef ENDER
+    if (GetEmbedded())
+    {
+        CMainFrame * pFrame = (CMainFrame*)GetParentFrame();
+        CComboToolBar *pControler = pFrame->getComposeToolBar();
+        CWnd *pWnd=NULL;
+        CWnd *pCPparent=NULL;
+        BOOL keepToolbar=FALSE;
+
+        if (pOldWin)
+        {
+            pWnd = pOldWin->GetParent();
+            if (pOldWin->IsKindOf(RUNTIME_CLASS(CMiniDockFrameWnd))
+                ||pOldWin->IsKindOf(RUNTIME_CLASS(CDropdownToolbar)))
+                return;
+            if (pWnd && (pWnd->IsKindOf(RUNTIME_CLASS(CDropdownToolbar))
+                ||pWnd->IsKindOf(RUNTIME_CLASS(CMiniDockFrameWnd))
+                ||pWnd->IsKindOf(RUNTIME_CLASS(CComboToolBar)))) //thats the toolbar dont go anywhere!
+                return;
+            if (pOldWin->IsKindOf(RUNTIME_CLASS(CColorPicker)))
+            {
+                pCPparent = ((CColorPicker *)pOldWin)->getParent();
+                keepToolbar = (CGenericFrame *)::GetFrame(GET_MWCONTEXT) == (CGenericFrame *)pCPparent;
+            }
+        }
+
+        if (pControler && !keepToolbar)
+        {
+            //remember where the controler was!
+            pFrame->ShowControlBar(pControler,FALSE,FALSE);
+            pFrame->RecalcLayout();
+            UpdateWindow();
+        }
+    }
+#endif //ENDER
 
     //TRACE1("CNetscapeView::KillFocusEdit hOldWin=%X\n", (pOldWin ? pOldWin->GetSafeHwnd() : NULL));
     if (  m_caret.bEnabled &&
@@ -982,32 +1018,6 @@ void CNetscapeEditView::OnKillFocus(CWnd *pOldWin)
     }
 #endif //_IME_COMPOSITION
     // CNetscapeView doens't need this?
-#ifdef ENDER
-    if (GetEmbedded())
-    {
-        CMainFrame * pFrame = (CMainFrame*)GetParentFrame();
-        CEnderBar *pControler = pFrame->getComposeToolBar();
-        CWnd *pWnd=NULL;
-        CWnd *pCPparent=NULL;
-        BOOL bColorPicker=FALSE;
-        if (pOldWin)
-        {
-            pWnd = pOldWin->GetParent();
-            if (pOldWin->IsKindOf(RUNTIME_CLASS(CColorPicker)))
-            {
-                pCPparent = ((CColorPicker *)pOldWin)->getParent();
-                bColorPicker= (CGenericFrame *)::GetFrame(GET_MWCONTEXT) == (CGenericFrame *)pCPparent;
-            }
-        }
-        if (pControler && !bColorPicker && (!pWnd || !pWnd->IsKindOf(RUNTIME_CLASS(CComboToolBar))))
-        {
-            //remember where the controler was!
-            pFrame->ShowControlBar(pControler,FALSE,FALSE);
-            pFrame->RecalcLayout();
-            UpdateWindow();
-        }
-    }
-#endif //ENDER
     CNetscapeView::OnKillFocus(pOldWin); 
 }
 

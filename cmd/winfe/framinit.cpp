@@ -155,6 +155,14 @@ CMainFrame::~CMainFrame()
 }
 
 
+#ifdef ENDER
+CComboToolBar *
+CMainFrame::getComposeToolBar()
+{
+    return m_pToolBarController->GetCharacterBar();
+}
+#endif //ENDER
+
 //
 // Create the ledges
 //
@@ -186,8 +194,11 @@ BOOL CMainFrame::OnCreateClient(LPCREATESTRUCT lpcs, CCreateContext *pContext)
 #ifdef ENDER
         else
         {
-            m_pToolBarController = new CEnderBar();
-            if (!m_pToolBarController || !m_pToolBarController->Init(this,TRUE))
+   // Create the HTML edit toolbars.  There are currently two separate
+   // toolbars.. one for formats and another for character operations.
+            EnableDocking(CBRS_ALIGN_BOTTOM);
+            m_pToolBarController = new CEditToolBarController(this);
+            if (!m_pToolBarController || !m_pToolBarController->CreateEditBars(GetMainContext()->GetContext(), TRUE, DISPLAY_CHARACTER_TOOLBAR))
             {
                 TRACE("Bad ComposeBar");
                 if (m_pToolBarController)
@@ -195,10 +206,16 @@ BOOL CMainFrame::OnCreateClient(LPCREATESTRUCT lpcs, CCreateContext *pContext)
                 m_pToolBarController = NULL;
                 return FALSE;
             }
-            m_pToolBarController->ShowWindow(SW_HIDE);
-            m_pToolBarController->SetWindowText(_T("Edit"));//RESOURCE IT!
-            EnableDocking(CBRS_ALIGN_BOTTOM);
-            FloatControlBar(m_pToolBarController,CPoint(0,0),CBRS_ALIGN_LEFT);
+            CComboToolBar *t_combobar=m_pToolBarController->GetCharacterBar();
+            if (t_combobar)
+            {
+                t_combobar->ShowWindow(SW_HIDE);
+                //t_combobar->SetWindowText(_T("Edit"));//RESOURCE IT!
+                
+                DockControlBar(t_combobar,AFX_IDW_DOCKBAR_BOTTOM);
+                t_combobar->ShowWindow(SW_HIDE);
+                FloatControlBar(t_combobar,CPoint(0,0),CBRS_ALIGN_BOTTOM);
+            }
         }
 #endif //ENDER
 

@@ -108,6 +108,10 @@ public:
                  UINT * pIDArray, int nIDCount,      // Command ID array and count
                  UINT nIDBitmap, SIZE sizeButton, SIZE sizeImage );
 
+    BOOL CreateFloater(CWnd* pParent, UINT nIDBar, UINT nIDCaption,
+                            UINT * pIDArray, int nIDCount,      // Command ID array and count
+                            UINT * pIDArray2,int nIDCount2,
+                            UINT nIDBitmap, SIZE sizeButton, SIZE sizeImage );
     // After creating toobar, call this to enable/disable action on button down
     // Used primarily when action is creation of a CDropdownToolbar
     void SetDoOnButtonDown( UINT nID, BOOL bSet );

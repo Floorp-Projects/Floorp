@@ -2027,6 +2027,7 @@ void CDropdownToolbar::Show()
     GetParentFrame()->SetActiveWindow();
 }
 
+IMPLEMENT_DYNAMIC(CDropdownToolbar,CWnd)
 BEGIN_MESSAGE_MAP(CDropdownToolbar, CWnd)
 	//{{AFX_MSG_MAP(CDropdownToolbar)
 	ON_WM_LBUTTONUP()
