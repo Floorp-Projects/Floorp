@@ -1750,9 +1750,12 @@ sub BuildMozilla()
     # $D becomes a suffix to target names for selecting either the debug or non-debug target of a project
     my($D) = $main::DEBUG ? "Debug" : "";
 
+    # $C becomes a component of target names for selecting either the Carbon or non-Carbon target of a project
+    my($C) = $main::options{carbon} ? "Carbon" : "";
+
     StartBuildModule("apprunner");
 
-    BuildOneProject(":mozilla:xpfe:bootstrap:macbuild:apprunner.mcp",           "apprunner$D", 0, 0, 1);
+    BuildOneProject(":mozilla:xpfe:bootstrap:macbuild:apprunner.mcp",           "apprunner$C$D", 0, 0, 1);
 
     # build tool to create Component Registry in release builds only.
     if (!($main::DEBUG)) {
