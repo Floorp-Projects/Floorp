@@ -2152,7 +2152,12 @@ nsWebShell::DoLoadURL(nsIURI * aUri,
               rv = OnStartDocumentLoad(mDocLoader, aUri, "load");
               // Go to the anchor in the current document
               rv = presShell->GoToAnchor(nsAutoString(ref));            
-		          mProcessedEndDocumentLoad = PR_FALSE;
+		      mProcessedEndDocumentLoad = PR_FALSE;
+              // Set the URL & referrer if the anchor was successfully visited
+              if (NS_SUCCEEDED(rv)) {
+                  mURL = urlSpec;
+                  mReferrer = aReferrer;
+              }
 		          // Pass on status of scrolling/anchor visit to docloaderobserver
               rv = OnEndDocumentLoad(mDocLoader, dummyChannel, rv, this);
 		          return rv;		   
@@ -2167,7 +2172,11 @@ nsWebShell::DoLoadURL(nsIURI * aUri,
                 nsIScrollableView* view;
                 rv = viewMgr->GetRootScrollableView(&view);
 				        if (NS_SUCCEEDED(rv) && view)
-                  rv = view->ScrollTo(0, 0, NS_VMREFRESH_IMMEDIATE);
+                rv = view->ScrollTo(0, 0, NS_VMREFRESH_IMMEDIATE);
+                if (NS_SUCCEEDED(rv)) {
+                     mURL = urlSpec;
+                     mReferrer = aReferrer;
+                }
                 mProcessedEndDocumentLoad = PR_FALSE;
 		            // Pass on status of scrolling/anchor visit to docloaderobserver
                 rv = OnEndDocumentLoad(mDocLoader, dummyChannel, rv, this);
