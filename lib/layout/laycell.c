@@ -1096,7 +1096,7 @@ void lo_RebuildCell(MWContext *context, lo_DocState *state, LO_CellStruct *cell)
     if (state->line_array[0] && state->end_last_line) 
     { 
         XP_ASSERT(state->end_last_line->lo_any.next == NULL); 
-        cell->cell_list = state->line_array[0]; 
+        cell->cell_list = ((LO_Element**)state->line_array)[0]; 
         cell->cell_list_end = state->end_last_line; 
 
         state->line_array[0] = NULL; 
