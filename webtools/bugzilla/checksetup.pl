@@ -3948,6 +3948,26 @@ sub CloneEmailEvent {
     }    
 } 
 
+# 2005-03-27: Standardize all boolean fields to plain "tinyint"
+if ($dbh->bz_get_field_def('quips', 'approved')->[1] eq 'tinyint(1)') {
+    $dbh->bz_change_field_type('quips', 'approved', 
+                               'tinyint not null default 1');
+    $dbh->bz_change_field_type('series', 'public', 
+                               'tinyint not null default 0');
+    $dbh->bz_change_field_type('bug_status', 'isactive', 
+                               'tinyint not null default 1');
+    $dbh->bz_change_field_type('rep_platform', 'isactive', 
+                               'tinyint not null default 1');
+    $dbh->bz_change_field_type('resolution', 'isactive', 
+                               'tinyint not null default 1');
+    $dbh->bz_change_field_type('op_sys', 'isactive', 
+                               'tinyint not null default 1');
+    $dbh->bz_change_field_type('bug_severity', 'isactive', 
+                               'tinyint not null default 1');
+    $dbh->bz_change_field_type('priority', 'isactive', 
+                               'tinyint not null default 1');
+}
+
 } # END LEGACY CHECKS
 
 # If you had to change the --TABLE-- definition in any way, then add your
