@@ -58,6 +58,7 @@
 #include "nsLayoutAtoms.h"
 #include "nsIChromeEventHandler.h"
 #include "nsIScriptSecurityManager.h"
+#include "nsIScrollable.h"
 
 class nsHTMLFrame;
 
@@ -704,7 +705,12 @@ nsHTMLFrameInnerFrame::CreateWebShell(nsIPresContext* aPresContext,
   // Current and initial scrolling is set so that all succeeding docs
   // will use the scrolling value set here, regardless if scrolling is
   // set by viewing a particular document (e.g. XUL turns off scrolling)
-  mWebShell->SetScrolling(GetScrolling(content, mode));
+  nsCOMPtr<nsIScrollable> scrollableContainer = do_QueryInterface(mWebShell, &rv);
+  if (NS_SUCCEEDED(rv) && scrollableContainer) {
+    scrollableContainer->SetDefaultScrollbarPreferences(nsIScrollable::ScrollOrientation_Y, GetScrolling(content, mode));
+    scrollableContainer->SetDefaultScrollbarPreferences(nsIScrollable::ScrollOrientation_X, GetScrolling(content, mode));
+  }
+
   nsString frameName;
   if (GetName(content, frameName)) {
     docShellAsItem->SetName(frameName.GetUnicode());

@@ -215,7 +215,6 @@ public:
   // nsIWebShell
   NS_IMETHOD Init(nsNativeWidget aNativeParent,
                   PRInt32 x, PRInt32 y, PRInt32 w, PRInt32 h,
-                  nsScrollPreference aScrolling = nsScrollPreference_kAuto,
                   PRBool aAllowPlugins = PR_TRUE,
                   PRBool aIsSunkenBorder = PR_FALSE);
   NS_IMETHOD SetContainer(nsIWebShellContainer* aContainer);
@@ -234,9 +233,6 @@ public:
   NS_IMETHOD SetName(const PRUnichar* aName);
   NS_IMETHOD FindChildWithName(const PRUnichar* aName,
                                nsIWebShell*& aResult);
-
-  NS_IMETHOD GetScrolling(PRInt32& aScrolling);
-  NS_IMETHOD SetScrolling(PRInt32 aScrolling, PRBool aSetCurrentAndInitial = PR_TRUE);
 
   // Document load api's
   NS_IMETHOD GetDocumentLoader(nsIDocumentLoader*& aResult);
@@ -375,7 +371,7 @@ public:
 
 protected:
   void GetRootWebShellEvenIfChrome(nsIWebShell** aResult);
-  void InitFrameData(PRBool aCompleteInitScrolling);
+  void InitFrameData();
   nsresult CheckForTrailingSlash(nsIURI* aURL);
   nsresult GetViewManager(nsIViewManager* *viewManager);
   nsresult InitDialogVars(void);
@@ -412,7 +408,6 @@ protected:
 
   nsScrollPreference mScrollPref;
 
-  PRInt32 mScrolling[2];
   nsVoidArray mRefreshments;
 
   eCharsetReloadState mCharsetReloadState;
@@ -585,7 +580,7 @@ nsWebShell::nsWebShell() : nsDocShell()
   mHistoryIndex = -1;
   mScrollPref = nsScrollPreference_kAuto;
   mThreadEventQueue = nsnull;
-  InitFrameData(PR_TRUE);
+  InitFrameData();
   mItemType = typeContent;
   mSHist = nsnull;
   mIsInSHist = PR_FALSE;
@@ -636,7 +631,7 @@ nsWebShell::~nsWebShell()
     mScriptContext = nsnull;
   }
 
-  InitFrameData(PR_TRUE);
+  InitFrameData();
 
   // Free up history memory
   PRInt32 i, n = mHistory.Count();
@@ -657,17 +652,10 @@ nsWebShell::~nsWebShell()
 #endif
 }
 
-void nsWebShell::InitFrameData(PRBool aCompleteInitScrolling)
+void nsWebShell::InitFrameData()
 {
-  if (aCompleteInitScrolling) {
-    mScrolling[0] = -1;
-    mScrolling[1] = -1;
-    SetMarginWidth(-1);    
-    SetMarginHeight(-1);
-  }
-  else {
-    mScrolling[1] = mScrolling[0];
-  }
+  SetMarginWidth(-1);    
+  SetMarginHeight(-1);
 }
 
 nsresult
@@ -754,6 +742,7 @@ NS_INTERFACE_MAP_BEGIN(nsWebShell)
    NS_INTERFACE_MAP_ENTRY(nsIDocShellTreeItem)
    NS_INTERFACE_MAP_ENTRY(nsIDocShellTreeNode)
    NS_INTERFACE_MAP_ENTRY(nsIWebNavigation)
+   NS_INTERFACE_MAP_ENTRY(nsIScrollable)
 NS_INTERFACE_MAP_END
 
 NS_IMETHODIMP
@@ -959,7 +948,6 @@ nsWebShell::HandleUnknownContentType(nsIDocumentLoader* loader,
 NS_IMETHODIMP
 nsWebShell::Init(nsNativeWidget aNativeParent,
                  PRInt32 x, PRInt32 y, PRInt32 w, PRInt32 h,
-                 nsScrollPreference aScrolling,
                  PRBool aAllowPlugins,
                  PRBool aIsSunkenBorder)
 {
@@ -989,8 +977,6 @@ nsWebShell::Init(nsNativeWidget aNativeParent,
   nsWidgetInitData  widgetInit;
 
   CreatePluginHost(aAllowPlugins);
-
-  //mScrollPref = aScrolling;
 
   WEB_TRACE(WEB_TRACE_CALLS,
             ("nsWebShell::Init: this=%p", this));
@@ -1306,24 +1292,6 @@ nsWebShell::FindChildWithName(const PRUnichar* aName1,
    return NS_OK;
 }
 
-NS_IMETHODIMP
-nsWebShell::GetScrolling(PRInt32& aScrolling)
-{
-  aScrolling = mScrolling[1];
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsWebShell::SetScrolling(PRInt32 aScrolling, PRBool aSetCurrentAndInitial)
-{
-  mScrolling[1] = aScrolling;
-  if (aSetCurrentAndInitial) {
-    mScrolling[0] = aScrolling;
-  }
-  return NS_OK;
-}
-
-
 /**
  * Document Load methods
  */
@@ -1389,11 +1357,6 @@ nsWebShell::LoadURL(const PRUnichar *aURLSpec,
                     nsISupports * aHistoryState,
                     const PRUnichar* aReferrer)
 {
-  // Initialize margnwidth, marginheight. Put scrolling back the way it was
-  // before the last document was loaded.
-
-  InitFrameData(PR_FALSE);
-
   const char *cmd = mViewSource ? "view-source" : "view" ;
 
   return LoadURL(aURLSpec, cmd, aPostDataStream,
@@ -3843,7 +3806,6 @@ NS_IMETHODIMP nsWebShell::SetDocument(nsIDOMDocument *aDOMDoc,
   rootContent->SetDocument(doc, PR_TRUE);
 
   // (6) reflow the document
-  InitFrameData(PR_FALSE);  // Reset the scrolling state to initial
   PRInt32 i;
   PRInt32 ns = doc->GetNumberOfShells();
   for (i = 0; i < ns; i++) 

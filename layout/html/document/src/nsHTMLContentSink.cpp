@@ -93,6 +93,7 @@
 #include "nsITimer.h"
 #include "nsITimerCallback.h"
 #include "nsDOMError.h"
+#include "nsIScrollable.h"
 
 #ifdef ALLOW_ASYNCH_STYLE_SHEETS
 const PRBool kBlock=PR_FALSE;
@@ -3023,11 +3024,19 @@ HTMLContentSink::StartLayout()
   mLastNotificationTime = PR_Now();
 
   // If it's a frameset document then disable scrolling.
-  // Scrolling was reset nsWebShell::LoadURL() by InitFrameData()
+  // Else, reset scrolling to default settings for this shell.
+  // This must happen before the initial reflow, when we create the root frame
+  nsresult rv;
   if (mWebShell) {
-    if (mFrameset) {
-      mWebShell->SetScrolling(NS_STYLE_OVERFLOW_HIDDEN, PR_FALSE);
-    } 
+    nsCOMPtr<nsIScrollable> scrollableContainer = do_QueryInterface(mWebShell, &rv);
+    if (NS_SUCCEEDED(rv) && scrollableContainer) {
+      if (mFrameset) {
+        scrollableContainer->SetCurrentScrollbarPreferences(nsIScrollable::ScrollOrientation_Y, NS_STYLE_OVERFLOW_HIDDEN);
+        scrollableContainer->SetCurrentScrollbarPreferences(nsIScrollable::ScrollOrientation_X, NS_STYLE_OVERFLOW_HIDDEN);
+      } else {
+        scrollableContainer->ResetScrollbarPreferences();
+      }
+    }
   }
 
   PRInt32 i, ns = mDocument->GetNumberOfShells();
@@ -3057,7 +3066,7 @@ HTMLContentSink::StartLayout()
   // frameset document, disable the scroll bars on the views.
   char* ref = nsnull;           // init in case mDocumentURI is not a url
   nsIURL* url;
-  nsresult rv = mDocumentURI->QueryInterface(NS_GET_IID(nsIURL), (void**)&url);
+  rv = mDocumentURI->QueryInterface(NS_GET_IID(nsIURL), (void**)&url);
   if (NS_SUCCEEDED(rv)) {
     rv = url->GetRef(&ref);
     NS_RELEASE(url);

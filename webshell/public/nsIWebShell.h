@@ -120,7 +120,6 @@ public:
    */
   NS_IMETHOD Init(nsNativeWidget aNativeParent,
                   PRInt32 x, PRInt32 y, PRInt32 w, PRInt32 h,
-                  nsScrollPreference aScrolling = nsScrollPreference_kAuto,
                   PRBool aAllowPlugins = PR_TRUE,
                   PRBool aIsSunkenBorder = PR_FALSE) = 0;
 
@@ -315,11 +314,6 @@ public:
   // SetToolBar
   // SetMenuBar
   // SetStatusBar
-
-  NS_IMETHOD SetScrolling(PRInt32 aScrolling, PRBool aSetCurrentAndInitial = PR_TRUE)  = 0;
-  NS_IMETHOD GetScrolling(PRInt32& aScrolling) = 0;
-
-
 
   // XXX these are here until there a better way to pass along info to a sub doc
   NS_IMETHOD GetMarginWidth (PRInt32* aWidth)  = 0;
