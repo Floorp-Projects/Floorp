@@ -31,6 +31,7 @@ MISCDEP = 		    \
     $(DIST)/lib/dbm32.lib \
     $(DIST)/lib/libplc21.lib \
     $(DIST)/lib/xpcom32.lib \
+    $(DIST)/lib/libpref.lib \
     $(NULL)
 
 MODULE = cache
@@ -50,12 +51,13 @@ CPPSRCS	= nsCacheObject.cpp 	\
 		  nsMemStream.cpp		\
 	 	  $(NULL)
 
-REQUIRES = dbm nspr pref xpcom 
+REQUIRES = dbm nspr pref js xpcom 
 
 LLIBS =				 \
     $(DIST)/lib/dbm32.lib 		\
     $(DIST)/lib/libplc21.lib 	\
  	$(DIST)/lib/xpcom32.lib  	\
+ 	$(DIST)/lib/libpref.lib  	\
 	$(LIBNSPR)		 			\
 	$(NULL)
 
