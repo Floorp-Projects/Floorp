@@ -337,6 +337,7 @@ JavaArray_newEnumerate(JSContext *cx, JSObject *obj, JSIterateOp enum_op,
     JSJavaThreadState *jsj_env;
     JNIEnv *jEnv;
     jsize array_length, index;
+    JSBool ok = JS_TRUE;
 
     java_wrapper = JS_GetPrivate(cx, obj);
     /* Check for prototype object */
@@ -354,7 +355,7 @@ JavaArray_newEnumerate(JSContext *cx, JSObject *obj, JSIterateOp enum_op,
 
     array_length = jsj_GetJavaArrayLength(cx, jEnv, java_wrapper->java_obj);
     if (array_length < 0) {
-	jsj_ExitJava(jsj_env);
+        jsj_ExitJava(jsj_env);
         return JS_FALSE;
     }
 
@@ -364,8 +365,7 @@ JavaArray_newEnumerate(JSContext *cx, JSObject *obj, JSIterateOp enum_op,
 
         if (idp)
             *idp = INT_TO_JSVAL(array_length);
-	jsj_ExitJava(jsj_env);
-        return JS_TRUE;
+        break;
         
     case JSENUMERATE_NEXT:
         index = JSVAL_TO_INT(*statep);
@@ -373,21 +373,23 @@ JavaArray_newEnumerate(JSContext *cx, JSObject *obj, JSIterateOp enum_op,
             JS_ValueToId(cx, INT_TO_JSVAL(index), idp);
             index++;
             *statep = INT_TO_JSVAL(index);
-            return JS_TRUE;
+            break;
         }
 
         /* Fall through ... */
 
     case JSENUMERATE_DESTROY:
         *statep = JSVAL_NULL;
-	jsj_ExitJava(jsj_env);
-        return JS_TRUE;
+        break;
 
     default:
         JS_ASSERT(0);
-	jsj_ExitJava(jsj_env);
-        return JS_FALSE;
+        ok = JS_FALSE;
+        break;
     }
+
+    jsj_ExitJava(jsj_env);
+    return ok;
 }
 
 JS_STATIC_DLL_CALLBACK(JSBool)
