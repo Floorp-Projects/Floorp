@@ -139,7 +139,7 @@ public:
   NS_IMETHOD ContentStatesChanged(nsIDocument* aDocument,
                                   nsIContent* aContent1,
                                   nsIContent* aContent2,
-                                  nsIAtom* aChangedPseudoClass) = 0;
+                                  PRInt32 aStateMask) = 0;
 
   /**
    * Notification that the content model has changed. This method is called

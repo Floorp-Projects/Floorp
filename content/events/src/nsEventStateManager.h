@@ -260,9 +260,6 @@ protected:
   nsCOMPtr<nsIPref> mPrefService;
   PRBool m_haveShutdown;
 
-  //Pref for using hierarchical hover (possibly expensive) or not
-  PRBool hHover;
-
   // So we don't have to keep checking accessibility.browsewithcaret pref
   PRBool mBrowseWithCaret;
 

@@ -905,7 +905,7 @@ nsHTMLInputElement::SetCheckedInternal(PRBool aChecked)
   // Probably ContentStatesChanged() needs to be told not to worry if there is
   // no frame in some cases.  Bug 134560.
   if (mDocument && frame) {
-    mDocument->ContentStatesChanged(this, nsnull, nsCSSAtoms::checkedPseudo);
+    mDocument->ContentStatesChanged(this, nsnull, NS_EVENT_STATE_CHECKED);
   }
 
   return NS_OK;

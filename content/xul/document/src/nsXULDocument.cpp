@@ -1926,11 +1926,11 @@ nsXULDocument::ContentChanged(nsIContent* aContent,
 NS_IMETHODIMP
 nsXULDocument::ContentStatesChanged(nsIContent* aContent1,
                                     nsIContent* aContent2,
-                                    nsIAtom* aChangedPseudoClass)
+                                    PRInt32 aStateMask)
 {
     for (PRInt32 i = mObservers.Count() - 1; i >= 0; --i) {
         nsIDocumentObserver*  observer = (nsIDocumentObserver*)mObservers[i];
-        observer->ContentStatesChanged(this, aContent1, aContent2, aChangedPseudoClass);
+        observer->ContentStatesChanged(this, aContent1, aContent2, aStateMask);
     }
     return NS_OK;
 }

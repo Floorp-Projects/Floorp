@@ -205,8 +205,10 @@ public:
                                   nsIStyleContext* aNewParentContext,
                                   nsIStyleContext** aNewStyleContext);
 
-  NS_IMETHOD  HasStateDependentStyle(nsIPresContext* aPresContext,
-                                     nsIContent*     aContent);
+  NS_IMETHOD HasStateDependentStyle(nsIPresContext* aPresContext,
+                                    nsIContent*     aContent,
+                                    PRInt32         aStateMask,
+                                    PRBool*         aResult);
 
   NS_IMETHOD ConstructRootFrame(nsIPresContext* aPresContext,
                                 nsIContent*     aContent,
@@ -235,7 +237,7 @@ public:
   NS_IMETHOD ContentStatesChanged(nsIPresContext* aPresContext, 
                                   nsIContent* aContent1,
                                   nsIContent* aContent2,
-                                  nsIAtom* aChangedPseudoClass);
+                                  PRInt32 aStateMask);
   NS_IMETHOD AttributeChanged(nsIPresContext*  aPresContext,
                               nsIContent* aChild,
                               PRInt32 aNameSpaceID,
@@ -1432,8 +1434,9 @@ StyleSetImpl::ReParentStyleContext(nsIPresContext* aPresContext,
 }
 
 struct StatefulData : public StateRuleProcessorData {
-  StatefulData(nsIPresContext* aPresContext, nsIAtom* aMedium, nsIContent* aContent)
-    : StateRuleProcessorData(aPresContext, aContent),
+  StatefulData(nsIPresContext* aPresContext, nsIAtom* aMedium,
+               nsIContent* aContent, PRInt32 aStateMask)
+    : StateRuleProcessorData(aPresContext, aContent, aStateMask),
       mMedium(aMedium),
       mStateful(PR_FALSE)
   {}
@@ -1445,17 +1448,18 @@ static PRBool SheetHasStatefulStyle(nsISupports* aProcessor, void *aData)
 {
   nsIStyleRuleProcessor* processor = (nsIStyleRuleProcessor*)aProcessor;
   StatefulData* data = (StatefulData*)aData;
-  if (NS_OK == processor->HasStateDependentStyle(data, data->mMedium)) {
-    data->mStateful = PR_TRUE;
+  processor->HasStateDependentStyle(data, data->mMedium, &data->mStateful);
+  if (data->mStateful)
     return PR_FALSE;  // stop iteration
-  }
   return PR_TRUE; // continue
 }
 
 // Test if style is dependent on content state
 NS_IMETHODIMP
 StyleSetImpl::HasStateDependentStyle(nsIPresContext* aPresContext,
-                                     nsIContent*     aContent)
+                                     nsIContent*     aContent,
+                                     PRInt32         aStateMask,
+                                     PRBool*         aResult)
 {
   GatherRuleProcessors();
 
@@ -1466,12 +1470,15 @@ StyleSetImpl::HasStateDependentStyle(nsIPresContext* aPresContext,
        mOverrideRuleProcessors)) {  
     nsIAtom* medium = nsnull;
     aPresContext->GetMedium(&medium);
-    StatefulData data(aPresContext, medium, aContent);
+    StatefulData data(aPresContext, medium, aContent, aStateMask);
     WalkRuleProcessors(SheetHasStatefulStyle, &data);
     NS_IF_RELEASE(medium);
-    return ((data.mStateful) ? NS_OK : NS_COMFALSE);
+    *aResult = data.mStateful;
+  } else {
+    *aResult = PR_FALSE;
   }
-  return NS_COMFALSE;
+
+  return NS_OK;
 }
 
 
@@ -1541,10 +1548,10 @@ NS_IMETHODIMP
 StyleSetImpl::ContentStatesChanged(nsIPresContext* aPresContext, 
                                    nsIContent* aContent1,
                                    nsIContent* aContent2,
-                                   nsIAtom* aChangedPseudoClass)
+                                   PRInt32 aStateMask)
 {
-  return mFrameConstructor->ContentStatesChanged(aPresContext, aContent1, aContent2,
-                                                 aChangedPseudoClass);
+  return mFrameConstructor->ContentStatesChanged(aPresContext, aContent1,
+                                                 aContent2, aStateMask);
 }
 
 

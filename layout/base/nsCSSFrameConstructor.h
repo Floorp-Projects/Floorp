@@ -123,7 +123,7 @@ public:
   NS_IMETHOD ContentStatesChanged(nsIPresContext* aPresContext, 
                                   nsIContent*     aContent1,
                                   nsIContent*     aContent2,
-                                  nsIAtom*        aChangedPseudoClass);
+                                  PRInt32         aStateMask);
 
   NS_IMETHOD AttributeChanged(nsIPresContext* aPresContext,
                               nsIContent*     aContent,

@@ -251,7 +251,8 @@ public:
                            nsIAtom* aMedium);
 
   NS_IMETHOD HasStateDependentStyle(StateRuleProcessorData* aData,
-                                    nsIAtom* aMedium);
+                                    nsIAtom* aMedium,
+                                    PRBool* aResult);
 
   // XXX style rule enumerations
 
@@ -422,9 +423,11 @@ HTMLCSSStyleSheetImpl::Init(nsIURI* aURL, nsIDocument* aDocument)
 // Test if style is dependent on content state
 NS_IMETHODIMP
 HTMLCSSStyleSheetImpl::HasStateDependentStyle(StateRuleProcessorData* aData,
-                                              nsIAtom* aMedium)
+                                              nsIAtom* aMedium,
+                                              PRBool* aResult)
 {
-  return NS_COMFALSE;
+  *aResult = PR_FALSE;
+  return NS_OK;
 }
 
 

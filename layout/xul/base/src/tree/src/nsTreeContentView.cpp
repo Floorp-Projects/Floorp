@@ -50,6 +50,7 @@
 #include "nsChildIterator.h"
 #include "nsIDOMHTMLOptionElement.h"
 #include "nsIDOMClassInfo.h"
+#include "nsIEventStateManager.h"
 
 
 // A content model view implementation for the tree.
@@ -730,10 +731,11 @@ NS_IMETHODIMP
 nsTreeContentView::ContentStatesChanged(nsIDocument* aDocument,
                                            nsIContent* aContent1,
                                            nsIContent* aContent2,
-                                           nsIAtom* aChangedPseudoClass)
+                                           PRInt32 aStateMask)
 {
-  if (!aContent1 || !mSelection || !aContent1->IsContentOfType(nsIContent::eHTML) ||
-      aChangedPseudoClass != nsCSSAtoms::checkedPseudo)
+  if (!aContent1 || !mSelection ||
+      !aContent1->IsContentOfType(nsIContent::eHTML) ||
+      !(aStateMask & NS_EVENT_STATE_CHECKED))
     return NS_OK;
         
   nsCOMPtr<nsIAtom> contentTag;

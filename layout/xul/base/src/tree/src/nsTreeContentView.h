@@ -92,7 +92,7 @@ class nsTreeContentView : public nsITreeView,
     NS_IMETHOD ContentStatesChanged(nsIDocument* aDocument,
                                     nsIContent* aContent1,
                                     nsIContent* aContent2,
-                                    nsIAtom* aChangedPseudo);
+                                    PRInt32 aStateMask);
 
     NS_IMETHOD AttributeChanged(nsIDocument *aDocument,
                                 nsIContent*  aContent,
