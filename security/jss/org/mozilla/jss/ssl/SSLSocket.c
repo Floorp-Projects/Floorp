@@ -540,6 +540,12 @@ finish:
     return statusObj;
 }
 
+#ifdef _WINDOWS
+#define SNPRINTF _snprintf
+#else
+#define SNPRINTF snprintf
+#endif
+
 JNIEXPORT void JNICALL
 Java_org_mozilla_jss_ssl_SSLSocket_setCipherPreference(
     JNIEnv *env, jobject clazz, jint cipher, jboolean enable)
@@ -550,7 +556,7 @@ Java_org_mozilla_jss_ssl_SSLSocket_setCipherPreference(
     status = SSL_CipherPrefSetDefault(cipher, enable);
     if(status != SECSuccess) {
         char buf[128];
-        snprintf(buf, 128, "Failed to %s cipher 0x%lx\n",
+        SNPRINTF(buf, 128, "Failed to %s cipher 0x%lx\n",
             (enable ? "enable" : "disable"), cipher);
         JSS_throwMsg(env, SOCKET_EXCEPTION, buf);
         goto finish;
