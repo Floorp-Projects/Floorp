@@ -1,0 +1,93 @@
+<html>
+<head>
+<title>Strres Test</title>
+</head>
+
+<body>
+<script>
+var strBundleService = null;
+
+var sample = Components.classes["component://netscape/sample/sample-world"].createInstance();
+sample = sample.QueryInterface(Components.interfaces.nsISample);
+dump("sample = " + sample + "\n");
+
+function get()
+{
+  var field = document.getElementById('Value');
+  field.value = sample.Value;
+}
+
+function set()
+{
+  var field = document.getElementById('Value');
+  //sample.Value = field.value;
+  sample.WriteValue(field.value);
+}
+
+function poke()
+{
+  var field = document.getElementById('Value');
+  sample.Poke(field.value);
+}
+
+function write()
+{
+  sample.WriteValue("here is what I'm writing!");
+
+  strBundleService =
+    Components.classes["component://netscape/intl/stringbundle"].createInstance(); 
+
+  if (strBundleService) {
+/*
+    dump("\n--** strBundleService createInstance 1 succeeded **--\n");
+    dump("strBundleService = " + strBundleService + "\n");
+*/
+    strBundleService = 
+      strBundleService.QueryInterface(Components.interfaces.nsIStringBundleService);
+
+    if (strBundleService) {
+/*
+      dump("\n--** strBundleService createInstance 2 succeeded **--\n");
+      dump("strBundleService = " + strBundleService + "\n\n");
+    */
+	var strval = "TAO";
+	strBundleService.StrVal = "TAO";
+/*
+	  dump("\n--** strBundleService.StrVal = " + strBundleService.StrVal + " **--\n");
+*/
+      var strbundle = new Object();
+      strBundleService.CreateBundle("resource:/res/strres.properties", 
+                                    null, 
+                                    strbundle); 
+      
+      if (strbundle) {
+        dump("\n--** strbundle  createInstance succeeded **--\n");
+	var ostr;
+	strbundle.GetStringFromID(123, ostr);
+        dump("\n--** strbundle GetStringFromID 123=" + ostr + " **--\n");
+      }
+      else {
+        dump("\n--** strbundle  createInstance failed **--\n");
+      }
+    }
+    else {
+      dump("\n--** strBundleService createInstance 2 **--\n");
+    }
+  }
+  else {
+    dump("\n--** strBundleService createInstance 1 **--\n");
+  }
+  dump("\n--** StrresTest end **--\n");
+
+}
+</script>
+
+<form name="form">
+<input type="button" value="Get" onclick="get();">
+<input type="button" value="Set" onclick="set();">
+<input type="button" value="Poke" onclick="poke();">
+<input type="text" id="Value">
+<input type="button" value="Write" onclick="write();">
+<form>
+</body>
+</html>
