@@ -84,6 +84,7 @@ public:
   PRUint32      mFlags;
   PRBool        mXPConnected;
   char          *mFileName;
+  char          *mFullPath;
 };
 
 struct nsActivePlugin
