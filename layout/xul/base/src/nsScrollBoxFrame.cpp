@@ -128,7 +128,7 @@ nsScrollBoxFrame::SetUpScrolledFrame(nsIPresContext* aPresContext)
   nsCOMPtr<nsIStyleContext> context;
   frame->GetStyleContext(getter_AddRefs(context));
   nsHTMLContainerFrame::CreateViewForFrame(aPresContext, frame,
-                                           context, PR_TRUE);
+                                           context, nsnull, PR_TRUE);
 
   // We need to allow the view's position to be different than the
   // frame's position

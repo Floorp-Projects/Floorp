@@ -179,6 +179,7 @@ ReparentFrameViewTo(nsIPresContext* aPresContext,
     aViewManager->RemoveChild(aOldParentView, view);
     
     // XXX We need to insert this view in the correct place within its z-order...
+    // XXX What should we do about the Z-placeholder-child if this frame is position:fixed?
     aViewManager->InsertChild(aNewParentView, view, zIndex);
 
   } else {
@@ -416,14 +417,13 @@ nsresult
 nsHTMLContainerFrame::CreateViewForFrame(nsIPresContext* aPresContext,
                                          nsIFrame* aFrame,
                                          nsIStyleContext* aStyleContext,
+                                         nsIFrame* aContentParentFrame,
                                          PRBool aForce)
 {
   nsIView* view;
   aFrame->GetView(aPresContext, &view);
   // If we don't yet have a view, see if we need a view
   if (nsnull == view) {
-    PRInt32 zIndex = 0;
-    PRBool  autoZIndex = PR_FALSE;
     PRBool  fixedBackgroundAttachment = PR_FALSE;
 
     // Get nsStyleColor and nsStyleDisplay
@@ -431,7 +431,9 @@ nsHTMLContainerFrame::CreateViewForFrame(nsIPresContext* aPresContext,
       aStyleContext->GetStyleData(eStyleStruct_Color);
     const nsStyleDisplay* display = (const nsStyleDisplay*)
       aStyleContext->GetStyleData(eStyleStruct_Display);
-
+    const nsStylePosition* position = (const nsStylePosition*)
+      aStyleContext->GetStyleData(eStyleStruct_Position);
+    
     if (color->mOpacity != 1.0f) {
       NS_FRAME_LOG(NS_FRAME_TRACE_CALLS,
         ("nsHTMLContainerFrame::CreateViewForFrame: frame=%p opacity=%g",
@@ -448,36 +450,16 @@ nsHTMLContainerFrame::CreateViewForFrame(nsIPresContext* aPresContext,
     // See if the frame is being relatively positioned or absolutely
     // positioned
     if (!aForce) {
-      const nsStylePosition* position = (const nsStylePosition*)
-        aStyleContext->GetStyleData(eStyleStruct_Position);
-
       if (NS_STYLE_POSITION_RELATIVE == position->mPosition) {
         NS_FRAME_LOG(NS_FRAME_TRACE_CALLS,
           ("nsHTMLContainerFrame::CreateViewForFrame: frame=%p relatively positioned",
-           aFrame));
+          aFrame));
         aForce = PR_TRUE;
-        
-        // Get the z-index to use
-        if (position->mZIndex.GetUnit() == eStyleUnit_Integer) {
-          zIndex = position->mZIndex.GetIntValue();
-
-        } else if (position->mZIndex.GetUnit() == eStyleUnit_Auto) {
-          autoZIndex = PR_TRUE;
-        }
-      
       } else if (position->IsAbsolutelyPositioned()) {
         NS_FRAME_LOG(NS_FRAME_TRACE_CALLS,
-          ("nsHTMLContainerFrame::CreateViewForFrame: frame=%p relatively positioned",
-           aFrame));
+          ("nsHTMLContainerFrame::CreateViewForFrame: frame=%p absolutely positioned",
+          aFrame));
         aForce = PR_TRUE;
-
-        // Get the z-index to use
-        if (position->mZIndex.GetUnit() == eStyleUnit_Integer) {
-          zIndex = position->mZIndex.GetIntValue();
-
-        } else if (position->mZIndex.GetUnit() == eStyleUnit_Auto) {
-          autoZIndex = PR_TRUE;
-        }
       }
     }
 
@@ -522,12 +504,11 @@ nsHTMLContainerFrame::CreateViewForFrame(nsIPresContext* aPresContext,
 
     if (aForce) {
       // Create a view
-      nsIFrame* parent;
+      nsIFrame* parent = nsnull;
+      nsIView* parentView = nsnull;
 
       aFrame->GetParentWithView(aPresContext, &parent);
       NS_ASSERTION(parent, "GetParentWithView failed");
-      nsIView* parentView;
-   
       parent->GetView(aPresContext, &parentView);
       NS_ASSERTION(parentView, "no parent with view");
 
@@ -563,10 +544,43 @@ nsHTMLContainerFrame::CreateViewForFrame(nsIPresContext* aPresContext,
         if (NS_SUCCEEDED(parentView->QueryInterface(kScrollViewIID, (void**)&scrollingView))) {
           scrollingView->SetScrolledView(view);
         } else {
+          PRInt32 zIndex = 0;
+          PRBool  autoZIndex = PR_FALSE;
+
+          // Get the z-index to use
+          if (position->mZIndex.GetUnit() == eStyleUnit_Integer) {
+            zIndex = position->mZIndex.GetIntValue();
+          } else if (position->mZIndex.GetUnit() == eStyleUnit_Auto) {
+            autoZIndex = PR_TRUE;
+          }
+
           viewManager->InsertChild(parentView, view, zIndex);
 
           if (autoZIndex) {
             viewManager->SetViewAutoZIndex(view, PR_TRUE);
+          }
+
+          if (nsnull != aContentParentFrame) {
+            // If, for some reason, GetView below fails to initialize zParentView,
+            // then ensure that we completely bypass InsertZPlaceholder below.
+            // The effect will be as if we never knew about aContentParentFrame
+            // in the first place, so at least this code won't be doing any damage.
+            nsIView* zParentView = parentView;
+            
+            aContentParentFrame->GetView(aPresContext, &zParentView);
+            
+            if (nsnull == zParentView) {
+              nsIFrame* zParentFrame = nsnull;
+              
+              aContentParentFrame->GetParentWithView(aPresContext, &zParentFrame);
+              NS_ASSERTION(zParentFrame, "GetParentWithView failed");
+              zParentFrame->GetView(aPresContext, &zParentView);
+              NS_ASSERTION(zParentView, "no parent with view");
+            }
+            
+            if (zParentView != parentView) {
+              viewManager->InsertZPlaceholder(zParentView, view, zIndex);
+            }
           }
         }
 
@@ -617,9 +631,6 @@ nsHTMLContainerFrame::CreateViewForFrame(nsIPresContext* aPresContext,
 
         // XXX If it's fixed positioned, then create a widget so it floats
         // above the scrolling area
-        const nsStylePosition* position = (const nsStylePosition*)
-          aStyleContext->GetStyleData(eStyleStruct_Position);
-
         if (NS_STYLE_POSITION_FIXED == position->mPosition) {
           view->CreateWidget(kCChildCID);
         }

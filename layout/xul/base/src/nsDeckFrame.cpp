@@ -104,7 +104,7 @@ nsDeckFrame::CreateWidget(nsIPresContext* aPresContext, nsIBox* aBox)
   if (!view) {
      nsCOMPtr<nsIStyleContext> context;
      frame->GetStyleContext(getter_AddRefs(context));
-     nsHTMLContainerFrame::CreateViewForFrame(aPresContext,frame,context,PR_TRUE); 
+     nsHTMLContainerFrame::CreateViewForFrame(aPresContext,frame,context,nsnull,PR_TRUE); 
      frame->GetView(aPresContext, &view);
   }
 

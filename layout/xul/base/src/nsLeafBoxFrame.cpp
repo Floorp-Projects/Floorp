@@ -100,7 +100,7 @@ nsLeafBoxFrame::Init(nsIPresContext*  aPresContext,
         GetView(aPresContext, &view);
 
         if (!view) {
-           nsHTMLContainerFrame::CreateViewForFrame(aPresContext,this,mStyleContext,PR_TRUE); 
+           nsHTMLContainerFrame::CreateViewForFrame(aPresContext,this,mStyleContext,nsnull,PR_TRUE); 
            GetView(aPresContext, &view);
         }
 
