@@ -680,15 +680,14 @@ nsIEnumerator* nsWindow::GetChildren()
 {
     if (mChildren) {
         mChildren->Reset();
-        //mChildren->AddRef();
 
         Enumerator * children = new Enumerator();
+        children->AddRef();
         nsISupports   * next = mChildren->Next();
         if (next) {
           nsIWidget *widget;
           if (NS_OK == next->QueryInterface(kIWidgetIID, (void**)&widget)) {
             children->Append(widget);
-            //NS_RELEASE(widget);
           }
         }
 
@@ -1964,7 +1963,7 @@ HBRUSH nsWindow::OnControlColor()
 
 nsWindow::Enumerator::Enumerator()
 {
-    mRefCnt = 1;
+    mRefCnt = 0;
     mArraySize = INITIAL_SIZE;
     mChildrens = (nsIWidget**)new DWORD[mArraySize];
     memset(mChildrens, 0, sizeof(DWORD) * mArraySize);
