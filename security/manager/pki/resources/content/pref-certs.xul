@@ -65,7 +65,7 @@
   <groupbox orient="vertical">
     <caption label="&managecerts.label;"/>
     <html>&managecerts.text;</html>
-    <hbox halign="left" autostretch="never">
+    <hbox autostretch="never">
       <button class="dialog" label="&managecerts.button;" disabled="false"
               oncommand="openCertManager();" 
               id="openCertManagerButton"
@@ -78,7 +78,7 @@
   <groupbox orient="vertical">
     <caption label="&managedevices.label;"/>
     <html>&managedevices.text;</html>
-    <hbox halign="left" autostretch="never">
+    <hbox autostretch="never">
       <button class="dialog" label="&managedevices.button;" disabled="false"
               oncommand="openDeviceManager();"
               id="openDeviceManagerButton"

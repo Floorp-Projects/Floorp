@@ -45,7 +45,7 @@
   <groupbox orient="vertical">
     <caption label="&changepassword.label;"/>
     <html>&changepassword.text;</html>
-    <hbox halign="left" autostretch="never">
+    <hbox autostretch="never">
       <button class="dialog" label="&changepassword.button;" disabled="false"
               oncommand="ChangePW();"
               id="changePasswordButton"
@@ -58,7 +58,7 @@
   <groupbox orient="vertical">
     <caption label="&managepassword.label;"/>
     <html>&managepassword.text;</html>
-    <hbox halign="left" autostretch="never">
+    <hbox autostretch="never">
       <radiogroup id="passwordAskTimes" orient="vertical" 
                   pref="true" preftype="int" 
                   prefstring="security.ask_for_password" prefattribute="value"
@@ -102,7 +102,7 @@
     <caption label="&resetpassword.label;"/>
     <html>&resetpassword.text1;</html>
     <html>&resetpassword.text2;</html>
-    <hbox halign="left" autostretch="never">
+    <hbox autostretch="never">
       <button class="dialog" label="&resetpassword.button;" disabled="false"
               oncommand="ResetPW();"
               id="resetPasswordButton"

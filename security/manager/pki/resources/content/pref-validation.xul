@@ -51,7 +51,7 @@
   <groupbox orient="vertical">
     <caption label="&validation.crl.label;"/>
     <html>&validation.crl.description;</html>
-    <hbox halign="left" autostretch="never">
+    <hbox autostretch="never">
       <button class="dialog" label="&validation.managecrls.button;"
               oncommand="openCrlManager();"
               id="managecrlbutton"
