@@ -51,6 +51,7 @@ class InterpreterData {
     
     String itsName;
     String itsSource;
+    String itsSourceFile;
     boolean itsNeedsActivation;
 
     String[] itsStringTable;
