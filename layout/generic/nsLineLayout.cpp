@@ -903,14 +903,10 @@ nsLineLayout::ReflowFrame(nsIFrame* aFrame,
       // especially we won't use the unlimited size for <hr> (bug 60992), 
       // the following code is a consequence of setting 
       // hr  display:inline in quirks.css (bug 18754)
-      if (!InStrictMode()) {
-        nsCOMPtr<nsIAtom> frameType;
-        aFrame->GetFrameType(getter_AddRefs(frameType));
-        if (nsLayoutAtoms::hrFrame != frameType.get()) {
-          availSize.width = psd->mReflowState->availableWidth;
-        }
-      }
-      else {
+      nsCOMPtr<nsIAtom> frameType;
+      if (InStrictMode() ||
+          (aFrame->GetFrameType(getter_AddRefs(frameType)),
+           nsLayoutAtoms::hrFrame != frameType)) {
         availSize.width = psd->mReflowState->availableWidth;
       }
     }
@@ -3066,23 +3062,28 @@ nsLineLayout::HorizontalAlignFrames(nsRect& aLineBounds,
            availWidth, aLineBounds.width, remainingWidth);
 #endif
 #ifdef IBMBIDI
-  if (remainingWidth + aLineBounds.x > 0) {
+  if (remainingWidth + aLineBounds.x > 0)
 #else
   // XXXldb What if it's less than 0??
-  if (remainingWidth > 0) {
+  if (remainingWidth > 0)
 #endif
+  {
     nscoord dx = 0;
     PRUint32 textAlign = mTextAlign;
     // here is where we do special adjustments for HR's 
     // see bug 18754
+    // This code is not sufficient because it doesn't handle HRs that
+    // are within inline elements.  (We check the content node rather
+    // than the frame type due to the changes for bug 141054.)
     if (!InStrictMode()) {
-      if (psd->mFirstFrame && psd->mFirstFrame->mFrame)
-      {
-        nsCOMPtr<nsIAtom> frameType;
-        psd->mFirstFrame->mFrame->GetFrameType(getter_AddRefs(frameType));
-        if (nsLayoutAtoms::hrFrame == frameType.get()) {
-          // get the alignment from the HR frame
-          {
+      if (psd->mFirstFrame && psd->mFirstFrame->mFrame) {
+        nsCOMPtr<nsIContent> content;
+        psd->mFirstFrame->mFrame->GetContent(getter_AddRefs(content));
+        if (content) {
+          nsCOMPtr<nsIAtom> tag;
+          content->GetTag(*getter_AddRefs(tag));
+          if (tag == nsHTMLAtoms::hr) {
+            // get the alignment from the HR frame
             const nsStyleMargin* margin;
             psd->mFirstFrame->mFrame->GetStyleData(eStyleStruct_Margin,
                                                    (const nsStyleStruct*&)margin);

@@ -526,6 +526,9 @@ noembed, noscript, param {
   -moz-opacity: inherit;
 }
 
+*|*:-moz-gc-wrapper-block {
+  display: block;
+}
 
 /* PRINT ONLY rules follow */
 
