@@ -164,7 +164,14 @@ function remove_message()
 	window.status = "";
 }
 
+function getSelectedISPName()
+{
+	netscape.security.PrivilegeManager.enablePrivilege( "AccountSetup" );
 
+	var		ispDisplayName = document.setupPlugin.GetISPDisplayName( selectedISP );				
+	
+	return ispDisplayName;
+}
 
 function checkPluginExists( name, generateOutputFlag )
 {
@@ -359,28 +366,34 @@ function loadUserInput()
 			document.vars.altAreaCode3.value = GetNameValuePair( userInputFile, theSection, "altAreaCode3" );
 			
 			document.vars.cwData.value = GetNameValuePair(userInputFile,theSection,"cwData");
-			if (document.vars.cwData.value != null && document.vars.cwData.value != "")	{
+			if (document.vars.cwData.value != null && document.vars.cwData.value != "")
+			{
 //				document.vars.prefix.cwOFF=1;
-				}
-			else	{
+			}
+			else
+			{
 //				document.vars.prefix.cwOFF=0;
-				}
+			}
 			document.vars.prefixData.value = GetNameValuePair(userInputFile,theSection,"prefixData");
-			if (document.vars.prefixData.value != null && document.vars.prefixData.value != "")	{
+			if (document.vars.prefixData.value != null && document.vars.prefixData.value != "")
+			{
 //				document.vars.prefix.checked=1;
-				}
-			else	{
+			}
+			else
+			{
 //				document.vars.prefix.checked=0;
-				}
+			}
 			document.vars.dialMethod.value = GetNameValuePair(userInputFile,theSection,"dialMethod");
 	
 			document.vars.providername.value = GetNameValuePair(userInputFile,theSection,"providername");
-			if (intlMode=="yes")	{
+			if (intlMode=="yes")
+			{
 				document.vars.accountAreaCode.value="";
-				}
-			else	{
+			}
+			else
+			{
 				document.vars.accountAreaCode.value = GetNameValuePair(userInputFile,theSection,"accountAreaCode");
-				}
+			}
 			document.vars.accountPhoneNumber.value = GetNameValuePair(userInputFile,theSection,"accountPhoneNumber");
 	
 			document.vars.accountName.value = GetNameValuePair(userInputFile,theSection,"accountName");
@@ -543,30 +556,30 @@ function loadGlobalData()
 		setRegisterMode( 1 );
 }
 
-
-
 function saveExternalEditor()
 {
 	// Since we don't do a saveGlobalData in editMode, we need an alternate way to save the externalEditor
 	// as a preference in ACCTSET.DAT.  This is it.
 	
-	netscape.security.PrivilegeManager.enablePrivilege("AccountSetup");
+	netscape.security.PrivilegeManager.enablePrivilege( "AccountSetup" );
 	var userInputFile = document.setupPlugin.GetCurrentProfileDirectory();
-	if (userInputFile != null && userInputFile != "")	{
+	if ( userInputFile != null && userInputFile != "" )
+	{
 		userInputFile = userInputFile + "ACCTSET.DAT";
-		var theSection="Account Setup User Input";
-		SetNameValuePair(userInputFile,theSection,"externalEditor", document.vars.externalEditor.value);
-		}
+		var theSection = "Account Setup User Input";
+		SetNameValuePair( userInputFile, theSection, "externalEditor", document.vars.externalEditor.value );
+	}
 }
-
 
 function saveGlobalData()
 {
-	netscape.security.PrivilegeManager.enablePrivilege("AccountSetup");
+	netscape.security.PrivilegeManager.enablePrivilege( "AccountSetup" );
 
-	if (document.vars.editMode.value.toLowerCase() == "yes")	return;
+	if ( document.vars.editMode.value.toLowerCase() == "yes" )
+		return;
 
-	if (document.setupPlugin == null)	return;
+	if ( document.setupPlugin == null )
+		return;
 /*
 	if (document.vars.debugMode.value.toLowerCase() != "yes" && (document.vars.editMode.value.toLowerCase() != "yes"))	{
 		if (checkPluginExists("application/x-netscape-autoconfigure-dialer",false))	{
@@ -581,22 +594,25 @@ function saveGlobalData()
 	top.personalbar.visible=true;				// was directory
 */
 		
-	if (document.vars.cookieWarning.value == "yes")	{
+	if (document.vars.cookieWarning.value == "yes")
+	{
 		navigator.preference("network.cookie.warnAboutCookies", true);
-		}
-	else	{
+	}
+	else
+	{
 		navigator.preference("network.cookie.warnAboutCookies", false);
-		}
+	}
 
-	if (document.vars.offlineMode.value != "undefined") {
+	if (document.vars.offlineMode.value != "undefined")
+	{
 		navigator.preference("offline.startup_mode", document.vars.offlineMode.value);
 	}
 
 
 	// save user input (if any)
-
 	var userInputFile = document.setupPlugin.GetCurrentProfileDirectory();
-	if (userInputFile != null && userInputFile != "")	{
+	if (userInputFile != null && userInputFile != "")
+	{
 		userInputFile = userInputFile + "ACCTSET.DAT";
 		var theSection="Account Setup User Input";
 	
@@ -642,8 +658,9 @@ function saveGlobalData()
 			SetNameValuePair(userInputFile,theSection,"scriptEnabled", document.vars.scriptEnabled.value);
 			SetNameValuePair(userInputFile,theSection,"scriptFile", document.vars.scriptFile.value);
 			SetNameValuePair(userInputFile,theSection,"lckFilename", document.vars.lckFilename.value);
-			}
-		else	{
+		}
+		else
+		{
 			SetNameValuePair(userInputFile,theSection,"cardnumber", "");
 			SetNameValuePair(userInputFile,theSection,"path", "");
 			SetNameValuePair(userInputFile,theSection,"pageHistory", "");
@@ -654,7 +671,7 @@ function saveGlobalData()
 			SetNameValuePair(userInputFile,theSection,"emailPasswordCheck", "");
 			SetNameValuePair(userInputFile,theSection,"publishPassword", "");
 			SetNameValuePair(userInputFile,theSection,"publishPasswordCheck", "");
-			}
+		}
 		SetNameValuePair(userInputFile,theSection,"month", document.vars.month.value);
 		SetNameValuePair(userInputFile,theSection,"year", document.vars.year.value);
 
