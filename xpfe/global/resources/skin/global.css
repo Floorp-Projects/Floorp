@@ -133,7 +133,7 @@ toolbar.decorated > #toolbar_throbber_box > titledbutton#Throbber
 	margin-left: 9px;
 }
 
-toolbar.decorated > #toolbar_throbber_box > titledbutton#Throbber:active {
+toolbar.decorated > #toolbar_throbber_box > titledbutton#Throbber:hover:active {
 	margin-top: 1px;
 	margin-left: 10px;
 }
@@ -162,7 +162,7 @@ titledbutton.button28:hover {
 	text-decoration: none;
 }
 
-titledbutton.button28:active {
+titledbutton.button28:hover:active {
 	background-image:url("chrome://global/skin/button28-bg-active.gif");
 	border: none;
 	color: #CCFFFF;
@@ -214,7 +214,7 @@ titledbutton.other28:hover {
 	text-decoration: none;
 }
 
-titledbutton.other28:active {
+titledbutton.other28:hover:active {
 	background-image:url("chrome://global/skin/otherbutton28-bg-active.gif");
 	background-repeat: no-repeat;
 	background-position: 50% 4px;
@@ -277,7 +277,7 @@ titledbutton.button32:hover {
 	background-image:url("chrome://global/skin/button32-bg-hover.gif");
 }
 
-titledbutton.button32:active {
+titledbutton.button32:hover:active {
 	border: 1px solid transparent;
 	padding: 0px;
 	margin-top: 7px;
@@ -329,7 +329,7 @@ titledbutton#Throbber {
 	background-image: none;
 }
 
-titledbutton#Throbber:active {
+titledbutton#Throbber:hover:active {
 	margin-top: 9px;
 	margin-left: 10px;
 }
@@ -383,7 +383,7 @@ titledbutton.toolbar:hover:-moz-outline {
    border : 1px solid black;
 }
  
-titledbutton.toolbar:active {
+titledbutton.toolbar:hover:active {
   text-decoration: none;
   border-top: 1px solid #666666;
   border-bottom: 1px solid white;
@@ -429,7 +429,7 @@ titledbutton.bookmarkbutton:hover {
   background-color: #336699; 
 } 
 
-titledbutton.bookmarkbutton:active { 
+titledbutton.bookmarkbutton:hover:active { 
   color: #CCFFFF; 
   background-color: #336699; 
   padding-left: 2px; 
@@ -546,7 +546,7 @@ grippy:hover{
 	background-color: #99CCFF;
 }
 
-grippy:active{
+grippy:hover:active{
 	background-color: #99CCFF;
 }
 
@@ -1033,7 +1033,7 @@ titledbutton.toolbar-flat:hover {
   color: #CCFFFF;
 }
 
-titledbutton.toolbar-flat:active {
+titledbutton.toolbar-flat:hover:active {
   text-decoration: none;
   color: #CCFFFF;
   padding: 2px 0px 0px 2px;
@@ -1069,7 +1069,7 @@ titledbutton.push:hover {
   outline: 1px solid black;
 }*/
 
-titledbutton.push:active {
+titledbutton.push:hover:active {
   border-top: 1px solid #666666;
   border-bottom: 1px solid white;
   border-left: 1px solid #666666;
@@ -1136,7 +1136,7 @@ titledbutton.dialog[default] {
 	padding-right: 12px;
 }
 
-titledbutton.dialog[default]:active {
+titledbutton.dialog[default]:hover:active {
 	/* FIX ME - temporary workaround to offset the lack of a way to align text and image */
 	padding-right: 11px;
 }
@@ -1159,7 +1159,7 @@ titledbutton.plain:hover {
 	color: inherit;
 }
  
-titledbutton.plain:active {
+titledbutton.plain:hover:active {
 	border: 1px solid transparent;
 	padding: 2px;
 	text-decoration: none;
@@ -1202,7 +1202,7 @@ titledbutton.borderless:hover:-moz-outline {
   border : 1px solid black;
 }
 
-titledbutton.borderless:active {
+titledbutton.borderless:hover:active {
   text-decoration:none;
   border-top: 1px solid #666666;
   border-bottom: 1px solid white;
@@ -1363,7 +1363,7 @@ tab:hover {
   text-decoration: underline;
 }
 
-tab:active { 
+tab:hover:active { 
   border-top: 1px solid #666666;
   border-bottom: 1px solid white;
   border-left: 1px solid #666666;
