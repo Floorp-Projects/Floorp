@@ -26,6 +26,10 @@ MODULE = xpcom
 
 REQUIRES	= string \
 		  $(NULL)
+
+
+include <$(DEPTH)\config\config.mak>
+
 ################################################################################
 ## exports
 
