@@ -768,3 +768,4 @@ void nsHTMLTokenizer::RecordTrailingContent(CStartToken* aStartToken, nsScanner&
     }
   }
 }
+
