@@ -21,7 +21,7 @@
 
 [% PROCESS global/variables.none.tmpl %]
 
-[%# The javascript and header_html blocks get used in header.html.tmpl. %]
+[%# The javascript block gets used in header.html.tmpl. %]
 [% javascript = BLOCK %]
   var usetms = 0; // do we have target milestone?
   var first_load = 1; // is this the first time we load the page?
@@ -31,10 +31,6 @@
     cpts['[% p FILTER js %]'] = [
       [%- FOREACH item = components_by_product.$p %]'[% item FILTER js %]'[% ", " UNLESS loop.last %] [%- END -%] ];
   [% END %]
-[% END %]
-
-[% header_html = BLOCK %]
-  <script language="JavaScript" type="text/javascript" src="productmenu.js"></script>
 [% END %]
 
 [% IF type.target_type == "bug" %]
@@ -59,7 +55,8 @@
     table#form th { text-align: right; vertical-align: baseline; white-space: nowrap; }
     table#form td { text-align: left; vertical-align: baseline; }
   "
-  onload="selectProduct(forms[0], 'product', 'component', '__Any__');"
+  onload="selectProduct(document.forms[0], 'product', 'component', '__Any__');"
+  javascript_urls=["productmenu.js"]
 %]
 
 <form method="post" action="editflagtypes.cgi">

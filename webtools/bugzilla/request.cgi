@@ -266,7 +266,7 @@ sub queue {
     my $selectable = GetSelectableProductHash();
     $vars->{'products'} = $selectable->{legal_products};
     $vars->{'components'} = $selectable->{legal_components};
-    $vars->{'components_by_product'} = $selectable->{components};
+    $vars->{'components_by_product'} = $selectable->{components_by_product};
     
     $vars->{'excluded_columns'} = \@excluded_columns;
     $vars->{'group_field'} = $form_group;

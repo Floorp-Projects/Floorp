@@ -203,19 +203,26 @@ function selectProduct( f , productfield, componentfield, blank ) {
     // - is_diff says if it's a full list or just a list of products that
     //   were added to the current selection.
     // - single indicates if a single item was selected
+    // - selectedIndex is the index of the first selected item
+    // - selectedValue is the value of the first selected item
     var sel = Array();
     var is_diff = 0;
     var single;
+    var selectedIndex = f[productfield].selectedIndex;
+    var selectedValue = f[productfield].options[selectedIndex].value;
 
-    // if nothing selected, pick all
-    if ( f[productfield].selectedIndex == -1 ) {
-        for ( var i = 0 ; i < f[productfield].length ; i++ ) {
+    // If nothing is selected, or the selected item is the "blank" value
+    // at the top of the list which represents all products on drop-down menus,
+    // then pick all products so we show all components.
+    if ( selectedIndex == -1 || !cpts[selectedValue])
+    {
+        for ( var i = blank ? 1 : 0 ; i < f[productfield].length ; i++ ) {
             sel[sel.length] = f[productfield].options[i].value;
         }
         single = 0;
     } else {
 
-        for ( i = 0 ; i < f[productfield].length ; i++ ) {
+        for ( i = blank ? 1 : 0 ; i < f[productfield].length ; i++ ) {
             if ( f[productfield].options[i].selected ) {
                 sel[sel.length] = f[productfield].options[i].value;
             }

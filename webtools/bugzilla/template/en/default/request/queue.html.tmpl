@@ -24,7 +24,7 @@
 [% USE Bugzilla %]
 [% cgi = Bugzilla.cgi %]
 
-[%# The javascript and header_html blocks get used in header.html.tmpl. %]
+[%# The javascript block gets used in header.html.tmpl. %]
 [% javascript = BLOCK %]
   var usetms = 0; // do we have target milestone?
   var first_load = 1; // is this the first time we load the page?
@@ -34,10 +34,6 @@
     cpts['[% p FILTER js %]'] = [
       [%- FOREACH item = components_by_product.$p %]'[% item FILTER js %]'[% ", " UNLESS loop.last %] [%- END -%] ];
   [% END %]
-[% END %]
-
-[% header_html = BLOCK %]
-  <script language="JavaScript" type="text/javascript" src="productmenu.js"></script>
 [% END %]
 
 [% filter_form = BLOCK %]
@@ -133,6 +129,8 @@
     table.requests th { text-align: left; }
     table#filter th { text-align: right; }
   "
+  onload="selectProduct(document.forms[0], 'product', 'component', 'Any');"
+  javascript_urls=["productmenu.js"]
 %]
 
 [% IF debug %]
