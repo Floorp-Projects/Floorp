@@ -930,6 +930,13 @@ LRESULT CALLBACK nsWindow::WindowProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM
     // Get the window which caused the event and ask it to process the message
     nsWindow *someWindow = GetNSWindowPtr(hWnd);
 
+    // XXX This fixes 50208 and we are leaving 51174 open to further investigate
+    // why we are hitting this assert
+    if (nsnull == someWindow) {
+      NS_ASSERTION(someWindow, "someWindow is null, cannot call any CallWindowProc");      
+      return ::DefWindowProc(hWnd, msg, wParam, lParam);
+    }
+
     // hold on to the window for the life of this method, in case it gets
     // deleted during processing. yes, it's a double hack, since someWindow
     // is not really an interface.
@@ -1604,7 +1611,8 @@ NS_METHOD nsWindow::SetFocus(void)
     // be executed on the "gui thread"...
     //
     nsToolkit* toolkit = (nsToolkit *)mToolkit;
-    if (!toolkit->IsGuiThread()) {
+    NS_ASSERTION(toolkit != nsnull, "This should never be null!"); // Bug 57044
+    if (toolkit != nsnull && !toolkit->IsGuiThread()) {
         MethodInfo info(this, nsWindow::SET_FOCUS);
         toolkit->CallMethod(&info);
         return NS_ERROR_FAILURE;
