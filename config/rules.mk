@@ -44,24 +44,6 @@
 #	SIMPLE_PROGRAMS	-- Compiles Foo.cpp Bar.cpp into Foo, Bar executables.
 # e)
 #	LIBRARY_NAME	-- the target library name to create from $OBJS
-# f)
-#	JSRCS	-- java source files to compile into class files
-#			(if you don't specify this it will default to *.java)
-# g)
-#	PACKAGE	-- the package to put the .class files into
-#			(e.g. netscape/applet)
-# h)
-#	JMC_EXPORT -- java files to be exported for use by JMC_GEN
-#			(this is a list of Class names)
-# i)
-#	JRI_GEN	-- files to run through javah to generate headers and stubs
-#			(output goes into the _jri sub-dir)
-# j)
-#	JNI_GEN	-- files to run through javah to generate headers and stubs
-#			(output goes into the _jni sub-dir)
-# k)
-#	JMC_GEN	-- files to run through jmc to generate headers and stubs
-#			(output goes into the _jmc sub-dir)
 #
 ################################################################################
 ifndef topsrcdir
@@ -270,22 +252,6 @@ MDDEPFILES		= $(addprefix $(MDDEPDIR)/,$(OBJS:.$(OBJ_SUFFIX)=.pp))
 endif
 endif
 
-ifndef PACKAGE
-PACKAGE			= .
-endif
-
-ifdef JAVA_OR_NSJVM
-ALL_TRASH = \
-	$(GARBAGE) $(TARGETS) $(OBJS) $(PROGOBJS) LOGS TAGS a.out \
-	$(JDK_HEADER_CFILES) $(JDK_STUB_CFILES) \
-	$(JRI_HEADER_CFILES) $(JRI_STUB_CFILES) $(JMC_STUBS) \
-	$(JMC_HEADERS) $(JMC_EXPORT_FILES) \
-	 so_locations _gen _stubs _jmc _jri \
-	$(wildcard gts_tmp_*) \
-	$(wildcard $(JAVA_DESTPATH)/$(PACKAGE)/*.class)	
-ALL_TRASH_DIRS = \
-	$(GARBAGE_DIRS) /no-such-file
-else
 ALL_TRASH = \
 	$(GARBAGE) $(TARGETS) $(OBJS) $(PROGOBJS) LOGS TAGS a.out \
 	$(HOST_PROGOBJS) $(HOST_OBJS) $(IMPORT_LIBRARY) $(DEF_FILE)\
@@ -298,13 +264,6 @@ ALL_TRASH = \
 	$(wildcard gts_tmp_*) $(LIBRARY:%.a=.%.timestamp)
 ALL_TRASH_DIRS = \
 	$(GARBAGE_DIRS) /no-such-file
-endif
-
-ifdef JAVA_OR_NSJVM
-ifdef JDIRS
-GARBAGE			+= $(addprefix $(JAVA_DESTPATH)/,$(JDIRS))
-endif
-endif
 
 ifdef QTDIR
 GARBAGE			+= $(MOCSRCS)
@@ -328,17 +287,6 @@ GARBAGE_DIRS += SunWS_cache
 endif
 endif
 
-ifdef JAVA_OR_NSJVM
-JMC_SUBDIR              = _jmc
-else
-JMC_SUBDIR              = $(LOCAL_JMC_SUBDIR)
-endif
-
-JDK_GEN_DIR		= _gen
-JMC_GEN_DIR		= $(JMC_SUBDIR)
-JRI_GEN_DIR		= _jri
-JNI_GEN_DIR		= _jni
-JDK_STUB_DIR		= _stubs
 XPIDL_GEN_DIR		= _xpidlgen
 
 ifdef MOZ_UPDATE_XTERM
@@ -582,62 +530,6 @@ all_platforms:: $(NFSPWD)
 
 $(NFSPWD):
 	cd $(@D); $(MAKE) $(@F)
-endif
-
-#
-# JDIRS -- like JSRCS, except you can give a list of directories and it will
-# compile all the out-of-date java files in those directories.
-#
-# NOTE: recursing through these can speed things up, but they also cause
-# some builds to run out of memory
-#
-ifneq ($(JDIRS),)
-ifeq ($(JAVA_OR_NSJVM),1)
-export:: $(JAVA_DESTPATH) $(JAVA_DESTPATH)/$(PACKAGE)
-	@for d in $(JDIRS); do							\
-		if test -d $$d; then						\
-			$(EXIT_ON_ERROR)					\
-			files=`echo $$d/*.java`;				\
-			list=`$(PERL) $(topsrcdir)/config/outofdate.pl $(PERLARG)	\
-				    -d $(JAVA_DESTPATH)/$(PACKAGE) $$files`;	\
-			if test "$${list}x" != "x"; then			\
-			    echo Building all java files in $$d;		\
-			    echo $(JAVAC) $$list;				\
-			    $(JAVAC) $$list;					\
-			else				\
-				true;			\
-			fi;							\
-			set +e;							\
-		else								\
-			echo "Skipping non-directory $$d...";			\
-		fi;	                                                        \
-	done
-endif
-endif
-
-
-ifneq ($(JDIRS),)
-ifeq ($(JAVA_OR_NSJVM),1)
-export:: $(JAVA_DESTPATH) $(JAVA_DESTPATH)/$(PACKAGE)
-	@for d in $(JDIRS); do							\
-		if test -d $$d; then						\
-			$(EXIT_ON_ERROR)					\
-			files=`echo $$d/*.java`;				\
-			list=`$(PERL) $(topsrcdir)/config/outofdate.pl $(PERLARG)	\
-				    -d $(JAVA_DESTPATH)/$(PACKAGE) $$files`;	\
-			if test "$${list}x" != "x"; then			\
-			    echo Building all java files in $$d;		\
-			    echo $(JAVAC) $$list;				\
-			    $(JAVAC) $$list;					\
-			else				\
-				true;			\
-			fi;							\
-			set +e;							\
-		else	\
-			echo "Skipping non-directory $$d...";			\
-		fi;								\
-	done
-endif
 endif
 
 # Target to only regenerate makefiles
@@ -1220,202 +1112,6 @@ endif
 # Bunch of things that extend the 'export' rule (in order):
 ###############################################################################
 
-$(JAVA_DESTPATH) $(JAVA_DESTPATH)/$(PACKAGE) $(JMCSRCDIR)::
-	@if test ! -d $@; then		\
-		echo Creating $@;	\
-		rm -rf $@;		\
-		$(NSINSTALL) -D $@;	\
-	else				\
-		true;			\
-	fi
-
-################################################################################
-### JSRCS -- for compiling java files
-
-ifneq ($(JSRCS),)
-ifdef JAVA_OR_NSJVM
-export:: $(JAVA_DESTPATH) $(JAVA_DESTPATH)/$(PACKAGE)
-	list=`$(PERL) $(topsrcdir)/config/outofdate.pl $(PERLARG)	\
-		    -d $(JAVA_DESTPATH)/$(PACKAGE) $(JSRCS)`;	\
-	if test "$$list"x != "x"; then				\
-	    echo $(JAVAC) $$list;				\
-	    $(JAVAC) $$list;					\
-	else				\
-		true;			\
-	fi
-
-all:: export
-
-clean clobber::
-	rm -f $(DIST)/classes/$(PACKAGE)/*.class
-
-endif
-endif
-
-#
-# JDK_GEN -- for generating "old style" native methods
-#
-# Generate JDK Headers and Stubs into the '_gen' and '_stubs' directory
-#
-ifneq ($(JDK_GEN),)
-ifdef JAVA_OR_NSJVM
-INCLUDES		+= -I$(JDK_GEN_DIR)
-JDK_PACKAGE_CLASSES	= $(JDK_GEN)
-JDK_PATH_CLASSES	= $(subst .,/,$(JDK_PACKAGE_CLASSES))
-JDK_HEADER_CLASSFILES	= $(patsubst %,$(JAVA_DESTPATH)/%.class,$(JDK_PATH_CLASSES))
-JDK_STUB_CLASSFILES	= $(patsubst %,$(JAVA_DESTPATH)/%.class,$(JDK_PATH_CLASSES))
-JDK_HEADER_CFILES	= $(patsubst %,$(JDK_GEN_DIR)/%.h,$(JDK_GEN))
-JDK_STUB_CFILES		= $(patsubst %,$(JDK_STUB_DIR)/%.c,$(JDK_GEN))
-
-$(JDK_HEADER_CFILES): $(JDK_HEADER_CLASSFILES)
-$(JDK_STUB_CFILES): $(JDK_STUB_CLASSFILES)
-
-export::
-	@echo Generating/Updating JDK headers
-	$(JAVAH) -d $(JDK_GEN_DIR) $(JDK_PACKAGE_CLASSES)
-	@echo Generating/Updating JDK stubs
-	$(JAVAH) -stubs -d $(JDK_STUB_DIR) $(JDK_PACKAGE_CLASSES)
-ifdef MOZ_GENMAC
-	@if test ! -d $(DEPTH)/lib/mac/Java/; then						\
-		echo "!!! You need to have a ns/lib/mac/Java directory checked out.";		\
-		echo "!!! This allows us to automatically update generated files for the mac.";	\
-		echo "!!! If you see any modified files there, please check them in.";		\
-	else				\
-		true;			\
-	fi
-	@echo Generating/Updating JDK headers for the Mac
-	$(JAVAH) -mac -d $(DEPTH)/lib/mac/Java/_gen $(JDK_PACKAGE_CLASSES)
-	@echo Generating/Updating JDK stubs for the Mac
-	$(JAVAH) -mac -stubs -d $(DEPTH)/lib/mac/Java/_stubs $(JDK_PACKAGE_CLASSES)
-endif
-endif # JAVA_OR_NSJVM
-endif
-
-#
-# JRI_GEN -- for generating JRI native methods
-#
-# Generate JRI Headers and Stubs into the 'jri' directory
-#
-ifneq ($(JRI_GEN),)
-ifdef JAVA_OR_NSJVM
-INCLUDES		+= -I$(JRI_GEN_DIR)
-JRI_PACKAGE_CLASSES	= $(JRI_GEN)
-JRI_PATH_CLASSES	= $(subst .,/,$(JRI_PACKAGE_CLASSES))
-JRI_HEADER_CLASSFILES	= $(patsubst %,$(JAVA_DESTPATH)/%.class,$(JRI_PATH_CLASSES))
-JRI_STUB_CLASSFILES	= $(patsubst %,$(JAVA_DESTPATH)/%.class,$(JRI_PATH_CLASSES))
-JRI_HEADER_CFILES	= $(patsubst %,$(JRI_GEN_DIR)/%.h,$(JRI_GEN))
-JRI_STUB_CFILES		= $(patsubst %,$(JRI_GEN_DIR)/%.c,$(JRI_GEN))
-
-$(JRI_HEADER_CFILES): $(JRI_HEADER_CLASSFILES)
-$(JRI_STUB_CFILES): $(JRI_STUB_CLASSFILES)
-
-export::
-	@echo Generating/Updating JRI headers
-	$(JAVAH) -jri -d $(JRI_GEN_DIR) $(JRI_PACKAGE_CLASSES)
-	@echo Generating/Updating JRI stubs
-	$(JAVAH) -jri -stubs -d $(JRI_GEN_DIR) $(JRI_PACKAGE_CLASSES)
-ifdef MOZ_GENMAC
-	@if test ! -d $(DEPTH)/lib/mac/Java/; then						\
-		echo "!!! You need to have a ns/lib/mac/Java directory checked out.";		\
-		echo "!!! This allows us to automatically update generated files for the mac.";	\
-		echo "!!! If you see any modified files there, please check them in.";		\
-	else				\
-		true;			\
-	fi
-	@echo Generating/Updating JRI headers for the Mac
-	$(JAVAH) -jri -mac -d $(DEPTH)/lib/mac/Java/_jri $(JRI_PACKAGE_CLASSES)
-	@echo Generating/Updating JRI stubs for the Mac
-	$(JAVAH) -jri -mac -stubs -d $(DEPTH)/lib/mac/Java/_jri $(JRI_PACKAGE_CLASSES)
-endif
-endif # JAVA_OR_NSJVM
-endif
-
-
-
-#
-# JNI_GEN -- for generating JNI native methods
-#
-# Generate JNI Headers and Stubs into the 'jni' directory
-#
-ifneq ($(JNI_GEN),)
-ifdef JAVA_OR_NSJVM
-INCLUDES		+= -I$(JNI_GEN_DIR)
-JNI_PACKAGE_CLASSES	= $(JNI_GEN)
-JNI_PATH_CLASSES	= $(subst .,/,$(JNI_PACKAGE_CLASSES))
-JNI_HEADER_CLASSFILES	= $(patsubst %,$(JAVA_DESTPATH)/%.class,$(JNI_PATH_CLASSES))
-JNI_HEADER_CFILES	= $(patsubst %,$(JNI_GEN_DIR)/%.h,$(JNI_GEN))
-JNI_STUB_CFILES		= $(patsubst %,$(JNI_GEN_DIR)/%.c,$(JNI_GEN))
-
-$(JNI_HEADER_CFILES): $(JNI_HEADER_CLASSFILES)
-
-export::
-	@echo Generating/Updating JNI headers
-	$(JAVAH) -jni -d $(JNI_GEN_DIR) $(JNI_PACKAGE_CLASSES)
-ifdef MOZ_GENMAC
-	@if test ! -d $(DEPTH)/lib/mac/Java/; then						\
-		echo "!!! You need to have a ns/lib/mac/Java directory checked out.";		\
-		echo "!!! This allows us to automatically update generated files for the mac.";	\
-		echo "!!! If you see any modified files there, please check them in.";		\
-	else				\
-		true;			\
-	fi
-	@echo Generating/Updating JNI headers for the Mac
-	$(JAVAH) -jni -mac -d $(DEPTH)/lib/mac/Java/_jni $(JNI_PACKAGE_CLASSES)
-endif
-endif # JAVA_OR_NSJVM
-endif # JNI_GEN
-
-
-
-#
-# JMC_EXPORT -- for declaring which java classes are to be exported for jmc
-#
-ifneq ($(JMC_EXPORT),)
-ifdef JAVA_OR_NSJVM
-JMC_EXPORT_PATHS	= $(subst .,/,$(JMC_EXPORT))
-JMC_EXPORT_FILES	= $(patsubst %,$(JAVA_DESTPATH)/$(PACKAGE)/%.class,$(JMC_EXPORT_PATHS))
-
-#
-# We're doing NSINSTALL -t here (copy mode) because calling INSTALL will pick up
-# your NSDISTMODE and make links relative to the current directory. This is a
-# problem because the source isn't in the current directory:
-#
-export:: $(JMC_EXPORT_FILES) $(JMCSRCDIR)
-ifndef NO_DIST_INSTALL
-	$(SYSINSTALL) $(IFLAGS1) $(JMC_EXPORT_FILES) $(JMCSRCDIR)
-endif
-endif # JAVA_OR_NSJVM
-endif
-
-#
-# JMC_GEN -- for generating java modules
-#
-# Provide default export & libs rules when using JMC_GEN
-#
-ifneq ($(JMC_GEN),)
-INCLUDES		+= -I$(JMC_GEN_DIR) -I.
-ifdef JAVA_OR_NSJVM
-JMC_HEADERS		= $(patsubst %,$(JMC_GEN_DIR)/%.h,$(JMC_GEN))
-JMC_STUBS		= $(patsubst %,$(JMC_GEN_DIR)/%.c,$(JMC_GEN))
-JMC_OBJS		= $(patsubst %,%.$(OBJ_SUFFIX),$(JMC_GEN))
-
-$(JMC_GEN_DIR)/M%.h: $(JMCSRCDIR)/%.class
-	$(JMC) -d $(JMC_GEN_DIR) -interface $(JMC_GEN_FLAGS) $(?F:.class=)
-
-$(JMC_GEN_DIR)/M%.c: $(JMCSRCDIR)/%.class
-	$(JMC) -d $(JMC_GEN_DIR) -module $(JMC_GEN_FLAGS) $(?F:.class=)
-
-M%.$(OBJ_SUFFIX): $(JMC_GEN_DIR)/M%.h $(JMC_GEN_DIR)/M%.c
-ifeq ($(OS_ARCH),OS2)
-	$(CC) -Fo$@ -c $(CFLAGS) $(JMC_GEN_DIR)/M$*.c
-else
-	$(CC) -o $@ -c $(CFLAGS) $(JMC_GEN_DIR)/M$*.c
-endif
-
-export:: $(JMC_HEADERS) $(JMC_STUBS)
-endif # JAVA_OR_NSJVM
-endif
-
 ################################################################################
 # Copy each element of EXPORTS to $(PUBLIC)
 
@@ -1702,44 +1398,6 @@ endif
 REGCHROME = $(PERL) -I$(MOZILLA_DIR)/config $(MOZILLA_DIR)/config/add-chrome.pl $(DIST)/bin/chrome/installed-chrome.txt $(_JAR_REGCHROME_DISABLE_JAR)
 REGCHROME_INSTALL = $(PERL) -I$(MOZILLA_DIR)/config $(MOZILLA_DIR)/config/add-chrome.pl $(DESTDIR)$(mozappdir)/chrome/installed-chrome.txt $(_JAR_REGCHROME_DISABLE_JAR)
 
-##############################################################################
-
-ifndef NO_MDUPDATE
-ifneq (,$(filter-out OS2 WINNT,$(OS_ARCH)))
--include $(DEPENDENCIES)
-# Can't use sed because of its 4000-char line length limit, so resort to perl
-.DEFAULT:
-	@$(PERL) -e '                                                         \
-	    open(MD, "< $(DEPENDENCIES)");                                    \
-	    while (<MD>) {                                                    \
-		if (m@ \.*/*$< @) {                                           \
-		    $$found = 1;                                              \
-		    last;                                                     \
-		}                                                             \
-	    }                                                                 \
-	    if ($$found) {                                                    \
-		print "Removing stale dependency $< from $(DEPENDENCIES)\n";  \
-		seek(MD, 0, 0);                                               \
-		$$tmpname = "fix.md" . $$$$;                                  \
-		open(TMD, "> " . $$tmpname);                                  \
-		while (<MD>) {                                                \
-		    s@ \.*/*$< @ @;                                           \
-		    if (!print TMD "$$_") {                                   \
-			unlink(($$tmpname));                                  \
-			exit(1);                                              \
-		    }                                                         \
-		}                                                             \
-		close(TMD);                                                   \
-		if (!rename($$tmpname, "$(DEPENDENCIES)")) {                  \
-		    unlink(($$tmpname));                                      \
-		}                                                             \
-	    } elsif ("$<" ne "$(DEPENDENCIES)") {                             \
-		print "$(MAKE): *** No rule to make target $<.  Stop.\n";     \
-		exit(1);                                                      \
-	    }'
-endif
-endif
-
 #############################################################################
 # Dependency system
 #############################################################################
@@ -1870,11 +1528,6 @@ endif
 .SUFFIXES: .out .a .ln .o .ho .c .cc .C .cpp .y .l .s .S .h .sh .i .pl .class .java .html .pp .mk .in .$(OBJ_SUFFIX) .mm .idl $(BIN_SUFFIX)
 
 #
-# Don't delete these files if we get killed.
-#
-.PRECIOUS: .java $(JDK_HEADERS) $(JDK_STUBS) $(JRI_HEADERS) $(JRI_STUBS) $(JMC_HEADERS) $(JMC_STUBS)
-
-#
 # Fake targets.  Always run these rules, even if a file/directory with that
 # name already exists.
 #
@@ -1900,17 +1553,6 @@ tags: TAGS
 TAGS: $(SUBMAKEFILES) $(CSRCS) $(CPPSRCS) $(wildcard *.h)
 	-etags $(CSRCS) $(CPPSRCS) $(wildcard *.h)
 	+$(LOOP_OVER_DIRS)
-
-envirocheck::
-	@echo -----------------------------------
-	@echo "Enviro-Check (tm)"
-	@echo -----------------------------------
-	@echo "MOZILLA_CLIENT = $(MOZILLA_CLIENT)"
-	@echo "NO_MDUPDATE    = $(NO_MDUPDATE)"
-	@echo "BUILD_OPT      = $(BUILD_OPT)"
-	@echo "MOZ_LITE       = $(MOZ_LITE)"
-	@echo "MOZ_MEDIUM     = $(MOZ_MEDIUM)"
-	@echo -----------------------------------
 
 echo-dirs:
 	@echo $(DIRS)

@@ -43,10 +43,6 @@ include $(topsrcdir)/config/insure.mk
 endif
 endif
 
-ifndef INCLUDED_COMMON_MK
-include $(topsrcdir)/config/common.mk
-endif
-
 BUILD_TOOLS	= $(topsrcdir)/build/unix
 CONFIG_TOOLS	= $(DEPTH)/config
 AUTOCONF_TOOLS	= $(topsrcdir)/build/autoconf
@@ -434,38 +430,9 @@ MY_CONFIG	:= $(DEPTH)/config/myconfig.mk
 MY_RULES	:= $(DEPTH)/config/myrules.mk
 
 #
-# Relative pathname from top-of-tree to current source directory
-#
-ifneq ($(OS_ARCH),OS2)
-REVDEPTH	= $(CONFIG_TOOLS)/revdepth
-endif
-
-#
-# Provide the means to easily override our tool directory locations.
-#
-ifdef NETSCAPE_HIERARCHY
-CONTRIB_BIN	:= /tools/contrib/bin/
-JAVA_BIN	:= /usr/local/java/bin/
-LOCAL_BIN	:= /usr/local/bin/
-LOCAL_SUN4	:= /usr/local/sun4/bin/
-NS_BIN		:= /tools/ns/bin/
-NS_LIB		:= /tools/ns/lib
-JAVA_LIB	:= /usr/local/netscape/java/lib
-else
-NS_LIB		:= .
-JAVA_LIB	:= .
-endif
-
-# Allow NETSCAPE_COMMERCIAL to include XFEPRIVDIR
-ifdef NETSCAPE_COMMERCIAL
-XFEPRIVDIR		:= $(DEPTH)/../ns/cmd/xfe/
-endif
-
-#
 # Default command macros; can be overridden in <arch>.mk.
 #
 CCC		= $(CXX)
-CCF		= $(CC) $(CFLAGS)
 NFSPWD		= $(CONFIG_TOOLS)/nfspwd
 PURIFY		= purify $(PURIFYOPTIONS)
 QUANTIFY	= quantify $(QUANTIFYOPTIONS)
@@ -477,61 +444,13 @@ XPIDL_COMPILE 	= $(DIST)/bin/xpidl$(BIN_SUFFIX)
 XPIDL_LINK	= $(DIST)/bin/xpt_link$(BIN_SUFFIX)
 endif
 
-ifeq ($(OS_ARCH),OS2)
-PATH_SEPARATOR	:= \;
-else
-PATH_SEPARATOR	:= :
-ifeq ($(AWT_11),1)
-JAVA_PROG	= $(NS_BIN)java
-JAVAC_ZIP	= $(NS_LIB)/classes.zip
-else
-JAVA_PROG	= $(LOCAL_BIN)java
-ifdef JDKHOME
-JAVAC_ZIP	= $(JAVA_LIB)/classes.zip
-else
-JAVAC_ZIP	= $(JAVA_LIB)/javac.zip
-endif
-endif
-TAR		= tar
-endif # OS2
-
 ifeq ($(OS_ARCH),OpenVMS)
 include $(topsrcdir)/config/$(OS_ARCH).mk
-endif
-
-XBCFLAGS	=
-ifdef MOZ_DEBUG
-JAVA_OPTIMIZER	= -g
-XBCFLAGS	= -FR$*
 endif
 
 REQ_INCLUDES	= $(foreach d,$(REQUIRES),-I$(DIST)/include/$d)
 
 INCLUDES	= $(LOCAL_INCLUDES) $(REQ_INCLUDES) -I$(PUBLIC) -I$(DIST)/include $(OS_INCLUDES)
-
-LIBNT		= $(DIST)/lib/libnt.$(LIB_SUFFIX)
-LIBAWT		= $(DIST)/lib/libawt.$(LIB_SUFFIX)
-LIBMMEDIA	= $(DIST)/lib/libmmedia.$(LIB_SUFFIX)
-
-NSPRDIR		= nsprpub
-LIBNSPR		= $(DIST)/lib/libplds3.$(LIB_SUFFIX) $(DIST)/lib/libnspr3.$(LIB_SUFFIX)
-PURELIBNSPR	= $(DIST)/lib/purelibplds3.$(LIB_SUFFIX) $(DIST)/lib/purelibnspr3.$(LIB_SUFFIX)
-
-ifdef DBMALLOC
-LIBNSPR		+= $(DIST)/lib/libdbmalloc.$(LIB_SUFFIX)
-endif
-
-ifeq ($(OS_ARCH),OS2)
-ifneq ($(MOZ_WIDGET_TOOLKIT), os2)
-LIBNSJAVA	= $(DIST)/lib/jrt$(MOZ_BITS)$(VERSION_NUMBER).$(LIB_SUFFIX)
-LIBMD		= $(DIST)/lib/libjmd.$(LIB_SUFFIX)
-LIBJAVA		= $(DIST)/lib/libjrt.$(LIB_SUFFIX)
-LIBNSPR		= $(DIST)/lib/pr$(MOZ_BITS)$(VERSION_NUMBER).$(LIB_SUFFIX)
-LIBXP		= $(DIST)/lib/libxp.$(LIB_SUFFIX)
-endif
-else
-LIBNSJAVA	= $(DIST)/lib/nsjava32.$(LIB_SUFFIX)
-endif
 
 CFLAGS		= $(OS_CFLAGS)
 CXXFLAGS	= $(OS_CXXFLAGS)
@@ -599,14 +518,6 @@ endif # WINNT
 
 COMPILE_CFLAGS	= $(DEFINES) $(INCLUDES) $(XCFLAGS) $(PROFILER_CFLAGS) $(DSO_CFLAGS) $(DSO_PIC_CFLAGS) $(CFLAGS) $(RTL_FLAGS) $(OS_COMPILE_CFLAGS)
 COMPILE_CXXFLAGS = $(DEFINES) $(INCLUDES) $(XCFLAGS) $(PROFILER_CFLAGS) $(DSO_CFLAGS) $(DSO_PIC_CFLAGS)  $(CXXFLAGS) $(RTL_FLAGS) $(OS_COMPILE_CXXFLAGS)
-
-#
-# Some platforms (Solaris) might require builds using either
-# (or both) compiler(s).
-#
-ifdef SHOW_CC_TYPE
-COMPILER	= _$(notdir $(CC))
-endif
 
 #
 # Name of the binary code directories
@@ -712,33 +623,8 @@ endif
 DEFINES		+= -DOSTYPE=\"$(OS_CONFIG)\"
 DEFINES		+= -DOSARCH=\"$(OS_ARCH)\"
 
-#
-# Platform dependent switching off of JAVA
-#
-ifdef MOZ_JAVA
-DEFINES		+= -DJAVA
-ifdef MOZ_OJI
-error You can't define both MOZ_JAVA and MOZ_OJI anymore. 
-endif
-JAVA_OR_OJI	= 1
-JAVA_OR_NSJVM	= 1
-endif
-
-ifdef NSJVM
-JAVA_OR_NSJVM	= 1
-endif
-
 ifdef MOZ_OJI
 DEFINES		+= -DOJI
-JAVA_OR_OJI	= 1
-endif
-
-ifdef JAVA_OR_NSJVM	# XXX fix -- su can't depend on java
-MOZ_SMARTUPDATE	= 1
-endif
-
-ifdef FORTEZZA
-DEFINES		+= -DFORTEZZA
 endif
 
 # For profiling
@@ -783,81 +669,3 @@ endif # WINNT
 
 # Use nsinstall in copy mode to install files on the system
 SYSINSTALL	= $(NSINSTALL) -t
-
-######################################################################
-### Java Stuff - see common.mk
-######################################################################
-
-# where the bytecode will go
-JAVA_DESTPATH	= $(DIST)/classes
-
-# where the sources for the module you are compiling are
-# default is sun-java/classsrc, override for other modules
-ifndef JAVA_SOURCEPATH
-JAVA_SOURCEPATH	= $(DEPTH)/sun-java/classsrc
-endif
-
-ifndef JAVAH_IN_JAVA
-ifeq ($(MOZ_OS2_TOOLS),VACPP)
-JAVAH_PROG	= flipper $(DIST)/bin/javah
-else
-JAVAH_PROG	= $(DIST)/bin/javah
-endif
-else
-JAVAH_PROG	= $(JAVA) netscape.tools.jric.Main
-endif
-
-ifneq ($(JDKHOME),)
-JAVAH_PROG	= $(JDKHOME)/bin/javah
-JAVAC_PROG		= $(JDKHOME)/bin/javac $(JAVAC_FLAGS)
-JAVAC 			= $(JAVAC_PROG)
-endif
-
-ifeq ($(STAND_ALONE_JAVA),1)
-STAND_ALONE_JAVA_DLL_SUFFIX	= s
-endif
-
-ifeq ($(MOZ_OS2_TOOLS),OLD_IBM_BUILD) # These DLL names are no longer valid for OS/2
-AWTDLL		= awt$(MOZ_BITS)$(VERSION_NUMBER).$(DLL_SUFFIX)
-AWTSDLL		= awt$(MOZ_BITS)$(VERSION_NUMBER)$(STAND_ALONE_JAVA_DLL_SUFFIX).$(DLL_SUFFIX)
-CONDLL		= con.$(MOZ_BITS)$(VERSION_NUMBER)(DLL_SUFFIX)
-JBNDLL		= jbn.$(MOZ_BITS)$(VERSION_NUMBER)(DLL_SUFFIX)
-JDBCDLL		= jdb.$(MOZ_BITS)$(VERSION_NUMBER)(DLL_SUFFIX)
-JITDLL		= jit.$(MOZ_BITS)$(VERSION_NUMBER)(DLL_SUFFIX)
-JPWDLL		= jpw.$(MOZ_BITS)$(VERSION_NUMBER)(DLL_SUFFIX)
-JRTDLL		= jrt$(MOZ_BITS)$(VERSION_NUMBER).$(DLL_SUFFIX)
-JSJDLL		= jsj.$(MOZ_BITS)$(VERSION_NUMBER)(DLL_SUFFIX)
-MMDLL		= mm$(MOZ_BITS)$(VERSION_NUMBER).$(DLL_SUFFIX)
-NETDLL		= net.$(MOZ_BITS)$(VERSION_NUMBER)(DLL_SUFFIX)
-NSCDLL		= nsc.$(MOZ_BITS)$(VERSION_NUMBER)(DLL_SUFFIX)
-ZIPDLL		= zip.$(MOZ_BITS)$(VERSION_NUMBER)(DLL_SUFFIX)
-ZPWDLL		= zpw.$(MOZ_BITS)$(VERSION_NUMBER)(DLL_SUFFIX)
-else
-AWTDLL		= libawt.$(DLL_SUFFIX)
-AWTSDLL		= libawt$(STAND_ALONE_JAVA_DLL_SUFFIX).$(DLL_SUFFIX)
-CONDLL		= libcon.$(DLL_SUFFIX)
-JBNDLL		= libjbn.$(DLL_SUFFIX)
-JDBCDLL		= libjdb.$(DLL_SUFFIX)
-JITDLL		= libjit.$(DLL_SUFFIX)
-JPWDLL		= libjpw.$(DLL_SUFFIX)
-JRTDLL		= libjrt.$(DLL_SUFFIX)
-JSJDLL		= libjsj.$(DLL_SUFFIX)
-MMDLL		= libmm.$(DLL_SUFFIX)
-NETDLL		= libnet.$(DLL_SUFFIX)
-NSCDLL		= libnsc.$(DLL_SUFFIX)
-ZIPDLL		= libzip.$(DLL_SUFFIX)
-ZPWDLL		= libzpw.$(DLL_SUFFIX)
-endif
-
-JAVA_DEFINES	+= -DAWTSDLL=\"$(AWTSDLL)\" -DCONDLL=\"$(CONDLL)\" -DJBNDLL=\"$(JBNDLL)\" -DJDBDLL=\"$(JDBDLL)\" \
-		   -DJSJDLL=\"$(JSJDLL)\" -DNETDLL=\"$(NETDLL)\" -DNSCDLL=\"$(NSCDLL)\" -DZPWDLL=\"$(ZPWDLL)\" \
-		   -DJAR_NAME=\"$(JAR_NAME)\"
-
-ifeq ($(AWT_11),1)
-JAVA_DEFINES	+= -DAWT_11
-else
-JAVA_DEFINES	+= -DAWT_102
-endif
-
-#caca:
-#	@echo $(PROFILER_CFLAGS)
