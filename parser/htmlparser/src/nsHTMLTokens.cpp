@@ -731,9 +731,13 @@ PRInt32 ConsumeQuotedString(PRUnichar aChar,nsString& aString,CScanner& aScanner
   switch(aChar) {
     case kQuote:
       result=aScanner.ReadUntil(aString,kQuote,PR_TRUE);
+      if(kNoError==result)
+        aScanner.SkipOver(kQuote);  //this code is here in case someone mistakenly adds multiple quotes...
       break;
     case kApostrophe:
       result=aScanner.ReadUntil(aString,kApostrophe,PR_TRUE);
+      if(kNoError==result)
+        aScanner.SkipOver(kApostrophe); //this code is here in case someone mistakenly adds multiple apostrophes...
       break;
     default:
       break;

@@ -3146,7 +3146,7 @@ CNavDTD::ConsumeAttributes(PRUnichar aChar,CScanner& aScanner,CStartToken* aToke
     CAttributeToken* theToken= (CAttributeToken*)gTokenRecycler.CreateTokenOfType(eToken_attribute,eHTMLTag_unknown,gEmpty);
     if(theToken){
       result=theToken->Consume(aChar,aScanner);  //tell new token to finish consuming text...    
-
+ 
       //Much as I hate to do this, here's some special case code.
       //This handles the case of empty-tags in XML. Our last
       //attribute token will come through with a text value of ""
