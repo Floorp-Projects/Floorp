@@ -33,14 +33,14 @@
 
 #define MINIMUM_DELAY_TIME 10
 
-
 static void info_callback(png_structp png_ptr, png_infop info);
 static void row_callback(png_structp png_ptr, png_bytep new_row,
                          png_uint_32 row_num, int pass);
 static void end_callback(png_structp png_ptr, png_infop info);
 static void il_png_error_handler(png_structp png_ptr, png_const_charp msg);
 
-
+PRLogModuleInfo *il_log_module;
+int il_debug;
 
 PRBool
 il_png_init(il_container *ic)
