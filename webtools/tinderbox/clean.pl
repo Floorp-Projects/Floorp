@@ -43,7 +43,7 @@ sub files_to_remove {
 # Remove build.dat entries older than 7 days
 #
 sub log_files_to_trim {
-  return unless /^(?:notes.txt|build.dat)$/;
+  return unless /^(?:notes.txt|build.dat|bloat.dat|warnings.dat)$/;
   warn "Cleaning $File::Find::name\n";
   my $file = $_;
   my $range_start = 0;
@@ -52,6 +52,10 @@ sub log_files_to_trim {
   open LOG, "$file";
   while (<LOG>) {
     $log_time = (split /\|/)[0];
+    if ($log_time =~ /(\d+)\.\d+\.gz/) {
+      # Log file name is first column in file. Pull time out of it.
+      $log_time = $1;
+    }
     if ($range_start == 0 and $log_time < $expire_time) {
       $range_start = $line;
     } elsif ($range_start != 0 and $log_time >= $expire_time) {
