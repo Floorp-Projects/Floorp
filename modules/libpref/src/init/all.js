@@ -119,6 +119,8 @@ pref("browser.url_history.URL_13", "");
 pref("browser.url_history.URL_14", "");
 pref("browser.url_history.URL_15", "");
 
+pref("browser.uriloader", true); // turn new uri loading on by default
+
 pref("browser.personal_toolbar_button.min_chars", 15);
 pref("browser.personal_toolbar_button.max_chars", 30);
 
