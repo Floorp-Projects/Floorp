@@ -54,20 +54,38 @@ JNIEXPORT jint JNICALL Java_org_mozilla_webclient_wrapper_1native_BookmarksImpl_
 
 JNIEXPORT jint JNICALL 
 Java_org_mozilla_webclient_wrapper_1native_BookmarksImpl_nativeNewRDFNode
-(JNIEnv *env, jobject obj, jstring urlString)
+(JNIEnv *env, jobject obj, jstring urlString, jboolean isFolder)
 {
     nsCOMPtr<nsIRDFResource> newNode;
     nsresult rv;
     jint result = -1;
+	nsAutoString uri("NC:BookmarksRoot");
     
     const char *url = env->GetStringUTFChars(urlString, NULL);
+	uri.Append("#$");
+	uri.Append(url);
     printf("debug: edburns: nativeNewRDFNode: url: %s\n", url);
     
-    rv = gRDF->GetResource(url, getter_AddRefs(newNode));
+    rv = gRDF->GetUnicodeResource(uri.GetUnicode(), getter_AddRefs(newNode));
     env->ReleaseStringUTFChars(urlString, url);
     if (NS_FAILED(rv)) {
         ::util_ThrowExceptionToJava(env, "Exception: nativeNewRDFNode: can't create new nsIRDFResource.");
         return result;
+    }
+
+    if (isFolder) {
+        rv = gRDFCU->MakeSeq(gBookmarksDataSource, newNode, nsnull);
+        if (NS_FAILED(rv)) {
+            ::util_ThrowExceptionToJava(env, "Exception: unable to make new folder as a sequence.");
+            return result;
+        }
+        rv = gBookmarksDataSource->Assert(newNode, kRDF_type, 
+                                          kNC_Folder, PR_TRUE);
+        if (rv != NS_OK) {
+            ::util_ThrowExceptionToJava(env, "Exception: unable to mark new folder as folder.");
+            
+            return result;
+        }
     }
 
     /*
