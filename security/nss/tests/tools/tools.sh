@@ -101,12 +101,28 @@ tools_p12()
   echo "         -w ${R_PWFILE}"
   pk12util -o Alice.p12 -n "Alice" -d ${R_ALICEDIR} -k ${R_PWFILE} \
            -w ${R_PWFILE} 2>&1 
-  html_msg $? 0 "Exporting Alice's email cert & key (pk12util -o)"
+  ret=$?
+  html_msg $ret 0 "Exporting Alice's email cert & key (pk12util -o)"
+  check_tmpfile
 
   echo "$SCRIPTNAME: Importing Alice's email cert & key -----------------"
   echo "pk12util -i Alice.p12 -d ${R_COPYDIR} -k ${R_PWFILE} -w ${R_PWFILE}"
   pk12util -i Alice.p12 -d ${R_COPYDIR} -k ${R_PWFILE} -w ${R_PWFILE} 2>&1
-  html_msg $? 0 "Importing Alice's email cert & key (pk12util -i)"
+  ret=$?
+  html_msg $ret 0 "Importing Alice's email cert & key (pk12util -i)"
+  check_tmpfile
+}
+
+############################## tools_sign ##############################
+# local shell function pk12util uses a hardcoded tmp file, if this exists
+# and is owned by another user we don't get reasonable errormessages 
+########################################################################
+check_tmpfile()
+{
+  if [ $ret != "0" -a -f /tmp/Pk12uTemp ] ; then
+      echo "Error: pk12util temp file exists. Please remove this file and"
+      echo "       rerun the test (/tmp/Pk12uTemp) "
+  fi
 }
 
 ############################## tools_sign ##############################
