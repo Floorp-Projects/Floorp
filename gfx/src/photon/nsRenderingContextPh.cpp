@@ -466,31 +466,40 @@ NS_IMETHODIMP nsRenderingContextPh :: PushState(void)
   PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("nsRenderingContextPh::PushState\n"));
 
   GraphicsState * state = new GraphicsState();
+  if (state)
+  { 
+    mStateCache->AppendElement(state);
 
-  mStateCache->AppendElement(state);
-
-  // Save current settings to new state...
-
-  //state->mGC = mGC;
-  state->mCurrentColor = mCurrentColor;
-  state->mMatrix = mTMatrix;
-  state->mFontMetrics = mFontMetrics;
-  NS_IF_ADDREF( state->mFontMetrics );
-  state->mClipRegion = mRegion;
+    // Save current settings to new state...
+    state->mCurrentColor = mCurrentColor;
+    state->mMatrix = mTMatrix;
+    state->mFontMetrics = mFontMetrics;
+    NS_IF_ADDREF( state->mFontMetrics );
+    state->mClipRegion = mRegion;
   
-  /* if the mRegion is not empty make a copy */
-  if (mRegion != nsnull)
-  {
-    mRegion = new nsRegionPh();
-    mRegion->Init();
-    mRegion->SetTo(*state->mClipRegion);  
-  }
+    /* if the mRegion is not empty make a copy */
+    if (mRegion != nsnull)
+    {
+      mRegion = new nsRegionPh();
+      if (mRegion)
+	  {
+        mRegion->Init();
+        mRegion->SetTo(*state->mClipRegion);  
+      }
+      else
+	  {
+        delete state;
+        return NS_ERROR_OUT_OF_MEMORY;
+      }
+    }
     
-  // Make new objects so we dont change the saved ones...
-  // Can't make a new FontMetrics since there is no copy constructor
-
-  mTMatrix = new nsTransform2D(mTMatrix);
-
+    // Make new objects so we dont change the saved ones...
+    // Can't make a new FontMetrics since there is no copy constructor
+    mTMatrix = new nsTransform2D(mTMatrix);
+  }
+  else
+    return NS_ERROR_OUT_OF_MEMORY;
+	
   return NS_OK;
 }
 
