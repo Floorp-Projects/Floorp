@@ -60,6 +60,8 @@ sub getOfficialMilestone($) {
   close(FILE);
   if ($num !~ /^\d/) { return; }
   chomp($num);
+  # Remove extra ^M caused by using dos-mode line-endings
+  chop $num if (substr($num, -1, 1) eq "\r");
   $Moz::Milestone::officialMilestone = $num;
   $Moz::Milestone::milestone = &getMilestoneNum;
   return $num;
