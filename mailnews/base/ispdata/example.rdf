@@ -4,7 +4,7 @@
     xmlns:RDF="http://www.w3.org/1999/02/22-rdf-syntax-ns#">
 
   <RDF:Description about="NC:ispinfo">
-    <NC:provider>
+    <NC:providers>
       <NC:nsIMsgAccount about="domain:fred.com">
 
         <!-- server info -->
@@ -16,6 +16,12 @@
             <NC:port>1111</NC:port>
             <NC:username>fred</NC:username>
             <NC:rememberPassword>false</NC:rememberPassword>
+            <NC:ServerType-pop3>
+              <NC:nsIPopIncomingServer>
+                <NC:leaveMessagesOnServer>true</NC:leaveMessagesOnServer>
+                <NC:deleteMailLeftOnServer>false</NC:deleteMailLeftOnServer>
+              </NC:nsIPopIncomingServer>
+            </NC:ServerType-pop3>
           </NC:nsIMsgIncomingServer>
         </NC:incomingServer>
 
@@ -29,13 +35,21 @@
         </NC:identity>
 
         <!-- other options... see http://www.mozilla.org/mailnews/?? -->
-
+ 
+        <NC:wizardSkipPanels>false</NC:wizardSkipPanels>
         <NC:wizardShortName>fred</NC:wizardShortName>
         <NC:wizardLongName>Fred's ISP</NC:wizardLongName>
         <NC:wizardPromote>true</NC:wizardPromote>
+        <NC:wizardShow>true</NC:wizardShow>
+        <NC:emailProviderName>Fred's ISP</NC:emailProviderName>
+        <NC:sampleEmail>username@fred.com</NC:sampleEmail>
+        <NC:sampleUserName>username</NC:sampleUserName>
+        <NC:emailIDDescription>user name</NC:emailIDDescription>
+        <NC:emailIDFieldTitle>User Name:</NC:emailIDFieldTitle>
+        <NC:showServerDetailsOnWizardSummary>false</NC:showServerDetailsOnWizardSummary> 
 
       </NC:nsIMsgAccount>
-    </NC:provider>
+    </NC:providers>
   </RDF:Description>
 
 </RDF:RDF>
