@@ -179,6 +179,9 @@ NS_IMETHODIMP nsLookAndFeel::GetColor(const nsColorID aID, nscolor &aColor)
     case eColor__moz_field:
       idx = COLOR_WINDOW;  
       break;  
+    case eColor__moz_dragtargetzone:
+        idx = COLOR_HIGHLIGHTTEXT;
+        break;      
     default:
         idx = COLOR_WINDOW;    
         break;
