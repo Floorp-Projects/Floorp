@@ -1,6 +1,6 @@
---- mozilla/xpfe/components/prefwindow/resources/content/preftree.xul.debug	Mon May 14 12:33:18 2001
-+++ mozilla/xpfe/components/prefwindow/resources/content/preftree.xul	Mon May 14 12:34:06 2001
-@@ -136,27 +136,6 @@
+--- mozilla/xpfe/components/prefwindow/resources/content/preftree.xul.debug	Sun Aug  5 15:51:52 2001
++++ mozilla/xpfe/components/prefwindow/resources/content/preftree.xul	Sun Aug  5 15:52:09 2001
+@@ -145,27 +145,6 @@
        </treechildren>
      </treeitem>
  
