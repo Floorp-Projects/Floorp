@@ -305,8 +305,11 @@ private:
 
   // Table selection support. Unfortunately, we can't get at nsITableCellLayout
   //   and nsITableLayout through nsIFrame, so we have to duplicate editor code here
-  nsresult SelectBlockOfCells(nsIContent *aStartNode, nsIContent *aEndNode);
+  nsresult SelectBlockOfCells(nsIContent *aEndNode);
   nsresult GetCellIndexes(nsIContent *aCell, PRInt32 &aRowIndex, PRInt32 &aColIndex);
+  nsresult GetFirstSelectedCellAndRange(nsIDOMNode **aCell, nsIDOMRange **aRange);
+  nsresult GetNextSelectedCellAndRange(nsIDOMNode **aCell, nsIDOMRange **aRange);
+  nsresult GetFirstCellNodeInRange(nsIDOMRange *aRange, nsIDOMNode **aCellNode);
   // aTableNode may be null if table isn't needed to be returned
   PRBool   IsInSameTable(nsIContent *aContent1, nsIContent *aContent2, nsIContent **aTableNode);
   nsresult GetParentTable(nsIContent *aCellNode, nsIContent **aTableNode);
@@ -315,6 +318,7 @@ private:
   nsCOMPtr<nsIContent> mStartSelectedCell;
   nsCOMPtr<nsIContent> mEndSelectedCell;
   PRBool  mSelectingTableCells;
+  PRInt32 mSelectedCellIndex;
 
   //batching
   PRInt32 mBatching;
@@ -678,6 +682,7 @@ nsSelection::nsSelection()
   mHint = HINTLEFT;
   sInstanceCount ++;
   mSelectingTableCells = PR_FALSE;
+  mSelectedCellIndex = 0;
 }
 
 
@@ -1923,7 +1928,7 @@ nsSelection::HandleTableSelection(nsIContent *aParentContent, PRInt32 aContentOf
       printf("HandleTableSelection: Dragged into a new cell\n");
 #endif
       // Reselect block of cells to new end location
-      return SelectBlockOfCells(mStartSelectedCell, selectedContent);
+      return SelectBlockOfCells(selectedContent);
     }
   }
   else 
@@ -1975,7 +1980,7 @@ printf("Mouse was clicked at: x=%d, y=%d\n", aMouseEvent->point.x, aMouseEvent->
     if (rangeCount > 0 && aMouseEvent->isShift && selectedContent != mStartSelectedCell)
     {
       // If Shift is down as well, do a block selection
-      return SelectBlockOfCells(mStartSelectedCell, selectedContent);
+      return SelectBlockOfCells(selectedContent);
     }
     
     nsCOMPtr<nsIDOMNode> previousCellParent;
@@ -2066,44 +2071,23 @@ printf("Mouse was clicked at: x=%d, y=%d\n", aMouseEvent->point.x, aMouseEvent->
 }
 
 nsresult
-nsSelection::SelectBlockOfCells(nsIContent *aStartCell, nsIContent *aEndCell)
+nsSelection::SelectBlockOfCells(nsIContent *aEndCell)
 {
   if (!aEndCell) return NS_ERROR_NULL_POINTER;
   mEndSelectedCell = aEndCell;
   
-  nsresult result = NS_OK;
-  if (!aStartCell)
-  {
-    // User unselected the origianl start cell
-    // Try to use the first cell in existing selection
-    nsCOMPtr<nsIDOMRange> range;
-    PRInt32 offset;
-    result = mDomSelections[SELECTION_NORMAL]->GetRangeAt(0, getter_AddRefs(range));
-    if (NS_FAILED(result)) return result;
-    if (!range) return NS_ERROR_NULL_POINTER;
 
-    nsCOMPtr<nsIDOMNode> parent;
-    result = range->GetStartParent(getter_AddRefs(parent));
-    if (NS_FAILED(result)) return result;
-    if (!parent) return NS_ERROR_NULL_POINTER;
+  nsCOMPtr<nsIDOMNode> cellNode;
+  nsCOMPtr<nsIDOMRange> range;
+  nsresult result = GetFirstSelectedCellAndRange(getter_AddRefs(cellNode), getter_AddRefs(range));
+  if (NS_FAILED(result)) return result;
+  if (!cellNode || !range) return NS_OK;
 
-    range->GetStartOffset(&offset);
-    // Be sure previous selection is a table cell
-    nsCOMPtr<nsIContent> parentContent = do_QueryInterface(parent);
-    nsCOMPtr<nsIContent> childContent;
-    result = parentContent->ChildAt(offset, *getter_AddRefs(childContent));
-    if (NS_FAILED(result)) return result;
-    if (!childContent) return NS_ERROR_NULL_POINTER;
-    // We shouldn't be here if selected child isn't a cell!
-    if (!IsCell(childContent)) return NS_ERROR_FAILURE;
-    aStartCell = childContent;
-  }
-  
+  mStartSelectedCell = do_QueryInterface(cellNode);
+
   // Get starting and ending cells' location in the cellmap
   PRInt32 startRowIndex, startColIndex, endRowIndex, endColIndex;
-
-  // Get starting and ending cells' location in the cellmap
-  result = GetCellIndexes(aStartCell, startRowIndex, startColIndex);
+  result = GetCellIndexes(mStartSelectedCell, startRowIndex, startColIndex);
   if(NS_FAILED(result)) return result;
   result = GetCellIndexes(aEndCell, endRowIndex, endColIndex);
   if(NS_FAILED(result)) return result;
@@ -2111,32 +2095,51 @@ nsSelection::SelectBlockOfCells(nsIContent *aStartCell, nsIContent *aEndCell)
   // Get parent table, and don't allow selection if start
   //  and end are not in same table
   nsCOMPtr<nsIContent> table;
-  if (!IsInSameTable(aStartCell, aEndCell, getter_AddRefs(table)))
+  if (!IsInSameTable(mStartSelectedCell, aEndCell, getter_AddRefs(table)))
     return NS_OK;
 
-  // It is now safe to clear the selection
-  // BE SURE TO RESET IT BEFORE LEAVING!
-  mDomSelections[SELECTION_NORMAL]->ClearSelection();
-
+  // Get TableLayout interface to access cell data based on cellmap location
   // frames are not ref counted, so don't use an nsCOMPtr
   nsIFrame  *frame = nsnull;
   result = GetTracker()->GetPrimaryFrameFor(table, &frame);
   if (!frame) return NS_ERROR_FAILURE;
-
   nsITableLayout *tableLayoutObject = nsnull;
   result = frame->QueryInterface(NS_GET_IID(nsITableLayout), (void**)(&tableLayoutObject)); 
   if (NS_FAILED(result)) return result;
   if (!tableLayoutObject) return NS_ERROR_FAILURE;
 
+  // Remove selected cells outside of new block limits
+
+  PRInt32 minRowIndex = PR_MIN(startRowIndex, endRowIndex);
+  PRInt32 maxRowIndex = PR_MAX(startRowIndex, endRowIndex);
+  PRInt32 minColIndex = PR_MIN(startColIndex, endColIndex);
+  PRInt32 maxColIndex = PR_MAX(startColIndex, endColIndex);
+  PRInt32 curRowIndex, curColIndex;
+
+  // Examine all cell nodes, starting with first one found above
+  while (cellNode)
+  {
+    nsCOMPtr<nsIContent> cellContent = do_QueryInterface(cellNode);
+    result = GetCellIndexes(cellContent, curRowIndex, curColIndex);
+    if (NS_FAILED(result)) return result;
+
+    if (curRowIndex < minRowIndex || curRowIndex > maxRowIndex || 
+        curColIndex < minColIndex || curColIndex > maxColIndex)
+    {
+      mDomSelections[SELECTION_NORMAL]->RemoveRange(range);
+      // Since we've removed the range, decrement pointer to next range
+      mSelectedCellIndex--;
+    }    
+    result = GetNextSelectedCellAndRange(getter_AddRefs(cellNode), getter_AddRefs(range));
+    if (NS_FAILED(result)) return result;
+  }
+
   nsCOMPtr<nsIDOMElement> cell;
-  nsCOMPtr<nsIDOMNode> cellNode;
-  PRBool cellSelected = PR_FALSE;
-  PRInt32 curRowIndex, curColIndex, rowSpan, colSpan, actualRowSpan, actualColSpan;
+  PRInt32 rowSpan, colSpan, actualRowSpan, actualColSpan;
   PRBool  isSelected;
 
-  // Note that we select block in order of user's selection gesture,
+  // Note that we select block in the direction of user's mouse dragging,
   //  which means start cell may be after the end cell in either row or column
-
   PRInt32 row = startRowIndex;
   while(PR_TRUE)
   {
@@ -2150,8 +2153,8 @@ nsSelection::SelectBlockOfCells(nsIContent *aStartCell, nsIContent *aEndCell)
 
       NS_ASSERTION(actualColSpan, "!actualColSpan is 0!");
 
-      // Skip cells that are spanned from previous locations
-      if (cell && row == curRowIndex && col == curColIndex)
+      // Skip cells that are spanned from previous locations or are already selected
+      if (!isSelected && cell && row == curRowIndex && col == curColIndex)
       {
         cellNode = do_QueryInterface(cell);
         nsCOMPtr<nsIDOMNode> parent;
@@ -2167,7 +2170,6 @@ nsSelection::SelectBlockOfCells(nsIContent *aStartCell, nsIContent *aEndCell)
         if (NS_FAILED(result)) return result;
         result =  CreateAndAddRange(parent, offset);
         if (NS_FAILED(result)) return result;
-        cellSelected = PR_TRUE;
       }
       // Done when we reach end column
       if (col == endColIndex) break;
@@ -2185,13 +2187,111 @@ nsSelection::SelectBlockOfCells(nsIContent *aStartCell, nsIContent *aEndCell)
       row--;
   };
 
-  // Safety code to put selection in starting cell if no cells were selected
-  if (!cellSelected)
-  {
-    cellNode = do_QueryInterface(aStartCell);
-    result = CreateAndAddRange(cellNode, 0);
-  }
   return result;
+}
+
+nsresult 
+nsSelection::GetFirstCellNodeInRange(nsIDOMRange *aRange, nsIDOMNode **aCellNode)
+{
+  if (!aRange || !aCellNode) return NS_ERROR_NULL_POINTER;
+
+  *aCellNode = nsnull;
+
+  nsCOMPtr<nsIDOMNode> startParent;
+  nsresult result = aRange->GetStartParent(getter_AddRefs(startParent));
+  if (NS_FAILED(result)) return result;
+  if (!startParent) return NS_ERROR_FAILURE;
+
+  PRInt32 offset;
+  result = aRange->GetStartOffset(&offset);
+  if (NS_FAILED(result)) return result;
+
+  nsCOMPtr<nsIContent> parentContent = do_QueryInterface(startParent);
+  nsCOMPtr<nsIContent> childContent;
+  result = parentContent->ChildAt(offset, *getter_AddRefs(childContent));
+  if (NS_FAILED(result)) return result;
+  if (!childContent) return NS_ERROR_NULL_POINTER;
+  // Don't return node if not a cell
+  if (!IsCell(childContent)) return NS_OK;
+
+  nsCOMPtr<nsIDOMNode> childNode = do_QueryInterface(childContent);
+  if (childNode)
+  {
+    *aCellNode = childNode;
+    NS_ADDREF(*aCellNode);
+  }
+  return NS_OK;
+}
+
+nsresult 
+nsSelection::GetFirstSelectedCellAndRange(nsIDOMNode **aCell, nsIDOMRange **aRange)
+{
+  if (!aCell || !aRange) return NS_ERROR_NULL_POINTER;
+  *aCell = nsnull;
+  *aRange = nsnull;
+
+  nsCOMPtr<nsIDOMRange> firstRange;
+  nsresult result = mDomSelections[SELECTION_NORMAL]->GetRangeAt(0, getter_AddRefs(firstRange));
+  if (NS_FAILED(result)) return result;
+  if (!firstRange) return NS_ERROR_FAILURE;
+
+  nsCOMPtr<nsIDOMNode> cellNode;
+  result = GetFirstCellNodeInRange(firstRange, getter_AddRefs(cellNode));
+  if (NS_FAILED(result)) return result;
+  if (!cellNode) return NS_OK;
+
+  *aCell = cellNode;
+  NS_ADDREF(*aCell);
+  *aRange = firstRange;
+  NS_ADDREF(*aRange);
+
+  // Setup for next cell
+  mSelectedCellIndex = 1;
+
+  return NS_OK;
+}
+
+nsresult
+nsSelection::GetNextSelectedCellAndRange(nsIDOMNode **aCell, nsIDOMRange **aRange)
+{
+  if (!aCell || !aRange) return NS_ERROR_NULL_POINTER;
+  *aCell = nsnull;
+  *aRange = nsnull;
+
+  PRInt32 rangeCount;
+  nsresult result = mDomSelections[SELECTION_NORMAL]->GetRangeCount(&rangeCount);
+  if (NS_FAILED(result)) return result;
+
+  // Don't even try if index exceeds range count
+  if (mSelectedCellIndex >= rangeCount) 
+  {
+    // Should we reset index? 
+    // Maybe better to force recalling GetFirstSelectedCell()
+    //mSelectedCellIndex = 0;
+    return NS_OK;
+  }
+
+  // Get first node in next range of selection - test if it's a cell
+  nsCOMPtr<nsIDOMRange> range;
+  result = mDomSelections[SELECTION_NORMAL]->GetRangeAt(mSelectedCellIndex, getter_AddRefs(range));
+  if (NS_FAILED(result)) return result;
+  if (!range) return NS_ERROR_FAILURE;
+
+  nsCOMPtr<nsIDOMNode> cellNode;
+  result = GetFirstCellNodeInRange(range, getter_AddRefs(cellNode));
+  if (NS_FAILED(result)) return result;
+  // No cell in selection range
+  if (!cellNode) return NS_OK;
+
+  *aCell = cellNode;
+  NS_ADDREF(*aCell);
+  *aRange = range;
+  NS_ADDREF(*aRange);
+
+  // Setup for next cell
+  mSelectedCellIndex++;
+
+  return NS_OK;
 }
 
 nsresult
