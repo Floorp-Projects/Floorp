@@ -36,7 +36,6 @@ sub sillyness {
     $zz = $::unconfirmedstate;
     $zz = @::components;
     $zz = @::default_column_list;
-    $zz = @::keywordsbyname;
     $zz = @::legal_keywords;
     $zz = @::legal_platform;
     $zz = @::legal_priority;
@@ -405,7 +404,7 @@ sub GenerateSQL {
                  if ($value eq '') {
                      next;
                  }
-                 my $id = $::keywordsbyname{$value};
+                 my $id = GetKeywordIdFromName($name);
                  if ($id) {
                      push(@list, "$table.keywordid = $id");
                  } else {

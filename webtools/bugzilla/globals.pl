@@ -104,7 +104,7 @@ sub SyncAnyPendingShadowChanges {
         $shadowchanges = 0;
     }
 }
-    
+
 
 my $dosqllog = (-e "data/sqllog") && (-w "data/sqllog");
 
@@ -472,6 +472,7 @@ sub GenerateVersionTable {
     SendSQL("SELECT id, name FROM keyworddefs ORDER BY name");
     while (MoreSQLData()) {
         my ($id, $name) = FetchSQLData();
+        $name = lc($name);
         $::keywordsbyname{$name} = $id;
         push(@::legal_keywords, $name);
     }
@@ -483,6 +484,14 @@ sub GenerateVersionTable {
     rename $tmpname, "data/versioncache" || die "Can't rename $tmpname to versioncache";
     chmod 0666, "data/versioncache";
 }
+
+
+sub GetKeywordIdFromName {
+    my ($name) = (@_);
+    $name = lc($name);
+    return $::keywordsbyname{$name};
+}
+
 
 
 

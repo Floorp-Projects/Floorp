@@ -37,7 +37,6 @@ use vars %::versions,
     %::components,
     %::COOKIE,
     %::MFORM,
-    %::keywordsbyname,
     %::legal_keywords,
     %::legal_opsys,
     %::legal_platform,
@@ -549,7 +548,7 @@ if ($::FORM{'keywords'}) {
         if ($keyword eq '') {
             next;
         }
-        my $i = $::keywordsbyname{$keyword};
+        my $i = GetKeywordIdFromName($keyword);
         if (!$i) {
             PuntTryAgain("Unknown keyword named <code>$keyword</code>. " .
                          "<P>The legal keyword names are " .
