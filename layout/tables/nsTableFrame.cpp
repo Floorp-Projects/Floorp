@@ -772,7 +772,7 @@ void nsTableFrame::SetMinColSpanForTable()
           minColSpan = PR_MIN(minColSpan, colSpan);
       }
     }
-    if (1!=minColSpan)
+    if (1<minColSpan)
       mCellMap->SetMinColSpan(colIndex, minColSpan);
   }
 }

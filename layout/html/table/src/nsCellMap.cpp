@@ -173,7 +173,7 @@ nsTableColFrame* nsCellMap::GetColumnFrame(PRInt32 aColIndex) const
 void nsCellMap::SetMinColSpan(PRInt32 aColIndex, PRBool aColSpan)
 {
   NS_ASSERTION(aColIndex<mColCount, "bad aColIndex");
-  NS_ASSERTION(aColSpan>=0, "bad aColSpan");
+  NS_ASSERTION(aColSpan>=1, "bad aColSpan");
 
   // initialize the data structure if not already done
   if (nsnull==mMinColSpans)
