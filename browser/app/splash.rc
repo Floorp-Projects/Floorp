@@ -67,8 +67,13 @@ IDD_SPLASH DIALOGEX
 
 STRINGTABLE DISCARDABLE
 BEGIN
+#ifdef DEBUG
     ID_DDE_APPLICATION_NAME,            "Firefox Debug"
     IDS_STARTMENU_APPNAME,              "Firefox Debug"
+#else
+    ID_DDE_APPLICATION_NAME,            "Firefox"
+    IDS_STARTMENU_APPNAME,              "Firefox"
+#endif
 END
 
 #ifdef MOZ_STATIC_BUILD
