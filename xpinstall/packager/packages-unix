@@ -98,7 +98,6 @@ bin/components/dom_xul.xpt
 bin/components/editor.xpt
 bin/components/find.xpt
 bin/components/gfx.xpt
-bin/components/gfx2.xpt
 bin/components/intl.xpt
 bin/components/imglib2.xpt
 bin/components/chardet.xpt
@@ -113,7 +112,6 @@ bin/components/libcomposer.so
 bin/components/libdocshell.so
 bin/components/libeditor.so
 bin/components/libembedcomponents.so
-bin/components/libgfx2.so
 bin/components/libgfx_gtk.so
 bin/components/libgfxps.so
 bin/components/libgfxxprint.so

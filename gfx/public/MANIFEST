@@ -29,4 +29,5 @@ nsThemeConstants.h
 nsITheme.h
 nsPDECommon.h
 nsWatchTask.h
+gfxcompat.h
 

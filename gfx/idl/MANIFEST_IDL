@@ -10,3 +10,7 @@ nsIScreenManager.idl
 nsIPrintOptions.idl
 nsIPrintSettings.idl
 nsIPrintSettingsService.idl
+gfxtypes.idl
+gfx2types.idl
+gfxIFormats.idl
+gfxIImageFrame.idl

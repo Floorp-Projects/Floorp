@@ -2,6 +2,8 @@ function upgradeCleanup()
 {
   // Obsolete files and generated files that
   // need to be cleaned up.
+  deleteThisFile("Components", "gfx2.dll");
+  deleteThisFile("Components", "gfx2.xpt");
   deleteThisFile("Chrome",     "chrome.rdf");
   deleteThisFolder("Chrome",   "overlayinfo");
 }

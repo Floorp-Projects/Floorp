@@ -38,8 +38,6 @@
 class NS_GFX nsFontList : public nsIFontList
 {
 public:
-  NS_DEFINE_STATIC_CID_ACCESSOR(NS_IFONTLIST_IID)
-    
   nsFontList();
   virtual ~nsFontList();
 

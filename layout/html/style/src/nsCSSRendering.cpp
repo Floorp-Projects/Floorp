@@ -56,6 +56,7 @@
 #include "imgIRequest.h"
 #include "imgIContainer.h"
 #include "nsCSSRendering.h"
+#include "nsCSSColorUtils.h"
 #include "nsIPrintContext.h"
 #include "nsITheme.h"
 #include "nsThemeConstants.h"

@@ -317,7 +317,7 @@
                 <!-- Settings for "FTP Panel" panel -->
                 <SETTING><NAME>MWFTP_Post_hostName</NAME><VALUE></VALUE></SETTING>
                 <SETTING><NAME>MWFTP_Post_username</NAME><VALUE></VALUE></SETTING>
-                <SETTING><NAME>MWFTP_Post_password</NAME><VALUE>0</VALUE></SETTING>
+                <SETTING><NAME>MWFTP_Post_password</NAME><VALUE></VALUE></SETTING>
                 <SETTING><NAME>MWFTP_Post_remoteDir</NAME><VALUE></VALUE></SETTING>
                 <SETTING><NAME>MWFTP_Post_ftp_PathVersion</NAME><VALUE>1</VALUE></SETTING>
                 <SETTING><NAME>MWFTP_Post_ftp_PathType</NAME><VALUE>0</VALUE></SETTING>
@@ -811,6 +811,34 @@
                     <FILEKIND>Text</FILEKIND>
                     <FILEFLAGS></FILEFLAGS>
                 </FILE>
+                <FILE>
+                    <PATHTYPE>Name</PATHTYPE>
+                    <PATH>gfx2types.idl</PATH>
+                    <PATHFORMAT>MacOS</PATHFORMAT>
+                    <FILEKIND>Text</FILEKIND>
+                    <FILEFLAGS></FILEFLAGS>
+                </FILE>
+                <FILE>
+                    <PATHTYPE>Name</PATHTYPE>
+                    <PATH>gfxtypes.idl</PATH>
+                    <PATHFORMAT>MacOS</PATHFORMAT>
+                    <FILEKIND>Text</FILEKIND>
+                    <FILEFLAGS></FILEFLAGS>
+                </FILE>
+                <FILE>
+                    <PATHTYPE>Name</PATHTYPE>
+                    <PATH>gfxIImageFrame.idl</PATH>
+                    <PATHFORMAT>MacOS</PATHFORMAT>
+                    <FILEKIND>Text</FILEKIND>
+                    <FILEFLAGS></FILEFLAGS>
+                </FILE>
+                <FILE>
+                    <PATHTYPE>Name</PATHTYPE>
+                    <PATH>gfxIFormats.idl</PATH>
+                    <PATHFORMAT>MacOS</PATHFORMAT>
+                    <FILEKIND>Text</FILEKIND>
+                    <FILEFLAGS></FILEFLAGS>
+                </FILE>
             </FILELIST>
             <LINKORDER>
                 <FILEREF>
@@ -876,6 +904,26 @@
                 <FILEREF>
                     <PATHTYPE>Name</PATHTYPE>
                     <PATH>nsIPrintSessionX.idl</PATH>
+                    <PATHFORMAT>MacOS</PATHFORMAT>
+                </FILEREF>
+                <FILEREF>
+                    <PATHTYPE>Name</PATHTYPE>
+                    <PATH>gfx2types.idl</PATH>
+                    <PATHFORMAT>MacOS</PATHFORMAT>
+                </FILEREF>
+                <FILEREF>
+                    <PATHTYPE>Name</PATHTYPE>
+                    <PATH>gfxtypes.idl</PATH>
+                    <PATHFORMAT>MacOS</PATHFORMAT>
+                </FILEREF>
+                <FILEREF>
+                    <PATHTYPE>Name</PATHTYPE>
+                    <PATH>gfxIImageFrame.idl</PATH>
+                    <PATHFORMAT>MacOS</PATHFORMAT>
+                </FILEREF>
+                <FILEREF>
+                    <PATHTYPE>Name</PATHTYPE>
+                    <PATH>gfxIFormats.idl</PATH>
                     <PATHFORMAT>MacOS</PATHFORMAT>
                 </FILEREF>
             </LINKORDER>
@@ -1144,7 +1192,7 @@
                 <!-- Settings for "FTP Panel" panel -->
                 <SETTING><NAME>MWFTP_Post_hostName</NAME><VALUE></VALUE></SETTING>
                 <SETTING><NAME>MWFTP_Post_username</NAME><VALUE></VALUE></SETTING>
-                <SETTING><NAME>MWFTP_Post_password</NAME><VALUE>0</VALUE></SETTING>
+                <SETTING><NAME>MWFTP_Post_password</NAME><VALUE></VALUE></SETTING>
                 <SETTING><NAME>MWFTP_Post_remoteDir</NAME><VALUE></VALUE></SETTING>
                 <SETTING><NAME>MWFTP_Post_ftp_PathVersion</NAME><VALUE>1</VALUE></SETTING>
                 <SETTING><NAME>MWFTP_Post_ftp_PathType</NAME><VALUE>0</VALUE></SETTING>
@@ -1638,6 +1686,34 @@
                     <FILEKIND>Text</FILEKIND>
                     <FILEFLAGS></FILEFLAGS>
                 </FILE>
+                <FILE>
+                    <PATHTYPE>Name</PATHTYPE>
+                    <PATH>gfx2types.idl</PATH>
+                    <PATHFORMAT>MacOS</PATHFORMAT>
+                    <FILEKIND>Text</FILEKIND>
+                    <FILEFLAGS></FILEFLAGS>
+                </FILE>
+                <FILE>
+                    <PATHTYPE>Name</PATHTYPE>
+                    <PATH>gfxtypes.idl</PATH>
+                    <PATHFORMAT>MacOS</PATHFORMAT>
+                    <FILEKIND>Text</FILEKIND>
+                    <FILEFLAGS></FILEFLAGS>
+                </FILE>
+                <FILE>
+                    <PATHTYPE>Name</PATHTYPE>
+                    <PATH>gfxIImageFrame.idl</PATH>
+                    <PATHFORMAT>MacOS</PATHFORMAT>
+                    <FILEKIND>Text</FILEKIND>
+                    <FILEFLAGS></FILEFLAGS>
+                </FILE>
+                <FILE>
+                    <PATHTYPE>Name</PATHTYPE>
+                    <PATH>gfxIFormats.idl</PATH>
+                    <PATHFORMAT>MacOS</PATHFORMAT>
+                    <FILEKIND>Text</FILEKIND>
+                    <FILEFLAGS></FILEFLAGS>
+                </FILE>
             </FILELIST>
             <LINKORDER>
                 <FILEREF>
@@ -1703,6 +1779,26 @@
                 <FILEREF>
                     <PATHTYPE>Name</PATHTYPE>
                     <PATH>nsIPrintSessionX.idl</PATH>
+                    <PATHFORMAT>MacOS</PATHFORMAT>
+                </FILEREF>
+                <FILEREF>
+                    <PATHTYPE>Name</PATHTYPE>
+                    <PATH>gfx2types.idl</PATH>
+                    <PATHFORMAT>MacOS</PATHFORMAT>
+                </FILEREF>
+                <FILEREF>
+                    <PATHTYPE>Name</PATHTYPE>
+                    <PATH>gfxtypes.idl</PATH>
+                    <PATHFORMAT>MacOS</PATHFORMAT>
+                </FILEREF>
+                <FILEREF>
+                    <PATHTYPE>Name</PATHTYPE>
+                    <PATH>gfxIImageFrame.idl</PATH>
+                    <PATHFORMAT>MacOS</PATHFORMAT>
+                </FILEREF>
+                <FILEREF>
+                    <PATHTYPE>Name</PATHTYPE>
+                    <PATH>gfxIFormats.idl</PATH>
                     <PATHFORMAT>MacOS</PATHFORMAT>
                 </FILEREF>
             </LINKORDER>
@@ -1791,6 +1887,30 @@
             <TARGETNAME>headers</TARGETNAME>
             <PATHTYPE>Name</PATHTYPE>
             <PATH>nsIScriptableRegion.idl</PATH>
+            <PATHFORMAT>MacOS</PATHFORMAT>
+        </FILEREF>
+        <FILEREF>
+            <TARGETNAME>headers</TARGETNAME>
+            <PATHTYPE>Name</PATHTYPE>
+            <PATH>gfx2types.idl</PATH>
+            <PATHFORMAT>MacOS</PATHFORMAT>
+        </FILEREF>
+        <FILEREF>
+            <TARGETNAME>headers</TARGETNAME>
+            <PATHTYPE>Name</PATHTYPE>
+            <PATH>gfxtypes.idl</PATH>
+            <PATHFORMAT>MacOS</PATHFORMAT>
+        </FILEREF>
+        <FILEREF>
+            <TARGETNAME>headers</TARGETNAME>
+            <PATHTYPE>Name</PATHTYPE>
+            <PATH>gfxIImageFrame.idl</PATH>
+            <PATHFORMAT>MacOS</PATHFORMAT>
+        </FILEREF>
+        <FILEREF>
+            <TARGETNAME>headers</TARGETNAME>
+            <PATHTYPE>Name</PATHTYPE>
+            <PATH>gfxIFormats.idl</PATH>
             <PATHFORMAT>MacOS</PATHFORMAT>
         </FILEREF>
     </GROUPLIST>

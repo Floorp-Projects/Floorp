@@ -877,10 +877,6 @@ sub BuildClientDist()
     InstallFromManifest(":mozilla:modules:libimg:mng:MANIFEST",                    "$distdirectory:libimg:");
 
     if ($main::options{useimg2}) {
-	    #GFX2
-	    InstallFromManifest(":mozilla:gfx2:public:MANIFEST",                            "$distdirectory:gfx2:");
-	    InstallFromManifest(":mozilla:gfx2:public:MANIFEST_IDL",                        "$distdirectory:idl:");
-	    
 	    #LIBIMG2
 	    InstallFromManifest(":mozilla:modules:libpr0n:public:MANIFEST_IDL",            "$distdirectory:libimg2:");
 	    InstallFromManifest(":mozilla:modules:libpr0n:decoders:icon:MANIFEST_IDL",     "$distdirectory:icondecoder:");
@@ -1374,7 +1370,6 @@ sub BuildIDLProjects()
     BuildIDLProject(":mozilla:modules:libjar:macbuild:libjarIDL.xml",               "libjar");
     
 	if ($main::options{useimg2}) {
-	    BuildIDLProject(":mozilla:gfx2:macbuild:gfx2IDL.xml",                       "gfx2");      
 	    BuildIDLProject(":mozilla:modules:libpr0n:macbuild:libimg2IDL.xml",         "libimg2");
 	    BuildIDLProject(":mozilla:modules:libpr0n:macbuild:icondecoderIDL.xml",         "icondecoder");
     }
@@ -1698,7 +1693,6 @@ sub BuildImglib2Projects()
     
     if ($main::options{useimg2})
     {
-        BuildOneProject(":mozilla:gfx2:macbuild:gfx2.xml",                          "gfx2$D.$S", 1, $main::ALIAS_SYM_FILES, 1);
         BuildOneProject(":mozilla:modules:libpr0n:macbuild:libimg2.xml",            "libimg2$D.$S", 1, $main::ALIAS_SYM_FILES, 1);
         BuildOneProject(":mozilla:modules:libpr0n:macbuild:pngdecoder2.xml",        "pngdecoder2$D.$S", 1, $main::ALIAS_SYM_FILES, 1);
         BuildOneProject(":mozilla:modules:libpr0n:macbuild:gifdecoder2.xml",        "gifdecoder2$D.$S", 1, $main::ALIAS_SYM_FILES, 1);
