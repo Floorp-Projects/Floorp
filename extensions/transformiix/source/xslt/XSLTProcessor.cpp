@@ -42,7 +42,6 @@
  */
 
 #include "XSLTProcessor.h"
-#include "Tokenizer.h"
 #include "txAtoms.h"
 #include "TxLog.h"
 #include "txNodeSetContext.h"
@@ -50,6 +49,7 @@
 #include "txRtfHandler.h"
 #include "txStringUtils.h"
 #include "txTextHandler.h"
+#include "txTokenizer.h"
 #include "txURIUtils.h"
 #include "txVariableMap.h"
 #include "txXSLTNumber.h"
@@ -880,11 +880,9 @@ txXSLTProcessor::processAttributeSets(Element* aElement,
 
     // Split names
     txTokenizer tokenizer(names);
-    nsAutoString nameStr;
     while (tokenizer.hasMoreTokens()) {
-        tokenizer.nextToken(nameStr);
         txExpandedName name;
-        rv = name.init(nameStr, aElement, MB_FALSE);
+        rv = name.init(tokenizer.nextToken(), aElement, MB_FALSE);
         if (NS_FAILED(rv)) {
             aPs->receiveError(NS_LITERAL_STRING("missing or malformed name in use-attribute-sets"));
             return;
@@ -1458,28 +1456,11 @@ txXSLTProcessor::processTopLevel(Element* aStylesheet,
             if (element->getAttr(txXSLTAtoms::cdataSectionElements,
                                  kNameSpaceID_None, attValue)) {
                 txTokenizer tokens(attValue);
-                nsAutoString token;
                 while (tokens.hasMoreTokens()) {
-                    tokens.nextToken(token);
-                    if (!XMLUtils::isValidQName(token)) {
-                        break;
-                    }
-
-                    nsCOMPtr<nsIAtom> namePart;
-                    XMLUtils::getPrefix(token, getter_AddRefs(namePart));
-                    PRInt32 nsID = element->lookupNamespaceID(namePart);
-                    if (nsID == kNameSpaceID_Unknown) {
-                        // XXX ErrorReport: unknown prefix
-                        break;
-                    }
-                    XMLUtils::getLocalPart(token, getter_AddRefs(namePart));
-                    if (!namePart) {
-                        // XXX ErrorReport: out of memory
-                        break;
-                    }
-                    txExpandedName* qname = new txExpandedName(nsID, namePart);
-                    if (!qname) {
-                        // XXX ErrorReport: out of memory
+                    txExpandedName* qname = new txExpandedName();
+                    if (!qname || NS_FAILED(qname->init(tokens.nextToken(),
+                                                        element, PR_FALSE))) {
+                        // XXX ErrorReport
                         break;
                     }
                     format.mCDATASectionElements.add(qname);

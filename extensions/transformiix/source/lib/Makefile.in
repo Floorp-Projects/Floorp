@@ -40,7 +40,6 @@ OBJS = ../base/Double.$(OBJ_SUFFIX) \
   ../base/NamedMap.$(OBJ_SUFFIX) \
   ../base/SimpleErrorObserver.$(OBJ_SUFFIX) \
   ../base/Stack.$(OBJ_SUFFIX) \
-  ../base/Tokenizer.$(OBJ_SUFFIX) \
   ../base/txAtoms.$(OBJ_SUFFIX) \
   ../base/txExpandedNameMap.$(OBJ_SUFFIX) \
   ../base/txStringUtils.$(OBJ_SUFFIX) \

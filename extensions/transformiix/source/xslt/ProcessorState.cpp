@@ -38,12 +38,12 @@
 #include "txURIUtils.h"
 #include "XMLUtils.h"
 #include "XMLDOMUtils.h"
-#include "Tokenizer.h"
 #include "ExprResult.h"
 #include "XMLParser.h"
 #include "TxLog.h"
 #include "txAtoms.h"
 #include "txSingleNodeContext.h"
+#include "txTokenizer.h"
 #include "txVariableMap.h"
 #include "XSLTProcessor.h"
 
@@ -752,10 +752,9 @@ void ProcessorState::shouldStripSpace(const nsAString& aNames,
                                       ImportFrame* aImportFrame)
 {
     //-- split names on whitespace
-    txTokenizer tokenizer(aNames);
-    nsAutoString name;
+    txTokenizer tokenizer(PromiseFlatString(aNames));
     while (tokenizer.hasMoreTokens()) {
-        tokenizer.nextToken(name);
+        const nsAString& name = tokenizer.nextToken();
         PRInt32 aNSID = kNameSpaceID_None;
         nsCOMPtr<nsIAtom> prefix;
         XMLUtils::getPrefix(name, getter_AddRefs(prefix));
