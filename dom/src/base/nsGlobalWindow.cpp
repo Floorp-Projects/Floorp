@@ -3081,6 +3081,10 @@ GlobalWindowImpl::CheckForAbusePoint()
               if (::ContainsEventName("select", eventPref))
                 abuse = openControlled;
               break;
+            case NS_FORM_CHANGE :
+              if (::ContainsEventName("change", eventPref))
+                abuse = openControlled;
+              break;
             case NS_RESIZE_EVENT :
               if (::ContainsEventName("resize", eventPref))
                 abuse = openControlled;
