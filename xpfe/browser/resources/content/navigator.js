@@ -406,6 +406,30 @@ function UpdateHistory(event)
 	}
 }
 
+
+function savePage( url ) {
+        // Default is to save current page.
+        if ( !url ) {
+            url = window.content.location.href;
+        }
+        // Use stream xfer component to prompt for destination and save.
+        var xfer = Components
+                     .classes[ "component://netscape/appshell/component/xfer" ]
+                       .getService( Components.interfaces.nsIStreamTransfer );
+        try {
+            // When Necko lands, we need to receive the real nsIChannel and
+            // do SelectFileAndTransferLocation!
+
+            // Use this for now...
+            xfer.SelectFileAndTransferLocationSpec( url, window );
+        } catch( exception ) {
+            // Failed (or cancelled), give them another chance.
+            dump( "SelectFileAndTransferLocationSpec failed, rv=" + exception + "\n" );
+        }
+        return;
+    }
+
+
 function UpdateBookmarksLastVisitedDate(event)
 {
 

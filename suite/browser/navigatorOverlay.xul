@@ -103,7 +103,6 @@ Contributor(s): ______________________________________. -->
 	<broadcaster id="Browser:PrintPreview"  value="&printPreviewCmd.label;" disabled="true"  oncommand="BrowserReload();"/>
 	<broadcaster id="Browser:Print"  value="&printCmd.label;"        						 oncommand="BrowserPrint();"/>
   
-  
 	<broadcaster id="canGoBack"	disabled="true" oncommand="BrowserBack();"/>
 	<broadcaster id="canGoForward" disabled="true"	oncommand="BrowserForward();"/>
 	<broadcaster id="Browser:Home" value="&goHomeCmd.label;" 					oncommand="BrowserHome();" />
@@ -135,6 +134,7 @@ Contributor(s): ______________________________________. -->
 	      <menuitem accesskey="&openFileCmd.accesskey;" key="openFileKb" observes="Browser:OpenFile"/>
 	      <menuseparator/>
 	      <menuitem id="menu_close"/>
+		  <menuitem id="context-savepage" value="&savePageCmd.label;" accesskey="&savePageCmd.accesskey;" oncommand="savePage();"/>
 	      <menuseparator/>
 	      <menuitem accesskey="&sendPageCmd.label;" observes="Browser:SendPage"/>
 	      <menuitem accesskey="&editPageCmd.label;" observes="Browser:EditPage" />
