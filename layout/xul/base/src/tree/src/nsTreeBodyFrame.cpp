@@ -3275,8 +3275,7 @@ NS_IMETHODIMP nsTreeBodyFrame::ScrollToRow(PRInt32 aRow)
   // grab the scroll widget and make it paint synchronously. This is
   // sorta slow (having to paint the entire tree), but it works.
   if ( mDragSession ) {
-    nsCOMPtr<nsIWidget> scrollWidget;
-    mScrollbar->GetWindow(mPresContext, getter_AddRefs(scrollWidget));
+    nsIWidget* scrollWidget = mScrollbar->GetWindow();
     if ( scrollWidget )
       scrollWidget->Invalidate(PR_TRUE);
   }
