@@ -171,7 +171,7 @@ public:
                                       {
                                           return mInputStream;
                                       }
-    char                              eof() const { return get_at_eof(); }
+    PRBool                            eof() const { return get_at_eof(); }
     char                              get();
     void                              close()
                                       {
