@@ -71,8 +71,8 @@ all::
 $(RESFILE):: $(OBJDIR)\module.rc
 
 $(OBJDIR)\module.rc:
-	echo $(PERL) $(topsrcdir)\config\version_win.pl $(_RC_STRING)
-	$(PERL) $(topsrcdir)\config\version_win.pl $(_RC_STRING)
+	echo $(PERL) $(DEPTH)\config\version_win.pl $(_RC_STRING)
+	$(PERL) $(DEPTH)\config\version_win.pl $(_RC_STRING)
 	$(RC) $(OBJDIR)\module.rc
 
 clobber_resfile:
