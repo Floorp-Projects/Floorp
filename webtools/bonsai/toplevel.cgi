@@ -144,6 +144,9 @@ proc GetInfoForPeople {peoplelist} {
     if {$ldaperror} {
         return
     }
+    if {[cequal $ldapserver ""]} {
+        return
+    }
     if {[catch {set fid [open "|./data/ldapsearch -b \"o=Netscape Communications Corp.,c=US\" -h $ldapserver -p $ldapport -s sub -S mail \"$query\" mail cn nscpcurcontactinfo" r]} errvar]} {
         set ldaperror 1
     } else {
@@ -193,7 +196,10 @@ if {[info exists people]} {
     }
 
     puts "<table border cellspacing=2>"
-    puts "<th colspan=2>Who</th><th>What</th><th>How to contact</th>"
+    puts "<th colspan=2>Who</th><th>What</th>"
+    if {![cequal $ldapserver ""]} {
+        puts "<th>How to contact</th>"
+    }
 
     foreach p $peoplelist {
         if {[info exists closedcheckin($p)]} {
