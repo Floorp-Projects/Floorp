@@ -46,6 +46,17 @@ class nsIBufferOutputStream;
 #define NS_BUFFER_PROGID "component://netscape/buffer"
 #define NS_BUFFER_CLASSNAME "Buffer"
 
+typedef NS_CALLBACK(nsReadSegmentFun)(void* closure,
+                                      char* toRawSegment, 
+                                      PRUint32 fromOffset,
+                                      PRUint32 count,
+                                      PRUint32 *readCount);
+typedef NS_CALLBACK(nsWriteSegmentFun)(void* closure,
+                                       const char* fromRawSegment, 
+                                       PRUint32 toOffset,
+                                       PRUint32 count,
+                                       PRUint32 *writeCount);
+
 class nsIBuffer : public nsISupports {
 public:
     NS_DEFINE_STATIC_IID_ACCESSOR(NS_IBUFFER_IID);
@@ -61,11 +72,25 @@ public:
     NS_IMETHOD Init(PRUint32 growBySize, PRUint32 maxSize,
                     nsIAllocator* allocator) = 0;
 
+    /**
+     * This read method allows you to pass a callback function that gets called 
+     * repeatedly for each buffer segment until the entire amount is read.
+     * This avoids the need to copy data to/from and intermediate buffer.
+     */
+    NS_IMETHOD ReadSegments(nsWriteSegmentFun writer, void* closure, PRUint32 count,
+                            PRUint32 *readCount) = 0;
     NS_IMETHOD Read(char* toBuf, PRUint32 bufLen, PRUint32 *readCount) = 0;
     NS_IMETHOD GetReadBuffer(PRUint32 startPosition, 
                              char* *result,
                              PRUint32 *readBufferLength) = 0;
 
+    /**
+     * This write method allows you to pass a callback function that gets called 
+     * repeatedly for each buffer segment until the entire amount is written.
+     * This avoids the need to copy data to/from and intermediate buffer.
+     */
+    NS_IMETHOD WriteSegments(nsReadSegmentFun reader, void* closure, PRUint32 count,
+                             PRUint32 *writeCount) = 0;
     NS_IMETHOD Write(const char* fromBuf, PRUint32 bufLen, PRUint32 *writeCount) = 0;
     NS_IMETHOD WriteFrom(nsIInputStream* fromStream, PRUint32 count, PRUint32 *writeCount) = 0;
     NS_IMETHOD GetWriteBuffer(PRUint32 startPosition,
