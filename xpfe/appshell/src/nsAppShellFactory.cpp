@@ -29,6 +29,8 @@
 #include "rdf.h"
 #include "nsICommonDialogs.h"
 #include "nsIDialogParamBlock.h"
+#include "nsAbout.h"
+#include "nsIGenericFactory.h"
 /* extern the factory entry points for each component... */
 nsresult NS_NewAppShellServiceFactory(nsIFactory** aFactory);
 nsresult NS_NewXPConnectFactoryFactory(nsIFactory** aResult);
@@ -48,6 +50,7 @@ static NS_DEFINE_CID(kSessionHistoryCID,				  NS_SESSION_HISTORY_CID);
 
 static NS_DEFINE_CID(	kCommonDialogsCID, NS_CommonDialog_CID );
 static NS_DEFINE_CID( kDialogParamBlockCID, NS_DialogParamBlock_CID );
+static NS_DEFINE_CID( kAboutModuleCID,      NS_ABOUT_CID);
 /*
  * Global entry point to register all components in the registry...
  */
@@ -68,6 +71,8 @@ NSRegisterSelf(nsISupports* serviceMgr, const char *path)
                                          path, PR_TRUE, PR_TRUE);
     nsComponentManager::RegisterComponent(kCommonDialogsCID, NULL, "component://netscape/appshell/commonDialogs", path, PR_TRUE, PR_TRUE);
     nsComponentManager::RegisterComponent(kDialogParamBlockCID, NULL, NULL, path, PR_TRUE, PR_TRUE);
+    
+     nsComponentManager::RegisterComponent(kAboutModuleCID,  "about:", NS_ABOUT_MODULE_PROGID_PREFIX, path, PR_TRUE, PR_TRUE);
    return NS_OK;
 }
 
@@ -87,7 +92,7 @@ NSUnregisterSelf(nsISupports* serviceMgr, const char *path)
     nsComponentManager::UnregisterComponent(kSessionHistoryCID, path);
     nsComponentManager::UnregisterComponent(kCommonDialogsCID, path);
     nsComponentManager::UnregisterComponent(kDialogParamBlockCID, path);
-      
+    nsComponentManager::UnregisterComponent(kAboutModuleCID, path); 
     return NS_OK;
 }
 
@@ -152,6 +157,12 @@ NSGetFactory(nsISupports* serviceMgr,
   else  if ( aClass.Equals( kDialogParamBlockCID ) )
   {
   	rv = NS_NewDialogParamBlockFactory( aFactory );
+  }
+  else if ( aClass.Equals(kAboutModuleCID ) )
+  {
+  	  nsIGenericFactory* fact;
+  	 rv = NS_NewGenericFactory(&fact, nsAbout::Create);
+  	 *aFactory = fact;
   }
   return rv;
 }

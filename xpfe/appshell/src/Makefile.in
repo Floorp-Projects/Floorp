@@ -41,6 +41,7 @@ CPPSRCS		= \
 		nsSessionHistory.cpp \
 		nsDialogParamBlock.cpp \
 		nsCommonDialogs.cpp \
+		nsAbout.cpp \
 		$(NULL)
 
 EXTRA_DSO_LDOPTS = -L$(DIST)/bin -ljsdom

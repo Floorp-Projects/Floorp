@@ -33,6 +33,7 @@ install::
 	$(MAKE_INSTALL) commonDialog.xul $(DISTBROWSER)
 	$(MAKE_INSTALL) commonDialog.js $(DISTBROWSER)
 	$(MAKE_INSTALL) strres.js $(DISTBROWSER)
+	$(MAKE_INSTALL) about.html $(DISTBROWSER)
 
 clobber::
   rm -f $(DIST)\bin\chrome\global\content\default\*.*
