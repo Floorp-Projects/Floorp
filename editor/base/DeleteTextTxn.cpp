@@ -90,7 +90,7 @@ NS_IMETHODIMP DeleteTextTxn::Undo(void)
   if (NS_SUCCEEDED(result))
   {
     nsCOMPtr<nsIDOMSelection> selection;
-    nsresult selectionResult = mEditor->GetSelection(getter_AddRefs(selection));
+    result = mEditor->GetSelection(getter_AddRefs(selection));
 		if (NS_FAILED(result)) return result;
 		if (!selection) return NS_ERROR_NULL_POINTER;
     result = selection->Collapse(mElement, mOffset);
