@@ -88,7 +88,7 @@
  * Windows PlatformInstance
  *----------------------------------------------------------------------------*/
 
-#if defined(XP_PC)
+#if defined(XP_PC) && !defined(XP_OS2)          // XXXX OS2TODO
 typedef struct _PlatformInstance
 {
     HWND		fhWnd;
@@ -311,7 +311,7 @@ public:
 
     void SetMode(nsPluginMode mode) { fMode = mode; }
 
-#ifdef XP_PC
+#if defined(XP_PC) && !defined(XP_OS2)
     static LRESULT CALLBACK 
     PluginWindowProc( HWND hWnd, UINT Msg, WPARAM wParam, LPARAM lParam);
 #endif
@@ -911,7 +911,7 @@ NS_IMETHODIMP SimplePluginInstance::SetText(const char * aText)
         if(!fText)
             return NS_ERROR_OUT_OF_MEMORY;
 
-#ifdef XP_PC
+#if defined(XP_PC) && !defined(XP_OS2)
         if(fPlatform.fhWnd) {
             InvalidateRect( fPlatform.fhWnd, NULL, TRUE );
             UpdateWindow( fPlatform.fhWnd );
@@ -1195,7 +1195,7 @@ SimplePluginInstance::PlatformHandleEvent(nsPluginEvent* event)
  * Windows Implementations
  *----------------------------------------------------------------------------*/
 
-#elif defined(XP_PC)
+#elif defined(XP_PC) && !defined(XP_OS2)
 const char* gInstanceLookupString = "instance->pdata";
 
 /*+++++++++++++++++++++++++++++++++++++++++++++++++
