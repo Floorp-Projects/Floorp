@@ -22,6 +22,7 @@ sub InitVars {
     #relative path to binary
     $BinaryName{'grendel'} = 'Main.class';
 
+    $FE = 'grendel';
     # Set these to what makes sense for your system
     $cpus = 1;
     $Make = 'gmake'; # Must be gnu make
@@ -47,7 +48,7 @@ sub InitVars {
     $Topsrcdir = 'mozilla/grendel';
     $BuildObjName = '';
     $BuildConfigDir = 'mozilla/grendel/config';
-    $ClobberStr = 'realclean';
+    $ClobberStr = 'distclean';
     # Yeah, i know, hardcoding is bad. Set this to what you want
     $ConfigGuess = './build/autoconf/config.guess';
     $Logfile = '${BuildDir}.log';
