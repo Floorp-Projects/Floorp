@@ -426,25 +426,7 @@ nsObjectFrame::Init(nsIPresContext*  aPresContext,
     return rv;
 
   mPresContext = aPresContext; // weak ref
-  
-  // This is way of ensure the previous document is gone. Important when reloading either 
-  // the page or refreshing plugins. In the case of an OBJECT frame,
-  // we want to flush out the prevous content viewer which will cause the previous document
-  // and plugins to be cleaned up. Then we can create our new plugin without the old instance
-  // hanging around.
-  nsCOMPtr<nsISupports> container;
-  mPresContext->GetContainer(getter_AddRefs(container));
-  if (container) {
-    nsCOMPtr<nsIDocShell> cvc(do_QueryInterface(container));
-    if (cvc) {
-      nsCOMPtr<nsIContentViewer> cv;
-      cvc->GetContentViewer(getter_AddRefs(cv));
-      if (cv)
-        cv->Show();
-    }
-  }
-  
-  
+
   PRBool bImage = PR_FALSE;
 
   //Ideally should be call to imlib, when it is available
@@ -3122,6 +3104,24 @@ NS_IMETHODIMP nsPluginInstanceOwner::Init(nsIPresContext* aPresContext, nsObject
   nsCOMPtr<nsIContent> content;
   mOwner->GetContent(getter_AddRefs(content));
   
+  // This is way of ensure the previous document is gone. Important when reloading either 
+  // the page or refreshing plugins. In the case of an OBJECT frame,
+  // we want to flush out the prevous content viewer which will cause the previous document
+  // and plugins to be cleaned up. Then we can create our new plugin without the old instance
+  // hanging around.
+
+  nsCOMPtr<nsISupports> container;
+  aPresContext->GetContainer(getter_AddRefs(container));
+  if (container) {
+    nsCOMPtr<nsIDocShell> cvc(do_QueryInterface(container));
+    if (cvc) {
+      nsCOMPtr<nsIContentViewer> cv;
+      cvc->GetContentViewer(getter_AddRefs(cv));
+      if (cv)
+        cv->Show();
+    }
+  }
+
   // Register focus listener
   if (content) {
     nsCOMPtr<nsIDOMEventReceiver> receiver(do_QueryInterface(content));
