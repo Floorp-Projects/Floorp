@@ -44,10 +44,10 @@ class FileImpl
     public:
                                         FileImpl(PRFileDesc* inDesc)
                                             : mFileDesc(inDesc)
+											, mNSPRMode(0)
                                             , mFailed(PR_FALSE)
                                             , mEOF(PR_FALSE)
                                             , mLength(-1)
-											, mNSPRMode(0)
                                         {
                                             NS_INIT_REFCNT();
                                         }
@@ -56,10 +56,10 @@ class FileImpl
                                             int nsprMode,
                                             PRIntn accessMode)
                                             : mFileDesc(nsnull)
+											, mNSPRMode(-1)
                                             , mFailed(PR_FALSE)
                                             , mEOF(PR_FALSE)
                                             , mLength(-1)
-											, mNSPRMode(-1)
                                         {
                                             NS_INIT_REFCNT();
                                             Open(inFile, nsprMode, accessMode);
