@@ -67,6 +67,9 @@ static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
 #include "nsIServiceManager.h"
 #include "nsIDOMNode.h"
 
+#include "imgIContainer.h"
+#include "imgILoader.h"
+
 
 #include "nsContentPolicyUtils.h"
 
@@ -108,11 +111,8 @@ NS_NewImageFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame)
 }
 
 nsImageFrame::nsImageFrame() :
-  mLowSrcImageLoader(nsnull)
-#ifdef USE_IMG2
-  , mGotInitialReflow(PR_FALSE)
-  , mIntrinsicSize(0, 0)
-#endif
+  mIntrinsicSize(0, 0),
+  mGotInitialReflow(PR_FALSE)
 {
   // Size is constrained if we have a width and height. 
   // - Set in reflow in case the attributes are changed
@@ -121,9 +121,6 @@ nsImageFrame::nsImageFrame() :
 
 nsImageFrame::~nsImageFrame()
 {
-  if (mLowSrcImageLoader != nsnull) {
-    delete mLowSrcImageLoader;
-  }
 }
 
 NS_IMETHODIMP
@@ -184,12 +181,11 @@ nsImageFrame::Destroy(nsIPresContext* aPresContext)
   // Tell our image map, if there is one, to clean up
   // This causes the nsImageMap to unregister itself as
   // a DOM listener.
-    if(mImageMap) {
-      mImageMap->Destroy();
-      NS_RELEASE(mImageMap);
-    }
+  if(mImageMap) {
+    mImageMap->Destroy();
+    NS_RELEASE(mImageMap);
+  }
 
-#ifdef USE_IMG2
   if (mImageRequest)
     mImageRequest->Cancel(NS_ERROR_FAILURE); // NS_BINDING_ABORT ?
   if (mLowImageRequest)
@@ -203,24 +199,10 @@ nsImageFrame::Destroy(nsIPresContext* aPresContext)
   mLowImageRequest = nsnull;
   mListener = nsnull;
 
-#endif
-
-#ifndef USE_IMG2
-  // Release image loader first so that it's refcnt can go to zero
-  mImageLoader.StopAllLoadImages(aPresContext);
-  if (mLowSrcImageLoader != nsnull) {
-    mLowSrcImageLoader->StopAllLoadImages(aPresContext);
-  }
-#endif
-
   return nsLeafFrame::Destroy(aPresContext);
 }
 
-#ifdef USE_IMG2
-#include "imgIContainer.h"
-#include "imgILoader.h"
 
-#endif
 
 NS_IMETHODIMP
 nsImageFrame::Init(nsIPresContext*  aPresContext,
@@ -252,83 +234,21 @@ nsImageFrame::Init(nsIPresContext*  aPresContext,
   nsresult lowSrcResult;
   lowSrcResult = mContent->GetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::lowsrc, lowSrc);
 
-#ifndef USE_IMG2
-  nsCOMPtr<nsIURI> baseURL;
-  GetBaseURI(getter_AddRefs(baseURL));
-#endif
-
   // Set the image loader's source URL and base URL
-#ifdef USE_IMG2
-  if (!mListener) {
-    nsImageListener *listener = new nsImageListener(this);
-    if (!listener) return NS_ERROR_OUT_OF_MEMORY;
-    NS_ADDREF(listener);
-    listener->QueryInterface(NS_GET_IID(imgIDecoderObserver), getter_AddRefs(mListener));
-    NS_ASSERTION(mListener, "queryinterface for the listener failed");
-    NS_RELEASE(listener);
+  if (NS_CONTENT_ATTR_HAS_VALUE == lowSrcResult && !lowSrc.IsEmpty()) {
+    LoadImage(lowSrc, aPresContext, getter_AddRefs(mLowImageRequest));
   }
 
-  nsCOMPtr<imgILoader> il(do_GetService("@mozilla.org/image/loader;1", &rv));
-  if (NS_FAILED(rv))
-    return rv;
-
-  nsCOMPtr<nsILoadGroup> loadGroup;
-  GetLoadGroup(aPresContext, getter_AddRefs(loadGroup));
-#endif
-
-  if (NS_CONTENT_ATTR_HAS_VALUE == lowSrcResult && lowSrc.Length() > 0) {
-#ifdef USE_IMG2
-    nsCOMPtr<nsIURI> lowURI;
-    GetURI(lowSrc, getter_AddRefs(lowURI));
-
-    if (CanLoadImage(lowURI)) {
-      il->LoadImage(lowURI, loadGroup, mListener, aPresContext, getter_AddRefs(mLowImageRequest));
-    }
-#else
-    mLowSrcImageLoader = new nsHTMLImageLoader;
-    if (mLowSrcImageLoader) {
-      mLowSrcImageLoader->Init(this, UpdateImageFrame, (void*)mLowSrcImageLoader, baseURL, lowSrc);
-    }
-#endif
-  }
-
-
-#ifdef USE_IMG2
   mInitialLoadCompleted = PR_FALSE;
   mCanSendLoadEvent = PR_TRUE;
 
-  nsCOMPtr<nsIURI> srcURI;
-  GetURI(src, getter_AddRefs(srcURI));
-  if (CanLoadImage(srcURI)) {
-    il->LoadImage(srcURI, loadGroup, mListener, aPresContext, getter_AddRefs(mImageRequest));
-    // if the image was found in the cache, it is possible that LoadImage will result in a call to OnStartContainer()
-  }
-#else
-  mImageLoader.Init(this, UpdateImageFrame, (void*)&mImageLoader, baseURL, src);
-
-  mInitialLoadCompleted = PR_FALSE;
-  mCanSendLoadEvent = PR_TRUE;
-#endif
+  rv = LoadImage(src, aPresContext, getter_AddRefs(mImageRequest)); // if the image was found in the cache,
+                                                                       // it is possible that LoadImage will result in
+                                                                       // a call to OnStartContainer()
 
   return rv;
 }
 
-#ifndef USE_IMG2
-
-nsresult
-nsImageFrame::UpdateImageFrame(nsIPresContext* aPresContext,
-                               nsHTMLImageLoader* aLoader,
-                               nsIFrame* aFrame,
-                               void* aClosure,
-                               PRUint32 aStatus)
-{
-  nsImageFrame* frame = (nsImageFrame*) aFrame;
-  return frame->UpdateImage(aPresContext, aStatus, aClosure);
-}
-#endif
-
-
-#ifdef USE_IMG2
 
 NS_IMETHODIMP nsImageFrame::OnStartDecode(imgIRequest *aRequest, nsIPresContext *aPresContext)
 {
@@ -515,120 +435,7 @@ NS_IMETHODIMP nsImageFrame::FrameChanged(imgIContainer *aContainer, nsIPresConte
 
   return NS_OK;
 }
-#endif
 
-#ifndef USE_IMG2
-
-nsresult
-nsImageFrame::UpdateImage(nsIPresContext* aPresContext, PRUint32 aStatus, void* aClosure)
-{
-#ifdef NOISY_IMAGE_LOADING
-  ListTag(stdout);
-  printf(": UpdateImage: status=%x\n", aStatus);
-#endif
-
-  nsCOMPtr<nsIPresShell> presShell;
-  aPresContext->GetShell(getter_AddRefs(presShell));
-
-  // check to see if an image error occurred
-  PRBool imageFailedToLoad = PR_FALSE;
-  if (NS_IMAGE_LOAD_STATUS_ERROR & aStatus) { // We failed to load the image. Notify the pres shell
-
-    // One of the two images didn't load, which one?
-    // see if we are loading the lowsrc image
-    if (mLowSrcImageLoader != nsnull) {
-      // We ARE loading the lowsrc image
-      // check to see if the closure data is the lowsrc
-      if (aClosure == mLowSrcImageLoader) {
-        // The lowsrc failed to load, but only set the bool to true
-        // true if the src image failed.
-        imageFailedToLoad = mImageLoader.GetImage() == nsnull || (mImageLoader.GetLoadStatus() & NS_IMAGE_LOAD_STATUS_ERROR);
-      } else { 
-        // src failed to load, 
-        // see if the lowsrc is here so we can paint it instead
-        imageFailedToLoad = (mLowSrcImageLoader->GetLoadStatus() & NS_IMAGE_LOAD_STATUS_ERROR) != 0;
-      }
-    } else {
-      imageFailedToLoad = PR_TRUE;
-    }
-  }
-
-  // if src failed and there is no lowsrc
-  // or both failed to load, then notify the PresShell
-  if (imageFailedToLoad) {    
-    if (presShell) {
-      nsAutoString usemap;
-      mContent->GetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::usemap, usemap);    
-      // We failed to load the image. Notify the pres shell if we aren't an image map
-      if (usemap.IsEmpty()) {
-        presShell->CantRenderReplacedElement(aPresContext, this);      
-      }
-    }
-  } else if (NS_IMAGE_LOAD_STATUS_SIZE_AVAILABLE & aStatus) {
-    // see if the image is ready in this notification as well, and if the size is not needed
-    // check if we have a constrained size: if so, no need to reflow since we cannot change our size
-    if(!mSizeConstrained) {
-      if (mParent) {
-        mState |= NS_FRAME_IS_DIRTY;
-	      mParent->ReflowDirtyChild(presShell, (nsIFrame*) this);
-      }
-      else {
-        NS_ASSERTION(0, "No parent to pass the reflow request up to.");
-      }
-    } else {
-#ifdef NOISY_IMAGE_LOADING
-      printf("Image has frozen size: skipping reflow for NS_IMAGE_LOAD_STATUS_SIZE_AVAILABLE status\n");
-#endif
-    }
-  }
-
-  //After these DOM events are fired its possible that this frame may be deleted.  As a result
-  //the code should not attempt to access any of the frames internal data after this point.
-  if (presShell) {
-    if (imageFailedToLoad) {
-      // Send error event
-      nsEventStatus status = nsEventStatus_eIgnore;
-      nsEvent event;
-      event.eventStructType = NS_EVENT;
-      event.message = NS_IMAGE_ERROR;
-      presShell->HandleEventWithTarget(&event,this,mContent,NS_EVENT_FLAG_INIT,&status);
-    }
-    else if (mCanSendLoadEvent && NS_IMAGE_LOAD_STATUS_IMAGE_READY & aStatus) {
-      // Send load event
-      mCanSendLoadEvent = PR_FALSE;
-
-      nsEventStatus status = nsEventStatus_eIgnore;
-      nsEvent event;
-      event.eventStructType = NS_EVENT;
-      event.message = NS_IMAGE_LOAD;
-      presShell->HandleEventWithTarget(&event,this,mContent,NS_EVENT_FLAG_INIT | NS_EVENT_FLAG_CANT_BUBBLE,&status);
-    }
-  }
-
-#if 0 // ifdef'ing out the deleting of the lowsrc image
-      // if the "src" image was change via script to an iage that
-      // didn't exist, the the author would expect the lowsrc to be displayed.
-  // now check to see if we have the entire low
-  if (mLowSrcImageLoader != nsnull) {
-    nsIImage * image = mImageLoader.GetImage();
-    if (image) {
-      PRInt32 imgSrcLinesLoaded = image != nsnull?image->GetDecodedY2():-1;
-      if (image->GetDecodedY2() == image->GetHeight()) {
-        delete mLowSrcImageLoader;
-        mLowSrcImageLoader = nsnull;
-      }
-      NS_RELEASE(image);
-    }
-  }
-#endif
-
-  return NS_OK;
-}
-
-#endif
-
-
-#ifdef USE_IMG2
 
 #define MINMAX(_value,_min,_max) \
     ((_value) < (_min)           \
@@ -637,16 +444,12 @@ nsImageFrame::UpdateImage(nsIPresContext* aPresContext, PRUint32 aStatus, void* 
         ? (_max)                 \
         : (_value)))
 
-#endif
-
-
 void
 nsImageFrame::GetDesiredSize(nsIPresContext* aPresContext,
                              const nsHTMLReflowState& aReflowState,
                              nsHTMLReflowMetrics& aDesiredSize)
 {
 
-#ifdef USE_IMG2
   nscoord widthConstraint = NS_INTRINSICSIZE;
   nscoord heightConstraint = NS_INTRINSICSIZE;
   PRBool fixedContentWidth = PR_FALSE;
@@ -735,44 +538,6 @@ nsImageFrame::GetDesiredSize(nsIPresContext* aPresContext,
 
   aDesiredSize.width = mComputedSize.width;
   aDesiredSize.height = mComputedSize.height;
-
-#else
-  PRBool cancelledReflow = PR_FALSE;
-
-  if (mLowSrcImageLoader && !(mImageLoader.GetLoadStatus() & NS_IMAGE_LOAD_STATUS_IMAGE_READY)) {
-#ifdef DEBUG_RODS
-    PRBool gotDesiredSize =
-#endif
-    mLowSrcImageLoader->GetDesiredSize(aPresContext, &aReflowState, aDesiredSize);
-#ifdef DEBUG_RODS
-    if (gotDesiredSize) {
-      // We have our "final" desired size. Cancel any pending
-      // incremental reflows aimed at this frame.
-      nsIPresShell* shell;
-      aPresContext->GetShell(&shell);
-      if (shell) {
-        shell->CancelReflowCommand(this, nsnull);
-        NS_RELEASE(shell);
-      }
-    }
-#endif
-  }
-
-  // Must ask for desiredSize to start loading of image
-  // that seems like a bogus API
-  if (mImageLoader.GetDesiredSize(aPresContext, &aReflowState, aDesiredSize)) {
-    if (!cancelledReflow) {
-      // We have our "final" desired size. Cancel any pending
-      // incremental reflows aimed at this frame.
-      nsIPresShell* shell;
-      aPresContext->GetShell(&shell);
-      if (shell) {
-        shell->CancelReflowCommand(this, nsnull);
-        NS_RELEASE(shell);
-      }
-    }
-  }
-#endif
 }
 
 void
@@ -803,10 +568,8 @@ nsImageFrame::Reflow(nsIPresContext*          aPresContext,
   // see if we have a frozen size (i.e. a fixed width and height)
   HaveFixedSize(aReflowState, mSizeConstrained);
 
-#ifdef USE_IMG2
   if (aReflowState.reason == eReflowReason_Initial)
     mGotInitialReflow = PR_TRUE;
-#endif
 
   GetDesiredSize(aPresContext, aReflowState, aMetrics);
   AddBordersAndPadding(aPresContext, aReflowState, aMetrics, mBorderPadding);
@@ -1062,7 +825,6 @@ nsImageFrame::Paint(nsIPresContext* aPresContext,
     nsLeafFrame::Paint(aPresContext, aRenderingContext, aDirtyRect,
                        aWhichLayer);
 
-#ifdef USE_IMG2
     nsCOMPtr<imgIContainer> imgCon;
     nsCOMPtr<imgIContainer> lowImgCon;
 
@@ -1072,43 +834,18 @@ nsImageFrame::Paint(nsIPresContext* aPresContext,
     if (mLowImageRequest) {
       mLowImageRequest->GetImage(getter_AddRefs(lowImgCon));
     }
-#else
-    // first get to see if lowsrc image is here
-    PRInt32 lowSrcLinesLoaded = -1;
-    PRInt32 imgSrcLinesLoaded = -1;
 
-    nsIImage * lowImage = nsnull;
-    nsIImage * image    = nsnull;
-
-    // if lowsrc is here 
-    if (mLowSrcImageLoader) {
-      lowImage = mLowSrcImageLoader->GetImage();
-      lowSrcLinesLoaded = lowImage != nsnull?lowImage->GetDecodedY2():-1;
-    }
-#endif
-
-#ifdef USE_IMG2
-    PRUint32 loadStatus = imgIRequest::STATUS_NONE;
+    PRUint32 loadStatus = imgIRequest::STATUS_ERROR;
     if (mImageRequest) {
       mImageRequest->GetImageStatus(&loadStatus);
     }
     if (loadStatus & imgIRequest::STATUS_ERROR || !(imgCon || lowImgCon)) {
-#else
-    image = mImageLoader.GetImage();
-    imgSrcLinesLoaded = image != nsnull?image->GetDecodedY2():-1;
-
-    if (!image && !lowImage) {
-#endif
       // No image yet, or image load failed. Draw the alt-text and an icon
       // indicating the status
       if (NS_FRAME_PAINT_LAYER_BACKGROUND == aWhichLayer &&
           !mInitialLoadCompleted) {
         DisplayAltFeedback(aPresContext, aRenderingContext,
-#ifdef USE_IMG2
                            (loadStatus & imgIRequest::STATUS_ERROR)
-#else
-                           mImageLoader.GetLoadImageFailed()
-#endif
                            ? NS_ICON_BROKEN_IMAGE
                            : NS_ICON_LOADING_IMAGE);
       }
@@ -1121,7 +858,6 @@ nsImageFrame::Paint(nsIPresContext* aPresContext,
         nsRect inner;
         GetInnerArea(aPresContext, inner);
 
-#ifdef USE_IMG2
         if (loadStatus & imgIRequest::STATUS_ERROR) {
           if (imgCon) {
             inner.SizeTo(mComputedSize);
@@ -1151,40 +887,6 @@ nsImageFrame::Paint(nsIPresContext* aPresContext,
             aRenderingContext.DrawScaledImage(imgCon, &r, &d);
           }
         }
-#else
-        /*
-         * aDirtyRect is the dirty rect, which we want to use to minimize
-         * painting, but it's in terms of the frame and not the image, so
-         * we need to use the intersection of the dirty rect and the inner
-         * image rect. 
-         */
-        if (inner.IntersectRect(inner, aDirtyRect)) {
-          if (mImageLoader.GetLoadImageFailed()) {
-            float p2t;
-            aPresContext->GetScaledPixelsToTwips(&p2t);
-            if (image != nsnull) {
-              inner.width  = NSIntPixelsToTwips(image->GetWidth(), p2t);
-              inner.height = NSIntPixelsToTwips(image->GetHeight(), p2t);
-            } else if (lowImage != nsnull) {
-              inner.width  = NSIntPixelsToTwips(lowImage->GetWidth(), p2t);
-              inner.height = NSIntPixelsToTwips(lowImage->GetHeight(), p2t);
-            }
-          }
-          /*
-           * We need to adjust the image source rect to match
-           * the image's coordinates: we slide to the right and down.
-           */
-          nsRect innerSource(inner);
-          innerSource.x -= mBorderPadding.left;
-          innerSource.y -= mBorderPadding.top;
-
-          if (image != nsnull && imgSrcLinesLoaded > 0) {
-            aRenderingContext.DrawImage(image, innerSource, inner);
-          } else if (lowImage != nsnull && lowSrcLinesLoaded > 0) {
-            aRenderingContext.DrawImage(lowImage, innerSource, inner);
-          }
-        }
-#endif
       }
 
       nsImageMap* map = GetImageMap(aPresContext);
@@ -1218,10 +920,6 @@ nsImageFrame::Paint(nsIPresContext* aPresContext,
 #endif
     }
 
-#ifndef USE_IMG2
-    NS_IF_RELEASE(lowImage);
-    NS_IF_RELEASE(image);
-#endif
   }
   
   return nsFrame::Paint(aPresContext, aRenderingContext, aDirtyRect, aWhichLayer);
@@ -1535,81 +1233,24 @@ nsImageFrame::AttributeChanged(nsIPresContext* aPresContext,
     return rv;
   }
   if (nsHTMLAtoms::src == aAttribute) {
-    nsAutoString oldSRC, newSRC;
-    mImageLoader.GetURLSpec(oldSRC);
+    nsAutoString newSRC;
     aChild->GetAttribute(kNameSpaceID_None, nsHTMLAtoms::src, newSRC);
-    if (!oldSRC.Equals(newSRC)) {
-#ifdef NOISY_IMAGE_LOADING
-      ListTag(stdout);
-      printf(": new image source; old='");
-      fputs(oldSRC, stdout);
-      printf("' new='");
-      fputs(newSRC, stdout);
-      printf("'\n");
-#endif
 
+    PRUint32 loadStatus = imgIRequest::STATUS_ERROR;
 
+    if (mImageRequest)
+      mImageRequest->GetImageStatus(&loadStatus);
 
-      PRUint32 loadStatus;
-#ifdef USE_IMG2
-      nsCOMPtr<nsILoadGroup> loadGroup;
-      GetLoadGroup(aPresContext, getter_AddRefs(loadGroup));
-
-      loadStatus = imgIRequest::STATUS_NONE;
-
-      if (mImageRequest)
-        mImageRequest->GetImageStatus(&loadStatus);
-
-      if (loadStatus & imgIRequest::STATUS_SIZE_AVAILABLE) {
-        nsCOMPtr<nsIURI> uri;
-        GetURI(newSRC, getter_AddRefs(uri));
-
-        nsCOMPtr<imgILoader> il(do_GetService("@mozilla.org/image/loader;1"));
-        NS_ASSERTION(il, "no image loader!");
-
-        il->LoadImage(uri, loadGroup, mListener, aPresContext, getter_AddRefs(mImageRequest));
-
-        loadStatus = imgIRequest::STATUS_ERROR;
-        if (mImageRequest)
-          mImageRequest->GetImageStatus(&loadStatus);
-        if (loadStatus & imgIRequest::STATUS_SIZE_AVAILABLE) {
-
-#else
-      if (mImageLoader.IsImageSizeKnown()) {
-        mImageLoader.UpdateURLSpec(aPresContext, newSRC);
-        loadStatus = mImageLoader.GetLoadStatus();
-        if (loadStatus & NS_IMAGE_LOAD_STATUS_IMAGE_READY) {
-#endif
-          // Trigger a paint now because image-loader won't if the
-          // image is already loaded and ready to go.
-          Invalidate(aPresContext, nsRect(0, 0, mRect.width, mRect.height), PR_FALSE);
-        }
+    if (!(loadStatus & imgIRequest::STATUS_SIZE_AVAILABLE)) {
+      if (mImageRequest) {
+        mImageRequest->Cancel(NS_ERROR_FAILURE);
+        mImageRequest = nsnull;
       }
-      else {        
-        // Stop the earlier image load
-#ifdef USE_IMG2
-        if (mImageRequest)
-          mImageRequest->Cancel(NS_ERROR_FAILURE);
 
-        mCanSendLoadEvent = PR_TRUE;
-
-        nsCOMPtr<nsIURI> uri;
-        GetURI(newSRC, getter_AddRefs(uri));
-
-        nsCOMPtr<imgILoader> il(do_GetService("@mozilla.org/image/loader;1"));
-        NS_ASSERTION(il, "no image loader!");
-
-        il->LoadImage(uri, loadGroup, mListener, aPresContext, getter_AddRefs(mImageRequest));
-#else
-        mImageLoader.StopLoadImage(aPresContext);
-
-        mCanSendLoadEvent = PR_TRUE;
-
-        // Update the URL and start the new image load
-        mImageLoader.UpdateURLSpec(aPresContext, newSRC);
-#endif
-      }
+      mCanSendLoadEvent = PR_TRUE;
     }
+
+    LoadImage(newSRC, aPresContext, getter_AddRefs(mImageRequest));
   }
   else if (nsHTMLAtoms::width == aAttribute || nsHTMLAtoms::height == aAttribute)
   { // XXX: could check for new width == old width, and make that a no-op
@@ -1635,19 +1276,14 @@ nsImageFrame::GetFrameType(nsIAtom** aType) const
 NS_IMETHODIMP 
 nsImageFrame::GetIntrinsicImageSize(nsSize& aSize)
 {
-#ifdef USE_IMG2
   aSize = mIntrinsicSize;
-#else
-  mImageLoader.GetIntrinsicSize(aSize);
-#endif
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsImageFrame::GetNaturalImageSize(PRUint32* naturalWidth, 
+nsImageFrame::GetNaturalImageSize(PRUint32 *naturalWidth, 
                                   PRUint32 *naturalHeight)
 { 
-#ifdef USE_IMG2
   *naturalWidth = 0;
   *naturalHeight = 0;
 
@@ -1664,9 +1300,6 @@ nsImageFrame::GetNaturalImageSize(PRUint32* naturalWidth,
     }
   }
 
-#else
-  mImageLoader.GetNaturalImageSize(naturalWidth, naturalHeight);
-#endif
   return NS_OK;
 }
 
@@ -1674,7 +1307,6 @@ NS_IMETHODIMP
 nsImageFrame::IsImageComplete(PRBool* aComplete)
 {
   NS_ENSURE_ARG_POINTER(aComplete);
-#ifdef USE_IMG2
   if (!mImageRequest) {
     *aComplete = PR_FALSE;
     return NS_OK;
@@ -1683,9 +1315,7 @@ nsImageFrame::IsImageComplete(PRBool* aComplete)
   PRUint32 status;
   mImageRequest->GetImageStatus(&status);
   *aComplete = ((status & imgIRequest::STATUS_LOAD_COMPLETE) != 0);
-#else
-  *aComplete = ((mImageLoader.GetLoadStatus() & NS_IMAGE_LOAD_STATUS_IMAGE_READY) != 0);
-#endif
+
   return NS_OK;
 }
 
@@ -1702,6 +1332,49 @@ void HaveFixedSize(const nsHTMLReflowState& aReflowState, PRPackedBool& aConstra
       widthUnit  == eStyleUnit_Percent) &&
      (heightUnit == eStyleUnit_Coord ||
       heightUnit == eStyleUnit_Percent));
+}
+
+
+nsresult
+nsImageFrame::LoadImage(const nsAReadableString& aSpec, nsIPresContext *aPresContext, imgIRequest **aRequest)
+{
+  nsresult rv = NS_OK;
+
+  /* set this to TRUE here in case we return early */
+  mInitialLoadCompleted = PR_TRUE;
+
+  /* don't load the image if aSpec is empty */
+  if (aSpec.IsEmpty()) return NS_ERROR_FAILURE;
+
+  nsCOMPtr<nsIURI> uri;
+
+  /* don't load the image if some security check fails... */
+  GetRealURI(aSpec, getter_AddRefs(uri));
+  if (!CanLoadImage(uri)) return NS_ERROR_FAILURE;
+
+  if (!mListener) {
+    nsImageListener *listener = new nsImageListener(this);
+    if (!listener) return NS_ERROR_OUT_OF_MEMORY;
+    NS_ADDREF(listener);
+    listener->QueryInterface(NS_GET_IID(imgIDecoderObserver), getter_AddRefs(mListener));
+    NS_ASSERTION(mListener, "queryinterface for the listener failed");
+    NS_RELEASE(listener);
+  }
+
+  nsCOMPtr<imgILoader> il(do_GetService("@mozilla.org/image/loader;1", &rv));
+  if (NS_FAILED(rv)) return rv;
+
+  nsCOMPtr<nsILoadGroup> loadGroup;
+  GetLoadGroup(aPresContext, getter_AddRefs(loadGroup));
+
+  /* get the URI, convert internal-gopher-stuff if needed */
+  GetURI(aSpec, getter_AddRefs(uri));
+  if (!uri) return NS_ERROR_FAILURE;
+
+  /* set this back to FALSE before we do the real load */
+  mInitialLoadCompleted = PR_FALSE;
+
+  return il->LoadImage(uri, loadGroup, mListener, aPresContext, aRequest);
 }
 
 #define INTERNAL_GOPHER_STRING "internal-gopher-"
@@ -1728,9 +1401,16 @@ nsImageFrame::GetURI(const nsAReadableString& aSpec, nsIURI **aURI)
     newURI.Assign(aSpec);
   }
 
+  GetRealURI(newURI, aURI);
+}
+
+
+void
+nsImageFrame::GetRealURI(const nsAReadableString& aSpec, nsIURI **aURI)
+{
   nsCOMPtr<nsIURI> baseURI;
   GetBaseURI(getter_AddRefs(baseURI));
-  NS_NewURI(aURI, newURI, baseURI);
+  NS_NewURI(aURI, aSpec, baseURI);
 }
 
 void
@@ -1780,15 +1460,28 @@ nsImageFrame::GetLoadGroup(nsIPresContext *aPresContext, nsILoadGroup **aLoadGro
 }
 
 
-// Check with the content-policy things to make sure this load is permitted.
 PRBool
 nsImageFrame::CanLoadImage(nsIURI *aURI)
 {
   PRBool shouldLoad = PR_TRUE; // default permit
 
+#if 0
+  nsCOMPtr<nsIScriptSecurityManager> securityManager(do_GetService(NS_SCRIPTSECURITYMANAGER_CONTRACTID));
+
+  if (securityManager) {
+    nsCOMPtr<nsIURI> baseURI;
+    GetBaseURI(getter_AddRefs(baseURI));
+
+    nsresult proceed = securityManager->CheckLoadURI(baseURI, aURI, nsIScriptSecurityManager::STANDARD);
+    if (NS_FAILED(proceed))
+      return PR_FALSE;
+  }
+#endif
+
   // XXX leave this if 0'd until there is a good way to test it.
 #if 0
 
+  // Check with the content-policy things to make sure this load is permitted.
   nsresult rv;
   nsCOMPtr<nsIDOMElement> element(do_QueryInterface(mContent));
 
@@ -1818,6 +1511,7 @@ nsImageFrame::CanLoadImage(nsIURI *aURI)
 NS_IMETHODIMP
 nsImageFrame::SizeOf(nsISizeOfHandler* aHandler, PRUint32* aResult) const
 {
+#if 0
   if (!aResult) {
     return NS_ERROR_NULL_POINTER;
   }
@@ -1834,12 +1528,14 @@ nsImageFrame::SizeOf(nsISizeOfHandler* aHandler, PRUint32* aResult) const
     }
   }
   *aResult = sum;
+#endif
+  *aResult = 0;
+
   return NS_OK;
 }
 #endif
 
 
-#ifdef USE_IMG2
 NS_IMPL_ISUPPORTS2(nsImageListener, imgIDecoderObserver, imgIContainerObserver)
 
 nsImageListener::nsImageListener(nsImageFrame *aFrame) :
@@ -1947,6 +1643,4 @@ NS_IMETHODIMP nsImageListener::FrameChanged(imgIContainer *aContainer, nsISuppor
 
   return mFrame->FrameChanged(aContainer, pc, newframe, dirtyRect);
 }
-
-#endif
 

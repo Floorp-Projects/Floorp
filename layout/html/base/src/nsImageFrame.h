@@ -26,15 +26,12 @@
 #include "nsString.h"
 #include "nsAReadableString.h"
 #include "nsIPresContext.h"
-#include "nsHTMLImageLoader.h"
 #include "nsIImageFrame.h"
 
-#ifdef USE_IMG2
 #include "nsTransform2D.h"
 #include "imgIRequest.h"
 #include "imgIDecoderObserver.h"
 #include "imgIContainerObserver.h"
-#endif
 
 class nsIFrame;
 class nsImageMap;
@@ -44,7 +41,6 @@ struct nsHTMLReflowState;
 struct nsHTMLReflowMetrics;
 struct nsSize;
 
-#ifdef USE_IMG2
 class nsImageFrame;
 
 class nsImageListener : imgIDecoderObserver
@@ -62,8 +58,6 @@ public:
 private:
   nsImageFrame *mFrame;
 };
-#endif
-
 
 #define ImageFrameSuper nsLeafFrame
 
@@ -114,7 +108,6 @@ public:
   NS_IMETHOD SizeOf(nsISizeOfHandler* aHandler, PRUint32* aResult) const;
 #endif
 
-#ifdef USE_IMG2
   NS_IMETHOD OnStartDecode(imgIRequest *aRequest, nsIPresContext *aCX);
   NS_IMETHOD OnStartContainer(imgIRequest *aRequest, nsIPresContext *aCX, imgIContainer *aImage);
   NS_IMETHOD OnStartFrame(imgIRequest *aRequest, nsIPresContext *aCX, gfxIImageFrame *aFrame);
@@ -123,7 +116,6 @@ public:
   NS_IMETHOD OnStopContainer(imgIRequest *aRequest, nsIPresContext *aCX, imgIContainer *aImage);
   NS_IMETHOD OnStopDecode(imgIRequest *aRequest, nsIPresContext *aCX, nsresult aStatus, const PRUnichar *aStatusArg);
   NS_IMETHOD FrameChanged(imgIContainer *aContainer, nsIPresContext *aCX, gfxIImageFrame *aNewframe, nsRect *aDirtyRect);
-#endif
 
 protected:
   // nsISupports
@@ -135,10 +127,6 @@ protected:
   virtual void GetDesiredSize(nsIPresContext* aPresContext,
                               const nsHTMLReflowState& aReflowState,
                               nsHTMLReflowMetrics& aDesiredSize);
-
-#ifndef USE_IMG2
-  nsresult UpdateImage(nsIPresContext* aPresContext, PRUint32 aStatus, void* aClosure);
-#endif
 
   nsImageMap* GetImageMap(nsIPresContext* aPresContext);
 
@@ -175,27 +163,18 @@ protected:
   void GetInnerArea(nsIPresContext* aPresContext,
                     nsRect& aInnerArea) const;
 
-#ifndef USE_IMG2
-  static nsresult UpdateImageFrame(nsIPresContext* aPresContext,
-                                   nsHTMLImageLoader* aLoader,
-                                   nsIFrame* aFrame,
-                                   void* aClosure,
-                                   PRUint32 aStatus);
-#endif
 
-  PRBool CanLoadImage(nsIURI *aURI);
+  nsresult LoadImage(const nsAReadableString& aSpec, nsIPresContext *aPresContext, imgIRequest **aRequest);
+
+  inline PRBool CanLoadImage(nsIURI *aURI);
 
   inline void GetURI(const nsAReadableString& aSpec, nsIURI **aURI);
+  inline void GetRealURI(const nsAReadableString& aSpec, nsIURI **aURI);
+
   inline void GetBaseURI(nsIURI **uri);
   inline void GetLoadGroup(nsIPresContext *aPresContext, nsILoadGroup **aLoadGroup);
 
-  nsHTMLImageLoader   mImageLoader;
-  nsHTMLImageLoader * mLowSrcImageLoader;
   nsImageMap*         mImageMap;
-  PRPackedBool        mSizeConstrained;
-
-#ifdef USE_IMG2
-  PRPackedBool mGotInitialReflow;
 
   nsCOMPtr<imgIRequest> mImageRequest;
   nsCOMPtr<imgIRequest> mLowImageRequest;
@@ -206,11 +185,12 @@ protected:
   nsSize mIntrinsicSize;
 
   nsTransform2D mTransform;
-#endif
 
-  PRPackedBool        mSizeFrozen;
+  PRPackedBool        mSizeConstrained;
+  PRPackedBool        mGotInitialReflow;
   PRPackedBool        mInitialLoadCompleted;
   PRPackedBool        mCanSendLoadEvent;
+
   nsMargin            mBorderPadding;
   PRUint32            mNaturalImageWidth, 
                       mNaturalImageHeight;
