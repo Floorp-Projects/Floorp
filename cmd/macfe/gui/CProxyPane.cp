@@ -265,20 +265,27 @@ CProxyPane::ClickSelf(
 	{
 		if (LDropArea::DragAndDropIsPresent())
 		{
-			CProxyDragTask theTask(
-				*mProxyView,
-				*this,
-				*mPageProxyCaption,
-				inMouseDown.macEvent,
-				mNetscapeWindow->CreateExtraFlavorAdder());
-												
-			OSErr theErr = ::SetDragSendProc(
-				theTask.GetDragReference(),
-				mSendDataUPP,
-				(LDragAndDrop*)this);
-			ThrowIfOSErr_(theErr);
+			char title[256];
+			URL_Struct* url = mNetscapeWindow->CreateURLForProxyDrag(title);
+			if ( url ) {
+				string urlAndTitle = CURLDragHelper::CreateBookmarkFlavorURL ( url->address, title );
 			
-			theTask.DoDrag();
+				CProxyDragTask theTask(
+					*mProxyView,
+					*this,
+					*mPageProxyCaption,
+					inMouseDown.macEvent,
+					mNetscapeWindow->CreateExtraFlavorAdder(), 
+					urlAndTitle.c_str());
+													
+				OSErr theErr = ::SetDragSendProc(
+					theTask.GetDragReference(),
+					mSendDataUPP,
+					(LDragAndDrop*)this);
+				ThrowIfOSErr_(theErr);
+				
+				theTask.DoDrag();
+			}
 		}
 	}
 	else
