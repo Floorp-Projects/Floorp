@@ -88,6 +88,8 @@ NS_IMETHODIMP nsFilePicker::Show(PRInt16 *retval)
     nsMemory::Free( converted );
   }
 
+  char htmExt[] = "html";
+
   char *title = ConvertToFileSystemCharset(mTitle.GetUnicode());
   if (nsnull == title)
     title = mTitle.ToNewCString();
@@ -155,6 +157,25 @@ NS_IMETHODIMP nsFilePicker::Show(PRInt16 *retval)
 
     // XXX use OFN_NOCHANGEDIR  for M5
     ofn.Flags = OFN_SHAREAWARE | OFN_LONGNAMES | OFN_OVERWRITEPROMPT | OFN_HIDEREADONLY;
+
+    // Get file extension from suggested filename
+    //  to detect if we are saving an html file
+    //XXX: nsIFile SHOULD HAVE A GetExtension() METHOD!
+    PRInt32 extIndex = mDefault.RFind(".");
+    if ( extIndex >= 0) {
+      nsAutoString ext;
+      mDefault.Mid(ext, extIndex, -1);
+      // Should we test for ".cgi", ".asp", ".jsp" and other "generated" html pages?
+      if ( ext.EqualsIgnoreCase(".htm")  || 
+           ext.EqualsIgnoreCase(".html") || 
+           ext.EqualsIgnoreCase(".shtml") ) {
+        // This is supposed to append ".htm" if user doesn't supply an extension
+        //XXX Actually, behavior is sort of weird:
+        //    often appends ".html" even if you have an extension
+        //    It obeys your extension if you put quotes around name
+        ofn.lpstrDefExt = htmExt;
+      }
+    }
 
     if (mMode == modeOpen) {
       // FILE MUST EXIST!
