@@ -261,7 +261,7 @@ print "
   <tr><td>&nbsp<td> <td> <td> <td> <td> </tr>
 ";
 
-if (UserInGroup("canedit") || UserInGroup("canconfirm")) {
+if (UserInGroup("editbugs") || UserInGroup("canconfirm")) {
     SendSQL("SELECT votestoconfirm FROM products WHERE product = " .
             SqlQuote($product));
     if (FetchOneColumn()) {

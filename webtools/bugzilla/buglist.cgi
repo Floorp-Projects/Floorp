@@ -825,7 +825,7 @@ my $dotweak = defined $::FORM{'tweak'};
 
 if ($dotweak) {
     confirm_login();
-    if (!UserInGroup("canedit")) {
+    if (!UserInGroup("editbugs")) {
         print qq{
 Sorry; you do not have sufficient priviledges to edit a bunch of bugs
 at once.
@@ -1378,7 +1378,7 @@ if ($count > 0) {
 <NOBR><A HREF=\"enter_bug.cgi\">Enter New Bug</A></NOBR>
 &nbsp;&nbsp;
 <NOBR><A HREF=\"colchange.cgi?$::buffer\">Change columns</A></NOBR>";
-    if (!$dotweak && $count > 1 && UserInGroup("canedit")) {
+    if (!$dotweak && $count > 1 && UserInGroup("editbugs")) {
         print "&nbsp;&nbsp;\n";
         print "<NOBR><A HREF=\"buglist.cgi?$fields$orderpart&tweak=1\">";
         print "Change several bugs at once</A></NOBR>\n";
