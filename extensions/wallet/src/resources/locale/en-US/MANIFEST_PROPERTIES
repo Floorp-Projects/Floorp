@@ -1,2 +1,1 @@
-wallet.properties
-cookie.properties
+This file is very obsolete and not part of build.  Correct version in extensions/wallet/src.
