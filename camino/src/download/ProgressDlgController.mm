@@ -618,7 +618,7 @@ static id gSharedProgressController = nil;
 
 -(NSToolbarItem *)toolbar:(NSToolbar *)toolbar itemForItemIdentifier:(NSString *)itemIdentifier willBeInsertedIntoToolbar:(BOOL)flag
 {
-  NSToolbarItem *theItem = [[NSToolbarItem alloc] initWithItemIdentifier:itemIdentifier];
+  NSToolbarItem *theItem = [[[NSToolbarItem alloc] initWithItemIdentifier:itemIdentifier] autorelease];
   [theItem setTarget:self];
   [theItem setEnabled:NO];
   if ([itemIdentifier isEqualToString:@"removebutton"]) {
