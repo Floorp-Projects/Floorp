@@ -29,7 +29,7 @@ include $(DEPTH)/config/autoconf.mk
 MODULE		= addrbook
 LIBRARY_NAME	= addrbook_s
 META_COMPONENT = mail
-REQUIRES	= xpcom string rdf rdfutil appshell dom layout widget mork docshell pref necko locale webshell uconv msgbase msgbaseutil mime msgcompose appcomps
+REQUIRES	= xpcom string rdf rdfutil appshell dom layout content widget mork docshell pref necko locale webshell uconv msgbase msgbaseutil mime msgcompose appcomps
 
 CPPSRCS		= \
 		nsAddressBook.cpp \

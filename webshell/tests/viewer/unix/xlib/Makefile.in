@@ -28,7 +28,7 @@ include $(DEPTH)/config/autoconf.mk
 
 MODULE		= webshell_tests
 LIBRARY_NAME	= viewer_xlib_s
-REQUIRES	= xpcom string webshell htmlparser webbrwsr necko widget layout dom js uriloader view docshell util locale timer gfx2
+REQUIRES	= xpcom string webshell htmlparser webbrwsr necko widget layout content dom js uriloader view docshell util locale timer gfx2
 
 CPPSRCS		= nsXlibMain.cpp
 

@@ -32,7 +32,7 @@ EXPORT_LIBRARY = 1
 SHORT_LIBNAME	= xmlextra
 IS_COMPONENT	= 1
 MODULE_NAME	= nsXMLExtrasModule
-REQUIRES	= xpcom string dom js layout widget caps necko webbrwsr embedcomponents
+REQUIRES	= xpcom string dom js layout content widget caps necko webbrwsr embedcomponents
 
 CPPSRCS		= nsXMLExtrasModule.cpp
 

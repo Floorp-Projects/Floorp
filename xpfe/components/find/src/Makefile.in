@@ -32,7 +32,7 @@ LIBRARY_NAME	= mozfind
 EXPORT_LIBRARY = 1
 IS_COMPONENT	= 1
 MODULE_NAME	= nsFindComponent
-REQUIRES	= xpcom string dom layout widget editor necko txtsvc docshell
+REQUIRES	= xpcom string dom layout content widget editor necko txtsvc docshell
 
 CPPSRCS		= \
             nsFindComponent.cpp   \

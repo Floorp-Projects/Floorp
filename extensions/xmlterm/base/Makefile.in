@@ -67,7 +67,7 @@ CPPSRCS = \
 MODULE = xmlterm
 LIBRARY_NAME = xmlterm_s
 
-REQUIRES     = xpcom string layout docshell caps pref dom view widget necko webshell uriloader appshell locale
+REQUIRES     = xpcom string layout content docshell caps pref dom view widget necko webshell uriloader appshell locale
 
 XPIDLSRCS = \
 	mozILineTerm.idl      \

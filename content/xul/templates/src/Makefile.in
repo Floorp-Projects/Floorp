@@ -26,9 +26,9 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-MODULE		= layout
+MODULE		= xultmpl
 LIBRARY_NAME	= gkconxultmpl_s
-REQUIRES	= xpcom string js xpconnect timer caps widget dom rdf necko locale xul xuldoc xultmpl
+REQUIRES	= xpcom string js xpconnect timer caps layout content widget dom rdf necko locale xul xuldoc
 
 CPPSRCS		= \
 		nsClusterKey.cpp \

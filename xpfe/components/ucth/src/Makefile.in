@@ -31,7 +31,7 @@ LIBRARY_NAME	= mozucth
 EXPORT_LIBRARY = 1
 IS_COMPONENT	= 1
 MODULE_NAME	= nsUnknownContentTypeHandler
-REQUIRES	= xpcom string appshell dom js necko widget layout intl locale exthandler pref mozcomps
+REQUIRES	= xpcom string appshell dom js necko widget layout content intl locale exthandler pref mozcomps
 
 CPPSRCS		= nsUnknownContentTypeHandler.cpp
 

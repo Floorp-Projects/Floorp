@@ -26,7 +26,7 @@ include $(DEPTH)/config/autoconf.mk
 
 MODULE		= embedcomponents
 LIBRARY_NAME	= find_s
-REQUIRES	= string xpcom find txtsvc dom docshell layout widget
+REQUIRES	= string xpcom find txtsvc dom docshell layout content widget
 
 CPPSRCS		= nsWebBrowserFind.cpp \
                   $(NULL)

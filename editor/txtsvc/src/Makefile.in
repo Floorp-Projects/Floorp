@@ -31,7 +31,7 @@ LIBRARY_NAME	= txtsvc
 EXPORT_LIBRARY = 1
 IS_COMPONENT	= 1
 MODULE_NAME	= nsTextServicesModule
-REQUIRES	= xpcom string editor layout dom widget
+REQUIRES	= xpcom string editor layout content dom widget
 
 CPPSRCS		= \
 		nsFindAndReplace.cpp \

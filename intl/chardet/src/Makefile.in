@@ -31,7 +31,7 @@ LIBRARY_NAME	= chardet
 EXPORT_LIBRARY = 1
 IS_COMPONENT	= 1
 MODULE_NAME	= nsCharDetModule
-REQUIRES	= xpcom string uconv webshell uriloader docshell htmlparser dom necko widget layout embedcomponents
+REQUIRES	= xpcom string uconv webshell uriloader docshell htmlparser dom necko widget layout content embedcomponents
 
 CPPSRCS		= \
 		nsCharDetModule.cpp \

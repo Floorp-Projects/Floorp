@@ -26,9 +26,9 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-MODULE		= layout
+MODULE		= content
 LIBRARY_NAME	= gkconxmlcon_s
-REQUIRES	= xpcom string js dom widget necko caps webshell docshell htmlparser xpconnect
+REQUIRES	= xpcom string js dom layout widget necko caps webshell docshell htmlparser xpconnect
 
 CPPSRCS		= \
 		nsXMLElement.cpp \

@@ -26,9 +26,9 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-MODULE		= layout
+MODULE		= content
 LIBRARY_NAME	= gkconbase_s
-REQUIRES	= xpcom string dom widget view locale timer htmlparser js webshell necko caps lwbrk uconv chrome docshell pref xpconnect util unicharutil xsl_doc
+REQUIRES	= xpcom string dom layout widget view locale timer htmlparser js webshell necko caps lwbrk uconv chrome docshell pref xpconnect util unicharutil xsl_doc
 
 CPPSRCS		= \
 		nsCommentNode.cpp \
