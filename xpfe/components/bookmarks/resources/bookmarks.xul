@@ -253,7 +253,6 @@
     <treecol id="Name"
       sortSeparators="true" persist="hidden width" width="4*" flex="4"
       rdf:resource="http://home.netscape.com/NC-rdf#Name"/>
-    <splitter/>
     <treecol id="URL"
       sortSeparators="true" persist="hidden width" width="4*" flex="4"
       rdf:resource="http://home.netscape.com/NC-rdf#URL"

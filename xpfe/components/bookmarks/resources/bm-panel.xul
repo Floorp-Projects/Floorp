@@ -56,7 +56,7 @@
 
       <template>
         <rule rdf:type="http://home.netscape.com/NC-rdf#BookmarkSeparator">
-          <treechildren>
+          <treechildren flex="1">
             <treeitem uri="..." rdf:type="rdf:http://www.w3.org/1999/02/22-rdf-syntax-ns#type">
               <treerow>
                 <treecell>
@@ -68,7 +68,7 @@
         </rule>
 
         <rule>
-          <treechildren>
+          <treechildren flex="1">
             <treeitem uri="..." persist="open"
               web:status="rdf:http://home.netscape.com/WEB-rdf#status"
               rdf:type="rdf:http://www.w3.org/1999/02/22-rdf-syntax-ns#type"
@@ -87,8 +87,8 @@
       </template>
 
   <treecolgroup id="theColumns">
-      <treecol id="NameColumn" sortSeparators="true"
-      	rdf:resource="http://home.netscape.com/NC-rdf#Name" flex="1"/>
+      <treecol flex="1" id="NameColumn" sortSeparators="true"
+      	rdf:resource="http://home.netscape.com/NC-rdf#Name"/>
   </treecolgroup>
 
   <treehead>
@@ -97,8 +97,5 @@
       	onclick="return doSort('NameColumn');" observes="NameColumn" />
     </treerow>
   </treehead>
-
-  <treechildren flex="1"/>
-
   </tree>
 </window>
