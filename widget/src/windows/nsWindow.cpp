@@ -29,6 +29,7 @@
  *   Robert O'Callahan <roc+moz@cs.cmu.edu>
  *   Roy Yokoyama <yokoyama@netscape.com>
  *   Makoto Kato  <m_kato@ga2.so-net.ne.jp>
+ *   Masayuki Nakano <masayuki@d-toybox.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -2999,6 +3000,35 @@ BOOL nsWindow::OnKeyDown(UINT aVirtualKeyCode, UINT aScanCode, LPARAM aKeyData)
     // Remove a possible WM_CHAR or WM_SYSCHAR from the message queue
     if (gotMsg && (msg.message == WM_CHAR || msg.message == WM_SYSCHAR)) {
       ::GetMessage(&msg, mWnd, WM_KEYFIRST, WM_KEYLAST);
+    } else if (virtualKeyCode == NS_VK_BACK) {
+      MSG imeStartCompositionMsg, imeCompositionMsg;
+      if (::PeekMessage(&imeStartCompositionMsg, mWnd, WM_IME_STARTCOMPOSITION, WM_IME_STARTCOMPOSITION, PM_NOREMOVE | PM_NOYIELD)
+       && ::PeekMessage(&imeCompositionMsg, mWnd, WM_IME_COMPOSITION, WM_IME_COMPOSITION, PM_NOREMOVE | PM_NOYIELD)
+       && ::PeekMessage(&msg, mWnd, WM_CHAR, WM_CHAR, PM_NOREMOVE | PM_NOYIELD)
+       && imeStartCompositionMsg.wParam == 0x0 && imeStartCompositionMsg.lParam == 0x0
+       && imeCompositionMsg.wParam == 0x0 && imeCompositionMsg.lParam == 0x1BF
+       && msg.wParam == NS_VK_BACK && msg.lParam == 0x1
+       && imeStartCompositionMsg.time <= imeCompositionMsg.time
+       && imeCompositionMsg.time <= msg.time) {
+        // This message pattern is "Kakutei-Undo" on ATOK and WXG.
+        // (ATOK and WXG are popular IMEs in Japan)
+        // In this case, the message queue has following messages:
+        // ------------------------------------------------------------------------------------------
+        // WM_KEYDOWN              * n (wParam = VK_BACK, lParam = 0x1)
+        // WM_KEYUP                * 1 (wParam = VK_BACK, lParam = 0xC0000001) #this is ATOK only
+        // WM_IME_STARTCOMPOSITION * 1 (wParam = 0x0, lParam = 0x0)
+        // WM_IME_COMPOSITION      * 1 (wParam = 0x0, lParam = 0x1BF)
+        // WM_CHAR                 * n (wParam = VK_BACK, lParam = 0x1)
+        // WM_KEYUP                * 1 (wParam = VK_BACK, lParam = 0xC00E0001)
+        // ------------------------------------------------------------------------------------------
+        // This message pattern does not match to the above case;
+        // i.e.,WM_KEYDOWN -> WM_CHAR -> WM_KEYDOWN -> WM_CHAR.
+        // For more information of this problem:
+        // http://bugzilla.mozilla.gr.jp/show_bug.cgi?id=2885 (written in Japanese)
+        // http://bugzilla.mozilla.org/show_bug.cgi?id=194559 (written in English)
+
+        ::GetMessage(&msg, mWnd, WM_CHAR, WM_CHAR);
+      }
     }
   }
   else if (gotMsg &&
