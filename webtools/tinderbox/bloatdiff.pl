@@ -1,4 +1,4 @@
-#!perl -w
+#!/usr/bonsaitools/bin/perl -w
 
 $OLDFILE = $ARGV[0];
 $NEWFILE = $ARGV[1];
