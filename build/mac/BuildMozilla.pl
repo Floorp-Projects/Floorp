@@ -26,4 +26,6 @@ $MOZ_LITE = 0;		# build moz medium. This will come from a config file at some st
 Moz::OpenErrorLog(":::Mozilla.BuildLog");
 Moz::StopForErrors();
 
+chdir(":::");
+
 BuildMozilla();
