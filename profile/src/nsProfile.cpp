@@ -2508,7 +2508,7 @@ NS_IMETHODIMP nsProfile::CloneProfile(const char* newProfile)
 
 	GetCurrentProfileDir(&currProfileDir);
 
-	if (currProfileDir)
+	if (currProfileDir.Exists())
 	{
 		nsIFileLocator* locator = nsnull;
 		
