@@ -27,6 +27,7 @@
 #include "nsFTPDirListingConv.h"
 #include "nsMultiMixedConv.h"
 #include "nsHTTPChunkConv.h"
+#include "nsHTTPCompressConv.h"
 #include "mozTXTToHTMLConv.h"
 #include "nsUnknownDecoder.h"
 
@@ -34,7 +35,7 @@ nsresult NS_NewFTPDirListingConv(nsFTPDirListingConv** result);
 nsresult NS_NewMultiMixedConv (nsMultiMixedConv** result);
 nsresult MOZ_NewTXTToHTMLConv (mozTXTToHTMLConv** result);
 nsresult NS_NewHTTPChunkConv  (nsHTTPChunkConv ** result);
-
+nsresult NS_NewHTTPCompressConv  (nsHTTPCompressConv ** result);
 
 static NS_IMETHODIMP                 
 CreateNewFTPDirListingConv(nsISupports* aOuter, REFNSIID aIID, void **aResult) 
@@ -132,6 +133,30 @@ CreateNewHTTPChunkConvFactory (nsISupports* aOuter, REFNSIID aIID, void **aResul
     return rv;              
 }
 
+static NS_IMETHODIMP                 
+CreateNewHTTPCompressConvFactory (nsISupports* aOuter, REFNSIID aIID, void **aResult) 
+{
+    if (!aResult) {                                                  
+        return NS_ERROR_INVALID_POINTER;                             
+    }
+    if (aOuter) {                                                    
+        *aResult = nsnull;                                           
+        return NS_ERROR_NO_AGGREGATION;                              
+    }   
+    nsHTTPCompressConv* inst = nsnull;
+    nsresult rv = NS_NewHTTPCompressConv (&inst);
+    if (NS_FAILED(rv)) {                                             
+        *aResult = nsnull;                                           
+        return rv;                                                   
+    } 
+    rv = inst->QueryInterface(aIID, aResult);
+    if (NS_FAILED(rv)) {                                             
+        *aResult = nsnull;                                           
+    }                                                                
+    NS_RELEASE(inst);             /* get rid of extra refcnt */      
+    return rv;              
+}
+
 static NS_IMETHODIMP
 CreateNewUnknownDecoderFactory(nsISupports *aOuter, REFNSIID aIID, void **aResult)
 {
@@ -211,6 +236,32 @@ static nsModuleComponentInfo components[] =
       CreateNewHTTPChunkConvFactory
     },
 
+    { "HttpCompressConverter", 
+      NS_HTTPCOMPRESSCONVERTER_CID,
+      NS_ISTREAMCONVERTER_KEY "?from=gzip?to=uncompressed",
+      CreateNewHTTPCompressConvFactory
+    },
+
+    { "HttpCompressConverter", 
+      NS_HTTPCOMPRESSCONVERTER_CID,
+      NS_ISTREAMCONVERTER_KEY "?from=x-gzip?to=uncompressed",
+      CreateNewHTTPCompressConvFactory
+    },
+    { "HttpCompressConverter", 
+      NS_HTTPCOMPRESSCONVERTER_CID,
+      NS_ISTREAMCONVERTER_KEY "?from=compress?to=uncompressed",
+      CreateNewHTTPCompressConvFactory
+    },
+    { "HttpCompressConverter", 
+      NS_HTTPCOMPRESSCONVERTER_CID,
+      NS_ISTREAMCONVERTER_KEY "?from=x-compress?to=uncompressed",
+      CreateNewHTTPCompressConvFactory
+    },
+    { "HttpCompressConverter", 
+      NS_HTTPCOMPRESSCONVERTER_CID,
+      NS_ISTREAMCONVERTER_KEY "?from=deflate?to=uncompressed",
+      CreateNewHTTPCompressConvFactory
+    }
 };
 
 NS_IMPL_NSGETMODULE("nsConvModule", components);

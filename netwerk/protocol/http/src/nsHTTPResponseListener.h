@@ -29,6 +29,8 @@
 #include "nsString.h"
 #include "nsCOMPtr.h"
 #include "nsIInputStream.h"
+#include "nsXPIDLString.h" 
+#include "nsHTTPHandler.h"
 
 class nsIBufferInputStream;
 class nsHTTPResponse;
@@ -53,7 +55,7 @@ class nsHTTPChannel;
 class nsHTTPResponseListener : public nsIStreamListener
 {
 public:
-    nsHTTPResponseListener(nsHTTPChannel* aConnection);
+    nsHTTPResponseListener (nsHTTPChannel* aConnection, nsHTTPHandler *handler);
     virtual ~nsHTTPResponseListener();
 
     // nsISupport methods...
@@ -69,8 +71,9 @@ public:
     void SetListener(nsIStreamListener *aListener);
 
 protected:
-    nsCOMPtr<nsIStreamListener>  mResponseDataListener;
-    nsHTTPChannel*               mChannel;
+    nsCOMPtr<nsIStreamListener> mResponseDataListener;
+    nsHTTPChannel*              mChannel;
+    nsHTTPHandler*              mHandler;
 };
 
 
@@ -82,7 +85,7 @@ class nsHTTPServerListener : public nsHTTPResponseListener
 
 public:
 
-    nsHTTPServerListener(nsHTTPChannel* aConnection);
+    nsHTTPServerListener(nsHTTPChannel* aConnection, nsHTTPHandler *handler);
     virtual ~nsHTTPServerListener();
 
     NS_DECL_NSISTREAMOBSERVER
@@ -116,6 +119,9 @@ protected:
     PRUint32                    mBytesReceived; 
 	PRBool                      mChunkConverterPushed;
     PRInt32                     mBodyBytesReceived;
+
+    nsXPIDLCString              mCompressHeader;
+    PRBool                      mCompressHeaderChecked;
 };
 
 
@@ -125,7 +131,7 @@ protected:
 class nsHTTPCacheListener : public nsHTTPResponseListener
 {
 public:
-  nsHTTPCacheListener(nsHTTPChannel* aChannel);
+  nsHTTPCacheListener(nsHTTPChannel* aChannel, nsHTTPHandler *handler);
   virtual ~nsHTTPCacheListener();
 
   // nsIStreamObserver methods...

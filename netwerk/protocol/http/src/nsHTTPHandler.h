@@ -49,6 +49,9 @@
 class nsHashtable;
 class nsHTTPChannel;
 
+#define TRANSPORT_REUSE_ALIVE   1
+#define TRANSPORT_OPEN_ALWAYS   2
+
 class nsHTTPHandler : public nsIHTTPProtocolHandler
 {
 public:
@@ -67,7 +70,7 @@ public:
                                       nsHTTPChannel* i_Channel, 
                                       PRUint32 bufferSegmentSize,
                                       PRUint32 bufferMaxSize,
-                                      nsIChannel** o_pTrans);
+                                      nsIChannel** o_pTrans, PRUint32 flags = TRANSPORT_REUSE_ALIVE);
     
     /**
     *    Called to create a transport from RequestTransport to accually
@@ -104,6 +107,7 @@ protected:
     nsCOMPtr<nsISupportsArray> mIdleTransports;
 
     char*               mAcceptLanguages;
+    char*               mAcceptEncodings;
     PRUint32			mHttpVersion;
     nsAuthEngine        mAuthEngine;
     PRBool              mDoKeepAlive;

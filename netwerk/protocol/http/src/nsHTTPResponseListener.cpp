@@ -58,8 +58,8 @@ static const int kMAX_HEADER_SIZE = 60000;
 
 static NS_DEFINE_CID(kStreamConverterServiceCID, NS_STREAMCONVERTERSERVICE_CID);
 
-nsHTTPResponseListener::nsHTTPResponseListener(nsHTTPChannel *aChannel)
-                       : mChannel(aChannel)
+nsHTTPResponseListener::nsHTTPResponseListener(nsHTTPChannel *aChannel, nsHTTPHandler *handler)
+                       : mChannel(aChannel), mHandler (handler)
 {
   NS_INIT_REFCNT();
 
@@ -114,8 +114,8 @@ NS_IMPL_QUERY_INTERFACE2(nsHTTPResponseListener,
 // the cache.
 //
 ///////////////////////////////////////////////////////////////////////////////
-nsHTTPCacheListener::nsHTTPCacheListener(nsHTTPChannel* aChannel)
-                   : nsHTTPResponseListener(aChannel)
+nsHTTPCacheListener::nsHTTPCacheListener(nsHTTPChannel* aChannel, nsHTTPHandler *handler)
+                   : nsHTTPResponseListener(aChannel, handler)
 {
   PR_LOG(gHTTPLog, PR_LOG_ALWAYS, 
          ("Creating nsHTTPCacheListener [this=%x].\n", this));
@@ -210,13 +210,14 @@ nsresult nsHTTPCacheListener::Abort()
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-nsHTTPServerListener::nsHTTPServerListener(nsHTTPChannel* aChannel)
-                    : nsHTTPResponseListener(aChannel),
+nsHTTPServerListener::nsHTTPServerListener(nsHTTPChannel* aChannel, nsHTTPHandler *handler)
+                    : nsHTTPResponseListener (aChannel, handler),
                       mResponse(nsnull),
                       mFirstLineParsed(PR_FALSE),
                       mHeadersDone(PR_FALSE),
                       mBytesReceived(0),
-                      mBodyBytesReceived (0)
+                      mBodyBytesReceived (0),
+                      mCompressHeaderChecked (PR_FALSE)
 {
     mChannel->mHTTPServerListener = this;
 
@@ -373,6 +374,33 @@ nsHTTPServerListener::OnDataAvailable(nsIChannel* channel,
 					mChunkConverterPushed = PR_TRUE;
 				}
 
+                if (!mCompressHeaderChecked)
+                {
+                    rv = mResponse -> GetHeader (nsHTTPAtoms::Content_Encoding, getter_Copies (mCompressHeader));
+                    mCompressHeaderChecked = PR_TRUE;
+
+                    if (NS_SUCCEEDED (rv) && mCompressHeader)
+                    {
+    					NS_WITH_SERVICE (nsIStreamConverterService, 
+                                StreamConvService, kStreamConverterServiceCID, &rv);
+					    if (NS_FAILED(rv)) return rv;
+
+					    nsString2 fromStr ( mCompressHeader );
+					    nsString2 toStr   (  "uncompressed" );
+				    
+                        nsCOMPtr<nsIStreamListener> converterListener;
+					    rv = StreamConvService->AsyncConvertData(
+                                fromStr.GetUnicode(), 
+                                toStr.GetUnicode(), 
+                                mResponseDataListener, 
+                                channel, 
+                                getter_AddRefs (converterListener));
+					    if (NS_FAILED(rv)) return rv;
+					    mResponseDataListener = converterListener;
+                    }
+                }
+
+
                 PR_LOG(gHTTPLog, PR_LOG_ALWAYS, 
                        ("\tOnDataAvailable [this=%x]. Calling consumer "
                         "OnDataAvailable.\tlength:%d\n", this, i_Length));
@@ -478,7 +506,7 @@ nsHTTPServerListener::OnStopRequest(nsIChannel* channel,
             }
         }
 
-        mChannel -> ReleaseTransport (channel, keepAlive);
+        mHandler -> ReleaseTransport (channel, keepAlive);
     }
 
     NS_IF_RELEASE(mChannel);

@@ -347,7 +347,7 @@ nsHTTPHandler::NewPostDataStream(PRBool isFile,
 }
 
 NS_IMETHODIMP
-nsHTTPHandler::SetAcceptLanguages(const char* i_AcceptLanguages) 
+nsHTTPHandler::SetAcceptLanguages (const char* i_AcceptLanguages) 
 {
     CRTFREEIF(mAcceptLanguages);
     if (i_AcceptLanguages)
@@ -359,7 +359,7 @@ nsHTTPHandler::SetAcceptLanguages(const char* i_AcceptLanguages)
 }
 
 NS_IMETHODIMP
-nsHTTPHandler::GetAcceptLanguages(char* *o_AcceptLanguages)
+nsHTTPHandler::GetAcceptLanguages (char* *o_AcceptLanguages)
 {
     if (!o_AcceptLanguages)
         return NS_ERROR_NULL_POINTER;
@@ -371,6 +371,36 @@ nsHTTPHandler::GetAcceptLanguages(char* *o_AcceptLanguages)
     else
     {
         *o_AcceptLanguages = nsnull;
+        return NS_OK;
+    }
+}
+
+NS_IMETHODIMP
+nsHTTPHandler::SetAcceptEncodings (const char* i_AcceptEncodings) 
+{
+    CRTFREEIF (mAcceptEncodings);
+    if (i_AcceptEncodings)
+    {
+        mAcceptEncodings = nsCRT::strdup (i_AcceptEncodings);
+        return (mAcceptEncodings == nsnull) ? NS_ERROR_OUT_OF_MEMORY : NS_OK;
+    }
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsHTTPHandler::GetAcceptEncodings (char* *o_AcceptEncodings)
+{
+    if (!o_AcceptEncodings)
+        return NS_ERROR_NULL_POINTER;
+    
+    if (mAcceptEncodings)
+    {
+        *o_AcceptEncodings = nsCRT::strdup(mAcceptEncodings);
+        return (*o_AcceptEncodings == nsnull) ? NS_ERROR_OUT_OF_MEMORY : NS_OK;
+    }
+    else
+    {
+        *o_AcceptEncodings = nsnull;
         return NS_OK;
     }
 }
@@ -596,6 +626,7 @@ nsHTTPHandler::SetMisc(const PRUnichar* aMisc)
 
 nsHTTPHandler::nsHTTPHandler():
     mAcceptLanguages(nsnull),
+    mAcceptEncodings(nsnull),
 	mHttpVersion(HTTP_ONE_ZERO),
     mDoKeepAlive(PR_FALSE),
     mKeepAliveTimeout(2*60),
@@ -786,38 +817,20 @@ nsHTTPHandler::~nsHTTPHandler()
         mPrefs->UnregisterCallback(NETWORK_PREFS, 
                 HTTPPrefsCallback, (void*)this);
 
-    CRTFREEIF(mAcceptLanguages);
+    CRTFREEIF (mAcceptLanguages);
+    CRTFREEIF (mAcceptEncodings);
 }
 
 nsresult nsHTTPHandler::RequestTransport(nsIURI* i_Uri, 
                                          nsHTTPChannel* i_Channel,
                                          PRUint32 bufferSegmentSize,
                                          PRUint32 bufferMaxSize,
-                                         nsIChannel** o_pTrans)
+                                         nsIChannel** o_pTrans,
+                                         PRUint32 flags)
 {
     nsresult rv;
-    PRUint32 count;
-
     *o_pTrans = nsnull;
-
-    count = 0;
-    mTransportList->Count(&count);
-    if (count >= MAX_NUMBER_OF_OPEN_TRANSPORTS) {
-
-        // XXX this method incorrectly returns a bool
-        rv = mPendingChannelList->AppendElement(
-                (nsISupports*)(nsIRequest*)i_Channel) 
-            ? NS_OK : NS_ERROR_FAILURE;  
-        NS_ASSERTION(NS_SUCCEEDED(rv), "AppendElement failed");
-
-        PR_LOG(gHTTPLog, PR_LOG_ALWAYS, 
-               ("nsHTTPHandler::RequestTransport."
-                "\tAll socket transports are busy."
-                "\tAdding nsHTTPChannel [%x] to pending list.\n",
-                i_Channel));
-
-        return NS_ERROR_BUSY;
-    }
+    PRUint32 count = 0;
 
     PRInt32 port;
     nsXPIDLCString host;
@@ -853,7 +866,7 @@ nsresult nsHTTPHandler::RequestTransport(nsIURI* i_Uri,
     // Check in the idle transports for a host/port match
     count = 0;
     PRInt32 index = 0;
-    if (mDoKeepAlive)
+    if (mDoKeepAlive && (flags & TRANSPORT_REUSE_ALIVE))
     {
         mIdleTransports -> Count (&count);
 
@@ -914,16 +927,31 @@ nsresult nsHTTPHandler::RequestTransport(nsIURI* i_Uri,
     // if we didn't find any from the keep-alive idlelist
     if (trans == nsnull)
     {
+        if (! (flags & TRANSPORT_OPEN_ALWAYS) )
+        {
+            count = 0;
+            mTransportList -> Count (&count);
+            if (count >= MAX_NUMBER_OF_OPEN_TRANSPORTS)
+            {
+
+                // XXX this method incorrectly returns a bool
+                rv = mPendingChannelList -> AppendElement((nsISupports*)(nsIRequest*)i_Channel)
+                        ? NS_OK : NS_ERROR_FAILURE;  
+                NS_ASSERTION (NS_SUCCEEDED(rv), "AppendElement failed");
+
+                PR_LOG (gHTTPLog, PR_LOG_ALWAYS, 
+                       ("nsHTTPHandler::RequestTransport.""\tAll socket transports are busy."
+                        "\tAdding nsHTTPChannel [%x] to pending list.\n",
+                        i_Channel));       
+                return NS_ERROR_BUSY;
+            }
+        }
+
         if (usingProxy)
-        {
-            rv = CreateTransport(proxy, proxyPort, host,
-                     bufferSegmentSize, bufferMaxSize, &trans);
-        }
+            rv = CreateTransport (proxy, proxyPort, host, bufferSegmentSize, bufferMaxSize, &trans);
         else
-        {
-            rv = CreateTransport(host, port, host,
-                         bufferSegmentSize, bufferMaxSize, &trans);
-        }
+            rv = CreateTransport (host, port, host, bufferSegmentSize, bufferMaxSize, &trans);
+
         if (NS_FAILED(rv)) return rv;
     }
 
@@ -1173,6 +1201,12 @@ nsHTTPHandler::PrefsChanged(const char* pref)
         if (NS_SUCCEEDED(rv))
             SetAcceptLanguages(acceptLanguages);
     }
+
+    nsXPIDLCString acceptEncodings;
+    rv = mPrefs -> CopyCharPref ("network.http.accept-encoding", getter_Copies (acceptEncodings));
+    if (NS_SUCCEEDED (rv))
+        SetAcceptEncodings (acceptEncodings);
+
 }
 
 PRInt32 PR_CALLBACK HTTPPrefsCallback(const char* pref, void* instance)

@@ -28,17 +28,19 @@ DLLNAME=cnvts
 DLL=.\$(OBJDIR)\$(DLLNAME).dll
 
 EXPORTS =                           \
-        nsMultiMixedConv.h                   \
-        nsFTPDirListingConv.h           \
-	nsHTTPChunkConv.h		\
+        nsMultiMixedConv.h          \
+        nsFTPDirListingConv.h       \
+	nsHTTPChunkConv.h	    \
+	nsHTTPCompressConv.h	    \
         $(NULL)
 
 LLIBS= $(LLIBS) \
         $(DIST)\lib\xpcom.lib \
         $(LIBNSPR)            \
 !ifdef MOZ_PERF
-        $(DIST)\lib\util.lib \
+        $(DIST)\lib\util.lib  \
 !endif
+	$(DIST)\lib\zlib.lib  \
         $(NULL)
 
 #
@@ -57,10 +59,11 @@ CPP_OBJS =                                         \
         .\$(OBJDIR)\nsConvFactories.obj           \
         .\$(OBJDIR)\mozTXTToHTMLConv.obj \
 	.\$(OBJDIR)\nsHTTPChunkConv.obj  \
+	.\$(OBJDIR)\nsHTTPCompressConv.obj  \
         .\$(OBJDIR)\nsUnknownDecoder.obj \
         $(NULL)
 
-LOCAL_INCLUDES=-I.
+LOCAL_INCLUDES=-I. -I$(XPDIST)\public\zlib
 
 INCLUDES = $(LOCAL_INCLUDES)
 

@@ -99,13 +99,20 @@ nsHTTPHeaderArray::nsHTTPHeaderArray()
   (void)NS_NewISupportsArray(getter_AddRefs(mHTTPHeaders));
 }
 
+void
+nsHTTPHeaderArray::Clear ()
+{
+    if (mHTTPHeaders)
+        mHTTPHeaders -> Clear ();
+}
+
 
 nsHTTPHeaderArray::~nsHTTPHeaderArray()
 {
-  if (mHTTPHeaders) {
-    mHTTPHeaders->Clear();
-  }
-  mHTTPHeaders = null_nsCOMPtr();
+    if (mHTTPHeaders)
+        mHTTPHeaders -> Clear ();
+
+    mHTTPHeaders = null_nsCOMPtr ();
 }
 
 

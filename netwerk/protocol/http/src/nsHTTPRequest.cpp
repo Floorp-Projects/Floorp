@@ -40,6 +40,7 @@
 #include "nsIIOService.h"
 #include "nsAuthEngine.h"
 #include "nsIServiceManager.h"
+#include "nsISocketTransport.h"
 #include "plstr.h"
 
 #if defined(PR_LOGGING)
@@ -51,13 +52,18 @@ static NS_DEFINE_CID(kHTTPHandlerCID,   NS_IHTTPHANDLER_CID);
 
 extern nsresult DupString(char* *o_Dest, const char* i_Src);
 
-nsHTTPRequest::nsHTTPRequest(nsIURI* i_URL, HTTPMethod i_Method):
+nsHTTPRequest::nsHTTPRequest(nsIURI* i_URL, nsHTTPHandler* i_Handler, PRUint32 bufferSegmentSize, PRUint32 bufferMaxSize, HTTPMethod i_Method)
+    :
     mMethod(i_Method),
     mVersion(HTTP_ONE_ZERO),
     mRequestSpec(0),
     mDoKeepAlive(PR_FALSE),
-    mKeepAliveTimeout (2*60)
-{
+    mKeepAliveTimeout (2*60),
+    mBufferSegmentSize(bufferSegmentSize),
+    mBufferMaxSize(bufferMaxSize),
+    mAttempts (0),
+    mHandler (i_Handler)
+{   
     NS_INIT_REFCNT();
 
     NS_ASSERTION(i_URL, "No URL for the request!!");
@@ -71,63 +77,10 @@ nsHTTPRequest::nsHTTPRequest(nsIURI* i_URL, HTTPMethod i_Method):
          ("Creating nsHTTPRequest [this=%x] for URI: %s.\n", 
            this, (const char *)urlCString));
 #endif
-
-    
-    nsXPIDLCString host;
-    mURI->GetHost(getter_Copies(host));
-    PRInt32 port = -1;
-    mURI->GetPort(&port);
-
-    // Send Host header by default
-    if (HTTP_ZERO_NINE != mVersion)
-    {
-        if (-1 != port)
-        {
-            char* tempHostPort = 
-                PR_smprintf("%s:%d", (const char*)host, port);
-            if (tempHostPort)
-            {
-                SetHeader(nsHTTPAtoms::Host, tempHostPort);
-                PR_smprintf_free(tempHostPort);
-                tempHostPort = 0;
-            }
-        }
-        else
-            SetHeader(nsHTTPAtoms::Host, host);
-    }
-
-    // Add the user-agent 
-    nsresult rv = NS_OK;
-    NS_WITH_SERVICE(nsIHTTPProtocolHandler, httpHandler, 
-            kHTTPHandlerCID, &rv);
-    if (NS_FAILED(rv)) return;
-
-    nsXPIDLString ua;
-    if (NS_SUCCEEDED(httpHandler->GetUserAgent(getter_Copies(ua))))
-    {
-        nsCAutoString uaString((const PRUnichar*)ua);
-        SetHeader(nsHTTPAtoms::User_Agent, uaString.GetBuffer());
-    }
-
-    // Send */*. We're no longer chopping MIME-types for acceptance.
-    // MIME based content negotiation has died.
-    // SetHeader(nsHTTPAtoms::Accept, "image/gif, image/x-xbitmap, image/jpeg, 
-    // image/pjpeg, image/png, */*");
-    SetHeader(nsHTTPAtoms::Accept, "*/*");
-
-    nsXPIDLCString acceptLanguages;
-    // Add the Accept-Language header
-    rv = httpHandler->GetAcceptLanguages(
-            getter_Copies(acceptLanguages));
-    if (NS_SUCCEEDED(rv))
-    {
-        if (acceptLanguages && *acceptLanguages)
-            SetHeader(nsHTTPAtoms::Accept_Language, acceptLanguages);
-    }
-
-    httpHandler -> GetHttpVersion      (  &mVersion  );
-    httpHandler -> GetDoKeepAlive      (&mDoKeepAlive);
-    httpHandler -> GetKeepAliveTimeout (&mKeepAliveTimeout);
+  
+    mHandler -> GetHttpVersion      (  &mVersion  );
+    mHandler -> GetDoKeepAlive      (&mDoKeepAlive);
+    mHandler -> GetKeepAliveTimeout (&mKeepAliveTimeout);
 }
     
 
@@ -201,7 +154,7 @@ nsHTTPRequest::Resume(void)
 
 // Finally our own methods...
 
-nsresult nsHTTPRequest::WriteRequest()
+nsresult nsHTTPRequest::WriteRequest ()
 {
     nsresult rv;
     if (!mURI) {
@@ -209,7 +162,22 @@ nsresult nsHTTPRequest::WriteRequest()
         return NS_ERROR_NULL_POINTER;
     }
 
-    NS_ASSERTION(mTransport, "No transport has been set on this request.");
+    if (mAttempts > 2)
+        return NS_ERROR_FAILURE;
+
+    rv = mHandler -> RequestTransport (mURI, mConnection, mBufferSegmentSize, mBufferMaxSize, getter_AddRefs (mTransport), mAttempts ? TRANSPORT_OPEN_ALWAYS : TRANSPORT_REUSE_ALIVE);
+
+    if (NS_FAILED (rv))
+        return rv;
+
+    rv = mTransport -> SetNotificationCallbacks (mConnection);
+
+    if (NS_FAILED (rv))
+        return rv;
+
+    mAttempts++;
+
+    formHeaders ();
 
     PRUint32 loadAttributes;
     mConnection->GetLoadAttributes(&loadAttributes);
@@ -232,15 +200,6 @@ nsresult nsHTTPRequest::WriteRequest()
         SetHeader(nsHTTPAtoms::Cache_Control, "max-age=0");
     }
 
-    if (mDoKeepAlive)
-    {
-        char *p = PR_smprintf ("%d", mKeepAliveTimeout);
-        
-        SetHeader (nsHTTPAtoms::Keep_Alive, p);
-        PR_smprintf_free (p);
-    }
-
-
     //
     // Build up the request into mRequestBuffer...
     //
@@ -257,7 +216,7 @@ nsresult nsHTTPRequest::WriteRequest()
     //
     // ie. Method SP Request-URI SP HTTP-Version CRLF
     //
-    mRequestBuffer.Append(MethodToString(mMethod));
+    mRequestBuffer.Append (MethodToString (mMethod));
 
     // Request spec gets set for proxied cases-
     if (!mRequestSpec)
@@ -305,7 +264,7 @@ nsresult nsHTTPRequest::WriteRequest()
     // ie. field-name ":" [field-value] CRLF
     //
     nsCOMPtr<nsISimpleEnumerator> enumerator;
-    rv = mHeaders.GetEnumerator(getter_AddRefs(enumerator));
+    rv = mHeaders.GetEnumerator (getter_AddRefs (enumerator));
 
     if (NS_SUCCEEDED(rv)) {
         PRBool bMoreHeaders;
@@ -403,12 +362,12 @@ nsresult nsHTTPRequest::GetPriority()
 
 nsresult nsHTTPRequest::SetHeader(nsIAtom* i_Header, const char* i_Value)
 {
-    return mHeaders.SetHeader(i_Header, i_Value);
+    return mHeaders.SetHeader (i_Header, i_Value);
 }
 
 nsresult nsHTTPRequest::GetHeader(nsIAtom* i_Header, char* *o_Value)
 {
-    return mHeaders.GetHeader(i_Header, o_Value);
+    return mHeaders.GetHeader (i_Header, o_Value);
 }
 
 
@@ -459,57 +418,66 @@ nsHTTPRequest::OnStartRequest(nsIChannel* channel, nsISupports* i_Context)
 }
 
 NS_IMETHODIMP
-nsHTTPRequest::OnStopRequest(nsIChannel* channel, nsISupports* i_Context,
-                             nsresult iStatus,
-                             const PRUnichar* i_Msg)
+nsHTTPRequest::OnStopRequest (nsIChannel* channel, nsISupports* i_Context,
+                              nsresult iStatus,
+                              const PRUnichar* i_Msg)
 {
-    nsresult rv = iStatus;
+    nsresult rv;
+    nsCOMPtr<nsISocketTransport> trans = do_QueryInterface (mTransport, &rv);
     
-    if (NS_SUCCEEDED(rv)) {
-      //
-      // Write the POST data out to the server...
-      //
-      if (mPostDataStream) {
-        NS_ASSERTION(mMethod == HM_POST, "Post data without a POST method?");
+    rv = iStatus;
 
-        PR_LOG(gHTTPLog, PR_LOG_ALWAYS, 
-               ("nsHTTPRequest [this=%x]. Writing POST data to the server.\n",
-                this));
+    if (NS_SUCCEEDED (rv))
+    {
+        PRBool isAlive = PR_TRUE;
+        if (trans)
+            trans -> IsAlive (0, &isAlive);
 
-        rv = mTransport->AsyncWrite(mPostDataStream, 0, -1, 
-                (nsISupports*)(nsIRequest*)mConnection, this);
+        if (isAlive)
+        {
+            //
+            // Write the POST data out to the server...
+            //
+            if (mPostDataStream)
+            {
+                NS_ASSERTION(mMethod == HM_POST, "Post data without a POST method?");
 
-        /* the mPostDataStream is released below... */
-      }
-      //
-      // Prepare to receive the response...
-      //
-      else {
-        PR_LOG(gHTTPLog, PR_LOG_ALWAYS, 
-               ("nsHTTPRequest [this=%x]. Finished writing request to server."
-                "\tStatus: %x\n", 
-                this, iStatus));
+                PR_LOG(gHTTPLog, PR_LOG_ALWAYS, 
+                    ("nsHTTPRequest [this=%x]. Writing POST data to the server.\n", this));
 
-        nsHTTPResponseListener* pListener = 
-            new nsHTTPServerListener(mConnection);
-        if (pListener) {
-          NS_ADDREF(pListener);
-          rv = mTransport->AsyncRead(0, -1, i_Context, pListener);
-          NS_RELEASE(pListener);
-        } else {
-          rv = NS_ERROR_OUT_OF_MEMORY;
+                rv = mTransport -> AsyncWrite (mPostDataStream, 0, -1, (nsISupports*)(nsIRequest*)mConnection, this);
+
+                /* the mPostDataStream is released below... */
+            }
+            //
+            // Prepare to receive the response...
+            //
+            else
+            {
+                PR_LOG(gHTTPLog, PR_LOG_ALWAYS, 
+                       ("nsHTTPRequest [this=%x]. Finished writing request to server." "\tStatus: %x\n", this, iStatus));
+
+                nsHTTPResponseListener* pListener = new nsHTTPServerListener (mConnection, mHandler);
+                if (pListener)
+                {
+                    NS_ADDREF  (pListener);
+                    rv = mTransport -> AsyncRead (0, -1, i_Context, pListener);
+                    NS_RELEASE (pListener);
+                }
+                else
+                    rv = NS_ERROR_OUT_OF_MEMORY;
+            }
         }
-      }
-    }
+        else
+            rv = NS_ERROR_FAILURE; /* isAlive */
+    } /* NS_SUCCEEDED */
+
     //
     // An error occurred when trying to write the request to the server!
     //
-    else {
-        PR_LOG(gHTTPLog, PR_LOG_ERROR, 
-               ("nsHTTPRequest [this=%x]. Error writing request to server."
-                "\tStatus: %x\n", 
-                this, iStatus));
-
+    else
+    {
+        PR_LOG (gHTTPLog, PR_LOG_ERROR, ("nsHTTPRequest [this=%x]. Error writing request to server." "\tStatus: %x\n", this, iStatus));
         rv = iStatus;
     }
 
@@ -517,23 +485,34 @@ nsHTTPRequest::OnStopRequest(nsIChannel* channel, nsISupports* i_Context,
     // An error occurred...  Finish the transaction and notify the consumer
     // of the failure...
     //
-    if (NS_FAILED(rv)) {
+    if (NS_FAILED (rv))
+    {
+        PRUint32 wasKeptAlive = 0;
+
+        if (trans)
+            trans -> GetReuseCount (&wasKeptAlive);
+
+        mHandler -> ReleaseTransport (mTransport, PR_FALSE);
+
+        if (wasKeptAlive)
+        {
+            rv = WriteRequest ();
+            
+            if (NS_SUCCEEDED (rv))
+                return rv;
+        }
+
         // Notify the HTTPChannel that the request has finished
         nsCOMPtr<nsIStreamListener> consumer;
 
-        mConnection->GetResponseDataListener(getter_AddRefs(consumer));
-
-        mConnection->ResponseCompleted(consumer, rv, i_Msg);
-        mConnection->ReleaseTransport(mTransport);
-
-        NS_ASSERTION(!mTransport, "nsHTTRequest::ReleaseTransport() "
-                                  "was not called!");
+        mConnection -> GetResponseDataListener (getter_AddRefs (consumer));
+        mConnection -> ResponseCompleted (consumer, rv, i_Msg);
     }
  
     //
     // These resouces are no longer needed...
     //
-    mRequestBuffer.Truncate();
+    mRequestBuffer.Truncate ();
     mPostDataStream = null_nsCOMPtr();
 
     return rv;
@@ -546,12 +525,18 @@ nsresult nsHTTPRequest::SetConnection(nsHTTPChannel* i_Connection)
     return NS_OK;
 }
 
-nsresult nsHTTPRequest::SetTransport(nsIChannel *aTransport)
+nsresult nsHTTPRequest::SetTransport (nsIChannel * aTransport)
 {
     mTransport = aTransport;
     return NS_OK;
 }
 
+nsresult nsHTTPRequest::GetTransport (nsIChannel **aTransport)
+{
+    *aTransport = mTransport;
+    return NS_OK;
+}
+/*
 nsresult nsHTTPRequest::ReleaseTransport(nsIChannel *aTransport)
 {
     if (aTransport == mTransport.get()) {
@@ -559,10 +544,10 @@ nsresult nsHTTPRequest::ReleaseTransport(nsIChannel *aTransport)
     }
     return NS_OK;
 }
-
+*/
 nsresult nsHTTPRequest::GetHeaderEnumerator(nsISimpleEnumerator** aResult)
 {
-    return mHeaders.GetEnumerator(aResult);
+    return mHeaders.GetEnumerator (aResult);
 }
 
 nsresult
@@ -578,3 +563,82 @@ nsHTTPRequest::GetOverrideRequestSpec(char** o_Spec)
     return DupString(o_Spec, mRequestSpec);
 }
 
+nsresult
+nsHTTPRequest::formHeaders ()
+{
+    nsXPIDLCString host;
+    mURI -> GetHost (getter_Copies (host));
+    PRInt32 port = -1;
+    mURI -> GetPort (&port);
+
+    mHeaders.Clear ();
+
+    // Send Host header by default
+    if (HTTP_ZERO_NINE != mVersion)
+    {
+        if (-1 != port)
+        {
+            char* tempHostPort = 
+                PR_smprintf("%s:%d", (const char*)host, port);
+            if (tempHostPort)
+            {
+                SetHeader(nsHTTPAtoms::Host, tempHostPort);
+                PR_smprintf_free (tempHostPort);
+                tempHostPort = 0;
+            }
+        }
+        else
+            SetHeader(nsHTTPAtoms::Host, host);
+    }
+
+    // Add the user-agent 
+    nsresult rv = NS_OK;
+    NS_WITH_SERVICE(nsIHTTPProtocolHandler, httpHandler, kHTTPHandlerCID, &rv);
+    if (NS_FAILED(rv)) return rv;
+
+    nsXPIDLString ua;
+    if (NS_SUCCEEDED (httpHandler -> GetUserAgent (getter_Copies(ua))))
+    {
+        nsCAutoString uaString ((const PRUnichar*)ua);
+        SetHeader (nsHTTPAtoms::User_Agent, uaString.GetBuffer ());
+    }
+
+    // Send */*. We're no longer chopping MIME-types for acceptance.
+    // MIME based content negotiation has died.
+    // SetHeader(nsHTTPAtoms::Accept, "image/gif, image/x-xbitmap, image/jpeg, 
+    // image/pjpeg, image/png, */*");
+    SetHeader (nsHTTPAtoms::Accept, "*/*");
+
+    nsXPIDLCString acceptLanguages;
+    // Add the Accept-Language header
+    rv = httpHandler->GetAcceptLanguages (getter_Copies(acceptLanguages));
+    
+    if (NS_SUCCEEDED(rv))
+    {
+        if (acceptLanguages && *acceptLanguages)
+            SetHeader (nsHTTPAtoms::Accept_Language, acceptLanguages);
+    }
+
+    nsXPIDLCString acceptEncodings;
+    rv = httpHandler -> GetAcceptEncodings (getter_Copies (acceptEncodings));
+    
+    if (NS_SUCCEEDED(rv))
+    {
+        if (acceptEncodings && *acceptEncodings)
+            SetHeader (nsHTTPAtoms::Accept_Encoding, acceptEncodings);
+    }
+
+    if (mDoKeepAlive)
+    {
+        char *p = PR_smprintf ("%d", mKeepAliveTimeout);
+        
+        SetHeader (nsHTTPAtoms::Keep_Alive, p);
+        PR_smprintf_free (p);
+
+        SetHeader (nsHTTPAtoms::Connection, "keep-alive");
+    }
+    else
+        SetHeader (nsHTTPAtoms::Connection, "close");
+
+    return NS_OK;
+}
