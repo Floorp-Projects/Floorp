@@ -36,6 +36,17 @@ package org.mozilla.javascript.regexp;
 
 class SubString {
 
+    public SubString()
+    {
+    }
+    
+    public SubString(String str)
+    {
+        index = 0;
+        charArray = str.toCharArray();
+        length = str.length();
+    }
+
     public String toString() {
         return charArray == null
                ? ""
