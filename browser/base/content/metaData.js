@@ -374,36 +374,6 @@ function hideNode(id)
     document.getElementById(id).setAttribute("style", "display:none;" + style);
 }
 
-const nsIScriptSecurityManager = Components.interfaces.nsIScriptSecurityManager;
-
-// opens the link contained in the node's "value" attribute.
-function openLink(node)
-{
-  var url = node.getAttribute("value");
-  // Security-Critical: Only links to 'safe' protocols should be functional.
-  // Specifically, javascript: and data: URLs must be made non-functional
-  // here, because they will run with full privilege.
-  var safeurls = /^https?:|^file:|^chrome:|^resource:|^mailbox:|^imap:|^s?news:|^nntp:|^about:|^mailto:|^ftp:|^gopher:/i;
-  if (safeurls.test(url)) {
-    var sourceURI = Components.classes["@mozilla.org/network/standard-url;1"]
-                            .createInstance(Components.interfaces.nsIURI);
-    sourceURI.spec = nodeView.content.document.location;
-    var destURI = Components.classes["@mozilla.org/network/standard-url;1"]
-                          .createInstance(Components.interfaces.nsIURI);
-    destURI.spec = url;
-
-    var secMan = Components.classes["@mozilla.org/scriptsecuritymanager;1"].getService()
-                           .QueryInterface(nsIScriptSecurityManager);
-    try {
-      secMan.checkLoadURI(sourceURI, destURI, nsIScriptSecurityManager.STANDARD);
-    } catch (e) {
-      return;
-    }
-    nodeView.content.document.location = url;
-    window.close();
-  }
-}
-
 /*
  * Find <img> or <object> which uses an imagemap.
  * If more then one object is found we can't determine which one
