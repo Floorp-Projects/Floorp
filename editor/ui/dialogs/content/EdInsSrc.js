@@ -38,13 +38,13 @@ function Startup()
   // Create dialog object to store controls for easy access
   srcInput = document.getElementById("srcInput");
 
-  selection = editorShell.GetContentsAs("text/html", 35);
+  var selection = editorShell.GetContentsAs("text/html", 35);
   selection = (selection.replace(/<body[^>]*>/,"")).replace(/<\/body>/,"");
   if (selection != "")
     srcInput.value = selection;
 
   // Set initial focus
-  srcInput.focus;
+  srcInput.focus();
   // Note: We can't set the caret location in a multiline textfield
   SetWindowLocation();
 }
