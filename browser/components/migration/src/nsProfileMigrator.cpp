@@ -67,7 +67,8 @@ nsProfileMigrator::Migrate()
                                getter_AddRefs(mSourceKey),
                                &needsActiveProfile);
 
-  nsresult rv = NS_OK;
+  nsresult rv = NS_ERROR_FILE_NOT_FOUND; // No migrator, or data could be 
+                                         // found for the migrator
   if (mMigrator && mSourceKey) {
     PRBool sourceExists;
     mMigrator->GetSourceExists(&sourceExists);
@@ -80,11 +81,7 @@ nsProfileMigrator::Migrate()
         rv = obs->AddObserver(this, "browser-window-before-show", PR_FALSE);
       }
     }
-    else
-      rv = NS_ERROR_FILE_NOT_FOUND; // No data was found to import.
   }
-  else 
-    rv = NS_ERROR_FILE_NOT_FOUND; // No migrator could be found.
 
   return rv;
 }
