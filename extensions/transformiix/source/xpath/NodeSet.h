@@ -44,6 +44,8 @@ class NodeSet : public txAExprResult
 
 public:
 
+    NodeSet(); // Not to be implemented
+
     /*
      * Creates a new empty NodeSet
      */
