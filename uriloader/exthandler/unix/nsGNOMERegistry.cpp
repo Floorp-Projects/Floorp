@@ -64,6 +64,8 @@ typedef struct {
 typedef GConfClient * (*_gconf_client_get_default_fn)();
 typedef gchar * (*_gconf_client_get_string_fn)(GConfClient *,
 					       const char *, GError **);
+typedef gboolean (*_gconf_client_get_bool_fn)(GConfClient *,
+                                              const char *, GError **);
 typedef gboolean (*_gnome_url_show_fn)(const char *, GError **);
 typedef const char * (*_gnome_vfs_mime_type_from_name_fn)(const char *);
 typedef GList * (*_gnome_vfs_mime_get_extensions_list_fn)(const char *);
@@ -82,6 +84,7 @@ typedef GnomeProgram * (*_gnome_program_get_fn)();
 
 DECL_FUNC_PTR(gconf_client_get_default);
 DECL_FUNC_PTR(gconf_client_get_string);
+DECL_FUNC_PTR(gconf_client_get_bool);
 DECL_FUNC_PTR(gnome_url_show);
 DECL_FUNC_PTR(gnome_vfs_mime_type_from_name);
 DECL_FUNC_PTR(gnome_vfs_mime_get_extensions_list);
@@ -143,6 +146,7 @@ nsGNOMERegistry::Startup()
 
   GET_LIB_FUNCTION(gconf, gconf_client_get_default);
   GET_LIB_FUNCTION(gconf, gconf_client_get_string);
+  GET_LIB_FUNCTION(gconf, gconf_client_get_bool);
 
   // Attempt to open libgnome
   gnomeLib = LoadVersionedLibrary("gnome-2", ".0");
@@ -196,7 +200,13 @@ nsGNOMERegistry::HandlerExists(const char *aProtocolScheme)
 
   if (app) {
     g_free(app);
-    return PR_TRUE;
+
+    nsCAutoString enabledPath(NS_LITERAL_CSTRING("/desktop/gnome/url-handlers/") +
+                              nsDependentCString(aProtocolScheme) +
+                              NS_LITERAL_CSTRING("/enabled"));
+    gboolean isEnabled = _gconf_client_get_bool(client, enabledPath.get(), NULL);
+
+    return isEnabled ? PR_TRUE : PR_FALSE;
   }
 
   return PR_FALSE;
