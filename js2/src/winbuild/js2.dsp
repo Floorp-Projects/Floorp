@@ -64,7 +64,7 @@ LIB32=link.exe -lib
 # PROP Intermediate_Dir "Debug"
 # PROP Target_Dir ""
 # ADD BASE CPP /nologo /W3 /Gm /GX /ZI /Od /D "WIN32" /D "_DEBUG" /D "_MBCS" /D "_LIB" /YX /FD /GZ /c
-# ADD CPP /nologo /MTd /W3 /Gm /GR /GX /ZI /Od /I "../../../../../../gc/boehm/" /I "../../jsc/src/cpp/lexer" /I "../../jsc/src/cpp/parser" /I "../../jsc/src/cpp/semantics/" /I "../../jsc/src/cpp/generator/" /I "../../jsc/src/cpp/runtime" /D "_LIB" /D "WIN32" /D "_DEBUG" /D "_MBCS" /D "DEBUG" /FR /YX /FD /GZ /c
+# ADD CPP /nologo /W3 /Gm /GR /GX /ZI /Od /I "..\..\jsc\src\cpp\lexer" /I "..\..\jsc\src\cpp\parser" /I "..\..\jsc\src\cpp\semantics" /I "..\..\jsc\src\cpp\generator" /I "..\..\jsc\src\cpp\runtime" /D "WIN32" /D "_DEBUG" /D "_MBCS" /D "_LIB" /YX /FD /GZ /c
 # ADD BASE RSC /l 0x409 /d "_DEBUG"
 # ADD RSC /l 0x409 /d "_DEBUG"
 BSC32=bscmake.exe
@@ -136,7 +136,6 @@ SOURCE=..\jstypes.cpp
 !ELSEIF  "$(CFG)" == "js2 - Win32 Debug"
 
 # ADD CPP /I "../../../gc/boehm/"
-# SUBTRACT CPP /I "../../../../../../gc/boehm/"
 
 !ENDIF 
 
