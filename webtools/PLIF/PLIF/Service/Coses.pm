@@ -58,13 +58,12 @@ sub init {
 sub expand {
     my $self = shift;
     my($args) = @_;
-    $app = $args->{'app'};
-    $output  = $args->{'output'};
-    $session  = $args->{'session'};
-    $protocol  = $args->{'protocol'};
-    $string  = $args->{'string'};
-    $data  = $args->{'data'};
-    $stringType = $args->{'stringType'};
+    my $app = $args->{'app'};
+    my $output  = $args->{'output'};
+    my $session  = $args->{'session'};
+    my $protocol  = $args->{'protocol'};
+    my $string  = $args->{'string'};
+    my $data  = $args->{'data'};
     my $xmlService = $app->getService('service.xml');
     my @index = (); my $index = 0;
     my @stack = (); my $stack = $xmlService->parseNS($string);
@@ -87,8 +86,8 @@ sub expand {
                 $scope = pop(@scope);
             } else {
                 # end of stack -- have a nice day!
-                $data->{'string'} = $result;
-                return;
+                $args->{'string'} = $result;
+                return 1;
             }
         } else {
             # more data to deal with at this level
