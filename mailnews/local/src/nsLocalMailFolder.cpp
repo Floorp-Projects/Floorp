@@ -2612,8 +2612,9 @@ NS_IMETHODIMP nsMsgLocalMailFolder::EndCopy(PRBool copySucceeded)
         if (newHdr)
           newHdr->AndFlags(~MSG_FLAG_OFFLINE, &newHdrFlags);
       }
-      else
-        mCopyState->m_undoMsgTxn = nsnull; //null out the transaction because we can't undo w/o the msg db
+      // we can do undo with the dest folder db, see bug #198909
+      //else
+      //  mCopyState->m_undoMsgTxn = nsnull; //null out the transaction because we can't undo w/o the msg db
     }
     
     // if we plan on allowing undo, (if we have a mCopyState->m_parseMsgState or not)
@@ -2625,8 +2626,11 @@ NS_IMETHODIMP nsMsgLocalMailFolder::EndCopy(PRBool copySucceeded)
       if (!isImap || !mCopyState->m_copyingMultipleMessages)
       {
         nsMsgKey aKey;
+				PRUint32 statusOffset;
         mCopyState->m_message->GetMessageKey(&aKey);
+				mCopyState->m_message->GetStatusOffset(&statusOffset);
         localUndoTxn->AddSrcKey(aKey);
+				localUndoTxn->AddSrcStatusOffset(statusOffset);
         localUndoTxn->AddDstKey(mCopyState->m_curDstKey);
       }
     }
