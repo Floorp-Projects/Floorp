@@ -19,8 +19,9 @@
 #include "nscore.h"
 #include "nsIFactory.h"
 #include "nsISupports.h"
+#include "nsIHTMLContentSink.h"
 #include "nsParserCIID.h"
-
+#include "nsILoggingSink.h"
 #include "nsParser.h"
 #include "nsParserNode.h"
 
@@ -29,6 +30,7 @@ static NS_DEFINE_IID(kIFactoryIID,  NS_IFACTORY_IID);
 
 static NS_DEFINE_IID(kCParser,          NS_PARSER_IID);
 static NS_DEFINE_IID(kCParserNode,      NS_PARSER_NODE_IID);
+static NS_DEFINE_IID(kLoggingSinkCID,   NS_LOGGING_SINK_IID);
 
 class nsParserFactory : public nsIFactory
 {   
@@ -104,8 +106,8 @@ nsrefcnt nsParserFactory::Release()
 }  
 
 nsresult nsParserFactory::CreateInstance(nsISupports *aOuter,  
-                                      const nsIID &aIID,  
-                                      void **aResult)  
+                                         const nsIID &aIID,  
+                                         void **aResult)  
 {  
   if (aResult == NULL) {  
     return NS_ERROR_NULL_POINTER;  
@@ -120,6 +122,15 @@ nsresult nsParserFactory::CreateInstance(nsISupports *aOuter,
   }
   else if (mClassID.Equals(kCParserNode)) {
     inst = (nsISupports *)(nsIParserNode *)new nsCParserNode();
+  }
+  else if (mClassID.Equals(kLoggingSinkCID)) {
+    nsIContentSink* cs;
+    nsresult rv = NS_NewHTMLLoggingSink(&cs);
+    if (NS_OK != rv) {
+      return rv;
+    }
+    *aResult = cs;
+    return rv;
   }
 
   if (inst == NULL) {  
