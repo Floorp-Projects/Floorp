@@ -472,6 +472,7 @@ nsNNTPProtocol::nsNNTPProtocol(nsIURI * aURL, nsIMsgWindow *aMsgWindow)
 	m_runningURL = null_nsCOMPtr();
   m_connectionBusy = PR_FALSE;
   m_fromCache = PR_FALSE;
+	m_currentGroup = "";
   LL_I2L(m_lastActiveTimeStamp, 0);
 }
 
@@ -610,7 +611,6 @@ NS_IMETHODIMP nsNNTPProtocol::Initialize(nsIURI * aURL, nsIMsgWindow *aMsgWindow
 	m_previousResponseCode = 0;
 	m_responseText = nsnull;
 
-	m_currentGroup = "";
 	m_path = nsnull;
 
 	m_firstArticle = 0;
