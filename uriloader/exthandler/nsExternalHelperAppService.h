@@ -98,7 +98,7 @@ public:
    * Create an external app handler and binds it with a mime info object which
    * represents how we want to dispose of this content.
    * CreateNewExternalHandler is implemented only by the base class.
-   * @param aMIEInfo       MIMEInfo object, representing the type of the
+   * @param aMIMEInfo      MIMEInfo object, representing the type of the
    *                       content that should be handled
    * @param aFileExtension The extension we need to append to our temp file,
    *                       INCLUDING the ".". e.g. .mp3
