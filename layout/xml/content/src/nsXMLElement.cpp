@@ -136,10 +136,10 @@ nsXMLElement::HandleDOMEvent(nsIPresContext& aPresContext,
       {
         nsIEventStateManager *stateManager;
         if (NS_OK == aPresContext.GetEventStateManager(&stateManager)) {
-          stateManager->SetActiveContent(this);
+          stateManager->SetContentState(this, NS_EVENT_STATE_ACTIVE | NS_EVENT_STATE_FOCUS);
           NS_RELEASE(stateManager);
         }
-        aEventStatus = nsEventStatus_eConsumeNoDefault; 
+        aEventStatus = nsEventStatus_eConsumeDoDefault; 
       }
       break;
 
@@ -165,7 +165,7 @@ nsXMLElement::HandleDOMEvent(nsIPresContext& aPresContext,
           }
           mInner.TriggerLink(aPresContext, verb, baseURL, href, target, PR_TRUE);
           NS_IF_RELEASE(baseURL);
-          aEventStatus = nsEventStatus_eConsumeNoDefault; 
+          aEventStatus = nsEventStatus_eConsumeDoDefault; 
         }
       }
       break;
