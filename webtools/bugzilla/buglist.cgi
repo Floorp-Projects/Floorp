@@ -308,6 +308,14 @@ if ($::FORM{'cmdtype'} eq "dorem") {
         $vars->{'searchtype'} = "saved";
         $params = new Bugzilla::CGI($::buffer);
         $order = $params->param('order') || $order;
+
+        # backward compatibility hack: if the saved query doesn't say which
+        # form was used to create it, assume it was on the advanced query
+        # form - see bug 252295
+        if (!$params->param('query_format')) {
+            $params->param('query_format', 'advanced');
+            $::buffer = $params->query_string;
+        }
     }
     elsif ($::FORM{'remaction'} eq "runseries") {
         $::buffer = LookupSeries($::FORM{"series_id"});
