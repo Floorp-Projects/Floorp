@@ -40,8 +40,10 @@
 #include "nsIWindowWatcher.h"
 #include "nsIWebBrowserChrome.h"
 #include "nsIEmbeddingSiteWindow.h"
+#include "nsIProfile.h"
 #include "NSBrowserView.h"
 #include "nsCRT.h"
+#include "nsString.h"
 
 PRUint32 nsCocoaBrowserService::sNumBrowsers = 0;
 nsAlertController* nsCocoaBrowserService::sController = nsnull;
@@ -113,6 +115,28 @@ nsCocoaBrowserService::InitEmbedding()
   }
 
   watcher->SetWindowCreator(sSingleton);
+
+  // Set the profile which the control will use
+  nsCOMPtr<nsIProfile> profileService(do_GetService(NS_PROFILE_CONTRACTID, &rv));
+  if (NS_FAILED(rv))
+    return rv;
+
+  // Make a new default profile for the control if none exists.
+  nsAutoString newProfileName(NS_LITERAL_STRING("CocoazillaControl"));
+  PRBool profileExists = PR_FALSE;
+  rv = profileService->ProfileExists(newProfileName.get(), &profileExists);
+  if (NS_FAILED(rv))
+    return rv;
+  
+  if (!profileExists) {
+    rv = profileService->CreateNewProfile(newProfileName.get(), nsnull, nsnull, PR_FALSE);
+    if (NS_FAILED(rv))
+      return rv;
+  }
+
+  rv = profileService->SetCurrentProfile(newProfileName.get());
+  if (NS_FAILED(rv))
+    return rv;
 
   return NS_OK;
 }
