@@ -302,19 +302,13 @@ public:
    * XIF is an intermediate form of the content model, the buffer
    * will then be parsed into any number of formats including HTML, TXT, etc.
 
-   * Pattern for Containers
-   * BeginConvertToXIF -- opens a container
-   * DoConvertToXIF -- writes out element attribute information (if any exists)
+   * BeginConvertToXIF -- opens a container and writes out the attributes
+   * ConvertContentToXIF -- typically does nothing unless there is text content
    * FinishConvertToXIF -- closes a container
-
-   * Pattern for Leafs
-   * BeginConvertToXIF -- does nothing
-   * DoConvertToXIF -- writes out the element and any attribute information (if any exists)
-   * FinishConvertToXIF -- does nothing
-
+   
   */
   virtual void BeginConvertToXIF(nsXIFConverter& aConverter) const;
-  virtual void DoConvertToXIF(nsXIFConverter& aConverter) const;
+  virtual void ConvertContentToXIF(nsXIFConverter& aConverter) const;
   virtual void FinishConvertToXIF(nsXIFConverter& aConverter) const;
 
 
@@ -675,14 +669,13 @@ TextFrame::PaintRegularText(nsIPresContext& aPresContext,
                             const nsRect& aDirtyRect,
                             nscoord dx, nscoord dy)
 {
-  PRBool   delCompressedStr;
-  PRUint16 indexes[1024];
-  PRUint32 compressedStrLen = 0;
-  char buf[128];
-  char *   compressedStr  = CompressWhiteSpace(buf, sizeof(buf), indexes, compressedStrLen, delCompressedStr);
+  // Get Selection Object
+  nsIPresShell     * shell     = aPresContext.GetShell();
+  nsIDocument      * doc       = shell->GetDocument();
+  
 
-#ifndef DO_SELECTION
-  if (1) {
+  if (doc->GetDisplaySelection() == PR_FALSE)
+  {
     // Skip leading space if necessary
     Text* txt = (Text*) mContent;
     const PRUnichar* cp = txt->mText + mContentOffset;
@@ -743,8 +736,11 @@ TextFrame::PaintRegularText(nsIPresContext& aPresContext,
         aRenderingContext.SetColor(color->mColor);
         aRenderingContext.DrawString(s0, s - s0, dx, dy, mRect.width);
 
-#if XXX
-        //this is junk. MMP
+/*
+        // ROD -- WARNING!!!!!
+        // 1.The fixed size buffers causes the application to CRASH.
+        // 2 These statements do not appear to do anything.
+
         char cmpBuf[256];
         char sBuf[256];
         int len = s - s0;
@@ -757,7 +753,7 @@ TextFrame::PaintRegularText(nsIPresContext& aPresContext,
             strcmp(cmpBuf, sBuf)) {
           int x = 0;
         }
-#endif
+*/
 
         if (s0 != buf) {
           delete[] s0;
@@ -801,8 +797,13 @@ TextFrame::PaintRegularText(nsIPresContext& aPresContext,
         aRenderingContext.SetColor(color->mColor);
         aRenderingContext.DrawString(s0, s - s0, dx, dy, mRect.width);
 
-#if XXX
-        //this is junk. MMP
+/*
+        // ROD -- WARNING!!!!!
+        // 1.The fixed size buffers causes the application to CRASH.
+        // 2 These statements do not appear to do anything.
+        // gpk
+
+
         char cmpBuf[256];
         char sBuf[256];
         int len = s - s0;
@@ -815,20 +816,27 @@ TextFrame::PaintRegularText(nsIPresContext& aPresContext,
             strcmp(cmpBuf, sBuf)) {
           int x = 0;
         }
-#endif
+*/
 
         if (s0 != buf) {
           delete[] s0;
         }
       }
     }
+    NS_RELEASE(doc);
+    NS_RELEASE(shell);
     return;
   }
-#endif
 
-  // Get Selection Object
-  nsIPresShell     * shell     = aPresContext.GetShell();
-  nsIDocument      * doc       = shell->GetDocument();
+
+  PRBool   delCompressedStr;
+  PRUint16 indexes[1024];
+  PRUint32 compressedStrLen = 0;
+  char buf[128];
+  char *   compressedStr  = CompressWhiteSpace(buf, sizeof(buf), indexes, compressedStrLen, delCompressedStr);
+  
+  
+  
   nsISelection     * selection = doc->GetSelection();
   nsSelectionRange * range     = selection->GetRange();
 
@@ -884,6 +892,7 @@ TextFrame::PaintRegularText(nsIPresContext& aPresContext,
     rect.width--;
     rect.height--;
 
+#ifdef DO_SELECTION
     {
       char buf[255];
       strncpy(buf, compressedStr, compressedStrLen);
@@ -894,6 +903,7 @@ TextFrame::PaintRegularText(nsIPresContext& aPresContext,
         xx++;
       }
     }
+#endif
 
     if (startEndInSameContent) {
 
@@ -1010,7 +1020,7 @@ TextFrame::PaintRegularText(nsIPresContext& aPresContext,
           endPnt->GetOffset() < mContentOffset+mContentLength) {
 
         //PRInt32 endOffset   = endPnt->GetOffset();
-        if (endOffset == (PRInt32)compressedStrLen) {
+        if ((PRUint32)endOffset == compressedStrLen) {
           endOffset--;
         }
         //---------------------------------------------------
@@ -1638,7 +1648,7 @@ nsresult Text::QueryInterface(const nsIID& aIID, void** aInstancePtr)
     return NS_OK;
   }
   if (aIID.Equals(kIDOMNodeIID)) {
-    *aInstancePtr = (void*) ((nsHTMLContent*)this);
+    *aInstancePtr = (void*) ((nsIDOMNode*)(nsHTMLContent*)this);
     nsHTMLContent::AddRef();
     return NS_OK;
   }
@@ -1716,11 +1726,50 @@ void Text::FinishConvertToXIF(nsXIFConverter& aConverter) const
  * XIF is an intermediate form of the content model, the buffer
  * will then be parsed into any number of formats including HTML, TXT, etc.
  */
-void Text::DoConvertToXIF(nsXIFConverter& aConverter) const
+void Text::ConvertContentToXIF(nsXIFConverter& aConverter) const
 {
-  nsString  buffer;
-  buffer.Append(mText, mLength);
-  aConverter.AddContent(buffer);
+  const nsIContent* content = this;
+
+  if (aConverter.GetUseSelection() == PR_TRUE && mDocument->IsInSelection(content))
+  {
+    nsISelection* sel = mDocument->GetSelection();
+    if (sel != nsnull)
+    {
+      nsSelectionRange* range = sel->GetRange();
+      if (range != nsnull)
+      {
+        nsSelectionPoint* startPoint = range->GetStartPoint();
+        nsSelectionPoint* endPoint = range->GetEndPoint();
+
+        nsIContent* startContent = startPoint->GetContent();
+        nsIContent* endContent = endPoint->GetContent();
+
+        PRInt32 startOffset = startPoint->GetOffset();
+        PRInt32 endOffset = endPoint->GetOffset();
+
+        nsString  buffer;
+        buffer.Append(mText, mLength);
+        if (startContent == content || endContent == content)
+        { 
+          // NOTE: ORDER MATTERS!
+          // This must go before the Cut
+          if (endContent == content)
+            buffer.Truncate(endOffset);            
+          
+          // This must go after the Trunctate
+          if (startContent == content)
+           buffer.Cut(0,startOffset); 
+        }
+        aConverter.AddContent(buffer);
+      }
+    }
+  }
+  else  
+  {
+    nsString  buffer;
+    buffer.Append(mText, mLength);
+    aConverter.AddContent(buffer);
+  }
 }
 
 

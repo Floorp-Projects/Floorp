@@ -48,19 +48,14 @@ public:
    * XIF is an intermediate form of the content model, the buffer
    * will then be parsed into any number of formats including HTML, TXT, etc.
 
-   * Pattern for Containers
-   * BeginConvertToXIF -- opens a container
-   * DoConvertToXIF -- writes out element attribute information (if any exists)
+   * BeginConvertToXIF -- opens a container and writes out the attributes
+   * ConvertContentToXIF -- typically does nothing unless there is text content
    * FinishConvertToXIF -- closes a container
 
-   * Pattern for Leafs
-   * BeginConvertToXIF -- does nothing
-   * DoConvertToXIF -- writes out the element and any attribute information (if any exists)
-   * FinishConvertToXIF -- does nothing
 
   */
   virtual void BeginConvertToXIF(nsXIFConverter& aConverter) const;
-  virtual void DoConvertToXIF(nsXIFConverter& aConverter) const;
+  virtual void ConvertContentToXIF(nsXIFConverter& aConverter) const;
   virtual void FinishConvertToXIF(nsXIFConverter& aConverter) const;
 
   
