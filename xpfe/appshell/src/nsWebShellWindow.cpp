@@ -1679,12 +1679,10 @@ nsWebShellWindow::GetWebShell(nsIWebShell *& aWebShell)
 NS_IMETHODIMP
 nsWebShellWindow::GetContentWebShell(nsIWebShell **aResult)
 {
-  nsresult     rv;
   nsIWebShell  *content;
 
   content = nsnull;
-  rv = NS_ERROR_FAILURE;
-
+  
   // first, try looking in the webshell list
   // (note this list isn't dynamic: it's set up when the webshell is added,
   // but not updated when its attributes are poked. could be a problem...)
@@ -1699,16 +1697,9 @@ nsWebShellWindow::GetContentWebShell(nsIWebShell **aResult)
     }
   }
 
-  if (!content)
-    // couldn't find it? then return our chrome webshell
-    content = mWebShell;
-
-  if (content) {
-    NS_ADDREF(content);
-    rv = NS_OK;
-  }
+  NS_IF_ADDREF(content);
   *aResult = content;
-  return rv;
+  return NS_OK;
 }
 
 NS_IMETHODIMP 
@@ -1812,7 +1803,7 @@ nsWebShellWindow::OnEndDocumentLoad(nsIDocumentLoader* loader,
     contextMenuTest = FindNamedDOMNode(nsAutoString("contextmenu"), window, endCount, 1);
     // End Context Menu test
     #else
-    DynamicLoadMenus(menubarDOMDoc, mWindow);
+    //DynamicLoadMenus(menubarDOMDoc, mWindow);
     #endif
   }
 
