@@ -99,7 +99,7 @@ function formatBranch (rec, indent)
     for (var i = 0; i < rec.childData.length; ++i)
     {
         formatRecord (rec.childData[i], indent);
-        if (rec.childData[i].childData)
+        if ("childData" in rec.childData[i])
             formatBranch(rec.childData[i], indent + "  ");
     }
 }

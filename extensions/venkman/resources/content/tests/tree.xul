@@ -15,7 +15,7 @@
     <script>
       <![CDATA[
         dd = function (msg) { dump("-*- tree: " + msg + "\n"); }
-        ASSERT = function (expr, msg) {
+        var ASSERT = function (expr, msg) {
             if (!expr)
                 dd ("** ASSERTION FAILED: " + msg + " **\n" + getStackTrace()); 
         }
