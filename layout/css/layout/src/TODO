@@ -20,6 +20,7 @@ o UMR bug because of painting during reflow
 o implement base tag support:
   o frame, iframe, frameset
   o layer
+  o body background, table background, etc.
 
 o TEST base tag support:
   o script src=
@@ -44,9 +45,16 @@ o fix floating tables
   o current-line floaters need to go in previous line's bcl list; if first line
     then they go in the block-frame's pending floater list
   o <block><floater>... we need a place to hang current-line floaters!!!
-  o http://www.news.com
-  o http://www.usatoday.com/ 
+  x http://www.news.com
+  x http://www.usatoday.com/ 
   o http://www.mrshowbiz.com/
+  o file:/f:/html/floating-images.html
+	"tucked between the woofers" isn't
+  o file:/f:/html/floating-tables-inline.html
+	overwrite errors
+  o file:/f:/html/br-clear.html
+	3rd test case is not compatible with navigator; I think navigator
+	has a bug IMHO.
 
 o block-frame: DidReflow and content-appended can be smarter; right now
   we did-reflow the whole caboodle whereas we could keep a bit in the
@@ -82,6 +90,11 @@ o fix limited stack depth in content sink
 
 ----------------------------------------------------------------------
 
+o crash in: http://www-dsed.llnl.gov/documents/a_document.html
+  the problem stems from a OL marked display:inline that contains LI's;
+  the LI's aren't doing the right thing to find the container that
+  has next ordinal number (which in this case is none!)
+
 ebina margin bugs:
   BR tags
   line-height adjustment (sometimes; see test0.html and the large font)
@@ -91,8 +104,26 @@ ebina margin bugs:
   www.infoseek.com; see steve's mail (date july 21st)
   www.w3.org
 
+o rework how BR's work:
+  f:/html/image-vspace.html; notice the top two lines stuck together in nav
+  make clear-line a real style-const property and use it to mean "give me
+  a fresh line". Then make br's zero height. Have the block code handle the
+  fresh line concept directly...work this in with keeping track of pending
+  vertical whitespace for table shrink wrapping.
+
+o ebina's engine provides automatic margins around floating images that
+  are PROPORTIONAL to the size of the image's border (find the code
+  luke)
+
 tinderbox: add selftest to our makefile so that it will run whatever
 we want and verify the results of a build
+
+o XXX code in block frame code
+
+o rethink list-item handling again
+  o f:/html/list-padding.html: bullet turns into a box
+  o f:/html/list-style-image.html: bullets don't trigger a reflow properly
+    when the image size finally arrives
 
 o have michael fix up the scrolling-view code so that if a document is
   scrolled and grown the relative scroll position is maintained so that
