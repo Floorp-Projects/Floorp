@@ -34,47 +34,47 @@
    -
    - ***** END LICENSE BLOCK ***** -->
 
-<!ENTITY GeneratedName.label "Name">
-<!ENTITY GeneratedName.accesskey "N">
-<!ENTITY PrimaryEmail.label "Email">
-<!ENTITY PrimaryEmail.accesskey "E">
-<!ENTITY Company.label "Company">
-<!ENTITY Company.accesskey "C">
-<!ENTITY _PhoneticName.label "Phonetic Name">
-<!ENTITY _PhoneticName.accesskey "O">
-<!ENTITY NickName.label "Nickname">
-<!ENTITY NickName.accesskey "i">
-<!ENTITY SecondEmail.label "Additional Email">
-<!ENTITY SecondEmail.accesskey "l">
-<!ENTITY Department.label "Department">
-<!ENTITY Department.accesskey "r">
-<!ENTITY JobTitle.label "Title">
-<!ENTITY JobTitle.accesskey "T">
-<!ENTITY CellularNumber.label "Mobile">
-<!ENTITY CellularNumber.accesskey "M">
-<!ENTITY PagerNumber.label "Pager">
-<!ENTITY PagerNumber.accesskey "P">
-<!ENTITY FaxNumber.label "Fax">
-<!ENTITY FaxNumber.accesskey "F">
-<!ENTITY HomePhone.label "Home Phone">
-<!ENTITY HomePhone.accesskey "H">
-<!ENTITY WorkPhone.label "Work Phone">
-<!ENTITY WorkPhone.accesskey "W">
-<!ENTITY ScreenName.label "Screen Name">
-<!ENTITY ScreenName.accesskey "S">
-<!ENTITY sortAscending.label  "Ascending">
-<!ENTITY sortAscending.accesskey  "A">
-<!ENTITY sortDescending.label "Descending">
-<!ENTITY sortDescending.accesskey "D">
+<!ENTITY GeneratedName.label                   "Name">
+<!ENTITY GeneratedName.accesskey               "N">
+<!ENTITY PrimaryEmail.label                    "Email">
+<!ENTITY PrimaryEmail.accesskey                "E">
+<!ENTITY Company.label                         "Company">
+<!ENTITY Company.accesskey                     "C">
+<!ENTITY _PhoneticName.label                   "Phonetic Name">
+<!ENTITY _PhoneticName.accesskey               "O">
+<!ENTITY NickName.label                        "Nickname">
+<!ENTITY NickName.accesskey                    "i">
+<!ENTITY SecondEmail.label                     "Additional Email">
+<!ENTITY SecondEmail.accesskey                 "l">
+<!ENTITY Department.label                      "Department">
+<!ENTITY Department.accesskey                  "r">
+<!ENTITY JobTitle.label                        "Title">
+<!ENTITY JobTitle.accesskey                    "T">
+<!ENTITY CellularNumber.label                  "Mobile">
+<!ENTITY CellularNumber.accesskey              "M">
+<!ENTITY PagerNumber.label                     "Pager">
+<!ENTITY PagerNumber.accesskey                 "P">
+<!ENTITY FaxNumber.label                       "Fax">
+<!ENTITY FaxNumber.accesskey                   "F">
+<!ENTITY HomePhone.label                       "Home Phone">
+<!ENTITY HomePhone.accesskey                   "H">
+<!ENTITY WorkPhone.label                       "Work Phone">
+<!ENTITY WorkPhone.accesskey                   "W">
+<!ENTITY ScreenName.label                      "Screen Name">
+<!ENTITY ScreenName.accesskey                  "S">
+<!ENTITY sortAscending.label                   "Ascending">
+<!ENTITY sortAscending.accesskey               "A">
+<!ENTITY sortDescending.label                  "Descending">
+<!ENTITY sortDescending.accesskey              "D">
 
 <!-- context menu -->
-<!ENTITY composeEmail.label "Compose Email To">
-<!ENTITY composeEmail.accesskey "C">
-<!ENTITY deleteAddrBookCard.label "Delete">
-<!ENTITY deleteAddrBookCard.accesskey "D">
-<!ENTITY newAddrBookCard.label "New Card...">
-<!ENTITY newAddrBookCard.accesskey "N">
-<!ENTITY newAddrBookMailingList.label "New Mailing List...">
-<!ENTITY newAddrBookMailingList.accesskey "M">
-<!ENTITY addrBookCardProperties.label "Properties">
-<!ENTITY addrBookCardProperties.accesskey "P">
+<!ENTITY composeEmail.label                    "Compose Email To">
+<!ENTITY composeEmail.accesskey                "C">
+<!ENTITY deleteAddrBookCard.label              "Delete">
+<!ENTITY deleteAddrBookCard.accesskey          "D">
+<!ENTITY newAddrBookCard.label                 "New Card...">
+<!ENTITY newAddrBookCard.accesskey             "N">
+<!ENTITY newAddrBookMailingList.label          "New Mailing List...">
+<!ENTITY newAddrBookMailingList.accesskey      "M">
+<!ENTITY addrBookCardProperties.label          "Properties">
+<!ENTITY addrBookCardProperties.accesskey      "P">

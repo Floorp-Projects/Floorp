@@ -19,15 +19,15 @@ Rights Reserved.
 --> 
 
 <!-- Box Headings -->
-<!ENTITY contact.heading "Contact">
-<!ENTITY home.heading	 "Home">
-<!ENTITY other.heading	 "Other">
-<!ENTITY phone.heading	 "Phone">
-<!ENTITY work.heading	 "Work">
+<!ENTITY contact.heading             "Contact">
+<!ENTITY home.heading                "Home">
+<!ENTITY other.heading               "Other">
+<!ENTITY phone.heading               "Phone">
+<!ENTITY work.heading                "Work">
 <!-- Special Box Headings, for mailing lists -->
-<!ENTITY description.heading "Description">
-<!ENTITY addresses.heading "Addresses">
+<!ENTITY description.heading         "Description">
+<!ENTITY addresses.heading           "Addresses">
 <!-- For Map It! -->
-<!ENTITY mapItButton.label "Get Map">
-<!ENTITY mapIt.tooltip "Display a map of this address from the Web">
+<!ENTITY mapItButton.label           "Get Map">
+<!ENTITY mapIt.tooltip               "Display a map of this address from the Web">
 

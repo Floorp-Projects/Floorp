@@ -19,7 +19,7 @@ Rights Reserved.
 --> 
 
 <!-- Title -->
-<!ENTITY addressbookWindow.title "Address Book">
+<!ENTITY addressbookWindow.title                        "Address Book">
 
 <!-- Menus:  the . means that the menu item isn't implemented yet -->
 
@@ -39,9 +39,9 @@ Rights Reserved.
 <!ENTITY newLDAPDirectoryCmd.accesskey                  "D">
 <!ENTITY newIM.label                                    "IM">
 <!ENTITY importCmd.label                                "Import..."> 
-<!ENTITY importCmd.accesskey				"I"> 
+<!ENTITY importCmd.accesskey                            "I"> 
 <!ENTITY exportCmd.label                                "Export...">  
-<!ENTITY exportCmd.accesskey				"E"> 
+<!ENTITY exportCmd.accesskey                            "E"> 
 <!ENTITY printCardViewCmd.label                         "Print Card...">
 <!ENTITY printCardViewCmd.accesskey                     "p">
 <!ENTITY printPreviewCardViewCmd.label                  "Print Preview Card">
@@ -78,9 +78,9 @@ Rights Reserved.
 <!ENTITY firstLastCmd.label                             "First Last">  
 <!ENTITY firstLastCmd.accesskey                         "f"> 
 <!ENTITY lastFirstCmd.label                             "Last, First">  
-<!ENTITY lastFirstCmd.accesskey				"l"> 
-<!ENTITY displayNameCmd.label				"Display Name">  
-<!ENTITY displayNameCmd.accesskey			"d"> 
+<!ENTITY lastFirstCmd.accesskey                         "l"> 
+<!ENTITY displayNameCmd.label                           "Display Name">  
+<!ENTITY displayNameCmd.accesskey                       "d"> 
 
 <!ENTITY stopSearchingCmd.label                         ".Stop Searching"> 
 
@@ -109,8 +109,8 @@ Rights Reserved.
 <!ENTITY advancedButton.tooltip                         "Advanced address search">
 
 <!-- Status Bar -->  
-<!ENTITY  statusText.label "">
+<!ENTITY statusText.label                               "">
 
 <!-- LOCALIZATION NOTE (hideSwapFnLnUI) : DONT_TRANSLATE -->
 <!-- Swap FN/LN UI  Set to "false" to show swap fn/ln UI -->
-<!ENTITY  hideSwapFnLnUI "true">
+<!ENTITY  hideSwapFnLnUI                                "true">

@@ -18,8 +18,9 @@ Communications Corporation. Portions created by Netscape are
 Rights Reserved.
 --> 
 
-<!ENTITY Contact.tab "Contact"> 
-<!ENTITY Name.box "Name"> 
+<!ENTITY Contact.tab                     "Contact"> 
+<!ENTITY Name.box                        "Name"> 
+
 <!-- LOCALIZATION NOTE: 
  NameField1, NameField2, PhoneticField1, PhoneticField2
  those fields are either LN or FN depends on the target country.
@@ -29,13 +30,13 @@ Rights Reserved.
 -->
 
 <!-- LOCALIZATION NOTE (NameField1.id) : DONT_TRANSLATE -->
-<!ENTITY NameField1.id			"FirstName"> 
+<!ENTITY NameField1.id                  "FirstName"> 
 <!-- LOCALIZATION NOTE (NameField2.id) : DONT_TRANSLATE -->
-<!ENTITY NameField2.id			"LastName"> 
+<!ENTITY NameField2.id                  "LastName"> 
 <!-- LOCALIZATION NOTE (PhoneticField1.id) : DONT_TRANSLATE -->
-<!ENTITY PhoneticField1.id		"PhoneticFirstName"> 
+<!ENTITY PhoneticField1.id              "PhoneticFirstName"> 
 <!-- LOCALIZATION NOTE (PhoneticField2.id) : DONT_TRANSLATE -->
-<!ENTITY PhoneticField2.id		"PhoneticLastName"> 
+<!ENTITY PhoneticField2.id              "PhoneticLastName"> 
 
 <!ENTITY NameField1.label               "First:">
 <!ENTITY NameField1.accesskey           "F">
@@ -74,35 +75,35 @@ Rights Reserved.
 <!ENTITY CellularNumber.accesskey       "M">
 
 
-<!ENTITY Address.tab "Address"> 
-<!ENTITY Home.box "Home"> 
-<!ENTITY HomeAddress.label "Address:"> 
-<!ENTITY HomeAddress2.label ""> 
-<!ENTITY HomeCity.label "City:"> 
-<!ENTITY HomeState.label "State/Province:"> 
-<!ENTITY HomeZipCode.label "Zip/Postal Code:"> 
-<!ENTITY HomeCountry.label "Country:">
-<!ENTITY HomeWebPage.label "Web Page:"> 
-<!ENTITY Work.box "Work"> 
-<!ENTITY JobTitle.label "Title:"> 
-<!ENTITY Department.label "Department:"> 
-<!ENTITY Company.label "Organization:"> 
-<!ENTITY WorkAddress.label "Address:"> 
-<!ENTITY WorkAddress2.label ""> 
-<!ENTITY WorkCity.label "City:"> 
-<!ENTITY WorkState.label "State/Province:"> 
-<!ENTITY WorkZipCode.label "Zip/Postal Code:"> 
-<!ENTITY WorkCountry.label "Country:">
-<!ENTITY WorkWebPage.label "Web Page:"> 
+<!ENTITY Address.tab                    "Address"> 
+<!ENTITY Home.box                       "Home"> 
+<!ENTITY HomeAddress.label              "Address:"> 
+<!ENTITY HomeAddress2.label             ""> 
+<!ENTITY HomeCity.label                 "City:"> 
+<!ENTITY HomeState.label                "State/Province:"> 
+<!ENTITY HomeZipCode.label              "Zip/Postal Code:"> 
+<!ENTITY HomeCountry.label              "Country:">
+<!ENTITY HomeWebPage.label              "Web Page:"> 
+<!ENTITY Work.box                       "Work"> 
+<!ENTITY JobTitle.label                 "Title:"> 
+<!ENTITY Department.label               "Department:"> 
+<!ENTITY Company.label                  "Organization:"> 
+<!ENTITY WorkAddress.label              "Address:"> 
+<!ENTITY WorkAddress2.label             ""> 
+<!ENTITY WorkCity.label                 "City:"> 
+<!ENTITY WorkState.label                "State/Province:"> 
+<!ENTITY WorkZipCode.label              "Zip/Postal Code:"> 
+<!ENTITY WorkCountry.label              "Country:">
+<!ENTITY WorkWebPage.label              "Web Page:"> 
 
 
-<!ENTITY Other.tab                     "Other">
-<!ENTITY Custom1.label                 "Custom 1:">
-<!ENTITY Custom1.accesskey             "1">
-<!ENTITY Custom2.label                 "Custom 2:">
-<!ENTITY Custom2.accesskey             "2">
-<!ENTITY Custom3.label                 "Custom 3:">
-<!ENTITY Custom3.accesskey             "3">
-<!ENTITY Custom4.label                 "Custom 4:">
-<!ENTITY Custom4.accesskey             "4">
-<!ENTITY Notes.box                     "Notes">
+<!ENTITY Other.tab                      "Other">
+<!ENTITY Custom1.label                  "Custom 1:">
+<!ENTITY Custom1.accesskey              "1">
+<!ENTITY Custom2.label                  "Custom 2:">
+<!ENTITY Custom2.accesskey              "2">
+<!ENTITY Custom3.label                  "Custom 3:">
+<!ENTITY Custom3.accesskey              "3">
+<!ENTITY Custom4.label                  "Custom 4:">
+<!ENTITY Custom4.accesskey              "4">
+<!ENTITY Notes.box                      "Notes">
