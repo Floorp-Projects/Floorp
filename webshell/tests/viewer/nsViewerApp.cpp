@@ -135,6 +135,14 @@ static NS_DEFINE_IID(kIDOMHTMLSelectElementIID, NS_IDOMHTMLSELECTELEMENT_IID);
 #define DEFAULT_WIDTH 620
 #define DEFAULT_HEIGHT 400
 
+
+#ifdef _BUILD_STATIC_BIN
+#include "nsStaticComponent.h"
+nsresult PR_CALLBACK
+app_getModuleInfo(nsStaticModuleInfo **info, PRUint32 *count);
+#endif
+
+
 nsViewerApp::nsViewerApp()
 {
   NS_INIT_ISUPPORTS(); 
@@ -295,6 +303,11 @@ nsresult
 nsViewerApp::Initialize(int argc, char** argv)
 {
   nsresult rv;
+
+#ifdef _BUILD_STATIC_BIN
+  // Initialize XPCOM's module info table
+  NSGetStaticModuleInfo = app_getModuleInfo;
+#endif
 
   rv = SetupRegistry();
   if (NS_OK != rv) {

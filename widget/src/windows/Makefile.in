@@ -80,6 +80,12 @@ endif
 
 DEFINES		+= -D_IMPL_NS_WIDGET -DMOZ_AIMM -DMOZ_UNICODE 
 
+
+ifdef BUILD_STATIC_LIBS
+DEFINES		+= -DMOZ_STATIC_COMPONENT_LIBS
+endif # BUILD_STATIC_LIBS
+
+
 EXPORTS		= nsdefs.h
 
 LOCAL_INCLUDES	= -I. -I$(srcdir)/../xpwidgets -I$(srcdir)
