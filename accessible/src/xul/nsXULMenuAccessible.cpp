@@ -41,8 +41,9 @@
 #include "nsAccessible.h"
 #include "nsIAccessible.h"
 #include "nsIDOMElement.h"
-#include "nsIDOMXULPopupElement.h"
-#include "nsIDOMXULMenuBarElement.h"
+#include "nsIFrame.h"
+#include "nsIMenuFrame.h"
+#include "nsIMenuParent.h"
 
 // ------------------------ Menu Item -----------------------------
 
@@ -57,26 +58,30 @@ NS_IMETHODIMP nsXULMenuitemAccessible::GetAccState(PRUint32 *_retval)
   nsAccessible::GetAccState(_retval);
 
   // Focused?
-  nsCOMPtr<nsIDOMElement> element(do_QueryInterface(mDOMNode));
-  NS_ASSERTION(element, "No DOM element for menu  node!");
-  nsCOMPtr<nsIDOMNode> parentNode;
-  mDOMNode->GetParentNode(getter_AddRefs(parentNode));
-  if (parentNode) {
-    nsCOMPtr<nsIDOMElement> currentItem;
-    nsCOMPtr<nsIDOMXULPopupElement> popupEl = do_QueryInterface(parentNode);
-    if (popupEl)
-      popupEl->GetActiveItem(getter_AddRefs(currentItem));
-    else {
-      nsCOMPtr<nsIDOMXULMenuBarElement> menubar = do_QueryInterface(parentNode);
-      if (menubar)
-        menubar->GetActiveMenu(getter_AddRefs(currentItem));
+  nsCOMPtr<nsIPresShell> shell = do_QueryReferent(mPresShell);
+  if (shell) {
+    nsCOMPtr<nsIContent> content = do_QueryInterface(mDOMNode);
+    nsIFrame* itemFrame;
+    shell->GetPrimaryFrameFor(content, &itemFrame);
+    if (itemFrame) {
+      nsIMenuFrame* menuFrame = nsnull;
+      CallQueryInterface(itemFrame, &menuFrame);
+      if (menuFrame) {
+        nsIMenuParent* menuParent;
+        menuFrame->GetMenuParent(&menuParent);
+        if (menuParent) {
+          nsIMenuFrame* currentMenuFrame;
+          menuParent->GetCurrentMenuItem(&currentMenuFrame);
+          if (currentMenuFrame == menuFrame)
+            *_retval |= STATE_FOCUSED;
+        }
+      }
     }
-
-    if (currentItem == element)
-        *_retval |= STATE_FOCUSED;
   }
 
   // Has Popup?
+  nsCOMPtr<nsIDOMElement> element(do_QueryInterface(mDOMNode));
+  NS_ASSERTION(element, "No DOM element for menu node!");
   nsAutoString tagName;
   element->GetLocalName(tagName);
   if (tagName.Equals(NS_LITERAL_STRING("menu")))

@@ -1,4 +1,3 @@
 nsIDOMXULCommandDispatcher.idl
 nsIDOMXULDocument.idl
 nsIDOMXULElement.idl
-nsIDOMXULMenuBarElement.idl
