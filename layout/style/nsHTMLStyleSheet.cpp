@@ -499,15 +499,6 @@ nsHTMLStyleSheet::~nsHTMLStyleSheet()
 
 NS_IMPL_ISUPPORTS2(nsHTMLStyleSheet, nsIStyleSheet, nsIStyleRuleProcessor)
 
-NS_IMETHODIMP
-nsHTMLStyleSheet::GetStyleRuleProcessor(nsIStyleRuleProcessor*& aProcessor,
-                                        nsIStyleRuleProcessor* /*aPrevProcessor*/)
-{
-  aProcessor = this;
-  NS_ADDREF(aProcessor);
-  return NS_OK;
-}
-
 static nsresult GetBodyColor(nsIPresContext* aPresContext, nscolor* aColor)
 {
   nsCOMPtr<nsIDocument> doc;

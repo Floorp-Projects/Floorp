@@ -55,7 +55,7 @@ AddStyleSheet(nsIEditor* aEditor, nsIStyleSheet* aSheet)
   nsCOMPtr<nsIDocument> doc = do_QueryInterface(domDoc);
   if (doc) {
     doc->BeginUpdate(UPDATE_STYLE);
-    doc->AddStyleSheet(aSheet, 0);
+    doc->AddStyleSheet(aSheet);
     doc->EndUpdate(UPDATE_STYLE);
   }
 }

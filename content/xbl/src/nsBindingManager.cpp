@@ -1271,18 +1271,6 @@ nsBindingManager::WalkRules(nsStyleSet* aStyleSet,
   // Null out the scoped root that we set repeatedly in the other |WalkRules|.
   aData->mScopedRoot = nsnull;
 
-  if (parent) {
-    // We cut ourselves off, but we still need to walk the document's attribute sheet
-    // so that inline style continues to work on anonymous content.
-    nsIDocument* doc = content->GetDocument();
-    if (doc) {
-      nsCOMPtr<nsIStyleRuleProcessor> inlineCSS(
-              do_QueryInterface(doc->GetInlineStyleSheet()));
-      if (inlineCSS)
-        (*aFunc)(inlineCSS, aData);
-    }
-  }
-
   return NS_OK;
 }
 

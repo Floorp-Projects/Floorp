@@ -563,7 +563,8 @@ GetMathMLAttributeStyleSheet(nsIPresContext* aPresContext,
   cssSheet->SetComplete();
 
   // insert the stylesheet into the styleset without notifying observers
-  styleSet->AppendStyleSheet(nsStyleSet::eAgentSheet, cssSheet);
+  // XXX Should this be at a different level?
+  styleSet->PrependStyleSheet(nsStyleSet::eAgentSheet, cssSheet);
   *aSheet = cssSheet;
   NS_ADDREF(*aSheet);
 }

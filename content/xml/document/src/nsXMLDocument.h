@@ -61,10 +61,7 @@ public:
   nsXMLDocument();
   virtual ~nsXMLDocument();
 
-  NS_IMETHOD QueryInterface(REFNSIID aIID, void** aInstancePtr);
-
-  NS_IMETHOD_(nsrefcnt) AddRef(void);
-  NS_IMETHOD_(nsrefcnt) Release(void);
+  NS_DECL_ISUPPORTS_INHERITED
 
   virtual void Reset(nsIChannel* aChannel, nsILoadGroup* aLoadGroup);
 
@@ -98,18 +95,7 @@ public:
   virtual nsresult Init();
 
 protected:
-  // subclass hooks for sheet ordering
-  virtual void InternalAddStyleSheet(nsIStyleSheet* aSheet, PRUint32 aFlags);
-  virtual void InternalInsertStyleSheetAt(nsIStyleSheet* aSheet, PRInt32 aIndex);
-  virtual nsIStyleSheet* InternalGetStyleSheetAt(PRInt32 aIndex) const;
-  virtual PRInt32 InternalGetNumberOfStyleSheets() const;
-
   virtual nsresult GetLoadGroup(nsILoadGroup **aLoadGroup);
-
-  // For additional catalog sheets (if any) needed to layout the XML vocabulary
-  // of the document. Catalog sheets are kept at the beginning of our array of
-  // style sheets and this counter is used as an offset to distinguish them
-  PRInt32 mCatalogSheetCount;
 
   nsCOMPtr<nsIEventQueueService> mEventQService;
 

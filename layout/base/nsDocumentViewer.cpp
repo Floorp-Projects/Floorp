@@ -1752,7 +1752,7 @@ DocumentViewerImpl::CreateStyleSet(nsIDocument* aDocument,
   }
 
   if (sheet)
-    styleSet->PrependStyleSheet(nsStyleSet::eUserSheet, sheet);
+    styleSet->AppendStyleSheet(nsStyleSet::eUserSheet, sheet);
 
   // Append chrome sheets (scrollbars + forms).
   PRBool shouldOverride = PR_FALSE;
@@ -1783,7 +1783,7 @@ DocumentViewerImpl::CreateStyleSet(nsIDocument* aDocument,
           cssLoader->LoadAgentSheet(uri, getter_AddRefs(csssheet));
           if (!sheet) continue;
 
-          styleSet->AppendStyleSheet(nsStyleSet::eAgentSheet, csssheet);
+          styleSet->PrependStyleSheet(nsStyleSet::eAgentSheet, csssheet);
           shouldOverride = PR_TRUE;
         }
         nsMemory::Free(str);
@@ -1794,17 +1794,17 @@ DocumentViewerImpl::CreateStyleSet(nsIDocument* aDocument,
   if (!shouldOverride) {
     sheet = nsLayoutStylesheetCache::ScrollbarsSheet();
     if (sheet) {
-      styleSet->AppendStyleSheet(nsStyleSet::eAgentSheet, sheet);
+      styleSet->PrependStyleSheet(nsStyleSet::eAgentSheet, sheet);
     }
   }
 
   sheet = nsLayoutStylesheetCache::FormsSheet();
   if (sheet) {
-    styleSet->AppendStyleSheet(nsStyleSet::eAgentSheet, sheet);
+    styleSet->PrependStyleSheet(nsStyleSet::eAgentSheet, sheet);
   }
 
   if (mUAStyleSheet) {
-    styleSet->AppendStyleSheet(nsStyleSet::eAgentSheet, mUAStyleSheet);
+    styleSet->PrependStyleSheet(nsStyleSet::eAgentSheet, mUAStyleSheet);
   }
 
   // Caller will handle calling EndUpdate, per contract.

@@ -51,7 +51,6 @@
 #include "nsIRDFService.h"
 #include "pldhash.h"
 #include "nsIHttpChannel.h"
-#include "nsIHTMLCSSStyleSheet.h"
 #include "nsHTMLStyleSheet.h"
 
 // Document.Write() related
@@ -224,13 +223,6 @@ protected:
   nsresult PrePopulateHashTables();
 
   nsIContent *MatchId(nsIContent *aContent, const nsAString& aId);
-
-  virtual void InternalAddStyleSheet(nsIStyleSheet* aSheet,
-                                     PRUint32 aFlags);
-  virtual void InternalInsertStyleSheetAt(nsIStyleSheet* aSheet,
-                                          PRInt32 aIndex);
-  virtual nsIStyleSheet* InternalGetStyleSheetAt(PRInt32 aIndex) const;
-  virtual PRInt32 InternalGetNumberOfStyleSheets() const;
 
   static PRBool MatchLinks(nsIContent *aContent, PRInt32 aNamespaceID,
                            nsIAtom* aAtom, const nsAString& aData);

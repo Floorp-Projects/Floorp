@@ -432,6 +432,8 @@ nsXULDocument::~nsXULDocument()
     // from happening.
     if (mIsPopup) {
         mStyleSheets.Clear();
+        mStyleAttrStyleSheet = nsnull;
+        mAttrStyleSheet = nsnull;
     }
 
     // This is done in nsDocument::~nsDocument() too, but since this
@@ -721,7 +723,7 @@ nsXULDocument::EndLoad()
                     continue;
                 }
 
-                AddStyleSheet(sheet, 0);
+                AddStyleSheet(sheet);
             }
         }
 
@@ -3577,7 +3579,7 @@ nsXULDocument::AddPrototypeSheets()
         // prototype's list, but until then, don't propagate the failure
         // from LoadAgentSheet (and thus exit the loop).
         if (NS_SUCCEEDED(rv)) {
-            AddStyleSheet(sheet, 0);
+            AddStyleSheet(sheet);
         }
     }
 

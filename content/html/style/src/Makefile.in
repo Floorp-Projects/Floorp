@@ -96,7 +96,6 @@ CPPSRCS		= \
 EXPORTS		= \
 		nsDOMCSSDeclaration.h \
 		nsCSSValue.h \
-		nsICSSStyleRuleProcessor.h \
 		nsICSSRule.h \
 		nsICSSGroupRule.h \
 		nsICSSStyleRule.h \

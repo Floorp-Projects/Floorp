@@ -1,4 +1,5 @@
 /* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+// vim:cindent:tabstop=2:expandtab:shiftwidth=2:
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -12,7 +13,7 @@
  * for the specific language governing rights and limitations under the
  * License.
  *
- * The Original Code is Mozilla Communicator client code.
+ * The Original Code is mozilla.org code.
  *
  * The Initial Developer of the Original Code is
  * Netscape Communications Corporation.
@@ -20,7 +21,7 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *   Original Author: David W. Hyatt (hyatt@netscape.com)
+ *   L. David Baron <dbaron@dbaron.org>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -36,45 +37,56 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef nsXBLPrototypeResources_h__
-#define nsXBLPrototypeResources_h__
+#ifndef nsCSSRuleProcessor_h_
+#define nsCSSRuleProcessor_h_
 
-#include "nsCOMPtr.h"
-#include "nsICSSLoaderObserver.h"
-#include "nsISupportsArray.h"
 #include "nsIStyleRuleProcessor.h"
-#include "nsCOMArray.h"
 
-class nsIContent;
-class nsIAtom;
-class nsIDocument;
-class nsIScriptContext;
-class nsSupportsHashtable;
-class nsXBLResourceLoader;
-class nsXBLPrototypeBinding;
+struct RuleCascadeData;
 class nsICSSStyleSheet;
 
-// *********************************************************************/
-// The XBLPrototypeResources class
+/**
+ * The CSS style rule processor provides a mechanism for sibling style
+ * sheets to combine their rule processing in order to allow proper
+ * cascading to happen.
+ *
+ * CSS style rule processors keep a live reference on all style sheets
+ * bound to them.  The CSS style sheets keep a weak reference to all the
+ * processors that they are bound to (many to many).  The CSS style sheet
+ * is told when the rule processor is going away (via DropRuleProcessor).
+ */
 
-class nsXBLPrototypeResources
-{
+class nsCSSRuleProcessor: public nsIStyleRuleProcessor {
 public:
-  void LoadResources(PRBool* aResult);
-  void AddResource(nsIAtom* aResourceType, const nsAString& aSrc);
-  void AddResourceListener(nsIContent* aElement);
-  nsresult FlushSkinSheets();
+  nsCSSRuleProcessor(const nsCOMArray<nsICSSStyleSheet>& aSheets);
+  virtual ~nsCSSRuleProcessor();
 
-  nsXBLPrototypeResources(nsXBLPrototypeBinding* aBinding);
-  ~nsXBLPrototypeResources();
+  NS_DECL_ISUPPORTS
 
-// MEMBER VARIABLES
-  nsXBLResourceLoader* mLoader; // A loader object. Exists only long enough to load resources, and then it dies.
-  nsCOMArray<nsICSSStyleSheet> mStyleSheetList; // A list of loaded stylesheets for this binding.
+public:
+  nsresult ClearRuleCascades();
 
-  // The list of stylesheets converted to a rule processor.
-  nsCOMPtr<nsIStyleRuleProcessor> mRuleProcessor;
+  // nsIStyleRuleProcessor
+  NS_IMETHOD RulesMatching(ElementRuleProcessorData* aData,
+                           nsIAtom* aMedium);
+
+  NS_IMETHOD RulesMatching(PseudoRuleProcessorData* aData,
+                           nsIAtom* aMedium);
+
+  NS_IMETHOD HasStateDependentStyle(StateRuleProcessorData* aData,
+                                    nsIAtom* aMedium,
+                                    nsReStyleHint* aResult);
+
+  NS_IMETHOD HasAttributeDependentStyle(AttributeRuleProcessorData* aData,
+                                        nsIAtom* aMedium,
+                                        nsReStyleHint* aResult);
+
+protected:
+  RuleCascadeData* GetRuleCascade(nsIPresContext* aPresContext, nsIAtom* aMedium);
+
+  nsCOMArray<nsICSSStyleSheet> mSheets;
+
+  RuleCascadeData*  mRuleCascades;
 };
 
-#endif
-
+#endif /* nsCSSRuleProcessor_h_ */

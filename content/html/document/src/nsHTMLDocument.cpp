@@ -49,7 +49,6 @@
 #include "nsIXMLContentSink.h"
 #include "nsHTMLParts.h"
 #include "nsHTMLStyleSheet.h"
-#include "nsIHTMLCSSStyleSheet.h"
 #include "nsHTMLAtoms.h"
 #include "nsLayoutAtoms.h"
 #include "nsIPresShell.h"
@@ -1069,77 +1068,6 @@ nsHTMLDocument::GetImageMap(const nsAString& aMapName)
   return nsnull;
 }
 
-// subclass hooks for sheet ordering
-void
-nsHTMLDocument::InternalAddStyleSheet(nsIStyleSheet* aSheet, PRUint32 aFlags)
-{
-  if (aSheet == mAttrStyleSheet) {  // always first
-    NS_ASSERTION(mStyleSheets.Count() == 0 ||
-                 mAttrStyleSheet != mStyleSheets[0],
-                 "Adding attr sheet twice!");
-    mStyleSheets.InsertObjectAt(aSheet, 0);
-  }
-  else if (aSheet == mStyleAttrStyleSheet) {  // always last
-    NS_ASSERTION(mStyleSheets.Count() == 0 ||
-                 mStyleSheets[mStyleSheets.Count() - 1] != mStyleAttrStyleSheet,
-                 "Adding style attr sheet twice!");
-    mStyleSheets.AppendObject(aSheet);
-  }
-  else {
-    PRInt32 count = mStyleSheets.Count();
-    if (count != 0 && mStyleAttrStyleSheet == mStyleSheets[count - 1]) {
-      // keep attr sheet last
-      mStyleSheets.InsertObjectAt(aSheet, count - 1);
-    }
-    else {
-      mStyleSheets.AppendObject(aSheet);
-    }
-  }
-}
-
-void
-nsHTMLDocument::InternalInsertStyleSheetAt(nsIStyleSheet* aSheet,
-                                           PRInt32 aIndex)
-{
-  NS_ASSERTION(0 <= aIndex &&
-               aIndex <= (
-                          mStyleSheets.Count()
-                          /* Don't count Attribute stylesheet */
-                          - 1
-                          /* No insertion allowed after StyleAttr stylesheet */
-                          - ((mStyleAttrStyleSheet &&
-                              mStyleSheets.Count() > 0 &&
-                              mStyleAttrStyleSheet ==
-                                mStyleSheets[mStyleSheets.Count() - 1]) ? 1: 0)
-                          ),
-               "index out of bounds");
-
-  // offset one for the attr style sheet
-  mStyleSheets.InsertObjectAt(aSheet, aIndex + 1);
-}
-
-nsIStyleSheet*
-nsHTMLDocument::InternalGetStyleSheetAt(PRInt32 aIndex) const
-{
-  PRInt32 count = InternalGetNumberOfStyleSheets();
-  if (aIndex >= 0 && aIndex < count) {
-    return mStyleSheets[aIndex + 1];
-  } else {
-    NS_ERROR("Index out of range");
-    return nsnull;
-  }
-}
-
-PRInt32
-nsHTMLDocument::InternalGetNumberOfStyleSheets() const
-{
-  PRInt32 count = mStyleSheets.Count();
-  if (count != 0 && mStyleAttrStyleSheet == mStyleSheets[count - 1])
-    --count;
-  --count; // for the attr sheet
-  NS_ASSERTION(count >= 0, "Why did we end up with a negative count?");
-  return count;
-}
 
 nsICSSLoader*
 nsHTMLDocument::GetCSSLoader()

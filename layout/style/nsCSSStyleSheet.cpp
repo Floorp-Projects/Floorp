@@ -53,7 +53,7 @@
 #include "pldhash.h"
 #include "nsHashtable.h"
 #include "nsICSSPseudoComparator.h"
-#include "nsICSSStyleRuleProcessor.h"
+#include "nsCSSRuleProcessor.h"
 #include "nsICSSStyleRule.h"
 #include "nsICSSNameSpaceRule.h"
 #include "nsICSSMediaRule.h"
@@ -107,13 +107,17 @@ struct RuleValue {
    * |RuleHash|, to act as rule/selector pairs.  |Add| is called when
    * they are added to the |RuleHash|, and can be considered the second
    * half of the constructor.
+   *
+   * |RuleValue|s are added to the rule hash from highest weight/order
+   * to lowest (since this is the fast way to build a singly linked
+   * list), so the index used to remember the order is backwards.
    */
   RuleValue(nsICSSStyleRule* aRule, nsCSSSelector* aSelector)
     : mRule(aRule), mSelector(aSelector) {}
 
-  RuleValue* Add(PRInt32 aIndex, RuleValue *aNext)
+  RuleValue* Add(PRInt32 aBackwardIndex, RuleValue *aNext)
   {
-    mIndex = aIndex;
+    mBackwardIndex = aBackwardIndex;
     mNext = aNext;
     return this;
   }
@@ -136,7 +140,7 @@ struct RuleValue {
 
   nsICSSStyleRule*  mRule;
   nsCSSSelector*    mSelector; // which of |mRule|'s selectors
-  PRInt32           mIndex; // High index means low weight/order.
+  PRInt32           mBackwardIndex; // High index means low weight/order.
   RuleValue*        mNext;
 };
 
@@ -603,9 +607,9 @@ void RuleHash::EnumerateAllRules(PRInt32 aNameSpace, nsIAtom* aTag,
     // Merge the lists while there are still multiple lists to merge.
     while (valueCount > 1) {
       PRInt32 valueIndex = 0;
-      PRInt32 highestRuleIndex = mEnumList[valueIndex]->mIndex;
+      PRInt32 highestRuleIndex = mEnumList[valueIndex]->mBackwardIndex;
       for (PRInt32 index = 1; index < valueCount; ++index) {
-        PRInt32 ruleIndex = mEnumList[index]->mIndex;
+        PRInt32 ruleIndex = mEnumList[index]->mBackwardIndex;
         if (ruleIndex > highestRuleIndex) {
           valueIndex = index;
           highestRuleIndex = ruleIndex;
@@ -720,48 +724,6 @@ RuleCascadeData::AttributeListFor(nsIAtom* aAttribute)
 }
 
 // -------------------------------
-// CSS Style Rule processor
-//
-
-class CSSRuleProcessor: public nsICSSStyleRuleProcessor {
-public:
-  CSSRuleProcessor(void);
-  virtual ~CSSRuleProcessor(void);
-
-  NS_DECL_ISUPPORTS
-
-public:
-  // nsICSSStyleRuleProcessor
-  NS_IMETHOD AppendStyleSheet(nsICSSStyleSheet* aStyleSheet);
-
-  NS_IMETHOD ClearRuleCascades(void);
-
-  // nsIStyleRuleProcessor
-  NS_IMETHOD RulesMatching(ElementRuleProcessorData* aData,
-                           nsIAtom* aMedium);
-
-  NS_IMETHOD RulesMatching(PseudoRuleProcessorData* aData,
-                           nsIAtom* aMedium);
-
-  NS_IMETHOD HasStateDependentStyle(StateRuleProcessorData* aData,
-                                    nsIAtom* aMedium,
-                                    nsReStyleHint* aResult);
-
-  NS_IMETHOD HasAttributeDependentStyle(AttributeRuleProcessorData* aData,
-                                        nsIAtom* aMedium,
-                                        nsReStyleHint* aResult);
-
-protected:
-  RuleCascadeData* GetRuleCascade(nsIPresContext* aPresContext, nsIAtom* aMedium);
-
-  static PRBool CascadeSheetRulesInto(nsISupports* aSheet, void* aData);
-
-  nsISupportsArray* mSheets;
-
-  RuleCascadeData*  mRuleCascades;
-};
-
-// -------------------------------
 // CSS Style Sheet Inner Data Container
 //
 
@@ -795,6 +757,7 @@ public:
 class CSSImportsCollectionImpl;
 class CSSRuleListImpl;
 class DOMMediaListImpl;
+static PRBool CascadeSheetRulesInto(nsICSSStyleSheet* aSheet, void* aData);
 
 class CSSStyleSheetImpl : public nsICSSStyleSheet, 
                           public nsIDOMCSSStyleSheet,
@@ -836,9 +799,8 @@ public:
   NS_IMETHOD SetOwnerRule(nsICSSImportRule* aOwnerRule);
   NS_IMETHOD GetOwnerRule(nsICSSImportRule** aOwnerRule);
 
-  NS_IMETHOD GetStyleRuleProcessor(nsIStyleRuleProcessor*& aProcessor,
-                                   nsIStyleRuleProcessor* aPrevProcessor);
-  NS_IMETHOD DropRuleProcessorReference(nsICSSStyleRuleProcessor* aProcessor);
+  NS_IMETHOD AddRuleProcessor(nsCSSRuleProcessor* aProcessor);
+  NS_IMETHOD DropRuleProcessor(nsCSSRuleProcessor* aProcessor);
 
 
   NS_IMETHOD ContainsStyleSheet(nsIURI* aURL, PRBool& aContains, nsIStyleSheet** aTheChild=nsnull);
@@ -920,8 +882,8 @@ protected:
 
   nsAutoVoidArray*      mRuleProcessors;
 
-  friend class CSSRuleProcessor;
   friend class DOMMediaListImpl;
+  friend PRBool CascadeSheetRulesInto(nsICSSStyleSheet* aSheet, void* aData);
 };
 
 
@@ -1696,55 +1658,28 @@ NS_IMPL_RELEASE(CSSStyleSheetImpl)
 
 
 NS_IMETHODIMP
-CSSStyleSheetImpl::GetStyleRuleProcessor(nsIStyleRuleProcessor*& aProcessor,
-                                         nsIStyleRuleProcessor* aPrevProcessor)
+CSSStyleSheetImpl::AddRuleProcessor(nsCSSRuleProcessor* aProcessor)
 {
-  nsresult  result = NS_OK;
-  nsICSSStyleRuleProcessor*  cssProcessor = nsnull;
-
-  if (aPrevProcessor) {
-    result = aPrevProcessor->QueryInterface(NS_GET_IID(nsICSSStyleRuleProcessor), (void**)&cssProcessor);
+  if (! mRuleProcessors) {
+    mRuleProcessors = new nsAutoVoidArray();
+    if (!mRuleProcessors)
+      return NS_ERROR_OUT_OF_MEMORY;
   }
-  if (! cssProcessor) {
-    CSSRuleProcessor* processor = new CSSRuleProcessor();
-    if (processor) {
-      result = processor->QueryInterface(NS_GET_IID(nsICSSStyleRuleProcessor), (void**)&cssProcessor);
-      if (NS_FAILED(result)) {
-        delete processor;
-        cssProcessor = nsnull;
-      }
-    }
-    else {
-      result = NS_ERROR_OUT_OF_MEMORY;
-    }
-  }
-  if (NS_SUCCEEDED(result) && cssProcessor) {
-    cssProcessor->AppendStyleSheet(this);
-    if (! mRuleProcessors) {
-      mRuleProcessors = new nsAutoVoidArray();
-    }
-    if (mRuleProcessors) {
-      NS_ASSERTION(-1 == mRuleProcessors->IndexOf(cssProcessor), "processor already registered");
-      mRuleProcessors->AppendElement(cssProcessor); // weak ref
-    }
-  }
-  aProcessor = cssProcessor;
+  NS_ASSERTION(-1 == mRuleProcessors->IndexOf(aProcessor),
+               "processor already registered");
+  mRuleProcessors->AppendElement(aProcessor); // weak ref
   return NS_OK;
 }
 
 NS_IMETHODIMP
-CSSStyleSheetImpl::DropRuleProcessorReference(nsICSSStyleRuleProcessor* aProcessor)
+CSSStyleSheetImpl::DropRuleProcessor(nsCSSRuleProcessor* aProcessor)
 {
-  NS_ASSERTION(mRuleProcessors, "no rule processors registered");
-  if (mRuleProcessors) {
-    NS_ASSERTION(-1 != mRuleProcessors->IndexOf(aProcessor), "not a registered processor");
-    mRuleProcessors->RemoveElement(aProcessor);
-  }
-  return NS_OK;
+  if (!mRuleProcessors)
+    return NS_ERROR_FAILURE;
+  return mRuleProcessors->RemoveElement(aProcessor)
+           ? NS_OK
+           : NS_ERROR_FAILURE;
 }
-
-
-
 
 
 NS_IMETHODIMP
@@ -2367,7 +2302,8 @@ void CSSStyleSheetImpl::List(FILE* out, PRInt32 aIndent) const
 static PRBool PR_CALLBACK
 EnumClearRuleCascades(void* aProcessor, void* aData)
 {
-  nsICSSStyleRuleProcessor* processor = (nsICSSStyleRuleProcessor*)aProcessor;
+  nsCSSRuleProcessor* processor =
+    NS_STATIC_CAST(nsCSSRuleProcessor*, aProcessor);
   processor->ClearRuleCascades();
   return PR_TRUE;
 }
@@ -3011,72 +2947,23 @@ NS_NewCSSStyleSheet(nsICSSStyleSheet** aInstancePtrResult)
 // CSS Style rule processor implementation
 //
 
-CSSRuleProcessor::CSSRuleProcessor(void)
-  : mSheets(nsnull),
+nsCSSRuleProcessor::nsCSSRuleProcessor(const nsCOMArray<nsICSSStyleSheet>& aSheets)
+  : mSheets(aSheets),
     mRuleCascades(nsnull)
 {
+  for (PRInt32 i = mSheets.Count() - 1; i >= 0; --i)
+    mSheets[i]->AddRuleProcessor(this);
 }
 
-static PRBool
-DropProcessorReference(nsISupports* aSheet, void* aProcessor)
+nsCSSRuleProcessor::~nsCSSRuleProcessor(void)
 {
-  nsICSSStyleSheet* sheet = (nsICSSStyleSheet*)aSheet;
-  nsICSSStyleRuleProcessor* processor = (nsICSSStyleRuleProcessor*)aProcessor;
-  sheet->DropRuleProcessorReference(processor);
-  return PR_TRUE;
-}
-
-CSSRuleProcessor::~CSSRuleProcessor(void)
-{
-  if (mSheets) {
-    mSheets->EnumerateForwards(DropProcessorReference, this);
-    NS_RELEASE(mSheets);
-  }
+  for (PRInt32 i = mSheets.Count() - 1; i >= 0; --i)
+    mSheets[i]->DropRuleProcessor(this);
+  mSheets.Clear();
   ClearRuleCascades();
 }
 
-NS_IMPL_ADDREF(CSSRuleProcessor)
-NS_IMPL_RELEASE(CSSRuleProcessor)
-
-nsresult 
-CSSRuleProcessor::QueryInterface(REFNSIID aIID, void** aInstancePtrResult)
-{
-  if (NULL == aInstancePtrResult) {
-    return NS_ERROR_NULL_POINTER;
-  }
-
-  static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
-  if (aIID.Equals(NS_GET_IID(nsICSSStyleRuleProcessor))) {
-    *aInstancePtrResult = (void*)this;
-    NS_ADDREF_THIS();
-    return NS_OK;
-  }
-  if (aIID.Equals(NS_GET_IID(nsIStyleRuleProcessor))) {
-    *aInstancePtrResult = (void*)this;
-    NS_ADDREF_THIS();
-    return NS_OK;
-  }
-  if (aIID.Equals(kISupportsIID)) {
-    *aInstancePtrResult = (void*)this;
-    NS_ADDREF_THIS();
-    return NS_OK;
-  }
-  return NS_NOINTERFACE;
-}
-
-
-NS_IMETHODIMP
-CSSRuleProcessor::AppendStyleSheet(nsICSSStyleSheet* aStyleSheet)
-{
-  nsresult result = NS_OK;
-  if (! mSheets) {
-    result = NS_NewISupportsArray(&mSheets);
-  }
-  if (mSheets) {
-    mSheets->AppendElement(aStyleSheet);
-  }
-  return result;
-}
+NS_IMPL_ISUPPORTS1(nsCSSRuleProcessor, nsIStyleRuleProcessor)
 
 MOZ_DECL_CTOR_COUNTER(RuleProcessorData)
 
@@ -3869,8 +3756,8 @@ static void ContentEnumFunc(nsICSSStyleRule* aRule, nsCSSSelector* aSelector,
 }
 
 NS_IMETHODIMP
-CSSRuleProcessor::RulesMatching(ElementRuleProcessorData *aData,
-                                nsIAtom* aMedium)
+nsCSSRuleProcessor::RulesMatching(ElementRuleProcessorData *aData,
+                                  nsIAtom* aMedium)
 {
   NS_PRECONDITION(aData->mContent->IsContentOfType(nsIContent::eELEMENT),
                   "content must be element");
@@ -3939,8 +3826,8 @@ static void PseudoEnumFunc(nsICSSStyleRule* aRule, nsCSSSelector* aSelector,
 }
 
 NS_IMETHODIMP
-CSSRuleProcessor::RulesMatching(PseudoRuleProcessorData* aData,
-                                nsIAtom* aMedium)
+nsCSSRuleProcessor::RulesMatching(PseudoRuleProcessorData* aData,
+                                  nsIAtom* aMedium)
 {
   NS_PRECONDITION(!aData->mContent ||
                   aData->mContent->IsContentOfType(nsIContent::eELEMENT),
@@ -3987,9 +3874,9 @@ PR_STATIC_CALLBACK(PRBool) StateEnumFunc(void* aSelector, void* aData)
 }
 
 NS_IMETHODIMP
-CSSRuleProcessor::HasStateDependentStyle(StateRuleProcessorData* aData,
-                                         nsIAtom* aMedium,
-                                         nsReStyleHint* aResult)
+nsCSSRuleProcessor::HasStateDependentStyle(StateRuleProcessorData* aData,
+                                           nsIAtom* aMedium,
+                                           nsReStyleHint* aResult)
 {
   NS_PRECONDITION(aData->mContent->IsContentOfType(nsIContent::eELEMENT),
                   "content must be element");
@@ -4038,9 +3925,9 @@ PR_STATIC_CALLBACK(PRBool) AttributeEnumFunc(void* aSelector, void* aData)
 }
 
 NS_IMETHODIMP
-CSSRuleProcessor::HasAttributeDependentStyle(AttributeRuleProcessorData* aData,
-                                             nsIAtom* aMedium,
-                                             nsReStyleHint* aResult)
+nsCSSRuleProcessor::HasAttributeDependentStyle(AttributeRuleProcessorData* aData,
+                                               nsIAtom* aMedium,
+                                               nsReStyleHint* aResult)
 {
   NS_PRECONDITION(aData->mContent->IsContentOfType(nsIContent::eELEMENT),
                   "content must be element");
@@ -4087,7 +3974,7 @@ CSSRuleProcessor::HasAttributeDependentStyle(AttributeRuleProcessorData* aData,
 }
 
 NS_IMETHODIMP
-CSSRuleProcessor::ClearRuleCascades(void)
+nsCSSRuleProcessor::ClearRuleCascades(void)
 {
   RuleCascadeData *data = mRuleCascades;
   mRuleCascades = nsnull;
@@ -4229,19 +4116,18 @@ InsertRuleByWeight(nsISupports* aRule, void* aData)
 }
 
 
-PRBool
-CSSRuleProcessor::CascadeSheetRulesInto(nsISupports* aSheet, void* aData)
+static PRBool
+CascadeSheetRulesInto(nsICSSStyleSheet* aSheet, void* aData)
 {
-  nsICSSStyleSheet* iSheet = (nsICSSStyleSheet*)aSheet;
-  CSSStyleSheetImpl*  sheet = (CSSStyleSheetImpl*)iSheet;
-  CascadeEnumData*  data = (CascadeEnumData*)aData;
+  CSSStyleSheetImpl*  sheet = NS_STATIC_CAST(CSSStyleSheetImpl*, aSheet);
+  CascadeEnumData* data = NS_STATIC_CAST(CascadeEnumData*, aData);
   PRBool bSheetApplicable = PR_TRUE;
   sheet->GetApplicable(bSheetApplicable);
 
   if (bSheetApplicable && sheet->UseForMedium(data->mMedium)) {
-    CSSStyleSheetImpl*  child = sheet->mFirstChild;
+    CSSStyleSheetImpl* child = sheet->mFirstChild;
     while (child) {
-      CascadeSheetRulesInto((nsICSSStyleSheet*)child, data);
+      CascadeSheetRulesInto(child, data);
       child = child->mNext;
     }
 
@@ -4311,7 +4197,8 @@ static void PutRulesInList(nsObjectHashtable* aRuleArrays,
 }
 
 RuleCascadeData*
-CSSRuleProcessor::GetRuleCascade(nsIPresContext* aPresContext, nsIAtom* aMedium)
+nsCSSRuleProcessor::GetRuleCascade(nsIPresContext* aPresContext,
+                                   nsIAtom* aMedium)
 {
   RuleCascadeData **cascadep = &mRuleCascades;
   RuleCascadeData *cascade;
@@ -4321,15 +4208,17 @@ CSSRuleProcessor::GetRuleCascade(nsIPresContext* aPresContext, nsIAtom* aMedium)
     cascadep = &cascade->mNext;
   }
 
-  if (mSheets) {
+  if (mSheets.Count() != 0) {
     cascade = new RuleCascadeData(aMedium,
                                   eCompatibility_NavQuirks == aPresContext->CompatibilityMode());
     if (cascade) {
       CascadeEnumData data(aMedium, cascade->mRuleHash.Arena());
-      mSheets->EnumerateForwards(CascadeSheetRulesInto, &data);
+      mSheets.EnumerateForwards(CascadeSheetRulesInto, &data);
       nsVoidArray weightedRules;
       PutRulesInList(&data.mRuleArrays, &weightedRules);
 
+      // Put things into the rule hash backwards because it's easier to
+      // build a singly linked list lowest-first that way.
       if (!weightedRules.EnumerateBackwards(AddRule, cascade)) {
         delete cascade;
         cascade = nsnull;
