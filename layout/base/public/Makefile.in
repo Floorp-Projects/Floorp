@@ -69,6 +69,13 @@ nsIScrollableFrame.h \
 nsIScrollableViewProvider.h \
 $(NULL)
 
+ifdef IBMBIDI
+EXPORTS		+= \
+		nsBidiPresUtils.h \
+		nsITextFrame.h \
+		$(NULL)
+endif                
+
 XPIDLSRCS	= \
 		nsIChromeEventHandler.idl	\
 		nsIPrintListener.idl        \
