@@ -32,8 +32,9 @@
 
 // Define CIDs...
 static NS_DEFINE_CID(kIOServiceCID,              NS_IOSERVICE_CID);
+static NS_DEFINE_CID(kStdURLCID, 				 NS_STANDARDURL_CID);
 
-int writeout(const char* i_pURL)
+int writeout(const char* i_pURL, PRBool bUseStd =PR_TRUE)
 {
     if (i_pURL)
     {
@@ -41,17 +42,37 @@ int writeout(const char* i_pURL)
 
 	    nsCOMPtr<nsIURI> pURL;
         nsresult result = NS_OK;
+		
+		if (bUseStd) 
+		{
+			nsIURI* url;
+			result = nsComponentManager::CreateInstance(kStdURLCID, nsnull, 
+				nsCOMTypeInfo<nsIURI>::GetIID(), (void**)&url);
+			if (NS_FAILED(result))
+			{
+				cout << "CreateInstance failed" << endl;
+				return result;
+			}
+			pURL = url;
+			pURL->SetSpec((char*)i_pURL);
+		}
+		else 
+		{
+			NS_WITH_SERVICE(nsIIOService, pService, kIOServiceCID, &result);
+			if (NS_FAILED(result)) 
+			{
+				cout << "Service failed!" << endl;
+				return result;
+			}	
 
-        NS_WITH_SERVICE(nsIIOService, pService, kIOServiceCID, &result);
-        if (NS_FAILED(result)) return result;
-
-	    result = pService->NewURI(i_pURL, nsnull, getter_AddRefs(pURL));
+			result = pService->NewURI(i_pURL, nsnull, getter_AddRefs(pURL));
+		}
 	    if (NS_SUCCEEDED(result))
 	    {
 		    char* temp;
 		    PRInt32 port;
 		    pURL->GetScheme(&temp);
-		    cout << "Got " << (temp ? temp : "") << ',';
+		    cout << "Got    " << (temp ? temp : "") << ',';
 		    pURL->GetPreHost(&temp);
 		    cout << (temp ? temp : "") << ',';
 		    pURL->GetHost(&temp);
@@ -69,7 +90,7 @@ int writeout(const char* i_pURL)
     return -1;
 }
 
-nsresult testURL(const char* i_pURL)
+nsresult testURL(const char* i_pURL, PRBool bUseStd=PR_TRUE)
 {
     const int tests = 8;
 
@@ -80,7 +101,7 @@ nsresult testURL(const char* i_pURL)
 
 	if (i_pURL)
 	{
-        writeout(i_pURL);
+        writeout(i_pURL, bUseStd);
 	}
 	else
 	{
@@ -104,14 +125,36 @@ nsresult testURL(const char* i_pURL)
 			",,host,0,/netlib",
 			",,,-1,",
 			"mailbox,,,-1,/foo",
-			",username:pass,hostname.edu,80,/pathname",
+			",user:pass,hostname.edu,80,/pathname",
 			"http,username:password,hostname,80,/pathname"
 		};
 
+		// These tests will fail to create a URI from NS_NewURI calls...
+		// because of a missing scheme: in front. This set assumes
+		// an only working HTTP Handler is available.
+		PRBool failWithURI[tests] =
+		{
+			PR_FALSE,
+			PR_TRUE,
+			PR_FALSE,
+			PR_TRUE,
+			PR_TRUE,
+			PR_TRUE,
+			PR_TRUE,
+			PR_FALSE
+		};
+		nsresult stat;
 		for (int i = 0; i< tests; ++i)
 		{
-            writeout(url[i]);
-		    cout << "Expect " << resultset[i] << endl << endl;
+			cout << "--------------------" << endl;
+			if (!bUseStd)
+				cout << "Should" << (failWithURI[i] ? " not " : " ")
+					<< "create URL" << endl;
+			stat = writeout(url[i], bUseStd);
+			if (NS_FAILED(stat))
+				return stat;
+			if (bUseStd || !failWithURI[i])
+				cout << "Expect " << resultset[i] << endl << endl;
 		}
 	}
 	return 0;
@@ -128,19 +171,28 @@ int main(int argc, char **argv)
     nsresult result = NS_OK;
 
     if (argc < 2) {
-        printf("urltest <URL> \n");
+        printf("urltest [-std] [<URL> | -all]\n");
         return 0;
     }
 
     result = NS_AutoregisterComponents();
 	if (NS_FAILED(result)) return result;
+	
+	PRBool bStdTest= PR_FALSE;
+	PRBool bTestAll= PR_FALSE;
 
-	if (PL_strncasecmp(argv[1], "-all", 4) == 0)
-	{
-		result = testURL(0);	
+    for (int i=1; i<argc; i++) {
+        if (PL_strcasecmp(argv[i], "-std") == 0) 
+		{
+			bStdTest = PR_TRUE;
+			continue;
+		}
+
+        if (PL_strcasecmp(argv[i], "-all") == 0) 
+		{
+			bTestAll = PR_TRUE;
+			continue;
+		}
 	}
-	else
-		result = testURL(argv[1]);
-
-    return result;
+	return bTestAll ? testURL(0,bStdTest) : testURL(argv[argc-1],bStdTest);
 }
