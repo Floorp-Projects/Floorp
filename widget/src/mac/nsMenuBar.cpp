@@ -110,7 +110,6 @@ nsMenuBar::nsMenuBar() : nsIMenuBar(), nsIMenuListener()
   mOriginalMacMBarHandle = nsnull;
   mMacMBarHandle = nsnull;
   mMacMBarHandle = ::GetMenuBar(); // Get a copy of the menu list
-  //::SetMenuBar(mMacMBarHandle); // Make the copy the current menu list
   ::ClearMenuBar(); // Clear the copy
 }
 
@@ -122,6 +121,13 @@ nsMenuBar::nsMenuBar() : nsIMenuBar(), nsIMenuListener()
 nsMenuBar::~nsMenuBar()
 {
   NS_IF_RELEASE(mParent);
+
+  while(mNumMenus)
+  {
+    --mNumMenus;
+    nsIMenu* menu = (nsIMenu*)mMenuVoidArray[mNumMenus];
+    NS_IF_RELEASE( menu );
+  }
 }
 
 //-------------------------------------------------------------------------
