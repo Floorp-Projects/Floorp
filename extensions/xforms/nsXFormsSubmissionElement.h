@@ -40,7 +40,6 @@
 #define nsXFormsSubmissionElement_h_
 
 #include "nsIXTFGenericElement.h"
-#include "nsIDOMEventListener.h"
 #include "nsXFormsElement.h"
 
 class nsIMultiplexInputStream;
@@ -53,14 +52,12 @@ class nsString;
 class SubmissionAttachmentArray;
 
 class nsXFormsSubmissionElement : public nsXFormsElement,
-                                  public nsIXTFGenericElement,
-                                  public nsIDOMEventListener
+                                  public nsIXTFGenericElement
 {
 public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSIXTFELEMENT
   NS_DECL_NSIXTFGENERICELEMENT
-  NS_DECL_NSIDOMEVENTLISTENER
 
   nsXFormsSubmissionElement()
     : mElement(nsnull)

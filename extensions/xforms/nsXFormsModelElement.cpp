@@ -59,9 +59,6 @@
 #include "nsIDOMXPathEvaluator.h"
 #include "nsIDOMXPathNSResolver.h"
 #include "nsIDOMXPathExpression.h"
-#include "nsIDOM3EventTarget.h"
-#include "nsIDOMEventGroup.h"
-#include "nsIDOMNSUIEvent.h"
 #include "nsIScriptGlobalObject.h"
 #include "nsIContent.h"
 #include "nsNetUtil.h"
@@ -140,19 +137,6 @@ NS_INTERFACE_MAP_END
 NS_IMETHODIMP
 nsXFormsModelElement::OnDestroyed()
 {
-  nsCOMPtr<nsIDOMEventReceiver> receiver = do_QueryInterface(mElement);
-  NS_ASSERTION(receiver, "xml elements must be event receivers");
-
-  nsCOMPtr<nsIDOMEventGroup> systemGroup;
-  receiver->GetSystemEventGroup(getter_AddRefs(systemGroup));
-  NS_ASSERTION(systemGroup, "system event group must exist");
-  
-  nsCOMPtr<nsIDOM3EventTarget> targ = do_QueryInterface(mElement);
-  for (unsigned int i = 0; i < NS_ARRAY_LENGTH(sModelEvents); ++i) {
-    targ->RemoveGroupedEventListener(NS_ConvertUTF8toUTF16(sModelEvents[i].name),
-                                     this, PR_FALSE, systemGroup);
-  }
-
   RemoveModelFromDocument();
 
   mElement = nsnull;
@@ -406,7 +390,31 @@ nsXFormsModelElement::DoneAddingChildren()
 NS_IMETHODIMP
 nsXFormsModelElement::HandleDefault(nsIDOMEvent *aEvent, PRBool *aHandled)
 {
-  *aHandled = PR_FALSE;
+  *aHandled = PR_TRUE;
+
+  nsAutoString type;
+  aEvent->GetType(type);
+
+  if (type.EqualsLiteral("xforms-refresh")) {
+    // refresh all of our form controls
+    PRInt32 controlCount = mFormControls.Count();
+    for (PRInt32 i = 0; i < controlCount; ++i) {
+      NS_STATIC_CAST(nsXFormsControl*, mFormControls[i])->Refresh();
+    }
+  } else if (type.EqualsLiteral("xforms-revalidate")) {
+    Revalidate();
+  } else if (type.EqualsLiteral("xforms-recalculate")) {
+    Recalculate();
+  } else if (type.EqualsLiteral("xforms-rebuild")) {
+    Rebuild();
+  } else if (type.EqualsLiteral("xforms-reset")) {
+#ifdef DEBUG
+    printf("nsXFormsModelElement::Reset()\n");
+#endif    
+  } else {
+    *aHandled = PR_FALSE;
+  }
+
   return NS_OK;
 }
 
@@ -550,35 +558,6 @@ nsXFormsModelElement::OnError(nsresult aStatus,
 NS_IMETHODIMP
 nsXFormsModelElement::HandleEvent(nsIDOMEvent* aEvent)
 {
-  nsCOMPtr<nsIDOMNSUIEvent> evt = do_QueryInterface(aEvent);
-  NS_ASSERTION(evt, "event should implement nsIDOMNSUIEvent");
-
-  PRBool defaultPrevented;
-  evt->GetPreventDefault(&defaultPrevented);
-  if (defaultPrevented)
-    return NS_OK;
-
-  nsAutoString type;
-  aEvent->GetType(type);
-
-  if (type.EqualsLiteral("xforms-refresh")) {
-    // refresh all of our form controls
-    PRInt32 controlCount = mFormControls.Count();
-    for (PRInt32 i = 0; i < controlCount; ++i) {
-      NS_STATIC_CAST(nsXFormsControl*, mFormControls[i])->Refresh();
-    }
-  } else if (type.EqualsLiteral("xforms-revalidate")) {
-    Revalidate();
-  } else if (type.EqualsLiteral("xforms-recalculate")) {
-    Recalculate();
-  } else if (type.EqualsLiteral("xforms-rebuild")) {
-    Rebuild();
-  } else if (type.EqualsLiteral("xforms-reset")) {
-#ifdef DEBUG
-    printf("nsXFormsModelElement::Reset()\n");
-#endif    
-  }
-
   return NS_OK;
 }
 
@@ -737,23 +716,6 @@ nsXFormsModelElement::FinishConstruction()
   }
 
   // 5. dispatch xforms-rebuild, xforms-recalculate, xforms-revalidate
-
-  // First hook up our event listener so we invoke the default action for
-  // these events.  We listen on the system event group so that we can check
-  // whether preventDefault() was called by any content listeners.
-
-  nsCOMPtr<nsIDOMEventReceiver> receiver = do_QueryInterface(mElement);
-  NS_ASSERTION(receiver, "xml elements must be event receivers");
-
-  nsCOMPtr<nsIDOMEventGroup> systemGroup;
-  receiver->GetSystemEventGroup(getter_AddRefs(systemGroup));
-  NS_ASSERTION(systemGroup, "system event group must exist");
-  
-  nsCOMPtr<nsIDOM3EventTarget> targ = do_QueryInterface(mElement);
-  for (unsigned int j = 0; j < NS_ARRAY_LENGTH(sModelEvents); ++j) {
-    targ->AddGroupedEventListener(NS_ConvertUTF8toUTF16(sModelEvents[j].name),
-                                  this, PR_FALSE, systemGroup);
-  }
 
   DispatchEvent(eEvent_Rebuild);
   DispatchEvent(eEvent_Recalculate);

@@ -52,14 +52,10 @@
 #include "nsIDOMDocument.h"
 #include "nsIDOMElement.h"
 #include "nsIDOMText.h"
-#include "nsIDOMEventListener.h"
-#include "nsIDOMEventGroup.h"
-#include "nsIDOMEventReceiver.h"
 #include "nsIDOMEvent.h"
 #include "nsIDOMDocumentEvent.h"
-#include "nsIDOM3EventTarget.h"
+#include "nsIDOMEventTarget.h"
 #include "nsIDOM3Node.h"
-#include "nsIDOMNSUIEvent.h"
 #include "nsIDOMXPathResult.h"
 #include "nsIDOMXPathEvaluator.h"
 #include "nsIDOMXPathNSResolver.h"
@@ -236,10 +232,9 @@ public:
 
 // nsISupports
 
-NS_IMPL_ISUPPORTS3(nsXFormsSubmissionElement,
+NS_IMPL_ISUPPORTS2(nsXFormsSubmissionElement,
                    nsIXTFElement,
-                   nsIXTFGenericElement,
-                   nsIDOMEventListener)
+                   nsIXTFGenericElement)
 
 // nsIXTFElement
 
@@ -366,7 +361,15 @@ nsXFormsSubmissionElement::DoneAddingChildren()
 NS_IMETHODIMP
 nsXFormsSubmissionElement::HandleDefault(nsIDOMEvent *aEvent, PRBool *aHandled)
 {
-  *aHandled = PR_FALSE;
+  nsAutoString type;
+  aEvent->GetType(type);
+  if (type.EqualsLiteral("xforms-submit")) {
+    Submit();
+    *aHandled = PR_TRUE;
+  } else {
+    *aHandled = PR_FALSE;
+  }
+
   return NS_OK;
 }
 
@@ -385,39 +388,6 @@ nsXFormsSubmissionElement::OnCreated(nsIXTFGenericElementWrapper *aWrapper)
   mElement = node;
   NS_ASSERTION(mElement, "Wrapper is not an nsIDOMElement, we'll crash soon");
 
-  // We listen on the system event group so that we can check
-  // whether preventDefault() was called by any content listeners.
-
-  nsCOMPtr<nsIDOMEventReceiver> receiver = do_QueryInterface(mElement);
-  NS_ASSERTION(receiver, "xml elements must be event receivers");
-
-  nsCOMPtr<nsIDOMEventGroup> systemGroup;
-  receiver->GetSystemEventGroup(getter_AddRefs(systemGroup));
-  NS_ASSERTION(systemGroup, "system event group must exist");
-
-  nsCOMPtr<nsIDOM3EventTarget> target = do_QueryInterface(mElement);
-
-  target->AddGroupedEventListener(NS_LITERAL_STRING("xforms-submit"),
-                                  this, PR_FALSE, systemGroup);
-  return NS_OK;
-}
-
-// nsIDOMEventListener
-
-NS_IMETHODIMP
-nsXFormsSubmissionElement::HandleEvent(nsIDOMEvent *aEvent)
-{
-  nsCOMPtr<nsIDOMNSUIEvent> evt = do_QueryInterface(aEvent);
-
-  PRBool defaultPrevented;
-  evt->GetPreventDefault(&defaultPrevented);
-  if (defaultPrevented)
-    return NS_OK;
-
-  nsAutoString type;
-  aEvent->GetType(type);
-  if (type.EqualsLiteral("xforms-submit"))
-    Submit();
   return NS_OK;
 }
 
