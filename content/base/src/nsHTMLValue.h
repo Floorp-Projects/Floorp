@@ -26,9 +26,10 @@
 
 enum nsHTMLUnit {
   eHTMLUnit_Null       = 0,      // (n/a) null unit, value is not specified
+  eHTMLUnit_Empty      = 1,      // (n/a) empty unit, value is not specified
   eHTMLUnit_String     = 10,     // (nsString) a string value
   eHTMLUnit_ISupports  = 20,     // (nsISupports*) a ref counted interface
-  eHTMLUnit_Absolute   = 50,     // (int) simple value
+  eHTMLUnit_Integer    = 50,     // (int) simple value
   eHTMLUnit_Enumerated = 51,     // (int) value has enumerated meaning
   eHTMLUnit_Color      = 80,     // (color) an RGBA value
   eHTMLUnit_Percent    = 90,     // (float) 1.0 == 100%) value is percentage of something
@@ -39,9 +40,9 @@ enum nsHTMLUnit {
 
 class nsHTMLValue {
 public:
-  nsHTMLValue(void);
-  nsHTMLValue(PRInt32 aValue, nsHTMLUnit aUnit = eHTMLUnit_Absolute);
-  nsHTMLValue(float aValue, nsHTMLUnit aUnit = eHTMLUnit_Pixel);
+  nsHTMLValue(nsHTMLUnit aUnit = eHTMLUnit_Null);
+  nsHTMLValue(PRInt32 aValue, nsHTMLUnit aUnit);
+  nsHTMLValue(float aValue);
   nsHTMLValue(const nsString& aValue);
   nsHTMLValue(nsISupports* aValue);
   nsHTMLValue(nscolor aValue);
@@ -53,17 +54,20 @@ public:
 
   nsHTMLUnit  GetUnit(void) const { return mUnit; }
   PRInt32     GetIntValue(void) const;
-  float       GetFloatValue(void) const;
+  PRInt32     GetPixelValue(void) const;
+  float       GetPercentValue(void) const;
   nsString&   GetStringValue(nsString& aBuffer) const;
   nsISupports*  GetISupportsValue(void) const;
   nscolor     GetColorValue(void) const;
 
   void  Reset(void);
-  void  Set(PRInt32 aValue, nsHTMLUnit aUnit = eHTMLUnit_Absolute);
-  void  Set(float aValue, nsHTMLUnit aUnit = eHTMLUnit_Pixel);
-  void  Set(const nsString& aValue);
-  void  Set(nsISupports* aValue);
-  void  Set(nscolor aValue);
+  void  SetIntValue(PRInt32 aValue, nsHTMLUnit aUnit);
+  void  SetPixelValue(PRInt32 aValue);
+  void  SetPercentValue(float aValue);
+  void  SetStringValue(const nsString& aValue);
+  void  SetSupportsValue(nsISupports* aValue);
+  void  SetColorValue(nscolor aValue);
+  void  SetEmptyValue(void);
 
   void  AppendToString(nsString& aBuffer) const;
   void  ToString(nsString& aBuffer) const;
@@ -84,20 +88,27 @@ public:
 
 inline PRInt32 nsHTMLValue::GetIntValue(void) const
 {
-  NS_ASSERTION((mUnit == eHTMLUnit_Absolute) || 
-               (mUnit == eHTMLUnit_Enumerated) || 
-               (mUnit == eHTMLUnit_Pixel), "not an int value");
-  if ((mUnit == eHTMLUnit_Absolute) || 
-      (mUnit == eHTMLUnit_Enumerated) || 
-      (mUnit == eHTMLUnit_Pixel)) {
+  NS_ASSERTION((mUnit == eHTMLUnit_Integer) || 
+               (mUnit == eHTMLUnit_Enumerated), "not an int value");
+  if ((mUnit == eHTMLUnit_Integer) || 
+      (mUnit == eHTMLUnit_Enumerated)) {
     return mValue.mInt;
   }
   return 0;
 }
 
-inline float nsHTMLValue::GetFloatValue(void) const
+inline PRInt32 nsHTMLValue::GetPixelValue(void) const
 {
-  NS_ASSERTION(mUnit == eHTMLUnit_Percent, "not a float value");
+  NS_ASSERTION((mUnit == eHTMLUnit_Pixel), "not a pixel value");
+  if (mUnit == eHTMLUnit_Pixel) {
+    return mValue.mInt;
+  }
+  return 0;
+}
+
+inline float nsHTMLValue::GetPercentValue(void) const
+{
+  NS_ASSERTION(mUnit == eHTMLUnit_Percent, "not a percent value");
   if (mUnit == eHTMLUnit_Percent) {
     return mValue.mFloat;
   }

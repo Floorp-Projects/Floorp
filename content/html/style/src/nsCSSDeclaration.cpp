@@ -34,22 +34,42 @@ static NS_DEFINE_IID(kCSSListSID, NS_CSS_LIST_SID);
 static NS_DEFINE_IID(kICSSDeclarationIID, NS_ICSS_DECLARATION_IID);
 
 
-nsCSSValue::nsCSSValue(void)
-  : mUnit(eCSSUnit_Null)
+nsCSSValue::nsCSSValue(nsCSSUnit aUnit)
+  : mUnit(aUnit)
 {
+  NS_ASSERTION(mUnit <= eCSSUnit_Normal, "not a valueless unit");
+  if (aUnit > eCSSUnit_Normal) {
+    mUnit = eCSSUnit_Null;
+  }
   mValue.mInt = 0;
 }
 
 nsCSSValue::nsCSSValue(PRInt32 aValue, nsCSSUnit aUnit)
   : mUnit(aUnit)
 {
-  mValue.mInt = aValue;
+  NS_ASSERTION((eCSSUnit_Integer == aUnit) ||
+               (eCSSUnit_Enumerated == aUnit), "not an int value");
+  if ((eCSSUnit_Integer == aUnit) ||
+      (eCSSUnit_Enumerated == aUnit)) {
+    mValue.mInt = aValue;
+  }
+  else {
+    mUnit = eCSSUnit_Null;
+    mValue.mInt = 0;
+  }
 }
 
 nsCSSValue::nsCSSValue(float aValue, nsCSSUnit aUnit)
   : mUnit(aUnit)
 {
-  mValue.mFloat = aValue;
+  NS_ASSERTION(eCSSUnit_Percent <= aUnit, "not a float value");
+  if (eCSSUnit_Percent <= aUnit) {
+    mValue.mFloat = aValue;
+  }
+  else {
+    mUnit = eCSSUnit_Null;
+    mValue.mInt = 0;
+  }
 }
 
 nsCSSValue::nsCSSValue(const nsString& aValue)
@@ -75,7 +95,7 @@ nsCSSValue::nsCSSValue(const nsCSSValue& aCopy)
       mValue.mString = nsnull;
     }
   }
-  else if ((eCSSUnit_Absolute <= mUnit) && (mUnit <= eCSSUnit_Enumerated)) {
+  else if ((eCSSUnit_Integer <= mUnit) && (mUnit <= eCSSUnit_Enumerated)) {
     mValue.mInt = aCopy.mValue.mInt;
   }
   else if (eCSSUnit_Color == mUnit){
@@ -100,7 +120,7 @@ nsCSSValue& nsCSSValue::operator=(const nsCSSValue& aCopy)
       mValue.mString = (aCopy.mValue.mString)->ToNewString();
     }
   }
-  else if ((eCSSUnit_Absolute <= mUnit) && (mUnit <= eCSSUnit_Enumerated)) {
+  else if ((eCSSUnit_Integer <= mUnit) && (mUnit <= eCSSUnit_Enumerated)) {
     mValue.mInt = aCopy.mValue.mInt;
   }
   else if (eCSSUnit_Color == mUnit){
@@ -125,7 +145,7 @@ PRBool nsCSSValue::operator==(const nsCSSValue& aOther) const
         return mValue.mString->Equals(*(aOther.mValue.mString));
       }
     }
-    else if ((eCSSUnit_Absolute <= mUnit) && (mUnit < eCSSUnit_Percent)) {
+    else if ((eCSSUnit_Integer <= mUnit) && (mUnit <= eCSSUnit_Enumerated)) {
       return PRBool(mValue.mInt == aOther.mValue.mInt);
     }
     else if (eCSSUnit_Color == mUnit){
@@ -182,32 +202,71 @@ void nsCSSValue::Reset(void)
   mValue.mInt = 0;
 };
 
-void nsCSSValue::Set(PRInt32 aValue, nsCSSUnit aUnit)
+void nsCSSValue::SetIntValue(PRInt32 aValue, nsCSSUnit aUnit)
 {
+  NS_ASSERTION((eCSSUnit_Integer == aUnit) ||
+               (eCSSUnit_Enumerated == aUnit), "not an int value");
   Reset();
-  mUnit = aUnit;
-  mValue.mInt = aValue;
+  if ((eCSSUnit_Integer == aUnit) ||
+      (eCSSUnit_Enumerated == aUnit)) {
+    mUnit = aUnit;
+    mValue.mInt = aValue;
+  }
 }
 
-void nsCSSValue::Set(float aValue, nsCSSUnit aUnit)
+void nsCSSValue::SetPercentValue(float aValue)
 {
   Reset();
-  mUnit = aUnit;
+  mUnit = eCSSUnit_Percent;
   mValue.mFloat = aValue;
 }
 
-void nsCSSValue::Set(const nsString& aValue)
+void nsCSSValue::SetFloatValue(float aValue, nsCSSUnit aUnit)
+{
+  NS_ASSERTION(eCSSUnit_Number <= aUnit, "not a float value");
+  Reset();
+  if (eCSSUnit_Number <= aUnit) {
+    mUnit = aUnit;
+    mValue.mFloat = aValue;
+  }
+}
+
+void nsCSSValue::SetStringValue(const nsString& aValue)
 {
   Reset();
   mUnit = eCSSUnit_String;
   mValue.mString = aValue.ToNewString();
 }
 
-void nsCSSValue::Set(nscolor aValue)
+void nsCSSValue::SetColorValue(nscolor aValue)
 {
   Reset();
   mUnit = eCSSUnit_Color;
   mValue.mColor = aValue;
+}
+
+void nsCSSValue::SetAutoValue(void)
+{
+  Reset();
+  mUnit = eCSSUnit_Auto;
+}
+
+void nsCSSValue::SetInheritValue(void)
+{
+  Reset();
+  mUnit = eCSSUnit_Inherit;
+}
+
+void nsCSSValue::SetNoneValue(void)
+{
+  Reset();
+  mUnit = eCSSUnit_None;
+}
+
+void nsCSSValue::SetNormalValue(void)
+{
+  Reset();
+  mUnit = eCSSUnit_Normal;
 }
 
 void nsCSSValue::AppendToString(nsString& aBuffer, PRInt32 aPropID) const
@@ -231,7 +290,7 @@ void nsCSSValue::AppendToString(nsString& aBuffer, PRInt32 aPropID) const
       aBuffer.Append("null str");
     }
   }
-  else if ((eCSSUnit_Absolute <= mUnit) && (mUnit <= eCSSUnit_Enumerated)) {
+  else if ((eCSSUnit_Integer <= mUnit) && (mUnit <= eCSSUnit_Enumerated)) {
     aBuffer.Append(mValue.mInt, 10);
     aBuffer.Append("[0x");
     aBuffer.Append(mValue.mInt, 16);
@@ -255,8 +314,10 @@ void nsCSSValue::AppendToString(nsString& aBuffer, PRInt32 aPropID) const
   switch (mUnit) {
     case eCSSUnit_Null:       break;
     case eCSSUnit_Auto:       aBuffer.Append("auto"); break;
+    case eCSSUnit_Inherit:    aBuffer.Append("inherit"); break;
+    case eCSSUnit_None:       aBuffer.Append("none"); break;
     case eCSSUnit_String:     break;
-    case eCSSUnit_Absolute:   aBuffer.Append("abs");  break;
+    case eCSSUnit_Integer:    aBuffer.Append("int");  break;
     case eCSSUnit_Enumerated: aBuffer.Append("enum"); break;
     case eCSSUnit_Color:      aBuffer.Append("rbga"); break;
     case eCSSUnit_Percent:    aBuffer.Append("%");    break;
@@ -283,7 +344,7 @@ void nsCSSValue::AppendToString(nsString& aBuffer, PRInt32 aPropID) const
 
 void nsCSSValue::ToString(nsString& aBuffer, PRInt32 aPropID) const
 {
-  aBuffer.SetLength(0);
+  aBuffer.Truncate();
   AppendToString(aBuffer, aPropID);
 }
 
@@ -474,7 +535,7 @@ void nsCSSPosition::List(FILE* out, PRInt32 aIndent) const
   }
   buffer.SetLength(0);
   mOverflow.AppendToString(buffer, PROP_OVERFLOW);
-  mZIndex.AppendToString(buffer, PROP_OVERFLOW);
+  mZIndex.AppendToString(buffer, PROP_Z_INDEX);
   mVisibility.AppendToString(buffer, PROP_VISIBILITY);
   mFilter.AppendToString(buffer, PROP_FILTER);
   fputs(buffer, out);
