@@ -357,6 +357,7 @@ endif
 #
 # Need to define these before include the $ARCH.mk makefile
 #
+ifndef USE_AUTOCONF
 ifneq (,$(filter Linux,$(OS_ARCH)))
 MOZILLA_DETECT		= 1
 MOZILLA_DETECT_DIR	= $(DEPTH)/config/mkdetect
@@ -373,7 +374,6 @@ MOZILLA_DETECT_NAME	= detect_$(MOZILLA_DETECT_UNIQ_IDENT)_gen.mk
 MOZILLA_DETECT_GEN	= $(MOZILLA_DETECT_DIR)/$(MOZILLA_DETECT_NAME)
 endif
 
-ifndef USE_AUTOCONF
 #
 # Now include the platform-specific stuff.
 #

@@ -40,11 +40,13 @@ DETECT_NAME	= detect_$(DETECT_UNIQ_IDENT)_gen.mk
 DETECT_GLIBC	= $(DETECT_DIR)/detect_glibc.sh -o $(DETECT_UNIQ_IDENT) \
 	-cc $(CC)
 
+ifeq (motif, $(MOZ_TOOLKIT))
 # The motif detection script
 DETECT_MOTIF	=\
 				$(DETECT_DIR)/detect_motif.sh -o $(DETECT_UNIQ_IDENT) \
 				-xif $(X11_INCLUDE_FLAGS) \
 	-cc $(CC)
+endif
 
 # The X11 detection script
 DETECT_X11	= $(DETECT_DIR)/detect_x11.sh -o $(DETECT_UNIQ_IDENT) \
