@@ -530,11 +530,6 @@ nsFrameImageLoader::NotifyError(nsIImageRequest *aImageRequest,
 void
 nsFrameImageLoader::NotifyFrames(PRBool aIsSizeUpdate)
 {
-  nsIPresShell* shell;
-  mPresContext->GetShell(&shell);
-  if (shell) {
-    shell->EnterReflowLock();
-  }
 
   PerFrameData* pfd = mFrames;
   while (nsnull != pfd) {
@@ -552,11 +547,7 @@ nsFrameImageLoader::NotifyFrames(PRBool aIsSizeUpdate)
     }
     pfd = pfd->mNext;
   }
-
-  if (shell) {
-    shell->ExitReflowLock(PR_TRUE);
-    NS_RELEASE(shell);
-  }
+  
 }
 
 void

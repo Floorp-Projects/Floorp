@@ -163,11 +163,7 @@ public:
    * GetFrameSelection will return the Frame based selection API you 
    *  cannot go back and forth anymore with QI with nsIDOM sel and nsIFrame sel.
    */
-  NS_IMETHOD GetFrameSelection(nsIFrameSelection** aSelection) = 0;
-
-  NS_IMETHOD EnterReflowLock() = 0;
-
-  NS_IMETHOD ExitReflowLock(PRBool aTryToReflow) = 0;
+  NS_IMETHOD GetFrameSelection(nsIFrameSelection** aSelection) = 0;  
 
   // Make shell be a document observer
   NS_IMETHOD BeginObservingDocument() = 0;
@@ -262,7 +258,19 @@ public:
    */
   NS_IMETHOD AppendReflowCommand(nsIReflowCommand* aReflowCommand) = 0;
   NS_IMETHOD CancelReflowCommand(nsIFrame* aTargetFrame, nsIReflowCommand::ReflowType* aCmdType) = 0;
-  NS_IMETHOD ProcessReflowCommands(PRBool aInterruptible) = 0;  
+
+  /**
+   * Flush all pending notifications such that the presentation is
+   * in sync with the content.
+   */
+  NS_IMETHOD FlushPendingNotifications() = 0;
+
+  /**
+   * Reflow batching
+   */   
+  NS_IMETHOD BeginReflowBatching() = 0;
+  NS_IMETHOD EndReflowBatching(PRBool aFlushPendingReflows) = 0;
+  NS_IMETHOD GetReflowBatchingStatus(PRBool* aIsBatching) = 0;
 
   NS_IMETHOD ClearFrameRefs(nsIFrame* aFrame) = 0;
 
@@ -391,26 +399,6 @@ public:
   NS_IMETHOD CaptureHistoryState(nsILayoutHistoryState** aLayoutHistoryState) = 0;
   NS_IMETHOD GetHistoryState(nsILayoutHistoryState** aLayoutHistoryState) = 0;
   NS_IMETHOD SetHistoryState(nsILayoutHistoryState* aLayoutHistoryState) = 0;
-
-  /** 
-   * Get/Set the status that indicates whether the presshell knows about a 
-   * pending reflow event
-   */
-  NS_IMETHOD GetReflowEventStatus(PRBool* aPending) = 0;
-  NS_IMETHOD SetReflowEventStatus(PRBool aPending) = 0;
-
-  /**
-   * Reflow batching
-   */   
-  NS_IMETHOD BeginBatchingReflows() = 0;
-  NS_IMETHOD EndBatchingReflows(PRBool aFlushPendingReflows) = 0;
-  NS_IMETHOD GetReflowBatchingStatus(PRBool* aIsBatching) = 0;
-
-  /**
-   * Flush all pending notifications such that the presentation is
-   * in sync with the content.
-   */
-  NS_IMETHOD FlushPendingNotifications() = 0;  
 
   /**
    * Determine if reflow is currently locked

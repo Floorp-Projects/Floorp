@@ -6256,9 +6256,6 @@ nsBlockFrame::ReflowDirtyChild(nsIPresShell* aPresShell, nsIFrame* aChild)
         line->MarkDirty();
         line = line->mNext;
       }
-#ifdef DEBUG_nisheeth      
-      NS_ASSERTION(0, "nsBlockFrame::ReflowDirtyChild: Marked all lines dirty.");
-#endif
     }
   }
 

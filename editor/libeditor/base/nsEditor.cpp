@@ -4847,7 +4847,7 @@ nsresult nsEditor::BeginUpdateViewBatch()
       rv = GetPresShell(getter_AddRefs(presShell));
       if (NS_SUCCEEDED(rv) && presShell)
       {
-        presShell->BeginBatchingReflows();
+        presShell->BeginReflowBatching();
       }
     }
     mUpdateCount++;
@@ -4885,7 +4885,7 @@ nsresult nsEditor::EndUpdateViewBatch()
 #else
       mViewManager->EndUpdateViewBatch(NS_VMREFRESH_IMMEDIATE);
 #endif
-      presShell->EndBatchingReflows(PR_TRUE);
+      presShell->EndReflowBatching(PR_TRUE);
     }
   }  
 
