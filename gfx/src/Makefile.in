@@ -126,7 +126,7 @@ CPPSRCS += \
         $(NULL)
 endif
 
-ifneq (,$(filter gtk gtk2 xlib beos windows os2 mac,$(MOZ_WIDGET_TOOLKIT)))
+ifneq (,$(filter gtk gtk2 xlib beos windows os2 mac cocoa,$(MOZ_WIDGET_TOOLKIT)))
 CPPSRCS += imgScaler.cpp
 endif
 
