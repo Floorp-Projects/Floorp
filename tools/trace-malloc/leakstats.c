@@ -107,7 +107,7 @@ static void my_tmevent_handler(tmreader *tmr, tmevent *event)
 
 int main(int argc, char **argv)
 {
-    int c, i, j, rv;
+    int i, j, rv;
     tmreader *tmr;
     FILE *fp;
     time_t start;
