@@ -1730,7 +1730,6 @@ PRUint32 nsWidget::nsConvertKey(unsigned long keysym, PRBool *aIsChar )
   { NS_VK_OPEN_BRACKET,  Pk_bracketleft, PR_TRUE },
   { NS_VK_CLOSE_BRACKET, Pk_bracketright, PR_TRUE },
   { NS_VK_QUOTE,         Pk_quotedbl, PR_TRUE },
-#if 0
   { NS_VK_MULTIPLY,      Pk_KP_Multiply, PR_TRUE },
   { NS_VK_ADD,           Pk_KP_Add, PR_TRUE },
   { NS_VK_COMMA,         Pk_KP_Separator, PR_FALSE },
@@ -1748,9 +1747,6 @@ PRUint32 nsWidget::nsConvertKey(unsigned long keysym, PRBool *aIsChar )
   { NS_VK_HOME,          Pk_KP_7, PR_FALSE },
   { NS_VK_UP,            Pk_KP_8, PR_FALSE },
   { NS_VK_PAGE_UP,       Pk_KP_9, PR_FALSE }
-#else
-  { NS_VK_NUMPAD5,       Pk_KP_5, PR_FALSE }
-#endif
   };
 
   const int length = sizeof(nsKeycodes) / sizeof(struct nsKeyConverter);
@@ -1817,10 +1813,12 @@ void nsWidget::InitKeyEvent(PhKeyEvent_t *aPhKeyEvent,
     PRBool IsChar;
     unsigned long keysym;
 	
-    /* kirk: Big Change from key_cap to key_sym to fix the numeric keypad */
-    /* 3/7/00 This seems to easy so there may be some other problems that were caused! */
-	//keysym = nsConvertKey(aPhKeyEvent->key_cap, &IsChar);
-	keysym = nsConvertKey(aPhKeyEvent->key_sym, &IsChar);
+    if (Pk_KF_Sym_Valid & aPhKeyEvent->key_flags)
+        keysym = nsConvertKey(aPhKeyEvent->key_sym, &IsChar);
+    else
+		/* Need this to support key release events on numeric key pad */
+    	keysym = nsConvertKey(aPhKeyEvent->key_cap, &IsChar);
+
 
     //printf("nsWidget::InitKeyEvent EventType=<%d> key_cap=<%lu> converted=<%lu> IsChar=<%d>\n", aEventType, aPhKeyEvent->key_cap, keysym, IsChar);
 
@@ -1892,7 +1890,7 @@ PRBool  nsWidget::DispatchKeyEvent(PhKeyEvent_t *aPhKeyEvent)
 
   nsWindow *w = (nsWindow *) this;
 
-#if 1
+#if 0
 printf("nsWidget::DispatchKeyEvent KeyEvent Info: this=<%p> key_flags=<%lu> key_mods=<%lu>  key_sym=<%lu> key_cap=<%lu> key_scan=<%d> Focused=<%d>\n",
 	this, aPhKeyEvent->key_flags, aPhKeyEvent->key_mods, aPhKeyEvent->key_sym, aPhKeyEvent->key_cap, aPhKeyEvent->key_scan, PtIsFocused(mWidget));
 #endif	
