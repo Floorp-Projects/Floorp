@@ -16,6 +16,8 @@
  * Reserved.
  */
 
+#define NEW_GS
+
 #include "nsRenderingContextPh.h"
 #include "nsRegionPh.h"
 #include <math.h>
@@ -24,28 +26,22 @@
 #include "prprf.h"
 #include "nsDrawingSurfacePh.h"
 #include "nsGfxCIID.h"
-#include <stdlib.h>
+#ifdef NEW_GS
+#include "nsGraphicsStatePh.h"
+#endif
 
+#include <stdlib.h>
 #include <mem.h>
 #include <photon/PhRender.h>
 #include <Pt.h>
 
-#ifdef GFX_DEBUG
-  #define BREAK_TO_DEBUGGER           DebugBreak()
-#else   
-  #define BREAK_TO_DEBUGGER
-#endif  
-
-#ifdef GFX_DEBUG
-  #define VERIFY(exp)                 ((exp) ? 0: (GetLastError(), BREAK_TO_DEBUGGER))
-#else   // !_DEBUG
-  #define VERIFY(exp)                 (exp)
-#endif  // !_DEBUG
 
 static NS_DEFINE_IID(kIRenderingContextIID, NS_IRENDERING_CONTEXT_IID);
-static NS_DEFINE_IID(kIRenderingContextPhIID, NS_IRENDERING_CONTEXT_PH_IID);
+//static NS_DEFINE_IID(kIRenderingContextPhIID, NS_IRENDERING_CONTEXT_PH_IID);
 static NS_DEFINE_IID(kIDrawingSurfaceIID, NS_IDRAWING_SURFACE_IID);
 static NS_DEFINE_IID(kDrawingSurfaceCID, NS_DRAWING_SURFACE_CID);
+static NS_DEFINE_CID(kRegionCID, NS_REGION_CID);
+
 
 #define FLAG_CLIP_VALID       0x0001
 #define FLAG_CLIP_CHANGED     0x0002
@@ -56,7 +52,6 @@ static NS_DEFINE_IID(kDrawingSurfaceCID, NS_DRAWING_SURFACE_CID);
 int cur_color = 0;
 char FillColorName[8][20] = {"Pg_BLACK","Pg_BLUE","Pg_RED","Pg_YELLOW","Pg_GREEN","Pg_MAGENTA","Pg_CYAN","Pg_WHITE"};
 long FillColorVal[8] = {Pg_BLACK,Pg_BLUE,Pg_RED,Pg_YELLOW,Pg_GREEN,Pg_MAGENTA,Pg_CYAN,Pg_WHITE};
-//PRBool            mBufferIsEmpty;
 
 // Macro for creating a palette relative color if you have a COLORREF instead
 // of the reg, green, and blue values. The color is color-matches to the nearest
@@ -73,12 +68,19 @@ long FillColorVal[8] = {Pg_BLACK,Pg_BLUE,Pg_RED,Pg_YELLOW,Pg_GREEN,Pg_MAGENTA,Pg
 PRLogModuleInfo *PhGfxLog = PR_NewLogModule("PhGfxLog");
 #include "nsPhGfxLog.h"
 
+NS_IMPL_ISUPPORTS1(nsRenderingContextPh, nsIRenderingContext)
+
+
 /* Global Variable for Alpha Blending */
-void *Mask;
+void *Mask = nsnull;
+
+/* The default Photon Drawing Context */
+PhGC_t *nsRenderingContextPh::mPtGC = nsnull;
 
 #define SELECT(surf) mBufferIsEmpty = PR_FALSE; if (surf->Select()) ApplyClipping(surf->GetGC());
 //#define SELECT(surf) if (surf->Select()) ApplyClipping(surf->GetGC());
 
+#ifndef NEW_GS
 class GraphicsState
 {
 public:
@@ -93,7 +95,7 @@ public:
   nscolor		     mCurrentColor;
   nsTransform2D     *mMatrix;		// transform that all the graphics drawn here will obey
   nsIFontMetrics	*mFontMetrics;
-  nsRegionPh	    *mClipRegion;
+  nsIRegion		    *mClipRegion;
 };
 
 
@@ -112,11 +114,7 @@ GraphicsState :: GraphicsState()
 GraphicsState :: ~GraphicsState()
 {
 }
-
-
-#define NOT_SETUP 0x33
-
-PhGC_t *nsRenderingContextPh::mPtGC = nsnull;
+#endif
 
 nsRenderingContextPh :: nsRenderingContextPh()
 {
@@ -124,8 +122,8 @@ nsRenderingContextPh :: nsRenderingContextPh()
   
   mGC = nsnull;
   mTMatrix         = new nsTransform2D();
-  mRegion          = new nsRegionPh();
-  mRegion->Init();
+  mClipRegion          = nsnull ; // new nsRegionPh();
+  //mClipRegion->Init();
   mFontMetrics     = nsnull;
   mSurface         = nsnull;
   mMainSurface     = nsnull;
@@ -135,7 +133,7 @@ nsRenderingContextPh :: nsRenderingContextPh()
   mWidget          = nsnull;
   mPhotonFontName  = nsnull;
   Mask             = nsnull;
-  mLineStyle       = nsLineStyle_kSolid;
+  mCurrentLineStyle       = nsLineStyle_kSolid;
 
   //default objects
   //state management
@@ -147,10 +145,7 @@ nsRenderingContextPh :: nsRenderingContextPh()
   if( mPtGC == nsnull )
     mPtGC = PgGetGC();
 
-  #ifdef NS_DEBUG
-  mInitialized     = PR_FALSE;
-  #endif
-
+  mInitialized   = PR_FALSE;
   mBufferIsEmpty = PR_TRUE;
 
   PushState();
@@ -159,14 +154,24 @@ nsRenderingContextPh :: nsRenderingContextPh()
 
 nsRenderingContextPh :: ~nsRenderingContextPh()
 {
-  PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("nsRenderingContextPh(%p) destructor, mGC = %p\n", this, mGC ));
+  PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("nsRenderingContextPh::~nsRenderingContextPh this=<%p> mGC = %p\n", this, mGC ));
 
-  if (mContext)
-    NS_IF_RELEASE(mContext);
+#if 1
+  // Destroy the State Machine
+  if (mStateCache)
+  {
+    PRInt32 cnt = mStateCache->Count();
 
-  if (mFontMetrics)
-    NS_IF_RELEASE(mFontMetrics);
+    while (--cnt >= 0)
+    {
+      PRBool  clipstate;
+      PopState(clipstate);
+    }
 
+    delete mStateCache;
+    mStateCache = nsnull;
+  }
+#else
   if (nsnull != mStateCache)
   {
     PRInt32 cnt = mStateCache->Count();
@@ -183,6 +188,7 @@ nsRenderingContextPh :: ~nsRenderingContextPh()
     delete mStateCache;
     mStateCache = nsnull;
   }
+#endif
 
   if (mTMatrix)
     delete mTMatrix;
@@ -191,84 +197,34 @@ nsRenderingContextPh :: ~nsRenderingContextPh()
   {
     if( mGC )
     {
-//      PgDestroyGC( mGC );
-
       PgSetGC( mPtGC );
       PgSetRegion( mPtGC->rid );
-
       PgDestroyGC( mGC );
       mGC = nsnull;
     }
   }
-  else
-  {
-//    PmMemStop( (PmMemoryContext_t *)mGC);
-  }
 
-  if (mRegion)
-  {
-    delete mRegion;
-  }
 
-  if( mWidget )
-  {
-#ifdef ENABLE_PHOTON_FLUXING
-    PtEndFlux( PtFindDisjoint( mWidget ));
-#endif
-//    PtContainerRelease(PtFindDisjoint( mWidget ));
-//    PtFlush();
-  }
+
+  /* We always do this?? */
   PgSetGC( mPtGC );
   PgSetRegion( mPtGC->rid );
 
   if (mPhotonFontName)
     delete [] mPhotonFontName;
-  
+
+  NS_IF_RELEASE(mClipRegion);  /* do we need to do this? */
+
+//  if (mClipRegion)
+//      delete mClipRegion;
+
+  NS_IF_RELEASE(mFontMetrics);
+  NS_IF_RELEASE(mContext);
 }
-
-
-nsresult nsRenderingContextPh :: QueryInterface(REFNSIID aIID, void** aInstancePtr)
-{
-  if (nsnull == aInstancePtr)
-    return NS_ERROR_NULL_POINTER;
-
-  if (aIID.Equals(kIRenderingContextIID))
-  {
-    nsIRenderingContext* tmp = this;
-    *aInstancePtr = (void*) tmp;
-    NS_ADDREF_THIS();
-    return NS_OK;
-  }
-
-  if (aIID.Equals(kIRenderingContextPhIID))
-  {
-    nsIRenderingContextPh* tmp = this;
-    *aInstancePtr = (void*) tmp;
-    NS_ADDREF_THIS();
-    return NS_OK;
-  }
-
-  static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
-
-  if (aIID.Equals(kISupportsIID))
-  {
-    nsIRenderingContext* tmp = this;
-    nsISupports* tmp2 = tmp;
-    *aInstancePtr = (void*) tmp2;
-    NS_ADDREF_THIS();
-    return NS_OK;
-  }
-
-  return NS_NOINTERFACE;
-}
-
-
-NS_IMPL_ADDREF(nsRenderingContextPh)
-NS_IMPL_RELEASE(nsRenderingContextPh)
 
 
 NS_IMETHODIMP nsRenderingContextPh :: Init(nsIDeviceContext* aContext,
-                              nsIWidget *aWindow)
+                                           nsIWidget *aWindow)
 {
   PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("nsRenderingContextPh::Init with a widget\n"));
   NS_PRECONDITION(PR_FALSE == mInitialized, "double init");
@@ -282,29 +238,29 @@ NS_IMETHODIMP nsRenderingContextPh :: Init(nsIDeviceContext* aContext,
 
   if(!mWidget)
   {
-    printf( "nsRenderingContext::Init (with a widget) mWidget is NULL!\n" );
-    fflush( stdout );
+    NS_IF_RELEASE(mContext); // new
+    NS_ASSERTION(mWidget,"nsRenderingContext::Init (with a widget) mWidget is NULL!");
     return NS_ERROR_FAILURE;
   }
 
   PhRid_t    rid = PtWidgetRid( mWidget );
-  //PhRid_t    rid = PtWidgetRid( PtFindDisjoint(mWidget) );
+  
+   PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("nsRenderingContextPh::Init this=<%p> mWidget=<%p> rid=<%d>\n", this, mWidget, rid ));
 
-  if( !rid )
+  if (rid == 0)
   {
     PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("nsRenderingContextPh::Init Widget (%p) does not have a Rid!\n", mWidget ));
+    //NS_ASSERTION(rid, "nsRenderingContextPh::Init PtWidgetRid returned 0");
   }
-
-   NS_ASSERTION(rid, "nsRenderingContextPh::Init PtWidgetRid returned 0");
-
-   mGC = PgCreateGC( 4096 );
-
-  if( !mGC )
+  else
   {
-    PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("nsRenderingContextPh::Init PgCreateGC() failed!\n" ));
-  }
+    mGC = PgCreateGC( 4096 );
+    if( !mGC )
+    {
+      PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("nsRenderingContextPh::Init PgCreateGC() failed!\n" ));
+    }
 
-  NS_ASSERTION(mGC, "nsRenderingContextPh::Init PgCreateGC() failed!");
+    NS_ASSERTION(mGC, "nsRenderingContextPh::Init PgCreateGC() failed!");
   
   PgSetGC( mGC );
   PgDefaultGC( mGC );
@@ -314,20 +270,29 @@ NS_IMETHODIMP nsRenderingContextPh :: Init(nsIDeviceContext* aContext,
 //  PgSetRegion( mPtGC->rid );
 
   mSurface = new nsDrawingSurfacePh();
-//printf ("create1: %p\n",mSurface);
-  res = mSurface->Init(mGC);
-  if (res != NS_OK)
+  if (mSurface)
   {
-    PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("nsRenderingContextPh::Init  mSurface->Init(mGC) failed\n"));
+    res = mSurface->Init(mGC);
+    if (res != NS_OK)
+    {
+      PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("nsRenderingContextPh::Init  mSurface->Init(mGC) failed\n"));
+      return NS_ERROR_FAILURE;
+    }
+  }
+  else
+  {
+    NS_ASSERTION(0, "nsRenderingContextPh::Init Failed to new the mSurface");
     return NS_ERROR_FAILURE;
   }
-  
-//  mSurface->Init(mGC,640,480,0);
-//  SELECT(mSurface);
+  	
   mOffscreenSurface = mSurface;
 
-  NS_IF_ADDREF(aWindow);
+//  NS_IF_ADDREF(aWindow);  /* took this out */
   NS_ADDREF(mSurface);
+  }
+  
+  mInitialized = PR_TRUE;
+  
   return (CommonInit());
 }
 
@@ -335,10 +300,21 @@ NS_IMETHODIMP nsRenderingContextPh::CommonInit()
 {
   float app2dev;
 
+  if ( NS_SUCCEEDED(nsComponentManager::CreateInstance(kRegionCID, 0, NS_GET_IID(nsIRegion), (void**)&mClipRegion)) )
+  {
+    mClipRegion->Init();
+    mClipRegion->SetTo(0, 0, 0,0);
+    if (mSurface)
+	{
+      PRUint32 width, height;
+	  mSurface->GetDimensions(&width, &height);
+      mClipRegion->SetTo(0, 0, width, height);
+	}
+  }
+  
   mContext->GetAppUnitsToDevUnits(app2dev);
   mTMatrix->AddScale(app2dev,app2dev);
   mContext->GetDevUnitsToAppUnits(mP2T);
-  
   mContext->GetGammaTable(mGammaTable);
 
   return NS_OK;
@@ -346,32 +322,23 @@ NS_IMETHODIMP nsRenderingContextPh::CommonInit()
 
 
 NS_IMETHODIMP nsRenderingContextPh :: Init(nsIDeviceContext* aContext,
-                              nsDrawingSurface aSurface)
+                                           nsDrawingSurface aSurface)
 {
-printf ("kedl: init with a surface!!!! %p\n",aSurface);
-PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("nsRenderingContextPh::Init with a Drawing Surface\n"));
+
+  printf ("nsRenderingContextPh::Init  with a surface!!!! %p\n",aSurface);
+
+  PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("nsRenderingContextPh::Init with a Drawing Surface\n"));
 
   NS_PRECONDITION(PR_FALSE == mInitialized, "double init");
 
   mContext = aContext;
   NS_IF_ADDREF(mContext);
 
-//  mGC = PgCreateGC( 8192 );
-//  PgSetGC( mGC );
-//  PgDefaultGC( mGC );
-//  PgSetRegion( rid );
-
-  mSurface = (nsDrawingSurfacePh *)aSurface;
+  mSurface = (nsDrawingSurfacePh *) aSurface;
   mOffscreenSurface=mSurface;
-//printf ("kedl: gcs %p %p\n",((nsDrawingSurfacePh *)aSurface)->GetGC(),mSurface->GetGC());
-//  mSurface->Select();
+  NS_ADDREF(mSurface);
 
-//  NS_ADDREF(mSurface);
-
-//  printf( "abs clip = not set from surface!\n" );
-//  PgSetClipping( 0, NULL );
-//  PgClearTranslation();
-//  mTMatrix->SetToTranslate(0,0);
+  mInitialized = PR_TRUE;
 
   return (CommonInit());
 }
@@ -401,18 +368,16 @@ NS_IMETHODIMP nsRenderingContextPh::UnlockDrawingSurface(void)
 
 NS_IMETHODIMP nsRenderingContextPh :: SelectOffScreenDrawingSurface(nsDrawingSurface aSurface)
 {
-//  PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("nsRenderingContextPh::SelectOffScreenDrawingSurface\n"));
-  PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("nsRenderingContextPh::SelectOffScreenDrawingSurface (%s)\n", FillColorName[cur_color]));
+  PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("nsRenderingContextPh::SelectOffScreenDrawingSurface this=<%p> sSurface=<%p>\n", this, aSurface));
 
-//  printf ("kedl: surface select: %lu\n",aSurface);
   if (nsnull==aSurface)
   {
-    PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("  selecting offscreen (private)\n"));
+    PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("nsRenderingContextPh::SelectOffScreenDrawingSurface  selecting offscreen (private)\n"));
     mSurface = mOffscreenSurface;
   }
   else
   {
-    PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("  selecting passed-in (%p)\n", aSurface));
+    PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("nsRenderingContextPh::SelectOffScreenDrawingSurface  selecting passed-in (%p)\n", aSurface));
     mSurface = (nsDrawingSurfacePh *) aSurface;
   }
 
@@ -437,7 +402,7 @@ NS_IMETHODIMP nsRenderingContextPh :: GetDrawingSurface(nsDrawingSurface *aSurfa
 {
   PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("nsRenderingContextPh::GetDrawingSurface\n"));
 //  printf ("get drawing surface! %p\n",mSurface);
-  *aSurface = (void *)mSurface;
+  *aSurface = (void *) mSurface;
   return NS_OK;
 }
 
@@ -446,10 +411,18 @@ NS_IMETHODIMP nsRenderingContextPh :: GetHints(PRUint32& aResult)
 {
   PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("nsRenderingContextPh::GetHints\n"));
 
+  PRUint32 result = 0;
+
+  // Most X servers implement 8 bit text rendering alot faster than
+  // XChar2b rendering. In addition, we can avoid the PRUnichar to
+  // XChar2b conversion. So we set this bit...
+  result |= NS_RENDERING_HINT_FAST_8BIT_TEXT;
+  
+  
   /* this flag indicates that the system prefers 8bit chars over wide chars */
   /* It may or may not be faster under photon... */
   
-  aResult = NS_RENDERING_HINT_FAST_8BIT_TEXT;
+  aResult = result;
 
   return NS_OK;
 }
@@ -476,6 +449,45 @@ NS_IMETHODIMP nsRenderingContextPh :: PushState(void)
 {
   PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("nsRenderingContextPh::PushState\n"));
 
+#ifdef NEW_GS
+/* kirk 9/27/99 stole this from GTK */
+
+  //  Get a new GS
+#ifdef USE_GS_POOL
+  nsGraphicsState *state = nsGraphicsStatePool::GetNewGS();
+#else
+  nsGraphicsState *state = new nsGraphicsState;
+#endif
+
+  // Push into this state object, add to vector
+  if (!state)
+  {
+    NS_ASSERTION(0, "nsRenderingContextPh::PushState Failed to create a new Graphics State");
+    return NS_ERROR_FAILURE;
+  }
+
+  state->mMatrix = mTMatrix;
+
+  if (nsnull == mTMatrix)
+    mTMatrix = new nsTransform2D();
+  else
+    mTMatrix = new nsTransform2D(mTMatrix);
+
+  if (mClipRegion)
+  {
+    // set the state's clip region to a new copy of the current clip region
+    GetClipRegion(&state->mClipRegion);
+  }
+
+  NS_IF_ADDREF(mFontMetrics);
+  state->mFontMetrics = mFontMetrics;
+
+  state->mColor = mCurrentColor;
+  state->mLineStyle = mCurrentLineStyle;
+
+  mStateCache->AppendElement(state);
+#else
+
   GraphicsState * state = new GraphicsState();
   if (state)
   { 
@@ -486,16 +498,16 @@ NS_IMETHODIMP nsRenderingContextPh :: PushState(void)
     state->mMatrix = mTMatrix;
     state->mFontMetrics = mFontMetrics;
     NS_IF_ADDREF( state->mFontMetrics );
-    state->mClipRegion = mRegion;
+    state->mClipRegion = mClipRegion;
   
-    /* if the mRegion is not empty make a copy */
-    if (mRegion != nsnull)
+    /* if the mClipRegion is not empty make a copy */
+    if (mClipRegion != nsnull)
     {
-      mRegion = new nsRegionPh();
-      if (mRegion)
+      mClipRegion = new nsRegionPh();
+      if (mClipRegion)
 	  {
-        mRegion->Init();
-        mRegion->SetTo(*state->mClipRegion);  
+        mClipRegion->Init();
+        mClipRegion->SetTo(*state->mClipRegion);  
       }
       else
 	  {
@@ -510,6 +522,7 @@ NS_IMETHODIMP nsRenderingContextPh :: PushState(void)
   }
   else
     return NS_ERROR_OUT_OF_MEMORY;
+#endif
 	
   return NS_OK;
 }
@@ -518,6 +531,62 @@ NS_IMETHODIMP nsRenderingContextPh :: PushState(void)
 NS_IMETHODIMP nsRenderingContextPh :: PopState( PRBool &aClipEmpty )
 {
   PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("nsRenderingContextPh::PopState\n"));
+
+#ifdef NEW_GS
+/* kirk 9/27/99 stole this code from GTK */
+
+  PRUint32 cnt = mStateCache->Count();
+  nsGraphicsState * state;
+
+  if (cnt > 0) {
+    state = (nsGraphicsState *)mStateCache->ElementAt(cnt - 1);
+    mStateCache->RemoveElementAt(cnt - 1);
+
+    // Assign all local attributes from the state object just popped
+    if (mTMatrix)
+      delete mTMatrix;
+    mTMatrix = state->mMatrix;
+
+    // get rid of the current clip region
+    NS_IF_RELEASE(mClipRegion);
+    mClipRegion = nsnull;
+
+    // restore everything
+    mClipRegion = (nsRegionPh *) state->mClipRegion;
+    mFontMetrics = state->mFontMetrics;
+
+    if (mSurface && mClipRegion)
+    {
+// kirk what does this do?
+//      GdkRegion *rgn;
+//      mClipRegion->GetNativeRegion((void*&)rgn);
+//      ::gdk_gc_set_clip_region (mSurface->GetGC(), rgn);
+    }
+
+    ApplyClipping(mGC);
+	  
+    if (state->mColor != mCurrentColor)
+      SetColor(state->mColor);
+
+    if (state->mLineStyle != mCurrentLineStyle)
+      SetLineStyle(state->mLineStyle);
+
+    // Delete this graphics state object
+#ifdef USE_GS_POOL
+    nsGraphicsStatePool::ReleaseGS(state);
+#else
+    delete state;
+#endif
+  }
+
+  if (mClipRegion)
+    aClipEmpty = mClipRegion->IsEmpty();
+  else
+    aClipEmpty = PR_TRUE;
+
+  return NS_OK;
+
+#else
 
   PRUint32 cnt = mStateCache->Count();
   PRBool bEmpty=PR_FALSE;
@@ -541,11 +610,11 @@ NS_IMETHODIMP nsRenderingContextPh :: PopState( PRBool &aClipEmpty )
     NS_IF_RELEASE( mFontMetrics );
     mFontMetrics = state->mFontMetrics;
 
-    if (mRegion)
-      delete mRegion;
+    if (mClipRegion)
+      delete mClipRegion;
 	  
-    mRegion = state->mClipRegion;
-    if ((mRegion) && (mRegion->IsEmpty() == PR_TRUE))
+    mClipRegion = state->mClipRegion;
+    if ((mClipRegion) && (mClipRegion->IsEmpty() == PR_TRUE))
     {
       bEmpty = PR_TRUE;
     }
@@ -560,6 +629,8 @@ NS_IMETHODIMP nsRenderingContextPh :: PopState( PRBool &aClipEmpty )
   aClipEmpty = bEmpty;
 
   return NS_OK;
+#endif
+
 }
 
 
@@ -579,9 +650,9 @@ NS_IMETHODIMP nsRenderingContextPh :: SetClipRect(const nsRect& aRect, nsClipCom
 
   PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("nsRenderingContextPh::SetClipRect  (%ld,%ld,%ld,%ld)\n", aRect.x, aRect.y, aRect.width, aRect.height ));
 
-  if ((mTMatrix) && (mRegion))
+  if ((mTMatrix) && (mClipRegion))
   {
-    PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("  prev clip empty = %i\n", mRegion->IsEmpty()));
+    PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("  prev clip empty = %i\n", mClipRegion->IsEmpty()));
 
     mTMatrix->TransformCoord(&trect.x, &trect.y,&trect.width, &trect.height);
 
@@ -589,31 +660,31 @@ NS_IMETHODIMP nsRenderingContextPh :: SetClipRect(const nsRect& aRect, nsClipCom
     {
       case nsClipCombine_kIntersect:
    	PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("  combine type = intersect\n"));
-        mRegion->Intersect(trect.x,trect.y,trect.width,trect.height);
+        mClipRegion->Intersect(trect.x,trect.y,trect.width,trect.height);
         break;
       case nsClipCombine_kUnion:
    	PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("  combine type = union\n"));
-        mRegion->Union(trect.x,trect.y,trect.width,trect.height);
+        mClipRegion->Union(trect.x,trect.y,trect.width,trect.height);
         break;
       case nsClipCombine_kSubtract:
    	PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("  combine type = subtract\n"));
-        mRegion->Subtract(trect.x,trect.y,trect.width,trect.height);
+        mClipRegion->Subtract(trect.x,trect.y,trect.width,trect.height);
         break;
       case nsClipCombine_kReplace:
    	PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("  combine type = replace\n"));
-        mRegion->SetTo(trect.x,trect.y,trect.width,trect.height);
+        mClipRegion->SetTo(trect.x,trect.y,trect.width,trect.height);
         break;
       default:
    	PR_LOG(PhGfxLog, PR_LOG_ERROR, ("nsRenderingContextPh::SetClipRect  Unknown Combine type\n"));
         break;
     }
 
-    aClipEmpty = mRegion->IsEmpty();
+    aClipEmpty = mClipRegion->IsEmpty();
     PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("  new clip empty = %i\n", aClipEmpty ));
 
     ApplyClipping(mGC);
 
-// kirk    mRegion->GetNativeRegion((void*&)rgn);
+// kirk    mClipRegion->GetNativeRegion((void*&)rgn);
 // kirk    PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("nsRenderingContextPh::SetClipRect Calling PgSetCliping (%ld,%ld,%ld,%ld)\n", rgn->ul.x, rgn->ul.y, rgn->lr.x, rgn->lr.y));
 // kirk    PgSetClipping(1, rgn);
 	 
@@ -633,9 +704,9 @@ NS_IMETHODIMP nsRenderingContextPh :: GetClipRect(nsRect &aRect, PRBool &aClipVa
   PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("nsRenderingContextPh::GetClipRect\n"));
   PRInt32 x, y, w, h;
 
-  if (!mRegion->IsEmpty())
+  if (!mClipRegion->IsEmpty())
   {
-    mRegion->GetBoundingBox(&x,&y,&w,&h);
+    mClipRegion->GetBoundingBox(&x,&y,&w,&h);
     aRect.SetRect(x,y,w,h);
     aClipValid = PR_TRUE;
   }
@@ -656,20 +727,20 @@ NS_IMETHODIMP nsRenderingContextPh :: SetClipRegion(const nsIRegion& aRegion, ns
   switch(aCombine)
   {
   case nsClipCombine_kIntersect:
-    mRegion->Intersect(aRegion);
+    mClipRegion->Intersect(aRegion);
     break;
   case nsClipCombine_kUnion:
-    mRegion->Union(aRegion);
+    mClipRegion->Union(aRegion);
     break;
   case nsClipCombine_kSubtract:
-    mRegion->Subtract(aRegion);
+    mClipRegion->Subtract(aRegion);
     break;
   case nsClipCombine_kReplace:
-    mRegion->SetTo(aRegion);
+    mClipRegion->SetTo(aRegion);
     break;
   }
 
-  aClipEmpty = mRegion->IsEmpty();
+  aClipEmpty = mClipRegion->IsEmpty();
   ApplyClipping(mGC);
 
   return NS_OK;
@@ -684,6 +755,44 @@ NS_IMETHODIMP nsRenderingContextPh :: CopyClipRegion(nsIRegion &aRegion)
 NS_IMETHODIMP nsRenderingContextPh :: GetClipRegion(nsIRegion **aRegion)
 {
   PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("nsRenderingContextPh::GetClipRegion\n"));
+
+#ifdef NEW_GS
+/* kirk 9/27/99 stole this from GTK */
+  nsresult rv = NS_ERROR_FAILURE;
+
+  if (!aRegion)
+    return NS_ERROR_NULL_POINTER;
+
+  if (*aRegion) // copy it, they should be using CopyClipRegion
+  {
+    // printf("you should be calling CopyClipRegion()\n");
+    (*aRegion)->SetTo(*mClipRegion);
+    rv = NS_OK;
+  }
+  else
+  {
+    if ( NS_SUCCEEDED(nsComponentManager::CreateInstance(kRegionCID, 0, NS_GET_IID(nsIRegion), 
+                                                         (void**)aRegion )) )
+    {
+      if (mClipRegion)
+      {
+        (*aRegion)->Init();
+        (*aRegion)->SetTo(*mClipRegion);
+        NS_ADDREF(*aRegion);
+        rv = NS_OK;
+      }
+      else
+      {
+        printf("null clip region, can't make a valid copy\n");
+        NS_RELEASE(*aRegion);
+        rv = NS_ERROR_FAILURE;
+      }
+    } 
+  }
+
+  return rv;
+#else
+
   nsresult  rv = NS_OK;
   
   NS_ASSERTION(!(nsnull == aRegion), "no region ptr");
@@ -708,10 +817,11 @@ NS_IMETHODIMP nsRenderingContextPh :: GetClipRegion(nsIRegion **aRegion)
 
   if (rv == NS_OK)
   {
-    (*aRegion)->SetTo(*mRegion);
+    (*aRegion)->SetTo(*mClipRegion);
   }																				  
 
   return rv;
+#endif
 }
 
 
@@ -739,7 +849,7 @@ NS_IMETHODIMP nsRenderingContextPh :: GetColor(nscolor &aColor) const
 NS_IMETHODIMP nsRenderingContextPh :: SetLineStyle(nsLineStyle aLineStyle)
 {
   PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("nsRenderingContextPh::SetLineStyle\n"));
-  mLineStyle = aLineStyle;
+  mCurrentLineStyle = aLineStyle;
   return NS_OK;
 }
 
@@ -747,7 +857,7 @@ NS_IMETHODIMP nsRenderingContextPh :: SetLineStyle(nsLineStyle aLineStyle)
 NS_IMETHODIMP nsRenderingContextPh :: GetLineStyle(nsLineStyle &aLineStyle)
 {
   PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("nsRenderingContextPh::GetLineStyle  - Not Implemented\n"));
-  aLineStyle = mLineStyle;
+  aLineStyle = mCurrentLineStyle;
   return NS_OK;
 }
 
@@ -914,7 +1024,7 @@ NS_IMETHODIMP nsRenderingContextPh :: DrawLine(nscoord aX0, nscoord aY0, nscoord
 {
   PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("nsRenderingContextPh::DrawLine (%ld,%ld,%ld,%ld)\n", aX0, aY0, aX1, aY1 ));
 
-  if( nsLineStyle_kNone == mLineStyle )
+  if( nsLineStyle_kNone == mCurrentLineStyle )
     return NS_OK;
 
   nscoord x0,y0,x1,y1;
@@ -941,7 +1051,7 @@ NS_IMETHODIMP nsRenderingContextPh :: DrawPolyline(const nsPoint aPoints[], PRIn
 {
   PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("untested nsRenderingContextPh::DrawPolyLine\n"));
 
-  if( nsLineStyle_kNone == mLineStyle )
+  if( nsLineStyle_kNone == mCurrentLineStyle )
     return NS_OK;
 
   PhPoint_t *pts;
@@ -973,7 +1083,7 @@ NS_IMETHODIMP nsRenderingContextPh :: DrawPolyline(const nsPoint aPoints[], PRIn
 
 NS_IMETHODIMP nsRenderingContextPh :: DrawRect(const nsRect& aRect)
 {
-  PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("untested nsRenderingContextPh::DrawRect\n"));
+  PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("untested nsRenderingContextPh::DrawRect 1 \n"));
 
   DrawRect( aRect.x, aRect.y, aRect.width, aRect.height );
 
@@ -983,7 +1093,7 @@ NS_IMETHODIMP nsRenderingContextPh :: DrawRect(const nsRect& aRect)
 
 NS_IMETHODIMP nsRenderingContextPh :: DrawRect(nscoord aX, nscoord aY, nscoord aWidth, nscoord aHeight)
 {
-  PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("untested nsRenderingContextPh::DrawRect\n"));
+  PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("untested nsRenderingContextPh::DrawRect 2 \n"));
 
   nscoord x,y,w,h;
 
@@ -1002,7 +1112,7 @@ NS_IMETHODIMP nsRenderingContextPh :: DrawRect(nscoord aX, nscoord aY, nscoord a
 
 NS_IMETHODIMP nsRenderingContextPh :: FillRect(const nsRect& aRect)
 {
-//  PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("nsRenderingContextPh::FillRect (%i,%i,%i,%i)\n", aRect.x, aRect.y, aRect.width, aRect.height ));
+  PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("nsRenderingContextPh::FillRect 1 (%i,%i,%i,%i)\n", aRect.x, aRect.y, aRect.width, aRect.height ));
 
   FillRect( aRect.x, aRect.y, aRect.width, aRect.height );
 
@@ -1012,7 +1122,7 @@ NS_IMETHODIMP nsRenderingContextPh :: FillRect(const nsRect& aRect)
 
 NS_IMETHODIMP nsRenderingContextPh :: FillRect(nscoord aX, nscoord aY, nscoord aWidth, nscoord aHeight)
 {
-  PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("nsRenderingContextPh::FillRect (%i,%i,%i,%i)\n", aX, aY, aWidth, aHeight ));
+  PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("nsRenderingContextPh::FillRect 2 (%i,%i,%i,%i)\n", aX, aY, aWidth, aHeight ));
   nscoord x,y,w,h;
 
   x = aX;
@@ -1023,7 +1133,6 @@ NS_IMETHODIMP nsRenderingContextPh :: FillRect(nscoord aX, nscoord aY, nscoord a
   mTMatrix->TransformCoord(&x,&y,&w,&h);
   SELECT(mSurface);
   PgDrawIRect( x, y, x + w - 1, y + h - 1, Pg_DRAW_FILL_STROKE );
-//  PgDrawIRect( x, y, x + w - 1, y + h - 1, Pg_DRAW_FILL );
 
   return NS_OK;
 }
@@ -1031,7 +1140,6 @@ NS_IMETHODIMP nsRenderingContextPh :: FillRect(nscoord aX, nscoord aY, nscoord a
 NS_IMETHODIMP 
 nsRenderingContextPh :: InvertRect(const nsRect& aRect)
 {
-//	NS_NOTYETIMPLEMENTED("nsRenderingContextPh::InvertRect");
   InvertRect( aRect.x, aRect.y, aRect.width, aRect.height );
 
   return NS_OK;
@@ -1043,8 +1151,6 @@ nsRenderingContextPh :: InvertRect(const nsRect& aRect)
 NS_IMETHODIMP 
 nsRenderingContextPh :: InvertRect(nscoord aX, nscoord aY, nscoord aWidth, nscoord aHeight)
 {
-//	NS_NOTYETIMPLEMENTED("nsRenderingContextPh::InvertRect");
-
   nscoord x,y,w,h;
 
   x = aX;
@@ -1534,16 +1640,22 @@ NS_IMETHODIMP nsRenderingContextPh :: CopyOffScreenBits(nsDrawingSurface aSrcSur
                                                          const nsRect &aDestBounds,
                                                          PRUint32 aCopyFlags)
 {
-  PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("nsRenderingContextPh::CopyOffScreenBits.\n"));
+  PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("nsRenderingContextPh::CopyOffScreenBits this=<%p> aSrcSurf=<%p> aSrcPt=(%d,%d) aCopyFlags=<%d> DestRect=<%d,%d,%d,%d>\n",
+     this, aSrcSurf, aSrcX, aSrcY, aCopyFlags, aDestBounds.x, aDestBounds.y, aDestBounds.width, aDestBounds.height));
 
-
-  PhArea_t    area;
+  PhArea_t              area;
   PRInt32               srcX = aSrcX;
   PRInt32               srcY = aSrcY;
   nsRect                drect = aDestBounds;
-  nsDrawingSurfacePh  *destsurf;
+  nsDrawingSurfacePh    *destsurf;
 
-  PhGC_t *saveGC=PgGetGC();
+  if ( (aSrcSurf==NULL) || (mTMatrix==NULL) || (mSurface==NULL))
+  {
+    NS_ASSERTION(0, "nsRenderingContextPh::CopyOffScreenBits STarted with NULL pointer");
+    return NS_ERROR_FAILURE;  
+  }
+  
+  PhGC_t *saveGC = PgGetGC();
 
   if (aCopyFlags & NS_COPYBITS_TO_BACK_BUFFER)
   {
@@ -1555,7 +1667,7 @@ NS_IMETHODIMP nsRenderingContextPh :: CopyOffScreenBits(nsDrawingSurface aSrcSur
 
   if( mBufferIsEmpty )
   {
-    PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("  Buffer empty, skipping.\n"));
+    PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("nsRenderingContextPh::CopyOffScreenBits Buffer empty, skipping.\n"));
     SELECT( destsurf );
     PgSetGC(saveGC);
     return NS_OK;
@@ -1594,14 +1706,15 @@ NS_IMETHODIMP nsRenderingContextPh :: CopyOffScreenBits(nsDrawingSurface aSrcSur
 
 //  printf ("location: %d, %p %p (%d %d) %d %d %d %d\n",aCopyFlags,aSrcSurf,destsurf,srcX,srcY,area.pos.x,area.pos.y,area.size.w,area.size.h);
 
-nsRect rect;
-PRBool valid;
-GetClipRect(rect,valid);
-if (valid)
-{
-//  printf ("clip: %d %d %d %d\n",rect.x,rect.y,rect.width,rect.height);
-  area.size.w = rect.width; area.size.h = rect.height; 
-}
+  nsRect rect;
+  PRBool valid;
+  GetClipRect(rect,valid);
+  if (valid)
+  {
+    //printf ("clip: %d %d %d %d\n",rect.x,rect.y,rect.width,rect.height);
+    area.size.w = rect.width; 
+    area.size.h = rect.height; 
+  }
   
   ((nsDrawingSurfacePh *)aSrcSurf)->Stop();
   PhImage_t *image;
@@ -1661,14 +1774,6 @@ printf ("unimp pushclipstate\n");
   PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("nsRenderingContextPh::PushClipState - Not implemented.\n"));
 }
 
-NS_IMETHODIMP nsRenderingContextPh :: CreateDrawingSurface( PhGC_t *aGC, nsDrawingSurface &aSurface)
-{
-printf ("unimp createdrawingsurface\n");
-  PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("nsRenderingContextPh::CreateDrawingSurface - Not implemented.\n"));
-
-  return NS_OK;
-}
-
 
 void nsRenderingContextPh::ApplyClipping( PhGC_t *gc )
 {
@@ -1686,7 +1791,7 @@ rid = gc->rid;
 //PtArg_t arg;
 //PhPoint_t *pos;
 
-  if (mRegion)
+  if (mClipRegion)
   {
     PhRegion_t my_region;
     PhRect_t rect = {{0,0},{0,0}};
@@ -1704,7 +1809,7 @@ rid = gc->rid;
 //printf ("clip widget: %p %d %d\n",mWidget,pos->x,pos->y);
 
      /* no offset needed use the normal tile list */
-     mRegion->GetNativeRegion((void*&)tiles);
+     mClipRegion->GetNativeRegion((void*&)tiles);
 
     if (tiles != nsnull)
     {
@@ -1725,7 +1830,7 @@ rid = gc->rid;
 
 void nsRenderingContextPh::SetPhLineStyle()
 {
-  switch( mLineStyle )
+  switch( mCurrentLineStyle )
   {
   case nsLineStyle_kSolid:
     PgSetStrokeDash( nsnull, 0, 0x10000 );

@@ -23,9 +23,7 @@ static NS_DEFINE_IID(kIFontMetricsIID, NS_IFONT_METRICS_IID);
 
 nsFontMetricsPh :: nsFontMetricsPh()
 {
-  /* stolen from GTK version */
   NS_INIT_REFCNT();
-
   mDeviceContext = nsnull;
   mFont = nsnull;
 	  
@@ -58,7 +56,7 @@ nsFontMetricsPh :: ~nsFontMetricsPh()
   mDeviceContext = nsnull;
 }
 
-NS_IMPL_ISUPPORTS(nsFontMetricsPh, kIFontMetricsIID)
+NS_IMPL_ISUPPORTS1(nsFontMetricsPh, nsIFontMetrics)
 
 NS_IMETHODIMP
 nsFontMetricsPh :: Init(const nsFont& aFont, nsIDeviceContext *aContext)

@@ -16,20 +16,34 @@
  * Reserved.
  */
 
-#include "nsDeviceContextPh.h"
-#include "nsRenderingContextPh.h"
-#include "nsDeviceContextSpecPh.h"
+#include <math.h>
+
+#include "nspr.h"
 #include "nsIPref.h"
 #include "nsIServiceManager.h"
 #include "il_util.h"
+#include "nsCRT.h"
+
+#include "nsDeviceContextPh.h"
+#include "nsRenderingContextPh.h"
+#include "nsDeviceContextSpecPh.h"
+
 #include "nsPhGfxLog.h"
 
 static NS_DEFINE_IID(kIDeviceContextSpecIID, NS_IDEVICE_CONTEXT_SPEC_IID);
+static NS_DEFINE_CID(kPrefCID, NS_PREF_CID);
+static NS_DEFINE_IID(kIPrefIID, NS_IPREF_IID);
+
+NS_IMPL_ISUPPORTS1(nsDeviceContextPh, nsIDeviceContext)
 
 
 nsDeviceContextPh :: nsDeviceContextPh()
-  : DeviceContextImpl()
 {
+  NS_INIT_REFCNT();
+  
+  mTwipsToPixels = 1.0;
+  mPixelsToTwips = 1.0;
+  mDepth = 0 ;
   mSurface = NULL;
   mPaletteInfo.isPaletteDevice = PR_FALSE;
   mPaletteInfo.sizePalette = 0;
@@ -69,8 +83,6 @@ nsDeviceContextPh :: ~nsDeviceContextPh()
   NS_IF_RELEASE(mSpec);
 }
 
-static NS_DEFINE_CID(kPrefCID, NS_PREF_CID);
-static NS_DEFINE_IID(kIPrefIID, NS_IPREF_IID);
 
 NS_IMETHODIMP nsDeviceContextPh :: Init(nsNativeWidget aWidget)
 {

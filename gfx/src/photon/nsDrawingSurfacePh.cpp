@@ -16,35 +16,14 @@
  * Reserved.
  */
 
-#ifdef NGLAYOUT_DDRAW
-#define INITGUID
-#endif
-
 #include "nsDrawingSurfacePh.h"
 #include "prmem.h"
-#include "nsCRT.h"
 
 #include "nsPhGfxLog.h"
 #include <photon/PhRender.h>
 #include <Pt.h>
 
-//#define GFX_DEBUG
-
-#ifdef GFX_DEBUG
-  #define BREAK_TO_DEBUGGER           DebugBreak()
-#else   
-  #define BREAK_TO_DEBUGGER
-#endif  
-
-#ifdef GFX_DEBUG
-  #define VERIFY(exp)                 ((exp) ? 0: (GetLastError(), BREAK_TO_DEBUGGER))
-#else   // !_DEBUG
-  #define VERIFY(exp)                 (exp)
-#endif  // !_DEBUG
-
-static NS_DEFINE_IID(kIDrawingSurfaceIID, NS_IDRAWING_SURFACE_IID);
-static NS_DEFINE_IID(kIDrawingSurfacePhIID, NS_IDRAWING_SURFACE_PH_IID);
-
+NS_IMPL_ISUPPORTS2(nsDrawingSurfacePh, nsIDrawingSurface, nsIDrawingSurfacePh)
 
 nsDrawingSurfacePh :: nsDrawingSurfacePh()
 {
@@ -86,44 +65,6 @@ nsDrawingSurfacePh :: ~nsDrawingSurfacePh()
   }
 }
 
-NS_IMETHODIMP nsDrawingSurfacePh :: QueryInterface(REFNSIID aIID, void** aInstancePtr)
-{
-  if (nsnull == aInstancePtr)
-    return NS_ERROR_NULL_POINTER;
-
-  if (aIID.Equals(kIDrawingSurfaceIID))
-  {
-    nsIDrawingSurface* tmp = this;
-    *aInstancePtr = (void*) tmp;
-    NS_ADDREF_THIS();
-    return NS_OK;
-  }
-
-  if (aIID.Equals(kIDrawingSurfacePhIID))
-  {
-    nsIDrawingSurfacePh* tmp = this;
-    *aInstancePtr = (void*) tmp;
-    NS_ADDREF_THIS();
-    return NS_OK;
-  }
-
-  static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
-
-  if (aIID.Equals(kISupportsIID))
-  {
-    nsIDrawingSurface* tmp = this;
-    nsISupports* tmp2 = tmp;
-    *aInstancePtr = (void*) tmp2;
-    NS_ADDREF_THIS();
-    return NS_OK;
-  }
-
-  return NS_NOINTERFACE;
-}
-
-NS_IMPL_ADDREF(nsDrawingSurfacePh)
-NS_IMPL_RELEASE(nsDrawingSurfacePh)
-
   /**
    * Lock a rect of a drawing surface and return a
    * pointer to the upper left hand corner of the
@@ -146,7 +87,8 @@ NS_IMETHODIMP nsDrawingSurfacePh :: Lock(PRInt32 aX, PRInt32 aY,
                                           void **aBits, PRInt32 *aStride,
                                           PRInt32 *aWidthBytes, PRUint32 aFlags)
 {
-//printf ("lock\n");
+  PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("nsDrawingSurfacePh::Lock mLocked=<%d>\n"));
+
   if (mLocked)
   {
     NS_ASSERTION(0, "nested lock attempt");
@@ -160,11 +102,13 @@ NS_IMETHODIMP nsDrawingSurfacePh :: Lock(PRInt32 aX, PRInt32 aY,
   mLockHeight = aHeight;
   mLockFlags = aFlags;
 
-  PhImage_t *image;
-  PhDim_t dim;
-  short               bytes_per_pixel = 3;
+  PhImage_t  *image;
+  PhDim_t    dim;
+  short      bytes_per_pixel = 3;
 
-  image = PR_Malloc(sizeof(PhImage_t));
+// kirk - replaced Malloc with Calloc and got rid of memset further down
+//  image = PR_Malloc(sizeof(PhImage_t));
+  image = PR_CALLOC(sizeof(PhImage_t) );
   if (image == NULL)
     return NS_ERROR_FAILURE;
 
@@ -173,21 +117,23 @@ NS_IMETHODIMP nsDrawingSurfacePh :: Lock(PRInt32 aX, PRInt32 aY,
   dim.w = mLockWidth;
   dim.h = mLockHeight;
 
-  memset( image, 0, sizeof(PhImage_t) );
+//  memset( image, 0, sizeof(PhImage_t) );
   image->type = Pg_IMAGE_DIRECT_888; // 3 bytes per pixel with this type
   image->size = dim;
-//  image->image = (char *) PgShmemCreate( dim.w * dim.h * bytes_per_pixel, NULL);
   image->image = (char *) PR_Malloc( dim.w * dim.h * bytes_per_pixel);
   if (image->image == NULL)
     return NS_ERROR_FAILURE;
 	  
   image->bpl = bytes_per_pixel*dim.w;
 
-int y;
-for (y=0;y<dim.h;y++)
-	memcpy(image->image+y*dim.w*3,mPixmap->image+3*mLockX+(mLockY+y)*mPixmap->bpl,dim.w*3);
-
-//  *aBits = mImage->image+mLockX*3+mLockY*mImage->bpl;
+  int y;
+  for (y=0;y<dim.h;y++)
+  {
+	memcpy( image->image+y*dim.w*3,
+	        mPixmap->image+3*mLockX+(mLockY+y)*mPixmap->bpl,
+			dim.w*3);
+  }
+  
   *aBits = mImage->image;
   *aWidthBytes = aWidth*3;
   *aStride = mImage->bpl;
@@ -198,55 +144,76 @@ for (y=0;y<dim.h;y++)
 NS_IMETHODIMP nsDrawingSurfacePh :: XOR(PRInt32 aX, PRInt32 aY,
                                           PRUint32 aWidth, PRUint32 aHeight)
 {
-//printf ("XOR: %d, %d %d %d %d\n",mIsOffscreen,aX,aY,aWidth,aHeight);
+  PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("nsDrawingSurfacePh::XOR this=<%p> mIsOffscreen=<%d> area=(%ld,%ld,%ld,%ld)\n",
+    this, mIsOffscreen, aX, aY, aWidth, aHeight));
 
-int x;
-int y;
-unsigned char *ptr;
+  int x, y, err;
+  unsigned char *ptr;
 
-PmMemFlush( (PmMemoryContext_t *) mGC, mPixmap ); // get the image
-ptr = mPixmap->image;
+    err=PmMemFlush( (PmMemoryContext_t *) mGC, mPixmap ); // get the image
+    NS_ASSERTION(err != -1, "nsDrawingSurfacePh::XOR  PmMemFlush failed");
+    if (err == -1)
+	  return NS_ERROR_FAILURE;
+	  	
+	ptr = mPixmap->image;
+	for (y=aY;y<aY+aHeight;y++)
+	{
+	  for (x=aX;x<aX+aWidth;x++)
+	  {
+		ptr[3*x+0+(y*mPixmap->bpl)]^=255;
+		ptr[3*x+1+(y*mPixmap->bpl)]^=255;
+		ptr[3*x+2+(y*mPixmap->bpl)]^=255;
+	  }
+	}
 
-for (y=aY;y<aY+aHeight;y++)
-{
-  for (x=aX;x<aX+aWidth;x++)
-  {
-	ptr[3*x+0+(y*mPixmap->bpl)]^=255;
-	ptr[3*x+1+(y*mPixmap->bpl)]^=255;
-	ptr[3*x+2+(y*mPixmap->bpl)]^=255;
-  }
-}
-  return NS_OK;
+	return NS_OK;
 }
 
 extern void *Mask;
+
 NS_IMETHODIMP nsDrawingSurfacePh :: Unlock(void)
 {
-//printf ("unlock: %p\n",Mask);
+  PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("nsDrawingSurfacePh::Unlock this=<%p> mLocked=<%d> \n", this, mLocked));
+
   if (!mLocked)
   {
-    NS_ASSERTION(0, "attempting to unlock an DS that isn't locked");
+    NS_ASSERTION(0, "nsDrawingSurfacePh::Unlock - attempting to unlock an DS that isn't locked");
     return NS_ERROR_FAILURE;
   }
 
   // If the lock was not read only, put the bits back on the pixmap
   if (!(mLockFlags & NS_LOCK_SURFACE_READ_ONLY))
   {
-//printf ("really put data back: %d %d %d %d (%d %d)\n",mLockX,mLockY,mLockWidth,mLockHeight,mImage->size.w,mImage->size.h);
-  PhPoint_t pos = { mLockX, mLockY };
+    PhPoint_t pos = { mLockX, mLockY };
+    int err;
 
     Select();
+
+/* Kirk Hack to see what this does 9/27/99 */
+/* No apparent problems improvements or problems... */
+#if 1
     if (Mask)
     {
-//      printf ("use mask\n");
-int bpl;
-   bpl = (mLockWidth+7)/8;
-   bpl = (bpl + 3) & ~0x3;
-      PgDrawTImage( mImage->image, mImage->type, &pos, &mImage->size, mImage->bpl, 0 ,Mask,bpl);
+      int bpl;
+      bpl = (mLockWidth+7)/8;
+      bpl = (bpl + 3) & ~0x3;
+      err=PgDrawTImage( mImage->image, mImage->type, &pos, &mImage->size, mImage->bpl, 0 ,Mask,bpl);
+      if (err == -1)
+	  {
+	    NS_ASSERTION(0, "nsDrawingSurfacePh::Unlock PgDrawTImage failed");
+		return NS_ERROR_FAILURE;
+	  }
     }
     else
-      PgDrawImage( mImage->image, mImage->type, &pos, &mImage->size, mImage->bpl, 0 );
-
+	{
+      err=PgDrawImage( mImage->image, mImage->type, &pos, &mImage->size, mImage->bpl, 0 );
+      if (err == -1)
+	  {
+	    NS_ASSERTION(0, "nsDrawingSurfacePh::Unlock PgDrawImage failed");
+		return NS_ERROR_FAILURE;
+	  }
+    }
+#endif
   }
 
   PR_Free(mImage->image);
@@ -262,30 +229,26 @@ NS_IMETHODIMP nsDrawingSurfacePh :: GetDimensions(PRUint32 *aWidth, PRUint32 *aH
   *aWidth = mWidth;
   *aHeight = mHeight;
 
-  PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("nsDrawingSurfacePh::GetDimensions - Not Implemented\n"));
+  PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("nsDrawingSurfacePh::GetDimensions this=<%p> w,h=(%ld,%ld)\n", this, mWidth, mHeight));
   return NS_OK;
 }
 
 NS_IMETHODIMP nsDrawingSurfacePh :: IsOffscreen(PRBool *aOffScreen)
 {
   *aOffScreen = mIsOffscreen;
-  PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("nsDrawingSurfacePh::IsOffScreen - Not Implemented\n"));
+  PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("nsDrawingSurfacePh::IsOffScreen mIsOffscreen=<%d>\n", mIsOffscreen));
   return NS_OK;
 }
 
 NS_IMETHODIMP nsDrawingSurfacePh :: IsPixelAddressable(PRBool *aAddressable)
 {
-// FIXME
-printf ("ispixeladdressable\n");
   *aAddressable = PR_FALSE;
   PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("nsDrawingSurfacePh::IsPixelAddressable - Not Implemented\n"));
-
   return NS_OK;
 }
 
 NS_IMETHODIMP nsDrawingSurfacePh :: GetPixelFormat(nsPixelFormat *aFormat)
 {
-//printf ("getpixelformat\n");
   *aFormat = mPixFormat;
   return NS_OK;
 }
@@ -296,7 +259,7 @@ NS_IMETHODIMP nsDrawingSurfacePh :: Init( PhGC_t * &aGC )
   mIsOffscreen = PR_FALSE;	// is onscreen
   mPixmap = NULL; // is onscreen
 
-  PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("nsDrawingSurfacePh::Init with PhGC_t\n"));
+  PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("nsDrawingSurfacePh::Init with PhGC_t this=<%p>\n",this));
 
   return NS_OK;
 }
@@ -304,8 +267,7 @@ NS_IMETHODIMP nsDrawingSurfacePh :: Init( PhGC_t * &aGC )
 NS_IMETHODIMP nsDrawingSurfacePh :: Init( PhGC_t * &aGC, PRUint32 aWidth,
                                           PRUint32 aHeight, PRUint32 aFlags)
 {
-//printf ("kedl: init with width and height\n");
-  PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("nsDrawingSurfacePh::Init with PhGC_t + width/height\n"));
+  PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("nsDrawingSurfacePh::Init with PhGC_t + width/height this=<%p> w,h=(%ld,%ld)\n", this, aWidth, aHeight));
 
   mholdGC = aGC;
   mWidth = aWidth;
@@ -320,43 +282,65 @@ NS_IMETHODIMP nsDrawingSurfacePh :: Init( PhGC_t * &aGC, PRUint32 aWidth,
   PhArea_t    area;
   PtArg_t     arg[3];
 
-  image = PR_Malloc(sizeof(PhImage_t));
+// kirk - replaced Malloc with Calloc and got rid of memset further down
+//  image = PR_Malloc(sizeof(PhImage_t));
+  image = PR_CALLOC(sizeof(PhImage_t) );
   if (image == NULL)
     return NS_ERROR_FAILURE;
 	
-  mPixmap = image;
+  mPixmap     = image;
+  area.pos.x  = 0;
+  area.pos.y  = 0;
+  area.size.w = aWidth;
+  area.size.h = aHeight;
+  dim.w       = area.size.w;
+  dim.h       = area.size.h;
 
-  area.pos.x=0;
-  area.pos.y=0;
-  area.size.w=aWidth;
-  area.size.h=aHeight;
-  dim.w = area.size.w;
-  dim.h = area.size.h;
-  dim.h += 100;                 // kedl, uggggg hack! weird font not drawing unless
-                                // the surface is somewhat bigger??
-  dim.w ++;
+#if 1
+  // kedl, hack! weird font not drawing unless
+  // the surface is somewhat bigger??
+    dim.h += 100;
+    dim.w ++;
+#endif
 
 //printf ("kedl: create drawing surface: %d %d %d %d, %lu\n",area.pos.x,area.pos.y,area.size.w,area.size.h,image);
 
-  PhPoint_t           translation = { 0, 0 }, center, radii;
+  PhPoint_t           translation = { 0, 0 };
   PmMemoryContext_t   *mc;
   short               bytes_per_pixel = 3;
 
-  memset( image, 0, sizeof(PhImage_t) );
+//  memset( image, 0, sizeof(PhImage_t) );
   image->type = Pg_IMAGE_DIRECT_888; // 3 bytes per pixel with this type
   image->size = dim;
   image->image = (char *) PgShmemCreate( dim.w * dim.h * bytes_per_pixel, NULL);
-  image->bpl = bytes_per_pixel*dim.w;
+
+  if (image->image == NULL)
+  {
+    NS_ASSERTION(0,"nsDrawingSurfacePh::Init Out of Memory calling PgShmemCreate");
+    return NS_ERROR_FAILURE;
+  }
+  
+  image->bpl = bytes_per_pixel * dim.w;
 
   mc = PmMemCreateMC( image, &dim, &translation );
-
-  mGC = (PhGC_t *)mc;
+  if (mc == NULL)
+  {
+    NS_ASSERTION(0, "nsDrawingSurfacePh::Init Out of Memory calling PmMemCreateMC");
+    return NS_ERROR_FAILURE;
+  }
+  	
+  mGC = (PhGC_t *) mc;
 
   // now all drawing goes into the memory context
-  PmMemStart( mc );
-  
-//  PgSetRegion( mholdGC->rid );
+  PhDrawContext_t *oldDC;
 
+  oldDC = PmMemStart( mc );
+  if (oldDC == NULL)
+  {
+	NS_ASSERTION(0, "nsDrawingSurfacePh::Init - Error calling PmMemStart");
+	return NS_ERROR_FAILURE;
+  }
+	    
   return NS_OK;
 }
 
@@ -374,43 +358,72 @@ NS_IMETHODIMP nsDrawingSurfacePh :: ReleaseGC( void )
 
 NS_IMETHODIMP nsDrawingSurfacePh :: Select( void )
 {
-PhGC_t *gc=PgGetGC();
+  PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("nsDrawingSurfacePh::Select mIsOffscreen=<%d>\n", mIsOffscreen));
 
-  if (mholdGC==nsnull) mholdGC = mGC;
+  PhGC_t *gc = PgGetGC();
+
+  if (mholdGC==nsnull)
+    mholdGC = mGC;
 
 
-  if (gc==mGC)
+  if (gc == mGC)
   {
     //printf ("don't set gc\n");
-    return 0;
+    return NS_OK;	// kirk - this was a 0, I think its the same?
   }
   else
   {
     if (mIsOffscreen)
     {
-      //printf ("going offscreen: %p\n",mGC); fflush(stdout);
-      PmMemFlush( (PmMemoryContext_t *) mGC, mPixmap ); // get the image
-      PmMemStart( (PmMemoryContext_t *) mGC);
-//      PgSetRegion(mGC->rid);
+      int err;
+	  PhDrawContext_t *oldDC;
+	  
+      err=PmMemFlush( (PmMemoryContext_t *) mGC, mPixmap ); // get the image
+      if (err == -1)
+	  {
+		NS_ASSERTION(0, "nsDrawingSurfacePh::Select - Error calling PmMemFlush");
+		return NS_ERROR_FAILURE;
+	  }
+
+      oldDC=PmMemStart( (PmMemoryContext_t *) mGC);
+      if (oldDC == NULL)
+	  {
+		NS_ASSERTION(0, "nsDrawingSurfacePh::Select - Error calling PmMemStart");
+		return NS_ERROR_FAILURE;
+	  }
     }
     else
     {
       //printf ("going onscreen: %p\n",mGC); fflush(stdout);
       PgSetGC(mGC);
-//      PgSetRegion(mGC->rid);
     }
   }
 
-  return 1;
+  return NS_OK;
 }
 
 void nsDrawingSurfacePh::Stop(void)
 {
-//  printf ("offscreen: %d\n",mIsOffscreen);
+  PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("nsDrawingSurfacePh::Stop mIsOffscreen=<%d>\n", mIsOffscreen));
+
   if (mIsOffscreen)
   {
-    PmMemFlush( (PmMemoryContext_t *) mGC, mPixmap ); // get the image
-    PmMemStop( (PmMemoryContext_t *) mGC );
+    int err;
+    PhDrawContext_t *theMC;
+
+    err=PmMemFlush( (PmMemoryContext_t *) mGC, mPixmap ); // get the image
+    if (err == -1)
+    {
+      NS_ASSERTION(0, "nsDrawingSurfacePh::Stop - Error calling PmMemFlush");
+	  return;
+	}
+
+    theMC = PmMemStop( (PmMemoryContext_t *) mGC );
+	if (theMC == NULL)
+	{
+	  NS_ASSERTION(0, "nsDrawingSurfacePh::Stop - Error calling PmMemStop");
+	  return;
+	}
   }
 }
 
