@@ -65,7 +65,8 @@ class nsDocShell : public nsIDocShell,
                    public nsIScrollable, 
                    public nsITextScroll, 
                    public nsIContentViewerContainer,
-                   public nsIInterfaceRequestor
+                   public nsIInterfaceRequestor,
+                   public nsIScriptContextOwner
 {
 friend class nsDSURIContentListener;
 
@@ -78,6 +79,7 @@ public:
    NS_DECL_NSISCROLLABLE
    NS_DECL_NSITEXTSCROLL
    NS_DECL_NSIINTERFACEREQUESTOR
+   NS_DECL_NSISCRIPTCONTEXTOWNER
 
    // XXX: move to a macro
    // nsIContentViewerContainer
@@ -93,8 +95,6 @@ public:
 
    static NS_METHOD Create(nsISupports* aOuter, const nsIID& aIID, void** ppv);
 
-
-
 protected:
    nsDocShell();
    virtual ~nsDocShell();
@@ -104,6 +104,7 @@ protected:
       PRInt32* aOffset);
    nsresult GetRootScrollableView(nsIScrollableView** aOutScrollView);
    nsresult EnsureContentListener();
+   nsresult EnsureScriptEnvironment();
 
    void SetCurrentURI(nsIURI* aUri);
    nsresult CreateContentViewer(const char* aContentType, const char* aCommand,
