@@ -528,15 +528,10 @@ endif
 DEFINES		+= -DOSTYPE=\"$(OS_CONFIG)\"
 DEFINES		+= -DOSARCH=\"$(OS_ARCH)\"
 
-DEFINES += -DNS_PRINT_PREVIEW
-
-ifdef MOZ_DEBUG
-DEFINES		+= -DMOZ_REFLOW_PERF -DMOZ_REFLOW_PERF_DSP
-endif
-
 #
 # Platform dependent switching off of JAVA
 #
+MOZ_OJI=1
 
 ifdef MOZ_JAVA
 DEFINES		+= -DJAVA

@@ -4055,7 +4055,12 @@ else
 fi
 
 AC_DEFINE(JS_THREADSAFE)
+AC_DEFINE(NS_PRINT_PREVIEW)
 
+if test "$MOZ_DEBUG"; then
+    AC_DEFINE(MOZ_REFLOW_PERF)
+    AC_DEFINE(MOZ_REFLOW_PERF_DSP)
+endif
 
 # Used for LD_LIBRARY_PATH of run_viewer target
 LIBS_PATH=
