@@ -180,6 +180,7 @@ public:
   NS_IMETHOD    SetTarget(nsIDOMEventTarget* aTarget);
   NS_IMETHOD    SetCurrentTarget(nsIDOMEventTarget* aCurrentTarget);
   NS_IMETHOD    SetOriginalTarget(nsIDOMEventTarget* aOriginalTarget);
+  NS_IMETHOD    GetOriginalTargetTrusted(nsIDOMEventTarget** aOriginalTarget);
   NS_IMETHOD    IsDispatchStopped(PRBool* aIsDispatchStopped);
   NS_IMETHOD    GetInternalNSEvent(nsEvent** aNSEvent);
   NS_IMETHOD    HasOriginalTarget(PRBool* aResult);
@@ -232,6 +233,7 @@ protected:
   nsIDOMEventTarget* mTarget;
   nsIDOMEventTarget* mCurrentTarget;
   nsIDOMEventTarget* mOriginalTarget;
+  nsIDOMEventTarget* mRealOriginalTarget;
   nsString*	mText;
   nsIPrivateTextRangeList*	mTextRange;
   PRPackedBool mEventIsInternal;
