@@ -106,6 +106,13 @@ private:
   static PRInt32       FillArrayWithAncestors(nsVoidArray* aArray,nsIDOMNode* aNode);
   static nsIDOMNode*   CommonParent(nsIDOMNode* aNode1, nsIDOMNode* aNode2);
   
+  static nsresult CloneSibsAndParents(nsIDOMNode* parentNode,
+                                      PRInt32 nodeOffset,
+                                      nsIDOMNode* clonedNode,
+                                      nsIDOMNode* commonParent,
+                                      nsIDOMDocumentFragment* docfrag,
+                                      PRBool leftP);
+
   nsresult      DoSetRange(nsIDOMNode* aStartN, PRInt32 aStartOffset,
                              nsIDOMNode* aEndN, PRInt32 aEndOffset);
 
@@ -1004,13 +1011,123 @@ nsresult nsRange::ExtractContents(nsIDOMDocumentFragment** aReturn)
   return res; 
 }
 
+// CloneSibsAndParents(node, dogfrag, leftP)
+// Assumes that the node passed in is already a clone.
+// If node == 0, adds directly to doc fragment.
+// Algorithm:
+// - Loop from start child until common parent
+//   - clone parent (or use doc frag if parent == common parent)
+//   - add self & left or right right sibs' clones to parent
+//   - recurse to parent
+//
+nsresult
+nsRange::CloneSibsAndParents(nsIDOMNode* parentNode, PRInt32 nodeOffset,
+                             nsIDOMNode* clonedNode,
+                             nsIDOMNode* commonParent,
+                             nsIDOMDocumentFragment* docfrag,
+                             PRBool leftP)
+{
+  nsresult res;
+
+  if (docfrag == 0)
+    return NS_ERROR_INVALID_ARG;
+
+  nsIDOMNode* parentClone;
+  if (parentNode == 0)
+  {
+    return NS_ERROR_INVALID_ARG;
+  }
+
+  // Make clone of parent:
+  if (parentNode == commonParent || parentNode == 0)
+  {
+    //NS_ADDREF(docfrag);
+    parentClone = docfrag;
+  }
+  else
+  {
+    res = parentNode->CloneNode(PR_FALSE, &parentClone);
+    if (!NS_SUCCEEDED(res))
+      return res;
+  }
+
+  // Loop over self and left or right siblings, and add to parent clone:
+  nsIDOMNode* clone;
+  nsIDOMNode* retNode;    // To hold the useless return value of insertBefore
+
+  int i = 0;  // or 1, depending on which base IndexOf uses
+  nsIDOMNode* tmpNode;
+  res = parentNode->GetFirstChild(&tmpNode);
+  if (!NS_SUCCEEDED(res))
+  {
+    return res;
+  }
+
+  while (1)
+  {
+    if (i == nodeOffset)
+    {
+      // If we weren't passed in a clone of node, make one now:
+      if (clonedNode == 0)
+      {
+        res = tmpNode->CloneNode(PR_TRUE, &clonedNode);
+        if (!NS_SUCCEEDED(res))
+          break;
+      }
+
+      res = parentClone->InsertBefore(clonedNode, (nsIDOMNode*)0, &retNode);
+      NS_IF_RELEASE(retNode); // don't need this -- can we just pass in nsnull?
+    }
+    else if ((leftP && (i < nodeOffset))
+             || (!leftP && (i > nodeOffset)))
+    {
+      res = tmpNode->CloneNode(PR_TRUE, &clone);
+      res = parentClone->InsertBefore(clone, (nsIDOMNode*)0, &retNode);
+      NS_IF_RELEASE(retNode); // don't need this -- can we just pass in nsnull?
+    }
+    else
+      res = NS_OK;
+    if (!NS_SUCCEEDED(res))
+      break;
+
+    ++i;
+    nsIDOMNode* tmptmpNode = tmpNode;
+    res = tmpNode->GetNextSibling(&tmpNode);
+    NS_IF_RELEASE(tmptmpNode);
+    if (!NS_SUCCEEDED(res) || tmpNode == 0)
+      break;
+  }
+
+  NS_IF_RELEASE(clonedNode);
+
+  if (!NS_SUCCEEDED(res))	  // Probably broke out of the loop prematurely
+    return res;
+
+  // Recurse to parent:
+  tmpNode = parentNode;
+  res = tmpNode->GetParentNode(&parentNode);
+  if (NS_SUCCEEDED(res))
+  {
+    PRInt32 index = IndexOf(parentNode);
+    return CloneSibsAndParents(parentNode, index, parentClone,
+                               commonParent, docfrag, leftP);
+  }
+  NS_IF_RELEASE(parentNode);
+
+  //
+  // XXX This is fine for left children but it will include too much
+  // XXX instead of stopping at the left children of the end node.
+  //
+}
+
 nsresult nsRange::CloneContents(nsIDOMDocumentFragment** aReturn)
 {
   if (!mIsPositioned)
     return NS_ERROR_NOT_INITIALIZED;
 
-  nsresult res;
+  nsIDOMNode* commonParent = CommonParent(mStartParent,mEndParent);
 
+  nsresult res;
   nsIDOMDocument* document;
   res = mStartParent->GetOwnerDocument(&document);
   if (!NS_SUCCEEDED(res))
@@ -1024,31 +1141,21 @@ nsresult nsRange::CloneContents(nsIDOMDocumentFragment** aReturn)
   // XXX but who owns this doc frag -- when will it be released?
   if (NS_SUCCEEDED(res))
   {
-    // Loop over the nodes contained in this Range:
-    // XXX Getting the nodes still needs to be implemented!
     return NS_ERROR_NOT_IMPLEMENTED;
-#if 0
-    while (1)
-    {
-      // This is how to append a node to a doc frag:
-      nsIDOMNode* clonedNode;
-      res = thisNode->cloneNode(PR_TRUE, &clonedNode);
-      if (!NS_SUCCEEDED(res))
-        break;    // punt
-      nsIDOMNode* retNode;
-      res = docfrag->insertBefore(clonedNode, (nsIDOMNode*)0, &retNode);
-      if (!NS_SUCCEEDED(res))
-        break;
-    }
 
-    // haven't implemented it yet, so just punt:
-    if (!NS_SUCCEEDED(res))
-    {
-      NS_IF_RELEASE(docfrag);
-      return res;
-    }
-    return NS_OK;
-#endif
+    // Loop over the nodes contained in this Range,
+    // from the start and end points, and add them
+    // to the parent doc frag:
+    res = CloneSibsAndParents(mStartParent, mStartOffset, 0,
+                              commonParent, docfrag, PR_TRUE);
+    res = CloneSibsAndParents(mEndParent, mEndOffset, 0,
+                              commonParent, docfrag, PR_FALSE);
+
+    // XXX Now we need to add the sibs between the two top-level
+    // XXX doc frag cloned elements.
+
+    if (NS_SUCCEEDED(res))
+      return NS_OK;
   }
 
   NS_IF_RELEASE(docfrag);
@@ -1059,8 +1166,6 @@ nsresult nsRange::Clone(nsIDOMRange** aReturn)
 {
   if (aReturn == 0)
     return NS_ERROR_NULL_POINTER;
-
-  return NS_ERROR_NOT_IMPLEMENTED;
 
   nsresult res = NS_NewRange(aReturn);
   if (!NS_SUCCEEDED(res))
