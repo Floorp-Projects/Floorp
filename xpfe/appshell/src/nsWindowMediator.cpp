@@ -831,15 +831,6 @@ nsWindowMediator::GetWindowForResource( const PRUnichar* inResource,
 
 
 
-NS_IMETHODIMP
-nsWindowMediator::ConvertISupportsToDOMWindow( nsISupports* inInterface,
-                                               nsIDOMWindowInternal** outWindow )
-{
-  return inInterface->QueryInterface(NS_GET_IID(nsIDOMWindowInternal)  , (void**) outWindow );
-} 
-
-
-
 // COM
 NS_IMPL_ADDREF( nsWindowMediator );
 NS_IMPL_QUERY_INTERFACE3(nsWindowMediator, nsIWindowMediator, nsIRDFDataSource, nsIRDFObserver);
