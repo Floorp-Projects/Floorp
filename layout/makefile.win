@@ -19,4 +19,4 @@ DEPTH=..
 
 DIRS=base html xml xul events build
 
-include <$(DEPTH)\layout\config\rules.mak>
+include <$(DEPTH)\config\rules.mak>

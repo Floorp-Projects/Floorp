@@ -12,7 +12,7 @@ rem out the interesting information. She can be contacted at
 rem bsharma@netscape.com
 
 @echo off
-y:\x86Rel\viewer.exe -v -d 15 -f y:\url.txt > y:\smoke.status.txt
+y:\recover\mozilla\dist\WIN32_D.OBJ\bin\viewer.exe -v -d 15 -f y:\url.txt > y:\smoke.status.txt
 
 
 

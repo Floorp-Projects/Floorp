@@ -48,7 +48,7 @@ MAKE_OBJ_TYPE=DLL
 #//
 #//------------------------------------------------------------------------
 DLLNAME=$(ZIPDLL)
-PDBFILE=$(MOD_ZIP).pdb
+#PDBFILE=$(MOD_ZIP).pdb
 MAPFILE=$(MOD_ZIP).map
 !if "$(MOZ_BITS)" == "16"
 DEFFILE=zip16.def
