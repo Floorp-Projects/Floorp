@@ -89,6 +89,8 @@ JS_BEGIN_EXTERN_C
  * TOK_FOR      binary      pn_left: either
  *                            for/in loop: a binary TOK_IN node with
  *                              pn_left:  TOK_VAR or TOK_NAME to left of 'in'
+ *                                if TOK_VAR, its pn_extra may have PNX_POPVAR
+ *                                and PNX_FORINVAR bits set
  *                              pn_right: object expr to right of 'in'
  *                            for(;;) loop: a ternary TOK_RESERVED node with
  *                              pn_kid1:  init expr before first ';'
@@ -163,7 +165,7 @@ JS_BEGIN_EXTERN_C
  * TOK_RB       list        pn_head: list of pn_count array element exprs
  *                          [,,] holes are represented by TOK_COMMA nodes
  *                          #n=[...] produces TOK_DEFSHARP at head of list
- *                          pn_extra: true if extra comma at end
+ *                          pn_extra: PN_ENDCOMMA if extra comma at end
  * TOK_RC       list        pn_head: list of pn_count TOK_COLON nodes where
  *                          each has pn_left: property id, pn_right: value
  *                          #n={...} produces TOK_DEFSHARP at head of list
@@ -258,8 +260,12 @@ struct JSParseNode {
 #define pn_dval         pn_u.dval
 
 /* PN_LIST pn_extra flags. */
-#define PNX_STRCAT      0x1             /* TOK_PLUS list has string term */
-#define PNX_CANTFOLD    0x2             /* TOK_PLUS list has unfoldable term */
+#define PNX_STRCAT      0x01            /* TOK_PLUS list has string term */
+#define PNX_CANTFOLD    0x02            /* TOK_PLUS list has unfoldable term */
+#define PNX_POPVAR      0x04            /* TOK_VAR last result needs popping */
+#define PNX_FORINVAR    0x08            /* TOK_VAR is left kid of TOK_IN node,
+                                           which is left kid of TOK_FOR */
+#define PNX_ENDCOMMA    0x10            /* array literal has comma at end */
 
 /*
  * Move pn2 into pn, preserving pn->pn_pos and pn->pn_offset and handing off
