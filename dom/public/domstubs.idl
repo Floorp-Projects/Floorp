@@ -78,5 +78,24 @@ interface nsIDOMSelectionListener : nsISupports {};
 
 
 %{C++
+#else
+    // Instead, simply forward declare all the classes "defined"
+    // herein.  These declarations satisfy the references to
+    // these classes contained in xpidl-generated .h files that
+    // come from .idl files that #include this one.
+    class nsIDOMNode;
+    class nsIDOMElement;
+    class nsIDOMDocument;
+    class nsIDOMNodeList;
+    class nsIDOMNavigator;
+    class nsIDOMScreen;
+    class nsIDOMHistory;
+    class nsIDOMBarProp;
+    class nsIDOMWindowCollection;
+    class nsIDOMWindow;
+    class nsIDOMDocumentFragment;
+    class nsIDOMRange;
+    class nsIDOMSelection;
+    class nsIDOMSelectionListener;
 #endif
 %}
