@@ -53,6 +53,9 @@
 #include "nsIContent.h"
 #include "prlog.h"
 
+#ifdef XP_PC
+#include <windows.h>
+#endif
 
 //XXX used for nsIStreamObserver implementation.  This sould be replaced by DocLoader
 //    notifications...
