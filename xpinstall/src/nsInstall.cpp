@@ -1147,8 +1147,8 @@ PRInt32
 nsInstall::ExtractFileFromJar(const nsString& aJarfile, nsFileSpec* aSuggestedName, nsFileSpec** aRealName)
 {
     PRInt32 result;
-    const char* extractFileHere;
-   
+    nsFilePath*  extractFileHere = nsnull;
+    
     nsSpecialSystemDirectory tempFile(nsSpecialSystemDirectory::OS_TemporaryDirectory);
         
     if (aSuggestedName == nsnull || aSuggestedName->Exists() )
@@ -1170,28 +1170,29 @@ nsInstall::ExtractFileFromJar(const nsString& aJarfile, nsFileSpec* aSuggestedNa
          
         // Create a temporary file to extract to.
         tempFile.MakeUnique();
-       
-        extractFileHere = tempFile.operator const char* ();
+   
+        extractFileHere = new nsFilePath(tempFile);
     }
     else
     {
         // extract to the final destination.
-        extractFileHere =  aSuggestedName->operator const char* ();
+    	extractFileHere = new nsFilePath(*aSuggestedName);
     }
 
     // Return the filepath that we extracted to:
 
-    nsFileSpec *fileSpec = new nsFileSpec(extractFileHere);
+    nsFileSpec *fileSpec = new nsFileSpec(*extractFileHere);
 
     // FIX:  We will overwrite what is in the way.  is this something that we want to do?  
     fileSpec->Delete(PR_FALSE);
 
-    result  = ZIP_ExtractFile( mJarFileData, nsAutoCString(aJarfile), extractFileHere );
+    result  = ZIP_ExtractFile( mJarFileData, nsAutoCString(aJarfile), (*extractFileHere) );
     
     if (result == 0)
         *aRealName = fileSpec;
-
-    //delete [] extractFileHere;
+	
+	if (extractFileHere != nsnull)
+    	delete extractFileHere;
 
     return result;
 }

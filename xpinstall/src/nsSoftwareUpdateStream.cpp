@@ -61,12 +61,7 @@ DownloadJar(const nsString& aUrlString, const nsString& aSaveLocationString)
 
     result = NS_OpenURL(pURL, aListener);
 
-    /* If the open failed... */
-    if (NS_OK != result) 
-    {
-        return result;
-    }
-
+    return result;
 }
 
 
@@ -153,7 +148,7 @@ nsSoftwareUpdateListener::OnDataAvailable(nsIURL* aURL, nsIInputStream *pIStream
     
     do 
     {
-        err = pIStream->Read(buffer, 0, BUF_SIZE, &len);
+        err = pIStream->Read(buffer, BUF_SIZE, &len);
         
         if (err == NS_OK) 
         {

@@ -24,6 +24,8 @@
 #include "nsString.h"
 #include "nsInstallErrorMessages.h"
 
+#error  
+/// Need to rewrite!
 
 
 char * 

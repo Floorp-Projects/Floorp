@@ -1,7 +1,12 @@
 #include "nsSoftwareUpdate.h"
 #include "nsSoftwareUpdateRun.h"
 
+#ifndef XP_MAC
 #include <sys/stat.h>
+#else
+#include <stat.h>
+#endif 
+
 #include "nspr.h"
 
 #include "nsRepository.h"
@@ -101,7 +106,7 @@ extern "C" NS_EXPORT PRInt32 Install(char* jarFile, char* args)
     installJSFileSpec += "install.js";
     installJSFileSpec.MakeUnique();
 
-    const char* installJSFile = installJSFileSpec.operator const char* ();
+    const char* installJSFile = nsFilePath(installJSFileSpec);
 
     // Extract the install.js file.
     result  = ZIP_ExtractFile( hZip, "install.js", installJSFile );

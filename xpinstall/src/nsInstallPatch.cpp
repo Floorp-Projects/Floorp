@@ -202,7 +202,7 @@ PRInt32 nsInstallPatch::Complete()
     
     mInstall->GetPatch(&ikey, fileName);
     
-    if (fileName != nsnull && fileName->Equals(*mPatchedFile) )
+    if (fileName != nsnull && (*fileName == *mPatchedFile) )
     {
         // the patch has not been superceded--do final replacement
         err = NativeReplace( *mTargetFile, *mPatchedFile );
@@ -244,7 +244,7 @@ void nsInstallPatch::Abort()
 
     mInstall->GetPatch(&ikey, fileName);
 
-    if (fileName != nsnull && fileName->Equals(*mPatchedFile) )
+    if (fileName != nsnull && (*fileName == *mPatchedFile) )
     {
         NativeDeleteFile( mPatchedFile );
     }
@@ -329,11 +329,13 @@ void*
 nsInstallPatch::HashFilePath(const nsFilePath& aPath)
 {
     PRUint32 rv = 0;
-    if(aPath) 
+    const char* cPath = aPath;
+    
+    if(cPath != nsnull) 
     {
         char  ch;
         char* filePath = nsnull;
-        strcpy(filePath, aPath);
+        strcpy(filePath, cPath);
 
         while ((ch = *filePath++) != 0) 
         {

@@ -95,8 +95,12 @@ nsInstallFolder::~nsInstallFolder()
 void 
 nsInstallFolder::GetDirectoryPath(nsString& aDirectoryPath)
 {
+	// We want the a NATIVE path.
+	
     aDirectoryPath.SetLength(0);
-    aDirectoryPath.Append(*mUrlPath);
+    
+    // FIX NSFILESPEC - we need to have a GetDisplayString.
+    aDirectoryPath.Append(nsFilePath(*mUrlPath));
 }
 
 
