@@ -2355,15 +2355,10 @@ nsMsgDBView::ApplyCommandToIndices(nsMsgViewCommandTypeValue command, nsMsgViewI
     junkPlugin = do_QueryInterface(filterPlugin, &rv);
     NS_ENSURE_SUCCESS(rv, rv);
 
-    if (mNumMessagesRemainingInBatch == 0)
-    {
-      rv = junkPlugin->StartBatch();
-      NS_ENSURE_SUCCESS(rv, rv);
-    }
-    // note that if we aren't starting a batch w.r.t.
-    // the junk plugin we are actually coalescing the
-    // batch of messages this function was called for
-    // into the junk plugin's current batch
+    // note that if we aren't starting a batch we are
+    // actually coalescing the batch of messages this
+    // function was called for with the previous
+    // batch(es)
     mNumMessagesRemainingInBatch += numIndices;
   }
          
@@ -2808,40 +2803,6 @@ nsMsgDBView::OnMessageClassified(const char *aMsgURI,
   
   if (--mNumMessagesRemainingInBatch == 0)
   {
-    nsCOMPtr<nsIMsgFolder> folder;
-    // since we assume everything's in the same folder, this:
-    //nsresult rv = GetFolderForViewIndex(mJunkIndices[0], getter_AddRefs(folder));
-    // is no better than this (which works even for no junkIndices):
-    nsresult rv = GetFolderFromMsgURI(aMsgURI, getter_AddRefs(folder));
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    // it seems EndBatch must be called here, rather
-    // than after the last message has been dispatched for
-    // classification. One would think when the UI tells the
-    // classifier "I am done with sending you this batch of 
-    // messages" the classifer should say "ok, now as soon
-    // as I finish classification I should flush my data file"
-    // ... but that's not the way it works. If that were
-    // to change you could move the EndBatch() call to 
-    // ApplyCommandToIndices and avoid the redundant 
-    // lines of code which get the pointer to the junk plugin
-    // object.
-
-    nsCOMPtr<nsIMsgIncomingServer> server;
-    rv = folder->GetServer(getter_AddRefs(server));
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    nsCOMPtr<nsIMsgFilterPlugin> filterPlugin;
-    rv = server->GetSpamFilterPlugin(getter_AddRefs(filterPlugin));
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    nsCOMPtr<nsIJunkMailPlugin> junkPlugin;
-    junkPlugin = do_QueryInterface(filterPlugin, &rv);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    rv = junkPlugin->EndBatch();
-    NS_ENSURE_SUCCESS(rv, rv);
-    
     if ( mNumJunkIndices > 0 )
     {
       PerformActionsOnJunkMsgs();
@@ -2849,7 +2810,6 @@ nsMsgDBView::OnMessageClassified(const char *aMsgURI,
       mJunkIndices = nsnull;
       mNumJunkIndices = 0;
     }
-    
   }
   return NS_OK;
 }
@@ -2888,11 +2848,12 @@ nsMsgDBView::PerformActionsOnJunkMsgs()
   {
     // notes on marking junk as read:
     // 1. there are 2 occasions on which junk messages are marked as 
-    //    read: here (after a manual marking) as well as after automatic
-    //    marking by the bayesian filter (see code for local mail folders
-    //    and for imap mail folders); it is perhaps worth considering
-    //    making these two separate options... but for now they are
-    //    controlled by a single preference
+    //    read: here (after a manual marking) and after automatic
+    //    classification by the bayesian filter (see code for local
+    //    mail folders and for imap mail folders); it is perhaps
+    //    worth considering having a different 'mark as read'
+    //    preference for these 2 operations... for now, there's
+    //    but a single pref for both
     // 2. even though move/delete on manual mark may be
     //    turned off, we might still need to mark as read
 

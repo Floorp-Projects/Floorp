@@ -64,14 +64,6 @@ interface nsIMsgFilterPlugin : nsISupports
      */     
     readonly attribute boolean shouldDownloadAllHeaders;
 
-    /**
-     * When a large number of messages are going to be trained or filtered,
-     * it's typically not worth it to write everything to disk after
-     * each message.  The calling code will call startBatch() before
-     * starting a set messages, and then endBatch() once it has finished.
-     */
-    void startBatch();
-    void endBatch();
 };
 
 /**

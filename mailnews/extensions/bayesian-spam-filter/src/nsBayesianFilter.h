@@ -43,12 +43,16 @@
 #include "nsIMsgFilterPlugin.h"
 #include "nsISemanticUnitScanner.h"
 #include "pldhash.h"
+#include "nsITimer.h"
 
 // XXX can't simply byte align arenas, must at least 2-byte align.
 #define PL_ARENA_CONST_ALIGN_MASK 1
 #include "plarena.h"
 
-class Token;
+#define DEFAULT_MIN_INTERVAL_BETWEEN_WRITES             15*60*1000
+#define DEFAULT_WRITE_TRAINING_DATA_MESSAGES_THRESHOLD  50
+
+struct Token;
 class TokenEnumeration;
 class TokenAnalyzer;
 class nsIMsgWindow;
@@ -150,11 +154,17 @@ public:
     void readTrainingData();
     
 protected:
+
+    static void TimerCallback(nsITimer* aTimer, void* aClosure);
+
     Tokenizer mGoodTokens, mBadTokens;
     double   mJunkProbabilityThreshold;
     PRUint32 mGoodCount, mBadCount;
-    PRUint32 mBatchLevel;  // allow for nested batches to happen
-    PRPackedBool mTrainingDataDirty;
+    PRInt32 mDirtyingMessageWriteThreshold; // ... before flushing training data
+    PRInt32 mNumDirtyingMessages; // must be positive
+    PRInt32 mMinFlushInterval; // in miliseconds, must be positive
+                               //and not too close to 0
+    nsCOMPtr<nsITimer> mTimer;
 };
 
 #endif // _nsBayesianFilter_h__

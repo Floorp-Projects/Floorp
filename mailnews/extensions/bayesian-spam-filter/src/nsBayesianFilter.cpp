@@ -791,7 +791,7 @@ NS_IMPL_ISUPPORTS2(nsBayesianFilter, nsIMsgFilterPlugin, nsIJunkMailPlugin)
 
 nsBayesianFilter::nsBayesianFilter()
     :   mGoodCount(0), mBadCount(0),
-        mBatchLevel(0), mTrainingDataDirty(PR_FALSE)
+        mNumDirtyingMessages(0)
 {
     if (!BayesianFilterLogModule)
       BayesianFilterLogModule = PR_NewLogModule("BayesianFilter");
@@ -815,13 +815,56 @@ nsBayesianFilter::nsBayesianFilter()
     else {
       PR_LOG(BayesianFilterLogModule, PR_LOG_ALWAYS, ("error allocating tokenizers"));
     }
+    
+    // get parameters for training data flushing, from the prefs
+
+    nsCOMPtr<nsIPrefBranch> prefBranch;
+    
+    nsCOMPtr<nsIPrefService> prefs = do_GetService(NS_PREFSERVICE_CONTRACTID, &rv);
+    NS_ASSERTION(NS_SUCCEEDED(rv),"failed accessing preferences service");
+    rv = prefs->GetBranch(nsnull, getter_AddRefs(prefBranch));
+    NS_ASSERTION(NS_SUCCEEDED(rv),"failed getting preferences branch");
+
+    rv = prefBranch->GetIntPref("mailnews.bayesian_spam_filter.flush.diryting_messages_threshold",&mDirtyingMessageWriteThreshold);
+    if (NS_FAILED(rv) || (mDirtyingMessageWriteThreshold <= 0) )
+        mDirtyingMessageWriteThreshold = DEFAULT_WRITE_TRAINING_DATA_MESSAGES_THRESHOLD;
+    rv = prefBranch->GetIntPref("mailnews.bayesian_spam_filter.flush.minimum_interval",&mMinFlushInterval);
+    // it is not a good idea to allow a minimum interval of under 1 second
+    if (NS_FAILED(rv) || (mMinFlushInterval <= 1000) )
+        mMinFlushInterval = DEFAULT_MIN_INTERVAL_BETWEEN_WRITES;
+
+    mTimer = do_CreateInstance(NS_TIMER_CONTRACTID, &rv);
+    NS_ASSERTION(NS_SUCCEEDED(rv), "unable to create a timer; training data will only be written on exit");
+    
+    // the timer is not used on object construction, since for
+    // the time being there are no dirying messages
+    
 }
 
-nsBayesianFilter::~nsBayesianFilter() 
+void
+nsBayesianFilter::TimerCallback(nsITimer* aTimer, void* aClosure)
 {
-  // call shutdown when we are going away in case we need
-  // to flush the training set to disk
-  Shutdown();
+    // we will flush the training data to disk if it is dirty with
+    // enough messages, and if enough time has passed since the first
+    // time a message has been classified after the last flush
+
+    nsBayesianFilter *filter = NS_STATIC_CAST(nsBayesianFilter *, aClosure);
+    if (filter->mNumDirtyingMessages > filter->mDirtyingMessageWriteThreshold)
+        filter->writeTrainingData();
+    else 
+        filter->mTimer->InitWithFuncCallback(nsBayesianFilter::TimerCallback, filter, filter->mMinFlushInterval, nsITimer::TYPE_ONE_SHOT);
+}
+
+nsBayesianFilter::~nsBayesianFilter()
+{
+    if (mTimer)
+    {
+        mTimer->Cancel();
+        mTimer = nsnull;
+    }
+    // call shutdown when we are going away in case we need
+    // to flush the training set to disk
+    Shutdown();
 }
 
 // this object is used for one call to classifyMessage or classifyMessages(). 
@@ -1049,7 +1092,7 @@ void nsBayesianFilter::classifyMessage(Tokenizer& tokenizer, const char* message
 /* void shutdown (); */
 NS_IMETHODIMP nsBayesianFilter::Shutdown()
 {
-    if (mTrainingDataDirty)
+    if (mNumDirtyingMessages > 0)
         writeTrainingData();
     return NS_OK;
 }
@@ -1059,26 +1102,6 @@ NS_IMETHODIMP nsBayesianFilter::GetShouldDownloadAllHeaders(PRBool *aShouldDownl
 {
     // bayesian filters work on the whole msg body currently.
     *aShouldDownloadAllHeaders = PR_FALSE;
-    return NS_OK;
-}
-
-NS_IMETHODIMP nsBayesianFilter::StartBatch(void)
-{
-  PR_LOG(BayesianFilterLogModule, PR_LOG_ALWAYS, ("StartBatch() entered with mBatchLevel=%d", mBatchLevel));
-  ++mBatchLevel;
-  return NS_OK;
-}
-
-NS_IMETHODIMP nsBayesianFilter::EndBatch(void)
-{
-    PR_LOG(BayesianFilterLogModule, PR_LOG_ALWAYS, ("EndBatch() entered with mBatchLevel=%d", mBatchLevel));
-    NS_ASSERTION(mBatchLevel > 0, "nsBayesianFilter::EndBatch() called with"
-                 " mBatchLevel <= 0");
-    --mBatchLevel;
-    
-    if (!mBatchLevel && mTrainingDataDirty)
-        writeTrainingData();
-    
     return NS_OK;
 }
 
@@ -1155,6 +1178,7 @@ void nsBayesianFilter::observeMessage(Tokenizer& tokenizer, const char* messageU
                                       nsMsgJunkStatus oldClassification, nsMsgJunkStatus newClassification,
                                       nsIJunkMailClassificationListener* listener)
 {
+    PRUint32 oldNumDirtyingMessages = mNumDirtyingMessages;
     PR_LOG(BayesianFilterLogModule, PR_LOG_ALWAYS, ("observeMessage(%s) old=%d new=%d", messageURL, oldClassification, newClassification));
     TokenEnumeration tokens = tokenizer.getTokens();
 
@@ -1173,7 +1197,7 @@ void nsBayesianFilter::observeMessage(Tokenizer& tokenizer, const char* messageU
         if (mBadCount > 0) {
             --mBadCount;
             forgetTokens(mBadTokens, tokens);
-            mTrainingDataDirty = PR_TRUE;
+            mNumDirtyingMessages++;
         }
         break;
     case nsIJunkMailPlugin::GOOD:
@@ -1181,7 +1205,7 @@ void nsBayesianFilter::observeMessage(Tokenizer& tokenizer, const char* messageU
         if (mGoodCount > 0) {
             --mGoodCount;
             forgetTokens(mGoodTokens, tokens);
-            mTrainingDataDirty = PR_TRUE;
+            mNumDirtyingMessages++;
         }
         break;
     }
@@ -1193,21 +1217,25 @@ void nsBayesianFilter::observeMessage(Tokenizer& tokenizer, const char* messageU
         // put tokens into junk corpus.
         ++mBadCount;
         rememberTokens(mBadTokens, tokens);
-        mTrainingDataDirty = PR_TRUE;
+        mNumDirtyingMessages++;
         break;
     case nsIJunkMailPlugin::GOOD:
         // put tokens into good corpus.
         ++mGoodCount;
         rememberTokens(mGoodTokens, tokens);
-        mTrainingDataDirty = PR_TRUE;
+        mNumDirtyingMessages++;
         break;
     }
     
     if (listener)
         listener->OnMessageClassified(messageURL, newClassification);
-
-    if (mTrainingDataDirty && !mBatchLevel)
-        writeTrainingData();
+    
+    if ( (mNumDirtyingMessages > 0) && (oldNumDirtyingMessages == 0) && ( mTimer != nsnull ) )
+    {
+    	// schedule check for need to flush training data in
+    	// mMinFlushInterval msec from now
+        mTimer->InitWithFuncCallback(nsBayesianFilter::TimerCallback, this, mMinFlushInterval, nsITimer::TYPE_ONE_SHOT);
+    }
 }
 
 static nsresult getTrainingFile(nsCOMPtr<nsILocalFile>& file)
@@ -1320,7 +1348,7 @@ void nsBayesianFilter::writeTrainingData()
     nsresult rv = getTrainingFile(file);
     if (NS_FAILED(rv)) return;
  
-    // open the file, and write out training data using fprintf for now.
+    // open the file, and write out training data
     FILE* stream;
     rv = file->OpenANSIFileDesc("wb", &stream);
     if (NS_FAILED(rv)) return;
@@ -1336,7 +1364,7 @@ void nsBayesianFilter::writeTrainingData()
         file->Remove(PR_FALSE);
     } else {
         fclose(stream);
-        mTrainingDataDirty = PR_FALSE;
+        mNumDirtyingMessages = 0;
     }
 }
 
@@ -1350,7 +1378,6 @@ void nsBayesianFilter::readTrainingData()
     rv = file->Exists(&exists);
     if (NS_FAILED(rv) || !exists) return;
 
-    // open the file, and write out training data using fprintf for now.
     FILE* stream;
     rv = file->OpenANSIFileDesc("rb", &stream);
     if (NS_FAILED(rv)) return;
