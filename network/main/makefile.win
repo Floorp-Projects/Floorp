@@ -39,7 +39,9 @@ LLIBS=  \
 	$(NULL)
 MISCDEP=$(LLIBS)
 OBJS=   \
+!ifdef MOZ_MAIL_NEWS
 	.\$(OBJDIR)\mkabook.obj		\
+!endif
 	.\$(OBJDIR)\jsautocf.obj	\
 	.\$(OBJDIR)\jscookie.obj	\
 	.\$(OBJDIR)\mkautocf.obj	\
