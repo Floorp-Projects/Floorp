@@ -1450,12 +1450,6 @@ nsFontXPNormal::GetBoundingMetrics (const PRUnichar*   aString,
     aBoundingMetrics.width        =  overall.width;
     aBoundingMetrics.ascent       =  overall.ascent;
     aBoundingMetrics.descent      =  overall.descent;
-
-    unsigned long pr = 0;
-    if (::XGetFontProperty(font_struct, XA_ITALIC_ANGLE, &pr)) {
-      aBoundingMetrics.subItalicCorrection = (int) pr; 
-      aBoundingMetrics.supItalicCorrection = (int) pr;
-    }
   }
 
   return NS_OK;
