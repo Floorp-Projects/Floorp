@@ -48,6 +48,21 @@ class nsTextToSubURI: public nsITextToSubURI {
 public:
   nsTextToSubURI();
   virtual ~nsTextToSubURI();
+
+private:
+  // IRI is "Internationalized Resource Identifiers"
+  // http://www.ietf.org/internet-drafts/draft-duerst-iri-01.txt
+  // 
+  // if the IRI option is true then we assume that the URI is encoded as UTF-8
+  // note: there is no definite way to distinguish between IRI and a URI encoded 
+  // with a non-UTF-8 charset
+  // Use this option carefully -- it may cause dataloss
+  // (recommended to set to true for UI purpose only)
+  //
+  nsresult convertURItoUnicode(const nsAFlatCString &aCharset,
+                               const nsAFlatCString &aURI, 
+                               PRBool aIRI, 
+                               nsAString &_retval);
 };
 
 #endif // nsTextToSubURI_h__

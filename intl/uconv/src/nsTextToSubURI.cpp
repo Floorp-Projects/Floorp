@@ -39,6 +39,8 @@
 #include "nsString.h"
 #include "nsIUnicodeEncoder.h"
 #include "nsICharsetConverterManager.h"
+#include "nsICharsetConverterManager2.h"
+#include "nsReadableUtils.h"
 #include "nsITextToSubURI.h"
 #include "nsIServiceManager.h"
 #include "nsUConvDll.h"
@@ -155,6 +157,68 @@ NS_IMETHODIMP  nsTextToSubURI::UnEscapeAndConvert(
   PR_FREEIF(unescaped);
 
   return rv;
+}
+
+nsresult nsTextToSubURI::convertURItoUnicode(const nsAFlatCString &aCharset,
+                                             const nsAFlatCString &aURI, 
+                                             PRBool aIRI, 
+                                             nsAString &_retval)
+{
+  nsresult rv = NS_OK;
+
+  if (IsASCII(aURI)) {
+    _retval.Assign(NS_ConvertASCIItoUCS2(aURI));
+    return rv;
+  }
+
+  if (aIRI) {
+    NS_ConvertUTF8toUCS2 ucs2(aURI);
+    if (aURI.Equals(NS_ConvertUCS2toUTF8(ucs2))) {
+      _retval.Assign(ucs2);
+      return rv;
+    }
+  }
+
+  nsCOMPtr<nsICharsetConverterManager2> charsetConverterManager;
+
+  charsetConverterManager = do_GetService(NS_CHARSETCONVERTERMANAGER_CONTRACTID, &rv);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsCOMPtr<nsIAtom> charsetAtom;
+  rv = charsetConverterManager->GetCharsetAtom2(aCharset.get(), getter_AddRefs(charsetAtom));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsCOMPtr<nsIUnicodeDecoder> unicodeDecoder;
+  rv = charsetConverterManager->GetUnicodeDecoder(charsetAtom, 
+                                                  getter_AddRefs(unicodeDecoder));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  PRInt32 srcLen = aURI.Length();
+  PRInt32 dstLen;
+  rv = unicodeDecoder->GetMaxLength(aURI.get(), srcLen, &dstLen);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  PRUnichar *ustr = (PRUnichar *) nsMemory::Alloc(dstLen * sizeof(PRUnichar));
+  NS_ENSURE_TRUE(ustr, NS_ERROR_OUT_OF_MEMORY);
+
+  rv = unicodeDecoder->Convert(aURI.get(), &srcLen, ustr, &dstLen);
+
+  if (NS_SUCCEEDED(rv))
+    _retval.Assign(ustr, dstLen);
+  
+  nsMemory::Free(ustr);
+
+  return rv;
+}
+
+NS_IMETHODIMP  nsTextToSubURI::UnEscapeURIForUI(const nsACString & aCharset, 
+                                                const nsACString &aURIFragment, 
+                                                nsAString &_retval)
+{
+  nsCAutoString unescapedSpec(aURIFragment);
+  NS_UnescapeURL(unescapedSpec);
+
+  return convertURItoUnicode(PromiseFlatCString(aCharset), unescapedSpec, PR_TRUE, _retval);
 }
 
 //----------------------------------------------------------------------

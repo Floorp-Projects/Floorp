@@ -80,6 +80,8 @@
 #include "nsIPromptService.h"
 #include "nsIDOMWindow.h"
 
+#include "nsITextToSubURI.h"
+
 const char *FORCE_ALWAYS_ASK_PREF = "browser.helperApps.alwaysAsk.force";
 
 static NS_DEFINE_CID(kRDFServiceCID, NS_RDFSERVICE_CID);
@@ -1046,8 +1048,21 @@ nsresult nsExternalAppHandler::SetUpTempFile(nsIChannel * aChannel)
     url->GetFileName(leafName);
     if (!leafName.IsEmpty())
     {
-      NS_UnescapeURL(leafName);
-      mSuggestedFileName = NS_ConvertUTF8toUCS2(leafName); // XXX leafName may not be UTF-8
+
+      nsCOMPtr<nsITextToSubURI> textToSubURI = do_GetService(NS_ITEXTTOSUBURI_CONTRACTID, &rv);
+      if (NS_SUCCEEDED(rv))
+      {
+        nsCAutoString originCharset;
+        url->GetOriginCharset(originCharset);
+        rv = textToSubURI->UnEscapeURIForUI(originCharset, leafName, 
+                                            mSuggestedFileName);
+      }
+
+      if (NS_FAILED(rv))
+      {
+        mSuggestedFileName = NS_ConvertUTF8toUCS2(leafName); // use escaped name
+        rv = NS_OK;
+      }
 
 #ifdef XP_WIN
       // Make sure extension is still correct.
