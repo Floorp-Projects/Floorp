@@ -454,17 +454,17 @@ NS_IMETHODIMP nsHTMLEditor::EditorKeyPress(nsIDOMUIEvent* aKeyEvent)
     // this royally blows: because tabs come in from keyDowns instead
     // of keyPress, and because GetCharCode refuses to work for keyDown
     // i have to play games.
-    if (keyCode == nsIDOMUIEvent::VK_TAB) character = '\t';
+    if (keyCode == nsIDOMUIEvent::DOM_VK_TAB) character = '\t';
     else aKeyEvent->GetCharCode(&character);
     
-    if (keyCode == nsIDOMUIEvent::VK_TAB && !(mFlags&eEditorPlaintextBit))
+    if (keyCode == nsIDOMUIEvent::DOM_VK_TAB && !(mFlags&eEditorPlaintextBit))
     {
       PRBool bHandled = PR_FALSE;
       res = TabInTable(isShift, &bHandled);
       if (NS_FAILED(res)) return res;
       if (bHandled) return res;
     }
-    else if (keyCode == nsIDOMUIEvent::VK_RETURN)
+    else if (keyCode == nsIDOMUIEvent::DOM_VK_RETURN)
     {
       if (isShift && !(mFlags&eEditorPlaintextBit))
         return InsertBR();  // only inserts a br node
