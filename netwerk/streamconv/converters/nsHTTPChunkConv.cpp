@@ -39,47 +39,47 @@ nsHTTPChunkConv::nsHTTPChunkConv()
 {
     NS_INIT_ISUPPORTS ();
     mListener    = nsnull;
-	mChunkBuffer = NULL;
-	mState = CHUNK_STATE_INIT;
+    mChunkBuffer = NULL;
+    mState = CHUNK_STATE_INIT;
 }
 
 nsHTTPChunkConv::~nsHTTPChunkConv ()
 {
     NS_IF_RELEASE(mListener);
 
-	if (mChunkBuffer != NULL)
-		nsAllocator::Free (mChunkBuffer);
+    if (mChunkBuffer != NULL)
+        nsAllocator::Free (mChunkBuffer);
 }
 
 NS_IMETHODIMP
 nsHTTPChunkConv::AsyncConvertData (
-							const PRUnichar *aFromType, 
-							const PRUnichar *aToType, 
-							nsIStreamListener *aListener, 
-							nsISupports *aCtxt)
+                            const PRUnichar *aFromType, 
+                            const PRUnichar *aToType, 
+                            nsIStreamListener *aListener, 
+                            nsISupports *aCtxt)
 {
-	nsString from (aFromType);
-	nsString to   ( aToType );
+    nsString from (aFromType);
+    nsString to   ( aToType );
 
-	char * fromStr = from.ToNewCString ();
-	char *   toStr =   to.ToNewCString ();
+    char * fromStr = from.ToNewCString ();
+    char *   toStr =   to.ToNewCString ();
 
-	if (!PL_strncasecmp (fromStr, HTTP_CHUNK_TYPE, strlen (HTTP_CHUNK_TYPE  ) )
-		&&
-		!PL_strncasecmp (toStr, HTTP_UNCHUNK_TYPE, strlen (HTTP_UNCHUNK_TYPE)))
-		mMode = DO_UNCHUNKING;
-	else
-		mMode = DO_CHUNKING;
+    if (!PL_strncasecmp (fromStr, HTTP_CHUNK_TYPE, strlen (HTTP_CHUNK_TYPE  ) )
+        &&
+        !PL_strncasecmp (toStr, HTTP_UNCHUNK_TYPE, strlen (HTTP_UNCHUNK_TYPE)))
+        mMode = DO_UNCHUNKING;
+    else
+        mMode = DO_CHUNKING;
 
-	nsAllocator::Free (fromStr);
-	nsAllocator::Free (  toStr);
+    nsAllocator::Free (fromStr);
+    nsAllocator::Free (  toStr);
 
     // hook ourself up with the receiving listener. 
     mListener = aListener;
     NS_ADDREF (mListener);
 
     mAsyncConvContext = (nsISupportsPRBool *) aCtxt;
-	
+    
     return NS_OK; 
 } 
 
@@ -97,105 +97,106 @@ nsHTTPChunkConv::OnStopRequest  (nsIChannel *aChannel, nsISupports *aContext, ns
 
 NS_IMETHODIMP
 nsHTTPChunkConv::OnDataAvailable ( 
-							  nsIChannel *aChannel, 
-							  nsISupports *aContext, 
-							  nsIInputStream *iStr, 
-							  PRUint32 aSourceOffset, 
-							  PRUint32 aCount)
+                              nsIChannel *aChannel, 
+                              nsISupports *aContext, 
+                              nsIInputStream *iStr, 
+                              PRUint32 aSourceOffset, 
+                              PRUint32 aCount)
 {
     nsresult rv = NS_ERROR_FAILURE;
-	PRUint32 rl;
-	PRUint32 streamLen;
-	char c;
+    PRUint32 rl;
+    PRUint32 streamLen;
+    char c = 0;
 
     rv = iStr -> Available (&streamLen);
     if (NS_FAILED (rv))
-		return rv;
+        return rv;
 
-	if (streamLen == 0)
-		return NS_OK;
+    if (streamLen == 0)
+        return NS_OK;
 
-	if (mMode == DO_CHUNKING)
-	{
-		mChunkBuffer = (char * )nsAllocator::Alloc (streamLen + 20);
-		mChunkBufferPos = sprintf (mChunkBuffer, "%x%c%c", streamLen, '\r', '\n');
+    if (mMode == DO_CHUNKING)
+    {
+        mChunkBuffer = (char * )nsAllocator::Alloc (streamLen + 20);
+        mChunkBufferPos = sprintf (mChunkBuffer, "%x%c%c", streamLen, '\r', '\n');
 
-		rv = iStr -> Read (&mChunkBuffer[mChunkBufferPos], streamLen, &rl);
-		if (NS_FAILED (rv))
-			return rv;
+        rv = iStr -> Read (&mChunkBuffer[mChunkBufferPos], streamLen, &rl);
+        if (NS_FAILED (rv))
+            return rv;
 
-		mChunkBufferPos += streamLen;
-		mChunkBuffer[mChunkBufferPos++] = '\r';
-		mChunkBuffer[mChunkBufferPos++] = '\n';
-		mChunkBuffer[mChunkBufferPos  ] = 0;
+        mChunkBufferPos += streamLen;
+        mChunkBuffer[mChunkBufferPos++] = '\r';
+        mChunkBuffer[mChunkBufferPos++] = '\n';
+        mChunkBuffer[mChunkBufferPos  ] = 0;
 
-		mChunkBufferLength = mChunkBufferPos;
+        mChunkBufferLength = mChunkBufferPos;
 
-	    nsIInputStream * convertedStream = nsnull; 
-		nsIByteArrayInputStream	* convertedStreamSup = nsnull;
+        nsIInputStream * convertedStream = nsnull; 
+        nsIByteArrayInputStream * convertedStreamSup = nsnull;
 
-		rv = NS_NewByteArrayInputStream (&convertedStreamSup, mChunkBuffer, mChunkBufferPos);
-		if (NS_FAILED (rv)) 
-			return rv;
+        rv = NS_NewByteArrayInputStream (&convertedStreamSup, mChunkBuffer, mChunkBufferPos);
+        if (NS_FAILED (rv)) 
+            return rv;
 
         mChunkBuffer = NULL;
         mChunkBufferPos = 0;
 
-		rv = convertedStreamSup -> QueryInterface (NS_GET_IID (nsIInputStream), (void**)&convertedStream);
-		NS_RELEASE (convertedStreamSup);
+        rv = convertedStreamSup -> QueryInterface (NS_GET_IID (nsIInputStream), (void**)&convertedStream);
+        NS_RELEASE (convertedStreamSup);
  
-		if (NS_FAILED (rv)) 
-			return rv;
+        if (NS_FAILED (rv)) 
+            return rv;
 
-		rv = mListener -> OnDataAvailable (aChannel, aContext, convertedStream, aSourceOffset, mChunkBufferLength);
-		
-		if (NS_FAILED (rv))
-			return rv;
-	}
-	else
-	{
-		// DO_UNCHUNKING
+        rv = mListener -> OnDataAvailable (aChannel, aContext, convertedStream, aSourceOffset, mChunkBufferLength);
+        
+        if (NS_FAILED (rv))
+            return rv;
+    }
+    else
+    {
+        // DO_UNCHUNKING
 
-		while (streamLen > 0 || mState == CHUNK_STATE_FINAL)
-		{
-			switch (mState)
-			{
-				case CHUNK_STATE_INIT:
-					
-					if (mChunkBuffer != NULL)
-					{
-						nsAllocator::Free (mChunkBuffer);
-						mChunkBuffer = NULL;
-					}
+        while (streamLen > 0 || mState == CHUNK_STATE_FINAL)
+        {
+            switch (mState)
+            {
+                case CHUNK_STATE_INIT:
+                    
+                    if (mChunkBuffer != NULL)
+                    {
+                        nsAllocator::Free (mChunkBuffer);
+                        mChunkBuffer = NULL;
+                    }
 
-					mChunkBufferPos = mChunkBufferLength = 0;
-					mLenBufCnt = 0;
+                    mChunkBufferPos = mChunkBufferLength = 0;
+                    mLenBufCnt = 0;
+                    c = 0;
 
-					mState = CHUNK_STATE_LENGTH;
-					break;
+                    mState = CHUNK_STATE_LENGTH;
+                    break;
 
-				case CHUNK_STATE_FINAL:
-					// send data upstream
+                case CHUNK_STATE_FINAL:
+                    // send data upstream
 
-					{
+                    {
                         if (mChunkBufferLength > 0)
                         {
-						    nsCOMPtr<nsIByteArrayInputStream> convertedStreamSup;
-						    rv = NS_NewByteArrayInputStream (getter_AddRefs(convertedStreamSup), mChunkBuffer, mChunkBufferLength);
-						    if (NS_FAILED (rv)) 
-							    return rv;
+                            nsCOMPtr<nsIByteArrayInputStream> convertedStreamSup;
+                            rv = NS_NewByteArrayInputStream (getter_AddRefs(convertedStreamSup), mChunkBuffer, mChunkBufferLength);
+                            if (NS_FAILED (rv)) 
+                                return rv;
 
                             mChunkBuffer = NULL;
 
-                		    nsCOMPtr<nsIInputStream> convertedStream = do_QueryInterface (convertedStreamSup, &rv);
+                            nsCOMPtr<nsIInputStream> convertedStream = do_QueryInterface (convertedStreamSup, &rv);
  
-						    if (NS_FAILED (rv))
-							    return rv;
+                            if (NS_FAILED (rv))
+                                return rv;
 
-						    rv = mListener -> OnDataAvailable (aChannel, aContext, convertedStream, aSourceOffset, mChunkBufferLength);
+                            rv = mListener -> OnDataAvailable (aChannel, aContext, convertedStream, aSourceOffset, mChunkBufferLength);
 
-						    if (NS_FAILED (rv))
-							    return rv;
+                            if (NS_FAILED (rv))
+                                return rv;
                         }
                         else
                         {
@@ -203,106 +204,121 @@ nsHTTPChunkConv::OnDataAvailable (
                                 mAsyncConvContext -> SetData (PR_TRUE);
                         }
 
-						mState = CHUNK_STATE_INIT;
-				    
-						if (mChunkBuffer != NULL)
-						{
-							nsAllocator::Free (mChunkBuffer);
-							mChunkBuffer = NULL;
-						}
-					}
+                        mState = CHUNK_STATE_INIT;
+                    
+                        if (mChunkBuffer != NULL)
+                        {
+                            nsAllocator::Free (mChunkBuffer);
+                            mChunkBuffer = NULL;
+                        }
+                    }
 
-					break;
+                    break;
 
-				case CHUNK_STATE_CR:
-				case CHUNK_STATE_CR_FINAL:
+                case CHUNK_STATE_CR:
+                case CHUNK_STATE_CR_FINAL:
 
-					rv = iStr -> Read (&c, 1, &rl);
-					if (NS_FAILED (rv))
-						return rv;
+                    rv = iStr -> Read (&c, 1, &rl);
+                    if (NS_FAILED (rv))
+                        return rv;
 
-					if (c != '\r')
-						return NS_ERROR_FAILURE;
-				
-					streamLen--;
-					mState = mState == CHUNK_STATE_CR ? CHUNK_STATE_LF : CHUNK_STATE_LF_FINAL;
-					break;
+                    if (c != '\r' && c != '\n') // be really relaxed here cuz of numerous spec violations
+                        return NS_ERROR_FAILURE;
+                
+                    streamLen--;
+                    mState = mState == CHUNK_STATE_CR ? CHUNK_STATE_LF : CHUNK_STATE_LF_FINAL;
+                    break;
 
-				case CHUNK_STATE_LF:
-				case CHUNK_STATE_LF_FINAL:
-					rv = iStr -> Read (&c, 1, &rl);
-					if (NS_FAILED (rv))
-						return rv;
+                case CHUNK_STATE_LF:
+                case CHUNK_STATE_LF_FINAL:
+                    
+                    if (c != '\n')
+                    {
+                        rv = iStr -> Read (&c, 1, &rl);
+                        if (NS_FAILED (rv))
+                            return rv;
+                    }
 
-					if (c != '\n')
-						return NS_ERROR_FAILURE;
+                    if (c != '\n')
+                        return NS_ERROR_FAILURE;
 
-					streamLen--;
-					if (mState == CHUNK_STATE_LF)
-					{
+                    streamLen--;
+                    if (mState == CHUNK_STATE_LF)
+                    {
                         if (mChunkBufferLength > 0)
                         {
-						    mChunkBuffer = (char * )nsAllocator::Alloc (mChunkBufferLength + 1);
-						    mState = CHUNK_STATE_DATA;
+                            mChunkBuffer = (char * )nsAllocator::Alloc (mChunkBufferLength + 1);
+                            mState = CHUNK_STATE_DATA;
                         }
                         else
-    						mState = CHUNK_STATE_CR_FINAL;
-					}
-					else
-						mState = CHUNK_STATE_FINAL;
-					break;
+                            mState = CHUNK_STATE_CR_FINAL;
+                    }
+                    else
+                        mState = CHUNK_STATE_FINAL;
+                    
+                    c = 0;
+                    break;
 
-				case CHUNK_STATE_LENGTH:
-				
-					if (mLenBufCnt >= sizeof (mLenBuf) - 1)
-						return NS_ERROR_FAILURE;
+                case CHUNK_STATE_LENGTH:
+                
+                    if (mLenBufCnt >= sizeof (mLenBuf) - 1)
+                        return NS_ERROR_FAILURE;
 
-					rv = iStr -> Read (&c, 1, &rl);
-					if (NS_FAILED (rv))
-						return rv;
+                    rv = iStr -> Read (&c, 1, &rl);
+                    if (NS_FAILED (rv))
+                        return rv;
 
-					streamLen--;
-				
-					if (isxdigit (c))
-						mLenBuf[mLenBufCnt++] = c;
-					else
-                    if (c == '\r')
-					{
-						mLenBuf[mLenBufCnt] = 0;
-						sscanf (mLenBuf, "%x", &mChunkBufferLength);
+                    streamLen--;
+                
+                    if (isxdigit (c))
+                    {
+                        mLenBuf[mLenBufCnt++] = c;
+                        c = 0;
+                    }
+                    else
+                    if (c == '\r' || c == '\n')
+                    {
+                        if (mLenBufCnt > 0)
+                        {
+                            // ruslan: have to add this due to a lot of spec violations
+                            //      similating what IE does here
 
-						mState = CHUNK_STATE_LF;
-					}
-					break;
-			
-				case CHUNK_STATE_DATA:
-					if (mChunkBufferLength - mChunkBufferPos <= streamLen)
-					{
-    				    // entire chunk
-					    rv = iStr -> Read (&mChunkBuffer[mChunkBufferPos], mChunkBufferLength - mChunkBufferPos, &rl);
-					    if (NS_FAILED (rv))
-						    return rv;
+                            mLenBuf[mLenBufCnt] = 0;
+                            sscanf (mLenBuf, "%x", &mChunkBufferLength);
 
-    					mChunkBufferPos += rl;
-       					mChunkBuffer[mChunkBufferPos++] = 0;
-	    				streamLen -= rl;
-						mState = CHUNK_STATE_CR_FINAL;
-					}
-					else
-					{
-						rv = iStr -> Read (&mChunkBuffer[mChunkBufferPos], streamLen, &rl);						
-						if (NS_FAILED (rv))
-							return rv;
+                            mState = CHUNK_STATE_LF;
+                        }
+                    }
+                    break;
+            
+                case CHUNK_STATE_DATA:
+                    if (mChunkBufferLength - mChunkBufferPos <= streamLen)
+                    {
+                        // entire chunk
+                        rv = iStr -> Read (&mChunkBuffer[mChunkBufferPos], mChunkBufferLength - mChunkBufferPos, &rl);
+                        if (NS_FAILED (rv))
+                            return rv;
 
-						mChunkBufferPos += rl;
-						streamLen -= rl;
-					}
-					break;
-			} /* switch */
-		} /* while */
-	} /* DO_UNCHUNKING */
+                        mChunkBufferPos += rl;
+                        mChunkBuffer[mChunkBufferPos++] = 0;
+                        streamLen -= rl;
+                        mState = CHUNK_STATE_CR_FINAL;
+                    }
+                    else
+                    {
+                        rv = iStr -> Read (&mChunkBuffer[mChunkBufferPos], streamLen, &rl);                     
+                        if (NS_FAILED (rv))
+                            return rv;
 
-	return NS_OK;
+                        mChunkBufferPos += rl;
+                        streamLen -= rl;
+                    }
+                    break;
+            } /* switch */
+        } /* while */
+    } /* DO_UNCHUNKING */
+
+    return NS_OK;
 } /* OnDataAvailable */
 
 
@@ -310,11 +326,11 @@ nsHTTPChunkConv::OnDataAvailable (
 
 NS_IMETHODIMP
 nsHTTPChunkConv::Convert (
-						  nsIInputStream *aFromStream, 
-						  const PRUnichar *aFromType, 
-						  const PRUnichar *aToType, 
-						  nsISupports *aCtxt, 
-						  nsIInputStream **_retval)
+                          nsIInputStream *aFromStream, 
+                          const PRUnichar *aFromType, 
+                          const PRUnichar *aToType, 
+                          nsISupports *aCtxt, 
+                          nsIInputStream **_retval)
 { 
     return NS_ERROR_NOT_IMPLEMENTED;
 } 
