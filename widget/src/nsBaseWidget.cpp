@@ -24,9 +24,10 @@
 #include "nsWidgetsCID.h"
 
 static NS_DEFINE_IID(kIWidgetIID, NS_IWIDGET_IID);
+static NS_DEFINE_IID(kIEnumeratorIID, NS_IENUMERATOR_IID);
 
-NS_IMPL_ISUPPORTS(nsBaseWidget, NS_IWIDGET_IID)
-NS_IMPL_ISUPPORTS(nsBaseWidget::Enumerator, NS_IENUMERATOR_IID)
+NS_IMPL_ISUPPORTS(nsBaseWidget, kIWidgetIID)
+NS_IMPL_ISUPPORTS(nsBaseWidget::Enumerator, kIEnumeratorIID)
 
 //-------------------------------------------------------------------------
 //
