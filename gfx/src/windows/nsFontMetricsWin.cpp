@@ -28,6 +28,13 @@ int nsFontMetricsWin::gGlobalFontsCount = 0;
 
 PLHashTable* nsFontMetricsWin::gFamilyNames = nsnull;
 
+//-- Font weight
+PLHashTable* nsFontMetricsWin::gFontWeights = nsnull;
+
+#define NS_MAX_FONT_WEIGHT 900
+#define NS_MIN_FONT_WEIGHT 100
+
+
 nsFontMetricsWin :: nsFontMetricsWin()
 {
   NS_INIT_REFCNT();
@@ -134,7 +141,7 @@ nsresult nsFontMetricsWin :: GetSpaceWidth(nscoord &aSpaceWidth)
 }
 
 void
-nsFontMetricsWin::FillLogFont(LOGFONT* logFont)
+nsFontMetricsWin::FillLogFont(LOGFONT* logFont, PRInt32 aWeight)
 {
   // Fill in logFont structure; stolen from awt
   logFont->lfWidth          = 0; 
@@ -151,7 +158,7 @@ nsFontMetricsWin::FillLogFont(LOGFONT* logFont)
   logFont->lfClipPrecision  = CLIP_DEFAULT_PRECIS;
   logFont->lfQuality        = DEFAULT_QUALITY;
   logFont->lfPitchAndFamily = DEFAULT_PITCH | FF_DONTCARE;
-  logFont->lfWeight = ((400 < mFont->weight) ? FW_BOLD : FW_NORMAL);  // XXX could be smarter
+  logFont->lfWeight = aWeight;
   logFont->lfItalic = (mFont->style & (NS_FONT_STYLE_ITALIC | NS_FONT_STYLE_OBLIQUE))
     ? TRUE : FALSE;   // XXX need better oblique support
   float app2dev, app2twip, scale;
@@ -544,8 +551,11 @@ nsFontWin*
 nsFontMetricsWin::LoadFont(HDC aDC, nsString* aName)
 {
   LOGFONT logFont;
-  FillLogFont(&logFont);
 
+  PRUint16 weightTable = LookForFontWeightTable(aDC, aName);
+  PRInt32 weight = GetFontWeight(mFont->weight, weightTable);
+  FillLogFont(&logFont, weight);
+ 
   /*
    * XXX we are losing info by converting from Unicode to system code page
    * but we don't really have a choice since CreateFontIndirectW is
@@ -727,6 +737,313 @@ nsFontMetricsWin::FindGlobalFont(HDC aDC, PRUnichar c)
 
   return nsnull;
 }
+
+//------------ Font weight utilities -------------------
+
+// XXX: Should not need to store all these in a hash table.
+// We need to restructure the font management code so there is one
+// global place to cache font info. As the code is right now, there
+// are two separate places that font info is stored, in the gFamilyNames
+// hash table and the global font array. There are also cases where the
+// font info is not cached at all. 
+// I initially tried to add the font weight info to those two places, but
+// it was messy. In addition I discovered another code path which does not
+// cache anything. 
+
+// Entry for storing hash table. Store as a single
+// entry rather than doing a separate allocation for the
+// fontName and weight.
+
+
+typedef struct nsFontWeightEntry
+{
+  nsString mFontName;
+  PRUint16 mWeightTable; // Each bit indicates the availability of a font weight.
+} nsFontWeightEntry;
+
+
+static PLHashNumber
+HashKeyFontWeight(const void* aFontWeightEntry)
+{
+  const nsString* string = &((const nsFontWeightEntry*) aFontWeightEntry)->mFontName;
+  return (PLHashNumber)
+    nsCRT::HashValue(string->GetUnicode());
+}
+
+static PRIntn
+CompareKeysFontWeight(const void* aFontWeightEntry1, const void* aFontWeightEntry2)
+{
+  const nsString* str1 = &((const nsFontWeightEntry*) aFontWeightEntry1)->mFontName;
+  const nsString* str2 = &((const nsFontWeightEntry*) aFontWeightEntry2)->mFontName;
+
+  return nsCRT::strcmp(str1->GetUnicode(), str2->GetUnicode()) == 0;
+}
+
+
+// Store the font weight as a bit in the aWeightTable
+void nsFontMetricsWin::SetFontWeight(PRInt32 aWeight, PRUint16* aWeightTable) {
+  NS_ASSERTION((aWeight >= 0) && (aWeight <= 9), "Invalid font weight passed");
+  *aWeightTable |= 1 << (aWeight - 1);
+}
+
+// Check to see if a font weight is available within the font weight table
+PRBool nsFontMetricsWin::IsFontWeightAvailable(PRInt32 aWeight, PRUint16 aWeightTable) {
+  PRInt32 normalizedWeight = aWeight / 100;
+  NS_ASSERTION((aWeight >= 100) && (aWeight <= 900), "Invalid font weight passed");
+  PRUint16 bitwiseWeight = 1 << (normalizedWeight - 1);
+  if (bitwiseWeight & aWeightTable) {
+    return PR_TRUE;
+  }
+  else {
+    return PR_FALSE;
+  }
+}
+
+static int CALLBACK nsFontWeightCallback(const LOGFONT* logFont, const TEXTMETRIC * metrics,
+  DWORD fontType, LPARAM closure)
+{
+  // printf("Name %s Log font sizes %d\n",logFont->lfFaceName,logFont->lfWeight);
+  if (!(fontType & TRUETYPE_FONTTYPE)) {
+ //     printf("rejecting %s\n", logFont->lfFaceName);
+    return TRUE;
+  }
+  
+  if (NULL != metrics) {
+    int pos = metrics->tmWeight / 100;
+      // Set a bit to indicate the font weight is available
+    nsFontMetricsWin::SetFontWeight(metrics->tmWeight / 100, (PRUint16*)closure);
+  }
+
+  return TRUE; // Keep looking for more weights.
+}
+
+PRUint16 
+nsFontMetricsWin::GetFontWeightTable(HDC aDC, nsString* aFontName) {
+
+    // Look for all of the weights for a given font.
+  LOGFONT logFont;
+  logFont.lfCharSet = DEFAULT_CHARSET;
+  aFontName->ToCString(logFont.lfFaceName, LF_FACESIZE);
+  logFont.lfPitchAndFamily = 0;
+
+  PRUint16 weights = 0;
+   ::EnumFontFamiliesEx(aDC, &logFont, nsFontWeightCallback, (LPARAM)&weights, 0);
+//   printf("font weights for %s dec %d hex %x \n", logFont.lfFaceName, weights, weights);
+   return weights;
+}
+
+
+// Calculate the closest font weight. This is necessary because we need to
+// control the mapping of logical font weight to available weight to handle both CSS2
+// default algorithm + the case where a font weight is choosen which is not available then made
+// bolder or lighter. (e.g. a font weight of 200 is choosen but not available
+// on the system so a weight of 400 is used instead when mapping to a physical font.
+// If the font is made bolder we need to know that a font weight of 400 was choosen, so
+// we can select a font weight which is greater. 
+PRInt32
+nsFontMetricsWin::GetClosestWeight(PRInt32 aWeight, PRUint16 aWeightTable)
+{
+  // Algorithm used From CSS2 section 15.5.1 Mapping font weight values to font names
+  PRInt32 newWeight = aWeight;
+   // Check for exact match
+  if ((aWeight > 0) && (nsFontMetricsWin::IsFontWeightAvailable(aWeight, aWeightTable))) {
+    return aWeight;
+  }
+
+    // Find lighter and darker weights to be used later.
+
+    // First look for lighter
+  PRInt32 lighterWeight = 0;
+  PRInt32 proposedLighterWeight = PR_MAX(0, aWeight - 100);
+
+  PRBool done = PR_FALSE;
+  while ((PR_FALSE == done) && (proposedLighterWeight >= 100)) {
+    if (nsFontMetricsWin::IsFontWeightAvailable(proposedLighterWeight, aWeightTable)) {
+      lighterWeight = proposedLighterWeight;
+      done = PR_TRUE;
+    } else {
+      proposedLighterWeight-= 100;
+    }
+  }
+
+     // Now look for darker
+  PRInt32 darkerWeight = 0;
+  done = PR_FALSE;
+  PRInt32 proposedDarkerWeight = PR_MIN(aWeight + 100, 900);
+  while ((PR_FALSE == done) && (proposedDarkerWeight <= 900)) {
+    if (nsFontMetricsWin::IsFontWeightAvailable(proposedDarkerWeight, aWeightTable)) {
+      darkerWeight = proposedDarkerWeight;
+      done = PR_TRUE;   
+    } else {
+      proposedDarkerWeight+= 100;
+    }
+  }
+
+  // From CSS2 section 15.5.1 
+
+  // If '500' is unassigned, it will be
+  // assigned the same font as '400'.
+  // If any of '300', '200', or '100' remains unassigned, it is
+  // assigned to the next lighter assigned keyword, if any, or 
+  // the next darker otherwise. 
+  // What about if the desired  weight is 500 and 400 is unassigned?.
+  // This is not inlcluded in the CSS spec so I'll treat it in a consistent
+  // manner with unassigned '300', '200' and '100'
+
+
+  if (aWeight <= 500) {
+    if (0 != lighterWeight) {
+      return lighterWeight;
+    }
+    else {
+      return darkerWeight;
+    }
+
+  } else {
+
+    // Automatically chose the bolder weight if the next lighter weight
+    // makes it normal. (i.e goes over the normal to bold threshold.)
+
+  // From CSS2 section 15.5.1 
+  // if any of the values '600', '700', '800', or '900' remains unassigned, 
+  // they are assigned to the same face as the next darker assigned keyword, 
+  // if any, or the next lighter one otherwise.
+
+    if (0 != darkerWeight) {
+      return darkerWeight;
+    } else {
+      return lighterWeight;
+    }
+  }
+
+  return aWeight;
+}
+
+
+
+PRInt32
+nsFontMetricsWin::GetBolderWeight(PRInt32 aWeight, PRInt32 aDistance, PRUint16 aWeightTable)
+{
+  PRInt32 newWeight = aWeight;
+ 
+  PRInt32 proposedWeight = aWeight + 100; // Start 1 bolder than the current
+  for (PRInt32 j = 0; j < aDistance; j++) {
+    PRBool aFoundAWeight = PR_FALSE;
+    while ((proposedWeight <= NS_MAX_FONT_WEIGHT) && (PR_FALSE == aFoundAWeight)) {
+      if (nsFontMetricsWin::IsFontWeightAvailable(proposedWeight, aWeightTable)) {
+         // 
+        newWeight = proposedWeight; 
+        aFoundAWeight = PR_TRUE;
+      }
+      proposedWeight+=100; 
+    }
+  }
+
+  return newWeight;
+}
+
+PRInt32
+nsFontMetricsWin::GetLighterWeight(PRInt32 aWeight, PRInt32 aDistance, PRUint16 aWeightTable)
+{
+  PRInt32 newWeight = aWeight;
+ 
+  PRInt32 proposedWeight = aWeight - 100; // Start 1 lighter than the current
+  for (PRInt32 j = 0; j < aDistance; j++) {
+    PRBool aFoundAWeight = PR_FALSE;
+    while ((proposedWeight >= NS_MIN_FONT_WEIGHT) && (PR_FALSE == aFoundAWeight)) {
+      if (nsFontMetricsWin::IsFontWeightAvailable(proposedWeight, aWeightTable)) {
+         // 
+        newWeight = proposedWeight; 
+        aFoundAWeight = PR_TRUE;
+      }
+      proposedWeight-=100; 
+    }
+  }
+
+  return newWeight;
+}
+
+
+PRInt32
+nsFontMetricsWin::GetFontWeight(PRInt32 aWeight, PRUint16 aWeightTable) {
+
+   // The remainder is used to determine whether to make
+   // the font lighter or bolder
+
+  PRInt32 remainder = aWeight % 100;
+  PRInt32 normalizedWeight = aWeight / 100;
+  PRInt32 selectedWeight = 0;
+
+    // No remainder, so get the closest weight
+  if (remainder == 0) {
+    selectedWeight = GetClosestWeight(aWeight, aWeightTable);
+  } else {
+
+    NS_ASSERTION((remainder < 10) || (remainder > 90), "Invalid bolder or lighter value");
+
+    if (remainder < 10) {
+      PRInt32 weight = GetClosestWeight(normalizedWeight * 100, aWeightTable);
+      selectedWeight = GetBolderWeight(weight, remainder, aWeightTable);
+    } else {
+       // Have to add back 1 for the lighter weight since aWeight really refers to the 
+       // whole number. eq. 398 really means 2 lighter than font weight 400.
+      PRInt32 weight = GetClosestWeight((normalizedWeight + 1) * 100, aWeightTable);
+      selectedWeight = GetLighterWeight(weight, 100-remainder, aWeightTable);
+    }
+  }
+
+//  printf("XXX Input weight %d output weight %d weight table hex %x\n", aWeight, selectedWeight, aWeightTable);
+  return selectedWeight;
+}
+
+
+PRUint16
+nsFontMetricsWin::LookForFontWeightTable(HDC aDC, nsString* aName)
+{
+  static int gInitializedFontWeights = 0;
+ 
+    // Initialize the font weight table if need be.
+  if (!gInitializedFontWeights) {
+    gInitializedFontWeights = 1;
+    gFontWeights = PL_NewHashTable(0, HashKeyFontWeight, CompareKeysFontWeight, nsnull, nsnull,
+      nsnull);
+    if (!gFontWeights) {
+      return 0;
+    }
+  }
+
+     // Use lower case name for hash table searches. This eliminates
+     // keeping multiple font weights entries when the font name varies 
+     // only by case.
+  nsAutoString low = *aName;
+  low.ToLowerCase();
+
+   // See if the font weight has already been computed.
+  nsFontWeightEntry searchEntry;
+  searchEntry.mFontName = low;
+  searchEntry.mWeightTable = 0;
+
+  nsFontWeightEntry* weightEntry = (nsFontWeightEntry*)PL_HashTableLookup(gFontWeights, &searchEntry);
+  if (nsnull != weightEntry) {
+ //   printf("Re-use weight entry\n");
+    return weightEntry->mWeightTable;
+  }
+
+   // Hasn't been computed, so need to compute and store it.
+  PRUint16 weightTable = GetFontWeightTable(aDC, aName);
+//  printf("Compute font weight %d\n",  weightTable);
+
+    // Store it in font weight HashTable.
+   nsFontWeightEntry* fontWeightEntry = new nsFontWeightEntry;
+   fontWeightEntry->mFontName = low;
+   fontWeightEntry->mWeightTable = weightTable;
+   PL_HashTableAdd(gFontWeights, fontWeightEntry, fontWeightEntry);
+     
+   return weightTable;
+}
+
+
+// ------------ End of font weight utilities
 
 typedef struct nsFontFamilyName
 {
@@ -1575,7 +1892,10 @@ nsFontWin*
 nsFontMetricsWinA::LoadFont(HDC aDC, nsString* aName)
 {
   LOGFONT logFont;
-  FillLogFont(&logFont);
+
+  PRUint16 weightTable = LookForFontWeightTable(aDC, aName);
+  PRInt32 weight = GetFontWeight(mFont->weight, weightTable);
+  FillLogFont(&logFont, weight);
 
   // XXX need to preserve Unicode chars in face name (use LOGFONTW) -- erik
   aName->ToCString(logFont.lfFaceName, LF_FACESIZE);

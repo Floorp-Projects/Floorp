@@ -102,8 +102,34 @@ public:
   static nsGlobalFont* gGlobalFonts;
   static int gGlobalFontsCount;
 
+  static void SetFontWeight(PRInt32 aWeight, PRUint16* aWeightTable);
+  static PRBool IsFontWeightAvailable(PRInt32 aWeight, PRUint16 aWeightTable);
+
 protected:
-  void FillLogFont(LOGFONT* aLogFont);
+  // @description Font Weights
+    // Each available font weight is stored as as single bit inside a PRUint16.
+    // e.g. The binary value 0000000000001000 indcates font weight 400 is available.
+    // while the binary value 0000000000001001 indicates both font weight 100 and 400 are available
+    // The font weights which will be represented include {100, 200, 300, 400, 500, 600, 700, 800, 900}
+    // The font weight specified in the mFont->weight may include values which are not an even multiple of 100.
+    // If so, the font weight mod 100 indicates the number steps to lighten are make bolder.
+    // This corresponds to the CSS lighter and bolder property values. If bolder is applied twice to the font which has
+    // a font weight of 400 then the mFont->weight will contain the value 402.
+    // If lighter is applied twice to a font of weight 400 then the mFont->weight will contain the value 398.
+    // Only nine steps of bolder or lighter are allowed by the CSS XPCODE.
+    // The font weight table is used in conjuction with the mFont->weight to determine
+    // what font weight to pass in the LOGFONT structure.
+
+
+    // Utility methods for managing font weights.
+  PRUint16 LookForFontWeightTable(HDC aDc, nsString* aName);
+  PRInt32  GetBolderWeight(PRInt32 aWeight, PRInt32 aDistance, PRUint16 aWeightTable);
+  PRInt32  GetLighterWeight(PRInt32 aWeight, PRInt32 aDistance, PRUint16 aWeightTable);
+  PRInt32  GetFontWeight(PRInt32 aWeight, PRUint16 aWeightTable);
+  PRInt32  GetClosestWeight(PRInt32 aWeight, PRUint16 aWeightTable);
+  PRUint16 GetFontWeightTable(HDC aDC, nsString* aFontName);
+  
+  void FillLogFont(LOGFONT* aLogFont, PRInt32 aWeight);
   void RealizeFont();
 
   nsDeviceContextWin  *mDeviceContext;
@@ -126,6 +152,7 @@ protected:
 
   static PLHashTable* InitializeFamilyNames(void);
   static PLHashTable* gFamilyNames;
+  static PLHashTable* gFontWeights;
 
   static nsGlobalFont* InitializeGlobalFonts(HDC aDC);
 
