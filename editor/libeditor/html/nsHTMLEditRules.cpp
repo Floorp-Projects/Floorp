@@ -1767,10 +1767,7 @@ nsHTMLEditRules::WillDeleteSelection(nsISelection *aSelection,
       if (NS_FAILED(res)) return res;
       // remember sibling to visnode, if any
       nsCOMPtr<nsIDOMNode> sibling, stepbrother;
-      if (aAction == nsIEditor::ePrevious)  
-        mHTMLEditor->GetPriorHTMLSibling(visNode, address_of(sibling));
-      if (aAction == nsIEditor::eNext)  
-        mHTMLEditor->GetNextHTMLSibling(visNode, address_of(sibling));
+      mHTMLEditor->GetPriorHTMLSibling(visNode, address_of(sibling));
       // delete the node, and join like nodes if appropriate
       res = mHTMLEditor->DeleteNode(visNode);
       if (NS_FAILED(res)) return res;
@@ -1778,12 +1775,7 @@ nsHTMLEditRules::WillDeleteSelection(nsISelection *aSelection,
       *aHandled = PR_TRUE;
       // is there a prior node and are they siblings?
       if (sibling)
-      {
-        if (aAction == nsIEditor::ePrevious)  
-          mHTMLEditor->GetNextHTMLSibling(sibling, address_of(stepbrother));
-        if (aAction == nsIEditor::eNext)  
-          mHTMLEditor->GetPriorHTMLSibling(sibling, address_of(stepbrother));
-      }
+         mHTMLEditor->GetNextHTMLSibling(sibling, address_of(stepbrother));
       if (startNode == stepbrother) 
       {
         // are they both text nodes?
