@@ -24,6 +24,9 @@
 class nsISupportsArray;
 class nsIDataFlavor;
 class nsDataObj;
+class nsVoidArray;
+class nsIFormatConverter;
+
 
 /**
  * Native Win32 Transferable wrapper
@@ -46,27 +49,17 @@ public:
   NS_IMETHOD GetTransferData(nsIDataFlavor * aFlavor, void ** aData, PRUint32 * aDataLen);
   NS_IMETHOD SetTransferData(nsIDataFlavor * aFlavor, void * aData, PRUint32 aDataLen);
 
-  NS_IMETHOD SetTransferString(const nsString & aStr);
-  NS_IMETHOD GetTransferString(nsString & aStr);
-
-  NS_IMETHOD AddDataFlavor(const nsString & aMimeType, const nsString & aHumanPresentableName);
+  NS_IMETHOD AddDataFlavor(nsIDataFlavor * aDataFlavor);
   NS_IMETHOD IsLargeDataSet();
 
-  // Used for native implementation
-  nsDataObj * GetDataObj() { return mDataObj; }
+  NS_IMETHOD SetConverter(nsIFormatConverter * aConverter);
+  NS_IMETHOD GetConverter(nsIFormatConverter ** aConverter);
 
 protected:
 
-  NS_IMETHOD ConvertToHTML(nsString & aStr);
-  NS_IMETHOD ConvertToText(nsString & aStr);
-  NS_IMETHOD ConvertToAOLMail(nsString & aStr);
-  NS_IMETHOD ConvertToXIF(nsString & aStr);
+  nsVoidArray        * mDataArray;
+  nsIFormatConverter * mFormatConv;
 
-  nsISupportsArray * mDFList;
-  nsDataObj * mDataObj;
-
-  nsString * mStrCache;
-  void     * mDataPtr;
 };
 
 #endif // nsTransferable_h__
