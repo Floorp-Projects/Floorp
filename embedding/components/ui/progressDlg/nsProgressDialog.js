@@ -136,7 +136,7 @@ nsProgressDialog.prototype = {
     set target(newval) { 
         // If newval references a file on the local filesystem, then grab a
         // reference to its corresponding nsIFile.
-        this.mTargetFile = newval instanceof nsIFileURL ? newfile.file : null;
+        this.mTargetFile = newval instanceof nsIFileURL ? newval.file : null;
 
         return this.mTarget = newval;
     },
