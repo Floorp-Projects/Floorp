@@ -2066,15 +2066,20 @@ RDFGenericBuilderImpl::BuildContentFromTemplate(nsIContent *aTemplateNode,
             if (! isUnique) {
                 rv = NS_ERROR_UNEXPECTED;
 
-                if (gXULSortService && isResourceElement) {
-			nsCOMPtr<nsIRDFDataSource>		tempCache = nsnull;
-
-                    rv = gXULSortService->InsertContainerNode(mDB, getter_AddRefs(tempCache),
-                    	mRoot, trueParent, aRealNode, realKid, aNotify);
-                    if (tempCache)
-                    {
-                    	mCache = tempCache;
-                    }
+                if (gXULSortService && isResourceElement)
+                {
+                	if (mCache)
+			{
+				rv = gXULSortService->InsertContainerNode(mDB,
+					(nsIRDFDataSource **)&mCache,
+					mRoot, trueParent, aRealNode, realKid, aNotify);
+			}
+			else
+			{
+				rv = gXULSortService->InsertContainerNode(mDB,
+					getter_AddRefs(mCache),
+					mRoot, trueParent, aRealNode, realKid, aNotify);
+			}
                 }
 
                 if (NS_FAILED(rv)) {
