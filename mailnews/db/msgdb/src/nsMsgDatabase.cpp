@@ -38,6 +38,12 @@
 
 // this file implements the nsMsgDatabase interface using the MDB Interface.
 
+#ifdef XP_MAC
+#include <stat.h>
+#else
+#include <sys/stat.h>
+#endif
+
 #include "nscore.h"
 #include "msgCore.h"
 #include "nsMsgDatabase.h"
@@ -53,7 +59,7 @@
 #include "nsMsgBaseCID.h"
 #include "nsMorkCID.h"
 #include "nsIMdbFactoryFactory.h"
-#include "xp_file.h"
+#include "prlog.h"
 #include "prprf.h"
 #include "nsTime.h"
 #include "nsIFileSpec.h"

@@ -53,7 +53,6 @@
 #include "plstr.h"
 #include "prmem.h"
 #include "xp_str.h"
-#include "xp_file.h"
 #include "prprf.h"
 
 static NS_DEFINE_CID(kAddrBookSessionCID, NS_ADDRBOOKSESSION_CID);
@@ -115,6 +114,9 @@ typedef enum
 #define NS_ERROR_OUT_OF_MEMORY -1;
 
 #endif /* #if !defined(MOZADDRSTANDALONE) */
+
+#define XP_FILE_URL_PATH char *
+#define XP_FILE_NATIVE_PATH char *
 
 XP_FILE_URL_PATH	XP_PlatformFileToURL (const XP_FILE_NATIVE_PATH ) {return NULL;}
 

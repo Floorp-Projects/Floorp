@@ -35,7 +35,12 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "xp_file.h"
+#ifdef XP_MAC
+#include <stat.h>
+#else
+#include <sys/stat.h>
+#endif
+
 #include "msgCore.h"
 #include "nsImapMailDatabase.h"
 #include "nsDBFolderInfo.h"
