@@ -1078,7 +1078,7 @@ endif
 
 ########################################
 # Data General DG/UX
-ifeq ($(OS_ARCH),dgux)
+ifeq ($(OS_ARCH),DGUX)
 
 OTHER_LIBS	= $(MOTIFLIB) $(OS_LIBS)
 
