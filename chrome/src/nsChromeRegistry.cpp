@@ -51,6 +51,8 @@ DEFINE_RDF_VOCAB(CHROME_NAMESPACE_URI, CHROME, behavior);
 DEFINE_RDF_VOCAB(CHROME_NAMESPACE_URI, CHROME, base);
 DEFINE_RDF_VOCAB(CHROME_NAMESPACE_URI, CHROME, main);
 DEFINE_RDF_VOCAB(CHROME_NAMESPACE_URI, CHROME, archive);
+DEFINE_RDF_VOCAB(CHROME_NAMESPACE_URI, CHROME, displayname);
+DEFINE_RDF_VOCAB(CHROME_NAMESPACE_URI, CHROME, name);
 
 DEFINE_RDF_VOCAB(RDF_NAMESPACE_URI, RDF, Description);
 
@@ -128,10 +130,12 @@ public:
     static nsIRDFResource* kCHROME_base;
     static nsIRDFResource* kCHROME_main;
     static nsIRDFResource* kCHROME_archive;
+    static nsIRDFResource* kCHROME_name;
+    static nsIRDFResource* kCHROME_displayname;
     static nsIRDFDataSource* mInner;
 
 protected:
-    nsresult GetProviderTypeResource(const nsString& aChromeType, nsIRDFResource** aResult);
+    nsresult GetPackageTypeResource(const nsString& aChromeType, nsIRDFResource** aResult);
     nsresult GetChromeResource(nsString& aResult, nsIRDFResource* aChromeResource,
                                nsIRDFResource* aProperty);    
 };
@@ -148,6 +152,8 @@ nsIRDFResource* nsChromeRegistry::kCHROME_platform = nsnull;
 nsIRDFResource* nsChromeRegistry::kCHROME_base = nsnull;
 nsIRDFResource* nsChromeRegistry::kCHROME_main = nsnull;
 nsIRDFResource* nsChromeRegistry::kCHROME_archive = nsnull;
+nsIRDFResource* nsChromeRegistry::kCHROME_name = nsnull;
+nsIRDFResource* nsChromeRegistry::kCHROME_displayname = nsnull;
 nsIRDFDataSource* nsChromeRegistry::mInner = nsnull;
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -177,6 +183,8 @@ nsChromeRegistry::~nsChromeRegistry()
         NS_IF_RELEASE(kCHROME_base);
         NS_IF_RELEASE(kCHROME_main);
         NS_IF_RELEASE(kCHROME_archive);
+        NS_IF_RELEASE(kCHROME_displayname);
+        NS_IF_RELEASE(kCHROME_name);
        
         if (gRDFService) {
             nsServiceManager::ReleaseService(kRDFServiceCID, gRDFService);
@@ -235,12 +243,12 @@ nsChromeRegistry::ConvertChromeURL(nsIURL* aChromeURL)
     aChromeURL->GetSearch(&file);
     nsAutoString searchStr(file);
 
-    // Find out the provider type of the URL
+    // Find out the package type of the URL
     aChromeURL->GetFile(&file);
     nsAutoString restOfURL(file);
     
 		// Find the second slash.
-		nsAutoString providerType("content");
+		nsAutoString packageType("content");
 		nsAutoString path("");
 	  PRInt32 slashIndex = -1;
 	  if (restOfURL.Length() > 1)
@@ -251,7 +259,7 @@ nsChromeRegistry::ConvertChromeURL(nsIURL* aChromeURL)
 		  if (slashIndex == -1)
 		    slashIndex = restOfURL.Length();
 
-			restOfURL.Mid(providerType, 1, slashIndex - 1);
+			restOfURL.Mid(packageType, 1, slashIndex - 1);
 
 			if (slashIndex < restOfURL.Length()-1)
 			{
@@ -260,19 +268,29 @@ nsChromeRegistry::ConvertChromeURL(nsIURL* aChromeURL)
 			}
 		}
 
-    windowType += providerType + "/";
+    windowType += packageType + "/";
 
     // We have the resource URI that we wish to retrieve. Fetch it.
     nsCOMPtr<nsIRDFResource> chromeResource;
-    if (NS_FAILED(rv = GetProviderTypeResource(windowType, getter_AddRefs(chromeResource)))) {
+    if (NS_FAILED(rv = GetPackageTypeResource(windowType, getter_AddRefs(chromeResource)))) {
         NS_ERROR("Unable to retrieve the resource corresponding to the chrome skin or content.");
         return rv;
     }
 
+    nsString chromeName;
+    if (NS_FAILED(rv = GetChromeResource(chromeName, chromeResource, kCHROME_name))) {
+        // No name entry was found. Don't use one.
+        chromeName = "";
+    }
+
     nsString chromeBase;
     if (NS_FAILED(rv = GetChromeResource(chromeBase, chromeResource, kCHROME_base))) {
-        NS_ERROR("Unable to retrieve codebase for chrome entry.");
-        return rv;
+        // No base entry was found. Default to our cache.
+        chromeBase = "resource:/chrome/";
+        chromeBase += hostStr + "/";
+        chromeBase += packageType + "/";
+        if (chromeName != "")
+          chromeBase += chromeName + "/";
     }
 
 		// Make sure base ends in a slash
@@ -337,13 +355,13 @@ nsChromeRegistry::InitRegistry()
 ////////////////////////////////////////////////////////////////////////////////
 
 nsresult
-nsChromeRegistry::GetProviderTypeResource(const nsString& aChromeType,
+nsChromeRegistry::GetPackageTypeResource(const nsString& aChromeType,
                                            nsIRDFResource** aResult)
 {
     nsresult rv = NS_OK;
     char* url = aChromeType.ToNewCString();
     if (NS_FAILED(rv = gRDFService->GetResource(url, aResult))) {
-        NS_ERROR("Unable to retrieve a resource for this provider type.");
+        NS_ERROR("Unable to retrieve a resource for this package type.");
         *aResult = nsnull;
         delete []url;
         return rv;
@@ -463,6 +481,14 @@ nsChromeRegistry::Init(const char* uri)
       if (NS_FAILED(rv)) return rv;
 
       rv = gRDFService->GetResource(kURICHROME_archive, &kCHROME_archive);
+      NS_ASSERTION(NS_SUCCEEDED(rv), "unable to get resource");
+      if (NS_FAILED(rv)) return rv;
+
+      rv = gRDFService->GetResource(kURICHROME_name, &kCHROME_name);
+      NS_ASSERTION(NS_SUCCEEDED(rv), "unable to get resource");
+      if (NS_FAILED(rv)) return rv;
+
+      rv = gRDFService->GetResource(kURICHROME_displayname, &kCHROME_displayname);
       NS_ASSERTION(NS_SUCCEEDED(rv), "unable to get resource");
       if (NS_FAILED(rv)) return rv;
 
