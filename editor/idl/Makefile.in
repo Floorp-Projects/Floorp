@@ -15,20 +15,20 @@
 # Reserved.
 # 
 
-DEPTH=../..
+DEPTH		= ../..
 topsrcdir	= @top_srcdir@
 srcdir		= @srcdir@
 VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-XPIDLSRCS = nsIEditorShell.idl \
-						nsIEditorSpellCheck.idl  \
-						nsIDocumentStateListener.idl \
-						$(NULL)
+MODULE		= editor
 
-MODULE	= editor
-
-EXPORTS := $(addprefix $(srcdir)/, $(EXPORTS))
+XPIDLSRCS	= \
+		nsIEditorShell.idl \
+		nsIEditorSpellCheck.idl \
+		nsIDocumentStateListener.idl \
+		$(NULL)
 
 include $(topsrcdir)/config/rules.mk
+
