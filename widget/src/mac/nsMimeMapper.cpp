@@ -59,7 +59,7 @@ nsMimeMapperMac :: ~nsMimeMapperMac ( )
 // be exported along with the data.
 //
 ResType
-nsMimeMapperMac :: MapMimeTypeToMacOSType ( const char* aMimeStr )
+nsMimeMapperMac :: MapMimeTypeToMacOSType ( const char* aMimeStr, PRBool inAddIfNotPresent )
 {
   ResType format = 0;
 
@@ -79,7 +79,7 @@ nsMimeMapperMac :: MapMimeTypeToMacOSType ( const char* aMimeStr )
   if ( !format ) {
     if ( PL_strcmp(aMimeStr, kTextMime) == 0 )
       format = 'TEXT';
-    else {
+    else if ( inAddIfNotPresent ) {
       // create the flavor based on the unique id in the lower two bytes and 'MZ' in the
       // upper two bytes.
       format = mCounter++;
@@ -91,7 +91,8 @@ nsMimeMapperMac :: MapMimeTypeToMacOSType ( const char* aMimeStr )
   
   }
 
-  NS_ASSERTION ( format, "Didn't map mimeType to a macOS type for some reason" );   
+  if ( inAddIfNotPresent )
+    NS_ASSERTION ( format, "Didn't map mimeType to a macOS type for some reason" );   
   return format;
   
 } // MapMimeTypeToMacOSType

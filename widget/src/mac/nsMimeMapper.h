@@ -59,8 +59,9 @@ public:
   nsMimeMapperMac ( const char* inMappings ) ;
   ~nsMimeMapperMac ( ) ;
    
-    // Converts from mime type (eg: text/plain) to MacOS type (eg: 'TEXT').
-  ResType MapMimeTypeToMacOSType ( const char* aMimeStr ) ;
+    // Converts from mime type (eg: text/plain) to MacOS type (eg: 'TEXT'). If
+    // the mapping failed, the resulting restype will be null.
+  ResType MapMimeTypeToMacOSType ( const char* aMimeStr, PRBool inAddIfNotPresent = PR_TRUE ) ;
   void MapMacOSTypeToMimeType ( ResType inMacType, nsCAutoString & outMimeStr ) ;
  
     // Takes the internal mappings and converts them to a string for
