@@ -139,6 +139,7 @@ namespace MetaData {
             }
             break;
         case StmtNode::While:
+        case StmtNode::DoWhile:
             {
                 UnaryStmtNode *w = checked_cast<UnaryStmtNode *>(p);
                 targetList.push_back(p);
@@ -575,6 +576,37 @@ namespace MetaData {
 
                 targetList.push_back(p);
 
+                bCon->emitBranch(eBranch, w->continueLabelID, p->pos);
+                bCon->setLabel(loopTop);
+                EvalStmt(env, phase, w->stmt);
+                bCon->setLabel(w->continueLabelID);
+                Reference *r = EvalExprNode(env, phase, w->expr);
+                if (r) r->emitReadBytecode(bCon, p->pos);
+                bCon->emitBranch(eBranchTrue, loopTop, p->pos);
+                bCon->setLabel(w->breakLabelID);
+
+                targetList.pop_back();
+            }
+            break;
+        case StmtNode::DoWhile:
+            {
+                UnaryStmtNode *w = checked_cast<UnaryStmtNode *>(p);
+                w->breakLabelID = bCon->getLabel();
+                w->continueLabelID = bCon->getLabel();
+                BytecodeContainer::LabelID loopTop = bCon->getLabel();
+
+                targetList.push_back(p);
+
+                bCon->setLabel(loopTop);
+                EvalStmt(env, phase, w->stmt);
+                bCon->setLabel(w->continueLabelID);
+                Reference *r = EvalExprNode(env, phase, w->expr);
+                if (r) r->emitReadBytecode(bCon, p->pos);
+                bCon->emitBranch(eBranchTrue, loopTop, p->pos);
+                bCon->setLabel(w->breakLabelID);
+
+                
+                
                 bCon->emitBranch(eBranch, w->continueLabelID, p->pos);
                 bCon->setLabel(loopTop);
                 EvalStmt(env, phase, w->stmt);
