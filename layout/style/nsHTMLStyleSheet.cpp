@@ -223,7 +223,7 @@ public:
   NS_IMETHOD GetTitle(nsString& aTitle) const;
   NS_IMETHOD GetType(nsString& aType) const;
   NS_IMETHOD GetMediumCount(PRInt32& aCount) const;
-  NS_IMETHOD GetMediumAt(PRInt32 aIndex, nsString& aMedium) const;
+  NS_IMETHOD GetMediumAt(PRInt32 aIndex, nsIAtom*& aMedium) const;
 
   NS_IMETHOD GetEnabled(PRBool& aEnabled) const;
   NS_IMETHOD SetEnabled(PRBool aEnabled);
@@ -577,7 +577,7 @@ PRInt32 HTMLStyleSheetImpl::RulesMatching(nsIPresContext* aPresContext,
 
     // just get the one and only style rule from the content
     nsIStyleRule* rule;
-    htmlContent->GetStyleRule(rule);
+    htmlContent->GetContentStyleRule(rule);
     if (nsnull != rule) {
       aResults->AppendElement(rule);
       NS_RELEASE(rule);
@@ -635,9 +635,9 @@ HTMLStyleSheetImpl::GetMediumCount(PRInt32& aCount) const
 }
 
 NS_IMETHODIMP
-HTMLStyleSheetImpl::GetMediumAt(PRInt32 aIndex, nsString& aMedium) const
+HTMLStyleSheetImpl::GetMediumAt(PRInt32 aIndex, nsIAtom*& aMedium) const
 {
-  aMedium.Truncate();
+  aMedium = nsnull;
   return NS_ERROR_INVALID_ARG;
 }
 
