@@ -216,6 +216,7 @@ if (aReflowState.mComputedWidth != NS_UNCONSTRAINEDSIZE) { \
 
 //---------------------------------------------------------
 nsListControlFrame::nsListControlFrame()
+:   mWeakReferent(this)
 {
   mSelectedIndex      = kNothingSelected;
   mComboboxFrame      = nsnull;
@@ -1434,21 +1435,25 @@ nsListControlFrame::Init(nsIPresContext*  aPresContext,
   // we shouldn't have to unregister this listener because when
   // our frame goes away all these content node go away as well
   // because our frame is the only one who references them.
-  reciever->AddEventListenerByIID((nsIDOMMouseListener *)this, kIDOMMouseListenerIID);
-  reciever->AddEventListenerByIID((nsIDOMMouseMotionListener *)this, kIDOMMouseMotionListenerIID);
-  reciever->AddEventListenerByIID((nsIDOMKeyListener *)this, kIDOMKeyListenerIID);
+  // we need to hook up our listeners before the editor is initialized
+  result = NS_NewListEventListener(getter_AddRefs(mEventListener));
+  if (NS_FAILED(result)) { return result ; }
+  if (!mEventListener) { return NS_ERROR_NULL_POINTER; }
 
-#if 0
-  nsIFrame* parent;
-  GetParentWithView(&parent);
-  NS_ASSERTION(parent, "GetParentWithView failed");
+  mEventListener->SetFrame(this);
 
-  // Get parent view
-  nsIView* parentView = nsnull;
-  while (1) {
-    parent->GetView(&parentView);
-  }
-#endif
+  nsCOMPtr<nsIDOMMouseListener> mouseListener = do_QueryInterface(mEventListener);
+  if (!mouseListener) { return NS_ERROR_NO_INTERFACE; }
+  reciever->AddEventListenerByIID(mouseListener, NS_GET_IID(nsIDOMMouseListener));
+
+  nsCOMPtr<nsIDOMMouseMotionListener> mouseMotionListener = do_QueryInterface(mEventListener);
+  if (!mouseMotionListener) { return NS_ERROR_NO_INTERFACE; }
+  reciever->AddEventListenerByIID(mouseMotionListener, NS_GET_IID(nsIDOMMouseMotionListener));
+
+  nsCOMPtr<nsIDOMKeyListener> keyListener = do_QueryInterface(mEventListener);
+  if (!keyListener) { return NS_ERROR_NO_INTERFACE; }
+  reciever->AddEventListenerByIID(keyListener, NS_GET_IID(nsIDOMKeyListener));
+
   return result;
 }
 
@@ -3591,3 +3596,225 @@ nsListControlFrame::RestoreState(nsIPresContext* aPresContext,
 
   return NS_OK;
 }
+
+/*******************************************************************************
+ * nsListEventListener
+ ******************************************************************************/
+
+nsresult 
+NS_NewListEventListener(nsIListEventListener ** aInstancePtr)
+{
+  nsListEventListener* it = new nsListEventListener();
+  if (nsnull == it) {
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
+  return it->QueryInterface(NS_GET_IID(nsIListEventListener), (void **) aInstancePtr);   
+}
+
+NS_IMPL_ADDREF(nsListEventListener)
+
+NS_IMPL_RELEASE(nsListEventListener)
+
+
+nsListEventListener::nsListEventListener()
+{
+  NS_INIT_REFCNT();
+}
+
+nsListEventListener::~nsListEventListener()
+{
+  // all refcounted objects are held as nsCOMPtrs, clear themselves
+}
+
+NS_IMETHODIMP
+nsListEventListener::SetFrame(nsListControlFrame *aFrame)
+{
+  mFrame.SetReference(aFrame->WeakReferent());
+  if (aFrame)
+  {
+    aFrame->GetContent(getter_AddRefs(mContent));
+  }
+  return NS_OK;
+}
+
+nsresult
+nsListEventListener::QueryInterface(REFNSIID aIID, void** aInstancePtr)
+{
+  if (nsnull == aInstancePtr) {
+    return NS_ERROR_NULL_POINTER;
+  }
+  if (aIID.Equals(NS_GET_IID(nsISupports))) {
+    nsIDOMKeyListener *tmp = this;
+    nsISupports *tmp2 = tmp;
+    *aInstancePtr = (void*) tmp2;
+    NS_ADDREF_THIS();
+    return NS_OK;
+  }
+
+  if (aIID.Equals(NS_GET_IID(nsIDOMEventListener))) {
+    nsIDOMKeyListener *kl = (nsIDOMKeyListener*)this;
+    nsIDOMEventListener *temp = kl;
+    *aInstancePtr = (void*)temp;
+    NS_ADDREF_THIS();
+    return NS_OK;
+  }
+  
+  if (aIID.Equals(NS_GET_IID(nsIDOMMouseMotionListener))) {                                         
+    *aInstancePtr = (void*)(nsIDOMMouseMotionListener*) this;                                        
+    NS_ADDREF_THIS();
+    return NS_OK;                                                        
+  }
+  if (aIID.Equals(NS_GET_IID(nsIDOMKeyListener))) {
+    *aInstancePtr = (void*)(nsIDOMKeyListener*)this;
+    NS_ADDREF_THIS();
+    return NS_OK;
+  }
+  if (aIID.Equals(NS_GET_IID(nsIDOMMouseListener))) {
+    *aInstancePtr = (void*)(nsIDOMMouseListener*)this;
+    NS_ADDREF_THIS();
+    return NS_OK;
+  }
+  if (aIID.Equals(NS_GET_IID(nsIListEventListener))) {
+    *aInstancePtr = (void*)(nsIListEventListener*)this;
+    NS_ADDREF_THIS();
+    return NS_OK;
+  }
+
+  return NS_NOINTERFACE;
+}
+
+nsresult
+nsListEventListener::HandleEvent(nsIDOMEvent* aEvent)
+{
+  return NS_OK;
+}
+
+/*================== nsIKeyListener =========================*/
+
+nsresult
+nsListEventListener::KeyDown(nsIDOMEvent* aKeyEvent)
+{
+  nsListControlFrame *gfxFrame = mFrame.Reference();
+  if (gfxFrame && mContent)
+  {
+    return gfxFrame->KeyDown(aKeyEvent);
+  }
+  return NS_OK;
+}
+
+nsresult
+nsListEventListener::KeyUp(nsIDOMEvent* aKeyEvent)
+{
+  nsListControlFrame *gfxFrame = mFrame.Reference();
+  if (gfxFrame && mContent)
+  {
+    return gfxFrame->KeyUp(aKeyEvent);
+  }
+  return NS_OK;
+}
+
+nsresult
+nsListEventListener::KeyPress(nsIDOMEvent* aKeyEvent)
+{
+  nsListControlFrame *gfxFrame = mFrame.Reference();
+  if (gfxFrame && mContent)
+  {
+    return gfxFrame->KeyPress(aKeyEvent);
+  }
+  return NS_OK;
+}
+
+/*=============== nsIMouseListener ======================*/
+
+nsresult
+nsListEventListener::MouseDown(nsIDOMEvent* aMouseEvent)
+{
+  nsListControlFrame *gfxFrame = mFrame.Reference();
+  if (gfxFrame && mContent)
+  {
+    return gfxFrame->MouseDown(aMouseEvent);
+  }
+  return NS_OK;
+}
+
+nsresult
+nsListEventListener::MouseUp(nsIDOMEvent* aMouseEvent)
+{
+  nsListControlFrame *gfxFrame = mFrame.Reference();
+  if (gfxFrame && mContent)
+  {
+    return gfxFrame->MouseUp(aMouseEvent);
+  }
+  return NS_OK;
+}
+
+nsresult
+nsListEventListener::MouseClick(nsIDOMEvent* aMouseEvent)
+{
+  nsListControlFrame *gfxFrame = mFrame.Reference();
+  if (gfxFrame && mContent)
+  {
+    return gfxFrame->MouseClick(aMouseEvent);
+  }
+  return NS_OK;
+}
+
+nsresult
+nsListEventListener::MouseDblClick(nsIDOMEvent* aMouseEvent)
+{
+  nsListControlFrame *gfxFrame = mFrame.Reference();
+  if (gfxFrame && mContent)
+  {
+    return gfxFrame->MouseDblClick(aMouseEvent);
+  }
+  return NS_OK;
+}
+
+nsresult
+nsListEventListener::MouseOver(nsIDOMEvent* aMouseEvent)
+{
+  nsListControlFrame *gfxFrame = mFrame.Reference();
+  if (gfxFrame && mContent)
+  {
+    return gfxFrame->MouseOver(aMouseEvent);
+  }
+  return NS_OK;
+}
+
+nsresult
+nsListEventListener::MouseOut(nsIDOMEvent* aMouseEvent)
+{
+  nsListControlFrame *gfxFrame = mFrame.Reference();
+  if (gfxFrame && mContent)
+  {
+    return gfxFrame->MouseOut(aMouseEvent);
+  }
+  return NS_OK;
+}
+
+/*=============== nsIDOMMouseMotionListener ======================*/
+
+nsresult
+nsListEventListener::MouseMove(nsIDOMEvent* aMouseEvent)
+{
+  nsListControlFrame *gfxFrame = mFrame.Reference();
+  if (gfxFrame && mContent)
+  {
+    return gfxFrame->MouseMove(aMouseEvent);
+  }
+  return NS_OK;
+}
+
+nsresult
+nsListEventListener::DragMove(nsIDOMEvent* aMouseEvent)
+{
+  /*
+  nsListControlFrame *gfxFrame = mFrame.Reference();
+  if (gfxFrame && mContent)
+  {
+    return gfxFrame->DragMove(aMouseEvent);
+  }
+  */
+  return NS_OK;
+}
+
