@@ -6037,7 +6037,6 @@ nsPluginHostImpl::StopPluginInstance(nsIPluginInstance* aInstance)
   return NS_OK;
 }
 
-
 ////////////////////////////////////////////////////////////////////////
 /* Called by InstantiateEmbededPlugin() */
 nsresult nsPluginHostImpl::NewEmbededPluginStream(nsIURI* aURL,
@@ -6052,7 +6051,6 @@ nsresult nsPluginHostImpl::NewEmbededPluginStream(nsIURI* aURL,
     return NS_ERROR_OUT_OF_MEMORY;
 
   nsresult rv;
-
 
   // if we have an instance, everything has been set up
   // if we only have an owner, then we need to pass it in
@@ -6075,17 +6073,29 @@ nsresult nsPluginHostImpl::NewEmbededPluginStream(nsIURI* aURL,
         doc->GetDocumentLoadGroup(getter_AddRefs(loadGroup));
       }
     }
-    rv = NS_OpenURI(listener, nsnull, aURL, nsnull, loadGroup);
-    // delete listener, don't leak it
-    if (NS_FAILED(rv))
-      delete listener;
+
+    nsCOMPtr<nsIChannel> channel;
+
+    rv = NS_NewChannel(getter_AddRefs(channel), aURL, nsnull, loadGroup);
+    if (NS_SUCCEEDED(rv)) {
+      // if this is http channel, set referrer, some servers are configured
+      // to reject requests without referrer set, see bug 157796
+      nsCOMPtr<nsIHttpChannel> httpChannel(do_QueryInterface(channel));
+      if (httpChannel && doc) {
+        nsCOMPtr<nsIURI> referrerURL;
+        if (NS_SUCCEEDED(doc->GetBaseURL(*getter_AddRefs(referrerURL))))
+          httpChannel->SetReferrer(referrerURL, nsIHttpChannel::REFERRER_INLINES);
+      }
+
+      rv = channel->AsyncOpen(listener, nsnull);
+      if (NS_SUCCEEDED(rv))
+        return NS_OK;
+    }
   }
 
-  //NS_RELEASE(aURL);
-
+  delete listener;
   return rv;
 }
-
 
 ////////////////////////////////////////////////////////////////////////
 /* Called by InstantiateFullPagePlugin() */
