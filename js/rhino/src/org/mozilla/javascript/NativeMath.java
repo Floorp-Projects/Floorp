@@ -238,20 +238,59 @@ final class NativeMath extends IdScriptable
         return result;
     }
 
+    // See Ecma 15.8.2.13
     private double js_pow(double x, double y) {
-        if (y == 0) return 1.0;   // Java's pow(NaN, 0) = NaN; we need 1
-        if ((x == 0) && (y < 0)) {
+        double result;
+        if (y != y) {
+            // y is NaN, result is always NaN
+            result = y;
+        } else if (y == 0) {
+            // Java's pow(NaN, 0) = NaN; we need 1
+            result = 1.0;
+        } else if (x == 0) {
+            // Many dirrerences from Java's Math.pow
             if (1 / x > 0) {
-                // x is +0, Java is -oo, we need +oo
-                return Double.POSITIVE_INFINITY;
+                result = (y > 0) ? 0 : Double.POSITIVE_INFINITY;
+            } else {
+                // x is -0, need to check if y is an odd integer
+                long y_long = (long)y;
+                if (y_long == y && (y_long & 0x1) != 0) {
+                    result = (y > 0) ? -0.0 : Double.NEGATIVE_INFINITY;
+                } else {
+                    result = (y > 0) ? 0.0 : Double.POSITIVE_INFINITY;
+                }
             }
-            /* if x is -0 and y is an odd integer, -oo */
-            int y_int = (int)y;
-            if (y_int == y && (y_int & 0x1) != 0)
-                return Double.NEGATIVE_INFINITY;
-            return Double.POSITIVE_INFINITY;
+        } else {
+            result = Math.pow(x, y);
+            if (result != result) {
+                // Check for broken Java implementations that gives NaN
+                // when they should return something else
+                if (y == Double.POSITIVE_INFINITY) {
+                    if (x < -1.0 || 1.0 < x) {
+                        result = Double.POSITIVE_INFINITY;
+                    } else if (-1.0 < x && x < 1.0) {
+                        result = 0;
+                    }
+                } else if (y == Double.NEGATIVE_INFINITY) {
+                    if (x < -1.0 || 1.0 < x) {
+                        result = 0;
+                    } else if (-1.0 < x && x < 1.0) {
+                        result = Double.POSITIVE_INFINITY;
+                    }
+                } else if (x == Double.POSITIVE_INFINITY) {
+                    result = (y > 0) ? Double.POSITIVE_INFINITY : 0.0;
+                } else if (x == Double.NEGATIVE_INFINITY) {
+                    long y_long = (long)y;
+                    if (y_long == y && (y_long & 0x1) != 0) {
+                        // y is odd integer
+                        result = (y > 0) ? Double.NEGATIVE_INFINITY : -0.0;
+                    } else {
+                        result = (y > 0) ? Double.POSITIVE_INFINITY : 0.0;
+                    }
+                }
+            }
         }
-        return Math.pow(x, y);
+        return result;
     }
 
     private double js_random() { return Math.random(); }
