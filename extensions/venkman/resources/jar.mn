@@ -9,6 +9,8 @@ venkman.jar:
   content/venkman/venkman-debugger.js   (content/venkman-debugger.js)
   content/venkman/venkman-commands.js   (content/venkman-commands.js)
   content/venkman/venkman-prefs.js   (content/venkman-prefs.js)
+  content/venkman/venkman-eval.js   (content/venkman-eval.js)
+  content/venkman/venkman-msg.js   (content/venkman-msg.js)
   content/venkman/venkman-output-window.html   (content/venkman-output-window.html)
   content/venkman/html-consts.js   (content/html-consts.js)
   content/venkman/command-manager.js   (content/command-manager.js)
