@@ -51,9 +51,9 @@ typedef struct
 DbTableColumn dbTableColumns[] =
 {
 	{ Desc,      "Description", 16, XmALIGNMENT_LEFT,  True  },
-	{ Price,     "Price",       9,  XmALIGNMENT_RIGHT, True  },
-	{ Qty,       "Qty",         5,  XmALIGNMENT_RIGHT, True  },
-	{ UnitPrice, "Unit Prc",    9,  XmALIGNMENT_RIGHT, False },
+	{ Price,     "Price",       9,  XmALIGNMENT_LEFT, True  },
+	{ Qty,       "Qty",         5,  XmALIGNMENT_LEFT, True  },
+	{ UnitPrice, "Unit Prc",    9,  XmALIGNMENT_LEFT, False },
 	{ Buyer,     "Buyer",       15, XmALIGNMENT_LEFT,  True  },
 };
 
@@ -188,6 +188,10 @@ XtPointer callData;
 		XmNcolumnPtr, column,
 		XmNcolumnUserData, &columnUserData,
 		NULL);
+	XtVaSetValues(w,
+		XmNcolumn, cbs->column,
+		XmNcolumnSortType, XmSORT_ASCENDING,
+    	NULL);
 	setRowKeysInGridSorted(w, (DbTableColumnID)columnUserData);
 	XmLGridRedrawAll(w);
 }
