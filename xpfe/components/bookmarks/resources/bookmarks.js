@@ -18,6 +18,8 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *   Peter Annema <disttsc@bart.nl>
+ *   Blake Ross <blakeross@telocity.com>
  */
 
 
@@ -676,12 +678,10 @@ function update_sort_menuitems(column, direction)
                 menuitem.setAttribute('checked', 'true');
                 break;
             }
-            if ("true" == column_node.getAttribute("hidden")) {
-                debug("disabled: " + name);
-                item.setAttribute("disabled", "true");
-            }
             menuitem = menuitem.nextSibling;
             column_node = column_node.nextSibling;
+            if (column_node && column_node.tagName == "splitter")
+                column_node = column_node.nextSibling;
         }
     }
     enable_sort_menuitems();
@@ -706,6 +706,9 @@ function enable_sort_menuitems() {
         menuitem = menuitem.nextSibling;
         tree_column = tree_column.nextSibling;
         column_node = column_node.nextSibling;
+
+        if (column_node && column_node.tagName == "splitter")
+            column_node = column_node.nextSibling;
     }
 }
 
@@ -821,6 +824,9 @@ function fillViewMenu(popup)
           }
           tree_column = tree_column.nextSibling;
           column_node = column_node.nextSibling;
+
+          if (column_node && column_node.tagName == "splitter")
+              column_node = column_node.nextSibling;
       }
   }
   var sort_column = find_sort_column();
