@@ -45,7 +45,7 @@
 #include "nsIFormControl.h"
 
 #include "nsIRenderingContext.h"
-#include "nsIPresContext.h"
+#include "nsPresContext.h"
 #include "nsIPresShell.h"
 #include "nsStyleContext.h"
 #include "nsLeafFrame.h"
@@ -102,14 +102,14 @@ nsHTMLButtonControlFrame::~nsHTMLButtonControlFrame()
 }
 
 NS_IMETHODIMP
-nsHTMLButtonControlFrame::Destroy(nsIPresContext *aPresContext)
+nsHTMLButtonControlFrame::Destroy(nsPresContext *aPresContext)
 {
   nsFormControlFrame::RegUnRegAccessKey(aPresContext, NS_STATIC_CAST(nsIFrame*, this), PR_FALSE);
   return nsHTMLContainerFrame::Destroy(aPresContext);
 }
 
 NS_IMETHODIMP
-nsHTMLButtonControlFrame::Init(nsIPresContext*  aPresContext,
+nsHTMLButtonControlFrame::Init(nsPresContext*  aPresContext,
               nsIContent*      aContent,
               nsIFrame*        aParent,
               nsStyleContext*  aContext,
@@ -244,7 +244,7 @@ nsHTMLButtonControlFrame::IsSubmit(PRInt32 type)
 
 
 void
-nsHTMLButtonControlFrame::MouseClicked(nsIPresContext* aPresContext) 
+nsHTMLButtonControlFrame::MouseClicked(nsPresContext* aPresContext) 
 {
 // This is no longer called; click events are handled in
 // nsHTMLInputElement::HandleDOMEvent().
@@ -256,7 +256,7 @@ nsHTMLButtonControlFrame::SetFocus(PRBool aOn, PRBool aRepaint)
 }
 
 void
-nsHTMLButtonControlFrame::ScrollIntoView(nsIPresContext* aPresContext)
+nsHTMLButtonControlFrame::ScrollIntoView(nsPresContext* aPresContext)
 {
   if (aPresContext) {
     nsIPresShell *presShell = aPresContext->GetPresShell();
@@ -269,7 +269,7 @@ nsHTMLButtonControlFrame::ScrollIntoView(nsIPresContext* aPresContext)
 }
 
 NS_IMETHODIMP
-nsHTMLButtonControlFrame::HandleEvent(nsIPresContext* aPresContext, 
+nsHTMLButtonControlFrame::HandleEvent(nsPresContext* aPresContext, 
                                       nsGUIEvent*     aEvent,
                                       nsEventStatus*  aEventStatus)
 {
@@ -285,7 +285,7 @@ nsHTMLButtonControlFrame::HandleEvent(nsIPresContext* aPresContext,
 
 
 NS_IMETHODIMP
-nsHTMLButtonControlFrame::GetFrameForPoint(nsIPresContext* aPresContext,
+nsHTMLButtonControlFrame::GetFrameForPoint(nsPresContext* aPresContext,
                                            const nsPoint& aPoint,
                                            nsFramePaintLayer aWhichLayer,
                                            nsIFrame** aFrame)
@@ -301,7 +301,7 @@ nsHTMLButtonControlFrame::GetFrameForPoint(nsIPresContext* aPresContext,
 }
 
 NS_IMETHODIMP
-nsHTMLButtonControlFrame::SetInitialChildList(nsIPresContext* aPresContext,
+nsHTMLButtonControlFrame::SetInitialChildList(nsPresContext* aPresContext,
                                               nsIAtom*        aListName,
                                               nsIFrame*       aChildList)
 {
@@ -312,7 +312,7 @@ nsHTMLButtonControlFrame::SetInitialChildList(nsIPresContext* aPresContext,
 }
 
 NS_IMETHODIMP
-nsHTMLButtonControlFrame::Paint(nsIPresContext*      aPresContext,
+nsHTMLButtonControlFrame::Paint(nsPresContext*      aPresContext,
                                 nsIRenderingContext& aRenderingContext,
                                 const nsRect&        aDirtyRect,
                                 nsFramePaintLayer    aWhichLayer,
@@ -370,7 +370,7 @@ nsHTMLButtonControlFrame::AddComputedBorderPaddingToDesiredSize(nsHTMLReflowMetr
 }
 
 NS_IMETHODIMP 
-nsHTMLButtonControlFrame::Reflow(nsIPresContext* aPresContext,
+nsHTMLButtonControlFrame::Reflow(nsPresContext* aPresContext,
                                nsHTMLReflowMetrics& aDesiredSize,
                                const nsHTMLReflowState& aReflowState,
                                nsReflowStatus& aStatus)
@@ -490,7 +490,7 @@ nsHTMLButtonControlFrame::Reflow(nsIPresContext* aPresContext,
 }
 
 void
-nsHTMLButtonControlFrame::ReflowButtonContents(nsIPresContext* aPresContext,
+nsHTMLButtonControlFrame::ReflowButtonContents(nsPresContext* aPresContext,
                                                nsHTMLReflowMetrics& aDesiredSize,
                                                const nsHTMLReflowState& aReflowState,
                                                nsIFrame* aFirstKid,
@@ -577,7 +577,7 @@ nsHTMLButtonControlFrame::GetFormContent(nsIContent*& aContent) const
 }
 
 nscoord 
-nsHTMLButtonControlFrame::GetVerticalInsidePadding(nsIPresContext* aPresContext,
+nsHTMLButtonControlFrame::GetVerticalInsidePadding(nsPresContext* aPresContext,
                                                    float aPixToTwip, 
                                                    nscoord aInnerHeight) const
 {
@@ -585,7 +585,7 @@ nsHTMLButtonControlFrame::GetVerticalInsidePadding(nsIPresContext* aPresContext,
 }
 
 nscoord 
-nsHTMLButtonControlFrame::GetHorizontalInsidePadding(nsIPresContext* aPresContext,
+nsHTMLButtonControlFrame::GetHorizontalInsidePadding(nsPresContext* aPresContext,
                                                float aPixToTwip, 
                                                nscoord aInnerWidth,
                                                nscoord aCharWidth) const
@@ -593,7 +593,7 @@ nsHTMLButtonControlFrame::GetHorizontalInsidePadding(nsIPresContext* aPresContex
   return 0;
 }
 
-NS_IMETHODIMP nsHTMLButtonControlFrame::SetProperty(nsIPresContext* aPresContext,
+NS_IMETHODIMP nsHTMLButtonControlFrame::SetProperty(nsPresContext* aPresContext,
                                                     nsIAtom* aName, const nsAString& aValue)
 {
   if (nsHTMLAtoms::value == aName) {
@@ -640,7 +640,7 @@ NS_IMETHODIMP nsHTMLButtonControlFrame::SetSuggestedSize(nscoord aWidth, nscoord
 
 
 NS_IMETHODIMP 
-nsHTMLButtonControlFrame::AppendFrames(nsIPresContext* aPresContext,
+nsHTMLButtonControlFrame::AppendFrames(nsPresContext* aPresContext,
                                        nsIPresShell&   aPresShell,
                                        nsIAtom*        aListName,
                                        nsIFrame*       aFrameList)
@@ -653,7 +653,7 @@ nsHTMLButtonControlFrame::AppendFrames(nsIPresContext* aPresContext,
 }
 
 NS_IMETHODIMP
-nsHTMLButtonControlFrame::InsertFrames(nsIPresContext* aPresContext,
+nsHTMLButtonControlFrame::InsertFrames(nsPresContext* aPresContext,
                                        nsIPresShell&   aPresShell,
                                        nsIAtom*        aListName,
                                        nsIFrame*       aPrevFrame,
@@ -668,7 +668,7 @@ nsHTMLButtonControlFrame::InsertFrames(nsIPresContext* aPresContext,
 }
 
 NS_IMETHODIMP
-nsHTMLButtonControlFrame::RemoveFrame(nsIPresContext* aPresContext,
+nsHTMLButtonControlFrame::RemoveFrame(nsPresContext* aPresContext,
                                       nsIPresShell&   aPresShell,
                                       nsIAtom*        aListName,
                                       nsIFrame*       aOldFrame)
@@ -680,7 +680,7 @@ nsHTMLButtonControlFrame::RemoveFrame(nsIPresContext* aPresContext,
 }
 
 NS_IMETHODIMP
-nsHTMLButtonControlFrame::ReplaceFrame(nsIPresContext* aPresContext,
+nsHTMLButtonControlFrame::ReplaceFrame(nsPresContext* aPresContext,
                                        nsIPresShell&   aPresShell,
                                        nsIAtom*        aListName,
                                        nsIFrame*       aOldFrame,

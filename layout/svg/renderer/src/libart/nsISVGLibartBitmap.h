@@ -43,7 +43,7 @@
 #include "nsISupports.h"
 
 class nsIRenderingContext;
-class nsIPresContext;
+class nsPresContext;
 struct nsRect;
 typedef PRUint32 nscolor;
 
@@ -114,7 +114,7 @@ public:
 nsresult
 NS_NewSVGLibartBitmap(nsISVGLibartBitmap **result,
                       nsIRenderingContext *ctx,
-                      nsIPresContext* presContext,
+                      nsPresContext* presContext,
                       const nsRect & rect);
 
 #endif // __NS_ISVGLIBART_BITMAP_H__

@@ -121,7 +121,7 @@ protected:
 #endif // IBMBIDI
 
 void
-nsFrameList::DestroyFrames(nsIPresContext* aPresContext)
+nsFrameList::DestroyFrames(nsPresContext* aPresContext)
 {
   nsIFrame* next;
   for (nsIFrame* frame = mFirstChild; frame; frame = next) {
@@ -206,7 +206,7 @@ nsFrameList::RemoveFirstChild()
 }
 
 PRBool
-nsFrameList::DestroyFrame(nsIPresContext* aPresContext, nsIFrame* aFrame)
+nsFrameList::DestroyFrame(nsPresContext* aPresContext, nsIFrame* aFrame)
 {
   NS_PRECONDITION(nsnull != aFrame, "null ptr");
   if (RemoveFrame(aFrame)) {
@@ -306,7 +306,7 @@ nsFrameList::DoReplaceFrame(nsIFrame* aParent,
 }
 
 PRBool
-nsFrameList::ReplaceFrame(nsIPresContext* aPresContext,
+nsFrameList::ReplaceFrame(nsPresContext* aPresContext,
                           nsIFrame* aParent,
                           nsIFrame* aOldFrame,
                           nsIFrame* aNewFrame,
@@ -452,7 +452,7 @@ nsFrameList::VerifyParent(nsIFrame* aParent) const
 
 #ifdef NS_DEBUG
 void
-nsFrameList::List(nsIPresContext* aPresContext, FILE* out) const
+nsFrameList::List(nsPresContext* aPresContext, FILE* out) const
 {
   fputs("<\n", out);
   for (nsIFrame* frame = mFirstChild; frame;

@@ -3,7 +3,7 @@
 
 #include "nsISupports.h"
 
-class nsIPresContext;
+class nsPresContext;
 class nsIPresState;
 
 #define NS_ISTATEFULFRAME_IID_STR "306c8ca0-5f0c-11d3-a9fb-000064657374"
@@ -24,8 +24,8 @@ class nsIStatefulFrame : public nsISupports {
   // offset NS_CONTENT_ID_COUNTER_BASE
   enum SpecialStateID {eNoID=0, eDocumentScrollState};
 
-  NS_IMETHOD SaveState(nsIPresContext* aPresContext, nsIPresState** aState) = 0;
-  NS_IMETHOD RestoreState(nsIPresContext* aPresContext, nsIPresState* aState) = 0;
+  NS_IMETHOD SaveState(nsPresContext* aPresContext, nsIPresState** aState) = 0;
+  NS_IMETHOD RestoreState(nsPresContext* aPresContext, nsIPresState* aState) = 0;
 };
 
 #endif /* _nsIStatefulFrame_h */

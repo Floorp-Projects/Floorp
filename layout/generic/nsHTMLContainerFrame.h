@@ -62,7 +62,7 @@ struct nsHTMLReflowState;
 // functionality.
 class nsHTMLContainerFrame : public nsContainerFrame {
 public:
-  NS_IMETHOD  Paint(nsIPresContext*      aPresContext,
+  NS_IMETHOD  Paint(nsPresContext*      aPresContext,
                     nsIRenderingContext& aRenderingContext,
                     const nsRect&        aDirtyRect,
                     nsFramePaintLayer    aWhichLayer,
@@ -77,7 +77,7 @@ public:
    * aFrame is a float or positioned, then *aPlaceholderResult holds
    * a placeholder.
    */
-  static nsresult CreateNextInFlow(nsIPresContext* aPresContext,
+  static nsresult CreateNextInFlow(nsPresContext* aPresContext,
                                    nsIFrame*       aOuterFrame,
                                    nsIFrame*       aFrame,
                                    nsIFrame*&      aNextInFlowResult);
@@ -96,12 +96,12 @@ public:
                                      nsIFrame* aContentParentFrame,
                                      PRBool aForce);
 
-  static nsresult ReparentFrameView(nsIPresContext* aPresContext,
+  static nsresult ReparentFrameView(nsPresContext* aPresContext,
                                     nsIFrame*       aChildFrame,
                                     nsIFrame*       aOldParentFrame,
                                     nsIFrame*       aNewParentFrame);
 
-  static nsresult ReparentFrameViewList(nsIPresContext* aPresContext,
+  static nsresult ReparentFrameViewList(nsPresContext* aPresContext,
                                         nsIFrame*       aChildFrameList,
                                         nsIFrame*       aOldParentFrame,
                                         nsIFrame*       aNewParentFrame);
@@ -109,7 +109,7 @@ public:
 protected:
   virtual PRIntn GetSkipSides() const = 0;
 
-  void PaintSelf(nsIPresContext*      aPresContext,
+  void PaintSelf(nsPresContext*      aPresContext,
                  nsIRenderingContext& aRenderingContext,
                  const nsRect&        aDirtyRect) {
     nsContainerFrame::PaintSelf(aPresContext, aRenderingContext,
@@ -121,7 +121,7 @@ protected:
    * decorations (block and inline frames).  It will paint the
    * decorations before and after the call to PaintChildren.
    */
-  void PaintDecorationsAndChildren(nsIPresContext*      aPresContext,
+  void PaintDecorationsAndChildren(nsPresContext*      aPresContext,
                                    nsIRenderingContext& aRenderingContext,
                                    const nsRect&        aDirtyRect,
                                    nsFramePaintLayer    aWhichLayer,
@@ -157,7 +157,7 @@ protected:
    *        aDecorations for text-less frames.  See bug 20163 for
    *        details.
    */
-  void GetTextDecorations(nsIPresContext* aPresContext, 
+  void GetTextDecorations(nsPresContext* aPresContext, 
                           PRBool aIsBlock,
                           PRUint8& aDecorations, 
                           nscolor& aUnderColor, 

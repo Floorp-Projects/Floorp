@@ -46,7 +46,7 @@ class nsIAtom;
 class nsIURI;
 class nsICSSParser;
 class nsICSSStyleSheet;
-class nsIPresContext;
+class nsPresContext;
 class nsIContent;
 class nsIParser;
 class nsIDocument;

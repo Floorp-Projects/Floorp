@@ -53,7 +53,7 @@
 #include "imgIContainer.h"
 #include "imgIDecoderObserver.h"
 #include "nsIPresShell.h"
-#include "nsIPresContext.h"
+#include "nsPresContext.h"
 #include "nsStyleContext.h"
 #include "nsAutoPtr.h"
 #include "nsMediaDocument.h"
@@ -556,7 +556,7 @@ nsImageDocument::CheckOverflowing()
     return NS_OK;
   }
 
-  nsCOMPtr<nsIPresContext> context;
+  nsCOMPtr<nsPresContext> context;
   shell->GetPresContext(getter_AddRefs(context));
 
   nsRect visibleArea = context->GetVisibleArea();

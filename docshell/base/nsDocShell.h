@@ -243,7 +243,7 @@ protected:
         nsIStreamListener ** aContentHandler, nsIContentViewer ** aViewer);
     NS_IMETHOD SetupNewViewer(nsIContentViewer * aNewViewer);
 
-    NS_IMETHOD GetEldestPresContext(nsIPresContext** aPresContext);
+    NS_IMETHOD GetEldestPresContext(nsPresContext** aPresContext);
     void GetCurrentDocumentOwner(nsISupports ** aOwner);
     virtual nsresult DoURILoad(nsIURI * aURI,
                                nsIURI * aReferrer,

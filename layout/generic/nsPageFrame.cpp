@@ -37,7 +37,7 @@
 #include "nsPageFrame.h"
 #include "nsHTMLParts.h"
 #include "nsIContent.h"
-#include "nsIPresContext.h"
+#include "nsPresContext.h"
 #include "nsStyleContext.h"
 #include "nsIRenderingContext.h"
 #include "nsHTMLAtoms.h"
@@ -119,13 +119,13 @@ nsPageFrame::~nsPageFrame()
 
 
 NS_IMETHODIMP
-nsPageFrame::SetInitialChildList(nsIPresContext* aPresContext,
+nsPageFrame::SetInitialChildList(nsPresContext* aPresContext,
                                       nsIAtom*        aListName,
                                       nsIFrame*       aChildList)
 {
   nsIView* view = aChildList->GetView();
   if (view && mDoCreateWidget) {
-    if (aPresContext->Type() == nsIPresContext::eContext_PrintPreview &&
+    if (aPresContext->Type() == nsPresContext::eContext_PrintPreview &&
         view->GetNearestWidget(nsnull)) {
       view->CreateWidget(kCChildCID);  
     }
@@ -134,7 +134,7 @@ nsPageFrame::SetInitialChildList(nsIPresContext* aPresContext,
   return nsContainerFrame::SetInitialChildList(aPresContext, aListName, aChildList);
 }
 
-NS_IMETHODIMP nsPageFrame::Reflow(nsIPresContext*          aPresContext,
+NS_IMETHODIMP nsPageFrame::Reflow(nsPresContext*          aPresContext,
                                   nsHTMLReflowMetrics&     aDesiredSize,
                                   const nsHTMLReflowState& aReflowState,
                                   nsReflowStatus&          aStatus)
@@ -432,7 +432,7 @@ nscoord nsPageFrame::GetXPosition(nsIRenderingContext& aRenderingContext,
 // @parm aUseHalfThePage - indicates whether the text should limited to  the width
 //                         of the entire page or just half the page
 void
-nsPageFrame::DrawHeaderFooter(nsIPresContext*      aPresContext,
+nsPageFrame::DrawHeaderFooter(nsPresContext*      aPresContext,
                               nsIRenderingContext& aRenderingContext,
                               nsIFrame *           aFrame,
                               nsHeaderFooterEnum   aHeaderFooter,
@@ -473,7 +473,7 @@ nsPageFrame::DrawHeaderFooter(nsIPresContext*      aPresContext,
 // @parm aHeight - the height of the text
 // @parm aWidth - available width for any one of the strings
 void
-nsPageFrame::DrawHeaderFooter(nsIPresContext*      aPresContext,
+nsPageFrame::DrawHeaderFooter(nsPresContext*      aPresContext,
                               nsIRenderingContext& aRenderingContext,
                               nsIFrame *           aFrame,
                               nsHeaderFooterEnum   aHeaderFooter,
@@ -567,7 +567,7 @@ nsPageFrame::DrawHeaderFooter(nsIPresContext*      aPresContext,
 
 //------------------------------------------------------------------------------
 NS_IMETHODIMP
-nsPageFrame::Paint(nsIPresContext*      aPresContext,
+nsPageFrame::Paint(nsPresContext*      aPresContext,
                    nsIRenderingContext& aRenderingContext,
                    const nsRect&        aDirtyRect,
                    nsFramePaintLayer    aWhichLayer,
@@ -593,7 +593,7 @@ nsPageFrame::Paint(nsIPresContext*      aPresContext,
 
   if (NS_FRAME_PAINT_LAYER_BACKGROUND == aWhichLayer) {
 
-    if (aPresContext->Type() == nsIPresContext::eContext_PrintPreview) {
+    if (aPresContext->Type() == nsPresContext::eContext_PrintPreview) {
       // fill page with White
       aRenderingContext.SetColor(NS_RGB(255,255,255));
       rect.x = 0;
@@ -642,7 +642,7 @@ nsPageFrame::Paint(nsIPresContext*      aPresContext,
   if (NS_FRAME_PAINT_LAYER_FOREGROUND == aWhichLayer && !mSupressHF) {
     // For PrintPreview the 
     if (!mPD->mPrintSettings) {
-      if (aPresContext->Type() == nsIPresContext::eContext_PrintPreview) {
+      if (aPresContext->Type() == nsPresContext::eContext_PrintPreview) {
         mPD->mPrintSettings = aPresContext->GetPrintSettings();
       }
     }
@@ -705,7 +705,7 @@ nsPageFrame::SetPageNumInfo(PRInt32 aPageNumber, PRInt32 aTotalPages)
 
 //------------------------------------------------------------------------------
 void
-nsPageFrame::DrawBackground(nsIPresContext*      aPresContext,
+nsPageFrame::DrawBackground(nsPresContext*      aPresContext,
                             nsIRenderingContext& aRenderingContext,
                             const nsRect&        aDirtyRect) 
 {
@@ -741,7 +741,7 @@ NS_NewPageBreakFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame)
   NS_PRECONDITION(aPresShell && aNewFrame, "null PresShell or OUT ptr");
 #ifdef DEBUG
   //check that we are only creating page break frames when printing
-  nsCOMPtr<nsIPresContext> presContext;    
+  nsCOMPtr<nsPresContext> presContext;    
   aPresShell->GetPresContext(getter_AddRefs(presContext));
   NS_ASSERTION(presContext->IsPaginated(), "created a page break frame while not printing");
 #endif
@@ -764,7 +764,7 @@ nsPageBreakFrame::~nsPageBreakFrame()
 }
 
 void 
-nsPageBreakFrame::GetDesiredSize(nsIPresContext*          aPresContext,
+nsPageBreakFrame::GetDesiredSize(nsPresContext*          aPresContext,
                                  const nsHTMLReflowState& aReflowState,
                                  nsHTMLReflowMetrics&     aDesiredSize)
 {
@@ -791,7 +791,7 @@ nsPageBreakFrame::GetDesiredSize(nsIPresContext*          aPresContext,
 }
 
 nsresult 
-nsPageBreakFrame::Reflow(nsIPresContext*          aPresContext,
+nsPageBreakFrame::Reflow(nsPresContext*          aPresContext,
                          nsHTMLReflowMetrics&     aDesiredSize,
                          const nsHTMLReflowState& aReflowState,
                          nsReflowStatus&          aStatus)

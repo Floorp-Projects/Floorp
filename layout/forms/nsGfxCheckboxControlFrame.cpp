@@ -164,7 +164,7 @@ nsGfxCheckboxControlFrame::SetAdditionalStyleContext(PRInt32 aIndex,
 
 //------------------------------------------------------------
 NS_IMETHODIMP
-nsGfxCheckboxControlFrame::OnChecked(nsIPresContext* aPresContext,
+nsGfxCheckboxControlFrame::OnChecked(nsPresContext* aPresContext,
                                      PRBool aChecked)
 {
   Invalidate(GetOutlineRect(), PR_FALSE);
@@ -174,7 +174,7 @@ nsGfxCheckboxControlFrame::OnChecked(nsIPresContext* aPresContext,
 
 //------------------------------------------------------------
 void
-nsGfxCheckboxControlFrame::PaintCheckBox(nsIPresContext* aPresContext,
+nsGfxCheckboxControlFrame::PaintCheckBox(nsPresContext* aPresContext,
                                          nsIRenderingContext& aRenderingContext,
                                          const nsRect& aDirtyRect,
                                          nsFramePaintLayer aWhichLayer)
@@ -211,7 +211,7 @@ nsGfxCheckboxControlFrame::PaintCheckBox(nsIPresContext* aPresContext,
 
 //------------------------------------------------------------
 NS_METHOD 
-nsGfxCheckboxControlFrame::Paint(nsIPresContext*   aPresContext,
+nsGfxCheckboxControlFrame::Paint(nsPresContext*   aPresContext,
                               nsIRenderingContext& aRenderingContext,
                               const nsRect&        aDirtyRect,
                               nsFramePaintLayer    aWhichLayer,
@@ -273,7 +273,7 @@ nsGfxCheckboxControlFrame::GetCheckboxState ( )
 //------------------------------------------------------------
 #ifdef DEBUG_rodsXXX
 NS_IMETHODIMP
-nsGfxCheckboxControlFrame::Reflow(nsIPresContext*          aPresContext, 
+nsGfxCheckboxControlFrame::Reflow(nsPresContext*          aPresContext, 
                                   nsHTMLReflowMetrics&     aDesiredSize,
                                   const nsHTMLReflowState& aReflowState, 
                                   nsReflowStatus&          aStatus)

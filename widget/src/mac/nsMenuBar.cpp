@@ -874,7 +874,7 @@ MenuHelpers :: ConvertToScriptRun ( const nsString & inStr, const UnicodeToTextR
 // sending an event into the dom.
 //
 nsresult
-MenuHelpers :: WebShellToPresContext (nsIWebShell* inWebShell, nsIPresContext** outContext )
+MenuHelpers :: WebShellToPresContext (nsIWebShell* inWebShell, nsPresContext** outContext )
 {
   NS_ENSURE_ARG_POINTER(outContext);
   *outContext = nsnull;

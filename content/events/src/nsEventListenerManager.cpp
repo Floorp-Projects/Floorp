@@ -1521,7 +1521,7 @@ nsEventListenerManager::HandleEventSubType(nsListenerStruct* aListenerStruct,
 * @param an event listener
 */
 
-nsresult nsEventListenerManager::HandleEvent(nsIPresContext* aPresContext,
+nsresult nsEventListenerManager::HandleEvent(nsPresContext* aPresContext,
                                              nsEvent* aEvent,
                                              nsIDOMEvent** aDOMEvent,
                                              nsIDOMEventTarget* aCurrentTarget,
@@ -1620,7 +1620,7 @@ nsresult nsEventListenerManager::HandleEvent(nsIPresContext* aPresContext,
 */
 
 NS_IMETHODIMP
-nsEventListenerManager::CreateEvent(nsIPresContext* aPresContext,
+nsEventListenerManager::CreateEvent(nsPresContext* aPresContext,
                                     nsEvent* aEvent,
                                     const nsAString& aEventType,
                                     nsIDOMEvent** aDOMEvent)
@@ -1886,7 +1886,7 @@ nsEventListenerManager::DispatchEvent(nsIDOMEvent* aEvent, PRBool *_retval)
   }
   
   // Retrieve the context
-  nsCOMPtr<nsIPresContext> aPresContext;
+  nsCOMPtr<nsPresContext> aPresContext;
   shell->GetPresContext(getter_AddRefs(aPresContext));
 
   return aPresContext->EventStateManager()->DispatchNewEvent(mTarget, aEvent,
@@ -1965,7 +1965,7 @@ nsEventListenerManager::GetSystemEventGroup(nsIDOMEventGroup **aGroup)
 }
 
 nsresult
-nsEventListenerManager::FixContextMenuEvent(nsIPresContext* aPresContext,
+nsEventListenerManager::FixContextMenuEvent(nsPresContext* aPresContext,
                                             nsIDOMEventTarget* aCurrentTarget,
                                             nsEvent* aEvent,
                                             nsIDOMEvent** aDOMEvent)
@@ -2025,7 +2025,7 @@ nsEventListenerManager::FixContextMenuEvent(nsIPresContext* aPresContext,
 }
 
 void nsEventListenerManager::GetCoordinatesFor(nsIDOMElement *aCurrentEl, 
-                                               nsIPresContext *aPresContext,
+                                               nsPresContext *aPresContext,
                                                nsIPresShell *aPresShell, 
                                                nsPoint& aTargetPt)
 {

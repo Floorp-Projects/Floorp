@@ -41,7 +41,7 @@
 #include "nsStringBuf.h"
 #include "nsDocument.h"
 #include "nsIPresShell.h"
-#include "nsIPresContext.h"
+#include "nsPresContext.h"
 #include "nsIContentDelegate.h"
 #include "nsIViewManager.h"
 #include "nsIView.h"
@@ -83,9 +83,9 @@ public:
 
   virtual ~GeometryTest() {};
 
-  void CreateGeometry(BasicTest *aDoc, nsIPresContext *aPC);
+  void CreateGeometry(BasicTest *aDoc, nsPresContext *aPC);
 
-  void VerifyGeometry(BasicTest *aDoc, nsIPresContext *aPC);
+  void VerifyGeometry(BasicTest *aDoc, nsPresContext *aPC);
 
   nsIPresShell * mShell;
   nsIViewManager * mViewManager;
@@ -453,7 +453,7 @@ GeometryTest::GeometryTest(BasicTest *aDoc)
     dx->SetAppUnitsToDevUnits(dx->TwipsToDevUnits());
   }
 
-  nsIPresContext * pc = nsnull;
+  nsPresContext * pc = nsnull;
   nsresult status = NS_NewGalleyContext(&pc);
   if ((NS_FAILED(status)) ||  nsnull==pc)
   {
@@ -545,7 +545,7 @@ GeometryTest::GeometryTest(BasicTest *aDoc)
 }
 
 /** given a content model, create a geometry model */
-void GeometryTest::CreateGeometry(BasicTest * aDoc, nsIPresContext *aPC)
+void GeometryTest::CreateGeometry(BasicTest * aDoc, nsPresContext *aPC)
 {
   nsIContent *root;
   aDoc->GetRootContent(&root);
@@ -587,7 +587,7 @@ void GeometryTest::CreateGeometry(BasicTest * aDoc, nsIPresContext *aPC)
   
 }
 
-void GeometryTest::VerifyGeometry(BasicTest *aDoc, nsIPresContext *aPC)
+void GeometryTest::VerifyGeometry(BasicTest *aDoc, nsPresContext *aPC)
 {
   mRootFrame->List(out);
 }

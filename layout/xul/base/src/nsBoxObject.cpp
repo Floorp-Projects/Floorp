@@ -41,7 +41,7 @@
 #include "nsIBoxPaintManager.h"
 #include "nsIDocument.h"
 #include "nsIPresShell.h"
-#include "nsIPresContext.h"
+#include "nsPresContext.h"
 #include "nsIDocument.h"
 #include "nsIContent.h"
 #include "nsIFrame.h"
@@ -244,7 +244,7 @@ nsBoxObject::GetOffsetRect(nsRect& aRect)
         }
 
         // Get the Presentation Context from the Shell
-        nsCOMPtr<nsIPresContext> context;
+        nsCOMPtr<nsPresContext> context;
         presShell->GetPresContext(getter_AddRefs(context));
        
         if(context) {
@@ -284,7 +284,7 @@ nsBoxObject::GetScreenRect(nsRect& aRect)
       // Flush all pending notifications so that our frames are uptodate
       doc->FlushPendingNotifications(Flush_Layout);
 
-      nsCOMPtr<nsIPresContext> presContext;
+      nsCOMPtr<nsPresContext> presContext;
       presShell->GetPresContext(getter_AddRefs(presContext));
       
       if (presContext) {

@@ -44,7 +44,7 @@
 #include "nsIDOMNodeList.h"
 #include "nsHTMLAtoms.h"
 #include "nsIWidget.h"
-#include "nsIPresContext.h"
+#include "nsPresContext.h"
 #include "nsIDOMWindowInternal.h"
 #include "nsIScriptGlobalObject.h"
 #include "nsIViewManager.h"
@@ -80,7 +80,7 @@ nsTitleBarFrame::nsTitleBarFrame(nsIPresShell* aPresShell)
 
 
 
-NS_IMETHODIMP  nsTitleBarFrame::Init(nsIPresContext*  aPresContext,
+NS_IMETHODIMP  nsTitleBarFrame::Init(nsPresContext*  aPresContext,
                 nsIContent*      aContent,
                 nsIFrame*        aParent,
                 nsStyleContext*  aContext,
@@ -103,7 +103,7 @@ nsTitleBarFrame::GetMouseThrough(PRBool& aMouseThrough)
   return NS_OK;
 }
 
-NS_IMETHODIMP nsTitleBarFrame::GetFrameForPoint(nsIPresContext* aPresContext,
+NS_IMETHODIMP nsTitleBarFrame::GetFrameForPoint(nsPresContext* aPresContext,
                                     const nsPoint& aPoint, 
                                     nsFramePaintLayer aWhichLayer,
                                     nsIFrame**     aFrame)
@@ -118,7 +118,7 @@ NS_IMETHODIMP nsTitleBarFrame::GetFrameForPoint(nsIPresContext* aPresContext,
 
 	
 NS_IMETHODIMP
-nsTitleBarFrame::HandleEvent(nsIPresContext* aPresContext, 
+nsTitleBarFrame::HandleEvent(nsPresContext* aPresContext, 
                                       nsGUIEvent* aEvent,
                                       nsEventStatus* aEventStatus)
 {
@@ -202,7 +202,7 @@ nsTitleBarFrame::HandleEvent(nsIPresContext* aPresContext,
 }
 
 NS_IMETHODIMP 
-nsTitleBarFrame::CaptureMouseEvents(nsIPresContext* aPresContext,PRBool aGrabMouseEvents)
+nsTitleBarFrame::CaptureMouseEvents(nsPresContext* aPresContext,PRBool aGrabMouseEvents)
 {
 	// get its view
   nsIView* view = GetView();
@@ -231,7 +231,7 @@ nsTitleBarFrame::CaptureMouseEvents(nsIPresContext* aPresContext,PRBool aGrabMou
 
 
 void 
-nsTitleBarFrame::MouseClicked (nsIPresContext* aPresContext) 
+nsTitleBarFrame::MouseClicked (nsPresContext* aPresContext) 
 {
   // Execute the oncommand event handler.
   nsEventStatus status = nsEventStatus_eIgnore;

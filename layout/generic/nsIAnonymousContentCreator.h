@@ -43,7 +43,7 @@
 #include "nsIContent.h"
 #include "nsCOMPtr.h"
 
-class nsIPresContext;
+class nsPresContext;
 class nsISupportsArray;
 class nsIAtom;
 class nsIFrame;
@@ -61,12 +61,12 @@ class nsIFrame;
 class nsIAnonymousContentCreator : public nsISupports {
 public:
      NS_DEFINE_STATIC_IID_ACCESSOR(NS_IANONYMOUS_CONTENT_CREATOR_IID)
-     NS_IMETHOD CreateAnonymousContent(nsIPresContext* aPresContext,
+     NS_IMETHOD CreateAnonymousContent(nsPresContext* aPresContext,
                                        nsISupportsArray& aAnonymousItems)=0;
 
      // If the creator doesn't want to create a special frame or frame hierarchy
      // then it should null out aFrame and return NS_ERROR_FAILURE
-     NS_IMETHOD CreateFrameFor(nsIPresContext*   aPresContext,
+     NS_IMETHOD CreateFrameFor(nsPresContext*   aPresContext,
                                nsIContent *      aContent,
                                nsIFrame**        aFrame)=0;
 

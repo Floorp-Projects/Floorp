@@ -40,7 +40,7 @@
 
 #include "nsCOMPtr.h"
 #include "nsFrame.h"
-#include "nsIPresContext.h"
+#include "nsPresContext.h"
 #include "nsUnitConversion.h"
 #include "nsStyleContext.h"
 #include "nsStyleConsts.h"
@@ -113,7 +113,7 @@ nsMathMLmoFrame::GetType() const
 // frame's state bit in our child text frame. So we will first check
 // its selected state bit, and use this little helper to double check.
 PRBool
-nsMathMLmoFrame::IsFrameInSelection(nsIPresContext* aPresContext,
+nsMathMLmoFrame::IsFrameInSelection(nsPresContext* aPresContext,
                                     nsIFrame*       aFrame)
 {
   NS_ASSERTION(aFrame, "null arg");
@@ -152,7 +152,7 @@ nsMathMLmoFrame::IsFrameInSelection(nsIPresContext* aPresContext,
 }
 
 NS_IMETHODIMP
-nsMathMLmoFrame::Paint(nsIPresContext*      aPresContext,
+nsMathMLmoFrame::Paint(nsPresContext*      aPresContext,
                        nsIRenderingContext& aRenderingContext,
                        const nsRect&        aDirtyRect,
                        nsFramePaintLayer    aWhichLayer,
@@ -198,7 +198,7 @@ nsMathMLmoFrame::Paint(nsIPresContext*      aPresContext,
 
 // get the text that we enclose and setup our nsMathMLChar
 void
-nsMathMLmoFrame::ProcessTextData(nsIPresContext* aPresContext)
+nsMathMLmoFrame::ProcessTextData(nsPresContext* aPresContext)
 {
   mFlags = 0;
 
@@ -285,7 +285,7 @@ nsMathMLmoFrame::ProcessTextData(nsIPresContext* aPresContext)
 // called very often. We depend on many things that may change around us.
 // However, we re-use unchanged values.
 void
-nsMathMLmoFrame::ProcessOperatorData(nsIPresContext* aPresContext)
+nsMathMLmoFrame::ProcessOperatorData(nsPresContext* aPresContext)
 {
   // if we have been here before, we will just use our cached form
   nsOperatorFlags form = NS_MATHML_OPERATOR_GET_FORM(mFlags);
@@ -616,7 +616,7 @@ nsMathMLmoFrame::ProcessOperatorData(nsIPresContext* aPresContext)
 //       On input  - it contains our current size
 //       On output - the same size or the new size that we want
 NS_IMETHODIMP
-nsMathMLmoFrame::Stretch(nsIPresContext*      aPresContext,
+nsMathMLmoFrame::Stretch(nsPresContext*      aPresContext,
                          nsIRenderingContext& aRenderingContext,
                          nsStretchDirection   aStretchDirection,
                          nsBoundingMetrics&   aContainerSize,
@@ -931,7 +931,7 @@ nsMathMLmoFrame::Stretch(nsIPresContext*      aPresContext,
 }
 
 NS_IMETHODIMP
-nsMathMLmoFrame::InheritAutomaticData(nsIPresContext* aPresContext,
+nsMathMLmoFrame::InheritAutomaticData(nsPresContext* aPresContext,
                                       nsIFrame*       aParent)
 {
   // retain our native direction, it only changes if our text content changes
@@ -942,7 +942,7 @@ nsMathMLmoFrame::InheritAutomaticData(nsIPresContext* aPresContext,
 }
 
 NS_IMETHODIMP
-nsMathMLmoFrame::TransmitAutomaticData(nsIPresContext* aPresContext)
+nsMathMLmoFrame::TransmitAutomaticData(nsPresContext* aPresContext)
 {
   // this will cause us to re-sync our flags from scratch
   // but our returned 'form' is still not final (bug 133429), it will
@@ -953,7 +953,7 @@ nsMathMLmoFrame::TransmitAutomaticData(nsIPresContext* aPresContext)
 }
 
 NS_IMETHODIMP
-nsMathMLmoFrame::Reflow(nsIPresContext*          aPresContext,
+nsMathMLmoFrame::Reflow(nsPresContext*          aPresContext,
                         nsHTMLReflowMetrics&     aDesiredSize,
                         const nsHTMLReflowState& aReflowState,
                         nsReflowStatus&          aStatus)
@@ -974,7 +974,7 @@ nsMathMLmoFrame::ReflowDirtyChild(nsIPresShell* aPresShell,
   // an re-build the automatic data from the parent of our outermost embellished
   // container (we ensure that we are the core, not just a sibling of the core)
 
-  nsCOMPtr<nsIPresContext> presContext;
+  nsCOMPtr<nsPresContext> presContext;
   aPresShell->GetPresContext(getter_AddRefs(presContext));
 
   ProcessTextData(presContext);
@@ -991,7 +991,7 @@ nsMathMLmoFrame::ReflowDirtyChild(nsIPresShell* aPresShell,
 }
 
 NS_IMETHODIMP
-nsMathMLmoFrame::AttributeChanged(nsIPresContext* aPresContext,
+nsMathMLmoFrame::AttributeChanged(nsPresContext* aPresContext,
                                   nsIContent*     aContent,
                                   PRInt32         aNameSpaceID,
                                   nsIAtom*        aAttribute,

@@ -53,7 +53,7 @@
 
 #define PL_ARENA_CONST_ALIGN_MASK 3
 #include "nsIPresShell.h"
-#include "nsIPresContext.h"
+#include "nsPresContext.h"
 #include "nsIContent.h"
 #include "nsIDocument.h"
 #include "nsIDOMXULDocument.h"
@@ -328,13 +328,13 @@ public:
   void Add(const char * aName, nsReflowReason aType, nsIFrame * aFrame);
   ReflowCounter * LookUp(const char * aName);
 
-  void PaintCount(const char * aName, nsIRenderingContext* aRenderingContext, nsIPresContext* aPresContext, nsIFrame * aFrame, PRUint32 aColor);
+  void PaintCount(const char * aName, nsIRenderingContext* aRenderingContext, nsPresContext* aPresContext, nsIFrame * aFrame, PRUint32 aColor);
 
   FILE * GetOutFile() { return mFD; }
 
   PLHashTable * GetIndiFrameHT() { return mIndiFrameCounts; }
 
-  void SetPresContext(nsIPresContext * aPresContext) { mPresContext = aPresContext; } // weak reference
+  void SetPresContext(nsPresContext * aPresContext) { mPresContext = aPresContext; } // weak reference
   void SetPresShell(nsIPresShell* aPresShell) { mPresShell= aPresShell; } // weak reference
 
   void SetDumpFrameCounts(PRBool aVal)         { mDumpFrameCounts = aVal; }
@@ -377,7 +377,7 @@ protected:
   PRBool mCycledOnce;
 
   // Root Frame for Individual Tracking
-  nsIPresContext * mPresContext;
+  nsPresContext * mPresContext;
   nsIPresShell*    mPresShell;
 
   // ReflowCountMgr gReflowCountMgr;
@@ -832,14 +832,14 @@ public:
     eOOM       // Out of memory.
   };
   AddCommandResult
-  AddCommand(nsIPresContext      *aPresContext,
+  AddCommand(nsPresContext      *aPresContext,
              nsHTMLReflowCommand *aCommand);
 
   /**
    * Dispatch the incremental reflow.
    */
   void
-  Dispatch(nsIPresContext      *aPresContext,
+  Dispatch(nsPresContext      *aPresContext,
            nsHTMLReflowMetrics &aDesiredSize,
            const nsSize        &aMaxSize,
            nsIRenderingContext &aRendContext);
@@ -849,7 +849,7 @@ public:
    * Dump the incremental reflow state.
    */
   void
-  Dump(nsIPresContext *aPresContext) const;
+  Dump(nsPresContext *aPresContext) const;
 #endif
 
 protected:
@@ -866,7 +866,7 @@ IncrementalReflow::~IncrementalReflow()
 }
 
 void
-IncrementalReflow::Dispatch(nsIPresContext      *aPresContext,
+IncrementalReflow::Dispatch(nsPresContext      *aPresContext,
                             nsHTMLReflowMetrics &aDesiredSize,
                             const nsSize        &aMaxSize,
                             nsIRenderingContext &aRendContext)
@@ -915,7 +915,7 @@ IncrementalReflow::Dispatch(nsIPresContext      *aPresContext,
 }
 
 IncrementalReflow::AddCommandResult
-IncrementalReflow::AddCommand(nsIPresContext      *aPresContext,
+IncrementalReflow::AddCommand(nsPresContext      *aPresContext,
                               nsHTMLReflowCommand *aCommand)
 {
   nsIFrame *frame;
@@ -999,7 +999,7 @@ IncrementalReflow::AddCommand(nsIPresContext      *aPresContext,
 
 #ifdef NS_DEBUG
 void
-IncrementalReflow::Dump(nsIPresContext *aPresContext) const
+IncrementalReflow::Dump(nsPresContext *aPresContext) const
 {
   for (PRInt32 i = mRoots.Count() - 1; i >= 0; --i)
     NS_STATIC_CAST(nsReflowPath *, mRoots[i])->Dump(aPresContext, stdout, 0);
@@ -1070,7 +1070,7 @@ public:
 
   // nsIPresShell
   NS_IMETHOD Init(nsIDocument* aDocument,
-                  nsIPresContext* aPresContext,
+                  nsPresContext* aPresContext,
                   nsIViewManager* aViewManager,
                   nsStyleSet* aStyleSet,
                   nsCompatibility aCompatMode);
@@ -1085,7 +1085,7 @@ public:
   NS_IMETHOD AllocateStackMemory(size_t aSize, void** aResult);
 
   NS_IMETHOD GetDocument(nsIDocument** aResult);
-  NS_IMETHOD GetPresContext(nsIPresContext** aResult);
+  NS_IMETHOD GetPresContext(nsPresContext** aResult);
   NS_IMETHOD GetViewManager(nsIViewManager** aResult);
   nsIViewManager* GetViewManager() { return mViewManager; }
   NS_IMETHOD GetActiveAlternateStyleSheet(nsString& aSheetTitle);
@@ -1303,7 +1303,7 @@ public:
 #ifdef MOZ_REFLOW_PERF
   NS_IMETHOD DumpReflows();
   NS_IMETHOD CountReflows(const char * aName, PRUint32 aType, nsIFrame * aFrame);
-  NS_IMETHOD PaintCount(const char * aName, nsIRenderingContext* aRenderingContext, nsIPresContext* aPresContext, nsIFrame * aFrame, PRUint32 aColor);
+  NS_IMETHOD PaintCount(const char * aName, nsIRenderingContext* aRenderingContext, nsPresContext* aPresContext, nsIFrame * aFrame, PRUint32 aColor);
 
   NS_IMETHOD SetPaintFrameCount(PRBool aOn);
   
@@ -1488,7 +1488,7 @@ PRLogModuleInfo* PresShell::gLog;
 
 #ifdef NS_DEBUG
 static void
-VerifyStyleTree(nsIPresContext* aPresContext, nsFrameManager* aFrameManager)
+VerifyStyleTree(nsPresContext* aPresContext, nsFrameManager* aFrameManager)
 {
   if (nsIFrameDebug::GetVerifyStyleTreeEnable()) {
     nsIFrame* rootFrame = aFrameManager->GetRootFrame();
@@ -1666,7 +1666,7 @@ PresShell::~PresShell()
  */
 NS_IMETHODIMP
 PresShell::Init(nsIDocument* aDocument,
-                nsIPresContext* aPresContext,
+                nsPresContext* aPresContext,
                 nsIViewManager* aViewManager,
                 nsStyleSet* aStyleSet,
                 nsCompatibility aCompatMode)
@@ -2020,7 +2020,7 @@ PresShell::GetDocument(nsIDocument** aResult)
 }
 
 NS_IMETHODIMP
-PresShell::GetPresContext(nsIPresContext** aResult)
+PresShell::GetPresContext(nsPresContext** aResult)
 {
   NS_PRECONDITION(nsnull != aResult, "null ptr");
   if (nsnull == aResult) {
@@ -3418,7 +3418,7 @@ PresShell::CheckVisibility(nsIDOMNode *node, PRInt16 startOffset, PRInt16 EndOff
 //end implementations nsISelectionController
 
 
-static void UpdateViewProperties(nsIPresContext* aPresContext, nsIViewManager* aVM,
+static void UpdateViewProperties(nsPresContext* aPresContext, nsIViewManager* aVM,
                                  nsIView* aView) {
   nsIViewManager* thisVM = aView->GetViewManager();
   if (thisVM != aVM) {
@@ -3539,7 +3539,7 @@ PresShell::GetPageSequenceFrame(nsIPageSequenceFrame** aResult) const
           // if it is then get the scrolled frame
           scrollable->GetScrolledFrame(nsnull, child);
       } else {
-        if (mPresContext->Type() == nsIPresContext::eContext_PrintPreview) {
+        if (mPresContext->Type() == nsPresContext::eContext_PrintPreview) {
           child = child->GetFirstChild(nsnull);
         }
       }
@@ -6563,7 +6563,7 @@ ReframeImageBoxes(nsIFrame *aFrame, void *aClosure)
 }
 
 static void
-WalkFramesThroughPlaceholders(nsIPresContext *aPresContext, nsIFrame *aFrame,
+WalkFramesThroughPlaceholders(nsPresContext *aPresContext, nsIFrame *aFrame,
                               frameWalkerFn aFunc, void *aClosure)
 {
   PRBool walkChildren = (*aFunc)(aFrame, aClosure);
@@ -6712,8 +6712,8 @@ LogVerifyMessage(nsIFrame* k1, nsIFrame* k2, const char* aMsg,
 }
 
 static PRBool
-CompareTrees(nsIPresContext* aFirstPresContext, nsIFrame* aFirstFrame, 
-             nsIPresContext* aSecondPresContext, nsIFrame* aSecondFrame)
+CompareTrees(nsPresContext* aFirstPresContext, nsIFrame* aFirstFrame, 
+             nsPresContext* aSecondPresContext, nsIFrame* aSecondFrame)
 {
   if (!aFirstPresContext || !aFirstFrame || !aSecondPresContext || !aSecondFrame)
     return PR_TRUE;
@@ -7021,14 +7021,14 @@ PresShell::VerifyIncrementalReflow()
      printf("Building Verification Tree...\n");
    }
   // All the stuff we are creating that needs releasing
-  nsIPresContext* cx;
+  nsPresContext* cx;
   nsIViewManager* vm;
   nsIPresShell* sh;
 
   // Create a presentation context to view the new frame tree
-  NS_IF_ADDREF(cx = new nsIPresContext(mPresContext->IsPaginated() ?
-                                       nsIPresContext::eContext_PrintPreview :
-                                       nsIPresContext::eContext_Galley));
+  NS_IF_ADDREF(cx = new nsPresContext(mPresContext->IsPaginated() ?
+                                       nsPresContext::eContext_PrintPreview :
+                                       nsPresContext::eContext_Galley));
 
   if (!cx)
     return NS_ERROR_OUT_OF_MEMORY;
@@ -7315,7 +7315,7 @@ PresShell::CountReflows(const char * aName, PRUint32 aType, nsIFrame * aFrame)
 
 //-------------------------------------------------------------
 NS_IMETHODIMP
-PresShell::PaintCount(const char * aName, nsIRenderingContext* aRenderingContext, nsIPresContext* aPresContext, nsIFrame * aFrame, PRUint32 aColor)
+PresShell::PaintCount(const char * aName, nsIRenderingContext* aRenderingContext, nsPresContext* aPresContext, nsIFrame * aFrame, PRUint32 aColor)
 {
   if (mReflowCountMgr) {
     mReflowCountMgr->PaintCount(aName, aRenderingContext, aPresContext, aFrame, aColor);
@@ -7527,7 +7527,7 @@ void ReflowCountMgr::Add(const char * aName, nsReflowReason aType, nsIFrame * aF
 //------------------------------------------------------------------
 void ReflowCountMgr::PaintCount(const char *    aName, 
                                 nsIRenderingContext* aRenderingContext, 
-                                nsIPresContext* aPresContext, 
+                                nsPresContext* aPresContext, 
                                 nsIFrame*       aFrame, 
                                 PRUint32        aColor)
 {
@@ -7660,7 +7660,7 @@ void ReflowCountMgr::DoGrandTotals()
   }
 }
 
-static void RecurseIndiTotals(nsIPresContext* aPresContext, 
+static void RecurseIndiTotals(nsPresContext* aPresContext, 
                               PLHashTable *   aHT, 
                               nsIFrame *      aParentFrame,
                               PRInt32         aLevel)

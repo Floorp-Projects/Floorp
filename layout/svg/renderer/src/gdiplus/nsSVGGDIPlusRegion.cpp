@@ -48,7 +48,7 @@ using namespace Gdiplus;
 #include "nsISVGGDIPlusRegion.h"
 #include "nsSVGGDIPlusRegion.h"
 #include "nsISVGRectangleSink.h"
-#include "nsIPresContext.h"
+#include "nsPresContext.h"
 #include "nsDeviceContextWin.h"
 
 /**
@@ -69,7 +69,7 @@ protected:
                                              const GraphicsPath* path);
   friend nsresult NS_NewSVGGDIPlusClonedRegion(nsISVGRendererRegion** result,
                                                const Region* region,
-                                               nsIPresContext *presContext);
+                                               nsPresContext *presContext);
   nsSVGGDIPlusRegion(RectF& rect);
   nsSVGGDIPlusRegion(const GraphicsPath* path);
   nsSVGGDIPlusRegion(const nsSVGGDIPlusRegion& other);
@@ -186,7 +186,7 @@ NS_NewSVGGDIPlusPathRegion(nsISVGRendererRegion** result,
 
 nsresult NS_NewSVGGDIPlusClonedRegion(nsISVGRendererRegion** result,
                                       const Region* region,
-                                      nsIPresContext *presContext)
+                                      nsPresContext *presContext)
 {
 #ifdef NS_SVG_GDIPLUS_RENDERER_USE_RECT_REGIONS
   HWND win;

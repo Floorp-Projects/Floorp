@@ -60,7 +60,7 @@
 #include "nsIScriptGlobalObject.h"
 #include "nsIContent.h"
 #include "nsIPresShell.h"
-#include "nsIPresContext.h"
+#include "nsPresContext.h"
 #include "nsIView.h"
 #include "nsIFrame.h"
 #include "nsIWidget.h"
@@ -129,7 +129,7 @@ GetScreenOrigin(nsIDOMElement* aElement)
     nsIPresShell* presShell = doc->GetShellAt(0);
     
     if (presShell) {
-      nsCOMPtr<nsIPresContext> presContext;
+      nsCOMPtr<nsPresContext> presContext;
       presShell->GetPresContext(getter_AddRefs(presContext));
 
       if (presContext) {

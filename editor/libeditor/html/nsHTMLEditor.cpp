@@ -93,7 +93,7 @@
 #include "nsIDocumentEncoder.h"
 #include "nsIDOMDocumentFragment.h"
 #include "nsIPresShell.h"
-#include "nsIPresContext.h"
+#include "nsPresContext.h"
 #include "nsParserCIID.h"
 #include "nsIImage.h"
 #include "nsAOLCiter.h"
@@ -267,7 +267,7 @@ NS_IMETHODIMP nsHTMLEditor::Init(nsIDOMDocument *aDoc,
     mHTMLCSSUtils->Init(this);
 
     // disable links
-    nsCOMPtr<nsIPresContext> context;
+    nsCOMPtr<nsPresContext> context;
     aPresShell->GetPresContext(getter_AddRefs(context));
     if (!context) return NS_ERROR_NULL_POINTER;
     if (!(mFlags & eEditorPlaintextMask))
@@ -5959,7 +5959,7 @@ nsHTMLEditor::GetElementOrigin(nsIDOMElement * aElement, PRInt32 & aX, PRInt32 &
   ps->GetPrimaryFrameFor(content, &frame);
 
   float t2p;
-  nsCOMPtr<nsIPresContext> pcontext;
+  nsCOMPtr<nsPresContext> pcontext;
   ps->GetPresContext(getter_AddRefs(pcontext));
   t2p = pcontext->TwipsToPixels();
 

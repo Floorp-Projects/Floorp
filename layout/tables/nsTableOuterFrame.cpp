@@ -40,7 +40,7 @@
 #include "nsHTMLReflowCommand.h"
 #include "nsStyleContext.h"
 #include "nsStyleConsts.h"
-#include "nsIPresContext.h"
+#include "nsPresContext.h"
 #include "nsIRenderingContext.h"
 #include "nsCSSRendering.h"
 #include "nsIContent.h"
@@ -72,7 +72,7 @@ nsTableCaptionFrame::~nsTableCaptionFrame()
 }
 
 NS_IMETHODIMP
-nsTableOuterFrame::Destroy(nsIPresContext* aPresContext)
+nsTableOuterFrame::Destroy(nsPresContext* aPresContext)
 {
   if (mCaptionFrame) {
     mCaptionFrame->Destroy(aPresContext);
@@ -158,7 +158,7 @@ nsTableOuterFrame::IsContainingBlock() const
 }
 
 NS_IMETHODIMP
-nsTableOuterFrame::Init(nsIPresContext*  aPresContext,
+nsTableOuterFrame::Init(nsPresContext*  aPresContext,
                    nsIContent*           aContent,
                    nsIFrame*             aParent,
                    nsStyleContext*       aContext,
@@ -196,7 +196,7 @@ nsTableOuterFrame::GetAdditionalChildListName(PRInt32 aIndex) const
 }
 
 NS_IMETHODIMP 
-nsTableOuterFrame::SetInitialChildList(nsIPresContext* aPresContext,
+nsTableOuterFrame::SetInitialChildList(nsPresContext* aPresContext,
                                        nsIAtom*        aListName,
                                        nsIFrame*       aChildList)
 {
@@ -218,7 +218,7 @@ nsTableOuterFrame::SetInitialChildList(nsIPresContext* aPresContext,
 }
 
 NS_IMETHODIMP
-nsTableOuterFrame::AppendFrames(nsIPresContext* aPresContext,
+nsTableOuterFrame::AppendFrames(nsPresContext* aPresContext,
                                 nsIPresShell&   aPresShell,
                                 nsIAtom*        aListName,
                                 nsIFrame*       aFrameList)
@@ -254,7 +254,7 @@ nsTableOuterFrame::AppendFrames(nsIPresContext* aPresContext,
 }
 
 NS_IMETHODIMP
-nsTableOuterFrame::InsertFrames(nsIPresContext* aPresContext,
+nsTableOuterFrame::InsertFrames(nsPresContext* aPresContext,
                                 nsIPresShell&   aPresShell,
                                 nsIAtom*        aListName,
                                 nsIFrame*       aPrevFrame,
@@ -265,7 +265,7 @@ nsTableOuterFrame::InsertFrames(nsIPresContext* aPresContext,
 }
 
 NS_IMETHODIMP
-nsTableOuterFrame::RemoveFrame(nsIPresContext* aPresContext,
+nsTableOuterFrame::RemoveFrame(nsPresContext* aPresContext,
                                nsIPresShell&   aPresShell,
                                nsIAtom*        aListName,
                                nsIFrame*       aOldFrame)
@@ -306,7 +306,7 @@ nsTableOuterFrame::RemoveFrame(nsIPresContext* aPresContext,
 }
 
 NS_METHOD 
-nsTableOuterFrame::Paint(nsIPresContext*      aPresContext,
+nsTableOuterFrame::Paint(nsPresContext*      aPresContext,
                          nsIRenderingContext& aRenderingContext,
                          const nsRect&        aDirtyRect,
                          nsFramePaintLayer    aWhichLayer,
@@ -355,7 +355,7 @@ nsTableOuterFrame::Paint(nsIPresContext*      aPresContext,
 }
 
 NS_IMETHODIMP
-nsTableOuterFrame::GetFrameForPoint(nsIPresContext* aPresContext,
+nsTableOuterFrame::GetFrameForPoint(nsPresContext* aPresContext,
                                    const nsPoint& aPoint, 
                                    nsFramePaintLayer aWhichLayer,
                                    nsIFrame**     aFrame)
@@ -374,7 +374,7 @@ nsTableOuterFrame::GetFrameForPoint(nsIPresContext* aPresContext,
   return GetFrameForPointUsing(aPresContext, aPoint, nsnull, aWhichLayer, PR_FALSE, aFrame);
 }
 
-NS_IMETHODIMP nsTableOuterFrame::SetSelected(nsIPresContext* aPresContext,
+NS_IMETHODIMP nsTableOuterFrame::SetSelected(nsPresContext* aPresContext,
                                              nsIDOMRange *aRange,
                                              PRBool aSelected,
                                              nsSpread aSpread)
@@ -386,7 +386,7 @@ NS_IMETHODIMP nsTableOuterFrame::SetSelected(nsIPresContext* aPresContext,
 }
 
 NS_IMETHODIMP 
-nsTableOuterFrame::GetParentStyleContextFrame(nsIPresContext* aPresContext,
+nsTableOuterFrame::GetParentStyleContextFrame(nsPresContext* aPresContext,
                                               nsIFrame**      aProviderFrame,
                                               PRBool*         aIsChild)
 {
@@ -442,7 +442,7 @@ FixAutoMargins(nscoord            aAvailWidth,
 }
 
 void
-nsTableOuterFrame::InitChildReflowState(nsIPresContext&    aPresContext,                     
+nsTableOuterFrame::InitChildReflowState(nsPresContext&    aPresContext,                     
                                         nsHTMLReflowState& aReflowState)
                                     
 {
@@ -464,7 +464,7 @@ nsTableOuterFrame::InitChildReflowState(nsIPresContext&    aPresContext,
 // get the margin and padding data. nsHTMLReflowState doesn't handle the
 // case of auto margins
 void
-nsTableOuterFrame::GetMarginPadding(nsIPresContext*          aPresContext,                     
+nsTableOuterFrame::GetMarginPadding(nsPresContext*          aPresContext,                     
                                     const nsHTMLReflowState& aOuterRS,
                                     nsIFrame*                aChildFrame,
                                     nscoord                  aAvailWidth, 
@@ -507,7 +507,7 @@ nscoord CalcAutoMargin(nscoord aAutoMargin,
 }
 
 void
-MoveFrameTo(nsIPresContext* aPresContext, 
+MoveFrameTo(nsPresContext* aPresContext, 
             nsIFrame*       aFrame, 
             nscoord         aX,
             nscoord         aY)
@@ -540,7 +540,7 @@ GetContainingBlockSize(const nsHTMLReflowState& aOuterRS)
 }
 
 void
-nsTableOuterFrame::InvalidateDamage(nsIPresContext* aPresContext,
+nsTableOuterFrame::InvalidateDamage(nsPresContext* aPresContext,
                                     PRUint8         aCaptionSide,
                                     const nsSize&   aOuterSize,
                                     PRBool          aInnerChanged,
@@ -628,7 +628,7 @@ nsTableOuterFrame::InvalidateDamage(nsIPresContext* aPresContext,
 }
 
 nscoord
-nsTableOuterFrame::GetCaptionAvailWidth(nsIPresContext*          aPresContext,
+nsTableOuterFrame::GetCaptionAvailWidth(nsPresContext*          aPresContext,
                                         nsIFrame*                aCaptionFrame,
                                         const nsHTMLReflowState& aOuterRS,
                                         nsMargin&                aCaptionMargin,
@@ -681,7 +681,7 @@ nsTableOuterFrame::GetCaptionAvailWidth(nsIPresContext*          aPresContext,
 }
 
 nscoord
-nsTableOuterFrame::GetInnerTableAvailWidth(nsIPresContext*          aPresContext,
+nsTableOuterFrame::GetInnerTableAvailWidth(nsPresContext*          aPresContext,
                                            nsIFrame*                aInnerTable,
                                            const nsHTMLReflowState& aOuterRS,
                                            nscoord*                 aCaptionWidth,
@@ -813,7 +813,7 @@ nsTableOuterFrame::GetCaptionVerticalAlign()
 }
 
 void
-nsTableOuterFrame::SetDesiredSize(nsIPresContext* aPresContext,
+nsTableOuterFrame::SetDesiredSize(nsPresContext* aPresContext,
                                   PRUint8         aCaptionSide,
                                   const nsMargin& aInnerMargin,
                                   const nsMargin& aCaptionMargin,
@@ -856,7 +856,7 @@ nsTableOuterFrame::SetDesiredSize(nsIPresContext* aPresContext,
 }
 
 void 
-nsTableOuterFrame::PctAdjustMinCaptionWidth(nsIPresContext*           aPresContext,
+nsTableOuterFrame::PctAdjustMinCaptionWidth(nsPresContext*           aPresContext,
                                             const nsHTMLReflowState&  aOuterRS,
                                             PRUint8                   aCaptionSide,
                                             nscoord&                  capMin)
@@ -878,7 +878,7 @@ nsTableOuterFrame::PctAdjustMinCaptionWidth(nsIPresContext*           aPresConte
   }
 }
 void
-nsTableOuterFrame::BalanceLeftRightCaption(nsIPresContext* aPresContext,
+nsTableOuterFrame::BalanceLeftRightCaption(nsPresContext* aPresContext,
                                            PRUint8         aCaptionSide,
                                            const nsMargin& aInnerMargin,
                                            const nsMargin& aCaptionMargin,
@@ -946,7 +946,7 @@ nsTableOuterFrame::BalanceLeftRightCaption(nsIPresContext* aPresContext,
 }
 
 nsresult 
-nsTableOuterFrame::GetCaptionOrigin(nsIPresContext*  aPresContext,
+nsTableOuterFrame::GetCaptionOrigin(nsPresContext*  aPresContext,
                                     PRUint32         aCaptionSide,
                                     const nsSize&    aContainBlockSize,
                                     const nsSize&    aInnerSize, 
@@ -1058,7 +1058,7 @@ nsTableOuterFrame::GetCaptionOrigin(nsIPresContext*  aPresContext,
 }
 
 nsresult 
-nsTableOuterFrame::GetInnerOrigin(nsIPresContext*  aPresContext,
+nsTableOuterFrame::GetInnerOrigin(nsPresContext*  aPresContext,
                                   PRUint32         aCaptionSide,
                                   const nsSize&    aContainBlockSize,
                                   const nsSize&    aCaptionSize, 
@@ -1241,7 +1241,7 @@ nsTableOuterFrame::IsAutoWidth(nsIFrame& aTableOrCaption,
 // eReflowReason_Resize was being used for incremental cases
 
 nsresult
-nsTableOuterFrame::OuterReflowChild(nsIPresContext*            aPresContext,
+nsTableOuterFrame::OuterReflowChild(nsPresContext*            aPresContext,
                                     nsIFrame*                  aChildFrame,
                                     const nsHTMLReflowState&   aOuterRS,
                                     nsHTMLReflowMetrics&       aMetrics,
@@ -1341,7 +1341,7 @@ nsTableOuterFrame::OuterReflowChild(nsIPresContext*            aPresContext,
 }
 
 void 
-nsTableOuterFrame::UpdateReflowMetrics(nsIPresContext*      aPresContext,
+nsTableOuterFrame::UpdateReflowMetrics(nsPresContext*      aPresContext,
                                        PRUint8              aCaptionSide,
                                        nsHTMLReflowMetrics& aMet,
                                        const nsMargin&      aInnerMargin,
@@ -1371,7 +1371,7 @@ nsTableOuterFrame::UpdateReflowMetrics(nsIPresContext*      aPresContext,
 }
 
 nsresult 
-nsTableOuterFrame::IncrementalReflow(nsIPresContext*          aPresContext,
+nsTableOuterFrame::IncrementalReflow(nsPresContext*          aPresContext,
                                      nsHTMLReflowMetrics&     aDesiredSize,
                                      const nsHTMLReflowState& aReflowState,
                                      nsReflowStatus&          aStatus)
@@ -1398,7 +1398,7 @@ nsTableOuterFrame::IncrementalReflow(nsIPresContext*          aPresContext,
 }
 
 nsresult 
-nsTableOuterFrame::IR_TargetIsChild(nsIPresContext*          aPresContext,
+nsTableOuterFrame::IR_TargetIsChild(nsPresContext*          aPresContext,
                                     nsHTMLReflowMetrics&     aDesiredSize,
                                     const nsHTMLReflowState& aReflowState,
                                     nsReflowStatus&          aStatus,
@@ -1434,7 +1434,7 @@ nsTableOuterFrame::IR_TargetIsChild(nsIPresContext*          aPresContext,
 }
 
 nsresult 
-nsTableOuterFrame::IR_TargetIsInnerTableFrame(nsIPresContext*           aPresContext,
+nsTableOuterFrame::IR_TargetIsInnerTableFrame(nsPresContext*           aPresContext,
                                               nsHTMLReflowMetrics&      aDesiredSize,
                                               const nsHTMLReflowState&  aReflowState,
                                               nsReflowStatus&           aStatus)
@@ -1444,7 +1444,7 @@ nsTableOuterFrame::IR_TargetIsInnerTableFrame(nsIPresContext*           aPresCon
 }
 
 nsresult 
-nsTableOuterFrame::IR_TargetIsCaptionFrame(nsIPresContext*           aPresContext,
+nsTableOuterFrame::IR_TargetIsCaptionFrame(nsPresContext*           aPresContext,
                                            nsHTMLReflowMetrics&      aDesiredSize,
                                            const nsHTMLReflowState&  aOuterRS,
                                            nsReflowStatus&           aStatus)
@@ -1556,7 +1556,7 @@ nsTableOuterFrame::IR_TargetIsCaptionFrame(nsIPresContext*           aPresContex
 }
 
 nsresult
-nsTableOuterFrame::IR_ReflowDirty(nsIPresContext*           aPresContext,
+nsTableOuterFrame::IR_ReflowDirty(nsPresContext*           aPresContext,
                                   nsHTMLReflowMetrics&      aDesiredSize,
                                   const nsHTMLReflowState&  aReflowState,
                                   nsReflowStatus&           aStatus)
@@ -1614,7 +1614,7 @@ nsTableOuterFrame::IR_ReflowDirty(nsIPresContext*           aPresContext,
 }
 
 // IR_TargetIsMe is free to foward the request to the inner table frame 
-nsresult nsTableOuterFrame::IR_TargetIsMe(nsIPresContext*           aPresContext,
+nsresult nsTableOuterFrame::IR_TargetIsMe(nsPresContext*           aPresContext,
                                           nsHTMLReflowMetrics&      aDesiredSize,
                                           const nsHTMLReflowState&  aReflowState,
                                           nsReflowStatus&           aStatus)
@@ -1649,7 +1649,7 @@ nsresult nsTableOuterFrame::IR_TargetIsMe(nsIPresContext*           aPresContext
 }
 
 nsresult 
-nsTableOuterFrame::IR_InnerTableReflow(nsIPresContext*           aPresContext,
+nsTableOuterFrame::IR_InnerTableReflow(nsPresContext*           aPresContext,
                                        nsHTMLReflowMetrics&      aOuterMet,
                                        const nsHTMLReflowState&  aOuterRS,
                                        nsReflowStatus&           aStatus)
@@ -1783,7 +1783,7 @@ nsTableOuterFrame::IR_InnerTableReflow(nsIPresContext*           aPresContext,
    has changed
 */
 nsresult 
-nsTableOuterFrame::IR_CaptionInserted(nsIPresContext*           aPresContext,
+nsTableOuterFrame::IR_CaptionInserted(nsPresContext*           aPresContext,
                                       nsHTMLReflowMetrics&      aDesiredSize,
                                       const nsHTMLReflowState&  aOuterRS,
                                       nsReflowStatus&           aStatus)
@@ -1907,7 +1907,7 @@ IsPctHeight(nsIFrame* aFrame)
   * inner table no longer fits and has to be reflowed again this time with s
   * smaller available height
   */
-NS_METHOD nsTableOuterFrame::Reflow(nsIPresContext*          aPresContext,
+NS_METHOD nsTableOuterFrame::Reflow(nsPresContext*          aPresContext,
                                     nsHTMLReflowMetrics&     aDesiredSize,
                                     const nsHTMLReflowState& aOuterRS,
                                     nsReflowStatus&          aStatus)
@@ -2107,7 +2107,7 @@ NS_METHOD nsTableOuterFrame::VerifyTree() const
  * @param   aChild child this child's next-in-flow
  * @return  PR_TRUE if successful and PR_FALSE otherwise
  */
-void nsTableOuterFrame::DeleteChildsNextInFlow(nsIPresContext* aPresContext, 
+void nsTableOuterFrame::DeleteChildsNextInFlow(nsPresContext* aPresContext, 
                                                nsIFrame*       aChild)
 {
   if (!aChild) return;

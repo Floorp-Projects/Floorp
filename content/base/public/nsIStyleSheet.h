@@ -45,7 +45,7 @@ class nsString;
 class nsIURI;
 class nsIStyleRule;
 class nsISupportsArray;
-class nsIPresContext;
+class nsPresContext;
 class nsIContent;
 class nsIDocument;
 class nsIStyleRuleProcessor;

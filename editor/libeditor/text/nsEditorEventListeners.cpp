@@ -54,7 +54,7 @@
 #include "nsIPrefBranch.h"
 #include "nsIPrefService.h"
 #include "nsILookAndFeel.h"
-#include "nsIPresContext.h"
+#include "nsPresContext.h"
 #ifdef USE_HACK_REPAINT
 // for repainting hack only
 #include "nsIView.h"
@@ -971,7 +971,7 @@ IsTargetFocused(nsIDOMEventTarget* aTarget)
   if (!shell)
     return PR_FALSE;
 
-  nsCOMPtr<nsIPresContext> presContext;
+  nsCOMPtr<nsPresContext> presContext;
   shell->GetPresContext(getter_AddRefs(presContext));
   if (!presContext)
     return PR_FALSE;

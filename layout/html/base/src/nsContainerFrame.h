@@ -54,27 +54,27 @@ class nsContainerFrame : public nsSplittableFrame
 {
 public:
   // nsIFrame overrides
-  NS_IMETHOD Init(nsIPresContext*  aPresContext,
+  NS_IMETHOD Init(nsPresContext*  aPresContext,
                   nsIContent*      aContent,
                   nsIFrame*        aParent,
                   nsStyleContext*  aContext,
                   nsIFrame*        aPrevInFlow);
-  NS_IMETHOD SetInitialChildList(nsIPresContext* aPresContext,
+  NS_IMETHOD SetInitialChildList(nsPresContext* aPresContext,
                                  nsIAtom*        aListName,
                                  nsIFrame*       aChildList);
   virtual nsIFrame* GetFirstChild(nsIAtom* aListName) const;
   virtual nsIAtom* GetAdditionalChildListName(PRInt32 aIndex) const;
-  NS_IMETHOD Destroy(nsIPresContext* aPresContext);
-  NS_IMETHOD Paint(nsIPresContext*      aPresContext,
+  NS_IMETHOD Destroy(nsPresContext* aPresContext);
+  NS_IMETHOD Paint(nsPresContext*      aPresContext,
                    nsIRenderingContext& aRenderingContext,
                    const nsRect&        aDirtyRect,
                    nsFramePaintLayer    aWhichLayer,
                    PRUint32             aFlags = 0);
-  NS_IMETHOD GetFrameForPoint(nsIPresContext* aPresContext,
+  NS_IMETHOD GetFrameForPoint(nsPresContext* aPresContext,
                               const nsPoint& aPoint, 
                               nsFramePaintLayer aWhichLayer,
                               nsIFrame**     aFrame);
-  NS_IMETHOD ReplaceFrame(nsIPresContext* aPresContext,
+  NS_IMETHOD ReplaceFrame(nsPresContext* aPresContext,
                           nsIPresShell&   aPresShell,
                           nsIAtom*        aListName,
                           nsIFrame*       aOldFrame,
@@ -82,11 +82,11 @@ public:
   NS_IMETHOD ReflowDirtyChild(nsIPresShell* aPresShell, nsIFrame* aChild);
 
 #ifdef DEBUG
-  NS_IMETHOD List(nsIPresContext* aPresContext, FILE* out, PRInt32 aIndent) const;
+  NS_IMETHOD List(nsPresContext* aPresContext, FILE* out, PRInt32 aIndent) const;
 #endif  
 
   // nsContainerFrame methods
-  virtual void DeleteNextInFlowChild(nsIPresContext* aPresContext,
+  virtual void DeleteNextInFlowChild(nsPresContext* aPresContext,
                                      nsIFrame*       aNextInFlow);
 
   static PRInt32 LengthOf(nsIFrame* aFrameList) {
@@ -95,7 +95,7 @@ public:
   }
 
   // Positions the frame's view based on the frame's origin
-  static void PositionFrameView(nsIPresContext* aPresContext,
+  static void PositionFrameView(nsPresContext* aPresContext,
                                 nsIFrame*       aKidFrame);
 
   // Set the view's size and position after its frame has been reflowed.
@@ -104,7 +104,7 @@ public:
   // NS_FRAME_NO_MOVE_VIEW - don't position the frame's view. Set this if you
   //    don't want to automatically sync the frame and view
   // NS_FRAME_NO_SIZE_VIEW - don't size the view
-  static void SyncFrameViewAfterReflow(nsIPresContext* aPresContext,
+  static void SyncFrameViewAfterReflow(nsPresContext* aPresContext,
                                        nsIFrame*       aFrame,
                                        nsIView*        aView,
                                        const nsRect*   aCombinedArea,
@@ -114,7 +114,7 @@ public:
   // (clip, transparency). This needs to be called if you change the size of
   // a view and the view's frame could have clipping set on it.
   // @param aStyleContext can be null, in which case the frame's style context is used
-  static void SyncFrameViewAfterSizeChange(nsIPresContext*  aPresContext,
+  static void SyncFrameViewAfterSizeChange(nsPresContext*  aPresContext,
                                            nsIFrame*        aFrame,
                                            nsStyleContext*  aStyleContext,
                                            nsIView*         aView,
@@ -128,7 +128,7 @@ public:
   // Call this when one of these styles changes or when the view has just
   // been created.
   // @param aStyleContext can be null, in which case the frame's style context is used
-  static void SyncFrameViewProperties(nsIPresContext*  aPresContext,
+  static void SyncFrameViewProperties(nsPresContext*  aPresContext,
                                       nsIFrame*        aFrame,
                                       nsStyleContext*  aStyleContext,
                                       nsIView*         aView,
@@ -149,7 +149,7 @@ public:
    *    case. Also implies NS_FRAME_NO_MOVE_VIEW
    */
   nsresult ReflowChild(nsIFrame*                aKidFrame,
-                       nsIPresContext*          aPresContext,
+                       nsPresContext*          aPresContext,
                        nsHTMLReflowMetrics&     aDesiredSize,
                        const nsHTMLReflowState& aReflowState,
                        nscoord                  aX,
@@ -175,7 +175,7 @@ public:
    * NS_FRAME_NO_SIZE_VIEW - don't size the frame's view
    */
   static nsresult FinishReflowChild(nsIFrame*                 aKidFrame,
-                                    nsIPresContext*           aPresContext,
+                                    nsPresContext*           aPresContext,
                                     const nsHTMLReflowState*  aReflowState,
                                     nsHTMLReflowMetrics&      aDesiredSize,
                                     nscoord                   aX,
@@ -183,27 +183,27 @@ public:
                                     PRUint32                  aFlags);
 
   
-  static void PositionChildViews(nsIPresContext* aPresContext,
+  static void PositionChildViews(nsPresContext* aPresContext,
                                  nsIFrame*       aFrame);
 
 protected:
   nsContainerFrame();
   ~nsContainerFrame();
 
-  nsresult GetFrameForPointUsing(nsIPresContext* aPresContext,
+  nsresult GetFrameForPointUsing(nsPresContext* aPresContext,
                                  const nsPoint& aPoint,
                                  nsIAtom*       aList,
                                  nsFramePaintLayer aWhichLayer,
                                  PRBool         aConsiderSelf,
                                  nsIFrame**     aFrame);
 
-  virtual void PaintChildren(nsIPresContext*      aPresContext,
+  virtual void PaintChildren(nsPresContext*      aPresContext,
                              nsIRenderingContext& aRenderingContext,
                              const nsRect&        aDirtyRect,
                              nsFramePaintLayer    aWhichLayer,
                              PRUint32             aFlags = 0);
 
-  virtual void PaintChild(nsIPresContext*      aPresContext,
+  virtual void PaintChild(nsPresContext*      aPresContext,
                           nsIRenderingContext& aRenderingContext,
                           const nsRect&        aDirtyRect,
                           nsIFrame*            aFrame,
@@ -213,13 +213,13 @@ protected:
   /**
    * Get the frames on the overflow list
    */
-  nsIFrame* GetOverflowFrames(nsIPresContext* aPresContext,
+  nsIFrame* GetOverflowFrames(nsPresContext* aPresContext,
                               PRBool          aRemoveProperty) const;
 
   /**
    * Set the overflow list
    */
-  nsresult SetOverflowFrames(nsIPresContext* aPresContext,
+  nsresult SetOverflowFrames(nsPresContext* aPresContext,
                              nsIFrame*       aOverflowFrames);
 
   /**
@@ -231,7 +231,7 @@ protected:
    *
    * @return PR_TRUE if any frames were moved and PR_FALSE otherwise
    */
-  PRBool MoveOverflowToChildList(nsIPresContext* aPresContext);
+  PRBool MoveOverflowToChildList(nsPresContext* aPresContext);
 
   /**
    * Push aFromChild and its next siblings to the next-in-flow. Change
@@ -247,7 +247,7 @@ protected:
    * @param   aPrevSibling aFromChild's previous sibling. Must not be null.
    *            It's an error to push a parent's first child frame
    */
-  void PushChildren(nsIPresContext* aPresContext,
+  void PushChildren(nsPresContext* aPresContext,
                     nsIFrame*       aFromChild,
                     nsIFrame*       aPrevSibling);
 

@@ -38,7 +38,7 @@
 
 #include "nsCOMPtr.h"
 #include "nsFrame.h"
-#include "nsIPresContext.h"
+#include "nsPresContext.h"
 #include "nsUnitConversion.h"
 #include "nsStyleContext.h"
 #include "nsStyleConsts.h"
@@ -76,7 +76,7 @@ nsMathMLmspaceFrame::~nsMathMLmspaceFrame()
 }
 
 void
-nsMathMLmspaceFrame::ProcessAttributes(nsIPresContext* aPresContext)
+nsMathMLmspaceFrame::ProcessAttributes(nsPresContext* aPresContext)
 {
   /*
   parse the attributes
@@ -124,7 +124,7 @@ nsMathMLmspaceFrame::ProcessAttributes(nsIPresContext* aPresContext)
 }
 
 NS_IMETHODIMP
-nsMathMLmspaceFrame::Reflow(nsIPresContext*          aPresContext,
+nsMathMLmspaceFrame::Reflow(nsPresContext*          aPresContext,
                             nsHTMLReflowMetrics&     aDesiredSize,
                             const nsHTMLReflowState& aReflowState,
                             nsReflowStatus&          aStatus)

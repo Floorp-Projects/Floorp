@@ -89,14 +89,14 @@ pres_shell(nsIDocShell *aDocShell)
 }
 
 #if 0 // not currently needed
-static already_AddRefed<nsIPresContext>
+static already_AddRefed<nsPresContext>
 pres_context(nsIDocShell *aDocShell)
 {
     nsCOMPtr<nsIDocumentViewer> dv =
         do_QueryInterface(nsCOMPtr<nsIContentViewer>(doc_viewer(aDocShell)));
     if (!dv)
         return nsnull;
-    nsIPresContext *result = nsnull;
+    nsPresContext *result = nsnull;
     dv->GetPresContext(result);
     return result;
 }
@@ -429,7 +429,7 @@ DumpFramesRecur(nsIDocShell* aDocShell, FILE* out)
             nsIFrame* root;
             shell->GetRootFrame(&root);
             if (root) {
-                nsCOMPtr<nsIPresContext> presContext;
+                nsCOMPtr<nsPresContext> presContext;
                 shell->GetPresContext(getter_AddRefs(presContext));
 
                 nsIFrameDebug* fdbg;

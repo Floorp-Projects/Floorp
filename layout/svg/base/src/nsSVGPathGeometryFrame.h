@@ -48,7 +48,7 @@
 #include "nsISVGValueObserver.h"
 #include "nsISVGOuterSVGFrame.h"
 
-class nsIPresContext;
+class nsPresContext;
 class nsIDOMSVGMatrix;
 class nsISVGRendererRegion;
 
@@ -72,20 +72,20 @@ public:
 
   // nsIFrame interface:
   NS_IMETHOD
-  Init(nsIPresContext*  aPresContext,
+  Init(nsPresContext*  aPresContext,
        nsIContent*      aContent,
        nsIFrame*        aParent,
        nsStyleContext*  aContext,
        nsIFrame*        aPrevInFlow);
 
-  NS_IMETHOD  AttributeChanged(nsIPresContext* aPresContext,
+  NS_IMETHOD  AttributeChanged(nsPresContext* aPresContext,
                                nsIContent*     aChild,
                                PRInt32         aNameSpaceID,
                                nsIAtom*        aAttribute,
                                PRInt32         aModType,
                                PRInt32         aHint);
 
-  NS_IMETHOD DidSetStyleContext(nsIPresContext* aPresContext);
+  NS_IMETHOD DidSetStyleContext(nsPresContext* aPresContext);
   
   // nsISVGValueObserver
   NS_IMETHOD WillModifySVGObservable(nsISVGValue* observable);

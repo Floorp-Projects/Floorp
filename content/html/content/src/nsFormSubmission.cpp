@@ -38,7 +38,7 @@
 
 #include "nsIFormSubmission.h"
 
-#include "nsIPresContext.h"
+#include "nsPresContext.h"
 #include "nsCOMPtr.h"
 #include "nsIForm.h"
 #include "nsILinkHandler.h"
@@ -112,7 +112,7 @@ public:
   // nsIFormSubmission
   //
   virtual nsresult SubmitTo(nsIURI* aActionURI, const nsAString& aTarget,
-                            nsIContent* aSource, nsIPresContext* aPresContext,
+                            nsIContent* aSource, nsPresContext* aPresContext,
                             nsIDocShell** aDocShell, nsIRequest** aRequest);
 
   /**
@@ -196,7 +196,7 @@ public:
    * @param aEncoder the returned encoder [OUT]
    */
   static nsresult GetEncoder(nsIHTMLContent* aForm,
-                             nsIPresContext* aPresContext,
+                             nsPresContext* aPresContext,
                              const nsACString& aCharset,
                              nsISaveAsCharset** aEncoder);
   /**
@@ -1151,7 +1151,7 @@ SendJSWarning(nsIHTMLContent* aContent,
 
 nsresult
 GetSubmissionFromForm(nsIHTMLContent* aForm,
-                      nsIPresContext* aPresContext,
+                      nsPresContext* aPresContext,
                       nsIFormSubmission** aFormSubmission)
 {
   nsresult rv = NS_OK;
@@ -1225,7 +1225,7 @@ GetSubmissionFromForm(nsIHTMLContent* aForm,
 
 nsresult
 nsFormSubmission::SubmitTo(nsIURI* aActionURI, const nsAString& aTarget,
-                           nsIContent* aSource, nsIPresContext* aPresContext,
+                           nsIContent* aSource, nsPresContext* aPresContext,
                            nsIDocShell** aDocShell, nsIRequest** aRequest)
 {
   nsresult rv;
@@ -1327,7 +1327,7 @@ nsFormSubmission::GetSubmitCharset(nsIHTMLContent* aForm,
 // static
 nsresult
 nsFormSubmission::GetEncoder(nsIHTMLContent* aForm,
-                             nsIPresContext* aPresContext,
+                             nsPresContext* aPresContext,
                              const nsACString& aCharset,
                              nsISaveAsCharset** aEncoder)
 {

@@ -54,13 +54,13 @@ public:
   virtual ~nsBulletFrame();
 
   // nsIFrame
-  NS_IMETHOD Init(nsIPresContext*  aPresContext,
+  NS_IMETHOD Init(nsPresContext*  aPresContext,
                   nsIContent*      aContent,
                   nsIFrame*        aParent,
                   nsStyleContext*  aContext,
                   nsIFrame*        aPrevInFlow);
-  NS_IMETHOD Destroy(nsIPresContext* aPresContext);
-  NS_IMETHOD Paint(nsIPresContext*      aCX,
+  NS_IMETHOD Destroy(nsPresContext* aPresContext);
+  NS_IMETHOD Paint(nsPresContext*      aCX,
                    nsIRenderingContext& aRenderingContext,
                    const nsRect&        aDirtyRect,
                    nsFramePaintLayer    aWhichLayer,
@@ -71,7 +71,7 @@ public:
 #endif
 
   // nsIHTMLReflow
-  NS_IMETHOD Reflow(nsIPresContext* aPresContext,
+  NS_IMETHOD Reflow(nsPresContext* aPresContext,
                     nsHTMLReflowMetrics& aMetrics,
                     const nsHTMLReflowState& aReflowState,
                     nsReflowStatus& aStatus);
@@ -91,17 +91,17 @@ public:
                           gfxIImageFrame *aNewframe,
                           nsRect *aDirtyRect);
 
-  PRBool GetListItemText(nsIPresContext* aCX,
+  PRBool GetListItemText(nsPresContext* aCX,
                          const nsStyleList& aStyleList,
                          nsString& aResult);
 
 
 protected:
-  void GetDesiredSize(nsIPresContext* aPresContext,
+  void GetDesiredSize(nsPresContext* aPresContext,
                       const nsHTMLReflowState& aReflowState,
                       nsHTMLReflowMetrics& aMetrics);
 
-  void GetLoadGroup(nsIPresContext *aPresContext, nsILoadGroup **aLoadGroup);
+  void GetLoadGroup(nsPresContext *aPresContext, nsILoadGroup **aLoadGroup);
 
   PRInt32 mOrdinal;
   nsMargin mPadding;
@@ -110,7 +110,7 @@ protected:
 
   nsSize mIntrinsicSize;
   nsSize mComputedSize;
-  nsIPresContext* mPresContext; // weak ref
+  nsPresContext* mPresContext; // weak ref
 };
 
 #endif /* nsBulletFrame_h___ */

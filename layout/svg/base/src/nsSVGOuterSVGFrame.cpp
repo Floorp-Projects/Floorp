@@ -40,7 +40,7 @@
 #include "nsContainerFrame.h"
 #include "nsCSSRendering.h"
 #include "nsISVGSVGElement.h"
-#include "nsIPresContext.h"
+#include "nsPresContext.h"
 #include "nsIDOMSVGAnimatedLength.h"
 #include "nsIDOMSVGLength.h"
 #include "nsISVGContainerFrame.h"
@@ -162,54 +162,54 @@ private:
   NS_IMETHOD_(nsrefcnt) Release() { return NS_OK; }  
 public:
   // nsIFrame:
-  NS_IMETHOD Init(nsIPresContext*  aPresContext,
+  NS_IMETHOD Init(nsPresContext*  aPresContext,
                   nsIContent*      aContent,
                   nsIFrame*        aParent,
                   nsStyleContext*  aContext,
                   nsIFrame*        aPrevInFlow);
   
-  NS_IMETHOD Reflow(nsIPresContext*          aPresContext,
+  NS_IMETHOD Reflow(nsPresContext*          aPresContext,
                     nsHTMLReflowMetrics&     aDesiredSize,
                     const nsHTMLReflowState& aReflowState,
                     nsReflowStatus&          aStatus);
 
-  NS_IMETHOD  DidReflow(nsIPresContext*   aPresContext,
+  NS_IMETHOD  DidReflow(nsPresContext*   aPresContext,
                         const nsHTMLReflowState*  aReflowState,
                         nsDidReflowStatus aStatus);
 
 
-  NS_IMETHOD  AppendFrames(nsIPresContext* aPresContext,
+  NS_IMETHOD  AppendFrames(nsPresContext* aPresContext,
                            nsIPresShell&   aPresShell,
                            nsIAtom*        aListName,
                            nsIFrame*       aFrameList);
-  NS_IMETHOD  InsertFrames(nsIPresContext* aPresContext,
+  NS_IMETHOD  InsertFrames(nsPresContext* aPresContext,
                            nsIPresShell&   aPresShell,
                            nsIAtom*        aListName,
                            nsIFrame*       aPrevFrame,
                            nsIFrame*       aFrameList);
-  NS_IMETHOD  RemoveFrame(nsIPresContext* aPresContext,
+  NS_IMETHOD  RemoveFrame(nsPresContext* aPresContext,
                           nsIPresShell&   aPresShell,
                           nsIAtom*        aListName,
                           nsIFrame*       aOldFrame);
-  NS_IMETHOD  ReplaceFrame(nsIPresContext* aPresContext,
+  NS_IMETHOD  ReplaceFrame(nsPresContext* aPresContext,
                            nsIPresShell&   aPresShell,
                            nsIAtom*        aListName,
                            nsIFrame*       aOldFrame,
                            nsIFrame*       aNewFrame);
 
-  NS_IMETHOD  AttributeChanged(nsIPresContext* aPresContext,
+  NS_IMETHOD  AttributeChanged(nsPresContext* aPresContext,
                                nsIContent*     aChild,
                                PRInt32         aNameSpaceID,
                                nsIAtom*        aAttribute,
                                PRInt32         aModType);
 
-  NS_IMETHOD  GetFrameForPoint(nsIPresContext* aPresContext,
+  NS_IMETHOD  GetFrameForPoint(nsPresContext* aPresContext,
                                const nsPoint& aPoint, 
                                nsFramePaintLayer aWhichLayer,
                                nsIFrame**     aFrame);
 
   
-  NS_IMETHOD  Paint(nsIPresContext* aPresContext,
+  NS_IMETHOD  Paint(nsPresContext* aPresContext,
                     nsIRenderingContext& aRenderingContext,
                     const nsRect& aDirtyRect,
                     nsFramePaintLayer aWhichLayer,
@@ -245,10 +245,10 @@ protected:
   void RemoveAsWidthHeightObserver();
 
   void CalculateAvailableSpace(nsRect *maxRect, nsRect *preferredRect,
-                               nsIPresContext* aPresContext,
+                               nsPresContext* aPresContext,
                                const nsHTMLReflowState& aReflowState);
   nsresult SetViewportDimensions(nsISVGViewportRect* vp, float width, float height);
-  nsresult SetViewportScale(nsISVGViewportRect* vp, nsIPresContext *context);
+  nsresult SetViewportScale(nsISVGViewportRect* vp, nsPresContext *context);
   
 //  nsIView* mView;
   nsIPresShell* mPresShell; // XXX is a non-owning ref ok?
@@ -336,7 +336,7 @@ NS_INTERFACE_MAP_END_INHERITING(nsSVGOuterSVGFrameBase)
 // nsIFrame methods
 
 NS_IMETHODIMP
-nsSVGOuterSVGFrame::Init(nsIPresContext*  aPresContext,
+nsSVGOuterSVGFrame::Init(nsPresContext*  aPresContext,
                   nsIContent*      aContent,
                   nsIFrame*        aParent,
                   nsStyleContext*  aContext,
@@ -357,7 +357,7 @@ nsSVGOuterSVGFrame::Init(nsIPresContext*  aPresContext,
 // reflowing
 
 NS_IMETHODIMP
-nsSVGOuterSVGFrame::Reflow(nsIPresContext*          aPresContext,
+nsSVGOuterSVGFrame::Reflow(nsPresContext*          aPresContext,
                            nsHTMLReflowMetrics&     aDesiredSize,
                            const nsHTMLReflowState& aReflowState,
                            nsReflowStatus&          aStatus)
@@ -561,7 +561,7 @@ nsSVGOuterSVGFrame::Reflow(nsIPresContext*          aPresContext,
 }
 
 NS_IMETHODIMP
-nsSVGOuterSVGFrame::DidReflow(nsIPresContext*   aPresContext,
+nsSVGOuterSVGFrame::DidReflow(nsPresContext*   aPresContext,
                               const nsHTMLReflowState*  aReflowState,
                               nsDidReflowStatus aStatus)
 {
@@ -592,7 +592,7 @@ nsSVGOuterSVGFrame::DidReflow(nsIPresContext*   aPresContext,
 // container methods
 
 NS_IMETHODIMP
-nsSVGOuterSVGFrame::AppendFrames(nsIPresContext* aPresContext,
+nsSVGOuterSVGFrame::AppendFrames(nsPresContext* aPresContext,
                       nsIPresShell&   aPresShell,
                       nsIAtom*        aListName,
                       nsIFrame*       aFrameList)
@@ -603,7 +603,7 @@ nsSVGOuterSVGFrame::AppendFrames(nsIPresContext* aPresContext,
 }
 
 NS_IMETHODIMP
-nsSVGOuterSVGFrame::InsertFrames(nsIPresContext* aPresContext,
+nsSVGOuterSVGFrame::InsertFrames(nsPresContext* aPresContext,
                       nsIPresShell&   aPresShell,
                       nsIAtom*        aListName,
                       nsIFrame*       aPrevFrame,
@@ -642,7 +642,7 @@ nsSVGOuterSVGFrame::InsertFrames(nsIPresContext* aPresContext,
 }
 
 NS_IMETHODIMP
-nsSVGOuterSVGFrame::RemoveFrame(nsIPresContext* aPresContext,
+nsSVGOuterSVGFrame::RemoveFrame(nsPresContext* aPresContext,
                      nsIPresShell&   aPresShell,
                      nsIAtom*        aListName,
                      nsIFrame*       aOldFrame)
@@ -667,7 +667,7 @@ nsSVGOuterSVGFrame::RemoveFrame(nsIPresContext* aPresContext,
 }
 
 NS_IMETHODIMP
-nsSVGOuterSVGFrame::ReplaceFrame(nsIPresContext* aPresContext,
+nsSVGOuterSVGFrame::ReplaceFrame(nsPresContext* aPresContext,
                       nsIPresShell&   aPresShell,
                       nsIAtom*        aListName,
                       nsIFrame*       aOldFrame,
@@ -678,7 +678,7 @@ nsSVGOuterSVGFrame::ReplaceFrame(nsIPresContext* aPresContext,
 }
 
 NS_IMETHODIMP
-nsSVGOuterSVGFrame::AttributeChanged(nsIPresContext* aPresContext,
+nsSVGOuterSVGFrame::AttributeChanged(nsPresContext* aPresContext,
                                      nsIContent*     aChild,
                                      PRInt32         aNameSpaceID,
                                      nsIAtom*        aAttribute,
@@ -697,7 +697,7 @@ nsSVGOuterSVGFrame::AttributeChanged(nsIPresContext* aPresContext,
 
 
 nsresult
-nsSVGOuterSVGFrame::GetFrameForPoint(nsIPresContext* aPresContext,
+nsSVGOuterSVGFrame::GetFrameForPoint(nsPresContext* aPresContext,
                                      const nsPoint& aPoint,
                                      nsFramePaintLayer aWhichLayer,
                                      nsIFrame**     aFrame)
@@ -744,7 +744,7 @@ nsSVGOuterSVGFrame::GetFrameForPoint(nsIPresContext* aPresContext,
 // painting
 
 NS_IMETHODIMP
-nsSVGOuterSVGFrame::Paint(nsIPresContext* aPresContext,
+nsSVGOuterSVGFrame::Paint(nsPresContext* aPresContext,
                           nsIRenderingContext& aRenderingContext,
                           const nsRect& aDirtyRect,
                           nsFramePaintLayer aWhichLayer,
@@ -1118,7 +1118,7 @@ void nsSVGOuterSVGFrame::RemoveAsWidthHeightObserver()
 void
 nsSVGOuterSVGFrame::CalculateAvailableSpace(nsRect *maxRect,
                                             nsRect *preferredRect,
-                                            nsIPresContext* aPresContext,
+                                            nsPresContext* aPresContext,
                                             const nsHTMLReflowState& aReflowState)
 {
   *preferredRect = aPresContext->GetVisibleArea();
@@ -1171,7 +1171,7 @@ nsSVGOuterSVGFrame::SetViewportDimensions(nsISVGViewportRect* vp,
 }  
 
 nsresult
-nsSVGOuterSVGFrame::SetViewportScale(nsISVGViewportRect* vp, nsIPresContext *context)
+nsSVGOuterSVGFrame::SetViewportScale(nsISVGViewportRect* vp, nsPresContext *context)
 {
   float mmPerPx = context->ScaledPixelsToTwips() / TWIPS_PER_POINT_FLOAT / (72.0f * 0.03937f);
 

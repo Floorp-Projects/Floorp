@@ -54,7 +54,7 @@
 #include "nsIDOMWindowInternal.h"
 #include "nsIDOMXULElement.h"
 #include "nsIDocument.h"
-#include "nsIPresContext.h"
+#include "nsPresContext.h"
 #include "nsIPresShell.h"
 #include "nsIScriptGlobalObject.h"
 #include "nsPIDOMWindow.h"
@@ -377,7 +377,7 @@ nsXULCommandDispatcher::UpdateCommands(const nsAString& aEventName)
       nsIPresShell *shell = document->GetShellAt(i);
 
       // Retrieve the context in which our DOM event will fire.
-      nsCOMPtr<nsIPresContext> context;
+      nsCOMPtr<nsPresContext> context;
       rv = shell->GetPresContext(getter_AddRefs(context));
       if (NS_FAILED(rv)) return rv;
 

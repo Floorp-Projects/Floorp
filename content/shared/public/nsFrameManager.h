@@ -296,12 +296,12 @@ private:
   friend struct CantRenderReplacedElementEvent;
 
   NS_HIDDEN_(nsIPresShell*) GetPresShell() const { return mPresShell; }
-  NS_HIDDEN_(nsIPresContext*) GetPresContext() const {
+  NS_HIDDEN_(nsPresContext*) GetPresContext() const {
     return mPresShell->GetPresContext();
   }
 
   NS_HIDDEN_(nsChangeHint)
-    ReResolveStyleContext(nsIPresContext    *aPresContext,
+    ReResolveStyleContext(nsPresContext    *aPresContext,
                           nsIFrame          *aFrame,
                           nsIContent        *aParentContent,
                           nsStyleChangeList *aChangeList, 
@@ -312,9 +312,9 @@ private:
     FindPostedEventFor(nsIFrame* aFrame);
 
   NS_HIDDEN_(void) DequeuePostedEventFor(nsIFrame* aFrame);
-  NS_HIDDEN_(void) DestroyPropertyList(nsIPresContext* aPresContext);
+  NS_HIDDEN_(void) DestroyPropertyList(nsPresContext* aPresContext);
   NS_HIDDEN_(PropertyList*) GetPropertyListFor(nsIAtom* aPropertyName) const;
-  NS_HIDDEN_(void) RemoveAllPropertiesFor(nsIPresContext *aPresContext,
+  NS_HIDDEN_(void) RemoveAllPropertiesFor(nsPresContext *aPresContext,
                                           nsIFrame       *aFrame);
 
   static NS_HIDDEN_(void)

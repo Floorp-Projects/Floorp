@@ -39,7 +39,7 @@
 
 #include "nsSpaceManager.h"
 
-class nsIPresContext;
+class nsPresContext;
 
 // Number of builtin nsBandTrapezoid's
 #define NS_BLOCK_BAND_DATA_TRAPS 6

@@ -122,54 +122,54 @@ public:
 
   // ----- public methods -------
   
-  NS_IMETHOD GetFrameForPoint(nsIPresContext*   aPresContext,
+  NS_IMETHOD GetFrameForPoint(nsPresContext*   aPresContext,
                               const nsPoint&    aPoint,
                               nsFramePaintLayer aWhichLayer,    
                               nsIFrame**        aFrame);
 
-  NS_IMETHOD GetCursor(nsIPresContext* aPresContext,
+  NS_IMETHOD GetCursor(nsPresContext* aPresContext,
                        nsPoint&        aPoint,
                        PRInt32&        aCursor);
 
 
   NS_IMETHOD ReflowDirtyChild(nsIPresShell* aPresShell, nsIFrame* aChild);
 
-  NS_IMETHOD  Init(nsIPresContext*  aPresContext,
+  NS_IMETHOD  Init(nsPresContext*  aPresContext,
                    nsIContent*      aContent,
                    nsIFrame*        aParent,
                    nsStyleContext*  aContext,
                    nsIFrame*        asPrevInFlow);
 
  
-  NS_IMETHOD AttributeChanged(nsIPresContext* aPresContext,
+  NS_IMETHOD AttributeChanged(nsPresContext* aPresContext,
                               nsIContent*     aChild,
                               PRInt32         aNameSpaceID,
                               nsIAtom*        aAttribute,
                               PRInt32         aModType);
 
 
-  NS_IMETHOD Reflow(nsIPresContext*          aPresContext,
+  NS_IMETHOD Reflow(nsPresContext*          aPresContext,
                     nsHTMLReflowMetrics&     aDesiredSize,
                     const nsHTMLReflowState& aReflowState,
                     nsReflowStatus&          aStatus);
 
-  NS_IMETHOD  AppendFrames(nsIPresContext* aPresContext,
+  NS_IMETHOD  AppendFrames(nsPresContext* aPresContext,
                            nsIPresShell&   aPresShell,
                            nsIAtom*        aListName,
                            nsIFrame*       aFrameList);
 
-  NS_IMETHOD  InsertFrames(nsIPresContext* aPresContext,
+  NS_IMETHOD  InsertFrames(nsPresContext* aPresContext,
                            nsIPresShell&   aPresShell,
                            nsIAtom*        aListName,
                            nsIFrame*       aPrevFrame,
                            nsIFrame*       aFrameList);
 
-  NS_IMETHOD  RemoveFrame(nsIPresContext* aPresContext,
+  NS_IMETHOD  RemoveFrame(nsPresContext* aPresContext,
                           nsIPresShell&   aPresShell,
                           nsIAtom*        aListName,
                           nsIFrame*       aOldFrame);
 
-  NS_IMETHOD  SetInitialChildList(nsIPresContext* aPresContext,
+  NS_IMETHOD  SetInitialChildList(nsPresContext* aPresContext,
                                   nsIAtom*        aListName,
                                   nsIFrame*       aChildList);
 
@@ -178,7 +178,7 @@ public:
   NS_IMETHOD GetFrameName(nsAString& aResult) const;
 #endif
 
-  NS_IMETHOD DidReflow(nsIPresContext*           aPresContext,
+  NS_IMETHOD DidReflow(nsPresContext*           aPresContext,
                        const nsHTMLReflowState*  aReflowState,
                        nsDidReflowStatus         aStatus);
 
@@ -193,12 +193,12 @@ public:
   
   nsBoxFrame(nsIPresShell* aPresShell, PRBool aIsRoot = nsnull, nsIBoxLayout* aLayoutManager = nsnull);
  
-  static nsresult CreateViewForFrame(nsIPresContext* aPresContext,
+  static nsresult CreateViewForFrame(nsPresContext* aPresContext,
                                      nsIFrame* aChild,
                                      nsStyleContext* aStyleContext,
                                      PRBool aForce);
 
-  NS_IMETHOD  Paint(nsIPresContext*      aPresContext,
+  NS_IMETHOD  Paint(nsPresContext*      aPresContext,
                     nsIRenderingContext& aRenderingContext,
                     const nsRect&        aDirtyRect,
                     nsFramePaintLayer    aWhichLayer,
@@ -220,14 +220,14 @@ protected:
 
 
     // Paint one child frame
-    virtual void PaintChild(nsIPresContext*      aPresContext,
+    virtual void PaintChild(nsPresContext*      aPresContext,
                             nsIRenderingContext& aRenderingContext,
                             const nsRect&        aDirtyRect,
                             nsIFrame*            aFrame,
                             nsFramePaintLayer    aWhichLayer,
                             PRUint32             aFlags = 0);
 
-    virtual void PaintChildren(nsIPresContext*      aPresContext,
+    virtual void PaintChildren(nsPresContext*      aPresContext,
                                nsIRenderingContext& aRenderingContext,
                                const nsRect&        aDirtyRect,
                                nsFramePaintLayer    aWhichLayer,
@@ -240,7 +240,7 @@ protected:
     virtual PRBool GetInitialVAlignment(Valignment& aValign); 
     virtual PRBool GetInitialAutoStretch(PRBool& aStretch); 
   
-    NS_IMETHOD  Destroy(nsIPresContext* aPresContext);
+    NS_IMETHOD  Destroy(nsPresContext* aPresContext);
 
     nsSize mPrefSize;
     nsSize mMinSize;
@@ -249,10 +249,10 @@ protected:
     nscoord mAscent;
 
 protected:
-    nsresult RegUnregAccessKey(nsIPresContext* aPresContext,
+    nsresult RegUnregAccessKey(nsPresContext* aPresContext,
                                PRBool aDoReg);
-    void FireDOMEvent(nsIPresContext *aPresContext, const nsAString& aDOMEventName);
-    virtual nsresult GetFrameForPointChild(nsIPresContext*   aPresContext,
+    void FireDOMEvent(nsPresContext *aPresContext, const nsAString& aDOMEventName);
+    virtual nsresult GetFrameForPointChild(nsPresContext*   aPresContext,
                                            const nsPoint&    aPoint,
                                            nsFramePaintLayer aWhichLayer,    
                                            nsIFrame*         aChild,
@@ -262,7 +262,7 @@ protected:
 private: 
 
     // helper methods
-    void TranslateEventCoords(nsIPresContext* aPresContext,
+    void TranslateEventCoords(nsPresContext* aPresContext,
                                     const nsPoint& aPoint,
                                     nsPoint& aResult);
 
@@ -272,12 +272,12 @@ private:
 
 
 #ifdef DEBUG_LAYOUT
-    nsresult SetDebug(nsIPresContext* aPresContext, PRBool aDebug);
+    nsresult SetDebug(nsPresContext* aPresContext, PRBool aDebug);
     PRBool GetInitialDebug(PRBool& aDebug);
-    void GetDebugPref(nsIPresContext* aPresContext);
+    void GetDebugPref(nsPresContext* aPresContext);
 
     nsresult DisplayDebugInfoFor(nsIBox*         aBox, 
-                                 nsIPresContext* aPresContext,
+                                 nsPresContext* aPresContext,
                                  nsPoint&        aPoint,
                                  PRInt32&        aCursor);
 
@@ -289,13 +289,13 @@ private:
 
     nsresult GetFrameSizeWithMargin(nsIBox* aBox, nsSize& aSize);
 
-    void PixelMarginToTwips(nsIPresContext* aPresContext, nsMargin& aMarginPixels);
+    void PixelMarginToTwips(nsPresContext* aPresContext, nsMargin& aMarginPixels);
 
 #ifdef DEBUG_LAYOUT
-    void GetValue(nsIPresContext* aPresContext, const nsSize& a, const nsSize& b, char* value);
-    void GetValue(nsIPresContext* aPresContext, PRInt32 a, PRInt32 b, char* value);
+    void GetValue(nsPresContext* aPresContext, const nsSize& a, const nsSize& b, char* value);
+    void GetValue(nsPresContext* aPresContext, PRInt32 a, PRInt32 b, char* value);
 #endif
-    void DrawSpacer(nsIPresContext* aPresContext, nsIRenderingContext& aRenderingContext, PRBool aHorizontal, PRInt32 flex, nscoord x, nscoord y, nscoord size, nscoord spacerSize);
+    void DrawSpacer(nsPresContext* aPresContext, nsIRenderingContext& aRenderingContext, PRBool aHorizontal, PRInt32 flex, nscoord x, nscoord y, nscoord size, nscoord spacerSize);
     void DrawLine(nsIRenderingContext& aRenderingContext,  PRBool aHorizontal, nscoord x1, nscoord y1, nscoord x2, nscoord y2);
     void FillRect(nsIRenderingContext& aRenderingContext,  PRBool aHorizontal, nscoord x, nscoord y, nscoord width, nscoord height);
     void UpdateMouseThrough();
@@ -308,7 +308,7 @@ private:
     Halignment mHalign;
     Valignment mValign;
 
-    nsIPresContext* mPresContext;
+    nsPresContext* mPresContext;
 
 #ifdef DEBUG_LAYOUT
     static PRBool gDebug;

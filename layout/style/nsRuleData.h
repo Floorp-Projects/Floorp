@@ -46,7 +46,7 @@ struct nsRuleData
 {
   nsStyleStructID mSID;
   PRPackedBool mCanStoreInRuleTree;
-  nsIPresContext* mPresContext;
+  nsPresContext* mPresContext;
   nsStyleContext* mStyleContext;
   nsPostResolveFunc mPostResolveCallback;
   nsRuleDataFont* mFontData; // Should always be stack-allocated! We don't own these structures!
@@ -67,7 +67,7 @@ struct nsRuleData
 
   nsRuleDataColumn* mColumnData;
 
-  nsRuleData(const nsStyleStructID& aSID, nsIPresContext* aContext, nsStyleContext* aStyleContext) 
+  nsRuleData(const nsStyleStructID& aSID, nsPresContext* aContext, nsStyleContext* aStyleContext) 
     :mSID(aSID), mPresContext(aContext), mStyleContext(aStyleContext), mPostResolveCallback(nsnull),
      mFontData(nsnull), mDisplayData(nsnull), mMarginData(nsnull), mListData(nsnull), 
      mPositionData(nsnull), mTableData(nsnull), mColorData(nsnull), mContentData(nsnull), mTextData(nsnull),

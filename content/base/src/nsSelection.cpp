@@ -82,7 +82,7 @@ static NS_DEFINE_CID(kFrameTraversalCID, NS_FRAMETRAVERSAL_CID);
 #include "nsContentUtils.h"
 
 //included for desired x position;
-#include "nsIPresContext.h"
+#include "nsPresContext.h"
 #include "nsIPresShell.h"
 #include "nsICaret.h"
 
@@ -194,7 +194,7 @@ public:
   NS_DECL_NSISELECTIONPRIVATE
 
   // utility methods for scrolling the selection into view
-  nsresult      GetPresContext(nsIPresContext **aPresContext);
+  nsresult      GetPresContext(nsPresContext **aPresContext);
   nsresult      GetPresShell(nsIPresShell **aPresShell);
   nsresult      GetRootScrollableView(nsIScrollableView **aScrollableView);
   nsresult      GetFrameToScrolledViewOffsets(nsIScrollableView *aScrollableView, nsIFrame *aFrame, nscoord *aXOffset, nscoord *aYOffset);
@@ -207,7 +207,7 @@ public:
   nsresult      AddItem(nsIDOMRange *aRange);
   nsresult      RemoveItem(nsIDOMRange *aRange);
 
-  nsresult      Clear(nsIPresContext* aPresContext);
+  nsresult      Clear(nsPresContext* aPresContext);
   // methods for convenience. Note, these don't addref
   nsIDOMNode*  FetchAnchorNode();  //where did the selection begin
   PRInt32      FetchAnchorOffset();
@@ -237,13 +237,13 @@ public:
   NS_IMETHOD   GetOriginalAnchorPoint(nsIDOMNode **aNode, PRInt32 *aOffset);
   NS_IMETHOD   LookUpSelection(nsIContent *aContent, PRInt32 aContentOffset, PRInt32 aContentLength,
                              SelectionDetails **aReturnDetails, SelectionType aType, PRBool aSlowCheck);
-  NS_IMETHOD   Repaint(nsIPresContext* aPresContext);
+  NS_IMETHOD   Repaint(nsPresContext* aPresContext);
 
-  nsresult     StartAutoScrollTimer(nsIPresContext *aPresContext, nsIView *aView, nsPoint& aPoint, PRUint32 aDelay);
+  nsresult     StartAutoScrollTimer(nsPresContext *aPresContext, nsIView *aView, nsPoint& aPoint, PRUint32 aDelay);
   nsresult     StopAutoScrollTimer();
-  nsresult     DoAutoScrollView(nsIPresContext *aPresContext, nsIView *aView, nsPoint& aPoint, PRBool aScrollParentViews);
-  nsresult     ScrollPointIntoClipView(nsIPresContext *aPresContext, nsIView *aView, nsPoint& aPoint, PRBool *aDidScroll);
-  nsresult     ScrollPointIntoView(nsIPresContext *aPresContext, nsIView *aView, nsPoint& aPoint, PRBool aScrollParentViews, PRBool *aDidScroll);
+  nsresult     DoAutoScrollView(nsPresContext *aPresContext, nsIView *aView, nsPoint& aPoint, PRBool aScrollParentViews);
+  nsresult     ScrollPointIntoClipView(nsPresContext *aPresContext, nsIView *aView, nsPoint& aPoint, PRBool *aDidScroll);
+  nsresult     ScrollPointIntoView(nsPresContext *aPresContext, nsIView *aView, nsPoint& aPoint, PRBool aScrollParentViews, PRBool *aDidScroll);
   nsresult     GetViewAncestorOffset(nsIView *aView, nsIView *aAncestorView, nscoord *aXOffset, nscoord *aYOffset);
   nsresult     GetClosestScrollableView(nsIView *aView, nsIScrollableView **aScrollableView);
 
@@ -258,8 +258,8 @@ private:
 
 
   void         setAnchorFocusRange(PRInt32 aIndex); //pass in index into FrameSelection
-  NS_IMETHOD   selectFrames(nsIPresContext* aPresContext, nsIContentIterator *aInnerIter, nsIContent *aContent, nsIDOMRange *aRange, nsIPresShell *aPresShell, PRBool aFlags);
-  NS_IMETHOD   selectFrames(nsIPresContext* aPresContext, nsIDOMRange *aRange, PRBool aSelect);
+  NS_IMETHOD   selectFrames(nsPresContext* aPresContext, nsIContentIterator *aInnerIter, nsIContent *aContent, nsIDOMRange *aRange, nsIPresShell *aPresShell, PRBool aFlags);
+  NS_IMETHOD   selectFrames(nsPresContext* aPresContext, nsIDOMRange *aRange, PRBool aSelect);
   nsresult     getTableCellLocationFromRange(nsIDOMRange *aRange, PRInt32 *aSelectionType, PRInt32 *aRow, PRInt32 *aCol);
   nsresult     addTableCellRange(nsIDOMRange *aRange, PRBool *aDidAddRange);
   
@@ -316,12 +316,12 @@ public:
 
   NS_IMETHOD ShutDown();
   NS_IMETHOD HandleTextEvent(nsGUIEvent *aGUIEvent);
-  NS_IMETHOD HandleKeyEvent(nsIPresContext* aPresContext, nsGUIEvent *aGuiEvent);
+  NS_IMETHOD HandleKeyEvent(nsPresContext* aPresContext, nsGUIEvent *aGuiEvent);
   NS_IMETHOD HandleClick(nsIContent *aNewFocus, PRUint32 aContentOffset, PRUint32 aContentEndOffset, 
                        PRBool aContinueSelection, PRBool aMultipleSelection,PRBool aHint);
-  NS_IMETHOD HandleDrag(nsIPresContext *aPresContext, nsIFrame *aFrame, nsPoint& aPoint);
+  NS_IMETHOD HandleDrag(nsPresContext *aPresContext, nsIFrame *aFrame, nsPoint& aPoint);
   NS_IMETHOD HandleTableSelection(nsIContent *aParentContent, PRInt32 aContentOffset, PRInt32 aTarget, nsMouseEvent *aMouseEvent);
-  NS_IMETHOD StartAutoScrollTimer(nsIPresContext *aPresContext, nsIView *aView, nsPoint& aPoint, PRUint32 aDelay);
+  NS_IMETHOD StartAutoScrollTimer(nsPresContext *aPresContext, nsIView *aView, nsPoint& aPoint, PRUint32 aDelay);
   NS_IMETHOD StopAutoScrollTimer();
   NS_IMETHOD EnableFrameNotification(PRBool aEnable){mNotifyFrames = aEnable; return NS_OK;}
   NS_IMETHOD LookUpSelection(nsIContent *aContent, PRInt32 aContentOffset, PRInt32 aContentLength,
@@ -334,7 +334,7 @@ public:
   
   NS_IMETHOD GetSelection(SelectionType aType, nsISelection **aDomSelection);
   NS_IMETHOD ScrollSelectionIntoView(SelectionType aType, SelectionRegion aRegion, PRBool aIsSynchronous);
-  NS_IMETHOD RepaintSelection(nsIPresContext* aPresContext, SelectionType aType);
+  NS_IMETHOD RepaintSelection(nsPresContext* aPresContext, SelectionType aType);
   NS_IMETHOD GetFrameForNodeOffset(nsIContent *aNode, PRInt32 aOffset, HINT aHint, nsIFrame **aReturnFrame, PRInt32 *aReturnOffset);
   NS_IMETHOD CommonPageMove(PRBool aForward, PRBool aExtend, nsIScrollableView *aScrollableView, nsIFrameSelection *aFrameSel);
 
@@ -357,14 +357,14 @@ public:
   NS_IMETHOD GetLimiter(nsIContent **aLimiterContent);
   NS_IMETHOD SetMouseDoubleDown(PRBool aDoubleDown);
   NS_IMETHOD GetMouseDoubleDown(PRBool *aDoubleDown);
-  NS_IMETHOD GetPrevNextBidiLevels(nsIPresContext *aPresContext,
+  NS_IMETHOD GetPrevNextBidiLevels(nsPresContext *aPresContext,
                                    nsIContent *aNode,
                                    PRUint32 aContentOffset,
                                    nsIFrame **aPrevFrame,
                                    nsIFrame **aNextFrame,
                                    PRUint8 *aPrevLevel,
                                    PRUint8 *aNextLevel);
-  NS_IMETHOD GetFrameFromLevel(nsIPresContext *aPresContext,
+  NS_IMETHOD GetFrameFromLevel(nsPresContext *aPresContext,
                                nsIFrame *aFrameIn,
                                nsDirection aDirection,
                                PRUint8 aBidiLevel,
@@ -387,17 +387,17 @@ private:
   NS_IMETHOD TakeFocus(nsIContent *aNewFocus, PRUint32 aContentOffset, PRUint32 aContentEndOffset, 
                        PRBool aContinueSelection, PRBool aMultipleSelection);
 
-  void BidiLevelFromMove(nsIPresContext* aContext,
+  void BidiLevelFromMove(nsPresContext* aContext,
                          nsIPresShell* aPresShell,
                          nsIContent *aNode,
                          PRUint32 aContentOffset,
                          PRUint32 aKeycode);
   void BidiLevelFromClick(nsIContent *aNewFocus, PRUint32 aContentOffset);
 #ifdef VISUALSELECTION
-  NS_IMETHOD VisualSelectFrames(nsIPresContext* aContext,
+  NS_IMETHOD VisualSelectFrames(nsPresContext* aContext,
                                 nsIFrame* aCurrentFrame,
                                 nsPeekOffsetStruct aPos);
-  NS_IMETHOD VisualSequence(nsIPresContext *aPresContext,
+  NS_IMETHOD VisualSequence(nsPresContext *aPresContext,
                             nsIFrame* aSelectFrame,
                             nsIFrame* aCurrentFrame,
                             nsPeekOffsetStruct* aPos,
@@ -407,7 +407,7 @@ private:
                           PRInt32 aOffset,
                           PRInt32 aEdge,
                           PRBool aMultipleSelection);
-  NS_IMETHOD SelectLines(nsIPresContext *aPresContext,
+  NS_IMETHOD SelectLines(nsPresContext *aPresContext,
                          nsDirection aSelectionDirection,
                          nsIDOMNode *aAnchorNode,
                          nsIFrame* aAnchorFrame,
@@ -443,8 +443,8 @@ private:
   void         SetDesiredX(nscoord aX); //set the mDesiredX
 
   nsresult     GetRootForContentSubtree(nsIContent *aContent, nsIContent **aParent);
-  nsresult     GetGlobalViewOffsetsFromFrame(nsIPresContext *aPresContext, nsIFrame *aFrame, nscoord *offsetX, nscoord *offsetY);
-  nsresult     ConstrainFrameAndPointToAnchorSubtree(nsIPresContext *aPresContext, nsIFrame *aFrame, nsPoint& aPoint, nsIFrame **aRetFrame, nsPoint& aRetPoint);
+  nsresult     GetGlobalViewOffsetsFromFrame(nsPresContext *aPresContext, nsIFrame *aFrame, nscoord *offsetX, nscoord *offsetY);
+  nsresult     ConstrainFrameAndPointToAnchorSubtree(nsPresContext *aPresContext, nsIFrame *aFrame, nsPoint& aPoint, nsIFrame **aRetFrame, nsPoint& aRetPoint);
 
   PRUint32     GetBatching(){return mBatching;}
   PRBool       GetNotifyFrames(){return mNotifyFrames;}
@@ -561,7 +561,7 @@ public:
        mTimer->Cancel();
   }
 
-  nsresult Start(nsIPresContext *aPresContext, nsIView *aView, nsPoint &aPoint)
+  nsresult Start(nsPresContext *aPresContext, nsIView *aView, nsPoint &aPoint)
   {
     mView        = aView;
     mPresContext = aPresContext;
@@ -625,7 +625,7 @@ private:
   nsTypedSelection *mSelection;
   nsCOMPtr<nsITimer> mTimer;
   nsIView        *mView;
-  nsIPresContext *mPresContext;
+  nsPresContext *mPresContext;
   nsPoint         mPoint;
   PRUint32        mDelay;
 };
@@ -964,7 +964,7 @@ nsSelection::FetchDesiredX(nscoord &aDesiredX) //the x position requested by the
     return NS_OK;
   }
 
-  nsCOMPtr<nsIPresContext> context;
+  nsCOMPtr<nsPresContext> context;
   nsresult result = mTracker->GetPresContext(getter_AddRefs(context));
   if (NS_FAILED(result))
     return result;
@@ -1060,7 +1060,7 @@ nsSelection::GetRootForContentSubtree(nsIContent *aContent, nsIContent **aParent
 }
 
 nsresult
-nsSelection::GetGlobalViewOffsetsFromFrame(nsIPresContext *aPresContext, nsIFrame *aFrame, nscoord *offsetX, nscoord *offsetY)
+nsSelection::GetGlobalViewOffsetsFromFrame(nsPresContext *aPresContext, nsIFrame *aFrame, nscoord *offsetX, nscoord *offsetY)
 {
   //
   // The idea here is to figure out what the offset of aFrame's view
@@ -1101,7 +1101,7 @@ nsSelection::GetGlobalViewOffsetsFromFrame(nsIPresContext *aPresContext, nsIFram
 }
 
 nsresult
-nsSelection::ConstrainFrameAndPointToAnchorSubtree(nsIPresContext *aPresContext, nsIFrame *aFrame, nsPoint& aPoint, nsIFrame **aRetFrame, nsPoint& aRetPoint)
+nsSelection::ConstrainFrameAndPointToAnchorSubtree(nsPresContext *aPresContext, nsIFrame *aFrame, nsPoint& aPoint, nsIFrame **aRetFrame, nsPoint& aRetPoint)
 {
   //
   // The whole point of this method is to return a frame and point that
@@ -1360,7 +1360,7 @@ nsSelection::HandleTextEvent(nsGUIEvent *aGUIEvent)
 nsresult
 nsSelection::MoveCaret(PRUint32 aKeycode, PRBool aContinue, nsSelectionAmount aAmount)
 {
-  nsCOMPtr<nsIPresContext> context;
+  nsCOMPtr<nsPresContext> context;
   nsresult result = mTracker->GetPresContext(getter_AddRefs(context));
   if (NS_FAILED(result) || !context)
     return result?result:NS_ERROR_FAILURE;
@@ -1566,7 +1566,7 @@ nsSelection::MoveCaret(PRUint32 aKeycode, PRBool aContinue, nsSelectionAmount aA
  *  focus  DomNode, it is invalid?  The answer now is yes.
  */
 NS_IMETHODIMP
-nsSelection::HandleKeyEvent(nsIPresContext* aPresContext, nsGUIEvent *aGuiEvent)
+nsSelection::HandleKeyEvent(nsPresContext* aPresContext, nsGUIEvent *aGuiEvent)
 {
   if (!aGuiEvent)
     return NS_ERROR_NULL_POINTER;
@@ -1709,7 +1709,7 @@ FindLineContaining(nsIFrame* aFrame, nsIFrame** aBlock, PRInt32* aLine)
 }
 
 NS_IMETHODIMP
-nsSelection::VisualSequence(nsIPresContext *aPresContext,
+nsSelection::VisualSequence(nsPresContext *aPresContext,
                             nsIFrame* aSelectFrame,
                             nsIFrame* aCurrentFrame,
                             nsPeekOffsetStruct* aPos,
@@ -1778,7 +1778,7 @@ nsSelection::SelectToEdge(nsIFrame *aFrame, nsIContent *aContent, PRInt32 aOffse
 }
 
 NS_IMETHODIMP
-nsSelection::SelectLines(nsIPresContext *aPresContext,
+nsSelection::SelectLines(nsPresContext *aPresContext,
                          nsDirection aSelectionDirection,
                          nsIDOMNode *aAnchorNode,
                          nsIFrame* aAnchorFrame,
@@ -1881,7 +1881,7 @@ nsSelection::SelectLines(nsIPresContext *aPresContext,
 }
 
 NS_IMETHODIMP
-nsSelection::VisualSelectFrames(nsIPresContext *aPresContext,
+nsSelection::VisualSelectFrames(nsPresContext *aPresContext,
                                 nsIFrame* aCurrentFrame,
                                 nsPeekOffsetStruct aPos)
 {
@@ -2082,7 +2082,7 @@ nsSelection::VisualSelectFrames(nsIPresContext *aPresContext,
 #endif // VISUALSELECTION
 
 NS_IMETHODIMP
-nsSelection::GetPrevNextBidiLevels(nsIPresContext *aPresContext,
+nsSelection::GetPrevNextBidiLevels(nsPresContext *aPresContext,
                                    nsIContent *aNode,
                                    PRUint32 aContentOffset,
                                    nsIFrame **aPrevFrame,
@@ -2253,7 +2253,7 @@ nsSelection::GetPrevNextBidiLevels(nsIPresContext *aPresContext,
 
 }
 
-NS_IMETHODIMP nsSelection::GetFrameFromLevel(nsIPresContext *aPresContext,
+NS_IMETHODIMP nsSelection::GetFrameFromLevel(nsPresContext *aPresContext,
                                              nsIFrame *aFrameIn,
                                              nsDirection aDirection,
                                              PRUint8 aBidiLevel,
@@ -2344,7 +2344,7 @@ nsSelection::MaintainSelection()
  * @param aContentOffset is the new caret position, as an offset into aNode
  * @param aKeycode is the keyboard event that moved the caret to the new position
  */
-void nsSelection::BidiLevelFromMove(nsIPresContext* aContext,
+void nsSelection::BidiLevelFromMove(nsPresContext* aContext,
                                     nsIPresShell* aPresShell,
                                     nsIContent *aNode,
                                     PRUint32 aContentOffset,
@@ -2392,7 +2392,7 @@ void nsSelection::BidiLevelFromMove(nsIPresContext* aContext,
  */
 void nsSelection::BidiLevelFromClick(nsIContent *aNode, PRUint32 aContentOffset)
 {
-  nsCOMPtr<nsIPresContext> context;
+  nsCOMPtr<nsPresContext> context;
   nsresult result = mTracker->GetPresContext(getter_AddRefs(context));
   if (NS_FAILED(result) || !context)
     return;
@@ -2497,7 +2497,7 @@ nsSelection::HandleClick(nsIContent *aNewFocus, PRUint32 aContentOffset,
 }
 
 NS_IMETHODIMP
-nsSelection::HandleDrag(nsIPresContext *aPresContext, nsIFrame *aFrame, nsPoint& aPoint)
+nsSelection::HandleDrag(nsPresContext *aPresContext, nsIFrame *aFrame, nsPoint& aPoint)
 {
   if (!aPresContext || !aFrame)
     return NS_ERROR_NULL_POINTER;
@@ -2572,7 +2572,7 @@ nsSelection::HandleDrag(nsIPresContext *aPresContext, nsIFrame *aFrame, nsPoint&
 }
 
 NS_IMETHODIMP
-nsSelection::StartAutoScrollTimer(nsIPresContext *aPresContext, nsIView *aView, nsPoint& aPoint, PRUint32 aDelay)
+nsSelection::StartAutoScrollTimer(nsPresContext *aPresContext, nsIView *aView, nsPoint& aPoint, PRUint32 aDelay)
 {
   PRInt8 index = GetIndexFromSelectionType(nsISelectionController::SELECTION_NORMAL);
   return mDomSelections[index]->StartAutoScrollTimer(aPresContext, aView, aPoint, aDelay);
@@ -2647,7 +2647,7 @@ nsSelection::TakeFocus(nsIContent *aNewFocus, PRUint32 aContentOffset,
     //if we are no longer inside same table ,cell then switch to table selection mode.
     // BUT only do this in an editor
 
-    nsCOMPtr<nsIPresContext> presContext;
+    nsCOMPtr<nsPresContext> presContext;
     nsresult result = mTracker->GetPresContext(getter_AddRefs(presContext));
     if (NS_FAILED(result) || !presContext)
       return result?result:NS_ERROR_FAILURE;
@@ -2807,7 +2807,7 @@ nsSelection::ScrollSelectionIntoView(SelectionType aType, SelectionRegion aRegio
 }
 
 NS_IMETHODIMP
-nsSelection::RepaintSelection(nsIPresContext* aPresContext, SelectionType aType)
+nsSelection::RepaintSelection(nsPresContext* aPresContext, SelectionType aType)
 {
   PRInt8 index = GetIndexFromSelectionType(aType);
   if (index < 0)
@@ -2960,7 +2960,7 @@ nsSelection::CommonPageMove(PRBool aForward,
     return result;
   nsRect viewRect = clipView->GetBounds();
 
-  nsCOMPtr<nsIPresContext> context;
+  nsCOMPtr<nsPresContext> context;
   result = mTracker->GetPresContext(getter_AddRefs(context));
   
   if (NS_FAILED(result))
@@ -4720,7 +4720,7 @@ nsTypedSelection::RemoveItem(nsIDOMRange *aItem)
 
 
 nsresult
-nsTypedSelection::Clear(nsIPresContext* aPresContext)
+nsTypedSelection::Clear(nsPresContext* aPresContext)
 {
   setAnchorFocusRange(-1);
   // Get an iterator
@@ -4831,7 +4831,7 @@ nsTypedSelection::GetPrimaryFrameForFocusNode(nsIFrame **aReturnFrame, PRInt32 *
 
 //select all content children of aContent
 NS_IMETHODIMP
-nsTypedSelection::selectFrames(nsIPresContext* aPresContext,
+nsTypedSelection::selectFrames(nsPresContext* aPresContext,
                              nsIContentIterator *aInnerIter,
                              nsIContent *aContent,
                              nsIDOMRange *aRange,
@@ -4926,7 +4926,7 @@ nsTypedSelection::selectFrames(nsIPresContext* aPresContext,
 
 //the idea of this helper method is to select, deselect "top to bottom" traversing through the frames
 NS_IMETHODIMP
-nsTypedSelection::selectFrames(nsIPresContext* aPresContext, nsIDOMRange *aRange, PRBool aFlags)
+nsTypedSelection::selectFrames(nsPresContext* aPresContext, nsIDOMRange *aRange, PRBool aFlags)
 {
   if (!mFrameSelection)
     return NS_OK;//nothing to do
@@ -5137,7 +5137,7 @@ nsTypedSelection::LookUpSelection(nsIContent *aContent, PRInt32 aContentOffset, 
 }
 
 NS_IMETHODIMP
-nsTypedSelection::Repaint(nsIPresContext* aPresContext)
+nsTypedSelection::Repaint(nsPresContext* aPresContext)
 {
   PRInt32 arrCount = mRangeArray.Count();
 
@@ -5225,7 +5225,7 @@ nsTypedSelection::GetCachedFrameOffset(nsIFrame *aFrame, PRInt32 inOffset, nsPoi
 }
 
 nsresult
-nsTypedSelection::StartAutoScrollTimer(nsIPresContext *aPresContext, nsIView *aView, nsPoint& aPoint, PRUint32 aDelay)
+nsTypedSelection::StartAutoScrollTimer(nsPresContext *aPresContext, nsIView *aView, nsPoint& aPoint, PRUint32 aDelay)
 {
   nsresult result;
   if (!mFrameSelection)
@@ -5308,7 +5308,7 @@ nsTypedSelection::GetClosestScrollableView(nsIView *aView, nsIScrollableView **a
 }
 
 nsresult
-nsTypedSelection::ScrollPointIntoClipView(nsIPresContext *aPresContext, nsIView *aView, nsPoint& aPoint, PRBool *aDidScroll)
+nsTypedSelection::ScrollPointIntoClipView(nsPresContext *aPresContext, nsIView *aView, nsPoint& aPoint, PRBool *aDidScroll)
 {
   nsresult result;
 
@@ -5470,7 +5470,7 @@ nsTypedSelection::ScrollPointIntoClipView(nsIPresContext *aPresContext, nsIView 
 }
 
 nsresult
-nsTypedSelection::ScrollPointIntoView(nsIPresContext *aPresContext, nsIView *aView, nsPoint& aPoint, PRBool aScrollParentViews, PRBool *aDidScroll)
+nsTypedSelection::ScrollPointIntoView(nsPresContext *aPresContext, nsIView *aView, nsPoint& aPoint, PRBool aScrollParentViews, PRBool *aDidScroll)
 {
   if (!aPresContext || !aView || !aDidScroll)
     return NS_ERROR_NULL_POINTER;
@@ -5603,7 +5603,7 @@ nsTypedSelection::ScrollPointIntoView(nsIPresContext *aPresContext, nsIView *aVi
 }
 
 nsresult
-nsTypedSelection::DoAutoScrollView(nsIPresContext *aPresContext, nsIView *aView, nsPoint& aPoint, PRBool aScrollParentViews)
+nsTypedSelection::DoAutoScrollView(nsPresContext *aPresContext, nsIView *aView, nsPoint& aPoint, PRBool aScrollParentViews)
 {
   if (!aPresContext || !aView)
     return NS_ERROR_NULL_POINTER;
@@ -5685,7 +5685,7 @@ nsTypedSelection::RemoveAllRanges()
 {
   if (!mFrameSelection)
     return NS_OK;//nothing to do
-  nsCOMPtr<nsIPresContext>  presContext;
+  nsCOMPtr<nsPresContext>  presContext;
   GetPresContext(getter_AddRefs(presContext));
 
 
@@ -5732,7 +5732,7 @@ nsTypedSelection::AddRange(nsIDOMRange* aRange)
   }
   setAnchorFocusRange(count -1);
   
-  nsCOMPtr<nsIPresContext>  presContext;
+  nsCOMPtr<nsPresContext>  presContext;
   GetPresContext(getter_AddRefs(presContext));
   selectFrames(presContext, aRange, PR_TRUE);        
 
@@ -5750,7 +5750,7 @@ nsTypedSelection::RemoveRange(nsIDOMRange* aRange)
     return NS_ERROR_INVALID_ARG;
   RemoveItem(aRange);
   
-  nsCOMPtr<nsIPresContext>  presContext;
+  nsCOMPtr<nsPresContext>  presContext;
   GetPresContext(getter_AddRefs(presContext));
   selectFrames(presContext, aRange, PR_FALSE);        
   if (aRange == mAnchorFocusRange.get())
@@ -5784,7 +5784,7 @@ nsTypedSelection::Collapse(nsIDOMNode* aParentNode, PRInt32 aOffset)
   // Delete all of the current ranges
   if (NS_FAILED(SetOriginalAnchorPoint(aParentNode,aOffset)))
     return NS_ERROR_FAILURE; //???
-  nsCOMPtr<nsIPresContext>  presContext;
+  nsCOMPtr<nsPresContext>  presContext;
   GetPresContext(getter_AddRefs(presContext));
   Clear(presContext);
 
@@ -6340,7 +6340,7 @@ nsTypedSelection::Extend(nsIDOMNode* aParentNode, PRInt32 aOffset)
   if (result2 == 0) //not selecting anywhere
     return NS_OK;
 
-  nsCOMPtr<nsIPresContext>  presContext;
+  nsCOMPtr<nsPresContext>  presContext;
   GetPresContext(getter_AddRefs(presContext));
   if ((result1 == 0 && result3 < 0) || (result1 <= 0 && result2 < 0)){//a1,2  a,1,2
     //select from 1 to 2 unless they are collapsed
@@ -6710,7 +6710,7 @@ nsTypedSelection::ContainsNode(nsIDOMNode* aNode, PRBool aRecursive, PRBool* aYe
 
 
 nsresult
-nsTypedSelection::GetPresContext(nsIPresContext **aPresContext)
+nsTypedSelection::GetPresContext(nsPresContext **aPresContext)
 {
   if (!mFrameSelection)
     return NS_ERROR_FAILURE;//nothing to do
@@ -6741,7 +6741,7 @@ nsTypedSelection::GetPresShell(nsIPresShell **aPresShell)
   if (!tracker)
     return NS_ERROR_NULL_POINTER;
 
-  nsCOMPtr<nsIPresContext> presContext;
+  nsCOMPtr<nsPresContext> presContext;
 
   rv = tracker->GetPresContext(getter_AddRefs(presContext));
 
@@ -6833,7 +6833,7 @@ nsTypedSelection::GetFrameToScrolledViewOffsets(nsIScrollableView *aScrollableVi
   if (!tracker)
     return NS_ERROR_NULL_POINTER;
 
-  nsCOMPtr<nsIPresContext> presContext;
+  nsCOMPtr<nsPresContext> presContext;
   tracker->GetPresContext(getter_AddRefs(presContext));
   aFrame->GetOffsetFromView(presContext, offset, &closestView);
 
@@ -6875,7 +6875,7 @@ nsTypedSelection::GetPointFromOffset(nsIFrame *aFrame, PRInt32 aContentOffset, n
   if (!tracker)
     return NS_ERROR_NULL_POINTER;
 
-  nsCOMPtr<nsIPresContext> presContext;
+  nsCOMPtr<nsPresContext> presContext;
 
   rv = tracker->GetPresContext(getter_AddRefs(presContext));
 
@@ -7000,7 +7000,7 @@ nsTypedSelection::GetSelectionRegionRectAndScrollableView(SelectionRegion aRegio
   // Get the frame's scrollable view.
   //
 
-  nsCOMPtr<nsIPresContext> presContext;
+  nsCOMPtr<nsPresContext> presContext;
 
   result = GetPresContext(getter_AddRefs(presContext));
 
@@ -7547,7 +7547,7 @@ nsTypedSelection::SelectionLanguageChange(PRBool aLangRTL)
 
   PRInt32 frameStart, frameEnd;
   focusFrame->GetOffsets(frameStart, frameEnd);
-  nsCOMPtr<nsIPresContext> context;
+  nsCOMPtr<nsPresContext> context;
   PRUint8 levelBefore, levelAfter;
   result = GetPresContext(getter_AddRefs(context));
   if (NS_FAILED(result) || !context)

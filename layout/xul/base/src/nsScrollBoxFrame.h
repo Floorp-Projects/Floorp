@@ -54,7 +54,7 @@ class nsScrollBoxFrame : public nsBoxFrame, public nsIStatefulFrame {
 public:
   friend nsresult NS_NewScrollBoxFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame);
 
-  NS_IMETHOD Init(nsIPresContext*  aPresContext,
+  NS_IMETHOD Init(nsPresContext*  aPresContext,
                   nsIContent*      aContent,
                   nsIFrame*        aParent,
                   nsStyleContext*  aContext,
@@ -63,30 +63,30 @@ public:
   // Called to set the one and only child frame. Returns NS_ERROR_INVALID_ARG
   // if the child frame is NULL, and NS_ERROR_UNEXPECTED if the child list
   // contains more than one frame
-  NS_IMETHOD SetInitialChildList(nsIPresContext* aPresContext,
+  NS_IMETHOD SetInitialChildList(nsPresContext* aPresContext,
                                  nsIAtom*        aListName,
                                  nsIFrame*       aChildList);
 
   // Because there can be only one child frame, these two function return
   // NS_ERROR_FAILURE
-  NS_IMETHOD AppendFrames(nsIPresContext* aPresContext,
+  NS_IMETHOD AppendFrames(nsPresContext* aPresContext,
                           nsIPresShell&   aPresShell,
                           nsIAtom*        aListName,
                           nsIFrame*       aFrameList);
-  NS_IMETHOD InsertFrames(nsIPresContext* aPresContext,
+  NS_IMETHOD InsertFrames(nsPresContext* aPresContext,
                           nsIPresShell&   aPresShell,
                           nsIAtom*        aListName,
                           nsIFrame*       aPrevFrame,
                           nsIFrame*       aFrameList);
 
   // This function returns NS_ERROR_NOT_IMPLEMENTED
-  NS_IMETHOD RemoveFrame(nsIPresContext* aPresContext,
+  NS_IMETHOD RemoveFrame(nsPresContext* aPresContext,
                          nsIPresShell&   aPresShell,
                          nsIAtom*        aListName,
                          nsIFrame*       aOldFrame);
 
 
-  NS_IMETHOD Paint(nsIPresContext*      aPresContext,
+  NS_IMETHOD Paint(nsPresContext*      aPresContext,
                    nsIRenderingContext& aRenderingContext,
                    const nsRect&        aDirtyRect,
                    nsFramePaintLayer    aWhichLayer,
@@ -133,16 +133,16 @@ protected:
    // that sub-classes may control widget creation.
   virtual nsresult CreateScrollingViewWidget(nsIView* aView, const nsStyleDisplay* aDisplay);
    // Getting the view for scollframe may be overriden to provide a parent view for te scroll frame
-  virtual nsresult GetScrollingParentView(nsIPresContext* aPresContext,
+  virtual nsresult GetScrollingParentView(nsPresContext* aPresContext,
                                           nsIFrame* aParent,
                                           nsIView** aParentView);
 
   //nsIStatefulFrame
-  NS_IMETHOD SaveState(nsIPresContext* aPresContext, nsIPresState** aState);
-  NS_IMETHOD RestoreState(nsIPresContext* aPresContext, nsIPresState* aState);
+  NS_IMETHOD SaveState(nsPresContext* aPresContext, nsIPresState** aState);
+  NS_IMETHOD RestoreState(nsPresContext* aPresContext, nsIPresState* aState);
 
 private:
-  nsresult CreateScrollingView(nsIPresContext* aPresContext);
+  nsresult CreateScrollingView(nsPresContext* aPresContext);
   PRPackedBool mVerticalOverflow;
   PRPackedBool mHorizontalOverflow;
   nsRect mRestoreRect;
@@ -151,7 +151,7 @@ private:
 protected:
   virtual PRBool NeedsClipWidget();
   virtual void PostScrollPortEvent(nsIPresShell* aShell, PRBool aOverflow, nsScrollPortEvent::orientType aType);
-  virtual void SetUpScrolledFrame(nsIPresContext* aPresContext);
+  virtual void SetUpScrolledFrame(nsPresContext* aPresContext);
 };
 
 #endif /* nsScrollBoxFrame_h___ */

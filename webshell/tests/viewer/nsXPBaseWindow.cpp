@@ -52,7 +52,7 @@
 #include "nsViewerApp.h"
 
 #include "nsIDocument.h"
-#include "nsIPresContext.h"
+#include "nsPresContext.h"
 #include "nsIDocumentViewer.h"
 #include "nsIContentViewer.h"
 #include "nsIPresShell.h"
@@ -579,7 +579,7 @@ NS_IMETHODIMP nsXPBaseWindow::GetPresShell(nsIPresShell*& aPresShell)
       nsIDocumentViewer* docv = nsnull;
       cv->QueryInterface(kIDocumentViewerIID, (void**) &docv);
       if (nsnull != docv) {
-        nsCOMPtr<nsIPresContext> cx;
+        nsCOMPtr<nsPresContext> cx;
         docv->GetPresContext(getter_AddRefs(cx));
         if (nsnull != cx) {
           NS_IF_ADDREF(aPresShell = cx->GetPresShell());

@@ -229,7 +229,7 @@ NS_INTERFACE_MAP_END_INHERITING(nsBoxFrame)
 ////////// nsIFrame /////////////////
 
 NS_IMETHODIMP
-nsListBoxBodyFrame::Init(nsIPresContext* aPresContext, nsIContent* aContent,
+nsListBoxBodyFrame::Init(nsPresContext* aPresContext, nsIContent* aContent,
                          nsIFrame* aParent, nsStyleContext* aContext, nsIFrame* aPrevInFlow)
 {
   nsresult rv = nsBoxFrame::Init(aPresContext, aContent, aParent, aContext, aPrevInFlow);
@@ -270,7 +270,7 @@ nsListBoxBodyFrame::Init(nsIPresContext* aPresContext, nsIContent* aContent,
 }
 
 NS_IMETHODIMP
-nsListBoxBodyFrame::Destroy(nsIPresContext* aPresContext)
+nsListBoxBodyFrame::Destroy(nsPresContext* aPresContext)
 {
   // make sure we cancel any posted callbacks.
   if (mReflowCallbackPosted)
@@ -305,7 +305,7 @@ nsListBoxBodyFrame::Destroy(nsIPresContext* aPresContext)
 }
 
 NS_IMETHODIMP
-nsListBoxBodyFrame::AttributeChanged(nsIPresContext* aPresContext,
+nsListBoxBodyFrame::AttributeChanged(nsPresContext* aPresContext,
                                      nsIContent* aChild,
                                      PRInt32 aNameSpaceID,
                                      nsIAtom* aAttribute, 
@@ -745,7 +745,7 @@ nsListBoxBodyFrame::ComputeIntrinsicWidth(nsBoxLayoutState& aBoxLayoutState)
 
   if (firstRowContent) {
     nsRefPtr<nsStyleContext> styleContext;
-    nsIPresContext *presContext = aBoxLayoutState.PresContext();
+    nsPresContext *presContext = aBoxLayoutState.PresContext();
     styleContext = presContext->StyleSet()->
       ResolveStyleFor(firstRowContent, nsnull);
 
@@ -769,7 +769,7 @@ nsListBoxBodyFrame::ComputeIntrinsicWidth(nsBoxLayoutState& aBoxLayoutState)
       nsIContent *child = listbox->GetChildAt(i);
 
       if (child->Tag() == nsXULAtoms::listitem) {
-        nsIPresContext* presContext = aBoxLayoutState.PresContext();
+        nsPresContext* presContext = aBoxLayoutState.PresContext();
         nsIRenderingContext* rendContext = aBoxLayoutState.GetReflowState()->rendContext;
         if (rendContext) {
           nsAutoString value;
@@ -1286,7 +1286,7 @@ nsListBoxBodyFrame::ListBoxInsertFrames(nsIFrame* aPrevFrame, nsIFrame* aFrameLi
 // Called by nsCSSFrameConstructor when a new listitem content is inserted.
 //
 void 
-nsListBoxBodyFrame::OnContentInserted(nsIPresContext* aPresContext, nsIContent* aChildContent)
+nsListBoxBodyFrame::OnContentInserted(nsPresContext* aPresContext, nsIContent* aChildContent)
 {
   if (mRowCount >= 0)
     ++mRowCount;
@@ -1327,7 +1327,7 @@ nsListBoxBodyFrame::OnContentInserted(nsIPresContext* aPresContext, nsIContent* 
 // Called by nsCSSFrameConstructor when listitem content is removed.
 //
 void
-nsListBoxBodyFrame::OnContentRemoved(nsIPresContext* aPresContext, nsIFrame* aChildFrame, PRInt32 aIndex)
+nsListBoxBodyFrame::OnContentRemoved(nsPresContext* aPresContext, nsIFrame* aChildFrame, PRInt32 aIndex)
 {
   if (mRowCount >= 0)
     --mRowCount;

@@ -50,7 +50,7 @@ public:
   NS_DEFINE_STATIC_IID_ACCESSOR(NS_IIMAGEMAP_IID)
 
   NS_IMETHOD GetBoundsForAreaContent(nsIContent *aContent, 
-                                     nsIPresContext* aPresContext, 
+                                     nsPresContext* aPresContext, 
                                      nsRect& aBounds) = 0;
 };
 

@@ -40,7 +40,7 @@
 #include "nsCOMPtr.h"
 #include "nsIViewManager.h"
 #include "nsCRT.h"
-#include "nsIPresContext.h"
+#include "nsPresContext.h"
 #include "nsIWidget.h"
 #include "nsITimer.h"
 #include "prtime.h"
@@ -55,7 +55,7 @@
 
 class nsIRegion;
 class nsIEvent;
-class nsIPresContext;
+class nsPresContext;
 class nsISupportsArray;
 struct DisplayListElement2;
 struct DisplayZTreeNode;

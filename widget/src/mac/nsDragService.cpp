@@ -66,7 +66,7 @@
 #include "nsIDOMNode.h"
 #include "nsIDocument.h"
 #include "nsIPresShell.h"
-#include "nsIPresContext.h"
+#include "nsPresContext.h"
 #include "nsIFrame.h"
 #include "nsIView.h"
 #include "nsRect.h"
@@ -161,7 +161,7 @@ nsDragService::ComputeGlobalRectFromFrame ( nsIDOMNode* aDOMNode, Rect & outScre
 
   // Get the frame for this content node (note: frames are not refcounted)
   nsIFrame *aFrame = nsnull;
-  nsCOMPtr<nsIPresContext> presContext;
+  nsCOMPtr<nsPresContext> presContext;
   GetFrameFromNode ( aDOMNode, &aFrame, getter_AddRefs(presContext) );
   if ( !aFrame || !presContext )
     return PR_FALSE;

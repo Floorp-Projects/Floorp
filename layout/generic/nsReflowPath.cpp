@@ -106,13 +106,13 @@ nsReflowPath::Remove(iterator &aIterator)
 
 #ifdef DEBUG
 void
-DebugListReflowPath(nsIPresContext *aPresContext, nsReflowPath *aReflowPath)
+DebugListReflowPath(nsPresContext *aPresContext, nsReflowPath *aReflowPath)
 {
     aReflowPath->Dump(aPresContext, stdout, 0);
 }
 
 void
-nsReflowPath::Dump(nsIPresContext *aPresContext, FILE *aFile, int depth)
+nsReflowPath::Dump(nsPresContext *aPresContext, FILE *aFile, int depth)
 {
     fprintf(aFile, "%*s nsReflowPath(%p): ", depth, "", this);
 

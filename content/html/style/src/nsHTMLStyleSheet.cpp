@@ -54,7 +54,7 @@
 #include "nsIFrame.h"
 #include "nsStyleContext.h"
 #include "nsHTMLAtoms.h"
-#include "nsIPresContext.h"
+#include "nsPresContext.h"
 #include "nsIEventStateManager.h"
 #include "nsIDocument.h"
 #include "nsIPresShell.h"
@@ -498,7 +498,7 @@ nsHTMLStyleSheet::~nsHTMLStyleSheet()
 
 NS_IMPL_ISUPPORTS2(nsHTMLStyleSheet, nsIStyleSheet, nsIStyleRuleProcessor)
 
-static nsresult GetBodyColor(nsIPresContext* aPresContext, nscolor* aColor)
+static nsresult GetBodyColor(nsPresContext* aPresContext, nscolor* aColor)
 {
   nsCOMPtr<nsIDocument> doc;
   nsIPresShell *shell = aPresContext->PresShell();

@@ -75,7 +75,7 @@ nsAccessibleHyperText::nsAccessibleHyperText(nsIDOMNode* aDomNode, nsIWeakRefere
       nsIFrame *parentFrame = nsAccessible::GetParentBlockFrame(frame);
       NS_ASSERTION(parentFrame, "Error: HyperText can't get parent block frame");
       if (parentFrame) {
-        nsCOMPtr<nsIPresContext> presContext;
+        nsCOMPtr<nsPresContext> presContext;
         shell->GetPresContext(getter_AddRefs(presContext));
         nsIFrame* childFrame = parentFrame->GetFirstChild(nsnull);
         PRBool bSave = PR_FALSE;
@@ -90,7 +90,7 @@ void nsAccessibleHyperText::Shutdown()
   mTextChildren = nsnull;
 }
 
-PRBool nsAccessibleHyperText::GetAllTextChildren(nsIPresContext *aPresContext, nsIFrame *aCurFrame, nsIDOMNode* aNode, PRBool &bSave)
+PRBool nsAccessibleHyperText::GetAllTextChildren(nsPresContext *aPresContext, nsIFrame *aCurFrame, nsIDOMNode* aNode, PRBool &bSave)
 {
   if (! aCurFrame)
     return PR_FALSE;

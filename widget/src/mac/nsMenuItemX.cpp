@@ -38,7 +38,7 @@
 #include "nsCOMPtr.h"
 #include "nsIDocumentViewer.h"
 #include "nsIContent.h"
-#include "nsIPresContext.h"
+#include "nsPresContext.h"
 
 #include "nsMenuBarX.h"         // for MenuHelpers namespace
 #include "nsMenuItemX.h"

@@ -50,7 +50,7 @@
 #include "nsHTMLContainerFrame.h"
 #include "nsSpaceManager.h"
 #include "nsStyleContext.h"
-#include "nsIPresContext.h"
+#include "nsPresContext.h"
 #include "nsIFontMetrics.h"
 #include "nsIRenderingContext.h"
 #include "nsLayoutAtoms.h"
@@ -92,7 +92,7 @@
 #define HACK_MEW
 //#undef HACK_MEW
 #ifdef HACK_MEW
-static nscoord AccumulateImageSizes(nsIPresContext& aPresContext, nsIFrame& aFrame)
+static nscoord AccumulateImageSizes(nsPresContext& aPresContext, nsIFrame& aFrame)
 {
   nscoord sizes = 0;
 
@@ -147,7 +147,7 @@ static PRBool InUnconstrainedTableCell(const nsHTMLReflowState& aBlockReflowStat
 
 MOZ_DECL_CTOR_COUNTER(nsLineLayout)
 
-nsLineLayout::nsLineLayout(nsIPresContext* aPresContext,
+nsLineLayout::nsLineLayout(nsPresContext* aPresContext,
                            nsSpaceManager* aSpaceManager,
                            const nsHTMLReflowState* aOuterReflowState,
                            PRBool aComputeMaxElementWidth)
@@ -1561,7 +1561,7 @@ nsLineLayout::IsPercentageUnitSides(const nsStyleSides* aSides)
 }
 
 PRBool
-nsLineLayout::IsPercentageAwareReplacedElement(nsIPresContext *aPresContext, 
+nsLineLayout::IsPercentageAwareReplacedElement(nsPresContext *aPresContext, 
                                                nsIFrame* aFrame)
 {
   if (aFrame->GetStateBits() & NS_FRAME_REPLACED_ELEMENT)
@@ -1601,7 +1601,7 @@ nsLineLayout::IsPercentageAwareReplacedElement(nsIPresContext *aPresContext,
   return PR_FALSE;
 }
 
-PRBool IsPercentageAwareFrame(nsIPresContext *aPresContext, nsIFrame *aFrame)
+PRBool IsPercentageAwareFrame(nsPresContext *aPresContext, nsIFrame *aFrame)
 {
   if (aFrame->GetStateBits() & NS_FRAME_REPLACED_ELEMENT) {
     if (nsLineLayout::IsPercentageAwareReplacedElement(aPresContext, aFrame)) {
@@ -3028,7 +3028,7 @@ nsLineLayout::ForgetWordFrame(nsIFrame* aFrame)
 }
 
 nsIFrame*
-nsLineLayout::FindNextText(nsIPresContext* aPresContext, nsIFrame* aFrame)
+nsLineLayout::FindNextText(nsPresContext* aPresContext, nsIFrame* aFrame)
 {
   // Grovel through the frame hierarchy to find a text frame that is
   // "adjacent" to aFrame.

@@ -169,10 +169,10 @@ nsSVGRendererGDIPlus::CreateGlyphGeometry(nsISVGGlyphGeometrySource *src,
 }
 
 /** Implements [noscript] nsISVGRendererCanvas createCanvas(in nsIRenderingContext ctx,
-   in nsIPresContext presContext, const in nsRectRef dirtyRect); */
+   in nsPresContext presContext, const in nsRectRef dirtyRect); */
 NS_IMETHODIMP
 nsSVGRendererGDIPlus::CreateCanvas(nsIRenderingContext *ctx,
-                                   nsIPresContext *presContext,
+                                   nsPresContext *presContext,
                                    const nsRect & dirtyRect,
                                    nsISVGRendererCanvas **_retval)
 {

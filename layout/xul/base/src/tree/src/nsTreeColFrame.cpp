@@ -103,7 +103,7 @@ nsTreeColFrame::~nsTreeColFrame()
 }
 
 NS_IMETHODIMP
-nsTreeColFrame::Init(nsIPresContext*  aPresContext,
+nsTreeColFrame::Init(nsPresContext*  aPresContext,
                      nsIContent*      aContent,
                      nsIFrame*        aParent,
                      nsStyleContext*  aContext,
@@ -117,7 +117,7 @@ nsTreeColFrame::Init(nsIPresContext*  aPresContext,
 }
 
 NS_IMETHODIMP                                                                   
-nsTreeColFrame::Destroy(nsIPresContext* aPresContext)                          
+nsTreeColFrame::Destroy(nsPresContext* aPresContext)                          
 {
   if (mColumns)
     mColumns->InvalidateColumns();
@@ -125,7 +125,7 @@ nsTreeColFrame::Destroy(nsIPresContext* aPresContext)
 }
 
 NS_IMETHODIMP
-nsTreeColFrame::GetFrameForPoint(nsIPresContext* aPresContext,
+nsTreeColFrame::GetFrameForPoint(nsPresContext* aPresContext,
                                      const nsPoint& aPoint, 
                                      nsFramePaintLayer aWhichLayer,
                                      nsIFrame**     aFrame)
@@ -181,7 +181,7 @@ nsTreeColFrame::GetFrameForPoint(nsIPresContext* aPresContext,
 }
 
 NS_IMETHODIMP
-nsTreeColFrame::AttributeChanged(nsIPresContext* aPresContext,
+nsTreeColFrame::AttributeChanged(nsPresContext* aPresContext,
                                  nsIContent* aChild,
                                  PRInt32 aNameSpaceID,
                                  nsIAtom* aAttribute,

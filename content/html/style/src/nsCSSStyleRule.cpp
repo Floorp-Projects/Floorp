@@ -45,7 +45,7 @@
 #include "nsICSSParser.h"
 #include "nsICSSLoader.h"
 #include "nsIURL.h"
-#include "nsIPresContext.h"
+#include "nsPresContext.h"
 #include "nsIDocument.h"
 #include "nsIDeviceContext.h"
 #include "nsIAtom.h"

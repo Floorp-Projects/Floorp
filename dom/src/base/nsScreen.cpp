@@ -42,7 +42,7 @@
 #include "nsIScriptGlobalObject.h"
 #include "nsIDocShell.h"
 #include "nsIDeviceContext.h"
-#include "nsIPresContext.h"
+#include "nsPresContext.h"
 #include "nsCOMPtr.h"
 #include "nsIDocumentViewer.h"
 #include "nsIDocumentLoader.h"
@@ -208,7 +208,7 @@ ScreenImpl::GetDeviceContext()
   if(!docViewer)
     return nsnull;
 
-  nsCOMPtr<nsIPresContext> presContext;
+  nsCOMPtr<nsPresContext> presContext;
   docViewer->GetPresContext(getter_AddRefs(presContext));
 
   nsIDeviceContext* context = nsnull;

@@ -37,7 +37,7 @@
 
 #include "nsLayoutUtils.h"
 #include "nsIFrame.h"
-#include "nsIPresContext.h"
+#include "nsPresContext.h"
 #include "nsIContent.h"
 #include "nsFrameList.h"
 #include "nsLayoutAtoms.h"
@@ -58,7 +58,7 @@
  * @param aFrame the frame's content node
  */
 static nsIFrame*
-GetFirstChildFrame(nsIPresContext* aPresContext,
+GetFirstChildFrame(nsPresContext* aPresContext,
                    nsIFrame*       aFrame,
                    nsIContent*     aContent)
 {
@@ -88,7 +88,7 @@ GetFirstChildFrame(nsIPresContext* aPresContext,
  * @param aFrame the frame's content node
  */
 static nsIFrame*
-GetLastChildFrame(nsIPresContext* aPresContext,
+GetLastChildFrame(nsPresContext* aPresContext,
                   nsIFrame*       aFrame,
                   nsIContent*     aContent)
 {
@@ -126,7 +126,7 @@ GetLastChildFrame(nsIPresContext* aPresContext,
 
 // static
 nsIFrame*
-nsLayoutUtils::GetBeforeFrame(nsIFrame* aFrame, nsIPresContext* aPresContext)
+nsLayoutUtils::GetBeforeFrame(nsIFrame* aFrame, nsPresContext* aPresContext)
 {
   NS_PRECONDITION(aFrame, "NULL frame pointer");
 #ifdef DEBUG
@@ -147,7 +147,7 @@ nsLayoutUtils::GetBeforeFrame(nsIFrame* aFrame, nsIPresContext* aPresContext)
 
 // static
 nsIFrame*
-nsLayoutUtils::GetAfterFrame(nsIFrame* aFrame, nsIPresContext* aPresContext)
+nsLayoutUtils::GetAfterFrame(nsIFrame* aFrame, nsPresContext* aPresContext)
 {
   NS_PRECONDITION(aFrame, "NULL frame pointer");
 

@@ -52,7 +52,7 @@
 #include "nsHTMLAtoms.h"
 #include "nsLayoutAtoms.h"
 #include "nsIPresShell.h"
-#include "nsIPresContext.h"
+#include "nsPresContext.h"
 #include "nsIHTMLContent.h"
 #include "nsIDOMNode.h" // for Find
 #include "nsIDOMNodeList.h"
@@ -407,7 +407,7 @@ nsHTMLDocument::GetAttrSheetType()
 }
 
 nsresult
-nsHTMLDocument::CreateShell(nsIPresContext* aContext,
+nsHTMLDocument::CreateShell(nsPresContext* aContext,
                             nsIViewManager* aViewManager,
                             nsStyleSet* aStyleSet,
                             nsIPresShell** aInstancePtrResult)
@@ -753,7 +753,7 @@ nsHTMLDocument::StartDocumentLoad(const char* aCommand,
 
   nsCOMPtr<nsIDocumentCharsetInfo> dcInfo;
   docShell->GetDocumentCharsetInfo(getter_AddRefs(dcInfo));
-  nsCOMPtr<nsIPresContext> cx;
+  nsCOMPtr<nsPresContext> cx;
   docShell->GetPresContext(getter_AddRefs(cx));
   if(cx){
     mTexttype = GET_BIDI_OPTION_TEXTTYPE(cx->GetBidi());
@@ -1100,7 +1100,7 @@ nsHTMLDocument::SetCompatibilityMode(nsCompatibility aMode)
   }
   nsCOMPtr<nsIPresShell> shell = (nsIPresShell*)mPresShells.SafeElementAt(0);
   if (shell) {
-    nsCOMPtr<nsIPresContext> pc;
+    nsCOMPtr<nsPresContext> pc;
     shell->GetPresContext(getter_AddRefs(pc));
     if (pc) {
       pc->SetCompatibilityMode(mCompatMode);
@@ -2499,7 +2499,7 @@ nsHTMLDocument::GetPixelDimensions(nsIPresShell* aShell,
   nsresult rv = aShell->GetPrimaryFrameFor(body, &frame);
   if (NS_SUCCEEDED(rv) && frame) {
     nsSize                    size;
-    nsCOMPtr<nsIPresContext>  presContext;
+    nsCOMPtr<nsPresContext>  presContext;
 
     aShell->GetPresContext(getter_AddRefs(presContext));
     nsIView* view = frame->GetView();
@@ -2524,7 +2524,7 @@ nsHTMLDocument::GetPixelDimensions(nsIPresShell* aShell,
     }
 
     // Convert from twips to pixels
-    nsCOMPtr<nsIPresContext> context;
+    nsCOMPtr<nsPresContext> context;
     rv = aShell->GetPresContext(getter_AddRefs(context));
 
     if (NS_SUCCEEDED(rv)) {
@@ -2795,7 +2795,7 @@ nsHTMLDocument::GetSelection(nsAString& aReturn)
     return NS_OK;
   }
 
-  nsCOMPtr<nsIPresContext> cx;
+  nsCOMPtr<nsPresContext> cx;
 
   shell->GetPresContext(getter_AddRefs(cx));
   NS_ENSURE_TRUE(cx, NS_OK);
@@ -3548,7 +3548,7 @@ nsHTMLDocument::SetDesignMode(const nsAString & aDesignMode)
     nsCOMPtr<nsIPresShell> shell = (nsIPresShell*)mPresShells.SafeElementAt(0);
     NS_ENSURE_TRUE(shell, NS_ERROR_FAILURE);
 
-    nsCOMPtr<nsIPresContext> cx;
+    nsCOMPtr<nsPresContext> cx;
     shell->GetPresContext(getter_AddRefs(cx));
     NS_ENSURE_TRUE(cx, NS_ERROR_FAILURE);
 

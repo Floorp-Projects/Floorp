@@ -51,7 +51,7 @@
 #include "nsIContent.h"
 #include "nsIPresShell.h"
 #include "nsIDOMNode.h"
-#include "nsIPresContext.h"
+#include "nsPresContext.h"
 
 
 NS_IMPL_ADDREF(nsBaseDragService)
@@ -194,7 +194,7 @@ NS_IMETHODIMP nsBaseDragService::InvokeDragSession (nsIDOMNode *aDOMNode, nsISup
     // the event coordinates are in the wrong coord system. Turn off capture by 
     // getting the frame associated with the DOM Node.
     nsIFrame* dragFrame = nsnull;
-    nsCOMPtr<nsIPresContext> context;
+    nsCOMPtr<nsPresContext> context;
     GetFrameFromNode ( aDOMNode, &dragFrame, getter_AddRefs(context) );
     if ( dragFrame && context )
       dragFrame->CaptureMouse ( context, PR_FALSE );
@@ -251,7 +251,7 @@ NS_IMETHODIMP nsBaseDragService::EndDragSession ()
 //
 void
 nsBaseDragService :: GetFrameFromNode ( nsIDOMNode* inNode, nsIFrame** outFrame,
-                                           nsIPresContext** outContext )
+                                           nsPresContext** outContext )
 {
   *outFrame = nsnull;
   *outContext = nsnull;

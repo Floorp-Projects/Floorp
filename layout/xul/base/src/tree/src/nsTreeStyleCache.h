@@ -102,7 +102,7 @@ public:
   void Clear() { delete mTransitionTable; mTransitionTable = nsnull; delete mCache; mCache = nsnull; mNextState = 0; };
 
   nsStyleContext* GetStyleContext(nsICSSPseudoComparator* aComparator,
-                                  nsIPresContext* aPresContext, 
+                                  nsPresContext* aPresContext, 
                                   nsIContent* aContent, 
                                   nsStyleContext* aContext,
                                   nsIAtom* aPseudoElement,

@@ -56,7 +56,7 @@
 #include "nsIEventQueue.h"
 #include "nsNetUtil.h"
 
-#include "nsIPresContext.h"
+#include "nsPresContext.h"
 #include "nsIPresShell.h"
 #include "nsGUIEvent.h"
 #include "nsDummyLayoutRequest.h"
@@ -603,7 +603,7 @@ class ImageEvent : public PLEvent,
                    public nsDummyLayoutRequest
 {
 public:
-  ImageEvent(nsIPresContext* aPresContext, nsIContent* aContent,
+  ImageEvent(nsPresContext* aPresContext, nsIContent* aContent,
              const nsAString& aMessage, nsILoadGroup *aLoadGroup)
     : nsDummyLayoutRequest(nsnull),
       mPresContext(aPresContext),
@@ -618,7 +618,7 @@ public:
     MOZ_COUNT_DTOR(ImageEvent);
   }
   
-  nsCOMPtr<nsIPresContext> mPresContext;
+  nsCOMPtr<nsPresContext> mPresContext;
   nsCOMPtr<nsIContent> mContent;
   nsString mMessage;
   nsCOMPtr<nsILoadGroup> mLoadGroup;
@@ -687,7 +687,7 @@ nsImageLoadingContent::FireEvent(const nsAString& aEventType)
   nsIPresShell *shell = document->GetShellAt(0);
   NS_ENSURE_TRUE(shell, NS_ERROR_FAILURE);
 
-  nsCOMPtr<nsIPresContext> presContext;
+  nsCOMPtr<nsPresContext> presContext;
   shell->GetPresContext(getter_AddRefs(presContext));
   NS_ENSURE_TRUE(presContext, NS_ERROR_FAILURE);
 

@@ -60,14 +60,14 @@ public:
   NS_IMETHOD GetFrameName(nsAString& aResult) const;
 #endif
 
-  static nsIFrame* GetChildBeforeAfter(nsIPresContext* aPresContext, nsIFrame* start, PRBool before);
-  static nsIFrame* GetChildAt(nsIPresContext* aPresContext, nsIFrame* parent, PRInt32 index);
-  static PRInt32 IndexOf(nsIPresContext* aPresContext, nsIFrame* parent, nsIFrame* child);
-  static PRInt32 CountFrames(nsIPresContext* aPresContext, nsIFrame* aFrame);
+  static nsIFrame* GetChildBeforeAfter(nsPresContext* aPresContext, nsIFrame* start, PRBool before);
+  static nsIFrame* GetChildAt(nsPresContext* aPresContext, nsIFrame* parent, PRInt32 index);
+  static PRInt32 IndexOf(nsPresContext* aPresContext, nsIFrame* parent, nsIFrame* child);
+  static PRInt32 CountFrames(nsPresContext* aPresContext, nsIFrame* aFrame);
   nsGrippyFrame(nsIPresShell* aShell);  
 
 protected:
-  virtual void MouseClicked (nsIPresContext* aPresContext, nsGUIEvent* aEvent);
+  virtual void MouseClicked (nsPresContext* aPresContext, nsGUIEvent* aEvent);
 
 private:
 

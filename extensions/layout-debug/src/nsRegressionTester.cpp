@@ -124,7 +124,7 @@ nsRegressionTester::DumpFrameModel(nsIDOMWindow *aWindowToDump, nsILocalFile *aD
     if (NS_FAILED(rv)) return rv;
   }
   
-  nsCOMPtr<nsIPresContext> presContext;
+  nsCOMPtr<nsPresContext> presContext;
   presShell->GetPresContext(getter_AddRefs(presContext));
 
   fdbg->DumpRegressionData(presContext, fp, 0, dumpStyle);

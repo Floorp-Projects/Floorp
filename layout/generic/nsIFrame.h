@@ -72,7 +72,7 @@ struct nsHTMLReflowState;
 class nsHTMLReflowCommand;
 
 class nsIAtom;
-class nsIPresContext;
+class nsPresContext;
 class nsIPresShell;
 class nsIRenderingContext;
 class nsIView;
@@ -91,7 +91,7 @@ struct nsMargin;
 
 // Calback function used to destroy the value associated with a property.
 typedef void 
-(*NSFramePropertyDtorFunc)(nsIPresContext* aPresContext,
+(*NSFramePropertyDtorFunc)(nsPresContext* aPresContext,
                            nsIFrame*       aFrame,
                            nsIAtom*        aPropertyName,
                            void*           aPropertyValue);
@@ -399,7 +399,7 @@ class nsIFrame : public nsISupports
 public:
   NS_DEFINE_STATIC_IID_ACCESSOR(NS_IFRAME_IID)
 
-  nsIPresContext* GetPresContext() const {
+  nsPresContext* GetPresContext() const {
     return GetStyleContext()->GetRuleNode()->GetPresContext();
   }
 
@@ -421,7 +421,7 @@ public:
    * @param   aPrevInFlow the prev-in-flow frame
    * @see #AppendToFlow()
    */
-  NS_IMETHOD  Init(nsIPresContext*  aPresContext,
+  NS_IMETHOD  Init(nsPresContext*  aPresContext,
                    nsIContent*      aContent,
                    nsIFrame*        aParent,
                    nsStyleContext*  aContext,
@@ -431,12 +431,12 @@ public:
    * Destroys this frame and each of its child frames (recursively calls
    * Destroy() for each child)
    */
-  NS_IMETHOD  Destroy(nsIPresContext* aPresContext) = 0;
+  NS_IMETHOD  Destroy(nsPresContext* aPresContext) = 0;
 
   /*
    * Notify the frame that it has been removed as the primary frame for its content
    */
-  virtual void RemovedAsPrimaryFrame(nsIPresContext* aPresContext) {}
+  virtual void RemovedAsPrimaryFrame(nsPresContext* aPresContext) {}
 
   /**
    * Called to set the initial list of frames. This happens after the frame
@@ -456,7 +456,7 @@ public:
    *          NS_OK otherwise
    * @see     #Init()
    */
-  NS_IMETHOD  SetInitialChildList(nsIPresContext* aPresContext,
+  NS_IMETHOD  SetInitialChildList(nsPresContext* aPresContext,
                                   nsIAtom*        aListName,
                                   nsIFrame*       aChildList) = 0;
 
@@ -474,7 +474,7 @@ public:
    *          NS_ERROR_UNEXPECTED if the frame is an atomic frame,
    *          NS_OK otherwise
    */
-  NS_IMETHOD AppendFrames(nsIPresContext* aPresContext,
+  NS_IMETHOD AppendFrames(nsPresContext* aPresContext,
                           nsIPresShell&   aPresShell,
                           nsIAtom*        aListName,
                           nsIFrame*       aFrameList) = 0;
@@ -494,7 +494,7 @@ public:
    *          NS_ERROR_UNEXPECTED if the frame is an atomic frame,
    *          NS_OK otherwise
    */
-  NS_IMETHOD InsertFrames(nsIPresContext* aPresContext,
+  NS_IMETHOD InsertFrames(nsPresContext* aPresContext,
                           nsIPresShell&   aPresShell,
                           nsIAtom*        aListName,
                           nsIFrame*       aPrevFrame,
@@ -516,7 +516,7 @@ public:
    *          NS_ERROR_UNEXPECTED if the frame is an atomic frame,
    *          NS_OK otherwise
    */
-  NS_IMETHOD RemoveFrame(nsIPresContext* aPresContext,
+  NS_IMETHOD RemoveFrame(nsPresContext* aPresContext,
                          nsIPresShell&   aPresShell,
                          nsIAtom*        aListName,
                          nsIFrame*       aOldFrame) = 0;
@@ -538,7 +538,7 @@ public:
    *          NS_ERROR_UNEXPECTED if the frame is an atomic frame,
    *          NS_OK otherwise
    */
-  NS_IMETHOD ReplaceFrame(nsIPresContext* aPresContext,
+  NS_IMETHOD ReplaceFrame(nsPresContext* aPresContext,
                           nsIPresShell&   aPresShell,
                           nsIAtom*        aListName,
                           nsIFrame*       aOldFrame,
@@ -571,7 +571,7 @@ public:
    *
    */
   nsStyleContext* GetStyleContext() const { return mStyleContext; }
-  void SetStyleContext(nsIPresContext* aPresContext, nsStyleContext* aContext)
+  void SetStyleContext(nsPresContext* aPresContext, nsStyleContext* aContext)
   { 
     if (aContext != mStyleContext) {
       if (mStyleContext)
@@ -585,7 +585,7 @@ public:
   }
 
   // Style post processing hook
-  NS_IMETHOD DidSetStyleContext(nsIPresContext* aPresContext) = 0;
+  NS_IMETHOD DidSetStyleContext(nsPresContext* aPresContext) = 0;
 
   /**
    * Get the style data associated with this frame.  This returns a
@@ -693,7 +693,7 @@ public:
    * argument indicates which layer of painting should be done during
    * the call.
    */
-  NS_IMETHOD  Paint(nsIPresContext*      aPresContext,
+  NS_IMETHOD  Paint(nsPresContext*      aPresContext,
                     nsIRenderingContext& aRenderingContext,
                     const nsRect&        aDirtyRect,
                     nsFramePaintLayer    aWhichLayer,
@@ -720,15 +720,15 @@ public:
    * @see     nsGUIEvent
    * @see     nsEventStatus
    */
-  NS_IMETHOD  HandleEvent(nsIPresContext* aPresContext,
+  NS_IMETHOD  HandleEvent(nsPresContext* aPresContext,
                           nsGUIEvent*     aEvent,
                           nsEventStatus*  aEventStatus) = 0;
 
-  NS_IMETHOD  GetContentForEvent(nsIPresContext* aPresContext,
+  NS_IMETHOD  GetContentForEvent(nsPresContext* aPresContext,
                                  nsEvent* aEvent,
                                  nsIContent** aContent) = 0;
 
-  NS_IMETHOD GetContentAndOffsetsFromPoint(nsIPresContext* aCX,
+  NS_IMETHOD GetContentAndOffsetsFromPoint(nsPresContext* aCX,
                                            const nsPoint&  aPoint,
                                            nsIContent **   aNewContent,
                                            PRInt32&        aContentOffset,
@@ -739,7 +739,7 @@ public:
   /**
    * Get the cursor for a given frame.
    */
-  NS_IMETHOD  GetCursor(nsIPresContext* aPresContext,
+  NS_IMETHOD  GetCursor(nsPresContext* aPresContext,
                         nsPoint&        aPoint,
                         PRInt32&        aCursor) = 0;
 
@@ -750,7 +750,7 @@ public:
    * recieve the events.  A successful return value indicates that a
    * point was found.
    */
-  NS_IMETHOD  GetFrameForPoint(nsIPresContext* aPresContext,
+  NS_IMETHOD  GetFrameForPoint(nsPresContext* aPresContext,
                                const nsPoint& aPoint, 
                                nsFramePaintLayer aWhichLayer,
                                nsIFrame**     aFrame) = 0;
@@ -761,7 +761,7 @@ public:
    * the content. This point should be on the baseline of text with
    * the correct horizontal offset
    */
-  NS_IMETHOD  GetPointFromOffset(nsIPresContext*          inPresContext,
+  NS_IMETHOD  GetPointFromOffset(nsPresContext*          inPresContext,
                                  nsIRenderingContext*     inRendContext,
                                  PRInt32                  inOffset,
                                  nsPoint*                 outPoint) = 0;
@@ -800,7 +800,7 @@ public:
    * @param aContent     the content node that was changed
    * @param aAppend      a hint to the frame about the change
    */
-  NS_IMETHOD  CharacterDataChanged(nsIPresContext* aPresContext,
+  NS_IMETHOD  CharacterDataChanged(nsPresContext* aPresContext,
                                    nsIContent*     aChild,
                                    PRBool          aAppend) = 0;
 
@@ -814,7 +814,7 @@ public:
    * @param aAttribute the attribute whose value changed
    * @param aHint the level of change that has already been dealt with
    */
-  NS_IMETHOD  AttributeChanged(nsIPresContext* aPresContext,
+  NS_IMETHOD  AttributeChanged(nsPresContext* aPresContext,
                                nsIContent*     aChild,
                                PRInt32         aNameSpaceID,
                                nsIAtom*        aAttribute,
@@ -856,7 +856,7 @@ public:
    * XXX Is this really the semantics we want? Because we have the NS_FRAME_IN_REFLOW
    * bit we can ensure we don't call it more than once...
    */
-  NS_IMETHOD  WillReflow(nsIPresContext* aPresContext) = 0;
+  NS_IMETHOD  WillReflow(nsPresContext* aPresContext) = 0;
 
   /**
    * The frame is given a maximum size and asked for its desired size.
@@ -898,7 +898,7 @@ public:
    * @param aStatus a return value indicating whether the frame is complete
    *          and whether the next-in-flow is dirty and needs to be reflowed
    */
-  NS_IMETHOD Reflow(nsIPresContext*          aPresContext,
+  NS_IMETHOD Reflow(nsPresContext*          aPresContext,
                     nsHTMLReflowMetrics&     aReflowMetrics,
                     const nsHTMLReflowState& aReflowState,
                     nsReflowStatus&          aStatus) = 0;
@@ -918,7 +918,7 @@ public:
    * XXX Don't we want the semantics to dictate that we only call this once for
    * a given reflow?
    */
-  NS_IMETHOD  DidReflow(nsIPresContext*           aPresContext,
+  NS_IMETHOD  DidReflow(nsPresContext*           aPresContext,
                         const nsHTMLReflowState*  aReflowState,
                         nsDidReflowStatus         aStatus) = 0;
 
@@ -944,7 +944,7 @@ public:
 
   // Justification helper method that is used to remove trailing
   // whitespace before justification.
-  NS_IMETHOD TrimTrailingWhiteSpace(nsIPresContext* aPresContext,
+  NS_IMETHOD TrimTrailingWhiteSpace(nsPresContext* aPresContext,
                                     nsIRenderingContext& aRC,
                                     nscoord& aDeltaWidth) = 0;
 
@@ -973,7 +973,7 @@ public:
    * Returns the offset from this frame to the closest geometric parent that
    * has a view. Also returns the containing view or null in case of error
    */
-  NS_IMETHOD  GetOffsetFromView(nsIPresContext* aPresContext,
+  NS_IMETHOD  GetOffsetFromView(nsPresContext* aPresContext,
                                 nsPoint&        aOffset,
                                 nsIView**       aView) const = 0;
 
@@ -985,7 +985,7 @@ public:
    * aView is optional, that is, you may pass null if you are not interested
    * in getting a pointer to the view.
    */
-  NS_IMETHOD  GetOriginToViewOffset(nsIPresContext* aPresContext,
+  NS_IMETHOD  GetOriginToViewOffset(nsPresContext* aPresContext,
                                     nsPoint&        aOffset,
                                     nsIView**       aView) const = 0;
 
@@ -1065,7 +1065,7 @@ public:
    *  @param aSelected is it selected?
    *  @param aSpread should it spread the selection to flow elements around it? or go down to its children?
    */
-  NS_IMETHOD  SetSelected(nsIPresContext* aPresContext,
+  NS_IMETHOD  SetSelected(nsPresContext* aPresContext,
                           nsIDOMRange*    aRange,
                           PRBool          aSelected,
                           nsSpread        aSpread) = 0;
@@ -1088,7 +1088,7 @@ public:
    *  @param aSelCon will contain the selection controller associated with
    *  the frame.
    */
-  NS_IMETHOD  GetSelectionController(nsIPresContext *aPresContext, nsISelectionController **aSelCon) = 0;
+  NS_IMETHOD  GetSelectionController(nsPresContext *aPresContext, nsISelectionController **aSelCon) = 0;
 
   /** EndSelection related calls
    */
@@ -1099,7 +1099,7 @@ public:
    *  @param aPresContext presContext associated with the frame
    *  @param aGrabMouseEvents PR_TRUE to enable capture, PR_FALSE to disable
    */
-  NS_IMETHOD CaptureMouse(nsIPresContext* aPresContext, PRBool aGrabMouseEvents) = 0;
+  NS_IMETHOD CaptureMouse(nsPresContext* aPresContext, PRBool aGrabMouseEvents) = 0;
 
   /**
    *  called to find the previous/next character, word, or line  returns the actual 
@@ -1108,7 +1108,7 @@ public:
    *  return NS_ERROR_FAILURE
    *  @param aPOS is defined in nsIFrameSelection
    */
-  NS_IMETHOD  PeekOffset(nsIPresContext* aPresContext, nsPeekOffsetStruct *aPos) = 0;
+  NS_IMETHOD  PeekOffset(nsPresContext* aPresContext, nsPeekOffsetStruct *aPos) = 0;
 
   /**
    *  called to see if the children of the frame are visible from indexstart to index end.
@@ -1121,7 +1121,7 @@ public:
    *  @param aFinished did this frame have the aEndIndex? or is there more work to do
    *  @param _retval  return value true or false. false = range is not rendered.
    */
-  NS_IMETHOD CheckVisibility(nsIPresContext* aContext, PRInt32 aStartIndex, PRInt32 aEndIndex, PRBool aRecurse, PRBool *aFinished, PRBool *_retval)=0;
+  NS_IMETHOD CheckVisibility(nsPresContext* aContext, PRInt32 aStartIndex, PRInt32 aEndIndex, PRBool aRecurse, PRBool *aFinished, PRBool *_retval)=0;
 
   /**
    *  Called by a child frame on a parent frame to tell the parent frame that the child needs
@@ -1159,7 +1159,7 @@ public:
    *                        of this frame; false if it is an ancestor or
    *                        null.
    */
-  NS_IMETHOD GetParentStyleContextFrame(nsIPresContext* aPresContext,
+  NS_IMETHOD GetParentStyleContextFrame(nsPresContext* aPresContext,
                                         nsIFrame**      aProviderFrame,
                                         PRBool*         aIsChild) = 0;
 
@@ -1172,7 +1172,7 @@ public:
    *                  PR_FALSE skips the check, PR_TRUE does the check
    * @param aIsVisible return value
    */
-  NS_IMETHOD IsVisibleForPainting(nsIPresContext *     aPresContext, 
+  NS_IMETHOD IsVisibleForPainting(nsPresContext *     aPresContext, 
                                   nsIRenderingContext& aRenderingContext,
                                   PRBool               aCheckVis,
                                   PRBool*              aIsVisible) = 0;

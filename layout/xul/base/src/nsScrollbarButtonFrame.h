@@ -57,32 +57,32 @@ public:
   nsScrollbarButtonFrame(nsIPresShell* aPresShell);
 
   // Overrides
-  NS_IMETHOD Destroy(nsIPresContext* aPresContext);
+  NS_IMETHOD Destroy(nsPresContext* aPresContext);
 
   friend nsresult NS_NewScrollBarButtonFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame);
 
-  NS_IMETHOD HandleEvent(nsIPresContext* aPresContext, 
+  NS_IMETHOD HandleEvent(nsPresContext* aPresContext, 
                          nsGUIEvent* aEvent,
                          nsEventStatus* aEventStatus);
 
 
-  static nsresult GetChildWithTag(nsIPresContext* aPresContext,
+  static nsresult GetChildWithTag(nsPresContext* aPresContext,
                                   nsIAtom* atom, nsIFrame* start, nsIFrame*& result);
   static nsresult GetParentWithTag(nsIAtom* atom, nsIFrame* start, nsIFrame*& result);
 
-  NS_IMETHOD HandlePress(nsIPresContext* aPresContext,
+  NS_IMETHOD HandlePress(nsPresContext* aPresContext,
                          nsGUIEvent *    aEvent,
                          nsEventStatus*  aEventStatus);
 
-  NS_IMETHOD HandleMultiplePress(nsIPresContext* aPresContext,
+  NS_IMETHOD HandleMultiplePress(nsPresContext* aPresContext,
                          nsGUIEvent *    aEvent,
                          nsEventStatus*  aEventStatus)  { return NS_OK; }
 
-  NS_IMETHOD HandleDrag(nsIPresContext* aPresContext,
+  NS_IMETHOD HandleDrag(nsPresContext* aPresContext,
                         nsGUIEvent *    aEvent,
                         nsEventStatus*  aEventStatus) { return NS_OK; }
 
-  NS_IMETHOD HandleRelease(nsIPresContext* aPresContext,
+  NS_IMETHOD HandleRelease(nsPresContext* aPresContext,
                            nsGUIEvent *    aEvent,
                            nsEventStatus*  aEventStatus);
 
@@ -94,7 +94,7 @@ public:
 
 
 protected:
-  virtual void MouseClicked(nsIPresContext* aPresContext, nsGUIEvent* aEvent);
+  virtual void MouseClicked(nsPresContext* aPresContext, nsGUIEvent* aEvent);
   virtual void MouseClicked();
 
   

@@ -48,7 +48,7 @@
 
 class nsIDOMHTMLAreaElement;
 class nsIDOMHTMLMapElement;
-class nsIPresContext;
+class nsPresContext;
 class nsIRenderingContext;
 class nsIURI;
 class nsString;
@@ -77,7 +77,7 @@ public:
    */
   PRBool IsInside(nscoord aX, nscoord aY) const;
 
-  void Draw(nsIPresContext* aCX, nsIRenderingContext& aRC);
+  void Draw(nsPresContext* aCX, nsIRenderingContext& aRC);
   
   /** 
    * Called just before the nsImageFrame releases us. 
@@ -106,7 +106,7 @@ public:
 
   //nsIImageMap
   NS_IMETHOD GetBoundsForAreaContent(nsIContent *aContent, 
-                                     nsIPresContext* aPresContext, 
+                                     nsPresContext* aPresContext, 
                                      nsRect& aBounds);
 
 protected:

@@ -44,7 +44,7 @@
 #include "nsIDocument.h"
 #include "nsIEventListenerManager.h"
 #include "nsIPresShell.h"
-#include "nsIPresContext.h"
+#include "nsPresContext.h"
 #include "nsLayoutCID.h"
 #include "nsContentCID.h"
 #include "nsIEventStateManager.h"
@@ -102,7 +102,7 @@ nsWindowRoot::DispatchEvent(nsIDOMEvent* aEvt, PRBool *_retval)
   nsIPresShell *shell = doc->GetShellAt(0);
   
   // Retrieve the context
-  nsCOMPtr<nsIPresContext> aPresContext;
+  nsCOMPtr<nsPresContext> aPresContext;
   shell->GetPresContext(getter_AddRefs(aPresContext));
 
   return aPresContext->EventStateManager()->
@@ -203,7 +203,7 @@ nsWindowRoot::GetSystemEventGroup(nsIDOMEventGroup **aGroup)
   return NS_ERROR_FAILURE;
 }
 
-NS_IMETHODIMP nsWindowRoot::HandleChromeEvent(nsIPresContext* aPresContext,
+NS_IMETHODIMP nsWindowRoot::HandleChromeEvent(nsPresContext* aPresContext,
    nsEvent* aEvent, nsIDOMEvent** aDOMEvent, PRUint32 aFlags, 
    nsEventStatus* aEventStatus)
 {

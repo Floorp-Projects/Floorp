@@ -40,7 +40,7 @@
 
 #include "nsCOMPtr.h"
 #include "nsFrame.h"
-#include "nsIPresContext.h"
+#include "nsPresContext.h"
 #include "nsUnitConversion.h"
 #include "nsStyleContext.h"
 #include "nsStyleConsts.h"
@@ -78,7 +78,7 @@ nsMathMLmfencedFrame::~nsMathMLmfencedFrame()
 }
 
 NS_IMETHODIMP
-nsMathMLmfencedFrame::InheritAutomaticData(nsIPresContext* aPresContext,
+nsMathMLmfencedFrame::InheritAutomaticData(nsPresContext* aPresContext,
                                            nsIFrame*       aParent)
 {
   // let the base class get the default from our parent
@@ -90,7 +90,7 @@ nsMathMLmfencedFrame::InheritAutomaticData(nsIPresContext* aPresContext,
 }
 
 NS_IMETHODIMP
-nsMathMLmfencedFrame::SetInitialChildList(nsIPresContext* aPresContext,
+nsMathMLmfencedFrame::SetInitialChildList(nsPresContext* aPresContext,
                                           nsIAtom*        aListName,
                                           nsIFrame*       aChildList)
 {
@@ -105,7 +105,7 @@ nsMathMLmfencedFrame::SetInitialChildList(nsIPresContext* aPresContext,
 }
 
 NS_IMETHODIMP
-nsMathMLmfencedFrame::AttributeChanged(nsIPresContext* aPresContext,
+nsMathMLmfencedFrame::AttributeChanged(nsPresContext* aPresContext,
                                        nsIContent*     aContent,
                                        PRInt32         aNameSpaceID,
                                        nsIAtom*        aAttribute,
@@ -120,7 +120,7 @@ nsMathMLmfencedFrame::AttributeChanged(nsIPresContext* aPresContext,
 }
 
 nsresult
-nsMathMLmfencedFrame::ChildListChanged(nsIPresContext* aPresContext,
+nsMathMLmfencedFrame::ChildListChanged(nsPresContext* aPresContext,
                                        PRInt32         aModType)
 {
   RemoveFencesAndSeparators();
@@ -143,7 +143,7 @@ nsMathMLmfencedFrame::RemoveFencesAndSeparators()
 }
 
 nsresult
-nsMathMLmfencedFrame::CreateFencesAndSeparators(nsIPresContext* aPresContext)
+nsMathMLmfencedFrame::CreateFencesAndSeparators(nsPresContext* aPresContext)
 {
   nsresult rv;
   nsAutoString value, data;
@@ -230,7 +230,7 @@ nsMathMLmfencedFrame::CreateFencesAndSeparators(nsIPresContext* aPresContext)
 }
 
 NS_IMETHODIMP
-nsMathMLmfencedFrame::Paint(nsIPresContext*      aPresContext,
+nsMathMLmfencedFrame::Paint(nsPresContext*      aPresContext,
                             nsIRenderingContext& aRenderingContext,
                             const nsRect&        aDirtyRect,
                             nsFramePaintLayer    aWhichLayer,
@@ -256,7 +256,7 @@ nsMathMLmfencedFrame::Paint(nsIPresContext*      aPresContext,
 }
 
 NS_IMETHODIMP
-nsMathMLmfencedFrame::Reflow(nsIPresContext*          aPresContext,
+nsMathMLmfencedFrame::Reflow(nsPresContext*          aPresContext,
                              nsHTMLReflowMetrics&     aDesiredSize,
                              const nsHTMLReflowState& aReflowState,
                              nsReflowStatus&          aStatus)
@@ -268,7 +268,7 @@ nsMathMLmfencedFrame::Reflow(nsIPresContext*          aPresContext,
 // exported routine that both mfenced and mfrac share.
 // mfrac uses this when its bevelled attribute is set.
 /*static*/ nsresult
-nsMathMLmfencedFrame::doReflow(nsIPresContext*          aPresContext,
+nsMathMLmfencedFrame::doReflow(nsPresContext*          aPresContext,
                                const nsHTMLReflowState& aReflowState,
                                nsHTMLReflowMetrics&     aDesiredSize,
                                nsReflowStatus&          aStatus,
@@ -489,7 +489,7 @@ nsMathMLmfencedFrame::doReflow(nsIPresContext*          aPresContext,
 
 // helper functions to perform the common task of formatting our chars
 /*static*/ nsresult
-nsMathMLmfencedFrame::ReflowChar(nsIPresContext*      aPresContext,
+nsMathMLmfencedFrame::ReflowChar(nsPresContext*      aPresContext,
                                  nsIRenderingContext& aRenderingContext,
                                  nsMathMLChar*        aMathMLChar,
                                  nsOperatorFlags      aForm,

@@ -62,27 +62,27 @@ public:
 #endif
 
       // Paint one child frame
-  virtual void PaintChild(nsIPresContext*         aPresContext,
+  virtual void PaintChild(nsPresContext*         aPresContext,
                              nsIRenderingContext& aRenderingContext,
                              const nsRect&        aDirtyRect,
                              nsIFrame*            aFrame,
                              nsFramePaintLayer    aWhichLayer,
                              PRUint32             aFlags = 0);
 
-  virtual void PaintChildren(nsIPresContext*      aPresContext,
+  virtual void PaintChildren(nsPresContext*      aPresContext,
                              nsIRenderingContext& aRenderingContext,
                              const nsRect&        aDirtyRect,
                              nsFramePaintLayer    aWhichLayer,
                              PRUint32             aFlags = 0);
 
-  NS_IMETHOD GetFrameForPoint(nsIPresContext* aPresContext,
+  NS_IMETHOD GetFrameForPoint(nsPresContext* aPresContext,
                               const nsPoint& aPoint,
                               nsFramePaintLayer aWhichLayer,    
                               nsIFrame**     aFrame);
 
 protected:
 
-  virtual nsresult GetFrameForPointChild(nsIPresContext*   aPresContext,
+  virtual nsresult GetFrameForPointChild(nsPresContext*   aPresContext,
                                          const nsPoint&    aPoint,
                                          nsFramePaintLayer aWhichLayer,    
                                          nsIFrame*         aChild,

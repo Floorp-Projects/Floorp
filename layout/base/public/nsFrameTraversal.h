@@ -43,7 +43,7 @@
 
 nsresult NS_NewFrameTraversal(nsIBidirectionalEnumerator **aEnumerator,
                               nsTraversalType aType,
-                              nsIPresContext* aPresContext,
+                              nsPresContext* aPresContext,
                               nsIFrame *aStart,
                               PRBool aLockInScrollView);
 
@@ -59,7 +59,7 @@ public:
 
   NS_IMETHOD NewFrameTraversal(nsIBidirectionalEnumerator **aEnumerator,
                               PRUint32 aType,
-                              nsIPresContext* aPresContext,
+                              nsPresContext* aPresContext,
                               nsIFrame *aStart);
 };
 

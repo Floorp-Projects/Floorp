@@ -52,7 +52,7 @@ class nsISelection;
 class nsITransferable;
 class nsIImage;
 class nsIPresShell;
-class nsIPresContext;
+class nsPresContext;
 class nsIContent;
 class nsIDocument;
 class nsIURI;

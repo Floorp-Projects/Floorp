@@ -116,7 +116,7 @@
 // For calculating size
 #include "nsIFrame.h"
 #include "nsIPresShell.h"
-#include "nsIPresContext.h"
+#include "nsPresContext.h"
 
 #include "nsIBaseWindow.h"
 #include "nsIDocShellTreeItem.h"
@@ -970,7 +970,7 @@ void nsWebShellWindow::DynamicLoadMenus(nsIDOMDocument * aDOMDoc, nsIWidget * aP
           return;
       }
 
-      nsCOMPtr<nsIPresContext> presContext;
+      nsCOMPtr<nsPresContext> presContext;
       if (NS_FAILED(rv = docViewer->GetPresContext(getter_AddRefs(presContext)))) {
           NS_ERROR("Unable to retrieve the doc viewer's presentation context.");
           return;
@@ -1491,7 +1491,7 @@ PRBool nsWebShellWindow::ExecuteCloseHandler()
     nsCOMPtr<nsIDocumentViewer> docViewer(do_QueryInterface(contentViewer));
 
     if (docViewer) {
-      nsCOMPtr<nsIPresContext> presContext;
+      nsCOMPtr<nsPresContext> presContext;
       docViewer->GetPresContext(getter_AddRefs(presContext));
 
       nsEventStatus status = nsEventStatus_eIgnore;

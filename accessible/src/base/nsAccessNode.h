@@ -53,7 +53,7 @@
 #include "nsInterfaceHashtable.h"
 
 class nsIPresShell;
-class nsIPresContext;
+class nsPresContext;
 class nsIAccessibleDocument;
 class nsIFrame;
 class nsIDOMNodeList;
@@ -122,7 +122,7 @@ class nsAccessNode: public nsIAccessNode, public nsPIAccessNode
 protected:
     nsresult MakeAccessNode(nsIDOMNode *aNode, nsIAccessNode **aAccessNode);
     already_AddRefed<nsIPresShell> GetPresShell();
-    already_AddRefed<nsIPresContext> GetPresContext();
+    already_AddRefed<nsPresContext> GetPresContext();
     already_AddRefed<nsIAccessibleDocument> GetDocAccessible();
     virtual nsIFrame* GetFrame();
 

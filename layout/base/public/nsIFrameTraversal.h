@@ -87,7 +87,7 @@ public:
 
   NS_IMETHOD NewFrameTraversal(nsIBidirectionalEnumerator **aEnumerator,
                               PRUint32 aType,
-                              nsIPresContext* aPresContext,
+                              nsPresContext* aPresContext,
                               nsIFrame *aStart) = 0;
 };
 

@@ -51,7 +51,7 @@
 #include "nsGenericHTMLElement.h"
 #include "nsHTMLAtoms.h"
 #include "nsStyleConsts.h"
-#include "nsIPresContext.h"
+#include "nsPresContext.h"
 #include "nsMappedAttributes.h"
 #include "nsIFormControlFrame.h"
 #include "nsITextControlFrame.h"
@@ -125,11 +125,11 @@ public:
                                     PRInt32 aModType,
                                     nsChangeHint& aHint) const;
   NS_IMETHOD_(PRBool) IsAttributeMapped(const nsIAtom* aAttribute) const;
-  virtual nsresult HandleDOMEvent(nsIPresContext* aPresContext,
+  virtual nsresult HandleDOMEvent(nsPresContext* aPresContext,
                                   nsEvent* aEvent, nsIDOMEvent** aDOMEvent,
                                   PRUint32 aFlags,
                                   nsEventStatus* aEventStatus);
-  virtual void SetFocus(nsIPresContext* aPresContext);
+  virtual void SetFocus(nsPresContext* aPresContext);
 
   virtual nsresult GetInnerHTML(nsAString& aInnerHTML);
   virtual nsresult SetInnerHTML(const nsAString& aInnerHTML);
@@ -149,7 +149,7 @@ protected:
       created by a parser */
   PRPackedBool             mDoneAddingChildren;
 
-  NS_IMETHOD SelectAll(nsIPresContext* aPresContext);
+  NS_IMETHOD SelectAll(nsPresContext* aPresContext);
   /**
    * Get the value, whether it is from the content or the frame.
    * @param aValue the value [out]
@@ -232,7 +232,7 @@ nsHTMLTextAreaElement::Focus()
 }
 
 void
-nsHTMLTextAreaElement::SetFocus(nsIPresContext* aPresContext)
+nsHTMLTextAreaElement::SetFocus(nsPresContext* aPresContext)
 {
   if (!aPresContext)
     return;
@@ -276,7 +276,7 @@ nsHTMLTextAreaElement::Select()
   // selected
 
   // Just like SetFocus() but without the ScrollIntoView()!
-  nsCOMPtr<nsIPresContext> presContext;
+  nsCOMPtr<nsPresContext> presContext;
   GetPresContext(this, getter_AddRefs(presContext)); 
 
   nsEventStatus status = nsEventStatus_eIgnore;
@@ -303,7 +303,7 @@ nsHTMLTextAreaElement::Select()
 }
 
 NS_IMETHODIMP
-nsHTMLTextAreaElement::SelectAll(nsIPresContext* aPresContext)
+nsHTMLTextAreaElement::SelectAll(nsPresContext* aPresContext)
 {
   nsIFormControlFrame* formControlFrame = GetFormControlFrame(PR_TRUE);
 
@@ -401,7 +401,7 @@ nsHTMLTextAreaElement::SetValueInternal(const nsAString& aValue,
     textControlFrame->OwnsValue(&frameOwnsValue);
   }
   if (frameOwnsValue) {
-    nsCOMPtr<nsIPresContext> presContext;
+    nsCOMPtr<nsPresContext> presContext;
     GetPresContext(this, getter_AddRefs(presContext));
 
     formControlFrame->SetProperty(presContext, nsHTMLAtoms::value, aValue);
@@ -548,7 +548,7 @@ nsHTMLTextAreaElement::GetAttributeMappingFunction(nsMapRuleToAttributesFunc& aM
 
 
 nsresult
-nsHTMLTextAreaElement::HandleDOMEvent(nsIPresContext* aPresContext,
+nsHTMLTextAreaElement::HandleDOMEvent(nsPresContext* aPresContext,
                                       nsEvent* aEvent,
                                       nsIDOMEvent** aDOMEvent,
                                       PRUint32 aFlags,

@@ -79,7 +79,7 @@
 #include "nsDOMError.h"
 #include "nsIScrollableView.h"
 #include "nsIPresShell.h"
-#include "nsIPresContext.h"
+#include "nsPresContext.h"
 #include "nsContentUtils.h"
 #include "nsNodeInfoManager.h"
 #include "nsIXBLService.h"
@@ -397,7 +397,7 @@ nsDOMImplementation::CreateDocument(const nsAString& aNamespaceURI,
 
   nsIDocShell *docShell = nsContentUtils::GetDocShellFromCaller();
   if (docShell) {
-    nsCOMPtr<nsIPresContext> presContext;
+    nsCOMPtr<nsPresContext> presContext;
     docShell->GetPresContext(getter_AddRefs(presContext));
     if (presContext) {
       nsCOMPtr<nsISupports> container = presContext->GetContainer();
@@ -1268,7 +1268,7 @@ nsDocument::TryChannelCharset(nsIChannel *aChannel,
 }
 
 nsresult
-nsDocument::CreateShell(nsIPresContext* aContext, nsIViewManager* aViewManager,
+nsDocument::CreateShell(nsPresContext* aContext, nsIViewManager* aViewManager,
                         nsStyleSet* aStyleSet,
                         nsIPresShell** aInstancePtrResult)
 {
@@ -1280,7 +1280,7 @@ nsDocument::CreateShell(nsIPresContext* aContext, nsIViewManager* aViewManager,
 }
 
 nsresult
-nsDocument::doCreateShell(nsIPresContext* aContext,
+nsDocument::doCreateShell(nsPresContext* aContext,
                           nsIViewManager* aViewManager, nsStyleSet* aStyleSet,
                           nsCompatibility aCompatMode,
                           nsIPresShell** aInstancePtrResult)
@@ -1995,7 +1995,7 @@ nsDocument::EndLoad()
 
           nsIPresShell *shell = ancestor_doc->GetShellAt(0);
           if (shell) {
-            nsCOMPtr<nsIPresContext> context;
+            nsCOMPtr<nsPresContext> context;
             shell->GetPresContext(getter_AddRefs(context));
 
             if (context) {
@@ -2788,7 +2788,7 @@ nsDocument::GetDefaultView(nsIDOMAbstractView** aDefaultView)
                                                 mPresShells.ElementAt(0));
   NS_ENSURE_TRUE(shell, NS_OK);
 
-  nsCOMPtr<nsIPresContext> ctx;
+  nsCOMPtr<nsPresContext> ctx;
   nsresult rv = shell->GetPresContext(getter_AddRefs(ctx));
   NS_ENSURE_TRUE(NS_SUCCEEDED(rv) && ctx, rv);
 
@@ -2833,7 +2833,7 @@ nsDocument::SetTitle(const nsAString& aTitle)
     nsCOMPtr<nsIPresShell> shell =
       NS_STATIC_CAST(nsIPresShell*, mPresShells[i]);
 
-    nsCOMPtr<nsIPresContext> context;
+    nsCOMPtr<nsPresContext> context;
     nsresult rv = shell->GetPresContext(getter_AddRefs(context));
     NS_ENSURE_SUCCESS(rv, rv);
 
@@ -2986,7 +2986,7 @@ nsDocument::GetDir(nsAString& aDirection)
 {
   nsCOMPtr<nsIPresShell> shell = (nsIPresShell*)mPresShells.SafeElementAt(0);
   if (shell) {
-    nsCOMPtr<nsIPresContext> context;
+    nsCOMPtr<nsPresContext> context;
     shell->GetPresContext(getter_AddRefs(context));
     if (context) {
       PRUint32 options = context->GetBidi();
@@ -3017,7 +3017,7 @@ nsDocument::SetDir(const nsAString& aDirection)
     return NS_OK;
   }
 
-  nsCOMPtr<nsIPresContext> context;
+  nsCOMPtr<nsPresContext> context;
   shell->GetPresContext(getter_AddRefs(context));
   NS_ENSURE_TRUE(context, NS_ERROR_UNEXPECTED);
 
@@ -3788,7 +3788,7 @@ nsDocument::GetSystemEventGroup(nsIDOMEventGroup **aGroup)
 }
 
 nsresult
-nsDocument::HandleDOMEvent(nsIPresContext* aPresContext, nsEvent* aEvent,
+nsDocument::HandleDOMEvent(nsPresContext* aPresContext, nsEvent* aEvent,
                            nsIDOMEvent** aDOMEvent, PRUint32 aFlags,
                            nsEventStatus* aEventStatus)
 {
@@ -3920,7 +3920,7 @@ nsDocument::DispatchEvent(nsIDOMEvent* aEvent, PRBool *_retval)
     return NS_ERROR_FAILURE;
 
   // Retrieve the context
-  nsCOMPtr<nsIPresContext> presContext;
+  nsCOMPtr<nsPresContext> presContext;
   shell->GetPresContext(getter_AddRefs(presContext));
 
   return presContext->EventStateManager()->
@@ -3984,7 +3984,7 @@ nsDocument::CreateEvent(const nsAString& aEventType, nsIDOMEvent** aReturn)
   // Obtain a presentation context
 
   nsIPresShell *shell = GetShellAt(0);
-  nsCOMPtr<nsIPresContext> presContext;
+  nsCOMPtr<nsPresContext> presContext;
 
   if (shell) {
     // Retrieve the context

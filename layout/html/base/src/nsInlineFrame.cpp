@@ -41,7 +41,7 @@
 #include "nsHTMLParts.h"
 #include "nsStyleContext.h"
 #include "nsIPresShell.h"
-#include "nsIPresContext.h"
+#include "nsPresContext.h"
 #include "nsIRenderingContext.h"
 #include "nsIFontMetrics.h"
 #include "nsAbsoluteContainingBlock.h"
@@ -179,7 +179,7 @@ nsInlineFrame::IsEmpty()
 }
 
 NS_IMETHODIMP
-nsInlineFrame::AppendFrames(nsIPresContext* aPresContext,
+nsInlineFrame::AppendFrames(nsPresContext* aPresContext,
                             nsIPresShell& aPresShell,
                             nsIAtom* aListName,
                             nsIFrame* aFrameList)
@@ -197,7 +197,7 @@ nsInlineFrame::AppendFrames(nsIPresContext* aPresContext,
 }
 
 NS_IMETHODIMP
-nsInlineFrame::InsertFrames(nsIPresContext* aPresContext,
+nsInlineFrame::InsertFrames(nsPresContext* aPresContext,
                             nsIPresShell& aPresShell,
                             nsIAtom* aListName,
                             nsIFrame* aPrevFrame,
@@ -223,7 +223,7 @@ nsInlineFrame::InsertFrames(nsIPresContext* aPresContext,
 }
 
 NS_IMETHODIMP
-nsInlineFrame::RemoveFrame(nsIPresContext* aPresContext,
+nsInlineFrame::RemoveFrame(nsPresContext* aPresContext,
                            nsIPresShell& aPresShell,
                            nsIAtom* aListName,
                            nsIFrame* aOldFrame)
@@ -280,7 +280,7 @@ nsInlineFrame::RemoveFrame(nsIPresContext* aPresContext,
 }
 
 NS_IMETHODIMP
-nsInlineFrame::ReplaceFrame(nsIPresContext* aPresContext,
+nsInlineFrame::ReplaceFrame(nsPresContext* aPresContext,
                             nsIPresShell& aPresShell,
                             nsIAtom* aListName,
                             nsIFrame* aOldFrame,
@@ -306,7 +306,7 @@ nsInlineFrame::ReplaceFrame(nsIPresContext* aPresContext,
 
 
 NS_IMETHODIMP
-nsInlineFrame::Paint(nsIPresContext*      aPresContext,
+nsInlineFrame::Paint(nsPresContext*      aPresContext,
                      nsIRenderingContext& aRenderingContext,
                      const nsRect&        aDirtyRect,
                      nsFramePaintLayer    aWhichLayer,
@@ -340,7 +340,7 @@ nsInlineFrame::Paint(nsIPresContext*      aPresContext,
 // Reflow methods
 
 NS_IMETHODIMP
-nsInlineFrame::Reflow(nsIPresContext*          aPresContext,
+nsInlineFrame::Reflow(nsPresContext*          aPresContext,
                       nsHTMLReflowMetrics&     aMetrics,
                       const nsHTMLReflowState& aReflowState,
                       nsReflowStatus&          aStatus)
@@ -477,7 +477,7 @@ nsInlineFrame::ReflowDirtyChild(nsIPresShell* aPresShell, nsIFrame* aChild)
 }
 
 nsresult
-nsInlineFrame::ReflowFrames(nsIPresContext* aPresContext,
+nsInlineFrame::ReflowFrames(nsPresContext* aPresContext,
                             const nsHTMLReflowState& aReflowState,
                             InlineReflowState& irs,
                             nsHTMLReflowMetrics& aMetrics,
@@ -674,7 +674,7 @@ void SetContainsPercentAwareChild(nsIFrame *aFrame)
 }
 
 static
-void MarkPercentAwareFrame(nsIPresContext *aPresContext, 
+void MarkPercentAwareFrame(nsPresContext *aPresContext, 
                            nsInlineFrame  *aInline,
                            nsIFrame       *aFrame)
 {
@@ -697,7 +697,7 @@ void MarkPercentAwareFrame(nsIPresContext *aPresContext,
 }
 
 nsresult
-nsInlineFrame::ReflowInlineFrame(nsIPresContext* aPresContext,
+nsInlineFrame::ReflowInlineFrame(nsPresContext* aPresContext,
                                  const nsHTMLReflowState& aReflowState,
                                  InlineReflowState& irs,
                                  nsIFrame* aFrame,
@@ -795,7 +795,7 @@ nsInlineFrame::ReflowInlineFrame(nsIPresContext* aPresContext,
 }
 
 nsIFrame*
-nsInlineFrame::PullOneFrame(nsIPresContext* aPresContext,
+nsInlineFrame::PullOneFrame(nsPresContext* aPresContext,
                             InlineReflowState& irs,
                             PRBool* aIsComplete)
 {
@@ -819,7 +819,7 @@ nsInlineFrame::PullOneFrame(nsIPresContext* aPresContext,
 }
 
 void
-nsInlineFrame::PushFrames(nsIPresContext* aPresContext,
+nsInlineFrame::PushFrames(nsPresContext* aPresContext,
                           nsIFrame* aFromChild,
                           nsIFrame* aPrevSibling)
 {
@@ -906,7 +906,7 @@ NS_IMETHODIMP nsInlineFrame::GetAccessible(nsIAccessible** aAccessible)
 // nsLineFrame implementation
 
 static void
-ReParentChildListStyle(nsIPresContext* aPresContext,
+ReParentChildListStyle(nsPresContext* aPresContext,
                        nsStyleContext* aParentStyleContext,
                        nsFrameList& aFrameList)
 {
@@ -964,7 +964,7 @@ nsFirstLineFrame::StealFramesFrom(nsIFrame* aFrame)
 }
 
 nsIFrame*
-nsFirstLineFrame::PullOneFrame(nsIPresContext* aPresContext, InlineReflowState& irs, PRBool* aIsComplete)
+nsFirstLineFrame::PullOneFrame(nsPresContext* aPresContext, InlineReflowState& irs, PRBool* aIsComplete)
 {
   nsIFrame* frame = nsInlineFrame::PullOneFrame(aPresContext, irs, aIsComplete);
   if (frame && !mPrevInFlow) {
@@ -976,7 +976,7 @@ nsFirstLineFrame::PullOneFrame(nsIPresContext* aPresContext, InlineReflowState& 
 }
 
 NS_IMETHODIMP
-nsFirstLineFrame::Reflow(nsIPresContext* aPresContext,
+nsFirstLineFrame::Reflow(nsPresContext* aPresContext,
                          nsHTMLReflowMetrics& aMetrics,
                          const nsHTMLReflowState& aReflowState,
                          nsReflowStatus& aStatus)
@@ -1097,14 +1097,14 @@ NS_NewPositionedInlineFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame)
 }
 
 NS_IMETHODIMP
-nsPositionedInlineFrame::Destroy(nsIPresContext* aPresContext)
+nsPositionedInlineFrame::Destroy(nsPresContext* aPresContext)
 {
   mAbsoluteContainer.DestroyFrames(this, aPresContext);
   return nsInlineFrame::Destroy(aPresContext);
 }
 
 NS_IMETHODIMP
-nsPositionedInlineFrame::SetInitialChildList(nsIPresContext* aPresContext,
+nsPositionedInlineFrame::SetInitialChildList(nsPresContext* aPresContext,
                                              nsIAtom*        aListName,
                                              nsIFrame*       aChildList)
 {
@@ -1120,7 +1120,7 @@ nsPositionedInlineFrame::SetInitialChildList(nsIPresContext* aPresContext,
 }
 
 NS_IMETHODIMP
-nsPositionedInlineFrame::AppendFrames(nsIPresContext* aPresContext,
+nsPositionedInlineFrame::AppendFrames(nsPresContext* aPresContext,
                                       nsIPresShell&   aPresShell,
                                       nsIAtom*        aListName,
                                       nsIFrame*       aFrameList)
@@ -1139,7 +1139,7 @@ nsPositionedInlineFrame::AppendFrames(nsIPresContext* aPresContext,
 }
   
 NS_IMETHODIMP
-nsPositionedInlineFrame::InsertFrames(nsIPresContext* aPresContext,
+nsPositionedInlineFrame::InsertFrames(nsPresContext* aPresContext,
                                       nsIPresShell&   aPresShell,
                                       nsIAtom*        aListName,
                                       nsIFrame*       aPrevFrame,
@@ -1159,7 +1159,7 @@ nsPositionedInlineFrame::InsertFrames(nsIPresContext* aPresContext,
 }
   
 NS_IMETHODIMP
-nsPositionedInlineFrame::RemoveFrame(nsIPresContext* aPresContext,
+nsPositionedInlineFrame::RemoveFrame(nsPresContext* aPresContext,
                                      nsIPresShell&   aPresShell,
                                      nsIAtom*        aListName,
                                      nsIFrame*       aOldFrame)
@@ -1176,7 +1176,7 @@ nsPositionedInlineFrame::RemoveFrame(nsIPresContext* aPresContext,
 }
 
 NS_IMETHODIMP
-nsPositionedInlineFrame::ReplaceFrame(nsIPresContext* aPresContext,
+nsPositionedInlineFrame::ReplaceFrame(nsPresContext* aPresContext,
                                       nsIPresShell&   aPresShell,
                                       nsIAtom*        aListName,
                                       nsIFrame*       aOldFrame,
@@ -1219,7 +1219,7 @@ nsPositionedInlineFrame::GetType() const
 }
 
 NS_IMETHODIMP
-nsPositionedInlineFrame::Reflow(nsIPresContext*          aPresContext,
+nsPositionedInlineFrame::Reflow(nsPresContext*          aPresContext,
                                 nsHTMLReflowMetrics&     aDesiredSize,
                                 const nsHTMLReflowState& aReflowState,
                                 nsReflowStatus&          aStatus)

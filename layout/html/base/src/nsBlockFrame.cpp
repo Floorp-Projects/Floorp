@@ -51,7 +51,7 @@
 #include "nsPlaceholderFrame.h"
 #include "nsStyleConsts.h"
 #include "nsFrameManager.h"
-#include "nsIPresContext.h"
+#include "nsPresContext.h"
 #include "nsIPresShell.h"
 #include "nsReflowPath.h"
 #include "nsStyleContext.h"
@@ -286,7 +286,7 @@ nsBlockFrame::~nsBlockFrame()
 }
 
 NS_IMETHODIMP
-nsBlockFrame::Destroy(nsIPresContext* aPresContext)
+nsBlockFrame::Destroy(nsPresContext* aPresContext)
 {
   mAbsoluteContainer.DestroyFrames(this, aPresContext);
   // Outside bullets are not in our child-list so check for them here
@@ -354,7 +354,7 @@ nsBlockFrame::IsSplittable(nsSplittableType& aIsSplittable) const
 
 #ifdef DEBUG
 NS_METHOD
-nsBlockFrame::List(nsIPresContext* aPresContext, FILE* out, PRInt32 aIndent) const
+nsBlockFrame::List(nsPresContext* aPresContext, FILE* out, PRInt32 aIndent) const
 {
   IndentBy(out, aIndent);
   ListTag(out);
@@ -566,7 +566,7 @@ CalculateContainingBlock(const nsHTMLReflowState& aReflowState,
 }
 
 NS_IMETHODIMP
-nsBlockFrame::Reflow(nsIPresContext*          aPresContext,
+nsBlockFrame::Reflow(nsPresContext*          aPresContext,
                      nsHTMLReflowMetrics&     aMetrics,
                      const nsHTMLReflowState& aReflowState,
                      nsReflowStatus&          aStatus)
@@ -1939,7 +1939,7 @@ WrappedLinesAreDirty(nsLineList::iterator aLine,
   return PR_FALSE;
 }
 
-static void PlaceFrameView(nsIPresContext* aPresContext, nsIFrame* aFrame);
+static void PlaceFrameView(nsPresContext* aPresContext, nsIFrame* aFrame);
 
 /**
  * Reflow the dirty lines
@@ -2616,7 +2616,7 @@ nsBlockFrame::PullFrameFrom(nsBlockReflowState& aState,
 }
 
 static void
-PlaceFrameView(nsIPresContext* aPresContext,
+PlaceFrameView(nsPresContext* aPresContext,
                nsIFrame*       aFrame)
 {
   if (aFrame->HasView())
@@ -2672,7 +2672,7 @@ nsBlockFrame::SlideLine(nsBlockReflowState& aState,
 }
 
 NS_IMETHODIMP 
-nsBlockFrame::AttributeChanged(nsIPresContext* aPresContext,
+nsBlockFrame::AttributeChanged(nsPresContext* aPresContext,
                                nsIContent*     aChild,
                                PRInt32         aNameSpaceID,
                                nsIAtom*        aAttribute,
@@ -2853,7 +2853,7 @@ nsBlockFrame::ShouldApplyTopMargin(nsBlockReflowState& aState,
 }
 
 nsIFrame*
-nsBlockFrame::GetTopBlockChild(nsIPresContext* aPresContext)
+nsBlockFrame::GetTopBlockChild(nsPresContext* aPresContext)
 {
   if (mLines.empty())
     return nsnull;
@@ -3734,7 +3734,7 @@ nsBlockFrame::CreateContinuationFor(nsBlockReflowState& aState,
 }
 
 nsresult
-nsBlockFrame::SplitPlaceholder(nsIPresContext& aPresContext,
+nsBlockFrame::SplitPlaceholder(nsPresContext& aPresContext,
                                nsIFrame&       aPlaceholder)
 {
   nsIFrame* nextInFlow;
@@ -4201,7 +4201,7 @@ nsBlockFrame::PushLines(nsBlockReflowState&  aState,
 // the invariant that the property is never set if the list is empty.
 
 PRBool
-nsBlockFrame::DrainOverflowLines(nsIPresContext* aPresContext)
+nsBlockFrame::DrainOverflowLines(nsPresContext* aPresContext)
 {
 #ifdef DEBUG
   VerifyOverflowSituation();
@@ -4313,7 +4313,7 @@ nsBlockFrame::RemoveOverflowLines() const
 
 // Destructor function for the overflowLines frame property
 static void
-DestroyOverflowLines(nsIPresContext* aPresContext,
+DestroyOverflowLines(nsPresContext* aPresContext,
                      nsIFrame*       aFrame,
                      nsIAtom*        aPropertyName,
                      void*           aPropertyValue)
@@ -4356,7 +4356,7 @@ nsBlockFrame::RemoveOverflowOutOfFlows() const
 
 // Destructor function for the overflowPlaceholders frame property
 static void
-DestroyOverflowOOFs(nsIPresContext* aPresContext,
+DestroyOverflowOOFs(nsPresContext* aPresContext,
                     nsIFrame*       aFrame,
                     nsIAtom*        aPropertyName,
                     void*           aPropertyValue)
@@ -4394,7 +4394,7 @@ nsBlockFrame::RemoveOverflowPlaceholders() const
 
 // Destructor function for the overflowPlaceholders frame property
 static void
-DestroyOverflowPlaceholders(nsIPresContext* aPresContext,
+DestroyOverflowPlaceholders(nsPresContext* aPresContext,
                             nsIFrame*       aFrame,
                             nsIAtom*        aPropertyName,
                             void*           aPropertyValue)
@@ -4428,7 +4428,7 @@ nsBlockFrame::LastChild()
 }
 
 NS_IMETHODIMP
-nsBlockFrame::AppendFrames(nsIPresContext* aPresContext,
+nsBlockFrame::AppendFrames(nsPresContext* aPresContext,
                            nsIPresShell&   aPresShell,
                            nsIAtom*        aListName,
                            nsIFrame*       aFrameList)
@@ -4477,7 +4477,7 @@ nsBlockFrame::AppendFrames(nsIPresContext* aPresContext,
 }
 
 NS_IMETHODIMP
-nsBlockFrame::InsertFrames(nsIPresContext* aPresContext,
+nsBlockFrame::InsertFrames(nsPresContext* aPresContext,
                            nsIPresShell&   aPresShell,
                            nsIAtom*        aListName,
                            nsIFrame*       aPrevFrame,
@@ -4522,7 +4522,7 @@ nsBlockFrame::InsertFrames(nsIPresContext* aPresContext,
 }
 
 nsresult
-nsBlockFrame::AddFrames(nsIPresContext* aPresContext,
+nsBlockFrame::AddFrames(nsPresContext* aPresContext,
                         nsIFrame* aFrameList,
                         nsIFrame* aPrevSibling)
 {
@@ -4629,7 +4629,7 @@ nsBlockFrame::AddFrames(nsIPresContext* aPresContext,
 }
 
 NS_IMETHODIMP
-nsBlockFrame::RemoveFrame(nsIPresContext* aPresContext,
+nsBlockFrame::RemoveFrame(nsPresContext* aPresContext,
                           nsIPresShell&   aPresShell,
                           nsIAtom*        aListName,
                           nsIFrame*       aOldFrame)
@@ -4685,7 +4685,7 @@ nsBlockFrame::RemoveFrame(nsIPresContext* aPresContext,
 }
 
 void
-nsBlockFrame::DoRemoveOutOfFlowFrame(nsIPresContext* aPresContext,
+nsBlockFrame::DoRemoveOutOfFlowFrame(nsPresContext* aPresContext,
                                      nsIFrame*       aFrame)
 {
   // First remove aFrame's next in flow
@@ -4721,7 +4721,7 @@ nsBlockFrame::DoRemoveOutOfFlowFrame(nsIPresContext* aPresContext,
 }
 
 nsresult
-nsBlockFrame::DoRemoveFrame(nsIPresContext* aPresContext,
+nsBlockFrame::DoRemoveFrame(nsPresContext* aPresContext,
                             nsIFrame* aDeletedFrame)
 {
   // Clear our line cursor, since our lines may change.
@@ -4882,7 +4882,7 @@ nsBlockFrame::DoRemoveFrame(nsIPresContext* aPresContext,
 }
 
 void
-nsBlockFrame::DeleteNextInFlowChild(nsIPresContext* aPresContext,
+nsBlockFrame::DeleteNextInFlowChild(nsPresContext* aPresContext,
                                     nsIFrame*       aNextInFlow)
 {
   nsIFrame* prevInFlow;
@@ -5163,7 +5163,7 @@ static void ComputeCombinedArea(nsLineList& aLines,
 #endif
 
 NS_IMETHODIMP
-nsBlockFrame::IsVisibleForPainting(nsIPresContext *     aPresContext, 
+nsBlockFrame::IsVisibleForPainting(nsPresContext *     aPresContext, 
                                    nsIRenderingContext& aRenderingContext,
                                    PRBool               aCheckVis,
                                    PRBool*              aIsVisible)
@@ -5217,7 +5217,7 @@ nsBlockFrame::PaintTextDecorationLines(nsIRenderingContext& aRenderingContext,
 }
 
 NS_IMETHODIMP
-nsBlockFrame::Paint(nsIPresContext*      aPresContext,
+nsBlockFrame::Paint(nsPresContext*      aPresContext,
                     nsIRenderingContext& aRenderingContext,
                     const nsRect&        aDirtyRect,
                     nsFramePaintLayer    aWhichLayer,
@@ -5321,7 +5321,7 @@ nsBlockFrame::Paint(nsIPresContext*      aPresContext,
 }
 
 void
-nsBlockFrame::PaintFloats(nsIPresContext* aPresContext,
+nsBlockFrame::PaintFloats(nsPresContext* aPresContext,
                           nsIRenderingContext& aRenderingContext,
                           const nsRect& aDirtyRect)
 {
@@ -5358,7 +5358,7 @@ static void DebugOutputDrawLine(nsFramePaintLayer aWhichLayer, PRInt32 aDepth,
 static inline void
 PaintLine(const nsRect& aLineArea, const nsRect& aDirtyRect,
           nsBlockFrame::line_iterator& aLine, PRInt32 aDepth,
-          PRInt32& aDrawnLines, nsIPresContext* aPresContext, 
+          PRInt32& aDrawnLines, nsPresContext* aPresContext, 
           nsIRenderingContext& aRenderingContext,
           nsFramePaintLayer aWhichLayer, nsBlockFrame* aFrame) {
   // If the line's combined area (which includes child frames that
@@ -5387,7 +5387,7 @@ PaintLine(const nsRect& aLineArea, const nsRect& aDirtyRect,
 }
 
 void
-nsBlockFrame::PaintChildren(nsIPresContext*      aPresContext,
+nsBlockFrame::PaintChildren(nsPresContext*      aPresContext,
                             nsIRenderingContext& aRenderingContext,
                             const nsRect&        aDirtyRect,
                             nsFramePaintLayer    aWhichLayer,
@@ -5565,7 +5565,7 @@ nsBlockFrame::GetClosestLine(nsILineIterator *aLI,
 }
 
 NS_IMETHODIMP
-nsBlockFrame::HandleEvent(nsIPresContext* aPresContext, 
+nsBlockFrame::HandleEvent(nsPresContext* aPresContext, 
                           nsGUIEvent*     aEvent,
                           nsEventStatus*  aEventStatus)
 {
@@ -5698,7 +5698,7 @@ NS_IMETHODIMP nsBlockFrame::GetAccessible(nsIAccessible** aAccessible)
     do_GetService("@mozilla.org/accessibilityService;1");
   NS_ENSURE_TRUE(accService, NS_ERROR_FAILURE);
 
-  nsIPresContext *aPresContext = GetPresContext();
+  nsPresContext *aPresContext = GetPresContext();
   if (!mBullet || !aPresContext) {
     return NS_ERROR_FAILURE;
   }
@@ -5772,7 +5772,7 @@ nsLineBox* nsBlockFrame::GetFirstLineContaining(nscoord y) {
 
 static inline void
 GetFrameFromLine(const nsRect& aLineArea, const nsPoint& aTmp,
-                 nsBlockFrame::line_iterator& aLine, nsIPresContext* aPresContext,
+                 nsBlockFrame::line_iterator& aLine, nsPresContext* aPresContext,
                  nsFramePaintLayer aWhichLayer, nsIFrame** aFrame) {
   if (aLineArea.Contains(aTmp)) {
     nsIFrame* kid = aLine->mFirstChild;
@@ -5792,7 +5792,7 @@ GetFrameFromLine(const nsRect& aLineArea, const nsPoint& aTmp,
 // Optimized function that uses line combined areas to skip lines
 // we know can't contain the point
 nsresult
-nsBlockFrame::GetFrameForPointUsing(nsIPresContext* aPresContext,
+nsBlockFrame::GetFrameForPointUsing(nsPresContext* aPresContext,
                                     const nsPoint& aPoint,
                                     nsIAtom*       aList,
                                     nsFramePaintLayer aWhichLayer,
@@ -5880,7 +5880,7 @@ nsBlockFrame::GetFrameForPointUsing(nsIPresContext* aPresContext,
 }
 
 NS_IMETHODIMP
-nsBlockFrame::GetFrameForPoint(nsIPresContext* aPresContext,
+nsBlockFrame::GetFrameForPoint(nsPresContext* aPresContext,
                                const nsPoint& aPoint,
                                nsFramePaintLayer aWhichLayer,
                                nsIFrame** aFrame)
@@ -6126,7 +6126,7 @@ nsBlockFrame::VerifyTree() const
 //////////////////////////////////////////////////////////////////////
 
 NS_IMETHODIMP
-nsBlockFrame::Init(nsIPresContext*  aPresContext,
+nsBlockFrame::Init(nsPresContext*  aPresContext,
                    nsIContent*      aContent,
                    nsIFrame*        aParent,
                    nsStyleContext*  aContext,
@@ -6145,7 +6145,7 @@ nsBlockFrame::Init(nsIPresContext*  aPresContext,
 }
 
 NS_IMETHODIMP
-nsBlockFrame::SetInitialChildList(nsIPresContext* aPresContext,
+nsBlockFrame::SetInitialChildList(nsPresContext* aPresContext,
                                   nsIAtom*        aListName,
                                   nsIFrame*       aChildList)
 {
@@ -6238,7 +6238,7 @@ nsBlockFrame::FrameStartsCounterScope(nsIFrame* aFrame)
 }
 
 void
-nsBlockFrame::RenumberLists(nsIPresContext* aPresContext)
+nsBlockFrame::RenumberLists(nsPresContext* aPresContext)
 {
   if (!FrameStartsCounterScope(this)) {
     // If this frame doesn't start a counter scope then we don't need
@@ -6268,7 +6268,7 @@ nsBlockFrame::RenumberLists(nsIPresContext* aPresContext)
 }
 
 PRBool
-nsBlockFrame::RenumberListsInBlock(nsIPresContext* aPresContext,
+nsBlockFrame::RenumberListsInBlock(nsPresContext* aPresContext,
                                    nsBlockFrame* aBlockFrame,
                                    PRInt32* aOrdinal,
                                    PRInt32 aDepth)
@@ -6301,7 +6301,7 @@ nsBlockFrame::RenumberListsInBlock(nsIPresContext* aPresContext,
 }
 
 PRBool
-nsBlockFrame::RenumberListsFor(nsIPresContext* aPresContext,
+nsBlockFrame::RenumberListsFor(nsPresContext* aPresContext,
                                nsIFrame* aKid,
                                PRInt32* aOrdinal,
                                PRInt32 aDepth)

@@ -79,7 +79,7 @@ public:
 #ifdef MOZ_ACCESSIBILITY_ATK
   static nsresult GetParentBlockNode(nsIPresShell *aPresShell, nsIDOMNode *aCurrentNode, nsIDOMNode **aBlockNode);
   static nsIFrame* GetParentBlockFrame(nsIFrame *aFrame);
-  static PRBool FindTextFrame(PRInt32 &index, nsIPresContext *aPresContext, nsIFrame *aCurFrame, 
+  static PRBool FindTextFrame(PRInt32 &index, nsPresContext *aPresContext, nsIFrame *aCurFrame, 
                                    nsIFrame **aFirstTextFrame, const nsIFrame *aTextFrame);
 #endif
 
@@ -105,7 +105,7 @@ protected:
   static nsresult GetFullKeyName(const nsAString& aModifierName, const nsAString& aKeyName, nsAString& aStringOut);
   static nsresult GetTranslatedString(const nsAString& aKey, nsAString& aStringOut);
   void GetScrollOffset(nsRect *aRect);
-  void GetScreenOrigin(nsIPresContext *aPresContext, nsIFrame *aFrame, nsRect *aRect);
+  void GetScreenOrigin(nsPresContext *aPresContext, nsIFrame *aFrame, nsRect *aRect);
   nsresult AppendFlatStringFromSubtreeRecurse(nsIContent *aContent, nsAString *aFlatString);
   virtual void CacheChildren(PRBool aWalkAnonContent);
 

@@ -61,7 +61,7 @@
 #include "nsStyleConsts.h"
 #include "nsIPresShell.h"
 #include "nsGUIEvent.h"
-#include "nsIPresContext.h"
+#include "nsPresContext.h"
 #include "nsIDOMCSSStyleDeclaration.h"
 #include "nsIDOMViewCSS.h"
 #include "nsIXBLService.h"
@@ -150,7 +150,7 @@ nsXMLElement::SetAttr(PRInt32 aNameSpaceID, nsIAtom* aName, nsIAtom* aPrefix,
 }
 
 static nsresult
-DocShellToPresContext(nsIDocShell *aShell, nsIPresContext **aPresContext)
+DocShellToPresContext(nsIDocShell *aShell, nsPresContext **aPresContext)
 {
   *aPresContext = nsnull;
 
@@ -261,7 +261,7 @@ nsXMLElement::MaybeTriggerAutoLink(nsIDocShell *aShell)
                                                          mDocument,
                                                          base);
           if (NS_SUCCEEDED(rv)) {
-            nsCOMPtr<nsIPresContext> pc;
+            nsCOMPtr<nsPresContext> pc;
             rv = DocShellToPresContext(aShell, getter_AddRefs(pc));
             if (NS_SUCCEEDED(rv)) {
               rv = TriggerLink(pc, verb, base, uri,
@@ -279,7 +279,7 @@ nsXMLElement::MaybeTriggerAutoLink(nsIDocShell *aShell)
 }
 
 nsresult
-nsXMLElement::HandleDOMEvent(nsIPresContext* aPresContext,
+nsXMLElement::HandleDOMEvent(nsPresContext* aPresContext,
                              nsEvent* aEvent,
                              nsIDOMEvent** aDOMEvent,
                              PRUint32 aFlags,

@@ -40,7 +40,7 @@
 #include "nsISupports.h"
 #include "nsRect.h"
 
-class nsIPresContext;
+class nsPresContext;
 class nsIPrintSettings;
 
 // IID for the nsIPageSequenceFrame interface 
@@ -72,11 +72,11 @@ public:
    *            and the start page is greater than the total number of pages
    *          NS_ERROR_FAILURE if there is an error
    */
-  NS_IMETHOD StartPrint(nsIPresContext*  aPresContext,
+  NS_IMETHOD StartPrint(nsPresContext*  aPresContext,
                         nsIPrintSettings* aPrintOptions,
                         PRUnichar* aDocTitle,
                         PRUnichar* aDocURL) = 0;
-  NS_IMETHOD PrintNextPage(nsIPresContext*  aPresContext) = 0;
+  NS_IMETHOD PrintNextPage(nsPresContext*  aPresContext) = 0;
   NS_IMETHOD GetCurrentPageNum(PRInt32* aPageNum) = 0;
   NS_IMETHOD GetNumPages(PRInt32* aNumPages) = 0;
   NS_IMETHOD IsDoingPrintRange(PRBool* aDoing) = 0;
@@ -85,11 +85,11 @@ public:
   NS_IMETHOD SkipPageBegin() = 0;
   NS_IMETHOD SkipPageEnd() = 0;
 
-  NS_IMETHOD DoPageEnd(nsIPresContext* aPresContext) = 0;
+  NS_IMETHOD DoPageEnd(nsPresContext* aPresContext) = 0;
   NS_IMETHOD GetPrintThisPage(PRBool* aPrintThisPage) = 0;
   NS_IMETHOD SetOffset(nscoord aX, nscoord aY) = 0;
   NS_IMETHOD SuppressHeadersAndFooters(PRBool aDoSup) = 0;
-  NS_IMETHOD SetClipRect(nsIPresContext*  aPresContext, nsRect* aSize) = 0;
+  NS_IMETHOD SetClipRect(nsPresContext*  aPresContext, nsRect* aSize) = 0;
   NS_IMETHOD SetSelectionHeight(nscoord aYOffset, nscoord aHeight) = 0;
 
   NS_IMETHOD SetTotalNumPages(PRInt32 aTotal) = 0;

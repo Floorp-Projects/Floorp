@@ -42,7 +42,7 @@
 #include "libart-incs.h"
 
 class nsISVGRendererRegion;
-class nsIPresContext;
+class nsPresContext;
 
 //----------------------------------------------------------------------
 // region constructors:

@@ -44,7 +44,7 @@
 
 class nsBlockFrame;
 class nsIFrame;
-class nsIPresContext;
+class nsPresContext;
 class nsLineLayout;
 struct nsStylePosition;
 struct nsBlockHorizontalAlign;
@@ -54,7 +54,7 @@ struct nsBlockHorizontalAlign;
  */
 class nsBlockReflowContext {
 public:
-  nsBlockReflowContext(nsIPresContext* aPresContext,
+  nsBlockReflowContext(nsPresContext* aPresContext,
                        const nsHTMLReflowState& aParentRS,
                        PRBool aComputeMaxElementWidth,
                        PRBool aComputeMaximumWidth);
@@ -101,12 +101,12 @@ public:
     return mMetrics.mMaximumWidth;
   }
 
-  static void ComputeCollapsedTopMargin(nsIPresContext* aPresContext,
+  static void ComputeCollapsedTopMargin(nsPresContext* aPresContext,
                                         nsHTMLReflowState& aRS,
                            /* inout */  nsCollapsingMargin& aMargin);
 
 protected:
-  nsIPresContext* mPresContext;
+  nsPresContext* mPresContext;
   const nsHTMLReflowState& mOuterReflowState;
 
   nsIFrame* mFrame;

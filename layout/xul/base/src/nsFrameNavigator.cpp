@@ -48,7 +48,7 @@
 #include "nsIBox.h"
 
 nsIBox*
-nsFrameNavigator::GetChildBeforeAfter(nsIPresContext* aPresContext,
+nsFrameNavigator::GetChildBeforeAfter(nsPresContext* aPresContext,
                                       nsIBox* start, PRBool before)
 {
    nsIBox* parent = nsnull;
@@ -75,7 +75,7 @@ nsFrameNavigator::GetChildBeforeAfter(nsIPresContext* aPresContext,
 }
 
 PRInt32
-nsFrameNavigator::IndexOf(nsIPresContext* aPresContext, nsIBox* parent, nsIBox* child)
+nsFrameNavigator::IndexOf(nsPresContext* aPresContext, nsIBox* parent, nsIBox* child)
 {
   PRInt32 count = 0;
 
@@ -95,7 +95,7 @@ nsFrameNavigator::IndexOf(nsIPresContext* aPresContext, nsIBox* parent, nsIBox* 
 }
 
 PRInt32
-nsFrameNavigator::CountFrames(nsIPresContext* aPresContext, nsIBox* aBox)
+nsFrameNavigator::CountFrames(nsPresContext* aPresContext, nsIBox* aBox)
 {
   PRInt32 count = 0;
 
@@ -112,7 +112,7 @@ nsFrameNavigator::CountFrames(nsIPresContext* aPresContext, nsIBox* aBox)
 }
 
 nsIBox*
-nsFrameNavigator::GetChildAt(nsIPresContext* aPresContext, nsIBox* parent, PRInt32 index)
+nsFrameNavigator::GetChildAt(nsPresContext* aPresContext, nsIBox* parent, PRInt32 index)
 {
   PRInt32 count = 0;
 

@@ -70,7 +70,7 @@ public:
 
   NS_IMETHOD ThemeChanged();
 
-  PRBool ThemeSupportsWidget(nsIPresContext* aPresContext, 
+  PRBool ThemeSupportsWidget(nsPresContext* aPresContext, 
                              nsIFrame* aFrame,
                              PRUint8 aWidgetType);
 
@@ -101,7 +101,7 @@ protected:
                                   nsSize* aResult,
                                   PRBool* aIsOverridable);
 
-  PRBool ClassicThemeSupportsWidget(nsIPresContext* aPresContext, 
+  PRBool ClassicThemeSupportsWidget(nsPresContext* aPresContext, 
                              nsIFrame* aFrame,
                              PRUint8 aWidgetType);
 

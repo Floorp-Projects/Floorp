@@ -37,7 +37,7 @@
 #include "nsHTMLParts.h"
 #include "nsFrame.h"
 #include "nsLineLayout.h"
-#include "nsIPresContext.h"
+#include "nsPresContext.h"
 #include "nsHTMLAtoms.h"
 #include "nsUnitConversion.h"
 #include "nsStyleConsts.h"
@@ -53,7 +53,7 @@ public:
   friend nsresult NS_NewSpacerFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame);
 
   // nsIHTMLReflow
-  NS_IMETHOD Reflow(nsIPresContext*          aPresContext,
+  NS_IMETHOD Reflow(nsPresContext*          aPresContext,
                     nsHTMLReflowMetrics&     aDesiredSize,
                     const nsHTMLReflowState& aReflowState,
                     nsReflowStatus&          aStatus);
@@ -89,7 +89,7 @@ SpacerFrame::~SpacerFrame()
 }
 
 NS_IMETHODIMP
-SpacerFrame::Reflow(nsIPresContext*          aPresContext,
+SpacerFrame::Reflow(nsPresContext*          aPresContext,
                     nsHTMLReflowMetrics&     aMetrics,
                     const nsHTMLReflowState& aReflowState,
                     nsReflowStatus&          aStatus)

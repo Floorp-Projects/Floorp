@@ -45,7 +45,7 @@
 #include "nsIDOMXULButtonElement.h"
 #include "nsHTMLAtoms.h"
 #include "nsINameSpaceManager.h"
-#include "nsIPresContext.h"
+#include "nsPresContext.h"
 #include "nsIPresShell.h"
 #include "nsGUIEvent.h"
 #include "nsIEventStateManager.h"
@@ -86,7 +86,7 @@ nsButtonBoxFrame::GetMouseThrough(PRBool& aMouseThrough)
   return NS_OK;
 }
 
-NS_IMETHODIMP nsButtonBoxFrame::GetFrameForPoint(nsIPresContext* aPresContext,
+NS_IMETHODIMP nsButtonBoxFrame::GetFrameForPoint(nsPresContext* aPresContext,
                                     const nsPoint& aPoint, 
                                     nsFramePaintLayer aWhichLayer,
                                     nsIFrame**     aFrame)
@@ -96,7 +96,7 @@ NS_IMETHODIMP nsButtonBoxFrame::GetFrameForPoint(nsIPresContext* aPresContext,
 }
 
 NS_IMETHODIMP
-nsButtonBoxFrame::HandleEvent(nsIPresContext* aPresContext, 
+nsButtonBoxFrame::HandleEvent(nsPresContext* aPresContext, 
                               nsGUIEvent* aEvent,
                               nsEventStatus* aEventStatus)
 {
@@ -151,7 +151,7 @@ nsButtonBoxFrame::HandleEvent(nsIPresContext* aPresContext,
 }
 
 void 
-nsButtonBoxFrame::MouseClicked (nsIPresContext* aPresContext, nsGUIEvent* aEvent) 
+nsButtonBoxFrame::MouseClicked (nsPresContext* aPresContext, nsGUIEvent* aEvent) 
 {
   // Don't execute if we're disabled.
   nsAutoString disabled;

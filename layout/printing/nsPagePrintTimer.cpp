@@ -111,7 +111,7 @@ nsPagePrintTimer::Notify(nsITimer *timer)
 void 
 nsPagePrintTimer::Init(nsPrintEngine*          aPrintEngine,
                        nsIDocumentViewerPrint* aDocViewerPrint,
-                       nsIPresContext*         aPresContext,
+                       nsPresContext*         aPresContext,
                        nsIPrintSettings*       aPrintSettings,
                        nsPrintObject*          aPO,
                        PRUint32                aDelay)
@@ -128,7 +128,7 @@ nsPagePrintTimer::Init(nsPrintEngine*          aPrintEngine,
 nsresult 
 nsPagePrintTimer::Start(nsPrintEngine*          aPrintEngine,
                         nsIDocumentViewerPrint* aDocViewerPrint,
-                        nsIPresContext*         aPresContext,
+                        nsPresContext*         aPresContext,
                         nsIPrintSettings*       aPrintSettings,
                         nsPrintObject*          aPO,
                         PRUint32                aDelay)

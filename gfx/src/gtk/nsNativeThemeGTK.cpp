@@ -155,7 +155,7 @@ static PRInt32 GetContentState(nsIFrame* aFrame)
   if (!shell)
     return 0;
 
-  nsCOMPtr<nsIPresContext> context;
+  nsCOMPtr<nsPresContext> context;
   shell->GetPresContext(getter_AddRefs(context));
   PRInt32 flags = 0;
   context->EventStateManager()->GetContentState(aFrame->GetContent(), flags);
@@ -690,7 +690,7 @@ nsNativeThemeGTK::ThemeChanged()
 }
 
 NS_IMETHODIMP_(PRBool)
-nsNativeThemeGTK::ThemeSupportsWidget(nsIPresContext* aPresContext,
+nsNativeThemeGTK::ThemeSupportsWidget(nsPresContext* aPresContext,
                                       nsIFrame* aFrame,
                                       PRUint8 aWidgetType)
 {

@@ -47,7 +47,7 @@
 
 class nsIFrame;
 class nsIPresShell;
-class nsIPresContext;
+class nsPresContext;
 
 class nsNativeTheme
 {
@@ -60,7 +60,7 @@ class nsNativeTheme
   // Returns whether the widget is already styled by content
   // Normally called from ThemeSupportsWidget to turn off native theming
   // for elements that are already styled.
-  PRBool IsWidgetStyled(nsIPresContext* aPresContext, nsIFrame* aFrame,
+  PRBool IsWidgetStyled(nsPresContext* aPresContext, nsIFrame* aFrame,
                         PRUint8 aWidgetType);                                              
 
   // Accessors to widget-specific state information

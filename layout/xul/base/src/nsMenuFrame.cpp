@@ -47,7 +47,7 @@
 #include "nsIContent.h"
 #include "prtypes.h"
 #include "nsIAtom.h"
-#include "nsIPresContext.h"
+#include "nsPresContext.h"
 #include "nsIPresShell.h"
 #include "nsStyleContext.h"
 #include "nsCSSRendering.h"
@@ -179,7 +179,7 @@ nsMenuFrame::SetParent(const nsIFrame* aParent)
 }
 
 NS_IMETHODIMP
-nsMenuFrame::Init(nsIPresContext*  aPresContext,
+nsMenuFrame::Init(nsPresContext*  aPresContext,
                      nsIContent*      aContent,
                      nsIFrame*        aParent,
                      nsStyleContext*  aContext,
@@ -268,7 +268,7 @@ nsMenuFrame::GetFirstChild(nsIAtom* aListName) const
 }
 
 NS_IMETHODIMP
-nsMenuFrame::SetInitialChildList(nsIPresContext* aPresContext,
+nsMenuFrame::SetInitialChildList(nsPresContext* aPresContext,
                                                nsIAtom*        aListName,
                                                nsIFrame*       aChildList)
 {
@@ -316,7 +316,7 @@ nsMenuFrame::GetAdditionalChildListName(PRInt32 aIndex) const
 }
 
 nsresult
-nsMenuFrame::DestroyPopupFrames(nsIPresContext* aPresContext)
+nsMenuFrame::DestroyPopupFrames(nsPresContext* aPresContext)
 {
   // Remove our frame mappings
   if (mFrameConstructor) {
@@ -333,7 +333,7 @@ nsMenuFrame::DestroyPopupFrames(nsIPresContext* aPresContext)
 }
 
 NS_IMETHODIMP
-nsMenuFrame::Destroy(nsIPresContext* aPresContext)
+nsMenuFrame::Destroy(nsPresContext* aPresContext)
 {
   DestroyPopupFrames(aPresContext);
   return nsBoxFrame::Destroy(aPresContext);
@@ -341,7 +341,7 @@ nsMenuFrame::Destroy(nsIPresContext* aPresContext)
 
 // Called to prevent events from going to anything inside the menu.
 NS_IMETHODIMP
-nsMenuFrame::GetFrameForPoint(nsIPresContext* aPresContext,
+nsMenuFrame::GetFrameForPoint(nsPresContext* aPresContext,
                               const nsPoint& aPoint, 
                               nsFramePaintLayer aWhichLayer,    
                               nsIFrame**     aFrame)
@@ -366,7 +366,7 @@ nsMenuFrame::GetFrameForPoint(nsIPresContext* aPresContext,
 }
 
 NS_IMETHODIMP 
-nsMenuFrame::HandleEvent(nsIPresContext* aPresContext, 
+nsMenuFrame::HandleEvent(nsPresContext* aPresContext, 
                              nsGUIEvent*     aEvent,
                              nsEventStatus*  aEventStatus)
 {
@@ -668,7 +668,7 @@ nsMenuFrame::ActivateMenu(PRBool aActivateFlag)
 }  
 
 NS_IMETHODIMP
-nsMenuFrame::AttributeChanged(nsIPresContext* aPresContext,
+nsMenuFrame::AttributeChanged(nsPresContext* aPresContext,
                               nsIContent* aChild,
                               PRInt32 aNameSpaceID,
                               nsIAtom* aAttribute,
@@ -1144,7 +1144,7 @@ static void ConvertPosition(nsIContent* aPopupElt, nsString& aAnchor, nsString& 
 void
 nsMenuFrame::RePositionPopup(nsBoxLayoutState& aState)
 {  
-  nsIPresContext* presContext = aState.PresContext();
+  nsPresContext* presContext = aState.PresContext();
 
   // Sync up the view.
   nsIFrame* frame = mPopupFrames.FirstChild();
@@ -1315,7 +1315,7 @@ nsMenuFrame::IsDisabled()
 }
 
 void
-nsMenuFrame::UpdateMenuType(nsIPresContext* aPresContext)
+nsMenuFrame::UpdateMenuType(nsPresContext* aPresContext)
 {
   nsAutoString value;
   mContent->GetAttr(kNameSpaceID_None, nsHTMLAtoms::type, value);
@@ -1336,7 +1336,7 @@ nsMenuFrame::UpdateMenuType(nsIPresContext* aPresContext)
 
 /* update checked-ness for type="checkbox" and type="radio" */
 void
-nsMenuFrame::UpdateMenuSpecialState(nsIPresContext* aPresContext) {
+nsMenuFrame::UpdateMenuSpecialState(nsPresContext* aPresContext) {
   nsAutoString value;
   PRBool newChecked;
 
@@ -1811,7 +1811,7 @@ nsMenuFrame::OnDestroyed()
 }
 
 NS_IMETHODIMP
-nsMenuFrame::RemoveFrame(nsIPresContext* aPresContext,
+nsMenuFrame::RemoveFrame(nsPresContext* aPresContext,
                            nsIPresShell& aPresShell,
                            nsIAtom* aListName,
                            nsIFrame* aOldFrame)
@@ -1831,7 +1831,7 @@ nsMenuFrame::RemoveFrame(nsIPresContext* aPresContext,
 }
 
 NS_IMETHODIMP
-nsMenuFrame::InsertFrames(nsIPresContext* aPresContext,
+nsMenuFrame::InsertFrames(nsPresContext* aPresContext,
                             nsIPresShell& aPresShell,
                             nsIAtom* aListName,
                             nsIFrame* aPrevFrame,
@@ -1860,7 +1860,7 @@ nsMenuFrame::InsertFrames(nsIPresContext* aPresContext,
 }
 
 NS_IMETHODIMP
-nsMenuFrame::AppendFrames(nsIPresContext* aPresContext,
+nsMenuFrame::AppendFrames(nsPresContext* aPresContext,
                            nsIPresShell&   aPresShell,
                            nsIAtom*        aListName,
                            nsIFrame*       aFrameList)
@@ -2006,7 +2006,7 @@ nsMenuFrame::SetActiveChild(nsIDOMElement* aChild)
 }
 
 NS_IMETHODIMP
-nsMenuFrame::GetScrollableView(nsIPresContext* aPresContext, nsIScrollableView** aView)
+nsMenuFrame::GetScrollableView(nsPresContext* aPresContext, nsIScrollableView** aView)
 {
   *aView = nsnull;
   if (!mPopupFrames.FirstChild())
@@ -2023,7 +2023,7 @@ nsMenuFrame::GetScrollableView(nsIPresContext* aPresContext, nsIScrollableView**
 
 /* Need to figure out what this does.
 NS_IMETHODIMP
-nsMenuFrame::GetBoxInfo(nsIPresContext* aPresContext, const nsHTMLReflowState& aReflowState, nsBoxInfo& aSize)
+nsMenuFrame::GetBoxInfo(nsPresContext* aPresContext, const nsHTMLReflowState& aReflowState, nsBoxInfo& aSize)
 {
   nsresult rv = nsBoxFrame::GetBoxInfo(aPresContext, aReflowState, aSize);
   nsCOMPtr<nsIDOMXULMenuListElement> menulist(do_QueryInterface(mContent));

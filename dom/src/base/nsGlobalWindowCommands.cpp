@@ -50,7 +50,7 @@
 
 #include "nsIDOMWindow.h"
 #include "nsIPresShell.h"
-#include "nsIPresContext.h"
+#include "nsPresContext.h"
 #include "nsIScriptGlobalObject.h"
 #include "nsIDocShell.h"
 #include "nsISelectionController.h"
@@ -235,7 +235,7 @@ nsSelectionCommandsBase::GetEventStateManagerForWindow(nsIDOMWindow *aWindow,
   GetPresShellFromWindow(aWindow, getter_AddRefs(presShell));
   if (presShell)
   {
-    nsCOMPtr<nsIPresContext> presContext;
+    nsCOMPtr<nsPresContext> presContext;
     presShell->GetPresContext(getter_AddRefs(presContext));
     if (presContext) {
       NS_ADDREF(*aEventStateManager = presContext->EventStateManager());

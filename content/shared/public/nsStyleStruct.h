@@ -46,7 +46,7 @@
 #include "nsStyleCoord.h"
 #include "nsStyleConsts.h"
 #include "nsChangeHint.h"
-#include "nsIPresContext.h"
+#include "nsPresContext.h"
 #include "nsIPresShell.h"
 #include "nsCOMPtr.h"
 #include "nsIAtom.h"
@@ -98,7 +98,7 @@ struct nsStyleFont : public nsStyleStruct {
   nsStyleFont(void);
   nsStyleFont(const nsFont& aFont);
   nsStyleFont(const nsStyleFont& aStyleFont);
-  nsStyleFont(nsIPresContext *aPresContext);
+  nsStyleFont(nsPresContext *aPresContext);
   ~nsStyleFont(void) {};
 
   NS_DEFINE_STATIC_STYLESTRUCTID_ACCESSOR(eStyleStruct_Font)
@@ -106,11 +106,11 @@ struct nsStyleFont : public nsStyleStruct {
   nsChangeHint CalcDifference(const nsStyleFont& aOther) const;
   static nsChangeHint CalcFontDifference(const nsFont& aFont1, const nsFont& aFont2);
 
-  static nscoord ZoomText(nsIPresContext* aPresContext, nscoord aSize);
-  static nscoord UnZoomText(nsIPresContext* aPresContext, nscoord aSize);
+  static nscoord ZoomText(nsPresContext* aPresContext, nscoord aSize);
+  static nscoord UnZoomText(nsPresContext* aPresContext, nscoord aSize);
   
-  void* operator new(size_t sz, nsIPresContext* aContext) CPP_THROW_NEW;
-  void Destroy(nsIPresContext* aContext);
+  void* operator new(size_t sz, nsPresContext* aContext) CPP_THROW_NEW;
+  void Destroy(nsPresContext* aContext);
 
   PRUint8 mFlags;       // [inherited] See nsStyleConsts.h
   nsFont  mFont;        // [inherited]
@@ -121,7 +121,7 @@ struct nsStyleFont : public nsStyleStruct {
 };
 
 struct nsStyleColor : public nsStyleStruct {
-  nsStyleColor(nsIPresContext* aPresContext);
+  nsStyleColor(nsPresContext* aPresContext);
   nsStyleColor(const nsStyleColor& aOther);
   ~nsStyleColor(void) {};
 
@@ -129,10 +129,10 @@ struct nsStyleColor : public nsStyleStruct {
 
   nsChangeHint CalcDifference(const nsStyleColor& aOther) const;
   
-  void* operator new(size_t sz, nsIPresContext* aContext) CPP_THROW_NEW {
+  void* operator new(size_t sz, nsPresContext* aContext) CPP_THROW_NEW {
     return aContext->AllocateFromShell(sz);
   }
-  void Destroy(nsIPresContext* aContext) {
+  void Destroy(nsPresContext* aContext) {
     this->~nsStyleColor();
     aContext->FreeToShell(sizeof(nsStyleColor), this);
   };
@@ -143,16 +143,16 @@ struct nsStyleColor : public nsStyleStruct {
 };
 
 struct nsStyleBackground : public nsStyleStruct {
-  nsStyleBackground(nsIPresContext* aPresContext);
+  nsStyleBackground(nsPresContext* aPresContext);
   nsStyleBackground(const nsStyleBackground& aOther);
   ~nsStyleBackground();
 
   NS_DEFINE_STATIC_STYLESTRUCTID_ACCESSOR(eStyleStruct_Background)
 
-  void* operator new(size_t sz, nsIPresContext* aContext) CPP_THROW_NEW {
+  void* operator new(size_t sz, nsPresContext* aContext) CPP_THROW_NEW {
     return aContext->AllocateFromShell(sz);
   }
-  void Destroy(nsIPresContext* aContext) {
+  void Destroy(nsPresContext* aContext) {
     this->~nsStyleBackground();
     aContext->FreeToShell(sizeof(nsStyleBackground), this);
   };
@@ -207,8 +207,8 @@ struct nsStyleMargin: public nsStyleStruct {
 
   NS_DEFINE_STATIC_STYLESTRUCTID_ACCESSOR(eStyleStruct_Margin)
 
-  void* operator new(size_t sz, nsIPresContext* aContext) CPP_THROW_NEW;
-  void Destroy(nsIPresContext* aContext);
+  void* operator new(size_t sz, nsPresContext* aContext) CPP_THROW_NEW;
+  void Destroy(nsPresContext* aContext);
 
   void RecalcData();
   nsChangeHint CalcDifference(const nsStyleMargin& aOther) const;
@@ -240,8 +240,8 @@ struct nsStylePadding: public nsStyleStruct {
 
   NS_DEFINE_STATIC_STYLESTRUCTID_ACCESSOR(eStyleStruct_Padding)
 
-  void* operator new(size_t sz, nsIPresContext* aContext) CPP_THROW_NEW;
-  void Destroy(nsIPresContext* aContext);
+  void* operator new(size_t sz, nsPresContext* aContext) CPP_THROW_NEW;
+  void Destroy(nsPresContext* aContext);
 
   void RecalcData();
   nsChangeHint CalcDifference(const nsStylePadding& aOther) const;
@@ -305,7 +305,7 @@ struct nsBorderColors {
 
 struct nsStyleBorder: public nsStyleStruct {
   nsStyleBorder() :mBorderColors(nsnull) {};
-  nsStyleBorder(nsIPresContext* aContext);
+  nsStyleBorder(nsPresContext* aContext);
   nsStyleBorder(const nsStyleBorder& aBorder);
   ~nsStyleBorder(void) {
     if (mBorderColors) {
@@ -317,8 +317,8 @@ struct nsStyleBorder: public nsStyleStruct {
 
   NS_DEFINE_STATIC_STYLESTRUCTID_ACCESSOR(eStyleStruct_Border)
 
-  void* operator new(size_t sz, nsIPresContext* aContext) CPP_THROW_NEW;
-  void Destroy(nsIPresContext* aContext);
+  void* operator new(size_t sz, nsPresContext* aContext) CPP_THROW_NEW;
+  void Destroy(nsPresContext* aContext);
 
   PRBool IsBorderSideVisible(PRUint8 aSide) const;
   void RecalcData();
@@ -477,16 +477,16 @@ protected:
 
 
 struct nsStyleOutline: public nsStyleStruct {
-  nsStyleOutline(nsIPresContext* aPresContext);
+  nsStyleOutline(nsPresContext* aPresContext);
   nsStyleOutline(const nsStyleOutline& aOutline);
   ~nsStyleOutline(void) {};
 
   NS_DEFINE_STATIC_STYLESTRUCTID_ACCESSOR(eStyleStruct_Outline)
 
-  void* operator new(size_t sz, nsIPresContext* aContext) CPP_THROW_NEW {
+  void* operator new(size_t sz, nsPresContext* aContext) CPP_THROW_NEW {
     return aContext->AllocateFromShell(sz);
   }
-  void Destroy(nsIPresContext* aContext) {
+  void Destroy(nsPresContext* aContext) {
     this->~nsStyleOutline();
     aContext->FreeToShell(sizeof(nsStyleOutline), this);
   };
@@ -566,10 +566,10 @@ struct nsStyleList : public nsStyleStruct {
 
   NS_DEFINE_STATIC_STYLESTRUCTID_ACCESSOR(eStyleStruct_List)
 
-  void* operator new(size_t sz, nsIPresContext* aContext) CPP_THROW_NEW {
+  void* operator new(size_t sz, nsPresContext* aContext) CPP_THROW_NEW {
     return aContext->AllocateFromShell(sz);
   }
-  void Destroy(nsIPresContext* aContext) {
+  void Destroy(nsPresContext* aContext) {
     this->~nsStyleList();
     aContext->FreeToShell(sizeof(nsStyleList), this);
   };
@@ -589,10 +589,10 @@ struct nsStylePosition : public nsStyleStruct {
 
   NS_DEFINE_STATIC_STYLESTRUCTID_ACCESSOR(eStyleStruct_Position)
 
-  void* operator new(size_t sz, nsIPresContext* aContext) CPP_THROW_NEW {
+  void* operator new(size_t sz, nsPresContext* aContext) CPP_THROW_NEW {
     return aContext->AllocateFromShell(sz);
   }
-  void Destroy(nsIPresContext* aContext) {
+  void Destroy(nsPresContext* aContext) {
     this->~nsStylePosition();
     aContext->FreeToShell(sizeof(nsStylePosition), this);
   };
@@ -617,10 +617,10 @@ struct nsStyleTextReset : public nsStyleStruct {
 
   NS_DEFINE_STATIC_STYLESTRUCTID_ACCESSOR(eStyleStruct_TextReset)
 
-  void* operator new(size_t sz, nsIPresContext* aContext) CPP_THROW_NEW {
+  void* operator new(size_t sz, nsPresContext* aContext) CPP_THROW_NEW {
     return aContext->AllocateFromShell(sz);
   }
-  void Destroy(nsIPresContext* aContext) {
+  void Destroy(nsPresContext* aContext) {
     this->~nsStyleTextReset();
     aContext->FreeToShell(sizeof(nsStyleTextReset), this);
   };
@@ -640,10 +640,10 @@ struct nsStyleText : public nsStyleStruct {
 
   NS_DEFINE_STATIC_STYLESTRUCTID_ACCESSOR(eStyleStruct_Text)
 
-  void* operator new(size_t sz, nsIPresContext* aContext) CPP_THROW_NEW {
+  void* operator new(size_t sz, nsPresContext* aContext) CPP_THROW_NEW {
     return aContext->AllocateFromShell(sz);
   }
-  void Destroy(nsIPresContext* aContext) {
+  void Destroy(nsPresContext* aContext) {
     this->~nsStyleText();
     aContext->FreeToShell(sizeof(nsStyleText), this);
   };
@@ -666,16 +666,16 @@ struct nsStyleText : public nsStyleStruct {
 };
 
 struct nsStyleVisibility : public nsStyleStruct {
-  nsStyleVisibility(nsIPresContext* aPresContext);
+  nsStyleVisibility(nsPresContext* aPresContext);
   nsStyleVisibility(const nsStyleVisibility& aVisibility);
   ~nsStyleVisibility() {};
 
   NS_DEFINE_STATIC_STYLESTRUCTID_ACCESSOR(eStyleStruct_Visibility)
 
-  void* operator new(size_t sz, nsIPresContext* aContext) CPP_THROW_NEW {
+  void* operator new(size_t sz, nsPresContext* aContext) CPP_THROW_NEW {
     return aContext->AllocateFromShell(sz);
   }
-  void Destroy(nsIPresContext* aContext) {
+  void Destroy(nsPresContext* aContext) {
     this->~nsStyleVisibility();
     aContext->FreeToShell(sizeof(nsStyleVisibility), this);
   };
@@ -703,10 +703,10 @@ struct nsStyleDisplay : public nsStyleStruct {
 
   NS_DEFINE_STATIC_STYLESTRUCTID_ACCESSOR(eStyleStruct_Display)
 
-  void* operator new(size_t sz, nsIPresContext* aContext) CPP_THROW_NEW {
+  void* operator new(size_t sz, nsPresContext* aContext) CPP_THROW_NEW {
     return aContext->AllocateFromShell(sz);
   }
-  void Destroy(nsIPresContext* aContext) {
+  void Destroy(nsPresContext* aContext) {
     this->~nsStyleDisplay();
     aContext->FreeToShell(sizeof(nsStyleDisplay), this);
   };
@@ -756,10 +756,10 @@ struct nsStyleTable: public nsStyleStruct {
 
   NS_DEFINE_STATIC_STYLESTRUCTID_ACCESSOR(eStyleStruct_Table)
 
-  void* operator new(size_t sz, nsIPresContext* aContext) CPP_THROW_NEW {
+  void* operator new(size_t sz, nsPresContext* aContext) CPP_THROW_NEW {
     return aContext->AllocateFromShell(sz);
   }
-  void Destroy(nsIPresContext* aContext) {
+  void Destroy(nsPresContext* aContext) {
     this->~nsStyleTable();
     aContext->FreeToShell(sizeof(nsStyleTable), this);
   };
@@ -774,16 +774,16 @@ struct nsStyleTable: public nsStyleStruct {
 };
 
 struct nsStyleTableBorder: public nsStyleStruct {
-  nsStyleTableBorder(nsIPresContext* aContext);
+  nsStyleTableBorder(nsPresContext* aContext);
   nsStyleTableBorder(const nsStyleTableBorder& aOther);
   ~nsStyleTableBorder(void);
 
   NS_DEFINE_STATIC_STYLESTRUCTID_ACCESSOR(eStyleStruct_TableBorder)
 
-  void* operator new(size_t sz, nsIPresContext* aContext) CPP_THROW_NEW {
+  void* operator new(size_t sz, nsPresContext* aContext) CPP_THROW_NEW {
     return aContext->AllocateFromShell(sz);
   }
-  void Destroy(nsIPresContext* aContext) {
+  void Destroy(nsPresContext* aContext) {
     this->~nsStyleTableBorder();
     aContext->FreeToShell(sizeof(nsStyleTableBorder), this);
   };
@@ -842,10 +842,10 @@ struct nsStyleQuotes : public nsStyleStruct {
 
   NS_DEFINE_STATIC_STYLESTRUCTID_ACCESSOR(eStyleStruct_Quotes)
 
-  void* operator new(size_t sz, nsIPresContext* aContext) CPP_THROW_NEW {
+  void* operator new(size_t sz, nsPresContext* aContext) CPP_THROW_NEW {
     return aContext->AllocateFromShell(sz);
   }
-  void Destroy(nsIPresContext* aContext) {
+  void Destroy(nsPresContext* aContext) {
     this->~nsStyleQuotes();
     aContext->FreeToShell(sizeof(nsStyleQuotes), this);
   };
@@ -912,10 +912,10 @@ struct nsStyleContent: public nsStyleStruct {
 
   NS_DEFINE_STATIC_STYLESTRUCTID_ACCESSOR(eStyleStruct_Content)
 
-  void* operator new(size_t sz, nsIPresContext* aContext) CPP_THROW_NEW {
+  void* operator new(size_t sz, nsPresContext* aContext) CPP_THROW_NEW {
     return aContext->AllocateFromShell(sz);
   }
-  void Destroy(nsIPresContext* aContext) {
+  void Destroy(nsPresContext* aContext) {
     this->~nsStyleContent();
     aContext->FreeToShell(sizeof(nsStyleContent), this);
   };
@@ -1024,10 +1024,10 @@ struct nsStyleUIReset: public nsStyleStruct {
 
   NS_DEFINE_STATIC_STYLESTRUCTID_ACCESSOR(eStyleStruct_UIReset)
 
-  void* operator new(size_t sz, nsIPresContext* aContext) CPP_THROW_NEW {
+  void* operator new(size_t sz, nsPresContext* aContext) CPP_THROW_NEW {
     return aContext->AllocateFromShell(sz);
   }
-  void Destroy(nsIPresContext* aContext) {
+  void Destroy(nsPresContext* aContext) {
     this->~nsStyleUIReset();
     aContext->FreeToShell(sizeof(nsStyleUIReset), this);
   };
@@ -1046,10 +1046,10 @@ struct nsStyleUserInterface: public nsStyleStruct {
 
   NS_DEFINE_STATIC_STYLESTRUCTID_ACCESSOR(eStyleStruct_UserInterface)
 
-  void* operator new(size_t sz, nsIPresContext* aContext) CPP_THROW_NEW {
+  void* operator new(size_t sz, nsPresContext* aContext) CPP_THROW_NEW {
     return aContext->AllocateFromShell(sz);
   }
-  void Destroy(nsIPresContext* aContext) {
+  void Destroy(nsPresContext* aContext) {
     this->~nsStyleUserInterface();
     aContext->FreeToShell(sizeof(nsStyleUserInterface), this);
   };
@@ -1070,10 +1070,10 @@ struct nsStyleXUL : public nsStyleStruct {
 
   NS_DEFINE_STATIC_STYLESTRUCTID_ACCESSOR(eStyleStruct_XUL)
 
-  void* operator new(size_t sz, nsIPresContext* aContext) CPP_THROW_NEW {
+  void* operator new(size_t sz, nsPresContext* aContext) CPP_THROW_NEW {
     return aContext->AllocateFromShell(sz);
   }
-  void Destroy(nsIPresContext* aContext) {
+  void Destroy(nsPresContext* aContext) {
     this->~nsStyleXUL();
     aContext->FreeToShell(sizeof(nsStyleXUL), this);
   };
@@ -1095,10 +1095,10 @@ struct nsStyleColumn : public nsStyleStruct {
 
   NS_DEFINE_STATIC_STYLESTRUCTID_ACCESSOR(eStyleStruct_Column)
   
-  void* operator new(size_t sz, nsIPresContext* aContext) CPP_THROW_NEW {
+  void* operator new(size_t sz, nsPresContext* aContext) CPP_THROW_NEW {
     return aContext->AllocateFromShell(sz);
   }
-  void Destroy(nsIPresContext* aContext) {
+  void Destroy(nsPresContext* aContext) {
     this->~nsStyleColumn();
     aContext->FreeToShell(sizeof(nsStyleColumn), this);
   };
@@ -1130,10 +1130,10 @@ struct nsStyleSVG : public nsStyleStruct {
 
   NS_DEFINE_STATIC_STYLESTRUCTID_ACCESSOR(eStyleStruct_SVG)
 
-  void* operator new(size_t sz, nsIPresContext* aContext) CPP_THROW_NEW {
+  void* operator new(size_t sz, nsPresContext* aContext) CPP_THROW_NEW {
     return aContext->AllocateFromShell(sz);
   }
-  void Destroy(nsIPresContext* aContext) {
+  void Destroy(nsPresContext* aContext) {
     this->~nsStyleSVG();
     aContext->FreeToShell(sizeof(nsStyleSVG), this);
   };
@@ -1164,10 +1164,10 @@ struct nsStyleSVGReset : public nsStyleStruct {
 
   NS_DEFINE_STATIC_STYLESTRUCTID_ACCESSOR(eStyleStruct_SVGReset)
   
-  void* operator new(size_t sz, nsIPresContext* aContext) CPP_THROW_NEW {
+  void* operator new(size_t sz, nsPresContext* aContext) CPP_THROW_NEW {
     return aContext->AllocateFromShell(sz);
   }
-  void Destroy(nsIPresContext* aContext) {
+  void Destroy(nsPresContext* aContext) {
     this->~nsStyleSVGReset();
     aContext->FreeToShell(sizeof(nsStyleSVGReset), this);
   };

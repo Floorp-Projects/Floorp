@@ -138,14 +138,14 @@ public:
   NS_IMETHOD CaptureEvent(PRInt32 aEventTypes);
   NS_IMETHOD ReleaseEvent(PRInt32 aEventTypes);
 
-  NS_IMETHOD HandleEvent(nsIPresContext* aPresContext, 
+  NS_IMETHOD HandleEvent(nsPresContext* aPresContext, 
                          nsEvent* aEvent, 
                          nsIDOMEvent** aDOMEvent,
                          nsIDOMEventTarget* aCurrentTarget,
                          PRUint32 aFlags,
                          nsEventStatus* aEventStatus);
 
-  NS_IMETHOD CreateEvent(nsIPresContext* aPresContext, 
+  NS_IMETHOD CreateEvent(nsPresContext* aPresContext, 
                          nsEvent* aEvent,
                          const nsAString& aEventType,
                          nsIDOMEvent** aDOMEvent);
@@ -216,11 +216,11 @@ protected:
   nsresult FlipCaptureBit(PRInt32 aEventTypes, PRBool aInitCapture);
   nsVoidArray* GetListenersByType(EventArrayType aType, nsHashKey* aKey, PRBool aCreate);
   EventArrayType GetTypeForIID(const nsIID& aIID);
-  nsresult FixContextMenuEvent(nsIPresContext* aPresContext,
+  nsresult FixContextMenuEvent(nsPresContext* aPresContext,
                                nsIDOMEventTarget* aCurrentTarget,
                                nsEvent* aEvent,
                                nsIDOMEvent** aDOMEvent);
-  void GetCoordinatesFor(nsIDOMElement *aCurrentEl, nsIPresContext *aPresContext,
+  void GetCoordinatesFor(nsIDOMElement *aCurrentEl, nsPresContext *aPresContext,
                          nsIPresShell *aPresShell, nsPoint& aTargetPt);
   nsresult GetDOM2EventGroup(nsIDOMEventGroup** aGroup);
 

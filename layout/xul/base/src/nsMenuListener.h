@@ -44,7 +44,7 @@
 #include "nsIDOMEventReceiver.h"
 
 class nsIMenuParent;
-class nsIPresContext;
+class nsPresContext;
 
 /** editor Implementation of the DragListener interface
  */

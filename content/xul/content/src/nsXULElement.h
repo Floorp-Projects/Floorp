@@ -473,7 +473,7 @@ public:
     {
     }
 #endif
-    virtual nsresult HandleDOMEvent(nsIPresContext* aPresContext,
+    virtual nsresult HandleDOMEvent(nsPresContext* aPresContext,
                               nsEvent* aEvent,
                               nsIDOMEvent** aDOMEvent,
                               PRUint32 aFlags,
@@ -485,8 +485,8 @@ public:
     virtual nsresult RangeAdd(nsIDOMRange* aRange);
     virtual void RangeRemove(nsIDOMRange* aRange);
     virtual const nsVoidArray *GetRangeList() const;
-    virtual void SetFocus(nsIPresContext* aPresContext);
-    virtual void RemoveFocus(nsIPresContext* aPresContext);
+    virtual void SetFocus(nsPresContext* aPresContext);
+    virtual void RemoveFocus(nsPresContext* aPresContext);
 
     virtual nsIContent *GetBindingParent() const;
     virtual nsresult SetBindingParent(nsIContent* aParent);

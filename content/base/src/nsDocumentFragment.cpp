@@ -155,7 +155,7 @@ public:
     *aPrefix = nsnull;
     return NS_ERROR_ILLEGAL_VALUE;
   }
-  virtual nsresult HandleDOMEvent(nsIPresContext* aPresContext,
+  virtual nsresult HandleDOMEvent(nsPresContext* aPresContext,
                                   nsEvent* aEvent, nsIDOMEvent** aDOMEvent,
                                   PRUint32 aFlags, nsEventStatus* aEventStatus)
   {

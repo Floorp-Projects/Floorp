@@ -101,13 +101,13 @@ public:
   // The dismissal listener gets created and attached to the window.
   NS_IMETHOD CreateDismissalListener();
 
-  NS_IMETHOD Init(nsIPresContext*  aPresContext,
+  NS_IMETHOD Init(nsPresContext*  aPresContext,
                   nsIContent*      aContent,
                   nsIFrame*        aParent,
                   nsStyleContext*  aContext,
                   nsIFrame*        aPrevInFlow);
 
-  NS_IMETHOD Destroy(nsIPresContext* aPresContext);
+  NS_IMETHOD Destroy(nsPresContext* aPresContext);
 
 // Non-interface helpers
 
@@ -149,7 +149,7 @@ protected:
   nsIDOMEventReceiver* mTarget;
 
   // XXX Hack
-  nsIPresContext* mPresContext;  // weak reference
+  nsPresContext* mPresContext;  // weak reference
 
 private:
   PRBool mCaretWasVisible;

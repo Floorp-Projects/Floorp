@@ -155,59 +155,59 @@ public:
   NS_IMETHOD  QueryInterface(const nsIID& aIID, void** aInstancePtr);
 
   // nsIFrame
-  NS_IMETHOD  Init(nsIPresContext*  aPresContext,
+  NS_IMETHOD  Init(nsPresContext*  aPresContext,
                    nsIContent*      aContent,
                    nsIFrame*        aParent,
                    nsStyleContext*  aContext,
                    nsIFrame*        asPrevInFlow);
-  NS_IMETHOD  SetInitialChildList(nsIPresContext* aPresContext,
+  NS_IMETHOD  SetInitialChildList(nsPresContext* aPresContext,
                                   nsIAtom*        aListName,
                                   nsIFrame*       aChildList);
-  NS_IMETHOD  AppendFrames(nsIPresContext* aPresContext,
+  NS_IMETHOD  AppendFrames(nsPresContext* aPresContext,
                            nsIPresShell&   aPresShell,
                            nsIAtom*        aListName,
                            nsIFrame*       aFrameList);
-  NS_IMETHOD  InsertFrames(nsIPresContext* aPresContext,
+  NS_IMETHOD  InsertFrames(nsPresContext* aPresContext,
                            nsIPresShell&   aPresShell,
                            nsIAtom*        aListName,
                            nsIFrame*       aPrevFrame,
                            nsIFrame*       aFrameList);
-  NS_IMETHOD  RemoveFrame(nsIPresContext* aPresContext,
+  NS_IMETHOD  RemoveFrame(nsPresContext* aPresContext,
                           nsIPresShell&   aPresShell,
                           nsIAtom*        aListName,
                           nsIFrame*       aOldFrame);
-  NS_IMETHOD  ReplaceFrame(nsIPresContext* aPresContext,
+  NS_IMETHOD  ReplaceFrame(nsPresContext* aPresContext,
                            nsIPresShell&   aPresShell,
                            nsIAtom*        aListName,
                            nsIFrame*       aOldFrame,
                            nsIFrame*       aNewFrame);
-  NS_IMETHOD  Destroy(nsIPresContext* aPresContext);
+  NS_IMETHOD  Destroy(nsPresContext* aPresContext);
   NS_IMETHOD  CalcBorderPadding(nsMargin& aBorderPadding) const;
   virtual nsStyleContext* GetAdditionalStyleContext(PRInt32 aIndex) const;
   virtual void SetAdditionalStyleContext(PRInt32 aIndex,
                                          nsStyleContext* aStyleContext);
   virtual nsIAtom* GetAdditionalChildListName(PRInt32 aIndex) const;
   virtual nsIFrame* GetFirstChild(nsIAtom* aListName) const;
-  NS_IMETHOD  Paint(nsIPresContext*      aPresContext,
+  NS_IMETHOD  Paint(nsPresContext*      aPresContext,
                     nsIRenderingContext& aRenderingContext,
                     const nsRect&        aDirtyRect,
                     nsFramePaintLayer    aWhichLayer,
                     PRUint32             aFlags = 0);
-  NS_IMETHOD  HandleEvent(nsIPresContext* aPresContext, 
+  NS_IMETHOD  HandleEvent(nsPresContext* aPresContext, 
                           nsGUIEvent*     aEvent,
                           nsEventStatus*  aEventStatus);
-  NS_IMETHOD  GetContentForEvent(nsIPresContext* aPresContext,
+  NS_IMETHOD  GetContentForEvent(nsPresContext* aPresContext,
                                  nsEvent* aEvent,
                                  nsIContent** aContent);
-  NS_IMETHOD  GetCursor(nsIPresContext* aPresContext,
+  NS_IMETHOD  GetCursor(nsPresContext* aPresContext,
                         nsPoint&        aPoint,
                         PRInt32&        aCursor);
-  NS_IMETHOD  GetFrameForPoint(nsIPresContext* aPresContext,
+  NS_IMETHOD  GetFrameForPoint(nsPresContext* aPresContext,
                                const nsPoint& aPoint, 
                                nsFramePaintLayer aWhichLayer,
                                nsIFrame**     aFrame);
 
-  NS_IMETHOD  GetPointFromOffset(nsIPresContext*        inPresContext,
+  NS_IMETHOD  GetPointFromOffset(nsPresContext*        inPresContext,
                                  nsIRenderingContext*   inRendContext,
                                  PRInt32                inOffset,
                                  nsPoint*               outPoint);
@@ -217,16 +217,16 @@ public:
                                  PRInt32*               outFrameContentOffset,
                                  nsIFrame*              *outChildFrame);
 
-  static nsresult  GetNextPrevLineFromeBlockFrame(nsIPresContext* aPresContext,
+  static nsresult  GetNextPrevLineFromeBlockFrame(nsPresContext* aPresContext,
                                         nsPeekOffsetStruct *aPos, 
                                         nsIFrame *aBlockFrame, 
                                         PRInt32 aLineStart, 
                                         PRInt8 aOutSideLimit
                                         );
-  NS_IMETHOD  CharacterDataChanged(nsIPresContext* aPresContext,
+  NS_IMETHOD  CharacterDataChanged(nsPresContext* aPresContext,
                                    nsIContent*     aChild,
                                    PRBool          aAppend);
-  NS_IMETHOD  AttributeChanged(nsIPresContext* aPresContext,
+  NS_IMETHOD  AttributeChanged(nsPresContext* aPresContext,
                                nsIContent*     aChild,
                                PRInt32         aNameSpaceID,
                                nsIAtom*        aAttribute,
@@ -236,27 +236,27 @@ public:
   NS_IMETHOD  SetPrevInFlow(nsIFrame*);
   NS_IMETHOD  GetNextInFlow(nsIFrame** aNextInFlow) const;
   NS_IMETHOD  SetNextInFlow(nsIFrame*);
-  NS_IMETHOD  GetOffsetFromView(nsIPresContext* aPresContext, nsPoint& aOffset, nsIView** aView) const;
-  NS_IMETHOD  GetOriginToViewOffset(nsIPresContext *aPresContext, nsPoint& aOffset, nsIView **aView) const;
+  NS_IMETHOD  GetOffsetFromView(nsPresContext* aPresContext, nsPoint& aOffset, nsIView** aView) const;
+  NS_IMETHOD  GetOriginToViewOffset(nsPresContext *aPresContext, nsPoint& aOffset, nsIView **aView) const;
   virtual nsIAtom* GetType() const;
   virtual PRBool IsContainingBlock() const;
 #ifdef NS_DEBUG
-  NS_IMETHOD  List(nsIPresContext* aPresContext, FILE* out, PRInt32 aIndent) const;
+  NS_IMETHOD  List(nsPresContext* aPresContext, FILE* out, PRInt32 aIndent) const;
   NS_IMETHOD  GetFrameName(nsAString& aResult) const;
   NS_IMETHOD_(nsFrameState) GetDebugStateBits() const;
-  NS_IMETHOD  DumpRegressionData(nsIPresContext* aPresContext, FILE* out, PRInt32 aIndent, PRBool aIncludeStyleData);
+  NS_IMETHOD  DumpRegressionData(nsPresContext* aPresContext, FILE* out, PRInt32 aIndent, PRBool aIncludeStyleData);
   NS_IMETHOD  VerifyTree() const;
 #endif
 
-  NS_IMETHOD  SetSelected(nsIPresContext* aPresContext, nsIDOMRange *aRange,PRBool aSelected, nsSpread aSpread);
+  NS_IMETHOD  SetSelected(nsPresContext* aPresContext, nsIDOMRange *aRange,PRBool aSelected, nsSpread aSpread);
   NS_IMETHOD  GetSelected(PRBool *aSelected) const;
   NS_IMETHOD  IsSelectable(PRBool* aIsSelectable, PRUint8* aSelectStyle) const;
 
-  NS_IMETHOD  GetSelectionController(nsIPresContext *aPresContext, nsISelectionController **aSelCon);
-  NS_IMETHOD  PeekOffset(nsIPresContext* aPresContext, nsPeekOffsetStruct *aPos) ;
-  NS_IMETHOD  CheckVisibility(nsIPresContext* aContext, PRInt32 aStartIndex, PRInt32 aEndIndex, PRBool aRecurse, PRBool *aFinished, PRBool *_retval);
+  NS_IMETHOD  GetSelectionController(nsPresContext *aPresContext, nsISelectionController **aSelCon);
+  NS_IMETHOD  PeekOffset(nsPresContext* aPresContext, nsPeekOffsetStruct *aPos) ;
+  NS_IMETHOD  CheckVisibility(nsPresContext* aContext, PRInt32 aStartIndex, PRInt32 aEndIndex, PRBool aRecurse, PRBool *aFinished, PRBool *_retval);
 
-  NS_IMETHOD  PeekOffsetParagraph(nsIPresContext* aPresContext,
+  NS_IMETHOD  PeekOffsetParagraph(nsPresContext* aPresContext,
                                   nsPeekOffsetStruct *aPos);
   NS_IMETHOD  GetOffsets(PRInt32 &aStart, PRInt32 &aEnd) const;
   NS_IMETHOD  ReflowDirtyChild(nsIPresShell* aPresShell, nsIFrame* aChild);
@@ -265,12 +265,12 @@ public:
   NS_IMETHOD  GetAccessible(nsIAccessible** aAccessible);
 #endif
 
-  NS_IMETHOD GetParentStyleContextFrame(nsIPresContext* aPresContext,
+  NS_IMETHOD GetParentStyleContextFrame(nsPresContext* aPresContext,
                                         nsIFrame**      aProviderFrame,
                                         PRBool*         aIsChild);
 
   // Check Style Visibility and mState for Selection (when printing)
-  NS_IMETHOD IsVisibleForPainting(nsIPresContext *     aPresContext, 
+  NS_IMETHOD IsVisibleForPainting(nsPresContext *     aPresContext, 
                                   nsIRenderingContext& aRenderingContext,
                                   PRBool               aCheckVis,
                                   PRBool*              aIsVisible);
@@ -278,17 +278,17 @@ public:
   virtual PRBool IsEmpty();
 
   // nsIHTMLReflow
-  NS_IMETHOD  WillReflow(nsIPresContext* aPresContext);
-  NS_IMETHOD  Reflow(nsIPresContext*          aPresContext,
+  NS_IMETHOD  WillReflow(nsPresContext* aPresContext);
+  NS_IMETHOD  Reflow(nsPresContext*          aPresContext,
                      nsHTMLReflowMetrics&     aDesiredSize,
                      const nsHTMLReflowState& aReflowState,
                      nsReflowStatus&          aStatus);
-  NS_IMETHOD  DidReflow(nsIPresContext*           aPresContext,
+  NS_IMETHOD  DidReflow(nsPresContext*           aPresContext,
                         const nsHTMLReflowState*  aReflowState,
                         nsDidReflowStatus         aStatus);
   NS_IMETHOD CanContinueTextRun(PRBool& aContinueTextRun) const;
   NS_IMETHOD AdjustFrameSize(nscoord aExtraSpace, nscoord& aUsedSpace);
-  NS_IMETHOD TrimTrailingWhiteSpace(nsIPresContext* aPresContext,
+  NS_IMETHOD TrimTrailingWhiteSpace(nsPresContext* aPresContext,
                                     nsIRenderingContext& aRC,
                                     nscoord& aDeltaWidth);
 
@@ -296,23 +296,23 @@ public:
   // XXX Doc me... (in nsIFrame.h puhleeze)
   // XXX If these are selection specific, then the name should imply selection
   // rather than generic event processing, e.g., SelectionHandlePress...
-  NS_IMETHOD HandlePress(nsIPresContext* aPresContext,
+  NS_IMETHOD HandlePress(nsPresContext* aPresContext,
                          nsGUIEvent *    aEvent,
                          nsEventStatus*  aEventStatus);
 
-  NS_IMETHOD HandleMultiplePress(nsIPresContext* aPresContext,
+  NS_IMETHOD HandleMultiplePress(nsPresContext* aPresContext,
                          nsGUIEvent *    aEvent,
                          nsEventStatus*  aEventStatus);
 
-  NS_IMETHOD HandleDrag(nsIPresContext* aPresContext,
+  NS_IMETHOD HandleDrag(nsPresContext* aPresContext,
                         nsGUIEvent *    aEvent,
                         nsEventStatus*  aEventStatus);
 
-  NS_IMETHOD HandleRelease(nsIPresContext* aPresContext,
+  NS_IMETHOD HandleRelease(nsPresContext* aPresContext,
                            nsGUIEvent *    aEvent,
                            nsEventStatus*  aEventStatus);
 
-  NS_IMETHOD GetContentAndOffsetsFromPoint(nsIPresContext* aCX,
+  NS_IMETHOD GetContentAndOffsetsFromPoint(nsPresContext* aCX,
                                            const nsPoint& aPoint,
                                            nsIContent **   aNewContent,
                                            PRInt32&        aContentOffset,
@@ -321,7 +321,7 @@ public:
   NS_IMETHOD PeekBackwardAndForward(nsSelectionAmount aAmountBack,
                                     nsSelectionAmount aAmountForward,
                                     PRInt32 aStartPos,
-                                    nsIPresContext* aPresContext,
+                                    nsPresContext* aPresContext,
                                     PRBool aJumpLines);
 
 
@@ -338,7 +338,7 @@ public:
    * @param aDesiredSize the new size of the frame
    * @param aReflowState the reflow that was just done on this frame
    */
-  void CheckInvalidateSizeChange(nsIPresContext*          aPresContext,
+  void CheckInvalidateSizeChange(nsPresContext*          aPresContext,
                                  nsHTMLReflowMetrics&     aDesiredSize,
                                  const nsHTMLReflowState& aReflowState);
 
@@ -362,19 +362,19 @@ public:
   // method on *another* frame.  (This function handles out-of-flow
   // frames by using the frame manager's placeholder map and it also
   // handles block-within-inline and generated content wrappers.)
-  nsresult DoGetParentStyleContextFrame(nsIPresContext* aPresContext,
+  nsresult DoGetParentStyleContextFrame(nsPresContext* aPresContext,
                                         nsIFrame**      aProviderFrame,
                                         PRBool*         aIsChild);
 
   // incorporate the child overflow area into the parent overflow area
   // if the child does not have a overflow use the child area
-  void ConsiderChildOverflow(nsIPresContext* aPresContext,
+  void ConsiderChildOverflow(nsPresContext* aPresContext,
                              nsRect&         aOverflowArea,
                              nsIFrame*       aChildFrame);
 
   //Mouse Capturing code used by the frames to tell the view to capture all the following events
-  NS_IMETHOD CaptureMouse(nsIPresContext* aPresContext, PRBool aGrabMouseEvents);
-  PRBool   IsMouseCaptured(nsIPresContext* aPresContext);
+  NS_IMETHOD CaptureMouse(nsPresContext* aPresContext, PRBool aGrabMouseEvents);
+  PRBool   IsMouseCaptured(nsPresContext* aPresContext);
 
   virtual const nsStyleStruct* GetStyleDataExternal(nsStyleStructID aSID) const;
 
@@ -428,15 +428,15 @@ public:
    * some custom behavior that requires changing how the outer "frame"
    * XML container is dumped.
    */
-  virtual void DumpBaseRegressionData(nsIPresContext* aPresContext, FILE* out, PRInt32 aIndent, PRBool aIncludeStyleData);
+  virtual void DumpBaseRegressionData(nsPresContext* aPresContext, FILE* out, PRInt32 aIndent, PRBool aIncludeStyleData);
   
   nsresult MakeFrameName(const nsAString& aKind, nsAString& aResult) const;
 
   // Display Reflow Debugging 
-  static void* DisplayReflowEnter(nsIPresContext*          aPresContext,
+  static void* DisplayReflowEnter(nsPresContext*          aPresContext,
                                   nsIFrame*                aFrame,
                                   const nsHTMLReflowState& aReflowState);
-  static void  DisplayReflowExit(nsIPresContext*      aPresContext,
+  static void  DisplayReflowExit(nsPresContext*      aPresContext,
                                  nsIFrame*            aFrame,
                                  nsHTMLReflowMetrics& aMetrics,
                                  PRUint32             aStatus,
@@ -456,28 +456,28 @@ protected:
    * the background, border, and outline, when in the correct layer to
    * do so.
    */
-  void PaintSelf(nsIPresContext*      aPresContext,
+  void PaintSelf(nsPresContext*      aPresContext,
                  nsIRenderingContext& aRenderingContext,
                  const nsRect&        aDirtyRect,
                  PRIntn               aSkipSides = 0,
                  PRBool               aUsePrintBackgroundSettings = PR_TRUE);
 
-  PRInt16 DisplaySelection(nsIPresContext* aPresContext, PRBool isOkToTurnOn = PR_FALSE);
+  PRInt16 DisplaySelection(nsPresContext* aPresContext, PRBool isOkToTurnOn = PR_FALSE);
   
   //this will modify aPos and return the next frame ect.
-  NS_IMETHOD GetFrameFromDirection(nsIPresContext* aPresContext, nsPeekOffsetStruct *aPos);
+  NS_IMETHOD GetFrameFromDirection(nsPresContext* aPresContext, nsPeekOffsetStruct *aPos);
 
   // Style post processing hook
-  NS_IMETHOD DidSetStyleContext(nsIPresContext* aPresContext);
+  NS_IMETHOD DidSetStyleContext(nsPresContext* aPresContext);
 
   // Helper routine for determining whether to print selection
-  nsresult GetSelectionForVisCheck(nsIPresContext * aPresContext, nsISelection** aSelection);
+  nsresult GetSelectionForVisCheck(nsPresContext * aPresContext, nsISelection** aSelection);
 
   //return the line number of the aFrame
   static PRInt32 GetLineNumber(nsIFrame *aFrame);
   //given a frame five me the first/last leaf available
-  static void GetLastLeaf(nsIPresContext* aPresContext, nsIFrame **aFrame);
-  static void GetFirstLeaf(nsIPresContext* aPresContext, nsIFrame **aFrame);
+  static void GetLastLeaf(nsPresContext* aPresContext, nsIFrame **aFrame);
+  static void GetFirstLeaf(nsPresContext* aPresContext, nsIFrame **aFrame);
 
   // Test if we are selecting a table object:
   //  Most table/cell selection requires that Ctrl (Cmd on Mac) key is down 
@@ -509,7 +509,7 @@ protected:
 #ifdef DEBUG
 
   struct DR_cookie {
-    DR_cookie(nsIPresContext*          aPresContext,
+    DR_cookie(nsPresContext*          aPresContext,
               nsIFrame*                aFrame, 
               const nsHTMLReflowState& aReflowState,
               nsHTMLReflowMetrics&     aMetrics,
@@ -517,7 +517,7 @@ protected:
     ~DR_cookie();
     void Change() const;
 
-    nsIPresContext*          mPresContext;
+    nsPresContext*          mPresContext;
     nsIFrame*                mFrame;
     const nsHTMLReflowState& mReflowState;
     nsHTMLReflowMetrics&     mMetrics;

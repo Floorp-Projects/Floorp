@@ -39,7 +39,7 @@
 #include "nsMediaDocument.h"
 #include "nsHTMLAtoms.h"
 #include "nsRect.h"
-#include "nsIPresContext.h"
+#include "nsPresContext.h"
 #include "nsIPresShell.h"
 #include "nsIScrollable.h"
 #include "nsIViewManager.h"
@@ -282,7 +282,7 @@ nsMediaDocument::StartLayout()
     shell->BeginObservingDocument();
 
     // Initial-reflow this time.
-    nsCOMPtr<nsIPresContext> context;
+    nsCOMPtr<nsPresContext> context;
     shell->GetPresContext(getter_AddRefs(context));
     nsRect visibleArea = context->GetVisibleArea();
     shell->InitialReflow(visibleArea.width, visibleArea.height);

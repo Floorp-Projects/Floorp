@@ -38,7 +38,7 @@
 
 #include "nsIDOMSVGRect.h"
 #include "nsIDOMSVGGElement.h"
-#include "nsIPresContext.h"
+#include "nsPresContext.h"
 #include "nsISVGOuterSVGFrame.h"
 #include "nsISVGRendererCanvas.h"
 #include "nsISVGValue.h"
@@ -114,7 +114,7 @@ NS_INTERFACE_MAP_END_INHERITING(nsSVGDefsFrameBase)
 //----------------------------------------------------------------------
 // nsIFrame methods
 NS_IMETHODIMP
-nsSVGDefsFrame::Init(nsIPresContext*  aPresContext,
+nsSVGDefsFrame::Init(nsPresContext*  aPresContext,
                   nsIContent*      aContent,
                   nsIFrame*        aParent,
                   nsStyleContext*  aContext,
@@ -130,7 +130,7 @@ nsSVGDefsFrame::Init(nsIPresContext*  aPresContext,
 }
 
 NS_IMETHODIMP
-nsSVGDefsFrame::AppendFrames(nsIPresContext* aPresContext,
+nsSVGDefsFrame::AppendFrames(nsPresContext* aPresContext,
                           nsIPresShell&   aPresShell,
                           nsIAtom*        aListName,
                           nsIFrame*       aFrameList)
@@ -141,7 +141,7 @@ nsSVGDefsFrame::AppendFrames(nsIPresContext* aPresContext,
 }
 
 NS_IMETHODIMP
-nsSVGDefsFrame::InsertFrames(nsIPresContext* aPresContext,
+nsSVGDefsFrame::InsertFrames(nsPresContext* aPresContext,
                           nsIPresShell&   aPresShell,
                           nsIAtom*        aListName,
                           nsIFrame*       aPrevFrame,
@@ -175,7 +175,7 @@ nsSVGDefsFrame::InsertFrames(nsIPresContext* aPresContext,
 }
 
 NS_IMETHODIMP
-nsSVGDefsFrame::RemoveFrame(nsIPresContext* aPresContext,
+nsSVGDefsFrame::RemoveFrame(nsPresContext* aPresContext,
                      nsIPresShell&   aPresShell,
                      nsIAtom*        aListName,
                      nsIFrame*       aOldFrame)
@@ -200,7 +200,7 @@ nsSVGDefsFrame::RemoveFrame(nsIPresContext* aPresContext,
 }
 
 NS_IMETHODIMP
-nsSVGDefsFrame::ReplaceFrame(nsIPresContext* aPresContext,
+nsSVGDefsFrame::ReplaceFrame(nsPresContext* aPresContext,
                           nsIPresShell&   aPresShell,
                           nsIAtom*        aListName,
                           nsIFrame*       aOldFrame,

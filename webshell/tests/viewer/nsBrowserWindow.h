@@ -74,7 +74,7 @@ class nsIButton;
 class nsThrobber;
 class nsViewerApp;
 class nsIDocumentViewer;
-class nsIPresContext;
+class nsPresContext;
 class nsIPresShell;
 class nsIContentConnector;
 class nsWebCrawler;
@@ -214,7 +214,7 @@ public:
                 PRUint32 aChromeMask,
                 PRBool aAllowPlugins,
                 nsIDocumentViewer* aDocViewer,
-                nsIPresContext* aPresContext);
+                nsPresContext* aPresContext);
 
   void SetApp(nsViewerApp* aApp) {
     mApp = aApp;

@@ -39,7 +39,7 @@
 
 interface nsIContent;
 interface nsIDOMHTMLOptionElement;
-interface nsIPresContext;
+interface nsPresContext;
 interface nsIPresState;
 
 /** 

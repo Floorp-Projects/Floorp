@@ -57,7 +57,7 @@
 #include "nsIContentViewerContainer.h"
 #include "nsIDocument.h"
 #include "nsIPresShell.h"
-#include "nsIPresContext.h"
+#include "nsPresContext.h"
 #include "nsIStringBundle.h"
 #include "nsIScriptSecurityManager.h"
 
@@ -427,7 +427,7 @@ nsDocLoaderImpl::GetContentViewerContainer(nsISupports* aDocumentID,
   if (doc) {
     nsIPresShell *pres = doc->GetShellAt(0);
     if (pres) {
-      nsCOMPtr<nsIPresContext> presContext;
+      nsCOMPtr<nsPresContext> presContext;
       pres->GetPresContext(getter_AddRefs(presContext));
       if (presContext) {
         nsCOMPtr<nsISupports> supp = presContext->GetContainer();

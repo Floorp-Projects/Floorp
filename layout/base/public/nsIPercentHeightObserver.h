@@ -39,7 +39,7 @@
 #define nsIPercentHeightObserver_h___
 
 struct nsHTMLReflowState;
-class  nsIPresContext;
+class  nsPresContext;
 
 // IID for the nsIPercentHeightObserver interface 
 #define NS_IPERCENTHEIGHTOBSERVER_IID \

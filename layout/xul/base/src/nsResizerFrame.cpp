@@ -46,7 +46,7 @@
 #include "nsINameSpaceManager.h"
 
 #include "nsIWidget.h"
-#include "nsIPresContext.h"
+#include "nsPresContext.h"
 #include "nsIDocShell.h"
 #include "nsIDocShellTreeItem.h"
 #include "nsIDocShellTreeOwner.h"
@@ -84,7 +84,7 @@ nsResizerFrame::nsResizerFrame(nsIPresShell* aPresShell)
 	mDirection = topleft; // by default...
 }
 
-NS_IMETHODIMP  nsResizerFrame::Init(nsIPresContext*  aPresContext,
+NS_IMETHODIMP  nsResizerFrame::Init(nsPresContext*  aPresContext,
                 nsIContent*      aContent,
                 nsIFrame*        aParent,
                 nsStyleContext*  aContext,
@@ -99,7 +99,7 @@ NS_IMETHODIMP  nsResizerFrame::Init(nsIPresContext*  aPresContext,
 
 
 NS_IMETHODIMP
-nsResizerFrame::HandleEvent(nsIPresContext* aPresContext, 
+nsResizerFrame::HandleEvent(nsPresContext* aPresContext, 
                             nsGUIEvent* aEvent,
                             nsEventStatus* aEventStatus)
 {
@@ -333,7 +333,7 @@ nsResizerFrame::GetInitialDirection(eDirection& aDirection)
 
 
 NS_IMETHODIMP
-nsResizerFrame::AttributeChanged(nsIPresContext* aPresContext,
+nsResizerFrame::AttributeChanged(nsPresContext* aPresContext,
                                nsIContent* aChild,
                                PRInt32 aNameSpaceID,
                                nsIAtom* aAttribute,
@@ -355,7 +355,7 @@ nsResizerFrame::AttributeChanged(nsIPresContext* aPresContext,
 
 
 void 
-nsResizerFrame::MouseClicked (nsIPresContext* aPresContext) 
+nsResizerFrame::MouseClicked (nsPresContext* aPresContext) 
 {
   // Execute the oncommand event handler.
   nsEventStatus status = nsEventStatus_eIgnore;

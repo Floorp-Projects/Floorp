@@ -44,11 +44,11 @@
 #include "nsIWidget.h"
 #include "nsLeafFrame.h"
 #include "nsCoord.h"
-#include "nsIPresContext.h"
+#include "nsPresContext.h"
 #include "nsCOMPtr.h"
 
 class nsIView;
-class nsIPresContext;
+class nsPresContext;
 class nsStyleCoord;
 
 #define CSS_NOTSET -1
@@ -100,7 +100,7 @@ public:
     * Respond to a gui event
     * @see nsIFrame::HandleEvent
     */
-  NS_IMETHOD HandleEvent(nsIPresContext* aPresContext, 
+  NS_IMETHOD HandleEvent(nsPresContext* aPresContext, 
                          nsGUIEvent* aEvent,
                          nsEventStatus* aEventStatus);
 
@@ -108,22 +108,22 @@ public:
     * Draw this frame within the context of a presentation context and rendering context
     * @see nsIFrame::Paint
     */
-  NS_IMETHOD Paint(nsIPresContext*      aPresContext,
+  NS_IMETHOD Paint(nsPresContext*      aPresContext,
                    nsIRenderingContext& aRenderingContext,
                    const nsRect&        aDirtyRect,
                    nsFramePaintLayer    aWhichLayer,
                    PRUint32             aFlags = 0);
 
-  NS_IMETHOD GetFrameForPoint(nsIPresContext* aPresContext,
+  NS_IMETHOD GetFrameForPoint(nsPresContext* aPresContext,
                               const nsPoint& aPoint,
                               nsFramePaintLayer aWhichLayer,
                               nsIFrame** aFrame);
 
-  NS_IMETHOD SetInitialChildList(nsIPresContext* aPresContext,
+  NS_IMETHOD SetInitialChildList(nsPresContext* aPresContext,
                                  nsIAtom*        aListName,
                                  nsIFrame*       aChildList);
 
-  NS_IMETHOD DidReflow(nsIPresContext*           aPresContext,
+  NS_IMETHOD DidReflow(nsPresContext*           aPresContext,
                        const nsHTMLReflowState*  aReflowState,
                        nsDidReflowStatus         aStatus);
 
@@ -131,12 +131,12 @@ public:
     * Respond to the request to resize and/or reflow
     * @see nsIFrame::Reflow
     */
-  NS_IMETHOD Reflow(nsIPresContext*      aCX,
+  NS_IMETHOD Reflow(nsPresContext*      aCX,
                     nsHTMLReflowMetrics& aDesiredSize,
                     const nsHTMLReflowState& aReflowState,
                     nsReflowStatus&      aStatus);
 
-  NS_IMETHOD Destroy(nsIPresContext *aPresContext);
+  NS_IMETHOD Destroy(nsPresContext *aPresContext);
 
   // new behavior
 
@@ -159,31 +159,31 @@ public:
   /**
     * Respond to a enter key being pressed
     */
-  virtual void EnterPressed(nsIPresContext* aPresContext) {} 
+  virtual void EnterPressed(nsPresContext* aPresContext) {} 
 
   /**
     * Respond to a mouse click (e.g. mouse enter, mouse down, mouse up)
     */
-  virtual void MouseClicked(nsIPresContext* aPresContext) {}
+  virtual void MouseClicked(nsPresContext* aPresContext) {}
 
   /**
     * Respond to a control change (e.g. combo box close-up)
     */
-  virtual void ControlChanged(nsIPresContext* aPresContext) {}
+  virtual void ControlChanged(nsPresContext* aPresContext) {}
 
   /**
     * Chance to Initialize to a defualt value
     */
-  virtual void InitializeControl(nsIPresContext* aPresContext);
+  virtual void InitializeControl(nsPresContext* aPresContext);
 
   virtual void SetFocus(PRBool aOn = PR_TRUE, PRBool aRepaint = PR_FALSE);
-  virtual void ScrollIntoView(nsIPresContext* aPresContext);
+  virtual void ScrollIntoView(nsPresContext* aPresContext);
 
   /**
     * Perform opertations before the widget associated with this frame has been
     * created.
     */
-  virtual nsWidgetInitData* GetWidgetInitData(nsIPresContext* aPresContext);  
+  virtual nsWidgetInitData* GetWidgetInitData(nsPresContext* aPresContext);  
 
   void GetWidgetSize(nsSize& aSize) const { aSize.width  = mWidgetSize.width; 
                                             aSize.height = mWidgetSize.height; }
@@ -205,12 +205,12 @@ public:
     * @param aSize the size that this frame wants, set by this method. values of -1 
     * for aSize.width or aSize.height indicate unset values.
     */
-  static void GetStyleSize(nsIPresContext* aContext,
+  static void GetStyleSize(nsPresContext* aContext,
                             const nsHTMLReflowState& aReflowState,
                             nsSize& aSize);
 
     // nsIFormControlFrame
-  NS_IMETHOD SetProperty(nsIPresContext* aPresContext, nsIAtom* aName, const nsAString& aValue);
+  NS_IMETHOD SetProperty(nsPresContext* aPresContext, nsIAtom* aName, const nsAString& aValue);
 
   NS_IMETHOD GetProperty(nsIAtom* aName, nsAString& aValue); 
   // Resize Reflow Optimiaztion Methods
@@ -229,19 +229,19 @@ public:
                                PRBool& aBailOnWidth,
                                PRBool& aBailOnHeight);
   // AccessKey Helper function
-  static nsresult RegUnRegAccessKey(nsIPresContext* aPresContext, nsIFrame * aFrame, PRBool aDoReg);
+  static nsresult RegUnRegAccessKey(nsPresContext* aPresContext, nsIFrame * aFrame, PRBool aDoReg);
 
   /**
    * Helper routine to that returns the height of the screen
    *
    */
-  static nsresult GetScreenHeight(nsIPresContext* aPresContext, nscoord& aHeight);
+  static nsresult GetScreenHeight(nsPresContext* aPresContext, nscoord& aHeight);
 
   /**
    * Helper method to get the absolute position of a frame
    *
    */
-  static nsresult GetAbsoluteFramePosition(nsIPresContext* aPresContext,
+  static nsresult GetAbsoluteFramePosition(nsPresContext* aPresContext,
                                            nsIFrame *aFrame, 
                                            nsRect& aAbsoluteTwipsRect, 
                                            nsRect& aAbsolutePixelRect);
@@ -255,11 +255,11 @@ protected:
     * @param aDesiredSize the size desired by this frame, to be set by this method
     * @param aMaxSize the maximum size available for this frame
     */
-  virtual void GetDesiredSize(nsIPresContext* aPresContext,
+  virtual void GetDesiredSize(nsPresContext* aPresContext,
                               const nsHTMLReflowState& aReflowState,
                               nsHTMLReflowMetrics& aDesiredSize);
 
-  virtual void GetDesiredSize(nsIPresContext* aPresContext,
+  virtual void GetDesiredSize(nsPresContext* aPresContext,
                               const nsHTMLReflowState& aReflowState,
                               nsHTMLReflowMetrics& aDesiredLayoutSize,
                               nsSize& aDesiredWidgetSize);
@@ -313,7 +313,7 @@ protected:
   nscoord      mSuggestedWidth;
   nscoord      mSuggestedHeight;
 
-  nsIPresContext * mPresContext;
+  nsPresContext * mPresContext;
 
   // Reflow Optimization
   nsSize       mCacheSize;

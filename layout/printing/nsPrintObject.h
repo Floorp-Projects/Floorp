@@ -41,7 +41,7 @@
 #include "nsCOMPtr.h"
 #include "nsAutoPtr.h"
 #include "nsIContent.h"
-#include "nsIPresContext.h"
+#include "nsPresContext.h"
 #include "nsIPresShell.h"
 #include "nsStyleSet.h"
 #include "nsIViewManager.h"
@@ -76,11 +76,11 @@ public:
   nsCOMPtr<nsIWebShell>    mWebShell;
   nsCOMPtr<nsIDocShell>    mDocShell;
   nsCOMPtr<nsIPresShell>   mDisplayPresShell;
-  nsCOMPtr<nsIPresContext> mDisplayPresContext;
+  nsCOMPtr<nsPresContext> mDisplayPresContext;
   nsCOMPtr<nsIDocument>    mDocument;
 
   PrintObjectType mFrameType;
-  nsCOMPtr<nsIPresContext> mPresContext;
+  nsCOMPtr<nsPresContext> mPresContext;
   nsStyleSet              *mStyleSet;
   nsCOMPtr<nsIPresShell>   mPresShell;
   nsCOMPtr<nsIViewManager> mViewManager;

@@ -51,7 +51,7 @@
 #include "nsIMenuBar.h"
 #include "nsIMenuItem.h"
 #include "nsIMenuListener.h"
-#include "nsIPresContext.h"
+#include "nsPresContext.h"
 #include "nsIMenuCommandDispatcher.h"
 
 #include "nsString.h"
@@ -983,7 +983,7 @@ nsMenuX::OnCreate()
     NS_ERROR("No web shell");
     return PR_FALSE;
   }
-  nsCOMPtr<nsIPresContext> presContext;
+  nsCOMPtr<nsPresContext> presContext;
   MenuHelpersX::WebShellToPresContext(webShell, getter_AddRefs(presContext) );
   if ( presContext ) {
     nsresult rv = NS_OK;
@@ -1066,7 +1066,7 @@ nsMenuX::OnCreated()
     NS_ERROR("No web shell");
     return PR_FALSE;
   }
-  nsCOMPtr<nsIPresContext> presContext;
+  nsCOMPtr<nsPresContext> presContext;
   MenuHelpersX::WebShellToPresContext(webShell, getter_AddRefs(presContext) );
   if ( presContext ) {
     nsresult rv = NS_OK;
@@ -1103,7 +1103,7 @@ nsMenuX::OnDestroy()
   nsCOMPtr<nsIContent> popupContent;
   GetMenuPopupContent(getter_AddRefs(popupContent));
 
-  nsCOMPtr<nsIPresContext> presContext;
+  nsCOMPtr<nsPresContext> presContext;
   MenuHelpersX::WebShellToPresContext (webShell, getter_AddRefs(presContext) );
   if (presContext )  {
     nsresult rv = NS_OK;
@@ -1133,7 +1133,7 @@ nsMenuX::OnDestroyed()
   nsCOMPtr<nsIContent> popupContent;
   GetMenuPopupContent(getter_AddRefs(popupContent));
 
-  nsCOMPtr<nsIPresContext> presContext;
+  nsCOMPtr<nsPresContext> presContext;
   MenuHelpersX::WebShellToPresContext (webShell, getter_AddRefs(presContext) );
   if (presContext )  {
     nsresult rv = NS_OK;

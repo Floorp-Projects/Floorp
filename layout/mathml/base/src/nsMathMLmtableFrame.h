@@ -56,11 +56,11 @@ public:
   // Overloaded nsIMathMLFrame methods
 
   NS_IMETHOD
-  InheritAutomaticData(nsIPresContext* aPresContext,
+  InheritAutomaticData(nsPresContext* aPresContext,
                        nsIFrame*       aParent);
 
   NS_IMETHOD
-  UpdatePresentationDataFromChildAt(nsIPresContext* aPresContext,
+  UpdatePresentationDataFromChildAt(nsPresContext* aPresContext,
                                     PRInt32         aFirstIndex,
                                     PRInt32         aLastIndex,
                                     PRInt32         aScriptLevelIncrement,
@@ -73,7 +73,7 @@ public:
   }
 
   NS_IMETHOD
-  ReResolveScriptStyle(nsIPresContext* aPresContext,
+  ReResolveScriptStyle(nsPresContext* aPresContext,
                        PRInt32         aParentScriptLevel)
   {
     nsMathMLContainerFrame::PropagateScriptStyleFor(aPresContext, this, aParentScriptLevel);
@@ -83,14 +83,14 @@ public:
   // overloaded nsTableOuterFrame methods
 
   NS_IMETHOD
-  Init(nsIPresContext*  aPresContext,
+  Init(nsPresContext*  aPresContext,
        nsIContent*      aContent,
        nsIFrame*        aParent,
        nsStyleContext*  aContext,
        nsIFrame*        aPrevInFlow);
 
   NS_IMETHOD
-  Reflow(nsIPresContext*          aPresContext,
+  Reflow(nsPresContext*          aPresContext,
          nsHTMLReflowMetrics&     aDesiredSize,
          const nsHTMLReflowState& aReflowState,
          nsReflowStatus&          aStatus);
@@ -103,7 +103,7 @@ protected:
   // 1..n means the first row down to the last row, -1..-n means the last row
   // up to the first row. Used for alignments that are relative to a given row
   nsIFrame*
-  GetRowFrameAt(nsIPresContext* aPresContext,
+  GetRowFrameAt(nsPresContext* aPresContext,
                 PRInt32         aRowIndex);
 }; // class nsMathMLmtableOuterFrame
 
@@ -137,7 +137,7 @@ public:
   // Overloaded nsIMathMLFrame methods
 
   NS_IMETHOD
-  UpdatePresentationDataFromChildAt(nsIPresContext* aPresContext,
+  UpdatePresentationDataFromChildAt(nsPresContext* aPresContext,
                                     PRInt32         aFirstIndex,
                                     PRInt32         aLastIndex,
                                     PRInt32         aScriptLevelIncrement,
@@ -150,7 +150,7 @@ public:
   }
 
   NS_IMETHOD
-  ReResolveScriptStyle(nsIPresContext* aPresContext,
+  ReResolveScriptStyle(nsPresContext* aPresContext,
                        PRInt32         aParentScriptLevel)
   {
     nsMathMLContainerFrame::PropagateScriptStyleFor(aPresContext, this, aParentScriptLevel);
@@ -160,14 +160,14 @@ public:
   // overloaded nsBlockFrame methods
 
   NS_IMETHOD
-  Init(nsIPresContext*  aPresContext,
+  Init(nsPresContext*  aPresContext,
        nsIContent*      aContent,
        nsIFrame*        aParent,
        nsStyleContext*  aContext,
        nsIFrame*        aPrevInFlow);
 
   NS_IMETHOD
-  Reflow(nsIPresContext*          aPresContext,
+  Reflow(nsPresContext*          aPresContext,
          nsHTMLReflowMetrics&     aDesiredSize,
          const nsHTMLReflowState& aReflowState,
          nsReflowStatus&          aStatus);

@@ -78,17 +78,17 @@ public:
 
   // nsIFrame interface:
   NS_IMETHOD
-  Init(nsIPresContext*  aPresContext,
+  Init(nsPresContext*  aPresContext,
        nsIContent*      aContent,
        nsIFrame*        aParent,
        nsStyleContext*  aContext,
        nsIFrame*        aPrevInFlow);
 
-  NS_IMETHOD  CharacterDataChanged(nsIPresContext* aPresContext,
+  NS_IMETHOD  CharacterDataChanged(nsPresContext* aPresContext,
                                    nsIContent*     aChild,
                                    PRBool          aAppend);
 
-  NS_IMETHOD  SetSelected(nsIPresContext* aPresContext,
+  NS_IMETHOD  SetSelected(nsPresContext* aPresContext,
                           nsIDOMRange*    aRange,
                           PRBool          aSelected,
                           nsSpread        aSpread);
@@ -206,7 +206,7 @@ NS_INTERFACE_MAP_END_INHERITING(nsSVGGlyphFrameBase)
 // nsIFrame methods
 
 NS_IMETHODIMP
-nsSVGGlyphFrame::Init(nsIPresContext*  aPresContext,
+nsSVGGlyphFrame::Init(nsPresContext*  aPresContext,
                       nsIContent*      aContent,
                       nsIFrame*        aParent,
                       nsStyleContext*  aContext,
@@ -241,7 +241,7 @@ nsSVGGlyphFrame::Init(nsIPresContext*  aPresContext,
 }
 
 NS_IMETHODIMP
-nsSVGGlyphFrame::CharacterDataChanged(nsIPresContext* aPresContext,
+nsSVGGlyphFrame::CharacterDataChanged(nsPresContext* aPresContext,
                                       nsIContent*     aChild,
                                       PRBool          aAppend)
 {
@@ -264,7 +264,7 @@ nsSVGGlyphFrame::CharacterDataChanged(nsIPresContext* aPresContext,
 }
 
 NS_IMETHODIMP
-nsSVGGlyphFrame::SetSelected(nsIPresContext* aPresContext,
+nsSVGGlyphFrame::SetSelected(nsPresContext* aPresContext,
                              nsIDOMRange*    aRange,
                              PRBool          aSelected,
                              nsSpread        aSpread)
@@ -425,9 +425,9 @@ nsSVGGlyphFrame::GetBBox(nsIDOMSVGRect **_retval)
 //----------------------------------------------------------------------
 // nsISVGGeometrySource methods:
 
-/* [noscript] readonly attribute nsIPresContext presContext; */
+/* [noscript] readonly attribute nsPresContext presContext; */
 NS_IMETHODIMP
-nsSVGGlyphFrame::GetPresContext(nsIPresContext * *aPresContext)
+nsSVGGlyphFrame::GetPresContext(nsPresContext * *aPresContext)
 {
   // XXX gcc 3.2.2 requires the explicit 'nsSVGGlyphFrameBase::' qualification
   *aPresContext = nsSVGGlyphFrameBase::GetPresContext();
@@ -736,7 +736,7 @@ nsSVGGlyphFrame::GetHighlight(PRUint32 *charnum, PRUint32 *nchars, nscolor *fore
   }
 
   // XXX gcc 3.2.2 requires the explicit 'nsSVGGlyphFrameBase::' qualification
-  nsIPresContext *presContext = nsSVGGlyphFrameBase::GetPresContext();
+  nsPresContext *presContext = nsSVGGlyphFrameBase::GetPresContext();
 
   nsCOMPtr<nsITextContent> tc = do_QueryInterface(mContent);
   NS_ASSERTION(tc, "no textcontent interface");

@@ -45,7 +45,7 @@
 #include "nsILoadGroup.h"
 #include "nsNetUtil.h"
 
-#include "nsIPresContext.h"
+#include "nsPresContext.h"
 #include "nsIPresShell.h"
 #include "nsIFrame.h"
 #include "nsIContent.h"
@@ -79,7 +79,7 @@ nsImageLoader::~nsImageLoader()
 
 
 void
-nsImageLoader::Init(nsIFrame *aFrame, nsIPresContext *aPresContext)
+nsImageLoader::Init(nsIFrame *aFrame, nsPresContext *aPresContext)
 {
   mFrame = aFrame;
   mPresContext = aPresContext;

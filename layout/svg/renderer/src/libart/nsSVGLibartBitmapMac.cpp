@@ -41,7 +41,7 @@
 #include "nsISVGLibartBitmap.h"
 #include "nsIRenderingContext.h"
 #include "nsIDeviceContext.h"
-#include "nsIPresContext.h"
+#include "nsPresContext.h"
 #include "nsRect.h"
 #include "nsIImage.h"
 #include "nsIComponentManager.h"
@@ -66,7 +66,7 @@ public:
   nsSVGLibartBitmapMac();
   ~nsSVGLibartBitmapMac();
   nsresult Init(nsIRenderingContext *ctx,
-                nsIPresContext* presContext,
+                nsPresContext* presContext,
                 const nsRect & rect);
 
   // nsISupports interface:
@@ -111,7 +111,7 @@ nsSVGLibartBitmapMac::~nsSVGLibartBitmapMac()
 
 nsresult
 nsSVGLibartBitmapMac::Init(nsIRenderingContext* ctx,
-                               nsIPresContext* presContext,
+                               nsPresContext* presContext,
                                const nsRect & rect)
 {
   mRenderingContext = ctx;
@@ -138,7 +138,7 @@ nsSVGLibartBitmapMac::Init(nsIRenderingContext* ctx,
 nsresult
 NS_NewSVGLibartBitmap(nsISVGLibartBitmap **result,
                       nsIRenderingContext *ctx,
-                      nsIPresContext* presContext,
+                      nsPresContext* presContext,
                       const nsRect & rect)
 {
   nsSVGLibartBitmapMac* bm = new nsSVGLibartBitmapMac();

@@ -169,7 +169,7 @@ public:
    *  @param aGuiEvent is the event that should be dealt with by aFocusFrame
    *  @param aFrame is the frame that MAY handle the event
    */
-  NS_IMETHOD HandleKeyEvent(nsIPresContext* aPresContext, nsGUIEvent *aGuiEvent) = 0;
+  NS_IMETHOD HandleKeyEvent(nsPresContext* aPresContext, nsGUIEvent *aGuiEvent) = 0;
 
   /** HandleClick will take the focus to the new frame at the new offset and 
    *  will either extend the selection from the old anchor, or replace the old anchor.
@@ -192,7 +192,7 @@ public:
    *  @param aFrame is the parent of all frames to use when searching for the closest frame to the point.
    *  @param aPoint is relative to aFrame's parent view.
    */
-  NS_IMETHOD HandleDrag(nsIPresContext *aPresContext, nsIFrame *aFrame, nsPoint& aPoint) = 0;
+  NS_IMETHOD HandleDrag(nsPresContext *aPresContext, nsIFrame *aFrame, nsPoint& aPoint) = 0;
 
   /** HandleTableSelection will set selection to a table, cell, etc
    *   depending on information contained in aFlags
@@ -217,7 +217,7 @@ public:
    *  @param aPoint is relative to the view.
    *  @param aDelay is the timer's interval.
    */
-  NS_IMETHOD StartAutoScrollTimer(nsIPresContext *aPresContext, nsIView* aFrame, nsPoint& aPoint, PRUint32 aDelay) = 0;
+  NS_IMETHOD StartAutoScrollTimer(nsPresContext *aPresContext, nsIView* aFrame, nsPoint& aPoint, PRUint32 aDelay) = 0;
 
   /** StopAutoScrollTimer stops any active auto scroll timer.
    */
@@ -278,7 +278,7 @@ public:
    *  specified by aSelectionType.
    * @param aSelectionType enum value defined in nsISelection for the seleciton you want.
    */
-  NS_IMETHOD RepaintSelection(nsIPresContext* aPresContext, SelectionType aSelectionType)=0;
+  NS_IMETHOD RepaintSelection(nsPresContext* aPresContext, SelectionType aSelectionType)=0;
 
   /** GetFrameForNodeOffset given a node and its child offset, return the nsIFrame and
    *  the offset into that frame. 
@@ -446,7 +446,7 @@ public:
    *  At the beginning and end of each line there is assumed to be a frame with Bidi level equal to the
    *   paragraph embedding level. In these cases aPrevFrame and aNextFrame respectively will return nsnull.
    */
-  NS_IMETHOD GetPrevNextBidiLevels(nsIPresContext *aPresContext, nsIContent *aNode, PRUint32 aContentOffset,
+  NS_IMETHOD GetPrevNextBidiLevels(nsPresContext *aPresContext, nsIContent *aNode, PRUint32 aContentOffset,
                                    nsIFrame **aPrevFrame, nsIFrame **aNextFrame, PRUint8 *aPrevLevel, PRUint8 *aNextLevel)=0;
 
   /** GetFrameFromLevel will scan in a given direction
@@ -458,7 +458,7 @@ public:
    *  @param aBidiLevel is the level to search for
    *  @param aFrameOut will hold the frame returned
    */
-  NS_IMETHOD GetFrameFromLevel(nsIPresContext *aPresContext, nsIFrame *aFrameIn, nsDirection aDirection, PRUint8 aBidiLevel,
+  NS_IMETHOD GetFrameFromLevel(nsPresContext *aPresContext, nsIFrame *aFrameIn, nsDirection aDirection, PRUint8 aBidiLevel,
                                nsIFrame **aFrameOut)=0;
 
 #endif // IBMBIDI

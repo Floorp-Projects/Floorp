@@ -44,7 +44,7 @@
 #include "nsReflowPath.h"
 #include "nsStyleContext.h"
 #include "nsStyleConsts.h"
-#include "nsIPresContext.h"
+#include "nsPresContext.h"
 #include "nsIRenderingContext.h"
 #include "nsCSSRendering.h"
 #include "nsIContent.h"
@@ -109,7 +109,7 @@ nsTableCellFrame::GetNextCell() const
 }
 
 NS_IMETHODIMP
-nsTableCellFrame::Init(nsIPresContext*  aPresContext,
+nsTableCellFrame::Init(nsPresContext*  aPresContext,
                        nsIContent*      aContent,
                        nsIFrame*        aParent,
                        nsStyleContext*  aContext,
@@ -205,7 +205,7 @@ nsTableCellFrame::GetColIndex(PRInt32 &aColIndex) const
 }
 
 NS_IMETHODIMP
-nsTableCellFrame::AttributeChanged(nsIPresContext* aPresContext,
+nsTableCellFrame::AttributeChanged(nsPresContext* aPresContext,
                                    nsIContent*     aChild,
                                    PRInt32         aNameSpaceID,
                                    nsIAtom*        aAttribute,
@@ -243,7 +243,7 @@ void nsTableCellFrame::SetPass1MaxElementWidth(nscoord aMaxWidth,
 }
 
 NS_IMETHODIMP
-nsTableCellFrame::AppendFrames(nsIPresContext* aPresContext,
+nsTableCellFrame::AppendFrames(nsPresContext* aPresContext,
                                nsIPresShell&   aPresShell,
                                nsIAtom*        aListName,
                                nsIFrame*       aFrameList)
@@ -253,7 +253,7 @@ nsTableCellFrame::AppendFrames(nsIPresContext* aPresContext,
 }
 
 NS_IMETHODIMP
-nsTableCellFrame::InsertFrames(nsIPresContext* aPresContext,
+nsTableCellFrame::InsertFrames(nsPresContext* aPresContext,
                                nsIPresShell&   aPresShell,
                                nsIAtom*        aListName,
                                nsIFrame*       aPrevFrame,
@@ -264,7 +264,7 @@ nsTableCellFrame::InsertFrames(nsIPresContext* aPresContext,
 }
 
 NS_IMETHODIMP
-nsTableCellFrame::RemoveFrame(nsIPresContext* aPresContext,
+nsTableCellFrame::RemoveFrame(nsPresContext* aPresContext,
                               nsIPresShell&   aPresShell,
                               nsIAtom*        aListName,
                               nsIFrame*       aOldFrame)
@@ -295,7 +295,7 @@ inline nscolor EnsureDifferentColors(nscolor colorA, nscolor colorB)
 
 
 nsresult
-nsTableCellFrame::DecorateForSelection(nsIPresContext* aPresContext,
+nsTableCellFrame::DecorateForSelection(nsPresContext* aPresContext,
                                        nsIRenderingContext& aRenderingContext,
                                        const nsStyleBackground *aStyleColor)
 {
@@ -346,7 +346,7 @@ nsTableCellFrame::DecorateForSelection(nsIPresContext* aPresContext,
 }
 
 void
-nsTableCellFrame::PaintUnderlay(nsIPresContext&           aPresContext,
+nsTableCellFrame::PaintUnderlay(nsPresContext&           aPresContext,
                                 nsIRenderingContext&      aRenderingContext,
                                 const nsRect&             aDirtyRect,
                                 PRUint32&                 aFlags,
@@ -367,7 +367,7 @@ nsTableCellFrame::PaintUnderlay(nsIPresContext&           aPresContext,
 }
 
 NS_IMETHODIMP
-nsTableCellFrame::Paint(nsIPresContext*      aPresContext,
+nsTableCellFrame::Paint(nsPresContext*      aPresContext,
                         nsIRenderingContext& aRenderingContext,
                         const nsRect&        aDirtyRect,
                         nsFramePaintLayer    aWhichLayer,
@@ -459,7 +459,7 @@ nsTableCellFrame::Paint(nsIPresContext*      aPresContext,
 }
 
 NS_IMETHODIMP
-nsTableCellFrame::GetFrameForPoint(nsIPresContext*   aPresContext,
+nsTableCellFrame::GetFrameForPoint(nsPresContext*   aPresContext,
                                    const nsPoint&    aPoint, 
                                    nsFramePaintLayer aWhichLayer,
                                    nsIFrame**        aFrame)
@@ -470,7 +470,7 @@ nsTableCellFrame::GetFrameForPoint(nsIPresContext*   aPresContext,
 
 //null range means the whole thing
 NS_IMETHODIMP
-nsTableCellFrame::SetSelected(nsIPresContext* aPresContext,
+nsTableCellFrame::SetSelected(nsPresContext* aPresContext,
                               nsIDOMRange*    aRange,
                               PRBool          aSelected,
                               nsSpread        aSpread)
@@ -531,7 +531,7 @@ PRBool nsTableCellFrame::ParentDisablesSelection() const //override default beha
 
 // Align the cell's child frame within the cell
 
-void nsTableCellFrame::VerticallyAlignChild(nsIPresContext*          aPresContext,
+void nsTableCellFrame::VerticallyAlignChild(nsPresContext*          aPresContext,
                                             const nsHTMLReflowState& aReflowState,
                                             nscoord                  aMaxAscent)
 {
@@ -686,7 +686,7 @@ void DebugCheckChildSize(nsIFrame*            aChild,
 // it is the height (minus border, padding) of the cell's first in flow during its final 
 // reflow without an unconstrained height.
 static nscoord
-CalcUnpaginagedHeight(nsIPresContext*       aPresContext,
+CalcUnpaginagedHeight(nsPresContext*       aPresContext,
                       nsTableCellFrame&     aCellFrame, 
                       nsTableFrame&         aTableFrame,
                       nscoord               aVerticalBorderPadding)
@@ -716,7 +716,7 @@ CalcUnpaginagedHeight(nsIPresContext*       aPresContext,
   return computedHeight;
 }
 
-NS_METHOD nsTableCellFrame::Reflow(nsIPresContext*          aPresContext,
+NS_METHOD nsTableCellFrame::Reflow(nsPresContext*          aPresContext,
                                    nsHTMLReflowMetrics&     aDesiredSize,
                                    const nsHTMLReflowState& aReflowState,
                                    nsReflowStatus&          aStatus)
@@ -1179,7 +1179,7 @@ nsTableCellFrame::GetFrameName(nsAString& aResult) const
 }
 #endif
 
-void nsTableCellFrame::SetCollapseOffsetX(nsIPresContext* aPresContext,
+void nsTableCellFrame::SetCollapseOffsetX(nsPresContext* aPresContext,
                                           nscoord         aXOffset)
 {
   // Get the frame property (creating a point struct if necessary)
@@ -1190,7 +1190,7 @@ void nsTableCellFrame::SetCollapseOffsetX(nsIPresContext* aPresContext,
   }
 }
 
-void nsTableCellFrame::SetCollapseOffsetY(nsIPresContext* aPresContext,
+void nsTableCellFrame::SetCollapseOffsetY(nsPresContext* aPresContext,
                                           nscoord         aYOffset)
 {
   // Get the property (creating a point struct if necessary)
@@ -1201,7 +1201,7 @@ void nsTableCellFrame::SetCollapseOffsetY(nsIPresContext* aPresContext,
   }
 }
 
-void nsTableCellFrame::GetCollapseOffset(nsIPresContext* aPresContext,
+void nsTableCellFrame::GetCollapseOffset(nsPresContext* aPresContext,
                                          nsPoint&        aOffset)
 {
   // See if the property is set
@@ -1295,7 +1295,7 @@ nsBCTableCellFrame::SetBorderWidth(PRUint8 aSide,
 }
 
 void
-nsBCTableCellFrame::PaintUnderlay(nsIPresContext&           aPresContext,
+nsBCTableCellFrame::PaintUnderlay(nsPresContext&           aPresContext,
                                   nsIRenderingContext&      aRenderingContext,
                                   const nsRect&             aDirtyRect,
                                   PRUint32&                 aFlags,

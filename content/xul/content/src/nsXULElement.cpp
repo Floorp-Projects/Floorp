@@ -2011,7 +2011,7 @@ nsXULElement::UnregisterAccessKey(const nsAString& aOldValue)
             }
 
             if (validElement) {
-                nsCOMPtr<nsIPresContext> presContext;
+                nsCOMPtr<nsPresContext> presContext;
                 shell->GetPresContext(getter_AddRefs(presContext));
 
                 presContext->EventStateManager()->
@@ -2622,7 +2622,7 @@ nsXULElement::List(FILE* out, PRInt32 aIndent) const
 #endif
 
 nsresult
-nsXULElement::HandleDOMEvent(nsIPresContext* aPresContext, nsEvent* aEvent,
+nsXULElement::HandleDOMEvent(nsPresContext* aPresContext, nsEvent* aEvent,
                              nsIDOMEvent** aDOMEvent, PRUint32 aFlags,
                              nsEventStatus* aEventStatus)
 {
@@ -3710,7 +3710,7 @@ nsXULElement::Focus()
     nsIPresShell *shell = mDocument->GetShellAt(0);
 
     // Retrieve the context
-    nsCOMPtr<nsIPresContext> presContext;
+    nsCOMPtr<nsPresContext> presContext;
     shell->GetPresContext(getter_AddRefs(presContext));
 
     // Set focus
@@ -3733,7 +3733,7 @@ nsXULElement::Blur()
     nsIPresShell *shell = mDocument->GetShellAt(0);
 
     // Retrieve the context
-    nsCOMPtr<nsIPresContext> presContext;
+    nsCOMPtr<nsPresContext> presContext;
     shell->GetPresContext(getter_AddRefs(presContext));
 
     // Set focus
@@ -3753,7 +3753,7 @@ nsXULElement::Click()
     nsCOMPtr<nsIDocument> doc = mDocument; // Strong just in case
     if (doc) {
         PRUint32 numShells = doc->GetNumberOfShells();
-        nsCOMPtr<nsIPresContext> context;
+        nsCOMPtr<nsPresContext> context;
 
         for (PRUint32 i = 0; i < numShells; ++i) {
             nsIPresShell *shell = doc->GetShellAt(i);
@@ -3790,7 +3790,7 @@ nsXULElement::DoCommand()
     nsCOMPtr<nsIDocument> doc = mDocument; // strong just in case
     if (doc) {
         PRUint32 numShells = doc->GetNumberOfShells();
-        nsCOMPtr<nsIPresContext> context;
+        nsCOMPtr<nsPresContext> context;
 
         for (PRUint32 i = 0; i < numShells; ++i) {
             nsIPresShell *shell = doc->GetShellAt(i);
@@ -3809,7 +3809,7 @@ nsXULElement::DoCommand()
 // nsIFocusableContent interface and helpers
 
 void
-nsXULElement::SetFocus(nsIPresContext* aPresContext)
+nsXULElement::SetFocus(nsPresContext* aPresContext)
 {
     nsAutoString disabled;
     GetAttribute(NS_LITERAL_STRING("disabled"), disabled);
@@ -3821,7 +3821,7 @@ nsXULElement::SetFocus(nsIPresContext* aPresContext)
 }
 
 void
-nsXULElement::RemoveFocus(nsIPresContext* aPresContext)
+nsXULElement::RemoveFocus(nsPresContext* aPresContext)
 {
 }
 
@@ -3889,7 +3889,7 @@ nsXULElement::AddPopupListener(nsIAtom* aName)
 // nsXULElement::nsIChromeEventHandler
 //*****************************************************************************
 
-NS_IMETHODIMP nsXULElement::HandleChromeEvent(nsIPresContext* aPresContext,
+NS_IMETHODIMP nsXULElement::HandleChromeEvent(nsPresContext* aPresContext,
    nsEvent* aEvent, nsIDOMEvent** aDOMEvent, PRUint32 aFlags,
    nsEventStatus* aEventStatus)
 {
@@ -4024,7 +4024,7 @@ nsXULElement::HideWindowChrome(PRBool aShouldHide)
         nsIFrame* frame = nsnull;
         shell->GetPrimaryFrameFor(content, &frame);
 
-        nsCOMPtr<nsIPresContext> presContext;
+        nsCOMPtr<nsPresContext> presContext;
         shell->GetPresContext(getter_AddRefs(presContext));
 
         if (frame && presContext) {

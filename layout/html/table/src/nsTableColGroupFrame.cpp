@@ -41,7 +41,7 @@
 #include "nsReflowPath.h"
 #include "nsStyleContext.h"
 #include "nsStyleConsts.h"
-#include "nsIPresContext.h"
+#include "nsPresContext.h"
 #include "nsHTMLParts.h"
 #include "nsHTMLAtoms.h"
 #include "nsCOMPtr.h"
@@ -97,7 +97,7 @@ void nsTableColGroupFrame::ResetColIndices(nsIFrame*       aFirstColGroup,
 
 
 nsresult
-nsTableColGroupFrame::AddColsToTable(nsIPresContext&  aPresContext,
+nsTableColGroupFrame::AddColsToTable(nsPresContext&  aPresContext,
                                      PRInt32          aFirstColIndex,
                                      PRBool           aResetSubsequentColIndices,
                                      nsIFrame*        aFirstFrame,
@@ -174,7 +174,7 @@ nsTableColGroupFrame::GetLastRealColGroup(nsTableFrame* aTableFrame,
 
 // don't set mColCount here, it is done in AddColsToTable
 NS_IMETHODIMP
-nsTableColGroupFrame::SetInitialChildList(nsIPresContext* aPresContext,
+nsTableColGroupFrame::SetInitialChildList(nsPresContext* aPresContext,
                                           nsIAtom*        aListName,
                                           nsIFrame*       aChildList)
 {
@@ -197,7 +197,7 @@ nsTableColGroupFrame::SetInitialChildList(nsIPresContext* aPresContext,
 }
 
 NS_IMETHODIMP
-nsTableColGroupFrame::AppendFrames(nsIPresContext* aPresContext,
+nsTableColGroupFrame::AppendFrames(nsPresContext* aPresContext,
                                    nsIPresShell&   aPresShell,
                                    nsIAtom*        aListName,
                                    nsIFrame*       aFrameList)
@@ -208,7 +208,7 @@ nsTableColGroupFrame::AppendFrames(nsIPresContext* aPresContext,
 }
 
 NS_IMETHODIMP
-nsTableColGroupFrame::InsertFrames(nsIPresContext* aPresContext,
+nsTableColGroupFrame::InsertFrames(nsPresContext* aPresContext,
                                    nsIPresShell&   aPresShell,
                                    nsIAtom*        aListName,
                                    nsIFrame*       aPrevFrameIn,
@@ -228,7 +228,7 @@ nsTableColGroupFrame::InsertFrames(nsIPresContext* aPresContext,
 }
 
 void
-nsTableColGroupFrame::InsertColsReflow(nsIPresContext& aPresContext,
+nsTableColGroupFrame::InsertColsReflow(nsPresContext& aPresContext,
                                        nsIPresShell&   aPresShell,
                                        PRInt32         aColIndex,
                                        nsIFrame*       aFirstFrame,
@@ -248,7 +248,7 @@ nsTableColGroupFrame::InsertColsReflow(nsIPresContext& aPresContext,
 }
 
 void
-nsTableColGroupFrame::RemoveChild(nsIPresContext&  aPresContext,
+nsTableColGroupFrame::RemoveChild(nsPresContext&  aPresContext,
                                   nsTableColFrame& aChild,
                                   PRBool           aResetSubsequentColIndices)
 {
@@ -282,7 +282,7 @@ nsTableColGroupFrame::RemoveChild(nsIPresContext&  aPresContext,
 }
 
 NS_IMETHODIMP
-nsTableColGroupFrame::RemoveFrame(nsIPresContext* aPresContext,
+nsTableColGroupFrame::RemoveFrame(nsPresContext* aPresContext,
                                   nsIPresShell&   aPresShell,
                                   nsIAtom*        aListName,
                                   nsIFrame*       aOldFrame)
@@ -313,7 +313,7 @@ nsTableColGroupFrame::RemoveFrame(nsIPresContext* aPresContext,
 }
 
 NS_METHOD 
-nsTableColGroupFrame::Paint(nsIPresContext*      aPresContext,
+nsTableColGroupFrame::Paint(nsPresContext*      aPresContext,
                             nsIRenderingContext& aRenderingContext,
                             const nsRect&        aDirtyRect,
                             nsFramePaintLayer    aWhichLayer,
@@ -342,7 +342,7 @@ nsTableColGroupFrame::GetSkipSides() const
 }
 
 NS_IMETHODIMP
-nsTableColGroupFrame::GetFrameForPoint(nsIPresContext* aPresContext,
+nsTableColGroupFrame::GetFrameForPoint(nsPresContext* aPresContext,
                                    const nsPoint& aPoint, 
                                    nsFramePaintLayer aWhichLayer,
                                    nsIFrame**     aFrame)
@@ -351,7 +351,7 @@ nsTableColGroupFrame::GetFrameForPoint(nsIPresContext* aPresContext,
   return GetFrameForPointUsing(aPresContext, aPoint, nsnull, aWhichLayer, PR_FALSE, aFrame);
 }
 
-NS_METHOD nsTableColGroupFrame::Reflow(nsIPresContext*          aPresContext,
+NS_METHOD nsTableColGroupFrame::Reflow(nsPresContext*          aPresContext,
                                        nsHTMLReflowMetrics&     aDesiredSize,
                                        const nsHTMLReflowState& aReflowState,
                                        nsReflowStatus&          aStatus)
@@ -405,7 +405,7 @@ NS_METHOD nsTableColGroupFrame::Reflow(nsIPresContext*          aPresContext,
   return rv;
 }
 
-NS_METHOD nsTableColGroupFrame::IncrementalReflow(nsIPresContext*          aPresContext,
+NS_METHOD nsTableColGroupFrame::IncrementalReflow(nsPresContext*          aPresContext,
                                                   nsHTMLReflowMetrics&     aDesiredSize,
                                                   const nsHTMLReflowState& aReflowState,
                                                   nsReflowStatus&          aStatus)
@@ -425,7 +425,7 @@ NS_METHOD nsTableColGroupFrame::IncrementalReflow(nsIPresContext*          aPres
   return NS_OK;
 }
 
-NS_METHOD nsTableColGroupFrame::IR_TargetIsMe(nsIPresContext*          aPresContext,
+NS_METHOD nsTableColGroupFrame::IR_TargetIsMe(nsPresContext*          aPresContext,
                                               nsHTMLReflowMetrics&     aDesiredSize,
                                               const nsHTMLReflowState& aReflowState,
                                               nsReflowStatus&          aStatus)
@@ -456,7 +456,7 @@ NS_METHOD nsTableColGroupFrame::IR_TargetIsMe(nsIPresContext*          aPresCont
   return rv;
 }
 
-NS_METHOD nsTableColGroupFrame::IR_StyleChanged(nsIPresContext*          aPresContext,
+NS_METHOD nsTableColGroupFrame::IR_StyleChanged(nsPresContext*          aPresContext,
                                                 nsHTMLReflowMetrics&     aDesiredSize,
                                                 const nsHTMLReflowState& aReflowState,
                                                 nsReflowStatus&          aStatus)
@@ -472,7 +472,7 @@ NS_METHOD nsTableColGroupFrame::IR_StyleChanged(nsIPresContext*          aPresCo
   return rv;
 }
 
-NS_METHOD nsTableColGroupFrame::IR_TargetIsChild(nsIPresContext*          aPresContext,
+NS_METHOD nsTableColGroupFrame::IR_TargetIsChild(nsPresContext*          aPresContext,
                                                  nsHTMLReflowMetrics&     aDesiredSize,
                                                  const nsHTMLReflowState& aReflowState,
                                                  nsReflowStatus&          aStatus,
@@ -594,7 +594,7 @@ NS_NewTableColGroupFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame)
 }
 
 NS_IMETHODIMP
-nsTableColGroupFrame::Init(nsIPresContext*  aPresContext,
+nsTableColGroupFrame::Init(nsPresContext*  aPresContext,
                            nsIContent*      aContent,
                            nsIFrame*        aParent,
                            nsStyleContext*  aContext,

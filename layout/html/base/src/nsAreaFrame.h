@@ -59,15 +59,15 @@ public:
   // nsIFrame
 
 #ifdef MOZ_XUL
-  NS_IMETHOD Init(nsIPresContext*  aPresContext,
+  NS_IMETHOD Init(nsPresContext*  aPresContext,
                   nsIContent*      aContent,
                   nsIFrame*        aParent,
                   nsStyleContext*  aContext,
                   nsIFrame*        aPrevInFlow);
 
-  NS_IMETHOD Destroy(nsIPresContext* aPresContext);
+  NS_IMETHOD Destroy(nsPresContext* aPresContext);
 
-  NS_IMETHOD AttributeChanged(nsIPresContext* aPresContext,
+  NS_IMETHOD AttributeChanged(nsPresContext* aPresContext,
                               nsIContent* aChild,
                               PRInt32 aNameSpaceID,
                               nsIAtom* aAttribute,
@@ -89,7 +89,7 @@ protected:
   nsAreaFrame();
 
 #ifdef MOZ_XUL
-  nsresult RegUnregAccessKey(nsIPresContext* aPresContext,
+  nsresult RegUnregAccessKey(nsPresContext* aPresContext,
                              PRBool aDoReg);
 #endif
 };

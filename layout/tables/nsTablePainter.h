@@ -82,7 +82,7 @@ class TableBackgroundPainter
       */
     TableBackgroundPainter(nsTableFrame*        aTableFrame,
                            Origin               aOrigin,
-                           nsIPresContext*      aPresContext,
+                           nsPresContext*      aPresContext,
                            nsIRenderingContext& aRenderingContext,
                            const nsRect&        aDirtyRect);
 
@@ -199,14 +199,14 @@ class TableBackgroundPainter
       /** Destroys synthesized data. MUST be called before destructor
        *  @param aPresContext - the pres context
        */
-      void Destroy(nsIPresContext* aPresContext);
+      void Destroy(nsPresContext* aPresContext);
 
 
       /** Clear background data */
       void Clear();
 
       /** Calculate and set all data values to represent aFrame */
-      void SetFull(nsIPresContext*      aPresContext,
+      void SetFull(nsPresContext*      aPresContext,
                    nsIRenderingContext& aRenderingContext,
                    nsIFrame*            aFrame);
 
@@ -234,7 +234,7 @@ class TableBackgroundPainter
       }
     };
 
-    nsIPresContext*      mPresContext;
+    nsPresContext*      mPresContext;
     nsIRenderingContext& mRenderingContext;
     nsRect               mDirtyRect;
 #ifdef DEBUG

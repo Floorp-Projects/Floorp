@@ -40,7 +40,7 @@
 
 #include "nsISupports.h"
 #include "nsFont.h"
-class nsIPresContext;
+class nsPresContext;
 class nsAString;
 class nsIContent;
 class nsIAtom;
@@ -67,9 +67,9 @@ public:
 
   virtual void SetFocus(PRBool aOn = PR_TRUE, PRBool aRepaint = PR_FALSE) = 0;
 
-  virtual void ScrollIntoView(nsIPresContext* aPresContext) = 0;  
+  virtual void ScrollIntoView(nsPresContext* aPresContext) = 0;  
 
-  virtual void MouseClicked(nsIPresContext* aPresContext) = 0;
+  virtual void MouseClicked(nsPresContext* aPresContext) = 0;
 
   /**
    * Set the suggested size for the form element. 
@@ -98,7 +98,7 @@ public:
    * @returns NS_OK if the property name is valid, otherwise an error code
    */
   
-  NS_IMETHOD SetProperty(nsIPresContext* aPresContext, nsIAtom* aName, const nsAString& aValue) = 0;
+  NS_IMETHOD SetProperty(nsPresContext* aPresContext, nsIAtom* aName, const nsAString& aValue) = 0;
   
   /**
    * Get a property from the form control frame

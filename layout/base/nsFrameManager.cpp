@@ -45,7 +45,7 @@
  * 04/20/2000       IBM Corp.      OS/2 VisualAge build.
  */
 #include "nscore.h"
-#include "nsIPresContext.h"
+#include "nsPresContext.h"
 #include "nsIPresShell.h"
 #include "nsStyleSet.h"
 #include "nsCSSFrameConstructor.h"
@@ -289,11 +289,11 @@ struct nsFrameManagerBase::PropertyList {
 
   // Removes the property associated with the given frame, and destroys
   // the property value
-  NS_HIDDEN_(PRBool) RemovePropertyForFrame(nsIPresContext* aPresContext,
+  NS_HIDDEN_(PRBool) RemovePropertyForFrame(nsPresContext* aPresContext,
                                             const nsIFrame* aFrame);
 
   // Destroy all remaining properties (without removing them)
-  NS_HIDDEN_(void) Destroy(nsIPresContext* aPresContext);
+  NS_HIDDEN_(void) Destroy(nsPresContext* aPresContext);
 };
 
 
@@ -332,7 +332,7 @@ nsFrameManager::Destroy()
 {
   NS_ASSERTION(mPresShell, "Frame manager already shut down.");
 
-  nsCOMPtr<nsIPresContext> presContext;
+  nsCOMPtr<nsPresContext> presContext;
   mPresShell->GetPresContext(getter_AddRefs(presContext));
   
   // Destroy the frame hierarchy. Don't destroy the property lists until after
@@ -425,7 +425,7 @@ nsFrameManager::GetPrimaryFrameFor(nsIContent* aContent)
     //             very fast in the embedded hash table.
     //             This would almost completely remove the lookup penalty for things
     //             like <SCRIPT> and comments in very large documents.
-    nsCOMPtr<nsIPresContext> presContext;
+    nsCOMPtr<nsPresContext> presContext;
 
     // Give the frame construction code the opportunity to return the
     // frame that maps the content object
@@ -782,7 +782,7 @@ nsFrameManager::NotifyDestroyingFrame(nsIFrame* aFrame)
   DequeuePostedEventFor(aFrame);
 
   // Remove all properties associated with the frame
-  nsCOMPtr<nsIPresContext> presContext;
+  nsCOMPtr<nsPresContext> presContext;
   mPresShell->GetPresContext(getter_AddRefs(presContext));
 
   RemoveAllPropertiesFor(presContext, aFrame);
@@ -913,7 +913,7 @@ nsFrameManager::HandlePLEvent(CantRenderReplacedElementEvent* aEvent)
 
   // Notify the style system and then process any reflow commands that
   // are generated
-  nsCOMPtr<nsIPresContext> presContext;    
+  nsCOMPtr<nsPresContext> presContext;    
   frameManager->mPresShell->GetPresContext(getter_AddRefs(presContext));
   frameManager->mPresShell->FrameConstructor()->
     CantRenderReplacedElement(frameManager->mPresShell, presContext,
@@ -1116,7 +1116,7 @@ VerifySameTree(nsStyleContext* aContext1, nsStyleContext* aContext2)
 }
 
 static void
-VerifyContextParent(nsIPresContext* aPresContext, nsIFrame* aFrame, 
+VerifyContextParent(nsPresContext* aPresContext, nsIFrame* aFrame, 
                     nsStyleContext* aContext, nsStyleContext* aParentContext)
 {
   // get the contexts not provided
@@ -1169,7 +1169,7 @@ VerifyContextParent(nsIPresContext* aPresContext, nsIFrame* aFrame,
 }
 
 static void
-VerifyStyleTree(nsIPresContext* aPresContext, nsIFrame* aFrame,
+VerifyStyleTree(nsPresContext* aPresContext, nsIFrame* aFrame,
                 nsStyleContext* aParentContext)
 {
   nsStyleContext*  context = aFrame->GetStyleContext();
@@ -1242,7 +1242,7 @@ nsFrameManager::ReParentStyleContext(nsIFrame* aFrame,
     // tree has already been changed, so this check would just fail.
     nsStyleContext* oldContext = aFrame->GetStyleContext();
     if (oldContext) {
-      nsIPresContext *presContext = GetPresContext();
+      nsPresContext *presContext = GetPresContext();
       nsRefPtr<nsStyleContext> newContext;
       result = NS_OK;
       newContext = mStyleSet->ReParentStyleContext(presContext, oldContext,
@@ -1324,7 +1324,7 @@ CaptureChange(nsStyleContext* aOldContext, nsStyleContext* aNewContext,
 }
 
 nsChangeHint
-nsFrameManager::ReResolveStyleContext(nsIPresContext    *aPresContext,
+nsFrameManager::ReResolveStyleContext(nsPresContext    *aPresContext,
                                       nsIFrame          *aFrame,
                                       nsIContent        *aParentContent,
                                       nsStyleChangeList *aChangeList, 
@@ -1886,7 +1886,7 @@ CompareKeys(void* key1, void* key2)
 }
 
 void
-nsFrameManager::DestroyPropertyList(nsIPresContext* aPresContext)
+nsFrameManager::DestroyPropertyList(nsPresContext* aPresContext)
 {
   if (mPropertyList) {
     while (mPropertyList) {
@@ -1914,7 +1914,7 @@ nsFrameManager::GetPropertyListFor(nsIAtom* aPropertyName) const
 }
 
 void
-nsFrameManager::RemoveAllPropertiesFor(nsIPresContext* aPresContext,
+nsFrameManager::RemoveAllPropertiesFor(nsPresContext* aPresContext,
                                        nsIFrame*       aFrame)
 {
   for (PropertyList* prop = mPropertyList; prop; prop = prop->mNext) {
@@ -1992,7 +1992,7 @@ nsFrameManager::SetFrameProperty(const nsIFrame*         aFrame,
   // A NULL entry->key is the sign that the entry has just been allocated
   // for us.  If it's non-NULL then we have an existing entry.
   if (entry->key && propertyList->mDtorFunc) {
-    nsCOMPtr<nsIPresContext> presContext;
+    nsCOMPtr<nsPresContext> presContext;
     mPresShell->GetPresContext(getter_AddRefs(presContext));
     propertyList->mDtorFunc(presContext, NS_CONST_CAST(nsIFrame*, entry->key),
                             aPropertyName, entry->value);
@@ -2012,7 +2012,7 @@ nsFrameManager::RemoveFrameProperty(const nsIFrame* aFrame,
 
   PropertyList* propertyList = GetPropertyListFor(aPropertyName);
   if (propertyList) {
-    nsCOMPtr<nsIPresContext> presContext;
+    nsCOMPtr<nsPresContext> presContext;
     mPresShell->GetPresContext(getter_AddRefs(presContext));
     
     if (propertyList->RemovePropertyForFrame(presContext, aFrame))
@@ -2191,7 +2191,7 @@ DestroyPropertyEnumerator(PLDHashTable *table, PLDHashEntryHdr *hdr,
 {
   nsFrameManagerBase::PropertyList *propList =
       NS_STATIC_CAST(nsFrameManagerBase::PropertyList*, table->data);
-  nsIPresContext *presContext = NS_STATIC_CAST(nsIPresContext*, arg);
+  nsPresContext *presContext = NS_STATIC_CAST(nsPresContext*, arg);
   PropertyListMapEntry* entry = NS_STATIC_CAST(PropertyListMapEntry*, hdr);
 
   propList->mDtorFunc(presContext, NS_CONST_CAST(nsIFrame*, entry->key),
@@ -2200,7 +2200,7 @@ DestroyPropertyEnumerator(PLDHashTable *table, PLDHashEntryHdr *hdr,
 }
 
 void
-nsFrameManagerBase::PropertyList::Destroy(nsIPresContext* aPresContext)
+nsFrameManagerBase::PropertyList::Destroy(nsPresContext* aPresContext)
 {
   // Enumerate any remaining frame/value pairs and destroy the value object
   if (mDtorFunc)
@@ -2209,7 +2209,7 @@ nsFrameManagerBase::PropertyList::Destroy(nsIPresContext* aPresContext)
 }
 
 PRBool
-nsFrameManagerBase::PropertyList::RemovePropertyForFrame(nsIPresContext* aPresContext,
+nsFrameManagerBase::PropertyList::RemovePropertyForFrame(nsPresContext* aPresContext,
                                                          const nsIFrame* aFrame)
 {
   PropertyListMapEntry *entry = NS_STATIC_CAST(PropertyListMapEntry*,

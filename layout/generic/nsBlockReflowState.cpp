@@ -43,7 +43,7 @@
 #include "nsBlockReflowState.h"
 #include "nsBlockFrame.h"
 #include "nsLineLayout.h"
-#include "nsIPresContext.h"
+#include "nsPresContext.h"
 #include "nsLayoutAtoms.h"
 #include "nsIFrame.h"
 #include "nsFrameManager.h"
@@ -57,7 +57,7 @@
 #endif
 
 nsBlockReflowState::nsBlockReflowState(const nsHTMLReflowState& aReflowState,
-                                       nsIPresContext* aPresContext,
+                                       nsPresContext* aPresContext,
                                        nsBlockFrame* aFrame,
                                        const nsHTMLReflowMetrics& aMetrics,
                                        PRBool aBlockMarginRoot)

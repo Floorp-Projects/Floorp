@@ -51,7 +51,7 @@
 #include "nsIDOMEvent.h"
 #include "nsCOMPtr.h"
 #include "nsIDOMEventTarget.h"
-#include "nsIPresContext.h"
+#include "nsPresContext.h"
 #include "nsPoint.h"
 #include "nsGUIEvent.h"
 
@@ -127,7 +127,7 @@ public:
     eDOMEvents_DOMFocusOut
   };
 
-  nsDOMEvent(nsIPresContext* aPresContext, nsEvent* aEvent,
+  nsDOMEvent(nsPresContext* aPresContext, nsEvent* aEvent,
              const nsAString& aEventType);
   virtual ~nsDOMEvent();
 
@@ -222,7 +222,7 @@ protected:
   nsPoint GetScreenPoint();
 
   nsEvent* mEvent;
-  nsCOMPtr<nsIPresContext> mPresContext;
+  nsCOMPtr<nsPresContext> mPresContext;
   nsCOMPtr<nsIDOMEventTarget> mTarget;
   nsCOMPtr<nsIDOMEventTarget> mCurrentTarget;
   nsCOMPtr<nsIDOMEventTarget> mOriginalTarget;

@@ -22,7 +22,7 @@
 
 #include "nsCOMPtr.h"
 #include "nsFrame.h"
-#include "nsIPresContext.h"
+#include "nsPresContext.h"
 #include "nsUnitConversion.h"
 #include "nsStyleContext.h"
 #include "nsStyleConsts.h"
@@ -83,7 +83,7 @@ CompressWhitespace(nsIContent* aContent)
 }
 
 NS_IMETHODIMP
-nsMathMLTokenFrame::Init(nsIPresContext*  aPresContext,
+nsMathMLTokenFrame::Init(nsPresContext*  aPresContext,
                          nsIContent*      aContent,
                          nsIFrame*        aParent,
                          nsStyleContext*  aContext,
@@ -99,7 +99,7 @@ nsMathMLTokenFrame::Init(nsIPresContext*  aPresContext,
 }
 
 NS_IMETHODIMP
-nsMathMLTokenFrame::SetInitialChildList(nsIPresContext* aPresContext,
+nsMathMLTokenFrame::SetInitialChildList(nsPresContext* aPresContext,
                                         nsIAtom*        aListName,
                                         nsIFrame*       aChildList)
 {
@@ -124,7 +124,7 @@ nsMathMLTokenFrame::SetInitialChildList(nsIPresContext* aPresContext,
 }
 
 nsresult
-nsMathMLTokenFrame::Reflow(nsIPresContext*          aPresContext,
+nsMathMLTokenFrame::Reflow(nsPresContext*          aPresContext,
                            nsHTMLReflowMetrics&     aDesiredSize,
                            const nsHTMLReflowState& aReflowState,
                            nsReflowStatus&          aStatus)
@@ -200,7 +200,7 @@ printf("\n");
 // pass, it is not computed here because our children may be text frames
 // that do not implement the GetBoundingMetrics() interface.
 nsresult
-nsMathMLTokenFrame::Place(nsIPresContext*      aPresContext,
+nsMathMLTokenFrame::Place(nsPresContext*      aPresContext,
                           nsIRenderingContext& aRenderingContext,
                           PRBool               aPlaceOrigin,
                           nsHTMLReflowMetrics& aDesiredSize)
@@ -246,7 +246,7 @@ nsMathMLTokenFrame::ReflowDirtyChild(nsIPresShell* aPresShell,
   // if we get this, it means it was called by the nsTextFrame beneath us, and
   // this means something changed in the text content. So re-process our text
 
-  nsCOMPtr<nsIPresContext> presContext;
+  nsCOMPtr<nsPresContext> presContext;
   aPresShell->GetPresContext(getter_AddRefs(presContext));
   ProcessTextData(presContext);
 
@@ -255,7 +255,7 @@ nsMathMLTokenFrame::ReflowDirtyChild(nsIPresShell* aPresShell,
 }
 
 NS_IMETHODIMP
-nsMathMLTokenFrame::AttributeChanged(nsIPresContext* aPresContext,
+nsMathMLTokenFrame::AttributeChanged(nsPresContext* aPresContext,
                                      nsIContent*     aContent,
                                      PRInt32         aNameSpaceID,
                                      nsIAtom*        aAttribute,
@@ -272,7 +272,7 @@ nsMathMLTokenFrame::AttributeChanged(nsIPresContext* aPresContext,
 }
 
 void
-nsMathMLTokenFrame::ProcessTextData(nsIPresContext* aPresContext)
+nsMathMLTokenFrame::ProcessTextData(nsPresContext* aPresContext)
 {
   SetTextStyle(aPresContext);
 }
@@ -282,7 +282,7 @@ nsMathMLTokenFrame::ProcessTextData(nsIPresContext* aPresContext)
 // normal (this function will also query attributes from the mstyle hierarchy)
 
 void
-nsMathMLTokenFrame::SetTextStyle(nsIPresContext* aPresContext)
+nsMathMLTokenFrame::SetTextStyle(nsPresContext* aPresContext)
 {
   if (mContent->Tag() != nsMathMLAtoms::mi_)
     return;
@@ -359,7 +359,7 @@ nsMathMLTokenFrame::SetTextStyle(nsIPresContext* aPresContext)
 // We also check that we are not relying on null pointers...
 
 static void
-SetQuote(nsIPresContext* aPresContext, 
+SetQuote(nsPresContext* aPresContext, 
          nsIFrame*       aFrame, 
          nsString&       aValue)
 {
@@ -388,7 +388,7 @@ SetQuote(nsIPresContext* aPresContext,
 }
 
 void
-nsMathMLTokenFrame::SetQuotes(nsIPresContext* aPresContext)
+nsMathMLTokenFrame::SetQuotes(nsPresContext* aPresContext)
 {
   if (mContent->Tag() != nsMathMLAtoms::ms_)
     return;

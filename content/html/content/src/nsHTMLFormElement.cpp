@@ -47,7 +47,7 @@
 #include "nsGenericHTMLElement.h"
 #include "nsHTMLAtoms.h"
 #include "nsStyleConsts.h"
-#include "nsIPresContext.h"
+#include "nsPresContext.h"
 #include "nsIDocument.h"
 #include "nsIPresShell.h"
 #include "nsIFrame.h"
@@ -164,7 +164,7 @@ public:
   NS_IMETHOD AttributeToString(nsIAtom* aAttribute,
                                const nsHTMLValue& aValue,
                                nsAString& aResult) const;
-  virtual nsresult HandleDOMEvent(nsIPresContext* aPresContext,
+  virtual nsresult HandleDOMEvent(nsPresContext* aPresContext,
                                   nsEvent* aEvent, nsIDOMEvent** aDOMEvent,
                                   PRUint32 aFlags,
                                   nsEventStatus* aEventStatus);
@@ -199,7 +199,7 @@ public:
                                PRInt32* retval);
 
 protected:
-  nsresult DoSubmitOrReset(nsIPresContext* aPresContext,
+  nsresult DoSubmitOrReset(nsPresContext* aPresContext,
                            nsEvent* aEvent,
                            PRInt32 aMessage);
   nsresult DoReset();
@@ -215,7 +215,7 @@ protected:
    * @param aPresContext the presentation context
    * @param aEvent the DOM event that was passed to us for the submit
    */
-  nsresult DoSubmit(nsIPresContext* aPresContext, nsEvent* aEvent);
+  nsresult DoSubmit(nsPresContext* aPresContext, nsEvent* aEvent);
 
   /**
    * Prepare the submission object (called by DoSubmit)
@@ -224,7 +224,7 @@ protected:
    * @param aFormSubmission the submission object
    * @param aEvent the DOM event that was passed to us for the submit
    */
-  nsresult BuildSubmission(nsIPresContext* aPresContext, 
+  nsresult BuildSubmission(nsPresContext* aPresContext, 
                            nsCOMPtr<nsIFormSubmission>& aFormSubmission, 
                            nsEvent* aEvent);
   /**
@@ -233,7 +233,7 @@ protected:
    * @param aPresContext the presentation context
    * @param aFormSubmission the submission object
    */
-  nsresult SubmitSubmission(nsIPresContext* aPresContext, 
+  nsresult SubmitSubmission(nsPresContext* aPresContext, 
                             nsIFormSubmission* aFormSubmission);
   /**
    * Walk over the form elements and call SubmitNamesValues() on them to get
@@ -564,7 +564,7 @@ nsHTMLFormElement::Submit()
 {
   // Send the submit event
   nsresult rv = NS_OK;
-  nsCOMPtr<nsIPresContext> presContext;
+  nsCOMPtr<nsPresContext> presContext;
   GetPresContext(this, getter_AddRefs(presContext));
   if (presContext) {
     if (mPendingSubmission) {
@@ -585,7 +585,7 @@ nsHTMLFormElement::Reset()
 {
   // Send the reset event
   nsresult rv = NS_OK;
-  nsCOMPtr<nsIPresContext> presContext;
+  nsCOMPtr<nsPresContext> presContext;
   GetPresContext(this, getter_AddRefs(presContext));
   if (presContext) {
     // Calling HandleDOMEvent() directly so that reset() will work even if
@@ -669,7 +669,7 @@ nsHTMLFormElement::SetDocument(nsIDocument* aDocument, PRBool aDeep,
 
 
 nsresult
-nsHTMLFormElement::HandleDOMEvent(nsIPresContext* aPresContext,
+nsHTMLFormElement::HandleDOMEvent(nsPresContext* aPresContext,
                                   nsEvent* aEvent,
                                   nsIDOMEvent** aDOMEvent,
                                   PRUint32 aFlags,
@@ -756,7 +756,7 @@ nsHTMLFormElement::HandleDOMEvent(nsIPresContext* aPresContext,
 }
 
 nsresult
-nsHTMLFormElement::DoSubmitOrReset(nsIPresContext* aPresContext,
+nsHTMLFormElement::DoSubmitOrReset(nsPresContext* aPresContext,
                                    nsEvent* aEvent,
                                    PRInt32 aMessage)
 {
@@ -804,7 +804,7 @@ nsHTMLFormElement::DoReset()
   }
 
 nsresult
-nsHTMLFormElement::DoSubmit(nsIPresContext* aPresContext, nsEvent* aEvent)
+nsHTMLFormElement::DoSubmit(nsPresContext* aPresContext, nsEvent* aEvent)
 {
   NS_ASSERTION(!mIsSubmitting, "Either two people are trying to submit or the "
                "previous submit was not properly cancelled by the DocShell");
@@ -841,7 +841,7 @@ nsHTMLFormElement::DoSubmit(nsIPresContext* aPresContext, nsEvent* aEvent)
 }
 
 nsresult
-nsHTMLFormElement::BuildSubmission(nsIPresContext* aPresContext, 
+nsHTMLFormElement::BuildSubmission(nsPresContext* aPresContext, 
                                    nsCOMPtr<nsIFormSubmission>& aFormSubmission, 
                                    nsEvent* aEvent)
 {
@@ -873,7 +873,7 @@ nsHTMLFormElement::BuildSubmission(nsIPresContext* aPresContext,
 }
 
 nsresult
-nsHTMLFormElement::SubmitSubmission(nsIPresContext* aPresContext, 
+nsHTMLFormElement::SubmitSubmission(nsPresContext* aPresContext, 
                                     nsIFormSubmission* aFormSubmission)
 {
   nsresult rv;
@@ -1207,7 +1207,7 @@ nsHTMLFormElement::FlushPendingSubmission()
   //
   // preform the submission with the stored pending submission
   //
-  nsCOMPtr<nsIPresContext> presContext;
+  nsCOMPtr<nsPresContext> presContext;
   GetPresContext(this, getter_AddRefs(presContext));
   SubmitSubmission(presContext, mPendingSubmission);
 

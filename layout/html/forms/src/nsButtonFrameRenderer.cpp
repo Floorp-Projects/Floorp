@@ -37,7 +37,7 @@
 #include "nsButtonFrameRenderer.h"
 #include "nsIRenderingContext.h"
 #include "nsCSSRendering.h"
-#include "nsIPresContext.h"
+#include "nsPresContext.h"
 #include "nsIView.h"
 #include "nsIViewManager.h"
 #include "nsHTMLAtoms.h"
@@ -62,7 +62,7 @@ nsButtonFrameRenderer::~nsButtonFrameRenderer()
 }
 
 void
-nsButtonFrameRenderer::SetFrame(nsFrame* aFrame, nsIPresContext* aPresContext)
+nsButtonFrameRenderer::SetFrame(nsFrame* aFrame, nsPresContext* aPresContext)
 {
   mFrame = aFrame;
   ReResolveStyles(aPresContext);
@@ -97,7 +97,7 @@ nsButtonFrameRenderer::isDisabled()
 }
 
 void 
-nsButtonFrameRenderer::PaintButton     (nsIPresContext* aPresContext,
+nsButtonFrameRenderer::PaintButton     (nsPresContext* aPresContext,
           nsIRenderingContext& aRenderingContext,
           const nsRect& aDirtyRect,
           const nsRect& aRect)
@@ -112,7 +112,7 @@ nsButtonFrameRenderer::PaintButton     (nsIPresContext* aPresContext,
 }
 
 void
-nsButtonFrameRenderer::PaintOutlineAndFocusBorders(nsIPresContext* aPresContext,
+nsButtonFrameRenderer::PaintOutlineAndFocusBorders(nsPresContext* aPresContext,
           nsIRenderingContext& aRenderingContext,
           const nsRect& aDirtyRect,
           const nsRect& aRect)
@@ -147,7 +147,7 @@ nsButtonFrameRenderer::PaintOutlineAndFocusBorders(nsIPresContext* aPresContext,
 
 
 void
-nsButtonFrameRenderer::PaintBorderAndBackground(nsIPresContext* aPresContext,
+nsButtonFrameRenderer::PaintBorderAndBackground(nsPresContext* aPresContext,
           nsIRenderingContext& aRenderingContext,
           const nsRect& aDirtyRect,
           const nsRect& aRect)
@@ -297,7 +297,7 @@ nsButtonFrameRenderer::GetAddedButtonBorderAndPadding()
  * Call this when styles change
  */
 void 
-nsButtonFrameRenderer::ReResolveStyles(nsIPresContext* aPresContext)
+nsButtonFrameRenderer::ReResolveStyles(nsPresContext* aPresContext)
 {
   // get all the styles
   nsStyleContext* context = mFrame->GetStyleContext();

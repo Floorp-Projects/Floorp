@@ -40,7 +40,7 @@
 #include "nsFrame.h"
 #include "nsIContent.h"
 #include "nsHTMLAtoms.h"
-#include "nsIPresContext.h"
+#include "nsPresContext.h"
 #include "nsIPresShell.h"
 #include "nsLayoutAtoms.h"
 #include "nsIDeviceContext.h"
@@ -91,7 +91,7 @@ nsHTMLReflowState::ReasonToString(nsReflowReason aReason)
 
 // Initialize a <b>root</b> reflow state with a rendering context to
 // use for measuring things.
-nsHTMLReflowState::nsHTMLReflowState(nsIPresContext*      aPresContext,
+nsHTMLReflowState::nsHTMLReflowState(nsPresContext*      aPresContext,
                                      nsIFrame*            aFrame,
                                      nsReflowReason       aReason,
                                      nsIRenderingContext* aRenderingContext,
@@ -122,7 +122,7 @@ nsHTMLReflowState::nsHTMLReflowState(nsIPresContext*      aPresContext,
 
 // Initialize a <b>root</b> reflow state for an <b>incremental</b>
 // reflow.
-nsHTMLReflowState::nsHTMLReflowState(nsIPresContext*      aPresContext,
+nsHTMLReflowState::nsHTMLReflowState(nsPresContext*      aPresContext,
                                      nsIFrame*            aFrame,
                                      nsReflowPath*        aReflowPath,
                                      nsIRenderingContext* aRenderingContext,
@@ -155,7 +155,7 @@ nsHTMLReflowState::nsHTMLReflowState(nsIPresContext*      aPresContext,
 // Initialize a reflow state for a child frames reflow. Some state
 // is copied from the parent reflow state; the remaining state is
 // computed.
-nsHTMLReflowState::nsHTMLReflowState(nsIPresContext*          aPresContext,
+nsHTMLReflowState::nsHTMLReflowState(nsPresContext*          aPresContext,
                                      const nsHTMLReflowState& aParentReflowState,
                                      nsIFrame*                aFrame,
                                      const nsSize&            aAvailableSpace,
@@ -202,7 +202,7 @@ nsHTMLReflowState::nsHTMLReflowState(nsIPresContext*          aPresContext,
 
 // Same as the previous except that the reason is taken from the
 // parent's reflow state.
-nsHTMLReflowState::nsHTMLReflowState(nsIPresContext*          aPresContext,
+nsHTMLReflowState::nsHTMLReflowState(nsPresContext*          aPresContext,
                                      const nsHTMLReflowState& aParentReflowState,
                                      nsIFrame*                aFrame,
                                      const nsSize&            aAvailableSpace)
@@ -244,7 +244,7 @@ nsHTMLReflowState::nsHTMLReflowState(nsIPresContext*          aPresContext,
 }
 
 // Version that species the containing block width and height
-nsHTMLReflowState::nsHTMLReflowState(nsIPresContext*          aPresContext,
+nsHTMLReflowState::nsHTMLReflowState(nsPresContext*          aPresContext,
                                      const nsHTMLReflowState& aParentReflowState,
                                      nsIFrame*                aFrame,
                                      const nsSize&            aAvailableSpace,
@@ -289,7 +289,7 @@ nsHTMLReflowState::nsHTMLReflowState(nsIPresContext*          aPresContext,
 }
 
 void
-nsHTMLReflowState::Init(nsIPresContext* aPresContext,
+nsHTMLReflowState::Init(nsPresContext* aPresContext,
                         nscoord         aContainingBlockWidth,
                         nscoord         aContainingBlockHeight,
                         nsMargin*       aBorder,
@@ -710,7 +710,7 @@ FindImmediateChildOf(nsIFrame* aParent, nsIFrame* aDescendantFrame)
 // the flow. The values returned are relative to the padding edge of the
 // absolute containing block
 void
-nsHTMLReflowState::CalculateHypotheticalBox(nsIPresContext*    aPresContext,
+nsHTMLReflowState::CalculateHypotheticalBox(nsPresContext*    aPresContext,
                                             nsIFrame*          aPlaceholderFrame,
                                             nsIFrame*          aBlockFrame,
                                             nsMargin&          aBlockContentArea,
@@ -927,7 +927,7 @@ nsHTMLReflowState::CalculateHypotheticalBox(nsIPresContext*    aPresContext,
 }
 
 void
-nsHTMLReflowState::InitAbsoluteConstraints(nsIPresContext* aPresContext,
+nsHTMLReflowState::InitAbsoluteConstraints(nsPresContext* aPresContext,
                                            const nsHTMLReflowState* cbrs,
                                            nscoord containingBlockWidth,
                                            nscoord containingBlockHeight)
@@ -1444,7 +1444,7 @@ CalcQuirkContainingBlockHeight(const nsHTMLReflowState& aReflowState)
 // Called by InitConstraints() to compute the containing block rectangle for
 // the element. Handles the special logic for absolutely positioned elements
 void
-nsHTMLReflowState::ComputeContainingBlockRectangle(nsIPresContext*          aPresContext,
+nsHTMLReflowState::ComputeContainingBlockRectangle(nsPresContext*          aPresContext,
                                                    const nsHTMLReflowState* aContainingBlockRS,
                                                    nscoord&                 aContainingBlockWidth,
                                                    nscoord&                 aContainingBlockHeight)
@@ -1559,7 +1559,7 @@ static eNormalLineHeightControl GetNormalLineHeightCalcControl(void)
 // we are computing: width,height,line-height; margin; offsets
 
 void
-nsHTMLReflowState::InitConstraints(nsIPresContext* aPresContext,
+nsHTMLReflowState::InitConstraints(nsPresContext* aPresContext,
                                    nscoord         aContainingBlockWidth,
                                    nscoord         aContainingBlockHeight,
                                    nsMargin*       aBorder,
@@ -1864,7 +1864,7 @@ nsHTMLReflowState::InitConstraints(nsIPresContext* aPresContext,
 // Compute the box data for block and block-replaced elements in the
 // normal flow.
 void
-nsHTMLReflowState::ComputeBlockBoxData(nsIPresContext* aPresContext,
+nsHTMLReflowState::ComputeBlockBoxData(nsPresContext* aPresContext,
                                        const nsHTMLReflowState* cbrs,
                                        nsStyleUnit aWidthUnit,
                                        nsStyleUnit aHeightUnit,
@@ -2121,7 +2121,7 @@ GetNormalLineHeight(nsIFontMetrics* aFontMetrics)
 }
 
 static nscoord
-ComputeLineHeight(nsIPresContext* aPresContext,
+ComputeLineHeight(nsPresContext* aPresContext,
                   nsIRenderingContext* aRenderingContext,
                   nsStyleContext* aStyleContext)
 {
@@ -2172,7 +2172,7 @@ ComputeLineHeight(nsIPresContext* aPresContext,
 }
 
 nscoord
-nsHTMLReflowState::CalcLineHeight(nsIPresContext* aPresContext,
+nsHTMLReflowState::CalcLineHeight(nsPresContext* aPresContext,
                                   nsIRenderingContext* aRenderingContext,
                                   nsIFrame* aFrame)
 {
@@ -2485,7 +2485,7 @@ void nsHTMLReflowState::AdjustComputedWidth(PRBool aAdjustForBoxSizing)
 }
 #ifdef IBMBIDI
 PRBool
-nsHTMLReflowState::IsBidiFormControl(nsIPresContext* aPresContext)
+nsHTMLReflowState::IsBidiFormControl(nsPresContext* aPresContext)
 {
   // This check is only necessary on visual bidi pages, because most
   // visual pages use logical order for form controls so that they will

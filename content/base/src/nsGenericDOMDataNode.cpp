@@ -695,7 +695,7 @@ nsGenericDOMDataNode::GetAttrCount() const
 }
 
 nsresult
-nsGenericDOMDataNode::HandleDOMEvent(nsIPresContext* aPresContext,
+nsGenericDOMDataNode::HandleDOMEvent(nsPresContext* aPresContext,
                                      nsEvent* aEvent, nsIDOMEvent** aDOMEvent,
                                      PRUint32 aFlags,
                                      nsEventStatus* aEventStatus)

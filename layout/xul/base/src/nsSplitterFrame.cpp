@@ -50,7 +50,7 @@
 #include "nsIDOMElement.h"
 #include "nsIDOMXULElement.h"
 #include "nsIDOMDocument.h"
-#include "nsIPresContext.h"
+#include "nsPresContext.h"
 #include "nsIDocument.h"
 #include "nsINameSpaceManager.h"
 #include "nsScrollbarButtonFrame.h"
@@ -119,18 +119,18 @@ public:
   NS_IMETHOD MouseMove(nsIDOMEvent* aMouseEvent);
   NS_IMETHOD DragMove(nsIDOMEvent* aMouseEvent) { return NS_OK; }
 
-  void MouseDrag(nsIPresContext* aPresContext, nsGUIEvent* aEvent);
-  void MouseUp(nsIPresContext* aPresContext, nsGUIEvent* aEvent);
+  void MouseDrag(nsPresContext* aPresContext, nsGUIEvent* aEvent);
+  void MouseUp(nsPresContext* aPresContext, nsGUIEvent* aEvent);
 
-  void AdjustChildren(nsIPresContext* aPresContext);
-  void AdjustChildren(nsIPresContext* aPresContext, nsSplitterInfo* aChildInfos, PRInt32 aCount, PRBool aIsHorizontal);
+  void AdjustChildren(nsPresContext* aPresContext);
+  void AdjustChildren(nsPresContext* aPresContext, nsSplitterInfo* aChildInfos, PRInt32 aCount, PRBool aIsHorizontal);
 
   void AddRemoveSpace(nscoord aDiff,
                     nsSplitterInfo* aChildInfos,
                     PRInt32 aCount,
                     PRInt32& aSpaceLeft);
 
-  void ResizeChildTo(nsIPresContext* aPresContext,
+  void ResizeChildTo(nsPresContext* aPresContext,
                    nscoord& aDiff, 
                    nsSplitterInfo* aChildrenBeforeInfos, 
                    nsSplitterInfo* aChildrenAfterInfos, 
@@ -140,7 +140,7 @@ public:
 
   void UpdateState();
 
-  void AddListener(nsIPresContext* aPresContext);
+  void AddListener(nsPresContext* aPresContext);
   void RemoveListener();
 
   enum ResizeType { Closest, Farthest, Grow };
@@ -151,12 +151,12 @@ public:
   ResizeType GetResizeAfter();
   State GetState();
 
-  //nsresult CaptureMouse(nsIPresContext* aPresContext, PRBool aGrabMouseEvents);
-  //PRBool IsMouseCaptured(nsIPresContext* aPresContext);
+  //nsresult CaptureMouse(nsPresContext* aPresContext, PRBool aGrabMouseEvents);
+  //PRBool IsMouseCaptured(nsPresContext* aPresContext);
   void Reverse(nsSplitterInfo*& aIndexes, PRInt32 aCount);
   CollapseDirection GetCollapseDirection();
 
-  void MoveSplitterBy(nsIPresContext* aPresContext, nscoord aDiff);
+  void MoveSplitterBy(nsPresContext* aPresContext, nscoord aDiff);
   void EnsureOrient();
   void SetPreferredSize(nsBoxLayoutState& aState, nsIBox* aChildBox, nscoord aOnePixel, PRBool aIsHorizontal, nscoord* aSize);
 
@@ -267,7 +267,7 @@ NS_INTERFACE_MAP_END_INHERITING(nsBoxFrame)
 
 
 NS_IMETHODIMP
-nsSplitterFrame::GetCursor(nsIPresContext* aPresContext,
+nsSplitterFrame::GetCursor(nsPresContext* aPresContext,
                                      nsPoint&        aPoint,
                                      PRInt32&        aCursor)
 {
@@ -284,7 +284,7 @@ nsSplitterFrame::GetCursor(nsIPresContext* aPresContext,
 }
 
 NS_IMETHODIMP
-nsSplitterFrame::AttributeChanged(nsIPresContext* aPresContext,
+nsSplitterFrame::AttributeChanged(nsPresContext* aPresContext,
                                   nsIContent* aChild,
                                   PRInt32 aNameSpaceID,
                                   nsIAtom* aAttribute,
@@ -312,7 +312,7 @@ nsSplitterFrame::AttributeChanged(nsIPresContext* aPresContext,
  * Initialize us. If we are in a box get our alignment so we know what direction we are
  */
 NS_IMETHODIMP
-nsSplitterFrame::Init(nsIPresContext*  aPresContext,
+nsSplitterFrame::Init(nsPresContext*  aPresContext,
               nsIContent*      aContent,
               nsIFrame*        aParent,
               nsStyleContext*  aContext,
@@ -418,7 +418,7 @@ nsSplitterFrame::GetInitialOrientation(PRBool& aIsHorizontal)
 }
 
 NS_IMETHODIMP
-nsSplitterFrame::HandlePress(nsIPresContext* aPresContext,
+nsSplitterFrame::HandlePress(nsPresContext* aPresContext,
                          nsGUIEvent *    aEvent,
                          nsEventStatus*  aEventStatus)
 {
@@ -426,7 +426,7 @@ nsSplitterFrame::HandlePress(nsIPresContext* aPresContext,
 }
 
 NS_IMETHODIMP
-nsSplitterFrame::HandleMultiplePress(nsIPresContext* aPresContext,
+nsSplitterFrame::HandleMultiplePress(nsPresContext* aPresContext,
                          nsGUIEvent *    aEvent,
                          nsEventStatus*  aEventStatus)
 {
@@ -434,7 +434,7 @@ nsSplitterFrame::HandleMultiplePress(nsIPresContext* aPresContext,
 }
 
 NS_IMETHODIMP
-nsSplitterFrame::HandleDrag(nsIPresContext* aPresContext,
+nsSplitterFrame::HandleDrag(nsPresContext* aPresContext,
                         nsGUIEvent *    aEvent,
                         nsEventStatus*  aEventStatus)
 {
@@ -442,14 +442,14 @@ nsSplitterFrame::HandleDrag(nsIPresContext* aPresContext,
 }
 
 NS_IMETHODIMP
-nsSplitterFrame::HandleRelease(nsIPresContext* aPresContext,
+nsSplitterFrame::HandleRelease(nsPresContext* aPresContext,
                            nsGUIEvent *    aEvent,
                            nsEventStatus*  aEventStatus)
 {
   return NS_OK;
 }
 
-NS_IMETHODIMP  nsSplitterFrame::GetFrameForPoint(nsIPresContext* aPresContext,
+NS_IMETHODIMP  nsSplitterFrame::GetFrameForPoint(nsPresContext* aPresContext,
                                              const nsPoint& aPoint, 
                                              nsFramePaintLayer aWhichLayer,    
                                              nsIFrame**     aFrame)
@@ -475,7 +475,7 @@ NS_IMETHODIMP  nsSplitterFrame::GetFrameForPoint(nsIPresContext* aPresContext,
 }
 
 NS_IMETHODIMP
-nsSplitterFrame::HandleEvent(nsIPresContext* aPresContext, 
+nsSplitterFrame::HandleEvent(nsPresContext* aPresContext, 
                                       nsGUIEvent* aEvent,
                                       nsEventStatus* aEventStatus)
 {
@@ -493,7 +493,7 @@ nsSplitterFrame::HandleEvent(nsIPresContext* aPresContext,
 }
 
 void
-nsSplitterFrameInner::MouseUp(nsIPresContext* aPresContext, nsGUIEvent* aEvent)
+nsSplitterFrameInner::MouseUp(nsPresContext* aPresContext, nsGUIEvent* aEvent)
 {
   if (mDragging) {
     AdjustChildren(aPresContext);
@@ -518,7 +518,7 @@ nsSplitterFrameInner::MouseUp(nsIPresContext* aPresContext, nsGUIEvent* aEvent)
 }
 
 void
-nsSplitterFrameInner::MouseDrag(nsIPresContext* aPresContext, nsGUIEvent* aEvent)
+nsSplitterFrameInner::MouseDrag(nsPresContext* aPresContext, nsGUIEvent* aEvent)
 {
   if (mDragging) {
 
@@ -646,7 +646,7 @@ nsSplitterFrameInner::MouseDrag(nsIPresContext* aPresContext, nsGUIEvent* aEvent
 }
 
 void
-nsSplitterFrameInner::AddListener(nsIPresContext* aPresContext)
+nsSplitterFrameInner::AddListener(nsPresContext* aPresContext)
 {
   nsIFrame* thumbFrame = mOuter->GetFirstChild(nsnull);
 
@@ -669,7 +669,7 @@ nsSplitterFrameInner::RemoveListener()
 
 /*
 nsresult
-nsSplitterFrameInner :: CaptureMouse(nsIPresContext* aPresContext, PRBool aGrabMouseEvents)
+nsSplitterFrameInner :: CaptureMouse(nsPresContext* aPresContext, PRBool aGrabMouseEvents)
 {
   // get its view
   nsIView* view = mOuter->GetView();
@@ -696,7 +696,7 @@ nsSplitterFrameInner :: CaptureMouse(nsIPresContext* aPresContext, PRBool aGrabM
 
 
 PRBool
-nsSplitterFrameInner :: IsMouseCaptured(nsIPresContext* aPresContext)
+nsSplitterFrameInner :: IsMouseCaptured(nsPresContext* aPresContext)
 {
     // get its view
   nsIView* view = mOuter->GetView();
@@ -1022,7 +1022,7 @@ nsSplitterFrameInner::EnsureOrient()
 }
 
 void
-nsSplitterFrameInner::AdjustChildren(nsIPresContext* aPresContext)
+nsSplitterFrameInner::AdjustChildren(nsPresContext* aPresContext)
 {
   EnsureOrient();
   PRBool isHorizontal = !mOuter->IsHorizontal();
@@ -1054,7 +1054,7 @@ nsSplitterFrameInner::AdjustChildren(nsIPresContext* aPresContext)
 }
 
 void
-nsSplitterFrameInner::AdjustChildren(nsIPresContext* aPresContext, nsSplitterInfo* aChildInfos, PRInt32 aCount, PRBool aIsHorizontal)
+nsSplitterFrameInner::AdjustChildren(nsPresContext* aPresContext, nsSplitterInfo* aChildInfos, PRInt32 aCount, PRBool aIsHorizontal)
 {
   ///printf("------- AdjustChildren------\n");
 
@@ -1179,7 +1179,7 @@ nsSplitterFrameInner::AddRemoveSpace(nscoord aDiff,
  */
 
 void
-nsSplitterFrameInner::ResizeChildTo(nsIPresContext* aPresContext,
+nsSplitterFrameInner::ResizeChildTo(nsPresContext* aPresContext,
                                    nscoord& aDiff, 
                                    nsSplitterInfo* aChildrenBeforeInfos, 
                                    nsSplitterInfo* aChildrenAfterInfos, 
@@ -1206,7 +1206,7 @@ nsSplitterFrameInner::ResizeChildTo(nsIPresContext* aPresContext,
 
 
 void
-nsSplitterFrameInner::MoveSplitterBy(nsIPresContext* aPresContext, nscoord aDiff)
+nsSplitterFrameInner::MoveSplitterBy(nsPresContext* aPresContext, nscoord aDiff)
 {
   const nsRect& r = mOuter->mRect;
   nsIView *v = mOuter->GetView();

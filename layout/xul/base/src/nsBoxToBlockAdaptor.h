@@ -84,7 +84,7 @@ protected:
 
 private:
   nsresult Reflow(nsBoxLayoutState& aState,
-                   nsIPresContext*   aPresContext,
+                   nsPresContext*   aPresContext,
                    nsHTMLReflowMetrics&     aDesiredSize,
                    const nsHTMLReflowState& aReflowState,
                    nsReflowStatus&          aStatus,

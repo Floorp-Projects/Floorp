@@ -53,7 +53,7 @@
 #include "nsIContent.h"
 #include "nsITextContent.h"
 #include "nsIStyleSheetLinkingElement.h"
-#include "nsIPresContext.h"
+#include "nsPresContext.h"
 #include "nsIPresShell.h"
 #include "nsIViewManager.h"
 #include "nsIDOMComment.h"

@@ -150,7 +150,7 @@ nsGfxRadioControlFrame::SetRadioButtonFaceStyleContext(nsStyleContext *aRadioBut
 
 //--------------------------------------------------------------
 NS_IMETHODIMP
-nsGfxRadioControlFrame::HandleEvent(nsIPresContext* aPresContext, 
+nsGfxRadioControlFrame::HandleEvent(nsPresContext* aPresContext, 
                                           nsGUIEvent* aEvent,
                                           nsEventStatus* aEventStatus)
 {
@@ -165,7 +165,7 @@ nsGfxRadioControlFrame::HandleEvent(nsIPresContext* aPresContext,
 
 //--------------------------------------------------------------
 void
-nsGfxRadioControlFrame::PaintRadioButton(nsIPresContext* aPresContext,
+nsGfxRadioControlFrame::PaintRadioButton(nsPresContext* aPresContext,
                                       nsIRenderingContext& aRenderingContext,
                                       const nsRect& aDirtyRect)
 {
@@ -213,7 +213,7 @@ nsGfxRadioControlFrame::PaintRadioButton(nsIPresContext* aPresContext,
 
 //--------------------------------------------------------------
 NS_METHOD 
-nsGfxRadioControlFrame::Paint(nsIPresContext*   aPresContext,
+nsGfxRadioControlFrame::Paint(nsPresContext*   aPresContext,
                            nsIRenderingContext& aRenderingContext,
                            const nsRect&        aDirtyRect,
                            nsFramePaintLayer    aWhichLayer,
@@ -235,7 +235,7 @@ nsGfxRadioControlFrame::Paint(nsIPresContext*   aPresContext,
 
 //--------------------------------------------------------------
 NS_IMETHODIMP
-nsGfxRadioControlFrame::OnChecked(nsIPresContext* aPresContext,
+nsGfxRadioControlFrame::OnChecked(nsPresContext* aPresContext,
                                   PRBool aChecked)
 {
   Invalidate(GetOutlineRect(), PR_FALSE);
@@ -248,7 +248,7 @@ nsGfxRadioControlFrame::OnChecked(nsIPresContext* aPresContext,
 //----------------------------------------------------------------------
 #ifdef DEBUG_rodsXXX
 NS_IMETHODIMP 
-nsGfxRadioControlFrame::Reflow(nsIPresContext*          aPresContext, 
+nsGfxRadioControlFrame::Reflow(nsPresContext*          aPresContext, 
                                nsHTMLReflowMetrics&     aDesiredSize,
                                const nsHTMLReflowState& aReflowState, 
                                nsReflowStatus&          aStatus)

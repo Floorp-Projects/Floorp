@@ -115,30 +115,30 @@ public:
   NS_NewTableRowGroupFrame(nsIPresShell* aPresShell, nsIFrame** aResult);
   virtual ~nsTableRowGroupFrame();
 
-  NS_IMETHOD Init(nsIPresContext*  aPresContext,
+  NS_IMETHOD Init(nsPresContext*  aPresContext,
                   nsIContent*      aContent,
                   nsIFrame*        aParent,
                   nsStyleContext*  aContext,
                   nsIFrame*        aPrevInFlow);
 
-  NS_IMETHOD AppendFrames(nsIPresContext* aPresContext,
+  NS_IMETHOD AppendFrames(nsPresContext* aPresContext,
                           nsIPresShell&   aPresShell,
                           nsIAtom*        aListName,
                           nsIFrame*       aFrameList);
   
-  NS_IMETHOD InsertFrames(nsIPresContext* aPresContext,
+  NS_IMETHOD InsertFrames(nsPresContext* aPresContext,
                           nsIPresShell&   aPresShell,
                           nsIAtom*        aListName,
                           nsIFrame*       aPrevFrame,
                           nsIFrame*       aFrameList);
 
-  NS_IMETHOD RemoveFrame(nsIPresContext* aPresContext,
+  NS_IMETHOD RemoveFrame(nsPresContext* aPresContext,
                          nsIPresShell&   aPresShell,
                          nsIAtom*        aListName,
                          nsIFrame*       aOldFrame);
 
   /** @see nsIFrame::Paint */
-  NS_IMETHOD Paint(nsIPresContext*      aPresContext,
+  NS_IMETHOD Paint(nsPresContext*      aPresContext,
                    nsIRenderingContext& aRenderingContext,
                    const nsRect&        aDirtyRect,
                    nsFramePaintLayer    aWhichLayer,
@@ -152,7 +152,7 @@ public:
    * Return PR_TRUE if a frame containing the point is found.
    * @see nsContainerFrame::GetFrameForPoint
    */
-  NS_IMETHOD GetFrameForPoint(nsIPresContext* aPresContext, const nsPoint& aPoint, nsFramePaintLayer aWhichLayer, nsIFrame** aFrame);
+  NS_IMETHOD GetFrameForPoint(nsPresContext* aPresContext, const nsPoint& aPoint, nsFramePaintLayer aWhichLayer, nsIFrame** aFrame);
 
    /** calls Reflow for all of its child rows.
     * Rows are all set to the same width and stacked vertically.
@@ -163,7 +163,7 @@ public:
     *
     * @see nsIFrame::Reflow
     */
-  NS_IMETHOD Reflow(nsIPresContext*          aPresContext,
+  NS_IMETHOD Reflow(nsPresContext*          aPresContext,
                     nsHTMLReflowMetrics&     aDesiredSize,
                     const nsHTMLReflowState& aReflowState,
                     nsReflowStatus&          aStatus);
@@ -200,7 +200,7 @@ public:
    * @param aHeaderFooterFrame the original header or footer row group frame
    * that was repeated
    */
-  nsresult  InitRepeatedFrame(nsIPresContext*       aPresContext,
+  nsresult  InitRepeatedFrame(nsPresContext*       aPresContext,
                               nsTableRowGroupFrame* aHeaderFooterFrame);
 
   
@@ -263,7 +263,7 @@ public:
 protected:
   nsTableRowGroupFrame();
 
-  void InitChildReflowState(nsIPresContext&    aPresContext, 
+  void InitChildReflowState(nsPresContext&    aPresContext, 
                             PRBool             aBorderCollapse,
                             float              aPixelsToTwips,
                             nsHTMLReflowState& aReflowState);
@@ -271,17 +271,17 @@ protected:
   /** implement abstract method on nsHTMLContainerFrame */
   virtual PRIntn GetSkipSides() const;
 
-  void PlaceChild(nsIPresContext*        aPresContext,
+  void PlaceChild(nsPresContext*        aPresContext,
                   nsRowGroupReflowState& aReflowState,
                   nsIFrame*              aKidFrame,
                   nsHTMLReflowMetrics&   aDesiredSize);
 
-  void CalculateRowHeights(nsIPresContext*          aPresContext, 
+  void CalculateRowHeights(nsPresContext*          aPresContext, 
                            nsHTMLReflowMetrics&     aDesiredSize,
                            const nsHTMLReflowState& aReflowState,
                            nsTableRowFrame*         aStartRowFrameIn = nsnull);
 
-  void DidResizeRows(nsIPresContext&          aPresContext,
+  void DidResizeRows(nsPresContext&          aPresContext,
                      const nsHTMLReflowState& aReflowState,
                      nsHTMLReflowMetrics&     aDesiredSize,
                      nsTableRowFrame*         aStartRowFrameIn = nsnull);
@@ -293,28 +293,28 @@ protected:
     *
     * @see Reflow
     */
-  NS_IMETHOD IncrementalReflow(nsIPresContext*        aPresContext,
+  NS_IMETHOD IncrementalReflow(nsPresContext*        aPresContext,
                                nsHTMLReflowMetrics&   aDesiredSize,
                                nsRowGroupReflowState& aReflowState,
                                nsReflowStatus&        aStatus);
 
-  NS_IMETHOD IR_TargetIsChild(nsIPresContext*        aPresContext,
+  NS_IMETHOD IR_TargetIsChild(nsPresContext*        aPresContext,
                               nsHTMLReflowMetrics&   aDesiredSize,
                               nsRowGroupReflowState& aReflowState,
                               nsReflowStatus&        aStatus,
                               nsIFrame*              aNextFrame);
 
-  NS_IMETHOD IR_TargetIsMe(nsIPresContext*        aPresContext,
+  NS_IMETHOD IR_TargetIsMe(nsPresContext*        aPresContext,
                            nsHTMLReflowMetrics&   aDesiredSize,
                            nsRowGroupReflowState& aReflowState,
                            nsReflowStatus&        aStatus);
 
-  NS_IMETHOD IR_StyleChanged(nsIPresContext*        aPresContext,
+  NS_IMETHOD IR_StyleChanged(nsPresContext*        aPresContext,
                              nsHTMLReflowMetrics&   aDesiredSize,
                              nsRowGroupReflowState& aReflowState,
                              nsReflowStatus&        aStatus);
 
-  nsresult AdjustSiblingsAfterReflow(nsIPresContext*        aPresContext,
+  nsresult AdjustSiblingsAfterReflow(nsPresContext*        aPresContext,
                                      nsRowGroupReflowState& aReflowState,
                                      nsIFrame*              aKidFrame,
                                      nscoord                aDeltaY);
@@ -330,7 +330,7 @@ protected:
    * @return  true if we successfully reflowed all the mapped children and false
    *            otherwise, e.g. we pushed children to the next in flow
    */
-  NS_METHOD ReflowChildren(nsIPresContext*        aPresContext,
+  NS_METHOD ReflowChildren(nsPresContext*        aPresContext,
                            nsHTMLReflowMetrics&   aDesiredSize,
                            nsRowGroupReflowState& aReflowState,
                            nsReflowStatus&        aStatus,
@@ -339,13 +339,13 @@ protected:
                            nsTableRowFrame**      aFirstRowReflowed   = nsnull,
                            PRBool*                aPageBreakBeforeEnd = nsnull);
 
-  nsresult SplitRowGroup(nsIPresContext*          aPresContext,
+  nsresult SplitRowGroup(nsPresContext*          aPresContext,
                          nsHTMLReflowMetrics&     aDesiredSize,
                          const nsHTMLReflowState& aReflowState,
                          nsTableFrame*            aTableFrame,
                          nsReflowStatus&          aStatus);
 
-  void SplitSpanningCells(nsIPresContext&          aPresContext,
+  void SplitSpanningCells(nsPresContext&          aPresContext,
                           const nsHTMLReflowState& aReflowState,
                           nsTableFrame&            aTableFrame,
                           nsTableRowFrame&         aFirstRow, 
@@ -356,7 +356,7 @@ protected:
                           nsTableRowFrame*&        aFirstTruncatedRow,
                           nscoord&                 aDesiredHeight);
 
-  void CreateContinuingRowFrame(nsIPresContext& aPresContext,
+  void CreateContinuingRowFrame(nsPresContext& aPresContext,
                                 nsIFrame&       aRowFrame,
                                 nsIFrame**      aContRowFrame);
 
@@ -365,7 +365,7 @@ protected:
 
   void GetNextRowSibling(nsIFrame** aRowFrame);
 
-  void UndoContinuedRow(nsIPresContext*  aPresContext,
+  void UndoContinuedRow(nsPresContext*  aPresContext,
                         nsTableRowFrame* aRow);
                         
 private:

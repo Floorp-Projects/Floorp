@@ -83,12 +83,12 @@ public:
   NS_IMETHOD  QueryInterface(const nsIID& aIID, void** aInstancePtr);
 
   // nsIFrameReflow
-  NS_IMETHOD  Reflow(nsIPresContext*      aPresContext,
+  NS_IMETHOD  Reflow(nsPresContext*      aPresContext,
                      nsHTMLReflowMetrics& aDesiredSize,
                      const nsHTMLReflowState& aMaxSize,
                      nsReflowStatus&      aStatus);
 
-  NS_IMETHOD  Paint(nsIPresContext*      aPresContext,
+  NS_IMETHOD  Paint(nsPresContext*      aPresContext,
                     nsIRenderingContext& aRenderingContext,
                     const nsRect&        aDirtyRect,
                     nsFramePaintLayer    aWhichLayer);
@@ -106,22 +106,22 @@ public:
   NS_IMETHOD GetSTFPercent(float& aSTFPercent);
 
   // Async Printing
-  NS_IMETHOD StartPrint(nsIPresContext*  aPresContext,
+  NS_IMETHOD StartPrint(nsPresContext*  aPresContext,
                         nsIPrintSettings* aPrintSettings,
                         PRUnichar*        aDocTitle,
                         PRUnichar*        aDocURL);
-  NS_IMETHOD PrintNextPage(nsIPresContext*  aPresContext);
+  NS_IMETHOD PrintNextPage(nsPresContext*  aPresContext);
   NS_IMETHOD GetCurrentPageNum(PRInt32* aPageNum);
   NS_IMETHOD GetNumPages(PRInt32* aNumPages);
   NS_IMETHOD IsDoingPrintRange(PRBool* aDoing);
   NS_IMETHOD GetPrintRange(PRInt32* aFromPage, PRInt32* aToPage);
   NS_IMETHOD SkipPageBegin() { mSkipPageBegin = PR_TRUE; return NS_OK; }
   NS_IMETHOD SkipPageEnd() { mSkipPageEnd = PR_TRUE; return NS_OK; }
-  NS_IMETHOD DoPageEnd(nsIPresContext*  aPresContext);
+  NS_IMETHOD DoPageEnd(nsPresContext*  aPresContext);
   NS_IMETHOD GetPrintThisPage(PRBool*  aPrintThisPage) { *aPrintThisPage = mPrintThisPage; return NS_OK; }
   NS_IMETHOD SetOffset(nscoord aX, nscoord aY) { mOffsetX = aX; mOffsetY = aY; return NS_OK; }
   NS_IMETHOD SuppressHeadersAndFooters(PRBool aDoSup);
-  NS_IMETHOD SetClipRect(nsIPresContext* aPresContext, nsRect* aSize);
+  NS_IMETHOD SetClipRect(nsPresContext* aPresContext, nsRect* aSize);
 
   /**
    * Get the "type" of the frame
@@ -139,7 +139,7 @@ protected:
   nsSimplePageSequenceFrame();
   virtual ~nsSimplePageSequenceFrame();
 
-  nsresult CreateContinuingPageFrame(nsIPresContext* aPresContext,
+  nsresult CreateContinuingPageFrame(nsPresContext* aPresContext,
                                      nsIFrame*       aPageFrame,
                                      nsIFrame**      aContinuingFrame);
 
@@ -191,7 +191,7 @@ protected:
   nsCOMPtr<nsIDateTimeFormat> mDateFormatter;
 
 private:
-  void CacheBackground(nsIPresContext* aPresContext);
+  void CacheBackground(nsPresContext* aPresContext);
 
 };
 

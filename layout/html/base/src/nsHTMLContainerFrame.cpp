@@ -36,7 +36,7 @@
  * ***** END LICENSE BLOCK ***** */
 #include "nsHTMLContainerFrame.h"
 #include "nsIRenderingContext.h"
-#include "nsIPresContext.h"
+#include "nsPresContext.h"
 #include "nsIPresShell.h"
 #include "nsStyleContext.h"
 #include "nsStyleConsts.h"
@@ -67,7 +67,7 @@
 static NS_DEFINE_CID(kCChildCID, NS_CHILD_CID);
 
 NS_IMETHODIMP
-nsHTMLContainerFrame::Paint(nsIPresContext*      aPresContext,
+nsHTMLContainerFrame::Paint(nsPresContext*      aPresContext,
                             nsIRenderingContext& aRenderingContext,
                             const nsRect&        aDirtyRect,
                             nsFramePaintLayer    aWhichLayer,
@@ -90,7 +90,7 @@ nsHTMLContainerFrame::Paint(nsIPresContext*      aPresContext,
 
 void
 nsHTMLContainerFrame::PaintDecorationsAndChildren(
-                                       nsIPresContext*      aPresContext,
+                                       nsPresContext*      aPresContext,
                                        nsIRenderingContext& aRenderingContext,
                                        const nsRect&        aDirtyRect,
                                        nsFramePaintLayer    aWhichLayer,
@@ -145,10 +145,10 @@ nsHTMLContainerFrame::PaintDecorationsAndChildren(
 }
 
 static PRBool 
-HasTextFrameDescendantOrInFlow(nsIPresContext* aPresContext, nsIFrame* aFrame);
+HasTextFrameDescendantOrInFlow(nsPresContext* aPresContext, nsIFrame* aFrame);
 
 void
-nsHTMLContainerFrame::GetTextDecorations(nsIPresContext* aPresContext, 
+nsHTMLContainerFrame::GetTextDecorations(nsPresContext* aPresContext, 
                                          PRBool aIsBlock,
                                          PRUint8& aDecorations,
                                          nscolor& aUnderColor, 
@@ -225,7 +225,7 @@ nsHTMLContainerFrame::GetTextDecorations(nsIPresContext* aPresContext,
 }
 
 static PRBool 
-HasTextFrameDescendant(nsIPresContext* aPresContext, nsIFrame* aParent)
+HasTextFrameDescendant(nsPresContext* aPresContext, nsIFrame* aParent)
 {
   for (nsIFrame* kid = aParent->GetFirstChild(nsnull); kid;
        kid = kid->GetNextSibling())
@@ -246,7 +246,7 @@ HasTextFrameDescendant(nsIPresContext* aPresContext, nsIFrame* aParent)
 }
 
 static PRBool 
-HasTextFrameDescendantOrInFlow(nsIPresContext* aPresContext, nsIFrame* aFrame)
+HasTextFrameDescendantOrInFlow(nsPresContext* aPresContext, nsIFrame* aFrame)
 {
   for (nsIFrame *f = aFrame->GetFirstInFlow(); f; f->GetNextInFlow(&f)) {
     if (HasTextFrameDescendant(aPresContext, f))
@@ -304,7 +304,7 @@ nsHTMLContainerFrame::PaintTextDecorations(
  * created; otherwise nsnull is returned in aNextInFlowResult.
  */
 nsresult
-nsHTMLContainerFrame::CreateNextInFlow(nsIPresContext* aPresContext,
+nsHTMLContainerFrame::CreateNextInFlow(nsPresContext* aPresContext,
                                        nsIFrame*       aOuterFrame,
                                        nsIFrame*       aFrame,
                                        nsIFrame*&      aNextInFlowResult)
@@ -379,7 +379,7 @@ ReparentFrameViewTo(nsIFrame*       aFrame,
 }
 
 nsresult
-nsHTMLContainerFrame::ReparentFrameView(nsIPresContext* aPresContext,
+nsHTMLContainerFrame::ReparentFrameView(nsPresContext* aPresContext,
                                         nsIFrame*       aChildFrame,
                                         nsIFrame*       aOldParentFrame,
                                         nsIFrame*       aNewParentFrame)
@@ -448,7 +448,7 @@ nsHTMLContainerFrame::ReparentFrameView(nsIPresContext* aPresContext,
 }
 
 nsresult
-nsHTMLContainerFrame::ReparentFrameViewList(nsIPresContext* aPresContext,
+nsHTMLContainerFrame::ReparentFrameViewList(nsPresContext* aPresContext,
                                             nsIFrame*       aChildFrameList,
                                             nsIFrame*       aOldParentFrame,
                                             nsIFrame*       aNewParentFrame)

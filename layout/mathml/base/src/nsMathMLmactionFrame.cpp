@@ -37,7 +37,7 @@
 
 #include "nsCOMPtr.h"
 #include "nsFrame.h"
-#include "nsIPresContext.h"
+#include "nsPresContext.h"
 #include "nsUnitConversion.h"
 #include "nsStyleContext.h"
 #include "nsStyleConsts.h"
@@ -105,7 +105,7 @@ nsMathMLmactionFrame::~nsMathMLmactionFrame()
 }
 
 NS_IMETHODIMP
-nsMathMLmactionFrame::Init(nsIPresContext*  aPresContext,
+nsMathMLmactionFrame::Init(nsPresContext*  aPresContext,
                            nsIContent*      aContent,
                            nsIFrame*        aParent,
                            nsStyleContext*  aContext,
@@ -232,7 +232,7 @@ nsMathMLmactionFrame::GetSelectedFrame()
 }
 
 NS_IMETHODIMP
-nsMathMLmactionFrame::SetInitialChildList(nsIPresContext* aPresContext,
+nsMathMLmactionFrame::SetInitialChildList(nsPresContext* aPresContext,
                                           nsIAtom*        aListName,
                                           nsIFrame*       aChildList)
 {
@@ -254,7 +254,7 @@ nsMathMLmactionFrame::SetInitialChildList(nsIPresContext* aPresContext,
 
 // Return the selected frame ...
 NS_IMETHODIMP
-nsMathMLmactionFrame::GetFrameForPoint(nsIPresContext*   aPresContext,
+nsMathMLmactionFrame::GetFrameForPoint(nsPresContext*   aPresContext,
                                        const nsPoint&    aPoint,
                                        nsFramePaintLayer aWhichLayer,
                                        nsIFrame**        aFrame)
@@ -269,7 +269,7 @@ nsMathMLmactionFrame::GetFrameForPoint(nsIPresContext*   aPresContext,
 
 //  Only paint the selected child...
 NS_IMETHODIMP
-nsMathMLmactionFrame::Paint(nsIPresContext*      aPresContext,
+nsMathMLmactionFrame::Paint(nsPresContext*      aPresContext,
                             nsIRenderingContext& aRenderingContext,
                             const nsRect&        aDirtyRect,
                             nsFramePaintLayer    aWhichLayer,
@@ -302,7 +302,7 @@ nsMathMLmactionFrame::Paint(nsIPresContext*      aPresContext,
 
 // Only reflow the selected child ...
 NS_IMETHODIMP
-nsMathMLmactionFrame::Reflow(nsIPresContext*          aPresContext,
+nsMathMLmactionFrame::Reflow(nsPresContext*          aPresContext,
                              nsHTMLReflowMetrics&     aDesiredSize,
                              const nsHTMLReflowState& aReflowState,
                              nsReflowStatus&          aStatus)
@@ -342,7 +342,7 @@ nsMathMLmactionFrame::Reflow(nsIPresContext*          aPresContext,
 
 // Only place the selected child ...
 NS_IMETHODIMP
-nsMathMLmactionFrame::Place(nsIPresContext*      aPresContext,
+nsMathMLmactionFrame::Place(nsPresContext*      aPresContext,
                             nsIRenderingContext& aRenderingContext,
                             PRBool               aPlaceOrigin,
                             nsHTMLReflowMetrics& aDesiredSize)
@@ -370,7 +370,7 @@ nsMathMLmactionFrame::Place(nsIPresContext*      aPresContext,
 // helper to show a msg on the status bar
 // curled from nsObjectFrame.cpp ...
 nsresult
-nsMathMLmactionFrame::ShowStatus(nsIPresContext* aPresContext,
+nsMathMLmactionFrame::ShowStatus(nsPresContext* aPresContext,
                                  nsString&       aStatusMsg)
 {
   nsCOMPtr<nsISupports> cont = aPresContext->GetContainer();

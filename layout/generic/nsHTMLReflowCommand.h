@@ -42,7 +42,7 @@
 #include "nsIAtom.h"
 
 class  nsIFrame;
-class  nsIPresContext;
+class  nsPresContext;
 class  nsIRenderingContext;
 struct nsHTMLReflowMetrics;
 struct nsSize;

@@ -37,7 +37,7 @@
 #include "nsPlaceholderFrame.h"
 #include "nsLineLayout.h"
 #include "nsIContent.h"
-#include "nsIPresContext.h"
+#include "nsPresContext.h"
 #include "nsIRenderingContext.h"
 #include "nsLayoutAtoms.h"
 
@@ -66,7 +66,7 @@ nsPlaceholderFrame::~nsPlaceholderFrame()
 }
 
 NS_IMETHODIMP
-nsPlaceholderFrame::Reflow(nsIPresContext*          aPresContext,
+nsPlaceholderFrame::Reflow(nsPresContext*          aPresContext,
                            nsHTMLReflowMetrics&     aDesiredSize,
                            const nsHTMLReflowState& aReflowState,
                            nsReflowStatus&          aStatus)
@@ -100,7 +100,7 @@ nsPlaceholderFrame::IsEmpty()
 
 #ifdef DEBUG
 NS_IMETHODIMP
-nsPlaceholderFrame::Paint(nsIPresContext*      aPresContext,
+nsPlaceholderFrame::Paint(nsPresContext*      aPresContext,
                           nsIRenderingContext& aRenderingContext,
                           const nsRect&        aDirtyRect,
                           nsFramePaintLayer    aWhichLayer,
@@ -128,7 +128,7 @@ nsPlaceholderFrame::GetFrameName(nsAString& aResult) const
 }
 
 NS_IMETHODIMP
-nsPlaceholderFrame::List(nsIPresContext* aPresContext, FILE* out, PRInt32 aIndent) const
+nsPlaceholderFrame::List(nsPresContext* aPresContext, FILE* out, PRInt32 aIndent) const
 {
   IndentBy(out, aIndent);
   ListTag(out);

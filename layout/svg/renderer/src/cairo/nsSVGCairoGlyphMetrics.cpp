@@ -43,7 +43,7 @@
 #include "nsISVGGlyphMetricsSource.h"
 #include "nsPromiseFlatString.h"
 #include "nsFont.h"
-#include "nsIPresContext.h"
+#include "nsPresContext.h"
 #include "nsISVGCairoGlyphMetrics.h"
 #include "nsSVGCairoGlyphMetrics.h"
 #include "nsIDOMSVGMatrix.h"
@@ -324,7 +324,7 @@ nsSVGCairoGlyphMetrics::Update(PRUint32 updatemask, PRBool *_retval)
     free(f);
     mFont = cairo_current_font(mCT);
 
-    nsCOMPtr<nsIPresContext> presContext;
+    nsCOMPtr<nsPresContext> presContext;
     mSource->GetPresContext(getter_AddRefs(presContext));
     float pxPerTwips;
     pxPerTwips = presContext->TwipsToPixels();

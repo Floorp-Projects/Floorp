@@ -45,7 +45,7 @@
 #include "nsIDocument.h"
 #include "nsIFrame.h"
 #include "nsIWidget.h"
-#include "nsIPresContext.h"
+#include "nsPresContext.h"
 #include "nsIPresShell.h"
 #include "nsDOMEvent.h"
 #include "nsHTMLAtoms.h"
@@ -140,7 +140,7 @@ static NS_DEFINE_CID(kLookAndFeelCID, NS_LOOKANDFEEL_CID);
 
 nsIContent * gLastFocusedContent = 0; // Strong reference
 nsIDocument * gLastFocusedDocument = 0; // Strong reference
-nsIPresContext* gLastFocusedPresContext = 0; // Weak reference
+nsPresContext* gLastFocusedPresContext = 0; // Weak reference
 
 enum nsTextfieldSelectModel {
   eTextfieldSelect_unset = -1,
@@ -423,7 +423,7 @@ SetFrameExternalReference(nsIFrame* aFrame)
 }
 
 NS_IMETHODIMP
-nsEventStateManager::PreHandleEvent(nsIPresContext* aPresContext,
+nsEventStateManager::PreHandleEvent(nsPresContext* aPresContext,
                                     nsEvent *aEvent,
                                     nsIFrame* aTargetFrame,
                                     nsEventStatus* aStatus,
@@ -597,7 +597,7 @@ nsEventStateManager::PreHandleEvent(nsIPresContext* aPresContext,
               if (doc) {
                 nsIPresShell *shell = doc->GetShellAt(0);
                 if (shell) {
-                  nsCOMPtr<nsIPresContext> oldPresContext;
+                  nsCOMPtr<nsPresContext> oldPresContext;
                   shell->GetPresContext(getter_AddRefs(oldPresContext));
 
                   nsCOMPtr<nsIEventStateManager> esm;
@@ -731,7 +731,7 @@ nsEventStateManager::PreHandleEvent(nsIPresContext* aPresContext,
             if (doc) {
               nsIPresShell *shell = doc->GetShellAt(0);
               if (shell) {
-                nsCOMPtr<nsIPresContext> oldPresContext;
+                nsCOMPtr<nsPresContext> oldPresContext;
                 shell->GetPresContext(getter_AddRefs(oldPresContext));
 
                 nsCOMPtr<nsIEventStateManager> esm =
@@ -821,7 +821,7 @@ nsEventStateManager::PreHandleEvent(nsIPresContext* aPresContext,
           if (shell) {
             if (focusedElement) {
               nsCOMPtr<nsIContent> focusContent = do_QueryInterface(focusedElement);
-              nsCOMPtr<nsIPresContext> context;
+              nsCOMPtr<nsPresContext> context;
               shell->GetPresContext(getter_AddRefs(context));
               focusContent->SetFocus(context);
             }
@@ -886,7 +886,7 @@ nsEventStateManager::PreHandleEvent(nsIPresContext* aPresContext,
         if (gLastFocusedContent) {
           nsIPresShell *shell = gLastFocusedDocument->GetShellAt(0);
           if (shell) {
-            nsCOMPtr<nsIPresContext> oldPresContext;
+            nsCOMPtr<nsPresContext> oldPresContext;
             shell->GetPresContext(getter_AddRefs(oldPresContext));
 
             nsCOMPtr<nsIDOMElement> focusedElement;
@@ -965,7 +965,7 @@ nsEventStateManager::PreHandleEvent(nsIPresContext* aPresContext,
 // 0 -- childCount - 1 stands for the child docShell's offset
 // which bubbles up the access key handling
 void
-nsEventStateManager::HandleAccessKey(nsIPresContext* aPresContext,
+nsEventStateManager::HandleAccessKey(nsPresContext* aPresContext,
                                      nsKeyEvent *aEvent,
                                      nsEventStatus* aStatus,
                                      PRInt32 aChildOffset,
@@ -1076,7 +1076,7 @@ nsEventStateManager::HandleAccessKey(nsIPresContext* aPresContext,
 
       nsCOMPtr<nsIDocShellTreeItem> subShellItem;
       nsCOMPtr<nsIPresShell> subPS;
-      nsCOMPtr<nsIPresContext> subPC;
+      nsCOMPtr<nsPresContext> subPC;
 
       docShell->GetChildAt(counter, getter_AddRefs(subShellItem));
       nsCOMPtr<nsIDocShell> subDS = do_QueryInterface(subShellItem);
@@ -1121,7 +1121,7 @@ nsEventStateManager::HandleAccessKey(nsIPresContext* aPresContext,
       docShell->GetChildOffset(&myOffset);
 
       nsCOMPtr<nsIPresShell> parentPS;
-      nsCOMPtr<nsIPresContext> parentPC;
+      nsCOMPtr<nsPresContext> parentPC;
 
       parentDS->GetPresShell(getter_AddRefs(parentPS));
       NS_ASSERTION(parentPS, "Our PresShell exists but the parent's does not?");
@@ -1150,7 +1150,7 @@ nsEventStateManager::HandleAccessKey(nsIPresContext* aPresContext,
 // a drag.
 //
 void
-nsEventStateManager::CreateClickHoldTimer(nsIPresContext* inPresContext,
+nsEventStateManager::CreateClickHoldTimer(nsPresContext* inPresContext,
                                           nsGUIEvent* inMouseDownEvent)
 {
   // just to be anal (er, safe)
@@ -1363,7 +1363,7 @@ nsEventStateManager::FireContextClick()
 // want to cancel the drag gesture if the context-click event is handled.
 //
 void
-nsEventStateManager::BeginTrackingDragGesture(nsIPresContext* aPresContext,
+nsEventStateManager::BeginTrackingDragGesture(nsPresContext* aPresContext,
                                               nsGUIEvent* inDownEvent,
                                               nsIFrame* inDownFrame)
 {
@@ -1405,7 +1405,7 @@ nsEventStateManager::StopTrackingDragGesture()
 //
 void
 nsEventStateManager::GetSelection(nsIFrame* inFrame,
-                                  nsIPresContext* inPresContext,
+                                  nsPresContext* inPresContext,
                                   nsIFrameSelection** outSelection)
 {
   *outSelection = nsnull;
@@ -1448,7 +1448,7 @@ nsEventStateManager::GetSelection(nsIFrame* inFrame,
 // Do we need to do anything about this? Let's wait and see.
 //
 void
-nsEventStateManager::GenerateDragGesture(nsIPresContext* aPresContext,
+nsEventStateManager::GenerateDragGesture(nsPresContext* aPresContext,
                                          nsGUIEvent *aEvent)
 {
   NS_WARN_IF_FALSE(aPresContext, "This shouldn't happen.");
@@ -1574,7 +1574,7 @@ nsEventStateManager::ChangeTextSize(PRInt32 change)
 
   nsIPresShell *presShell = doc->GetShellAt(0);
   if(!presShell) return NS_ERROR_FAILURE;
-  nsCOMPtr<nsIPresContext> presContext;
+  nsCOMPtr<nsPresContext> presContext;
   presShell->GetPresContext(getter_AddRefs(presContext));
   if(!presContext) return NS_ERROR_FAILURE;
 
@@ -1633,7 +1633,7 @@ nsEventStateManager::DoScrollTextsize(nsIFrame *aTargetFrame,
 
 //
 nsresult
-nsEventStateManager::DoScrollText(nsIPresContext* aPresContext,
+nsEventStateManager::DoScrollText(nsPresContext* aPresContext,
                                   nsIFrame* aTargetFrame,
                                   nsInputEvent* aEvent,
                                   PRInt32 aNumLines,
@@ -1786,7 +1786,7 @@ nsEventStateManager::DoScrollText(nsIPresContext* aPresContext,
   if (passToParent) {
     nsresult rv;
     nsIFrame* newFrame = nsnull;
-    nsCOMPtr<nsIPresContext> newPresContext;
+    nsCOMPtr<nsPresContext> newPresContext;
 
     rv = GetParentScrollingView(aEvent, aPresContext, newFrame,
                                 *getter_AddRefs(newPresContext));
@@ -1802,9 +1802,9 @@ nsEventStateManager::DoScrollText(nsIPresContext* aPresContext,
 
 nsresult
 nsEventStateManager::GetParentScrollingView(nsInputEvent *aEvent,
-                                            nsIPresContext* aPresContext,
+                                            nsPresContext* aPresContext,
                                             nsIFrame* &targetOuterFrame,
-                                            nsIPresContext* &presCtxOuter)
+                                            nsPresContext* &presCtxOuter)
 {
   targetOuterFrame = nsnull;
 
@@ -1849,7 +1849,7 @@ nsEventStateManager::GetParentScrollingView(nsInputEvent *aEvent,
 }
 
 NS_IMETHODIMP
-nsEventStateManager::PostHandleEvent(nsIPresContext* aPresContext,
+nsEventStateManager::PostHandleEvent(nsPresContext* aPresContext,
                                      nsEvent *aEvent,
                                      nsIFrame* aTargetFrame,
                                      nsEventStatus* aStatus,
@@ -2284,7 +2284,7 @@ nsEventStateManager::PostHandleEvent(nsIPresContext* aPresContext,
 }
 
 NS_IMETHODIMP
-nsEventStateManager::SetPresContext(nsIPresContext* aPresContext)
+nsEventStateManager::SetPresContext(nsPresContext* aPresContext)
 {
   if (aPresContext == nsnull) {
     // A pres context is going away. Make sure we do cleanup.
@@ -2366,7 +2366,7 @@ nsEventStateManager::CheckDisabled(nsIContent* aContent)
 }
 
 void
-nsEventStateManager::UpdateCursor(nsIPresContext* aPresContext,
+nsEventStateManager::UpdateCursor(nsPresContext* aPresContext,
                                   nsEvent* aEvent, nsIFrame* aTargetFrame,
                                   nsEventStatus* aStatus)
 {
@@ -2532,7 +2532,7 @@ nsEventStateManager::AfterDispatchEvent()
 }
 
 void
-nsEventStateManager::DispatchMouseEvent(nsIPresContext* aPresContext,
+nsEventStateManager::DispatchMouseEvent(nsPresContext* aPresContext,
                                         nsGUIEvent* aEvent, PRUint32 aMessage,
                                         nsIContent* aTargetContent,
                                         nsIFrame*& aTargetFrame,
@@ -2577,7 +2577,7 @@ nsEventStateManager::DispatchMouseEvent(nsIPresContext* aPresContext,
 
 void
 nsEventStateManager::MaybeDispatchMouseEventToIframe(
-    nsIPresContext* aPresContext, nsGUIEvent* aEvent, PRUint32 aMessage)
+    nsPresContext* aPresContext, nsGUIEvent* aEvent, PRUint32 aMessage)
 {
   // Check to see if we're an IFRAME and if so dispatch the given event
   // (mouseover / mouseout) to the IFRAME element above us.  This will result
@@ -2614,7 +2614,7 @@ nsEventStateManager::MaybeDispatchMouseEventToIframe(
 
 
 void
-nsEventStateManager::GenerateMouseEnterExit(nsIPresContext* aPresContext,
+nsEventStateManager::GenerateMouseEnterExit(nsPresContext* aPresContext,
                                             nsGUIEvent* aEvent)
 {
   // Hold onto old target content through the event and reset after.
@@ -2731,7 +2731,7 @@ nsEventStateManager::GenerateMouseEnterExit(nsIPresContext* aPresContext,
 }
 
 void
-nsEventStateManager::GenerateDragDropEnterExit(nsIPresContext* aPresContext,
+nsEventStateManager::GenerateDragDropEnterExit(nsPresContext* aPresContext,
                                                nsGUIEvent* aEvent)
 {
   //Hold onto old target content through the event and reset after.
@@ -2863,7 +2863,7 @@ nsEventStateManager::GenerateDragDropEnterExit(nsIPresContext* aPresContext,
 }
 
 nsresult
-nsEventStateManager::SetClickCount(nsIPresContext* aPresContext,
+nsEventStateManager::SetClickCount(nsPresContext* aPresContext,
                                    nsMouseEvent *aEvent,
                                    nsEventStatus* aStatus)
 {
@@ -2921,7 +2921,7 @@ nsEventStateManager::SetClickCount(nsIPresContext* aPresContext,
 }
 
 nsresult
-nsEventStateManager::CheckForAndDispatchClick(nsIPresContext* aPresContext,
+nsEventStateManager::CheckForAndDispatchClick(nsPresContext* aPresContext,
                                               nsMouseEvent *aEvent,
                                               nsEventStatus* aStatus)
 {
@@ -3037,7 +3037,7 @@ PrintDocTree(nsIDocShellTreeNode * aParentNode, int aLevel)
   parentAsItem->GetItemType(&type);
   nsCOMPtr<nsIPresShell> presShell;
   parentAsDocShell->GetPresShell(getter_AddRefs(presShell));
-  nsCOMPtr<nsIPresContext> presContext;
+  nsCOMPtr<nsPresContext> presContext;
   parentAsDocShell->GetPresContext(getter_AddRefs(presContext));
   nsCOMPtr<nsIDocument> doc;
   presShell->GetDocument(getter_AddRefs(doc));
@@ -3332,7 +3332,7 @@ nsEventStateManager::ShiftFocusInternal(PRBool aForward, nsIContent* aStart)
 
           nsIContent *docContent = parent_doc->FindContentForSubDocument(mDocument);
 
-          nsCOMPtr<nsIPresContext> parentPC;
+          nsCOMPtr<nsPresContext> parentPC;
           parentShell->GetPresContext(getter_AddRefs(parentPC));
 
           nsIEventStateManager *parentESM = parentPC->EventStateManager();
@@ -3977,7 +3977,7 @@ nsEventStateManager::SetContentState(nsIContent *aContent, PRInt32 aState)
 }
 
 nsresult
-nsEventStateManager::SendFocusBlur(nsIPresContext* aPresContext,
+nsEventStateManager::SendFocusBlur(nsPresContext* aPresContext,
                                    nsIContent *aContent,
                                    PRBool aEnsureWindowHasFocus)
 {
@@ -4023,7 +4023,7 @@ nsEventStateManager::SendFocusBlur(nsIPresContext* aPresContext,
         if (shell) {
           kungFuDeathGrip = shell->GetViewManager();
 
-          nsCOMPtr<nsIPresContext> oldPresContext;
+          nsCOMPtr<nsPresContext> oldPresContext;
           shell->GetPresContext(getter_AddRefs(oldPresContext));
 
           //fire blur
@@ -4421,7 +4421,7 @@ nsEventStateManager::DispatchNewEvent(nsISupports* aTarget, nsIDOMEvent* aEvent,
 }
 
 void
-nsEventStateManager::EnsureDocument(nsIPresContext* aPresContext)
+nsEventStateManager::EnsureDocument(nsPresContext* aPresContext)
 {
   if (!mDocument)
     EnsureDocument(aPresContext->PresShell());
@@ -4435,7 +4435,7 @@ nsEventStateManager::EnsureDocument(nsIPresShell* aPresShell)
 }
 
 void
-nsEventStateManager::FlushPendingEvents(nsIPresContext* aPresContext)
+nsEventStateManager::FlushPendingEvents(nsPresContext* aPresContext)
 {
   NS_PRECONDITION(nsnull != aPresContext, "nsnull ptr");
   nsIPresShell *shell = aPresContext->GetPresShell();
@@ -5068,7 +5068,7 @@ nsEventStateManager::TabIntoDocument(nsIDocShell* aDocShell,
   else {
     aDocShell->SetHasFocus(PR_FALSE);
 
-    nsCOMPtr<nsIPresContext> pc;
+    nsCOMPtr<nsPresContext> pc;
     aDocShell->GetPresContext(getter_AddRefs(pc));
     if (pc) {
       nsIEventStateManager *docESM = pc->EventStateManager();

@@ -76,27 +76,27 @@ public:
   nsTextControlFrame(nsIPresShell* aShell);
   virtual ~nsTextControlFrame();
 
-  virtual void RemovedAsPrimaryFrame(nsIPresContext* aPresContext); 
+  virtual void RemovedAsPrimaryFrame(nsPresContext* aPresContext); 
 
-  NS_IMETHOD Destroy(nsIPresContext* aPresContext);
+  NS_IMETHOD Destroy(nsPresContext* aPresContext);
 
-  NS_IMETHOD Reflow(nsIPresContext*          aPresContext,
+  NS_IMETHOD Reflow(nsPresContext*          aPresContext,
                     nsHTMLReflowMetrics&     aDesiredSize,
                     const nsHTMLReflowState& aReflowState,
                     nsReflowStatus&          aStatus);
 
-  NS_IMETHOD  Paint(nsIPresContext*      aPresContext,
+  NS_IMETHOD  Paint(nsPresContext*      aPresContext,
                     nsIRenderingContext& aRenderingContext,
                     const nsRect&        aDirtyRect,
                     nsFramePaintLayer    aWhichLayer,
                     PRUint32             aFlags = 0);
 
-  NS_IMETHOD GetFrameForPoint(nsIPresContext* aPresContext,
+  NS_IMETHOD GetFrameForPoint(nsPresContext* aPresContext,
                               const nsPoint& aPoint,
                               nsFramePaintLayer aWhichLayer,
                               nsIFrame** aFrame);
 
-  NS_IMETHOD HandleEvent(nsIPresContext* aPresContext,
+  NS_IMETHOD HandleEvent(nsPresContext* aPresContext,
                          nsGUIEvent* aEvent,
                          nsEventStatus* aEventStatus);
 
@@ -117,16 +117,16 @@ public:
 #endif
 
   // from nsIAnonymousContentCreator
-  NS_IMETHOD CreateAnonymousContent(nsIPresContext* aPresContext,
+  NS_IMETHOD CreateAnonymousContent(nsPresContext* aPresContext,
                                     nsISupportsArray& aChildList);
-  NS_IMETHOD CreateFrameFor(nsIPresContext*   aPresContext,
+  NS_IMETHOD CreateFrameFor(nsPresContext*   aPresContext,
                                nsIContent *      aContent,
                                nsIFrame**        aFrame);
   virtual void PostCreateFrames();
 
   // Utility methods to set current widget state
   void SetValue(const nsAString& aValue);
-  NS_IMETHOD SetInitialChildList(nsIPresContext* aPresContext,
+  NS_IMETHOD SetInitialChildList(nsPresContext* aPresContext,
                                   nsIAtom*        aListName,
                                   nsIFrame*       aChildList);
 
@@ -134,18 +134,18 @@ public:
   NS_IMETHOD_(PRInt32) GetFormControlType() const; //*
   NS_IMETHOD GetName(nsAString* aName);//*
   virtual void SetFocus(PRBool aOn , PRBool aRepaint); 
-  virtual void ScrollIntoView(nsIPresContext* aPresContext);
-  virtual void MouseClicked(nsIPresContext* aPresContext);
-  virtual nscoord GetVerticalInsidePadding(nsIPresContext* aPresContext,
+  virtual void ScrollIntoView(nsPresContext* aPresContext);
+  virtual void MouseClicked(nsPresContext* aPresContext);
+  virtual nscoord GetVerticalInsidePadding(nsPresContext* aPresContext,
                                            float aPixToTwip,
                                            nscoord aInnerHeight) const;
-  virtual nscoord GetHorizontalInsidePadding(nsIPresContext* aPresContext,
+  virtual nscoord GetHorizontalInsidePadding(nsPresContext* aPresContext,
                                              float aPixToTwip, 
                                              nscoord aInnerWidth,
                                              nscoord aCharWidth) const;/**/
   NS_IMETHOD SetSuggestedSize(nscoord aWidth, nscoord aHeight);
   NS_IMETHOD GetFormContent(nsIContent*& aContent) const;
-  NS_IMETHOD SetProperty(nsIPresContext* aPresContext, nsIAtom* aName, const nsAString& aValue);
+  NS_IMETHOD SetProperty(nsPresContext* aPresContext, nsIAtom* aName, const nsAString& aValue);
   NS_IMETHOD GetProperty(nsIAtom* aName, nsAString& aValue); 
   NS_IMETHOD OnContentReset();
 
@@ -173,7 +173,7 @@ public:
   virtual nsIAtom* GetType() const;
 
   /** handler for attribute changes to mContent */
-  NS_IMETHOD AttributeChanged(nsIPresContext* aPresContext,
+  NS_IMETHOD AttributeChanged(nsPresContext* aPresContext,
                               nsIContent*     aChild,
                               PRInt32         aNameSpaceID,
                               nsIAtom*        aAttribute,
@@ -247,7 +247,7 @@ protected:
    * We call this when we are being destroyed or removed from the PFM.
    * @param aPresContext the current pres context
    */
-  void PreDestroy(nsIPresContext* aPresContext);
+  void PreDestroy(nsPresContext* aPresContext);
   /**
    * Fire the onChange event.
    */
@@ -267,12 +267,12 @@ protected:
    */
   PRInt32 GetRows();
 
-  nsresult ReflowStandard(nsIPresContext*          aPresContext,
+  nsresult ReflowStandard(nsPresContext*          aPresContext,
                           nsSize&                  aDesiredSize,
                           const nsHTMLReflowState& aReflowState,
                           nsReflowStatus&          aStatus);
 
-  nsresult CalculateSizeStandard(nsIPresContext*       aPresContext,
+  nsresult CalculateSizeStandard(nsPresContext*       aPresContext,
                                  nsIRenderingContext*  aRendContext,
                                  nsSize&               aDesiredSize,
                                  nsSize&               aMinSize);
@@ -280,7 +280,7 @@ protected:
   PRInt32 GetWidthInCharacters() const;
 
   // nsIScrollableViewProvider
-  NS_IMETHOD GetScrollableView(nsIPresContext* aPresContext, nsIScrollableView** aView);
+  NS_IMETHOD GetScrollableView(nsPresContext* aPresContext, nsIScrollableView** aView);
 
 private:
   //helper methods

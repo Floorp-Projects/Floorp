@@ -44,7 +44,7 @@
 
 #include "nsDeckFrame.h"
 #include "nsStyleContext.h"
-#include "nsIPresContext.h"
+#include "nsPresContext.h"
 #include "nsIContent.h"
 #include "nsCOMPtr.h"
 #include "nsUnitConversion.h"
@@ -100,7 +100,7 @@ nsDeckFrame::ChildrenMustHaveWidgets(PRBool& aMust)
 }
 
 NS_IMETHODIMP
-nsDeckFrame::AttributeChanged(nsIPresContext* aPresContext,
+nsDeckFrame::AttributeChanged(nsPresContext* aPresContext,
                               nsIContent*     aChild,
                               PRInt32         aNameSpaceID,
                               nsIAtom*        aAttribute,
@@ -120,7 +120,7 @@ nsDeckFrame::AttributeChanged(nsIPresContext* aPresContext,
 }
 
 NS_IMETHODIMP
-nsDeckFrame::Init(nsIPresContext* aPresContext,
+nsDeckFrame::Init(nsPresContext* aPresContext,
                   nsIContent*     aContent,
                   nsIFrame*       aParent,
                   nsStyleContext* aStyleContext,
@@ -136,7 +136,7 @@ nsDeckFrame::Init(nsIPresContext* aPresContext,
 }
 
 void
-nsDeckFrame::HideBox(nsIPresContext* aPresContext, nsIBox* aBox)
+nsDeckFrame::HideBox(nsPresContext* aPresContext, nsIBox* aBox)
 {
   nsIFrame* frame = nsnull;
   aBox->GetFrame(&frame);
@@ -151,7 +151,7 @@ nsDeckFrame::HideBox(nsIPresContext* aPresContext, nsIBox* aBox)
 }
 
 void
-nsDeckFrame::ShowBox(nsIPresContext* aPresContext, nsIBox* aBox)
+nsDeckFrame::ShowBox(nsPresContext* aPresContext, nsIBox* aBox)
 {
   nsIFrame* frame = nsnull;
   aBox->GetFrame(&frame);
@@ -167,7 +167,7 @@ nsDeckFrame::ShowBox(nsIPresContext* aPresContext, nsIBox* aBox)
 }
 
 void
-nsDeckFrame::IndexChanged(nsIPresContext* aPresContext)
+nsDeckFrame::IndexChanged(nsPresContext* aPresContext)
 {
   //did the index change?
   PRInt32 index = GetSelectedIndex();
@@ -222,7 +222,7 @@ nsDeckFrame::GetSelectedBox()
 
 
 NS_IMETHODIMP
-nsDeckFrame::Paint(nsIPresContext*      aPresContext,
+nsDeckFrame::Paint(nsPresContext*      aPresContext,
                    nsIRenderingContext& aRenderingContext,
                    const nsRect&        aDirtyRect,
                    nsFramePaintLayer    aWhichLayer,
@@ -253,7 +253,7 @@ nsDeckFrame::Paint(nsIPresContext*      aPresContext,
 
 
 NS_IMETHODIMP
-nsDeckFrame::GetFrameForPoint(nsIPresContext*   aPresContext,
+nsDeckFrame::GetFrameForPoint(nsPresContext*   aPresContext,
                               const nsPoint&    aPoint, 
                               nsFramePaintLayer aWhichLayer,    
                               nsIFrame**        aFrame)

@@ -68,7 +68,7 @@ public:
 
   NS_IMETHOD ThemeChanged();
 
-  NS_IMETHOD_(PRBool) ThemeSupportsWidget(nsIPresContext* aPresContext,
+  NS_IMETHOD_(PRBool) ThemeSupportsWidget(nsPresContext* aPresContext,
                                           nsIFrame* aFrame,
                                           PRUint8 aWidgetType);
 

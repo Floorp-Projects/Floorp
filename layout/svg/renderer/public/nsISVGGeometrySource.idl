@@ -45,7 +45,7 @@
 native nscolor(nscolor);
 
 interface nsIDOMSVGMatrix;
-interface nsIPresContext;
+interface nsPresContext;
 
 /**
  * \addtogroup rendering_backend_interfaces Rendering Backend Interfaces
@@ -80,7 +80,7 @@ interface nsISVGGeometrySource : nsISupports
    * @name Presentation context
    * @{
    */
-  [noscript] readonly attribute nsIPresContext presContext;
+  [noscript] readonly attribute nsPresContext presContext;
   const unsigned long UPDATEMASK_PRES_CONTEXT      = 0x00000001;
   /** @} */
   

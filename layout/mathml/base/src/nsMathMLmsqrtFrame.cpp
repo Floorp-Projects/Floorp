@@ -41,7 +41,7 @@
 
 #include "nsCOMPtr.h"
 #include "nsFrame.h"
-#include "nsIPresContext.h"
+#include "nsPresContext.h"
 #include "nsUnitConversion.h"
 #include "nsStyleContext.h"
 #include "nsStyleConsts.h"
@@ -94,7 +94,7 @@ nsMathMLmsqrtFrame::~nsMathMLmsqrtFrame()
 }
 
 NS_IMETHODIMP
-nsMathMLmsqrtFrame::Init(nsIPresContext*  aPresContext,
+nsMathMLmsqrtFrame::Init(nsPresContext*  aPresContext,
                          nsIContent*      aContent,
                          nsIFrame*        aParent,
                          nsStyleContext*  aContext,
@@ -114,7 +114,7 @@ nsMathMLmsqrtFrame::Init(nsIPresContext*  aPresContext,
 }
 
 NS_IMETHODIMP
-nsMathMLmsqrtFrame::InheritAutomaticData(nsIPresContext* aPresContext,
+nsMathMLmsqrtFrame::InheritAutomaticData(nsPresContext* aPresContext,
                                          nsIFrame*       aParent) 
 {
   // let the base class get the default from our parent
@@ -126,7 +126,7 @@ nsMathMLmsqrtFrame::InheritAutomaticData(nsIPresContext* aPresContext,
 }
 
 NS_IMETHODIMP
-nsMathMLmsqrtFrame::TransmitAutomaticData(nsIPresContext* aPresContext)
+nsMathMLmsqrtFrame::TransmitAutomaticData(nsPresContext* aPresContext)
 {
   // 1. The REC says:
   //    The <msqrt> element leaves both attributes [displaystyle and scriptlevel]
@@ -140,7 +140,7 @@ nsMathMLmsqrtFrame::TransmitAutomaticData(nsIPresContext* aPresContext)
 }
 
 NS_IMETHODIMP
-nsMathMLmsqrtFrame::Paint(nsIPresContext*      aPresContext,
+nsMathMLmsqrtFrame::Paint(nsPresContext*      aPresContext,
                           nsIRenderingContext& aRenderingContext,
                           const nsRect&        aDirtyRect,
                           nsFramePaintLayer    aWhichLayer,
@@ -186,7 +186,7 @@ nsMathMLmsqrtFrame::Paint(nsIPresContext*      aPresContext,
 }
 
 NS_IMETHODIMP
-nsMathMLmsqrtFrame::Reflow(nsIPresContext*          aPresContext,
+nsMathMLmsqrtFrame::Reflow(nsPresContext*          aPresContext,
                            nsHTMLReflowMetrics&     aDesiredSize,
                            const nsHTMLReflowState& aReflowState,
                            nsReflowStatus&          aStatus)

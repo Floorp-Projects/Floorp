@@ -49,7 +49,7 @@ public:
   NS_IMETHOD GetBorderAndPadding(nsMargin& aBorderAndPadding);
 
                                
-  NS_METHOD Paint(nsIPresContext*      aPresContext,
+  NS_METHOD Paint(nsPresContext*      aPresContext,
                   nsIRenderingContext& aRenderingContext,
                   const nsRect&        aDirtyRect,
                   nsFramePaintLayer    aWhichLayer,
@@ -69,7 +69,7 @@ public:
   virtual PRBool GetInitialVAlignment(Valignment& aValign)  { aValign = vAlign_Top; return PR_TRUE; } 
   virtual PRBool GetInitialAutoStretch(PRBool& aStretch)    { aStretch = PR_TRUE; return PR_TRUE; } 
 
-  nsIBox* GetCaptionBox(nsIPresContext* aPresContext, nsRect& aCaptionRect);
+  nsIBox* GetCaptionBox(nsPresContext* aPresContext, nsRect& aCaptionRect);
 };
 
 /*
@@ -114,7 +114,7 @@ nsGroupBoxFrame::nsGroupBoxFrame(nsIPresShell* aShell):nsBoxFrame(aShell)
 
 // this is identical to nsHTMLContainerFrame::Paint except for the background and border. 
 NS_IMETHODIMP
-nsGroupBoxFrame::Paint(nsIPresContext*      aPresContext,
+nsGroupBoxFrame::Paint(nsPresContext*      aPresContext,
                         nsIRenderingContext& aRenderingContext,
                         const nsRect&        aDirtyRect,
                         nsFramePaintLayer    aWhichLayer,
@@ -231,7 +231,7 @@ nsGroupBoxFrame::Paint(nsIPresContext*      aPresContext,
 }
 
 nsIBox*
-nsGroupBoxFrame::GetCaptionBox(nsIPresContext* aPresContext, nsRect& aCaptionRect)
+nsGroupBoxFrame::GetCaptionBox(nsPresContext* aPresContext, nsRect& aCaptionRect)
 {
     // first child is our grouped area
     nsIBox* box;

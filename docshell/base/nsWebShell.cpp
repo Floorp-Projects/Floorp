@@ -59,7 +59,7 @@
 #include "nsIScriptGlobalObject.h"
 #include "nsIScriptGlobalObjectOwner.h"
 #include "nsIDOMEvent.h"
-#include "nsIPresContext.h"
+#include "nsPresContext.h"
 #include "nsIComponentManager.h"
 #include "nsIEventQueueService.h"
 #include "nsCRT.h"

@@ -76,7 +76,7 @@
 #include "nsIContentViewer.h"
 #include "nsIContentViewerFile.h"
 #include "nsIPresShell.h"
-#include "nsIPresContext.h"
+#include "nsPresContext.h"
 #include "nsIDocument.h"
 #include "nsILayoutDebugger.h"
 #include "nsThrobber.h"
@@ -479,7 +479,7 @@ GetPresShellFor(nsIDocShell* aDocShell)
       nsIDocumentViewer* docv = nsnull;
       cv->QueryInterface(kIDocumentViewerIID, (void**) &docv);
       if (nsnull != docv) {
-        nsCOMPtr<nsIPresContext> cx;
+        nsCOMPtr<nsPresContext> cx;
         docv->GetPresContext(getter_AddRefs(cx));
         if (nsnull != cx) {
           NS_IF_ADDREF(shell = cx->GetPresShell());
@@ -1402,7 +1402,7 @@ nsBrowserWindow::Init(nsIAppShell* aAppShell,
                       PRUint32 aChromeMask,
                       PRBool aAllowPlugins,
                       nsIDocumentViewer* aDocumentViewer,
-                      nsIPresContext* aPresContext)
+                      nsPresContext* aPresContext)
 {
   mChromeMask = aChromeMask;
   mAppShell = aAppShell;
@@ -2437,7 +2437,7 @@ DumpFramesRecurse(nsIDocShell* aDocShell, FILE* out, nsString *aFilterName)
       nsIFrame* root;
       shell->GetRootFrame(&root);
       if (nsnull != root) {
-        nsIPresContext* presContext;
+        nsPresContext* presContext;
         shell->GetPresContext(&presContext);
 
         nsIFrameDebug* fdbg;

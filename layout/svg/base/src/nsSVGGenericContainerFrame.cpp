@@ -38,7 +38,7 @@
 
 #include "nsContainerFrame.h"
 #include "nsIDOMSVGGElement.h"
-#include "nsIPresContext.h"
+#include "nsPresContext.h"
 #include "nsISVGChildFrame.h"
 #include "nsISVGContainerFrame.h"
 #include "nsISVGRendererCanvas.h"
@@ -71,31 +71,31 @@ private:
 public:
   // nsIFrame:
   
-  NS_IMETHOD  AppendFrames(nsIPresContext* aPresContext,
+  NS_IMETHOD  AppendFrames(nsPresContext* aPresContext,
                            nsIPresShell&   aPresShell,
                            nsIAtom*        aListName,
                            nsIFrame*       aFrameList);
-  NS_IMETHOD  InsertFrames(nsIPresContext* aPresContext,
+  NS_IMETHOD  InsertFrames(nsPresContext* aPresContext,
                            nsIPresShell&   aPresShell,
                            nsIAtom*        aListName,
                            nsIFrame*       aPrevFrame,
                            nsIFrame*       aFrameList);
-  NS_IMETHOD  RemoveFrame(nsIPresContext* aPresContext,
+  NS_IMETHOD  RemoveFrame(nsPresContext* aPresContext,
                           nsIPresShell&   aPresShell,
                           nsIAtom*        aListName,
                           nsIFrame*       aOldFrame);
-  NS_IMETHOD  ReplaceFrame(nsIPresContext* aPresContext,
+  NS_IMETHOD  ReplaceFrame(nsPresContext* aPresContext,
                            nsIPresShell&   aPresShell,
                            nsIAtom*        aListName,
                            nsIFrame*       aOldFrame,
                            nsIFrame*       aNewFrame);
-  NS_IMETHOD Init(nsIPresContext*  aPresContext,
+  NS_IMETHOD Init(nsPresContext*  aPresContext,
                   nsIContent*      aContent,
                   nsIFrame*        aParent,
                   nsStyleContext*  aContext,
                   nsIFrame*        aPrevInFlow);
 
-  NS_IMETHOD  AttributeChanged(nsIPresContext* aPresContext,
+  NS_IMETHOD  AttributeChanged(nsPresContext* aPresContext,
                                nsIContent*     aChild,
                                PRInt32         aNameSpaceID,
                                nsIAtom*        aAttribute,
@@ -172,7 +172,7 @@ NS_INTERFACE_MAP_END_INHERITING(nsSVGGenericContainerFrameBase)
 //----------------------------------------------------------------------
 // nsIFrame methods
 NS_IMETHODIMP
-nsSVGGenericContainerFrame::Init(nsIPresContext*  aPresContext,
+nsSVGGenericContainerFrame::Init(nsPresContext*  aPresContext,
                   nsIContent*      aContent,
                   nsIFrame*        aParent,
                   nsStyleContext*  aContext,
@@ -189,7 +189,7 @@ nsSVGGenericContainerFrame::Init(nsIPresContext*  aPresContext,
 
 
 NS_IMETHODIMP
-nsSVGGenericContainerFrame::AppendFrames(nsIPresContext* aPresContext,
+nsSVGGenericContainerFrame::AppendFrames(nsPresContext* aPresContext,
                                          nsIPresShell&   aPresShell,
                                          nsIAtom*        aListName,
                                          nsIFrame*       aFrameList)
@@ -200,7 +200,7 @@ nsSVGGenericContainerFrame::AppendFrames(nsIPresContext* aPresContext,
 }
 
 NS_IMETHODIMP
-nsSVGGenericContainerFrame::InsertFrames(nsIPresContext* aPresContext,
+nsSVGGenericContainerFrame::InsertFrames(nsPresContext* aPresContext,
                       nsIPresShell&   aPresShell,
                       nsIAtom*        aListName,
                       nsIFrame*       aPrevFrame,
@@ -232,7 +232,7 @@ nsSVGGenericContainerFrame::InsertFrames(nsIPresContext* aPresContext,
 }
 
 NS_IMETHODIMP
-nsSVGGenericContainerFrame::RemoveFrame(nsIPresContext* aPresContext,
+nsSVGGenericContainerFrame::RemoveFrame(nsPresContext* aPresContext,
                      nsIPresShell&   aPresShell,
                      nsIAtom*        aListName,
                      nsIFrame*       aOldFrame)
@@ -257,7 +257,7 @@ nsSVGGenericContainerFrame::RemoveFrame(nsIPresContext* aPresContext,
 }
 
 NS_IMETHODIMP
-nsSVGGenericContainerFrame::ReplaceFrame(nsIPresContext* aPresContext,
+nsSVGGenericContainerFrame::ReplaceFrame(nsPresContext* aPresContext,
                       nsIPresShell&   aPresShell,
                       nsIAtom*        aListName,
                       nsIFrame*       aOldFrame,
@@ -268,7 +268,7 @@ nsSVGGenericContainerFrame::ReplaceFrame(nsIPresContext* aPresContext,
 }
 
 NS_IMETHODIMP
-nsSVGGenericContainerFrame::AttributeChanged(nsIPresContext* aPresContext,
+nsSVGGenericContainerFrame::AttributeChanged(nsPresContext* aPresContext,
                                              nsIContent*     aChild,
                                              PRInt32         aNameSpaceID,
                                              nsIAtom*        aAttribute,

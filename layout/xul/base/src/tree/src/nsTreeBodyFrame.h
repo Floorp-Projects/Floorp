@@ -85,21 +85,21 @@ public:
   NS_IMETHOD VisibilityChanged(nsISupports* aScrollbar, PRBool aVisible) { Invalidate(); return NS_OK; };
 
   // Overridden from nsIFrame to cache our pres context.
-  NS_IMETHOD Init(nsIPresContext* aPresContext, nsIContent* aContent,
+  NS_IMETHOD Init(nsPresContext* aPresContext, nsIContent* aContent,
                   nsIFrame* aParent, nsStyleContext* aContext, nsIFrame* aPrevInFlow);
-  NS_IMETHOD Destroy(nsIPresContext* aPresContext);
-  NS_IMETHOD GetCursor(nsIPresContext* aPresContext,
+  NS_IMETHOD Destroy(nsPresContext* aPresContext);
+  NS_IMETHOD GetCursor(nsPresContext* aPresContext,
                        nsPoint& aPoint,
                        PRInt32& aCursor);
 
-  NS_IMETHOD HandleEvent(nsIPresContext* aPresContext,
+  NS_IMETHOD HandleEvent(nsPresContext* aPresContext,
                          nsGUIEvent* aEvent,
                          nsEventStatus* aEventStatus);
 
   // Painting methods.
   // Paint is the generic nsIFrame paint method.  We override this method
   // to paint our contents (our rows and cells).
-  NS_IMETHOD Paint(nsIPresContext*      aPresContext,
+  NS_IMETHOD Paint(nsPresContext*      aPresContext,
                    nsIRenderingContext& aRenderingContext,
                    const nsRect&        aDirtyRect,
                    nsFramePaintLayer    aWhichLayer,
@@ -108,21 +108,21 @@ public:
   // This method paints a specific column background of the tree.
   void PaintColumn(nsTreeColumn*        aColumn,
                    const nsRect&        aColumnRect,
-                   nsIPresContext*      aPresContext,
+                   nsPresContext*      aPresContext,
                    nsIRenderingContext& aRenderingContext,
                    const nsRect&        aDirtyRect);
 
   // This method paints a single row in the tree.
   void PaintRow(PRInt32              aRowIndex,
                 const nsRect&        aRowRect,
-                nsIPresContext*      aPresContext,
+                nsPresContext*      aPresContext,
                 nsIRenderingContext& aRenderingContext,
                 const nsRect&        aDirtyRect);
 
   // This method paints a single separator in the tree.
   void PaintSeparator(PRInt32              aRowIndex,
                       const nsRect&        aSeparatorRect,
-                      nsIPresContext*      aPresContext,
+                      nsPresContext*      aPresContext,
                       nsIRenderingContext& aRenderingContext,
                       const nsRect&        aDirtyRect);
 
@@ -130,7 +130,7 @@ public:
   void PaintCell(PRInt32              aRowIndex, 
                  nsTreeColumn*        aColumn,
                  const nsRect&        aCellRect,
-                 nsIPresContext*      aPresContext,
+                 nsPresContext*      aPresContext,
                  nsIRenderingContext& aRenderingContext,
                  const nsRect&        aDirtyRect,
                  nscoord&             aCurrX);
@@ -139,7 +139,7 @@ public:
   void PaintTwisty(PRInt32              aRowIndex,
                    nsTreeColumn*        aColumn,
                    const nsRect&        aTwistyRect,
-                   nsIPresContext*      aPresContext,
+                   nsPresContext*      aPresContext,
                    nsIRenderingContext& aRenderingContext,
                    const nsRect&        aDirtyRect,
                    nscoord&             aRemainingWidth,
@@ -149,7 +149,7 @@ public:
   void PaintImage(PRInt32              aRowIndex,
                   nsTreeColumn*        aColumn,
                   const nsRect&        aImageRect,
-                  nsIPresContext*      aPresContext,
+                  nsPresContext*      aPresContext,
                   nsIRenderingContext& aRenderingContext,
                   const nsRect&        aDirtyRect,
                   nscoord&             aRemainingWidth,
@@ -159,7 +159,7 @@ public:
   void PaintText(PRInt32              aRowIndex, 
                  nsTreeColumn*        aColumn,
                  const nsRect&        aTextRect,
-                 nsIPresContext*      aPresContext,
+                 nsPresContext*      aPresContext,
                  nsIRenderingContext& aRenderingContext,
                  const nsRect&        aDirtyRect,
                  nscoord&             aCurrX);
@@ -168,7 +168,7 @@ public:
   void PaintCheckbox(PRInt32              aRowIndex, 
                      nsTreeColumn*        aColumn,
                      const nsRect&        aCheckboxRect,
-                     nsIPresContext*      aPresContext,
+                     nsPresContext*      aPresContext,
                      nsIRenderingContext& aRenderingContext,
                      const nsRect&        aDirtyRect);
 
@@ -176,20 +176,20 @@ public:
   void PaintProgressMeter(PRInt32              aRowIndex, 
                           nsTreeColumn*        aColumn,
                           const nsRect&        aProgressMeterRect,
-                          nsIPresContext*      aPresContext,
+                          nsPresContext*      aPresContext,
                           nsIRenderingContext& aRenderingContext,
                           const nsRect&        aDirtyRect);
 
   // This method paints a drop feedback of the tree.
   void PaintDropFeedback(const nsRect&        aDropFeedbackRect, 
-                         nsIPresContext*      aPresContext,
+                         nsPresContext*      aPresContext,
                          nsIRenderingContext& aRenderingContext,
                          const nsRect&        aDirtyRect);
 
   // This method is called with a specific style context and rect to
   // paint the background rect as if it were a full-blown frame.
   void PaintBackgroundLayer(nsStyleContext*      aStyleContext,
-                            nsIPresContext*      aPresContext, 
+                            nsPresContext*      aPresContext, 
                             nsIRenderingContext& aRenderingContext, 
                             const nsRect&        aRect,
                             const nsRect&        aDirtyRect);
@@ -308,7 +308,7 @@ protected:
 
 protected: // Data Members
   // Our cached pres context.
-  nsIPresContext* mPresContext;
+  nsPresContext* mPresContext;
 
   // The cached box object parent.
   nsCOMPtr<nsITreeBoxObject> mTreeBoxObject;

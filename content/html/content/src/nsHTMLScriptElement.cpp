@@ -40,7 +40,7 @@
 #include "nsGenericHTMLElement.h"
 #include "nsHTMLAtoms.h"
 #include "nsStyleConsts.h"
-#include "nsIPresContext.h"
+#include "nsPresContext.h"
 #include "nsITextContent.h"
 #include "nsIDocument.h"
 #include "nsIScriptLoader.h"
@@ -551,7 +551,7 @@ nsHTMLScriptElement::ScriptAvailable(nsresult aResult,
                                      const nsAString& aScript)
 {
   if (!aIsInline && NS_FAILED(aResult)) {
-    nsCOMPtr<nsIPresContext> presContext;
+    nsCOMPtr<nsPresContext> presContext;
     GetPresContext(this, getter_AddRefs(presContext));
 
     nsEventStatus status = nsEventStatus_eIgnore;
@@ -587,7 +587,7 @@ nsHTMLScriptElement::ScriptEvaluated(nsresult aResult,
 {
   nsresult rv = NS_OK;
   if (!aIsInline) {
-    nsCOMPtr<nsIPresContext> presContext;
+    nsCOMPtr<nsPresContext> presContext;
     GetPresContext(this, getter_AddRefs(presContext));
 
     nsEventStatus status = nsEventStatus_eIgnore;

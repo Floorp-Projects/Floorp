@@ -88,7 +88,7 @@ public:
 
   NS_DECL_ISUPPORTS
   
-  NS_IMETHOD Init(nsIPresContext*  aPresContext,
+  NS_IMETHOD Init(nsPresContext*  aPresContext,
                   nsIContent*      aContent,
                   nsIFrame*        aParent,
                   nsStyleContext*  aContext,
@@ -101,7 +101,7 @@ public:
 #endif
 
   // Used to destroy our popup frames.
-  NS_IMETHOD Destroy(nsIPresContext* aPresContext);
+  NS_IMETHOD Destroy(nsPresContext* aPresContext);
 
   // Reflow methods
   virtual void RepositionPopup(nsPopupFrameList* aEntry, nsBoxLayoutState& aState);
@@ -147,7 +147,7 @@ protected:
 
   nsPopupFrameList* mPopupList;
   
-  nsIPresContext* mPresContext; // Our pres context.
+  nsPresContext* mPresContext; // Our pres context.
 
 private:
   nsCSSFrameConstructor* mFrameConstructor;

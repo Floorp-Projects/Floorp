@@ -41,7 +41,7 @@
 #include "nsMutationEvent.h"
 #include "nsContentUtils.h"
 
-class nsIPresContext;
+class nsPresContext;
 
 class nsDOMMutationEvent : public nsDOMEvent, public nsIDOMMutationEvent
 {
@@ -50,13 +50,13 @@ class nsDOMMutationEvent : public nsDOMEvent, public nsIDOMMutationEvent
   
   NS_DECL_ISUPPORTS_INHERITED
 
-  nsDOMMutationEvent(nsIPresContext* aPresContext, 
+  nsDOMMutationEvent(nsPresContext* aPresContext, 
                      nsEvent* aEvent);
 
   ~nsDOMMutationEvent();
 };
 
-nsDOMMutationEvent::nsDOMMutationEvent(nsIPresContext* aPresContext,
+nsDOMMutationEvent::nsDOMMutationEvent(nsPresContext* aPresContext,
                                        nsEvent* aEvent)
   :nsDOMEvent(aPresContext, aEvent, NS_LITERAL_STRING("MutationEvents")) 
 {  
@@ -170,7 +170,7 @@ nsDOMMutationEvent::InitMutationEvent(const nsAString& aTypeArg, PRBool aCanBubb
 }
 
 nsresult NS_NewDOMMutationEvent(nsIDOMEvent** aInstancePtrResult,
-                                nsIPresContext* aPresContext,
+                                nsPresContext* aPresContext,
                                 nsEvent *aEvent) 
 {
   nsDOMMutationEvent* it = new nsDOMMutationEvent(aPresContext, aEvent);

@@ -48,7 +48,7 @@
 #include "nsILink.h"
 #include "nsHTMLAtoms.h"
 #include "nsStyleConsts.h"
-#include "nsIPresContext.h"
+#include "nsPresContext.h"
 #include "nsIEventStateManager.h"
 #include "nsIURL.h"
 #include "nsIEventStateManager.h"
@@ -101,10 +101,10 @@ public:
 
   virtual void SetDocument(nsIDocument* aDocument, PRBool aDeep,
                            PRBool aCompileEventHandlers);
-  virtual void SetFocus(nsIPresContext* aPresContext);
+  virtual void SetFocus(nsPresContext* aPresContext);
   virtual PRBool IsFocusable(PRBool *aTabIndex = nsnull);
 
-  virtual nsresult HandleDOMEvent(nsIPresContext* aPresContext,
+  virtual nsresult HandleDOMEvent(nsPresContext* aPresContext,
                                   nsEvent* aEvent, nsIDOMEvent** aDOMEvent,
                                   PRUint32 aFlags,
                                   nsEventStatus* aEventStatus);
@@ -205,7 +205,7 @@ nsHTMLAnchorElement::Focus()
 }
 
 void
-nsHTMLAnchorElement::SetFocus(nsIPresContext* aPresContext)
+nsHTMLAnchorElement::SetFocus(nsPresContext* aPresContext)
 {
   if (!aPresContext) {
     return;
@@ -262,7 +262,7 @@ nsHTMLAnchorElement::IsFocusable(PRInt32 *aTabIndex)
 }
 
 nsresult
-nsHTMLAnchorElement::HandleDOMEvent(nsIPresContext* aPresContext,
+nsHTMLAnchorElement::HandleDOMEvent(nsPresContext* aPresContext,
                                     nsEvent* aEvent,
                                     nsIDOMEvent** aDOMEvent,
                                     PRUint32 aFlags,

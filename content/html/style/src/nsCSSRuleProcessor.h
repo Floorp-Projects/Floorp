@@ -82,7 +82,7 @@ public:
                                         nsReStyleHint* aResult);
 
 protected:
-  RuleCascadeData* GetRuleCascade(nsIPresContext* aPresContext, nsIAtom* aMedium);
+  RuleCascadeData* GetRuleCascade(nsPresContext* aPresContext, nsIAtom* aMedium);
 
   nsCOMArray<nsICSSStyleSheet> mSheets;
 

@@ -40,7 +40,7 @@
 #include "nsIDOMNode.h"
 #include "nsIContent.h"
 #include "nsIPresShell.h"
-#include "nsIPresContext.h"
+#include "nsPresContext.h"
 #include "nsIFrame.h"
 
 // Test for distance between caret and text that will be deleted
@@ -60,7 +60,7 @@ nsTextEditRules::CheckBidiLevelForDeletion(nsIDOMNode           *aSelNode,
   if (!shell)
     return NS_ERROR_NULL_POINTER;
   
-  nsCOMPtr<nsIPresContext> context;
+  nsCOMPtr<nsPresContext> context;
   res = shell->GetPresContext(getter_AddRefs(context));
   if (NS_FAILED(res))
     return res;

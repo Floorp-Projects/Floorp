@@ -171,7 +171,7 @@ MOZ_DECL_CTOR_COUNTER(nsTextTransformer)
 
 nsTextTransformer::nsTextTransformer(nsILineBreaker* aLineBreaker,
                                      nsIWordBreaker* aWordBreaker,
-                                     nsIPresContext* aPresContext)
+                                     nsPresContext* aPresContext)
   : mFrag(nsnull),
     mOffset(0),
     mMode(eNormal),
@@ -1690,7 +1690,7 @@ static SelfTestData tests[] = {
 void
 nsTextTransformer::SelfTest(nsILineBreaker* aLineBreaker,
                             nsIWordBreaker* aWordBreaker,
-                            nsIPresContext* aPresContext)
+                            nsPresContext* aPresContext)
 {
   PRBool gNoisy = PR_FALSE;
   if (PR_GetEnv("GECKO_TEXT_TRANSFORMER_NOISY_SELF_TEST")) {

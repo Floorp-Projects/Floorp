@@ -42,7 +42,7 @@
 #include "nsPromiseFlatString.h"
 #include "nsFont.h"
 #include "nsIFontMetrics.h"
-#include "nsIPresContext.h"
+#include "nsPresContext.h"
 #include "float.h"
 #include "nsIDOMSVGMatrix.h"
 #include "nsIDOMSVGRect.h"

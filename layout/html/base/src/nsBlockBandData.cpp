@@ -38,7 +38,7 @@
 #include "nsBlockBandData.h"
 #include "nsIFrame.h"
 #include "nsHTMLReflowState.h"
-#include "nsIPresContext.h"
+#include "nsPresContext.h"
 #include "nsIPresShell.h"
 #include "nsLayoutAtoms.h"
 #include "nsVoidArray.h"

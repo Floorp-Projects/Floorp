@@ -78,7 +78,7 @@
 #include "nsIDOMNSDocument.h"
 #include "nsIScriptContext.h"
 #include "imgIContainer.h"
-#include "nsIPresContext.h"
+#include "nsPresContext.h"
 
 #if DEBUG
 //#define NOISY_DOC_LOADING  1
@@ -395,7 +395,7 @@ nsEditingSession::SetupEditorOnWindow(nsIDOMWindow *aWindow)
   if (!presShell) return NS_ERROR_FAILURE;
 
   // Disable animation of images in this document:
-  nsCOMPtr<nsIPresContext> presContext;
+  nsCOMPtr<nsPresContext> presContext;
   rv = presShell->GetPresContext(getter_AddRefs(presContext));
   if (NS_FAILED(rv)) return rv;
   if (!presContext) return NS_ERROR_FAILURE;

@@ -67,7 +67,7 @@ class nsIContentIterator;
 class nsIDocument;
 class nsIDocumentObserver;
 class nsIFrame;
-class nsIPresContext;
+class nsPresContext;
 class nsStyleSet;
 class nsIViewManager;
 class nsIDeviceContext;
@@ -138,7 +138,7 @@ public:
   NS_DEFINE_STATIC_IID_ACCESSOR(NS_IPRESSHELL_IID)
 
   NS_IMETHOD Init(nsIDocument* aDocument,
-                  nsIPresContext* aPresContext,
+                  nsPresContext* aPresContext,
                   nsIViewManager* aViewManager,
                   nsStyleSet* aStyleSet,
                   nsCompatibility aCompatMode) = 0;
@@ -166,8 +166,8 @@ public:
   NS_IMETHOD GetDocument(nsIDocument** aResult) = 0;
   nsIDocument* GetDocument() { return mDocument; }
 
-  NS_IMETHOD GetPresContext(nsIPresContext** aResult) = 0;
-  nsIPresContext* GetPresContext() { return mPresContext; }
+  NS_IMETHOD GetPresContext(nsPresContext** aResult) = 0;
+  nsPresContext* GetPresContext() { return mPresContext; }
 
   NS_IMETHOD GetViewManager(nsIViewManager** aResult) = 0;
   nsIViewManager* GetViewManager() { return mViewManager; }
@@ -623,7 +623,7 @@ public:
   NS_IMETHOD CountReflows(const char * aName, PRUint32 aType, nsIFrame * aFrame) = 0;
   NS_IMETHOD PaintCount(const char * aName, 
                         nsIRenderingContext* aRenderingContext, 
-                        nsIPresContext * aPresContext, 
+                        nsPresContext * aPresContext, 
                         nsIFrame * aFrame,
                         PRUint32 aColor) = 0;
   NS_IMETHOD SetPaintFrameCount(PRBool aOn) = 0;
@@ -667,7 +667,7 @@ protected:
   // these are the same Document and PresContext owned by the DocViewer.
   // we must share ownership.
   nsIDocument*              mDocument;      // [STRONG]
-  nsIPresContext*           mPresContext;   // [STRONG]
+  nsPresContext*           mPresContext;   // [STRONG]
   nsStyleSet*               mStyleSet;      // [OWNS]
   nsCSSFrameConstructor*    mFrameConstructor; // [OWNS]
   nsIViewManager*           mViewManager;   // [WEAK] docViewer owns it so I don't have to

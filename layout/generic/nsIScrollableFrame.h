@@ -45,7 +45,7 @@
 
 class nsIFrame;
 class nsIBox;
-class nsIPresContext;
+class nsPresContext;
 class nsBoxLayoutState;
 
 // IID for the nsIScrollableFrame interface
@@ -70,7 +70,7 @@ public:
    * Get the frame that we are scrolling within the scrollable frame.
    * @result child frame
    */
-  NS_IMETHOD GetScrolledFrame(nsIPresContext* aPresContext,
+  NS_IMETHOD GetScrolledFrame(nsPresContext* aPresContext,
                               nsIFrame *&aScrolledFrame) const = 0;
 
   struct ScrollbarStyles {
@@ -100,12 +100,12 @@ public:
    * only when necessary.
    * @return current scrollbar selection
    */
-  NS_IMETHOD  GetScrollPreference(nsIPresContext* aPresContext, nsScrollPref* aScrollPreference) const = 0;
+  NS_IMETHOD  GetScrollPreference(nsPresContext* aPresContext, nsScrollPref* aScrollPreference) const = 0;
 
   /**
    * Get the position of the scrolled view.
    */
-  NS_IMETHOD  GetScrollPosition(nsIPresContext* aContext, nscoord &aX, nscoord& aY) const=0;
+  NS_IMETHOD  GetScrollPosition(nsPresContext* aContext, nscoord &aX, nscoord& aY) const=0;
 
   /**
    * Scroll the view to the given x,y, update's the scrollbar's thumb
@@ -116,22 +116,22 @@ public:
    * @param aUpdateFlags passed onto nsIViewManager->UpdateView()
    * @return error status
    */
-  NS_IMETHOD ScrollTo(nsIPresContext* aContext, nscoord aX, nscoord aY, PRUint32 aFlags = NS_VMREFRESH_NO_SYNC)=0;
+  NS_IMETHOD ScrollTo(nsPresContext* aContext, nscoord aX, nscoord aY, PRUint32 aFlags = NS_VMREFRESH_NO_SYNC)=0;
 
-  NS_IMETHOD GetScrollableView(nsIPresContext* aContext, nsIScrollableView** aResult)=0;
+  NS_IMETHOD GetScrollableView(nsPresContext* aContext, nsIScrollableView** aResult)=0;
 
 
   /**
    * Set information about whether the vertical and horizontal scrollbars
    * are currently visible
    */
-  NS_IMETHOD SetScrollbarVisibility(nsIPresContext* aPresContext,
+  NS_IMETHOD SetScrollbarVisibility(nsPresContext* aPresContext,
                                     PRBool aVerticalVisible,
                                     PRBool aHorizontalVisible) = 0;
 
   NS_IMETHOD GetScrollbarBox(PRBool aVertical, nsIBox** aResult) = 0;
 
-  NS_IMETHOD CurPosAttributeChanged(nsIPresContext* aPresContext,
+  NS_IMETHOD CurPosAttributeChanged(nsPresContext* aPresContext,
                                     nsIContent* aChild,
                                     PRInt32 aModType) = 0;
 

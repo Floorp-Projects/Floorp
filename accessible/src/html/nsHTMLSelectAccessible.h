@@ -104,8 +104,8 @@ protected:
     void Select(PRBool aSelect);
     void AddAccessibleIfSelected(nsIAccessibilityService *aAccService, 
                                  nsIMutableArray *aSelectedAccessibles, 
-                                 nsIPresContext *aContext);
-    PRBool GetAccessibleIfSelected(PRInt32 aIndex, nsIAccessibilityService *aAccService, nsIPresContext *aContext, nsIAccessible **_retval);
+                                 nsPresContext *aContext);
+    PRBool GetAccessibleIfSelected(PRInt32 aIndex, nsIAccessibilityService *aAccService, nsPresContext *aContext, nsIAccessible **_retval);
 
     PRBool Advance();
   };

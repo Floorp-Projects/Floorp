@@ -40,13 +40,13 @@
 #include <stdio.h>
 
 #include "nsISupports.h"
-#include "nsIPresContext.h" // for nsCompatability
+#include "nsPresContext.h" // for nsCompatability
 #include "nsILinkHandler.h"
 #include "nsString.h"
 #include "nsChangeHint.h"
 
 class nsIStyleSheet;
-class nsIPresContext;
+class nsPresContext;
 class nsIContent;
 class nsIStyledContent;
 class nsISupportsArray;
@@ -58,7 +58,7 @@ class nsRuleWalker;
 // nsCSSStyleSheet.cpp.
 
 struct RuleProcessorData {
-  RuleProcessorData(nsIPresContext* aPresContext,
+  RuleProcessorData(nsPresContext* aPresContext,
                     nsIContent* aContent, 
                     nsRuleWalker* aRuleWalker,
                     nsCompatibility* aCompat = nsnull);
@@ -66,17 +66,17 @@ struct RuleProcessorData {
   // NOTE: not |virtual|
   ~RuleProcessorData();
 
-  void* operator new(size_t sz, nsIPresContext* aContext) CPP_THROW_NEW {
+  void* operator new(size_t sz, nsPresContext* aContext) CPP_THROW_NEW {
     return aContext->AllocateFromShell(sz);
   }
-  void Destroy(nsIPresContext* aContext) {
+  void Destroy(nsPresContext* aContext) {
     this->~RuleProcessorData();
     aContext->FreeToShell(sizeof(RuleProcessorData), this);
   };
 
   const nsString* GetLang();
 
-  nsIPresContext*   mPresContext;
+  nsPresContext*   mPresContext;
   nsIContent*       mContent;       // weak ref
   nsIContent*       mParentContent; // if content, content->GetParent(); weak ref
   nsRuleWalker*     mRuleWalker; // Used to add rules to our results.
@@ -102,7 +102,7 @@ protected:
 };
 
 struct ElementRuleProcessorData : public RuleProcessorData {
-  ElementRuleProcessorData(nsIPresContext* aPresContext,
+  ElementRuleProcessorData(nsPresContext* aPresContext,
                            nsIContent* aContent, 
                            nsRuleWalker* aRuleWalker)
   : RuleProcessorData(aPresContext,aContent,aRuleWalker)
@@ -113,7 +113,7 @@ struct ElementRuleProcessorData : public RuleProcessorData {
 };
 
 struct PseudoRuleProcessorData : public RuleProcessorData {
-  PseudoRuleProcessorData(nsIPresContext* aPresContext,
+  PseudoRuleProcessorData(nsPresContext* aPresContext,
                           nsIContent* aParentContent,
                           nsIAtom* aPseudoTag,
                           nsICSSPseudoComparator* aComparator,
@@ -131,7 +131,7 @@ struct PseudoRuleProcessorData : public RuleProcessorData {
 };
 
 struct StateRuleProcessorData : public RuleProcessorData {
-  StateRuleProcessorData(nsIPresContext* aPresContext,
+  StateRuleProcessorData(nsPresContext* aPresContext,
                          nsIContent* aContent,
                          PRInt32 aStateMask)
     : RuleProcessorData(aPresContext, aContent, nsnull),
@@ -144,7 +144,7 @@ struct StateRuleProcessorData : public RuleProcessorData {
 };
 
 struct AttributeRuleProcessorData : public RuleProcessorData {
-  AttributeRuleProcessorData(nsIPresContext* aPresContext,
+  AttributeRuleProcessorData(nsPresContext* aPresContext,
                          nsIContent* aContent,
                          nsIAtom* aAttribute,
                          PRInt32 aModType)

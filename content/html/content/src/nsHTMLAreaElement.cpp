@@ -44,7 +44,7 @@
 #include "nsIPresShell.h"
 #include "nsHTMLAtoms.h"
 #include "nsStyleConsts.h"
-#include "nsIPresContext.h"
+#include "nsPresContext.h"
 #include "nsIEventStateManager.h"
 #include "nsIURL.h"
 #include "nsNetUtil.h"
@@ -83,11 +83,11 @@ public:
   NS_IMETHOD SetLinkState(nsLinkState aState);
   NS_IMETHOD GetHrefURI(nsIURI** aURI);
 
-  virtual nsresult HandleDOMEvent(nsIPresContext* aPresContext,
+  virtual nsresult HandleDOMEvent(nsPresContext* aPresContext,
                                   nsEvent* aEvent, nsIDOMEvent** aDOMEvent,
                                   PRUint32 aFlags,
                                   nsEventStatus* aEventStatus);
-  virtual void SetFocus(nsIPresContext* aPresContext);
+  virtual void SetFocus(nsPresContext* aPresContext);
 
   virtual void SetDocument(nsIDocument* aDocument, PRBool aDeep,
                            PRBool aCompileEventHandlers);
@@ -165,7 +165,7 @@ nsHTMLAreaElement::SetTarget(const nsAString& aValue)
 }
 
 nsresult
-nsHTMLAreaElement::HandleDOMEvent(nsIPresContext* aPresContext,
+nsHTMLAreaElement::HandleDOMEvent(nsPresContext* aPresContext,
                                   nsEvent* aEvent,
                                   nsIDOMEvent** aDOMEvent,
                                   PRUint32 aFlags,
@@ -176,7 +176,7 @@ nsHTMLAreaElement::HandleDOMEvent(nsIPresContext* aPresContext,
 }
 
 void
-nsHTMLAreaElement::SetFocus(nsIPresContext* aPresContext)
+nsHTMLAreaElement::SetFocus(nsPresContext* aPresContext)
 {
   if (!aPresContext)
     return;

@@ -41,7 +41,7 @@
 #include "nsIContent.h"
 #include "prtypes.h"
 #include "nsIAtom.h"
-#include "nsIPresContext.h"
+#include "nsPresContext.h"
 #include "nsIHTMLContent.h"
 #include "nsHTMLAtoms.h"
 #include "nsIPresState.h"
@@ -117,7 +117,7 @@ nsFileControlFrame::~nsFileControlFrame()
 }
 
 void
-nsFileControlFrame::PreDestroy(nsIPresContext* aPresContext)
+nsFileControlFrame::PreDestroy(nsPresContext* aPresContext)
 {
   // Toss the value into the control from the anonymous content, which is about
   // to get lost.
@@ -134,7 +134,7 @@ nsFileControlFrame::PreDestroy(nsIPresContext* aPresContext)
 }
 
 NS_IMETHODIMP
-nsFileControlFrame::Destroy(nsIPresContext* aPresContext)
+nsFileControlFrame::Destroy(nsPresContext* aPresContext)
 {
   if (!mDidPreDestroy) {
     PreDestroy(aPresContext);
@@ -144,7 +144,7 @@ nsFileControlFrame::Destroy(nsIPresContext* aPresContext)
 }
 
 void
-nsFileControlFrame::RemovedAsPrimaryFrame(nsIPresContext* aPresContext)
+nsFileControlFrame::RemovedAsPrimaryFrame(nsPresContext* aPresContext)
 {
   if (!mDidPreDestroy) {
     PreDestroy(aPresContext);
@@ -157,7 +157,7 @@ nsFileControlFrame::RemovedAsPrimaryFrame(nsIPresContext* aPresContext)
 }
 
 NS_IMETHODIMP
-nsFileControlFrame::CreateAnonymousContent(nsIPresContext* aPresContext,
+nsFileControlFrame::CreateAnonymousContent(nsPresContext* aPresContext,
                                            nsISupportsArray& aChildList)
 {
   // Get the NodeInfoManager and tag necessary to create input elements
@@ -264,7 +264,7 @@ nsFileControlFrame::SetFocus(PRBool aOn, PRBool aRepaint)
 }
 
 void
-nsFileControlFrame::ScrollIntoView(nsIPresContext* aPresContext)
+nsFileControlFrame::ScrollIntoView(nsPresContext* aPresContext)
 {
   if (aPresContext) {
     nsIPresShell *presShell = aPresContext->GetPresShell();
@@ -382,7 +382,7 @@ nsFileControlFrame::MouseClick(nsIDOMEvent* aMouseEvent)
 }
 
 
-NS_IMETHODIMP nsFileControlFrame::Reflow(nsIPresContext*          aPresContext, 
+NS_IMETHODIMP nsFileControlFrame::Reflow(nsPresContext*          aPresContext, 
                                          nsHTMLReflowMetrics&     aDesiredSize,
                                          const nsHTMLReflowState& aReflowState, 
                                          nsReflowStatus&          aStatus)
@@ -464,7 +464,7 @@ NS_IMETHODIMP nsFileControlFrame::Reflow(nsIPresContext*          aPresContext,
 
 /*
 NS_IMETHODIMP
-nsFileControlFrame::SetInitialChildList(nsIPresContext* aPresContext,
+nsFileControlFrame::SetInitialChildList(nsPresContext* aPresContext,
                                               nsIAtom*        aListName,
                                               nsIFrame*       aChildList)
 {
@@ -477,7 +477,7 @@ nsFileControlFrame::SetInitialChildList(nsIPresContext* aPresContext,
 */
 
 nsNewFrame*
-nsFileControlFrame::GetTextControlFrame(nsIPresContext* aPresContext, nsIFrame* aStart)
+nsFileControlFrame::GetTextControlFrame(nsPresContext* aPresContext, nsIFrame* aStart)
 {
   nsNewFrame* result = nsnull;
 #ifndef DEBUG_NEWFRAME
@@ -544,7 +544,7 @@ nsFileControlFrame::SyncAttr(PRInt32 aNameSpaceID, nsIAtom* aAttribute,
 }
 
 NS_IMETHODIMP
-nsFileControlFrame::AttributeChanged(nsIPresContext* aPresContext,
+nsFileControlFrame::AttributeChanged(nsPresContext* aPresContext,
                                        nsIContent*     aChild,
                                        PRInt32         aNameSpaceID,
                                        nsIAtom*        aAttribute,
@@ -564,7 +564,7 @@ nsFileControlFrame::AttributeChanged(nsIPresContext* aPresContext,
 }
 
 NS_IMETHODIMP
-nsFileControlFrame::GetFrameForPoint(nsIPresContext* aPresContext,
+nsFileControlFrame::GetFrameForPoint(nsPresContext* aPresContext,
                                      const nsPoint& aPoint,
                                      nsFramePaintLayer aWhichLayer,
                                      nsIFrame** aFrame)
@@ -599,7 +599,7 @@ nsFileControlFrame::GetFormContent(nsIContent*& aContent) const
 }
 
 nscoord 
-nsFileControlFrame::GetVerticalInsidePadding(nsIPresContext* aPresContext,
+nsFileControlFrame::GetVerticalInsidePadding(nsPresContext* aPresContext,
                                              float aPixToTwip, 
                                              nscoord aInnerHeight) const
 {
@@ -607,7 +607,7 @@ nsFileControlFrame::GetVerticalInsidePadding(nsIPresContext* aPresContext,
 }
 
 nscoord 
-nsFileControlFrame::GetHorizontalInsidePadding(nsIPresContext* aPresContext,
+nsFileControlFrame::GetHorizontalInsidePadding(nsPresContext* aPresContext,
                                                float aPixToTwip, 
                                                nscoord aInnerWidth,
                                                nscoord aCharWidth) const
@@ -615,7 +615,7 @@ nsFileControlFrame::GetHorizontalInsidePadding(nsIPresContext* aPresContext,
   return 0;
 }
 
-NS_IMETHODIMP nsFileControlFrame::SetProperty(nsIPresContext* aPresContext,
+NS_IMETHODIMP nsFileControlFrame::SetProperty(nsPresContext* aPresContext,
                                               nsIAtom* aName,
                                               const nsAString& aValue)
 {
@@ -651,7 +651,7 @@ NS_IMETHODIMP nsFileControlFrame::GetProperty(nsIAtom* aName, nsAString& aValue)
 
 
 NS_METHOD
-nsFileControlFrame::Paint(nsIPresContext*      aPresContext,
+nsFileControlFrame::Paint(nsPresContext*      aPresContext,
                           nsIRenderingContext& aRenderingContext,
                           const nsRect&        aDirtyRect,
                           nsFramePaintLayer    aWhichLayer,

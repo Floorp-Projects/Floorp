@@ -38,7 +38,7 @@
 #include "nsBlockBandData.h"
 #include "nsStyleContext.h"
 #include "nsStyleConsts.h"
-#include "nsIPresContext.h"
+#include "nsPresContext.h"
 #include "nsIViewManager.h"
 #include "nsINodeInfo.h"
 #include "nsHTMLAtoms.h"
@@ -81,7 +81,7 @@ nsAreaFrame::nsAreaFrame()
 // If you make changes to this function, check its counterparts 
 // in nsBoxFrame and nsTextBoxFrame
 nsresult
-nsAreaFrame::RegUnregAccessKey(nsIPresContext* aPresContext,
+nsAreaFrame::RegUnregAccessKey(nsPresContext* aPresContext,
                                PRBool aDoReg)
 {
   // if we have no content, we can't do anything
@@ -128,7 +128,7 @@ nsAreaFrame::RegUnregAccessKey(nsIPresContext* aPresContext,
 
 #ifdef MOZ_XUL
 NS_IMETHODIMP
-nsAreaFrame::Init(nsIPresContext*  aPresContext,
+nsAreaFrame::Init(nsPresContext*  aPresContext,
                   nsIContent*      aContent,
                   nsIFrame*        aParent,
                   nsStyleContext*  aContext,
@@ -147,7 +147,7 @@ nsAreaFrame::Init(nsIPresContext*  aPresContext,
 }
 
 NS_IMETHODIMP
-nsAreaFrame::Destroy(nsIPresContext* aPresContext)
+nsAreaFrame::Destroy(nsPresContext* aPresContext)
 {
   // unregister access key
   RegUnregAccessKey(aPresContext, PR_FALSE);
@@ -156,7 +156,7 @@ nsAreaFrame::Destroy(nsIPresContext* aPresContext)
 } 
 
 NS_IMETHODIMP
-nsAreaFrame::AttributeChanged(nsIPresContext* aPresContext,
+nsAreaFrame::AttributeChanged(nsPresContext* aPresContext,
                               nsIContent* aChild,
                               PRInt32 aNameSpaceID,
                               nsIAtom* aAttribute,

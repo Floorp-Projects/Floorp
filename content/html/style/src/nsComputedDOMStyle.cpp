@@ -55,7 +55,7 @@
 #include "nsLayoutAtoms.h"
 #include "nsThemeConstants.h"
 
-#include "nsIPresContext.h"
+#include "nsPresContext.h"
 #include "nsIDocument.h"
 
 #include "nsCSSPseudoElements.h"
@@ -194,7 +194,7 @@ nsComputedDOMStyle::Init(nsIDOMElement *aElement,
     }
   }
 
-  nsCOMPtr<nsIPresContext> presCtx;
+  nsCOMPtr<nsPresContext> presCtx;
 
   aPresShell->GetPresContext(getter_AddRefs(presCtx));
 
@@ -615,7 +615,7 @@ nsComputedDOMStyle::GetFontFamily(nsIFrame *aFrame,
   if (font) {
     nsCOMPtr<nsIPresShell> presShell = do_QueryReferent(mPresShellWeak);
     NS_ASSERTION(presShell, "pres shell is required");
-    nsCOMPtr<nsIPresContext> presContext;
+    nsCOMPtr<nsPresContext> presContext;
     presShell->GetPresContext(getter_AddRefs(presContext));
     NS_ASSERTION(presContext, "pres context is required");
 
@@ -2783,7 +2783,7 @@ nsComputedDOMStyle::GetAbsoluteOffset(PRUint8 aSide, nsIFrame* aFrame,
       // scrollbars.  We have to do some extra work.
       nsCOMPtr<nsIPresShell> presShell = do_QueryReferent(mPresShellWeak);
       NS_ASSERTION(presShell, "Must have a presshell!");
-      nsCOMPtr<nsIPresContext> presContext;
+      nsCOMPtr<nsPresContext> presContext;
       presShell->GetPresContext(getter_AddRefs(presContext));
       // the first child in the default frame list is what we want
       nsIFrame* scrollingChild = container->GetFirstChild(nsnull);

@@ -46,7 +46,7 @@
 #include "nsCOMPtr.h"
 
 class nsMenuPopupFrame;
-class nsIPresContext;
+class nsPresContext;
 class nsIMenuParent;
 
 /** editor Implementation of the DragListener interface

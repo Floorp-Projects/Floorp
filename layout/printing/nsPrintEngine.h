@@ -119,7 +119,7 @@ public:
                       nsISupports*            aContainer,
                       nsIDocument*            aDocument,
                       nsIDeviceContext*       aDevContext,
-                      nsIPresContext*         aPresContext,
+                      nsPresContext*         aPresContext,
                       nsIWidget*              aWindow,
                       nsIWidget*              aParentWidget,
                       FILE*                   aDebugFile);
@@ -159,7 +159,7 @@ public:
   void InstallPrintPreviewListener();
 
   // nsIDocumentViewerPrint Printing Methods
-  PRBool   PrintPage(nsIPresContext* aPresContext,
+  PRBool   PrintPage(nsPresContext* aPresContext,
                      nsIPrintSettings* aPrintSettings,
                      nsPrintObject* aPOect, PRBool& aInRange);
   PRBool   DonePrintingPages(nsPrintObject* aPO, nsresult aResult);
@@ -209,7 +209,7 @@ public:
 
 
   // Timer Methods
-  nsresult StartPagePrintTimer(nsIPresContext * aPresContext,
+  nsresult StartPagePrintTimer(nsPresContext * aPresContext,
                                nsIPrintSettings* aPrintSettings,
                                nsPrintObject*     aPO,
                                PRUint32         aDelay);
@@ -252,7 +252,7 @@ public:
   nsresult ShowDocList(PRBool aShow);
 
   void GetNewPresentation(nsCOMPtr<nsIPresShell>& aShell, 
-                          nsCOMPtr<nsIPresContext>& aPC, 
+                          nsCOMPtr<nsPresContext>& aPC, 
                           nsCOMPtr<nsIViewManager>& aVM, 
                           nsCOMPtr<nsIWidget>& aW);
 
@@ -270,10 +270,10 @@ public:
   {
     mIsCachingPresentation = aDoCache;
   }
-  void CachePresentation(nsIPresShell* aShell, nsIPresContext* aPC,
+  void CachePresentation(nsIPresShell* aShell, nsPresContext* aPC,
                          nsIViewManager* aVM, nsIWidget* aW);
   void GetCachedPresentation(nsCOMPtr<nsIPresShell>& aShell, 
-                             nsCOMPtr<nsIPresContext>& aPC, 
+                             nsCOMPtr<nsPresContext>& aPC, 
                              nsCOMPtr<nsIViewManager>& aVM, 
                              nsCOMPtr<nsIWidget>& aW);
 
@@ -324,7 +324,7 @@ protected:
                                             nsIFrame*&      aSeqFrame,
                                             PRInt32&        aCount);
 
-  static nsresult FindSelectionBoundsWithList(nsIPresContext* aPresContext,
+  static nsresult FindSelectionBoundsWithList(nsPresContext* aPresContext,
                                               nsIRenderingContext& aRC,
                                               nsIAtom*        aList,
                                               nsIFrame *      aParentFrame,
@@ -334,7 +334,7 @@ protected:
                                               nsIFrame *&     aEndFrame,
                                               nsRect&         aEndRect);
 
-  static nsresult FindSelectionBounds(nsIPresContext* aPresContext,
+  static nsresult FindSelectionBounds(nsPresContext* aPresContext,
                                       nsIRenderingContext& aRC,
                                       nsIFrame *      aParentFrame,
                                       nsRect&         aRect,
@@ -344,7 +344,7 @@ protected:
                                       nsRect&         aEndRect);
 
   static nsresult GetPageRangeForSelection(nsIPresShell *        aPresShell,
-                                           nsIPresContext*       aPresContext,
+                                           nsPresContext*       aPresContext,
                                            nsIRenderingContext&  aRC,
                                            nsISelection*         aSelection,
                                            nsIPageSequenceFrame* aPageSeqFrame,
@@ -355,7 +355,7 @@ protected:
                                            PRInt32&              aEndPageNum,
                                            nsRect&               aEndRect);
 
-  static nsIFrame * FindFrameByType(nsIPresContext* aPresContext,
+  static nsIFrame * FindFrameByType(nsPresContext* aPresContext,
                                     nsIFrame *      aParentFrame,
                                     nsIAtom *       aType,
                                     nsRect&         aRect,
@@ -369,7 +369,7 @@ protected:
   nsIDocumentViewer*      mDocViewer;      // [WEAK] it owns me!
   nsISupports*            mContainer;      // [WEAK] it owns me!
   nsIDeviceContext*       mDeviceContext;  // not ref counted
-  nsIPresContext*         mPresContext;    // not ref counted
+  nsPresContext*         mPresContext;    // not ref counted
   nsCOMPtr<nsIWidget>     mWindow;      
   
   nsPrintData*            mPrt;

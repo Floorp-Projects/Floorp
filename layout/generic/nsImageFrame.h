@@ -40,7 +40,7 @@
 #include "nsSplittableFrame.h"
 #include "nsString.h"
 #include "nsAString.h"
-#include "nsIPresContext.h"
+#include "nsPresContext.h"
 #include "nsIImageFrame.h"
 #include "nsIIOService.h"
 #include "nsIObserver.h"
@@ -88,18 +88,18 @@ public:
   // nsISupports 
   NS_IMETHOD QueryInterface(const nsIID& aIID, void** aInstancePtr);
 
-  NS_IMETHOD Destroy(nsIPresContext* aPresContext);
-  NS_IMETHOD Init(nsIPresContext*  aPresContext,
+  NS_IMETHOD Destroy(nsPresContext* aPresContext);
+  NS_IMETHOD Init(nsPresContext*  aPresContext,
                   nsIContent*      aContent,
                   nsIFrame*        aParent,
                   nsStyleContext*  aContext,
                   nsIFrame*        aPrevInFlow);
-  NS_IMETHOD Paint(nsIPresContext*      aPresContext,
+  NS_IMETHOD Paint(nsPresContext*      aPresContext,
                    nsIRenderingContext& aRenderingContext,
                    const nsRect&        aDirtyRect,
                    nsFramePaintLayer    aWhichLayer,
                    PRUint32             aFlags = 0);
-  NS_IMETHOD Reflow(nsIPresContext*          aPresContext,
+  NS_IMETHOD Reflow(nsPresContext*          aPresContext,
                     nsHTMLReflowMetrics&     aDesiredSize,
                     const nsHTMLReflowState& aReflowState,
                     nsReflowStatus&          aStatus);
@@ -107,16 +107,16 @@ public:
   NS_IMETHOD CanContinueTextRun(PRBool& aContinueTextRun) const;
 
 
-  NS_IMETHOD  GetContentForEvent(nsIPresContext* aPresContext,
+  NS_IMETHOD  GetContentForEvent(nsPresContext* aPresContext,
                                  nsEvent* aEvent,
                                  nsIContent** aContent);
-  NS_IMETHOD HandleEvent(nsIPresContext* aPresContext,
+  NS_IMETHOD HandleEvent(nsPresContext* aPresContext,
                         nsGUIEvent* aEvent,
                         nsEventStatus* aEventStatus);
-  NS_IMETHOD GetCursor(nsIPresContext* aPresContext,
+  NS_IMETHOD GetCursor(nsPresContext* aPresContext,
                        nsPoint& aPoint,
                        PRInt32& aCursor);
-  NS_IMETHOD AttributeChanged(nsIPresContext* aPresContext,
+  NS_IMETHOD AttributeChanged(nsPresContext* aPresContext,
                               nsIContent* aChild,
                               PRInt32 aNameSpaceID,
                               nsIAtom* aAttribute,
@@ -128,10 +128,10 @@ public:
 
   virtual nsIAtom* GetType() const;
 #ifdef DEBUG
-  NS_IMETHOD List(nsIPresContext* aPresContext, FILE* out, PRInt32 aIndent) const;
+  NS_IMETHOD List(nsPresContext* aPresContext, FILE* out, PRInt32 aIndent) const;
 #endif
 
-  NS_IMETHOD GetImageMap(nsIPresContext *aPresContext, nsIImageMap **aImageMap);
+  NS_IMETHOD GetImageMap(nsPresContext *aPresContext, nsIImageMap **aImageMap);
 
   NS_IMETHOD GetIntrinsicImageSize(nsSize& aSize);
 
@@ -150,20 +150,20 @@ protected:
 
   virtual ~nsImageFrame();
 
-  virtual void GetDesiredSize(nsIPresContext* aPresContext,
+  virtual void GetDesiredSize(nsPresContext* aPresContext,
                               const nsHTMLReflowState& aReflowState,
                               nsHTMLReflowMetrics& aDesiredSize);
 
-  nsImageMap* GetImageMap(nsIPresContext* aPresContext);
+  nsImageMap* GetImageMap(nsPresContext* aPresContext);
 
-  void TriggerLink(nsIPresContext* aPresContext,
+  void TriggerLink(nsPresContext* aPresContext,
                    nsIURI* aURI,
                    const nsString& aTargetSpec,
                    PRBool aClick);
 
   PRBool IsServerImageMap();
 
-  void TranslateEventCoords(nsIPresContext* aPresContext,
+  void TranslateEventCoords(nsPresContext* aPresContext,
                             const nsPoint& aPoint,
                             nsPoint& aResult);
 
@@ -175,16 +175,16 @@ protected:
                      PRUint32&            aMaxFit,
                      nsIRenderingContext& aContext);
 
-  void DisplayAltText(nsIPresContext*      aPresContext,
+  void DisplayAltText(nsPresContext*      aPresContext,
                       nsIRenderingContext& aRenderingContext,
                       const nsString&      aAltText,
                       const nsRect&        aRect);
 
-  void DisplayAltFeedback(nsIPresContext*      aPresContext,
+  void DisplayAltFeedback(nsPresContext*      aPresContext,
                           nsIRenderingContext& aRenderingContext,
                           imgIRequest*         aRequest);
 
-  void GetInnerArea(nsIPresContext* aPresContext,
+  void GetInnerArea(nsPresContext* aPresContext,
                     nsRect& aInnerArea) const;
 
 protected:
@@ -205,7 +205,7 @@ private:
   inline void SpecToURI(const nsAString& aSpec, nsIIOService *aIOService,
                         nsIURI **aURI);
 
-  inline void GetLoadGroup(nsIPresContext *aPresContext,
+  inline void GetLoadGroup(nsPresContext *aPresContext,
                            nsILoadGroup **aLoadGroup);
   nscoord GetContinuationOffset(nscoord* aWidth = 0) const;
   void GetDocumentCharacterSet(nsACString& aCharset) const;
@@ -262,8 +262,8 @@ private:
 
   // LoadIcons: initiate the loading of the static icons used to show
   // loading / broken images
-  nsresult LoadIcons(nsIPresContext *aPresContext);
-  nsresult LoadIcon(const nsAString& aSpec, nsIPresContext *aPresContext,
+  nsresult LoadIcons(nsPresContext *aPresContext);
+  nsresult LoadIcon(const nsAString& aSpec, nsPresContext *aPresContext,
                     imgIRequest **aRequest);
   
   // HandleIconLoads: See if the request is for an Icon load. If it

@@ -373,7 +373,7 @@ NS_IMETHODIMP nsComboboxControlFrame::GetAccessible(nsIAccessible** aAccessible)
 
 
 NS_IMETHODIMP
-nsComboboxControlFrame::Init(nsIPresContext*  aPresContext,
+nsComboboxControlFrame::Init(nsPresContext*  aPresContext,
               nsIContent*      aContent,
               nsIFrame*        aParent,
               nsStyleContext*  aContext,
@@ -423,7 +423,7 @@ nsComboboxControlFrame::InitTextStr()
 
 //--------------------------------------------------------------
 void 
-nsComboboxControlFrame::InitializeControl(nsIPresContext* aPresContext)
+nsComboboxControlFrame::InitializeControl(nsPresContext* aPresContext)
 {
   nsFormControlHelper::Reset(this, aPresContext);
 }
@@ -462,7 +462,7 @@ nsComboboxControlFrame::GetHorizontalBorderWidth(float aPixToTwip) const
 
 //--------------------------------------------------------------
 nscoord 
-nsComboboxControlFrame::GetVerticalInsidePadding(nsIPresContext* aPresContext,
+nsComboboxControlFrame::GetVerticalInsidePadding(nsPresContext* aPresContext,
                                                  float aPixToTwip, 
                                                  nscoord aInnerHeight) const
 {
@@ -471,7 +471,7 @@ nsComboboxControlFrame::GetVerticalInsidePadding(nsIPresContext* aPresContext,
 
 //--------------------------------------------------------------
 nscoord 
-nsComboboxControlFrame::GetHorizontalInsidePadding(nsIPresContext* aPresContext,
+nsComboboxControlFrame::GetHorizontalInsidePadding(nsPresContext* aPresContext,
                                                float aPixToTwip, 
                                                nscoord aInnerWidth,
                                                nscoord aCharWidth) const
@@ -509,7 +509,7 @@ nsComboboxControlFrame::SetFocus(PRBool aOn, PRBool aRepaint)
 }
 
 void
-nsComboboxControlFrame::ScrollIntoView(nsIPresContext* aPresContext)
+nsComboboxControlFrame::ScrollIntoView(nsPresContext* aPresContext)
 {
   if (aPresContext) {
     nsIPresShell *presShell = aPresContext->GetPresShell();
@@ -554,7 +554,7 @@ nsComboboxControlFrame::ShowPopup(PRBool aShowPopup)
 // Show the dropdown list
 
 void 
-nsComboboxControlFrame::ShowList(nsIPresContext* aPresContext, PRBool aShowList)
+nsComboboxControlFrame::ShowList(nsPresContext* aPresContext, PRBool aShowList)
 {
   nsIWidget* widget = nsnull;
 
@@ -596,14 +596,14 @@ nsComboboxControlFrame::ShowList(nsIPresContext* aPresContext, PRBool aShowList)
 // this is in response to the MouseClick from the containing browse button
 // XXX: TODO still need to get filters from accept attribute
 void 
-nsComboboxControlFrame::MouseClicked(nsIPresContext* aPresContext)
+nsComboboxControlFrame::MouseClicked(nsPresContext* aPresContext)
 {
    //ToggleList(aPresContext);
 }
 
 nsresult
 nsComboboxControlFrame::ReflowComboChildFrame(nsIFrame* aFrame, 
-                                             nsIPresContext*  aPresContext, 
+                                             nsPresContext*  aPresContext, 
                                              nsHTMLReflowMetrics&     aDesiredSize,
                                              const nsHTMLReflowState& aReflowState, 
                                              nsReflowStatus&          aStatus,
@@ -652,7 +652,7 @@ nsComboboxControlFrame::SetChildFrameSize(nsIFrame* aFrame, nscoord aWidth, nsco
 }
 
 nsresult 
-nsComboboxControlFrame::GetPrimaryComboFrame(nsIPresContext* aPresContext, nsIContent* aContent, nsIFrame** aFrame)
+nsComboboxControlFrame::GetPrimaryComboFrame(nsPresContext* aPresContext, nsIContent* aContent, nsIFrame** aFrame)
 {
    // Get the primary frame from the presentation shell.
   nsIPresShell *presShell = aPresContext->GetPresShell();
@@ -663,7 +663,7 @@ nsComboboxControlFrame::GetPrimaryComboFrame(nsIPresContext* aPresContext, nsICo
 }
 
 nsresult 
-nsComboboxControlFrame::PositionDropdown(nsIPresContext* aPresContext, 
+nsComboboxControlFrame::PositionDropdown(nsPresContext* aPresContext, 
                                          nscoord aHeight, 
                                          nsRect aAbsoluteTwipsRect, 
                                          nsRect aAbsolutePixelRect)
@@ -768,7 +768,7 @@ GetOptions(nsIContent * aContent, nsIDOMHTMLSelectElement* aSelect = nsnull)
 
 #ifdef DO_NEW_REFLOW
 NS_IMETHODIMP 
-nsComboboxControlFrame::ReflowItems(nsIPresContext* aPresContext,
+nsComboboxControlFrame::ReflowItems(nsPresContext* aPresContext,
                                     const nsHTMLReflowState& aReflowState,
                                     nsHTMLReflowMetrics& aDesiredSize) 
 {
@@ -847,7 +847,7 @@ nsComboboxControlFrame::ReflowItems(nsIPresContext* aPresContext,
 // and then the GfxButton - The dropdown button
 //--------------------------------------------------------------------------
 void 
-nsComboboxControlFrame::ReflowCombobox(nsIPresContext *         aPresContext,
+nsComboboxControlFrame::ReflowCombobox(nsPresContext *         aPresContext,
                                            const nsHTMLReflowState& aReflowState,
                                            nsHTMLReflowMetrics&     aDesiredSize,
                                            nsReflowStatus&          aStatus,
@@ -1090,7 +1090,7 @@ static void printSize(char * aDesc, nscoord aSize)
 //-- Main Reflow for the Combobox
 //-------------------------------------------------------------------
 NS_IMETHODIMP 
-nsComboboxControlFrame::Reflow(nsIPresContext*          aPresContext, 
+nsComboboxControlFrame::Reflow(nsPresContext*          aPresContext, 
                                nsHTMLReflowMetrics&     aDesiredSize,
                                const nsHTMLReflowState& aReflowState, 
                                nsReflowStatus&          aStatus)
@@ -1605,7 +1605,7 @@ nsComboboxControlFrame::GetName(nsAString* aResult)
 }
 
 NS_IMETHODIMP
-nsComboboxControlFrame::GetFrameForPoint(nsIPresContext* aPresContext,
+nsComboboxControlFrame::GetFrameForPoint(nsPresContext* aPresContext,
                                          const nsPoint& aPoint,
                                          nsFramePaintLayer aWhichLayer,
                                          nsIFrame** aFrame)
@@ -1699,7 +1699,7 @@ nsComboboxControlFrame::GetDropDown(nsIFrame** aDropDownFrame)
 // Toggle dropdown list.
 
 NS_IMETHODIMP 
-nsComboboxControlFrame::ToggleList(nsIPresContext* aPresContext)
+nsComboboxControlFrame::ToggleList(nsPresContext* aPresContext)
 {
   ShowList(aPresContext, (PR_FALSE == mDroppedDown));
 
@@ -1819,7 +1819,7 @@ nsComboboxControlFrame::DoneAddingChildren(PRBool aIsDone)
 }
 
 NS_IMETHODIMP
-nsComboboxControlFrame::AddOption(nsIPresContext* aPresContext, PRInt32 aIndex)
+nsComboboxControlFrame::AddOption(nsPresContext* aPresContext, PRInt32 aIndex)
 {
 #ifdef DO_REFLOW_DEBUGXX
   printf("*********AddOption: %d\n", aIndex);
@@ -1830,7 +1830,7 @@ nsComboboxControlFrame::AddOption(nsIPresContext* aPresContext, PRInt32 aIndex)
   
 
 NS_IMETHODIMP
-nsComboboxControlFrame::RemoveOption(nsIPresContext* aPresContext, PRInt32 aIndex)
+nsComboboxControlFrame::RemoveOption(nsPresContext* aPresContext, PRInt32 aIndex)
 {
   // If we removed the last option, we need to blank things out
   PRInt32 len;
@@ -1893,7 +1893,7 @@ nsComboboxControlFrame::SetDummyFrame(nsIFrame* aFrame)
 //----------------------------------------------------------------------
 
 NS_IMETHODIMP 
-nsComboboxControlFrame::HandleEvent(nsIPresContext* aPresContext, 
+nsComboboxControlFrame::HandleEvent(nsPresContext* aPresContext, 
                                        nsGUIEvent*     aEvent,
                                        nsEventStatus*  aEventStatus)
 {
@@ -1921,7 +1921,7 @@ nsComboboxControlFrame::HandleEvent(nsIPresContext* aPresContext,
 
 
 NS_IMETHODIMP 
-nsComboboxControlFrame::SetProperty(nsIPresContext* aPresContext, nsIAtom* aName, const nsAString& aValue)
+nsComboboxControlFrame::SetProperty(nsPresContext* aPresContext, nsIAtom* aName, const nsAString& aValue)
 {
   nsIFormControlFrame* fcFrame = nsnull;
   nsresult result = CallQueryInterface(mDropdownFrame, &fcFrame);
@@ -1948,7 +1948,7 @@ nsComboboxControlFrame::GetContentInsertionFrame() {
 }
 
 NS_IMETHODIMP 
-nsComboboxControlFrame::CreateDisplayFrame(nsIPresContext* aPresContext)
+nsComboboxControlFrame::CreateDisplayFrame(nsPresContext* aPresContext)
 {
   if (mGoodToGo) {
     return NS_OK;
@@ -1991,7 +1991,7 @@ nsComboboxControlFrame::CreateDisplayFrame(nsIPresContext* aPresContext)
 
 
 NS_IMETHODIMP
-nsComboboxControlFrame::CreateAnonymousContent(nsIPresContext* aPresContext,
+nsComboboxControlFrame::CreateAnonymousContent(nsPresContext* aPresContext,
                                                nsISupportsArray& aChildList)
 {
   // The frames used to display the combo box and the button used to popup the dropdown list
@@ -2054,7 +2054,7 @@ nsComboboxControlFrame::CreateAnonymousContent(nsIPresContext* aPresContext,
 }
 
 NS_IMETHODIMP 
-nsComboboxControlFrame::CreateFrameFor(nsIPresContext*   aPresContext,
+nsComboboxControlFrame::CreateFrameFor(nsPresContext*   aPresContext,
                                        nsIContent *      aContent,
                                        nsIFrame**        aFrame) 
 { 
@@ -2130,7 +2130,7 @@ nsComboboxControlFrame::SetSuggestedSize(nscoord aWidth, nscoord aHeight)
 
 
 NS_IMETHODIMP
-nsComboboxControlFrame::Destroy(nsIPresContext* aPresContext)
+nsComboboxControlFrame::Destroy(nsPresContext* aPresContext)
 {
   nsFormControlFrame::RegUnRegAccessKey(mPresContext, NS_STATIC_CAST(nsIFrame*, this), PR_FALSE);
 
@@ -2173,7 +2173,7 @@ nsComboboxControlFrame::GetFirstChild(nsIAtom* aListName) const
 }
 
 NS_IMETHODIMP
-nsComboboxControlFrame::SetInitialChildList(nsIPresContext* aPresContext,
+nsComboboxControlFrame::SetInitialChildList(nsPresContext* aPresContext,
                                                nsIAtom*        aListName,
                                                nsIFrame*       aChildList)
 {
@@ -2240,7 +2240,7 @@ nsComboboxControlFrame::Rollup()
 }
 
 NS_IMETHODIMP
-nsComboboxControlFrame::RollupFromList(nsIPresContext* aPresContext)
+nsComboboxControlFrame::RollupFromList(nsPresContext* aPresContext)
 {
   ShowList(aPresContext, PR_FALSE);
   mListControlFrame->CaptureMouseEvents(aPresContext, PR_FALSE);
@@ -2258,7 +2258,7 @@ nsComboboxControlFrame::UpdateRecentIndex(PRInt32 aIndex)
 }
 
 NS_METHOD 
-nsComboboxControlFrame::Paint(nsIPresContext*     aPresContext,
+nsComboboxControlFrame::Paint(nsPresContext*     aPresContext,
                              nsIRenderingContext& aRenderingContext,
                              const nsRect&        aDirtyRect,
                              nsFramePaintLayer    aWhichLayer,
@@ -2338,7 +2338,7 @@ nsComboboxControlFrame::Paint(nsIPresContext*     aPresContext,
   //nsIScrollableViewProvider
 //----------------------------------------------------------------------
 NS_METHOD
-nsComboboxControlFrame::GetScrollableView(nsIPresContext* aPresContext,
+nsComboboxControlFrame::GetScrollableView(nsPresContext* aPresContext,
                                           nsIScrollableView** aView)
 {
   *aView = nsnull;
@@ -2359,7 +2359,7 @@ nsComboboxControlFrame::GetScrollableView(nsIPresContext* aPresContext,
 // being selected or not selected
 //---------------------------------------------------------
 NS_IMETHODIMP
-nsComboboxControlFrame::OnOptionSelected(nsIPresContext* aPresContext,
+nsComboboxControlFrame::OnOptionSelected(nsPresContext* aPresContext,
                                          PRInt32 aIndex,
                                          PRBool aSelected)
 {
@@ -2412,7 +2412,7 @@ nsComboboxControlFrame::OnContentReset()
 // nsIStatefulFrame
 //--------------------------------------------------------
 NS_IMETHODIMP
-nsComboboxControlFrame::SaveState(nsIPresContext* aPresContext,
+nsComboboxControlFrame::SaveState(nsPresContext* aPresContext,
                                   nsIPresState** aState)
 {
   nsCOMPtr<nsIStatefulFrame> stateful(do_QueryInterface(mListControlFrame));
@@ -2424,7 +2424,7 @@ nsComboboxControlFrame::SaveState(nsIPresContext* aPresContext,
 }
 
 NS_IMETHODIMP
-nsComboboxControlFrame::RestoreState(nsIPresContext* aPresContext,
+nsComboboxControlFrame::RestoreState(nsPresContext* aPresContext,
                                      nsIPresState* aState)
 {
   if (!mListControlFrame)

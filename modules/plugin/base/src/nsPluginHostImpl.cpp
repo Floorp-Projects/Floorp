@@ -152,7 +152,7 @@
 #include "nsWeakReference.h"
 #include "nsIDOMElement.h"
 #include "nsIPresShell.h"
-#include "nsIPresContext.h"
+#include "nsPresContext.h"
 #include "nsIWebNavigation.h"
 #include "nsISupportsArray.h"
 #include "nsIDocShell.h"

@@ -43,7 +43,7 @@
 class nsSplittableFrame : public nsFrame
 {
 public:
-  NS_IMETHOD Init(nsIPresContext*  aPresContext,
+  NS_IMETHOD Init(nsPresContext*  aPresContext,
                   nsIContent*      aContent,
                   nsIFrame*        aParent,
                   nsStyleContext*  aContext,
@@ -51,7 +51,7 @@ public:
   
   NS_IMETHOD  IsSplittable(nsSplittableType& aIsSplittable) const;
 
-  NS_IMETHOD Destroy(nsIPresContext* aPresContext);
+  NS_IMETHOD Destroy(nsPresContext* aPresContext);
 
   // Flow member functions.
   NS_IMETHOD  GetPrevInFlow(nsIFrame** aPrevInFlow) const;
@@ -81,7 +81,7 @@ public:
 
 protected:
 #ifdef DEBUG
-  virtual void DumpBaseRegressionData(nsIPresContext* aPresContext, FILE* out, PRInt32 aIndent, PRBool aIncludeStyleData);
+  virtual void DumpBaseRegressionData(nsPresContext* aPresContext, FILE* out, PRInt32 aIndent, PRBool aIncludeStyleData);
 #endif
 
   nsIFrame*   mPrevInFlow;

@@ -1456,7 +1456,7 @@ nsAutoSpaceManager::~nsAutoSpaceManager()
 }
 
 nsresult
-nsAutoSpaceManager::CreateSpaceManagerFor(nsIPresContext *aPresContext, nsIFrame *aFrame)
+nsAutoSpaceManager::CreateSpaceManagerFor(nsPresContext *aPresContext, nsIFrame *aFrame)
 {
   // Create a new space manager and install it in the reflow
   // state. `Remember' the old space manager so we can restore it

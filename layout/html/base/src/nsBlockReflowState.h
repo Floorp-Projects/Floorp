@@ -50,7 +50,7 @@ class nsBlockFrame;
 class nsBlockReflowState {
 public:
   nsBlockReflowState(const nsHTMLReflowState& aReflowState,
-                     nsIPresContext* aPresContext,
+                     nsPresContext* aPresContext,
                      nsBlockFrame* aFrame,
                      const nsHTMLReflowMetrics& aMetrics,
                      PRBool aBlockMarginRoot);
@@ -140,7 +140,7 @@ public:
   // The block frame that is using this object
   nsBlockFrame* mBlock;
 
-  nsIPresContext* mPresContext;
+  nsPresContext* mPresContext;
 
   const nsHTMLReflowState& mReflowState;
 

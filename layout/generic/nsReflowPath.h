@@ -52,7 +52,7 @@
 
 class nsIFrame;
 class nsHTMLReflowCommand;
-class nsIPresContext;
+class nsPresContext;
 
 /**
  * A reflow `path' that is a sparse tree the parallels the frame
@@ -202,7 +202,7 @@ public:
      * Recursively dump the reflow path object and its descendants.
      */
     void
-    Dump(nsIPresContext *aPresContext, FILE *aFile, int aDepth);
+    Dump(nsPresContext *aPresContext, FILE *aFile, int aDepth);
 #endif
 
     /**

@@ -45,7 +45,7 @@
 #include "nsRect.h"
 
 class nsIFrame;
-class nsIPresContext;
+class nsPresContext;
 class nsIRenderingContext;
 
 class nsTextAccessibleWrap : public nsTextAccessible, 
@@ -89,7 +89,7 @@ class nsTextAccessibleWrap : public nsTextAccessible,
                                  PRInt32* aWidth, PRInt32* aHeight);
 
     // Return child frame containing offset on success
-    nsIFrame* GetPointFromOffset(nsIFrame *aContainingFrame, nsIPresContext *aPresContext,
+    nsIFrame* GetPointFromOffset(nsIFrame *aContainingFrame, nsPresContext *aPresContext,
                                  nsIRenderingContext *aRenderingContext,
                                  PRInt32 aOffset, nsPoint& aOutPoint);
 };

@@ -44,7 +44,7 @@
 #include "nsIDOMDocument.h"
 #include "nsIDOMElement.h"
 #include "nsIDOMXULElement.h"
-#include "nsIPresContext.h"
+#include "nsPresContext.h"
 #include "nsIFrame.h"
 #include "nsIScrollableView.h"
 #include "nsIScrollableFrame.h"
@@ -234,7 +234,7 @@ NS_IMETHODIMP nsScrollBoxObject::ScrollToElement(nsIDOMElement *child)
        return NS_ERROR_FAILURE;
 
     // prepare for twips
-    nsCOMPtr<nsIPresContext> context;
+    nsCOMPtr<nsPresContext> context;
     mPresShell->GetPresContext(getter_AddRefs(context));
     float pixelsToTwips = 0.0;
     pixelsToTwips = context->PixelsToTwips();
@@ -309,7 +309,7 @@ NS_IMETHODIMP nsScrollBoxObject::EnsureElementIsVisible(nsIDOMElement *child)
        return NS_ERROR_FAILURE;
 
     // prepare for twips
-    nsCOMPtr<nsIPresContext> context;
+    nsCOMPtr<nsPresContext> context;
     mPresShell->GetPresContext(getter_AddRefs(context));
     float pixelsToTwips = 0.0;
     pixelsToTwips = context->PixelsToTwips();

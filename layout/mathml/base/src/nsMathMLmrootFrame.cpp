@@ -41,7 +41,7 @@
 
 #include "nsCOMPtr.h"
 #include "nsFrame.h"
-#include "nsIPresContext.h"
+#include "nsPresContext.h"
 #include "nsUnitConversion.h"
 #include "nsStyleContext.h"
 #include "nsStyleConsts.h"
@@ -94,7 +94,7 @@ nsMathMLmrootFrame::~nsMathMLmrootFrame()
 }
 
 NS_IMETHODIMP
-nsMathMLmrootFrame::Init(nsIPresContext*  aPresContext,
+nsMathMLmrootFrame::Init(nsPresContext*  aPresContext,
                          nsIContent*      aContent,
                          nsIFrame*        aParent,
                          nsStyleContext*  aContext,
@@ -114,7 +114,7 @@ nsMathMLmrootFrame::Init(nsIPresContext*  aPresContext,
 }
 
 NS_IMETHODIMP
-nsMathMLmrootFrame::TransmitAutomaticData(nsIPresContext* aPresContext)
+nsMathMLmrootFrame::TransmitAutomaticData(nsPresContext* aPresContext)
 {
   // 1. The REC says:
   //    The <mroot> element increments scriptlevel by 2, and sets displaystyle to
@@ -130,7 +130,7 @@ nsMathMLmrootFrame::TransmitAutomaticData(nsIPresContext* aPresContext)
 }
 
 NS_IMETHODIMP
-nsMathMLmrootFrame::Paint(nsIPresContext*      aPresContext,
+nsMathMLmrootFrame::Paint(nsPresContext*      aPresContext,
                           nsIRenderingContext& aRenderingContext,
                           const nsRect&        aDirtyRect,
                           nsFramePaintLayer    aWhichLayer,
@@ -176,7 +176,7 @@ nsMathMLmrootFrame::Paint(nsIPresContext*      aPresContext,
 }
 
 NS_IMETHODIMP
-nsMathMLmrootFrame::Reflow(nsIPresContext*          aPresContext,
+nsMathMLmrootFrame::Reflow(nsPresContext*          aPresContext,
                            nsHTMLReflowMetrics&     aDesiredSize,
                            const nsHTMLReflowState& aReflowState,
                            nsReflowStatus&          aStatus)

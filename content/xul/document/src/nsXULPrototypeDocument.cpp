@@ -96,7 +96,7 @@ public:
     virtual void SetOpenerWindow(nsIDOMWindowInternal *aOpener);
     virtual void SetGlobalObjectOwner(nsIScriptGlobalObjectOwner* aOwner);
     virtual nsIScriptGlobalObjectOwner *GetGlobalObjectOwner();
-    virtual nsresult HandleDOMEvent(nsIPresContext* aPresContext, 
+    virtual nsresult HandleDOMEvent(nsPresContext* aPresContext, 
                                     nsEvent* aEvent, 
                                     nsIDOMEvent** aDOMEvent,
                                     PRUint32 aFlags,
@@ -891,7 +891,7 @@ nsXULPDGlobalObject::GetGlobalObjectOwner()
 
 
 nsresult
-nsXULPDGlobalObject::HandleDOMEvent(nsIPresContext* aPresContext, 
+nsXULPDGlobalObject::HandleDOMEvent(nsPresContext* aPresContext, 
                                        nsEvent* aEvent, 
                                        nsIDOMEvent** aDOMEvent,
                                        PRUint32 aFlags,

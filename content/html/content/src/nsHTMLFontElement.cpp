@@ -42,7 +42,7 @@
 #include "nsHTMLAtoms.h"
 #include "nsIDeviceContext.h"
 #include "nsStyleConsts.h"
-#include "nsIPresContext.h"
+#include "nsPresContext.h"
 #include "nsMappedAttributes.h"
 #include "nsCSSStruct.h"
 #include "nsRuleData.h"

@@ -42,7 +42,7 @@
 #include "nsISupports.h"
 
 class nsIStyleSheet;
-class nsIPresContext;
+class nsPresContext;
 class nsIContent;
 struct nsRuleData;
 

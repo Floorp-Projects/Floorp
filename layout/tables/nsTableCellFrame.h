@@ -82,7 +82,7 @@ public:
   nsTableCellFrame();
   ~nsTableCellFrame();
 
-  NS_IMETHOD Init(nsIPresContext*  aPresContext,
+  NS_IMETHOD Init(nsPresContext*  aPresContext,
                   nsIContent*      aContent,
                   nsIFrame*        aParent,
                   nsStyleContext*  aContext,
@@ -93,7 +93,7 @@ public:
 #endif
 
 
-  NS_IMETHOD  AttributeChanged(nsIPresContext* aPresContext,
+  NS_IMETHOD  AttributeChanged(nsPresContext* aPresContext,
                                nsIContent*     aChild,
                                PRInt32         aNameSpaceID,
                                nsIAtom*        aAttribute,
@@ -102,16 +102,16 @@ public:
   // table cells contain an area frame which does most of the work, and
   // so these functions should never be called. They assert and return
   // NS_ERROR_NOT_IMPLEMENTED
-  NS_IMETHOD AppendFrames(nsIPresContext* aPresContext,
+  NS_IMETHOD AppendFrames(nsPresContext* aPresContext,
                           nsIPresShell&   aPresShell,
                           nsIAtom*        aListName,
                           nsIFrame*       aFrameList);
-  NS_IMETHOD InsertFrames(nsIPresContext* aPresContext,
+  NS_IMETHOD InsertFrames(nsPresContext* aPresContext,
                           nsIPresShell&   aPresShell,
                           nsIAtom*        aListName,
                           nsIFrame*       aPrevFrame,
                           nsIFrame*       aFrameList);
-  NS_IMETHOD RemoveFrame(nsIPresContext* aPresContext,
+  NS_IMETHOD RemoveFrame(nsPresContext* aPresContext,
                          nsIPresShell&   aPresShell,
                          nsIAtom*        aListName,
                          nsIFrame*       aOldFrame);
@@ -132,23 +132,23 @@ public:
   friend nsresult 
   NS_NewTableCellFrame(nsIPresShell* aPresShell, nsIFrame** aResult);
 
-  NS_IMETHOD Paint(nsIPresContext*      aPresContext,
+  NS_IMETHOD Paint(nsPresContext*      aPresContext,
                    nsIRenderingContext& aRenderingContext,
                    const nsRect&        aDirtyRect,
                    nsFramePaintLayer    aWhichLayer,
                    PRUint32             aFlags = 0);
 
-  NS_IMETHOD GetFrameForPoint(nsIPresContext* aPresContext,
+  NS_IMETHOD GetFrameForPoint(nsPresContext* aPresContext,
                               const nsPoint& aPoint, 
                               nsFramePaintLayer aWhichLayer,
                               nsIFrame**     aFrame);
 
-  NS_IMETHOD SetSelected(nsIPresContext* aPresContext,
+  NS_IMETHOD SetSelected(nsPresContext* aPresContext,
                          nsIDOMRange *aRange,
                          PRBool aSelected,
                          nsSpread aSpread);
 
-  NS_IMETHOD Reflow(nsIPresContext*      aPresContext,
+  NS_IMETHOD Reflow(nsPresContext*      aPresContext,
                     nsHTMLReflowMetrics& aDesiredSize,
                     const nsHTMLReflowState& aReflowState,
                     nsReflowStatus&      aStatus);
@@ -164,7 +164,7 @@ public:
   NS_IMETHOD GetFrameName(nsAString& aResult) const;
 #endif
 
-  virtual void VerticallyAlignChild(nsIPresContext*          aPresContext,
+  virtual void VerticallyAlignChild(nsPresContext*          aPresContext,
                                     const nsHTMLReflowState& aReflowState,
                                     nscoord                  aMaxAscent);
 
@@ -266,9 +266,9 @@ public:
   void    SetLastBlockHeight(nscoord aValue);
 
   // The collapse offset is (0,0) except for cells originating in a row/col which is collapsed
-  void    SetCollapseOffsetX(nsIPresContext* aPresContext, nscoord aXOffset);
-  void    SetCollapseOffsetY(nsIPresContext* aPresContext, nscoord aYOffset);
-  void    GetCollapseOffset(nsIPresContext* aPresContext, nsPoint& aOffset);
+  void    SetCollapseOffsetX(nsPresContext* aPresContext, nscoord aXOffset);
+  void    SetCollapseOffsetY(nsPresContext* aPresContext, nscoord aYOffset);
+  void    GetCollapseOffset(nsPresContext* aPresContext, nsPoint& aOffset);
 
   nsTableCellFrame* GetNextCell() const;
 
@@ -290,7 +290,7 @@ protected:
 
   friend class nsTableRowFrame;
 
-  virtual void PaintUnderlay(nsIPresContext&           aPresContext,
+  virtual void PaintUnderlay(nsPresContext&           aPresContext,
                              nsIRenderingContext&      aRenderingContext,
                              const nsRect&             aDirtyRect,
                              PRUint32&                 aFlags,
@@ -298,7 +298,7 @@ protected:
                              const nsStylePadding&     aStylePadding,
                              const nsStyleTableBorder& aCellTableStyle);
 
-  nsresult  DecorateForSelection(nsIPresContext* aPresContext,
+  nsresult  DecorateForSelection(nsPresContext* aPresContext,
                                  nsIRenderingContext& aRenderingContext,
                                  const nsStyleBackground* aStyleColor);
 
@@ -465,7 +465,7 @@ public:
 
 protected:
 
-  virtual void PaintUnderlay(nsIPresContext&           aPresContext,
+  virtual void PaintUnderlay(nsPresContext&           aPresContext,
                              nsIRenderingContext&      aRenderingContext,
                              const nsRect&             aDirtyRect,
                              PRUint32&                 aFlags,

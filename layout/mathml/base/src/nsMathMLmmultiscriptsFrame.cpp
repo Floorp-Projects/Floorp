@@ -40,7 +40,7 @@
 
 #include "nsCOMPtr.h"
 #include "nsFrame.h"
-#include "nsIPresContext.h"
+#include "nsPresContext.h"
 #include "nsUnitConversion.h"
 #include "nsStyleContext.h"
 #include "nsStyleConsts.h"
@@ -77,7 +77,7 @@ nsMathMLmmultiscriptsFrame::~nsMathMLmmultiscriptsFrame()
 }
 
 NS_IMETHODIMP
-nsMathMLmmultiscriptsFrame::TransmitAutomaticData(nsIPresContext* aPresContext)
+nsMathMLmmultiscriptsFrame::TransmitAutomaticData(nsPresContext* aPresContext)
 {
   // if our base is an embellished operator, let its state bubble to us
   GetEmbellishDataFrom(mFrames.FirstChild(), mEmbellishData);
@@ -128,7 +128,7 @@ nsMathMLmmultiscriptsFrame::TransmitAutomaticData(nsIPresContext* aPresContext)
 }
 
 void
-nsMathMLmmultiscriptsFrame::ProcessAttributes(nsIPresContext* aPresContext)
+nsMathMLmmultiscriptsFrame::ProcessAttributes(nsPresContext* aPresContext)
 {
   mSubScriptShift = 0;
   mSupScriptShift = 0;
@@ -154,7 +154,7 @@ nsMathMLmmultiscriptsFrame::ProcessAttributes(nsIPresContext* aPresContext)
 }
 
 NS_IMETHODIMP
-nsMathMLmmultiscriptsFrame::Place(nsIPresContext*      aPresContext,
+nsMathMLmmultiscriptsFrame::Place(nsPresContext*      aPresContext,
                                   nsIRenderingContext& aRenderingContext,
                                   PRBool               aPlaceOrigin,
                                   nsHTMLReflowMetrics& aDesiredSize)

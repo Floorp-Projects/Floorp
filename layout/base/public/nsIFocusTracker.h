@@ -42,7 +42,7 @@
 #include "nsIFrame.h"
 
 
-class nsIPresContext;
+class nsPresContext;
    
 
 // IID for the nsIFocusTracker interface
@@ -72,11 +72,11 @@ public:
                                 nsIFrame**  aPrimaryFrame) const = 0;
 
   /**
-   * GetPresContent will return the nsIPresContext Interface from this 
+   * GetPresContent will return the nsPresContext Interface from this 
    * FocusTracker
    * usefull for getting screen coordinates of current selection
    */
-  NS_IMETHOD GetPresContext(nsIPresContext **aContext) = 0;
+  NS_IMETHOD GetPresContext(nsPresContext **aContext) = 0;
 };
 
 

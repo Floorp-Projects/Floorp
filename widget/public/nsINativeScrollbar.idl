@@ -47,7 +47,7 @@
  *
  */
 
-interface nsIPresContext;
+interface nsPresContext;
 interface nsIFrame;
 interface nsIContent;
 interface nsIScrollbarMediator;

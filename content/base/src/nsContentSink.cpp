@@ -55,7 +55,7 @@
 #include "nsIParser.h"
 #include "nsContentErrors.h"
 #include "nsIPresShell.h"
-#include "nsIPresContext.h"
+#include "nsPresContext.h"
 #include "nsIViewManager.h"
 #include "nsIScrollableView.h"
 #include "nsIContentViewer.h"
@@ -942,7 +942,7 @@ nsContentSink::StartLayout(PRBool aIsFrameset)
       shell->BeginObservingDocument();
 
       // Resize-reflow this time
-      nsCOMPtr<nsIPresContext> cx;
+      nsCOMPtr<nsPresContext> cx;
       shell->GetPresContext(getter_AddRefs(cx));
       nsRect r = cx->GetVisibleArea();
       shell->InitialReflow(r.width, r.height);

@@ -45,7 +45,7 @@
 #include "nsIDOMEventReceiver.h"
 
 class nsMenuBarFrame;
-class nsIPresContext;
+class nsPresContext;
 class nsIDOMKeyEvent;
 
 /** editor Implementation of the DragListener interface

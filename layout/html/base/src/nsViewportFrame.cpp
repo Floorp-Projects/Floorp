@@ -41,7 +41,7 @@
 #include "nsIViewManager.h"
 #include "nsIScrollableFrame.h"
 #include "nsIDeviceContext.h"
-#include "nsIPresContext.h"
+#include "nsPresContext.h"
 #include "nsReflowPath.h"
 #include "nsIPresShell.h"
 
@@ -61,14 +61,14 @@ NS_NewViewportFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame)
 }
 
 NS_IMETHODIMP
-ViewportFrame::Destroy(nsIPresContext* aPresContext)
+ViewportFrame::Destroy(nsPresContext* aPresContext)
 {
   mFixedContainer.DestroyFrames(this, aPresContext);
   return nsContainerFrame::Destroy(aPresContext);
 }
 
 NS_IMETHODIMP
-ViewportFrame::SetInitialChildList(nsIPresContext* aPresContext,
+ViewportFrame::SetInitialChildList(nsPresContext* aPresContext,
                                    nsIAtom*        aListName,
                                    nsIFrame*       aChildList)
 {
@@ -89,7 +89,7 @@ ViewportFrame::SetInitialChildList(nsIPresContext* aPresContext,
 }
 
 NS_IMETHODIMP
-ViewportFrame::GetFrameForPoint(nsIPresContext* aPresContext,
+ViewportFrame::GetFrameForPoint(nsPresContext* aPresContext,
                                    const nsPoint& aPoint, 
                                    nsFramePaintLayer aWhichLayer,
                                    nsIFrame**     aFrame)
@@ -100,7 +100,7 @@ ViewportFrame::GetFrameForPoint(nsIPresContext* aPresContext,
 }
 
 NS_IMETHODIMP
-ViewportFrame::AppendFrames(nsIPresContext* aPresContext,
+ViewportFrame::AppendFrames(nsPresContext* aPresContext,
                             nsIPresShell&   aPresShell,
                             nsIAtom*        aListName,
                             nsIFrame*       aFrameList)
@@ -121,7 +121,7 @@ ViewportFrame::AppendFrames(nsIPresContext* aPresContext,
 }
 
 NS_IMETHODIMP
-ViewportFrame::InsertFrames(nsIPresContext* aPresContext,
+ViewportFrame::InsertFrames(nsPresContext* aPresContext,
                             nsIPresShell&   aPresShell,
                             nsIAtom*        aListName,
                             nsIFrame*       aPrevFrame,
@@ -143,7 +143,7 @@ ViewportFrame::InsertFrames(nsIPresContext* aPresContext,
 }
 
 NS_IMETHODIMP
-ViewportFrame::RemoveFrame(nsIPresContext* aPresContext,
+ViewportFrame::RemoveFrame(nsPresContext* aPresContext,
                            nsIPresShell&   aPresShell,
                            nsIAtom*        aListName,
                            nsIFrame*       aOldFrame)
@@ -209,7 +209,7 @@ nsPoint
 }
 
 NS_IMETHODIMP
-ViewportFrame::Reflow(nsIPresContext*          aPresContext,
+ViewportFrame::Reflow(nsPresContext*          aPresContext,
                       nsHTMLReflowMetrics&     aDesiredSize,
                       const nsHTMLReflowState& aReflowState,
                       nsReflowStatus&          aStatus)

@@ -58,7 +58,7 @@
 #include "nsIView.h"
 #include "nsIScrollableView.h"
 #include "nsIViewManager.h"
-#include "nsIPresContext.h"
+#include "nsPresContext.h"
 #include "nsILookAndFeel.h"
 #include "nsBlockFrame.h"
 #include "nsISelectionController.h"
@@ -118,7 +118,7 @@ NS_IMETHODIMP nsCaret::Init(nsIPresShell *inPresShell)
   // get nsILookAndFeel from the pres context, which has one cached.
   nsILookAndFeel *lookAndFeel = nsnull;
   
-  nsCOMPtr<nsIPresContext> presContext;
+  nsCOMPtr<nsPresContext> presContext;
   inPresShell->GetPresContext(getter_AddRefs(presContext));
   if (presContext)
     lookAndFeel = presContext->LookAndFeel();
@@ -340,7 +340,7 @@ NS_IMETHODIMP nsCaret::GetCaretCoordinates(EViewCoordinates aRelativeToType, nsI
     return NS_ERROR_UNEXPECTED;
   // ramp up to make a rendering context for measuring text.
   // First, we get the pres context ...
-  nsCOMPtr<nsIPresContext> presContext;
+  nsCOMPtr<nsPresContext> presContext;
   err = presShell->GetPresContext(getter_AddRefs(presContext));
   if (NS_FAILED(err))
     return err;
@@ -562,7 +562,7 @@ PRBool nsCaret::SetupDrawingFrameAndOffset(nsIDOMNode* aNode, PRInt32 aOffset, n
   // NS_STYLE_DIRECTION_LTR : LTR or Default
   // NS_STYLE_DIRECTION_RTL
   // NS_STYLE_DIRECTION_INHERIT
-  nsCOMPtr<nsIPresContext> presContext;
+  nsCOMPtr<nsPresContext> presContext;
   rv = presShell->GetPresContext(getter_AddRefs(presContext));
 
   if (presContext && presContext->BidiEnabled())
@@ -761,7 +761,7 @@ void nsCaret::GetViewForRendering(nsIFrame *caretFrame, EViewCoordinates coordTy
   if (!presShell)
     return;
   
-  nsCOMPtr<nsIPresContext>  presContext;
+  nsCOMPtr<nsPresContext>  presContext;
   presShell->GetPresContext(getter_AddRefs(presContext));
 
   viewOffset.x = 0;
@@ -953,7 +953,7 @@ void nsCaret::GetCaretRectAndInvert()
   nsCOMPtr<nsIPresShell> presShell = do_QueryReferent(mPresShell);
   if (!presShell) return;
   
-  nsCOMPtr<nsIPresContext> presContext;
+  nsCOMPtr<nsPresContext> presContext;
   if (NS_FAILED(presShell->GetPresContext(getter_AddRefs(presContext))))
     return;
 

@@ -49,7 +49,7 @@
 #include "nsIScriptLoader.h"
 #include "nsIScriptLoaderObserver.h"
 #include "nsIPresShell.h"
-#include "nsIPresContext.h"
+#include "nsPresContext.h"
 #include "nsGUIEvent.h"
 #include "nsIDOMText.h"
 
@@ -228,7 +228,7 @@ nsSVGScriptElement::ScriptAvailable(nsresult aResult,
                                     const nsAString& aScript)
 {
   if (!aIsInline && NS_FAILED(aResult)) {
-    nsCOMPtr<nsIPresContext> presContext;
+    nsCOMPtr<nsPresContext> presContext;
     if (mDocument) {
       nsIPresShell *presShell = mDocument->GetShellAt(0);
       if (presShell)
@@ -268,7 +268,7 @@ nsSVGScriptElement::ScriptEvaluated(nsresult aResult,
 {
   nsresult rv = NS_OK;
   if (!aIsInline) {
-    nsCOMPtr<nsIPresContext> presContext;
+    nsCOMPtr<nsPresContext> presContext;
     if (mDocument) {
       nsIPresShell *presShell = mDocument->GetShellAt(0);
       if (presShell)

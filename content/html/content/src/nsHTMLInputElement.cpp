@@ -55,7 +55,7 @@
 #include "nsGenericHTMLElement.h"
 #include "nsHTMLAtoms.h"
 #include "nsStyleConsts.h"
-#include "nsIPresContext.h"
+#include "nsPresContext.h"
 #include "nsMappedAttributes.h"
 #include "nsIFormControl.h"
 #include "nsIForm.h"
@@ -174,7 +174,7 @@ public:
   virtual PRBool AllowDrop();
 
   // nsIContent
-  virtual void SetFocus(nsIPresContext* aPresContext);
+  virtual void SetFocus(nsPresContext* aPresContext);
   virtual PRBool IsFocusable(PRInt32 *aTabIndex = nsnull);
 
   virtual PRBool ParseAttribute(nsIAtom* aAttribute,
@@ -188,7 +188,7 @@ public:
                                     nsChangeHint& aHint) const;
   NS_IMETHOD_(PRBool) IsAttributeMapped(const nsIAtom* aAttribute) const;
   NS_IMETHOD GetAttributeMappingFunction(nsMapRuleToAttributesFunc& aMapRuleFunc) const;
-  virtual nsresult HandleDOMEvent(nsIPresContext* aPresContext,
+  virtual nsresult HandleDOMEvent(nsPresContext* aPresContext,
                                   nsEvent* aEvent, nsIDOMEvent** aDOMEvent,
                                   PRUint32 aFlags,
                                   nsEventStatus* aEventStatus);
@@ -248,7 +248,7 @@ protected:
   nsresult GetSelectionRange(PRInt32* aSelectionStart, PRInt32* aSelectionEnd);
   //Helper method
 #ifdef ACCESSIBILITY
-  nsresult FireEventForAccessibility(nsIPresContext* aPresContext,
+  nsresult FireEventForAccessibility(nsPresContext* aPresContext,
                                      const nsAString& aEventType);
 #endif
 
@@ -273,7 +273,7 @@ protected:
   void AfterSetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
                     const nsAString* aValue, PRBool aNotify);
 
-  void SelectAll(nsIPresContext* aPresContext);
+  void SelectAll(nsPresContext* aPresContext);
   PRBool IsImage() const
   {
     nsAutoString tmp;
@@ -316,7 +316,7 @@ protected:
    * MaybeSubmitForm looks for a submit input or a single text control
    * and submits the form if either is present.
    */
-  nsresult MaybeSubmitForm(nsIPresContext* aPresContext);
+  nsresult MaybeSubmitForm(nsPresContext* aPresContext);
   
   nsCOMPtr<nsIControllers> mControllers;
 
@@ -702,7 +702,7 @@ nsHTMLInputElement::SetValueInternal(const nsAString& aValue,
     }
     // If the frame owns the value, set the value in the frame
     if (frameOwnsValue) {
-      nsCOMPtr<nsIPresContext> presContext;
+      nsCOMPtr<nsPresContext> presContext;
       GetPresContext(this, getter_AddRefs(presContext));
       formControlFrame->SetProperty(presContext, nsHTMLAtoms::value, aValue);
       return NS_OK;
@@ -902,7 +902,7 @@ nsHTMLInputElement::GetRadioGroupContainer()
 }
 
 nsresult
-nsHTMLInputElement::MaybeSubmitForm(nsIPresContext* aPresContext)
+nsHTMLInputElement::MaybeSubmitForm(nsPresContext* aPresContext)
 {
   if (!mForm) {
     // Nothing to do here.
@@ -979,7 +979,7 @@ nsHTMLInputElement::SetCheckedInternal(PRBool aChecked, PRBool aNotify)
   //
   nsIFrame* frame = GetPrimaryFrame(PR_FALSE);
   if (frame) {
-    nsCOMPtr<nsIPresContext> presContext;
+    nsCOMPtr<nsPresContext> presContext;
     GetPresContext(this, getter_AddRefs(presContext));
 
     if (mType == NS_FORM_INPUT_CHECKBOX) {
@@ -1014,7 +1014,7 @@ nsHTMLInputElement::FireOnChange()
   //
   // Since the value is changing, send out an onchange event (bug 23571)
   //
-  nsCOMPtr<nsIPresContext> presContext;
+  nsCOMPtr<nsPresContext> presContext;
   GetPresContext(this, getter_AddRefs(presContext));
   nsEventStatus status = nsEventStatus_eIgnore;
   nsEvent event(NS_FORM_CHANGE);
@@ -1038,7 +1038,7 @@ nsHTMLInputElement::Focus()
 }
 
 void
-nsHTMLInputElement::SetFocus(nsIPresContext* aPresContext)
+nsHTMLInputElement::SetFocus(nsPresContext* aPresContext)
 {
   if (!aPresContext)
     return;
@@ -1099,7 +1099,7 @@ nsHTMLInputElement::Select()
     // XXX Bug?  We have to give the input focus before contents can be
     // selected
 
-    nsCOMPtr<nsIPresContext> presContext;
+    nsCOMPtr<nsPresContext> presContext;
     GetPresContext(this, getter_AddRefs(presContext)); 
 
     // If the window is not active, do not allow the select to bring the
@@ -1160,7 +1160,7 @@ nsHTMLInputElement::Select()
 }
 
 void
-nsHTMLInputElement::SelectAll(nsIPresContext* aPresContext)
+nsHTMLInputElement::SelectAll(nsPresContext* aPresContext)
 {
   nsIFormControlFrame* formControlFrame = GetFormControlFrame(PR_TRUE);
 
@@ -1196,7 +1196,7 @@ nsHTMLInputElement::Click()
        mType == NS_FORM_INPUT_IMAGE)) {
 
     nsCOMPtr<nsIDocument> doc = mDocument; // Strong in case the event kills it
-    nsCOMPtr<nsIPresContext> context;
+    nsCOMPtr<nsPresContext> context;
 
     nsIPresShell *shell = doc->GetShellAt(0);
 
@@ -1221,7 +1221,7 @@ nsHTMLInputElement::Click()
 }
 
 nsresult
-nsHTMLInputElement::HandleDOMEvent(nsIPresContext* aPresContext,
+nsHTMLInputElement::HandleDOMEvent(nsPresContext* aPresContext,
                                    nsEvent* aEvent,
                                    nsIDOMEvent** aDOMEvent,
                                    PRUint32 aFlags,
@@ -2035,7 +2035,7 @@ nsHTMLInputElement::GetPhonetic(nsAString& aPhonetic)
 
 #ifdef ACCESSIBILITY
 nsresult
-nsHTMLInputElement::FireEventForAccessibility(nsIPresContext* aPresContext,
+nsHTMLInputElement::FireEventForAccessibility(nsPresContext* aPresContext,
                                               const nsAString& aEventType)
 {
   nsCOMPtr<nsIDOMEvent> event;

@@ -47,7 +47,7 @@
 #include "nsIFrame.h"
 #include "nsICSSStyleRule.h"
 #include "nsIStyleRuleProcessor.h"
-#include "nsIPresContext.h"
+#include "nsPresContext.h"
 #include "nsIDocument.h"
 #include "nsCOMPtr.h"
 #include "nsRuleWalker.h"

@@ -56,7 +56,7 @@
 #include "BasicTableLayoutStrategy.h"
 #include "FixedTableLayoutStrategy.h"
 
-#include "nsIPresContext.h"
+#include "nsPresContext.h"
 #include "nsCSSRendering.h"
 #include "nsStyleConsts.h"
 #include "nsVoidArray.h"
@@ -106,7 +106,7 @@ struct nsTableReflowState {
   // The first body section row group frame, i.e. not a header or footer
   nsIFrame* firstBodySection;
 
-  nsTableReflowState(nsIPresContext&          aPresContext,
+  nsTableReflowState(nsPresContext&          aPresContext,
                      const nsHTMLReflowState& aReflowState,
                      nsTableFrame&            aTableFrame,
                      nsReflowReason           aReason,
@@ -117,7 +117,7 @@ struct nsTableReflowState {
     Init(aPresContext, aTableFrame, aReason, aAvailWidth, aAvailHeight);
   }
 
-  void Init(nsIPresContext& aPresContext,
+  void Init(nsPresContext& aPresContext,
             nsTableFrame&   aTableFrame,
             nsReflowReason  aReason,
             nscoord         aAvailWidth,
@@ -148,7 +148,7 @@ struct nsTableReflowState {
     firstBodySection = nsnull;
   }
 
-  nsTableReflowState(nsIPresContext&          aPresContext,
+  nsTableReflowState(nsPresContext&          aPresContext,
                      const nsHTMLReflowState& aReflowState,
                      nsTableFrame&            aTableFrame)
     : reflowState(aReflowState)
@@ -177,7 +177,7 @@ struct BCPropertyData
 };
 
 NS_IMETHODIMP 
-nsTableFrame::GetParentStyleContextFrame(nsIPresContext* aPresContext,
+nsTableFrame::GetParentStyleContextFrame(nsPresContext* aPresContext,
                                          nsIFrame**      aProviderFrame,
                                          PRBool*         aIsChild)
 {
@@ -245,7 +245,7 @@ nsresult nsTableFrame::QueryInterface(const nsIID& aIID, void** aInstancePtr)
 }
 
 NS_IMETHODIMP
-nsTableFrame::Init(nsIPresContext*  aPresContext,
+nsTableFrame::Init(nsPresContext*  aPresContext,
                    nsIContent*      aContent,
                    nsIFrame*        aParent,
                    nsStyleContext*  aContext,
@@ -304,7 +304,7 @@ nsTableFrame::~nsTableFrame()
 }
 
 NS_IMETHODIMP
-nsTableFrame::Destroy(nsIPresContext* aPresContext)
+nsTableFrame::Destroy(nsPresContext* aPresContext)
 {
   mColGroups.DestroyFrames(aPresContext);
   return nsHTMLContainerFrame::Destroy(aPresContext);
@@ -360,7 +360,7 @@ nsTableFrame::AppendDirtyReflowCommand(nsIPresShell* aPresShell,
 
 // Make sure any views are positioned properly
 void
-nsTableFrame::RePositionViews(nsIPresContext* aPresContext,
+nsTableFrame::RePositionViews(nsPresContext* aPresContext,
                               nsIFrame*       aFrame)
 {
   nsContainerFrame::PositionFrameView(aPresContext, aFrame);
@@ -390,7 +390,7 @@ nsTableFrame::PageBreakAfter(nsIFrame& aSourceFrame,
 // XXX this needs to be cleaned up so that the frame constructor breaks out col group
 // frames into a separate child list.
 NS_IMETHODIMP
-nsTableFrame::SetInitialChildList(nsIPresContext* aPresContext,
+nsTableFrame::SetInitialChildList(nsPresContext* aPresContext,
                                   nsIAtom*        aListName,
                                   nsIFrame*       aChildList)
 {
@@ -460,7 +460,7 @@ nsTableFrame::IsContainingBlock() const
   return PR_TRUE;
 }
 
-void nsTableFrame::AttributeChangedFor(nsIPresContext* aPresContext, 
+void nsTableFrame::AttributeChangedFor(nsPresContext* aPresContext, 
                                        nsIFrame*       aFrame,
                                        nsIContent*     aContent, 
                                        nsIAtom*        aAttribute)
@@ -659,7 +659,7 @@ NS_IMETHODIMP nsTableFrame::AdjustRowIndices(nsIFrame*       aRowGroup,
 }
 
 
-void nsTableFrame::InsertColGroups(nsIPresContext& aPresContext,
+void nsTableFrame::InsertColGroups(nsPresContext& aPresContext,
                                    PRInt32         aStartColIndex,
                                    nsIFrame*       aFirstFrame,
                                    nsIFrame*       aLastFrame)
@@ -694,7 +694,7 @@ void nsTableFrame::InsertColGroups(nsIPresContext& aPresContext,
   }
 }
 
-void nsTableFrame::InsertCol(nsIPresContext&  aPresContext,
+void nsTableFrame::InsertCol(nsPresContext&  aPresContext,
                              nsTableColFrame& aColFrame,
                              PRInt32          aColIndex)
 {
@@ -738,7 +738,7 @@ void nsTableFrame::InsertCol(nsIPresContext&  aPresContext,
   }
 }
 
-void nsTableFrame::RemoveCol(nsIPresContext&       aPresContext,
+void nsTableFrame::RemoveCol(nsPresContext&       aPresContext,
                              nsTableColGroupFrame* aColGroupFrame,
                              PRInt32               aColIndex,
                              PRBool                aRemoveFromCache,
@@ -809,7 +809,7 @@ nscoord nsTableFrame::GetPreferredWidth() const
 
 // XXX this needs to be moved to nsCSSFrameConstructor
 nsTableColGroupFrame*
-nsTableFrame::CreateAnonymousColGroupFrame(nsIPresContext&     aPresContext,
+nsTableFrame::CreateAnonymousColGroupFrame(nsPresContext&     aPresContext,
                                            nsTableColGroupType aColGroupType)
 {
   nsIContent* colGroupContent = GetContent();
@@ -830,7 +830,7 @@ nsTableFrame::CreateAnonymousColGroupFrame(nsIPresContext&     aPresContext,
 }
 
 void
-nsTableFrame::CreateAnonymousColFrames(nsIPresContext& aPresContext,
+nsTableFrame::CreateAnonymousColFrames(nsPresContext& aPresContext,
                                        PRInt32         aNumColsToAdd,
                                        nsTableColType  aColType,
                                        PRBool          aDoAppend,
@@ -887,7 +887,7 @@ nsTableFrame::CreateAnonymousColFrames(nsIPresContext& aPresContext,
 // XXX this needs to be moved to nsCSSFrameConstructor
 // Right now it only creates the col frames at the end 
 void
-nsTableFrame::CreateAnonymousColFrames(nsIPresContext&       aPresContext,
+nsTableFrame::CreateAnonymousColFrames(nsPresContext&       aPresContext,
                                        nsTableColGroupFrame& aColGroupFrame,
                                        PRInt32               aNumColsToAdd,
                                        nsTableColType        aColType,
@@ -972,7 +972,7 @@ nsTableFrame::CreateAnonymousColFrames(nsIPresContext&       aPresContext,
 }
 
 void
-nsTableFrame::AppendCell(nsIPresContext&   aPresContext,
+nsTableFrame::AppendCell(nsPresContext&   aPresContext,
                          nsTableCellFrame& aCellFrame,
                          PRInt32           aRowIndex)
 {
@@ -993,7 +993,7 @@ nsTableFrame::AppendCell(nsIPresContext&   aPresContext,
   }
 }
 
-void nsTableFrame::InsertCells(nsIPresContext& aPresContext,
+void nsTableFrame::InsertCells(nsPresContext& aPresContext,
                                nsVoidArray&    aCellFrames, 
                                PRInt32         aRowIndex, 
                                PRInt32         aColIndexBefore)
@@ -1017,7 +1017,7 @@ void nsTableFrame::InsertCells(nsIPresContext& aPresContext,
 
 // this removes the frames from the col group and table, but not the cell map
 PRInt32 
-nsTableFrame::DestroyAnonymousColFrames(nsIPresContext& aPresContext,
+nsTableFrame::DestroyAnonymousColFrames(nsPresContext& aPresContext,
                                         PRInt32 aNumFrames)
 {
   // only remove cols that are of type eTypeAnonymous cell (they are at the end)
@@ -1042,7 +1042,7 @@ nsTableFrame::DestroyAnonymousColFrames(nsIPresContext& aPresContext,
   return (aNumFrames - numColsRemoved);
 }
 
-void nsTableFrame::RemoveCell(nsIPresContext&   aPresContext,
+void nsTableFrame::RemoveCell(nsPresContext&   aPresContext,
                               nsTableCellFrame* aCellFrame,
                               PRInt32           aRowIndex)
 {
@@ -1087,7 +1087,7 @@ nsTableFrame::GetStartRowIndex(nsTableRowGroupFrame& aRowGroupFrame)
 }
 
 // this cannot extend beyond a single row group
-void nsTableFrame::AppendRows(nsIPresContext&       aPresContext,
+void nsTableFrame::AppendRows(nsPresContext&       aPresContext,
                               nsTableRowGroupFrame& aRowGroupFrame,
                               PRInt32               aRowIndex,
                               nsVoidArray&          aRowFrames)
@@ -1100,7 +1100,7 @@ void nsTableFrame::AppendRows(nsIPresContext&       aPresContext,
 }
 
 PRInt32
-nsTableFrame::InsertRow(nsIPresContext&       aPresContext,
+nsTableFrame::InsertRow(nsPresContext&       aPresContext,
                         nsTableRowGroupFrame& aRowGroupFrame,
                         nsIFrame&             aRowFrame,
                         PRInt32               aRowIndex,
@@ -1113,7 +1113,7 @@ nsTableFrame::InsertRow(nsIPresContext&       aPresContext,
 
 // this cannot extend beyond a single row group
 PRInt32
-nsTableFrame::InsertRows(nsIPresContext&       aPresContext,
+nsTableFrame::InsertRows(nsPresContext&       aPresContext,
                          nsTableRowGroupFrame& aRowGroupFrame,
                          nsVoidArray&          aRowFrames,
                          PRInt32               aRowIndex,
@@ -1161,7 +1161,7 @@ nsTableFrame::InsertRows(nsIPresContext&       aPresContext,
 }
 
 // this cannot extend beyond a single row group
-void nsTableFrame::RemoveRows(nsIPresContext&  aPresContext,
+void nsTableFrame::RemoveRows(nsPresContext&  aPresContext,
                               nsTableRowFrame& aFirstRowFrame,
                               PRInt32          aNumRowsToRemove,
                               PRBool           aConsiderSpans)
@@ -1220,7 +1220,7 @@ void nsTableFrame::RemoveRows(nsIPresContext&  aPresContext,
 #endif
 }
 
-void nsTableFrame::AppendRowGroups(nsIPresContext& aPresContext,
+void nsTableFrame::AppendRowGroups(nsPresContext& aPresContext,
                                    nsIFrame*       aFirstRowGroupFrame)
 {
   if (aFirstRowGroupFrame) {
@@ -1285,7 +1285,7 @@ nsTableFrame::CollectRows(nsIFrame*       aFrame,
 }
 
 void
-nsTableFrame::InsertRowGroups(nsIPresContext&  aPresContext,
+nsTableFrame::InsertRowGroups(nsPresContext&  aPresContext,
                               nsIFrame*        aFirstRowGroupFrame,
                               nsIFrame*        aLastRowGroupFrame)
 {
@@ -1355,7 +1355,7 @@ nsTableFrame::GetAdditionalChildListName(PRInt32 aIndex) const
 }
 
 void 
-nsTableFrame::PaintChildren(nsIPresContext*      aPresContext,
+nsTableFrame::PaintChildren(nsPresContext*      aPresContext,
                             nsIRenderingContext& aRenderingContext,
                             const nsRect&        aDirtyRect,
                             nsFramePaintLayer    aWhichLayer,
@@ -1382,7 +1382,7 @@ nsTableFrame::PaintChildren(nsIPresContext*      aPresContext,
 // table paint code is concerned primarily with borders and bg color
 // SEC: TODO: adjust the rect for captions 
 NS_METHOD 
-nsTableFrame::Paint(nsIPresContext*      aPresContext,
+nsTableFrame::Paint(nsPresContext*      aPresContext,
                     nsIRenderingContext& aRenderingContext,
                     const nsRect&        aDirtyRect,
                     nsFramePaintLayer    aWhichLayer,
@@ -1454,7 +1454,7 @@ nsTableFrame::Paint(nsIPresContext*      aPresContext,
 }
 
 NS_IMETHODIMP
-nsTableFrame::GetFrameForPoint(nsIPresContext* aPresContext,
+nsTableFrame::GetFrameForPoint(nsPresContext* aPresContext,
                                    const nsPoint& aPoint, 
                                    nsFramePaintLayer aWhichLayer,
                                    nsIFrame**     aFrame)
@@ -1466,7 +1466,7 @@ nsTableFrame::GetFrameForPoint(nsIPresContext* aPresContext,
 
 //null range means the whole thing
 NS_IMETHODIMP
-nsTableFrame::SetSelected(nsIPresContext* aPresContext,
+nsTableFrame::SetSelected(nsPresContext* aPresContext,
                           nsIDOMRange *aRange,
                           PRBool aSelected,
                           nsSpread aSpread)
@@ -1541,7 +1541,7 @@ PRBool nsTableFrame::NeedsReflow(const nsHTMLReflowState& aReflowState)
 // Slides all the row groups following aKidFrame by the specified
 // amount
 nsresult 
-nsTableFrame::AdjustSiblingsAfterReflow(nsIPresContext*     aPresContext,
+nsTableFrame::AdjustSiblingsAfterReflow(nsPresContext*     aPresContext,
                                         nsTableReflowState& aReflowState,
                                         nsIFrame*           aKidFrame,
                                         nscoord             aDeltaY)
@@ -1642,7 +1642,7 @@ nsTableFrame::SetColumnDimensions(nscoord         aHeight,
 // XXX this could be made more general to handle row modifications that change the
 // table height, but first we need to scrutinize every Invalidate
 static void
-ProcessRowInserted(nsIPresContext*     aPresContext,
+ProcessRowInserted(nsPresContext*     aPresContext,
                    nsTableFrame&   aTableFrame,
                    PRBool          aInvalidate,
                    nscoord         aNewHeight)
@@ -1860,7 +1860,7 @@ nsTableFrame::IsPrematureSpecialHeightReflow(const nsHTMLReflowState& aReflowSta
  ******************************************************************************************/
 
 /* Layout the entire inner table. */
-NS_METHOD nsTableFrame::Reflow(nsIPresContext*          aPresContext,
+NS_METHOD nsTableFrame::Reflow(nsPresContext*          aPresContext,
                                nsHTMLReflowMetrics&     aDesiredSize,
                                const nsHTMLReflowState& aReflowState,
                                nsReflowStatus&          aStatus)
@@ -2117,7 +2117,7 @@ NS_METHOD nsTableFrame::Reflow(nsIPresContext*          aPresContext,
 }
 
 nsresult 
-nsTableFrame::ReflowTable(nsIPresContext*          aPresContext,
+nsTableFrame::ReflowTable(nsPresContext*          aPresContext,
                           nsHTMLReflowMetrics&     aDesiredSize,
                           const nsHTMLReflowState& aReflowState,
                           nscoord                  aAvailHeight,
@@ -2200,7 +2200,7 @@ nsTableFrame::GetFirstBodyRowGroupFrame()
 // Table specific version that takes into account repeated header and footer
 // frames when continuing table frames
 void
-nsTableFrame::PushChildren(nsIPresContext* aPresContext,
+nsTableFrame::PushChildren(nsPresContext* aPresContext,
                            nsIFrame*       aFromChild,
                            nsIFrame*       aPrevSibling)
 {
@@ -2241,7 +2241,7 @@ nsTableFrame::PushChildren(nsIPresContext* aPresContext,
 // the child list is empty (it may not be empty, because there may be repeated
 // header/footer frames)
 PRBool
-nsTableFrame::MoveOverflowToChildList(nsIPresContext* aPresContext)
+nsTableFrame::MoveOverflowToChildList(nsPresContext* aPresContext)
 {
   PRBool result = PR_FALSE;
 
@@ -2270,7 +2270,7 @@ nsTableFrame::MoveOverflowToChildList(nsIPresContext* aPresContext)
 }
 
 NS_METHOD 
-nsTableFrame::CollapseRowGroupIfNecessary(nsIPresContext* aPresContext,
+nsTableFrame::CollapseRowGroupIfNecessary(nsPresContext* aPresContext,
                                           nsIFrame* aRowGroupFrame,
                                           const nscoord& aYTotalOffset,
                                           nscoord& aYGroupOffset, PRInt32& aRowX)
@@ -2359,7 +2359,7 @@ nsTableFrame::CollapseRowGroupIfNecessary(nsIPresContext* aPresContext,
 
 // collapsing row groups, rows, col groups and cols are accounted for after both passes of
 // reflow so that it has no effect on the calculations of reflow.
-NS_METHOD nsTableFrame::AdjustForCollapsingRows(nsIPresContext*       aPresContext, 
+NS_METHOD nsTableFrame::AdjustForCollapsingRows(nsPresContext*       aPresContext, 
                                                 nsHTMLReflowMetrics&  aDesiredSize)
 {
   nscoord yGroupOffset = 0; // total offset among rows within a single row group
@@ -2389,7 +2389,7 @@ NS_METHOD nsTableFrame::AdjustForCollapsingRows(nsIPresContext*       aPresConte
   return NS_OK;
 }
 
-NS_METHOD nsTableFrame::AdjustForCollapsingCols(nsIPresContext*       aPresContext, 
+NS_METHOD nsTableFrame::AdjustForCollapsingCols(nsPresContext*       aPresContext, 
                                                 nsHTMLReflowMetrics&  aDesiredSize)
 {
   nsTableCellMap* cellMap = GetCellMap();
@@ -2474,7 +2474,7 @@ NS_METHOD nsTableFrame::AdjustForCollapsingCols(nsIPresContext*       aPresConte
 }
 
 NS_IMETHODIMP
-nsTableFrame::AppendFrames(nsIPresContext* aPresContext,
+nsTableFrame::AppendFrames(nsPresContext* aPresContext,
                            nsIPresShell&   aPresShell,
                            nsIAtom*        aListName,
                            nsIFrame*       aFrameList)
@@ -2527,7 +2527,7 @@ nsTableFrame::AppendFrames(nsIPresContext* aPresContext,
 }
 
 NS_IMETHODIMP
-nsTableFrame::InsertFrames(nsIPresContext* aPresContext,
+nsTableFrame::InsertFrames(nsPresContext* aPresContext,
                            nsIPresShell&   aPresShell,
                            nsIAtom*        aListName,
                            nsIFrame*       aPrevFrame,
@@ -2580,7 +2580,7 @@ nsTableFrame::InsertFrames(nsIPresContext* aPresContext,
 }
 
 NS_IMETHODIMP
-nsTableFrame::RemoveFrame(nsIPresContext* aPresContext,
+nsTableFrame::RemoveFrame(nsPresContext* aPresContext,
                           nsIPresShell&   aPresShell,
                           nsIAtom*        aListName,
                           nsIFrame*       aOldFrame)
@@ -2653,7 +2653,7 @@ nsTableFrame::RemoveFrame(nsIPresContext* aPresContext,
 }
 
 NS_METHOD 
-nsTableFrame::IncrementalReflow(nsIPresContext*          aPresContext,
+nsTableFrame::IncrementalReflow(nsPresContext*          aPresContext,
                                 const nsHTMLReflowState& aReflowState,
                                 nsReflowStatus&          aStatus)
 {
@@ -2682,7 +2682,7 @@ nsTableFrame::IncrementalReflow(nsIPresContext*          aPresContext,
 }
 
 NS_METHOD 
-nsTableFrame::IR_TargetIsMe(nsIPresContext*      aPresContext,
+nsTableFrame::IR_TargetIsMe(nsPresContext*      aPresContext,
                             nsTableReflowState&  aReflowState,
                             nsReflowStatus&      aStatus)
 {
@@ -2723,7 +2723,7 @@ nsTableFrame::IR_TargetIsMe(nsIPresContext*      aPresContext,
   return rv;
 }
 
-NS_METHOD nsTableFrame::IR_StyleChanged(nsIPresContext*      aPresContext,
+NS_METHOD nsTableFrame::IR_StyleChanged(nsPresContext*      aPresContext,
                                         nsTableReflowState&  aReflowState,
                                         nsReflowStatus&      aStatus)
 {
@@ -2749,7 +2749,7 @@ nsMargin
 nsTableFrame::GetBCBorder() const
 {
   nsMargin border(0, 0, 0, 0);
-  nsIPresContext *presContext = GetPresContext();
+  nsPresContext *presContext = GetPresContext();
   GET_PIXELS_TO_TWIPS(presContext, p2t);
   BCPropertyData* propData = 
     (BCPropertyData*)nsTableFrame::GetProperty(presContext, (nsIFrame*)this, nsLayoutAtoms::tableBCProperty, PR_FALSE);
@@ -2780,7 +2780,7 @@ nsTableFrame::GetBCBorder() const
 }
 
 nsMargin
-nsTableFrame::GetBCMargin(nsIPresContext*  aPresContext) const
+nsTableFrame::GetBCMargin(nsPresContext*  aPresContext) const
 {
   nsMargin overflow(0, 0, 0, 0);
   GET_PIXELS_TO_TWIPS(aPresContext, p2t);
@@ -2824,7 +2824,7 @@ nsTableFrame::GetChildAreaOffset(const nsHTMLReflowState* aReflowState) const
 {
   nsMargin offset(0,0,0,0);
   if (IsBorderCollapse()) {
-    nsIPresContext *presContext = GetPresContext();
+    nsPresContext *presContext = GetPresContext();
     if (eCompatibility_NavQuirks == presContext->CompatibilityMode()) {
       nsTableFrame* firstInFlow = (nsTableFrame*)GetFirstInFlow(); if (!firstInFlow) ABORT1(offset);
       nscoord smallHalf, largeHalf;
@@ -2927,7 +2927,7 @@ nsTableFrame::RecoverState(nsTableReflowState& aReflowState,
 }
 
 void
-nsTableFrame::InitChildReflowState(nsIPresContext&    aPresContext,                     
+nsTableFrame::InitChildReflowState(nsPresContext&    aPresContext,                     
                                    nsHTMLReflowState& aReflowState)                                    
 {
   nsMargin collapseBorder;
@@ -2944,7 +2944,7 @@ nsTableFrame::InitChildReflowState(nsIPresContext&    aPresContext,
 }
 
 NS_METHOD 
-nsTableFrame::IR_TargetIsChild(nsIPresContext*      aPresContext,
+nsTableFrame::IR_TargetIsChild(nsPresContext*      aPresContext,
                                nsTableReflowState&  aReflowState,
                                nsReflowStatus&      aStatus,
                                nsIFrame*            aNextFrame)
@@ -3015,7 +3015,7 @@ nsTableFrame::IR_TargetIsChild(nsIPresContext*      aPresContext,
 
 // Position and size aKidFrame and update our reflow state. The origin of
 // aKidRect is relative to the upper-left origin of our frame
-void nsTableFrame::PlaceChild(nsIPresContext*      aPresContext,
+void nsTableFrame::PlaceChild(nsPresContext*      aPresContext,
                               nsTableReflowState&  aReflowState,
                               nsIFrame*            aKidFrame,
                               nsHTMLReflowMetrics& aKidDesiredSize)
@@ -3144,7 +3144,7 @@ IsRepeatable(nsTableRowGroupFrame& aHeaderOrFooter,
 // Reflow the children based on the avail size and reason in aReflowState
 // update aReflowMetrics a aStatus
 NS_METHOD 
-nsTableFrame::ReflowChildren(nsIPresContext*     aPresContext,
+nsTableFrame::ReflowChildren(nsPresContext*     aPresContext,
                              nsTableReflowState& aReflowState,
                              PRBool              aDoColGroups,
                              PRBool              aDirtyOnly,
@@ -3340,7 +3340,7 @@ nsTableFrame::ReflowChildren(nsIPresContext*     aPresContext,
   to assign widths to each column.
   */
 // use the cell map to determine which cell is in which column.
-void nsTableFrame::BalanceColumnWidths(nsIPresContext*          aPresContext, 
+void nsTableFrame::BalanceColumnWidths(nsPresContext*          aPresContext, 
                                        const nsHTMLReflowState& aReflowState)
 {
   NS_ASSERTION(!mPrevInFlow, "never ever call me on a continuing frame!");
@@ -3462,7 +3462,7 @@ nsTableFrame::CalcDesiredHeight(const nsHTMLReflowState& aReflowState)
 
 static
 void ResizeCells(nsTableFrame&            aTableFrame,
-                 nsIPresContext*          aPresContext,
+                 nsPresContext*          aPresContext,
                  const nsHTMLReflowState& aReflowState)
 {
   nsAutoVoidArray rowGroups;
@@ -3505,7 +3505,7 @@ void
 nsTableFrame::DistributeHeightToRows(const nsHTMLReflowState& aReflowState,
                                      nscoord                  aAmount)
 { 
-  nsIPresContext *presContext = GetPresContext();
+  nsPresContext *presContext = GetPresContext();
   float p2t;
   p2t = presContext->PixelsToTwips();
 
@@ -4561,7 +4561,7 @@ CheckFixDamageArea(PRInt32 aNumRows,
  *******************************************************************************/
 
 void 
-nsTableFrame::SetBCDamageArea(nsIPresContext& aPresContext,
+nsTableFrame::SetBCDamageArea(nsPresContext& aPresContext,
                               const nsRect&   aValue)
 {
   nsRect newRect(aValue);
@@ -5642,7 +5642,7 @@ LimitBorderWidth(PRUint16 aWidth)
 
 // Calc the dominate border at every cell edge and corner within the current damage area
 void 
-nsTableFrame::CalcBCBorders(nsIPresContext& aPresContext)
+nsTableFrame::CalcBCBorders(nsPresContext& aPresContext)
 {
   nsTableCellMap* tableCellMap = GetCellMap(); if (!tableCellMap) ABORT0();
   PRInt32 numRows = GetRowCount();
@@ -6661,7 +6661,7 @@ BCHorizontalSeg::Start(BCMapBorderIterator& aIter,
 }
 
 void 
-nsTableFrame::PaintBCBorders(nsIPresContext*      aPresContext,
+nsTableFrame::PaintBCBorders(nsPresContext*      aPresContext,
                              nsIRenderingContext& aRenderingContext,
                              const nsRect&        aDirtyRect)
 {
@@ -7375,7 +7375,7 @@ PRBool nsTableFrame::ColIsSpannedInto(PRInt32 aColIndex)
 
 // Destructor function for nscoord properties
 static void
-DestroyCoordFunc(nsIPresContext* aPresContext,
+DestroyCoordFunc(nsPresContext* aPresContext,
                  nsIFrame*       aFrame,
                  nsIAtom*        aPropertyName,
                  void*           aPropertyValue)
@@ -7385,7 +7385,7 @@ DestroyCoordFunc(nsIPresContext* aPresContext,
 
 // Destructor function point properties
 static void
-DestroyPointFunc(nsIPresContext* aPresContext,
+DestroyPointFunc(nsPresContext* aPresContext,
                  nsIFrame*       aFrame,
                  nsIAtom*        aPropertyName,
                  void*           aPropertyValue)
@@ -7395,7 +7395,7 @@ DestroyPointFunc(nsIPresContext* aPresContext,
 
 // Destructor function for nscoord properties
 static void
-DestroyBCPropertyDataFunc(nsIPresContext* aPresContext,
+DestroyBCPropertyDataFunc(nsPresContext* aPresContext,
                           nsIFrame*       aFrame,
                           nsIAtom*        aPropertyName,
                           void*           aPropertyValue)
@@ -7404,7 +7404,7 @@ DestroyBCPropertyDataFunc(nsIPresContext* aPresContext,
 }
 
 void*
-nsTableFrame::GetProperty(nsIPresContext*      aPresContext,
+nsTableFrame::GetProperty(nsPresContext*      aPresContext,
                           nsIFrame*            aFrame,
                           nsIAtom*             aPropertyName,
                           PRBool               aCreateIfNecessary)

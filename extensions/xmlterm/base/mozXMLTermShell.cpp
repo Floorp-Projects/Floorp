@@ -52,7 +52,7 @@
 
 #include "nsIDocShell.h"
 #include "nsIPresShell.h"
-#include "nsIPresContext.h"
+#include "nsPresContext.h"
 #include "nsIScriptGlobalObject.h"
 
 #include "nsIServiceManager.h"

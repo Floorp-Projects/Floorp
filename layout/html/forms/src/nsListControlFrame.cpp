@@ -302,7 +302,7 @@ public:
   NS_DECL_NSITIMERCALLBACK
 
   // Additional Methods
-  nsresult Start(nsIPresContext *aPresContext) 
+  nsresult Start(nsPresContext *aPresContext) 
   {
     mPresContext = aPresContext;
 
@@ -375,7 +375,7 @@ public:
 private:
   nsListControlFrame * mListControl;
   nsCOMPtr<nsITimer>   mTimer;
-  nsIPresContext*      mPresContext;
+  nsPresContext*      mPresContext;
   PRUint32             mDelay;
   PRPackedBool         mHasBeenNotified;
 
@@ -479,7 +479,7 @@ nsListControlFrame::~nsListControlFrame()
 
 // for Bug 47302 (remove this comment later)
 NS_IMETHODIMP
-nsListControlFrame::Destroy(nsIPresContext *aPresContext)
+nsListControlFrame::Destroy(nsPresContext *aPresContext)
 {
   // get the receiver interface from the browser button's content node
   nsCOMPtr<nsIDOMEventReceiver> receiver(do_QueryInterface(mContent));
@@ -506,7 +506,7 @@ nsListControlFrame::Destroy(nsIPresContext *aPresContext)
 }
 
 NS_IMETHODIMP
-nsListControlFrame::Paint(nsIPresContext*      aPresContext,
+nsListControlFrame::Paint(nsPresContext*      aPresContext,
                           nsIRenderingContext& aRenderingContext,
                           const nsRect&        aDirtyRect,
                           nsFramePaintLayer    aWhichLayer,
@@ -732,7 +732,7 @@ nsListControlFrame::QueryInterface(const nsIID& aIID, void** aInstancePtr)
 // nsHTMLScrollFrame.
 //----------------------------------------------------------------------
 NS_IMETHODIMP
-nsListControlFrame::SaveState(nsIPresContext* aPresContext,
+nsListControlFrame::SaveState(nsPresContext* aPresContext,
                               nsIPresState** aState)
 {
   NS_ENSURE_ARG_POINTER(aState);
@@ -797,7 +797,7 @@ nsListControlFrame::SaveState(nsIPresContext* aPresContext,
 
 //-----------------------------------------------------------
 NS_IMETHODIMP
-nsListControlFrame::RestoreState(nsIPresContext* aPresContext,
+nsListControlFrame::RestoreState(nsPresContext* aPresContext,
                                  nsIPresState* aState)
 {
   NS_ENSURE_ARG_POINTER(aState);
@@ -874,7 +874,7 @@ static void printSize(char * aDesc, nscoord aSize)
 #endif
 
 static nscoord
-GetMaxOptionHeight(nsIPresContext *aPresContext, nsIFrame *aContainer)
+GetMaxOptionHeight(nsPresContext *aPresContext, nsIFrame *aContainer)
 {
   nscoord result = 0;
   for (nsIFrame* option = aContainer->GetFirstChild(nsnull);
@@ -898,7 +898,7 @@ GetMaxOptionHeight(nsIPresContext *aPresContext, nsIFrame *aContainer)
 // Main Reflow for ListBox/Dropdown
 //-----------------------------------------------------------------
 NS_IMETHODIMP 
-nsListControlFrame::Reflow(nsIPresContext*          aPresContext, 
+nsListControlFrame::Reflow(nsPresContext*          aPresContext, 
                            nsHTMLReflowMetrics&     aDesiredSize,
                            const nsHTMLReflowState& aReflowState, 
                            nsReflowStatus&          aStatus)
@@ -1636,7 +1636,7 @@ nsListControlFrame::HandleListSelection(nsIDOMEvent* aEvent,
 
 //---------------------------------------------------------
 NS_IMETHODIMP
-nsListControlFrame::CaptureMouseEvents(nsIPresContext* aPresContext, PRBool aGrabMouseEvents)
+nsListControlFrame::CaptureMouseEvents(nsPresContext* aPresContext, PRBool aGrabMouseEvents)
 {
   nsIView* view = nsnull;
   if (IsInDropDownMode()) {
@@ -1689,7 +1689,7 @@ nsListControlFrame::CaptureMouseEvents(nsIPresContext* aPresContext, PRBool aGra
 
 //---------------------------------------------------------
 NS_IMETHODIMP 
-nsListControlFrame::HandleEvent(nsIPresContext* aPresContext, 
+nsListControlFrame::HandleEvent(nsPresContext* aPresContext, 
                                        nsGUIEvent*     aEvent,
                                        nsEventStatus*  aEventStatus)
 {
@@ -1741,7 +1741,7 @@ nsListControlFrame::HandleEvent(nsIPresContext* aPresContext,
 
 //---------------------------------------------------------
 NS_IMETHODIMP
-nsListControlFrame::SetInitialChildList(nsIPresContext* aPresContext,
+nsListControlFrame::SetInitialChildList(nsPresContext* aPresContext,
                                         nsIAtom*        aListName,
                                         nsIFrame*       aChildList)
 {
@@ -1783,7 +1783,7 @@ nsListControlFrame::GetSizeAttribute(PRInt32 *aSize) {
 
 //---------------------------------------------------------
 NS_IMETHODIMP  
-nsListControlFrame::Init(nsIPresContext*  aPresContext,
+nsListControlFrame::Init(nsPresContext*  aPresContext,
                          nsIContent*      aContent,
                          nsIFrame*        aParent,
                          nsStyleContext*  aContext,
@@ -1826,7 +1826,7 @@ nsListControlFrame::Init(nsIPresContext*  aPresContext,
 
 //---------------------------------------------------------
 nscoord 
-nsListControlFrame::GetVerticalInsidePadding(nsIPresContext* aPresContext,
+nsListControlFrame::GetVerticalInsidePadding(nsPresContext* aPresContext,
                                              float aPixToTwip, 
                                              nscoord aInnerHeight) const
 {
@@ -1836,7 +1836,7 @@ nsListControlFrame::GetVerticalInsidePadding(nsIPresContext* aPresContext,
 
 //---------------------------------------------------------
 nscoord 
-nsListControlFrame::GetHorizontalInsidePadding(nsIPresContext* aPresContext,
+nsListControlFrame::GetHorizontalInsidePadding(nsPresContext* aPresContext,
                                                float aPixToTwip, 
                                                nscoord aInnerWidth,
                                                nscoord aCharWidth) const
@@ -2005,7 +2005,7 @@ nsListControlFrame::IsContentSelectedByIndex(PRInt32 aIndex)
 // being selected or not selected
 //---------------------------------------------------------
 NS_IMETHODIMP
-nsListControlFrame::OnOptionSelected(nsIPresContext* aPresContext,
+nsListControlFrame::OnOptionSelected(nsPresContext* aPresContext,
                                      PRInt32 aIndex,
                                      PRBool aSelected)
 {
@@ -2040,7 +2040,7 @@ nsListControlFrame::GetFormControlType() const
 
 //---------------------------------------------------------
 void
-nsListControlFrame::MouseClicked(nsIPresContext* aPresContext)
+nsListControlFrame::MouseClicked(nsPresContext* aPresContext)
 {
 }
 
@@ -2057,7 +2057,7 @@ nsListControlFrame::OnContentReset()
 // those values as determined by the original HTML
 //---------------------------------------------------------
 void 
-nsListControlFrame::ResetList(nsIPresContext* aPresContext, nsVoidArray * aInxList)
+nsListControlFrame::ResetList(nsPresContext* aPresContext, nsVoidArray * aInxList)
 {
   REFLOW_DEBUG_MSG("LBX::ResetList\n");
 
@@ -2115,7 +2115,7 @@ void nsListControlFrame::ComboboxFocusSet()
 
 //---------------------------------------------------------
 void 
-nsListControlFrame::ScrollIntoView(nsIPresContext* aPresContext)
+nsListControlFrame::ScrollIntoView(nsPresContext* aPresContext)
 {
   if (aPresContext) {
     nsIPresShell *presShell = aPresContext->GetPresShell();
@@ -2267,7 +2267,7 @@ nsListControlFrame::DoneAddingChildren(PRBool aIsDone)
 
 //-------------------------------------------------------------------
 NS_IMETHODIMP
-nsListControlFrame::AddOption(nsIPresContext* aPresContext, PRInt32 aIndex)
+nsListControlFrame::AddOption(nsPresContext* aPresContext, PRInt32 aIndex)
 {
   StopUpdateTimer();
 
@@ -2301,7 +2301,7 @@ nsListControlFrame::AddOption(nsIPresContext* aPresContext, PRInt32 aIndex)
 
 //-------------------------------------------------------------------
 NS_IMETHODIMP
-nsListControlFrame::RemoveOption(nsIPresContext* aPresContext, PRInt32 aIndex)
+nsListControlFrame::RemoveOption(nsPresContext* aPresContext, PRInt32 aIndex)
 {
   StopUpdateTimer();
   nsresult rv = StartUpdateTimer(aPresContext);
@@ -2415,7 +2415,7 @@ nsListControlFrame::ComboboxFinish(PRInt32 aIndex)
 }
 
 NS_IMETHODIMP
-nsListControlFrame::GetOptionsContainer(nsIPresContext* aPresContext,
+nsListControlFrame::GetOptionsContainer(nsPresContext* aPresContext,
                                         nsIFrame** aFrame)
 {
   return GetScrolledFrame(aPresContext, *aFrame);
@@ -2484,7 +2484,7 @@ nsListControlFrame::SetDummyFrame(nsIFrame* aFrame)
 
 //---------------------------------------------------------
 NS_IMETHODIMP 
-nsListControlFrame::SetProperty(nsIPresContext* aPresContext, nsIAtom* aName,
+nsListControlFrame::SetProperty(nsPresContext* aPresContext, nsIAtom* aName,
                                 const nsAString& aValue)
 {
   if (nsHTMLAtoms::selected == aName) {
@@ -2541,7 +2541,7 @@ nsListControlFrame::GetViewOffset(nsIViewManager* aManager, nsIView* aView,
  
 //---------------------------------------------------------
 NS_IMETHODIMP 
-nsListControlFrame::SyncViewWithFrame(nsIPresContext* aPresContext)
+nsListControlFrame::SyncViewWithFrame(nsPresContext* aPresContext)
 {
     // Resync the view's position with the frame.
     // The problem is the dropdown's view is attached directly under
@@ -2594,7 +2594,7 @@ nsListControlFrame::AboutToRollup()
 
 //---------------------------------------------------------
 NS_IMETHODIMP
-nsListControlFrame::DidReflow(nsIPresContext*           aPresContext,
+nsListControlFrame::DidReflow(nsPresContext*           aPresContext,
                               const nsHTMLReflowState*  aReflowState,
                               nsDidReflowStatus         aStatus)
 {
@@ -3542,7 +3542,7 @@ IGNORE_EVENT(DragMove)
 
 /*=============== Timer Related Code ======================*/
 nsresult
-nsListControlFrame::StartUpdateTimer(nsIPresContext * aPresContext)
+nsListControlFrame::StartUpdateTimer(nsPresContext * aPresContext)
 {
 
   if (mUpdateTimer == nsnull) {
@@ -3569,7 +3569,7 @@ nsListControlFrame::StopUpdateTimer()
 }
 
 void
-nsListControlFrame::ItemsHaveBeenRemoved(nsIPresContext * aPresContext)
+nsListControlFrame::ItemsHaveBeenRemoved(nsPresContext * aPresContext)
 {
   // Only adjust things if it is a combobox
   // removing items on a listbox should effect anything

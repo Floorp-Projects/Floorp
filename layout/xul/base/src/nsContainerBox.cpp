@@ -46,7 +46,7 @@
 
 #include "nsBoxLayoutState.h"
 #include "nsBox.h"
-#include "nsIPresContext.h"
+#include "nsPresContext.h"
 #include "nsCOMPtr.h"
 #include "nsIContent.h"
 #include "nsIViewManager.h"
@@ -57,7 +57,7 @@
 
 #include "nsBoxLayoutState.h"
 #include "nsBoxFrame.h"
-#include "nsIPresContext.h"
+#include "nsPresContext.h"
 #include "nsCOMPtr.h"
 #include "nsUnitConversion.h"
 #include "nsHTMLAtoms.h"

@@ -39,7 +39,7 @@
 #ifndef nsRuleNode_h___
 #define nsRuleNode_h___
 
-#include "nsIPresContext.h"
+#include "nsPresContext.h"
 #include "nsStyleStruct.h"
 
 class nsStyleContext;
@@ -69,7 +69,7 @@ struct nsInheritedStyleData
 #undef STYLE_STRUCT_INHERITED
 #undef STYLE_STRUCT_RESET
 
-  void* operator new(size_t sz, nsIPresContext* aContext) CPP_THROW_NEW {
+  void* operator new(size_t sz, nsPresContext* aContext) CPP_THROW_NEW {
     return aContext->AllocateFromShell(sz);
   };
 
@@ -85,7 +85,7 @@ struct nsInheritedStyleData
 #undef STYLE_STRUCT_RESET
   };
 
-  void Destroy(PRUint32 aBits, nsIPresContext* aContext) {
+  void Destroy(PRUint32 aBits, nsPresContext* aContext) {
 #define STYLE_STRUCT_INHERITED(name, checkdata_cb, ctor_args) \
     if (m##name##Data && !(aBits & NS_STYLE_INHERIT_BIT(name))) \
       m##name##Data->Destroy(aContext);
@@ -126,7 +126,7 @@ struct nsResetStyleData
 #undef STYLE_STRUCT_INHERITED
   };
 
-  void* operator new(size_t sz, nsIPresContext* aContext) CPP_THROW_NEW {
+  void* operator new(size_t sz, nsPresContext* aContext) CPP_THROW_NEW {
     return aContext->AllocateFromShell(sz);
   }
 
@@ -142,7 +142,7 @@ struct nsResetStyleData
 #undef STYLE_STRUCT_INHERITED
   };
 
-  void Destroy(PRUint32 aBits, nsIPresContext* aContext) {
+  void Destroy(PRUint32 aBits, nsPresContext* aContext) {
 #define STYLE_STRUCT_RESET(name, checkdata_cb, ctor_args) \
     if (m##name##Data && !(aBits & NS_STYLE_INHERIT_BIT(name))) \
       m##name##Data->Destroy(aContext);
@@ -226,7 +226,7 @@ struct nsCachedStyleData
       mInheritedData->ClearInheritedData(aBits);
   }
 
-  NS_HIDDEN_(void) Destroy(PRUint32 aBits, nsIPresContext* aContext) {
+  NS_HIDDEN_(void) Destroy(PRUint32 aBits, nsPresContext* aContext) {
     if (mResetData)
       mResetData->Destroy(aBits, aContext);
     if (mInheritedData)
@@ -272,7 +272,7 @@ public:
   };
 
 private:
-  nsIPresContext* mPresContext; // Our pres context.
+  nsPresContext* mPresContext; // Our pres context.
 
   nsRuleNode* mParent; // A pointer to the parent node in the tree.
                        // This enables us to walk backwards from the
@@ -354,7 +354,7 @@ friend struct nsRuleList;
 public:
   // Overloaded new operator. Initializes the memory to 0 and relies on an arena
   // (which comes from the presShell) to perform the allocation.
-  NS_HIDDEN_(void*) operator new(size_t sz, nsIPresContext* aContext) CPP_THROW_NEW;
+  NS_HIDDEN_(void*) operator new(size_t sz, nsPresContext* aContext) CPP_THROW_NEW;
   NS_HIDDEN_(void) Destroy();
   static NS_HIDDEN_(nsILanguageAtomService*) gLangService;
 
@@ -508,7 +508,7 @@ protected:
 #endif
 
   // helpers for |ComputeFontData| that need access to |mNoneBits|:
-  static NS_HIDDEN_(void) SetFont(nsIPresContext* aPresContext,
+  static NS_HIDDEN_(void) SetFont(nsPresContext* aPresContext,
                                   nsStyleContext* aContext,
                                   nscoord aMinFontSize,
                                   PRBool aUseDocumentFonts,
@@ -518,7 +518,7 @@ protected:
                                   const nsStyleFont* aParentFont,
                                   nsStyleFont* aFont, PRBool& aInherited);
 
-  static NS_HIDDEN_(void) SetGenericFont(nsIPresContext* aPresContext,
+  static NS_HIDDEN_(void) SetGenericFont(nsPresContext* aPresContext,
                                          nsStyleContext* aContext,
                                          const nsRuleDataFont& aFontData,
                                          PRUint8 aGenericFontID,
@@ -571,11 +571,11 @@ protected:
 #endif
 
 public:
-  nsRuleNode(nsIPresContext* aPresContext, nsIStyleRule* aRule,
+  nsRuleNode(nsPresContext* aPresContext, nsIStyleRule* aRule,
              nsRuleNode* aParent) NS_HIDDEN;
   virtual ~nsRuleNode() NS_HIDDEN;
 
-  static NS_HIDDEN_(nsRuleNode*) CreateRootNode(nsIPresContext* aPresContext);
+  static NS_HIDDEN_(nsRuleNode*) CreateRootNode(nsPresContext* aPresContext);
 
   NS_HIDDEN_(nsresult) Transition(nsIStyleRule* aRule, nsRuleNode** aResult);
   nsRuleNode* GetParent() const { return mParent; }
@@ -584,7 +584,7 @@ public:
   // NOTE:  Does not |AddRef|.
   nsIStyleRule* GetRule() const { return mRule; }
   // NOTE: Does not |AddRef|.
-  nsIPresContext* GetPresContext() const { return mPresContext; }
+  nsPresContext* GetPresContext() const { return mPresContext; }
 
   NS_HIDDEN_(nsresult) ClearStyleData();
   NS_HIDDEN_(const nsStyleStruct*) GetStyleData(nsStyleStructID aSID, 

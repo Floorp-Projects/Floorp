@@ -50,14 +50,14 @@
 #include "nsStyleContext.h"
 #include "nsStyleConsts.h"
 #include "nsCOMPtr.h"
-#include "nsIPresContext.h"
+#include "nsPresContext.h"
 #include "nsButtonFrameRenderer.h"
 #include "nsBoxLayoutState.h"
 
 #include "nsHTMLParts.h"
 #include "nsString.h"
 #include "nsLeafFrame.h"
-#include "nsIPresContext.h"
+#include "nsPresContext.h"
 #include "nsIRenderingContext.h"
 #include "nsIPresShell.h"
 #include "nsIImage.h"
@@ -122,7 +122,7 @@ HandleImagePLEvent(nsIContent *aContent, PRUint32 aMessage, PRUint32 aFlags)
     return;
   }
 
-  nsCOMPtr<nsIPresContext> pres_context;
+  nsCOMPtr<nsPresContext> pres_context;
   pres_shell->GetPresContext(getter_AddRefs(pres_context));
 
   if (!pres_context) {
@@ -253,7 +253,7 @@ NS_NewImageBoxFrame ( nsIPresShell* aPresShell, nsIFrame** aNewFrame )
 } // NS_NewTitledButtonFrame
 
 NS_IMETHODIMP
-nsImageBoxFrame::AttributeChanged(nsIPresContext* aPresContext,
+nsImageBoxFrame::AttributeChanged(nsPresContext* aPresContext,
                                nsIContent* aChild,
                                PRInt32 aNameSpaceID,
                                nsIAtom* aAttribute,
@@ -296,7 +296,7 @@ nsImageBoxFrame::NeedsRecalc()
 }
 
 NS_METHOD
-nsImageBoxFrame::Destroy(nsIPresContext* aPresContext)
+nsImageBoxFrame::Destroy(nsPresContext* aPresContext)
 {
   // Release image loader first so that it's refcnt can go to zero
   if (mImageRequest)
@@ -310,7 +310,7 @@ nsImageBoxFrame::Destroy(nsIPresContext* aPresContext)
 
 
 NS_IMETHODIMP
-nsImageBoxFrame::Init(nsIPresContext*  aPresContext,
+nsImageBoxFrame::Init(nsPresContext*  aPresContext,
                           nsIContent*      aContent,
                           nsIFrame*        aParent,
                           nsStyleContext*  aContext,
@@ -451,7 +451,7 @@ nsImageBoxFrame::UpdateImage()
 }
 
 NS_IMETHODIMP
-nsImageBoxFrame::Paint(nsIPresContext*      aPresContext,
+nsImageBoxFrame::Paint(nsPresContext*      aPresContext,
                        nsIRenderingContext& aRenderingContext,
                        const nsRect&        aDirtyRect,
                        nsFramePaintLayer    aWhichLayer,
@@ -532,7 +532,7 @@ nsImageBoxFrame::PaintImage(nsIRenderingContext& aRenderingContext,
 // When the style context changes, make sure that all of our image is up to date.
 //
 NS_IMETHODIMP
-nsImageBoxFrame::DidSetStyleContext( nsIPresContext* aPresContext )
+nsImageBoxFrame::DidSetStyleContext( nsPresContext* aPresContext )
 {
   // Fetch our subrect.
   const nsStyleList* myList = GetStyleList();
@@ -690,7 +690,7 @@ NS_IMETHODIMP nsImageBoxFrame::OnStartContainer(imgIRequest *request,
   image->GetWidth(&w);
   image->GetHeight(&h);
 
-  nsIPresContext* presContext = GetPresContext();
+  nsPresContext* presContext = GetPresContext();
   float p2t = presContext->PixelsToTwips();
 
   mIntrinsicSize.SizeTo(NSIntPixelsToTwips(w, p2t), NSIntPixelsToTwips(h, p2t));

@@ -44,7 +44,7 @@
 class nsIScriptContext;
 class nsIDOMDocument;
 class nsIDOMEvent;
-class nsIPresContext;
+class nsPresContext;
 class nsIDocShell;
 class nsIDOMWindowInternal;
 class nsIScriptGlobalObjectOwner;
@@ -89,7 +89,7 @@ public:
    */
   virtual nsIScriptGlobalObjectOwner *GetGlobalObjectOwner() = 0;
 
-  virtual nsresult HandleDOMEvent(nsIPresContext* aPresContext, 
+  virtual nsresult HandleDOMEvent(nsPresContext* aPresContext, 
                                   nsEvent* aEvent, 
                                   nsIDOMEvent** aDOMEvent,
                                   PRUint32 aFlags,

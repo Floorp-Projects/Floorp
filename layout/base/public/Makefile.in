@@ -71,7 +71,7 @@ nsIMutableStyleContext.h \
 nsIObjectFrame.h \
 nsIPageSequenceFrame.h \
 nsIPercentHeightObserver.h  \
-nsIPresContext.h \
+nsPresContext.h \
 nsIPresShell.h \
 nsIPresState.h \
 nsIReflowCallback.h \

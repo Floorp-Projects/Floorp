@@ -89,7 +89,7 @@ public:
    * PostHandleEvent.  Any centralized event processing which must occur before
    * DOM or frame event handling should occur here as well.
    */
-  NS_IMETHOD PreHandleEvent(nsIPresContext* aPresContext,
+  NS_IMETHOD PreHandleEvent(nsPresContext* aPresContext,
                          nsEvent *aEvent,
                          nsIFrame* aTargetFrame,
                          nsEventStatus* aStatus,
@@ -100,7 +100,7 @@ public:
    * also contain any centralized event processing which must occur after
    * DOM and frame processing.
    */
-  NS_IMETHOD PostHandleEvent(nsIPresContext* aPresContext,
+  NS_IMETHOD PostHandleEvent(nsPresContext* aPresContext,
                              nsEvent *aEvent,
                              nsIFrame* aTargetFrame,
                              nsEventStatus* aStatus,
@@ -111,7 +111,7 @@ public:
   NS_IMETHOD SetCurrentEvent(nsEvent *aEvent)
                { mCurrentEvent = aEvent; return NS_OK; }
 
-  NS_IMETHOD SetPresContext(nsIPresContext* aPresContext);
+  NS_IMETHOD SetPresContext(nsPresContext* aPresContext);
   NS_IMETHOD ClearFrameRefs(nsIFrame* aFrame);
 
   NS_IMETHOD GetEventTarget(nsIFrame **aFrame);
@@ -149,22 +149,22 @@ public:
 protected:
   friend class CurrentEventShepherd;
 
-  void UpdateCursor(nsIPresContext* aPresContext, nsEvent* aEvent, nsIFrame* aTargetFrame, nsEventStatus* aStatus);
+  void UpdateCursor(nsPresContext* aPresContext, nsEvent* aEvent, nsIFrame* aTargetFrame, nsEventStatus* aStatus);
   /**
    * Turn a GUI mouse event into a mouse event targeted at the specified
    * content and frame.  This will fix the frame if it goes away during the
    * event, as well.
    */
-  void DispatchMouseEvent(nsIPresContext* aPresContext,
+  void DispatchMouseEvent(nsPresContext* aPresContext,
                           nsGUIEvent* aEvent, PRUint32 aMessage,
                           nsIContent* aTargetContent,
                           nsIFrame*& aTargetFrame,
                           nsIContent* aRelatedContent);
-  void MaybeDispatchMouseEventToIframe(nsIPresContext* aPresContext, nsGUIEvent* aEvent, PRUint32 aMessage);
-  void GenerateMouseEnterExit(nsIPresContext* aPresContext, nsGUIEvent* aEvent);
-  void GenerateDragDropEnterExit(nsIPresContext* aPresContext, nsGUIEvent* aEvent);
-  nsresult SetClickCount(nsIPresContext* aPresContext, nsMouseEvent *aEvent, nsEventStatus* aStatus);
-  nsresult CheckForAndDispatchClick(nsIPresContext* aPresContext, nsMouseEvent *aEvent, nsEventStatus* aStatus);
+  void MaybeDispatchMouseEventToIframe(nsPresContext* aPresContext, nsGUIEvent* aEvent, PRUint32 aMessage);
+  void GenerateMouseEnterExit(nsPresContext* aPresContext, nsGUIEvent* aEvent);
+  void GenerateDragDropEnterExit(nsPresContext* aPresContext, nsGUIEvent* aEvent);
+  nsresult SetClickCount(nsPresContext* aPresContext, nsMouseEvent *aEvent, nsEventStatus* aStatus);
+  nsresult CheckForAndDispatchClick(nsPresContext* aPresContext, nsMouseEvent *aEvent, nsEventStatus* aStatus);
   PRBool ChangeFocus(nsIContent* aFocus, PRInt32 aFocusedWith);
   nsresult GetNextTabbableContent(nsIContent* aRootContent,
                                   nsIContent* aStartContent,
@@ -176,11 +176,11 @@ protected:
 
   void TabIndexFrom(nsIContent *aFrom, PRInt32 *aOutIndex);
   PRInt32 GetNextTabIndex(nsIContent* aParent, PRBool foward);
-  nsresult SendFocusBlur(nsIPresContext* aPresContext, nsIContent *aContent, PRBool aEnsureWindowHasFocus);
+  nsresult SendFocusBlur(nsPresContext* aPresContext, nsIContent *aContent, PRBool aEnsureWindowHasFocus);
   PRBool CheckDisabled(nsIContent* aContent);
   void EnsureDocument(nsIPresShell* aPresShell);
-  void EnsureDocument(nsIPresContext* aPresContext);
-  void FlushPendingEvents(nsIPresContext* aPresContext);
+  void EnsureDocument(nsPresContext* aPresContext);
+  void FlushPendingEvents(nsPresContext* aPresContext);
   nsIFocusController* GetFocusControllerForDocument(nsIDocument* aDocument);
 
   typedef enum {
@@ -188,7 +188,7 @@ protected:
     eAccessKeyProcessingUp,
     eAccessKeyProcessingDown
   } ProcessingAccessKeyState;
-  void HandleAccessKey(nsIPresContext* aPresContext, nsKeyEvent* aEvent, nsEventStatus* aStatus, PRInt32 aChildOffset, ProcessingAccessKeyState aAccessKeyState);
+  void HandleAccessKey(nsPresContext* aPresContext, nsKeyEvent* aEvent, nsEventStatus* aStatus, PRInt32 aChildOffset, ProcessingAccessKeyState aAccessKeyState);
 
   //---------------------------------------------
   // DocShell Focus Traversal Methods
@@ -210,10 +210,10 @@ protected:
   // These functions are for mousewheel scrolling
   nsIScrollableView* GetNearestScrollingView(nsIView* aView);
   nsresult GetParentScrollingView(nsInputEvent* aEvent,
-                                  nsIPresContext* aPresContext,
+                                  nsPresContext* aPresContext,
                                   nsIFrame* &targetOuterFrame,
-                                  nsIPresContext* &presCtxOuter);
-  nsresult DoScrollText(nsIPresContext* aPresContext,
+                                  nsPresContext* &presCtxOuter);
+  nsresult DoScrollText(nsPresContext* aPresContext,
                         nsIFrame* aTargetFrame,
                         nsInputEvent* aEvent,
                         PRInt32 aNumLines,
@@ -227,9 +227,9 @@ protected:
   // end mousewheel functions
 
   // routines for the d&d gesture tracking state machine
-  void BeginTrackingDragGesture ( nsIPresContext* aPresContext, nsGUIEvent* inDownEvent, nsIFrame* inDownFrame ) ;
+  void BeginTrackingDragGesture ( nsPresContext* aPresContext, nsGUIEvent* inDownEvent, nsIFrame* inDownFrame ) ;
   void StopTrackingDragGesture ( ) ;
-  void GenerateDragGesture ( nsIPresContext* aPresContext, nsGUIEvent *aEvent ) ;
+  void GenerateDragGesture ( nsPresContext* aPresContext, nsGUIEvent *aEvent ) ;
   PRBool IsTrackingDragGesture ( ) const { return mIsTrackingDragGesture; }
 
   PRBool mSuppressFocusChange; // Used only for Ender text fields to suppress a focus firing on mouse down
@@ -241,7 +241,7 @@ protected:
   // Return the location of the caret
   nsresult GetDocSelectionLocation(nsIContent **startContent, nsIContent **endContent, nsIFrame **startFrame, PRUint32 *startOffset);
 
-  void GetSelection ( nsIFrame* inFrame, nsIPresContext* inPresContext, nsIFrameSelection** outSelection ) ;
+  void GetSelection ( nsIFrame* inFrame, nsPresContext* inPresContext, nsIFrameSelection** outSelection ) ;
 
   // To be called before and after you fire an event, to update booleans and
   // such
@@ -287,7 +287,7 @@ protected:
   nsCOMPtr<nsIContent> mFirstMouseOverEventElement;
   nsCOMPtr<nsIContent> mFirstMouseOutEventElement;
 
-  nsIPresContext* mPresContext;      // Not refcnted
+  nsPresContext* mPresContext;      // Not refcnted
   nsCOMPtr<nsIDocument> mDocument;   // Doesn't necessarily need to be owner
 
   PRUint32 mLClickCount;
@@ -322,7 +322,7 @@ protected:
 #ifdef CLICK_HOLD_CONTEXT_MENUS
   enum { kClickHoldDelay = 500 } ;        // 500ms == 1/2 second
 
-  void CreateClickHoldTimer ( nsIPresContext* aPresContext, nsGUIEvent* inMouseDownEvent ) ;
+  void CreateClickHoldTimer ( nsPresContext* aPresContext, nsGUIEvent* inMouseDownEvent ) ;
   void KillClickHoldTimer ( ) ;
   void FireContextClick ( ) ;
   static void sClickHoldCallback ( nsITimer* aTimer, void* aESM ) ;
@@ -332,7 +332,7 @@ protected:
     // things because we're alerted to when they are going away in ClearFrameRefs().
   nsPoint mEventPoint, mEventRefPoint;
   nsIWidget* mEventDownWidget; // [WEAK]
-  nsIPresContext* mEventPresContext; // [WEAK]
+  nsPresContext* mEventPresContext; // [WEAK]
   nsCOMPtr<nsITimer> mClickHoldTimer;
 #endif
 

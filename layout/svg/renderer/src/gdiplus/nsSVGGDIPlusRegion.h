@@ -48,7 +48,7 @@
 using namespace Gdiplus;
 
 class nsISVGRendererRegion;
-class nsIPresContext;
+class nsPresContext;
 
 //----------------------------------------------------------------------
 // region constructors:
@@ -62,5 +62,5 @@ nsresult NS_NewSVGGDIPlusPathRegion(nsISVGRendererRegion** result,
 
 nsresult NS_NewSVGGDIPlusClonedRegion(nsISVGRendererRegion** result,
                                       const Region* region,
-                                      nsIPresContext* presContext);
+                                      nsPresContext* presContext);
 #endif // __NS_SVGGDIPLUS_REGION_H__

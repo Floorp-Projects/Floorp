@@ -42,7 +42,7 @@
 #include "nsLayoutAtoms.h"
 #include "nsIPresShell.h"
 #include "nsHTMLParts.h"
-#include "nsIPresContext.h"
+#include "nsPresContext.h"
 
 #ifdef DEBUG
 #include "nsBlockFrame.h"
@@ -61,7 +61,7 @@ nsAbsoluteContainingBlock::FirstChild(const nsIFrame* aDelegatingFrame,
 
 nsresult
 nsAbsoluteContainingBlock::SetInitialChildList(nsIFrame*       aDelegatingFrame,
-                                               nsIPresContext* aPresContext,
+                                               nsPresContext* aPresContext,
                                                nsIAtom*        aListName,
                                                nsIFrame*       aChildList)
 {
@@ -75,7 +75,7 @@ nsAbsoluteContainingBlock::SetInitialChildList(nsIFrame*       aDelegatingFrame,
 
 nsresult
 nsAbsoluteContainingBlock::AppendFrames(nsIFrame*       aDelegatingFrame,
-                                        nsIPresContext* aPresContext,
+                                        nsPresContext* aPresContext,
                                         nsIPresShell&   aPresShell,
                                         nsIAtom*        aListName,
                                         nsIFrame*       aFrameList)
@@ -101,7 +101,7 @@ nsAbsoluteContainingBlock::AppendFrames(nsIFrame*       aDelegatingFrame,
 
 nsresult
 nsAbsoluteContainingBlock::InsertFrames(nsIFrame*       aDelegatingFrame,
-                                        nsIPresContext* aPresContext,
+                                        nsPresContext* aPresContext,
                                         nsIPresShell&   aPresShell,
                                         nsIAtom*        aListName,
                                         nsIFrame*       aPrevFrame,
@@ -128,7 +128,7 @@ nsAbsoluteContainingBlock::InsertFrames(nsIFrame*       aDelegatingFrame,
 
 nsresult
 nsAbsoluteContainingBlock::RemoveFrame(nsIFrame*       aDelegatingFrame,
-                                       nsIPresContext* aPresContext,
+                                       nsPresContext* aPresContext,
                                        nsIPresShell&   aPresShell,
                                        nsIAtom*        aListName,
                                        nsIFrame*       aOldFrame)
@@ -143,7 +143,7 @@ nsAbsoluteContainingBlock::RemoveFrame(nsIFrame*       aDelegatingFrame,
 
 nsresult
 nsAbsoluteContainingBlock::ReplaceFrame(nsIFrame*       aDelegatingFrame,
-                                        nsIPresContext* aPresContext,
+                                        nsPresContext* aPresContext,
                                         nsIPresShell&   aPresShell,
                                         nsIAtom*        aListName,
                                         nsIFrame*       aOldFrame,
@@ -157,7 +157,7 @@ nsAbsoluteContainingBlock::ReplaceFrame(nsIFrame*       aDelegatingFrame,
 
 nsresult
 nsAbsoluteContainingBlock::Reflow(nsIFrame*                aDelegatingFrame,
-                                  nsIPresContext*          aPresContext,
+                                  nsPresContext*          aPresContext,
                                   const nsHTMLReflowState& aReflowState,
                                   nscoord                  aContainingBlockWidth,
                                   nscoord                  aContainingBlockHeight,
@@ -223,7 +223,7 @@ nsAbsoluteContainingBlock::Reflow(nsIFrame*                aDelegatingFrame,
 }
 
 void
-nsAbsoluteContainingBlock::CalculateChildBounds(nsIPresContext* aPresContext,
+nsAbsoluteContainingBlock::CalculateChildBounds(nsPresContext* aPresContext,
                                                 nsRect&         aChildBounds)
 {
   // Initialize the OUT parameters
@@ -253,7 +253,7 @@ nsAbsoluteContainingBlock::CalculateChildBounds(nsIPresContext* aPresContext,
 
 nsresult
 nsAbsoluteContainingBlock::IncrementalReflow(nsIFrame*                aDelegatingFrame,
-                                             nsIPresContext*          aPresContext,
+                                             nsPresContext*          aPresContext,
                                              const nsHTMLReflowState& aReflowState,
                                              nscoord                  aContainingBlockWidth,
                                              nscoord                  aContainingBlockHeight,
@@ -344,7 +344,7 @@ nsAbsoluteContainingBlock::IncrementalReflow(nsIFrame*                aDelegatin
 
 void
 nsAbsoluteContainingBlock::DestroyFrames(nsIFrame*       aDelegatingFrame,
-                                         nsIPresContext* aPresContext)
+                                         nsPresContext* aPresContext)
 {
   mAbsoluteFrames.DestroyFrames(aPresContext);
 }
@@ -359,7 +359,7 @@ nsAbsoluteContainingBlock::DestroyFrames(nsIFrame*       aDelegatingFrame,
 
 nsresult
 nsAbsoluteContainingBlock::ReflowAbsoluteFrame(nsIFrame*                aDelegatingFrame,
-                                               nsIPresContext*          aPresContext,
+                                               nsPresContext*          aPresContext,
                                                const nsHTMLReflowState& aReflowState,
                                                nscoord                  aContainingBlockWidth,
                                                nscoord                  aContainingBlockHeight,

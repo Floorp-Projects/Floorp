@@ -57,7 +57,7 @@
 #include "nsNetUtil.h"
 #include "nsIFrame.h"
 #include "nsIPresShell.h"
-#include "nsIPresContext.h"
+#include "nsPresContext.h"
 #include "nsStyleConsts.h"
 #include "nsIView.h"
 #include "nsIViewManager.h"
@@ -1790,7 +1790,7 @@ nsGenericElement::GetNodeInfo() const
 }
 
 nsresult
-nsGenericElement::HandleDOMEvent(nsIPresContext* aPresContext,
+nsGenericElement::HandleDOMEvent(nsPresContext* aPresContext,
                                  nsEvent* aEvent,
                                  nsIDOMEvent** aDOMEvent,
                                  PRUint32 aFlags,
@@ -2356,7 +2356,7 @@ nsGenericElement::GetRangeList() const
 }
 
 void
-nsGenericElement::SetFocus(nsIPresContext* aPresContext)
+nsGenericElement::SetFocus(nsPresContext* aPresContext)
 {
   // Traditionally focusable elements can take focus as long as they don't set
   // the disabled attribute
@@ -3061,7 +3061,7 @@ nsGenericElement::PostQueryInterface(REFNSIID aIID, void** aInstancePtr)
 
 //----------------------------------------------------------------------
 nsresult
-nsGenericElement::LeaveLink(nsIPresContext* aPresContext)
+nsGenericElement::LeaveLink(nsPresContext* aPresContext)
 {
   nsILinkHandler *handler = aPresContext->GetLinkHandler();
   if (!handler) {
@@ -3072,7 +3072,7 @@ nsGenericElement::LeaveLink(nsIPresContext* aPresContext)
 }
 
 nsresult
-nsGenericElement::TriggerLink(nsIPresContext* aPresContext,
+nsGenericElement::TriggerLink(nsPresContext* aPresContext,
                               nsLinkVerb aVerb,
                               nsIURI* aOriginURI,
                               nsIURI* aLinkURI,

@@ -38,7 +38,7 @@
 
 #include "nsContainerFrame.h"
 #include "nsIDOMSVGTSpanElement.h"
-#include "nsIPresContext.h"
+#include "nsPresContext.h"
 #include "nsISVGTextContainerFrame.h"
 #include "nsISVGRendererCanvas.h"
 #include "nsWeakReference.h"
@@ -83,25 +83,25 @@ private:
 public:
   // nsIFrame:
 
-  NS_IMETHOD  AppendFrames(nsIPresContext* aPresContext,
+  NS_IMETHOD  AppendFrames(nsPresContext* aPresContext,
                            nsIPresShell&   aPresShell,
                            nsIAtom*        aListName,
                            nsIFrame*       aFrameList);
-  NS_IMETHOD  InsertFrames(nsIPresContext* aPresContext,
+  NS_IMETHOD  InsertFrames(nsPresContext* aPresContext,
                            nsIPresShell&   aPresShell,
                            nsIAtom*        aListName,
                            nsIFrame*       aPrevFrame,
                            nsIFrame*       aFrameList);
-  NS_IMETHOD  RemoveFrame(nsIPresContext* aPresContext,
+  NS_IMETHOD  RemoveFrame(nsPresContext* aPresContext,
                           nsIPresShell&   aPresShell,
                           nsIAtom*        aListName,
                           nsIFrame*       aOldFrame);
-  NS_IMETHOD  ReplaceFrame(nsIPresContext* aPresContext,
+  NS_IMETHOD  ReplaceFrame(nsPresContext* aPresContext,
                            nsIPresShell&   aPresShell,
                            nsIAtom*        aListName,
                            nsIFrame*       aOldFrame,
                            nsIFrame*       aNewFrame);
-  NS_IMETHOD Init(nsIPresContext*  aPresContext,
+  NS_IMETHOD Init(nsPresContext*  aPresContext,
                   nsIContent*      aContent,
                   nsIFrame*        aParent,
                   nsStyleContext*  aContext,
@@ -240,7 +240,7 @@ NS_INTERFACE_MAP_END_INHERITING(nsSVGTSpanFrameBase)
 //----------------------------------------------------------------------
 // nsIFrame methods
 NS_IMETHODIMP
-nsSVGTSpanFrame::Init(nsIPresContext*  aPresContext,
+nsSVGTSpanFrame::Init(nsPresContext*  aPresContext,
                       nsIContent*      aContent,
                       nsIFrame*        aParent,
                       nsStyleContext*  aContext,
@@ -256,7 +256,7 @@ nsSVGTSpanFrame::Init(nsIPresContext*  aPresContext,
 }
 
 NS_IMETHODIMP
-nsSVGTSpanFrame::AppendFrames(nsIPresContext* aPresContext,
+nsSVGTSpanFrame::AppendFrames(nsPresContext* aPresContext,
                               nsIPresShell&   aPresShell,
                               nsIAtom*        aListName,
                               nsIFrame*       aFrameList)
@@ -267,7 +267,7 @@ nsSVGTSpanFrame::AppendFrames(nsIPresContext* aPresContext,
 }
 
 NS_IMETHODIMP
-nsSVGTSpanFrame::InsertFrames(nsIPresContext* aPresContext,
+nsSVGTSpanFrame::InsertFrames(nsPresContext* aPresContext,
                               nsIPresShell&   aPresShell,
                               nsIAtom*        aListName,
                               nsIFrame*       aPrevFrame,
@@ -302,7 +302,7 @@ nsSVGTSpanFrame::InsertFrames(nsIPresContext* aPresContext,
 }
 
 NS_IMETHODIMP
-nsSVGTSpanFrame::RemoveFrame(nsIPresContext* aPresContext,
+nsSVGTSpanFrame::RemoveFrame(nsPresContext* aPresContext,
                              nsIPresShell&   aPresShell,
                              nsIAtom*        aListName,
                              nsIFrame*       aOldFrame)
@@ -338,7 +338,7 @@ nsSVGTSpanFrame::RemoveFrame(nsIPresContext* aPresContext,
 }
 
 NS_IMETHODIMP
-nsSVGTSpanFrame::ReplaceFrame(nsIPresContext* aPresContext,
+nsSVGTSpanFrame::ReplaceFrame(nsPresContext* aPresContext,
                               nsIPresShell&   aPresShell,
                               nsIAtom*        aListName,
                               nsIFrame*       aOldFrame,

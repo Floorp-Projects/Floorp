@@ -42,7 +42,7 @@
 #include "nsImageLoadingContent.h"
 #include "nsHTMLAtoms.h"
 #include "nsStyleConsts.h"
-#include "nsIPresContext.h"
+#include "nsPresContext.h"
 #include "nsIPresShell.h"
 #include "nsMappedAttributes.h"
 #include "nsIJSNativeInitializer.h"
@@ -126,7 +126,7 @@ public:
                                     nsChangeHint& aHint) const;
   NS_IMETHOD_(PRBool) IsAttributeMapped(const nsIAtom* aAttribute) const;
   NS_IMETHOD GetAttributeMappingFunction(nsMapRuleToAttributesFunc& aMapRuleFunc) const;
-  virtual nsresult HandleDOMEvent(nsIPresContext* aPresContext,
+  virtual nsresult HandleDOMEvent(nsPresContext* aPresContext,
                                   nsEvent* aEvent, nsIDOMEvent** aDOMEvent,
                                   PRUint32 aFlags,
                                   nsEventStatus* aEventStatus);
@@ -270,7 +270,7 @@ nsHTMLImageElement::GetXY()
   }
 
   // Get the Presentation Context from the Shell
-  nsCOMPtr<nsIPresContext> context;
+  nsCOMPtr<nsPresContext> context;
   presShell->GetPresContext(getter_AddRefs(context));
 
   if (!context) {
@@ -355,7 +355,7 @@ nsHTMLImageElement::GetWidthHeight()
     size.height -= margin.top + margin.bottom;
     size.width -= margin.left + margin.right;
 
-    nsCOMPtr<nsIPresContext> context;
+    nsCOMPtr<nsPresContext> context;
     GetPresContext(this, getter_AddRefs(context));
 
     if (context) {
@@ -509,7 +509,7 @@ nsHTMLImageElement::GetAttributeMappingFunction(nsMapRuleToAttributesFunc& aMapR
 
 
 nsresult
-nsHTMLImageElement::HandleDOMEvent(nsIPresContext* aPresContext,
+nsHTMLImageElement::HandleDOMEvent(nsPresContext* aPresContext,
                                    nsEvent* aEvent, nsIDOMEvent** aDOMEvent,
                                    PRUint32 aFlags,
                                    nsEventStatus* aEventStatus)

@@ -38,7 +38,7 @@
 
 #include "nsContainerFrame.h"
 #include "nsIDOMSVGTextElement.h"
-#include "nsIPresContext.h"
+#include "nsPresContext.h"
 #include "nsISVGTextFrame.h"
 #include "nsISVGRendererCanvas.h"
 #include "nsWeakReference.h"
@@ -87,39 +87,39 @@ private:
 public:
   // nsIFrame:
 
-  NS_IMETHOD  AppendFrames(nsIPresContext* aPresContext,
+  NS_IMETHOD  AppendFrames(nsPresContext* aPresContext,
                            nsIPresShell&   aPresShell,
                            nsIAtom*        aListName,
                            nsIFrame*       aFrameList);
-  NS_IMETHOD  InsertFrames(nsIPresContext* aPresContext,
+  NS_IMETHOD  InsertFrames(nsPresContext* aPresContext,
                            nsIPresShell&   aPresShell,
                            nsIAtom*        aListName,
                            nsIFrame*       aPrevFrame,
                            nsIFrame*       aFrameList);
-  NS_IMETHOD  RemoveFrame(nsIPresContext* aPresContext,
+  NS_IMETHOD  RemoveFrame(nsPresContext* aPresContext,
                           nsIPresShell&   aPresShell,
                           nsIAtom*        aListName,
                           nsIFrame*       aOldFrame);
-  NS_IMETHOD  ReplaceFrame(nsIPresContext* aPresContext,
+  NS_IMETHOD  ReplaceFrame(nsPresContext* aPresContext,
                            nsIPresShell&   aPresShell,
                            nsIAtom*        aListName,
                            nsIFrame*       aOldFrame,
                            nsIFrame*       aNewFrame);
   
-  NS_IMETHOD Init(nsIPresContext*  aPresContext,
+  NS_IMETHOD Init(nsPresContext*  aPresContext,
                   nsIContent*      aContent,
                   nsIFrame*        aParent,
                   nsStyleContext*  aContext,
                   nsIFrame*        aPrevInFlow);
 
-  NS_IMETHOD  AttributeChanged(nsIPresContext* aPresContext,
+  NS_IMETHOD  AttributeChanged(nsPresContext* aPresContext,
                                nsIContent*     aChild,
                                PRInt32         aNameSpaceID,
                                nsIAtom*        aAttribute,
                                PRInt32         aModType,
                                PRInt32         aHint);
 
-  NS_IMETHOD DidSetStyleContext(nsIPresContext* aPresContext);
+  NS_IMETHOD DidSetStyleContext(nsPresContext* aPresContext);
 
   // nsISVGValueObserver
   NS_IMETHOD WillModifySVGObservable(nsISVGValue* observable);
@@ -273,7 +273,7 @@ NS_INTERFACE_MAP_END_INHERITING(nsSVGTextFrameBase)
 //----------------------------------------------------------------------
 // nsIFrame methods
 NS_IMETHODIMP
-nsSVGTextFrame::Init(nsIPresContext*  aPresContext,
+nsSVGTextFrame::Init(nsPresContext*  aPresContext,
                      nsIContent*      aContent,
                      nsIFrame*        aParent,
                      nsStyleContext*  aContext,
@@ -289,7 +289,7 @@ nsSVGTextFrame::Init(nsIPresContext*  aPresContext,
 }
 
 NS_IMETHODIMP
-nsSVGTextFrame::AttributeChanged(nsIPresContext* aPresContext,
+nsSVGTextFrame::AttributeChanged(nsPresContext* aPresContext,
                                  nsIContent*     aChild,
                                  PRInt32         aNameSpaceID,
                                  nsIAtom*        aAttribute,
@@ -310,7 +310,7 @@ nsSVGTextFrame::AttributeChanged(nsIPresContext* aPresContext,
 }
 
 NS_IMETHODIMP
-nsSVGTextFrame::DidSetStyleContext(nsIPresContext* aPresContext)
+nsSVGTextFrame::DidSetStyleContext(nsPresContext* aPresContext)
 {
 #ifdef DEBUG
   printf("** nsSVGTextFrame::DidSetStyleContext\n");
@@ -320,7 +320,7 @@ nsSVGTextFrame::DidSetStyleContext(nsIPresContext* aPresContext)
 }
 
 NS_IMETHODIMP
-nsSVGTextFrame::AppendFrames(nsIPresContext* aPresContext,
+nsSVGTextFrame::AppendFrames(nsPresContext* aPresContext,
                              nsIPresShell&   aPresShell,
                              nsIAtom*        aListName,
                              nsIFrame*       aFrameList)
@@ -331,7 +331,7 @@ nsSVGTextFrame::AppendFrames(nsIPresContext* aPresContext,
 }
 
 NS_IMETHODIMP
-nsSVGTextFrame::InsertFrames(nsIPresContext* aPresContext,
+nsSVGTextFrame::InsertFrames(nsPresContext* aPresContext,
                              nsIPresShell&   aPresShell,
                              nsIAtom*        aListName,
                              nsIFrame*       aPrevFrame,
@@ -366,7 +366,7 @@ nsSVGTextFrame::InsertFrames(nsIPresContext* aPresContext,
 }
 
 NS_IMETHODIMP
-nsSVGTextFrame::RemoveFrame(nsIPresContext* aPresContext,
+nsSVGTextFrame::RemoveFrame(nsPresContext* aPresContext,
                             nsIPresShell&   aPresShell,
                             nsIAtom*        aListName,
                             nsIFrame*       aOldFrame)
@@ -402,7 +402,7 @@ nsSVGTextFrame::RemoveFrame(nsIPresContext* aPresContext,
 }
 
 NS_IMETHODIMP
-nsSVGTextFrame::ReplaceFrame(nsIPresContext* aPresContext,
+nsSVGTextFrame::ReplaceFrame(nsPresContext* aPresContext,
                              nsIPresShell&   aPresShell,
                              nsIAtom*        aListName,
                              nsIFrame*       aOldFrame,

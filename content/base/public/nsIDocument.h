@@ -55,7 +55,7 @@
 
 class nsIAtom;
 class nsIContent;
-class nsIPresContext;
+class nsPresContext;
 class nsIPresShell;
 
 class nsIStreamListener;
@@ -296,7 +296,7 @@ public:
    * presentation context (presentation contexts <b>must not</b> be
    * shared among multiple presentation shells).
    */
-  virtual nsresult CreateShell(nsIPresContext* aContext,
+  virtual nsresult CreateShell(nsPresContext* aContext,
                                nsIViewManager* aViewManager,
                                nsStyleSet* aStyleSet,
                                nsIPresShell** aInstancePtrResult) = 0;
@@ -517,7 +517,7 @@ public:
   virtual void StyleRuleRemoved(nsIStyleSheet* aStyleSheet,
                                 nsIStyleRule* aStyleRule) = 0;
 
-  virtual nsresult HandleDOMEvent(nsIPresContext* aPresContext,
+  virtual nsresult HandleDOMEvent(nsPresContext* aPresContext,
                                   nsEvent* aEvent, nsIDOMEvent** aDOMEvent,
                                   PRUint32 aFlags,
                                   nsEventStatus* aEventStatus) = 0;

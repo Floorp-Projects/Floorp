@@ -47,7 +47,7 @@
 
 #include "nsIFrame.h"
 #include "nsCOMPtr.h"
-#include "nsIPresContext.h"
+#include "nsPresContext.h"
 #include "nsIPresShell.h"
 #include "nsHTMLReflowState.h"
 
@@ -67,16 +67,16 @@ public:
     Initial
   };
 
-  nsBoxLayoutState(nsIPresContext* aPresContext,
+  nsBoxLayoutState(nsPresContext* aPresContext,
                    const nsHTMLReflowState& aReflowState,
                    nsHTMLReflowMetrics& aDesiredSize) NS_HIDDEN;
-  nsBoxLayoutState(nsIPresContext* aPresContext) NS_HIDDEN;
+  nsBoxLayoutState(nsPresContext* aPresContext) NS_HIDDEN;
   nsBoxLayoutState(nsIPresShell* aShell) NS_HIDDEN;
   nsBoxLayoutState(const nsBoxLayoutState& aState) NS_HIDDEN;
 
   NS_HIDDEN_(void) HandleReflow(nsIBox* aRootBox);
 
-  nsIPresContext* PresContext() { return mPresContext; }
+  nsPresContext* PresContext() { return mPresContext; }
   nsIPresShell*   PresShell() { return mPresContext->PresShell(); }
   nscoord* GetMaxElementWidth() { return mReflowState ? mMaxElementWidth : nsnull; }
 
@@ -110,7 +110,7 @@ private:
   NS_HIDDEN_(void) Unwind(nsReflowPath* aReflowPath, nsIBox* aRootBox);
   NS_HIDDEN_(nsIBox*) GetBoxForFrame(nsIFrame* aFrame, PRBool& aIsAdaptor);
 
-  nsCOMPtr<nsIPresContext> mPresContext;
+  nsCOMPtr<nsPresContext> mPresContext;
   const nsHTMLReflowState* mReflowState;
   eBoxLayoutReason mType;
   nscoord* mMaxElementWidth;

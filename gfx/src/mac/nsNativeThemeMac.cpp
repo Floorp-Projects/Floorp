@@ -44,13 +44,13 @@
 #include "nsTransform2D.h"
 #include "nsThemeConstants.h"
 #include "nsIPresShell.h"
-#include "nsIPresContext.h"
+#include "nsPresContext.h"
 #include "nsIContent.h"
 #include "nsIDocument.h"
 #include "nsIFrame.h"
 #include "nsIEventStateManager.h"
 #include "nsINameSpaceManager.h"
-#include "nsIPresContext.h"
+#include "nsPresContext.h"
 #include "nsILookAndFeel.h"
 #include "nsRegionPool.h"
 #include "nsGfxUtils.h"
@@ -746,7 +746,7 @@ nsNativeThemeMac::ThemeChanged()
 
 
 PRBool 
-nsNativeThemeMac::ThemeSupportsWidget(nsIPresContext* aPresContext, nsIFrame* aFrame,
+nsNativeThemeMac::ThemeSupportsWidget(nsPresContext* aPresContext, nsIFrame* aFrame,
                                       PRUint8 aWidgetType)
 {
 #ifndef MOZ_WIDGET_COCOA

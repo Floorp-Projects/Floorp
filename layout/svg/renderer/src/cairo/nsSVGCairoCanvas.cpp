@@ -45,7 +45,7 @@
 #include "nsIRenderingContext.h"
 #include "nsIDeviceContext.h"
 #include "nsTransform2D.h"
-#include "nsIPresContext.h"
+#include "nsPresContext.h"
 #include "nsRect.h"
 #include "nsRenderingContextGTK.h"
 #include <gdk/gdkx.h>
@@ -64,7 +64,7 @@ class nsSVGCairoCanvas : public nsISVGCairoCanvas
 public:
   nsSVGCairoCanvas();
   ~nsSVGCairoCanvas();
-  nsresult Init(nsIRenderingContext* ctx, nsIPresContext* presContext,
+  nsresult Init(nsIRenderingContext* ctx, nsPresContext* presContext,
                 const nsRect & dirtyRect);
     
   // nsISupports interface:
@@ -78,7 +78,7 @@ public:
     
 private:
   nsCOMPtr<nsIRenderingContext> mMozContext;
-  nsCOMPtr<nsIPresContext> mPresContext;
+  nsCOMPtr<nsPresContext> mPresContext;
   cairo_t *mCR;
   PRUint32 mWidth, mHeight;
 };
@@ -103,7 +103,7 @@ nsSVGCairoCanvas::~nsSVGCairoCanvas()
 
 nsresult
 nsSVGCairoCanvas::Init(nsIRenderingContext *ctx,
-                       nsIPresContext *presContext,
+                       nsPresContext *presContext,
                        const nsRect &dirtyRect)
 {
   mPresContext = presContext;
@@ -134,7 +134,7 @@ nsSVGCairoCanvas::Init(nsIRenderingContext *ctx,
 nsresult
 NS_NewSVGCairoCanvas(nsISVGRendererCanvas **result,
                      nsIRenderingContext *ctx,
-                     nsIPresContext *presContext,
+                     nsPresContext *presContext,
                      const nsRect & dirtyRect)
 {
   nsSVGCairoCanvas* pg = new nsSVGCairoCanvas();
@@ -188,9 +188,9 @@ nsSVGCairoCanvas::UnlockRenderingContext()
   return NS_OK;
 }
 
-/** Implements nsIPresContext getPresContext(); */
+/** Implements nsPresContext getPresContext(); */
 NS_IMETHODIMP
-nsSVGCairoCanvas::GetPresContext(nsIPresContext **_retval)
+nsSVGCairoCanvas::GetPresContext(nsPresContext **_retval)
 {
   *_retval = mPresContext;
   NS_IF_ADDREF(*_retval);
