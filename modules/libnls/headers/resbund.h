@@ -595,7 +595,7 @@ private:
 	static Transition& getTransition(ENode row, short col);
 
 public:
-#ifdef _DEBUG
+#if 0
 	// This is used for debugging
 	friend ostream& operator<<(ostream&, const ResourceBundle&);
 #endif
