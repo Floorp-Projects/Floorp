@@ -364,6 +364,17 @@
   margin-right: 4px;
   margin-left: 0px;
   min-width: 0px;
+  list-style-image: url("chrome://navigator/skin/toolbar/search.gif");
+  font: message-box;
+  font-weight: bold;
+}
+
+#search-button > .button-stack > .button-text-box {
+  padding: 2px 0px;
+}
+
+#search-button > .button-stack > .button-text-box > .button-text-mid {
+  margin-right: 0px;
 }
 
 /* ::::: navigator throbber ::::: */
