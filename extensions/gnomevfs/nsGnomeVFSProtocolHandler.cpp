@@ -44,6 +44,9 @@ extern "C" {
 
 #include "nsIGenericFactory.h"
 #include "nsIInterfaceRequestorUtils.h"
+#include "nsIPrefService.h"
+#include "nsIPrefBranchInternal.h"
+#include "nsIObserver.h"
 #include "nsEventQueueUtils.h"
 #include "nsProxyRelease.h"
 #include "nsIAuthPrompt.h"
@@ -60,7 +63,8 @@ extern "C" {
 #include "prlog.h"
 #include "prtime.h"
 
-#define MOZ_GNOMEVFS_SCHEME "moz-gnomevfs"
+#define MOZ_GNOMEVFS_SCHEME              "moz-gnomevfs"
+#define MOZ_GNOMEVFS_SUPPORTED_PROTOCOLS "network.gnomevfs.supported-protocols"
 
 //-----------------------------------------------------------------------------
 
@@ -173,7 +177,7 @@ ProxiedAuthCallback(gconstpointer in,
   GnomeVFSModuleCallbackAuthenticationOut *authOut =
       (GnomeVFSModuleCallbackAuthenticationOut *) out;
 
-  LOG(("ProxiedAuthCallback [uri=%s]\n", authIn->uri));
+  LOG(("gnomevfs: ProxiedAuthCallback [uri=%s]\n", authIn->uri));
 
   // Without a channel, we have no way of getting a prompter.
   nsIChannel *channel = (nsIChannel *) callback_data;
@@ -211,7 +215,7 @@ ProxiedAuthCallback(gconstpointer in,
     int uriLen = strlen(authIn->uri);
     if (!StringHead(spec, uriLen).Equals(nsDependentCString(authIn->uri, uriLen)))
     {
-      LOG(("[spec=%s authIn->uri=%s]\n", spec.get(), authIn->uri));
+      LOG(("gnomevfs: [spec=%s authIn->uri=%s]\n", spec.get(), authIn->uri));
       NS_ERROR("URI mismatch");
     }
   }
@@ -463,14 +467,14 @@ nsGnomeVFSInputStream::DoOpen()
     rv = gnome_vfs_directory_list_load(&mDirList, mSpec.get(),
                                        GNOME_VFS_FILE_INFO_DEFAULT);
 
-    LOG(("gnome_vfs_directory_list_load returned %d (%s) [spec=\"%s\"]\n",
+    LOG(("gnomevfs: gnome_vfs_directory_list_load returned %d (%s) [spec=\"%s\"]\n",
         rv, gnome_vfs_result_to_string(rv), mSpec.get()));
   }
   else
   {
     rv = gnome_vfs_open(&mHandle, mSpec.get(), GNOME_VFS_OPEN_READ);
 
-    LOG(("gnome_vfs_open returned %d (%s) [spec=\"%s\"]\n",
+    LOG(("gnomevfs: gnome_vfs_open returned %d (%s) [spec=\"%s\"]\n",
         rv, gnome_vfs_result_to_string(rv), mSpec.get()));
   }
 
@@ -775,7 +779,7 @@ nsGnomeVFSInputStream::Read(char *aBuf,
     if (mStatus == NS_BASE_STREAM_CLOSED)
       return NS_OK;
 
-    LOG(("GnomeVFS result %d [%s] mapped to 0x%x\n",
+    LOG(("gnomevfs: result %d [%s] mapped to 0x%x\n",
         rv, gnome_vfs_result_to_string(rv), mStatus));
   }
   return mStatus;
@@ -804,15 +808,23 @@ nsGnomeVFSInputStream::IsNonBlocking(PRBool *aResult)
 //-----------------------------------------------------------------------------
 
 class nsGnomeVFSProtocolHandler : public nsIProtocolHandler
+                                , public nsIObserver
 {
   public:
     NS_DECL_ISUPPORTS
     NS_DECL_NSIPROTOCOLHANDLER
+    NS_DECL_NSIOBSERVER
 
     nsresult Init();
+
+  private:
+    void   InitSupportedProtocolsPref(nsIPrefBranch *prefs);
+    PRBool IsSupportedProtocol(const nsCString &spec);
+
+    nsXPIDLCString mSupportedProtocols;
 };
 
-NS_IMPL_ISUPPORTS1(nsGnomeVFSProtocolHandler, nsIProtocolHandler)
+NS_IMPL_ISUPPORTS2(nsGnomeVFSProtocolHandler, nsIProtocolHandler, nsIObserver)
 
 nsresult
 nsGnomeVFSProtocolHandler::Init()
@@ -830,7 +842,47 @@ nsGnomeVFSProtocolHandler::Init()
     }
   }
 
+  nsCOMPtr<nsIPrefBranchInternal> prefs = do_GetService(NS_PREFSERVICE_CONTRACTID);
+  if (prefs)
+  {
+    InitSupportedProtocolsPref(prefs);
+    prefs->AddObserver(MOZ_GNOMEVFS_SUPPORTED_PROTOCOLS, this, PR_FALSE);
+  }
+
   return NS_OK;
+}
+
+void
+nsGnomeVFSProtocolHandler::InitSupportedProtocolsPref(nsIPrefBranch *prefs)
+{
+  // read preferences
+  nsresult rv = prefs->GetCharPref(MOZ_GNOMEVFS_SUPPORTED_PROTOCOLS,
+                                   getter_Copies(mSupportedProtocols));
+  if (NS_SUCCEEDED(rv))
+    mSupportedProtocols.StripWhitespace();
+  else
+    mSupportedProtocols = NS_LITERAL_CSTRING("smb:,sftp:"); // use defaults
+
+  LOG(("gnomevfs: supported protocols \"%s\"\n", mSupportedProtocols.get()));
+}
+
+PRBool
+nsGnomeVFSProtocolHandler::IsSupportedProtocol(const nsCString &spec)
+{
+  PRInt32 colon = spec.FindChar(':');
+  if (colon == kNotFound)
+    return PR_FALSE;
+
+  // <scheme> + ':'
+  const nsCSubstring &scheme = StringHead(spec, colon + 1);
+
+  nsACString::const_iterator begin, end, iter;
+  mSupportedProtocols.BeginReading(begin);
+  mSupportedProtocols.EndReading(end);
+
+  iter = begin;
+  return CaseInsensitiveFindInReadable(scheme, iter, end) &&
+      (iter == begin || *(--iter) == ',');
 }
 
 NS_IMETHODIMP
@@ -863,6 +915,8 @@ nsGnomeVFSProtocolHandler::NewURI(const nsACString &aSpec,
 {
   const nsPromiseFlatCString &flatSpec = PromiseFlatCString(aSpec);
 
+  LOG(("gnomevfs: NewURI [spec=%s]\n", flatSpec.get()));
+
   if (!aBaseURI)
   {
     //
@@ -875,7 +929,7 @@ nsGnomeVFSProtocolHandler::NewURI(const nsACString &aSpec,
     //     There are others that fall into this category, which are best handled
     //     externally by Nautilus (or another app like it).
     //
-    if (!StringHead(flatSpec, 4).Equals(NS_LITERAL_CSTRING("smb:")))
+    if (!IsSupportedProtocol(flatSpec))
       return NS_ERROR_UNKNOWN_PROTOCOL;
 
     // Verify that GnomeVFS supports this URI scheme.
@@ -942,6 +996,18 @@ nsGnomeVFSProtocolHandler::AllowPort(PRInt32 aPort,
 {
   // Don't override anything.
   *aResult = PR_FALSE; 
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsGnomeVFSProtocolHandler::Observe(nsISupports *aSubject,
+                                   const char *aTopic,
+                                   const PRUnichar *aData)
+{
+  if (strcmp(aTopic, NS_PREFBRANCH_PREFCHANGE_TOPIC_ID) == 0) {
+    nsCOMPtr<nsIPrefBranch> prefs = do_QueryInterface(aSubject);
+    InitSupportedProtocolsPref(prefs);
+  }
   return NS_OK;
 }
 
