@@ -19,6 +19,9 @@
 #
 # Contributor(s): Sean Su
 #
+#
+#  Next Generation Apps Version:
+#     Ben Goodger <ben@mozilla.org>
 
 #
 # Purpose:

@@ -845,7 +845,7 @@ Strip Filename=FALSE
 
 ;Copy File SequentialX sections
 [Copy File Sequential0]
-Timing=post launchapp
+Timing=post smartupdate
 Filename=install_wizard.log
 Source=[SETUP PATH]
 Destination=[SETUP PATH]\uninstall
@@ -863,7 +863,7 @@ Timing=post download
 Destination=[COMMON_PROGRAMS]\Mozilla Seamonkey\Mozilla AppRunner.lnk
 
 [Delete File1]
-Timing=post launchapp
+Timing=post smartupdate
 Destination=[SETUP PATH]\install_wizard.log
 
 

@@ -466,6 +466,9 @@ if(verifyDiskSpace(fProgram, srDest))
     registerChrome(CONTENT | DELAYED_CHROME, getFolder("Chrome","comm.jar"),"content/communicator-platform/");
     registerChrome(SKIN | DELAYED_CHROME, getFolder("Chrome","classic.jar"),"skin/classic/communicator/");
 
+    // Create the uninstall folder. 
+    err = File.dirCreate(getFolder("Program", "uninstall"));
+    logComment("dirCreate() of Program/uninstall returned: " + err);
 
     // We need to register the psm chrome files.
     // We're checking to see if they exist first in case
@@ -515,6 +518,7 @@ if(verifyDiskSpace(fProgram, srDest))
     logComment("Installing: "    + fProgram + "chrome\\overlayinfo\\navigator\\content\\overlays.rdf");
     logComment("Create Folder: " + fProgram + "chrome\\overlayinfo\\navigator\\skin");
     logComment("Installing: "    + fProgram + "chrome\\overlayinfo\\navigator\\skin\\stylesheets.rdf");
+    logComment("Create Folder: " + fProgram + "uninstall");
 
     err = getLastError();
     if (err == SUCCESS)

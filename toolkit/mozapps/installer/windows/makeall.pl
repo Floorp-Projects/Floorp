@@ -21,6 +21,9 @@
 # Contributor(s): 
 # Sean Su <ssu@netscape.com>
 # 
+#
+#  Next Generation Apps Version:
+#     Ben Goodger <ben@mozilla.org>
 
 #
 # This perl script builds the xpi, config.ini, and js files.
