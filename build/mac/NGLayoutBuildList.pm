@@ -1169,13 +1169,16 @@ sub MakeResourceAliases()
 	_copy( ":mozilla:rdf:chrome:build:registry.rdf", "$chrome_dir" . "registry.rdf" );
 		
 	# Install XPFE component resources
-	_InstallResources(":mozilla:xpfe:components:find:resources:MANIFEST",			"$samples_dir");
+	_InstallResources(":mozilla:xpfe:components:find:resources:MANIFEST",			"$global_chrome_dir:content:default");
+	_InstallResources(":mozilla:xpfe:components:find:resources:locale:MANIFEST",	"$global_chrome_dir:locale");
 	_InstallResources(":mozilla:xpfe:components:bookmarks:resources:MANIFEST",		"$samples_dir");
 	_InstallResources(":mozilla:xpfe:components:history:resources:MANIFEST",			"$samples_dir");
 	_InstallResources(":mozilla:xpfe:components:related:resources:MANIFEST",			"$samples_dir");
 	_InstallResources(":mozilla:xpfe:components:search:resources:MANIFEST",			"$samples_dir");
-	_InstallResources(":mozilla:xpfe:components:ucth:resources:MANIFEST",			"$samples_dir");
-	_InstallResources(":mozilla:xpfe:components:xfer:resources:MANIFEST",			"$samples_dir");
+	_InstallResources(":mozilla:xpfe:components:ucth:resources:MANIFEST",			"$global_chrome_dir:content:default");
+	_InstallResources(":mozilla:xpfe:components:ucth:resources:locale:MANIFEST",	"$global_chrome_dir:locale");
+	_InstallResources(":mozilla:xpfe:components:xfer:resources:MANIFEST",			"$global_chrome_dir:content:default");
+	_InstallResources(":mozilla:xpfe:components:xfer:resources:locale:MANIFEST",	"$global_chrome_dir:locale");
 	# the WALLET
 	_InstallResources(":mozilla:extensions:wallet:cookieviewer:MANIFEST",			"$samples_dir");
 	_InstallResources(":mozilla:extensions:wallet:signonviewer:MANIFEST",			"$samples_dir");
