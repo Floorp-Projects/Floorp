@@ -58,7 +58,7 @@
   </menubar>
 
   <tree rdf:datasources="rdf:history rdf:find"
-        ondblclick="OpenURL(event.target.parentNode.parentNode);"
+        ondblclick="OpenURL(event,event.target.parentNode.parentNode);"
         ref="NC:HistoryRoot"
         style="height:100%;">
 
