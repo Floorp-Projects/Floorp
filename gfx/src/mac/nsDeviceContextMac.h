@@ -47,6 +47,8 @@ public:
   NS_IMETHOD GetDepth(PRUint32& aDepth);
   NS_IMETHOD ConvertPixel(nscolor aColor, PRUint32 & aPixel);
 
+  static bool GetMacFontNumber(const nsString& aFontName, short &fontNum);
+
 protected:
   virtual ~nsDeviceContextMac();
   nsresult CreateFontCache();
