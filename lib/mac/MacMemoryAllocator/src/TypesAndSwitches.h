@@ -207,7 +207,7 @@ extern LargeBlockAllocationRoot	gLargeBlockRoot;
 LargeBlockAllocationRoot	gLargeBlockRoot = {  DECLARE_SUBHEAP_ROOT(), basePercentage, idealTmpSize, smallestTmpSize }
 
 #define	DeclareLargeBlockHeapDescriptor()	\
-	{	&LargeBlockAlloc, &LargeBlockAllocChunk, &LargeBlockHeapFree, (void *)&gLargeBlockRoot }
+	{	&LargeBlockAlloc, &LargeBlockAllocChunk, &LargeBlockHeapFree, (SubHeapAllocationRoot *)&gLargeBlockRoot }
 
 //##############################################################################
 //##############################################################################
@@ -269,7 +269,7 @@ extern FixedSizeAllocationRoot	gFixedSize##blockSize##Root;	\
 FixedSizeAllocationRoot	gFixedSize##blockSize##Root = {	DECLARE_SUBHEAP_ROOT(), baseCount, tempCount, blockSize }
 
 #define	DeclareFixedBlockHeapDescriptor(blockSize)	\
-	{	&FixedSizeAlloc, &FixedSizeAllocChunk, &FixedBlockHeapFree, (void *)&gFixedSize##blockSize##Root }
+	{	&FixedSizeAlloc, &FixedSizeAllocChunk, &FixedBlockHeapFree, (SubHeapAllocationRoot *)&gFixedSize##blockSize##Root }
 
 //##############################################################################
 //##############################################################################
@@ -322,7 +322,7 @@ extern SmallHeapRoot	gSmallHeapRoot; \
 SmallHeapRoot	gSmallHeapRoot = {  DECLARE_SUBHEAP_ROOT(), baseSize, tempSize }
 
 #define	DeclareSmallSmallHeapDescriptor()	\
-	{	&SmallHeapAlloc, &SmallHeapAllocChunk, &SmallBlockHeapFree, (void *)&gSmallHeapRoot }
+	{	&SmallHeapAlloc, &SmallHeapAllocChunk, &SmallBlockHeapFree, (SubHeapAllocationRoot *)&gSmallHeapRoot }
 	
 void *SmallHeapAlloc(size_t blockSize, void *refcon);
 void SmallHeapFree(void *address, void *refcon);
