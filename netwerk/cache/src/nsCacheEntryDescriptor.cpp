@@ -41,7 +41,7 @@ nsCacheEntryDescriptor::~nsCacheEntryDescriptor()
 }
 
 
-NS_METHOD
+nsresult
 nsCacheEntryDescriptor::Create(nsCacheEntry * entry, nsCacheAccessMode  accessGranted,
                                nsICacheEntryDescriptor ** result)
 {
