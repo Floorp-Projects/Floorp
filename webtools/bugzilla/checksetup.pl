@@ -3499,90 +3499,91 @@ if (GetFieldDef("profiles", "groupset")) {
     $sth->execute();
     my ($gsid) = $sth->fetchrow_array;
     # Get all bugs_activity records from groupset changes
-    $sth = $dbh->prepare("SELECT bug_id, bug_when, who, added, removed
-                          FROM bugs_activity WHERE fieldid = $gsid");
-    $sth->execute();
-    while (my ($bug_id, $bug_when, $who, $added, $removed) = $sth->fetchrow_array) {
-        $added ||= 0;
-        $removed ||= 0;
-        # Get names of groups added.
-        my $sth2 = $dbh->prepare("SELECT name FROM groups WHERE (bit & $added) != 0 AND (bit & $removed) = 0");
-        $sth2->execute();
-        my @logadd = ();
-        while (my ($n) = $sth2->fetchrow_array) {
-            push @logadd, $n;
+    if ($gsid) {
+        $sth = $dbh->prepare("SELECT bug_id, bug_when, who, added, removed
+                              FROM bugs_activity WHERE fieldid = $gsid");
+        $sth->execute();
+        while (my ($bug_id, $bug_when, $who, $added, $removed) = $sth->fetchrow_array) {
+            $added ||= 0;
+            $removed ||= 0;
+            # Get names of groups added.
+            my $sth2 = $dbh->prepare("SELECT name FROM groups WHERE (bit & $added) != 0 AND (bit & $removed) = 0");
+            $sth2->execute();
+            my @logadd = ();
+            while (my ($n) = $sth2->fetchrow_array) {
+                push @logadd, $n;
+            }
+            # Get names of groups removed.
+            $sth2 = $dbh->prepare("SELECT name FROM groups WHERE (bit & $removed) != 0 AND (bit & $added) = 0");
+            $sth2->execute();
+            my @logrem = ();
+            while (my ($n) = $sth2->fetchrow_array) {
+                push @logrem, $n;
+            }
+            # Get list of group bits added that correspond to missing groups.
+            $sth2 = $dbh->prepare("SELECT ($added & ~BIT_OR(bit)) FROM groups");
+            $sth2->execute();
+            my ($miss) = $sth2->fetchrow_array;
+            if ($miss) {
+                push @logadd, ListBits($miss);
+                print "\nWARNING - GROUPSET ACTIVITY ON BUG $bug_id CONTAINS DELETED GROUPS\n";
+            }
+            # Get list of group bits deleted that correspond to missing groups.
+            $sth2 = $dbh->prepare("SELECT ($removed & ~BIT_OR(bit)) FROM groups");
+            $sth2->execute();
+            ($miss) = $sth2->fetchrow_array;
+            if ($miss) {
+                push @logrem, ListBits($miss);
+                print "\nWARNING - GROUPSET ACTIVITY ON BUG $bug_id CONTAINS DELETED GROUPS\n";
+            }
+            my $logr = "";
+            my $loga = "";
+            $logr = join(", ", @logrem) . '?' if @logrem;
+            $loga = join(", ", @logadd) . '?' if @logadd;
+            # Replace to old activity record with the converted data.
+            $dbh->do("UPDATE bugs_activity SET fieldid = $bgfid, added = " .
+                      $dbh->quote($loga) . ", removed = " . 
+                      $dbh->quote($logr) .
+                      " WHERE bug_id = $bug_id AND bug_when = " . $dbh->quote($bug_when) .
+                      " AND who = $who AND fieldid = $gsid");
+    
         }
-        # Get names of groups removed.
-        $sth2 = $dbh->prepare("SELECT name FROM groups WHERE (bit & $removed) != 0 AND (bit & $added) = 0");
-        $sth2->execute();
-        my @logrem = ();
-        while (my ($n) = $sth2->fetchrow_array) {
-            push @logrem, $n;
+        # Replace groupset changes with group name changes in profiles_activity.
+        # Get profiles_activity records for groupset.
+        $sth = $dbh->prepare("SELECT userid, profiles_when, who, newvalue, oldvalue
+                              FROM profiles_activity WHERE fieldid = $gsid");
+        $sth->execute();
+        while (my ($uid, $uwhen, $uwho, $added, $removed) = $sth->fetchrow_array) {
+            $added ||= 0;
+            $removed ||= 0;
+            # Get names of groups added.
+            my $sth2 = $dbh->prepare("SELECT name FROM groups WHERE (bit & $added) != 0 AND (bit & $removed) = 0");
+            $sth2->execute();
+            my @logadd = ();
+            while (my ($n) = $sth2->fetchrow_array) {
+                push @logadd, $n;
+            }
+            # Get names of groups removed.
+            $sth2 = $dbh->prepare("SELECT name FROM groups WHERE (bit & $removed) != 0 AND (bit & $added) = 0");
+            $sth2->execute();
+            my @logrem = ();
+            while (my ($n) = $sth2->fetchrow_array) {
+                push @logrem, $n;
+            }
+            my $ladd = "";
+            my $lrem = "";
+            $ladd = join(", ", @logadd) . '?' if @logadd;
+            $lrem = join(", ", @logrem) . '?' if @logrem;
+            # Replace profiles_activity record for groupset change with group list.
+            $dbh->do("UPDATE profiles_activity SET fieldid = $bgfid, newvalue = " .
+                      $dbh->quote($ladd) . ", oldvalue = " . 
+                      $dbh->quote($lrem) .
+                      " WHERE userid = $uid AND profiles_when = " . 
+                      $dbh->quote($uwhen) .
+                      " AND who = $uwho AND fieldid = $gsid");
+    
         }
-        # Get list of group bits added that correspond to missing groups.
-        $sth2 = $dbh->prepare("SELECT ($added & ~BIT_OR(bit)) FROM groups");
-        $sth2->execute();
-        my ($miss) = $sth2->fetchrow_array;
-        if ($miss) {
-            push @logadd, ListBits($miss);
-            print "\nWARNING - GROUPSET ACTIVITY ON BUG $bug_id CONTAINS DELETED GROUPS\n";
-        }
-        # Get list of group bits deleted that correspond to missing groups.
-        $sth2 = $dbh->prepare("SELECT ($removed & ~BIT_OR(bit)) FROM groups");
-        $sth2->execute();
-        ($miss) = $sth2->fetchrow_array;
-        if ($miss) {
-            push @logrem, ListBits($miss);
-            print "\nWARNING - GROUPSET ACTIVITY ON BUG $bug_id CONTAINS DELETED GROUPS\n";
-        }
-        my $logr = "";
-        my $loga = "";
-        $logr = join(", ", @logrem) . '?' if @logrem;
-        $loga = join(", ", @logadd) . '?' if @logadd;
-        # Replace to old activity record with the converted data.
-        $dbh->do("UPDATE bugs_activity SET fieldid = $bgfid, added = " .
-                  $dbh->quote($loga) . ", removed = " . 
-                  $dbh->quote($logr) .
-                  " WHERE bug_id = $bug_id AND bug_when = " . $dbh->quote($bug_when) .
-                  " AND who = $who AND fieldid = $gsid");
-
     }
-    # Replace groupset changes with group name changes in profiles_activity.
-    # Get profiles_activity records for groupset.
-    $sth = $dbh->prepare("SELECT userid, profiles_when, who, newvalue, oldvalue
-                          FROM profiles_activity WHERE fieldid = $gsid");
-    $sth->execute();
-    while (my ($uid, $uwhen, $uwho, $added, $removed) = $sth->fetchrow_array) {
-        $added ||= 0;
-        $removed ||= 0;
-        # Get names of groups added.
-        my $sth2 = $dbh->prepare("SELECT name FROM groups WHERE (bit & $added) != 0 AND (bit & $removed) = 0");
-        $sth2->execute();
-        my @logadd = ();
-        while (my ($n) = $sth2->fetchrow_array) {
-            push @logadd, $n;
-        }
-        # Get names of groups removed.
-        $sth2 = $dbh->prepare("SELECT name FROM groups WHERE (bit & $removed) != 0 AND (bit & $added) = 0");
-        $sth2->execute();
-        my @logrem = ();
-        while (my ($n) = $sth2->fetchrow_array) {
-            push @logrem, $n;
-        }
-        my $ladd = "";
-        my $lrem = "";
-        $ladd = join(", ", @logadd) . '?' if @logadd;
-        $lrem = join(", ", @logrem) . '?' if @logrem;
-        # Replace profiles_activity record for groupset change with group list.
-        $dbh->do("UPDATE profiles_activity SET fieldid = $bgfid, newvalue = " .
-                  $dbh->quote($ladd) . ", oldvalue = " . 
-                  $dbh->quote($lrem) .
-                  " WHERE userid = $uid AND profiles_when = " . 
-                  $dbh->quote($uwhen) .
-                  " AND who = $uwho AND fieldid = $gsid");
-
-    }
-
     # Identify admin group.
     my $sth = $dbh->prepare("SELECT id FROM groups 
                 WHERE name = 'admin'");
