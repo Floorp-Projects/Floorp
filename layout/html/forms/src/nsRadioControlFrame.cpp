@@ -137,7 +137,7 @@ nsRadioControlFrame::ReResolveStyleContext(nsIPresContext* aPresContext,
 										  PR_FALSE,
 										  &mRadioButtonFaceStyle);
 
-  if ((mRadioButtonFaceStyle && oldRadioButtonFaceStyle) && (mRadioButtonFaceStyle != oldRadioButtonFaceStyle)) {
+  if ((mRadioButtonFaceStyle && oldRadioButtonFaceStyle.get()) && (mRadioButtonFaceStyle != oldRadioButtonFaceStyle.get())) {
     nsFormControlFrame::CaptureStyleChangeFor(this, oldRadioButtonFaceStyle, mRadioButtonFaceStyle, 
                               aParentChange, aChangeList, aLocalChange);
   }
