@@ -51,13 +51,6 @@ class nsIToolkit;
 
 class nsWidget;
 
-typedef struct DamageQueueEntry_s
-{
-  PtWidget_t          *widget;
-  nsWidget            *inst;
-  DamageQueueEntry_s  *next;
-}DamageQueueEntry;
-
 #define NS_TO_PH_RGB(ns) (ns & 0xff) << 16 | (ns & 0xff00) | ((ns >> 16) & 0xff)
 #define PH_TO_NS_RGB(ns) (ns & 0xff) << 16 | (ns & 0xff00) | ((ns >> 16) & 0xff)
 
@@ -75,76 +68,135 @@ public:
 
   // nsIWidget
 
-  NS_IMETHOD            Create(nsIWidget *aParent,
+	// create with nsIWidget parent
+  inline NS_IMETHOD            Create(nsIWidget *aParent,
                                const nsRect &aRect,
                                EVENT_CALLBACK aHandleEventFunction,
                                nsIDeviceContext *aContext,
                                nsIAppShell *aAppShell = nsnull,
                                nsIToolkit *aToolkit = nsnull,
-                               nsWidgetInitData *aInitData = nsnull);
-  NS_IMETHOD            Create(nsNativeWidget aParent,
+                               nsWidgetInitData *aInitData = nsnull)
+		{
+		return(CreateWidget(aParent, aRect, aHandleEventFunction, aContext, aAppShell, aToolkit, aInitData, nsnull));
+		}
+
+	// create with a native parent
+  inline NS_IMETHOD            Create(nsNativeWidget aParent,
                                const nsRect &aRect,
                                EVENT_CALLBACK aHandleEventFunction,
                                nsIDeviceContext *aContext,
                                nsIAppShell *aAppShell = nsnull,
                                nsIToolkit *aToolkit = nsnull,
-                               nsWidgetInitData *aInitData = nsnull);
+                               nsWidgetInitData *aInitData = nsnull)
+		{
+		return(CreateWidget(nsnull, aRect, aHandleEventFunction, aContext, aAppShell, aToolkit, aInitData,aParent));
+		}
 
   NS_IMETHOD Destroy(void);
-  nsIWidget* GetParent(void);
+  inline nsIWidget* GetParent(void)
+		{
+		nsIWidget* result = mParent;
+		if( mParent ) NS_ADDREF( result );
+		return result;
+		}
+
   virtual void OnDestroy();
 
   NS_IMETHOD SetModal(PRBool aModal);
   NS_IMETHOD Show(PRBool state);
-  NS_IMETHOD CaptureRollupEvents(nsIRollupListener *aListener, PRBool aDoCapture, PRBool aConsumeRollupEvent);
-  NS_IMETHOD IsVisible(PRBool &aState);
+  inline NS_IMETHOD CaptureRollupEvents(nsIRollupListener *aListener, PRBool aDoCapture, PRBool aConsumeRollupEvent) { return NS_OK; }
 
-  NS_IMETHOD ConstrainPosition(PRBool aAllowSlop, PRInt32 *aX, PRInt32 *aY);
+  inline NS_IMETHOD IsVisible(PRBool &aState) { aState = mShown; return NS_OK; }
+
+  inline NS_IMETHOD ConstrainPosition(PRBool aAllowSlop, PRInt32 *aX, PRInt32 *aY) { return NS_OK; }
   NS_IMETHOD Move(PRInt32 aX, PRInt32 aY);
   NS_IMETHOD Resize(PRInt32 aWidth, PRInt32 aHeight, PRBool aRepaint);
-  NS_IMETHOD Resize(PRInt32 aX, PRInt32 aY, PRInt32 aWidth,
-                    PRInt32 aHeight, PRBool aRepaint);
+  inline NS_IMETHOD Resize(PRInt32 aX, PRInt32 aY, PRInt32 aWidth, PRInt32 aHeight, PRBool aRepaint)
+		{
+		Move(aX,aY);
+		Resize(aWidth,aHeight,aRepaint);
+		return NS_OK;
+		}
 
-  NS_IMETHOD Enable(PRBool aState);
-  NS_IMETHOD IsEnabled(PRBool *aState);
-  NS_IMETHOD SetFocus(PRBool aRaise);
+  inline NS_IMETHOD Enable(PRBool aState)
+		{
+		if( mWidget ) PtSetResource( mWidget, Pt_ARG_FLAGS, aState ? 0 : Pt_BLOCKED, Pt_BLOCKED );
+		return NS_OK;
+		}
+
+  inline NS_IMETHOD IsEnabled(PRBool *aState)
+		{
+		if(PtWidgetFlags(mWidget) & Pt_BLOCKED) *aState = PR_FALSE;
+		else *aState = PR_TRUE;
+		return NS_OK;
+		}
+
+  inline NS_IMETHOD SetFocus(PRBool aRaise)
+		{
+		if( mWidget ) PtContainerGiveFocus( mWidget, NULL );
+		return NS_OK;
+		}
 
   PRBool OnResize(nsSizeEvent event);
   virtual PRBool OnResize(nsRect &aRect);
   virtual PRBool OnMove(PRInt32 aX, PRInt32 aY);
 
-  nsIFontMetrics *GetFont(void);
+  inline nsIFontMetrics *GetFont(void) { return nsnull; }
   NS_IMETHOD SetFont(const nsFont &aFont);
 
-  NS_IMETHOD SetBackgroundColor(const nscolor &aColor);
+  inline NS_IMETHOD SetBackgroundColor(const nscolor &aColor)
+		{
+		nsBaseWidget::SetBackgroundColor( aColor );
+		if( mWidget ) PtSetResource( mWidget, Pt_ARG_FILL_COLOR, NS_TO_PH_RGB( aColor ), 0 );
+		return NS_OK;
+		}
 
   NS_IMETHOD SetCursor(nsCursor aCursor);
 
-  NS_IMETHOD SetColorMap(nsColorMap *aColorMap);
+  inline NS_IMETHOD SetColorMap(nsColorMap *aColorMap) { return NS_OK; }
 
-  void* GetNativeData(PRUint32 aDataType);
+  inline void* GetNativeData(PRUint32 aDataType) { return (void *)mWidget; }
 
   NS_IMETHOD WidgetToScreen(const nsRect &aOldRect, nsRect &aNewRect);
   NS_IMETHOD ScreenToWidget(const nsRect &aOldRect, nsRect &aNewRect);
 
-  NS_IMETHOD BeginResizingChildren(void);
-  NS_IMETHOD EndResizingChildren(void);
+  inline NS_IMETHOD BeginResizingChildren(void)
+		{
+		PtHold();
+		return NS_OK;
+		}
 
-  NS_IMETHOD GetPreferredSize(PRInt32& aWidth, PRInt32& aHeight);
-  NS_IMETHOD SetPreferredSize(PRInt32 aWidth, PRInt32 aHeight);
+  inline NS_IMETHOD EndResizingChildren(void)
+		{
+		PtRelease();
+		return NS_OK;
+		}
+
+  inline NS_IMETHOD GetPreferredSize(PRInt32& aWidth, PRInt32& aHeight)
+		{
+		aWidth  = mPreferredWidth;
+		aHeight = mPreferredHeight;
+		return (mPreferredWidth != 0 && mPreferredHeight != 0)?NS_OK:NS_ERROR_FAILURE;
+		}
+
+  inline NS_IMETHOD SetPreferredSize(PRInt32 aWidth, PRInt32 aHeight)
+		{
+		mPreferredWidth  = aWidth;
+		mPreferredHeight = aHeight;
+		return NS_OK;
+		}
 
   // Use this to set the name of a widget for normal widgets.. not the same as the nsWindow version
-  NS_IMETHOD SetTitle(const nsString& aTitle);
+  inline NS_IMETHOD SetTitle(const nsString& aTitle) { return NS_OK; }
 
-
-  virtual void ConvertToDeviceCoordinates(nscoord &aX, nscoord &aY);
+  inline void ConvertToDeviceCoordinates(nscoord &aX, nscoord &aY) { }
 
   // the following are nsWindow specific, and just stubbed here
-  NS_IMETHOD Scroll(PRInt32 aDx, PRInt32 aDy, nsRect *aClipRect);
-  NS_IMETHOD ScrollWidgets(PRInt32 aDx, PRInt32 aDy);
+  inline NS_IMETHOD Scroll(PRInt32 aDx, PRInt32 aDy, nsRect *aClipRect) { return NS_OK; }
+  inline NS_IMETHOD ScrollWidgets(PRInt32 aDx, PRInt32 aDy) { return NS_OK; }
  
-  NS_IMETHOD SetMenuBar(nsIMenuBar *aMenuBar);
-  NS_IMETHOD ShowMenuBar(PRBool aShow);
+  inline NS_IMETHOD SetMenuBar(nsIMenuBar *aMenuBar) { return NS_ERROR_FAILURE; }
+  inline NS_IMETHOD ShowMenuBar(PRBool aShow) { return NS_ERROR_FAILURE; }
   // *could* be done on a widget, but that would be silly wouldn't it?
   NS_IMETHOD CaptureMouse(PRBool aCapture) { return NS_ERROR_FAILURE; }
 
@@ -152,7 +204,13 @@ public:
   NS_IMETHOD Invalidate(PRBool aIsSynchronous);
   NS_IMETHOD Invalidate(const nsRect &aRect, PRBool aIsSynchronous);
   NS_IMETHOD InvalidateRegion(const nsIRegion *aRegion, PRBool aIsSynchronous);
-  NS_IMETHOD Update(void);
+  inline NS_IMETHOD Update(void)
+		{
+		/* if the widget has been invalidated or damaged then re-draw it */
+		PtFlush();
+		return NS_OK;
+		}
+
   NS_IMETHOD DispatchEvent(nsGUIEvent* event, nsEventStatus & aStatus);
 
 
@@ -160,26 +218,59 @@ public:
   NS_IMETHOD ResetInputState();
   NS_IMETHOD PasswordFieldInit();
 
-  void InitEvent(nsGUIEvent& event, PRUint32 aEventType, nsPoint* aPoint = nsnull);
+  inline void InitEvent(nsGUIEvent& event, PRUint32 aEventType, nsPoint* aPoint = nsnull)
+		{
+		if( aPoint == nsnull ) {
+		  event.point.x = 0;
+		  event.point.y = 0;
+		  }
+		else {
+		  event.point.x = aPoint->x;
+		  event.point.y = aPoint->y;
+		  }
+		event.widget = this;
+		event.time = PR_IntervalNow();
+		event.message = aEventType;
+		}
 
   // Utility functions
 
-  PRBool     ConvertStatus(nsEventStatus aStatus);
+  inline PRBool     ConvertStatus(nsEventStatus aStatus)
+		{
+		switch(aStatus) {
+		  case nsEventStatus_eIgnore:
+		  case nsEventStatus_eConsumeDoDefault:
+		    return(PR_FALSE);
+		  case nsEventStatus_eConsumeNoDefault:
+		    return(PR_TRUE);
+		  }
+		NS_ASSERTION(0, "Illegal nsEventStatus enumeration value");
+		return PR_FALSE;
+		}
+
   PRBool     DispatchMouseEvent(nsMouseEvent& aEvent);
-  PRBool     DispatchStandardEvent(PRUint32 aMsg);
-  PRBool     DispatchFocus(nsGUIEvent &aEvent);
+  inline PRBool     DispatchStandardEvent(PRUint32 aMsg)
+		{
+		nsGUIEvent event;
+		event.eventStructType = NS_GUI_EVENT;
+		InitEvent(event, aMsg);
+		return DispatchWindowEvent(&event);
+		}
 
   // are we a "top level" widget?
   PRBool     mIsToplevel;
 
   // Set/Get the Pt_ARG_USER_DATA associated with each PtWidget_t *
   // this is always set to the "this" that owns the PtWidget_t
-  static PRBool     SetInstance( PtWidget_t *pWidget, nsWidget * inst );
-  static nsWidget*  GetInstance( PtWidget_t *pWidget );
+  static inline void SetInstance( PtWidget_t *pWidget, nsWidget * inst ) { PtSetResource( pWidget, Pt_ARG_POINTER, (void *)inst, 0 ); }
+  static inline nsWidget*  GetInstance( PtWidget_t *pWidget )
+		{
+		nsWidget *data;
+		PtGetResource( pWidget, Pt_ARG_POINTER, &data, 0 );
+		return data;
+		}
 
 protected:
-  virtual void InitCallbacks(char * aName = nsnull);
-
   NS_IMETHOD CreateNative(PtWidget_t *parentWindow) { return NS_OK; }
 
   nsresult CreateWidget(nsIWidget *aParent,
@@ -191,12 +282,13 @@ protected:
                         nsWidgetInitData *aInitData,
                         nsNativeWidget aNativeParent = nsnull);
 
-//#if defined(DEBUG)
-  static nsAutoString GuiEventToString(nsGUIEvent * aGuiEvent);
-  static nsAutoString PhotonEventToString(PhEvent_t * aPhEvent);
-//#endif
+  inline PRBool DispatchWindowEvent(nsGUIEvent* event)
+		{
+		nsEventStatus status;
+		DispatchEvent(event, status);
+		return ConvertStatus(status);
+		}
 
-  PRBool DispatchWindowEvent(nsGUIEvent* event);
 	void DispatchDragDropEvent( PRUint32 aEventType, PhPoint_t *pos );
 	void ProcessDrag( PhEvent_t *event, PRUint32 aEventType, PhPoint_t *pos );
 
@@ -209,15 +301,22 @@ protected:
   // Photon event support methods
   //
   //////////////////////////////////////////////////////////////////
-  static int       RawEventHandler( PtWidget_t *widget, void *data, PtCallbackInfo_t *cbinfo );
-  virtual PRBool   HandleEvent( PtWidget_t *, PtCallbackInfo_t* aCbInfo );
-  PRBool           DispatchMouseEvent(PhPoint_t &aPos, PRUint32 aEvent);
-  PRBool           DispatchKeyEvent(PhKeyEvent_t *aPhKeyEvent);
-  void     ScreenToWidgetPos( PhPoint_t &pt );
+  static int      RawEventHandler( PtWidget_t *widget, void *data, PtCallbackInfo_t *cbinfo );
+  inline PRBool		HandleEvent( PtWidget_t *, PtCallbackInfo_t* aCbInfo );
+  PRBool          DispatchMouseEvent(PhPoint_t &aPos, PRUint32 aEvent);
+  PRBool          DispatchKeyEvent(PhKeyEvent_t *aPhKeyEvent);
 
-  void             InitKeyEvent(PhKeyEvent_t *aPhKeyEvent, nsWidget *aWidget,
+  inline void ScreenToWidgetPos( PhPoint_t &pt )
+		{
+		// pt is in screen coordinates - convert it to be relative to ~this~ widgets origin
+		short x, y;
+		PtGetAbsPosition( mWidget, &x, &y );
+		pt.x -= x; pt.y -= y;
+		}
+
+  inline void     InitKeyEvent(PhKeyEvent_t *aPhKeyEvent, nsWidget *aWidget,
                                 nsKeyEvent &aKeyEvent, PRUint32 aEventType);
-  void             InitMouseEvent(PhPointerEvent_t * aPhButtonEvent,
+  void     InitMouseEvent(PhPointerEvent_t * aPhButtonEvent,
                                   nsWidget         * aWidget,
                                   nsMouseEvent     & anEvent,
                                   PRUint32           aEventType);
@@ -227,27 +326,15 @@ protected:
   PRUint32   nsConvertKey(unsigned long keysym, PRBool *aIsChar);
 
   //Enable/Disable Photon Damage		  
-  void       EnableDamage( PtWidget_t *widget, PRBool enable );
+	inline void EnableDamage( PtWidget_t *widget, PRBool enable )
+		{
+		PtWidget_t *top = PtFindDisjoint( widget );
+		if( top ) {
+			if( PR_TRUE == enable ) PtEndFlux( top );
+			else PtStartFlux( top );
+			}
+		}
 
-  //Get the Parent's area minus the children's area for clipping reasons
-  PRBool     GetParentClippedArea( nsRect &rect );
-
-  //////////////////////////////////////////////////////////////////
-  //
-  // Damage Queue Methods and Members
-  //
-  //////////////////////////////////////////////////////////////////
-  void  InitDamageQueue();
-  void  RemoveDamagedWidget(PtWidget_t *aWidget);
-  void  QueueWidgetDamage();
-  void  UpdateWidgetDamage();
-
-  // The Damage Queue Work Proc.
-  static int        WorkProc( void *data );
-
-  static DamageQueueEntry     *mDmgQueue;
-  static PRBool                mDmgQueueInited;
-  static PtWorkProcId_t       *mWorkProcID;
 
   //////////////////////////////////////////////////////////////////
   //
@@ -261,10 +348,6 @@ protected:
 
   PtWidget_t          *mWidget;
   nsIWidget						*mParent;
-#if 0
-  // This is the composite update area (union of all the calls to Invalidate)
-  nsIRegion *mUpdateArea;
-#endif
   PRBool mShown;
 
   PRUint32 mPreferredWidth, mPreferredHeight;
@@ -275,13 +358,7 @@ protected:
   static PRBool    sJustGotDeactivated;
   static PRBool    sJustGotActivated; //For getting rid of the ASSERT ERROR due to reducing suppressing of focus.
   
-  /* this is the rollup listener variables */
-  /* These variables help us close the Menu when the clicks outside the application */
-  static nsIRollupListener *gRollupListener;
-  static nsIWidget         *gRollupWidget;
-
   static nsILookAndFeel *sLookAndFeel;
-//	static nsCOMPtr<nsIDragService> sDragService;
 	static nsIDragService *sDragService;
   static PRUint32 sWidgetCount;
 };
