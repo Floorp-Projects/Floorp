@@ -53,6 +53,10 @@
 #include "nsReadableUtils.h"
 
 NS_INTERFACE_MAP_BEGIN(nsHTMLIFrameRootAccessible)
+  NS_INTERFACE_MAP_ENTRY(nsIDOMFocusListener)
+  NS_INTERFACE_MAP_ENTRY(nsIDOMFormListener)
+  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIDOMFormListener)
+  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsIDOMEventListener, nsIDOMFormListener)
 NS_INTERFACE_MAP_END_INHERITING(nsRootAccessible)
 
 NS_IMPL_ADDREF_INHERITED(nsHTMLIFrameRootAccessible, nsRootAccessible);
@@ -120,7 +124,7 @@ NS_IMETHODIMP nsHTMLIFrameAccessible::GetAccRole(PRUint32 *_retval)
 
 NS_IMETHODIMP nsHTMLIFrameAccessible::GetAccState(PRUint32 *aAccState)
 {
-  return nsAccessible::GetAccState(aAccState);
+  return nsDocAccessibleMixin::GetAccState(aAccState);
 }
 
 NS_IMETHODIMP nsHTMLIFrameAccessible::GetURL(nsAWritableString& aURL)
