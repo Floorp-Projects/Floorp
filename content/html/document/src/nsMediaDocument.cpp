@@ -67,6 +67,8 @@ nsMediaDocumentStreamListener::SetStreamListener(nsIStreamListener *aListener)
 NS_IMETHODIMP
 nsMediaDocumentStreamListener::OnStartRequest(nsIRequest* request, nsISupports *ctxt)
 {
+  NS_ENSURE_TRUE(mDocument, NS_ERROR_FAILURE);
+
   mDocument->StartLayout();
 
   if (mNextStream) {
@@ -81,11 +83,15 @@ nsMediaDocumentStreamListener::OnStopRequest(nsIRequest* request,
                                              nsISupports *ctxt,
                                              nsresult status)
 {
+  nsresult rv = NS_OK;
   if (mNextStream) {
-    return mNextStream->OnStopRequest(request, ctxt, status);
+    rv = mNextStream->OnStopRequest(request, ctxt, status);
   }
 
-  return NS_OK;
+  // No more need for our document so clear our reference and prevent leaks
+  mDocument = nsnull;
+
+  return rv;
 }
 
 NS_IMETHODIMP

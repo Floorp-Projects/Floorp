@@ -61,6 +61,8 @@ public:
                                PRBool              aReset = PR_TRUE,
                                nsIContentSink*     aSink = nsnull);
 
+  NS_IMETHOD SetScriptGlobalObject(nsIScriptGlobalObject* aScriptGlobalObject);
+
 protected:
   nsresult CreateSyntheticPluginDocument(nsACString &aMimeType);
 
@@ -90,6 +92,16 @@ NS_IMPL_RELEASE_INHERITED(nsPluginDocument, nsMediaDocument)
 NS_INTERFACE_MAP_BEGIN(nsPluginDocument)
   NS_INTERFACE_MAP_ENTRY(nsIPluginDocument)
 NS_INTERFACE_MAP_END_INHERITING(nsMediaDocument)
+
+
+NS_IMETHODIMP nsPluginDocument::SetScriptGlobalObject(nsIScriptGlobalObject* aScriptGlobalObject)
+{
+  if (!aScriptGlobalObject) {
+    mStreamListener = nsnull;
+  }
+
+  return nsMediaDocument::SetScriptGlobalObject(aScriptGlobalObject);
+}
 
 
 NS_IMETHODIMP
