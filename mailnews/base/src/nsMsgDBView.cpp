@@ -1888,7 +1888,6 @@ NS_IMETHODIMP nsMsgDBView::GetSuppressCommandUpdating(PRBool * aSuppressCommandU
 
 NS_IMETHODIMP nsMsgDBView::SetSuppressMsgDisplay(PRBool aSuppressDisplay)
 {
-  nsresult rv = NS_OK;
   PRBool forceDisplay = PR_FALSE;
   if (mSuppressMsgDisplay && (mSuppressMsgDisplay != aSuppressDisplay))
     forceDisplay = PR_TRUE;
@@ -1898,12 +1897,12 @@ NS_IMETHODIMP nsMsgDBView::SetSuppressMsgDisplay(PRBool aSuppressDisplay)
   {
     // get the view indexfor the currently selected message
     nsMsgViewIndex viewIndex;
-    rv = GetViewIndexForFirstSelectedMsg(&viewIndex);
+    nsresult rv = GetViewIndexForFirstSelectedMsg(&viewIndex);
     if (NS_SUCCEEDED(rv) && viewIndex != nsMsgViewIndex_None)
        LoadMessageByViewIndex(viewIndex);
   }
 
-  return rv;
+  return NS_OK;
 }
 
 NS_IMETHODIMP nsMsgDBView::GetSuppressMsgDisplay(PRBool * aSuppressDisplay)
