@@ -37,6 +37,9 @@
 #include "nsIDOMElement.h"
 #include "nsIDOMText.h"
 
+// XXX The XML world depends on the html atoms
+#include "nsHTMLAtoms.h"
+
 static NS_DEFINE_IID(kIDOMDocumentIID, NS_IDOMDOCUMENT_IID);
 static NS_DEFINE_IID(kIDocumentIID, NS_IDOCUMENT_IID);
 static NS_DEFINE_IID(kIXMLDocumentIID, NS_IXMLDOCUMENT_IID);
@@ -61,6 +64,9 @@ nsXMLDocument::nsXMLDocument()
   mAttrStyleSheet = nsnull;
   mProlog = nsnull;
   mEpilog = nsnull;
+
+  // XXX The XML world depends on the html atoms
+  nsHTMLAtoms::AddrefAtoms();
 }
 
 nsXMLDocument::~nsXMLDocument()
@@ -72,9 +78,9 @@ nsXMLDocument::~nsXMLDocument()
       nsXMLNameSpace *ns = (nsXMLNameSpace *)mNameSpaces->ElementAt(i);
       
       if (nsnull != ns) {
-	NS_IF_RELEASE(ns->mPrefix);
-	delete ns->mURI;
-	delete ns;
+        NS_IF_RELEASE(ns->mPrefix);
+        delete ns->mURI;
+        delete ns;
       }
     }
     mNameSpaces = nsnull;
@@ -90,7 +96,7 @@ nsXMLDocument::~nsXMLDocument()
 
 NS_IMETHODIMP 
 nsXMLDocument::QueryInterface(REFNSIID aIID,
-			      void** aInstancePtr)
+                              void** aInstancePtr)
 {
   if (NULL == aInstancePtr) {
     return NS_ERROR_NULL_POINTER;
@@ -120,9 +126,9 @@ nsrefcnt nsXMLDocument::Release()
 
 NS_IMETHODIMP 
 nsXMLDocument::StartDocumentLoad(nsIURL *aUrl, 
-				 nsIContentViewerContainer* aContainer,
-				 nsIStreamListener **aDocListener,
-				 const char* aCommand)
+                                 nsIContentViewerContainer* aContainer,
+                                 nsIStreamListener **aDocListener,
+                                 const char* aCommand)
 {
   nsresult rv = nsDocument::StartDocumentLoad(aUrl, aContainer,
                                               aDocListener);
@@ -159,7 +165,7 @@ nsXMLDocument::StartDocumentLoad(nsIURL *aUrl,
       if (NS_OK == rv) {
 
         nsIDTD* theDTD=0;
-	// XXX For now, we'll use the HTML DTD
+        // XXX For now, we'll use the HTML DTD
         NS_NewWellFormed_DTD(&theDTD);
         mParser->RegisterDTD(theDTD);
 
@@ -290,7 +296,7 @@ nsXMLDocument::CreateTextNode(const nsString& aData, nsIDOMText** aReturn)
 // nsIXMLDocument interface
 NS_IMETHODIMP 
 nsXMLDocument::RegisterNameSpace(nsIAtom *aPrefix, const nsString& aURI, 
-				 PRInt32& aNameSpaceId)
+                                 PRInt32& aNameSpaceId)
 {
   if (nsnull == mNameSpaces) {
     mNameSpaces = new nsVoidArray();
