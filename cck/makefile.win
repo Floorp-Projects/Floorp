@@ -31,6 +31,36 @@ export::
 	-mkdir $(CCKDIST)
 	-mkdir $(CCKDIST)\CCKTool
 	-mkdir $(CCKDIST)\CCKTool\Configs
+	-mkdir $(CCKDIST)\CCKTool\Configs\Default
+	-mkdir $(CCKDIST)\CCKTool\Configs\Default\CD
+	-mkdir $(CCKDIST)\CCKTool\Configs\Default\Network
+	-mkdir $(CCKDIST)\CCKTool\Configs\Default\Workspace
+	-mkdir $(CCKDIST)\CCKTool\Configs\Default\Workspace\AnimLogo
+	-mkdir $(CCKDIST)\CCKTool\Configs\Default\Workspace\Autorun
+	-mkdir $(CCKDIST)\CCKTool\Configs\Default\Workspace\Autorun\Shell
+	-mkdir $(CCKDIST)\CCKTool\Configs\Default\Workspace\Autorun\Shell\bmps
+	-mkdir $(CCKDIST)\CCKTool\Configs\Default\Workspace\Autorun\Shell\NSetup32
+	-mkdir $(CCKDIST)\CCKTool\Configs\Default\Workspace\Bkmarks
+	-mkdir $(CCKDIST)\CCKTool\Configs\Default\Workspace\CustInst
+	-mkdir $(CCKDIST)\CCKTool\Configs\Default\Workspace\Installer
+	-mkdir $(CCKDIST)\CCKTool\Configs\Default\Workspace\ISetup
+	-mkdir $(CCKDIST)\CCKTool\Configs\Default\Workspace\ISetup\NCIFiles
+
+	-mkdir $(CCKDIST)\CCKTool\Configs\MyIsp
+	-mkdir $(CCKDIST)\CCKTool\Configs\MyIsp\Cd
+	-mkdir $(CCKDIST)\CCKTool\Configs\MyIsp\Network
+	-mkdir $(CCKDIST)\CCKTool\Configs\MyIsp\Workspace
+	-mkdir $(CCKDIST)\CCKTool\Configs\MyIsp\Workspace\AnimLogo
+	-mkdir $(CCKDIST)\CCKTool\Configs\MyIsp\Workspace\Autorun
+	-mkdir $(CCKDIST)\CCKTool\Configs\MyIsp\Workspace\Autorun\Shell
+	-mkdir $(CCKDIST)\CCKTool\Configs\MyIsp\Workspace\Autorun\Shell\bmps
+	-mkdir $(CCKDIST)\CCKTool\Configs\MyIsp\Workspace\Autorun\Shell\NSetup32
+	-mkdir $(CCKDIST)\CCKTool\Configs\MyIsp\Workspace\Bkmarks
+	-mkdir $(CCKDIST)\CCKTool\Configs\MyIsp\Workspace\CustInst
+	-mkdir $(CCKDIST)\CCKTool\Configs\MyIsp\Workspace\Installer
+	-mkdir $(CCKDIST)\CCKTool\Configs\MyIsp\Workspace\ISetup
+	-mkdir $(CCKDIST)\CCKTool\Configs\MyIsp\Workspace\ISetup\NCIFiles
+
 	-mkdir $(CCKDIST)\CCKTool\WSTemplate
 	-mkdir $(CCKDIST)\CCKTool\WSTemplate\CD
 	-mkdir $(CCKDIST)\CCKTool\WSTemplate\Network
@@ -38,8 +68,8 @@ export::
 	-mkdir $(CCKDIST)\CCKTool\WSTemplate\Workspace\AnimLogo
 	-mkdir $(CCKDIST)\CCKTool\WSTemplate\Workspace\Autorun
 	-mkdir $(CCKDIST)\CCKTool\WSTemplate\Workspace\Autorun\Shell
-	-mkdir $(CCKDIST)\CCKTool\WSTemplate\Workspace\Autorun\Shell\bmps
-	-mkdir $(CCKDIST)\CCKTool\WSTemplate\Workspace\Autorun\Shell\nsetup32
+	-mkdir $(CCKDIST)\CCKTool\WSTemplate\Workspace\Autorun\Shell\Bmps
+	-mkdir $(CCKDIST)\CCKTool\WSTemplate\Workspace\Autorun\Shell\Nsetup32
 	-mkdir $(CCKDIST)\CCKTool\WSTemplate\Workspace\Bkmarks
 	-mkdir $(CCKDIST)\CCKTool\WSTemplate\Workspace\CustInst
 	-mkdir $(CCKDIST)\CCKTool\WSTemplate\Workspace\Installer
@@ -47,3 +77,5 @@ export::
 	-mkdir $(CCKDIST)\CCKTool\WSTemplate\Workspace\ISetup\NCIFiles
 
 	-mkdir $(CCKDIST)\CCKTool\Shell
+	-mkdir $(CCKDIST)\CCKTool\NSCPXPI
+	
