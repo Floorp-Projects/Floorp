@@ -133,6 +133,15 @@ case "$target" in
 alpha-*-linux*)
 	CFLAGS="$CFLAGS -mieee" ;;
 
+alpha*-*-osf*)
+    if [ test "$GNU_CC" = 1 ]; then
+        DSO_LDOPTS='-shared -Wl,-soname -Wl,$(@:$(OBJDIR)/%.$(DLL_SUFFIX)=%.$(DLL_SUFFIX))'
+    else
+	CFLAGS="$CFLAGS -std1 -ieee_with_inexact"
+        DSO_LDOPTS='-shared -expect_unresolved \* -soname $(@:$(OBJDIR)/%.$(DLL_SUFFIX)=%.$(DLL_SUFFIX))'
+        DSO_CFLAGS=
+    fi ;;
+
 *-freebsd*)
     if test -z "$GNU_CC"; then
 	DSO_LDOPTS="-Bshareable $DSO_LDOPTS"
@@ -831,8 +840,20 @@ dnl ========================================================
 AC_ARG_WITH(pthreads,
 [  --with-pthreads         use system pthread library ],
         [if test "$withval" = "yes"; then
-	    AC_CHECK_LIB(pthread, pthread_create, 
+	    AC_CHECK_LIB(pthread, pthread_attr_init, 
 		NSPR_LIBS="-lpthread $NSPR_LIBS" USE_PTHREADS=1)
+            case "$target" in
+            *-*-solaris*) 
+                CFLAGS="$CFLAGS -D_REENTRANT" ;;
+            *-*-linux*) 
+                CFLAGS="$CFLAGS -D_REENTRANT" ;;
+            alpha*-*-osf*)
+                if [ test "$GNU_CC" = 1 ]; then
+                    CFLAGS="$CFLAGS -D_REENTRANT"
+                else
+                    CFLAGS="$CFLAGS -pthread" 
+                fi ;;
+            esac
         fi] )
 
 AC_ARG_WITH(nspr,
@@ -866,14 +887,11 @@ if [ test "$_NSPR_NEEDS_THREAD_LIB" = 1 ]; then
 LIBS=$_SAVE_LIBS
 case "$target" in
 *-*-solaris*) 
-	AC_CHECK_LIB(pthread, pthread_create, 
+	AC_CHECK_LIB(pthread, pthread_attr_init, 
 		NSPR_LIBS="-lpthread $NSPR_LIBS") ;;
 *-*-linux*) 
-	AC_CHECK_LIB(pthread, pthread_create, 
+	AC_CHECK_LIB(pthread, pthread_attr_init, 
 		NSPR_LIBS="-lpthread $NSPR_LIBS") ;;
-alpha-*-osf*)
-	CFLAGS="$CFLAGS -pthread" 
-	_SAVE_CFLAGS="$_SAVE_CFLAGS -pthread" ;;
 esac
 
 AC_MSG_CHECKING("for PR_GetCurrentThread in -lnspr21 with thread lib")
