@@ -895,13 +895,24 @@ class NS_COM NS_ConvertUCS2toUTF8
   {
     public:
       NS_ConvertUCS2toUTF8( const PRUnichar* aString )
-        { Init( aString, ~PRUint32(0) /* MAXINT */); }
+        {
+          Init( aString, ~PRUint32(0) /* MAXINT */);
+        }
 
       NS_ConvertUCS2toUTF8( const PRUnichar* aString, PRUint32 aLength )
-        { Init( aString, aLength ); }
+        {
+          Init( aString, aLength );
+        }
 
       NS_ConvertUCS2toUTF8( PRUnichar aChar )
-        { Init( &aChar, 1 ); }
+        {
+          Init( &aChar, 1 );
+        }
+
+      operator const char*() const
+        {
+          return GetBuffer();
+        }
 
     protected:
       void Init( const PRUnichar* aString, PRUint32 aLength );
