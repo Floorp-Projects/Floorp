@@ -25,69 +25,79 @@
 /* Implementations of nsIControllerCommand for composer commands */
 
 
-var gHTMLEditorCommandManager = null;
-var gComposerWindowCommandManager = null;
 var commonDialogsService = Components.classes["@mozilla.org/appshell/commonDialogs;1"].getService();
 commonDialogsService = commonDialogsService.QueryInterface(Components.interfaces.nsICommonDialogs);
 
 //-----------------------------------------------------------------------------------
 function SetupHTMLEditorCommands()
 {
-  gHTMLEditorCommandManager = GetHTMLEditorController();
-  if (!gHTMLEditorCommandManager)
+  var controller = GetEditorController();
+  if (!controller)
     return;
   
-  dump("Registering commands\n");
+
+  // Include everthing a text editor does
+  SetupTextEditorCommands();
+
+  dump("Registering HTML editor commands\n");
+
+  controller.registerCommand("cmd_listProperties",  nsListPropertiesCommand);
+  controller.registerCommand("cmd_pageProperties",  nsPagePropertiesCommand);
+  controller.registerCommand("cmd_colorProperties", nsColorPropertiesCommand);
+  controller.registerCommand("cmd_advancedProperties", nsAdvancedPropertiesCommand);
+  controller.registerCommand("cmd_objectProperties",   nsObjectPropertiesCommand);
+  controller.registerCommand("cmd_removeLinks",        nsRemoveLinksCommand);
   
-  gHTMLEditorCommandManager.registerCommand("cmd_find",       nsFindCommand);
-  gHTMLEditorCommandManager.registerCommand("cmd_findNext",   nsFindNextCommand);
-  gHTMLEditorCommandManager.registerCommand("cmd_replace",    nsReplaceCommand);
-  gHTMLEditorCommandManager.registerCommand("cmd_spelling",   nsSpellingCommand);
+  controller.registerCommand("cmd_image",         nsImageCommand);
+  controller.registerCommand("cmd_hline",         nsHLineCommand);
+  controller.registerCommand("cmd_link",          nsLinkCommand);
+  controller.registerCommand("cmd_anchor",        nsAnchorCommand);
+  controller.registerCommand("cmd_insertHTML",    nsInsertHTMLCommand);
+  controller.registerCommand("cmd_insertBreak",   nsInsertBreakCommand);
+  controller.registerCommand("cmd_insertBreakAll",nsInsertBreakAllCommand);
 
-  gHTMLEditorCommandManager.registerCommand("cmd_insertChars", nsInsertCharsCommand);
+  controller.registerCommand("cmd_table",              nsInsertOrEditTableCommand);
+  controller.registerCommand("cmd_editTable",          nsEditTableCommand);
+  controller.registerCommand("cmd_SelectTable",        nsSelectTableCommand);
+  controller.registerCommand("cmd_SelectRow",          nsSelectTableRowCommand);
+  controller.registerCommand("cmd_SelectColumn",       nsSelectTableColumnCommand);
+  controller.registerCommand("cmd_SelectCell",         nsSelectTableCellCommand);
+  controller.registerCommand("cmd_SelectAllCells",     nsSelectAllTableCellsCommand);
+  controller.registerCommand("cmd_InsertTable",        nsInsertTableCommand);
+  controller.registerCommand("cmd_InsertRowAbove",     nsInsertTableRowAboveCommand);
+  controller.registerCommand("cmd_InsertRowBelow",     nsInsertTableRowBelowCommand);
+  controller.registerCommand("cmd_InsertColumnBefore", nsInsertTableColumnBeforeCommand);
+  controller.registerCommand("cmd_InsertColumnAfter",  nsInsertTableColumnAfterCommand);
+  controller.registerCommand("cmd_InsertCellBefore",   nsInsertTableCellBeforeCommand);
+  controller.registerCommand("cmd_InsertCellAfter",    nsInsertTableCellAfterCommand);
+  controller.registerCommand("cmd_DeleteTable",        nsDeleteTableCommand);
+  controller.registerCommand("cmd_DeleteRow",          nsDeleteTableRowCommand);
+  controller.registerCommand("cmd_DeleteColumn",       nsDeleteTableColumnCommand);
+  controller.registerCommand("cmd_DeleteCell",         nsDeleteTableCellCommand);
+  controller.registerCommand("cmd_DeleteCellContents", nsDeleteTableCellContentsCommand);
+  controller.registerCommand("cmd_JoinTableCells",     nsJoinTableCellsCommand);
+  controller.registerCommand("cmd_SplitTableCell",     nsSplitTableCellCommand);
+  controller.registerCommand("cmd_TableOrCellColor",   nsTableOrCellColorCommand);
+  controller.registerCommand("cmd_NormalizeTable",     nsNormalizeTableCommand);
+  controller.registerCommand("cmd_FinishHTMLSource",   nsFinishHTMLSource);
+  controller.registerCommand("cmd_CancelHTMLSource",   nsCancelHTMLSource);
+  controller.registerCommand("cmd_smiley",             nsSetSmiley);
+  controller.registerCommand("cmd_buildRecentPagesMenu", nsBuildRecentPagesMenu);
+}
 
-  gHTMLEditorCommandManager.registerCommand("cmd_listProperties",  nsListPropertiesCommand);
-  gHTMLEditorCommandManager.registerCommand("cmd_pageProperties",  nsPagePropertiesCommand);
-  gHTMLEditorCommandManager.registerCommand("cmd_colorProperties", nsColorPropertiesCommand);
-  gHTMLEditorCommandManager.registerCommand("cmd_advancedProperties", nsAdvancedPropertiesCommand);
-  gHTMLEditorCommandManager.registerCommand("cmd_objectProperties",   nsObjectPropertiesCommand);
-  gHTMLEditorCommandManager.registerCommand("cmd_removeLinks",        nsRemoveLinksCommand);
+function SetupTextEditorCommands()
+{
+  var controller = GetEditorController();
+  if (!controller)
+    return;
   
-  gHTMLEditorCommandManager.registerCommand("cmd_image",         nsImageCommand);
-  gHTMLEditorCommandManager.registerCommand("cmd_hline",         nsHLineCommand);
-  gHTMLEditorCommandManager.registerCommand("cmd_link",          nsLinkCommand);
-  gHTMLEditorCommandManager.registerCommand("cmd_anchor",        nsAnchorCommand);
-  gHTMLEditorCommandManager.registerCommand("cmd_insertHTML",    nsInsertHTMLCommand);
-  gHTMLEditorCommandManager.registerCommand("cmd_insertBreak",   nsInsertBreakCommand);
-  gHTMLEditorCommandManager.registerCommand("cmd_insertBreakAll",nsInsertBreakAllCommand);
-
-  gHTMLEditorCommandManager.registerCommand("cmd_table",              nsInsertOrEditTableCommand);
-  gHTMLEditorCommandManager.registerCommand("cmd_editTable",          nsEditTableCommand);
-  gHTMLEditorCommandManager.registerCommand("cmd_SelectTable",        nsSelectTableCommand);
-  gHTMLEditorCommandManager.registerCommand("cmd_SelectRow",          nsSelectTableRowCommand);
-  gHTMLEditorCommandManager.registerCommand("cmd_SelectColumn",       nsSelectTableColumnCommand);
-  gHTMLEditorCommandManager.registerCommand("cmd_SelectCell",         nsSelectTableCellCommand);
-  gHTMLEditorCommandManager.registerCommand("cmd_SelectAllCells",     nsSelectAllTableCellsCommand);
-  gHTMLEditorCommandManager.registerCommand("cmd_InsertTable",        nsInsertTableCommand);
-  gHTMLEditorCommandManager.registerCommand("cmd_InsertRowAbove",     nsInsertTableRowAboveCommand);
-  gHTMLEditorCommandManager.registerCommand("cmd_InsertRowBelow",     nsInsertTableRowBelowCommand);
-  gHTMLEditorCommandManager.registerCommand("cmd_InsertColumnBefore", nsInsertTableColumnBeforeCommand);
-  gHTMLEditorCommandManager.registerCommand("cmd_InsertColumnAfter",  nsInsertTableColumnAfterCommand);
-  gHTMLEditorCommandManager.registerCommand("cmd_InsertCellBefore",   nsInsertTableCellBeforeCommand);
-  gHTMLEditorCommandManager.registerCommand("cmd_InsertCellAfter",    nsInsertTableCellAfterCommand);
-  gHTMLEditorCommandManager.registerCommand("cmd_DeleteTable",        nsDeleteTableCommand);
-  gHTMLEditorCommandManager.registerCommand("cmd_DeleteRow",          nsDeleteTableRowCommand);
-  gHTMLEditorCommandManager.registerCommand("cmd_DeleteColumn",       nsDeleteTableColumnCommand);
-  gHTMLEditorCommandManager.registerCommand("cmd_DeleteCell",         nsDeleteTableCellCommand);
-  gHTMLEditorCommandManager.registerCommand("cmd_DeleteCellContents", nsDeleteTableCellContentsCommand);
-  gHTMLEditorCommandManager.registerCommand("cmd_JoinTableCells",     nsJoinTableCellsCommand);
-  gHTMLEditorCommandManager.registerCommand("cmd_SplitTableCell",     nsSplitTableCellCommand);
-  gHTMLEditorCommandManager.registerCommand("cmd_TableOrCellColor",   nsTableOrCellColorCommand);
-  gHTMLEditorCommandManager.registerCommand("cmd_NormalizeTable",     nsNormalizeTableCommand);
-  gHTMLEditorCommandManager.registerCommand("cmd_FinishHTMLSource",   nsFinishHTMLSource);
-  gHTMLEditorCommandManager.registerCommand("cmd_CancelHTMLSource",   nsCancelHTMLSource);
-  gHTMLEditorCommandManager.registerCommand("cmd_smiley",             nsSetSmiley);
-  gHTMLEditorCommandManager.registerCommand("cmd_buildRecentPagesMenu", nsBuildRecentPagesMenu);
+  dump("Registering plain text editor commands\n");
+  
+  controller.registerCommand("cmd_find",       nsFindCommand);
+  controller.registerCommand("cmd_findNext",   nsFindNextCommand);
+  controller.registerCommand("cmd_replace",    nsReplaceCommand);
+  controller.registerCommand("cmd_spelling",   nsSpellingCommand);
+  controller.registerCommand("cmd_insertChars", nsInsertCharsCommand);
 }
 
 function SetupComposerWindowCommands()
@@ -98,9 +108,9 @@ function SetupComposerWindowCommands()
   //            must first call FinishHTMLSource() 
   //            to go from HTML Source mode to any other edit mode
 
-  var gComposerWindowCommandManager = window.controllers;
+  var windowCommandManager = window.controllers;
 
-  if (!gComposerWindowCommandManager) return;
+  if (!windowCommandManager) return;
 
   var composerController = Components.classes["@mozilla.org/editor/composercontroller;1"].createInstance();
   if (!composerController)
@@ -161,11 +171,11 @@ function SetupComposerWindowCommands()
     commandManager.registerCommand("cmd_CancelHTMLSource",   nsCancelHTMLSource);
   }
 
-  gComposerWindowCommandManager.insertControllerAt(0, editorController);
+  windowCommandManager.insertControllerAt(0, editorController);
 }
 
 //-----------------------------------------------------------------------------------
-function GetHTMLEditorController()
+function GetEditorController()
 {
   var numControllers = window._content.controllers.getControllerCount();
   
