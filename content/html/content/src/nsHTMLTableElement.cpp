@@ -382,6 +382,7 @@ nsHTMLTableElement::CloneNode(PRBool aDeep, nsIDOMNode** aReturn)
   if (nsnull == it) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
+  nsCOMPtr<nsIDOMNode> kungFuDeathGrip(it);
   mInner.CopyInnerTo(this, &it->mInner, aDeep);
   return it->QueryInterface(kIDOMNodeIID, (void**) aReturn);
 }
@@ -819,20 +820,20 @@ nsHTMLTableElement::InsertRow(PRInt32 aIndex, nsIDOMHTMLElement** aValue)
 NS_IMETHODIMP
 nsHTMLTableElement::DeleteRow(PRInt32 aValue)
 {
-  nsIDOMHTMLCollection *rows;
-  GetRows(&rows);
-  nsIDOMNode *row=nsnull;
-  rows->Item(aValue, &row);
-  if (nsnull!=row)
+  nsCOMPtr<nsIDOMHTMLCollection> rows;
+  GetRows(getter_AddRefs(rows));
+  nsCOMPtr<nsIDOMNode> row;
+  rows->Item(aValue, getter_AddRefs(row));
+  if (row)
   {
-    nsIDOMNode *parent=nsnull;
-    row->GetParentNode(&parent);
-    if (nsnull!=parent)
+    nsCOMPtr<nsIDOMNode> parent=nsnull;
+    row->GetParentNode(getter_AddRefs(parent));
+    if (parent)
     {
-      parent->RemoveChild(row, &row);
+      nsCOMPtr<nsIDOMNode> deleted_row;
+      parent->RemoveChild(row, getter_AddRefs(deleted_row));
     }
   }
-  NS_RELEASE(rows);
   return NS_OK;
 }
 
