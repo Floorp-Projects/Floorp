@@ -86,7 +86,7 @@
 
 #include "nsITimelineService.h"
 
-#if defined(DEBUG_sspitzer) || defined(DEBUG_seth)
+#if defined(DEBUG_sspitzer) || defined(DEBUG_seth) || defined(DEBUG_pra)
 #define DEBUG_CMD_LINE
 #endif
 
@@ -338,10 +338,31 @@ PrintUsage(void)
   fprintf(stderr, "\t<url>:  a fully defined url string like http:// etc..\n");
 }
 
-static nsresult OpenWindow(const char *urlstr, const PRUnichar *args, const char *aFeatures=0)
+static nsresult OpenWindow(const nsAFlatCString& aChromeURL,
+                           const nsAFlatString& aAppArgs,
+                           PRInt32 aWidth, PRInt32 aHeight);
+
+static nsresult OpenWindow(const nsAFlatCString& aChromeURL,
+                           const nsAFlatString& aAppArgs)
 {
+  return OpenWindow(aChromeURL, aAppArgs, NS_SIZETOCONTENT, NS_SIZETOCONTENT);
+}
+
+static nsresult OpenWindow(const nsAFlatCString& aChromeURL,
+                           PRInt32 aWidth, PRInt32 aHeight)
+{
+  return OpenWindow(aChromeURL, NS_LITERAL_STRING(""), aWidth, aHeight);
+}
+
+static nsresult OpenWindow(const nsAFlatCString& aChromeURL,
+                           const nsAFlatString& aAppArgs,
+                           PRInt32 aWidth, PRInt32 aHeight)
+{
+
 #ifdef DEBUG_CMD_LINE
-  printf("OpenWindow(%s,?)\n",urlstr);
+  printf("OpenWindow(%s, %s, %d, %d)\n", aChromeURL.get(),
+                                         NS_ConvertUCS2toUTF8(aAppArgs).get(),
+                                         aWidth, aHeight);
 #endif /* DEBUG_CMD_LINE */
 
   nsCOMPtr<nsIWindowWatcher> wwatch(do_GetService("@mozilla.org/embedcomp/window-watcher;1"));
@@ -349,53 +370,27 @@ static nsresult OpenWindow(const char *urlstr, const PRUnichar *args, const char
   if (!wwatch || !sarg)
     return NS_ERROR_FAILURE;
 
-  sarg->SetData(args);
+  sarg->SetData(aAppArgs.get());
 
   nsCAutoString features("chrome,dialog=no,all");
-  if (aFeatures && *aFeatures) {
-    features.Append(",");
-    features.Append(aFeatures);
+  if (aHeight != NS_SIZETOCONTENT) {
+    features.Append(",height=");
+    features.AppendInt(aHeight);
   }
+  if (aWidth != NS_SIZETOCONTENT) {
+    features.Append(",width=");
+    features.AppendInt(aWidth);
+  }
+
 #ifdef DEBUG_CMD_LINE
   printf("features: %s...\n", features.get());
 #endif /* DEBUG_CMD_LINE */
 
   nsCOMPtr<nsIDOMWindow> newWindow;
-  nsresult rv;
-  rv = wwatch->OpenWindow(0, urlstr, "_blank",
-                          features.get(), sarg,
-                          getter_AddRefs(newWindow));
-
-  return rv;
+  return wwatch->OpenWindow(0, aChromeURL.get(), "_blank",
+                            features.get(), sarg,
+                            getter_AddRefs(newWindow));
 }
-
-static nsresult
-OpenChromeURL( const char * urlstr,
-               PRInt32 height = NS_SIZETOCONTENT,
-               PRInt32 width = NS_SIZETOCONTENT )
-{
-#ifdef DEBUG_CMD_LINE
-    printf("OpenChromeURL(%s,%d,%d)\n",urlstr,height,width);
-#endif /* DEBUG_CMD_LINE */
-
-	nsCOMPtr<nsIURI> url;
-	nsresult  rv;
-	rv = NS_NewURI(getter_AddRefs(url), urlstr);
-	if ( NS_FAILED( rv ) )
-		return rv;
-
-   nsCOMPtr<nsIAppShellService> appShell(do_GetService(kAppShellServiceCID));
-   NS_ENSURE_TRUE(appShell, NS_ERROR_FAILURE);
-
-   nsCOMPtr<nsIXULWindow> newWindow;
- 	rv = appShell->CreateTopLevelWindow(nsnull, url,
-                                      PR_TRUE, PR_TRUE,
-                                      nsIWebBrowserChrome::CHROME_ALL,
-                                      width, height,
-                                      getter_AddRefs(newWindow));
-  return rv;
-}
-
 
 static void DumpArbitraryHelp()
 {
@@ -479,7 +474,7 @@ nsresult LaunchApplication(const char *aParam, PRInt32 height, PRInt32 width)
     rv = OpenWindow(chromeUrlForTask, defaultArgs);
   }
   else {
-    rv = OpenChromeURL(chromeUrlForTask, height, width);
+    rv = OpenWindow(chromeUrlForTask, width, height);
   }
 
   return rv;
@@ -532,17 +527,17 @@ LaunchApplicationWithArgs(const char *commandLineArg,
         if (NS_FAILED(rv)) return rv;
 
         if (openWindowWithArgs) {
-          nsString cmdArgs; cmdArgs.AssignWithConversion(cmdResult);
+          nsAutoString cmdArgs; cmdArgs.AssignWithConversion(cmdResult);
 #ifdef DEBUG_CMD_LINE
-          printf("opening %s with %s\n",(const char *)chromeUrlForTask,"OpenWindow");
+          printf("opening %s with %s\n", chromeUrlForTask.get(), "OpenWindow");
 #endif /* DEBUG_CMD_LINE */
-          rv = OpenWindow(chromeUrlForTask, cmdArgs.get());
+          rv = OpenWindow(chromeUrlForTask, cmdArgs);
         }
         else {
 #ifdef DEBUG_CMD_LINE
-          printf("opening %s with %s\n",(const char *)cmdResult,"OpenChromeURL");
+          printf("opening %s with %s\n", cmdResult.get(), "OpenWindow");
 #endif /* DEBUG_CMD_LINE */
-          rv = OpenChromeURL(cmdResult,height, width);
+          rv = OpenWindow(cmdResult, width, height);
           if (NS_FAILED(rv)) return rv;
         }
       }
@@ -559,11 +554,11 @@ LaunchApplicationWithArgs(const char *commandLineArg,
   else {
     if (NS_SUCCEEDED(rv) && (const char*)cmdResult) {
       if (PL_strcmp("1",cmdResult) == 0) {
-        rv = OpenChromeURL(chromeUrlForTask,height, width);
+        rv = OpenWindow(chromeUrlForTask, width, height);
         if (NS_FAILED(rv)) return rv;
       }
       else {
-        rv = OpenChromeURL(cmdResult, height, width);
+        rv = OpenWindow(cmdResult, width, height);
         if (NS_FAILED(rv)) return rv;
       }
     }
@@ -763,26 +758,18 @@ static nsresult OpenBrowserWindow(PRInt32 height, PRInt32 width)
     rv = cmdLine->GetURLToLoad(getter_Copies(urlToLoad));
     if (NS_FAILED(rv)) return rv;
 
-    nsCAutoString features;
-    if (height != NS_SIZETOCONTENT) {
-      features.Append("height=");
-      features.AppendInt(height);
-    }
-    if (width != NS_SIZETOCONTENT) {
-      if (!features.IsEmpty())
-        features.Append(',');
-      features.Append("width=");
-      features.AppendInt(width);
-    }
-
     if (!urlToLoad.IsEmpty()) {
+
 #ifdef DEBUG_CMD_LINE
       printf("url to load: %s\n", urlToLoad.get());
 #endif /* DEBUG_CMD_LINE */
 
       NS_ConvertUTF8toUCS2 url(urlToLoad);
-      rv = OpenWindow(chromeUrlForTask, url.get(), features.get());
+
+      rv = OpenWindow(chromeUrlForTask, url, width, height);
+
     } else {
+
       nsXPIDLString defaultArgs;
       rv = handler->GetDefaultArgs(getter_Copies(defaultArgs));
       if (NS_FAILED(rv)) return rv;
@@ -790,7 +777,8 @@ static nsresult OpenBrowserWindow(PRInt32 height, PRInt32 width)
 #ifdef DEBUG_CMD_LINE
       printf("default args: %s\n", NS_ConvertUCS2toUTF8(defaultArgs).get());
 #endif /* DEBUG_CMD_LINE */
-      rv = OpenWindow(chromeUrlForTask, defaultArgs.get(), features.get());
+
+      rv = OpenWindow(chromeUrlForTask, defaultArgs, width, height);
     }
 
     return rv;
@@ -825,7 +813,7 @@ static nsresult Ensure1Window( nsICmdLineService* cmdLineArgs)
       } 
 
       // No window exists so lets create a browser one
-      PRInt32 height  = NS_SIZETOCONTENT;
+      PRInt32 height = NS_SIZETOCONTENT;
       PRInt32 width  = NS_SIZETOCONTENT;
 				
       // Get the value of -width option
@@ -1317,13 +1305,13 @@ static nsresult main1(int argc, char* argv[], nsISupports *nativeApp )
   // if we had no command line arguments, argc == 1.
 
 #ifdef XP_MAC
-	// if we do no command line args on the mac, it says argc is 0, and not 1
-	rv = DoCommandLines( cmdLineArgs, ((argc == 1) || (argc == 0)) );
+  // if we do no command line args on the mac, it says argc is 0, and not 1
+  rv = DoCommandLines( cmdLineArgs, ((argc == 1) || (argc == 0)) );
 #else
-	rv = DoCommandLines( cmdLineArgs, (argc == 1) );
+  rv = DoCommandLines( cmdLineArgs, (argc == 1) );
 #endif /* XP_MAC */
     NS_ASSERTION(NS_SUCCEEDED(rv), "failed to process command line");
-	if ( NS_FAILED(rv) )
+  if ( NS_FAILED(rv) )
     return rv;
 
   // Make sure there exists at least 1 window.
