@@ -47,9 +47,8 @@
 #include "nsIDOMHTMLDocument.h"
 #include "nsIWebProgressListener.h"
 #include "nsIComponentManager.h"
-#include "nsIPrefBranch.h"
+#include "nsIPref.h"
 
-const char* prefContractID = "@mozilla.org/preferences-service;1";
 
 class nsDownloadListener : public nsIWebProgressListener
 {
@@ -89,6 +88,7 @@ public:
 public:
     void BeginDownload();
     void InitDialog();
+    void CancelDownload();
     
 private: // Member variables
     ProgressDlgController* mController; // Controller for our UI.
@@ -112,10 +112,7 @@ nsDownloadListener::OnProgressChange(nsIWebProgress *aWebProgress,
                                       PRInt32 aCurTotalProgress, 
                                       PRInt32 aMaxTotalProgress)
 {
-  NSProgressIndicator *progressBar= [mController progressBar];
-  if ([progressBar doubleValue] == 0.0)
-    [progressBar setMaxValue:aMaxSelfProgress];
-  [progressBar setDoubleValue:aCurSelfProgress];
+  [mController setProgressBar:aCurTotalProgress maxProg:aMaxTotalProgress];
   return NS_OK;
 }
 
@@ -151,7 +148,12 @@ NS_IMETHODIMP
 nsDownloadListener::OnStateChange(nsIWebProgress *aWebProgress,  nsIRequest *aRequest,  PRUint32 aStateFlags, 
                                     PRUint32 aStatus)
 {
-    return NS_OK;
+  if (aStateFlags & STATE_STOP) {
+  //it appears as if we finished.
+    [mController killDownloadTimer];
+    [mController setDownloadProgress:nil];
+  }
+  return NS_OK;
 }
 
 void
@@ -229,11 +231,18 @@ nsDownloadListener::InitDialog()
     nsAutoString pathStr;
     mDestination->GetPath(pathStr);
     [mController setDestination: pathStr.get()];
-    
-    
+    [mController setDownloadTimer];
 }
 
-static NSString *SaveFileToolbarIdentifier			= @"Save File Dialog Toolbar";
+void
+nsDownloadListener::CancelDownload()
+{
+  if (mWebPersist)
+    mWebPersist->CancelSave();
+}
+
+
+static NSString *SaveFileToolbarIdentifier		= @"Save File Dialog Toolbar";
 static NSString *CancelToolbarItemIdentifier		= @"Cancel Toolbar Item";
 static NSString *PauseResumeToolbarItemIdentifier	= @"Pause and Resume Toggle Toolbar Item";
 static NSString *ShowFileToolbarItemIdentifier		= @"Show File Toolbar Item";
@@ -258,34 +267,44 @@ static NSString *LeaveOpenToolbarItemIdentifier		= @"Leave Open Toggle Toolbar I
                                                aInputStream, aBypassCache);
     NS_ADDREF(mDownloadListener);
 }
-
--(NSProgressIndicator*) progressBar
+-(void) setProgressBar:(long int)curProgress maxProg:(long int)maxProgress
 {
-	return mProgressBar;
+  aCurrentProgress = curProgress; // fall back for stat calcs
+  if (![mProgressBar isIndeterminate]) { //most likely - just update value
+    if (curProgress == maxProgress)	//handles little bug in FTP download size
+      [mProgressBar setMaxValue:maxProgress];
+    [mProgressBar setDoubleValue:curProgress];
+  }
+  else if (maxProgress > 0) { // ok, we're starting up with good max & cur values
+    [mProgressBar setIndeterminate:NO];
+    [mProgressBar setMaxValue:maxProgress];
+    [mProgressBar setDoubleValue:curProgress];
+  } // if neither case was true, it's barber pole city.
 }
 
 -(void) setSourceURL: (const PRUnichar*)aSource
 {
-    [mFromField setStringValue: [NSString stringWithCharacters:aSource length:nsCRT::strlen(aSource)]];
+  [mFromField setStringValue: [NSString stringWithCharacters:aSource length:nsCRT::strlen(aSource)]];
 }
 
 -(void) setDestination: (const PRUnichar*)aDestination
 {
-    [mToField setStringValue: [NSString stringWithCharacters:aDestination length:nsCRT::strlen(aDestination)]];
+  [mToField setStringValue: [[NSString stringWithCharacters:aDestination length:nsCRT::strlen(aDestination)] stringByAbbreviatingWithTildeInPath]];
 }
 
 - (void)windowDidLoad
 {
-    mDownloadIsPaused = NO; 
-    nsCOMPtr<nsIPrefBranch> prefs(do_GetService(prefContractID));
-    PRBool save = PR_FALSE;
-    prefs->GetBoolPref("browser.download.progressDnldDialog.keepAlive", 
-                        &save);
-    mSaveFileDialogShouldStayOpen = save;
-
-    [self setupToolbar];
-    if (mDownloadListener)
-        mDownloadListener->BeginDownload();
+  mDownloadIsPaused = NO;
+  mDownloadIsComplete = NO;
+  nsCOMPtr<nsIPref> prefs(do_GetService(NS_PREF_CONTRACTID));
+  PRBool save = PR_FALSE;
+  prefs->GetBoolPref("browser.download.progressDnldDialog.keepAlive",&save);
+  mSaveFileDialogShouldStayOpen = save;
+  [self setupToolbar];
+  [mProgressBar setUsesThreadedAnimation:YES];			
+  [mProgressBar startAnimation:self];
+  if (mDownloadListener)
+    mDownloadListener->BeginDownload();
 }
 
 - (void)setupToolbar
@@ -325,6 +344,18 @@ static NSString *LeaveOpenToolbarItemIdentifier		= @"Leave Open Toggle Toolbar I
         nil];
 }
 
+- (BOOL)validateToolbarItem:(NSToolbarItem *)toolbarItem
+{
+  if ([toolbarItem action] == @selector(cancel))	// cancel button
+    return (!mDownloadIsComplete);
+  if ([toolbarItem action] == @selector(pauseAndResumeDownload))	// pause/resume button
+    return (NO);	// Hey - it hasn't been hooked up yet. !mDownloadIsComplete when it is.
+  if ([toolbarItem action] == @selector(showFile))	// show file
+    return (mDownloadIsComplete);
+  if ([toolbarItem action] == @selector(openFile))	// open file
+    return (mDownloadIsComplete);
+  return YES;						// turn it on otherwise.
+}
 - (NSToolbarItem *) toolbar:(NSToolbar *)toolbar
       itemForItemIdentifier:(NSString *)itemIdent
   willBeInsertedIntoToolbar:(BOOL)willBeInserted
@@ -390,36 +421,55 @@ static NSString *LeaveOpenToolbarItemIdentifier		= @"Leave Open Toggle Toolbar I
 
 -(void)cancel
 {
-    NSLog(@"Request to cancel download.");
+  mDownloadListener->CancelDownload();
+  // clean up downloaded file. - do it here on in CancelDownload?
+  NSFileManager *fileManager = [NSFileManager defaultManager];
+  NSString *thePath = [[mToField stringValue] stringByExpandingTildeInPath];
+  if ([fileManager isDeletableFileAtPath:thePath])
+    // if we delete it, fantastic.  if not, oh well.  better to move to trash instead?
+    [fileManager removeFileAtPath:thePath handler:nil];
+  mDownloadIsComplete = YES;	// don't have to do this again.
 }
 
 -(void)pauseAndResumeDownload
 {
-    if ( ! mDownloadIsPaused ) {
-        //Do logic to pause download
-        mDownloadIsPaused = YES;
-        [pauseResumeToggleToolbarItem setLabel:@"Resume"];
-        [pauseResumeToggleToolbarItem setPaletteLabel:@"Resume Download"];
-        [pauseResumeToggleToolbarItem setToolTip:@"Resume the paused FTP download"];
-        [pauseResumeToggleToolbarItem setImage:[NSImage imageNamed:@"saveResume"]];
-    } else {
-        //Do logic to resume download
-        mDownloadIsPaused = NO;
-        [pauseResumeToggleToolbarItem setLabel:@"Pause"];
-        [pauseResumeToggleToolbarItem setPaletteLabel:@"Pause Download"];
-        [pauseResumeToggleToolbarItem setToolTip:@"Pause this FTP file download"];
-        [pauseResumeToggleToolbarItem setImage:[NSImage imageNamed:@"savePause"]];
-    }
+  if ( ! mDownloadIsPaused ) {
+    //Do logic to pause download
+    mDownloadIsPaused = YES;
+    [pauseResumeToggleToolbarItem setLabel:@"Resume"];
+    [pauseResumeToggleToolbarItem setPaletteLabel:@"Resume Download"];
+    [pauseResumeToggleToolbarItem setToolTip:@"Resume the paused FTP download"];
+    [pauseResumeToggleToolbarItem setImage:[NSImage imageNamed:@"saveResume"]];
+    [self killDownloadTimer];
+  } else {
+    //Do logic to resume download
+    mDownloadIsPaused = NO;
+    [pauseResumeToggleToolbarItem setLabel:@"Pause"];
+    [pauseResumeToggleToolbarItem setPaletteLabel:@"Pause Download"];
+    [pauseResumeToggleToolbarItem setToolTip:@"Pause this FTP file download"];
+    [pauseResumeToggleToolbarItem setImage:[NSImage imageNamed:@"savePause"]];
+    [self setDownloadTimer];
+  }
 }
 
 -(void)showFile
 {
-    NSLog(@"Request to show file.");
+  NSString *theFile = [[mToField stringValue] stringByExpandingTildeInPath];
+  if ([[NSWorkspace sharedWorkspace] selectFile:theFile
+                       inFileViewerRootedAtPath:[theFile stringByDeletingLastPathComponent]])
+    return;
+  // hmmm.  it didn't work.  that's odd. need localized error messages. for now, just beep.
+  NSBeep();
 }
 
 -(void)openFile
 {
-    NSLog(@"Request to open file.");
+  NSString *theFile = [[mToField stringValue] stringByExpandingTildeInPath];
+  if ([[NSWorkspace sharedWorkspace] openFile:theFile])
+    return;
+  // hmmm.  it didn't work.  that's odd.  need localized error message. for now, just beep.
+  NSBeep();
+    
 }
 
 -(void)toggleLeaveOpen
@@ -438,19 +488,164 @@ static NSString *LeaveOpenToolbarItemIdentifier		= @"Leave Open Toggle Toolbar I
         [leaveOpenToggleToolbarItem setImage:[NSImage imageNamed:@"saveLeaveOpenNO"]];
     }
     
-    nsCOMPtr<nsIPrefBranch> prefs(do_GetService(prefContractID));
+    nsCOMPtr<nsIPref> prefs(do_GetService(NS_PREF_CONTRACTID));
     prefs->SetBoolPref("browser.download.progressDnldDialog.keepAlive", mSaveFileDialogShouldStayOpen);
 }
 
 - (void)windowWillClose:(NSNotification *)notification
 {
-    [self autorelease];
+  [self autorelease];
+}
+
+- (BOOL)windowShouldClose:(NSNotification *)notification
+{
+  [self killDownloadTimer];
+  if (!mDownloadIsComplete) {	//whoops.  hard cancel.
+    [self cancel];
+    return NO;	// let setDownloadProgress handle the close.
+  }
+  return YES;	
 }
 
 - (void)dealloc
 {
-    NS_IF_RELEASE(mDownloadListener);
-    [super dealloc];
+  NS_IF_RELEASE(mDownloadListener);
+  [super dealloc];
+}
+
+- (void)killDownloadTimer
+{
+  if (mDownloadTimer) {
+    [mDownloadTimer invalidate];
+    [mDownloadTimer release];
+    mDownloadTimer = nil;
+  }    
+}
+- (void)setDownloadTimer
+{
+  [self killDownloadTimer];
+  mDownloadTimer = [[NSTimer scheduledTimerWithTimeInterval:1.0
+                                                     target:self
+                                                   selector:@selector(setDownloadProgress:)
+                                                   userInfo:nil
+                                                    repeats:YES] retain];
+}
+
+-(NSString *)formatTime:(int)seconds
+{
+  NSMutableString *theTime =[[[NSMutableString alloc] initWithCapacity:8] autorelease];
+  [theTime setString:@""];
+  NSString *padZero = [NSString stringWithString:@"0"];
+  //write out new elapsed time
+  if (seconds >= 3600){
+    [theTime appendFormat:@"%d:",(seconds / 3600)];
+    seconds = seconds % 3600;
+  }
+  NSString *elapsedMin = [NSString stringWithFormat:@"%d:",(seconds / 60)];
+  if ([elapsedMin length] == 2)
+    [theTime appendString:[padZero stringByAppendingString:elapsedMin]];
+  else
+    [theTime appendString:elapsedMin];
+  seconds = seconds % 60;
+  NSString *elapsedSec = [NSString stringWithFormat:@"%d",seconds];
+  if ([elapsedSec length] == 2)
+    [theTime appendString:elapsedSec];
+  else
+    [theTime appendString:[padZero stringByAppendingString:elapsedSec]];
+  return theTime;
+}
+// fuzzy time gives back strings like "about 5 seconds"
+-(NSString *)formatFuzzyTime:(int)seconds
+{
+  // check for seconds first
+  if (seconds < 60) {
+    if (seconds < 7)
+      return [[[NSString alloc] initWithFormat:[[NSBundle mainBundle] localizedStringForKey:@"UnderSec" value:@"Under %d seconds" table:@"ProgressDialog"],5] autorelease];
+    if (seconds < 13)
+      return [[[NSString alloc] initWithFormat:[[NSBundle mainBundle] localizedStringForKey:@"UnderSec" value:@"Under %d seconds" table:@"ProgressDialog"],10] autorelease];
+    return [[[NSString alloc] initWithString:[[NSBundle mainBundle] localizedStringForKey:@"UnderMin" value:@"Under a minute" table:@"ProgressDialog"]] autorelease];
+  }    
+  // seconds becomes minutes and we keep checking.  
+  seconds=seconds/60;
+  if (seconds < 60) {
+    if (seconds < 2)
+      return [[[NSString alloc] initWithString:[[NSBundle mainBundle] localizedStringForKey:@"AboutMin" value:@"About a minute" table:@"ProgressDialog"]] autorelease];
+    // OK, tell the good people how much time we have left.
+    return [[[NSString alloc] initWithFormat:[[NSBundle mainBundle] localizedStringForKey:@"AboutMins" value:@"About %d minutes" table:@"ProgressDialog"],seconds] autorelease];
+  }
+  //this download will never seemingly never end. now seconds become hours.
+  seconds=seconds/60;
+  if (seconds < 2)
+    return [[[NSString alloc] initWithString:[[NSBundle mainBundle] localizedStringForKey:@"AboutHour" value:@"Over an hour" table:@"ProgressDialog"]] autorelease];
+  return [[[NSString alloc] initWithFormat:[[NSBundle mainBundle] localizedStringForKey:@"AboutHours" value:@"Over %d hours" table:@"ProgressDialog"],seconds] autorelease];
+}
+
+
+-(NSString *)formatBytes:(float)bytes
+{		// this is simpler than my first try.  I peaked at Omnigroup byte formatting code.
+    // if bytes are negative, we return question marks.
+  if (bytes < 0)
+    return [[[NSString alloc] initWithString:@"???"] autorelease];
+  // bytes first.
+  if (bytes < 1024)
+    return [[[NSString alloc] initWithFormat:@"%.1f bytes",bytes] autorelease];
+  // kb
+  bytes = bytes/1024;
+  if (bytes < 1024)
+    return [[[NSString alloc] initWithFormat:@"%.1f KB",bytes] autorelease];
+  // mb
+  bytes = bytes/1024;
+  if (bytes < 1024)
+    return [[[NSString alloc] initWithFormat:@"%.1f MB",bytes] autorelease];
+  // gb
+  bytes = bytes/1024;
+  return [[[NSString alloc] initWithFormat:@"%.1f GB",bytes] autorelease];
+}
+
+// this handles lots of things.
+- (void)setDownloadProgress:(NSTimer *)downloadTimer;
+{
+  // Ack! we're closing the window with the download still running!
+  if (mDownloadIsComplete) {        
+    [[self window] performClose:self];	
+    return;
+  }
+  // get the elapsed time
+  NSArray *elapsedTimeArray = [[mElapsedTimeLabel stringValue] componentsSeparatedByString:@":"];
+  int j = [elapsedTimeArray count];
+  int elapsedSec = [[elapsedTimeArray objectAtIndex:(j-1)] intValue] + [[elapsedTimeArray objectAtIndex:(j-2)] intValue]*60;
+  if (j==3)  // this download is taking forever.
+    elapsedSec += [[elapsedTimeArray objectAtIndex:0] intValue]*3600;
+  // update elapsed time
+  [mElapsedTimeLabel setStringValue:[self formatTime:(++elapsedSec)]];
+  // for status field & time left
+  float maxBytes = ([mProgressBar maxValue]);
+  float byteSec = aCurrentProgress/elapsedSec;
+  // OK - if downloadTimer is nil, we're done - fix maxBytes value for status report.
+  if (!downloadTimer)
+    maxBytes = aCurrentProgress;
+  // update status field 
+  NSString *labelString = [[NSBundle mainBundle] localizedStringForKey:@"LabelString"
+                                                                 value:@"%@ of %@ total (at %@/sec)"
+                                                                 table:@"ProgressDialog"];
+  [mStatusLabel setStringValue: [NSString stringWithFormat:labelString, [self formatBytes:aCurrentProgress], [self formatBytes:maxBytes], [self formatBytes:byteSec]]];
+  // updating estimated time left field
+  // if maxBytes < 0, can't calc time left.
+  // if !downloadTimer, download is finished.  either way, make sure time left is 0.
+  if ((maxBytes > 0) && (downloadTimer)) {
+    int secToGo = (int)ceil((elapsedSec*maxBytes/aCurrentProgress)-elapsedSec);
+    [mTimeLeftLabel setStringValue:[self formatFuzzyTime:secToGo]];
+  }
+  else if (!downloadTimer) {  // download done.  Set remaining time to 0, fix progress bar & cancel button
+    [mTimeLeftLabel setStringValue:@""];
+    [self setProgressBar:aCurrentProgress maxProg:aCurrentProgress];
+    if (!mSaveFileDialogShouldStayOpen)
+      [[self window] performClose:self];	//close window
+    mDownloadIsComplete = YES;	// all done.
+    [[self window] update];	//redraw window
+  }
+  else //maxBytes is undetermined.  Set remaining time to question marks.
+      [mTimeLeftLabel setStringValue:@"???"];
 }
 
 @end
