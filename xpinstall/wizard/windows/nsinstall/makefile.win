@@ -31,31 +31,16 @@ RESFILE         = $(MODULE).res
 
 OBJS =  \
     .\$(OBJDIR)\nsinstall.obj   \
-    .\$(OBJDIR)\adler32.obj     \
-    .\$(OBJDIR)\infblock.obj    \
-    .\$(OBJDIR)\infcodes.obj    \
-    .\$(OBJDIR)\inffast.obj     \
-    .\$(OBJDIR)\inflate.obj     \
-    .\$(OBJDIR)\inftrees.obj    \
-    .\$(OBJDIR)\infutil.obj     \
-    .\$(OBJDIR)\uncompr.obj     \
-    .\$(OBJDIR)\zutil.obj       \
     $(NULL)
 
-LCFLAGS= -UMOZILLA_CLIENT
+LLIBS=$(DIST)\lib\zlib_s.lib
 
 include <$(DEPTH)\config\rules.mak>
-
-docopy:
-    $(MAKE_INSTALL) $(DEPTH)\modules\zlib\src\*.h .
-    $(MAKE_INSTALL) $(DEPTH)\modules\zlib\src\*.c .
-
-export:: docopy
 
 install:: $(PROGRAM)
     $(MAKE_INSTALL) $(PROGRAM) $(DIST)\install
 
 clobber_all::
-    $(RM) inf*.* adler32.c uncompr.c z*.* trees.c deflate.* compr* gzio* example.c crc* mini*
+    $(RM) inf*.* adler32.c uncompr.c z*.* trees.* deflate.* compr* gzio* example.c crc* mini*
     $(RM) $(DIST)\install\$(MODULE).exe
 

@@ -26,6 +26,7 @@ MODULES_ZLIB_SRC_LCSRCS = \
 		uncompr.c \
 		deflate.c \
 		trees.c \
+		gzio.c \
 		zutil.c \
 		inflate.c \
 		infblock.c \

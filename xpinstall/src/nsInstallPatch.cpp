@@ -20,6 +20,7 @@
  * Contributor(s): 
  */
 
+#include "zlib.h"
 #include "nsFileSpec.h"
 #include "prmem.h"
 #include "nsXPIDLString.h"
@@ -27,7 +28,6 @@
 #include "nsInstallPatch.h"
 #include "nsInstallResources.h"
 #include "nsIDOMInstallVersion.h"
-#include "zlib.h"
 
 #include "gdiff.h"
 

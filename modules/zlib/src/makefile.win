@@ -50,6 +50,7 @@ DEPTH= ..\..\..\
 EXPORT_LIBRARY=1
 LIBRARY_NAME=$(MODULE)
 MAPFILE= $(LIBRARY_NAME).map
+DEFFILE=zlib.def
 
 #//------------------------------------------------------------------------
 #// 
@@ -87,6 +88,8 @@ OBJS=                                   \
 #//     (ie. LCFLAGS, LLFLAGS, LLIBS, LINCS)
 #//
 #//------------------------------------------------------------------------
+# Use standard win32 (but not standard for mozilla) entrypoints
+LCFLAGS=$(LCFLAGS) -DZLIB_DLL=1
 LLIBS=$(LLIBS)  $(LIBNSPR) 
 LINCS=$(LINCS) -I. -I_gen
 # clobber and clobber_all will remove the following garbage:
