@@ -435,7 +435,7 @@ nsLDAPAutoCompleteSession::OnLDAPMessage(nsILDAPMessage *aMessage)
 // void onLDAPInit (in nsresult aStatus);
 //
 NS_IMETHODIMP
-nsLDAPAutoCompleteSession::OnLDAPInit(nsresult aStatus)
+nsLDAPAutoCompleteSession::OnLDAPInit(nsILDAPConnection *aConn, nsresult aStatus)
 {
     nsresult rv;        // temp for xpcom return values
     nsCOMPtr<nsILDAPMessageListener> selfProxy;
@@ -586,7 +586,7 @@ nsLDAPAutoCompleteSession::OnLDAPInit(nsresult aStatus)
 
     // our OnLDAPMessage accepts all result callbacks
     //
-    rv = mOperation->Init(mConnection, selfProxy);
+    rv = mOperation->Init(mConnection, selfProxy, nsnull);
     if (NS_FAILED(rv)) {
         FinishAutoCompleteLookup(nsIAutoCompleteStatus::failureItems, rv, 
                                  UNBOUND);
@@ -696,7 +696,7 @@ nsLDAPAutoCompleteSession::OnLDAPBind(nsILDAPMessage *aMessage)
                    ("nsLDAPAutoCompleteSession::OnLDAPBind(): auth error;"
                     " calling OnLDAPInit() again"));
         
-            return OnLDAPInit(NS_OK);
+            return OnLDAPInit(nsnull, NS_OK);
         }
 
         // reset to the default state
@@ -871,7 +871,7 @@ nsLDAPAutoCompleteSession::StartLDAPSearch()
 
     // initialize the LDAP operation object
     //
-    rv = mOperation->Init(mConnection, selfProxy);
+    rv = mOperation->Init(mConnection, selfProxy, nsnull);
     if (NS_FAILED(rv)) {
         NS_ERROR("nsLDAPAutoCompleteSession::StartLDAPSearch(): couldn't "
                  "initialize LDAP operation");
@@ -1141,7 +1141,7 @@ nsLDAPAutoCompleteSession::InitConnection()
     rv = mConnection->Init(host.get(), port,
                            (options & nsILDAPURL::OPT_SECURE) ? PR_TRUE 
                            : PR_FALSE, NS_ConvertUTF8toUCS2(mLogin).get(), 
-                           selfProxy);
+                           selfProxy, nsnull);
     if NS_FAILED(rv) {
         switch (rv) {
 

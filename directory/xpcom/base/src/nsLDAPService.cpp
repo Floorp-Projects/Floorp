@@ -697,10 +697,10 @@ nsLDAPService::OnLDAPMessage(nsILDAPMessage *aMessage)
     return NS_OK;
 }
 
-// void onLDAPInit (in nsresult aStatus); */
+// void onLDAPInit (in nsILDAPConnection aConn, in nsresult aStatus); */
 //
 NS_IMETHODIMP
-nsLDAPService::OnLDAPInit(nsresult aStatus)
+nsLDAPService::OnLDAPInit(nsILDAPConnection *aConn, nsresult aStatus)
 {
     return NS_ERROR_NOT_IMPLEMENTED;
 }
@@ -771,7 +771,7 @@ nsLDAPService::EstablishConnection(nsLDAPServiceEntry *aEntry,
     //
     rv = conn->Init(host.get(), port, 
                     (options & nsILDAPURL::OPT_SECURE) ? PR_TRUE : PR_FALSE, 
-                    nsnull, this);
+                    nsnull, this, nsnull);
     if (NS_FAILED(rv)) {
         switch (rv) {
         // Only pass along errors we are aware of
@@ -840,7 +840,7 @@ nsLDAPService::EstablishConnection(nsLDAPServiceEntry *aEntry,
         return NS_ERROR_FAILURE;
     }
 
-    rv = operation->Init(conn, this);
+    rv = operation->Init(conn, this, nsnull);
     if (NS_FAILED(rv)) {
         return NS_ERROR_UNEXPECTED; // this should never happen
     }

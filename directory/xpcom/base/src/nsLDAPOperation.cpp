@@ -61,7 +61,8 @@ NS_IMPL_THREADSAFE_ISUPPORTS1(nsLDAPOperation, nsILDAPOperation);
  */
 NS_IMETHODIMP
 nsLDAPOperation::Init(nsILDAPConnection *aConnection,
-                      nsILDAPMessageListener *aMessageListener)
+                      nsILDAPMessageListener *aMessageListener,
+                      nsISupports *aClosure)
 {
     if (!aConnection) {
         return NS_ERROR_ILLEGAL_VALUE;
@@ -76,12 +77,30 @@ nsLDAPOperation::Init(nsILDAPConnection *aConnection,
     //
     mConnection = aConnection;
     mMessageListener = aMessageListener;
+    mClosure = aClosure;
 
     // cache the connection handle
     //
     mConnectionHandle = 
         NS_STATIC_CAST(nsLDAPConnection *, aConnection)->mConnectionHandle;
 
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsLDAPOperation::GetClosure(nsISupports **_retval)
+{
+    if (!_retval) {
+        return NS_ERROR_ILLEGAL_VALUE;
+    }
+    NS_IF_ADDREF(*_retval = mClosure);
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsLDAPOperation::SetClosure(nsISupports *aClosure)
+{
+    mClosure = aClosure;
     return NS_OK;
 }
 

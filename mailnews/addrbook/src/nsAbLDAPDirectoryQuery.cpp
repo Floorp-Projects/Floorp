@@ -247,7 +247,7 @@ NS_IMETHODIMP nsAbQueryLDAPMessageListener::OnLDAPMessage(nsILDAPMessage *aMessa
     return rv;
 }
 
-NS_IMETHODIMP nsAbQueryLDAPMessageListener::OnLDAPInit(nsresult aStatus)
+NS_IMETHODIMP nsAbQueryLDAPMessageListener::OnLDAPInit(nsILDAPConnection *aConn, nsresult aStatus)
 {
     nsresult rv;
     nsXPIDLString passwd;
@@ -397,7 +397,7 @@ NS_IMETHODIMP nsAbQueryLDAPMessageListener::OnLDAPInit(nsresult aStatus)
                      PROXY_SYNC | PROXY_ALWAYS,
                      getter_AddRefs(proxyListener));
 
-    rv = ldapOperation->Init(mConnection, proxyListener);
+    rv = ldapOperation->Init(mConnection, proxyListener, nsnull);
     NS_ENSURE_SUCCESS(rv, rv);
 
     // Bind
@@ -460,7 +460,7 @@ nsresult nsAbQueryLDAPMessageListener::OnLDAPMessageBind (nsILDAPMessage *aMessa
 									this, PROXY_SYNC | PROXY_ALWAYS, getter_AddRefs(proxyListener));
     NS_ENSURE_SUCCESS(rv, rv);
 
-    rv = mSearchOperation->Init (mConnection, proxyListener);
+    rv = mSearchOperation->Init (mConnection, proxyListener, nsnull);
     NS_ENSURE_SUCCESS(rv, rv);
 
     nsXPIDLCString dn;
@@ -791,7 +791,7 @@ NS_IMETHODIMP nsAbLDAPDirectoryQuery::DoQuery(nsIAbDirectoryQueryArguments* argu
     // Now lets initialize the LDAP connection properly. We'll kick
     // off the bind operation in the callback function, |OnLDAPInit()|.
     rv = ldapConnection->Init(host.get(), port, options, mLogin.get(),
-                              messageListener);
+                              messageListener, nsnull);
     NS_ENSURE_SUCCESS(rv, rv);
 
     return rv;

@@ -35,6 +35,8 @@
 #include "nsISupports.idl"
 #include "nsILDAPMessage.idl"
 
+interface nsILDAPConnection;
+
 /** 
  * A callback interface to be implemented by any objects that want to 
  * receive results from an nsILDAPOperation (ie nsILDAPMessages) as they
@@ -58,7 +60,8 @@ interface nsILDAPMessageListener : nsISupports
      * Reason for this is to allow us to do asynchronous DNS
      * lookups, preresolving hostnames.
      *
+     * @arg aConn     The LDAP connection in question
      * @arg aStatus   The result from the LDAP connection init
      */
-    void onLDAPInit(in nsresult aStatus);
+    void onLDAPInit(in nsILDAPConnection aConn, in nsresult aStatus);
 };

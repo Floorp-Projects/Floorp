@@ -171,7 +171,8 @@ nsLDAPConnection::Release(void)
 NS_IMETHODIMP
 nsLDAPConnection::Init(const char *aHost, PRInt16 aPort, PRBool aSSL,
                        const PRUnichar *aBindName, 
-                       nsILDAPMessageListener *aMessageListener)
+                       nsILDAPMessageListener *aMessageListener,
+                       nsISupports *aClosure)
 {
     nsCOMPtr<nsIDNSListener> selfProxy;
     nsresult rv;
@@ -198,6 +199,8 @@ nsLDAPConnection::Init(const char *aHost, PRInt16 aPort, PRBool aSSL,
     } else {
         mBindName = 0;
     }
+
+    mClosure = aClosure;
 
     // Save the port number for later use, once the DNS server(s) has
     // resolved the host part.
@@ -283,6 +286,23 @@ nsLDAPConnection::Init(const char *aHost, PRInt16 aPort, PRBool aSSL,
         mDNSRequest = 0;
     }
 
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsLDAPConnection::GetClosure(nsISupports **_retval)
+{
+    if (!_retval) {
+        return NS_ERROR_ILLEGAL_VALUE;
+    }
+    NS_IF_ADDREF(*_retval = mClosure);
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsLDAPConnection::SetClosure(nsISupports *aClosure)
+{
+    mClosure = aClosure;
     return NS_OK;
 }
 
@@ -1041,7 +1061,7 @@ nsLDAPConnection::OnStopLookup(nsISupports *aContext,
 
     // Call the listener, and then we can release our reference to it.
     //
-    mInitListener->OnLDAPInit(rv);
+    mInitListener->OnLDAPInit(this, rv);
     mInitListener = 0;
 
     return rv;

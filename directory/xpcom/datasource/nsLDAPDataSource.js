@@ -1034,7 +1034,7 @@ nsLDAPMessageRDFDelegateFactory.prototype =
                 }
 
             getTargetsBoundCallback.prototype.onLDAPInit = 
-                function(aStatus) {
+                function(aConn, aStatus) {
                     if (DEBUG) {
                         dump("getTargetsBoundCallback.onLDAPInit()" +
                              " called with status of " + aStatus + "\n\n");
@@ -1279,7 +1279,7 @@ nsLDAPMessageRDFDelegateFactory.prototype =
                     ["@mozilla.org/network/ldap-connection;1"].
                     createInstance(Components.interfaces.nsILDAPConnection);
             connection.init(queryURL.host, queryURL.port, null,
-                            generateGetTargetsBoundCallback())
+                            generateGetTargetsBoundCallback(), null)
 
             // XXXdmose - in this case, we almost certainly shouldn't be
             // falling through to an error case, but instead returning 

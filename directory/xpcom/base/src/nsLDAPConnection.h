@@ -125,6 +125,7 @@ class nsLDAPConnection : public nsILDAPConnection,
     nsCString mResolvedIP;              // Preresolved list of host IPs
     nsCOMPtr<nsILDAPMessageListener> mInitListener; // Init callback
     nsCOMPtr<nsIRequest> mDNSRequest;   // The "active" DNS request
+    nsCOMPtr<nsISupports> mClosure;     // private parameter (anything caller desires)
     nsresult mDNSStatus;                // The status of DNS lookup (rv cache)
     PRBool mDNSFinished;                // Flag if DNS lookup has finished
 };

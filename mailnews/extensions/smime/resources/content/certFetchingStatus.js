@@ -93,7 +93,8 @@ function search()
       gLdapServerURL.options,
       null,
       getProxyOnUIThread(new boundListener(),
-                            Components.interfaces.nsILDAPMessageListener));
+                            Components.interfaces.nsILDAPMessageListener),
+      null);
 
   } catch (ex) {
     window.close();
@@ -215,7 +216,7 @@ boundListener.prototype.onLDAPMessage =
   }
 
 boundListener.prototype.onLDAPInit = 
-  function(aStatus) {
+  function(aConn, aStatus) {
     kickOffBind();
   }
 
@@ -266,7 +267,7 @@ ldapMessageListener.prototype.onLDAPMessage =
   }
 
 ldapMessageListener.prototype.onLDAPInit = 
-  function(aStatus) {
+  function(aConn, aStatus) {
   }
 
 

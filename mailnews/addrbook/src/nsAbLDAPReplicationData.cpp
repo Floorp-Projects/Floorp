@@ -113,7 +113,7 @@ NS_IMETHODIMP nsAbLDAPProcessReplicationData::GetProtocolUsed(PRInt32 *aProtocol
     return NS_OK; 
 }
 
-NS_IMETHODIMP nsAbLDAPProcessReplicationData::OnLDAPInit(nsresult aStatus)
+NS_IMETHODIMP nsAbLDAPProcessReplicationData::OnLDAPInit(nsILDAPConnection *aConn, nsresult aStatus)
 {
     if(!mInitialized) 
         return NS_ERROR_NOT_INITIALIZED;
@@ -149,7 +149,7 @@ NS_IMETHODIMP nsAbLDAPProcessReplicationData::OnLDAPInit(nsresult aStatus)
        return rv;  
     }
 
-    rv = operation->Init(connection, listener);
+    rv = operation->Init(connection, listener, nsnull);
     if(NS_FAILED(rv)) {
         Done(PR_FALSE);
         return rv;

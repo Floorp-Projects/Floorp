@@ -168,7 +168,7 @@ NS_IMETHODIMP nsAbLDAPReplicationQuery::ConnectToLDAPServer(nsILDAPURL *aURL, co
     return mConnection->Init(host.get(), port, 
 			     (options & nsILDAPURL::OPT_SECURE) ? PR_TRUE
 			     : PR_FALSE, PromiseFlatString(aAuthDN).get(),
-			     listener);
+			     listener, nsnull);
 }
 
 NS_IMETHODIMP nsAbLDAPReplicationQuery::Init(const nsACString & aPrefName, nsIWebProgressListener *aProgressListener)
