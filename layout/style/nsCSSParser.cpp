@@ -4745,24 +4745,30 @@ CSSParserImpl::DoParseRect(nsCSSRect& aRect, nsresult& aErrorCode)
   if (! GetToken(aErrorCode, PR_TRUE)) {
     return PR_FALSE;
   }
-  if ((eCSSToken_Ident == mToken.mType) && 
-      mToken.mIdent.EqualsIgnoreCase("auto")) {
-    if (ExpectEndProperty(aErrorCode, PR_TRUE)) {
-      aRect.SetAllSidesTo(nsCSSValue(eCSSUnit_Auto));
-      return PR_TRUE;
-    }
-  } else if ((eCSSToken_Ident == mToken.mType) && 
-             mToken.mIdent.EqualsIgnoreCase("inherit")) {
-    if (ExpectEndProperty(aErrorCode, PR_TRUE)) {
-      aRect.SetAllSidesTo(nsCSSValue(eCSSUnit_Inherit));
-      return PR_TRUE;
-    }
-  } 
-  else if ((eCSSToken_Ident == mToken.mType) && 
-             mToken.mIdent.EqualsIgnoreCase("-moz-initial")) {
-    if (ExpectEndProperty(aErrorCode, PR_TRUE)) {
-      aRect.SetAllSidesTo(nsCSSValue(eCSSUnit_Initial));
-      return PR_TRUE;
+  if (eCSSToken_Ident == mToken.mType) {
+    nsCSSKeyword keyword = nsCSSKeywords::LookupKeyword(mToken.mIdent);
+    switch (keyword) {
+      case eCSSKeyword_auto:
+        if (ExpectEndProperty(aErrorCode, PR_TRUE)) {
+          aRect.SetAllSidesTo(nsCSSValue(eCSSUnit_Auto));
+          return PR_TRUE;
+        }
+        break;
+      case eCSSKeyword_inherit:
+        if (ExpectEndProperty(aErrorCode, PR_TRUE)) {
+          aRect.SetAllSidesTo(nsCSSValue(eCSSUnit_Inherit));
+          return PR_TRUE;
+        }
+        break;
+      case eCSSKeyword__moz_initial:
+        if (ExpectEndProperty(aErrorCode, PR_TRUE)) {
+          aRect.SetAllSidesTo(nsCSSValue(eCSSUnit_Initial));
+          return PR_TRUE;
+        }
+        break;
+      default:
+        UngetToken();
+        break;
     }
   } else if ((eCSSToken_Function == mToken.mType) && 
              mToken.mIdent.EqualsIgnoreCase("rect")) {
@@ -5132,11 +5138,12 @@ PRBool CSSParserImpl::ParseFamily(nsresult& aErrorCode, nsCSSValue& aValue)
     }
     if (eCSSToken_Ident == tk->mType) {
       if (firstOne) {
-        if (tk->mIdent.EqualsIgnoreCase("inherit")) {
+        nsCSSKeyword keyword = nsCSSKeywords::LookupKeyword(tk->mIdent);
+        if (keyword == eCSSKeyword_inherit) {
           aValue.SetInheritValue();
           return PR_TRUE;
         }
-        else if (tk->mIdent.EqualsIgnoreCase("initial")) {
+        else if (keyword == eCSSKeyword__moz_initial) {
           aValue.SetInitialValue();
           return PR_TRUE;
         }
