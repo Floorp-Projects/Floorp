@@ -186,6 +186,7 @@ OBJS = \
     misc/$(OBJDIR)/prlong.$(OBJ_SUFFIX) \
     misc/$(OBJDIR)/prnetdb.$(OBJ_SUFFIX) \
     misc/$(OBJDIR)/prolock.$(OBJ_SUFFIX)	 \
+    misc/$(OBJDIR)/prrng.$(OBJ_SUFFIX)	 \
     misc/$(OBJDIR)/prsystem.$(OBJ_SUFFIX) \
     misc/$(OBJDIR)/prthinfo.$(OBJ_SUFFIX) \
     misc/$(OBJDIR)/prtrace.$(OBJ_SUFFIX) \
@@ -286,6 +287,7 @@ OBJS +=	md/windows/$(OBJDIR)/w95io.$(OBJ_SUFFIX) \
 	md/windows/$(OBJDIR)/win32_errors.$(OBJ_SUFFIX) \
 	md/windows/$(OBJDIR)/w32ipcsem.$(OBJ_SUFFIX)	\
 	md/windows/$(OBJDIR)/w32poll.$(OBJ_SUFFIX)	\
+	md/windows/$(OBJDIR)/w32rng.$(OBJ_SUFFIX)	\
 	md/windows/$(OBJDIR)/w32shm.$(OBJ_SUFFIX)	\
 	md/windows/$(OBJDIR)/w95dllmain.$(OBJ_SUFFIX)
 else
@@ -310,6 +312,7 @@ OBJS +=	md/windows/$(OBJDIR)/ntdllmn.$(OBJ_SUFFIX) \
 	md/windows/$(OBJDIR)/ntsem.$(OBJ_SUFFIX)	\
 	md/windows/$(OBJDIR)/win32_errors.$(OBJ_SUFFIX) \
 	md/windows/$(OBJDIR)/w32ipcsem.$(OBJ_SUFFIX) \
+	md/windows/$(OBJDIR)/w32rng.$(OBJ_SUFFIX)	\
 	md/windows/$(OBJDIR)/w32shm.$(OBJ_SUFFIX)	\
 	md/windows/$(OBJDIR)/w32poll.$(OBJ_SUFFIX)
 endif

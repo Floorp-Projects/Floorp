@@ -113,6 +113,7 @@ CSRCS =             \
 	provider.c		\
 	prpoll.c		\
 	ranfile.c       \
+	randseed.c      \
 	rwlocktest.c    \
 	sel_spd.c  		\
 	selct_er.c	    \

@@ -1918,6 +1918,14 @@ extern PRStatus _PR_MD_GETHOSTNAME(char *name, PRUint32 namelen);
 extern PRStatus _PR_MD_GETSYSINFO(PRSysInfo cmd, char *name, PRUint32 namelen);
 #define    _PR_MD_GETSYSINFO _MD_GETSYSINFO
 
+/* --- PR_GetRandomNoise() related things --- */
+
+extern PRSize _PR_MD_GetNoise( void *buf, PRSize size );
+#define _PR_MD_GET_RANDOM_NOISE(buf,size) _PR_MD_GetRandomNoise((buf),(size))
+extern PRSize _pr_CopyLowBits( void *dest, PRSize dstlen, void *src, PRSize srclen );
+
+/* end PR_GetRandomNoise() related */
+
 #ifdef XP_BEOS
 
 extern PRLock *_connectLock;

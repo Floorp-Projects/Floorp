@@ -1,0 +1,320 @@
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/*
+ * The contents of this file are subject to the Netscape Public License
+ * Version 1.1 (the "NPL"); you may not use this file except in
+ * compliance with the NPL.  You may obtain a copy of the NPL at
+ * http://www.mozilla.org/NPL/
+ * 
+ * Software distributed under the NPL is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the NPL
+ * for the specific language governing rights and limitations under the
+ * NPL.
+ * 
+ * The Initial Developer of this code under the NPL is Netscape
+ * Communications Corporation.  Portions created by Netscape are
+ * Copyright (C) 1999 Netscape Communications Corporation.  All Rights
+ * Reserved.
+ */
+
+
+#include <stdio.h>
+#include <string.h>
+#include <signal.h>
+#include <unistd.h>
+#include <errno.h>
+#include <stdlib.h>
+#include <sys/time.h>
+#include <sys/wait.h>
+#include <sys/stat.h>
+#include <assert.h>
+#include <time.h>
+#include <primpl.h>
+
+
+#if defined(SOLARIS)
+
+#include <sys/systeminfo.h>
+#include <sys/times.h>
+#include <wait.h>
+
+/* int gettimeofday(struct timeval *); */
+
+static size_t
+GetHighResClock(void *buf, size_t maxbytes)
+{
+    hrtime_t t;
+    t = gethrtime();
+    if (t) {
+	    return _pr_CopyLowBits(buf, maxbytes, &t, sizeof(t));
+    }
+    return 0;
+}
+
+#elif defined(SUNOS4)
+
+#include <sys/wait.h>
+extern long sysconf(int name);
+
+static size_t
+GetHighResClock(void *buf, size_t maxbytes)
+{
+    return 0;
+}
+
+#elif defined(HPUX)
+
+#include <sys/unistd.h>
+#include <sys/wait.h>
+
+static size_t
+GetHighResClock(void *buf, size_t maxbytes)
+{
+    extern int ret_cr16();
+    int cr16val;
+
+    cr16val = ret_cr16();
+    return(_pr_CopyLowBits(buf, maxbytes, &cr16val, sizeof(cr16val)));
+}
+
+#elif defined(OSF1)
+
+#include <sys/types.h>
+#include <sys/sysinfo.h>
+#include <sys/wait.h>
+#include <sys/systeminfo.h>
+#include <c_asm.h>
+
+/*
+ * Use the "get the cycle counter" instruction on the alpha.
+ * The low 32 bits completely turn over in less than a minute.
+ * The high 32 bits are some non-counter gunk that changes sometimes.
+ */
+static size_t
+GetHighResClock(void *buf, size_t maxbytes)
+{
+    unsigned long t;
+
+    t = asm("rpcc %v0");
+    return _pr_CopyLowBits(buf, maxbytes, &t, sizeof(t));
+}
+
+#elif defined(AIX)
+
+static size_t
+GetHighResClock(void *buf, size_t maxbytes)
+{
+    return 0;
+}
+
+#elif defined(LINUX)
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <fcntl.h>
+#include <time.h>
+
+static int      fdDevRandom;
+static PRCallOnceType coOpenDevRandom;
+
+static PRStatus OpenDevRandom( void )
+{
+    fdDevRandom = open( "/dev/random", O_RDONLY );
+    return((-1 == fdDevRandom)? PR_FAILURE : PR_SUCCESS );
+} /* end OpenDevRandom() */
+
+static size_t GetDevRandom( void *buf, size_t size )
+{
+    int bytesIn;
+    int rc;
+
+    rc = PR_CallOnce( &coOpenDevRandom, OpenDevRandom );
+    if ( PR_FAILURE == rc ) {
+        _PR_MD_MAP_OPEN_ERROR( errno );
+        return(0);
+    }
+
+    bytesIn = read( fdDevRandom, buf, size );
+    if ( -1 == bytesIn ) {
+        _PR_MD_MAP_READ_ERROR( errno );
+        return(0);
+    }
+
+    return( bytesIn );
+} /* end GetDevRandom() */
+
+static size_t
+GetHighResClock(void *buf, size_t maxbytes)
+{             
+    return(GetDevRandom( buf, maxbytes ));
+}
+
+#elif defined(NCR)
+
+#include <sys/utsname.h>
+#include <sys/systeminfo.h>
+
+static size_t
+GetHighResClock(void *buf, size_t maxbytes)
+{
+    return 0;
+}
+
+#elif defined(IRIX)
+#include <fcntl.h>
+#undef PRIVATE
+#include <sys/mman.h>
+#include <sys/syssgi.h>
+#include <sys/immu.h>
+#include <sys/systeminfo.h>
+#include <sys/utsname.h>
+#include <wait.h>
+
+static size_t GetHighResClock(void *buf, size_t maxbuf)
+{
+    unsigned phys_addr, raddr, cycleval;
+    static volatile unsigned *iotimer_addr = NULL;
+    static int tries = 0;
+    static int cntr_size;
+    int mfd;
+    long s0[2];
+    struct timeval tv;
+
+#ifndef SGI_CYCLECNTR_SIZE
+#define SGI_CYCLECNTR_SIZE      165     /* Size user needs to use to read CC */
+#endif
+
+    if (iotimer_addr == NULL) {
+	    if (tries++ > 1) {
+	        /* Don't keep trying if it didn't work */
+	        return 0;
+	    }
+
+	    /*
+	    ** For SGI machines we can use the cycle counter, if it has one,
+	    ** to generate some truly random numbers
+	    */
+	    phys_addr = syssgi(SGI_QUERY_CYCLECNTR, &cycleval);
+	    if (phys_addr) {
+	        int pgsz = getpagesize();
+	        int pgoffmask = pgsz - 1;
+
+	        raddr = phys_addr & ~pgoffmask;
+	        mfd = open("/dev/mmem", O_RDONLY);
+	        if (mfd < 0) {
+    		    return 0;
+	        }
+	        iotimer_addr = (unsigned *)
+		    mmap(0, pgoffmask, PROT_READ, MAP_PRIVATE, mfd, (int)raddr);
+	        if (iotimer_addr == (void*)-1) {
+	    	    close(mfd);
+		        iotimer_addr = NULL;
+		        return 0;
+	        }
+	        iotimer_addr = (unsigned*)
+		    ((__psint_t)iotimer_addr | (phys_addr & pgoffmask));
+	        /*
+	         * The file 'mfd' is purposefully not closed.
+	         */
+	        cntr_size = syssgi(SGI_CYCLECNTR_SIZE);
+	        if (cntr_size < 0) {
+    		    struct utsname utsinfo;
+
+		        /* 
+		         * We must be executing on a 6.0 or earlier system, since the
+		         * SGI_CYCLECNTR_SIZE call is not supported.
+		         * 
+		         * The only pre-6.1 platforms with 64-bit counters are
+		         * IP19 and IP21 (Challenge, PowerChallenge, Onyx).
+		         */
+		        uname(&utsinfo);
+		        if (!strncmp(utsinfo.machine, "IP19", 4) ||
+		            !strncmp(utsinfo.machine, "IP21", 4))
+			        cntr_size = 64;
+		        else
+			        cntr_size = 32;
+	        }
+	        cntr_size /= 8;	/* Convert from bits to bytes */
+	    }
+    }
+
+    s0[0] = *iotimer_addr;
+    if (cntr_size > 4)
+	s0[1] = *(iotimer_addr + 1);
+    memcpy(buf, (char *)&s0[0], cntr_size);
+    return _pr_CopyLowBits(buf, maxbuf, &s0, cntr_size);
+}
+
+#elif defined(SONY)
+#include <sys/systeminfo.h>
+
+static size_t
+GetHighResClock(void *buf, size_t maxbytes)
+{
+    return 0;
+}
+
+#elif defined(SNI)
+#include <unistd.h>
+#include <sys/systeminfo.h>
+#include <sys/times.h>
+
+int gettimeofday(struct timeval *, struct timezone *);
+int gethostname(char *, int);
+
+static size_t
+GetHighResClock(void *buf, size_t maxbytes)
+{
+    int ticks;
+    struct tms buffer;
+
+    ticks=times(&buffer);
+    return _pr_CopyLowBits(buf, maxbytes, &ticks, sizeof(ticks));
+}
+
+#elif defined(NEC)
+#include <sys/systeminfo.h>
+
+static size_t
+GetHighResClock(void *buf, size_t maxbytes)
+{
+    return 0;
+}
+#elif defined(SCO) || defined(UNIXWARE) || defined(BSDI)
+#include <sys/times.h>
+
+static size_t
+GetHighResClock(void *buf, size_t maxbytes)
+{
+    int ticks;
+    struct tms buffer;
+
+    ticks=times(&buffer);
+    return _pr_CopyLowBits(buf, maxbytes, &ticks, sizeof(ticks));
+}
+#else
+error! Platform undefined
+#endif /* defined(SOLARIS) */
+
+extern PRSize _PR_MD_GetRandomNoise( void *buf, PRSize size )
+{
+    struct timeval tv;
+    int n = 0;
+    int s;
+
+    n += GetHighResClock(buf, size);
+    size -= n;
+
+    GETTIMEOFDAY(&tv);
+
+    if ( size >= 0 ) {
+        s = _pr_CopyLowBits((char*)buf+n, size, &tv.tv_usec, sizeof(tv.tv_usec));
+        size -= s;
+        n += s;
+    }
+    if ( size >= 0 ) {
+        s = _pr_CopyLowBits((char*)buf+n, size, &tv.tv_sec, sizeof(tv.tv_usec));
+        size -= s;
+        n += s;
+    }
+
+    return n;
+} /* end _PR_MD_GetRandomNoise() */

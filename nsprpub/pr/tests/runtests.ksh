@@ -129,6 +129,7 @@ prftest
 priotest
 provider
 ranfile
+randseed
 rwlocktest
 sel_spd
 selct_er
