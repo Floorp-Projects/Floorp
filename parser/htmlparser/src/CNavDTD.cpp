@@ -686,10 +686,11 @@ nsresult CNavDTD::HandleToken(CToken* aToken,nsIParser* aParser){
        deque until we can deal with it.
        ---------------------------------------------------------------------------------
      */
-    if(!execSkipContent) {
+    if(!execSkipContent && mDTDState!=NS_HTMLPARSER_ALTERNATECONTENT) {
 
       switch(theTag) {
         case eHTMLTag_html:
+        case eHTMLTag_noscript:
         case eHTMLTag_script:
         case eHTMLTag_markupDecl:
           break;  // simply pass these through to token handler without further ado...
@@ -1174,7 +1175,7 @@ nsresult CNavDTD::WillHandleStartTag(CToken* aToken,eHTMLTags aTag,nsCParserNode
   STOP_TIMER()
   MOZ_TIMER_DEBUGLOG(("Stop: Parse Time: CNavDTD::WillHandleStartTag(), this=%p\n", this));
 
-  if(mParser) {
+  if(mParser && mDTDState!=NS_HTMLPARSER_ALTERNATECONTENT) {
 
     CObserverService* theService=mParser->GetObserverService();
     if(theService) {
@@ -1511,11 +1512,6 @@ nsresult CNavDTD::HandleStartToken(CToken* aToken) {
         case eHTMLTag_noframes:
         case eHTMLTag_noembed:
           mHasOpenNoXXX++;
-          break;
-
-        case eHTMLTag_noscript:
-          //mHasOpenNoXXX++;      // Fix for 33397 - Enable this when we handle NOSCRIPTS.
-          isTokenHandled=PR_TRUE; // XXX - Throwing NOSCRIPT to the floor...yet another time..
           break;
 
         case eHTMLTag_script:
@@ -3084,7 +3080,76 @@ nsresult CNavDTD::CloseFrameset(const nsIParserNode *aNode){
   return result;
 }
 
+/**
+ *  This method would determine how the noscript content
+ *  should be handled.
+ *
+ *  harishd 08/24/00
+ *  @param  aNode - The noscript node
+ *  return  NS_OK if succeeded else ERROR
+ */
+nsresult CNavDTD::OpenNoscript(const nsIParserNode *aNode,nsEntryStack* aStyleStack) {
+  nsresult result=NS_OK;
 
+  if(mSink) {
+    STOP_TIMER();
+    MOZ_TIMER_DEBUGLOG(("Stop: Parse Time: CNavDTD::OpenNoscript(), this=%p\n", this));
+    
+    result=mSink->OpenNoscript(*aNode);
+
+    MOZ_TIMER_DEBUGLOG(("Start: Parse Time: CNavDTD::OpenNoscript(), this=%p\n", this));
+    START_TIMER();
+
+    if(NS_SUCCEEDED(result)) {
+      if(result==NS_HTMLPARSER_ALTERNATECONTENT) {
+        // We're here because the sink has identified that
+        // JS is enabled and therefore noscript content should
+        // not be treated as a regular content,i.e., make sure
+        // that head elements are handled correctly and may be
+        // residual style.
+        mDTDState=result;
+        // Though NS_HTMLPARSER_ALTERNATECONTENT is a succeeded message we don't want to propagate it
+        // because there are lots of places where we don't check for succeeded result instead
+        // we check for NS_OK. Also, this message is pertinent to the DTD only 
+        result=NS_OK; 
+      }
+      mHasOpenNoXXX++;
+      mBodyContext->Push(aNode,aStyleStack);
+    }
+  }
+  
+  return result;
+}
+
+/**
+ *  Call this method to stop handling noscript content
+ *
+ *  harishd 08/24/00
+ *  @param  aNode - The noscript node
+ *  return  NS_OK if succeeded else ERROR
+ */
+nsresult CNavDTD::CloseNoscript(const nsIParserNode *aNode) {
+  nsresult result=NS_OK;
+
+  if(mSink) {
+    STOP_TIMER();
+    MOZ_TIMER_DEBUGLOG(("Stop: Parse Time: CNavDTD::CloseNoscript(), this=%p\n", this));
+
+    result=mSink->CloseNoscript(*aNode);
+
+    MOZ_TIMER_DEBUGLOG(("Start: Parse Time: CNavDTD::CloseNoscript(), this=%p\n", this));
+    START_TIMER();
+
+    if(NS_SUCCEEDED(result)) {
+      if(mHasOpenNoXXX > 0) { 
+        mHasOpenNoXXX--;
+      }
+      mDTDState=NS_OK;  // switch from alternate content state to regular state
+    }
+  }
+  
+  return result;
+}
 
 /**
  * This method does two things: 1st, help construct
@@ -3177,6 +3242,10 @@ CNavDTD::OpenContainer(const nsIParserNode *aNode,eHTMLTags aTag,PRBool aClosedB
       CloseHead(aNode); //do this just in case someone left it open...
       result=HandleScriptToken(aNode);
       break;
+    
+    case eHTMLTag_noscript:
+      result=OpenNoscript(aNode,aStyleStack);
+      break;
 
     default:
       isDefaultNode=PR_TRUE;
@@ -3245,6 +3314,10 @@ CNavDTD::CloseContainer(const nsIParserNode *aNode,eHTMLTags aTarget,PRBool aClo
 
     case eHTMLTag_frameset:
       result=CloseFrameset(aNode); 
+      break;
+    
+    case eHTMLTag_noscript:
+      result=CloseNoscript(aNode);
       break;
 
     case eHTMLTag_title:
@@ -3583,7 +3656,7 @@ nsresult CNavDTD::AddLeaf(const nsIParserNode *aNode){
 nsresult CNavDTD::AddHeadLeaf(nsIParserNode *aNode){
   nsresult result=NS_OK;
 
-  static eHTMLTags gNoXTags[]={eHTMLTag_noembed,eHTMLTag_noframes,eHTMLTag_noscript};
+  static eHTMLTags gNoXTags[]={eHTMLTag_noembed,eHTMLTag_noframes};
 
   eHTMLTags theTag=(eHTMLTags)aNode->GetNodeType();
   
@@ -3597,42 +3670,50 @@ nsresult CNavDTD::AddHeadLeaf(nsIParserNode *aNode){
   }
 
   if(mSink) {
-    result=OpenHead(aNode);
-    if(NS_OK==result) {
-      if(eHTMLTag_title==theTag) {
+    // Alternate content => Content that shouldn't get processed
+    // as a regular content. That is, probably the content is
+    // within NOSCRIPT and since JS is enanbled we should not process
+    // this content. However, when JS is disabled alternate content
+    // would become regular content.
+    if(mDTDState!=NS_HTMLPARSER_ALTERNATECONTENT) {
+      result=OpenHead(aNode);
+      if(NS_OK==result) {
+        if(eHTMLTag_title==theTag) {
 
-        const nsString& theString=aNode->GetSkippedContent();
-        PRInt32 theLen=theString.Length();
-        CBufDescriptor theBD(theString.GetUnicode(), PR_TRUE, theLen+1, theLen);
-        nsAutoString theString2(theBD);
+          const nsString& theString=aNode->GetSkippedContent();
+          PRInt32 theLen=theString.Length();
+          CBufDescriptor theBD(theString.GetUnicode(), PR_TRUE, theLen+1, theLen);
+          nsAutoString theString2(theBD);
 
-        theString2.CompressWhitespace();
+          theString2.CompressWhitespace();
 
-        STOP_TIMER()
-        MOZ_TIMER_DEBUGLOG(("Stop: Parse Time: CNavDTD::AddHeadLeaf(), this=%p\n", this));
-        mSink->SetTitle(theString2);
-        MOZ_TIMER_DEBUGLOG(("Start: Parse Time: CNavDTD::AddHeadLeaf(), this=%p\n", this));
-        START_TIMER()
+          STOP_TIMER()
+          MOZ_TIMER_DEBUGLOG(("Stop: Parse Time: CNavDTD::AddHeadLeaf(), this=%p\n", this));
+          mSink->SetTitle(theString2);
+          MOZ_TIMER_DEBUGLOG(("Start: Parse Time: CNavDTD::AddHeadLeaf(), this=%p\n", this));
+          START_TIMER()
 
-      }
-      else result=AddLeaf(aNode);
-      // XXX If the return value tells us to block, go
-      // ahead and close the tag out anyway, since its
-      // contents will be consumed.
-
-      // Fix for Bug 31392
-      // Do not leave a head context open no matter what the result is.
-      if(mHasOpenHead) {
-        nsresult rv=CloseHead(aNode);
-        // XXX Only send along a failure. If the close 
-        // succeeded we still may need to indicate that the
-        // parser has blocked (i.e. return the result of
-        // the AddLeaf.
-        if (rv != NS_OK) {
-          result = rv;
         }
-      }
-    }  
+        else result=AddLeaf(aNode);
+        // XXX If the return value tells us to block, go
+        // ahead and close the tag out anyway, since its
+        // contents will be consumed.
+
+        // Fix for Bug 31392
+        // Do not leave a head context open no matter what the result is.
+        if(mHasOpenHead) {
+          nsresult rv=CloseHead(aNode);
+          // XXX Only send along a failure. If the close 
+          // succeeded we still may need to indicate that the
+          // parser has blocked (i.e. return the result of
+          // the AddLeaf.
+          if (rv != NS_OK) {
+            result = rv;
+          }
+        }
+      }  
+    }
+    else result=AddLeaf(aNode);
   }
   return result;
 }
