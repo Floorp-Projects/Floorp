@@ -102,7 +102,7 @@ nsSVGCairoRectRegion::Combine(nsISVGRendererRegion *other,
   float x1 = PR_MIN(mX, _other->mX);
   float y1 = PR_MIN(mY, _other->mY);
   float x2 = PR_MAX(mX+mWidth, _other->mX+_other->mWidth);
-  float y2 = PR_MAX(mY+mHeight, _other->mHeight+_other->mHeight);
+  float y2 = PR_MAX(mY+mHeight, _other->mY+_other->mHeight);
   
   return NS_NewSVGCairoRectRegion(_retval, x1, y1, x2-x1, y2-y1);
 }

@@ -50,6 +50,7 @@
 #include "nsISVGRendererPathBuilder.h"
 #include "nsSVGCairoPathBuilder.h"
 #include "nsMemory.h"
+#include <float.h>
 #include <cairo.h>
 #include "nsSVGCairoRegion.h"
 
@@ -174,74 +175,11 @@ nsSVGCairoPathGeometry::GeneratePath(cairo_t *ctx)
   NS_NewSVGCairoPathBuilder(getter_AddRefs(builder), ctx);
   mSource->ConstructPath(builder);
   builder->EndPath();
-}
-
-
-//----------------------------------------------------------------------
-// nsISVGRendererPathGeometry methods:
-
-/** Implements void render(in nsISVGRendererCanvas canvas); */
-NS_IMETHODIMP
-nsSVGCairoPathGeometry::Render(nsISVGRendererCanvas *canvas)
-{
-  nsCOMPtr<nsISVGCairoCanvas> cairoCanvas = do_QueryInterface(canvas);
-  NS_ASSERTION(cairoCanvas, "wrong svg render context for geometry!");
-  if (!cairoCanvas) return NS_ERROR_FAILURE;
-
-  cairo_t *ctx = cairoCanvas->GetContext();
-
-  /* save/pop the state so we don't screw up the xform */
-  cairo_save(ctx);
-
-  GeneratePath(ctx);
 
   PRUint16 type;
 
-  PRBool bStroking = PR_FALSE;
   mSource->GetStrokePaintType(&type);
-  if (type == nsISVGGeometrySource::PAINT_TYPE_SOLID_COLOR)
-    bStroking = PR_TRUE;
-
-  mSource->GetFillPaintType(&type);
-  if (type == nsISVGGeometrySource::PAINT_TYPE_SOLID_COLOR) {
-    if (bStroking)
-      cairo_save(ctx);
-
-    nscolor rgb;
-    mSource->GetFillPaint(&rgb);
-    float opacity;
-    mSource->GetFillOpacity(&opacity);
-
-    cairo_set_rgb_color(ctx,
-                        NS_GET_R(rgb)/255.0,
-                        NS_GET_G(rgb)/255.0,
-                        NS_GET_B(rgb)/255.0);
-    cairo_set_alpha(ctx, double(opacity));
-
-    PRUint16 rule;
-    mSource->GetFillRule(&rule);
-    if (rule == nsISVGGeometrySource::FILL_RULE_EVENODD)
-      cairo_set_fill_rule(ctx, CAIRO_FILL_RULE_EVEN_ODD);
-    else
-      cairo_set_fill_rule(ctx, CAIRO_FILL_RULE_WINDING);
-
-    cairo_fill(ctx);
-
-    if (bStroking)
-      cairo_restore(ctx);
-  }
-
-  if (bStroking) {
-    nscolor rgb;
-    mSource->GetStrokePaint(&rgb);
-    float opacity;
-    mSource->GetStrokeOpacity(&opacity);
-    cairo_set_rgb_color(ctx,
-                        NS_GET_R(rgb)/255.0,
-                        NS_GET_G(rgb)/255.0,
-                        NS_GET_B(rgb)/255.0);
-    cairo_set_alpha(ctx, double(opacity));
-
+  if (type != nsISVGGeometrySource::PAINT_TYPE_NONE) {
     float width;
     mSource->GetStrokeWidth(&width);
     cairo_set_line_width(ctx, double(width));
@@ -290,6 +228,77 @@ nsSVGCairoPathGeometry::Render(nsISVGRendererCanvas *canvas)
       nsMemory::Free(dashArray);
       delete [] dashes;
     }
+  }
+
+  mSource->GetFillPaintType(&type);
+  if (type != nsISVGGeometrySource::PAINT_TYPE_NONE) {
+    PRUint16 rule;
+    mSource->GetFillRule(&rule);
+    if (rule == nsISVGGeometrySource::FILL_RULE_EVENODD)
+      cairo_set_fill_rule(ctx, CAIRO_FILL_RULE_EVEN_ODD);
+    else
+      cairo_set_fill_rule(ctx, CAIRO_FILL_RULE_WINDING);
+  }
+}
+
+
+//----------------------------------------------------------------------
+// nsISVGRendererPathGeometry methods:
+
+/** Implements void render(in nsISVGRendererCanvas canvas); */
+NS_IMETHODIMP
+nsSVGCairoPathGeometry::Render(nsISVGRendererCanvas *canvas)
+{
+  nsCOMPtr<nsISVGCairoCanvas> cairoCanvas = do_QueryInterface(canvas);
+  NS_ASSERTION(cairoCanvas, "wrong svg render context for geometry!");
+  if (!cairoCanvas) return NS_ERROR_FAILURE;
+
+  cairo_t *ctx = cairoCanvas->GetContext();
+
+  /* save/pop the state so we don't screw up the xform */
+  cairo_save(ctx);
+
+  GeneratePath(ctx);
+
+  PRUint16 type;
+
+  PRBool bStroking = PR_FALSE;
+  mSource->GetStrokePaintType(&type);
+  if (type == nsISVGGeometrySource::PAINT_TYPE_SOLID_COLOR)
+    bStroking = PR_TRUE;
+
+  mSource->GetFillPaintType(&type);
+  if (type == nsISVGGeometrySource::PAINT_TYPE_SOLID_COLOR) {
+    if (bStroking)
+      cairo_save(ctx);
+
+    nscolor rgb;
+    mSource->GetFillPaint(&rgb);
+    float opacity;
+    mSource->GetFillOpacity(&opacity);
+
+    cairo_set_rgb_color(ctx,
+                        NS_GET_R(rgb)/255.0,
+                        NS_GET_G(rgb)/255.0,
+                        NS_GET_B(rgb)/255.0);
+    cairo_set_alpha(ctx, double(opacity));
+
+    cairo_fill(ctx);
+
+    if (bStroking)
+      cairo_restore(ctx);
+  }
+
+  if (bStroking) {
+    nscolor rgb;
+    mSource->GetStrokePaint(&rgb);
+    float opacity;
+    mSource->GetStrokeOpacity(&opacity);
+    cairo_set_rgb_color(ctx,
+                        NS_GET_R(rgb)/255.0,
+                        NS_GET_G(rgb)/255.0,
+                        NS_GET_B(rgb)/255.0);
+    cairo_set_alpha(ctx, double(opacity));
 
     cairo_stroke(ctx);
   }
@@ -303,16 +312,92 @@ nsSVGCairoPathGeometry::Render(nsISVGRendererCanvas *canvas)
 NS_IMETHODIMP
 nsSVGCairoPathGeometry::Update(PRUint32 updatemask, nsISVGRendererRegion **_retval)
 {
-  // XXX just return a large region for now:
-  return NS_NewSVGCairoRectRegion(_retval, -10000, -10000, 20000, 20000);
+  *_retval = nsnull;
+
+  const unsigned long pathmask =
+    nsISVGPathGeometrySource::UPDATEMASK_PATH |
+    nsISVGGeometrySource::UPDATEMASK_CTM;
+
+  const unsigned long fillmask = 
+    pathmask |
+    nsISVGGeometrySource::UPDATEMASK_FILL_RULE;
+
+  const unsigned long strokemask =
+    pathmask |
+    nsISVGGeometrySource::UPDATEMASK_STROKE_WIDTH       |
+    nsISVGGeometrySource::UPDATEMASK_STROKE_LINECAP     |
+    nsISVGGeometrySource::UPDATEMASK_STROKE_LINEJOIN    |
+    nsISVGGeometrySource::UPDATEMASK_STROKE_MITERLIMIT  |
+    nsISVGGeometrySource::UPDATEMASK_STROKE_DASH_ARRAY  |
+    nsISVGGeometrySource::UPDATEMASK_STROKE_DASHOFFSET;
+
+  const unsigned long coveredregionmask =
+    fillmask                                            |
+    strokemask                                          |
+    nsISVGGeometrySource::UPDATEMASK_FILL_PAINT_TYPE    |
+    nsISVGGeometrySource::UPDATEMASK_STROKE_PAINT_TYPE;
+
+  if (updatemask & coveredregionmask) {
+    nsCOMPtr<nsISVGRendererRegion> after;
+    GetCoveredRegion(getter_AddRefs(after));
+
+    if (mCoveredRegion) {
+      if (after)
+        after->Combine(mCoveredRegion, _retval);
+    } else {
+      *_retval = after;
+      NS_IF_ADDREF(*_retval);
+    }
+    mCoveredRegion = after;
+  }
+  else if (updatemask != nsISVGGeometrySource::UPDATEMASK_NOTHING) {
+    *_retval = mCoveredRegion;
+    NS_IF_ADDREF(*_retval);
+  }
 }
 
 /** Implements nsISVGRendererRegion getCoveredRegion(); */
 NS_IMETHODIMP
 nsSVGCairoPathGeometry::GetCoveredRegion(nsISVGRendererRegion **_retval)
 {
-  // XXX just return a large region for now:
-  return NS_NewSVGCairoRectRegion(_retval, -10000, -10000, 20000, 20000);
+  cairo_t *ctx = cairo_create();
+
+  GeneratePath(ctx);
+  cairo_default_matrix(ctx);
+
+  PRUint16 type;  
+  mSource->GetFillPaintType(&type);
+  PRBool hasCoveredFill = type != nsISVGGeometrySource::PAINT_TYPE_NONE;
+  
+  mSource->GetStrokePaintType(&type);
+  bool hasCoveredStroke = type != nsISVGGeometrySource::PAINT_TYPE_NONE;
+
+  if (!hasCoveredFill && !hasCoveredStroke) return NS_OK;
+
+  double x[4], y[4];
+
+  if (hasCoveredStroke)
+    cairo_stroke_extents(ctx, &x[0], &y[0], &x[1], &y[1]);
+  else
+    cairo_fill_extents(ctx, &x[0], &y[0], &x[1], &y[1]);
+
+  x[2] = x[0];  y[2] = y[1];
+  x[3] = x[1];  y[3] = y[0];
+
+  double xmin = DBL_MAX, ymin = DBL_MAX;
+  double xmax = DBL_MIN, ymax = DBL_MIN;
+
+  for (int i=0; i<4; i++) {
+    cairo_transform_point(ctx, &x[i], &y[i]);
+    if (x[i] < xmin) xmin = x[i];
+    if (y[i] < ymin) ymin = y[i];
+    if (x[i] > xmax) xmax = x[i];
+    if (y[i] > ymax) ymax = y[i];
+  }
+
+  cairo_destroy(ctx);
+
+  return NS_NewSVGCairoRectRegion(_retval, xmin, ymin, xmax-xmin, ymax-ymin);
 }
 
 /** Implements boolean containsPoint(in float x, in float y); */
