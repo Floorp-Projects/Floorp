@@ -1025,7 +1025,6 @@ void CALLBACK MouseTrailer::TimerProc(HWND hWnd, UINT msg, UINT event, DWORD tim
         mp.y = HIWORD(pos);
 
         if (::WindowFromPoint(mp) != mHoldMouse->GetWindowHandle()) {
-            int64 time = PR_Now(); // time in milliseconds
             ::ScreenToClient(mHoldMouse->GetWindowHandle(), &mp);
 
             //notify someone that a mouse exit happened
