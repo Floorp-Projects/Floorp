@@ -222,10 +222,11 @@ void nsFileSpec::GetParent(nsFileSpec& outSpec) const
 //----------------------------------------------------------------------------------------
 {
 	outSpec.mPath = mPath;
-	outSpec.mPath[outSpec.mPath.Length() - 1] = '\0';; // avoid trailing separator, if any
-	char* cp = strrchr(outSpec.mPath, '\\');
-	if (cp++)
-		*cp = '\0';
+	char* chars = (char*)outSpec.mPath;
+	chars[outSpec.mPath.Length() - 1] = '\0'; // avoid trailing separator, if any
+    char* cp = strrchr(chars, '\\');
+    if (cp++)
+	    outSpec.mPath.ReallocData(cp - chars); // truncate.
 } // nsFileSpec::GetParent
 
 //----------------------------------------------------------------------------------------
