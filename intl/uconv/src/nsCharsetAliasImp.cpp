@@ -18,5 +18,233 @@
  */
 
 
-// Placeholder for Charset Alias Resoluation
-// Implmementation will be check in soon.
+#define NS_IMPL_IDS
+
+#include "nsICharsetAlias.h"
+#include "nsCharsetAliasFactory.h"
+#include "pratom.h"
+
+#include "nsUConvDll.h"
+
+
+
+class nsCharsetAlias : public nsICharsetAlias
+{
+  NS_DECL_ISUPPORTS
+
+public:
+
+  nsCharsetAlias();
+  virtual ~nsCharsetAlias();
+
+   NS_IMETHOD GetPreferred(const nsString& aAlias, nsString& oResult);
+   NS_IMETHOD GetPreferred(const PRUnichar* aAlias, const PRUnichar** oResult) ;
+   NS_IMETHOD GetPreferred(const char* aAlias, char* oResult, PRInt32 aBufLength) ;
+
+
+   NS_IMETHOD Equals(const nsString& aCharset1, const nsString& aCharset2, PRBool* oResult) ;
+   NS_IMETHOD Equals(const PRUnichar* aCharset1, const PRUnichar* aCharset2, PRBool* oResult) ;
+   NS_IMETHOD Equals(const char* aCharset1, const char* aCharset2, PRBool* oResult) ;
+
+protected:
+   PRBool Equals(const nsString& aCharset1, const nsString& aCharset2);
+   const nsString& GetPreferred(const nsString& aAlias) const ;
+
+private:
+// XXX Hack
+   nsString iso88591;
+   nsString sjis;
+   nsString eucjp;
+   nsString iso2022jp;
+   nsString utf8;
+   nsString xmacroman;
+};
+
+NS_IMPL_ISUPPORTS(nsCharsetAlias, kICharsetAliasIID);
+
+nsCharsetAlias::nsCharsetAlias()
+{
+  NS_INIT_REFCNT();
+  PR_AtomicIncrement(&g_InstanceCount);
+
+// XXX Hack
+  iso88591 =  "ISO-8859-1";
+  sjis =      "Shift_JIS";
+  eucjp =     "EUC-JP";
+  iso2022jp = "ISO-2022-JP";
+  xmacroman = "x-mac-roman";
+  utf8      = "UTF8";
+}
+
+nsCharsetAlias::~nsCharsetAlias()
+{
+  PR_AtomicDecrement(&g_InstanceCount);
+}
+
+const nsString& nsCharsetAlias::GetPreferred(
+   const nsString& aAlias) const
+{
+   nsAutoString aKey;
+   aAlias.ToLowerCase(aKey);
+
+   // XXX Hack
+   // we should delegate the tast to a property file 
+   if(aKey.Equals("iso-8859-1") ||
+      aKey.Equals("latin1") ||
+      aKey.Equals("iso_8859-1") ||
+      aKey.Equals("iso_8859-1:1987") ||
+      aKey.Equals("iso-ir-100") ||
+      aKey.Equals("l1") ||
+      aKey.Equals("ibm819") ||
+      aKey.Equals("cp819") ||
+      aKey.Equals("iso-8859-1-windows-3.0-latin-1") ||
+      aKey.Equals("iso-8859-1-windows-3.1-latin-1") ||
+      aKey.Equals("windows-1252") )
+   {
+      return iso88591;
+   } else if(aKey.Equals("x-sjis") ||
+             aKey.Equals("ms_kanji") ||
+             aKey.Equals("csshiftjis") ||
+             aKey.Equals("windows-31j") )
+   {
+      return sjis;
+   } else if(aKey.Equals("euc-jp") ||
+             aKey.Equals("cseucjpkdfmtjapanese") ||
+             aKey.Equals("x-euc-jp") )
+   {
+      return eucjp;
+   } else if(aKey.Equals("iso-2022-jp") ||
+             aKey.Equals("csiso2022jp") )
+   {
+      return iso2022jp;
+   } else if(aKey.Equals("x-mac-roman") )
+   {
+      return xmacroman;
+   } else if(aKey.Equals("utf-8") ||
+             aKey.Equals("unicode-1-1-utf-8") )
+   {
+      return utf8;
+   }
+
+   return "";
+}
+
+NS_IMETHODIMP nsCharsetAlias::GetPreferred(
+   const nsString& aAlias, nsString& oResult)
+{
+   oResult = GetPreferred(aAlias);
+   if(oResult.Equals(""))
+     return NS_ERROR_NOT_AVAILABLE;
+   return NS_OK;
+}
+
+NS_IMETHODIMP nsCharsetAlias::GetPreferred(
+   const PRUnichar* aAlias, const PRUnichar** oResult) 
+{
+   const nsString& res = GetPreferred(aAlias);
+   if(res.Equals(""))
+   {
+     *oResult = NULL;
+     return NS_ERROR_NOT_AVAILABLE;
+   } 
+   *oResult = res.GetUnicode();
+   return NS_OK;
+}
+
+NS_IMETHODIMP nsCharsetAlias::GetPreferred(
+   const char* aAlias, char* oResult, PRInt32 aBufLength) 
+{
+   const nsString& res = GetPreferred(aAlias);
+   if(res.Equals(""))
+   {
+     *oResult = NULL;
+     return NS_ERROR_NOT_AVAILABLE;
+   }
+   res.ToCString(oResult, aBufLength);
+   return NS_OK;
+}
+
+PRBool nsCharsetAlias::Equals(
+   const nsString& aCharset1, const nsString& aCharset2)
+{
+   if(aCharset1.EqualsIgnoreCase(aCharset2))
+      return PR_TRUE;
+
+   return GetPreferred(aCharset1).Equals(GetPreferred(aCharset2));
+}
+
+NS_IMETHODIMP nsCharsetAlias::Equals(
+   const nsString& aCharset1, const nsString& aCharset2, PRBool* oResult) 
+{
+   *oResult = Equals(aCharset1, aCharset2);
+   return NS_OK;
+}
+
+NS_IMETHODIMP nsCharsetAlias::Equals(
+   const PRUnichar* aCharset1, const PRUnichar* aCharset2, PRBool* oResult) 
+{
+   *oResult = Equals(aCharset1, aCharset2);
+   return NS_OK;
+}
+
+NS_IMETHODIMP nsCharsetAlias::Equals(
+   const char* aCharset1, const char* aCharset2, PRBool* oResult) 
+{
+   *oResult = Equals(aCharset1, aCharset2);
+   return NS_OK;
+}
+
+class nsCharsetAliasFactory : public nsIFactory {
+   NS_DECL_ISUPPORTS
+
+public:
+   nsCharsetAliasFactory() {
+     NS_INIT_REFCNT();
+     PR_AtomicIncrement(&g_InstanceCount);
+   }
+   ~nsCharsetAliasFactory() {
+     PR_AtomicDecrement(&g_InstanceCount);
+   }
+
+   NS_IMETHOD CreateInstance(nsISupports* aDelegate, const nsIID& aIID, void** aResult);
+   NS_IMETHOD LockFactory(PRBool aLock);
+ 
+};
+
+NS_DEFINE_IID( kIFactoryIID, NS_IFACTORY_IID);
+NS_IMPL_ISUPPORTS( nsCharsetAliasFactory , kIFactoryIID);
+
+NS_IMETHODIMP nsCharsetAliasFactory::CreateInstance(
+    nsISupports* aDelegate, const nsIID &aIID, void** aResult)
+{
+  if(NULL == aResult) 
+        return NS_ERROR_NULL_POINTER;
+  if(NULL != aDelegate) 
+        return NS_ERROR_NO_AGGREGATION;
+
+  *aResult = NULL;
+  nsISupports *inst = new nsCharsetAlias();
+  if(NULL == inst) {
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
+  nsresult res =inst->QueryInterface(aIID, aResult);
+  if(NS_FAILED(res)) {
+     delete inst;
+  }
+  
+  return res;
+}
+NS_IMETHODIMP nsCharsetAliasFactory::LockFactory(PRBool aLock)
+{
+  if(aLock)
+     PR_AtomicIncrement( &g_LockCount );
+  else
+     PR_AtomicDecrement( &g_LockCount );
+  return NS_OK;
+}
+
+nsIFactory* NEW_CHARSETALIASFACTORY()
+{
+  return new nsCharsetAliasFactory();
+}
+
