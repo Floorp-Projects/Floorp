@@ -27,7 +27,7 @@
 #include "nsFixedSizeAllocator.h"
 #include "nsResourceSet.h"
 #include "nsRuleNetwork.h"
-#include <new>
+#include <new.h>
 
 /**
  * A "match" is a fully instantiated rule; that is, a complete and
