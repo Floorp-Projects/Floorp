@@ -162,8 +162,6 @@ Components:pipbootDebug.shlb
 Components:pipboot.xpt
 Components:PIPNSSDebug.shlb
 Components:pipnss.xpt
-Components:PIPPKIDebug.shlb
-Components:pippki.xpt
 defaults:pref:security-prefs.js
 Essential Files:NSS3Debug.shlb
 Essential Files:SMIME3Debug.shlb

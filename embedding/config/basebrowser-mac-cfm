@@ -162,8 +162,6 @@ Components:pipboot.shlb
 Components:pipboot.xpt
 Components:PIPNSS.shlb
 Components:pipnss.xpt
-Components:PIPPKI.shlb
-Components:pippki.xpt
 defaults:pref:security-prefs.js
 Essential Files:NSS3.shlb
 Essential Files:SMIME3.shlb

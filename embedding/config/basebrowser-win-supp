@@ -13,7 +13,6 @@ res\dtd\*
 ; psm2
 ; Optional - only if you need PSM2 support
 chrome\pipnss.jar
-chrome\pippki.jar
 defaults\pref\security-prefs.js
 
 ; required l10n resources

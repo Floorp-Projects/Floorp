@@ -210,9 +210,6 @@ components/pipboot.xpt
 components/libpipnss.so
 components/pipnss.xpt
 chrome/pipnss.jar
-components/libpippki.so
-components/pippki.xpt
-chrome/pippki.jar
 defaults/pref/security-prefs.js
 libnss3.so
 libsmime3.so

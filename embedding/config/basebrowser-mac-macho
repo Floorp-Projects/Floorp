@@ -168,9 +168,6 @@ components/pipboot.xpt
 components/libpipnss.dylib
 components/pipnss.xpt
 chrome/pipnss.jar
-components/libpippki.dylib
-components/pippki.xpt
-chrome/pippki.jar
 defaults/pref/security-prefs.js
 libnss3.dylib
 libsmime3.dylib
