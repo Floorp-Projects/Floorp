@@ -21,6 +21,7 @@
 
 DEPTH=..\..
 MODULE = xpcom 
+REQUIRES	= uconv string necko
 
 ################################################################################
 ## exports

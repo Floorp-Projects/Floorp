@@ -22,7 +22,9 @@
 
 
 DEPTH=..\..
-MODULE = xpcom_components
+MODULE = xpcom
+XPIDL_MODULE = xpcom_components
+REQUIRES	= mozreg string
 
 ################################################################################
 ## exports

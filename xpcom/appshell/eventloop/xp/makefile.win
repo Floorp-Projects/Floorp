@@ -20,7 +20,9 @@
 #   Travis Bogard <travis@netscape.com>
 
 DEPTH=..\..\..\..
-MODULE=xpcom_eventloop_xp
+MODULE=xpcom
+REQUIRES=string
+XPIDL_MODULE=xpcom_eventloop_xp
 
 LIBRARY_NAME= xp_eventloop
 

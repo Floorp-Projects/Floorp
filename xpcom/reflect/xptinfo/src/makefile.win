@@ -22,6 +22,7 @@
 
 DEPTH=..\..\..\..
 MODULE	= 	xpcom
+REQUIRES	= jar
 
 LIBRARY_NAME=xpcomxptinfo_s
 

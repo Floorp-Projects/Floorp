@@ -23,7 +23,7 @@
 
 DEPTH=..\..
 MODULE = xpcom 
-
+REQUIRES=string unicharutil
 ################################################################################
 ## exports
 
