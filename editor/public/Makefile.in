@@ -22,15 +22,13 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-DEFINES = -D_IMPL_NS_BASE
-
 EXPORTS =		\
-    nsISizeOfHandler.h	\
+    nsIEditor.h	\
     $(NULL)
 
 EXPORTS := $(addprefix $(srcdir)/, $(EXPORTS))
 
-MODULE = raptor
+MODULE = editor
 
 include $(topsrcdir)/config/config.mk
 

@@ -22,65 +22,20 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-DEFINES =-D_IMPL_NS_BASE
+DEFINES += -DNOT_PRODUCTION_CODE -DUSE_EXPERIMENTAL_SMART_POINTERS 
 
-ifeq ($(OS_TARGET),Rhapsody)
-DIRS = rhapsody
-else
-DIRS = unix
-endif
-
-LIBRARY_NAME = raptorbase
+LIBRARY_NAME = ender
 
 CPPSRCS =                       \
-    nsArena.cpp                 \
-    nsAtomTable.cpp             \
-    nsBTree.cpp                 \
-    nsByteBuffer.cpp            \
-    nsCRT.cpp                   \
-    nsDeque.cpp                 \
-    nsRBTree.cpp                \
-    nsSizeOfHandler.cpp		\
-    nsString.cpp                \
-    nsUnicharBuffer.cpp         \
-    nsUnicharInputStream.cpp    \
-    nsVoidArray.cpp             \
+    editor.cpp                  \
+    editorInterfaces.cpp        \
     $(NULL)
 
-EXPORTS =                       \
-    nscore.h                    \
-    nsBTree.h                   \
-    nsCRT.h                     \
-    nsDeque.h                   \
-    nsIArena.h                  \
-    nsIAtom.h                   \
-    nsIByteBuffer.h             \
-    nsIBaseStream.h             \
-    nsIInputStream.h            \
-    nsIOutputStream.h           \
-    nsITimer.h                  \
-    nsITimerCallback.h          \
-    nsIUnicharBuffer.h          \
-    nsIUnicharInputStream.h     \
-    nsInt64.h                   \
-    nsRBTree.h                  \
-    nsString.h                  \
-    nsTime.h			\
-    nsVoidArray.h               \
-    nsUnitConversion.h          \
-    $(NULL)
+MODULE = editor
 
-EXPORTS := $(addprefix $(srcdir)/, $(EXPORTS))
-
-MODULE = raptor
-
-REQUIRES = xpcom netlib raptor
+REQUIRES = xpcom raptor dom base
 
 include $(topsrcdir)/config/config.mk
 
-TARGET = $(LIBARY)
-
 include $(topsrcdir)/config/rules.mk
 
-test:
-	@echo OS_ARCH = $(OS_ARCH)
