@@ -37,6 +37,7 @@
 >
 
 <script src="viewCertDetails.js"/>
+<script src="chrome://global/content/strres.js" />
 
 <box orient="vertical" flex="1">
   <box flex="0" height="100">
@@ -45,30 +46,15 @@
         <treecol flex="1"/>
       </treecolgroup>
       <treechildren id="chain" flex="1" />
-<!--
-      <treechildren flex="1">
-        <treeitem container="true" open="true">
-          <treerow style="border-top: 1px solid black">
-            <treecell class="treecell-indent" value="Foo CA"/>
-          </treerow>
-          <treechildren>
-            <treeitem container="true" open="true">
-              <treerow>
-                <treecell class="treecell-indent" value="Bar CA"/>
-              </treerow>
-              <treechildren>
-                <treeitem>
-                  <treerow>
-                    <treecell class="treecell-indent" 
-                              value="Bob Lord's Personal Cert"/>
-                  </treerow>
-                </treeitem>
-              </treechildren>
-            </treeitem>
-          </treechildren>
-        </treeitem>
-      </treechildren>
--->
+    </tree>
+  </box>
+  <box orient="vertical">
+    <text id="verified"/>
+    <tree id="usagetree" flex="1">
+      <treecolgroup flex="1">
+        <treecol flex="1"/>
+      </treecolgroup>
+      <treechildren id="usage" flex="1" />
     </tree>
   </box>
   <box>
