@@ -502,6 +502,9 @@ function delayedOpenWindow(chrome, flags, url)
     // Load into current editor if empty
     if (PageIsEmptyAndUntouched())
     {
+      if (IsInHTMLSourceMode())
+        FinishHTMLSource(); 
+
       editorShell.LoadUrl(url);
       return;
     }
