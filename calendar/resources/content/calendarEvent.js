@@ -484,63 +484,9 @@ CalendarEventDataSource.prototype.getAllFutureEvents = function()
    return eventArray;
 }
 
-/** PUBLIC
-*
-*   CalendarEventDataSource/makeNewEvent.
-*
-* RETURN
-*      new event, not SAVED yet, use addEvent to save it.
-*/
-
-CalendarEventDataSource.prototype.makeNewEvent = function( date )
-{
-   var iCalEventComponent = Components.classes["@mozilla.org/icalevent;1"].createInstance();
-   var iCalEvent = iCalEventComponent.QueryInterface(Components.interfaces.oeIICalEvent);
-   
-   if( date )
-   {
-       iCalEvent.start.setTime( date );
-   }
-   
-   return iCalEvent;
-}
-
 CalendarEventDataSource.prototype.getICalLib = function()
 {
    return this.gICalLib;
-}
-
-/*
-** Start time and end time are optional.  
-*/
-
-CalendarEventDataSource.prototype.openNewEventDialog = function( onOK, startTime, endTime )
-{
-   var args = new Object();
-   
-   var iCalEventComponent = Components.classes["@mozilla.org/icalevent;1"].createInstance();
-   args.calendarEvent = iCalEventComponent.QueryInterface(Components.interfaces.oeIICalEvent);
-   
-   args.mode = "new";
-   
-   args.onOk =  onOK; 
-   
-   if( !startTime )
-      args.calendarEvent.start.setTime( new Date() );
-   else
-      args.calendarEvent.start.setTime( startTime );
-
-   if( !endTime )
-   {
-      args.calendarEvent.end.setTime( new Date() );
-
-      args.calendarEvent.end.hour++;
-   }
-   else
-      args.calendarEvent.end.setTime( endTime );
-   
-   //this doens't work yet
-   calendar.openDialog("caNewEvent", "chrome://calendar/content/ca-event-dialog.xul", false, args );   
 }
 
 /** PACKAGE STATIC
