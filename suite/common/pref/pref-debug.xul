@@ -146,7 +146,7 @@
 				</html:label>
 				<html:input type="checkbox" id="pref:0:bool:nglayout.debug.enable_xpcom_refcnt_log" />
 				<html:label for="pref:0:bool:nglayout.debug.enable_xpcom_refcnt_log" accesskey="n" tabindex="0">
-				<html:a href="http://www.mozilla.org/performance/refcnt-balancer.html">&debugEnableXPCOMRefcntLog.label;</html:a>
+				&debugEnableXPCOMRefcntLog.label;
 				</html:label>
 			</html:div>
                 </html:fieldset>
