@@ -96,7 +96,7 @@ endif
 
 
 build_trex:
-	cd $(MOZ_SRC)/$(MOZ_TOP)/msgsdk; \
+	cd $(MOZ_SRC)/mozilla/msgsdk; \
 	gmake buildC; \
 	cd $(MOZ_SRC)/mozilla/gconfig; \
 	gmake; \
