@@ -758,7 +758,7 @@ nsresult nsAbView::CreateCollationKey(const PRUnichar *aSource, PRUint8 **aKey, 
   rv = mCollationKeyGenerator->CreateRawSortKey(kCollationCaseInSensitive, sourceString, *aKey, aKeyLen);
   if (NS_FAILED(rv))
   {
-    nsMemory::Free(aKey);
+    nsMemory::Free(*aKey);
     return rv;
   }
   return NS_OK;
