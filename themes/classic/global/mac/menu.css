@@ -218,7 +218,7 @@ menuitem[checked="true"][menuactive="true"]
  **/
 .tooltip
   {
-    background-color      : Info;
+    background-color      : InfoBackground;
     border                : none;
     color                 : InfoText;
     font                  : 9px geneva;
