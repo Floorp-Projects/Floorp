@@ -49,8 +49,7 @@ interface nsIHTTPChannel : nsIChannel
     /*
         Pass in the post data if any...
     */
-    void SetPostDataStream(in nsIInputStream postStream);
-    void GetPostDataStream(out nsIInputStream postStream);
+	attribute nsIInputStream PostDataStream;
 
     /* 
         Response funtions. A call to any of these implicitly calls Load() on this
