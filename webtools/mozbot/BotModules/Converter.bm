@@ -1,0 +1,406 @@
+
+# -*- Mode: perl; tab-width: 4; indent-tabs-mode: nil; -*-
+################################
+# Converter Module             #
+################################
+# Originally by GluffiS <gluffis@mean.net>
+
+package BotModules::Converter;
+use vars qw(@ISA);
+@ISA = qw(BotModules);
+1;
+
+# XXX support the suffixes "to <n> sf" or "to <n> dp"
+
+sub Help {
+    my $self = shift;
+    my ($event) = @_;
+    return {
+        '' => 'A generic converter. Currently supports converting between positive integers in binary, octal, decimal and hexidecimal forms, converting temperatures, and converting lengths.',
+        'syntax' => 'To convert a number, simply give the number with units or appropriate prefixes, for example to convert from hexadecimal: \'0x2F\'',
+        'integers' => 'Decimal: Simply give the number.  Hexadecimal: Prefix with 0x.  Octal: Prefix with 0.  Binary: Prefix with 0b.',
+        'temperature' => 'Kelvin: Suffix with K.  Celsius: Suffix with C.  Fahrenheit: Suffix with F.',
+        'length' => 'Imperial: in, ft, yd, mi.  Metric: A, nm, mm, cm, m, km', # XXX should support light year, parsec, furlong; f, p, n, µ, m, -, k, M, G, T, P
+        # XXX should support weight, speed, volume, twips
+	};
+}
+
+
+sub Told {
+    my $self = shift;
+    my ($event, $message) = @_;
+
+    # integers
+    if ($message =~ m/^\s*([1-9][0-9]*|0)\s*\??\s*$/osi) {
+        $self->convertDecimal($event, $1);
+    } elsif ($message =~ m/^\s*0x([a-f0-9]+)\s*\??\s*$/osi) {
+        $self->convertHex($event, $1);
+    } elsif ($message =~ m/^\s*0([0-9]+)\s*\??\s*$/osi) {
+        $self->convertOctal($event, $1);
+    } elsif ($message =~ m/^\s*0b([0-9]+)\s*\??\s*$/osi) {
+        $self->convertBinary($event, $1);
+
+    # temperatures
+    } elsif ($message =~ m/^\s*(-?(?:[0-9]+\.?|[0-9]+\.[0-9]+|\.[0-9]+)(?:e-?[0-9]+)?)\s*(?:kelvin|K)\s*\??\s*$/osi) {
+        $self->convertKelvin($event, $1);
+    } elsif ($message =~ m/^\s*(-?(?:[0-9]+\.?|[0-9]+\.[0-9]+|\.[0-9]+)(?:e-?[0-9]+)?)\s*(?:deg(?:rees?)|[\`°])?\s*(?:cel[sc]ius|centigrade|c)\s*\??\s*$/osi) {
+        $self->convertCelsius($event, $1);
+    } elsif ($message =~ m/^\s*(-?(?:[0-9]+\.?|[0-9]+\.[0-9]+|\.[0-9]+)(?:e-?[0-9]+)?)\s*(?:deg(?:rees?)|[\`°])?\s*(?:fahrenheit|f)\s*\??\s*$/osi) {
+        $self->convertFahrenheit($event, $1);
+
+    # imperial lengths
+    } elsif ($message =~ m/^\s*(-?(?:[0-9]+\.?|[0-9]+\.[0-9]+|\.[0-9]+)(?:e-?[0-9]+)?)\s*(?:ins?|inch(?:es)?)\s*\??\s*$/osi) {
+        $self->convertInches($event, $1);
+    } elsif ($message =~ m/^\s*(-?(?:[0-9]+\.?|[0-9]+\.[0-9]+|\.[0-9]+)(?:e-?[0-9]+)?)\s*(?:ft|feet|foot)\s*\??\s*$/osi) {
+        $self->convertFeet($event, $1);
+    } elsif ($message =~ m/^\s*(-?(?:[0-9]+\.?|[0-9]+\.[0-9]+|\.[0-9]+)(?:e-?[0-9]+)?)\s*(?:yds?|yards?)\s*\??\s*$/osi) {
+        $self->convertYards($event, $1);
+    } elsif ($message =~ m/^\s*(-?(?:[0-9]+\.?|[0-9]+\.[0-9]+|\.[0-9]+)(?:e-?[0-9]+)?)\s*(?:mi|miles?)\s*\??\s*$/osi) {
+        $self->convertMiles($event, $1);
+
+    # metric lengths
+    } elsif ($message =~ m/^\s*(-?(?:[0-9]+\.?|[0-9]+\.[0-9]+|\.[0-9]+)(?:e-?[0-9]+)?)\s*(?:Å|a|angstroms?)\s*\??\s*$/osi) {
+        $self->convertAngstroms($event, $1);
+    } elsif ($message =~ m/^\s*(-?(?:[0-9]+\.?|[0-9]+\.[0-9]+|\.[0-9]+)(?:e-?[0-9]+)?)\s*(?:nms?|nanometers?|nanometres?)\s*\??\s*$/osi) {
+        $self->convertNanometers($event, $1);
+    } elsif ($message =~ m/^\s*(-?(?:[0-9]+\.?|[0-9]+\.[0-9]+|\.[0-9]+)(?:e-?[0-9]+)?)\s*(?:mms?|millimeters?|millimetres?)\s*\??\s*$/osi) {
+        $self->convertMillimeters($event, $1);
+    } elsif ($message =~ m/^\s*(-?(?:[0-9]+\.?|[0-9]+\.[0-9]+|\.[0-9]+)(?:e-?[0-9]+)?)\s*(?:cms?|centimeters?|centimetres?)\s*\??\s*$/osi) {
+        $self->convertCentieters($event, $1);
+    } elsif ($message =~ m/^\s*(-?(?:[0-9]+\.?|[0-9]+\.[0-9]+|\.[0-9]+)(?:e-?[0-9]+)?)\s*(?:m|meters?|metres?)\s*\??\s*$/osi) {
+        $self->convertMeters($event, $1);
+    } elsif ($message =~ m/^\s*(-?(?:[0-9]+\.?|[0-9]+\.[0-9]+|\.[0-9]+)(?:e-?[0-9]+)?)\s*(?:kms?|kilometers?|kilometres?|klic?ks?)\s*\??\s*$/osi) {
+        $self->convertKilometers($event, $1);
+
+    # oh well
+    } else {
+        return $self->SUPER::Told(@_);
+    }
+    return 0;
+}
+
+
+# Integers
+
+sub convertDecimal {
+    my $self = shift;
+    my($event, $decimal) = @_;
+    my $hex = sprintf('%X', $decimal);
+    my $octal = sprintf('%o', $decimal);
+    my $binary = sprintf('%b', $decimal);
+    $self->say($event, "$event->{'from'}: $decimal = 0x$hex, 0$octal, 0b$binary");
+}
+
+sub convertHex {
+    my $self = shift;
+    my($event, $hex) = @_;
+    my $decimal = hex($hex);
+    my $hex = sprintf('%X', $decimal); # normalise
+    my $octal = sprintf('%o', $decimal);
+    my $binary = sprintf('%b', $decimal);
+    $self->say($event, "$event->{'from'}: 0x$hex = $decimal, 0$octal, 0b$binary");
+}
+
+sub convertOctal {
+    my $self = shift;
+    my($event, $octal) = @_;
+    my $decimal = oct("0$octal");
+    my $hex = sprintf('%X', $decimal);
+    my $binary = sprintf('%b', $decimal);
+    $self->say($event, "$event->{'from'}: 0$octal = $decimal, 0x$hex, 0b$binary");
+}
+
+sub convertBinary {
+    my $self = shift;
+    my($event, $binary) = @_;
+    my $decimal = oct("0b$binary");
+    my $hex = sprintf('%X', $decimal);
+    my $octal = sprintf('%o', $decimal);
+    $self->say($event, "$event->{'from'}: 0b$binary = $decimal, 0x$hex, 0$octal");
+}
+
+
+# Temperature
+
+sub convertKelvin {
+    my $self = shift;
+    my($event, $kelvin) = @_;
+    my $celsius = round(1, $kelvin - 273.14);
+    my $fahrenheit = round(1, ($kelvin - 273.14) * 9 / 5 + 32);
+    my $kelvin = round(1, $kelvin); # normalise
+    my $prognosis = diagnoseTemperature($kelvin, $celsius, $fahrenheit);
+    $self->say($event, "$event->{'from'}: ${kelvin}K = $celsius°C, $fahrenheit°F, $prognosis");
+}
+
+sub convertCelsius {
+    my $self = shift;
+    my($event, $celsius) = @_;
+    my $kelvin = round(1, $celsius + 273.14);
+    my $fahrenheit = round(1, $celsius * 9 / 5 + 32);
+    my $celsius = round(1, $celsius); # normalise
+    my $prognosis = diagnoseTemperature($kelvin, $celsius, $fahrenheit);
+    $self->say($event, "$event->{'from'}: $celsius°C = ${kelvin}K, $fahrenheit°F, $prognosis");
+}
+
+sub convertFahrenheit {
+    my $self = shift;
+    my($event, $fahrenheit) = @_;
+    my $celsius = round(1, ($fahrenheit - 32) * 5 / 9);
+    my $kelvin = round(1, ($fahrenheit - 32) * 5 / 9 + 273.14);
+    my $fahrenheit = round(1, $fahrenheit); # normalise
+    my $prognosis = diagnoseTemperature($kelvin, $celsius, $fahrenheit);
+    $self->say($event, "$event->{'from'}: $fahrenheit°F = ${kelvin}K, $celsius°C, $prognosis");
+}
+
+sub diagnoseTemperature($$$) {
+    my($kelvin, $celsius, $fahrenheit) = @_;
+    return
+      $kelvin < 0 ? 'an impossible temperature' :
+        $kelvin == 0 ? 'absolute zero' :
+          $fahrenheit < 0 ? 'extremely cold' :
+            $celsius < 0 ? 'freezing cold' :
+              $celsius == 0 ? 'freezing point of water' :
+                $celsius < 18 ? 'cold' :
+                  $celsius == 20 ? 'standard room temperature' :
+                    $celsius < 35 ? 'warm' :
+                      $celsius < 36 ? 'body temperature' :
+                        $celsius < 65 ? 'hot' :
+                          $celsius < 95 ? 'very hot' :
+                            $celsius == 100 ? 'boiling point of water' :
+                              $celsius < 105 ? 'boiling hot' :
+                                'ridiculously hot';
+}
+
+
+# Imperial Lengths
+
+sub convertInches {
+    my $self = shift;
+    my($event, $inches) = @_;
+    # imperial
+    # (inches)
+    my $feet = sigfig(3, $inches / 12.0);
+    my $yards = sigfig(3, $inches / 36.0);
+    my $miles = sigfig(3, $inches / 190080.0);
+    # metric
+    my $kilometers = sigfig(3, $inches * 0.00000254);
+    my $meters = sigfig(3, $inches * 0.00254);
+    my $centimeters = sigfig(3, $inches * 0.254);
+    my $millimeters = sigfig(3, $inches * 2.54);
+    my $nanometers = sigfig(3, $inches * 2540000.0);
+    my $angstroms = sigfig(3, $inches * 25400000.0);
+    # normalise
+    my $inches = sigfig(3, $inches);
+    $self->say($event, "$event->{'from'}: ${inches}in = ${feet}ft, ${yards}yd, ${miles}mi; ${kilometers}Km, ${meters}m, ${centimeters}cm, ${millimeters}mm, ${nanometers}nm, ${angstroms}Å (to 3sf)");
+}
+
+sub convertFeet {
+    my $self = shift;
+    my($event, $feet) = @_;
+    # imperial
+    my $inches = sigfig(3, $feet * 12.0);
+    # (feet)
+    my $yards = sigfig(3, $feet / 3.0);
+    my $miles = sigfig(3, $feet / 15840.0);
+    # metric
+    my $kilometers = sigfig(3, $feet * 0.00000254 * 12.0);
+    my $meters = sigfig(3, $feet * 0.00254 * 12.0);
+    my $centimeters = sigfig(3, $feet * 0.254 * 12.0);
+    my $millimeters = sigfig(3, $feet * 2.54 * 12.0);
+    my $nanometers = sigfig(3, $feet * 2540000.0 * 12.0);
+    my $angstroms = sigfig(3, $feet * 25400000.0 * 12.0);
+    # normalise
+    my $feet = sigfig(3, $feet);
+    $self->say($event, "$event->{'from'}: ${feet}ft = ${inches}in, ${yards}yd, ${miles}mi, ${kilometers}Km, ${meters}m, ${centimeters}cm, ${millimeters}mm, ${nanometers}nm, ${angstroms}Å (to 3sf)");
+}
+
+sub convertYards {
+    my $self = shift;
+    my($event, $yards) = @_;
+    # imperial
+    my $inches = sigfig(3, $yards * 36.0);
+    my $feet = sigfig(3, $yards * 3.0);
+    # (yards)
+    my $miles = sigfig(3, $yards / 5280.0);
+    # metric
+    my $kilometers = sigfig(3, $yards * 0.0000000254 * 36.0);
+    my $meters = sigfig(3, $yards * 0.00254 * 36.0);
+    my $centimeters = sigfig(3, $yards * 0.254 * 36.0);
+    my $millimeters = sigfig(3, $yards * 2.54 * 36.0);
+    my $nanometers = sigfig(3, $yards * 2540000.0 * 36.0);
+    my $angstroms = sigfig(3, $yards * 25400000.0 * 36.0);
+    # normalise
+    my $yards = sigfig(3, $yards);
+    $self->say($event, "$event->{'from'}: ${yards}yd = ${inches}in, ${feet}ft, ${miles}mi, ${kilometers}Km, ${meters}m, ${centimeters}cm, ${millimeters}mm, ${nanometers}nm, ${angstroms}Å (to 3sf)");
+}
+
+sub convertMiles {
+    my $self = shift;
+    my($event, $miles) = @_;
+    # imperial
+    my $inches = sigfig(3, $miles * 190080.0);
+    my $feet = sigfig(3, $miles * 15840.0);
+    my $yards = sigfig(3, $miles * 5280.0);
+    # (miles)
+    # metric
+    my $kilometers = sigfig(3, $miles * 0.00000254 * 190080.0);
+    my $meters = sigfig(3, $miles * 0.00254 * 190080.0);
+    my $centimeters = sigfig(3, $miles * 0.254 * 190080.0);
+    my $millimeters = sigfig(3, $miles * 2.54 * 190080.0);
+    my $nanometers = sigfig(3, $miles * 2540000.0 * 190080.0);
+    my $angstroms = sigfig(3, $miles * 25400000.0 * 190080.0);
+    # normalise
+    my $miles = sigfig(3, $miles);
+    $self->say($event, "$event->{'from'}: ${miles}mi = ${inches}in, ${feet}ft, ${yards}yd, ${kilometers}Km, ${meters}m, ${centimeters}cm, ${millimeters}mm, ${nanometers}nm, ${angstroms}Å (to 3sf)");
+}
+
+
+# Metric Lengths
+
+sub convertAngstroms {
+    my $self = shift;
+    my($event, $input) = @_;
+    # get the number
+    my $accurateMeters = $input / 10000000000.0;
+    $self->debug("Accurate KiloMeters: ".$accurateMeters/1000);
+    # imperial
+    my $inches = sigfig(3, $accurateMeters / (0.00254 * 1.0));
+    my $feet = sigfig(3, $accurateMeters / (0.00254 * 12.0));
+    my $yards = sigfig(3, $accurateMeters / (0.00254 * 36.0));
+    my $miles = sigfig(3, $accurateMeters / (0.00254 * 190080.0));
+    # metric
+    my $kilometers = sigfig(3, $accurateMeters / 1000.0);
+    my $meters = sigfig(3, $accurateMeters);
+    my $centimeters = sigfig(3, $accurateMeters * 100.0);
+    my $millimeters = sigfig(3, $accurateMeters * 1000.0);
+    my $nanometers = sigfig(3, $accurateMeters * 1000000000.0);
+    my $angstroms = sigfig(3, $accurateMeters * 10000000000.0);
+    $self->say($event, "$event->{'from'}: ${angstroms}Å = ${inches}in, ${feet}ft, ${yards}yd, ${miles}mi; ${kilometers}Km, ${meters}m, ${centimeters}cm, ${millimeters}mm, ${nanometers}nm (to 3sf)");
+}
+
+sub convertNanometers {
+    my $self = shift;
+    my($event, $input) = @_;
+    # get the number
+    my $accurateMeters = $input / 1000000000.0;
+    # imperial
+    my $inches = sigfig(3, $accurateMeters / (0.00254 * 1.0));
+    my $feet = sigfig(3, $accurateMeters / (0.00254 * 12.0));
+    my $yards = sigfig(3, $accurateMeters / (0.00254 * 36.0));
+    my $miles = sigfig(3, $accurateMeters / (0.00254 * 190080.0));
+    # metric
+    my $kilometers = sigfig(3, $accurateMeters / 1000.0);
+    my $meters = sigfig(3, $accurateMeters);
+    my $centimeters = sigfig(3, $accurateMeters * 100.0);
+    my $millimeters = sigfig(3, $accurateMeters * 1000.0);
+    my $nanometers = sigfig(3, $accurateMeters * 1000000000.0);
+    my $angstroms = sigfig(3, $accurateMeters * 10000000000.0);
+    $self->say($event, "$event->{'from'}: ${nanometers}nm = ${inches}in, ${feet}ft, ${yards}yd, ${miles}mi; ${kilometers}Km, ${meters}m, ${centimeters}cm, ${millimeters}mm, ${angstroms}Å (to 3sf)");
+}
+
+sub convertMillimeters {
+    my $self = shift;
+    my($event, $input) = @_;
+    # get the number
+    my $accurateMeters = $input / 1000.0;
+    # imperial
+    my $inches = sigfig(3, $accurateMeters / (0.00254 * 1.0));
+    my $feet = sigfig(3, $accurateMeters / (0.00254 * 12.0));
+    my $yards = sigfig(3, $accurateMeters / (0.00254 * 36.0));
+    my $miles = sigfig(3, $accurateMeters / (0.00254 * 190080.0));
+    # metric
+    my $kilometers = sigfig(3, $accurateMeters / 1000.0);
+    my $meters = sigfig(3, $accurateMeters);
+    my $centimeters = sigfig(3, $accurateMeters * 100.0);
+    my $millimeters = sigfig(3, $accurateMeters * 1000.0);
+    my $nanometers = sigfig(3, $accurateMeters * 1000000000.0);
+    my $angstroms = sigfig(3, $accurateMeters * 10000000000.0);
+    $self->say($event, "$event->{'from'}: ${millimeters}mm = ${inches}in, ${feet}ft, ${yards}yd, ${miles}mi; ${kilometers}Km, ${meters}m, ${centimeters}cm, ${nanometers}nm, ${angstroms}Å (to 3sf)");
+}
+
+sub convertCentieters {
+    my $self = shift;
+    my($event, $input) = @_;
+    # get the number
+    my $accurateMeters = $input / 100.0;
+    # imperial
+    my $inches = sigfig(3, $accurateMeters / (0.00254 * 1.0));
+    my $feet = sigfig(3, $accurateMeters / (0.00254 * 12.0));
+    my $yards = sigfig(3, $accurateMeters / (0.00254 * 36.0));
+    my $miles = sigfig(3, $accurateMeters / (0.00254 * 190080.0));
+    # metric
+    my $kilometers = sigfig(3, $accurateMeters / 1000.0);
+    my $meters = sigfig(3, $accurateMeters);
+    my $centimeters = sigfig(3, $accurateMeters * 100.0);
+    my $millimeters = sigfig(3, $accurateMeters * 1000.0);
+    my $nanometers = sigfig(3, $accurateMeters * 1000000000.0);
+    my $angstroms = sigfig(3, $accurateMeters * 10000000000.0);
+    $self->say($event, "$event->{'from'}: ${centimeters}cm = ${inches}in, ${feet}ft, ${yards}yd, ${miles}mi; ${kilometers}Km, ${meters}m, ${millimeters}mm, ${nanometers}nm, ${angstroms}Å (to 3sf)");
+}
+
+sub convertMeters {
+    my $self = shift;
+    my($event, $input) = @_;
+    # get the number
+    my $accurateMeters = $input * 1.0;
+    # imperial
+    my $inches = sigfig(3, $accurateMeters / (0.00254 * 1.0));
+    my $feet = sigfig(3, $accurateMeters / (0.00254 * 12.0));
+    my $yards = sigfig(3, $accurateMeters / (0.00254 * 36.0));
+    my $miles = sigfig(3, $accurateMeters / (0.00254 * 190080.0));
+    # metric
+    my $kilometers = sigfig(3, $accurateMeters / 1000.0);
+    my $meters = sigfig(3, $accurateMeters);
+    my $centimeters = sigfig(3, $accurateMeters * 100.0);
+    my $millimeters = sigfig(3, $accurateMeters * 1000.0);
+    my $nanometers = sigfig(3, $accurateMeters * 1000000000.0);
+    my $angstroms = sigfig(3, $accurateMeters * 10000000000.0);
+    $self->say($event, "$event->{'from'}: ${meters}m = ${inches}in, ${feet}ft, ${yards}yd, ${miles}mi; ${kilometers}Km, ${centimeters}cm, ${millimeters}mm, ${nanometers}nm, ${angstroms}Å (to 3sf)");
+}
+
+sub convertKilometers {
+    my $self = shift;
+    my($event, $input) = @_;
+    # get the number
+    my $accurateMeters = $input * 1000.0;
+    # imperial
+    my $inches = sigfig(3, $accurateMeters / (0.00254 * 1.0));
+    my $feet = sigfig(3, $accurateMeters / (0.00254 * 12.0));
+    my $yards = sigfig(3, $accurateMeters / (0.00254 * 36.0));
+    my $miles = sigfig(3, $accurateMeters / (0.00254 * 190080.0));
+    # metric
+    my $kilometers = sigfig(3, $accurateMeters / 1000.0);
+    my $meters = sigfig(3, $accurateMeters);
+    my $centimeters = sigfig(3, $accurateMeters * 100.0);
+    my $millimeters = sigfig(3, $accurateMeters * 1000.0);
+    my $nanometers = sigfig(3, $accurateMeters * 1000000000.0);
+    my $angstroms = sigfig(3, $accurateMeters * 10000000000.0);
+    $self->say($event, "$event->{'from'}: ${kilometers}km = ${inches}in, ${feet}ft, ${yards}yd, ${miles}mi; ${meters}m, ${centimeters}cm, ${millimeters}mm, ${nanometers}nm, ${angstroms}Å (to 3sf)");
+}
+
+
+# Utility Functions
+
+sub round($$) {
+    return sprintf("%.*f", @_);
+}
+
+sub sigfig($$) {
+    my($sf, $float) = @_;
+    my $length = length(int($float));
+    if ($length == $sf) {
+        $float = int($float);
+    } elsif ($length > $sf) {
+        my $factor = (10 ** ($length - $sf));
+        $float = int($float / $factor) * $factor;
+    } else {
+        my $factor = 0;
+        while (length(int($float * 10 ** $factor)) < $sf) {
+            $factor++;
+        }
+        $float = int($float * 10 ** $factor) / (10 ** $factor);
+    }
+    $float = sprintf("%g", $float);
+    $float =~ s/e(?:\+|(-))0*/x10^$1/os;
+    return $float;
+}
