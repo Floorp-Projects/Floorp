@@ -150,7 +150,7 @@ const UInt32 MRJPlugin::kInterfaceCount = sizeof(sInterfaces) / sizeof(Interface
 
 MRJPlugin::MRJPlugin()
 	:	SupportsMixin(this, sInterfaces, kInterfaceCount),
-		mManager(NULL), mThreadManager(NULL), mSession(NULL), mConsole(NULL), mIsEnabled(false), mPluginThreadID(0)
+		mManager(NULL), mThreadManager(NULL), mSession(NULL), mConsole(NULL), mIsEnabled(false), mPluginThreadID(NULL)
 {
 }
 
@@ -503,10 +503,14 @@ MRJPluginInstance* MRJPlugin::getPluginInstance(JNIEnv* jenv)
 
 Boolean MRJPlugin::inPluginThread()
 {
-	PRUint32 currentThreadID = -1;
+        Boolean result = false;
+	nsPluginThread *currentThreadID = -1;
 	if (mThreadManager != NULL)
 		mThreadManager->GetCurrentThread(&currentThreadID);
-	return (mPluginThreadID == currentThreadID);
+	if ((NULL != currentThreadID) && (NULL != mPluginThreadID)) {
+	  result = (*mPluginThreadID == *currentThreadID);
+	}
+	return result;
 }
 
 #pragma mark *** MRJPluginInstance ***

@@ -60,7 +60,7 @@ public:
 	 * Returns a unique identifier for the "current" system thread.
 	 */
 	NS_IMETHOD
-	GetCurrentThread(PRUint32* threadID);
+	GetCurrentThread(nsPluginThread* *threadID);
 
 	/**
 	 * Pauses the current thread for the specified number of milliseconds.
