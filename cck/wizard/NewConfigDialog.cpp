@@ -33,7 +33,7 @@
 #undef THIS_FILE
 static char THIS_FILE[] = __FILE__;
 #endif
-
+extern CString DlgTitle;
 /////////////////////////////////////////////////////////////////////////////
 // CNewConfigDialog dialog
 
@@ -85,7 +85,7 @@ BOOL CNewConfigDialog::OnInitDialog()
 	CDialog::OnInitDialog();
 	// TODO: Add extra initialization here
 
-	CString DlgTitle = GetGlobal("DialogTitle");
+//	CString DlgTitle = GetGlobal("DialogTitle");
 	if (!DlgTitle.IsEmpty())
 	{
 		SetWindowText(DlgTitle);

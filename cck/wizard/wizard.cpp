@@ -5,6 +5,8 @@
 #include "NewConfigDialog.h"
 #include "NewDialog.h"
 
+CString DlgTitle = "";
+
 extern "C" __declspec(dllexport)
 void NewNCIDialog(CString parms, WIDGET* curWidget)
 {
@@ -27,7 +29,9 @@ BOOL Config(CString globalsName, CString DialogTitle, WIDGET* curWidget)
 
 	CNewConfigDialog newDlg;
 	if (!DialogTitle.IsEmpty())
-		SetGlobal("DialogTitle", "Create Copy");
+		DlgTitle = "Create Copy";
+	else 
+		DlgTitle = "";
 	newDlg.DoModal();
 	CString configField = newDlg.GetConfigName();
 
