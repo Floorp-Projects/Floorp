@@ -1175,6 +1175,36 @@ nsEventStateManager::SetCursor(PRInt32 aCursor, nsIWidget* aWidget, PRBool aLock
   case NS_STYLE_CURSOR_SW_RESIZE:
     c = eCursor_sizeSW;
     break;
+  case NS_STYLE_CURSOR_COPY: // CSS3
+    c = eCursor_copy;
+    break;
+  case NS_STYLE_CURSOR_ALIAS:
+    c = eCursor_alias;
+    break;
+  case NS_STYLE_CURSOR_CONTEXT_MENU:
+    c = eCursor_context_menu;
+    break;
+  case NS_STYLE_CURSOR_CELL:
+    c = eCursor_cell;
+    break;
+  case NS_STYLE_CURSOR_GRAB:
+    c = eCursor_grab;
+    break;
+  case NS_STYLE_CURSOR_GRABBING:
+    c = eCursor_grabbing;
+    break;
+  case NS_STYLE_CURSOR_SPINNING:
+    c = eCursor_spinning;
+    break;
+  case NS_STYLE_CURSOR_COUNT_UP:
+    c = eCursor_count_up;
+    break;
+  case NS_STYLE_CURSOR_COUNT_DOWN:
+    c = eCursor_count_down;
+    break;
+  case NS_STYLE_CURSOR_COUNT_UP_DOWN:
+    c = eCursor_count_up_down;
+    break;
   }
 
   aWidget->SetCursor(c);

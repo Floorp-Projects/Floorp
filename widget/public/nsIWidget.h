@@ -164,7 +164,17 @@ enum nsCursor {   ///(normal cursor,       usually rendered as an arrow)
                 eCursor_crosshair,
                 //Don't know what 'move' cursor should be.  See CSS2.
                 eCursor_move,
-                eCursor_help
+                eCursor_help,
+                eCursor_copy, // CSS3
+                eCursor_alias,
+                eCursor_context_menu,
+                eCursor_cell,
+                eCursor_grab,
+                eCursor_grabbing,
+                eCursor_spinning,
+                eCursor_count_up,
+                eCursor_count_down,
+                eCursor_count_up_down
                 }; 
 
 

@@ -249,6 +249,17 @@
 #define NS_STYLE_CURSOR_TEXT                    14   // ie: i-beam
 #define NS_STYLE_CURSOR_WAIT                    15
 #define NS_STYLE_CURSOR_HELP                    16
+#define NS_STYLE_CURSOR_COPY                    17   // CSS3
+#define NS_STYLE_CURSOR_ALIAS                   18
+#define NS_STYLE_CURSOR_CONTEXT_MENU            19
+#define NS_STYLE_CURSOR_CELL                    20
+#define NS_STYLE_CURSOR_GRAB                    21
+#define NS_STYLE_CURSOR_GRABBING                22
+#define NS_STYLE_CURSOR_SPINNING                23
+#define NS_STYLE_CURSOR_COUNT_UP                24
+#define NS_STYLE_CURSOR_COUNT_DOWN              25
+#define NS_STYLE_CURSOR_COUNT_UP_DOWN           26
+
 
 // See nsStyleDisplay
 #define NS_STYLE_DIRECTION_LTR                  0
