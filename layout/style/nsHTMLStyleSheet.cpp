@@ -1618,6 +1618,8 @@ HTMLStyleSheetImpl::ConstructFrameByTag(nsIPresContext*  aPresContext,
 
     // Ignore the tag if it's not HTML content
     if (NS_SUCCEEDED(aContent->QueryInterface(kIHTMLContentIID, (void **)&htmlContent))) {
+      NS_RELEASE(htmlContent);
+      
       // See if the element is absolutely positioned
       const nsStylePosition* position = (const nsStylePosition*)
         aStyleContext->GetStyleData(eStyleStruct_Position);
@@ -1694,7 +1696,6 @@ HTMLStyleSheetImpl::ConstructFrameByTag(nsIPresContext*  aPresContext,
         rv = NS_NewLabelFrame(aNewFrame);
         processChildren = PR_TRUE;
       }
-      NS_RELEASE(htmlContent);
     }
   }
 
