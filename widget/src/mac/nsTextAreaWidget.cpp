@@ -444,18 +444,16 @@ LongRect			macRect;
  * Set the text for this widget
  * @update  dc 10/01/98
  * @param   aText -- Text to use in this widget
- * @param   aSize -- size of the text to use here
+ * @param   outSize -- (out only) Length of text displayed in the text area
  * @return  PR_TRUE 
  */ 
-PRUint32  nsTextAreaWidget::SetText(const nsString& aText, PRUint32& aSize)
+PRUint32  nsTextAreaWidget::SetText(const nsString& aText, PRUint32& outSize)
 { 
 PRInt32		offx,offy;
 GrafPtr		theport;
 
-	Size textSize = aText.Length();
-	if ( aSize < textSize )				// truncate to given size
-		textSize = aSize;
-	const unsigned int bufferSize = textSize + 1;	// add 1 for null
+	outSize = aText.Length();
+	const unsigned int bufferSize = outSize + 1;	// add 1 for null
 
 	CalcOffset(offx,offy);
 	::GetPort(&theport);
@@ -466,7 +464,7 @@ GrafPtr		theport;
 	auto_ptr<char> buffer ( new char[bufferSize] );
 	if ( buffer.get() ) {
 		aText.ToCString(buffer.get(),bufferSize);
-		WEInsert(buffer.get(),aSize,0,0,mTE_Data);
+		WEInsert(buffer.get(),outSize,0,0,mTE_Data);
 	}
 	else
 		return NS_ERROR_OUT_OF_MEMORY;
