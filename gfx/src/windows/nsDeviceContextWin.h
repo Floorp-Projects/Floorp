@@ -34,7 +34,7 @@ public:
 
   NS_DECL_ISUPPORTS
 
-  virtual nsresult Init();
+  virtual nsresult Init(nsNativeDeviceContext aNativeDeviceContext);
 
   virtual nsIRenderingContext * CreateRenderingContext(nsIView *aView);
   virtual void InitRenderingContext(nsIRenderingContext *aContext, nsIWidget *aWidget);
@@ -65,6 +65,7 @@ public:
   virtual void SetGamma(float aGamma);
   virtual PRUint8 * GetGammaTable(void);
 
+  virtual nsNativeDeviceContext GetNativeDeviceContext(void) ;
 protected:
   ~nsDeviceContextWin();
 

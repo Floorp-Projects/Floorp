@@ -42,7 +42,7 @@ public:
 
   NS_DECL_ISUPPORTS
 
-  virtual nsresult Init();
+  virtual nsresult Init(nsNativeDeviceContext aNativeDeviceContext);
 
   virtual nsIRenderingContext * CreateRenderingContext(nsIView *aView);
   virtual void InitRenderingContext(nsIRenderingContext *aContext, nsIWidget *aWidget);
@@ -105,6 +105,21 @@ public:
   void InstallColormap(void);
   void SetDrawingSurface(nsDrawingSurfaceUnix * aSurface) { mSurface = aSurface; }
   void SetGammaTable(PRUint8 * aTable, float aCurrentGamma, float aNewGamma);
+  nsNativeDeviceContext GetNativeDeviceContext();
+
+private:
+  PRUint32 mRedMask;
+  PRUint32 mGreenMask;
+  PRUint32 mBlueMask;
+  PRUint32 mRedBits;
+  PRUint32 mGreenBits;
+  PRUint32 mBlueBits;
+  PRUint32 mRedOffset;
+  PRUint32 mGreenOffset;
+  PRUint32 mBlueOffset;
+
+  nsNativeDeviceContext mNativeDisplay;
+
 };
 
 #endif /* nsDeviceContextUnix_h___ */

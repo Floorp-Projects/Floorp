@@ -68,7 +68,7 @@ NS_IMPL_QUERY_INTERFACE(nsDeviceContextWin, kDeviceContextIID)
 NS_IMPL_ADDREF(nsDeviceContextWin)
 NS_IMPL_RELEASE(nsDeviceContextWin)
 
-nsresult nsDeviceContextWin :: Init()
+nsresult nsDeviceContextWin :: Init(nsNativeDeviceContext aNativeDeviceContext)
 {
   for (PRInt32 cnt = 0; cnt < 256; cnt++)
     mGammaTable[cnt] = cnt;
@@ -191,6 +191,11 @@ nsDrawingSurface nsDeviceContextWin :: GetDrawingSurface(nsIRenderingContext &aC
     mSurface = aContext.CreateDrawingSurface(nsnull);
 
   return mSurface;
+}
+
+nsNativeDeviceContext nsDeviceContextWin :: GetNativeDeviceContext()
+{
+  return ((nsNativeDeviceContext)nsnull);
 }
 
 float nsDeviceContextWin :: GetGamma(void)

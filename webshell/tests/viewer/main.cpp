@@ -65,7 +65,7 @@ void MenuProc(PRUint32 aId)
 //--------------------------------------------------------
 void nsMotifViewer::AddMenu(nsIWidget* aMainWindow)
 {
-  CreateViewerMenus(XtParent(aMainWindow->GetNativeData(NS_NATIVE_WIDGET)), MenuProc);
+  CreateViewerMenus(XtParent((Widget)aMainWindow->GetNativeData(NS_NATIVE_WIDGET)), MenuProc);
 }
 
 char* nsMotifViewer::GetBaseURL()

@@ -41,7 +41,7 @@ GalleyContext::GalleyContext()
                                      kDeviceContextIID,
                                      (void **)&mDeviceContext);
   if (NS_OK == res) {
-    mDeviceContext->Init();
+    mDeviceContext->Init(nsnull);
     mDeviceContext->SetDevUnitsToAppUnits(mDeviceContext->GetDevUnitsToTwips());
     mDeviceContext->SetAppUnitsToDevUnits(mDeviceContext->GetTwipsToDevUnits());
     mDeviceContext->SetGamma(1.7f);

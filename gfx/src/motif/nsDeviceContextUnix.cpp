@@ -27,6 +27,12 @@ static NS_DEFINE_IID(kDeviceContextIID, NS_IDEVICE_CONTEXT_IID);
 
 #define NS_TO_X_COMPONENT(a) ((a << 8) | (a))
 
+#define NS_TO_X_RED(a)   (((NS_GET_R(a) >> (8 - mRedBits)) << mRedOffset) & mRedMask)
+#define NS_TO_X_GREEN(a) (((NS_GET_G(a) >> (8 - mGreenBits)) << mGreenOffset) & mGreenMask)
+#define NS_TO_X_BLUE(a)  (((NS_GET_B(a) >> (8 - mBlueBits)) << mBlueOffset) & mBlueMask)
+
+#define NS_TO_X(a) (NS_TO_X_RED(a) | NS_TO_X_GREEN(a) | NS_TO_X_BLUE(a))
+
 nsDeviceContextUnix :: nsDeviceContextUnix()
 {
   NS_INIT_REFCNT();
@@ -45,6 +51,22 @@ nsDeviceContextUnix :: nsDeviceContextUnix()
 
   mZoom = 1.0f;
 
+  mVisual = nsnull;
+
+  mRedMask = 0;
+  mGreenMask = 0;
+  mBlueMask = 0;
+
+  mRedBits = 0;
+  mGreenBits = 0;
+  mBlueBits = 0;
+
+  mRedOffset = 0;
+  mGreenOffset = 0;
+  mBlueOffset = 0;
+
+  mNativeDisplay = nsnull;
+
 }
 
 nsDeviceContextUnix :: ~nsDeviceContextUnix()
@@ -59,13 +81,17 @@ nsDeviceContextUnix :: ~nsDeviceContextUnix()
   NS_IF_RELEASE(mFontCache);
 
   if (mSurface) delete mSurface;
+
+  if (mNativeDisplay)
+    ::XCloseDisplay((Display *)mNativeDisplay);
+
 }
 
 NS_IMPL_QUERY_INTERFACE(nsDeviceContextUnix, kDeviceContextIID)
 NS_IMPL_ADDREF(nsDeviceContextUnix)
 NS_IMPL_RELEASE(nsDeviceContextUnix)
 
-nsresult nsDeviceContextUnix :: Init()
+nsresult nsDeviceContextUnix :: Init(nsNativeDeviceContext aNativeDeviceContext)
 {
   for (PRInt32 cnt = 0; cnt < 256; cnt++)
     mGammaTable[cnt] = cnt;
@@ -73,20 +99,15 @@ nsresult nsDeviceContextUnix :: Init()
 
   // XXX We really need to have Display passed to us since it could be specified
   //     not from the environment, which is the one we use here.
-  Display * display = ::XOpenDisplay(nsnull);
+  if (aNativeDeviceContext == nsnull)
+    mNativeDisplay = ::XOpenDisplay(nsnull);
 
-  if (display) {
 
-    mTwipsToPixels = (((float)::XDisplayWidth(display, DefaultScreen(display))) /
-		      ((float)::XDisplayWidthMM(display,DefaultScreen(display) )) * 25.4) / 
-      NS_POINTS_TO_TWIPS_FLOAT(72.0f);
+  mTwipsToPixels = (((float)::XDisplayWidth((Display *)mNativeDisplay, DefaultScreen((Display *)mNativeDisplay))) /
+		    ((float)::XDisplayWidthMM((Display *)mNativeDisplay,DefaultScreen((Display *)mNativeDisplay) )) * 25.4) / 
+    NS_POINTS_TO_TWIPS_FLOAT(72.0f);
     
-    mPixelsToTwips = 1.0f / mTwipsToPixels;
-
-    ::XCloseDisplay(display);
-
-  }
-
+  mPixelsToTwips = 1.0f / mTwipsToPixels;
 
   return NS_OK;
 }
@@ -161,95 +182,133 @@ PRUint32 nsDeviceContextUnix :: ConvertPixel(nscolor aColor)
 {
   PRUint32 newcolor = 0;
 
-  if (mDepth == 8) {
+  /*
+    For now, we assume anything in 12 planes or more is a TrueColor visual. 
+    If it is not (like older IRIS GL graphics boards, we'll look stupid for now.
+    */
 
-    if (mWriteable == PR_FALSE) {
-
-      Status rc ;
-      XColor colorcell;
+  switch (mDepth) {
+    
+  case 8:
+    {
       
-      colorcell.red   = NS_TO_X_COMPONENT(NS_GET_R(aColor));
-      colorcell.green = NS_TO_X_COMPONENT(NS_GET_G(aColor));
-      colorcell.blue  = NS_TO_X_COMPONENT(NS_GET_B(aColor));
-      
-      colorcell.pixel = 0;
-      colorcell.flags = 0;
-      colorcell.pad = 0;
-
-      // On static displays, this will return closest match
-      rc = ::XAllocColor(mSurface->display,
-			 mColormap,
-			 &colorcell);
-
-      if (rc == 0) {
-	// Punt ... this cannot happen!
-	fprintf(stderr,"WHOA! IT FAILED!\n");
-      } else {
-	newcolor = colorcell.pixel;
-      }
-    } else {
-
-      // Check to see if this exact color is present.  If not, add it ourselves.  
-      // If there are no unallocated cells left, do our own closest match lookup 
-      //since X doesn't provide us with one.
-      
-      Status rc ;
-      XColor colorcell;
-      
-      colorcell.red   = NS_TO_X_COMPONENT(NS_GET_R(aColor));
-      colorcell.green = NS_TO_X_COMPONENT(NS_GET_G(aColor));
-      colorcell.blue  = NS_TO_X_COMPONENT(NS_GET_B(aColor));
-      
-      colorcell.pixel = 0;
-      colorcell.flags = 0;
-      colorcell.pad = 0;
-
-      // On non-static displays, this may fail
-      rc = ::XAllocColor(mSurface->display,
-			 mColormap,
-			 &colorcell);
-
-      if (rc == 0) {
+      if (mWriteable == PR_FALSE) {
 	
-	// The color does not already exist AND we do not have any unallocated colorcells left
-	// At his point we need to implement our own lookup matching algorithm.
-
-	unsigned long pixel;
-      
-	rc = ::XAllocColorCells(mSurface->display,
-				mColormap,
-				False,0,0,
-				&pixel,
-				1);
+	Status rc ;
+	XColor colorcell;
 	
-	if (rc == 0){
-
-	  fprintf(stderr, "Failed to allocate Color cells...this sux\n");
-
+	colorcell.red   = NS_TO_X_COMPONENT(NS_GET_R(aColor));
+	colorcell.green = NS_TO_X_COMPONENT(NS_GET_G(aColor));
+	colorcell.blue  = NS_TO_X_COMPONENT(NS_GET_B(aColor));
+	
+	colorcell.pixel = 0;
+	colorcell.flags = 0;
+	colorcell.pad = 0;
+	
+	// On static displays, this will return closest match
+	rc = ::XAllocColor(mSurface->display,
+			   mColormap,
+			   &colorcell);
+	
+	if (rc == 0) {
+	  // Punt ... this cannot happen!
+	  fprintf(stderr,"WHOA! IT FAILED!\n");
 	} else {
-
-	  colorcell.pixel = pixel;
-	  colorcell.pad = 0 ;
-	  colorcell.flags = DoRed | DoGreen | DoBlue ;
-	  colorcell.red   = NS_TO_X_COMPONENT(NS_GET_R(aColor));
-	  colorcell.green = NS_TO_X_COMPONENT(NS_GET_G(aColor));
-	  colorcell.blue  = NS_TO_X_COMPONENT(NS_GET_B(aColor));
-	  
-	  ::XStoreColor(mSurface->display, mColormap, &colorcell);
-	  
 	  newcolor = colorcell.pixel;
-	
-	} 
+	} // rc == 0
       } else {
-	newcolor = colorcell.pixel;
-      }
-    } 
+	
+	// Check to see if this exact color is present.  If not, add it ourselves.  
+	// If there are no unallocated cells left, do our own closest match lookup 
+	//since X doesn't provide us with one.
+      
+	Status rc ;
+	XColor colorcell;
+      
+	colorcell.red   = NS_TO_X_COMPONENT(NS_GET_R(aColor));
+	colorcell.green = NS_TO_X_COMPONENT(NS_GET_G(aColor));
+	colorcell.blue  = NS_TO_X_COMPONENT(NS_GET_B(aColor));
+	
+	colorcell.pixel = 0;
+	colorcell.flags = 0;
+	colorcell.pad = 0;
 
-  }
+	// On non-static displays, this may fail
+	rc = ::XAllocColor(mSurface->display,
+			   mColormap,
+			   &colorcell);
 
-  if (mDepth == 24) {
-    newcolor = (PRUint32)aColor & 0x00ffffff;
-  }
+	if (rc == 0) {
+	
+	  // The color does not already exist AND we do not have any unallocated colorcells left
+	  // At his point we need to implement our own lookup matching algorithm.
+
+	  unsigned long pixel;
+      
+	  rc = ::XAllocColorCells(mSurface->display,
+				  mColormap,
+				  False,0,0,
+				  &pixel,
+				  1);
+	
+	  if (rc == 0){
+
+	    fprintf(stderr, "Failed to allocate Color cells...this sux\n");
+	  
+	  } else {
+
+	    colorcell.pixel = pixel;
+	    colorcell.pad = 0 ;
+	    colorcell.flags = DoRed | DoGreen | DoBlue ;
+	    colorcell.red   = NS_TO_X_COMPONENT(NS_GET_R(aColor));
+	    colorcell.green = NS_TO_X_COMPONENT(NS_GET_G(aColor));
+	    colorcell.blue  = NS_TO_X_COMPONENT(NS_GET_B(aColor));
+	    
+	    ::XStoreColor(mSurface->display, mColormap, &colorcell);
+	    
+	    newcolor = colorcell.pixel;
+	    
+	  } // rc == 0 
+	} else {
+	  newcolor = colorcell.pixel;
+	} // rc == 0
+      } // mWriteable == FALSE
+    } // 8
+  break;
+
+  case 12:
+    {
+      newcolor = (PRUint32)NS_TO_X(aColor);
+    } // 12
+  break;
+
+  case 15:
+    {
+      newcolor = (PRUint32)NS_TO_X(aColor);
+    } // 15
+  break;
+
+  case 16:
+    {
+      newcolor = (PRUint32)NS_TO_X(aColor);
+    } // 16
+  break;
+
+  case 24:
+    {
+      newcolor = (PRUint32)NS_TO_X(aColor);
+	//newcolor = (PRUint32)NS_TO_X24(aColor);
+    } // 24
+  break;
+  
+  default:
+    {
+      newcolor = (PRUint32)NS_TO_X(aColor);
+      //      newcolor = (PRUint32) aColor;
+    } // default
+  break;
+    
+  } // switch(mDepth)
   
   return (newcolor);
 }
@@ -296,6 +355,52 @@ void nsDeviceContextUnix :: InstallColormap()
 
     }
   }
+
+  // Compute rgb masks and number of bits for each
+  mRedMask = mVisual->red_mask;
+  mGreenMask = mVisual->green_mask;
+  mBlueMask = mVisual->blue_mask;
+
+  PRUint32 i = mRedMask;
+
+  while (i) {
+    
+    if ((i & 0x1) != 0) {
+      mRedBits++;
+    } else {
+      mRedOffset++;
+    }
+
+    i = i >> 1;
+
+  }
+
+  i = mGreenMask;
+
+  while (i) {
+    
+    if ((i & 0x1) != 0)
+      mGreenBits++;
+    else
+      mGreenOffset++;
+
+    i = i >> 1;
+
+  }
+
+  i = mBlueMask;
+
+  while (i) {
+    
+    if ((i & 0x1) != 0)
+      mBlueBits++;
+    else
+      mBlueOffset++;
+
+    i = i >> 1;
+
+  }
+  
 
 }
 
@@ -391,7 +496,10 @@ void nsDeviceContextUnix :: SetGammaTable(PRUint8 * aTable, float aCurrentGamma,
     aTable[cnt] = (PRUint8)(pow((double)cnt * (1. / 256.), fgval) * 255.99999999);
 }
 
-
+nsNativeDeviceContext nsDeviceContextUnix :: GetNativeDeviceContext()
+{
+  return ((nsNativeDeviceContext)mNativeDisplay);
+}
 
 
 

@@ -1075,7 +1075,7 @@ nsresult WidgetTest()
 
     if (NS_OK == res)
     {
-      deviceContext->Init();
+      deviceContext->Init(nsnull);
       NS_ADDREF(deviceContext);
     }
 

@@ -36,6 +36,8 @@
 #include "Xm/XmStrDefs.h"
 #include "Xm/DrawingA.h"
 
+#include "X11/Intrinsic.h"
+
 #include "stdio.h"
 
 #define DBG 0
@@ -196,7 +198,7 @@ void nsWindow::CreateWindow(nsNativeWindow aNativeParent,
 				       kDeviceContextIID, 
 				       (void **)&mContext);
     if (NS_OK == res) {
-      mContext->Init();
+      mContext->Init(nsnull);
     }
   }
   
@@ -904,6 +906,16 @@ void nsWindow::OnDestroy()
 
 PRBool nsWindow::OnResize(nsSizeEvent &aEvent)
 {
+  if (mWidget) {
+    Arg arg[3];
+
+    XtSetArg(arg[0], XtNwidth, 600);
+    XtSetArg(arg[1], XtNheight,800);
+
+    XtSetValues(mWidget, arg, 2);
+
+  }
+
   if (mEventCallback) {
     return(DispatchEvent(&aEvent));
   }
