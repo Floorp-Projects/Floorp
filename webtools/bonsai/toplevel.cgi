@@ -175,7 +175,7 @@ $cvsqueryurl.= "&branch=$::TreeInfo{$::TreeID}{branch}"
 $bip = BatchIdPart('?');
 $tinderboxbase = Param('tinderboxbase');
 $tinderboxlink = '';
-$tinderboxlink = "<a href=\"$tinderbox_base/showbuilds.cgi\">Tinderbox
+$tinderboxlink = "<a href=\"$tinderboxbase/showbuilds.cgi\">Tinderbox
         continuous builds</a><br>" if ($tinderboxbase);
 
 $otherrefs = Param('other_ref_urls');
