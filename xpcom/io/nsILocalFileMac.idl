@@ -168,6 +168,10 @@ interface nsILocalFileMac : nsILocalFile
 };
 
 %{C++
-extern "C" NS_EXPORT nsresult
-NS_NewLocalFileWithFSSpec(FSSpec* inSpec, PRBool followSymlinks, nsILocalFileMac* *result);
+extern "C"
+{
+NS_EXPORT const char* NS_TruncNodeName(const char *aNode, char *outBuf);
+
+NS_EXPORT nsresult NS_NewLocalFileWithFSSpec(FSSpec* inSpec, PRBool followSymlinks, nsILocalFileMac* *result);
+}
 %}

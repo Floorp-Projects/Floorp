@@ -598,13 +598,19 @@ nsFilePicker::PutLocalFile(const nsString & inTitle, const nsString & inDefaultN
                                                       &theEncoding);
             if (anErr != noErr)
               theEncoding = kTextEncodingMacRoman;
-            ::CFStringGetPascalString(
-                                      reply.saveFileName,
-                                      theFSSpec.name,
-                                      sizeof(theFSSpec.name),
-                                      theEncoding);
-    				
-             *outFileSpec = theFSSpec;	// Return the FSSpec
+
+            // Until we switch to the HFS+ APIs for Mac file system calls
+            // reduce the name to a max of 31 characters
+            char  origName[256];
+            char  truncBuf[32];
+            ::CFStringGetCString(reply.saveFileName, origName, 256, theEncoding);
+            const char * truncName = NS_TruncNodeName(origName, truncBuf);
+            PRUint32 truncNameLen = strlen(truncName);
+            if (truncNameLen)
+              BlockMoveData(truncName, &theFSSpec.name[1], truncNameLen);
+            theFSSpec.name[0] = truncNameLen;
+            
+            *outFileSpec = theFSSpec;	// Return the FSSpec
 
             if (reply.replacing)
               retVal = returnReplace;
