@@ -33,6 +33,7 @@
 #include "nsIPluginHost.h"
 #include "nsplugin.h"
 #include "nsString.h"
+#include "nsReadableUtils.h"
 #include "prmem.h"
 #include "nsHTMLAtoms.h"
 #include "nsIDocument.h"
@@ -60,6 +61,7 @@
 #include "nsIDOMEventReceiver.h"
 #include "nsIPrivateDOMEvent.h"
 #include "nsIDocumentEncoder.h"
+#include "nsXPIDLString.h"
 #include "nsIDOMRange.h"
 
 // XXX For temporary paint code
@@ -654,8 +656,6 @@ nsObjectFrame::Reflow(nsIPresContext*          aPresContext,
 {
   DO_GLOBAL_REFLOW_COUNT("nsObjectFrame", aReflowState.reason);
   nsresult rv = NS_OK;
-  char* mimeType = nsnull;
-  PRUint32 buflen;
 
   // Get our desired size
   GetDesiredSize(aPresContext, aReflowState, aMetrics);
@@ -678,8 +678,8 @@ nsObjectFrame::Reflow(nsIPresContext*          aPresContext,
 
     nsCOMPtr<nsISupports>     container;
     nsCOMPtr<nsIPluginHost>   pluginHost;
-    nsIURI* baseURL = nsnull;
-    nsIURI* fullURL = nsnull;
+    nsCOMPtr<nsIURI> baseURL;
+    nsCOMPtr<nsIURI> fullURL;
 
     nsAutoString classid;
     PRInt32 nameSpaceID;
@@ -688,53 +688,50 @@ nsObjectFrame::Reflow(nsIPresContext*          aPresContext,
     mContent->GetNameSpaceID(nameSpaceID);
     if (NS_CONTENT_ATTR_HAS_VALUE == mContent->GetAttribute(nameSpaceID, nsHTMLAtoms::classid, classid))
     {
-      nsCID widgetCID;
+      PRBool bJavaObject = PR_FALSE;
+      PRBool bJavaPluginClsid = PR_FALSE;
 
-        PRBool bJavaObject = PR_FALSE;
-        PRBool bJavaPluginClsid = PR_FALSE;
+      if (classid.Find("java:") != -1)
+      {
+        classid.Cut(0, 5); // Strip off the "java:". What's left is the class file.
+        bJavaObject = PR_TRUE;
+      }
 
-        if (classid.Find("java:") != -1)
-        {
-          classid.Cut(0, 5); // Strip off the "java:". What's left is the class file.
-          bJavaObject = PR_TRUE;
-        }
-
-        if (classid.Find("clsid:") != -1)
-        {
+      if (classid.Find("clsid:") != -1)
+      {
         classid.Cut(0, 6); // Strip off the "clsid:". What's left is the class ID.
-          bJavaPluginClsid = (classid.EqualsWithConversion(JAVA_CLASS_ID));
-        }
+        bJavaPluginClsid = (classid.EqualsWithConversion(JAVA_CLASS_ID));
+      }
 
-      // if we find "java:" in the class id, or we match the Java classid number, we have a java applet
+      // if we find "java:" in the class id, or we match the Java
+      // classid number, we have a java applet
       if(bJavaObject || bJavaPluginClsid)
       {
-        mimeType = (char *)PR_Malloc(PL_strlen("application/x-java-vm") + 1);
-        PL_strcpy(mimeType, "application/x-java-vm");
-
-        if((rv = GetBaseURL(baseURL)) != NS_OK)
-            return rv;
+        if (NS_FAILED(rv = GetBaseURL(*getter_AddRefs(baseURL))))
+          return rv;
 
         nsAutoString codeBase;
-        if(NS_CONTENT_ATTR_HAS_VALUE == mContent->GetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::codebase, codeBase) &&
-           !bJavaPluginClsid) 
-            {
-          nsIURI* codeBaseURL = nsnull;
-          rv = NS_NewURI(&codeBaseURL, codeBase, baseURL);
-          if(rv == NS_OK)
+        if ((NS_CONTENT_ATTR_HAS_VALUE ==
+               mContent->GetAttribute(kNameSpaceID_HTML,
+                                      nsHTMLAtoms::codebase,
+                                      codeBase)) &&
+            !bJavaPluginClsid)
+        {
+          nsCOMPtr<nsIURI> codeBaseURL;
+          rv = NS_NewURI(getter_AddRefs(codeBaseURL), codeBase, baseURL);
+          if (NS_SUCCEEDED(rv))
           {
-            NS_IF_RELEASE(baseURL);
             baseURL = codeBaseURL;
           }
         }
 
         // Create an absolute URL
         if(bJavaPluginClsid) {
-          rv = NS_NewURI(&fullURL, classid, baseURL);
+          rv = NS_NewURI(getter_AddRefs(fullURL), classid, baseURL);
         }
         else
         {
           fullURL = baseURL;
-          NS_IF_ADDREF(fullURL);
         }
 
         // get the nsIPluginHost interface
@@ -743,7 +740,8 @@ nsObjectFrame::Reflow(nsIPresContext*          aPresContext,
           return NS_ERROR_FAILURE;
 
         mInstanceOwner->SetPluginHost(pluginHost);
-        rv = InstantiatePlugin(aPresContext, aMetrics, aReflowState, pluginHost, mimeType, fullURL);
+        rv = InstantiatePlugin(aPresContext, aMetrics, aReflowState,
+                               pluginHost, "application/x-java-vm", fullURL);
       }
       else // otherwise, we're either an ActiveX control or an internal widget
       {
@@ -751,30 +749,29 @@ nsObjectFrame::Reflow(nsIPresContext*          aPresContext,
         // (Eventually this will move somewhere else.)
         if (classid.EqualsWithConversion("browser"))
         {
-          widgetCID = kCAppShellCID;
-            rv = InstantiateWidget(aPresContext, aMetrics, aReflowState, widgetCID);
+          rv = InstantiateWidget(aPresContext, aMetrics,
+                                 aReflowState, kCAppShellCID);
         }
         else
         {
-          // if we haven't matched to an internal type, check to see if we have an ActiveX handler
+          // if we haven't matched to an internal type, check to see if
+          // we have an ActiveX handler
           // if not, create the default plugin
-            if((rv = GetBaseURL(baseURL)) != NS_OK)
-              return rv;
+          if (NS_FAILED(rv = GetBaseURL(*getter_AddRefs(baseURL))))
+            return rv;
 
-            // if we have a codebase, add it to the fullURL
-            nsAutoString codeBase;
+          // if we have a codebase, add it to the fullURL
+          nsAutoString codeBase;
           if (NS_CONTENT_ATTR_HAS_VALUE == mContent->GetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::codebase, codeBase)) 
+          {
+            nsCOMPtr<nsIURI> codeBaseURL;
+            rv = NS_NewURI(getter_AddRefs(fullURL), codeBase, baseURL);
+            if (NS_SUCCEEDED(rv))
             {
-            nsIURI* codeBaseURL = nsnull;
-            rv = NS_NewURI(&fullURL, codeBase, baseURL);
-            if(rv == NS_OK)
-            {
-              NS_IF_RELEASE(baseURL);
               baseURL = codeBaseURL;
             }
           } else {
-              fullURL = baseURL;
-              NS_IF_ADDREF(fullURL);
+            fullURL = baseURL;
           }
 
           // get the nsIPluginHost interface
@@ -783,26 +780,30 @@ nsObjectFrame::Reflow(nsIPresContext*          aPresContext,
             return NS_ERROR_FAILURE;
 
           mInstanceOwner->SetPluginHost(pluginHost);
-          if(pluginHost->IsPluginEnabledForType("application/x-oleobject") == NS_OK)
-              rv = InstantiatePlugin(aPresContext, aMetrics, aReflowState, pluginHost, "application/x-oleobject", fullURL);
-          else if(pluginHost->IsPluginEnabledForType("application/oleobject") == NS_OK)
-              rv = InstantiatePlugin(aPresContext, aMetrics, aReflowState, pluginHost, "application/oleobject", fullURL);
-            else
-              rv = NS_ERROR_FAILURE;
+          if (NS_SUCCEEDED(
+                pluginHost->IsPluginEnabledForType("application/x-oleobject")))
+            rv = InstantiatePlugin(aPresContext, aMetrics, aReflowState,
+                                   pluginHost, "application/x-oleobject",
+                                   fullURL);
+          else if (NS_SUCCEEDED(
+                  pluginHost->IsPluginEnabledForType("application/oleobject")))
+            rv = InstantiatePlugin(aPresContext, aMetrics, aReflowState,
+                                   pluginHost, "application/oleobject",
+                                   fullURL);
+          else
+            rv = NS_ERROR_FAILURE;
         }
       }
 
-        NS_IF_RELEASE(baseURL);
-        NS_IF_RELEASE(fullURL);
-
       // finish up
-      if(rv == NS_OK)
+      if (NS_SUCCEEDED(rv))
       {
         aStatus = NS_FRAME_COMPLETE;
         return NS_OK;
       }
 
-      // if we got an error, we'll check for alternative content with CantRenderReplacedElement()
+      // if we got an error, we'll check for alternative content with
+      // CantRenderReplacedElement()
       nsIPresShell* presShell;
       aPresContext->GetShell(&presShell);
       presShell->CantRenderReplacedElement(aPresContext, this);
@@ -811,13 +812,12 @@ nsObjectFrame::Reflow(nsIPresContext*          aPresContext,
       return NS_OK;
     }
 
-      // if we're here, the object is either an applet or a plugin
+    // if we're here, the object is either an applet or a plugin
 
-    nsIAtom* atom = nsnull;
     nsAutoString    src;
 
-      if((rv = GetBaseURL(baseURL)) != NS_OK)
-          return rv;
+    if (NS_FAILED(rv = GetBaseURL(*getter_AddRefs(baseURL))))
+      return rv;
 
     // get the nsIPluginHost interface
     pluginHost = do_GetService(kCPluginManagerCID);
@@ -826,106 +826,99 @@ nsObjectFrame::Reflow(nsIPresContext*          aPresContext,
 
     mInstanceOwner->SetPluginHost(pluginHost);
 
-    mContent->GetTag(atom);
+    nsCOMPtr<nsIAtom> tag;
+    mContent->GetTag(*getter_AddRefs(tag));
       // check if it's an applet
-    if (atom == nsHTMLAtoms::applet && atom) 
-      {
-      mimeType = (char *)PR_Malloc(PL_strlen("application/x-java-vm") + 1);
-      PL_strcpy(mimeType, "application/x-java-vm");
-
+    if (tag.get() == nsHTMLAtoms::applet) 
+    {
       if (NS_CONTENT_ATTR_HAS_VALUE == mContent->GetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::code, src)) 
-        {
+      {
 
         nsAutoString codeBase;
         if (NS_CONTENT_ATTR_HAS_VALUE == mContent->GetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::codebase, codeBase)) 
-            {
-          nsIURI* codeBaseURL = nsnull;
-          rv = NS_NewURI(&codeBaseURL, codeBase, baseURL);
+        {
+          nsCOMPtr<nsIURI> codeBaseURL;
+          rv = NS_NewURI(getter_AddRefs(codeBaseURL), codeBase, baseURL);
           if(rv == NS_OK)
           {
-            NS_IF_RELEASE(baseURL);
             baseURL = codeBaseURL;
           }
         }
 
         // Create an absolute URL
-        rv = NS_NewURI(&fullURL, src, baseURL);
+        rv = NS_NewURI(getter_AddRefs(fullURL), src, baseURL);
       }
 
-      rv = InstantiatePlugin(aPresContext, aMetrics, aReflowState, pluginHost, mimeType, fullURL);
+      rv = InstantiatePlugin(aPresContext, aMetrics, aReflowState,
+                             pluginHost, "application/x-java-vm", fullURL);
     }
     else // traditional plugin
-      {
-        nsAutoString type;
+    {
+      nsXPIDLCString mimeType;
+      nsAutoString type;
       mContent->GetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::type, type);
 
-      buflen = type.Length();
-      if (buflen > 0) 
-        {
-        mimeType = (char *)PR_Malloc(buflen + 1);
-        if (nsnull != mimeType)
-          type.ToCString(mimeType, buflen + 1);
-      }
+      if (type.Length())
+        *getter_Copies(mimeType) = type.ToNewCString();
 
       //stream in the object source if there is one...
-      if (NS_CONTENT_ATTR_HAS_VALUE == mContent->GetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::src, src)) 
-        {
+      if (NS_CONTENT_ATTR_HAS_VALUE ==
+            mContent->GetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::src, src)) 
+      {
         // Create an absolute URL
-        rv = NS_NewURI(&fullURL, src, baseURL);
-        if ( rv != NS_OK )
+        rv = NS_NewURI(getter_AddRefs(fullURL), src, baseURL);
+        if (NS_FAILED(rv))
           // Failed to create URI, maybe because we didn't
           // reconize the protocol handler ==> treat like
           // no 'src' was specified in the embed tag
           fullURL = baseURL;
-        }
-        else if(NS_CONTENT_ATTR_HAS_VALUE == mContent->GetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::data, src)) 
-        {
+      }
+      else if (NS_CONTENT_ATTR_HAS_VALUE ==
+             mContent->GetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::data, src)) 
+      {
         // Create an absolute URL
-        rv = NS_NewURI(&fullURL, src, baseURL);
-        if ( rv != NS_OK )
+        rv = NS_NewURI(getter_AddRefs(fullURL), src, baseURL);
+        if (NS_FAILED(rv))
           // Failed to create URI, maybe because we didn't
           // reconize the protocol handler ==> treat like
           // no 'data' was specified in the object tag
           fullURL = baseURL;
 
-        } else {// we didn't find a src or data param, so just set the url to the base
-          fullURL = baseURL;
-          NS_IF_ADDREF(fullURL);
-        }
+      } else {
+        // we didn't find a src or data param, so just set the url to the base
+        fullURL = baseURL;
+      }
 
-        // if we didn't find the type, but we do have a src, we can determine the mimetype
-        // based on the file extension
-      if(!mimeType && src.GetUnicode())
-        {
-            char* extension;
-            char* cString = src.ToNewCString();
-            extension = PL_strrchr(cString, '.');
-            if(extension)
-                ++extension;
+      // if we didn't find the type, but we do have a src, we can
+      // determine the mimetype based on the file extension
+      if (!mimeType && src.GetUnicode())
+      {
+        nsXPIDLCString extension;
+        PRInt32 offset = src.RFindChar(PRUnichar('.'));
+        if (offset != kNotFound)
+          *getter_Copies(extension) =
+            ToNewCString(Substring(src, offset+1, src.Length()));
 
-            pluginHost->IsPluginEnabledForExtension((const char *)extension, (const char *&)mimeType);
+        pluginHost->IsPluginEnabledForExtension(extension,
+                                                *getter_Shares(mimeType));
+      }
 
-      delete [] cString;
-        }
-
-        rv = InstantiatePlugin(aPresContext, aMetrics, aReflowState, pluginHost, mimeType, fullURL);
+      rv = InstantiatePlugin(aPresContext, aMetrics, aReflowState,
+                             pluginHost, mimeType, fullURL);
     }
-
-      NS_IF_RELEASE(atom);
-      NS_IF_RELEASE(baseURL);
-      NS_IF_RELEASE(fullURL);
   }
   else
     rv = ReinstantiatePlugin(aPresContext, aMetrics, aReflowState);
 
   // finish up
-  if(rv == NS_OK)
+  if (NS_SUCCEEDED(rv))
   {
     aStatus = NS_FRAME_COMPLETE;
     return NS_OK;
   }
 
-  // if we got an error, we'll check for alternative content with CantRenderReplacedElement()
+  // if we got an error, we'll check for alternative content with
+  // CantRenderReplacedElement()
   nsIPresShell* presShell;
   aPresContext->GetShell(&presShell);
   presShell->CantRenderReplacedElement(aPresContext, this);
@@ -1692,12 +1685,14 @@ NS_IMETHODIMP nsPluginInstanceOwner::GetAttributes(PRUint16& n,
         if ((nsnull != mAttrNames) && (nsnull != mAttrVals)) {
           for (index = 0; index < count; index++) {
             PRInt32 nameSpaceID;
-            nsIAtom* atom;
+            nsCOMPtr<nsIAtom> atom;
             nsCOMPtr<nsIAtom> prefix;
-            iContent->GetAttributeNameAt(index, nameSpaceID, atom,
+            iContent->GetAttributeNameAt(index, nameSpaceID,
+                                         *getter_AddRefs(atom),
                                          *getter_AddRefs(prefix));
             nsAutoString  value;
-            if (NS_CONTENT_ATTR_HAS_VALUE == iContent->GetAttribute(nameSpaceID, atom, value)) {
+            if (NS_CONTENT_ATTR_HAS_VALUE ==
+                  iContent->GetAttribute(nameSpaceID, atom, value)) {
               nsAutoString  name;
               atom->ToString(name);
 
@@ -1732,7 +1727,6 @@ NS_IMETHODIMP nsPluginInstanceOwner::GetAttributes(PRUint16& n,
               mAttrVals[mNumAttrs] = value.ToNewUTF8String();
               mNumAttrs++;
             }
-            NS_RELEASE(atom);
           }
         }
         else {
