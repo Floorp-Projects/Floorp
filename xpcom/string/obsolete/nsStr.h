@@ -48,6 +48,10 @@
 
 enum  eCharSize {eOneByte=0,eTwoByte=1};
 #define kDefaultCharSize eTwoByte
+#define kRadix10        (10)
+#define kRadix16        (16)
+#define kAutoDetect     (100)
+#define kRadixUnknown   (kAutoDetect+1)
 const PRInt32 kNotFound = -1;
 
 
@@ -55,8 +59,23 @@ class nsIMemoryAgent;
 
 //----------------------------------------------------------------------------------------
 
+class NS_COM CSharedStrBuffer {
+public:
+  CSharedStrBuffer(char* aString,PRBool aStackBased,PRUint32 aCapacity,PRInt32 aLength=-1);
+  CSharedStrBuffer(PRUnichar* aString,PRBool aStackBased,PRUint32 aCapacity,PRInt32 aLength=-1);
 
-struct nsStr {  
+  char*     mBuffer;
+  eCharSize mCharSize;
+  PRUint32  mCapacity;
+  PRInt32   mLength;
+  PRBool    mStackBased;
+
+};
+
+//----------------------------------------------------------------------------------------
+
+
+struct NS_COM nsStr {  
 
  /**
   * This method initializes an nsStr for use
@@ -169,16 +188,6 @@ struct nsStr {
   */
   static void ChangeCase(nsStr& aDest,PRBool aToUpper);
 
-  /**
-   * This method removes chars (given in aSet) from the given buffer 
-   *
-   * @update	gess 01/04/99
-   * @param   aString is the buffer to be manipulated
-   * @param   aDestOffset is starting pos in buffer for manipulation
-   * @param   aCount is the number of chars to compare
-   * @param   aSet tells us which chars to remove from given buffer
-   */
-  static void StripChars(nsStr& aDest,PRUint32 aDestOffset,PRInt32 aCount,const char* aCharSet);
 
   /**
    * This method trims chars (given in aSet) from the edges of given buffer 
@@ -201,7 +210,7 @@ struct nsStr {
    * @param   aEliminateLeading tells us whether to strip chars from the start of the buffer
    * @param   aEliminateTrailing tells us whether to strip chars from the start of the buffer
    */
-  static void CompressSet(nsStr& aDest,const char* aSet,PRUint32 aChar,PRBool aEliminateLeading,PRBool aEliminateTrailing);
+  static void CompressSet(nsStr& aDest,const char* aSet,PRBool aEliminateLeading,PRBool aEliminateTrailing);
 
   /**
    * This method compares the data bewteen two nsStr's 
@@ -225,13 +234,13 @@ struct nsStr {
   * @param  anOffset tells us where in the dest string to start searching
   * @return the index of the source (substr) in dest, or -1 (kNotFound) if not found.
   */
-  static PRInt32 FindSubstr(const nsStr& aDest,const nsStr& aSource, PRBool aIgnoreCase,PRUint32 anOffset);
-  static PRInt32 FindChar(const nsStr& aDest,PRUnichar aChar, PRBool aIgnoreCase,PRUint32 anOffset);
-  static PRInt32 FindCharInSet(const nsStr& aDest,const nsStr& aSet,PRBool aIgnoreCase,PRUint32 anOffset);
+  static PRInt32 FindSubstr(const nsStr& aDest,const nsStr& aSource, PRBool aIgnoreCase,PRInt32 anOffset);
+  static PRInt32 FindChar(const nsStr& aDest,PRUnichar aChar, PRBool aIgnoreCase,PRInt32 anOffset);
+  static PRInt32 FindCharInSet(const nsStr& aDest,const nsStr& aSet,PRBool aIgnoreCase,PRInt32 anOffset);
 
-  static PRInt32 RFindSubstr(const nsStr& aDest,const nsStr& aSource, PRBool aIgnoreCase,PRUint32 anOffset);
-  static PRInt32 RFindChar(const nsStr& aDest,PRUnichar aChar, PRBool aIgnoreCase,PRUint32 anOffset);
-  static PRInt32 RFindCharInSet(const nsStr& aDest,const nsStr& aSet,PRBool aIgnoreCase,PRUint32 anOffset);
+  static PRInt32 RFindSubstr(const nsStr& aDest,const nsStr& aSource, PRBool aIgnoreCase,PRInt32 anOffset);
+  static PRInt32 RFindChar(const nsStr& aDest,PRUnichar aChar, PRBool aIgnoreCase,PRInt32 anOffset);
+  static PRInt32 RFindCharInSet(const nsStr& aDest,const nsStr& aSet,PRBool aIgnoreCase,PRInt32 anOffset);
 
 
   PRUint32        mLength;
