@@ -2048,9 +2048,14 @@ nsComboboxControlFrame::HandleEvent(nsIPresContext* aPresContext,
     return NS_OK;
   }
 
-  // Have to feed event down to nsFrame::HandleEvent so that
-  // selection takes place when appropriate.
-  return nsAreaFrame::HandleEvent(aPresContext, aEvent, aEventStatus);
+  // If we have style that affects how we are selected, feed event down to
+  // nsFrame::HandleEvent so that selection takes place when appropriate.
+  const nsStyleUserInterface* uiStyle;
+  GetStyleData(eStyleStruct_UserInterface,  (const nsStyleStruct *&)uiStyle);
+  if (uiStyle->mUserInput == NS_STYLE_USER_INPUT_NONE || uiStyle->mUserInput == NS_STYLE_USER_INPUT_DISABLED)
+    return nsAreaFrame::HandleEvent(aPresContext, aEvent, aEventStatus);
+    
+  return NS_OK;
 }
 
 
