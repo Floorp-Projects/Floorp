@@ -664,7 +664,7 @@
                    (contents (rest html-item)))
                (cond
                 ((member tag paragraph-styles) (cons " " contents))
-                ((member tag division-styles :test #'eq)
+                ((or (member tag division-styles :test #'eq) (eq tag :wrap))
                  (mapcan #'flatten-item contents))
                 (t (error "Unable to flatten ~S" html-item))))))
     (if html
