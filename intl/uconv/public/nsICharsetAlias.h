@@ -21,24 +21,28 @@
 #define nsICharsetAlias_h___
 
 #include "nscore.h"
+#include "nsString.h"
 #include "nsISupports.h"
 
 // {CCD4D374-CCDC-11d2-B3B1-00805F8A6670}
-NS_DECLARE_ID(kICharsetAliasIID,
-{ 0xccd4d374, 0xccdc, 0x11d2, \
-    { 0xb3, 0xb1, 0x0, 0x80, 0x5f, 0x8a, 0x66, 0x70 } };
+NS_DECLARE_ID(kICharsetAliasIID,\
+ 0xccd4d374, 0xccdc, 0x11d2, 0xb3, 0xb1, 0x0, 0x80, 0x5f, 0x8a, 0x66, 0x70 );
+
+// {98D41C21-CCF3-11d2-B3B1-00805F8A6670}
+NS_DECLARE_ID(kCharsetAliasCID,\
+ 0x98d41c21, 0xccf3, 0x11d2, 0xb3, 0xb1, 0x0, 0x80, 0x5f, 0x8a, 0x66, 0x70 );
 
 
 class nsICharsetAlias : public nsISupports
 {
 public:
-   NS_IMETHOD GetPreferred(nsString& aAlias, nsString& aResult) = 0;
+   NS_IMETHOD GetPreferred(const nsString& aAlias, nsString& aResult) = 0;
    NS_IMETHOD GetPreferred(const PRUnichar* aAlias, const PRUnichar** aResult) = 0;
-   NS_IMETHOD GetPreferred(const char* aAlias, const char** aResult) = 0;
+   NS_IMETHOD GetPreferred(const char* aAlias, char* aResult, PRInt32 aBufLength) = 0;
 
-   NS_IMETHOD Equals(nsString& aCharset, nsString& aCharset, PRBool* aResult) = 0;
-   NS_IMETHOD Equals(const PRUnichar* aCharset, const PRUnichar* aCharset, PRBool* aResult) = 0;
-   NS_IMETHOD Equals(const char* aCharset, const char* aCharset, PRBool* aResult) = 0;
+   NS_IMETHOD Equals(const nsString& aCharset1, const nsString& aCharset2, PRBool* aResult) = 0;
+   NS_IMETHOD Equals(const PRUnichar* aCharset1, const PRUnichar* aCharset2, PRBool* aResult) = 0;
+   NS_IMETHOD Equals(const char* aCharset1, const char* aCharset2, PRBool* aResult) = 0;
 
 };
 
