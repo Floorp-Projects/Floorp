@@ -64,6 +64,8 @@ public:
   NS_IMETHOD  GetFont(const nsFont *&aFont);
   NS_IMETHOD  GetFontHandle(nsFontHandle& aHandle);
 
+  static void SetFont(const nsFont& aFont, nsIDeviceContext* aContext);
+
 /*protected:
   void RealizeFont();
   static const char* MapFamilyToFont(const nsString& aLogicalFontName);
