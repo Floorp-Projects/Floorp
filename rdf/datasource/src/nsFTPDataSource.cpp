@@ -42,6 +42,8 @@
 #include "prio.h"
 #include "rdf.h"
 
+#include "nsCOMPtr.h"
+
 #include "nsEscape.h"
 
 #include "nsIURL.h"
@@ -109,6 +111,10 @@ private:
 	static nsIRDFResource	*kNC_FTPObject;
 	static nsIRDFResource	*kRDF_InstanceOf;
 	static nsIRDFResource	*kRDF_type;
+
+	static nsIRDFResource	*kNC_FTPCommand_Refresh;
+	static nsIRDFResource	*kNC_FTPCommand_DeleteFolder;
+	static nsIRDFResource	*kNC_FTPCommand_DeleteFile;
 
 	NS_METHOD	GetFTPListing(nsIRDFResource *source, nsISimpleEnumerator** aResult);
 	NS_METHOD	GetURL(nsIRDFResource *source, nsIRDFLiteral** aResult);
@@ -200,26 +206,49 @@ nsIRDFResource		*FTPDataSource::kNC_FTPObject;
 nsIRDFResource		*FTPDataSource::kRDF_InstanceOf;
 nsIRDFResource		*FTPDataSource::kRDF_type;
 
+nsIRDFResource		*FTPDataSource::kNC_FTPCommand_Refresh;
+nsIRDFResource		*FTPDataSource::kNC_FTPCommand_DeleteFolder;
+nsIRDFResource		*FTPDataSource::kNC_FTPCommand_DeleteFile;
+
 PRInt32			FTPDataSource::gRefCnt;
 PRInt32			FTPDataSourceCallback::gRefCnt;
 
 nsIRDFResource		*FTPDataSourceCallback::kNC_Child;
 nsIRDFResource		*FTPDataSourceCallback::kNC_loading;
 
+static const char	kFTPprotocol[] = "ftp:";
+static const char	kFTPcommand[] = "http://home.netscape.com/NC-rdf#ftpcommand?";
+
 
 
 static PRBool
 isFTPURI(nsIRDFResource *r)
 {
-	PRBool		isFTPURI = PR_FALSE;
-        nsXPIDLCString uri;
+	PRBool		isFTPURIFlag = PR_FALSE;
+        nsXPIDLCString	uri;
 	
 	r->GetValue( getter_Copies(uri) );
-	if (!strncmp(uri, "ftp:", PL_strlen("ftp:")))
+	if (!strncmp(uri, kFTPprotocol, sizeof(kFTPprotocol) - 1))
 	{
-		isFTPURI = PR_TRUE;
+		isFTPURIFlag = PR_TRUE;
 	}
-	return(isFTPURI);
+	return(isFTPURIFlag);
+}
+
+
+
+static PRBool
+isFTPCommand(nsIRDFResource *r)
+{
+	PRBool		isFTPCommandFlag = PR_FALSE;
+        nsXPIDLCString	uri;
+	
+	r->GetValue( getter_Copies(uri) );
+	if (!strncmp(uri, kFTPcommand, sizeof(kFTPcommand) - 1))
+	{
+		isFTPCommandFlag = PR_TRUE;
+	}
+	return(isFTPCommandFlag);
 }
 
 
@@ -266,6 +295,10 @@ FTPDataSource::FTPDataSource(void)
 		gRDFService->GetResource(RDF_NAMESPACE_URI "instanceOf", &kRDF_InstanceOf);
 		gRDFService->GetResource(RDF_NAMESPACE_URI "type",       &kRDF_type);
 
+		gRDFService->GetResource(NC_NAMESPACE_URI "ftpcommand?refresh",      &kNC_FTPCommand_Refresh);
+		gRDFService->GetResource(NC_NAMESPACE_URI "ftpcommand?deletefolder", &kNC_FTPCommand_DeleteFolder);
+		gRDFService->GetResource(NC_NAMESPACE_URI "ftpcommand?deletefile",   &kNC_FTPCommand_DeleteFile);
+
 		gFTPDataSource = this;
 	}
 }
@@ -284,6 +317,10 @@ FTPDataSource::~FTPDataSource (void)
 		NS_RELEASE(kNC_FTPObject);
 		NS_RELEASE(kRDF_InstanceOf);
 		NS_RELEASE(kRDF_type);
+
+		NS_RELEASE(kNC_FTPCommand_Refresh);
+		NS_RELEASE(kNC_FTPCommand_DeleteFolder);
+		NS_RELEASE(kNC_FTPCommand_DeleteFile);
 
 		NS_RELEASE(mInner);
 
@@ -474,6 +511,45 @@ FTPDataSource::GetTarget(nsIRDFResource *source,
 			NS_RELEASE(literal);
 
 			return rv;
+		}
+	}
+	else if (isFTPCommand(source))
+	{
+		if (property == kNC_Name)
+		{
+			if (source == kNC_FTPCommand_Refresh)
+			{
+				nsAutoString	name("Refresh FTP file listing");		// XXX localization
+				nsIRDFLiteral	*literal;
+				rv = gRDFService->GetLiteral(name.GetUnicode(), &literal);
+
+				rv = literal->QueryInterface(nsIRDFNode::GetIID(), (void**) target);
+				NS_RELEASE(literal);
+
+				return rv;
+			}
+			else if (source == kNC_FTPCommand_DeleteFolder)
+			{
+				nsAutoString	name("Delete remote FTP folder");		// XXX localization
+				nsIRDFLiteral	*literal;
+				rv = gRDFService->GetLiteral(name.GetUnicode(), &literal);
+
+				rv = literal->QueryInterface(nsIRDFNode::GetIID(), (void**) target);
+				NS_RELEASE(literal);
+
+				return rv;
+			}
+			else if (source == kNC_FTPCommand_DeleteFile)
+			{
+				nsAutoString	name("Delete remote FTP file");		// XXX localization
+				nsIRDFLiteral	*literal;
+				rv = gRDFService->GetLiteral(name.GetUnicode(), &literal);
+
+				rv = literal->QueryInterface(nsIRDFNode::GetIID(), (void**) target);
+				NS_RELEASE(literal);
+
+				return rv;
+			}
 		}
 	}
 	return mInner->GetTarget(source, property, tv, target);
@@ -956,8 +1032,35 @@ FTPDataSource::GetAllCommands(nsIRDFResource* source,nsIEnumerator/*<nsIRDFResou
 NS_IMETHODIMP
 FTPDataSource::GetAllCmds(nsIRDFResource* source, nsISimpleEnumerator/*<nsIRDFResource>*/** commands)
 {
-	NS_NOTYETIMPLEMENTED("write me!");
-	return NS_ERROR_NOT_IMPLEMENTED;
+	if (isFTPURI(source))
+	{
+		nsresult	rv;
+		nsXPIDLCString	uri;
+		rv = source->GetValue( getter_Copies(uri) );
+		if (NS_FAILED(rv))	return(rv);
+
+		nsCOMPtr<nsISupportsArray>	cmdArray;
+		rv = NS_NewISupportsArray(getter_AddRefs(cmdArray));
+		if (NS_FAILED(rv))	return(rv);
+
+		if (isFTPDirectory(source))
+		{
+			cmdArray->AppendElement(kNC_FTPCommand_Refresh);
+			cmdArray->AppendElement(kNC_FTPCommand_DeleteFolder);
+		}
+		else
+		{
+			cmdArray->AppendElement(kNC_FTPCommand_DeleteFile);
+		}
+
+		nsISimpleEnumerator		*result = new nsArrayEnumerator(cmdArray);
+		if (!result)
+			return(NS_ERROR_OUT_OF_MEMORY);
+		NS_ADDREF(result);
+		*commands = result;
+		return(NS_OK);
+	}
+	return(NS_NewEmptyEnumerator(commands));
 }
 
 
