@@ -76,7 +76,9 @@ NS_IMETHODIMP nsPrintProgress::OpenProgressDialog(nsIDOMWindowInternal *parent,
                                                   nsIObserver *openDialogObserver,
                                                   PRBool *notifyOnOpen)
 {
-  *notifyOnOpen = PR_FALSE;
+  *notifyOnOpen = PR_TRUE;
+  m_observer = openDialogObserver;
+
   nsresult rv = NS_ERROR_FAILURE;
   
   if (m_dialog)
@@ -186,6 +188,9 @@ NS_IMETHODIMP nsPrintProgress::UnregisterListener(nsIWebProgressListener *listen
 /* void doneIniting (); */
 NS_IMETHODIMP nsPrintProgress::DoneIniting()
 {
+  if (m_observer) {
+    m_observer->Observe(nsnull, nsnull, nsnull);
+  }
   return NS_OK;
 }
 

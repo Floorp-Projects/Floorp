@@ -158,7 +158,7 @@ static const char sPrintOptionsContractID[]         = "@mozilla.org/gfx/printset
 // Print Progress
 #include "nsIPrintProgress.h"
 #include "nsIPrintProgressParams.h"
-
+#include "nsIObserver.h"
 
 // Print error dialog
 #include "nsIPrompt.h"
@@ -433,7 +433,8 @@ public:
   nsCOMPtr<nsIWebProgressListener> mPrintProgressListener;
   nsCOMPtr<nsIPrintProgress>       mPrintProgress;
   nsCOMPtr<nsIPrintProgressParams> mPrintProgressParams;
-  PRBool                           mShowProgressDialog;
+  PRBool                           mShowProgressDialog;    // means we should try to show it
+  PRPackedBool                     mProgressDialogIsShown; // means it is already being shown
 
   nsCOMPtr<nsIDOMWindowInternal> mCurrentFocusWin; // cache a pointer to the currently focused window
 
@@ -484,7 +485,8 @@ class DocumentViewerImpl : public nsIDocumentViewer,
                            public nsIContentViewerEdit,
                            public nsIContentViewerFile,
                            public nsIMarkupDocumentViewer,
-                           public nsIWebBrowserPrint
+                           public nsIWebBrowserPrint,
+                           public nsIObserver
 {
   friend class nsDocViewerSelectionListener;
   friend class nsPagePrintTimer;
@@ -521,6 +523,9 @@ public:
 
   // nsIWebBrowserPrint
   NS_DECL_NSIWEBBROWSERPRINT
+
+  // nsIObserver
+  NS_DECL_NSIOBSERVER
 
   typedef void (*CallChildFunc)(nsIMarkupDocumentViewer* aViewer,
                                 void* aClosure);
@@ -612,9 +617,14 @@ private:
   void CalcNumPrintableDocsAndPages(PRInt32& aNumDocs, PRInt32& aNumPages);
   void DoProgressForAsIsFrames();
   void DoProgressForSeparateFrames();
-  void DoPrintProgress(PRBool aIsForPrinting);
+  void ShowPrintProgress(PRBool aIsForPrinting, PRBool& aDoNotify);
+  void CleanUpBeforeReflow(nsresult aResult);
+  nsresult FinishPrintPreview();
+  void CloseProgressDialog(nsIWebProgressListener* aWebProgressListener);
+
   void SetDocAndURLIntoProgress(PrintObject* aPO,
                                 nsIPrintProgressParams* aParams);
+  void ElipseLongString(PRUnichar *& aStr, const PRUint32 aLen, PRBool aDoFront);
   nsresult CheckForPrinters(nsIPrintOptions*  aPrintOptions,
                             nsIPrintSettings* aPrintSettings,
                             PRUint32          aErrorCode,
@@ -888,7 +898,7 @@ static nsresult NS_NewUpdateTimer(nsPagePrintTimer **aResult)
 //---------------------------------------------------
 PrintData::PrintData(ePrintDataType aType) :
   mType(aType), mPrintView(nsnull), mDebugFilePtr(nsnull), mPrintObject(nsnull), mSelectedPO(nsnull),
-  mShowProgressDialog(PR_TRUE), mPrintDocList(nsnull), mIsIFrameSelected(PR_FALSE),
+  mShowProgressDialog(PR_TRUE), mProgressDialogIsShown(PR_FALSE), mPrintDocList(nsnull), mIsIFrameSelected(PR_FALSE),
   mIsParentAFrameSet(PR_FALSE), mPrintingAsIsSubDoc(PR_FALSE), mOnStartSent(PR_FALSE),
   mIsAborted(PR_FALSE), mPreparingForPrint(PR_FALSE), mDocWasToBeDestroyed(PR_FALSE),
   mShrinkToFit(PR_FALSE), mPrintFrameType(nsIPrintSettings::kFramesAsIs), 
@@ -933,7 +943,7 @@ PrintData::~PrintData()
   }
 
   // Only Send an OnEndPrinting if we have started printing
-  if (mOnStartSent) {
+  if (mOnStartSent && mType != eIsPrintPreview) {
     OnEndPrinting();
   }
 
@@ -980,7 +990,7 @@ PrintData::~PrintData()
 void PrintData::OnStartPrinting()
 {
   if (!mOnStartSent) {
-    DoOnProgressChange(mPrintProgressListeners, 100, 100, PR_TRUE, nsIWebProgressListener::STATE_START|nsIWebProgressListener::STATE_IS_DOCUMENT);
+    DoOnProgressChange(mPrintProgressListeners, 0, 0, PR_TRUE, nsIWebProgressListener::STATE_START|nsIWebProgressListener::STATE_IS_DOCUMENT);
     mOnStartSent = PR_TRUE;
   }
 }
@@ -1128,13 +1138,14 @@ DocumentViewerImpl::DocumentViewerImpl(nsIPresContext* aPresContext)
   PrepareToStartLoad();
 }
 
-NS_IMPL_ISUPPORTS6(DocumentViewerImpl,
+NS_IMPL_ISUPPORTS7(DocumentViewerImpl,
                    nsIContentViewer,
                    nsIDocumentViewer,
                    nsIMarkupDocumentViewer,
                    nsIContentViewerFile,
                    nsIContentViewerEdit,
-                   nsIWebBrowserPrint)
+                   nsIWebBrowserPrint,
+                   nsIObserver)
 
 DocumentViewerImpl::~DocumentViewerImpl()
 {
@@ -3916,7 +3927,7 @@ DocumentViewerImpl::ReflowPrintObject(PrintObject * aPO, PRBool aDoCalcShrink)
     }
   }
 
-  if (!adjRect.width || !adjRect.height) {
+  if (!adjRect.width || !adjRect.height || !width || !height) {
     aPO->mDontPrint = PR_TRUE;
     return NS_OK;
   }
@@ -4558,6 +4569,11 @@ DocumentViewerImpl::SetupToPrintContent(nsIWebShell*          aParent,
 
   PR_PL(("--- Printing %d docs and %d pages\n", mPrt->mNumPrintableDocs, mPrt->mNumPrintablePages));
   DUMP_DOC_TREELAYOUT;
+
+  // Print listener setup...
+  if (mPrt != nsnull) {
+    mPrt->OnStartPrinting();    
+  }
 
   mPrt->mPrintDocDW = aCurrentFocusedDOMWin;
 
@@ -6323,6 +6339,13 @@ void DocumentViewerImpl::CheckForHiddenFrameSetFrames()
   }
 }
 
+void
+DocumentViewerImpl::CloseProgressDialog(nsIWebProgressListener* aWebProgressListener)
+{
+  if (aWebProgressListener) {
+    aWebProgressListener->OnStateChange(nsnull, nsnull, nsIWebProgressListener::STATE_STOP|nsIWebProgressListener::STATE_IS_DOCUMENT, nsnull);
+  }
+}
 
 /** ---------------------------------------------------
  *  See documentation above in the nsIContentViewerfile class definition
@@ -6336,13 +6359,16 @@ DocumentViewerImpl::PrintPreview(nsIPrintSettings* aPrintSettings,
                                  nsIDOMWindow *aChildDOMWin, 
                                  nsIWebProgressListener* aWebProgressListener)
 {
+  nsresult rv = NS_OK;
+
+#ifdef NS_PRINT_PREVIEW
   if (!mPresShell) {
     // A frame that's not displayed can't be printed!
-
     return NS_OK;
   }
 
   if (mIsDoingPrinting) {
+    CloseProgressDialog(aWebProgressListener);
     return NS_ERROR_FAILURE;
   }
 
@@ -6352,6 +6378,7 @@ DocumentViewerImpl::PrintPreview(nsIPrintSettings* aPrintSettings,
   // Temporary code for Bug 136185
   nsCOMPtr<nsIXULDocument> xulDoc(do_QueryInterface(mDocument));
   if (xulDoc) {
+    CloseProgressDialog(aWebProgressListener);
     ShowPrintErrorDialog(NS_ERROR_GFX_PRINTER_NO_XUL, PR_FALSE);
     return NS_ERROR_FAILURE;
   }
@@ -6368,11 +6395,10 @@ DocumentViewerImpl::PrintPreview(nsIPrintSettings* aPrintSettings,
 
   if (NS_FAILED(docShell->GetBusyFlags(&busyFlags)) ||
       busyFlags != nsIDocShell::BUSY_FLAGS_NONE) {
+    CloseProgressDialog(aWebProgressListener);
     ShowPrintErrorDialog(NS_ERROR_GFX_PRINTER_DOC_IS_BUSY_PP, PR_FALSE);
     return NS_ERROR_FAILURE;
   }
-
-  nsresult rv = NS_OK;
 
 #if defined(XP_PC) && defined(EXTENDED_DEBUG_PRINTING)
   if (!mIsDoingPrintPreview) {
@@ -6382,7 +6408,6 @@ DocumentViewerImpl::PrintPreview(nsIPrintSettings* aPrintSettings,
   }
 #endif
 
-#ifdef NS_PRINT_PREVIEW
   if (mIsDoingPrintPreview) {
     mOldPrtPreview = mPrtPreview;
     mPrtPreview = nsnull;
@@ -6390,9 +6415,15 @@ DocumentViewerImpl::PrintPreview(nsIPrintSettings* aPrintSettings,
 
   mPrt = new PrintData(PrintData::eIsPrintPreview);
   if (!mPrt) {
+    CloseProgressDialog(aWebProgressListener);
     mIsCreatingPrintPreview = PR_FALSE;
     return NS_ERROR_OUT_OF_MEMORY;
   }
+
+  // The WebProgressListener can be QI'ed to nsIPrintingPromptService
+  // then that means the progress dialog is already being shown.
+  nsCOMPtr<nsIPrintingPromptService> pps(do_QueryInterface(aWebProgressListener));
+  mPrt->mProgressDialogIsShown = pps != nsnull;
 
   // Check to see if we need to transfer any of our old values
   // over to the new PrintData object
@@ -6437,6 +6468,7 @@ DocumentViewerImpl::PrintPreview(nsIPrintSettings* aPrintSettings,
     rv = NS_ERROR_FAILURE;
   }
   if (NS_FAILED(rv)) {
+    CloseProgressDialog(aWebProgressListener);
     delete mPrt;
     mPrt = nsnull;
     return NS_ERROR_FAILURE;
@@ -6588,26 +6620,53 @@ DocumentViewerImpl::PrintPreview(nsIPrintSettings* aPrintSettings,
     mPresShell->EndObservingDocument();
   }
 
+  if (aWebProgressListener != nsnull) {
+    mPrt->mPrintProgressListeners.AppendElement((void*)aWebProgressListener);
+    NS_ADDREF(aWebProgressListener);
+  }
+
+  PRBool notifyOnInit = PR_FALSE;
+  ShowPrintProgress(PR_FALSE, notifyOnInit);
+
+  if (!notifyOnInit) {
+    rv = FinishPrintPreview();
+  } else {
+    rv = NS_OK;
+  }
+
+#endif // NS_PRINT_PREVIEW
+
+  return rv;
+}
+
+nsresult
+DocumentViewerImpl::FinishPrintPreview()
+{
+  nsresult rv = NS_OK;
+
+#ifdef NS_PRINT_PREVIEW
+
   rv = DocumentReadyForPrinting();
 
   mIsCreatingPrintPreview = PR_FALSE;
+
   /* cleaup on failure + notify user */
   if (NS_FAILED(rv)) {
+    /* cleanup done, let's fire-up an error dialog to notify the user
+     * what went wrong...
+     */
+    mIsCreatingPrintPreview = PR_FALSE;
+    mIsDoingPrintPreview    = PR_FALSE;
+    mPrt->OnEndPrinting();
+    ShowPrintErrorDialog(rv, PR_FALSE);
+    TurnScriptingOn(PR_TRUE);
+
     if (mPrt) {
       delete mPrt;
       mPrt = nsnull;
     }
-
-    /* cleanup done, let's fire-up an error dialog to notify the user
-     * what went wrong...
-     */
-    ShowPrintErrorDialog(rv, PR_FALSE);
-    TurnScriptingOn(PR_TRUE);
-    mIsCreatingPrintPreview = PR_FALSE;
-    mIsDoingPrintPreview    = PR_FALSE;
     return rv;
   }
-
 
   // At this point we are done preparing everything
   // before it is to be created
@@ -6615,6 +6674,7 @@ DocumentViewerImpl::PrintPreview(nsIPrintSettings* aPrintSettings,
   // Noew create the new Presentation and display it
   InstallNewPresentation();
 
+  mPrt->OnEndPrinting();
   // PrintPreview was built using the mPrt (code reuse)
   // then we assign it over
   mPrtPreview = mPrt;
@@ -6635,6 +6695,28 @@ DocumentViewerImpl::PrintPreview(nsIPrintSettings* aPrintSettings,
 
 
 void
+DocumentViewerImpl::ElipseLongString(PRUnichar *& aStr, const PRUint32 aLen, PRBool aDoFront)
+{
+  // Make sure the URLS don't get too long for the progress dialog
+  if (aStr && nsCRT::strlen(aStr) > aLen) {
+    if (aDoFront) {
+      PRUnichar * ptr = &aStr[nsCRT::strlen(aStr)-aLen+3];
+      nsAutoString newStr;
+      newStr.AppendWithConversion("...");
+      newStr += ptr;
+      nsMemory::Free(aStr);
+      aStr = ToNewUnicode(newStr);
+    } else {
+      nsAutoString newStr(aStr);
+      newStr.SetLength(aLen-3);
+      newStr.AppendWithConversion("...");
+      nsMemory::Free(aStr);
+      aStr = ToNewUnicode(newStr);
+    }
+  }
+}
+
+void
 DocumentViewerImpl::SetDocAndURLIntoProgress(PrintObject* aPO,
                                              nsIPrintProgressParams* aParams)
 {
@@ -6651,15 +6733,9 @@ DocumentViewerImpl::SetDocAndURLIntoProgress(PrintObject* aPO,
   GetDisplayTitleAndURL(aPO, mPrt->mPrintSettings, mPrt->mBrandName,
                         &docTitleStr, &docURLStr, eDocTitleDefURLDoc);
 
-  // Make sure the URLS don't get too long for the progress dialog
-  if (docURLStr && nsCRT::strlen(docURLStr) > kTitleLength) {
-    PRUnichar * ptr = &docURLStr[nsCRT::strlen(docURLStr)-kTitleLength+3];
-    nsAutoString newURLStr;
-    newURLStr.AppendWithConversion("...");
-    newURLStr += ptr;
-    nsMemory::Free(docURLStr);
-    docURLStr = ToNewUnicode(newURLStr);
-  }
+  // Make sure the Titles & URLS don't get too long for the progress dialog
+  ElipseLongString(docTitleStr, kTitleLength, PR_FALSE);
+  ElipseLongString(docURLStr, kTitleLength, PR_TRUE);
 
   aParams->SetDocTitle((const PRUnichar*) docTitleStr);
   aParams->SetDocURL((const PRUnichar*) docURLStr);
@@ -6671,14 +6747,23 @@ DocumentViewerImpl::SetDocAndURLIntoProgress(PrintObject* aPO,
 //----------------------------------------------------------------------
 // Set up to use the "pluggable" Print Progress Dialog
 void
-DocumentViewerImpl::DoPrintProgress(PRBool aIsForPrinting)
+DocumentViewerImpl::ShowPrintProgress(PRBool aIsForPrinting, PRBool& aDoNotify)
 {
+  // default to not notifying, that if something here goes wrong
+  // or we aren't going to show the progress dialog we can straight into 
+  // reflowing the doc for printing.
+  aDoNotify = PR_FALSE;
+
   // Assume we can't do progress and then see if we can
   mPrt->mShowProgressDialog = PR_FALSE;
 
-  nsCOMPtr<nsIPref> prefs (do_GetService(NS_PREF_CONTRACTID));
-  if (prefs) {
-    prefs->GetBoolPref("print.show_print_progress", &mPrt->mShowProgressDialog);
+  // if it is already being shown then don't bother to find out if it should be
+  // so skip this and leave mShowProgressDialog set to FALSE
+  if (!mPrt->mProgressDialogIsShown) {
+    nsCOMPtr<nsIPref> prefs (do_GetService(NS_PREF_CONTRACTID));
+    if (prefs) {
+      prefs->GetBoolPref("print.show_print_progress", &mPrt->mShowProgressDialog);
+    }
   }
 
   // Turning off the showing of Print Progress in Prefs overrides
@@ -6689,18 +6774,20 @@ DocumentViewerImpl::DoPrintProgress(PRBool aIsForPrinting)
   }
 
   // Now open the service to get the progress dialog
-  nsCOMPtr<nsIPrintingPromptService> printPromptService(do_GetService(kPrintingPromptService));
-  if (printPromptService) {
-    nsCOMPtr<nsIScriptGlobalObject> scriptGlobalObject;
-    mDocument->GetScriptGlobalObject(getter_AddRefs(scriptGlobalObject));
-    if (!scriptGlobalObject) return;
-    nsCOMPtr<nsIDOMWindow> domWin = do_QueryInterface(scriptGlobalObject); 
-    if (!domWin) return;
+  // If we don't get a service, that's ok, then just don't show progress
+  if (mPrt->mShowProgressDialog) {
+    nsCOMPtr<nsIPrintingPromptService> printPromptService(do_GetService(kPrintingPromptService));
+    if (printPromptService) {
+      nsCOMPtr<nsIScriptGlobalObject> scriptGlobalObject;
+      mDocument->GetScriptGlobalObject(getter_AddRefs(scriptGlobalObject));
+      if (!scriptGlobalObject) return;
+      nsCOMPtr<nsIDOMWindow> domWin = do_QueryInterface(scriptGlobalObject); 
+      if (!domWin) return;
 
-    // If we don't get a service, that's ok, then just don't show progress
-    if (mPrt->mShowProgressDialog) {
-      PRBool notifyOnOpen;
-      nsresult rv = printPromptService->ShowProgress(domWin, this, mPrt->mPrintSettings, nsnull, PR_TRUE, getter_AddRefs(mPrt->mPrintProgressListener), getter_AddRefs(mPrt->mPrintProgressParams), &notifyOnOpen);
+      nsresult rv = printPromptService->ShowProgress(domWin, this, mPrt->mPrintSettings, this, aIsForPrinting,
+                                                     getter_AddRefs(mPrt->mPrintProgressListener), 
+                                                     getter_AddRefs(mPrt->mPrintProgressParams), 
+                                                     &aDoNotify);
       if (NS_SUCCEEDED(rv)) {
         mPrt->mShowProgressDialog = mPrt->mPrintProgressListener != nsnull && mPrt->mPrintProgressParams != nsnull;
 
@@ -6750,6 +6837,35 @@ DocumentViewerImpl::Print(PRBool            aSilent,
 
 
   return Print(printSettings, nsnull);
+
+}
+
+/** ---------------------------------------------------
+ *  Cleans up when an error occurred
+ */
+void DocumentViewerImpl::CleanUpBeforeReflow(nsresult aResult)
+{
+  /* cleanup... */
+  if (mPagePrintTimer) {
+    mPagePrintTimer->Stop();
+    NS_RELEASE(mPagePrintTimer);
+  }
+  
+  if (mPrt) {
+    delete mPrt;
+    mPrt = nsnull;
+  }
+  mIsDoingPrinting = PR_FALSE;
+
+  /* cleanup done, let's fire-up an error dialog to notify the user
+   * what went wrong... 
+   * 
+   * When rv == NS_ERROR_ABORT, it means we want out of the 
+   * print job without displaying any error messages
+   */
+  if (aResult != NS_ERROR_ABORT) {
+    ShowPrintErrorDialog(aResult);
+  }
 
 }
 
@@ -7169,15 +7285,16 @@ DocumentViewerImpl::Print(nsIPrintSettings*       aPrintSettings,
             if (docURLStr) nsMemory::Free(docURLStr);
             NS_ENSURE_SUCCESS(rv, rv);
 
-            DoPrintProgress(PR_TRUE);
+            PRBool doNotify;
+            ShowPrintProgress(PR_TRUE, doNotify);
 
-            // Print listener setup...
-            if (mPrt != nsnull) {
-              mPrt->OnStartPrinting();    
+            if (!doNotify) {
+              // Print listener setup...
+              if (mPrt != nsnull) {
+                mPrt->OnStartPrinting();    
+              }
+              rv = DocumentReadyForPrinting();
             }
-
-            rv = DocumentReadyForPrinting();
-            PR_PL(("PRINT JOB ENDING, OBSERVER WAS NOT CALLED\n"));
           }
         }
       }
@@ -7188,28 +7305,7 @@ DocumentViewerImpl::Print(nsIPrintSettings*       aPrintSettings,
 
   /* cleaup on failure + notify user */
   if (NS_FAILED(rv)) {
-    /* cleanup... */
-    if (mPagePrintTimer) {
-      mPagePrintTimer->Stop();
-      NS_RELEASE(mPagePrintTimer);
-    }
-
-    if (mPrt) {
-      delete mPrt;
-      mPrt = nsnull;
-    }
-    mIsDoingPrinting = PR_FALSE;
-
-    /* cleanup done, let's fire-up an error dialog to notify the user
-     * what went wrong...
-     *
-     * When rv == NS_ERROR_ABORT, it means we want out of the
-     * print job without displaying any error messages
-     */
-    if (rv != NS_ERROR_ABORT) {
-      ShowPrintErrorDialog(rv);
-    }
-    PR_PL(("**** Printing Failed - rv 0x%X", rv));
+    CleanUpBeforeReflow(rv);
   }
 
   return rv;
@@ -8422,3 +8518,26 @@ DocumentViewerImpl::StartPagePrintTimer(nsIPresContext * aPresContext,
   return mPagePrintTimer->Start(this, aPresContext, aPrintSettings, aPOect, aDelay);
 }
 
+/*=============== nsIObserver Interface ======================*/
+NS_IMETHODIMP DocumentViewerImpl::Observe(nsISupports *aSubject, const char *aTopic, const PRUnichar *aData)
+{
+  nsresult rv = NS_ERROR_FAILURE;
+
+  if (mIsDoingPrinting) {
+    rv = DocumentReadyForPrinting();
+ 
+    /* cleaup on failure + notify user */
+    if (NS_FAILED(rv)) {
+      CleanUpBeforeReflow(rv);
+    }
+  } else {
+    rv = FinishPrintPreview();
+    if (mPrtPreview) {
+      mPrtPreview->OnEndPrinting();
+    }
+    rv = NS_OK;
+  }
+
+  return rv;
+
+}

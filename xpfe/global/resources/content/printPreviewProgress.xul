@@ -19,8 +19,6 @@ Copyright (C) 1998-2000 Netscape Communications Corporation. All
 Rights Reserved.
 
 Contributor(s):
-  Scott MacGregor <mscott@netscape.com>
-  Jean-Francois Ducarroz <ducarroz@netscape.com>
   Rod Spears <rods@netscape.com>
 
  -->
@@ -29,7 +27,7 @@ Contributor(s):
 
 <?xul-overlay href="chrome://global/content/dialogOverlay.xul"?>
 
-<!DOCTYPE window SYSTEM "chrome://global/locale/printProgress.dtd">
+<!DOCTYPE window SYSTEM "chrome://global/locale/printPreviewProgress.dtd">
 
 <window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         class="dialog"
@@ -38,24 +36,10 @@ Contributor(s):
         onload="onLoad()"
         onunload="onUnload()">
 
-  <script type="application/x-javascript" src="chrome://global/content/printProgress.js"/>
-
-    <!-- This is non-visible content that simply adds translatable string
-         into the document so that it is accessible to JS code.
-         
-         XXX-TODO: 
-          convert to use string bundles. 
-    -->
-  
-    <data id="dialog.strings.dialogCloseLabel">&dialogClose.label;</data>
-    <data id="dialog.strings.printComplete">&printComplete;</data>
-    <data id="dialog.strings.progressText">&percentPrint;</data>
-    <data id="dialog.strings.progressLabel">&progress;</data>
-    <data id="dialog.strings.preparing">&preparing;</data>
+  <script type="application/x-javascript" src="chrome://global/content/printPreviewProgress.js"/>
 
     <grid flex="1">
       <columns>
-        <column/>
         <column/>
         <column/>
       </columns>
@@ -65,23 +49,14 @@ Contributor(s):
           <hbox pack="end">
             <label id="dialog.titleLabel" value="&title;"/>
           </hbox>
-            <label id="dialog.title"/>
+          <label id="dialog.title"/>
         </row>
         <row class="thin-separator">             
           <hbox pack="end">
-            <label id="dialog.progressLabel" value="&progress;"/>
+            <label id="dialog.progressSpaces" value="&progress;"/>
           </hbox>
-            <label id="dialog.tempLabel" value="&preparing;"/>
-            <progressmeter id="dialog.progress" mode="normal" value="0"/>
-          <hbox pack="end" style="min-width: 2.5em;">
-            <label id="dialog.progressText"/>
-          </hbox>
+            <label id="dialog.progressLabel" value="&preparing;"/>
         </row>
       </rows>
     </grid>
-    <separator/>
-    <hbox id="CancelButton" pack="end">
-      <button id="cancel" label="&dialogCancel.label;" 
-        oncommand="doCancelButton()"/>
-    </hbox>
 </window>
