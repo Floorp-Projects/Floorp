@@ -117,13 +117,17 @@ STDMETHODIMP nsNativeDragTarget::QueryInterface(REFIID riid, void** ppv)
 //-----------------------------------------------------
 STDMETHODIMP_(ULONG) nsNativeDragTarget::AddRef(void)
 {
-    return ++m_cRef;
+    ++m_cRef;
+    NS_LOG_ADDREF(this, m_cRef, "nsNativeDragTarget", sizeof(*this));
+    return m_cRef;
 }
 
 //-----------------------------------------------------
 STDMETHODIMP_(ULONG) nsNativeDragTarget::Release(void)
 {
-	 if (0 != --m_cRef)
+    --m_cRef;
+    NS_LOG_RELEASE(this, m_cRef, "nsNativeDragTarget");
+    if (0 != m_cRef)
         return m_cRef;
 
     delete this;
