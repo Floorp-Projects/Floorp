@@ -188,6 +188,10 @@ ALL_TRASH		= $(TARGETS) $(OBJS) LOGS TAGS $(GARBAGE) \
 			  _gen _stubs $(MDDEPDIR) $(wildcard gts_tmp_*)
 endif
 
+ifndef USE_AUTOCONF
+ALL_TRASH		+= $(OBJDIR)
+endif
+
 ifdef JAVA_OR_NSJVM
 ifdef JDIRS
 ALL_TRASH		+= $(addprefix $(JAVA_DESTPATH)/,$(JDIRS))
