@@ -455,6 +455,23 @@ NS_IMETHODIMP nsDocShell::SetParentURIContentListener(nsIURIContentListener*
    return mContentListener->SetParentContentListener(aParent);
 }
 
+NS_IMETHODIMP nsDocShell::GetDocumentCharsetInfo(nsIDocumentCharsetInfo** 
+   aDocumentCharsetInfo)
+{
+   NS_ENSURE_ARG_POINTER(aDocumentCharsetInfo);
+
+   *aDocumentCharsetInfo = mDocumentCharsetInfo;
+   NS_IF_ADDREF(*aDocumentCharsetInfo);
+   return NS_OK;
+} 
+
+NS_IMETHODIMP nsDocShell::SetDocumentCharsetInfo(nsIDocumentCharsetInfo* 
+   aDocumentCharsetInfo)
+{
+   mDocumentCharsetInfo = aDocumentCharsetInfo;
+   return NS_OK;
+}
+
 NS_IMETHODIMP nsDocShell::GetAllowPlugins(PRBool* aAllowPlugins)
 {
    NS_ENSURE_ARG_POINTER(aAllowPlugins);
@@ -2287,7 +2304,7 @@ NS_IMETHODIMP nsDocShell::CreateFixupURI(const PRUnichar* aStringURI,
    // if no scheme (protocol) is found, assume http.
    if((colon=uriString.FindChar(':') == -1) ||// no colon at all
       ((fSlash > -1) && (colon > fSlash)) ||// the only colon comes after the first slash
-      ((colon < uriString.Length()-1) && // the first char after the first colon is a digit (i.e. a port)
+      ((colon < (((PRInt32)uriString.Length())-1)) && // the first char after the first colon is a digit (i.e. a port)
        ((port=uriString.CharAt(colon+1)) <= '9') && (port > '0'))) 
       {
       // find host name

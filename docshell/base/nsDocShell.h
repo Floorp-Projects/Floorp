@@ -55,6 +55,7 @@
 #include "nsDSWebProgressListener.h"
 
 // Interfaces Needed
+#include "nsIDocumentCharsetInfo.h"
 #include "nsISupportsArray.h"
 #include "nsISHistory.h"
 #include "nsIWebNavigation.h"
@@ -211,6 +212,7 @@ protected:
    nsDSWebProgressListener*   mWebProgressListener;
    nsDocShellInitInfo*        mInitInfo;
    nsCOMPtr<nsIContentViewer> mContentViewer;
+   nsCOMPtr<nsIDocumentCharsetInfo> mDocumentCharsetInfo;
    nsCOMPtr<nsIDeviceContext> mDeviceContext;
    nsCOMPtr<nsIDocumentLoader>mDocLoader;
    nsCOMPtr<nsIDocumentLoaderObserver> mDocLoaderObserver;
