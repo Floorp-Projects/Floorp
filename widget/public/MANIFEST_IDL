@@ -8,3 +8,5 @@ nsITransferable.idl
 nsIDragSession.idl
 nsIDragService.idl
 nsIFormatConverter.idl
+nsIClipboard.idl
+nsIClipboardOwner.idl
