@@ -1105,12 +1105,12 @@ sub CheckIfVotedConfirmed {
                 "WHERE bug_id = $id");
         my $fieldid = GetFieldID("bug_status");
         SendSQL("INSERT INTO bugs_activity " .
-                "(bug_id,who,bug_when,fieldid,oldvalue,newvalue) VALUES " .
+                "(bug_id,who,bug_when,fieldid,removed,added) VALUES " .
                 "($id,$who,now(),$fieldid,'$::unconfirmedstate','NEW')");
         if (!$everconfirmed) {
             $fieldid = GetFieldID("everconfirmed");
             SendSQL("INSERT INTO bugs_activity " .
-                    "(bug_id,who,bug_when,fieldid,oldvalue,newvalue) VALUES " .
+                    "(bug_id,who,bug_when,fieldid,removed,added) VALUES " .
                     "($id,$who,now(),$fieldid,'0','1')");
         }
         AppendComment($id, DBID_to_name($who),
@@ -1136,7 +1136,7 @@ sub DumpBugActivity {
     my $query = "
         SELECT IFNULL(fielddefs.name, bugs_activity.fieldid),
                 bugs_activity.bug_when,
-                bugs_activity.oldvalue, bugs_activity.newvalue,
+                bugs_activity.removed, bugs_activity.added,
                 profiles.login_name
         FROM bugs_activity LEFT JOIN fielddefs ON 
                                      bugs_activity.fieldid = fielddefs.fieldid,
@@ -1149,25 +1149,21 @@ sub DumpBugActivity {
     
     print "<table border cellpadding=4>\n";
     print "<tr>\n";
-    print "    <th>Who</th><th>What</th><th>Old value</th><th>New value</th><th>When</th>\n";
+    print "    <th>Who</th><th>What</th><th>Removed</th><th>Added</th><th>When</th>\n";
     print "</tr>\n";
     
     my @row;
     while (@row = FetchSQLData()) {
-        my ($field,$when,$old,$new,$who) = (@row);
-        $old = value_quote($old);
-        $new = value_quote($new);
-        if ($old eq "") {
-            $old = "&nbsp;";
-        }
-        if ($new eq "") {
-            $new = "&nbsp;";
-        }
+        my ($field,$when,$removed,$added,$who) = (@row);
+        $removed = html_quote($removed);
+        $added = html_quote($added);
+        $removed ||= "&nbsp;";
+        $added ||= "&nbsp;";
         print "<tr>\n";
         print "<td>$who</td>\n";
         print "<td>$field</td>\n";
-        print "<td>$old</td>\n";
-        print "<td>$new</td>\n";
+        print "<td>$removed</td>\n";
+        print "<td>$added</td>\n";
         print "<td>$when</td>\n";
         print "</tr>\n";
     }

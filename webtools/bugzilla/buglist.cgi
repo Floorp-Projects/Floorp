@@ -1426,6 +1426,17 @@ document.write(\" <input type=button value=\\\"Uncheck All\\\" onclick=\\\"SetCh
 </TR>";
     }
 
+   print qq{
+<TR><TD ALIGN="RIGHT"><B>CC List:</B></TD>
+<TD COLSPAN=3><INPUT NAME="masscc" SIZE=32 VALUE="">
+<SELECT NAME="ccaction">
+<OPTION VALUE="add">Add these to the CC List
+<OPTION VALUE="remove">Remove these from the CC List
+</SELECT>
+</TD>
+</TR>
+};
+
     if (@::legal_keywords) {
         print qq{
 <TR><TD><B><A HREF="describekeywords.cgi">Keywords</A>:</TD>
@@ -1541,8 +1552,8 @@ if ($::usergroupset ne '0' && $buggroupset =~ /^\d+$/) {
 To make changes to a bunch of bugs at once:
 <ol>
 <li> Put check boxes next to the bugs you want to change.
-<li> Adjust above form elements.  (It's <b>always</b> a good idea to add some
-     comment explaining what you're doing.)
+<li> Adjust above form elements.  (If the change you are making requires
+       an explanation, include it in the comments box).
 <li> Click the below \"Commit\" button.
 </ol></font>
 <INPUT TYPE=SUBMIT VALUE=Commit>";

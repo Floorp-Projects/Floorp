@@ -135,7 +135,7 @@ sub ProcessOneBug {
 
 
     SendSQL("SELECT profiles.login_name, fielddefs.description, " .
-            "       bug_when, oldvalue, newvalue " .
+            "       bug_when, removed, added " .
             "FROM bugs_activity, fielddefs, profiles " .
             "WHERE bug_id = $id " .
             "  AND fielddefs.fieldid = bugs_activity.fieldid " .
@@ -157,7 +157,7 @@ sub ProcessOneBug {
         if ($who ne $lastwho) {
             $lastwho = $who;
             $difftext .= "\n$who" . Param('emailsuffix') . " changed:\n\n";
-            $difftext .= FormatTriple("What    ", "Old Value", "New Value");
+            $difftext .= FormatTriple("What    ", "Removed", "Added");
             $difftext .= ('-' x 76) . "\n";
         }
         $difftext .= FormatTriple($what, $old, $new);
@@ -171,7 +171,7 @@ sub ProcessOneBug {
     my $resid = 
 
     SendSQL("SELECT bugs_activity.bug_id, fielddefs.name, " .
-            "       oldvalue, newvalue " .
+            "       removed, added " .
             "FROM bugs_activity, dependencies, fielddefs ".
             "WHERE bugs_activity.bug_id = dependencies.dependson " .
             "  AND dependencies.blocked = $id " .
@@ -414,9 +414,7 @@ sub getEmailAttributes ($@) {
         } elsif ($fieldName eq 'QAContact') {
            push (@{$force{'QAContact'}}, $new);
         } elsif ($fieldName eq 'CC') {
-            my @oldVal = split (/,/, $old);
-            my @newVal = split (/,/, $new);
-            my @added = filterExcludeList(\@newVal, \@oldVal);
+            my @added = split (/[ ,]/, $new);
             push (@{$force{'CClist'}}, @added);
         }
     }

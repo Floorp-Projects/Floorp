@@ -768,8 +768,8 @@ $table{bugs_activity} =
     who mediumint not null,
     bug_when datetime not null,
     fieldid mediumint not null,
-    oldvalue tinytext,
-    newvalue tinytext,
+    added tinytext,
+    removed tinytext,
 
     index (bug_id),
     index (bug_when),
@@ -2306,6 +2306,72 @@ if (!defined GetIndexDef('longdescs','who')) {
 # 2001-06-15 kiko@async.com.br - Change bug:version size to avoid
 # truncates re http://bugzilla.mozilla.org/show_bug.cgi?id=9352
 ChangeFieldType('bugs', 'version','varchar(64) not null');
+
+# 2001-07-20 jake@acutex.net - Change bugs_activity to only record changes
+#  http://bugzilla.mozilla.org/show_bug.cgi?id=55161
+if (GetFieldDef('bugs_activity', 'oldvalue')) {
+    AddField("bugs_activity", "removed", "tinytext");
+    AddField("bugs_activity", "added", "tinytext");
+
+    # Need to get fieldid's for the fields that have multipule values
+    my @multi = ();
+    foreach my $f ("cc", "dependson", "blocked", "keywords") {
+        my $sth = $dbh->prepare("SELECT fieldid FROM fielddefs WHERE name = '$f'");
+        $sth->execute();
+        my ($fid) = $sth->fetchrow_array();
+        push (@multi, $fid);
+    } 
+
+    # Now we need to process the bugs_activity table and reformat the data
+    my $i = 0;
+    print "Fixing activity log ";
+    my $sth = $dbh->prepare("SELECT bug_id, who, bug_when, fieldid,
+                            oldvalue, newvalue FROM bugs_activity");
+    $sth->execute;
+    while (my ($bug_id, $who, $bug_when, $fieldid, $oldvalue, $newvalue) = $sth->fetchrow_array()) {
+        # print a "." every 500 records so the user knows we didn't die
+        print "." if !($i++ % 500); 
+        # Make sure (old|new)value isn't null (to suppress warnings)
+        $oldvalue ||= "";
+        $newvalue ||= "";
+        my ($added, $removed) = "";
+        if (grep /^$fieldid$/, @multi) {
+            my (@add, @remove) = ();
+            my @old = split(/[ ,]/, $oldvalue);
+            my @new = split(/[ ,]/, $newvalue);
+            # Find values that were "added"
+            foreach my $value(@new) {
+                if (! grep /^$value$/, @old) {
+                    push (@add, $value);
+                }
+            }
+            # Find values that were removed
+            foreach my $value(@old) {
+                if (! grep /^$value$/, @new) {
+                    push (@remove, $value);
+                }
+            }
+            $added = join (", ", @add);
+            $removed = join (", ", @remove);
+            # If we can't determine what changed, put a ? in both fields
+            unless ($added || $removed) {
+                $added = "?";
+                $removed = "?";
+            }
+        } else {
+            $removed = $oldvalue;
+            $added = $newvalue;
+        }
+        $added = $dbh->quote($added);
+        $removed = $dbh->quote($removed);
+        $dbh->do("UPDATE bugs_activity SET removed = $removed, added = $added
+                  WHERE bug_id = $bug_id AND who = $who
+                   AND bug_when = '$bug_when' AND fieldid = $fieldid");
+    }
+    print ". Done.\n";
+    DropField("bugs_activity", "oldvalue");
+    DropField("bugs_activity", "newvalue");
+} 
 
 # If you had to change the --TABLE-- definition in any way, then add your
 # differential change code *** A B O V E *** this comment.

@@ -456,31 +456,8 @@ if (defined $::FORM{'qa_contact'}) {
 
 ConnectToDatabase();
 
-my $formCcSet = new RelationSet;
-my $origCcSet = new RelationSet;
-my $origCcString;
 my $removedCcString = "";
 my $duplicate = 0;
-
-# We make sure to check out the CC list before we actually start touching any
-# bugs.  mergeFromString() ultimately searches the database using a quoted
-# form of the data it gets from $::FORM{'cc'}, so anything bogus from a 
-# security standpoint should trigger an abort there.
-#
-if (defined $::FORM{'newcc'} && defined $::FORM{'id'}) {
-    $origCcSet->mergeFromDB("select who from cc where bug_id = $::FORM{'id'}");
-    $formCcSet->mergeFromDB("select who from cc where bug_id = $::FORM{'id'}");
-    $origCcString = $origCcSet->toString();  # cache a copy of the string vers
-    if ((exists $::FORM{'removecc'}) && (exists $::FORM{'cc'})) {
-
-      # save off the folks removed from the CC list so they can be given to 
-      # the processmaill command line so they can be sent mail about it.
-      #
-      $removedCcString = join (',', @{$::MFORM{'cc'}});
-      $formCcSet->removeItemsInArray(@{$::MFORM{'cc'}});
-    }
-    $formCcSet->mergeFromString($::FORM{'newcc'});
-}
 
 if ( Param('strictvaluechecks') ) {
     CheckFormFieldDefined(\%::FORM, 'knob');
@@ -686,10 +663,14 @@ sub LogDependencyActivity {
     my ($i, $oldstr, $target, $me) = (@_);
     my $newstr = SnapShotDeps($i, $target, $me);
     if ($oldstr ne $newstr) {
+        # Figure out what's really different...
+        my ($removed, $added) = DiffStrings($oldstr, $newstr);
+        $added = SqlQuote($added);
+        $removed = SqlQuote($removed);
         my $fieldid = GetFieldID($target);
         SendSQL("INSERT INTO bugs_activity " .
-                "(bug_id,who,bug_when,fieldid,oldvalue,newvalue) VALUES " .
-                "($i,$whoid,$timestamp,$fieldid,'$oldstr','$newstr')");
+                "(bug_id,who,bug_when,fieldid,removed,added) VALUES " .
+                "($i,$whoid,$timestamp,$fieldid,$removed,$added)");
         return 1;
     }
     return 0;
@@ -899,25 +880,67 @@ The changes made were:
         AppendComment($id, $::FORM{'who'}, $::FORM{'comment'});
     }
     
-    if (defined $::FORM{'newcc'} && defined $::FORM{'id'}
-        && ! $origCcSet->isEqual($formCcSet) ) {
+    if (defined $::FORM{newcc} || defined $::FORM{removecc} || defined $::FORM{masscc}) {
+        # Get the current CC list for this bug
+        my %oncc;
+        SendSQL("SELECT who FROM cc WHERE bug_id = $id");
+        while (MoreSQLData()) {
+            $oncc{FetchOneColumn()} = 1;
+        }
 
-        # update the database to look like the form
-        #
-        my @CCDELTAS = $origCcSet->generateSqlDeltas($formCcSet, "cc", 
-                                                     "bug_id", $::FORM{'id'},
-                                                     "who");
-        $CCDELTAS[0] eq "" || SendSQL($CCDELTAS[0]);
-        $CCDELTAS[1] eq "" || SendSQL($CCDELTAS[1]);
+        # If masscc is defined, then we came from buglist and need to either add or
+        # remove cc's... otherwise, we came from bugform and may need to do both.
+        my ($cc_add, $cc_remove) = "";
+        if (defined $::FORM{masscc}) {
+            if ($::FORM{ccaction} eq 'add') {
+                $cc_add = $::FORM{masscc};
+            } elsif ($::FORM{ccaction} eq 'remove') {
+                $cc_remove = $::FORM{masscc};
+            }
+        } else {
+            $cc_add = $::FORM{newcc};
+            # We came from bug_form which uses a select box to determine what cc's
+            # need to be removed...
+            if (defined $::FORM{removecc}) {
+                $cc_remove = join (",", @{$::MFORM{cc}});
+            }
+        }
 
-        my $col = GetFieldID('cc');
-        my $origq = SqlQuote($origCcString);
-        my $newq = SqlQuote($formCcSet->toString());
-        SendSQL("INSERT INTO bugs_activity " . 
-                "(bug_id,who,bug_when,fieldid,oldvalue,newvalue) VALUES " . 
-                "($id,$whoid,'$timestamp',$col,$origq,$newq)");
+        my (@added, @removed) = ();
+        if ($cc_add) {
+            my @new = split(/[ ,]/, $cc_add);
+            foreach my $person (@new) {
+                my $pid = DBNameToIdAndCheck($person);
+                # If this person isn't already on the cc list, add them
+                if (! $oncc{$pid}) {
+                    SendSQL("INSERT INTO cc (bug_id, who) VALUES ($id, $pid)");
+                    push (@added, $person);
+                }
+            }
+        }
+        if ($cc_remove) {
+            my @old = split (/[ ,]/, $cc_remove);
+            foreach my $person (@old) {
+                my $pid = DBNameToIdAndCheck($person);
+                # If the person is on the cc list, remove them
+                if ($oncc{$pid}) {
+                    SendSQL("DELETE FROM cc WHERE bug_id = $id AND who = $pid");
+                    push (@removed, $person);
+                }
+            }
+            # Save off the removedCcString so it can be fed to processmail
+            $removedCcString = join (",", @removed);
+        }
+        # If any changes were found, record it in the activity log
+        if (scalar(@removed) || scalar(@added)) {
+            my $col = GetFieldID('cc');
+            my $removed = SqlQuote(join(", ", @removed));
+            my $added = SqlQuote(join(", ", @added));
+            SendSQL("INSERT INTO bugs_activity " .
+                    "(bug_id,who,bug_when,fieldid,removed,added) VALUES " .
+                    "($id,$whoid,'$timestamp',$col,$removed,$added)");
+        }
     }
-  
 
     if (defined $::FORM{'dependson'}) {
         my $me = "blocked";
@@ -1013,6 +1036,11 @@ The changes made were:
                 $origQaContact = $old;
             }
 
+            # If this is the keyword field, only record the changes, not everything.
+            if ($col eq 'keywords') {
+                ($old, $new) = DiffStrings($old, $new);
+            }
+
             if ($col eq 'product') {
                 RemoveVotes($id, 0,
                             "This bug has been moved to a different product");
@@ -1020,7 +1048,7 @@ The changes made were:
             $col = GetFieldID($col);
             $old = SqlQuote($old);
             $new = SqlQuote($new);
-            my $q = "insert into bugs_activity (bug_id,who,bug_when,fieldid,oldvalue,newvalue) values ($id,$whoid,'$timestamp',$col,$old,$new)";
+            my $q = "insert into bugs_activity (bug_id,who,bug_when,fieldid,removed,added) values ($id,$whoid,'$timestamp',$col,$old,$new)";
             # puts "<pre>$q</pre>"
             SendSQL($q);
         }
@@ -1054,17 +1082,10 @@ The changes made were:
         my $isoncc = FetchOneColumn();
         unless ($isreporter || $isoncc) {
             # The reporter is oblivious to the existance of the new bug... add 'em to the cc (and record activity)
-            SendSQL("SELECT who FROM cc WHERE bug_id = " . SqlQuote($duplicate));
-            my @dupecc;
-            while (MoreSQLData()) {
-                push (@dupecc, DBID_to_name(FetchOneColumn()));
-            }
-            my @newdupecc = @dupecc;
-            push (@newdupecc, DBID_to_name($reporter));
             my $ccid = GetFieldID("cc");
             my $whochange = DBNameToIdAndCheck($::FORM{'who'});
-            SendSQL("INSERT INTO bugs_activity (bug_id,who,bug_when,fieldid,oldvalue,newvalue) VALUES " .
-                    "('$duplicate','$whochange',now(),$ccid,'" . join (",", sort @dupecc) . "','" . join (",", sort @newdupecc) . "')"); 
+            SendSQL("INSERT INTO bugs_activity (bug_id,who,bug_when,fieldid,removed,added) VALUES " .
+                    "('$duplicate','$whochange',now(),$ccid,'','" . DBID_to_name($reporter) . "')"); 
             SendSQL("INSERT INTO cc (who, bug_id) VALUES ($reporter, " . SqlQuote($duplicate) . ")");
         }
         AppendComment($duplicate, $::FORM{'who'}, "*** Bug $::FORM{'id'} has been marked as a duplicate of this bug. ***");

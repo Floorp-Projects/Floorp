@@ -1224,6 +1224,37 @@ sub Param ($) {
     die "Can't find param named $value";
 }
 
+# Take two comma or space separated strings and return what
+# values were removed from or added to the new one.
+sub DiffStrings {
+    my ($oldstr, $newstr) = @_;
+
+    my (@remove, @add) = ();
+    my @old = split(/[ ,]/, $oldstr);
+    my @new = split(/[ ,]/, $newstr);
+
+    # Find values that were removed
+    foreach my $value(@old) {
+        next if $value =~ /^\s*$/;
+        if (! grep /^$value$/, @new) {
+            push (@remove, $value);
+        }
+    }
+
+    # Find values that were added
+    foreach my $value(@new) {
+        next if $value =~ /^\s*$/;
+        if (! grep /^$value$/, @old) {
+            push (@add, $value);
+        }
+    }
+
+    my $removed = join (", ", @remove);
+    my $added = join (", ", @add);
+
+    return ($removed, $added);
+}
+
 sub PerformSubsts {
     my ($str, $substs) = (@_);
     $str =~ s/%([a-z]*)%/(defined $substs->{$1} ? $substs->{$1} : Param($1))/eg;
