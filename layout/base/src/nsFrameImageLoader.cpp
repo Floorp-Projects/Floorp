@@ -69,6 +69,7 @@ nsFrameImageLoader::~nsFrameImageLoader()
 {
   NS_IF_RELEASE(mImageRequest);
   NS_IF_RELEASE(mPresContext);
+  NS_IF_RELEASE(mImage);
 }
 
 NS_IMPL_ADDREF(nsFrameImageLoader)
