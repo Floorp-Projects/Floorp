@@ -1122,7 +1122,7 @@ NPP_SetWindow(NPP instance, NPWindow* window)
 //  that the plugin doesn't handle streaming and can only deal with the object as
 //  a complete disk file.  It will still call the write functions but it will also
 //  pass the filename of the cached file in a later NPE_StreamAsFile call when it
-//  is done transfering the file.
+//  is done transferring the file.
 //
 //  If a plugin handles the data in a streaming manner, it should set streamtype to
 //  NPNormal  (e.g. *streamtype = NPNormal)...the NPE_StreamAsFile function will

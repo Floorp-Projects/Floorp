@@ -325,7 +325,7 @@ int moz_progress_cb(PtWidget_t *widget, void *data, PtCallbackInfo_t *cbinfo)
 		percent = (c->cur*100)/c->max;
     	//if ( i->statusMessage != NULL ) 
         	//sprintf(message, "%s (%d%% complete, %d bytes of %d loaded)", i->statusMessage, percent, c->cur, c->max);
-        	sprintf(message, "%s (%d%% complete, %d bytes of %d loaded)", "Transfering", percent, c->cur, c->max);
+        	sprintf(message, "%s (%d%% complete, %d bytes of %d loaded)", "Transferring", percent, c->cur, c->max);
 	}
 #if 0 
 printf ("Progress: %d\n",(int)percent);
