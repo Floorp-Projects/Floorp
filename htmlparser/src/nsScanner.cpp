@@ -53,8 +53,11 @@ CScanner::CScanner(nsIURL* aURL,eParseMode aMode) : mBuffer("") {
  *  @return  
  */
 CScanner::~CScanner() {
-  mStream->Close();
-  mStream->Release();
+  if(mStream) {
+    mStream->Close();
+    mStream->Release();
+    mStream=0;
+  }
 }
 
 

@@ -129,6 +129,12 @@ static char formElementTags[]= {
     eHTMLTag_isindex, eHTMLTag_label,     eHTMLTag_legend,
     eHTMLTag_select,  eHTMLTag_textarea,0};
 
+static char gHeadingTags[]={
+  eHTMLTag_h1,  eHTMLTag_h2,  eHTMLTag_h3,  
+  eHTMLTag_h4,  eHTMLTag_h5,  eHTMLTag_h6, 
+  0};
+
+  
 /**
  *  This method is called to determine whether or not a tag
  *  of one type can contain a tag of another type.
@@ -142,6 +148,7 @@ PRBool CNavDTD::CanContainFormElement(PRInt32 aParent,PRInt32 aChild) const {
   PRBool result=(mParser) ? mParser->HasOpenForm() : PR_FALSE;
   return result;
 }
+
 
 /**
  *  This method is called to determine whether or not a tag
@@ -341,10 +348,7 @@ PRBool CNavDTD::CanContain(PRInt32 aParent,PRInt32 aChild) const {
     case eHTMLTag_h3: case eHTMLTag_h4:
     case eHTMLTag_h5: case eHTMLTag_h6:
       {
-        static char  badTags[]={
-          eHTMLTag_h1,  eHTMLTag_h2,  eHTMLTag_h3,  
-          eHTMLTag_h4,  eHTMLTag_h5,  eHTMLTag_h6, 0};
-        if(0!=strchr(badTags,aChild))
+        if(0!=strchr(gHeadingTags,aChild))
           result=PR_FALSE;
         else result=PRBool(0!=strchr(gTagSet1,aChild)); 
       }
@@ -630,6 +634,68 @@ PRBool CNavDTD::CanOmit(PRInt32 aParent,PRInt32 aChild) const {
       if(eHTMLTag_unknown==aParent)
         result=PR_FALSE;
 //        result=PRBool(eHTMLTag_html!=aChild);
+      break;
+  } //switch
+  return result;
+}
+
+/**
+ *  This method gets called to determine whether a given
+ *  ENDtag can be omitted. Admittedly,this is a gross simplification.
+ *  
+ *  @update  gess 3/25/98
+ *  @param   aTag -- tag to test for containership
+ *  @return  PR_TRUE if given tag can contain other tags
+ */
+PRBool CNavDTD::CanOmitEndTag(PRInt32 aParent,PRInt32 aChild) const {
+  PRBool result=PR_FALSE;
+
+  //begin with some simple (and obvious) cases...
+  switch((eHTMLTags)aChild) {
+
+    case eHTMLTag_userdefined:
+    case eHTMLTag_comment:
+      result=PR_TRUE; 
+      break;
+
+    case eHTMLTag_h1:           case eHTMLTag_h2:
+    case eHTMLTag_h3:           case eHTMLTag_h4:
+    case eHTMLTag_h5:           case eHTMLTag_h6:
+      {
+        if(0!=strchr(gHeadingTags,aParent))
+          result=PR_FALSE;
+        //Actually, we probably need to walk the stack here...
+        else result=PR_TRUE; 
+      }
+      break;
+
+    case eHTMLTag_button:       case eHTMLTag_fieldset:
+    case eHTMLTag_input:        case eHTMLTag_isindex:
+    case eHTMLTag_label:        case eHTMLTag_legend:
+    case eHTMLTag_select:       case eHTMLTag_textarea:
+      if(PR_FALSE==mParser->HasOpenForm())
+        result=PR_TRUE; 
+      break;
+
+    case eHTMLTag_newline:    
+    case eHTMLTag_whitespace:
+
+      switch((eHTMLTags)aParent) {
+        case eHTMLTag_html:     case eHTMLTag_head:   
+        case eHTMLTag_title:    case eHTMLTag_map:    
+        case eHTMLTag_tr:       case eHTMLTag_table:  
+        case eHTMLTag_thead:    case eHTMLTag_tfoot:  
+        case eHTMLTag_tbody:    case eHTMLTag_col:    
+        case eHTMLTag_colgroup: case eHTMLTag_unknown:
+          result=PR_TRUE;
+        default:
+          break;
+      } //switch
+      break;
+
+    default:
+      if(aChild!=aParent)
+        result=PR_TRUE;
       break;
   } //switch
   return result;

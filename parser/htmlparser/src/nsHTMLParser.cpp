@@ -760,11 +760,11 @@ PRBool nsHTMLParser::HandleEndToken(CToken* aToken) {
   NS_PRECONDITION(0!=aToken,kNullToken);
 
   PRBool      result=PR_FALSE;
-  CEndToken*  st = (CEndToken*)(aToken);
-  eHTMLTags   tokenTagType=st->GetHTMLTag();
+  CEndToken*  et = (CEndToken*)(aToken);
+  eHTMLTags   tokenTagType=et->GetHTMLTag();
 
     //now check to see if this token should be omitted...
-  if(PR_TRUE==mDTD->CanOmit(GetTopNode(),tokenTagType)) {
+  if(PR_TRUE==mDTD->CanOmitEndTag(GetTopNode(),tokenTagType)) {
     return PR_TRUE;
   }
 

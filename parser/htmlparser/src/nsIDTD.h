@@ -96,6 +96,17 @@ class nsIDTD : public nsISupports {
     virtual PRBool CanOmit(PRInt32 aParent,PRInt32 aChild)const=0;
 
     /**
+     *  This method gets called to determine whether a given 
+     *  tag can contain newlines. Most do not.
+     *  
+     *  @update  gess 3/25/98
+     *  @param   aParent -- tag type of parent
+     *  @param   aChild -- tag type of child
+     *  @return  PR_TRUE if given tag can contain other tags
+     */
+    virtual PRBool CanOmitEndTag(PRInt32 aParent,PRInt32 aChild)const=0;
+
+    /**
      * This method gets called at various times by the parser
      * whenever we want to verify a valid context stack. This
      * method also gives us a hook to add debugging metrics.

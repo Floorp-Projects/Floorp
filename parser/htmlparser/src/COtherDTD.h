@@ -108,6 +108,17 @@ class COtherDTD : public nsIDTD {
 
     /**
      *  This method gets called to determine whether a given 
+     *  tag can contain newlines. Most do not.
+     *  
+     *  @update  gess 3/25/98
+     *  @param   aParent -- tag type of parent
+     *  @param   aChild -- tag type of child
+     *  @return  PR_TRUE if given tag can contain other tags
+     */
+    virtual PRBool CanOmitEndTag(PRInt32 aParent,PRInt32 aChild)const;
+
+    /**
+     *  This method gets called to determine whether a given 
      *  tag is itself a container
      *  
      *  @update  gess 3/25/98
