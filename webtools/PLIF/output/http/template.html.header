@@ -11,11 +11,11 @@ Content-Type: text/html
   <title>[% app.name %][% IF title != app.name %]: [% title %][% END %]</title>
   <link rel="stylesheet" href="style">
 [% IF session.fields.settings.stylesheet != '' -%]
-  <link rel="stylesheet" href="[% session.fields.settings.stylesheet %]">
+  <link rel="stylesheet" href="[% session.fields.settings.stylesheet | uri | html %]">
 [% END -%]
  </head>
  <body>
-  <h1>[% title %]</h1>
+  <h1>[% title | html %]</h1>
 [%- IF session.adminMessage != '' %]
-  <p class="adminMessage">[% session.adminMessage %]</p>
+  <p class="adminMessage">[% session.adminMessage | html %]</p>
 [% END -%]

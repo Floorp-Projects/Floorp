@@ -5,11 +5,11 @@ TemplateToolkit
 
   <p>Your password has been sent.</p>
 
-  <form >
+  <form action="" method="GET"> <!-- XXX POST -->
    <p>
     <input type="submit" value="Continue...">
     [%- FOREACH key = pendingCommands.keys -%] [%- FOREACH value = pendingCommands.$key %]
-    <input type="hidden" name="[% key %]" value="[% value %]">
+    <input type="hidden" name="[% key | html %]" value="[% value | html %]">
     [%- END -%] [%- END %]
    </p>
   </form>
