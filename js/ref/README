@@ -22,7 +22,7 @@ Build conventions:
 
 - On Windows, use MSDEV4.2 (js*.mdp) or 5.0 (js*.mak).
 
-- On Mac, use CodeWarrior 1.x (JSRef.prj.hqx) or 2 (JSRef.prj2.hqx).
+- On Mac, use CodeWarrior 3.x (JSRef.mcp in the macbuild subdirectory)
 
 - On Unix, use vendor cc or gcc (ftp://prep.ai.mit.edu/pub/gnu) for compiling,
   and use gmake for building.
