@@ -46,6 +46,10 @@ public:
 
   NS_IMETHOD Destroy(nsIPresContext& aPresContext);
 
+  NS_IMETHOD GetCursor(nsIPresContext& aPresContext,
+                                     nsPoint&        aPoint,
+                                     PRInt32&        aCursor);
+
   void Hover(nsIPresContext& presContext, PRBool isHover, PRBool notifyForReflow = PR_TRUE);
 
   nsTableFrame* GetTreeFrame();
@@ -76,10 +80,11 @@ protected:
 								                  nsGUIEvent*     aEvent,
 							                    nsEventStatus&  aEventStatus);
 
+  PRBool CanResize(nsPoint& aPoint);
+
 protected:
   // Data members
   PRBool mIsHeader; // Whether or not we're a column header
   nsTreeFrame* mTreeFrame; // Our parent tree frame.
   PRBool mAllowEvents; // Whether we let events go through.
-
 }; // class nsTableCellFrame
