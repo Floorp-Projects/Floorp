@@ -256,12 +256,11 @@ PRBool nsRandomAccessInputStream::readline(char* s, PRInt32 n)
 nsInputStringStream::nsInputStringStream(const char* stringToRead)
 //----------------------------------------------------------------------------------------
 {
-	nsISupports* stream;
-	if (NS_FAILED(NS_NewCharInputStream(&stream, stringToRead)))
+	nsCOMPtr<nsIInputStream> stream;
+	if (NS_FAILED(NS_NewCharInputStream(getter_AddRefs(stream), stringToRead)))
 		return;
-	mInputStream = do_QueryInterface(stream);
+	mInputStream = stream;
 	mStore = do_QueryInterface(stream);
-	NS_RELEASE(stream);
 }
 
 //----------------------------------------------------------------------------------------

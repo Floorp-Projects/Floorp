@@ -195,12 +195,11 @@ nsHttpTransaction::Init(PRUint8 caps,
     // Create a string stream for the request header buf (the stream holds
     // a non-owning reference to the request header data, so we MUST keep
     // mReqHeaderBuf around).
-    nsCOMPtr<nsISupports> sup;
-    rv = NS_NewByteInputStream(getter_AddRefs(sup),
+    nsCOMPtr<nsIInputStream> headers;
+    rv = NS_NewByteInputStream(getter_AddRefs(headers),
                                mReqHeaderBuf.get(),
                                mReqHeaderBuf.Length());
     if (NS_FAILED(rv)) return rv;
-    nsCOMPtr<nsIInputStream> headers = do_QueryInterface(sup, &rv);
 
     if (requestBody) {
         // wrap the headers and request body in a multiplexed input stream.
