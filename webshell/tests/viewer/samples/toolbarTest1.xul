@@ -1,15 +1,12 @@
 <?xml version="1.0"?> 
 <?xml-stylesheet href="xul.css" type="text/css"?> 
+<?xml-stylesheet href="navigator.css" type="text/css"?> 
 
 <!DOCTYPE window> 
 
-<window 
-	style="width: 100%; height: 100%" 
-	xmlns:html="http://www.w3.org/TR/REC-html40"
-    xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-    onConstruction="Startup()"> 
-
-<box align="vertical">
+<window style="width: 100%; height: 100%" xmlns:html="http://www.w3.org/TR/REC-html40"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        onConstruction="Startup()"> 
 
 <html:h1>Toolbar Test 1</html:h1>
 
@@ -19,8 +16,6 @@ and look/feel of rollover and clicks. Note that the last toolbar is empty, and s
 normal size because of min-height.
 </html:h3>
 
-<!-- <hr> crashes boxes for some reason.... -EDV -->
-<!-- <hr> works on linux, trying again..? -mcafee -->
 <html:hr/>
 
 <toolbox>  
@@ -45,12 +40,11 @@ normal size because of min-height.
     <toolbar>
       <titledbutton align="right" src="resource:/res/toolbar/TB_Location.gif" value="Mozilla" />
       <titledbutton align="right" src="resource:/res/toolbar/TB_Location.gif" value="ABC News"/>
+	  <spring flex="100%"/>
     </toolbar>
     
     <toolbar>
     </toolbar>
   </toolbox>
-
-</box>
 
 </window>
