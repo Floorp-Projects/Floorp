@@ -358,7 +358,6 @@ lo_NewTopState(MWContext *context, char *url)
 	top_state->savedData.OnMove = NULL;
 	top_state->savedData.OnResize = NULL;
 	top_state->embed_count = 0;
-	top_state->builtin_count = 0;
 
 	top_state->total_bytes = 0;
 	top_state->current_bytes = 0;
