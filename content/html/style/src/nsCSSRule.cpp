@@ -75,14 +75,16 @@ void nsCSSRule::operator delete(void* ptr)
 }
 
 nsCSSRule::nsCSSRule(void)
-  : mSheet(nsnull),
+  : mRefCnt(0),
+    mSheet(nsnull),
     mParentRule(nsnull)
 {
   NS_INIT_ISUPPORTS();
 }
 
 nsCSSRule::nsCSSRule(const nsCSSRule& aCopy)
-  : mSheet(aCopy.mSheet),
+  : mRefCnt(0),
+    mSheet(aCopy.mSheet),
     mParentRule(aCopy.mParentRule)
 {
   NS_INIT_ISUPPORTS();

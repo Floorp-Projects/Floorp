@@ -85,7 +85,26 @@ extern "C" NS_COM void NS_CheckThreadSafe(void* owningThread,
 
 #endif // !(defined(NS_DEBUG) && defined(NS_MT_SUPPORTED))
 
-////////////////////////////////////////////////////////////////////////////////
+class nsAutoRefCnt {
+
+ public:
+    nsAutoRefCnt() : mValue(0) {}
+    nsAutoRefCnt(nsrefcnt aValue) : mValue(aValue) {}
+
+    // only support prefix increment/decrement
+    nsrefcnt operator++() { return ++mValue; }
+    nsrefcnt operator--() { return --mValue; }
+    
+    nsrefcnt operator=(nsrefcnt aValue) { return (mValue = aValue); }
+    operator nsrefcnt() const { return mValue; }
+ private:
+    // do not define these to enforce the faster prefix notation
+    nsrefcnt operator++(int);
+    nsrefcnt operator--(int);
+    nsrefcnt mValue;
+};
+
+///////////////////////////////////////////////////////////////////////////////
 
 /**
  * Declare the reference count variable and the implementations of the
@@ -99,7 +118,7 @@ public:                                                                       \
   NS_IMETHOD_(nsrefcnt) AddRef(void);                                         \
   NS_IMETHOD_(nsrefcnt) Release(void);                                        \
 protected:                                                                    \
-  nsrefcnt mRefCnt;                                                           \
+  nsAutoRefCnt mRefCnt;                                                       \
   NS_DECL_OWNINGTHREAD                                                        \
 public:
 
@@ -110,7 +129,7 @@ public:
  * Initialize the reference count variable. Add this to each and every
  * constructor you implement.
  */
-#define NS_INIT_ISUPPORTS() (mRefCnt = 0, NS_IMPL_OWNINGTHREAD())
+#define NS_INIT_ISUPPORTS() (NS_IMPL_OWNINGTHREAD())
 
 /**
  * Use this macro to implement the AddRef method for a given <i>_class</i>

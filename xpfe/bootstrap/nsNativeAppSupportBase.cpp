@@ -145,7 +145,7 @@ nsNativeAppSupportBase::CreateSplashScreen( nsISplashScreen **splash ) {
 // Standard implementations of AddRef/Release/QueryInterface.
 NS_IMETHODIMP_(nsrefcnt)
 nsNativeAppSupportBase::AddRef() {
-    mRefCnt++;
+    ++mRefCnt;
     return mRefCnt;
 }
 

@@ -208,10 +208,10 @@ public:
                                  nsIURI* aDocumentURI,
                                  nsISupportsArray* aNodeInfos) = 0;
 
-    void AddRef() { mRefCnt++; };
+    void AddRef() { ++mRefCnt; };
     void Release() 
     { 
-        mRefCnt--; 
+        --mRefCnt; 
         if (mRefCnt == 0) 
             delete this; 
     };

@@ -297,6 +297,7 @@ void HTMLCSSStyleSheetImpl::operator delete(void* ptr)
 
 HTMLCSSStyleSheetImpl::HTMLCSSStyleSheetImpl()
   : nsIHTMLCSSStyleSheet(),
+    mRefCnt(0),
     mURL(nsnull),
     mDocument(nsnull),
     mFirstLineRule(nsnull),

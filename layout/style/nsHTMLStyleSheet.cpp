@@ -858,6 +858,7 @@ void HTMLStyleSheetImpl::operator delete(void* ptr)
 
 HTMLStyleSheetImpl::HTMLStyleSheetImpl(void)
   : nsIHTMLStyleSheet(),
+    mRefCnt(0),
     mURL(nsnull),
     mDocument(nsnull),
     mLinkRule(nsnull),
