@@ -495,6 +495,7 @@ NS_IMETHODIMP imgLoader::LoadImage(nsIURI *aURI,
     // create the proxy listener
     ProxyListener *pl = new ProxyListener(NS_STATIC_CAST(nsIStreamListener *, request));
     if (!pl) {
+      request->Cancel(NS_ERROR_OUT_OF_MEMORY);
       NS_RELEASE(request);
       return NS_ERROR_OUT_OF_MEMORY;
     }
@@ -510,6 +511,10 @@ NS_IMETHODIMP imgLoader::LoadImage(nsIURI *aURI,
     NS_RELEASE(pl);
 
     if (NS_FAILED(openRes)) {
+      PR_LOG(gImgLog, PR_LOG_DEBUG,
+             ("[this=%p] imgLoader::LoadImage -- AsyncOpen() failed: 0x%x\n",
+              this, openRes));
+      request->Cancel(openRes);
       NS_RELEASE(request);
       return openRes;
     }
