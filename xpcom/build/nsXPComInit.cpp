@@ -254,8 +254,10 @@ nsresult NS_InitXPCOM(nsIServiceManager* *result)
                                 NS_XPCOMPROXY_PROGID,
                                 nsProxyObjectManager::Create);
 
+#if 0
     // Prepopulate registry for performance
     nsComponentManagerImpl::gComponentManager->PlatformPrePopulateRegistry();
+#endif
 
     return rv;
 }
