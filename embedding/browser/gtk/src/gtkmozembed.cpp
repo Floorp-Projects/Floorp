@@ -577,8 +577,6 @@ GtkMozEmbedPrivate::Destroy(void)
   webProgress = do_GetInterface(docShell);
   // remove the mContentProgress object from that docshell
   webProgress->RemoveProgressListener(mContentProgress);
-  // remove our history object from the content area
-  mContentNav->SetSessionHistory(nsnull);
   
   // now that we have removed ourselves as the tree owner for the
   // content item, remove ourselves as the tree owner for the
