@@ -264,7 +264,7 @@ nsUTF16ToUnicode::Convert(const char * aSrc, PRInt32 * aSrcLength,
 #elif defined(IS_LITTLE_ENDIAN)
     if (mEndian == kBigEndian)
 #else
-    #error "Unknown endinanness"
+    #error "Unknown endianness"
 #endif
       SwapBytes(aDest, *aDestLength);
 
