@@ -1111,45 +1111,60 @@ CompositeDataSourceImpl::DoCommand(nsISupportsArray/*<nsIRDFResource>*/* aSource
 // need to add the observers of the CompositeDataSourceImpl to the new data source.
 
 NS_IMETHODIMP
-CompositeDataSourceImpl::AddDataSource(nsIRDFDataSource* source)
+CompositeDataSourceImpl::AddDataSource(nsIRDFDataSource* aDataSource)
 {
-    NS_ASSERTION(source != nsnull, "null ptr");
-    if (! source)
+    NS_ASSERTION(aDataSource != nsnull, "null ptr");
+    if (! aDataSource)
         return NS_ERROR_NULL_POINTER;
 
-    mDataSources.InsertElementAt(source, 0);
-    source->AddObserver(this);
-    NS_ADDREF(source);
+    mDataSources.AppendElement(aDataSource);
+    aDataSource->AddObserver(this);
+    NS_ADDREF(aDataSource);
     return NS_OK;
 }
 
 
 
 NS_IMETHODIMP
-CompositeDataSourceImpl::RemoveDataSource(nsIRDFDataSource* source)
+CompositeDataSourceImpl::RemoveDataSource(nsIRDFDataSource* aDataSource)
 {
-    NS_ASSERTION(source != nsnull, "null ptr");
-    if (! source)
+    NS_ASSERTION(aDataSource != nsnull, "null ptr");
+    if (! aDataSource)
         return NS_ERROR_NULL_POINTER;
 
 
-    if (mDataSources.IndexOf(source) >= 0) {
-        mDataSources.RemoveElement(source);
-        source->RemoveObserver(this);
-        NS_RELEASE(source);
+    if (mDataSources.IndexOf(aDataSource) >= 0) {
+        mDataSources.RemoveElement(aDataSource);
+        aDataSource->RemoveObserver(this);
+        NS_RELEASE(aDataSource);
     }
     return NS_OK;
 }
 
 NS_IMETHODIMP
-CompositeDataSourceImpl::OnAssert(nsIRDFResource* subject,
-                                  nsIRDFResource* predicate,
-                                  nsIRDFNode* object)
+CompositeDataSourceImpl::OnAssert(nsIRDFResource* aSource,
+                                  nsIRDFResource* aProperty,
+                                  nsIRDFNode* aTarget)
 {
+    // Make sure that the assertion isn't masked by another
+    // datasource.
+    //
+    // XXX We could make this more efficient if we knew _which_
+    // datasource actually served up the OnAssert(): we could use
+    // HasAssertionN() to only search datasources _before_ the
+    // datasource that coughed up the assertion.
+    nsresult rv;
+    PRBool hasAssertion;
+    rv = HasAssertion(aSource, aProperty, aTarget, PR_TRUE, &hasAssertion);
+    if (NS_FAILED(rv)) return rv;
+
+    if (! hasAssertion)
+        return NS_OK;
+
     if (mObservers) {
         for (PRInt32 i = mObservers->Count() - 1; i >= 0; --i) {
             nsIRDFObserver* obs = (nsIRDFObserver*) mObservers->ElementAt(i);
-            obs->OnAssert(subject, predicate, object);
+            obs->OnAssert(aSource, aProperty, aTarget);
             // XXX ignore return value?
         }
     }
@@ -1157,14 +1172,31 @@ CompositeDataSourceImpl::OnAssert(nsIRDFResource* subject,
 }
 
 NS_IMETHODIMP
-CompositeDataSourceImpl::OnUnassert(nsIRDFResource* subject,
-                                    nsIRDFResource* predicate,
-                                    nsIRDFNode* object)
+CompositeDataSourceImpl::OnUnassert(nsIRDFResource* aSource,
+                                    nsIRDFResource* aProperty,
+                                    nsIRDFNode* aTarget)
 {
+    // Make sure that the un-assertion doesn't just unmask the
+    // same assertion in a different datasource.
+    //
+    // XXX We could make this more efficient if we knew _which_
+    // datasource actually served up the OnAssert(): we could use
+    // HasAssertionN() to only search datasources _before_ the
+    // datasource that coughed up the assertion.
+    //
+    // XXX What if the unassertion
+    nsresult rv;
+    PRBool hasAssertion;
+    rv = HasAssertion(aSource, aProperty, aTarget, PR_TRUE, &hasAssertion);
+    if (NS_FAILED(rv)) return rv;
+
+    if (hasAssertion)
+        return NS_OK;
+
     if (mObservers) {
         for (PRInt32 i = mObservers->Count() - 1; i >= 0; --i) {
             nsIRDFObserver* obs = (nsIRDFObserver*) mObservers->ElementAt(i);
-            obs->OnUnassert(subject, predicate, object);
+            obs->OnUnassert(aSource, aProperty, aTarget);
             // XXX ignore return value?
         }
     }

@@ -34,7 +34,6 @@
 #include "nsIComponentManager.h"
 #include "nsIRDFDataSource.h"
 #include "nsIRDFNode.h"
-#include "nsIRDFResourceFactory.h"
 #include "nsIRDFService.h"
 #include "nsIRDFXMLDataSource.h"
 #include "nsRDFCID.h"
@@ -846,17 +845,20 @@ ServiceImpl::GetDataSource(const char* uri, nsIRDFDataSource** aDataSource)
 {
     // First, check the cache to see if we already have this
     // datasource loaded and initialized.
-    nsIRDFDataSource* ds =
-        NS_STATIC_CAST(nsIRDFDataSource*, PL_HashTableLookup(mNamedDataSources, uri));
+    {
+        nsIRDFDataSource* cached =
+            NS_STATIC_CAST(nsIRDFDataSource*, PL_HashTableLookup(mNamedDataSources, uri));
 
-    if (ds) {
-        NS_ADDREF(ds);
-        *aDataSource = ds;
-        return NS_OK;
+        if (cached) {
+            NS_ADDREF(cached);
+            *aDataSource = cached;
+            return NS_OK;
+        }
     }
 
     // Nope. So go to the repository to try to create it.
     nsresult rv;
+    nsCOMPtr<nsIRDFDataSource> ds;
 	nsAutoString rdfName(uri);
     static const char kRDFPrefix[] = "rdf:";
     PRInt32 pos = rdfName.Find(kRDFPrefix);
@@ -881,9 +883,15 @@ ServiceImpl::GetDataSource(const char* uri, nsIRDFDataSource** aDataSource)
 
         rv = nsComponentManager::CreateInstance(progID, nsnull,
                                                 nsIRDFDataSource::GetIID(),
-                                                (void**)&ds);
+                                                getter_AddRefs(ds));
+
         if (progID != buf)
             delete[] progID;
+
+        if (NS_FAILED(rv)) return rv;
+
+        rv = ds->Init(uri);
+        if (NS_FAILED(rv)) return rv;
     }
     else {
         // Try to load this as an RDF/XML data source
@@ -892,32 +900,24 @@ ServiceImpl::GetDataSource(const char* uri, nsIRDFDataSource** aDataSource)
                                                 nsIRDFDataSource::GetIID(),
                                                 (void**) &ds);
 
+        if (NS_FAILED(rv)) return rv;
+
+        rv = ds->Init(uri);
+        if (NS_FAILED(rv)) return rv;
+
         // XXX hack for now: make sure that the data source is
         // synchronously loaded. In the long run, we should factor out
         // the "loading" from the "creating". See nsRDFXMLDataSource::Init().
-        if (NS_SUCCEEDED(rv)) {
-            nsCOMPtr<nsIRDFXMLDataSource> rdfxmlDataSource(do_QueryInterface(ds));
-            NS_ASSERTION(rdfxmlDataSource, "not an RDF/XML data source!");
-            if (rdfxmlDataSource) {
-                rv = rdfxmlDataSource->SetSynchronous(PR_TRUE);
-                NS_ASSERTION(NS_SUCCEEDED(rv), "unable to make RDF/XML data source synchronous");
-            }
-        }
+        nsCOMPtr<nsIRDFXMLDataSource> rdfxmlDataSource(do_QueryInterface(ds));
+        NS_ASSERTION(rdfxmlDataSource, "not an RDF/XML data source!");
+        if (! rdfxmlDataSource) return NS_ERROR_UNEXPECTED;
+
+        rv = rdfxmlDataSource->Open(PR_TRUE);
+        if (NS_FAILED(rv)) return rv;
     }
 
-    if (NS_FAILED(rv)) {
-        // XXX only a warning, because the URI may have been ill-formed.
-        NS_WARNING("unable to create data source");
-        return rv;
-    }
-
-    rv = ds->Init(uri);
-    if (NS_FAILED(rv)) {
-        NS_RELEASE(ds);
-        NS_ERROR("unable to initialize data source");
-        return rv;
-    }
     *aDataSource = ds;
+    NS_ADDREF(*aDataSource);
     return NS_OK;
 }
 

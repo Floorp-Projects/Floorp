@@ -35,6 +35,7 @@
 
 #include "nscore.h"
 #include "nsCOMPtr.h"
+#include "nsIRDFContainerUtils.h"
 #include "nsIRDFDataSource.h"
 #include "nsIRDFNode.h"
 #include "nsIRDFService.h"

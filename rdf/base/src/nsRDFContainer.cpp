@@ -25,6 +25,7 @@
 
 #include "nsCOMPtr.h"
 #include "nsIRDFContainer.h"
+#include "nsIRDFContainerUtils.h"
 #include "nsIRDFService.h"
 #include "nsIServiceManager.h"
 #include "nsRDFCID.h"
