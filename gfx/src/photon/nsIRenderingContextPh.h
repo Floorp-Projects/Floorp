@@ -37,7 +37,7 @@ public:
    * @param aSurface out parameter for new drawing surface
    * @result error status
    */
-  NS_IMETHOD CreateDrawingSurface(PhGC_t &aGC, nsDrawingSurface &aSurface) = 0;
+  NS_IMETHOD CreateDrawingSurface(PhGC_t *aGC, nsDrawingSurface &aSurface) = 0;
 };
 
 #endif /* nsIRenderingContextPh_h___ */

@@ -21,6 +21,7 @@
 #include <Pt.h>
 #include "nsGfxCIID.h"
 #include "plstr.h"
+#include "nsPhGfxLog.h"
 
 nsDeviceContextSpecFactoryPh :: nsDeviceContextSpecFactoryPh()
 {
@@ -29,6 +30,7 @@ nsDeviceContextSpecFactoryPh :: nsDeviceContextSpecFactoryPh()
 
 nsDeviceContextSpecFactoryPh :: ~nsDeviceContextSpecFactoryPh()
 {
+  PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("nsDeviceContextSpecFactoryPh::~nsDeviceContextSpecFactoryPh Destructor called\n"));
 }
 
 static NS_DEFINE_IID(kDeviceContextSpecFactoryIID, NS_IDEVICE_CONTEXT_SPEC_FACTORY_IID);
@@ -41,6 +43,8 @@ NS_IMPL_RELEASE(nsDeviceContextSpecFactoryPh)
 
 NS_IMETHODIMP nsDeviceContextSpecFactoryPh :: Init(void)
 {
+  PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("nsDeviceContextSpecFactoryPh::Init - Not Implemented\n"));
+
   return NS_OK;
 }
 
@@ -50,6 +54,7 @@ NS_IMETHODIMP nsDeviceContextSpecFactoryPh :: CreateDeviceContextSpec(nsIDeviceC
                                                                        nsIDeviceContextSpec *&aNewSpec,
                                                                        PRBool aQuiet)
 {
+  PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("nsDeviceContextSpecFactoryPh::CreateDeviceContextSpec - Not Implemented\n"));
 
   return NS_OK;
 }

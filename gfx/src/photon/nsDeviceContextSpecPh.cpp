@@ -19,13 +19,17 @@
 #include "nsDeviceContextSpecPh.h"
 #include "prmem.h"
 #include "plstr.h"
+#include "nsPhGfxLog.h"
 
 nsDeviceContextSpecPh :: nsDeviceContextSpecPh()
 {
+  mDriverName = nsnull;
+  mDeviceName = nsnull;
 }
 
 nsDeviceContextSpecPh :: ~nsDeviceContextSpecPh()
 {
+  PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("nsDeviceContextSpecPh::~nsDeviceContextSpecPh Destructor Called\n"));
 }
 
 static NS_DEFINE_IID(kDeviceContextSpecIID, NS_IDEVICE_CONTEXT_SPEC_IID);
@@ -36,17 +40,22 @@ NS_IMPL_RELEASE(nsDeviceContextSpecPh)
 
 NS_IMETHODIMP nsDeviceContextSpecPh :: Init(char *aDriverName, char *aDeviceName )
 {
+  PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("nsDeviceContextSpecPh::Init - Not Implemented\n"));
 
   return NS_OK;
 }
 
 NS_IMETHODIMP nsDeviceContextSpecPh :: GetDriverName(char *&aDriverName) const
 {
+ PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("nsDeviceContextSpecPh::GetDriverName - Not Implemented\n"));
+
   return NS_OK;
 }
 
 NS_IMETHODIMP nsDeviceContextSpecPh :: GetDeviceName(char *&aDeviceName) const
 {
+ PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("nsDeviceContextSpecPh::GetDeviceName - Not Implemented\n"));
+
   return NS_OK;
 }
 
