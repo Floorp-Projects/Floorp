@@ -836,6 +836,13 @@ NS_IMETHODIMP nsWidget::SetCursor(nsCursor aCursor)
       case eCursor_sizeNS:
         newCursor = gdk_cursor_new(GDK_TCROSS);
         break;
+      
+      case eCursor_sizeNW:
+      case eCursor_sizeSE:
+      case eCursor_sizeNE:
+      case eCursor_sizeSW:
+        // XXX: these resize cursors need to be implemented
+        break;
 
       case eCursor_arrow_south:
       case eCursor_arrow_south_plus:

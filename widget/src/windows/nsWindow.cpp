@@ -1621,6 +1621,16 @@ NS_METHOD nsWindow::SetCursor(nsCursor aCursor)
       newCursor = ::LoadCursor(NULL, IDC_SIZENS);
       break;
 
+    case eCursor_sizeNW:
+    case eCursor_sizeSE:
+      newCursor = ::LoadCursor(NULL, IDC_SIZENWSE);
+      break;
+
+    case eCursor_sizeNE:
+    case eCursor_sizeSW:
+      newCursor = ::LoadCursor(NULL, IDC_SIZENESW);
+      break;
+
     case eCursor_arrow_north:
       newCursor = ::LoadCursor(nsToolkit::mDllInstance, MAKEINTRESOURCE(IDC_ARROWNORTH));
       break;
