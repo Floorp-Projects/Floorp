@@ -400,4 +400,8 @@ pref("mailnews.labels.color.2", "#FF9900"); // default: orange
 pref("mailnews.labels.color.3", "#009900"); // default: green
 pref("mailnews.labels.color.4", "#3333FF"); // default: blue
 pref("mailnews.labels.color.5", "#993399"); // default: purple
+
+//default null headers
+//example "X-Warn: XReply", list of hdrs separated by ": "
+pref("mailnews.customHeaders", ""); 
  

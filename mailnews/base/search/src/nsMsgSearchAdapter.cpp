@@ -1087,13 +1087,17 @@ nsMsgSearchValidityManager::NewTable(nsIMsgSearchValidityTable **aTable)
 nsresult 
 nsMsgSearchValidityManager::InitOtherHeadersInTable (nsIMsgSearchValidityTable *aTable, const char *customHeaders)
 {
-  PRUint32 strlen = PL_strlen(customHeaders);
+  PRUint32 customHeadersLength = PL_strlen(customHeaders);
   PRUint32 numHeaders=0;
   PRUint32 i=0;
-  for (i=0;i <strlen; i++)
-    if (customHeaders[i] == ':')
-      numHeaders++;
-  numHeaders++;
+  if (customHeadersLength)
+  {
+    for (i=0;i <customHeadersLength; i++)
+      if (customHeaders[i] == ':')
+        numHeaders++;
+    numHeaders++;
+  }
+
   NS_ASSERTION(nsMsgSearchAttrib::OtherHeader + numHeaders < nsMsgSearchAttrib::kNumMsgSearchAttributes, "more headers than the table can hold");
   for (i=nsMsgSearchAttrib::OtherHeader+1;i< (nsMsgSearchAttrib::OtherHeader + numHeaders+1) && nsMsgSearchAttrib::kNumMsgSearchAttributes;i++)
   {
