@@ -704,8 +704,8 @@ nsMessengerMigrator::UpgradePrefs()
     rv = m_prefs->SavePrefFile();
     if (NS_FAILED(rv)) return rv;
 
-	// not yet, but soon.
-    // rv = accountManager->RemoveIdentity(identity);
+	// remove the temporary identity we used for migration purposes
+    rv = accountManager->RemoveIdentity(identity);
     return rv;
 }
 

@@ -36,6 +36,7 @@ interface nsIMsgAccountManager : nsISupports {
   nsIMsgAccount getAccount(in string key);
     
   void removeAccount(in nsIMsgAccount account);
+  void removeIdentity(in nsIMsgIdentity identity);
   void duplicateAccount(in nsIMsgAccount account);
 
   /*

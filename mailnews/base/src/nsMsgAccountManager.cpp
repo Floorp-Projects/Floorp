@@ -437,6 +437,13 @@ nsMsgAccountManager::DuplicateAccount(nsIMsgAccount *aAccount)
 }
 
 NS_IMETHODIMP
+nsMsgAccountManager::RemoveIdentity(nsIMsgIdentity *aIdentity)
+{
+  // finish this
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 nsMsgAccountManager::RemoveAccount(nsIMsgAccount *aAccount)
 {
   NS_ENSURE_ARG_POINTER(aAccount);
