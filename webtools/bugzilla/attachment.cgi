@@ -276,10 +276,24 @@ sub validateData
   return $data;
 }
 
+my $filename;
 sub validateFilename
 {
   defined $cgi->upload('data')
     || ThrowUserError("file_not_specified");
+
+  $filename = $cgi->upload('data');
+  
+  # Remove path info (if any) from the file name.  The browser should do this
+  # for us, but some are buggy.  This may not work on Mac file names and could
+  # mess up file names with slashes in them, but them's the breaks.  We only
+  # use this as a hint to users downloading attachments anyway, so it's not 
+  # a big deal if it munges incorrectly occasionally.
+  $filename =~ s/^.*[\/\\]//;
+
+  # Truncate the filename to 100 characters, counting from the end of the string
+  # to make sure we keep the filename extension.
+  $filename = substr($filename, -100, 100);
 }
 
 sub validateObsolete
@@ -442,7 +456,7 @@ sub insert
   # Insert a new attachment into the database.
 
   # Escape characters in strings that will be used in SQL statements.
-  my $filename = SqlQuote($cgi->param('data'));
+  $filename = SqlQuote($filename);
   my $description = SqlQuote($::FORM{'description'});
   my $contenttype = SqlQuote($::FORM{'contenttype'});
   my $thedata = SqlQuote($data);

@@ -1353,7 +1353,7 @@ $table{attachments} =
     description mediumtext not null,
     mimetype mediumtext not null,
     ispatch tinyint,
-    filename mediumtext not null,
+    filename varchar(100) not null,
     thedata longblob not null,
     submitter_id mediumint not null,
     isobsolete tinyint not null default 0, 
@@ -3736,6 +3736,38 @@ if ($sth->rows == 0) {
   print "\n$login is now set up as an administrator account.\n";
 }
 
+
+# 2002 November, myk@mozilla.org, bug 178841:
+#
+# Convert the "attachments.filename" column from a ridiculously large
+# "mediumtext" to a much more sensible "varchar(100)".  Also takes
+# the opportunity to remove paths from existing filenames, since they 
+# shouldn't be there for security.  Buggy browsers include them, 
+# and attachment.cgi now takes them out, but old ones need converting.
+#
+{
+    my $ref = GetFieldDef("attachments", "filename");
+    if ($ref->[1] ne 'varchar(100)') {
+        print "Removing paths from filenames in attachments table...\n";
+        
+        $sth = $dbh->prepare("SELECT attach_id, filename FROM attachments " . 
+                             "WHERE INSTR(filename, '/') " . 
+                             "OR INSTR(filename, '\\\\')");
+        $sth->execute;
+        
+        while (my ($attach_id, $filename) = $sth->fetchrow_array) {
+            $filename =~ s/^.*[\/\\]//;
+            my $quoted_filename = $dbh->quote($filename);
+            $dbh->do("UPDATE attachments SET filename = $quoted_filename " . 
+                     "WHERE attach_id = $attach_id");
+        }
+        
+        print "Done.\n";
+        
+        print "Resizing attachments.filename from mediumtext to varchar(100).\n";
+        ChangeFieldType("attachments", "filename", "varchar(100) not null");
+    }
+}
 
 
 #
