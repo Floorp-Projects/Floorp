@@ -848,16 +848,27 @@ GlobalWindowImpl::GetInnerWidth(PRInt32* aInnerWidth)
 NS_IMETHODIMP
 GlobalWindowImpl::SetInnerWidth(PRInt32 aInnerWidth)
 {
-  nsIBrowserWindow *mBrowser;
+  nsresult         rv = NS_OK;
+  nsIBrowserWindow *browser;
+  nsIDOMWindow     *parent = nsnull;
 
-  if (NS_OK == GetBrowserWindowInterface(mBrowser)) {
-    nsRect r;
-    mBrowser->GetContentBounds(r);
-
-    mBrowser->SizeContentTo(aInnerWidth, r.height);
-    NS_RELEASE(mBrowser);
+  GetParent(&parent);
+  if (parent == this) {
+    if (NS_OK == (rv = GetBrowserWindowInterface(browser))) {
+      nsRect r;
+      browser->GetContentBounds(r);
+      rv = browser->SizeContentTo(aInnerWidth, r.height);
+      NS_RELEASE(browser);
+    }
+  } else {
+    rv = NS_ERROR_NULL_POINTER;
+    if (mWebShell) {
+      PRInt32 x,y,w,h;
+      mWebShell->GetBounds(x, y, w, h);
+      rv = mWebShell->SetBounds(x, y, aInnerWidth, h);
+    }
   }
-  return NS_OK;
+  return rv;
 }
 
 NS_IMETHODIMP
@@ -898,16 +909,27 @@ GlobalWindowImpl::GetInnerHeight(PRInt32* aInnerHeight)
 NS_IMETHODIMP
 GlobalWindowImpl::SetInnerHeight(PRInt32 aInnerHeight)
 {
-  nsIBrowserWindow *mBrowser;
+  nsresult         rv;
+  nsIBrowserWindow *browser;
+  nsIDOMWindow     *parent = nsnull;
 
-  if (NS_OK == GetBrowserWindowInterface(mBrowser)) {
-    nsRect r;
-    mBrowser->GetContentBounds(r);
-
-    mBrowser->SizeContentTo(r.width, aInnerHeight);
-    NS_RELEASE(mBrowser);
+  GetParent(&parent);
+  if (parent == this) {
+    if (NS_OK == (rv = GetBrowserWindowInterface(browser))) {
+      nsRect r;
+      browser->GetContentBounds(r);
+      rv = browser->SizeContentTo(r.width, aInnerHeight);
+      NS_RELEASE(browser);
+    }
+  } else {
+    rv = NS_ERROR_NULL_POINTER;
+    if (mWebShell) {
+      PRInt32 x,y,w,h;
+      mWebShell->GetBounds(x, y, w, h);
+      rv = mWebShell->SetBounds(x, y, w, aInnerHeight);
+    }
   }
-  return NS_OK;
+  return rv;
 }
 
 NS_IMETHODIMP
