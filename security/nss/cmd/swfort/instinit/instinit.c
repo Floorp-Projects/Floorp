@@ -39,7 +39,6 @@
 #include "pk11func.h"
 #include "nss.h"
 #include "secutil.h"
-#include "cdbhdl.h"
 
 #define CERTDB_VALID_CA        (1<<3)
 #define CERTDB_TRUSTED_CA      (1<<4) /* trusted for issuing server certs */
@@ -161,7 +160,7 @@ main(int argc, char ** argv)
     char *cp;
     int verbose = 0;
     int force = 0;
-    CERTCertDBHandle certhandle = { 0 };
+    CERTCertDBHandle *certhandle = NULL;
     CERTCertificate *cert;
     CERTCertTrust *trust;
     char * pass;
@@ -303,6 +302,7 @@ main(int argc, char ** argv)
 
     NSS_NoDB_Init(NULL);
     sec_SetCheckKRLState(1);
+    certhandle = CERT_GetDefaultCertDB();
 
     /* now dump the certs into the temparary data base */
     for (i=0; swfile->file.slotEntries[i]; i++) {
@@ -318,7 +318,7 @@ main(int argc, char ** argv)
 	    }
 	    continue;
 	}
-	cert = CERT_NewTempCertificate(&certhandle,derCert, NULL, 
+	cert = CERT_NewTempCertificate(certhandle,derCert, NULL, 
 							PR_FALSE, PR_TRUE);
 	if (cert == NULL) {
 	    if (verbose) {
@@ -350,7 +350,7 @@ main(int argc, char ** argv)
     fflush(stdout);
 
 
-    cert = CERT_FindCertByName(&certhandle,&swfile->file.derIssuer);
+    cert = CERT_FindCertByName(certhandle,&swfile->file.derIssuer);
     if (cert == NULL) {
 	fprintf(stderr,"%s: Couldn't find signer certificate \"%s\".\n",
 		progname,issuer);
@@ -364,11 +364,11 @@ main(int argc, char ** argv)
 		progname,filename,issuer);
 	goto noverify;
     }
-    rv = CERT_VerifyCert(&certhandle, cert, PR_TRUE, certUsageSSLServer,
+    rv = CERT_VerifyCert(certhandle, cert, PR_TRUE, certUsageSSLServer,
 								now ,NULL,NULL);
     /* not an normal cert, see if it's a CA? */
     if (rv != SECSuccess) {
-	rv = CERT_VerifyCert(&certhandle, cert, PR_TRUE, certUsageAnyCA,
+	rv = CERT_VerifyCert(certhandle, cert, PR_TRUE, certUsageAnyCA,
 								now ,NULL,NULL);
     }
     if (rv != SECSuccess) {
