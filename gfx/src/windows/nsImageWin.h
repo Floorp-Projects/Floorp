@@ -246,13 +246,15 @@ private:
   PRBool              mIsOptimized;       // Did we convert our DIB to a HBITMAP
   nsColorMap*         mColorMap;          // Redundant with mColorTable, but necessary
 
-  PRInt32             mDecodedX1;       //Keeps track of what part of image
-  PRInt32             mDecodedY1;       // has been decoded.
+  PRInt32             mDecodedX1;			    //Keeps track of what part of image
+  PRInt32             mDecodedY1;			    // has been decoded.
   PRInt32             mDecodedX2; 
-  PRInt32             mDecodedY2;    
+  PRInt32             mDecodedY2; 
+  PRBool              mIsLocked;			    // variable to keep track of the locking
+  PRBool              mDIBTemp;           // boolean to let us know if DIB was created as temp
 
-  PRInt32		mNaturalWidth;
-  PRInt32		mNaturalHeight;
+  PRInt32		          mNaturalWidth;
+  PRInt32		          mNaturalHeight;
     
   // alpha layer members
   PRUint8             *mAlphaBits;        // alpha layer if we made one
@@ -260,13 +262,12 @@ private:
   PRInt16             mARowBytes;         // number of bytes per row in the image for tha alpha
   PRInt16             mAlphaWidth;        // alpha layer width
   PRInt16             mAlphaHeight;       // alpha layer height
-  //nsPoint             mLocation;          // alpha mask location
   PRInt8              mImageCache;        // place to save off the old image for fast animation
   PRInt16             mAlphaLevel;        // an alpha level every pixel uses
   HBITMAP             mHBitmap;           // the GDI bitmaps
   LPBITMAPINFOHEADER  mBHead;             // BITMAPINFOHEADER
 
-  static ALPHABLENDPROC gAlphaBlend;  // AlphaBlend function pointer
+  static ALPHABLENDPROC gAlphaBlend;      // AlphaBlend function pointer
 
 };
 

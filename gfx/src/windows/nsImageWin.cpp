@@ -62,6 +62,8 @@ nsImageWin :: nsImageWin()
 
   mNaturalWidth = 0;
   mNaturalHeight = 0;
+  mIsLocked = PR_FALSE;
+  mDIBTemp = PR_FALSE;
 
 	//CleanUp(PR_TRUE);
   CleanUpDDB();
@@ -1078,7 +1080,7 @@ UINT  palType;
       if (mImageBits != nsnull) {
         delete [] mImageBits;
         mImageBits = nsnull;
-        }
+      }
     }
   }
 
@@ -1194,30 +1196,40 @@ PRInt16 numPaletteColors;
 NS_IMETHODIMP
 nsImageWin::LockImagePixels(PRBool aMaskPixels)
 {
-    /*
-  if (!mHBitmap)
-    return NS_ERROR_NOT_INITIALIZED;
-  
-   ... and do Windows locking of image pixels here, if necessary
-*/
+  /*  if (!mHBitmap) return NS_ERROR_NOT_INITIALIZED;
+   ... and do Windows locking of image pixels here, if necessary */
+
+  mIsLocked = PR_TRUE;
+
 	return NS_OK;
 }
 
 /** ---------------------------------------------------
- *	Unlock the pixels
+ *	Unlock the pixels, optimize this nsImageWin
  */
 NS_IMETHODIMP
 nsImageWin::UnlockImagePixels(PRBool aMaskPixels)
 {
-    /*
-  if (!mHBitmap)
+  mIsLocked = PR_FALSE;
+  // if memory was allocated temporarily by GetBits, it can now be deleted safely
+  if (mDIBTemp == PR_TRUE) {
+    // get rid of this memory
+    if (mImageBits != nsnull) {
+      delete [] mImageBits;
+      mImageBits = nsnull;
+      }
+
+    mDIBTemp = PR_FALSE;
+  }
+
+  /* if (!mHBitmap)
     return NS_ERROR_NOT_INITIALIZED;
   
   if (aMaskPixels && !mAlphamHBitmap)
   	return NS_ERROR_NOT_INITIALIZED;
 
-   ... and do Windows unlocking of image pixels here, if necessary
-    */
+   ... and do Windows unlocking of image pixels here, if necessary */
+
 	return NS_OK;
 }
 /** ---------------------------------------------------
@@ -1268,7 +1280,8 @@ nsRect  destRect;
 
 /**
  * Get a pointer to the bits for the pixelmap. Will convert to DIB if
- * only stored in optimized HBITMAP form.
+ * only stored in optimized HBITMAP form.  Using this routine will
+ * set the mDIBTemp flag to true so the next unlock will destroy this memory
  *
  * @return address of the DIB pixel array
  */
@@ -1276,8 +1289,11 @@ nsRect  destRect;
 PRUint8*
 nsImageWin::GetBits()
 {
-  if ( !mImageBits )
+  // if mImageBits did not exist.. then
+  if ( !mImageBits ) {
     ConvertDDBtoDIB(GetWidth(), GetHeight());
+    mDIBTemp = PR_TRUE;   // only set to true if the DIB is being created here as temporary
+  }
 
   return mImageBits;
 
