@@ -2428,6 +2428,27 @@ if test "$ac_cv_cpp_partial_specialization" = yes ; then
 fi
 
 
+dnl Some compilers have limited support for operators with templates;
+dnl specifically, it is necessary to define derived operators when a base
+dnl class's operator declaration should suffice.
+AC_CACHE_CHECK(whether operators must be re-defined for templates derived from templates,
+               ac_cv_need_derived_template_operators,
+               [AC_TRY_COMPILE([template <class T> class Base { };
+                                template <class T>
+                                Base<T> operator+(const Base<T>& lhs, const Base<T>& rhs) { return lhs; }
+                                template <class T> class Derived : public Base<T> { };],
+                               [Derived<char> a, b;
+                                Base<char> c = a + b;
+                                return 0;],
+                               ac_cv_need_derived_template_operators=no,
+                               ac_cv_need_derived_template_operators=yes)])
+if test "$ac_cv_need_derived_template_operators" = yes ; then
+  AC_DEFINE(NEED_CPP_DERIVED_TEMPLATE_OPERATORS)
+fi
+
+
+
+
 dnl
 dnl We dont do exceptions on unix.  The only reason this used to be here
 dnl is that mozilla/xpcom/tests/TestCOMPtr.cpp has a test which uses 
