@@ -152,7 +152,8 @@ nsWindow *nsWindow::mLastDragMotionWindow = NULL;
 
 static NS_DEFINE_IID(kCDragServiceCID,  NS_DRAGSERVICE_CID);
 
-static PRBool            gJustGotActivate      = PR_FALSE;
+// the current focus window
+static nsWindow         *gFocusWindow          = NULL;
 static PRBool            gGlobalsInitialized   = PR_FALSE;
 static PRBool            gRaiseWindows         = PR_TRUE;
 
@@ -168,7 +169,6 @@ struct nsXICLookupEntry {
 };
 
 PLDHashTable nsWindow::gXICLookupTable;
-nsWindow *nsWindow::gFocusedWindow;
 
 static void IM_commit_cb              (GtkIMContext *context,
                                        const gchar *str,
@@ -192,7 +192,6 @@ GdkCursor *gCursorCache[eCursor_count_up_down + 1];
 
 nsWindow::nsWindow()
 {
-    mFocusChild          = nsnull;
     mContainer           = nsnull;
     mDrawingarea         = nsnull;
     mShell               = nsnull;
@@ -200,12 +199,12 @@ nsWindow::nsWindow()
     mContainerGotFocus   = PR_FALSE;
     mContainerLostFocus  = PR_FALSE;
     mContainerBlockFocus = PR_FALSE;
-    mHasFocus            = PR_FALSE;
     mInKeyRepeat         = PR_FALSE;
     mIsVisible           = PR_FALSE;
     mRetryPointerGrab    = PR_FALSE;
     mRetryKeyboardGrab   = PR_FALSE;
     mHasNonXembedPlugin  = PR_FALSE;
+    mActivatePending     = PR_FALSE;
     mTransientParent     = nsnull;
     mWindowType          = eWindowType_child;
     mSizeState           = nsSizeMode_Normal;
@@ -381,28 +380,27 @@ nsWindow::Destroy(void)
 
 #ifdef USE_XIM
     GtkIMContext *im = IMEGetContext();
-    // unset focus before destroy
-    if (im && !mShell && mIMEShellWindow == gFocusedWindow) {
+    // If this is the focus window and we have an IM context we need
+    // to unset the focus on this window before we destroy the window.
+    if (im && gFocusWindow == this) {
+        LOGFOCUS(("  gtk_im_context_focus_out() from Destroy()\n"));
         gtk_im_context_focus_out(im);
     }
+
     // if shell, delete GtkIMContext
     if (im && mShell) {
         gtk_im_context_reset(im);
         PL_DHashTableOperate(&gXICLookupTable, this, PL_DHASH_REMOVE);
         g_object_unref(G_OBJECT(im));
     }
+
     mIMEShellWindow = nsnull;
 #endif
 
     // make sure that we remove ourself as the focus window
-    if (mHasFocus) {
-        LOG(("automatically losing focus...\n"));
-        mHasFocus = PR_FALSE;
-        // get the owning gtk widget and the nsWindow for that widget and
-        // remove ourselves as the focus widget tracked in that window
-        nsWindow *owningWindow =
-            get_owning_window_for_gdk_window(mDrawingarea->inner_window);
-        owningWindow->mFocusChild = nsnull;
+    if (gFocusWindow == this) {
+        LOGFOCUS(("automatically losing focus...\n"));
+        gFocusWindow = nsnull;
     }
 
     // Remove our reference to the window group.  If there was a window
@@ -582,7 +580,7 @@ nsWindow::SetFocus(PRBool aRaise)
     // Make sure that our owning widget has focus.  If it doesn't try to
     // grab it.  Note that we don't set our focus flag in this case.
 
-    LOG(("SetFocus [%p]\n", (void *)this));
+    LOGFOCUS(("  SetFocus [%p]\n", (void *)this));
 
     GtkWidget *owningWidget =
         get_gtk_widget_for_gdk_window(mDrawingarea->inner_window);
@@ -603,8 +601,7 @@ nsWindow::SetFocus(PRBool aRaise)
         return NS_ERROR_FAILURE;
 
     if (!GTK_WIDGET_HAS_FOCUS(owningWidget)) {
-
-        LOG(("grabbing focus for the toplevel\n"));
+        LOGFOCUS(("  grabbing focus for the toplevel [%p]\n", (void *)this));
         owningWindow->mContainerBlockFocus = PR_TRUE;
         gtk_widget_grab_focus(owningWidget);
         owningWindow->mContainerBlockFocus = PR_FALSE;
@@ -612,8 +609,8 @@ nsWindow::SetFocus(PRBool aRaise)
         DispatchGotFocusEvent();
 
         // unset the activate flag
-        if (gJustGotActivate) {
-            gJustGotActivate = PR_FALSE;
+        if (owningWindow->mActivatePending) {
+            owningWindow->mActivatePending = PR_FALSE;
             DispatchActivateEvent();
         }
 
@@ -621,38 +618,41 @@ nsWindow::SetFocus(PRBool aRaise)
     }
 
     // If this is the widget that already has focus, return.
-    if (mHasFocus) {
-        LOG(("already have focus...\n"));
+    if (gFocusWindow == this) {
+        LOGFOCUS(("  already have focus [%p]\n", (void *)this));
         return NS_OK;
     }
 
     // If there is already a focued child window, dispatch a LOSTFOCUS
     // event from that widget and unset its got focus flag.
-    if (owningWindow->mFocusChild) {
-        LOG(("removing focus child %p\n", (void *)owningWindow->mFocusChild));
-        owningWindow->mFocusChild->LoseFocus();
-    }
+    if (gFocusWindow)
+        gFocusWindow->LoseFocus();
 
     // Set this window to be the focused child window, update our has
     // focus flag and dispatch a GOTFOCUS event.
-    owningWindow->mFocusChild = this;
-    mHasFocus = PR_TRUE;
+    gFocusWindow = this;
 
 #ifdef USE_XIM
     GtkIMContext *im = IMEGetContext();
-    if (!mIsTopLevel && im && !mFocusChild) {
-        gFocusedWindow = this;
+    if (im && !mIsTopLevel) {
+        LOGFOCUS(("  gtk_im_context_focus_in()\n"));
         gtk_im_context_focus_in(im);
     }
 #endif
 
+    LOGFOCUS(("  widget now has focus - dispatching events [%p]\n", 
+              (void *)this));
+
     DispatchGotFocusEvent();
     
-    // make sure to unset the activate flag and send an activate event
-    if (gJustGotActivate) {
-        gJustGotActivate = PR_FALSE;
+    // unset the activate flag
+    if (owningWindow->mActivatePending) {
+        owningWindow->mActivatePending = PR_FALSE;
         DispatchActivateEvent();
     }
+
+    LOGFOCUS(("  done dispatching events in SetFocus() [%p]\n",
+              (void *)this));
 
     return NS_OK;
 }
@@ -1107,7 +1107,8 @@ nsWindow::LoseFocus(void)
 {
 #ifdef USE_XIM
     GtkIMContext *im = IMEGetContext();
-    if (!mIsTopLevel && im && !mFocusChild) {
+    if (im && !mIsTopLevel) {
+        LOGFOCUS(("  gtk_im_context_focus_out()\n"));
         gtk_im_context_focus_out(im);
         IMEComposeStart();
         IMEComposeText(NULL, 0, NULL, NULL);
@@ -1116,15 +1117,14 @@ nsWindow::LoseFocus(void)
     }
 #endif
 
-    // we don't have focus
-    mHasFocus = PR_FALSE;
-
     // make sure that we reset our repeat counter so the next keypress
     // for this widget will get the down event
     mInKeyRepeat = PR_FALSE;
 
     // Dispatch a lostfocus event
     DispatchLostFocusEvent();
+
+    LOGFOCUS(("  widget lost focus [%p]\n", (void *)this));
 }
 
 gboolean
@@ -1338,8 +1338,11 @@ nsWindow::OnButtonPressEvent(GtkWidget *aWidget, GdkEventButton *aEvent)
     nsEventStatus status;
 
     // check to see if we should rollup
-    if (gJustGotActivate) {
-        gJustGotActivate = PR_FALSE;
+    nsWindow *containerWindow;
+    GetContainerWindow(&containerWindow);
+
+    if (containerWindow->mActivatePending) {
+        containerWindow->mActivatePending = PR_FALSE;
         DispatchActivateEvent();
     }
     if (check_for_rollup(aEvent->window, aEvent->x_root, aEvent->y_root,
@@ -1402,14 +1405,17 @@ nsWindow::OnButtonReleaseEvent(GtkWidget *aWidget, GdkEventButton *aEvent)
 void
 nsWindow::OnContainerFocusInEvent(GtkWidget *aWidget, GdkEventFocus *aEvent)
 {
+    LOGFOCUS(("OnContainerFocusInEvent [%p]\n", (void *)this));
     // Return if someone has blocked events for this widget.  This will
     // happen if someone has called gtk_widget_grab_focus() from
     // nsWindow::SetFocus() and will prevent recursion.
-    if (mContainerBlockFocus)
+    if (mContainerBlockFocus) {
+        LOGFOCUS(("Container focus is blocked [%p]\n", (void *)this));
         return;
+    }
 
     if (mIsTopLevel)
-        gJustGotActivate = PR_TRUE;
+        mActivatePending = PR_TRUE;
 
     // dispatch a got focus event
     DispatchGotFocusEvent();
@@ -1417,46 +1423,69 @@ nsWindow::OnContainerFocusInEvent(GtkWidget *aWidget, GdkEventFocus *aEvent)
     // send the activate event if it wasn't already sent via any
     // SetFocus() calls that were the result of the GOTFOCUS event
     // above.
-    if (gJustGotActivate) {
-        gJustGotActivate = PR_FALSE;
+    if (mActivatePending) {
+        mActivatePending = PR_FALSE;
         DispatchActivateEvent();
     }
 
-#ifdef USE_XIM
-    nsWindow * aTmpWindow;
-    aTmpWindow = this;
-
-    if (mFocusChild)
-        while (aTmpWindow->mFocusChild)
-            aTmpWindow = aTmpWindow->mFocusChild;
-
-    GtkIMContext *im = aTmpWindow->IMEGetContext();
-    if (!(aTmpWindow->mIsTopLevel) && im) {
-        gtk_im_context_focus_in(im);
-        LOG(("OnContainFocusIn-set IC focus in. aTmpWindow:%x\n", aTmpWindow));
-    }
-#endif
+    LOGFOCUS(("Events sent from focus in event [%p]\n", (void *)this));
 }
 
 void
 nsWindow::OnContainerFocusOutEvent(GtkWidget *aWidget, GdkEventFocus *aEvent)
 {
-    // send a lost focus event for the child window
-    if (mFocusChild) {
-        mFocusChild->LoseFocus();
-        mFocusChild->DispatchDeactivateEvent();
-        mFocusChild = nsnull;
-        gJustGotActivate = PR_TRUE;
+    LOGFOCUS(("OnContainerFocusOutEvent [%p]\n", (void *)this));
+    // Figure out if the focus widget is the child of this window.  If
+    // it is, send a focus out and deactivate event for it.
+    if (!gFocusWindow)
+        return;
+
+    GdkWindow *tmpWindow;
+    tmpWindow = (GdkWindow *)gFocusWindow->GetNativeData(NS_NATIVE_WINDOW);
+    nsWindow *tmpnsWindow = get_window_for_gdk_window(tmpWindow);
+
+    while (tmpWindow && tmpnsWindow) {
+        // found it!
+        if(tmpnsWindow == gFocusWindow)
+            goto foundit;
+
+        tmpWindow = gdk_window_get_parent(tmpWindow);
+        if (!tmpWindow)
+            break;
+
+        tmpnsWindow = get_owning_window_for_gdk_window(tmpWindow);
     }
+
+    LOGFOCUS(("The focus widget was not a child of this window [%p]\n",
+              (void *)this));
+
+    return;
+
+ foundit:
+
+    gFocusWindow->LoseFocus();
+
+    // We only dispatch a deactivate event if we are a toplevel
+    // window, otherwise the embedding code takes care of it.
+    if (mIsTopLevel)
+        gFocusWindow->DispatchDeactivateEvent();
+
+    gFocusWindow = nsnull;
+
+    mActivatePending = PR_FALSE;
+
+    LOGFOCUS(("Done with container focus out [%p]\n", (void *)this));
 }
 
 gboolean
 nsWindow::OnKeyPressEvent(GtkWidget *aWidget, GdkEventKey *aEvent)
 {
+    LOGFOCUS(("OnKeyPressEvent [%p]\n", (void *)this));
 #ifdef USE_XIM
     GtkIMContext *im = IMEGetContext();
     if (im) {
         if (gtk_im_context_filter_keypress(im, aEvent)) {
+            LOGFOCUS(("  keypress filtered by XIM\n"));
             return TRUE;
         }
     }
@@ -1528,11 +1557,13 @@ nsWindow::OnKeyPressEvent(GtkWidget *aWidget, GdkEventKey *aEvent)
 gboolean
 nsWindow::OnKeyReleaseEvent(GtkWidget *aWidget, GdkEventKey *aEvent)
 {
+    LOGFOCUS(("OnKeyReleaseEvent [%p]\n", (void *)this));
 #ifdef USE_XIM
     GtkIMContext *im = IMEGetContext();
-    if (!mIsTopLevel && im && !mFocusChild) {
+    if (im) {
         if (gtk_im_context_filter_keypress(im, aEvent)) {
-           return TRUE;
+            LOGFOCUS(("  keypress filtered by XIM\n"));
+            return TRUE;
         }
     }
 #endif
@@ -2401,6 +2432,15 @@ nsWindow::GetToplevelWidget(GtkWidget **aWidget)
     *aWidget = gtk_widget_get_toplevel(widget);
 }
 
+void
+nsWindow::GetContainerWindow(nsWindow **aWindow)
+{
+    GtkWidget *owningWidget =
+        get_gtk_widget_for_gdk_window(mDrawingarea->inner_window);
+
+    *aWindow = get_window_for_gtk_widget(owningWidget);
+}
+
 void *
 nsWindow::SetupPluginPort(void)
 {
@@ -2935,9 +2975,7 @@ key_press_event_cb (GtkWidget *widget, GdkEventKey *event)
     if (!window)
         return FALSE;
 
-    nsWindow *focusWindow = window->mFocusChild;
-    if (!focusWindow)
-        focusWindow = window;
+    nsWindow *focusWindow = gFocusWindow ? gFocusWindow : window;
 
     return focusWindow->OnKeyPressEvent(widget, event);
 }
@@ -2951,9 +2989,7 @@ key_release_event_cb (GtkWidget *widget, GdkEventKey *event)
     if (!window)
         return FALSE;
 
-    nsWindow *focusWindow = window->mFocusChild;
-    if (!focusWindow)
-        focusWindow = window;
+    nsWindow *focusWindow = gFocusWindow ? gFocusWindow : window;
 
     return focusWindow->OnKeyReleaseEvent(widget, event);
 }
@@ -3458,15 +3494,15 @@ IM_preedit_changed_cb(GtkIMContext *context,
     PangoAttrList *feedback_list;
 
     // call for focused window
-    nsWindow *window = awindow->gFocusedWindow;
+    nsWindow *window = gFocusWindow;
     if (!window) return;
   
     // Should use cursor_pos ?
     gtk_im_context_get_preedit_string(context, &preedit_string,
                                       &feedback_list, &cursor_pos);
   
-    LOG(("preedit string is: %s   length is: %d\n",
-         preedit_string, strlen(preedit_string)));
+    LOGIM(("preedit string is: %s   length is: %d\n",
+           preedit_string, strlen(preedit_string)));
 
     if ((preedit_string == NULL) || (0 == strlen(preedit_string))) {
         window->IMEComposeStart();
@@ -3511,7 +3547,7 @@ IM_commit_cb (GtkIMContext *context,
     glong uniStrLen;
 
     // call for focused window
-    nsWindow *window = awindow->gFocusedWindow;
+    nsWindow *window = gFocusWindow;
     if (!window) return;
 
     uniStr = NULL;
@@ -3521,8 +3557,10 @@ IM_commit_cb (GtkIMContext *context,
     // Will free it in call function, don't need
     // g_free((void *)utf8_str));
 
+    LOGIM(("IM_commit_cb\n"));
+
     if (!uniStr) {
-        LOG(("utf80utf16 string tranfer failed!\n"));
+        LOGIM(("utf80utf16 string tranfer failed!\n"));
         return;
     }
 

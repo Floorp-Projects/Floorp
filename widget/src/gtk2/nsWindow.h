@@ -231,7 +231,6 @@ public:
     void               ReleaseGrabs (void);
     void               SetPluginType(PRBool aIsXembed);
 
-    nsWindow           *mFocusChild;
     Window              mOldFocusWindow;
 
 #ifdef USE_XIM
@@ -248,11 +247,11 @@ public:
  
     nsWindow*          mIMEShellWindow;
     static PLDHashTable gXICLookupTable;
-    static nsWindow    *gFocusedWindow;
 #endif
 
 private:
     void               GetToplevelWidget(GtkWidget **aWidget);
+    void               GetContainerWindow(nsWindow  **aWindow);
     void              *SetupPluginPort(void);
 
     GtkWidget          *mShell;
@@ -264,11 +263,11 @@ private:
     PRUint32            mContainerGotFocus : 1,
                         mContainerLostFocus : 1,
                         mContainerBlockFocus : 1,
-                        mHasFocus : 1,
                         mInKeyRepeat : 1,
                         mIsVisible : 1,
                         mRetryPointerGrab : 1,
                         mHasNonXembedPlugin : 1,
+                        mActivatePending : 1,
                         mRetryKeyboardGrab : 1;
     GtkWindow          *mTransientParent;
     PRInt32             mSizeState;
