@@ -1943,12 +1943,10 @@ nsMsgFolderDataSource::GetFolderSizeNode(PRInt32 aFolderSize, nsIRDFNode **aNode
     // XXX todo
     // can we catch this problem at compile time?
     // see #179234
-    nsAutoString units;
     if (sizeInMB)
-      units = NS_LITERAL_STRING(" MB");
+      sizeString.Append(NS_LITERAL_STRING(" MB"));
     else
-      units = NS_LITERAL_STRING(" KB");
-    sizeString.Append(units);
+      sizeString.Append(NS_LITERAL_STRING(" KB"));
     createNode(sizeString.get(), aNode, getRDFService());
   }
   return NS_OK;
