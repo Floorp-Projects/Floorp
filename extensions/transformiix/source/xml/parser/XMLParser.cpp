@@ -31,8 +31,10 @@
  *    -- UNICODE fix in method startElement, changed  casting of 
  *       char* to DOM_CHAR* to use the proper String constructor, 
  *       see method startElement
+ *    -- Removed a number of castings of XML_Char to DOM_CHAR since they
+ *       were not working on Windows properly
  *
- * $Id: XMLParser.cpp,v 1.3 2000/03/27 07:30:18 kvisco%ziplink.net Exp $
+ * $Id: XMLParser.cpp,v 1.4 2000/04/20 10:09:42 kvisco%ziplink.net Exp $
  */
 
 #include "XMLParser.h"
@@ -82,7 +84,7 @@ Document* XMLParser::parse(istream& inputStream)
   errorState = MB_FALSE;
   errorString.clear();
   if ( !inputStream ) {
-    errorString.append("unable to parse xml, invalid or unopen stream");
+    errorString.append("unable to parse xml: invalid or unopen stream encountered.");
     return NULL;
   }
   XML_Parser parser = XML_ParserCreate(NULL);
@@ -126,13 +128,14 @@ const DOMString& XMLParser::getErrorString()
   return errorString;
 }
 
+
 void startElement(void *userData, const XML_Char *name, const XML_Char **atts)
 {
   ParserState* ps = (ParserState*)userData;
   Element* newElement;
   Attr* newAttribute;
-  DOM_CHAR* attName;
-  DOM_CHAR* attValue;
+  XML_Char* attName;
+  XML_Char* attValue;
   XML_Char** theAtts = (XML_Char**)atts;
 
   String nodeName(name);
@@ -140,8 +143,8 @@ void startElement(void *userData, const XML_Char *name, const XML_Char **atts)
 
   while (*theAtts)
     {
-      attName = (DOM_CHAR*)*theAtts++;
-      attValue = (DOM_CHAR*)*theAtts++;
+      attName  = *theAtts++;
+      attValue = *theAtts++;
       newElement->setAttribute(attName, attValue);
     }
 
@@ -161,7 +164,7 @@ void charData(void* userData, const XML_Char* s, int len)
 {
     ParserState* ps = (ParserState*)userData;
     DOMString data;
-    data.append((const DOM_CHAR*)s, len);
+    data.append(s, len);
     ps->currentNode->appendChild(ps->document->createTextNode(data));
 } //-- charData
 
@@ -170,8 +173,8 @@ void charData(void* userData, const XML_Char* s, int len)
 **/
 void piHandler(void *userData, const XML_Char *target, const XML_Char *data) {
     ParserState* ps = (ParserState*)userData;
-    DOMString targetStr((const DOM_CHAR*) target);
-    DOMString dataStr((const DOM_CHAR*) data);
+    DOMString targetStr(target);
+    DOMString dataStr(data);
 
     ps->currentNode->appendChild(
         ps->document->createProcessingInstruction(targetStr, dataStr));
