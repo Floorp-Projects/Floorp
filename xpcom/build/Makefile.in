@@ -33,6 +33,7 @@ ifdef _BUILD_BUNDLE
 IS_COMPONENT	= 1
 DLL_SUFFIX	= .bundle
 NO_DIST_INSTALL	= 1
+MOZ_COMPONENTS_VERSION_SCRIPT_LDFLAGS=
 endif
 
 # Do not set EXPORT_LIBRARY as we do not want xpcom in the static libs list
