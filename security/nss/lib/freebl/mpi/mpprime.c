@@ -341,16 +341,15 @@ mp_err  mpp_pprime(mp_int *a, int nt)
     for (jx = 1; jx < b; jx++) {
       /* z = z^2 (mod a) */
       MP_CHECKOK( mp_sqrmod(&z, a, &z) );
+      res = MP_NO;	/* previous line set res to MP_YES */
 
       if(mp_cmp_d(&z, 1) == 0) {
-	res = MP_NO;
 	break;
       }
       if(mp_cmp(&z, &amo) == 0) {
 	res = MP_YES;
 	break;
       } 
-      res = MP_NO;
     } /* end testing loop */
 
     /* If the test passes, we will continue iterating, but a failed
