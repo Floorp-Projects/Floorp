@@ -58,7 +58,7 @@
 #else
 #define NETLIB_DLL "libnetlib.so"
 #define XPCOM_DLL  "libxpcom.so"
-#define PREF_DLL	 "pref.so"   // mscott: is this right?
+#define PREF_DLL   "libpref.so"
 #endif
 #endif
 
