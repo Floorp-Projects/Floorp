@@ -1342,16 +1342,16 @@ void nsWidget::InitEvent(nsGUIEvent& event, PRUint32 aEventType, nsPoint* aPoint
 {
   event.widget = this;
 
-  GdkEventConfigure *ge;
-  ge = (GdkEventConfigure*)gtk_get_current_event();
+  // This copies, and we need to call gdk_event_free.
+  GdkEvent *ge = gtk_get_current_event();
 
   if (aPoint == nsnull) {     // use the point from the event
     // get the message position in client coordinates and in twips
 
     if (ge != nsnull) {
       //       ::ScreenToClient(mWnd, &cpos);
-      event.point.x = PRInt32(ge->x);
-      event.point.y = PRInt32(ge->y);
+      event.point.x = PRInt32(ge->configure.x);
+      event.point.y = PRInt32(ge->configure.y);
     } else { 
       event.point.x = 0;
       event.point.y = 0;
@@ -1362,11 +1362,14 @@ void nsWidget::InitEvent(nsGUIEvent& event, PRUint32 aEventType, nsPoint* aPoint
     event.point.y = aPoint->y;
   }
 
-  event.time = gdk_event_get_time((GdkEvent*)ge);
+  event.time = gdk_event_get_time(ge);
   event.message = aEventType;
 
   //    mLastPoint.x = event.point.x;
   //    mLastPoint.y = event.point.y;
+
+  if (ge)
+    gdk_event_free(ge);
 }
 
 PRBool nsWidget::ConvertStatus(nsEventStatus aStatus)
