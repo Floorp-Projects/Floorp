@@ -704,7 +704,7 @@ nsresult nsMsgCompFields::SplitRecipients(const PRUnichar *recipients, nsIMsgRec
 			rv= parser->ParseHeaderAddresses(msgCompHeaderInternalCharset(), recipientsStr, &names, &addresses, &numAddresses);
 			if (NS_SUCCEEDED(rv))
 			{
-				int i;
+				PRUint32 i=0;
 				char * pNames = names;
 				char * pAddresses = addresses;
 				char * fullAddress;
