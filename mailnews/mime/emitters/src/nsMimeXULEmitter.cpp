@@ -37,10 +37,13 @@
 #include "nsFileSpec.h"
 #include "nsIRegistry.h"
 #include "nsIMimeMiscStatus.h"
+#include "nsIAbAddressCollecter.h"
+#include "nsAbBaseCID.h"
 
 // For the new pref API's
 static NS_DEFINE_CID(kPrefCID, NS_PREF_CID);
 static NS_DEFINE_CID(kMsgHeaderParserCID,		NS_MSGHEADERPARSER_CID); 
+static NS_DEFINE_CID(kCAddressCollecter, NS_ABADDRESSCOLLECTER_CID);
 
 nsresult NS_NewMimeXULEmitter(const nsIID& iid, void **result)
 {
@@ -586,7 +589,15 @@ nsMimeXULEmitter::StartHeader(PRBool rootMailHeader, PRBool headerOnly, const ch
 nsresult
 nsMimeXULEmitter::DoSpecialSenderProcessing(const char *field, const char *value)
 {
-  return NS_OK;
+	nsresult rv = NS_OK;
+	if (!nsCRT::strcmp(field, "From"))
+	{
+		NS_WITH_SERVICE(nsIAbAddressCollecter, addressCollecter,
+						kCAddressCollecter, &rv);
+		if (NS_SUCCEEDED(rv) && addressCollecter)
+			addressCollecter->CollectAddress(value);
+	}
+	return rv;
 }
 
 //
