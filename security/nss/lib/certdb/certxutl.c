@@ -161,7 +161,7 @@ cert_StartExtensions(void *owner, PRArenaPool *ownerArena,
 {
     PRArenaPool *arena;
     extRec *handle;
-    
+
     arena = PORT_NewArena(DER_DEFAULT_CHUNKSIZE);
     if ( !arena ) {
 	return(0);
@@ -383,7 +383,6 @@ CERT_MergeExtensions(void *exthandle, CERTCertExtension **extensions)
     SECOidTag tag;
     extNode *node;
     extRec *handle = exthandle;
-    PRBool critical;
     
     if (!exthandle || !extensions) {
 	PORT_SetError(SEC_ERROR_INVALID_ARGS);

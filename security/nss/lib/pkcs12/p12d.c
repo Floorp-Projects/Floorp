@@ -2996,7 +2996,6 @@ SEC_PKCS12DecoderIterateNext(SEC_PKCS12DecoderContext *p12dcx,
                              const SEC_PKCS12DecoderItem **ipp)
 {
     sec_PKCS12SafeBag *bag;
-    SECItem *tempnm;
     
     if(!p12dcx || p12dcx->error) {
         PORT_SetError(SEC_ERROR_INVALID_ARGS);
