@@ -86,11 +86,11 @@ nsHTMLContainerFrame::Paint(nsIPresContext& aPresContext,
     NS_RELEASE(hc);
   }
 
-  // Paint our background and border
-  const nsStyleDisplay* disp =
-    (const nsStyleDisplay*)mStyleContext->GetStyleData(eStyleStruct_Display);
+  const nsStyleDisplay* disp = (const nsStyleDisplay*)
+    mStyleContext->GetStyleData(eStyleStruct_Display);
 
   if (disp->mVisible && mRect.width && mRect.height) {
+    // Paint our background and border
     PRIntn skipSides = GetSkipSides();
     const nsStyleColor* color =
       (const nsStyleColor*)mStyleContext->GetStyleData(eStyleStruct_Color);
@@ -102,32 +102,23 @@ nsHTMLContainerFrame::Paint(nsIPresContext& aPresContext,
                                     aDirtyRect, rect, *color, 0, 0);
     nsCSSRendering::PaintBorder(aPresContext, aRenderingContext, this,
                                 aDirtyRect, rect, *spacing, skipSides);
-  }
 
-  PaintChildren(aPresContext, aRenderingContext, aDirtyRect);
-
-  if (nsIFrame::GetShowFrameBorders()) {
-    nsIView* view;
-    GetView(view);
-    if (nsnull != view) {
-      aRenderingContext.SetColor(NS_RGB(0,0,255));
-    }
-    else {
-      aRenderingContext.SetColor(NS_RGB(255,0,0));
-    }
-    aRenderingContext.DrawRect(0, 0, mRect.width, mRect.height);
+    // Now paint the kids
+    PaintChildren(aPresContext, aRenderingContext, aDirtyRect);
   }
   return NS_OK;
 }
 
-NS_METHOD nsHTMLContainerFrame::HandleEvent(nsIPresContext& aPresContext,
-                                            nsGUIEvent* aEvent,
-                                            nsEventStatus& aEventStatus)
+NS_IMETHODIMP
+nsHTMLContainerFrame::HandleEvent(nsIPresContext& aPresContext,
+                                  nsGUIEvent* aEvent,
+                                  nsEventStatus& aEventStatus)
 {
   return nsContainerFrame::HandleEvent(aPresContext, aEvent, aEventStatus);
 }
 
-NS_METHOD nsHTMLContainerFrame::GetCursorAndContentAt(nsIPresContext& aPresContext,
+NS_IMETHODIMP
+nsHTMLContainerFrame::GetCursorAndContentAt(nsIPresContext& aPresContext,
                                             const nsPoint& aPoint,
                                             nsIFrame** aFrame,
                                             nsIContent** aContent,
