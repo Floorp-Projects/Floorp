@@ -34,7 +34,7 @@
 
 <xsl:stylesheet
         xmlns:xsl="http://www.w3.org/1999/XSL/Transform"
-        result-ns="http://www.w3.org/1999/xhtml"
+        xmlns:def="foo"
         default-space="strip"
         version="1.0">
 
@@ -66,6 +66,7 @@
        This document serves to test XPath and XSLT functions.
    </P>
    <TABLE>
+   <TBODY>
    <TR BGColor="#E0E0FF">
       <TD Colspan="2" ALIGN="CENTER">
          <B>Boolean Functions</B>
@@ -200,11 +201,13 @@
          </FONT>
       </TD>
    </TR>
+   </TBODY>
    </TABLE>
    <!-- ********************* -->
    <!-- * NodeSet Functions * -->
    <!-- ********************* -->
    <TABLE>
+   <TBODY>
    <TR BGColor="#E0E0FF">
       <TD Colspan="2" ALIGN="CENTER">
          <B>NodeSet Functions</B>
@@ -301,7 +304,7 @@
    <TR>
       <TD VALIGN="TOP"><B>Test:</B></TD>
       <TD>
-         &lt;xsl:value-of select="local-name(names/abc:test-name)"/&gt;<BR />
+         &lt;xsl:value-of select="local-name(names/def:test-name)"/&gt;<BR />
       </TD>
    </TR>
    <TR>
@@ -314,7 +317,7 @@
       <TD><B>Result:</B></TD>
       <TD>
          <FONT COLOR="blue">
-            <xsl:value-of select="local-name(names/abc:test-name)"/>
+            <xsl:value-of select="local-name(names/def:test-name)"/>
          </FONT>
       </TD>
    </TR>
@@ -355,20 +358,20 @@
    <TR>
       <TD VALIGN="TOP"><B>Test:</B></TD>
       <TD>
-         &lt;xsl:value-of select="name(names/abc:test-name)"/&gt;<BR />
+         &lt;xsl:value-of select="name(names/def:test-name)"/&gt;<BR />
       </TD>
    </TR>
    <TR>
       <TD><B>Desired Result:</B></TD>
       <TD>
-         <FONT COLOR="blue">abc:test-name</FONT><BR/>
+         <FONT COLOR="blue">def:test-name</FONT><BR/>
       </TD>
     </TR>
     <TR>
       <TD><B>Result:</B></TD>
       <TD>
          <FONT COLOR="blue">
-            <xsl:value-of select="name(names/abc:test-name)"/>
+            <xsl:value-of select="name(names/def:test-name)"/>
          </FONT>
       </TD>
    </TR>
@@ -382,30 +385,31 @@
    <TR>
       <TD VALIGN="TOP"><B>Test:</B></TD>
       <TD>
-         &lt;xsl:value-of select="namespace-uri(names/abc:test-name)"/&gt;<BR />
+         &lt;xsl:value-of select="namespace-uri(names/def:test-name)"/&gt;<BR />
       </TD>
    </TR>
    <TR>
       <TD><B>Desired Result:</B></TD>
       <TD>
-         <FONT COLOR="blue">abc</FONT><BR/>
+         <FONT COLOR="blue">foo</FONT><BR/>
       </TD>
     </TR>
     <TR>
       <TD><B>Result:</B></TD>
       <TD>
          <FONT COLOR="blue">
-            <xsl:value-of select="namespace-uri(names/abc:test-name)"/>
+            <xsl:value-of select="namespace-uri(names/def:test-name)"/>
          </FONT>
       </TD>
    </TR>
-
+   </TBODY>
    </TABLE>
 
    <!-- ******************** -->
    <!-- * String Functions * -->
    <!-- ******************** -->
    <TABLE>
+   <TBODY>
    <TR BGColor="#E0E0FF">
       <TD Colspan="2" ALIGN="CENTER">
          <B>String Functions</B>
@@ -870,11 +874,13 @@
          </FONT>
       </TD>
    </TR>
+   </TBODY>
    </TABLE>
    <!-- ******************** -->
    <!-- * Number Functions * -->
    <!-- ******************** -->
    <TABLE>
+   <TBODY>
    <TR BGColor="#E0E0FF">
       <TD Colspan="2" ALIGN="CENTER">
          <B>Number Functions</B>
@@ -1108,12 +1114,14 @@
          </FONT>
       </TD>
    </TR>
+   </TBODY>
    </TABLE>
 
    <!-- **************************** -->
    <!-- * XSLT Extension Functions * -->
    <!-- **************************** -->
    <TABLE>
+   <TBODY>
    <TR BGColor="#E0E0FF">
       <TD Colspan="2" ALIGN="CENTER">
          <B>XSLT Extension Functions</B>
@@ -1185,8 +1193,8 @@
       </TD>
    </TR>
 
+   </TBODY>
    </TABLE>
-
   </BODY>
 </HTML>
 </xsl:template>
