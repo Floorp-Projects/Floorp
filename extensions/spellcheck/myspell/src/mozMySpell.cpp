@@ -73,7 +73,6 @@ const PRInt32 kFirstDirSize=8;
 
 mozMySpell::mozMySpell()
 {
-  NS_INIT_ISUPPORTS();
 }
 
 mozMySpell::~mozMySpell()

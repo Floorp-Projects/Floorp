@@ -58,7 +58,6 @@ NS_IMPL_ISUPPORTS2(ContentClickListener, nsIDOMMouseListener, nsIDOMEventListene
 ContentClickListener::ContentClickListener(id aBrowserController)
 :mBrowserController(aBrowserController)
 {
-  NS_INIT_ISUPPORTS();
 }
 
 ContentClickListener::~ContentClickListener()

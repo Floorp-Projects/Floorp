@@ -33,7 +33,6 @@ nsIRDFResource*         mozSqlService::kSQL_Database;
 mozSqlService::mozSqlService()
   : mConnectionCache(nsnull)
 {
-  NS_INIT_ISUPPORTS();
 }
 
 mozSqlService::~mozSqlService()

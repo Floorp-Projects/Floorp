@@ -78,7 +78,6 @@ nsPolicyReference::nsPolicyReference()
   : mFlags (0),
     mError (0)
 {
-  NS_INIT_ISUPPORTS();
 }
 
 nsPolicyReference::~nsPolicyReference()

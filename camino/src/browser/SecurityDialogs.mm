@@ -50,7 +50,6 @@
 
 SecurityDialogs::SecurityDialogs()
 {
-  NS_INIT_ISUPPORTS();
 }
 
 SecurityDialogs::~SecurityDialogs()

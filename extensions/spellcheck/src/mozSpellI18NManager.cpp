@@ -44,7 +44,6 @@ NS_IMPL_ISUPPORTS1(mozSpellI18NManager, mozISpellI18NManager)
 
 mozSpellI18NManager::mozSpellI18NManager()
 {
-  NS_INIT_ISUPPORTS();
   /* member initializers and constructor code */
 }
 

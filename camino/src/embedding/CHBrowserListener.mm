@@ -61,7 +61,6 @@
 CHBrowserListener::CHBrowserListener(CHBrowserView* aView)
   : mView(aView), mContainer(nsnull), mIsModal(PR_FALSE), mChromeFlags(0)
 {
-  NS_INIT_ISUPPORTS();
   mListeners = [[NSMutableArray alloc] init];
 }
 

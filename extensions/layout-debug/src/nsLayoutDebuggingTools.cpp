@@ -137,8 +137,6 @@ nsLayoutDebuggingTools::nsLayoutDebuggingTools()
     mCrossingEventDumping(PR_FALSE),
     mReflowCounts(PR_FALSE)
 {
-    NS_INIT_ISUPPORTS();
-
     NewURILoaded();
 }
 

@@ -62,8 +62,6 @@ NS_IMPL_ISUPPORTS1(nsRenderingContextPh, nsIRenderingContext)
 
 nsRenderingContextPh :: nsRenderingContextPh() 
 {
-	NS_INIT_ISUPPORTS();
-	
 	mGC               = nsnull;
 	mTranMatrix       = nsnull;
 	mClipRegion       = nsnull;

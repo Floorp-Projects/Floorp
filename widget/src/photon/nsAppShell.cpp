@@ -81,7 +81,6 @@ static NS_DEFINE_CID(kCmdLineServiceCID, NS_COMMANDLINE_SERVICE_CID);
 //-------------------------------------------------------------------------
 nsAppShell::nsAppShell()  
 {
-	NS_INIT_ISUPPORTS();
   mEventQueue  = nsnull;
   mFD          = -1;
 }

@@ -68,7 +68,6 @@ public:
   HistoryRDFObserver(HistoryDataSource* dataSource)
   : mHistoryDataSource(dataSource)
   { 
-    NS_INIT_ISUPPORTS();
   }
   virtual ~HistoryRDFObserver() { }
   

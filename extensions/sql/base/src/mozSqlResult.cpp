@@ -31,7 +31,6 @@ mozSqlResult::mozSqlResult(mozISqlConnection* aConnection,
     mCanUpdate(-1),
     mCanDelete(-1)
 {
-  NS_INIT_ISUPPORTS();
 }
 
 nsresult
@@ -1177,7 +1176,6 @@ mozSqlResultEnumerator::mozSqlResultEnumerator(mozSqlResult* aResult)
     mCurrentIndex(-1),
     mCurrentRow(nsnull)
 {
-  NS_INIT_ISUPPORTS();
   NS_ADDREF(mResult);
 
   mBuffer = Row::Create(mResult->mAllocator, nsnull, mResult->mColumnInfo);
@@ -1778,7 +1776,6 @@ mozSqlResultStream::mozSqlResultStream(mozSqlResult* aResult)
     mLength(0),
     mPosition(0)
 {
-  NS_INIT_ISUPPORTS();
   NS_ADDREF(mResult);
 }
 

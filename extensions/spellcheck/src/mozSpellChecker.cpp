@@ -44,7 +44,6 @@ NS_IMPL_ISUPPORTS1(mozSpellChecker, nsISpellChecker)
 
 mozSpellChecker::mozSpellChecker()
 {
-  NS_INIT_ISUPPORTS();
   mDictionaryName.SetLength(0);
   
   nsresult rv;

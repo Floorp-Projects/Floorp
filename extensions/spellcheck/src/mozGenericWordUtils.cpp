@@ -42,7 +42,6 @@ NS_IMPL_ISUPPORTS1(mozGenericWordUtils, mozISpellI18NUtil)
 
 mozGenericWordUtils::mozGenericWordUtils()
 {
-  NS_INIT_ISUPPORTS();
   /* member initializers and constructor code */
 }
 

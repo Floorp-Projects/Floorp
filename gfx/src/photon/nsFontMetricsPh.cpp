@@ -61,7 +61,6 @@ static NS_DEFINE_CID(kPrefCID, NS_PREF_CID);
 
 nsFontMetricsPh::nsFontMetricsPh()
 {
-	NS_INIT_ISUPPORTS();
 	mDeviceContext = nsnull;
 	mFont = nsnull;
 
@@ -300,7 +299,6 @@ struct nsFontFamily
 // The Font Enumerator
 nsFontEnumeratorPh::nsFontEnumeratorPh()
 {
-	NS_INIT_ISUPPORTS();
 }
 
 NS_IMPL_ISUPPORTS1(nsFontEnumeratorPh, nsIFontEnumerator)

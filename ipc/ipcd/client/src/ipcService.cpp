@@ -152,8 +152,6 @@ ipcService::ipcService()
     : mTransport(nsnull)
     , mClientID(0)
 {
-    NS_INIT_ISUPPORTS();
-
     IPC_InitLog(">>>");
 }
 

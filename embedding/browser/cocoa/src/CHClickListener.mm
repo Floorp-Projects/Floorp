@@ -108,7 +108,6 @@ NS_IMPL_ISUPPORTS2(CHClickListener, nsIDOMMouseListener, nsIDOMEventListener)
 
 CHClickListener::CHClickListener()
 {
-  NS_INIT_ISUPPORTS();
 }
 
 CHClickListener::~CHClickListener()

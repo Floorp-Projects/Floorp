@@ -65,7 +65,6 @@ public:
   , mUserData(inUserData)
   , mURI(inURI)
   {
-    NS_INIT_ISUPPORTS();
     [mLoadListener retain];
   }
   
@@ -129,7 +128,6 @@ protected:
 
 RemoteURILoadManager::RemoteURILoadManager()
 {
-  NS_INIT_ISUPPORTS();
 }
 
 RemoteURILoadManager::~RemoteURILoadManager()

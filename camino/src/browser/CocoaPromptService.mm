@@ -50,7 +50,6 @@
 
 CocoaPromptService::CocoaPromptService()
 {
-  NS_INIT_ISUPPORTS();
 }
 
 CocoaPromptService::~CocoaPromptService()

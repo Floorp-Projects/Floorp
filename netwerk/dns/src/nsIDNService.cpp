@@ -106,8 +106,6 @@ NS_IMETHODIMP nsIDNService::Observe(nsISupports *aSubject,
 
 nsIDNService::nsIDNService()
 {
-  NS_INIT_ISUPPORTS();
-
   nsresult rv;
 
   // initialize to the official prefix (RFC 3490 "5. ACE prefix")

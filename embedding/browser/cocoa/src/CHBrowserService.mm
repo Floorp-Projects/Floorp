@@ -63,7 +63,6 @@ PRBool CHBrowserService::sCanTerminate = PR_FALSE;
 // CHBrowserService implementation
 CHBrowserService::CHBrowserService()
 {
-  NS_INIT_ISUPPORTS();
 }
 
 CHBrowserService::~CHBrowserService()

@@ -9,7 +9,6 @@ mozSqlConnection::mozSqlConnection()
     mShutdown(PR_FALSE),
     mWaiting(PR_FALSE)
 {
-  NS_INIT_ISUPPORTS();
   mExecLock = PR_NewLock();
 }
 

@@ -6,7 +6,6 @@ mozSqlRequest::mozSqlRequest(mozISqlConnection* aConnection)
     mIsQuery(PR_TRUE),
     mStatus(mozISqlRequest::STATUS_NONE)
 {
-  NS_INIT_ISUPPORTS();
   mConnection = do_GetWeakReference(aConnection);
 }
 

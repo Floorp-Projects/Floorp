@@ -66,7 +66,6 @@ NS_IMPL_ISUPPORTS1(nsConsoleListener, nsIConsoleListener)
 
 nsConsoleListener::nsConsoleListener()
 {
-  NS_INIT_ISUPPORTS();
 }
 
 nsConsoleListener::~nsConsoleListener()

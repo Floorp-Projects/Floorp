@@ -72,8 +72,6 @@ NS_IMPL_ISUPPORTS2( nsDrawingSurfacePh, nsIDrawingSurface, nsIDrawingSurfacePh )
 
 nsDrawingSurfacePh :: nsDrawingSurfacePh( ) 
 {
-	NS_INIT_ISUPPORTS();
-
 	mDrawContext = nsnull;
 	mGC = nsnull;
 	mWidth = 0;

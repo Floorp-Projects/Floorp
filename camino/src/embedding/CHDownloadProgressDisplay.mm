@@ -45,7 +45,6 @@ CHDownloader::CHDownloader()
 , mDownloadDisplay(nil)
 , mIsFileSave(PR_FALSE)
 {
-  NS_INIT_ISUPPORTS();
 }
 
 CHDownloader::~CHDownloader()

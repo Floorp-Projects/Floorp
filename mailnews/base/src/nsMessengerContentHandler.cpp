@@ -50,7 +50,6 @@
 
 nsMessengerContentHandler::nsMessengerContentHandler()
 {
-  NS_INIT_ISUPPORTS();
 }
 
 /* the following macro actually implement addref, release and query interface for our component. */

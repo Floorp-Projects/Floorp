@@ -98,7 +98,6 @@ NS_IMPL_ISUPPORTS1(nsUnicodeNormalizer, nsIUnicodeNormalizer)
 
 nsUnicodeNormalizer::nsUnicodeNormalizer()
 {
-    NS_INIT_ISUPPORTS();
 }
 
 nsUnicodeNormalizer::~nsUnicodeNormalizer()

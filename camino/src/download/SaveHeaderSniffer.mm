@@ -70,7 +70,6 @@ nsHeaderSniffer::nsHeaderSniffer(nsIWebBrowserPersist* aPersist, nsIFile* aFile,
 , mBypassCache(aBypassCache)
 , mFilterView(aFilterView)
 {
-	NS_INIT_ISUPPORTS();
 }
 
 nsHeaderSniffer::~nsHeaderSniffer()

@@ -64,7 +64,6 @@ NS_IMPL_RELEASE(nsCheckButton)
 nsCheckButton::nsCheckButton() : nsWidget(), nsICheckButton(),
   mState(PR_FALSE)
 {
-	NS_INIT_ISUPPORTS();
 }
 
 //-------------------------------------------------------------------------

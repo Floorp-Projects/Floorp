@@ -53,7 +53,6 @@
 
 AppDirServiceProvider::AppDirServiceProvider(const nsACString& productDirName)
 {
-  NS_INIT_ISUPPORTS();
   mProductDirName.Assign(productDirName);
 }
 
