@@ -437,6 +437,8 @@ pref("mailnews.html_domains","");
 pref("mailnews.plaintext_domains","");
 pref("mailnews.global_html_domains.version",1);
 
+pref("mail.imap.use_status_for_biff", true);
+
 // Pref controlling the updates on the pre-configured accounts.
 // In order to add new pre-configured accounts (after a version),
 // increase the following version number besides updating the
@@ -510,6 +512,10 @@ pref("mail.purge.min_delay",480);
 // "mail.purge.timer_interval", fire the purge timer every 5 minutes, starting 5 minutes after we load accounts
 pref("mail.purge.timer_interval",5);
 pref("mailnews.view.last",0); // 0 == "all" view
+
+// set to true if viewing a message should mark it as read only if the msg is viewed for a specified time interval in seconds
+pref("mailnews.mark_message_read.delay", false); 
+pref("mailnews.mark_message_read.delay.interval", 5); // measured in seconds
 
 // require a password before showing imap or local headers in thread pane
 pref("mail.password_protect_local_cache", false);
