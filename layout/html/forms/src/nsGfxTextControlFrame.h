@@ -510,6 +510,7 @@ public:
   /* ============= nsIGfxTextControlFrame ================= */
   NS_IMETHOD GetEditor(nsIEditor **aEditor);
   NS_IMETHOD GetWebShell(nsIWebShell **aWebShell);
+  NS_IMETHOD SetInnerFocus();
 
 protected:
 

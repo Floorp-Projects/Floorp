@@ -37,4 +37,5 @@ public:
 
 	NS_IMETHOD GetEditor(nsIEditor **aEditor) = 0;
   NS_IMETHOD GetWebShell(nsIWebShell** aWebShell) = 0;
+  NS_IMETHOD SetInnerFocus() = 0;
 };

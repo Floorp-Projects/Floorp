@@ -239,6 +239,13 @@ nsGfxTextControlFrame::GetWebShell(nsIWebShell **aWebShell)
 }
 
 NS_IMETHODIMP
+nsGfxTextControlFrame::SetInnerFocus()
+{
+  SetFocus();
+  return NS_OK;
+}
+  
+NS_IMETHODIMP
 nsGfxTextControlFrame::CreateEditor()
 {
   nsresult result = NS_OK;
@@ -3355,8 +3362,16 @@ nsEnderEventListener::KeyPress(nsIDOMEvent* aKeyEvent)
       }
       NS_RELEASE(manager);
       
-      if(event.flags & NS_EVENT_FLAG_STOP_DISPATCH)
-      {
+      // Call consume focus events on the inner event state manager to prevent its
+      // PostHandleEvent from immediately blurring us.
+      nsCOMPtr<nsIPresContext> pc;
+      mInnerShell->GetPresContext(getter_AddRefs(pc));
+      
+      nsCOMPtr<nsIEventStateManager> esm;
+      pc->GetEventStateManager(getter_AddRefs(esm));
+      esm->ConsumeFocusEvents(PR_TRUE);
+      
+      if(event.flags & NS_EVENT_FLAG_STOP_DISPATCH) {
         aKeyEvent->PreventCapture();
         aKeyEvent->PreventBubble();
       }
@@ -3437,7 +3452,6 @@ nsEnderEventListener::DispatchMouseEvent(nsIDOMMouseEvent *aEvent, PRInt32 aEven
           nsCOMPtr<nsIEventStateManager> esm;
           pc->GetEventStateManager(getter_AddRefs(esm));
           esm->ConsumeFocusEvents(PR_TRUE);
-          // Now set the focus in to the widget.
           mFrame->SetFocus();
         }
       }
