@@ -76,7 +76,7 @@ Rights Reserved.
 											autocomplete="true"
 											timeout="300"
 											searchSessionType="addrbook"
-											displayMenu="false"
+											displayMenu="true"
 										    />
 							</treecell>
 						</treerow>
