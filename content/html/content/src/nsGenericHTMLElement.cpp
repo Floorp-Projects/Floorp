@@ -2141,27 +2141,11 @@ nsGenericHTMLElement::IsAttributeMapped(const nsIAtom* aAttribute) const
   return FindAttributeDependence(aAttribute, map, NS_ARRAY_LENGTH(map));
 }
 
-/**
- * Handle attributes on the BDO element
- */
-static void
-MapBdoAttributesInto(const nsMappedAttributes* aAttributes,
-                     nsRuleData* aData)
-{
-  if (aData->mSID == eStyleStruct_TextReset &&
-      aData->mTextData->mUnicodeBidi.GetUnit() == eCSSUnit_Null) {
-    aData->mTextData->mUnicodeBidi.SetIntValue(NS_STYLE_UNICODE_BIDI_OVERRIDE, eCSSUnit_Enumerated);
-  }
-  nsGenericHTMLElement::MapCommonAttributesInto(aAttributes, aData);
-}
-
 NS_IMETHODIMP
 nsGenericHTMLElement::GetAttributeMappingFunction(nsMapRuleToAttributesFunc& aMapRuleFunc) const
 {
-  if (mNodeInfo->Equals(nsHTMLAtoms::bdo))
-    aMapRuleFunc = &MapBdoAttributesInto;
-  else
-    aMapRuleFunc = &MapCommonAttributesInto;
+  aMapRuleFunc = &MapCommonAttributesInto;
+
   return NS_OK;
 }
 

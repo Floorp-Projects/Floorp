@@ -43,6 +43,7 @@
 #include "nsStyleConsts.h"
 #include "nsIPresContext.h"
 #include "nsIAtom.h"
+#include "nsRuleNode.h"
 
 class nsHTMLSpanElement : public nsGenericHTMLElement,
                           public nsIDOMHTMLElement
@@ -63,6 +64,7 @@ public:
   // nsIDOMHTMLElement
   NS_FORWARD_NSIDOMHTMLELEMENT(nsGenericHTMLElement::)
 
+  NS_IMETHOD GetAttributeMappingFunction(nsMapRuleToAttributesFunc& aMapRuleFunc) const;
   virtual nsresult GetInnerHTML(nsAString& aInnerHTML);
   virtual nsresult SetInnerHTML(const nsAString& aInnerHTML);
 };
@@ -141,6 +143,30 @@ nsHTMLSpanElement::CloneNode(PRBool aDeep, nsIDOMNode** aReturn)
   return NS_OK;
 }
 
+static void
+BdoMapAttributesIntoRule(const nsMappedAttributes* aAttributes,
+                         nsRuleData* aData)
+{
+  if (aData->mSID == eStyleStruct_TextReset &&
+      aData->mTextData->mUnicodeBidi.GetUnit() == eCSSUnit_Null) {
+    aData->mTextData->mUnicodeBidi.SetIntValue(NS_STYLE_UNICODE_BIDI_OVERRIDE, eCSSUnit_Enumerated);
+  }
+  nsGenericHTMLElement::MapCommonAttributesInto(aAttributes, aData);
+}
+
+NS_IMETHODIMP
+nsHTMLSpanElement::GetAttributeMappingFunction(nsMapRuleToAttributesFunc& aMapRuleFunc) const
+{
+  if (mNodeInfo->Equals(nsHTMLAtoms::bdo)) {
+    aMapRuleFunc = &BdoMapAttributesIntoRule;
+  }
+  else {
+    nsGenericHTMLElement::GetAttributeMappingFunction(aMapRuleFunc);
+  }
+
+  return NS_OK;
+}
+
 nsresult
 nsHTMLSpanElement::GetInnerHTML(nsAString& aInnerHTML)
 {
@@ -161,4 +187,67 @@ nsHTMLSpanElement::SetInnerHTML(const nsAString& aInnerHTML)
   }
 
   return nsGenericHTMLElement::SetInnerHTML(aInnerHTML);
+}
+
+// ------------------------------------------------------------------
+
+class nsHTMLUnknownElement : public nsHTMLSpanElement
+{
+  NS_IMETHOD QueryInterface(REFNSIID aIID, void** aInstancePtr);
+  NS_IMETHOD CloneNode(PRBool aDeep, nsIDOMNode** aReturn);
+};
+
+NS_INTERFACE_MAP_BEGIN(nsHTMLUnknownElement)
+  NS_INTERFACE_MAP_ENTRY_CONTENT_CLASSINFO(HTMLUnknownElement)
+NS_INTERFACE_MAP_END_INHERITING(nsHTMLSpanElement)
+
+nsresult
+NS_NewHTMLUnknownElement(nsIHTMLContent** aInstancePtrResult,
+                         nsINodeInfo *aNodeInfo)
+{
+  NS_ENSURE_ARG_POINTER(aInstancePtrResult);
+
+  nsHTMLUnknownElement* it = new nsHTMLUnknownElement();
+
+  if (!it) {
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
+
+  nsresult rv = it->Init(aNodeInfo);
+
+  if (NS_FAILED(rv)) {
+    delete it;
+
+    return rv;
+  }
+
+  NS_ADDREF(*aInstancePtrResult = it);
+
+  return NS_OK;
+}
+
+nsresult
+nsHTMLUnknownElement::CloneNode(PRBool aDeep, nsIDOMNode** aReturn)
+{
+  NS_ENSURE_ARG_POINTER(aReturn);
+  *aReturn = nsnull;
+
+  nsHTMLUnknownElement* it = new nsHTMLUnknownElement();
+
+  if (!it) {
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
+
+  nsCOMPtr<nsIDOMNode> kungFuDeathGrip(it);
+
+  nsresult rv = it->Init(mNodeInfo);
+
+  if (NS_FAILED(rv))
+    return rv;
+
+  CopyInnerTo(it, aDeep);
+
+  NS_ADDREF(*aReturn = it);
+
+  return NS_OK;
 }
