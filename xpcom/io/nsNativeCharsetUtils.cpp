@@ -447,11 +447,10 @@ nsNativeCharsetConverter::NativeToUnicode(const char **input,
 
         res = xp_iconv(gNativeToUnicode, input, &inLeft, (char **) output, &outLeft);
 
-        if (res != (size_t) -1) {
-            *inputLeft = inLeft;
-            *outputLeft = outLeft / 2;
+        *inputLeft = inLeft;
+        *outputLeft = outLeft / 2;
+        if (res != (size_t) -1) 
             return NS_OK;
-        }
 
         NS_WARNING("conversion from native to utf-16 failed");
 
@@ -486,12 +485,12 @@ nsNativeCharsetConverter::NativeToUnicode(const char **input,
             }
         }
 
-        if (res != (size_t) -1) {
-            (*input) += (*inputLeft - inLeft);
-            *inputLeft = inLeft;
-            *outputLeft = outLeft / 2;
+        (*input) += (*inputLeft - inLeft);
+        *inputLeft = inLeft;
+        *outputLeft = outLeft / 2;
+
+        if (res != (size_t) -1) 
             return NS_OK;
-        }
 
         // reset converters
         xp_iconv_reset(gNativeToUTF8);
@@ -500,6 +499,7 @@ nsNativeCharsetConverter::NativeToUnicode(const char **input,
 #endif
 
     // fallback: zero-pad and hope for the best
+    // XXX This is lame and we have to do better.
     isolatin1_to_utf16(input, inputLeft, output, outputLeft);
 
     return NS_OK;
