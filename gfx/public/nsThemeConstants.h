@@ -149,6 +149,9 @@
 // The text part of a dropdown list, to left of button
 #define NS_THEME_DROPDOWN_TEXT                             103
 
+// An editable textfield with a dropdown list (a combobox)
+#define NS_THEME_DROPDOWN_TEXTFIELD                        104
+
 // A slider
 #define NS_THEME_SLIDER                                    111
 
