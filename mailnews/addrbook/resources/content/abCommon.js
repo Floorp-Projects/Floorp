@@ -309,6 +309,7 @@ function AbEditCard(card)
     goEditCardDialog(gAbView.URI, card, UpdateCardView);
   }
 }
+
 function AbNewMessage()
 {
   var msgComposeType = Components.interfaces.nsIMsgCompType;

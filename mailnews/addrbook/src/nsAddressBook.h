@@ -66,18 +66,21 @@ public:
  	NS_DECL_NSIADDRESSBOOK
 	NS_DECL_NSICMDLINEHANDLER
 
-    CMDLINEHANDLER_REGISTERPROC_DECLS
+  CMDLINEHANDLER_REGISTERPROC_DECLS
     
 protected:
 	nsresult DoCommand(nsIRDFCompositeDataSource *db, const char * command,
-                       nsISupportsArray *srcArray, 
-					   nsISupportsArray *arguments);
+                     nsISupportsArray *srcArray, nsISupportsArray *arguments);
 	nsresult GetAbDatabaseFromFile(char* pDbFile, nsIAddrDatabase **db);
 
 private:
-        nsIDocShell        *mDocShell;            // weak reference
-        nsresult ExportDirectory(nsIAbDirectory *aDirectory, const char *aDelim, PRUint32 aDelimLen, nsILocalFile *aLocalFile); 
-
+  nsIDocShell        *mDocShell;            // weak reference
+  nsresult ExportDirectoryToDelimitedText(nsIAbDirectory *aDirectory, const char *aDelim, PRUint32 aDelimLen, nsILocalFile *aLocalFile);
+  nsresult ExportDirectoryToLDIF(nsIAbDirectory *aDirectory, nsILocalFile *aLocalFile);
+  nsresult AppendLDIFForMailList(nsIAbCard *aCard, nsAFlatCString &aResult);
+  nsresult AppendDNForCard(const char *aProperty, nsIAbCard *aCard, nsAFlatCString &aResult);
+  nsresult AppendBasicLDIFForCard(nsIAbCard *aCard, nsAFlatCString &aResult);
+  nsresult AppendProperty(const char *aProperty, const PRUnichar *aValue, nsAFlatCString &aResult);
 };
 
 #endif
