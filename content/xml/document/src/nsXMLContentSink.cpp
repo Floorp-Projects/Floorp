@@ -88,7 +88,6 @@
 #include "nsXSLContentSink.h"
 #include "nsParserCIID.h"
 #include "nsParserUtils.h"
-#include "nsIDocumentViewer.h"
 #include "nsIScrollable.h"
 #include "nsRect.h"
 #include "nsGenericElement.h"
@@ -260,7 +259,7 @@ NS_INTERFACE_MAP_BEGIN(nsXMLContentSink)
   NS_INTERFACE_MAP_ENTRY(nsIXMLContentSink)
   NS_INTERFACE_MAP_ENTRY(nsIContentSink)
   NS_INTERFACE_MAP_ENTRY(nsIExpatSink)
-  NS_INTERFACE_MAP_ENTRY(nsIObserver)
+  NS_INTERFACE_MAP_ENTRY(nsITransformObserver)
   NS_INTERFACE_MAP_ENTRY(nsISupportsWeakReference)
   NS_INTERFACE_MAP_ENTRY(nsIScriptLoaderObserver)
   NS_INTERFACE_MAP_ENTRY(nsICSSLoaderObserver)
@@ -362,13 +361,14 @@ nsXMLContentSink::DidBuildModel(PRInt32 aQualityLevel)
     rv = SetupTransformMediator();
   }
 
-  nsCOMPtr<nsIScriptLoader> loader;
-  mDocument->GetScriptLoader(getter_AddRefs(loader));
-  if (loader) {
-    loader->RemoveObserver(this);
-  }
-  
+  // Kick off layout for non-XSLT transformed documents.
   if (!mXSLTransformMediator || NS_FAILED(rv)) {
+    nsCOMPtr<nsIScriptLoader> loader;
+    mDocument->GetScriptLoader(getter_AddRefs(loader));
+    if (loader) {
+      loader->RemoveObserver(this);
+    }
+
     StartLayout();
 
 #if 0 /* Disable until this works for XML */
@@ -392,7 +392,7 @@ nsXMLContentSink::DidBuildModel(PRInt32 aQualityLevel)
   // Do this hack to make sure that the parser
   // doesn't get destroyed, accidently, before 
   // the circularity, between sink & parser, is
-  // actually borken. 
+  // actually broken. 
   nsCOMPtr<nsIParser> kungFuDeathGrip(mParser);
 
   // Drop our reference to the parser to get rid of a circular
@@ -402,88 +402,71 @@ nsXMLContentSink::DidBuildModel(PRInt32 aQualityLevel)
   return NS_OK;
 }
 
-// The observe method is called on completion of the transform.  The nsISupports argument is an
-// nsIContent interface to the root node of the output content model.
 NS_IMETHODIMP
-nsXMLContentSink::Observe(nsISupports *aSubject, const char *aTopic, const PRUnichar *someData)
+nsXMLContentSink::OnTransformDone(nsresult aResult,
+                                  nsIDOMDocument* aResultDocument)
 {
-  nsresult rv = NS_OK;
+  NS_ASSERTION(NS_FAILED(aResult) || aResultDocument,
+               "Don't notify about transform success without a document.");
 
-  if (!nsCRT::strcmp(aTopic, "xslt-done")) {
-    nsCOMPtr<nsIDocShell> docShell(do_QueryInterface(mWebShell));
-    nsCOMPtr<nsIContentViewer> contentViewer;
-    docShell->GetContentViewer(getter_AddRefs(contentViewer));
+  // Reset the observer on the transform mediator
+  mXSLTransformMediator->SetTransformObserver(nsnull);
 
-    // Set the output content model on the document
-    nsCOMPtr<nsIContent> content = do_QueryInterface(aSubject, &rv);
-    if (NS_SUCCEEDED(rv)) {
-      nsCOMPtr<nsIDOMDocument> resultDOMDoc;
-      mXSLTransformMediator->GetResultDocument(getter_AddRefs(resultDOMDoc));
-      nsCOMPtr<nsIDocument> resultDoc = do_QueryInterface(resultDOMDoc);
+  nsCOMPtr<nsIDocShell> docShell(do_QueryInterface(mWebShell));
+  nsCOMPtr<nsIContentViewer> contentViewer;
+  docShell->GetContentViewer(getter_AddRefs(contentViewer));
 
-      nsCOMPtr<nsIDocument> sourceDoc = mDocument;
-      NS_RELEASE(mDocument);
-
-      mDocument = resultDoc;
-      NS_ADDREF(mDocument);
-      nsCOMPtr<nsIContent> root;
-      mDocument->GetRootContent(getter_AddRefs(root));
-      if (!root)
-        mDocument->SetRootContent(content);
-
-      // Reset the observer on the transform mediator
-      mXSLTransformMediator->SetTransformObserver(nsnull);
-
-      // Start the layout process
-      StartLayout();
-
-#if 0 /* Disable until this works for XML */
-      //  Scroll to Anchor only if the document was *not* loaded through history means. 
-      PRUint32 documentLoadType = 0;
-      docShell->GetLoadType(&documentLoadType);
-      if (!(documentLoadType & nsIDocShell::LOAD_CMD_HISTORY)) {
-        ScrollToRef();
-      }
-#else
-      ScrollToRef();
-#endif
-
-      sourceDoc->EndLoad();
-
-      if (contentViewer) {
-        contentViewer->LoadComplete(NS_OK);
-      }
+  if (NS_FAILED(aResult) && contentViewer) {
+    // Transform failed.
+    if (aResultDocument) {
+      // We have an error document.
+      contentViewer->SetDOMDocument(aResultDocument);
     }
-    else
-    {
-      // Transform failed
-      nsCOMPtr<nsIDocumentViewer> documentViewer(do_QueryInterface(contentViewer));
-      if (documentViewer) {
-        documentViewer->SetTransformMediator(nsnull);
-      }
-
-      mDocument->SetRootContent(mDocElement);
-
-      // Start the layout process
-      StartLayout();
-
-#if 0 /* Disable until this works for XML */
-      //  Scroll to Anchor only if the document was *not* loaded through history means. 
-      PRUint32 documentLoadType = 0;
-      docShell->GetLoadType(&documentLoadType);
-      if (!(documentLoadType & nsIDocShell::LOAD_CMD_HISTORY)) {
-        ScrollToRef();
-      }
-#else
-      ScrollToRef();
-#endif
-
-      mDocument->EndLoad();
+    else {
+      // We don't have an error document, display the
+      // untransformed source document.
+      nsCOMPtr<nsIDOMDocument> document = do_QueryInterface(mDocument);
+      contentViewer->SetDOMDocument(document);
     }
-
-    mXSLTransformMediator = nsnull;
   }
-  return rv;
+
+  nsCOMPtr<nsIDocument> originalDocument = mDocument;
+  if (NS_SUCCEEDED(aResult) || aResultDocument) {
+    // Transform succeeded or it failed and we have an error
+    // document to display.
+    NS_RELEASE(mDocument);
+    CallQueryInterface(aResultDocument, &mDocument); // addrefs
+  }
+  else
+  {
+    // Transform failed and we don't have an error document, display the
+    // untransformed source document.
+    mDocument->SetRootContent(mDocElement);
+  }
+
+  nsCOMPtr<nsIScriptLoader> loader;
+  originalDocument->GetScriptLoader(getter_AddRefs(loader));
+  if (loader) {
+    loader->RemoveObserver(this);
+  }
+
+  // Start the layout process
+  StartLayout();
+
+#if 0 /* Disable until this works for XML */
+  //  Scroll to Anchor only if the document was *not* loaded through history means. 
+  PRUint32 documentLoadType = 0;
+  docShell->GetLoadType(&documentLoadType);
+  if (!(documentLoadType & nsIDocShell::LOAD_CMD_HISTORY)) {
+    ScrollToRef();
+  }
+#else
+  ScrollToRef();
+#endif
+
+  originalDocument->EndLoad();
+
+  return NS_OK;
 }
 
 
@@ -512,13 +495,10 @@ nsXMLContentSink::SetupTransformMediator()
   rv = NS_NewDOMDocument(getter_AddRefs(resultDOMDoc), emptyStr, emptyStr, nsnull, url);
   if (NS_FAILED(rv)) return rv;
 
-  nsCOMPtr<nsIXMLDocument> resultXMLDoc(do_QueryInterface(resultDOMDoc));
-  resultXMLDoc->SetDefaultStylesheets(url);
-
   nsCOMPtr<nsIDocShell> docShell(do_QueryInterface(mWebShell));
   nsCOMPtr<nsIContentViewer> contentViewer;
-  rv = docShell->GetContentViewer(getter_AddRefs(contentViewer));
-  if (NS_SUCCEEDED(rv) && contentViewer) {
+  docShell->GetContentViewer(getter_AddRefs(contentViewer));
+  if (contentViewer) {
     contentViewer->SetDOMDocument(resultDOMDoc);
   }
 
@@ -650,15 +630,6 @@ nsXMLContentSink::LoadXSLStyleSheet(nsIURI* aUrl)
   // document, and an observer.  The XML and XSL content sinks provide
   // this state by calling the various setters on nsITransformMediator.
   mXSLTransformMediator->SetEnabled(PR_TRUE);
-
-  // The document viewer owns the transform mediator.
-  nsCOMPtr<nsIDocShell> docShell(do_QueryInterface(mWebShell));
-  nsCOMPtr<nsIContentViewer> contentViewer;
-  rv = docShell->GetContentViewer(getter_AddRefs(contentViewer));
-  nsCOMPtr<nsIDocumentViewer> documentViewer(do_QueryInterface(contentViewer));
-  if (documentViewer) {
-    documentViewer->SetTransformMediator(mXSLTransformMediator);
-  }
 
   // Create the XSL stylesheet document
   nsCOMPtr<nsIDOMDocument> styleDOMDoc;
@@ -1972,13 +1943,6 @@ nsXMLContentSink::ReportError(const PRUnichar* aErrorText,
 
   if (mXSLTransformMediator) {
     // Get rid of the transform mediator.
-    nsCOMPtr<nsIDocShell> docShell(do_QueryInterface(mWebShell));
-    nsCOMPtr<nsIContentViewer> contentViewer;
-    rv = docShell->GetContentViewer(getter_AddRefs(contentViewer));
-    nsCOMPtr<nsIDocumentViewer> documentViewer(do_QueryInterface(contentViewer));
-    if (documentViewer) {
-      documentViewer->SetTransformMediator(nsnull);
-    }
     mXSLTransformMediator->SetEnabled(PR_FALSE);
     mXSLTransformMediator = nsnull;
   }

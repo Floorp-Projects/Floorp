@@ -3,3 +3,4 @@
 #
 
 nsIDocumentTransformer.idl
+nsITransformObserver.idl

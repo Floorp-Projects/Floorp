@@ -25,7 +25,6 @@ REQUIRES	= xpcom \
 		  string \
 		  dom \
 		  widget \
-		  content_xsl \
 		  necko \
 		  content \
 		  xpconnect \

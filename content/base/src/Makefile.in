@@ -49,7 +49,6 @@ REQUIRES	= xpcom \
 		  xpconnect \
 		  util \
 		  unicharutil \
-		  content_xsl \
 		  xuldoc \
 		  intl \
 		  windowwatcher \

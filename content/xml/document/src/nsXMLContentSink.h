@@ -42,7 +42,6 @@
 #include "nsIXMLContentSink.h"
 #include "nsIViewManager.h"
 #include "nsIScrollableView.h"
-#include "nsIObserver.h"
 #include "nsWeakReference.h"
 #include "nsITransformMediator.h"
 #include "nsIUnicharInputStream.h"
@@ -58,6 +57,7 @@ class nsICSSStyleSheet;
 #include "nsIScriptLoaderObserver.h"
 #include "nsSupportsArray.h"
 #include "nsIExpatSink.h"
+#include "nsITransformObserver.h"
 
 class nsIDocument;
 class nsIURI;
@@ -81,7 +81,7 @@ typedef enum {
 // XXX Till the parser knows a little bit more about XML, 
 // this is a HTMLContentSink.
 class nsXMLContentSink : public nsIXMLContentSink,
-                         public nsIObserver,
+                         public nsITransformObserver,
                          public nsSupportsWeakReference,
                          public nsIScriptLoaderObserver,
                          public nsICSSLoaderObserver,
@@ -99,7 +99,7 @@ public:
   // nsISupports
   NS_DECL_ISUPPORTS
   NS_DECL_NSISCRIPTLOADEROBSERVER
-
+  NS_DECL_NSITRANSFORMOBSERVER
   NS_DECL_NSIEXPATSINK
 
   // nsIContentSink
@@ -113,11 +113,6 @@ public:
 
   // nsICSSLoaderObserver
   NS_IMETHOD StyleSheetLoaded(nsICSSStyleSheet*aSheet, PRBool aNotify);
-
-  // nsIObserver
-  NS_IMETHOD Observe(nsISupports *aSubject, 
-                     const char *aTopic, 
-                     const PRUnichar *someData);
 
 protected:
   void StartLayout();

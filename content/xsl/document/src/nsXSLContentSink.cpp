@@ -41,6 +41,7 @@
 #include "nsIDocument.h"
 #include "nsIDOMDocument.h"
 #include "nsIDOMElement.h"
+#include "nsILoadGroup.h"
 #include "nsIParser.h"
 #include "nsIStyleSheetLinkingElement.h"
 #include "nsITransformMediator.h"
@@ -55,21 +56,17 @@ NS_NewXSLContentSink(nsIXMLContentSink** aResult,
                      nsIURI* aURL,
                      nsIWebShell* aWebShell)
 {
-  NS_PRECONDITION(nsnull != aResult, "null ptr");
-  if (nsnull == aResult) {
-    return NS_ERROR_NULL_POINTER;
-  }
+  NS_ENSURE_ARG(aResult);
+
   nsXSLContentSink* it;
   NS_NEWXPCOM(it, nsXSLContentSink);
-  if (nsnull == it) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
+  NS_ENSURE_TRUE(it, NS_ERROR_OUT_OF_MEMORY);
+
+  nsCOMPtr<nsIXMLContentSink> sink = it;
   nsresult rv = it->Init(aTM, aDoc, aURL, aWebShell);
-  if (NS_OK != rv) {
-    delete it;
-    return rv;
-  }
-  return it->QueryInterface(NS_GET_IID(nsIXMLContentSink), (void **)aResult);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  return CallQueryInterface(it, aResult);
 }
 
 nsXSLContentSink::nsXSLContentSink()
@@ -82,15 +79,13 @@ nsXSLContentSink::~nsXSLContentSink()
   // Empty
 }
 
-
 nsresult
 nsXSLContentSink::Init(nsITransformMediator* aTM,
                        nsIDocument* aDoc,
                        nsIURI* aURL,
                        nsIWebShell* aContainer)
 {
-  nsresult rv;
-  rv = nsXMLContentSink::Init(aDoc, aURL, aContainer, nsnull);
+  nsresult rv = nsXMLContentSink::Init(aDoc, aURL, aContainer, nsnull);
   NS_ENSURE_SUCCESS(rv, rv);
 
   mXSLTransformMediator = aTM;
@@ -98,7 +93,10 @@ nsXSLContentSink::Init(nsITransformMediator* aTM,
   nsCOMPtr<nsIScriptLoader> loader;
   rv = mDocument->GetScriptLoader(getter_AddRefs(loader));
   NS_ENSURE_SUCCESS(rv, rv);
+
   loader->Suspend();
+  loader->RemoveObserver(this);
+
   return rv;
 }
 
@@ -140,6 +138,7 @@ nsXSLContentSink::DidBuildModel(PRInt32 aQualityLevel)
   if (mXSLTransformMediator) {
     // Pass the style content model to the tranform mediator.
     mXSLTransformMediator->SetStyleSheetContentModel(styleNode);
+    mXSLTransformMediator = nsnull;
   }
   
   // Drop our reference to the parser to get rid of a circular
@@ -221,6 +220,12 @@ nsXSLContentSink::ReportError(const PRUnichar* aErrorText,
 {
   // nsXMLContentSink::ReportError sets mXSLTransformMediator to nsnull
   nsCOMPtr<nsITransformMediator> mediator = mXSLTransformMediator;
+
+  nsCOMPtr<nsIChannel> channel;
+  nsCOMPtr<nsILoadGroup> loadGroup;
+  mParser->GetChannel(getter_AddRefs(channel));
+  mDocument->GetDocumentLoadGroup(getter_AddRefs(loadGroup));
+  mDocument->Reset(channel, loadGroup);
 
   nsXMLContentSink::ReportError(aErrorText, aSourceText);
 
