@@ -253,7 +253,11 @@ NS_IMETHODIMP GlobalWindowImpl::SetNewDocument(nsIDOMDocument *aDocument)
       mDocument = nsnull; // Forces Release
    
    if(mContext) 
-      mContext->GC();
+   {
+      // Add an extra ref in case we release mContext during GC.
+      nsCOMPtr<nsIScriptContext> kungFuDeathGrip = mContext;
+      kungFuDeathGrip->GC();
+   }
 
    mDocument = aDocument;
 
