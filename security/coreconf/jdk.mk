@@ -242,7 +242,6 @@ ifeq ($(OS_ARCH), Linux)
 
 	JAVA_CLIBS =
 
-	JAVA_LIBS  = -L$(JAVA_HOME)/$(JAVA_LIBDIR)/$(JDK_THREADING_MODEL) -lhpi
         ifeq ($(JDK_VERSION), 1.4)
 	    JAVA_LIBS += -L$(JAVA_HOME)/$(JAVA_LIBDIR)/server -ljvm
         else
