@@ -5,11 +5,11 @@
             CLASS = FindDlgController; 
             LANGUAGE = ObjC; 
             OUTLETS = {
-                mFindButton = id; 
-                mIgnoreCaseBox = id; 
-                mSearchBackwardsBox = id; 
-                mSearchField = id; 
-                mWrapAroundBox = id; 
+                mFindButton = NSButton; 
+                mIgnoreCaseBox = NSButton; 
+                mSearchBackwardsBox = NSButton; 
+                mSearchField = NSTextField; 
+                mWrapAroundBox = NSButton; 
             }; 
             SUPERCLASS = NSWindowController; 
         }, 

@@ -70,8 +70,15 @@
   NSWindowController* controller = [[NSApp mainWindow] windowController];
   if ( [controller conformsToProtocol:@protocol(CHFind)] ) {
     id<CHFind> browserController = controller;
+    BOOL ignoreCase = [mIgnoreCaseBox state];
+    BOOL wrapSearch = [mWrapAroundBox state];
+    BOOL searchBack = [mSearchBackwardsBox state];
+
     [self storeSearchText:[mSearchField stringValue]];
-    BOOL found = [browserController findInPage:mSearchText];
+
+    BOOL found = [browserController findInPageWithPattern:mSearchText caseSensitive:!ignoreCase
+        wrap:wrapSearch backwards:searchBack];
+
     if ( found ) 
       [self close];
     else
@@ -93,14 +100,18 @@
   NSWindowController* controller = [[NSApp mainWindow] windowController];
   if ( [controller conformsToProtocol:@protocol(CHFind)] ) {
     id<CHFind> browserController = controller;
-    BOOL found = [browserController findInPage:mSearchText];
+    BOOL ignoreCase = [mIgnoreCaseBox state];
+    BOOL wrapSearch = [mWrapAroundBox state];
+    BOOL searchBack = [mSearchBackwardsBox state];
+    
+    BOOL found = [browserController findInPageWithPattern:mSearchText caseSensitive:!ignoreCase
+        wrap:wrapSearch backwards:searchBack];
     if ( !found )
       NSBeep();
   }
   else
     NSBeep();
 }
-
 
 //
 // controlTextDidChange
@@ -114,7 +125,6 @@
   else
     [mFindButton setEnabled:PR_FALSE];    
 }
-
 
 - (void)storeSearchText:(NSString*)inText
 {

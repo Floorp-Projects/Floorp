@@ -32,6 +32,7 @@
 
 @protocol CHFind
 
-- (BOOL)findInPage:(NSString*)text;
+- (BOOL)findInPageWithPattern:(NSString*)text caseSensitive:(BOOL)inCaseSensitive
+        wrap:(BOOL)inWrap backwards:(BOOL)inBackwards;
 
 @end
