@@ -49,7 +49,6 @@ static struct _PT_Bookeeping
     PRInt32 system, user;       /* a count of the two different types */
     PRUintn this_many;          /* number of threads allowed for exit */
     pthread_key_t key;          /* private private data key */
-    pthread_key_t highwater;    /* ordinal value of next key to be allocated */
     PRThread *first, *last;     /* list of threads we know about */
 #if defined(_PR_DCETHREADS) || defined(_POSIX_THREAD_PRIORITY_SCHEDULING)
     PRInt32 minPrio, maxPrio;   /* range of scheduling priorities */
@@ -630,53 +629,6 @@ PR_IMPLEMENT(void) PR_SetThreadPriority(PRThread *thred, PRThreadPriority newPri
     thred->priority = newPri;
 }  /* PR_SetThreadPriority */
 
-#if 0
-PR_IMPLEMENT(PRStatus) PR_NewThreadPrivateIndex(
-    PRUintn *newIndex, PRThreadPrivateDTOR destructor)
-{
-    int rv;
-
-    if (!_pr_initialized) _PR_ImplicitInitialization();
-
-    rv = _PT_PTHREAD_KEY_CREATE((pthread_key_t*)newIndex, destructor);
-
-    if (0 == rv)
-    {
-        PR_Lock(pt_book.ml);
-        if (*newIndex >= pt_book.highwater)
-            pt_book.highwater = *newIndex + 1;
-        PR_Unlock(pt_book.ml);
-        return PR_SUCCESS;
-    }
-    PR_SetError(PR_UNKNOWN_ERROR, rv);
-    return PR_FAILURE;
-}  /* PR_NewThreadPrivateIndex */
-
-PR_IMPLEMENT(PRStatus) PR_SetThreadPrivate(PRUintn index, void *priv)
-{
-    PRIntn rv;
-    if ((pthread_key_t)index >= pt_book.highwater)
-    {
-        PR_SetError(PR_TPD_RANGE_ERROR, 0);
-        return PR_FAILURE;
-    }
-    rv = pthread_setspecific((pthread_key_t)index, priv);
-    PR_ASSERT(0 == rv);
-    if (0 == rv) return PR_SUCCESS;
-
-    PR_SetError(PR_UNKNOWN_ERROR, rv);
-    return PR_FAILURE;
-}  /* PR_SetThreadPrivate */
-
-PR_IMPLEMENT(void*) PR_GetThreadPrivate(PRUintn index)
-{
-    void *result = NULL;
-    if ((pthread_key_t)index < pt_book.highwater)
-        _PT_PTHREAD_GETSPECIFIC((pthread_key_t)index, result);
-    return result;
-}  /* PR_GetThreadPrivate */
-#endif
-
 PR_IMPLEMENT(PRStatus) PR_Interrupt(PRThread *thred)
 {
     /*
@@ -787,6 +739,7 @@ static void _pt_thread_death(void *arg)
         PR_Unlock(pt_book.ml);
     }
     _PR_DestroyThreadPrivate(thred);
+    PR_Free(thred->privateData);
     if (NULL != thred->errorString)
         PR_Free(thred->errorString);
     if (NULL != thred->io_cv)

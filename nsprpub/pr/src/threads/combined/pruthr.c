@@ -314,7 +314,11 @@ _PR_NativeDestroyThread(PRThread *thread)
         PR_DestroyCondVar(thread->term);
         thread->term = 0;
     }
-
+    if (NULL != thread->privateData) {
+        PR_ASSERT(0 != thread->tpdLength);
+        PR_DELETE(thread->privateData);
+        thread->tpdLength = 0;
+    }
     PR_DELETE(thread->stack);
     _PR_DestroyThread(thread);
 }
@@ -326,11 +330,9 @@ _PR_UserDestroyThread(PRThread *thread)
         PR_DestroyCondVar(thread->term);
         thread->term = 0;
     }
-    if (NULL != thread->privateData)
-    {
+    if (NULL != thread->privateData) {
         PR_ASSERT(0 != thread->tpdLength);
         PR_DELETE(thread->privateData);
-        thread->privateData = NULL;
         thread->tpdLength = 0;
     }
     _MD_FREE_LOCK(&thread->threadLock);
