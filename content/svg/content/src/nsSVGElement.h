@@ -51,7 +51,6 @@
 #include "nsISVGValue.h"
 #include "nsISVGValueObserver.h"
 #include "nsWeakReference.h"
-#include "nsISVGStyleValue.h"
 #include "nsISVGContent.h"
 
 class nsSVGElement : public nsGenericElement,    // :nsIHTMLContent:nsIXMLContent:nsIStyledContent:nsIContent
@@ -86,10 +85,9 @@ public:
 
   // nsIStyledContent
   NS_IMETHOD GetID(nsIAtom** aResult) const;
-//   virtual const nsAttrValue* GetClasses() const;
-//   NS_IMETHOD HasClass(nsIAtom* aClass) const;
   
   NS_IMETHOD WalkContentStyleRules(nsRuleWalker* aRuleWalker);
+  NS_IMETHOD SetInlineStyleRule(nsICSSStyleRule* aStyleRule, PRBool aNotify);
   NS_IMETHOD GetInlineStyleRule(nsICSSStyleRule** aStyleRule);
 
   static const MappedAttributeEntry sFillStrokeMap[];
@@ -149,7 +147,6 @@ protected:
   
   nsCOMPtr<nsICSSStyleRule> mContentStyleRule;
   nsAttrAndChildArray mMappedAttributes;
-  nsCOMPtr<nsISVGStyleValue> mStyle;
 };
 
 #endif // __NS_SVGELEMENT_H__

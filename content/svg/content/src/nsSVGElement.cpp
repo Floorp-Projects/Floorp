@@ -55,9 +55,9 @@
 #include "nsICSSStyleRule.h"
 #include "nsISVGSVGElement.h"
 #include "nsRuleWalker.h"
-#include "nsSVGStyleValue.h"
 #include "nsCSSDeclaration.h"
 #include "nsICSSParser.h"
+#include "nsGenericHTMLElement.h"
 
 nsSVGElement::nsSVGElement()
 {
@@ -98,12 +98,6 @@ nsSVGElement::Init(nsINodeInfo* aNodeInfo)
   NS_ENSURE_SUCCESS(rv, rv);
   
   // Create mapped properties:
-  
-  // style #IMPLIED
-  rv = NS_NewSVGStyleValue(getter_AddRefs(mStyle));
-  NS_ENSURE_SUCCESS(rv,rv);
-  rv = AddMappedSVGValue(nsSVGAtoms::style, mStyle);
-  NS_ENSURE_SUCCESS(rv,rv);
   
   return NS_OK;
 }
@@ -204,6 +198,9 @@ nsSVGElement::SetAttr(PRInt32 aNamespaceID, nsIAtom* aName, nsIAtom* aPrefix,
       attrValue.SetTo(svg_value);
     }
   }
+  else if (aName == nsSVGAtoms::style && aNamespaceID == kNameSpaceID_None) {
+    nsGenericHTMLElement::ParseStyleAttribute(this, PR_TRUE, aValue, attrValue);
+  }
   else {
     // We don't have an nsISVGValue attribute.
     attrValue.SetTo(aValue);
@@ -258,9 +255,51 @@ nsSVGElement::WalkContentStyleRules(nsRuleWalker* aRuleWalker)
 }
 
 NS_IMETHODIMP
+nsSVGElement::SetInlineStyleRule(nsICSSStyleRule* aStyleRule, PRBool aNotify)
+{
+  PRBool hasListeners = PR_FALSE;
+  PRBool modification = PR_FALSE;
+  nsAutoString oldValueStr;
+
+  if (mDocument) {
+    hasListeners = nsGenericElement::HasMutationListeners(this,
+      NS_EVENT_BITS_MUTATION_ATTRMODIFIED);
+
+    // There's no point in comparing the stylerule pointers since we're always
+    // getting a new stylerule here. And we can't compare the stringvalues of
+    // the old and the new rules since both will point to the same declaration
+    // and thus will be the same.
+    if (hasListeners || aNotify) {
+      // save the old attribute so we can set up the mutation event properly
+      const nsAttrValue* value = mAttrsAndChildren.GetAttr(nsSVGAtoms::style);
+      if (value) {
+        modification = PR_TRUE;
+        if (hasListeners) {
+          value->ToString(oldValueStr);
+        }
+      }
+    }
+  }
+
+  nsAttrValue attrValue(aStyleRule);
+
+  return SetAttrAndNotify(kNameSpaceID_None, nsSVGAtoms::style, nsnull,
+                          oldValueStr, attrValue, modification, hasListeners,
+                          aNotify);
+}
+
+NS_IMETHODIMP
 nsSVGElement::GetInlineStyleRule(nsICSSStyleRule** aStyleRule)
 {
-  return mStyle->GetStyleRule(this, aStyleRule);
+  *aStyleRule = nsnull;
+
+  const nsAttrValue* attrVal = mAttrsAndChildren.GetAttr(nsSVGAtoms::style);
+
+  if (attrVal && attrVal->Type() == nsAttrValue::eCSSStyleRule) {
+    NS_ADDREF(*aStyleRule = attrVal->GetCSSStyleRuleValue());
+  }
+
+  return NS_OK;
 }
 
 // PresentationAttributes-FillStroke

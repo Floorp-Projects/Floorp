@@ -49,6 +49,7 @@ CPPSRCS		= \
 		nsSVGAnimatedString.cpp \
 		nsSVGAnimatedTransformList.cpp \
 		nsSVGCircleElement.cpp \
+		nsSVGClassValue.cpp \
 		nsSVGElement.cpp \
 		nsSVGElementFactory.cpp \
 		nsSVGEllipseElement.cpp \
@@ -71,11 +72,11 @@ CPPSRCS		= \
 		nsSVGPolygonElement.cpp \
 		nsSVGPolylineElement.cpp \
 		nsSVGStringProxyValue.cpp \
+		nsSVGStylableElement.cpp \
 		nsSVGRect.cpp \
 		nsSVGRectElement.cpp \
 		nsSVGSVGElement.cpp \
 		nsSVGStyleElement.cpp \
-		nsSVGStyleValue.cpp \
 		nsSVGTSpanElement.cpp \
 		nsSVGTextElement.cpp \
 		nsSVGTransform.cpp \
@@ -110,6 +111,7 @@ INCLUDES += 	\
 		-I$(srcdir)/../../../base/src \
 		-I$(srcdir)/../../../../layout/svg/base/src \
 		-I$(srcdir)/../../../html/style/src \
+		-I$(srcdir)/../../../html/content/src \
 		$(NULL)
 
 DEFINES += -D_IMPL_NS_LAYOUT

@@ -39,12 +39,12 @@
 #ifndef __NS_SVGGRAPHICELEMENT_H__
 #define __NS_SVGGRAPHICELEMENT_H__
 
-#include "nsSVGElement.h"
+#include "nsSVGStylableElement.h"
 #include "nsIDOMSVGLocatable.h"
 #include "nsIDOMSVGTransformable.h"
 #include "nsIDOMSVGAnimTransformList.h"
 
-typedef nsSVGElement nsSVGGraphicElementBase;
+typedef nsSVGStylableElement nsSVGGraphicElementBase;
 
 class nsSVGGraphicElement : public nsSVGGraphicElementBase,
                             public nsIDOMSVGTransformable // : nsIDOMSVGLocatable

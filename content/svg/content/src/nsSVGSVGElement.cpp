@@ -36,7 +36,7 @@
  *
  * ----- END LICENSE BLOCK ----- */
 
-#include "nsSVGElement.h"
+#include "nsSVGStylableElement.h"
 #include "nsSVGAtoms.h"
 #include "nsIDOMSVGFitToViewBox.h"
 #include "nsIDOMSVGLocatable.h"
@@ -64,7 +64,9 @@
 #include "nsSVGRect.h"
 #include "nsISVGValueUtils.h"
 
-class nsSVGSVGElement : public nsSVGElement,
+typedef nsSVGStylableElement nsSVGSVGElementBase;
+
+class nsSVGSVGElement : public nsSVGSVGElementBase,
                         public nsISVGSVGElement, // : nsIDOMSVGSVGElement
                         public nsIDOMSVGFitToViewBox,
                         public nsIDOMSVGLocatable
@@ -85,9 +87,9 @@ public:
   NS_DECL_NSIDOMSVGLOCATABLE
   
   // xxx I wish we could use virtual inheritance
-  NS_FORWARD_NSIDOMNODE_NO_CLONENODE(nsSVGElement::)
-  NS_FORWARD_NSIDOMELEMENT(nsSVGElement::)
-  NS_FORWARD_NSIDOMSVGELEMENT(nsSVGElement::)
+  NS_FORWARD_NSIDOMNODE_NO_CLONENODE(nsSVGSVGElementBase::)
+  NS_FORWARD_NSIDOMELEMENT(nsSVGSVGElementBase::)
+  NS_FORWARD_NSIDOMSVGELEMENT(nsSVGSVGElementBase::)
 
   // nsISVGSVGElement interface:
   NS_IMETHOD GetParentViewportRect(nsISVGViewportRect **parentViewport);
@@ -140,8 +142,8 @@ nsresult NS_NewSVGSVGElement(nsIContent **aResult, nsINodeInfo *aNodeInfo)
 //----------------------------------------------------------------------
 // nsISupports methods
 
-NS_IMPL_ADDREF_INHERITED(nsSVGSVGElement,nsSVGElement)
-NS_IMPL_RELEASE_INHERITED(nsSVGSVGElement,nsSVGElement)
+NS_IMPL_ADDREF_INHERITED(nsSVGSVGElement,nsSVGSVGElementBase)
+NS_IMPL_RELEASE_INHERITED(nsSVGSVGElement,nsSVGSVGElementBase)
 
 NS_INTERFACE_MAP_BEGIN(nsSVGSVGElement)
   NS_INTERFACE_MAP_ENTRY(nsIDOMNode)
@@ -152,7 +154,7 @@ NS_INTERFACE_MAP_BEGIN(nsSVGSVGElement)
   NS_INTERFACE_MAP_ENTRY(nsIDOMSVGLocatable)
   NS_INTERFACE_MAP_ENTRY(nsISVGSVGElement)
   NS_INTERFACE_MAP_ENTRY_CONTENT_CLASSINFO(SVGSVGElement)
-NS_INTERFACE_MAP_END_INHERITING(nsSVGElement)
+NS_INTERFACE_MAP_END_INHERITING(nsSVGSVGElementBase)
 
 //----------------------------------------------------------------------
 // Implementation
@@ -176,7 +178,7 @@ nsSVGSVGElement::~nsSVGSVGElement()
 nsresult
 nsSVGSVGElement::Init(nsINodeInfo* aNodeInfo)
 {
-  nsresult rv = nsSVGElement::Init(aNodeInfo);
+  nsresult rv = nsSVGSVGElementBase::Init(aNodeInfo);
   NS_ENSURE_SUCCESS(rv,rv);
 
   // parent viewport. this will be initialized properly by our frame.
@@ -1084,7 +1086,7 @@ nsSVGSVGElement::IsAttributeMapped(const nsIAtom* name) const
   };
 
   return FindAttributeDependence(name, map, NS_ARRAY_LENGTH(map)) ||
-    nsSVGElement::IsAttributeMapped(name);
+    nsSVGSVGElementBase::IsAttributeMapped(name);
 }
 
 //----------------------------------------------------------------------
