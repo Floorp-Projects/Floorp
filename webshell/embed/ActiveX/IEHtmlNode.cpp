@@ -18,9 +18,6 @@
 #include "stdafx.h"
 #include "IEHtmlNode.h"
 
-static NS_DEFINE_IID(kIDOMNodeIID, NS_IDOMNODE_IID);
-static NS_DEFINE_IID(kIDOMElementIID, NS_IDOMELEMENT_IID);
-
 CIEHtmlNode::CIEHtmlNode()
 {
 	m_pIDOMNode = nsnull;

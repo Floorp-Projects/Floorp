@@ -125,6 +125,8 @@ typedef std::basic_string<TCHAR> tstring;
 #include "ActiveXPluginInstance.h"
 #endif
 
+#include "guids.h"
+
 //{{AFX_INSERT_LOCATION}}
 // Microsoft Developer Studio will insert additional declarations immediately before the previous line.
 

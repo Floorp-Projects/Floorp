@@ -98,6 +98,10 @@ SOURCE=.\ControlSiteIPFrame.cpp
 # End Source File
 # Begin Source File
 
+SOURCE=.\guids.cpp
+# End Source File
+# Begin Source File
+
 SOURCE=.\IEHtmlDocument.cpp
 # End Source File
 # Begin Source File
@@ -187,6 +191,10 @@ SOURCE=.\ControlSiteIPFrame.h
 # Begin Source File
 
 SOURCE=.\CPMozillaControl.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\guids.h
 # End Source File
 # Begin Source File
 

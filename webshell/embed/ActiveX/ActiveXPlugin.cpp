@@ -17,10 +17,6 @@
  */
 #include "stdafx.h"
 
-static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
-static NS_DEFINE_IID(kIFactoryIID, NS_IFACTORY_IID);
-static NS_DEFINE_IID(kIPluginIID, NS_IPLUGIN_IID);
-
 static CActiveXPlugin *gpFactory = NULL;
 
 extern "C" NS_EXPORT nsresult 
