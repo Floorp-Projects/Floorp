@@ -30,12 +30,9 @@
 #include "nsXPIDLString.h"
 #include "nsIJSContextStack.h"
 #include "nsDOMError.h"
+#include "xpcexception.h"
 
 static NS_DEFINE_CID(kPrefServiceCID, NS_PREF_CID);
-static NS_DEFINE_CID(kURLCID, NS_STANDARDURL_CID);
-static NS_DEFINE_CID(kComponentManagerCID, NS_COMPONENTMANAGER_CID);
-static NS_DEFINE_IID(kIScriptSecurityManagerIID, NS_ISCRIPTSECURITYMANAGER_IID);
-static NS_DEFINE_IID(kIXPCSecurityManagerIID, NS_IXPCSECURITYMANAGER_IID);
 
 enum {
     SCRIPT_SECURITY_SAME_DOMAIN_ACCESS,
@@ -52,12 +49,12 @@ nsScriptSecurityManager::QueryInterface(REFNSIID aIID, void** aInstancePtr)
 {
   if (nsnull == aInstancePtr) 
       return NS_ERROR_NULL_POINTER;
-  if (aIID.Equals(kIScriptSecurityManagerIID)) {
+  if (aIID.Equals(NS_GET_IID(nsIScriptSecurityManager))) {
       *aInstancePtr = (void*)(nsIScriptSecurityManager *)this;
       NS_ADDREF_THIS();
       return NS_OK;
   }
-  if (aIID.Equals(kIXPCSecurityManagerIID)) {
+  if (aIID.Equals(NS_GET_IID(nsIXPCSecurityManager))) {
       *aInstancePtr = (void*)(nsIXPCSecurityManager *)this;
       NS_ADDREF_THIS();
       return NS_OK;
@@ -323,6 +320,8 @@ nsScriptSecurityManager::CanCreateWrapper(JSContext *aJSContext,
                                           const nsIID &aIID, 
                                           nsISupports *aObj)
 {
+	if (aIID.Equals(NS_GET_IID(nsIXPCException)))
+		return NS_OK;		
     return CheckXPCPermissions(aJSContext);
 }
 
@@ -614,23 +613,26 @@ nsScriptSecurityManager::CheckXPCPermissions(JSContext *aJSContext)
     // Temporary: only enforce if security.checkxpconnect pref is enabled
 	nsresult rv;
 	NS_WITH_SERVICE(nsIPref, prefs, kPrefServiceCID, &rv);
-	if (NS_FAILED(rv))
-		return NS_ERROR_FAILURE;
-    PRBool enabled;
-    if (NS_FAILED(prefs->GetBoolPref("security.checkxpconnect", &enabled)) ||
-        !enabled) 
-    {
-        return NS_OK;
-    }
+	if (NS_SUCCEEDED(rv)) {
+		PRBool enabled;
+		if (NS_SUCCEEDED(prefs->GetBoolPref("security.checkxpconnect", &enabled)) &&
+			!enabled) 
+		{
+			return NS_OK;
+		}
+	}
     
     nsCOMPtr<nsIPrincipal> subject;
-    if (NS_FAILED(GetSubjectPrincipal(aJSContext, getter_AddRefs(subject))))
-        return NS_ERROR_FAILURE;
     PRBool ok = PR_FALSE;
-    if (NS_FAILED(subject->CanAccess("UniversalXPConnect", &ok)))
-        return NS_ERROR_FAILURE;
+    if (NS_SUCCEEDED(GetSubjectPrincipal(aJSContext, getter_AddRefs(subject))))
+        ok = PR_TRUE;
+    if (!ok || NS_FAILED(subject->CanAccess("UniversalXPConnect", &ok)))
+        ok = PR_FALSE;
     if (!ok) {
-        JS_ReportError(aJSContext, "Access denied to XPConnect service.");
+		static const char msg[] = "Access denied to XPConnect service.";
+		JS_SetPendingException(aJSContext, 
+			                   STRING_TO_JSVAL(JS_NewStringCopyZ(aJSContext, msg)));
+		//JS_ReportError(aJSContext, msg);
         return NS_ERROR_DOM_XPCONNECT_ACCESS_DENIED;
     }
     return NS_OK;
