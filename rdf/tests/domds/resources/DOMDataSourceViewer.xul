@@ -1,6 +1,6 @@
 <?xml version="1.0"?>
 <?xml-stylesheet href="chrome://global/skin/" type="text/css"?>
-<?xml-stylesheet href="DataSourceViewer.css" type="text/css"?>
+<?xml-stylesheet href="DOMDataSourceViewer.css" type="text/css"?>
 
 <window
   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
