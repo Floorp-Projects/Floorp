@@ -113,17 +113,19 @@ ResIDT CNSMenuBarManager::MapWindowTypeToMBARResID(Uint32 inWindowType, CMediate
 		case WindowType_Editor:
 			result = cEditorMenubar;
 			break;
+#ifdef MOZ_MAIL_NEWS
 		case WindowType_SearchMailNews:
 		case WindowType_MailNews:
 		case WindowType_MailThread:
 		case WindowType_Message:
 			result = cMailNewsMenubar;
 			break;
-		case WindowType_NavCenter:
-			result = cBookmarksMenubar;
-			break;
 		case WindowType_Address:
 			result = cAddressBookMenubar;
+			break;
+#endif
+		case WindowType_NavCenter:
+			result = cBookmarksMenubar;
 			break;
 		case WindowType_Compose:
 			result = cComposeMenubar;
