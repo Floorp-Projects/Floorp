@@ -915,7 +915,7 @@ ParseAtom(CompilerState *state)
             }
             if ((c = *cp++) == ']')
                 break;
-            if (c == '\\' && (cp+1 != state->cpend))
+            if (c == '\\' && (cp != state->cpend))
                 cp++;
         } while (JS_TRUE);
         ren->u.kid2 = (void *)(cp - 1);
