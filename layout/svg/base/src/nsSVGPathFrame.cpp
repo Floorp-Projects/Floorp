@@ -275,7 +275,7 @@ nsSVGPathFrame::Paint(nsIPresContext* aPresContext,
   aPresContext->GetDeviceContext(getter_AddRefs(dx));
   float p2t   = 1.0;
   float scale = 1.0;
-  if (dx) { 
+  if (dx) {
     aPresContext->GetPixelsToTwips(&p2t);
     dx->GetCanonicalPixelScale(scale); 
   }  

@@ -134,51 +134,113 @@ nsSVGContainerFrame::Reflow(nsIPresContext*   aPresContext,
                      nsReflowStatus&          aStatus)
 {
   aStatus = NS_FRAME_COMPLETE;
+  if (eReflowReason_Incremental == aReflowState.reason) {
+    nsIFrame* targetFrame;
+    aReflowState.reflowCommand->GetTarget(targetFrame);
+    // Check to see if we are the target of the Incremental Reflow
+    if (targetFrame == this) {
+      NS_ASSERTION(0, "Incremental reflow on nsSVGContainerFrame");
+    } else {
+      nsIFrame * incrementalChild;
+      aReflowState.reflowCommand->GetNext(incrementalChild);
+      nscoord maxWidth  = 0;
+      nscoord maxHeight = 0;
 
-  nscoord maxWidth  = 0;
-  nscoord maxHeight = 0;
+      nsSize availSize(aReflowState.availableWidth, aReflowState.availableHeight);
+      nsHTMLReflowMetrics kidSize(&availSize);
+      nsHTMLReflowState   kidReflowState(aPresContext, aReflowState, incrementalChild, availSize);
 
-  nsIFrame * child = mFrames.FirstChild();
+      incrementalChild->WillReflow(aPresContext);
+      incrementalChild->MoveTo(aPresContext, aReflowState.mComputedBorderPadding.left, aReflowState.mComputedBorderPadding.top);
+      nsIView*  view;
+      incrementalChild->GetView(aPresContext, &view);
+      if (view) {
+        //nsHTMLContainerFrame::PositionFrameView(aPresContext, child, view);
+      }
+      nsReflowStatus status;
+      nsresult rv = incrementalChild->Reflow(aPresContext, kidSize, kidReflowState, status);
 
-  while (child != nsnull) {
+      nsRect rect;
+      incrementalChild->GetRect(rect);
+      nsCOMPtr<nsISVGFrame> svgFrame = do_QueryInterface(incrementalChild);
+      if (svgFrame) {
+        svgFrame->GetXY(&rect.x, &rect.y);
+      }
+      rect.width  = kidSize.width;
+      rect.height = kidSize.height;
+      maxWidth = PR_MAX(maxWidth, rect.x+rect.width);
+      maxHeight = PR_MAX(maxHeight, rect.y+rect.height);
 
-    nsSize availSize(aReflowState.availableWidth, aReflowState.availableHeight);
-    nsHTMLReflowMetrics kidSize(&availSize);
-    nsHTMLReflowState   kidReflowState(aPresContext, aReflowState, child, availSize);
+      incrementalChild->SetRect(aPresContext, rect);
+      if (NS_FAILED(rv)) return rv;
+      rv = incrementalChild->DidReflow(aPresContext, NS_FRAME_REFLOW_FINISHED);
+      if (NS_FAILED(rv)) return rv;
 
-    child->WillReflow(aPresContext);
-    child->MoveTo(aPresContext, aReflowState.mComputedBorderPadding.left, aReflowState.mComputedBorderPadding.top);
-    nsIView*  view;
-    child->GetView(aPresContext, &view);
-    if (view) {
-      //nsHTMLContainerFrame::PositionFrameView(aPresContext, child, view);
+      nsIFrame * child = mFrames.FirstChild();
+      while (child != nsnull) {
+        nsRect rect;
+        child->GetRect(rect);
+        nsCOMPtr<nsISVGFrame> svgFrame = do_QueryInterface(child);
+        if (svgFrame) {
+          svgFrame->GetXY(&rect.x, &rect.y);
+        }
+        maxWidth = PR_MAX(maxWidth, rect.x+rect.width);
+        maxHeight = PR_MAX(maxHeight, rect.y+rect.height);
+        child->GetNextSibling(&child);
+      }
+
+      aDesiredSize.width  = maxWidth;
+      aDesiredSize.height = maxHeight;
+      aDesiredSize.ascent = aDesiredSize.height;
+      aDesiredSize.descent = 0;
     }
-    nsReflowStatus status;
-    nsresult rv = child->Reflow(aPresContext, kidSize, kidReflowState, status);
+  } else {
 
-    nsRect rect;
-    child->GetRect(rect);
-    nsCOMPtr<nsISVGFrame> svgFrame = do_QueryInterface(child);
-    if (svgFrame) {
-      svgFrame->GetXY(&rect.x, &rect.y);
+    nscoord maxWidth  = 0;
+    nscoord maxHeight = 0;
+
+    nsIFrame * child = mFrames.FirstChild();
+
+    while (child != nsnull) {
+
+      nsSize availSize(aReflowState.availableWidth, aReflowState.availableHeight);
+      nsHTMLReflowMetrics kidSize(&availSize);
+      nsHTMLReflowState   kidReflowState(aPresContext, aReflowState, child, availSize);
+
+      child->WillReflow(aPresContext);
+      child->MoveTo(aPresContext, aReflowState.mComputedBorderPadding.left, aReflowState.mComputedBorderPadding.top);
+      nsIView*  view;
+      child->GetView(aPresContext, &view);
+      if (view) {
+        //nsHTMLContainerFrame::PositionFrameView(aPresContext, child, view);
+      }
+      nsReflowStatus status;
+      nsresult rv = child->Reflow(aPresContext, kidSize, kidReflowState, status);
+
+      nsRect rect;
+      child->GetRect(rect);
+      nsCOMPtr<nsISVGFrame> svgFrame = do_QueryInterface(child);
+      if (svgFrame) {
+        svgFrame->GetXY(&rect.x, &rect.y);
+      }
+      rect.width  = kidSize.width;
+      rect.height = kidSize.height;
+      maxWidth = PR_MAX(maxWidth, rect.x+rect.width);
+      maxHeight = PR_MAX(maxHeight, rect.y+rect.height);
+
+      child->SetRect(aPresContext, rect);
+      if (NS_FAILED(rv)) return rv;
+      rv = child->DidReflow(aPresContext, NS_FRAME_REFLOW_FINISHED);
+      if (NS_FAILED(rv)) return rv;
+      child->GetNextSibling(&child);
     }
-    rect.width  = kidSize.width;
-    rect.height = kidSize.height;
-    maxWidth = PR_MAX(maxWidth, rect.x+rect.width);
-    maxHeight = PR_MAX(maxHeight, rect.y+rect.height);
 
-    child->SetRect(aPresContext, rect);
-    if (NS_FAILED(rv)) return rv;
-    rv = child->DidReflow(aPresContext, NS_FRAME_REFLOW_FINISHED);
-    if (NS_FAILED(rv)) return rv;
-    child->GetNextSibling(&child);
+
+    aDesiredSize.width  = maxWidth;
+    aDesiredSize.height = maxHeight;
+    aDesiredSize.ascent = aDesiredSize.height;
+    aDesiredSize.descent = 0;
   }
-
-
-  aDesiredSize.width  = maxWidth;
-  aDesiredSize.height = maxHeight;
-  aDesiredSize.ascent = aDesiredSize.height;
-  aDesiredSize.descent = 0;
 
   if (nsnull != aDesiredSize.maxElementSize) {
     aDesiredSize.maxElementSize->width  = aDesiredSize.width;
@@ -331,7 +393,7 @@ nsSVGContainerFrame::AttributeChanged(nsIPresContext* aPresContext,
 
 
 NS_IMETHODIMP
-nsSVGContainerFrame :: Paint ( nsIPresContext* aPresContext,
+nsSVGContainerFrame::Paint ( nsIPresContext* aPresContext,
                       nsIRenderingContext& aRenderingContext,
                       const nsRect& aDirtyRect,
                       nsFramePaintLayer aWhichLayer)
@@ -342,10 +404,11 @@ nsSVGContainerFrame :: Paint ( nsIPresContext* aPresContext,
   // if we aren't visible then we are done.
   if (!disp->IsVisibleOrCollapsed()) 
 	   return NS_OK;  
-
+  //printf("nsSVGContainerFrame::Paint Start\n");
   // if we are visible then tell our superclass to paint
   nsresult r = nsHTMLContainerFrame::Paint(aPresContext, aRenderingContext, aDirtyRect,
                        aWhichLayer);
+  //printf("nsSVGContainerFrame::Paint End\n");
 
   return r;
 }
