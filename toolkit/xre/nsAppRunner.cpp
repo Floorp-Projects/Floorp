@@ -1876,6 +1876,19 @@ int xre_main(int argc, char* argv[], const nsXREAppData& aAppData)
   }
 #endif
 
+  // check for -register, which registers chrome and then exits immediately
+  for (int i = 0; i < argc; ++i) {
+    if (!strcmp(argv[i], "-register")) {
+      nsCOMPtr<nsIChromeRegistry> chromeReg = do_GetService("@mozilla.org/chrome/chrome-registry;1");
+      if (chromeReg) {
+        chromeReg->CheckForNewChrome();
+        chromeReg = 0;
+        NS_ShutdownXPCOM(nsnull);
+        return 0;
+      }
+    }
+  }
+
   nsresult mainResult = main1(argc, argv,
                               nativeApp ? (nsISupports*)nativeApp : (nsISupports*)splash,
                               aAppData);
