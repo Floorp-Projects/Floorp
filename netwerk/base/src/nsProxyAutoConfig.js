@@ -39,7 +39,7 @@ function nsProxyAutoConfig() {};
 
 nsProxyAutoConfig.prototype = {
 
-    ProxyForURL: function(url, host, port) {
+    ProxyForURL: function(url, host, port, type) {
         uri = url.QueryInterface(Components.interfaces.nsIURI);
         // Call the original function-
         var proxy = FindProxyForURL(uri.spec, uri.host);
@@ -50,6 +50,7 @@ nsProxyAutoConfig.prototype = {
         // test dummy for now...
         host.value = "localhost";
         port.value = 4444;
+		type.value = "http"; //proxy (http, socks, direct, etc)
     }
 }
 

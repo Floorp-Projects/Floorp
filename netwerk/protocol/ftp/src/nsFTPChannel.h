@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
  *
  * The contents of this file are subject to the Netscape Public
  * License Version 1.1 (the "License"); you may not use this file
@@ -39,8 +39,11 @@
 #include "nsIStreamListener.h"
 #include "nsAutoLock.h"
 #include "nsIPrompt.h"
+#include "nsIFTPChannel.h"
+#include "nsIProxy.h"
 
-class nsFTPChannel : public nsIChannel,
+class nsFTPChannel : public nsIFTPChannel,
+                     public nsIProxy,
                      public nsIInterfaceRequestor,
                      public nsIProgressEventSink,
                      public nsIStreamListener {
@@ -48,6 +51,8 @@ public:
     NS_DECL_ISUPPORTS
     NS_DECL_NSIREQUEST
     NS_DECL_NSICHANNEL
+    NS_DECL_NSIFTPCHANNEL
+    NS_DECL_NSIPROXY	  
     NS_DECL_NSIINTERFACEREQUESTOR
     NS_DECL_NSIPROGRESSEVENTSINK
     NS_DECL_NSISTREAMLISTENER
@@ -67,9 +72,9 @@ public:
     nsresult Init(nsIURI* uri, 
                   nsIProtocolHandler* aHandler, 
                   nsIThreadPool* aPool);
-
+    
     nsresult SetProxyChannel(nsIChannel *aChannel);
-
+    
 protected:
     nsCOMPtr<nsIURI>                mOriginalURI;
     nsCOMPtr<nsIURI>                mURL;
@@ -100,6 +105,11 @@ protected:
     PRLock*                         mLock;
     nsCOMPtr<nsISupports>           mUserContext;
     nsresult                        mStatus;
+    
+    nsCAutoString                   mProxyHost;
+    PRInt32                         mProxyPort;
+    nsCAutoString                   mProxyType;
+    PRBool                          mProxyTransparent;
 };
 
 #endif /* nsFTPChannel_h___ */

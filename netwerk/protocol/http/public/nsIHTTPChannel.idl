@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
  *
  * The contents of this file are subject to the Netscape Public
  * License Version 1.1 (the "License"); you may not use this file
@@ -59,6 +59,7 @@ interface nsIHTTPChannel : nsIChannel
 
     void SetRequestMethod(in nsIAtom methodAtom);
 //  NS_IMETHOD SetRequestMethod(HTTPMethod i_Method=HM_GET) = 0;
+    void GetRequestMethod(out nsIAtom methodAtom);
 
     /* 
         Response funtions. A call to any of these implicitly calls 
@@ -76,17 +77,17 @@ interface nsIHTTPChannel : nsIChannel
 
     readonly attribute nsIURI referrer;
 
-    readonly attribute unsigned long ResponseStatus;
+    readonly attribute unsigned long responseStatus;
 
-    readonly attribute string ResponseString;
+    readonly attribute string responseString;
 
-    readonly attribute nsIHTTPEventSink EventSink;
+    readonly attribute nsIHTTPEventSink eventSink;
     
-    readonly attribute nsIStreamListener ResponseDataListener;
+    readonly attribute nsIStreamListener responseDataListener;
 	
-    readonly attribute string Charset;
+    readonly attribute string charset;
 
-    attribute PRBool AuthTriedWithPrehost;
+    attribute PRBool authTriedWithPrehost;
 
 	/* 
 		We need a way to switch off gzip, etc. compression on the fly 
@@ -97,9 +98,10 @@ interface nsIHTTPChannel : nsIChannel
 		By default this value is TRUE. 
 
 	*/
-	attribute PRBool ApplyConversion; 
+	attribute PRBool applyConversion; 
 
-    readonly attribute PRBool UsingProxy;
+    readonly attribute PRBool usingProxy;
+    readonly attribute PRBool usingTransparentProxy;
 
     readonly attribute nsIPrompt prompter;
 
@@ -109,7 +111,7 @@ interface nsIHTTPChannel : nsIChannel
        request would look something like GET foo HTTP/1.0... This is done
        to allow other non-http specs to be used in proxy cases. 
    */
-    attribute string ProxyRequestURI;
+    attribute string proxyRequestURI;
     
 };
 

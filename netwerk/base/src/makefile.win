@@ -50,7 +50,7 @@ CPP_OBJS =                                         \
         .\$(OBJDIR)\nsStreamLoader.obj             \
         .\$(OBJDIR)\nsProtocolProxyService.obj     \
         .\$(OBJDIR)\nsProxyAutoConfigUtils.obj     \
-        $(NULL)
+	$(NULL)
 
 INCS = $(INCS)                  \
         -I$(DEPTH)\dist\include \

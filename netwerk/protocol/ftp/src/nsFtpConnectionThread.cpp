@@ -38,6 +38,7 @@
 #include "nsNetUtil.h"
 #include "nsIDNSService.h" // for host error code
 #include "nsIWalletService.h"
+#include "nsIProxy.h"
 #include "nsIAllocator.h"
 
 static NS_DEFINE_CID(kWalletServiceCID, NS_WALLETSERVICE_CID);
@@ -137,10 +138,10 @@ nsFtpConnectionThread::Process() {
                     if (NS_FAILED(rv)) return rv;
 
                     // build our own
-                    rv = mSTS->CreateTransport(host, mPort, nsnull, -1, 
-                                               FTP_COMMAND_CHANNEL_SEG_SIZE,
-                                               FTP_COMMAND_CHANNEL_MAX_SIZE,
-                                               getter_AddRefs(mCPipe)); // the command channel
+                    rv = CreateTransport(host, mPort, 
+                                         FTP_COMMAND_CHANNEL_SEG_SIZE,
+                                         FTP_COMMAND_CHANNEL_MAX_SIZE,
+                                         getter_AddRefs(mCPipe)); // the command channel
                     if (NS_FAILED(rv)) return rv;
 
                     // get the output stream so we can write to the server
@@ -1327,11 +1328,11 @@ nsFtpConnectionThread::S_pasv() {
     if (mIPv6Checked == PR_FALSE) {
         // Find IPv6 socket address, if server is IPv6
         nsresult rv;
-
+        
         mIPv6Checked = PR_TRUE;
         PR_ASSERT(mIPv6ServerAddress == 0);
         nsCOMPtr<nsISocketTransport> sTrans = do_QueryInterface(mCPipe, &rv);
-
+        
         if (!NS_FAILED(rv)) {
             rv = sTrans->GetIPStr(100, &mIPv6ServerAddress);
         }
@@ -1431,12 +1432,11 @@ nsFtpConnectionThread::R_pasv() {
     nsMemory::Free(response);
 
     // now we know where to connect our data channel
-    rv = mSTS->CreateTransport(mIPv6ServerAddress ? mIPv6ServerAddress : host.GetBuffer(),
-                               port, nsnull, -1, 
-                               mBufferSegmentSize, mBufferMaxSize,
-                               getter_AddRefs(mDPipe)); // the data channel
+    rv = CreateTransport(mIPv6ServerAddress ? mIPv6ServerAddress : host.GetBuffer(),
+                         port, mBufferSegmentSize, mBufferMaxSize,
+                         getter_AddRefs(mDPipe)); // the data channel
     if (NS_FAILED(rv)) return FTP_ERROR;
-
+    
     nsCOMPtr<nsISocketTransport> sTrans = do_QueryInterface(mDPipe, &rv);
     if (NS_FAILED(rv)) return FTP_ERROR;
 
@@ -1708,7 +1708,7 @@ nsFtpConnectionThread::Resume(void)
 
 nsresult
 nsFtpConnectionThread::Init(nsIProtocolHandler* aHandler,
-                            nsIChannel* aChannel,
+                            nsIFTPChannel* aChannel,
                             nsIPrompt*  aPrompter,
                             PRUint32 bufferSegmentSize,
                             PRUint32 bufferMaxSize) {
@@ -1914,4 +1914,47 @@ nsFtpConnectionThread::SetDirMIMEType(nsString& aString) {
     default:
         aString.AppendWithConversion("generic");
     }
+}
+
+nsresult
+nsFtpConnectionThread::CreateTransport(const char * host, PRInt32 port,
+                                       PRUint32 bufferSegmentSize,
+                                       PRUint32 bufferMaxSize,
+                                       nsIChannel** o_pTrans)
+{
+    PRBool usingProxy;
+    if (NS_SUCCEEDED(mChannel->GetUsingTransparentProxy(&usingProxy)) && usingProxy) {
+        
+        nsresult rv;
+        
+        nsCOMPtr<nsIProxy> channelProxy = do_QueryInterface(mChannel, &rv);
+        
+        if (NS_SUCCEEDED(rv)) {
+            
+            nsXPIDLCString proxyHost;
+            nsXPIDLCString proxyType;
+            PRInt32 proxyPort;
+            
+            rv = channelProxy->GetProxyHost(getter_Copies(proxyHost));
+            if (NS_FAILED(rv)) return rv;
+            
+            rv = channelProxy->GetProxyPort(&proxyPort);
+            if (NS_FAILED(rv)) return rv;
+            
+            rv = channelProxy->GetProxyType(getter_Copies(proxyType));
+            if (NS_SUCCEEDED(rv) && nsCRT::strcasecmp(proxyType, "socks") == 0) {
+                
+                return mSTS->CreateTransportOfType("socks", host, port, proxyHost, proxyPort, bufferSegmentSize,
+                                                   bufferMaxSize, o_pTrans);
+                
+            }
+                
+            return mSTS->CreateTransport(host, port, proxyHost, proxyPort, bufferSegmentSize,
+                                         bufferMaxSize, o_pTrans);
+                
+        }
+    }
+    
+    return mSTS->CreateTransport(host, port, nsnull, -1, bufferSegmentSize,
+                                 bufferMaxSize, o_pTrans);
 }

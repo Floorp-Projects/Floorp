@@ -178,7 +178,11 @@ protected:
 
     char*                               mProxy;
     PRInt32                             mProxyPort;
-
+    char*                               mProxyType;
+    // if the proxy doesn't affect the protocol behavior
+    // (such as socks) we want to reverse conditional proxy behavior
+    PRBool                              mProxyTransparent;
+   
     PRUint32                            mBufferSegmentSize;
     PRUint32                            mBufferMaxSize;
     nsresult                            mStatus;

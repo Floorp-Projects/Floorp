@@ -78,11 +78,10 @@ nsFtpProtocolHandler::~nsFtpProtocolHandler() {
 
 NS_IMPL_THREADSAFE_ADDREF(nsFtpProtocolHandler);
 NS_IMPL_THREADSAFE_RELEASE(nsFtpProtocolHandler);
-NS_IMPL_QUERY_INTERFACE4(nsFtpProtocolHandler, 
+NS_IMPL_QUERY_INTERFACE3(nsFtpProtocolHandler, 
                          nsIProtocolHandler, 
                          nsIConnectionCache, 
-                         nsIObserver,
-                         nsIProxy);
+                         nsIObserver);
 
 nsresult
 nsFtpProtocolHandler::Init() {
@@ -94,7 +93,7 @@ nsFtpProtocolHandler::Init() {
 
     mProxySvc = do_GetService(kProtocolProxyServiceCID, &rv);
     if (NS_FAILED(rv)) return rv;
-
+   
     NS_NEWXPCOM(mRootConnectionList, nsHashtable);
     if (!mRootConnectionList) return NS_ERROR_OUT_OF_MEMORY;
     rv = NS_NewThreadPool(getter_AddRefs(mPool), 
@@ -159,12 +158,6 @@ nsFtpProtocolHandler::NewChannel(nsIURI* url, nsIChannel* *result)
 
     PRBool useProxy = PR_FALSE;
     
-    if (NS_SUCCEEDED(mProxySvc->GetProxyEnabled(&useProxy)) && useProxy)
-    {
-        rv = mProxySvc->ExamineForProxy(url, this);
-        if (NS_FAILED(rv)) return rv;
-    }
-
     nsFTPChannel* channel;
     rv = nsFTPChannel::Create(nsnull, NS_GET_IID(nsIChannel), (void**)&channel);
     if (NS_FAILED(rv)) return rv;
@@ -175,44 +168,66 @@ nsFtpProtocolHandler::NewChannel(nsIURI* url, nsIChannel* *result)
         PR_LOG(gFTPLog, PR_LOG_DEBUG, ("nsFtpProtocolHandler::NewChannel() FAILED\n"));
         return rv;
     }
-
-    if (!mProxyHost.IsEmpty() || mProxyPort > 0) {
+    
+    if (NS_SUCCEEDED(mProxySvc->GetProxyEnabled(&useProxy)) && useProxy)
+    {
+        rv = mProxySvc->ExamineForProxy(url, channel);
+        if (NS_FAILED(rv)) return rv;
+    }
+    
+    useProxy = PR_FALSE;
+    if (NS_SUCCEEDED(channel->GetUsingProxy(&useProxy)) && useProxy) {
+        
         nsCOMPtr<nsIChannel> proxyChannel;
         // if an FTP proxy is enabled, push things off to HTTP.
-
+        
         nsCOMPtr<nsIHTTPProtocolHandler> httpHandler = do_GetService(kHTTPHandlerCID, &rv);
         if (NS_FAILED(rv)) return rv;
-
+        
         // Some dummy URI for the HTTP layer.
         nsCOMPtr<nsIURI> uri;
         rv = NS_NewURI(getter_AddRefs(uri), "http://");
         if (NS_FAILED(rv)) return rv;
-
+        
         rv = httpHandler->NewChannel(uri, getter_AddRefs(proxyChannel));
         if (NS_FAILED(rv)) return rv;
-
+        
         nsCOMPtr<nsIHTTPChannel> httpChannel = do_QueryInterface(proxyChannel, &rv);
         if (NS_FAILED(rv)) return rv;
-
+        
         nsXPIDLCString spec;
         rv = url->GetSpec(getter_Copies(spec));
         if (NS_FAILED(rv)) return rv;
-
+        
         rv = httpChannel->SetProxyRequestURI((const char*)spec);
         if (NS_FAILED(rv)) return rv;
-
+        
         nsCOMPtr<nsIProxy> proxyHTTP = do_QueryInterface(httpChannel, &rv);
         if (NS_FAILED(rv)) return rv;
-
-        rv = proxyHTTP->SetProxyHost(mProxyHost.GetBuffer());
+        
+        nsXPIDLCString proxyHost;
+        rv = channel->GetProxyHost(getter_Copies(proxyHost));
         if (NS_FAILED(rv)) return rv;
-
-        rv = proxyHTTP->SetProxyPort(mProxyPort);
+        
+        rv = proxyHTTP->SetProxyHost(proxyHost);
         if (NS_FAILED(rv)) return rv;
-
+        
+        PRInt32 proxyPort;
+        rv = channel->GetProxyPort(&proxyPort);
+        if (NS_FAILED(rv)) return rv;
+        
+        rv = proxyHTTP->SetProxyPort(proxyPort);
+        if (NS_FAILED(rv)) return rv;
+        
+        nsXPIDLCString proxyType;
+        rv = channel->GetProxyType(getter_Copies(proxyType));
+        
+        if (NS_SUCCEEDED(rv)) 
+            proxyHTTP->SetProxyType(proxyType);
+        
         rv = channel->SetProxyChannel(proxyChannel);
     }
-
+    
     *result = channel;
     return rv;
 }
@@ -262,30 +277,4 @@ nsFtpProtocolHandler::Observe(nsISupports     *aSubject,
     return NS_OK;
 }
 
-
-// nsIProxy methods
-NS_IMETHODIMP
-nsFtpProtocolHandler::GetProxyHost(char* *_retval) {
-    *_retval = mProxyHost.ToNewCString();
-    if (!*_retval) return NS_ERROR_OUT_OF_MEMORY;
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-nsFtpProtocolHandler::SetProxyHost(const char *aProxyHost) {
-    mProxyHost = aProxyHost;
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-nsFtpProtocolHandler::GetProxyPort(PRInt32 *_retval) {
-    *_retval = mProxyPort;
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-nsFtpProtocolHandler::SetProxyPort(PRInt32 aProxyPort) {
-    mProxyPort = aProxyPort;
-    return NS_OK;
-}
 ////////////////////////////////////////////////////////////////////////////////

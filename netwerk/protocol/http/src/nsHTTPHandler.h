@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
  *
  * The contents of this file are subject to the Netscape Public
  * License Version 1.1 (the "License"); you may not use this file
@@ -108,6 +108,14 @@ public:
                                      PRUint32 bufferMaxSize,
                                      nsIChannel** o_pTrans);
     
+    virtual nsresult CreateTransportOfType(const char* socketType,
+                                           const char* host, PRInt32 port, 
+                                           const char* aPrintHost,
+                                           PRBool usingProxy, 
+                                           PRUint32 bufferSegmentSize,
+                                           PRUint32 bufferMaxSize,
+                                           nsIChannel** o_pTrans);
+    
     /* Remove this transport from the list. */
     virtual nsresult ReleaseTransport(nsIChannel* i_pTrans, PRUint32 capabilies = 0, PRBool aDontRestartChannels = PR_FALSE, PRUint32 aKeepAliveTimeout = 0, PRInt32 aKeepAliveMaxCon = -1);
     virtual nsresult CancelPendingChannel(nsHTTPChannel* aChannel);
@@ -180,7 +188,7 @@ private:
     nsHashtable mCapTable;
     PRInt32     mRequestTimeout;
     PRInt32     mConnectTimeout;
-
+    
     PRUint32 getCapabilities (const char *host, PRInt32 port, PRUint32 cap);
     void     setCapabilities (nsIChannel* i_pTrans, PRUint32 aCapabilities);
     PRBool  mProxySSLConnectAllowed;

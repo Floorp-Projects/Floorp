@@ -28,7 +28,7 @@ EXPORTS =                           \
         netCore.h                   \
         nsNetUtil.h                 \
         nsUnixColorPrintf.h         \
-        $(NULL)
+	$(NULL)
 
 XPIDLSRCS =                             \
 	.\nsIAuthenticator.idl          \
@@ -59,7 +59,7 @@ XPIDLSRCS =                             \
         .\nsIURL.idl                    \
         .\nsIURLParser.idl              \
         .\nsIWebFilters.idl             \
-        $(NULL)
+	$(NULL)
 
 include <$(DEPTH)/config/rules.mak>
 

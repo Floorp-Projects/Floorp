@@ -31,7 +31,7 @@
 #include "nsIURI.h"
 #include "prtime.h"
 #include "nsString.h"
-#include "nsIChannel.h"
+#include "nsIFTPChannel.h"
 #include "nsIConnectionCache.h"
 #include "nsConnectionCacheObj.h"
 #include "nsIProtocolHandler.h"
@@ -95,7 +95,7 @@ public:
     virtual ~nsFtpConnectionThread();
 
     nsresult Init(nsIProtocolHandler    *aHandler,
-                  nsIChannel            *aChannel,
+                  nsIFTPChannel         *aChannel,
                   nsIPrompt             *aPrompter,
                   PRUint32              bufferSegmentSize,
                   PRUint32              bufferMaxSize);
@@ -142,6 +142,11 @@ private:
     void        SetDirMIMEType(nsString& aString);
     nsresult    Process();
 
+    virtual nsresult CreateTransport(const char * host, PRInt32 port,
+                                     PRUint32 bufferSegmentSize,
+                                     PRUint32 bufferMaxSize,
+                                     nsIChannel** o_pTrans);
+    
     ///////////////////////////////////
     // Private members
 
@@ -164,7 +169,7 @@ private:
     nsCOMPtr<nsISupports>           mListenerContext; // the context we pass through our read events
     nsCOMPtr<nsIStreamObserver>     mObserver; // the consumer of our open events
     nsCOMPtr<nsISupports>           mObserverContext; // the context we pass through our open events
-    nsCOMPtr<nsIChannel>            mChannel;         // our owning FTP channel we pass through our events
+    nsCOMPtr<nsIFTPChannel>         mChannel;         // our owning FTP channel we pass through our events
 
         // ****** connection cache vars
     PRInt32             mServerType;    // What kind of server are we talking to
@@ -175,7 +180,7 @@ private:
     PRBool              mCachedConn;    // is this connection from the cache
     nsCOMPtr<nsIConnectionCache> mConnCache;// the nsISupports proxy ptr to our connection cache
     nsConnectionCacheObj         *mConn;    // The cached connection.
-
+    
 
         // ****** protocol interpretation related state vars
     nsAutoString        mUsername;      // username

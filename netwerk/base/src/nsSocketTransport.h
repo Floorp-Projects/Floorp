@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
  *
  * The contents of this file are subject to the Netscape Public
  * License Version 1.1 (the "License"); you may not use this file
@@ -117,30 +117,31 @@ class nsSocketTransportService;
 class nsIInterfaceRequestor;
 
 class nsSocketTransport : public nsISocketTransport,
-public nsIChannel, 
-public nsIDNSListener,
-public nsIPipeObserver
+                                 public nsIChannel, 
+                                 public nsIDNSListener,
+                                 public nsIPipeObserver
 {
 public:
     NS_DECL_ISUPPORTS
-        NS_DECL_NSISOCKETTRANSPORT
-        NS_DECL_NSIREQUEST
-        NS_DECL_NSICHANNEL
-        NS_DECL_NSIPIPEOBSERVER
-        NS_DECL_NSIDNSLISTENER
-        
-        // nsSocketTransport methods:
-        nsSocketTransport();
-    virtual ~nsSocketTransport();
+    NS_DECL_NSISOCKETTRANSPORT
+    NS_DECL_NSIREQUEST
+    NS_DECL_NSICHANNEL
+    NS_DECL_NSIPIPEOBSERVER
+    NS_DECL_NSIDNSLISTENER
     
+    // nsSocketTransport methods:
+    nsSocketTransport();
+    virtual ~nsSocketTransport();
+  
     nsresult Init(nsSocketTransportService* aService,
-        const char* aHost, 
-        PRInt32 aPort,
-        const char* aSocketType,
-        const char* aProxyHost, 
-        PRInt32 aProxyPort,
-        PRUint32 bufferSegmentSize,
-        PRUint32 bufferMaxSize);
+                  const char* aHost, 
+                  PRInt32 aPort,
+	              PRUint32 aSocketTypeCount,
+	              const char* *aSocketTypes,
+                  const char* aProxyHost, 
+                  PRInt32 aProxyPort,
+                  PRUint32 bufferSegmentSize,
+                  PRUint32 bufferMaxSize);
     
     nsresult Process(PRInt16 aSelectFlags);
     
@@ -222,6 +223,7 @@ protected:
     nsCOMPtr<nsISupports>           mSecurityInfo;
     PRInt32                         mProxyPort;
     char*                           mProxyHost;
+    PRBool			    mProxyTransparent;
     nsCOMPtr<nsISupports>           mReadContext;
     nsCOMPtr<nsIStreamListener>     mReadListener;
     nsCOMPtr<nsIBufferInputStream>  mReadPipeIn;
@@ -230,14 +232,15 @@ protected:
     PRInt16                         mSelectFlags;
     nsSocketTransportService*       mService;
     PRFileDesc*                     mSocketFD;
-    char*                           mSocketType;
+    PRUint32                        mSocketTypeCount;
+    char*                          *mSocketTypes;
     PRUint32                        mReadOffset;
     PRUint32                        mWriteOffset;
     nsresult                        mStatus;
     PRInt32                         mSuspendCount;
     PRInt32                         mWriteCount;
     nsCOMPtr<nsISupports>           mWriteContext;
-    PRInt32				            mBytesExpected;
+    PRInt32		                    mBytesExpected;
     PRUint32                        mReuseCount;
     PRUint32                        mLastReuseCount;
     

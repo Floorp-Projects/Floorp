@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
  *
  * The contents of this file are subject to the Netscape Public
  * License Version 1.1 (the "License"); you may not use this file
@@ -39,6 +39,8 @@
 #include "nsIProxyObjectManager.h"
 #include "nsXPIDLString.h"
 #include "nsNetUtil.h"
+#include "nsIPSMSocketInfo.h"
+#include "nsMemory.h"
 
 static NS_DEFINE_CID(kSocketProviderService, NS_SOCKETPROVIDERSERVICE_CID);
 static NS_DEFINE_CID(kDNSService, NS_DNSSERVICE_CID);
@@ -50,42 +52,42 @@ static NS_DEFINE_CID(kSocketTransportServiceCID, NS_SOCKETTRANSPORTSERVICE_CID);
 // for each socket operation...
 //
 nsSocketState gStateTable[eSocketOperation_Max][eSocketState_Max] = {
-  // eSocketOperation_None:
-  {
-    eSocketState_Error,         // Created        -> Error
-    eSocketState_Error,         // WaitDNS        -> Error
-    eSocketState_Error,         // Closed         -> Error
-    eSocketState_Error,         // WaitConnect    -> Error
-    eSocketState_Error,         // Connected      -> Error
-    eSocketState_Error,         // WaitReadWrite  -> Error
-    eSocketState_Error,         // Done           -> Error
-    eSocketState_Error,         // Timeout        -> Error
-    eSocketState_Error          // Error          -> Error
-  },
-  // eSocketOperation_Connect:
-  {
-    eSocketState_WaitDNS,       // Created        -> WaitDNS
-    eSocketState_Closed,        // WaitDNS        -> Closed
-    eSocketState_WaitConnect,   // Closed         -> WaitConnect
-    eSocketState_Connected,     // WaitConnect    -> Connected
-    eSocketState_Connected,     // Connected      -> Done
-    eSocketState_Error,         // WaitReadWrite  -> Error
-    eSocketState_Connected,     // Done           -> Connected
-    eSocketState_Error,         // Timeout        -> Error
-    eSocketState_Closed         // Error          -> Closed
-  },
-  // eSocketOperation_ReadWrite:
-  {
-    eSocketState_WaitDNS,       // Created        -> WaitDNS
-    eSocketState_Closed,        // WaitDNS        -> Closed
-    eSocketState_WaitConnect,   // Closed         -> WaitConnect
-    eSocketState_Connected,     // WaitConnect    -> Connected
-    eSocketState_WaitReadWrite, // Connected      -> WaitReadWrite
-    eSocketState_Done,          // WaitReadWrite  -> Done
-    eSocketState_Connected,     // Done           -> Connected
-    eSocketState_Error,         // Timeout        -> Error
-    eSocketState_Closed         // Error          -> Closed
-  },
+    // eSocketOperation_None:
+    {
+        eSocketState_Error,         // Created        -> Error
+        eSocketState_Error,         // WaitDNS        -> Error
+        eSocketState_Error,         // Closed         -> Error
+        eSocketState_Error,         // WaitConnect    -> Error
+        eSocketState_Error,         // Connected      -> Error
+        eSocketState_Error,         // WaitReadWrite  -> Error
+        eSocketState_Error,         // Done           -> Error
+        eSocketState_Error,         // Timeout        -> Error
+        eSocketState_Error          // Error          -> Error
+    },
+    // eSocketOperation_Connect:
+    {
+        eSocketState_WaitDNS,       // Created        -> WaitDNS
+        eSocketState_Closed,        // WaitDNS        -> Closed
+        eSocketState_WaitConnect,   // Closed         -> WaitConnect
+        eSocketState_Connected,     // WaitConnect    -> Connected
+        eSocketState_Connected,     // Connected      -> Done
+        eSocketState_Error,         // WaitReadWrite  -> Error
+        eSocketState_Connected,     // Done           -> Connected
+        eSocketState_Error,         // Timeout        -> Error
+        eSocketState_Closed         // Error          -> Closed
+    },
+    // eSocketOperation_ReadWrite:
+    {
+        eSocketState_WaitDNS,       // Created        -> WaitDNS
+        eSocketState_Closed,        // WaitDNS        -> Closed
+        eSocketState_WaitConnect,   // Closed         -> WaitConnect
+        eSocketState_Connected,     // WaitConnect    -> Connected
+        eSocketState_WaitReadWrite, // Connected      -> WaitReadWrite
+        eSocketState_Done,          // WaitReadWrite  -> Done
+        eSocketState_Connected,     // Done           -> Connected
+        eSocketState_Error,         // Timeout        -> Error
+        eSocketState_Closed         // Error          -> Closed
+    },
 };
 
 //
@@ -134,11 +136,13 @@ nsSocketTransport::nsSocketTransport():
     mPort(0),
     mProxyHost(nsnull),
     mProxyPort(0),
+    mProxyTransparent(PR_FALSE),
     mReadWriteState(0),
     mSelectFlags(0),
     mService(nsnull),
     mSocketFD(nsnull),
-    mSocketType (nsnull),
+    mSocketTypeCount(0),
+    mSocketTypes(nsnull),
     mReadOffset (0),
     mWriteOffset(0),
     mStatus     (NS_OK),
@@ -188,15 +192,15 @@ nsSocketTransport::nsSocketTransport():
 #endif /* PR_LOGGING */
     
     PR_LOG(gSocketLog, PR_LOG_DEBUG, 
-        ("Creating nsSocketTransport [%x], TotalCreated=%d, TotalDeleted=%d\n", this, ++sTotalTransportsCreated, sTotalTransportsDeleted));
+           ("Creating nsSocketTransport [%x], TotalCreated=%d, TotalDeleted=%d\n", this, ++sTotalTransportsCreated, sTotalTransportsDeleted));
 }
 
 
 nsSocketTransport::~nsSocketTransport()
 {
     PR_LOG(gSocketLog, PR_LOG_DEBUG, 
-        ("Deleting nsSocketTransport [%s:%d %x], TotalCreated=%d, TotalDeleted=%d\n", 
-        mHostName, mPort, this, sTotalTransportsCreated, ++sTotalTransportsDeleted));
+           ("Deleting nsSocketTransport [%s:%d %x], TotalCreated=%d, TotalDeleted=%d\n", 
+            mHostName, mPort, this, sTotalTransportsCreated, ++sTotalTransportsDeleted));
     
     // Release the nsCOMPtrs...
     //
@@ -226,8 +230,12 @@ nsSocketTransport::~nsSocketTransport()
     
     CRTFREEIF (mProxyHost);
     CRTFREEIF (mHostName);
-    CRTFREEIF (mSocketType);
-
+    while (mSocketTypeCount) {
+        mSocketTypeCount--;
+        CRTFREEIF (mSocketTypes[mSocketTypeCount]);
+    }
+    if (mSocketTypes != NULL) nsMemory::Free(mSocketTypes);
+    
     if (mMonitor) {
         nsAutoMonitor::DestroyMonitor(mMonitor);
         mMonitor = nsnull;
@@ -237,7 +245,7 @@ nsSocketTransport::~nsSocketTransport()
         PR_Free(mWriteBuffer);
         mWriteBuffer = nsnull;
     }
-
+    
     if (mService)
         PR_AtomicDecrement(&mService->mTotalTransports);
 }
@@ -246,13 +254,14 @@ nsSocketTransport::~nsSocketTransport()
 nsresult nsSocketTransport::Init(nsSocketTransportService* aService,
                                  const char* aHost, 
                                  PRInt32 aPort,
-                                 const char* aSocketType,
+                                 PRUint32 aSocketTypeCount,
+                                 const char* *aSocketTypes,
                                  const char* aProxyHost,
                                  PRInt32 aProxyPort,
                                  PRUint32 bufferSegmentSize,
                                  PRUint32 bufferMaxSize)
 {
-    nsresult rv = NS_OK;
+   nsresult rv = NS_OK;
     
     mBufferSegmentSize = bufferSegmentSize != 0
         ? bufferSegmentSize : NS_SOCKET_TRANSPORT_SEGMENT_SIZE;
@@ -264,7 +273,7 @@ nsresult nsSocketTransport::Init(nsSocketTransportService* aService,
     
     mPort      = aPort;
     mProxyPort = aProxyPort;
-
+    
     if (aHost && *aHost)
     {
         mHostName = nsCRT::strdup(aHost);
@@ -282,12 +291,43 @@ nsresult nsSocketTransport::Init(nsSocketTransportService* aService,
         if (!mProxyHost)
             rv = NS_ERROR_OUT_OF_MEMORY;
     }
-
-    if (NS_SUCCEEDED(rv) && aSocketType)
+    
+    if (NS_SUCCEEDED(rv) && aSocketTypeCount)
     {
-        mSocketType = nsCRT::strdup(aSocketType);
-        if (!mSocketType)
+        mSocketTypes = (char**) nsMemory::Alloc (aSocketTypeCount * sizeof(char*));
+        if (!mSocketTypes)
+        {
             rv = NS_ERROR_OUT_OF_MEMORY;
+        }
+        else
+        {
+            mSocketTypeCount = 0;
+            for (PRUint32 type = 0; type < aSocketTypeCount; type++)
+            {
+                const char * socketType = aSocketTypes[type];
+                
+                if (socketType == nsnull) continue;
+#ifdef DEBUG
+                printf("pushing io layer: %s\n", socketType);
+#endif
+                mSocketTypes[mSocketTypeCount] = nsCRT::strdup(socketType);
+                if (!mSocketTypes[mSocketTypeCount])
+                {
+                    rv = NS_ERROR_OUT_OF_MEMORY;
+                    break;
+                }
+                
+                // increase the count
+                mSocketTypeCount++;
+                
+                if (nsCRT::strcmp(socketType, "socks") == 0)
+                {
+                    // for SOCKS proxys, we want to switch some of
+                    // the default proxy behavior
+                    mProxyTransparent = PR_TRUE;
+                }
+            }
+        }
     } 
     
     //
@@ -678,7 +718,7 @@ nsresult nsSocketTransport::doResolveHost(void)
     // XXX: The list of ports must be restricted - see net_bad_ports_table[] in 
     //      mozilla/network/main/mkconect.c
     //
-      mNetAddress.ipv6.port = PR_htons(((mProxyPort != -1) ? mProxyPort : mPort));
+      mNetAddress.ipv6.port = PR_htons(((mProxyPort != -1 && !mProxyTransparent) ? mProxyPort : mPort));
 
     NS_WITH_SERVICE(nsIDNSService,
                     pDNSService,
@@ -692,7 +732,7 @@ nsresult nsSocketTransport::doResolveHost(void)
     //
     PR_ExitMonitor(mMonitor);
 
-    rv = pDNSService->Lookup(mProxyHost ? mProxyHost : mHostName, 
+    rv = pDNSService->Lookup((mProxyHost && !mProxyTransparent) ? mProxyHost : mHostName, 
                              this, 
                              nsnull, 
                              getter_AddRefs(mDNSRequest));
@@ -757,133 +797,185 @@ nsresult nsSocketTransport::doConnection(PRInt16 aSelectFlags)
           mHostName, mPort, this, aSelectFlags));
 
   if (!mSocketFD) {
-    //
-    // Step 1:
-    //    Create a new TCP socket structure...
-    //
-    if (!mSocketType) 
-    {
-      mSocketFD = PR_OpenTCPSocket(PR_AF_INET6);
-    }
-    else 
-    {
-      NS_WITH_SERVICE(nsISocketProviderService,
-                      pProviderService,
-                      kSocketProviderService,
-                      &rv);
+      //
+      // Step 1:
+      //    Create a new TCP socket structure...
+      //
+      if (!mSocketTypeCount) 
+      {
+          mSocketFD = PR_OpenTCPSocket(PR_AF_INET6);
+      }
+      else 
+      {
+          NS_WITH_SERVICE(nsISocketProviderService,
+                          pProviderService,
+                          kSocketProviderService,
+                          &rv);
+          
+          char * destHost = mHostName;
+          PRInt32 destPort = mPort;
+          char * proxyHost = mProxyHost;
+          PRInt32 proxyPort = mProxyPort;
+          
+          for (PRUint32 type = 0; type < mSocketTypeCount; type++)
+          {
+              
+              nsCOMPtr<nsISocketProvider> pProvider;
+              
+              if (NS_SUCCEEDED(rv))
+                  rv = pProviderService->GetSocketProvider(mSocketTypes[type], 
+                                                           getter_AddRefs(pProvider));
+              
+              if (!NS_SUCCEEDED(rv)) break;
+              
+              nsCOMPtr<nsISupports> socketInfo;
+              
+              if (!type) 
+              {
+                  // if this is the first type, we'll want the 
+                  // service to allocate a new socket
+                  rv = pProvider->NewSocket(destHost,
+                                            destPort,
+                                            proxyHost,
+                                            proxyPort,
+                                            &mSocketFD, 
+                                            getter_AddRefs(socketInfo));
+              }
+              else
+              {
+                  // the socket has already been allocated, 
+                  // so we just want the service to add itself
+                  // to the stack (such as pushing an io layer)
+                  rv = pProvider->AddToSocket(destHost,
+                                              destPort,
+                                              proxyHost,
+                                              proxyPort,
+                                              mSocketFD,
+                                              getter_AddRefs(socketInfo));
+              }
+              
+              if (!NS_SUCCEEDED(rv) || !mSocketFD) break;
 
-      nsCOMPtr<nsISocketProvider> pProvider;
-
-      if (NS_SUCCEEDED(rv))
-        rv = pProviderService->GetSocketProvider(mSocketType, getter_AddRefs(pProvider));
-
-      if (NS_SUCCEEDED(rv))
-        rv = pProvider->NewSocket(mHostName,
-                                  mPort,
-                                  mProxyHost,
-                                  mProxyPort,
-                                  &mSocketFD, 
-                                  getter_AddRefs(mSecurityInfo));
-    }
-
-    if (mSocketFD) {
-      PRSocketOptionData opt;
-
-      // Make the socket non-blocking...
-      opt.option = PR_SockOpt_Nonblocking;
-      opt.value.non_blocking = PR_TRUE;
-      status = PR_SetSocketOption(mSocketFD, &opt);
-      if (PR_SUCCESS != status) {
-        rv = NS_ERROR_FAILURE;
+              // if the service was ssl, we want to hold onto the socket info
+              if (nsCRT::strcmp(mSocketTypes[type], "ssl") == 0)
+                  mSecurityInfo = socketInfo;
+              else if (nsCRT::strcmp(mSocketTypes[type], "socks") == 0) {
+                  // since socks is transparent, any layers above
+                  // it do not have to worry about proxy stuff
+                  proxyHost = nsnull;
+                  proxyPort = -1;
+              }
+          }
       }
 
-      // XXX: Is this still necessary?
+      if (mSocketFD) {
+          PRSocketOptionData opt;
+          
+          // Make the socket non-blocking...
+          opt.option = PR_SockOpt_Nonblocking;
+          opt.value.non_blocking = PR_TRUE;
+          status = PR_SetSocketOption(mSocketFD, &opt);
+          if (PR_SUCCESS != status) {
+              rv = NS_ERROR_FAILURE;
+          }
+          
+          // XXX: Is this still necessary?
 #if defined(XP_WIN16) // || (defined(XP_OS2) && !defined(XP_OS2_DOUGSOCK))
-      opt.option = PR_SockOpt_Linger;
-      opt.value.linger.polarity = PR_TRUE;
-      opt.value.linger.linger = PR_INTERVAL_NO_WAIT;
+          opt.option = PR_SockOpt_Linger;
+          opt.value.linger.polarity = PR_TRUE;
+          opt.value.linger.linger = PR_INTERVAL_NO_WAIT;
 #ifdef XP_OS2
-      PR_SetSocketOption(mSocketFD, &opt);
+          PR_SetSocketOption(mSocketFD, &opt);
 #else
-      PR_SetSocketOption(*sock, &opt);
+          PR_SetSocketOption(*sock, &opt);
 #endif
 #endif /* XP_WIN16 || XP_OS2*/
-    } 
-    else {
-      rv = NS_ERROR_OUT_OF_MEMORY;
-    }
-
-    //
-    // Step 2:
-    //    Initiate the connect() to the host...  
-    //
-    //    This is only done the first time doConnection(...) is called.
-    //
-    if (NS_SUCCEEDED(rv)) {
-      status = PR_Connect(mSocketFD, &mNetAddress, gConnectTimeout);
-      if (PR_SUCCESS != status) {
-        PRErrorCode code = PR_GetError();
-        //
-        // If the PR_Connect(...) would block, then return WOULD_BLOCK...
-        // It is the callers responsibility to place the transport on the
-        // select list of the transport thread...
-       //
-        if ((PR_WOULD_BLOCK_ERROR == code) || 
-            (PR_IN_PROGRESS_ERROR == code)) {
-
-          // Set up the select flags for connect...
-          mSelectFlags = (PR_POLL_READ | PR_POLL_EXCEPT | PR_POLL_WRITE);
-          rv = NS_BASE_STREAM_WOULD_BLOCK;
-        } 
-        //
-        // If the socket is already connected, then return success...
-        //
-        else if (PR_IS_CONNECTED_ERROR == code) {
-          rv = NS_OK;
-        }
-        //
-        // The connection was refused...
-        //
-        else {
-          // Connection refused...
-          PR_LOG(gSocketLog, PR_LOG_ERROR, 
-                 ("Connection Refused [%s:%d %x].  PRErrorCode = %x\n",
-                  mHostName, mPort, this, code));
-
-          rv = NS_ERROR_CONNECTION_REFUSED;
-        }
+      } 
+      else {
+          rv = NS_ERROR_OUT_OF_MEMORY;
       }
-    }
+      
+      //
+      // Step 2:
+      //    Initiate the connect() to the host...  
+      //
+      //    This is only done the first time doConnection(...) is called.
+      //
+      if (NS_SUCCEEDED(rv)) {
+          status = PR_Connect(mSocketFD, &mNetAddress, gConnectTimeout);
+          if (PR_SUCCESS != status) {
+              PRErrorCode code = PR_GetError();
+              //
+              // If the PR_Connect(...) would block, then return WOULD_BLOCK...
+              // It is the callers responsibility to place the transport on the
+              // select list of the transport thread...
+              //
+              if ((PR_WOULD_BLOCK_ERROR == code) || 
+                  (PR_IN_PROGRESS_ERROR == code)) {
+                  
+                  // Set up the select flags for connect...
+                  mSelectFlags = (PR_POLL_READ | PR_POLL_EXCEPT | PR_POLL_WRITE);
+                  rv = NS_BASE_STREAM_WOULD_BLOCK;
+              } 
+              //
+              // If the socket is already connected, then return success...
+              //
+              else if (PR_IS_CONNECTED_ERROR == code) {
+                  rv = NS_OK;
+              }
+              //
+              // The connection was refused...
+              //
+              else {
+                  // Connection refused...
+                  PR_LOG(gSocketLog, PR_LOG_ERROR, 
+                         ("Connection Refused [%s:%d %x].  PRErrorCode = %x\n",
+                          mHostName, mPort, this, code));
+                  
+                  rv = NS_ERROR_CONNECTION_REFUSED;
+              }
+          }
+      }
   }
   //
   // Step 3:
   //    Process the flags returned by PR_Poll() if any...
   //
   else if (aSelectFlags) {
-    if (PR_POLL_EXCEPT & aSelectFlags) {
-      PR_LOG(gSocketLog, PR_LOG_ERROR, 
-             ("Connection Refused via PR_POLL_EXCEPT. [%s:%d %x].\n", 
-              mHostName, mPort, this));
-
-      rv = NS_ERROR_CONNECTION_REFUSED;
-    }
-    //
-    // The connection was successful...  
-    //
-    // PR_Poll(...) returns PR_POLL_WRITE to indicate that the connection is
-    // established...
-    //
-    else if (PR_POLL_WRITE & aSelectFlags) {
-      rv = NS_OK;
-    }
+      if (PR_POLL_EXCEPT & aSelectFlags) {
+          PR_LOG(gSocketLog, PR_LOG_ERROR, 
+                 ("Connection Refused via PR_POLL_EXCEPT. [%s:%d %x].\n", 
+                  mHostName, mPort, this));
+          
+          rv = NS_ERROR_CONNECTION_REFUSED;
+      }
+      //
+      // The connection was successful...  
+      //
+      // PR_Poll(...) returns PR_POLL_WRITE to indicate that the connection is
+      // established...
+      //
+      else if (PR_POLL_WRITE & aSelectFlags) {
+          rv = NS_OK;
+      }
   } else {
-    rv = NS_BASE_STREAM_WOULD_BLOCK;
+      rv = NS_BASE_STREAM_WOULD_BLOCK;
   }
-
+  
   PR_LOG(gSocketLog, PR_LOG_DEBUG, 
          ("--- Leaving nsSocketTransport::doConnection() [%s:%d %x].\t"
           "rv = %x.\n\n",
           mHostName, mPort, this, rv));
+  
+  if (rv == NS_OK && mSecurityInfo && mProxyHost) {
+      // if the connection phase is finished, and the ssl layer
+      // has been pushed, and we were proxying, it's time
+      // for the ssl to "step up" and start doing it's thing.
+      nsCOMPtr<nsIPSMSocketInfo> securityInfo = do_QueryInterface(mSecurityInfo, &rv);
+      if (NS_SUCCEEDED(rv) && securityInfo) {
+          securityInfo->ProxyStepUp();
+      }
+  }
 
   return rv;
 }
@@ -1388,7 +1480,7 @@ nsSocketTransport::SetBytesExpected (PRInt32 bytes)
     }
     return NS_OK;
 }
-
+       
 NS_IMETHODIMP
 nsSocketTransport::GetSecurityInfo(nsISupports **info)
 {
@@ -1721,7 +1813,7 @@ nsSocketTransport::GetOriginalURI(nsIURI* *aURL)
 {
   nsStdURL *url;
   url = new nsStdURL(nsnull);
-  if( mProxyHost )
+  if( mProxyHost && !mProxyTransparent)
   {
     url->SetHost(mProxyHost);
     url->SetPort(mProxyPort);

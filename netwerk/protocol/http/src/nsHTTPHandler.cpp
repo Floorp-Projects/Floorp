@@ -256,19 +256,20 @@ nsHTTPHandler::NewChannel(nsIURI* i_URL, nsIChannel **o_Instance)
 
         // Create one
         pChannel = new nsHTTPChannel(i_URL, this);
+
         if (pChannel) {
             PRBool checkForProxy = PR_FALSE;
             NS_ADDREF(pChannel);
             rv = pChannel->Init();
             if (NS_FAILED(rv)) goto done;
 
-						if (mProxySvc) {
-	            rv = mProxySvc->GetProxyEnabled(&checkForProxy);
-	            if (checkForProxy)
-	            {
-	                rv = mProxySvc->ExamineForProxy(i_URL, pChannel);
-	                if (NS_FAILED(rv)) goto done;
-	            }
+	   if (mProxySvc) {
+	      rv = mProxySvc->GetProxyEnabled(&checkForProxy);
+	      if (checkForProxy)
+		{
+		   rv = mProxySvc->ExamineForProxy(i_URL, pChannel);
+		   if (NS_FAILED(rv)) goto done;
+		}
             }
 
             rv = pChannel->QueryInterface(NS_GET_IID(nsIChannel), 
@@ -854,30 +855,43 @@ nsresult nsHTTPHandler::RequestTransport(nsIURI* i_Uri,
 
     nsXPIDLCString proxy;
     PRInt32 proxyPort = -1;
-
+    nsXPIDLCString proxyType;
+   
     // Ask the channel for proxy info... since that overrides
     PRBool usingProxy = PR_FALSE;
+    PRBool usingTransparentProxy = PR_FALSE;
+    PRBool usingSocksProxy = PR_FALSE;
     i_Channel->GetUsingProxy(&usingProxy);
-
-    if (usingProxy)
+    i_Channel->GetUsingTransparentProxy(&usingTransparentProxy);
+    
+    if (usingProxy || usingTransparentProxy)
     {
         rv = i_Channel->GetProxyHost(getter_Copies(proxy));
         if (NS_FAILED (rv)) return rv;
-        
         rv = i_Channel->GetProxyPort(&proxyPort);
         if (NS_FAILED (rv)) return rv;
+        
+        if (usingTransparentProxy) {
+            rv = i_Channel->GetProxyType(getter_Copies(proxyType));
+            if (NS_SUCCEEDED (rv)) {
+                if (nsCRT::strcasecmp(proxyType, "socks") == 0) {
+                    usingSocksProxy = true;
+                }
+            }
+        }
     }
-
+    
     rv = i_Uri->GetHost(getter_Copies(host));
     if (NS_FAILED(rv)) return rv;
-
+    
     rv = i_Uri->GetPort(&port);
     if (NS_FAILED(rv)) return rv;
-
+    
     if (port == -1)
         GetDefaultPort (&port);
 
     nsCOMPtr<nsIChannel> trans;
+
     // Check in the idle transports for a host/port match
     count = 0;
     PRInt32 index = 0;
@@ -967,14 +981,25 @@ nsresult nsHTTPHandler::RequestTransport(nsIURI* i_Uri,
             }
         }
 
-        rv = CreateTransport(host, 
-                             port, 
-                             proxy, 
-                             proxyPort, 
-                             bufferSegmentSize, 
-                             bufferMaxSize, 
-                             getter_AddRefs(trans));
-        
+        if (usingSocksProxy) {
+            rv = CreateTransportOfType( "socks",
+                                        host, 
+                                        port, 
+                                        proxy, 
+                                        proxyPort, 
+                                        bufferSegmentSize, 
+                                        bufferMaxSize, 
+                                        getter_AddRefs(trans) );
+        } else {
+            rv = CreateTransport( host, 
+                                  port, 
+                                  proxy, 
+                                  proxyPort, 
+                                  bufferSegmentSize, 
+                                  bufferMaxSize, 
+                                  getter_AddRefs(trans) );
+        }
+       
         if (NS_FAILED(rv)) return rv;
 
         nsCOMPtr<nsISocketTransport> socketTrans = do_QueryInterface(trans, &rv);
@@ -1009,19 +1034,33 @@ nsresult nsHTTPHandler::CreateTransport(const char* host,
                                         PRUint32 bufferMaxSize,
                                         nsIChannel** o_pTrans)
 {
-    nsresult rv;
+    return CreateTransportOfType(nsnull, host, port, proxyHost, proxyPort,
+                                 bufferSegmentSize, bufferMaxSize, o_pTrans);
+}
 
+nsresult nsHTTPHandler::CreateTransportOfType(const char* type,
+                                              const char* host, 
+                                              PRInt32 port, 
+                                              const char* proxyHost,
+                                              PRInt32 proxyPort,
+                                              PRUint32 bufferSegmentSize,
+                                              PRUint32 bufferMaxSize,
+                                              nsIChannel** o_pTrans)
+{
+    nsresult rv;
+    
     NS_WITH_SERVICE(nsISocketTransportService, sts, kSocketTransportServiceCID, &rv);
     if (NS_FAILED (rv))
         return rv;
-
-    rv = sts->CreateTransport(host, 
-                              port, 
-                              proxyHost, 
-                              proxyPort, 
-                              bufferSegmentSize, 
-                              bufferMaxSize, 
-                              o_pTrans);
+    
+    rv = sts->CreateTransportOfType(type,
+                                    host, 
+                                    port, 
+                                    proxyHost, 
+                                    proxyPort, 
+                                    bufferSegmentSize, 
+                                    bufferMaxSize, 
+                                    o_pTrans);
     
     return rv;
 }
@@ -1503,13 +1542,14 @@ nsHTTPHandler::GetPipelinedRequest(nsIHTTPChannel* i_Channel, nsHTTPPipelinedReq
     {
         PRBool usingProxy = PR_FALSE;
         i_Channel->GetUsingProxy(&usingProxy);
+        
         PRUint32 capabilities;
-
+        
         if (usingProxy)
             GetServerCapabilities (host, port, DEFAULT_PROXY_CAPABILITIES , &capabilities);
         else
             GetServerCapabilities (host, port, DEFAULT_SERVER_CAPABILITIES, &capabilities);
-
+        
         pReq = new nsHTTPPipelinedRequest (this, host, port, capabilities);
         NS_ADDREF (pReq);
 
@@ -1554,7 +1594,7 @@ nsHTTPHandler::Check4BrokenHTTPServers(const char * a_Server, PRUint32 * a_Capab
     if (a_Capabilities == NULL)
         return NS_ERROR_NULL_POINTER;
     
-    for (int i = 0; i < sizeof (brokenServers_well_known) / sizeof (BrokenServersTable); i++)
+    for (unsigned int i = 0; i < sizeof (brokenServers_well_known) / sizeof (BrokenServersTable); i++)
     {
         BrokenServersTable *tP = &brokenServers_well_known[i];
         if (tP->matchFlags == BAD_SERVERS_MATCH_EXACT && !PL_strcmp(tP->serverHeader, a_Server))

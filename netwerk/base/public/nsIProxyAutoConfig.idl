@@ -40,7 +40,7 @@ interface nsIProxyAutoConfig : nsISupports
     /**
     * Get the proxy for the specified host 
     */
-    void ProxyForURL(in nsIURI uri, out string host, out long port);
+    void ProxyForURL(in nsIURI uri, out string host, out long port, out string type);
 };
 
 %{C++

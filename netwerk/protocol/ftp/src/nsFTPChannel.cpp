@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
  *
  * The contents of this file are subject to the Netscape Public
  * License Version 1.1 (the "License"); you may not use this file
@@ -52,7 +52,9 @@ nsFTPChannel::nsFTPChannel()
       mBufferSegmentSize(0),
       mBufferMaxSize(0),
       mLock(nsnull),
-      mStatus(NS_OK)
+      mStatus(NS_OK),
+      mProxyPort(-1),
+      mProxyTransparent(PR_FALSE)
 {
     NS_INIT_REFCNT();
 }
@@ -65,8 +67,10 @@ nsFTPChannel::~nsFTPChannel()
     if (mLock) PR_DestroyLock(mLock);
 }
 
-NS_IMPL_THREADSAFE_ISUPPORTS6(nsFTPChannel,
-                              nsIChannel, 
+NS_IMPL_THREADSAFE_ISUPPORTS8(nsFTPChannel,
+                              nsIChannel,
+                              nsIFTPChannel,
+                              nsIProxy,
                               nsIRequest, 
                               nsIInterfaceRequestor, 
                               nsIProgressEventSink,
@@ -673,4 +677,69 @@ nsFTPChannel::OnDataAvailable(nsIChannel* aChannel, nsISupports* aContext,
                                nsIInputStream *aInputStream, PRUint32 aSourceOffset,
                                PRUint32 aLength) {
     return mListener->OnDataAvailable(this, aContext, aInputStream, aSourceOffset, aLength);
+}
+
+// nsIFTPChannel methods
+NS_IMETHODIMP
+nsFTPChannel::GetUsingProxy(PRBool *aUsingProxy)
+{
+    if (!aUsingProxy)
+        return NS_ERROR_NULL_POINTER;
+    *aUsingProxy = (!mProxyHost.IsEmpty() && !mProxyTransparent);
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsFTPChannel::GetUsingTransparentProxy(PRBool *aUsingProxy)
+{
+    if (!aUsingProxy)
+        return NS_ERROR_NULL_POINTER;
+    *aUsingProxy = (!mProxyHost.IsEmpty() && mProxyTransparent);
+    return NS_OK;
+}
+
+// nsIProxy methods
+NS_IMETHODIMP
+nsFTPChannel::GetProxyHost(char* *_retval) {
+    *_retval = mProxyHost.ToNewCString();
+    if (!*_retval) return NS_ERROR_OUT_OF_MEMORY;
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsFTPChannel::SetProxyHost(const char *aProxyHost) {
+    mProxyHost = aProxyHost;
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsFTPChannel::GetProxyPort(PRInt32 *_retval) {
+    *_retval = mProxyPort;
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsFTPChannel::SetProxyPort(PRInt32 aProxyPort) {
+   mProxyPort = aProxyPort;
+   return NS_OK;
+}
+
+NS_IMETHODIMP
+nsFTPChannel::GetProxyType(char * *_retval)
+{
+    *_retval = mProxyType.ToNewCString();
+    if (!*_retval) return NS_ERROR_OUT_OF_MEMORY;
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsFTPChannel::SetProxyType(const char * aProxyType)
+{
+    if (nsCRT::strcasecmp(aProxyType, "socks") == 0) {
+        mProxyTransparent = PR_TRUE;
+    } else {
+        mProxyTransparent = PR_FALSE;
+    }
+    mProxyType = aProxyType;
+    return NS_OK;
 }

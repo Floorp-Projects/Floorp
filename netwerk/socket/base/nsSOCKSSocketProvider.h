@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
  *
  * The contents of this file are subject to the Mozilla Public
  * License Version 1.1 (the "License"); you may not use this file
@@ -19,7 +19,7 @@
  *
  * Contributor(s):
  *   Justin Bradford <jab@atdot.org>
-*/
+ */
 
 #ifndef _NSSOCKSSOCKETPROVIDER_H_
 #define _NSSOCKSSOCKETPROVIDER_H_
@@ -32,21 +32,21 @@
 
 class nsSOCKSSocketProvider : public nsISOCKSSocketProvider
 {
- public:
-   NS_DECL_ISUPPORTS
-   NS_DECL_NSISOCKETPROVIDER
-   NS_DECL_NSISOCKSSOCKETPROVIDER
-   
-   // nsSOCKSSocketProvider methods:
-   nsSOCKSSocketProvider();
-   virtual ~nsSOCKSSocketProvider();
-   
-   static NS_METHOD
-   Create(nsISupports *aOuter, REFNSIID aIID, void **aResult);
-   
-   nsresult Init();
-   
- protected:
+public:
+    NS_DECL_ISUPPORTS
+    NS_DECL_NSISOCKETPROVIDER
+    NS_DECL_NSISOCKSSOCKETPROVIDER
+    
+    // nsSOCKSSocketProvider methods:
+    nsSOCKSSocketProvider();
+    virtual ~nsSOCKSSocketProvider();
+    
+    static NS_METHOD
+    Create(nsISupports *aOuter, REFNSIID aIID, void **aResult);
+    
+    nsresult Init();
+    
+protected:
 };
 
 #endif /* _NSSOCKSSOCKETPROVIDER_H_ */
