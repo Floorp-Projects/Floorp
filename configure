@@ -14524,11 +14524,6 @@ cat >> confdefs.h <<\EOF
 EOF
 
 
-cat >> confdefs.h <<\EOF
-#define USE_IMG2 1
-EOF
-
-
 if test "$SUNCTL"; then
         _SAVE_CFLAGS=$CFLAGS
     CFLAGS="$CFLAGS $GLIB_CFLAGS"
@@ -14541,14 +14536,14 @@ ac_link='${CC-cc} -o conftest${ac_exeext} $CFLAGS $CPPFLAGS $LDFLAGS conftest.$a
 cross_compiling=$ac_cv_prog_cc_cross
 
     cat > conftest.$ac_ext <<EOF
-#line 14545 "configure"
+#line 14540 "configure"
 #include "confdefs.h"
 #include <gmodule.h>
 int main() {
  int x = 1; x++; 
 ; return 0; }
 EOF
-if { (eval echo configure:14552: \"$ac_compile\") 1>&5; (eval $ac_compile) 2>&5; }; then
+if { (eval echo configure:14547: \"$ac_compile\") 1>&5; (eval $ac_compile) 2>&5; }; then
   :
 else
   echo "configure: failed program was:" >&5
