@@ -35,7 +35,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: pki3hack.c,v $ $Revision: 1.81 $ $Date: 2004/05/17 20:08:37 $ $Name:  $";
+static const char CVS_ID[] = "@(#) $RCSfile: pki3hack.c,v $ $Revision: 1.82 $ $Date: 2004/07/21 18:18:05 $ $Name:  $";
 #endif /* DEBUG */
 
 /*
@@ -798,6 +798,23 @@ NSS_IMPLEMENT CERTCertificate *
 STAN_GetCERTCertificate(NSSCertificate *c)
 {
     return stan_GetCERTCertificate(c, PR_FALSE);
+}
+/*
+ * many callers of STAN_GetCERTCertificate() intend that
+ * the CERTCertificate returned inherits the reference to the 
+ * NSSCertificate. For these callers it's convenient to have 
+ * this function 'own' the reference and either return a valid 
+ * CERTCertificate structure which inherits the reference or 
+ * destroy the reference to NSSCertificate and returns NULL.
+ */
+NSS_IMPLEMENT CERTCertificate *
+STAN_GetCERTCertificateOrRelease(NSSCertificate *c)
+{
+    CERTCertificate *nss3cert = stan_GetCERTCertificate(c, PR_FALSE);
+    if (!nss3cert) {
+	nssCertificate_Destroy(c);
+    }
+    return nss3cert;
 }
 
 static nssTrustLevel

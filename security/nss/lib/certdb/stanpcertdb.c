@@ -198,7 +198,7 @@ __CERT_AddTempCertToPerm(CERTCertificate *cert, char *nickname,
     nssTrustDomain_AddCertsToCache(STAN_GetDefaultTrustDomain(), &c, 1);
     /* reset the CERTCertificate fields */
     cert->nssCertificate = NULL;
-    cert = STAN_GetCERTCertificate(c); /* will return same pointer */
+    cert = STAN_GetCERTCertificateOrRelease(c); /* should return same pointer */
     if (!cert) {
         return SECFailure;
     }
@@ -251,7 +251,7 @@ __CERT_NewTempCertificate(CERTCertDBHandle *handle, SECItem *derCert,
 		PORT_SetError(SEC_ERROR_REUSED_ISSUER_AND_SERIAL);
 		cc = NULL;
 	    } else {
-		cc = STAN_GetCERTCertificate(c);
+    		cc = STAN_GetCERTCertificateOrRelease(c);
 	    }
 	    return cc;
 	}
@@ -275,6 +275,8 @@ __CERT_NewTempCertificate(CERTCertDBHandle *handle, SECItem *derCert,
     /* Forces a decoding of the cert in order to obtain the parts used
      * below
      */
+    /* 'c' is not adopted here, if we fail loser frees what has been
+     * allocated so far for 'c' */
     cc = STAN_GetCERTCertificate(c);
     if (!cc) {
         goto loser;
@@ -321,7 +323,7 @@ __CERT_NewTempCertificate(CERTCertDBHandle *handle, SECItem *derCert,
     if (tempCert) {
 	/* and use the "official" entry */
 	c = tempCert;
-	cc = STAN_GetCERTCertificate(c);
+    	cc = STAN_GetCERTCertificateOrRelease(c);
         if (!cc) {
             return NULL;
         }
@@ -392,24 +394,12 @@ CERT_FindCertByName(CERTCertDBHandle *handle, SECItem *name)
                                                      NULL, &usage, NULL);
     c = get_best_temp_or_perm(ct, cp);
     if (ct) {
-	CERTCertificate *cert = STAN_GetCERTCertificate(ct);
-        if (!cert) {
-            return NULL;
-        }
-	CERT_DestroyCertificate(cert);
+	CERT_DestroyCertificate(STAN_GetCERTCertificateOrRelease(ct));
     }
     if (cp) {
-	CERTCertificate *cert = STAN_GetCERTCertificate(cp);
-        if (!cert) {
-            return NULL;
-        }
-	CERT_DestroyCertificate(cert);
+	CERT_DestroyCertificate(STAN_GetCERTCertificateOrRelease(cp));
     }
-    if (c) {
-	return STAN_GetCERTCertificate(c);
-    } else {
-	return NULL;
-    }
+    return c ? STAN_GetCERTCertificateOrRelease(c) : NULL;
 }
 
 CERTCertificate *
@@ -458,20 +448,12 @@ CERT_FindCertByNickname(CERTCertDBHandle *handle, char *nickname)
 	c = get_best_temp_or_perm(ct, STAN_GetNSSCertificate(cert));
 	CERT_DestroyCertificate(cert);
 	if (ct) {
-	    CERTCertificate *cert2 = STAN_GetCERTCertificate(ct);
-            if (!cert2) {
-                return NULL;
-            }
-	    CERT_DestroyCertificate(cert2);
+	    CERT_DestroyCertificate(STAN_GetCERTCertificateOrRelease(ct));
 	}
     } else {
 	c = ct;
     }
-    if (c) {
-	return STAN_GetCERTCertificate(c);
-    } else {
-	return NULL;
-    }
+    return c ? STAN_GetCERTCertificateOrRelease(c) : NULL;
 }
 
 CERTCertificate *
@@ -488,7 +470,7 @@ CERT_FindCertByDERCert(CERTCertDBHandle *handle, SECItem *derCert)
 	                                                       &encoding);
 	if (!c) return NULL;
     }
-    return STAN_GetCERTCertificate(c);
+    return STAN_GetCERTCertificateOrRelease(c);
 }
 
 CERTCertificate *
@@ -520,19 +502,12 @@ CERT_FindCertByNicknameOrEmailAddr(CERTCertDBHandle *handle, char *name)
 	c = get_best_temp_or_perm(ct, STAN_GetNSSCertificate(cert));
 	CERT_DestroyCertificate(cert);
 	if (ct) {
-	    CERTCertificate *cert2 = STAN_GetCERTCertificate(ct);
-            if (!cert2) {
-                return NULL;
-            }
-	    CERT_DestroyCertificate(cert2);
+	    CERT_DestroyCertificate(STAN_GetCERTCertificateOrRelease(ct));
 	}
     } else {
 	c = ct;
     }
-    if (c) {
-	return STAN_GetCERTCertificate(c);
-    }
-    return NULL;
+    return c ? STAN_GetCERTCertificateOrRelease(c) : NULL;
 }
 
 static void 
@@ -588,8 +563,10 @@ CERT_CreateSubjectCertList(CERTCertList *certList, CERTCertDBHandle *handle,
     /* Iterate over the matching temp certs.  Add them to the list */
     ci = tSubjectCerts;
     while (ci && *ci) {
-	cert = STAN_GetCERTCertificate(*ci);
+	cert = STAN_GetCERTCertificateOrRelease(*ci);
+	/* *ci may be invalid at this point, don't reference it again */
         if (cert) {
+	    /* NOTE: add_to_subject_list adopts the incoming cert. */
 	    add_to_subject_list(certList, cert, validOnly, sorttime);
         }
 	ci++;
@@ -597,18 +574,23 @@ CERT_CreateSubjectCertList(CERTCertList *certList, CERTCertDBHandle *handle,
     /* Iterate over the matching perm certs.  Add them to the list */
     ci = pSubjectCerts;
     while (ci && *ci) {
-	cert = STAN_GetCERTCertificate(*ci);
+	cert = STAN_GetCERTCertificateOrRelease(*ci);
+	/* *ci may be invalid at this point, don't reference it again */
         if (cert) {
+	    /* NOTE: add_to_subject_list adopts the incoming cert. */
 	    add_to_subject_list(certList, cert, validOnly, sorttime);
         }
 	ci++;
     }
+    /* all the references have been adopted or freed at this point, just
+     * free the arrays now */
     nss_ZFreeIf(tSubjectCerts);
     nss_ZFreeIf(pSubjectCerts);
     return certList;
 loser:
-    nss_ZFreeIf(tSubjectCerts);
-    nss_ZFreeIf(pSubjectCerts);
+    /* need to free the references in tSubjectCerts and pSubjectCerts! */
+    nssCertificateArray_Destroy(tSubjectCerts);
+    nssCertificateArray_Destroy(pSubjectCerts);
     if (myList && certList != NULL) {
 	CERT_DestroyCertList(certList);
     }
