@@ -835,7 +835,7 @@ NS_IMETHODIMP nsScrollingView::CreateScrollControls(nsNativeWidget aNative)
     nsIView *scrolledView;
     GetScrolledView(scrolledView);
 
-#if 1 // MOUSE WHEEL TRACKER CODE
+#ifdef LOSER // MOUSE WHEEL TRACKER CODE
 
     // XXX This code is to be reviewed by michealp
     // It gets the Window for the view and the gets the widget
