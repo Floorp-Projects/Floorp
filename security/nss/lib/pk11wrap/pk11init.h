@@ -58,6 +58,7 @@ struct PK11PreSlotInfoStr {
 #define SECMOD_INT_FLAGS SECMOD_MAKE_NSS_FLAGS("",1)
 #define SECMOD_FIPS_NAME "NSS Internal FIPS PKCS #11 Module"
 #define SECMOD_FIPS_FLAGS SECMOD_MAKE_NSS_FLAGS(",fips",3)
-
+extern void PK11SDR_Init(void);
+extern void PK11SDR_Shutdown(void);
 
 #endif /* _PK11_INIT_H_ 1 */
