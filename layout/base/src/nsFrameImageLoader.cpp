@@ -191,7 +191,7 @@ nsFrameImageLoader::Init(nsIPresContext* aPresContext,
   char* cp = aURL.ToNewCString();
   mImageRequest = aGroup->GetImage(cp, this, aBackgroundColor,
                                    desiredWidth, desiredHeight, 0);
-  delete[] cp;
+  nsCRT::free(cp);
 
   return NS_OK;
 }
