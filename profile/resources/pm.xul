@@ -25,6 +25,7 @@
 <window 
 xmlns:html="http://www.w3.org/TR/REC-html40"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul" class="dialog"
+	title="&windowtitle.label;"
 		width="500" height="500"> 
       
 <html:script language="javascript" src="pm.js">
