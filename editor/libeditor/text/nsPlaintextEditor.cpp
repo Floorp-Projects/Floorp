@@ -1906,26 +1906,35 @@ nsPlaintextEditor::SetCompositionString(const nsAReadableString& aCompositionStr
   if (NS_FAILED(result)) return result;
 
   mIMETextRangeList = aTextRangeList;
-  nsAutoPlaceHolderBatch batch(this, gIMETxnName);
 
-  result = InsertText(aCompositionString);
-
-  mIMEBufferLength = aCompositionString.Length();
-
-  if (!mPresShellWeak) return NS_ERROR_NOT_INITIALIZED;
-  nsCOMPtr<nsIPresShell> ps = do_QueryReferent(mPresShellWeak);
-  if (!ps) return NS_ERROR_NOT_INITIALIZED;
-  ps->GetCaret(getter_AddRefs(caretP));
-  caretP->SetCaretDOMSelection(selection);
-
-  caretP->GetCaretCoordinates(nsICaret::eIMECoordinates, selection,
-            &(aReply->mCursorPosition), &(aReply->mCursorIsCollapsed));
-
-  // second part of 23558 fix:
-  if (aCompositionString.IsEmpty()) 
+  // we need the nsAutoPlaceHolderBatch destructor called before hitting
+  // GetCaretCoordinates so the states in Frame system sync with content
+  // therefore, we put the nsAutoPlaceHolderBatch into a inner block
   {
-    mIMETextNode = nsnull;
+    nsAutoPlaceHolderBatch batch(this, gIMETxnName);
+
+    result = InsertText(aCompositionString);
+
+    mIMEBufferLength = aCompositionString.Length();
+
+    if (!mPresShellWeak) 
+      return NS_ERROR_NOT_INITIALIZED;
+    nsCOMPtr<nsIPresShell> ps = do_QueryReferent(mPresShellWeak);
+    if (!ps) 
+      return NS_ERROR_NOT_INITIALIZED;
+    ps->GetCaret(getter_AddRefs(caretP));
+    caretP->SetCaretDOMSelection(selection);
+
+    // second part of 23558 fix:
+    if (aCompositionString.IsEmpty()) 
+    {
+      mIMETextNode = nsnull;
+    }
   }
+
+  result = caretP->GetCaretCoordinates(nsICaret::eIMECoordinates, selection,
+            &(aReply->mCursorPosition), &(aReply->mCursorIsCollapsed));
+  NS_ASSERTION(NS_SUCCEEDED(result), "cannot get caret position");
   
   return result;
 }
