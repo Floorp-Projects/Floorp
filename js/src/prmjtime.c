@@ -61,7 +61,7 @@
 #include <Timer.h>
 #endif
 
-#ifdef XP_UNIX
+#if defined(XP_UNIX) || defined(XP_BEOS)
 
 #ifdef _SVID_GETTOD   /* Defined only on Solaris, see Solaris <sys/types.h> */
 extern int gettimeofday(struct timeval *tv);
@@ -269,7 +269,7 @@ PRMJ_Now(void)
     JSInt64 s, us, ms2us, s2us;
     struct timeb b;
 #endif /* XP_PC */
-#ifdef XP_UNIX
+#if defined(XP_UNIX) || defined(XP_BEOS)
     struct timeval tv;
     JSInt64 s, us, s2us;
 #endif /* XP_UNIX */
@@ -294,7 +294,7 @@ PRMJ_Now(void)
     return s;
 #endif
 
-#ifdef XP_UNIX
+#if defined(XP_UNIX) || defined(XP_BEOS)
 #ifdef _SVID_GETTOD   /* Defined only on Solaris, see Solaris <sys/types.h> */
     gettimeofday(&tv);
 #else
@@ -404,7 +404,7 @@ PRMJ_DSTOffset(JSInt64 local_time)
 size_t
 PRMJ_FormatTime(char *buf, int buflen, char *fmt, PRMJTime *prtm)
 {
-#if defined(XP_UNIX) || defined(XP_PC) || defined(XP_MAC)
+#if defined(XP_UNIX) || defined(XP_PC) || defined(XP_MAC) || defined(XP_BEOS)
     struct tm a;
 
     /* Zero out the tm struct.  Linux, SunOS 4 struct tm has extra members int

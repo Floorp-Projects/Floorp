@@ -33,7 +33,7 @@
 #ifdef XP_PC
 #include "nsIWin32Locale.h"
 #endif
-#if defined(XP_UNIX) || defined(BEOS)
+#if defined(XP_UNIX) || defined(XP_BEOS)
 #include <locale.h>
 #include <stdlib.h>
 #include "nsIPosixLocale.h"
@@ -53,7 +53,7 @@ static NS_DEFINE_IID(kIFactoryIID,NS_IFACTORY_IID);
 #ifdef XP_PC
 static NS_DEFINE_IID(kIWin32LocaleIID,NS_IWIN32LOCALE_IID);
 #endif
-#ifdef XP_UNIX
+#if defined(XP_UNIX) || defined(XP_BEOS)
 static NS_DEFINE_IID(kIPosixLocaleIID,NS_IPOSIXLOCALE_IID);
 #endif
 #ifdef XP_MAC
@@ -66,7 +66,7 @@ static NS_DEFINE_IID(kIMacLocaleIID,NS_IMACLOCALE_IID);
 #ifdef XP_PC
 static NS_DEFINE_CID(kWin32LocaleFactoryCID,NS_WIN32LOCALEFACTORY_CID);
 #endif
-#ifdef XP_UNIX
+#if defined(XP_UNIX) || defined(XP_BEOS)
 static NS_DEFINE_CID(kPosixLocaleFactoryCID,NS_POSIXLOCALEFACTORY_CID);
 #endif
 #ifdef XP_MAC
@@ -89,7 +89,7 @@ const char* LocaleList[LocaleListLength] =
 #define NSILOCALE_MAX_ACCEPT_LANGUAGE	16
 #define NSILOCALE_MAX_ACCEPT_LENGTH		18
 
-#ifdef XP_UNIX
+#if defined(XP_UNIX) || defined(XP_BEOS)
 static int posix_locale_category[LocaleListLength] =
 {
   LC_TIME,
@@ -213,7 +213,7 @@ nsLocaleService::nsLocaleService(void)
 		win32Converter->Release();
 	}
 #endif
-#ifdef XP_UNIX
+#if defined(XP_UNIX) || defined(XP_BEOS)
     nsIPosixLocale* posixConverter;
     nsString xpLocale;
     nsresult result = nsComponentManager::CreateInstance(kPosixLocaleFactoryCID,

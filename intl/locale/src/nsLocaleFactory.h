@@ -31,7 +31,7 @@
 #ifdef XP_PC
 #include "nsIWin32Locale.h"
 #endif
-#ifdef XP_UNIX
+#if defined(XP_UNIX) || defined(XP_BEOS)
 #include "nsIPosixLocale.h"
 #endif
 
@@ -58,7 +58,7 @@ private:
   nsILocale*	fApplicationLocale;
 #ifdef XP_PC
   nsIWin32Locale*		fWin32LocaleInterface;
-#elif defined(XP_UNIX)
+#elif defined(XP_UNIX) || defined(XP_BEOS)
   nsIPosixLocale*   fPosixLocaleInterface;
 #endif
 
