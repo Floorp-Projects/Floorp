@@ -1118,17 +1118,11 @@ rdf_BlockingWrite(nsIOutputStream* stream, const char* buf, PRUint32 size)
 static nsresult
 rdf_BlockingWrite(nsIOutputStream* stream, const nsString& s)
 {
-    char buf[256];
-    char* p = buf;
-
-    if (s.Length() >= PRInt32(sizeof buf))
-        p = (char *)nsAllocator::Alloc(s.Length() + 1);
-
-    nsresult rv = rdf_BlockingWrite(stream, s.ToCString(p, s.Length() + 1), s.Length());
-
-    if (p != buf)
-        nsCRT::free(p);
-
+    nsresult rv;
+    char* utf8 = s.ToNewUTF8String();
+    PRInt32 len = PL_strlen(utf8);
+    rv = rdf_BlockingWrite(stream, utf8, len);
+    nsCRT::free(utf8);
     return rv;
 }
 
