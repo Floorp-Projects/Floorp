@@ -32,7 +32,7 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  *
- * $Id: sslcon.c,v 1.8 2001/04/11 22:52:09 nelsonb%netscape.com Exp $
+ * $Id: sslcon.c,v 1.9 2001/06/09 03:18:06 nelsonb%netscape.com Exp $
  */
 
 #include "nssrenam.h"
@@ -2531,7 +2531,7 @@ ssl2_HandleMessage(sslSocket *ss)
 	    goto bad_peer;
 	}
 
-	if (gs->recordLen - 1 != SSL_SESSIONID_BYTES) {
+	if (gs->recordLen - 1 != SSL2_SESSIONID_BYTES) {
 	    SSL_DBG(("%d: SSL[%d]: bad server-finished message, len=%d",
 		     SSL_GETPID(), ss->fd, gs->recordLen));
 	    goto bad_peer;
@@ -3366,7 +3366,7 @@ ssl2_HandleClientHelloMessage(sslSocket *ss)
     sslSecurityInfo *sec;
     sslConnectInfo  *ci;
     sslGather       *gs;
-    sslSessionID    *sid = NULL;
+    sslSessionID    *sid;
     PRUint8         *msg;
     PRUint8         *data;
     PRUint8         *cs;
@@ -3375,7 +3375,6 @@ ssl2_HandleClientHelloMessage(sslSocket *ss)
     PRUint8         *challenge;
     unsigned int    challengeLen;
     SECStatus       rv; 
-    int             hit;
     int             csLen;
     int             sendLen;
     int             sdLen;
@@ -3383,6 +3382,11 @@ ssl2_HandleClientHelloMessage(sslSocket *ss)
     int             pid;
     int             sent;
     int             gotXmitBufLock = 0;
+#if defined(SOLARIS) && defined(i386)
+    volatile PRUint8 hit;
+#else
+    int             hit;
+#endif
     PRUint8         csImpl[sizeof implementedCipherSuites];
 
     PORT_Assert( ssl_Have1stHandshakeLock(ss) );
@@ -3508,14 +3512,14 @@ ssl2_HandleClientHelloMessage(sslSocket *ss)
 
     /* Examine message and see if session-id is good */
     ci->elements = 0;
-    if (ss->noCache) {
-	sid = NULL;
-    } else if (sdLen) {
+    if (sdLen > 0 && !ss->noCache) {
 	SSL_TRC(7, ("%d: SSL[%d]: server, lookup client session-id for 0x%08x%08x%08x%08x",
 		    SSL_GETPID(), ss->fd, ci->peer.pr_s6_addr32[0],
 		    ci->peer.pr_s6_addr32[1], ci->peer.pr_s6_addr32[2],
 		    ci->peer.pr_s6_addr32[3]));
 	sid = (*ssl_sid_lookup)(&ci->peer, sd, sdLen, ss->dbHandle);
+    } else {
+	sid = NULL;
     }
     if (sid) {
 	/* Got a good session-id. Short cut! */
@@ -3545,7 +3549,7 @@ ssl2_HandleClientHelloMessage(sslSocket *ss)
 
 	/* Invent a session-id */
 	ci->sid = sid;
-	PK11_GenerateRandom(sid->u.ssl2.sessionID+2, SSL_SESSIONID_BYTES-2);
+	PK11_GenerateRandom(sid->u.ssl2.sessionID+2, SSL2_SESSIONID_BYTES-2);
 
 	pid = SSL_GETPID();
 	sid->u.ssl2.sessionID[0] = MSB(pid);

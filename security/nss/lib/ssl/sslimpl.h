@@ -34,7 +34,7 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  *
- * $Id: sslimpl.h,v 1.13 2001/05/08 23:12:31 nelsonb%netscape.com Exp $
+ * $Id: sslimpl.h,v 1.14 2001/06/09 03:18:07 nelsonb%netscape.com Exp $
  */
 
 #ifndef __sslimpl_h_
@@ -113,7 +113,7 @@ typedef enum { SSLAppOpRead = 0,
 #define SSL_MIN_MASTER_KEY_BYTES	5
 #define SSL_MAX_MASTER_KEY_BYTES	64
 
-#define SSL_SESSIONID_BYTES		16
+#define SSL2_SESSIONID_BYTES		16
 #define SSL3_SESSIONID_BYTES		32
 
 #define SSL_MIN_CHALLENGE_BYTES		16
@@ -711,7 +711,7 @@ struct sslSessionIDStr {
     union {
 	struct {
 	    /* the V2 code depends upon the size of sessionID.  */
-	    unsigned char         sessionID[SSL_SESSIONID_BYTES];
+	    unsigned char         sessionID[SSL2_SESSIONID_BYTES];
 
 	    /* Stuff used to recreate key and read/write cipher objects */
 	    SECItem               masterKey;
@@ -1247,8 +1247,11 @@ void ssl_Trace(const char *format, ...);
 SEC_END_PROTOS
 
 
-#ifdef XP_UNIX
+#if defined(XP_UNIX)
 #define SSL_GETPID() getpid()
+#elif defined(WIN32)
+/* #define SSL_GETPID() GetCurrentProcessId() */
+#define SSL_GETPID() _getpid()
 #else
 #define SSL_GETPID() 0
 #endif
