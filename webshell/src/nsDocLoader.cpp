@@ -213,6 +213,7 @@ public:
                                  const char* aCommand);
     void FireOnEndDocumentLoad(nsIDocumentLoader* aLoadInitiator,
                                PRInt32 aStatus);
+							   
 
     void FireOnStartURLLoad(nsIDocumentLoader* aLoadInitiator,
                             nsIURL* aURL, 
@@ -826,6 +827,7 @@ void nsDocLoaderImpl::FireOnStartDocumentLoad(nsIDocumentLoader* aLoadInitiator,
 
 void nsDocLoaderImpl::FireOnEndDocumentLoad(nsIDocumentLoader* aLoadInitiator,
                                             PRInt32 aStatus)
+									
 {
     PRInt32 count = mDocObservers.Count();
     PRInt32 index;
@@ -837,7 +839,7 @@ void nsDocLoaderImpl::FireOnEndDocumentLoad(nsIDocumentLoader* aLoadInitiator,
         nsIDocumentLoaderObserver* observer = (nsIDocumentLoaderObserver*)
             mDocObservers.ElementAt(index);
         observer->OnEndDocumentLoad(aLoadInitiator, mDocumentUrl,
-                                    aStatus);
+                                    aStatus, observer);
     }
 
     /*
