@@ -613,9 +613,9 @@ nsProgressDialog.prototype = {
             title = this.replaceInsert( title, 2, this.percent );
         }
 
-        // Set <window>'s title attribute.
+        // Set dialog's title property.
         if ( this.dialog ) {
-            this.dialog.title = title;
+            this.dialog.document.title = title;
         }
     },
 
