@@ -20,7 +20,7 @@ use File::Basename; # for basename();
 use Config; # for $Config{sig_name} and $Config{sig_num}
 
 
-$::UtilsVersion = '$Revision: 1.84 $ ';
+$::UtilsVersion = '$Revision: 1.85 $ ';
 
 package TinderUtils;
 
@@ -893,7 +893,7 @@ sub run_all_tests {
 	  my $i;
 	  my $startuptime;         # Startup time in ms.
 	  my $agg_startuptime = 0; # Aggregate startup time.
-	  my $startup_count = 0;   # Number of successful runs.
+	  my $startup_count   = 0; # Number of successful runs.
 	  my $avg_startuptime = 0; # Average startup time.
 	  my @times;
 
@@ -941,7 +941,7 @@ sub run_all_tests {
 		}
 
 	  } # for loop
-	  
+	
 	  if($test_result eq 'success') {
 		print_log "\nSummary for startup test:\n";
 		
@@ -957,8 +957,13 @@ sub run_all_tests {
 		my $min_startuptime = min(@times);
 		print_log "Minimum startup time: $min_startuptime\n";
 
+		# Old mechanism here, new = TinderboxPrint.
 		# print_log "\n\n  __avg_startuptime,$avg_startuptime\n\n";
-		print_log "\n\n  __avg_startuptime,$min_startuptime\n\n";
+		# print_log "\n\n  __avg_startuptime,$min_startuptime\n\n";
+		
+		my $min_startuptime_string = sprintf "%.2f", $min_startuptime/1000;
+		my $print_string = "\n\nTinderboxPrint:Ts:" . $min_startuptime_string . "s\n\n";
+		print_log "$print_string";
 
 		# Report data back to server
 		if($Settings::TestsPhoneHome) {
@@ -1536,6 +1541,8 @@ sub PercentChange($$) {
     return ($new - $old) / $old;
 }
 
+# Print a value of bytes out in a reasonable
+# KB, MB, or GB form.
 sub PrintSize($) {
 
     # print a number with 3 significant figures
