@@ -480,7 +480,7 @@ NS_IMETHODIMP nsJISx4501LineBreaker::Prev(
      }
 
      if(GetPair(c1, c2)) {
-       *oPrev = cur - 1;
+       *oPrev = cur;
        *oNeedMoreText = PR_FALSE;
        return NS_OK;
      }
