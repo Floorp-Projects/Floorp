@@ -3353,7 +3353,7 @@ nsGfxListControlFrame::DragMove(nsIDOMEvent* aMouseEvent)
 // nsIDOMKeyListener
 //----------------------------------------------------------------------
 nsresult
-nsGfxListControlFrame::KeyPress(nsIDOMEvent* aKeyEvent)
+nsGfxListControlFrame::KeyDown(nsIDOMEvent* aKeyEvent)
 {
   return NS_OK;
 }
@@ -3419,7 +3419,7 @@ nsGfxListControlFrame::ScrollToFrame(nsIContent* aOptElement)
 }
 
 nsresult
-nsGfxListControlFrame::KeyDown(nsIDOMEvent* aKeyEvent)
+nsGfxListControlFrame::KeyPress(nsIDOMEvent* aKeyEvent)
 {
   NS_ASSERTION(aKeyEvent != nsnull, "keyEvent is null.");
 
@@ -3451,6 +3451,9 @@ nsGfxListControlFrame::KeyDown(nsIDOMEvent* aKeyEvent)
       if (numOptions == 0) {
         rv = NS_OK;
       } else {
+
+        // We are handling this so don't let it bubble up
+        aKeyEvent->PreventBubble();
 
         switch (code) {
 
