@@ -869,7 +869,7 @@ with_ThisObject(JSContext *cx, JSObject *obj)
     return OBJ_THIS_OBJECT(cx, proto);
 }
 
-static JSObjectOps with_object_ops = {
+JS_FRIEND_DATA(JSObjectOps) js_WithObjectOps = {
     js_NewObjectMap,        js_DestroyObjectMap,
     with_LookupProperty,    js_DefineProperty,
     with_GetProperty,       with_SetProperty,
@@ -882,7 +882,7 @@ static JSObjectOps with_object_ops = {
 static JSObjectOps *
 with_getObjectOps(JSContext *cx, JSClass *clasp)
 {
-    return &with_object_ops;
+    return &js_WithObjectOps;
 }
 
 JSClass js_WithClass = {

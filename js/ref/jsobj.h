@@ -144,10 +144,12 @@ struct JSObject {
     ((JSClass *)JSVAL_TO_PRIVATE(OBJ_GET_SLOT(cx, obj, JSSLOT_CLASS)))
 
 /* Test whether a map or object is native. */
-#define MAP_IS_NATIVE(map)  ((map)->ops == &js_ObjectOps)
+#define MAP_IS_NATIVE(map)  ((map)->ops == &js_ObjectOps || \
+                             (map)->ops == &js_WithObjectOps)
 #define OBJ_IS_NATIVE(obj)  MAP_IS_NATIVE((obj)->map)
 
 extern JS_FRIEND_DATA(JSObjectOps) js_ObjectOps;
+extern JS_FRIEND_DATA(JSObjectOps) js_WithObjectOps;
 extern JSClass      js_ObjectClass;
 extern JSClass      js_WithClass;
 
