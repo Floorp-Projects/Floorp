@@ -89,7 +89,7 @@ protected:
     char*       mQuery;
     char*       mRef;
 
-    nsIURLParser* mURLParser;
+    nsCOMPtr<nsIURLParser> mURLParser;
 
     // If a file was given to SetFile, then this instance variable holds it.
     // If GetFile is called, we synthesize one and cache it here.

@@ -51,14 +51,13 @@ nsStdURL::nsStdURL()
       mFileExtension(nsnull),
       mParam(nsnull),
       mQuery(nsnull),
-      mRef(nsnull),
-      mURLParser(nsnull)
+      mRef(nsnull)
 {
     NS_INIT_REFCNT();
     /* Create the standard URLParser */
     nsComponentManager::CreateInstance(kStdURLParserCID, 
                                        nsnull, NS_GET_IID(nsIURLParser),
-                                       (void**)&mURLParser);
+                                       getter_AddRefs(mURLParser));
 
 }
 
@@ -73,8 +72,7 @@ nsStdURL::nsStdURL(const char* i_Spec, nsISupports* outer)
       mFileExtension(nsnull),
       mParam(nsnull),
       mQuery(nsnull),
-      mRef(nsnull),
-      mURLParser(nsnull)
+      mRef(nsnull)
 {
     NS_INIT_REFCNT();
 
@@ -96,7 +94,7 @@ nsStdURL::nsStdURL(const char* i_Spec, nsISupports* outer)
     /* Create the standard URLParser */
     nsComponentManager::CreateInstance(kStdURLParserCID, 
                                        nsnull, NS_GET_IID(nsIURLParser),
-                                       (void**)&mURLParser);
+                                       getter_AddRefs(mURLParser));
 
     NS_INIT_AGGREGATED(outer);
     if (fwdPtr && mURLParser)
@@ -118,8 +116,6 @@ nsStdURL::nsStdURL(const nsStdURL& otherURL)
     mParam = otherURL.mParam ? nsCRT::strdup(otherURL.mParam) : nsnull;
     mQuery = otherURL.mQuery ? nsCRT::strdup(otherURL.mQuery) : nsnull;
     mRef= otherURL.mRef ? nsCRT::strdup(otherURL.mRef) : nsnull;
-
-    NS_IF_ADDREF(otherURL.mURLParser);
     mURLParser = otherURL.mURLParser;
 
     NS_INIT_AGGREGATED(nsnull); // Todo! How?
@@ -138,8 +134,6 @@ nsStdURL::operator=(const nsStdURL& otherURL)
     mParam = otherURL.mParam ? nsCRT::strdup(otherURL.mParam) : nsnull;
     mQuery = otherURL.mQuery ? nsCRT::strdup(otherURL.mQuery) : nsnull;
     mRef= otherURL.mRef ? nsCRT::strdup(otherURL.mRef) : nsnull;
-
-    NS_IF_ADDREF(otherURL.mURLParser);
     mURLParser = otherURL.mURLParser;
 
     NS_INIT_AGGREGATED(nsnull); // Todo! How?
@@ -166,7 +160,6 @@ nsStdURL::~nsStdURL()
     CRTFREEIF(mParam);
     CRTFREEIF(mQuery);
     CRTFREEIF(mRef);
-    NS_IF_RELEASE(mURLParser);
 }
 
 NS_IMPL_AGGREGATED(nsStdURL);
@@ -226,14 +219,12 @@ nsresult
 nsStdURL::GetURLParser(nsIURLParser* *aURLParser)
 {
     *aURLParser = mURLParser;
-    NS_IF_ADDREF(*aURLParser);
     return NS_OK;
 }
 
 nsresult 
 nsStdURL::SetURLParser(nsIURLParser* aURLParser)
 {
-    NS_IF_RELEASE(mURLParser);
     mURLParser = aURLParser;
     return NS_OK;
 }
@@ -247,8 +238,7 @@ nsStdURL::Parse(const char* i_Spec)
         return NS_ERROR_MALFORMED_URI;
 
     NS_PRECONDITION( (nsnull != mURLParser), "Parse called without parser!");
-    if (!mURLParser)
-        return NS_ERROR_NULL_POINTER;
+    if (!mURLParser) return NS_ERROR_NULL_POINTER;
 
     // Parse the spec
     char* ePath = nsnull;
@@ -475,8 +465,7 @@ nsStdURL::SetFileName(const char* i_FileName)
         return NS_ERROR_NULL_POINTER;
     
     NS_PRECONDITION( (nsnull != mURLParser), "Parse called without parser!");
-    if (!mURLParser)
-        return NS_ERROR_NULL_POINTER;
+    if (!mURLParser) return NS_ERROR_NULL_POINTER;
 
     //If it starts with a / then everything is the path.
     if ('/' == *i_FileName) {
@@ -535,8 +524,7 @@ nsStdURL::SetRelativePath(const char* i_Relative)
         return NS_ERROR_NULL_POINTER;
 
     NS_PRECONDITION( (nsnull != mURLParser), "Parse called without parser!");
-    if (!mURLParser)
-        return NS_ERROR_NULL_POINTER;
+    if (!mURLParser) return NS_ERROR_NULL_POINTER;
 
     // Make sure that if there is a : its before other delimiters
     // If not then its an absolute case
@@ -852,8 +840,7 @@ NS_METHOD
 nsStdURL::SetPreHost(const char* i_PreHost)
 {
     NS_PRECONDITION( (nsnull != mURLParser), "Parse called without parser!");
-    if (!mURLParser)
-        return NS_ERROR_NULL_POINTER;
+    if (!mURLParser) return NS_ERROR_NULL_POINTER;
 
     CRTFREEIF(mUsername);
     CRTFREEIF(mPassword);
@@ -865,8 +852,7 @@ NS_METHOD
 nsStdURL::SetPath(const char* i_Path)
 {
     NS_PRECONDITION( (nsnull != mURLParser), "Parse called without parser!");
-    if (!mURLParser)
-        return NS_ERROR_NULL_POINTER;
+    if (!mURLParser) return NS_ERROR_NULL_POINTER;
 
     CRTFREEIF(mDirectory);
     CRTFREEIF(mFileBaseName);
