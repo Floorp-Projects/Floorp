@@ -223,7 +223,7 @@ var messageHeaderSink = {
       // WARNING: This is the ONLY routine inside of the message Header Sink that should 
       // trigger a reflow!
       
-      if (this.NotifyClearAddresses != undefined)
+      if (NotifyClearAddresses != undefined)
         NotifyClearAddresses();
 
       ClearHeaderView(gCollapsedHeaderView);
