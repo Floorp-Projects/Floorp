@@ -241,7 +241,8 @@ nsresult nsDateTimeFormatMac::Initialize(nsILocale* locale)
 
   // use cached info if match with stored locale
   if (NULL == locale) {
-    if (mLocale.Length() && mLocale.EqualsIgnoreCase(mAppLocale)) {
+    if (mLocale.Length() &&
+        mLocale.Equals(mAppLocale, nsCaseInsensitiveStringComparator())) {
       return NS_OK;
     }
   }
