@@ -523,6 +523,10 @@ if (defined $::FORM{'id'}) {
                    \@{$::versions{$::FORM{'product'}}});
     CheckFormField(\%::FORM, 'op_sys', \@::legal_opsys);
     CheckFormFieldDefined(\%::FORM, 'longdesclength');
+    
+    if (trim($::FORM{'short_desc'}) eq "") {
+	ThrowUserError("require_summary");
+    }
 }
 
 my $action = '';
