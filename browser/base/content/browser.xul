@@ -476,7 +476,7 @@
   <!-- bookmarks context menu -->
   <popupset>
     <menupopup id="bookmarks-context-menu" 
-               onpopupshowing="BookmarksMenu.createContextMenu(event);"
+               onpopupshowing="return BookmarksMenu.createContextMenu(event);"
                onpopuphidden ="BookmarksMenu.destroyContextMenu(event);"/>
   </popupset>
 
@@ -779,8 +779,8 @@
                   template='bookmarks-template'
                   onpopupshowing="BookmarksMenu.showOpenInTabsMenuItem(event.target)"
                   onpopuphidden="BookmarksMenu.hideOpenInTabsMenuItem(event.target)"
-                  oncommand="BookmarksUtils.loadBookmarkBrowser(event, event.originalTarget, this.database)"
-                  onclick="BookmarksToolbar.loadBookmarkMiddleClick(event, this.database)"
+                  oncommand="BookmarksMenu.loadBookmark(event, this.database)"
+                  onclick="BookmarksMenu.loadBookmarkMiddleClick(event, this.database)"
                   ondraggesture="nsDragAndDrop.startDrag(event, BookmarksMenuDNDObserver)"
                   ondragdrop="nsDragAndDrop.drop(event, BookmarksMenuDNDObserver); event.preventBubble()"
                   ondragenter="nsDragAndDrop.dragEnter(event, BookmarksMenuDNDObserver); event.preventBubble()"
@@ -939,8 +939,8 @@
                 rdf:type="http://home.netscape.com/NC-rdf#Folder"
                 onpopupshowing="BookmarksMenu.showOpenInTabsMenuItem(event.target)"
                 onpopuphidden="BookmarksMenu.hideOpenInTabsMenuItem(event.target)"
-                oncommand="BookmarksUtils.loadBookmarkBrowser(event, event.target, this.database)"
-                onclick="BookmarksToolbar.loadBookmarkMiddleClick(event, this.database)"
+                oncommand="BookmarksMenu.loadBookmark(event, this.database)"
+                onclick="BookmarksMenu.loadBookmarkMiddleClick(event, this.database)"
                 ondraggesture="nsDragAndDrop.startDrag(event, BookmarksMenuDNDObserver)"
                 ondragdrop="nsDragAndDrop.drop(event, BookmarksMenuDNDObserver); event.preventBubble()"
                 ondragenter="nsDragAndDrop.dragEnter(event, BookmarksMenuDNDObserver); event.preventBubble()"
@@ -956,8 +956,8 @@
                              ref="NC:PersonalToolbarFolder" flags="dont-test-empty"
                              onpopupshowing="BookmarksMenu.showOpenInTabsMenuItem(event.target)"
                              onpopuphidden="BookmarksMenu.hideOpenInTabsMenuItem(event.target)"
-                             oncommand="BookmarksUtils.loadBookmarkBrowser(event, event.target, this.database)"
-                             onclick="BookmarksToolbar.loadBookmarkMiddleClick(event, this.database)"
+                             oncommand="BookmarksMenu.loadBookmark(event, this.database)"
+                             onclick="BookmarksMenu.loadBookmarkMiddleClick(event, this.database)"
                              ondraggesture="nsDragAndDrop.startDrag(event, BookmarksMenuDNDObserver)"
                              ondragdrop="nsDragAndDrop.drop(event, BookmarksMenuDNDObserver); event.preventBubble()"
                              ondragenter="nsDragAndDrop.dragEnter(event, BookmarksMenuDNDObserver); event.preventBubble()"

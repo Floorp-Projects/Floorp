@@ -1544,17 +1544,8 @@ var BookmarksUtils = {
       return "save"
     else
       return "current";
-  },
-
-  loadBookmarkBrowser: function (aEvent, aTarget, aDS)
-  {
-    var rSource   = RDF.GetResource(aTarget.id);
-    var selection = BookmarksUtils.getSelectionFromResource(rSource);
-    var browserTarget = BookmarksUtils.getBrowserTargetFromEvent(aEvent);
-    BookmarksCommand.openBookmark(selection, browserTarget, aDS)
   }
 }
-
 
 function BookmarkInsertTransaction (aAction)
 {
