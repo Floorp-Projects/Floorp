@@ -375,7 +375,9 @@ extern "C" void ProfileMigrationController(void *data)
         if (NS_FAILED(rv))
         {
           migrator->mErrorCode = rv;
+#ifdef DEBUG
           printf("failed to migrate properly.  err=%d\n",rv);
+#endif
         }
     }
     else
