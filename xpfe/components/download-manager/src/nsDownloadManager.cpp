@@ -1143,6 +1143,13 @@ nsDownload::OnStateChange(nsIWebProgress* aWebProgress,
   if (aStateFlags & STATE_START)
     mStartTime = PR_Now();
 
+  // When we break the ref cycle with mPersist, we don't want to lose
+  // access to out member vars!
+  // XXX can't do_QueryInterface because of bug 181387
+  nsCOMPtr<nsIDownload> kungFuDeathGrip;
+  CallQueryInterface(this, NS_STATIC_CAST(nsIDownload**,
+                                          getter_AddRefs(kungFuDeathGrip)));
+  
   if (mListener)
     mListener->OnStateChange(aWebProgress, aRequest, aStateFlags, aStatus);
 
