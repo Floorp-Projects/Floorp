@@ -2815,9 +2815,11 @@ void JS::Parser::parseFunctionSignature(FunctionDefinition &fd)
 
 	NodeQueue<VariableBinding> parameters;
 	VariableBinding *optParameters = 0;
+	VariableBinding *namedParameters = 0;
 	VariableBinding *restParameter = 0;
 #ifdef NEW_PARSER
  	fd.optParameters = optParameters;
+ 	fd.namedParameters = namedParameters;
     fd.restParameter = restParameter;
 #endif
     if (!lexer.eat(true, Token::closeParenthesis)) {
@@ -3583,7 +3585,6 @@ JS::VariableBinding *JS::Parser::parseAllParameters(FunctionDefinition &fd,NodeQ
             $$ = parseAllParameters(fd,params);
         } else if( lookahead(Token::assignment) ) {
             $1 = parseOptionalParameterPrime($1);
-			lexer.redesignate(true); // Safe: neither ',' nor '}' starts with a slash.
             if (!fd.optParameters) {
                 fd.optParameters = $1;
             }
@@ -3664,6 +3665,12 @@ JS::VariableBinding *JS::Parser::parseNamedRestParameters(FunctionDefinition &fd
         NodeQueue<IdentifierList> aliases;
         VariableBinding *$1;
         $1 = parseNamedParameter(aliases);
+        // The following marks the position in the list that named parameters
+        // may occur. It is not required that this particular parameter has 
+        // aliases associated with it.
+        if (!fd.namedParameters) {
+            fd.namedParameters = $1;
+        }
         if (!fd.optParameters && $1->initializer) {
             fd.optParameters = $1;
         }
@@ -3694,6 +3701,12 @@ JS::VariableBinding *JS::Parser::parseNamedParameters(FunctionDefinition &fd,Nod
     VariableBinding *$$,*$1;
     NodeQueue<IdentifierList> aliases;   // List of aliases.
     $1 = parseNamedParameter(aliases);
+    // The following marks the position in the list that named parameters
+    // may occur. It is not required that this particular parameter has 
+    // aliases associated with it.
+    if (!fd.namedParameters) {
+        fd.namedParameters = $1;
+    }
     if (!fd.optParameters && $1->initializer) {
         fd.optParameters = $1;
     }
@@ -3779,7 +3792,7 @@ JS::VariableBinding *JS::Parser::parseOptionalParameterPrime(VariableBinding *$1
     
     match(Token::assignment);
     $1->initializer = parseAssignmentExpression();
-	lexer.redesignate(true); // Safe: neither ',' nor '}' starts with a slash.
+	lexer.redesignate(true); // Safe: looking for non-slash puncutation.
     $$ = $1;
 
     return $$;
@@ -3805,7 +3818,6 @@ JS::VariableBinding *JS::Parser::parseNamedParameter(NodeQueue<IdentifierList> &
         $$->aliases = aliases.first;
         if( lookahead(Token::assignment) ) {
             $$ = parseOptionalParameterPrime($$);
-			//lexer.redesignate(true); // Safe: neither ',' nor '}' starts with a slash.
         } 
     }
     return $$;
