@@ -26,15 +26,28 @@
 
 
 // global(s)
+var bundle = srGetStrBundle("chrome://search/locale/search-editor.properties");
 var pref = null;
+var RDF = null;
+var RDFC = null;
+var catDS = null;
+
 try
 {
 	pref = Components.classes["component://netscape/preferences"].getService();
 	if (pref)	pref = pref.QueryInterface( Components.interfaces.nsIPref );
+
+	RDF = Components.classes["component://netscape/rdf/rdf-service"].getService();
+	if (RDF)	RDF = RDF.QueryInterface(Components.interfaces.nsIRDFService);
+
+	RDFC = Components.classes["component://netscape/rdf/container"].getService();
+	if (RDFC)	RDFC = RDFC.QueryInterface(Components.interfaces.nsIRDFContainer);
 }
 catch(e)
 {
 	pref = null;
+	RDF = null;
+	RDFC = null;
 }
 
 
@@ -49,15 +62,12 @@ function debug(msg)
 
 function doLoad()
 {
-	// set up action buttons
-	doSetOKCancel(Commit, Cancel);
-
 	// adjust category popup
 	var internetSearch = Components.classes["component://netscape/rdf/datasource?name=internetsearch"].getService();
 	if (internetSearch)	internetSearch = internetSearch.QueryInterface(Components.interfaces.nsIInternetSearchService);
 	if (internetSearch)
 	{
-		var catDS = internetSearch.GetCategoryDataSource();
+		catDS = internetSearch.GetCategoryDataSource();
 		if (catDS)	catDS = catDS.QueryInterface(Components.interfaces.nsIRDFDataSource);
 		if (catDS)
 		{
@@ -129,16 +139,19 @@ function doLoad()
 
 
 
-function Cancel()
-{
-	// Ignore any changes.
-	window.close();
-}
-
-
-
 function Commit()
 {
+	// flush
+	if (catDS)
+	{
+		var flushableDS = catDS.QueryInterface(Components.interfaces.nsIRDFRemoteDataSource);
+		if (flushableDS)
+		{
+			flushableDS.Flush();
+		}
+	}
+
+	window.close();
 }
 
 
@@ -236,6 +249,8 @@ function AddEngine()
 
 function RemoveEngine()
 {
+	var promptStr = bundle.GetStringFromName("RemoveEnginePrompt");
+	if (!confirm(promptStr))	return(false);
 	return(true);
 }
 
@@ -243,13 +258,57 @@ function RemoveEngine()
 
 function MoveUp()
 {
-	return(true);
+	return	MoveDelta(-1);
 }
 
 
 
 function MoveDown()
 {
+	return	MoveDelta(1);
+}
+
+
+
+function MoveDelta(delta)
+{
+	var engineList = document.getElementById("engineList");
+	if (!engineList)	return(false);
+	var select_list = engineList.selectedItems;
+	if (!select_list)	return(false)
+	if (select_list.length != 1)	return(false);
+
+	var ref = engineList.getAttribute("ref");
+	if ((!ref) || (ref == ""))	return(false);
+	var categoryRes = RDF.GetResource(ref);
+	if (!categoryRes)	return(false);
+
+	var id = select_list[0].getAttribute("id");
+	if ((!id) || (id == ""))	return(false);
+	var idRes = RDF.GetResource(id);
+	if (!idRes)	return(false);
+
+	RDFC.Init(catDS, categoryRes);
+
+	var nodeIndex = RDFC.IndexOf(idRes);
+	if (nodeIndex < 1)	return(false);			// how did that happen?
+
+	var numItems = RDFC.GetCount();
+
+	var newPos = -1;
+	if (((delta == -1) && (nodeIndex > 1)) ||
+		((delta == 1) && (nodeIndex < numItems)))
+	{
+		newPos = nodeIndex + delta;
+		RDFC.RemoveElementAt(nodeIndex, true, idRes);
+	}
+	if (newPos > 0)
+	{
+		RDFC.InsertElementAt(idRes, newPos, true);
+	}
+
+	selectItems(engineList, ref, id);
+
 	return(true);
 }
 
@@ -257,6 +316,9 @@ function MoveDown()
 
 function NewCategory()
 {
+	var promptStr = bundle.GetStringFromName("NewCategoryPrompt");
+	var name = prompt(promptStr, "");
+	if ((!name) || (name == ""))	return(false);
 	return(true);
 }
 
@@ -264,6 +326,36 @@ function NewCategory()
 
 function RenameCategory()
 {
+	var categoryList = document.getElementById( "categoryList" );
+	var currentName = categoryList.selectedItem.getAttribute("value");
+	var promptStr = bundle.GetStringFromName("RenameCategoryPrompt");
+	var name = prompt(promptStr, currentName);
+	if ((!name) || (name == "") || (name == currentName))	return(false);
+
+	var currentCatID = categoryList.selectedItem.getAttribute("id");
+	var currentCatRes = RDF.GetResource(currentCatID);
+	if (!currentCatRes)	return(false);
+
+	var titleRes = RDF.GetResource("http://home.netscape.com/NC-rdf#title");
+	if (!titleRes)	return(false);
+
+	var newName = RDF.GetLiteral(name);
+	if (!newName)	return(false);
+
+	var oldName = catDS.GetTarget(currentCatRes, titleRes, true);
+	if (oldName)	oldName = oldName.QueryInterface(Components.interfaces.nsIRDFLiteral);
+	if (oldName)
+	{
+		catDS.Change(currentCatRes, titleRes, oldName, newName);
+	}
+	else
+	{
+		catDS.Assert(currentCatRes, titleRes, newName, true);
+	}
+
+	// force popup to update
+	chooseCategory(categoryList.selectedItem);
+
 	return(true);
 }
 
@@ -271,5 +363,35 @@ function RenameCategory()
 
 function RemoveCategory()
 {
+	var promptStr = bundle.GetStringFromName("RemoveCategoryPrompt");
+	if (!confirm(promptStr))	return(false);
 	return(true);
+}
+
+
+
+function selectItems(treeRoot, containerID, targetID)
+{
+	var select_list = treeRoot.getElementsByAttribute("id", targetID);
+	for (var x=0; x<select_list.length; x++)
+	{
+		var node = select_list[x];
+		if (!node)	continue;
+
+		var parent = node.parentNode.parentNode;
+		if (!parent)	continue;
+
+		var id = parent.getAttribute("ref");
+		if (!id || id=="")
+		{
+			id = parent.getAttribute("id");
+		}
+		if (!id || id=="")	continue;
+
+		if (id == containerID)
+		{
+			node.setAttribute("selected", "true");
+			break;
+		}
+	}
 }

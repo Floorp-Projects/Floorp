@@ -26,6 +26,7 @@
 <!ENTITY allengines.label            "All Engines">
 <!ENTITY engine.column.label         "Search Engines">
 <!ENTITY category.label              "Category:">
+<!ENTITY done.label                  "Done">
 
 <!ENTITY add.label                   "&lt;-- Add --">
 <!ENTITY remove.label                "Remove">
