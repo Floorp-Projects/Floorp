@@ -179,6 +179,10 @@ struct nsCompositionEvent : public nsInputEvent {
 	nsTextEventReply	theReply;
 };
 
+struct nsMouseScrollEvent : public nsInputEvent {
+	PRInt32                 deltaLines;
+};
+
 /**
  * Tooltip event
  */
@@ -229,6 +233,7 @@ enum nsDragDropEventStatus {
 #define NS_TEXT_EVENT		12
 #define NS_COMPOSITION_START	13
 #define NS_COMPOSITION_END		14
+#define NS_MOUSE_SCROLL_EVENT 15
  
  /**
  * GUI MESSAGES
@@ -342,6 +347,9 @@ enum nsDragDropEventStatus {
 #define NS_XUL_COMMAND_UPDATE         (NS_MENU_EVENT_START+4)
 //@}
 
+// Scroll events
+#define NS_MOUSE_SCROLL_START         1600
+#define NS_MOUSE_SCROLL               (NS_MOUSE_SCROLL_START)
 
 #define NS_IS_MOUSE_EVENT(evnt) \
        (((evnt)->message == NS_MOUSE_LEFT_BUTTON_DOWN) || \
