@@ -38,6 +38,7 @@
 #include "nsIServiceManager.h"
 #include "nsString.h"
 #include "nsIPopupSetFrame.h"
+#include "nsIMenuFrame.h"
 #include "nsIFrame.h"
 
 NS_IMPL_ADDREF_INHERITED(nsXULPopupElement, nsXULAggregateElement);
@@ -95,11 +96,11 @@ nsXULPopupElement::OpenPopup(nsIDOMElement* aElement, PRInt32 aXPos, PRInt32 aYP
   if (!popupSet)
     return NS_OK;
 
-  // Do a sanity check to ensure we have a popup set element.
+  // Do a sanity check to ensure we have a popup set or menu element.
   nsString tagName;
   nsCOMPtr<nsIDOMElement> popupSetElement = do_QueryInterface(popupSet);
   popupSetElement->GetTagName(tagName);
-  if (tagName != "popupset")
+  if (tagName != "popupset" && tagName != "menu")
     return NS_OK;
 
   // Now obtain the popup set frame.
@@ -118,10 +119,15 @@ nsXULPopupElement::OpenPopup(nsIDOMElement* aElement, PRInt32 aXPos, PRInt32 aYP
 
   // Pass this all off to the popup set frame.
   nsCOMPtr<nsIPopupSetFrame> popupSetFrame = do_QueryInterface(frame);
-  popupSetFrame->CreatePopup(elementFrame, content, aXPos, aYPos,
-                             aPopupType, aAnchorAlignment,
-                             aPopupAlignment);
-  
+  if (popupSetFrame)
+    popupSetFrame->CreatePopup(elementFrame, content, aXPos, aYPos,
+                               aPopupType, aAnchorAlignment,
+                               aPopupAlignment);
+  else {
+    nsCOMPtr<nsIMenuFrame> menuFrame = do_QueryInterface(frame);
+    menuFrame->OpenMenu(PR_TRUE);
+  }
+
   return NS_OK;
 }
 
@@ -148,11 +154,11 @@ nsXULPopupElement::ClosePopup()
   if (!popupSet)
     return NS_OK;
 
-  // Do a sanity check to ensure we have a popup set element.
+  // Do a sanity check to ensure we have a popup set or menu element.
   nsString tagName;
   nsCOMPtr<nsIDOMElement> popupSetElement = do_QueryInterface(popupSet);
   popupSetElement->GetTagName(tagName);
-  if (tagName != "popupset")
+  if (tagName != "popupset" && tagName != "menu")
     return NS_OK;
 
   // Now obtain the popup set frame.
@@ -163,7 +169,12 @@ nsXULPopupElement::ClosePopup()
     return NS_OK;
 
   nsCOMPtr<nsIPopupSetFrame> popupSetFrame = do_QueryInterface(frame);
-  popupSetFrame->DestroyPopup();
+  if (popupSetFrame)
+    popupSetFrame->DestroyPopup();
+  else {
+    nsCOMPtr<nsIMenuFrame> menuFrame = do_QueryInterface(frame);
+    menuFrame->OpenMenu(PR_FALSE);
+  }
 
   return NS_OK;
 }

@@ -47,6 +47,9 @@ public:
   NS_IMETHOD    GetFocusedWindow(nsIDOMWindow** aFocusedWindow)=0;
   NS_IMETHOD    SetFocusedWindow(nsIDOMWindow* aFocusedWindow)=0;
 
+  NS_IMETHOD    GetSuppressFocus(PRBool* aSuppressFocus)=0;
+  NS_IMETHOD    SetSuppressFocus(PRBool aSuppressFocus)=0;
+
   NS_IMETHOD    AddCommandUpdater(nsIDOMElement* aUpdater, const nsString& aEvents, const nsString& aTargets)=0;
 
   NS_IMETHOD    RemoveCommandUpdater(nsIDOMElement* aUpdater)=0;
@@ -64,6 +67,8 @@ public:
   NS_IMETHOD    SetFocusedElement(nsIDOMElement* aFocusedElement);  \
   NS_IMETHOD    GetFocusedWindow(nsIDOMWindow** aFocusedWindow);  \
   NS_IMETHOD    SetFocusedWindow(nsIDOMWindow* aFocusedWindow);  \
+  NS_IMETHOD    GetSuppressFocus(PRBool* aSuppressFocus);  \
+  NS_IMETHOD    SetSuppressFocus(PRBool aSuppressFocus);  \
   NS_IMETHOD    AddCommandUpdater(nsIDOMElement* aUpdater, const nsString& aEvents, const nsString& aTargets);  \
   NS_IMETHOD    RemoveCommandUpdater(nsIDOMElement* aUpdater);  \
   NS_IMETHOD    UpdateCommands(const nsString& aEventName);  \
@@ -77,6 +82,8 @@ public:
   NS_IMETHOD    SetFocusedElement(nsIDOMElement* aFocusedElement) { return _to SetFocusedElement(aFocusedElement); } \
   NS_IMETHOD    GetFocusedWindow(nsIDOMWindow** aFocusedWindow) { return _to GetFocusedWindow(aFocusedWindow); } \
   NS_IMETHOD    SetFocusedWindow(nsIDOMWindow* aFocusedWindow) { return _to SetFocusedWindow(aFocusedWindow); } \
+  NS_IMETHOD    GetSuppressFocus(PRBool* aSuppressFocus) { return _to GetSuppressFocus(aSuppressFocus); } \
+  NS_IMETHOD    SetSuppressFocus(PRBool aSuppressFocus) { return _to SetSuppressFocus(aSuppressFocus); } \
   NS_IMETHOD    AddCommandUpdater(nsIDOMElement* aUpdater, const nsString& aEvents, const nsString& aTargets) { return _to AddCommandUpdater(aUpdater, aEvents, aTargets); }  \
   NS_IMETHOD    RemoveCommandUpdater(nsIDOMElement* aUpdater) { return _to RemoveCommandUpdater(aUpdater); }  \
   NS_IMETHOD    UpdateCommands(const nsString& aEventName) { return _to UpdateCommands(aEventName); }  \

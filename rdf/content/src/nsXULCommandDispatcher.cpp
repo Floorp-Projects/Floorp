@@ -53,7 +53,7 @@ static PRLogModuleInfo* gLog;
 ////////////////////////////////////////////////////////////////////////
 
 nsXULCommandDispatcher::nsXULCommandDispatcher(void)
-    : mScriptObject(nsnull), mUpdaters(nsnull)
+    : mScriptObject(nsnull), mUpdaters(nsnull), mSuppressFocus(PR_FALSE)
 {
 	NS_INIT_REFCNT();
 
@@ -330,6 +330,9 @@ nsXULCommandDispatcher::GetControllers(nsIControllers** aResult)
 nsresult 
 nsXULCommandDispatcher::Focus(nsIDOMEvent* aEvent)
 {
+  if (mSuppressFocus)
+    return NS_OK;
+
   nsCOMPtr<nsIDOMNode> t;
   aEvent->GetTarget(getter_AddRefs(t));
   
@@ -396,6 +399,9 @@ nsXULCommandDispatcher::Focus(nsIDOMEvent* aEvent)
 nsresult 
 nsXULCommandDispatcher::Blur(nsIDOMEvent* aEvent)
 {
+  if (mSuppressFocus)
+    return NS_OK;
+
   nsCOMPtr<nsIDOMNode> t;
   aEvent->GetTarget(getter_AddRefs(t));
 
@@ -556,3 +562,16 @@ nsXULCommandDispatcher::GetControllerForCommand(const nsString& command, nsICont
     return NS_OK;
 }
 
+NS_IMETHODIMP
+nsXULCommandDispatcher::GetSuppressFocus(PRBool* aSuppressFocus)
+{
+  *aSuppressFocus = mSuppressFocus;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsXULCommandDispatcher::SetSuppressFocus(PRBool aSuppressFocus)
+{
+  mSuppressFocus = aSuppressFocus;
+  return NS_OK;
+}
