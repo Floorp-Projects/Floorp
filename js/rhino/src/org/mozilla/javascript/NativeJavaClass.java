@@ -108,8 +108,8 @@ public class NativeJavaClass extends NativeJavaObject implements Function {
                 throw members.reportMemberNotFound(name);
             }
         }
-		
-     	return result;
+                
+        return result;
     }
 
     public void put(String name, Scriptable start, Object value) {
@@ -164,21 +164,21 @@ public class NativeJavaClass extends NativeJavaObject implements Function {
     public Scriptable construct(Context cx, Scriptable scope, Object[] args)
         throws JavaScriptException
     {
-    	Class classObject = getClassObject();
-    	int modifiers = classObject.getModifiers();
-    	if (! (Modifier.isInterface(modifiers) || 
+        Class classObject = getClassObject();
+        int modifiers = classObject.getModifiers();
+        if (! (Modifier.isInterface(modifiers) || 
                Modifier.isAbstract(modifiers))) 
         {
-	        Constructor[] ctors = members.getConstructors();
-	        Member member = NativeJavaMethod.findFunction(ctors, args);
-	        Constructor ctor = (Constructor) member;
-	        if (ctor == null) {
-	            String sig = NativeJavaMethod.scriptSignature(args);
+                Constructor[] ctors = members.getConstructors();
+                Member member = NativeJavaMethod.findFunction(ctors, args);
+                Constructor ctor = (Constructor) member;
+                if (ctor == null) {
+                    String sig = NativeJavaMethod.scriptSignature(args);
                 throw Context.reportRuntimeError2(
                     "msg.no.java.ctor", classObject.getName(), sig);
-	        }
+                }
 
-	        // Found the constructor, so try invoking it.
+                // Found the constructor, so try invoking it.
                 return NativeJavaClass.constructSpecific(cx, scope, 
                                                          this, ctor, args);
         } else {

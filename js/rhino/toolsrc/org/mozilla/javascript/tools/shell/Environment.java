@@ -33,11 +33,11 @@
  */
 
 /*
-	Environment.java
-	
-	Wraps java.lang.System properties.
-	
-	by Patrick C. Beard <beard@netscape.com>
+        Environment.java
+        
+        Wraps java.lang.System properties.
+        
+        by Patrick C. Beard <beard@netscape.com>
  */
 
 package org.mozilla.javascript.tools.shell;

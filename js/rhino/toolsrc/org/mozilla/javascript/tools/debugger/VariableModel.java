@@ -53,7 +53,7 @@ public class VariableModel extends AbstractTreeTableModel
 
 
     public VariableModel(Scriptable scope) { 
-	super(scope == null ? null : new VariableNode(scope, "this")); 
+        super(scope == null ? null : new VariableNode(scope, "this")); 
     }
 
     //
@@ -61,14 +61,14 @@ public class VariableModel extends AbstractTreeTableModel
     //
 
     protected Object getObject(Object node) {
-	VariableNode varNode = ((VariableNode)node); 
-	if(varNode == null) return null;
-	return varNode.getObject();       
+        VariableNode varNode = ((VariableNode)node); 
+        if(varNode == null) return null;
+        return varNode.getObject();       
     }
 
     protected Object[] getChildren(Object node) {
-	VariableNode varNode = ((VariableNode)node); 
-	return varNode.getChildren(); 
+        VariableNode varNode = ((VariableNode)node); 
+        return varNode.getChildren(); 
     }
 
     //
@@ -76,27 +76,27 @@ public class VariableModel extends AbstractTreeTableModel
     //
 
     public int getChildCount(Object node) { 
-	Object[] children = getChildren(node); 
-	return (children == null) ? 0 : children.length;
+        Object[] children = getChildren(node); 
+        return (children == null) ? 0 : children.length;
     }
 
     public Object getChild(Object node, int i) { 
-	return getChildren(node)[i]; 
+        return getChildren(node)[i]; 
     }
 
     // The superclass's implementation would work, but this is more efficient. 
     public boolean isLeaf(Object node) { 
-	if(node == null) return true;
-	VariableNode varNode = (VariableNode)node;
-	Object[] children = varNode.getChildren();
-	if(children != null && children.length > 0) {
-	    return false;
-	}
-	return true;
+        if(node == null) return true;
+        VariableNode varNode = (VariableNode)node;
+        Object[] children = varNode.getChildren();
+        if(children != null && children.length > 0) {
+            return false;
+        }
+        return true;
     }
 
     public boolean isCellEditable(Object node, int column) {
-	return column == 0; 
+        return column == 0; 
     }
 
     //
@@ -104,34 +104,34 @@ public class VariableModel extends AbstractTreeTableModel
     //
 
     public int getColumnCount() {
-	return cNames.length;
+        return cNames.length;
     }
 
     public String getColumnName(int column) {
-	return cNames[column];
+        return cNames[column];
     }
 
     public Class getColumnClass(int column) {
-	return cTypes[column];
+        return cTypes[column];
     }
  
     public Object getValueAt(Object node, int column) {
-	Object value = getObject(node); 
+        Object value = getObject(node); 
         Context cx = Context.enter();
-	try {
-	    switch(column) {
-	    case 0: // Name
-		VariableNode varNode = (VariableNode)node;
-		String name = "";
-		if(varNode.name != null) {
-		    return name + varNode.name;
-		}
-		return name + "[" + varNode.index + "]";
-	    case 1: // value
-		if(value == Undefined.instance || 
+        try {
+            switch(column) {
+            case 0: // Name
+                VariableNode varNode = (VariableNode)node;
+                String name = "";
+                if(varNode.name != null) {
+                    return name + varNode.name;
+                }
+                return name + "[" + varNode.index + "]";
+            case 1: // value
+                if(value == Undefined.instance || 
                    value == ScriptableObject.NOT_FOUND) {
-		    return "undefined";
-		}
+                    return "undefined";
+                }
                 if(value == null) {
                     return "null";
                 }
@@ -156,19 +156,19 @@ public class VariableModel extends AbstractTreeTableModel
                 return buf.toString();
             }
         } catch(Exception exc) { 
-	    //exc.printStackTrace();
-	} finally {
+            //exc.printStackTrace();
+        } finally {
             cx.exit();
         }
-	return null; 
+        return null; 
     }
 
     public void setScope(Scriptable scope) {
-	VariableNode rootVar = (VariableNode)root;
-	rootVar.scope = scope;
-	fireTreeNodesChanged(this,
-			     new Object[]{root},
-			     null, new Object[]{root});
+        VariableNode rootVar = (VariableNode)root;
+        rootVar.scope = scope;
+        fireTreeNodesChanged(this,
+                             new Object[]{root},
+                             null, new Object[]{root});
     }
 
 }
@@ -180,51 +180,51 @@ class VariableNode {
     int index;
 
     public VariableNode(Scriptable scope, String name) { 
-	this.scope = scope;
-	this.name = name;
+        this.scope = scope;
+        this.name = name;
     }
 
     public VariableNode(Scriptable scope, int index) { 
-	this.scope = scope;
-	this.name = null;
-	this.index = index;
+        this.scope = scope;
+        this.name = null;
+        this.index = index;
     }
 
     /**
      * Returns the the string to be used to display this leaf in the JTree.
      */
     public String toString() { 
-	return (name != null ? name : "[" + index + "]");
+        return (name != null ? name : "[" + index + "]");
     }
 
     public Object getObject() {
-	try {
-	    if(scope == null) return null;
-	    if(name != null) {
-		if(name.equals("this")) {
-		    return scope;
-		}
-		Object result;
-		if(name.equals("__proto__")) {
-		    result = scope.getPrototype();
-		} else if(name.equals("__parent__")) {
-		    result = scope.getParentScope();
-		} else {
-		    result = scope.get(name, scope);
-		}
-		if(result == ScriptableObject.NOT_FOUND) {
-		    result = Undefined.instance;
-		}
-		return result;
-	    }
-	    Object result = scope.get(index, scope);
-	    if(result == ScriptableObject.NOT_FOUND) {
-		result = Undefined.instance;
-	    }
-	    return result;
-	} catch(Exception exc) {
-	    return "undefined";
-	}
+        try {
+            if(scope == null) return null;
+            if(name != null) {
+                if(name.equals("this")) {
+                    return scope;
+                }
+                Object result;
+                if(name.equals("__proto__")) {
+                    result = scope.getPrototype();
+                } else if(name.equals("__parent__")) {
+                    result = scope.getParentScope();
+                } else {
+                    result = scope.get(name, scope);
+                }
+                if(result == ScriptableObject.NOT_FOUND) {
+                    result = Undefined.instance;
+                }
+                return result;
+            }
+            Object result = scope.get(index, scope);
+            if(result == ScriptableObject.NOT_FOUND) {
+                result = Undefined.instance;
+            }
+            return result;
+        } catch(Exception exc) {
+            return "undefined";
+        }
     }
 
     Object[] children;
@@ -235,19 +235,19 @@ class VariableNode {
     static final Object[] empty = new Object[0];
     static Scriptable builtin[];
     protected Object[] getChildren() {
-	if(children != null) return children;
+        if(children != null) return children;
         Context cx = Context.enter();
-	try {
-	    Object value = getObject();
-	    if(value == null) return children = empty;
-	    if(value == ScriptableObject.NOT_FOUND ||
-	       value == Undefined.instance) {
-		return children = empty;
-	    }
-	    if(value instanceof Scriptable) {
-		Scriptable scrip = (Scriptable)value;
-		Scriptable proto = scrip.getPrototype();
-		Scriptable parent = scrip.getParentScope();
+        try {
+            Object value = getObject();
+            if(value == null) return children = empty;
+            if(value == ScriptableObject.NOT_FOUND ||
+               value == Undefined.instance) {
+                return children = empty;
+            }
+            if(value instanceof Scriptable) {
+                Scriptable scrip = (Scriptable)value;
+                Scriptable proto = scrip.getPrototype();
+                Scriptable parent = scrip.getParentScope();
                 if(value instanceof NativeCall) {
                     if(name != null && name.equals("this")) {
                         // this is the local variables table root
@@ -260,112 +260,112 @@ class VariableNode {
                         parent = null;
                     }
                 }
-		if(proto != null) {
-		    if(builtin == null) {
-			builtin = new Scriptable[6];
-			builtin[0] =  
-			    ScriptableObject.getObjectPrototype(scrip);
-			builtin[1] = 
-			    ScriptableObject.getFunctionPrototype(scrip);
-			builtin[2] = 
-			    ScriptableObject.getClassPrototype(scrip, 
-							       "String");
-			builtin[3] = 
-			    ScriptableObject.getClassPrototype(scrip, 
-							       "Boolean");
-			builtin[4] = 
-			    ScriptableObject.getClassPrototype(scrip, 
-							       "Array");
-			builtin[5] =
-			    ScriptableObject.getClassPrototype(scrip, 
-							       "Number");
-		    }
-		    for(int i = 0; i < builtin.length; i++) {
-			if(proto == builtin[i]) {
-			    proto = null;
-			    break;
-			}
-		    }
-		}
-		if(scrip.has(0, scrip)) {
-		    int len = 0;
-		    try {
-			Scriptable start = scrip;
-			Scriptable obj = start;
-			Object result = Undefined.instance;
-			do {
-			    if(obj.has("length", start)) {
-				result = obj.get("length", start);
-				if (result != Scriptable.NOT_FOUND)
-				    break;
-			    }
-			    obj = obj.getPrototype();
-			} while (obj != null);
-			if(result instanceof Number) {
-			    len = ((Number)result).intValue();
-			}
-		    } catch(Exception exc) {
-		    }
-		    if(parent != null) {
-			len++;
-		    }
-		    if(proto != null) {
-			len++;
-		    }
-		    children = new VariableNode[len];
-		    int i = 0;
-		    int j = 0;
-		    if(proto != null) {
-			children[i++] = new VariableNode(scrip, "__proto__");
-			j++;
-		    }
-		    if(parent != null) {
-			children[i++] = new VariableNode(scrip, "__parent__");
-			j++;
-		    }
-		    for(; i < len; i++) {
-			children[i] = new VariableNode(scrip, i-j);
-		    }
-		} else {
-		    int len = 0;
-		    Hashtable t = new Hashtable();
-		    Object[] ids = scrip.getIds();
-		    if(proto != null) t.put("__proto__", "__proto__");
-		    if(parent != null) t.put("__parent__", "__parent__");
-		    if(ids.length > 0) {
-			for(int j = 0; j < ids.length; j++) {
-			    t.put(ids[j], ids[j]);
-			}
-		    }
-		    ids = new Object[t.size()];
-		    Enumeration e = t.keys();
-		    int j = 0;
-		    while(e.hasMoreElements()) {
-			ids[j++] = e.nextElement().toString();
-		    }
-		    if(ids != null && ids.length > 0) {
-			java.util.Arrays.sort(ids, new java.util.Comparator() {
-				public int compare(Object l, Object r) {
-				    return l.toString().compareToIgnoreCase(r.toString());
-				
-				}
-			    });
-			len = ids.length;
-		    }
-		    children = new VariableNode[len]; 
-		    for(int i = 0; i < len; i++) {
-			Object id = ids[i];
-			children[i] = 
-			    new VariableNode(scrip, id.toString());
-		    }
-		}
-	    }
-	} catch (Exception exc) {
-	    exc.printStackTrace();
-	} finally {
+                if(proto != null) {
+                    if(builtin == null) {
+                        builtin = new Scriptable[6];
+                        builtin[0] =  
+                            ScriptableObject.getObjectPrototype(scrip);
+                        builtin[1] = 
+                            ScriptableObject.getFunctionPrototype(scrip);
+                        builtin[2] = 
+                            ScriptableObject.getClassPrototype(scrip, 
+                                                               "String");
+                        builtin[3] = 
+                            ScriptableObject.getClassPrototype(scrip, 
+                                                               "Boolean");
+                        builtin[4] = 
+                            ScriptableObject.getClassPrototype(scrip, 
+                                                               "Array");
+                        builtin[5] =
+                            ScriptableObject.getClassPrototype(scrip, 
+                                                               "Number");
+                    }
+                    for(int i = 0; i < builtin.length; i++) {
+                        if(proto == builtin[i]) {
+                            proto = null;
+                            break;
+                        }
+                    }
+                }
+                if(scrip.has(0, scrip)) {
+                    int len = 0;
+                    try {
+                        Scriptable start = scrip;
+                        Scriptable obj = start;
+                        Object result = Undefined.instance;
+                        do {
+                            if(obj.has("length", start)) {
+                                result = obj.get("length", start);
+                                if (result != Scriptable.NOT_FOUND)
+                                    break;
+                            }
+                            obj = obj.getPrototype();
+                        } while (obj != null);
+                        if(result instanceof Number) {
+                            len = ((Number)result).intValue();
+                        }
+                    } catch(Exception exc) {
+                    }
+                    if(parent != null) {
+                        len++;
+                    }
+                    if(proto != null) {
+                        len++;
+                    }
+                    children = new VariableNode[len];
+                    int i = 0;
+                    int j = 0;
+                    if(proto != null) {
+                        children[i++] = new VariableNode(scrip, "__proto__");
+                        j++;
+                    }
+                    if(parent != null) {
+                        children[i++] = new VariableNode(scrip, "__parent__");
+                        j++;
+                    }
+                    for(; i < len; i++) {
+                        children[i] = new VariableNode(scrip, i-j);
+                    }
+                } else {
+                    int len = 0;
+                    Hashtable t = new Hashtable();
+                    Object[] ids = scrip.getIds();
+                    if(proto != null) t.put("__proto__", "__proto__");
+                    if(parent != null) t.put("__parent__", "__parent__");
+                    if(ids.length > 0) {
+                        for(int j = 0; j < ids.length; j++) {
+                            t.put(ids[j], ids[j]);
+                        }
+                    }
+                    ids = new Object[t.size()];
+                    Enumeration e = t.keys();
+                    int j = 0;
+                    while(e.hasMoreElements()) {
+                        ids[j++] = e.nextElement().toString();
+                    }
+                    if(ids != null && ids.length > 0) {
+                        java.util.Arrays.sort(ids, new java.util.Comparator() {
+                                public int compare(Object l, Object r) {
+                                    return l.toString().compareToIgnoreCase(r.toString());
+                                
+                                }
+                            });
+                        len = ids.length;
+                    }
+                    children = new VariableNode[len]; 
+                    for(int i = 0; i < len; i++) {
+                        Object id = ids[i];
+                        children[i] = 
+                            new VariableNode(scrip, id.toString());
+                    }
+                }
+            }
+        } catch (Exception exc) {
+            exc.printStackTrace();
+        } finally {
             cx.exit();
         }
-	return children; 
+        return children; 
     }
 }
 

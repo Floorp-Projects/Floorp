@@ -374,32 +374,32 @@ public class Block {
         switch (n.getType()) {
             case TokenStream.NUMBER : {
 /* distinguish between integers & f.p.s ?
-            	    Number num = ((NumberNode)n).getNumber();
-					if ((num instanceof Byte)
-            	            || (num instanceof Short)
-            	                || (num instanceof Integer)) {
-            	    }
-            	    else {
-            	    }
+                    Number num = ((NumberNode)n).getNumber();
+                    if ((num instanceof Byte)
+                            || (num instanceof Short)
+                                || (num instanceof Integer)) {
+                    }
+                    else {
+                    }
 */
-            	    return TypeEvent.NumberType;
-        	    }
-        	case TokenStream.NEW :
-        	case TokenStream.CALL :
-        	    return TypeEvent.NoType;
+                    return TypeEvent.NumberType;
+                }
+            case TokenStream.NEW :
+            case TokenStream.CALL :
+                return TypeEvent.NoType;
 
-        	case TokenStream.GETELEM :
+            case TokenStream.GETELEM :
                return TypeEvent.AnyType;
 
-        	case TokenStream.GETVAR : {
+            case TokenStream.GETVAR : {
                     OptLocalVariable theVar = (OptLocalVariable)
                                       (n.getProp(Node.VARIABLE_PROP));
                     if (theVar != null)
                         return theVar.getTypeUnion();
-        	    }
+                }
 
-        	case TokenStream.INC :
-        	case TokenStream.DEC :
+            case TokenStream.INC :
+            case TokenStream.DEC :
             case TokenStream.DIV:
             case TokenStream.MOD:
             case TokenStream.BITOR:
@@ -409,7 +409,7 @@ public class Block {
             case TokenStream.RSH:
             case TokenStream.URSH:
             case TokenStream.SUB : {
-            	    return TypeEvent.NumberType;
+                    return TypeEvent.NumberType;
                 }
             case TokenStream.ADD : {
                     // if the lhs & rhs are known to be numbers, we can be sure that's

@@ -16,8 +16,8 @@
  * Copyright (C) 2000 Matthias Radestock. All Rights Reserved.
  *
  * Contributor(s):
- * 	Redfig Ltd (http://www.redfig.com)
- *	LShift Ltd (http://www.lshift.net)
+ *      Redfig Ltd (http://www.redfig.com)
+ *      LShift Ltd (http://www.lshift.net)
  *
  * Alternatively, the contents of this file may be used under the terms
  * of the GNU Public License (the  "GPL License"), in which case the
@@ -61,17 +61,18 @@ public class Synchronizer extends Delegator {
      * @param obj the existing function
      */
     public Synchronizer(Scriptable obj) {
-	super(obj);
+        super(obj);
     }
 
     /**
      * @see org.mozilla.javascript.Function#call
      */
     public Object call(Context cx, Scriptable scope, Scriptable thisObj,
-		       Object[] args)
-	throws JavaScriptException {
-	synchronized(thisObj) {
-	    return ((Function)obj).call(cx,scope,thisObj,args);
-	}
+                       Object[] args)
+        throws JavaScriptException
+    {
+        synchronized(thisObj) {
+            return ((Function)obj).call(cx,scope,thisObj,args);
+        }
     }
 }

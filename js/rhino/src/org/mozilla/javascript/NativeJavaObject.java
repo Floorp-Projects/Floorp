@@ -130,7 +130,7 @@ public class NativeJavaObject implements Scriptable, Wrapper, Externalizable {
     }
     
     public Scriptable getPrototype() {
-    	if (prototype == null && javaObject.getClass() == ScriptRuntime.StringClass) {
+        if (prototype == null && javaObject.getClass() == ScriptRuntime.StringClass) {
             return ScriptableObject.getClassPrototype(parent, "String");
         }
         return prototype;
@@ -140,7 +140,7 @@ public class NativeJavaObject implements Scriptable, Wrapper, Externalizable {
      * Sets the prototype of the object.
      */
     public void setPrototype(Scriptable m) {
-    	prototype = m;
+        prototype = m;
     }
 
     /**

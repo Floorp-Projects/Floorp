@@ -113,8 +113,8 @@ DocumentListener {
     private int outputMark = 0;
 
     public void select(int start, int end) {
-	requestFocus();
-	super.select(start, end);
+        requestFocus();
+        super.select(start, end);
     }
 
     public ConsoleTextArea(String[] argv) {

@@ -36,12 +36,12 @@
 package org.mozilla.javascript;
 
 final class BinaryDigitReader {
-    int lgBase;			// Logarithm of base of number
-    int digit;			// Current digit value in radix given by base
-    int digitPos;		// Bit position of last bit extracted from digit
-    String digits;		// String containing the digits
-    int start;			// Index of the first remaining digit
-    int end;			// Index past the last remaining digit
+    int lgBase;         // Logarithm of base of number
+    int digit;          // Current digit value in radix given by base
+    int digitPos;       // Bit position of last bit extracted from digit
+    String digits;      // String containing the digits
+    int start;          // Index of the first remaining digit
+    int end;            // Index past the last remaining digit
 
     BinaryDigitReader(int base, String digits, int start, int end) {
         lgBase = 0;

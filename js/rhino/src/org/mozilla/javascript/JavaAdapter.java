@@ -142,7 +142,7 @@ public class JavaAdapter extends ScriptableObject {
     public static Object createAdapterClass(Class superClass, 
                                             Class[] interfaces, 
                                             Scriptable obj, Scriptable self)
-	  throws ClassNotFoundException
+          throws ClassNotFoundException
     {
         ClassSignature sig = new ClassSignature(superClass, interfaces, obj);
         Class adapterClass = (Class) generatedClasses.get(sig);

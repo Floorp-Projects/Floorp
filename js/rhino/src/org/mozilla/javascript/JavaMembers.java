@@ -284,15 +284,15 @@ class JavaMembers {
                 return;
             }
             if (member instanceof Field) {
-            	Field oldField = (Field) member;
-            	// If this newly reflected field shadows an inherited field, 
+                Field oldField = (Field) member;
+                // If this newly reflected field shadows an inherited field, 
                 // then replace it. Otherwise, since access to the field 
                 // would be ambiguous from Java, no field should be reflected.
-            	// For now, the first field found wins, unless another field 
+                // For now, the first field found wins, unless another field 
                 // explicitly shadows it.
-            	if (oldField.getDeclaringClass().isAssignableFrom(field.getDeclaringClass()))
-            		ht.put(name, field);
-            	return;
+                if (oldField.getDeclaringClass().isAssignableFrom(field.getDeclaringClass()))
+                        ht.put(name, field);
+                return;
             }
             throw new RuntimeException("unknown member type");
         }

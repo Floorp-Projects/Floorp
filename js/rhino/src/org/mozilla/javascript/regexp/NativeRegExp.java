@@ -450,7 +450,7 @@ public class NativeRegExp extends IdScriptable implements Function {
                 case REOP_LPARENNON:
                     System.out.println();
                     dumpRegExp(state, (RENode) ren.kid);
-            	    break;
+                    break;
 
                 case REOP_BACKREF:
                 case REOP_RPAREN:
@@ -980,7 +980,7 @@ public class NativeRegExp extends IdScriptable implements Function {
             ++index;
             op = REOP_DOT;
             if ((index < source.length) && (source[index] == '*')) {
-    	        index++;
+                index++;
                 op = REOP_DOTSTAR;
                 if ((index < source.length) && (source[index] == '?')) {
                     index++;
@@ -1172,7 +1172,7 @@ public class NativeRegExp extends IdScriptable implements Function {
                         }
                     }
                 } else {
-                    index = ocp;	/* \xZZ is xZZ (Perl does \0ZZ!) */
+                    index = ocp;        /* \xZZ is xZZ (Perl does \0ZZ!) */
                     num = 'x';
                 }
                 ren = new RENode(state, REOP_FLAT1, null);
@@ -1352,7 +1352,7 @@ public class NativeRegExp extends IdScriptable implements Function {
         int match;
         int num;
 
-	/*
+        /*
          *    when the kid match fails, we reset the parencount and run any 
          *    previously succesful kid in order to restablish it's paren
          *    contents.
@@ -1521,7 +1521,7 @@ public class NativeRegExp extends IdScriptable implements Function {
                             return -1;
                         if (state.goForBroke && (state.complete != -1))
                             return state.complete;
-                    }				
+                    }                           
                 }
                     break;
                 case REOP_PLUS: {
@@ -1552,7 +1552,7 @@ public class NativeRegExp extends IdScriptable implements Function {
                     if (index == -1) return -1;
                 }
                     break;
-                case REOP_STAR:					
+                case REOP_STAR:                                 
                     if ((ren.flags & RENode.MINIMAL) == 0) {
                         int kidMatch = matchGreedyKid(state, ren, stop, 0, index, -1);
                         if (kidMatch != -1) {
@@ -2465,7 +2465,7 @@ class RENode implements Serializable {
                                     n += NativeRegExp.unHex((char)c);
                                 }
                         } else {
-                            index = ocp;	/* \xZZ is xZZ (Perl does \0ZZ!) */
+                            index = ocp;        /* \xZZ is xZZ (Perl does \0ZZ!) */
                             n = 'x';
                         }
                     c = n;
@@ -2551,7 +2551,7 @@ class RENode implements Serializable {
 
 
 class MatchState {
-    boolean	inputExhausted;		/* did we run out of input chars ? */
+    boolean     inputExhausted;         /* did we run out of input chars ? */
     boolean     anchoring;              /* true if multiline anchoring ^/$ */
     int         pcend;                  /* pc limit (fencepost) */
     int         cpbegin, cpend;         /* cp base address and limit */
@@ -2562,7 +2562,7 @@ class MatchState {
     SubString[] maybeParens;            /* possible paren substring pointers */
     SubString[] parens;                 /* certain paren substring matches */
     Scriptable  scope;
-    char[]		input;
+    char[]              input;
     boolean     goForBroke;             /* pursue any match to the end of the re */
     int         complete;               /* match acheived by attempted early completion */
 

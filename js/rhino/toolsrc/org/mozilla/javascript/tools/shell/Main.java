@@ -339,10 +339,10 @@ public class Main {
             exitCode = EXITCODE_RUNTIME_ERROR;
         }
         catch (JavaScriptException jse) {
-	    	// Need to propagate ThreadDeath exceptions.
-	    	Object value = jse.getValue();
-	    	if (value instanceof ThreadDeath)
-	    		throw (ThreadDeath) value;
+            // Need to propagate ThreadDeath exceptions.
+            Object value = jse.getValue();
+            if (value instanceof ThreadDeath)
+                throw (ThreadDeath) value;
             exitCode = EXITCODE_RUNTIME_ERROR;
             Context.reportError(ToolErrorReporter.getMessage(
                 "msg.uncaughtJSException",
