@@ -379,8 +379,6 @@ public class Node
         optimizer -
         TARGETBLOCK_PROP - the block referenced by a branch node
         VARIABLE_PROP - the variable referenced by a BIND or NAME node
-        LASTUSE_PROP - that variable node is the last reference before
-                        a new def or the end of the block
         ISNUMBER_PROP - this node generates code on Number children and
                         delivers a Number result (as opposed to Objects)
         DIRECTCALL_PROP - this call node should emit code to test the function
@@ -390,10 +388,9 @@ public class Node
 
         TARGETBLOCK_PROP  = 12,
         VARIABLE_PROP     = 13,
-        LASTUSE_PROP      = 14,
-        ISNUMBER_PROP     = 15,
-        DIRECTCALL_PROP   = 16,
-        SPECIALCALL_PROP  = 17;
+        ISNUMBER_PROP     = 14,
+        DIRECTCALL_PROP   = 15,
+        SPECIALCALL_PROP  = 16;
 
     public static final int    // this value of the SPECIAL_PROP_PROP specifies
         SPECIAL_PROP_PROTO  = 1,
@@ -428,7 +425,6 @@ public class Node
 
                 case TARGETBLOCK_PROP:   return "targetblock";
                 case VARIABLE_PROP:      return "variable";
-                case LASTUSE_PROP:       return "lastuse";
                 case ISNUMBER_PROP:      return "isnumber";
                 case DIRECTCALL_PROP:    return "directcall";
 
@@ -629,9 +625,6 @@ public class Node
                     break;
                   case TARGETBLOCK_PROP : // can't add this as it recurses
                     value = "target block property";
-                    break;
-                  case LASTUSE_PROP :     // can't add this as it is dull
-                    value = "last use property";
                     break;
                   case LOCAL_BLOCK_PROP :     // can't add this as it is dull
                     value = "last local block";

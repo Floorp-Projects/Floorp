@@ -48,11 +48,6 @@ class DataFlowBitSet {
         itsBits = new int[(size + 31) >> 5];
     }
 
-    int size()
-    {
-        return itsSize;
-    }
-
     void set(int n)
     {
         if (!(0 <= n && n < itsSize)) badIndex(n);

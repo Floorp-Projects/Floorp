@@ -855,7 +855,7 @@ public class Interpreter
                         iCodeTop = addString(type == Token.INC
                                              ? Icode_NAMEINC
                                              : Icode_NAMEDEC,
-											 child.getString(), iCodeTop);
+                                             child.getString(), iCodeTop);
                         itsStackDepth++;
                         if (itsStackDepth > itsData.itsMaxStack)
                             itsData.itsMaxStack = itsStackDepth;

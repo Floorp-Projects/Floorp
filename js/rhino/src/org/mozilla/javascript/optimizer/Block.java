@@ -364,7 +364,7 @@ class Block
         The itsNotDefSet is built reversed then flipped later.
 
     */
-    private void lookForVariableAccess(Node n, Node lastUse[])
+    private void lookForVariableAccess(Node n)
     {
         switch (n.getType()) {
             case Token.DEC :
@@ -383,12 +383,10 @@ class Block
                 {
                     Node lhs = n.getFirstChild();
                     Node rhs = lhs.getNext();
-                    lookForVariableAccess(rhs, lastUse);
+                    lookForVariableAccess(rhs);
                     OptLocalVariable theVar = OptLocalVariable.get(n);
                     int theVarIndex = theVar.getIndex();
                     itsNotDefSet.set(theVarIndex);
-                    if (lastUse[theVarIndex] != null)
-                        lastUse[theVarIndex].putProp(Node.LASTUSE_PROP, theVar);
                 }
                 break;
             case Token.GETVAR :
@@ -396,13 +394,12 @@ class Block
                     int theVarIndex = OptLocalVariable.get(n).getIndex();
                     if (!itsNotDefSet.test(theVarIndex))
                         itsUseBeforeDefSet.set(theVarIndex);
-                    lastUse[theVarIndex] = n;
                 }
                 break;
             default :
                 Node child = n.getFirstChild();
                 while (child != null) {
-                    lookForVariableAccess(child, lastUse);
+                    lookForVariableAccess(child);
                     child = child.getNext();
                 }
                 break;
@@ -417,18 +414,13 @@ class Block
     private void initLiveOnEntrySets(OptFunctionNode fn, Node[] statementNodes)
     {
         int listLength = fn.getVarCount();
-        Node lastUse[] = new Node[listLength];
         itsUseBeforeDefSet = new DataFlowBitSet(listLength);
         itsNotDefSet = new DataFlowBitSet(listLength);
         itsLiveOnEntrySet = new DataFlowBitSet(listLength);
         itsLiveOnExitSet = new DataFlowBitSet(listLength);
         for (int i = itsStartNodeIndex; i <= itsEndNodeIndex; i++) {
             Node n = statementNodes[i];
-            lookForVariableAccess(n, lastUse);
-        }
-        for (int i = 0; i < listLength; i++) {
-            if (lastUse[i] != null)
-                lastUse[i].putProp(Node.LASTUSE_PROP, this);
+            lookForVariableAccess(n);
         }
         itsNotDefSet.not();         // truth in advertising
     }
