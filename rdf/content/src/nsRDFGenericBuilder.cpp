@@ -604,7 +604,7 @@ RDFGenericBuilderImpl::OnAssert(nsIRDFResource* aSource,
 
             // Okay, it's a "live" element, so go ahead and append the new
             // child to this node.
-            rv = CreateWidgetItem(element, aProperty, resource, 0);
+            rv = CreateWidgetItem(element, aProperty, resource, 0, PR_TRUE);
             NS_ASSERTION(NS_SUCCEEDED(rv), "unable to create widget item");
             if (NS_FAILED(rv)) return rv;
         }
@@ -830,7 +830,7 @@ RDFGenericBuilderImpl::OnChange(nsIRDFResource* aSource,
             if (! newresource)
                 return NS_OK;
 
-            rv = CreateWidgetItem(element, aProperty, newresource, 0);
+            rv = CreateWidgetItem(element, aProperty, newresource, 0, PR_TRUE);
             if (NS_FAILED(rv)) return rv;
         }
         else {
@@ -1531,7 +1531,8 @@ RDFGenericBuilderImpl::BuildContentFromTemplate(nsIContent *aTemplateNode,
                                                 nsIContent *aRealNode,
                                                 PRBool aIsUnique,
                                                 nsIRDFResource* aChild,
-                                                PRInt32 aNaturalOrderPos)
+                                                PRInt32 aNaturalOrderPos,
+                                                PRBool aNotify)
 {
 	nsresult rv;
 
@@ -1611,7 +1612,7 @@ RDFGenericBuilderImpl::BuildContentFromTemplate(nsIContent *aTemplateNode,
             }
 
             // Recurse until we get to the resource element.
-            rv = BuildContentFromTemplate(tmplKid, realKid, PR_TRUE, aChild, -1);
+            rv = BuildContentFromTemplate(tmplKid, realKid, PR_TRUE, aChild, -1, aNotify);
             if (NS_FAILED(rv)) return rv;
         }
         else if (isResourceElement) {
@@ -1759,13 +1760,13 @@ RDFGenericBuilderImpl::BuildContentFromTemplate(nsIContent *aTemplateNode,
             if (! aIsUnique) {
                 // Note: add into tree, but only sort if its a resource element!
                 if ((nsnull != XULSortService) && (isResourceElement)) {
-                    rv = XULSortService->InsertContainerNode(aRealNode, realKid);
+                    rv = XULSortService->InsertContainerNode(aRealNode, realKid, aNotify);
                     if (NS_FAILED(rv)) {
-                        aRealNode->AppendChildTo(realKid, PR_TRUE);
+                        aRealNode->AppendChildTo(realKid, aNotify);
                     }
                 }
                 else {
-                    aRealNode->AppendChildTo(realKid, PR_TRUE);
+                    aRealNode->AppendChildTo(realKid, aNotify);
                 }
             }
 
@@ -1789,7 +1790,8 @@ nsresult
 RDFGenericBuilderImpl::CreateWidgetItem(nsIContent *aElement,
                                         nsIRDFResource *aProperty,
                                         nsIRDFResource *aChild,
-                                        PRInt32 aNaturalOrderPos)
+                                        PRInt32 aNaturalOrderPos,
+                                        PRBool aNotify)
 {
 	nsCOMPtr<nsIContent> tmpl;
 	nsresult		rv;
@@ -1804,7 +1806,8 @@ RDFGenericBuilderImpl::CreateWidgetItem(nsIContent *aElement,
                                   aElement,
                                   PR_TRUE,
                                   aChild,
-                                  aNaturalOrderPos);
+                                  aNaturalOrderPos,
+                                  aNotify);
     NS_ASSERTION(NS_SUCCEEDED(rv), "unable to build content from template");
 	return rv;
 }
@@ -1931,15 +1934,10 @@ RDFGenericBuilderImpl::RemoveWidgetItem(nsIContent* aElement,
                                         nsIRDFResource* aValue,
                                         PRBool aNotify)
 {
+    // This works as follows. It finds all of the elements in the
+    // document that correspond to aValue. Any that are contained
+    // within aElement are removed from their direct parent.
     nsresult rv;
-
-    nsCOMPtr<nsIDOMXULDocument> xuldoc = do_QueryInterface(mDocument);
-    if (! xuldoc)
-        return NS_ERROR_UNEXPECTED;
-
-    nsXPIDLCString uri;
-    rv = aValue->GetValue(getter_Copies(uri));
-    if (NS_FAILED(rv)) return rv;
 
     nsCOMPtr<nsISupportsArray> elements;
     rv = NS_NewISupportsArray(getter_AddRefs(elements));
@@ -2097,15 +2095,30 @@ RDFGenericBuilderImpl::CreateContainerContents(nsIContent* aElement, nsIRDFResou
                 XULSortService->OpenContainer(mDB, aElement, flatArray, numElements/2, 2*sizeof(nsIRDFResource *));
             }
 
+            // This will insert all of the elements into the
+            // container, but _won't_ bother layout about it.
             for (loop=0; loop<numElements; loop+=2) {
-                rv = CreateWidgetItem(aElement, flatArray[loop+1], flatArray[loop], loop+1);
+                rv = CreateWidgetItem(aElement, flatArray[loop+1], flatArray[loop], loop+1, PR_FALSE);
                 NS_ASSERTION(NS_SUCCEEDED(rv), "unable to create widget item");
+                if (NS_FAILED(rv)) break;
             }
 
             for (PRInt32 i = PRInt32(numElements) - 1; i >=0; i--) {
                 NS_IF_RELEASE(flatArray[i]);
             }
             delete [] flatArray;
+
+            if (NS_FAILED(rv)) return rv;
+
+            nsCOMPtr<nsIDocument> doc = do_QueryInterface(mDocument);
+            if (! doc)
+                return NS_ERROR_UNEXPECTED;
+
+            // _Now_ tell layout that we've mucked with the
+            // container. This'll force a reflow and get the content
+            // displayed.
+            rv = doc->ContentChanged(aElement, nsnull);
+            if (NS_FAILED(rv)) return rv;
         }
     }
     for (int i = numElements - 1; i >= 0; i--) {
@@ -2175,7 +2188,7 @@ RDFGenericBuilderImpl::CreateTemplateContents(nsIContent* aElement, const nsStri
         element = parent;
     }
 
-    rv = BuildContentFromTemplate(tmpl, aElement, PR_FALSE, resource, -1);
+    rv = BuildContentFromTemplate(tmpl, aElement, PR_FALSE, resource, -1, PR_TRUE);
     if (NS_FAILED(rv)) return rv;
 
     return NS_OK;

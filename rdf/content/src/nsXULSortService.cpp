@@ -218,7 +218,7 @@ public:
     NS_IMETHOD DoSort(nsIDOMNode* node, const nsString& sortResource, const nsString& sortDirection);
     NS_IMETHOD OpenContainer(nsIRDFCompositeDataSource *db, nsIContent *container, nsIRDFResource **flatArray,
 				PRInt32 numElements, PRInt32 elementSize);
-    NS_IMETHOD InsertContainerNode(nsIContent *container, nsIContent *node);
+    NS_IMETHOD InsertContainerNode(nsIContent *container, nsIContent *node, PRBool aNotify);
 };
 
 nsIXULSortService	*XULSortServiceImpl::gXULSortService = nsnull;
@@ -1278,7 +1278,7 @@ XULSortServiceImpl::OpenContainer(nsIRDFCompositeDataSource *db, nsIContent *con
 
 
 NS_IMETHODIMP
-XULSortServiceImpl::InsertContainerNode(nsIContent *container, nsIContent *node)
+XULSortServiceImpl::InsertContainerNode(nsIContent *container, nsIContent *node, PRBool aNotify)
 {
 	nsresult	rv;
 	nsString	sortResource, sortDirection;
@@ -1420,13 +1420,13 @@ XULSortServiceImpl::InsertContainerNode(nsIContent *container, nsIContent *node)
 				{
 					if (current >= numChildren)
 					{
-						container->AppendChildTo(node, PR_TRUE);
+						container->AppendChildTo(node, aNotify);
 					}
 					else
 					{
 						container->InsertChildAt(node,
 							((direction > 0) ? current + 1: (current >= 0) ? current : 0),
-							PR_TRUE);
+							aNotify);
 					}
 					childAdded = PR_TRUE;
 					break;
@@ -1451,7 +1451,7 @@ XULSortServiceImpl::InsertContainerNode(nsIContent *container, nsIContent *node)
 				PRInt32 sortVal = inplaceSortCallback(&node, &theChild, &sortInfo);
 				if (sortVal <= 0)
 				{
-					container->InsertChildAt(node, childIndex, PR_TRUE);
+					container->InsertChildAt(node, childIndex, aNotify);
 					childAdded = PR_TRUE;
 					break;
 				}
@@ -1462,7 +1462,7 @@ XULSortServiceImpl::InsertContainerNode(nsIContent *container, nsIContent *node)
 
 	if (childAdded == PR_FALSE)
 	{
-		container->AppendChildTo(node, PR_TRUE);
+		container->AppendChildTo(node, aNotify);
 	}
 	return(NS_OK);
 }
