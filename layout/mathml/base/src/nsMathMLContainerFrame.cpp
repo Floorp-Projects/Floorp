@@ -293,19 +293,19 @@ printf("String:%s,  Number:%s,  Unit:%s\n", s1, s2, s3);
   if (0 == unit.Length()) {
     cssUnit = eCSSUnit_Number; // no explicit unit, this is a number that will act as a multiplier
   } 
-  else if (unit.Equals("%")) {
+  else if (unit.Equals(NS_ConvertASCIItoUCS2("%"))) {
     floatValue = floatValue / 100.0f;
     aCSSValue.SetPercentValue(floatValue);
     return PR_TRUE;
   } 
-  else if (unit.Equals("em")) cssUnit = eCSSUnit_EM;        
-  else if (unit.Equals("ex")) cssUnit = eCSSUnit_XHeight;   
-  else if (unit.Equals("px")) cssUnit = eCSSUnit_Pixel;     
-  else if (unit.Equals("in")) cssUnit = eCSSUnit_Inch;      
-  else if (unit.Equals("cm")) cssUnit = eCSSUnit_Centimeter;
-  else if (unit.Equals("mm")) cssUnit = eCSSUnit_Millimeter;
-  else if (unit.Equals("pt")) cssUnit = eCSSUnit_Point;     
-  else if (unit.Equals("pc")) cssUnit = eCSSUnit_Pica;      
+  else if (unit.Equals(NS_ConvertASCIItoUCS2("em"))) cssUnit = eCSSUnit_EM;        
+  else if (unit.Equals(NS_ConvertASCIItoUCS2("ex"))) cssUnit = eCSSUnit_XHeight;   
+  else if (unit.Equals(NS_ConvertASCIItoUCS2("px"))) cssUnit = eCSSUnit_Pixel;     
+  else if (unit.Equals(NS_ConvertASCIItoUCS2("in"))) cssUnit = eCSSUnit_Inch;      
+  else if (unit.Equals(NS_ConvertASCIItoUCS2("cm"))) cssUnit = eCSSUnit_Centimeter;
+  else if (unit.Equals(NS_ConvertASCIItoUCS2("mm"))) cssUnit = eCSSUnit_Millimeter;
+  else if (unit.Equals(NS_ConvertASCIItoUCS2("pt"))) cssUnit = eCSSUnit_Point;     
+  else if (unit.Equals(NS_ConvertASCIItoUCS2("pc"))) cssUnit = eCSSUnit_Pica;      
   else // unexpected unit
     return PR_FALSE;
 
@@ -883,8 +883,9 @@ nsMathMLContainerFrame::ResolveMathMLCharStyle(nsIPresContext*  aPresContext,
   nsAutoString data;
   aMathMLChar->GetData(data);
   PRBool isStretchy = nsMathMLOperators::MatchOperator(data, NS_MATHML_OPERATOR_STRETCHY);
-  nsAutoString fontStyle = (isStretchy) ? ":-moz-math-font-style-stretchy" 
-                                        : ":-moz-math-font-style-anonymous";
+  nsAutoString fontStyle = (isStretchy) ? 
+	NS_ConvertASCIItoUCS2(":-moz-math-font-style-stretchy") :
+        NS_ConvertASCIItoUCS2(":-moz-math-font-style-anonymous");
   nsCOMPtr<nsIAtom> fontAtom(getter_AddRefs(NS_NewAtom(fontStyle)));
   nsCOMPtr<nsIStyleContext> newStyleContext;
   nsresult rv = aPresContext->ResolvePseudoStyleContextFor(aContent, fontAtom, 
@@ -1008,8 +1009,8 @@ nsMathMLContainerFrame::InsertScriptLevelStyleContext(nsIPresContext* aPresConte
 
           // XXX seems not to decrease when the initail font-size is large (100pt)
           nsAutoString fontSize = (0 < gap)
-                                ? ":-moz-math-font-size-smaller"
-                                : ":-moz-math-font-size-larger";
+                                ? NS_ConvertASCIItoUCS2(":-moz-math-font-size-smaller")
+                                : NS_ConvertASCIItoUCS2(":-moz-math-font-size-larger");
           nsCOMPtr<nsIAtom> fontAtom(getter_AddRefs(NS_NewAtom(fontSize)));
 
           PRBool isSmaller = PR_TRUE;

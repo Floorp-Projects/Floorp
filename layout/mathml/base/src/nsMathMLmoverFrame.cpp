@@ -142,7 +142,7 @@ XXX The winner is the outermost in conflicting settings like these:
     baseFrame->GetContent(getter_AddRefs(baseContent));
     if (NS_CONTENT_ATTR_HAS_VALUE == baseContent->GetAttribute(kNameSpaceID_None, 
                      nsMathMLAtoms::movablelimits_, value)) {
-      if (value == "true") {
+      if (value.EqualsWithConversion("true")) {
         mPresentationData.flags |= NS_MATHML_MOVABLELIMITS;
       }
     }
@@ -172,8 +172,8 @@ XXX The winner is the outermost in conflicting settings like these:
           if (NS_CONTENT_ATTR_HAS_VALUE == mContent->GetAttribute(kNameSpaceID_None, 
                           nsMathMLAtoms::accent_, value))
           {
-            if (value == "true") embellishData.flags |= NS_MATHML_EMBELLISH_ACCENT;
-            else if (value == "false") embellishData.flags &= ~NS_MATHML_EMBELLISH_ACCENT;
+            if (value.EqualsWithConversion("true")) embellishData.flags |= NS_MATHML_EMBELLISH_ACCENT;
+            else if (value.EqualsWithConversion("false")) embellishData.flags &= ~NS_MATHML_EMBELLISH_ACCENT;
             aMathMLFrame->SetEmbellishData(embellishData);
           }
 

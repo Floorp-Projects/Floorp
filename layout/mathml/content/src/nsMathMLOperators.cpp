@@ -238,8 +238,7 @@ nsMathMLOperators::LookupOperator(const nsCString&      aOperator,
                                   float*                aLeftSpace,
                                   float*                aRightSpace)
 {
-  nsAutoString theOperator(aOperator);
-  return LookupOperator(theOperator,aForm,aFlags,aLeftSpace,aRightSpace);
+  return LookupOperator(aOperator,aForm,aFlags,aLeftSpace,aRightSpace);
 }
 
 PRBool

@@ -111,21 +111,21 @@ nsMathMLmfracFrame::CalcLineThickness(nsIPresContext*  aPresContext,
   nscoord minimumThickness = onePixel;
 
   if (0 < aThicknessAttribute.Length()) {
-    if (aThicknessAttribute.Equals("thin")) {
+    if (aThicknessAttribute.EqualsWithConversion("thin")) {
       lineThickness = NSToCoordFloor(defaultThickness * THIN_FRACTION_LINE);
       minimumThickness = onePixel * THIN_FRACTION_LINE_MINIMUM_PIXELS;
       // should visually decrease by at least one pixel, if default is not a pixel
       if (defaultThickness > onePixel && lineThickness > defaultThickness - onePixel)
         lineThickness = defaultThickness - onePixel;
     }
-    else if (aThicknessAttribute.Equals("medium")) {
+    else if (aThicknessAttribute.EqualsWithConversion("medium")) {
       lineThickness = NSToCoordRound(defaultThickness * MEDIUM_FRACTION_LINE);
       minimumThickness = onePixel * MEDIUM_FRACTION_LINE_MINIMUM_PIXELS;
       // should visually increase by at least one pixel
       if (lineThickness < defaultThickness + onePixel)
         lineThickness = defaultThickness + onePixel;
     }
-    else if (aThicknessAttribute.Equals("thick")) {
+    else if (aThicknessAttribute.EqualsWithConversion("thick")) {
       lineThickness = NSToCoordCeil(defaultThickness * THICK_FRACTION_LINE);
       minimumThickness = onePixel * THICK_FRACTION_LINE_MINIMUM_PIXELS;
       // should visually increase by at least two pixels

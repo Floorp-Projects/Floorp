@@ -140,7 +140,7 @@ nsMathMLmfencedFrame::ReCreateFencesAndSeparators(nsIPresContext* aPresContext)
   else if (NS_CONTENT_ATTR_NOT_THERE == rv)
     data = '('; // default as per the MathML REC
   else
-    data = "";
+    data = nsAutoString();
 
   if (0 < data.Length()) {
     mOpenChar = new nsMathMLChar;
@@ -160,7 +160,7 @@ nsMathMLmfencedFrame::ReCreateFencesAndSeparators(nsIPresContext* aPresContext)
   else if (NS_CONTENT_ATTR_NOT_THERE == rv)
     data = ')'; // default as per the MathML REC
   else
-    data = "";
+    data = nsAutoString();
 
   if (0 < data.Length()) {
     mCloseChar = new nsMathMLChar;
@@ -180,7 +180,7 @@ nsMathMLmfencedFrame::ReCreateFencesAndSeparators(nsIPresContext* aPresContext)
   else if (NS_CONTENT_ATTR_NOT_THERE == rv)
     data = ','; // default as per the MathML REC
   else
-    data = "";
+    data = nsAutoString();
 
   mSeparatorsCount = data.Length();
   if (0 < mSeparatorsCount) {
