@@ -1025,11 +1025,11 @@ nsIWebShellWindow* FindWebShellWindow(nsIXULWindowCallbacks* inCallbacks)
 	rv = NS_NewURL(getter_AddRefs(urlObj), urlStr);
 #else
     NS_WITH_SERVICE(nsIIOService, service, kIOServiceCID, &rv);
-    if (NS_FAILED(rv)) return rv;
+    if (NS_FAILED(rv)) return nsnull;
 
     nsIURI *uri = nsnull;
     rv = service->NewURI(urlStr, nsnull, &uri);
-    if (NS_FAILED(rv)) return rv;
+    if (NS_FAILED(rv)) return nsnull;
 
     rv = uri->QueryInterface(nsIURI::GetIID(), (void**)&urlObj);
     NS_RELEASE(uri);
