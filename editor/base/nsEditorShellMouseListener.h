@@ -24,13 +24,15 @@
 #define editorShellMouseLisenter_h__
 
 #include "nsCOMPtr.h"
+#include "nsWeakReference.h"
 
 
 #include "nsIDOMEvent.h"
 #include "nsIDOMMouseListener.h"
 #include "nsIEditorShell.h"
 
-class nsEditorShellMouseListener : public nsIDOMMouseListener 
+class nsEditorShellMouseListener : public nsIDOMMouseListener,
+                                   public nsSupportsWeakReference 
 {
 public:
   /** default constructor
