@@ -67,6 +67,12 @@ static NS_DEFINE_IID(kIFormControlIID, NS_IFORMCONTROL_IID);
 static NS_DEFINE_IID(kIFormControlFrameIID, NS_IFORMCONTROLFRAME_IID); 
 static NS_DEFINE_CID(kXULControllersCID,  NS_XULCONTROLLERS_CID);
 
+#ifdef DEBUG_mjudge
+typedef nsIGfxTextControlFrame2 textControlPlace;
+#else
+typedef nsIGfxTextControlFrame textControlPlace;
+#endif
+
 class nsHTMLInputElement : public nsIDOMHTMLInputElement,
                            public nsIDOMNSHTMLInputElement,
                            public nsIJSScriptObject,
@@ -1132,7 +1138,7 @@ nsHTMLInputElement::GetTextLength(PRInt32* aTextLength)
   nsresult rv = nsGenericHTMLElement::GetPrimaryFrame(this, formControlFrame);
   if (NS_SUCCEEDED(rv) && formControlFrame)
   {
-    nsCOMPtr<nsIGfxTextControlFrame> textControlFrame(do_QueryInterface(formControlFrame));
+    nsCOMPtr<textControlPlace> textControlFrame(do_QueryInterface(formControlFrame));
     if (textControlFrame)
       textControlFrame->GetTextLength(aTextLength);
       
@@ -1148,7 +1154,7 @@ nsHTMLInputElement::SetSelectionRange(PRInt32 aSelectionStart, PRInt32 aSelectio
   nsresult rv = nsGenericHTMLElement::GetPrimaryFrame(this, formControlFrame);
   if (NS_SUCCEEDED(rv) && formControlFrame)
   {
-    nsCOMPtr<nsIGfxTextControlFrame> textControlFrame(do_QueryInterface(formControlFrame));
+    nsCOMPtr<textControlPlace> textControlFrame(do_QueryInterface(formControlFrame));
     if (textControlFrame)
       textControlFrame->SetSelectionRange(aSelectionStart, aSelectionEnd);
       
@@ -1173,7 +1179,7 @@ nsHTMLInputElement::SetSelectionStart(PRInt32 aSelectionStart)
   nsresult rv = nsGenericHTMLElement::GetPrimaryFrame(this, formControlFrame);
   if (NS_SUCCEEDED(rv) && formControlFrame)
   {
-    nsCOMPtr<nsIGfxTextControlFrame> textControlFrame(do_QueryInterface(formControlFrame));
+    nsCOMPtr<textControlPlace> textControlFrame(do_QueryInterface(formControlFrame));
     if (textControlFrame)
       textControlFrame->SetSelectionStart(aSelectionStart);
       
@@ -1199,7 +1205,7 @@ nsHTMLInputElement::SetSelectionEnd(PRInt32 aSelectionEnd)
   nsresult rv = nsGenericHTMLElement::GetPrimaryFrame(this, formControlFrame);
   if (NS_SUCCEEDED(rv) && formControlFrame)
   {
-    nsCOMPtr<nsIGfxTextControlFrame> textControlFrame(do_QueryInterface(formControlFrame));
+    nsCOMPtr<textControlPlace> textControlFrame(do_QueryInterface(formControlFrame));
     if (textControlFrame)
       textControlFrame->SetSelectionEnd(aSelectionEnd);
       
@@ -1215,7 +1221,7 @@ nsHTMLInputElement::GetSelectionRange(PRInt32* aSelectionStart, PRInt32* aSelect
   nsresult rv = nsGenericHTMLElement::GetPrimaryFrame(this, formControlFrame);
   if (NS_SUCCEEDED(rv) && formControlFrame)
   {
-    nsCOMPtr<nsIGfxTextControlFrame> textControlFrame(do_QueryInterface(formControlFrame));
+    nsCOMPtr<textControlPlace> textControlFrame(do_QueryInterface(formControlFrame));
     if (textControlFrame)
       textControlFrame->GetSelectionRange(aSelectionStart, aSelectionEnd);
       
