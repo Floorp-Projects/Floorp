@@ -35,7 +35,11 @@ REQUIRES	= xpcom necko
 CPPSRCS		= \
 		nsJARProtocolHandler.cpp \
 		nsJARProtocolModule.cpp  \
+		nsJARChannel.cpp  \
+		nsJARURI.cpp  \
 		$(NULL)
+
+EXTRA_DSO_LDOPTS += $(MOZ_COMPONENT_LIBS) 
 
 include $(topsrcdir)/config/rules.mk
 
