@@ -160,7 +160,7 @@ function getValue(v) {
     if (v instanceof Reference) {
         if (!v.base) {
             throw new ReferenceError(v.propertyName + " is not defined",
-                                     this.node.filename, this.node.lineno);
+                                     v.node.filename, v.node.lineno);
         }
         return v.base[v.propertyName];
     }
