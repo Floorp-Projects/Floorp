@@ -126,6 +126,8 @@ function initMenus()
          ["-"],
          ["print"],
          ["-"],
+         ["save"],
+         ["-"],
          [navigator.platform.search(/win/i) == -1 ? "quit" : "exit"]
         ]
     };

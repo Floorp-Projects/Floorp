@@ -161,8 +161,17 @@ function futils_nosepicker(initialPath, typeList, attribs)
                     picker.appendFilters(FILTER_XUL);
                     break;
 
+                case "$noAll":
+                    // This prevents the automatic addition of "All Files"
+                    // as a file type option by pretending it is already there.
+                    allIncluded = true;
+                    break;
+
                 default:
-                    picker.appendFilter(typeList[i], typeList[i]);
+                    if ((typeof typeList[i] == "object") && isinstance(typeList[i], Array))
+                        picker.appendFilter(typeList[i][0], typeList[i][1]);
+                    else
+                        picker.appendFilter(typeList[i], typeList[i]);
                     break;
             }
         }
@@ -174,13 +183,14 @@ function futils_nosepicker(initialPath, typeList, attribs)
     return picker;
 }
 
-function pickSaveAs (title, typeList, defaultFile, defaultDir)
+function pickSaveAs (title, typeList, defaultFile, defaultDir, defaultExt)
 {
     if (!defaultDir && "lastSaveAsDir" in futils)
         defaultDir = futils.lastSaveAsDir;
 
     var picker = futils.getPicker (defaultDir, typeList,
-                                   {defaultString: defaultFile});
+                                   {defaultString: defaultFile,
+                                    defaultExtension: defaultExt});
     picker.init (window, title ? title : futils.MSG_SAVE_AS,
                  Components.interfaces.nsIFilePicker.modeSave);
 

@@ -145,6 +145,7 @@ function initCommands()
          ["reload-plugin",     cmdReload,                          CMD_CONSOLE],
          ["rlist",             cmdRlist,            CMD_NEED_SRV | CMD_CONSOLE],
          ["reload-ui",         cmdReloadUI,                                  0],
+         ["save",              cmdSave,                            CMD_CONSOLE],
          ["say",               cmdSay,              CMD_NEED_SRV | CMD_CONSOLE],
          ["server",            cmdServer,                          CMD_CONSOLE],
          ["set-current-view",  cmdSetCurrentView,                            0],
@@ -2810,6 +2811,240 @@ function cmdLog(e)
         else
             display(MSG_LOGGING_OFF);
     }
+}
+
+function cmdSave(e)
+{
+    var OutputProgressListener =
+    {
+        onStateChange: function(aWebProgress, aRequest, aStateFlags, aStatus)
+        {
+            // Use this to access onStateChange flags
+            var requestSpec;
+            try 
+            {
+              var channel = aRequest.QueryInterface(nsIChannel);
+              requestSpec = channel.URI.spec;
+            } 
+            catch (ex) { }
+
+            // Detect end of file saving of any file:
+            if (aStateFlags & nsIWebProgressListener.STATE_STOP)
+            {
+                if (aStatus == kErrorBindingAborted)
+                    aStatus = 0;
+
+                // We abort saving for all errors except if image src file is 
+                // not found
+                var abortSaving = (aStatus != 0 && aStatus != kFileNotFound);
+                if (abortSaving)
+                {
+                    // Cancel saving
+                    wbp.cancelSave();
+                    display(getMsg(MSG_SAVE_ERR_FAILED, aMessage), MT_ERROR);
+                    return;
+                }
+
+                if (aStateFlags & nsIWebProgressListener.STATE_IS_NETWORK
+                    && wbp.currentState == nsIWBP.PERSIST_STATE_FINISHED)
+                {
+                    // Let the user know:
+                    pm = [e.sourceObject.viewName, e.filename];
+                    display(getMsg(MSG_SAVE_SUCCESSFUL, pm), MT_INFO);
+                }
+                /* Check if we've finished. WebBrowserPersist screws up when we
+                 * don't save additional files. Cope when saving html only or 
+                 * text. 
+                 */
+                else if (!requestSpec && saveType > 0)
+                {
+                    pm = [e.sourceObject.viewName, e.filename];
+                    display(getMsg(MSG_SAVE_SUCCESSFUL, pm), MT_INFO);
+                }
+            }
+        },
+
+        onProgressChange: function(aWebProgress, aRequest, aCurSelfProgress,
+                                  aMaxSelfProgress, aCurTotalProgress, 
+                                  aMaxTotalProgress) {},
+        onLocationChange: function(aWebProgress, aRequest, aLocation) {},
+        onStatusChange: function(aWebProgress, aRequest, aStatus, aMessage) {},
+        onSecurityChange: function(aWebProgress, aRequest, state) {},
+
+        QueryInterface: function(aIID)
+        {
+            if (aIID.equals(Components.interfaces.nsIWebProgressListener)
+                || aIID.equals(Components.interfaces.nsISupports)
+                || aIID.equals(Components.interfaces.nsISupportsWeakReference))
+            {
+                return this;
+            }
+
+            throw Components.results.NS_NOINTERFACE;
+        }
+    };
+
+    const kFileNotFound = 2152857618;
+    const kErrorBindingAborted = 2152398850;
+
+    const nsIWBP = Components.interfaces.nsIWebBrowserPersist;
+    const nsIWebProgressListener = Components.interfaces.nsIWebProgressListener;
+    const nsIChannel = Components.interfaces.nsIChannel;
+
+    var wbp = newObject("@mozilla.org/embedding/browser/nsWebBrowserPersist;1",
+                        nsIWBP);
+    wbp.progressListener = OutputProgressListener;
+
+    var file, saveType, saveFolder, docToBeSaved, title;
+    var flags, fileType, charLimit;
+    var dialogTitle, rv, pm;
+
+    // We want proper descriptions and no "All Files" option.
+    const TYPELIST = [[MSG_SAVE_COMPLETEVIEW,"*.htm;*.html"],
+                      [MSG_SAVE_HTMLONLYVIEW,"*.htm;*.html"],
+                      [MSG_SAVE_PLAINTEXTVIEW,"*.txt"], "$noAll"];
+    // constants and variables for the wbp.saveDocument call
+    var saveTypes = 
+    {
+        complete: 0,
+        htmlonly: 1,
+        text: 2
+    };
+
+    if (!e.filename)
+    {
+        dialogTitle = getMsg(MSG_SAVE_DIALOGTITLE, e.sourceObject.viewName);
+        rv = pickSaveAs(dialogTitle, TYPELIST, e.sourceObject.viewName + 
+                        ".html");
+        if (rv.file == null)
+            return;
+        saveType = rv.picker.filterIndex;
+        file = rv.file;
+        e.filename = rv.file.path;
+    }
+    else
+    {
+        try 
+        {
+            // Try to use this as a path
+            file = nsLocalFile(e.filename);
+        }
+        catch (ex) 
+        {
+            // try to use it as an url
+            try
+            {
+                file = getFileFromURLSpec(e.filename);
+            }
+            catch(ex)
+            {
+                // What is the user thinking? It's not rocket science...
+                display(getMsg(MSG_SAVE_ERR_INVALID_PATH, e.filename), 
+                        MT_ERROR);
+                return;
+            }
+        }
+
+        // Get extension and determine savetype
+        if (!e.savetype)
+        {
+            var extension = file.path.substr(file.path.lastIndexOf("."));
+            if (extension == ".txt")
+            {
+                saveType = saveTypes["text"];
+            }
+            else if (extension.match(/\.x?html?$/))
+            {
+                saveType = saveTypes["complete"];
+            }
+            else
+            {
+                // No saveType and no decent extension --> out!
+                var errMsg;
+                if (extension.indexOf(".") < 0)
+                    errMsg = MSG_SAVE_ERR_NO_EXT;
+                else
+                    errMsg = getMsg(MSG_SAVE_ERR_INVALID_EXT, extension);
+                display(errMsg, MT_ERROR);
+                return;
+            }
+        }
+        else
+        {
+            if (!(e.savetype in saveTypes))
+            {
+                // no valid saveType
+                display(getMsg(MSG_SAVE_ERR_INVALID_SAVETYPE, e.savetype),
+                            MT_ERROR);
+                return;
+            }
+            saveType = saveTypes[e.savetype];
+        }
+
+        var askforreplace = (e.isInteractive && file.exists());
+        if (askforreplace && !confirm(getMsg(MSG_SAVE_FILEEXISTS, e.filename)))
+            return;        
+    }
+
+    // We don't want to convert anything, leave everything as is and replace
+    // old files, as the user has been prompted about that already.
+    wbp.persistFlags |= nsIWBP.PERSIST_FLAGS_NO_CONVERSION
+                        | nsIWBP.PERSIST_FLAGS_REPLACE_EXISTING_FILES
+                        | nsIWBP.PERSIST_FLAGS_NO_BASE_TAG_MODIFICATIONS
+                        | nsIWBP.PERSIST_FLAGS_REPLACE_EXISTING_FILES
+                        | nsIWBP.PERSIST_FLAGS_DONT_FIXUP_LINKS
+                        | nsIWBP.PERSIST_FLAGS_DONT_CHANGE_FILENAMES;
+
+    // Set the document from the current view, and set a usable title
+    docToBeSaved = e.sourceObject.frame.contentDocument;
+    var headElement = docToBeSaved.getElementsByTagName("HEAD")[0];
+    var titleElements = docToBeSaved.getElementsByTagName("title");
+    // Remove an existing title, there shouldn't be more than one.
+    if (titleElements.length > 0)
+        titleElements[0].parentNode.removeChild(titleElements[0]);
+    title = docToBeSaved.createElement("title");
+    title.appendChild(docToBeSaved.createTextNode(document.title +
+                                                  " (" + new Date() + ")"));
+    headElement.appendChild(title);
+    // Set standard flags, file type, saveFolder and character limit
+    flags = nsIWBP.ENCODE_FLAGS_ENCODE_BASIC_ENTITIES;
+    fileType = "text/html";
+    saveFolder = null;
+    charLimit = 0;
+
+    // Do saveType specific stuff
+    switch (saveType)
+    {
+        case saveTypes["complete"]:
+            // Get the directory into which to save associated files.
+            saveFolder = file.clone();
+            var baseName = saveFolder.leafName;
+            baseName = baseName.substring(0, baseName.lastIndexOf("."));
+            saveFolder.leafName = getMsg(MSG_SAVE_FILES_FOLDER, baseName);
+            break;
+            // html only does not need any additional configuration
+        case saveTypes["text"]:
+            // set flags for Plain Text
+            flags = nsIWBP.ENCODE_FLAGS_FORMATTED;
+            flags |= nsIWBP.ENCODE_FLAGS_ABSOLUTE_LINKS;
+            flags |= nsIWBP.ENCODE_FLAGS_NOFRAMES_CONTENT;
+            // set the file type and set character limit to 80
+            fileType = "text/plain";
+            charLimit = 80;
+            break;
+    }
+
+    try
+    {
+        wbp.saveDocument(docToBeSaved, file, saveFolder, fileType, flags, 
+                         charLimit);
+    }
+    catch (ex)
+    {
+        pm = [e.sourceObject.viewName, e.filename, ex.message];
+        display(getMsg(MSG_SAVE_ERR_FAILED, pm), MT_ERROR);
+    }
+    // Error handling and finishing message is done by the listener
 }
 
 function cmdSupports(e)
