@@ -111,11 +111,23 @@
   }
 }
 
+//
+// -buildButtonList
+//
+// this only gets called on startup OR window creation.  on the off chance that
+// we're starting due to an appleevent from another program, we might call it twice.
+// make sure nothing bad happens if we do that.
+// 
 -(void)buildButtonList
 {
   BookmarkFolder* toolbar = [[BookmarkManager sharedBookmarkManager] toolbarFolder];
 
-  for (unsigned int i = 0; i < [toolbar count]; i ++)
+  // check if we've built the toolbar already and bail if we have
+  const unsigned long count = [toolbar count];
+  if ([mButtons count] == count)
+    return;
+
+  for (unsigned int i = 0; i < count; i ++)
   {
     BookmarkButton* button = [self makeNewButtonWithItem:[toolbar objectAtIndex:i]];
     [self addSubview: button];
@@ -416,11 +428,12 @@
     else if (mDragInsertionPosition == CHInsertBefore ||
              mDragInsertionPosition == CHInsertAfter)		// drop onto toolbar
     {
+      destItem = toolbar;
       index = [mButtons indexOfObjectIdenticalTo:mDragInsertionButton];
       if (mDragInsertionPosition == CHInsertAfter)
         ++index;
     }
-    if (![bmManager isDropValid:draggedItems toFolder:toolbar])
+    if (![bmManager isDropValid:draggedItems toFolder:destItem])
       return NO;
   }
   return YES;
@@ -513,7 +526,8 @@
   if ( [draggedTypes containsObject:@"MozBookmarkType"] )
   {
     NSArray *draggedItems = [NSArray pointerArrayFromDataArrayForMozBookmarkDrop:[[sender draggingPasteboard] propertyListForType: @"MozBookmarkType"]];
-    NSEnumerator *enumerator = [draggedItems objectEnumerator];
+    // added sequentially, so use reverse object enumerator to preserve order.
+    NSEnumerator *enumerator = [draggedItems reverseObjectEnumerator];
     id aKid;
     while ((aKid = [enumerator nextObject])) {
       if (isCopy) {
