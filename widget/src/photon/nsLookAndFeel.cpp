@@ -159,6 +159,12 @@ NS_IMETHODIMP nsLookAndFeel::GetMetric(const nsMetricID aID, PRInt32 & aMetric)
   case eMetric_ListVerticalInsidePadding:
     aMetric = 0; // REVISIT - HACK!
     break;
+	case eMetric_CaretBlinkTime:
+    aMetric = 500;
+    break;
+	case eMetric_CaretWidthTwips:
+    aMetric = 20;
+    break;
   default:
     aMetric = -1;
     res = NS_ERROR_FAILURE;

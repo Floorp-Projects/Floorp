@@ -123,6 +123,28 @@ NS_IMETHODIMP nsLookAndFeel::GetMetric(const nsMetricID aID, PRInt32 & aMetric)
          aMetric = 0;
          break;
 
+    case eMetric_CaretBlinkTime:
+        aMetric = WinQuerySysValue( HWND_DESKTOP, SV_CURSORRATE);
+        break;
+    case eMetric_CaretWidthTwips:
+        // Sigh - this is in 'twips', should be in 'app units', but there's no
+        // DC anyway so we can't work it out!
+
+        // The reason for this is that there is some rounding weirdness,
+        // such that the 2-pixel caret requested by the windows guys
+        // got rounded down to a 1-pixel caret for drawing, because
+        // of errors in conversion to twips and back.
+        
+        ULONG ulPels = WinQuerySysValue( HWND_DESKTOP, SV_CYBORDER);
+
+        // With luck, either:
+        //   * these metrics will go into nsILookAndFeel, or
+        //   * we'll get an nsIDeviceContext here
+        //
+        // For now, lets assume p2t = 20.
+        aMetric = 20 * ulPels;
+        break;
+
       default:
          NS_ASSERTION( 0, "Bad metric");
          break;
