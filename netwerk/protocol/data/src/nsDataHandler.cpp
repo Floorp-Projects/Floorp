@@ -30,7 +30,7 @@
 #include "nsIInterfaceRequestor.h"
 #include "nsIProgressEventSink.h"
 
-static NS_DEFINE_CID(kStandardURLCID,            NS_STANDARDURL_CID);
+static NS_DEFINE_CID(kSimpleURICID,            NS_SIMPLEURI_CID);
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -81,7 +81,7 @@ nsDataHandler::NewURI(const char *aSpec, nsIURI *aBaseURI,
     NS_ASSERTION(!aBaseURI, "base url passed into data protocol handler");
 
     nsIURI* url;
-    rv = nsComponentManager::CreateInstance(kStandardURLCID, nsnull,
+    rv = nsComponentManager::CreateInstance(kSimpleURICID, nsnull,
                                             NS_GET_IID(nsIURI),
                                             (void**)&url);
     if (NS_FAILED(rv)) return rv;
