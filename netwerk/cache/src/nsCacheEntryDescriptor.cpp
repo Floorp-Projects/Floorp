@@ -28,7 +28,7 @@
 NS_IMPL_ISUPPORTS1(nsCacheEntryDescriptor, nsICacheEntryDescriptor)
 
 nsCacheEntryDescriptor::nsCacheEntryDescriptor(nsCacheEntry * entry,
-                                               PRUint32       accessGranted)
+                                               nsCacheAccessMode accessGranted)
     : mCacheEntry(entry), mAccessGranted(accessGranted)
 {
   NS_INIT_ISUPPORTS();
@@ -42,7 +42,7 @@ nsCacheEntryDescriptor::~nsCacheEntryDescriptor()
 
 
 NS_METHOD
-nsCacheEntryDescriptor::Create(nsCacheEntry * entry, PRUint32  accessGranted,
+nsCacheEntryDescriptor::Create(nsCacheEntry * entry, nsCacheAccessMode  accessGranted,
                                nsICacheEntryDescriptor ** result)
 {
     nsresult rv = nsnull;
@@ -157,7 +157,7 @@ nsCacheEntryDescriptor::SetCacheElement(nsISupports * cacheElement)
 
 /* readonly attribute unsigned long accessGranted; */
 NS_IMETHODIMP
-nsCacheEntryDescriptor::GetAccessGranted(PRUint32 *accessGranted)
+nsCacheEntryDescriptor::GetAccessGranted(nsCacheAccessMode *accessGranted)
 {
     *accessGranted = mAccessGranted;
     return NS_OK;
