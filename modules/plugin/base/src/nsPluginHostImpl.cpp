@@ -154,6 +154,13 @@
 #include "nsDefaultPlugin.h"
 #include "nsWeakReference.h"
 #include "nsIDOMElement.h"
+#include "nsIStyleSet.h"
+#include "nsIStyleFrameConstruction.h"
+#include "nsIPresShell.h"
+#include "nsIPresContext.h"
+#include "nsIWebNavigation.h"
+#include "nsISupportsArray.h"
+#include "nsIDocShell.h"
 
 #ifdef XP_UNIX
 #if defined(MOZ_WIDGET_GTK)
@@ -349,6 +356,96 @@ void DisplayNoDefaultPluginDialog(const char *mimeType, nsIPrompt *prompt)
   }
 
   return;
+}
+
+////////////////////////////////////////////////////////////////////////
+// Little helper struct to asynchronously reframe any presentations (embedded)
+// or reload any documents (full-page), that contained plugins 
+// which were shutdown as a result of a plugins.refresh(1)
+struct nsPluginDocReframeEvent: public PLEvent {
+  nsPluginDocReframeEvent (nsISupportsArray* aDocs)  { mDocs = aDocs; }
+  nsresult HandlePluginDocReframeEvent();
+  nsCOMPtr<nsISupportsArray> mDocs;
+};
+
+nsresult nsPluginDocReframeEvent::HandlePluginDocReframeEvent() {    
+  NS_ENSURE_TRUE(mDocs, NS_ERROR_FAILURE);
+  
+  PRUint32 c;
+  mDocs->Count(&c);
+  
+  // for each document (which previously had a running instance), tell
+  // the frame constructor to rebuild
+  for (PRUint32 i = 0; i < c; i++) {
+    nsCOMPtr<nsIDocument> doc (do_QueryElementAt(mDocs, i));
+    if (doc) {
+      nsCOMPtr<nsIPresShell> shell;
+      doc->GetShellAt(0, getter_AddRefs(shell));
+      
+      // if this document has a presentation shell, then it has frames and can be reframed
+      if (shell) {
+        nsCOMPtr<nsIPresContext> pc;
+        nsCOMPtr<nsIStyleSet> set;
+        shell->GetPresContext(getter_AddRefs(pc));
+        shell->GetStyleSet(getter_AddRefs(set));
+        if (pc && set) {
+          nsCOMPtr<nsIStyleFrameConstruction> fc;
+          set->GetStyleFrameConstruction(getter_AddRefs(fc));
+          if (fc)
+            
+         /**
+          * A reframe will cause a fresh object frame, instance owner, and instance
+          * to be created. Reframing of the entire document is necessary as we may have
+          * recently found new plugins and we want a shot at trying to use them instead
+          * of leaving alternate renderings.
+          * We do not want to completely reload all the documents that had running plugins
+          * because we could possibly trigger a script to run in the unload event handler
+          * which may want to access our defunct plugin and cause us to crash.
+          */
+          
+            fc->ReconstructDocElementHierarchy(pc); // causes reframe of document
+        }
+      } else {  // no pres shell --> full-page plugin
+        
+       /**
+        * This document does not have a presentation shell. It may be a full-page plugin.
+        * Full-page plugins don't really have the same problem of crashing because they
+        * are not currently scriptable. However, they do leave a non-painting, defunct
+        * window which doesn't look good. A reload of the page for full-page plugins
+        * is needed to kickstart the instance.
+        */
+        
+        nsCOMPtr<nsIScriptGlobalObject> gso;
+        doc->GetScriptGlobalObject(getter_AddRefs(gso));
+        if (gso) {
+          nsCOMPtr<nsIDocShell> docShell;
+          gso->GetDocShell(getter_AddRefs(docShell));
+          nsCOMPtr<nsIWebNavigation> webNav (do_QueryInterface(docShell));
+          if (webNav)
+            webNav->Reload(nsIWebNavigation::LOAD_FLAGS_NONE);
+          
+          else NS_WARNING("refreshing plugins: couldn't get webnav or docshell from gso");
+        } else NS_WARNING("refreshing plugins: could not get the global script object -- did the plugin set it?");
+      }
+    }
+  }
+
+  return mDocs->Clear();
+}
+
+
+  
+
+//----------------------------------------------------------------------
+static void* PR_CALLBACK HandlePluginDocReframePLEvent(PLEvent* aEvent)
+{
+  nsPluginDocReframeEvent* event = NS_REINTERPRET_CAST(nsPluginDocReframeEvent*, aEvent);
+  event->HandlePluginDocReframeEvent();
+  return nsnull;
+}
+static void PR_CALLBACK DestroyPluginDocReframePLEvent(PLEvent* aEvent)
+{
+  delete aEvent;
 }
 
 
@@ -566,7 +663,10 @@ PRBool nsActivePluginList::remove(nsActivePlugin * plugin)
 
 
 ////////////////////////////////////////////////////////////////////////
-void nsActivePluginList::stopRunning()
+// This method terminates all running instances of plugins and collects their
+// documents to be returned through an array. This method is used
+// when we are shutting down or when a plugins.refresh(1) happens.
+void nsActivePluginList::stopRunning(nsISupportsArray* aReloadDocs)
 {
   if(mFirst == nsnull)
     return;
@@ -593,6 +693,21 @@ void nsActivePluginList::stopRunning()
       }
       doCallSetWindowAfterDestroy = PR_FALSE;
       p->setStopped(PR_TRUE);
+
+      // If we've been passed an array to return, lets collect all our documents,
+      // removing duplicates. These will be reframed (embedded) or reloaded (full-page) later 
+      // to kickstart our instances.
+      if (aReloadDocs && p->mPeer) {
+        nsPluginInstancePeerImpl * peer = (nsPluginInstancePeerImpl *)p->mPeer;
+        nsCOMPtr<nsIPluginInstanceOwner> owner;
+        peer->GetOwner(*getter_AddRefs(owner));
+        if (owner) {
+          nsCOMPtr<nsIDocument> doc;
+          owner->GetDocument(getter_AddRefs(doc));
+          if (doc && aReloadDocs->IndexOf(doc) == -1)  // don't allow for duplicates
+            aReloadDocs->AppendElement(doc);
+        }
+      }
     }
   }
 }
@@ -2695,10 +2810,15 @@ nsresult nsPluginHostImpl::ReloadPlugins(PRBool reloadPages)
   // if no changed detected, return an appropriate error code
   if (!pluginschanged)
     return NS_ERROR_PLUGINS_PLUGINSNOTCHANGED;
+  
+  nsCOMPtr<nsISupportsArray> instsToReload;
 
   if(reloadPages) {
-    // stop any running plugins
-    mActivePluginList.stopRunning();
+    NS_NewISupportsArray(getter_AddRefs(instsToReload));
+ 
+    // Then stop any running plugin instances but hold on to the documents in the array
+    // We are going to need to restart the instances in these documents later
+    mActivePluginList.stopRunning(instsToReload);
   }
 
   // clean active plugin list
@@ -2736,6 +2856,29 @@ nsresult nsPluginHostImpl::ReloadPlugins(PRBool reloadPages)
 
   // load them again
   rv = LoadPlugins();
+
+  // If we have shut down any plugin instances, we've now got to restart them.
+  // Post an event to do the rest as we are going to be destroying the frame tree and we also want
+  // any posted unload events to finish
+  PRUint32 c;
+  if (reloadPages && 
+      instsToReload && 
+      NS_SUCCEEDED(instsToReload->Count(&c)) && 
+      c > 0) {
+    nsCOMPtr<nsIEventQueueService> eventService(do_GetService(kEventQueueServiceCID));
+    if (eventService) {
+      nsCOMPtr<nsIEventQueue> eventQueue;  
+      eventService->GetThreadEventQueue(PR_GetCurrentThread(), getter_AddRefs(eventQueue));
+      if (eventQueue) {
+        nsPluginDocReframeEvent * ev = new nsPluginDocReframeEvent(instsToReload);
+        if (ev) {
+          PL_InitEvent(ev, nsnull, HandlePluginDocReframePLEvent, DestroyPluginDocReframePLEvent);
+          eventQueue->PostEvent(ev);
+        }
+      }
+    }
+
+  }
 
   PLUGIN_LOG(PLUGIN_LOG_NORMAL,
   ("nsPluginHostImpl::ReloadPlugins End active_instance_count=%d\n",
@@ -3256,7 +3399,7 @@ NS_IMETHODIMP nsPluginHostImpl::Destroy(void)
 
   // we should call nsIPluginInstance::Stop and nsIPluginInstance::SetWindow 
   // for those plugins who want it
-  mActivePluginList.stopRunning();  
+  mActivePluginList.stopRunning(nsnull);  
 
   // at this point nsIPlugin::Shutdown calls will be performed if needed
   mActivePluginList.shut();

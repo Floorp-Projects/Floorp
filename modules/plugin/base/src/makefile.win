@@ -55,6 +55,7 @@ REQUIRES	= xpcom \
 		  windowwatcher \
 		  gfx \
 		  imglib2 \
+		  layout \
 		  $(NULL)
 
 DEFINES =-D_IMPL_NS_PLUGIN -DWIN32_LEAN_AND_MEAN
