@@ -749,25 +749,37 @@ nsCairoRenderingContext::CopyOffScreenBits(nsIDrawingSurface *aSrcSurf,
     PRUint32 srcWidth, srcHeight;
     cds->GetDimensions (&srcWidth, &srcHeight);
 
+    double sx, sy, dx, dy, dw, dh;
+    // figure out pixel positions
+    sx = double(aSrcX);
+    sy = double(aSrcY);
+    dx = double(aDestBounds.x);
+    dy = double(aDestBounds.y);
+    dw = double(aDestBounds.width);
+    dh = double(aDestBounds.height);
+
+    if (aCopyFlags & NS_COPYBITS_XFORM_SOURCE_VALUES) {
+        cairo_transform_point (mCairo, &sx, &sy);
+    }
+
+    if (aCopyFlags & NS_COPYBITS_XFORM_DEST_VALUES) {
+        cairo_transform_point (mCairo, &dx, &dy);
+        cairo_transform_distance (mCairo, &dw, &dh);
+    }
+
     cairo_save (mCairo);
 
-    cairo_pattern_t *imgpat = cairo_pattern_create_for_surface (src);
-    cairo_matrix_t *mat = cairo_matrix_create();
-    cairo_matrix_scale (mat, 1.0/15.0, 1.0/15.0);
-    cairo_matrix_scale (mat, double(aDestBounds.width)/double(srcWidth), double(aDestBounds.height)/double(srcHeight));
-    cairo_matrix_translate (mat, double(aSrcX), double(aSrcY));
-    cairo_pattern_set_matrix (imgpat, mat);
-    cairo_set_pattern (mCairo, imgpat);
+    // args are in pixels!!
+    cairo_identity_matrix (mCairo);
 
-    cairo_new_path (mCairo);
-    cairo_rectangle (mCairo,
-                     double(aDestBounds.x), double(aDestBounds.y),
-                     double(aDestBounds.width), double(aDestBounds.height));
-    cairo_fill (mCairo);
+    // clip to target
+    cairo_rectangle(mCairo, dx, dy, dw, dh);
+    cairo_clip(mCairo);
 
-    cairo_set_pattern (mCairo, nsnull);
-    cairo_pattern_destroy (imgpat);
-    cairo_matrix_destroy(mat);
+    cairo_scale(mCairo, dw / double(srcWidth), dh / double(srcHeight));
+    cairo_translate(mCairo, dx - sx, dy - sy);
+
+    cairo_show_surface(mCairo, src, srcWidth, srcHeight);
 
     cairo_restore (mCairo);
 
@@ -852,11 +864,18 @@ nsCairoRenderingContext::DrawImage(imgIContainer *aImage,
     if (sr.IsEmpty() || dr.IsEmpty())
         return NS_OK;
 
+    
     /* What the heck? 
      * sr.x = aSrcRect.x;
      * sr.y = aSrcRect.y;
      * mTranMatrix->TransformNoXLateCoord(&sr.x, &sr.y);
      */
+    x = sr.x;
+    y = sr.y;
+    cairo_transform_distance(mCairo, &x, &y);
+    sr.x = (int) x;
+    sr.y = (int) y;
+    /* .. not sure what that's for .. */
 
     nsCOMPtr<gfxIImageFrame> iframe;
     aImage->GetCurrentFrame(getter_AddRefs(iframe));
