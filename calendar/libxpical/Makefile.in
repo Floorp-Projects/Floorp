@@ -69,6 +69,11 @@ CPPSRCS		= \
 		oeICalStartupHandler.cpp \
 		$(NULL)
 
+CSRCS           = \
+                token.c \
+                md5.c \
+                $(NULL)
+
 EXTRA_DSO_LIBS	= mozicalss mozical
 
 EXTRA_DSO_LDOPTS += \

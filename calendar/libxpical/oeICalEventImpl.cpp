@@ -122,6 +122,19 @@ PRTime ConvertToPrtime ( icaltimetype indate ) {
     return result;
 }
 
+extern "C" {
+#include "token.h"
+}
+
+void GenerateUUID(char *output) {
+  uuid_state state;
+  uuid_t uuid;
+
+  create_uuid_state(&state);
+  create_token(&state, &uuid);
+  format_token(output, &uuid);
+}
+
 //////////////////////////////////////////////////
 //   UTF-8 functions
 //////////////////////////////////////////////////

@@ -61,6 +61,7 @@ extern "C" {
 icaltimetype ConvertFromPrtime( PRTime indate );
 PRTime ConvertToPrtime ( icaltimetype indate );
 void AlarmTimerCallback(nsITimer *aTimer, void *aClosure);
+void GenerateUUID(char *output);
 
 icalcomponent* icalcomponent_fetch( icalcomponent* parent,const char* uid )
 {
@@ -872,7 +873,7 @@ NS_IMETHODIMP oeICalImpl::AddEvent(oeIICalEvent *icalevent,char **retid)
     printf( "oeICalImpl::AddEvent()\n" );
 #endif
     icalset *stream;
-    icalcomponent *vcalendar,*fetchedcal;
+    icalcomponent *vcalendar;
 
     stream = icalfileset_new(serveraddr);
     if ( !stream ) {
@@ -885,13 +886,8 @@ NS_IMETHODIMP oeICalImpl::AddEvent(oeIICalEvent *icalevent,char **retid)
     ((oeICalEventImpl *)icalevent)->GetId( retid );
 
     if( *retid == nsnull ) {
-        char uidstr[10];
-        do {
-            unsigned long newid;
-            newid = 900000000 + ((rand()%0x4ff) << 16) + rand()%0xFFFF;
-            sprintf( uidstr, "%lu", newid );
-        } while ( (fetchedcal = icalfileset_fetch( stream, uidstr )) != 0 );
-
+        char uidstr[40];
+        GenerateUUID( uidstr );
         ((oeICalEventImpl *)icalevent)->SetId( uidstr );
         ((oeICalEventImpl *)icalevent)->GetId( retid );
     }
@@ -1774,7 +1770,7 @@ NS_IMETHODIMP oeICalImpl::AddTodo(oeIICalTodo *icaltodo,char **retid)
     printf( "oeICalImpl::AddTodo()\n" );
 #endif
     icalset *stream;
-    icalcomponent *vcalendar,*fetchedcal;
+    icalcomponent *vcalendar;
 
     stream = icalfileset_new(serveraddr);
     if ( !stream ) {
@@ -1787,12 +1783,8 @@ NS_IMETHODIMP oeICalImpl::AddTodo(oeIICalTodo *icaltodo,char **retid)
     ((oeICalTodoImpl *)icaltodo)->GetId( retid );
 
     if( *retid == nsnull ) {
-        char uidstr[10];
-        do {
-            unsigned long newid;
-            newid = 900000000 + ((rand()%0x4ff) << 16) + rand()%0xFFFF;
-            sprintf( uidstr, "%lu", newid );
-        } while ( (fetchedcal = icalfileset_fetch( stream, uidstr )) != 0 );
+        char uidstr[40];
+        GenerateUUID( uidstr );
 
         ((oeICalTodoImpl *)icaltodo)->SetId( uidstr );
         ((oeICalTodoImpl *)icaltodo)->GetId( retid );
