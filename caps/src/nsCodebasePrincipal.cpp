@@ -43,7 +43,7 @@ NS_IMETHODIMP
 nsCodebasePrincipal::ToString(char **result)
 {
     nsAutoString buf;
-    buf += "[Codebase ";
+    buf += "[";
     nsXPIDLCString spec;
     if (NS_FAILED(mURI->GetSpec(getter_Copies(spec))))
         return NS_ERROR_FAILURE;

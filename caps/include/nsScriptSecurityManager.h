@@ -77,8 +77,12 @@ private:
     static void
     enumeratePolicyCallback(const char *prefName, void *data);
 
+    static int
+    JSEnabledPrefChanged(const char *pref, void *data);
+
     nsIPrincipal *mSystemPrincipal;
     nsSupportsHashtable *mPrincipals;
+    PRBool mIsJavaScriptEnabled;
     unsigned char hasPolicyVector[(NS_DOM_PROP_MAX >> 3) + 1];
     unsigned char hasDomainPolicyVector[(NS_DOM_PROP_MAX >> 3) + 1];
 };
