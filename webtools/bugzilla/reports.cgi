@@ -18,7 +18,11 @@
 # Netscape Communications Corporation. All Rights Reserved.
 #
 # Contributor(s): Harrison Page <harrison@netscape.com>,
-# Terry Weissman <terry@mozilla.org>
+# Terry Weissman <terry@mozilla.org>,
+# Bryce Nesbitt <bryce@nextbus.COM>
+#	Added -All- report, change "nobanner" to "banner" (it is strange to have a
+#	list with 2 positive and 1 negative choice), default links on, add show
+#	sql comment.
 
 use diagnostics;
 use strict;
@@ -42,29 +46,23 @@ my %reports =
 	"show_chart" => \&show_chart,
 	);
 
-# patch from Sam Ziegler <sam@ziegler.org>:
-#
-# "reports.cgi currently has it's own idea of what 
-# the header should be. This patch sets it to the 
-# system wide header." 
-
 print "Content-type: text/html\n\n";
 
-if (defined $::FORM{'nobanner'})
-	{
-print <<FIN;
-<html>
-<head><title>Bug Reports</title></head>
-<body bgcolor="#FFFFFF">
-FIN
-	}
+# If we're here for the first time, give a banner.  Else respect the banner flag.
+if ( (!defined $::FORM{'product'}) || ($::FORM{'banner'})  )
+        {
+        PutHeader ("Bug Reports")
+        }
 else
-	{
-	PutHeader ("Bug Reports") unless (defined $::FORM{'nobanner'});
-	}
+        {
+	print("<html><head><title>Bug Reports</title></head><body bgcolor=\"#FFFFFF\">");
+        }
 
 ConnectToDatabase();
 GetVersionTable();
+
+my @myproducts;
+push( @myproducts, "-All-", @::legal_product );
 
 $::FORM{'output'} = $::FORM{'output'} || "most_doomed"; # a reasonable default
 
@@ -111,7 +109,7 @@ FIN
 
 sub choose_product
 	{
-	my $product_popup = make_options (\@::legal_product, $::legal_product[0]);
+	my $product_popup = make_options (\@myproducts, $myproducts[0]);
 	my $charts = (-d $dir) ? "<option value=\"show_chart\">Bug Charts" : "";
 
 	print <<FIN;
@@ -137,9 +135,9 @@ $charts
 <tr>
 <td align=center><b>Switches:</b></td>
 <td align=left>
-<input type=checkbox name=links value=1>&nbsp;Links to Bugs<br>
-<input type=checkbox name=nobanner value=1>&nbsp;No Banner<br>
-<input type=checkbox name=quip value=1>&nbsp;Include Quip<br>
+<input type=checkbox name=links checked value=1>&nbsp;Links to Bugs<br>
+<input type=checkbox name=banner checked value=1>&nbsp;Banner<br>
+<input type=checkbox name=quip value=1>&nbsp;Quip<br>
 </td>
 </tr>
 <tr>
@@ -151,6 +149,8 @@ $charts
 </form>
 <p>
 FIN
+#Add this above to get a control for showing the SQL query:
+#<input type=checkbox name=showsql value=1>&nbsp;Show SQL<br>
 	}
 
 sub most_doomed
@@ -165,7 +165,9 @@ Bug Report for $::FORM{'product'}
 $when<p>
 FIN
 
-	my $query = <<FIN;
+# Build up $query string
+	my $query;
+	$query = <<FIN;
 select 
 	bugs.bug_id, bugs.assigned_to, bugs.bug_severity,
 	bugs.bug_status, bugs.product, 
@@ -179,7 +181,13 @@ from   bugs,
        versions projector
 where  bugs.assigned_to = assign.userid
 and    bugs.reporter = report.userid
-and    bugs.product='$::FORM{'product'}'
+FIN
+
+	if( $::FORM{'product'} ne "-All-" ) {
+		$query .= "and    bugs.product='$::FORM{'product'}'";
+	}
+
+	$query .= <<FIN;
 and 	 
 	( 
 	bugs.bug_status = 'NEW' or 
@@ -187,6 +195,7 @@ and
 	bugs.bug_status = 'REOPENED'
 	)
 FIN
+# End build up $query string
 
 	print "<font color=purple><tt>$query</tt></font><p>\n" 
 		unless (! exists $::FORM{'showsql'});
@@ -380,7 +389,7 @@ FIN
 sub is_legal_product
 	{
 	my $product = shift;
-	return grep { $_ eq $product} @::legal_product;
+	return grep { $_ eq $product} @myproducts;
 	}
 
 sub header

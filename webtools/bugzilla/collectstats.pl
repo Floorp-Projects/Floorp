@@ -31,7 +31,10 @@ require "globals.pl";
 ConnectToDatabase();
 GetVersionTable();
 
-foreach (@::legal_product) {
+my @myproducts;
+push( @myproducts, "-All-", @::legal_product );
+
+foreach (@myproducts) {
     my $dir = "data/mining";
 
     &check_data_dir ($dir);
@@ -61,7 +64,11 @@ sub collect_stats {
         push my @row, &today;
 
         foreach my $status ('NEW', 'ASSIGNED', 'REOPENED') {
-            SendSQL("select count(bug_status) from bugs where bug_status='$status' and product='$product'");
+	    if( $product eq "-All-" ) {
+                SendSQL("select count(bug_status) from bugs where bug_status='$status'");
+	    } else {
+                SendSQL("select count(bug_status) from bugs where bug_status='$status' and product='$product'");
+	    }
             push @row, FetchOneColumn();
         }
 
