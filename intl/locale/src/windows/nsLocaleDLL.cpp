@@ -25,7 +25,7 @@
 #include "nsCollationWin.h"
 #include "nsDateTimeFormatCID.h"
 #include "nsDateTimeFormatWin.h"
-#include "nsIFontPackageService.h"
+#include "nsFontPackageService.h"
 #include "nsIGenericFactory.h"
 #include "nsILocaleService.h"
 #include "nsIScriptableDateFormat.h"
@@ -58,6 +58,7 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsCollationWin)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsDateTimeFormatWin)
 //NS_GENERIC_FACTORY_CONSTRUCTOR(nsScriptableDateTimeFormat)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsLanguageAtomService)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsFontPackageService)
 
 // The list of components we register
 static nsModuleComponentInfo gComponents[] = {
@@ -95,6 +96,11 @@ static nsModuleComponentInfo gComponents[] = {
     NS_LANGUAGEATOMSERVICE_CID,
     NS_LANGUAGEATOMSERVICE_CONTRACTID,
     nsLanguageAtomServiceConstructor },
+
+  { "Font Package Service",
+    NS_FONTPACKAGESERVICE_CID,
+    NS_FONTPACKAGESERVICE_CONTRACTID,
+    nsFontPackageServiceConstructor },
 };
 
 NS_IMPL_NSGETMODULE(nsLocaleModule, gComponents)
