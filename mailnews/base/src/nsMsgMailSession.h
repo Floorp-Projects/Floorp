@@ -39,7 +39,8 @@
 // cruft in it....
 //////////////////////////////////////////////////////////////////////////////////
 
-class nsMsgMailSession : public nsIMsgMailSession
+class nsMsgMailSession : public nsIMsgMailSession,
+                         public nsIFolderListener
 {
 public:
 	nsMsgMailSession();
@@ -47,6 +48,7 @@ public:
 
 	NS_DECL_ISUPPORTS
 	NS_DECL_NSIMSGMAILSESSION
+    NS_DECL_NSIFOLDERLISTENER
 
 	nsresult Init();
 protected:

@@ -68,7 +68,6 @@
 #include "nsMsgTxn.h"
 #include "nsIFileSpec.h"
 #include "nsIMessenger.h"
-#include "nsIMsgMailSession.h"
 #include "nsMsgBaseCID.h"
 #include "nsMsgI18N.h"
 #include "nsIWebShell.h"
@@ -1956,10 +1955,7 @@ NS_IMETHODIMP nsMsgLocalMailFolder::EndMove()
 			nsCOMPtr<nsIFolder> srcFolder = do_QueryInterface(mCopyState->m_srcSupport);
 			if(srcFolder)
 			{
-				nsresult rv;
-				NS_WITH_SERVICE(nsIMsgMailSession, mailSession, kMsgMailSessionCID, &rv); 
-				if(NS_SUCCEEDED(rv))
-					mailSession->NotifyDeleteOrMoveMessagesCompleted(srcFolder);
+					srcFolder->NotifyDeleteOrMoveMessagesCompleted(srcFolder);
 			}
 
 			//passing in NS_OK because we only get in here if copy portion succeeded

@@ -37,7 +37,6 @@
 #include "nsRDFCID.h"
 #include "nsXPIDLString.h"
 #include "nsCOMPtr.h"
-#include "nsIMsgMailSession.h"
 #include "nsIMsgAccountManager.h"
 #include "nsIMsgIdentity.h"
 #include "nsMsgBaseCID.h"
@@ -49,7 +48,7 @@
 
 static NS_DEFINE_CID(kStandardUrlCID, NS_STANDARDURL_CID);
 static NS_DEFINE_CID(kRDFServiceCID, NS_RDFSERVICE_CID);
-static NS_DEFINE_CID(kMsgMailSessionCID, NS_MSGMAILSESSION_CID);
+static NS_DEFINE_CID(kMsgFolderListenerManagerCID, NS_MSGMAILSESSION_CID);
 static NS_DEFINE_CID(kIOServiceCID,              NS_IOSERVICE_CID);
 
 PRInt32 nsMsgFolder::gInstanceCount	= 0;
@@ -74,8 +73,8 @@ nsMsgFolder::nsMsgFolder(void)
     mHaveParsedURI(PR_FALSE),
     mIsServerIsValid(PR_FALSE),
     mIsServer(PR_FALSE),
-    mBaseMessageURI(nsnull),
-    mDeleteIsMoveToTrash(PR_TRUE)
+    mDeleteIsMoveToTrash(PR_TRUE),
+    mBaseMessageURI(nsnull)
 	{
 //  NS_INIT_REFCNT(); done by superclass
 
@@ -368,7 +367,7 @@ NS_IMETHODIMP nsMsgFolder::SetParent(nsIFolder *aParent)
         // also set the server itself while we're here.
         
         nsCOMPtr<nsIMsgIncomingServer> server;
-        nsresult rv = parentMsgFolder->GetServer(getter_AddRefs(server));
+        rv = parentMsgFolder->GetServer(getter_AddRefs(server));
         if (NS_SUCCEEDED(rv) && server)
           mServer = getter_AddRefs(NS_GetWeakReference(server));
       }
@@ -2076,9 +2075,9 @@ nsMsgFolder::NotifyPropertyChanged(nsIAtom *property,
 
 		//Notify listeners who listen to every folder
 		nsresult rv;
-		NS_WITH_SERVICE(nsIMsgMailSession, mailSession, kMsgMailSessionCID, &rv); 
+		NS_WITH_SERVICE(nsIFolderListener, folderListenerManager, kMsgFolderListenerManagerCID, &rv); 
 		if(NS_SUCCEEDED(rv))
-			mailSession->NotifyFolderItemPropertyChanged(supports, property, oldValue, newValue);
+			folderListenerManager->OnItemPropertyChanged(supports, property, oldValue, newValue);
 
 	}
 
@@ -2105,12 +2104,12 @@ nsMsgFolder::NotifyUnicharPropertyChanged(nsIAtom *property,
   }
 
   // Notify listeners who listen to every folder
-  NS_WITH_SERVICE(nsIMsgMailSession, mailSession, kMsgMailSessionCID, &rv);
+  NS_WITH_SERVICE(nsIFolderListener, folderListenerManager, kMsgFolderListenerManagerCID, &rv);
   if (NS_SUCCEEDED(rv))
-    rv = mailSession->NotifyFolderItemUnicharPropertyChanged(supports,
-                                                             property,
-                                                             oldValue,
-                                                             newValue);
+    rv = folderListenerManager->OnItemUnicharPropertyChanged(supports,
+                                                   property,
+                                                   oldValue,
+                                                   newValue);
   return NS_OK;
 }
 
@@ -2129,9 +2128,9 @@ nsresult nsMsgFolder::NotifyIntPropertyChanged(nsIAtom *property, PRInt32 oldVal
 
 		//Notify listeners who listen to every folder
 		nsresult rv;
-		NS_WITH_SERVICE(nsIMsgMailSession, mailSession, kMsgMailSessionCID, &rv); 
+		NS_WITH_SERVICE(nsIFolderListener, folderListenerManager, kMsgFolderListenerManagerCID, &rv); 
 		if(NS_SUCCEEDED(rv))
-			mailSession->NotifyFolderItemIntPropertyChanged(supports, property, oldValue, newValue);
+			folderListenerManager->OnItemIntPropertyChanged(supports, property, oldValue, newValue);
 
 	}
 
@@ -2156,9 +2155,9 @@ nsMsgFolder::NotifyBoolPropertyChanged(nsIAtom* property,
 
 		//Notify listeners who listen to every folder
 		nsresult rv;
-		NS_WITH_SERVICE(nsIMsgMailSession, mailSession, kMsgMailSessionCID, &rv); 
+		NS_WITH_SERVICE(nsIFolderListener, folderListenerManager, kMsgFolderListenerManagerCID, &rv); 
 		if(NS_SUCCEEDED(rv))
-			mailSession->NotifyFolderItemBoolPropertyChanged(supports, property, oldValue, newValue);
+			folderListenerManager->OnItemBoolPropertyChanged(supports, property, oldValue, newValue);
 
 	}
 
@@ -2180,9 +2179,9 @@ nsMsgFolder::NotifyPropertyFlagChanged(nsISupports *item, nsIAtom *property,
 
 	//Notify listeners who listen to every folder
 	nsresult rv;
-	NS_WITH_SERVICE(nsIMsgMailSession, mailSession, kMsgMailSessionCID, &rv); 
+	NS_WITH_SERVICE(nsIFolderListener, folderListenerManager, kMsgFolderListenerManagerCID, &rv); 
 	if(NS_SUCCEEDED(rv))
-		mailSession->NotifyFolderItemPropertyFlagChanged(item, property, oldValue, newValue);
+		folderListenerManager->OnItemPropertyFlagChanged(item, property, oldValue, newValue);
 
 	return NS_OK;
 }
@@ -2204,9 +2203,9 @@ nsresult nsMsgFolder::NotifyItemAdded(nsISupports *parentItem, nsISupports *item
 
 	//Notify listeners who listen to every folder
 	nsresult rv;
-	NS_WITH_SERVICE(nsIMsgMailSession, mailSession, kMsgMailSessionCID, &rv); 
+	NS_WITH_SERVICE(nsIFolderListener, folderListenerManager, kMsgFolderListenerManagerCID, &rv); 
 	if(NS_SUCCEEDED(rv))
-		mailSession->NotifyFolderItemAdded(parentItem, item, viewString);
+		folderListenerManager->OnItemAdded(parentItem, item, viewString);
 
 	return NS_OK;
 
@@ -2224,9 +2223,9 @@ nsresult nsMsgFolder::NotifyItemDeleted(nsISupports *parentItem, nsISupports *it
 	}
 	//Notify listeners who listen to every folder
 	nsresult rv;
-  NS_WITH_SERVICE(nsIMsgMailSession, mailSession, kMsgMailSessionCID, &rv); 
+  NS_WITH_SERVICE(nsIFolderListener, folderListenerManager, kMsgFolderListenerManagerCID, &rv); 
 	if(NS_SUCCEEDED(rv))
-		mailSession->NotifyFolderItemDeleted(parentItem, item, viewString);
+		folderListenerManager->OnItemRemoved(parentItem, item, viewString);
 
 	return NS_OK;
 
@@ -2243,9 +2242,9 @@ nsresult nsMsgFolder::NotifyFolderLoaded()
 	}
 	//Notify listeners who listen to every folder
 	nsresult rv;
-	NS_WITH_SERVICE(nsIMsgMailSession, mailSession, kMsgMailSessionCID, &rv); 
+	NS_WITH_SERVICE(nsIFolderListener, folderListenerManager, kMsgFolderListenerManagerCID, &rv); 
 	if(NS_SUCCEEDED(rv))
-		mailSession->NotifyFolderLoaded(this);
+		folderListenerManager->OnFolderLoaded(this);
 
 	return NS_OK;
 }
@@ -2261,9 +2260,9 @@ nsresult nsMsgFolder::NotifyDeleteOrMoveMessagesCompleted(nsIFolder *folder)
 	}
 	//Notify listeners who listen to every folder
 	nsresult rv;
-	NS_WITH_SERVICE(nsIMsgMailSession, mailSession, kMsgMailSessionCID, &rv); 
+	NS_WITH_SERVICE(nsIFolderListener, folderListenerManager, kMsgFolderListenerManagerCID, &rv); 
 	if(NS_SUCCEEDED(rv))
-		mailSession->NotifyDeleteOrMoveMessagesCompleted(folder);
+		folderListenerManager->OnDeleteOrMoveMessagesCompleted(folder);
 
 	return NS_OK;
 }
@@ -2279,9 +2278,9 @@ nsresult nsMsgFolder::NotifyFolderEvent(nsIAtom* aEvent)
 	}
 	//Notify listeners who listen to every folder
 	nsresult rv;
-	NS_WITH_SERVICE(nsIMsgMailSession, mailSession, kMsgMailSessionCID, &rv); 
+	NS_WITH_SERVICE(nsIFolderListener, folderListenerManager, kMsgFolderListenerManagerCID, &rv); 
 	if(NS_SUCCEEDED(rv))
-		mailSession->NotifyFolderEvent(this, aEvent);
+		folderListenerManager->OnItemEvent(this, aEvent);
 
 	return NS_OK;
 }

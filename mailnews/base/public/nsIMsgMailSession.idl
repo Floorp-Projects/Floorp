@@ -46,35 +46,7 @@ interface nsIMsgMailSession : nsISupports {
   void Shutdown();
   void AddFolderListener(in nsIFolderListener listener);
   void RemoveFolderListener(in nsIFolderListener listener);
-  void NotifyFolderItemPropertyChanged(in nsISupports item,
-                                       in nsIAtom property,
-                                       in string oldValue,
-                                       in string newValue);
-  void NotifyFolderItemIntPropertyChanged(in nsISupports item,
-                                       in nsIAtom property,
-                                       in long oldValue,
-                                       in long newValue);
-  void NotifyFolderItemBoolPropertyChanged(in nsISupports item,
-                                       in nsIAtom property,
-                                       in boolean oldValue,
-                                       in boolean newValue);
-  void NotifyFolderItemPropertyFlagChanged(in nsISupports item,
-                                           in nsIAtom property,
-                                           in unsigned long oldValue,
-                                           in unsigned long newValue);
-    void NotifyFolderItemUnicharPropertyChanged(in nsISupports item,
-                                                in nsIAtom property,
-                                                in wstring oldValue,
-                                                in wstring newValue);
-
-  void NotifyFolderItemAdded(in nsISupports parentItem, in nsISupports item, in string viewString);
-  void NotifyFolderItemDeleted(in nsISupports parentItem, in nsISupports item, in string viewString);
-
-  void NotifyFolderEvent(in nsIFolder folder, in nsIAtom event);
   
-  void NotifyFolderLoaded(in nsIFolder folder);
-  void NotifyDeleteOrMoveMessagesCompleted(in nsIFolder folder);
-
   readonly attribute nsIMsgWindow topmostMsgWindow;
   void AddMsgWindow(in nsIMsgWindow msgWindow);
   void RemoveMsgWindow(in nsIMsgWindow msgWindow);

@@ -34,8 +34,14 @@
 #include "nsIURI.h"
 #include "nsXPIDLString.h"
 
-NS_IMPL_THREADSAFE_ISUPPORTS1(nsMsgMailSession, nsIMsgMailSession);
-
+NS_IMPL_THREADSAFE_ADDREF(nsMsgMailSession)
+NS_IMPL_THREADSAFE_RELEASE(nsMsgMailSession)
+NS_INTERFACE_MAP_BEGIN(nsMsgMailSession)
+  NS_INTERFACE_MAP_ENTRY(nsIMsgMailSession)
+  NS_INTERFACE_MAP_ENTRY(nsIFolderListener)
+  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIMsgMailSession)
+NS_INTERFACE_MAP_END_THREADSAFE
+  
 static NS_DEFINE_IID(kIFileLocatorIID,      NS_IFILELOCATOR_IID);
 static NS_DEFINE_CID(kFileLocatorCID,       NS_FILELOCATOR_CID);
  
@@ -85,10 +91,10 @@ NS_IMETHODIMP nsMsgMailSession::RemoveFolderListener(nsIFolderListener * listene
 }
 
 NS_IMETHODIMP
-nsMsgMailSession::NotifyFolderItemPropertyChanged(nsISupports *item,
-                                                  nsIAtom *property,
-                                                  const char* oldValue,
-                                                  const char* newValue)
+nsMsgMailSession::OnItemPropertyChanged(nsISupports *item,
+                                        nsIAtom *property,
+                                        const char* oldValue,
+                                        const char* newValue)
 {
 	nsresult rv;
 	PRUint32 count;
@@ -107,10 +113,10 @@ nsMsgMailSession::NotifyFolderItemPropertyChanged(nsISupports *item,
 }
 
 NS_IMETHODIMP
-nsMsgMailSession::NotifyFolderItemUnicharPropertyChanged(nsISupports *item,
-                                                         nsIAtom *property,
-                                                         const PRUnichar* oldValue,
-                                                         const PRUnichar* newValue)
+nsMsgMailSession::OnItemUnicharPropertyChanged(nsISupports *item,
+                                               nsIAtom *property,
+                                               const PRUnichar* oldValue,
+                                               const PRUnichar* newValue)
 {
 	nsresult rv;
 	PRUint32 count;
@@ -129,7 +135,7 @@ nsMsgMailSession::NotifyFolderItemUnicharPropertyChanged(nsISupports *item,
 }
 
 NS_IMETHODIMP
-nsMsgMailSession::NotifyFolderItemIntPropertyChanged(nsISupports *item,
+nsMsgMailSession::OnItemIntPropertyChanged(nsISupports *item,
                                                      nsIAtom *property,
                                                      PRInt32 oldValue,
                                                      PRInt32 newValue)
@@ -151,10 +157,10 @@ nsMsgMailSession::NotifyFolderItemIntPropertyChanged(nsISupports *item,
 }
 
 NS_IMETHODIMP
-nsMsgMailSession::NotifyFolderItemBoolPropertyChanged(nsISupports *item,
-                                                      nsIAtom *property,
-                                                      PRBool oldValue,
-                                                      PRBool newValue)
+nsMsgMailSession::OnItemBoolPropertyChanged(nsISupports *item,
+                                            nsIAtom *property,
+                                            PRBool oldValue,
+                                            PRBool newValue)
 {
 	nsresult rv;
 	PRUint32 count;
@@ -172,10 +178,10 @@ nsMsgMailSession::NotifyFolderItemBoolPropertyChanged(nsISupports *item,
 
 }
 NS_IMETHODIMP
-nsMsgMailSession::NotifyFolderItemPropertyFlagChanged(nsISupports *item,
-                                                      nsIAtom *property,
-                                                      PRUint32 oldValue,
-                                                      PRUint32 newValue)
+nsMsgMailSession::OnItemPropertyFlagChanged(nsISupports *item,
+                                            nsIAtom *property,
+                                            PRUint32 oldValue,
+                                            PRUint32 newValue)
 {
 	nsresult rv;
 	PRUint32 count;
@@ -193,7 +199,7 @@ nsMsgMailSession::NotifyFolderItemPropertyFlagChanged(nsISupports *item,
 
 }
 
-NS_IMETHODIMP nsMsgMailSession::NotifyFolderItemAdded(nsISupports *parentItem, nsISupports *item, const char* viewString)
+NS_IMETHODIMP nsMsgMailSession::OnItemAdded(nsISupports *parentItem, nsISupports *item, const char* viewString)
 {
 	nsresult rv;
 	PRUint32 count;
@@ -211,7 +217,7 @@ NS_IMETHODIMP nsMsgMailSession::NotifyFolderItemAdded(nsISupports *parentItem, n
 
 }
 
-NS_IMETHODIMP nsMsgMailSession::NotifyFolderItemDeleted(nsISupports *parentItem, nsISupports *item, const char* viewString)
+NS_IMETHODIMP nsMsgMailSession::OnItemRemoved(nsISupports *parentItem, nsISupports *item, const char* viewString)
 {
 	nsresult rv;
 	PRUint32 count;
@@ -228,7 +234,7 @@ NS_IMETHODIMP nsMsgMailSession::NotifyFolderItemDeleted(nsISupports *parentItem,
 
 }
 
-NS_IMETHODIMP  nsMsgMailSession::NotifyFolderLoaded(nsIFolder *folder)
+NS_IMETHODIMP  nsMsgMailSession::OnFolderLoaded(nsIFolder *folder)
 {
 
 	nsresult rv;
@@ -247,7 +253,7 @@ NS_IMETHODIMP  nsMsgMailSession::NotifyFolderLoaded(nsIFolder *folder)
 
 }
 
-NS_IMETHODIMP  nsMsgMailSession::NotifyDeleteOrMoveMessagesCompleted(nsIFolder *folder)
+NS_IMETHODIMP  nsMsgMailSession::OnDeleteOrMoveMessagesCompleted(nsIFolder *folder)
 {
 
 	nsresult rv;
@@ -264,7 +270,7 @@ NS_IMETHODIMP  nsMsgMailSession::NotifyDeleteOrMoveMessagesCompleted(nsIFolder *
 	return NS_OK;
 }
 
-NS_IMETHODIMP nsMsgMailSession::NotifyFolderEvent(nsIFolder *aFolder,
+NS_IMETHODIMP nsMsgMailSession::OnItemEvent(nsIFolder *aFolder,
                                                   nsIAtom *aEvent)
 {
 	nsresult rv;
