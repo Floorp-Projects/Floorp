@@ -42,7 +42,7 @@
       // Return true if "imageBlocker.enabled" pref is set and image is not already blocked.
       isBlockingImages : function () {
         /* determine if "imageBlocker.enabled" pref is set */
-        var pref = contextMenu.getService('@mozilla.org/preferences;1', 'nsIPref');
+        var pref = gContextMenu.getService('@mozilla.org/preferences;1', 'nsIPref');
         var result = false;
         try {
           result = pref.GetBoolPref( "imageblocker.enabled" );
@@ -71,7 +71,7 @@
             if(host.charAt(0) == ".") {  // get rid of the ugly dot on the start of some domains
               host = host.substring(1,host.length);
             }
-            if (host && contextMenu.imageURL.search(host) != -1) {
+            if (host && gContextMenu.imageURL.search(host) != -1) {
               /* it's our image's host that's being blocked */
               return false;
             }
@@ -86,16 +86,16 @@
         var imgmanager =
           Components.classes["@mozilla.org/imgmanager;1"]
             .getService().QueryInterface(Components.interfaces.nsIImgManager);
-        imgmanager.block(contextMenu.imageURL);
+        imgmanager.block(gContextMenu.imageURL);
       },
 
       initImageBlocking : function () {
         try {
         // Block image depends on whether an image was clicked on, and,
         // whether the user pref is enabled.
-        contextMenu.showItem
+        gContextMenu.showItem
           ("context-blockimage",
-           contextMenu.onImage && cookieContextMenu.isBlockingImages());
+           gContextMenu.onImage && cookieContextMenu.isBlockingImages());
         } catch (e) {}
       },
 
