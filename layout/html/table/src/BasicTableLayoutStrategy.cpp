@@ -490,6 +490,10 @@ void BasicTableLayoutStrategy::AllocateUnconstrained(PRInt32  aAllocAmount,
       numColsAllocated++;
     }
   }
+  if (!numColsAllocated) {
+    // redistribute the space to all columns and prevent a division by zero
+    numColsAllocated = numCols;
+  }
   for (colX = 0; colX < numCols; colX++) { 
     if (FINISHED != aAllocTypes[colX]) {
       if (aExclude0Pro) {
