@@ -111,7 +111,7 @@ static const char *kMailListListFormat = "List%d";
 
 nsAddrDatabase::nsAddrDatabase()
     : m_mdbEnv(nsnull), m_mdbStore(nsnull),
-      m_mdbPabTable(nsnull), m_mdbRow(nsnull),
+      m_mdbPabTable(nsnull), 
 	  m_dbName(""), m_mdbTokensInitialized(PR_FALSE), 
 	  m_ChangeListeners(nsnull), m_mdbAnonymousTable(nsnull), 
 	  m_AnonymousTableKind(0), m_pAnonymousStrAttributes(nsnull), 
@@ -210,19 +210,29 @@ NS_IMPL_THREADSAFE_ADDREF(nsAddrDatabase)
 
 NS_IMETHODIMP_(nsrefcnt) nsAddrDatabase::Release(void)                    
 {                                                      
-	NS_PRECONDITION(0 != mRefCnt, "dup release");    	
-	nsrefcnt count = PR_AtomicDecrement((PRInt32 *)&mRefCnt);
-	NS_LOG_RELEASE(this, count,"nsAddrDatabase"); 
-	if (count == 0)	// OK, the cache is no longer holding onto this, so we really want to delete it, 
-	{				// after removing it from the cache.
-		mRefCnt = 1; /* stabilize */
-		RemoveFromCache(this);
-		if (m_mdbStore)
-			m_mdbStore->CloseMdbObject(m_mdbEnv);
-		NS_DELETEXPCOM(this);                              
-		return 0;                                          
-	}
-	return count;                                      
+  NS_PRECONDITION(0 != mRefCnt, "dup release");    	
+  nsrefcnt count = PR_AtomicDecrement((PRInt32 *)&mRefCnt);
+  NS_LOG_RELEASE(this, count,"nsAddrDatabase"); 
+  if (count == 0)	// OK, the cache is no longer holding onto this, so we really want to delete it, 
+  {				// after removing it from the cache.
+    mRefCnt = 1; /* stabilize */
+    RemoveFromCache(this);
+    // clean up after ourself!
+    if (m_mdbPabTable)
+      m_mdbPabTable->Release();
+    if (m_mdbAnonymousTable)
+      m_mdbAnonymousTable->Release();
+    if (m_mdbStore)
+      m_mdbStore->CloseMdbObject(m_mdbEnv);
+    if (m_mdbEnv)
+    {
+      m_mdbEnv->CloseMdbObject(m_mdbEnv); //??? is this right?
+      m_mdbEnv = nsnull;
+    }
+    NS_DELETEXPCOM(this);                              
+    return 0;                                          
+  }
+  return count;                                      
 }
 
 NS_IMETHODIMP nsAddrDatabase::QueryInterface(REFNSIID aIID, void** aResult)
@@ -601,121 +611,121 @@ NS_IMETHODIMP nsAddrDatabase::Open
 // so other database calls can work.
 NS_IMETHODIMP nsAddrDatabase::OpenMDB(nsFileSpec *dbName, PRBool create)
 {
-	nsresult ret = NS_OK;
-	nsIMdbFactory *myMDBFactory = GetMDBFactory();
-	if (myMDBFactory)
-	{
-		ret = myMDBFactory->MakeEnv(NULL, &m_mdbEnv);
-		if (NS_SUCCEEDED(ret))
-		{
-			nsIMdbThumb *thumb = nsnull;
-			const char *pFilename = dbName->GetCString(); /* do not free */
-			char	*nativeFileName = nsCRT::strdup(pFilename);
-			nsIMdbHeap* dbHeap = 0;
-			mdb_bool dbFrozen = mdbBool_kFalse; // not readonly, we want modifiable
-
-			if (!nativeFileName)
-				return NS_ERROR_OUT_OF_MEMORY;
-
-			if (m_mdbEnv)
-				m_mdbEnv->SetAutoClear(PR_TRUE);
-
+  nsresult ret = NS_OK;
+  nsIMdbFactory *myMDBFactory = GetMDBFactory();
+  if (myMDBFactory)
+  {
+    ret = myMDBFactory->MakeEnv(NULL, &m_mdbEnv);
+    if (NS_SUCCEEDED(ret))
+    {
+      nsIMdbThumb *thumb = nsnull;
+      const char *pFilename = dbName->GetCString(); /* do not free */
+      char	*nativeFileName = nsCRT::strdup(pFilename);
+      nsIMdbHeap* dbHeap = 0;
+      mdb_bool dbFrozen = mdbBool_kFalse; // not readonly, we want modifiable
+      
+      if (!nativeFileName)
+        return NS_ERROR_OUT_OF_MEMORY;
+      
+      if (m_mdbEnv)
+        m_mdbEnv->SetAutoClear(PR_TRUE);
+      
 #if defined(XP_PC) || defined(XP_MAC)
-			UnixToNative(nativeFileName);
+      UnixToNative(nativeFileName);
 #endif
-			if (!dbName->Exists()) 
-				ret = NS_ERROR_FAILURE;  // check: use the right error code later
-			else
-			{
-				mdbOpenPolicy inOpenPolicy;
-				mdb_bool	canOpen;
-				mdbYarn		outFormatVersion;
-				nsIMdbFile* oldFile = 0;
-
-				ret = myMDBFactory->OpenOldFile(m_mdbEnv, dbHeap, nativeFileName,
-					 dbFrozen, &oldFile);
-				if ( oldFile )
-				{
-					if ( ret == NS_OK )
-					{
-						ret = myMDBFactory->CanOpenFilePort(m_mdbEnv, oldFile, // the file to investigate
-							&canOpen, &outFormatVersion);
-						if (ret == 0 && canOpen)
-						{
-							inOpenPolicy.mOpenPolicy_ScopePlan.mScopeStringSet_Count = 0;
-							inOpenPolicy.mOpenPolicy_MinMemory = 0;
-							inOpenPolicy.mOpenPolicy_MaxLazy = 0;
-
-							ret = myMDBFactory->OpenFileStore(m_mdbEnv, dbHeap,
-								oldFile, &inOpenPolicy, &thumb); 
-						}
-						else
-							ret = NS_ERROR_FAILURE;  //check: use the right error code
-					}
-					oldFile->CutStrongRef(m_mdbEnv); // always release our file ref, store has own
-				}
-			}
-
-			nsCRT::free(nativeFileName);
-
-			if (NS_SUCCEEDED(ret) && thumb)
-			{
-				mdb_count outTotal;    // total somethings to do in operation
-				mdb_count outCurrent;  // subportion of total completed so far
-				mdb_bool outDone = PR_FALSE;      // is operation finished?
-				mdb_bool outBroken;     // is operation irreparably dead and broken?
-				do
-				{
-					ret = thumb->DoMore(m_mdbEnv, &outTotal, &outCurrent, &outDone, &outBroken);
-					if (ret != 0)
-					{ 
-						outDone = PR_TRUE;
-						break;
-					}
-				}
-				while (NS_SUCCEEDED(ret) && !outBroken && !outDone);
-				if (NS_SUCCEEDED(ret) && outDone)
-				{
-					ret = myMDBFactory->ThumbToOpenStore(m_mdbEnv, thumb, &m_mdbStore);
-					if (ret == NS_OK && m_mdbStore)
-					{
-						ret = InitExistingDB();
-						create = PR_FALSE;
-					}
-				}
-			}
-			else if (create)	// ### need error code saying why open file store failed
-			{
-				nsIMdbFile* newFile = 0;
-				ret = myMDBFactory->CreateNewFile(m_mdbEnv, dbHeap, dbName->GetCString(), &newFile);
-				if ( newFile )
-				{
-					if (ret == NS_OK)
-					{
-						mdbOpenPolicy inOpenPolicy;
-
-						inOpenPolicy.mOpenPolicy_ScopePlan.mScopeStringSet_Count = 0;
-						inOpenPolicy.mOpenPolicy_MinMemory = 0;
-						inOpenPolicy.mOpenPolicy_MaxLazy = 0;
-
-						ret = myMDBFactory->CreateNewFileStore(m_mdbEnv, dbHeap,
-							newFile, &inOpenPolicy, &m_mdbStore);
-						if (ret == NS_OK)
-							ret = InitNewDB();
-					}
-					newFile->CutStrongRef(m_mdbEnv); // always release our file ref, store has own
-				}
-			}
-			if(thumb)
-			{
-				thumb->CutStrongRef(m_mdbEnv);
-			}
-		}
-	}
-	//Convert the DB error to a valid nsresult error.
-	if (ret == 1)
-	  ret = NS_ERROR_FAILURE;
-	return ret;
+      if (!dbName->Exists()) 
+        ret = NS_ERROR_FAILURE;  // check: use the right error code later
+      else
+      {
+        mdbOpenPolicy inOpenPolicy;
+        mdb_bool	canOpen;
+        mdbYarn		outFormatVersion;
+        nsIMdbFile* oldFile = 0;
+        
+        ret = myMDBFactory->OpenOldFile(m_mdbEnv, dbHeap, nativeFileName,
+          dbFrozen, &oldFile);
+        if ( oldFile )
+        {
+          if ( ret == NS_OK )
+          {
+            ret = myMDBFactory->CanOpenFilePort(m_mdbEnv, oldFile, // the file to investigate
+              &canOpen, &outFormatVersion);
+            if (ret == 0 && canOpen)
+            {
+              inOpenPolicy.mOpenPolicy_ScopePlan.mScopeStringSet_Count = 0;
+              inOpenPolicy.mOpenPolicy_MinMemory = 0;
+              inOpenPolicy.mOpenPolicy_MaxLazy = 0;
+              
+              ret = myMDBFactory->OpenFileStore(m_mdbEnv, dbHeap,
+                oldFile, &inOpenPolicy, &thumb); 
+            }
+            else
+              ret = NS_ERROR_FAILURE;  //check: use the right error code
+          }
+          oldFile->CutStrongRef(m_mdbEnv); // always release our file ref, store has own
+        }
+      }
+      
+      nsCRT::free(nativeFileName);
+      
+      if (NS_SUCCEEDED(ret) && thumb)
+      {
+        mdb_count outTotal;    // total somethings to do in operation
+        mdb_count outCurrent;  // subportion of total completed so far
+        mdb_bool outDone = PR_FALSE;      // is operation finished?
+        mdb_bool outBroken;     // is operation irreparably dead and broken?
+        do
+        {
+          ret = thumb->DoMore(m_mdbEnv, &outTotal, &outCurrent, &outDone, &outBroken);
+          if (ret != 0)
+          { 
+            outDone = PR_TRUE;
+            break;
+          }
+        }
+        while (NS_SUCCEEDED(ret) && !outBroken && !outDone);
+        if (NS_SUCCEEDED(ret) && outDone)
+        {
+          ret = myMDBFactory->ThumbToOpenStore(m_mdbEnv, thumb, &m_mdbStore);
+          if (ret == NS_OK && m_mdbStore)
+          {
+            ret = InitExistingDB();
+            create = PR_FALSE;
+          }
+        }
+      }
+      else if (create)	// ### need error code saying why open file store failed
+      {
+        nsIMdbFile* newFile = 0;
+        ret = myMDBFactory->CreateNewFile(m_mdbEnv, dbHeap, dbName->GetCString(), &newFile);
+        if ( newFile )
+        {
+          if (ret == NS_OK)
+          {
+            mdbOpenPolicy inOpenPolicy;
+            
+            inOpenPolicy.mOpenPolicy_ScopePlan.mScopeStringSet_Count = 0;
+            inOpenPolicy.mOpenPolicy_MinMemory = 0;
+            inOpenPolicy.mOpenPolicy_MaxLazy = 0;
+            
+            ret = myMDBFactory->CreateNewFileStore(m_mdbEnv, dbHeap,
+              newFile, &inOpenPolicy, &m_mdbStore);
+            if (ret == NS_OK)
+              ret = InitNewDB();
+          }
+          newFile->CutStrongRef(m_mdbEnv); // always release our file ref, store has own
+        }
+      }
+      if(thumb)
+      {
+        thumb->CutStrongRef(m_mdbEnv);
+      }
+    }
+  }
+  //Convert the DB error to a valid nsresult error.
+  if (ret == 1)
+    ret = NS_ERROR_FAILURE;
+  return ret;
 }
 
 NS_IMETHODIMP nsAddrDatabase::CloseMDB(PRBool commit)
@@ -1742,6 +1752,7 @@ nsresult nsAddrDatabase::AddListCardColumnsToRow
 						nsCRT::free(file);
 					}
 				}
+                                pCardRow->CutStrongRef(GetEnv());
 			}
 
 			if (!pCardRow)
@@ -3923,6 +3934,7 @@ NS_IMETHODIMP nsAddrDatabase::GetCardForEmailAddress(nsIAbDirectory *directory, 
 	if (NS_SUCCEEDED(result) && cardRow)
 	{
 		rv = CreateABCard(cardRow, cardResult);
+                cardRow->CutStrongRef(GetEnv());
 	}
 	else
 		*cardResult = nsnull;

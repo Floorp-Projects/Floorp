@@ -369,7 +369,6 @@ protected:
 	nsIMdbEnv		    *m_mdbEnv;	// to be used in all the db calls.
 	nsIMdbStore	 	    *m_mdbStore;
 	nsIMdbTable		    *m_mdbPabTable;
-	nsIMdbRow			*m_mdbRow;	// singleton row in table;
 	nsFileSpec		    m_dbName;
 	PRBool				m_mdbTokensInitialized;
     nsVoidArray /*<nsIAddrDBListener>*/ *m_ChangeListeners;
