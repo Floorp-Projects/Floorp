@@ -83,6 +83,7 @@ XPIDLSRCS	= \
 		nsIClipboard.idl \
 		nsIClipboardOwner.idl \
 		nsIRollupListener.idl \
+		nsIMenuRollup.idl \
 		nsIBaseWindow.idl \
 		$(NULL)
 

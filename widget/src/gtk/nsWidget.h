@@ -328,6 +328,10 @@ protected:
 
   static void  SuppressModality(PRBool aSuppress);
 
+  // Deal with rollup for popups
+  PRBool HandlePopup ( PRInt32 inMouseX, PRInt32 inMouseY ) ;
+  PRBool IsMouseInWindow ( GdkWindow* inWindow, PRInt32 inMouseX, PRInt32 inMouseY ) ;
+
 #ifdef USE_XIM
 protected:
   PRBool            mIMEEnable;

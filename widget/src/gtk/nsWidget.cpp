@@ -34,6 +34,7 @@
 #include "nsGfxCIID.h"
 #include <gdk/gdkx.h>
 #include "nsIRollupListener.h"
+#include "nsIMenuRollup.h"
 #include "nsIServiceManager.h"
 #include "nsIDragSessionGTK.h"
 #include "nsIDragService.h"
@@ -1979,6 +1980,88 @@ nsWidget::OnLeaveNotifySignal(GdkEventCrossing * aGdkCrossingEvent)
 
   Release();
 }
+
+
+//
+// IsMouseInWindow
+//
+// Check if the mouse x/y is within the given window
+//
+PRBool
+nsWidget :: IsMouseInWindow ( GdkWindow* inWindow, PRInt32 inMouseX, PRInt32 inMouseY )
+{
+  gint x, y;
+  gint w, h;
+
+  // XXX this causes a round trip to the ever lovely X server.  fix me.
+  gdk_window_get_origin(inWindow, &x, &y);
+
+  // this doesn't... it just pokes GdkWindowPrivate :-)
+  gdk_window_get_size(inWindow, &w, &h);
+
+  if ( inMouseX > x && inMouseX < x + w &&
+       inMouseY > y && inMouseY < y + h )
+    return PR_TRUE;
+
+  return PR_FALSE;
+
+} // IsMouseInWindow
+
+
+//
+// HandlePopup
+//
+// Deal with rollup of popups (xpmenus, etc)
+// 
+PRBool
+nsWidget :: HandlePopup ( PRInt32 inMouseX, PRInt32 inMouseY )
+{
+  PRBool retVal = PR_FALSE;
+  nsCOMPtr<nsIWidget> rollupWidget = do_QueryReferent(gRollupWidget);
+  if (rollupWidget && gRollupListener)
+  {
+    GdkWindow *currentPopup = (GdkWindow *)rollupWidget->GetNativeData(NS_NATIVE_WINDOW);
+    if ( !IsMouseInWindow(currentPopup, inMouseX, inMouseY) ) {
+      PRBool rollup = PR_TRUE;
+      // if we're dealing with menus, we probably have submenus and we don't
+      // want to rollup if the clickis in a parent menu of the current submenu
+      nsCOMPtr<nsIMenuRollup> menuRollup ( do_QueryInterface(gRollupListener) );
+      if ( menuRollup ) {
+        nsCOMPtr<nsISupportsArray> widgetChain;
+        menuRollup->GetSubmenuWidgetChain ( getter_AddRefs(widgetChain) );
+        if ( widgetChain ) {
+          PRUint32 count = 0;
+          widgetChain->Count ( &count );
+          for ( PRUint32 i = 0; i < count; ++i ) {
+            nsCOMPtr<nsISupports> genericWidget;
+            widgetChain->GetElementAt ( i, getter_AddRefs(genericWidget) );
+            nsCOMPtr<nsIWidget> widget ( do_QueryInterface(genericWidget) );
+            if ( widget ) {
+              GdkWindow* currWindow = (GdkWindow*) widget->GetNativeData(NS_NATIVE_WINDOW);
+              if ( IsMouseInWindow(currWindow, inMouseX, inMouseY) ) {
+                rollup = PR_FALSE;
+                break;
+              }
+            }
+          } // foreach parent menu widget
+        }
+      } // if rollup listener knows about menus
+
+      // if we've determined that we should still rollup, do it.
+      if ( rollup ) {
+        gRollupListener->Rollup();
+        retVal = PR_TRUE;
+      }
+    }
+  } else {
+    gRollupWidget = nsnull;
+    gRollupListener = nsnull;
+  }
+
+  return retVal;
+} // HandlePopup
+
+
 //////////////////////////////////////////////////////////////////////
 /* virtual */ void
 nsWidget::OnButtonPressSignal(GdkEventButton * aGdkButtonEvent)
@@ -1987,35 +2070,9 @@ nsWidget::OnButtonPressSignal(GdkEventButton * aGdkButtonEvent)
   nsMouseScrollEvent scrollEvent;
   PRUint32 eventType = 0;
 
-  nsCOMPtr<nsIWidget> rollupWidget = do_QueryReferent(gRollupWidget);
-
-  if (rollupWidget && gRollupListener)
-  {
-    GdkWindow *rollupWindow = (GdkWindow *)rollupWidget->GetNativeData(NS_NATIVE_WINDOW);
-
-    gint x, y;
-    gint w, h;
-
-    // XXX this causes a round trip to the ever lovely X server.  fix me.
-    gdk_window_get_origin(rollupWindow, &x, &y);
-
-    // this doesn't... it just pokes GdkWindowPrivate :-)
-    gdk_window_get_size(rollupWindow, &w, &h);
-
-
-    if (!(aGdkButtonEvent->x_root > x &&
-          aGdkButtonEvent->x_root < x + w &&
-          aGdkButtonEvent->y_root > y &&
-          aGdkButtonEvent->y_root < y + h))
-    {
-      gRollupListener->Rollup();
-      return;
-    }
-  } else {
-    gRollupWidget = nsnull;
-    gRollupListener = nsnull;
-  }
-
+  if ( HandlePopup(aGdkButtonEvent->x_root, aGdkButtonEvent->y_root) )
+    return;
+   
   // Switch on single, double, triple click.
   switch (aGdkButtonEvent->type) 
   {
