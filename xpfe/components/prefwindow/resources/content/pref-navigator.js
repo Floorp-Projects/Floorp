@@ -6,8 +6,7 @@ const nsIFilePicker     = Components.interfaces.nsIFilePicker;
 const nsIWindowMediator = Components.interfaces.nsIWindowMediator;
 
 const FILEPICKER_CONTRACTID     = "@mozilla.org/filepicker;1";
-const WINDOWMEDIATOR_CONTRACTID = "@mozilla.org/rdf/datasource;1" + 
-                                  "?name=window-mediator";
+const WINDOWMEDIATOR_CONTRACTID = "@mozilla.org/appshell/window-mediator;1";
 
 function selectFile()
 {
