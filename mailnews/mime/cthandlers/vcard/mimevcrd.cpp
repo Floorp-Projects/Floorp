@@ -796,7 +796,7 @@ static int OutputAdvancedVcard(MimeObject *obj, VObject *v)
 						status = OutputFont(obj, PR_FALSE, "-1", NULL);
 						if (status < 0) return status;
             char *tString = VCardGetStringByID(VCARD_LDAP_USEHTML);
-						status = WriteLineToStream (obj, tString, PR_TRUE);
+						status = WriteLineToStream (obj, tString, PR_FALSE);
             PR_FREEIF(tString);
 						if (status < 0) return status;
 						status = OutputFont(obj, PR_TRUE, NULL, NULL);
@@ -1433,7 +1433,7 @@ static int WriteOutEachVCardPhoneProperty (MimeObject *obj, VObject* o)
 							PR_FREEIF (attribName);
 							return status;
 						}
-						status = WriteLineToStream (obj, attribName, PR_TRUE);
+						status = WriteLineToStream (obj, attribName, PR_FALSE);
 						if (status < 0) {
 							PR_FREEIF (attribName);
 							return status;

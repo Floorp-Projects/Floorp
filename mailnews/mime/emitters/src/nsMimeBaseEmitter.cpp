@@ -716,6 +716,11 @@ nsMimeBaseEmitter::DumpSubjectFromDate()
     OutputGenericHeader(HEADER_FROM);
     OutputGenericHeader(HEADER_DATE);
 
+    // If we are Quoting a message, then we should dump the To: also
+    if ( ( mFormat == nsMimeOutput::nsMimeMessageQuoting ) ||
+         ( mFormat == nsMimeOutput::nsMimeMessageBodyQuoting ) )
+      OutputGenericHeader(HEADER_TO);
+
   mHTMLHeaders.Append("</TABLE>");
  
   return NS_OK;

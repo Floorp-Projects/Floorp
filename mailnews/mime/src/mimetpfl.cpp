@@ -46,6 +46,9 @@ static int MimeInlineTextPlainFlowed_parse_eof (MimeObject *, PRBool);
 
 static MimeInlineTextPlainFlowedExData *MimeInlineTextPlainFlowedExDataList = 0;
 
+extern "C" char *MimeTextBuildPrefixCSS(PRInt32    quotedSizeSetting,   // mail.quoted_size
+                                        PRInt32    quotedStyleSetting,  // mail.quoted_style
+                                        char       *citationColor);     // mail.citation_color
 
 
 static int
@@ -89,6 +92,20 @@ MimeInlineTextPlainFlowed_parse_begin (MimeObject *obj)
   {
     rv=prefs->GetBoolPref(PREF_MAIL_FIXED_WIDTH_MESSAGES, &(exdata->fixedwidthfont));
     NS_ASSERTION(NS_SUCCEEDED(rv),"failed to get the mail.fixed_width_messages pref");
+  }
+
+  MimeInlineTextPlainFlowed *text = (MimeInlineTextPlainFlowed *) obj;
+  
+  // Ok, first get the quoting settings.
+  text->mQuotedSizeSetting = 0;   // mail.quoted_size
+  text->mQuotedStyleSetting = 0;  // mail.quoted_style
+  text->mCitationColor = nsnull;  // mail.citation_color
+  
+  if (prefs)
+  {
+    prefs->GetIntPref("mail.quoted_size", &(text->mQuotedSizeSetting));
+    prefs->GetIntPref("mail.quoted_style", &(text->mQuotedStyleSetting));
+    prefs->CopyCharPref("mail.citation_color", &(text->mCitationColor));
   }
 
   // Link it up.
@@ -155,6 +172,13 @@ MimeInlineTextPlainFlowed_parse_eof (MimeObject *obj, PRBool abort_p)
     
     quotelevel--;
   }
+
+  // Make sure we close out any <DIV>'s if they are open!
+  MimeInlineTextPlainFlowed *text = (MimeInlineTextPlainFlowed *) obj;
+  PR_FREEIF(text->mCitationColor);
+
+  // Close out the block quote
+  status = MimeObject_write(obj, "</DIV>", 6, PR_FALSE);
 
   if(fixedwidthfont)
   {
@@ -388,7 +412,18 @@ MimeInlineTextPlainFlowed_parse_line (char *line, PRInt32 length, MimeObject *ob
       *outlinep='t'; outlinep++;
       *outlinep='t'; outlinep++;
       *outlinep='>'; outlinep++;
-    }      
+    }
+        
+    // This is to have us observe the user pref settings for citations
+    MimeInlineTextPlainFlowed *tObj = (MimeInlineTextPlainFlowed *) obj;
+    char *openDiv = MimeTextBuildPrefixCSS(tObj->mQuotedSizeSetting,
+                                           tObj->mQuotedStyleSetting,
+                                           tObj->mCitationColor);
+    if (openDiv)
+    {
+      status = MimeObject_write(obj, openDiv, nsCRT::strlen(openDiv), PR_FALSE);
+      if (status < 0) return status;
+    }
   }
   while(quoteleveldiff<0) {
     quoteleveldiff++;

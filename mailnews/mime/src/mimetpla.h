@@ -39,7 +39,11 @@ struct MimeInlineTextPlainClass {
 extern MimeInlineTextPlainClass mimeInlineTextPlainClass;
 
 struct MimeInlineTextPlain {
-  MimeInlineText text;
+  MimeInlineText  text;
+  PRBool          mInsideQuote;
+  PRInt32         mQuotedSizeSetting;   // mail.quoted_size
+  PRInt32         mQuotedStyleSetting;  // mail.quoted_style
+  char            *mCitationColor;      // mail.citation_color
 };
 
 #endif /* _MIMETPLA_H_ */

@@ -48,7 +48,9 @@
 #include "nsIMsgCompose.h"
 #include "nsMsgI18N.h"
 #include "nsSpecialSystemDirectory.h"
-
+#include "nsIMsgMessageService.h"
+#include "nsMsgUtils.h"
+#include "nsXPIDLString.h"
 
 //
 // Header strings...
@@ -1271,7 +1273,8 @@ mime_parse_stream_complete (nsMIMESession *stream)
         {
           if( PL_strcasestr(mdd->messageBody->type, "text/html") != NULL )
             composeFormat = nsIMsgCompFormat::HTML;
-          else if ( PL_strcasestr(mdd->messageBody->type, "text/plain") != NULL )
+          else if ( ( PL_strcasestr(mdd->messageBody->type, "text/plain") != NULL ) ||
+                    ( PL_strcasecmp(mdd->messageBody->type, "text") == 0 ) )
             composeFormat = nsIMsgCompFormat::PlainText;
         }
         else
@@ -1597,7 +1600,7 @@ mime_decompose_file_init_fn ( void *stream_closure, MimeHeaders *headers )
   PR_FREEIF(contLoc);
 
   mdd->curAttachment = newAttachment;  
-  newAttachment->type =  MimeHeaders_get ( headers, HEADER_CONTENT_TYPE, PR_TRUE, PR_FALSE );
+  newAttachment->type =  MimeHeaders_get ( headers, HEADER_CONTENT_TYPE, PR_FALSE, PR_FALSE );
   
   //
   // This is to handle the degenerated Apple Double attachment.
@@ -1797,19 +1800,29 @@ mime_bridge_create_draft_stream(
   if (!mdd) 
     return nsnull;
 
-  char *urlString;
-  if (NS_SUCCEEDED(uri->GetSpec(&urlString)))
-  {
-    if ((urlString) && (*urlString))
-    {
-      mdd->url_name = nsCRT::strdup(urlString);
-      if (!(mdd->url_name))
-      {
-        PR_FREEIF(mdd);
-        return nsnull;
-      }
+  // first, convert the rdf msg uri into a url that represents the message...
+  char *turl;
+  if (NS_FAILED(uri->GetSpec(&turl)))
+    return nsnull;
 
-      PR_FREEIF(urlString);
+  nsIMsgMessageService * msgService = nsnull;
+  nsresult rv = GetMessageServiceFromURI(turl, &msgService);
+  if (NS_FAILED(rv)) 
+    return nsnull;
+
+  nsCOMPtr<nsIURI> aURL;
+  rv = msgService->GetUrlForUri(turl, getter_AddRefs(aURL));
+  if (NS_FAILED(rv)) 
+    return nsnull;
+
+  nsXPIDLCString urlString;
+  if (NS_SUCCEEDED(aURL->GetSpec(getter_Copies(urlString))))
+  {
+    mdd->url_name = nsCRT::strdup(urlString);
+    if (!(mdd->url_name))
+    {
+      PR_FREEIF(mdd);
+      return nsnull;
     }
   }
 
@@ -1834,7 +1847,7 @@ mime_bridge_create_draft_stream(
   mdd->options->decompose_file_output_fn = mime_decompose_file_output_fn;
   mdd->options->decompose_file_close_fn = mime_decompose_file_close_fn;
 
-  nsresult rv = nsServiceManager::GetService(kPrefCID, NS_GET_IID(nsIPref), (nsISupports**)&(mdd->options->prefs));
+  rv = nsServiceManager::GetService(kPrefCID, NS_GET_IID(nsIPref), (nsISupports**)&(mdd->options->prefs));
   if (! (mdd->options->prefs && NS_SUCCEEDED(rv)))
 	{
     PR_FREEIF(mdd);

@@ -59,6 +59,7 @@
 #include "nsAbBaseCID.h"
 #include "nsIAddrDatabase.h"
 #include "nsIAddrBookSession.h"
+#include "nsIMimeService.h"
 
 // Defines....
 static NS_DEFINE_CID(kMsgQuoteCID, NS_MSGQUOTE_CID);
@@ -68,6 +69,7 @@ static NS_DEFINE_CID(kAddrBookSessionCID, NS_ADDRBOOKSESSION_CID);
 static NS_DEFINE_CID(kRDFServiceCID, NS_RDFSERVICE_CID);
 static NS_DEFINE_CID(kAddressBookDBCID, NS_ADDRDATABASE_CID);
 static NS_DEFINE_CID(kMsgRecipientArrayCID, NS_MSGRECIPIENTARRAY_CID);
+static NS_DEFINE_CID(kMimeServiceCID, NS_MIMESERVICE_CID);
 
 static PRInt32 GetReplyOnTop()
 {
@@ -112,6 +114,7 @@ nsMsgCompose::nsMsgCompose()
 	m_compFields = new nsMsgCompFields;
 	NS_IF_ADDREF(m_compFields);
 	mType = nsIMsgCompType::New;
+  mCiteReference = "";
 
 	// Get the default charset from pref, use this as a mail charset.
 	char * default_mail_charset = nsMsgI18NGetDefaultMailCharset();
@@ -247,7 +250,11 @@ nsresult nsMsgCompose::ConvertAndLoadComposeWindow(nsIEditorShell *aEditorShell,
 
     if (!aBuf.IsEmpty())
     {
-      aEditorShell->InsertAsQuotation(aBuf.GetUnicode(), getter_AddRefs(nodeInserted));
+      if (mCiteReference != "")
+        aEditorShell->InsertAsCitedQuotation(aBuf.GetUnicode(), mCiteReference.GetUnicode(),
+                                             nsString("UTF-8").GetUnicode(), getter_AddRefs(nodeInserted));
+      else
+        aEditorShell->InsertAsQuotation(aBuf.GetUnicode(), getter_AddRefs(nodeInserted));
     }
 
     if (!aSignature.IsEmpty())
@@ -904,6 +911,10 @@ nsresult nsMsgCompose::CreateMessage(const PRUnichar * originalMsgURI,
       case nsIMsgCompType::ReplyAll:
         {
           mQuotingToFollow = PR_TRUE;
+          NS_WITH_SERVICE(nsIPref, prefs, kPrefCID, &rv);
+  	      if (NS_SUCCEEDED(rv))
+		        prefs->GetBoolPref("mail.auto_quote", &mQuotingToFollow);
+          
           // get an original charset, used for a label, UTF-8 is used for the internal processing
           if (!aCharset.Equals(""))
             m_compFields->SetCharacterSet(nsCAutoString(aCharset));
@@ -919,7 +930,7 @@ nsresult nsMsgCompose::CreateMessage(const PRUnichar * originalMsgURI,
           rv = message->GetAuthor(getter_Copies(author));		
           if (NS_FAILED(rv)) return rv;
           m_compFields->SetTo(author);
-          
+
           nsString authorStr(author);
           if (NS_SUCCEEDED(rv = nsMsgI18NDecodeMimePartIIStr(authorStr, encodedCharset, decodedString)))
             if (NS_SUCCEEDED(rv = ConvertFromUnicode(msgCompHeaderInternalCharset(), decodedString, &aCString)))
@@ -1033,6 +1044,15 @@ QuotingOutputStreamListener::QuotingOutputStreamListener(const PRUnichar * origi
   {
     nsresult rv;
     nsAutoString author;
+
+    // Setup the cite information....
+    char    *msgID = nsnull;
+    if (NS_SUCCEEDED(originalMsg->GetMessageId(&msgID)) && msgID)
+    {
+      mCiteReference = msgID;
+      PR_FREEIF(msgID);
+    }
+
     rv = originalMsg->GetMime2DecodedAuthor(&author);
     if (NS_SUCCEEDED(rv))
     {
@@ -1102,6 +1122,10 @@ NS_IMETHODIMP QuotingOutputStreamListener::OnStopRequest(nsIChannel *aChannel, n
   {
     MSG_ComposeType type = mComposeObj->GetMessageType();
     
+    // Assign cite information if available...
+    if (mCiteReference != "")
+      mComposeObj->mCiteReference = mCiteReference;
+
     if (mHeaders && (type == nsIMsgCompType::Reply || type == nsIMsgCompType::ReplyAll))
     {
       nsIMsgCompFields *compFields = nsnull;
@@ -1758,11 +1782,18 @@ nsMsgCompose::ProcessSignature(nsIMsgIdentity *identity, nsString *aMsgBody)
   // look at the signature file first...if the extension is .htm or 
   // .html, we assume its HTML, otherwise, we assume it is plain text
   //
-  nsAutoString      urlStr;
+  // ...and that's not all! What we will also do now is look and see if
+  // the file is an image file. If it is an image file, then we should 
+  // insert the correct HTML into the composer to have it work, but if we
+  // are doing plain text compose, we should insert some sort of message
+  // saying "Image Signature Omitted" or something.
+  //
+  nsAutoString  urlStr;
   nsCOMPtr<nsIFileSpec> sigFileSpec;
   PRBool        useSigFile = PR_FALSE;
   PRBool        htmlSig = PR_FALSE;
-  nsAutoString      sigData = "";
+  PRBool        imageSig = PR_FALSE;
+  nsAutoString  sigData = "";
 
   if (identity)
   {
@@ -1794,18 +1825,71 @@ nsMsgCompose::ProcessSignature(nsIMsgIdentity *identity, nsString *aMsgBody)
   
   if ( (fileExt) && (*fileExt) )
   {
-    htmlSig = ( (!PL_strcasecmp(fileExt, "HTM")) || (!PL_strcasecmp(fileExt, "HTML")) );
+    // Now, most importantly, we need to figure out what the content type is for
+    // this signature...if we can't, we assume text
+    rv = NS_OK;
+    char      *sigContentType = nsnull;
+    NS_WITH_SERVICE(nsIMIMEService, mimeFinder, kMimeServiceCID, &rv); 
+    if (NS_SUCCEEDED(rv) && mimeFinder && fileExt) 
+    {
+      mimeFinder->GetTypeFromExtension(fileExt, &(sigContentType));
+      PR_FREEIF(fileExt);
+    }
+  
+    if (sigContentType)
+    {
+      imageSig = (!PL_strncasecmp(sigContentType, "image/", 6));
+      if (!imageSig)
+        htmlSig = (!PL_strcasecmp(sigContentType, TEXT_HTML));
+    }
+    else
+      htmlSig = ( (!PL_strcasecmp(fileExt, "HTM")) || (!PL_strcasecmp(fileExt, "HTML")) );
+
     PR_FREEIF(fileExt);
+    PR_FREEIF(sigContentType);
   }
   
-  // is this a text sig with an HTML editor?
-  if ( (m_composeHTML) && (!htmlSig) )
-    ConvertTextToHTML(testSpec, sigData);
-  // is this a HTML sig with a text window?
-  else if ( (!m_composeHTML) && (htmlSig) )
-    ConvertHTMLToText(testSpec, sigData);
-  else // We have a match...
-    LoadDataFromFile(testSpec, sigData);  // Get the data!
+  // If we have an image signature, then we should put in the appropriate
+  // HTML for inclusion, otherwise, just mention something about it.
+  if (imageSig)
+  {
+    if (m_composeHTML)
+    {
+      aMsgBody->Append("<PRE>");
+      aMsgBody->Append(CRLF);
+      aMsgBody->Append("-- ");
+      aMsgBody->Append(CRLF);
+      aMsgBody->Append("</PRE>");
+      aMsgBody->Append("<IMG SRC=\"file:///");
+      aMsgBody->Append(testSpec);
+      aMsgBody->Append("\" BORDER=0>");
+    }
+    else
+    {
+      PRUnichar *omitString = ComposeGetStringByID(NS_MSG_ATTACHMENT_TYPE_MISMATCH);
+      if (omitString)
+      {
+        aMsgBody->Append("-- ");
+        aMsgBody->Append(CRLF);
+        aMsgBody->Append(omitString);
+        aMsgBody->Append(CRLF);
+      }
+      PR_FREEIF(omitString);
+    }
+
+    return NS_OK;
+  }
+  else
+  {
+    // is this a text sig with an HTML editor?
+    if ( (m_composeHTML) && (!htmlSig) )
+      ConvertTextToHTML(testSpec, sigData);
+    // is this a HTML sig with a text window?
+    else if ( (!m_composeHTML) && (htmlSig) )
+      ConvertHTMLToText(testSpec, sigData);
+    else // We have a match...
+      LoadDataFromFile(testSpec, sigData);  // Get the data!
+  }
 
   // Now that sigData holds data...if any, append it to the body in a nice
   // looking manner

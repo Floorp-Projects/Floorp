@@ -42,7 +42,10 @@ struct MimeInlineTextPlainFlowedClass {
 extern MimeInlineTextPlainFlowedClass mimeInlineTextPlainFlowedClass;
 
 struct MimeInlineTextPlainFlowed {
-  MimeInlineText text;
+  MimeInlineText  text;
+  PRInt32         mQuotedSizeSetting;   // mail.quoted_size
+  PRInt32         mQuotedStyleSetting;  // mail.quoted_style
+  char            *mCitationColor;      // mail.citation_color
 };
 
 /*

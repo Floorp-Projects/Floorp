@@ -116,6 +116,7 @@ class nsMsgCompose : public nsIMsgCompose
   PRBool                        mEntityConversionDone;
 
   // Deal with quoting issues...
+  nsString                      mCiteReference;
 	nsCOMPtr<nsIMsgQuote>         mQuote;
 	PRBool						            mQuotingToFollow; // Quoting indicator
 	nsMsgDocumentStateListener    *mDocumentListener;
@@ -154,6 +155,7 @@ private:
     PRBool						        mQuoteHeaders;
     nsCOMPtr<nsIMimeHeaders>	mHeaders;
     nsCOMPtr<nsIMsgIdentity>  mIdentity;
+    nsString                  mCiteReference;
 };
 
 ////////////////////////////////////////////////////////////////////////////////////
