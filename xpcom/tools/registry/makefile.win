@@ -26,11 +26,13 @@ LINCS = \
 
 MAKE_OBJ_TYPE	= EXE
 PROG1 = .\$(OBJDIR)\regExport.exe
-PROGRAMS = $(PROG1)
+PROG2 = .\$(OBJDIR)\regxpcom.exe
+PROGRAMS = $(PROG1) $(PROG2)
 
 LLIBS =                         \
         $(LIBNSPR)              \
         $(DIST)\lib\xpcom.lib   \
+        $(DIST)\lib\neckoutil_s.lib \
 !if "$(MOZ_BITS)"=="32" && defined(MOZ_DEBUG) && defined(GLOWCODE)
         $(GLOWDIR)\glowcode.lib \
 !endif
