@@ -232,6 +232,7 @@ static SECStatus MatchComponentType(const SEC_ASN1Template* templateEntry,
 
     if ( (!item) || (!templateEntry) || (!match) )
     {
+        PORT_SetError(SEC_ERROR_INVALID_ARGS);
         return SECFailure;
     }
 
@@ -268,6 +269,7 @@ static SECStatus MatchComponentType(const SEC_ASN1Template* templateEntry,
                 SEC_ASN1GetSubtemplate (templateEntry, dest, PR_FALSE);
             if (!subTemplate)
             {
+                PORT_SetError(SEC_ERROR_BAD_TEMPLATE);
                 return SECFailure;
             }
             if ( (subTemplate->kind & SEC_ASN1_INLINE) ||
@@ -305,6 +307,7 @@ static SECStatus MatchComponentType(const SEC_ASN1Template* templateEntry,
                 return SECSuccess;
             }
         }
+        PORT_SetError(SEC_ERROR_BAD_DER);
         return SECFailure;
     }
 
