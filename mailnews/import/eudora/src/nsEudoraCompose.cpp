@@ -1081,11 +1081,14 @@ nsresult nsEudoraCompose::WriteHeaders( nsIFileSpec *pDst, SimpleBufferTonyRCopi
 	nsresult	rv = NS_OK; // it's ok if we don't have the first header on the predefined lists.
 	PRInt32		specialHeader;
 	PRBool		specials[kMaxSpecialHeaders];
+  PRBool    hasDateHeader = PR_FALSE;
 	int			i;
 
 	for (i = 0; i < kMaxSpecialHeaders; i++)
 		specials[i] = PR_FALSE;
 
+  // m_pHeaders - contains headers from a Eudora msg.
+  // newHeaders - contains headers from a mozilla msg (more headers here).
 	do {
 		GetNthHeader( m_pHeaders, m_headerLen, n, header, val, PR_FALSE);
 		// GetNthHeader( newHeaders.m_pBuffer, newHeaders.m_writeOffset, n, header, val, PR_FALSE);
@@ -1105,6 +1108,9 @@ nsresult nsEudoraCompose::WriteHeaders( nsIFileSpec *pDst, SimpleBufferTonyRCopi
 					val = replaceVal;
 			}
 			if (val.Length()) {
+        // See if we're writing out a Date: header.
+        if (!nsCRT::strcasecmp(header.get(), "Date"))
+          hasDateHeader = PR_TRUE;
 				rv = pDst->Write( header.get(), header.Length(), &written);
 				if (NS_SUCCEEDED( rv))
 					rv = pDst->Write( ": ", 2, &written);
@@ -1117,6 +1123,14 @@ nsresult nsEudoraCompose::WriteHeaders( nsIFileSpec *pDst, SimpleBufferTonyRCopi
 		}
 		n++;
 	} while (NS_SUCCEEDED( rv) && (header.Length() != 0));
+
+  // If we don't have Date: header so far then use the default one (taken from Eudora "From " line).
+  if (!hasDateHeader)
+  {
+    rv = pDst->Write(m_defaultDate.get(), m_defaultDate.Length(), &written);
+    if (NS_SUCCEEDED( rv))
+      rv = pDst->Write( "\x0D\x0A", 2, &written);
+  }
 
 	for (i = 0; (i < kMaxSpecialHeaders) && NS_SUCCEEDED( rv); i++) {
 		if (!specials[i]) {

@@ -114,6 +114,7 @@ public:
 	void		SetBody( const char *pBody, PRInt32 len) { m_pBody = pBody; m_bodyLen = len;}
 	void		SetHeaders( const char *pHeaders, PRInt32 len) { m_pHeaders = pHeaders; m_headerLen = len;}
 	void		SetAttachments( nsVoidArray *pAttachments) { m_pAttachments = pAttachments;}
+  void		SetDefaultDate( nsCString date) { m_defaultDate = date;}
 
 	nsresult	CopyComposedMessage( nsCString& fromLine, nsIFileSpec *pSrc, nsIFileSpec *pDst, SimpleBufferTonyRCopiedOnce& copy);
 
@@ -160,6 +161,7 @@ private:
 	nsString				m_defCharset;
 	SimpleBufferTonyRCopiedOnce			m_readHeaders;
 	nsCOMPtr<nsIImportService>	m_pImportService;
+  nsCString       m_defaultDate;  // Use this if no Date: header in msgs
 };
 
 

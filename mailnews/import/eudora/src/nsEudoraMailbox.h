@@ -50,7 +50,7 @@ public:
 		// import a mailbox
 	nsresult ImportMailbox( PRUint32 *pBytes, PRBool *pAbort, const PRUnichar *pName, nsIFileSpec *pSrc, nsIFileSpec *pDst, PRInt32 *pMsgCount);
 
-	static PRInt32		IsEudoraFromSeparator( const char *pData, PRInt32 maxLen);
+	static PRInt32		IsEudoraFromSeparator( const char *pData, PRInt32 maxLen, nsCString& defaultDate);
 
 protected:
 	nsresult	CreateTempFile( nsIFileSpec **ppSpec);
@@ -59,7 +59,7 @@ protected:
 
 private:
 	nsresult	CompactMailbox( PRUint32 *pBytes, PRBool *pAbort, nsIFileSpec *pMail, nsIFileSpec *pToc, nsIFileSpec *pDst);
-	nsresult	ReadNextMessage( ReadFileState *pState, SimpleBufferTonyRCopiedOnce& copy, SimpleBufferTonyRCopiedOnce& header, SimpleBufferTonyRCopiedOnce& body);
+	nsresult	ReadNextMessage( ReadFileState *pState, SimpleBufferTonyRCopiedOnce& copy, SimpleBufferTonyRCopiedOnce& header, SimpleBufferTonyRCopiedOnce& body, nsCString& defaultDate);
 	PRInt32		FindStartLine( SimpleBufferTonyRCopiedOnce& data);
 	PRInt32		FindNextEndLine( SimpleBufferTonyRCopiedOnce& data);
 	PRInt32		IsEndHeaders( SimpleBufferTonyRCopiedOnce& data);

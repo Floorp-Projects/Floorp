@@ -24,11 +24,13 @@
 #include "nsEudoraMailbox.h"
 #include "nsSpecialSystemDirectory.h"
 #include "nsEudoraCompose.h"
+#include "nspr.h"
 
 #include "EudoraDebugLog.h"
 
 #define	kCopyBufferSize		8192
 #define	kMailReadBufferSize	16384
+#define DATE_STR_LEN      64      // 64 bytes is plenty to hold the date header.
 
 #define	kWhitespace	" \t\b\r\n"
 
@@ -59,6 +61,31 @@ void DUMP_FILENAME( nsIFileSpec *pSpec, PRBool endLine)
 #else
 #define DUMP_FILENAME( x, y)
 #endif
+
+static char *eudoraWeekDays[7] = {
+	"Mon",
+	"Tue",
+	"Wed",
+	"Thu",
+	"Fri",
+	"Sat",
+	"Sun"
+};
+
+static char *eudoraMonths[12] = {
+	"Jan",
+	"Feb",
+	"Mar",
+	"Apr",
+	"May",
+	"Jun",
+	"Jul",
+	"Aug",
+	"Sep",
+	"Oct",
+	"Nov",
+	"Dec"
+};
 
 
 nsEudoraMailbox::nsEudoraMailbox()
@@ -230,6 +257,7 @@ nsresult nsEudoraMailbox::ImportMailbox( PRUint32 *pBytes, PRBool *pAbort, const
 
 	if (NS_SUCCEEDED( rv = NS_NewFileSpec( getter_AddRefs( compositionFile)))) {
 		nsEudoraCompose		compose;
+    nsCString defaultDate;
 		
 		/*
 		IMPORT_LOG0( "Calling compose.SendMessage\n");
@@ -244,7 +272,7 @@ nsresult nsEudoraMailbox::ImportMailbox( PRUint32 *pBytes, PRBool *pAbort, const
 
 		IMPORT_LOG0( "Reading first message\n");
 
-		while (!*pAbort && NS_SUCCEEDED( rv = ReadNextMessage( &state, readBuffer, headers, body))) {
+		while (!*pAbort && NS_SUCCEEDED( rv = ReadNextMessage( &state, readBuffer, headers, body, defaultDate))) {
 			
 			if (pBytes) {
 				*pBytes += (((body.m_writeOffset - 1 + headers.m_writeOffset - 1) / div) * mul);
@@ -253,6 +281,7 @@ nsresult nsEudoraMailbox::ImportMailbox( PRUint32 *pBytes, PRBool *pAbort, const
 			compose.SetBody( body.m_pBuffer, body.m_writeOffset - 1);
 			compose.SetHeaders( headers.m_pBuffer, headers.m_writeOffset - 1);
 			compose.SetAttachments( &m_attachments);
+      compose.SetDefaultDate(defaultDate);
 
 			rv = compose.SendTheMessage( compositionFile);
 			if (NS_SUCCEEDED( rv)) {
@@ -402,7 +431,7 @@ nsresult nsEudoraMailbox::CompactMailbox( PRUint32 *pBytes, PRBool *pAbort, nsIF
 
 
 
-nsresult nsEudoraMailbox::ReadNextMessage( ReadFileState *pState, SimpleBufferTonyRCopiedOnce& copy, SimpleBufferTonyRCopiedOnce& header, SimpleBufferTonyRCopiedOnce& body)
+nsresult nsEudoraMailbox::ReadNextMessage( ReadFileState *pState, SimpleBufferTonyRCopiedOnce& copy, SimpleBufferTonyRCopiedOnce& header, SimpleBufferTonyRCopiedOnce& body, nsCString& defaultDate)
 {
 	header.m_writeOffset = 0;
 	body.m_writeOffset = 0;
@@ -419,7 +448,7 @@ nsresult nsEudoraMailbox::ReadNextMessage( ReadFileState *pState, SimpleBufferTo
 			IMPORT_LOG0( "*** Error, FillMailBuffer FAILED in ReadNextMessage\n");
 			return( rv);
 		}
-		lineLen = IsEudoraFromSeparator( copy.m_pBuffer + copy.m_writeOffset, copy.m_bytesInBuf - copy.m_writeOffset);
+		lineLen = IsEudoraFromSeparator( copy.m_pBuffer + copy.m_writeOffset, copy.m_bytesInBuf - copy.m_writeOffset, defaultDate);
 	
 		if (lineLen == -1) {
 			while ((lineLen = FindStartLine( copy)) == -1) {
@@ -507,7 +536,8 @@ nsresult nsEudoraMailbox::ReadNextMessage( ReadFileState *pState, SimpleBufferTo
 				
 	// Get the body!
 	// Read one line at a time here and look for the next separator
-	while ((lineLen = IsEudoraFromSeparator( copy.m_pBuffer + copy.m_writeOffset, copy.m_bytesInBuf - copy.m_writeOffset)) == -1) {
+  nsCString tmp;
+	while ((lineLen = IsEudoraFromSeparator( copy.m_pBuffer + copy.m_writeOffset, copy.m_bytesInBuf - copy.m_writeOffset, tmp)) == -1) {
 		// Debatable is whether or not to exclude these lines from the
 		// text of the message, I prefer not to in case the original
 		// attachment is actually missing.
@@ -639,7 +669,7 @@ PRInt32 nsEudoraMailbox::IsEndHeaders( SimpleBufferTonyRCopiedOnce& data)
 	// versions of Eudora.
 	// A sample from line: 
 	// From john@uxc.cso.uiuc.edu Wed Jan 14 12:36:18 1989
-PRInt32	nsEudoraMailbox::IsEudoraFromSeparator( const char *pChar, PRInt32 maxLen)
+PRInt32	nsEudoraMailbox::IsEudoraFromSeparator( const char *pChar, PRInt32 maxLen, nsCString& defaultDate)
 {
 	if (maxLen < 12)
 		return( -1);
@@ -718,7 +748,7 @@ PRInt32	nsEudoraMailbox::IsEudoraFromSeparator( const char *pChar, PRInt32 maxLe
 	int		weekDay = 0;
 	int		other = 0;
 	int		result;
-	char	tymStr[8];
+	char	tymStr[9];  // Make it a null terminated string (used in PR_snprintf() call()).
 	PRBool	tym = PR_FALSE;
 	PRBool	remote = PR_FALSE;
 	PRBool	from = PR_FALSE;
@@ -795,6 +825,7 @@ PRInt32	nsEudoraMailbox::IsEudoraFromSeparator( const char *pChar, PRInt32 maxLe
 						tymStr[6] = '0';
 						tymStr[7] = '0';
 					}
+          tymStr[8] = 0;
 				}
 				else {
 					other++;
@@ -848,12 +879,12 @@ PRInt32	nsEudoraMailbox::IsEudoraFromSeparator( const char *pChar, PRInt32 maxLe
 		}
 
 		// Whew!, the next line isn't blank.
-		/*
-		m_fromDay = day;
-		m_fromYear = year;
-		m_fromMonth = month;
-		m_fromWeekDay = weekDay;
-		*/
+    // Generate the default date header in case the date header is missing when we
+    // write out headers later. The header looks like "Date: Tue, 5 Feb 2002 23:05:04"
+    char date_header_str[DATE_STR_LEN];
+    PR_snprintf(date_header_str, DATE_STR_LEN, "Date: %s, %2d %s %4d %s", eudoraWeekDays[weekDay-1], day, eudoraMonths[month-1], year, tymStr);
+    defaultDate.Assign(date_header_str);
+
 		return( lineLen);
 	}
 	
@@ -874,31 +905,6 @@ PRInt32 nsEudoraMailbox::AsciiToLong( const char *pChar, PRInt32 len)
 	}
 	return( num);
 }
-
-static char *eudoraWeekDays[7] = {
-	"MON",
-	"TUE",
-	"WED",
-	"THU",
-	"FRI",
-	"SAT",
-	"SUN"
-};
-
-static char *eudoraMonths[12] = {
-	"JAN",
-	"FEB",
-	"MAR",
-	"APR",
-	"MAY",
-	"JUN",
-	"JUL",
-	"AUG",
-	"SEP",
-	"OCT",
-	"NOV",
-	"DEC"
-};
 
 
 int nsEudoraMailbox::IsWeekDayStr( const char *pStr)
