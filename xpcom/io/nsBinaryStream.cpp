@@ -273,7 +273,7 @@ nsBinaryOutputStream::PutBuffer(char* aBuffer, PRUint32 aLength)
         mBufferAccess->PutBuffer(aBuffer, aLength);
 }
 
-NS_IMPL_ISUPPORTS1(nsBinaryInputStream, nsIBinaryInputStream)
+NS_IMPL_ISUPPORTS3(nsBinaryInputStream, nsIObjectInputStream, nsIBinaryInputStream, nsIInputStream)
 
 NS_IMETHODIMP
 nsBinaryInputStream::Available(PRUint32* aResult)
