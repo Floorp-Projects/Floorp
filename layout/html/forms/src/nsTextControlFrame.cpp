@@ -1490,6 +1490,14 @@ nsTextControlFrame::CalculateSizeStandard(nsIPresContext*       aPresContext,
     }
     // Now add the extra padding on (so that small input sizes work well)
     aDesiredSize.width += internalPadding;
+  } else {
+    // This is to account for the anonymous <br> having a 1 twip width
+    // in Full Standards mode, see BRFrame::Reflow and bug 228752.
+    nsCompatibility mode;
+    aPresContext->GetCompatibilityMode(&mode);
+    if (mode == eCompatibility_FullStandards) {
+      aDesiredSize.width += 1;
+    }
   }
 
   // Set the height equal to total number of rows (times the height of each
