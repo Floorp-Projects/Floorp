@@ -70,6 +70,7 @@ CPPSRCS=				\
 	nsHTMLQuoteElement.cpp		\
 	nsHTMLScriptElement.cpp		\
 	nsHTMLSelectElement.cpp		\
+	nsHTMLSpacerElement.cpp		\
 	nsHTMLSpanElement.cpp		\
 	nsHTMLStyleElement.cpp		\
 	nsHTMLTableElement.cpp		\
@@ -131,6 +132,7 @@ CPP_OBJS=						\
 	.\$(OBJDIR)\nsHTMLQuoteElement.obj		\
 	.\$(OBJDIR)\nsHTMLScriptElement.obj		\
 	.\$(OBJDIR)\nsHTMLSelectElement.obj		\
+	.\$(OBJDIR)\nsHTMLSpacerElement.obj		\
 	.\$(OBJDIR)\nsHTMLSpanElement.obj		\
 	.\$(OBJDIR)\nsHTMLStyleElement.obj		\
 	.\$(OBJDIR)\nsHTMLTableElement.obj		\
