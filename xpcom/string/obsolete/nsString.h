@@ -246,16 +246,6 @@ public:
   operator const char*() const {return (const char*)mStr;}
 //#endif
 
-
-  /**
-   * Copies data from internal buffer onto given char* buffer
-   * NOTE: This only copies as many chars as will fit in given buffer (clips)
-   * @param aBuf is the buffer where data is stored
-   * @param aBuflength is the max # of chars to move to buffer
-   * @return ptr to given buffer
-   */
-  char* ToCString(char* aBuf,PRUint32 aBufLength,PRUint32 anOffset=0) const;
-
   /**
    * Perform string to float conversion.
    * @param   aErrorCode will contain error if one occurs
@@ -438,8 +428,6 @@ public:
    * @return string length
    */
   virtual void SizeOf(nsISizeOfHandler* aHandler, PRUint32* aResult) const;
-
-  void    DebugDump(void) const;
 #endif
 
 private:
@@ -454,10 +442,6 @@ private:
 
 // NS_DEF_STRING_COMPARISON_OPERATORS(nsCString, char)
 // NS_DEF_DERIVED_STRING_OPERATOR_PLUS(nsCString, char)
-
-extern NS_COM int fputs(const nsCString& aString, FILE* out);
-//ostream& operator<<(ostream& aStream,const nsCString& aString);
-//virtual void  DebugDump(ostream& aStream) const;
 
 
 /**************************************************************

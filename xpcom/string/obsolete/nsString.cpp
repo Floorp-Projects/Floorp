@@ -527,31 +527,6 @@ nsCString::CompressWhitespace( PRBool aEliminateLeading,PRBool aEliminateTrailin
  *********************************************************************/
 
 /**
- * Copies contents of this string into he given buffer
- * Note that if you provide me a buffer that is smaller than the length of
- * this string, only the number of bytes that will fit are copied. 
- *
- * @update  gess 01/04/99
- * @param   aBuf
- * @param   aBufLength
- * @param   anOffset
- * @return
- */
-char* nsCString::ToCString(char* aBuf, PRUint32 aBufLength,PRUint32 anOffset) const{
-  if(aBuf) {
-
-    // NS_ASSERTION(mLength<=aBufLength,"buffer smaller than string");
-
-    CBufDescriptor theDescr(aBuf,PR_TRUE,aBufLength,0);
-    nsCAutoString temp(theDescr);
-    temp.Assign(mStr, PR_MIN(mLength, aBufLength-1));
-    temp.mStr=0;
-  }
-  return aBuf;
-}
-
-
-/**
  * Perform string to float conversion.
  * @update  gess 01/04/99
  * @param   aErrorCode will contain error if one occurs
@@ -563,7 +538,8 @@ float nsCString::ToFloat(PRInt32* aErrorCode) const {
     *aErrorCode = (PRInt32) NS_ERROR_ILLEGAL_VALUE;
     return 0.0f;
   }
-  char* cp = ToCString(buf, sizeof(buf));
+  char *cp = strncpy(buf, get(), sizeof(buf) - 1);
+  buf[sizeof(buf)-1] = '\0';
   float f = (float) PR_strtod(cp, &cp);
   if (*cp != 0) {
     *aErrorCode = (PRInt32) NS_ERROR_ILLEGAL_VALUE;
@@ -1251,75 +1227,7 @@ PRBool nsCString::EqualsWithConversion(const PRUnichar* aString,PRBool aIgnoreCa
   PRBool  result=PRBool(0==theAnswer);  
   return result;
 }
-   
-#if 0
 
-/**
- * 
- * @update  gess8/8/98
- * @param 
- * @return
- */
-ostream& operator<<(ostream& aStream,const nsCString& aString){
-  if(eOneByte==aString.mCharSize) {
-    aStream<<aString.mStr;
-  }
-  else{
-    PRUint32        theOffset=0;
-    const PRUint32  theBufSize=300;
-    char            theBuf[theBufSize+1];
-    PRUint32        theCount=0;
-    PRUint32        theRemains=0;
-
-    while(theOffset<aString.mLength){
-      theRemains=aString.mLength-theOffset;
-      theCount=(theRemains<theBufSize) ? theRemains : theBufSize;
-      aString.ToCString(theBuf,theCount+1,theOffset);
-      theBuf[theCount]=0;
-      aStream<<theBuf;
-      theOffset+=theCount;
-    }
-  }    
-  return aStream;
-}
-#endif
-
-/**
- * 
- * @update  gess 01/04/99
- * @param 
- * @return
- */
-NS_COM int fputs(const nsCString& aString, FILE* out)
-{
-  char buf[100];
-  char* cp = buf;
-  PRInt32 len = aString.mLength;
-  if (len >= PRInt32(sizeof(buf))) {
-    cp = ToNewCString(aString);
-  } else {
-    aString.ToCString(cp, len + 1);
-  }
-  if(len>0)
-    ::fwrite(cp, 1, len, out);
-  if (cp != buf) {
-    delete[] cp;
-  }
-  return (int) len;
-}
-
-#ifdef DEBUG  
-/**
- * Dumps the contents of the string to stdout
- * @update  gess 11/15/99
- */
-void nsCString::DebugDump(void) const {
-  if(mStr && (eOneByte==mCharSize)) {
-    printf("\n%s",mStr);
-  }
-}
-#endif
-       
 //----------------------------------------------------------------------
 
 NS_ConvertUCS2toUTF8::NS_ConvertUCS2toUTF8( const nsAString& aString )

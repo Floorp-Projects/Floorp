@@ -453,8 +453,6 @@ public:
    */
   PRBool IsASCII(const PRUnichar* aBuffer=0);
 
-  void    DebugDump(void) const;
-
   /**
    *  Determine if given char is a valid space character
    *  
@@ -500,10 +498,6 @@ private:
 
 // NS_DEF_STRING_COMPARISON_OPERATORS(nsString, PRUnichar)
 // NS_DEF_DERIVED_STRING_OPERATOR_PLUS(nsString, PRUnichar)
-
-extern NS_COM int fputs(const nsString& aString, FILE* out);
-//ostream& operator<<(ostream& aStream,const nsString& aString);
-//virtual void  DebugDump(ostream& aStream) const;
 
 /**************************************************************
   Here comes the AutoString class which uses internal memory
