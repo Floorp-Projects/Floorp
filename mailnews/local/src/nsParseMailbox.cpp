@@ -1570,22 +1570,21 @@ void nsParseNewMailState::ApplyFilters(PRBool *pMoved)
 				nsresult matchTermStatus = NS_OK;
 
 				{
-#ifdef HAVE_PORT
 					// how are we going to do this? Probably we need to load
 					// the offline mail search service and run the filter,
 					// or perhaps just add an interface on the filter object
 					// that does it internally.
 
-					// put this in its own block so scope will get destroyed
-					// before we apply the actions, so folder file will get closed.
-					nsMsgScopeTerm scope (nsnull, nsMsgSearchScopeMailFolder, m_folder);
-
-					char * headers = m_headers;
-					PRUint32 headersSize = m_headers_fp;
-
-					matchTermStatus = msg_SearchOfflineMail::MatchTermsForFilter(
-						msgHdr, filter->GetTermList(), &scope, m_mailDB, headers, headersSize);
-#endif
+					nsCOMPtr <nsIMsgFolder> inbox;
+					nsCOMPtr <nsIMsgFolder> rootMsgFolder = do_QueryInterface(m_rootFolder);
+					if (rootMsgFolder)
+					{
+						PRUint32 numFolders;
+						rootMsgFolder->GetFoldersWithFlag(MSG_FOLDER_FLAG_INBOX, getter_AddRefs(inbox), 1, &numFolders);
+						char * headers = m_headers.GetBuffer();
+						PRUint32 headersSize = m_headers.GetBufferPos();
+						matchTermStatus = filter->MatchHdr(msgHdr, inbox, m_mailDB, headers, headersSize);
+					}
 
 				}
 				if (NS_SUCCEEDED(matchTermStatus))
@@ -1743,8 +1742,13 @@ nsresult nsParseNewMailState::MoveIncorporatedMessage(nsIMsgDBHdr *mailHdr,
 	nsCOMPtr <nsIMsgFolder> lockedFolder;
 	m_rootFolder->FindSubFolder (destFolder, getter_AddRefs(destIFolder));
 	lockedFolder = do_QueryInterface(destIFolder);
+	nsISupports *myThis;
 
-	if (lockedFolder && (err = lockedFolder->AcquireSemaphore (this)) != 0)
+	QueryInterface(::nsISupports::GetIID(), (void **) &myThis);
+
+	nsCOMPtr <nsISupports> myISupports = dont_QueryInterface(myThis);
+
+	if (lockedFolder && (err = lockedFolder->AcquireSemaphore (myISupports)) != 0)
 		return err;
 
 	NS_ASSERTION(m_inboxFileStream != 0, "no input file stream");
@@ -1754,7 +1758,7 @@ nsresult nsParseNewMailState::MoveIncorporatedMessage(nsIMsgDBHdr *mailHdr,
 		NS_ASSERTION(PR_FALSE, "couldn't get source file in move filter");
 #endif
 		if (lockedFolder)
-			lockedFolder->ReleaseSemaphore (this);
+			lockedFolder->ReleaseSemaphore (myISupports);
 
 		return NS_MSG_FOLDER_UNREADABLE;	// ### dmb
 	}
@@ -1774,7 +1778,7 @@ nsresult nsParseNewMailState::MoveIncorporatedMessage(nsIMsgDBHdr *mailHdr,
 		NS_ASSERTION(PR_FALSE, "out of memory");
 #endif
 		if (lockedFolder)
-			lockedFolder->ReleaseSemaphore (this);
+			lockedFolder->ReleaseSemaphore (myISupports);
 		return  NS_MSG_ERROR_WRITING_MAIL_FOLDER;
 	}
 
@@ -1821,7 +1825,7 @@ nsresult nsParseNewMailState::MoveIncorporatedMessage(nsIMsgDBHdr *mailHdr,
 //			destFile->truncate(destFolder,xpMailFolder,newMsgPos);
 
 			if (lockedFolder)
-				lockedFolder->ReleaseSemaphore(this);
+				lockedFolder->ReleaseSemaphore(myISupports);
 
 			if (destMailDB)
 				destMailDB->Close(PR_TRUE);
@@ -1866,7 +1870,7 @@ nsresult nsParseNewMailState::MoveIncorporatedMessage(nsIMsgDBHdr *mailHdr,
 //	NS_ASSERTION(truncRet >= 0, "unable to truncate file");
 
 	if (lockedFolder)
-		lockedFolder->ReleaseSemaphore (this);
+		lockedFolder->ReleaseSemaphore (myISupports);
 
 	// tell parser that we've truncated the Inbox
 	mailHdr->GetMessageOffset(&messageOffset);
