@@ -1966,7 +1966,7 @@ nsBookmarksService::OnStopRequest(nsIChannel* channel, nsISupports *ctxt,
 						nsCOMPtr<nsIRDFLiteral>	nameLiteral = do_QueryInterface(nameNode);
 						if (nameLiteral)
 						{
-							PRUnichar	*nameUni = nsnull;
+							const PRUnichar	*nameUni = nsnull;
 							if (NS_SUCCEEDED(rv = nameLiteral->GetValueConst(&nameUni))
 								&& (nameUni))
 							{
