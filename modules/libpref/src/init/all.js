@@ -56,9 +56,9 @@ pref("browser.cache.check_doc_frequency",   0);
 
 pref("browser.display.use_document_fonts",  1);  // 0 = never, 1 = quick, 2 = always
 pref("browser.display.use_document_colors", true);
-pref("browser.display.use_system_colors",true);
+pref("browser.display.use_system_colors",   false);
 pref("browser.display.foreground_color",    "#000000");
-pref("browser.display.background_color",    "#C0C0C0");
+pref("browser.display.background_color",    "#FFFFFF");
 pref("browser.anchor_color",                "#0000EE");
 pref("browser.visited_color",               "#551A8B");
 pref("browser.underline_anchors",           true);
