@@ -47,9 +47,6 @@ enum FolderType {
     { 0xb7, 0xef, 0x00, 0x80, 0x5f, 0x05, 0xff, 0xa5 }}
 
 class nsIMsgFolder : public nsIRDFResource {
- private:
-  void operator delete(void *); // NOT TO BE IMPLEMENTED
-
  public: 
   static const nsIID& IID() {
     static nsIID iid = NS_IMSGFOLDER_IID;
