@@ -216,8 +216,9 @@ RootFrame::Reflow(nsIPresContext&          aPresContext,
 
     // We must pass in that the available height is unconstrained, because
     // constrained is only for when we're paginated...
-    nsHTMLReflowState kidReflowState(aPresContext, kidFrame, aReflowState,
-                                     nsSize(aReflowState.availableWidth, NS_UNCONSTRAINEDSIZE));
+    nsHTMLReflowState kidReflowState(aPresContext, aReflowState, kidFrame,
+                                     nsSize(aReflowState.availableWidth,
+                                            NS_UNCONSTRAINEDSIZE));
     if (isChildInitialReflow) {
       kidReflowState.reason = eReflowReason_Initial;
       kidReflowState.reflowCommand = nsnull;
