@@ -290,7 +290,7 @@ morkTable::AddRow(morkEnv* ev, morkRow* ioRow)
   if ( !row && ev->Good() )
   {
     mork_pos pos = mTable_RowArray.AppendSlot(ev, ioRow);
-    if ( ev->Good() && pos > 0 )
+    if ( ev->Good() && pos >= 0 )
     {
       ioRow->AddTableUse(ev);
       if ( mTable_RowMap.AddRow(ev, ioRow) )

@@ -342,7 +342,8 @@ morkBuilder::OnNewTable(morkEnv* ev, const morkPlace& inPlace,
 
   morkTable* table = mBuilder_Store->MidToTable(ev, inMid);
   morkTable::SlotStrongTable(table, ev, &mBuilder_Table);
-}
+  if ( table && table->mTable_RowSpace )
+    mBuilder_TableRowScope = table->mTable_RowSpace->mSpace_Scope;}
 
 /*virtual*/ void
 morkBuilder::OnTableGlitch(morkEnv* ev, const morkGlitch& inGlitch)
