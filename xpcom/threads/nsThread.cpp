@@ -84,8 +84,7 @@ nsThread::~nsThread()
            ("nsIThread %p destroyed\n", this));
 #if defined(PR_LOGGING)
     if (this == gMainThread) {
-        delete nsIThreadLog;
-        nsIThreadLog = nsnull;
+        PR_DELETE( nsIThreadLog );  // changed from delete, since it is malloc'ed
     }
 #endif
 }
