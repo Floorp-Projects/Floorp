@@ -694,6 +694,8 @@ my @types = (
 	     );
 
 
+print qq{<A NAME="chart"> </A>\n};
+
 foreach my $cmd (grep(/^cmd-/, keys(%::FORM))) {
     if ($cmd =~ /^cmd-add(\d+)-(\d+)-(\d+)$/) {
 	$::FORM{"field$1-$2-$3"} = "xyzzy";
@@ -709,7 +711,7 @@ if (!exists $::FORM{'field0-0-0'}) {
     $::FORM{'field0-0-0'} = "xyzzy";
 }
 
-print qq{<A NAME="chart"> </A>\n};
+my $jsmagic = qq{ONCLICK="document.forms[0].action='query.cgi#chart' ; document.forms[0].method='POST' ; return 1;"};
 
 my $chart;
 for ($chart=0 ; exists $::FORM{"field$chart-0-0"} ; $chart++) {
@@ -732,7 +734,7 @@ for ($chart=0 ; exists $::FORM{"field$chart-0-0"} ; $chart++) {
 	    push(@cols, $line);
 	}
 	push(@rows, "<TR>" . join(qq{<TD ALIGN="center"> or </TD>\n}, @cols) .
-	     qq{<TD><INPUT TYPE="submit" VALUE="Or" NAME="cmd-add$chart-$row-$col"></TD></TR>});
+	     qq{<TD><INPUT TYPE="submit" VALUE="Or" NAME="cmd-add$chart-$row-$col" $jsmagic></TD></TR>});
     }
     print qq{
 <HR>
@@ -740,13 +742,13 @@ for ($chart=0 ; exists $::FORM{"field$chart-0-0"} ; $chart++) {
 };
     print join('<TR><TD>And</TD></TR>', @rows);
     print qq{
-<TR><TD><INPUT TYPE="submit" VALUE="And" NAME="cmd-add$chart-$row-0">
+<TR><TD><INPUT TYPE="submit" VALUE="And" NAME="cmd-add$chart-$row-0" $jsmagic>
 };
     my $n = $chart + 1;
     if (!exists $::FORM{"field$n-0-0"}) {
         print qq{
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-<INPUT TYPE="submit" VALUE="Add another boolean chart" NAME="cmd-add$n-0-0">
+<INPUT TYPE="submit" VALUE="Add another boolean chart" NAME="cmd-add$n-0-0" $jsmagic>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
 <NOBR><A HREF="booleanchart.html">What is this stuff?</A></NOBR>
 };
