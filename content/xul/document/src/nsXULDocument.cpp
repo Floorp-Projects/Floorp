@@ -61,6 +61,7 @@
 #include "nsIScrollableView.h"
 #include "nsIContentViewer.h"
 #include "nsICSSStyleSheet.h"
+#include "nsIDOMComment.h"
 #include "nsIDOMEvent.h"
 #include "nsIDOMEventListener.h"
 #include "nsIDOMEventReceiver.h"
@@ -2313,8 +2314,16 @@ NS_IMETHODIMP
 nsXULDocument::CreateComment(const nsAReadableString& aData,
                              nsIDOMComment** aReturn)
 {
-    NS_NOTREACHED("nsXULDocument::CreateComment");
-    return NS_ERROR_NOT_IMPLEMENTED;
+    nsCOMPtr<nsIContent> comment;
+    nsresult rv = NS_NewCommentNode(getter_AddRefs(comment));
+
+    if (NS_SUCCEEDED(rv)) {
+        rv = comment->QueryInterface(NS_GET_IID(nsIDOMComment),
+                                     (void**)aReturn);
+        (*aReturn)->AppendData(aData);
+    }
+
+    return rv;
 }
 
 
