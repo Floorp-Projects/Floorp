@@ -30,7 +30,6 @@
 #include "nsIDocumentViewer.h"
 #include "nsIDocument.h"
 #include "nsIDOMDocument.h"
-#include "nsIDOMXULDocument.h"
 #include "nsIDiskDocument.h"
 #include "nsIDOMElement.h"
 #include "nsIDOMSelection.h"
@@ -101,7 +100,7 @@ NS_IMPL_RELEASE(nsInterfaceState);
 NS_IMPL_QUERY_INTERFACE4(nsInterfaceState, nsIDOMSelectionListener, nsIDocumentStateListener, nsITransactionListener, nsITimerCallback);
 
 NS_IMETHODIMP
-nsInterfaceState::Init(nsIHTMLEditor* aEditor, nsIDOMXULDocument *aChromeDoc)
+nsInterfaceState::Init(nsIHTMLEditor* aEditor, nsIDOMDocument *aChromeDoc)
 {
   if (!aEditor)
     return NS_ERROR_INVALID_ARG;
@@ -665,7 +664,7 @@ nsInterfaceState::Notify(nsITimer *timer)
 #endif
 
 
-nsresult NS_NewInterfaceState(nsIHTMLEditor* aEditor, nsIDOMXULDocument* aChromeDoc, nsIDOMSelectionListener** aInstancePtrResult)
+nsresult NS_NewInterfaceState(nsIHTMLEditor* aEditor, nsIDOMDocument* aChromeDoc, nsIDOMSelectionListener** aInstancePtrResult)
 {
   nsInterfaceState* newThang = new nsInterfaceState;
   if (!newThang)

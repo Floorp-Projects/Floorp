@@ -33,7 +33,7 @@
 #include "nsITimerCallback.h"
 
 class nsIHTMLEditor;
-class nsIDOMXULDocument;
+class nsIDOMDocument;
 
 // class responsible for communicating changes in local state back to the UI.
 // This is currently somewhat tied to a given XUL UI implementation
@@ -50,7 +50,7 @@ public:
   
   NS_DECL_ISUPPORTS
   
-  NS_IMETHOD    Init(nsIHTMLEditor* aEditor, nsIDOMXULDocument *aChromeDoc);
+  NS_IMETHOD    Init(nsIHTMLEditor* aEditor, nsIDOMDocument *aChromeDoc);
 
   // force an update of the UI. At some point, we could pass flags
   // here to target certain things for updating.
@@ -113,7 +113,7 @@ protected:
   // so would result in cirular reference chains.
   
   nsIHTMLEditor*      mEditor;		 // the HTML editor
-  nsIDOMXULDocument*  mChromeDoc;  // XUL document for the chrome area
+  nsIDOMDocument*  mChromeDoc;  // XUL document for the chrome area
 
   nsIDOMWindow*       mDOMWindow;   // nsIDOMWindow used for calling UpdateCommands
   
@@ -145,6 +145,6 @@ protected:
   
 };
 
-extern "C" nsresult NS_NewInterfaceState(nsIHTMLEditor* aEditor, nsIDOMXULDocument* aChromeDoc, nsIDOMSelectionListener** aInstancePtrResult);
+extern "C" nsresult NS_NewInterfaceState(nsIHTMLEditor* aEditor, nsIDOMDocument* aChromeDoc, nsIDOMSelectionListener** aInstancePtrResult);
 
 #endif // nsInterfaceState_h__
