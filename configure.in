@@ -717,6 +717,7 @@ case "$target" in
 	USE_PTHREADS=1
 	PTHREAD_LDFLAGS=""
 	LIBS="$LIBS -lstdc++"
+	HAVE_DEV_ZERO=1
     ;;
 
 *-openbsd*)
@@ -1813,6 +1814,10 @@ dnl on paged memory boundary
 dnl ========================================================
 
 AC_MSG_CHECKING(for /dev/zero)
+if test "$HAVE_DEV_ZERO"; then
+  AC_DEFINE(HAVE_DEV_ZERO)
+  AC_MSG_RESULT(yes)
+else
 if test -f /dev/zero; then
   AC_DEFINE(HAVE_DEV_ZERO)
   AC_MSG_RESULT(yes)
@@ -1831,6 +1836,7 @@ else
 	else
 	  AC_MSG_RESULT(no)
 	fi
+fi
 fi
 
 dnl Check for dll-challenged libc's.
