@@ -16,8 +16,8 @@
  * Reserved.
  */
 
-#ifndef nsRDFCursorUtils_h__
-#define nsRDFCursorUtils_h__
+#ifndef nsEnumeratorUtils_h__
+#define nsEnumeratorUtils_h__
 
 #include "nsIEnumerator.h"
 #include "nsISupportsArray.h"
@@ -41,6 +41,10 @@ protected:
     PRInt32 mIndex;
 };
 
+extern "C" NS_COM nsresult
+NS_NewArrayEnumerator(nsISimpleEnumerator* *result,
+                      nsISupportsArray* array);
+
 ////////////////////////////////////////////////////////////////////////////////
 
 class NS_COM nsSingletonEnumerator : public nsISimpleEnumerator
@@ -59,6 +63,10 @@ protected:
     nsISupports* mValue;
     PRBool mConsumed;
 };
+
+extern "C" NS_COM nsresult
+NS_NewSingletonEnumerator(nsISimpleEnumerator* *result,
+                          nsISupports* singleton);
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -80,6 +88,10 @@ protected:
     PRBool mStarted;
 };
 
+extern "C" NS_COM nsresult
+NS_NewAdapterEnumerator(nsISimpleEnumerator* *result,
+                        nsIEnumerator* enumerator);
+
 ////////////////////////////////////////////////////////////////////////
 
-#endif /* nsRDFCursorUtils_h__ */
+#endif /* nsEnumeratorUtils_h__ */
