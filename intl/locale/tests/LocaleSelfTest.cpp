@@ -41,7 +41,7 @@
 #define LOCALE_DLL_NAME "NSLOCALE_DLL"
 #define UCONV_DLL       "UCONV_DLL"
 #define UCVLATIN_DLL    "UCVLATIN_DLL"
-#define UNICHARUTIL_DLL_NAME "unicharutil_dll"
+#define UNICHARUTIL_DLL_NAME "UNICHARUTIL_DLL"
 #elif defined(XP_PC)
 #define LOCALE_DLL_NAME "NSLOCALE.DLL"
 #define UCONV_DLL       "uconv.dll"
@@ -346,6 +346,7 @@ static void TestCollation(nsILocale *locale)
 //
 
 static nsICollation *g_collationInst = NULL;
+static nsCollationStrength g_CollationStrength= kCollationCaseInSensitive;
 
 
 static void TestSortPrint1(nsString *string_array, int len)
@@ -366,7 +367,7 @@ static int compare1( const void *arg1, const void *arg2 )
   string1 = *(nsString *) arg1;
   string2 = *(nsString *) arg2;
 
-  res = g_collationInst->CompareString(kCollationCaseInSensitive, string1, string2, &result);
+  res = g_collationInst->CompareString(g_CollationStrength, string1, string2, &result);
 
   return (int) result;
 }
@@ -409,9 +410,43 @@ static void TestSortPrint2(collation_rec *key_array, int len)
   printf("\n");
 }
 
+// Sort test by reading data from a file.
+//
+void SortTestFile(nsILocale* locale, nsICollation* collationInst, FILE* fp)
+{
+  nsString string_array[256]; 
+  char buf[256];
+  int i = 0;
+
+  // read lines and put them to nsStrings
+  while (fgets(buf, 256, fp)) {
+    if (*buf == '\n' || *buf == '\r')
+      continue;
+    // trim LF CR
+    char *cp = buf + (strlen(buf) - 1);
+    while (*cp) {
+      if (*cp == '\n' || *cp == '\r')
+        *cp = '\0';
+      else
+        break;
+      cp--;
+    }
+    string_array[i].SetString(buf);
+    i++;
+  }  
+  cout << "print string before sort\n";
+  TestSortPrint1(string_array, i);
+
+  g_collationInst = collationInst;
+  qsort( (void *)string_array, i, sizeof(nsString), compare1 );
+
+  cout << "print string after sort\n";
+  TestSortPrint1(string_array, i);
+}
+
 // Use nsICollation for qsort.
 //
-static void TestSort(nsILocale *locale)
+static void TestSort(nsILocale *locale, nsCollationStrength collationStrength, FILE *fp)
 {
   nsresult res;
   nsICollationFactory *factoryInst;
@@ -445,6 +480,17 @@ static void TestSort(nsILocale *locale)
     cout << "\tFailed!! return value != NS_OK\n";
   }
 
+  // set collation strength
+  g_CollationStrength = collationStrength;
+  strength = g_CollationStrength;
+
+  if (fp != NULL) {
+    res = NS_ADDREF(collationInst);
+    SortTestFile(locale, collationInst, fp);
+    NS_RELEASE(collationInst);
+    return;
+  }
+
   cout << "==============================\n";
   cout << "Sort Test by comparestring.\n";
   cout << "==============================\n";
@@ -469,7 +515,6 @@ static void TestSort(nsILocale *locale)
   cout << "Sort Test by collation key.\n";
   cout << "==============================\n";
 
-  strength = kCollationCaseSensitive;
 
   res = CreateCollationKey(collationInst, strength, string1, &aKey, &aLength);
   if(NS_FAILED(res)) {
@@ -633,11 +678,47 @@ static void TestDateTimeFormat(nsILocale *locale)
   cout << "Finish nsIDateTimeFormat Test \n";
   cout << "==============================\n";
 }
- 
+
+static nsresult NewLocale(const nsString* localeName, nsILocale** locale)
+{
+	nsILocaleFactory*	localeFactory;
+  nsresult res;
+
+	res = nsRepository::FindFactory(kLocaleFactoryCID, (nsIFactory**)&localeFactory);
+  if (NS_FAILED(res) || localeFactory == nsnull) cout << "FindFactory nsILocaleFactory failed\n";
+
+  res = localeFactory->NewLocale(localeName, locale);
+  if (NS_FAILED(res) || locale == nsnull) cout << "GetSystemLocale failed\n";
+
+	localeFactory->Release();
+
+  return res;
+}
+
+static char* get_option(int argc, char** argv, char* arg)
+{
+  for (int i = 0; i < argc; i++) {
+    if (!strcmp(argv[i], arg)) {
+      NS_ASSERTION((i <= argc && argv[i+1]), "option not specified");
+      return argv[i+1];
+    }
+  }
+  return NULL;
+}
+static char* find_option(int argc, char** argv, char* arg)
+{
+  for (int i = 0; i < argc; i++) {
+    if (!strcmp(argv[i], arg)) {
+      return argv[i];
+    }
+  }
+  return NULL;
+}
 
 int main(int argc, char** argv) {
   nsresult res; 
-   
+
+#if !XP_PC
   res = nsRepository::RegisterFactory(kCollationFactoryCID, LOCALE_DLL_NAME, PR_FALSE, PR_FALSE);
   if (NS_FAILED(res)) cout << "RegisterFactory failed\n";
 
@@ -659,9 +740,6 @@ int main(int argc, char** argv) {
 	res = nsRepository::RegisterFactory(kLocaleFactoryCID, LOCALE_DLL_NAME, PR_FALSE, PR_FALSE);
 	NS_ASSERTION(res==NS_OK,"nsLocaleTest: RegisterFactory failed.");
 
-#ifdef XP_PC
-	res = nsRepository::RegisterFactory(kWin32LocaleFactoryCID, LOCALE_DLL_NAME, PR_FALSE, PR_FALSE);
-	NS_ASSERTION(res==NS_OK,"nsLocaleTest: Register nsIWin32LocaleFactory failed.");
 #endif
   // --------------------------------------------
 
@@ -682,17 +760,44 @@ int main(int argc, char** argv) {
   // --------------------------------------------
   if (argc == 1) {
     TestCollation(locale);
-    TestSort(locale);
+    TestSort(locale, kCollationCaseInSensitive, NULL);
     TestDateTimeFormat(locale);
   }
   else {
+    nsCollationStrength strength = kCollationCaseInSensitive;
+    FILE *fp = NULL;
+    char *s;
+    s = find_option(argc, argv, "-h");
+    if (s) {
+      cout << argv[0] << " usage:\n-date\tdate time format test\n-col\tcollation test\n-sort\tsort test\n\
+-f file\tsort data file\n-case\tcase sensitive sort\n-locale\tlocale\n";
+      return 0;
+    }
+    s = get_option(argc, argv, "-f");
+    if (s) {
+      fp = fopen(s, "r");
+    }
+    s = find_option(argc, argv, "-case");
+    if (s) {
+      strength = kCollationCaseSensitive;
+    }
+    s = get_option(argc, argv, "-locale");
+    if (s) {
+      nsString localeName(s);
+      NS_IF_RELEASE(locale);
+ //     res = NewLocale(&localeName, &locale);  // reset the locale
+    }
+
     while (argc--) {
-      if (!strcmp(argv[argc], "col"))
+      if (!strcmp(argv[argc], "-col"))
         TestCollation(locale);
-      else if (!strcmp(argv[argc], "sort"))
-        TestSort(locale);
-      else if (!strcmp(argv[argc], "date"))
+      else if (!strcmp(argv[argc], "-sort"))
+        TestSort(locale, strength, fp);
+      else if (!strcmp(argv[argc], "-date"))
         TestDateTimeFormat(locale);
+    }
+    if (fp != NULL) {
+      fclose(fp);
     }
   }
 
@@ -701,13 +806,14 @@ int main(int argc, char** argv) {
   // --------------------------------------------
 
   cout << "Finish All The Test Cases\n";
-  res = NS_OK;
-  res = nsRepository::FreeLibraries();
 
+#if !XP_PC
+  res = nsRepository::FreeLibraries();
   if(NS_FAILED(res))
     cout << "nsRepository failed\n";
   else
     cout << "nsRepository FreeLibraries Done\n";
+#endif
   
   return 0;
 }
