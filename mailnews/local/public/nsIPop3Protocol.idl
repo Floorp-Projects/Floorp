@@ -51,6 +51,7 @@ interface nsIPop3Protocol : nsISupports {
    * instead...
    */
   [noscript] void markMessages(in nsVoidArray aUidl);
+  boolean checkMessage(in string aUidl);
 };
 
 

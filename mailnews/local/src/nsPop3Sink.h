@@ -61,6 +61,8 @@ public:
     NS_DECL_ISUPPORTS
     NS_DECL_NSIPOP3SINK
     nsresult	GetServerFolder(nsIMsgFolder **aFolder);
+    nsresult	FindPartialMessages(nsFileSpec *fileSpec);
+    void	CheckPartialMessages(nsIPop3Protocol *protocol);
 
     static char*  GetDummyEnvelope(void);
     
@@ -90,6 +92,7 @@ protected:
     nsCString m_messageUri;
     nsXPIDLCString m_baseMessageUri;
     nsXPIDLCString m_accountKey;
+    nsVoidArray m_partialMsgsArray;
 };
 
 #endif

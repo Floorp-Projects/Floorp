@@ -27,6 +27,7 @@
  *   alecf@netscape.com
  *   sspitzer@netscape.com
  *   Pierre Phaneuf <pp@ludusdesign.com>
+ *   Howard Chu <hyc@highlandsun.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -141,6 +142,15 @@ nsLocalMailCopyState::~nsLocalMailCopyState()
   }
 }
   
+nsLocalFolderScanState::nsLocalFolderScanState() :
+  m_fileSpec(nsnull), m_uidl(nsnull)
+{
+}
+
+nsLocalFolderScanState::~nsLocalFolderScanState()
+{
+}
+
 ///////////////////////////////////////////////////////////////////////////////
 // nsMsgLocalMailFolder interface
 ///////////////////////////////////////////////////////////////////////////////
@@ -149,7 +159,7 @@ nsMsgLocalMailFolder::nsMsgLocalMailFolder(void)
   : mHaveReadNameFromDB(PR_FALSE),
     mInitialized(PR_FALSE), mCopyState(nsnull), mType(nsnull),
     mCheckForNewMessagesAfterParsing(PR_FALSE), mNumFilterClassifyRequests(0), 
-    m_parsingFolder(PR_FALSE)
+    m_parsingFolder(PR_FALSE), mDownloadState(DOWNLOAD_STATE_NONE)
 {
 }
 
@@ -2948,11 +2958,10 @@ nsresult nsMsgLocalMailFolder::CopyMessageTo(nsISupports *message,
 NS_IMETHODIMP
 nsMsgLocalMailFolder::MarkMsgsOnPop3Server(nsISupportsArray *aMessages, PRInt32 aMark)
 {
-  const char      *uidl, *accountKey;
-  char      *header = nsnull;
-  PRUint32  size = 0, len = 0;
+  nsLocalFolderScanState folderScanState;
   nsCOMPtr<nsIPop3IncomingServer> curFolderPop3MailServer;
   nsCOMPtr<nsIFileSpec> mailboxSpec;
+  nsFileSpec realSpec;
   nsCOMArray<nsIPop3IncomingServer> pop3Servers; // servers with msgs deleted...
 
   nsCOMPtr<nsIMsgIncomingServer> incomingServer;
@@ -2970,20 +2979,9 @@ nsMsgLocalMailFolder::MarkMsgsOnPop3Server(nsISupportsArray *aMessages, PRInt32 
   rv = GetPath(getter_AddRefs(mailboxSpec));
   NS_ENSURE_SUCCESS(rv, rv);
 
-  nsCOMPtr <nsILocalFile> localFile;
-  nsFileSpec realSpec;
   mailboxSpec->GetFileSpec(&realSpec);
-  NS_FileSpecToIFile(&realSpec, getter_AddRefs(localFile));
-  nsCOMPtr<nsIFileInputStream> fileStream = do_CreateInstance(NS_LOCALFILEINPUTSTREAM_CONTRACTID, &rv);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  rv = fileStream->Init(localFile,  PR_RDONLY, 0664, PR_FALSE);  //just have to read the messages
-  nsCOMPtr <nsIInputStream> inputStream = do_QueryInterface(fileStream);
-   
-  nsCOMPtr <nsISeekableStream> seekableStream = do_QueryInterface(inputStream);
-
-  nsCOMPtr <nsILineInputStream> fileLineStream = do_QueryInterface(inputStream);
-//  rv = mailboxSpec->OpenStreamForReading();
+  folderScanState.m_fileSpec = &realSpec;
+  rv = GetFolderScanState(&folderScanState);
   NS_ENSURE_SUCCESS(rv,rv);
   
   PRUint32 srcCount;
@@ -2994,12 +2992,9 @@ nsMsgLocalMailFolder::MarkMsgsOnPop3Server(nsISupportsArray *aMessages, PRInt32 
   PRInt32 mark;
   mark = (aMark == POP3_FORCE_DEL) ? POP3_DELETE : aMark;
 
-  for (PRInt32 i = 0; i < srcCount; i++)
+  for (PRUint32 i = 0; i < srcCount; i++)
   {
     /* get uidl for this message */
-    uidl = nsnull;
-    PRBool gotAccountKey = PR_FALSE;
-    accountKey = nsnull;
     nsCOMPtr<nsIMsgDBHdr> msgDBHdr (do_QueryElementAt(aMessages, i, &rv));
     
     PRUint32 flags = 0;
@@ -3007,8 +3002,6 @@ nsMsgLocalMailFolder::MarkMsgsOnPop3Server(nsISupportsArray *aMessages, PRInt32 
     if (msgDBHdr)
     {
       msgDBHdr->GetFlags(&flags);
-      len = 0;
-      PRUint32 messageOffset;
       nsCOMPtr <nsIPop3IncomingServer> msgPop3Server = curFolderPop3MailServer;
       PRBool leaveOnServer = PR_FALSE;
       PRBool deleteMailLeftOnServer = PR_FALSE;
@@ -3019,77 +3012,45 @@ nsMsgLocalMailFolder::MarkMsgsOnPop3Server(nsISupportsArray *aMessages, PRInt32 
         curFolderPop3MailServer->GetLeaveMessagesOnServer(&leaveOnServer);
       }
 
-      msgDBHdr->GetMessageOffset(&messageOffset);
-      rv = seekableStream->Seek(PR_SEEK_SET, messageOffset);
-      NS_ENSURE_SUCCESS(rv,rv);
-      msgDBHdr->GetMessageSize(&len);
-      PRBool wasTruncated = PR_FALSE;
-      while (len > 0 && !uidl)
-      {
-        nsCString header;
-        PRBool more = PR_FALSE;
-        size = len;
-        if (size > 512)
-          size = 512;
-        rv = fileLineStream->ReadLine(header, &more);
-        if (NS_SUCCEEDED(rv))
-        {
-          size = header.Length();
-          if (!size)
-            len = 0; // this breaks us out of the loop on the hdr/body sep
-          else 
-          {
-            len -= size;
-            if (!accountKey)
-              accountKey = strstr(header.get(), HEADER_X_MOZILLA_ACCOUNT_KEY);
-            // account key header will always be before X_UIDL header
-            if (accountKey && !gotAccountKey)
-            {
-              gotAccountKey = PR_TRUE;
-              accountKey += strlen(HEADER_X_MOZILLA_ACCOUNT_KEY) + 2; 
-              nsCOMPtr <nsIMsgAccount> account;
-              rv = accountManager->GetAccount(accountKey, getter_AddRefs(account));
-              if (NS_SUCCEEDED(rv) && account)
-              {
-                account->GetIncomingServer(getter_AddRefs(incomingServer));
-                nsCOMPtr<nsIPop3IncomingServer> curMsgPop3MailServer = do_QueryInterface(incomingServer);
-                if (curMsgPop3MailServer)
-                {
-                  msgPop3Server = curMsgPop3MailServer;
-                  msgPop3Server->GetDeleteMailLeftOnServer(&deleteMailLeftOnServer);
-                  msgPop3Server->GetLeaveMessagesOnServer(&leaveOnServer);
-                }
-              }
-            }
-            // ignore this header if not partial and leaveOnServer not set...
-            if (! (flags & MSG_FLAG_PARTIAL) && !leaveOnServer)
-              continue;
-            // if marking deleted, ignore header if we're not deleting from
-            // server when deleting locally.
-            if (aMark == POP3_DELETE && leaveOnServer && !deleteMailLeftOnServer)
-              continue;
-            uidl = strstr(header.get(), X_UIDL);
-            if (uidl)
-            {
-              uidl += X_UIDL_LEN + 2; // skip UIDL: header
-              len = strlen(uidl);
-              msgPop3Server->AddUidlToMark(uidl, mark);
-              // remember this pop server in list of servers with msgs deleted
-              if (pop3Servers.IndexOfObject(msgPop3Server) == kNotFound)
-                pop3Servers.AppendObject(msgPop3Server);
-              break;
-            }
+      rv = GetUidlFromFolder(&folderScanState, msgDBHdr);
+      if (!NS_SUCCEEDED(rv))
+        continue;
 
+      if (folderScanState.m_uidl)
+      {
+        nsCOMPtr <nsIMsgAccount> account;
+        rv = accountManager->GetAccount(folderScanState.m_accountKey.get(), getter_AddRefs(account));
+        if (NS_SUCCEEDED(rv) && account)
+        {
+          account->GetIncomingServer(getter_AddRefs(incomingServer));
+          nsCOMPtr<nsIPop3IncomingServer> curMsgPop3MailServer = do_QueryInterface(incomingServer);
+          if (curMsgPop3MailServer)
+          {
+            msgPop3Server = curMsgPop3MailServer;
+            msgPop3Server->GetDeleteMailLeftOnServer(&deleteMailLeftOnServer);
+            msgPop3Server->GetLeaveMessagesOnServer(&leaveOnServer);
           }
-        } 
-        else
-          len = 0;
+        }
+      }
+      // ignore this header if not partial and leaveOnServer not set...
+      if (! (flags & MSG_FLAG_PARTIAL) && !leaveOnServer)
+        continue;
+      // if marking deleted, ignore header if we're not deleting from
+      // server when deleting locally.
+      if (aMark == POP3_DELETE && leaveOnServer && !deleteMailLeftOnServer)
+        continue;
+      if (folderScanState.m_uidl)
+      {
+        msgPop3Server->AddUidlToMark(folderScanState.m_uidl, mark);
+        // remember this pop server in list of servers with msgs deleted
+        if (pop3Servers.IndexOfObject(msgPop3Server) == kNotFound)
+          pop3Servers.AppendObject(msgPop3Server);
       }
     }
   }
 
   // need to do this for all pop3 mail servers that had messages deleted.
-  PRInt32 serverCount = pop3Servers.Count();
+  PRUint32 serverCount = pop3Servers.Count();
   for (PRUint32 index = 0; index < serverCount; index++)
     pop3Servers[index]->MarkMessages();
 
@@ -3097,32 +3058,112 @@ nsMsgLocalMailFolder::MarkMsgsOnPop3Server(nsISupportsArray *aMessages, PRInt32 
   return rv;
 }
 
+NS_IMETHODIMP nsMsgLocalMailFolder::DeleteDownloadMsg(nsIMsgDBHdr *aMsgHdr,
+  PRBool *aDoSelect)
+{
+  PRUint32 numMsgs;
+  char *newMsgId;
+
+  // This method is only invoked thru DownloadMessagesForOffline()
+  if (mDownloadState != DOWNLOAD_STATE_NONE)
+  {
+    // We only remember the first key, no matter how many
+    // messages were originally selected.
+    if (mDownloadState == DOWNLOAD_STATE_INITED)
+    {
+      aMsgHdr->GetMessageKey(&mDownloadSelectKey);
+      mDownloadState = DOWNLOAD_STATE_GOTMSG;
+    }
+  
+    aMsgHdr->GetMessageId(&newMsgId);
+  
+    // Walk through all the selected headers, looking for a matching
+    // Message-ID.
+    mDownloadMessages->Count(&numMsgs);
+    for (PRUint32 i = 0; i < numMsgs; i++)
+    {
+      nsresult rv;
+      nsCOMPtr<nsIMsgDBHdr> msgDBHdr (do_QueryElementAt(mDownloadMessages, i, &rv));
+      char *oldMsgId = nsnull;
+      msgDBHdr->GetMessageId(&oldMsgId);
+  
+      // Delete the first match and remove it from the array
+      if (!PL_strcmp(newMsgId, oldMsgId))
+      {
+#if DOWNLOAD_NOTIFY_STYLE == DOWNLOAD_NOTIFY_LAST
+        msgDBHdr->GetMessageKey(&mDownloadOldKey);
+        msgDBHdr->GetThreadParent(&mDownloadOldParent);
+        msgDBHdr->GetFlags(&mDownloadOldFlags);
+        mDatabase->DeleteHeader(msgDBHdr, nsnull, PR_FALSE, PR_FALSE);
+        // Tell caller we want to select this message
+        if (aDoSelect)
+          *aDoSelect = PR_TRUE;
+#else
+        mDatabase->DeleteHeader(msgDBHdr, nsnull, PR_FALSE, PR_TRUE);
+        // Tell caller we want to select this message
+        if (aDoSelect && mDownloadState == DOWNLOAD_STATE_GOTMSG)
+          *aDoSelect = PR_TRUE;
+#endif
+        mDownloadMessages->DeleteElementAt(i);
+        break;
+      }
+    }
+  }
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsMsgLocalMailFolder::SelectDownloadMsg()
+{
+
+#if DOWNLOAD_NOTIFY_STYLE == DOWNLOAD_NOTIFY_LAST
+  if (mDownloadState >= DOWNLOAD_STATE_GOTMSG)
+    mDatabase->NotifyKeyDeletedAll(mDownloadOldKey, mDownloadOldParent, mDownloadOldFlags, nsnull);
+#endif
+
+  if (mDownloadState == DOWNLOAD_STATE_GOTMSG && mDownloadWindow)
+  {
+    nsCAutoString newuri;
+    nsBuildLocalMessageURI(mBaseMessageURI, mDownloadSelectKey, newuri);
+    mDownloadWindow->SelectMessage(newuri.get());
+    mDownloadState = DOWNLOAD_STATE_DIDSEL;
+  }
+  return NS_OK;
+}
 
 NS_IMETHODIMP nsMsgLocalMailFolder::DownloadMessagesForOffline(
 	nsISupportsArray *aMessages, nsIMsgWindow *aWindow)
 {
-  nsresult rv;
-  MarkMsgsOnPop3Server(aMessages, POP3_FETCH_BODY);
-  rv = GetNewMessages(aWindow, nsnull);
+  if (mDownloadState != DOWNLOAD_STATE_NONE) 
+    return NS_ERROR_FAILURE; // already has a download in progress
 
-  if (NS_SUCCEEDED(rv))
+  // We're starting a download...
+  mDownloadState = DOWNLOAD_STATE_INITED;
+
+  MarkMsgsOnPop3Server(aMessages, POP3_FETCH_BODY);
+
+  // Pull out all the PARTIAL messages into a new array
+  PRUint32 srcCount;
+  aMessages->Count(&srcCount);
+
+  NS_NewISupportsArray(getter_AddRefs(mDownloadMessages));
+  for (PRUint32 i = 0; i < srcCount; i++)
   {
-    PRUint32 srcCount;
-    aMessages->Count(&srcCount);
-  
-    for (PRInt32 i = 0; i < srcCount; i++)
+    nsresult rv;
+    nsCOMPtr<nsIMsgDBHdr> msgDBHdr (do_QueryElementAt(aMessages, i, &rv));
+    if (msgDBHdr)
     {
-      nsCOMPtr<nsIMsgDBHdr> msgDBHdr (do_QueryElementAt(aMessages, i, &rv));
-      if (msgDBHdr)
+      PRUint32 flags = 0;
+      msgDBHdr->GetFlags(&flags);
+      if (flags & MSG_FLAG_PARTIAL)
       {
-        PRUint32 flags = 0;
-        msgDBHdr->GetFlags(&flags);
-	if (flags & MSG_FLAG_PARTIAL)
-          mDatabase->DeleteHeader(msgDBHdr, nsnull, PR_FALSE, PR_TRUE);
+        mDownloadMessages->AppendElement(msgDBHdr);
       }
     }
   }
-  return rv;
+  mDownloadWindow = aWindow;
+
+  return GetNewMessages(aWindow, this);
 }
 
 // TODO:  once we move certain code into the IncomingServer (search for TODO)
@@ -3229,6 +3270,14 @@ nsMsgLocalMailFolder::OnStartRunningUrl(nsIURI * aUrl)
 NS_IMETHODIMP
 nsMsgLocalMailFolder::OnStopRunningUrl(nsIURI * aUrl, nsresult aExitCode)
 {
+  // If we just finished a DownloadMessages call, reset...
+  if (mDownloadState != DOWNLOAD_STATE_NONE)
+  {
+    mDownloadState = DOWNLOAD_STATE_NONE;
+    mDownloadMessages = nsnull;
+    mDownloadWindow = nsnull;
+    return nsMsgDBFolder::OnStopRunningUrl(aUrl, aExitCode);
+  }
   if (NS_SUCCEEDED(aExitCode))
   {
     nsresult rv;
@@ -3593,4 +3642,74 @@ nsMsgLocalMailFolder::OnMessageClassified(const char *aMsgURI, nsMsgJunkStatus a
   }
 
   return NS_OK;
+}
+
+NS_IMETHODIMP
+nsMsgLocalMailFolder::GetFolderScanState(nsLocalFolderScanState *aState)
+{
+  nsresult rv;
+
+  NS_FileSpecToIFile(aState->m_fileSpec, getter_AddRefs(aState->m_localFile));
+  aState->m_fileStream = do_CreateInstance(NS_LOCALFILEINPUTSTREAM_CONTRACTID, &rv);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = aState->m_fileStream->Init(aState->m_localFile, PR_RDONLY, 0664, PR_FALSE);
+  if (NS_SUCCEEDED(rv))
+  {
+    aState->m_inputStream = do_QueryInterface(aState->m_fileStream);
+    aState->m_seekableStream = do_QueryInterface(aState->m_inputStream);
+    aState->m_fileLineStream = do_QueryInterface(aState->m_inputStream);
+    aState->m_uidl = nsnull;
+  }
+
+  return rv;
+}
+
+NS_IMETHODIMP
+nsMsgLocalMailFolder::GetUidlFromFolder(nsLocalFolderScanState *aState,
+       nsIMsgDBHdr *aMsgDBHdr)
+{
+  nsresult rv;
+  PRUint32 messageOffset;
+  PRBool more = PR_FALSE;
+  PRUint32 size = 0, len = 0;
+  char *accountKey = nsnull;
+
+  aMsgDBHdr->GetMessageOffset(&messageOffset);
+  rv = aState->m_seekableStream->Seek(PR_SEEK_SET, messageOffset);
+  NS_ENSURE_SUCCESS(rv,rv);
+
+  aState->m_uidl = nsnull;
+
+  aMsgDBHdr->GetMessageSize(&len);
+  while (len > 0)
+  {
+    rv = aState->m_fileLineStream->ReadLine(aState->m_header, &more);
+    if (NS_SUCCEEDED(rv))
+    {
+      size = aState->m_header.Length();
+      if (!size)
+        break;
+      len -= size;
+      // account key header will always be before X_UIDL header
+      if (!accountKey)
+      {
+        accountKey = strstr(aState->m_header.get(), HEADER_X_MOZILLA_ACCOUNT_KEY);
+        if (accountKey)
+	{
+          accountKey += strlen(HEADER_X_MOZILLA_ACCOUNT_KEY) + 2;
+	  aState->m_accountKey = accountKey;
+	}
+      } else
+      {
+        aState->m_uidl = strstr(aState->m_header.get(), X_UIDL);
+        if (aState->m_uidl)
+        {
+          aState->m_uidl += X_UIDL_LEN + 2; // skip UIDL: header
+          break;
+        }
+      }
+    }
+  }
+  return rv;
 }

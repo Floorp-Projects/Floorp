@@ -48,6 +48,7 @@
 #include "nsFileSpec.h"
 #include "nsICopyMessageListener.h"
 #include "nsFileStream.h"
+#include "nsIFileStreams.h"
 #include "nsIPop3IncomingServer.h"  // need this for an interface ID
 #include "nsMsgTxn.h"
 #include "nsIMsgMessageService.h"
@@ -92,6 +93,22 @@ struct nsLocalMailCopyState
   PRPackedBool m_allowUndo;
   PRPackedBool m_writeFailed;
   PRPackedBool m_notifyFolderLoaded;
+};
+
+struct nsLocalFolderScanState
+{
+  nsLocalFolderScanState();
+  ~nsLocalFolderScanState();
+
+  nsFileSpec *m_fileSpec;
+  nsCOMPtr<nsILocalFile> m_localFile;
+  nsCOMPtr<nsIFileInputStream> m_fileStream;
+  nsCOMPtr<nsIInputStream> m_inputStream;
+  nsCOMPtr<nsISeekableStream> m_seekableStream;
+  nsCOMPtr<nsILineInputStream> m_fileLineStream;
+  nsCString m_header;
+  nsCString m_accountKey;
+  const char *m_uidl;	// memory is owned by m_header
 };
 
 class nsMsgLocalMailFolder : public nsMsgDBFolder,
@@ -231,6 +248,33 @@ protected:
   nsMsgKeyArray mSpamKeysToMove;
   nsCString mSpamFolderURI;
   nsresult setSubfolderFlag(const PRUnichar *aFolderName, PRUint32 flags);
+
+
+  // state variables for DownloadMessagesForOffline
+
+  // Do we notify the owning window of Delete's before or after
+  // Adding the new msg?
+#define DOWNLOAD_NOTIFY_FIRST 1
+#define DOWNLOAD_NOTIFY_LAST  2
+
+#ifndef DOWNLOAD_NOTIFY_STYLE
+#define DOWNLOAD_NOTIFY_STYLE	DOWNLOAD_NOTIFY_FIRST
+#endif
+
+  nsCOMPtr<nsISupportsArray> mDownloadMessages;
+  nsCOMPtr<nsIMsgWindow> mDownloadWindow;
+  nsMsgKey mDownloadSelectKey;
+  PRUint32 mDownloadState;
+#define DOWNLOAD_STATE_NONE	0
+#define DOWNLOAD_STATE_INITED	1
+#define DOWNLOAD_STATE_GOTMSG	2
+#define DOWNLOAD_STATE_DIDSEL	3
+
+#if DOWNLOAD_NOTIFY_STYLE == DOWNLOAD_NOTIFY_LAST
+  nsMsgKey mDownloadOldKey;
+  nsMsgKey mDownloadOldParent;
+  PRUint32 mDownloadOldFlags;
+#endif
 };
 
 #endif // nsMsgLocalMailFolder_h__

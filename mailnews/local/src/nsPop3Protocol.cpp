@@ -21,6 +21,8 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
+ *   Howard Chu <hyc@highlandsun.com>
+ *   David Bienvenu <bienvenu@nventure.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -751,7 +753,7 @@ void nsPop3Protocol::Abort()
       m_pop3ConData->msg_closure = nsnull;
   }
   // need this to close the stream on the inbox.
-  m_nsIPop3Sink->AbortMailDelivery();
+  m_nsIPop3Sink->AbortMailDelivery(this);
   m_pop3Server->SetRunningProtocol(nsnull);
 
 }
@@ -1719,6 +1721,9 @@ nsPop3Protocol::GetStat()
       /* We're all done.  We know we have no mail. */
      m_pop3ConData->next_state = POP3_SEND_QUIT;
      PL_HashTableEnumerateEntries(m_pop3ConData->uidlinfo->hash, hash_clear_mapper, nsnull);
+     /* Hack - use nsPop3Sink to wipe out any stale Partial messages */
+      m_nsIPop3Sink->BeginMailDelivery(PR_FALSE, nsnull, nsnull);
+      m_nsIPop3Sink->AbortMailDelivery(this);
      return(0);
   }
 
@@ -2417,7 +2422,7 @@ nsPop3Protocol::GetMsg()
         else 
             m_nsIPop3Sink->SetBiffStateAndUpdateFE(nsIMsgFolder::nsMsgBiffState_NewMail, m_pop3ConData->really_new_messages, PR_FALSE);
       }
-      m_nsIPop3Sink->EndMailDelivery();
+      m_nsIPop3Sink->EndMailDelivery(this);
     }
     
     m_pop3ConData->next_state = POP3_SEND_QUIT;
@@ -3014,28 +3019,37 @@ nsPop3Protocol::RetrResponse(nsIInputStream* inputStream,
             m_pop3ConData->leave_on_server )
         {
 	    Pop3UidlEntry *uidlEntry = NULL;
+            Pop3MsgInfo* info = m_pop3ConData->msg_info + m_pop3ConData->last_accessed_msg; 
 
-	    // A filter might have decided to retrieve this full msg
-	    if (m_pop3ConData->truncating_cur_msg)
-	    {
-               Pop3MsgInfo* info = m_pop3ConData->msg_info + m_pop3ConData->last_accessed_msg; 
-	       uidlEntry = (Pop3UidlEntry *)PL_HashTableLookup(m_pop3ConData->newuidl, info->uidl);
-	    }
-	    if (uidlEntry && uidlEntry->status == FETCH_BODY)
-	    {
-	    // A filter decided to retrieve this full msg
-	       m_pop3ConData->next_state = POP3_SEND_RETR;
-	       m_pop3ConData->truncating_cur_msg = PR_FALSE;
-	    } else
-	    {
+            /* Check for filter actions - FETCH or DELETE */
+            uidlEntry = (Pop3UidlEntry *)PL_HashTableLookup(m_pop3ConData->newuidl, info->uidl);
+
+            if (uidlEntry && uidlEntry->status == FETCH_BODY &&
+            	m_pop3ConData->truncating_cur_msg)
+            {
+            /* A filter decided to retrieve this full msg.
+               Use GetMsg() so the popstate will update correctly,
+	       but don't let this msg get counted twice. */
+               m_pop3ConData->next_state = POP3_GET_MSG;
+               m_pop3ConData->real_new_counter--;
+            /* Make sure we don't try to come through here again. */
+               PL_HashTableRemove (m_pop3ConData->newuidl, (void*)info->uidl);
+               put_hash(m_pop3ConData->uidlinfo->hash, info->uidl, FETCH_BODY, uidlEntry->dateReceived);
+
+            } else if (uidlEntry && uidlEntry->status == DELETE_CHAR)
+            {
+            // A filter decided to delete this msg from the server
+               m_pop3ConData->next_state = POP3_SEND_DELE;
+            } else
+            {
             /* We've retrieved all or part of this message, but we want to
                keep it on the server.  Go on to the next message. */
                m_pop3ConData->last_accessed_msg++;
                m_pop3ConData->next_state = POP3_GET_MSG;
-	    }
-	    if (m_pop3ConData->only_uidl)
-	    {
-	    /* GetMsg didn't update this field. Do it now. */
+            }
+            if (m_pop3ConData->only_uidl)
+            {
+            /* GetMsg didn't update this field. Do it now */
 	       uidlEntry = (Pop3UidlEntry *)PL_HashTableLookup(m_pop3ConData->uidlinfo->hash, m_pop3ConData->only_uidl);
                NS_ASSERTION(uidlEntry, "uidl not found in uidlinfo");
                if (uidlEntry)
@@ -3670,7 +3684,7 @@ nsresult nsPop3Protocol::ProcessProtocolState(nsIURI * url, nsIInputStream * aIn
       {
         m_nsIPop3Sink->IncorporateAbort(m_pop3ConData->only_uidl != nsnull);
         m_pop3ConData->msg_closure = NULL;
-        m_nsIPop3Sink->AbortMailDelivery();
+        m_nsIPop3Sink->AbortMailDelivery(this);
       }
       
       if(m_pop3ConData->msg_del_started)
@@ -3688,7 +3702,7 @@ nsresult nsPop3Protocol::ProcessProtocolState(nsIURI * url, nsIInputStream * aIn
         }
         
         PR_ASSERT (!TestFlag(POP3_PASSWORD_FAILED));
-        m_nsIPop3Sink->AbortMailDelivery();
+        m_nsIPop3Sink->AbortMailDelivery(this);
       }
       
       if (TestFlag(POP3_PASSWORD_FAILED))
@@ -3761,5 +3775,18 @@ NS_IMETHODIMP nsPop3Protocol::MarkMessages(nsVoidArray *aUIDLArray)
     if (m_pop3ConData->uidlinfo)
       MarkMsgInHashTable(m_pop3ConData->uidlinfo->hash, NS_STATIC_CAST(Pop3UidlEntry*,aUIDLArray->ElementAt(i)), &changed);
   }
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsPop3Protocol::CheckMessage(const char *aUidl, PRBool *aBool)
+{
+  Pop3UidlEntry *uidlEntry = nsnull;
+  
+  if (m_pop3ConData->newuidl)
+    uidlEntry = (Pop3UidlEntry *) PL_HashTableLookup(m_pop3ConData->newuidl, aUidl);
+  else if (m_pop3ConData->uidlinfo)
+    uidlEntry = (Pop3UidlEntry *) PL_HashTableLookup(m_pop3ConData->uidlinfo->hash, aUidl);
+  
+  *aBool = uidlEntry ? PR_TRUE : PR_FALSE;
   return NS_OK;
 }

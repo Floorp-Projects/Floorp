@@ -641,7 +641,7 @@ nsresult nsPop3GetMailChainer::RunNextGetNewMail()
   PRUint32 numServersLeft;
   m_serversToGetNewMailFor->Count(&numServersLeft);
 
-  for (PRUint32 i = 0; numServersLeft > 0;)
+  for (; numServersLeft > 0;)
   {
     nsCOMPtr <nsIPop3IncomingServer> popServer (do_QueryElementAt(m_serversToGetNewMailFor, 0));
     m_serversToGetNewMailFor->RemoveElementAt(0);

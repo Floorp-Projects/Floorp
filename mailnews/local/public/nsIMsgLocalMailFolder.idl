@@ -40,8 +40,11 @@
 interface nsIMsgWindow;
 interface nsIUrlListener;
 interface nsIMsgDatabase;
+interface nsIMsgDBHdr;
 interface nsIMsgFolder;
 interface nsIMsgCopyServiceListener;
+
+[ptr] native nsLocalFolderScanState(nsLocalFolderScanState);
 
 %{C++
 /* flags for markMsgsOnPop3Server */
@@ -49,6 +52,9 @@ interface nsIMsgCopyServiceListener;
 #define POP3_DELETE	1
 #define POP3_FETCH_BODY	2
 #define POP3_FORCE_DEL	3
+
+struct nsLocalFolderScanState;
+
 %}
 
 [scriptable, uuid(b8e26003-f2bb-4239-ba47-d597ab6e3671)]
@@ -69,4 +75,19 @@ interface nsIMsgLocalMailFolder : nsISupports {
   attribute boolean checkForNewMessagesAfterParsing;
   [noscript] void markMsgsOnPop3Server(in nsISupportsArray aMessages, in PRInt32 aMark);
   void refreshSizeOnDisk(); // file size on disk has possibly changed - update and notify
+
+  /**
+   * functions for updating the UI while running DownloadMessagesForOffline:
+   * delete the old message before adding its newly downloaded body, and
+   * select the new message after it has replaced the old one
+   */
+  void deleteDownloadMsg(in nsIMsgDBHdr aMsgHdr, out boolean aDoSelect);
+  void selectDownloadMsg();
+
+  /**
+   * functions for grubbing thru a folder to find the Uidl for a
+   * given msgDBHdr
+   */
+  [noscript] void getFolderScanState(in nsLocalFolderScanState aState);
+  [noscript] void getUidlFromFolder(in nsLocalFolderScanState aState, in nsIMsgDBHdr aMsgHdr);
 };

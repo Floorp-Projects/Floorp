@@ -1712,9 +1712,11 @@ NS_IMETHODIMP nsParseNewMailState::ApplyFilterHit(nsIMsgFilter *filter, nsIMsgWi
       }
       case nsMsgFilterAction::DeleteFromPop3Server:
         {
+          PRUint32 flags = 0;
           nsCOMPtr <nsIMsgFolder> downloadFolder;
           msgHdr->GetFolder(getter_AddRefs(downloadFolder));
           nsCOMPtr <nsIMsgLocalMailFolder> localFolder = do_QueryInterface(downloadFolder);
+          msgHdr->GetFlags(&flags);
           if (localFolder)
           {
             nsCOMPtr<nsISupportsArray> messages;
@@ -1724,6 +1726,14 @@ NS_IMETHODIMP nsParseNewMailState::ApplyFilterHit(nsIMsgFilter *filter, nsIMsgWi
             messages->AppendElement(iSupports);
             // This action ignores the deleteMailLeftOnServer preference
             localFolder->MarkMsgsOnPop3Server(messages, POP3_FORCE_DEL);
+
+            // If this is just a header, throw it away. It's useless now
+            // that the server copy is being deleted.
+            if (flags & MSG_FLAG_PARTIAL)
+            {
+              m_msgMovedByFilter = PR_TRUE;
+              msgIsNew = PR_FALSE;
+            }
           }
         }
         break;
@@ -1745,6 +1755,10 @@ NS_IMETHODIMP nsParseNewMailState::ApplyFilterHit(nsIMsgFilter *filter, nsIMsgWi
 	    // Don't add this header to the DB, we're going to replace it
 	    // with the full message.
             m_msgMovedByFilter = PR_TRUE;
+            msgIsNew = PR_FALSE;
+	    // Don't do anything else in this filter, wait until we
+	    // have the full message.
+	    *applyMore = PR_FALSE;
           }
         }
         break;
