@@ -12,7 +12,7 @@
  * 
  * The Original Code is Mozilla Communicator client code, 
  * released March 31, 1998.
- *  
+ * 
  * The Initial Developer of the Original Code is Netscape Communications 
  * Corporation.  Portions created by Netscape are
  * Copyright (C) 1999 Netscape Communications Corporation. All
