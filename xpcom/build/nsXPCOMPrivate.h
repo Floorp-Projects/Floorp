@@ -88,19 +88,19 @@ typedef nsresult (* NewNativeLocalFileFunc)(const nsACString &path, PRBool follo
 typedef nsresult (* GetDebugFunc)(nsIDebug* *result);
 typedef nsresult (* GetTraceRefcntFunc)(nsITraceRefcnt* *result);
 
-typedef PRBool   (* StringContainerInitFunc)(nsStringContainer&);
+typedef nsresult (* StringContainerInitFunc)(nsStringContainer&);
 typedef void     (* StringContainerFinishFunc)(nsStringContainer&);
 typedef PRUint32 (* StringGetDataFunc)(const nsAString&, const PRUnichar**, PRBool*);
-typedef void     (* StringSetDataFunc)(nsAString&, const PRUnichar*, PRUint32);
-typedef void     (* StringSetDataRangeFunc)(nsAString&, PRUint32, PRUint32, const PRUnichar*, PRUint32);
-typedef void     (* StringCopyFunc)(nsAString &, const nsAString &);
+typedef nsresult (* StringSetDataFunc)(nsAString&, const PRUnichar*, PRUint32);
+typedef nsresult (* StringSetDataRangeFunc)(nsAString&, PRUint32, PRUint32, const PRUnichar*, PRUint32);
+typedef nsresult (* StringCopyFunc)(nsAString &, const nsAString &);
 
-typedef PRBool   (* CStringContainerInitFunc)(nsCStringContainer&);
+typedef nsresult (* CStringContainerInitFunc)(nsCStringContainer&);
 typedef void     (* CStringContainerFinishFunc)(nsCStringContainer&);
 typedef PRUint32 (* CStringGetDataFunc)(const nsACString&, const char**, PRBool*);
-typedef void     (* CStringSetDataFunc)(nsACString&, const char*, PRUint32);
-typedef void     (* CStringSetDataRangeFunc)(nsACString&, PRUint32, PRUint32, const char*, PRUint32);
-typedef void     (* CStringCopyFunc)(nsACString &, const nsACString &);
+typedef nsresult (* CStringSetDataFunc)(nsACString&, const char*, PRUint32);
+typedef nsresult (* CStringSetDataRangeFunc)(nsACString&, PRUint32, PRUint32, const char*, PRUint32);
+typedef nsresult (* CStringCopyFunc)(nsACString &, const nsACString &);
 
 typedef nsresult (* CStringToUTF16)(const nsACString &, PRUint32, const nsAString &);
 typedef nsresult (* UTF16ToCString)(const nsAString &, PRUint32, const nsACString &);
