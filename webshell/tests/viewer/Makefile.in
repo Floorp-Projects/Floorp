@@ -43,8 +43,7 @@ EXPORT_RESOURCE_SAMPLES := \
 	$(NULL)
 
 EXPORT_RESOURCE_THROBBER := \
-	$(srcdir)/throbber/anim.gif \
-	$(srcdir)/throbber/anims00.gif \
+	$(wildcard $(srcdir)/throbber/anim*.gif) \
 	$(NULL)
 
 TOOLKIT_GFX_LIB		:= -lgfx$(MOZ_TOOLKIT)
