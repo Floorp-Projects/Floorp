@@ -48,6 +48,11 @@ char * llTransport::ParseParam( char *in_str, char *param_name )
     return retvalue;
 }
 
+// ========== llConnection default destructor ==========
+llConnection::~llConnection()
+{
+}
+
 // ========== llSocketConnection ==========
 
 llSocketConnection::~llSocketConnection()

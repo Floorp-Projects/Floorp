@@ -31,6 +31,7 @@ enum llSideType { llClient, llServer };
 
 class llConnection {
 public:
+    virtual ~llConnection();
     virtual PRInt32 Read( void *buf, PRInt32 amount ) = 0;
     virtual PRInt32 Write( void *buf, PRInt32 amount ) = 0;
 };
