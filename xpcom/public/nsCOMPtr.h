@@ -257,7 +257,6 @@
 #endif
 
 #if defined(SOLARIS) && !defined(__GNUG__)
-  #define NSCAP_NO_BOOL
   #define NSCAP_NO_EXPLICIT
   #define NSCAP_NO_NEW_CASTS
   #define NSCAP_NO_MEMBER_USING_DECLARATIONS
@@ -265,14 +264,12 @@
 
 #if defined(_MSC_VER) && (_MSC_VER<1100)
   #define NSCAP_NO_EXPLICIT
-  #define NSCAP_NO_BOOL
 #endif
 
 #if defined(IRIX)
   #define NSCAP_NO_MEMBER_USING_DECLARATIONS
   #define NSCAP_NO_EXPLICIT
   #define NSCAP_NO_NEW_CASTS
-  #define NSCAP_NO_BOOL
 #endif
 
 #if defined(HPUX)
@@ -281,7 +278,6 @@
 #endif
 
 #if defined(AIX)
-  #define NSCAP_NO_BOOL
   #define NSCAP_NO_NEW_CASTS
 #endif
 
@@ -293,12 +289,6 @@
   #define NSCAP_REINTERPRET_CAST(T,x)  reinterpret_cast<T>(x)
 #else
   #define NSCAP_REINTERPRET_CAST(T,x)  ((T)(x))
-#endif
-
-#ifndef NSCAP_NO_BOOL
-  typedef bool NSCAP_BOOL;
-#else
-  typedef PRBool NSCAP_BOOL;
 #endif
 
 #ifdef NSCAP_FEATURE_DEBUG_MACROS
@@ -441,6 +431,7 @@ struct nsDontAddRef
     T* mRawPtr;
   };
 
+	// This call is now deprecated.  Use |getter_AddRefs()| instead.
 template <class T>
 inline
 nsDontAddRef<T>
@@ -448,13 +439,18 @@ dont_AddRef( T* aRawPtr )
     /*
       ...makes typing easier, because it deduces the template type, e.g., 
       you write |dont_AddRef(fooP)| instead of |nsDontAddRef<IFoo>(fooP)|.
-
-      Like the class it is shorthand for, you would rarely use this directly,
-      but rather through |getter_AddRefs|.
     */
   {
     return nsDontAddRef<T>(aRawPtr);
   }
+
+template <class T>
+inline
+nsDontAddRef<T>
+getter_AddRefs( T* aRawPtr )
+	{
+		return nsDontAddRef<T>(aRawPtr);
+	}
 
 
 
@@ -621,11 +617,7 @@ class nsGetterAddRefs
 
       When initialized with a |nsCOMPtr|, as in the example above, it returns
       a |void**| (or |T**| if needed) that the outer call (|QueryInterface| in this
-      case) can fill in.  When this temporary object goes out of scope, just after
-      the call returns, its destructor assigned the resulting interface pointer, i.e.,
-      |QueryInterface|s result, into the |nsCOMPtr| it was initialized with.
-
-      See also |nsGetterDoesntAddRef|.
+      case) can fill in.
     */
   {
     public:
