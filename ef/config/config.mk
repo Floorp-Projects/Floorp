@@ -19,11 +19,13 @@ ifndef EF_CONFIG_MK
 
 EF_CONFIG_MK=1
 
-CORE_DEPTH = $(DEPTH)/..
-
-include $(DEPTH)/config/coreconfig.mk
 include $(DEPTH)/config/arch.mk
+include $(DEPTH)/config/command.mk
 include $(DEPTH)/config/$(OS_CONFIG).mk
+PLATFORM = $(OBJDIR_NAME)
+include $(DEPTH)/config/location.mk
+include $(DEPTH)/config/prefix.mk
+include $(DEPTH)/config/suffix.mk
 
 ifeq ($(OS_ARCH),WINNT)
 	CCC = cl
@@ -48,10 +50,10 @@ else
 	AS = gcc
 	ASFLAGS += -x assembler-with-cpp
 	CFLAGS += -fdollars-in-identifiers 
-	EXC_FLAGS = -fhandle-exceptions
-	EF_LIBS = -lEF 
+	EXC_FLAGS = -fexceptions
+	EF_LIBS = -L$(DIST)/lib -lEF 
 	EF_LIB_FILES = $(DIST)/lib/libEF.a
-	NSPR_LIBS = -L$(DIST)/lib -lnspr21 -lplc21
+	NSPR_LIBS = -L$(NSPR_PREFIX)/lib -lnspr21 -lplc21
 	MKDIR = mkdir -p
 	LN = ln -s -f
 endif
@@ -87,6 +89,9 @@ endif
 ARCH_DEFINES	+= -DTARGET_CPU=$(CPU_ARCH)
 CFLAGS += $(ARCH_DEFINES)
 
+ifndef BATCH_COMPILATION
+CFLAGS += -DBATCH_COMPILATION=0
+endif
 
 #
 # Some tools.
@@ -99,7 +104,7 @@ PERL = 			perl
 HEADER_GEN_DIR = 	$(DEPTH)/GenIncludes
 LOCAL_EXPORT_DIR = 	$(DEPTH)/LocalIncludes
 
-INCLUDES += -I $(LOCAL_EXPORT_DIR) -I $(LOCAL_EXPORT_DIR)/md/$(CPU_ARCH) -I $(DIST)/include -I $(DEPTH)/Includes
+INCLUDES += -I$(LOCAL_EXPORT_DIR) -I$(LOCAL_EXPORT_DIR)/md/$(CPU_ARCH) -I$(DIST)/include -I$(XPDIST)/public -I$(DEPTH)/Includes -I$(NSPR_PREFIX)/include
 
 ifneq ($(HEADER_GEN),)
 INCLUDES += -I $(HEADER_GEN_DIR)
