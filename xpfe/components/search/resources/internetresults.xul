@@ -24,7 +24,7 @@
 	<titledbutton id="internetresultssummary" value="&results.title.label;" />
 	<html:p />
 
-	<tree id="internetresultstree" flex="100%" border="1" datasources="rdf:internetsearch"  ondblclick="return OpenURL(event,event.target.parentNode);">
+	<tree id="internetresultstree" flex="100%" border="1" datasources="rdf:internetsearch" ondblclick="return OpenURL(event,event.target.parentNode);">
 		<treecol id="NameColumn" rdf:resource="http://home.netscape.com/NC-rdf#Name"/>
 		<treecol id="RelevanceColumn" rdf:resource="http://home.netscape.com/NC-rdf#Relevance" sortActive="true" sortDirection="descending" />
 		<treecol id="SiteColumn" rdf:resource="http://home.netscape.com/NC-rdf#Site"/>

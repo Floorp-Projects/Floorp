@@ -14,8 +14,8 @@ tree {
  background-color: #FFFFFF; 
  border: 1; 
  border-spacing: 0px; 
- width: 90%;
- align: center;
+ width: 100%;
+// align: center;
 } 
 
 treeitem { 
@@ -51,7 +51,7 @@ treecell[sortActive="true"][sortDirection="descending"] {
  }
  
 treecol[sortActive="true"] {
-  background-color: lightgreen;
+  background-color: lightgray;
 }
 
 treehead treeitem treecell { 
