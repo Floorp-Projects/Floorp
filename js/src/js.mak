@@ -58,7 +58,6 @@ INTDIR=.\Release
 ALL : "fdlibm - Win32 Release" "$(OUTDIR)\js32.dll"
 
 CLEAN : 
-	-@erase "$(INTDIR)\jsaddr.obj"
 	-@erase "$(INTDIR)\jsapi.obj"
 	-@erase "$(INTDIR)\jsarena.obj"
 	-@erase "$(INTDIR)\jsarray.obj"
@@ -148,7 +147,6 @@ LINK32_FLAGS=kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib\
  /pdb:"$(OUTDIR)/js32.pdb" /machine:I386 /out:"$(OUTDIR)/js32.dll"\
  /implib:"$(OUTDIR)/js32.lib" 
 LINK32_OBJS= \
-	"$(INTDIR)\jsaddr.obj" \
 	"$(INTDIR)\jsapi.obj" \
 	"$(INTDIR)\jsarena.obj" \
 	"$(INTDIR)\jsarray.obj" \
@@ -206,7 +204,6 @@ INTDIR=.\Debug
 ALL : "fdlibm - Win32 Debug" "$(OUTDIR)\js32.dll"
 
 CLEAN : 
-	-@erase "$(INTDIR)\jsaddr.obj"
 	-@erase "$(INTDIR)\jsapi.obj"
 	-@erase "$(INTDIR)\jsarena.obj"
 	-@erase "$(INTDIR)\jsarray.obj"
@@ -300,7 +297,6 @@ LINK32_FLAGS=kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib\
  /pdb:"$(OUTDIR)/js32.pdb" /debug /machine:I386 /out:"$(OUTDIR)/js32.dll"\
  /implib:"$(OUTDIR)/js32.lib" 
 LINK32_OBJS= \
-	"$(INTDIR)\jsaddr.obj" \
 	"$(INTDIR)\jsapi.obj" \
 	"$(INTDIR)\jsarena.obj" \
 	"$(INTDIR)\jsarray.obj" \
@@ -701,58 +697,6 @@ LIB32_OBJS= \
 
 !ENDIF 
 
-################################################################################
-# Begin Source File
-
-SOURCE=.\jsaddr.c
-
-!IF  "$(CFG)" == "js - Win32 Release"
-
-DEP_CPP_JSADD=\
-	".\jsapi.h"\
-	".\jscompat.h"\
-	".\jscpucfg.h"\
-	".\jsinterp.h"\
-	".\jslong.h"\
-	".\jsosdep.h"\
-	".\jsotypes.h"\
-	".\jsprvtd.h"\
-	".\jspubtd.h"\
-	".\jstypes.h"\
-	{$(INCLUDE)}"\sys\types.h"\
-	
-NODEP_CPP_JSADD=\
-	".\jsautocfg.h"\
-	
-
-"$(INTDIR)\jsaddr.obj" : $(SOURCE) $(DEP_CPP_JSADD) "$(INTDIR)"
-
-
-!ELSEIF  "$(CFG)" == "js - Win32 Debug"
-
-DEP_CPP_JSADD=\
-	".\jsapi.h"\
-	".\jscompat.h"\
-	".\jscpucfg.h"\
-	".\jsinterp.h"\
-	".\jslong.h"\
-	".\jsosdep.h"\
-	".\jsotypes.h"\
-	".\jsprvtd.h"\
-	".\jspubtd.h"\
-	".\jstypes.h"\
-	{$(INCLUDE)}"\sys\types.h"\
-	
-NODEP_CPP_JSADD=\
-	".\jsautocfg.h"\
-	
-
-"$(INTDIR)\jsaddr.obj" : $(SOURCE) $(DEP_CPP_JSADD) "$(INTDIR)"
-
-
-!ENDIF 
-
-# End Source File
 ################################################################################
 # Begin Source File
 

@@ -154,7 +154,6 @@ API_HFILES =		\
 	$(NULL)
 
 OTHER_HFILES =		\
-	jsaddr.h	\
 	jsbit.h		\
 	jscompat.h	\
 	jscpucfg.h	\
