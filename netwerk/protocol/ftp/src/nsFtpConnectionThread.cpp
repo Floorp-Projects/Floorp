@@ -835,7 +835,7 @@ nsFtpState::S_user() {
             if (NS_FAILED(rv)) return rv;
 
             nsCOMPtr<nsIStringBundle> bundle;
-            rv = bundleService->CreateBundle(NECKO_MSGS_URL, nsnull, getter_AddRefs(bundle));
+            rv = bundleService->CreateBundle(NECKO_MSGS_URL, getter_AddRefs(bundle));
 
             
             nsXPIDLString formatedString;
@@ -931,7 +931,7 @@ nsFtpState::S_pass() {
             if (NS_FAILED(rv)) return rv;
 
             nsCOMPtr<nsIStringBundle> bundle;
-            rv = bundleService->CreateBundle(NECKO_MSGS_URL, nsnull, getter_AddRefs(bundle));
+            rv = bundleService->CreateBundle(NECKO_MSGS_URL, getter_AddRefs(bundle));
 
             nsXPIDLString formatedString;
             const PRUnichar *formatStrings[2] = { mUsername.GetUnicode(), hostU.GetUnicode() };
