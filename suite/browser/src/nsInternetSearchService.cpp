@@ -1917,11 +1917,11 @@ InternetSearchDataSourceCallback::OnStopRequest(nsIChannel* channel, nsISupports
 	}
 
 	// copy the engine's icon reference (if it has one) onto the result node
-	nsCOMPtr<nsIRDFNode>		engineIconNode = nsnull;
-	mDataSource->GetTarget(mEngine, kNC_Icon, PR_TRUE, getter_AddRefs(engineIconNode));
-	if (engineIconNode)
+	nsCOMPtr<nsIRDFNode>		engineIconStatusNode = nsnull;
+	mDataSource->GetTarget(mEngine, kNC_Icon, PR_TRUE, getter_AddRefs(engineIconStatusNode));
+	if (engineIconStatusNode)
 	{
-		rv = mDataSource->Assert(mEngine, kNC_StatusIcon, engineIconNode, PR_TRUE);
+		rv = mDataSource->Assert(mEngine, kNC_StatusIcon, engineIconStatusNode, PR_TRUE);
 	}
 
 	if (mBuffer.Length() < 1)
