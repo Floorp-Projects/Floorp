@@ -669,8 +669,31 @@ pk11_FindSecretKeyAttribute(PK11TokenObject *object, CK_ATTRIBUTE_TYPE type)
     }
     switch (type) {
     case CKA_KEY_TYPE:
-	return pk11_NewTokenAttribute(type,key->u.rsa.coefficient.data,
-					key->u.rsa.coefficient.len, PR_FALSE);
+	{
+	    SECItem ktItem, *coeff;
+	    unsigned char ktBuf[4];
+	    int k;
+	    coeff = &key->u.rsa.coefficient;
+	    if (coeff->len < 4) {
+		/* The coefficient has been decoded from an entry in the
+		 * key db.  The decoder removes leading zeros, but PKCS#11
+		 * expects an attribute 4 bytes long it can convert to a
+		 * CK_ULONG.  In order for big-endian platforms to work, the
+		 * leading zeros must be prepended again.
+		 */
+		ktItem.len = 4;
+		ktItem.data = ktBuf;
+		for (k=0; k<4; k++) {
+		    if (k < coeff->len) {
+			ktBuf[3-k] = coeff->data[k];
+		    } else {
+			ktBuf[3-k] = 0;
+		    }
+		}
+		coeff = &ktItem;
+	    }
+	    return pk11_NewTokenAttribute(type, coeff->data, coeff->len, PR_FALSE);
+	}
     case CKA_VALUE:
 	return pk11_NewTokenAttribute(type,key->u.rsa.privateExponent.data,
 				key->u.rsa.privateExponent.len, PR_FALSE);
