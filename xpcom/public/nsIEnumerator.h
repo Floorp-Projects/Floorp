@@ -16,8 +16,8 @@
  * Reserved.
  */
 
-#ifndef __nsIEnumerator_h
-#define __nsIEnumerator_h
+#ifndef nsIEnumerator_h___
+#define nsIEnumerator_h___
 
 #include "nsISupports.h"
 
@@ -29,9 +29,36 @@
 
 class nsIEnumerator : public nsISupports {
 public:
-    NS_IMETHOD_(nsISupports*)    Next() = 0;
-    NS_IMETHOD_(void)            Reset()= 0;
+public:
+
+  /** First will reset the list. will return NS_FAILED if no items
+   */
+  virtual nsresult First()=0;
+
+  /** Last will reset the list to the end. will return NS_FAILED if no items
+   */
+  virtual nsresult Last()=0;
+  
+  /** Next will advance the list. will return failed if allready at end
+   */
+  virtual nsresult Next()=0;
+
+  /** Prev will decrement the list. will return failed if allready at beginning
+   */
+  virtual nsresult Prev()=0;
+
+  /** CurrentItem will return the CurrentItem item it will fail if the list is empty
+   *  @param aItem return value
+   */
+  virtual nsresult CurrentItem(nsISupports **aItem)=0;
+
+  /** return if the collection is at the end.  that is the beginning following a call to Prev
+   *  and it is the end of the list following a call to next
+   *  @param aItem return value
+   */
+  virtual nsresult IsDone(PRBool *aDone)=0;
+
 };
 
-#endif // __nsIFactory_h
+#endif // __nsIEnumerator_h
 
