@@ -20,6 +20,7 @@
 #ifndef nsUCS2BEToUnicode_h___
 #define nsUCS2BEToUnicode_h___
 
+#include "nsISupports.h"
 #include "nsUCvLatinSupport.h"
 
 //----------------------------------------------------------------------
@@ -53,5 +54,6 @@ protected:
   NS_IMETHOD GetMaxLength(const char * aSrc, PRInt32 aSrcLength, 
       PRInt32 * aDestLength);
 };
-
+nsresult NEW_UTF16BEToUnicode(nsISupports **Result);
+nsresult NEW_UTF16LEToUnicode(nsISupports **Result);
 #endif /* nsUCS2BEToUnicode_h___ */

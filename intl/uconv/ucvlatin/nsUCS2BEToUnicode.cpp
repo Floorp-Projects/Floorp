@@ -62,3 +62,178 @@ NS_IMETHODIMP nsUCS2BEToUnicode::GetMaxLength(const char * aSrc,
     return NS_OK;
   }
 }
+
+
+class nsUTF16SameEndianToUnicode : public nsBasicDecoderSupport
+{
+public:
+
+  /**
+   * Class constructor.
+   */
+  nsUTF16SameEndianToUnicode() { Reset();};
+
+  NS_IMETHOD Convert(const char * aSrc, PRInt32 * aSrcLength,
+      PRUnichar * aDest, PRInt32 * aDestLength); 
+  NS_IMETHOD Reset();
+  /**
+   * Static class constructor.
+   */
+  static nsresult CreateInstance(nsISupports **aResult);
+
+protected:
+  //--------------------------------------------------------------------
+  // Subclassing of nsDecoderSupport class [declaration]
+
+  NS_IMETHOD GetMaxLength(const char * aSrc, PRInt32 aSrcLength, 
+      PRInt32 * aDestLength);
+protected:
+  PRUint8 mState;
+  PRUint8 mData;
+};
+
+nsresult nsUTF16SameEndianToUnicode::CreateInstance(nsISupports ** aResult) 
+{
+  *aResult = new nsUTF16SameEndianToUnicode();
+  return (*aResult == NULL)? NS_ERROR_OUT_OF_MEMORY : NS_OK;
+}
+
+//----------------------------------------------------------------------
+// Subclassing of nsTableDecoderSupport class [implementation]
+
+NS_IMETHODIMP nsUTF16SameEndianToUnicode::GetMaxLength(const char * aSrc, 
+                                            PRInt32 aSrcLength, 
+                                            PRInt32 * aDestLength)
+{
+  *aDestLength = (aSrcLength + ((1==mState)?1:0))/2;
+  return NS_OK;
+}
+NS_IMETHODIMP nsUTF16SameEndianToUnicode::Convert(
+      const char * aSrc, PRInt32 * aSrcLength,
+      PRUnichar * aDest, PRInt32 * aDestLength)
+{
+  const char* src = aSrc;
+  const char* srcEnd = aSrc + *aSrcLength;
+  PRUnichar* dest = aDest;
+  PRUnichar* destEnd = aDest + *aDestLength;
+  PRInt32 copybytes;
+
+  if(2 == mState) // first time called
+  {
+    // eleminate BOM
+    if(0xFEFF == *((PRUnichar*)src)) {
+      src+=2;
+    } else if(0xFFFE == *((PRUnichar*)src)) {
+      *aSrcLength=0;
+      *aDestLength=0;
+      return NS_ERROR_ILLEGAL_INPUT;
+    }  
+    mState=0;
+  }
+
+  if((1 == mState) && (src < srcEnd))
+  {
+    if(dest >= destEnd)
+      goto error;
+    if(src>=srcEnd)
+      goto done;
+    char tmpbuf[2];
+    PRUnichar * up = (PRUnichar*) &tmpbuf[0];
+    tmpbuf[0]= mData;
+    tmpbuf[1]= *src++;
+    *dest++ = *up;
+  }
+  
+  copybytes = (destEnd-dest)*2;
+  if(copybytes > (0xFFFE & (srcEnd-src)))
+      copybytes = 0xFFFE & (srcEnd-src);
+  memcpy(dest,src,copybytes);
+  src +=copybytes;
+  dest +=(copybytes/2);
+  if(srcEnd==src)  {
+     mState = 0;
+  } else if(1 == (srcEnd-src) ) {
+     mState = 1;
+     mData  = *src++;
+  } else  {
+     goto error;
+  }
+  
+done:
+  *aDestLength = dest - aDest;
+  *aSrcLength =  src  - aSrc; 
+  return NS_OK;
+
+error:
+  *aDestLength = dest - aDest;
+  *aSrcLength =  src  - aSrc; 
+  return  NS_OK_UDEC_MOREOUTPUT;
+}
+
+NS_IMETHODIMP nsUTF16SameEndianToUnicode::Reset()
+{
+  mState =2;
+  mData=0;
+  return NS_OK;
+}
+class nsUTF16DiffEndianToUnicode : public nsUTF16SameEndianToUnicode
+{
+public:
+  nsUTF16DiffEndianToUnicode() {};
+  NS_IMETHOD Convert(const char * aSrc, PRInt32 * aSrcLength,
+      PRUnichar * aDest, PRInt32 * aDestLength); 
+};
+
+NS_IMETHODIMP nsUTF16DiffEndianToUnicode::Convert(
+      const char * aSrc, PRInt32 * aSrcLength,
+      PRUnichar * aDest, PRInt32 * aDestLength)
+{
+  if(2 == mState) // first time called
+  {
+    if(0xFFFE == *((PRUnichar*)aSrc)) {
+      aSrc+=2;
+      *aSrcLength-=2;
+    } else if(0xFEFF == *((PRUnichar*)aSrc)) {
+      // eleminate BOM
+      *aSrcLength=0;
+      *aDestLength=0;
+      return NS_ERROR_ILLEGAL_INPUT;
+    }  
+    mState=0;
+  }
+  nsresult res = nsUTF16SameEndianToUnicode::Convert(aSrc,aSrcLength, aDest, aDestLength);
+  PRInt32 i;
+
+  // copy
+  char* p;
+  p=(char*)aDest;
+  for(i=*aDestLength; i>0 ;i--,p+=2)
+  {
+     char tmp = *(p+1);
+     *(p+1) = *p;
+     *(p)= tmp;
+  }
+
+  return res;
+}
+static char BOM[] = {(char)0xfe, (char)0xff};
+#define IsBigEndian() (0xFEFF == *((PRUint16*)BOM))
+
+nsresult NEW_UTF16BEToUnicode(nsISupports **aResult)
+{
+   if(IsBigEndian()) {
+     *aResult = new nsUTF16SameEndianToUnicode();
+   } else {
+     *aResult = new nsUTF16DiffEndianToUnicode();
+   }
+   return (NULL == *aResult) ? NS_ERROR_OUT_OF_MEMORY : NS_OK;
+}
+nsresult NEW_UTF16LEToUnicode(nsISupports **aResult)
+{
+   if(IsBigEndian()) {
+     *aResult = new nsUTF16DiffEndianToUnicode();
+   } else {
+     *aResult = new nsUTF16SameEndianToUnicode();
+   }
+   return (NULL == *aResult) ? NS_ERROR_OUT_OF_MEMORY : NS_OK;
+}
