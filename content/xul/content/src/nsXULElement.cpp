@@ -515,11 +515,8 @@ nsXULElement::Init()
 
 nsXULElement::~nsXULElement()
 {
-    if (mPrototype && mPrototype->mType == nsXULPrototypeNode::eType_RefCounted_Element) {
-        mPrototype->mRefCnt--;
-        if (mPrototype->mRefCnt == 0)
-            delete mPrototype;
-    }
+    if (mPrototype)
+        mPrototype->Release();
 
     delete mSlots;
 
@@ -578,8 +575,7 @@ nsXULElement::Create(nsXULPrototypeElement* aPrototype,
     element->mPrototype = aPrototype;
     element->mDocument = aDocument;
 
-    if (aPrototype->mType == nsXULPrototypeNode::eType_RefCounted_Element)
-        aPrototype->mRefCnt++;
+    aPrototype->AddRef();
 
     if (aIsScriptable) {
         // Check each attribute on the prototype to see if we need to do
@@ -4760,13 +4756,7 @@ nsresult nsXULElement::MakeHeavyweight()
       }
     }
 
-    if (proto->mType == nsXULPrototypeNode::eType_RefCounted_Element) {
-      proto->mRefCnt--;
-      if (proto->mRefCnt == 0)
-        delete proto;
-    }
-    
-
+    proto->Release();
     return NS_OK;
 }
 
