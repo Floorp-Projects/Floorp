@@ -43,19 +43,4 @@ foreach my $file (@files) {
     }
 }
 
-# Now let's look at the templates and find any other templates
-# that are INCLUDEd.
-foreach my $file(@testitems) {
-    open (FILE, $include_path . "/" . $file) || next;
-    my @lines = <FILE>;
-    close (FILE);
-    foreach my $line (@lines) {
-        if ($line =~ m/\[% (?:INCLUDE|PROCESS) (.+?) /) {
-            my $template = $1;
-            push (@testitems, $template) unless $t{$template};
-            $t{$template} = 1;
-        }
-    }
-}
-
 1;
