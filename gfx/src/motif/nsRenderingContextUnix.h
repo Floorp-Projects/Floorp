@@ -37,6 +37,8 @@
 
 #include "Xm/Xm.h"
 
+#include "nsDeviceContextUnix.h"
+
 class nsRenderingContextUnix : public nsIRenderingContext
 {
 public:
@@ -66,7 +68,9 @@ public:
   virtual PRBool IsVisibleRect(const nsRect& aRect);
 
   virtual void SetClipRect(const nsRect& aRect, PRBool aIntersect);
-  virtual const nsRect& GetClipRect();
+  virtual PRBool GetClipRect(nsRect &aRect);
+  virtual void SetClipRegion(const nsIRegion& aRegion, PRBool aIntersect);
+
 
   virtual void SetColor(nscolor aColor);
   virtual nscolor GetColor() const;
@@ -125,12 +129,10 @@ public:
 
 protected:
   nscolor mCurrentColor ;
-  GC               mGC;
-  Drawable         mDrawable;
+  nsDrawingSurfaceUnix * mSurface;  
   nsIDeviceContext  *mContext;
-  nsIFontMetrics	  *mFontMetrics;
+  nsIFontMetrics    *mFontMetrics;
   nsIFontCache      *mFontCache;
-
 
 };
 

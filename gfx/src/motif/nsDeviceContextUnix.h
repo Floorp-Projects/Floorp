@@ -26,6 +26,15 @@
 #include "nsIView.h"
 #include "nsIRenderingContext.h"
 
+#include "Xm/Xm.h"
+
+/* nsDrawingSurface is actually the following struct */
+typedef struct nsDrawingSurfaceUnix {
+  Display *display ;
+  Drawable drawable ;
+  GC       gc ;
+};
+
 class nsDeviceContextUnix : public nsIDeviceContext
 {
 public:
@@ -60,12 +69,20 @@ public:
 
   virtual nsDrawingSurface GetDrawingSurface(nsIRenderingContext &aContext);
 
+  //functions for handling gamma correction of output device
+  virtual float GetGamma(void);
+  virtual void SetGamma(float aGamma);
+
+  //XXX the return from this really needs to be ref counted somehow. MMP
+  virtual PRUint8 * GetGammaTable(void);
+
 protected:
   ~nsDeviceContextUnix();
   nsresult CreateFontCache();
 
   nsIFontCache      *mFontCache;
-  nsIWidget         *mWidget;
+  float             mGammaValue;
+  nsDrawingSurfaceUnix * mSurface ;
 
 };
 

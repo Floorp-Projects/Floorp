@@ -40,7 +40,7 @@ public:
   virtual PRBool      Draw(nsIRenderingContext &aContext, nsDrawingSurface aSurface, PRInt32 aSX, PRInt32 aSY, PRInt32 aSWidth, PRInt32 aSHeight,
                                   PRInt32 aDX, PRInt32 aDY, PRInt32 aDWidth, PRInt32 aDHeight);
   virtual nsColorMap* GetColorMap() {return nsnull;}
-  virtual void        ImageUpdated(PRUint8 aFlags, nsRect *aUpdateRect);
+  virtual void ImageUpdated(nsIDeviceContext *aContext, PRUint8 aFlags, nsRect *aUpdateRect);
   virtual nsresult    Init(PRInt32 aWidth, PRInt32 aHeight, PRInt32 aDepth, nsMaskRequirements aMaskRequirements);
   virtual PRBool      IsOptimized()       { return PR_FALSE; }
   virtual nsresult    Optimize(nsDrawingSurface aSurface);
@@ -50,7 +50,7 @@ public:
   virtual PRInt32     GetAlphaXLoc() {return 0;}
   virtual PRInt32     GetAlphaYLoc() {return 0;}
   virtual PRInt32     GetAlphaLineStride(){ return 0; }
-  virtual void        CompositeImage(nsIImage *aTheImage,nsPoint *aULLocation);
+  virtual void CompositeImage(nsIImage *aTheImage,nsPoint *aULLocation,nsBlendQuality aQuality);
   
   virtual nsIImage*   DuplicateImage();
 
@@ -75,7 +75,15 @@ public:
 
   PRBool  SetAlphaMask(nsIImage *aTheMask);
 
+  virtual void  SetAlphaLevel(PRInt32 aAlphaLevel) {mAlphaLevel=aAlphaLevel;}
+
+  virtual PRInt32 GetAlphaLevel() {return(mAlphaLevel);}
+
   void MoveAlphaMask(PRInt32 aX, PRInt32 aY){}
+
+private:
+  PRInt16             mAlphaLevel;        // an alpha level every pixel uses
+
 
 };
 
