@@ -1,0 +1,492 @@
+<?xml version="1.0"?>  
+
+<!-- -*- Mode: HTML; indent-tabs-mode: nil; -*- -->
+<!--
+
+ * Version: NPL 1.1/GPL 2.0/LGPL 2.1
+ *
+ * The contents of this file are subject to the Netscape Public License
+ * Version 1.1 (the "License"); you may not use this file except in
+ * compliance with the License. You may obtain a copy of the License at
+ * http://www.mozilla.org/NPL/
+ *
+ * Software distributed under the License is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+ * for the specific language governing rights and limitations under the
+ * License.
+ *
+ * The Original Code is mozilla.org code.
+ *
+ * The Initial Developer of the Original Code is 
+ * Netscape Communications Corporation.
+ * Portions created by the Initial Developer are Copyright (C) 1998
+ * the Initial Developer. All Rights Reserved.
+ *
+ * Contributor(s):
+ *   Pierre Chanial <chanial@noos.fr> (Original Author)
+ *
+ * Alternatively, the contents of this file may be used under the terms of
+ * either the GNU General Public License Version 2 or later (the "GPL"), or 
+ * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+ * in which case the provisions of the GPL or the LGPL are applicable instead
+ * of those above. If you wish to allow use of your version of this file only
+ * under the terms of either the GPL or the LGPL, and not to allow others to
+ * use your version of this file under the terms of the NPL, indicate your
+ * decision by deleting the provisions above and replace them with the notice
+ * and other provisions required by the GPL or the LGPL. If you do not delete
+ * the provisions above, a recipient may use your version of this file under
+ * the terms of any one of the NPL, the GPL or the LGPL.
+ *
+-->
+<!DOCTYPE window [
+  <!ENTITY % bookmarksDTD SYSTEM "chrome://communicator/locale/bookmarks/bookmarks.dtd" >
+  %bookmarksDTD;
+  <!ENTITY % navigatorDTD SYSTEM "chrome://navigator/locale/navigator.dtd">
+  %navigatorDTD;
+]>
+
+<bindings xmlns="http://www.mozilla.org/xbl" 
+          xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul" 
+          xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+          xmlns:xbl="http://www.mozilla.org/xbl">
+
+  <binding id="bookmarks-toolbar-base">
+  </binding>
+
+  <binding id="bookmarks-toolbar">
+
+    <implementation>
+
+      <constructor>
+        this.toolbar.controllers.appendController(this.commandController);
+      </constructor>
+
+      <destructor>
+        this.toolbar.controllers.removeController(this.commandController);
+      </destructor>
+
+      <property name="toolbar">
+        <getter><![CDATA[
+          return document.getAnonymousElementByAttribute(this, "anonid", "bookmarks-ptf");
+        ]]></getter>
+      </property>
+
+      <method name="loadBookmarksCallback">
+        <body><![CDATA[
+          BMSVC.ReadBookmarks();
+          this.toolbar.builder.rebuild();       
+        ]]></body>
+      </method>
+
+      <method name="loadBookmarksWithDelay">
+        <body><![CDATA[
+          var This = this;
+          setTimeout(function () { This.loadBookmarksCallback() }, 0);
+        ]]></body>
+      </method>
+
+      <field name="_selection">  null</field>
+      <field name="_target">     null</field>
+      <field name="_orientation">null</field>
+
+  <!--////////////////////////////////////////////////////////////////////////////
+      // Fill a context menu popup with menuitems that are appropriate for the current
+      // selection.-->
+      <method name="createBTContextMenu">
+        <parameter name="aEvent"/>
+        <body><![CDATA[
+          var hbox = document.getElementById("NC:PersonalToolbarFolder")
+          hbox.focus() <!-- buttons in the pt have -moz-user-focus: ignore -->
+          this._selection   = this.getBTSelection(document.popupNode);
+          this._orientation = this.getBTOrientation(aEvent, document.popupNode);
+          this._target      = BookmarksUtils.getTargetFromSelection(this._selection, this._orientation);
+          BookmarksCommand.createContextMenu(aEvent, this._selection);
+          this.onCommandUpdate();
+          aEvent.target.addEventListener("mousemove", this.commandController.onMouseMove, false)
+        ]]></body>
+      </method>
+
+  <!--////////////////////////////////////////////////////////////////////////////
+      // Fill a context menu popup with menuitems that are appropriate for the current
+      // selection. -->
+      <method name="destroyBTContextMenu">
+        <parameter name="aEvent"/>
+        <body><![CDATA[
+          if (content) 
+            content.focus()
+          personalToolbarDNDObserver.onDragRemoveFeedBack(document.popupNode); // needed on cancel
+          aEvent.target.removeEventListener("mousemove", this.commandController.onMouseMove, false)
+        ]]></body>
+      </method>
+
+  <!--////////////////////////////////////////////////////////////////////////////
+      // Fill in tooltips for the bookmark toolbar. -->
+      <method name="fillInBTTooltip">
+        <parameter name="aTipElement"/>
+        <body><![CDATA[
+          var title = aTipElement.label;
+          var url = aTipElement.statusText;
+
+          if (!title && !url) {
+            // bail out early if there is nothing to show
+            return false;
+          }
+
+          var tooltipTitle = document.getElementById("ptTitleText");
+          var tooltipUrl = document.getElementById("ptUrlText"); 
+          if (title && title != url) {
+            tooltipTitle.removeAttribute("hidden");
+            tooltipTitle.setAttribute("value", title);
+          } else  {
+            tooltipTitle.setAttribute("hidden", "true");
+          }
+          if (url) {
+            tooltipUrl.removeAttribute("hidden");
+            tooltipUrl.setAttribute("value", url);
+          } else
+            tooltipUrl.setAttribute("hidden", "true");
+
+          return true; // show tooltip
+        ]]></body>
+      </method>
+
+  <!--/////////////////////////////////////////////////////////////////////////////
+      // returns the formatted selection from aNode -->
+      <method name="getBTSelection">
+        <parameter name="aNode"/>
+        <body><![CDATA[
+          var item;
+          switch (aNode.id) {
+          case "bookmarks-ptf":
+            item = "NC:PersonalToolbarFolder"
+            break;
+          case "bookmarks-menu":
+            item = "NC:BookmarksRoot";
+            break;
+          default:
+            item = aNode.id;
+          }
+          if (!this.isBTBookmark(item))
+            return {length:0};
+          var parent           = this.getBTContainer(aNode);
+          var isExpanded       = aNode.hasAttribute("open") && aNode.open;
+          var selection        = {};
+          selection.item       = [RDF.GetResource(item)];
+          selection.parent     = [RDF.GetResource(parent)];
+          selection.isExpanded = [isExpanded]
+          selection.length     = selection.item.length;
+          BookmarksUtils.checkSelection(selection);
+          return selection;
+        ]]></body>
+      </method>
+
+  <!--/////////////////////////////////////////////////////////////////////////////
+      // returns the parent resource of a node in the personal toolbar.
+      // This is determined by inspecting the source element and walking up the 
+      // DOM tree to find the appropriate containing node. -->
+      <method name="getBTContainer">
+        <parameter name="aNode"/>
+        <body><![CDATA[
+          var parent;
+          var item = aNode.id;
+          if (item == "NC:PersonalToolbarFolder")
+            parent = BookmarksUtils.getParentOfContainer(item);
+          else if (item == "NC:BookmarksRoot")
+            parent = null;
+          else if (this.isBTBookmark(item)) {
+            parent = aNode.parentNode.parentNode.id;
+            switch (parent) {
+            case "bookmarks-toolbar":
+              parent = "NC:PersonalToolbarFolder"
+              break;
+            case "bookmarks-menu":
+              parent = "NC:BookmarksRoot";
+              break;
+            }
+          } else
+            parent = "NC:BookmarksRoot"
+          return parent;
+        ]]></body>
+      </method>
+
+  <!--/////////////////////////////////////////////////////////////////////////////
+      // Returns true if the node is a bookmark, a folder or a bookmark separator -->
+      <method name="isBTBookmark">
+        <parameter name="aURI"/>
+        <body><![CDATA[
+          if (!aURI)
+            return false;
+          var type = BookmarksUtils.resolveType(aURI);
+          return (type == "BookmarkSeparator" ||
+                  type == "Bookmark"          ||
+                  type == "Folder"            ||
+                  type == "FolderGroup"       ||
+                  type == "PersonalToolbarFolder")
+        ]]></body>
+      </method>
+
+  <!--/////////////////////////////////////////////////////////////////////////////
+      // Returns true if the node is a container. -->
+      <method name="isBTContainer">
+        <parameter name="aTarget"/>
+        <body><![CDATA[
+          return  aTarget.localName == "menu" || (aTarget.localName == "toolbarbutton" &&
+                 (aTarget.getAttribute("container") == "true" || aTarget.getAttribute("group") == "true"));
+        ]]></body>
+      </method>
+
+  <!--/////////////////////////////////////////////////////////////////////////////
+      // Returns BookmarksUtils.DROP_BEFORE, DROP_ON or DROP_AFTER accordingly
+      // to the event coordinates. Skin authors could break us, we'll cross that 
+      // bridge when they turn us 90degrees.  -->
+      <method name="getBTOrientation">
+        <parameter name="aEvent"/>
+        <parameter name="aTarget"/>
+        <body><![CDATA[
+          var target
+          if (!aTarget)
+            target = aEvent.originalTarget;
+          else
+            target = aTarget;
+          if (target.localName == "menu" &&
+              target.parentNode.localName != "menupopup")
+            return BookmarksUtils.DROP_ON;
+          var overButtonBoxObject = target.boxObject.QueryInterface(Components.interfaces.nsIBoxObject);
+          var overParentBoxObject = target.parentNode.boxObject.QueryInterface(Components.interfaces.nsIBoxObject);
+
+          var size, border;
+          var coordValue, clientCoordValue;
+          switch (target.localName) {
+            case "toolbarseparator":
+            case "toolbarbutton":
+              size = overButtonBoxObject.width;
+              coordValue = overButtonBoxObject.x;
+              clientCoordValue = aEvent.clientX;
+              break;
+            case "menuseparator": 
+            case "menu":
+            case "menuitem":
+              size = overButtonBoxObject.height;
+              coordValue = overButtonBoxObject.y-overParentBoxObject.y;
+              clientCoordValue = aEvent.clientY;
+              break;
+            default: return BookmarksUtils.DROP_ON;
+          }
+          if (this.isBTContainer(target))
+            if (target.localName == "toolbarbutton") {
+              // the DROP_BEFORE area excludes the label
+              var iconNode = document.getAnonymousElementByAttribute(target, "class", "toolbarbutton-icon");
+              border = parseInt(document.defaultView.getComputedStyle(target,"").getPropertyValue("padding-left")) +
+                       parseInt(document.defaultView.getComputedStyle(iconNode     ,"").getPropertyValue("width"));
+              border = Math.min(size/5,Math.max(border,4));
+            } else
+              border = size/5;
+          else
+            border = size/2;
+      
+          // in the first region?
+          if (clientCoordValue-coordValue < border)
+            return BookmarksUtils.DROP_BEFORE;
+          // in the last region?
+          if (clientCoordValue-coordValue >= size-border)
+            return BookmarksUtils.DROP_AFTER;
+          // must be in the middle somewhere
+          return BookmarksUtils.DROP_ON;
+        ]]></body>
+      </method>
+
+  <!--/////////////////////////////////////////////////////////////////////////////
+      // Returns true if the node is a container. -->
+      <method name="expandBTFolder">
+        <body><![CDATA[
+           var target = document.popupNode.lastChild;
+           if (document.popupNode.open)
+             target.hidePopup();
+           else
+             target.showPopup(document.popupNode);
+        ]]></body>
+      </method>
+
+
+      <method name="onCommandUpdate">
+        <body><![CDATA[
+          var selection = this._selection;
+          var target    = this._target;
+          BookmarksController.onCommandUpdate(selection, target);
+          if (document.popupNode.id == "NC:PersonalToolbarFolder") {
+            // disabling 'copy' on the empty area of the personal toolbar
+            var commandNode = document.getElementById("cmd_bm_copy");
+            commandNode.setAttribute("disabled", "true");
+          }
+        ]]></body>
+      </method>
+
+  <!--/////////////////////////////////////////////////////////////////////////////
+      // Command controller -->
+      <field name="commandController" readonly="true"><![CDATA[
+      ({
+        mOuter: this,
+
+        supportsCommand: BookmarksController.supportsCommand,
+
+        isCommandEnabled: function (aCommand)
+        {
+          // warning: this is not the function called in BookmarksController.onCommandUpdate
+          var selection = this.mOuter._selection;
+          var target    = this.mOuter._target;
+          return BookmarksController.isCommandEnabled(aCommand, selection, target);
+        },
+
+        doCommand: function (aCommand)
+        {
+          personalToolbarDNDObserver.onDragRemoveFeedBack(document.popupNode);
+          var selection = this.mOuter._selection;
+          var target    = this.mOuter._target;
+          switch (aCommand) {
+          case "cmd_bm_expandfolder":
+            this.mOuter.expandBTFolder();
+            break;
+          default:
+            BookmarksController.doCommand(aCommand, selection, target);
+          }
+        },
+
+        onMouseMove: function (aEvent)
+        {
+          var command = aEvent.originalTarget.getAttribute("command");
+          var isDisabled = aEvent.originalTarget.getAttribute("disabled")
+          if (isDisabled != "true" && (command == "cmd_bm_newfolder" || command == "cmd_bm_paste")) {
+            personalToolbarDNDObserver.onDragSetFeedBack(document.popupNode, this.parentNode.parentNode._orientation);
+          } else {
+            personalToolbarDNDObserver.onDragRemoveFeedBack(document.popupNode);
+          }
+        }
+
+      })
+      ]]></field>
+
+    </implementation>
+
+    <content xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul" 
+             xmlns:xbl="http://www.mozilla.org/xbl">
+
+      <!-- Personal toolbar items -->
+      <hbox id="bookmarks-ptf" anonid="bookmarks-ptf" contextmenu="_child"
+           flex="1" style="margin-left: 3px;" 
+           datasources="rdf:bookmarks rdf:files rdf:localsearch rdf:internetsearch"
+           ref="NC:PersonalToolbarFolder" flags="dont-test-empty"
+           rdf:type="http://home.netscape.com/NC-rdf#Folder"
+           onclick="BookmarksUtils.loadBookmarkBrowser(event, this.database)"
+           ondraggesture="nsDragAndDrop.startDrag(event, personalToolbarDNDObserver)"
+           ondragdrop="nsDragAndDrop.drop(event, personalToolbarDNDObserver); event.preventBubble()"
+           ondragenter="nsDragAndDrop.dragEnter(event, personalToolbarDNDObserver); event.preventBubble()"
+           ondragexit="nsDragAndDrop.dragExit(event, personalToolbarDNDObserver); event.preventBubble()"
+           ondragover="nsDragAndDrop.dragOver(event, personalToolbarDNDObserver); event.preventBubble()">
+
+        <!-- context menu -->
+        <menupopup onpopupshowing="this.parentNode.parentNode.createBTContextMenu(event);"
+                   onpopuphidden ="this.parentNode.parentNode.destroyBTContextMenu(event);"/>
+
+        <tooltip id="ptTooltip" noautohide="true" 
+                 onpopupshowing="return this.parentNode.parentNode.fillInBTTooltip(document.tooltipNode)">
+          <vbox id="ptTooltipTextBox" flex="1">  
+            <label id="ptTitleText" />
+            <label id="ptUrlText" />
+          </vbox>
+        </tooltip>
+
+        <template xmlns:nc="http://home.netscape.com/NC-rdf#">
+          <rule parent="hbox" rdf:type="http://home.netscape.com/NC-rdf#BookmarkSeparator">
+            <toolbarseparator uri="rdf:*"
+                              rdf:type="rdf:http://www.w3.org/1999/02/22-rdf-syntax-ns#type"/>
+          </rule>
+
+          <!-- yes, the type attribute is necessary otherwise all leaves are 
+               treated as containers for some reason -->
+          <rule parent="hbox" iscontainer="true"
+                nc:FolderGroup="true">
+            <toolbarbutton class="bookmark-item bookmark-group" uri="rdf:*" xulcontentsgenerated="true" 
+                           group="true"
+                           container="false"
+                           rdf:type="http://home.netscape.com/NC-rdf#Folder"
+                           label="rdf:http://home.netscape.com/NC-rdf#Name"/>
+          </rule>
+
+          <rule parent="hbox" iscontainer="true" isempty="true"
+                rdf:type="http://home.netscape.com/NC-rdf#Folder">
+            <toolbarbutton type="menu" editable="true" class="bookmark-item"
+                           rdf:type="http://home.netscape.com/NC-rdf#Folder"
+                           uri="rdf:*" label="rdf:http://home.netscape.com/NC-rdf#Name">
+              <menupopup>
+                <menuitem label="&emptyItem.label;" disabled="true"/>
+              </menupopup>
+            </toolbarbutton>
+          </rule>
+
+          <rule parent="hbox" iscontainer="true">
+            <toolbarbutton type="menu" class="bookmark-item" uri="rdf:*" editable="true"
+                           rdf:type="http://home.netscape.com/NC-rdf#Folder"
+                           label="rdf:http://home.netscape.com/NC-rdf#Name">
+              <menupopup/>
+            </toolbarbutton>
+          </rule>
+
+          <rule parent="hbox">
+            <toolbarbutton class="bookmark-item" uri="rdf:*" editable="true" 
+                           status="rdf:http://home.netscape.com/WEB-rdf#status"
+                           rdf:type="http://home.netscape.com/NC-rdf#Bookmark"
+                           statustext="rdf:http://home.netscape.com/NC-rdf#URL"
+                           tooltip="ptTooltip"
+                           label="rdf:http://home.netscape.com/NC-rdf#Name"/>
+          </rule>
+
+          <rule nc:FolderGroup="true" iscontainer="true">
+            <menupopup>
+              <menuitem class="menuitem-iconic bookmark-group" 
+                        label="rdf:http://home.netscape.com/NC-rdf#Name"
+                        group="true"
+                        uri="rdf:*"
+                        xulcontentsgenerated="true"/>
+            </menupopup>
+          </rule>
+
+          <rule iscontainer="true" isempty="true" rdf:type="http://home.netscape.com/NC-rdf#Folder">
+            <menupopup>
+              <menu class="menu-iconic bookmark-item" uri="rdf:*" 
+                  type="rdf:http://www.w3.org/1999/02/22-rdf-syntax-ns#type"
+                  label="rdf:http://home.netscape.com/NC-rdf#Name">
+                <menupopup>
+                  <menuitem label="&emptyItem.label;" disabled="true"/>
+                </menupopup>
+              </menu>
+            </menupopup>
+          </rule>
+
+          <rule iscontainer="true">
+            <menupopup>
+              <menu class="menu-iconic bookmark-item" uri="rdf:*"
+                    type="rdf:http://www.w3.org/1999/02/22-rdf-syntax-ns#type"
+                    label="rdf:http://home.netscape.com/NC-rdf#Name">
+                <menupopup/>
+              </menu>
+            </menupopup>
+          </rule>
+
+          <rule rdf:type="http://home.netscape.com/NC-rdf#BookmarkSeparator">
+            <menupopup>
+              <menuseparator uri="rdf:*"
+                             type="rdf:http://www.w3.org/1999/02/22-rdf-syntax-ns#type"/>
+            </menupopup>
+          </rule>
+          <rule>
+            <menupopup>
+              <menuitem class="menuitem-iconic bookmark-item" uri="rdf:*"
+                        label="rdf:http://home.netscape.com/NC-rdf#Name"/>
+            </menupopup>
+          </rule>
+        </template>
+      </hbox>
+    </content>
+  </binding>
+
+</bindings>
