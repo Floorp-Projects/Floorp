@@ -7,13 +7,12 @@
 ////////////////////////////////////////////////////////////////////////////
 
 // There are currently two ways to use a stream converter:
-// 1. SYNCRONOUS. Stream to Stream.
+// 1. SYNCHRONOUS. Stream to Stream.
 //    You can supply the service with a stream of type X
 //    and it will convert it to your desired output type and return
-//    a converted stream to you.
-// 
+//    a converted (blocking) stream to you.
 //
-// 3. ASYNCRONOUS. nsIStreamListener to nsIStreamListener
+// 2. ASYNCHRONOUS. nsIStreamListener to nsIStreamListener
 //    You can supply data directly to the converter by calling it's
 //    nsIStreamListener::OnDataAvailable() method. It will then
 //    convert that data from type X to your desired output type and
