@@ -111,7 +111,6 @@ my %map = (
   'mozpango-dvngx',     'intl/ctl/src/hindiShaper',
   'mozucth',            'xpfe/components/ucth',
   'mozxfer',            'xpfe/components/xfer',
-  'mpfilelocprovider',  'modules/mpfilelocprovider',
   'msgbase',            'mailnews/base',
   'msgbaseutil',        'mailnews/base/util',
   'msgcompose',         'mailnews/compose',

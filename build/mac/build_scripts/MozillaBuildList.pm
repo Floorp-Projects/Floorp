@@ -861,9 +861,6 @@ sub BuildClientDist()
     #LIBUTIL
     InstallFromManifest(":mozilla:modules:libutil:public:MANIFEST",                "$distdirectory:libutil:");
 
-    # MPFILELOCPROVIDER
-    InstallFromManifest(":mozilla:modules:mpfilelocprovider:public:MANIFEST",      "$distdirectory:mpfilelocprovider:");
-
     #SUN_JAVA
     InstallFromManifest(":mozilla:sun-java:stubs:include:MANIFEST",                "$distdirectory:sun-java:");
     InstallFromManifest(":mozilla:sun-java:stubs:macjri:MANIFEST",                 "$distdirectory:sun-java:");
@@ -888,6 +885,7 @@ sub BuildClientDist()
 
     #PROFILE
     InstallFromManifest(":mozilla:profile:public:MANIFEST_IDL",                    "$distdirectory:idl:");
+    InstallFromManifest(":mozilla:profile:dirserviceprovider:public:MANIFEST",     "$distdirectory:profdirserviceprovider:");
 
     #PREF_MIGRATOR
     InstallFromManifest(":mozilla:profile:pref-migrator:public:MANIFEST",          "$distdirectory:profile:");
@@ -1686,11 +1684,6 @@ sub BuildCommonProjects()
     BuildProject(":mozilla:dbm:macbuild:DBM.xml",                               "DBM$D.o");
 	MakeAlias(":mozilla:dbm:macbuild:DBM$D.o",                                  ":mozilla:dist:dbm:");
 
-    #// Static libraries
-    # Static Libs
-    BuildProject(":mozilla:modules:mpfilelocprovider:macbuild:mpfilelocprovider.xml", "mpfilelocprovider$D.o");
-    MakeAlias(":mozilla:modules:mpfilelocprovider:macbuild:mpfilelocprovider$D.o", ":mozilla:dist:mpfilelocprovider:");
-    
     InstallFromManifest(":mozilla:xpcom:components:MANIFEST_COMPONENTS",         "${dist_dir}Components:");
 
     EndBuildModule("common");
@@ -1930,6 +1923,8 @@ sub BuildBrowserUtilsProjects()
 
     BuildOneProject(":mozilla:uriloader:macbuild:uriLoader.xml",                "uriLoader$D.$S", 1, $main::ALIAS_SYM_FILES, 1);
     
+    BuildProject(":mozilla:profile:dirserviceprovider:macbuild:dirServiceProvider.xml", "profDirServiceProvider$D.o");
+    MakeAlias(":mozilla:profile:dirserviceprovider:macbuild:profDirServiceProvider$D.o", ":mozilla:dist:profdirserviceprovider:");    
     BuildOneProject(":mozilla:profile:macbuild:profile.xml",                    "profile$D.$S", 1, $main::ALIAS_SYM_FILES, 1);
     BuildOneProject(":mozilla:profile:pref-migrator:macbuild:prefmigrator.xml", "prefm$D.$S", 1, $main::ALIAS_SYM_FILES, 1);
 

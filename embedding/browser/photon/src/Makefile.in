@@ -44,7 +44,7 @@ REQUIRES	= xpcom \
 		  embed_base \
 		  pref \
 		  windowwatcher \
-		  mpfilelocprovider \
+		  profdirserviceprovider \
 		  webbrowserpersist \
 		  find \
 		  exthandler \
@@ -66,7 +66,7 @@ CPPSRCS		= \
 
 SHARED_LIBRARY_LIBS= \
 		$(DIST)/lib/libembed_base_s.$(LIB_SUFFIX) \
-		$(DIST)/lib/libmpfilelocprovider_s.$(LIB_SUFFIX) \
+		$(DIST)/lib/libprofdirserviceprovider_s.$(LIB_SUFFIX) \
 		$(NULL)
 
 EXPORTS		= \

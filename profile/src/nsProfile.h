@@ -57,13 +57,11 @@
 #define _MAX_LENGTH   256
 
 class nsProfile: public nsIProfileInternal,
-                 public nsIDirectoryServiceProvider,
                  public nsIProfileChangeStatus 
 {
     NS_DECL_ISUPPORTS
     NS_DECL_NSIPROFILE
     NS_DECL_NSIPROFILEINTERNAL
-    NS_DECL_NSIDIRECTORYSERVICEPROVIDER
     NS_DECL_NSIPROFILECHANGESTATUS
 
 private:
@@ -76,15 +74,12 @@ private:
 	nsresult CopyDefaultFile(nsIFile *profDefaultsDir,
 	                         nsIFile *newProfDir,
                              const nsACString &fileName);
-	nsresult EnsureProfileFileExists(nsIFile *aFile);
 	nsresult LoadNewProfilePrefs();
     nsresult SetProfileDir(const PRUnichar *profileName, nsIFile *profileDir);
 								
-	nsresult CloneProfileDirectorySpec(nsILocalFile **aLocalFile);
     nsresult AddLevelOfIndirection(nsIFile *aDir);
     nsresult IsProfileDirSalted(nsIFile *profileDir, PRBool *isSalted);
     nsresult DefineLocaleDefaultsDir();
-    nsresult UndefineFileLocations();
     nsresult Update4xProfileInfo();
     char * GetOldRegLocation();
     nsresult UpdateCurrentProfileModTime(PRBool updateRegistry);
@@ -110,6 +105,8 @@ private:
 public:
     nsProfile();
     virtual ~nsProfile();
+    
+    nsresult Init();
 
     // Copies all the registry keys from old profile to new profile
     nsresult CopyRegKey(const PRUnichar *oldProfile, const PRUnichar *newProfile);

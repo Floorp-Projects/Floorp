@@ -43,7 +43,6 @@ REQUIRES    = xpcom \
 			  cookie\
 			  view\
 			  windowwatcher \
-			  mpfilelocprovider \
 			  appshell \
 			  exthandler \
 			  helperAppDlg \

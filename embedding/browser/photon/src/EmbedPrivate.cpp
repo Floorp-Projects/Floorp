@@ -63,8 +63,6 @@
 // for the focus hacking we need to do
 #include <nsIFocusController.h>
 
-// for profiles
-#include <nsMPFileLocProvider.h>
 #include "nsIWebBrowserPrint.h"
 
 // all of our local includes

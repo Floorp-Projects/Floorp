@@ -54,7 +54,6 @@ REQUIRES	= xpcom \
 		  windowwatcher \
 		  embed_base \
 		  embedcomponents \
-		  mpfilelocprovider \
 		  browser \
 		  docshell \
 		  uconv \
@@ -99,7 +98,7 @@ XP_LIBS		= \
 
 ifndef BUILD_STATIC_LIBS
 
-EXTRA_DSO_LIBS += gkgfx mpfilelocprovider_s
+EXTRA_DSO_LIBS += gkgfx
 ifdef MOZ_OJI
 ifeq ($(OS_ARCH),WINNT)
 EXTRA_DSO_LIBS += jsj$(MOZ_BITS)$(VERSION_NUMBER)

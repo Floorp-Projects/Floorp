@@ -33,7 +33,6 @@ STATIC_REQUIRES += \
 
 ifeq ($(OS_ARCH),OS2)
 STATIC_EXTRA_DSO_LIBS += $(addprefix lib,$(shell cat $(FINAL_LINK_COMPS) $(FINAL_LINK_LIBS)))
-STATIC_EXTRA_DSO_LIBS += mpfilelocprovider_s
 STATIC_EXTRA_LIBS += libuls.lib libconv.lib unikbd.lib
 else
 ifeq ($(OS_ARCH),WINNT)
