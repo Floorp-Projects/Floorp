@@ -23,7 +23,7 @@
 // For gUpperToTitle 
 enum {
   kUpperIdx =0,
-  kTitleIdx,
+  kTitleIdx
 };
 
 // For gUpperToTitle
