@@ -441,13 +441,16 @@
     <!-- Font face submenu -->
     <menu id="fontFaceMenu" label="&fontfaceMenu.label;" accesskey="&formatfontmenu.accesskey;" 
           position="1">
-      <menupopup oncommand="doStatefulCommand('cmd_fontFace', event.target.value)" onpopupshowing="initFontFaceMenu(this)">
+      <menupopup oncommand="if (event.target.localName == 'menuitem') doStatefulCommand('cmd_fontFace', event.target.value);"
+                 onpopupshowing="initFontFaceMenu(this);">
         <menuitem label="&fontVarWidth.label;"      accesskey="&fontvarwidth.accesskey;"    value=""    type="radio" name="1" observes="cmd_renderedHTMLEnabler"/>
         <menuitem label="&fontFixedWidth.label;"    accesskey="&fontfixedwidth.accesskey;"  value="tt"  type="radio" name="1" observes="cmd_renderedHTMLEnabler"/>
         <menuseparator/>
         <menuitem label="&fontHelveticaFont.label;" accesskey="&fonthelvetica.accesskey;"   value="Helvetica, Arial, sans-serif"    type="radio" name="2" observes="cmd_renderedHTMLEnabler"/>
         <menuitem label="&fontTimes.label;"         accesskey="&fonttimes.accesskey;"       value="Times New Roman, Times, serif"   type="radio" name="2" observes="cmd_renderedHTMLEnabler"/>
         <menuitem label="&fontCourier.label;"       accesskey="&fontcourier.accesskey;"     value="Courier New, Courier, monospace" type="radio" name="2" observes="cmd_renderedHTMLEnabler"/>
+        <menuseparator/>
+          <!-- Local font face items added here by initLocalFontFaceMenu() -->
       </menupopup>
     </menu>
 
