@@ -106,7 +106,7 @@ static NS_DEFINE_CID(kFrameTraversalCID, NS_FRAMETRAVERSAL_CID);
 #include "nsISelectionController.h"//for the enums
 
 #define STATUS_CHECK_RETURN_MACRO() {if (!mTracker) return NS_ERROR_FAILURE;}
-#define DEBUG_TABLE 1
+//#define DEBUG_TABLE 1
 
 // Selection's use of generated content iterators has been turned off
 // temporarily since it bogs down selection in large documents. Using
