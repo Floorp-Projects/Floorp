@@ -1684,6 +1684,7 @@ void
 nsGlobalHistory::ExpireNow()
 {
   mNowValid = PR_FALSE;
+  mExpireNowTimer = nsnull;
 }
 
 // when we're dirty, we want to make sure we sync again soon,
