@@ -21,6 +21,7 @@
  */
 
 #include "EmbedEventHandling.h"
+#include "CTextInputEventHandler.h"
 
 #include "nsRepeater.h"
 #include "prthread.h"
@@ -271,5 +272,6 @@ void InitializeEmbedEventHandling(LApplication* theApplication)
     CEmbedRepeater *embedRepeater = new CEmbedRepeater;
     ThrowIfNil_(embedRepeater);
     embedRepeater->StartRepeating();
+    InitializeTextInputEventHandling();
 }
    
