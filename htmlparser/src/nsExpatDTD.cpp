@@ -196,16 +196,14 @@ eAutoDetectResult nsExpatDTD::CanParse(nsString& aContentType, nsString& aComman
  * @param 
  * @return
  */
-NS_IMETHODIMP nsExpatDTD::WillBuildModel(nsString& aFilename,PRBool aNotifySink,nsIParser* aParser,nsIContentSink* aSink){
+NS_IMETHODIMP nsExpatDTD::WillBuildModel(nsString& aFilename,PRBool aNotifySink,nsString& aString,nsIContentSink* aSink){
   nsresult result=NS_OK;
   mFilename=aFilename;
 
-  if(aParser){
-    mSink=aParser->GetContentSink();
-    if((aNotifySink) && (mSink)) {
-      mLineNumber=0;
-      result = mSink->WillBuildModel();
-    }
+  mSink=aSink;
+  if((aNotifySink) && (mSink)) {
+    mLineNumber=0;
+    result = mSink->WillBuildModel();
   }
 
   return result;

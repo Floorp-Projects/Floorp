@@ -1367,31 +1367,34 @@ PRInt32 CEntityToken::TranslateToUnicodeStr(nsString& aString) {
   PRInt32 theRadix[2]={16,10};
 
   if(mTextValue.Length()>1) {
-    PRUnichar theChar1=mTextValue[0];
-    PRBool    isDigit1=nsString::IsDigit(theChar1);
+    PRUnichar theChar0=mTextValue[0];
+    PRBool    isDigit0=nsString::IsDigit(theChar0);
 
-    if(isDigit1 || ('x'==theChar1) || ('X'==theChar1)) {
-      PRInt32 err=0;
-      value=mTextValue.ToInteger(&err,theRadix[isDigit1]);
-      if(0==err) {
-  #ifdef PA_REMAP_128_TO_160_ILLEGAL_NCR
-        /* for some illegal, but popular usage */
-        if ((value >= 0x0080) && (value <= 0x009f)) {
-          value = PA_HackTable[value - 0x0080];
-        }
-  #endif
-        aString.Append(PRUnichar(value));
+    char cbuf[30];
+    mTextValue.ToCString(cbuf, sizeof(cbuf)-1);
+    value = NS_EntityToUnicode(cbuf);
+    if(-1<value) {
+      //we found a named entity...
+      aString=PRUnichar(value);
+    }
+    else {
+
+      if(isDigit0 || ('x'==theChar0) || ('X'==theChar0)) {
+        PRInt32 err=0;
+        value=mTextValue.ToInteger(&err,theRadix[isDigit0]);
+        if(0==err) {
+    #ifdef PA_REMAP_128_TO_160_ILLEGAL_NCR
+          /* for some illegal, but popular usage */
+          if ((value >= 0x0080) && (value <= 0x009f)) {
+            value = PA_HackTable[value - 0x0080];
+          }
+    #endif
+          aString.Append(PRUnichar(value));
+        }//if
       }//if
-      return value;
-    }//if
+    }//else
   }//if
 
-  char cbuf[30];
-  mTextValue.ToCString(cbuf, sizeof(cbuf));
-  value = NS_EntityToUnicode(cbuf);
-  if(-1 != value) {
-    aString = PRUnichar(value);
-  } 
   return value;
 }
 

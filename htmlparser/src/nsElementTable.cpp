@@ -214,7 +214,7 @@ CTagList  gNoframeRoot(2,0,eHTMLTag_body,eHTMLTag_frameset);
 
 CTagList  gAutoClose(2,0,eHTMLTag_body,eHTMLTag_td);
 CTagList  gBodyAutoClose(1,0,eHTMLTag_head);
-CTagList  gTBodyAutoClose(1,0,eHTMLTag_thead);
+CTagList  gTBodyAutoClose(3,0,eHTMLTag_thead,eHTMLTag_tfoot,eHTMLTag_tbody);
 CTagList  gCaptionAutoClose(1,0,eHTMLTag_tbody);
 CTagList  gLIAutoClose(2,0,eHTMLTag_p,eHTMLTag_li);
 CTagList  gPAutoClose(2,0,eHTMLTag_p,eHTMLTag_li);
@@ -416,7 +416,7 @@ nsHTMLElement gHTMLElements[] = {
   { /*tag*/                             eHTMLTag_del,
 	  /*rootnodes,endrootnodes*/          &gRootTags,&gRootTags,	
     /*autoclose starttags and endtags*/ 0,0,0,
-    /*parent,incl,exclgroups*/          kNone, (kSelf|kFlow), kNone,	
+    /*parent,incl,exclgroups*/          kFlow, (kSelf|kFlow), kNone,	
     /*special properties*/              0,
     /*special parents,kids,skip*/       &gInBody,0,eHTMLTag_unknown},
 
@@ -465,7 +465,7 @@ nsHTMLElement gHTMLElements[] = {
   { /*tag*/                             eHTMLTag_embed,
 	  /*rootnodes,endrootnodes*/          &gRootTags,&gRootTags,	
     /*autoclose starttags and endtags*/ 0,0,0,
-    /*parent,incl,exclgroups*/          kFlow, kFlow, kNone,	
+    /*parent,incl,exclgroups*/          kFlow, kInline, kNone,	
     /*special properties*/              0,
     /*special parents,kids,skip*/       0,&gContainsParam,eHTMLTag_unknown},
 
@@ -606,7 +606,7 @@ nsHTMLElement gHTMLElements[] = {
   { /*tag*/                             eHTMLTag_ins,
 	  /*rootnodes,endrootnodes*/          &gRootTags,&gRootTags,	
     /*autoclose starttags and endtags*/ 0,0,0,
-    /*parent,incl,exclgroups*/          kNone, (kSelf|kNone), kNone,	
+    /*parent,incl,exclgroups*/          kFlow, (kSelf|kNone), kNone,	
     /*special properties*/              0,
     /*special parents,kids,skip*/       0,0,eHTMLTag_unknown},
 
@@ -941,7 +941,7 @@ nsHTMLElement gHTMLElements[] = {
 
   { /*tag*/                             eHTMLTag_tfoot,
 	  /*rootnodes,endrootnodes*/          &gInTable,	&gInTable,
-    /*autoclose starttags and endtags*/ 0,0,0,
+    /*autoclose starttags and endtags*/ &gTBodyAutoClose,0,0,
     /*parent,incl,exclgroups*/          kNone, kNone, kSelf,	
     /*special properties*/              0,
     /*special parents,kids,skip*/       &gInTable,&gTableElemKids,eHTMLTag_unknown},
@@ -955,7 +955,7 @@ nsHTMLElement gHTMLElements[] = {
 
   { /*tag*/                             eHTMLTag_thead,
 	  /*rootnodes,endrootnodes*/          &gInTable,&gInTable,		
-    /*autoclose starttags and endtags*/ 0,0,0,
+    /*autoclose starttags and endtags*/ &gTBodyAutoClose,0,0,
     /*parent,incl,exclgroups*/          kNone, kNone, kSelf,	
     /*special properties*/              0,
     /*special parents,kids,skip*/       &gInTable,&gTableElemKids,eHTMLTag_unknown},

@@ -414,14 +414,11 @@ eAutoDetectResult nsXIFDTD::CanParse(nsString& aContentType, nsString& aCommand,
  * @param 
  * @return
  */
-nsresult nsXIFDTD::WillBuildModel(nsString& aFileName,PRBool aNotifySink,nsIParser* aParser,nsIContentSink* aSink){
+nsresult nsXIFDTD::WillBuildModel(nsString& aFileName,PRBool aNotifySink,nsString& aSourceType,nsIContentSink* aSink){
   nsresult result=NS_OK;
 
-  if(aParser){
-    mSink=(nsIHTMLContentSink*)aParser->GetContentSink();
-    if(mSink) {
-      mSink->WillBuildModel();
-    }
+  if(mSink) {
+    (nsIHTMLContentSink*)mSink->WillBuildModel();
   }
   return result;
 }

@@ -413,7 +413,10 @@ nsresult nsParser::WillBuildModel(nsString& aFilename,nsIDTD* aDefaultDTD){
         if(PR_TRUE==FindSuitableDTD(*mParserContext,mCommand,mParserContext->mScanner->GetBuffer())) {
           mParserContext->mParseMode=DetermineParseMode(*this);  
           mParserContext->mStreamListenerState=eOnDataAvail;
-          mParserContext->mDTD->WillBuildModel(aFilename,PRBool(0==mParserContext->mPrevContext),this,mSink);
+          mParserContext->mDTD->WillBuildModel( aFilename,
+                                                PRBool(0==mParserContext->mPrevContext),
+                                                mParserContext->mSourceType,
+                                                mSink);
         }//if        
       }//if
     }//if
@@ -705,6 +708,7 @@ nsresult nsParser::Parse(nsString& aSourceBuffer,void* aKey,const nsString& aCon
         pc->mStreamListenerState=eOnStart;  
         pc->mContextType=CParserContext::eCTString;
         pc->mSourceType=aContentType; 
+        mUnusedInput.Truncate(0);
       } 
       else {
         NS_RELEASE(me);

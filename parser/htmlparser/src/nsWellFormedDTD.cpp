@@ -204,33 +204,31 @@ eAutoDetectResult CWellFormedDTD::CanParse(nsString& aContentType, nsString& aCo
  * @param 
  * @return
  */
-NS_IMETHODIMP CWellFormedDTD::WillBuildModel(nsString& aFilename,PRBool aNotifySink,nsIParser* aParser,nsIContentSink* aSink){
+NS_IMETHODIMP CWellFormedDTD::WillBuildModel(nsString& aFilename,PRBool aNotifySink,nsString& aSourceType,nsIContentSink* aSink){
   nsresult result=NS_OK;
   mFilename=aFilename;
 
-  if(aParser){
-    mSink=aParser->GetContentSink();
-    if((aNotifySink) && (mSink)) {
-      mLineNumber=0;
-      result = mSink->WillBuildModel();
+  mSink=aSink;
+  if((aNotifySink) && (mSink)) {
+    mLineNumber=0;
+    result = mSink->WillBuildModel();
 
-  #if 0
-      /* COMMENT OUT THIS BLOCK IF: you aren't using an nsHTMLContentSink...*/
-      {
+#if 0
+    /* COMMENT OUT THIS BLOCK IF: you aren't using an nsHTMLContentSink...*/
+    {
 
-          //now let's automatically open the html...
-        CStartToken theHTMLToken(eHTMLTag_html);
-        nsCParserNode theHTMLNode(&theHTMLToken,0);
-        mSink->OpenHTML(theHTMLNode);
+        //now let's automatically open the html...
+      CStartToken theHTMLToken(eHTMLTag_html);
+      nsCParserNode theHTMLNode(&theHTMLToken,0);
+      mSink->OpenHTML(theHTMLNode);
 
-          //now let's automatically open the body...
-        CStartToken theBodyToken(eHTMLTag_body);
-        nsCParserNode theBodyNode(&theBodyToken,0);
-        mSink->OpenBody(theBodyNode);
-      }
-      /* COMMENT OUT THIS BLOCK IF: you aren't using an nsHTMLContentSink...*/
-  #endif
+        //now let's automatically open the body...
+      CStartToken theBodyToken(eHTMLTag_body);
+      nsCParserNode theBodyNode(&theBodyToken,0);
+      mSink->OpenBody(theBodyNode);
     }
+    /* COMMENT OUT THIS BLOCK IF: you aren't using an nsHTMLContentSink...*/
+#endif
   }
 
   return result;
