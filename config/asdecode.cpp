@@ -42,7 +42,15 @@
 #include <cstring>
 #include <stdlib.h>
 
-#define EXIT_IF_FALSE(x)  if (!(x)) exit(1);
+#define EXIT_IF_FALSE(x)                                                      \
+  do {                                                                        \
+    if (!(x)) {                                                               \
+      printf("Assertion failure: %s\n"                                        \
+             "  at %s line %d\n",                                             \
+             #x, __FILE__, __LINE__);                                         \
+      exit(1);                                                                \
+    }                                                                         \
+  } while (0)
 
 // decodes a file into data and resource forks.
 
@@ -56,7 +64,7 @@ static int read_int(FILE* f)
 static void copy_range(FILE* input, size_t offset, size_t length,
 		       const char* output_name)
 {
-  FILE* output = fopen(output_name, "wb");
+  FILE* output = fopen(output_name, "rw");
   EXIT_IF_FALSE(output != NULL);
   fseek(input, offset, SEEK_SET);
   while (length != 0) {
@@ -78,7 +86,7 @@ int main(int argc, char** argv)
 
   FILE* input = fopen(argv[1], "rb");
   if (input == NULL) {
-    printf("can't open file `%s'\n", argv[1]);
+    printf("%s: can't open file `%s'\n", argv[0], argv[1]);
     exit(2);
   }
 

@@ -216,7 +216,7 @@ $(PROGRAM): $(SPLASH_XPM)
 endif
 
 ifeq ($(OS_ARCH),Darwin)
-EXTRA_DSO_LDOPTS := $(subst -dynamiclib -install_name @executable_path/\$@,-execute,$(EXTRA_DSO_LDOPTS))
+EXTRA_DSO_LDOPTS := $(subst -dynamiclib -install_name @executable_path/\$@ -compatibility_version 1 -current_version 1,-execute,$(EXTRA_DSO_LDOPTS))
 
 ifdef BUILD_STATIC_LIBS
 LDFLAGS	+= -framework QuickTime $(TK_LIBS)
