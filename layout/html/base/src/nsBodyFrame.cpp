@@ -1073,8 +1073,7 @@ nsBodyFrame::CreateAbsoluteView(nsIStyleContext* aStyleContext) const
      
     // Initialize the view with a size of (0, 0). When we're done reflowing
     // the frame the view will be sized and positioned
-    view->Init(viewManager, nsRect(0, 0, 0, 0), containingView, nsnull,
-               nsnull, nsnull, pClip);
+    view->Init(viewManager, nsRect(0, 0, 0, 0), containingView, pClip);
     viewManager->InsertChild(containingView, view, zIndex);
     // If the background color is transparent then mark the view as having
     // transparent content.

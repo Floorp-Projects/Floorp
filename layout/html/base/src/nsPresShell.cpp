@@ -1190,12 +1190,19 @@ PresShell::VerifyIncrementalReflow()
 //  tbounds *= mPresContext->GetPixelsToTwips();
   rv = nsRepository::CreateInstance(kScrollingViewCID, nsnull, kIViewIID,
                                     (void **) &view);
-  if ((NS_OK != rv) || (NS_OK != view->Init(vm, tbounds, nsnull, &kWidgetCID,
-                                            nsnull, nativeParentWidget))) {
+  if ((NS_OK != rv) || (NS_OK != view->Init(vm, tbounds, nsnull))) {
     NS_ASSERTION(NS_OK == rv, "failed to create scroll view");
   }
+
+  //now create the widget for the view
+  rv = view->CreateWidget(kWidgetCID, nsnull, nativeParentWidget);
+  if (NS_OK != rv) {
+    NS_ASSERTION(NS_OK == rv, "failed to create scroll view widget");
+  }
+
   rv = view->QueryInterface(kScrollViewIID, (void**)&scrollView);
   if (NS_OK == rv) {
+    scrollView->CreateScrollControls(nativeParentWidget);
     scrollView->SetScrollPreference(scrolling);
   }
   else {

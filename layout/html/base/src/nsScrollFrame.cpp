@@ -170,8 +170,7 @@ nsScrollFrame::CreateScrollingView()
     }
 
     // Initialize the scrolling view
-    view->Init(viewManager, mRect, parentView, nsnull, nsnull, nsnull,
-               nsnull);
+    view->Init(viewManager, mRect, parentView);
 
     // Insert the view into the view hierarchy
     viewManager->InsertChild(parentView, view, zIndex);
@@ -188,6 +187,9 @@ nsScrollFrame::CreateScrollingView()
     // Get the nsIScrollableView interface
     nsIScrollableView* scrollingView;
     view->QueryInterface(kScrollViewIID, (void**)&scrollingView);
+
+    //create widgets for scrolling
+    scrollingView->CreateScrollControls();
 
     // Set the scroll prefrence
     nsScrollPreference scrollPref = (NS_STYLE_OVERFLOW_SCROLL == display->mOverflow)
@@ -211,8 +213,7 @@ nsScrollFrame::CreateScrollingView()
       mFirstChild->SetView(scrolledView);
   
       // Initialize the view
-      scrolledView->Init(viewManager, nsRect(0, 0, 0, 0), parentView, nsnull,
-                         nsnull, nsnull, nsnull);
+      scrolledView->Init(viewManager, nsRect(0, 0, 0, 0), parentView);
 
       // Set it as the scrolling view's scrolled view
       scrollingView->SetScrolledView(scrolledView);

@@ -395,105 +395,6 @@ nsrefcnt nsScrollingView :: Release()
   return 1;
 }
 
-NS_IMETHODIMP nsScrollingView :: Init(nsIViewManager* aManager,
-                            					const nsRect &aBounds,
-                                      const nsIView *aParent,
-                            					const nsIID *aWindowIID,
-                                      nsWidgetInitData *aWidgetInitData,
-                            					nsNativeWidget aNative,
-                            					const nsViewClip *aClip,
-                            					nsViewVisibility aVisibilityFlag)
-{
-  nsresult rv;
-
-  rv = nsView :: Init(aManager, aBounds, aParent, aWindowIID, aWidgetInitData,
-                      aNative, aClip, aVisibilityFlag);
-
-  if (rv == NS_OK)
-  {
-    nsIDeviceContext  *dx;
-    mViewManager->GetDeviceContext(dx);
-
-    // Create a clip view
-    mClipView = new nsView;
-
-    if (nsnull != mClipView)
-    {
-      // The clip view needs a widget to clip any of the scrolled view's
-      // child views with widgets. Note that the clip view has an opacity
-      // of 0.0f (completely transparent)
-      // XXX The clip widget should be created on demand only...
-      rv = mClipView->Init(mViewManager, aBounds, this, &kWidgetCID, nsnull,
-                           mWindow ? nsnull : aNative, nsnull);
-      mViewManager->InsertChild(this, mClipView, -1);
-      mViewManager->SetViewOpacity(mClipView, 0.0f);
-    }
-
-    // Create a view for a corner cover
-    mCornerView = new CornerView;
-
-    if (nsnull != mCornerView)
-    {
-      nsRect trect;
-      float  sbWidth, sbHeight;
-
-      dx->GetScrollBarDimensions(sbWidth, sbHeight);
-      trect.width = NSToCoordRound(sbWidth);
-      trect.x = aBounds.x + aBounds.XMost() - trect.width;
-      trect.height = NSToCoordRound(sbHeight);
-      trect.y = aBounds.y + aBounds.YMost() - trect.height;
-
-      rv = mCornerView->Init(mViewManager, trect, this, nsnull, nsnull, nsnull,
-                             nsnull, nsViewVisibility_kHide);
-      mViewManager->InsertChild(this, mCornerView, -1);
-    }
-
-    // Create a view for a vertical scrollbar
-    mVScrollBarView = new ScrollBarView(this);
-
-    if (nsnull != mVScrollBarView)
-    {
-      nsRect  trect = aBounds;
-      float   sbWidth, sbHeight;
-
-      dx->GetScrollBarDimensions(sbWidth, sbHeight);
-      trect.width = NSToCoordRound(sbWidth);
-      trect.x += aBounds.XMost() - trect.width;
-      trect.height -= NSToCoordRound(sbHeight);
-
-      static NS_DEFINE_IID(kCScrollbarIID, NS_VERTSCROLLBAR_CID);
-
-      rv = mVScrollBarView->Init(mViewManager, trect, this, &kCScrollbarIID, nsnull,
-                                 mWindow ? nsnull : aNative);
-      mViewManager->InsertChild(this, mVScrollBarView, -3);
-    }
-
-    // Create a view for a horizontal scrollbar
-    mHScrollBarView = new ScrollBarView(this);
-
-    if (nsnull != mHScrollBarView)
-    {
-      nsRect  trect = aBounds;
-      float   sbWidth, sbHeight;
-
-      dx->GetScrollBarDimensions(sbWidth, sbHeight);
-      trect.height = NSToCoordRound(sbHeight);
-      trect.y += aBounds.YMost() - trect.height;
-      trect.width -= NSToCoordRound(sbWidth);
-
-      static NS_DEFINE_IID(kCHScrollbarIID, NS_HORZSCROLLBAR_CID);
-
-      rv = mHScrollBarView->Init(mViewManager, trect, this, &kCHScrollbarIID, nsnull,
-                                 mWindow ? nsnull : aNative);
-      mViewManager->InsertChild(this, mHScrollBarView, -3);
-    }
-
-    NS_RELEASE(dx);
-  }
-
-  return rv;
-}
-
 NS_IMETHODIMP nsScrollingView :: SetDimensions(nscoord width, nscoord height, PRBool aPaint)
 {
   nsIDeviceContext  *dx;
@@ -953,6 +854,100 @@ NS_IMETHODIMP nsScrollingView :: HandleEvent(nsGUIEvent *aEvent, PRUint32 aEvent
   return nsView::HandleEvent(aEvent, aEventFlags, aStatus);
 }
 
+NS_IMETHODIMP nsScrollingView :: CreateScrollControls(nsNativeWidget aNative)
+{
+  nsIDeviceContext  *dx;
+  mViewManager->GetDeviceContext(dx);
+  nsresult rv = NS_ERROR_FAILURE;
+
+  // Create a clip view
+  mClipView = new nsView;
+
+  if (nsnull != mClipView)
+  {
+    // The clip view needs a widget to clip any of the scrolled view's
+    // child views with widgets. Note that the clip view has an opacity
+    // of 0.0f (completely transparent)
+    // XXX The clip widget should be created on demand only...
+    rv = mClipView->Init(mViewManager, mBounds, this);
+    mViewManager->InsertChild(this, mClipView, -1);
+    mViewManager->SetViewOpacity(mClipView, 0.0f);
+    rv = mClipView->CreateWidget(kWidgetCID, nsnull,
+                                 mWindow ? nsnull : aNative);
+  }
+
+  // Create a view for a corner cover
+  mCornerView = new CornerView;
+
+  if (nsnull != mCornerView)
+  {
+    nsRect trect;
+    float  sbWidth, sbHeight;
+
+    dx->GetScrollBarDimensions(sbWidth, sbHeight);
+    trect.width = NSToCoordRound(sbWidth);
+    trect.x = mBounds.x + mBounds.XMost() - trect.width;
+    trect.height = NSToCoordRound(sbHeight);
+    trect.y = mBounds.y + mBounds.YMost() - trect.height;
+
+    rv = mCornerView->Init(mViewManager, trect, this,
+                           nsnull, nsViewVisibility_kHide);
+    mViewManager->InsertChild(this, mCornerView, -1);
+  }
+
+  // Create a view for a vertical scrollbar
+  mVScrollBarView = new ScrollBarView(this);
+
+  if (nsnull != mVScrollBarView)
+  {
+    nsRect  trect = mBounds;
+    float   sbWidth, sbHeight;
+
+    dx->GetScrollBarDimensions(sbWidth, sbHeight);
+    trect.width = NSToCoordRound(sbWidth);
+    trect.x += mBounds.XMost() - trect.width;
+    trect.height -= NSToCoordRound(sbHeight);
+
+    static NS_DEFINE_IID(kCScrollbarIID, NS_VERTSCROLLBAR_CID);
+
+    rv = mVScrollBarView->Init(mViewManager, trect, this);
+    mViewManager->InsertChild(this, mVScrollBarView, -3);
+    rv = mVScrollBarView->CreateWidget(kCScrollbarIID, nsnull,
+                                       mWindow ? nsnull : aNative);
+  }
+
+  // Create a view for a horizontal scrollbar
+  mHScrollBarView = new ScrollBarView(this);
+
+  if (nsnull != mHScrollBarView)
+  {
+    nsRect  trect = mBounds;
+    float   sbWidth, sbHeight;
+
+    dx->GetScrollBarDimensions(sbWidth, sbHeight);
+    trect.height = NSToCoordRound(sbHeight);
+    trect.y += mBounds.YMost() - trect.height;
+    trect.width -= NSToCoordRound(sbWidth);
+
+    static NS_DEFINE_IID(kCHScrollbarIID, NS_HORZSCROLLBAR_CID);
+
+    rv = mHScrollBarView->Init(mViewManager, trect, this);
+    mViewManager->InsertChild(this, mHScrollBarView, -3);
+    rv = mHScrollBarView->CreateWidget(kCHScrollbarIID, nsnull,
+                                       mWindow ? nsnull : aNative);
+  }
+
+  NS_RELEASE(dx);
+
+  return rv;
+}
+
+NS_IMETHODIMP nsScrollingView :: SetWidget(nsIWidget *aWidget)
+{
+  NS_ASSERTION(PR_FALSE, "please don't try and set a widget here");
+  return NS_ERROR_FAILURE;
+}
+
 NS_IMETHODIMP nsScrollingView :: ComputeContainerSize()
 {
   nsIView       *scrolledView;
@@ -1392,7 +1387,13 @@ NS_IMETHODIMP nsScrollingView :: SetScrolledView(nsIView *aScrolledView)
 
 NS_IMETHODIMP nsScrollingView :: GetScrolledView(nsIView *&aScrolledView) const
 {
-  return mClipView->GetChild(0, aScrolledView);
+  if (nsnull != mClipView)
+    return mClipView->GetChild(0, aScrolledView);
+  else
+  {
+    aScrolledView = nsnull;
+    return NS_OK;
+  }
 }
 
 NS_IMETHODIMP nsScrollingView :: GetScrollPosition(nscoord &aX, nscoord &aY) const

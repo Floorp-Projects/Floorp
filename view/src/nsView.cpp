@@ -193,9 +193,6 @@ nsIView* nsView::GetViewFor(nsIWidget* aWidget)
 NS_IMETHODIMP nsView :: Init(nsIViewManager* aManager,
                              const nsRect &aBounds,
                              const nsIView *aParent,
-                             const nsCID *aWindowCIID,
-                             nsWidgetInitData *aWidgetInitData,
-                             nsNativeWidget aNative,
                              const nsViewClip *aClip,
                              nsViewVisibility aVisibilityFlag)
 {
@@ -225,34 +222,6 @@ NS_IMETHODIMP nsView :: Init(nsIViewManager* aManager,
   //temporarily set it...
   SetParent((nsIView *)aParent);
 
-  // check if a real window has to be created
-  if (aWindowCIID)
-  {
-    nsIDeviceContext  *dx;
-    nsRect            trect = aBounds;
-    float             scale;
-
-    mViewManager->GetDeviceContext(dx);
-    dx->GetAppUnitsToDevUnits(scale);
-
-    trect *= scale;
-
-    if (NS_OK == LoadWidget(*aWindowCIID))
-    {
-      if (aNative)
-        mWindow->Create(aNative, trect, ::HandleEvent, dx, nsnull, nsnull, aWidgetInitData);
-      else
-      {
-        nsIWidget *parent;
-        GetOffsetFromWidget(nsnull, nsnull, parent);
-        mWindow->Create(parent, trect, ::HandleEvent, dx, nsnull, nsnull, aWidgetInitData);
-        NS_IF_RELEASE(parent);
-      }
-    }
-
-    NS_RELEASE(dx);
-  }
-
   SetVisibility(aVisibilityFlag);
 
   // XXX Don't clear this or we hork the scrolling view when creating the clip
@@ -276,13 +245,6 @@ NS_IMETHODIMP nsView :: GetViewManager(nsIViewManager *&aViewMgr)
 {
   NS_IF_ADDREF(mViewManager);
   aViewMgr = mViewManager;
-  return NS_OK;
-}
-
-NS_IMETHODIMP nsView :: GetWidget(nsIWidget *&aWidget)
-{
-  NS_IF_ADDREF(mWindow);
-  aWidget = mWindow;
   return NS_OK;
 }
 
@@ -1157,6 +1119,67 @@ NS_IMETHODIMP nsView :: SetClientData(void *aData)
 NS_IMETHODIMP nsView :: GetClientData(void *&aData)
 {
   aData = mClientData;
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsView :: CreateWidget(const nsIID &aWindowIID,
+                                     nsWidgetInitData *aWidgetInitData,
+                                     nsNativeWidget aNative)
+{
+  nsIDeviceContext  *dx;
+  nsRect            trect = mBounds;
+  float             scale;
+
+  NS_IF_RELEASE(mWindow);
+
+  mViewManager->GetDeviceContext(dx);
+  dx->GetAppUnitsToDevUnits(scale);
+
+  trect *= scale;
+
+  if (NS_OK == LoadWidget(aWindowIID))
+  {
+    if (aNative)
+      mWindow->Create(aNative, trect, ::HandleEvent, dx, nsnull, nsnull, aWidgetInitData);
+    else
+    {
+      nsIWidget *parent;
+      GetOffsetFromWidget(nsnull, nsnull, parent);
+      mWindow->Create(parent, trect, ::HandleEvent, dx, nsnull, nsnull, aWidgetInitData);
+      NS_IF_RELEASE(parent);
+    }
+  }
+
+  //make sure visibility state is accurate
+
+  nsViewVisibility vis;
+
+  GetVisibility(vis);
+  SetVisibility(vis);
+
+  NS_RELEASE(dx);
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsView :: SetWidget(nsIWidget *aWidget)
+{
+  NS_IF_RELEASE(mWindow);
+  mWindow = aWidget;
+
+  if (nsnull != mWindow)
+  {
+    NS_ADDREF(mWindow);
+    mWindow->SetClientData((void *)this);
+  }
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsView :: GetWidget(nsIWidget *&aWidget)
+{
+  NS_IF_ADDREF(mWindow);
+  aWidget = mWindow;
   return NS_OK;
 }
 

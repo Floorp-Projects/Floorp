@@ -35,23 +35,16 @@ public:
   NS_IMETHOD QueryInterface(REFNSIID aIID,
                             void** aInstancePtr);
 
-  NS_IMETHOD  Init(nsIViewManager* aManager,
-        					 const nsRect &aBounds,
-                   const nsIView *aParent,
-        					 const nsIID *aWindowIID = nsnull,
-                   nsWidgetInitData *aWidgetInitData = nsnull,
-        					 nsNativeWidget aNative = nsnull,
-        					 const nsViewClip *aClip = nsnull,
-        					 nsViewVisibility aVisibilityFlag = nsViewVisibility_kShow);
-
   //overrides
   NS_IMETHOD  SetDimensions(nscoord width, nscoord height, PRBool aPaint = PR_TRUE);
   NS_IMETHOD  SetPosition(nscoord aX, nscoord aY);
   NS_IMETHOD  HandleEvent(nsGUIEvent *aEvent, PRUint32 aEventFlags, nsEventStatus &aStatus);
   NS_IMETHOD  Paint(nsIRenderingContext& rc, const nsRect& rect,
                     PRUint32 aPaintFlags, PRBool &aResult);
+  NS_IMETHOD  SetWidget(nsIWidget *aWidget);
 
   //nsIScrollableView interface
+  NS_IMETHOD  CreateScrollControls(nsNativeWidget aNative = nsnull);
   NS_IMETHOD  ComputeContainerSize();
   NS_IMETHOD  GetContainerSize(nscoord *aWidth, nscoord *aHeight) const;
   NS_IMETHOD  SetScrolledView(nsIView *aScrolledView);

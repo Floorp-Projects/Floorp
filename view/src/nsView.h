@@ -48,15 +48,11 @@ public:
   NS_IMETHOD  Init(nsIViewManager* aManager,
       						 const nsRect &aBounds,
                    const nsIView *aParent,
-      						 const nsCID *aWindowIID = nsnull,
-                   nsWidgetInitData *aWidgetInitData = nsnull,
-      						 nsNativeWidget aNative = nsnull,
       						 const nsViewClip *aClip = nsnull,
       						 nsViewVisibility aVisibilityFlag = nsViewVisibility_kShow);
 
   NS_IMETHOD  Destroy();
   NS_IMETHOD  GetViewManager(nsIViewManager *&aViewMgr);
-  NS_IMETHOD  GetWidget(nsIWidget *&aWidget);
   NS_IMETHOD  Paint(nsIRenderingContext& rc, const nsRect& rect,
                     PRUint32 aPaintFlags, PRBool &aResult);
   NS_IMETHOD  Paint(nsIRenderingContext& rc, const nsIRegion& region,
@@ -94,6 +90,11 @@ public:
   NS_IMETHOD  GetOffsetFromWidget(nscoord *aDx, nscoord *aDy, nsIWidget *&aWidget);
   NS_IMETHOD  GetDirtyRegion(nsIRegion*& aRegion);
   NS_IMETHOD  SetDirtyRegion(nsIRegion* aRegion);
+  NS_IMETHOD  CreateWidget(const nsIID &aWindowIID,
+                           nsWidgetInitData *aWidgetInitData = nsnull,
+                           nsNativeWidget aNative = nsnull);
+  NS_IMETHOD  SetWidget(nsIWidget *aWidget);
+  NS_IMETHOD  GetWidget(nsIWidget *&aWidget);
   virtual void List(FILE* out = stdout, PRInt32 aIndent = 0) const;
 
   // Helper function to get the view that's associated with a widget
