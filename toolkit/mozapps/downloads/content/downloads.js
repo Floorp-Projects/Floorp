@@ -530,7 +530,9 @@ var XPInstallDownloadManager = {
       var certName = aParams.GetString(i++);
     }
 
-    aObserver.observe(xpinstallManager.xpiProgress, "xpinstall-progress", "open");  
+    var observerService = Components.classes[kObserverServiceProgID]
+                                    .getService(Components.interfaces.nsIObserverService);
+    observerService.notifyObservers(xpinstallManager.xpiProgress, "xpinstall-progress", "open");  
   }
 }
 
