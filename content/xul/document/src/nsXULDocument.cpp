@@ -1486,7 +1486,6 @@ nsXULDocument::GetElementsByAttribute(const nsAString& aAttribute,
     // XXX This should use nsContentList, but that does not support
     // _two_ strings being passed to the match func.  Ah, the ability
     // to create real closures, where art thou?
-    nsresult rv;
     nsRDFDOMNodeList* elements = new nsRDFDOMNodeList();
     NS_ENSURE_TRUE(elements, NS_ERROR_OUT_OF_MEMORY);
     NS_ADDREF(elements);
@@ -1494,6 +1493,7 @@ nsXULDocument::GetElementsByAttribute(const nsAString& aAttribute,
     nsCOMPtr<nsIDOMNode> domRoot = do_QueryInterface(mRootContent);
     NS_ASSERTION(domRoot, "no doc root");
 
+    nsresult rv = NS_OK;
     if (domRoot) {
         rv = GetElementsByAttribute(domRoot, aAttribute, aValue, elements);
     }
