@@ -2366,7 +2366,7 @@ nsHTMLDocument::ScriptWriteCommon(PRBool aNewlineTerminate)
   }
 
   if (ncc) {
-    // We're called from C++, concatenate the extra arguments into
+    // We're called from JS, concatenate the extra arguments into
     // string_buffer
     PRUint32 i, argc;
 
