@@ -23,6 +23,7 @@ REQUIRES=xpcom gfxwin raptor dom network netlib
 DEFINES =-D_IMPL_NS_WIDGET
 
 CPPSRCS =              \
+	nsDropTarget.cpp      \
 	nsPopUpMenu.cpp      \
 	nsMenuBar.cpp        \
 	nsMenu.cpp           \
@@ -52,6 +53,7 @@ CPPSRCS =              \
 MODULE=raptor 
 
 OBJS =                             \
+	.\$(OBJDIR)\nsDropTarget.obj  \
 	.\$(OBJDIR)\nsPopUpMenu.obj  \
 	.\$(OBJDIR)\nsMenuBar.obj  \
 	.\$(OBJDIR)\nsMenu.obj  \
