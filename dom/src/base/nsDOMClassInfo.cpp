@@ -3230,6 +3230,67 @@ BaseStubConstructor(const nsGlobalNameStruct *name_struct, JSContext *cx,
   return NS_SUCCEEDED(rv) ? JS_TRUE : JS_FALSE;
 }
 
+
+static JSObject *
+GetInterfaceObject(JSContext *cx, JSObject *obj, const char *aName)
+{
+  jsval components_val;
+
+  if (!::JS_GetProperty(cx, obj, "Components", &components_val)) {
+    return nsnull;
+  }
+
+  if (JSVAL_IS_PRIMITIVE(components_val)) {
+    return nsnull;
+  }
+
+  jsval if_val = JSVAL_VOID;
+
+  if (!::JS_GetProperty(cx, JSVAL_TO_OBJECT(components_val), "interfaces",
+                        &if_val)) {
+    return nsnull;
+  }
+
+  if (JSVAL_IS_PRIMITIVE(if_val)) {
+    return nsnull;
+  }
+
+  jsval val;
+
+  if (!::JS_GetProperty(cx, JSVAL_TO_OBJECT(if_val), aName, &val)) {
+    return nsnull;
+  }
+
+  if (JSVAL_IS_PRIMITIVE(val)) {
+    return nsnull;
+  }
+
+  return JSVAL_TO_OBJECT(val);
+}
+
+// static
+nsresult
+nsWindowSH::DefineInterfaceProperty(JSContext *cx, JSObject *obj,
+                                    JSString *str)
+{
+  nsCAutoString name("nsIDOM");
+  name.Append(::JS_GetStringBytes(str));
+
+  JSObject *if_object = GetInterfaceObject(cx, obj, name.get());
+
+  if (!if_object) {
+    return NS_ERROR_UNEXPECTED;
+  }
+
+  if (!::JS_DefineUCProperty(cx, obj, ::JS_GetStringChars(str),
+                             ::JS_GetStringLength(str),
+                             OBJECT_TO_JSVAL(if_object), nsnull, nsnull, 0)) {
+    return NS_ERROR_FAILURE;
+  }
+
+  return NS_OK;
+}
+
 static nsresult
 DefineInterfaceConstants(JSContext *cx, JSObject *obj, const nsIID *aIID)
 {
@@ -3585,20 +3646,8 @@ nsWindowSH::GlobalResolve(nsISupports *native, JSContext *cx, JSObject *obj,
   }
 
   if (name_struct->mType == nsGlobalNameStruct::eTypeInterface) {
-    JSObject* class_obj = ::JS_DefineObject(cx, obj, ::JS_GetStringBytes(str),
-                                            &sDOMJSClass, 0, 0);
-    if (!class_obj) {
-      return NS_ERROR_UNEXPECTED;
-    }
-
-    PRUnichar* class_name = ToNewUnicode(name);
-    NS_ENSURE_TRUE(class_name, NS_ERROR_OUT_OF_MEMORY);
-
-    if (!::JS_SetPrivate(cx, class_obj, class_name)) {
-      nsMemory::Free(class_name);
-
-      return NS_ERROR_UNEXPECTED;
-    }
+    rv = DefineInterfaceProperty(cx, obj, str);
+    NS_ENSURE_SUCCESS(rv, rv);
 
     *did_resolve = PR_TRUE;
 
