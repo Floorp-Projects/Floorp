@@ -29,10 +29,10 @@
 #include "nsIComponentManager.h"
 #include <ctype.h>  // for isalpha, tolower & isspace
 
-#ifdef XP_PC
+#if defined(XP_PC) && !defined(XP_OS2)
 #include <windows.h>
 #endif
-#if defined(XP_UNIX) || defined(XP_BEOS)
+#if defined(XP_UNIX) || defined(XP_BEOS)  || defined(XP_OS2)
 #include <locale.h>
 #include <stdlib.h>
 #endif
@@ -43,9 +43,14 @@
 NS_DEFINE_IID(kILocaleFactoryIID, NS_ILOCALEFACTORY_IID);
 NS_DEFINE_IID(kLocaleFactoryCID, NS_LOCALEFACTORY_CID);
 
-#ifdef XP_PC
+#if defined(XP_PC) && !defined(XP_OS2)
 NS_DEFINE_CID(kWin32LocaleFactoryCID, NS_WIN32LOCALEFACTORY_CID);
 NS_DEFINE_IID(kIWin32LocaleIID, NS_IWIN32LOCALE_IID);
+#endif
+
+#ifdef XP_OS2
+NS_DEFINE_CID(kOS2LocaleFactoryCID, NS_OS2LOCALEFACTORY_CID);
+NS_DEFINE_IID(kIOS2LocaleIID, NS_IOS2LOCALE_IID);
 #endif
 
 #if defined(XP_UNIX) || defined(XP_BEOS)
@@ -102,7 +107,7 @@ nsLocaleFactory::nsLocaleFactory(void)
   for(i=0;i< LOCALE_CATEGORY_LISTLEN;i++)
 	fCategoryList[i] = new nsString(localeCategoryList[i]);
 
-#ifdef XP_PC
+#if defined(XP_PC) && !defined(XP_OS2)
    fWin32LocaleInterface = nsnull;
    result = nsComponentManager::CreateInstance(kWin32LocaleFactoryCID,
 									NULL,
@@ -116,6 +121,13 @@ nsLocaleFactory::nsLocaleFactory(void)
                                               kIPosixLocaleIID,
                                               (void**)&fPosixLocaleInterface);
 	NS_ASSERTION(fPosixLocaleInterface!=NULL,"nsLocaleFactory: factory_create_interface failed.\n");
+#elif defined(XP_OS2)
+  fOS2LocaleInterface = nsnull;
+  result = nsComponentManager::CreateInstance(kOS2LocaleFactoryCID,
+                                              NULL,
+                                              kIOS2LocaleIID,
+                                              (void**)&fOS2LocaleInterface);
+	NS_ASSERTION(fOS2LocaleInterface!=NULL,"nsLocaleFactory: factory_create_interface failed.\n");
 #endif
 
 }
@@ -134,13 +146,17 @@ nsLocaleFactory::~nsLocaleFactory(void)
 	if (fApplicationLocale)
 		fApplicationLocale->Release();
 
-#ifdef XP_PC
+#if defined(XP_PC) && !defined(XP_OS2)
 	if (fWin32LocaleInterface)
 		fWin32LocaleInterface->Release();
 #endif
 #if defined(XP_UNIX) || defined(XP_BEOS)
   if (fPosixLocaleInterface)
     fPosixLocaleInterface->Release();
+#endif
+#ifdef XP_OS2
+  if (fOS2LocaleInterface)
+   fOS2LocaleInterface->Release();
 #endif
 
 }
@@ -219,7 +235,7 @@ nsLocaleFactory::GetSystemLocale(nsILocale** systemLocale)
 	//
 	// for Windows
 	//
-#ifdef XP_PC
+#if defined(XP_PC) && !defined(XP_OS2)
 	LCID				sysLCID;
   nsString*   systemLocaleName;
 	
@@ -358,7 +374,7 @@ nsLocaleFactory::GetApplicationLocale(nsILocale** applicationLocale)
 	//
 	// for Windows
 	//
-#ifdef XP_PC
+#if defined(XP_PC) && !defined(XP_OS2)
 	LCID				appLCID;
   nsString*   applicationLocaleName;
 	
@@ -533,7 +549,7 @@ nsLocaleFactory::GetLocaleFromAcceptLanguage(const char* acceptLanguage, nsILoca
 
 }
 
-#ifdef XP_PC
+#if defined(XP_PC) && !defined(XP_OS2)
 // XXX I had to add this because I changed the link order on Windows
 void notCalled()
 {
