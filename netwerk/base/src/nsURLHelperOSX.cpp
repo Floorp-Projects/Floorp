@@ -48,8 +48,8 @@
 
 static PRBool pathBeginsWithVolName(const nsACString& path, nsACString& firstPathComponent)
 {
-  // Return whether the 1st path component in the given path is equal to the name
-  // of a mounted volume. Return the 1st path component in any case.
+  // Return whether the 1st path component in path (escaped) is equal to the name
+  // of a mounted volume. Return the 1st path component (unescaped) in any case.
   // This needs to be done as quickly as possible, so we cache a list of volume names.
   // XXX Register an event handler to detect drives being mounted/unmounted?
   
@@ -82,8 +82,10 @@ static PRBool pathBeginsWithVolName(const nsACString& path, nsACString& firstPat
     nsACString::const_iterator component_end(start);
     FindCharInReadable('/', component_end, directory_end);
     
-    firstPathComponent = Substring(start, component_end);
-    PRInt32 foundIndex = gVolumeList.IndexOf(nsCAutoString(firstPathComponent));
+    nsCAutoString flatComponent((Substring(start, component_end)));
+    NS_UnescapeURL(flatComponent);
+    PRInt32 foundIndex = gVolumeList.IndexOf(flatComponent);
+    firstPathComponent = flatComponent;
     return (foundIndex != -1);
 }
 
@@ -192,6 +194,8 @@ net_GetFileFromURLSpec(const nsACString &aURL, nsIFile **result)
       return rv;
 
     if (!directory.IsEmpty()) {
+      NS_EscapeURL(directory, esc_Directory|esc_AlwaysCopy, path);
+
       // The canonical form of file URLs on OSX use POSIX paths:
       //   file:///path-name.
       // But, we still encounter file URLs that use HFS paths:
@@ -208,8 +212,6 @@ net_GetFileFromURLSpec(const nsACString &aURL, nsIFile **result)
         if (::FSPathMakeRef((UInt8*)possibleVolName.get(), &testRef, nsnull) != noErr)
           bHFSPath = PR_TRUE;
       }
-
-      NS_EscapeURL(directory, esc_Directory|esc_AlwaysCopy, path);
 
       if (bHFSPath) {
         // "%2F"s need to become slashes, while all other slashes need to
