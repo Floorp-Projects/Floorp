@@ -379,8 +379,10 @@ DocObserver::LoadURL(const nsString& aURLSpec,
 {
   mURL = aURLSpec;
   for (int i = 0; i < MAX_RL; i++) {
-     if (gRLList[i])
+     if (gRLList[i]) {
         PL_strfree(gRLList[i]);
+        gRLList[i] = 0;
+     }
   }
   gRLPos = 0;
 
