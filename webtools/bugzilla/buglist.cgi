@@ -1450,17 +1450,21 @@ document.write(\" <input type=button value=\\\"Uncheck All\\\" onclick=\\\"SetCh
 <TEXTAREA WRAP=HARD NAME=comment ROWS=5 COLS=80></TEXTAREA><BR>";
 
 if ($::usergroupset ne '0' && $buggroupset =~ /^\d+$/) {
-    SendSQL("select bit, description, (bit & $buggroupset != 0) from groups where bit & $::usergroupset != 0 and isbuggroup != 0 order by bit");
+    SendSQL("select bit, description, (bit & $buggroupset != 0) from groups where bit & $::usergroupset != 0 and isbuggroup != 0 order by description");
+    # We only print out a header bit for this section if there are any
+    # results.
+    if(MoreSQLData()) {
+      print "<br><b>Only users in the selected groups can view this bug:</b><br>\n";
+    }
     while (MoreSQLData()) {
         my ($bit, $description, $ison) = (FetchSQLData());
-        my $check0 = !$ison ? " SELECTED" : "";
-        my $check1 = $ison ? " SELECTED" : "";
-        print "<select name=bit-$bit><option value=0$check0>\n";
-        print "People not in the \"$description\" group can see these bugs\n";
-        print "<option value=1$check1>\n";
-        print "Only people in the \"$description\" group can see these bugs\n";
-        print "</select><br>\n";
-    }
+        # Modifying this to use checkboxes instead
+        my $checked = $ison ? " CHECKED" : "";
+        # indent these a bit
+        print "&nbsp;&nbsp;&nbsp;&nbsp;";
+        print "<input type=checkbox name=\"bit-$bit\" value=1$checked>\n";
+        print "$description<br>\n";
+      }
 }
 
 

@@ -202,7 +202,7 @@ $comment = trim($comment);
 # OK except for the fact that it causes e-mail to be suppressed.
 $comment = $comment ? $comment : " ";
 
-$query .= "now(), 0";
+$query .= "now(), (0";
 
 foreach my $b (grep(/^bit-\d*$/, keys %::FORM)) {
     if ($::FORM{$b}) {
@@ -226,7 +226,7 @@ foreach my $b (grep(/^bit-\d*$/, keys %::FORM)) {
 
 
 
-$query .= ")\n";
+$query .= ") & $::usergroupset)\n";
 
 
 my %ccids;

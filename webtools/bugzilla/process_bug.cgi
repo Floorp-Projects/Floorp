@@ -382,20 +382,50 @@ sub CheckonComment( $ ) {
     return( ! $ret ); # Return val has to be inverted
 }
 
-
-my $foundbit = 0;
-foreach my $b (grep(/^bit-\d*$/, keys %::FORM)) {
-    if (!$foundbit) {
-        $foundbit = 1;
-        DoComma();
-        $::query .= "groupset = 0";
-    }
-    if ($::FORM{$b}) {
-        my $v = substr($b, 4);
-        $::query .= "+ $v";     # Carefully written so that the math is
+# Changing this so that it will process groups from checkboxes instead of
+# select lists.  This means that instead of looking for the bit-X values in
+# the form, we need to loop through all the bug groups this user has access
+# to, and for each one, see if it's selected.
+# In addition, adding a little extra work so that we don't clobber groupsets
+# for bugs where the user doesn't have access to the group, but does to the
+# bug (as with the proposed reporter access patch.)
+if($::usergroupset ne '0') {
+  # We want to start from zero and build up, since if all boxes have been
+  # unchecked, we want to revert to 0.
+  DoComma();
+  $::query .= "groupset = 0";
+  SendSQL("select bit from groups ".
+          "where bit & $::usergroupset != 0 ".
+          "and isbuggroup != 0 ".
+          "order by bit");
+  while(my $b = FetchSQLData()) {
+    if($::FORM{"bit-$b"}) {
+      $::query .= " + $b";      # Carefully written so that the math is
                                 # done by MySQL, which can handle 64-bit math,
                                 # and not by Perl, which I *think* can not.
     }
+  }
+  # If we're changing the groupset, then we want to check for any bits
+  # that may have been excluded because the user wasn't in that group, but
+  # that were set previously.
+  my $tmpbugid = 0;
+  if(defined $::FORM{'id'}) {
+    $tmpbugid = $::FORM{'id'};
+  } else {
+    $tmpbugid = (grep(/^id_/, (keys %::FORM)))[0];
+    $tmpbugid =~ s/^id_//;
+  }
+  SendSQL("select sum(bit) from groups ".
+          "LEFT JOIN bugs ON bugs.groupset & bit != 0 ".
+          "where bugs.bug_id = $tmpbugid ".
+          "and bit & $::usergroupset = 0 ".
+          "and isbuggroup != 0");
+  if(MoreSQLData()) {
+    my ($bitsum) = FetchSQLData();
+    if($bitsum =~ /^\d+$/) {
+      $::query .= " + $bitsum";
+    }
+  }
 }
 
 foreach my $field ("rep_platform", "priority", "bug_severity",          

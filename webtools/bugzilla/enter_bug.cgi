@@ -408,11 +408,21 @@ print "
 ";
 
 if ($::usergroupset ne '0') {
-    SendSQL("SELECT bit, description FROM groups " .
+    SendSQL("SELECT bit, name, description FROM groups " .
             "WHERE bit & $::usergroupset != 0 " .
             "  AND isbuggroup != 0 AND isactive = 1 ORDER BY description");
-     while (MoreSQLData()) {
-        my ($bit, $description) = (FetchSQLData());
+    # We only print out a header bit for this section if there are any
+    # results.
+    if(MoreSQLData()) {
+      print "<br><b>Only users in the selected groups can view this bug:</b><br>\n";
+      print "<font size=\"-1\">(Leave all boxes unchecked to make this a public bug.)</font><br><br>\n";
+    }
+    while (MoreSQLData()) {
+        my ($bit, $prodname, $description) = (FetchSQLData());
+        # Don't want to include product groups other than this product.
+        unless(($prodname eq $product) || (!defined($::proddesc{$prodname}))) {
+            next;
+        }
         # Rather than waste time with another Param check and another database
         # access, $group_bit will only have a non-zero value if we're using
         # bug groups and have  one for this product, so I'll check on that
@@ -421,21 +431,20 @@ if ($::usergroupset ne '0') {
         # select-box patch.  Also, if $group_bit is 0, it won't match the
         # current group, either, so I'll compare it to the current bit
         # instead of checking for non-zero. -DDM, 3/11/00
-        my $check = 0; # default selection
-        if($group_bit == $bit) {
-            # In addition, we need to handle the possibility that we're coming
-            # from a bookmark template.  We'll simply check if we've got a
-            # parameter called bit-# passed.  If so, then we're coming from a
-            # template, and we'll use the template value.
-            $check = formvalue("bit-$bit","1");
+        # Modifying this to use checkboxes instead of a select list.
+        # -JMR, 5/11/01
+        # If this is the group for this product, make it checked.
+        my $check = ($group_bit == $bit);
+        # If this is a bookmarked template, then we only want to set the bit
+        # for those bits set in the template.
+        if(formvalue("maketemplate","") eq "Remember values as bookmarkable template") {
+          $check = formvalue("bit-$bit",0);
         }
-        print BuildPulldown("bit-$bit",
-                            [["0",
-                             "People not in the \"$description\" group can see this bug"],
-                             ["1",
-                              "Only people in the \"$description\" group can see this bug"]],
-                            $check);
-        print "<BR>\n";
+        my $checked = $check ? " CHECKED" : "";
+        # indent these a bit
+        print "&nbsp;&nbsp;&nbsp;&nbsp;";
+        print "<input type=checkbox name=\"bit-$bit\" value=1$checked>\n";
+        print "$description<br>\n";
     }
 }
 

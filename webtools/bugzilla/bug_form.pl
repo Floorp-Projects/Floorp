@@ -368,23 +368,34 @@ print "
 
 
 if ($::usergroupset ne '0') {
-    SendSQL("select bit, description, (bit & $bug{'groupset'} != 0) " . 
-            "from groups where bit & $::usergroupset != 0 " . 
-            "and isbuggroup != 0 " . 
+    SendSQL("select bit, name, description, (bit & $bug{'groupset'} != 0) " .
+	    "from groups where bit & $::usergroupset != 0 " .
+	    "and isbuggroup != 0 " . 
             # Include active groups as well as inactive groups to which
             # the bug already belongs.  This way the bug can be removed
             # from an inactive group but can only be added to active ones.
             "and (isactive = 1 or (bit & $bug{'groupset'} != 0)) " . 
-            "order by bit");
+	    "order by description");
+    # We only print out a header bit for this section if there are any
+    # results.
+    if(MoreSQLData()) {
+      print "<br><b>Only users in the selected groups can view this bug:</b><br>\n";
+    }
     while (MoreSQLData()) {
-        my ($bit, $description, $ison) = (FetchSQLData());
-        my $check0 = !$ison ? " SELECTED" : "";
-        my $check1 = $ison ? " SELECTED" : "";
-        print "<select name=bit-$bit><option value=0$check0>\n";
-        print "People not in the \"$description\" group can see this bug\n";
-        print "<option value=1$check1>\n";
-        print "Only people in the \"$description\" group can see this bug\n";
-        print "</select><br>\n";
+      my ($bit, $name, $description, $ison) = (FetchSQLData());
+      # For product groups, we only want to display the checkbox if either
+      # (1) The bit is already set, or
+      # (2) It's the group for this product.
+      # All other product groups will be skipped.  Non-product bug groups
+      # will still be displayed.
+      if($ison || ($name eq $bug{'product'}) || (!defined $::proddesc{$name})) {
+        # Modifying this to use checkboxes instead
+        my $checked = $ison ? " CHECKED" : "";
+        # indent these a bit
+        print "&nbsp;&nbsp;&nbsp;&nbsp;";
+        print "<input type=checkbox name=\"bit-$bit\" value=1$checked>\n";
+        print "$description<br>\n";
+      }
     }
 }
 
