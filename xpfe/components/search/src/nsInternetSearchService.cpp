@@ -19,9 +19,6 @@
  *
  * Original Author(s):
  *   Robert John Churchill      <rjc@netscape.com>
- *
- * Contributor(s): 
- *   Pierre Phaneuf		<pp@ludusdesign.com>
  */
 
 /*
@@ -880,10 +877,6 @@ InternetSearchDataSource::Init()
 
 	mEngineListBuilt = PR_FALSE;
 
-	// we now build up the list of engines immediately, 
-	// but still defer loading in of the contents until needed
-	DeferredInit();
-	
 	// Register as a profile change obsevrer
   nsCOMPtr<nsIObserverService> observerService = 
            do_GetService(NS_OBSERVERSERVICE_CONTRACTID, &rv);
