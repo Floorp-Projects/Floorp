@@ -37,19 +37,17 @@ public:
   void SetPosition(nscoord x, nscoord y);
   void SetDimensions(nscoord width, nscoord height);
 
-protected:
+public:
   nsScrollingView *mScrollingView;
 };
 
 ScrollBarView :: ScrollBarView(nsScrollingView *aScrollingView)
 {
   mScrollingView = aScrollingView;
-  NS_ADDREF(mScrollingView);
 }
 
 ScrollBarView :: ~ScrollBarView()
 {
-  NS_RELEASE(mScrollingView);
 }
 
 nsEventStatus ScrollBarView :: HandleEvent(nsGUIEvent *aEvent, PRUint32 aEventFlags)
@@ -63,7 +61,10 @@ nsEventStatus ScrollBarView :: HandleEvent(nsGUIEvent *aEvent, PRUint32 aEventFl
     case NS_SCROLLBAR_PAGE_PREV:
     case NS_SCROLLBAR_LINE_NEXT:
     case NS_SCROLLBAR_LINE_PREV:
-      mScrollingView->HandleScrollEvent(aEvent, aEventFlags);
+      NS_ASSERTION((nsnull != mScrollingView), "HandleEvent() called after the ScrollingView has been destroyed.");
+      if (nsnull != mScrollingView) {
+        mScrollingView->HandleScrollEvent(aEvent, aEventFlags);
+      }
       retval = nsEventStatus_eConsumeNoDefault;
       break;
 
@@ -314,14 +315,16 @@ nsScrollingView :: ~nsScrollingView()
 {
   if (nsnull != mVScrollBarView)
   {
+    // Clear the back-pointer from the scrollbar...
+    ((ScrollBarView*)mVScrollBarView)->mScrollingView = nsnull;
     NS_RELEASE(mVScrollBarView);
-    mVScrollBarView = nsnull;
   }
 
   if (nsnull != mHScrollBarView)
   {
+    // Clear the back-pointer from the scrollbar...
+    ((ScrollBarView*)mHScrollBarView)->mScrollingView = nsnull;
     NS_RELEASE(mHScrollBarView);
-    mHScrollBarView = nsnull;
   }
 
   if (nsnull != mCornerView)
