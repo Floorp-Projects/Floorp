@@ -49,7 +49,8 @@
 PRLogModuleInfo *gImgLog = PR_NewLogModule("imgRequest");
 #endif
 
-NS_IMPL_THREADSAFE_ISUPPORTS5(imgRequest, imgIDecoderObserver, imgIContainerObserver,
+NS_IMPL_THREADSAFE_ISUPPORTS6(imgRequest, imgILoad,
+                              imgIDecoderObserver, imgIContainerObserver,
                               nsIStreamListener, nsIRequestObserver,
                               nsISupportsWeakReference)
 
