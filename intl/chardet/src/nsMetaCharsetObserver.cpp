@@ -258,11 +258,7 @@ NS_IMETHODIMP nsMetaCharsetObserver::Notify(
                          content.Mid(theCharset, charsetValueStart, charsetValueEnd - charsetValueStart);
                          if(! theCharset.Equals(currentCharset)) 
                          {
-                             nsICharsetAlias* calias = nsnull;
-                             res = nsServiceManager::GetService(
-                                            kCharsetAliasCID,
-                                            nsICharsetAlias::GetIID(),
-                                            (nsISupports**) &calias);
+                             NS_WITH_SERVICE(nsICharsetAlias, calias, kCharsetAliasCID, &res);
                              if(NS_SUCCEEDED(res) && (nsnull != calias) ) 
                              {
                                   PRBool same = PR_FALSE;
@@ -282,7 +278,6 @@ NS_IMETHODIMP nsMetaCharsetObserver::Notify(
                                             }
                                         } // if check for GetPreferred
                                   } // if check res for Equals
-                                  nsServiceManager::ReleaseService(kCharsetAliasCID, calias);
                               } // if check res for GetService
                           } // if Equals
                     }  // if check  charset=
@@ -305,40 +300,22 @@ NS_IMETHODIMP nsMetaCharsetObserver::Start()
 {
     nsresult res = NS_OK;
     nsAutoString htmlTopic("htmlparser");
-    nsIObserverService* anObserverService = nsnull;
 
-    res = nsServiceManager::GetService(NS_OBSERVERSERVICE_PROGID, 
-                                       nsIObserverService::GetIID(),
-                                       (nsISupports**) &anObserverService);
-    if(NS_FAILED(res)) 
-        goto done;
+    NS_WITH_SERVICE(nsIObserverService, anObserverService, NS_OBSERVERSERVICE_PROGID, &res);
+    if (NS_FAILED(res)) return res;
      
-    res = anObserverService->AddObserver(this, htmlTopic.GetUnicode());
-
-    nsServiceManager::ReleaseService(NS_OBSERVERSERVICE_PROGID, 
-                                    anObserverService);
-done:
-    return res;
+    return anObserverService->AddObserver(this, htmlTopic.GetUnicode());
 }
 //-------------------------------------------------------------------------
 NS_IMETHODIMP nsMetaCharsetObserver::End() 
 {
     nsresult res = NS_OK;
     nsAutoString htmlTopic("htmlparser");
-    nsIObserverService* anObserverService = nsnull;
 
-    res = nsServiceManager::GetService(NS_OBSERVERSERVICE_PROGID, 
-                                       nsIObserverService::GetIID(),
-                                       (nsISupports**) &anObserverService);
-    if(NS_FAILED(res)) 
-        goto done;
+    NS_WITH_SERVICE(nsIObserverService, anObserverService, NS_OBSERVERSERVICE_PROGID, &res);
+    if (NS_FAILED(res)) return res;
      
-    res = anObserverService->RemoveObserver(this, htmlTopic.GetUnicode());
-
-    nsServiceManager::ReleaseService(NS_OBSERVERSERVICE_PROGID, 
-                                    anObserverService);
-done:
-    return res;
+    return anObserverService->RemoveObserver(this, htmlTopic.GetUnicode());
 }
 //========================================================================== 
 
