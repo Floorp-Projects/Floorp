@@ -378,7 +378,7 @@ il_mng_refresh(mng_handle handle,
   container->mFrame->GetAlphaBytesPerRow(&abpr);
 
 // stupid Mac code that shouldn't be in the image decoders...
-#ifdef XP_MAC
+#if defined(XP_MAC) || defined(XP_MACOSX)
   PRInt32 iwidth;
   container->mFrame->GetWidth(&iwidth);
   PRUint8 *buf = (PRUint8 *)nsMemory::Alloc(bpr);
@@ -390,7 +390,7 @@ il_mng_refresh(mng_handle handle,
                           y*container->mByteWidthAlpha,
                           container->mByteWidthAlpha,
                           abpr*y);
-#ifdef XP_MAC
+#if defined(XP_MAC) || defined(XP_MACOSX)
     PRUint8 *cptr = buf;
     PRUint8 *row = container->image+y*container->mByteWidth;
     for (PRUint32 x=0; x<iwidth; x++) {
@@ -407,7 +407,7 @@ il_mng_refresh(mng_handle handle,
 			 bpr*y);
 #endif
   }
-#ifdef XP_MAC
+#if defined(XP_MAC) || defined(XP_MACOSX)
   nsMemory::Free(buf);
 #endif
 
@@ -508,7 +508,7 @@ imgContainerMNG::InitMNG(nsMNGDecoder *decoder)
    * using educated guesses for display-system exponents; do preferences
    * later */
 
-#if defined(XP_MAC)
+#if defined(XP_MAC) || defined(XP_MACOSX)
   LUT_exponent = 1.8 / 2.61;
 #elif defined(XP_UNIX)
 # if defined(__sgi)
