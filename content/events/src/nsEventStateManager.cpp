@@ -2971,8 +2971,25 @@ PRBool
 nsEventStateManager::ChangeFocus(nsIContent* aFocusContent, PRInt32 aFocusedWith)
 {
   aFocusContent->SetFocus(mPresContext);
-  if (aFocusedWith != eEventFocusedByMouse)
+  if (aFocusedWith != eEventFocusedByMouse) {
     MoveCaretToFocus();
+    // Select text fields when focused via keyboard (tab or accesskey)
+    if (sTextfieldSelectModel == eTextfieldSelect_auto && 
+        mCurrentFocus && 
+        mCurrentFocus->IsContentOfType(nsIContent::eHTML_FORM_CONTROL)) {
+      nsCOMPtr<nsIFormControl> formControl(do_QueryInterface(mCurrentFocus));
+      PRInt32 controlType;
+      formControl->GetType(&controlType);
+      if (controlType == NS_FORM_INPUT_TEXT ||
+          controlType == NS_FORM_INPUT_PASSWORD) {
+        nsCOMPtr<nsIDOMHTMLInputElement> inputElement = 
+          do_QueryInterface(mCurrentFocus);
+        if (inputElement) {
+          inputElement->Select();
+        }
+      }
+    }
+  }
 
   mLastFocusedWith = aFocusedWith;
   return PR_FALSE;
@@ -3098,8 +3115,7 @@ nsEventStateManager::ShiftFocusInternal(PRBool aForward, nsIContent* aStart)
   shellItem->GetItemType(&itemType);
   
   if (itemType != nsIDocShellTreeItem::typeChrome && mLastFocusedWith != eEventFocusedByMouse) {  
-    // If not content or focused gained via mouse click, forget selection - just use mCurrentFocus
-    // we're going to tab from the selection position 
+    // We're going to tab from the selection position 
     nsCOMPtr<nsIDOMHTMLAreaElement> areaElement(do_QueryInterface(mCurrentFocus));
     if (!areaElement) {
       nsCOMPtr<nsIContent> selectionContent, endSelectionContent;  // We won't be using this, need arg for method call
@@ -4864,23 +4880,6 @@ NS_IMETHODIMP nsEventStateManager::MoveFocusToCaret(PRBool aCanFocusDoc, PRBool 
 
 NS_IMETHODIMP nsEventStateManager::MoveCaretToFocus()
 {
-  // First, select text fields when focused via keyboard (tab or accesskey)
-  if (sTextfieldSelectModel == eTextfieldSelect_auto && 
-      mCurrentFocus && 
-      mCurrentFocus->IsContentOfType(nsIContent::eHTML_FORM_CONTROL)) {
-    nsCOMPtr<nsIFormControl> formControl(do_QueryInterface(mCurrentFocus));
-    PRInt32 controlType;
-    formControl->GetType(&controlType);
-    if (controlType == NS_FORM_INPUT_TEXT ||
-        controlType == NS_FORM_INPUT_PASSWORD) {
-      nsCOMPtr<nsIDOMHTMLInputElement> inputElement = 
-        do_QueryInterface(mCurrentFocus);
-      if (inputElement) {
-        inputElement->Select();
-      }
-    }
-  }
-
   // If in HTML content and the pref accessibility.browsewithcaret is TRUE,
   // then always move the caret to beginning of a new focus
 
