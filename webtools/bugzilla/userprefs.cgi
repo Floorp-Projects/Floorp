@@ -45,10 +45,12 @@ my $userid;
 # The default email flags leave all email on.
 my $defaultflagstring = "ExcludeSelf~on~";
 
-foreach my $role ("Owner", "Reporter", "QAcontact", "CClist", "Voter") {
-    foreach my $reason ("Removeme", "Comments", "Attachments", "Status", 
-                        "Resolved", "Keywords", "CC", "Other") 
-    {
+my @roles = ("Owner", "Reporter", "QAcontact", "CClist", "Voter");
+my @reasons = ("Removeme", "Comments", "Attachments", "Status", "Resolved", 
+               "Keywords", "CC", "Other");
+
+foreach my $role (@roles) {
+    foreach my $reason (@reasons) {
         $defaultflagstring .= "email$role$reason~on~";
     }
 }
@@ -174,9 +176,15 @@ sub SaveEmail {
         $updateString .= 'ExcludeSelf~';
     }
     
-    foreach my $key (keys %::FORM) {
-        if ($key =~ /email([A-Z]+[a-z]+)([A-Z]+[a-z]*)/) {
-            $updateString .= "~$key~on";    
+    foreach my $role (@roles) {
+        foreach my $reason (@reasons) {
+            # Add this preference to the list without giving it a value,
+            # which is the equivalent of setting the value to "off."
+            $updateString .= "~email$role$reason~";
+            
+            # If the form field for this preference is defined, then we
+            # know the checkbox was checked, so set the value to "on".
+            $updateString .= "on" if defined $::FORM{"email$role$reason"};
         }
     }
             
