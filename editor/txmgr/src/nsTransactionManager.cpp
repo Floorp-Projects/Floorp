@@ -98,6 +98,10 @@ nsTransactionManager::Do(nsITransaction *aTransaction)
 
   nsTransactionItem *top = 0;
 
+  // Check if there is a command on the do stack. If there is,
+  // the current transaction is a "sub" transaction, and should
+  // be added to the transaction at the top of the do stack.
+
   result = mDoStack.Peek(&top);
   if (top) {
     result = top->AddChild(tx);
@@ -108,16 +112,56 @@ nsTransactionManager::Do(nsITransaction *aTransaction)
     return result;
   }
 
-  // XXX: Check if we can coalesce this transaction with the one
-  //      at the top of the undo stack. If we can, merge this one
-  //      into the one currently on the stack.
-
-  // XXX: Check to see if we've hit the max level of undo. If so,
-  //      pop the bottom transaction of the undo stack and release it!
-
-  mUndoStack.Push(tx);
+  // The transaction succeeded, so clear the redo stack.
 
   result = ClearRedoStack();
+
+  // Check if we can coalesce this transaction with the one at the top
+  // of the undo stack.
+
+  top = 0;
+  result = mUndoStack.Peek(&top);
+
+  if (top) {
+    PRBool didMerge = 0;
+    nsITransaction *topTransaction = 0;
+
+    result = top->GetTransaction(&topTransaction);
+
+    if (topTransaction) {
+      result = topTransaction->Merge(&didMerge, aTransaction);
+
+      // XXX: What do we do if this fails?
+
+      if (didMerge) {
+        delete tx;
+        UNLOCK_TX_MANAGER(this);
+        return result;
+      }
+    }
+  }
+
+  // Check to see if we've hit the max level of undo. If so,
+  // pop the bottom transaction off the undo stack and release it!
+
+  PRInt32 sz = 0;
+
+  result = mUndoStack.GetSize(&sz);
+
+  if (mMaxLevelsOfUndo > 0 && sz > mMaxLevelsOfUndo) {
+    nsTransactionItem *overflow = 0;
+
+    result = mUndoStack.PopBottom(&overflow);
+
+    // XXX: What do we do in the case where this fails?
+
+    if (overflow)
+      delete overflow;
+  }
+
+  // Push the transaction on the undo stack:
+
+  result = mUndoStack.Push(tx);
 
   if (! NS_SUCCEEDED(result)) {
     // XXX: What do we do in the case where a clear fails?
@@ -141,8 +185,13 @@ nsTransactionManager::Undo()
   // until it has successfully completed.
   result = mUndoStack.Peek(&tx);
 
+  if (!NS_SUCCEEDED(result)) {
+    UNLOCK_TX_MANAGER(this);
+    return result;
+  }
+
   // Bail if there's nothing on the stack.
-  if (!NS_SUCCEEDED(result) || !tx) {
+  if (!tx) {
     UNLOCK_TX_MANAGER(this);
     return NS_OK;
   }
@@ -171,8 +220,13 @@ nsTransactionManager::Redo()
   // until it has successfully completed.
   result = mRedoStack.Peek(&tx);
 
+  if (!NS_SUCCEEDED(result)) {
+    UNLOCK_TX_MANAGER(this);
+    return result;
+  }
+
   // Bail if there's nothing on the stack.
-  if (!NS_SUCCEEDED(result) || !tx) {
+  if (!tx) {
     UNLOCK_TX_MANAGER(this);
     return NS_OK;
   }
@@ -190,15 +244,102 @@ nsTransactionManager::Redo()
 }
 
 nsresult
+nsTransactionManager::Clear()
+{
+  nsresult result;
+
+  LOCK_TX_MANAGER(this);
+
+  result = ClearRedoStack();
+
+  if (!NS_SUCCEEDED(result)) {
+    UNLOCK_TX_MANAGER(this);
+    return result;
+  }
+
+  result = ClearUndoStack();
+
+  UNLOCK_TX_MANAGER(this);
+
+  return result;
+}
+
+nsresult
 nsTransactionManager::GetNumberOfUndoItems(PRInt32 *aNumItems)
 {
-  return mUndoStack.GetSize(aNumItems);
+  nsresult result;
+
+  LOCK_TX_MANAGER(this);
+  result = mUndoStack.GetSize(aNumItems);
+  UNLOCK_TX_MANAGER(this);
+
+  return result;
 }
 
 nsresult
 nsTransactionManager::GetNumberOfRedoItems(PRInt32 *aNumItems)
 {
-  return mRedoStack.GetSize(aNumItems);
+  nsresult result;
+
+  LOCK_TX_MANAGER(this);
+  result = mRedoStack.GetSize(aNumItems);
+  UNLOCK_TX_MANAGER(this);
+
+  return result;
+}
+
+nsresult
+nsTransactionManager::PeekUndoStack(nsITransaction **aTransaction)
+{
+  nsTransactionItem *tx = 0;
+  nsresult result;
+
+  if (!aTransaction)
+    return NS_ERROR_NULL_POINTER;
+
+  *aTransaction = 0;
+
+  LOCK_TX_MANAGER(this);
+
+  result = mUndoStack.Peek(&tx);
+
+  if (!NS_SUCCEEDED(result)) {
+    UNLOCK_TX_MANAGER(this);
+    return result;
+  }
+
+  result = tx->GetTransaction(aTransaction);
+
+  UNLOCK_TX_MANAGER(this);
+
+  return result;
+}
+
+nsresult
+nsTransactionManager::PeekRedoStack(nsITransaction **aTransaction)
+{
+  nsTransactionItem *tx = 0;
+  nsresult result;
+
+  if (!aTransaction)
+    return NS_ERROR_NULL_POINTER;
+
+  *aTransaction = 0;
+
+  LOCK_TX_MANAGER(this);
+
+  result = mRedoStack.Peek(&tx);
+
+  if (!NS_SUCCEEDED(result)) {
+    UNLOCK_TX_MANAGER(this);
+    return result;
+  }
+
+  result = tx->GetTransaction(aTransaction);
+
+  UNLOCK_TX_MANAGER(this);
+
+  return result;
 }
 
 nsresult
@@ -235,14 +376,24 @@ nsTransactionManager::RemoveListener(nsITransactionListener *aListener)
 nsresult
 nsTransactionManager::ClearUndoStack()
 {
-  mUndoStack.Clear();
-  return NS_OK;
+  nsresult result;
+
+  LOCK_TX_MANAGER(this);
+  result = mUndoStack.Clear();
+  UNLOCK_TX_MANAGER(this);
+
+  return result;
 }
 
 nsresult
 nsTransactionManager::ClearRedoStack()
 {
-  mRedoStack.Clear();
-  return NS_OK;
+  nsresult result;
+
+  LOCK_TX_MANAGER(this);
+  result = mRedoStack.Clear();
+  UNLOCK_TX_MANAGER(this);
+
+  return result;
 }
 
