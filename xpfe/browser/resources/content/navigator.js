@@ -888,7 +888,9 @@ function OpenSearch(tabName, searchStr)
 		searchMode = pref.GetIntPref("browser.search.powermode");
 		autoOpenSearchPanel = pref.GetBoolPref("browser.search.opensidebarsearchpanel");
 		searchEngineURI = pref.CopyCharPref("browser.search.defaultengine");
-		defaultSearchURL = pref.CopyCharPref("network.search.url");
+
+		// rjc Note: don't use this old default preference, its for fuzzy URL matching
+		// defaultSearchURL = pref.CopyCharPref("network.search.url");
 	}
 	catch(ex)
 	{
@@ -896,13 +898,12 @@ function OpenSearch(tabName, searchStr)
 	
 	if ((defaultSearchURL == null) || (defaultSearchURL == ""))
 	{
-		// Fallback to a Netscape default
-		defaultSearchURL = "http://cgi.netscape.com/cgi-bin/url_search.cgi?search=";
+		// Fallback to a Netscape default (one that we can get sidebar search results for)
+		defaultSearchURL = "http://search.netscape.com/cgi-bin/search?";
 	}
 
 	if (searchMode == 1)
 	{
-		dump("Power Search: '" + searchStr + "'\n");
 		window.openDialog("chrome://search/content/search.xul", "SearchWindow", "dialog=no,close,chrome,resizable", tabName, searchStr);
 	}
 	else
