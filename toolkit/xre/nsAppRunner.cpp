@@ -86,6 +86,7 @@
 #include "nsIXULAppInfo.h"
 
 #include "nsCRT.h"
+#include "nsCommandLineServiceMac.h"
 #include "nsCOMPtr.h"
 #include "nsDirectoryServiceDefs.h"
 #include "nsDirectoryServiceUtils.h"
@@ -1769,6 +1770,11 @@ int xre_main(int argc, char* argv[], const nsXREAppData* aAppData)
           pm->Migrate(&dirProvider);
       }
       dirProvider.DoStartup();
+
+#ifdef XP_MACOSX
+      rv = InitializeMacCommandLine(gArgc, gArgv);
+      NS_ENSURE_SUCCESS(rv, 1);
+#endif
 
       nsCOMPtr<nsICommandLineRunner> cmdLine
         (do_CreateInstance("@mozilla.org/toolkit/command-line;1"));
