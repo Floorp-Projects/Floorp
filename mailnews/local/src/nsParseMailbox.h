@@ -32,7 +32,12 @@
 
 
 #ifdef DEBUG_bienvenu
-#define DOING_FILTERS
+//#define DOING_FILTERS
+#endif
+
+#ifdef DOING_FILTERS
+#include "nsIMsgFilterList.h"
+#include "nsIMsgFilterHitNotify.h"
 #endif
 
 class nsFileSpec;
@@ -75,7 +80,7 @@ public:
 	NS_IMETHOD ParseAFolderLine(const char *line, PRUint32 lineLength);
 	NS_IMETHOD GetNewMsgHdr(nsIMsgDBHdr ** aMsgHeader);
 	NS_IMETHOD FinishHeader();
-
+	NS_IMETHOD GetAllHeaders(char **headers, PRInt32 *headersSize);
 	void			Init(PRUint32 fileposition);
 	virtual PRInt32	ParseFolderLine(const char *line, PRUint32 lineLength);
 	virtual int		StartNewEnvelope(const char *line, PRUint32 lineLength);
@@ -233,11 +238,16 @@ private:
 };
 
 class nsParseNewMailState : public nsMsgMailboxParser 
+#ifdef DOING_FILTERS
+, public nsIMsgFilterHitNotify
+#endif
 {
 public:
 	nsParseNewMailState();
 	virtual ~nsParseNewMailState();
-
+#ifdef DOING_FILTERS
+	NS_DECL_ISUPPORTS_INHERITED
+#endif
     nsresult Init(nsIFolder *rootFolder, nsFileSpec &folder, nsIOFileStream *inboxFileStream);
 
 	virtual void	DoneParsingFolder();
@@ -255,6 +265,9 @@ public:
 										 PRBool *pMoved);
 #endif
 #ifdef DOING_FILTERS
+	// nsIMsgFilterHitNotification method(s)
+	NS_IMETHOD ApplyFilterHit(nsIMsgFilter *filter, PRBool *applyMore);
+
 	nsOutputFileStream *GetLogFile();
 #endif // DOING_FILTERS
 protected:
@@ -277,6 +290,7 @@ protected:
 	char				*m_tmpdbName;				// Temporary filename of new database
 	PRBool				m_usingTempDB;
 	PRBool				m_disableFilters;
+	PRBool				m_msgMovedByFilter;
 };
 
 #ifdef IMAP_NEW_MAIL_HANDLED

@@ -39,6 +39,12 @@
 #include "nsMsgBaseCID.h"
 #include "nsMsgLocalCID.h"
 
+#ifdef DOING_FILTERS
+#include "nsIMsgFilter.h"
+#include "nsIMsgFilterService.h"
+static NS_DEFINE_CID(kMsgFilterServiceCID, NS_MSGFILTERSERVICE_CID);
+#endif
+
 // we need this because of an egcs 1.0 (and possibly gcc) compiler bug
 // that doesn't allow you to call ::nsISupports::GetIID() inside of a class
 // that multiply inherits from nsISupports
@@ -127,7 +133,12 @@ NS_IMETHODIMP nsImapMailFolder::QueryInterface(REFNSIID aIID, void** aInstancePt
 	{
 		*aInstancePtr = NS_STATIC_CAST(nsIUrlListener *, this);
 	}
-
+#ifdef DOING_FILTERS
+	else if (aIID.Equals(nsIMsgFilterHitNotify::GetIID()))
+	{
+		*aInstancePtr = NS_STATIC_CAST(nsIMsgFilterHitNotify *, this);
+	}
+#endif
 	if(*aInstancePtr)
 	{
 		AddRef();
@@ -401,8 +412,7 @@ NS_IMETHODIMP nsImapMailFolder::GetMessages(nsIEnumerator* *result)
 
     char *folderName = nsnull;
     rv = GetName(&folderName);
-//	if (folderName && !PL_strcasecmp(folderName, "INBOX"))
-		selectFolder = PR_TRUE;
+	selectFolder = PR_TRUE;
 
     delete [] folderName;
 
@@ -1271,6 +1281,19 @@ NS_IMETHODIMP nsImapMailFolder::SetupHeaderParseStream(
 	if (!mDatabase)
 		GetDatabase();
 
+#ifdef DOING_FILTERS
+	if (mFlags & MSG_FOLDER_FLAG_INBOX && !m_filterList)
+	{
+	NS_WITH_SERVICE(nsIMsgFilterService, filterService, kMsgFilterServiceCID, &rv);
+	if (NS_FAILED(rv)) 
+		return rv;
+
+	// need a file spec for filters...
+	nsFileSpec filterFile("rules.dat");
+	nsresult res = filterService->OpenFilterList(&filterFile, getter_AddRefs(m_filterList));
+
+	}
+#endif
 	m_nextMessageByteLength = aStreamInfo->size;
 	if (!m_msgParser)
 	{
@@ -1334,8 +1357,24 @@ NS_IMETHODIMP nsImapMailFolder::NormalEndHeaderParseStream(nsIImapProtocol*
 		m_msgParser->GetNewMsgHdr(getter_AddRefs(newMsgHdr));
 	if (NS_SUCCEEDED(rv) && newMsgHdr)
 	{
+		char *headers;
+		PRInt32 headersSize;
+
 		newMsgHdr->SetMessageKey(m_curMsgUid);
 		TweakHeaderFlags(aProtocol, newMsgHdr);
+		// If this is the inbox, try to apply filters.
+		if (mFlags & MSG_FOLDER_FLAG_INBOX)
+		{
+			rv = m_msgParser->GetAllHeaders(&headers, &headersSize);
+
+			if (NS_SUCCEEDED(rv) && headers)
+			{
+#ifdef DOING_FILTERS
+				m_filterList->ApplyFiltersToHdr(nsMsgFilterInboxRule, newMsgHdr, this, mDatabase, 
+						headers, headersSize, this);
+#endif
+			}
+		}
 		// here we need to tweak flags from uid state..
 		mDatabase->AddNewHdrToDB(newMsgHdr, PR_TRUE);
 		m_msgParser->FinishHeader();
@@ -1412,6 +1451,218 @@ NS_IMETHODIMP nsImapMailFolder::EndCopy(PRBool copySucceeded)
 	nsresult rv = NS_ERROR_FAILURE;
 	return rv;
 }
+
+#ifdef DOING_FILTERS
+NS_IMETHODIMP nsImapMailFolder::ApplyFilterHit(nsIMsgFilter *filter, PRBool *applyMore)
+{
+	nsMsgRuleActionType actionType;
+	void				*value = nsnull;
+	PRUint32	newFlags;
+	nsresult rv = NS_OK;
+
+	if (!applyMore)
+	{
+		NS_ASSERTION(PR_FALSE, "need to return status!");
+		return NS_ERROR_NULL_POINTER;
+	}
+	// look at action - currently handle move
+#ifdef DEBUG_bienvenu
+	printf("got a rule hit!\n");
+#endif
+	if (NS_SUCCEEDED(filter->GetAction(&actionType, &value)))
+	{
+		nsCOMPtr<nsIMsgDBHdr> msgHdr;
+		nsresult rv = NS_OK;
+
+		if (m_msgParser)
+			m_msgParser->GetNewMsgHdr(getter_AddRefs(msgHdr));
+		if (NS_SUCCEEDED(rv) && msgHdr)
+
+		{
+			PRUint32 msgFlags;
+
+			msgHdr->GetFlags(&msgFlags);
+
+			PRBool isRead = (msgFlags & MSG_FLAG_READ);
+			switch (actionType)
+			{
+			case nsMsgFilterActionDelete:
+			{
+#ifdef DOING_DELETE
+				MSG_IMAPFolderInfoMail *imapFolder = m_folder->GetIMAPFolderInfoMail();
+				PRBool serverIsImap  = GetMaster()->GetPrefs()->GetMailServerIsIMAP4();
+				PRBool deleteToTrash = !imapFolder || imapFolder->DeleteIsMoveToTrash();
+				PRBool showDeletedMessages = (!imapFolder) || imapFolder->ShowDeletedMessages();
+				if (deleteToTrash || !serverIsImap)
+				{
+					// set value to trash folder
+					MSG_FolderInfoMail *mailTrash = GetTrashFolder();
+					if (mailTrash)
+						value = (void *) mailTrash->GetPathname();
+
+					msgHdr->OrFlags(MSG_FLAG_READ);	// mark read in trash.
+				}
+				else	// (!deleteToTrash && serverIsImap)
+				{
+					msgHdr->OrFlags(MSG_FLAG_READ | MSG_FLAG_IMAP_DELETED);
+					nsMsgKeyArray	keysToFlag;
+
+					keysToFlag.Add(msgHdr->GetMessageKey());
+					if (imapFolder)
+						imapFolder->StoreImapFlags(m_pane, kImapMsgSeenFlag | kImapMsgDeletedFlag, TRUE, keysToFlag, ((ParseIMAPMailboxState *) this)->GetFilterUrlQueue());
+					if (!showDeletedMessages)
+						msgMoved = TRUE;	// this will prevent us from adding the header to the db.
+
+				}
+#endif // DOING_DELETE
+			}
+			case nsMsgFilterActionMoveToFolder:
+			{
+				// if moving to a different file, do it.
+				char *folderName = nsnull;
+				rv = GetName(&folderName);
+
+				if (value && PL_strcasecmp(folderName, (char *) value))
+				{
+					PRUint32 msgFlags;
+					msgHdr->GetFlags(&msgFlags);
+
+					if (msgFlags & MSG_FLAG_MDN_REPORT_NEEDED &&
+						!isRead)
+					{
+
+#if DOING_MDN	// leave it to the user aciton
+						struct message_header to;
+						struct message_header cc;
+						GetAggregateHeader (m_toList, &to);
+						GetAggregateHeader (m_ccList, &cc);
+						msgHdr->SetFlags(msgFlags & ~MSG_FLAG_MDN_REPORT_NEEDED);
+						msgHdr->OrFlags(MSG_FLAG_MDN_REPORT_SENT, &newFlags);
+						if (actionType == nsMsgFilterActionDelete)
+						{
+							MSG_ProcessMdnNeededState processMdnNeeded
+								(MSG_ProcessMdnNeededState::eDeleted,
+								 m_pane, m_folder, msgHdr->GetMessageKey(),
+								 &state->m_return_path, &state->m_mdn_dnt, 
+								 &to, &cc, &state->m_subject, 
+								 &state->m_date, &state->m_mdn_original_recipient,
+								 &state->m_message_id, state->m_headers, 
+								 (PRInt32) state->m_headers_fp, TRUE);
+						}
+						else
+						{
+							MSG_ProcessMdnNeededState processMdnNeeded
+								(MSG_ProcessMdnNeededState::eProcessed,
+								 m_pane, m_folder, msgHdr->GetMessageKey(),
+								 &state->m_return_path, &state->m_mdn_dnt, 
+								 &to, &cc, &state->m_subject, 
+								 &state->m_date, &state->m_mdn_original_recipient,
+								 &state->m_message_id, state->m_headers, 
+								 (PRInt32) state->m_headers_fp, TRUE);
+						}
+						char *tmp = (char*) to.value;
+						PR_FREEIF(tmp);
+						tmp = (char*) cc.value;
+						PR_FREEIF(tmp);
+#endif
+					}
+					nsresult err = MoveIncorporatedMessage(msgHdr, mDatabase, (char *) value, filter);
+					if (NS_SUCCEEDED(err))
+						m_msgMovedByFilter = PR_TRUE;
+
+				}
+				delete [] folderName;
+			}
+				break;
+			case nsMsgFilterActionMarkRead:
+				MarkFilteredMessageRead(msgHdr);
+				break;
+			case nsMsgFilterActionKillThread:
+				// for ignore and watch, we will need the db
+				// to check for the flags in msgHdr's that
+				// get added, because only then will we know
+				// the thread they're getting added to.
+				msgHdr->OrFlags(MSG_FLAG_IGNORED, &newFlags);
+				break;
+			case nsMsgFilterActionWatchThread:
+				msgHdr->OrFlags(MSG_FLAG_WATCHED, &newFlags);
+				break;
+			case nsMsgFilterActionChangePriority:
+				msgHdr->SetPriority(*(nsMsgPriority *) &value);
+				break;
+			default:
+				break;
+			}
+		}
+		return rv;
+	}
+}
+
+
+nsresult nsImapMailFolder::MoveIncorporatedMessage(nsIMsgDBHdr *mailHdr, 
+											   nsIMsgDatabase *sourceDB, 
+											   char *destFolder,
+											   nsIMsgFilter *filter)
+{
+	nsresult err = NS_OK;
+	
+	if (fUrlQueue && fUrlQueue->GetPane())
+	{
+	 	// look for matching imap folders, then pop folders
+	 	MSG_FolderInfoContainer *imapContainer =  m_imapContainer;
+		nsIMsgFolder *sourceFolder = imapContainer->FindMailPathname(m_mailboxName);
+	 	nsIMsgFolder *destinationFolder = imapContainer->FindMailPathname(destFolder);
+	 	if (!destinationFolder)
+	 		destinationFolder = m_mailMaster->FindMailFolder(destFolder, FALSE);
+
+	 	if (destinationFolder)
+	 	{
+			nsIMsgFolder *inbox=nsnull;
+			imapContainer->GetFoldersWithFlag(MSG_FOLDER_FLAG_INBOX, &inbox, 1);
+			if (inbox)
+			{
+				MSG_FolderInfoMail *destMailFolder = destinationFolder->GetMailFolderInfo();
+				// put the header into the source db, since it needs to be there when we copy it
+				// and we need a valid header to pass to StartAsyncCopyMessagesInto
+				nsMsgKey keyToFilter = mailHdr->GetMessageKey();
+
+				if (sourceDB && destMailFolder)
+				{
+					PRBool imapDeleteIsMoveToTrash = m_host->GetDeleteIsMoveToTrash();
+					
+					nsMsgKeyArray *idsToMoveFromInbox = destMailFolder->GetImapIdsToMoveFromInbox();
+					idsToMoveFromInbox->Add(keyToFilter);
+
+					// this is our last best chance to log this
+					if (m_filterList->LoggingEnabled())
+						filter->LogRuleHit(GetLogFile(), mailHdr);
+
+					if (imapDeleteIsMoveToTrash)
+					{
+						if (m_parseMsgState->m_newMsgHdr)
+						{
+							m_parseMsgState->m_newMsgHdr->Release();
+							m_parseMsgState->m_newMsgHdr = nsnull;
+						}
+					}
+					
+					destinationFolder->SetFlag(MSG_FOLDER_FLAG_GOT_NEW);
+					
+					if (imapDeleteIsMoveToTrash)	
+						err = 0;
+				}
+			}
+	 	}
+	}
+	
+	
+	// we have to return an error because we do not actually move the message
+	// it is done async and that can fail
+	return err;
+}
+
+
+#endif // DOING_FILTERS
 
 // both of these algorithms assume that key arrays and flag states are sorted by increasing key.
 void nsImapMailFolder::FindKeysToDelete(const nsMsgKeyArray &existingKeys, nsMsgKeyArray &keysToDelete, nsImapFlagAndUidState *flagState)

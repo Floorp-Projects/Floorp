@@ -29,6 +29,13 @@
 #include "nsIUrlListener.h"
 #include "nsIImapIncomingServer.h" // we need this for its IID
 #include "nsIMsgParseMailMsgState.h"
+#ifdef DEBUG_bienvenu
+//#define DOING_FILTERS
+#endif
+#ifdef DOING_FILTERS
+#include "nsIMsgFilterHitNotify.h"
+#include "nsIMsgFilterList.h"
+#endif
 
 /* fa32d000-f6a0-11d2-af8d-001083002da8 */
 #define NS_IMAPRESOURCE_CID \
@@ -43,6 +50,9 @@ class nsImapMailFolder : public nsMsgDBFolder,
                          public nsIImapMiscellaneousSink,
                          public nsICopyMessageListener,
                          public nsIUrlListener
+#ifdef DOING_FILTERS
+						 ,public nsIMsgFilterHitNotify
+#endif
 {
 public:
 	nsImapMailFolder();
@@ -231,6 +241,15 @@ public:
 	NS_IMETHOD ProcessTunnel(nsIImapProtocol* aProtocol,
                              TunnelInfo *aInfo);
 
+#ifdef DOING_FILTERS
+	// nsIMsgFilterHitNotification method(s)
+	NS_IMETHOD ApplyFilterHit(nsIMsgFilter *filter, PRBool *applyMore);
+
+	nsresult MoveIncorporatedMessage(nsIMsgDBHdr *mailHdr, 
+									   nsIMsgDatabase *sourceDB, 
+									   char *destFolder,
+									   nsIMsgFilter *filter)
+#endif // DOING_FILTERS
 protected:
     // Helper methods
 	void FindKeysToAdd(const nsMsgKeyArray &existingKeys, nsMsgKeyArray
@@ -263,6 +282,10 @@ protected:
     PRBool m_haveDiscoverAllFolders;
     PRBool m_haveReadNameFromDB;
 	nsCOMPtr<nsIMsgParseMailMsgState> m_msgParser;
+#ifdef DOING_FILTERS
+	nsCOMPtr<nsIMsgFilterList> m_filterList;
+	PRBool				m_msgMovedByFilter;
+#endif
 	nsMsgKey			m_curMsgUid;
 	PRInt32			m_nextMessageByteLength;
     nsCOMPtr<nsIEventQueue> m_eventQueue;

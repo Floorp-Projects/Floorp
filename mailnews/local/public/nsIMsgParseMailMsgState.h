@@ -46,6 +46,7 @@ public:
 	 NS_IMETHOD ParseAFolderLine(const char *line, PRUint32 lineLength) = 0;
 	 NS_IMETHOD GetNewMsgHdr(nsIMsgDBHdr ** aMsgHeader) = 0;
 	 NS_IMETHOD FinishHeader() = 0;
+	 NS_IMETHOD GetAllHeaders(char **headers, PRInt32 *headersSize) = 0;
 };
 
 #endif /* nsIMsgParseMailMsgState_h___ */
