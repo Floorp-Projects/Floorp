@@ -2250,29 +2250,32 @@ private:
 class XPCReadableJSStringWrapper : public nsDependentString
 {
 public:
-    XPCReadableJSStringWrapper(JSString *str) :
-        nsDependentString(NS_REINTERPRET_CAST(PRUnichar *,
-                                              JS_GetStringChars(str)),
-                      JS_GetStringLength(str)),
-        mStr(str), mBufferHandle(0), mHandleIsShared(JS_FALSE)
+    static PRUnichar sEmptyString;
+
+    XPCReadableJSStringWrapper(JSString *str, PRUnichar *chars,
+                               size_t length) :
+        nsDependentString(chars, length), mStr(str), mSharedBufferHandle(0),
+        mBufferHandle(chars, chars + length)
     { }
 
     XPCReadableJSStringWrapper() :
         nsDependentString(&sEmptyString, &sEmptyString), mStr(nsnull),
-        mBufferHandle(nsnull), mHandleIsShared(JS_FALSE)
+        mSharedBufferHandle(nsnull),
+        mBufferHandle(&sEmptyString, &sEmptyString)
     { }
 
     ~XPCReadableJSStringWrapper();
 
-    // buffer-handle accessors
-    const nsBufferHandle<PRUnichar>* GetBufferHandle() const
-    {
-        return BufferHandle(JS_FALSE);
-    }
+    // buffer-handle accessors (virtual)
+    const nsBufferHandle<PRUnichar>* GetBufferHandle() const;
+    const nsBufferHandle<PRUnichar>* GetFlatBufferHandle() const;
+    const nsSharedBufferHandle<PRUnichar>* GetSharedBufferHandle() const;
 
-    const nsSharedBufferHandle<PRUnichar>* GetSharedBufferHandle() const
+    // Override Length() to avoid multiple virtual calls to access the
+    // length
+    virtual size_type Length() const
     {
-        return BufferHandle(JS_TRUE);
+        return mStr ? JS_GetStringLength(mStr) : 0;
     }
 
     PRBool IsVoid() const
@@ -2281,44 +2284,31 @@ public:
     }
 
 protected:
-
-    static const PRUnichar sEmptyString;
-
-    struct WrapperBufferHandle :
-        public nsSharedBufferHandleWithAllocator<PRUnichar>
+    class SharedWrapperBufferHandle :
+        public nsSharedBufferHandleWithDestroy<PRUnichar>
     {
-        WrapperBufferHandle(XPCReadableJSStringWrapper *outer, JSString *str) :
-            nsSharedBufferHandleWithAllocator<PRUnichar>
-              (NS_REINTERPRET_CAST(PRUnichar *, JS_GetStringChars(str)),
-               NS_REINTERPRET_CAST(PRUnichar *,
-                                   JS_GetStringChars(str) +
-                                   JS_GetStringLength(str)),
-               JS_GetStringLength(str) + 1,
-               mAllocator),
-            mAllocator(str)
+    public:
+        SharedWrapperBufferHandle(JSString *str, PRUnichar *chars,
+                                  size_t length) :
+            nsSharedBufferHandleWithDestroy<PRUnichar>(chars, chars + length,
+                                                       length + 1),
+            mStr(OBJECT_TO_JSVAL(str))
         { }
 
-        XPCReadableJSStringWrapper *mOuter;
+        virtual void Destroy();
 
-        struct Allocator : nsStringAllocator<PRUnichar>
-        {
-            Allocator(JSString *str) :  mStr(OBJECT_TO_JSVAL(str)) { }
-            virtual ~Allocator() { }
+        JSBool RootString();
 
-            virtual void Deallocate(PRUnichar *) const;
-
-            JSBool RootString();
-            jsval mStr;
-        };
-
-        Allocator mAllocator;
+        jsval mStr;
     };
 
-    const nsSharedBufferHandle<PRUnichar>* BufferHandle(JSBool shared) const;
+    JSString *mStr;
 
-    JSString            *mStr;
-    WrapperBufferHandle *mBufferHandle;
-    JSBool              mHandleIsShared;
+    // Pointer to shared buffer handle
+    SharedWrapperBufferHandle *mSharedBufferHandle;
+
+    // Inline non-shared buffer handle
+    nsBufferHandle<PRUnichar> mBufferHandle;
 };
 
 // "voidable" nsAString implementation
