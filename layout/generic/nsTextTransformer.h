@@ -32,6 +32,10 @@ class nsIWordBreaker;
 
 // XXX I'm sure there are other special characters
 #define CH_NBSP 160
+#define CH_ENSP 8194		//<!ENTITY ensp    CDATA "&#8194;" -- en space, U+2002 ISOpub -->
+#define CH_EMSP 8195		//<!ENTITY emsp    CDATA "&#8195;" -- em space, U+2003 ISOpub -->
+#define CH_THINSP 8291	//<!ENTITY thinsp  CDATA "&#8201;" -- thin space, U+2009 ISOpub -->
+#define CH_ZWNJ	8204	//<!ENTITY zwnj    CDATA "&#8204;" -- zero width non-joiner, U+200C NEW RFC 2070#define CH_SHY  173
 #define CH_SHY  173
 
 #define NS_TEXT_TRANSFORMER_AUTO_WORD_BUF_SIZE 256
@@ -165,6 +169,8 @@ protected:
   // Helper methods for GetNextWord (F == forwards)
   PRInt32 ScanNormalWhiteSpace_F();
   PRInt32 ScanNormalAsciiText_F(PRInt32* aWordLen,
+                                PRBool*  aWasTransformed);
+  PRInt32 ScanNormalAsciiText_F_ForWordBreak(PRInt32* aWordLen,
                                 PRBool*  aWasTransformed);
   PRInt32 ScanNormalUnicodeText_F(PRBool aForLineBreak,
                                   PRInt32* aWordLen,
