@@ -114,12 +114,14 @@ nsresult nsDateTimeFormatWin::FormatTMTime(nsILocale* locale,
   mCharset.SetString("ISO-8859-1"); //TODO: need to get this from locale
   // Get LCID
   if (locale != nsnull) {
+    const PRUnichar *aLocaleUnichar;
     nsString aLocale;
     nsString aCategory("NSILOCALE_TIME");
-    nsresult res = locale->GetCategory(&aCategory, &aLocale);
+    nsresult res = locale->GetCategory(aCategory.GetUnicode(), &aLocaleUnichar);
     if (NS_FAILED(res)) {
       return res;
     }
+    aLocale.SetString(aLocaleUnichar);
   	
 	  nsIWin32Locale* win32Locale;
 	  res = nsComponentManager::CreateInstance(kWin32LocaleFactoryCID, NULL, kIWin32LocaleIID, (void**)&win32Locale);
@@ -205,6 +207,10 @@ nsresult nsDateTimeFormatWin::FormatPRExplodedTime(nsILocale* locale,
                                                    nsString& stringOut)
 {
   struct tm  tmTime;
+  tmTime.tm_yday = explodedTime->tm_yday;
+  tmTime.tm_wday = explodedTime->tm_wday;
+  tmTime.tm_year = explodedTime->tm_year;
+  tmTime.tm_year -= 1900;
   tmTime.tm_mon = explodedTime->tm_month;
   tmTime.tm_mday = explodedTime->tm_mday;
   tmTime.tm_hour = explodedTime->tm_hour;

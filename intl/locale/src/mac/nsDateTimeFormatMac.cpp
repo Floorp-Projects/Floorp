@@ -258,12 +258,15 @@ nsresult nsDateTimeFormatMac::FormatTMTime(nsILocale* locale,
 
   // Get a script code and a charset name
   if (locale != nsnull) {
+    const PRUnichar *aLocaleUnichar; 
     nsString aLocale;
     nsString aCategory("NSILOCALE_TIME");
-    res = locale->GetCategory(&aCategory, &aLocale);
+    res = locale->GetCategory(aCategory.GetUnicode(), &aLocaleUnichar);
     if (NS_FAILED(res)) {
       return res;
     }
+    aLocale.SetString(aLocaleUnichar);
+    
     //TODO: Get a charset name from a script code.
     nsIMacLocale* macLocale;
     short langcode;
@@ -271,7 +274,7 @@ nsresult nsDateTimeFormatMac::FormatTMTime(nsILocale* locale,
     if (NS_FAILED(res)) {
       return res;
     }
-    res = macLocale->GetPlatformLocale(&aCategory, &scriptcode, &langcode);
+    res = macLocale->GetPlatformLocale(&aLocale, &scriptcode, &langcode);
     macLocale->Release();
   }
 
@@ -382,6 +385,10 @@ nsresult nsDateTimeFormatMac::FormatPRExplodedTime(nsILocale* locale,
                                                    nsString& stringOut)
 {
   struct tm  tmTime;
+  tmTime.tm_yday = explodedTime->tm_yday;
+  tmTime.tm_wday = explodedTime->tm_wday;
+  tmTime.tm_year = explodedTime->tm_year;
+  tmTime.tm_year -= 1900;
   tmTime.tm_mon = explodedTime->tm_month;
   tmTime.tm_mday = explodedTime->tm_mday;
   tmTime.tm_hour = explodedTime->tm_hour;

@@ -70,12 +70,14 @@ nsresult nsCollationWin::Initialize(nsILocale* locale)
   // locale -> LCID 
   mLCID = 1033; // initialize to en-US
   if (locale != nsnull) {
+    const PRUnichar *aLocaleUnichar;
     nsString aLocale;
     nsString aCategory("NSILOCALE_COLLATE");
-    nsresult res = locale->GetCategory(&aCategory, &aLocale);
+    nsresult res = locale->GetCategory(aCategory.GetUnicode(), &aLocaleUnichar);
     if (NS_FAILED(res)) {
       return res;
     }
+    aLocale.SetString(aLocaleUnichar);
   
 	  nsIWin32Locale* win32Locale;
 	  res = nsComponentManager::CreateInstance(kWin32LocaleFactoryCID, NULL, kIWin32LocaleIID, (void**)&win32Locale);

@@ -60,12 +60,14 @@ nsresult nsCollationUnix::Initialize(nsILocale* locale)
   mLocale.SetString("C");
 
   if (locale != nsnull) {
+    const PRUnichar *aLocaleUnichar;
     nsString aLocale;
     nsString aCategory("NSILOCALE_COLLATE");
-    nsresult res = locale->GetCategory(&aCategory, &aLocale);
+    nsresult res = locale->GetCategory(aCategory.GetUnicode(), &aLocaleUnichar);
     if (NS_FAILED(res)) {
       return res;
     }
+    aLocale.SetString(aLocaleUnichar);
 
     nsIPosixLocale* posixLocale;
     char locale[32];
@@ -74,7 +76,7 @@ nsresult nsCollationUnix::Initialize(nsILocale* locale)
     if (NS_FAILED(res)) {
       return res;
     }
-    if (NS_SUCCEEDED(res = posixLocale->GetPlatformLocale(&aCategory, locale, length))) {
+    if (NS_SUCCEEDED(res = posixLocale->GetPlatformLocale(&aLocale, locale, length))) {
       mLocale.SetString(locale);
     }
     posixLocale->Release();
