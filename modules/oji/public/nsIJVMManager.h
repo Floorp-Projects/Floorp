@@ -37,7 +37,7 @@
 // to JVM plugins for browsers that support JVM plugins.
 
 class nsIJVMPlugin;
-class nsISecureJNI2;
+class nsISecureEnv;
 
 class nsIJVMManager : public nsISupports {
 public:
@@ -48,7 +48,7 @@ public:
      * the same proxy JNI.
      */
 	   NS_IMETHOD
-	   CreateProxyJNI(nsISecureJNI2* inSecureEnv, JNIEnv** outProxyEnv) = 0;
+	   CreateProxyJNI(nsISecureEnv* inSecureEnv, JNIEnv** outProxyEnv) = 0;
 	   
 	   /**
 	    * Returns the proxy JNI associated with the current thread, or NULL if no

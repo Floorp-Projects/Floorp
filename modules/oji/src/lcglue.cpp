@@ -221,25 +221,19 @@ map_java_object_to_js_object_impl(JNIEnv *env, void *pNSIPluginInstanceIn, char 
     /*
     ** Check for the mayscript tag.
     */
-    nsIPluginInstance* pPIT;
-    pPIT = (nsIPluginInstance*)pNSIPluginInstanceIn;
-    if ( (err == NS_OK) && (pPIT != NULL) ) {
-        nsIJVMPluginInstance* pJVMPIT;
-        if (pPIT->QueryInterface(kIJVMPluginInstanceIID,
-                                 (void**)&pJVMPIT) == NS_OK) {
-            nsIPluginInstancePeer* pPITP;
-            err = pJVMPIT->GetPeer((nsIPluginInstancePeer**)&pPITP); 
-            if ( (err == NS_OK) &&(pPITP != NULL) ) {
-                nsIJVMPluginTagInfo* pJVMTagInfo;
-                if (pPITP->QueryInterface(kIJVMPluginTagInfoIID,
-                                          (void**)&pJVMTagInfo) == NS_OK) {
-                    err = pJVMTagInfo->GetMayScript(&mayscript);
-                    PR_ASSERT(err != NS_OK ? mayscript == PR_FALSE : PR_TRUE);
-                    pJVMTagInfo->Release();
-                }
-                pPITP->Release();
+    nsIPluginInstance* pluginInstance = (nsIPluginInstance*)pNSIPluginInstanceIn;
+    if ( (err == NS_OK) && (pluginInstance != NULL) ) {
+        nsIPluginInstancePeer* pluginPeer;
+        err = pluginInstance->GetPeer((nsIPluginInstancePeer**)&pluginPeer); 
+        if ( (err == NS_OK) &&(pluginPeer != NULL) ) {
+            nsIJVMPluginTagInfo* pJVMTagInfo;
+            if (pluginPeer->QueryInterface(kIJVMPluginTagInfoIID,
+                                      (void**)&pJVMTagInfo) == NS_OK) {
+                err = pJVMTagInfo->GetMayScript(&mayscript);
+                PR_ASSERT(err != NS_OK ? mayscript == PR_FALSE : PR_TRUE);
+                pJVMTagInfo->Release();
             }
-            pJVMPIT->Release();
+            pluginPeer->Release();
         }
     }
 

@@ -21,7 +21,7 @@
  */
 
 #include "jvmmgr.h"
-#include "nsISecureJNI2.h"
+#include "nsISecureEnv.h"
 #include "nsIJVMPlugin.h"
 #include "nsHashtable.h"
 #include "nsVector.h"
@@ -228,13 +228,13 @@ class ProxyJNIEnv : public JNIEnv {
 private:
 	static JNINativeInterface_ theFuncs;
 	static nsHashtable* theIDTable;
-	nsISecureJNI2* mSecureEnv;
+	nsISecureEnv* mSecureEnv;
 	nsISecurityContext* mContext;
 	jobject mJavaThread;
 
 	static ProxyJNIEnv& nsJNIEnvRef(JNIEnv* env) { return *(ProxyJNIEnv*)env; }
 
-	nsISecureJNI2* operator->() { return mSecureEnv; }
+	nsISecureEnv* operator->() { return mSecureEnv; }
 	nsISecurityContext* getContext() { return JVM_GetJSSecurityContext(); }
 
 	static jint JNICALL GetVersion(JNIEnv* env)
@@ -1092,10 +1092,10 @@ private:
 	}
 
 public:
-	ProxyJNIEnv(nsIJVMPlugin* jvmPlugin, nsISecureJNI2* secureEnv);
+	ProxyJNIEnv(nsIJVMPlugin* jvmPlugin, nsISecureEnv* secureEnv);
 	~ProxyJNIEnv();
 	
-	nsISecureJNI2* getSecureEnv() { return mSecureEnv; }
+	nsISecureEnv* getSecureEnv() { return mSecureEnv; }
 };
 
 JNINativeInterface_ ProxyJNIEnv::theFuncs = {
@@ -1477,7 +1477,7 @@ JNINativeInterface_ ProxyJNIEnv::theFuncs = {
 
 nsHashtable* ProxyJNIEnv::theIDTable = NULL;
 
-ProxyJNIEnv::ProxyJNIEnv(nsIJVMPlugin* jvmPlugin, nsISecureJNI2* secureEnv)
+ProxyJNIEnv::ProxyJNIEnv(nsIJVMPlugin* jvmPlugin, nsISecureEnv* secureEnv)
 	:	mSecureEnv(secureEnv), mContext(NULL), mJavaThread(NULL)
 {
  nsresult result; 
@@ -1485,7 +1485,7 @@ ProxyJNIEnv::ProxyJNIEnv(nsIJVMPlugin* jvmPlugin, nsISecureJNI2* secureEnv)
 	if (theIDTable == NULL)
 		theIDTable = new nsHashtable();
 	
-	// Ask the JVM for a new nsISecureJNI2, if none provided.
+	// Ask the JVM for a new nsISecureEnv, if none provided.
 	if (secureEnv == NULL)
 		result = jvmPlugin->CreateSecureEnv(this, &mSecureEnv);
 }
@@ -1498,7 +1498,7 @@ ProxyJNIEnv::~ProxyJNIEnv()
 		mSecureEnv->Release();
 }
 
-JNIEnv* CreateProxyJNI(nsIJVMPlugin* jvmPlugin, nsISecureJNI2* inSecureEnv)
+JNIEnv* CreateProxyJNI(nsIJVMPlugin* jvmPlugin, nsISecureEnv* inSecureEnv)
 {
 	return new ProxyJNIEnv(jvmPlugin, inSecureEnv);
 }
@@ -1510,7 +1510,7 @@ void DeleteProxyJNI(JNIEnv* env)
 		delete proxyEnv;
 }
 
-nsISecureJNI2* GetSecureEnv(JNIEnv* env)
+nsISecureEnv* GetSecureEnv(JNIEnv* env)
 {
 	ProxyJNIEnv* proxyEnv = (ProxyJNIEnv*)env;
 	return proxyEnv->getSecureEnv();

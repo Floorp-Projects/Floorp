@@ -317,10 +317,11 @@ struct nsPluginEvent {
  */
 enum nsPluginEventType {
 #ifdef XP_MAC
-    nsPluginEventType_GetFocusEvent        = (osEvt + 16),
-    nsPluginEventType_LoseFocusEvent       = (osEvt + 17),
-    nsPluginEventType_AdjustCursorEvent    = (osEvt + 18),
-    nsPluginEventType_MenuCommandEvent     = (osEvt + 19),
+    nsPluginEventType_GetFocusEvent = (osEvt + 16),
+    nsPluginEventType_LoseFocusEvent,
+    nsPluginEventType_AdjustCursorEvent,
+    nsPluginEventType_MenuCommandEvent,
+    nsPluginEventType_ClippingChangedEvent,
 #endif /* XP_MAC */
     nsPluginEventType_Idle                 = 0
 };

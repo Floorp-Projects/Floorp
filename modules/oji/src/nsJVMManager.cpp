@@ -73,6 +73,7 @@ static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 static NS_DEFINE_IID(kIJVMManagerIID, NS_IJVMMANAGER_IID);
 static NS_DEFINE_IID(kIThreadManagerIID, NS_ITHREADMANAGER_IID);
 static NS_DEFINE_IID(kIJVMPluginIID, NS_IJVMPLUGIN_IID);
+static NS_DEFINE_IID(kIPluginIID, NS_IPLUGIN_IID);
 static NS_DEFINE_IID(kISymantecDebugManagerIID, NS_ISYMANTECDEBUGMANAGER_IID);
 static NS_DEFINE_IID(kIPluginManagerIID, NS_IPLUGINMANAGER_IID);
 
@@ -101,7 +102,7 @@ GetRunningJVM()
 }
 
 NS_METHOD
-nsJVMManager::CreateProxyJNI(nsISecureJNI2* inSecureEnv, JNIEnv** outProxyEnv)
+nsJVMManager::CreateProxyJNI(nsISecureEnv* inSecureEnv, JNIEnv** outProxyEnv)
 {
 	JVMContext* context = GetJVMContext();
 	if (context->proxyEnv != NULL) {
@@ -437,27 +438,34 @@ nsJVMManager::StartupJVM(void)
     ** nsIPlugin* plugin = NPL_LoadPluginByType(NS_JVM_MIME_TYPE);
     */
     
-	/*nsIPluginHost* pNSIPluginHost = NULL;
-    nsresult err = g_pNSIServiceManager->GetService(kPluginManagerCID, kPluginHostIID, (nsISupports**)&pNSIPluginHost);*/
-
-    nsresult err = g_pNSIServiceManager->GetService(kPluginManagerCID, kPluginManagerIID, (nsISupports**)&plugin);
+	nsIPluginHost* pluginHost = NULL;
+    nsresult err = g_pNSIServiceManager->GetService(kPluginManagerCID, kPluginHostIID, (nsISupports**)&pluginHost);
 	if (err != NS_OK) {
         fStatus = nsJVMStatus_Failed;
         return fStatus;
     }
 
-    if (plugin == NULL) {
+    if (pluginHost == NULL) {
         fStatus = nsJVMStatus_Failed;
         return fStatus;
     }
 
-    nsresult rslt = plugin->QueryInterface(kIJVMPluginIID, (void**)&fJVM);
+	nsIPlugin* pluginFactory = NULL;
+	err = pluginHost->GetPluginFactory(NS_JVM_MIME_TYPE, &pluginFactory);
+	if (pluginFactory == NULL) {
+        fStatus = nsJVMStatus_Failed;
+        return fStatus;
+    }
+
+    nsresult rslt = pluginFactory->QueryInterface(kIJVMPluginIID, (void**)&fJVM);
     if (rslt != NS_OK) {
         PR_ASSERT(fJVM == NULL);
         fStatus = nsJVMStatus_Failed;
         return fStatus;
     }
 
+	// beard: do we really need an explicit startup mechanim for the JVM?
+#if 0
     // Get an execution environment -- that will cause the VM to start up
     JNIEnv* env = NULL;
     rslt = fJVM->GetJNIEnv(&env);
@@ -468,6 +476,7 @@ nsJVMManager::StartupJVM(void)
         /* else the JVM is running. */
         fStatus = nsJVMStatus_Running;
     }
+#endif
 
 #if 0
     JSContext* crippledContext = LM_GetCrippledContext();

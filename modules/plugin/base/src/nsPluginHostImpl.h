@@ -29,6 +29,7 @@
 #include "nsIFileUtilities.h"
 
 class ns4xPlugin;
+class nsNativeFileSpec;
 
 class nsPluginTag
 {
@@ -131,6 +132,9 @@ public:
 
   NS_IMETHOD
   LoadPlugins(void);
+  
+  NS_IMETHOD
+  GetPluginFactory(const char *aMimeType, nsIPlugin** aPlugin);
 
   NS_IMETHOD
   InstantiateEmbededPlugin(const char *aMimeType, nsString& aURLSpec, nsIPluginInstanceOwner *aOwner);
@@ -210,6 +214,8 @@ private:
   NewEmbededPluginStream(const nsString& aURL, nsIPluginInstanceOwner *aOwner, nsIPluginInstance* aInstance);
   nsresult
   NewFullPagePluginStream(nsIStreamListener *&aStreamListener, nsIPluginInstance *aInstance);
+
+  PRLibrary* LoadPluginLibrary(const nsNativeFileSpec &pluginSpec);
 
   PRLibrary* LoadPluginLibrary(const char* pluginPath, const char* path);
 
