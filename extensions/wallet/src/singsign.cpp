@@ -2570,7 +2570,10 @@ SINGSIGN_PromptPassword
 
   /* do only the dialog if signon preference is not enabled */
   if (!si_GetSignonRememberingPref()){
-    return dialog->PromptPassword(text, nsnull /* window title */, pwd, pressedOK);
+    PRUnichar * prompt_string = Wallet_Localize("PromptForPassword");
+    res = dialog->PromptPassword(text, prompt_string, pwd, pressedOK);
+    Recycle(prompt_string);
+    return res;
   }
 
   /* convert to a uri so we can parse out the username and hostname */
@@ -2652,7 +2655,10 @@ SINGSIGN_Prompt
 
   /* do only the dialog if signon preference is not enabled */
   if (!si_GetSignonRememberingPref()){
-    return dialog->Prompt(text, nsnull /* window title */, resultText, pressedOK);
+    PRUnichar * prompt_string = Wallet_Localize("PromptForData");
+    res = dialog->Prompt(text, prompt_string, resultText, pressedOK);
+    Recycle(prompt_string);
+    return res;
   }
 
   /* convert to a uri so we can parse out the hostname */
