@@ -545,8 +545,9 @@ LRESULT CMozillaBrowser::OnViewSource(WORD wNotifyCode, WORD wID, HWND hWndCtl, 
 	// Get the current URI
 	nsXPIDLCString aURI;
 	mWebBrowserContainer->m_pCurrentURI->GetSpec(getter_Copies(aURI));
-	
-	nsString strUrl = nsString("view-source:") + nsString(aURI);
+
+	USES_CONVERSION;
+	std::wstring strURI = std::wstring(L"view-source:") + A2W(aURI);
 
 	CIPtr(IDispatch) spDispNew;
 	VARIANT_BOOL bCancel = VARIANT_FALSE;
@@ -558,7 +559,7 @@ LRESULT CMozillaBrowser::OnViewSource(WORD wNotifyCode, WORD wID, HWND hWndCtl, 
 		if (spOther)
 		{
 			// tack in the viewsource command
-			BSTR bstrURL = SysAllocString(strUrl.GetUnicode());
+			BSTR bstrURL = SysAllocString(strURI.c_str());
 			CComVariant vURL(bstrURL);
 			VARIANT vNull;
 			vNull.vt = VT_NULL;
@@ -890,7 +891,7 @@ HRESULT CMozillaBrowser::DestroyBrowser()
 HRESULT CMozillaBrowser::SetEditorMode(BOOL bEnabled)
 {
 	NG_TRACE_METHOD(CMozillaBrowser::SetEditorMode);
-
+/*
 	m_bEditorMode = FALSE;
 	if (bEnabled && mEditor == nsnull)
 	{
@@ -941,7 +942,7 @@ HRESULT CMozillaBrowser::SetEditorMode(BOOL bEnabled)
 			mEditor = nsnull;
 		}
 	}
-
+*/
 	return S_OK;
 }
 
@@ -1480,25 +1481,23 @@ HRESULT STDMETHODCALLTYPE CMozillaBrowser::Navigate(BSTR URL, VARIANT __RPC_FAR 
 	}
 
 	// Extract the URL parameter
- 	nsString sCommand("view");
-	nsString sUrl;
 	if (URL == NULL)
 	{
 		NG_ASSERT(0);
 		RETURN_E_INVALIDARG();
 	}
-	else
-	{
-		USES_CONVERSION;
-		sUrl = URL;
-	}
+
+	std::wstring sUrl(URL);
 
 	// Check for a view-source op - this is a bit kludgy
 	// TODO
-	if (sUrl.Compare(L"view-source:", PR_TRUE, 12) == 0)
+	if (sUrl.compare(0, 12, L"view-source:") == 0)
  	{
- 		sUrl.Left(sCommand, 11);
- 		sUrl.Cut(0,12);
+		// Broken code - appears to want to replace view-source: with view: to 
+		// get Mozilla to respond to the IE view-source: protocol.
+///		std::wstring sCommand(L"view");
+//		sUrl.Left(sCommand, 11);
+// 		sUrl.Cut(0,12);
  	}
 
 	// Extract the launch flags parameter
@@ -1519,11 +1518,10 @@ HRESULT STDMETHODCALLTYPE CMozillaBrowser::Navigate(BSTR URL, VARIANT __RPC_FAR 
 
 
 	// Extract the target frame parameter
-	nsString sTargetFrame;
+	std::wstring sTargetFrame;
 	if (TargetFrameName && TargetFrameName->vt == VT_BSTR)
 	{
-		USES_CONVERSION;
-		sTargetFrame = nsString(OLE2A(TargetFrameName->bstrVal));
+		sTargetFrame = TargetFrameName->bstrVal;
 	}
 
 	// Extract the post data parameter
@@ -1593,7 +1591,7 @@ HRESULT STDMETHODCALLTYPE CMozillaBrowser::Navigate(BSTR URL, VARIANT __RPC_FAR 
 	nsCOMPtr<nsIWebNavigation> spIWebNavigation = do_QueryInterface(mRootDocShell);
 	if (spIWebNavigation)
 	{
-		res = spIWebNavigation->LoadURI(sUrl.GetUnicode());
+		res = spIWebNavigation->LoadURI(sUrl.c_str());
 	}
 
 	return res;
