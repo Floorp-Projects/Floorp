@@ -10,6 +10,7 @@
       color                 : black;
       padding               : 0px;
       font                  : 3mm arial;
+      max-width             : 10em;
     }
     
   .button-toolbar:hover
