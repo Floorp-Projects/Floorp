@@ -315,6 +315,8 @@ function unifinderRemoveCommand( DoNotConfirm )
                gICalLib.deleteEvent( calendarEvent.id );
             }
          }
+         else
+            gICalLib.deleteEvent( calendarEvent.id );
       }
       else
       {
@@ -323,6 +325,8 @@ function unifinderRemoveCommand( DoNotConfirm )
                gICalLib.deleteEvent( calendarEvent.id );
             }
          }
+         else
+            gICalLib.deleteEvent( calendarEvent.id );
       }
    }
    else if( SelectedItems.length > 1 )
@@ -337,19 +341,6 @@ function unifinderRemoveCommand( DoNotConfirm )
          }
       }
    }
-}
-
-
-/**
-*  This is called from the unifinder when a key is pressed in the categories tree
-*/
-
-function onUnifinderCategoriesKeyPress(event)
-{
-	if ((event.keyCode == 8)||(event.keyCode == 46))
-	{
-		unifinderRemoveCommand( true );
-	}
 }
 
 

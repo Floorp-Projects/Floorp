@@ -89,7 +89,7 @@
 
 
 <keyset>
-  <key id="delete_key" keycode="VK_DELETE" observes="delete_command" onkeypress="onUnifinderCategoriesKeyPress(event)"/>
+  <key id="delete_key" keycode="VK_DELETE" observes="delete_command" oncommand="unifinderRemoveCommand( true )"/>
 </keyset>
 
 <!-- Javascript DTD To Variable -->

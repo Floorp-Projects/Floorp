@@ -96,49 +96,10 @@
     <menu id="menu_File">
       <menupopup id="menu_FilePopup">            
          <menuitem id="calendar-new-event-menu"                           label="New Event" oncommand="newEventCommand()"/>
-         <menuitem id="unifinder-modify-menu"   observes="modify_command" label="Edit Event"      oncommand="unifinderModifyCommand()" />
-         <menuitem id="unifinder-remove-menu"   observes="delete_command" label="Delete Event"      oncommand="unifinderRemoveCommand()" />
+         <menuitem id="unifinder-modify-menu"   observes="modify_command" label="Edit Event"   oncommand="unifinderModifyCommand()" />
+         <menuitem id="unifinder-remove-menu"   observes="delete_command" label="Delete Event" oncommand="unifinderRemoveCommand()" key="delete_key"/>
       </menupopup>
     </menu>
-
-<!--
-    <menu id="menu_Edit">
-      <menupopup id="menu_Edit_Popup">
-        <menuitem id="menu_undo"/>
-        <menuitem id="menu_redo"/>
-        <menuseparator/>
-        <menuitem id="menu_cut"/>
-        <menuitem id="menu_copy"/>
-        <menuitem id="menu_paste"/>
-        <menuitem id="menu_delete"/>
-        <menuseparator/>
-        <menuitem id="menu_selectAll"/>
-        <menuseparator /> 
-        <menuitem id="menu_preferences" oncommand="goPreferences('navigator.xul', 'chrome://communicator/content/pref/pref-navigator.xul', 'navigator')"/>
-      </menupopup>
-    </menu>
-
-    <menu id="menu_View" accesskey="&viewMenu.accesskey;" label="&viewMenu.label;">
-      <menupopup id="menu_View_Popup">
-        <menu label="&toolbarsCmd.label;" accesskey="&toolbarsCmd.accesskey;" id="view_toolbars">
-          <menupopup id="view_toolbars_popup" onpopupshowing="//updateToolbarStates(this);"> 
-            <menuitem label="&navbarCmd.label;" accesskey="&navbarCmd.accesskey;" class="menuitem-iconic" type="checkbox" observes="cmd_viewnavbar"  />
-            <menuitem label="&taskbarCmd.label;" accesskey="&taskbarCmd.accesskey;" class="menuitem-iconic" type="checkbox" observes="cmd_viewtaskbar" />
-            <menuitem label="&componentbarCmd.label;" accesskey="&componentbarCmd.accesskey;" class="menuitem-iconic" type="checkbox" observes="cmd_viewcomponentbar"/>
-          </menupopup>
-        </menu>   
-      </menupopup>
-    </menu>
-
-    <menu accesskey="&searchMenu.accesskey;" label="&searchMenu.label;">
-      <menupopup id="searchMenu">
-        <menuitem id="menu_find" label="&findOnCmd.label;" accesskey="&findOnCmd.accesskey;" key="key_find" command="Browser:Find"/>
-        <menuitem id="menu_findAgain" label="&findAgainCmd.label;" accesskey="&findAgainCmd.accesskey;" key="key_findAgain" command="Browser:FindAgain"/>
-        <menuseparator />
-        <menuitem label="&searchInternetCmd.label;" accesskey="&searchInternetCmd.accesskey;" oncommand="loadXURL('urn:clienturl:srchmenu:srchinternet');"/>        
-      </menupopup>
-    </menu>
--->
 
   <menu id="tasksMenu"/>
   

@@ -70,7 +70,7 @@
                 <tabpanels orient="horizontal" flex="1">
                     <vbox id="unifinder-categories-box" flex="1">
                        <vbox id="unifinder-categories-content-box" flex="1"  >
-                           <tree multiple="true" id="unifinder-categories-tree" class="unifinder-tree-class"  flex="1" onkeypress="onUnifinderCategoriesKeyPress(event)">
+                           <tree multiple="true" id="unifinder-categories-tree" class="unifinder-tree-class"  flex="1">
                                <treechildren id="unifinder-categories-tree-children" flex="1"/>
                            </tree>
                        
