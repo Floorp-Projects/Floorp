@@ -74,7 +74,7 @@ nsDownloadListener::Init(nsIURI *aSource, nsIURI *aTarget, const PRUnichar *aDis
   // get the local file corresponding to the given target URI
   nsCOMPtr<nsILocalFile> targetFile;
   {
-    nsCOMPtr<nsIFileURL> fileURL = do_QueryInterface(mDestination);
+    nsCOMPtr<nsIFileURL> fileURL = do_QueryInterface(aTarget);
     if (fileURL)
     {
       nsCOMPtr<nsIFile> file;
