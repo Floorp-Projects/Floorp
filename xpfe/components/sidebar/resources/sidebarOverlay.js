@@ -51,6 +51,8 @@ function sidebarOverlayInit()
   else {
     // XXX What we should _really_ do here is copy the default panels
     // into the profile directory and then try again.
+
+
     sidebar.db = 'chrome://sidebar/content/default-panels.rdf'
     debug("using " + sidebar.db + " because " + sidebar_url.URLString + " does not exist\n");
   }
@@ -79,20 +81,63 @@ function sidebarOverlayInit()
   // XXX This is a hack to force re-display
   panels.setAttribute('ref', 'urn:sidebar:current-panel-list');
 
+  sidebarOpenDefaultPanel(1, 0);
 }
 
-function sidebarOpenClosePanel(splitter) {
-  var state = splitter.getAttribute("state")
-  var resizeafter = splitter.getAttribute("resizeafter")
-  var hasOlderSibling = splitter.previousSibling
+function sidebarOpenDefaultPanel(wait, tries) {
+  var parent = document.getElementById('sidebar-panels');
+  var target = parent.getAttribute('open-panel-src');
+  var children = parent.childNodes;
 
-  if (!hasOlderSibling && resizeafter != 'grow') {
-    return
+  debug("~~~~~~~~~~~opening default panel\n");
+  if (children.length < 3) {
+  debug("~~~~~~~~~~~not enough kids yet\n");
+	if (tries < 5) {
+      // No children yet, try again later
+      setTimeout('sidebarOpenDefaultPanel('+(wait*2+1)+','+(tries+1)+')',wait);
+	}
+    return;
   }
-  if (state == "" || state == "open") {
-    splitter.setAttribute("state", "collapsed")
-  } else {
-    splitter.setAttribute("state", "")
+    for (var ii=0; ii < children.length; ii++) {
+      debug("~~ child " + ii + "\n");
+	  dumpAttributes(children.item(ii));
+	}
+  if (target && target != '') {
+    for (var ii=0; ii < children.length; ii++) {
+	  if (children.item(ii).getAttribute('src') == target) {
+		children.item(ii).removeAttribute('collapsed');
+		return;
+	  }
+	}
+  }
+  // Pick the first one
+  debug("~~~~~~~~~~~picking first one\n");
+  var first_iframe = children.item(2);
+  if (first_iframe) {
+    first_iframe.removeAttribute('collapsed');
+    parent.setAttribute('open-panel-src',first_iframe.getAttribute('src'));
+  }
+}
+
+function sidebarOpenClosePanel(titledbutton) {
+  var target = titledbutton.getAttribute('iframe-src');
+  var last_src = titledbutton.parentNode.getAttribute('open-panel-src');
+  var children = titledbutton.parentNode.childNodes;
+
+  if (target == last_src) {
+	return;
+  }
+
+  for (var ii=0; ii < children.length; ii++) {
+    var src = children.item(ii).getAttribute('src')
+
+	if (src == target) {
+	  children.item(ii).removeAttribute('collapsed');
+	  titledbutton.parentNode.setAttribute('open-panel-src',target);
+	}
+	if (src == last_src) {
+	  children.item(ii).setAttribute('collapsed','true');
+	}
   }
 }
 
@@ -102,7 +147,7 @@ function sidebarReload() {
 
 function sidebarCustomize() {
   var newWin = window.openDialog('chrome://sidebar/content/customize.xul',
-                                 'New','chrome',
+                                 '_blank','chrome,modal',
                                  sidebar.db, sidebar.resource)
   return newWin
 }
@@ -116,7 +161,7 @@ function sidebarShowHide() {
     debug("Showing the sidebar\n")
     sidebar.setAttribute('hidden','')
     sidebar_splitter.setAttribute('hidden','')
-    sidebarOverlayInit()
+	  //sidebarOverlayInit()
   } else {
     debug("Hiding the sidebar\n")
     sidebar.setAttribute('hidden','true')
@@ -128,7 +173,7 @@ function dumpAttributes(node) {
   var attributes = node.attributes
 
   if (!attributes || attributes.length == 0) {
-    debug("no attributes")
+    debug("no attributes\n")
   }
   for (var ii=0; ii < attributes.length; ii++) {
     var attr = attributes.item(ii)
