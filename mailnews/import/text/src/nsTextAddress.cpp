@@ -869,7 +869,7 @@ nsresult nsTextAddress::GetLdifStringRecord(char* buf, PRInt32 len, PRInt32& sto
 			{
 				return NS_OK;
 			}
-			else if ((LFCount == 1 || CRCount == 1) && c != ' ')
+			else if ((LFCount == 1 || CRCount == 1))
 			{
          		m_ldifLine.Append('\n');
          		m_ldifLine.Append(c);

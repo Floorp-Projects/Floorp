@@ -951,7 +951,7 @@ nsresult AddressBookParser::GetLdifStringRecord(char* buf, PRInt32 len, PRInt32*
 			{
 				return NS_OK;
 			}
-			else if ((LFCount == 1 || CRCount == 1) && c != ' ')
+			else if ((LFCount == 1 || CRCount == 1))
 			{
          		mLine.Append('\n');
          		mLine.Append(c);
