@@ -60,7 +60,6 @@ static nsIEventQueue* gEventQ = nsnull;
 // Test converters include
 /////////////////////////////////
 #include "Converters.h"
-#include "nsMultiMixedConv.h"
 
 // CID setup
 static NS_DEFINE_CID(kEventQueueServiceCID,      NS_EVENTQUEUESERVICE_CID);
@@ -164,11 +163,6 @@ main(int argc, char* argv[])
     rv = convFactory1->QueryInterface(NS_GET_IID(nsIFactory), (void**)&convFactSup1);
     if (NS_FAILED(rv)) return rv;
 
-    // multipart mixed converter registration
-    nsIFactory *multiMixedFactSup = nsnull;
-    rv = nsComponentManager::FindFactory(kMultiMixedConverterCID, &multiMixedFactSup);
-    if (NS_FAILED(rv)) return rv;
-
     // register the TestConverter with the component manager. One progid registration
     // per conversion pair (from - to pair).
     rv = nsComponentManager::RegisterFactory(kTestConverterCID,
@@ -182,13 +176,6 @@ main(int argc, char* argv[])
                                              "TestConverter1",
                                              NS_ISTREAMCONVERTER_KEY "?from=b/foo?to=c/foo",
                                              convFactSup1,
-                                             PR_TRUE);
-    if (NS_FAILED(rv)) return rv;
-
-    rv = nsComponentManager::RegisterFactory(kMultiMixedConverterCID,
-                                             "MultiMixedConverter",
-                                             NS_ISTREAMCONVERTER_KEY "?from=multipart/x-mixed-replace?to=text/html",
-                                             multiMixedFactSup,
                                              PR_TRUE);
     if (NS_FAILED(rv)) return rv;
 
