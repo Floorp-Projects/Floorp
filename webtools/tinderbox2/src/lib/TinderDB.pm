@@ -19,8 +19,8 @@
 #       notice board display,  build display (colored squares)
 
 
-# $Revision: 1.18 $ 
-# $Date: 2003/05/26 13:38:41 $ 
+# $Revision: 1.19 $ 
+# $Date: 2003/06/18 15:47:16 $ 
 # $Author: kestes%walrus.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/lib/TinderDB.pm,v $ 
 # $Name:  $ 
@@ -396,6 +396,8 @@ sub trim_db_history {
 # Really this is the names the columns produced by this DB
 
 sub notice_association {
+  my ($tree,) = @_;
+
   my (@outrow) = ();
 
   foreach $db (@{$DB}) {
