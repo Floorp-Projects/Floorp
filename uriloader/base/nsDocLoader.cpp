@@ -960,6 +960,11 @@ void nsDocLoaderImpl::DocLoaderIsEmpty(nsresult aStatus)
 {
   if (mIsLoadingDocument) {
     PRBool busy = PR_FALSE;
+    /* In the unimagineably rude circumstance that onload event handlers
+       triggered by this function actually kill the window ... ok, it's
+       not unimagineable; it's happened ... this deathgrip keeps this object
+       alive long enough to survive this function call. */
+    nsCOMPtr<nsIDocumentLoader> kungFuDeathGrip(this);
 
     IsBusy(busy);
     if (!busy) {
