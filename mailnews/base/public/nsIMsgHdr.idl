@@ -92,9 +92,6 @@ interface nsIMsgHdr : nsISupports
     readonly attribute wstring mime2DecodedAuthor;
     readonly attribute wstring mime2DecodedSubject;
     readonly attribute wstring mime2DecodedRecipients;
-    //	[noscript] void getMime2DecodedAuthor(in nsString resultAuthor);
-    //	[noscript] void getMime2DecodedSubject(in nsString resultSubject);
-    //	[noscript] void getMime2DecodedRecipients(in nsString resultRecipients);
 
     readonly attribute wstring authorCollationKey;
     readonly attribute wstring subjectCollationKey;
