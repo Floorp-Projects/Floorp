@@ -33,7 +33,7 @@
 #endif
 #endif /* NSPR20 */
 
-#if defined(JAVA)
+#if defined(JAVA) || defined(NS_MT_SUPPORTED)
 
 XP_BEGIN_PROTOS
 extern PRMonitor* libnet_asyncIO;
@@ -43,7 +43,7 @@ XP_END_PROTOS
 #define LIBNET_UNLOCK()		PR_ExitMonitor(libnet_asyncIO)
 #define LIBNET_IS_LOCKED()	PR_InMonitor(libnet_asyncIO)
 
-#else /* !JAVA */
+#else /* !JAVA && !NS_MT_SUPPORTED*/
 
 #define LIBNET_LOCK()
 #define LIBNET_UNLOCK()
