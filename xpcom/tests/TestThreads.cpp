@@ -159,7 +159,7 @@ public:
         PR_AtomicIncrement(&gNum);
     }
 
-    ~nsStressRunner() {
+    virtual ~nsStressRunner() {
         NS_ASSERTION(mWasRun, "never run!");
     }
 
