@@ -37,6 +37,7 @@
 // For completion of send/message creation operations...
 typedef nsresult (*nsAttachSaveCompletionCallback) (nsIURI* aURL, nsresult aStatus,
                                                     const char *aContentType,
+                                                    const char *aCharset,
                                                     PRInt32 totalSize, const PRUnichar* aMsg, 
                                                     void *tagData);
 
@@ -72,8 +73,9 @@ private:
   nsOutputFileStream              *mOutStream;    // the output file stream
   PRBool                          mStillRunning;  // Are we still running?
   PRInt32                         mTotalWritten;  // Size counter variable
-  nsCOMPtr<nsIURI>                mURL;          // URL being processed
+  nsCOMPtr<nsIURI>                mURL;           // URL being processed
   char                            *mContentType;  // The content type retrieved from the server
+  char                            *mCharset;      // The charset retrieved from the server
   void                            *mTagData;      // Tag data for callback...
   nsAttachSaveCompletionCallback  mCallback;      // Callback to call once the file is saved...
 }; 

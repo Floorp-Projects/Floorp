@@ -1218,12 +1218,15 @@ done:
 PRBool 
 mime_7bit_data_p (const char *string, PRUint32 size)
 {
-	const unsigned char *s = (const unsigned char *) string;
-	const unsigned char *end = s + size;
-	if (s)
-		for (; s < end; s++)
-			if (*s > 0x7F)
-				return PR_FALSE;
+  if ((!string) || (!*string))
+    return PR_TRUE;
+
+  char *ptr = (char *)string;
+  for (PRUint32 i; i<size; i++)
+  {
+    if (ptr[i] > 0x7F)
+      return PR_FALSE;
+  }
 	return PR_TRUE;
 }
 

@@ -282,6 +282,7 @@ nsMsgComposeAndSend::Clear()
       }
 
 			PR_FREEIF (m_attachments [i].m_type);
+			PR_FREEIF (m_attachments [i].m_charset);
 			PR_FREEIF (m_attachments [i].m_override_type);
 			PR_FREEIF (m_attachments [i].m_override_encoding);
 			PR_FREEIF (m_attachments [i].m_desired_type);

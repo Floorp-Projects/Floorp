@@ -37,6 +37,7 @@
 #include "nsIChannel.h"
 #include "nsNetUtil.h"
 #include "nsMimeTypes.h"
+#include "nsIHTTPChannel.h"
 
 static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
 
@@ -85,12 +86,14 @@ nsURLFetcher::nsURLFetcher()
   mStillRunning = PR_TRUE;
   mCallback = nsnull;
   mContentType = nsnull;
+  mCharset = nsnull;
 }
 
 nsURLFetcher::~nsURLFetcher()
 {
   mStillRunning = PR_FALSE;
   PR_FREEIF(mContentType);
+  PR_FREEIF(mCharset);
 }
 
 NS_IMETHODIMP nsURLFetcher::GetInterface(const nsIID & aIID, void * *aInstancePtr)
@@ -207,23 +210,29 @@ nsURLFetcher::OnStopRequest(nsIChannel *aChannel, nsISupports * /* ctxt */, nsre
   if (aChannel)
   {
     char    *contentType = nsnull;
+    char    *charset = nsnull;
 
     if (NS_SUCCEEDED(aChannel->GetContentType(&contentType)) && contentType)
     {
       if (PL_strcasecmp(contentType, UNKNOWN_CONTENT_TYPE))
       {
         mContentType = contentType;
+      }
+    }
 
-#ifdef NS_DEBUG_rhp
-  printf("nsURLFetcher::OnStopRequest() for Content-Type: %s\n", mContentType);
-#endif
+    nsCOMPtr<nsIHTTPChannel> httpChannel = do_QueryInterface(aChannel);
+    if (httpChannel)
+    {
+      if (NS_SUCCEEDED(httpChannel->GetCharset(&charset)) && charset)
+      {
+        mCharset = charset;
       }
     }
   }  
 
   // Now if there is a callback, we need to call it...
   if (mCallback)
-    mCallback (mURL, aStatus, mContentType, mTotalWritten, aMsg, mTagData);
+    mCallback (mURL, aStatus, mContentType, mCharset, mTotalWritten, aMsg, mTagData);
 
   // Time to return...
   return NS_OK;

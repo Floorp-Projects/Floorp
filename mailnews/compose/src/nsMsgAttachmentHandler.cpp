@@ -401,6 +401,7 @@ DONE:
 static nsresult
 FetcherURLDoneCallback(nsIURI* aURL, nsresult aStatus, 
                        const char *aContentType,
+                       const char *aCharset,
                        PRInt32 totalSize, 
                        const PRUnichar* aMsg, void *tagData)
 {
@@ -414,6 +415,12 @@ FetcherURLDoneCallback(nsIURI* aURL, nsresult aStatus,
     {
       PR_FREEIF(ma->m_type);
       ma->m_type = PL_strdup(aContentType);
+    }
+
+    if (aCharset)
+    {
+      PR_FREEIF(ma->m_charset);
+      ma->m_charset = PL_strdup(aCharset);
     }
 
 	  return ma->UrlExit(aStatus, aMsg);
