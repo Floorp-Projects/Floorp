@@ -56,11 +56,11 @@ class nsContentPolicy : public nsIContentPolicy
     nsCOMArray<nsIContentPolicy> mPolicies;
 
     //Helper type for CheckPolicy
-    // XXXbz NS_METHOD_(nsresult) to work around the macro seeing the
-    // () that follows....
-    typedef NS_METHOD_(nsresult)
-    (nsIContentPolicy::*CPMethod)(PRUint32, nsIURI*, nsIURI*, nsIDOMNode*,
-                                  const nsACString &, nsISupports*, PRInt16*);
+    typedef
+    NS_STDCALL_FUNCPROTO(nsresult, CPMethod, nsIContentPolicy,
+                         ShouldProcess,
+                         (PRUint32, nsIURI*, nsIURI*, nsIDOMNode*,
+                           const nsACString &, nsISupports*, PRInt16*));
 
     //Helper method that applies policyMethod across all policies in mPolicies
     // with the given parameters
