@@ -237,7 +237,6 @@ void CreateDirectories(CString instblobPath)
 	CString instDirname     = instblobPath.Left(finddirPos);
 	CString instFilename    = instblobPath.Right(instblobPathlen - finddirPos -1);
 	CString fileExtension   = instblobPath.Right(instblobPathlen - findfilePos -1);
-	SetGlobal("InstallerFilename",instFilename); 
 
 	// Is the blob path a Linux blob installer
 	if (fileExtension == "tar.gz")
