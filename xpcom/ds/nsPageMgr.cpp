@@ -366,7 +366,7 @@ nsPageMgr::InitPages(nsPageCount minPages, nsPageCount maxPages)
 
     nsPage* addr = NULL;
     nsPageCount size = maxPages;
-    mZero_fd == NULL;
+    mZero_fd = NULL;
 
     mZero_fd = open("/dev/zero", O_RDWR);
 
