@@ -1793,33 +1793,45 @@ SearchDataSourceCallback::OnStopRequest(nsIURI* aURL, nsresult aStatus, const PR
 		char	*results = resultItem.ToNewCString();
 		if (results)
 		{
-			printf("----- Search result: '%s'\n", results);
+			printf("\n----- Search result: '%s'\n\n", results);
 			delete [] results;
 			results = nsnull;
 		}
 #endif
 
 		// look for href
-		PRInt32	hrefOffset = resultItem.Find("<A HREF=", PR_TRUE);
+		PRInt32	hrefOffset = resultItem.Find("HREF=", PR_TRUE);
 		if (hrefOffset < 0)
 		{
+#ifdef	DEBUG
+			printf("\n***** Unable to find HREF!\n\n");
+#endif
 			continue;
 		}
 
 		nsAutoString	hrefStr("");
-		PRInt32 quoteStartOffset = resultItem.FindCharInSet("\"\'>", hrefOffset);
-		if (quoteStartOffset < hrefOffset)	continue;
+		PRInt32		quoteStartOffset = resultItem.FindCharInSet("\"\'>", hrefOffset);
 		PRInt32		quoteEndOffset;
-		if (resultItem[quoteStartOffset] == PRUnichar('>'))
+		if (quoteStartOffset < hrefOffset)
 		{
 			// handle case where HREF isn't quoted
-			quoteEndOffset = quoteStartOffset;
-			quoteStartOffset = hrefOffset + strlen("<A HREF=") -1;
+			quoteStartOffset = hrefOffset + nsCRT::strlen("HREF=");
+			quoteEndOffset = resultItem.FindCharInSet(">", quoteStartOffset);
+			if (quoteEndOffset < quoteStartOffset)	continue;
 		}
 		else
 		{
-			quoteEndOffset = resultItem.FindCharInSet("\"\'", quoteStartOffset + 1);
-			if (quoteEndOffset < hrefOffset)	continue;
+			if (resultItem[quoteStartOffset] == PRUnichar('>'))
+			{
+				// handle case where HREF isn't quoted
+				quoteEndOffset = quoteStartOffset;
+				quoteStartOffset = hrefOffset + nsCRT::strlen("HREF=") -1;
+			}
+			else
+			{
+				quoteEndOffset = resultItem.FindCharInSet("\"\'", quoteStartOffset + 1);
+				if (quoteEndOffset < hrefOffset)	continue;
+			}
 		}
 		resultItem.Mid(hrefStr, quoteStartOffset + 1, quoteEndOffset - quoteStartOffset - 1);
 		if (hrefStr.Length() < 1)	continue;
@@ -1919,9 +1931,22 @@ SearchDataSourceCallback::OnStopRequest(nsIURI* aURL, nsresult aStatus, const PR
 
 		// look for name
 		PRInt32	anchorEnd = resultItem.FindCharInSet(">", quoteEndOffset);
-		if (anchorEnd < quoteEndOffset)	continue;
-		PRInt32	anchorStop = resultItem.Find("</A>", PR_TRUE);
-		if (anchorStop < anchorEnd)	continue;
+		if (anchorEnd < quoteEndOffset)
+		{
+#ifdef	DEBUG
+			printf("\n\nSearch: Unable to find ending > when computing name.\n\n");
+#endif
+			continue;
+		}
+//		PRInt32	anchorStop = resultItem.FindChar(PRUnichar('<'), PR_TRUE, quoteEndOffset);
+		PRInt32	anchorStop = resultItem.Find("</A>", PR_TRUE, quoteEndOffset);
+		if (anchorStop < anchorEnd)
+		{
+#ifdef	DEBUG
+			printf("\n\nSearch: Unable to find </A> tag to compute name.\n\n");
+#endif
+			continue;
+		}
 		
 		nsAutoString	nameStr;
 		resultItem.Mid(nameStr, anchorEnd + 1, anchorStop - anchorEnd - 1);
@@ -2009,9 +2034,9 @@ SearchDataSourceCallback::OnStopRequest(nsIURI* aURL, nsresult aStatus, const PR
 		// look for relevance
 		nsAutoString	relItem("-");
 		PRInt32		relStart;
-		if ((relStart = resultItem.Find(relevanceStartStr /* , PR_TRUE */)) >= 0)
+		if ((relStart = resultItem.Find(relevanceStartStr, PR_TRUE)) >= 0)
 		{
-			PRInt32	relEnd = resultItem.Find(relevanceEndStr /* , PR_TRUE */);
+			PRInt32	relEnd = resultItem.Find(relevanceEndStr, PR_TRUE);
 			if (relEnd > relStart)
 			{
 				resultItem.Mid(relItem, relStart + relevanceStartStr.Length(),
