@@ -160,6 +160,12 @@ JNIEXPORT jint JNICALL Java_org_mozilla_dom_NodeListImpl_getLength
 JNIEXPORT jobject JNICALL Java_org_mozilla_dom_NodeListImpl_item
   (JNIEnv *env, jobject jthis, jint jindex)
 {
+  if (jindex < 0 || jindex > JavaDOMGlobals::javaMaxInt) {
+    PR_LOG(JavaDOMGlobals::log, PR_LOG_ERROR, 
+     ("NodeList.item: invalid index value (%d)\n", jindex));
+    return NULL;
+  }
+
   nsIDOMNodeList* nodes = (nsIDOMNodeList*) 
     env->GetLongField(jthis, JavaDOMGlobals::nodeListPtrFID);
   if (!nodes) {

@@ -67,6 +67,14 @@ JNIEXPORT void JNICALL Java_org_mozilla_dom_CharacterDataImpl_appendData
 JNIEXPORT void JNICALL Java_org_mozilla_dom_CharacterDataImpl_deleteData
   (JNIEnv *env, jobject jthis, jint offset, jint count)
 {
+  if (offset < 0 || offset > JavaDOMGlobals::javaMaxInt || 
+      count < 0 || count > JavaDOMGlobals::javaMaxInt) {
+    JavaDOMGlobals::ThrowException(env, "",
+                 NS_ERROR_DOM_INDEX_SIZE_ERR,
+                 JavaDOMGlobals::EXCEPTION_DOM);
+    return;
+  }
+
   nsIDOMCharacterData* data = (nsIDOMCharacterData*) 
     env->GetLongField(jthis, JavaDOMGlobals::nodePtrFID);
   if (!data) {
@@ -202,6 +210,14 @@ JNIEXPORT void JNICALL Java_org_mozilla_dom_CharacterDataImpl_insertData
 JNIEXPORT void JNICALL Java_org_mozilla_dom_CharacterDataImpl_replaceData
   (JNIEnv *env, jobject jthis, jint offset, jint count, jstring jvalue)
 {
+  if (offset < 0 || offset > JavaDOMGlobals::javaMaxInt || 
+      count < 0 || count > JavaDOMGlobals::javaMaxInt) {
+    JavaDOMGlobals::ThrowException(env, "",
+                 NS_ERROR_DOM_INDEX_SIZE_ERR,
+                 JavaDOMGlobals::EXCEPTION_DOM);
+    return;
+  }
+
   nsIDOMCharacterData* data = (nsIDOMCharacterData*) 
     env->GetLongField(jthis, JavaDOMGlobals::nodePtrFID);
   if (!data) {
@@ -281,6 +297,14 @@ JNIEXPORT void JNICALL Java_org_mozilla_dom_CharacterDataImpl_setData
 JNIEXPORT jstring JNICALL Java_org_mozilla_dom_CharacterDataImpl_substringData
   (JNIEnv *env, jobject jthis, jint offset, jint count)
 {
+  if (offset < 0 || offset > JavaDOMGlobals::javaMaxInt || 
+      count < 0 || count > JavaDOMGlobals::javaMaxInt) {
+    JavaDOMGlobals::ThrowException(env, "",
+                 NS_ERROR_DOM_INDEX_SIZE_ERR,
+                 JavaDOMGlobals::EXCEPTION_DOM);
+    return NULL;
+  }
+
   nsIDOMCharacterData* data = (nsIDOMCharacterData*) 
     env->GetLongField(jthis, JavaDOMGlobals::nodePtrFID);
   if (!data) {

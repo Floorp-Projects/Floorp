@@ -108,7 +108,7 @@ nsJavaDOMImpl::nsJavaDOMImpl()
   vm_args.version = 0x00010001;
   vm_args.verifyMode = JNI_TRUE;
 #ifdef DEBUG
-  //  vm_args.verbose = JNI_TRUE;
+  vm_args.verbose = JNI_TRUE;
   vm_args.enableVerboseGC = JNI_TRUE;
 #endif // DEBUG
   char* cp = PR_GetEnv("CLASSPATH");

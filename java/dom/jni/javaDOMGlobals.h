@@ -77,6 +77,8 @@ class JavaDOMGlobals {
   static PRCList garbage;
   static PRLock* garbageLock;
 
+  static PRInt32 javaMaxInt;
+
   static void Initialize(JNIEnv *env);
   static void Destroy(JNIEnv *env);
   static jobject CreateNodeSubtype(JNIEnv *env, 

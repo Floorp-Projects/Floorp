@@ -29,6 +29,13 @@ Inc. All Rights Reserved.
 JNIEXPORT jobject JNICALL Java_org_mozilla_dom_TextImpl_splitText
   (JNIEnv *env, jobject jthis, jint joffset)
 {
+  if (joffset < 0 || joffset > JavaDOMGlobals::javaMaxInt) {
+    JavaDOMGlobals::ThrowException(env, "",
+                 NS_ERROR_DOM_INDEX_SIZE_ERR,
+                 JavaDOMGlobals::EXCEPTION_DOM);
+    return NULL;
+  }
+
   nsIDOMText* text = (nsIDOMText*) 
     env->GetLongField(jthis, JavaDOMGlobals::nodePtrFID);
   if (!text) {

@@ -77,6 +77,8 @@ PRLogModuleInfo* JavaDOMGlobals::log = NULL;
 PRCList JavaDOMGlobals::garbage = PR_INIT_STATIC_CLIST(&garbage);
 PRLock* JavaDOMGlobals::garbageLock = NULL;
 
+PRInt32 JavaDOMGlobals::javaMaxInt = 0;
+
 class jniDOMGarbage : public PRCList {
 public:
   jniDOMGarbage(nsISupports* p) { domObject = p; }
@@ -234,6 +236,11 @@ void JavaDOMGlobals::Initialize(JNIEnv *env)
   runtimeExceptionInitMID = 
     env->GetMethodID(runtimeExceptionClass, "<init>", "(Ljava/lang/String;)V");
   if (!runtimeExceptionInitMID) return;
+
+  jclass integerClass = env->FindClass("java/lang/Integer");
+  jfieldID javaMaxIntFID = 
+    env->GetStaticFieldID(integerClass, "MAX_VALUE", "I");
+  javaMaxInt = env->GetStaticIntField(integerClass, javaMaxIntFID);
 }
 
 void JavaDOMGlobals::Destroy(JNIEnv *env) 
@@ -545,7 +552,7 @@ void JavaDOMGlobals::ThrowException(JNIEnv *env,
       (jthrowable)env->NewObject(domExceptionClass, 
                                  domExceptionInitMID,
                                  NS_ERROR_GET_CODE(rv),
-                                 message);
+                                 jmessage);
   } else {
     char buffer[256];
     const char* msg = message;
