@@ -149,9 +149,11 @@ NS_METHOD nsMenu::GetParent(nsISupports*& aParent)
 {
   aParent = nsnull;
   if (nsnull != mMenuParent) {
-    return mMenuParent->QueryInterface(kISupportsIID,(void**)&aParent);
+    return mMenuParent->QueryInterface(kISupportsIID,
+                                       (void**)&aParent);
   } else if (nsnull != mMenuBarParent) {
-    return mMenuBarParent->QueryInterface(kISupportsIID,(void**)&aParent);
+    return mMenuBarParent->QueryInterface(kISupportsIID,
+                                          (void**)&aParent);
   }
 
   return NS_ERROR_FAILURE;
@@ -180,7 +182,8 @@ NS_METHOD nsMenu::AddItem(nsISupports * aItem)
   if(aItem)
   {
     nsIMenuItem * menuitem = nsnull;
-    aItem->QueryInterface(kIMenuItemIID, (void**) &menuitem);
+    aItem->QueryInterface(kIMenuItemIID,
+                          (void**)&menuitem);
     if(menuitem)
     {
       AddMenuItem(menuitem); // nsMenu now owns this
@@ -189,7 +192,8 @@ NS_METHOD nsMenu::AddItem(nsISupports * aItem)
     else
     {
       nsIMenu * menu = nsnull;
-      aItem->QueryInterface(kIMenuIID, (void**) &menu);
+      aItem->QueryInterface(kIMenuIID,
+                            (void**)&menu);
       if(menu)
       {
         AddMenu(menu); // nsMenu now owns this
@@ -216,7 +220,8 @@ NS_METHOD nsMenu::AddMenuItem(nsIMenuItem * aMenuItem)
   // XXX add aMenuItem to internal data structor list
   // Need to be adding an nsISupports *, not nsIMenuItem *
   nsISupports * supports = nsnull;
-  aMenuItem->QueryInterface(kISupportsIID, (void**)&supports);
+  aMenuItem->QueryInterface(kISupportsIID,
+                            (void**)&supports);
   {
     mMenuItemVoidArray.AppendElement(supports);
     mNumMenuItems++;
@@ -239,8 +244,10 @@ NS_METHOD nsMenu::AddMenu(nsIMenu * aMenu)
 
   // Create nsMenuItem
   nsIMenuItem * pnsMenuItem = nsnull;
-  nsresult rv = nsComponentManager::CreateInstance(
-    kMenuItemCID, nsnull, kIMenuItemIID, (void**)&pnsMenuItem);
+  nsresult rv = nsComponentManager::CreateInstance(kMenuItemCID,
+                                                   nsnull,
+                                                   kIMenuItemIID,
+                                                   (void**)&pnsMenuItem);
   if (NS_OK == rv) {
     nsISupports * supports = nsnull;
     QueryInterface(kISupportsIID, (void**) &supports);
@@ -302,13 +309,15 @@ NS_METHOD nsMenu::GetItemCount(PRUint32 &aCount)
 }
 
 //-------------------------------------------------------------------------
-NS_METHOD nsMenu::GetItemAt(const PRUint32 aPos, nsISupports *& aMenuItem)
+NS_METHOD nsMenu::GetItemAt(const PRUint32 aPos,
+                            nsISupports *&aMenuItem)
 {
   return NS_OK;
 }
 
 //-------------------------------------------------------------------------
-NS_METHOD nsMenu::InsertItemAt(const PRUint32 aPos, nsISupports * aMenuItem)
+NS_METHOD nsMenu::InsertItemAt(const PRUint32 aPos,
+                               nsISupports *aMenuItem)
 {
   return NS_OK;
 }
@@ -316,22 +325,41 @@ NS_METHOD nsMenu::InsertItemAt(const PRUint32 aPos, nsISupports * aMenuItem)
 //-------------------------------------------------------------------------
 NS_METHOD nsMenu::RemoveItem(const PRUint32 aPos)
 {
-  //gtk_menu_shell_remove (GTK_MENU_SHELL (mMenu), item);
+#if 0
+  // this may work here better than Removeall(), but i'm not sure how to test this one
+  void *item = mMenuItemVoidArray[aPos];
+  delete item;
+  mMenuItemVoidArray.RemoveElementAt(aPos);
+#endif
+  /*
+  gtk_menu_shell_remove (GTK_MENU_SHELL (mMenu), item);
 
-  //delete[] labelStr;
+  delete[] labelStr;
 
-  //voidData = NULL;
+  voidData = NULL;
 
-  //aMenu->GetNativeData(&voidData);
-  //newmenu = GTK_WIDGET(voidData);
+  aMenu->GetNativeData(&voidData);
+  newmenu = GTK_WIDGET(voidData);
 
-  //gtk_menu_item_remove_submenu (GTK_MENU_ITEM (item));
+  gtk_menu_item_remove_submenu (GTK_MENU_ITEM (item));
+  */
   return NS_OK;
 }
 
 //-------------------------------------------------------------------------
 NS_METHOD nsMenu::RemoveAll()
 {
+#if 0
+  // this doesn't work quite right, but this is about all that should really be needed
+  int i=0;
+  for (i = mMenuItemVoidArray.Count(); i > 0; i--) {
+    if(nsnull != mMenuItemVoidArray[i-1]) {
+      void *item = mMenuItemVoidArray[i-1];
+      delete item;
+      mMenuItemVoidArray.RemoveElementAt(i-1);
+    }
+  }
+#endif
   for (int i = mMenuItemVoidArray.Count(); i > 0; i--) {
     if(nsnull != mMenuItemVoidArray[i-1]) {
       nsIMenuItem * menuitem = nsnull;
@@ -345,24 +373,24 @@ NS_METHOD nsMenu::RemoveAll()
           gtk_widget_destroy(GTK_WIDGET(gtkmenuitem));
           // gtk_container_remove (GTK_CONTAINER (mMenu), GTK_WIDGET(gtkmenuitem));
         }
-
+ 
       } else {
-
+ 
         nsIMenu * menu= nsnull;
         ((nsISupports*)mMenuItemVoidArray[i-1])->QueryInterface(kIMenuIID,
                                                                 (void**)&menu);
         if(menu)
-        {
-          void * gtkmenu = nsnull;
-          menu->GetNativeData(&gtkmenu);
-
-          if(gtkmenu){
-            g_print("gtkmenu removed");
-
-            //gtk_menu_item_remove_submenu (GTK_MENU_ITEM (item));
+          {
+            void * gtkmenu = nsnull;
+            menu->GetNativeData(&gtkmenu);
+ 
+            if(gtkmenu){
+              g_print("gtkmenu removed");
+ 
+              //gtk_menu_item_remove_submenu (GTK_MENU_ITEM (item));
+            }
           }
-        }
-
+ 
       }
     }
   }
@@ -435,11 +463,10 @@ nsEventStatus nsMenu::MenuDeselected(const nsMenuEvent & aMenuEvent)
 }
 
 //-------------------------------------------------------------------------
-nsEventStatus nsMenu::MenuConstruct(
-    const nsMenuEvent & aMenuEvent,
-    nsIWidget         * aParentWindow, 
-    void              * menuNode,
-    void              * aWebShell)
+nsEventStatus nsMenu::MenuConstruct(const nsMenuEvent & aMenuEvent,
+                                    nsIWidget         * aParentWindow, 
+                                    void              * menuNode,
+                                    void              * aWebShell)
 {
   g_print("nsMenu::MenuConstruct called \n");
   if(menuNode){
@@ -464,7 +491,11 @@ nsEventStatus nsMenu::MenuConstruct(
         menuitemElement->GetNodeName(menuitemNodeType);
         if (menuitemNodeType.Equals("menuitem")) {
           // LoadMenuItem
-          LoadMenuItem(this, menuitemElement, menuitemNode, menuIndex, (nsIWebShell*)aWebShell);
+          LoadMenuItem(this,
+                       menuitemElement,
+                       menuitemNode,
+                       menuIndex,
+                       (nsIWebShell*)aWebShell);
         } else if (menuitemNodeType.Equals("separator")) {
           AddSeparator();
         } else if (menuitemNodeType.Equals("menu")) {
@@ -524,12 +555,11 @@ NS_METHOD nsMenu::SetWebShell(nsIWebShell * aWebShell)
 }
 
 //----------------------------------------
-void nsMenu::LoadMenuItem(
-  nsIMenu *       pParentMenu,
-  nsIDOMElement * menuitemElement,
-  nsIDOMNode *    menuitemNode,
-  unsigned short  menuitemIndex,
-  nsIWebShell *   aWebShell)
+void nsMenu::LoadMenuItem(nsIMenu *       pParentMenu,
+                          nsIDOMElement * menuitemElement,
+                          nsIDOMNode *    menuitemNode,
+                          unsigned short  menuitemIndex,
+                          nsIWebShell *   aWebShell)
 {
   static const char* NS_STRING_TRUE = "true";
   nsString disabled;
@@ -542,7 +572,10 @@ void nsMenu::LoadMenuItem(
       
   // Create nsMenuItem
   nsIMenuItem * pnsMenuItem = nsnull;
-  nsresult rv = nsComponentManager::CreateInstance(kMenuItemCID, nsnull, kIMenuItemIID, (void**)&pnsMenuItem);
+  nsresult rv = nsComponentManager::CreateInstance(kMenuItemCID,
+                                                   nsnull, 
+                                                   kIMenuItemIID, 
+                                                   (void**)&pnsMenuItem);
   if (NS_OK == rv) {
     pnsMenuItem->Create(pParentMenu, menuitemName, PR_FALSE);
                      
@@ -583,10 +616,9 @@ void nsMenu::LoadMenuItem(
 }
 
 //----------------------------------------
-void nsMenu::LoadSubMenu(
-  nsIMenu *       pParentMenu,
-  nsIDOMElement * menuElement,
-  nsIDOMNode *    menuNode)
+void nsMenu::LoadSubMenu(nsIMenu *       pParentMenu,
+                         nsIDOMElement * menuElement,
+                         nsIDOMNode *    menuNode)
 {
   nsString menuName;
   menuElement->GetAttribute(nsAutoString("name"), menuName);
@@ -594,7 +626,10 @@ void nsMenu::LoadSubMenu(
 
   // Create nsMenu
   nsIMenu * pnsMenu = nsnull;
-  nsresult rv = nsComponentManager::CreateInstance(kMenuCID, nsnull, kIMenuIID, (void**)&pnsMenu);
+  nsresult rv = nsComponentManager::CreateInstance(kMenuCID,
+                                                   nsnull,
+                                                   kIMenuIID,
+                                                   (void**)&pnsMenu);
   if (NS_OK == rv) {
     // Call Create
     nsISupports * supports = nsnull;
