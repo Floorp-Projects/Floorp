@@ -102,6 +102,7 @@ public:
   NS_IMETHOD              GetPreferredSize(PRInt32& aWidth, PRInt32& aHeight);
   NS_IMETHOD              SetPreferredSize(PRInt32 aWidth, PRInt32 aHeight);
   NS_IMETHOD              DispatchEvent(nsGUIEvent* event, nsEventStatus & aStatus);
+  NS_IMETHOD              PreCreateWidget(nsWidgetInitData *aInitData);
 
 #ifdef DEBUG
   void                    DebugPrintEvent(nsGUIEvent & aEvent,Window aWindow);
@@ -158,8 +159,8 @@ protected:
   // there's no geometry information here because that should be in the mBounds
   // in the widget
   void WidgetPut        (nsWidget *aWidget);
-  void WidgetMove       (nsWidget *aWidget);
-  void WidgetMoveResize (nsWidget *aWidget);
+  void WidgetMove       (nsWidget *aWidget, PRInt32 aX, PRInt32 aY);
+  void WidgetMoveResize (nsWidget *aWidget, PRInt32 aX, PRInt32 aY);
   void WidgetResize     (nsWidget *aWidget);
   void WidgetShow       (nsWidget *aWidget);
   // check to see whether or not a rect will intersect with the current scrolled area
