@@ -141,8 +141,8 @@ nsJVMManager::CreateProxyJNI(nsISecureEnv* inSecureEnv, JNIEnv** outProxyEnv)
 NS_METHOD
 nsJVMManager::GetProxyJNI(JNIEnv** outProxyEnv)
 {
-	JVMContext* context = GetJVMContext();
-	*outProxyEnv = context->proxyEnv;
+        // Get proxy JNI, if not created yet, create it.
+        *outProxyEnv = JVM_GetJNIEnv();
 	return NS_OK;
 }
 
