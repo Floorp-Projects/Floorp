@@ -26,10 +26,11 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-MODULE		= necko
+MODULE		= necko2
 LIBRARY_NAME	= nkdatetm_s
 REQUIRES	= xpcom \
 		  string \
+		  necko \
 		  $(NULL)
 
 CPPSRCS		= \

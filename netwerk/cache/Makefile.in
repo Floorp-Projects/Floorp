@@ -28,17 +28,8 @@ include $(DEPTH)/config/autoconf.mk
 
 DIRS	= \
 	public \
+	src \
 	$(NULL)
-
-ifdef OLD_CACHE
-DIRS	+= \
-	memcache \
-	filecache \
-	mgr \
-	$(NULL)
-endif
-
-DIRS    += src
 
 include $(topsrcdir)/config/rules.mk
 

@@ -33,6 +33,7 @@ XPIDLSRCS	= nsIHTTPIndex.idl
 REQUIRES	= xpcom \
 		  string \
 		  necko \
+		  necko2 \
 		  rdf \
 		  layout \
 		  content \
