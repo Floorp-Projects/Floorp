@@ -193,7 +193,7 @@ JSMath::JSMath()
     for (int i = 0; i < sizeof(MathFunctions) / sizeof(MathFunctionEntry); i++)
         setProperty(widenCString(MathFunctions[i].name), JSValue(new JSNativeFunction(MathFunctions[i].fn) ) );
 
-    for (i = 0; i < sizeof(MathConstants) / sizeof(MathConstantEntry); i++)
+    for (int i = 0; i < sizeof(MathConstants) / sizeof(MathConstantEntry); i++)
         setProperty(widenCString(MathConstants[i].name), JSValue(MathConstants[i].value) );
 
 }
