@@ -1599,12 +1599,21 @@ BookmarkTransaction.prototype = {
     if (this.item.length > this.BATCH_LIMIT) {
       this.BMDS.endUpdateBatch();
     }
-  }
+  },
+
+  // nsITransaction method stubs
+  doTransaction: function() {},
+  undoTransaction: function() {},
+  redoTransaction: function() { this.doTransaction(); },
+  get isTransient() { return false; },
+  merge: function(aTransaction) { return false; },
+
+  // debugging helper
+  get wrappedJSObject() { return this; }
 }
 
 function BookmarkInsertTransaction (aAction)
 {
-  this.wrappedJSObject = this;
   this.type    = "insert";
   this.action  = aAction;
   this.item    = null;
@@ -1616,8 +1625,6 @@ function BookmarkInsertTransaction (aAction)
 BookmarkInsertTransaction.prototype =
 {
   __proto__: BookmarkTransaction.prototype,
-
-  isTransient: false,
 
   doTransaction: function ()
   {
@@ -1643,24 +1650,12 @@ BookmarkInsertTransaction.prototype =
       }
     }
     this.endUpdateBatch();
-  },
-   
-  redoTransaction: function ()
-  {
-    this.doTransaction();
-  },
-
-  merge               : function (aTransaction) {return false},
-  QueryInterface      : function (aUID)         {return this},
-  getHelperForLanguage: function (aCount)       {return null},
-  getInterfaces       : function (aCount)       {return null},
-  canCreateWrapper    : function (aIID)         {return "AllAccess"}
+  }
 
 }
 
 function BookmarkRemoveTransaction (aAction)
 {
-  this.wrappedJSObject = this;
   this.type    = "remove";
   this.action  = aAction;
   this.item    = null;
@@ -1672,8 +1667,6 @@ function BookmarkRemoveTransaction (aAction)
 BookmarkRemoveTransaction.prototype =
 {
   __proto__: BookmarkTransaction.prototype,
-
-  isTransient: false,
 
   doTransaction: function ()
   {
@@ -1697,24 +1690,12 @@ BookmarkRemoveTransaction.prototype =
       }
     }
     this.endUpdateBatch();
-  },
-   
-  redoTransaction: function ()
-  {
-    this.doTransaction();
-  },
-
-  merge               : function (aTransaction) {return false},
-  QueryInterface      : function (aUID)         {return this},
-  getHelperForLanguage: function (aCount)       {return null},
-  getInterfaces       : function (aCount)       {return null},
-  canCreateWrapper    : function (aIID)         {return "AllAccess"}
+  }
 
 }
 
 function BookmarkMoveTransaction (aAction, aSelection, aTarget)
 {
-  this.wrappedJSObject = this;
   this.type      = "move";
   this.action    = aAction;
   this.selection = aSelection;
@@ -1725,8 +1706,6 @@ function BookmarkMoveTransaction (aAction, aSelection, aTarget)
 BookmarkMoveTransaction.prototype =
 {
   __proto__: BookmarkTransaction.prototype,
-
-  isTransient: false,
 
   beginUpdateBatch: function()
   {
@@ -1750,19 +1729,12 @@ BookmarkMoveTransaction.prototype =
     this.endUpdateBatch();
   },
 
-  undoTransaction     : function () {},
-  redoTransaction     : function () {},
-  merge               : function (aTransaction) {return false},
-  QueryInterface      : function (aUID)         {return this},
-  getHelperForLanguage: function (aCount)       {return null},
-  getInterfaces       : function (aCount)       {return null},
-  canCreateWrapper    : function (aIID)         {return "AllAccess"}
+  redoTransaction     : function () {}
 
 }
 
 function BookmarkImportTransaction (aAction)
 {
-  this.wrappedJSObject = this;
   this.type    = "import";
   this.action  = aAction;
   this.item    = [];
@@ -1774,12 +1746,6 @@ function BookmarkImportTransaction (aAction)
 BookmarkImportTransaction.prototype =
 {
   __proto__: BookmarkTransaction.prototype,
-
-  isTransient: false,
-
-  doTransaction: function ()
-  {
-  },
 
   undoTransaction: function ()
   {
@@ -1803,12 +1769,6 @@ BookmarkImportTransaction.prototype =
       }
     }
     this.endUpdateBatch();
-  },
-
-  merge               : function (aTransaction) {return false},
-  QueryInterface      : function (aUID)         {return this},
-  getHelperForLanguage: function (aCount)       {return null},
-  getInterfaces       : function (aCount)       {return null},
-  canCreateWrapper    : function (aIID)         {return "AllAccess"}
+  }
 
 }
