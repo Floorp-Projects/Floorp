@@ -1718,7 +1718,6 @@ nsChildView::GetQuickDrawPort ( )
   return [mView qdPort];
 }
 
-
 #pragma mark -
 
 
@@ -1821,7 +1820,11 @@ nsChildView::GetQuickDrawPort ( )
 - (void)drawRect:(NSRect)aRect
 {
 //  printf("drawing (%d) %f %f w/h %f %f\n", self, aRect.origin.x, aRect.origin.y, aRect.size.width, aRect.size.height);
-  
+  PRBool isVisible;
+  mGeckoChild->IsVisible(isVisible);
+  if (!isVisible)
+    return;
+    
   // tell gecko to paint.
   nsRect r;
   ConvertCocoaToGeckoRect(aRect, r);
@@ -1883,7 +1886,24 @@ nsChildView::GetQuickDrawPort ( )
   printf("got mouse EXIT view\n");
 }
 
+const PRInt32 kNumLines = 4;
 
+-(void)scrollWheel:(NSEvent*)theEvent
+{
+  // XXXdwh. We basically always get 1 or -1 as the delta.  This is treated by 
+  // Gecko as the number of lines to scroll.  We go ahead and use a 
+  // default kNumLines of 4 for now (until I learn how we can get settings from
+  // the OS). --dwh
+  nsMouseScrollEvent geckoEvent;
+  geckoEvent.eventStructType = NS_MOUSE_SCROLL_EVENT;
+  [self convert:theEvent message:NS_MOUSE_SCROLL toGeckoEvent:&geckoEvent];
+  geckoEvent.delta = PRInt32([theEvent deltaY])*(-kNumLines);
+  geckoEvent.scrollFlags |= nsMouseScrollEvent::kIsVertical;
+ 
+  // send event into Gecko by going directly to the
+  // the widget.
+  mGeckoChild->DispatchWindowEvent(geckoEvent);
+}
 
 
 - (void)keyDown:(NSEvent*)theEvent;
