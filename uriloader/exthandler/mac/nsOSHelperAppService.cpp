@@ -28,84 +28,6 @@
 #include "nsILocalFile.h"
 #include "nsILocalFileMac.h"
 
-// this is a platform specific class that abstracts an application.
-// we treat this object as a cookie when we pass it to an external app handler..
-// the handler will present this cookie back to the helper app service along with a
-// an argument (the temp file).
-class nsExternalApplication : public nsISupports
-{
-public:
-  NS_DECL_ISUPPORTS
-
-  nsExternalApplication();
-  virtual ~nsExternalApplication();
-
-  // the app registry name is the key we got from the registry for the
-  // application. We should be able to just call ::ShellExecute on this name
-  // in order to launch the application.
-  void SetAppRegistryName(const char * aAppRegistryName);
-
-  void SetLocalFile(nsIFile * aApplicationToUse);
-
-  // used to launch the application passing in the location of the temp file
-  // to be associated with this app.
-  nsresult LaunchApplication(nsIFile * aTempFile);
-
-protected:
-  nsCString mAppRegistryName;
-  nsCOMPtr<nsIFile> mApplicationToUse;
-};
-
-
-NS_IMPL_THREADSAFE_ADDREF(nsExternalApplication)
-NS_IMPL_THREADSAFE_RELEASE(nsExternalApplication)
-
-NS_INTERFACE_MAP_BEGIN(nsExternalApplication)
-   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsISupports)
-NS_INTERFACE_MAP_END_THREADSAFE
-
-nsExternalApplication::nsExternalApplication()
-{
-  NS_INIT_ISUPPORTS();
-}
-
-nsExternalApplication::~nsExternalApplication()
-{}
-
-void nsExternalApplication::SetAppRegistryName(const char * aAppRegistryName)
-{
-  mAppRegistryName = aAppRegistryName;
-}
-
-void nsExternalApplication::SetLocalFile(nsIFile * aApplicationToUse)
-{
-  mApplicationToUse = aApplicationToUse;
-}
-
-nsresult nsExternalApplication::LaunchApplication(nsIFile * aTempFile)
-{
-  nsresult rv = NS_OK;
-
-  // if we were given an application to use then use it....otherwise
-  if (mApplicationToUse)
-  {
-  	nsCOMPtr <nsILocalFileMac> app = do_QueryInterface(mApplicationToUse, &rv);
-  	if (NS_FAILED(rv)) return rv;
-  	
-  	nsCOMPtr <nsILocalFile> docToLoad = do_QueryInterface(aTempFile, &rv);
-  	if (NS_FAILED(rv)) return rv;
-  	
-  	rv = app->LaunchAppWithDoc(docToLoad, PR_FALSE); 
-  }
-  else if (!mAppRegistryName.IsEmpty() && aTempFile)
-  {
-	printf("fix me!\n");
-	rv = NS_OK;
-  }
-
-  return rv;
-}
-
 nsOSHelperAppService::nsOSHelperAppService() : nsExternalHelperAppService()
 {
  	nsExternalHelperAppService::Init();
@@ -147,15 +69,25 @@ NS_IMETHODIMP nsOSHelperAppService::DoContent(const char *aMimeContentType, nsIU
   return NS_OK;
 }
 
-NS_IMETHODIMP nsOSHelperAppService::LaunchAppWithTempFile(nsIFile * aTempFile, nsISupports * aAppCookie)
+NS_IMETHODIMP nsOSHelperAppService::LaunchAppWithTempFile(nsIMIMEInfo * aMIMEInfo, nsIFile * aTempFile)
 {
-  if (aAppCookie)
-  { 
-     nsExternalApplication * application = NS_STATIC_CAST(nsExternalApplication *, aAppCookie);
-     return application->LaunchApplication(aTempFile);
+  nsresult rv = NS_OK;
+  if (aMIMEInfo)
+  {
+    nsCOMPtr<nsIFile> application;   
+    aMIMEInfo->GetPreferredApplicationHandler(getter_AddRefs(application));
+    if (application)
+    {
+  	  nsCOMPtr <nsILocalFileMac> app = do_QueryInterface(application, &rv);
+  	  if (NS_FAILED(rv)) return rv;
+  	
+  	  nsCOMPtr <nsILocalFile> docToLoad = do_QueryInterface(aTempFile, &rv);
+  	  if (NS_FAILED(rv)) return rv;
+  	
+  	  rv = app->LaunchAppWithDoc(docToLoad, PR_FALSE); 
+    } 
   }
-  else
-    return NS_ERROR_FAILURE;
+  return rv;
 }
 
 NS_IMETHODIMP nsOSHelperAppService::ExternalProtocolHandlerExists(const char * aProtocolScheme, PRBool * aHandlerExists)
@@ -185,28 +117,5 @@ nsresult nsOSHelperAppService::GetFileTokenForPath(const PRUnichar * platformApp
   else
     rv = NS_ERROR_FAILURE;
 
-  return rv;
-}
-
-nsresult nsOSHelperAppService::CreateStreamListenerWithApp(nsIFile * aApplicationToUse, const char * aFileExtension, nsIStreamListener ** aStreamListener)
-{
-  nsresult rv = NS_OK;
-  
-  // create an application that represents this app name...
-  nsExternalApplication * application = nsnull;
-  NS_NEWXPCOM(application, nsExternalApplication);
-  NS_IF_ADDREF(application);
-
-  if (application)
-  {
-    application->SetLocalFile(aApplicationToUse);
-    nsCOMPtr<nsISupports> appSupports = do_QueryInterface(application);    
-    // this code is incomplete and just here to get things started..
-    nsExternalAppHandler * handler = CreateNewExternalHandler(appSupports, aFileExtension);
-    handler->QueryInterface(NS_GET_IID(nsIStreamListener), (void **) aStreamListener);
-  }
-
-  NS_IF_RELEASE(application);
-  
   return rv;
 }
