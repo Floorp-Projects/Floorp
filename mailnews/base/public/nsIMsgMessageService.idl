@@ -26,7 +26,6 @@ interface nsIStreamListener;
 
 %{C++
 
-#include "nsIURL.h"
 #include "nsIStreamListener.h"
     
 %}
