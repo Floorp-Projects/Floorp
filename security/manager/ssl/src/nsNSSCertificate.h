@@ -80,14 +80,6 @@ private:
   nsresult CreateASN1Struct();
   nsresult CreateTBSCertificateASN1Struct(nsIASN1Sequence **retSequence,
                                           nsINSSComponent *nssComponent);
-
-  PRBool verifyFailed(PRUint32 *_verified);
-
-  nsresult GetUsageArray(char     *suffix,
-                         PRUint32 *_verified,
-                         PRUint32 *_count,
-                         PRUnichar **tmpUsages);
-
 };
 
 /* Header file */
