@@ -71,9 +71,6 @@ public:
   NS_IMETHOD HandleEvent(nsIPresContext& aPresContext, 
                          nsGUIEvent*     aEvent,
                          nsEventStatus&  aEventStatus);
-
-protected:
-  void CreateFirstChild(nsIPresContext* aPresContext);
 };
 
 //----------------------------------------------------------------------
@@ -266,50 +263,6 @@ RootContentFrame::RootContentFrame(nsIContent* aContent, nsIFrame* aParent)
 
     // Remember our view
     SetView(view);
-  }
-}
-
-void
-RootContentFrame::CreateFirstChild(nsIPresContext* aPresContext)
-{
-  // Are we paginated?
-  if (aPresContext->IsPaginated()) {
-    // Yes. Create the first page frame
-    mFirstChild = new nsPageFrame(mContent, this);
-    mChildCount = 1;
-    mLastContentOffset = mFirstContentOffset;
-
-  } else {
-    // Create a frame for the body/frameset child
-    PRInt32 i, n;
-    mContent->ChildCount(n);
-    for (i = 0; i < n; i++) {
-      nsIContent* child;
-      mContent->ChildAt(i, child);
-      if (nsnull != child) {
-        nsIAtom* tag;
-        child->GetTag(tag);
-        if ((nsHTMLAtoms::body == tag) || (nsHTMLAtoms::frameset == tag)) {
-          // Create a frame
-          nsIContentDelegate* cd = child->GetDelegate(aPresContext);
-          if (nsnull != cd) {
-            nsIStyleContext* kidStyleContext =
-              aPresContext->ResolveStyleContextFor(child, this);
-            nsresult rv = cd->CreateFrame(aPresContext, child, this,
-                                          kidStyleContext, mFirstChild);
-            NS_RELEASE(kidStyleContext);
-            if (NS_OK == rv) {
-              mChildCount = 1;
-              mFirstContentOffset = i;
-              mLastContentOffset = i;
-            }
-            NS_RELEASE(cd);
-          }
-        }
-        NS_IF_RELEASE(tag);
-        NS_RELEASE(child);
-      }
-    }
   }
 }
 
