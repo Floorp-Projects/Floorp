@@ -129,6 +129,11 @@ PRBool BasicTableLayoutStrategy::Initialize(nsSize* aMaxElementSize)
 
   PRBool result = PR_TRUE;
 
+  // re-init instance variables
+  mMinTableWidth=0;
+  mMaxTableWidth=0;
+  mFixedTableWidth=0;
+
   // Step 1 - assign the width of all fixed-width columns
   AssignPreliminaryColumnWidths();
 
