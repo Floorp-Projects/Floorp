@@ -19,7 +19,7 @@
 #define nsFormFrame_h___
 
 #include "nsIFormManager.h"
-#include "nsLeafFrame.h"
+#include "nsBlockFrame.h"
 #include "nsVoidArray.h"
 
 class  nsString;
@@ -36,16 +36,11 @@ class nsIPresContext;
 class nsFormFrame;
 class nsIUnicodeEncoder;
 
-class nsFormFrame : public nsLeafFrame, 
+class nsFormFrame : public nsBlockFrame, 
                     public nsIFormManager
 {
 public:
   nsFormFrame();
-
-  NS_IMETHOD Reflow(nsIPresContext&      aPresContext,
-                    nsHTMLReflowMetrics& aDesiredSize,
-                    const nsHTMLReflowState& aReflowState,
-                    nsReflowStatus&      aStatus);
   virtual ~nsFormFrame();
 
   NS_IMETHOD QueryInterface(REFNSIID aIID, void** aInstancePtr);
@@ -82,9 +77,6 @@ public:
 protected:
   NS_IMETHOD_(nsrefcnt) AddRef(void);
   NS_IMETHOD_(nsrefcnt) Release(void);
-  virtual void GetDesiredSize(nsIPresContext* aPresContext,
-                              const nsHTMLReflowState& aReflowState,
-                              nsHTMLReflowMetrics& aDesiredSize);
   void RemoveRadioGroups();
   void ProcessAsURLEncoded(PRBool aIsPost, nsString& aData, nsIFormControlFrame* aFrame);
   void ProcessAsMultipart(nsString& aData, nsIFormControlFrame* aFrame);

@@ -659,36 +659,24 @@ XULContentSinkImpl::CloseContainer(const nsIParserNode& aNode)
         FlushText();
     }
 
-  // XXX The following code is a hack to make forms work in XUL. Forms aren't
-  // really pushed and popped like other elements.
-    nsAutoString tag;
-    PRInt32 nameSpaceID;
-    SplitQualifiedName(aNode.GetText(), nameSpaceID, tag);
-    PRBool popContent = PR_TRUE;
-    if (nameSpaceID == kNameSpaceID_HTML) {
-        if (tag.Equals("form"))
-            popContent = PR_FALSE;
-    }
 
-    if (popContent) {
-        nsIRDFResource* resource;
+    nsIRDFResource* resource;
 
-        if (NS_FAILED(PopResourceAndState(resource, mState))) {
+    if (NS_FAILED(PopResourceAndState(resource, mState))) {
 #ifdef PR_LOGGING
-            if (PR_LOG_TEST(gLog, PR_LOG_ALWAYS)) {
-                char* tagStr = aNode.GetText().ToNewCString();
-                PR_LOG(gLog, PR_LOG_ALWAYS,
-                       ("xul: extra close tag '</%s>' at line %d\n",
-                        tagStr, aNode.GetSourceLineNumber()));
-                delete[] tagStr;
-            }
-#endif
-            // Failure to return NS_OK causes stuff to freak out. See Bug 4433.
-            return NS_OK;
+        if (PR_LOG_TEST(gLog, PR_LOG_ALWAYS)) {
+            char* tagStr = aNode.GetText().ToNewCString();
+            PR_LOG(gLog, PR_LOG_ALWAYS,
+                   ("xul: extra close tag '</%s>' at line %d\n",
+                    tagStr, aNode.GetSourceLineNumber()));
+            delete[] tagStr;
         }
-
-        NS_IF_RELEASE(resource);
+#endif
+        // Failure to return NS_OK causes stuff to freak out. See Bug 4433.
+        return NS_OK;
     }
+
+    NS_IF_RELEASE(resource);
 
     PRInt32 nestLevel = mContextStack->Count();
     if (nestLevel == 0) {
@@ -1439,21 +1427,10 @@ XULContentSinkImpl::OpenTag(const nsIParserNode& aNode)
     SplitQualifiedName(aNode.GetText(), nameSpaceID, tag);
 
     // HTML tags must be lowercase
-	  PRBool pushContent = PR_TRUE;
     if (nameSpaceID == kNameSpaceID_HTML) {
         if (tag.Equals("script")) {
             return OpenScript(aNode);
         }
-		else if (tag.Equals("form")) {
-			// XXX Forms (for whatever reason) are treated differently.  Their
-			// children are treated as if they were children of the form's
-			// parent node, and the form itself is added in as a sibling.
-			// This makes no sense to me, but it is what the other two
-			// content sinks are doing, so I'm blindly following it.
-			// I would like to know if this is a hack or if this really is
-			// the right thing to do. - Dave
-			pushContent = PR_FALSE;
-		}
     }
 
     // Figure out the URI of this object, and create an RDF node for it.
@@ -1565,9 +1542,7 @@ XULContentSinkImpl::OpenTag(const nsIParserNode& aNode)
 
     // Push the element onto the context stack, so that child
     // containers will hook up to us as their parent.
-    // (XXX The push content hack is for HTML form content. See above.)
-    if (pushContent)
-		PushResourceAndState(rdfResource, mState);
+    PushResourceAndState(rdfResource, mState);
     mState = eXULContentSinkState_InDocumentElement;
     return NS_OK;
 }

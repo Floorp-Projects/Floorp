@@ -692,11 +692,6 @@ nsXMLContentSink::OpenContainer(const nsIParserNode& aNode)
     if (nsHTMLAtoms::script == tagAtom) {
       result = ProcessStartSCRIPTTag(aNode);
     }
-    // XXX Treat the form elements as a leaf element (even if it is a
-    // container). Need to do further processing with forms
-    else if (nsHTMLAtoms::form == tagAtom) {
-      pushContent = PR_FALSE;
-    }
     NS_RELEASE(tagAtom);
 
     nsIHTMLContent *htmlContent = nsnull;
@@ -777,10 +772,6 @@ nsXMLContentSink::CloseContainer(const nsIParserNode& aNode)
     nsIAtom* tagAtom = NS_NewAtom(tag);
     if (nsHTMLAtoms::script == tagAtom) {
       result = ProcessEndSCRIPTTag(aNode);
-    }
-    // XXX Form content was never pushed on the stack
-    else if (nsHTMLAtoms::form == tagAtom) {
-      popContent = PR_FALSE;
     }
     NS_RELEASE(tagAtom);
   }

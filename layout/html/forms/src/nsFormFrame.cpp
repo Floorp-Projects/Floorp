@@ -38,7 +38,6 @@
 #include "nsIPresShell.h"
 #include "nsIPresContext.h"
 #include "nsIStyleContext.h"
-#include "nsLeafFrame.h"
 #include "nsCSSRendering.h"
 #include "nsHTMLIIDs.h"
 #include "nsDebug.h"
@@ -61,7 +60,6 @@ static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
 #include "nsDocument.h"
 #include "nsIDOMHTMLFormElement.h"
 #include "nsIDOMNSHTMLFormElement.h"
-#include "nsLeafFrame.h"
 #include "nsHTMLParts.h"
 #include "nsIReflowCommand.h"
 
@@ -144,7 +142,7 @@ nsFormFrame::QueryInterface(REFNSIID aIID, void** aInstancePtr)
     *aInstancePtr = (void*)(nsIFormManager*)this;
     return NS_OK;
   }
-  return nsLeafFrame::QueryInterface(aIID, aInstancePtr);
+  return nsBlockFrame::QueryInterface(aIID, aInstancePtr);
 }
 
 nsrefcnt nsFormFrame::AddRef(void)
@@ -160,7 +158,7 @@ nsrefcnt nsFormFrame::Release(void)
 }
 
 nsFormFrame::nsFormFrame()
-  : nsLeafFrame()
+  : nsBlockFrame()
 {
   mTextSubmitter = nsnull;
 }
@@ -181,21 +179,6 @@ nsFormFrame::CanSubmit(nsFormControlFrame& aFrame)
     return PR_TRUE;
   }
   return PR_FALSE;
-}
-
-void 
-nsFormFrame::GetDesiredSize(nsIPresContext* aPresContext,
-                            const nsHTMLReflowState& aReflowState,
-                            nsHTMLReflowMetrics& aDesiredSize)
-{
-  aDesiredSize.width   = 0;
-  aDesiredSize.height  = 0;
-  aDesiredSize.ascent  = 0;
-  aDesiredSize.descent = 0;
-  if (aDesiredSize.maxElementSize) {
-    aDesiredSize.maxElementSize->width  = 0;
-    aDesiredSize.maxElementSize->height = 0;
-  }
 }
 
 NS_IMETHODIMP
@@ -280,17 +263,6 @@ nsFormFrame::GetEnctype(PRInt32* aEnctype)
   }
   *aEnctype = NS_FORM_ENCTYPE_URLENCODED;
   return result;
-}
-
-NS_IMETHODIMP
-nsFormFrame::Reflow(nsIPresContext&      aPresContext,
-                    nsHTMLReflowMetrics& aDesiredSize,
-                    const nsHTMLReflowState& aReflowState,
-                    nsReflowStatus&      aStatus)
-{
-  GetDesiredSize(&aPresContext, aReflowState, aDesiredSize);
-  aStatus = NS_FRAME_COMPLETE;
-  return NS_OK;
 }
 
 NS_IMETHODIMP 
