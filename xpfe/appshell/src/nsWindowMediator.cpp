@@ -71,7 +71,7 @@ static void GetAttribute( nsIXULWindow* inWindow,
 static void GetWindowType( nsIXULWindow* inWindow, nsAutoString& outType );
 static PRUint32 GetWindowZ( nsIXULWindow *inWindow );
 
-nsresult NS_NewRDFContainer(nsIRDFDataSource* aDataSource,
+static nsresult NS_NewMediatorListRDFContainer(nsIRDFDataSource* aDataSource,
                    nsIRDFResource* aResource,
                    nsIRDFContainer** aResult)
 {
@@ -476,7 +476,7 @@ NS_IMETHODIMP nsWindowMediator::UnregisterWindow( nsWindowInfo *inInfo )
 
   // Remove From RDF
   nsCOMPtr<nsIRDFContainer> container;
-  nsresult rv = NS_NewRDFContainer(mInner, kNC_WindowMediatorRoot, getter_AddRefs(container));
+  nsresult rv = NS_NewMediatorListRDFContainer(mInner, kNC_WindowMediatorRoot, getter_AddRefs(container));
   if (NS_SUCCEEDED(rv))
     container->RemoveElement( inInfo->mRDFID, PR_TRUE );
  	
@@ -1111,7 +1111,7 @@ nsresult nsWindowMediator::AddWindowToRDF( nsWindowInfo* ioWindowInfo )
 	#endif
 	// Add the element to the container
   nsCOMPtr<nsIRDFContainer> container;
-  rv = NS_NewRDFContainer(mInner, kNC_WindowMediatorRoot, getter_AddRefs(container));
+  rv = NS_NewMediatorListRDFContainer(mInner, kNC_WindowMediatorRoot, getter_AddRefs(container));
   if (NS_FAILED(rv))
   	return rv;
 
