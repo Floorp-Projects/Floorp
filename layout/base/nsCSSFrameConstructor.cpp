@@ -4840,15 +4840,27 @@ nsCSSFrameConstructor::ConstructFrameByTag(nsIPresShell*            aPresShell,
   nsresult  rv = NS_OK;
 
   if (nsLayoutAtoms::textTagName == aTag) {
+    PRBool isWhitespace = IsOnlyWhiteSpace(aContent);
     // process pending pseudo frames. whitespace doesn't have an effect.
-    if (!aState.mPseudoFrames.IsEmpty() && !IsOnlyWhiteSpace(aContent)) { 
+    if (!aState.mPseudoFrames.IsEmpty() && !isWhitespace) { 
       ProcessPseudoFrames(aPresContext, aState.mPseudoFrames, aFrameItems);
     }
-    rv = NS_NewTextFrame(aPresShell, &newFrame);
-    // Text frames don't go in the content->frame hash table, because
-    // they're anonymous. This keeps the hash table smaller
-    addToHashTable = PR_FALSE;
-    isReplaced = PR_TRUE;   // XXX kipp: temporary
+    // exclude whitespace from tables in as efficient manner as possible
+    PRBool createFrame = PR_TRUE;
+    if (isWhitespace) {
+      nsCOMPtr<nsIAtom> fType;
+      aParentFrame->GetFrameType(getter_AddRefs(fType));
+      if ((fType.get() != nsLayoutAtoms::tableCellFrame) && IsTableRelated(fType.get())) {
+        createFrame = PR_FALSE;
+      }
+    }
+    if (createFrame) {
+      rv = NS_NewTextFrame(aPresShell, &newFrame);
+      // Text frames don't go in the content->frame hash table, because
+      // they're anonymous. This keeps the hash table smaller
+      addToHashTable = PR_FALSE;
+      isReplaced = PR_TRUE;   // XXX kipp: temporary
+    }
   }
   else {
     nsIHTMLContent *htmlContent;
