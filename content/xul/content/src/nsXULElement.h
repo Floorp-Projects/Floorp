@@ -450,9 +450,7 @@ public:
     }
 
 protected:
-    static nsrefcnt             gRefCnt;
     // pseudo-constants
-    static nsIRDFService*       gRDFService;
     static nsIXBLService*       gXBLService;
     static nsICSSOMFactory*     gCSSOMFactory;
 
@@ -571,9 +569,7 @@ public:
 
 protected:
     nsXULElement(nsINodeInfo* aNodeInfo);
-    nsresult Init();
     virtual ~nsXULElement(void);
-
 
     // Implementation methods
     nsresult EnsureContentsGenerated(void) const;
@@ -582,8 +578,6 @@ protected:
 
     static nsresult
     ExecuteJSCode(nsIDOMElement* anElement, nsEvent* aEvent);
-
-    static PRBool IsAncestor(nsIDOMNode* aParentNode, nsIDOMNode* aChildNode);
 
     // Helper routine that crawls a parent chain looking for a tree element.
     NS_IMETHOD GetParentTree(nsIDOMXULMultiSelectControlElement** aTreeElement);
@@ -645,6 +639,7 @@ protected:
     }
 
     void UnregisterAccessKey(const nsAString& aOldValue);
+    PRBool BoolAttrIsTrue(nsIAtom* aName);
 
     friend nsresult
     NS_NewXULElement(nsIContent** aResult, nsINodeInfo *aNodeInfo);
