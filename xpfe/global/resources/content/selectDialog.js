@@ -123,6 +123,11 @@ function commonDialogOnCancel() {
   return true;
 }
 
+function commonDialogOnDoubleClick() {
+  commonDialogOnOK();
+  window.close();
+}
+
 // following routine should really be in a global utilities package
 
 function AppendStringToTreelist(tree, string)
@@ -137,6 +142,7 @@ function AppendStringToTreelist(tree, string)
     if (treeitem && treerow && treecell)
     {
       treecell.setAttribute("label", string);
+      treecell.setAttribute("ondblclick","commonDialogOnDoubleClick()");
       treerow.appendChild(treecell);
       treeitem.appendChild(treerow);
       treechildren.appendChild(treeitem)
