@@ -263,20 +263,24 @@ void nsTreeCellFrame::Select(nsIPresContext& aPresContext, PRBool isSelected, PR
 	nsCOMPtr<nsIAtom> kSelectedCellAtom(dont_AddRef(NS_NewAtom("selectedcell")));
   nsCOMPtr<nsIAtom> kSelectedAtom(dont_AddRef(NS_NewAtom("selected")));
 
-  nsIContent* pParentContent;
+  nsIContent* pParentContent = nsnull;
   mContent->GetParent(pParentContent);
 
   if (isSelected)
 	{
 		// We're selecting the node.
 		mContent->SetAttribute(kNameSpaceID_None, kSelectedCellAtom, "true", notifyForReflow);
-    pParentContent->SetAttribute(kNameSpaceID_None, kSelectedAtom, "true", notifyForReflow);
+    if(pParentContent) {
+      pParentContent->SetAttribute(kNameSpaceID_None, kSelectedAtom, "true", notifyForReflow);
+    }
 	}
 	else
 	{
 		// We're deselecting the node.
 		mContent->UnsetAttribute(kNameSpaceID_None, kSelectedCellAtom, notifyForReflow);
-    pParentContent->UnsetAttribute(kNameSpaceID_None, kSelectedAtom, notifyForReflow);
+    if(pParentContent) {
+      pParentContent->UnsetAttribute(kNameSpaceID_None, kSelectedAtom, notifyForReflow);
+    }
 	}
 
   NS_IF_RELEASE(pParentContent);
