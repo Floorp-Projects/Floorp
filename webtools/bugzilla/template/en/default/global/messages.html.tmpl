@@ -36,10 +36,15 @@
     [% title = "Adding field to query page..." %]
     [% link  = "Click here if the page does not redisplay automatically." %]
     [% # --- %] 
+
   [% ELSIF message_tag == "buglist_load_named_query" %]
     [% title = BLOCK %]Loading your query named [% namedcmd %][% END %]
     [% link  = "Click here if the page does not redisplay automatically." %]
     [% # --- %] 
+
+  [% ELSIF message_tag == "buglist_updated_named_query" %]
+    OK, your query named <code>[% queryname FILTER html %]</code> is updated.
+
   [% ELSIF message_tag == "buglist_new_default_query" %]
     OK, you now have a new default query.  You may
     also bookmark the result of any individual query.

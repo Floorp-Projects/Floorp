@@ -329,11 +329,16 @@ elsif ($::FORM{'cmdtype'} eq "doit" && $::FORM{'remember'}) {
         }
         
         my $new_in_footer = $tofooter;
+        $vars->{'message'}   = "buglist_new_named_query";
         
         # Don't add it to the list if they are reusing an existing query name.
         foreach my $query (@{$vars->{'user'}{'queries'}}) {
-            if ($query->{'name'} eq $name && $query->{'linkinfooter'} == 1) {
-                $new_in_footer = 0;
+            if ($query->{'name'} eq $name) {
+                $vars->{'message'} = "buglist_updated_named_query";
+                if ($query->{'linkinfooter'} == 1) {
+                    $new_in_footer = 0;
+                }
+                break;
             }
         }        
         
@@ -344,7 +349,6 @@ elsif ($::FORM{'cmdtype'} eq "doit" && $::FORM{'remember'}) {
             push(@{$vars->{'user'}{'queries'}}, \%query);
         }
         
-        $vars->{'message'}   = "buglist_new_named_query";
         $vars->{'queryname'} = $name;
     }
 }
