@@ -36,7 +36,6 @@
 #include "nsWeakReference.h"
 #include "nsXPIDLString.h"
 #include "nsIFile.h"
-#include "nsISecurityCheckedComponent.h"
 
 class nsFactoryEntry;
 class nsDll;
@@ -55,13 +54,11 @@ extern const char XPCOM_LIB_PREFIX[];
 
 class nsComponentManagerImpl
     : public nsIComponentManager, public nsSupportsWeakReference,
-      public nsIInterfaceRequestor, public nsISecurityCheckedComponent
-{
+      public nsIInterfaceRequestor {
 public:
     NS_DECL_ISUPPORTS
     NS_DECL_NSICOMPONENTMANAGER
     NS_DECL_NSIINTERFACEREQUESTOR
-    NS_DECL_NSISECURITYCHECKEDCOMPONENT
 
     // nsComponentManagerImpl methods:
     nsComponentManagerImpl();

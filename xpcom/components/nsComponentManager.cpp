@@ -417,9 +417,8 @@ nsComponentManagerImpl::~nsComponentManagerImpl()
     PR_LOG(nsComponentManagerLog, PR_LOG_ALWAYS, ("nsComponentManager: Destroyed."));
 }
 
-NS_IMPL_ISUPPORTS4(nsComponentManagerImpl, nsIComponentManager,
-                   nsISupportsWeakReference, nsIInterfaceRequestor,
-                   nsISecurityCheckedComponent)
+NS_IMPL_ISUPPORTS3(nsComponentManagerImpl, nsIComponentManager,
+                   nsISupportsWeakReference, nsIInterfaceRequestor)
 
 ////////////////////////////////////////////////////////////////////////////////
 // nsComponentManagerImpl: Platform methods
@@ -1975,12 +1974,6 @@ RegisterDeferred_enumerate(nsHashKey *key, void *aData, void *aClosure)
 }
 
 nsresult
-nsComponentManagerImpl::RefreshComponents(void)
-{
-    return AutoRegister(NS_Script, nsnull);
-}
-
-nsresult
 nsComponentManagerImpl::AutoRegister(PRInt32 when, nsIFile *inDirSpec)
 {
     nsresult rv;
@@ -2345,56 +2338,3 @@ NS_GetGlobalComponentManager(nsIComponentManager* *result)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-
-
-////////////////////////////////////////////////////////////////////////////////
-// nsComponentManagerImpl: methods for nsISecurityCheckedComponent interface
-////////////////////////////////////////////////////////////////////////////////
-
-
-static char* CloneAllAccess()
-{
-    static const char allAccess[] = "AllAccess";
-    return (char*)nsMemory::Clone(allAccess, sizeof(allAccess));
-}
-
-/* string canCreateWrapper (in nsIIDPtr iid); */
-NS_IMETHODIMP
-nsComponentManagerImpl::CanCreateWrapper(const nsIID * iid, char **_retval)
-{
-    // We let anyone do this...
-    *_retval = CloneAllAccess();
-    return NS_OK;
-}
-
-/* string canCallMethod (in nsIIDPtr iid, in wstring methodName); */
-NS_IMETHODIMP
-nsComponentManagerImpl::CanCallMethod(const nsIID * iid, const PRUnichar *methodName, char **_retval)
-{
-    // Allow unprivileged scripts to call Components.manager.refreshComponents
-    static const NS_NAMED_LITERAL_STRING(s_refreshComponents, "refreshComponents");
-
-    if(! nsCRT::strcmp(methodName, s_refreshComponents.get()))
-        *_retval = CloneAllAccess();
-    else
-        *_retval = nsnull;
-    return NS_OK;
-}
-
-/* string canGetProperty (in nsIIDPtr iid, in wstring propertyName); */
-NS_IMETHODIMP
-nsComponentManagerImpl::CanGetProperty(const nsIID * iid, const PRUnichar *propertyName, char **_retval)
-{
-    // If you have to ask, then the answer is NO
-    *_retval = nsnull;
-    return NS_OK;
-}
-
-/* string canSetProperty (in nsIIDPtr iid, in wstring propertyName); */
-NS_IMETHODIMP
-nsComponentManagerImpl::CanSetProperty(const nsIID * iid, const PRUnichar *propertyName, char **_retval)
-{
-    // If you have to ask, then the answer is NO
-    *_retval = nsnull;
-    return NS_OK;
-}
