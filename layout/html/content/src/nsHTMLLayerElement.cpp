@@ -296,7 +296,7 @@ MapAttributesInto(const nsIHTMLMappedAttributes* aAttributes,
     nsStyleDisplay* display = (nsStyleDisplay*)
       aContext->GetMutableStyleData(eStyleStruct_Display);
 
-    display->mVisible = value.GetIntValue() == NS_STYLE_VISIBILITY_VISIBLE;
+    display->mVisible = value.GetIntValue();
   }
 
   // Background and bgcolor
