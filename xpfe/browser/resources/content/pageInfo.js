@@ -165,6 +165,9 @@ function makeGeneralTab()
   var mode = ("compatMode" in theDocument && theDocument.compatMode == "BackCompat") ? theBundle.getString("generalQuirksMode") : theBundle.getString("generalStrictMode");
   document.getElementById("modetext").value = mode;
 
+  var referrer = (theDocument.referrer) ? theDocument.referrer : theBundle.getString("generalNoReferrer");
+  document.getElementById('refertext').value = referrer;
+
   // find out the mime type
   var mimeType = theDocument.contentType || unknown;
   document.getElementById("typetext").value = mimeType;
