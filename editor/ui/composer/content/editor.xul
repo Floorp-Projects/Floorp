@@ -266,7 +266,7 @@
 
     <!-- Some of this is from globarOverlay.xul -->
     <statusbar id="status-bar">
-      <statusbarpanel id="component-bar"/>
+      <hbox id="component-bar"/>
       <statusbarpanel id="statusText" label="&statusText.label;" flex="1" crop="right"/>
       <statusbarpanel class="statusbarpanel-icononly" id="offline-status"/>
     </statusbar>
