@@ -385,7 +385,7 @@ nsWalletlibService::OnEndDocumentLoad(nsIDocumentLoader* aLoader, nsIRequest *re
                             SINGSIGN_RestoreSignonData(prompter, URLName, nameString, &valueString, elementNumber++);
                           }
                           if (valueString) {
-                            nsAutoString value(valueString);                                    
+                            value = valueString;
                             rv = inputElement->SetValue(value);
                             // warning! don't delete valueString
                           }

@@ -318,7 +318,7 @@ nsIURI * wallet_lastUrl = NULL;
 /* The following routines are for diagnostic purposes only */
 /***********************************************************/
 
-#ifdef DEBUG
+#ifdef DEBUG_morse
 
 static void
 wallet_Pause(){
@@ -454,7 +454,7 @@ wallet_DumpStopwatch() {
   LL_L2I(r3, r2);
   fprintf(stdout, "stopwatch = %ld\n", (long)r3);  
 }
-#endif /* DEBUG */
+#endif /* DEBUG_morse */
 
 
 /*************************************************************************/
@@ -2112,7 +2112,6 @@ wallet_ResolvePositionalSchema(nsIDOMNode* elementNode, nsString& schema) {
           if (atEnd) {
             break;
           }
-          PRUint32 i;
           PRUnichar c;
           for (i=0; i<text.Length(); i++) {
             c = text.CharAt(i);
@@ -2553,13 +2552,13 @@ static PRBool wallet_URLListInitialized = PR_FALSE;
 static void
 wallet_Initialize(PRBool unlockDatabase=PR_TRUE) {
 
-#ifdef DEBUG
+#ifdef DEBUG_morse
 //wallet_ClearStopwatch();
 //wallet_ResumeStopwatch();
 #endif
 
   if (!wallet_tablesInitialized) {
-#ifdef DEBUG
+#ifdef DEBUG_morse
 //wallet_PauseStopwatch();
 //wallet_DumpStopwatch();
 #endif
@@ -3529,7 +3528,7 @@ WLLT_Prefill(nsIPresShell* shell, PRBool quick, nsIDOMWindowInternal* win)
     /* let user preview and verify the prefills first */
     wallet_list = wallet_PrefillElement_list;
     wallet_url = urlName;
-#ifdef DEBUG
+#ifdef DEBUG_morse
 ////wallet_DumpStopwatch();
 ////wallet_ClearStopwatch();
 //wallet_DumpTiming();
