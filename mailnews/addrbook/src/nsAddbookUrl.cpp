@@ -20,13 +20,12 @@
  * Contributor(s): 
  */
 
-#include "msgCore.h"
-
 #include "nsIURI.h"
 #include "nsAddbookUrl.h"
 #include "nsString.h"
 #include "nsXPIDLString.h"
 #include "nsAbBaseCID.h"
+#include "nsEscape.h"
 
 const char *kWorkAddressBook = "AddbookWorkAddressBook";
 

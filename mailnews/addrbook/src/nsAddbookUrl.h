@@ -25,7 +25,6 @@
 
 #include "nsISmtpUrl.h"
 #include "nsIURI.h"
-#include "nsMsgMailNewsUrl.h"
 #include "nsIFileSpec.h"
 #include "nsIMsgIdentity.h"
 #include "nsCOMPtr.h"
