@@ -3529,6 +3529,12 @@ nsMsgLocalMailFolder::OnMessageClassified(const char *aMsgURI, nsMsgJunkStatus a
           rv = copySvc->CopyMessages(this, messages, folder, PR_TRUE,
             /*nsIMsgCopyServiceListener* listener*/ nsnull, nsnull, PR_FALSE /*allowUndo*/);
           NS_ASSERTION(NS_SUCCEEDED(rv), "CopyMessages failed");
+          if (NS_FAILED(rv))
+          {
+            nsCAutoString logMsg("failed to copy junk messages to junk folder rv = ");
+            logMsg.AppendInt(rv, 16);
+            spamSettings->LogJunkString(logMsg.get());
+          }
         }
       }
     }
