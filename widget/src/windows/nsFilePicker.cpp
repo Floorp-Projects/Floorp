@@ -155,6 +155,8 @@ NS_IMETHODIMP nsFilePicker::Show(PRInt16 *retval)
     ofn.Flags = OFN_SHAREAWARE | OFN_LONGNAMES | OFN_OVERWRITEPROMPT | OFN_HIDEREADONLY;
 
     if (mMode == modeOpen) {
+      // FILE MUST EXIST!
+      ofn.Flags |= OFN_FILEMUSTEXIST;
       result = ::GetOpenFileName(&ofn);
     }
     else if (mMode == modeSave) {

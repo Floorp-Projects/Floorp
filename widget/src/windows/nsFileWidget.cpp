@@ -141,6 +141,8 @@ PRBool nsFileWidget::Show()
 
 
   if (mMode == eMode_load) {
+    // FILE MUST EXIST!
+    ofn.Flags |= OFN_FILEMUSTEXIST;
     result = ::GetOpenFileName(&ofn);
   }
   else if (mMode == eMode_save) {
