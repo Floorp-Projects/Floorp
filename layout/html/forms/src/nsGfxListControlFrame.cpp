@@ -515,8 +515,8 @@ nsGfxListControlFrame::Reflow(nsIPresContext*          aPresContext,
         GetView(aPresContext, &view);
 
         if (view) {
-          nsIViewManager  *vm;
-          view->GetViewManager(vm);
+          nsCOMPtr<nsIViewManager> vm;
+          view->GetViewManager(*getter_AddRefs(vm));
           const nsStyleDisplay* display;
           GetStyleData(eStyleStruct_Display, (const nsStyleStruct*&)display);
 
@@ -537,10 +537,10 @@ nsGfxListControlFrame::Reflow(nsIPresContext*          aPresContext,
           }
 
           // Make sure visibility is correct
-          vm->SetViewVisibility(view, viewIsVisible ? nsViewVisibility_kShow :
-                                nsViewVisibility_kHide);
+          if (vm)
+            vm->SetViewVisibility(view, viewIsVisible ? nsViewVisibility_kShow :
+                                  nsViewVisibility_kHide);
 
-          NS_RELEASE(vm);
         }
         NS_ASSERTION(aDesiredSize.width < 100000, "Width is still NS_UNCONSTRAINEDSIZE");
         NS_ASSERTION(aDesiredSize.height < 100000, "Height is still NS_UNCONSTRAINEDSIZE");
@@ -2567,7 +2567,7 @@ nsGfxListControlFrame::UpdateSelection(PRBool aDoDispatchEvent, PRBool aForceUpd
         mSelectionCache->Clear();
         for (PRInt32 i = 0; i < length; i++) {
           selected = IsContentSelectedByIndex(i);
-          mSelectionCache->InsertElementAt((void*)selected, i);
+          mSelectionCache->AppendElement((void*)selected);
           changed = PR_TRUE;
         }
       }
@@ -2803,6 +2803,9 @@ nsGfxListControlFrame::SyncViewWithFrame(nsIPresContext* aPresContext)
   parent->GetView(aPresContext, &parentView);
 
   parentView->GetViewManager(*getter_AddRefs(viewManager));
+  if (!viewManager)
+      return NS_ERROR_FAILURE;
+    
   GetViewOffset(viewManager, parentView, parentPos);
   nsIView* view = nsnull;
   GetView(aPresContext, &view);

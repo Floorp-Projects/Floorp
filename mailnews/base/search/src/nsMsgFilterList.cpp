@@ -839,11 +839,6 @@ nsresult nsMsgFilterList::MoveFilterAt(PRUint32 filterIndex,
     
     NS_ENSURE_ARG(filterCount >= filterIndex);
 
-    nsCOMPtr<nsIMsgFilter> tempFilter;
-	rv = m_filters->GetElementAt(filterIndex, getter_AddRefs(tempFilter));
-    NS_ENSURE_SUCCESS(rv, rv);
-    
-    nsCOMPtr<nsIMsgFilter> oldElement;
     PRUint32 newIndex = filterIndex;
     
 	if (motion == nsMsgFilterMotion::up)
@@ -860,12 +855,7 @@ nsresult nsMsgFilterList::MoveFilterAt(PRUint32 filterIndex,
         // are we already at the bottom?
 		if (newIndex > filterCount - 1) return NS_OK;
 	}
-    
-    m_filters->GetElementAt(newIndex, getter_AddRefs(oldElement));
-    m_filters->ReplaceElementAt(NS_STATIC_CAST(nsISupports*,oldElement),
-                                filterIndex);
-    m_filters->ReplaceElementAt(NS_STATIC_CAST(nsISupports*,tempFilter),
-                                newIndex);
+    m_filters->MoveElement(filterIndex,newIndex);
 	return NS_OK;
 }
 
