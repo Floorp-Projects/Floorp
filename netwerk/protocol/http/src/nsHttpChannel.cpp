@@ -561,6 +561,11 @@ nsHttpChannel::ProcessNormal()
 
     LOG(("nsHttpChannel::ProcessNormal [this=%x]\n", this));
 
+    // if we're here, then any byte-range requests failed to result in a partial
+    // response.  we must clear this flag to prevent BufferPartialContent from
+    // being called inside our OnDataAvailable (see bug 136678).
+    mCachedContentIsPartial = PR_FALSE;
+
     // For .gz files, apache sends both a Content-Type: application/x-gzip
     // as well as Content-Encoding: gzip, which is completely wrong.  In
     // this case, we choose to ignore the rogue Content-Encoding header. We
