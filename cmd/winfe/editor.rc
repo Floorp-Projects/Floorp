@@ -422,7 +422,7 @@ BEGIN
     IDS_PERCENT_WINDOW      "% of window"
     IDS_UNUM_LIST           "Bullet (Unnumbered) List"
     IDS_NUM_LIST            "Numbered List"
-    IDS_BLOCK_QUOTE         "Block Quote"
+    IDS_BLOCK_QUOTE         "Blockquote"
     IDS_DESCRIPTION_LIST    "Definition List"
     IDS_DEFAULT             "Default"
     IDS_LIST                "List"
@@ -809,12 +809,13 @@ BEGIN
     ID_ALIGN_TABLE_LEFT     "Align table to left margin"
     ID_ALIGN_TABLE_CENTER   "Center table between margins"
     ID_ALIGN_TABLE_RIGHT    "Align table to right margin"
-    ID_INSERT_TABLE_OR_PROPS 
-                            "Insert a table or edit table properties at the insertion location\nInsert Table\nTable"
+    ID_REMOVE_LIST          "Remove existing list and outdent to left margin"
 END
 
 STRINGTABLE DISCARDABLE 
 BEGIN
+    ID_INSERT_TABLE_OR_PROPS 
+                            "Insert a table or edit table properties at the insertion location\nInsert Table\nTable"
     ID_INSERT_TABLE         "Insert a table at the insertion location\nInsert Table\nTable"
     ID_INSERT_TABLE_CAPTION "Insert a caption above the table"
     ID_INSERT_TABLE_ROW     "Insert a new row in the table below the current row\nInsert Table Row"

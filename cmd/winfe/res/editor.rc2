@@ -205,9 +205,10 @@ BEGIN
 		    MENUITEM "&Normal",                 ID_FORMAT_PARAGRAPH_BASE+P_NSDT
 		    MENUITEM "&Address",                ID_FORMAT_PARAGRAPH_BASE+P_ADDRESS             
 		    MENUITEM "&Formatted",              ID_FORMAT_PARAGRAPH_BASE+P_PREFORMAT            
-	        MENUITEM "&Block Quote"             ID_FORMAT_PARAGRAPH_BASE+P_BLOCKQUOTE
     	    MENUITEM "&Term Name"               ID_FORMAT_PARAGRAPH_BASE+P_DESC_TITLE
 	        MENUITEM "&Definition"              ID_FORMAT_PARAGRAPH_BASE+P_DESC_TEXT
+            MENUITEM SEPARATOR
+	        MENUITEM "&Blockquote"              ID_FORMAT_PARAGRAPH_BASE+P_BLOCKQUOTE
 	    END
 	    POPUP "&List"
 	    BEGIN
@@ -578,9 +579,10 @@ BEGIN
 	    MENUITEM "&Normal",                 ID_FORMAT_PARAGRAPH_BASE+P_NSDT
 	    MENUITEM "&Address",                ID_FORMAT_PARAGRAPH_BASE+P_ADDRESS             
 	    MENUITEM "&Formatted",              ID_FORMAT_PARAGRAPH_BASE+P_PREFORMAT            
-        MENUITEM "&Block Quote"             ID_FORMAT_PARAGRAPH_BASE+P_BLOCKQUOTE
     	MENUITEM "&Term Name"               ID_FORMAT_PARAGRAPH_BASE+P_DESC_TITLE
 	    MENUITEM "&Definition"              ID_FORMAT_PARAGRAPH_BASE+P_DESC_TEXT
+        MENUITEM SEPARATOR
+        MENUITEM "&Blockquote"             ID_FORMAT_PARAGRAPH_BASE+P_BLOCKQUOTE
     END
 	POPUP "&List"
 	BEGIN
@@ -716,6 +718,7 @@ BEGIN
 	ID_LIST_TEXT_PARAGRAPH_BASE+P_LIST_ITEM        "List Item"            
 	ID_LIST_TEXT_PARAGRAPH_BASE+P_DESC_TITLE       "Term Name"    
 	ID_LIST_TEXT_PARAGRAPH_BASE+P_DESC_TEXT        "Definition"    
+	ID_LIST_TEXT_PARAGRAPH_BASE+P_BLOCKQUOTE       "Blockquote"    
     // End of Paragraph combobox list
 	ID_LIST_TEXT_CHARACTER_BASE+P_BOLD             "Bold\tCtrl+B"               
 	ID_LIST_TEXT_CHARACTER_BASE+P_ITALIC           "Italic\tCtrl+I"                
@@ -755,7 +758,7 @@ BEGIN
 	ID_FORMAT_PARAGRAPH_BASE+P_LIST_ITEM        "Set the style to List Item\nList Item"
 	ID_FORMAT_PARAGRAPH_BASE+P_DESC_TITLE       "Set the style to Term Name (an item to be defined)\nTerm Name"
 	ID_FORMAT_PARAGRAPH_BASE+P_DESC_TEXT        "Set the style to Term Definition\nDefinition"
-	ID_FORMAT_PARAGRAPH_BASE+P_BLOCKQUOTE       "Set the style to Block Quote\nBlock Quote"
+	ID_FORMAT_PARAGRAPH_BASE+P_BLOCKQUOTE       "Set or remove the Blockquote style (same as indenting or outdenting a non-list paragraph)\nBlockquote"
     ID_FORMAT_CHAR_NONE                         "Remove all character styles and link(s)\nRemove All Styles (Ctrl+K)"
     ID_FORMAT_CHAR_BOLD                         "Set the style to Bold\nBold (Ctrl+B)"
     ID_FORMAT_CHAR_ITALIC                       "Set the style to Italic\nItalic (Ctrl+I)"

@@ -1076,12 +1076,9 @@ BOOL CNetscapeEditView::OnCmdMsg(UINT nID, int nCode, void* pExtra, AFX_CMDHANDL
         else if(nID >= ID_FORMAT_PARAGRAPH_BASE && nID <= ID_FORMAT_PARAGRAPH_END)
         {
             TagType t = TagType(nID - ID_FORMAT_PARAGRAPH_BASE);
-            // NOTE: P_UNUM_LIST and P_NUM_LIST should be handled here
-            //       and remove separate message handlers, but not 
-            //       done now (7/23/97) to avoid changing the ID 
-            //       associated with these in res\editor.rc2
-	        if( t == P_UNUM_LIST || //P_DIRECTORY ||
-                t == P_NUM_LIST || //P_MENU ||
+	        if( t == P_BLOCKQUOTE ||
+                t == P_UNUM_LIST ||
+                t == P_NUM_LIST ||
                 t == P_DESC_LIST ){
                 EDT_ToggleList(GET_MWCONTEXT, t);
                 return TRUE;

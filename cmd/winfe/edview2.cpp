@@ -255,14 +255,23 @@ void CNetscapeEditView::OnUpdatePasteCharacterStyle(CCmdUI* pCmdUI)
 void CNetscapeEditView::OnFormatParagraph( UINT nID )
 {
   	MWContext *pMWContext = GET_MWCONTEXT;
-    if( pMWContext ){
-	    // Should be current, but lets get style to be sure
-	    UINT nParagraphFormat = (UINT)EDT_GetParagraphFormatting( pMWContext );
-	    UINT nNewParagraphFormat = CASTUINT(nID-ID_FORMAT_PARAGRAPH_BASE);
-        EDT_MorphContainer( pMWContext, nNewParagraphFormat);
-        if( nNewParagraphFormat == P_DESC_TEXT || nNewParagraphFormat == P_DESC_TITLE ){
-            // We should have a description list
-            EDT_MorphContainer(pMWContext, P_DESC_LIST);
+    if( pMWContext )
+    {
+        if( nID == ID_FORMAT_PARAGRAPH_BASE+P_BLOCKQUOTE )
+        {
+            // Block quote is a special case - its is handled by list
+            EDT_ToggleList(GET_MWCONTEXT, TagType(nID - ID_FORMAT_PARAGRAPH_BASE));
+        }
+        else
+        {
+	        // Should be current, but lets get style to be sure
+	        UINT nParagraphFormat = (UINT)EDT_GetParagraphFormatting( pMWContext );
+	        UINT nNewParagraphFormat = CASTUINT(nID-ID_FORMAT_PARAGRAPH_BASE);
+            EDT_MorphContainer( pMWContext, nNewParagraphFormat);
+            if( nNewParagraphFormat == P_DESC_TEXT || nNewParagraphFormat == P_DESC_TITLE ){
+                // We should have a description list
+                EDT_MorphContainer(pMWContext, P_DESC_LIST);
+            }
         }
     }
 }

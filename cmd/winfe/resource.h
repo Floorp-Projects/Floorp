@@ -3018,7 +3018,6 @@
 #define ID_SORT_DESCENDING              42524
 #define ID_SORT_BYFLAG                  42525
 #define ID_OPTIONS_PREFERENCES          42526
-#define ID_REMOVE_LIST                  42527
 #define ID_SORT_BYSTATUS                42528
 #define ID_FILE_NEWNEWSHOST             42529
 #define ID_SORT_BYSIZE                  42530
@@ -3078,6 +3077,7 @@
 #define ID_ALIGN_TABLE_LEFT             42713
 #define ID_ALIGN_TABLE_CENTER           42714
 #define ID_ALIGN_TABLE_RIGHT            42715
+#define ID_REMOVE_LIST                  42716
 #define ID_INSERT_TABLE_OR_PROPS        42719
 #define ID_INSERT_TABLE                 42720
 #define ID_INSERT_TABLE_CAPTION         42721
