@@ -107,10 +107,16 @@
   #undef NSCAP_FEATURE_TEST_DONTQUERY_CASES
 #endif
 
-#if defined(__GNUC__) && __GNUC__ >= 3
-  // Without this, we violate the C++ standard's aliasing rules.  See
-  // http://bugzilla.mozilla.org/show_bug.cgi?id=212082
-  #undef NSCAP_FEATURE_USE_BASE
+#if __GNUC__ > 3 || (__GNUC__ == 3 && __GNUC_MINOR__ >= 3)
+  // Our use of nsCOMPtr_base::mRawPtr violates the C++ standard's aliasing
+  // rules. Mark it with the may_alias attribute so that gcc 3.3 and higher
+  // don't reorder instructions based on aliasing assumptions for
+  // this variable.  Fortunately, gcc versions < 3.3 do not do any
+  // optimizations that break nsCOMPtr.
+
+  #define NS_MAY_ALIAS_PTR(t)    t*  __attribute__((__may_alias__))
+#else
+  #define NS_MAY_ALIAS_PTR(t)    t*
 #endif
 
 #if defined(NSCAP_DISABLE_DEBUG_PTR_TYPES)
@@ -403,7 +409,7 @@ class nsCOMPtr_base
       NS_COM void**  begin_assignment();
 
     protected:
-      nsISupports* mRawPtr;
+      NS_MAY_ALIAS_PTR(nsISupports) mRawPtr;
 
       void
       assign_assuming_AddRef( nsISupports* newPtr )
