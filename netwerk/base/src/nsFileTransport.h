@@ -96,7 +96,7 @@ public:
                   PRBool closeStreamWhenDone);
     nsresult Init(nsFileTransportService *aService, nsIStreamIO* io);
 
-    void Process(void);
+    void Process(nsIProgressEventSink *);
     void DoClose(void);
 
     enum XferState {
