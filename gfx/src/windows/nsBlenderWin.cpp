@@ -19,6 +19,8 @@
 #include <windows.h>
 #include "nsBlenderWin.h"
 #include "nsRenderingContextWin.h"
+#include "il_util.h"
+
 
 #ifdef NGLAYOUT_DDRAW
 #include "ddraw.h"
@@ -42,8 +44,6 @@ nsBlenderWin :: nsBlenderWin()
   mResLS = 0;
   mSRowBytes = 0;
   mDRowBytes = 0;
-  mSrcDS = nsnull;
-  mDstDS = nsnull;
 }
 
 /** --------------------------------------------------------------------------
@@ -52,8 +52,6 @@ nsBlenderWin :: nsBlenderWin()
  */
 nsBlenderWin :: ~nsBlenderWin()
 {
-  NS_IF_RELEASE(mSrcDS);
-  NS_IF_RELEASE(mDstDS);
 
   // get rid of the DIB's
   if (nsnull != mSrcbinfo)
@@ -74,25 +72,18 @@ nsBlenderWin :: ~nsBlenderWin()
 
 /** --------------------------------------------------------------------------
  * Set  all the windows specific data for a blender to some initial values
- * @update dc - 10/29/98
+ * @update dc 11/4/98
+ * @param - aTheDevCon is the device context we will use to get information from for the blend
  */
 nsresult
-nsBlenderWin::Init(nsDrawingSurface aSrc, nsDrawingSurface aDst)
+nsBlenderWin::Init(nsIDeviceContext *aTheDevCon)
 {
-  NS_ASSERTION(!(aSrc == nsnull), "no source surface");
-  NS_ASSERTION(!(aDst == nsnull), "no dest surface");
-
-  if (mSaveBytes != nsnull)
-  {
+  if (mSaveBytes != nsnull){
     delete [] mSaveBytes;
     mSaveBytes = nsnull;
   }
 
-  mSrcDS = (nsDrawingSurfaceWin *)aSrc;
-  mDstDS = (nsDrawingSurfaceWin *)aDst;
-
-  NS_IF_ADDREF(mSrcDS);
-  NS_IF_ADDREF(mDstDS);
+  mTheDeviceCon = aTheDevCon;
 
   return NS_OK;
 }
@@ -112,17 +103,25 @@ nsBlenderWin::Init(nsDrawingSurface aSrc, nsDrawingSurface aDst)
  * @result NS_OK if the blend worked.
  */
 nsresult
-nsBlenderWin::Blend(PRInt32 aSX, PRInt32 aSY, PRInt32 aWidth, PRInt32 aHeight,
+nsBlenderWin::Blend(PRInt32 aSX, PRInt32 aSY, PRInt32 aWidth, PRInt32 aHeight,nsDrawingSurface aSrc,
                     nsDrawingSurface aDst, PRInt32 aDX, PRInt32 aDY, float aSrcOpacity,PRBool aSaveBlendArea)
 {
-  nsresult    result = NS_ERROR_FAILURE;
-  HBITMAP     dstbits, tb1;
-  nsPoint     srcloc, maskloc;
-  PRInt32     dlinespan, slinespan, mlinespan, numbytes, numlines, level, size, oldsize;
-  PRUint8     *s1, *d1, *m1, *mask = NULL;
-  nsColorMap  *colormap;
-  HDC         srcdc, dstdc;
-  PRBool      srcissurf = PR_FALSE, dstissurf = PR_FALSE;
+nsresult      result = NS_ERROR_FAILURE;
+HBITMAP       dstbits, tb1;
+nsPoint       srcloc, maskloc;
+PRInt32       dlinespan, slinespan, mlinespan, numbytes, numlines, level, size, oldsize;
+PRUint8       *s1, *d1, *m1, *mask = NULL;
+IL_ColorSpace *thespace=nsnull;
+HDC           srcdc, dstdc;
+PRBool        srcissurf = PR_FALSE, dstissurf = PR_FALSE;
+
+// This is a temporary solution, nsDrawingSurface is a void*, but on windows it is really a
+// nsDrawingSurfaceWin, which is an XPCom object.  I am going to cast it here just temporarily
+// until I fix all the platforms to use a XPComed version of the nsDrawingSurface
+nsDrawingSurfaceWin   *SrcWinSurf,*DstWinSurf;
+
+  SrcWinSurf = (nsDrawingSurfaceWin*)aSrc;
+  DstWinSurf = (nsDrawingSurfaceWin*)aDst;
 
   // source
 
@@ -134,31 +133,25 @@ nsBlenderWin::Blend(PRInt32 aSX, PRInt32 aSY, PRInt32 aWidth, PRInt32 aHeight,
   srect.right = aSX + aWidth;
   srect.bottom = aSY + aHeight;
 
-  if (PR_TRUE == LockSurface(mSrcDS->mSurface, &mSrcSurf, &mSrcInfo, &srect, DDLOCK_READONLY))
-  {
+  if (PR_TRUE == LockSurface(SrcWinSurf->mSurface, &mSrcSurf, &mSrcInfo, &srect, DDLOCK_READONLY)){
     srcissurf = PR_TRUE;
     mSRowBytes = mSrcInfo.bmWidthBytes;
-  }
-  else
+  }else
 #endif
   {
-    if (nsnull == mSrcbinfo)
-    {
+    if (nsnull == mSrcbinfo){
       HBITMAP srcbits;
-      srcdc = mSrcDS->mDC;
+      srcdc = SrcWinSurf->mDC;
 
-      if (nsnull == mSrcDS->mSelectedBitmap)
-      {
+      if (nsnull == SrcWinSurf->mSelectedBitmap){
         HBITMAP hbits = ::CreateCompatibleBitmap(srcdc, 2, 2);
         srcbits = (HBITMAP)::SelectObject(srcdc, hbits);
         ::GetObject(srcbits, sizeof(BITMAP), &mSrcInfo);
         ::SelectObject(srcdc, srcbits);
         ::DeleteObject(hbits);
-      }
-      else
-      {
-        ::GetObject(mSrcDS->mSelectedBitmap, sizeof(BITMAP), &mSrcInfo);
-        srcbits = mSrcDS->mSelectedBitmap;
+      }else{
+        ::GetObject(SrcWinSurf->mSelectedBitmap, sizeof(BITMAP), &mSrcInfo);
+        srcbits = SrcWinSurf->mSelectedBitmap;
       }
 
       BuildDIB(&mSrcbinfo, &mSrcBytes, mSrcInfo.bmWidth, mSrcInfo.bmHeight, mSrcInfo.bmBitsPixel);
@@ -180,31 +173,26 @@ nsBlenderWin::Blend(PRInt32 aSX, PRInt32 aSY, PRInt32 aWidth, PRInt32 aHeight,
   drect.right = aDX + aWidth;
   drect.bottom = aDY + aHeight;
 
-  if (PR_TRUE == LockSurface(mDstDS->mSurface, &mDstSurf, &mDstInfo, &drect, 0))
-  {
+  if (PR_TRUE == LockSurface(DstWinSurf->mSurface, &mDstSurf, &mDstInfo, &drect, 0)){
     dstissurf = PR_TRUE;
     mDRowBytes = mDstInfo.bmWidthBytes;
   }
   else
 #endif
   {
-    if (nsnull == mDstbinfo)
-    {
+    if (nsnull == mDstbinfo){
       HBITMAP dstbits;
-      dstdc = mDstDS->mDC;
+      dstdc = DstWinSurf->mDC;
 
-      if (nsnull == mDstDS->mSelectedBitmap)
-      {
+      if (nsnull == DstWinSurf->mSelectedBitmap){
         HBITMAP hbits = CreateCompatibleBitmap(dstdc, 2, 2);
         dstbits = (HBITMAP)::SelectObject(dstdc, hbits);
         ::GetObject(dstbits, sizeof(BITMAP), &mDstInfo);
         ::SelectObject(dstdc, dstbits);
         ::DeleteObject(hbits);
-      }
-      else
-      {
-        ::GetObject(mDstDS->mSelectedBitmap, sizeof(BITMAP), &mDstInfo);
-        dstbits = mDstDS->mSelectedBitmap;
+      }else{
+        ::GetObject(DstWinSurf->mSelectedBitmap, sizeof(BITMAP), &mDstInfo);
+        dstbits = DstWinSurf->mSelectedBitmap;
       }
 
       BuildDIB(&mDstbinfo, &mDstBytes, mDstInfo.bmWidth, mDstInfo.bmHeight, mDstInfo.bmBitsPixel);
@@ -223,10 +211,8 @@ nsBlenderWin::Blend(PRInt32 aSX, PRInt32 aSY, PRInt32 aWidth, PRInt32 aHeight,
   maskloc.y = 0;
 
   if (CalcAlphaMetrics(&mSrcInfo, &mDstInfo, &srcloc, NULL, &maskloc, aWidth, aHeight, &numlines, &numbytes,
-                       &s1, &d1, &m1, &slinespan, &dlinespan, &mlinespan))
-  {
-    if (nsnull != aSaveBlendArea)
-    {
+                       &s1, &d1, &m1, &slinespan, &dlinespan, &mlinespan)){
+    if (nsnull != aSaveBlendArea){
       oldsize = mSaveLS * mSaveNumLines;
 
       // allocate some memory
@@ -235,45 +221,35 @@ nsBlenderWin::Blend(PRInt32 aSX, PRInt32 aSY, PRInt32 aWidth, PRInt32 aHeight,
       size = mSaveLS * numlines; 
       mSaveNumBytes = numbytes;
 
-      if(mSaveBytes != nsnull) 
-      {
-        if(oldsize != size)
-        {
+      if(mSaveBytes != nsnull) {
+        if(oldsize != size){
           delete [] mSaveBytes;
           mSaveBytes = new unsigned char[size];
         }
-      }
-      else
-        mSaveBytes = new unsigned char[size];
+      } else
+          mSaveBytes = new unsigned char[size];
 
       mRestorePtr = d1;
       mResLS = dlinespan;
     }
 
-    if (mSrcInfo.bmBitsPixel == mDstInfo.bmBitsPixel)
-    {
+    if (mSrcInfo.bmBitsPixel == mDstInfo.bmBitsPixel){
       // now do the blend
-      switch (mSrcInfo.bmBitsPixel)
-      {
+      switch (mSrcInfo.bmBitsPixel){
         case 32:
-          if (!mask)
-          {
+          if (!mask){
             level = (PRInt32)(100 - aSrcOpacity*100);
             Do32Blend(level,numlines,numbytes,s1,d1,slinespan,dlinespan,nsHighQual,aSaveBlendArea);
             result = NS_OK;
-          }
-          else
+          }else
             result = NS_ERROR_FAILURE;
           break;
 
         case 24:
-          if (mask)
-          {
+          if (mask){
             Do24BlendWithMask(numlines,numbytes,s1,d1,m1,slinespan,dlinespan,mlinespan,nsHighQual,aSaveBlendArea);
             result = NS_OK;
-          }
-          else
-          {
+          }else{
             level = (PRInt32)(100 - aSrcOpacity*100);
             Do24Blend(level,numlines,numbytes,s1,d1,slinespan,dlinespan,nsHighQual,aSaveBlendArea);
             result = NS_OK;
@@ -281,8 +257,7 @@ nsBlenderWin::Blend(PRInt32 aSX, PRInt32 aSY, PRInt32 aWidth, PRInt32 aHeight,
           break;
 
         case 16:
-          if (!mask)
-          {
+          if (!mask){
             level = (PRInt32)(100 - aSrcOpacity*100);
             Do16Blend(level,numlines,numbytes,s1,d1,slinespan,dlinespan,nsHighQual,aSaveBlendArea);
             result = NS_OK;
@@ -292,39 +267,37 @@ nsBlenderWin::Blend(PRInt32 aSX, PRInt32 aSY, PRInt32 aWidth, PRInt32 aHeight,
           break;
 
         case 8:
-          if (mask)
-          {
+          if (mask){
             Do8BlendWithMask(numlines,numbytes,s1,d1,m1,slinespan,dlinespan,mlinespan,nsHighQual,aSaveBlendArea);
             result = NS_OK;
-          }
-          else
-          {
-            level = (PRInt32)(100 - aSrcOpacity*100);
-            Do8Blend(level,numlines,numbytes,s1,d1,slinespan,dlinespan,colormap,nsHighQual,aSaveBlendArea);
-            result = NS_OK;
+          }else{
+            if( mTheDeviceCon->GetILColorSpace(thespace) == NS_OK){
+              level = (PRInt32)(100 - aSrcOpacity*100);
+              Do8Blend(level,numlines,numbytes,s1,d1,slinespan,dlinespan,thespace,nsHighQual,aSaveBlendArea);
+              result = NS_OK;
+              IL_ReleaseColorSpace(thespace);
+            }
           }
           break;
       }
 
-      if (PR_FALSE == dstissurf)
-      {
+      if (PR_FALSE == dstissurf){
         // put the new bits in
-        dstdc = ((nsDrawingSurfaceWin *)aDst)->mDC;
+        dstdc = ((nsDrawingSurfaceWin *)DstWinSurf)->mDC;
         dstbits = ::CreateDIBitmap(dstdc, mDstbinfo, CBM_INIT, mDstBytes, (LPBITMAPINFO)mDstbinfo, DIB_RGB_COLORS);
         tb1 = (HBITMAP)::SelectObject(dstdc, dstbits);
         ::DeleteObject(tb1);
       }
-    }
-    else
+    } else
         result == NS_ERROR_FAILURE;
   }
 
 #ifdef NGLAYOUT_DDRAW
   if (PR_TRUE == srcissurf)
-    mSrcDS->mSurface->Unlock(mSrcSurf.lpSurface);
+    aSrc->mSurface->Unlock(mSrcSurf.lpSurface);
 
   if (PR_TRUE == dstissurf)
-    mDstDS->mSurface->Unlock(mDstSurf.lpSurface);
+    DstWinSurf->mSurface->Unlock(mDstSurf.lpSurface);
 #endif
 
   return result;
@@ -348,19 +321,16 @@ HBITMAP   dstbits, tb1;
 
   //XXX this is busted with directdraw... MMP
 
-  if(mSaveBytes!=nsnull)
-  {
+  if(mSaveBytes!=nsnull){
     result = PR_TRUE;
     saveptr = mSaveBytes;
     orgptr = mRestorePtr;
 
-    for(y=0;y<mSaveNumLines;y++)
-    {
+    for(y=0;y<mSaveNumLines;y++){
       savebyteptr = saveptr;
       orgbyteptr = orgptr;
 
-      for(x=0;x<mSaveNumBytes;x++)
-      {
+      for(x=0;x<mSaveNumBytes;x++){
         *orgbyteptr = *savebyteptr;
         savebyteptr++;
         orgbyteptr++;
@@ -394,18 +364,15 @@ HBITMAP   dstbits, tb1;
  */
 PRBool nsBlenderWin :: LockSurface(IDirectDrawSurface *aSurface, DDSURFACEDESC *aDesc, BITMAP *aBitmap, RECT *aRect, DWORD aLockFlags)
 {
-  if (nsnull != aSurface)
-  {
+  if (nsnull != aSurface){
     aDesc->dwSize = sizeof(DDSURFACEDESC);
 
-    if (DD_OK == aSurface->Lock(aRect, aDesc, DDLOCK_WAIT | DDLOCK_SURFACEMEMORYPTR | aLockFlags, NULL))
-    {
+    if (DD_OK == aSurface->Lock(aRect, aDesc, DDLOCK_WAIT | DDLOCK_SURFACEMEMORYPTR | aLockFlags, NULL)){
       if ((aDesc->ddpfPixelFormat.dwFlags &
           (DDPF_ALPHA | DDPF_PALETTEINDEXED1 |
           DDPF_PALETTEINDEXED2 | DDPF_PALETTEINDEXED4 |
           DDPF_PALETTEINDEXEDTO8 | DDPF_YUV | DDPF_ZBUFFER)) ||
-          (aDesc->ddpfPixelFormat.dwRGBBitCount < 8))
-      {
+          (aDesc->ddpfPixelFormat.dwRGBBitCount < 8)){
         //this is a surface that we can't, or don't want to handle.
 
         aSurface->Unlock(aDesc->lpSurface);
@@ -421,8 +388,7 @@ PRBool nsBlenderWin :: LockSurface(IDirectDrawSurface *aSurface, DDSURFACEDESC *
       aBitmap->bmBits = aDesc->lpSurface;
 
       return PR_TRUE;
-    }
-    else
+    }else
       return PR_FALSE;
   }
   else
@@ -463,14 +429,11 @@ PRBool    doalpha = PR_FALSE;
 nsRect    arect,srect,drect,irect;
 PRInt32   startx,starty;
 
-  if(aMaskInfo)
-  {
+  if(aMaskInfo){
     arect.SetRect(0,0,aDestInfo->bmWidth,aDestInfo->bmHeight);
     srect.SetRect(aMaskUL->x,aMaskUL->y,aMaskInfo->bmWidth,aSrcInfo->bmHeight);
     arect.IntersectRect(arect,srect);
-  }
-  else
-  {
+  }else{
     //arect.SetRect(0,0,aDestInfo->bmWidth,aDestInfo->bmHeight);
     //srect.SetRect(aMaskUL->x,aMaskUL->y,aWidth,aHeight);
     //arect.IntersectRect(arect,srect);
@@ -481,8 +444,7 @@ PRInt32   startx,starty;
   srect.SetRect(aSrcUL->x, aSrcUL->y, aSrcInfo->bmWidth, aSrcInfo->bmHeight);
   drect = arect;
 
-  if (irect.IntersectRect(srect, drect))
-  {
+  if (irect.IntersectRect(srect, drect)){
     // calculate destination information
     *aDLSpan = mDRowBytes;
     *aNumbytes = CalcBytesSpan(irect.width,aDestInfo->bmBitsPixel);
@@ -505,13 +467,10 @@ PRInt32   startx,starty;
          
     doalpha = PR_TRUE;
 
-    if(aMaskInfo)
-    {
+    if(aMaskInfo){
       *aMLSpan = aMaskInfo->bmWidthBytes;
       *aMImage = (PRUint8*)aMaskInfo->bmBits;
-    }
-    else
-    {
+    }else{
       aMLSpan = 0;
       *aMImage = nsnull;
     }
@@ -537,8 +496,7 @@ nsBlenderWin :: BuildDIB(LPBITMAPINFOHEADER  *aBHead,unsigned char **aBits,PRInt
   PRUint8 *colortable;
   DWORD   bicomp, masks[3];
 
-	switch (aDepth) 
-  {
+	switch (aDepth) {
 		case 8:
 			palsize = 256;
 			allocsize = 256;
@@ -574,8 +532,7 @@ nsBlenderWin :: BuildDIB(LPBITMAPINFOHEADER  *aBHead,unsigned char **aBits,PRInt
       break;
   }
 
-  if (palsize >= 0)
-  {
+  if (palsize >= 0){
     spanbytes = CalcBytesSpan(aWidth, aDepth);
     imagesize = spanbytes * aHeight;
 
@@ -603,8 +560,7 @@ nsBlenderWin :: BuildDIB(LPBITMAPINFOHEADER  *aBHead,unsigned char **aBits,PRInt
     *aBits = new unsigned char[imagesize];
 
     return NS_OK;
-  }
-  else
+  }else
     return NS_ERROR_FAILURE;
 }
 
@@ -618,7 +574,6 @@ nsBlenderWin :: BuildDIB(LPBITMAPINFOHEADER  *aBHead,unsigned char **aBits,PRInt
 void
 nsBlenderWin::DeleteDIB(LPBITMAPINFOHEADER  *aBHead,unsigned char **aBits)
 {
-
   delete[] *aBHead;
   aBHead = 0;
   delete[] *aBits;

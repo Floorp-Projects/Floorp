@@ -40,19 +40,20 @@ public:
   * Construct and set the initial values for this windows specific blender
   * @update dc - 10/29/98
   */
- nsBlenderWin();
+  nsBlenderWin();
 
  /** --------------------------------------------------------------------------
   * Release and cleanup all the windows specific information for this blender
   * @update dc - 10/29/98
   */
- ~nsBlenderWin();
+  ~nsBlenderWin();
 
  /** --------------------------------------------------------------------------
   * Set  all the windows specific data for a blender to some initial values
   * @update dc - 10/29/98
+  * @param - aTheDevCon is the device context we will use to get information from for the blend
   */
- virtual nsresult Init(nsDrawingSurface aSrc,nsDrawingSurface aDst);
+  virtual nsresult Init(nsIDeviceContext *aDeviceCon);
 
 
 /** --------------------------------------------------------------------------
@@ -62,6 +63,7 @@ public:
  * @param aSY -- top location for the blend
  * @param aWidth -- width of the blend
  * @param aHeight -- height of the blend
+ * @param aSrc -- Source drawing surface for the blend
  * @param aDst -- Destination drawing surface for the blend
  * @param aDX -- left location for the destination of the blend
  * @param aDY -- top location for the destination of the blend
@@ -69,11 +71,8 @@ public:
  * @param aSaveBlendArea -- If true, will save off the blended area to restore later
  * @result NS_OK if the blend worked.
  */
- virtual nsresult Blend(PRInt32 aSX, PRInt32 aSY, PRInt32 aWidth, PRInt32 aHeight,
+ virtual nsresult Blend(PRInt32 aSX, PRInt32 aSY, PRInt32 aWidth, PRInt32 aHeight,nsDrawingSurface aSrc,
                           nsDrawingSurface aDest, PRInt32 aDX, PRInt32 aDY, float aSrcOpacity,PRBool aSaveBlendArea);
-
-  nsDrawingSurface GetSrcDS() {return(mSrcDS);}
-  nsDrawingSurface GetDstDS() {return(mDstDS);}
 
 /** --------------------------------------------------------------------------
  * Replace the bits saved from the last blend if the restore flag was set
@@ -150,7 +149,6 @@ public:
   PRUint8             *mSrcBytes;
   PRUint8             *mDstBytes;
   BITMAP              mSrcInfo, mDstInfo;
-  nsDrawingSurfaceWin *mSrcDS, *mDstDS;
 
   PRInt32             mSRowBytes;
   PRInt32             mDRowBytes;

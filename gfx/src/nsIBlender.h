@@ -34,43 +34,32 @@
 class nsIBlender : public nsISupports
 {
 public:
+
   /**
    * Initialize the Blender
-   * @param  aSrc is the source drawing image to buffer
-   * @param  aDst is the dest drawing image to buffer
+   * @update dc 11/4/98
+   * @param  aDeviceContext is where the blender can get info about the device its blending on
    * @result The result of the initialization, NS_OK if no errors
    */
-  virtual nsresult Init(nsDrawingSurface aSrc,nsDrawingSurface aDst) = 0;
+  virtual nsresult Init(nsIDeviceContext *aDeviceContext) = 0;
 
   /**
    * NOTE: if we can make this static, that would be great. I don't think we can.
    * Blend source and destination nsDrawingSurfaces. Both drawing surfaces
    * will have bitmaps associated with them.
-   * @param aSrc source for blending
    * @param aSX x offset into source drawing surface of blend area
    * @param aSY y offset into source drawing surface of blend area
    * @param aWidth width of blend area
    * @param aHeight width of blend area
+   * @param aSrc  source for the blending
    * @param aDest destination for blending
    * @param aDX x offset into destination drawing surface of blend area
    * @param aDY y offset into destination drawing surface of blend area
    * @param aSrcOpacity 0.0f -> 1.0f opacity value of source area. 1.0f indicates
    *        complete opacity.
    */
-  virtual nsresult Blend(PRInt32 aSX, PRInt32 aSY, PRInt32 aWidth, PRInt32 aHeight,
+  virtual nsresult Blend(PRInt32 aSX, PRInt32 aSY, PRInt32 aWidth, PRInt32 aHeight,nsDrawingSurface aSrc,
                      nsDrawingSurface aDest, PRInt32 aDX, PRInt32 aDY, float aSrcOpacity,PRBool aSaveBlendArea) = 0;
-
-  /**
-   * Return the source drawing surface to be blended
-   * @return The platform specific drawing surface
-   */
-  virtual nsDrawingSurface GetSrcDS()=0;
-
-  /**
-   * Return the destination drawing surface to be blended and modified
-   * @return The platform specific drawing surface
-   */
-  virtual nsDrawingSurface GetDstDS()=0;
 
   /**
    * Restore the the blended area of the image if one was save on a previous blend.

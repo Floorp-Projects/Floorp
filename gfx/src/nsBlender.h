@@ -35,6 +35,8 @@
 #include "nsPoint.h"
 #include "nsRect.h"
 #include "nsIImage.h"
+#include "libimg.h"
+
 
 //----------------------------------------------------------------------
 
@@ -49,22 +51,22 @@ public:
   * General constructor for a nsBlender object
   * @update dc - 10/29/98
   */
- nsBlender();
+  nsBlender();
 
  /** --------------------------------------------------------------------------
   * Destructor for a nsBlender object
   * @update dc - 10/29/98
   */
- ~nsBlender();
+  virtual ~nsBlender();
+
 
  /** --------------------------------------------------------------------------
-  * Initialize a nsBlender object, or re-initialize if it is re-used
-  * @update dc - 10/29/98
-  * @param aSrc -- source drawing surface
-  * @param aDst -- destination drawing surface
-  * @result NS_OK if everything initialized
-  */
-  virtual nsresult Init(nsDrawingSurface aSrc,nsDrawingSurface aDst);
+   * Initialize a nsBlender object, or re-initialize if it is re-used
+   * @update dc 11/4/98
+   * @param  aDeviceContext is where the blender can get info about the device its blending on
+   * @result The result of the initialization, NS_OK if no errors
+   */
+  virtual nsresult Init(nsIDeviceContext *aDeviceContext);
 
  protected:
 
@@ -172,11 +174,12 @@ public:
    * @param aSaveBlendArea informs routine if the area affected area will be save first
    */
   void Do8Blend(PRUint8 aBlendVal,PRInt32 aNumlines,PRInt32 aNumbytes,PRUint8 *aSImage,PRUint8 *aDImage,
-                PRInt32 aSLSpan,PRInt32 aDLSpan,nsColorMap *aColorMap,nsBlendQuality aBlendQuality,PRBool aSaveBlendArea);
+                PRInt32 aSLSpan,PRInt32 aDLSpan,IL_ColorSpace *aColorMap,nsBlendQuality aBlendQuality,PRBool aSaveBlendArea);
 
 
   PRUint8             *mSaveBytes;    // place to save bits
   PRInt32             mSaveLS;
+  nsIDeviceContext    *mTheDeviceCon;
 
 };
 
