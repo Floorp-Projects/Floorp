@@ -110,7 +110,8 @@ sub GetBugText {
     my @collist = ("bug_id", "product", "version", "rep_platform", "op_sys",
                    "bug_status", "resolution", "priority", "bug_severity",
                    "area", "assigned_to", "reporter", "bug_file_loc",
-                   "short_desc", "component");
+                   "short_desc", "component", "qa_contact", "target_milestone",
+                   "status_whiteboard");
 
     my $query = "select " . join(", ", @collist) .
         " from bugs where bug_id = $id";
@@ -130,6 +131,21 @@ sub GetBugText {
 
     $::bug{'assigned_to'} = DBID_to_name($::bug{'assigned_to'});
     $::bug{'reporter'} = DBID_to_name($::bug{'reporter'});
+    my $qa_contact = "";
+    my $target_milestone = "";
+    my $status_whiteboard = "";
+    if (Param('useqacontact') && $::bug{'qa_contact'} > 0) {
+        $::bug{'qa_contact'} = DBID_to_name($::bug{'qa_contact'});
+        $qa_contact = "QAContact: $::bug{'qa_contact'}\n";
+    } else {
+        $::bug{'qa_contact'} = "";
+    }
+    if (Param('usetargetmilestone') && $::bug{'target_milestone'} ne "") {
+        $target_milestone = "TargetMilestone: $::bug{'target_milestone'}\n";
+    }
+    if (Param('usestatuswhiteboard') && $::bug{'status_whiteboard'} ne "") {
+        $status_whiteboard = "StatusWhiteboard: $::bug{'status_whiteboard'}\n";
+    }
 
     $::bug{'long_desc'} = GetLongDescription($id);
 
@@ -151,7 +167,7 @@ Component: $::bug{'component'}
 Area: $::bug{'area'}
 AssignedTo: $::bug{'assigned_to'}                            
 ReportedBy: $::bug{'reporter'}               
-URL: $::bug{'bug_file_loc'}
+$qa_contact$target_milestone${status_whiteboard}URL: $::bug{'bug_file_loc'}
 " . DescCC($::bug{'cclist'}) . "Summary: $::bug{'short_desc'}
 
 $::bug{'long_desc'}
@@ -166,7 +182,7 @@ sub fixaddresses {
     my @result;
     my %seen;
     foreach my $i (@$list) {
-        if (!defined $::nomail{$i} && !defined $seen{$i}) {
+        if ($i ne "" && !defined $::nomail{$i} && !defined $seen{$i}) {
             push @result, $i;
             $seen{$i} = 1;
         }
@@ -237,7 +253,8 @@ foreach my $i (@ARGV) {
     close FID;
     if (Different($old, $new)) {
         system("diff -c $old $new > $diffs");
-        my $tolist = fixaddresses([$::bug{'assigned_to'}, $::bug{'reporter'}]);
+        my $tolist = fixaddresses([$::bug{'assigned_to'}, $::bug{'reporter'},
+                                   $::bug{'qa_contact'}]);
         my $cclist = fixaddresses($::bug{'cclist'});
         my $logstr = "Bug $i changed";
         if ($tolist ne "" || $cclist ne "") {
