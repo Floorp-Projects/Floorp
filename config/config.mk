@@ -333,16 +333,68 @@ endif
 #
 _ALL_META_COMPONENTS=mail crypto
 
-MOZ_META_COMPONENTS_mail = nsMsgBaseModule IMAP_factory nsVCardModule mime_services nsMimeEmitterModule nsMsgNewsModule  nsMsgComposeModule local_mail_services nsAbSyncModule nsImportServiceModule nsTextImportModule nsAbModule nsMsgDBModule nsMsgMdnModule nsComm4xMailImportModule
-MOZ_META_COMPONENTS_mail_comps = msgimap mime msgnews import addrbook impText vcard msgdb msgmdn
+MOZ_META_COMPONENTS_mail = \
+	IMAP_factory \
+	mime_services \
+	nsMsgNewsModule  \
+	nsImportServiceModule \
+	nsAbModule \
+	nsTextImportModule \
+	nsVCardModule \
+	nsMsgDBModule \
+	nsMsgMdnModule \
+	nsMsgMailViewModule \
+	nsBayesianFilterModule \
+	$(NULL)
+
+MOZ_META_COMPONENTS_mail_comps = \
+	msgimap \
+	mime \
+	msgnews \
+	import \
+	addrbook \
+	impText \
+	vcard \
+	msgdb \
+	msgmdn \
+	mailview \
+	bayesflt \
+	$(NULL)
+
 MOZ_META_COMPONENTS_mail_libs = mimecthglue_s
+ifdef USE_SHORT_LIBNAME
+MOZ_META_COMPONENTS_mail_libs += msgbsutl
+else
+MOZ_META_COMPONENTS_mail_libs += msgbaseutil
+endif
 
 ifeq ($(OS_ARCH),WINNT)
-MOZ_META_COMPONENTS_mail += nsEudoraImportModule nsOEImport nsOutlookImport msgMapiModule
-MOZ_META_COMPONENTS_mail_comps += msgbase impEudra importOE impOutlk msgMapi 
+MOZ_META_COMPONENTS_mail += \
+	nsMsgBaseModule \
+	nsEudoraImportModule \
+	nsOEImport \
+	nsOutlookImport \
+	msgMapiModule \
+	$(NULL)
+MOZ_META_COMPONENTS_mail_comps += \
+	msgbase \
+	impEudra \
+	importOE \
+	impOutlk \
+	msgMapi \
+	$(NULL)
 else
+MOZ_META_COMPONENTS_mail += nsMsgBaseModule
 MOZ_META_COMPONENTS_mail_comps += mailnews
 endif
+
+MOZ_META_COMPONENTS_mail += \
+	nsMimeEmitterModule \
+	nsMsgComposeModule \
+	local_mail_services \
+	nsAbSyncModule \
+	nsComm4xMailImportModule \
+	$(NULL)
 
 ifdef USE_SHORT_LIBNAME
 MOZ_META_COMPONENTS_mail_comps += emitter msgcompo msglocal absyncsv
@@ -351,10 +403,8 @@ MOZ_META_COMPONENTS_mail_comps += impComm4xMail
 else
 MOZ_META_COMPONENTS_mail_comps += imp4Mail
 endif
-MOZ_META_COMPONENTS_mail_libs += msgbsutl
 else
-MOZ_META_COMPONENTS_mail_cops += mimeemitter msgcompose localmail absyncsvc impComm4xMail
-MOZ_META_COMPONENTS_mail_libs += msgbaseutil
+MOZ_META_COMPONENTS_mail_comps += mimeemitter msgcompose localmail absyncsvc impComm4xMail
 endif
 
 ifdef MOZ_PSM
