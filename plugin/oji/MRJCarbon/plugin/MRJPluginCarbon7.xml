@@ -442,7 +442,7 @@
                 <!-- Settings for "FTP Panel" panel -->
                 <SETTING><NAME>MWFTP_Post_hostName</NAME><VALUE></VALUE></SETTING>
                 <SETTING><NAME>MWFTP_Post_username</NAME><VALUE></VALUE></SETTING>
-                <SETTING><NAME>MWFTP_Post_password</NAME><VALUE>2653gbjk0&#255;&#217;p</VALUE></SETTING>
+                <SETTING><NAME>MWFTP_Post_password</NAME><VALUE>26339bjk0&#255;&#217;p</VALUE></SETTING>
                 <SETTING><NAME>MWFTP_Post_remoteDir</NAME><VALUE></VALUE></SETTING>
                 <SETTING><NAME>MWFTP_Post_ftp_PathVersion</NAME><VALUE>0</VALUE></SETTING>
                 <SETTING><NAME>MWFTP_Post_ftp_PathType</NAME><VALUE>0</VALUE></SETTING>
@@ -815,17 +815,24 @@
                 </FILE>
                 <FILE>
                     <PATHTYPE>Name</PATHTYPE>
-                    <PATH>ProxyClassLoaderFactory.java</PATH>
+                    <PATH>rt.jar</PATH>
+                    <PATHFORMAT>MacOS</PATHFORMAT>
+                    <FILEKIND>Library</FILEKIND>
+                    <FILEFLAGS></FILEFLAGS>
+                </FILE>
+                <FILE>
+                    <PATHTYPE>Name</PATHTYPE>
+                    <PATH>LiveConnectProxy.java</PATH>
                     <PATHFORMAT>MacOS</PATHFORMAT>
                     <FILEKIND>Text</FILEKIND>
                     <FILEFLAGS>Debug</FILEFLAGS>
                 </FILE>
                 <FILE>
                     <PATHTYPE>Name</PATHTYPE>
-                    <PATH>rt.jar</PATH>
+                    <PATH>ProxyClassLoaderFactory.java</PATH>
                     <PATHFORMAT>MacOS</PATHFORMAT>
-                    <FILEKIND>Library</FILEKIND>
-                    <FILEFLAGS></FILEFLAGS>
+                    <FILEKIND>Text</FILEKIND>
+                    <FILEFLAGS>Debug</FILEFLAGS>
                 </FILE>
             </FILELIST>
             <LINKORDER>
@@ -871,12 +878,17 @@
                 </FILEREF>
                 <FILEREF>
                     <PATHTYPE>Name</PATHTYPE>
-                    <PATH>ProxyClassLoaderFactory.java</PATH>
+                    <PATH>rt.jar</PATH>
                     <PATHFORMAT>MacOS</PATHFORMAT>
                 </FILEREF>
                 <FILEREF>
                     <PATHTYPE>Name</PATHTYPE>
-                    <PATH>rt.jar</PATH>
+                    <PATH>LiveConnectProxy.java</PATH>
+                    <PATHFORMAT>MacOS</PATHFORMAT>
+                </FILEREF>
+                <FILEREF>
+                    <PATHTYPE>Name</PATHTYPE>
+                    <PATH>ProxyClassLoaderFactory.java</PATH>
                     <PATHFORMAT>MacOS</PATHFORMAT>
                 </FILEREF>
             </LINKORDER>
@@ -1006,6 +1018,16 @@
                     <SETTING>
                         <SETTING><NAME>SearchPath</NAME>
                             <SETTING><NAME>Path</NAME><VALUE>:::::dist:netwerk:</VALUE></SETTING>
+                            <SETTING><NAME>PathFormat</NAME><VALUE>MacOS</VALUE></SETTING>
+                            <SETTING><NAME>PathRoot</NAME><VALUE>Project</VALUE></SETTING>
+                        </SETTING>
+                        <SETTING><NAME>Recursive</NAME><VALUE>true</VALUE></SETTING>
+                        <SETTING><NAME>FrameworkPath</NAME><VALUE>false</VALUE></SETTING>
+                        <SETTING><NAME>HostFlags</NAME><VALUE>All</VALUE></SETTING>
+                    </SETTING>
+                    <SETTING>
+                        <SETTING><NAME>SearchPath</NAME>
+                            <SETTING><NAME>Path</NAME><VALUE>:::::dist:xpconnect:</VALUE></SETTING>
                             <SETTING><NAME>PathFormat</NAME><VALUE>MacOS</VALUE></SETTING>
                             <SETTING><NAME>PathRoot</NAME><VALUE>Project</VALUE></SETTING>
                         </SETTING>
@@ -1455,7 +1477,7 @@
                 <!-- Settings for "FTP Panel" panel -->
                 <SETTING><NAME>MWFTP_Post_hostName</NAME><VALUE></VALUE></SETTING>
                 <SETTING><NAME>MWFTP_Post_username</NAME><VALUE></VALUE></SETTING>
-                <SETTING><NAME>MWFTP_Post_password</NAME><VALUE>2653gbjk0&#255;&#217;p</VALUE></SETTING>
+                <SETTING><NAME>MWFTP_Post_password</NAME><VALUE>26339bjk0&#255;&#217;p</VALUE></SETTING>
                 <SETTING><NAME>MWFTP_Post_remoteDir</NAME><VALUE></VALUE></SETTING>
                 <SETTING><NAME>MWFTP_Post_ftp_PathVersion</NAME><VALUE>0</VALUE></SETTING>
                 <SETTING><NAME>MWFTP_Post_ftp_PathType</NAME><VALUE>0</VALUE></SETTING>
@@ -2311,6 +2333,12 @@
                 <TARGETNAME>MRJPlugin.jar</TARGETNAME>
                 <PATHTYPE>Name</PATHTYPE>
                 <PATH>JNIThread.java</PATH>
+                <PATHFORMAT>MacOS</PATHFORMAT>
+            </FILEREF>
+            <FILEREF>
+                <TARGETNAME>MRJPlugin.jar</TARGETNAME>
+                <PATHTYPE>Name</PATHTYPE>
+                <PATH>LiveConnectProxy.java</PATH>
                 <PATHFORMAT>MacOS</PATHFORMAT>
             </FILEREF>
             <FILEREF>
