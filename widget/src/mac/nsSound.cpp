@@ -65,6 +65,8 @@
 
 #include "nsSound.h"
 
+#include "nsString.h"
+
 //#define SOUND_DEBUG
 
 #pragma mark nsSoundRequest
@@ -432,9 +434,9 @@ nsSound::GetSoundResourceName(const char* inSoundName, StringPtr outResourceName
     nsCOMPtr <nsIInternetConfigService> icService = do_GetService(NS_INTERNETCONFIGSERVICE_CONTRACTID, &rv);
     if (NS_FAILED(rv))
       return rv;
-
-    nsXPIDLCString  newMailSound;
-    rv = icService->GetString(nsIInternetConfigService::eICString_NewMailSoundName, getter_Copies(newMailSound));
+    
+    nsCAutoString  newMailSound;
+    rv = icService->GetString(nsIInternetConfigService::eICString_NewMailSoundName, newMailSound);
     if (NS_FAILED(rv))
       return rv;
       

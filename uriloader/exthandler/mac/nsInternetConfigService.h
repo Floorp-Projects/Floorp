@@ -59,8 +59,11 @@ protected:
   // some private helper methods...
   nsresult FillMIMEInfoForICEntry(ICMapEntry& entry, nsIMIMEInfo ** mimeinfo);
   
-  nsresult GetICKeyPascalString(PRUint32 inIndex, unsigned char **outICKey);
+  nsresult GetICKeyPascalString(PRUint32 inIndex, const unsigned char*& outICKey);
   nsresult GetICPreference(PRUint32 inKey, void *outData, long *ioSize);
+  
+  PRBool mRunningOSX;
+  PRBool mRunningJaguar;
 };
 
 #endif

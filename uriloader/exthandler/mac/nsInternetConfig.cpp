@@ -119,31 +119,3 @@ nsInternetConfig::~nsInternetConfig()
 		sInstance = NULL;
 	}
 }
-
-
-nsresult nsInternetConfig::GetString( ConstStr255Param inKey, char** outString )
-{
-	nsresult result = NS_ERROR_FAILURE;
-	ICInstance instance = nsInternetConfig::GetInstance();
-	if ( instance )
-	{	
-		OSStatus err;
-		char buffer[256];
-		ICAttr junk;
-		long size = 256;
-		err = ::ICGetPref( instance, inKey, &junk, buffer, &size );
-		if ( err == noErr )
-		{
-			if (size == 0) {
-				*outString = nsnull;
-				return NS_OK;
-			}
-				
-			// Buffer is a Pascal string
-			nsCString temp( &buffer[1], buffer[0] );
-			*outString = ToNewCString(temp);
- 			result = NS_OK;
-		}
-	}
-	return result;
-}
