@@ -883,7 +883,7 @@ nsDNSService::Shutdown()
         rv = mThread->Join();
         // Have to break the cycle here, otherwise nsDNSService holds onto the thread
         // and the thread holds onto the nsDNSService via its mRunnable
-        mThread = nsnull;
+//        mThread = nsnull;
     }
 
 #elif defined(XP_PC)
