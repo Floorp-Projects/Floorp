@@ -36,9 +36,13 @@
  *  Child frames are traversed before their parents going both forward
  *  and backward.
  *
- * EXTENSIVE_PREORDER:
- *  Like EXTENSIVE, but traverse parent frames before their children
- *  when going forward.
+ * FOCUS:
+ *  Traverse frames in "focus" order, which is like extensive but
+ *  does a strict preorder traversal in both directions.  This type of
+ *  traversal also handles placeholder frames transparently, meaning that
+ *  it will never stop on one - going down will get the real frame, going
+ *  back up will go on past the placeholder, so the placeholders are logically
+ *  part of the frame tree.
  *
  * FASTEST:
  *  XXX not implemented
@@ -50,7 +54,7 @@
 enum nsTraversalType{
   LEAF,
   EXTENSIVE,
-  EXTENSIVE_PREORDER,
+  FOCUS,
   FASTEST
 #ifdef IBMBIDI // Simon
    , VISUAL

@@ -2813,6 +2813,7 @@ nsEventStateManager::GetNextTabbableContent(nsIContent* aRootContent, nsIFrame* 
 {
   *aResult = nsnull;
   PRBool keepFirstFrame = PR_FALSE;
+  PRBool findLastFrame = PR_FALSE;
 
   nsCOMPtr<nsIBidirectionalEnumerator> frameTraversal;
 
@@ -2824,11 +2825,11 @@ nsEventStateManager::GetNextTabbableContent(nsIContent* aRootContent, nsIFrame* 
       if (NS_SUCCEEDED(mPresContext->GetShell(getter_AddRefs(presShell))) && presShell) {
         presShell->GetPrimaryFrameFor(aRootContent, &result);
       }
-      if (result) {
-        while(NS_SUCCEEDED(result->FirstChild(mPresContext, nsnull, &result)) && result) {
-          aFrame = result;
-        }
-      }
+
+      aFrame = result;
+
+      if (!forward)
+        findLastFrame = PR_TRUE;
     }
     if (!aFrame) {
       return NS_ERROR_FAILURE;
@@ -2861,7 +2862,7 @@ nsEventStateManager::GetNextTabbableContent(nsIContent* aRootContent, nsIFrame* 
   if (NS_FAILED(result))
     return result;
 
-  result = trav->NewFrameTraversal(getter_AddRefs(frameTraversal), EXTENSIVE_PREORDER,
+  result = trav->NewFrameTraversal(getter_AddRefs(frameTraversal), FOCUS,
                                    mPresContext, aFrame);
   if (NS_FAILED(result))
     return NS_OK;
@@ -2870,7 +2871,8 @@ nsEventStateManager::GetNextTabbableContent(nsIContent* aRootContent, nsIFrame* 
     if (forward)
       frameTraversal->Next();
     else frameTraversal->Prev();
-  }
+  } else if (findLastFrame)
+    frameTraversal->Last();
 
   nsISupports* currentItem;
   frameTraversal->CurrentItem(&currentItem);

@@ -24,9 +24,7 @@
 
 #include "nsFrameTraversal.h"
 #include "nsFrameList.h"
-
-
-static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
+#include "nsPlaceholderFrame.h"
 
 
 class nsFrameIterator: public nsIBidirectionalEnumerator
@@ -84,8 +82,6 @@ public:
   nsLeafIterator(nsIPresContext* aPresContext, nsIFrame *start);
   void SetExtensive(PRBool aExtensive) {mExtensive = aExtensive;}
   PRBool GetExtensive(){return mExtensive;}
-  void SetPreOrder(PRBool aPreOrder) { mPreOrder = aPreOrder; }
-  PRBool GetPreOrder() { return mPreOrder; }
 
 private :
   
@@ -95,7 +91,44 @@ private :
 
   nsIPresContext* mPresContext;
   PRPackedBool mExtensive;
-  PRPackedBool mPreOrder;
+};
+
+class nsFocusIterator : public nsFrameIterator
+{
+public:
+  nsFocusIterator(nsIPresContext* aPresContext, nsIFrame* aStart);
+private:
+  NS_IMETHOD Next();
+  NS_IMETHOD Prev();
+  NS_IMETHOD Last();
+
+  /*
+    Our own versions of the standard frame tree navigation
+    methods, which apply the following rules for placeholder
+    frames:
+
+     - If a frame HAS a placeholder frame, getting its parent
+       gets the placeholder's parent.
+
+     - If a frame's first child or next/prev sibling IS a
+       placeholder frame, then we instead return the real frame.
+
+     - If a frame HAS a placeholder frame, getting its next/prev
+       sibling gets the placeholder frame's next/prev sibling.
+
+    These are all applied recursively to support multiple levels of
+    placeholders.
+  */
+
+  nsIFrame* GetParentFrame(nsIFrame* aFrame);
+  nsIFrame* GetFirstChild(nsIFrame* aFrame);
+  nsIFrame* GetNextSibling(nsIFrame* aFrame);
+  nsIFrame* GetPrevSibling(nsIFrame* aFrame);
+
+  nsIFrame* GetRealFrame(nsIFrame* aFrame);
+  nsIFrame* GetPlaceholderFrame(nsIFrame* aFrame);
+
+  nsIPresContext* mPresContext;
 };
 
 #ifdef IBMBIDI // Simon
@@ -148,7 +181,6 @@ NS_NewFrameTraversal(nsIBidirectionalEnumerator **aEnumerator,
     *aEnumerator = NS_STATIC_CAST(nsIBidirectionalEnumerator*, trav);
     NS_ADDREF(trav);
     trav->SetExtensive(PR_FALSE);
-    trav->SetPreOrder(PR_FALSE);
   }
   break;
   case EXTENSIVE:{
@@ -158,17 +190,14 @@ NS_NewFrameTraversal(nsIBidirectionalEnumerator **aEnumerator,
     *aEnumerator = NS_STATIC_CAST(nsIBidirectionalEnumerator*, trav);
     NS_ADDREF(trav);
     trav->SetExtensive(PR_TRUE);
-    trav->SetPreOrder(PR_FALSE);
   }
   break;
-  case EXTENSIVE_PREORDER: {
-    nsLeafIterator *trav = new nsLeafIterator(aPresContext, aStart);
+  case FOCUS: {
+    nsFocusIterator *trav = new nsFocusIterator(aPresContext, aStart);
     if (!trav)
       return NS_ERROR_OUT_OF_MEMORY;
     *aEnumerator = NS_STATIC_CAST(nsIBidirectionalEnumerator*, trav);
     NS_ADDREF(trav);
-    trav->SetExtensive(PR_TRUE);
-    trav->SetPreOrder(PR_TRUE);
   }
   break;
 #ifdef IBMBIDI
@@ -303,15 +332,12 @@ nsLeafIterator::Next()
   nsIFrame *parent = getCurrent();
   if (!parent)
     parent = getLast();
-  if (!mExtensive && !mPreOrder)
+  if (!mExtensive)
   {
      while(NS_SUCCEEDED(parent->FirstChild(mPresContext, nsnull,&result)) && result)
     {
       parent = result;
     }
-  } else if (mPreOrder) {
-    if (NS_SUCCEEDED(parent->FirstChild(mPresContext, nsnull, &result)) && result)
-      parent = result;
   }
   if (parent != getCurrent())
   {
@@ -319,15 +345,13 @@ nsLeafIterator::Next()
   }
   else {
     while(parent && !IsRootFrame(parent)) {
-      if (NS_SUCCEEDED(parent->GetNextSibling(&result)) && result) {
-        if (!mPreOrder) {
-          parent = result;
-          while(NS_SUCCEEDED(parent->FirstChild(mPresContext, nsnull,&result)) && result)
-            {
-              parent = result;
-            }
-          result = parent;
-        }
+     if (NS_SUCCEEDED(parent->GetNextSibling(&result)) && result) {
+       parent = result;
+       while(NS_SUCCEEDED(parent->FirstChild(mPresContext, nsnull,&result)) && result)
+         {
+           parent = result;
+         }
+       result = parent;
         break;
       }
       else
@@ -340,7 +364,7 @@ nsLeafIterator::Next()
         else 
         {
           parent = result;
-          if (mExtensive && !mPreOrder)
+          if (mExtensive)
             break;
         }
       }
@@ -401,6 +425,199 @@ nsLeafIterator::Prev()
   setCurrent(result);
   if (!result)
     setOffEdge(-1);
+  return NS_OK;
+}
+
+nsFocusIterator::nsFocusIterator(nsIPresContext* aPresContext, nsIFrame* aStart)
+  : mPresContext(aPresContext)
+{
+  nsIFrame* start = aStart;
+  if (aStart)
+    start = GetRealFrame(aStart);
+
+  setStart(start);
+  setCurrent(start);
+  setLast(start);
+}
+
+nsIFrame*
+nsFocusIterator::GetPlaceholderFrame(nsIFrame* aFrame)
+{
+  nsIFrame* result = aFrame;
+  nsCOMPtr<nsIPresShell> presShell;
+  mPresContext->GetShell(getter_AddRefs(presShell));
+  if (presShell) {
+    nsIFrame* placeholder = 0;
+    presShell->GetPlaceholderFrameFor(aFrame, &placeholder);
+    if (placeholder)
+      result = placeholder;
+  }
+
+  if (result != aFrame)
+    result = GetPlaceholderFrame(result);
+
+  return result;
+}
+
+nsIFrame*
+nsFocusIterator::GetRealFrame(nsIFrame* aFrame)
+{
+  nsIFrame* result = aFrame;
+
+  // See if it's a placeholder frame for a floater.
+  if (aFrame) {
+    nsCOMPtr<nsIAtom> frameType;
+    aFrame->GetFrameType(getter_AddRefs(frameType));
+    PRBool isPlaceholder = (nsLayoutAtoms::placeholderFrame == frameType.get());
+    if (isPlaceholder) {
+      // Get the out-of-flow frame that the placeholder points to.
+      // This is the real floater that we should examine.
+      result = NS_STATIC_CAST(nsPlaceholderFrame*,aFrame)->GetOutOfFlowFrame();
+      NS_ASSERTION(result, "No out of flow frame found for placeholder!\n");
+    }
+    
+    if (result != aFrame)
+      result = GetRealFrame(result);
+  }
+
+  return result;
+}
+
+nsIFrame*
+nsFocusIterator::GetParentFrame(nsIFrame* aFrame)
+{
+  nsIFrame* result = 0;
+  nsIFrame* placeholder = GetPlaceholderFrame(aFrame);
+  if (placeholder)
+    placeholder->GetParent(&result);
+
+  return result;
+}
+
+nsIFrame*
+nsFocusIterator::GetFirstChild(nsIFrame* aFrame)
+{
+  nsIFrame* result = 0;
+  aFrame->FirstChild(mPresContext, nsnull, &result);
+  if (result)
+    result = GetRealFrame(result);
+
+  return result;
+}
+
+nsIFrame*
+nsFocusIterator::GetNextSibling(nsIFrame* aFrame)
+{
+  nsIFrame* result = 0;
+  nsIFrame* placeholder = GetPlaceholderFrame(aFrame);
+  if (placeholder) {
+    placeholder->GetNextSibling(&result);
+    if (result)
+      result = GetRealFrame(result);
+  }
+
+  return result;
+}
+
+nsIFrame*
+nsFocusIterator::GetPrevSibling(nsIFrame* aFrame)
+{
+  nsIFrame* result = 0;
+  nsIFrame* placeholder = GetPlaceholderFrame(aFrame);
+  if (placeholder) {
+    nsIFrame* parent = GetParentFrame(placeholder);
+    if (parent) {
+      nsIFrame* child = 0;
+      parent->FirstChild(mPresContext, nsnull, &child);
+      nsFrameList list(child);
+      result = list.GetPrevSiblingFor(placeholder);
+      result = GetRealFrame(result);
+    }
+  }
+
+  return result;
+}
+
+NS_IMETHODIMP
+nsFocusIterator::Next()
+{
+  nsIFrame* result = 0;
+  nsIFrame* parent = getCurrent();
+  if (!parent)
+    parent = getLast();
+
+  if ((result = GetFirstChild(parent)))
+    parent = result;
+
+  result = parent;
+  if (result == getCurrent()) {
+    while (result && !IsRootFrame(result)) {
+      if ((parent = GetNextSibling(result))) {
+        result = parent;
+        break;
+       } else {
+        parent = result;
+        result = GetParentFrame(parent);
+      }
+    }
+
+    if (!result || IsRootFrame(result)) {
+      result = 0;
+      setLast(parent);
+    }
+  }
+
+  setCurrent(result);
+  if (!result)
+    setOffEdge(1);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsFocusIterator::Prev()
+{
+  nsIFrame *result;
+  nsIFrame *parent = getCurrent();
+  if (!parent)
+    parent = getLast();
+  if (parent) {
+    if ((result = GetPrevSibling(parent))) {
+      parent = result;
+      while ((result = GetFirstChild(parent))) {
+        parent = result;
+        while ((result = GetNextSibling(parent)))
+          parent = result;
+      }
+      result = parent;
+    } else if (!(result = GetParentFrame(parent))) {
+      result = 0;
+      setLast(parent);
+    }
+  }
+
+  setCurrent(result);
+  if (!result)
+    setOffEdge(-1);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsFocusIterator::Last()
+{
+  nsIFrame* result;
+  nsIFrame* parent = getCurrent();
+  while (!IsRootFrame(parent) && (result = GetParentFrame(parent)))
+    parent = result;
+
+  while ((result = GetFirstChild(parent))) {
+    parent = result;
+    while ((result = GetNextSibling(parent)))
+      parent = result;
+  }
+
+  setCurrent(parent);
+  if (!parent)
+    setOffEdge(1);
   return NS_OK;
 }
 
