@@ -676,11 +676,7 @@ NS_IMETHODIMP nsMacWindow::Resize(PRInt32 aWidth, PRInt32 aHeight, PRBool aRepai
 PRBool nsMacWindow::OnPaint(nsPaintEvent &event)
 {
 
- 	//if (eWindowType_popup == mWindowType) {
-		//return PR_TRUE;
-	//}else {
-		return PR_FALSE;	// don't dispatch the update event
-	//}
+		return PR_TRUE;	// don't dispatch the update event
 }
 
 //-------------------------------------------------------------------------
