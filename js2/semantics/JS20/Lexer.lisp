@@ -68,24 +68,31 @@
                                  (($default-action $default-action)))
                (:ordinary-reg-exp-char (- :non-terminator (#\\ #\/))
                                        (($default-action $default-action))))
-              (($default-action character nil identity)
+              (($default-action char16 nil identity)
                ($digit-value integer digit-value digit-char-36)))
        
        (rule :$next-input-element
-             ((lex input-element))
+             ((lex (union input-element extended-rational)))
          (production :$next-input-element ($num (:next-input-element num)) $next-input-element-num
            (lex (lex :next-input-element)))
          (production :$next-input-element ($re (:next-input-element re)) $next-input-element-re
            (lex (lex :next-input-element)))
          (production :$next-input-element ($div (:next-input-element div)) $next-input-element-div
-           (lex (lex :next-input-element))))
+           (lex (lex :next-input-element)))
+         (production :$next-input-element ($string-to-number :string-numeric-literal) $next-input-element-string-to-number
+           (lex (lex-number :string-numeric-literal)))
+         (production :$next-input-element ($parse-float :string-decimal-literal) $next-input-element-parse-float
+           (lex (lex-number :string-decimal-literal))))
        
-       (%text nil "The start symbols are: "
+       (%text nil "The lexer" :apostrophe "s start symbols are: "
               (:grammar-symbol (:next-input-element num)) " if the previous input element was a number; "
               (:grammar-symbol (:next-input-element re)) " if the previous input element was not a number and a "
               (:character-literal #\/) " should be interpreted as a regular expression; and "
               (:grammar-symbol (:next-input-element div)) " if the previous input element was not a number and a "
               (:character-literal #\/) " should be interpreted as a division or division-assignment operator.")
+       (%text nil "In addition to the above, the start symbol " (:grammar-symbol :string-numeric-literal)
+              " is used by the syntactic semantics for string-to-number conversions and the start symbol " (:grammar-symbol :string-decimal-literal)
+              " is used by the syntactic semantics for implementing the " (:character-literal "parseFloat") " function.")
        
        (deftag line-break)
        (deftag end-of-input)
@@ -106,7 +113,7 @@
        (deftag range-error)
        (deftype semantic-exception (tag syntax-error range-error))
        
-       (%heading 1 "Unicode Character Classes")
+       (%heading 2 "Unicode Character Classes")
        (%charclass :unicode-character)
        (%charclass :unicode-initial-alphabetic)
        (%charclass :unicode-alphanumeric)
@@ -115,7 +122,7 @@
        (%charclass :a-s-c-i-i-digit)
        (%print-actions)
        
-       (%heading 1 "Comments")
+       (%heading 2 "Comments")
        (production :line-comment (#\/ #\/ :line-comment-characters) line-comment)
        
        (production :line-comment-characters () line-comment-characters-empty)
@@ -143,13 +150,13 @@
                    multi-line-block-comment-characters-rest)
        (%print-actions)
        
-       (%heading 1 "White Space")
+       (%heading 2 "White Space")
        
        (production :white-space () white-space-empty)
        (production :white-space (:white-space :white-space-character) white-space-character)
        (production :white-space (:white-space :single-line-block-comment) white-space-single-line-block-comment)
        
-       (%heading 1 "Line Breaks")
+       (%heading 2 "Line Breaks")
        
        (production :line-break (:line-terminator) line-break-line-terminator)
        (production :line-break (:line-comment :line-terminator) line-break-line-comment)
@@ -158,7 +165,7 @@
        (production :line-breaks (:line-break) line-breaks-first)
        (production :line-breaks (:line-breaks :white-space :line-break) line-breaks-rest)
        
-       (%heading 1 "Input Elements")
+       (%heading 2 "Input Elements")
        
        (grammar-argument :nu re div num)
        (grammar-argument :nu_2 re div)
@@ -197,7 +204,7 @@
        (production :end-of-input (:line-comment $end) end-of-input-line-comment)
        (%print-actions)
        
-       (%heading 1 "Keywords and Identifiers")
+       (%heading 2 "Keywords and Identifiers")
        
        (rule :identifier-or-keyword
              ((lex input-element))
@@ -205,9 +212,9 @@
            (lex (begin
                  (const id string (lex-name :identifier-name))
                  (if (and (set-in id (list-set "abstract" "as" "break" "case" "catch" "class" "const" "continue" "debugger" "default" "delete" "do" "else" "enum"
-                                               "exclude" "export" "extends" "false" "final" "finally" "for" "function" "get" "goto" "if" "implements" "import" "in"
+                                               "exclude" "export" "extends" "false" "finally" "for" "function" "get" "goto" "if" "implements" "import" "in"
                                                "include" "instanceof" "interface" "is" "namespace" "native" "new" "null" "package" "private" "protected" "public" "return"
-                                               "set" "static" "super" "switch" "synchronized" "this" "throw" "throws" "transient" "true" "try" "typeof" "use"
+                                               "set" "super" "switch" "synchronized" "this" "throw" "throws" "transient" "true" "try" "typeof" "use"
                                                "var" "volatile" "while" "with"))
                           (not (contains-escapes :identifier-name)))
                    (return (new keyword id))
@@ -236,13 +243,13 @@
        (production :null-escape (#\\ #\_) null-escape-underscore)
        
        (rule :initial-identifier-character-or-escape
-             ((lex-char character) (contains-escapes boolean))
+             ((lex-char char16) (contains-escapes boolean))
          (production :initial-identifier-character-or-escape (:initial-identifier-character) initial-identifier-character-or-escape-ordinary
            (lex-char ($default-action :initial-identifier-character))
            (contains-escapes false))
          (production :initial-identifier-character-or-escape (#\\ :hex-escape) initial-identifier-character-or-escape-escape
            (lex-char (begin 
-                      (const ch character (lex-char :hex-escape))
+                      (const ch char16 (lex-char :hex-escape))
                       (if (is-initial-identifier-character ch)
                         (return ch)
                         (throw syntax-error))))
@@ -251,13 +258,13 @@
        (%charclass :initial-identifier-character)
        
        (rule :continuing-identifier-character-or-escape
-             ((lex-char character) (contains-escapes boolean))
+             ((lex-char char16) (contains-escapes boolean))
          (production :continuing-identifier-character-or-escape (:continuing-identifier-character) continuing-identifier-character-or-escape-ordinary
            (lex-char ($default-action :continuing-identifier-character))
            (contains-escapes false))
          (production :continuing-identifier-character-or-escape (#\\ :hex-escape) continuing-identifier-character-or-escape-escape
            (lex-char (begin
-                      (const ch character (lex-char :hex-escape))
+                      (const ch char16 (lex-char :hex-escape))
                       (if (is-continuing-identifier-character ch)
                         (return ch)
                         (throw syntax-error))))
@@ -266,18 +273,18 @@
        (%charclass :continuing-identifier-character)
        (%print-actions)
        
-       (define (is-initial-identifier-character (ch character :unused)) boolean
+       (define (is-initial-identifier-character (ch char16 :unused)) boolean
          (bottom (:keyword return) " " (:tag true) " if the nonterminal " (:grammar-symbol :initial-identifier-character) " can expand into " (:local ch)
                  " and " (:tag false) " otherwise."))
        (defprimitive is-initial-identifier-character (lambda (ch) (initial-identifier-character? ch)))
        
-       (define (is-continuing-identifier-character (ch character :unused)) boolean
+       (define (is-continuing-identifier-character (ch char16 :unused)) boolean
          (bottom (:keyword return) " " (:tag true) " if the nonterminal " (:grammar-symbol :continuing-identifier-character) " can expand into " (:local ch)
                  " and " (:tag false) " otherwise."))
        (defprimitive is-continuing-identifier-character (lambda (ch) (continuing-identifier-character? ch)))
        
        
-       (%heading 1 "Punctuators")
+       (%heading 2 "Punctuators")
        
        (rule :punctuator ((lex token))
          (production :punctuator (#\!) punctuator-not (lex (new punctuator "!")))
@@ -338,14 +345,14 @@
          (production :division-punctuator (#\/ #\=) punctuator-divide-equals (lex (new punctuator "/="))))
        (%print-actions)
        
-       (%heading 1 "Numeric Literals")
+       (%heading 2 "Numeric Literals")
        
        (rule :numeric-literal ((lex token))
-         (production :numeric-literal (:decimal-literal) numeric-literal-decimal
+         (production :numeric-literal ((:decimal-literal no-leading-zeros)) numeric-literal-decimal
            (lex (new number-token (real-to-float64 (lex-number :decimal-literal)))))
          (production :numeric-literal (:hex-integer-literal) numeric-literal-hex
            (lex (new number-token (real-to-float64 (lex-number :hex-integer-literal)))))
-         (production :numeric-literal (:decimal-literal :letter-f) numeric-literal-single
+         (production :numeric-literal ((:decimal-literal no-leading-zeros) :letter-f) numeric-literal-single
            (lex (new number-token (real-to-float32 (lex-number :decimal-literal)))))
          (production :numeric-literal (:integer-literal :letter-l) numeric-literal-long
            (lex (begin
@@ -362,7 +369,7 @@
                    (throw range-error))))))
        
        (rule :integer-literal ((lex-number integer))
-         (production :integer-literal (:decimal-integer-literal) integer-literal-decimal
+         (production :integer-literal ((:decimal-integer-literal no-leading-zeros)) integer-literal-decimal
            (lex-number (lex-number :decimal-integer-literal)))
          (production :integer-literal (:hex-integer-literal) integer-literal-hex
            (lex-number (lex-number :hex-integer-literal))))
@@ -371,30 +378,34 @@
        (%charclass :letter-u)
        (%print-actions)
        
-       (rule :decimal-literal ((lex-number rational))
-         (production :decimal-literal (:mantissa) decimal-literal
+       (grammar-argument :zeta no-leading-zeros allow-leading-zeros)
+       
+       (rule (:decimal-literal :zeta) ((lex-number rational))
+         (production (:decimal-literal :zeta) ((:mantissa :zeta)) decimal-literal
            (lex-number (lex-number :mantissa)))
-         (production :decimal-literal (:mantissa :letter-e :signed-integer) decimal-literal-exponent
+         (production (:decimal-literal :zeta) ((:mantissa :zeta) :letter-e :signed-integer) decimal-literal-exponent
            (lex-number (rat* (lex-number :mantissa) (expt 10 (lex-number :signed-integer))))))
        
        (%charclass :letter-e)
        
-       (rule :mantissa ((lex-number rational))
-         (production :mantissa (:decimal-integer-literal) mantissa-integer
+       (rule (:mantissa :zeta) ((lex-number rational))
+         (production (:mantissa :zeta) ((:decimal-integer-literal :zeta)) mantissa-integer
            (lex-number (lex-number :decimal-integer-literal)))
-         (production :mantissa (:decimal-integer-literal #\.) mantissa-integer-dot
+         (production (:mantissa :zeta) ((:decimal-integer-literal :zeta) #\.) mantissa-integer-dot
            (lex-number (lex-number :decimal-integer-literal)))
-         (production :mantissa (:decimal-integer-literal #\. :fraction) mantissa-integer-dot-fraction
+         (production (:mantissa :zeta) ((:decimal-integer-literal :zeta) #\. :fraction) mantissa-integer-dot-fraction
            (lex-number (rat+ (lex-number :decimal-integer-literal)
                              (lex-number :fraction))))
-         (production :mantissa (#\. :fraction) mantissa-dot-fraction
+         (production (:mantissa :zeta) (#\. :fraction) mantissa-dot-fraction
            (lex-number (lex-number :fraction))))
        
-       (rule :decimal-integer-literal ((lex-number integer))
-         (production :decimal-integer-literal (#\0) decimal-integer-literal-0
+       (rule (:decimal-integer-literal :zeta) ((lex-number integer))
+         (production (:decimal-integer-literal no-leading-zeros) (#\0) decimal-integer-literal-0
            (lex-number 0))
-         (production :decimal-integer-literal (:non-zero-decimal-digits) decimal-integer-literal-nonzero
-           (lex-number (lex-number :non-zero-decimal-digits))))
+         (production (:decimal-integer-literal no-leading-zeros) (:non-zero-decimal-digits) decimal-integer-literal-nonzero
+           (lex-number (lex-number :non-zero-decimal-digits)))
+         (production (:decimal-integer-literal allow-leading-zeros) (:decimal-digits) decimal-integer-literal-decimal-digits
+           (lex-number (lex-number :decimal-digits))))
        
        (rule :non-zero-decimal-digits ((lex-number integer))
          (production :non-zero-decimal-digits (:non-zero-digit) non-zero-decimal-digits-first
@@ -411,12 +422,16 @@
        (%print-actions)
        
        (rule :signed-integer ((lex-number integer))
-         (production :signed-integer (:decimal-digits) signed-integer-no-sign
-           (lex-number (lex-number :decimal-digits)))
-         (production :signed-integer (#\+ :decimal-digits) signed-integer-plus
-           (lex-number (lex-number :decimal-digits)))
-         (production :signed-integer (#\- :decimal-digits) signed-integer-minus
-           (lex-number (neg (lex-number :decimal-digits)))))
+         (production :signed-integer (:optional-sign :decimal-digits) signed-integer-sign-and-digits
+           (lex-number (* (lex-sign :optional-sign) (lex-number :decimal-digits)))))
+       
+       (rule :optional-sign ((lex-sign (integer-list -1 1)))
+         (production :optional-sign () optional-sign-none
+           (lex-sign 1))
+         (production :optional-sign (#\+) optional-sign-plus
+           (lex-sign 1))
+         (production :optional-sign (#\-) optional-sign-minus
+           (lex-sign -1)))
        (%print-actions)
        
        (rule :decimal-digits
@@ -438,7 +453,7 @@
        (%charclass :hex-digit)
        (%print-actions)
        
-       (%heading 1 "String Literals")
+       (%heading 2 "String Literals")
        
        (grammar-argument :theta single double)
        (rule :string-literal ((lex token))
@@ -457,7 +472,7 @@
          (production (:string-chars :theta) ((:string-chars :theta) :null-escape) string-chars-null-escape
            (lex-string (lex-string :string-chars))))
        
-       (rule (:string-char :theta) ((lex-char character))
+       (rule (:string-char :theta) ((lex-char char16))
          (production (:string-char :theta) ((:literal-string-char :theta)) string-char-literal
            (lex-char ($default-action :literal-string-char)))
          (production (:string-char :theta) (#\\ :string-escape) string-char-escape
@@ -467,7 +482,7 @@
        (%charclass (:literal-string-char double))
        (%print-actions)
        
-       (rule :string-escape ((lex-char character))
+       (rule :string-escape ((lex-char char16))
          (production :string-escape (:control-escape) string-escape-control
            (lex-char (lex-char :control-escape)))
          (production :string-escape (:zero-escape) string-escape-zero
@@ -479,7 +494,7 @@
        (%charclass :identity-escape)
        (%print-actions)
        
-       (rule :control-escape ((lex-char character))
+       (rule :control-escape ((lex-char char16))
          (production :control-escape (#\b) control-escape-backspace (lex-char #?0008))
          (production :control-escape (#\f) control-escape-form-feed (lex-char #?000C))
          (production :control-escape (#\n) control-escape-new-line (lex-char #?000A))
@@ -488,24 +503,24 @@
          (production :control-escape (#\v) control-escape-vertical-tab (lex-char #?000B)))
        (%print-actions)
        
-       (rule :zero-escape ((lex-char character))
+       (rule :zero-escape ((lex-char char16))
          (production :zero-escape (#\0 (:- :a-s-c-i-i-digit)) zero-escape-zero
            (lex-char #?0000)))
        (%print-actions)
        
-       (rule :hex-escape ((lex-char character))
+       (rule :hex-escape ((lex-char char16))
          (production :hex-escape (#\x :hex-digit :hex-digit) hex-escape-2
-           (lex-char (code-to-character (+ (* 16 (hex-value :hex-digit 1))
+           (lex-char (integer-to-char16 (+ (* 16 (hex-value :hex-digit 1))
                                            (hex-value :hex-digit 2)))))
          (production :hex-escape (#\u :hex-digit :hex-digit :hex-digit :hex-digit) hex-escape-4
-           (lex-char (code-to-character (+ (+ (+ (* 4096 (hex-value :hex-digit 1))
+           (lex-char (integer-to-char16 (+ (+ (+ (* 4096 (hex-value :hex-digit 1))
                                                  (* 256 (hex-value :hex-digit 2)))
                                               (* 16 (hex-value :hex-digit 3)))
                                            (hex-value :hex-digit 4))))))
        
        (%print-actions)
        
-       (%heading 1 "Regular Expression Literals")
+       (%heading 2 "Regular Expression Literals")
        
        (rule :reg-exp-literal ((lex token))
          (production :reg-exp-literal (:reg-exp-body :reg-exp-flags) reg-exp-literal
@@ -537,12 +552,66 @@
            (lex-string (vector #\\ ($default-action :non-terminator)))))
        
        (%charclass :ordinary-reg-exp-char)
+       (%print-actions)
+       
+       (%heading 1 "String to Number Conversion")
+       
+       (deftag +zero)
+       (deftag -zero)
+       (deftag +infinity)
+       (deftag -infinity)
+       (deftag nan)
+       (deftype extended-rational (union rational (tag +zero -zero +infinity -infinity nan)))
+       
+       (%heading 2 "ToGeneralNumber Conversion")
+       
+       (rule :string-numeric-literal ((lex-number extended-rational))
+         (production :string-numeric-literal (:string-white-space) string-numeric-literal-white-space
+           (lex-number +zero))
+         (production :string-numeric-literal (:string-white-space :signed-decimal-literal :string-white-space) string-numeric-literal-signed-decimal-literal
+           (lex-number (lex-number :signed-decimal-literal)))
+         (production :string-numeric-literal (:string-white-space :optional-sign :hex-integer-literal :string-white-space) string-numeric-literal-hex-integer-literal
+           (lex-number (combine-with-sign (lex-sign :optional-sign) (lex-number :hex-integer-literal)))))
+       
+       (rule :signed-decimal-literal ((lex-number extended-rational))
+         (production :signed-decimal-literal (:optional-sign (:decimal-literal allow-leading-zeros)) signed-decimal-literal-decimal-literal
+           (lex-number (combine-with-sign (lex-sign :optional-sign) (lex-number :decimal-literal))))
+         (production :signed-decimal-literal (:optional-sign #\I #\n #\f #\i #\n #\i #\t #\y) signed-decimal-literal-infinity
+           (lex-number (if (> (lex-sign :optional-sign) 0) +infinity -infinity)))
+         (production :signed-decimal-literal (#\N #\a #\N) signed-decimal-literal-nan
+           (lex-number nan)))
+       (%print-actions)
+       
+       (define (combine-with-sign (sign (integer-list -1 1)) (q rational)) extended-rational
+         (cond
+          ((/= q 0 rational) (return (rat* sign q)))
+          ((> sign 0) (return +zero))
+          (nil (return -zero))))
+       
+       (%heading 2 "parseFloat Conversion")
+       
+       (rule :string-decimal-literal ((lex-number extended-rational))
+         (production :string-decimal-literal (:string-white-space :signed-decimal-literal) string-decimal-literal-signed-decimal-literal
+           (lex-number (lex-number :signed-decimal-literal))))
+       (%print-actions)
+       
+       (%heading 2 "White Space")
+       
+       (production :string-white-space () string-white-space-empty)
+       (production :string-white-space (:string-white-space :white-space-character) string-white-space-character)
+       (production :string-white-space (:string-white-space :line-terminator) string-white-space-line-terminator)
        )))
   
   (defparameter *ll* (world-lexer *lw* 'code-lexer))
   (defparameter *lg* (lexer-grammar *ll*))
   (set-up-lexer-metagrammar *ll*)
   (defparameter *lm* (lexer-metagrammar *ll*)))
+
+
+(defun string-to-extended-rational (string)
+  (handler-case
+    (first (action-parse *lg* (lexer-classifier *ll*) (cons '$string-to-number (coerce string 'list))))
+    (syntax-error () :syntax-error)))
 
 
 (defun dump-lexer ()
