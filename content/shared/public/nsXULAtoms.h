@@ -83,6 +83,15 @@ public:
 
   static nsIAtom* widget;
   static nsIAtom* window;
+
+  static nsIAtom* curpos; 
+  static nsIAtom* maxpos; 
+  static nsIAtom* increment; 
+  static nsIAtom* pageincrement; 
+  static nsIAtom* scrollbarbutton; 
+  static nsIAtom* thumb; 
+
+  static nsIAtom* toggled; 
 };
 
 #endif /* nsXULAtoms_h___ */

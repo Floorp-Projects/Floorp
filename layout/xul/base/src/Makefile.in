@@ -49,6 +49,7 @@ CPPSRCS =				\
 	nsTriStateCheckboxFrame.cpp \
 	nsSpinnerFrame.cpp \
 	nsScrollbarFrame.cpp \
+	nsScrollbarButtonFrame.cpp \
 	nsSliderFrame.cpp \
 	nsColorPickerFrame.cpp \
 	nsFontPickerFrame.cpp \

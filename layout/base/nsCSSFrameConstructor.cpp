@@ -63,17 +63,15 @@
 
 #ifdef INCLUDE_XUL
 #include "nsXULAtoms.h"
-#include "nsTriStateCheckboxFrame.h"
-#include "nsSliderFrame.h"
-#include "nsScrollbarFrame.h"
-#include "nsSpinnerFrame.h"
-#include "nsColorPickerFrame.h"
-#include "nsFontPickerFrame.h"
 #include "nsTreeFrame.h"
 #include "nsToolboxFrame.h"
 #include "nsToolbarFrame.h"
 #include "nsTreeIndentationFrame.h"
 #include "nsTreeCellFrame.h"
+#include "nsIDOMElement.h"
+#include "nsIDOMDocument.h"
+#include "nsDocument.h"
+
 
 nsresult
 NS_NewTabFrame ( nsIFrame** aNewFrame );
@@ -89,6 +87,30 @@ NS_NewTitledButtonFrame ( nsIFrame** aNewFrame );
 
 nsresult
 NS_NewBoxFrame ( nsIFrame** aNewFrame );
+
+nsresult
+NS_NewSliderFrame ( nsIFrame** aNewFrame );
+
+nsresult
+NS_NewScrollbarFrame ( nsIFrame** aNewFrame );
+
+nsresult
+NS_NewTriStateCheckboxFrame ( nsIFrame** aNewFrame );
+
+nsresult
+NS_NewSpinnerFrame ( nsIFrame** aNewFrame );
+
+nsresult
+NS_NewColorPickerFrame ( nsIFrame** aNewFrame );
+
+nsresult
+NS_NewFontPickerFrame ( nsIFrame** aNewFrame );
+
+nsresult
+NS_NewScrollbarButtonFrame ( nsIFrame** aNewFrame );
+
+nsresult
+NS_NewScrollbarFrame ( nsIFrame** aNewFrame );
 
 #endif
 
@@ -1701,6 +1723,8 @@ nsCSSFrameConstructor::TableIsValidCellContent(nsIPresContext* aPresContext,
         (nsXULAtoms::slider == tag.get())  ||
         (nsXULAtoms::spinner == tag.get())  ||
         (nsXULAtoms::scrollbar == tag.get())  ||
+        (nsXULAtoms::scrollbarbutton == tag.get())  ||
+        (nsXULAtoms::thumb == tag.get())  ||
         (nsXULAtoms::colorpicker == tag.get())  ||
         (nsXULAtoms::fontpicker == tag.get())  ||
         (nsXULAtoms::radio           == tag.get())  ||
@@ -2675,12 +2699,8 @@ nsCSSFrameConstructor::ConstructXULFrame(nsIPresContext*          aPresContext,
       rv = NS_NewButtonControlFrame(&newFrame);
     else if (aTag == nsXULAtoms::checkbox)
       rv = NS_NewTriStateCheckboxFrame(&newFrame);
-    else if (aTag == nsXULAtoms::slider)
-      rv = NS_NewSliderFrame(&newFrame);
     else if (aTag == nsXULAtoms::spinner)
       rv = NS_NewSpinnerFrame(&newFrame);
-    else if (aTag == nsXULAtoms::scrollbar)
-      rv = NS_NewScrollbarFrame(&newFrame);
     else if (aTag == nsXULAtoms::colorpicker)
       rv = NS_NewColorPickerFrame(&newFrame);
     else if (aTag == nsXULAtoms::fontpicker)
@@ -2859,6 +2879,38 @@ nsCSSFrameConstructor::ConstructXULFrame(nsIPresContext*          aPresContext,
     }
     // End of TAB CONSTRUCTION logic
 
+    // SLIDER CONSTRUCTION
+    else if (aTag == nsXULAtoms::slider) {
+      processChildren = PR_TRUE;
+      isReplaced = PR_TRUE;
+      rv = NS_NewSliderFrame(&newFrame);
+    }
+    // End of SLIDER CONSTRUCTION logic
+
+    // SCROLLBAR CONSTRUCTION
+    else if (aTag == nsXULAtoms::scrollbar) {
+      processChildren = PR_TRUE;
+      isReplaced = PR_TRUE;
+      rv = NS_NewScrollbarFrame(&newFrame);
+
+    }
+    // End of SCROLLBAR CONSTRUCTION logic
+
+    // SCROLLBUTTON CONSTRUCTION
+    else if (aTag == nsXULAtoms::scrollbarbutton) {
+      processChildren = PR_TRUE;
+      isReplaced = PR_TRUE;
+      rv = NS_NewScrollbarButtonFrame(&newFrame);
+    }
+    // End of SCROLLBUTTON CONSTRUCTION logic
+
+    // THUMB CONSTRUCTION
+    else if (aTag == nsXULAtoms::thumb) {
+      processChildren = PR_TRUE;
+      isReplaced = PR_TRUE;
+      rv = NS_NewTitledButtonFrame(&newFrame);
+    }
+    // End of THUMB CONSTRUCTION logic
   }
 
   // If we succeeded in creating a frame then initialize it, process its
@@ -2891,6 +2943,9 @@ nsCSSFrameConstructor::ConstructXULFrame(nsIPresContext*          aPresContext,
                            childItems);
     }
 
+    // if any anonymous nodes need to be created create them.
+    CreateAnonymousXULContent(aPresContext, aTag, aState, aContent, newFrame,
+                              childItems);
 
     // Set the frame's initial child list
     newFrame->SetInitialChildList(*aPresContext, nsnull, childItems.childList);
@@ -2916,6 +2971,101 @@ nsCSSFrameConstructor::ConstructXULFrame(nsIPresContext*          aPresContext,
 
   return rv;
 }
+
+// after the node has been constructed create any
+// anonymous content a node needs.
+nsresult
+nsCSSFrameConstructor::CreateAnonymousXULContent(nsIPresContext* aPresContext,
+                                       nsIAtom*                 aTag,
+                                       nsFrameConstructorState& aState,
+                                       nsIContent*              aContent,
+                                       nsIFrame*                aNewFrame,
+                                       nsFrameItems&            aChildItems)
+{
+    // if we are creating a scrollbar
+    if (aTag == nsXULAtoms::scrollbar) {
+
+      // if we have not children create anonymous ones
+      PRInt32   count;
+      aContent->ChildCount(count);
+
+      if (count == 0)
+      {
+        // get the document
+        nsCOMPtr<nsIDocument> idocument;
+        aContent->GetDocument(*getter_AddRefs(idocument));
+
+        nsCOMPtr<nsIDOMDocument> document(do_QueryInterface(idocument));
+
+        // create a decrement button
+        nsCOMPtr<nsIDOMElement> node;
+        document->CreateElement("scrollbarbutton",getter_AddRefs(node));
+        nsCOMPtr<nsIContent> content;
+        //content->SetNameSpaceID(nsXULAtoms::nameSpaceID);
+        
+        content = do_QueryInterface(node);
+        content->SetAttribute(kNameSpaceID_None, nsHTMLAtoms::kClass, "decrement", PR_TRUE);
+        content->SetParent(aContent);
+
+        ConstructFrame(aPresContext, aState, content, aNewFrame, PR_FALSE, aChildItems);
+
+        // a slider
+        document->CreateElement("slider",getter_AddRefs(node));
+        content = do_QueryInterface(node);
+        content->SetAttribute(kNameSpaceID_None, nsXULAtoms::flex, "100%", PR_TRUE);
+        content->SetParent(aContent);
+
+        ConstructFrame(aPresContext, aState, content, aNewFrame, PR_FALSE, aChildItems);
+
+        // make sure the slider's thumb is flexible.
+        nsIFrame* thumb;
+        aChildItems.lastChild->FirstChild(nsnull,&thumb);
+        nsCOMPtr<nsIContent> thumbContent;
+        thumb->GetContent(getter_AddRefs(thumbContent));
+
+        // make sure we got it
+        nsIAtom* tag = nsnull;
+        thumbContent->GetTag(tag);
+        NS_ASSERTION(tag == nsXULAtoms::thumb, "Could not get slider while creating scrollbar!");
+
+        thumbContent->SetAttribute(kNameSpaceID_None, nsXULAtoms::flex, "100%", PR_TRUE);
+
+
+        // and increment button
+        document->CreateElement("scrollbarbutton",getter_AddRefs(node));
+        content = do_QueryInterface(node);
+        content->SetAttribute(kNameSpaceID_None, nsHTMLAtoms::kClass, "increment", PR_TRUE);
+        content->SetParent(aContent);
+
+        ConstructFrame(aPresContext, aState, content, aNewFrame, PR_FALSE, aChildItems);
+      }
+    } else if (aTag == nsXULAtoms::slider) {
+
+      // if we have not children create anonymous ones
+      PRInt32   count;
+      aContent->ChildCount(count);
+
+      if (count == 0)
+      {
+        // get the document
+        nsCOMPtr<nsIDocument> idocument;
+        aContent->GetDocument(*getter_AddRefs(idocument));
+
+        nsCOMPtr<nsIDOMDocument> document(do_QueryInterface(idocument));
+
+        // create a thumb
+        nsCOMPtr<nsIDOMElement> node;
+        document->CreateElement("thumb",getter_AddRefs(node));
+        nsCOMPtr<nsIContent> content;
+        content = do_QueryInterface(node);
+        
+        ConstructFrame(aPresContext, aState, content, aNewFrame, PR_FALSE, aChildItems);
+      }
+    }
+
+    return NS_OK;
+}
+
 
 #endif
 

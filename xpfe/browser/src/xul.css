@@ -369,6 +369,20 @@ titledbutton:active {
   padding-bottom: 1px;
 }
 
+titledbutton[toggled="1"] {
+  border: 1px inset;
+
+  padding-left: 3px;
+  padding-right: 1px;
+  padding-top: 3px;
+  padding-bottom: 1px;
+}
+
+titledbutton[toggled="2"] {
+   background-color: lightgray;
+   border: 1px solid gray;
+}
+
 titledbutton[default] {
 	//border-color: black;
 	font-weight: bold;
@@ -521,6 +535,15 @@ toolbar titledbutton[disabled]:hover {
 toolbar titledbutton[disabled]:active {
 	border: 1px solid transparent;
 	padding: 2px;
+}
+
+toolbar titledbutton[toggled="1"] {
+  border: 1px inset white;
+
+  padding-left: 3px;
+  padding-right: 1px;
+  padding-top: 3px;
+  padding-bottom: 1px;
 }
 
 /* tree related stuff */
@@ -808,4 +831,53 @@ box[debug] progressmeter {
         display:inline;
         border: 1px yellow;
         color : #9999CC;         
+}
+
+
+thumb {
+   background-color: rgb(206, 207, 206);
+   border: 2px outset rgb(156, 154, 156);
+   list-style-image: url(resource:/res/toolbar/TB_Stop.gif)
+}
+
+thumb:hover {
+   background-color: rgb(220, 210, 210);
+}
+
+thumb:active {
+   background-color: rgb(220, 210, 210);
+}
+
+slider {
+   border: 1px solid black;
+   background-image: url(bg.jpg);
+}
+
+scrollbarbutton {
+  display: inline;
+  vertical-align: bottom;
+  cursor: default;
+
+  border: 2px outset rgb(156, 154, 156);
+  background-color: rgb(206, 207, 206);
+  color:black; 
+
+  padding: 1px;
+}
+
+scrollbarbutton:active {
+  border-style: inset;
+
+  padding-left: 2px;
+  padding-right: 0px;
+  padding-top: 2px;
+  padding-bottom: 0px;
+}
+
+scrollbarbutton.decrement {
+   list-style-image: url(resource:/res/toolbar/TB_Back.gif)
+}
+
+scrollbarbutton.increment {
+   list-style-image: url(resource:/res/toolbar/TB_Forward.gif)
 }

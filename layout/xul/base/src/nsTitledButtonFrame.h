@@ -85,6 +85,15 @@ public:
  
 protected:
 
+  enum CheckState { eUnset, eOff, eOn, eMixed } ;
+
+  CheckState GetCurrentCheckState();
+  void SetCurrentCheckState(CheckState aState);
+  
+
+  virtual void MouseClicked(const nsIPresContext & aPresContext);
+ 
+
   NS_IMETHOD  PaintTitle(nsIPresContext& aPresContext,
                          nsIRenderingContext& aRenderingContext,
                          const nsRect& aDirtyRect,
@@ -139,6 +148,12 @@ protected:
 
 private:
 
+  // tri state methods
+  void CheckStateToString ( CheckState inState, nsString& outStateAsString ) ;
+  CheckState StringToCheckState ( const nsString & aStateAsString ) ;
+
+  PRBool mHasOnceBeenInMixedState;
+ 
   TruncationStyle mTruncationType;
   PRIntn mAlign;
   nsString mTitle;
@@ -151,12 +166,12 @@ private:
   nsRect mTitleRect;
   PRBool mNeedsLayout;
   nscoord mSpacing;
-  nsSize mMinSize;
+  //nsSize mMinSize;
   nsButtonFrameRenderer mRenderer;
   PRBool mHasImage;
 
-  nsIPopUpMenu * mPopUpMenu;
-  PRBool         mMenuIsPoppedUp;
+ // nsIPopUpMenu * mPopUpMenu;
+ // PRBool         mMenuIsPoppedUp;
  
 }; // class nsTitledButtonFrame
 
