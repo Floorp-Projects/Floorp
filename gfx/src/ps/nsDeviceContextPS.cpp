@@ -207,6 +207,18 @@ NS_IMETHODIMP nsDeviceContextPS::CreateRenderingContext(nsIRenderingContext *&aC
   return rv;
 }
 
+NS_IMETHODIMP nsDeviceContextPS::CreateRenderingContextInstance(nsIRenderingContext *&aContext)
+{
+  nsCOMPtr<nsIRenderingContext> renderingContext = new nsRenderingContextPS();
+  if (!renderingContext)
+    return NS_ERROR_OUT_OF_MEMORY;
+         
+  aContext = renderingContext;
+  NS_ADDREF(aContext);
+  
+  return NS_OK;
+}
+
 /** ---------------------------------------------------
  *  See documentation in nsIDeviceContext.h
  *	@update 12/21/98 dwc

@@ -484,10 +484,10 @@ NS_IMETHODIMP nsBaseWidget::HideWindowChrome(PRBool aShouldHide)
 //-------------------------------------------------------------------------
 nsIRenderingContext* nsBaseWidget::GetRenderingContext()
 {
-  static NS_DEFINE_CID(kRenderingContextCID, NS_RENDERING_CONTEXT_CID);
-  nsresult rv;
+  nsresult                      rv;
+  nsCOMPtr<nsIRenderingContext> renderingCtx;
 
-  nsCOMPtr<nsIRenderingContext> renderingCtx = do_CreateInstance(kRenderingContextCID, &rv);
+  rv = mContext->CreateRenderingContextInstance(*getter_AddRefs(renderingCtx));
   if (NS_SUCCEEDED(rv)) {
     rv = renderingCtx->Init(mContext, this);
     if (NS_SUCCEEDED(rv)) {
@@ -505,7 +505,7 @@ nsIRenderingContext* nsBaseWidget::GetRenderingContext()
     NS_WARNING("GetRenderingContext: Cannot create RenderingContext.");
   }  
   
-  return nsnull;  
+  return nsnull;
 }
 
 //-------------------------------------------------------------------------

@@ -93,8 +93,8 @@ public:
   NS_IMETHOD  CreateRenderingContext(nsIView *aView, nsIRenderingContext *&aContext);
   NS_IMETHOD  CreateRenderingContext(nsIWidget *aWidget, nsIRenderingContext *&aContext);
   NS_IMETHOD  CreateRenderingContext(nsIRenderingContext *&aContext){return NS_ERROR_NOT_IMPLEMENTED;}
-
-  NS_IMETHOD  InitRenderingContext(nsIRenderingContext *aContext, nsIWidget *aWindow);
+  NS_IMETHOD  CreateRenderingContext(nsDrawingSurface aSurface, nsIRenderingContext *&aContext);
+  NS_IMETHOD  CreateRenderingContextInstance(nsIRenderingContext *&aContext);
 
   NS_IMETHOD  GetDevUnitsToTwips(float &aDevUnitsToTwips) const;
   NS_IMETHOD  GetTwipsToDevUnits(float &aTwipsToDevUnits) const;
@@ -142,6 +142,11 @@ public:
 #else 
 
 #endif
+
+private:
+  /* Helper methods for |CreateRenderingContext|&co. */
+  nsresult InitRenderingContext(nsIRenderingContext *aContext, nsIWidget *aWindow);
+  nsresult InitRenderingContext(nsIRenderingContext *aContext, nsDrawingSurface aSurface);
 
 protected:
   virtual ~DeviceContextImpl();

@@ -216,6 +216,14 @@ public:
   NS_IMETHOD  CreateRenderingContext(nsIView *aView, nsIRenderingContext *&aContext) = 0;
 
   /**
+   * Create a rendering context and initialize it from an nsDrawingSurface
+   * @param nsDrawingSurface widget to initialize context from
+   * @param aContext out parameter for new rendering context
+   * @return error status
+   */
+  NS_IMETHOD  CreateRenderingContext(nsDrawingSurface aSurface, nsIRenderingContext *&aContext) = 0;
+
+  /**
    * Create a rendering context and initialize it from an nsIWidget
    * @param aWidget widget to initialize context from
    * @param aContext out parameter for new rendering context
@@ -232,14 +240,11 @@ public:
   NS_IMETHOD  CreateRenderingContext(nsIRenderingContext *&aContext) = 0;
 
   /**
-   * Initialize a rendering context from a widget. This method is only for use
-   * when a rendering context was obtained directly from a factory rather than
-   * through one of the Create* methods above.
-   * @param aContext rendering context to initialize
-   * @param aWindow widget to initialize context from
+   * Create an uninitalised rendering context.
+   * @param aContext out parameter for new rendering context
    * @return error status
    */
-  NS_IMETHOD  InitRenderingContext(nsIRenderingContext *aContext, nsIWidget *aWindow) = 0;
+  NS_IMETHOD  CreateRenderingContextInstance(nsIRenderingContext *&aContext) = 0;
 
   /**
    * Query the device to see if it supports native widgets. If not, then
