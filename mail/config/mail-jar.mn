@@ -42,7 +42,6 @@ content/communicator/contentAreaClick.js,             comm/content/communicator/
 content/communicator/contentAreaContextOverlay.xul,   comm/content/communicator/contentAreaContextOverlay.xul 
 content/communicator/nsContextMenu.js,                comm/content/communicator/nsContextMenu.js
 content/communicator/printing.js,                     comm/content/communicator/printing.js
-content/communicator/XPCNativeWrapper.js,             comm/content/communicator/XPCNativeWrapper.js
 
 # from xpfe\components jar.mn
 content/communicator/alerts,                          comm/content/communicator/alerts
@@ -134,6 +133,7 @@ content/global/findUtils.js,                          toolkit/content/global/fin
 content/global/printUtils.js,                         toolkit/content/global/printUtils.js
 content/global/editMenuOverlay.xul,                   toolkit/content/global/editMenuOverlay.xul
 content/global/editMenuOverlay.js,                    toolkit/content/global/editMenuOverlay.js
+content/global/XPCNativeWrapper.js,                   toolkit/content/global/XPCNativeWrapper.js
 
 #from mozapps
 content/mozapps/downloads,                            toolkit/content/mozapps/downloads

@@ -30,7 +30,6 @@ comm.jar:
     content/communicator/popupManager.js                 (resources/content/popupManager.js)
     content/communicator/popupManager.xul                (resources/content/popupManager.xul)
     content/communicator/aboutPopups.xul                 (resources/content/aboutPopups.xul)
-    content/communicator/XPCNativeWrapper.js             (resources/content/XPCNativeWrapper.js) 
 
 en-US.jar:
 *   locale/en-US/communicator/contents.rdf                      (resources/locale/en-US/contents.rdf)

@@ -74,6 +74,7 @@ toolkit.jar:
         content/global/buildconfig.html             (buildconfig.html)
         content/global/fontpackage.xul              (resources/content/fontpackage.xul)
         content/global/fontpackage.js               (resources/content/fontpackage.js)
+        content/global/XPCNativeWrapper.js          (resources/content/XPCNativeWrapper.js) 
 
 en-US.jar:
 *   locale/en-US/global/contents.rdf                (resources/locale/en-US/contents.rdf) 
