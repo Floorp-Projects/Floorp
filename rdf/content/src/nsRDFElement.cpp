@@ -2153,14 +2153,14 @@ RDFElementImpl::HandleDOMEvent(nsIPresContext& aPresContext,
         nsString tagName;
         GetTagName(tagName);
         if (tagName == "menu" || tagName == "menuitem" ||
-            tagName == "menubar") {
+            tagName == "menubar" || tagName == "key" || tagName == "keyset") {
             nsCOMPtr<nsIEventListenerManager> listenerManager;
             if (NS_FAILED(ret = GetListenerManager(getter_AddRefs(listenerManager)))) {
-                NS_ERROR("Unable to instantiate a listener manager on a menu event.");
+                NS_ERROR("Unable to instantiate a listener manager on a menu/key event.");
                 return ret;
             }
             if (NS_FAILED(ret = listenerManager->CreateEvent(aPresContext, aEvent, aDOMEvent))) {
-                NS_ERROR("Menu event will fail without the ability to create the event early.");
+                NS_ERROR("Menu/key event will fail without the ability to create the event early.");
                 return ret;
             }
             domEvent->SetTarget(this);
