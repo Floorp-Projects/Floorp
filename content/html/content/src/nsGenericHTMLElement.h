@@ -295,6 +295,9 @@ public:
   static PRBool AlignValueToString(const nsHTMLValue& aValue,
                                    nsAWritableString& aResult);
 
+  static PRBool VAlignValueToString(const nsHTMLValue& aValue,
+                                    nsAWritableString& aResult);
+
   static PRBool ParseImageAttribute(nsIAtom* aAttribute,
                                     const nsAReadableString& aString,
                                     nsHTMLValue& aResult);
