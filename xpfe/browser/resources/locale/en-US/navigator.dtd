@@ -177,7 +177,7 @@
 <!ENTITY debugQASmoke.label "Smoke Tests">
 <!ENTITY debugQAKnowBug.label "Known Bugs">
 <!ENTITY debugVerCmd.label "Verification">
-<!ENTITY ver1Cmd.label "&brandShortName;">
+<!ENTITY ver1Cmd.label "Mozilla">
 <!ENTITY ver2Cmd.label "Yahoo">
 <!ENTITY ver3Cmd.label "Netscape">
 <!ENTITY ver4Cmd.label "Excite">
