@@ -884,7 +884,7 @@ NS_IMETHODIMP QuotingOutputStreamListener::OnStopRequest(nsIChannel * /* aChanne
 
     PRBool    compHTML = PR_FALSE;
     mComposeObj->GetComposeHTML(&compHTML);
-    mComposeObj->mTempComposeFileSpec = nsMsgCreateTempFileSpec(compHTML ? (char *)"nscomp.html" : (char *)"nscomp.txt");
+    mComposeObj->mTempComposeFileSpec = nsMsgCreateTempFileSpec((char *)"nscomp.html");
     if (!mComposeObj->mTempComposeFileSpec)
     {
       rv = NS_MSG_ERROR_WRITING_FILE;
@@ -1441,7 +1441,7 @@ nsMsgCompose::ProcessSignature(nsOutputFileStream *aAppendFileStream,
       if (m_composeHTML)
         urlStr = "chrome://messengercompose/content/defaultHtmlBody.html";
       else
-        urlStr = "chrome://messengercompose/content/defaultTextBody.txt";
+        urlStr = "chrome://messengercompose/content/defaultTextBody.html";
     }
     else
     {
@@ -1478,7 +1478,7 @@ nsMsgCompose::ProcessSignature(nsOutputFileStream *aAppendFileStream,
     if (m_composeHTML)
       urlStr = "chrome://messengercompose/content/defaultHtmlBody.html";
     else
-      urlStr = "chrome://messengercompose/content/defaultTextBody.txt";
+      urlStr = "chrome://messengercompose/content/defaultTextBody.html";
   }
 
   // This is the "load signature alone" operation!
@@ -1492,7 +1492,7 @@ nsMsgCompose::ProcessSignature(nsOutputFileStream *aAppendFileStream,
     }
     else   // Have to write data to a temp file then load the URL...
     {
-      mSigFileSpec = nsMsgCreateTempFileSpec(m_composeHTML ? (char *)"sig.html" : (char *)"sig.txt");
+      mSigFileSpec = nsMsgCreateTempFileSpec((char *)"sig.html");
       if (!mSigFileSpec)
         return NS_ERROR_FAILURE;
 
@@ -1559,7 +1559,7 @@ nsMsgCompose::BuildBodyMessage()
   // Since we have a body in the comp fields, we need to create a 
   // body of this old body...
   //  
-  mTempComposeFileSpec = nsMsgCreateTempFileSpec(m_composeHTML ? (char *)"nscomp.html" : (char *)"nscomp.txt");
+  mTempComposeFileSpec = nsMsgCreateTempFileSpec((char *)"nscomp.html");
   if (!mTempComposeFileSpec)
     return NS_MSG_ERROR_WRITING_FILE;
   
