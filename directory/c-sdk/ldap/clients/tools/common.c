@@ -51,6 +51,10 @@
 #include <stdlib.h>
 #include <time.h>	/* for time() and ctime() */
 
+#if defined(HPUX)
+#include <sys/termios.h>  /* for tcgetattr and tcsetattr */
+#endif /* HPUX */
+
 static LDAP_REBINDPROC_CALLBACK get_rebind_credentials;
 static void print_library_info( const LDAPAPIInfo *aip, FILE *fp );
 static int wait4result( LDAP *ld, int msgid, struct berval **servercredp,
@@ -690,8 +694,46 @@ ldaptool_process_args( int argc, char **argv, char *extra_opts,
 	/* 256 characters on Solaris */
 	passwd = getpassphrase(password_string);
 #else
+#if defined(HPUX)
+	/* HP-UX has deprecated their password asking function, so we have
+	 * to resort to doing it the hard way . . . */
+    char pbuf[257];
+    struct termios termstat;
+    tcflag_t savestat;
+
+    fputs(password_string, stdout);
+    fflush(stdout);
+
+    if(tcgetattr(fileno(stdin), &termstat) < 0) {
+        perror( "tcgetattr" );
+        exit( LDAP_LOCAL_ERROR );
+    }
+    savestat = termstat.c_lflag;
+    termstat.c_lflag &= ~(ECHO | ECHOE | ECHOK);
+    termstat.c_lflag |= (ICANON | ECHONL);
+    if(tcsetattr(fileno(stdin), TCSANOW, &termstat) < 0) {
+        perror( "tcgetattr" );
+        exit( LDAP_LOCAL_ERROR );
+    }
+    if (fgets(pbuf,256,stdin) == NULL) {
+        passwd = NULL;
+    } else {
+        char *tmp;
+        passwd = NULL;
+        tmp = strchr(pbuf,'\n');
+        if (tmp)
+            *tmp = '\0';
+        passwd = strdup(pbuf);
+    }
+    termstat.c_lflag = savestat;
+    if(tcsetattr(fileno(stdin), TCSANOW, &termstat) < 0) {
+        perror( "tcgetattr" );
+        exit( LDAP_LOCAL_ERROR );
+    }
+#else
 	/* limited to 16 chars on Tru64, 32 on AIX */
 	passwd = getpass(password_string);
+#endif
 #endif
 #endif
 
