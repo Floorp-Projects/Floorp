@@ -180,9 +180,9 @@ Usage(char *progName)
     fprintf(stderr, "%-20s token password\n", "-w password");
     fprintf(stderr, "%-20s temporary key generation. Not for token keys.\n",
             "-g");
-    fprintf(stderr, "%-20s set public exponent for keygen", "-x");
-    fprintf(stderr, "%-20s Number of execution threads\n",
-            "-t threads(default 1)");
+    fprintf(stderr, "%-20s set public exponent for keygen\n", "-x");
+    fprintf(stderr, "%-20s Number of execution threads (default 1)\n",
+            "-t threads");
     exit(-1);
 }
 
