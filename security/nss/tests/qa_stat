@@ -29,8 +29,11 @@ O_OPTIONS=ON
 TBX_EXIT=49          # in case we are running on a tinderbox build, any
                           # early exit needs to return an error
 if [ -z "$O_TBX" -o "$O_TBX" = "OFF" ] ; then
-    . `dirname $0`/header
+    if [ -z "$O_LOCAL" -o "$O_LOCAL" = "OFF" ] ; then
+        . `dirname $0`/header
+    fi
 fi
+Debug "Sourced header O_TBX=$O_TBX O_LOCAL=$O_LOCAL"
 TBX_EXIT=48
 EARLY_EXIT=TRUE
 
@@ -261,7 +264,7 @@ setQAsysvars()
         SYSNAME=`echo $MACHINE | sed -e 's/\..*//'`
         Debug "SYSNAME= $SYSNAME"
 
-        if [  "$O_TBX" = "ON" ] ; then
+        if [  "$O_TBX" = "ON" -o "$O_LOCAL" = "ON" ] ; then
             QA_SYS_OS=$QA_OS
         else
             QA_SYS_OS=`grep $SYSNAME $PLATFORMLIST |
@@ -718,7 +721,7 @@ qa_stat_main()
 CURRENT_TABLE="Standard"
 qa_stat_init
 
-if [  "$O_TBX" = "ON" ] ; then
+if [  "$O_TBX" = "ON" -o "$O_LOCAL" = "ON" ] ; then
     tbx_main
 else
     qa_stat_main
