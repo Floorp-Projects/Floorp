@@ -267,6 +267,7 @@ nsComboboxControlFrame::~nsComboboxControlFrame()
   }
   NS_IF_RELEASE(mButtonContent);
 
+  nsFormControlFrame::RegUnRegAccessKey(mPresContext, NS_STATIC_CAST(nsIFrame*, this), PR_FALSE);
   NS_IF_RELEASE(mPresContext);
 }
 
@@ -346,8 +347,6 @@ nsComboboxControlFrame::IsSuccessful(nsIFormControlFrame* aSubmitter)
 NS_IMETHODIMP
 nsComboboxControlFrame::MakeSureSomethingIsSelected(nsIPresContext* aPresContext)
 {
-  REFLOW_DEBUG_MSG("CBX::MakeSureSomethingIsSelected\n");
-
   nsIFormControlFrame* fcFrame = nsnull;
   nsIFrame* dropdownFrame = GetDropdownFrame();
   nsresult rv = dropdownFrame->QueryInterface(kIFormControlFrameIID, (void**)&fcFrame);
@@ -1518,13 +1517,6 @@ nsComboboxControlFrame::Reflow(nsIPresContext*          aPresContext,
       REFLOW_DEBUG_MSG4("firstPassState.mComputedWidth %d -  size.width %d dspBorderPadding.right %d\n", PX(firstPassState.mComputedWidth), PX(size.width), PX(dspBorderPadding.right));
     }
   }
-
-  // Fix for Bug 44788 (remove this comment later)
-  if (firstPassState.mComputedHeight > 0 && NS_UNCONSTRAINEDSIZE != firstPassState.mComputedHeight) {
-    size.height = firstPassState.mComputedHeight;
-  }
-
-
   // this reflows and makes and last minute adjustments
   ReflowCombobox(aPresContext, firstPassState, aDesiredSize, aStatus, 
                      mDisplayFrame, buttonFrame, mItemDisplayWidth, scrollbarWidth, 
@@ -1814,7 +1806,7 @@ nsComboboxControlFrame::GetDropDown(nsIFrame** aDropDownFrame)
 }
 
 NS_IMETHODIMP
-nsComboboxControlFrame::ListWasSelected(nsIPresContext* aPresContext, PRBool aForceUpdate) // Added "aForceUpdate" for Bug 42661
+nsComboboxControlFrame::ListWasSelected(nsIPresContext* aPresContext)
 {
   if (aPresContext == nsnull) {
     aPresContext = mPresContext;
@@ -1825,7 +1817,7 @@ nsComboboxControlFrame::ListWasSelected(nsIPresContext* aPresContext, PRBool aFo
   PRInt32 indx;
   mListControlFrame->GetSelectedIndex(&indx);
 
-  UpdateSelection(PR_TRUE, aForceUpdate, indx); // Added "aForceUpdate" for Bug 42661
+  UpdateSelection(PR_TRUE, PR_FALSE, indx);
 
   return NS_OK;
 }
@@ -1846,19 +1838,16 @@ nsComboboxControlFrame::UpdateSelection(PRBool aDoDispatchEvent, PRBool aForceUp
   if (mListControlFrame) {
      // Check to see if the selection changed
     if (mSelectedIndex != aNewIndex || aForceUpdate) {
+    //???if (mSelectedIndex != aNewIndex || (aForceUpdate && aNewIndex != kSizeNotSet)) {
       mListControlFrame->GetSelectedItem(mTextStr); // Update text box
-
-      // Fix for Bug 42661 (remove comment later)
 #ifdef DO_REFLOW_DEBUG
       char * str =  mTextStr.ToNewCString();
-      REFLOW_DEBUG_MSG2("UpdateSelection %s\n", str);
-      delete [] str;
+     REFLOW_DEBUG_MSG2("UpdateSelection %s\n", str);
+     delete [] str;
 #endif
-      mSelectedIndex = aNewIndex;
       mListControlFrame->UpdateSelection(aDoDispatchEvent, aForceUpdate, mContent);
-    } else {
-      mSelectedIndex = aNewIndex;
     }
+    mSelectedIndex = aNewIndex;
   }
 
   return NS_OK;
@@ -1908,7 +1897,7 @@ nsComboboxControlFrame::SelectionChanged()
       shouldSetValue = PR_TRUE;
     } else {
       shouldSetValue = value != mTextStr;
-      REFLOW_DEBUG_MSG3("**** CBX::SelectionChanged  Old[%s]  New[%s]\n", value.ToNewCString(), mTextStr.ToNewCString());
+      REFLOW_DEBUG_MSG3("**** SelectionChanged  Old[%s]  New[%s]\n", value.ToNewCString(), mTextStr.ToNewCString());
     }
     if (shouldSetValue) {
       if (mTextStr.Length() == 0) {
@@ -2298,11 +2287,6 @@ nsComboboxControlFrame::SetSuggestedSize(nscoord aWidth, nscoord aHeight)
 NS_IMETHODIMP
 nsComboboxControlFrame::Destroy(nsIPresContext* aPresContext)
 {
-#define FIX_BUG_47302
-#ifdef FIX_BUG_47302
-  nsFormControlFrame::RegUnRegAccessKey(mPresContext, NS_STATIC_CAST(nsIFrame*, this), PR_FALSE);
-#endif
-
   if (mDroppedDown) {
     nsCOMPtr<nsIWidget> widget;
     // Get parent view
@@ -2372,7 +2356,7 @@ nsComboboxControlFrame::SetInitialChildList(nsIPresContext* aPresContext,
     nsIFrame * child = aChildList;
     while (child != nsnull) {
       nsIFormControlFrame* fcFrame = nsnull;
-      rv = child->QueryInterface(kIFormControlFrameIID, (void**)&fcFrame);
+      nsresult rv = child->QueryInterface(kIFormControlFrameIID, (void**)&fcFrame);
       if (NS_FAILED(rv) && fcFrame == nsnull) {
         mDisplayFrame = child;
         break;
