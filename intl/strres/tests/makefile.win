@@ -39,10 +39,16 @@ LLIBS=				\
 
 include <$(DEPTH)\config\rules.mak>
 
+DISTBROWSWER=$(DIST)\bin\chrome\global\content\default
+
 install:: $(PROGRAMS)
 	$(MAKE_INSTALL) $(PROG0) $(DIST)\bin
 	$(MAKE_INSTALL) strres.properties $(DIST)\bin\res
 	$(MAKE_INSTALL) strres-test.html $(DIST)\bin\res
+	$(MAKE_INSTALL) strres-test.xul $(DIST)\bin\res
+	$(MAKE_INSTALL) strres-test.dtd $(DIST)\bin\res
+	$(MAKE_INSTALL) strres-test.js $(DIST)\bin\res
+	$(MAKE_INSTALL) strres.js $(DISTBROWSWER)
 
 clobber::
 	rm -f $(DIST)\bin\StringBundleTest.exe
