@@ -87,8 +87,28 @@ ifdef GC_LEAK_DETECTOR
 LIBS += -lboehm
 endif
 
+# This code removes the console from release builds
+# (unless you've set MOZ_WINCONSOLE=1).
+ifndef MOZ_WINCONSOLE
+ifdef MOZ_DEBUG
+MOZ_WINCONSOLE=1
+else
+MOZ_WINCONSOLE=0
+endif
+endif
+
+# Set link flags according to whether we want a console.
+ifeq ($(MOZ_WINCONSOLE),1)
+ifeq ($(MOZ_OS2_TOOLS),EMX)
+BIN_FLAGS	:= -Zlinker /PM:VIO -Zlinker /Stack:0x30000
+endif
+else
+ifeq ($(MOZ_OS2_TOOLS),VACPP)
+LDFLAGS += /PM:PM
+endif
 ifeq ($(MOZ_OS2_TOOLS),EMX)
 BIN_FLAGS	:= -Zlinker /PM:PM -Zlinker /Stack:0x30000
+endif
 endif
 
 ifeq ($(MOZ_WIDGET_TOOLKIT),beos)
