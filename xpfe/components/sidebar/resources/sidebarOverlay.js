@@ -1240,7 +1240,6 @@ function SidebarShowHide() {
 function SidebarBuildPickerPopup() {
   var menu = document.getElementById('sidebar-panel-picker-popup');
   menu.database.AddDataSource(RDF.GetDataSource(sidebarObj.datasource_uri));
-  menu.setAttribute('ref', sidebarObj.resource);
 
   for (var ii=3; ii < menu.childNodes.length; ii++) {
     var panel_menuitem = menu.childNodes.item(ii);
@@ -1252,6 +1251,7 @@ function SidebarBuildPickerPopup() {
       panel_menuitem.setAttribute('checked', 'true');
     }
   }
+  menu.builder.rebuild();
 }
 
 function SidebarTogglePanel(panel_menuitem) {
