@@ -1,0 +1,15 @@
+TemplateToolkit
+1
+
+[% INCLUDE template.html.header title = 'Create Account' -%]
+
+  <form action="" method="GET"> <!-- XXX POST -->
+   <p>To create a new account fill in your e-mail address or other
+   means of contact in the form below and hit the submit button:</p>
+
+   <p>
+    [%- INCLUDE template.html.login.form buttonLabel = 'Submit' %]
+   </p>
+  </form>
+
+[% INCLUDE template.html.footer %]

@@ -1,0 +1,17 @@
+TemplateToolkit
+1
+
+[% INCLUDE template.html.header title = 'Details Sent' -%]
+
+  <p>Your password has been sent.</p>
+
+  <form >
+   <p>
+    <input type="submit" value="Continue...">
+    [%- FOREACH key = pendingCommands.keys -%] [%- FOREACH value = pendingCommands.$key %]
+    <input type="hidden" name="[% key %]" value="[% value %]">
+    [%- END -%] [%- END %]
+   </p>
+  </form>
+
+[% INCLUDE template.html.footer %]

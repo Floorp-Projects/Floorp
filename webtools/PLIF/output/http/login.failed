@@ -1,0 +1,23 @@
+TemplateToolkit
+1
+
+[% INCLUDE template.html.header
+    title = 'Login'
+    response = '401 Authentication Required'
+    headers = "WWW-Authenticate: Basic realm=\"$app.name\""
+-%]
+
+  <form action="" method="GET"> <!-- XXX POST -->
+ 
+   [% IF tried == 1 -%] <p> The password or username you used is incorrect. </p> [%- END %]
+
+   <p>If you would like to create a new account, or to have your
+   password sent to you, fill in your e-mail address or other means of
+   contact:</p>
+
+   <p>
+    [%- INCLUDE template.html.login.form buttonLabel = 'Get Password' %]
+   </p>
+  </form>
+
+[% INCLUDE template.html.footer %]

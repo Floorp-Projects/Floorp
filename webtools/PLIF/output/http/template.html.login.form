@@ -1,0 +1,12 @@
+TemplateToolkit
+1
+
+    <input type="hidden" name="command" value="loginSendPassword">
+    <select name="protocol">
+     [%- FOREACH protocol = contacts.sort %]
+     <option name="[% protocol %]">[% protocol %]</option>
+     [%- END %]
+    </select>
+    <input type="text" name="address" value="">
+    <input type="hidden" name="loginPendingCommands" value="[% pendingCommands %]">
+    <input type="submit" value="[% buttonLabel %]">
