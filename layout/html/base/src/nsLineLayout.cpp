@@ -948,7 +948,7 @@ nsLineLayout::ReflowFrame(nsIFrame* aFrame,
                                 psd->mReflowState->availableHeight);
   reflowState.reason = reason;
   reflowState.mLineLayout = this;
-  reflowState.isTopOfPage = GetFlag(LL_ISTOPOFPAGE);
+  reflowState.mFlags.mIsTopOfPage = GetFlag(LL_ISTOPOFPAGE);
   SetFlag(LL_UNDERSTANDSNWHITESPACE, PR_FALSE);
   SetFlag(LL_TEXTSTARTSWITHNBSP, PR_FALSE);
   mTextJustificationNumSpaces = 0;
@@ -1273,7 +1273,7 @@ nsLineLayout::ReflowFrame(nsIFrame* aFrame,
   }
 
   // Tell the frame that we're done reflowing it
-  aFrame->DidReflow(mPresContext, NS_FRAME_REFLOW_FINISHED);
+  aFrame->DidReflow(mPresContext, &reflowState, NS_FRAME_REFLOW_FINISHED);
 
   if (aMetrics) {
     *aMetrics = metrics;

@@ -448,13 +448,13 @@ nsMathMLmunderoverFrame::Place(nsIPresContext*      aPresContext,
     nscoord dy;
     // place overscript
     dy = aDesiredSize.ascent - mBoundingMetrics.ascent + bmOver.ascent - overSize.ascent;
-    FinishReflowChild (overFrame, aPresContext, overSize, dxOver, dy, 0);
+    FinishReflowChild (overFrame, aPresContext, nsnull, overSize, dxOver, dy, 0);
     // place base
     dy = aDesiredSize.ascent - baseSize.ascent;
-    FinishReflowChild (baseFrame, aPresContext, baseSize, dxBase, dy, 0);
+    FinishReflowChild (baseFrame, aPresContext, nsnull, baseSize, dxBase, dy, 0);
     // place underscript
     dy = aDesiredSize.ascent + mBoundingMetrics.descent - bmUnder.descent - underSize.ascent;
-    FinishReflowChild (underFrame, aPresContext, underSize, dxUnder, dy, 0);
+    FinishReflowChild (underFrame, aPresContext, nsnull, underSize, dxUnder, dy, 0);
   }
   return NS_OK;
 }

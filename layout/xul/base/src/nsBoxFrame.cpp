@@ -815,12 +815,13 @@ nsBoxFrame::ReflowDirtyChild(nsIPresShell* aPresShell, nsIFrame* aChild)
 }
 
 NS_IMETHODIMP
-nsBoxFrame::DidReflow(nsIPresContext* aPresContext,
-                   nsDidReflowStatus aStatus)
+nsBoxFrame::DidReflow(nsIPresContext*           aPresContext,
+                      const nsHTMLReflowState*  aReflowState,
+                      nsDidReflowStatus         aStatus)
 {
   PRBool isDirty = mState & NS_FRAME_IS_DIRTY;
   PRBool hasDirtyChildren = mState & NS_FRAME_HAS_DIRTY_CHILDREN;
-  nsresult rv = nsFrame::DidReflow(aPresContext, aStatus);
+  nsresult rv = nsFrame::DidReflow(aPresContext, aReflowState, aStatus);
   if (isDirty)
     mState |= NS_FRAME_IS_DIRTY;
 
@@ -1890,6 +1891,15 @@ nsBoxFrame::GetFrameName(nsAString& aResult) const
   return MakeFrameName(NS_LITERAL_STRING("Box"), aResult);
 }
 #endif
+
+NS_IMETHODIMP
+nsBoxFrame::GetFrameType(nsIAtom** aType) const
+{
+  NS_PRECONDITION(nsnull != aType, "null OUT parameter pointer");
+  *aType = nsLayoutAtoms::boxFrame; 
+  NS_ADDREF(*aType);
+  return NS_OK;
+}
 
 NS_IMETHODIMP
 nsBoxFrame::GetDebug(PRBool& aDebug)

@@ -386,7 +386,7 @@ nsMathMLmactionFrame::Place(nsIPresContext*      aPresContext,
   if (childFrame) {
     GetReflowAndBoundingMetricsFor(childFrame, aDesiredSize, mBoundingMetrics);
     if (aPlaceOrigin) {
-      FinishReflowChild(childFrame, aPresContext, aDesiredSize, 0, 0, 0);
+      FinishReflowChild(childFrame, aPresContext, nsnull, aDesiredSize, 0, 0, 0);
     }
     mReference.x = 0;
     mReference.y = aDesiredSize.ascent;

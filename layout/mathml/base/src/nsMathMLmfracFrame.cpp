@@ -372,10 +372,10 @@ nsMathMLmfracFrame::Place(nsIPresContext*      aPresContext,
     nscoord dy;
     // place numerator
     dy = 0;
-    FinishReflowChild(frameNum, aPresContext, sizeNum, dxNum, dy, 0);
+    FinishReflowChild(frameNum, aPresContext, nsnull, sizeNum, dxNum, dy, 0);
     // place denominator
     dy = aDesiredSize.height - sizeDen.height;
-    FinishReflowChild(frameDen, aPresContext, sizeDen, dxDen, dy, 0);
+    FinishReflowChild(frameDen, aPresContext, nsnull, sizeDen, dxDen, dy, 0);
     // place the fraction bar - dy is top of bar
     dy = aDesiredSize.ascent - (axisHeight + actualRuleThickness/2);
     mLineRect.SetRect(onePixel, dy, width - 2*onePixel, actualRuleThickness);

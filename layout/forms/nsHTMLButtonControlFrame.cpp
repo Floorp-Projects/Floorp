@@ -637,7 +637,7 @@ nsHTMLButtonControlFrame::Reflow(nsIPresContext* aPresContext,
   }
 
   // Place the child
-  FinishReflowChild(firstKid, aPresContext, aDesiredSize,
+  FinishReflowChild(firstKid, aPresContext, &reflowState, aDesiredSize,
                     focusPadding.left + aReflowState.mComputedBorderPadding.right,
                     yoff + focusPadding.top + aReflowState.mComputedBorderPadding.top, 0);
 

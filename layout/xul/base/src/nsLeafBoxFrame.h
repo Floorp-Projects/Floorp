@@ -67,8 +67,9 @@ public:
                             nsIContent*     aChild,
                             nsISupports*    aSubContent);
 
-  NS_IMETHOD DidReflow(nsIPresContext* aPresContext,
-                 nsDidReflowStatus aStatus);
+  NS_IMETHOD DidReflow(nsIPresContext*           aPresContext,
+                       const nsHTMLReflowState*  aReflowState,
+                       nsDidReflowStatus         aStatus);
 
   NS_IMETHOD  Init(nsIPresContext*  aPresContext,
                nsIContent*      aContent,

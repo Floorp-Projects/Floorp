@@ -341,7 +341,7 @@ nsTableRowGroupFrame::PlaceChild(nsIPresContext*        aPresContext,
 																 nsHTMLReflowMetrics&   aDesiredSize)
 {
   // Place and size the child
-  FinishReflowChild(aKidFrame, aPresContext, aDesiredSize, 0, aReflowState.y, 0);
+  FinishReflowChild(aKidFrame, aPresContext, nsnull, aDesiredSize, 0, aReflowState.y, 0);
 
   // Adjust the running y-offset
   aReflowState.y += aDesiredSize.height;
@@ -392,7 +392,7 @@ nsTableRowGroupFrame::ReflowChildren(nsIPresContext*        aPresContext,
     if (aDirtyOnly && ((frameState & NS_FRAME_IS_DIRTY) == 0)) {
       doReflowChild = PR_FALSE;
     }
-    if (aReflowState.reflowState.mFlags.mSpecialTableReflow) {
+    if (aReflowState.reflowState.mFlags.mSpecialHeightReflow) {
       if (!isPaginated && (nsLayoutAtoms::tableRowFrame == kidType.get() &&
                            !((nsTableRowFrame*)kidFrame)->NeedSpecialReflow())) {
         doReflowChild = PR_FALSE;
@@ -436,7 +436,7 @@ nsTableRowGroupFrame::ReflowChildren(nsIPresContext*        aPresContext,
       // If this isn't the first row frame, then we can't be at the top of
       // the page anymore...
       if (kidFrame != GetFirstFrame()) {
-        kidReflowState.isTopOfPage = PR_FALSE;
+        kidReflowState.mFlags.mIsTopOfPage = PR_FALSE;
       }
 
       rv = ReflowChild(kidFrame, aPresContext, desiredSize, kidReflowState,
@@ -1024,7 +1024,7 @@ nsTableRowGroupFrame::SplitRowGroup(nsIPresContext*          aPresContext,
         rv = ReflowChild(rowFrame, aPresContext, desiredSize, rowReflowState,
                          0, 0, NS_FRAME_NO_MOVE_FRAME, aStatus);
         rowFrame->SizeTo(aPresContext, desiredSize.width, desiredSize.height);
-        rowFrame->DidReflow(aPresContext, NS_FRAME_REFLOW_FINISHED);
+        rowFrame->DidReflow(aPresContext, nsnull, NS_FRAME_REFLOW_FINISHED);
         rowFrame->DidResize(aPresContext, aReflowState);
 
         if (NS_FRAME_IS_NOT_COMPLETE(aStatus)) {
@@ -1137,7 +1137,7 @@ nsTableRowGroupFrame::Reflow(nsIPresContext*          aPresContext,
     // Check for an overflow list
     MoveOverflowToChildList(aPresContext);
   
-    if (isPaginated && aReflowState.mFlags.mSpecialTableReflow) {
+    if (isPaginated && aReflowState.mFlags.mSpecialHeightReflow) {
       // cache row height info for printing, now that row heights are known. 
       CacheRowHeightsForPrinting(aPresContext, GetFirstRow());
     }
@@ -1158,7 +1158,7 @@ nsTableRowGroupFrame::Reflow(nsIPresContext*          aPresContext,
     // reflow, then we need to do this because the table will skip the pass 2 reflow,
     // but we need to correctly calculate the row group height and we can't if there
     // are row spans unless we do this step
-    if (aReflowState.mFlags.mSpecialTableReflow) {
+    if (aReflowState.mFlags.mSpecialHeightReflow) {
       DidResizeRows(*aPresContext, aReflowState);
     }
     else if ((eReflowReason_Initial != aReflowState.reason) || 
@@ -1171,18 +1171,18 @@ nsTableRowGroupFrame::Reflow(nsIPresContext*          aPresContext,
     // See if all the frames fit
     if (aDesiredSize.height > aReflowState.availableHeight) {
       // Nope, find a place to split the row group 
-      PRBool specialReflow = (PRBool)aReflowState.mFlags.mSpecialTableReflow;
-      ((nsHTMLReflowState::ReflowStateFlags&)aReflowState.mFlags).mSpecialTableReflow = PR_FALSE;
+      PRBool specialReflow = (PRBool)aReflowState.mFlags.mSpecialHeightReflow;
+      ((nsHTMLReflowState::ReflowStateFlags&)aReflowState.mFlags).mSpecialHeightReflow = PR_FALSE;
 
       SplitRowGroup(aPresContext, aDesiredSize, aReflowState, tableFrame, aStatus);
 
-      ((nsHTMLReflowState::ReflowStateFlags&)aReflowState.mFlags).mSpecialTableReflow = specialReflow;
+      ((nsHTMLReflowState::ReflowStateFlags&)aReflowState.mFlags).mSpecialHeightReflow = specialReflow;
    }
   }
   SetHasStyleHeight((NS_UNCONSTRAINEDSIZE != aReflowState.mComputedHeight) &&
                     (aReflowState.mComputedHeight > 0)); 
   
-  if (aReflowState.mFlags.mSpecialTableReflow) {
+  if (aReflowState.mFlags.mSpecialHeightReflow) {
     SetNeedSpecialReflow(PR_FALSE);
   }
 

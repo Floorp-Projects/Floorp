@@ -388,7 +388,7 @@ nsMathMLmfencedFrame::Reflow(nsIPresContext*          aPresContext,
     else  
       mBoundingMetrics += bm;
 
-    FinishReflowChild(childFrame, aPresContext, childSize, 
+    FinishReflowChild(childFrame, aPresContext, nsnull, childSize, 
                       dx, aDesiredSize.ascent - childSize.ascent, 0);
     dx += childSize.width;
 

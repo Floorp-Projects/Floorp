@@ -100,6 +100,7 @@ LAYOUT_ATOM(selectScrolledContentPseudo, ":-moz-select-scrolled-content")
   // Alphabetical list of frame types
 LAYOUT_ATOM(areaFrame, "AreaFrame")
 LAYOUT_ATOM(blockFrame, "BlockFrame")
+LAYOUT_ATOM(boxFrame, "BoxFrame")
 LAYOUT_ATOM(brFrame, "BRFrame")
 LAYOUT_ATOM(bulletFrame, "BulletFrame")
 LAYOUT_ATOM(gfxButtonControlFrame, "gfxButtonControlFrame")
@@ -132,7 +133,6 @@ LAYOUT_ATOM(textFrame, "TextFrame")
 LAYOUT_ATOM(viewportFrame, "ViewportFrame")
 
   // Alphabetical list of frame property names
-LAYOUT_ATOM(cellPctOverHeightProperty, "CellPctOverHeightProperty")  // nscoord*
 LAYOUT_ATOM(collapseOffsetProperty, "CollapseOffsetProperty")  // nsPoint*
 LAYOUT_ATOM(inlineFrameAnnotation, "InlineFrameAnnotation")    // BOOL
 LAYOUT_ATOM(maxElementSizeProperty, "MaxElementSizeProperty")  // nsSize*

@@ -238,8 +238,9 @@ public:
                     const nsHTMLReflowState& aReflowState,
                     nsReflowStatus&          aStatus);
 
-  NS_IMETHOD DidReflow(nsIPresContext* aPresContext,
-                       nsDidReflowStatus aStatus);
+  NS_IMETHOD DidReflow(nsIPresContext*           aPresContext,
+                       const nsHTMLReflowState*  aReflowState,
+                       nsDidReflowStatus         aStatus);
 
   NS_IMETHOD Init(nsIPresContext*  aPresContext,
                   nsIContent*      aContent,
@@ -532,7 +533,8 @@ nsHTMLFrameOuterFrame::Reflow(nsIPresContext*          aPresContext,
   }
 
   // Place and size the child
-  FinishReflowChild(firstChild, aPresContext, kidMetrics, offset.x, offset.y, 0);
+  FinishReflowChild(firstChild, aPresContext, nsnull, 
+                    kidMetrics, offset.x, offset.y, 0);
 
   NS_FRAME_TRACE(NS_FRAME_TRACE_CALLS,
      ("exit nsHTMLFrameOuterFrame::Reflow: size=%d,%d status=%x",
@@ -962,10 +964,11 @@ nsHTMLFrameInnerFrame::GetParentContent(nsIContent*& aContent)
 }
 
 NS_IMETHODIMP
-nsHTMLFrameInnerFrame::DidReflow(nsIPresContext* aPresContext,
-                        nsDidReflowStatus aStatus)
+nsHTMLFrameInnerFrame::DidReflow(nsIPresContext*           aPresContext,
+                                 const nsHTMLReflowState*  aReflowState,
+                                 nsDidReflowStatus         aStatus)
 {
-  nsresult rv = nsLeafFrame::DidReflow(aPresContext, aStatus);
+  nsresult rv = nsLeafFrame::DidReflow(aPresContext, nsnull, aStatus);
 
 
   // The view is created hidden; once we have reflowed it and it has been

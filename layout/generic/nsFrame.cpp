@@ -84,6 +84,7 @@
 #include "nsITableCellLayout.h"//  "
 #include "nsIGfxTextControlFrame.h"
 #include "nsINameSpaceManager.h"
+#include "nsIPercentHeightObserver.h"
 
 // For triple-click pref
 #include "nsIPref.h"
@@ -1767,14 +1768,31 @@ nsFrame::WillReflow(nsIPresContext* aPresContext)
 }
 
 NS_IMETHODIMP
-nsFrame::DidReflow(nsIPresContext* aPresContext,
-                   nsDidReflowStatus aStatus)
+nsFrame::DidReflow(nsIPresContext*           aPresContext,
+                   const nsHTMLReflowState*  aReflowState,
+                   nsDidReflowStatus         aStatus)
 {
   NS_FRAME_TRACE_MSG(NS_FRAME_TRACE_CALLS,
                      ("nsFrame::DidReflow: aStatus=%d", aStatus));
   if (NS_FRAME_REFLOW_FINISHED == aStatus) {
     mState &= ~(NS_FRAME_IN_REFLOW | NS_FRAME_FIRST_REFLOW | NS_FRAME_IS_DIRTY |
                 NS_FRAME_HAS_DIRTY_CHILDREN);
+  }
+
+  // Notify the percent height observer if this is an initial or resize constrained reflow
+  // and there is a percent height but no computed height. The observer may be able to
+  // initiate another reflow with a computed height. This happens in the case where a table
+  // cell has no computed height but can fabricate one when the cell height is known.
+  if (aReflowState && (aReflowState->mPercentHeightObserver)           && // an observer
+      ((eReflowReason_Initial == aReflowState->reason) ||                 // initial or resize reflow
+       (eReflowReason_Resize  == aReflowState->reason))                &&
+      (NS_UNCONSTRAINEDSIZE != aReflowState->availableWidth)           && // constrained width reflow
+      ((NS_UNCONSTRAINEDSIZE == aReflowState->mComputedHeight) ||         // no computed height 
+       (0                    == aReflowState->mComputedHeight))        && 
+      aReflowState->mStylePosition                                     && // percent height
+      (eStyleUnit_Percent == aReflowState->mStylePosition->mHeight.GetUnit())) {
+
+    aReflowState->mPercentHeightObserver->NotifyPercentHeight(*aReflowState);
   }
 
   return NS_OK;

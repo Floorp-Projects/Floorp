@@ -503,7 +503,7 @@ NS_METHOD nsTableColGroupFrame::Reflow(nsIPresContext*          aPresContext,
 
     nsReflowStatus status;
     ReflowChild(kidFrame, aPresContext, kidSize, kidReflowState, 0, 0, 0, status);
-    FinishReflowChild(kidFrame, aPresContext, kidSize, 0, 0, 0);
+    FinishReflowChild(kidFrame, aPresContext, nsnull, kidSize, 0, 0, 0);
   }
 
   aDesiredSize.width=0;
@@ -608,7 +608,7 @@ NS_METHOD nsTableColGroupFrame::IR_TargetIsChild(nsIPresContext*          aPresC
                                    nsSize(aReflowState.availableWidth,
                                           aReflowState.availableHeight));
   rv = ReflowChild(aNextFrame, aPresContext, desiredSize, kidReflowState, 0, 0, 0, aStatus);
-  aNextFrame->DidReflow(aPresContext, NS_FRAME_REFLOW_FINISHED);
+  aNextFrame->DidReflow(aPresContext, nsnull, NS_FRAME_REFLOW_FINISHED);
   if (NS_FAILED(rv))
     return rv;
 

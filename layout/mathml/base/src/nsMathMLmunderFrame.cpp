@@ -347,10 +347,10 @@ nsMathMLmunderFrame::Place(nsIPresContext*      aPresContext,
   if (aPlaceOrigin) {
     nscoord dy = 0;
     // place base
-    FinishReflowChild(baseFrame, aPresContext, baseSize, dxBase, dy, 0);
+    FinishReflowChild(baseFrame, aPresContext, nsnull, baseSize, dxBase, dy, 0);
     // place underscript
     dy = aDesiredSize.ascent + mBoundingMetrics.descent - bmUnder.descent - underSize.ascent;
-    FinishReflowChild(underFrame, aPresContext, underSize, dxUnder, dy, 0);
+    FinishReflowChild(underFrame, aPresContext, nsnull, underSize, dxUnder, dy, 0);
   }
 
   return NS_OK;

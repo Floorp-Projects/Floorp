@@ -169,12 +169,14 @@ public:
                                   nsIAtom*        aListName,
                                   nsIFrame*       aChildList);
 
+  NS_IMETHOD GetFrameType(nsIAtom** aType) const;
 #ifdef DEBUG
   NS_IMETHOD GetFrameName(nsAString& aResult) const;
 #endif
 
-  NS_IMETHOD DidReflow(nsIPresContext* aPresContext,
-                   nsDidReflowStatus aStatus);
+  NS_IMETHOD DidReflow(nsIPresContext*           aPresContext,
+                       const nsHTMLReflowState*  aReflowState,
+                       nsDidReflowStatus         aStatus);
 
   virtual PRBool IsHorizontal() const;
   virtual PRBool IsNormalDirection() const;

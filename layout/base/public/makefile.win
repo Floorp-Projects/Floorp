@@ -46,11 +46,12 @@ EXPORTS =				\
 	nsIMutableStyleContext.h	\
 	nsIObjectFrame.h		\
 	nsIPageSequenceFrame.h		\
+	nsIPercentHeightObserver.h  \
 	nsIPresContext.h		\
 	nsIPresShell.h			\
 	nsIPresState.h			\
 	nsIPrintContext.h		\
-  nsIPrintPreviewContext.h \
+    nsIPrintPreviewContext.h \
 	nsIReflowCallback.h		\
 	nsIReflowCommand.h		\
 	nsIScrollableFrame.h		\

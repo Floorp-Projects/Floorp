@@ -46,6 +46,7 @@ class nsIReflowCommand;
 class nsIRenderingContext;
 class nsSpaceManager;
 class nsLineLayout;
+class nsIPercentHeightObserver;
 
 struct nsStyleDisplay;
 struct nsStyleVisibility;
@@ -153,9 +154,6 @@ struct nsHTMLReflowState {
   // rendering context to use for measurement
   nsIRenderingContext* rendContext;
 
-  // is the current context at the top of a page?
-  PRPackedBool     isTopOfPage;
-
   // The type of frame, from css's perspective. This value is
   // initialized by the Init method below.
   nsCSSFrameType   mFrameType;
@@ -214,38 +212,29 @@ struct nsHTMLReflowState {
   // Compact margin available space
   nscoord          mCompactMarginWidth;
 
-  // The following data members are relevant if nsStyleText.mTextAlign
-  // == NS_STYLE_TEXT_ALIGN_CHAR
-
-  // distance from reference edge (as specified in nsStyleDisplay.mDirection) 
-  // to the align character (which will be specified in nsStyleTable)
-  nscoord          mAlignCharOffset;
-
-  // if true, the reflow honors alignCharOffset and does not
-  // set it. if false, the reflow sets alignCharOffset
-  PRPackedBool     mUseAlignCharOffset;
-
-  // Keep track of text-decoration: blink
-  PRPackedBool     mBlinks;
-
   // Cached pointers to the various style structs used during intialization
-  const nsStyleDisplay* mStyleDisplay;
+  const nsStyleDisplay*    mStyleDisplay;
   const nsStyleVisibility* mStyleVisibility;
-  const nsStylePosition* mStylePosition;
-  const nsStyleBorder* mStyleBorder;
-  const nsStyleMargin* mStyleMargin;
-  const nsStylePadding* mStylePadding;
-  const nsStyleText* mStyleText;
+  const nsStylePosition*   mStylePosition;
+  const nsStyleBorder*     mStyleBorder;
+  const nsStyleMargin*     mStyleMargin;
+  const nsStylePadding*    mStylePadding;
+  const nsStyleText*       mStyleText;
+
+  // a frame (e.g. nsTableCellFrame) which may need to generate a special 
+  // reflow for percent height calculations 
+  nsIPercentHeightObserver* mPercentHeightObserver;
 
   // This value keeps track of how deeply nested a given reflow state
   // is from the top of the frame tree.
   PRInt16 mReflowDepth;
 
   struct ReflowStateFlags {
-    //unsigned mUseAlignCharOffset:1; // ditto
-    //unsigned isTopOfPage:1;         // ditto
-    PRUint16 mSpecialTableReflow:1;   // used by tables to communicate special reflow in process
-    PRUint16 mUnused:15;              
+    PRUint16 mSpecialHeightReflow:1; // used by tables to communicate special reflow (in process) to handle
+                                     // percent height frames inside cells which may not have computed heights
+    PRUint16 mIsTopOfPage:1;         // is the current context at the top of a page?
+    PRUint16 mBlinks:1;              // Keep track of text-decoration: blink
+    PRUint16 mUnused:13;             // for future use             
   } mFlags;
 
 #ifdef IBMBIDI

@@ -417,7 +417,7 @@ ViewportFrame::ReflowFixedFrame(nsIPresContext*          aPresContext,
   aKidFrame->GetView(aPresContext, &kidView);
   nsContainerFrame::SyncFrameViewAfterReflow(aPresContext, aKidFrame, kidView,
                                              &kidDesiredSize.mOverflowArea);
-  aKidFrame->DidReflow(aPresContext, NS_FRAME_REFLOW_FINISHED);
+  aKidFrame->DidReflow(aPresContext, nsnull, NS_FRAME_REFLOW_FINISHED);
   return rv;
 }
 
@@ -576,7 +576,7 @@ ViewportFrame::Reflow(nsIPresContext*          aPresContext,
         kidRect.width = kidDesiredSize.width;
         kidRect.height = kidDesiredSize.height;
 
-        FinishReflowChild(kidFrame, aPresContext, kidDesiredSize, 0, 0, 0);
+        FinishReflowChild(kidFrame, aPresContext, nsnull, kidDesiredSize, 0, 0, 0);
       }
 
       // If it's a 'initial', 'resize', or 'style change' reflow command (anything

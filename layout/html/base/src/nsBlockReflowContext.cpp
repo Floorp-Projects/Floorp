@@ -432,7 +432,7 @@ nsBlockReflowContext::DoReflowBlock(nsHTMLReflowState &aReflowState,
   aComputedOffsets = aReflowState.mComputedOffsets;
   aReflowState.mLineLayout = nsnull;
   if (!aIsAdjacentWithTop) {
-    aReflowState.isTopOfPage = PR_FALSE;  // make sure this is cleared
+    aReflowState.mFlags.mIsTopOfPage = PR_FALSE;  // make sure this is cleared
   }
   mIsTable = NS_STYLE_DISPLAY_TABLE == aReflowState.mStyleDisplay->mDisplay;
   mComputedWidth = aReflowState.mComputedWidth;
@@ -688,11 +688,12 @@ nsBlockReflowContext::DoReflowBlock(nsHTMLReflowState &aReflowState,
  * margins (CSS2 8.3.1). Also apply relative positioning.
  */
 PRBool
-nsBlockReflowContext::PlaceBlock(PRBool aForceFit,
-                                 const nsMargin& aComputedOffsets,
-                                 nsCollapsingMargin& aBottomMarginResult,
-                                 nsRect& aInFlowBounds,
-                                 nsRect& aCombinedRect)
+nsBlockReflowContext::PlaceBlock(const nsHTMLReflowState& aReflowState,
+                                 PRBool                   aForceFit,
+                                 const nsMargin&          aComputedOffsets,
+                                 nsCollapsingMargin&      aBottomMarginResult,
+                                 nsRect&                  aInFlowBounds,
+                                 nsRect&                  aCombinedRect)
 {
   // Compute collapsed bottom margin value
   aBottomMarginResult = mMetrics.mCarriedOutBottomMargin;
@@ -731,7 +732,7 @@ nsBlockReflowContext::PlaceBlock(PRBool aForceFit,
     nsRect r(x, y, mMetrics.width, 0);
 
     // Now place the frame and complete the reflow process
-    nsContainerFrame::FinishReflowChild(mFrame, mPresContext, mMetrics, x, y, 0);
+    nsContainerFrame::FinishReflowChild(mFrame, mPresContext, &aReflowState, mMetrics, x, y, 0);
     aInFlowBounds = r;
 
     // Retain combined area information in case we contain a floater
@@ -781,7 +782,7 @@ nsBlockReflowContext::PlaceBlock(PRBool aForceFit,
       }
 
       // Now place the frame and complete the reflow process
-      nsContainerFrame::FinishReflowChild(mFrame, mPresContext, mMetrics, x, y, 0);
+      nsContainerFrame::FinishReflowChild(mFrame, mPresContext, &aReflowState, mMetrics, x, y, 0);
 
       // Adjust the max-element-size in the metrics to take into
       // account the margins around the block element. Note that we
@@ -817,7 +818,7 @@ nsBlockReflowContext::PlaceBlock(PRBool aForceFit,
     else {
       // Send the DidReflow() notification, but don't bother placing
       // the frame
-      mFrame->DidReflow(mPresContext, NS_FRAME_REFLOW_FINISHED);
+      mFrame->DidReflow(mPresContext, &aReflowState, NS_FRAME_REFLOW_FINISHED);
       fits = PR_FALSE;
     }
   }

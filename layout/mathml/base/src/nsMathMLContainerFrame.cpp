@@ -1198,7 +1198,7 @@ nsMathMLContainerFrame::PlaceTokenFor(nsIFrame*            aFrame,
       // place and size the child
       dy = aDesiredSize.ascent - rect.y;
       NS_STATIC_CAST(nsMathMLContainerFrame*,
-                     aFrame)->FinishReflowChild(childFrame, aPresContext,
+                     aFrame)->FinishReflowChild(childFrame, aPresContext, nsnull,
                                                 childSize, dx, dy, 0);
       dx += rect.width;
       childFrame->GetNextSibling(&childFrame);
@@ -1537,7 +1537,7 @@ nsMathMLContainerFrame::Place(nsIPresContext*      aPresContext,
       GetItalicCorrection(bmChild, leftCorrection, italicCorrection);
       // add left correction
       dx += leftCorrection;
-      FinishReflowChild(childFrame, aPresContext, childSize, dx, dy, 0);
+      FinishReflowChild(childFrame, aPresContext, nsnull, childSize, dx, dy, 0);
       // add child size + italic correction
       dx += bmChild.width + italicCorrection;
       childFrame->GetNextSibling(&childFrame);

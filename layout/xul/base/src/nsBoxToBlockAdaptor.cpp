@@ -807,7 +807,7 @@ nsBoxToBlockAdaptor::Reflow(nsBoxLayoutState& aState,
 
              mFrame->WillReflow(aPresContext);
              mFrame->Reflow(aPresContext, aDesiredSize, reflowState, aStatus);
-             mFrame->DidReflow(aPresContext, NS_FRAME_REFLOW_FINISHED);
+             mFrame->DidReflow(aPresContext, &reflowState, NS_FRAME_REFLOW_FINISHED);
              reflowState.mComputedWidth = aDesiredSize.width - (border.left + border.right);
              reflowState.availableWidth = reflowState.mComputedWidth;
              reflowState.reason = eReflowReason_StyleChange;
@@ -858,7 +858,7 @@ nsBoxToBlockAdaptor::Reflow(nsBoxLayoutState& aState,
                  reflowState.availableWidth = reflowState.mComputedWidth;
                  reflowState.reason = eReflowReason_Resize;
                  reflowState.reflowCommand = nsnull;
-                 mFrame->DidReflow(aPresContext, NS_FRAME_REFLOW_FINISHED);
+                 mFrame->DidReflow(aPresContext, &reflowState, NS_FRAME_REFLOW_FINISHED);
                  #ifdef DEBUG_REFLOW
                   nsAdaptorAddIndents();
                   nsAdaptorPrintReason(reflowState);
@@ -893,7 +893,8 @@ nsBoxToBlockAdaptor::Reflow(nsBoxLayoutState& aState,
     if (mLastSize.width != aDesiredSize.width || mLastSize.height != aDesiredSize.height)
        changedSize = PR_TRUE;
   
-    nsContainerFrame::FinishReflowChild(mFrame, aPresContext, aDesiredSize, aX, aY, NS_FRAME_NO_MOVE_FRAME);
+    nsContainerFrame::FinishReflowChild(mFrame, aPresContext, &reflowState,
+                                        aDesiredSize, aX, aY, NS_FRAME_NO_MOVE_FRAME);
   } else {
     aDesiredSize.ascent = mBlockAscent;
   }

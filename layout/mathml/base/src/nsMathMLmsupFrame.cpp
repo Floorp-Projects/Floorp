@@ -275,11 +275,11 @@ nsMathMLmsupFrame::PlaceSuperScript(nsIPresContext*      aPresContext,
     nscoord dx, dy;
     // now place the base ...
     dx = 0; dy = aDesiredSize.ascent - baseSize.ascent;
-    FinishReflowChild (baseFrame, aPresContext, baseSize, dx, dy, 0);
+    FinishReflowChild (baseFrame, aPresContext, nsnull, baseSize, dx, dy, 0);
     // ... and supscript
     dx = bmBase.width + aScriptSpace + italicCorrection;
     dy = aDesiredSize.ascent - (supScriptSize.ascent + actualSupScriptShift);
-    FinishReflowChild (supScriptFrame, aPresContext, supScriptSize, dx, dy, 0);
+    FinishReflowChild (supScriptFrame, aPresContext, nsnull, supScriptSize, dx, dy, 0);
   }
 
   return NS_OK;

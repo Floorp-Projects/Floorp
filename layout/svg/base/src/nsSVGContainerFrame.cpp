@@ -185,7 +185,7 @@ nsSVGContainerFrame::Reflow(nsIPresContext*   aPresContext,
 
       incrementalChild->SetRect(aPresContext, rect);
       if (NS_FAILED(rv)) return rv;
-      rv = incrementalChild->DidReflow(aPresContext, NS_FRAME_REFLOW_FINISHED);
+      rv = incrementalChild->DidReflow(aPresContext, &kidReflowState, NS_FRAME_REFLOW_FINISHED);
       if (NS_FAILED(rv)) return rv;
 
       nsIFrame * child = mFrames.FirstChild();
@@ -241,7 +241,7 @@ nsSVGContainerFrame::Reflow(nsIPresContext*   aPresContext,
 
       child->SetRect(aPresContext, rect);
       if (NS_FAILED(rv)) return rv;
-      rv = child->DidReflow(aPresContext, NS_FRAME_REFLOW_FINISHED);
+      rv = child->DidReflow(aPresContext, &kidReflowState, NS_FRAME_REFLOW_FINISHED);
       if (NS_FAILED(rv)) return rv;
       child->GetNextSibling(&child);
     }
@@ -263,10 +263,11 @@ nsSVGContainerFrame::Reflow(nsIPresContext*   aPresContext,
 
 
 NS_IMETHODIMP
-nsSVGContainerFrame::DidReflow(nsIPresContext* aPresContext,
-                      nsDidReflowStatus aStatus)
+nsSVGContainerFrame::DidReflow(nsIPresContext*           aPresContext,
+                               const nsHTMLReflowState*  aReflowState,
+                               nsDidReflowStatus         aStatus)
 {
-  nsresult rv = nsHTMLContainerFrame::DidReflow(aPresContext, aStatus);
+  nsresult rv = nsHTMLContainerFrame::DidReflow(aPresContext, aReflowState, aStatus);
   NS_ASSERTION(rv == NS_OK,"DidReflow failed");
 
   return rv;

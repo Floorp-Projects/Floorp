@@ -51,6 +51,7 @@ nsILayoutHistoryState.h \
 nsIMutableStyleContext.h \
 nsIObjectFrame.h \
 nsIPageSequenceFrame.h \
+nsIPercentHeightObserver.h  \
 nsIPresContext.h \
 nsIPresShell.h \
 nsIPresState.h \

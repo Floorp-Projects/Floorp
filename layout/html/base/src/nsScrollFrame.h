@@ -88,8 +88,9 @@ public:
                          nsIAtom*        aListName,
                          nsIFrame*       aOldFrame);
 
-  NS_IMETHOD DidReflow(nsIPresContext*   aPresContext,
-                       nsDidReflowStatus aStatus);
+  NS_IMETHOD DidReflow(nsIPresContext*           aPresContext,
+                       const nsHTMLReflowState*  aReflowState,
+                       nsDidReflowStatus         aStatus);
 
   NS_IMETHOD Reflow(nsIPresContext*          aPresContext,
                     nsHTMLReflowMetrics&     aDesiredSize,

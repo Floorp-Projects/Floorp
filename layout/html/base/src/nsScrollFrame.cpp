@@ -352,15 +352,16 @@ nsScrollFrame::RemoveFrame(nsIPresContext* aPresContext,
 }
 
 NS_IMETHODIMP
-nsScrollFrame::DidReflow(nsIPresContext*   aPresContext,
-                         nsDidReflowStatus aStatus)
+nsScrollFrame::DidReflow(nsIPresContext*           aPresContext,
+                         const nsHTMLReflowState*  aReflowState,
+                         nsDidReflowStatus         aStatus)
 {
   nsresult  rv = NS_OK;
 
   if (NS_FRAME_REFLOW_FINISHED == aStatus) {
     // Let the default nsFrame implementation clear the state flags
     // and size and position our view
-    rv = nsFrame::DidReflow(aPresContext, aStatus);
+    rv = nsFrame::DidReflow(aPresContext, aReflowState, aStatus);
     
     // Have the scrolling view layout
     nsIScrollableView* scrollingView;
@@ -939,8 +940,8 @@ nsScrollFrame::Reflow(nsIPresContext*          aPresContext,
   }
 
   // Place and size the child.
-  FinishReflowChild(kidFrame, aPresContext, kidDesiredSize, border.left,
-                    border.top, NS_FRAME_NO_MOVE_VIEW);
+  FinishReflowChild(kidFrame, aPresContext, &kidReflowState, kidDesiredSize, 
+                    border.left, border.top, NS_FRAME_NO_MOVE_VIEW);
 
   // Compute our desired size
   aDesiredSize.width = scrollAreaSize.width;

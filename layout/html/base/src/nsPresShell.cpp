@@ -2686,7 +2686,7 @@ PresShell::InitialReflow(nscoord aWidth, nscoord aHeight)
       nsContainerFrame::SyncFrameViewAfterReflow(mPresContext, rootFrame, view,
                                                  nsnull);
     }
-    rootFrame->DidReflow(mPresContext, NS_FRAME_REFLOW_FINISHED);
+    rootFrame->DidReflow(mPresContext, nsnull, NS_FRAME_REFLOW_FINISHED);
       
 #ifdef NS_DEBUG
     if (nsIFrameDebug::GetVerifyTreeEnable()) {
@@ -2823,7 +2823,7 @@ PresShell::ResizeReflow(nscoord aWidth, nscoord aHeight)
       nsContainerFrame::SyncFrameViewAfterReflow(mPresContext, rootFrame, view,
                                                  nsnull);
     }
-    rootFrame->DidReflow(mPresContext, NS_FRAME_REFLOW_FINISHED);
+    rootFrame->DidReflow(mPresContext, nsnull, NS_FRAME_REFLOW_FINISHED);
 #ifdef NS_DEBUG
     if (nsIFrameDebug::GetVerifyTreeEnable()) {
       nsIFrameDebug*  frameDebug;
@@ -3366,7 +3366,7 @@ PresShell::StyleChangeReflow()
       nsContainerFrame::SyncFrameViewAfterReflow(mPresContext, rootFrame, view,
                                                  nsnull);
     }
-    rootFrame->DidReflow(mPresContext, NS_FRAME_REFLOW_FINISHED);
+    rootFrame->DidReflow(mPresContext, nsnull, NS_FRAME_REFLOW_FINISHED);
 #ifdef NS_DEBUG
     if (nsIFrameDebug::GetVerifyTreeEnable()) {
       nsIFrameDebug*  frameDebug;

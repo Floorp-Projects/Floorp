@@ -603,7 +603,7 @@ CanvasFrame::Reflow(nsIPresContext*          aPresContext,
     // Complete the reflow and position and size the child frame
     nsRect  rect(kidReflowState.mComputedMargin.left, kidReflowState.mComputedMargin.top,
                  kidDesiredSize.width, kidDesiredSize.height);
-    FinishReflowChild(kidFrame, aPresContext, kidDesiredSize, rect.x, rect.y, 0);
+    FinishReflowChild(kidFrame, aPresContext, &kidReflowState, kidDesiredSize, rect.x, rect.y, 0);
 
     // If the child frame was just inserted, then we're responsible for making sure
     // it repaints

@@ -123,12 +123,13 @@ public:
          nsReflowStatus&          aStatus);
 
   NS_IMETHOD
-  DidReflow(nsIPresContext*   aPresContext,
-            nsDidReflowStatus aStatus)
+  DidReflow(nsIPresContext*           aPresContext,
+            const nsHTMLReflowState*  aReflowState,
+            nsDidReflowStatus         aStatus)
 
   {
     mEmbellishData.flags &= ~NS_MATHML_STRETCH_DONE;
-    return nsHTMLContainerFrame::DidReflow(aPresContext, aStatus);
+    return nsHTMLContainerFrame::DidReflow(aPresContext, aReflowState, aStatus);
   }
 
   NS_IMETHOD

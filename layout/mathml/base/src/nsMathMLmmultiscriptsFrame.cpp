@@ -392,7 +392,7 @@ nsMathMLmmultiscriptsFrame::Place(nsIPresContext*      aPresContext,
         // place the base ...
         childFrame = baseFrame;
         dy = aDesiredSize.ascent - baseSize.ascent;
-        FinishReflowChild (baseFrame, aPresContext, baseSize, dx, dy, 0);
+        FinishReflowChild (baseFrame, aPresContext, nsnull, baseSize, dx, dy, 0);
         dx += bmBase.width + mScriptSpace + italicCorrection;
       }
       else if (mprescriptsFrame != childFrame) {
@@ -415,12 +415,12 @@ nsMathMLmmultiscriptsFrame::Place(nsIPresContext*      aPresContext,
 
           dy = aDesiredSize.ascent - subScriptSize.ascent +
             maxSubScriptShift;
-          FinishReflowChild (subScriptFrame, aPresContext, subScriptSize,
+          FinishReflowChild (subScriptFrame, aPresContext, nsnull, subScriptSize,
                              dx + (width-subScriptSize.width)/2, dy, 0);
 
           dy = aDesiredSize.ascent - supScriptSize.ascent -
             maxSupScriptShift;
-          FinishReflowChild (supScriptFrame, aPresContext, supScriptSize,
+          FinishReflowChild (supScriptFrame, aPresContext, nsnull, supScriptSize,
                              dx + (width-supScriptSize.width)/2, dy, 0);
 
           dx += mScriptSpace + width;

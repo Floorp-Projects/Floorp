@@ -156,12 +156,13 @@ public:
    *    don't want to automatically sync the frame and view
    * NS_FRAME_NO_SIZE_VIEW - don't size the frame's view
    */
-  static nsresult FinishReflowChild(nsIFrame*            aKidFrame,
-                                    nsIPresContext*      aPresContext,
-                                    nsHTMLReflowMetrics& aDesiredSize,
-                                    nscoord              aX,
-                                    nscoord              aY,
-                                    PRUint32             aFlags);
+  static nsresult FinishReflowChild(nsIFrame*                 aKidFrame,
+                                    nsIPresContext*           aPresContext,
+                                    const nsHTMLReflowState*  aReflowState,
+                                    nsHTMLReflowMetrics&      aDesiredSize,
+                                    nscoord                   aX,
+                                    nscoord                   aY,
+                                    PRUint32                  aFlags);
 
   
   static void PositionChildViews(nsIPresContext* aPresContext,

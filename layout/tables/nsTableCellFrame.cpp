@@ -77,7 +77,7 @@
 
 nsTableCellFrame::nsTableCellFrame()
 {
-  mColIndex        = 0;
+  mBits.mColIndex        = 0;
   mPriorAvailWidth = 0;
 #ifdef DEBUG_TABLE_REFLOW_TIMING
   mTimer = new nsReflowTimer(this);
@@ -131,6 +131,48 @@ nsTableCellFrame::Init(nsIPresContext*  aPresContext,
 
   return rv;
 }
+static PRBool
+NoComputedHeightBetween(const nsHTMLReflowState&  aReflowState,
+                        nsIFrame*                 aCellFrame)
+{
+  for (const nsHTMLReflowState* rs = aReflowState.parentReflowState; rs; rs = rs->parentReflowState) {
+    if ((NS_UNCONSTRAINEDSIZE != rs->mComputedHeight) || (0 != rs->mComputedHeight)) {
+      return PR_FALSE;
+    }
+    // stop when we hit the cell frame
+    if (rs->frame == aCellFrame) {
+      return PR_TRUE;
+    }
+  }
+  NS_ASSERTION(PR_FALSE, "program error in NoComputedHeightBetween");
+  return PR_FALSE;
+}
+
+// nsIPercentHeightObserver methods
+
+nsresult
+nsTableCellFrame::NotifyPercentHeight(const nsHTMLReflowState& aReflowState)
+{
+  if (!HadSpecialReflow()) {
+    // Only initiate a special reflow if we will be able to construct a computed height 
+    // on the cell that will result in the frame getting a computed height. This can only 
+    // happen (but not sufficient) if there no computed height already set between the 
+    // initiating frame and the cell.
+    for (const nsHTMLReflowState* rs = aReflowState.parentReflowState; rs; rs = rs->parentReflowState) {
+      if ((NS_UNCONSTRAINEDSIZE != rs->mComputedHeight) && (0 != rs->mComputedHeight)) {
+        return NS_OK;
+      }
+      // stop when we reach the cell frame
+      if (rs->frame == this) {
+        nsTableFrame::NotifyAncestorsOfSpecialReflow((nsIFrame&)*this);
+        SetNeedSpecialReflow(PR_TRUE);
+        return NS_OK;
+      }
+    }
+    NS_ASSERTION(PR_FALSE, "program error in NotifyPercentHeight");
+  }
+  return NS_OK;
+}
 
 nsresult 
 nsTableCellFrame::GetRowIndex(PRInt32 &aRowIndex) const
@@ -156,7 +198,7 @@ nsTableCellFrame::GetColIndex(PRInt32 &aColIndex) const
     return ((nsTableCellFrame*)GetFirstInFlow())->GetColIndex(aColIndex);
   }
   else {
-    aColIndex = mColIndex;
+    aColIndex = mBits.mColIndex;
     return  NS_OK;
   }
 }
@@ -246,7 +288,7 @@ void nsTableCellFrame::InitCellFrame(PRInt32 aColIndex)
 
 nsresult nsTableCellFrame::SetColIndex(PRInt32 aColIndex)
 {  
-  mColIndex = aColIndex;
+  mBits.mColIndex = aColIndex;
   // for style context optimization, set the content's column index if possible.
   // this can only be done if we really have an nsTableCell.  
   // other tags mapped to table cell display won't benefit from this optimization
@@ -766,7 +808,7 @@ NS_METHOD nsTableCellFrame::Reflow(nsIPresContext*          aPresContext,
        (0                    == aReflowState.mComputedHeight))  && 
       !mPrevInFlow                                              && 
       nsTableFrame::IsPctHeight(mStyleContext)) {
-    nsTableFrame::NotifyAncestorsOfSpecialReflow(aReflowState);
+    nsTableFrame::NotifyAncestorsOfSpecialReflow(*this);
     SetNeedSpecialReflow(PR_TRUE);
   }
   // this should probably be cached somewhere
@@ -851,7 +893,8 @@ NS_METHOD nsTableCellFrame::Reflow(nsIPresContext*          aPresContext,
   aPresContext->IsPaginated(&isPaginated);
   nscoord computedPaginatedHeight = 0;
 
-  if (aReflowState.mFlags.mSpecialTableReflow || (eReflowReason_Incremental == aReflowState.reason)) {
+  if (aReflowState.mFlags.mSpecialHeightReflow || 
+      (HadSpecialReflow() && (eReflowReason_Incremental == aReflowState.reason))) {
     ((nsHTMLReflowState&)aReflowState).mComputedHeight = mRect.height - topInset - bottomInset;
     DISPLAY_REFLOW_CHANGE();
   }
@@ -866,6 +909,8 @@ NS_METHOD nsTableCellFrame::Reflow(nsIPresContext*          aPresContext,
     SetHasPctOverHeight(PR_FALSE);
   }
   nsHTMLReflowState kidReflowState(aPresContext, aReflowState, firstKid, availSize);
+  // mIPercentHeightObserver is for non table related frames inside cells
+  kidReflowState.mPercentHeightObserver = (nsIPercentHeightObserver *)this;
 
   // If it was a style change targeted at us, then reflow the child using
   // the special reflow reason
@@ -899,8 +944,10 @@ NS_METHOD nsTableCellFrame::Reflow(nsIPresContext*          aPresContext,
 #if defined DEBUG_TABLE_REFLOW_TIMING
   nsTableFrame::DebugReflow(firstKid, (nsHTMLReflowState&)kidReflowState);
 #endif
+  nscoord priorBlockHeight = GetLastBlockHeight();
   ReflowChild(firstKid, aPresContext, kidSize, kidReflowState,
               kidOrigin.x, kidOrigin.y, 0, aStatus);
+  SetLastBlockHeight(kidSize.height);
   if (isStyleChanged) {
     Invalidate(aPresContext, mRect);
   }
@@ -990,7 +1037,7 @@ NS_METHOD nsTableCellFrame::Reflow(nsIPresContext*          aPresContext,
   //  NS_ASSERTION(kidSize.width <= availSize.width, "child needed more space during resize reflow");
   //}
   // Place the child
-  FinishReflowChild(firstKid, aPresContext, kidSize,
+  FinishReflowChild(firstKid, aPresContext, &kidReflowState, kidSize,
                     kidOrigin.x, kidOrigin.y, 0);
     
   // first, compute the height which can be set w/o being restricted by aMaxSize.height
@@ -1041,25 +1088,20 @@ NS_METHOD nsTableCellFrame::Reflow(nsIPresContext*          aPresContext,
     }
   }
 
-  if (aReflowState.mFlags.mSpecialTableReflow) {
+  if (aReflowState.mFlags.mSpecialHeightReflow) {
     if (aDesiredSize.height > mRect.height) {
-      // set a bit and frame property indicating that the pct height contents exceeded 
+      // set a bit indicating that the pct height contents exceeded 
       // the height that they could honor in the pass 2 reflow
       SetHasPctOverHeight(PR_TRUE);
-      SetPctOverHeightValue(aPresContext, aDesiredSize.height);
     }
     aDesiredSize.height = mRect.height;
     SetNeedSpecialReflow(PR_FALSE);
+    SetHadSpecialReflow(PR_TRUE);
   }
-  else if ((eReflowReason_Incremental == aReflowState.reason) && HasPctOverHeight()) {
-    nscoord overValue;
-    GetPctOverHeightValue(aPresContext, overValue);
-    // if the pct over height value hasn't changed, use the last height of the cell, otherwise ignore it
-    if (aDesiredSize.height == overValue) {
+  else if (HadSpecialReflow() && (eReflowReason_Incremental == aReflowState.reason)) {
+    // if the block height value hasn't changed, use the last height of the cell, otherwise ignore it
+    if (GetLastBlockHeight() == priorBlockHeight) {
       aDesiredSize.height = mRect.height;
-    }
-    else {
-      SetHasPctOverHeight(PR_FALSE);
     }
   }
   else if (computedPaginatedHeight > 0) {
@@ -1277,6 +1319,10 @@ nsresult nsTableCellFrame::QueryInterface(const nsIID& aIID, void** aInstancePtr
     *aInstancePtr = (void*) (nsITableCellLayout *)this;
     return NS_OK;
   }
+  if (aIID.Equals(NS_GET_IID(nsIPercentHeightObserver))) {
+    *aInstancePtr = (void*) (nsIPercentHeightObserver *)this;
+    return NS_OK;
+  }
 
   return nsHTMLContainerFrame::QueryInterface(aIID, aInstancePtr);
 }
@@ -1305,7 +1351,7 @@ nsTableCellFrame::GetCellIndexes(PRInt32 &aRowIndex, PRInt32 &aColIndex)
     aColIndex = 0;
     return res;
   }
-  aColIndex = mColIndex;
+  aColIndex = mBits.mColIndex;
   return  NS_OK;
 }
 
@@ -1444,27 +1490,6 @@ void nsTableCellFrame::GetCollapseOffset(nsIPresContext* aPresContext,
     aOffset = *offset;
   } else {
     aOffset.MoveTo(0, 0);
-  }
-}
-
-void nsTableCellFrame::SetPctOverHeightValue(nsIPresContext* aPresContext,
-                                             nscoord         aValue)
-{
-  // Get the property 
-  nscoord* value = (nscoord*)nsTableFrame::GetProperty(aPresContext, this, nsLayoutAtoms::cellPctOverHeightProperty, PR_TRUE);
-  if (value) {
-    *value = aValue;
-  }
-}
-
-void nsTableCellFrame::GetPctOverHeightValue(nsIPresContext* aPresContext,
-                                             nscoord&        aValue)
-{
-  aValue = 0;
-  // See if the property is set
-  nscoord* value = (nscoord*)nsTableFrame::GetProperty(aPresContext, this, nsLayoutAtoms::cellPctOverHeightProperty);
-  if (value) {
-    aValue = *value;
   }
 }
 

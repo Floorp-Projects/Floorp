@@ -3211,9 +3211,8 @@ nsBlockFrame::ReflowBlockFrame(nsBlockReflowState& aState,
     PRBool isAdjacentWithTop = aState.IsAdjacentWithTop();
     nsCollapsingMargin collapsedBottomMargin;
     nsRect combinedArea(0,0,0,0);
-    *aKeepReflowGoing = brc.PlaceBlock(isAdjacentWithTop, computedOffsets,
-                                       collapsedBottomMargin,
-                                       aLine->mBounds, combinedArea);
+    *aKeepReflowGoing = brc.PlaceBlock(aState.mReflowState, isAdjacentWithTop, computedOffsets,
+                                       collapsedBottomMargin, aLine->mBounds, combinedArea);
     aLine->SetCarriedOutBottomMargin(collapsedBottomMargin);
 
     if (aState.GetFlag(BRS_SHRINKWRAPWIDTH)) {
@@ -5153,7 +5152,7 @@ nsBlockFrame::ReflowFloater(nsBlockReflowState& aState,
                                                &metrics.mOverflowArea,
                                                NS_FRAME_NO_MOVE_VIEW);
   }
-  floater->DidReflow(aState.mPresContext, NS_FRAME_REFLOW_FINISHED);
+  floater->DidReflow(aState.mPresContext, &aState.mReflowState, NS_FRAME_REFLOW_FINISHED);
 
   // If we computed it, then stash away the max-element-size for later
   if (computeMaxElementSize) {
@@ -6300,7 +6299,7 @@ nsBlockFrame::ReflowBullet(nsBlockReflowState& aState,
   const nsMargin& bp = aState.BorderPadding();
   nscoord y = bp.top;
   mBullet->SetRect(aState.mPresContext, nsRect(x, y, aMetrics.width, aMetrics.height));
-  mBullet->DidReflow(aState.mPresContext, NS_FRAME_REFLOW_FINISHED);
+  mBullet->DidReflow(aState.mPresContext, &aState.mReflowState, NS_FRAME_REFLOW_FINISHED);
 }
 
 //XXX get rid of this -- its slow

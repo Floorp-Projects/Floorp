@@ -1374,7 +1374,7 @@ nsObjectFrame::HandleChild(nsIPresContext*          aPresContext,
   }
 
   ReflowChild(child, aPresContext, kidDesiredSize, kidReflowState, 0, 0, 0, status);
-  FinishReflowChild(child, aPresContext, kidDesiredSize, 0, 0, 0);
+  FinishReflowChild(child, aPresContext, &kidReflowState, kidDesiredSize, 0, 0, 0);
 
     aMetrics.width = kidDesiredSize.width;
     aMetrics.height = kidDesiredSize.height;
@@ -1465,10 +1465,11 @@ nsObjectFrame::ContentChanged(nsIPresContext* aPresContext,
 }
 
 NS_IMETHODIMP
-nsObjectFrame::DidReflow(nsIPresContext* aPresContext,
-                         nsDidReflowStatus aStatus)
+nsObjectFrame::DidReflow(nsIPresContext*           aPresContext,
+                         const nsHTMLReflowState*  aReflowState,
+                         nsDidReflowStatus         aStatus)
 {
-  nsresult rv = nsObjectFrameSuper::DidReflow(aPresContext, aStatus);
+  nsresult rv = nsObjectFrameSuper::DidReflow(aPresContext, aReflowState, aStatus);
 
   // The view is created hidden; once we have reflowed it and it has been
   // positioned then we show it.
@@ -1708,7 +1709,7 @@ nsObjectFrame::Paint(nsIPresContext*      aPresContext,
     nsCOMPtr<nsIPresContext> screenPcx;
     shell->GetPresContext(getter_AddRefs(screenPcx));
     nsDidReflowStatus status = NS_FRAME_REFLOW_FINISHED; // should we use a special status?
-    frame->DidReflow(screenPcx, status);  // DidReflow will take care of it
+    frame->DidReflow(screenPcx, nsnull, status);  // DidReflow will take care of it
 
     return rv;  // done with printing
   }

@@ -223,7 +223,7 @@ NS_IMETHODIMP nsHTMLReflowCommand::Dispatch(nsIPresContext*      aPresContext,
       nsContainerFrame::SyncFrameViewAfterReflow(aPresContext, root, view,
                                                  nsnull);
     }
-    root->DidReflow(aPresContext, NS_FRAME_REFLOW_FINISHED);
+    root->DidReflow(aPresContext, nsnull, NS_FRAME_REFLOW_FINISHED);
   }
 
   return NS_OK;

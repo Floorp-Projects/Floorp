@@ -212,7 +212,7 @@ public:
                               float        aPixelToTwips,
                               nsPixelRound aRound= eAlwaysRoundUp);
 
-  static void NotifyAncestorsOfSpecialReflow(const nsHTMLReflowState& aReflowState);
+  static void NotifyAncestorsOfSpecialReflow(nsIFrame& aFrame);
 
   NS_IMETHOD IsPercentageBase(PRBool& aBase) const;
 
