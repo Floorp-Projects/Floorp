@@ -22,10 +22,6 @@
 
 <!ENTITY  noupdates.title                 "No Updates Found">
 <!ENTITY  noupdates.intro.user.label      "&brandShortName; was not able to find any available updates.">
-<!ENTITY  noupdates.intro2.user.label     "&brandShortName; will check periodically and inform you when
-                                           updates become available.">
-<!ENTITY  noupdates.intro3.user.label     "&brandShortName; can check periodically and inform you when
-                                           updates become available.">
 
 <!ENTITY  noupdates.intro.mismatch.label  "&brandShortName; was not able to find any available updates - 
                                            compatible versions may not be available at this time.">

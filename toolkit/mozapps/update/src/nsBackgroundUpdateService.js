@@ -154,11 +154,7 @@ nsBackgroundUpdateService.prototype = {
     os.addObserver(this._updateObserver, "Update:Extension:Ended", false);
     os.addObserver(this._updateObserver, "Update:App:Ended", false);
     
-    var appUpdatesEnabled = this._pref.getBoolPref(PREF_UPDATE_APP_ENABLED);
-    var extUpdatesEnabled = this._pref.getBoolPref(PREF_UPDATE_EXTENSIONS_ENABLED);
-
-    if (appUpdatesEnabled && ((aUpdateTypes == nsIUpdateItem.TYPE_ANY) || 
-                              (aUpdateTypes == nsIUpdateItem.TYPE_APP))) {
+    if ((aUpdateTypes == nsIUpdateItem.TYPE_ANY) || (aUpdateTypes == nsIUpdateItem.TYPE_APP)) {
       var dsURI = this._pref.getComplexValue(PREF_UPDATE_APP_URI, 
                                              Components.interfaces.nsIPrefLocalizedString).data;
       var rdf = Components.classes["@mozilla.org/rdf/rdf-service;1"]
@@ -172,7 +168,7 @@ nsBackgroundUpdateService.prototype = {
         sink.addXMLSinkObserver(new nsAppUpdateXMLRDFDSObserver(this));
       }
     }
-    if (extUpdatesEnabled && (aUpdateTypes != nsIUpdateItem.TYPE_APP)) {
+    if (aUpdateTypes != nsIUpdateItem.TYPE_APP) {
       var em = Components.classes["@mozilla.org/extensions/manager;1"]
                          .getService(Components.interfaces.nsIExtensionManager);
       em.update(aItems, aItems.length);      
@@ -215,8 +211,9 @@ nsBackgroundUpdateService.prototype = {
  
     // do update checking here, parsing something like this format:
     var version = this._getProperty(aDataSource, appID, "version");
-    var checker = new VersionChecker(appVersion, version);
-    if (checker.isNewer) {
+    var versionChecker = Components.classes["@mozilla.org/updates/version-checker;1"]
+                                   .getService(Components.interfaces.nsIVersionChecker);
+    if (versionChecker.compare(appVersion, version) < 0) {
       pref.setCharPref(PREF_UPDATE_APP_UPDATEVERSION, version);
     
       var severity = this._getProperty(aDataSource, appID, "severity");
@@ -336,11 +333,9 @@ nsUpdateObserver.prototype = {
                       this._updateTypes == nsIUpdateItem.TYPE_APP;
     var updatingExt = this._updateTypes != nsIUpdateItem.TYPE_APP;
     
-    if (this._pref.getBoolPref(PREF_UPDATE_APP_ENABLED) && 
-        updatingApp)
+    if (updatingApp)
       test |= UPDATED_APP;
-    if (this._pref.getBoolPref(PREF_UPDATE_EXTENSIONS_ENABLED) && 
-        updatingExt)
+    if (updatingExt)
       test |= UPDATED_EXTENSIONS;
     
     return (this._updateState & test) == test;
@@ -419,7 +414,7 @@ function UpdateItem ()
 }
 
 UpdateItem.prototype = {
-  init: function (aID, aVersion, aName, aRow, aUpdateURL, aIconURL, aType)
+  init: function (aID, aVersion, aName, aRow, aUpdateURL, aIconURL, aUpdateRDF, aType)
   {
     this._id = aID;
     this._version = aVersion;
@@ -427,6 +422,7 @@ UpdateItem.prototype = {
     this._row = aRow;
     this._updateURL = aUpdateURL;
     this._iconURL = aIconURL;
+    this._updateRDF = aUpdateRDF;
     this._type = aType;
   },
   
@@ -436,6 +432,7 @@ UpdateItem.prototype = {
   get row()       { return this._row;       },
   get updateURL() { return this._updateURL; },
   get iconURL()   { return this._iconURL    },
+  get updateRDF() { return this._updateRDF; },
   get type()      { return this._type;      },
 
   get objectSource()
@@ -456,67 +453,66 @@ UpdateItem.prototype = {
   }
 };
 
-// XXXben I would actually like to replace this with something more generic
-// like what samir has in nsUpdateNotifier.js
-function VersionChecker(aCurrentAppVer, aUpdateAppVer)
+function nsVersionChecker()
 {
-  this._currAppVer = aCurrentAppVer;
-  this._nextAppVer = aUpdateAppVer;
 }
 
-VersionChecker.prototype = { 
-  currAppVersion: 0,
-  nextAppversion: 0,
-
-  get isNewer ()
+nsVersionChecker.prototype = {
+  /////////////////////////////////////////////////////////////////////////////
+  // nsIVersionChecker
+  
+  // -ve      if B is newer
+  // equal    if A == B
+  // +ve      if A is newer
+  compare: function (aVersionA, aVersionB)
   {
-    var power = this._getLargestPower([this._currAppVer, this._nextAppVer]);
-    this.currAppVersion = this._parseVersion(this._currAppVer, power);
-    this.nextAppVersion = this._parseVersion(this._nextAppVer, power);
-    return this.nextAppVersion > this.currAppVersion;
+    var a = this._decomposeVersion(aVersionA);
+    var b = this._decomposeVersion(aVersionB);
+    return a - b;
   },
   
-  // Convert a version string into an integer value
-  _parseVersion: function (aVersion, aPower)
+  // Version strings get translated into a "score" that indicates how new
+  // the product is. 
+  // 
+  // a.b.c+ -> a*1000 + b*100 + c*10 + 1*[+]
+  // i.e 0.6.1+ = 6 * 100 + 1 * 10 = 611. 
+  _decomposeVersion: function (aVersion)
   {
-    var parts = aVersion.split(".");
-    var version = 0;
-    if (aPower == 0)
-      aPower = parts.length;
+    var result = 0;
+    if (aVersion.charAt(aVersion.length-1) == "+") {
+      aVersion = aVersion.substr(0, aVersion.length-1);
+      result += 1;
+    }
     
-    for (var i = 0; i < parts.length; ++i) {
-      var token = parts[i];
-      if (token.charAt(token.length-1) == "+") {
-        token = token.substr(0, token.lastIndexOf("+"));
-        version += 1;
-        if (token.length == 0)
-          continue;
-      }
-      
-      version += parseInt(token) * Math.pow(10, aPower - i);
-    }
-    return version;
+    var parts = aVersion.split(".");
+    result += this._getValidInt(parts[0]) * 1000;
+    result += this._getValidInt(parts[1]) * 100;
+    result += this._getValidInt(parts[2]) * 10;
+    
+    return result;
   },
   
-  _parsePower: function (aVersion)
+  _getValidInt: function (aPartString)
   {
-    return aVersion.split(".").length;
+    var integer = parseInt(aPartString);
+    if (isNaN(integer))
+      return 0;
+    return integer;
   },
 
-  _getLargestPower: function (aVersionArray)
+  /////////////////////////////////////////////////////////////////////////////
+  // nsISupports
+  QueryInterface: function (aIID) 
   {
-    var biggestPower = 0;
-    for (var i = 0; i < aVersionArray.length; ++i) {
-      var power = this._parsePower(aVersionArray[i]);
-      if (power > biggestPower) 
-        biggestPower = power;
-    }
-    return biggestPower;
+    if (!aIID.equals(Components.interfaces.nsIVersionChecker) &&
+        !aIID.equals(Components.interfaces.nsISupports))
+      throw Components.results.NS_ERROR_NO_INTERFACE;
+    return this;
   }
-}
+};
 
-
-var gUpdateService = null;
+var gUpdateService  = null;
+var gVersionChecker = null;
 
 var gModule = {
   _firstTime: true,
@@ -552,7 +548,7 @@ var gModule = {
   _objects: {
     manager: { CID: Components.ID("{B3C290A6-3943-4B89-8BBE-C01EB7B3B311}"),
                contractID: "@mozilla.org/updates/update-service;1",
-               className: "Background Update Service",
+               className: "Update Service",
                factory: {
                           createInstance: function (aOuter, aIID) 
                           {
@@ -563,6 +559,22 @@ var gModule = {
                               gUpdateService = new nsBackgroundUpdateService();
                               
                             return gUpdateService.QueryInterface(aIID);
+                          }
+                        }
+             },
+    version: { CID: Components.ID("{9408E0A5-509E-45E7-80C1-0F35B99FF7A9}"),
+               contractID: "@mozilla.org/updates/version-checker;1",
+               className: "Version Checker",
+               factory: {
+                          createInstance: function (aOuter, aIID) 
+                          {
+                            if (aOuter != null)
+                              throw Components.results.NS_ERROR_NO_AGGREGATION;
+                            
+                            if (!gVersionChecker)
+                              gVersionChecker = new nsVersionChecker();
+                              
+                            return gVersionChecker.QueryInterface(aIID);
                           }
                         }
              },

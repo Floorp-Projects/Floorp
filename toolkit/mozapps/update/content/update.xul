@@ -94,10 +94,28 @@
     
   </wizardpage>
     
-  <wizardpage id="noupdates" pageid="noupdates" next="finished"
+  <wizardpage id="noupdates" pageid="noupdates"
               label="&noupdates.title;"
-              onpageshow="gNoUpdatesPage.onPageShow();"
-              onpageadvanced="gNoUpdatesPage.onPageAdvanced();">
+              onpageshow="gNoUpdatesPage.onPageShow();">
+    <label id="introUser">&noupdates.intro.user.label;</label>
+    <label id="introMismatch" hidden="true">&noupdates.intro.mismatch.label;</label>
+    <separator/>
+    <vbox id="mismatchNoUpdates" hidden="true">
+      <description id="mismatchIncompatibleRemaining" flex="1">
+        &noupdates.intro2.mismatch.label;
+      </description>
+      <description id="mismatchIncompatibleRemaining2" flex="1" hidden="true">
+        &noupdates.intro3.mismatch.label;
+      </description>
+      <separator class="thin"/>
+
+      <vbox align="left">
+        <checkbox label="&noupdates.enableChecking.label;" 
+                  id="mismatchFinishedEnableChecking" hidden="true"
+                  oncommand="gUpdateWizard.shouldAutoCheck = this.checked;"/>
+      </vbox>
+    </vbox>
+
   </wizardpage>
 
   <wizardpage id="found" pageid="found" next="installing"

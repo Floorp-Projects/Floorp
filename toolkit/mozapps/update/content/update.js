@@ -45,6 +45,7 @@ const nsIExtensionManager               = Components.interfaces.nsIExtensionMana
 
 const PREF_APP_ID                       = "app.id";
 const PREF_UPDATE_APP_UPDATESAVAILABLE  = "update.app.updatesAvailable";
+const PREF_UPDATE_EXTENSIONS_ENABLED    = "update.extensions.enabled";
 
 var gSourceEvent = null;
 var gUpdateTypes = null;
@@ -74,7 +75,7 @@ var gUpdateWizard = {
     var pref = Components.classes["@mozilla.org/preferences-service;1"]
                          .getService(Components.interfaces.nsIPrefBranch);
     this.shouldSuggestAutoChecking = (gSourceEvent == nsIUpdateService.SOURCE_EVENT_MISMATCH) && 
-                                      !pref.getBoolPref("update.extensions.enabled");
+                                      !pref.getBoolPref(PREF_UPDATE_EXTENSIONS_ENABLED);
 
     if (gSourceEvent == nsIUpdateService.SOURCE_EVENT_USER) {
       document.getElementById("mismatch").setAttribute("next", "checking");
@@ -262,7 +263,7 @@ var gUpdatePage = {
         item.init(appID, updates.appUpdateVersion,
                   brandShortName, -1, updates.appUpdateURL, 
                   "chrome://mozapps/skin/update/icon32.png", 
-                  nsIUpdateItem.TYPE_APP);
+                  "", nsIUpdateItem.TYPE_APP);
         gUpdateWizard.itemsToUpdate.splice(0, 0, item);
       }
       break;
@@ -427,6 +428,11 @@ var gInstallingPage = {
 };
 
 var gErrorsPage = {
+  onPageShow: function ()
+  {
+    document.documentElement.getButton("finish").focus();
+  },
+  
   onShowErrors: function ()
   {
     openDialog("chrome://mozapps/content/update/errors.xul", "", 
@@ -435,7 +441,6 @@ var gErrorsPage = {
 };
 
 var gFinishedPage = {
-
   onPageShow: function ()
   {
     gUpdateWizard.setButtonLabels(null, true, null, true, null, true);
@@ -464,6 +469,24 @@ var gFinishedPage = {
   }
 };
 
+var gNoUpdatesPage = {
+  onPageShow: function (aEvent)
+  {
+    gUpdateWizard.setButtonLabels(null, true, null, true, null, true);
+    document.documentElement.getButton("finish").focus();
+    if (gSourceEvent == nsIUpdateService.SOURCE_EVENT_MISMATCH) {
+      document.getElementById("introUser").hidden = true;
+      document.getElementById("introMismatch").hidden = false;
+      document.getElementById("mismatchNoUpdates").hidden = false;
+        
+      if (gUpdateWizard.shouldSuggestAutoChecking) {
+        document.getElementById("mismatchIncompatibleRemaining").hidden = true;
+        document.getElementById("mismatchIncompatibleRemaining2").hidden = false;
+        document.getElementById("mismatchFinishedEnableChecking").hidden = false;
+      }
+    }
+  }
+};
 
 # -*- Mode: Java; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
 # Version: MPL 1.1/GPL 2.0/LGPL 2.1

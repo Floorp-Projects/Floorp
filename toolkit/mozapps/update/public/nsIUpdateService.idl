@@ -49,6 +49,7 @@ interface nsIUpdateItem : nsISupports
   readonly attribute long     row;
   readonly attribute wstring  updateURL;
   readonly attribute wstring  iconURL;
+  readonly attribute wstring  updateRDF;
 
   const unsigned short TYPE_ANY         = 0x01;
   const unsigned short TYPE_APP         = 0x02;
@@ -62,7 +63,7 @@ interface nsIUpdateItem : nsISupports
 
   void init(in string aID, in string aVersion, in wstring aName, 
             in long aRow, in wstring aUpdateURL, in wstring aIconURL, 
-            in long aType);
+            in wstring aUpdateRDF, in long aType);
 
   readonly attribute wstring objectSource;
 };
@@ -92,5 +93,14 @@ interface nsIUpdateService : nsISupports
   readonly attribute string appUpdateVersion;
   readonly attribute wstring appUpdateDescription;
   readonly attribute wstring appUpdateURL;
+};
+
+[scriptable, uuid(22d35700-5765-42e1-914b-a0da7c911a8c)]
+interface nsIVersionChecker : nsISupports
+{
+  // -ve      if B is newer
+  // equal    if A == B
+  // +ve      if A is newer
+  long compare(in string aVersionA, in string aVersionB);
 };
 
