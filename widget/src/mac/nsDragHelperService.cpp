@@ -166,9 +166,6 @@ nsDragHelperService::Leave(DragReference inDragRef, nsIEventSink *inSink)
   if (!mDragService || !inSink)
     return NS_ERROR_FAILURE;
 
-  // tell the drag service that we're done with it.
-  mDragService->EndDragSession();
-    
   // clear out the dragRef in the drag session. We are guaranteed that
   // this will be called _after_ the drop has been processed (if there
   // is one), so we're not destroying valuable information if the drop
@@ -188,6 +185,22 @@ nsDragHelperService::Leave(DragReference inDragRef, nsIEventSink *inSink)
 #ifndef MOZ_WIDGET_COCOA
   ::HideDragHilite(inDragRef);
 #endif
+
+  nsCOMPtr<nsIDragSession> currentDragSession;
+  mDragService->GetCurrentSession(getter_AddRefs(currentDragSession));
+
+  if (currentDragSession) {
+    nsCOMPtr<nsIDOMNode> sourceNode;
+    currentDragSession->GetSourceNode(getter_AddRefs(sourceNode));
+
+    if (!sourceNode) {
+      // We're leaving a window while doing a drag that was
+      // initiated in a differnt app. End the drag session,
+      // since we're done with it for now (until the user
+      // drags back into mozilla).
+      mDragService->EndDragSession();
+    }
+  }
 
   // we're _really_ done with it, so let go of the service.
   mDragService = nsnull;
