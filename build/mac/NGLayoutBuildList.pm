@@ -323,11 +323,6 @@ sub BuildDist()
 	InstallFromManifest(":mozilla:layout:events:src:MANIFEST",						"$distdirectory:layout:");
 	InstallFromManifest(":mozilla:layout:xml:document:public:MANIFEST",				"$distdirectory:layout:");
 	InstallFromManifest(":mozilla:layout:xml:content:public:MANIFEST",				"$distdirectory:layout:");
-	
-
-	#WIDGET
-    InstallFromManifest(":mozilla:widget:public:MANIFEST",							"$distdirectory:widget:");
-    InstallFromManifest(":mozilla:widget:src:mac:MANIFEST",							"$distdirectory:widget:");
 
 	#GFX
     InstallFromManifest(":mozilla:gfx:public:MANIFEST",								"$distdirectory:gfx:");
@@ -352,6 +347,10 @@ sub BuildDist()
    #EXPAT
    InstallFromManifest(":mozilla:expat:xmlparse:MANIFEST",							"$distdirectory:expat:");
       
+	#WIDGET
+    InstallFromManifest(":mozilla:widget:public:MANIFEST",							"$distdirectory:widget:");
+    InstallFromManifest(":mozilla:widget:src:mac:MANIFEST",							"$distdirectory:widget:");
+
     #RDF
     InstallFromManifest(":mozilla:rdf:base:public:MANIFEST",						"$distdirectory:rdf:");
     InstallFromManifest(":mozilla:rdf:util:public:MANIFEST",						"$distdirectory:rdf:");
