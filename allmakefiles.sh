@@ -365,6 +365,13 @@ modules/plugin/base/public/Makefile
 modules/plugin/samples/simple/Makefile
 modules/plugin/samples/SanePlugin/Makefile
 modules/plugin/samples/default/unix/Makefile
+modules/plugin/tools/sdk/Makefile
+modules/plugin/tools/sdk/samples/Makefile
+modules/plugin/tools/sdk/samples/common/Makefile
+modules/plugin/tools/sdk/samples/basic/windows/Makefile
+modules/plugin/tools/sdk/samples/scriptable/windows/Makefile
+modules/plugin/tools/sdk/samples/simple/Makefile
+modules/plugin/tools/sdk/samples/winless/windows/Makefile
 "
 
 MAKEFILES_access_builtin="
