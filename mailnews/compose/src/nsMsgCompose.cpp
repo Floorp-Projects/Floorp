@@ -1104,7 +1104,10 @@ NS_IMETHODIMP nsMsgCompose::SendMsg(MSG_DeliverMode deliverMode,  nsIMsgIdentity
               if (userid.IsEmpty()) 
                   attachment->SetName(NS_LITERAL_STRING("vcard.vcf").get());
               else
+              {
+                  userid.Append(NS_LITERAL_CSTRING(".vcf"));
                   attachment->SetName(NS_ConvertASCIItoUCS2(userid).get());
+              }
  
               attachment->SetUrl(vCardUrl.get());
               m_compFields->AddAttachment(attachment);
