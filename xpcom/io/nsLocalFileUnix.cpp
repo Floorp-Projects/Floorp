@@ -14,24 +14,27 @@
  * released March 31, 1998.
  *
  * The Initial Developer of the Original Code is Netscape Communications
- * Corporation.  Portions created by Netscape are
+ * Corporation.    Portions created by Netscape are
  * Copyright (C) 1998-1999 Netscape Communications Corporation. All
  * Rights Reserved.
  *
  * Contributor(s):
- *     Mike Shaver              <shaver@mozilla.org>
- *     Christopher Blizzard     <blizzard@mozilla.org>
- *     Jason Eager              <jce2@po.cwru.edu>
- *     Stuart Parmenter         <pavlov@netscape.com>
- *     Brendan Eich             <brendan@mozilla.org>
- *     Pete Collins             <petejc@mozdev.org>
+ *     Mike Shaver            <shaver@mozilla.org>
+ *     Christopher Blizzard   <blizzard@mozilla.org>
+ *     Jason Eager            <jce2@po.cwru.edu>
+ *     Stuart Parmenter       <pavlov@netscape.com>
+ *     Brendan Eich           <brendan@mozilla.org>
+ *     Pete Collins           <petejc@mozdev.org>
  */
 
-/*
- * Implementation of nsIFile for ``Unixy'' systems.
+/**
+ *  Implementation of nsIFile for ``Unixy'' systems.
  */
 
-/* we're going to need some autoconf loving, I can just tell */
+/** 
+ *  we're going to need some autoconf loving, 
+ *  I can just tell 
+ */
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <unistd.h>
@@ -41,11 +44,11 @@
 #include <dirent.h>
 #include <ctype.h>
 #ifdef XP_BEOS
-#include <Path.h>
-#include <Entry.h>
+    #include <Path.h>
+    #include <Entry.h>
 #endif
 #if defined(VMS)
-#include <fabdef.h>
+    #include <fabdef.h>
 #endif
 
 #include "nsCRT.h"
@@ -63,42 +66,42 @@
 #include "nsISimpleEnumerator.h"
 #include "nsITimelineService.h"
 
-// we need these for statfs()
-
+/** 
+ *  we need these for statfs()
+ */
 #ifdef HAVE_SYS_STATVFS_H
-#if defined(__osf__) && defined(__DECCXX)
-    extern "C" int statvfs(const char *, struct statvfs *);
-#endif
-#include <sys/statvfs.h>
+    #if defined(__osf__) && defined(__DECCXX)
+        extern "C" int statvfs(const char *, struct statvfs *);
+    #endif
+    #include <sys/statvfs.h>
 #endif
 
 #ifdef HAVE_SYS_STATFS_H
-#include <sys/statfs.h>
+    #include <sys/statfs.h>
 #endif
 
 #ifdef HAVE_STATVFS
-#define STATFS statvfs
+    #define STATFS statvfs
 #else
-#define STATFS statfs
+    #define STATFS statfs
 #endif
 
 // so we can statfs on freebsd
 #if defined(__FreeBSD__)
-#define HAVE_SYS_STATFS_H
-#define STATFS statfs
-#include <sys/param.h>
-#include <sys/mount.h>
+    #define HAVE_SYS_STATFS_H
+    #define STATFS statfs
+    #include <sys/param.h>
+    #include <sys/mount.h>
 #endif
-
 
 // On some platforms file/directory name comparisons need to
 // be case-blind.
 #if defined(VMS)
-#define FILE_STRCMP strcasecmp
-#define FILE_STRNCMP strncasecmp
+    #define FILE_STRCMP strcasecmp
+    #define FILE_STRNCMP strncasecmp
 #else
-#define FILE_STRCMP strcmp
-#define FILE_STRNCMP strncmp
+    #define FILE_STRCMP strcmp
+    #define FILE_STRNCMP strncmp
 #endif
 
 #define VALIDATE_STAT_CACHE()                   \
@@ -106,7 +109,7 @@
         if (!mHaveCachedStat) {                 \
             FillStatCache();                    \
             if (!mHaveCachedStat)               \
-               return NSRESULT_FOR_ERRNO();     \
+                 return NSRESULT_FOR_ERRNO();   \
         }                                       \
     PR_END_MACRO
 
@@ -120,7 +123,7 @@
 class NS_COM
 nsDirEnumeratorUnix : public nsISimpleEnumerator
 {
-  public:
+    public:
     nsDirEnumeratorUnix();
     virtual ~nsDirEnumeratorUnix();
 
@@ -132,7 +135,7 @@ nsDirEnumeratorUnix : public nsISimpleEnumerator
 
     NS_IMETHOD Init(nsIFile *parent, PRBool ignored);
 
-  protected:
+    protected:
     NS_IMETHOD GetNextEntry();
 
     DIR *mDir;
@@ -141,7 +144,8 @@ nsDirEnumeratorUnix : public nsISimpleEnumerator
 };
 
 nsDirEnumeratorUnix::nsDirEnumeratorUnix() :
-  mDir(nsnull), mEntry(nsnull)
+                         mDir(nsnull), 
+                         mEntry(nsnull)
 {
     NS_INIT_REFCNT();
 }
@@ -213,15 +217,15 @@ nsDirEnumeratorUnix::GetNextEntry()
             return NSRESULT_FOR_ERRNO();
 
         // keep going past "." and ".."
-    } while (mEntry->d_name[0] == '.' &&
-             (mEntry->d_name[1] == '\0' ||      // .\0
-              (mEntry->d_name[1] == '.' &&
-               mEntry->d_name[2] == '\0')));    // ..\0
+    } while (mEntry->d_name[0] == '.'     &&
+            (mEntry->d_name[1] == '\0'    ||   // .\0
+            (mEntry->d_name[1] == '.'     &&
+            mEntry->d_name[2] == '\0')));      // ..\0
     return NS_OK;
 }
 
 nsLocalFile::nsLocalFile() :
-  mHaveCachedStat(PR_FALSE)
+    mHaveCachedStat(PR_FALSE)
 {
     NS_INIT_REFCNT();
 }
@@ -233,8 +237,9 @@ nsLocalFile::~nsLocalFile()
 NS_IMPL_THREADSAFE_ISUPPORTS2(nsLocalFile, nsILocalFile, nsIFile)
 
 nsresult
-nsLocalFile::nsLocalFileConstructor(nsISupports *outer, const nsIID &aIID,
-                                    void **aInstancePtr)
+nsLocalFile::nsLocalFileConstructor(nsISupports *outer, 
+                                        const nsIID &aIID,
+                                        void **aInstancePtr)
 {
     NS_ENSURE_ARG_POINTER(aInstancePtr);
     NS_ENSURE_NO_AGGREGATION(outer);
@@ -271,7 +276,7 @@ nsLocalFile::InitWithPath(const char *filePath)
 {
     NS_ENSURE_ARG(filePath);
 
-    ssize_t len  = strlen(filePath);
+    ssize_t len    = strlen(filePath);
     while (filePath[len-1] == '/' && len > 1)
         --len;
     mPath.Assign(Substring(filePath, filePath+len));
@@ -296,17 +301,17 @@ nsLocalFile::CreateAllAncestors(PRUint32 permissions)
 #endif
 
     while ((slashp = strchr(slashp + 1, '/'))) {
-        /*
-         * Sequences of '/' are equivalent to a single '/'.
+        /**
+         *  Sequences of '/' are equivalent to a single '/'.
          */
         if (slashp[1] == '/')
             continue;
 
-        /*
-         * If the path has a trailing slash, don't make the last component here,
-         * because we'll get EEXISTS in Create when we try to build the final
-         * component again, and it's easier to condition the logic here than
-         * there.
+        /**
+         *  If the path has a trailing slash, don't make the last component here,
+         *  because we'll get EEXISTS in Create when we try to build the final
+         *  component again, and it's easier to condition the logic here than
+         *  there.
          */
         if (slashp[1] == '\0')
             break;
@@ -321,11 +326,11 @@ nsLocalFile::CreateAllAncestors(PRUint32 permissions)
         /* Put the / back before we (maybe) return */
         *slashp = '/';
 
-        /*
-         * We could get EEXISTS for an existing file -- not directory --
-         * with the name of one of our ancestors, but that's OK: we'll get
-         * ENOTDIR when we try to make the next component in the path,
-         * either here on back in Create, and error out appropriately.
+        /**
+         *  We could get EEXISTS for an existing file -- not directory --
+         *  with the name of one of our ancestors, but that's OK: we'll get
+         *  ENOTDIR when we try to make the next component in the path,
+         *  either here on back in Create, and error out appropriately.
          */
         if (result == -1 && errno != EEXIST)
             return NSRESULT_FOR_ERRNO();
@@ -337,7 +342,6 @@ nsLocalFile::CreateAllAncestors(PRUint32 permissions)
 
     return NS_OK;
 }
-
 
 NS_IMETHODIMP
 nsLocalFile::OpenNSPRFileDesc(PRInt32 flags, PRInt32 mode, PRFileDesc **_retval)
@@ -389,14 +393,14 @@ nsLocalFile::Create(PRUint32 type, PRUint32 permissions)
 
     result = exclusiveCreateFunc(mPath.get(), permissions);
     if (result == -1 && errno == ENOENT) {
-        /*
-         * If we failed because of missing ancestor components, try to create
-         * them and then retry the original creation.
+        /**
+         *  If we failed because of missing ancestor components, try to create
+         *  them and then retry the original creation.
          *
-         * Ancestor directories get the same permissions as the file we're
-         * creating, with the X bit set for each of (user,group,other) with
-         * an R bit in the original permissions.  If you want to do anything
-         * fancy like setgid or sticky bits, do it by hand.
+         *  Ancestor directories get the same permissions as the file we're
+         *  creating, with the X bit set for each of (user,group,other) with
+         *  an R bit in the original permissions.    If you want to do anything
+         *  fancy like setgid or sticky bits, do it by hand.
          */
         int dirperm = permissions;
         if (permissions & S_IRUSR)
@@ -463,7 +467,7 @@ NS_IMETHODIMP
 nsLocalFile::Normalize()
 {
     CHECK_mPath();
-    char  resolved_path[PATH_MAX] = "";
+    char    resolved_path[PATH_MAX] = "";
     char *resolved_path_ptr = nsnull;
 
 #ifdef XP_BEOS
@@ -522,9 +526,9 @@ nsLocalFile::SetLeafName(const char *aLeafName)
     if (NS_FAILED(rv = GetLeafNameRaw((const char **)&leafName)))
         return rv;
 
-    char *newPath = (char *)nsMemory::Alloc((leafName - mPath.get()) +
-                                            strlen(aLeafName) +
-                                            1);
+    char *newPath = (char *)nsMemory::Alloc((leafName - mPath.get()) 
+                                        + strlen(aLeafName) 
+                                        + 1);
     if (!newPath)
         return NS_ERROR_OUT_OF_MEMORY;
     *leafName = '\0';
@@ -553,8 +557,9 @@ nsLocalFile::GetPath(char **_retval)
 }
 
 nsresult
-nsLocalFile::GetTargetPathName(nsIFile *newParent, const char *newName,
-                               char **_retval)
+nsLocalFile::GetTargetPathName(nsIFile *newParent, 
+                                   const char *newName,
+                                   char **_retval)
 {
     nsresult rv;
     nsCOMPtr<nsIFile> oldParent;
@@ -616,7 +621,7 @@ nsLocalFile::CopyDirectoryTo(nsIFile *newParent)
         return rv;
     if (!dirCheck)
         return CopyTo(newParent, nsnull);
-  
+    
     if (NS_FAILED(rv = Equals(newParent, &dirCheck)))
         return rv;
     if (dirCheck) { 
@@ -632,7 +637,7 @@ nsLocalFile::CopyDirectoryTo(nsIFile *newParent)
             return rv;
         if (NS_FAILED(rv = newParent->Create(DIRECTORY_TYPE, oldPerms)))
             return rv;
-    } else {  // dir exists lets try to use leaf
+    } else {    // dir exists lets try to use leaf
         nsXPIDLCString leafName;
         if (NS_FAILED(rv = GetLeafName(getter_Copies(leafName))))
             return rv;
@@ -814,7 +819,7 @@ nsLocalFile::CopyTo(nsIFile *newParent, const char *newName)
 
 #ifdef DEBUG_blizzard
         printf("read %d bytes, wrote %d bytes\n",
-               totalRead, totalWritten);
+                 totalRead, totalWritten);
 #endif
 
         // close the files
@@ -981,20 +986,22 @@ nsLocalFile::GetLastModifiedTimeOfLink(PRInt64 *aLastModTimeOfLink)
     return NS_OK;
 }
 
-/*
- * utime(2) may or may not dereference symlinks, joy.
+/**
+ *  utime(2) may or may not dereference symlinks, joy.
  */
+
 NS_IMETHODIMP
 nsLocalFile::SetLastModifiedTimeOfLink(PRInt64 aLastModTimeOfLink)
 {
     return SetLastModifiedTime(aLastModTimeOfLink);
 }
 
-/*
- * only send back permissions bits: maybe we want to send back the whole
- * mode_t to permit checks against other file types?
+/** 
+ *  only send back permissions bits: maybe we want to send back the whole
+ *  mode_t to permit checks against other file types?
  */
-#define NORMALIZE_PERMS(mode)  ((mode)& (S_IRWXU | S_IRWXG | S_IRWXO))
+
+#define NORMALIZE_PERMS(mode)    ((mode)& (S_IRWXU | S_IRWXG | S_IRWXO))
 
 NS_IMETHODIMP
 nsLocalFile::GetPermissions(PRUint32 *aPermissions)
@@ -1097,44 +1104,48 @@ nsLocalFile::GetDiskSpaceAvailable(PRInt64 *aDiskSpaceAvailable)
 
     struct STATFS fs_buf;
 
-    // Members of the STATFS struct that you should know about:
-    // f_bsize = block size on disk.
-    // f_bavail = number of free blocks available to a non-superuser.
-    // f_bfree = number of total free blocks in file system.
+    /** 
+     *  Members of the STATFS struct that you should know about:
+     *  f_bsize = block size on disk.
+     *  f_bavail = number of free blocks available to a non-superuser.
+     *  f_bfree = number of total free blocks in file system.
+     */
 
     if (STATFS(mPath.get(), &fs_buf) < 0) {
         // The call to STATFS failed.
 #ifdef DEBUG
-        printf("ERROR: GetDiskSpaceAvailable: STATFS call FAILED. \n");
+    printf("ERROR: GetDiskSpaceAvailable: STATFS call FAILED. \n");
 #endif
         return NS_ERROR_FAILURE;
     }
 #ifdef DEBUG_DISK_SPACE
     printf("DiskSpaceAvailable: %d bytes\n",
-       fs_buf.f_bsize * (fs_buf.f_bavail - 1));
+         fs_buf.f_bsize * (fs_buf.f_bavail - 1));
 #endif
 
-    // The number of Bytes free = The number of free blocks available to
-    // a non-superuser, minus one as a fudge factor, multiplied by the size
-    // of the beforementioned blocks.
+    /** 
+     *  The number of Bytes free = The number of free blocks available to
+     *  a non-superuser, minus one as a fudge factor, multiplied by the size
+     *  of the beforementioned blocks.
+     */
 
     PRInt64 bsize,bavail;
-    LL_I2L( bsize,  fs_buf.f_bsize );
+    LL_I2L( bsize,    fs_buf.f_bsize );
     LL_I2L( bavail, fs_buf.f_bavail - 1 );
     LL_MUL( *aDiskSpaceAvailable, bsize, bavail );
     return NS_OK;
 
 #else
-    /*
-    ** This platform doesn't have statfs or statvfs.
-    ** I'm sure that there's a way to check for free disk space
-    ** on platforms that don't have statfs
-    ** (I'm SURE they have df, for example).
-    **
-    ** Until we figure out how to do that, lets be honest
-    ** and say that this command isn't implemented
-    ** properly for these platforms yet.
-    */
+    /**
+     *  This platform doesn't have statfs or statvfs.
+     *  I'm sure that there's a way to check for free disk space
+     *  on platforms that don't have statfs
+     *  (I'm SURE they have df, for example).
+     *
+     *    Until we figure out how to do that, lets be honest
+     *  and say that this command isn't implemented
+     *  properly for these platforms yet.
+     */
 #ifdef DEBUG
     printf("ERROR: GetDiskSpaceAvailable: Not implemented for plaforms without statfs.\n");
 #endif
@@ -1149,13 +1160,13 @@ nsLocalFile::GetParent(nsIFile **aParent)
 {
     CHECK_mPath();
     NS_ENSURE_ARG_POINTER(aParent);
-    *aParent     = nsnull;
-    PRBool root  = PR_FALSE;
+    *aParent       = nsnull;
+    PRBool root    = PR_FALSE;
 
     // <brendan, after jband> I promise to play nice
-    char *buffer = NS_CONST_CAST(char *, mPath.get()),
-         *slashp = buffer, 
-         *orig   = nsCRT::strdup(buffer);
+    char *buffer   = NS_CONST_CAST(char *, mPath.get()),
+         *slashp   = buffer, 
+         *orig     = nsCRT::strdup(buffer);
 
     // find the last significant slash in buffer
     slashp = strrchr(buffer, '/');
@@ -1189,8 +1200,9 @@ nsLocalFile::GetParent(nsIFile **aParent)
     return rv;
 }
 
-/*
- * The results of Exists, isWritable and isReadable are not cached.
+/**
+ * The results of Exists, isWritable and isReadable 
+ * are not cached.
  */
 
 NS_IMETHODIMP
@@ -1286,12 +1298,12 @@ nsLocalFile::IsSpecial(PRBool *_retval)
 {
     NS_ENSURE_ARG_POINTER(_retval);
     VALIDATE_STAT_CACHE();
-    *_retval = S_ISCHR(mCachedStat.st_mode)  ||
-               S_ISBLK(mCachedStat.st_mode)  ||
+    *_retval = S_ISCHR(mCachedStat.st_mode)    ||
+                 S_ISBLK(mCachedStat.st_mode)    ||
 #ifndef XP_BEOS
-               S_ISSOCK(mCachedStat.st_mode) ||
+                 S_ISSOCK(mCachedStat.st_mode) ||
 #endif
-               S_ISFIFO(mCachedStat.st_mode);
+                 S_ISFIFO(mCachedStat.st_mode);
 
     return NS_OK;
 }
@@ -1436,14 +1448,19 @@ nsLocalFile::GetTarget(char **_retval)
     return rv;
 }
 
+/** 
+ *  Warning this method is going away 
+ */
 NS_IMETHODIMP
 nsLocalFile::Spawn(const char **args, PRUint32 count)
 {
     CHECK_mPath();
 
-    // make sure that when we allocate we have 1 greater than the
-    // count since we need to null terminate the list for the argv to
-    // pass into PR_CreateProcessDetached
+    /**
+     *  make sure that when we allocate we have 1 greater than the
+     *  count since we need to null terminate the list for the argv to
+     *  pass into PR_CreateProcessDetached
+     */
     char **my_argv = (char **)malloc(sizeof(char *) * (count + 2) );
     if (!my_argv)
         return NS_ERROR_OUT_OF_MEMORY;
@@ -1476,6 +1493,7 @@ nsLocalFile::GetFollowLinks(PRBool *aFollowLinks)
     *aFollowLinks = PR_TRUE;
     return NS_OK;
 }
+
 NS_IMETHODIMP
 nsLocalFile::SetFollowLinks(PRBool aFollowLinks)
 {
@@ -1493,9 +1511,9 @@ nsLocalFile::GetDirectoryEntries(nsISimpleEnumerator **entries)
     if (NS_FAILED(rv))
         return rv;
 
-    /* QI needed?  If not, need to ADDREF. */
+    /* QI needed? If not, need to ADDREF. */
     return dir->QueryInterface(NS_GET_IID(nsISimpleEnumerator),
-                               (void **)entries);
+                                 (void **)entries);
 }
 
 NS_IMETHODIMP nsLocalFile::GetURL(char * *aURL)
@@ -1538,15 +1556,17 @@ NS_IMETHODIMP nsLocalFile::SetURL(const char * aURL)
     
     nsXPIDLCString host, directory, fileBaseName, fileExtension;
     
-    rv = ParseURL(aURL, getter_Copies(host), getter_Copies(directory),
-                  getter_Copies(fileBaseName), getter_Copies(fileExtension));
+    rv = ParseURL(aURL, getter_Copies(host), 
+                                 getter_Copies(directory),
+                                 getter_Copies(fileBaseName), 
+                                 getter_Copies(fileExtension));
+
     if (NS_FAILED(rv)) return rv;
 
     nsCAutoString path;
     nsCAutoString component;
 
-    if (directory)
-    {
+    if (directory) {
         nsStdEscape(directory, esc_Directory, component);
         path += component;
     }    
@@ -1604,14 +1624,13 @@ nsLocalFile::SetPersistentDescriptor(const char *aPersistentDescriptor)
 NS_IMETHODIMP
 nsLocalFile::Reveal()
 {
-  return NS_ERROR_FAILURE;
+    return NS_ERROR_FAILURE;
 }
-
 
 NS_IMETHODIMP
 nsLocalFile::Launch()
 {
-  return NS_ERROR_FAILURE;
+    return NS_ERROR_FAILURE;
 }
 
 nsresult
