@@ -840,7 +840,7 @@ TypedRegister ICodeGenerator::genExpr(ExprNode *p,
         {
             UnaryExprNode *d = static_cast<UnaryExprNode *>(p);
             ASSERT(d->op->getKind() == ExprNode::dot);
-            ret = handleDot(static_cast<BinaryExprNode *>(d->op), p->getKind(), xcrementOp, ret);
+            ret = handleDot(static_cast<BinaryExprNode *>(d->op), p->getKind(), xcrementOp, ret, NULL);
             // rather than getProperty(), need to do a deleteProperty().
         }
         break;
