@@ -42,6 +42,7 @@
 #include "rdfutil.h"
 #include "prlog.h"
 #include "nsIComponentManager.h"
+#include "xp_core.h"
 
 ////////////////////////////////////////////////////////////////////////
 
@@ -863,6 +864,8 @@ BookmarkDataSourceImpl::ReadBookmarks(void)
 	parser.Parse(kNC_BookmarksRoot);
 
 	// look for and import any IE Favorites
+	nsAutoString	ieTitle("Imported IE Favorites");
+
 #ifdef	XP_MAC
 	nsSpecialSystemDirectory ieFavoritesFile(nsSpecialSystemDirectory::Mac_PreferencesDirectory);
 	ieFavoritesFile += "Explorer";
@@ -881,7 +884,6 @@ BookmarkDataSourceImpl::ReadBookmarks(void)
 					BookmarkParser parser(ieStream, this);
 					parser.Parse(ieFolder);
 					
-					nsAutoString	ieTitle("Imported IE Favorites");
 					nsCOMPtr<nsIRDFLiteral>	ieTitleLiteral;
 					if (NS_SUCCEEDED(rv = mRDFService->GetLiteral(ieTitle, getter_AddRefs(ieTitleLiteral))))
 					{
@@ -892,6 +894,23 @@ BookmarkDataSourceImpl::ReadBookmarks(void)
 					}
 				}
 			}
+		}
+	}
+#endif
+
+#ifdef	XP_WIN
+	nsCOMPtr<nsIRDFResource>	ieFolder;
+	// XXX This usually works for Win95/98... need to be smarter (check registry?)
+	// XXX and do the right thing (whatever that is) for WinNT
+	if (NS_SUCCEEDED(rv = mRDFService->GetResource("file:///C|/WINDOWS/Favorites/", getter_AddRefs(ieFolder))))
+	{
+		nsCOMPtr<nsIRDFLiteral>	ieTitleLiteral;
+		if (NS_SUCCEEDED(rv = mRDFService->GetLiteral(ieTitle, getter_AddRefs(ieTitleLiteral))))
+		{
+			rv = rdf_Assert(mInner, ieFolder, kURINC_Name, ieTitleLiteral);
+		}
+		if (NS_SUCCEEDED(rv = rdf_ContainerAppendElement(mInner, kNC_BookmarksRoot, ieFolder)))
+		{
 		}
 	}
 #endif
