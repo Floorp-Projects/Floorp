@@ -1865,6 +1865,10 @@ jsdStackFrame::Eval (const nsAString &bytes, const char *fileName,
                      PRUint32 line, jsdIValue **result, PRBool *_rval)
 {
     ASSERT_VALID_EPHEMERAL;
+
+    if (bytes.IsEmpty())
+        return NS_ERROR_INVALID_ARG;
+
     const nsSharedBufferHandle<PRUnichar> *h = bytes.GetSharedBufferHandle();
     const jschar *char_bytes = NS_REINTERPRET_CAST(const jschar *,
                                                    h->DataStart());
