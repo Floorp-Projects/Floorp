@@ -1508,7 +1508,7 @@ nsresult
 nsMsgLocalMailFolder::SetTransactionManager(nsITransactionManager* txnMgr)
 {
   nsresult rv = NS_OK;
-  if (!mTxnMgr)
+  if (txnMgr)
     mTxnMgr = do_QueryInterface(txnMgr, &rv);
   return rv;
 }

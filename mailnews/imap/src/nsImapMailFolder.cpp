@@ -5189,7 +5189,7 @@ nsresult
 nsImapMailFolder::SetTransactionManager(nsITransactionManager* txnMgr)
 {
     nsresult rv = NS_OK;
-    if (txnMgr && !m_transactionManager)
+    if (txnMgr)
         m_transactionManager = txnMgr;
     return rv;
 }
