@@ -105,6 +105,19 @@ CProgressCaption::SetDescriptor(const char* inCDescriptor)
 
 
 //
+// SetMaxValue
+//
+// Sets the max value of the progress bar control.
+//
+void
+CProgressCaption :: SetMaxValue ( Int32 inNewMaxValue )
+{
+	mBar->SetMaxValue ( inNewMaxValue ) ;
+
+} // SetMaxValue
+
+
+//
 // GetValue
 // SetValue
 //

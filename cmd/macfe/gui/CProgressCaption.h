@@ -45,6 +45,8 @@ class CProgressCaption : public LView
 
 		virtual	void			SetValue(Int32 inValue);
 		virtual	Int32			GetValue() const;
+		
+		virtual void			SetMaxValue ( Int32 inMax ) ;
 
 	protected:
 
