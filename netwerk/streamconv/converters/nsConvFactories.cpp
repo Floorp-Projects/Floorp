@@ -232,6 +232,12 @@ static nsModuleComponentInfo components[] =
       NS_ISTREAMCONVERTER_KEY "?from=text/ftp-dir-nt&to=application/http-index-format", 
       CreateNewFTPDirListingConv
     },
+
+    { "FTPDirListingConverter", 
+      NS_FTPDIRLISTINGCONVERTER_CID,
+      NS_ISTREAMCONVERTER_KEY "?from=text/ftp-dir-os2&to=application/http-index-format", 
+      CreateNewFTPDirListingConv
+    },
     
     { "MultiMixedConverter", 
       NS_MULTIMIXEDCONVERTER_CID,
