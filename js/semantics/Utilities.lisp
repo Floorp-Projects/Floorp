@@ -637,6 +637,49 @@
 
 
 ;;; ------------------------------------------------------------------------------------------------------
+;;; PARTIAL ORDERS
+
+(defstruct partial-order
+  (next-number 0 :type integer))  ;Bit number to use for next element
+
+
+(defstruct (partial-order-element (:constructor make-partial-order-element (partial-order number predecessor-bitmap))
+                                  (:copier nil)
+                                  (:predicate partial-order-element?))
+  (partial-order nil :type partial-order)  ;Partial order to which this element belongs
+  (number nil :type integer)               ;Bit number of this element
+  (predecessor-bitmap nil :type integer))  ;Bitmap of elements less than or equal to this one in the partial order
+
+
+; Construct a new unique element in the partial order that is greater than the
+; given predecessors.  Return that element.
+(defun partial-order-add-element (partial-order &rest predecessors)
+  (let* ((number (partial-order-next-number partial-order))
+         (predecessor-bitmap (ash 1 number)))
+    (dolist (predecessor predecessors)
+      (assert-true (eq (partial-order-element-partial-order predecessor) partial-order))
+      (setq predecessor-bitmap (logior predecessor-bitmap (partial-order-element-predecessor-bitmap predecessor))))
+    (incf (partial-order-next-number partial-order))
+    (make-partial-order-element partial-order number predecessor-bitmap)))
+
+
+(defmacro def-partial-order-element (partial-order name &rest predecessors)
+  `(defparameter ,name (partial-order-add-element ,partial-order ,@predecessors)))
+
+
+; Return true if element1 is greater than or equal to element2 in this partial order.
+(defun partial-order->= (element1 element2)
+  (assert-true (eq (partial-order-element-partial-order element1) (partial-order-element-partial-order element2)))
+  (logbitp (partial-order-element-number element2) (partial-order-element-predecessor-bitmap element1)))
+
+
+; Return true if element1 is less than element2 in this partial order.
+(declaim (inline partial-order-<))
+(defun partial-order-< (element1 element2)
+  (not (partial-order->= element1 element2)))
+
+
+;;; ------------------------------------------------------------------------------------------------------
 ;;; DEPTH-FIRST SEARCH
 
 ; Return a depth-first-ordered list of the nodes in a directed graph.
