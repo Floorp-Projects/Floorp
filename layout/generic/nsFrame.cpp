@@ -4656,7 +4656,7 @@ nsFrame::GetStyleDataExternal(nsStyleStructID aSID) const
   return mStyleContext->GetStyleData(aSID);
 }
 
-PRBool
+/* virtual */ PRBool
 nsIFrame::IsFocusable(PRInt32 *aTabIndex, PRBool aWithMouse)
 {
   PRInt32 tabIndex = -1;
