@@ -26,10 +26,16 @@
 #define DOM_PRIV_H
 
 #include "dom.h"
-#include "xp_mem.h"
+#ifdef XP_PC
+/* XXX this pulls in half the freaking client! but it's needed for some bogus
+       reason probably to do with compiled headers, to avoid unresolved refs
+       to XP_MEMCPY and XP_STRDUP */
+#include "xp.h"
+#else
 #include "xpassert.h"
+#include "xp_mem.h"
 #include "xp_str.h"
-/* #include "xp.h" -- this pulls in half the freaking client...no thanks! */
+#endif
 
 JSObject *
 dom_NodeInit(JSContext *cx, JSObject *obj);
