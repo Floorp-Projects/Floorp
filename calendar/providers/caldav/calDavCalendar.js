@@ -261,20 +261,21 @@ calDavCalendar.prototype = {
         if (!aListener)
             return;
 
-        if (aId == null || this.mItems[aId] == null) {
-            aListener.onOperationComplete(this,
-                                          Components.results.NS_ERROR_FAILURE,
-                                          aListener.GET,
-                                          null,
-                                          "IID doesn't exist for getItem");
-            // XXX FAILURE is a bad choice
-            return;
-        }
-
         // XXX we really should use DASL SEARCH or CalDAV REPORT, but the only
         // server we can possibly test against doesn't yet support those
 
         function searchItemsLocally(calendarToReturn, aAllItems) {
+
+            if (aId == null || aAllItems[aId] == null) {
+                aListener.onOperationComplete(this,
+                                              Components.results.NS_ERROR_FAILURE,
+                                              aListener.GET,
+                                              null,
+                                              "IID doesn't exist for getItem");
+                // XXX FAILURE is a bad choice
+                return;
+            }
+
             var item = aAllItems[aId];
             var iid = null;
 
@@ -283,24 +284,20 @@ calDavCalendar.prototype = {
             } else if (item.QueryInterface(Components.interfaces.calITodo)) {
                 iid = Components.interfaces.calITodo;
             } else {
-                aListener.onOperationComplete (this,
-                                               Components.results.NS_ERROR_FAILURE,
-                                               aListener.GET,
-                                               aId,
-                                               "Can't deduce item type based on QI");
+                aListener.onOperationComplete(this,
+                                              Components.results.NS_ERROR_FAILURE,
+                                              aListener.GET,
+                                              aId,
+                                              "Can't deduce item type based on QI");
                 return;
             }
 
-            aListener.onGetResult (this,
-                                   Components.results.NS_OK,
-                                   iid,
-                                   null, 1, [item]);
+            aListener.onGetResult(calendarToReturn, Components.results.NS_OK,
+                                  iid, null, 1, [item]);
 
-            aListener.onOperationComplete (this,
-                                           Components.results.NS_OK,
-                                           aListener.GET,
-                                           aId,
-                                           null);
+            aListener.onOperationComplete(calendarToReturn,
+                                          Components.results.NS_OK,
+                                          aListener.GET, aId, null);
         }
 
         this.getAllEvents(aListener, searchItemsLocally);
