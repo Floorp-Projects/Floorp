@@ -85,7 +85,6 @@ PRThread *suspendAllThread = NULL;
 
 extern PRCList _pr_active_global_threadQ;
 extern PRCList _pr_active_local_threadQ;
-extern _PRCPU  *_pr_primordialCPU;
 
 static void _PR_DecrActiveThreadCount(PRThread *thread);
 static PRThread *_PR_AttachThread(PRThreadType, PRThreadPriority, PRThreadStack *);
