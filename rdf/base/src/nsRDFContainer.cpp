@@ -192,11 +192,11 @@ RDFContainerImpl::GetCount(PRInt32 *aCount)
     rv = nextValNode->QueryInterface(NS_GET_IID(nsIRDFLiteral), getter_AddRefs(nextValLiteral));
     if (NS_FAILED(rv)) return rv;
 
-    nsXPIDLString s;
-    rv = nextValLiteral->GetValue( getter_Copies(s) );
+    const PRUnichar *s;
+    rv = nextValLiteral->GetValueConst( &s );
     if (NS_FAILED(rv)) return rv;
 
-    nsAutoString nextValStr(NS_STATIC_CAST(const PRUnichar*, s));
+    nsAutoString nextValStr(s);
 
     PRInt32 nextVal;
     PRInt32 err;
@@ -563,14 +563,36 @@ RDFContainerImpl::Renumber(PRInt32 aStartIndex, PRInt32 aIncrement)
         i = count; // we're one-indexed.
     }
 
-    while ((aIncrement < 0) ? (i <= count) : (i >= aStartIndex)) {
+    // Note: once we begin batch updates, don't exit this method until
+    // ending batch updates, otherwise viewers will get out of sync
+    nsCOMPtr<nsIRDFObserver>    dsObs;
+    if (mDataSource)
+    {
+        dsObs = do_QueryInterface(mDataSource);
+        if (dsObs)
+        {
+            dsObs->BeginUpdateBatch(mDataSource);
+        }
+    }
+
+    PRBool  err = PR_FALSE;
+    while ((err == PR_FALSE) && ((aIncrement < 0) ? (i <= count) : (i >= aStartIndex)))
+    {
         nsCOMPtr<nsIRDFResource> oldOrdinal;
         rv = gRDFContainerUtils->IndexToOrdinalResource(i, getter_AddRefs(oldOrdinal));
-        if (NS_FAILED(rv)) return rv;
+        if (NS_FAILED(rv))
+        {
+            err = PR_TRUE;
+            continue;
+        }
 
         nsCOMPtr<nsIRDFResource> newOrdinal;
         rv = gRDFContainerUtils->IndexToOrdinalResource(i + aIncrement, getter_AddRefs(newOrdinal));
-        if (NS_FAILED(rv)) return rv;
+        if (NS_FAILED(rv))
+        {
+            err = PR_TRUE;
+            continue;
+        }
 
         // Because of aggregation, we need to be paranoid about the
         // possibility that >1 element may be present per ordinal. If
@@ -580,43 +602,77 @@ RDFContainerImpl::Renumber(PRInt32 aStartIndex, PRInt32 aIncrement)
         // would require two passes.)
         nsCOMPtr<nsISimpleEnumerator> targets;
         rv = mDataSource->GetTargets(mContainer, oldOrdinal, PR_TRUE, getter_AddRefs(targets));
-        if (NS_FAILED(rv)) return rv;
+        if (NS_FAILED(rv))
+        {
+            err = PR_TRUE;
+            continue;
+        }
 
         while (1) {
             PRBool hasMore;
             rv = targets->HasMoreElements(&hasMore);
-            if (NS_FAILED(rv)) return rv;
+            if (NS_FAILED(rv))
+            {
+                err = PR_TRUE;
+                break;
+            }
 
             if (! hasMore)
                 break;
 
             nsCOMPtr<nsISupports> isupports;
             rv = targets->GetNext(getter_AddRefs(isupports));
-            if (NS_FAILED(rv)) return rv;
+            if (NS_FAILED(rv))
+            {
+                err = PR_TRUE;
+                break;
+            }
 
             nsCOMPtr<nsIRDFNode> element( do_QueryInterface(isupports) );
             NS_ASSERTION(element != nsnull, "something funky in the enumerator");
             if (! element)
-                return NS_ERROR_UNEXPECTED;
+            {
+                err = PR_TRUE;
+                rv = NS_ERROR_UNEXPECTED;
+                break;
+            }
 
             rv = mDataSource->Unassert(mContainer, oldOrdinal, element);
-            if (NS_FAILED(rv)) return rv;
+            if (NS_FAILED(rv))
+            {
+                err = PR_TRUE;
+                break;
+            }
 
             rv = mDataSource->Assert(mContainer, newOrdinal, element, PR_TRUE);
-            if (NS_FAILED(rv)) return rv;
+            if (NS_FAILED(rv))
+            {
+                err = PR_TRUE;
+                break;
+            }
         }
 
         i -= aIncrement;
     }
 
-    if (aIncrement < 0) {
+    if ((err == PR_FALSE) && (aIncrement < 0))
+    {
         // Update the container's nextVal to reflect the
         // renumbering. We do this now if aIncrement < 0 because, up
         // until this point, we'll want people to be able to find
         // things that are still "at the end".
         rv = SetNextValue(count + aIncrement + 1);
-        if (NS_FAILED(rv)) return rv;
+        if (NS_FAILED(rv))
+        {
+            err = PR_TRUE;
+        }
     }
+
+    // Note: MUST end update batching before exiting this method
+    // otherwise viewers will get out of sync
+    if (dsObs)  dsObs->EndUpdateBatch(mDataSource);
+
+    if (err == PR_TRUE) return(rv);
 
     return NS_OK;
 }

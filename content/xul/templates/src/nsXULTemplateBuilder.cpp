@@ -2723,6 +2723,8 @@ protected:
 
 	nsRDFSortState			sortState;
 
+    PRInt32     mUpdateBatchNest;
+
     // For the rule network
     ResourceSet   mContainmentProperties;
     PRBool        mRulesCompiled;
@@ -4028,7 +4030,8 @@ nsXULTemplateBuilder::nsXULTemplateBuilder(void)
       mTimer(nsnull),
       mRulesCompiled(PR_FALSE),
       mIsBuilding(PR_FALSE),
-      mFlags(0)
+      mFlags(0),
+      mUpdateBatchNest(0)
 {
     NS_INIT_REFCNT();
 }
@@ -4671,6 +4674,8 @@ nsXULTemplateBuilder::OnAssert(nsIRDFDataSource* aDataSource,
                                nsIRDFResource* aProperty,
                                nsIRDFNode* aTarget)
 {
+    if (mUpdateBatchNest != 0)  return(NS_OK);
+
     // Just silently fail, because this can happen "normally" as part
     // of tear-down code. (Bug 9098)
     if (! mDocument)
@@ -4759,6 +4764,8 @@ nsXULTemplateBuilder::OnUnassert(nsIRDFDataSource* aDataSource,
                                  nsIRDFResource* aProperty,
                                  nsIRDFNode* aTarget)
 {
+    if (mUpdateBatchNest != 0)  return(NS_OK);
+
     // Just silently fail, because this can happen "normally" as part
     // of tear-down code. (Bug 9098)
     if (! mDocument)
@@ -4794,6 +4801,8 @@ nsXULTemplateBuilder::OnChange(nsIRDFDataSource* aDataSource,
                                nsIRDFNode* aOldTarget,
                                nsIRDFNode* aNewTarget)
 {
+    if (mUpdateBatchNest != 0)  return(NS_OK);
+
     // Just silently fail, because this can happen "normally" as part
     // of tear-down code. (Bug 9098)
     if (! mDocument)
@@ -4852,6 +4861,8 @@ nsXULTemplateBuilder::OnMove(nsIRDFDataSource* aDataSource,
                              nsIRDFResource* aProperty,
                              nsIRDFNode* aTarget)
 {
+    if (mUpdateBatchNest != 0)  return(NS_OK);
+
     // Ignore re-entrant updates while we're building content.
     if (mIsBuilding)
         return NS_OK;
@@ -4870,6 +4881,7 @@ nsXULTemplateBuilder::OnMove(nsIRDFDataSource* aDataSource,
 NS_IMETHODIMP
 nsXULTemplateBuilder::BeginUpdateBatch(nsIRDFDataSource* aDataSource)
 {
+    mUpdateBatchNest++;
     return NS_OK;
 }
 
@@ -4877,6 +4889,10 @@ nsXULTemplateBuilder::BeginUpdateBatch(nsIRDFDataSource* aDataSource)
 NS_IMETHODIMP
 nsXULTemplateBuilder::EndUpdateBatch(nsIRDFDataSource* aDataSource)
 {
+    if (mUpdateBatchNest > 0)
+    {
+        --mUpdateBatchNest;
+    }
     return NS_OK;
 }
 

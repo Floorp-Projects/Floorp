@@ -1708,6 +1708,7 @@ protected:
 	nsCOMPtr<nsISupportsArray>      mObservers;
 	nsCOMPtr<nsIStringBundle>	mBundle;
 	nsString			mPersonalToolbarName;
+    PRInt32             mUpdateBatchNest;
 static	nsCOMPtr<nsITimer>		mTimer;
 
 #ifdef	XP_MAC
@@ -1903,7 +1904,8 @@ nsCOMPtr<nsITimer>		nsBookmarksService::mTimer;
 
 
 nsBookmarksService::nsBookmarksService()
-	: mInner(nsnull), mBookmarksAvailable(PR_FALSE), mDirty(PR_FALSE)
+	: mInner(nsnull), mBookmarksAvailable(PR_FALSE), mDirty(PR_FALSE), mUpdateBatchNest(0)
+
 #ifdef	XP_MAC
 	,mIEFavoritesAvailable(PR_FALSE)
 #endif
@@ -2882,7 +2884,7 @@ nsBookmarksService::AddBookmark(const char *aURI,
 			getter_AddRefs(newBookmarkFolder))))
 		return(rv);
 
-	rv = container->Init(mInner, newBookmarkFolder);
+	rv = container->Init(this, newBookmarkFolder);
 	if (NS_FAILED(rv)) return(rv);
 
 	// convert the current date/time from microseconds (PRTime) to seconds
@@ -3715,7 +3717,7 @@ nsBookmarksService::insertBookmarkItem(nsIRDFResource *src, nsISupportsArray *aA
 	if (NS_FAILED(rv = nsComponentManager::CreateInstance(kRDFContainerCID, nsnull,
 			NS_GET_IID(nsIRDFContainer), getter_AddRefs(container))))
 		return(rv);
-	if (NS_FAILED(rv = container->Init(mInner, argParent)))
+	if (NS_FAILED(rv = container->Init(this, argParent)))
 		return(rv);
 
 	if (src != kNC_BookmarksRoot)
@@ -3830,7 +3832,7 @@ nsBookmarksService::deleteBookmarkItem(nsIRDFResource *src, nsISupportsArray *aA
 	if (NS_FAILED(rv = nsComponentManager::CreateInstance(kRDFContainerCID, nsnull,
 			NS_GET_IID(nsIRDFContainer), getter_AddRefs(container))))
 		return(rv);
-	if (NS_FAILED(rv = container->Init(mInner, argParent)))
+	if (NS_FAILED(rv = container->Init(this, argParent)))
 		return(rv);
 
 	if (NS_FAILED(rv = container->RemoveElement(src, PR_TRUE)))
@@ -4396,7 +4398,7 @@ nsBookmarksService::ReadBookmarks()
 							getter_AddRefs(bookmarksRoot));
 		if (NS_FAILED(rv)) return rv;
 
-		rv = bookmarksRoot->Init(mInner, kNC_BookmarksRoot);
+		rv = bookmarksRoot->Init(this, kNC_BookmarksRoot);
 		if (NS_FAILED(rv)) return rv;
 
 		rv = bookmarksRoot->AppendElement(kNC_IEFavoritesRoot);
@@ -4429,7 +4431,7 @@ nsBookmarksService::ReadBookmarks()
 								getter_AddRefs(container));
 			if (NS_FAILED(rv)) return rv;
 
-			rv = container->Init(mInner, kNC_BookmarksRoot);
+			rv = container->Init(this, kNC_BookmarksRoot);
 			if (NS_FAILED(rv)) return rv;
 
 			rv = container->AppendElement(ieFolder);
@@ -4464,7 +4466,7 @@ nsBookmarksService::ReadBookmarks()
 								getter_AddRefs(container));
 			if (NS_FAILED(rv)) return rv;
 
-			rv = container->Init(mInner, kNC_BookmarksRoot);
+			rv = container->Init(this, kNC_BookmarksRoot);
 			if (NS_FAILED(rv)) return rv;
 
 			rv = container->AppendElement(netPositiveFolder);
@@ -4922,6 +4924,8 @@ nsBookmarksService::OnAssert(nsIRDFDataSource* aDataSource,
 			     nsIRDFResource* aProperty,
 			     nsIRDFNode* aTarget)
 {
+    if (mUpdateBatchNest != 0)  return(NS_OK);
+
 	if (mObservers) {
 		nsresult rv;
 
@@ -4948,6 +4952,8 @@ nsBookmarksService::OnUnassert(nsIRDFDataSource* aDataSource,
 			       nsIRDFResource* aProperty,
 			       nsIRDFNode* aTarget)
 {
+    if (mUpdateBatchNest != 0)  return(NS_OK);
+
 	if (mObservers) {
 		nsresult rv;
 
@@ -4974,6 +4980,8 @@ nsBookmarksService::OnChange(nsIRDFDataSource* aDataSource,
 			     nsIRDFNode* aOldTarget,
 			     nsIRDFNode* aNewTarget)
 {
+    if (mUpdateBatchNest != 0)  return(NS_OK);
+
 	if (mObservers) {
 		nsresult rv;
 
@@ -5000,6 +5008,8 @@ nsBookmarksService::OnMove(nsIRDFDataSource* aDataSource,
 			   nsIRDFResource* aProperty,
 			   nsIRDFNode* aTarget)
 {
+    if (mUpdateBatchNest != 0)  return(NS_OK);
+
 	if (mObservers) {
 		nsresult rv;
 
@@ -5022,13 +5032,52 @@ nsBookmarksService::OnMove(nsIRDFDataSource* aDataSource,
 NS_IMETHODIMP
 nsBookmarksService::BeginUpdateBatch(nsIRDFDataSource* aDataSource)
 {
-    return NS_OK;
+	if ((mUpdateBatchNest++ == 0) && mObservers)
+	{
+		nsresult rv;
+
+		PRUint32 count;
+		rv = mObservers->Count(&count);
+		if (NS_FAILED(rv)) return rv;
+
+		for (PRInt32 i = 0; i < PRInt32(count); ++i) {
+			nsIRDFObserver* obs =
+				NS_REINTERPRET_CAST(nsIRDFObserver*, mObservers->ElementAt(i));
+
+			(void) obs->BeginUpdateBatch(aDataSource);
+			NS_RELEASE(obs);
+		}
+	}
+
+	return NS_OK;
 }
 
 NS_IMETHODIMP
 nsBookmarksService::EndUpdateBatch(nsIRDFDataSource* aDataSource)
 {
-    return NS_OK;
+    if (mUpdateBatchNest > 0)
+    {
+        --mUpdateBatchNest;
+    }
+
+	if ((mUpdateBatchNest == 0) && mObservers)
+	{
+		nsresult rv;
+
+		PRUint32 count;
+		rv = mObservers->Count(&count);
+		if (NS_FAILED(rv)) return rv;
+
+		for (PRInt32 i = 0; i < PRInt32(count); ++i) {
+			nsIRDFObserver* obs =
+				NS_REINTERPRET_CAST(nsIRDFObserver*, mObservers->ElementAt(i));
+
+			(void) obs->EndUpdateBatch(aDataSource);
+			NS_RELEASE(obs);
+		}
+	}
+
+	return NS_OK;
 }
 
 ////////////////////////////////////////////////////////////////////////
