@@ -999,7 +999,7 @@ DConnectStub::QueryInterface(const nsID &aIID, void **aInstancePtr)
   }
 
   // else, we need to query the peer object
-  LOG(("calling QueryInteface on peer object\n"));
+  LOG(("calling QueryInterface on peer object\n"));
 
   DConnectSetupQueryInterface msg;
   msg.opcode_minor = DCON_OP_SETUP_QUERY_INTERFACE;
@@ -1207,10 +1207,18 @@ public:
 
     LOG(("got SETUP_REPLY: status=%x instance=%p\n", reply->status, reply->instance));
 
-    nsresult rv = CreateStub(mSetup->iid, sender, reply->instance,
-                             getter_AddRefs(mStub));
-    if (NS_FAILED(rv))
-      mStatus = rv;
+    if (NS_FAILED(reply->status))
+    {
+      NS_ASSERTION(!reply->instance, "non-null instance on failure");
+      mStatus = reply->status;
+    }
+    else
+    {
+      nsresult rv = CreateStub(mSetup->iid, sender, reply->instance,
+                               getter_AddRefs(mStub));
+      if (NS_FAILED(rv))
+        mStatus = rv;
+    }
   }
 
   nsresult GetStub(void **aInstancePtr)
