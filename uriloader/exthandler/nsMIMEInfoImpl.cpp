@@ -104,6 +104,9 @@ NS_IMETHODIMP
 nsMIMEInfoImpl::GetMIMEType(char * *aMIMEType) {
     if (!aMIMEType) return NS_ERROR_NULL_POINTER;
 
+    if (mMIMEType.Length() < 1)
+        return NS_ERROR_NOT_INITIALIZED;
+
     *aMIMEType = mMIMEType.ToNewCString();
     if (!*aMIMEType) return NS_ERROR_OUT_OF_MEMORY;
     return NS_OK;
