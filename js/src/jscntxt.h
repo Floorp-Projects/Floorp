@@ -470,11 +470,8 @@ js_ReportIsNotDefined(JSContext *cx, const char *name);
 
 extern JSErrorFormatString js_ErrorFormatString[JSErr_Limit];
 
-extern void
-js_SetStackSizeLimit(JSContext *cx, jsuword stackSizeLimit);
-
 /*
- * See js_SetStackSizeLimit in jscntxt.c, where we assert that the stack grows
+ * See JS_SetThreadStackLimit in jsapi.c, where we check that the stack grows
  * in the expected direction.  On Unix-y systems, JS_STACK_GROWTH_DIRECTION is
  * computed on the build host by jscpucfg.c and written into jsautocfg.h.  The
  * macro is hardcoded in jscpucfg.h on Windows and Mac systems (for historical
