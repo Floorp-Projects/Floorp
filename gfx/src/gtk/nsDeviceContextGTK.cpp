@@ -77,7 +77,7 @@ NS_IMETHODIMP nsDeviceContextGTK::Init(nsNativeWidget aNativeWidget)
 
   mWidget = aNativeWidget;
 
-  static nscoord dpi = 96;
+  static nscoord dpi = 100;
   static int initialized = 0;
   if (!initialized) {
     initialized = 1;
