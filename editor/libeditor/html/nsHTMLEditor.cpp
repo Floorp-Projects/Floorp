@@ -88,7 +88,7 @@
 #include "nsEditorUtils.h"
 #include "nsIPref.h"
 
-const unsigned char nbsp = 160;
+const PRUnichar nbsp = 160;
 
 // HACK - CID for NavDTD until we can get at dtd via the document
 // {a6cf9107-15b3-11d2-932e-00805f8add32}
