@@ -82,7 +82,7 @@ interface nsISmtpService : nsISupports {
    * @param hostname the hostname of the server
    * @returns null if no server is found
    */
-  nsISmtpServer findServer(in string hostname);
+  nsISmtpServer findServer(in string username, in string hostname);
 
   /**
    * look up the server with the given key

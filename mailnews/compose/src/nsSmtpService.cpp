@@ -46,6 +46,7 @@ typedef struct _findServerByKeyEntry {
 
 typedef struct _findServerByHostnameEntry {
     const char *hostname;
+    const char *username;
     nsISmtpServer *server;
 } findServerByHostnameEntry;
 
@@ -836,8 +837,15 @@ nsSmtpService::findServerByHostname(nsISupports *element, void *aData)
     rv = server->GetHostname(getter_Copies(hostname));
     if (NS_FAILED(rv)) return PR_TRUE;
 
-    if (((const char*)hostname) &&
-        nsCRT::strcmp(hostname, entry->hostname) == 0) {
+    nsXPIDLCString username;
+    rv = server->GetUsername(getter_Copies(username));
+    if (NS_FAILED(rv)) return PR_TRUE;
+
+    PRBool checkHostname = PL_strcmp(entry->hostname, "");
+    PRBool checkUsername = PL_strcmp(entry->username, "");
+    
+    if ((!checkHostname || (PL_strcasecmp(entry->hostname, hostname)==0)) &&
+        (!checkUsername || (PL_strcmp(entry->username, username)==0))) {
         entry->server = server;
         return PR_FALSE;        // stop when found
     }
@@ -845,13 +853,15 @@ nsSmtpService::findServerByHostname(nsISupports *element, void *aData)
 }
 
 NS_IMETHODIMP
-nsSmtpService::FindServer(const char *hostname, nsISmtpServer ** aResult)
+nsSmtpService::FindServer(const char *aUsername,
+                          const char *aHostname, nsISmtpServer ** aResult)
 {
-    if (!aResult) return NS_ERROR_NULL_POINTER;
+    NS_ENSURE_ARG_POINTER(aResult);
 
     findServerByHostnameEntry entry;
     entry.server=nsnull;
-    entry.hostname = hostname;
+    entry.hostname = aHostname;
+    entry.username = aUsername;
 
     mSmtpServers->EnumerateForwards(findServerByHostname, (void *)&entry);
 
