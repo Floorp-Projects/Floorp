@@ -324,6 +324,8 @@ nsresult nsComposerController::RegisterComposerCommands(nsIControllerCommandMana
   // lists
   NS_REGISTER_STYLE_COMMAND(nsListCommand, "cmd_ol", "ol");
   NS_REGISTER_STYLE_COMMAND(nsListCommand, "cmd_ul", "ul");
+  NS_REGISTER_STYLE_COMMAND(nsListItemCommand, "cmd_dt", "dt");
+  NS_REGISTER_STYLE_COMMAND(nsListItemCommand, "cmd_dd", "dd");
 
   // format stuff
   NS_REGISTER_ONE_COMMAND(nsParagraphStateCommand, "cmd_paragraphState");

@@ -403,26 +403,16 @@ nsresult
 nsListCommand::GetCurrentState(nsIEditorShell *aEditorShell, const char* aTagName, PRBool& outInList)
 {
   NS_ASSERTION(aEditorShell, "Need editorShell here");
-  nsCOMPtr<nsIEditor> editor;
-  aEditorShell->GetEditor(getter_AddRefs(editor));
-  if (!editor) return NS_ERROR_UNEXPECTED;
-  nsCOMPtr<nsIHTMLEditor> htmlEditor = do_QueryInterface(editor);
-  if (!htmlEditor) return NS_ERROR_NOT_INITIALIZED;
-  
-  // tagStr will hold the list state when we're done.
-  nsAutoString  tagStr; 
-  PRBool bMixed, bOL, bUL, bDL;
-  nsresult rv = htmlEditor->GetListState(bMixed, bOL, bUL, bDL);
-  if (NS_FAILED(rv)) return rv; 
 
-  if (!bMixed)
-  {
-    if (bOL) tagStr.AssignWithConversion("ol");
-    else if (bUL) tagStr.AssignWithConversion("ul");
-    else if (bDL) tagStr.AssignWithConversion("dl");
-  }
-  
-  outInList = tagStr.EqualsWithConversion(mTagName);
+  PRBool bMixed;
+  PRUnichar *tagStr;
+  nsresult rv = aEditorShell->GetListState(&bMixed, &tagStr);
+  if (NS_FAILED(rv)) return rv;
+
+  outInList = (0 == nsCRT::strcmp(tagStr, aTagName));
+
+  if (tagStr) nsCRT::free(tagStr);
+
   return NS_OK;
 }
 
@@ -433,12 +423,84 @@ nsListCommand::ToggleState(nsIEditorShell *aEditorShell, const char* aTagName)
   PRBool inList;
   nsresult rv = GetCurrentState(aEditorShell, aTagName, inList);
   if (NS_FAILED(rv)) return rv;
-  
+
   nsAutoString listType; listType.AssignWithConversion(aTagName);
+
   if (inList)
     rv = aEditorShell->RemoveList(listType.GetUnicode());    
   else
     rv = aEditorShell->MakeOrChangeList(listType.GetUnicode());
+    
+  return rv;
+}
+
+
+#ifdef XP_MAC
+#pragma mark -
+#endif
+
+nsListItemCommand::nsListItemCommand(const char* aTagName)
+: nsBaseStateUpdatingCommand(aTagName)
+{
+}
+
+nsresult
+nsListItemCommand::GetCurrentState(nsIEditorShell *aEditorShell, const char* aTagName, PRBool& outInList)
+{
+  NS_ASSERTION(aEditorShell, "Need editorShell here");
+
+  PRBool bMixed;
+  PRUnichar *tagStr;
+  nsresult rv = aEditorShell->GetListItemState(&bMixed, &tagStr);
+  if (NS_FAILED(rv)) return rv;
+
+  outInList = (0 == nsCRT::strcmp(tagStr, aTagName));
+
+  if (tagStr) nsCRT::free(tagStr);
+
+  return NS_OK;
+}
+
+nsresult
+nsListItemCommand::ToggleState(nsIEditorShell *aEditorShell, const char* aTagName)
+{
+  NS_ASSERTION(aEditorShell, "Need editorShell here");
+  nsCOMPtr<nsIEditor> editor;
+  aEditorShell->GetEditor(getter_AddRefs(editor));
+  if (!editor) return NS_ERROR_UNEXPECTED;
+  nsCOMPtr<nsIHTMLEditor> htmlEditor = do_QueryInterface(editor);
+  if (!htmlEditor) return NS_ERROR_NOT_INITIALIZED;
+
+  PRBool inList;
+  nsresult rv = GetCurrentState(aEditorShell, aTagName, inList);
+  if (NS_FAILED(rv)) return rv;
+  
+  if (inList)
+  {
+    // To remove a list, first get what kind of list we're in
+    PRBool bMixed;
+    PRUnichar *tagStr;
+    rv = aEditorShell->GetListState(&bMixed, &tagStr);
+    if (NS_FAILED(rv)) return rv; 
+    if (tagStr)
+    {
+      if (!bMixed)
+      {
+        nsAutoString listType(tagStr);
+        rv = htmlEditor->RemoveList(listType);    
+      }
+      nsCRT::free(tagStr);
+    }
+  }
+  else
+  {
+    nsAutoString itemType; itemType.AssignWithConversion(aTagName);
+    // Set to the requested paragraph type
+    //XXX Note: This actually doesn't work for "LI",
+    //    but we currently don't use this for non DL lists anyway.
+    // Problem: won't this replace any current block paragraph style?
+    rv = htmlEditor->SetParagraphFormat(itemType);
+  }
     
   return rv;
 }
@@ -623,18 +685,6 @@ nsParagraphStateCommand::GetCurrentState(nsIEditorShell *aEditorShell, nsString&
   aEditorShell->GetEditor(getter_AddRefs(editor));
   nsCOMPtr<nsIHTMLEditor> htmlEditor = do_QueryInterface(editor);
   if (!htmlEditor) return NS_ERROR_FAILURE;
-#if 0
-  // some proof of concept code for list item state.  
-  // Just leaving in for Charlie to see.
-  PRBool bLI,bDT,bDD;
-  htmlEditor->GetListItemState(outMixed, bLI, bDT, bDD);
-  if (!outMixed && (bDT || bDD))
-  {
-    if (bDT) outStateString.AssignWithConversion("DT");
-    if (bDD) outStateString.AssignWithConversion("DD");
-    return NS_OK;
-  }
-#endif
   return htmlEditor->GetParagraphState(outMixed, outStateString);
 }
 

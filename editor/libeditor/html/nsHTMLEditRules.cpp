@@ -521,25 +521,21 @@ nsHTMLEditRules::GetParagraphState(PRBool &aMixed, nsString &outFormat)
     
     if (mEditor->IsInlineNode(curNode))
       format.AssignWithConversion("");
-    else if (nsIEditProperty::p == atom.get())
-      format.AssignWithConversion("P");
     else if (nsHTMLEditUtils::IsHeader(curNode))
     {
       nsAutoString tag;
       nsEditor::GetTagString(curNode,tag);
-      tag.ToUpperCase();
       format = tag;
     }
-    else if (nsIEditProperty::blockquote == atom.get())
-      format.AssignWithConversion("BLOCKQUOTE");
-    else if (nsIEditProperty::address == atom.get())
-      format.AssignWithConversion("ADDRESS");
-    else if (nsIEditProperty::pre == atom.get())
-      format.AssignWithConversion("PRE");
-    else if (nsIEditProperty::dt == atom.get())
-      format.AssignWithConversion("DT");
-    else if (nsIEditProperty::dd == atom.get())
-      format.AssignWithConversion("DD");
+    else if (nsIEditProperty::p == atom.get()           ||
+             nsIEditProperty::blockquote == atom.get()  ||
+             nsIEditProperty::address == atom.get()     ||
+             nsIEditProperty::pre == atom.get()         ||
+             nsIEditProperty::dt == atom.get()          ||
+             nsIEditProperty::dd == atom.get() )
+    {
+      atom->ToString(format);
+    }
     
     // if this is the first node, we've found, remember it as the format
     if (formatStr.EqualsWithConversion("x"))
@@ -682,7 +678,7 @@ nsHTMLEditRules::WillInsertText(PRInt32          aAction,
     if (isPRE)
     {
       char newlineChar = '\n';
-      while (unicodeBuf && (pos != -1) && (pos < inString->Length()))
+      while (unicodeBuf && (pos != -1) && (pos < (PRInt32)inString->Length()))
       {
         PRInt32 oldPos = pos;
         PRInt32 subStrLen;
@@ -720,7 +716,7 @@ nsHTMLEditRules::WillInsertText(PRInt32          aAction,
     {
       char specialChars[] = {'\t','\n',0};
       nsAutoString tabString; tabString.AssignWithConversion("    ");
-      while (unicodeBuf && (pos != -1) && (pos < inString->Length()))
+      while (unicodeBuf && (pos != -1) && (pos < (PRInt32)inString->Length()))
       {
         PRInt32 oldPos = pos;
         PRInt32 subStrLen;
@@ -3175,7 +3171,7 @@ nsHTMLEditRules::BustUpInlinesAtBRs(nsIDOMNode *inNode,
     PRInt32 splitOffset, resultOffset, i;
     inNode->GetParentNode(getter_AddRefs(inlineParentNode));
     
-    for (i=0; i<listCount; i++)
+    for (i=0; i< (PRInt32)listCount; i++)
     {
       isupports = (dont_AddRef)(arrayOfBreaks->ElementAt(i));
       breakNode = do_QueryInterface(isupports);
@@ -3230,13 +3226,13 @@ nsHTMLEditRules::MakeTransitionList(nsISupportsArray *inArrayOfNodes,
   if (!inArrayOfNodes || !inTransitionArray) return NS_ERROR_NULL_POINTER;
 
   PRUint32 listCount;
-  PRInt32 i;
+  PRUint32 i;
   inArrayOfNodes->Count(&listCount);
   nsVoidArray transitionList;
   nsCOMPtr<nsIDOMNode> prevElementParent;
   nsCOMPtr<nsIDOMNode> curElementParent;
   
-  for (i=0; i<(PRInt32)listCount; i++)
+  for (i=0; i<listCount; i++)
   {
     nsCOMPtr<nsISupports> isupports  = (dont_AddRef)(inArrayOfNodes->ElementAt(i));
     nsCOMPtr<nsIDOMNode> transNode( do_QueryInterface(isupports ) );
