@@ -31,6 +31,8 @@
 #include "nsIDOMMouseEvent.h"
 #include "nsIDOMSelection.h"
 #include "nsIDOMEventTarget.h"
+#include "nsIDOMHTMLTableElement.h"
+#include "nsIDOMHTMLTableCellElement.h"
 
 /*
  * nsEditorShellMouseListener implementation
@@ -39,11 +41,11 @@ NS_IMPL_ADDREF(nsEditorShellMouseListener)
 
 NS_IMPL_RELEASE(nsEditorShellMouseListener)
 
-
 nsEditorShellMouseListener::nsEditorShellMouseListener() 
 {
   NS_INIT_REFCNT();
 }
+
 nsEditorShellMouseListener::~nsEditorShellMouseListener() 
 {
 }
@@ -78,6 +80,68 @@ nsEditorShellMouseListener::QueryInterface(REFNSIID aIID, void** aInstancePtr)
   }
   return NS_NOINTERFACE;
 }
+// Helpers to test if in a table
+
+PRBool GetParentTable(nsIDOMEvent* aMouseEvent, nsIDOMElement **aTableElement)
+{
+  nsCOMPtr<nsIDOMMouseEvent> mouseEvent ( do_QueryInterface(aMouseEvent) );
+  if (!mouseEvent) return PR_FALSE;
+  nsCOMPtr<nsIDOMEventTarget> target;
+  if (NS_SUCCEEDED(aMouseEvent->GetTarget(getter_AddRefs(target))) && target)
+  {
+    nsCOMPtr<nsIDOMNode> node = do_QueryInterface(target);
+    
+    while (node)
+    {
+      nsCOMPtr<nsIDOMHTMLTableElement> table = do_QueryInterface(node);
+      if (table)
+      {
+        nsCOMPtr<nsIDOMElement> tableElement = do_QueryInterface(table);
+        if (tableElement)
+        {
+          *aTableElement = tableElement;
+          NS_ADDREF(*aTableElement);
+          return PR_TRUE;
+        }
+      }
+      nsCOMPtr<nsIDOMNode>parent;
+      if (NS_FAILED(node->GetParentNode(getter_AddRefs(parent))) || !parent)
+        return PR_FALSE;
+      node = parent;
+    }
+  }
+  return PR_FALSE;
+}
+
+PRBool GetParentCell(nsIDOMEvent* aMouseEvent, nsIDOMElement **aCellElement)
+{
+  nsCOMPtr<nsIDOMMouseEvent> mouseEvent ( do_QueryInterface(aMouseEvent) );
+  if (!mouseEvent) return PR_FALSE;
+  nsCOMPtr<nsIDOMEventTarget> target;
+  if (NS_SUCCEEDED(aMouseEvent->GetTarget(getter_AddRefs(target))) && target)
+  {
+    nsCOMPtr<nsIDOMNode> node = do_QueryInterface(target);
+    while (node)
+    {
+      nsCOMPtr<nsIDOMHTMLTableCellElement> cell = do_QueryInterface(node);
+      if (cell)
+      {
+        nsCOMPtr<nsIDOMElement> cellElement = do_QueryInterface(cell);
+        if (cellElement)
+        {
+          *aCellElement = cellElement;
+          NS_ADDREF(*aCellElement);
+          return PR_TRUE;
+        }
+      }
+      nsCOMPtr<nsIDOMNode>parent;
+      if (NS_FAILED(node->GetParentNode(getter_AddRefs(parent))) || !parent)
+        return PR_FALSE;
+      node = parent;
+    }
+  }
+  return PR_FALSE;
+}
 
 nsresult
 nsEditorShellMouseListener::HandleEvent(nsIDOMEvent* aEvent)
@@ -89,52 +153,57 @@ nsresult
 nsEditorShellMouseListener::MouseDown(nsIDOMEvent* aMouseEvent)
 {
   nsCOMPtr<nsIDOMMouseEvent> mouseEvent ( do_QueryInterface(aMouseEvent) );
-  if (!mouseEvent) {
+  if (!mouseEvent || !mEditorShell) {
     //non-ui event passed in.  bad things.
     return NS_OK;
   }
+
   PRUint16 buttonNumber;
   nsresult res = mouseEvent->GetButton(&buttonNumber);
   if (NS_FAILED(res)) return res;
 
-  // Should we do this only for "right" mouse button?
-  // What about Mac?
-  if (mEditorShell && buttonNumber == 3)
-  {
-    nsCOMPtr<nsIDOMEventTarget> target;
-    if (NS_SUCCEEDED(aMouseEvent->GetTarget(getter_AddRefs(target))) && target)
-    {
-      // We are only interested in elements, not text nodes
-      nsCOMPtr<nsIDOMElement> element = do_QueryInterface(target);
-      if (element)
-      {
-        // Set selection to node clicked on
-        mEditorShell->SelectElement(element);
-        return NS_ERROR_BASE; // consumed
-      }
-    }
-  }
-  return NS_OK;
-}
-
-nsresult
-nsEditorShellMouseListener::MouseUp(nsIDOMEvent* aMouseEvent)
-{
-  nsCOMPtr<nsIDOMMouseEvent> mouseEvent ( do_QueryInterface(aMouseEvent) );
-  if (!mouseEvent) {
-    //non-ui event passed in.  bad things.
-    return NS_OK;
-  }
-  // Detect double click message:
-  PRInt32 clickCount;
-  nsresult res = mouseEvent->GetDetail(&clickCount);
+  nsCOMPtr<nsIDOMEventTarget> targetNode;
+  res = aMouseEvent->GetTarget(getter_AddRefs(targetNode));
   if (NS_FAILED(res)) return res;
+  if (!targetNode) return NS_ERROR_NULL_POINTER;
 
-  nsCOMPtr<nsIDOMEventTarget> node;
-  if (NS_SUCCEEDED(aMouseEvent->GetTarget(getter_AddRefs(node))) && node)
+  nsCOMPtr<nsIDOMElement> element = do_QueryInterface(targetNode);
+
+  if (buttonNumber == 1)
   {
-    // We are only interested in elements, not text nodes
-    nsCOMPtr<nsIDOMElement> element = do_QueryInterface(node);
+    PRInt32 clickCount;
+    nsresult res = mouseEvent->GetDetail(&clickCount);
+    if (NS_FAILED(res)) return res;
+
+#ifdef DEBUG_cmanske
+printf("nsEditorShellMouseListener::MouseDown: clickCount=%d\n",clickCount);
+#endif
+    // Test if special 'table selection' key is pressed when double-clicking
+    //  so we look for an enclosing cell or table
+    PRBool tableMode = PR_FALSE;
+
+#ifdef XP_MAC
+    res = mouseEvent->GetMetaKey(&tableMode);
+#else
+    res = mouseEvent->GetCtrlKey(&tableMode);
+#endif
+    if (NS_FAILED(res)) return res;
+    if (tableMode && clickCount == 2)
+    {
+#ifdef DEBUG_cmanske
+printf("nsEditorShellMouseListener:MouseDown-DoubleClick in TableMode\n");
+#endif
+      if (!GetParentCell(aMouseEvent, getter_AddRefs(element)))
+        GetParentTable(aMouseEvent, getter_AddRefs(element));
+#ifdef DEBUG_cmanske
+      else 
+printf("nsEditorShellMouseListener::MouseDown-DoubleClick in cell\n");
+#endif
+    }
+    // No table or cell -- look for other element (ignore text nodes)
+    if (!element)
+      element = do_QueryInterface(targetNode);
+
     if (element)
     {
       PRInt32 x,y;
@@ -152,6 +221,21 @@ nsEditorShellMouseListener::MouseUp(nsIDOMEvent* aMouseEvent)
         return NS_ERROR_BASE; // consumed
     }
   }
+  // Should we do this only for "right" mouse button?
+  // What about Mac?
+  else if (buttonNumber == 3)
+  {
+    if (element)
+      // Set selection to node clicked on
+      mEditorShell->SelectElement(element);
+      // Always fall through to do other actions, such as context menu
+  }
+  return NS_OK;
+}
+
+nsresult
+nsEditorShellMouseListener::MouseUp(nsIDOMEvent* aMouseEvent)
+{
   return NS_OK; // didn't handle event
 }
 
