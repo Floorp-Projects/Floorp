@@ -29,7 +29,6 @@
 <window
   xmlns:html="http://www.w3.org/1999/xhtml"
   xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-  onload="Init();" 
   id="main-window"
   class="dialog"
   title="&sidebar.customize.title.label;"
@@ -38,19 +37,22 @@
   width="450" height="400"
   persist="screenX screenY width height">
 
-  <script src="chrome://communicator/content/sidebar/customize.js"></script>
+  <script language="JavaScript"
+    src="chrome://communicator/content/sidebar/customize.js"/>
 
   <keyset id="keyset"/>
 
   <box flex="1">
-    <box orient="vertical" flex="5">
+    <box orient="vertical" flex="1000">
       <text class="label" value="&sidebar.customize.additional.label;"
         crop="right"/>
       <tree id="other-panels" flex="1"
         datasources="rdf:null"
         containment="http://home.netscape.com/NC-rdf#panel-list"
         indent="true" class="inset" multiple="true"
-        onselect="SelectChangeForOtherPanels(event, event.target.parentNode.parentNode)" >
+        onselect="SelectChangeForOtherPanels(event, event.target.parentNode.parentNode)"
+	onclick="if (event.detail == 2) { AddPanel(); }"
+	 >
         <template>
           <rule>
             <conditions>
@@ -66,8 +68,6 @@
                 predicate="http://home.netscape.com/NC-rdf#content" />
               <binding subject="?panel" object="?link"
                 predicate="http://home.netscape.com/NC-rdf#link" />
-              <binding subject="?panel" object="?haslink"
-                predicate="http://home.netscape.com/NC-rdf#haslink" />
               <binding subject="?panel" object="?open"
                 predicate="http://home.netscape.com/NC-rdf#open" />
               <binding subject="?panel" object="?exclude"
@@ -76,11 +76,11 @@
             <action>
               <treechildren>
                 <treeitem uri="?panel" title="?title" content="?content"
-                  link="?link" haslink="?haslink" open="?open"
+                  link="?link" open="?open"
                   exclude="?exclude">
                   <treerow>
                     <treecell class="treecell-indent treecell-panel"
-                      haslink="?haslink" value="?title"/>
+                      value="?title"/>
                   </treerow>
                 </treeitem>
               </treechildren>
@@ -90,7 +90,8 @@
         <treecolgroup>
           <treecol flex="1"/>
         </treecolgroup>
-        <treechildren onclick="ClickOnOtherPanels(event, event.target.parentNode.parentNode)" flex="1"/>
+        <treechildren onclick="ClickOnOtherPanels(event)"
+          flex="1"/>
       </tree>
 
       <!-- xxxslamm Need to add descriptive panel text here -->
@@ -163,14 +164,19 @@
     <!-- The 'reorder' buttons -->
     <box id="reorder" align="vertical" autostretch="never">
       <spring flex="1"/>
-      <button oncommand="MoveUp();" id="up" class="up plain small" />
-      <button oncommand="MoveDown();" id="down" class="down plain small" />
+      <button oncommand="MoveUp();" id="up" class="dialog" 
+        value="&sidebar.customize.up.label;"/>
+      <button oncommand="MoveDown();" id="down" class="dialog"
+        value="&sidebar.customize.down.label;"/>
       <spring flex="1"/>
     </box> 
 
   </box>
 
-  <separator class="thin"/>
+  <separator/>
+
+  <text id="more-panels-link" value="&sidebar.more.label;"
+    onclick="BrowseMorePanels()"/>
 
   <box id="okCancelButtonsRight" />
 
