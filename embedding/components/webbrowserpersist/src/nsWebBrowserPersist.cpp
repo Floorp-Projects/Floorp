@@ -1033,6 +1033,14 @@ nsresult nsWebBrowserPersist::SendErrorStatusChange(
     nsAutoString msgId;
     switch(aResult)
     {
+    case NS_ERROR_FILE_NAME_TOO_LONG:
+        // File name too long.
+        msgId.AssignLiteral("fileNameTooLongError");
+        break;
+    case NS_ERROR_FILE_ALREADY_EXISTS:
+        // File exists with same name as directory.
+        msgId.AssignLiteral("fileAlreadyExistsError");
+        break;
     case NS_ERROR_FILE_DISK_FULL:
     case NS_ERROR_FILE_NO_DEVICE_SPACE:
         // Out of space on target volume.
@@ -1584,9 +1592,13 @@ nsresult nsWebBrowserPersist::SaveDocumentInternal(
                 {
                     localDataPath->IsDirectory(&haveDir);
                 }
-                if (!haveDir && NS_SUCCEEDED(localDataPath->Create(nsILocalFile::DIRECTORY_TYPE, 0755)))
+                if (!haveDir)
                 {
-                    haveDir = PR_TRUE;
+                    rv = localDataPath->Create(nsILocalFile::DIRECTORY_TYPE, 0755);
+                    if (NS_SUCCEEDED(rv))
+                        haveDir = PR_TRUE;
+                    else
+                        SendErrorStatusChange(PR_FALSE, rv, nsnull, aFile);
                 }
                 if (!haveDir)
                 {

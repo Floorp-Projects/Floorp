@@ -254,10 +254,15 @@ static nsresult ConvertWinError(DWORD winErr)
         case ERROR_CANNOT_MAKE:
             rv = NS_ERROR_FILE_ALREADY_EXISTS;
             break;
+        case ERROR_FILENAME_EXCED_RANGE:
+            rv = NS_ERROR_FILE_NAME_TOO_LONG;
+            break;
         case 0:
             rv = NS_OK;
+            break;
         default:
             rv = NS_ERROR_FAILURE;
+            break;
     }
     return rv;
 }
