@@ -263,7 +263,7 @@ void NamedMap::put(const String& key, TxObject* obj) {
  * @param key the key of the Object to remove from the NamedMap
  * @return the Object being removed
 **/
-TxObject* NamedMap::remove(String& key) {
+TxObject* NamedMap::remove(const String& key) {
 
     // compute hash for key
     long hashCode = hashKey(key);

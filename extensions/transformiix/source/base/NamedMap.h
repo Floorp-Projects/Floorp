@@ -125,7 +125,7 @@ public:
      * @param index the position in the NodeSet to remove the Node from
      * @return the Node that was removed from the list
     **/
-    TxObject* remove(String& key);
+    TxObject* remove(const String& key);
 
     /**
      * Sets the object deletion flag. If set to true, objects in
