@@ -37,7 +37,7 @@
 #ifndef nsIComputedDOMStyle_h___
 #define nsIComputedDOMStyle_h___
 
-#include "nsIDOMCSSStyleDeclaration.h"
+#include "nsICSSDeclaration.h"
 
 class nsIDOMElement;
 class nsIPresShell;
@@ -46,7 +46,7 @@ class nsIPresShell;
  { 0x5f0197a1, 0xa873, 0x44e5, \
     {0x96, 0x31, 0xac, 0xd6, 0xca, 0xb4, 0xf1, 0xe0 } }
 
-class nsIComputedDOMStyle : public nsIDOMCSSStyleDeclaration
+class nsIComputedDOMStyle : public nsICSSDeclaration
 {
 public:
   NS_DEFINE_STATIC_IID_ACCESSOR(NS_ICOMPUTEDDOMSTYLE_IID)

@@ -64,6 +64,8 @@ public:
                   const nsAString& aPseudoElt,
                   nsIPresShell *aPresShell);
 
+  NS_DECL_NSICSSDECLARATION
+
   NS_DECL_NSIDOMCSSSTYLEDECLARATION
 
   nsComputedDOMStyle();

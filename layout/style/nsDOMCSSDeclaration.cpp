@@ -61,12 +61,45 @@ nsDOMCSSDeclaration::~nsDOMCSSDeclaration()
 
 // QueryInterface implementation for nsDOMCSSDeclaration
 NS_INTERFACE_MAP_BEGIN(nsDOMCSSDeclaration)
+  NS_INTERFACE_MAP_ENTRY(nsICSSDeclaration)
   NS_INTERFACE_MAP_ENTRY(nsIDOMCSSStyleDeclaration)
   NS_INTERFACE_MAP_ENTRY_AGGREGATED(nsIDOMCSS2Properties, &mInner)
   NS_INTERFACE_MAP_ENTRY_AGGREGATED(nsIDOMNSCSS2Properties, &mInner)
   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIDOMCSSStyleDeclaration)
   NS_INTERFACE_MAP_ENTRY_CONTENT_CLASSINFO(CSSStyleDeclaration)
 NS_INTERFACE_MAP_END
+
+NS_IMETHODIMP
+nsDOMCSSDeclaration::GetPropertyValue(const nsCSSProperty aPropID,
+                                      nsAString& aValue)
+{
+  NS_PRECONDITION(aPropID != eCSSProperty_UNKNOWN,
+                  "Should never pass eCSSProperty_UNKNOWN around");
+  
+  nsCSSDeclaration *decl;
+  nsresult result = GetCSSDeclaration(&decl, PR_FALSE);
+
+  aValue.Truncate();
+  if (decl) {
+    result = decl->GetValue(aPropID, aValue);
+  }
+
+  return result;
+}
+
+NS_IMETHODIMP
+nsDOMCSSDeclaration::SetPropertyValue(const nsCSSProperty aPropID,
+                                      const nsAString& aValue)
+{
+  if (aValue.IsEmpty()) {
+    // If the new value of the property is an empty string we remove the
+    // property.
+    return RemoveProperty(aPropID);
+  }
+
+  return ParsePropertyValue(aPropID, aValue);
+}
+
 
 NS_IMETHODIMP
 nsDOMCSSDeclaration::GetCssText(nsAString& aCssText)
@@ -133,16 +166,13 @@ NS_IMETHODIMP
 nsDOMCSSDeclaration::GetPropertyValue(const nsAString& aPropertyName, 
                                       nsAString& aReturn)
 {
-  nsCSSValue val;
-  nsCSSDeclaration *decl;
-  nsresult result = GetCSSDeclaration(&decl, PR_FALSE);
-
-  aReturn.Truncate();
-  if (decl) {
-    result = decl->GetValue(aPropertyName, aReturn);
+  const nsCSSProperty propID = nsCSSProps::LookupProperty(aPropertyName);
+  if (propID == eCSSProperty_UNKNOWN) {
+    aReturn.Truncate();
+    return NS_OK;
   }
-
-  return result;
+  
+  return GetPropertyValue(propID, aReturn);
 }
 
 NS_IMETHODIMP    
@@ -165,15 +195,20 @@ nsDOMCSSDeclaration::SetProperty(const nsAString& aPropertyName,
                                  const nsAString& aValue, 
                                  const nsAString& aPriority)
 {
+  // In the common (and fast) cases we can use the property id
+  nsCSSProperty propID = nsCSSProps::LookupProperty(aPropertyName);
+  if (propID == eCSSProperty_UNKNOWN) {
+    return NS_OK;
+  }
+  
   if (aValue.IsEmpty()) {
-     // If the new value of the property is an empty string we remove the
-     // property.
-    nsAutoString tmp;
-    return RemoveProperty(aPropertyName, tmp);
+    // If the new value of the property is an empty string we remove the
+    // property.
+    return RemoveProperty(propID);
   }
 
   if (aPriority.IsEmpty()) {
-    return ParsePropertyValue(aPropertyName, aValue);
+    return ParsePropertyValue(propID, aValue);
   }
 
   // ParsePropertyValue does not handle priorities correctly -- it's
@@ -189,37 +224,21 @@ NS_IMETHODIMP
 nsDOMCSSDeclaration::RemoveProperty(const nsAString& aPropertyName,
                                     nsAString& aReturn)
 {
-  aReturn.Truncate();
-
-  nsCSSDeclaration* decl;
-  nsresult rv = GetCSSDeclaration(&decl, PR_FALSE);
-  if (!decl) {
-    return rv;
-  }
-
-  nsCSSProperty prop = nsCSSProps::LookupProperty(aPropertyName);
-  if (prop == eCSSProperty_UNKNOWN) {
+  const nsCSSProperty propID = nsCSSProps::LookupProperty(aPropertyName);
+  if (propID == eCSSProperty_UNKNOWN) {
+    aReturn.Truncate();
     return NS_OK;
   }
-
-  decl->GetValue(prop, aReturn);
-
-  rv = decl->RemoveProperty(prop);
-
-  if (NS_SUCCEEDED(rv)) {
-    rv = DeclarationChanged();
-  } else {
-    // RemoveProperty used to throw in all sorts of situations -- e.g.
-    // if the property was a shorthand one.  Do not propagate its return
-    // value to callers.  (XXX or should we propagate it again now?)
-    rv = NS_OK;
-  }
-
+  
+  nsresult rv = GetPropertyValue(propID, aReturn);
+  NS_ENSURE_SUCCESS(rv, rv);
+  
+  rv = RemoveProperty(propID);
   return rv;
 }
 
 nsresult
-nsDOMCSSDeclaration::ParsePropertyValue(const nsAString& aPropName,
+nsDOMCSSDeclaration::ParsePropertyValue(const nsCSSProperty aPropID,
                                         const nsAString& aPropValue)
 {
   nsCSSDeclaration* decl;
@@ -240,7 +259,7 @@ nsDOMCSSDeclaration::ParsePropertyValue(const nsAString& aPropName,
   }
 
   PRBool changed;
-  result = cssParser->ParseProperty(aPropName, aPropValue, baseURI, decl,
+  result = cssParser->ParseProperty(aPropID, aPropValue, baseURI, decl,
                                     &changed);
   if (NS_SUCCEEDED(result) && changed) {
     result = DeclarationChanged();
@@ -293,10 +312,32 @@ nsDOMCSSDeclaration::ParseDeclaration(const nsAString& aDecl,
   return result;
 }
 
+nsresult
+nsDOMCSSDeclaration::RemoveProperty(const nsCSSProperty aPropID)
+{
+  nsCSSDeclaration* decl;
+  nsresult rv = GetCSSDeclaration(&decl, PR_FALSE);
+  if (!decl) {
+    return rv;
+  }
+
+  rv = decl->RemoveProperty(aPropID);
+
+  if (NS_SUCCEEDED(rv)) {
+    rv = DeclarationChanged();
+  } else {
+    // RemoveProperty used to throw in all sorts of situations -- e.g.
+    // if the property was a shorthand one.  Do not propagate its return
+    // value to callers.  (XXX or should we propagate it again now?)
+    rv = NS_OK;
+  }
+
+  return rv;
+}
 
 //////////////////////////////////////////////////////////////////////////////
 
-CSS2PropertiesTearoff::CSS2PropertiesTearoff(nsIDOMCSSStyleDeclaration *aOuter)
+CSS2PropertiesTearoff::CSS2PropertiesTearoff(nsICSSDeclaration *aOuter)
   : mOuter(aOuter)
 {
   NS_ASSERTION(mOuter, "must have outer");
@@ -331,25 +372,36 @@ CSS2PropertiesTearoff::QueryInterface(REFNSIID aIID, void** aInstancePtr)
   NS_IMETHODIMP                                                              \
   CSS2PropertiesTearoff::Get##method_(nsAString& aValue)                     \
   {                                                                          \
-    return mOuter->GetPropertyValue(NS_LITERAL_STRING(#name_), aValue);      \
+    return mOuter->GetPropertyValue(eCSSProperty_##id_, aValue);             \
   }                                                                          \
                                                                              \
   NS_IMETHODIMP                                                              \
   CSS2PropertiesTearoff::Set##method_(const nsAString& aValue)               \
   {                                                                          \
-    return mOuter->SetProperty(NS_LITERAL_STRING(#name_), aValue,            \
-                               EmptyString());                               \
+    return mOuter->SetPropertyValue(eCSSProperty_##id_, aValue);             \
+  }
+
+#define CSS_PROP_NOTIMPLEMENTED(name_, id_, method_)                         \
+  NS_IMETHODIMP                                                              \
+  CSS2PropertiesTearoff::Get##method_(nsAString& aValue)                     \
+  {                                                                          \
+    aValue.Truncate();                                                       \
+    return NS_OK;                                                            \
+  }                                                                          \
+                                                                             \
+  NS_IMETHODIMP                                                              \
+  CSS2PropertiesTearoff::Set##method_(const nsAString& aValue)               \
+  {                                                                          \
+    return NS_OK;                                                            \
   }
 
 #define CSS_PROP_LIST_EXCLUDE_INTERNAL
-#define CSS_PROP_NOTIMPLEMENTED(name_, id_, method_) \
-  CSS_PROP(name_, id_, method_, , , , ,)
 #define CSS_PROP_SHORTHAND(name_, id_, method_) \
   CSS_PROP(name_, id_, method_, , , , ,)
 #include "nsCSSPropList.h"
 
 // Aliases
-CSS_PROP(opacity, X, MozOpacity, X, X, X, X, X)
+CSS_PROP(X, opacity, MozOpacity, X, X, X, X, X)
 
 #undef CSS_PROP_SHORTHAND
 #undef CSS_PROP_NOTIMPLEMENTED

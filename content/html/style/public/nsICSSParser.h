@@ -39,6 +39,7 @@
 
 #include "nsISupports.h"
 #include "nsAString.h"
+#include "nsCSSProperty.h"
 
 class nsICSSStyleRule;
 class nsICSSStyleSheet;
@@ -96,7 +97,7 @@ public:
                        nsIURI*            aBaseURL,
                        nsISupportsArray** aResult) = 0;
 
-  NS_IMETHOD ParseProperty(const nsAString& aPropName,
+  NS_IMETHOD ParseProperty(const nsCSSProperty aPropID,
                            const nsAString& aPropValue,
                            nsIURI* aBaseURL,
                            nsCSSDeclaration* aDeclaration,
