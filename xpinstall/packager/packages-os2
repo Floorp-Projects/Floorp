@@ -192,7 +192,6 @@ bin/components/profile.xpt
 bin/components/proxyObjInst.xpt
 bin/components/rdf.dll
 bin/components/rdf.xpt
-bin/components/shistory.dll
 bin/components/shistory.xpt
 bin/components/sidebar.xpt
 bin/components/signonviewer.xpt
