@@ -44,6 +44,7 @@ VPATH		= @srcdir@
 include $(DEPTH)/config/autoconf.mk
 
 MODULE		= xpconnect
+GRE_MODULE	= 1
 
 SDK_XPIDLSRCS   = \
 		mozIJSSubScriptLoader.idl \
