@@ -1,5 +1,5 @@
 #############################################################################
-# $Id: Entry.pm,v 1.6 1998/08/09 01:16:53 leif Exp $
+# $Id: Entry.pm,v 1.7 1998/08/13 11:02:28 leif Exp $
 #
 # The contents of this file are subject to the Mozilla Public License
 # Version 1.0 (the "License"); you may not use this file except in
@@ -11,7 +11,7 @@
 # License for the specific language governing rights and limitations
 # under the License.
 #
-# The Original Code is PerlDAP. The Initial Developer of the Original
+# The Original Code is PerLDAP. The Initial Developer of the Original
 # Code is Netscape Communications Corp. and Clayton Donley. Portions
 # created by Netscape are Copyright (C) Netscape Communications
 # Corp., portions created by Clayton Donley are Copyright (C) Clayton
@@ -69,9 +69,9 @@ sub STORE
   $self->{"_${attr}_modified_"} = 1;
 
   # Potentially add the attribute to the OC order list.
-  if (($attr ne "dn") && !grep(/^$attr$/, @{$self->{_oc_order_}}))
+  if (($attr ne "dn") && !grep(/^\Q$attr\E$/i, @{$self->{"_oc_order_"}}))
     {
-      push(@{$self->{_oc_order_}}, $attr);
+      push(@{$self->{"_oc_order_"}}, $attr);
     }
 }
 
@@ -117,7 +117,7 @@ sub attrModified
 
   @{$self->{"_${attr}_save_"}} = @{$self->{$attr}}
     unless $self->{"_${attr}_save_"};
-  $self->{_self_obj_}->{"_${attr}_modified_"} = 1;
+  $self->{"_self_obj_"}->{"_${attr}_modified_"} = 1;
 
   return 1;
 }
@@ -132,7 +132,7 @@ sub isModified
   my ($self, $attr) = ($_[$[], lc $_[$[ + 1]);
 
   return 0 if ($attr eq ""); return 0 unless defined($self->{$attr});
-  return $self->{_self_obj_}->{"_${attr}_modified_"};
+  return $self->{"_self_obj_"}->{"_${attr}_modified_"};
 }
 
 
@@ -148,8 +148,8 @@ sub remove
   return 0 if ($attr eq "");
   return 0 unless defined($self->{$attr});
 
-  $self->{_self_obj_}->{"_${attr}_deleted_"} = 1;
-  undef $self->{_self_obj_}->{$attr};
+  $self->{"_self_obj_"}->{"_${attr}_deleted_"} = 1;
+  undef $self->{"_self_obj_"}->{$attr};
 
   return 1;
 }
@@ -158,7 +158,8 @@ sub remove
 
 #############################################################################
 # Delete a value from an attribute, if it exists. NOTE: If it was the last
-# value, we'll actually remove the entire attribute!
+# value, we'll actually remove the entire attribute! We should then also
+# remove it from the _oc_order_ list...
 #
 sub removeValue
 {
@@ -176,8 +177,15 @@ sub removeValue
       if ($_ eq $val)
 	{
 	  splice(@{$self->{$attr}}, $i, 1);
-	  $action = ($self->size($attr) > 0 ? "modified" : "deleted");
-	  $self->{_self_obj_}->{"_${attr}_${action}_"} = 1;
+	  if ($self->size($attr) > 0)
+	    {
+	      $self->{"_self_obj_"}->{"_${attr}_modified_"} = 1;
+	    }
+	  else
+	    {
+	      $self->{"_self_obj_"}->{"_${attr}_deleted_"} = 1;
+	      # TODO: Now remove it from _oc_order_ !
+	    }
 
 	  return 1;
 	}
@@ -209,11 +217,20 @@ sub addValue
         }
     }
 
-  @{$self->{"_${attr}_save_"}} = @{$self->{$attr}}
-    unless $self->{"_${attr}_save_"};
+  if (defined(@{$self->{$attr}}))
+    {
+      @{$self->{"_${attr}_save_"}} = @{$self->{$attr}}
+        unless $self->{"_${attr}_save_"};
+    }
 
-  $self->{_self_obj_}->{"_${attr}_modified_"} = 1;
+  $self->{"_self_obj_"}->{"_${attr}_modified_"} = 1;
   push(@{$self->{$attr}}, $val);
+
+  # Potentially add the attribute to the OC order list.
+  if (($attr ne "dn") && !grep(/^\Q$attr\E$/i, @{$self->{"_oc_order_"}}))
+    {
+      push(@{$self->{"_oc_order_"}}, $attr);
+    }
 
   return 1;
 }
@@ -258,7 +275,7 @@ sub setDN
 
   return 0 if ($val eq "");
 
-  $self->{dn} = $val;
+  $self->{"dn"} = $val;
 
   return 1;
 }
@@ -271,7 +288,7 @@ sub getDN
 {
   my ($self) = @_;
 
-  return "$self->{dn}";
+  return $self->{"dn"};
 }
 
 
@@ -316,7 +333,7 @@ sub printLDIF
   my $attr;
 
   print "dn: ", $self->getDN(),"\n";
-  foreach $attr (@{$self->{_oc_order_}})
+  foreach $attr (@{$self->{"_oc_order_"}})
     {
       next if ($attr =~ /^_.+_$/);
       next if $self->{"_${attr}_deleted_"};
@@ -433,7 +450,9 @@ This is an internal function, that can be used to force the API to
 consider an attribute (value) to have been modified. The only argument is
 the name of the attribute. In almost all situation, you never, ever,
 should call this. If you do, please contact the developers, and as us to
-fix the API.
+fix the API. Example
+
+    $entry->attrModified("cn");
 
 =item B<isModified>
 
@@ -441,7 +460,9 @@ This is a somewhat more useful method, which will return the internal
 modification status of a particular attribute. The argument is the name of
 the attribute, and the return value is True or False. If the attribute has
 been modified, in any way, we return True (1), otherwise we return False
-(0).
+(0). For example:
+
+    if ($entry->isModified("cn")) { # do something }
 
 =item B<remove>
 
@@ -472,7 +493,9 @@ name, and the value to add.
 The optional third argument is a flag, indicating that we want to add the
 attribute without checking for duplicates. This is useful if you know the
 values are unique already, or if you perhaps want to allow duplicates for
-a particular attribute.
+a particular attribute. To add a CN to an existing entry/attribute, do:
+
+    $entry->addValue("cn", "Leif Hedstrom");
 
 =item B<hasValue>
 
@@ -490,18 +513,26 @@ the attribute, as usual.
 This is very similar to B<hasValue>, except it does a regular expression
 match instead of a full string match. It takes the same arguments,
 including the optional third argument to specify case insensitive
-matching.
+matching. The usage is identical to the example for hasValue, e.g.
+
+    if ($entry->matchValue("objectclass", "pers", 1)) { # do something }
+
 
 =item B<setDN>
 
 Set the DN to the specified value. Only do this on new entries, it will
 not work well if you try to do this on an existing entry. If you wish to
 renamed an entry, use the Mozilla::Conn::modifyRDN method instead.
-Eventually we'll provide a complete "rename" method.
+Eventually we'll provide a complete "rename" method. To set the DN for a
+newly created entry, we can do
+
+    $entry->setDN("uid=leif,ou=people,dc=netscape,dc=com");
 
 =item B<getDN>
 
-Return the DN for the entry.
+Return the DN for the entry. For instance
+
+    print "The DN is: ", $entry->getDN(), "\n";
 
 =item B<size>
 
@@ -515,7 +546,11 @@ attribute, and the return value is the size of the value array.
 
 =item B<exists>
 
-Return TRUE if the specified attribute is defined in the LDAP entry.
+Return TRUE if the specified attribute is defined in the LDAP entry. This
+is useful to know if an entry has a particular attribute, regardless of
+the value. For instance:
+
+    if ($entry->exists("jpegphoto")) { # do something special }
 
 =item B<printLDIF>
 
@@ -529,6 +564,10 @@ Format, RFC xxxx). An example of an LDIF entry is:
     uid: leif
     cn: Leif Hedstrom
     mail: leif@netscape.com
+
+The above would be the result of
+
+    $entry->printLDIF();
 
 If you need to write to a file, close STDOUT, and open up a file with that
 file handle instead. For more useful LDIF functionality, check out the
@@ -565,13 +604,13 @@ package. See the installation procedures which are part of this package.
 
 This package can be retrieved from a number of places, including:
 
-    http://www.mozilla.org/
+    http://www.mozilla.org/directory/
     Your local CPAN server
 
 =head1 AUTHOR INFORMATION
 
-Address bug reports and comments to:
-xxx@netscape.com
+Address bug reports and comments to the Netscape DevEdge newsgroups at:
+nntps://secnews.netscape.com/netscape.dev.directory.
 
 =head1 CREDITS
 
