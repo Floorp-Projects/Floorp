@@ -229,7 +229,7 @@ function createShortcuts()
       winreg.setRootKey(winreg.HKEY_LOCAL_MACHINE);
 
       winreg.createKey(subkey,"");
-      winreg.createKey(subkey + "\\DefaultsIcon", "");
+      winreg.createKey(subkey + "\\DefaultIcon", "");
       winreg.createKey(subkey + "\\shell", "");
       winreg.createKey(subkey + "\\shell\\open", "");
       winreg.createKey(subkey + "\\shell\\open\\command", "");
@@ -242,7 +242,7 @@ function createShortcuts()
       valname = "";
       // path does not need to be quoted per MS doc
       data = fProgram + "chrome\\icons\\default\\messengerWindow.ico,0";
-      winreg.setValueString(subkey + "\\DefaultsIcon", valname, data);
+      winreg.setValueString(subkey + "\\DefaultIcon", valname, data);
 
       valname = "";
       data = "\"" + fProgram + "$MainExeFile$\" -mail";
