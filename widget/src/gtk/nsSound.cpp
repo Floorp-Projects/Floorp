@@ -86,6 +86,10 @@ nsSound::nsSound()
 {
   NS_INIT_REFCNT();
   mInited = PR_FALSE;
+
+  mPlayBuf    = NULL;
+  mBuffer     = NULL;
+  mBufferSize = 0;
 }
 
 nsSound::~nsSound()
@@ -98,10 +102,8 @@ nsSound::~nsSound()
     (*EsdClose)(esdref);
     esdref = -1;
   }
-  if (mPlayBuf)
-      PR_Free( mPlayBuf );
-  if (mBuffer)
-      PR_Free( mBuffer );
+  PR_FREEIF( mPlayBuf );
+  PR_FREEIF( mBuffer );
   mInited = PR_FALSE;
 }
 
