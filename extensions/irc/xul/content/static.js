@@ -1653,7 +1653,7 @@ function setCurrentObject (obj)
     }
     if (tb)
     {
-        tb.setAttribute ("selected", "false");
+        tb.selected = false;
         tb.setAttribute ("state", "normal");
     }
     
@@ -1676,7 +1676,7 @@ function setCurrentObject (obj)
     tb = getTabForObject(obj);
     if (tb)
     {
-        tb.setAttribute ("selected", "true");
+        tb.selected = true;
         tb.setAttribute ("state", "current");
     }
     
