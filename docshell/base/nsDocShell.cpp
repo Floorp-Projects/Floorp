@@ -75,7 +75,6 @@
 #include "nsIFileStream.h"
 #include "nsISHistoryInternal.h"
 #include "nsIPrincipal.h"
-#include "nsIAggregatePrincipal.h"
 
 #include "nsPIDOMWindow.h"
 #include "nsIDOMDocument.h"
@@ -547,6 +546,7 @@ nsDocShell::LoadURI(nsIURI * aURI,
             }
         }
     }
+
     if (shEntry) {
         // Load is from SH. SH does normal load only
         PR_LOG(gDocShellLog, PR_LOG_DEBUG,
@@ -556,6 +556,36 @@ nsDocShell::LoadURI(nsIURI * aURI,
     }
     // Perform the load...
     else {
+        // We need an owner (a referring principal). 3 possibilities:
+        // (1) If a principal was passed in, that's what we'll use.
+        // (2) If the caller has allowed inheriting from the current document,
+        //   or if we're being called from chrome (if there's system JS on the stack),
+        //   then inheritOwner should be true and InternalLoad will get an owner
+        //   from the current document. If none of these things are true, then
+        // (3) we pass a null owner into the channel, and an owner will be
+        //   created later from the URL.
+        if (!owner && !inheritOwner) {
+            // See if there's system or chrome JS code running
+            nsCOMPtr<nsIScriptSecurityManager> secMan;
+
+            secMan = do_GetService(NS_SCRIPTSECURITYMANAGER_CONTRACTID, &rv);
+            if (NS_SUCCEEDED(rv)) {
+                nsCOMPtr<nsIPrincipal> sysPrin;
+                nsCOMPtr<nsIPrincipal> subjectPrin;
+
+                // Just to compare, not to use!
+                rv = secMan->GetSystemPrincipal(getter_AddRefs(sysPrin));
+                if (NS_SUCCEEDED(rv)) {
+                    rv = secMan->GetSubjectPrincipal(getter_AddRefs(subjectPrin));
+                }
+                // If there's no subject principal, there's no JS running, so we're in system code.
+                if (NS_SUCCEEDED(rv) &&
+                    (!subjectPrin || sysPrin.get() == subjectPrin.get())) {
+                    inheritOwner = PR_TRUE;
+                }
+            }
+        }
+
         nsAutoString windowTarget;
         windowTarget.AssignWithConversion(target);
 
@@ -4123,52 +4153,10 @@ nsDocShell::InternalLoad(nsIURI * aURI,
 
     nsCOMPtr<nsISupports> owner(aOwner);
     //
-    // Check to see if an owner should be inherited...
+    // Get an owner from the current document if necessary
     //
-    if (!owner) {
-        // If an owner was passed in, use it
-        // Otherwise, if the caller has allowed inheriting from the current document,
-        // or if we're being called from chrome (which has the system principal),
-        // then use the current document principal
-
-        nsCOMPtr<nsIScriptSecurityManager> secMan;
-        secMan = do_GetService(NS_SCRIPTSECURITYMANAGER_CONTRACTID, &rv);
-        nsCOMPtr<nsIPrincipal> sysPrin;
-        if (NS_SUCCEEDED(rv))
-            // Just to compare, not to use!
-            rv = secMan->GetSystemPrincipal(getter_AddRefs(sysPrin));
-
-        if (NS_SUCCEEDED(rv)) {
-            if (!aInheritOwner) {
-                // See if there's system or chrome JS code running
-                nsCOMPtr<nsIPrincipal> subjectPrin;
-
-                if (NS_SUCCEEDED(rv)) {
-                    rv = secMan->GetSubjectPrincipal(getter_AddRefs(subjectPrin));
-                }
-                // Null subject principal means there's no script running == system code
-                if (NS_SUCCEEDED(rv) &&
-                    (!subjectPrin || sysPrin.get() == subjectPrin.get())) {
-                    aInheritOwner = PR_TRUE;
-                }
-            }
-            if (aInheritOwner) {
-                GetCurrentDocumentOwner(getter_AddRefs(owner));
-                nsCOMPtr<nsIPrincipal> ownerPrin(do_QueryInterface(owner));
-                if (ownerPrin.get() == sysPrin.get())
-                    owner = null_nsCOMPtr();
-                else {
-                    nsCOMPtr<nsIAggregatePrincipal> agg(do_QueryInterface(ownerPrin, &rv));
-                    if (NS_SUCCEEDED(rv)) {
-                        nsCOMPtr<nsIPrincipal> certificate;
-                        rv = agg->GetCertificate(getter_AddRefs(certificate));
-                        if (NS_SUCCEEDED(rv) && certificate)
-                            owner = null_nsCOMPtr();
-                    }
-                }
-            }
-        }
-    }
+    if (!owner && aInheritOwner)
+        GetCurrentDocumentOwner(getter_AddRefs(owner));
 
     //
     // Resolve the window target before going any further...
@@ -5466,7 +5454,7 @@ nsDocShell::LoadHistoryEntry(nsISHEntry * aEntry, PRUint32 aLoadType)
     rv = InternalLoad(uri,
                       referrerURI,
                       nsnull,       // No owner
-                      PR_TRUE,      // Inherit owner from document
+                      PR_FALSE,     // Do not inherit owner from document (security-critical!)
                       PR_FALSE,     // Do not stop active document
                       nsnull,       // No window target
                       postData,     // Post data stream
