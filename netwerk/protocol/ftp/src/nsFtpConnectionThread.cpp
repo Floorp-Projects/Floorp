@@ -31,6 +31,12 @@
 #include "nsIBufferOutputStream.h"
 #include "nsIMIMEService.h"
 #include "nsXPIDLString.h" 
+#include "nsIStreamConverterService.h"
+static NS_DEFINE_CID(kStreamConverterServiceCID, NS_STREAMCONVERTERSERVICE_CID);
+
+#include "nsIIOService.h"
+static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
+
 
 static NS_DEFINE_CID(kMIMEServiceCID, NS_MIMESERVICE_CID);
 static NS_DEFINE_CID(kEventQueueServiceCID,      NS_EVENTQUEUESERVICE_CID);
@@ -1175,9 +1181,6 @@ nsFtpConnectionThread::R_mdtm() {
          //         xxx     if present, is a fractional second and may be any length
          // Time is expressed in UTC (GMT), not local time.
         PRExplodedTime ts;
-        PRInt64 t1, t2;
-        PRTime t;
-        time_t tt;
         char *timeStr = mResponseMsg.ToNewCString();
         if (!timeStr) return FTP_ERROR;
 
@@ -1194,12 +1197,7 @@ nsFtpConnectionThread::R_mdtm() {
         ts.tm_sec  = (timeStr[12] - '0') * 10 + (timeStr[13] - '0');
         ts.tm_usec = 0;
 
-        t = PR_ImplodeTime(&ts);
-        LL_I2L(t1, PR_USEC_PER_SEC);
-        LL_DIV(t2, t, t1);
-        LL_L2I(tt, t2);
-
-        mLastModified = tt;                
+        mLastModified = PR_ImplodeTime(&ts);
     }
 
     return FindGetState();
@@ -1246,9 +1244,33 @@ nsFtpConnectionThread::R_list() {
     nsISupports *ctxtSup = nsnull;
     rv = dataCtxt->QueryInterface(NS_GET_IID(nsISupports), (void**)&ctxtSup);
 
+    // we're now receiving a dir listing. push it through a converter.
+
+    NS_WITH_SERVICE(nsIStreamConverterService, StreamConvService, kStreamConverterServiceCID, &rv);
+    if (NS_FAILED(rv)) return FTP_ERROR;
+
+
+    nsString fromStr("text/ftp-dir-");
+    SetDirMIMEType(fromStr);
+
+    // all FTP directory listings are converted to http-index
+    nsString toStr("application/http-index-format");
+
+    NS_WITH_SERVICE(nsIIOService, serv, kIOServiceCID, &rv);
+    if (NS_FAILED(rv)) return FTP_ERROR;
+
+    // setup a listener to push the data into. This listener sits inbetween the
+    // unconverted data of fromType, and the final listener in the chain (in this case
+    // the mListener).
+    nsIStreamListener *converterListener = nsnull;
+    rv = StreamConvService->AsyncConvertData(fromStr.GetUnicode(),
+                                             toStr.GetUnicode(),
+                                             mListener, mUrl, &converterListener);
+    if (NS_FAILED(rv)) return FTP_ERROR;
+
     // tell the user that we've begun the transaction.
     nsFtpOnStartRequestEvent* startEvent =
-        new nsFtpOnStartRequestEvent(mListener, mChannel, mContext);
+        new nsFtpOnStartRequestEvent(converterListener, mChannel, mContext);
     if (!startEvent) return FTP_ERROR;
 
     rv = startEvent->Fire(mEventQueue);
@@ -1257,9 +1279,9 @@ nsFtpConnectionThread::R_list() {
         return FTP_ERROR;
     }
 
+    // send data off
     nsFtpOnDataAvailableEvent* availEvent =
-        new nsFtpOnDataAvailableEvent(mListener, mChannel, ctxtSup); // XXX the destroy event method
-                                                                      // XXX needs to clean up this new.
+        new nsFtpOnDataAvailableEvent(converterListener, mChannel, ctxtSup);
     if (!availEvent) return FTP_ERROR;
 
     rv = availEvent->Init(stringStream, 0, read);
@@ -1274,6 +1296,10 @@ nsFtpConnectionThread::R_list() {
         delete availEvent;
         return FTP_ERROR;
     }
+
+    // NOTE: that we're not firing an OnStopRequest() to the converterListener (the
+    //  stream converter). It (at least this implementation of it) doesn't care 
+    //  about stops. FTP_COMPLETE will send the stop.
 
     return FTP_COMPLETE;
 }
@@ -1660,6 +1686,21 @@ nsFtpConnectionThread::Run() {
     char greetBuf[NS_FTP_BUFFER_READ_SIZE];
     PRUint32 read;
     rv = mCInStream->Read(greetBuf, NS_FTP_BUFFER_READ_SIZE, &read);
+    if (NS_FAILED(rv)) return rv;
+
+    if (read > 0) {
+        // we got something.
+        // look for a response code
+        switch (greetBuf[0]) {
+        case '2':
+            // we're receiving some data
+            mNextState = mState;
+            mState = FTP_READ_BUF;
+            break;
+        default:
+            break;
+        }
+    }
 
     ///////////////////////////////
     // END - COMMAND CHANNEL SETUP
@@ -1912,3 +1953,42 @@ nsFtpConnectionThread::MapResultCodeToString(nsresult aResultCode, PRUnichar* *a
 }
 
 
+void
+nsFtpConnectionThread::SetDirMIMEType(nsString& aString) {
+    // the from content type is a string of the form
+    // "text/ftp-dir-SERVER_TYPE" where SERVER_TYPE represents the server we're talking to.
+    switch (mServerType) {
+    case FTP_UNIX_TYPE:
+        aString.Append("unix");
+        break;
+    case FTP_DCTS_TYPE:
+        aString.Append("dcts");
+        break;
+    case FTP_NCSA_TYPE:
+        aString.Append("ncsa");
+        break;
+    case FTP_PETER_LEWIS_TYPE:
+        aString.Append("peter_lewis");
+        break;
+    case FTP_MACHTEN_TYPE:
+        aString.Append("machten");
+        break;
+    case FTP_CMS_TYPE:
+        aString.Append("cms");
+        break;
+    case FTP_TCPC_TYPE:
+        aString.Append("tcpc");
+        break;
+    case FTP_VMS_TYPE:
+        aString.Append("vms");
+        break;
+    case FTP_NT_TYPE:
+        aString.Append("nt");
+        break;
+    case FTP_WEBSTAR_TYPE:
+        aString.Append("webstar");
+        break;
+    default:
+        aString.Append("generic");
+    }
+}
