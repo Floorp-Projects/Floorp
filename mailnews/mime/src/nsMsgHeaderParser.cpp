@@ -25,12 +25,16 @@
 #include "nsISimpleEnumerator.h"	 
 #include "comi18n.h"
 #include "prmem.h"
+#include "nsMsgMimeCID.h"
+
+static NS_DEFINE_CID(kCMimeConverterCID, NS_MIME_CONVERTER_CID);
 
 class nsMsgHeaderParserResult : public nsIMsgHeaderParserResult, public nsISimpleEnumerator
 {
 public:
   nsMsgHeaderParserResult();
-  nsresult Init(char * aNames, char * aAddresses, PRUint32 numAddresses);
+  nsresult Init(char * aNames, char * aAddresses, PRUint32 numAddresses, nsIMimeConverter * aUnicodeConverter,
+                nsIMsgHeaderParser * aHeaderParser);
   virtual ~nsMsgHeaderParserResult();
   
   NS_DECL_NSIMSGHEADERPARSERRESULT
@@ -49,6 +53,9 @@ protected:
   // char * ptrs into the null separated strings
   char * mCurrentName;
   char * mCurrentAddress;
+
+  nsCOMPtr<nsIMimeConverter> mUnicodeConverter;
+  nsCOMPtr<nsIMsgHeaderParser> mHeaderParser;
 
   PRBool mFirstPass;
 };
@@ -75,7 +82,9 @@ nsMsgHeaderParserResult::~nsMsgHeaderParserResult()
   PR_FREEIF(mStartofAddresses);
 }
 
-nsresult nsMsgHeaderParserResult::Init(char * aNames, char * aAddresses, PRUint32 numAddresses)
+nsresult nsMsgHeaderParserResult::Init(char * aNames, char * aAddresses, PRUint32 numAddresses, 
+                                       nsIMimeConverter * aUnicodeConverter,
+                                       nsIMsgHeaderParser * aHeaderParser)
 {
   nsresult rv = NS_OK;
   mNumTotalAddresses = numAddresses;
@@ -83,17 +92,45 @@ nsresult nsMsgHeaderParserResult::Init(char * aNames, char * aAddresses, PRUint3
   mCurrentName = mStartofNames;
   mStartofAddresses = aAddresses;
   mCurrentAddress = mStartofAddresses;
-  
+
+  mUnicodeConverter = aUnicodeConverter;
+  mHeaderParser = aHeaderParser;
   return rv;
 }
 
-NS_IMETHODIMP nsMsgHeaderParserResult::GetAddressAndName(char **address, char **name)
+NS_IMETHODIMP nsMsgHeaderParserResult::GetAddressAndName(PRUnichar ** aAddress, PRUnichar ** aName, PRUnichar ** aFullAddress)
 {
   nsresult rv = NS_OK;
-  if (address)
-    *address = nsCRT::strdup(mCurrentAddress);
-  if (name)
-    *name = nsCRT::strdup(mCurrentName);
+  // *yuck* the mime converter interface is requiring us to pass in nsStrings which is forcing
+  // all this extra string copying...we need to fix the interface!
+  nsAutoString charset ("UTF-8");
+  nsAutoString unicodeValue;
+  nsAutoString value;
+  if (aAddress)
+  {
+    value = mCurrentAddress;
+    rv = mUnicodeConverter->DecodeMimePartIIStr(value, charset, unicodeValue);
+    *aAddress = unicodeValue.ToNewUnicode(); 
+  }
+  if (aName)
+  {
+    value = mCurrentName;
+    rv = mUnicodeConverter->DecodeMimePartIIStr(value, charset, unicodeValue);
+    *aName = unicodeValue.ToNewUnicode();
+  }
+  if (aFullAddress)
+  {
+    char * fullAddress;
+    rv = mHeaderParser->MakeFullAddress("UTF-8", mCurrentName, mCurrentAddress, &fullAddress);
+    if (NS_SUCCEEDED(rv) && fullAddress)
+    {
+      value = fullAddress;
+      rv = mUnicodeConverter->DecodeMimePartIIStr(value, charset, unicodeValue);
+      *aFullAddress = unicodeValue.ToNewUnicode();
+      nsCRT::free(fullAddress);
+    }
+
+  }
 
   return rv;
 }
@@ -190,7 +227,7 @@ nsMsgHeaderParser::nsMsgHeaderParser()
   /* the following macro is used to initialize the ref counting data */
   NS_INIT_REFCNT();
   m_USAsciiToUtf8CharsetConverter = nsnull;
-
+  mUnicodeConverter = do_GetService(kCMimeConverterCID);
 }
 
 nsMsgHeaderParser::~nsMsgHeaderParser()
@@ -218,7 +255,7 @@ MimeCharsetConverterClass *nsMsgHeaderParser::GetUSAsciiToUtf8CharsetConverter()
 	return m_USAsciiToUtf8CharsetConverter;
 }
 
-NS_IMETHODIMP nsMsgHeaderParser::ParseHeadersWithEnumerator(const char *charset, const char *line, 
+NS_IMETHODIMP nsMsgHeaderParser::ParseHeadersWithEnumerator(const PRUnichar *line, 
                                                             nsISimpleEnumerator **aResultEnumerator)
 {
   char * names = nsnull;
@@ -226,14 +263,19 @@ NS_IMETHODIMP nsMsgHeaderParser::ParseHeadersWithEnumerator(const char *charset,
   PRUint32 numAddresses = 0;
   nsresult rv = NS_OK;
 
-  rv = ParseHeaderAddresses(charset, line, &names, &addresses, &numAddresses);
+  // need to convert unicode to UTF-8...
+  nsAutoString tempString (line);
+  char * utf8String = tempString.ToNewUTF8String();
+
+  rv = ParseHeaderAddresses("UTF-8", utf8String, &names, &addresses, &numAddresses);
+  nsCRT::free(utf8String);
   if (NS_SUCCEEDED(rv))
   {
     // now shove the results into an enumerator.......i know i should be using the component manager for this...=(
     nsMsgHeaderParserResult * parserResult = new nsMsgHeaderParserResult();
     if (parserResult)
     {
-      rv = parserResult->Init(names, addresses, numAddresses); // ownership of all strings is now passed here...
+      rv = parserResult->Init(names, addresses, numAddresses, mUnicodeConverter, this); // ownership of all strings is now passed here...
       parserResult->QueryInterface(NS_GET_IID(nsISimpleEnumerator), (void **) aResultEnumerator);
     }
     else

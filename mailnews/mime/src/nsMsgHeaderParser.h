@@ -31,7 +31,9 @@
 
 #include "msgCore.h"
 #include "nsIMsgHeaderParser.h" /* include the interface we are going to support */
+#include "nsIMimeConverter.h"
 #include "comi18n.h"
+#include "nsCOMPtr.h"
 
  /* 
   * RFC-822 parser
@@ -50,7 +52,8 @@ public:
 	
 	MimeCharsetConverterClass *GetUSAsciiToUtf8CharsetConverter();
 protected:
-	MimeCharsetConverterClass *m_USAsciiToUtf8CharsetConverter;
+  nsCOMPtr<nsIMimeConverter> mUnicodeConverter;
+  MimeCharsetConverterClass *m_USAsciiToUtf8CharsetConverter;
 }; 
 
 #endif /* nsMSGRFCPARSER_h__ */

@@ -36,7 +36,7 @@ interface nsISimpleEnumerator;
 // more useable from an xpconnect point of view. 
 [scriptable, uuid(8987735B-C239-11d3-98AD-001083010E9B)]
 interface nsIMsgHeaderParserResult : nsISupports {
-	string getAddressAndName(out string address);
+	wstring getAddressAndName(out wstring address, out wstring name);
 	readonly attribute unsigned long currentResultNumber;
 	readonly attribute unsigned long totalNumberOfResults; 
 };
@@ -52,8 +52,7 @@ interface nsIMsgHeaderParser : nsISupports {
 	// the enumerator for nsIMsgHeaderParserResult and you can ask it anything
 	// you want =).
 
-	nsISimpleEnumerator ParseHeadersWithEnumerator(in string charset, 
-									in string line);
+	nsISimpleEnumerator ParseHeadersWithEnumerator(in wstring line);
 
 	/* Given a string which contains a list of Header addresses, parses it into
 	   their component names and mailboxes.
