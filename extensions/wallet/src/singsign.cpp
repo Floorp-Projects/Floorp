@@ -2708,19 +2708,18 @@ SINGSIGN_PromptUsernameAndPassword
                                   savePassword,
                                   promptUsernameAndPassword);
   }
+
   /* prefill with previous username/password if any */
   nsAutoString username, password;
   si_RestoreOldSignonDataFromBrowser(dialog, passwordRealm, PR_FALSE, username, password);
 
   /* get new username/password from user */
-  if (!username.IsEmpty()) {
-    if (!(*user = ToNewUnicode(username))) {
-      return NS_ERROR_OUT_OF_MEMORY;
-    }
-    if (!(*pwd = ToNewUnicode(password))) {
-      PR_Free(*user);
-      return NS_ERROR_OUT_OF_MEMORY;
-    }
+  if (!(*user = ToNewUnicode(username))) {
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
+  if (!(*pwd = ToNewUnicode(password))) {
+    PR_Free(*user);
+    return NS_ERROR_OUT_OF_MEMORY;
   }
 
   PRBool checked = (**user != 0);
