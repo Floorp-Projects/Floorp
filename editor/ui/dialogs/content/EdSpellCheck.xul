@@ -48,8 +48,8 @@
 
   <grid>
     <columns>
-      <column/>
-      <column style="min-width 15em; width: 15em"/>
+      <column class="spell-check"/>
+      <column class="spell-check"/>
     </columns>
     <rows>
       <row valign="middle" autostretch="never">
@@ -59,19 +59,17 @@
       </row>
       <row valign="middle" autostretch="never">
         <text class="label" id="ReplaceWordLabel" value="&wordEditField.label;"/>
-        <box valign="middle" autostretch="never">
-          <textbox id="ReplaceWord" oninput="ChangeReplaceWord()" style="width: 14em"/>
-          <button id="CheckWord" oncommand="CheckWord()" label="&checkwordButton.label;"/>
+        <box valign="middle" autostretch="never" flex="1">
+          <!-- flex doesn't seem to work on textbox? -->
+          <textbox id="ReplaceWordInput" oninput="ChangeReplaceWord()" flex="1"/>
+          <button class="dialog" id="CheckWord" oncommand="CheckWord()" label="&checkwordButton.label;"/>
         </box>
       </row>
     </rows>
   </grid>
   <text class="label" id="SuggestedListLabel" value="&suggestions.label;"/>
   <grid flex="1">
-    <columns>
-      <column flex="1"/>
-      <column flex="1"/>
-    </columns>
+    <columns><column flex="1"/><column flex="1"/></columns>
     <rows>
       <row flex="1">
         <!-- BUG! setting class="MinWidth20em" on tree doesn't work (width=0) -->
@@ -80,42 +78,27 @@
             <treecol flex="1"/>
           </treecolgroup>
         </tree>
-        <grid flex="1">
-          <columns>
-            <column flex="1"/>
-            <column flex="1"/>
-          </columns>
-          <rows>
-            <row>
-              <box>
-                <button class="dialog" id="Ignore" oncommand="Ignore()" label="&ignoreButton.label;"/>
-              </box>
-              <box>
+        <box orient="vertical">
+          <grid flex="1" autostretch="never">
+            <columns><column class="spell-check" flex="1"/><column class="spell-check" flex="1"/></columns>
+            <rows>
+              <row>
+                <button class="dialog" id="Ignore"    oncommand="Ignore()" label="&ignoreButton.label;"/>
                 <button class="dialog" id="IgnoreAll" oncommand="IgnoreAll()" label="&ignoreAllButton.label;"/>
-              </box>
-            </row>
-            <row>
-              <box>
-              <button class="dialog" id="Replace" oncommand="Replace()" label="&changeButton.label;"/>
-              </box>
-              <box>
-              <button class="dialog" id="ReplaceAll" oncommand="ReplaceAll()" label="&changeAllButton.label;"/>
-              </box>
-            </row>
-           
-            <spring class="bigspacer"/>
-            <text class="label" value="&userDictionary.label;"/>
-           
-            <row>
-              <box>
-                <button class="dialog" id="AddToDictionary" oncommand="AddToDictionary()" label="&addToUserDictionaryButton.label;"/>
-              </box>
-              <box>
-              <button class="dialog" id="EditDictionary"  oncommand="EditDictionary()" label="&editUserDictionaryButton.label;"/>
-              </box>
-            </row>
-          </rows> 
-        </grid>
+              </row>
+              <row>
+                <button class="dialog" id="Replace" oncommand="Replace()" label="&changeButton.label;"/>
+                <button class="dialog" id="ReplaceAll" oncommand="ReplaceAll()" label="&changeAllButton.label;"/>
+              </row>
+            </rows> 
+          </grid>
+          <spring flex="1"/>
+          <text class="label" value="&userDictionary.label;"/>
+          <box flex="1" autostretch="never">
+            <button class="dialog spell-check" id="AddToDictionary" oncommand="AddToDictionary()" label="&addToUserDictionaryButton.label;" />
+            <button class="dialog spell-check" id="EditDictionary"  oncommand="EditDictionary()" label="&editUserDictionaryButton.label;"   />
+          </box>
+        </box>
       </row>
       <row>
         <text class="label" value ="&languagePopup.label;"/>
@@ -125,12 +108,8 @@
         <menulist id="LanguageMenulist" oncommand="SelectLanguage()"/>
          <!-- contents are appended by JS -->
         <box flex="1">
-          <box>
-            <button class="dialog" id="Recheck" flex="1" label="&recheckButton.label;" oncommand="Recheck()"/>
-          </box>
-          <box>
-            <button class="dialog" id="Close"   flex="1" label="&closeButton.label;"   oncommand="onClose()"/>
-          </box>
+          <button class="dialog spell-check" id="Recheck" label="&recheckButton.label;" oncommand="Recheck()"/>
+          <button class="dialog spell-check" id="Close"   label="&closeButton.label;"   oncommand="onClose()"/>
         </box>
       </row>
     </rows>
