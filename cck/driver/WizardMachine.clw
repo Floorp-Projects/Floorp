@@ -38,9 +38,9 @@ Resource12=IDD_WIZARDMACHINE_DIALOG
 Resource13=IDD_NEWCONFIG_DIALOG
 Resource14=IDD_ABOUTBOX
 Class14=CSumDlg
-Resource15=1536
+Resource15=IDD_WIZ_HELP
 Class15=CWizHelp
-Resource16=IDD_WIZ_HELP
+Resource16=1536
 
 [CLS:CWizardMachineApp]
 Type=0

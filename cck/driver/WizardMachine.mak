@@ -33,9 +33,9 @@ NULL=nul
 ################################################################################
 # Begin Project
 # PROP Target_Last_Scanned "WizardMachine - Win32 Debug"
+RSC=rc.exe
 CPP=cl.exe
 MTL=mktyplib.exe
-RSC=rc.exe
 
 !IF  "$(CFG)" == "WizardMachine - Win32 Release"
 
@@ -55,7 +55,9 @@ INTDIR=.\Release
 ALL : "$(OUTDIR)\WizardMachine.exe"
 
 CLEAN : 
+	-@erase "$(INTDIR)\HelpDlg.obj"
 	-@erase "$(INTDIR)\ImageDialog.obj"
+	-@erase "$(INTDIR)\ImgDlg.obj"
 	-@erase "$(INTDIR)\NavText.obj"
 	-@erase "$(INTDIR)\NewConfigDialog.obj"
 	-@erase "$(INTDIR)\NewDialog.obj"
@@ -63,11 +65,14 @@ CLEAN :
 	-@erase "$(INTDIR)\ProgressDialog.obj"
 	-@erase "$(INTDIR)\PropSheet.obj"
 	-@erase "$(INTDIR)\StdAfx.obj"
+	-@erase "$(INTDIR)\SumDlg.obj"
 	-@erase "$(INTDIR)\WizardMachine.obj"
 	-@erase "$(INTDIR)\WizardMachine.pch"
 	-@erase "$(INTDIR)\WizardMachine.res"
 	-@erase "$(INTDIR)\WizardMachineDlg.obj"
 	-@erase "$(INTDIR)\WizardUI.obj"
+	-@erase "$(INTDIR)\WizHelp.obj"
+	-@erase "$(INTDIR)\wizshell.obj"
 	-@erase "$(OUTDIR)\WizardMachine.exe"
 
 "$(OUTDIR)" :
@@ -99,7 +104,9 @@ LINK32_FLAGS=/nologo /subsystem:windows /incremental:no\
  /pdb:"$(OUTDIR)/WizardMachine.pdb" /machine:I386\
  /out:"$(OUTDIR)/WizardMachine.exe" 
 LINK32_OBJS= \
+	"$(INTDIR)\HelpDlg.obj" \
 	"$(INTDIR)\ImageDialog.obj" \
+	"$(INTDIR)\ImgDlg.obj" \
 	"$(INTDIR)\NavText.obj" \
 	"$(INTDIR)\NewConfigDialog.obj" \
 	"$(INTDIR)\NewDialog.obj" \
@@ -107,10 +114,13 @@ LINK32_OBJS= \
 	"$(INTDIR)\ProgressDialog.obj" \
 	"$(INTDIR)\PropSheet.obj" \
 	"$(INTDIR)\StdAfx.obj" \
+	"$(INTDIR)\SumDlg.obj" \
 	"$(INTDIR)\WizardMachine.obj" \
 	"$(INTDIR)\WizardMachine.res" \
 	"$(INTDIR)\WizardMachineDlg.obj" \
-	"$(INTDIR)\WizardUI.obj"
+	"$(INTDIR)\WizardUI.obj" \
+	"$(INTDIR)\WizHelp.obj" \
+	"$(INTDIR)\wizshell.obj"
 
 "$(OUTDIR)\WizardMachine.exe" : "$(OUTDIR)" $(DEF_FILE) $(LINK32_OBJS)
     $(LINK32) @<<
@@ -135,8 +145,12 @@ INTDIR=.\Debug
 ALL : "$(OUTDIR)\WizardMachine.exe" "$(OUTDIR)\WizardMachine.bsc"
 
 CLEAN : 
+	-@erase "$(INTDIR)\HelpDlg.obj"
+	-@erase "$(INTDIR)\HelpDlg.sbr"
 	-@erase "$(INTDIR)\ImageDialog.obj"
 	-@erase "$(INTDIR)\ImageDialog.sbr"
+	-@erase "$(INTDIR)\ImgDlg.obj"
+	-@erase "$(INTDIR)\ImgDlg.sbr"
 	-@erase "$(INTDIR)\NavText.obj"
 	-@erase "$(INTDIR)\NavText.sbr"
 	-@erase "$(INTDIR)\NewConfigDialog.obj"
@@ -151,6 +165,8 @@ CLEAN :
 	-@erase "$(INTDIR)\PropSheet.sbr"
 	-@erase "$(INTDIR)\StdAfx.obj"
 	-@erase "$(INTDIR)\StdAfx.sbr"
+	-@erase "$(INTDIR)\SumDlg.obj"
+	-@erase "$(INTDIR)\SumDlg.sbr"
 	-@erase "$(INTDIR)\vc40.idb"
 	-@erase "$(INTDIR)\vc40.pdb"
 	-@erase "$(INTDIR)\WizardMachine.obj"
@@ -161,6 +177,10 @@ CLEAN :
 	-@erase "$(INTDIR)\WizardMachineDlg.sbr"
 	-@erase "$(INTDIR)\WizardUI.obj"
 	-@erase "$(INTDIR)\WizardUI.sbr"
+	-@erase "$(INTDIR)\WizHelp.obj"
+	-@erase "$(INTDIR)\WizHelp.sbr"
+	-@erase "$(INTDIR)\wizshell.obj"
+	-@erase "$(INTDIR)\wizshell.sbr"
 	-@erase "$(OUTDIR)\WizardMachine.bsc"
 	-@erase "$(OUTDIR)\WizardMachine.exe"
 	-@erase "$(OUTDIR)\WizardMachine.ilk"
@@ -187,7 +207,9 @@ BSC32=bscmake.exe
 # ADD BSC32 /nologo
 BSC32_FLAGS=/nologo /o"$(OUTDIR)/WizardMachine.bsc" 
 BSC32_SBRS= \
+	"$(INTDIR)\HelpDlg.sbr" \
 	"$(INTDIR)\ImageDialog.sbr" \
+	"$(INTDIR)\ImgDlg.sbr" \
 	"$(INTDIR)\NavText.sbr" \
 	"$(INTDIR)\NewConfigDialog.sbr" \
 	"$(INTDIR)\NewDialog.sbr" \
@@ -195,9 +217,12 @@ BSC32_SBRS= \
 	"$(INTDIR)\ProgressDialog.sbr" \
 	"$(INTDIR)\PropSheet.sbr" \
 	"$(INTDIR)\StdAfx.sbr" \
+	"$(INTDIR)\SumDlg.sbr" \
 	"$(INTDIR)\WizardMachine.sbr" \
 	"$(INTDIR)\WizardMachineDlg.sbr" \
-	"$(INTDIR)\WizardUI.sbr"
+	"$(INTDIR)\WizardUI.sbr" \
+	"$(INTDIR)\WizHelp.sbr" \
+	"$(INTDIR)\wizshell.sbr"
 
 "$(OUTDIR)\WizardMachine.bsc" : "$(OUTDIR)" $(BSC32_SBRS)
     $(BSC32) @<<
@@ -211,7 +236,9 @@ LINK32_FLAGS=/nologo /subsystem:windows /incremental:yes\
  /pdb:"$(OUTDIR)/WizardMachine.pdb" /debug /machine:I386\
  /out:"$(OUTDIR)/WizardMachine.exe" 
 LINK32_OBJS= \
+	"$(INTDIR)\HelpDlg.obj" \
 	"$(INTDIR)\ImageDialog.obj" \
+	"$(INTDIR)\ImgDlg.obj" \
 	"$(INTDIR)\NavText.obj" \
 	"$(INTDIR)\NewConfigDialog.obj" \
 	"$(INTDIR)\NewDialog.obj" \
@@ -219,10 +246,13 @@ LINK32_OBJS= \
 	"$(INTDIR)\ProgressDialog.obj" \
 	"$(INTDIR)\PropSheet.obj" \
 	"$(INTDIR)\StdAfx.obj" \
+	"$(INTDIR)\SumDlg.obj" \
 	"$(INTDIR)\WizardMachine.obj" \
 	"$(INTDIR)\WizardMachine.res" \
 	"$(INTDIR)\WizardMachineDlg.obj" \
-	"$(INTDIR)\WizardUI.obj"
+	"$(INTDIR)\WizardUI.obj" \
+	"$(INTDIR)\WizHelp.obj" \
+	"$(INTDIR)\wizshell.obj"
 
 "$(OUTDIR)\WizardMachine.exe" : "$(OUTDIR)" $(DEF_FILE) $(LINK32_OBJS)
     $(LINK32) @<<
@@ -278,12 +308,14 @@ SOURCE=.\ReadMe.txt
 
 SOURCE=.\WizardMachine.cpp
 DEP_CPP_WIZAR=\
+	".\HelpDlg.h"\
 	".\ProgressDialog.h"\
 	".\PropSheet.h"\
 	".\StdAfx.h"\
 	".\WizardMachine.h"\
 	".\WizardMachineDlg.h"\
 	".\WizardUI.h"\
+	".\WizHelp.h"\
 	
 
 !IF  "$(CFG)" == "WizardMachine - Win32 Release"
@@ -472,7 +504,7 @@ DEP_CPP_PROPS=\
 
 SOURCE=.\WizardMachineDlg.cpp
 DEP_CPP_WIZARDM=\
-	".\ImageDialog.h"\
+	".\ImgDlg.h"\
 	".\ProgressDialog.h"\
 	".\PropSheet.h"\
 	".\StdAfx.h"\
@@ -641,7 +673,7 @@ DEP_CPP_NEWDI=\
 
 SOURCE=.\WizardUI.cpp
 DEP_CPP_WIZARDU=\
-	".\ImageDialog.h"\
+	".\ImgDlg.h"\
 	".\NavText.h"\
 	".\NewConfigDialog.h"\
 	".\NewDialog.h"\
@@ -649,6 +681,7 @@ DEP_CPP_WIZARDU=\
 	".\ProgressDialog.h"\
 	".\PropSheet.h"\
 	".\StdAfx.h"\
+	".\SumDlg.h"\
 	".\WizardMachine.h"\
 	".\WizardMachineDlg.h"\
 	".\WizardUI.h"\
@@ -668,6 +701,179 @@ DEP_CPP_WIZARDU=\
  "$(INTDIR)\WizardMachine.pch"
 
 "$(INTDIR)\WizardUI.sbr" : $(SOURCE) $(DEP_CPP_WIZARDU) "$(INTDIR)"\
+ "$(INTDIR)\WizardMachine.pch"
+
+
+!ENDIF 
+
+# End Source File
+################################################################################
+# Begin Source File
+
+SOURCE=.\wizshell.cpp
+DEP_CPP_WIZSH=\
+	".\ProgressDialog.h"\
+	".\PropSheet.h"\
+	".\StdAfx.h"\
+	".\WizardMachine.h"\
+	".\WizardMachineDlg.h"\
+	".\WizardUI.h"\
+	
+
+!IF  "$(CFG)" == "WizardMachine - Win32 Release"
+
+
+"$(INTDIR)\wizshell.obj" : $(SOURCE) $(DEP_CPP_WIZSH) "$(INTDIR)"\
+ "$(INTDIR)\WizardMachine.pch"
+
+
+!ELSEIF  "$(CFG)" == "WizardMachine - Win32 Debug"
+
+
+"$(INTDIR)\wizshell.obj" : $(SOURCE) $(DEP_CPP_WIZSH) "$(INTDIR)"\
+ "$(INTDIR)\WizardMachine.pch"
+
+"$(INTDIR)\wizshell.sbr" : $(SOURCE) $(DEP_CPP_WIZSH) "$(INTDIR)"\
+ "$(INTDIR)\WizardMachine.pch"
+
+
+!ENDIF 
+
+# End Source File
+################################################################################
+# Begin Source File
+
+SOURCE=.\ImgDlg.cpp
+DEP_CPP_IMGDL=\
+	".\HelpDlg.h"\
+	".\ImgDlg.h"\
+	".\ProgressDialog.h"\
+	".\PropSheet.h"\
+	".\StdAfx.h"\
+	".\WizardMachine.h"\
+	".\WizardMachineDlg.h"\
+	".\WizardUI.h"\
+	".\WizHelp.h"\
+	
+
+!IF  "$(CFG)" == "WizardMachine - Win32 Release"
+
+
+"$(INTDIR)\ImgDlg.obj" : $(SOURCE) $(DEP_CPP_IMGDL) "$(INTDIR)"\
+ "$(INTDIR)\WizardMachine.pch"
+
+
+!ELSEIF  "$(CFG)" == "WizardMachine - Win32 Debug"
+
+
+"$(INTDIR)\ImgDlg.obj" : $(SOURCE) $(DEP_CPP_IMGDL) "$(INTDIR)"\
+ "$(INTDIR)\WizardMachine.pch"
+
+"$(INTDIR)\ImgDlg.sbr" : $(SOURCE) $(DEP_CPP_IMGDL) "$(INTDIR)"\
+ "$(INTDIR)\WizardMachine.pch"
+
+
+!ENDIF 
+
+# End Source File
+################################################################################
+# Begin Source File
+
+SOURCE=.\SumDlg.cpp
+DEP_CPP_SUMDL=\
+	".\ProgressDialog.h"\
+	".\PropSheet.h"\
+	".\StdAfx.h"\
+	".\SumDlg.h"\
+	".\WizardMachine.h"\
+	".\WizardMachineDlg.h"\
+	".\WizardUI.h"\
+	
+
+!IF  "$(CFG)" == "WizardMachine - Win32 Release"
+
+
+"$(INTDIR)\SumDlg.obj" : $(SOURCE) $(DEP_CPP_SUMDL) "$(INTDIR)"\
+ "$(INTDIR)\WizardMachine.pch"
+
+
+!ELSEIF  "$(CFG)" == "WizardMachine - Win32 Debug"
+
+
+"$(INTDIR)\SumDlg.obj" : $(SOURCE) $(DEP_CPP_SUMDL) "$(INTDIR)"\
+ "$(INTDIR)\WizardMachine.pch"
+
+"$(INTDIR)\SumDlg.sbr" : $(SOURCE) $(DEP_CPP_SUMDL) "$(INTDIR)"\
+ "$(INTDIR)\WizardMachine.pch"
+
+
+!ENDIF 
+
+# End Source File
+################################################################################
+# Begin Source File
+
+SOURCE=.\WizHelp.cpp
+DEP_CPP_WIZHE=\
+	".\HelpDlg.h"\
+	".\ProgressDialog.h"\
+	".\PropSheet.h"\
+	".\StdAfx.h"\
+	".\WizardMachine.h"\
+	".\WizardMachineDlg.h"\
+	".\WizardUI.h"\
+	".\WizHelp.h"\
+	
+
+!IF  "$(CFG)" == "WizardMachine - Win32 Release"
+
+
+"$(INTDIR)\WizHelp.obj" : $(SOURCE) $(DEP_CPP_WIZHE) "$(INTDIR)"\
+ "$(INTDIR)\WizardMachine.pch"
+
+
+!ELSEIF  "$(CFG)" == "WizardMachine - Win32 Debug"
+
+
+"$(INTDIR)\WizHelp.obj" : $(SOURCE) $(DEP_CPP_WIZHE) "$(INTDIR)"\
+ "$(INTDIR)\WizardMachine.pch"
+
+"$(INTDIR)\WizHelp.sbr" : $(SOURCE) $(DEP_CPP_WIZHE) "$(INTDIR)"\
+ "$(INTDIR)\WizardMachine.pch"
+
+
+!ENDIF 
+
+# End Source File
+################################################################################
+# Begin Source File
+
+SOURCE=.\HelpDlg.cpp
+DEP_CPP_HELPD=\
+	".\HelpDlg.h"\
+	".\ProgressDialog.h"\
+	".\PropSheet.h"\
+	".\StdAfx.h"\
+	".\WizardMachine.h"\
+	".\WizardMachineDlg.h"\
+	".\WizardUI.h"\
+	".\WizHelp.h"\
+	
+
+!IF  "$(CFG)" == "WizardMachine - Win32 Release"
+
+
+"$(INTDIR)\HelpDlg.obj" : $(SOURCE) $(DEP_CPP_HELPD) "$(INTDIR)"\
+ "$(INTDIR)\WizardMachine.pch"
+
+
+!ELSEIF  "$(CFG)" == "WizardMachine - Win32 Debug"
+
+
+"$(INTDIR)\HelpDlg.obj" : $(SOURCE) $(DEP_CPP_HELPD) "$(INTDIR)"\
+ "$(INTDIR)\WizardMachine.pch"
+
+"$(INTDIR)\HelpDlg.sbr" : $(SOURCE) $(DEP_CPP_HELPD) "$(INTDIR)"\
  "$(INTDIR)\WizardMachine.pch"
 
 
