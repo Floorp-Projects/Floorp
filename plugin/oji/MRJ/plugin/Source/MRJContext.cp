@@ -34,6 +34,7 @@
 #include "MRJPage.h"
 #include "AsyncMessage.h"
 #include "TopLevelFrame.h"
+#include "EmbeddedFrame.h"
 #include "LocalPort.h"
 #include "StringUtils.h"
 
@@ -729,7 +730,6 @@ OSStatus MRJContext::createFrame(JMFrameRef frameRef, JMFrameKind kind, const Re
 		// bind this newly created frame to this context, and vice versa.
 		mViewerFrame = frameRef;
 		frame = new AppletViewerFrame(frameRef, this);
-		status = ::JMSetFrameData(frameRef, frame);
 
 		// make sure the frame's clipping is up-to-date.
 		setVisibility();
@@ -743,8 +743,13 @@ OSStatus MRJContext::createFrame(JMFrameRef frameRef, JMFrameKind kind, const Re
 	} else if (thePluginManager2 != NULL) {
 		// Can only do this safely if we are using the new API.
 		frame = new TopLevelFrame(mPluginInstance, frameRef, kind, initialBounds, resizeable);
-		status = ::JMSetFrameData(frameRef, frame);
+	} else {
+		// Try to create a frame that lives in a newly created browser window.
+		frame = new EmbeddedFrame(mPluginInstance, frameRef, kind, initialBounds, resizeable);
 	}
+
+	if (frame != NULL)
+		status = ::JMSetFrameData(frameRef, frame);
 	
 	return status;
 }
