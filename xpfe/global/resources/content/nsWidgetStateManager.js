@@ -262,6 +262,10 @@ nsWidgetStateManager.prototype =
             {
               element.selectedItem = element.getElementsByAttribute( "value", aDataObject.value )[0];
             }
+          if( 'disabled' in aDataObject )
+            {
+              element.disabled = aDataObject.disabled;
+            }
         },
 
     get_Radiogroup:

@@ -45,7 +45,6 @@
       <property name="selectedItem">
         <getter>
         <![CDATA[
-          this.disabled = this.disabled; // this strange line is to fire the setter for the disabled property
           var groupElements = this.getElementsByAttribute( "group", this.id );
           for( var i = 0; i < groupElements.length; i++ ) {
             if( groupElements[i].checked || 
