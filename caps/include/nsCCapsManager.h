@@ -248,8 +248,8 @@ public:
     GetNSPrincipal(nsIPrincipal* pNSIPrincipal, nsPrincipal **ppNSPRincipal);
 
     NS_METHOD
-    nsCCapsManager::GetNSPrincipalArray(nsPrincipalArray* prinArray, 
-                                        nsPrincipalArray* *pPrincipalArray);
+    GetNSPrincipalArray(nsPrincipalArray* prinArray, 
+                        nsPrincipalArray* *pPrincipalArray);
 
     nsPermission
     ConvertPrivilegeToPermission(nsPrivilege *pNSPrivilege);
