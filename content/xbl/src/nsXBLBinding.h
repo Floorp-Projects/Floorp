@@ -39,7 +39,6 @@
 
 #include "nsCOMPtr.h"
 #include "nsIXBLBinding.h"
-#include "nsIXBLPrototypeBinding.h"
 
 class nsIContent;
 class nsIAtom;
@@ -50,6 +49,7 @@ class nsSupportsHashtable;
 class nsIXBLService;
 class nsFixedSizeAllocator;
 class nsXBLEventHandler;
+class nsXBLPrototypeBinding;
 struct JSContext;
 
 // *********************************************************************/
@@ -60,8 +60,8 @@ class nsXBLBinding: public nsIXBLBinding
   NS_DECL_ISUPPORTS
 
   // nsIXBLBinding
-  NS_IMETHOD GetPrototypeBinding(nsIXBLPrototypeBinding** aResult);
-  NS_IMETHOD SetPrototypeBinding(nsIXBLPrototypeBinding* aProtoBinding);
+  NS_IMETHOD GetPrototypeBinding(nsXBLPrototypeBinding** aResult);
+  NS_IMETHOD SetPrototypeBinding(nsXBLPrototypeBinding* aProtoBinding);
 
   NS_IMETHOD GetBaseBinding(nsIXBLBinding** aResult);
   NS_IMETHOD SetBaseBinding(nsIXBLBinding* aBinding);
@@ -123,7 +123,7 @@ class nsXBLBinding: public nsIXBLBinding
   NS_IMETHOD ShouldBuildChildFrames(PRBool* aResult);
 
 public:
-  nsXBLBinding(nsIXBLPrototypeBinding* aProtoBinding);
+  nsXBLBinding(nsXBLPrototypeBinding* aProtoBinding);
   virtual ~nsXBLBinding();
 
   NS_IMETHOD AddScriptEventListener(nsIContent* aElement, nsIAtom* aName, const nsString& aValue);
@@ -165,7 +165,7 @@ protected:
   
 // MEMBER VARIABLES
 protected:
-  nsCOMPtr<nsIXBLPrototypeBinding> mPrototypeBinding; // Strong. As long as we're around, the binding can't go away.
+  nsXBLPrototypeBinding* mPrototypeBinding; // Weak. The docinfo owns the prototype binding.
   nsCOMPtr<nsIContent> mContent; // Strong. Our anonymous content stays around with us.
   nsCOMPtr<nsIXBLBinding> mNextBinding; // Strong. The derived binding owns the base class bindings.
   

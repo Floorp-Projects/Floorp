@@ -38,7 +38,6 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "nsCOMPtr.h"
-#include "nsIXBLPrototypeBinding.h"
 #include "nsICSSLoaderObserver.h"
 #include "nsISupportsArray.h"
 
@@ -48,6 +47,7 @@ class nsIDocument;
 class nsIScriptContext;
 class nsSupportsHashtable;
 class nsXBLPrototypeResources;
+class nsXBLPrototypeBinding;
 
 // *********************************************************************/
 // The XBLResourceLoader class
@@ -84,13 +84,14 @@ public:
   void AddResource(nsIAtom* aResourceType, const nsAString& aSrc);
   void AddResourceListener(nsIContent* aElement);
 
-  nsXBLResourceLoader(nsIXBLPrototypeBinding* aBinding, nsXBLPrototypeResources* aResources);
+  nsXBLResourceLoader(nsXBLPrototypeBinding* aBinding,
+                      nsXBLPrototypeResources* aResources);
   virtual ~nsXBLResourceLoader();
 
   void NotifyBoundElements();
 
 // MEMBER VARIABLES
-  nsIXBLPrototypeBinding* mBinding; // A pointer back to our binding.
+  nsXBLPrototypeBinding* mBinding; // A pointer back to our binding.
   nsXBLPrototypeResources* mResources; // A pointer back to our resources information.
   
   nsXBLResource* mResourceList; // The list of resources we need to load.

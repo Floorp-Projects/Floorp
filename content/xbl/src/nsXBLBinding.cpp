@@ -111,7 +111,7 @@
 #include "nsXBLLoadHandler.h"
 #include "nsXBLContextMenuHandler.h"
 #include "nsXBLCustomHandler.h"
-
+#include "nsXBLPrototypeBinding.h"
 #include "nsXBLBinding.h"
 
 // Helper classes
@@ -237,7 +237,7 @@ nsXBLBinding::kEventHandlerMap[] = {
 NS_IMPL_ISUPPORTS1(nsXBLBinding, nsIXBLBinding)
 
 // Constructors/Destructors
-nsXBLBinding::nsXBLBinding(nsIXBLPrototypeBinding* aBinding)
+nsXBLBinding::nsXBLBinding(nsXBLPrototypeBinding* aBinding)
 : mFirstHandler(nsnull),
   mInsertionPointTable(nsnull),
   mIsStyleBinding(PR_TRUE),
@@ -345,15 +345,14 @@ nsXBLBinding::SetAnonymousContent(nsIContent* aParent)
 }
 
 NS_IMETHODIMP
-nsXBLBinding::GetPrototypeBinding(nsIXBLPrototypeBinding** aResult)
+nsXBLBinding::GetPrototypeBinding(nsXBLPrototypeBinding** aResult)
 {
   *aResult = mPrototypeBinding;
-  NS_IF_ADDREF(*aResult);
   return NS_OK;
 }
   
 NS_IMETHODIMP
-nsXBLBinding::SetPrototypeBinding(nsIXBLPrototypeBinding* aProtoBinding)
+nsXBLBinding::SetPrototypeBinding(nsXBLPrototypeBinding* aProtoBinding)
 {
   mPrototypeBinding = aProtoBinding;
   return NS_OK;
@@ -362,13 +361,15 @@ nsXBLBinding::SetPrototypeBinding(nsIXBLPrototypeBinding* aProtoBinding)
 NS_IMETHODIMP
 nsXBLBinding::GetBindingElement(nsIContent** aResult)
 {
-  return mPrototypeBinding->GetBindingElement(aResult);
+  *aResult = mPrototypeBinding->GetBindingElement().get();
+  return NS_OK;
 }
 
 NS_IMETHODIMP
 nsXBLBinding::SetBindingElement(nsIContent* aElement)
 {
-  return mPrototypeBinding->SetBindingElement(aElement);
+  mPrototypeBinding->SetBindingElement(aElement);
+  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -393,8 +394,7 @@ nsXBLBinding::GetFirstBindingWithConstructor(nsIXBLBinding** aResult)
 {
   *aResult = nsnull;
 
-  nsXBLPrototypeHandler* constructor;
-  mPrototypeBinding->GetConstructor(&constructor);
+  nsXBLPrototypeHandler* constructor = mPrototypeBinding->GetConstructor();
   if (constructor) {
     *aResult = this;
     NS_ADDREF(*aResult);
@@ -410,9 +410,7 @@ nsXBLBinding::HasStyleSheets(PRBool* aResolveStyle)
 {
   // Find out if we need to re-resolve style.  We'll need to do this
   // if we have additional stylesheets in our binding document.
-  PRBool hasSheets;
-  mPrototypeBinding->HasStyleSheets(&hasSheets);
-  if (hasSheets) {
+  if (mPrototypeBinding->HasStyleSheets()) {
     *aResolveStyle = PR_TRUE;
     return NS_OK;
   }
@@ -624,8 +622,7 @@ nsXBLBinding::GenerateAnonymousContent()
 
   // Plan to build the content by default.
   PRBool hasContent = (contentCount > 0);
-  PRBool hasInsertionPoints;
-  mPrototypeBinding->HasInsertionPoints(&hasInsertionPoints);
+  PRBool hasInsertionPoints = mPrototypeBinding->HasInsertionPoints();
 
 #ifdef DEBUG
   // See if there's an includes attribute.
@@ -834,13 +831,11 @@ nsXBLBinding::InstallEventHandlers()
   if (AllowScripts()) {
     // Fetch the handlers prototypes for this binding.
     nsCOMPtr<nsIXBLDocumentInfo> info;
-    mPrototypeBinding->GetXBLDocumentInfo(mBoundElement, getter_AddRefs(info));
+    info = mPrototypeBinding->GetXBLDocumentInfo(mBoundElement);
     if (!info)
       return NS_ERROR_FAILURE;
 
-    nsXBLPrototypeHandler* handlerChain;
-    mPrototypeBinding->GetPrototypeHandlers(&handlerChain);
-  
+    nsXBLPrototypeHandler* handlerChain = mPrototypeBinding->GetPrototypeHandlers();
     nsXBLEventHandler* currHandler = nsnull;
 
     for (nsXBLPrototypeHandler* curr = handlerChain; curr;
@@ -1026,9 +1021,9 @@ nsXBLBinding::AttributeChanged(nsIAtom* aAttribute, PRInt32 aNameSpaceID,
     return NS_OK;
   }
 
-  return mPrototypeBinding->AttributeChanged(aAttribute, aNameSpaceID,
-                                             aRemoveFlag, mBoundElement,
-                                             mContent, aNotify);
+  mPrototypeBinding->AttributeChanged(aAttribute, aNameSpaceID, aRemoveFlag,
+                                      mBoundElement, mContent, aNotify);
+  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -1178,8 +1173,10 @@ nsXBLBinding::InheritsStyle(PRBool* aResult)
   // Most derived binding with anonymous content determines style inheritance for now.
 
   // XXX What about bindings with <content> but no kids, e.g., my treecell-text binding?
-  if (mContent)
-    return mPrototypeBinding->InheritsStyle(aResult);
+  if (mContent) {
+    *aResult = mPrototypeBinding->InheritsStyle();
+    return NS_OK;
+  }
   
   if (mNextBinding)
     return mNextBinding->InheritsStyle(aResult);
@@ -1197,8 +1194,7 @@ nsXBLBinding::WalkRules(nsISupportsArrayEnumFunc aFunc, void* aData)
       return rv;
   }
 
-  nsCOMPtr<nsISupportsArray> rules;
-  mPrototypeBinding->GetRuleProcessors(getter_AddRefs(rules));
+  nsCOMPtr<nsISupportsArray> rules = mPrototypeBinding->GetRuleProcessors();
   if (rules)
     rules->EnumerateForwards(aFunc, aData);
   
@@ -1360,8 +1356,7 @@ nsXBLBinding::InitClass(const nsCString& aClassName,
 void
 nsXBLBinding::GetImmediateChild(nsIAtom* aTag, nsIContent** aResult) 
 {
-  nsCOMPtr<nsIContent> binding;
-  mPrototypeBinding->GetBindingElement(getter_AddRefs(binding));
+  nsCOMPtr<nsIContent> binding = mPrototypeBinding->GetBindingElement();
 
   *aResult = nsnull;
   PRInt32 childCount;
@@ -1526,7 +1521,7 @@ nsXBLBinding::GetInsertionPoint(nsIContent* aChild, nsIContent** aResult, PRUint
   *aResult = nsnull;
   *aDefaultContent = nsnull;
   if (mContent)
-    return mPrototypeBinding->GetInsertionPoint(mBoundElement, mContent, aChild, aResult, aIndex, aDefaultContent);
+    mPrototypeBinding->GetInsertionPoint(mBoundElement, mContent, aChild, aResult, aIndex, aDefaultContent);
   else if (mNextBinding)
     return mNextBinding->GetInsertionPoint(aChild, aResult, aIndex, aDefaultContent);
   return NS_OK;
@@ -1540,8 +1535,8 @@ nsXBLBinding::GetSingleInsertionPoint(nsIContent** aResult, PRUint32* aIndex, PR
   *aDefaultContent = nsnull;
   *aMultipleInsertionPoints = PR_FALSE;
   if (mContent)
-    return mPrototypeBinding->GetSingleInsertionPoint(mBoundElement, mContent, aResult, aIndex, 
-                                                      aMultipleInsertionPoints, aDefaultContent);
+    mPrototypeBinding->GetSingleInsertionPoint(mBoundElement, mContent, aResult, aIndex, 
+                                               aMultipleInsertionPoints, aDefaultContent);
   else if (mNextBinding)
     return mNextBinding->GetSingleInsertionPoint(aResult, aIndex, aMultipleInsertionPoints, aDefaultContent);
   return NS_OK;
@@ -1591,7 +1586,7 @@ nsXBLBinding::MarkedForDeath(PRBool* aResult)
 NS_IMETHODIMP
 nsXBLBinding::ImplementsInterface(REFNSIID aIID, PRBool* aResult)
 {
-  mPrototypeBinding->ImplementsInterface(aIID, aResult);
+  *aResult = mPrototypeBinding->ImplementsInterface(aIID);
   if (!*aResult && mNextBinding)
     return mNextBinding->ImplementsInterface(aIID, aResult);
   return NS_OK;
@@ -1615,7 +1610,7 @@ nsXBLBinding::ShouldBuildChildFrames(PRBool* aResult)
 {
   *aResult = PR_TRUE;
   if (mContent)
-    return mPrototypeBinding->ShouldBuildChildFrames(aResult);
+    *aResult = mPrototypeBinding->ShouldBuildChildFrames();
   else if (mNextBinding) 
     return mNextBinding->ShouldBuildChildFrames(aResult);
 
@@ -1625,7 +1620,7 @@ nsXBLBinding::ShouldBuildChildFrames(PRBool* aResult)
 // Creation Routine ///////////////////////////////////////////////////////////////////////
 
 nsresult
-NS_NewXBLBinding(nsIXBLPrototypeBinding* aBinding, nsIXBLBinding** aResult)
+NS_NewXBLBinding(nsXBLPrototypeBinding* aBinding, nsIXBLBinding** aResult)
 {
   *aResult = new nsXBLBinding(aBinding);
   if (!*aResult)

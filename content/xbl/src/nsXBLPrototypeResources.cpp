@@ -55,7 +55,7 @@ static NS_DEFINE_CID(kCSSLoaderCID, NS_CSS_LOADER_CID);
 
 MOZ_DECL_CTOR_COUNTER(nsXBLPrototypeResources)
 
-nsXBLPrototypeResources::nsXBLPrototypeResources(nsIXBLPrototypeBinding* aBinding)
+nsXBLPrototypeResources::nsXBLPrototypeResources(nsXBLPrototypeBinding* aBinding)
 :mStyleSheetList(nsnull)
 {
   MOZ_COUNT_CTOR(nsXBLPrototypeResources);

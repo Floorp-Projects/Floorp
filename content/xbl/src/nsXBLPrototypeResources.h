@@ -37,8 +37,10 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#ifndef nsXBLPrototypeResources_h__
+#define nsXBLPrototypeResources_h__
+
 #include "nsCOMPtr.h"
-#include "nsIXBLPrototypeBinding.h"
 #include "nsICSSLoaderObserver.h"
 #include "nsISupportsArray.h"
 
@@ -48,6 +50,7 @@ class nsIDocument;
 class nsIScriptContext;
 class nsSupportsHashtable;
 class nsXBLResourceLoader;
+class nsXBLPrototypeBinding;
 
 // *********************************************************************/
 // The XBLPrototypeResources class
@@ -60,7 +63,7 @@ public:
   void AddResourceListener(nsIContent* aElement);
   nsresult FlushSkinSheets();
 
-  nsXBLPrototypeResources(nsIXBLPrototypeBinding* aBinding);
+  nsXBLPrototypeResources(nsXBLPrototypeBinding* aBinding);
   ~nsXBLPrototypeResources();
 
 // MEMBER VARIABLES
@@ -68,4 +71,6 @@ public:
   nsCOMPtr<nsISupportsArray> mStyleSheetList; // A list of loaded stylesheets for this binding.
   nsCOMPtr<nsISupportsArray> mRuleProcessors; // The list of stylesheets converted to rule processors.
 };
+
+#endif
 

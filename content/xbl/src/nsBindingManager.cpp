@@ -77,7 +77,6 @@
 
 #include "nsIStyleRuleProcessor.h"
 #include "nsIStyleSet.h"
-#include "nsIXBLPrototypeBinding.h"
 #include "nsIWeakReference.h"
 
 #include "jsapi.h"
