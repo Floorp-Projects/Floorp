@@ -550,6 +550,7 @@ CDISTINCLUDES= \
     /I$(XPDIST)\public\security \
     /I$(XPDIST)\public\htmldlgs \
     /I$(XPDIST)\public\softupdt \
+    /I$(XPDIST)\public\zlib \
 #!ifdef MOZ_LOC_INDEP
 	/I$(XPDIST)\public\li \
 #!endif MOZ_LOC_INDEP
