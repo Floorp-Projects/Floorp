@@ -109,11 +109,6 @@ public:
   NS_IMETHOD GetAbsoluteRect(nsRect* aRect) = 0;
 
   /**
-   *
-   */
-  NS_IMETHOD SetFrameConstructor(nsCSSFrameConstructor *aConstructor) = 0;
-
-  /**
    * This returns the index of the item that is currently being displayed
    * in the display area. It may differ from what the currently Selected index
    * is in in the dropdown.

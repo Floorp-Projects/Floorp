@@ -56,8 +56,6 @@
 
 nsresult NS_NewPopupSetFrame(nsIPresShell* aPresShell, nsIFrame** aResult) ;
 
-class nsCSSFrameConstructor;
-
 struct nsPopupFrameList {
   nsPopupFrameList* mNextPopup;  // The next popup in the list.
   nsIFrame* mPopupFrame;         // Our popup.
@@ -132,10 +130,6 @@ public:
   }
 #endif
 
-  void SetFrameConstructor(nsCSSFrameConstructor* aFC) {
-    mFrameConstructor = aFC;
-  }
-
 protected:
 
   void MarkAsGenerated(nsIContent* aPopupContent);
@@ -150,8 +144,6 @@ protected:
   
   nsPresContext* mPresContext; // Our pres context.
 
-private:
-  nsCSSFrameConstructor* mFrameConstructor;
 }; // class nsPopupSetFrame
 
 #endif

@@ -157,8 +157,7 @@ nsMenuFrame::nsMenuFrame(nsIPresShell* aShell):nsBoxFrame(aShell),
     mType(eMenuType_Normal),
     mMenuParent(nsnull),
     mPresContext(nsnull),
-    mLastPref(-1,-1),
-    mFrameConstructor(nsnull)
+    mLastPref(-1,-1)
 {
 
 } // cntr
@@ -319,12 +318,12 @@ nsresult
 nsMenuFrame::DestroyPopupFrames(nsPresContext* aPresContext)
 {
   // Remove our frame mappings
-  if (mFrameConstructor) {
-    nsIFrame* curFrame = mPopupFrames.FirstChild();
-    while (curFrame) {
-      mFrameConstructor->RemoveMappingsForFrameSubtree(aPresContext, curFrame, nsnull);
-      curFrame = curFrame->GetNextSibling();
-    }
+  nsCSSFrameConstructor* frameConstructor =
+    aPresContext->PresShell()->FrameConstructor();
+  nsIFrame* curFrame = mPopupFrames.FirstChild();
+  while (curFrame) {
+    frameConstructor->RemoveMappingsForFrameSubtree(curFrame, nsnull);
+    curFrame = curFrame->GetNextSibling();
   }
 
    // Cleanup frames in popup child list

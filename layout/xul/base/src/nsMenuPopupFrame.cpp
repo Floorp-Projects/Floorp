@@ -1233,8 +1233,7 @@ static void GetInsertionPoint(nsIPresShell* aShell, nsIFrame* aFrame, nsIFrame* 
   nsIContent* child = nsnull;
   if (aChild)
     child = aChild->GetContent();
-  aShell->FrameConstructor()->GetInsertionPoint(aShell, aFrame,
-                                                      child, aResult);
+  aShell->FrameConstructor()->GetInsertionPoint(aFrame, child, aResult);
 }
 
 NS_IMETHODIMP

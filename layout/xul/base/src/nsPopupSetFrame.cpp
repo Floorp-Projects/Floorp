@@ -145,8 +145,7 @@ NS_INTERFACE_MAP_END_INHERITING(nsBoxFrame)
 // nsPopupSetFrame cntr
 //
 nsPopupSetFrame::nsPopupSetFrame(nsIPresShell* aShell):nsBoxFrame(aShell),
-mPresContext(nsnull), 
-mFrameConstructor(nsnull)
+mPresContext(nsnull)
 {
 
 } // cntr
@@ -175,29 +174,27 @@ NS_IMETHODIMP
 nsPopupSetFrame::Destroy(nsPresContext* aPresContext)
 {
   // Remove our frame list.
-  if (mFrameConstructor) {
-    if (mPopupList) {
-      // Try to hide any active popups
-      if (nsMenuFrame::sDismissalListener) {
-        nsCOMPtr<nsIMenuParent> menuParent;
-        nsMenuFrame::sDismissalListener->GetCurrentMenuParent(getter_AddRefs(menuParent));
-        nsIFrame* frame;
-        CallQueryInterface(menuParent, &frame);
-        // Rollup popups, but only if they're ours
-        if (frame && mPopupList->GetEntryByFrame(frame)) {
-          nsMenuFrame::sDismissalListener->Rollup();
-        }
+  if (mPopupList) {
+    // Try to hide any active popups
+    if (nsMenuFrame::sDismissalListener) {
+      nsCOMPtr<nsIMenuParent> menuParent;
+      nsMenuFrame::sDismissalListener->GetCurrentMenuParent(getter_AddRefs(menuParent));
+      nsIFrame* frame;
+      CallQueryInterface(menuParent, &frame);
+      // Rollup popups, but only if they're ours
+      if (frame && mPopupList->GetEntryByFrame(frame)) {
+        nsMenuFrame::sDismissalListener->Rollup();
       }
+    }
 
-      // Actually remove each popup from the list as we go. This
-      // keeps things consistent so reentering won't crash us
-      while (mPopupList) {
-        mPopupList->mPopupFrame->Destroy(aPresContext);
+    // Actually remove each popup from the list as we go. This
+    // keeps things consistent so reentering won't crash us
+    while (mPopupList) {
+      mPopupList->mPopupFrame->Destroy(aPresContext);
 
-        nsPopupFrameList* temp = mPopupList;
-        mPopupList = mPopupList->mNextPopup;
-        delete temp;
-      }
+      nsPopupFrameList* temp = mPopupList;
+      mPopupList = mPopupList->mNextPopup;
+      delete temp;
     }
   }
 

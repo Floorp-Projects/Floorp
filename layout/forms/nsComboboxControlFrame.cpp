@@ -2165,7 +2165,8 @@ nsComboboxControlFrame::Destroy(nsPresContext* aPresContext)
 
   if (!mGoodToGo) {
     if (mDisplayFrame) {
-      mFrameConstructor->RemoveMappingsForFrameSubtree(aPresContext, mDisplayFrame, nsnull);
+      aPresContext->PresShell()->FrameConstructor()->
+        RemoveMappingsForFrameSubtree(mDisplayFrame, nsnull);
       mDisplayFrame->Destroy(aPresContext);
       mDisplayFrame=nsnull;
     }
