@@ -169,10 +169,6 @@ private:
 class nsObjectFrame : public nsObjectFrameSuper {
 public:
   //~~~
-  NS_IMETHOD SetInitialChildList(nsIPresContext& aPresContext,
-                                 nsIAtom*        aListName,
-                                 nsIFrame*       aChildList);
-  //~~~
   NS_IMETHOD Init(nsIPresContext&  aPresContext,
                   nsIContent*      aContent,
                   nsIFrame*        aParent,
@@ -280,15 +276,6 @@ PRIntn
 nsObjectFrame::GetSkipSides() const
 {
   return 0;
-}
-
-//~~~
-NS_IMETHODIMP
-nsObjectFrame::SetInitialChildList(nsIPresContext& aPresContext,
-                                      nsIAtom*        aListName,
-                                      nsIFrame*       aChildList)
-{
-  return NS_OK;
 }
 
 //~~~
