@@ -2477,7 +2477,7 @@ RDFElementImpl::SetAttribute(PRInt32 aNameSpaceID,
     }
 
     if (NS_SUCCEEDED(rv) && aNotify && ElementIsInDocument()) {
-        mDocument->AttributeChanged(NS_STATIC_CAST(nsIStyledContent*, this), aName, NS_STYLE_HINT_UNKNOWN);
+        mDocument->AttributeChanged(NS_STATIC_CAST(nsIStyledContent*, this), aNameSpaceID, aName, NS_STYLE_HINT_UNKNOWN);
     }
 
     return rv;
@@ -2699,7 +2699,7 @@ RDFElementImpl::UnsetAttribute(PRInt32 aNameSpaceID, nsIAtom* aName, PRBool aNot
       // Notify document
       if (NS_SUCCEEDED(rv) && aNotify && (nsnull != mDocument)) {
           mDocument->AttributeChanged(NS_STATIC_CAST(nsIStyledContent*, this),
-                                      aName,
+                                      aNameSpaceID, aName,
                                       NS_STYLE_HINT_UNKNOWN);
       }
     }

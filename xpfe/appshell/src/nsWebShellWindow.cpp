@@ -2460,6 +2460,7 @@ nsWebShellWindow::ContentStatesChanged(nsIDocument *aDocument,
 NS_IMETHODIMP
 nsWebShellWindow::AttributeChanged(nsIDocument *aDocument,
                                    nsIContent*  aContent,
+                                   PRInt32      aNameSpaceID,
                                    nsIAtom*     aAttribute,
                                    PRInt32      aHint)
 {

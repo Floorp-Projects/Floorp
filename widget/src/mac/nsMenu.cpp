@@ -1377,6 +1377,7 @@ NS_IMETHODIMP
 nsMenu::AttributeChanged(
   nsIDocument * aDocument,
   nsIContent  * aContent,
+  PRInt32       aNameSpaceID,
   nsIAtom     * aAttribute,
   PRInt32       aHint)
 {
