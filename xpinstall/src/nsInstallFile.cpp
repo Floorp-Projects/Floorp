@@ -124,7 +124,7 @@ nsInstallFile::nsInstallFile(nsInstall* inInstall,
         /* the nsFileSpecMac.cpp operator += requires "this" (the nsFileSpec)
          * to be an existing dir
          */
-        int dirPermissions = 755; // std default for UNIX, ignored otherwise
+        int dirPermissions = 0755; // std default for UNIX, ignored otherwise
         mFinalFile->CreateDir(dirPermissions);
     }
 
