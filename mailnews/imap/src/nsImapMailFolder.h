@@ -107,7 +107,7 @@ public:
     virtual nsresult GetDBFolderInfoAndDB(nsIDBFolderInfo **folderInfo,
                                           nsIMsgDatabase **db);
  	NS_IMETHOD DeleteMessages(nsISupportsArray *messages,
-                              nsITransactionManager *txnMgr);
+                              nsITransactionManager *txnMgr, PRBool deleteStorage);
 	NS_IMETHOD CreateMessageFromMsgDBHdr(nsIMsgDBHdr *msgHdr, nsIMessage
                                          **message);
     NS_IMETHOD GetNewMessages();

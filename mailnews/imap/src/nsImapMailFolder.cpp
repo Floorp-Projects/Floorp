@@ -850,7 +850,7 @@ nsresult nsImapMailFolder::GetDBFolderInfoAndDB(
 }
 
 NS_IMETHODIMP nsImapMailFolder::DeleteMessages(nsISupportsArray *messages,
-                                               nsITransactionManager *txnMgr)
+                                               nsITransactionManager *txnMgr, PRBool deleteStorage)
 {
     nsresult rv = NS_ERROR_FAILURE;
     // *** jt - assuming delete is move to the trash folder for now
