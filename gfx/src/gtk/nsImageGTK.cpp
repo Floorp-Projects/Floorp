@@ -26,14 +26,9 @@
 #include <gdk/gdkx.h>
 
 #include "nsImageGTK.h"
-#include "nsGCCache.h"
 #include "nsRenderingContextGTK.h"
 
 #include "nspr.h"
-
-
-static nsGCCache gcCache;
-
 
 #define IsFlagSet(a,b) ((a) & (b))
 
@@ -1066,7 +1061,7 @@ NS_IMETHODIMP nsImageGTK::DrawTile(nsIRenderingContext &aContext,
     values.ts_y_origin = aTileRect.y;
     valuesMask = GdkGCValuesMask(GDK_GC_FILL | GDK_GC_TILE | GDK_GC_TS_X_ORIGIN | GDK_GC_TS_Y_ORIGIN);
 
-    gc = gcCache.GetGC(drawing->GetDrawable(), &values, valuesMask, nsnull);
+    gc = gdk_gc_new_with_values(drawing->GetDrawable(), &values, valuesMask);
 
     // draw onscreen
     printf("gdk_draw_rectangle(..., %d, %d, %d, %d)\n",
