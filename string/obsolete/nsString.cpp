@@ -1753,7 +1753,8 @@ nsCAutoString::nsCAutoString(const CBufDescriptor& aBuffer) : nsCString() {
   else {
     nsStr::Initialize(*this,aBuffer.mBuffer,aBuffer.mCapacity,aBuffer.mLength,aBuffer.mCharSize,!aBuffer.mStackBased);
   }
-  AddNullTerminator(*this); //this isn't really needed, but it guarantees that folks don't pass string constants.
+  if(!aBuffer.mIsConst)
+    AddNullTerminator(*this); //this isn't really needed, but it guarantees that folks don't pass string constants.
 }
 
 /**

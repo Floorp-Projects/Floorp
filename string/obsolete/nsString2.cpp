@@ -109,6 +109,7 @@ nsString::nsString(const nsString& aString) :mAgent(aString.mAgent) {
  * @param   reference to a subsumeString
  */
 nsString::nsString(nsSubsumeStr& aSubsumeStr) :mAgent(0) {
+  nsStr::Initialize(*this,eTwoByte);
   Subsume(*this,aSubsumeStr);
 }
 
@@ -2149,7 +2150,8 @@ nsAutoString::nsAutoString(const CBufDescriptor& aBuffer) : nsString() {
   else {
     nsStr::Initialize(*this,aBuffer.mBuffer,aBuffer.mCapacity,aBuffer.mLength,aBuffer.mCharSize,!aBuffer.mStackBased);
   }
-  AddNullTerminator(*this);
+  if(!aBuffer.mIsConst)
+    AddNullTerminator(*this);
 }
 
 

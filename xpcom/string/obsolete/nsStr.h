@@ -183,15 +183,17 @@ class nsIMemoryAgent;
 
 class NS_COM CBufDescriptor {
 public:
-  CBufDescriptor(char* aString,     PRBool aStackBased,PRUint32 aCapacity,PRInt32 aLength=-1);
-  CBufDescriptor(PRUnichar* aString,PRBool aStackBased,PRUint32 aCapacity,PRInt32 aLength=-1);
+  CBufDescriptor(char* aString,           PRBool aStackBased,PRUint32 aCapacity,PRInt32 aLength=-1);
+  CBufDescriptor(const char* aString,     PRBool aStackBased,PRUint32 aCapacity,PRInt32 aLength=-1);
+  CBufDescriptor(PRUnichar* aString,      PRBool aStackBased,PRUint32 aCapacity,PRInt32 aLength=-1);
+  CBufDescriptor(const PRUnichar* aString,PRBool aStackBased,PRUint32 aCapacity,PRInt32 aLength=-1);
 
   char*     mBuffer;
   eCharSize mCharSize;
   PRUint32  mCapacity;
   PRInt32   mLength;
   PRBool    mStackBased;
-
+  PRBool    mIsConst;
 };
 
 //----------------------------------------------------------------------------------------
