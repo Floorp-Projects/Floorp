@@ -220,6 +220,9 @@ public:
   NS_IMETHOD CloseFrameset(const nsIParserNode& aNode);
   NS_IMETHOD OpenMap(const nsIParserNode& aNode);
   NS_IMETHOD CloseMap(const nsIParserNode& aNode);
+  NS_IMETHOD OpenNoscript(const nsIParserNode& aNode);
+  NS_IMETHOD CloseNoscript(const nsIParserNode& aNode);
+
 
   NS_IMETHOD DoFragment(PRBool aFlag);
 
@@ -1367,7 +1370,6 @@ SinkContext::OpenContainer(const nsIParserNode& aNode)
 
     case eHTMLTag_noembed:
     case eHTMLTag_noframes:
-    case eHTMLTag_noscript:
       mSink->mInsideNoXXXTag++;
       break;
 
@@ -1488,7 +1490,6 @@ SinkContext::CloseContainer(const nsIParserNode& aNode)
 
     case eHTMLTag_noembed:
     case eHTMLTag_noframes:
-    case eHTMLTag_noscript:
       // Fix bug 40216
       NS_ASSERTION((mSink->mInsideNoXXXTag > 0), "mInsideNoXXXTag underflow");
       if (mSink->mInsideNoXXXTag > 0) {
@@ -2983,6 +2984,83 @@ HTMLContentSink::CloseMap(const nsIParserNode& aNode)
   MOZ_TIMER_DEBUGLOG(("Stop: nsHTMLContentSink::CloseMap()\n"));
   MOZ_TIMER_STOP(mWatch);
   return rv;
+}
+
+/**
+ *  From the pref determine if the noscript content should be
+ *  processed or not.  If java script is enabled then inform
+ *  DTD that the content should be treated as an alternate content,i.e.,
+ *  the content should not be treated as a regular content.
+ *
+ *  harishd 08/24/00
+ *  @param  aNode - The noscript node
+ *  return  NS_OK if succeeded else ERROR
+ */
+
+NS_IMETHODIMP
+HTMLContentSink::OpenNoscript(const nsIParserNode& aNode) {
+
+  MOZ_TIMER_DEBUGLOG(("Start: nsHTMLContentSink::OpenNoscript()\n"));
+  MOZ_TIMER_START(mWatch);
+  SINK_TRACE_NODE(SINK_TRACE_CALLS,
+                  "HTMLContentSink::OpenNoscript", aNode, 
+                  mCurrentContext->mStackPos, this);
+  
+  nsresult result=mCurrentContext->OpenContainer(aNode);
+  if(NS_SUCCEEDED(result)) {
+    NS_WITH_SERVICE(nsIPref, prefs, "component://netscape/preferences", &result);
+    if(NS_SUCCEEDED(result)) {
+      PRBool jsEnabled;
+      result=prefs->GetBoolPref("javascript.enabled", &jsEnabled);
+      if(NS_SUCCEEDED(result)){
+        if(!jsEnabled) {
+          nsIHTMLContent* content=mCurrentContext->mStack[mCurrentContext->mStackPos -1].mContent;
+          nsCOMPtr<nsIDOMElement> element=do_QueryInterface(content, &result);
+          if(NS_SUCCEEDED(result)) {
+            result=element->SetAttribute(NS_ConvertASCIItoUCS2("style"),NS_ConvertASCIItoUCS2("display:inline"));
+          }
+        }
+        else {
+          mInsideNoXXXTag++;        // To indicate that no processing should be done to this content
+          result=NS_HTMLPARSER_ALTERNATECONTENT; // Inform DTD that the content is not regular, but an alternate content.
+        }
+      }
+    }
+  }
+
+  MOZ_TIMER_DEBUGLOG(("Stop: nsHTMLContentSink::OpenNoscript()\n"));
+  MOZ_TIMER_STOP(mWatch);
+  return result;
+}
+
+/**
+ *  Close noscript and enable processing for rest of the content,
+ *  outside noscript
+ *
+ *  harishd 08/24/00
+ *  @param  aNode - The noscript node
+ *  return  NS_OK if succeeded else ERROR
+ */
+NS_IMETHODIMP
+HTMLContentSink::CloseNoscript(const nsIParserNode& aNode) {
+
+  MOZ_TIMER_DEBUGLOG(("Start: nsHTMLContentSink::CloseNoscript()\n"));
+  MOZ_TIMER_START(mWatch);
+  SINK_TRACE_NODE(SINK_TRACE_CALLS,
+                  "HTMLContentSink::CloseNoscript", aNode, 
+                  mCurrentContext->mStackPos-1, this);
+ 
+  nsresult result=mCurrentContext->CloseContainer(aNode);
+  if(NS_SUCCEEDED(result)) {
+    NS_ASSERTION((mInsideNoXXXTag > -1), "mInsideNoXXXTag underflow");
+    if (mInsideNoXXXTag > 0) {
+      mInsideNoXXXTag--;
+    }
+  }
+  
+  MOZ_TIMER_DEBUGLOG(("Stop: nsHTMLContentSink::CloseNoscript()\n"));
+  MOZ_TIMER_STOP(mWatch);
+  return result;
 }
 
 NS_IMETHODIMP
@@ -5036,7 +5114,6 @@ HTMLContentSink::ProcessSTYLETag(const nsIParserNode& aNode)
 
   return rv;
 }
-
 
 NS_IMETHODIMP 
 HTMLContentSink::NotifyError(const nsParserError* aError)
