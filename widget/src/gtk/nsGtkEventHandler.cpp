@@ -916,12 +916,10 @@ dispatch_superwin_event(GdkEvent *event, nsWindow *window)
     if (!window->sFocusWindow) 
     {
       GtkWidget *mozArea = window->GetMozArea();
-      if (mozArea)
-      {
-        gtk_propagate_event(mozArea, event);
-      }
-      else
-        g_print("dispatch_superwin_event: aeii! failed to get the mozarea!\n");
+      NS_ASSERTION(mozArea, "Failed to get GtkMozArea for superwin event!\n");
+      // pass it off to gtk's event system and return
+      gtk_propagate_event(mozArea, event);
+      return;
     }
   }
 
