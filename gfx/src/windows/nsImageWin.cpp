@@ -527,7 +527,8 @@ nsImageWin::Draw(nsIRenderingContext &aContext, nsDrawingSurface aSurface,
         }
       } else if (8 == mAlphaDepth) {
         nsresult rv = DrawComposited(TheHDC, aDX, aDY, aDWidth, aDHeight,
-                                     aSX, srcy, aSWidth, aSHeight);
+                                     aSX, srcy, aSWidth, aSHeight,
+                                     origDWidth, origDHeight);
         if (NS_FAILED(rv)) {
           ((nsDrawingSurfaceWin *)aSurface)->ReleaseDC();
           return rv;
@@ -665,12 +666,24 @@ void nsImageWin::DrawComposited24(unsigned char *aBits,
  */
 nsresult nsImageWin::DrawComposited(HDC TheHDC, int aDX, int aDY,
                                     int aDWidth, int aDHeight,
-                                    int aSX, int aSY, int aSWidth, int aSHeight)
+                                    int aSX, int aSY, int aSWidth, int aSHeight,
+                                    int aOrigDWidth, int aOrigDHeight)
 {
   HDC memDC = ::CreateCompatibleDC(TheHDC);
   if (!memDC)
     return NS_ERROR_OUT_OF_MEMORY;
   unsigned char *screenBits;
+
+  PRBool scaling = PR_FALSE;
+  /* Both scaled and unscaled images come through this code */
+  if ((aDWidth != aSWidth) || (aDHeight != aSHeight)) {
+    scaling = PR_TRUE;
+    aDWidth = aOrigDWidth;
+    aDHeight = aOrigDHeight;
+    aSWidth = mBHead->biWidth;
+    aSHeight = mBHead->biHeight;
+  }
+
   ALPHA24BITMAPINFO bmi(aDWidth, aDHeight);
   HBITMAP tmpBitmap = ::CreateDIBSection(memDC, (LPBITMAPINFO)&bmi, DIB_RGB_COLORS,
                                          (LPVOID *)&screenBits, NULL, 0);
@@ -700,9 +713,7 @@ nsresult nsImageWin::DrawComposited(HDC TheHDC, int aDX, int aDY,
   PRUint8 *imageRGB, *imageAlpha;
   PRUint32 strideRGB, strideAlpha;
 
-  /* Both scaled and unscaled images come through this code - save
-     work if not scaling */
-  if ((aSWidth != aDWidth) || (aSHeight != aDHeight)) {
+  if (scaling) {
     /* Scale our image to match */
     imageRGB = (PRUint8 *)nsMemory::Alloc(3*aDWidth*aDHeight);
     imageAlpha = (PRUint8 *)nsMemory::Alloc(aDWidth*aDHeight);
@@ -720,9 +731,11 @@ nsresult nsImageWin::DrawComposited(HDC TheHDC, int aDX, int aDY,
 
     strideRGB = 3 * aDWidth;
     strideAlpha = aDWidth;
-    RectStretch(aSWidth, aSHeight, aDWidth, aDHeight, 0, 0, aDWidth-1, aDHeight-1,
+    RectStretch(aSWidth, aSHeight, aDWidth, aDHeight,
+                0, 0, aDWidth-1, aDHeight-1,
                 mImageBits, mRowBytes, imageRGB, strideRGB, 24);
-    RectStretch(aSWidth, aSHeight, aDWidth, aDHeight, 0, 0, aDWidth-1, aDHeight-1,
+    RectStretch(aSWidth, aSHeight, aDWidth, aDHeight,
+                0, 0, aDWidth-1, aDHeight-1,
                 mAlphaBits, mARowBytes, imageAlpha, strideAlpha, 8);
   } else {
     imageRGB = mImageBits + aSY * mRowBytes + aSX * 3;
@@ -735,15 +748,23 @@ nsresult nsImageWin::DrawComposited(HDC TheHDC, int aDX, int aDY,
   DrawComposited24(screenBits, imageRGB, strideRGB, imageAlpha, strideAlpha,
                    aDWidth, aDHeight);
 
-  if ((aSWidth != aDWidth) || (aSHeight != aDHeight)) {
+  if (scaling) {
     /* Free scaled images */
     nsMemory::Free(imageRGB);
     nsMemory::Free(imageAlpha);
   }
 
   /* Copy back to the HDC */
-  retval = ::BitBlt(TheHDC, aDX, aDY, aDWidth, aDHeight,
-                    memDC, 0, 0, SRCCOPY);
+  if (scaling) {
+    /* only copy back the valid portion of the image */
+    retval = ::BitBlt(TheHDC, aDX, aDY,
+                      aDWidth, (mDecodedY2*aDHeight + aSHeight - 1)/aSHeight,
+                      memDC, 0, 0, SRCCOPY);
+  } else {
+    retval = ::BitBlt(TheHDC, aDX, aDY, aDWidth, aDHeight,
+                      memDC, 0, 0, SRCCOPY);
+  }
+
   if (!retval) {
     ::SelectObject(memDC, oldBitmap);
     ::DeleteObject(tmpBitmap);
@@ -1916,7 +1937,8 @@ NS_IMETHODIMP nsImageWin::DrawToImage(nsIImage* aDstImage, nscoord aDX, nscoord 
 
     if (8 == mAlphaDepth) {
       nsresult rv = DrawComposited(dstMemDC, aDX, aDY, aDWidth, aDHeight,
-                                   0, 0, mBHead->biWidth, mBHead->biHeight);
+                                   0, 0, mBHead->biWidth, mBHead->biHeight,
+                                   aDWidth, aDHeight);
       if (NS_FAILED(rv)) {
         ::SelectObject(dstMemDC, oldDstBits);
         ::DeleteDC(dstMemDC);
