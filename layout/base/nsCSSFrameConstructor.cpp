@@ -4867,14 +4867,18 @@ nsCSSFrameConstructor::ConstructFieldSetFrame(nsIPresShell*            aPresShel
   while (nsnull != child) {
     nsresult result = child->QueryInterface(kLegendFrameCID, (void**)&legendFrame);
     if (NS_SUCCEEDED(result) && legendFrame) {
+      // We want the legend to be the first frame in the fieldset child list.
+      // That way the EventStateManager will do the right thing when tabbing
+      // from a selection point within the legend (bug 236071), which is
+      // used for implementing legend access keys (bug 81481).
+      // GetAdjustedParentFrame() below depends on this frame order.
       if (nsnull != previous) {
         previous->SetNextSibling(legendFrame->GetNextSibling());
       } else {
         childItems.childList = legendFrame->GetNextSibling();
       }
-      areaFrame->SetNextSibling(legendFrame);
+      legendFrame->SetNextSibling(areaFrame);
       legendFrame->SetParent(newFrame);
-      legendFrame->SetNextSibling(nsnull);
       break;
     }
     previous = child;
@@ -4885,7 +4889,7 @@ nsCSSFrameConstructor::ConstructFieldSetFrame(nsIPresShell*            aPresShel
   areaFrame->SetInitialChildList(aPresContext, nsnull, childItems.childList);
 
   // Set the scroll frame's initial child list
-  newFrame->SetInitialChildList(aPresContext, nsnull, areaFrame);
+  newFrame->SetInitialChildList(aPresContext, nsnull, legendFrame ? legendFrame : areaFrame);
 
   // our new frame retured is the top frame which is the list frame. 
   aNewFrame = newFrame; 
@@ -8297,8 +8301,13 @@ GetAdjustedParentFrame(nsPresContext* aPresContext,
     // If the parent is a fieldSet, use the fieldSet's area frame as the
     // parent unless the new content is a legend. 
     nsCOMPtr<nsIDOMHTMLLegendElement> legendContent(do_QueryInterface(childContent));
-    if (!legendContent) 
+    if (!legendContent) {
+      // Depends on the fieldset child frame order - see ConstructFieldSetFrame() above.
       newParent = aParentFrame->GetFirstChild(nsnull);
+      if (newParent->GetNextSibling()) {
+        newParent = newParent->GetNextSibling();
+      }
+    }
   }
   return (newParent) ? newParent : aParentFrame;
 }
