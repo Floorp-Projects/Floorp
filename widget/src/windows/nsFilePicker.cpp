@@ -115,20 +115,15 @@ NS_IMETHODIMP nsFilePicker::Show(PRInt16 *retval)
     if (list != NULL) {
       result = ::SHGetPathFromIDList(list, (LPSTR)fileBuffer);
       if (result) {
-        nsAutoString pathStr;
-        PRUnichar *unichar = ConvertFromFileSystemCharset(fileBuffer);
-        if (nsnull == unichar)
-          pathStr.AssignWithConversion(fileBuffer);
-        else {
-          pathStr.Assign(unichar);
-          nsMemory::Free( unichar );
-        }
-          
-        if (result == PR_TRUE) {
-          // I think it also needs a conversion here (to unicode since appending to nsString) 
-          // but doing that generates garbage file name, weird.
           mFile.Append(fileBuffer);
-        }
+      }
+  
+      // free PIDL
+      LPMALLOC pMalloc = NULL;
+      ::SHGetMalloc(&pMalloc);
+      if(pMalloc) {
+         pMalloc->Free(list);
+         pMalloc->Release();
       }
     }
   }
@@ -139,7 +134,16 @@ NS_IMETHODIMP nsFilePicker::Show(PRInt16 *retval)
 
     ofn.lStructSize = sizeof(ofn);
 
-    char *filterBuffer = mFilterList.ToNewCString();
+    PRInt32 l = (mFilterList.Length()+2)*2;
+    char *filterBuffer = (char*) nsMemory::Alloc(l);
+    int len = WideCharToMultiByte(CP_ACP, 0,
+                                  mFilterList.GetUnicode(),
+                                  mFilterList.Length(),
+                                  filterBuffer,
+                                  l, NULL, NULL);
+    filterBuffer[len] = NULL;
+    filterBuffer[len+1] = NULL;
+                                  
     if (initialDir && *initialDir) {
       ofn.lpstrInitialDir = initialDir;
     }
