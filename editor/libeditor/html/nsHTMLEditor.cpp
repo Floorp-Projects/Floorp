@@ -552,9 +552,43 @@ NS_IMETHODIMP nsHTMLEditor::BeginningOfDocument()
     }
     else if (visType==nsWSRunObject::eOtherBlock)
     {
-      curNode = visNode;
-      curOffset = 0;
-      // keep looping
+      // By definition of nsWSRunObject, a block element terminates 
+      // a whitespace run. That is, although we are calling a method 
+      // that is named "NextVisibleNode", the node returned
+      // might not be visible/editable!
+      // If the given block does not contain any visible/editable items,
+      // we want to skip it and continue our search.
+
+      if (!IsContainer(visNode))
+      {
+        // However, we were given a block that is not a container.
+        // Since the block can not contain anything that's visible,
+        // such a block only makes sense if it is visible by itself,
+        // like a <hr>
+        // We want to place the caret in front of that block.
+
+        res = GetNodeLocation(visNode, address_of(selNode), &selOffset);
+        if (NS_FAILED(res)) return res; 
+        done = PR_TRUE;
+      }
+      else
+      {
+        PRBool isEmptyBlock;
+        if (NS_SUCCEEDED(IsEmptyNode(visNode, &isEmptyBlock)) &&
+            isEmptyBlock)
+        {
+          // skip the empty block
+          res = GetNodeLocation(visNode, address_of(curNode), &curOffset);
+          if (NS_FAILED(res)) return res; 
+          ++curOffset;
+        }
+        else
+        {
+          curNode = visNode;
+          curOffset = 0;
+        }
+        // keep looping
+      }
     }
     else
     {
