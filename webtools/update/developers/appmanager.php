@@ -40,10 +40,12 @@ if (!$function) {
      $subver = $_POST["SubVer"];
      $public_ver = $_POST["public_ver"];
 
-     $sql = "INSERT INTO `t_applications` (`AppName`, `GUID`, `shortname`, `Version`, `major`, `minor`, `release`,`SubVer`,`public_ver`) VALUES ('$appname','$guid','$shortname','$version', '$major','$minor','$release','$subver','$public_ver')";
-     $sql_result = mysql_query($sql, $connection) or trigger_error("<div class=\"error\">MySQL Error ".mysql_errno().": ".mysql_error()."</div>", E_USER_NOTICE);
-     if ($sql_result) {
-         echo"The application $appname $version has been successfully added.";
+     if (checkFormKey()) {
+       $sql = "INSERT INTO `t_applications` (`AppName`, `GUID`, `shortname`, `Version`, `major`, `minor`, `release`,`SubVer`,`public_ver`) VALUES ('$appname','$guid','$shortname','$version', '$major','$minor','$release','$subver','$public_ver')";
+       $sql_result = mysql_query($sql, $connection) or trigger_error("<div class=\"error\">MySQL Error ".mysql_errno().": ".mysql_error()."</div>", E_USER_NOTICE);
+       if ($sql_result) {
+           echo"The application $appname $version has been successfully added.";
+       }
      }
 }
 ?>
@@ -87,13 +89,14 @@ $sql = "SELECT `AppName` from `t_applications` GROUP BY `AppName` ORDER BY `AppN
 
 <h2>New Version of <?php echo ucwords($application); ?></h2>
 <form name="addapplication" method="post" action="?function=&action=addnewapp">
+<?writeFormKey();?>
 <?php
-$sql = "SELECT `AppName`, `GUID`, `shortname` FROM `t_applications` WHERE `AppName`='$application' LIMIT 1";
- $sql_result = mysql_query($sql, $connection) or trigger_error("MySQL Error ".mysql_errno().": ".mysql_error()."", E_USER_NOTICE);
-   $row = mysql_fetch_array($sql_result);
-    $application = $row["AppName"];
-    $guid = $row["GUID"];
-    $shortname = $row["shortname"];
+  $sql = "SELECT `AppName`, `GUID`, `shortname` FROM `t_applications` WHERE `AppName`='$application' LIMIT 1";
+  $sql_result = mysql_query($sql, $connection) or trigger_error("MySQL Error ".mysql_errno().": ".mysql_error()."", E_USER_NOTICE);
+  $row = mysql_fetch_array($sql_result);
+  $application = $row["AppName"];
+  $guid = $row["GUID"];
+  $shortname = $row["shortname"];
 ?>
 <input name="appname" type="hidden" value="<?php echo ucwords($application); ?>">
 <input name="guid" type="hidden" value="<?php echo"$guid"; ?>">
@@ -128,13 +131,15 @@ Public Version: Yes: <input name="public_ver" type="radio" value="YES" checked> 
      $public_ver = $_POST["public_ver"];
      $appid=$_POST["appid"];
 
-    echo"<h2>Processing update request, please wait...</h2>\n";
-    $sql = "UPDATE `t_applications` SET `AppName`='$appname', `major`='$major', `minor`='$minor', `release`='$release', `SubVer`='$subver',`Version`='$version', `public_ver`='$public_ver' WHERE `appid`='$appid'";
-    $sql_result = mysql_query($sql, $connection) or trigger_error("<div class=\"error\">MySQL Error ".mysql_errno().": ".mysql_error()."</div>", E_USER_NOTICE);
-    if ($sql_result) {
-        echo"Your update to $appname $version has been successful.<br>";
-    }
+    if (checkFormKey()) {
+      echo"<h2>Processing update request, please wait...</h2>\n";
 
+      $sql = "UPDATE `t_applications` SET `AppName`='$appname', `major`='$major', `minor`='$minor', `release`='$release', `SubVer`='$subver',`Version`='$version', `public_ver`='$public_ver' WHERE `appid`='$appid'";
+      $sql_result = mysql_query($sql, $connection) or trigger_error("<div class=\"error\">MySQL Error ".mysql_errno().": ".mysql_error()."</div>", E_USER_NOTICE);
+      if ($sql_result) {
+          echo"Your update to $appname $version has been successful.<br>";
+      }
+    }
   } else if ($_POST["submit"] == "Delete Version") {
      $appid=$_POST["appid"];
      $appname = $_POST["AppName"];
@@ -161,6 +166,7 @@ if (!$appid) { $appid = $_POST["appid"]; }
 
 <h3>Edit Application:</h3>
 <form name="editcategory" method="post" action="?function=editversion">
+<?writeFormKey();?>
 <?php
   echo"Name:  <input name=\"AppName\" type=\"text\" size=\"30\" maxlength=\"30\" value=\"".$row["AppName"]."\"><br>\n";
   echo"Display Version: <input name=\"version\" type=\"text\" size=\"10\" maxlength=\"15\" value=\"$row[Version]\" title=\"User Friendly Version (Ex. 1.0PR instead of 0.10)\"><br>\n";
