@@ -220,6 +220,7 @@ NS_IMETHODIMP nsDocShell::LoadURI(nsIURI* aURI, nsIDocShellLoadInfo* aLoadInfo)
 #ifdef SH_IN_FRAMES
    nsCOMPtr<nsISHEntry>  loadInfoSHEntry;
 #endif /* SH_IN_FRAMES */
+
    if(aLoadInfo)
    {
       aLoadInfo->GetReferrer(getter_AddRefs(referrer));
@@ -237,7 +238,7 @@ NS_IMETHODIMP nsDocShell::LoadURI(nsIURI* aURI, nsIDocShellLoadInfo* aLoadInfo)
 	 */
    	   nsCOMPtr<nsIDocShellTreeItem> parentAsItem;
        GetSameTypeParent(getter_AddRefs(parentAsItem));
-	    nsCOMPtr<nsISHEntry> entry;
+       nsCOMPtr<nsISHEntry> entry;
 	   nsCOMPtr<nsIWebNavigation> parent;
 	   // Get your SHEntry from your parent
 	   if (parentAsItem) {
@@ -245,13 +246,14 @@ NS_IMETHODIMP nsDocShell::LoadURI(nsIURI* aURI, nsIDocShellLoadInfo* aLoadInfo)
 	      if (!parent)
 		     return NS_ERROR_FAILURE;
           parent->GetSHEForChild(mChildOffset, getter_AddRefs(entry));
+          // XXX: should loadType be set to loadHistory ?
 	   }
 	   
 #ifdef SH_IN_FRAMES
    if (loadInfoSHEntry)
-	   NS_ENSURE_SUCCESS(LoadHistoryEntry(loadInfoSHEntry, loadType), NS_ERROR_FAILURE);
+      NS_ENSURE_SUCCESS(LoadHistoryEntry(loadInfoSHEntry, loadType), NS_ERROR_FAILURE);
    else if (entry)
-       NS_ENSURE_SUCCESS(LoadHistoryEntry(entry, loadType), NS_ERROR_FAILURE);
+      NS_ENSURE_SUCCESS(LoadHistoryEntry(entry, loadType), NS_ERROR_FAILURE);
    else
       NS_ENSURE_SUCCESS(InternalLoad(aURI, referrer, owner, nsnull, nsnull, loadType, loadInfoSHEntry), NS_ERROR_FAILURE);
 #else
@@ -928,6 +930,14 @@ NS_IMETHODIMP nsDocShell::GetCanGoBack(PRBool* aCanGoBack)
    NS_ENSURE_SUCCESS(mSessionHistory->GetIndex(&index), NS_ERROR_FAILURE);
    if(index > 0)
       *aCanGoBack = PR_TRUE;
+#else
+  if (mSessionHistory) {
+    nsCOMPtr<nsIWebNavigation> webNav(do_QueryInterface(mSessionHistory));
+
+    if (webNav) {
+      return webNav->GetCanGoBack(aCanGoBack);
+    }
+  }
 #endif 
    return NS_OK;
 }
@@ -951,6 +961,14 @@ NS_IMETHODIMP nsDocShell::GetCanGoForward(PRBool* aCanGoForward)
 
    if((index >= 0) && (index < (count - 1)))
       *aCanGoForward = PR_TRUE;
+#else
+  if (mSessionHistory) {
+    nsCOMPtr<nsIWebNavigation> webNav(do_QueryInterface(mSessionHistory));
+
+    if (webNav) {
+      return webNav->GetCanGoForward(aCanGoForward);
+    }
+  }
 #endif 
    return NS_OK;
 }
@@ -982,6 +1000,14 @@ NS_IMETHODIMP nsDocShell::GoBack()
 
   
    NS_ENSURE_SUCCESS(LoadHistoryEntry(previousEntry), NS_ERROR_FAILURE);
+#else
+  if (mSessionHistory) {
+    nsCOMPtr<nsIWebNavigation> webNav(do_QueryInterface(mSessionHistory));
+
+    if (webNav) {
+      return webNav->GoBack();
+    }
+  }
 #endif 
    return NS_OK;
 }
@@ -1012,6 +1038,14 @@ NS_IMETHODIMP nsDocShell::GoForward()
    
 
    NS_ENSURE_SUCCESS(LoadHistoryEntry(nextEntry), NS_ERROR_FAILURE);
+#else
+  if (mSessionHistory) {
+    nsCOMPtr<nsIWebNavigation> webNav(do_QueryInterface(mSessionHistory));
+
+    if (webNav) {
+      return webNav->GoForward();
+    }
+  }
 #endif 
    return NS_OK;
 }
@@ -1076,6 +1110,8 @@ NS_IMETHODIMP nsDocShell::Reload(PRInt32 aReloadType)
    if ( aReloadType == nsIWebNavigation::loadReloadBypassProxyAndCache )
    	type = nsIDocShellLoadInfo::loadReloadBypassProxyAndCache;
 
+  // XXX: Why does reload fail if session history is not available?
+  //      Won't this break reloading framesets?
    if (mSessionHistory == nsnull) {
       return NS_OK;
    }
@@ -1195,6 +1231,13 @@ NS_IMETHODIMP nsDocShell::GetCurrentURI(PRUnichar** aCurrentURI)
 NS_IMETHODIMP nsDocShell::SetSessionHistory(nsISHistory* aSessionHistory)
 {
    mSessionHistory = aSessionHistory;
+
+#if defined(SH_IN_FRAMES)
+   if (mSessionHistory) {
+     mSessionHistory->SetRootDocShell(this);
+   }
+#endif /* SH_IN_FRAMES */
+
    return NS_OK;
 }
 	
@@ -2094,6 +2137,11 @@ NS_IMETHODIMP
 nsDocShell::OnStateChange(nsIWebProgress *aProgress, nsIRequest *aRequest,
                           PRInt32 aStateFlags, nsresult aStatus)
 {
+  // Clear the LSHE reference to indicate document loading has finished
+  // one way or another.
+  if ((aStateFlags & flag_stop) && (aStateFlags & flag_is_network)) {
+    LSHE = nsnull;
+  }
   return NS_OK;
 }
 
@@ -2321,6 +2369,9 @@ NS_IMETHODIMP nsDocShell::SetupNewViewer(nsIContentViewer* aNewViewer)
       NS_ERROR("ContentViewer Initialization failed");
       return NS_ERROR_FAILURE;
       }
+
+// XXX: It looks like the LayoutState gets restored again in Embed()
+//      right after the call to SetupNewViewer(...)
 #ifndef SH_IN_FRAMES
     // Restore up any HistoryLayoutState this page might have.
     nsresult rv = NS_OK;
@@ -2407,7 +2458,9 @@ NS_IMETHODIMP nsDocShell::InternalLoad(nsIURI* aURI, nsIURI* aReferrer,
 
     mLoadType = aLoadType;
 #ifdef SH_IN_FRAMES
-   if (aSHEntry)
+// XXX: I think that LSHE should *always* be set to the new Entry.
+//      Even if it is null...
+//   if (aSHEntry)
 	   LSHE = aSHEntry;
 #endif
 
