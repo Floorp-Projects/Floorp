@@ -26,6 +26,10 @@
 #include "mcom_db.h"
 #include "pwcacapi.h"
 
+#ifdef XP_MAC
+#include <errno.h>
+#endif
+
 DB *pw_database=NULL;
 XP_List *pc_interpret_funcs=NULL;
 
