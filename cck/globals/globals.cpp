@@ -7,6 +7,12 @@ __declspec(dllexport) WIDGET GlobalWidgetArray[1000];
 __declspec(dllexport) int GlobalArrayIndex=0;
 __declspec(dllexport) BOOL IsSameCache = TRUE;
 
+void ExtractContents(CString rootPath, CString instblobPath, 
+					 CString instFilename, CString platformInfo, 
+					 CString platformPath, CString extractPath);
+void PopulateNscpxpi(CString rootpath, CString platformInfo, 
+					 CString nscpxpiPath, CString extractPath);
+
 extern "C" __declspec(dllexport)
 int GetAttrib(CString theValue, char* attribArray[MAX_SIZE])
 {
@@ -198,10 +204,8 @@ CString SearchDirectory(CString dirPath, BOOL subDir, CString serachStr)
 // searching recursively if subDir is TRUE 
 {
 	CFileFind finder;
-	CString filePath;
-	CString fileName;
-	CString retval;
-	CString sFileToFind = dirPath + "\\*.*";
+	CString filePath, fileName, retval, sFileToFind;
+	sFileToFind = dirPath + "\\*.*";
 	BOOL found = finder.FindFile(sFileToFind);
 	while (found) 
 	{
@@ -211,6 +215,7 @@ CString SearchDirectory(CString dirPath, BOOL subDir, CString serachStr)
 
 		filePath = finder.GetFilePath();
 		fileName = finder.GetFileName();
+		fileName.MakeLower();
 		if (fileName.Find(serachStr) != -1)
 			return fileName;
 
@@ -228,84 +233,126 @@ extern "C" __declspec(dllexport)
 void CreateDirectories(CString instblobPath)
 // Create appropriate platform and language directories
 {
-	CString quotes          = "\"";
-	CString rootPath        = GetGlobal("Root");
-	CString curVersion      = GetGlobal("Version");
-	int instblobPathlen     = instblobPath.GetLength();
-	int findfilePos         = instblobPath.Find('.');
-	int finddirPos          = instblobPath.ReverseFind('\\');
-	CString instDirname     = instblobPath.Left(finddirPos);
-	CString instFilename    = instblobPath.Right(instblobPathlen - finddirPos -1);
-	CString fileExtension   = instblobPath.Right(instblobPathlen - findfilePos -1);
+	CString rootPath, curVersion, instDirname, instFilename, fileExtension, 
+			platformInfo, platformPath, extractPath, languageInfo, 
+			languagePath, nscpxpiPath;
+	int blobPathlen, findfilePos, finddirPos;
+	char oldDir[MAX_SIZE];
 
-	// Is the blob path a Linux blob installer
+	rootPath        = GetGlobal("Root");
+	curVersion      = GetGlobal("Version");
+	blobPathlen     = instblobPath.GetLength();
+	finddirPos      = instblobPath.ReverseFind('\\');
+	instDirname     = instblobPath.Left(finddirPos);
+	instFilename    = instblobPath.Right(blobPathlen - finddirPos - 1);
+	findfilePos     = instFilename.Find('.');
+	fileExtension   = instFilename.Right(instFilename.GetLength()- findfilePos - 1);
+
 	if (fileExtension == "tar.gz")
+		platformInfo = "Linux";
+	else if (fileExtension == "exe")
+		platformInfo = "Windows";
+	else if (fileExtension == "zip")
+		platformInfo = "Mac OS";
+
+	platformPath = rootPath + "Version\\" + curVersion + "\\" + platformInfo;
+	extractPath  = platformPath + "\\" + "temp";
+
+	if (GetFileAttributes(platformPath) == -1)
+	// platform directory does not exist
+		_mkdir(platformPath);
+	_mkdir(extractPath);
+	GetCurrentDirectory(sizeof(oldDir), oldDir);
+	SetCurrentDirectory((char *)(LPCTSTR) instDirname);
+	ExtractContents(rootPath, instblobPath, instFilename, platformInfo, 
+		platformPath, extractPath);
+	CString searchStr = "defl";
+	searchStr = SearchDirectory(extractPath, TRUE, searchStr);
+
+	if (searchStr != "")
 	{
-		char oldDir[MAX_SIZE];
-		CString platformInfo = "Linux";
-		CString platformPath = rootPath + "Version\\" + curVersion + "\\" + platformInfo;
-		CString extractPath  = platformPath + "\\" + "temp";
-		CString tempPath     = extractPath;
+		languageInfo   = searchStr.Mid(4,4);
+		languagePath   = rootPath + "Version\\" + curVersion + "\\" + 
+			platformInfo + "\\" + languageInfo;
+		nscpxpiPath    = languagePath + "\\Nscpxpi";
+		_mkdir(languagePath);
+		_mkdir(nscpxpiPath);
+		PopulateNscpxpi(rootPath, platformInfo, nscpxpiPath, extractPath);
+	}		
+	EraseDirectory(extractPath);
+	RemoveDirectory(extractPath);
+	SetCurrentDirectory(oldDir);
+}
 
-		if (GetFileAttributes(platformPath) == -1)
-		// platform directory does not exist
-			_mkdir(platformPath);
+void ExtractContents(CString rootPath, CString instblobPath, 
+					 CString instFilename, CString platformInfo, 
+					 CString platformPath, CString extractPath)
+// Extract contents of blob installer
+{
+	CString command, quotes = "\"", spaces = " ";
+	char originalDir[MAX_SIZE];
 
-		// extract contents of Linux blob installer
-		_mkdir(extractPath);
-		GetCurrentDirectory(sizeof(oldDir), oldDir);
-		SetCurrentDirectory((char *)(LPCTSTR) instDirname);
-		tempPath.Replace("\\","/");
-		tempPath.Replace(":","");
-		tempPath.Insert(0,"/cygdrive/");
-		CString command = "tar -zxvf " + instFilename + " -C " + quotes + tempPath + quotes;
+	if (platformInfo == "Linux")
+	{
+		extractPath.Replace("\\","/");
+		extractPath.Replace(":","");
+		extractPath.Insert(0,"/cygdrive/");
+		command = "tar -zxvf " + instFilename + " -C " + quotes + 
+			extractPath + quotes;
 		ExecuteCommand((char *)(LPCTSTR) command, SW_HIDE, INFINITE);
-		CString searchStr = "defl";
-		searchStr = SearchDirectory(extractPath, TRUE, searchStr);
+	}
+	else if (platformInfo == "Windows")
+	{
+		GetCurrentDirectory(sizeof(originalDir), originalDir);
+		CopyFile(instFilename, extractPath+"\\"+instFilename, FALSE);
+		SetCurrentDirectory((char *)(LPCTSTR) extractPath);
+		command = instFilename + " -u";
+		ExecuteCommand((char *)(LPCTSTR) command, SW_HIDE, INFINITE);
+		DeleteFile(extractPath+"\\"+instFilename);
+		SetCurrentDirectory(originalDir);
+	}
+	else if (platformInfo == "Mac OS")
+	{
+		command = quotes + rootPath + "unzip.exe"+ quotes + "-od" + spaces 
+			+ quotes + platformPath + quotes + spaces + quotes + instblobPath
+			+ quotes; 
+		ExecuteCommand((char *)(LPCTSTR) command, SW_HIDE, INFINITE);
+	}
 
-		if (searchStr != "")
-		{
-			CString languageInfo = searchStr.Mid(4,4);
-			CString languagePath = rootPath + "Version\\" + curVersion + "\\" + platformInfo + "\\" + languageInfo;
-			CString nscpxpiPath  = languagePath + "\\Nscpxpi";
-						
-			_mkdir(languagePath);
-			_mkdir(nscpxpiPath);
+}
 
-			// checking if nscpxpi directory is non-empty  
-			// to avoid the steps of populating installer files 
-			BOOL empty = TRUE;
-			CFileFind fn;
-			if (fn.FindFile(nscpxpiPath+"\\*.*") != 0)
-			{
-				while (TRUE)
-				{
-					int fileExist = fn.FindNextFile();
-					if (!fn.IsDots()) 
-					{
-						empty = FALSE;
-						break;
-					}
-					if (fileExist == 0) break;
-				}
-			}
-			if (empty)
-			{
-				CString nsinstallerStr = "\\netscape-installer";
-				_mkdir(nscpxpiPath+nsinstallerStr);
-				CopyDirectory(extractPath+nsinstallerStr+"\\xpi",
-					nscpxpiPath, TRUE);
-				CopyDirectory(extractPath+nsinstallerStr, 
-					nscpxpiPath+nsinstallerStr, FALSE);
-				CopyFile(nscpxpiPath+nsinstallerStr+"\\Config.ini", 
-					nscpxpiPath+"\\Config.ini", FALSE);
-				CopyFile(rootPath+"script_linux.ib", 
-					languagePath+"\\script.ib", FALSE);
-			}		
-		}
-		EraseDirectory(extractPath);
-		RemoveDirectory(extractPath);
-		SetCurrentDirectory(oldDir);
+void PopulateNscpxpi(CString rootPath, CString platformInfo, 
+					 CString nscpxpiPath, CString extractPath)
+// Populate Nscpxpi directory with appropriate installer files
+{
+	CString command, 
+			quotes = "\"", 
+			spaces = " ",
+			nscpzipFile = nscpxpiPath + "\\N6Setup.zip";
+	if (platformInfo == "Linux")
+	{
+		CString strNscpInstaller = "\\netscape-installer";
+		_mkdir(nscpxpiPath+strNscpInstaller);
+		CopyDirectory(extractPath+strNscpInstaller+"\\xpi", nscpxpiPath, TRUE);
+		CopyDirectory(extractPath+strNscpInstaller, nscpxpiPath+strNscpInstaller, 
+			FALSE);
+		CopyFile(nscpxpiPath+strNscpInstaller+"\\Config.ini", 
+			nscpxpiPath+"\\Config.ini", FALSE);
+	}
+	else if (platformInfo == "Windows")
+	{
+		CopyDirectory(extractPath, nscpxpiPath, TRUE);
+		command = quotes + rootPath + "zip.exe" + quotes + " -jm " + 
+			quotes + nscpzipFile + quotes + spaces + quotes + 
+			nscpxpiPath + "\\*.exe" + quotes + spaces + quotes + 
+			nscpxpiPath + "\\*.txt" + quotes + spaces + quotes +
+			nscpxpiPath + "\\*.dll" + quotes + spaces + quotes +
+			nscpxpiPath + "\\install.ini" + quotes;
+		ExecuteCommand((char *)(LPCTSTR) command, SW_HIDE, INFINITE);
+		command = quotes + rootPath + "zip.exe" + quotes + " -j " + 
+			quotes + nscpzipFile + quotes + spaces + quotes + 
+			nscpxpiPath + "\\config.ini" + quotes;
+		ExecuteCommand((char *)(LPCTSTR) command, SW_HIDE, INFINITE);
 	}
 }
 

@@ -1,5 +1,6 @@
 #include "stdafx.h"
 #include "WizardTypes.h"
+#include "encoding.h"
 
 extern __declspec(dllimport) WIDGET 	GlobalWidgetArray[];
 extern __declspec(dllimport) int 		GlobalArrayIndex;
@@ -17,3 +18,4 @@ extern "C" __declspec(dllimport) void EraseDirectory(CString sPath);
 __declspec(dllimport) CString SearchDirectory(CString dirPath, BOOL subDir, CString searchStr);
 extern "C" __declspec(dllimport) void CreateDirectories(CString instblobPath);
 __declspec(dllimport) CString GetModulePath();
+
