@@ -887,8 +887,11 @@ NS_IMETHODIMP nsRenderingContextImpl::DrawImage(imgIContainer *aImage, const nsR
   nsPoint pt;
   nsRect sr;
 
-  pt = *aDestPoint;
-  mTranMatrix->TransformCoord(&pt.x, &pt.y);
+  float fX = float(aDestPoint->x), fY = float(aDestPoint->y);
+  mTranMatrix->Transform(&fX, &fY);
+  
+  pt.x = NSToCoordRound(fX);
+  pt.y = NSToCoordRound(fY);
 
   sr = *aSrcRect;
   mTranMatrix->TransformCoord(&sr.x, &sr.y, &sr.width, &sr.height);
