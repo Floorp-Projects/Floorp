@@ -488,11 +488,30 @@ nsEditor::Do(nsITransaction *aTxn)
 
     // finally we QI to an nsITransaction since that's what Do() expects
     nsCOMPtr<nsITransaction> theTxn = do_QueryInterface(plcTxn);
-    nsITransaction* txn = theTxn;
-    Do(txn);  // we will recurse, but will not hit this case in the nested call
+    Do(theTxn);  // we will recurse, but will not hit this case in the nested call
+
+    if (mTxnMgr)
+    {
+      nsITransaction *topTxn = 0;
+      result = mTxnMgr->PeekUndoStack(&topTxn);
+      if (NS_FAILED(result)) return result;
+      if (topTxn)
+      {
+        plcTxn = nsnull;
+        topTxn->QueryInterface(NS_GET_IID(nsIAbsorbingTransaction), getter_AddRefs(plcTxn));
+        if (plcTxn)
+        {
+          // there is a palceholder transaction on top of the undo stack.  It is 
+          // either the one we just created, or an earlier one that we are now merging
+          // into.  From here on out remember this placeholder instead of the one
+          // we just created.
+          mPlaceHolderTxn = getter_AddRefs( NS_GetWeakReference(plcTxn) );
+        }
+      }
+    }
     
-    // The transaction system (if any) has taken ownwership of txn
-    NS_IF_RELEASE(txn);
+    // txn mgr will now own this if it's around, and if it isn't we don't care
+    NS_IF_RELEASE(editTxn);    
   }
 
   if (aTxn)
@@ -1387,7 +1406,7 @@ nsEditor::ReplaceContainer(nsIDOMNode *inNode,
     res = DeleteNode(child);
     if (NS_FAILED(res)) return res;
     nsCOMPtr<nsIDOMNode> unused;
-    res = (*outNode)->AppendChild(child, getter_AddRefs(unused));
+    res = InsertNode(child, *outNode, -1);
     if (NS_FAILED(res)) return res;
     inNode->HasChildNodes(&bHasMoreChildren);
   }
@@ -1496,7 +1515,7 @@ nsEditor::InsertContainerAbove( nsIDOMNode *inNode,
   res = DeleteNode(inNode);
   if (NS_FAILED(res)) return res;
   nsCOMPtr<nsIDOMNode> unused;
-  res = (*outNode)->AppendChild(inNode, getter_AddRefs(unused));
+  res = InsertNode(inNode, *outNode, 0);
   if (NS_FAILED(res)) return res;
   
   // put new parent in doc

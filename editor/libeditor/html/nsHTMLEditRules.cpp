@@ -7450,6 +7450,19 @@ nsresult
 nsHTMLEditRules::UpdateDocChangeRange(nsIDOMRange *aRange)
 {
   nsresult res = NS_OK;
+
+  // first make sure aRange is in the document.  It might not be if
+  // portions of our editting action involved manipulating nodes
+  // prior to placing them in the document (e.g., populating a list item
+  // before placing it in it's list)
+  nsCOMPtr<nsIDOMNode> startNode;
+  res = aRange->GetStartContainer(getter_AddRefs(startNode));
+  if (NS_FAILED(res)) return res;
+  if (!mHTMLEditor->IsDescendantOfBody(startNode))
+  {
+    // just return - we don't need to adjust mDocChangeRange in this case
+    return NS_OK;
+  }
   
   if (!mDocChangeRange)
   {
@@ -7466,10 +7479,7 @@ nsHTMLEditRules::UpdateDocChangeRange(nsIDOMRange *aRange)
     if (NS_FAILED(res)) return res;
     if (result > 0)  // positive result means mDocChangeRange start is after aRange start
     {
-      nsCOMPtr<nsIDOMNode> startNode;
       PRInt32 startOffset;
-      res = aRange->GetStartContainer(getter_AddRefs(startNode));
-      if (NS_FAILED(res)) return res;
       res = aRange->GetStartOffset(&startOffset);
       if (NS_FAILED(res)) return res;
       res = mDocChangeRange->SetStart(startNode, startOffset);

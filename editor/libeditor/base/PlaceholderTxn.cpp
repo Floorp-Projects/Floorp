@@ -153,8 +153,15 @@ NS_IMETHODIMP PlaceholderTxn::Merge(nsITransaction *aTransaction, PRBool *aDidMe
   }
 
   EditTxn *editTxn = (EditTxn*)aTransaction;  //XXX: hack, not safe!  need nsIEditTransaction!
-  if (PR_TRUE==mAbsorb)
-  { // yep, it's one of ours.  Assimilate it.
+  // determine if this incoming txn is a placeholder txn
+  nsCOMPtr<nsIAbsorbingTransaction> plcTxn;// = do_QueryInterface(editTxn);
+  // cant do_QueryInterface() above due to our broken transaction interfaces.
+  // instead have to brute it below. ugh. 
+  editTxn->QueryInterface(NS_GET_IID(nsIAbsorbingTransaction), getter_AddRefs(plcTxn));
+
+  // we are absorbing all txn's if mAbsorb is lit.
+  if (mAbsorb)
+  { 
     IMETextTxn*  otherTxn = nsnull;
     if (NS_SUCCEEDED(aTransaction->QueryInterface(IMETextTxn::GetCID(),(void**)&otherTxn)) && otherTxn)
     {
@@ -173,16 +180,16 @@ NS_IMETHODIMP PlaceholderTxn::Merge(nsITransaction *aTransaction, PRBool *aDidMe
         if (!didMerge)
         {
           // it wouldn't merge.  Earlier IME txn is already commited and will 
-          // not absorb frther IME txns.  So just stack this one after it
-          // and remember it as a candidate for furthre merges.
+          // not absorb further IME txns.  So just stack this one after it
+          // and remember it as a candidate for further merges.
           mIMETextTxn =otherTxn;
           AppendChild(editTxn);
         }
       }
       NS_IF_RELEASE(otherTxn);
     }
-    else
-    {
+    else if (!plcTxn)  // see bug 171243: just drop incoming placeholders on the floor.
+    {                  // their children will be swallowed by this preexisting one.
       AppendChild(editTxn);
     }
     *aDidMerge = PR_TRUE;
@@ -220,7 +227,11 @@ NS_IMETHODIMP PlaceholderTxn::Merge(nsITransaction *aTransaction, PRBool *aDidMe
             {
               mAbsorb = PR_TRUE;  // we need to start absorbing again
               plcTxn->ForwardEndBatchTo(this);
-              AppendChild(editTxn);
+              // AppendChild(editTxn);
+              // see bug 171243: we don't need to merge placeholders
+              // into placeholders.  We just reactivate merging in the pre-existing
+              // placeholder and drop the new one on the floor.  The EndPlaceHolderBatch()
+              // call on the new placeholder will be forwarded to this older one.
               RememberEndingSelection();
               *aDidMerge = PR_TRUE;
             }

@@ -103,6 +103,8 @@ NS_IMETHODIMP InsertElementTxn::DoTransaction(void)
     PRUint32 count;
     childNodes->GetLength(&count);
     if (mOffset>(PRInt32)count) mOffset = count;
+    // -1 is sentinel value meaning "append at end"
+    if (mOffset == -1) mOffset = count;
     result = childNodes->Item(mOffset, getter_AddRefs(refNode));
     if (NS_FAILED(result)) return result; 
     // note, it's ok for mRefNode to be null.  that means append
