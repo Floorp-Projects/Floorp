@@ -21,7 +21,7 @@
 #include "nsITransferable.h"
 #include "nsDragSource.h"
 #include "nsDataObj.h"
-#include "nsTransferable.h"
+//#include "nsTransferable.h"
 
 #include "OLEIDL.h"
 #include "OLE2.h"
@@ -85,7 +85,7 @@ NS_IMETHODIMP nsDragService::StartDragSession (nsIDragSource * aDragSrc,
                                            PRBool          aDoFlyback)
 
 {
-  NS_IF_RELEASE(mDragSource);
+ /* NS_IF_RELEASE(mDragSource);
   mDragSource = aDragSrc;
   NS_ADDREF(mDragSource);
 
@@ -98,6 +98,7 @@ NS_IMETHODIMP nsDragService::StartDragSession (nsIDragSource * aDragSrc,
   res = ::DoDragDrop((IDataObject*)dataObj,
                      (IDropSource *)((nsDragSource *)mDragSource)->GetNativeDragSrc(), 
                      DROPEFFECT_COPY | DROPEFFECT_MOVE | DROPEFFECT_SCROLL, &dropRes);
+                     */
   return NS_OK;
 }
 
