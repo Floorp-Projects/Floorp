@@ -429,8 +429,10 @@ NODE* CWizardMachineApp::CreateNode(NODE *parentNode, CString iniFile)
 	} 
 	GetPrivateProfileString(varSection, "Caption", "", buffer, MAX_SIZE, iniFile);
 	NewNode->localVars->caption = buffer;
+	/*  Obsolete...
 	GetPrivateProfileString(varSection, "Function", "", buffer, MAX_SIZE, iniFile);
 	NewNode->localVars->functionality = buffer;
+	*/
 
 	NewNode->localVars->wizbut = new WIZBUT;
 	GetPrivateProfileString(varSection, "Back", "", buffer, MAX_SIZE, iniFile); 
@@ -1348,12 +1350,18 @@ void CWizardMachineApp::BuildWidget(WIDGET* aWidget, CString iniSection, CString
 	else 
 		aWidget->fieldlen.length = MAX_SIZE;
 	
+	/* Obsolete...
 	GetPrivateProfileString(iniSection, "dll", "", buffer, MAX_SIZE, iniFile);
 	aWidget->action.dll = buffer;
 	GetPrivateProfileString(iniSection, "function", "", buffer, MAX_SIZE, iniFile);
 	aWidget->action.function = buffer;
 	GetPrivateProfileString(iniSection, "parameters", "", buffer, MAX_SIZE, iniFile);
 	strcpy(aWidget->action.parameters, buffer);
+	*/
+	GetPrivateProfileString(iniSection, "onInit", "", buffer, MAX_SIZE, iniFile);
+	aWidget->action.onInit = buffer;
+	GetPrivateProfileString(iniSection, "onCommand", "", buffer, MAX_SIZE, iniFile);
+	aWidget->action.onCommand = buffer;
 
 	/// Dynamic ID allocation
 	aWidget->widgetID = pageBaseIndex + idCounter;
@@ -1368,8 +1376,10 @@ void CWizardMachineApp::BuildWidget(WIDGET* aWidget, CString iniSection, CString
 		subSection = new char[sizeof(buffer)];
 		strcpy(subSection, buffer);
 
+		/*  Don't tie options to functions...
 		if (aWidget->action.function == "")
 		{
+		*/
 			int counter = 0;
 			int i = 0;
 			char* ComponentKey;
@@ -1393,10 +1403,12 @@ void CWizardMachineApp::BuildWidget(WIDGET* aWidget, CString iniSection, CString
 				}
 			}
 			aWidget->numOfOptions = counter;
+		/*
 		}	
 		else {
 			aWidget->numOfOptions = 0;
 		}
+		*/
 	}
 }
 

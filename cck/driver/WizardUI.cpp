@@ -274,249 +274,6 @@ void CWizardUI::OnPaint()
 
 BOOL CWizardUI::ActCommand(WIDGET *curWidget)
 {
-#ifdef USETHEOLDMETHODOFHANDLINGCOMMANDS
-	char params[MAX_SIZE];
-					
-	UpdateGlobals();
-
-	CString function;
-	strcpy(params, curWidget->action.parameters);
-	int numCommands=0;
-	char target[MID_SIZE] = {'\0'};
-	char baseCommand[MID_SIZE] = {'\0'};
-	char *args[MAX_SIZE];
-	BOOL informAct = FALSE;
-
-
-	char *commands[MIN_SIZE];
-					
-
-	commands[0] = (char *) GlobalAlloc(0, MAX_SIZE * sizeof(char));
-	commands[0] = strtok(params, ";");
-
-	int i=0;
-	while (commands[i])
-	{
-		i++;
-		commands[i] = strtok(NULL, ";");
-		if (commands[i])
-		{
-			if(!(strcmp(commands[i], "inform")))
-			{
-				informAct = TRUE;
-			}
-		}
-	}
-	numCommands = i;
-					
-	if (curWidget->target != "")
-	{
-		strcpy(target, curWidget->target);
-	}
-
-	WIDGET* tmpWidget = theApp.findWidget((char*) (LPCTSTR)curWidget->target);
-	CString tmpFunction = tmpWidget->action.function;
-	CString tmpParams = CString(tmpWidget->action.parameters);
-	
-	char localPath[MAX_SIZE] = {'\0'};
-
-	if (strrchr(tmpParams,'\\')) {
-		strncpy(localPath, tmpParams, strlen(tmpParams) - strlen(strrchr(tmpParams,'\\')));							
-	}
-					
-
-	char *commandList[MIN_SIZE];
-	int commandListLength = 0;
-	BOOL abortProcessing = FALSE;
-	BOOL newEntry = FALSE;
-	BOOL commandBuilt = FALSE;
-	CString entryName;
-
-	for (int j=0; j < numCommands; j++)
-	{
-		commandListLength = 0;
-		if (!abortProcessing)
-		{
-			// Need to replace this gunk with replaceVars() call, but listbox iterator needs 
-			// to be solved first.
-			int numArgs = 0;
-
-
-			int x=0;
-			args[x] = (char *) GlobalAlloc(0, MAX_SIZE * sizeof(char));
-			args[x] = strtok((char *)(LPCTSTR) commands[j], " ");	
-	
-			commandList[commandListLength] = (char *) GlobalAlloc(0, MAX_SIZE * sizeof(char));
-	
-			while (args[x])
-			{
-				x++;
-				args[x] = strtok(NULL, " ");
-			}
-					
-			numArgs = x;
-
-			if ((strstr(args[0], "ConfigDialog")))
-			{
-				CNewDialog newDlg;
-				newDlg.DoModal();
-				entryName = newDlg.GetData();
-				newEntry = TRUE;
-			}
-			if (newEntry && entryName == "")
-			{
-				abortProcessing = TRUE;
-			}
-			else
-			{
-				if (!newEntry)
-				{
-					for (int k=0; k < numArgs; k++)
-					{
-						if (!(strstr(args[k], "%")))
-						{
-							if (!commandBuilt)
-							{
-								strcpy(commandList[commandListLength], args[k]);
-							}
-							else
-							{
-								strcat(commandList[commandListLength], args[k]);
-							}
-							strcat(commandList[commandListLength]," ");
-							commandBuilt = TRUE;
-
-							if (k+1 == numArgs)
-								commandListLength++;
-						}
-						else
-						{
-							args[k]++;
-							args[k][strlen(args[k])-1] = '\0';
-														
-							WIDGET* aWidget = theApp.findWidget(args[k]);
-											
-							if (aWidget)
-							{
-								if (aWidget->type == "ListBox")
-								{
-									/* --- Broken at the moment due to listbox value overhaul ---
-
-									// Listbox iterator:  apply command to each selected value
-									//
-									// Use this index value to find the string from the listbox
-									// If the index is a ',' separated list, iterate over each value
-									CString valueSet = aWidget->value;
-
-									char *values[MIN_SIZE];
-				
-									int numValues=0;
-									values[numValues] = (char *) GlobalAlloc(0, MAX_SIZE * sizeof(char));
-									values[numValues] = strtok((char *)(LPCTSTR)valueSet, ",");
-									while (values[numValues])
-									{
-										numValues++;
-										values[numValues] = strtok(NULL, ",");
-									}							
-													
-									if (strstr(commandList[0]," ")) {
-										strncpy(baseCommand, commandList[0], strlen(commandList[0]) - (strlen(strstr(commandList[0]," "))) );
-										strcat(baseCommand, " ");
-									}
-
-									for (int index=0;  index < numValues; index++)
-									{
-			
-										char valueBuffer[MAX_SIZE] = {'\0'};
-										((CListBox*)aWidget->control)->GetText(atoi(values[index]), valueBuffer);
-		
-										if (index >0)
-										{
-											commandList[commandListLength] = (char *) GlobalAlloc(0, MAX_SIZE * sizeof(char));
-											strcpy(commandList[commandListLength], baseCommand);
-											strcat(commandList[commandListLength], currDirPath);
-											if (localPath) {
-												strcat(commandList[commandListLength], localPath);
-											}
-											strcat(commandList[commandListLength], "\\");
-											strcat(commandList[commandListLength], valueBuffer);
-											strcat(commandList[commandListLength], " ");	
-											commandListLength++;
-										}
-										else
-										{
-											strcat(commandList[commandListLength], currDirPath);
-											if (localPath) {
-												strcat(commandList[commandListLength], localPath);
-											}
-											strcat(commandList[commandListLength], "\\");
-											strcat(commandList[commandListLength], valueBuffer);
-											strcat(commandList[commandListLength], " ");
-															
-											if (k+1 == numArgs)
-											{
-												commandListLength++;
-											}
-										}
-									}
-									*/
-								}
-								else
-								{
-									strcpy(commandList[commandListLength], (char *) (LPCTSTR) aWidget->value);
-									strcat(commandList[commandListLength], " ");
-
-									if (k+1 == numArgs)
-									{
-										commandListLength++;
-									}
-								}
-							}
-							else if (CString(args[k]) == "newEntry")
-							{
-								// Funky reference to newEntry as value just prompted for
-								strcat(commandList[commandListLength], currDirPath);
-								if (localPath) {
-									strcat(commandList[commandListLength], localPath);
-								}
-								strcat(commandList[commandListLength], "\\");
-								strcat(commandList[commandListLength], (char *) (LPCTSTR) entryName);
-												
-								if (k+1 == numArgs)
-								{
-									commandListLength++;
-								}
-							}
-						}
-
-					}	
-				}
-			}
-		}
-		newEntry = FALSE;
-		for (int listNum =0; listNum < commandListLength; listNum++)
-			theApp.ExecuteCommand(commandList[listNum]);
-
-		// This is the list of the target widget, but assumes the function
-		theApp.GenerateList(tmpFunction, tmpWidget, tmpParams);
-	}
-						
-	// Special dialog to show where the file was saved.  Should be replaced with interpreted call in INI file
-	if (informAct)
-	{
-		CWnd myWnd;
-		char infoPath[MAX_SIZE] = {'\0'};
-		strcpy(infoPath, currDirPath);
-		if (localPath) {
-			strcat(infoPath, localPath);
-		}
-
-		if (entryName != "") {
-			myWnd.MessageBox( entryName + " is saved in " + CString(infoPath), "Information", MB_OK);
-		}
-	}	
-#endif
-
 	return TRUE;
 }
 
@@ -578,9 +335,13 @@ BOOL CWizardUI::NewConfig(WIDGET *curWidget, CString globalsName)
 	if (!tmpWidget)
 		return FALSE;
 
+	/*
 	CString tmpFunction = tmpWidget->action.function;
 	CString params = theInterpreter->replaceVars(tmpWidget->action.parameters,NULL);
 	theApp.GenerateList(tmpFunction, tmpWidget, params);	
+	*/
+	if (tmpWidget->action.onInit)
+		theInterpreter->interpret(tmpWidget->action.onInit, curWidget);
 					
 	((CComboBox*)tmpWidget->control)->SelectString(0, configField);
 
@@ -715,13 +476,8 @@ BOOL CWizardUI::OnCommand(WPARAM wParam, LPARAM lParam)
 		if (curWidget->widgetID != (int)wParam) 
 			continue;
 
-		if (curWidget->action.dll == "NULL") 
-		{
-			if (curWidget->action.function == "command")
-				theInterpreter->interpret(curWidget->action.parameters, curWidget);
-		}
-		else 
-			Progress();
+		if (curWidget->action.onCommand)
+			theInterpreter->interpret(curWidget->action.onCommand, curWidget);
 
 		break;
 	}
@@ -813,10 +569,11 @@ void CWizardUI::EnableWidget(WIDGET *curWidget)
 {
 	// all controls are enabled by default, only do something if not enabled...
 	int enabled = TRUE;
-	if (curWidget->action.function == "Enable")
+	if (curWidget->action.onInit)
 	{
-		CString enableStr = theInterpreter->replaceVars(curWidget->action.parameters,NULL);				
-		if (enableStr != "1")
+		CString enableStr = theInterpreter->replaceVars(curWidget->action.onInit,NULL);				
+		// Cheat the interpret overhead since this is called a lot!
+		if (enableStr == "Enable(0)")
 			enabled = FALSE;
 		curWidget->control->EnableWindow(enabled);
 	}
@@ -980,12 +737,16 @@ void CWizardUI::CreateControls()
 			((CListBox*)curWidget->control)->Create(LBS_STANDARD | LBS_MULTIPLESEL | WS_HSCROLL | WS_VSCROLL | WS_TABSTOP, tmpRect, this, ID);
 			((CListBox*)curWidget->control)->ModifyStyleEx(NULL, WS_EX_CLIENTEDGE, 0);
 
-			if (curWidget->action.function == "GenerateFileList" ||
-				curWidget->action.function == "GenerateDirList")
+			/*
+			if (curWidget->action.onInit == "GenerateFileList" ||
+				curWidget->action.onInit == "GenerateDirList")
 			{
 				CString ext = theInterpreter->replaceVars(curWidget->action.parameters,NULL);				
-				theApp.GenerateList(curWidget->action.function, curWidget, ext);
+				theApp.GenerateList(curWidget->action.onInit, curWidget, ext);
 			}
+			*/
+			if (curWidget->action.onInit)
+				theInterpreter->interpret(curWidget->action.onInit, curWidget);
 			else
 			{
 				for (int i = 0; i < curWidget->numOfOptions; i++) 
@@ -1018,12 +779,16 @@ void CWizardUI::CreateControls()
 				WS_TABSTOP, tmpRect, this, ID);
 			((CCheckListBox*)curWidget->control)->ModifyStyleEx(NULL, WS_EX_CLIENTEDGE, 0);
 
-			if (curWidget->action.function == "GenerateFileList" ||
-				curWidget->action.function == "GenerateDirList")
+			/*
+			if (curWidget->action.onInit == "GenerateFileList" ||
+				curWidget->action.onInit == "GenerateDirList")
 			{
 				CString ext = theInterpreter->replaceVars(curWidget->action.parameters, NULL);
-				theApp.GenerateList(curWidget->action.function, curWidget, ext);
+				theApp.GenerateList(curWidget->action.onInit, curWidget, ext);
 			}
+			*/
+			if (curWidget->action.onInit)
+				theInterpreter->interpret(curWidget->action.onInit, curWidget);
 			else
 			{
 				for (int i = 0; i < curWidget->numOfOptions; i++) 
@@ -1054,12 +819,16 @@ void CWizardUI::CreateControls()
 			curWidget->control = new CComboBox;
 			((CComboBox*)curWidget->control)->Create(CBS_DROPDOWNLIST | WS_TABSTOP, tmpRect, this, ID);
 
-			if (curWidget->action.function == "GenerateFileList" ||
-				curWidget->action.function == "GenerateDirList")
+			/*
+			if (curWidget->action.onInit == "GenerateFileList" ||
+				curWidget->action.onInit == "GenerateDirList")
 			{
 				CString ext = theInterpreter->replaceVars(curWidget->action.parameters,NULL);				
-				theApp.GenerateList(curWidget->action.function, curWidget, ext);
+				theApp.GenerateList(curWidget->action.onInit, curWidget, ext);
 			}
+			*/
+			if (curWidget->action.onInit)
+				theInterpreter->interpret(curWidget->action.onInit, curWidget);
 			else
 			{
 				for (int i = 0; i < curWidget->numOfOptions; i++) 

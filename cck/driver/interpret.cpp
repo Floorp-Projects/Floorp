@@ -163,6 +163,12 @@ BOOL CInterpret::IterateListBox(char *parms)
 	return TRUE;
 }
 
+CString CInterpret::replaceVars(CString str, char *listval)
+{
+	char *theStr = (char *) (LPCTSTR) str;
+	return replaceVars(theStr, listval);
+}
+
 CString CInterpret::replaceVars(char *str, char *listval)
 {
 	char buf[MIN_SIZE];
@@ -265,6 +271,12 @@ BOOL CInterpret::CallDLL(char *dll, char *proc, char *parms)
 		return FALSE;
 
 	return TRUE;
+}
+
+BOOL CInterpret::interpret(char *cmds, WIDGET *curWidget)
+{
+	CString commands(cmds);
+	return interpret(commands, curWidget);
 }
 
 BOOL CInterpret::interpret(CString cmds, WIDGET *curWidget)

@@ -21,6 +21,8 @@ typedef struct ACTIONSET
 	CString dll;
 	CString function;
 	char parameters[MAX_SIZE];
+	CString onInit;
+	CString onCommand;
 }ACTIONSET;
 
 typedef struct DIMENSION

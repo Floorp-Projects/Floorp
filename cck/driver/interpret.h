@@ -36,8 +36,10 @@ public:
 	void CopyDir(CString from, CString to);
 	void ExecuteCommand(char *command, int showflag);
 	BOOL IterateListBox(char *parms);
+	CString replaceVars(CString str, char *listval);
 	CString replaceVars(char *str, char *listval);
 	BOOL CallDLL(char *dll, char *proc, char *parms);
+	BOOL interpret(char *cmds, WIDGET *curWidget);
 	BOOL interpret(CString cmds, WIDGET *curWidget);
 // Overrides
 	// ClassWizard generated virtual function overrides
