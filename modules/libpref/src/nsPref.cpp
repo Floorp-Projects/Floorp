@@ -471,7 +471,7 @@ NS_IMETHODIMP nsPref::ReadUserPrefsFrom(nsIFileSpec* inFile)
     mFileSpec = inFile;
     NS_ADDREF(mFileSpec);
     
-    gErrorOpeningUserPrefs = PR_TRUE;
+    gErrorOpeningUserPrefs = PR_FALSE;
 
     if (NS_FAILED(StartUp()))
     	return NS_ERROR_FAILURE;
@@ -479,7 +479,7 @@ NS_IMETHODIMP nsPref::ReadUserPrefsFrom(nsIFileSpec* inFile)
 	nsresult rv = NS_OK;
 	JS_BeginRequest(gMochaContext);
     PRBool exists;
-    if ((NS_SUCCEEDED(mFileSpec->exists(&exists)) && exists)
+    if (!(NS_SUCCEEDED(mFileSpec->exists(&exists)) && exists)
       || pref_OpenFileSpec(mFileSpec, PR_TRUE, PR_FALSE, PR_FALSE, PR_TRUE)
         								!= PREF_NOERROR)
       rv = NS_ERROR_FAILURE;
