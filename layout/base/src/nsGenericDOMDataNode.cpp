@@ -619,6 +619,8 @@ nsGenericDOMDataNode::ConvertContentToXIF(const nsIContent *aOuterContent,
              buffer.Cut(0,startOffset); 
           }
           aConverter.AddContent(buffer);
+
+          NS_RELEASE(range);
         }
       }
     }

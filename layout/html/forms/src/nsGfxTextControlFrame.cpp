@@ -3044,6 +3044,7 @@ nsGfxTextControlFrame::InstallEditor()
         // XXX DocShell redesign work
         SetFocus();
       }
+      NS_RELEASE(focusContent);
     }
     NS_RELEASE(manager);
   }

@@ -254,6 +254,7 @@ void nsMarkupDocument::FinishConvertToXIF(nsXIFConverter& aConverter, nsIDOMNode
         NS_RELEASE(tag);
       }
     }
+    NS_RELEASE(content);
   }
   nsDocument::FinishConvertToXIF(aConverter,aNode);
 }

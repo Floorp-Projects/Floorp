@@ -3083,7 +3083,7 @@ PRBool nsHTMLDocument::NodeIsBlock(nsIDOMNode * aNode, PRBool aPreIsBlock) const
       return PR_FALSE;
 
     // Wish mParserService could be mutable:
-    NS_CONST_CAST(nsHTMLDocument* , this)->mParserService = parserService;
+    NS_CONST_CAST(nsHTMLDocument* , this)->mParserService = dont_AddRef(parserService);
   }
 
   PRInt32 id;
