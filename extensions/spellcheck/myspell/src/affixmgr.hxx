@@ -1,6 +1,10 @@
 #ifndef _AFFIXMGR_HXX_
 #define _AFFIXMGR_HXX_
 
+#ifdef __SUNPRO_CC // for SunONE Studio compiler
+using namespace std;
+#endif
+
 #include "atypes.hxx"
 #include "baseaffix.hxx"
 #include "hashmgr.hxx"

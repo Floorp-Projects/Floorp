@@ -116,7 +116,11 @@ int SuggestMgr::map_related(const char * word, int i, char** wlst, int ns, const
   for (int j = 0; j < nummap; j++) {
     if (strchr(maptable[j].set,c) != 0) {
       in_map = 1;
+#ifdef __SUNPRO_CC // for SunONE Studio compiler
+      char * newword = mystrdup(word);
+#else
       char * newword = strdup(word);
+#endif
       for (int k = 0; k < maptable[j].len; k++) {
 	*(newword + i) = *(maptable[j].set + k);
 	ns = map_related(newword, (i+1), wlst, ns, maptable, nummap);
@@ -403,7 +407,11 @@ int SuggestMgr::ngsuggest(char** wlst, char * word, HashMgr* pHMgr)
   int thresh = 0;
   char * mw = NULL;
   for (int sp = 1; sp < 4; sp++) {
+#ifdef __SUNPRO_CC // for SunONE Studio compiler
+     mw = mystrdup(word);
+#else
      mw = strdup(word);
+#endif
      for (int k=sp; k < n; k+=4) *(mw + k) = '*';
      thresh = thresh + ngram(n, word, mw, NGRAM_ANY_MISMATCH);
      free(mw);

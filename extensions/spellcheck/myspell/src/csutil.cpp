@@ -15,7 +15,9 @@
 static NS_DEFINE_CID(kCharsetConverterManagerCID, NS_ICHARSETCONVERTERMANAGER_CID);
 static NS_DEFINE_CID(kUnicharUtilCID, NS_UNICHARUTIL_CID);
 
-// using namespace std;
+#ifdef __SUNPRO_CC // for SunONE Studio compiler
+using namespace std;
+#endif
 
 // strip strings into token based on single char delimiter
 // acts like strsep() but only uses a delim char and not 
