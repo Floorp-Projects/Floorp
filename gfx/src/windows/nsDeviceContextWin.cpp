@@ -356,12 +356,16 @@ NS_IMETHODIMP nsDeviceContextWin :: GetScrollBarDimensions(float &aWidth, float 
 }
 
 nsresult nsDeviceContextWin::CopyLogFontToNSFont(HDC* aHDC, const LOGFONT* ptrLogFont,
-                                                 nsFont* aFont) const
+                                                 nsFont* aFont, PRBool aIsWide) const
 {
   PRUnichar name[LF_FACESIZE];
   name[0] = 0;
-  MultiByteToWideChar(CP_ACP, 0, ptrLogFont->lfFaceName,
-    strlen(ptrLogFont->lfFaceName) + 1, name, sizeof(name)/sizeof(name[0]));
+  if (aIsWide)
+    memcpy(name, ptrLogFont->lfFaceName, LF_FACESIZE*2);
+  else {
+    MultiByteToWideChar(CP_ACP, 0, ptrLogFont->lfFaceName,
+      strlen(ptrLogFont->lfFaceName) + 1, name, sizeof(name)/sizeof(name[0]));
+  }
   aFont->name = name;
 
   // Do Style

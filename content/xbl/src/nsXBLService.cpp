@@ -75,6 +75,7 @@
 #include "nsIXBLPrototypeBinding.h"
 #include "nsIXBLDocumentInfo.h"
 #include "nsXBLAtoms.h"
+#include "nsXULAtoms.h"
 
 #include "nsIXBLPrototypeHandler.h"
 
@@ -538,7 +539,6 @@ PRUint32 nsXBLService::gClassLRUListLength = 0;
 PRUint32 nsXBLService::gClassLRUListQuota = 64;
 
 nsIAtom* nsXBLService::kEventAtom = nsnull;
-nsIAtom* nsXBLService::kScrollbarAtom = nsnull;
 nsIAtom* nsXBLService::kInputAtom = nsnull;
 
 // Enabled by default. Must be over-ridden to disable
@@ -565,7 +565,6 @@ nsXBLService::nsXBLService(void)
     
     // Create our atoms
     kEventAtom = NS_NewAtom("event");
-    kScrollbarAtom = NS_NewAtom("scrollbar");
     kInputAtom = NS_NewAtom("input");
 
     // Find out if the XUL cache is on or off
@@ -590,7 +589,6 @@ nsXBLService::~nsXBLService(void)
     
     // Release our atoms
     NS_RELEASE(kEventAtom);
-    NS_RELEASE(kScrollbarAtom);
     NS_RELEASE(kInputAtom);
 
     // Walk the LRU list removing and deleting the nsXBLJSClasses.
@@ -1113,7 +1111,8 @@ nsXBLService::LoadBindingDocumentInfo(nsIContent* aBoundElement, nsIDocument* aB
     nsCOMPtr<nsIAtom> tagName;
     if (aBoundElement)
       aBoundElement->GetTag(*getter_AddRefs(tagName));
-    if (!info && bindingManager && (tagName.get() != kScrollbarAtom) && (tagName.get() != kInputAtom) 
+    if (!info && bindingManager && (tagName.get() != nsXULAtoms::scrollbar) &&
+        (tagName.get() != nsXULAtoms::thumb) && (tagName.get() != kInputAtom) 
         && !aForceSyncLoad) {
       // The third line of defense is to investigate whether or not the
       // document is currently being loaded asynchronously.  If so, there's no
@@ -1217,7 +1216,8 @@ nsXBLService::FetchBindingDocument(nsIContent* aBoundElement, nsIDocument* aBoun
   if (aBoundElement)
     aBoundElement->GetTag(*getter_AddRefs(tagName)); 
 
-  if (tagName.get() == kScrollbarAtom || IsResourceURI(aURI))
+  if (tagName.get() == nsXULAtoms::scrollbar || tagName.get() == nsXULAtoms::thumb || 
+      IsResourceURI(aURI))
     aForceSyncLoad = PR_TRUE;
 
   nsCOMPtr<nsIStreamListener> listener;

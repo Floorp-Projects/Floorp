@@ -55,20 +55,10 @@ public:
                                   const nsRect& aRect,
                                   const nsRect& aClipRect)=0;
 
-  NS_IMETHOD GetWidgetPadding(nsIDeviceContext* aContext, 
-                              nsIFrame* aFrame,
-                              PRUint8 aWidgetType,
-                              nsMargin* aResult)=0;
-
-  NS_IMETHOD GetWidgetFont(nsIDeviceContext* aContext, 
-                           PRUint8 aWidgetType,
-                           nsFont* aFont)=0;
-
-  NS_IMETHOD GetWidgetColor(nsIPresContext* aPresContext,
-                            nsIRenderingContext* aContext,
-                            nsIFrame* aFrame,
-                            PRUint8 aWidgetType,
-                            nscolor* aFont)=0;
+  NS_IMETHOD GetWidgetBorder(nsIDeviceContext* aContext, 
+                             nsIFrame* aFrame,
+                             PRUint8 aWidgetType,
+                             nsMargin* aResult)=0;
 
   NS_IMETHOD GetMinimumWidgetSize(nsIRenderingContext* aContext, nsIFrame* aFrame,
                                   PRUint8 aWidgetType,

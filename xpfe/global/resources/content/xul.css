@@ -618,6 +618,11 @@ scrollbar {
   direction: ltr;
 }
 
+thumb 
+{
+  -moz-binding: url(chrome://global/content/bindings/scrollbar.xml#thumb);
+}
+
 scrollbar, scrollbarbutton, slider, thumb {
   -moz-user-select: none;
 }
@@ -641,6 +646,11 @@ autorepeatbutton {
 }
 
 /********** statusbar **********/
+
+statusbar 
+{
+  -moz-binding: url("chrome://global/content/bindings/general.xml#statusbar");
+}
 
 statusbarpanel {
   -moz-binding: url("chrome://global/content/bindings/general.xml#statusbarpanel");

@@ -4,15 +4,19 @@
    xmlns="http://www.mozilla.org/xbl"
    xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
   
+  <binding id="thumb" extends="xul:button">
+    <content>
+      <xul:gripper/>
+    </content>
+  </binding>
+  
   <binding id="scrollbar">
     <content>
       <xul:scrollbarbutton sbattr="scrollbar-up-top" type="decrement" inherits="sborient=orient"/>
       <xul:scrollbarbutton sbattr="scrollbar-down-top" type="increment" hidden="true" inherits="sborient=orient"/>
       <xul:slider flex="1" inherits="curpos,maxpos,pageincrement,increment,orient,sborient=orient">
         <xul:thumb sbattr="scrollbar-thumb" inherits="orient,sborient=orient" 
-                   align="center" pack="center" flex="1">
-          <xul:gripper/>
-        </xul:thumb>
+                   align="center" pack="center" flex="1"/>
       </xul:slider>
       <xul:scrollbarbutton sbattr="scrollbar-up-bottom" type="decrement" hidden="true" inherits="sborient=orient"/>
       <xul:scrollbarbutton sbattr="scrollbar-down-bottom" type="increment" inherits="sborient=orient"/>

@@ -30,6 +30,7 @@
 /* :::::::::: button :::::::::: */
 
 button {
+  -moz-appearance: button;
   margin: 1px 5px 2px 5px;
   min-width: 6.3em;
   border: 3px solid;
@@ -42,7 +43,6 @@ button {
 }
 
 .button-box {
-  margin: 1px;
   border: 1px solid transparent;
   padding: 1px 4px 2px 3px;
 }
