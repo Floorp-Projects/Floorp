@@ -62,6 +62,9 @@ public:
   // create new child name space
   NS_IMETHOD CreateChildNameSpace(nsIAtom* aPrefix, const nsString& aURI,
                                   nsINameSpace*& aChildNameSpace) = 0;
+
+  NS_IMETHOD CreateChildNameSpace(nsIAtom* aPrefix, PRInt32 aNameSpaceID,
+                                  nsINameSpace*& aChildNameSpace) = 0;
 };
 
 #endif // nsINameSpace_h___
