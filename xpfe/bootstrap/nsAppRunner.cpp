@@ -763,6 +763,9 @@ static PRBool IsStartupCommand(const char *arg)
 
 static nsresult HandleArbitraryStartup( nsICmdLineService* cmdLineArgs, nsIPref *prefs,  PRBool heedGeneralStartupPrefs, PRBool *windowOpened)
 {
+#ifdef MOZ_PHOENIX
+  heedGeneralStartupPrefs = PR_FALSE;
+#endif
 	nsresult rv;
 	PRInt32 height = nsIAppShellService::SIZE_TO_CONTENT;
 	PRInt32 width  = nsIAppShellService::SIZE_TO_CONTENT;
