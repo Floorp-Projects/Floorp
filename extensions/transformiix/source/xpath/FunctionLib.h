@@ -316,39 +316,37 @@ private:
 }; //-- StringFunctionCall
 
 
-// OG+
-/**
+/*
  * Represents the XPath Number Function Calls
-**/
+ */
 class NumberFunctionCall : public FunctionCall {
 
 public:
 
-    enum numberFunctions {
-        NUMBER = 1,            //-- number()
-        ROUND,                 //-- round()
-        FLOOR,                 //-- floor()
-        CEILING,               //-- ceiling()
-        SUM                    //-- sum()
+    enum NumberFunctions {
+        NUMBER,   // number()
+        ROUND,    // round()
+        FLOOR,    // floor()
+        CEILING,  // ceiling()
+        SUM       // sum()
     };
 
-    /**
+    /*
      * Creates a Number function of the given type
-    **/
-    NumberFunctionCall(short type);
+     */
+    NumberFunctionCall(NumberFunctions type);
 
-    /**
+    /*
      * Evaluates this Expr based on the given context node and processor state
      * @param context the context node for evaluation of this Expr
      * @param ps the ContextState containing the stack information needed
      * for evaluation
      * @return the result of the evaluation
-    **/
+     */
     virtual ExprResult* evaluate(Node* context, ContextState* cs);
 
 private:
-    short type;
-}; //-- NumberFunctionCall
-// OG-
+    NumberFunctions mType;
+};
 
 #endif
