@@ -2942,7 +2942,7 @@ CombineBreakType(PRUint8 aOrigBreakType,
     if ((NS_STYLE_CLEAR_LEFT           == aNewBreakType) ||
         (NS_STYLE_CLEAR_RIGHT          == aNewBreakType) ||    
         (NS_STYLE_CLEAR_LEFT_AND_RIGHT == aNewBreakType)) {
-      breakType = NS_STYLE_CLEAR_LEFT_AND_RIGHT;
+      breakType = aNewBreakType;
     }
   }
   return breakType;
