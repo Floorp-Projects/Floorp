@@ -65,7 +65,11 @@ public:
   virtual nsIFrame* GetFrame();
   nsresult GetOffsetRect(nsRect& aRect);
   nsresult GetScreenPosition(nsIntPoint& aPoint);
-  nsIDOMElement* GetChildByOrdinalAt(PRUint32 aIndex);
+
+  // Given a parent frame and a child frame, find the frame whose
+  // next sibling is the given child frame and return its element
+  static nsresult GetPreviousSibling(nsIFrame* aParentFrame, nsIFrame* aFrame,
+                                     nsIDOMElement** aResult);
 
 protected:
   // Helper for some of the subclasses of nsBoxObject
