@@ -43,7 +43,7 @@
 #include "nsXPFCToolkit.h"
 #include "nsX400Parser.h"
 #include "nsxpfcCIID.h"
-
+#include "nscalcids.h"
 #include "capi.h"
 #include "nsICapi.h"
 
@@ -82,13 +82,27 @@ extern Widget topLevel;
 nsIID kIXPCOMApplicationShellCID = NS_CAL_SHELL_CID ; 
 
 static NS_DEFINE_IID(kIXPFCObserverManagerIID, NS_IXPFC_OBSERVERMANAGER_IID);
-static NS_DEFINE_IID(kCXPFCObserverManagerCID, NS_XPFC_OBSERVERMANAGER_CID);
+static NS_DEFINE_IID(kCXPFCDTD,               NS_IXPFCXML_DTD_IID);
+static NS_DEFINE_IID(kCXPFCContentSink,       NS_XPFCXMLCONTENTSINK_IID);
+static NS_DEFINE_IID(kCXPFCCommandServerCID,  NS_XPFC_COMMAND_SERVER_CID);
+static NS_DEFINE_IID(kCXPFCHTMLCanvasCID,     NS_XPFC_HTML_CANVAS_CID);
+static NS_DEFINE_IID(kCXPFolderCanvasCID,     NS_XP_FOLDER_CANVAS_CID);
+static NS_DEFINE_IID(kCCalCanvasCID,          NS_CAL_CANVAS_CID);
 
 // hardcode names of dll's
+// hardcode names of dll's
 #ifdef NS_WIN32
+  #define CALUI_DLL   "calui10.dll"
+  #define UTIL_DLL    "util10.dll"
+  #define PARSER_DLL  "calparser10.dll"
+  #define XPFC_DLL    "xpfc10.dll"
   #define CAPI_DLL    "calcapi10.dll"
   #define CORE_DLL    "calcore10.dll"
 #else
+  #define CALUI_DLL  "libcalui10.so"
+  #define UTIL_DLL   "libutil10.so"
+  #define PARSER_DLL "libcalparser10.so"
+  #define XPFC_DLL   "libxpfc10.so"
   #define CAPI_DLL   "libcalcapi10.so"
   #define CORE_DLL   "libcalcore10.so"
 #endif
@@ -206,6 +220,14 @@ nsresult nsCalendarShell::Init()
   nsresult res = nsApplicationManager::GetShellInstance(this, &mShellInstance);
 
   /*
+   * Register class factrories needed for application
+   */
+
+  RegisterFactories() ;
+  InitFactoryObjs();
+
+
+  /*
    * Parse command Line
    */
 
@@ -215,12 +237,6 @@ nsresult nsCalendarShell::Init()
   if (NS_OK != res)
     return res;
     
-  /*
-   * Register class factrories needed for application
-   */
-  RegisterFactories() ;
-  InitFactoryObjs();
-
   /*
    * Load Application Prefs
    */
@@ -826,6 +842,55 @@ nsresult nsCalendarShell::RegisterFactories()
   nsRepository::RegisterFactory(kCCalendarModelCID, CORE_DLL, PR_FALSE, PR_FALSE);
   nsRepository::RegisterFactory(kCLayerCID, CORE_DLL, PR_FALSE, PR_FALSE);
   nsRepository::RegisterFactory(kCLayerCollectionCID, CORE_DLL, PR_FALSE, PR_FALSE);
+
+  // register classes
+  nsRepository::RegisterFactory(kCCalTimeContextCID, CALUI_DLL, PR_FALSE, PR_FALSE);
+  nsRepository::RegisterFactory(kCCalComponentCID, CALUI_DLL, PR_FALSE, PR_FALSE);
+  nsRepository::RegisterFactory(kCCalContextControllerCID, CALUI_DLL, PR_FALSE, PR_FALSE);
+  nsRepository::RegisterFactory(kCCalTimebarContextControllerCID, CALUI_DLL, PR_FALSE, PR_FALSE);
+  nsRepository::RegisterFactory(kCCalCanvasCID, CALUI_DLL, PR_FALSE, PR_FALSE);
+  nsRepository::RegisterFactory(kCCalMonthContextControllerCID, CALUI_DLL, PR_FALSE, PR_FALSE);
+  nsRepository::RegisterFactory(kCCalToolkitCID, CALUI_DLL, PR_FALSE, PR_FALSE);
+  nsRepository::RegisterFactory(kCVectorCID, XPFC_DLL, PR_FALSE, PR_FALSE);
+  nsRepository::RegisterFactory(kCVectorIteratorCID, XPFC_DLL, PR_FALSE, PR_FALSE);
+  nsRepository::RegisterFactory(kCDateTimeCID, UTIL_DLL, PR_FALSE, PR_FALSE);
+  nsRepository::RegisterFactory(kCstackCID, XPFC_DLL, PR_FALSE, PR_FALSE);
+  nsRepository::RegisterFactory(kCDurationCID, UTIL_DLL, PR_FALSE, PR_FALSE);
+  nsRepository::RegisterFactory(kCCalDurationCommandCID, CALUI_DLL, PR_FALSE, PR_FALSE);
+  nsRepository::RegisterFactory(kCCalDayListCommandCID, CALUI_DLL, PR_FALSE, PR_FALSE);
+  nsRepository::RegisterFactory(kCCalFetchEventsCommandCID, CALUI_DLL, PR_FALSE, PR_FALSE);
+  nsRepository::RegisterFactory(kCCalNewModelCommandCID, CALUI_DLL, PR_FALSE, PR_FALSE);
+  nsRepository::RegisterFactory(kCCalStatusCanvasCID, CALUI_DLL, PR_FALSE, PR_FALSE);
+  nsRepository::RegisterFactory(kCCalCommandCanvasCID, CALUI_DLL, PR_FALSE, PR_FALSE);
+  nsRepository::RegisterFactory(kCCalTodoComponentCanvasCID, CALUI_DLL, PR_FALSE, PR_FALSE);
+  nsRepository::RegisterFactory(kCCalDayViewCID, CALUI_DLL, PR_FALSE, PR_FALSE);
+  nsRepository::RegisterFactory(kCCalMonthViewCID, CALUI_DLL, PR_FALSE, PR_FALSE);
+  nsRepository::RegisterFactory(kCCalMultiDayViewCID, CALUI_DLL, PR_FALSE, PR_FALSE);
+  nsRepository::RegisterFactory(kCCalMultiUserViewCID, CALUI_DLL, PR_FALSE, PR_FALSE);
+  nsRepository::RegisterFactory(kCalTimebarHeadingCID, CALUI_DLL, PR_FALSE, PR_FALSE);
+  nsRepository::RegisterFactory(kCalTimebarUserHeadingCID, CALUI_DLL, PR_FALSE, PR_FALSE);
+  nsRepository::RegisterFactory(kCalTimebarTimeHeadingCID, CALUI_DLL, PR_FALSE, PR_FALSE);
+  nsRepository::RegisterFactory(kCalTimebarScaleCID, CALUI_DLL, PR_FALSE, PR_FALSE);
+  nsRepository::RegisterFactory(kCCalXMLDTD, PARSER_DLL, PR_FALSE, PR_FALSE);
+  nsRepository::RegisterFactory(kCCalXMLContentSink, PARSER_DLL, PR_FALSE, PR_FALSE);
+  nsRepository::RegisterFactory(kCXPFCDTD, XPFC_DLL, PR_FALSE, PR_FALSE);
+  nsRepository::RegisterFactory(kCXPFCContentSink, XPFC_DLL, PR_FALSE, PR_FALSE);
+  nsRepository::RegisterFactory(kCLayoutCID, XPFC_DLL, PR_TRUE, PR_TRUE);
+  nsRepository::RegisterFactory(kCBoxLayoutCID, XPFC_DLL, PR_TRUE, PR_TRUE);
+  nsRepository::RegisterFactory(kCXPFCObserverCID, XPFC_DLL, PR_FALSE, PR_FALSE);
+  nsRepository::RegisterFactory(kCXPFCSubjectCID, XPFC_DLL, PR_FALSE, PR_FALSE);
+  nsRepository::RegisterFactory(kCXPFCObserverManagerCID, XPFC_DLL, PR_FALSE, PR_FALSE);
+  nsRepository::RegisterFactory(kCXPFCCommandCID, XPFC_DLL, PR_FALSE, PR_FALSE);
+  nsRepository::RegisterFactory(kCXPFCCanvasCID, XPFC_DLL, PR_FALSE, PR_FALSE);
+  nsRepository::RegisterFactory(kCXPFCHTMLCanvasCID, XPFC_DLL, PR_FALSE, PR_FALSE);
+  nsRepository::RegisterFactory(kCXPFolderCanvasCID, XPFC_DLL, PR_FALSE, PR_FALSE);
+  nsRepository::RegisterFactory(kCXPFCCanvasCID, XPFC_DLL, PR_TRUE, PR_TRUE);
+  nsRepository::RegisterFactory(kCXPFCCanvasManagerCID, XPFC_DLL, PR_FALSE, PR_FALSE);
+  nsRepository::RegisterFactory(kCXPFCMethodInvokerCommandCID, XPFC_DLL, PR_FALSE, PR_FALSE);
+  nsRepository::RegisterFactory(kCXPFCNotificationStateCommandCID, XPFC_DLL, PR_FALSE, PR_FALSE);
+  nsRepository::RegisterFactory(kCXPFCModelUpdateCommandCID, XPFC_DLL, PR_FALSE, PR_FALSE);
+  nsRepository::RegisterFactory(kCXPFCActionCommandCID, XPFC_DLL, PR_FALSE, PR_FALSE);
+  nsRepository::RegisterFactory(kCXPFCCommandServerCID, XPFC_DLL, PR_FALSE, PR_FALSE);
 
   return NS_OK;
 }
