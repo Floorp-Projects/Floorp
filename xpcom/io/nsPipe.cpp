@@ -37,8 +37,14 @@ public:
     NS_DECL_NSIINPUTSTREAM
 
     // nsIBufferInputStream methods:
-    NS_DECL_NSIBUFFERINPUTSTREAM
-
+    NS_IMETHOD GetBuffer(nsIBuffer* *result);
+    NS_IMETHOD ReadSegments(nsWriteSegmentFun writer, void* closure, PRUint32 count,
+                            PRUint32 *readCount) {
+        return NS_ERROR_NOT_IMPLEMENTED;
+    }
+    NS_IMETHOD Search(const char *forString, PRBool ignoreCase, PRBool *found, PRUint32 *offsetSearchedTo);
+    NS_IMETHOD GetNonBlocking(PRBool *aNonBlocking);
+    NS_IMETHOD SetNonBlocking(PRBool aNonBlocking);
 #if 0
     NS_IMETHOD Fill(const char *buf, PRUint32 count, PRUint32 *_retval);
     NS_IMETHOD FillFrom(nsIInputStream *inStr, PRUint32 count, PRUint32 *_retval);
@@ -69,7 +75,15 @@ public:
     NS_DECL_NSIOUTPUTSTREAM
 
     // nsIBufferOutputStream methods:
-    NS_DECL_NSIBUFFEROUTPUTSTREAM
+    NS_IMETHOD GetBuffer(nsIBuffer * *aBuffer);
+    NS_IMETHOD WriteSegments(nsReadSegmentFun reader, void* closure, PRUint32 count,
+                             PRUint32 *writeCount) {
+        return NS_ERROR_NOT_IMPLEMENTED;
+    } 
+    NS_IMETHOD WriteFrom(nsIInputStream* fromStream, PRUint32 aCount,
+                         PRUint32 *aWriteCount);
+    NS_IMETHOD GetNonBlocking(PRBool *aNonBlocking);
+    NS_IMETHOD SetNonBlocking(PRBool aNonBlocking);
 
     // nsBufferOutputStream methods:
     nsBufferOutputStream(nsIBuffer* buf, PRBool blocking);
@@ -283,7 +297,24 @@ nsBufferOutputStream::~nsBufferOutputStream()
     NS_RELEASE(mBuffer);
 }
 
-NS_IMPL_ISUPPORTS3(nsBufferOutputStream, nsIBufferOutputStream, nsIOutputStream, nsIBaseStream)
+NS_IMPL_ADDREF(nsBufferOutputStream);
+NS_IMPL_RELEASE(nsBufferOutputStream);
+
+NS_IMETHODIMP
+nsBufferOutputStream::QueryInterface(REFNSIID aIID, void** aInstancePtr)
+{
+    if (aInstancePtr == nsnull)
+        return NS_ERROR_NULL_POINTER;
+    if (aIID.Equals(nsIBufferOutputStream::GetIID()) ||
+        aIID.Equals(nsIOutputStream::GetIID()) ||
+        aIID.Equals(nsIBaseStream::GetIID()) ||
+        aIID.Equals(nsCOMTypeInfo<nsISupports>::GetIID())) {
+        *aInstancePtr = this;
+        NS_ADDREF_THIS();
+        return NS_OK;
+    }
+    return NS_NOINTERFACE;
+}
 
 NS_IMETHODIMP
 nsBufferOutputStream::Close(void)

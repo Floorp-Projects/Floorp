@@ -20,6 +20,26 @@
 
 interface nsIBuffer;
 
+%{C++
+/**
+ * The signature for the reader function passed to WriteSegment. This 
+ * specifies where the data should come from that gets written into the buffer.
+ * Implementers should return the following:
+ * @return NS_OK and readCount - if successfully read something
+ * @return NS_BASE_STREAM_EOF - if no more to read
+ * @return NS_BASE_STREAM_WOULD_BLOCK - if there is currently no data (in
+ *   a non-blocking mode)
+ * @return <other-error> - on failure
+ */
+typedef NS_CALLBACK(nsReadSegmentFun)(void* closure,
+                                      char* toRawSegment,
+                                      PRUint32 fromOffset,
+                                      PRUint32 count,
+                                      PRUint32 *readCount);
+%}
+
+native nsReadSegmentFun(nsReadSegmentFun);
+
 [scriptable, uuid(d2aaae66-1ab0-11d3-8ccd-0060b0fc14a3)]
 interface nsIBufferOutputStream : nsIOutputStream
 {
@@ -27,6 +47,10 @@ interface nsIBufferOutputStream : nsIOutputStream
      * Returns the buffer underlying this output stream.
      */
     readonly attribute nsIBuffer Buffer;
+
+    [noscript] unsigned long WriteSegments(in nsReadSegmentFun reader,
+                                           in voidStar closure,
+                                           in unsigned long count);
 
     /**
      * Writes data into the stream from an input stream.

@@ -19,49 +19,60 @@
 #include "nsSegmentedBuffer.h"
 #include "nsCRT.h"
 
-#ifdef DEBUG
-#define DEBUG_MEMSET(addr, value, count) nsCRT::memset(addr, value, count)
-#else
-#define DEBUG_MEMSET(addr, value, count) /* nothing */
-#endif
-
-nsSegmentedBuffer::nsSegmentedBuffer(PRUint32 segmentSize, PRUint32 maxSize,
-                                     nsIAllocator* allocator)
-    : mSegmentSize(segmentSize), mMaxSize(maxSize), 
-      mSegAllocator(allocator), mSegmentArray(nsnull),
-      mSegmentArrayCount(NS_SEGMENTARRAY_INITIAL_COUNT),
+nsSegmentedBuffer::nsSegmentedBuffer()
+    : mSegmentSize(0), mMaxSize(0), 
+      mSegAllocator(nsnull), mSegmentArray(nsnull),
+      mSegmentArrayCount(0),
       mFirstSegmentIndex(0), mLastSegmentIndex(0)
 {
+}
+
+nsSegmentedBuffer::~nsSegmentedBuffer()
+{
+    Empty();
+    NS_IF_RELEASE(mSegAllocator);
+}
+
+nsresult
+nsSegmentedBuffer::Init(PRUint32 segmentSize, PRUint32 maxSize,
+                        nsIAllocator* allocator)
+{
+    if (mSegmentArrayCount != 0)
+        return NS_ERROR_FAILURE;        // initialized more than once
+    mSegmentSize = segmentSize;
+    mMaxSize = maxSize;
+    mSegAllocator = allocator;
     if (mSegAllocator == nsnull) {
         mSegAllocator = nsAllocator::GetGlobalAllocator();
     }
     else {
         NS_ADDREF(mSegAllocator);
     }
-}
-
-nsSegmentedBuffer::~nsSegmentedBuffer()
-{
-    Empty();
-    NS_RELEASE(mSegAllocator);
+#if 0 // testing...
+    mSegmentArrayCount = 2;
+#else
+    mSegmentArrayCount = NS_SEGMENTARRAY_INITIAL_COUNT;
+#endif
+    return NS_OK;
 }
 
 char*
 nsSegmentedBuffer::AppendNewSegment()
 {
+    if (GetSize() >= mMaxSize)
+        return nsnull;
+
     if (mSegmentArray == nsnull) {
         PRUint32 bytes = mSegmentArrayCount * sizeof(char*);
         mSegmentArray = (char**)nsAllocator::Alloc(bytes);
         if (mSegmentArray == nsnull)
             return nsnull;
-        DEBUG_MEMSET(mSegmentArray, 0, bytes);
+        nsCRT::memset(mSegmentArray, 0, bytes);
     }
-
+    
     if (IsFull()) {
         PRUint32 newArraySize = mSegmentArrayCount * 2;
         PRUint32 bytes = newArraySize * sizeof(char*);
-        if (bytes > mMaxSize)
-            return nsnull;
         char** newSegArray = (char**)nsAllocator::Realloc(mSegmentArray, bytes);
         if (newSegArray == nsnull)
             return nsnull;
@@ -72,10 +83,14 @@ nsSegmentedBuffer::AppendNewSegment()
             nsCRT::memcpy(&mSegmentArray[mSegmentArrayCount],
                           mSegmentArray,
                           mLastSegmentIndex * sizeof(char*));
-            DEBUG_MEMSET(mSegmentArray, 0, mLastSegmentIndex * sizeof(char*));
+            nsCRT::memset(mSegmentArray, 0, mLastSegmentIndex * sizeof(char*));
             mLastSegmentIndex += mSegmentArrayCount;
-            DEBUG_MEMSET(&mSegmentArray[mLastSegmentIndex],
-                         0, (newArraySize - mLastSegmentIndex) * sizeof(char*));
+            nsCRT::memset(&mSegmentArray[mLastSegmentIndex], 0,
+                          (newArraySize - mLastSegmentIndex) * sizeof(char*));
+        }
+        else {
+            nsCRT::memset(&mSegmentArray[mLastSegmentIndex], 0,
+                          (newArraySize - mLastSegmentIndex) * sizeof(char*));
         }
         mSegmentArrayCount = newArraySize;
     }
@@ -124,18 +139,36 @@ nsSegmentedBuffer::Empty()
 NS_COM void
 TestSegmentedBuffer()
 {
-    nsSegmentedBuffer* mgr = new nsSegmentedBuffer(4, 8);
-    NS_ASSERTION(mgr, "out of memory");
-    mgr->AppendNewSegment();
-    mgr->AppendNewSegment();
-    mgr->AppendNewSegment();
-    mgr->DeleteFirstSegment();
-    mgr->DeleteFirstSegment();
-    mgr->AppendNewSegment();
-    mgr->AppendNewSegment();
-    mgr->AppendNewSegment();
-    mgr->DeleteFirstSegment();
-    delete mgr;
+    nsSegmentedBuffer* buf = new nsSegmentedBuffer();
+    NS_ASSERTION(buf, "out of memory");
+    buf->Init(4, 16);
+    char* seg;
+    PRBool empty;
+    seg = buf->AppendNewSegment();
+    NS_ASSERTION(seg, "AppendNewSegment failed");
+    seg = buf->AppendNewSegment();
+    NS_ASSERTION(seg, "AppendNewSegment failed");
+    seg = buf->AppendNewSegment();
+    NS_ASSERTION(seg, "AppendNewSegment failed");
+    empty = buf->DeleteFirstSegment();
+    NS_ASSERTION(!empty, "DeleteFirstSegment failed");
+    empty = buf->DeleteFirstSegment();
+    NS_ASSERTION(!empty, "DeleteFirstSegment failed");
+    seg = buf->AppendNewSegment();
+    NS_ASSERTION(seg, "AppendNewSegment failed");
+    seg = buf->AppendNewSegment();
+    NS_ASSERTION(seg, "AppendNewSegment failed");
+    seg = buf->AppendNewSegment();
+    NS_ASSERTION(seg, "AppendNewSegment failed");
+    empty = buf->DeleteFirstSegment();
+    NS_ASSERTION(!empty, "DeleteFirstSegment failed");
+    empty = buf->DeleteFirstSegment();
+    NS_ASSERTION(!empty, "DeleteFirstSegment failed");
+    empty = buf->DeleteFirstSegment();
+    NS_ASSERTION(!empty, "DeleteFirstSegment failed");
+    empty = buf->DeleteFirstSegment();
+    NS_ASSERTION(empty, "DeleteFirstSegment failed");
+    delete buf;
 }
 #endif
 

@@ -25,9 +25,11 @@
 class nsSegmentedBuffer
 {
 public:
-    nsSegmentedBuffer(PRUint32 segmentSize, PRUint32 maxSize,
-                      nsIAllocator* allocator = nsnull);
+    nsSegmentedBuffer();
     ~nsSegmentedBuffer();
+
+    nsresult Init(PRUint32 segmentSize, PRUint32 maxSize,
+                  nsIAllocator* allocator = nsnull);
 
     char* AppendNewSegment();   // pushes at end
 

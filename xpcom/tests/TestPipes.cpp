@@ -28,8 +28,9 @@
 #include "prinrval.h"
 #include "plstr.h"
 #include "nsCRT.h"
+#include "nsCOMPtr.h"
 #include <stdio.h>
-#include "nsPipe2.h"    // new implementation
+#include "nsIPipe.h"    // new implementation
 #include "nsAutoLock.h"
 #include <stdlib.h>     // for rand
 
@@ -128,7 +129,7 @@ TestPipe(nsIInputStream* in, nsIOutputStream* out)
 
     thread->Join();
 
-    printf("write %d bytes, time = %dms\n", total,
+    printf("wrote %d bytes, time = %dms\n", total,
            PR_IntervalToMilliseconds(end - start));
     NS_ASSERTION(receiver->GetBytesRead() == total, "didn't read everything");
 
@@ -148,6 +149,7 @@ public:
         nsresult rv;
         char buf[101];
         PRUint32 count;
+        PRUint32 total = 0;
         while (PR_TRUE) {
             rv = mIn->Read(buf, 100, &count);
             if (rv == NS_BASE_STREAM_EOF) {
@@ -162,7 +164,9 @@ public:
             if (gTrace)
                 printf("read %d bytes: %s\n", count, buf);
             Received(count);
+            total += count;
         }
+        printf("read  %d bytes\n", total);
         return rv;
     }
 
@@ -212,7 +216,8 @@ TestShortWrites(nsIInputStream* in, nsIOutputStream* out)
     rv = NS_NewThread(&thread, receiver);
     if (NS_FAILED(rv)) return rv;
 
-    for (PRUint32 i = 0; i < ITERATIONS/100; i++) {
+    PRUint32 total = 0;
+    for (PRUint32 i = 0; i < ITERATIONS; i++) {
         PRUint32 writeCount;
         char* buf = PR_smprintf("%d %s", i, kTestPattern);
         PRUint32 len = nsCRT::strlen(buf);
@@ -221,6 +226,7 @@ TestShortWrites(nsIInputStream* in, nsIOutputStream* out)
         rv = out->Write(buf, len, &writeCount);
         if (NS_FAILED(rv)) return rv;
         NS_ASSERTION(writeCount == len, "didn't write enough");
+        total += writeCount;
 
         if (gTrace)
             printf("wrote %d bytes: %s\n", writeCount, buf);
@@ -233,10 +239,226 @@ TestShortWrites(nsIInputStream* in, nsIOutputStream* out)
     if (NS_FAILED(rv)) return rv;
 
     thread->Join();
+    printf("wrote %d bytes\n", total);
 
     NS_RELEASE(thread);
     NS_RELEASE(receiver);
 
+    return NS_OK;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+class nsPipeObserver : public nsIPipeObserver {
+public:
+    NS_DECL_ISUPPORTS
+
+    NS_IMETHOD OnFull(nsIPipe *pipe) {
+        printf("OnFull pipe=%p\n", pipe);
+        return NS_OK;
+    }
+
+    NS_IMETHOD OnWrite(nsIPipe *pipe, PRUint32 amount) {
+        printf("OnWrite pipe=%p amount=%d\n", pipe, amount);
+        return NS_OK;
+    }
+
+    NS_IMETHOD OnEmpty(nsIPipe *pipe) {
+        printf("OnEmpty pipe=%p\n", pipe);
+        return NS_OK;
+    }
+
+    nsPipeObserver() { NS_INIT_REFCNT(); }
+    virtual ~nsPipeObserver() {}
+};
+
+NS_IMPL_ISUPPORTS(nsPipeObserver, nsIPipeObserver::GetIID());
+
+nsresult
+TestPipeObserver()
+{
+    nsresult rv;
+    nsPipeObserver* obs = new nsPipeObserver();
+    if (obs == nsnull) return NS_ERROR_OUT_OF_MEMORY;
+    NS_ADDREF(obs);
+
+    printf("TestPipeObserver: OnWrite, OnFull and OnEmpty should be called once each.\n");
+    nsIBufferInputStream* in;
+    nsIBufferOutputStream* out;
+    rv = NS_NewPipe(&in, &out, obs, 20, 20);
+    if (NS_FAILED(rv)) return rv;
+
+    rv = in->SetNonBlocking(PR_TRUE);
+    if (NS_FAILED(rv)) return rv;
+    rv = out->SetNonBlocking(PR_TRUE);
+    if (NS_FAILED(rv)) return rv;
+
+    char buf[] = "puirt a beul: a style of Gaelic vocal music intended for dancing.";
+    PRUint32 cnt;
+    // this should print OnWrite message:
+    rv = out->Write(buf, 20, &cnt);
+    if (NS_FAILED(rv)) return rv;
+    NS_ASSERTION(cnt == 20, "Write failed");
+
+    // this should print OnFull message:
+    rv = out->Write(buf + 20, 1, &cnt);
+    if (NS_FAILED(rv)) return rv;
+    NS_ASSERTION(cnt == 0, "Write failed");
+
+    char buf2[20];
+    rv = in->Read(buf2, 20, &cnt);
+    if (NS_FAILED(rv)) return rv;
+    NS_ASSERTION(cnt == 20, "Read failed");
+    NS_ASSERTION(nsCRT::strncmp(buf, buf2, 20) == 0, "Read wrong stuff");
+
+    // this should print OnEmpty message:
+    rv = in->Read(buf2, 1, &cnt);
+    if (NS_FAILED(rv)) return rv;
+    NS_ASSERTION(cnt == 0, "Read failed");
+
+    NS_RELEASE(obs);
+    NS_RELEASE(in);
+    NS_RELEASE(out);
+    return NS_OK;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+class nsPump : public nsIPipeObserver, public nsIRunnable {
+public:
+    NS_DECL_ISUPPORTS
+
+    NS_IMETHOD OnFull(nsIPipe *pipe) {
+        printf("OnFull pipe=%p\n", pipe);
+        nsAutoCMonitor mon(this);
+        mon.Notify();
+        return NS_OK;
+    }
+
+    NS_IMETHOD OnWrite(nsIPipe *pipe, PRUint32 amount) {
+        printf("OnWrite pipe=%p amount=%d\n", pipe, amount);
+        return NS_OK;
+    }
+
+    NS_IMETHOD OnEmpty(nsIPipe *pipe) {
+        printf("OnEmpty pipe=%p\n", pipe);
+        nsAutoCMonitor mon(this);
+        mon.Notify();
+        return NS_OK;
+    }
+
+    NS_IMETHOD Run() {
+        nsresult rv;
+        PRUint32 count;
+        while (PR_TRUE) {
+            nsAutoCMonitor mon(this);
+            rv = mOut->WriteFrom(mIn, -1, &count);
+            if (rv == NS_BASE_STREAM_EOF) {
+                printf("EOF count = %d\n", mCount);
+                rv = NS_OK;
+                break;
+            }
+            if (NS_FAILED(rv)) {
+                printf("Write failed\n");
+                break;
+            }
+
+            if (gTrace) {
+                printf("Wrote: %d\n", count);
+            }
+            mCount += count;
+        }
+        mOut->Close();
+        return rv;
+    }
+
+    nsPump(nsIBufferInputStream* in,
+           nsIBufferOutputStream* out)
+        : mIn(in), mOut(out), mCount(0) {
+        NS_INIT_REFCNT();
+    }
+
+    virtual ~nsPump() {
+    }
+
+protected:
+    nsCOMPtr<nsIBufferInputStream>      mIn;
+    nsCOMPtr<nsIBufferOutputStream>     mOut;
+    PRUint32                            mCount;
+};
+
+NS_IMPL_ADDREF(nsPump);
+NS_IMPL_RELEASE(nsPump);
+
+NS_IMETHODIMP
+nsPump::QueryInterface(REFNSIID aIID,
+                       void** aInstancePtr)
+{
+    // not used in this test
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+nsresult
+TestChainedPipes()
+{
+    nsresult rv;
+    printf("TestChainedPipes\n");
+
+    nsIBufferInputStream* in1;
+    nsIBufferOutputStream* out1;
+    rv = NS_NewPipe(&in1, &out1, nsnull, 20, 1999);
+    if (NS_FAILED(rv)) return rv;
+
+    nsIBufferInputStream* in2;
+    nsIBufferOutputStream* out2;
+    rv = NS_NewPipe(&in2, &out2, nsnull, 200, 401);
+    if (NS_FAILED(rv)) return rv;
+
+    nsIThread* thread;
+    nsPump* pump = new nsPump(in1, out2);
+    if (pump == nsnull) return NS_ERROR_OUT_OF_MEMORY;
+    NS_ADDREF(pump);
+
+    rv = NS_NewThread(&thread, pump);
+    if (NS_FAILED(rv)) return rv;
+
+    nsIThread* receiverThread;
+    nsReceiver* receiver = new nsReceiver(in2);
+    if (receiver == nsnull) return NS_ERROR_OUT_OF_MEMORY;
+    NS_ADDREF(receiver);
+
+    rv = NS_NewThread(&receiverThread, receiver);
+    if (NS_FAILED(rv)) return rv;
+
+    PRUint32 total = 0;
+    for (PRUint32 i = 0; i < ITERATIONS; i++) {
+        PRUint32 writeCount;
+        char* buf = PR_smprintf("%d %s", i, kTestPattern);
+        PRUint32 len = nsCRT::strlen(buf);
+        len = len * rand() / RAND_MAX;
+        len = PR_MAX(1, len);
+        rv = out1->Write(buf, len, &writeCount);
+        if (NS_FAILED(rv)) return rv;
+        NS_ASSERTION(writeCount == len, "didn't write enough");
+        total += writeCount;
+
+        if (gTrace)
+            printf("wrote %d bytes: %s\n", writeCount, buf);
+        //out1->Flush();  // wakes up the pump
+
+        PR_smprintf_free(buf);
+    }
+    printf("wrote total of %d bytes\n", total);
+    rv = out1->Close();
+    if (NS_FAILED(rv)) return rv;
+
+    thread->Join();
+    receiverThread->Join();
+
+    NS_RELEASE(thread);
+    NS_RELEASE(pump);
+    NS_RELEASE(receiverThread);
+    NS_RELEASE(receiver);
     return NS_OK;
 }
 
@@ -327,6 +549,10 @@ main(int argc, char* argv[])
         return -1;
     }
 #endif
+    rv = TestPipeObserver();
+    NS_ASSERTION(NS_SUCCEEDED(rv), "TestPipeObserver failed");
+    rv = TestChainedPipes();
+    NS_ASSERTION(NS_SUCCEEDED(rv), "TestChainedPipes failed");
     RunTests(16, 1);
     RunTests(4096, 16);
     return 0;
