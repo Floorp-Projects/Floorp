@@ -25,7 +25,7 @@
          insertbefore="printMenuItem"
          label="&printSetupCmd.label;"
          accesskey="&printSetupCmd.accesskey;"
-         command="Browser:PrintSetup"/>
+         command="cmd_printSetup"/>
     <!-- quit -->
     <menuseparator id="menu_FileQuitSeparator"/>
     <menuitem label="&quitApplicationCmd.label;" id="menu_FileQuitItem"
@@ -51,7 +51,7 @@
          insertafter="printMenuItemToolbar"
          label="&printSetupCmd.label;"
          accesskey="&printSetupCmd.accesskey;"
-         command="Browser:PrintSetup"/>
+         command="cmd_printSetup"/>
   </menupopup>
 
   <!-- Find As You Type Keys -->

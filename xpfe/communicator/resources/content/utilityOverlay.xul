@@ -55,9 +55,6 @@
   <command id="cmd_newEditorDraft"
            disabled="true"
            oncommand="NewEditorFromDraft();"/>
-  <command id="cmd_pageSetup"
-           disabled="true"
-           oncommand="goPageSetup();"/>
   -->
 
   <menuitem id="menu_newEditor"

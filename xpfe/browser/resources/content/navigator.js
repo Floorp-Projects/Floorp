@@ -1486,7 +1486,7 @@ function hiddenWindowStartup()
   window.focus();
 
   // Disable menus which are not appropriate
-  var disabledItems = ['cmd_close', 'Browser:SendPage', 'Browser:EditPage', 'Browser:PrintSetup', /*'Browser:PrintPreview',*/
+  var disabledItems = ['cmd_close', 'Browser:SendPage', 'Browser:EditPage', 'cmd_printSetup', /*'Browser:PrintPreview',*/
                        'Browser:Print', 'canGoBack', 'canGoForward', 'Browser:Home', 'Browser:AddBookmark', 'cmd_undo',
                        'cmd_redo', 'cmd_cut', 'cmd_copy','cmd_paste', 'cmd_delete', 'cmd_selectAll', 'menu_textZoom'];
   for (var id in disabledItems) {
