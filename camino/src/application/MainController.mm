@@ -1337,7 +1337,7 @@ const int kReuseWindowOnAE = 2;
 {
   if (NSRunCriticalAlertPanel(NSLocalizedString(@"Reset Camino Title", @"Are you sure you want to reset Camino?"),
                       NSLocalizedString(@"Reset Warning Message",
-                      @"Resetting Camino will erase your browsing hisory, empty the cache, clear downloads, clear all cookies, clear all site permissions, and remove all remembered usernames and passwords. This action cannot be undone."),
+                      @"Resetting Camino will erase your browsing history, empty the cache, clear downloads, clear all cookies, clear all site permissions, and remove all remembered usernames and passwords. This action cannot be undone."),
                       NSLocalizedString(@"Reset Camino", @"Reset Camino"),
                       NSLocalizedString(@"CancelButtonText", @"Cancel"),
                       nil) == NSAlertDefaultReturn) {
