@@ -1260,6 +1260,12 @@ case "$target" in
         OBJ_SUFFIX=obj
         LIB_SUFFIX=lib
         DLL_SUFFIX=dll
+
+        # Determine compiler version
+        CC_VERSION=`"${CC}" -v 2>&1 | grep Version | sed -e 's|.* Version ||' -e 's| .*||'`
+        _CC_MAJOR_VERSION=`echo $CC_VERSION | awk -F\. '{ print $1 }'`
+        _CC_MINOR_VERSION=`echo $CC_VERSION | awk -F\. '{ print $2 }'`
+        MSC_VER=${_CC_MAJOR_VERSION}${_CC_MINOR_VERSION}
         
         CFLAGS="$CFLAGS -W3 -nologo -GF -Gy"
 
@@ -1334,7 +1340,10 @@ case "$target" in
         OBJDIR_SUFFIX=OBJD
     fi
 
-    OS_DLLFLAGS='-nologo -DLL -SUBSYSTEM:WINDOWS -PDB:NONE'
+    OS_DLLFLAGS="-nologo -DLL -SUBSYSTEM:WINDOWS"
+    if test "$MSC_VER" = "1200"; then
+        OS_DLLFLAGS="$OS_DLLFLAGS -PDB:NONE"
+    fi
 
     case "$OS_TARGET" in
     WINNT)
@@ -2410,6 +2419,7 @@ AC_SUBST(HOST_CFLAGS)
 AC_SUBST(LDFLAGS)
 AC_SUBST(GNU_CC)
 AC_SUBST(GCC_USE_GNU_LD)
+AC_SUBST(MSC_VER)
 AC_SUBST(CROSS_COMPILE)
 
 AC_SUBST(MOZ_OPTIMIZE)
