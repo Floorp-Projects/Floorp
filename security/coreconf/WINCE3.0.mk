@@ -69,7 +69,7 @@ OS_CFLAGS += -W3 -nologo
 
 OS_DLLFLAGS += -DLL 
 
-LINKFLAGS = -nologo -PDB:NONE -subsystem:windowsce,3.00 \
+LINKFLAGS = -nologo -subsystem:windowsce,3.00 \
  -nodefaultlib:libc.lib \
  -nodefaultlib:libcd.lib \
  -nodefaultlib:libcmt.lib \
@@ -78,6 +78,10 @@ LINKFLAGS = -nologo -PDB:NONE -subsystem:windowsce,3.00 \
  -nodefaultlib:msvcrtd.lib \
  -nodefaultlib:oldnames.lib \
  $(NULL)
+
+ifndef MOZ_DEBUG_SYMBOLS
+LINKFLAGS += -PDB:NONE
+endif
 
 LINK    += $(LINKFLAGS)
 LDFLAGS += $(LINKFLAGS)
