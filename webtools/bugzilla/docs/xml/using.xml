@@ -584,6 +584,12 @@
       reverse order and edit the referring file so that they point to the
       attached files. This way, the test case works immediately 
       out of the bug.
+      </para>
+      <para>Bugzilla stores and uses a Content-Type for each attachment 
+      (e.g. text/html). To download an attachment as a different 
+      Content-Type (e.g. application/xhtml+xml), you can override this 
+      using a 'content-type' parameter on the URL, e.g.
+      <filename>&amp;content-type=text/plain</filename>.
       </para>     
     </section>
   </section>
