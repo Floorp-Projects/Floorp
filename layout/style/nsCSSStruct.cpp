@@ -2527,6 +2527,12 @@ CSSDeclarationImpl::SetValueImportant(nsCSSProperty aProperty)
         SetValueImportant(eCSSProperty__moz_border_radius_bottomRight);
         SetValueImportant(eCSSProperty__moz_border_radius_bottomLeft);
       	break;
+      case eCSSProperty__moz_outline_radius:
+        SetValueImportant(eCSSProperty__moz_outline_radius_topLeft);
+        SetValueImportant(eCSSProperty__moz_outline_radius_topRight);
+        SetValueImportant(eCSSProperty__moz_outline_radius_bottomRight);
+        SetValueImportant(eCSSProperty__moz_outline_radius_bottomLeft);
+      	break;
       default:
         result = NS_ERROR_ILLEGAL_VALUE;
         break;
