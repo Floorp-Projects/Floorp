@@ -139,8 +139,7 @@ public class NativeRegExp extends IdScriptable implements Function {
 
         NativeRegExpCtor ctor = new NativeRegExpCtor();
 
-        ctor.setPrototype(ScriptableObject.getFunctionPrototype(scope));
-        ctor.setParentScope(scope);
+        ScriptRuntime.initFunction(scope, ctor);
 
         ctor.setImmunePrototypeProperty(proto);
 

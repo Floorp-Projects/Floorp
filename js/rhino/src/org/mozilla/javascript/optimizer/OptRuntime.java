@@ -37,6 +37,9 @@
 
 package org.mozilla.javascript.optimizer;
 
+import java.lang.reflect.Constructor;
+import java.lang.reflect.InvocationTargetException;
+
 import org.mozilla.javascript.*;
 
 public final class OptRuntime extends ScriptRuntime {
@@ -301,6 +304,53 @@ public final class OptRuntime extends ScriptRuntime {
     public static Object[] padStart(Object[] currentArgs, int count) {
         Object[] result = new Object[currentArgs.length + count];
         System.arraycopy(currentArgs, 0, result, count, currentArgs.length);
+        return result;
+    }
+
+    public static void initFunction(Function fn,
+                                    Scriptable scope,
+                                    String fnName,
+                                    boolean doSetName)
+    {
+        initFunction(scope, fn);
+        if (doSetName) {
+            ScriptableObject.defineProperty(scope, fnName, fn,
+                                            ScriptableObject.PERMANENT);
+        }
+    }
+
+    public static NativeFunction createFunctionObject(Scriptable scope,
+                                                      Class functionClass,
+                                                      Context cx,
+                                                      boolean setName)
+    {
+        Constructor[] ctors = functionClass.getConstructors();
+
+        NativeFunction result = null;
+        Object[] initArgs = { scope, cx };
+        try {
+            result = (NativeFunction) ctors[0].newInstance(initArgs);
+        }
+        catch (InstantiationException e) {
+            throw WrappedException.wrapException(e);
+        }
+        catch (IllegalAccessException e) {
+            throw WrappedException.wrapException(e);
+        }
+        catch (IllegalArgumentException e) {
+            throw WrappedException.wrapException(e);
+        }
+        catch (InvocationTargetException e) {
+            throw WrappedException.wrapException(e);
+        }
+
+        ScriptRuntime.initFunction(scope, result);
+
+        String fnName = result.getFunctionName();
+        if (setName && fnName != null && fnName.length() != 0) {
+            ScriptableObject.putProperty(scope, fnName, result);
+        }
+
         return result;
     }
 

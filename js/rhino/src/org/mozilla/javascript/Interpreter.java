@@ -1514,8 +1514,6 @@ public class Interpreter {
                                                       boolean fromEvalCode)
     {
         InterpretedFunction fn = new InterpretedFunction(cx, idata);
-        fn.setPrototype(ScriptableObject.getFunctionPrototype(scope));
-        fn.setParentScope(scope);
         if (cx.hasCompileFunctionsWithDynamicScope()) {
              // Nested functions are not affected by the dynamic scope flag
              // as dynamic scope is already a parent of their scope
@@ -1528,6 +1526,7 @@ public class Interpreter {
                  fn.itsUseDynamicScope = true;
              }
         }
+        ScriptRuntime.initFunction(scope, fn);
         String fnName = idata.itsName;
         if (fnName.length() != 0) {
             int type = idata.itsFunctionType;

@@ -1934,55 +1934,9 @@ public class ScriptRuntime {
         return scope.getParentScope();
     }
 
-    public static NativeFunction initFunction(NativeFunction fn,
-                                              Scriptable scope,
-                                              String fnName,
-                                              Context cx,
-                                              boolean doSetName)
-    {
+    public static void initFunction(Scriptable scope, Function fn) {
         fn.setPrototype(ScriptableObject.getFunctionPrototype(scope));
         fn.setParentScope(scope);
-        if (doSetName) {
-            ScriptableObject.defineProperty(scope, fnName, fn,
-                                            ScriptableObject.PERMANENT);
-        }
-        return fn;
-    }
-
-    public static NativeFunction createFunctionObject(Scriptable scope,
-                                                      Class functionClass,
-                                                      Context cx,
-                                                      boolean setName)
-    {
-        Constructor[] ctors = functionClass.getConstructors();
-
-        NativeFunction result = null;
-        Object[] initArgs = { scope, cx };
-        try {
-            result = (NativeFunction) ctors[0].newInstance(initArgs);
-        }
-        catch (InstantiationException e) {
-            throw WrappedException.wrapException(e);
-        }
-        catch (IllegalAccessException e) {
-            throw WrappedException.wrapException(e);
-        }
-        catch (IllegalArgumentException e) {
-            throw WrappedException.wrapException(e);
-        }
-        catch (InvocationTargetException e) {
-            throw WrappedException.wrapException(e);
-        }
-
-        result.setPrototype(ScriptableObject.getFunctionPrototype(scope));
-        result.setParentScope(scope);
-
-        String fnName = result.getFunctionName();
-        if (setName && fnName != null && fnName.length() != 0) {
-            ScriptableObject.putProperty(scope, fnName, result);
-        }
-
-        return result;
     }
 
     static void checkDeprecated(Context cx, String name) {

@@ -165,7 +165,7 @@ public class Codegen extends Interpreter {
         if (tree instanceof OptFunctionNode) {
             if (result == null)
                 return null;
-            return ScriptRuntime.createFunctionObject(scope, result, cx, true);
+            return OptRuntime.createFunctionObject(scope, result, cx, true);
         } else {
             try {
                 if (result == null)
@@ -1303,51 +1303,11 @@ public class Codegen extends Interpreter {
             String fnClassName = codegen.generateCode(def, namesVector,
                                                       classFilesVector,
                                                       itsNameHelper);
-
-            addByteCode(ByteCode.NEW, fnClassName);
-            addByteCode(ByteCode.DUP);
-            if (inFunction) {
-                addByteCode(ByteCode.ALOAD_0); // load "this" argument
-            } else {
-                aload(variableObjectLocal);
-            }
-            aload(contextLocal);           // load 'cx'
-            addSpecialInvoke(fnClassName, "<init>",
-                             "(Lorg/mozilla/javascript/Scriptable;" +
-                              "Lorg/mozilla/javascript/Context;)",
-                             "V");
-
-            // 'fn' still on stack
-            // load 'scope'
-            if (inFunction) {
-                addByteCode(ByteCode.ALOAD_0); // load "this" argument
-            } else {
-                aload(variableObjectLocal);
-            }
-            // load 'fnName'
-            String str = def.getFunctionName();
-            if (str != null) {
-                push(str);
-            } else {
-                addByteCode(ByteCode.ACONST_NULL);
-            }
-            // load 'cx'
-            aload(contextLocal);
-            // load boolean indicating whether fn name should be set in scope
-            boolean setFnName = str != null && str.length() > 0 &&
-                                ((FunctionNode) def).getFunctionType() ==
-                                    FunctionNode.FUNCTION_STATEMENT;
-            addByteCode(setFnName ? ByteCode.ICONST_1 : ByteCode.ICONST_0);
-
-            addScriptRuntimeInvoke("initFunction",
-                                   "(Lorg/mozilla/javascript/NativeFunction;" +
-                                    "Lorg/mozilla/javascript/Scriptable;" +
-                                    "Ljava/lang/String;" +
-                                    "Lorg/mozilla/javascript/Context;Z)",
-                                   "Lorg/mozilla/javascript/NativeFunction;");
-            def.putIntProp(Node.FUNCTION_PROP, i);
+            generateCreateFunction(def, fnClassName);
             addByteCode(ByteCode.AASTORE);    // store NativeFunction
                                               // instance to array
+
+            def.putIntProp(Node.FUNCTION_PROP, i);
         }
 
         // add the array as the nestedFunctions field; array should
@@ -1358,6 +1318,51 @@ public class Codegen extends Interpreter {
 
         classFile.add(ByteCode.PUTFIELD, "org/mozilla/javascript/NativeFunction",
                 "nestedFunctions", "[Lorg/mozilla/javascript/NativeFunction;");
+    }
+
+    // On exit it leaves on stack new function
+    private void generateCreateFunction(FunctionNode def, String fnClassName) {
+        addByteCode(ByteCode.NEW, fnClassName);
+        addByteCode(ByteCode.DUP);
+        if (inFunction) {
+            addByteCode(ByteCode.ALOAD_0); // load "this" argument
+        } else {
+            aload(variableObjectLocal);
+        }
+        aload(contextLocal);           // load 'cx'
+        addSpecialInvoke(fnClassName, "<init>",
+                         "(Lorg/mozilla/javascript/Scriptable;" +
+                          "Lorg/mozilla/javascript/Context;)",
+                         "V");
+
+        // 'fn' still on stack, dup it to use later
+        addByteCode(ByteCode.DUP);
+        // load 'scope'
+        if (inFunction) {
+            addByteCode(ByteCode.ALOAD_0); // load "this" argument
+        } else {
+            aload(variableObjectLocal);
+        }
+        // load 'fnName'
+        String str = def.getFunctionName();
+        if (str != null) {
+            push(str);
+        } else {
+            addByteCode(ByteCode.ACONST_NULL);
+        }
+        // load boolean indicating whether fn name should be set in scope
+        boolean setFnName = str != null && str.length() > 0 &&
+                            def.getFunctionType() ==
+                                FunctionNode.FUNCTION_STATEMENT;
+        addByteCode(setFnName ? ByteCode.ICONST_1 : ByteCode.ICONST_0);
+
+        addOptRuntimeInvoke("initFunction",
+                            "(Lorg/mozilla/javascript/Function;"
+                            +"Lorg/mozilla/javascript/Scriptable;"
+                            +"Ljava/lang/String;"
+                            +"Z)",
+                            "V");
+
     }
 
 
@@ -1608,11 +1613,11 @@ public class Codegen extends Interpreter {
         aload(contextLocal);
         addByteCode(ByteCode.BIPUSH, setName ? (byte)1 : (byte)0);
 
-        addScriptRuntimeInvoke("createFunctionObject",
-                               "(Lorg/mozilla/javascript/Scriptable;"+
-                                "Ljava/lang/Class;" +
-                                "Lorg/mozilla/javascript/Context;Z)",
-                               "Lorg/mozilla/javascript/NativeFunction;");
+        addOptRuntimeInvoke("createFunctionObject",
+                            "(Lorg/mozilla/javascript/Scriptable;"
+                            +"Ljava/lang/Class;"
+                            +"Lorg/mozilla/javascript/Context;Z)",
+                            "Lorg/mozilla/javascript/NativeFunction;");
 
     }
 

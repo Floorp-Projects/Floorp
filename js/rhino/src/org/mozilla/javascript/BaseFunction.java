@@ -366,8 +366,7 @@ public class BaseFunction extends IdScriptable implements Function {
 
         fn.functionName = "anonymous";
         fn.fromFunctionConstructor = true;
-        fn.setPrototype(getFunctionPrototype(global));
-        fn.setParentScope(global);
+        ScriptRuntime.initFunction(global, fn);
 
         return fn;
     }
