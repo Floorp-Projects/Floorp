@@ -1,6 +1,6 @@
 <?xml version="1.0"?> 
 <?xml-stylesheet href="xul.css" type="text/css"?> 
-<?xml-stylesheet href="navigator.css" type="text/css"?> 
+<?xml-stylesheet href="chrome://navigator/skin/" type="text/css"?> 
 
 <!DOCTYPE window> 
 
@@ -753,7 +753,7 @@
 
 		<spring flex="100%"/>
 
-Build ID: 1999040108
+Build ID: 1999040111
 		</titledbutton>
 
 		<titledbutton id="security-button" class="insecure" value="Secure Conn" align="right" onclick="securityOff();"/>
