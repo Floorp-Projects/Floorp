@@ -27,6 +27,7 @@
 
 #include <sys/time.h>
 #include <X11/Xlib.h>
+#include <X11/Intrinsic.h>
 
 // Interface id for the XlibWindow service
 // { bd39ccb0-3f08-11d3-b419-00805f6d4c2a }
@@ -54,7 +55,7 @@ typedef void (*nsXlibEventDispatcher)(nsXlibNativeEvent aNativeEvent);
 
 typedef int (*nsXlibTimeToNextTimeoutFunc)(struct timeval *aTimer);
 
-typedef void (*nsXlibProcessTimeoutsProc)(Display *aDisplay);
+typedef void (*nsXlibProcessTimeoutsProc)(XtAppContext app_context);
 
 class nsIXlibWindowService : public nsISupports
 {

@@ -82,7 +82,7 @@ nsXlibWindowServiceFactory::CreateInstance(nsISupports *aOuter,
     return NS_ERROR_OUT_OF_MEMORY;
 
   nsresult rv = inst->QueryInterface(aIID, aResult);
-  if (rv != NS_OK)
+  if (NS_FAILED(rv))
     delete inst;
   return rv;
 }

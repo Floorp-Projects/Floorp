@@ -87,20 +87,18 @@ static nsresult nsHorizScrollbarConstructor (nsISupports *aOuter, REFNSIID aIID,
   nsresult rv;
   nsISupports *inst = nsnull;
 
-  if ( NULL == aResult )
+  if ( nsnull == aResult )
   {
-    rv = NS_ERROR_NULL_POINTER;
-    return rv;
+    return NS_ERROR_NULL_POINTER;
   }
-  *aResult = NULL;
-  if (NULL != aOuter)
+  *aResult = nsnull;
+  if (nsnull != aOuter)
   {
-    rv = NS_ERROR_NO_AGGREGATION;
-    return rv;
+    return NS_ERROR_NO_AGGREGATION;
   }
   
   inst = (nsISupports *)(nsBaseWidget *)(nsWidget *)new nsScrollbar(PR_FALSE);
-  if (inst == NULL)
+  if (inst == nsnull)
   {
     return NS_ERROR_OUT_OF_MEMORY;
   }
@@ -116,20 +114,18 @@ static nsresult nsVertScrollbarConstructor (nsISupports *aOuter, REFNSIID aIID, 
   nsresult rv;
   nsISupports *inst = nsnull;
 
-  if ( NULL == aResult )
+  if ( nsnull == aResult )
   {
-    rv = NS_ERROR_NULL_POINTER;
-    return rv;
+    return NS_ERROR_NULL_POINTER;
   }
-  *aResult = NULL;
-  if (NULL != aOuter)
+  *aResult = nsnull;
+  if (nsnull != aOuter)
   {
-    rv = NS_ERROR_NO_AGGREGATION;
-    return rv;
+    return NS_ERROR_NO_AGGREGATION;
   }
   
   inst = (nsISupports *)(nsBaseWidget *)(nsWidget *)new nsScrollbar(PR_TRUE);
-  if (inst == NULL)
+  if (inst == nsnull)
   {
     return NS_ERROR_OUT_OF_MEMORY;
   }

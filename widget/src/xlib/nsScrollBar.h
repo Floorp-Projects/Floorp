@@ -79,7 +79,7 @@ public:
   NS_IMETHOD SetLineIncrement(PRUint32 aSize);
   NS_IMETHOD GetLineIncrement(PRUint32& aSize);
   NS_IMETHOD SetParameters(PRUint32 aMaxRange, PRUint32 aThumbSize,
-			   PRUint32 aPosition, PRUint32 aLineIncrement);
+                           PRUint32 aPosition, PRUint32 aLineIncrement);
   
   PRBool    OnScroll(PRUint32 scrollCode, int cPos);
   void CreateNative(Window aParent, nsRect aRect);

@@ -94,7 +94,7 @@ class nsWindow : public nsWidget
                                  PRBool aConsumeRollupEvent);
   NS_IMETHOD Invalidate(PRBool aIsSynchronous);
   NS_IMETHOD Invalidate(const nsRect & aRect, PRBool aIsSynchronous);
-  NS_IMETHOD           InvalidateRegion(const nsIRegion* aRegion, PRBool aIsSynchronous);
+  NS_IMETHOD           InvalidateRegion(const nsIRegion* aRegion, PRBool aIsSynchronous);                  
   NS_IMETHOD Update();
   NS_IMETHOD Scroll(PRInt32 aDx, PRInt32 aDy, nsRect *aClipRect);
   NS_IMETHOD ScrollWidgets(PRInt32 aDx, PRInt32 aDy);
@@ -123,6 +123,9 @@ protected:
   // Keyboard and Pointer Grabbing
   void NativeGrab(PRBool aGrab);
 
+  void DoPaint (PRInt32 aX, PRInt32 aY, PRInt32 aWidth, PRInt32 aHeight,
+                nsIRegion *aClipRegion);
+                
   void                 QueueDraw();
   void                 UnqueueDraw();
   PRBool mIsUpdating;

@@ -91,7 +91,7 @@ nsXUtils::XFlashWindow(Display *       aDisplay,
   memset(&gcv, 0, sizeof(XGCValues));
   
   gcv.function = GXxor;
-  gcv.foreground = WhitePixel(aDisplay, DefaultScreen(aDisplay));
+  gcv.foreground = XWhitePixel(aDisplay, XDefaultScreen(aDisplay));
   gcv.subwindow_mode = IncludeInferiors;
   
   if (gcv.foreground == 0)
