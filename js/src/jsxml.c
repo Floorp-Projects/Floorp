@@ -2308,7 +2308,7 @@ GetNamespace(JSContext *cx, JSXMLQName *qn, const JSXMLArray *inScopeNSes)
              *
              * Per 10.3.2.1, the namespace attribute in t has an empty string
              * prefix (*not* a null prefix), per 10.3.2.1 Step 6(h)(i)(1):
-             * 
+             *
              *   1. If the [local name] property of a is "xmlns"
              *      a. Map ns.prefix to the empty string
              *
@@ -6044,7 +6044,8 @@ out:
 static const char js_attribute_str[] = "attribute";
 static const char js_text_str[]      = "text";
 
-static const char *xml_class_str[] = {
+/* Exported to jsgc.c #ifdef GC_MARK_DEBUG. */
+const char *js_xml_class_str[] = {
     "list",
     "element",
     js_attribute_str,
@@ -6061,7 +6062,7 @@ xml_nodeKind(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
     JSString *str;
 
     xml = (JSXML *) JS_GetPrivate(cx, obj);
-    str = JS_InternString(cx, xml_class_str[xml->xml_class]);
+    str = JS_InternString(cx, js_xml_class_str[xml->xml_class]);
     if (!str)
         return JS_FALSE;
     *rval = STRING_TO_JSVAL(str);

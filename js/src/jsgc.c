@@ -909,8 +909,33 @@ gc_dump_thing(JSGCThing *thing, uint8 flags, GCMarkNode *prev, FILE *fp)
         fprintf(fp, "object %8p %s", privateThing, className);
         break;
       }
+      case GCX_NAMESPACE:
+      {
+        JSXMLNamespace *ns = (JSXMLNamespace *)thing;
+        fprintf(fp, "namespace %s:%s",
+                JS_GetStringBytes(ns->prefix), JS_GetStringBytes(ns->uri));
+        break;
+      }
+      case GCX_QNAME:
+      {
+        JSXMLQName *qn = (JSXMLQName *)thing;
+        fprintf(fp, "qname %s(%s):%s",
+                JS_GetStringBytes(qn->prefix), JS_GetStringBytes(qn->uri),
+                JS_GetStringBytes(qn->localName));
+        break;
+      }
+      case GCX_XML:
+      {
+        extern const char *js_xml_class_str[];
+        JSXML *xml = (JSXML *)thing;
+        fprintf(fp, "xml %8p %s", xml, js_xml_class_str[xml->xml_class]);
+        break;
+      }
       case GCX_DOUBLE:
         fprintf(fp, "double %g", *(jsdouble *)thing);
+        break;
+      case GCX_PRIVATE:
+        fprintf(fp, "private %8p", (void *)thing);
         break;
       default:
         fprintf(fp, "string %s", JS_GetStringBytes((JSString *)thing));
@@ -1356,7 +1381,7 @@ down:
                 : NULL;
         if (scope)
             vp += DecodeDSWIndex(scope->dswIndex, vp);
-        
+
         /*
          * Alas, we must search for the reversed pointer.  If we used the
          * scope->dswIndex hint, we'll step over a few slots for objects with
