@@ -48,8 +48,7 @@ char* localeCatagoryList[6] = { "NSILOCALE_TIME",
 
 nsLocaleFactory::nsLocaleFactory(void)
 :	fSystemLocale(NULL),
-	fApplicationLocale(NULL),
-	fWin32LocaleInterface(NULL)
+	fApplicationLocale(NULL)
 {
   int	i;
   nsresult result;
@@ -61,6 +60,7 @@ nsLocaleFactory::nsLocaleFactory(void)
 	fCatagoryList[i] = new nsString(localeCatagoryList[i]);
 
 #ifdef XP_PC
+   fWin32LocaleInterface = nsnull;
    result = nsComponentManager::CreateInstance(kWin32LocaleFactoryCID,
 									NULL,
 									kIWin32LocaleIID,
@@ -275,7 +275,7 @@ nsLocaleFactory::GetApplicationLocale(nsILocale** applicationLocale)
 	
 #else
 	applicationLocaleName = new nsString("en-US");
-	result = this->NewLocale(applicationLocaleName,&fapplicationLocale);
+	result = this->NewLocale(applicationLocaleName,&fApplicationLocale);
 	if (result!=NS_OK) {
 		delete applicationLocaleName;
 		*applicationLocale=(nsILocale*)nsnull;
@@ -283,7 +283,7 @@ nsLocaleFactory::GetApplicationLocale(nsILocale** applicationLocale)
 		return result;
 	}
 
-	*applicationLocale = fapplicationLocale;
+	*applicationLocale = fApplicationLocale;
 	fApplicationLocale->AddRef();
 	delete applicationLocaleName;
 	return result;
