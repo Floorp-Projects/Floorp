@@ -33,6 +33,7 @@
 //----------------------------------------------------------------------
 // nsISupports
 //----------------------------------------------------------------------
+// Frames are not refcounted, no need to AddRef
 NS_IMETHODIMP
 nsCheckboxControlFrame::QueryInterface(const nsIID& aIID, void** aInstancePtr)
 {
@@ -41,7 +42,6 @@ nsCheckboxControlFrame::QueryInterface(const nsIID& aIID, void** aInstancePtr)
     return NS_ERROR_NULL_POINTER;
   if (aIID.Equals(NS_GET_IID(nsIStatefulFrame))) {
     *aInstancePtr = (void*)(nsIStatefulFrame*) this;
-    NS_ADDREF_THIS();
     return NS_OK;
   }
   return nsFormControlFrame::QueryInterface(aIID, aInstancePtr);

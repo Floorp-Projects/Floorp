@@ -59,6 +59,7 @@ nsLegendFrame::nsLegendFrame()
 {
 }
 
+// Frames are not refcounted, no need to AddRef
 NS_IMETHODIMP
 nsLegendFrame::QueryInterface(REFNSIID aIID, void** aInstancePtrResult)
 {

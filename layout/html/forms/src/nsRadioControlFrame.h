@@ -80,7 +80,7 @@ public:
   ///XXX: End o the temporary methods
 
   //nsIStatefulFrame
-  NS_IMETHOD GetStateType(nsIPresContext* aPresContext, StateType* aStateType);
+  NS_IMETHOD GetStateType(nsIPresContext* aPresContext, nsIStatefulFrame::StateType* aStateType);
   NS_IMETHOD SaveState(nsIPresContext* aPresContext, nsISupports** aState);
   NS_IMETHOD RestoreState(nsIPresContext* aPresContext, nsISupports* aState);
 

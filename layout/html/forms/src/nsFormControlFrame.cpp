@@ -74,7 +74,8 @@ nsFormControlFrame::~nsFormControlFrame()
   mFormFrame = nsnull;
 }
 
-nsresult
+// Frames are not refcounted, no need to AddRef
+NS_IMETHODIMP
 nsFormControlFrame::QueryInterface(const nsIID& aIID, void** aInstancePtr)
 {
   NS_PRECONDITION(0 != aInstancePtr, "null ptr");

@@ -156,7 +156,7 @@ public:
   virtual nsresult HandleEvent(nsIDOMEvent* aEvent)        { return NS_OK; }
 
   //nsIStatefulFrame
-  NS_IMETHOD GetStateType(nsIPresContext* aPresContext, StateType* aStateType);
+  NS_IMETHOD GetStateType(nsIPresContext* aPresContext, nsIStatefulFrame::StateType* aStateType);
   NS_IMETHOD SaveState(nsIPresContext* aPresContext, nsISupports** aState);
   NS_IMETHOD RestoreState(nsIPresContext* aPresContext, nsISupports* aState);
 

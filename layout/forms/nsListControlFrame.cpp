@@ -140,6 +140,7 @@ nsListControlFrame::~nsListControlFrame()
 //NS_IMPL_RELEASE(nsListControlFrame)
 
 //---------------------------------------------------------
+// Frames are not refcounted, no need to AddRef
 NS_IMETHODIMP
 nsListControlFrame::QueryInterface(const nsIID& aIID, void** aInstancePtr)
 {
@@ -160,22 +161,18 @@ nsListControlFrame::QueryInterface(const nsIID& aIID, void** aInstancePtr)
   }
   if (aIID.Equals(kIDOMMouseListenerIID)) {                                         
     *aInstancePtr = (void*)(nsIDOMMouseListener*) this;                                        
-    NS_ADDREF_THIS();
     return NS_OK;                                                        
   }
   if (aIID.Equals(kIDOMMouseMotionListenerIID)) {                                         
     *aInstancePtr = (void*)(nsIDOMMouseMotionListener*) this;                                        
-    NS_ADDREF_THIS();
     return NS_OK;                                                        
   }
   if (aIID.Equals(kIDOMKeyListenerIID)) {                                         
     *aInstancePtr = (void*)(nsIDOMKeyListener*) this;                                        
-    NS_ADDREF_THIS();
     return NS_OK;                                                        
   }
   if (aIID.Equals(NS_GET_IID(nsIStatefulFrame))) {
     *aInstancePtr = (void*)(nsIStatefulFrame*) this;
-    NS_ADDREF_THIS();
     return NS_OK;
   }
   return nsScrollFrame::QueryInterface(aIID, aInstancePtr);
