@@ -106,6 +106,7 @@ public:
   void ShowContentSize();
   void ShowFrameSize();
   void ShowStyleSize();
+  void DoDebugSave();
   nsEventStatus DispatchDebugMenu(PRInt32 aID);
 #endif
 
