@@ -571,11 +571,11 @@ nsBlockFrame::PlaceLine(nsBlockReflowState& aState,
   aState.mY += aLine->mBounds.height;
   if (nsnull != aState.mMaxElementSizePointer) {
     nsSize* maxSize = aState.mMaxElementSizePointer;
-    if (aLineLayout.mReflowData.mMaxElementSize.width > maxSize->width) {
-      maxSize->width = aLineLayout.mReflowData.mMaxElementSize.width;
+    if (aLineLayout.mState.mMaxElementSize.width > maxSize->width) {
+      maxSize->width = aLineLayout.mState.mMaxElementSize.width;
     }
-    if (aLineLayout.mReflowData.mMaxElementSize.height > maxSize->height) {
-      maxSize->height = aLineLayout.mReflowData.mMaxElementSize.height;
+    if (aLineLayout.mState.mMaxElementSize.height > maxSize->height) {
+      maxSize->height = aLineLayout.mState.mMaxElementSize.height;
     }
   }
   nscoord xmost = aLine->mBounds.XMost();
@@ -754,7 +754,7 @@ nsBlockFrame::ReflowMapped(nsBlockReflowState& aState)
     if (NS_OK != rv) {
       goto done;
     }
-    lineLayout.mPrevKidFrame = aState.mPrevKidFrame;
+    lineLayout.mState.mPrevKidFrame = aState.mPrevKidFrame;
 
     // Reflow the line
     nsresult lineReflowStatus = lineLayout.ReflowLine();
@@ -774,7 +774,7 @@ nsBlockFrame::ReflowMapped(nsBlockReflowState& aState)
     mLastContentOffset = line->mLastContentOffset;
     mLastContentIsComplete = PRBool(line->mLastContentIsComplete);
     line = line->mNextLine;
-    aState.mPrevKidFrame = lineLayout.mPrevKidFrame;
+    aState.mPrevKidFrame = lineLayout.mState.mPrevKidFrame;
   }
 
 done:
@@ -802,7 +802,7 @@ nsBlockFrame::ReflowMappedFrom(nsBlockReflowState& aState, nsLineData* aLine)
     if (NS_OK != rv) {
       goto done;
     }
-    lineLayout.mPrevKidFrame = aState.mPrevKidFrame;
+    lineLayout.mState.mPrevKidFrame = aState.mPrevKidFrame;
 
     // Reflow the line
     nsresult lineReflowStatus = lineLayout.ReflowLine();
@@ -822,7 +822,7 @@ nsBlockFrame::ReflowMappedFrom(nsBlockReflowState& aState, nsLineData* aLine)
     mLastContentOffset = aLine->mLastContentOffset;
     mLastContentIsComplete = PRBool(aLine->mLastContentIsComplete);
     aLine = aLine->mNextLine;
-    aState.mPrevKidFrame = lineLayout.mPrevKidFrame;
+    aState.mPrevKidFrame = lineLayout.mState.mPrevKidFrame;
   }
 
 done:
@@ -900,7 +900,7 @@ nsBlockFrame::ReflowUnmapped(nsBlockReflowState& aState)
       goto done;
     }
     lineLayout.mKidPrevInFlow = kidPrevInFlow;
-    lineLayout.mPrevKidFrame = aState.mPrevKidFrame;
+    lineLayout.mState.mPrevKidFrame = aState.mPrevKidFrame;
 
     // Reflow the line
     nsresult lineReflowStatus = lineLayout.ReflowLine();
@@ -929,14 +929,14 @@ nsBlockFrame::ReflowUnmapped(nsBlockReflowState& aState)
     if (NS_LINE_LAYOUT_COMPLETE != rv) {
       goto done;
     }
-    kidIndex = lineLayout.mKidIndex;
+    kidIndex = lineLayout.mState.mKidIndex;
     kidPrevInFlow = lineLayout.mKidPrevInFlow;
 
     mLastContentOffset = line->mLastContentOffset;
     mLastContentIsComplete = PRBool(line->mLastContentIsComplete);
     prevLine = line;
     line = line->mNextLine;
-    aState.mPrevKidFrame = lineLayout.mPrevKidFrame;
+    aState.mPrevKidFrame = lineLayout.mState.mPrevKidFrame;
   }
 
 done:
@@ -1284,7 +1284,7 @@ nsBlockFrame::Reflow(nsIPresContext*      aPresContext,
       if (NS_LINE_LAYOUT_COMPLETE == rv) {
         mLastContentOffset = line->mLastContentOffset;
         mLastContentIsComplete = PRBool(line->mLastContentIsComplete);
-        state.mPrevKidFrame = lineLayout.mPrevKidFrame;
+        state.mPrevKidFrame = lineLayout.mState.mPrevKidFrame;
   
         // Now figure out what to do with the frames that follow
         rv = IncrementalReflowAfter(state, line, rv, oldBounds);
