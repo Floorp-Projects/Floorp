@@ -16,7 +16,7 @@
    - 
    - The Initial Developer of the Original Code is Netscape
    - Communications Corporation. Portions created by Netscape are
-   - Copyright (C) 1998-1999 Netscape Communications Corporation. All
+   - Copyright (C) 1998-2000 Netscape Communications Corporation. All
    - Rights Reserved.
    - 
    - Contributor(s): 
@@ -27,6 +27,7 @@
 
 <?xul-overlay href="chrome://global/content/dialogOverlay.xul"?> 
 <?xul-overlay href="chrome://editor/content/EdDialogOverlay.xul"?> 
+<?xul-overlay href="chrome://global/content/globalOverlay.xul"?> 
 
 <!DOCTYPE window SYSTEM "chrome://editor/locale/EditorInsertTable.dtd">
 
@@ -43,34 +44,40 @@
 
   <broadcaster id="args" value=""/>
   <keyset id="keyset"/>
+  <popupset id="aTooltipSet" />
   
   <grid>
     <columns><column/><column/><column/></columns>
     <rows>
       <row valign="baseline" text-align="right" autostretch="never">
-        <text class="label align-right" text-align="right" value="&numRowsEditField.label;"/>
+        <text class="label align-right" text-align="right" value="&numRowsEditField.label;"
+            tooltip="aTooltip" tooltiptext="&numRowsEditField.tooltip;" />
         <textfield class="narrow" id="rowsInput" onkeyup="forceInteger(this.id)" />
         <spring/>
       </row>
       <row valign="baseline" text-align="right" autostretch="never">
-        <text class="label align-right" value="&numColumnsEditField.label;"/>
+        <text class="label align-right" value="&numColumnsEditField.label;"
+            tooltip="aTooltip" tooltiptext="&numColumnsEditField.tooltip;" />
         <textfield class="narrow" id="columnsInput" onkeyup="forceInteger(this.id)" />
         <spring/>
       </row>
       <row valign="baseline" text-align="right" autostretch="never">
-        <text class="label align-right" value="&widthEditField.label;"/>
+        <text class="label align-right" value="&widthEditField.label;"
+            tooltip="aTooltip" tooltiptext="&widthEditField.tooltip;" />
         <textfield class="narrow" id="widthInput" onkeyup="forceInteger(this.id)" />
         <menulist id="widthPixelOrPercentMenulist"><menupopup/></menulist>
           <!-- child elements are appended by JS -->
       </row>
       <row valign="baseline" text-align="right" autostretch="never">
-        <text class="label align-right" value="&heightEditField.label;"/>
+        <text class="label align-right" value="&heightEditField.label;"
+            tooltip="aTooltip" tooltiptext="&heightEditField.tooltip;" />
         <textfield class="narrow" id="heightInput" onkeyup="forceInteger(this.id)" />
         <menulist id="heightPixelOrPercentMenulist"><menupopup/></menulist>
           <!-- child elements are appended by JS -->
       </row>
       <row valign="baseline" autostretch="never">
-        <text class="label align-right" text-align="right" value="&borderEditField.label;"/>
+        <text class="label align-right" text-align="right" value="&borderEditField.label;"
+            tooltip="aTooltip" tooltiptext="&borderEditField.tooltip;" />
         <textfield class="narrow" id="borderInput" onkeyup="forceInteger(this.id)" />
         <text class="label" value="&pixels.label;"/>  
       </row>
@@ -79,7 +86,7 @@
         <spring/>
         <spring/>
         <!-- from EdDialogOverlay -->
-        <button class="dialog" id="AdvancedEditButton"/>
+        <button class="dialog" id="AdvancedEditButton" tooltip="aTooltip" tooltiptext="&AdvancedEditButton.tooltip;"/>
       </row>
     </rows>
   </grid>
