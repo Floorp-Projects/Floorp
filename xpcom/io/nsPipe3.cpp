@@ -388,6 +388,7 @@ nsPipe::AdvanceReadCursor(PRUint32 bytesRead)
         nsAutoMonitor mon(mMonitor);
 
         LOG(("III advancing read cursor by %u\n", bytesRead));
+        NS_ASSERTION(bytesRead <= mBuffer.GetSegmentSize(), "read too much");
 
         mReadCursor += bytesRead;
         NS_ASSERTION(mReadCursor <= mReadLimit, "read cursor exceeds limit");
@@ -481,8 +482,8 @@ nsPipe::AdvanceWriteCursor(PRUint32 bytesWritten)
         char *newWriteCursor = mWriteCursor + bytesWritten;
         NS_ASSERTION(newWriteCursor <= mWriteLimit, "write cursor exceeds limit");
 
-        // update read limit
-        if (mReadLimit == mWriteCursor)
+        // update read limit if reading in the same segment
+        if (mWriteSegment == 0 && mReadLimit == mWriteCursor)
             mReadLimit = newWriteCursor;
 
         mWriteCursor = newWriteCursor;
