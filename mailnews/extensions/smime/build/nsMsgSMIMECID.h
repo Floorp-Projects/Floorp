@@ -64,4 +64,12 @@
  0xd57d928c, 0x60e4, 0x4f81,                     \
  {0x99, 0x9d, 0x5c, 0x76, 0x2e, 0x61, 0x12, 0x05 }}
 
+#define NS_SMIMEENCRYPTURISERVICE_CONTRACTID     \
+  "@mozilla.org/messenger-smime/smime-encrypted-uris-service;1"
+
+#define NS_SMIMEENCRYPTURISERVICE_CID            \
+{ /* a0134d58-018f-4d40-a099-fa079e5024a6 */     \
+ 0xa0134d58, 0x018f, 0x4d40,                     \
+ {0xa0, 0x99, 0xfa, 0x07, 0x9e, 0x50, 0x24, 0xa6 }}
+
 #endif // nsMsgSMIMECID_h__

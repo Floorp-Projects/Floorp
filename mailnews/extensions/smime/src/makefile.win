@@ -67,6 +67,7 @@ include <$(DEPTH)\config\config.mak>
 
 EXPORTS=    nsMsgComposeSecure.h \
             nsSMimeJSHelper.h \
+            nsEncryptedSMIMEURIsService.h \
             $(NULL)
 
 ################################################################################
@@ -76,6 +77,7 @@ LIBRARY_NAME=msgsmime_s
 
 CPP_OBJS=   .\$(OBJDIR)\nsMsgComposeSecure.obj \
             .\$(OBJDIR)\nsSMimeJSHelper.obj \
+            .\$(OBJDIR)\nsEncryptedSMIMEURIsService.obj \
             $(NULL)
 
 

@@ -26,6 +26,9 @@ var gStatusBar = null;
 var gSignedStatusPanel = null;
 var gEncryptedStatusPanel = null;
 
+var gEncryptedURIService = null;
+var gMyLastEncryptedURI = null;
+
 // manipulates some globals from msgReadSMIMEOverlay.js
 
 const nsICMSMessageErrors = Components.interfaces.nsICMSMessageErrors;
@@ -92,6 +95,12 @@ var smimeHeaderSink =
       gEncryptedUINode.setAttribute("encrypted", "notok");
       gStatusBar.setAttribute("encrypted", "notok");
     }
+    
+    if (gEncryptedURIService)
+    {
+      gMyLastEncryptedURI = GetLoadedMessage();
+      gEncryptedURIService.rememberEncrypted(gMyLastEncryptedURI);
+    }
   },
 
   QueryInterface : function(iid)
@@ -101,6 +110,15 @@ var smimeHeaderSink =
     throw Components.results.NS_NOINTERFACE;
   }
 };
+
+function forgetEncryptedURI()
+{
+  if (gMyLastEncryptedURI && gEncryptedURIService)
+  {
+    gEncryptedURIService.forgetEncrypted(gMyLastEncryptedURI);
+    gMyLastEncryptedURI = null;
+  }
+}
 
 function onSMIMEStartHeaders()
 {
@@ -121,6 +139,8 @@ function onSMIMEStartHeaders()
   gEncryptedUINode.collapsed = true;
   gEncryptedUINode.removeAttribute("encrypted");
   gStatusBar.removeAttribute("encrypted");
+
+  forgetEncryptedURI();
 }
 
 function onSMIMEEndHeaders()
@@ -145,6 +165,16 @@ function msgHdrViewSMIMEOnLoad(event)
   listener.onStartHeaders = onSMIMEStartHeaders;
   listener.onEndHeaders = onSMIMEEndHeaders;
   gMessageListeners.push(listener);
+
+  gEncryptedURIService = 
+    Components.classes["@mozilla.org/messenger-smime/smime-encrypted-uris-service;1"]
+    .getService(Components.interfaces.nsIEncryptedSMIMEURIsService);
+}
+
+function msgHdrViewSMIMEOnUnload(event)
+{
+  forgetEncryptedURI();
 }
 
 addEventListener('messagepane-loaded', msgHdrViewSMIMEOnLoad, true);
+addEventListener('messagepane-unloaded', msgHdrViewSMIMEOnUnload, true);

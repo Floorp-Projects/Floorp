@@ -32,6 +32,7 @@ XPIDLSRCS	= \
 		nsIMsgSMIMECompFields.idl \
 		nsIMsgSMIMEHeaderSink.idl \
 		nsISMimeJSHelper.idl \
+		nsIEncryptedSMIMEURIsSrvc.idl \
 		$(NULL)
 
 include $(topsrcdir)/config/rules.mk

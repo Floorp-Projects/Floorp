@@ -37,7 +37,7 @@
 #ifndef _nsEncryptedSMIMEURIsService_H_
 #define _nsEncryptedSMIMEURIsService_H_
 
-#include "nsIEncryptedSMIMEURIsService.h"
+#include "nsIEncryptedSMIMEURIsSrvc.h"
 #include "nsVoidArray.h"
 
 class nsEncryptedSMIMEURIsService : public nsIEncryptedSMIMEURIsService

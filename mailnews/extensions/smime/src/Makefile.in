@@ -43,11 +43,13 @@ REQUIRES	= xpcom \
 CPPSRCS		= \
                 nsMsgComposeSecure.cpp \
                 nsSMimeJSHelper.cpp \
+                nsEncryptedSMIMEURIsService.cpp \
 		$(NULL)
 
 EXPORTS		= \
 		nsMsgComposeSecure.h \
 		nsSMimeJSHelper.h \
+		nsEncryptedSMIMEURIsService.h \
 		$(NULL)
 
 EXTRA_COMPONENTS = smime-service.js

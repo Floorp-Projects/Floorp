@@ -51,10 +51,12 @@
 /* Include all of the interfaces our factory can generate components for */
 #include "nsMsgComposeSecure.h"
 #include "nsSMimeJSHelper.h"
+#include "nsEncryptedSMIMEURIsService.h"
 
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsMsgComposeSecure);
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsMsgSMIMEComposeFields);
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsSMimeJSHelper);
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsEncryptedSMIMEURIsService);
 
 ////////////////////////////////////////////////////////////
 //
@@ -73,7 +75,11 @@ static const nsModuleComponentInfo components[] =
   { "SMIME JS Helper",
     NS_SMIMEJSJELPER_CID,
     NS_SMIMEJSHELPER_CONTRACTID,
-    nsSMimeJSHelperConstructor }
+    nsSMimeJSHelperConstructor },
+  { "SMIME Encrypted URI Cache Service",
+    NS_SMIMEENCRYPTURISERVICE_CID,
+    NS_SMIMEENCRYPTURISERVICE_CONTRACTID,
+    nsEncryptedSMIMEURIsServiceConstructor }
 };
 
   

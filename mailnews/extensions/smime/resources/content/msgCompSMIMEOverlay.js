@@ -28,6 +28,7 @@ var gNextSecurityButtonCommand = "";
 var gBundle;
 var gBrandBundle;
 var gSMFields;
+var gEncryptedURIService = null;
 
 
 function onComposerClose()
@@ -70,6 +71,15 @@ function onComposerReOpen()
 
     gSMFields.signMessage = gCurrentIdentity.getBoolAttribute("sign_mail");
 
+    if (gEncryptedURIService && !gSMFields.requireEncryptMessage)
+    {
+      if (gEncryptedURIService.isEncrypted(gMsgCompose.originalMsgURI))
+      {
+        // Override encryption setting if original is known as encrypted.
+        gSMFields.requireEncryptMessage = true;
+      }
+    }
+
     if (gSMFields.requireEncryptMessage)
     {
       setEncryptionUI();
@@ -95,6 +105,13 @@ function onComposerReOpen()
 // but only on first open, not on composer recycling
 function smimeComposeOnLoad()
 {
+  if (!gEncryptedURIService)
+  {
+    gEncryptedURIService = 
+      Components.classes["@mozilla.org/messenger-smime/smime-encrypted-uris-service;1"]
+      .getService(Components.interfaces.nsIEncryptedSMIMEURIsService);
+  }
+
   onComposerReOpen();
 }
 
