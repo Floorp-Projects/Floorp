@@ -101,6 +101,7 @@
 #include "nsGUIEvent.h"
 #include "nsIRenderingContext.h"
 #include "nsIContentViewer.h"
+#include "nsIDocumentViewer.h"
 #include "nsIDocShell.h"
 #include "npapi.h"
 #include "nsIPrintSettings.h"
@@ -397,12 +398,6 @@ static void ConvertTwipsToPixels(nsIPresContext& aPresContext, nsRect& aTwipsRec
 
 nsObjectFrame::~nsObjectFrame()
 {
-  if (nsnull != mInstanceOwner) {
-    mInstanceOwner->Destroy();
-  }
-
-  NS_IF_RELEASE(mInstanceOwner);
-
 }
 
 NS_IMETHODIMP
@@ -733,7 +728,11 @@ nsObjectFrame::Destroy(nsIPresContext* aPresContext)
       if (window)
         window->SetPluginWidget(nsnull);
     }
+
+    mInstanceOwner->Destroy();
+    NS_RELEASE(mInstanceOwner);
   }
+  
   return nsObjectFrameSuper::Destroy(aPresContext);
 }
 
@@ -3799,8 +3798,16 @@ NS_IMETHODIMP nsPluginInstanceOwner::Init(nsIPresContext* aPresContext, nsObject
     if (docShell) {
       nsCOMPtr<nsIContentViewer> cv;
       docShell->GetContentViewer(getter_AddRefs(cv));
-      if (cv)
-        cv->Show();
+      // Make sure that we're in the presentation that the current
+      // content viewer knows about
+      nsCOMPtr<nsIDocumentViewer> docV(do_QueryInterface(cv));
+      if (docV) {
+        nsCOMPtr<nsIPresContext> currentPresContext;
+        docV->GetPresContext(getter_AddRefs(currentPresContext));
+        if (currentPresContext == aPresContext) {
+          cv->Show();
+        }
+      }
     }
 
     if (fc)
