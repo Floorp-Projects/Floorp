@@ -81,12 +81,12 @@
 
     [% IF !is_new %]
       <button id="editTab"      class="tab [% "wysiwyg" IF wysiwyg %]"
-                                            type="button" onclick="switchToMode('edit');"     disabled="disabled">Edit</button>
-      <button id="hackTab"      class="tab" type="button" onclick="switchToMode('hack');"     disabled="disabled">Edit Source</button>
-      <button id="originalTab"  class="tab" type="button" onclick="switchToMode('original');" disabled="disabled">View Original</button>
-      <button id="modifiedTab"  class="tab" type="button" onclick="switchToMode('modified');" disabled="disabled">View Edited</button>
-      <button id="diffTab"      class="tab" type="button" onclick="switchToMode('diff');"     disabled="disabled">Show Diff</button>
-      <button id="saveTab"      class="tab" type="button" onclick="switchToMode('save');"     disabled="disabled">Save Changes</button>
+                                            type="button" onclick="switchToTab('edit');"     disabled="disabled">Edit</button>
+      <button id="hackTab"      class="tab" type="button" onclick="switchToTab('hack');"     disabled="disabled">Edit Source</button>
+      <button id="originalTab"  class="tab" type="button" onclick="switchToTab('original');" disabled="disabled">View Original</button>
+      <button id="modifiedTab"  class="tab" type="button" onclick="switchToTab('modified');" disabled="disabled">View Edited</button>
+      <button id="diffTab"      class="tab" type="button" onclick="switchToTab('diff');"     disabled="disabled">Show Diff</button>
+      <button id="saveTab"      class="tab" type="button" onclick="switchToTab('save');"     disabled="disabled">Save Changes</button>
       <br>
     [% END %]
     

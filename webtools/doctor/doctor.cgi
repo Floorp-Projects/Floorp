@@ -119,6 +119,8 @@ my $CONFIG = {
   WEB_BASE_URI_PATTERN  => $WEB_BASE_URI_PATTERN  ,
   WEB_BASE_PATH         => $WEB_BASE_PATH         ,
   ADMIN_EMAIL           => $ADMIN_EMAIL           ,
+  DOCTOR_EMAIL          => $config->get('DOCTOR_EMAIL') ,
+  EDITOR_EMAIL          => $config->get('EDITOR_EMAIL') ,
   DB_HOST               => $config->get('DB_HOST') ,
   DB_PORT               => $config->get('DB_PORT') ,
   DB_NAME               => $config->get('DB_NAME') ,
@@ -428,6 +430,7 @@ sub queue
   ValidateContent();
   # XXX validate the version as well?
   # XXX validate the user's email address
+  my $email = $request->param('email');
   
   # Create and change to a temporary sub-directory into which we will check out
   # the file being committed.
@@ -459,19 +462,62 @@ sub queue
   # Delete the temporary directory into which we checked out the file.
   DeleteTempDir();
 
-  my $dbh = ConnectToDatabase();
-  my $insert_patch_sth =
-    $dbh->prepare("INSERT INTO patch (id, submitter, submitted, file, version,
-                                      patch, comment)
-                   VALUES (?, ?, NOW(), ?, ?, ?, ?)");
+  eval {
+    use Mail::Mailer;
 
-  $dbh->do("START TRANSACTION");
-  my ($patch_id) = $dbh->selectrow_array("SELECT MAX(id) FROM patch");
-  $patch_id = ($patch_id || 0) + 1;
-  $insert_patch_sth->execute($patch_id, $request->param('email'), $file,
-                             $oldversion, $patch, $comment);
-  $dbh->commit;
-  $dbh->disconnect;
+    # Generate a random string to serve as an attachment boundary.
+    my @chars = (0..9);
+    my $dashes = "--------------";
+    my $boundary = "${dashes}394857292719284728394756";
+    my $i = 0;
+    while ($patch =~ /\Q$boundary\E/ && ++$i < 100) {
+      $boundary = $dashes . join("", @chars[ map {rand @chars} (1..24) ]);
+    }
+    if ($patch =~ /\Q$boundary\E/ && $i == 100) {
+      die "can't find a unique string that isn't in the patch file: $boundary";
+    }
+    my $mailer = new Mail::Mailer;
+    $mailer->open( { From     => $email,
+                     To       => $CONFIG->{EDITOR_EMAIL},
+                     Subject  => "patch: $file v$oldversion",
+                     "MIME-Version" => "1.0",
+                     "Content-Type" => "multipart/mixed; boundary=\"$boundary\"" });
+
+    print $mailer "This is a multi-part message in MIME format.\n";
+    print $mailer "$boundary\n";
+    print $mailer "Content-Type: text/plain; charset=us-ascii; format=flowed\n";
+    print $mailer "Content-Transfer-Encoding: 7bit\n";
+    print $mailer "\n";
+    print $mailer "$comment\n\n";
+    print $mailer "$boundary\n";
+    print $mailer "Content-Type: text/plain\n";
+    print $mailer " name=\"patch.txt\"\n";
+    print $mailer "Content-Transfer-Encoding: 7bit\n";
+    print $mailer "Content-Disposition: inline\n";
+    print $mailer " filename=\"patch.txt\"\n";
+    print $mailer "\n";
+    print $mailer $patch;
+    print $mailer "$boundary\n";
+
+    $mailer->close;
+  };
+  if ($@) {
+    ThrowCodeError($@, "Mailing Patch to Editors Failure");
+  }
+
+#  my $dbh = ConnectToDatabase();
+#  my $insert_patch_sth =
+#    $dbh->prepare("INSERT INTO patch (id, submitter, submitted, file, version,
+#                                      patch, comment)
+#                   VALUES (?, ?, NOW(), ?, ?, ?, ?)");
+
+#  $dbh->do("START TRANSACTION");
+#  my ($patch_id) = $dbh->selectrow_array("SELECT MAX(id) FROM patch");
+#  $patch_id = ($patch_id || 0) + 1;
+#  $insert_patch_sth->execute($patch_id, $request->param('email'), $file,
+#                             $oldversion, $patch, $comment);
+#  $dbh->commit;
+#  $dbh->disconnect;
 
   print $request->header;
   $template->process("queued.tmpl", $vars)
