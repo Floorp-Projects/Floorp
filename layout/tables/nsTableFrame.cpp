@@ -1641,7 +1641,7 @@ NS_METHOD nsTableFrame::Reflow(nsIPresContext& aPresContext,
       if (PR_TRUE==gsDebug || PR_TRUE==gsDebugIR) printf("TIF Reflow: Re-init layout strategy\n");
       if (nsnull!=mTableLayoutStrategy)
       {
-        mTableLayoutStrategy->Initialize(aDesiredSize.maxElementSize, mCellMap->GetColCount());
+        mTableLayoutStrategy->Initialize(aDesiredSize.maxElementSize, GetColCount());
         mColumnWidthsValid=PR_TRUE;
       }
     }
