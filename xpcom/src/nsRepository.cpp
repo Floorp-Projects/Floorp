@@ -25,9 +25,6 @@
 #include <iostream.h>
 #endif
 
-#ifdef _WIN32
-#include <windows.h>
-#endif
 #include "plstr.h"
 #include "prlink.h"
 #include "prsystem.h"
@@ -63,7 +60,6 @@ class FactoryEntry {
 public:
 	nsCID cid;
 	nsIFactory *factory;
-	char *library;
 	
 	// DO NOT DELETE THIS. Many FactoryEntry(s) could be sharing the same Dll.
 	// This gets deleted from the dllStore going away.
@@ -71,7 +67,7 @@ public:
 	
 	FactoryEntry(const nsCID &aClass, nsIFactory *aFactory,
 		const char *aLibrary)
-		: cid(aClass), factory(aFactory), library(NULL), dll(NULL)
+		: cid(aClass), factory(aFactory), dll(NULL)
 	{
 		nsDllStore *dllCollection = nsRepository::dllStore;
 		
@@ -80,34 +76,25 @@ public:
 			return;
 		}
 		
-		library = PL_strdup(aLibrary);
-		if (library == NULL)
-		{
-			// No memory
-			return;
-		}
-		
 		// If dll not already in dllCollection, add it.
 		// PR_EnterMonitor(nsRepository::monitor);
-		dll = dllCollection->Get(library);
+		dll = dllCollection->Get(aLibrary);
 		// PR_ExitMonitor(nsRepository::monitor);
 		
 		if (dll == NULL)
 		{
 			// Add a new Dll into the nsDllStore
-			dll = new nsDll(library);
+			dll = new nsDll(aLibrary);
 			if (dll->GetStatus() != DLL_OK)
 			{
 				// Cant create a nsDll. Backoff.
 				delete dll;
 				dll = NULL;
-				PL_strfree(library);
-				library = NULL;
 			}
 			else
 			{
 				// PR_EnterMonitor(nsRepository::monitor);
-				dllCollection->Put(library, dll);
+				dllCollection->Put(aLibrary, dll);
 				// PR_ExitMonitor(nsRepository::monitor);
 			}
 		}
@@ -115,10 +102,6 @@ public:
 	
 	~FactoryEntry(void)
 	{
-		if (library != NULL)
-		{
-			free(library);
-		}
 		if (factory != NULL)
 		{
 			factory->Release();
@@ -211,69 +194,6 @@ static FactoryEntry *platformFind(const nsCID &aCID)
 	}
 	return res;
 }
-
-#else // USE_NSREG
-
-#ifdef _WIN32
-#define USE_REGISTRY
-// USE_REGISTRY means use windows registry
-// This will never be enabled and will soon be removed.
-static nsresult platformRegister(const nsCID &aCID, const char *aLibrary)
-{
-	HKEY key;
-	LONG res = RegCreateKey(HKEY_CURRENT_USER, "SOFTWARE\\Netscape\\CID", &key);
-	if (res == ERROR_SUCCESS)
-	{
-		char *cidString = aCID.ToString();
-		RegSetValue(key, cidString, REG_SZ, aLibrary, PL_strlen(aLibrary));
-		delete [] cidString;
-		RegCloseKey(key);
-	}
-	return NS_OK;
-}
-
-static nsresult platformUnregister(const nsCID &aCID, const char *aLibrary)
-{
-	HKEY key;
-	nsresult res = NS_OK;
-	LONG err = RegCreateKey(HKEY_CURRENT_USER, "SOFTWARE\\Netscape\\CID", &key);
-	if (err == ERROR_SUCCESS)
-	{
-		char *cidString = aCID.ToString();
-		err = RegDeleteKey(key, cidString);
-		if (err != ERROR_SUCCESS)
-		{
-			res = NS_ERROR_FACTORY_NOT_UNREGISTERED;
-		}
-		delete [] cidString;
-		RegCloseKey(key);
-	}
-	return res;
-}
-
-static FactoryEntry *platformFind(const nsCID &aCID)
-{
-	HKEY key;
-	LONG res = RegOpenKey(HKEY_CURRENT_USER, "SOFTWARE\\Netscape\\CID", &key);
-	
-	if (res == ERROR_SUCCESS)
-	{
-		char *cidString = aCID.ToString();
-		char library[_MAX_PATH];
-		LONG len = _MAX_PATH;
-		res = RegQueryValue(key, cidString, library, &len);
-		delete [] cidString;
-		if (res == ERROR_SUCCESS)
-		{
-			FactoryEntry *entry = new FactoryEntry(aCID, NULL, library);
-			return entry;
-		}
-	}
-	return NULL;
-}
-
-#endif // _WIN32
-
 #endif // USE_NSREG
 
 nsresult nsRepository::loadFactory(FactoryEntry *aEntry,
@@ -289,7 +209,7 @@ nsresult nsRepository::loadFactory(FactoryEntry *aEntry,
 	{
 		// Load the dll
 		PR_LOG(logmodule, PR_LOG_ALWAYS, 
-			("nsRepository: + Loading \"%s\".", aEntry->library));
+			("nsRepository: + Loading \"%s\".", aEntry->dll->GetFullPath()));
 		if (aEntry->dll->Load() == PR_FALSE)
 		{
 			PR_LOG(logmodule, PR_LOG_ERROR,
@@ -301,7 +221,7 @@ nsresult nsRepository::loadFactory(FactoryEntry *aEntry,
 #ifdef MOZ_TRACE_XPCOM_REFCNT
 	// Inform refcnt tracer of new library so that calls through the
 	// new library can be traced.
-	nsTraceRefcnt::LoadLibrarySymbols(aEntry->library, aEntry->dll->GetInstance());
+	nsTraceRefcnt::LoadLibrarySymbols(aEntry->dll->GetFullPath(), aEntry->dll->GetInstance());
 #endif
 	nsFactoryProc proc = (nsFactoryProc) aEntry->dll->FindSymbol("NSGetFactory");
 	if (proc != NULL)
@@ -648,11 +568,13 @@ nsresult nsRepository::UnregisterFactory(const nsCID &aClass,
 	
 	if (old != NULL)
 	{
+		if (old->dll->GetFullPath() != NULL &&
 #ifdef XP_UNIX
-		if (old->library != NULL && PL_strcasecmp(old->library, aLibrary))
+			PL_strcasecmp(old->dll->GetFullPath(), aLibrary)
 #else
-		if (old->library != NULL && PL_strcmp(old->library, aLibrary))
+			PL_strcmp(old->dll->GetFullPath(), aLibrary)
 #endif
+			)
 		{
 			FactoryEntry *entry = (FactoryEntry *) factories->Remove(&key);
 			delete entry;
@@ -685,7 +607,7 @@ static PRBool freeLibraryEnum(nsHashKey *aKey, void *aData, void* closure)
 			if (res)
 			{
 				PR_LOG(logmodule, PR_LOG_ALWAYS, 
-					("nsRepository: + Unloading \"%s\".", entry->library));
+					("nsRepository: + Unloading \"%s\".", entry->dll->GetFullPath()));
 				entry->dll->Unload();
 			}
 		}    
