@@ -119,7 +119,7 @@
 <!ENTITY taskMenu.accesskey            "@">
 
 <!ENTITY toolsMenu.label                "Gereedschappen">
-<!ENTITY toolsMenu.accesskey            "@">
+<!ENTITY toolsMenu.accesskey            "R">
 
 <!ENTITY javaScriptConsoleCmd.label     "JavaScript Console">
 <!ENTITY javaScriptConsoleCmd.accesskey "@">

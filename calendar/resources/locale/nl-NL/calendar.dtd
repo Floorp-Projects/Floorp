@@ -62,13 +62,13 @@
 <!ENTITY repeat.units.years.singular    "Jaar" >
 
 <!ENTITY priority.level.none              "Geen">
-<!ENTITY priority.level.none.accesskey    "@">
+<!ENTITY priority.level.none.accesskey    "G">
 <!ENTITY priority.level.low               "Laag">
-<!ENTITY priority.level.low.accesskey     "@">
+<!ENTITY priority.level.low.accesskey     "L">
 <!ENTITY priority.level.medium            "Gemiddeld">
-<!ENTITY priority.level.medium.accesskey  "@">
+<!ENTITY priority.level.medium.accesskey  "E">
 <!ENTITY priority.level.high              "Hoog">
-<!ENTITY priority.level.high.accesskey    "@">
+<!ENTITY priority.level.high.accesskey    "H">
 
 <!ENTITY newevent.title.label        "Titel" >
 <!ENTITY newevent.location.label     "Lokatie" >
@@ -255,14 +255,14 @@
 <!ENTITY calendar.monthview.button.label        "Maandoverzicht" >
 <!ENTITY calendar.multiweekview.button.label        "Meerder wekenoverzicht" >
 <!ENTITY calendar.onlyworkday.checkbox.label    "Alleen maandag-vrijdag" >
-<!ENTITY calendar.onlyworkday.checkbox.accesskey  "@" >
+<!ENTITY calendar.onlyworkday.checkbox.accesskey  "A" >
 <!ENTITY calendar.displaytodos.checkbox.label   "Taken in overzicht" >
-<!ENTITY calendar.displaytodos.checkbox.accesskey "@" >
+<!ENTITY calendar.displaytodos.checkbox.accesskey "T" >
 
 <!ENTITY calendar.menu.options.modify           "Bewerken" >
 <!ENTITY calendar.menu.options.remove           "Verwijderen" >
-<!ENTITY calendar.menu.options.close            "Sluit venster" >
-<!ENTITY calendar.menu.options.close.accesskey  "@" >
+<!ENTITY calendar.menu.options.close            "Sluiten" >
+<!ENTITY calendar.menu.options.close.accesskey  "S" >
 
 <!ENTITY calendar.main.tab.label        "Gebeurtenissen" >
 <!ENTITY calendar.search.tab.label      "Zoeken">
@@ -352,15 +352,15 @@
                                                                  
 <!-- Server Context Menu -->
 <!ENTITY calendar.context.newserver.label              "Nieuwe kalender">
-<!ENTITY calendar.context.newserver.accesskey          "@">
+<!ENTITY calendar.context.newserver.accesskey          "N">
 <!ENTITY calendar.context.editserver.label             "Bewerk kalender">
-<!ENTITY calendar.context.editserver.accesskey         "@">
+<!ENTITY calendar.context.editserver.accesskey         "B">
 <!ENTITY calendar.context.deleteserver.label           "Verwijder kalender">
-<!ENTITY calendar.context.deleteserver.accesskey       "@">
+<!ENTITY calendar.context.deleteserver.accesskey       "V">
 <!ENTITY calendar.context.refreshserver.label          "Ververs kalenders op andere computer(s)">
-<!ENTITY calendar.context.refreshserver.accesskey      "@">
+<!ENTITY calendar.context.refreshserver.accesskey      "C">
 <!ENTITY calendar.context.publish.label                "Publiceer volledige kalender">
-<!ENTITY calendar.context.publish.accesskey            "@">
+<!ENTITY calendar.context.publish.accesskey            "P">
 
 <!-- About Dialog -->
 <!ENTITY calendar.about.title "Over Mozilla kalender">
