@@ -527,7 +527,6 @@ NS_NewSimpleStreamListener(nsIStreamListener **aResult,
     return rv;
 }
 
-// Deprecated, prefer NS_NewStreamListenerProxy
 inline nsresult
 NS_NewAsyncStreamListener(nsIStreamListener **result,
                           nsIStreamListener  *receiver,
