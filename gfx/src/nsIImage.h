@@ -55,39 +55,101 @@ typedef enum {
 class nsIImage : public nsISupports
 {
 public:
-  //initialize the image. aDepth is either 8 or 24. if the image has an alpha
-  //channel, aNeedAlpha will be true
-  // had nsqresult for return, need to fix                                                fix
+  /**
+   * Build and initialize the pixelmap
+   * @param aWidth The width in pixels of the desired pixelmap
+   * @param aHeight The height in pixels of the desired pixelmap
+   * @param aDepth The number of bits per pixel for the pixelmap
+   * @param aMaskRequirements A flag indicating if a alpha mask should be allocated 
+   */
   virtual nsresult Init(PRInt32 aWidth, PRInt32 aHeight, PRInt32 aDepth, nsMaskRequirements aMaskRequirements) = 0;
 
-  //dimensioning in PIXELS
+  /**
+   * Get the width for the pixelmap
+   @return The width in pixels for the pixelmap
+   */
   virtual PRInt32 GetWidth() = 0;
+
+  /**
+   * Get the height for the pixelmap
+   @return The height in pixels for the pixelmap
+   */
   virtual PRInt32 GetHeight() = 0;
 
-  //if the image is not optimzed, get a pointer to the bits
+  /**
+   * Get a pointer to the bits for the pixelmap, only if it is not optimized
+   @return address of the DIB pixel array
+   */
   virtual PRUint8 * GetBits() = 0;
 
-  //get the number of bytes to jump from scanline to scanline
+  /**
+   * Get the number of bytes needed to get to the next scanline for the pixelmap
+   @return The number of bytes in each scanline
+   */
   virtual PRInt32 GetLineStride() = 0;
 
-  //if the image is not optimzed, get a pointer to the bits
+  /**
+   * Get a pointer to the bits for the alpha mask
+   @return address of the alpha mask pixel array
+   */
   virtual PRUint8 * GetAlphaBits() = 0;
 
-  //get the number of bytes to jump from scanline to scanline
+  /**
+   * Get the number of bytes needed to get to the next scanline for the alpha mask
+   @return The number of bytes in each scanline
+   */
   virtual PRInt32 GetAlphaLineStride() = 0;
 
+  /**
+   * Will update a pixelmaps color table
+   @param aFlags Used to pass in parameters for the update
+   @param aUpdateRect The rectangle to update
+   */
   virtual void ImageUpdated(PRUint8 aFlags, nsRect *aUpdateRect) = 0;
 
-  //has this image been optimized?
+  /**
+   * Returns if the pixelmap has been converted to an optimized pixelmap
+   @return If true, it is optimized
+   */
   virtual PRBool IsOptimized() = 0;
 
-  //convert this image to a version optimized for display
+  /**
+   * Converted this pixelmap to an optimized pixelmap for the device
+   @param aSurface The surface to optimize for
+   @return the result of the operation, if NS_OK, then the pixelmap is optimized
+   */
   virtual nsresult Optimize(nsDrawingSurface aSurface) = 0;
 
-  //if this returns non-null, this image is color mapped
+  /**
+   * Get the colormap for the pixelmap
+   @return if non null, the colormap for the pixelmap,otherwise the image is not color mapped
+   */
   virtual nsColorMap * GetColorMap() = 0;
 
+  /**
+   * BitBlit the pixelmap to a device, the source can be scale to the dest
+   @param aSurface  the surface to blit to
+   @param aX The destination horizontal location
+   @param aY The destination vertical location
+   @param aWidth The destination width of the pixelmap
+   @param aHeight The destination height of the pixelmap
+   @return if TRUE, no errors
+   */
   virtual PRBool Draw(nsDrawingSurface aSurface, PRInt32 aX, PRInt32 aY, PRInt32 aWidth, PRInt32 aHeight) = 0;
+
+  /**
+   * BitBlit the pixelmap to a device, the source and dest can be scaled
+   @param aSurface  the surface to blit to
+   @param aSX The source width of the pixelmap
+   @param aSY The source vertical location
+   @param aSWidth The source width of the pixelmap
+   @param aSHeight The source height of the pixelmap
+   @param aDX The destination horizontal location
+   @param aDY The destination vertical location
+   @param aDWidth The destination width of the pixelmap
+   @param aDHeight The destination height of the pixelmap
+   @return if TRUE, no errors
+   */
   virtual PRBool Draw(nsDrawingSurface aSurface, PRInt32 aSX, PRInt32 aSY, PRInt32 aSWidth, PRInt32 aSHeight,
                                   PRInt32 aDX, PRInt32 aDY, PRInt32 aDWidth, PRInt32 aDHeight) = 0;
   

@@ -29,14 +29,15 @@ public:
 
   NS_DECL_ISUPPORTS
 
+  /**
+  @see nsIImage.h
+  */
   virtual PRInt32     GetHeight()         { return mBHead->biHeight; }
   virtual PRInt32     GetWidth()          { return mBHead->biWidth; }
   virtual PRUint8*    GetAlphaBits()      { return mAlphaBits; }
   virtual PRInt32     GetAlphaLineStride(){ return mBHead->biWidth; }
   virtual PRUint8*    GetBits()           { return mImageBits; }
-          PRIntn      GetSizeHeader()     {return sizeof(BITMAPINFOHEADER) + sizeof(RGBQUAD) * mNumPalleteColors;}
   virtual PRInt32     GetLineStride()     {return mRowBytes; }
-          PRIntn      GetSizeImage()                 { return mSizeImage; }
   virtual PRBool      Draw(nsDrawingSurface aSurface, PRInt32 aX, PRInt32 aY, PRInt32 aWidth, PRInt32 aHeight);
   virtual PRBool      Draw(nsDrawingSurface aSurface, PRInt32 aSX, PRInt32 aSY, PRInt32 aSWidth, PRInt32 aSHeight,
                                   PRInt32 aDX, PRInt32 aDY, PRInt32 aDWidth, PRInt32 aDHeight);
@@ -44,16 +45,58 @@ public:
   virtual void        ImageUpdated(PRUint8 aFlags, nsRect *aUpdateRect);
   virtual nsresult    Init(PRInt32 aWidth, PRInt32 aHeight, PRInt32 aDepth, nsMaskRequirements aMaskRequirements);
   virtual PRBool      IsOptimized()       { return mIsOptimized; }
-          PRBool      MakePalette();
   virtual nsresult    Optimize(nsDrawingSurface aSurface);
-          PRBool      SetSystemPalette(HDC* aHdc);
-          PRUintn     UsePalette(HDC* aHdc, PRBool bBackground = PR_FALSE);
-          void        TestFillBits();
-          PRInt32     TestSpeedBits(nsDrawingSurface aSurface, PRInt32 aX, PRInt32 aY, PRInt32 aWidth, PRInt32 aHeight);
+
+  /** 
+   * Return the header size of the Device Independent Bitmap(DIB).
+   * @return size of header in bytes
+  */
+  PRIntn      GetSizeHeader(){return sizeof(BITMAPINFOHEADER) + sizeof(RGBQUAD) * mNumPalleteColors;}
+
+  /** 
+    * Return the image size of the Device Independent Bitmap(DIB).
+    * @return size of image in bytes
+    */
+  PRIntn      GetSizeImage(){ return mSizeImage; }
+
+  /** 
+   * Make a palette for the DIB.
+   * @return true or false if the palette was created
+   */
+  PRBool      MakePalette();
+
+  /** 
+   * Set the for this pixelmap to the system palette.
+   * @param  aHdc is the DC to get the palette from to use
+   * @return true or false if the palette was set
+   */
+  PRBool      SetSystemPalette(HDC* aHdc);
+
+
+  /** 
+   * Set the palette for an HDC.
+   * @param aHDC is the DC to set the palette to
+   * @param bBackround tells if the DC is in the background
+   * @return true or false if the palette was set
+   */
+  PRUintn     UsePalette(HDC* aHdc, PRBool bBackground = PR_FALSE);
 
 private:
+  /** 
+   * Clean up the memory used nsImageWin.
+   * @param aCleanUpAll if True, all the memory used will be released otherwise just clean up the DIB memory
+   */
   void CleanUp(PRBool aCleanUpAll);
+
+  /** 
+   * Calculate the amount of memory needed for the palette
+   * @param  aBitCount is the number of bits per pixel
+   */
+
   void ComputePaletteSize(PRIntn aBitCount);
+  /** 
+   * Calculate the amount of memory needed for the initialization of the pixelmap
+   */
   void ComputeMetrics();
 
   PRInt8              mNumBytesColor;     // number of bytes per color
