@@ -26,8 +26,9 @@
 #include "nsCOMPtr.h"
 #include "nsString.h"
 #include "pratom.h"
+#include "prio.h"
+#include "prprf.h"
 
-#include "nsIAppShellService.h"
 #include "nsIDOMDocument.h"
 #include "nsIDocument.h"
 #include "nsITextServicesDocument.h"
@@ -35,10 +36,11 @@
 #include "nsIDocShell.h"
 #include "nsIPresShell.h"
 #include "nsIContent.h"
-#include "nsIURL.h"
-#include "nsIFactory.h"
-#include "nsIServiceManager.h"
 #include "nsIDOMWindowInternal.h"
+
+#include "nsIURL.h"
+
+#include "nsIServiceManager.h"
 #include "nsIScriptGlobalObject.h"
 
 #include "nsISound.h"
@@ -48,9 +50,13 @@
 #include "nsIFindAndReplace.h"
 #include "nsIEditor.h"
 
+#include "nsIGenericFactory.h"
 
 #ifdef DEBUG
 #define DEBUG_FIND
+#define DEBUG_PRINTF PR_fprintf
+#else
+#define DEBUG_PRINTF (void)
 #endif
 
 
@@ -419,6 +425,8 @@ nsFindComponent::nsFindComponent()
     // Initialize "last" stuff from prefs, if we wanted to be really clever...
 }
 
+NS_IMPL_ISUPPORTS1(nsFindComponent, nsIFindComponent)
+
 // dtor
 nsFindComponent::~nsFindComponent()
 {
@@ -540,7 +548,7 @@ nsFindComponent::Find(nsISupports *aContext, PRBool *aDidFind)
         }
     }
 
-    if (aContext && GetAppShell())
+    if (aContext)
     {
         nsCOMPtr<nsISearchContext> context = do_QueryInterface( aContext, &rv );
         if (NS_FAILED(rv))
@@ -628,7 +636,7 @@ nsFindComponent::Replace( nsISupports *aContext )
         }
     }
 
-    if (aContext && GetAppShell())
+    if (aContext)
     {
         nsCOMPtr<nsISearchContext> context = do_QueryInterface( aContext, &rv );
         if (NS_FAILED(rv))
@@ -698,7 +706,16 @@ nsFindComponent::ResetContext( nsISupports *aContext,
 // nsFindComponent::Context implementation...
 NS_IMPL_ISUPPORTS1( nsFindComponent::Context, nsISearchContext)
 
-NS_IMPL_IAPPSHELLCOMPONENT( nsFindComponent, nsIFindComponent, NS_IFINDCOMPONENT_CONTRACTID, 0 )
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsFindComponent)
+
+static nsModuleComponentInfo components[] = {
+  { NS_IFINDCOMPONENT_CLASSNAME,
+    NS_FINDCOMPONENT_CID,
+    NS_IFINDCOMPONENT_CONTRACTID,
+    nsFindComponentConstructor}
+};
+
+NS_IMPL_NSGETMODULE("nsFindComponent", components)
 
 #ifdef XP_WIN32
   //in addition to returning a version number for this module,

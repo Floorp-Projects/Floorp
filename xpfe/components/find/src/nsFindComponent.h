@@ -19,7 +19,6 @@
  *
  * Contributor(s): 
  */
-#include "nsIAppShellComponentImpl.h"
 #include "nsIFindComponent.h"
 #include "nsISearchContext.h"
 #include "nsCOMPtr.h"
@@ -31,7 +30,7 @@ class nsITextServicesDocument;
 #define NS_FINDCOMPONENT_CID \
     { 0x4aa267a0, 0xf81d, 0x11d2, { 0x80, 0x67, 0x0, 0x60, 0x8, 0x11, 0xa9, 0xc3} }
 
-class nsFindComponent : public nsIFindComponent, public nsAppShellComponentImpl
+class nsFindComponent : public nsIFindComponent
 {
 public:
     NS_DEFINE_STATIC_CID_ACCESSOR( NS_FINDCOMPONENT_CID );
@@ -42,9 +41,6 @@ public:
 
     // This class implements the nsISupports interface functions.
     NS_DECL_ISUPPORTS
-
-    // This class implements the nsIAppShellComponent interface functions.
-    NS_DECL_NSIAPPSHELLCOMPONENT
 
     // This class implements the nsIFindComponent interface functions.
     NS_DECL_NSIFINDCOMPONENT
@@ -92,5 +88,4 @@ protected:
     PRBool                       mLastCaseSensitive;
     PRBool                       mLastSearchBackwards;
     PRBool                       mLastWrapSearch;
-    nsInstanceCounter            mInstanceCounter;
 }; // nsFindComponent
