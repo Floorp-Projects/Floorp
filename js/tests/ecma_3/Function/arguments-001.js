@@ -88,8 +88,25 @@ addThis();
 
 status = 'Section C of test';
 /*
+ * Brendan:
+ *
  * Note that only callee and length can be overridden, so deleting an indexed
  * property and asking for it again causes it to be recreated by args_resolve:
+ *
+ * function g(){delete arguments[0]; return arguments[0]}
+ * g(42)     // should this print 42?
+ *
+ * I'm not positive this violates ECMA, which allows in chapter 16 for extensions
+ * including properties (does it allow for magically reappearing properties?).  The
+ * delete operator successfully deletes arguments[0] and results in true, but that
+ * is not distinguishable from the case where arguments[0] was delegated to
+ * Arguments.prototype[0], which was how the bad old code worked.
+ *
+ * I'll ponder this last detail...
+ *
+ * UPDATE: Per ECMA-262, delete on an arguments[i] should succeed
+ * and remove that property from the arguments object, leaving any get
+ * of it after the delete to evaluate to undefined.
  */
 function g()
 {
@@ -97,7 +114,7 @@ function g()
   return arguments[0];
 }
 actual = g(42);
-expect = 42;
+expect = undefined;  // not 42...
 addThis();
 
 
