@@ -35,8 +35,6 @@ var cert;
 function onLoad()
 {
 
-  doSetOKCancel(doOK, doCancel, doHelpButton);
-
   pkiParams    = window.arguments[0].QueryInterface(nsIPKIParamBlock);
   dialogParams = pkiParams.QueryInterface(nsIDialogParamBlock);
 
@@ -49,7 +47,7 @@ function onLoad()
   var brandName = gBundleBrand.GetStringFromName("brandShortName");
   var continueButton = bundle.GetStringFromName("continueButton");
 
-  document.getElementById("ok").label = continueButton;
+  document.documentElement.getButton("accept").label = continueButton;
 
   var message = 
     bundle.formatStringFromName("newServerMessage",
@@ -87,14 +85,14 @@ function doOK()
   // 0 = accept perm, 1 = accept for this session - just the opposite
   // of the checkbox value.
   dialogParams.SetInt(2, !checkbox.checked);
-  window.close();
+  return true;
 }
 
 function doCancel()
 {
   // the user pressed cancel
   dialogParams.SetInt(1,0);
-  window.close();
+  return true;
 }
 
 function viewCert()
