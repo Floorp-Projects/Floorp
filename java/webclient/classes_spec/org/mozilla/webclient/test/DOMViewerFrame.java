@@ -31,6 +31,11 @@ import org.w3c.dom.NodeList;
 import org.w3c.dom.Element;
 import org.w3c.dom.Document;
 
+import org.w3c.dom.events.Event;
+import org.w3c.dom.events.EventTarget;
+import org.w3c.dom.events.EventListener;
+import org.w3c.dom.events.MouseEvent;
+
 import javax.swing.JScrollPane;
 import javax.swing.JSplitPane;
 import javax.swing.JPanel;
@@ -38,8 +43,11 @@ import javax.swing.JFrame;
 import javax.swing.JTree;
 
 import javax.swing.tree.TreeSelectionModel;
+import javax.swing.tree.TreePath;
 
 import java.awt.BorderLayout;
+
+import java.util.Stack;
 
 /**
  *
@@ -47,7 +55,7 @@ import java.awt.BorderLayout;
  * A dom viewer Frame
 
  *
- * @version $Id: DOMViewerFrame.java,v 1.1 2000/06/04 22:16:04 edburns%acm.org Exp $
+ * @version $Id: DOMViewerFrame.java,v 1.2 2000/06/08 18:40:20 edburns%acm.org Exp $
  * 
  * @see	org.mozilla.webclient.BrowserControlFactory
 
@@ -62,7 +70,7 @@ import java.awt.BorderLayout;
 
 
 
-public class DOMViewerFrame extends JFrame {
+public class DOMViewerFrame extends JFrame implements EventListener {
 
 private EmbeddedMozilla creator;
 
@@ -75,6 +83,8 @@ private JPanel panel;
 private JTree tree;
 
 private Document doc;
+
+private Stack pathStack;
 
     
 public DOMViewerFrame (String title, EmbeddedMozilla Creator) 
@@ -106,9 +116,23 @@ public DOMViewerFrame (String title, EmbeddedMozilla Creator)
 public void setDocument(Document newDocument)
 {
     if (null == newDocument) {
-	return;
+        return;
+    }
+    EventTarget eventTarget = null;
+
+    if (null != doc) {
+        if (doc instanceof EventTarget) {
+            System.out.println("debug: edburns: Document is EventTarget");
+            eventTarget = (EventTarget) doc;
+            eventTarget.removeEventListener("mousedown", this, false);
+        }
     }
     doc = newDocument;
+    if (doc instanceof EventTarget) {
+        System.out.println("debug: edburns: Document is EventTarget");
+        eventTarget = (EventTarget) doc;
+        eventTarget.addEventListener("click", this, false);
+    }
 
     try {
 	// store the document as the root node
@@ -135,6 +159,65 @@ public void setDocument(Document newDocument)
     }
     
 }
+
+// 
+// From org.w3c.dom.events.EventListener
+// 
+
+public void handleEvent(Event e)
+{
+    if (!(e instanceof MouseEvent)) {
+        return;
+    }
+    MouseEvent mouseEvent = (MouseEvent) e;
+
+    if (mouseEvent.getShiftKey()) {
+        // As of M13, getCurrentNode is un-implemented in mozilla.
+        //        selectNodeInTree(mouseEvent.getCurrentNode());
+    }
+    
+}
+
+protected void selectNodeInTree(Node node)
+{
+    TreeSelectionModel selection = tree.getSelectionModel();
+    if (null == selection) {
+        return;
+    }
+
+    if (null == node) {
+        selection.clearSelection();
+    }
+    if (null != pathStack) {
+        pathStack.clear();
+    }
+    populatePathStackFromNode(node);
+    if (null == pathStack || pathStack.isEmpty()) {
+        return;
+    }
+    TreePath nodePath = new TreePath(pathStack.toArray());
+    
+    System.out.println("treePath: " + nodePath.toString());
+    
+    selection.setSelectionPath(nodePath);
+}
+
+protected void populatePathStackFromNode(Node node)
+{
+    if (null == pathStack) {
+        // PENDING(edburns): perhaps provide default size
+        pathStack = new Stack();
+    }
+    if (null == pathStack) {
+        return;
+    }
+    pathStack.push(node);
+    Node parent = node.getParentNode();
+    if (null != parent) {
+        populatePathStackFromNode(node);
+    }
+}
+
 
 }
 
