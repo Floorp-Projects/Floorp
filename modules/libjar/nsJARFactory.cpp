@@ -114,7 +114,7 @@ nsJARFactory::QueryInterface(REFNSIID aIID, void** aInstancePtr)
 NS_IMPL_ADDREF(nsJARFactory);
 NS_IMPL_RELEASE(nsJARFactory);
 /*------------------------------------------------------------------------*/
-/* The JARFactory CreateInstance Method
+/* The JARFactory CreateInstance Method					  */
 /*------------------------------------------------------------------------*/
 NS_IMETHODIMP
 nsJARFactory::CreateInstance(nsISupports *aOuter, 
