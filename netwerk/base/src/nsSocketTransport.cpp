@@ -148,7 +148,7 @@ nsSocketTransport::nsSocketTransport()
   // Set up Internet defaults...
   //
   memset(&mNetAddress, 0, sizeof(mNetAddress));
-	PR_InitializeNetAddr(PR_IpAddrNull, 0, &mNetAddress);
+    PR_InitializeNetAddr(PR_IpAddrNull, 0, &mNetAddress);
 
   //
   // Initialize the global connect timeout value if necessary...
@@ -538,7 +538,7 @@ nsresult nsSocketTransport::doResolveHost(void)
           rv = NS_ERROR_UNKNOWN_HOST; // check this!
       }
       status = PR_GetHostByAddr(netAddr, dbbuf, sizeof(dbbuf), &hostEnt);
-	  nsAllocator::Free(netAddr);
+      nsAllocator::Free(netAddr);
   } else {
       status = PR_GetHostByName(mHostName, dbbuf, sizeof(dbbuf), &hostEnt);
   }
@@ -1643,10 +1643,10 @@ nsSocketTransport::OpenOutputStream(PRUint32 startPosition, nsIOutputStream* *re
     mWriteObserver = null_nsCOMPtr();
     mWriteContext  = null_nsCOMPtr();
 
-  	// We want a pipe here so the caller can "write" into one end
-  	// and the other end (aWriteStream) gets the data. This data
-  	// is then written to the underlying socket when nsSocketTransport::doWrite()
-  	// is called.
+    // We want a pipe here so the caller can "write" into one end
+    // and the other end (aWriteStream) gets the data. This data
+    // is then written to the underlying socket when nsSocketTransport::doWrite()
+    // is called.
 
     nsCOMPtr<nsIBufferOutputStream> out;
     nsCOMPtr<nsIBufferInputStream>  in;

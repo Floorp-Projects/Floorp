@@ -27,27 +27,27 @@
 [uuid(8D9430E0-0FB4-11d3-9DE6-0010A4053FD0)]
 interface nsIHTTPNotify : nsINetNotify {
     /* Before an HTTP request is sent to the server, this method is called.
-	 * The implementor of this method can the chose to set any additional
-	 * headers for this request before the request is actually sent to the
-	 * server. The HTTP PI (protocol interpreter) blocks on this call until
-	 * it returns.
+     * The implementor of this method can the chose to set any additional
+     * headers for this request before the request is actually sent to the
+     * server. The HTTP PI (protocol interpreter) blocks on this call until
+     * it returns.
      *
      * ARGUMENTS:
-	 * aContext: An nsISupports pointer, that should be queried for nsIHTTPChannel.
+     * aContext: An nsISupports pointer, that should be queried for nsIHTTPChannel.
      *
      * RETURNS: nsresult
-	 */
+     */
     void ModifyRequest(in nsISupports aContext);
 
-	/* After an HTTP server response is received, this method is called
-	 * asyncronously. The implementor can interrogate the nsIHTTPChannel as
-	 * it deems necessary. The HTTP PI (protocol interpreter) doesn't wait 
-	 * for this method to return.
-	 *
-	 * ARGUMENTS:
-	 * aContext: An nsISupport pointer, that should be queried for nsIHTTPChannel.
-	 * 
-	 * RETURNS: nsresult
-	 */
-	void AsyncExamineResponse(in nsISupports aContext);
+    /* After an HTTP server response is received, this method is called
+     * asyncronously. The implementor can interrogate the nsIHTTPChannel as
+     * it deems necessary. The HTTP PI (protocol interpreter) doesn't wait 
+     * for this method to return.
+     *
+     * ARGUMENTS:
+     * aContext: An nsISupport pointer, that should be queried for nsIHTTPChannel.
+     * 
+     * RETURNS: nsresult
+     */
+    void AsyncExamineResponse(in nsISupports aContext);
 };

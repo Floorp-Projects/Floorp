@@ -258,7 +258,7 @@ nsIOService::MakeAbsolute(const char *aSpec,
 
     if (aSpec == nsnull)
         return aBaseURI->GetSpec(result);
-	
+    
     char* scheme;
     rv = GetScheme(aSpec, &scheme);
     if (NS_SUCCEEDED(rv)) {

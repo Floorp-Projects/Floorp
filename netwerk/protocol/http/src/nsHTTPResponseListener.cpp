@@ -100,7 +100,7 @@ nsHTTPResponseListener::OnDataAvailable(nsIChannel* channel,
     nsresult rv = NS_OK;
     PRUint32 actualBytesRead;
     NS_ASSERTION(i_pStream, "No stream supplied by the transport!");
-	nsCOMPtr<nsIBufferInputStream> bufferInStream = do_QueryInterface(i_pStream);
+    nsCOMPtr<nsIBufferInputStream> bufferInStream = do_QueryInterface(i_pStream);
 
     PR_LOG(gHTTPLog, PR_LOG_DEBUG, 
            ("nsHTTPResponseListener::OnDataAvailable [this=%x].\n"
@@ -153,7 +153,7 @@ nsHTTPResponseListener::OnDataAvailable(nsIChannel* channel,
 #else
             rv = ParseHTTPHeader(bufferInStream, i_Length, &actualBytesRead);
 #endif
-			NS_ASSERTION(i_Length - actualBytesRead <= i_Length, "wrap around");
+            NS_ASSERTION(i_Length - actualBytesRead <= i_Length, "wrap around");
             i_Length -= actualBytesRead;
         }
 
@@ -806,13 +806,12 @@ nsresult nsHTTPResponseListener::ProcessRedirection(PRInt32 aStatusCode)
       if (NS_SUCCEEDED(rv)) {
 
 #if defined(PR_LOGGING)
-        char *newURLSpec;
-
-        newURLSpec = nsnull;
+        char *newURLSpec = nsnull;
         newURL->GetSpec(&newURLSpec);
         PR_LOG(gHTTPLog, PR_LOG_DEBUG, 
                ("ProcessRedirect [this=%x].\tRedirecting to: %s.\n",
                 this, newURLSpec));
+        CRTFREEIF(newURLSpec);
 #endif /* PR_LOGGING */
 #if 0
       // Expanded inline to avoid linking with neckoutils....  (temporary)

@@ -287,8 +287,8 @@ nsHTTPChannel::GetContentType(char * *aContentType)
     }
 
     // if all else fails treat it as text/html?
-	if (!*aContentType) 
-		*aContentType = nsCRT::strdup(DUMMY_TYPE);
+    if (!*aContentType) 
+        *aContentType = nsCRT::strdup(DUMMY_TYPE);
     if (!*aContentType) {
         rv = NS_ERROR_OUT_OF_MEMORY;
     } else {
@@ -372,8 +372,8 @@ nsHTTPChannel::GetResponseStatus(PRUint32  *o_Status)
 {
     if (!mConnected) 
         Open();
-	if (mResponse)
-		return mResponse->GetStatus(o_Status);
+    if (mResponse)
+        return mResponse->GetStatus(o_Status);
     return NS_ERROR_FAILURE; // NS_ERROR_NO_RESPONSE_YET ? 
 }
 
@@ -382,8 +382,8 @@ nsHTTPChannel::GetResponseString(char* *o_String)
 {
     if (!mConnected) 
         Open();
-	if (mResponse)
-		return mResponse->GetStatusString(o_String);
+    if (mResponse)
+        return mResponse->GetStatusString(o_String);
     return NS_ERROR_FAILURE; // NS_ERROR_NO_RESPONSE_YET ? 
 }
 

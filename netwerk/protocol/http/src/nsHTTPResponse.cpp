@@ -58,7 +58,7 @@ nsresult nsHTTPResponse::GetContentLength(PRInt32* o_Value)
         nsXPIDLCString value;
         nsAutoString str;
 
-	    mHeaders.GetHeader(nsHTTPAtoms::Content_Length, getter_Copies(value));
+        mHeaders.GetHeader(nsHTTPAtoms::Content_Length, getter_Copies(value));
         str = value;
         *o_Value = str.ToInteger(&err);
         return NS_OK;
