@@ -43,7 +43,7 @@
  * Based on original code from nsIStringStream.h
  */
 
-#include "nsISupports.idl"
+#include "nsIInputStream.idl"
 
 /**
  * nsIStringInputStream
@@ -52,7 +52,7 @@
  * nsIInputStream implementation with a simple character array.
  */
 [scriptable, uuid(450cd2d4-f0fd-424d-b365-b1251f80fd53)]
-interface nsIStringInputStream : nsISupports
+interface nsIStringInputStream : nsIInputStream
 {
     /**
      * SetData - assign data to the input stream (copied on assignment).
@@ -93,49 +93,39 @@ interface nsIStringInputStream : nsISupports
 
 %{C++
 
-//----------------------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
 // C++ factory methods
-//----------------------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
 
 #include "nsIInputStream.h"
-#include "nsIOutputStream.h"
 #include "nsString.h"
 
-//----------------------------------------------------------------------------------------
-extern "C" NS_COM nsresult NS_NewStringInputStream(
-    nsIInputStream** aStreamResult,
-    const nsAString& aStringToRead);
-    // Factory method to get an nsInputStream from a string.  Result will implement all the
-    // file stream interfaces in nsIFileStream.h
+//-----------------------------------------------------------------------------
+// Factory method to get an nsInputStream from an nsAString.  Result will
+// implement nsIStringInputStream and nsIRandomAccessStore
+extern "C" NS_COM nsresult
+NS_NewStringInputStream(nsIInputStream** aStreamResult,
+                        const nsAString& aStringToRead);
 
-//----------------------------------------------------------------------------------------
-extern "C" NS_COM nsresult NS_NewCStringInputStream(
-    nsIInputStream** aStreamResult,
-    const nsACString& aStringToRead);
-    // Factory method to get an nsInputStream from a cstring.  Result will implement all the
-    // file stream interfaces in nsIFileStream.h
+//-----------------------------------------------------------------------------
+// Factory method to get an nsInputStream from an nsACString.  Result will
+// implement nsIStringInputStream and nsIRandomAccessStore
+extern "C" NS_COM nsresult
+NS_NewCStringInputStream(nsIInputStream** aStreamResult,
+                         const nsACString& aStringToRead);
 
-//----------------------------------------------------------------------------------------
-extern "C" NS_COM nsresult NS_NewCharInputStream(
-    nsISupports** aStreamResult,
-    const char* aStringToRead);
-    // Factory method to get an nsInputStream from a string.  Result will implement all the
-    // file stream interfaces in nsIFileStream.h
+//-----------------------------------------------------------------------------
+// Factory method to get an nsInputStream from a string.  Result will
+// implement nsIStringInputStream and nsIRandomAccessStore
+extern "C" NS_COM nsresult
+NS_NewCharInputStream(nsIInputStream** aStreamResult,
+                      const char* aStringToRead);
 
-//----------------------------------------------------------------------------------------
-extern "C" NS_COM nsresult NS_NewCharOutputStream(
-    nsISupports** aStreamResult,
-    char** aStringToChange);
-    // Factory method to get an nsOutputStream to a string.  Result will implement all the
-    // file stream interfaces in nsIFileStream.h
-
-
-//----------------------------------------------------------------------------------------
-extern "C" NS_COM nsresult NS_NewByteInputStream(
-    nsISupports** aStreamResult,
-    const char* aStringToRead,
-    PRInt32 aLength);
-    // Factory method to get an nsInputStream from a string.  Result will implement all the
-    // 
-
+//-----------------------------------------------------------------------------
+// Factory method to get an nsInputStream from a byte buffer.  Result will
+// implement nsIStringInputStream and nsIRandomAccessStore
+extern "C" NS_COM nsresult
+NS_NewByteInputStream(nsIInputStream** aStreamResult,
+                      const char* aStringToRead,
+                      PRInt32 aLength);
 %}

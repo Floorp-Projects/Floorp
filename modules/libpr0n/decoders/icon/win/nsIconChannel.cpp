@@ -408,11 +408,14 @@ NS_IMETHODIMP nsIconChannel::AsyncOpen(nsIStreamListener *aListener, nsISupports
             aListener->OnStartRequest(this, ctxt);
 
             // turn our string into a stream...and make the appropriate calls on our consumer
-            nsCOMPtr<nsISupports> streamSupports;
-            NS_NewByteInputStream(getter_AddRefs(streamSupports), iconBuffer.get(), iconBuffer.Length());
-            nsCOMPtr<nsIInputStream> inputStr (do_QueryInterface(streamSupports));
-            aListener->OnDataAvailable(this, ctxt, inputStr, 0, iconBuffer.Length());
-            aListener->OnStopRequest(this, ctxt, NS_OK);
+            nsCOMPtr<nsIInputStream> inputStr;
+            rv = NS_NewByteInputStream(getter_AddRefs(inputStr),
+                                       iconBuffer.get(),
+                                       iconBuffer.Length());
+            if (NS_SUCCEEDED(rv))
+                aListener->OnDataAvailable(this, ctxt, inputStr, 0,
+                                           iconBuffer.Length());
+            aListener->OnStopRequest(this, ctxt, rv);
           } // if we have a mask buffer to apply
         } // if we got the color bit map
 

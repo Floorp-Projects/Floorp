@@ -907,17 +907,12 @@ nsXMLHttpRequest::StreamReaderFunc(nsIInputStream* in,
     // We need to wrap the data in a new lightweight stream and pass that
     // to the parser, because calling ReadSegments() recursively on the same
     // stream is not supported.
-    nsCOMPtr<nsISupports> supportsStream;
-    rv = NS_NewByteInputStream(getter_AddRefs(supportsStream),fromRawSegment,count);
+    nsCOMPtr<nsIInputStream> copyStream;
+    rv = NS_NewByteInputStream(getter_AddRefs(copyStream), fromRawSegment, count);
 
     if (NS_SUCCEEDED(rv)) {
-      nsCOMPtr<nsIInputStream> copyStream(do_QueryInterface(supportsStream));
-      if (copyStream) {
-        rv = xmlHttpRequest->mXMLParserStreamListener->OnDataAvailable(xmlHttpRequest->mReadRequest,xmlHttpRequest->mContext,copyStream,toOffset,count);
-      } else {
-        NS_ERROR("NS_NewByteInputStream did not give out nsIInputStream!");
-        rv = NS_ERROR_UNEXPECTED;
-      }
+      NS_ASSERTION(copyStream, "NS_NewByteInputStream lied");
+      rv = xmlHttpRequest->mXMLParserStreamListener->OnDataAvailable(xmlHttpRequest->mReadRequest,xmlHttpRequest->mContext,copyStream,toOffset,count);
     }
   }
 
