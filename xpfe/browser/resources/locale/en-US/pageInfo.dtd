@@ -58,8 +58,8 @@
 <!ENTITY  generalExpires        "Expires:">
 <!ENTITY  generalEncoding       "Encoding:">
 <!ENTITY  generalMeta           "Meta:">
-<!ENTITY  generalMetaName       "Name:">
-<!ENTITY  generalMetaContent    "Content:">
+<!ENTITY  generalMetaName       "Name">
+<!ENTITY  generalMetaContent    "Content">
 
 <!ENTITY  formsTab              "Forms">
 <!ENTITY  formsAccesskey        "f">
