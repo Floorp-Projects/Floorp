@@ -438,6 +438,19 @@ nsContentUtils::CheckSameOrigin(nsIDOMNode *aTrustedNode,
 
   nsCOMPtr<nsIURI> uri1;
   doc1->GetDocumentURL(getter_AddRefs(uri1));
+
+  // If the trusted node doesn't have a uri we can't check security against it
+  if (!uri1) {
+    return NS_ERROR_DOM_SECURITY_ERR;
+  }
+
+  // Chrome can do anything
+  PRBool isChrome;
+  nsresult rv = uri1->SchemeIs("chrome", &isChrome);
+  if (NS_SUCCEEDED(rv) && isChrome) {
+      return NS_OK;
+  }
+
   nsCOMPtr<nsIURI> uri2;
   doc2->GetDocumentURL(getter_AddRefs(uri2));
   
