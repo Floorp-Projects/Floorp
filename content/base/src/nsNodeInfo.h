@@ -48,8 +48,8 @@ struct nsNodeInfoInner
   nsNodeInfoInner()
     : mName(nsnull), mPrefix(nsnull), mNamespaceID(kNameSpaceID_None) {}
 
-  static PR_CALLBACK PRIntn KeyCompare(const void *key1, const void *key2);
-  static PR_CALLBACK PLHashNumber GetHashValue(const void *key);
+  static PRIntn PR_CALLBACK KeyCompare(const void *key1, const void *key2);
+  static PLHashNumber PR_CALLBACK GetHashValue(const void *key);
 
   nsIAtom*            mName;
   nsIAtom*            mPrefix;
