@@ -3478,8 +3478,8 @@ nsListControlFrame::KeyPress(nsIDOMEvent* aKeyEvent)
     PRBool isAlt     = PR_FALSE;
     PRBool isMeta    = PR_FALSE;
     keyEvent->GetCtrlKey(&isControl);
-    keyEvent->GetCtrlKey(&isAlt);
-    keyEvent->GetCtrlKey(&isMeta);
+    keyEvent->GetAltKey(&isAlt);
+    keyEvent->GetMetaKey(&isMeta);
     if (isControl || isAlt || isMeta) {
       return NS_OK;
     }
