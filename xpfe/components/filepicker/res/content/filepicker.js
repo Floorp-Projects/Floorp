@@ -153,7 +153,7 @@ function onOK()
 function onCancel()
 {
   // Close the window.
-  retvals.retval = nsIFilePicker.returnCancel;
+  retvals.buttonStatus = nsIFilePicker.returnCancel;
   return true;
 }
 
