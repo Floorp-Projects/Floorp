@@ -789,12 +789,16 @@ const nsIFilePicker = Components.interfaces.nsIFilePicker;
 function GetLocalFileURL(filterType)
 {
   var fp = Components.classes["@mozilla.org/filepicker;1"].createInstance(nsIFilePicker);
-  fp.init(window, GetString("OpenHTMLFile"), nsIFilePicker.modeOpen);
 
   if (filterType == "img")
+  {
+    fp.init(window, GetString("SelectImageFile"), nsIFilePicker.modeOpen);
     fp.appendFilters(nsIFilePicker.filterImages);
+  }
   else
   {
+    fp.init(window, GetString("OpenHTMLFile"), nsIFilePicker.modeOpen);
+
     // When loading into Composer, direct user to prefer HTML files and text files,
     //   so we call separately to control the order of the filter list
     fp.appendFilters(nsIFilePicker.filterHTML);
