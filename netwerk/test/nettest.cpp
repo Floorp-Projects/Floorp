@@ -34,7 +34,6 @@
 #include "nsIComponentManager.h"
 #include "nsIServiceManager.h"
 #include "nsIEventQueueService.h"
-#include "nsXPComCIID.h"
 #include "nsString2.h"
 
 

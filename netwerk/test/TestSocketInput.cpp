@@ -22,7 +22,6 @@
 #endif
 
 #include "nscore.h"
-#include "nsXPComCIID.h"
 #include "nsISocketTransportService.h"
 #include "nsIEventQueueService.h"
 #include "nsIServiceManager.h"

@@ -33,7 +33,6 @@ CPPSRCS		=  			\
 BASE_LIBS =	     \
 	-lreg	     \
 	-lxpcom	     \
-	-lraptorbase \
 	-lnetwerk    \
 	$(NULL)
 
