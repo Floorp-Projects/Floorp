@@ -119,7 +119,7 @@ enum nsWindowType {     // Don't alter previously encoded enum values - 3rd part
   // plugin window
   eWindowType_plugin,
   // java plugin window
-  eWindowType_java,
+  eWindowType_java
 };
 
 enum nsBorderStyle
