@@ -27,6 +27,8 @@ use Bug;
 require "CGI.pl";
 $::lockcount = 0;
 
+ConnectToDatabase();
+
 sub Log {
     my ($str) = (@_);
     Lock();
@@ -63,11 +65,8 @@ sub Unlock {
 }
 
 if ( !defined $::FORM{'buglist'} ) {
-  print "Content-type: text/html\n\n";
-  PutHeader("Move Bugs");
   print "To move bugs, perform a ";
   print "<A HREF=\"query.cgi\">query</A> and change several bugs at once.\n";
-  PutFooter();
   exit;
 }
 
@@ -84,34 +83,41 @@ unless ($exporter =~ /(lchaing\@netscape.com|leger\@netscape.com|endico\@mozilla
 my $xml = "";
 $xml .= Bug::XML_Header( Param("urlbase"), $::param{'version'}, 
                          Param("maintainer"), $exporter );
+print "<P>\n";
 foreach my $id (split(/:/, $::FORM{'buglist'})) {
   my $bug = new Bug($id, $::userid);
   $xml .= $bug->emitXML;
+  if (!$bug->error) {
+    SendSQL("UPDATE bugs SET bug_status =\"MOVED\" where bug_id=\"$id\"");
+    SendSQL("UPDATE bugs SET resolution =\"\" where bug_id=\"$id\"");
+    my $exp = $exporter;
+    $exp =~ s/@/\@/;
+    my $comment = "Bug moved to http://bugscape.netscape.com/ by $exp.\n";
+    SendSQL("INSERT INTO longdescs (bug_id, who, bug_when, thetext) VALUES " .
+        "($id, " . DBNameToIdAndCheck($exporter) 
+                 . ", now(), " . SqlQuote($comment) . ")");
+    print "Bug $id moved to http://bugscape.netscape.com/.<BR>\n";
+  }
 }
+print "<P>\n";
 $xml .= Bug::XML_Footer;
 
+my $buglist = $::FORM{'buglist'};
+$buglist =~ s/:/,/g;
 my $host = Param("urlbase");
 $host =~ s#http://([^/]+)/.*#$1#;
 my $to = "endico\@localhost";
 my $msg = "To: $to\n";
 $msg .= "From: Bugzilla <bugzilla\@$host>\n";
-$msg .= "Subject: Moving bugs $::FORM{'buglist'}\n\n";
+$msg .= "Subject: Moving bugs $buglist\n\n";
 $msg .= $xml . "\n";
 
 open(SENDMAIL,
   "|/usr/lib/sendmail -ODeliveryMode=background -t") ||
     die "Can't open sendmail";
-
 print SENDMAIL $msg;
 close SENDMAIL;
 
-my $buglist = $::FORM{'buglist'};
-$buglist =~ s/:/,/g;
 my $logstr = "XML: bugs $buglist sent to $to";
 Log($logstr);
 
-print "Content-type: text/html\n\n";
-PutHeader("Moved Bugs");
-print "<P>Bugs $buglist were moved to $to.<P>";
-print "<P>(This function incomplete. You must close these bugs yourself.)<P>";
-PutFooter();
