@@ -539,6 +539,7 @@ nsMimeXULEmitter::DumpAttachmentMenu()
   UtilityWriteCRLF("<box align=\"horizontal\">");
 
   char *escapedUrl = nsnull;
+  char *escapedName = nsnull;
   nsCOMPtr<nsIMsgMessageUrl> messageUrl;
   char *urlString = nsnull;
 
@@ -557,7 +558,15 @@ nsMimeXULEmitter::DumpAttachmentMenu()
         continue;
       
       UtilityWrite("<menuitem value=\"");
-      UtilityWrite(attachInfo->displayName);
+
+      escapedName = nsEscape(attachInfo->displayName, url_Path);
+      if (escapedName)
+      {
+        UtilityWrite(escapedName);
+      }
+      else
+        UtilityWrite(attachInfo->displayName);
+
       UtilityWrite("\" oncommand=\"OpenAttachURL('");
       escapedUrl = nsEscape(attachInfo->urlSpec, url_Path);
       if (escapedUrl)
@@ -571,7 +580,12 @@ nsMimeXULEmitter::DumpAttachmentMenu()
       }
 
       UtilityWrite("','");
-      UtilityWrite(attachInfo->displayName);
+      if (escapedName)
+      {
+        UtilityWrite(escapedName);
+      }
+      else
+        UtilityWrite(attachInfo->displayName);
       UtilityWrite("','");
       
       nsCOMPtr<nsIMsgMessageUrl> messageUrl = do_QueryInterface(mURL, &rv);
@@ -583,7 +597,9 @@ nsMimeXULEmitter::DumpAttachmentMenu()
         nsCRT::free(urlString);
         urlString = nsnull;
       }
+
       UtilityWriteCRLF("' );\"  />");
+      PR_FREEIF(escapedName);
     }
     UtilityWriteCRLF("</menupopup>");
     UtilityWriteCRLF("</menu>");
