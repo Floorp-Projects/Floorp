@@ -2171,43 +2171,20 @@ nsresult
 nsHTMLInputElement::FireEventForAccessibility(nsIPresContext* aPresContext,
                                               const nsAString& aEventType)
 {
-  nsCOMPtr<nsIEventListenerManager> listenerManager;
-
-  nsresult rv = GetListenerManager(getter_AddRefs(listenerManager));
-  if ( !listenerManager )
-    return rv;
-
-  // Create the DOM event
-  nsCOMPtr<nsIDOMEvent> domEvent;
-  rv = listenerManager->CreateEvent(aPresContext,
-                                    nsnull, 
-                                    NS_LITERAL_STRING("MutationEvents"),
-                                    getter_AddRefs(domEvent) );
-  if ( !domEvent )
-    return NS_ERROR_FAILURE;
-
-  // Initialize the mutation event
-  nsCOMPtr<nsIDOMMutationEvent> mutEvent(do_QueryInterface(domEvent));
-  if ( !mutEvent )
-    return NS_ERROR_FAILURE;
-  nsAutoString empty;
-  mutEvent->InitMutationEvent( aEventType, PR_TRUE, PR_TRUE, nsnull, empty, empty, empty, nsIDOMMutationEvent::MODIFICATION);
-
-  // Set the target of the event to this nsHTMLInputElement, which should be checkbox content??
-  nsCOMPtr<nsIPrivateDOMEvent> privEvent(do_QueryInterface(domEvent));
-  if ( ! privEvent )
-    return NS_ERROR_FAILURE;
-  nsCOMPtr<nsIDOMEventTarget> targ(do_QueryInterface(NS_STATIC_CAST(nsIDOMHTMLInputElement *, this)));
-  if ( ! targ )
-    return NS_ERROR_FAILURE;
-  privEvent->SetTarget(targ);
-
-  // Dispatch the event
-  nsCOMPtr<nsIDOMEventReceiver> eventReceiver(do_QueryInterface(listenerManager));
-  if ( ! eventReceiver )
-    return NS_ERROR_FAILURE;
-  PRBool noDefault;
-  eventReceiver->DispatchEvent(domEvent, &noDefault);
+  nsCOMPtr<nsIDOMEvent> event;
+  nsCOMPtr<nsIEventListenerManager> manager;
+  nsresult rv = GetListenerManager(getter_AddRefs(manager));
+  if (manager &&
+      NS_SUCCEEDED(manager->CreateEvent(aPresContext, nsnull, NS_LITERAL_STRING("Events"), getter_AddRefs(event)))) {
+    event->InitEvent(aEventType, PR_TRUE, PR_TRUE);
+    PRBool noDefault;
+    nsCOMPtr<nsIEventStateManager> esm;
+    aPresContext->GetEventStateManager(getter_AddRefs(esm));
+    if (esm) {
+      nsCOMPtr<nsISupports> target(do_QueryInterface(NS_STATIC_CAST(nsIDOMHTMLInputElement *, this)));
+      esm->DispatchNewEvent(target, event, &noDefault);
+    }
+  }
 
   return NS_OK;
 }
