@@ -3862,19 +3862,25 @@ PRBool nsWindow::DispatchMouseEvent(PRUint32 aEventType, nsPoint* aPoint)
                                    (abs(gLastMousePoint.y - mp.y) < kDoubleClickMoveThreshold);
 
   // we're going to time double-clicks from mouse *up* to next mouse *down*
-  if (aEventType == NS_MOUSE_LEFT_DOUBLECLICK ||
-      aEventType == NS_MOUSE_RIGHT_DOUBLECLICK) {
-    event.message = (aEventType == NS_MOUSE_LEFT_DOUBLECLICK) ? 
-                     NS_MOUSE_LEFT_BUTTON_DOWN : NS_MOUSE_RIGHT_BUTTON_DOWN;
+  if (aEventType == NS_MOUSE_LEFT_DOUBLECLICK) {
+    event.message = NS_MOUSE_LEFT_BUTTON_DOWN;
     gLastClickCount = 2;
-    event.clickCount = gLastClickCount;
-  } else if (aEventType == NS_MOUSE_LEFT_BUTTON_UP) {
+  }
+  else if (aEventType == NS_MOUSE_MIDDLE_DOUBLECLICK) {
+    event.message = NS_MOUSE_MIDDLE_BUTTON_DOWN;
+    gLastClickCount = 2;
+  }
+  else if (aEventType == NS_MOUSE_RIGHT_DOUBLECLICK) {
+    event.message = NS_MOUSE_RIGHT_BUTTON_DOWN;
+    gLastClickCount = 2;
+  }
+  else if (aEventType == NS_MOUSE_LEFT_BUTTON_UP || aEventType == NS_MOUSE_MIDDLE_BUTTON_UP || aEventType == NS_MOUSE_RIGHT_BUTTON_UP) {
     // remember when this happened for the next mouse down
     DWORD pos = ::GetMessagePos();
     gLastMousePoint.x = LOWORD(pos);
     gLastMousePoint.y = HIWORD(pos);
-
-  } else if (aEventType == NS_MOUSE_LEFT_BUTTON_DOWN) {
+  }
+  else if (aEventType == NS_MOUSE_LEFT_BUTTON_DOWN || aEventType == NS_MOUSE_MIDDLE_BUTTON_DOWN || aEventType == NS_MOUSE_RIGHT_BUTTON_DOWN) {
     // now look to see if we want to convert this to a double- or triple-click
    
 #ifdef NS_DEBUG_XX
@@ -3889,7 +3895,8 @@ PRBool nsWindow::DispatchMouseEvent(PRUint32 aEventType, nsPoint* aPoint)
     }
     // Set last Click time on MouseDown only
     gLastMouseDownTime = curMsgTime;
-  } else if (aEventType == NS_MOUSE_MOVE && !insideMovementThreshold) {
+  }
+  else if (aEventType == NS_MOUSE_MOVE && !insideMovementThreshold) {
     gLastClickCount = 0;
   }
   event.clickCount = gLastClickCount;
