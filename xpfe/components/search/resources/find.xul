@@ -6,6 +6,9 @@
 [
 <!ENTITY window.title.label          "Find Local Data">
 
+<!ENTITY search1.label               "Search for items in ">
+<!ENTITY search2.label               " whose ">
+
 <!ENTITY bookmarks.label             "Bookmarks">
 <!ENTITY history.label               "History">
 
@@ -35,12 +38,12 @@
 		<html:table>
 			<html:tr>
 				<html:td>
-				Find items in 
+				&search1.label; 
 					<html:select id="datasource">
 						<html:option value="rdf:bookmarks">&bookmarks.label;</html:option>
 						<html:option value="rdf:history">&history.label;</html:option>
 					</html:select>
-				 whose
+				 &search2.label;
 				<html:p />
 				</html:td>
 			</html:tr>
