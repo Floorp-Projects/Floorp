@@ -19,7 +19,7 @@
  * Keith Visco, kvisco@ziplink.net
  *    -- original author.
  *
- * $Id: DOMHelper.h,v 1.2 2000/04/12 22:32:17 nisheeth%netscape.com Exp $
+ * $Id: DOMHelper.h,v 1.3 2000/04/19 10:31:32 kvisco%ziplink.net Exp $
  */
 
 #ifndef TRANSFRMX_DOMHELPER_H
@@ -31,7 +31,7 @@
 #include "dom.h"
 #include "HashTable.h"
 #include "MITREObject.h"
-
+#include "primitives.h"
 
 
 //----------------------/
@@ -59,7 +59,7 @@ class OrderInfo : public MITREObject {
 /**
  * A class used to overcome DOM 1.0 deficiencies
  * @author <a href="mailto:kvisco@ziplink.net">Keith Visco</a>
- * @version $Revision: 1.2 $ $Date: 2000/04/12 22:32:17 $
+ * @version $Revision: 1.3 $ $Date: 2000/04/19 10:31:32 $
 **/
 class DOMHelper {
 
@@ -83,6 +83,12 @@ public:
     * @return the node which appears first in document order
    **/
     Node* appearsFirst(Node* node1, Node* node2);
+
+    /**
+     * Generates a unique ID for the given node and places the result in
+     * dest
+    **/
+    void generateId(Node* node, String& dest);
 
     /**
      * Returns the child number of the given node. Numbering
