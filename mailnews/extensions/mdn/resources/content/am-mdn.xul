@@ -40,8 +40,8 @@ Rights Reserved.
       <radiogroup id="identity.use_custom_prefs" wsm_persist="true" genericattr="true" 
                   preftype="bool" prefstring="mail.identity.%identitykey%.use_custom_prefs" 
                   oncommand="EnableDisableCustomSettings();">
-        <radio value="false" label="&useGlobalPrefs.label;"/>
-        <radio value="true" label="&useCustomPrefs.label;"/> 
+        <radio id="identity.select_global_prefs" value="false" label="&useGlobalPrefs.label;"/>
+        <radio id="identity.select_custom_prefs" value="true" label="&useCustomPrefs.label;"/> 
       </radiogroup>
     </hbox>
 

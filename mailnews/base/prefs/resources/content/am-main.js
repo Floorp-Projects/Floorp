@@ -38,6 +38,11 @@
 
 const nsIFilePicker = Components.interfaces.nsIFilePicker;
 
+function onInit() 
+{
+  setupSignatureItems();
+}
+
 function onAdvanced()
 {
     dump("onAdvanced..\n");
@@ -103,4 +108,26 @@ function GetSigFolder()
         dump("failed to get signature folder..\n");
     }
     return sigFolder;
+}
+
+// If a signature is need to be attached, the associated items which
+// displays the absolute path to the signature (in a textbox) and the way
+// to select a new signature file (a button) are enabled. Otherwise, they
+// are disabled. Check to see if the attachSignature is locked to block
+// broadcasting events.
+function setupSignatureItems()
+{ 
+   var broadcaster = document.getElementById("broadcaster_attachSignature");
+
+   var attachSignature = document.getElementById("identity.attachSignature");
+   var checked = attachSignature.checked;
+   var locked = getAccountValueIsLocked(attachSignature);
+
+   if (checked)
+     broadcaster.removeAttribute("disabled");
+   else
+     broadcaster.setAttribute("disabled", "true");
+   if (locked) {
+     broadcaster.setAttribute("disabled","true");
+   }
 }

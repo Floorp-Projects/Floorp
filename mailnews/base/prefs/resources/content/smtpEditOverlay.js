@@ -47,6 +47,7 @@ var gSmtpPort;
 var gSmtpUseUsername;
 var gSmtpAuthMethod;
 var gSmtpTrySSL;
+var gSmtpPrefBranch;
 
 var gSavedUsername="";
 
@@ -84,6 +85,47 @@ function initSmtpSettings(server) {
 
     onUseUsername(gSmtpUseUsername, false);
     updateControls();
+    onLockPreference();
+}
+
+// Disables xul elements that have associated preferences locked.
+function onLockPreference()
+{
+    var defaultSmtpServerKey = gPrefBranch.getCharPref("mail.smtp.defaultserver");
+    var finalPrefString = "mail.smtpserver." + defaultSmtpServerKey + "."; 
+
+    var prefService = Components.classes["@mozilla.org/preferences-service;1"].getService(Components.interfaces.nsIPrefService);
+
+    var allPrefElements = [
+      { prefstring:"hostname", id:"smtp.hostname"},
+      { prefstring:"port", id:"smtp.port"},
+      { prefstring:"use_username", id:"smtp.useUsername"},
+      { prefstring:"try_ssl", id:"smtp.trySSL"}
+    ];
+
+    gSmtpPrefBranch = prefService.getBranch(finalPrefString);
+    disableIfLocked( allPrefElements );
+} 
+
+// Does the work of disabling an element given the array which contains xul id/prefstring pairs.
+// Also saves the id/locked state in an array so that other areas of the code can avoid
+// stomping on the disabled state indiscriminately.
+function disableIfLocked( prefstrArray )
+{
+  for (var i=0; i<prefstrArray.length; i++) {
+    var id = prefstrArray[i].id;
+    var element = document.getElementById(id);
+    if (gSmtpPrefBranch.prefIsLocked(prefstrArray[i].prefstring)) {
+      if (id == "smtp.trySSL")
+      {
+        document.getElementById("smtp.neverSecure").setAttribute("disabled", "true");
+        document.getElementById("smtp.sometimesSecure").setAttribute("disabled", "true");
+        document.getElementById("smtp.alwaysSecure").setAttribute("disabled", "true");
+      }
+      else
+        element.setAttribute("disabled", "true");
+    }
+  }
 }
 
 function saveSmtpSettings(server)

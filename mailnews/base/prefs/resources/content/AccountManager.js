@@ -583,8 +583,6 @@ function updateButtons(tree,serverId) {
   //  under the IFRAME
   if (nsPrefBranch.prefIsLocked(addAccountButton.getAttribute("prefstring")))
     canCreate = false;
-  //if (nsPrefBranch.prefIsLocked(duplicateButton.getAttribute("prefstring")))
-  //  canDuplicate = false;
   if (nsPrefBranch.prefIsLocked(setDefaultButton.getAttribute("prefstring")))
     canSetDefault = false;
   if (nsPrefBranch.prefIsLocked(removeButton.getAttribute("prefstring")))

@@ -66,7 +66,7 @@ function menu_new_init()
     nsPrefBranch = prefService.getBranch(null);
   }
   var newAccountItem = document.getElementById('newAccountMenuItem');
-  if (nsPrefBranch.prefIsLocked("mail.accountmanager.accounts"))
+  if (nsPrefBranch.prefIsLocked("mail.disable_new_account_addition"))
     newAccountItem.setAttribute("disabled","true");
 }
 

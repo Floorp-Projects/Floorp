@@ -124,7 +124,7 @@ function ArrangeAccountCentralItems(server, protocolInfo, msgFolder)
 
         /***** Accounts : Begin *****/
 
-        var canShowCreateAccount = ! nsPrefBranch.prefIsLocked("mail.accountmanager.accounts");
+        var canShowCreateAccount = ! nsPrefBranch.prefIsLocked("mail.disable_new_account_addition");
         SetItemDisplay("CreateAccount", canShowCreateAccount);
           
         /***** Accounts : End *****/

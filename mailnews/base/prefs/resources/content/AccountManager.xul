@@ -48,7 +48,7 @@
       </tree>
       
       <button label="&addAccountButton.label;" oncommand="onAddAccount(event);" id="addAccountButton"
-              prefstring="mail.accountmanager.accounts"/>
+              prefstring="mail.disable_new_account_addition"/>
       <button label="&setDefaultButton.label;" oncommand="onSetDefault(event);" disabled="true" id="setDefaultButton"
               prefstring="mail.disable_button.set_default_account"/>
   

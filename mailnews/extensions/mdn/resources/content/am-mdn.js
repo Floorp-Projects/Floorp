@@ -33,6 +33,8 @@ var otherCasesPref;
 var otherCasesLabel;
 var receiptArriveLabel;
 var receiptRequestLabel;
+var gIdentity;
+var gMdnPrefBranch;
 
 function onInit() 
 {
@@ -82,6 +84,10 @@ function EnableDisableCustomSettings() {
     receiptRequestLabel.removeAttribute("disabled");
   }
   EnableDisableAllowedReceipts();
+  // Lock id based prefs
+  onLockPreference("mail.identity", gIdentity.key);
+  // Lock server based prefs
+  onLockPreference("mail.server", gIncomingServer.key);
   return true;
 }
 
@@ -105,4 +111,52 @@ function EnableDisableAllowedReceipts() {
     }
   }
   return true;
+}
+
+function onPreInit(account, accountValues)
+{
+  gIdentity = account.defaultIdentity;
+  gIncomingServer = account.incomingServer;
+}
+
+// Disables xul elements that have associated preferences locked.
+function onLockPreference(initPrefString, keyString)
+{
+    var finalPrefString; 
+
+    var prefService = Components.classes["@mozilla.org/preferences-service;1"].getService(Components.interfaces.nsIPrefService);
+
+    var allPrefElements = [
+      { prefstring:"request_return_receipt_on", id:"identity.request_return_receipt_on"},
+      { prefstring:"select_custom_prefs", id:"identity.select_custom_prefs"},
+      { prefstring:"select_global_prefs", id:"identity.select_global_prefs"},
+      { prefstring:"incorporate_return_receipt", id:"server.incorporate_return_receipt"},
+      { prefstring:"never_return", id:"never_return"},
+      { prefstring:"return_some", id:"return_some"},
+      { prefstring:"mdn_not_in_to_cc", id:"server.mdn_not_in_to_cc"},
+      { prefstring:"mdn_outside_domain", id:"server.mdn_outside_domain"},
+      { prefstring:"mdn_other", id:"server.mdn_other"},
+    ];
+
+    finalPrefString = initPrefString + "." + keyString + ".";
+    gMdnPrefBranch = prefService.getBranch(finalPrefString);
+
+    disableIfLocked( allPrefElements );
+} 
+
+function disableIfLocked( prefstrArray )
+{
+  for (var i=0; i<prefstrArray.length; i++) {
+    var id = prefstrArray[i].id;
+    var element = document.getElementById(id);
+    if (gMdnPrefBranch.prefIsLocked(prefstrArray[i].prefstring)) {
+      if (id == "server.incorporate_return_receipt")
+      {
+        document.getElementById("leave_in_inbox").setAttribute("disabled", "true");
+        document.getElementById("move_to_sent").setAttribute("disabled", "true");
+      }
+      else
+        element.setAttribute("disabled", "true");
+    }
+  }
 }

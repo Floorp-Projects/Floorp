@@ -37,6 +37,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 var smtpService = Components.classes["@mozilla.org/messengercompose/smtp;1"].getService(Components.interfaces.nsISmtpService);
+var gPrefBranch = Components.classes["@mozilla.org/preferences-service;1"].getService(Components.interfaces.nsIPrefBranch);
 
 function onLoad()
 {
@@ -49,6 +50,16 @@ function onLoad()
         defaultSmtpServer = null;
     }
     initSmtpSettings(defaultSmtpServer);
+
+    // Get the default smtp server preference to check if we need to lock the
+    // advance button on the panel. 
+    var defaultSmtpServerKey = gPrefBranch.getCharPref("mail.smtp.defaultserver");
+    var prefString = "mail.smtpserver."+ defaultSmtpServerKey + ".advanced.disable"; 
+
+    var advButton = document.getElementById("smtp.advancedbutton");
+    if (gPrefBranch.prefIsLocked(prefString)) {
+      advButton.setAttribute("disabled", "true");
+    }
 }
 
 function onSave()

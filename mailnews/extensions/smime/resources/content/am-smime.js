@@ -38,6 +38,7 @@ var gEncryptAlways = null;
 var gNeverEncrypt = null;
 var gBundle = null;
 var gBrandBundle;
+var gSmimePrefbranch;
 
 function onInit() 
 {
@@ -80,6 +81,7 @@ function onInit()
   {
     gSignMessages.setAttribute("disabled", true);
   }
+  onLockPreference();
 }
 
 function onPreInit(account, accountValues)
@@ -101,7 +103,20 @@ function onSave()
 
 function onLockPreference()
 {
-  dump("XXX on lock\n");
+  var initPrefString = "mail.identity"; 
+  var finalPrefString; 
+
+  var prefService = Components.classes["@mozilla.org/preferences-service;1"].getService(Components.interfaces.nsIPrefService);
+
+  var allPrefElements = [
+    { prefstring:"signingCertSelectButton", id:"signingCertSelectButton"},
+    { prefstring:"encryptionCertSelectButton", id:"encryptionCertSelectButton"}
+  ];
+
+  finalPrefString = initPrefString + "." + gIdentity.key + ".";
+  gSmimePrefbranch = prefService.getBranch(finalPrefString);
+
+  disableIfLocked( allPrefElements );
 }
 
 
@@ -110,20 +125,13 @@ function onLockPreference()
 // stomping on the disabled state indiscriminately.
 function disableIfLocked( prefstrArray )
 {
-    if (!gLockedPref)
-      gLockedPref = new Array;
-
-    for (i=0; i<prefstrArray.length; i++) {
-        var id = prefstrArray[i].id;
-        var element = document.getElementById(id);
-        if (gPref.prefIsLocked(prefstrArray[i].prefstring)) {
-            element.disabled = true;
-            gLockedPref[id] = true;
-        } else {
-            element.removeAttribute("disabled");
-            gLockedPref[id] = false;
-        }
+  for (i=0; i<prefstrArray.length; i++) {
+    var id = prefstrArray[i].id;
+    var element = document.getElementById(id);
+    if (gSmimePrefbranch.prefIsLocked(prefstrArray[i].prefstring)) {
+        element.setAttribute("disabled", "true");
     }
+  }
 }
 
 function getPromptService()
