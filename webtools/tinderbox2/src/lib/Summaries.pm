@@ -8,8 +8,8 @@
 # The only external interface to this library is summary_pages() and
 # create_global_index() these functions are only called by tinder.cgi.
 
-# $Revision: 1.5 $ 
-# $Date: 2000/09/18 19:25:17 $ 
+# $Revision: 1.6 $ 
+# $Date: 2000/11/09 19:40:19 $ 
 # $Author: kestes%staff.mail.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/lib/Summaries.pm,v $ 
 # $Name:  $ 
@@ -77,8 +77,8 @@ sub summary_pages {
     @LATEST_STATUS = TinderDB::Build::latest_status($tree);
     @BUILD_NAMES = TinderDB::Build::build_names($tree);
 
-    @HTML_COLORS = TinderDB::Build::status2html_colors(@LATEST_STATUS);
-    @HDML_CHARS = TinderDB::Build::status2hdml_chars(@LATEST_STATUS);
+    @HTML_COLORS = BuildStatus::status2html_colors(@LATEST_STATUS);
+    @HDML_CHARS = BuildStatus::status2hdml_chars(@LATEST_STATUS);
 
     $TREE = $tree;
     $TREE_STATE = TinderHeader::gettree_header('TreeState', $tree);
@@ -204,7 +204,7 @@ sub treegroup_func_page    {
     # there is no data for any function
 
     my ($base_name) = "$groupname.$func.$extension";
-    my ($file_name) = "$FileStructure::TINDERBOX_DIR/$base_name";
+    my ($file_name) = "$FileStructure::TINDERBOX_HTML_DIR/$base_name";
     
     main::overwrite_file ($file_name, $group_func_summary_page);
     
@@ -319,7 +319,7 @@ EOF
   }
 
   my $global_index_file = (
-                           $FileStructure::TINDERBOX_DIR.
+                           $FileStructure::TINDERBOX_HTML_DIR.
                            "/".$FileStructure::GLOBAL_INDEX_FILE
                           );
   
