@@ -18,10 +18,6 @@
 DEPTH=..\..
 MODULE=rdf 
 
-
-
-
-
 include <$(DEPTH)\config\rules.mak>
 
 FILES=\
