@@ -571,6 +571,7 @@ NS_METHOD nsTableRowGroupFrame::PullUpChildren(nsIPresContext&      aPresContext
 void nsTableRowGroupFrame::ShrinkWrapChildren(nsIPresContext* aPresContext, 
                                               nsHTMLReflowMetrics& aDesiredSize)
 {
+  if (gsDebug) printf("TRGF ShrinkWrapChildren begin\n");
   // iterate children and for each row get its height
   PRBool atLeastOneRowSpanningCell = PR_FALSE;
   nscoord topInnerMargin = 0;
@@ -596,6 +597,10 @@ void nsTableRowGroupFrame::ShrinkWrapChildren(nsIPresContext* aPresContext,
       nscoord maxCellTopMargin    = ((nsTableRowFrame*)rowFrame)->GetChildMaxTopMargin();
       nscoord maxCellBottomMargin = ((nsTableRowFrame*)rowFrame)->GetChildMaxBottomMargin();
       nscoord maxRowHeight = maxCellHeight + maxCellTopMargin + maxCellBottomMargin;
+      if (gsDebug) printf("TRGF SWC: for row %p, maxCellH=%d, maxCTM=%d, maxCBM=%d\n",
+                            rowFrame, maxCellHeight, maxCellTopMargin, maxCellBottomMargin);
+      if (gsDebug) printf("TRGF SWC: rowHeight=%d, rowIndex=%d\n",
+                            maxRowHeight, rowIndex);
 
       // save the row height for pass 2 below
       rowHeights[rowIndex] = maxRowHeight;
@@ -613,111 +618,132 @@ void nsTableRowGroupFrame::ShrinkWrapChildren(nsIPresContext* aPresContext,
     rowFrame->GetNextSibling(rowFrame);
   }
 
-  /* Step 2:  now account for cells that span rows.
-   *          a spanning cell's height is the sum of the heights of the rows it spans,
+  /* Step 2:  Now account for cells that span rows.
+   *          A spanning cell's height is the sum of the heights of the rows it spans,
    *          or it's own desired height, whichever is greater.
    *          If the cell's desired height is the larger value, resize the rows and contained
    *          cells by an equal percentage of the additional space.
+   *          We go through this loop twice.  The first time, we are adjusting cell heights
+   *          and row y-offsets on the fly.
+   *          The second time through the loop, we're ensuring that subsequent row-spanning cells
+   *          didn't change prior calculations.  
+   *          Since we are guaranteed to have found the max height spanners the first time through, 
+   *          we know we only need two passes, not an arbitrary number.
    */
   /* TODO
    * 1. optimization, if (PR_TRUE==atLeastOneRowSpanningCell) ... otherwise skip this step entirely
-   * 2. find cases where spanning cells effect other spanning cells that began in rows above themselves.
-   *    I think in this case, we have to make another pass through step 2.
-   *    There should be a "rational" check to terminate that kind of loop after n passes, probably 3 or 4.
    */
-  PRInt32 rowGroupHeight = 0;
-  rowFrame = mFirstChild;
-  rowIndex = 0;
-  while (nsnull != rowFrame)
+  PRInt32 rowGroupHeight;
+  for (PRInt32 counter; counter<2; counter++)
   {
-    const nsStyleDisplay *childDisplay;
-    rowFrame->GetStyleData(eStyleStruct_Display, ((nsStyleStruct *&)childDisplay));
-    if (NS_STYLE_DISPLAY_TABLE_ROW == childDisplay->mDisplay)
+    rowGroupHeight = 0;
+    rowFrame = mFirstChild;
+    rowIndex = 0;
+    while (nsnull != rowFrame)
     {
-      // check this row for a cell with rowspans
-      nsIFrame *cellFrame;
-      rowFrame->FirstChild(cellFrame);
-      while (nsnull != cellFrame)
+      const nsStyleDisplay *childDisplay;
+      rowFrame->GetStyleData(eStyleStruct_Display, ((nsStyleStruct *&)childDisplay));
+      if (NS_STYLE_DISPLAY_TABLE_ROW == childDisplay->mDisplay)
       {
-        const nsStyleDisplay *childDisplay;
-        cellFrame->GetStyleData(eStyleStruct_Display, ((nsStyleStruct *&)childDisplay));
-        if (NS_STYLE_DISPLAY_TABLE_CELL == childDisplay->mDisplay)
+        if (gsDebug) printf("TRGF SWC: for row %p...\n", rowFrame);
+        // check this row for a cell with rowspans
+        nsIFrame *cellFrame;
+        rowFrame->FirstChild(cellFrame);
+        while (nsnull != cellFrame)
         {
-          nsTableFrame *tableFrame=nsnull;
-          nsresult rv = nsTableFrame::GetTableFrame(this, tableFrame);
-          if (NS_FAILED(rv) || nsnull==tableFrame)
-            return;
-          PRInt32 rowSpan = tableFrame->GetEffectiveRowSpan(rowIndex,(nsTableCellFrame*)cellFrame);
-          if (rowSpan > 1)
-          { // found a cell with rowspan > 1, determine its height
-            nscoord heightOfRowsSpanned = 0;
-            PRInt32 i;
-            for ( i = 0; i < rowSpan; i++)
-              heightOfRowsSpanned += rowHeights[rowIndex + i];
+          const nsStyleDisplay *childDisplay;
+          cellFrame->GetStyleData(eStyleStruct_Display, ((nsStyleStruct *&)childDisplay));
+          if (NS_STYLE_DISPLAY_TABLE_CELL == childDisplay->mDisplay)
+          {
+            if (gsDebug) printf("TRGF SWC:   for cell %p...\n", cellFrame);
+            nsTableFrame *tableFrame=nsnull;
+            nsresult rv = nsTableFrame::GetTableFrame(this, tableFrame);
+            if (NS_FAILED(rv) || nsnull==tableFrame)
+              return;
+            PRInt32 rowSpan = tableFrame->GetEffectiveRowSpan(rowIndex,(nsTableCellFrame*)cellFrame);
+            if (rowSpan > 1)
+            { // found a cell with rowspan > 1, determine its height
+              if (gsDebug) printf("TRGF SWC:   cell %p has rowspan=%d\n", cellFrame, rowSpan);
+              nscoord heightOfRowsSpanned = 0;
+              PRInt32 i;
+              for ( i = 0; i < rowSpan; i++)
+                heightOfRowsSpanned += rowHeights[rowIndex + i];
+              if (gsDebug) printf("TRGF SWC:   heightOfRowsSpanned=%d\n", heightOfRowsSpanned);
         
-            heightOfRowsSpanned -= topInnerMargin + bottomInnerMargin;
+              heightOfRowsSpanned -= topInnerMargin + bottomInnerMargin;
+              if (gsDebug) printf("TRGF SWC:   after margins, heightOfRowsSpanned=%d\n", heightOfRowsSpanned);
 
-            /* if the cell height fits in the rows, expand the spanning cell's height and slap it in */
-            nsSize  cellFrameSize;
-            cellFrame->GetSize(cellFrameSize);
-            if (heightOfRowsSpanned > cellFrameSize.height)
-            {
-              cellFrame->SizeTo(cellFrameSize.width, heightOfRowsSpanned);
-              // Realign cell content based on new height
-              ((nsTableCellFrame*)cellFrame)->VerticallyAlignChild(aPresContext);
-            }
-            /* otherwise, distribute the excess height to the rows effected.
-             * push all subsequent rows down by the total change in height of all the rows above it
-             */
-            else
-            {
-              PRInt32 excessHeight = cellFrameSize.height - heightOfRowsSpanned;
-              PRInt32 excessHeightPerRow = excessHeight/rowSpan;
-
-              // for every row starting at the row with the spanning cell...
-              nsTableRowFrame *rowFrameToBeResized = (nsTableRowFrame *)rowFrame;
-              for (i = rowIndex; i < numRows; i++)
+              /* if the cell height fits in the rows, expand the spanning cell's height and slap it in */
+              nsSize  cellFrameSize;
+              cellFrame->GetSize(cellFrameSize);
+              if (heightOfRowsSpanned > cellFrameSize.height)
               {
-                // if the row is within the spanned range, resize the row
-                if (i < (rowIndex + rowSpan))
-                {
-                  // update the row height
-                  rowHeights[i] += excessHeightPerRow;
+                if (gsDebug) printf("TRGF SWC:   cell had h=%d, set to %d\n", 
+                                    cellFrameSize.height, heightOfRowsSpanned);
+                cellFrame->SizeTo(cellFrameSize.width, heightOfRowsSpanned);
+                // Realign cell content based on new height
+                ((nsTableCellFrame*)cellFrame)->VerticallyAlignChild(aPresContext);
+              }
+              /* otherwise, distribute the excess height to the rows effected.
+               * push all subsequent rows down by the total change in height of all the rows above it
+               */
+              else
+              {
+                PRInt32 excessHeight = cellFrameSize.height - heightOfRowsSpanned;
+                PRInt32 excessHeightPerRow = excessHeight/rowSpan;
+                if (gsDebug) printf("TRGF SWC:   excessHeight=%d, excessHeightPerRow=%d\n", 
+                                    excessHeight, excessHeightPerRow);
 
-                  // adjust the height of the row
-                  nsSize  rowFrameSize;
-                  rowFrameToBeResized->GetSize(rowFrameSize);
-                  rowFrameToBeResized->SizeTo(rowFrameSize.width, rowHeights[i]);
-                }
-
-                // if we're dealing with a row below the row containing the spanning cell, 
-                // push that row down by the amount we've expanded the cell heights by
-                if ((i >= rowIndex) && (i != 0))
+                // for every row starting at the row with the spanning cell...
+                nsTableRowFrame *rowFrameToBeResized = (nsTableRowFrame *)rowFrame;
+                for (i = rowIndex; i < numRows; i++)
                 {
-                  nsRect rowRect;
+                  if (gsDebug) printf("TRGF SWC:     for row index=%d\n", i);
+                  // if the row is within the spanned range, resize the row
+                  if (i < (rowIndex + rowSpan))
+                  {
+                    // update the row height
+                    rowHeights[i] += excessHeightPerRow;
+
+                    // adjust the height of the row
+                    nsSize  rowFrameSize;
+                    rowFrameToBeResized->GetSize(rowFrameSize);
+                    rowFrameToBeResized->SizeTo(rowFrameSize.width, rowHeights[i]);
+                    if (gsDebug) printf("TRGF SWC:     row %p sized to %d\n", 
+                                        rowFrameToBeResized, rowHeights[i]);
+                  }
+
+                  // if we're dealing with a row below the row containing the spanning cell, 
+                  // push that row down by the amount we've expanded the cell heights by
+                  if ((i >= rowIndex) && (i != 0))
+                  {
+                    nsRect rowRect;
                
-                  rowFrameToBeResized->GetRect(rowRect);
-                  nscoord delta = excessHeightPerRow * (i - rowIndex);
-                  if (delta > excessHeight)
-                    delta = excessHeight;
-                  rowFrameToBeResized->MoveTo(rowRect.x, rowRect.y + delta);
-                }
+                    rowFrameToBeResized->GetRect(rowRect);
+                    nscoord delta = excessHeightPerRow * (i - rowIndex);
+                    if (delta > excessHeight)
+                      delta = excessHeight;
+                    rowFrameToBeResized->MoveTo(rowRect.x, rowRect.y + delta);
+                    if (gsDebug) printf("TRGF SWC:     row %p moved to %d after delta %d\n", 
+                                        rowFrameToBeResized, rowRect.y + delta, delta);
+                  }
 
-                // Get the next row frame
-                rowFrameToBeResized->GetNextSibling((nsIFrame*&)rowFrameToBeResized);
+                  // Get the next row frame
+                  rowFrameToBeResized->GetNextSibling((nsIFrame*&)rowFrameToBeResized);
+                }
               }
             }
           }
+          // Get the next row child (cell frame)
+          cellFrame->GetNextSibling(cellFrame);
         }
-        // Get the next row child (cell frame)
-        cellFrame->GetNextSibling(cellFrame);
+        // Update the running row group height
+        rowGroupHeight += rowHeights[rowIndex];
+        rowIndex++;
       }
-      // Update the running row group height
-      rowGroupHeight += rowHeights[rowIndex];
-      rowIndex++;
+      // Get the next rowgroup child (row frame)
+      rowFrame->GetNextSibling(rowFrame);
     }
-    // Get the next rowgroup child (row frame)
-    rowFrame->GetNextSibling(rowFrame);
   }
 
   // Adjust our desired size
