@@ -212,6 +212,16 @@
         <column flex="3"/>
       </columns>
       <rows>
+        <row>
+          <hbox autostretch="never">
+            <text class="label small-margin" id="domainText" value="&domain.label;" accesskey="&domain.accesskey;" for="addDomain"/>
+            <textbox class="small-margin" id="addDomain" flex="1" oninput="doButtonEnabling();"
+                     prefstring="pref.browser.smartbrowsing.disable_textbox.add" prefattribute="disabled"/>
+          </hbox>
+          <button disabled="true" class="dialog" id="addDomainButton" label="&addDomain.label;" accesskey="&addDomain.accesskey;"
+                  oncommand="addDomain();" pref="true" preftype="bool"
+                  prefstring="pref.browser.smartbrowsing.disable_button.add" prefattribute="disabled"/>
+        </row>
         <row flex="1">
           <tree class="inset" id="disabledDomains" multiple="true" onkeyup="treeHandleEvent(event)" style="height: 0px; width: 0px;" flex="1">
             <treecolgroup>
@@ -224,16 +234,6 @@
                     oncommand="removeDomain();" pref="true" preftype="bool"
                     prefstring="pref.browser.smartbrowsing.disable_button.remove" prefattribute="disabled"/>
           </vbox>
-        </row>
-        <row>
-          <hbox autostretch="never">
-            <text class="label small-margin" id="domainText" value="&domain.label;" accesskey="&domain.accesskey;" for="addDomain"/>
-            <textbox class="small-margin" id="addDomain" flex="1" oninput="doButtonEnabling();"
-                     prefstring="pref.browser.smartbrowsing.disable_textbox.add" prefattribute="disabled"/>
-          </hbox>
-          <button disabled="true" class="dialog" id="addDomainButton" label="&addDomain.label;" accesskey="&addDomain.accesskey;"
-                  oncommand="addDomain();" pref="true" preftype="bool"
-                  prefstring="pref.browser.smartbrowsing.disable_button.add" prefattribute="disabled"/>
         </row>
       </rows>
     </grid>
