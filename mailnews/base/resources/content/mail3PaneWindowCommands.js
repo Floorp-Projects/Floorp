@@ -157,6 +157,8 @@ var ThreadPaneController =
 					if ( threadTree.selectedItems && threadTree.selectedItems.length != 1 )
 						ClearMessagePane();
 				}
+					//setting threadTree on
+        			document.getElementById("threadTree").setAttribute("focusring","true");
 				break;
 		}
 	},
@@ -166,7 +168,16 @@ var ThreadPaneController =
 		// on blur events set the menu item texts back to the normal values
 		if ( event == 'blur' )
         {
+              document.getElementById("threadTree").setAttribute("focusring","false");
+
 		}
+		
+		if ( event == 'focus' )
+        {
+        	//alert("focus")
+              document.getElementById("threadTree").setAttribute("focusring","true");
+
+		}		
 	}
 };
 
@@ -321,7 +332,8 @@ var DefaultController =
 	doCommand: function(command)
 	{
    		//dump("ThreadPaneController.doCommand(" + command + ")\n");
-
+   		
+        document.getElementById("messagepane").setAttribute("focusring","true");
 		switch ( command )
 		{
 			case "cmd_getNewMessages":
@@ -491,21 +503,42 @@ function GetNumSelectedMessages()
 
 function CommandUpdate_Mail()
 {
-	/*var messagePane = top.document.getElementById('messagePane');
-	var drawFocusBorder = messagePane.getAttribute('draw-focus-border');
+	//var messagePane = top.document.getElementById('messagePane');
+	//var drawFocusBorder = messagePane.getAttribute('draw-focus-border');
 	
 	if ( MessagePaneHasFocus() )
 	{
-		if ( !drawFocusBorder )
-			messagePane.setAttribute('draw-focus-border', 'true');
+		//if ( !drawFocusBorder )
+		//	messagePane.setAttribute('draw-focus-border', 'true');
+		document.getElementById("messagepanebox").setAttribute("focusring","true");
+		document.getElementById("threadTree").setAttribute("focusring","false")
+		document.getElementById("folderTree").setAttribute("focusring","false")
+
 	}
 	else
 	{
-		if ( drawFocusBorder )
-			messagePane.removeAttribute('draw-focus-border');
-	}*/
+		//if ( drawFocusBorder )
+		//	messagePane.removeAttribute('draw-focus-border');
+		document.getElementById("messagepanebox").setAttribute("focusring","false");
 		
-	goUpdateCommand('button_delete');
+		if( WhichPaneHasFocus() == "threadTree"){
+			document.getElementById("threadTree").setAttribute("focusring","true")
+			document.getElementById("folderTree").setAttribute("focusring","false")
+		}
+		
+// mail3PaneWindowCommands.js
+		else{
+			document.getElementById("threadTree").setAttribute("focusring","false")
+			document.getElementById("folderTree").setAttribute("focusring","true")
+		}
+		
+	}
+
+
+		
+
+	//goUpdateCommand('button_delete');
+
 	goUpdateCommand('cmd_delete');
 	goUpdateCommand('cmd_nextMsg');
 	goUpdateCommand('cmd_nextUnreadMsg');
@@ -607,7 +640,9 @@ function CommandUpdate_UndoRedo()
     EnableMenuItem("menu_redo", SetupUndoRedoCommand("cmd_redo"));
 }
 
+
 function MessagePaneHasFocus()
+
 {
 	var focusedWindow = top.document.commandDispatcher.focusedWindow;
 	var messagePaneWindow = top.frames['messagepane'];
@@ -635,6 +670,32 @@ function IsSubWindowOf(search, wind, found)
 	}
 	return false;
 }
+
+
+function WhichPaneHasFocus(){
+	var whichPane= "none";
+	currentNode = top.document.commandDispatcher.focusedElement;	
+
+	
+	if(currentNode){
+		while(currentNode.parentNode!=null){
+			if(currentNode.getAttribute("id") == "threadTree" ){ whichPane="threadTree" }
+			
+			if(currentNode.getAttribute("id") == "folderTree"){  whichPane="folderTree" } 
+		
+			currentNode = currentNode.parentNode;
+		}
+	
+	}
+	
+	
+	
+	return whichPane
+
+}
+
+
+
 
 
 function SetupCommandUpdateHandlers()

@@ -73,7 +73,7 @@ Rights Reserved.
 <commands id="commands">
 	<commandset id="CommandUpdate_Mail"
 				commandupdater="true"
-				events="focus,folderTree-select,threadTree-select"
+				events="focus,folderTree-select,threadTree-select,blur"
 				oncommandupdate="CommandUpdate_Mail()"/>
 	<commandset id="ThreadTreeUpdate_Mail"
 				commandupdater="true"
@@ -123,21 +123,21 @@ Rights Reserved.
 
 		<box id="sidebar-box">
 			<sidebarheader type="box" class="sidebarheader-main" value="&mail-sidebar-header.label;"/>
-			<tree id="folderTree" flex="1000" context="folderPaneContext"/>
+			<tree id="folderTree" flex="1000" context="folderPaneContext" focusring="false"/>
 		</box>
           
 		<splitter id="sidebar-splitter"/>
 
 		<box orient="vertical" flex="1">
      
-			<tree id="threadTree" flex="2" style="height:0px" context="threadPaneContext"/>
+			<tree id="threadTree" flex="2" style="height:0px" context="threadPaneContext" class="window-focusborder" focusring="false"/>
 
 			<splitter collapse="after" persist="state" onclick="OnClickThreadAndMessagePaneSplitter()"
                 id="threadpane-splitter" orient="vertical" autostretch="never">
         <grippy/>
       </splitter>
 			
-			<box id="messagepanebox" align="vertical" flex="3" persist="collapsed">
+			<box id="messagepanebox" align="vertical" flex="3" persist="collapsed" class="window-focusborder" focusring="false">
 				<toolbox id="msgHeaderView"/>
     
 				<iframe id="messagepane" context="messagePaneContext" style="height: 0px" flex="1" name="messagepane" type="content-primary" src="about:blank"/>
