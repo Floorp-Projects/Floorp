@@ -92,10 +92,10 @@
 			  
 		  	 <box align="horizontal">
 	  			
-	  	 		<titledbutton align="left" id="mini-nav" value="" onaction="toNavigator();"/>
-	  	 		<titledbutton align="left" id="mini-mail" value="" onaction="toMessengerWindow()"/>
-	  	 		<titledbutton align="left" id="mini-addr" value="" onaction="toAddressBook()"/>
-	  	 		<titledbutton align="left" id="mini-comp" value="" onaction="toEditor();" />
+	  	 		<titledbutton align="left" id="mini-nav" value="" onclick="toNavigator();"/>
+	  	 		<titledbutton align="left" id="mini-mail" value="" onclick="toMessengerWindow()"/>
+	  	 		<titledbutton align="left" id="mini-addr" value="" onclick="toAddressBook()"/>
+	  	 		<titledbutton align="left" id="mini-comp" value="" onclick="toEditor();" />
 		      </box>
 			  <spring flex="100%"/>
 		 	  <box align="horizontal">
