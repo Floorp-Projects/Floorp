@@ -178,9 +178,10 @@
     return true;
   }
 
-  function openNewTabOrWindow(event, href)
+  function openNewTabOrWindow(event, href, linkNode)
   {
     // should we open it in a new tab?
+    var result = false;
     if (pref && pref.getBoolPref("browser.tabs.opentabfor.middleclick") &&
         ("getBrowser" in window) && getBrowser().localName == "tabbrowser") {
       var loadInBackground = pref.getBoolPref("browser.tabs.loadInBackground");
@@ -190,18 +191,21 @@
       if (!loadInBackground)
         getBrowser().selectedTab = theTab;
       event.preventBubble();
-      return true;
+      result = true;
     }
-
+    else
     // should we open it in a new window?
     if (pref && pref.getBoolPref("middlemouse.openNewWindow")) {
       openNewWindowWith(href);
       event.preventBubble();
-      return true;
+      result = true;
     }
 
+    if (result && linkNode && !linkNode.style.color)
+      linkNode.style.color = "-moz-visitedhyperlinktext";
+
     // let someone else deal with it
-    return false;
+    return result;
   }
 
   function handleLinkClick(event, href, linkNode)
@@ -209,7 +213,7 @@
     switch (event.button) {                                   
       case 0:                                                         // if left button clicked
         if (event.metaKey || event.ctrlKey) {                         // and meta or ctrl are down
-          if (openNewTabOrWindow(event, href))
+          if (openNewTabOrWindow(event, href, linkNode))
             return true;
         } 
         var saveModifier = true;
@@ -230,7 +234,7 @@
           return true;                                                // do nothing
         return false;
       case 1:                                                         // if middle button clicked
-        if (openNewTabOrWindow(event, href))
+        if (openNewTabOrWindow(event, href, linkNode))
           return true;
         break;
     }
@@ -248,7 +252,7 @@
 
     // On ctrl-middleclick, open in new window or tab.
     if (event.ctrlKey)
-      return openNewTabOrWindow(event, url);
+      return openNewTabOrWindow(event, url, null);
 
     // If ctrl wasn't down, then just load the url in the current win/tab.
     loadURI(url);
