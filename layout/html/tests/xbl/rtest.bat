@@ -3,11 +3,11 @@ if "%1"=="baseline" goto baseline
 
 :verify
 if not exist verify mkdir verify
-s:\mozilla\dist\win32_d.obj\bin\viewer -o s:\mozilla\layout\html\tests\xbl\verify\ -rd s:\mozilla\layout\html\tests\xbl -f s:\mozilla\layout\html\tests\xbl\file_list.txt
+s:\mozilla\dist\bin\viewer -o s:\mozilla\layout\html\tests\xbl\verify\ -rd s:\mozilla\layout\html\tests\xbl -f s:\mozilla\layout\html\tests\xbl\file_list.txt
 goto done
 
 :baseline
-s:\mozilla\dist\win32_d.obj\bin\viewer -o s:\mozilla\layout\html\tests\xbl\ -f s:\mozilla\layout\html\tests\xbl\file_list.txt
+s:\mozilla\dist\bin\viewer -o s:\mozilla\layout\html\tests\xbl\ -f s:\mozilla\layout\html\tests\xbl\file_list.txt
 goto done
 
 :error
