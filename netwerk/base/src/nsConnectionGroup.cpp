@@ -132,7 +132,9 @@ nsConnectionGroup::AppendElement(nsISupports* connection)
 NS_IMETHODIMP
 nsConnectionGroup::RemoveElement(nsISupports* connection)
 {
-    return mElements->RemoveElement(connection);
+    // XXX RemoveElement returns a bool instead of nsresult!
+    PRBool result = mElements->RemoveElement(connection);
+    return result ? NS_OK : NS_ERROR_FAILURE;
 }
 NS_IMETHODIMP
 nsConnectionGroup::Enumerate(nsIEnumerator* *result)

@@ -101,7 +101,9 @@ nsFileTransportService::Resume(nsFileTransport* request)
     nsresult rv;
     if (mSuspended == nsnull)
         return NS_ERROR_FAILURE;
-    rv = mSuspended->RemoveElement(NS_STATIC_CAST(nsITransport*, request));
+    // XXX RemoveElement returns a bool instead of nsresult!
+    PRBool removed = mSuspended->RemoveElement(NS_STATIC_CAST(nsITransport*, request));
+    rv = removed ? NS_OK : NS_ERROR_FAILURE;
     if (NS_FAILED(rv)) return rv;
 
     // restart the request
