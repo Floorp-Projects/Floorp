@@ -1,0 +1,38 @@
+<HTML>
+<HEAD>
+<TITLE>XPInstall Pre-Checkin Trigger Test</TITLE>
+
+<SCRIPT>
+function xpinstallCallback(url, status)
+{
+  if (status == 0)
+    msg = "XPInstall Test:   PASSED\n";
+  else
+    msg = "XPInstall Test:   FAILED\n";
+
+  dump(msg);
+  alert(msg);
+}
+
+function triggerXPI()
+{
+  xpi = {"XPInstall Pre-Checkin Test":"pre_checkin.xpi"};
+  InstallTrigger.install(xpi, xpinstallCallback);
+}
+</SCRIPT>
+</HEAD>
+
+<BODY>
+
+<H3>XPInstall Pre-Checkin Trigger Test</H3>
+<HR>
+Click on the link below to execute the XPInstall pre-checkin test. <BR>
+The test result (PASS or FAIL) will pop up in an alert after the test completes. <P>
+
+<A HREF="javascript:
+  xpi={'XPInstall Pre-Checkin Test':'pre_checkin.xpi'};     InstallTrigger.install(xpi,xpinstallCallback);
+">Test XPInstall</A>
+
+
+</BODY>
+</HTML>
