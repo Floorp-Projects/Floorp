@@ -2375,21 +2375,21 @@ PresShell::GetHistoryState(nsILayoutHistoryState** aState)
     if (NS_FAILED(rv)) { 
       *aState = nsnull;
       return rv;
-    }
-
-    // Capture frame state for the entire frame hierarchy
-    nsIFrame* rootFrame = nsnull;
-    rv = GetRootFrame(&rootFrame);
-    if (NS_FAILED(rv) || nsnull == rootFrame) return rv;
-
-    rv = mFrameManager->CaptureFrameState(mPresContext, rootFrame, *aState);
+    }    
 
     mHistoryState = *aState;
-    return NS_OK;
+  }
+  else {
+    *aState = mHistoryState;
+    NS_IF_ADDREF(mHistoryState);
   }
   
-  *aState = mHistoryState;
-  NS_IF_ADDREF(mHistoryState);
+  // Capture frame state for the entire frame hierarchy
+  nsIFrame* rootFrame = nsnull;
+  rv = GetRootFrame(&rootFrame);
+  if (NS_FAILED(rv) || nsnull == rootFrame) return rv;
+
+  rv = mFrameManager->CaptureFrameState(mPresContext, rootFrame, mHistoryState);  
  
   return rv;
 }
