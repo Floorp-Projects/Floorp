@@ -850,17 +850,17 @@ NS_IMETHODIMP nsHTMLEditor::TabInTable(PRBool inIsShift, PRBool *outHandled)
     // put selection in right place
     // Use table code to get selection and index to new row...
     nsCOMPtr<nsIDOMSelection>selection;
-    nsCOMPtr<nsIDOMElement> tbl;
+    nsCOMPtr<nsIDOMElement> tblElement;
     nsCOMPtr<nsIDOMElement> cell;
     PRInt32 row;
     res = GetCellContext(getter_AddRefs(selection), 
-                         getter_AddRefs(tbl),
+                         getter_AddRefs(tblElement),
                          getter_AddRefs(cell), 
                          nsnull, nsnull,
                          &row, nsnull);
     if (NS_FAILED(res)) return res;
     // ...so that we can ask for first cell in that row...
-    res = GetCellAt(tbl, row, 0, *(getter_AddRefs(cell)));
+    res = GetCellAt(tblElement, row, 0, *(getter_AddRefs(cell)));
     if (NS_FAILED(res)) return res;
     // ...and then set selection there.
     // (Note that normally you should use CollapseSelectionToDeepestNonTableFirstChild(),
@@ -2278,7 +2278,6 @@ NS_IMETHODIMP nsHTMLEditor::InsertText(const nsString& aStringToInsert)
   return result;
 }
 
-
 NS_IMETHODIMP nsHTMLEditor::InsertHTML(const nsString& aInputString)
 {
   nsAutoString charset;
@@ -2288,6 +2287,19 @@ NS_IMETHODIMP nsHTMLEditor::InsertHTML(const nsString& aInputString)
 NS_IMETHODIMP nsHTMLEditor::InsertHTMLWithCharset(const nsString& aInputString,
                                                   const nsString& aCharset)
 {
+  // First, make sure there are no return chars in the document.
+  // Bad things happen if you insert returns (instead of dom newlines, \n)
+  // into an editor document.
+  nsAutoString inputString (aInputString);  // hope this does copy-on-write
+ 
+  // Windows linebreaks: Map CRLF to LF:
+  inputString.ReplaceSubstring(NS_ConvertASCIItoUCS2("\r\n"),
+                               NS_ConvertASCIItoUCS2("\n"));
+ 
+  // Mac linebreaks: Map any remaining CR to LF:
+  inputString.ReplaceSubstring(NS_ConvertASCIItoUCS2("\r"),
+                               NS_ConvertASCIItoUCS2("\n"));
+
   ForceCompositionEnd();
   nsAutoEditBatch beginBatching(this);
   nsAutoRules beginRulesSniffing(this, kOpInsertElement, nsIEditor::eNext);
@@ -2329,7 +2341,7 @@ NS_IMETHODIMP nsHTMLEditor::InsertHTMLWithCharset(const nsString& aInputString,
       return NS_ERROR_NO_INTERFACE;
 
     nsCOMPtr<nsIDOMDocumentFragment> docfrag;
-    res = nsrange->CreateContextualFragment(aInputString,
+    res = nsrange->CreateContextualFragment(inputString,
                                             getter_AddRefs(docfrag));
     if (NS_FAILED(res))
     {
@@ -2391,7 +2403,6 @@ NS_IMETHODIMP nsHTMLEditor::InsertHTMLWithCharset(const nsString& aInputString,
   res = mRules->DidDoAction(selection, &ruleInfo, res);
   return res;
 }
-
 
 NS_IMETHODIMP nsHTMLEditor::InsertBreak()
 {
@@ -4676,11 +4687,8 @@ nsHTMLEditor::InsertAsPlaintextQuotation(const nsString& aQuotedText,
       // Do this after the insertion, so that 
       nsCOMPtr<nsIDOMElement> preElement (do_QueryInterface(preNode));
       if (preElement)
-      {
         preElement->SetAttribute(NS_ConvertASCIItoUCS2("_moz_quote"), NS_ConvertASCIItoUCS2("true"));
-        // set style to not have unwanted vertical margins
-        preElement->SetAttribute(NS_ConvertASCIItoUCS2("style"), NS_ConvertASCIItoUCS2("margin: 0 0 0 0px;"));
-      }
+
       // and set the selection inside it:
       selection->Collapse(preNode, 0);
     }
