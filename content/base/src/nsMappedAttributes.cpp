@@ -43,20 +43,18 @@
 
 nsMappedAttributes::nsMappedAttributes(nsIHTMLStyleSheet* aSheet,
                                        nsMapRuleToAttributesFunc aMapRuleFunc)
-  : mSheet(aSheet),
-    mAttrCount(0),
+  : mAttrCount(0),
+    mSheet(aSheet),
     mRuleMapper(aMapRuleFunc)
 {
 }
 
 nsMappedAttributes::nsMappedAttributes(const nsMappedAttributes& aCopy)
-  : mSheet(aCopy.mSheet),
-    mAttrCount(0),
+  : mAttrCount(aCopy.mAttrCount),
+    mSheet(aCopy.mSheet),
     mRuleMapper(aCopy.mRuleMapper)
 {
   NS_ASSERTION(mBufferSize >= aCopy.mAttrCount, "can't fit attributes");
-
-  mAttrCount = aCopy.mAttrCount;
 
   PRUint32 i;
   for (i = 0; i < mAttrCount; ++i) {

@@ -120,8 +120,8 @@ class nsXULPrototypeAttribute
 {
 public:
     nsXULPrototypeAttribute()
-        : mEventHandler(nsnull),
-          mName(nsXULAtoms::id)   // XXX this is a hack, but names have to have a value
+        : mName(nsXULAtoms::id),  // XXX this is a hack, but names have to have a value
+          mEventHandler(nsnull)
     {
         XUL_PROTOTYPE_ATTRIBUTE_METER(gNumAttributes);
         MOZ_COUNT_CTOR(nsXULPrototypeAttribute);

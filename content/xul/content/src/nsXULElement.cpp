@@ -4441,8 +4441,6 @@ nsXULPrototypeElement::SetAttrAt(PRUint32 aPos, const nsAString& aValue,
         return NS_OK;
     }
 
-    nsresult rv;
-
     if (mAttributes[aPos].mName.Equals(nsXULAtoms::id) &&
         !aValue.IsEmpty()) {
         // Store id as atom.

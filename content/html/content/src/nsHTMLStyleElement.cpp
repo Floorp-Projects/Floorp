@@ -90,7 +90,7 @@ public:
   {
     return SetAttr(aNameSpaceID, aName, nsnull, aValue, aNotify);
   }
-  virtual nsresult SetAttr(PRUint32 aNameSpaceID, nsIAtom* aName,
+  virtual nsresult SetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
                            nsIAtom* aPrefix, const nsAString& aValue,
                            PRBool aNotify);
   virtual nsresult UnsetAttr(PRInt32 aNameSpaceID, nsIAtom* aAttribute,
@@ -290,7 +290,7 @@ nsHTMLStyleElement::SetDocument(nsIDocument* aDocument, PRBool aDeep,
 }
  
 nsresult
-nsHTMLStyleElement::SetAttr(PRUint32 aNameSpaceID, nsIAtom* aName,
+nsHTMLStyleElement::SetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
                             nsIAtom* aPrefix, const nsAString& aValue,
                             PRBool aNotify)
 {
