@@ -1488,40 +1488,44 @@ nsBrowserWindow::Init(nsIAppShell* aAppShell,
   mAppShell = aAppShell;
   NS_IF_ADDREF(mAppShell);
   mAllowPlugins = aAllowPlugins;
-
   // Create top level window
-  nsresult rv = nsComponentManager::CreateInstance(kWindowCID, nsnull,
-                                                   kIWidgetIID,
-                                                   getter_AddRefs(mWindow));
+  nsresult rv = nsComponentManager::CreateInstance(kWindowCID,
+nsnull,
+                                                  
+kIWidgetIID,
+                                                  
+getter_AddRefs(mWindow));
   if (NS_OK != rv) {
     return rv;
   }
+  nsWidgetInitData initData;
+  initData.mWindowType = eWindowType_toplevel;
+  initData.mBorderStyle = eBorderStyle_default;
   nsRect r(0, 0, aBounds.width, aBounds.height);
   mWindow->Create((nsIWidget*)NULL, r, HandleBrowserEvent,
-                  nsnull, aAppShell);
+                 
+nsnull, aAppShell, nsnull, &initData);
   mWindow->GetClientBounds(r);
-
   // Create web shell
-  rv = nsComponentManager::CreateInstance(kWebShellCID, nsnull,
-                                          NS_GET_IID(nsIDocShell),
-                                          getter_AddRefs(mDocShell));
-  if (NS_OK != rv) {
-    return rv;
-  }
-  nsCOMPtr<nsIDocumentLoader> docLoader;
+  mWebBrowser = do_CreateInstance(NS_WEBBROWSER_CONTRACTID);
+  NS_ENSURE_TRUE(mWebBrowser, NS_ERROR_FAILURE);
   r.x = r.y = 0;
-  //nsRect ws = r;
-  nsCOMPtr<nsIWebShell> webShell(do_QueryInterface(mDocShell));
-  mDocShell->SetAllowPlugins(aAllowPlugins);
   nsCOMPtr<nsIBaseWindow> webBrowserWin(do_QueryInterface(mWebBrowser));
-  rv = webBrowserWin->InitWindow(mWindow->GetNativeData(NS_NATIVE_WIDGET), nsnull, r.x, r.y, r.width, r.height);
+  rv = webBrowserWin->InitWindow(mWindow->GetNativeData(NS_NATIVE_WIDGET),
+nsnull, r.x, r.y, r.width, r.height);
+  NS_ENSURE_SUCCESS(EnsureWebBrowserChrome(), NS_ERROR_FAILURE);
+  mWebBrowser->SetContainerWindow(mWebBrowserChrome);
   webBrowserWin->Create();
+  mDocShell = do_GetInterface(mWebBrowser);
+  mDocShell->SetAllowPlugins(aAllowPlugins);
+  nsCOMPtr<nsIDocumentLoader> docLoader;
+  nsCOMPtr<nsIWebShell> webShell(do_QueryInterface(mDocShell));
   webShell->SetContainer((nsIWebShellContainer*) this);
   webShell->GetDocumentLoader(*getter_AddRefs(docLoader));
   if (docLoader) {
     docLoader->AddObserver(this);
   }
-
+  webBrowserWin->SetVisibility(PR_TRUE);
   if (nsIWebBrowserChrome::CHROME_MENUBAR & aChromeMask) {
     rv = CreateMenuBar(r.width);
     if (NS_OK != rv) {
@@ -1530,31 +1534,35 @@ nsBrowserWindow::Init(nsIAppShell* aAppShell,
     mWindow->GetClientBounds(r);
     r.x = r.y = 0;
   }
-
   if (nsIWebBrowserChrome::CHROME_TOOLBAR & aChromeMask) {
     rv = CreateToolBar(r.width);
     if (NS_OK != rv) {
       return rv;
     }
   }
-
-  if (nsIWebBrowserChrome::CHROME_STATUSBAR & aChromeMask) {
+  if (nsIWebBrowserChrome::CHROME_STATUSBAR & aChromeMask)
+{
     rv = CreateStatusBar(r.width);
     if (NS_OK != rv) {
       return rv;
     }
   }
-
   // Give the embedding app a chance to do platforms-specific window setup
   InitNativeWindow();
-  
+ 
   // Now lay it all out
   Layout(r.width, r.height);
+
+
+
 
   // Create a document viewer and bind it to the webshell
   nsIDocumentViewer* docv;
   aDocumentViewer->CreateDocumentViewerUsing(aPresContext, docv);
+  docv->SetContainer(mWebBrowser);
   webShell->Embed(docv, "duh", nsnull);
+
+
   webBrowserWin->SetVisibility(PR_TRUE);
   NS_RELEASE(docv);
 
