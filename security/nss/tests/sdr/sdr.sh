@@ -71,8 +71,14 @@ sdr_init()
   T2="The quick brown fox jumped over the lazy dog"
 
   SDRDIR=${HOSTDIR}/SDR
+  D_SDR="SDR.$version"
   if [ ! -d ${SDRDIR} ]; then
     mkdir -p ${SDRDIR}
+  fi
+
+  PROFILE=.
+  if [ -n "${MULTIACCESS_DBM}" ]; then
+     PROFILE="multiaccess:${D_SDR}"
   fi
 
   cd ${SDRDIR}
@@ -85,23 +91,23 @@ sdr_init()
 sdr_main()
 {
   echo "$SCRIPTNAME: Creating an SDR key/Encrypt"
-  echo "sdrtest -d . -o ${VALUE1} -t Test1"
-  sdrtest -d . -o ${VALUE1} -t Test1
+  echo "sdrtest -d ${PROFILE} -o ${VALUE1} -t Test1"
+  sdrtest -d ${PROFILE} -o ${VALUE1} -t Test1
   html_msg $? 0 "Creating SDR Key"
 
   echo "$SCRIPTNAME: SDR Encrypt - Second Value"
-  echo "sdrtest -d . -o ${VALUE2} -t '${T2}'"
-  sdrtest -d . -o ${VALUE2} -t "${T2}"
+  echo "sdrtest -d ${PROFILE} -o ${VALUE2} -t '${T2}'"
+  sdrtest -d ${PROFILE} -o ${VALUE2} -t "${T2}"
   html_msg $? 0 "Encrypt - Value 2"
 
   echo "$SCRIPTNAME: Decrypt - Value 1"
-  echo "sdrtest -d . -i ${VALUE1} -t Test1"
-  sdrtest -d . -i ${VALUE1} -t Test1
+  echo "sdrtest -d ${PROFILE} -i ${VALUE1} -t Test1"
+  sdrtest -d ${PROFILE} -i ${VALUE1} -t Test1
   html_msg $? 0 "Decrypt - Value 1"
 
   echo "$SCRIPTNAME: Decrypt - Value 2"
-  echo "sdrtest -d . -i ${VALUE2} -t ${T2}"
-  sdrtest -d . -i ${VALUE2} -t "${T2}"
+  echo "sdrtest -d ${PROFILE} -i ${VALUE2} -t ${T2}"
+  sdrtest -d ${PROFILE} -i ${VALUE2} -t "${T2}"
   html_msg $? 0 "Decrypt - Value 2"
 }
 

@@ -65,12 +65,17 @@ cipher_init()
 
   CIPHERDIR=${HOSTDIR}/cipher
   CIPHERTESTDIR=${QADIR}/../cmd/bltest
+  D_CIPHER="Cipher.$version"
 
   CIPHER_TXT=${QADIR}/cipher/cipher.txt
 
   mkdir -p ${CIPHERDIR}
 
   cd ${CIPHERTESTDIR}
+  P_CIPHER=.
+  if [ -n "${MULTIACCESS_DBM}" ]; then
+    P_CIPHER="multiaccess:${D_CIPHER}"
+  fi
 }
 
 ############################## cipher_main #############################
@@ -84,9 +89,9 @@ cipher_main()
           PARAM=`echo $PARAM | sed -e "s/_-/ -/g"`
           TESTNAME=`echo $TESTNAME | sed -e "s/_/ /g"`
           echo "$SCRIPTNAME: $TESTNAME --------------------------------"
-          echo "bltest -T -m $PARAM -d ."
+          echo "bltest -T -m $PARAM -d ${P_CIPHER}"
 
-          bltest -T -m $PARAM -d .
+          bltest -T -m $PARAM -d ${P_CIPHER} 
           html_msg $? $EXP_RET "$TESTNAME"
       fi
   done

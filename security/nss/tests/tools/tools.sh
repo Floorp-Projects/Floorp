@@ -82,6 +82,10 @@ tools_init()
 
   R_TOOLSDIR=../tools
   R_COPYDIR=../tools/copydir
+  P_R_COPYDIR=${R_COPYDIR}
+  if [ -n "${MULTIACCESS_DBM}" ]; then
+    P_R_COPYDIR="multiaccess:Tools.$version"
+  fi
 
   mkdir -p ${TOOLSDIR}
   mkdir -p ${COPYDIR}
@@ -97,17 +101,17 @@ tools_init()
 tools_p12()
 {
   echo "$SCRIPTNAME: Exporting Alice's email cert & key------------------"
-  echo "pk12util -o Alice.p12 -n \"Alice\" -d ${R_ALICEDIR} -k ${R_PWFILE} \\"
+  echo "pk12util -o Alice.p12 -n \"Alice\" -d ${P_R_ALICEDIR} -k ${R_PWFILE} \\"
   echo "         -w ${R_PWFILE}"
-  pk12util -o Alice.p12 -n "Alice" -d ${R_ALICEDIR} -k ${R_PWFILE} \
+  pk12util -o Alice.p12 -n "Alice" -d ${P_R_ALICEDIR} -k ${R_PWFILE} \
            -w ${R_PWFILE} 2>&1 
   ret=$?
   html_msg $ret 0 "Exporting Alice's email cert & key (pk12util -o)"
   check_tmpfile
 
   echo "$SCRIPTNAME: Importing Alice's email cert & key -----------------"
-  echo "pk12util -i Alice.p12 -d ${R_COPYDIR} -k ${R_PWFILE} -w ${R_PWFILE}"
-  pk12util -i Alice.p12 -d ${R_COPYDIR} -k ${R_PWFILE} -w ${R_PWFILE} 2>&1
+  echo "pk12util -i Alice.p12 -d ${P_R_COPYDIR} -k ${R_PWFILE} -w ${R_PWFILE}"
+  pk12util -i Alice.p12 -d ${P_R_COPYDIR} -k ${R_PWFILE} -w ${R_PWFILE} 2>&1
   ret=$?
   html_msg $ret 0 "Importing Alice's email cert & key (pk12util -i)"
   check_tmpfile
@@ -131,8 +135,8 @@ check_tmpfile()
 tools_sign()
 {
   echo "$SCRIPTNAME: Create objsign cert -------------------------------"
-  echo "signtool -G \"objectsigner\" -d ${R_ALICEDIR} -p \"nss\""
-  signtool -G "objsigner" -d ${R_ALICEDIR} -p "nss" 2>&1 <<SIGNSCRIPT
+  echo "signtool -G \"objectsigner\" -d ${P_R_ALICEDIR} -p \"nss\""
+  signtool -G "objsigner" -d ${P_R_ALICEDIR} -p "nss" 2>&1 <<SIGNSCRIPT
 y
 TEST
 MOZ
@@ -145,19 +149,20 @@ SIGNSCRIPT
   html_msg $? 0 "Create objsign cert (signtool -G)"
 
   echo "$SCRIPTNAME: Signing a set of files ----------------------------"
-  echo "signtool -Z nojs.jar -d ${R_ALICEDIR} -p \"nss\" -k objsigner \\"
+  echo "signtool -Z nojs.jar -d ${P_R_ALICEDIR} -p \"nss\" -k objsigner \\"
   echo "         ${R_TOOLSDIR}/html"
-  signtool -Z nojs.jar -d ${R_ALICEDIR} -p "nss" -k objsigner ${R_TOOLSDIR}/html
+  signtool -Z nojs.jar -d ${P_R_ALICEDIR} -p "nss" -k objsigner \
+           ${R_TOOLSDIR}/html
   html_msg $? 0 "Signing a set of files (signtool -Z)"
 
   echo "$SCRIPTNAME: Listing signed files in jar ----------------------"
-  echo "signtool -v nojs.jar -d ${R_ALICEDIR} -p nss -k objsigner"
-  signtool -v nojs.jar -d ${R_ALICEDIR} -p nss -k objsigner
+  echo "signtool -v nojs.jar -d ${P_R_ALICEDIR} -p nss -k objsigner"
+  signtool -v nojs.jar -d ${P_R_ALICEDIR} -p nss -k objsigner
   html_msg $? 0 "Listing signed files in jar (signtool -v)"
   
   echo "$SCRIPTNAME: Show who signed jar ------------------------------"
-  echo "signtool -w nojs.jar -d ${R_ALICEDIR}"
-  signtool -w nojs.jar -d ${R_ALICEDIR}
+  echo "signtool -w nojs.jar -d ${P_R_ALICEDIR}"
+  signtool -w nojs.jar -d ${P_R_ALICEDIR}
   html_msg $? 0 "Show who signed jar (signtool -w)"
 }
 

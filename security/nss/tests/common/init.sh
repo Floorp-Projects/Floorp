@@ -359,6 +359,19 @@ if [ -z "${INIT_SOURCED}" -o "${INIT_SOURCED}" != "TRUE" ]; then
     FIPSP12PWFILE=${TMP}/tests.fipsp12pw.$$
     FIPSCERTNICK="FIPS_PUB_140-1_Test_Certificate"
 
+    # domains to handle ipc based access to databases
+    D_CA="TestCA.$version"
+    D_ALICE="Alice.$version"
+    D_BOB="Bob.$version"
+    D_DAVE="Dave.$version"
+    D_SERVER_CA="ServerCA.$version"
+    D_CLIENT_CA="ClientCA.$version"
+    D_SERVER="Server.$version"
+    D_CLIENT="Client.$version"
+    D_FIPS="FIPS.$version"
+    D_EXT_SERVER="ExtendedServer.$version"
+    D_EXT_CLIENT="ExtendedClient.$version"
+
     # we need relative pathnames of these files abd directories, since our 
     # tools can't handle the unix style absolut pathnames on cygnus
 
@@ -370,6 +383,33 @@ if [ -z "${INIT_SOURCED}" -o "${INIT_SOURCED}" != "TRUE" ]; then
     R_DAVEDIR=../dave
     R_EXT_SERVERDIR=../ext_server
     R_EXT_CLIENTDIR=../ext_client
+
+    #
+    # profiles are either paths or domains depending on the setting of
+    # MULTIACCESS_DBM
+    #
+    P_R_CADIR=${R_CADIR}
+    P_R_ALICEDIR=${R_ALICEDIR}
+    P_R_BOBDIR=${R_BOBDIR}
+    P_R_DAVEDIR=${R_DAVEDIR}
+    P_R_SERVERDIR=${R_SERVERDIR}
+    P_R_CLIENTDIR=${R_CLIENTDIR}
+    P_R_EXT_SERVERDIR=${R_EXT_SERVERDIR}
+    P_R_EXT_CLIENTDIR=${R_EXT_CLIENTDIR}
+    P_SERVER_CADIR=${SERVER_CADIR}
+    P_CLIENT_CADIR=${CLIENT_CADIR}
+    if [ -n "${MULTIACCESS_DBM}" ]; then
+	P_R_CADIR="multiaccess:${D_CA}"
+	P_R_ALICEDIR="multiaccess:${D_ALICE}"
+	P_R_BOBDIR="multiaccess:${D_BOB}"
+	P_R_DAVEDIR="multiaccess:${D_DAVE}"
+	P_R_SERVERDIR="multiaccess:${D_SERVER}"
+	P_R_CLIENTDIR="multiaccess:${D_CLIENT}"
+	P_R_EXT_SERVERDIR="multiaccess:${D_EXT_SERVER}"
+	P_R_EXT_CLIENTDIR="multiaccess:${D_EXT_CLIENT}"
+	P_SERVER_CADIR="multiaccess:${D_SERVER_CA}"
+	P_CLIENT_CADIR="multiaccess:${D_CLIENT_CA}"
+    fi
 
     R_PWFILE=../tests.pw.$$
     R_NOISE_FILE=../tests_noise.$$

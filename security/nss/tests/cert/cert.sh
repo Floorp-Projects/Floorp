@@ -34,7 +34,7 @@
 
 ########################################################################
 #
-# mozilla/security/nss/tests/cert/cert.sh
+# mozilla/security/nss/tests/cert/rcert.sh
 #
 # Certificate generating and handeling for NSS QA, can be included 
 # multiple times from all.sh and the individual scripts
@@ -85,7 +85,7 @@ cert_init()
 
 cert_log() ######################    write the cert_status file
 {
-    #echo "$SCRIPTNAME $*"
+    echo "$SCRIPTNAME $*"
     echo $* >>${CERT_LOG_FILE}
 }
 
@@ -98,7 +98,7 @@ cert_log() ######################    write the cert_status file
 #########################################################################
 noise()
 {
-    netstat >> ${NOISE_FILE} 2>&1
+    #netstat >> ${NOISE_FILE} 2>&1
     date >> ${NOISE_FILE} 2>&1
 }
 
@@ -129,6 +129,9 @@ certu()
     else
         html_passed "<TR><TD>${CU_ACTION}"
     fi
+
+    # echo "Contine?"
+    # cat > /dev/null
     return $RET
 }
 
@@ -140,6 +143,7 @@ cert_init_cert()
     CERTDIR="$1"
     CERTNAME="$2"
     CERTSERIAL="$3"
+    DOMAIN="$4"
 
     if [ ! -d "${CERTDIR}" ]; then
         mkdir -p "${CERTDIR}"
@@ -148,6 +152,11 @@ cert_init_cert()
     fi
     cd "${CERTDIR}"
     CERTDIR="." 
+
+    PROFILEDIR=${CERTDIR}
+    if [ -n "${MULTIACCESS_DBM}" ]; then
+	PROFILEDIR="multiaccess:${DOMAIN}"
+    fi
 
     noise
 }
@@ -166,9 +175,9 @@ hw_acc()
    
 
         echo "modutil -add rainbow -libfile /usr/lib/libcryptoki22.so "
-        echo "         -dbdir . 2>&1 "
+        echo "         -dbdir ${PROFILEDIR} 2>&1 "
         echo | modutil -add rainbow -libfile /usr/lib/libcryptoki22.so \
-            -dbdir . 2>&1 
+            -dbdir ${PROFILEDIR} 2>&1 
         if [ "$?" -ne 0 ]; then
             echo "modutil -add rainbow failed in `pwd`"
             HW_ACC_RET=1
@@ -177,10 +186,10 @@ hw_acc()
     
         echo "modutil -add ncipher "
         echo "         -libfile /opt/nfast/toolkits/pkcs11/libcknfast.so "
-        echo "         -dbdir . 2>&1 "
+        echo "         -dbdir ${PROFILEDIR} 2>&1 "
         echo | modutil -add ncipher \
             -libfile /opt/nfast/toolkits/pkcs11/libcknfast.so \
-            -dbdir . 2>&1 
+            -dbdir ${PROFILEDIR} 2>&1 
         if [ "$?" -ne 0 ]; then
             echo "modutil -add ncipher failed in `pwd`"
             HW_ACC_RET=`expr $HW_ACC_RET + 2`
@@ -204,16 +213,16 @@ hw_acc()
 ########################################################################
 cert_create_cert()
 {
-    cert_init_cert "$1" "$2" "$3"
+    cert_init_cert "$1" "$2" "$3" "$4"
 
     CU_ACTION="Initializing ${CERTNAME}'s Cert DB"
-    certu -N -d "${CERTDIR}" -f "${R_PWFILE}" 2>&1
+    certu -N -d "${PROFILEDIR}" -f "${R_PWFILE}" 2>&1
     if [ "$RET" -ne 0 ]; then
         return $RET
     fi
     hw_acc
     CU_ACTION="Import Root CA for $CERTNAME"
-    certu -A -n "TestCA" -t "TC,TC,TC" -f "${R_PWFILE}" -d "${CERTDIR}" \
+    certu -A -n "TestCA" -t "TC,TC,TC" -f "${R_PWFILE}" -d "${PROFILEDIR}" \
           -i "${R_CADIR}/root.cert" 2>&1
     if [ "$RET" -ne 0 ]; then
         return $RET
@@ -234,20 +243,20 @@ cert_add_cert()
 
     CU_ACTION="Generate Cert Request for $CERTNAME"
     CU_SUBJECT="CN=$CERTNAME, E=${CERTNAME}@bogus.com, O=BOGUS NSS, L=Mountain View, ST=California, C=US"
-    certu -R -d "${CERTDIR}" -f "${R_PWFILE}" -z "${R_NOISE_FILE}" -o req 2>&1
+    certu -R -d "${PROFILEDIR}" -f "${R_PWFILE}" -z "${R_NOISE_FILE}" -o req 2>&1
     if [ "$RET" -ne 0 ]; then
         return $RET
     fi
 
     CU_ACTION="Sign ${CERTNAME}'s Request"
-    certu -C -c "TestCA" -m "$CERTSERIAL" -v 60 -d "${R_CADIR}" \
+    certu -C -c "TestCA" -m "$CERTSERIAL" -v 60 -d "${P_R_CADIR}" \
           -i req -o "${CERTNAME}.cert" -f "${R_PWFILE}" 2>&1
     if [ "$RET" -ne 0 ]; then
         return $RET
     fi
 
     CU_ACTION="Import $CERTNAME's Cert"
-    certu -A -n "$CERTNAME" -t "u,u,u" -d "${CERTDIR}" -f "${R_PWFILE}" \
+    certu -A -n "$CERTNAME" -t "u,u,u" -d "${PROFILEDIR}" -f "${R_PWFILE}" \
           -i "${CERTNAME}.cert" 2>&1
     if [ "$RET" -ne 0 ]; then
         return $RET
@@ -267,23 +276,23 @@ cert_all_CA()
     echo nss > ${PWFILE}
 
     ALL_CU_SUBJECT="CN=NSS Test CA, O=BOGUS NSS, L=Mountain View, ST=California, C=US"
-    cert_CA $CADIR TestCA -x "CTu,CTu,CTu"
+    cert_CA $CADIR TestCA -x "CTu,CTu,CTu" ${D_CA}
 
     ALL_CU_SUBJECT="CN=NSS Server Test CA, O=BOGUS NSS, L=Santa Clara, ST=California, C=US"
-    cert_CA $SERVER_CADIR serverCA -x "Cu,Cu,Cu"
+    cert_CA $SERVER_CADIR serverCA -x "Cu,Cu,Cu" ${D_SERVER_CA}
     ALL_CU_SUBJECT="CN=NSS Chain1 Server Test CA, O=BOGUS NSS, L=Santa Clara, ST=California, C=US"
-    cert_CA $SERVER_CADIR chain-1-serverCA "-c serverCA" "u,u,u"
+    cert_CA $SERVER_CADIR chain-1-serverCA "-c serverCA" "u,u,u" ${D_SERVER_CA}
     ALL_CU_SUBJECT="CN=NSS Chain2 Server Test CA, O=BOGUS NSS, L=Santa Clara, ST=California, C=US"
-    cert_CA $SERVER_CADIR chain-2-serverCA "-c chain-1-serverCA" "u,u,u"
+    cert_CA $SERVER_CADIR chain-2-serverCA "-c chain-1-serverCA" "u,u,u" ${D_SERVER_CA}
 
 
 
     ALL_CU_SUBJECT="CN=NSS Client Test CA, O=BOGUS NSS, L=Santa Clara, ST=California, C=US"
-    cert_CA $CLIENT_CADIR clientCA -x "Tu,Cu,Cu"
+    cert_CA $CLIENT_CADIR clientCA -x "Tu,Cu,Cu" ${D_CLIENT_CA}
     ALL_CU_SUBJECT="CN=NSS Chain1 Client Test CA, O=BOGUS NSS, L=Santa Clara, ST=California, C=US"
-    cert_CA $CLIENT_CADIR chain-1-clientCA "-c clientCA" "u,u,u"
+    cert_CA $CLIENT_CADIR chain-1-clientCA "-c clientCA" "u,u,u" ${D_CLIENT_CA}
     ALL_CU_SUBJECT="CN=NSS Chain2 Client Test CA, O=BOGUS NSS, L=Santa Clara, ST=California, C=US"
-    cert_CA $CLIENT_CADIR chain-2-clientCA "-c chain-1-clientCA" "u,u,u"
+    cert_CA $CLIENT_CADIR chain-2-clientCA "-c chain-1-clientCA" "u,u,u" ${D_CLIENT_CA}
 
     rm $CLIENT_CADIR/root.cert $SERVER_CADIR/root.cert
     # root.cert in $CLIENT_CADIR and in $SERVER_CADIR is the one of the last 
@@ -300,6 +309,7 @@ cert_CA()
   NICKNAME=$2
   SIGNER=$3
   TRUSTARG=$4
+  DOMAIN=$5
 
   echo "$SCRIPTNAME: Creating a CA Certificate $NICKNAME =========================="
 
@@ -309,10 +319,14 @@ cert_CA()
   cd ${CUR_CADIR}
   pwd
 
+  LPROFILE=.
+  if [ -n "${MULTIACCESS_DBM}" ]; then
+	LPROFILE="multiaccess:${DOMAIN}"
+  fi
 
   if [ "$SIGNER" = "-x" ] ; then # self signed -> create DB
       CU_ACTION="Creating CA Cert DB"
-      certu -N -d . -f ${R_PWFILE} 2>&1
+      certu -N -d ${LPROFILE} -f ${R_PWFILE} 2>&1
       if [ "$RET" -ne 0 ]; then
           Exit 5 "Fatal - failed to create CA $NICKNAME "
       fi
@@ -324,7 +338,7 @@ cert_CA()
   #
   CU_ACTION="Creating CA Cert $NICKNAME "
   CU_SUBJECT=$ALL_CU_SUBJECT
-  certu -S -n $NICKNAME -t $TRUSTARG -v 60 $SIGNER -d . -1 -2 -5 \
+  certu -S -n $NICKNAME -t $TRUSTARG -v 60 $SIGNER -d ${LPROFILE} -1 -2 -5 \
         -f ${R_PWFILE} -z ${R_NOISE_FILE} 2>&1 <<CERTSCRIPT
 5
 9
@@ -340,13 +354,14 @@ n
 CERTSCRIPT
 
   if [ "$RET" -ne 0 ]; then
+      echo "return value is $RET"
       Exit 6 "Fatal - failed to create CA cert"
   fi
 
   ################# Exporting Root Cert ###################################
   #
   CU_ACTION="Exporting Root Cert"
-  certu -L -n  $NICKNAME -r -d . -o root.cert 
+  certu -L -n  $NICKNAME -r -d ${LPROFILE} -o root.cert 
   if [ "$RET" -ne 0 ]; then
       Exit 7 "Fatal - failed to export root cert"
   fi
@@ -361,43 +376,44 @@ cert_smime_client()
   CERTFAILED=0
   echo "$SCRIPTNAME: Creating Client CA Issued Certificates =============="
 
-  cert_create_cert ${ALICEDIR} "Alice" 3
-  cert_create_cert ${BOBDIR} "Bob" 4
+  cert_create_cert ${ALICEDIR} "Alice" 3 ${D_ALICE}
+  cert_create_cert ${BOBDIR} "Bob" 4  ${D_BOB}
 
   echo "$SCRIPTNAME: Creating Dave's Certificate -------------------------"
-  cert_init_cert "${DAVEDIR}" Dave 5
-  cp ${CADIR}/*.db .
-  hw_acc
+  cert_create_cert "${DAVEDIR}" Dave 5 ${D_DAVE}
+  #echo "************* Copying CA files to ${SERVERDIR}"
+  #cp ${CADIR}/*.db .
+  #hw_acc
 
   #########################################################################
   #
-  cd ${CERTDIR}
-  CU_ACTION="Creating ${CERTNAME}'s Server Cert"
-  CU_SUBJECT="CN=${CERTNAME}, E=${CERTNAME}@bogus.com, O=BOGUS Netscape, L=Mountain View, ST=California, C=US"
-  certu -S -n "${CERTNAME}" -c "TestCA" -t "u,u,u" -m "$CERTSERIAL" -d . \
-        -f "${R_PWFILE}" -z "${R_NOISE_FILE}" -v 60 2>&1
+  #cd ${CERTDIR}
+  #CU_ACTION="Creating ${CERTNAME}'s Server Cert"
+  #CU_SUBJECT="CN=${CERTNAME}, E=${CERTNAME}@bogus.com, O=BOGUS Netscape, L=Mountain View, ST=California, C=US"
+  #certu -S -n "${CERTNAME}" -c "TestCA" -t "u,u,u" -m "$CERTSERIAL" \
+  #	-d ${PROFILEDIR} -f "${R_PWFILE}" -z "${R_NOISE_FILE}" -v 60 2>&1
 
-  CU_ACTION="Export Dave's Cert"
-  cd ${DAVEDIR}
-  certu -L -n "Dave" -r -d . -o Dave.cert
+  #CU_ACTION="Export Dave's Cert"
+  #cd ${DAVEDIR}
+  #certu -L -n "Dave" -r -d ${P_R_DAVE} -o Dave.cert
 
   ################# Importing Certificates for S/MIME tests ###############
   #
   echo "$SCRIPTNAME: Importing Certificates =============================="
   CU_ACTION="Import Alices's cert into Bob's db"
-  certu -E -t "p,p,p" -d ${R_BOBDIR} -f ${R_PWFILE} \
+  certu -E -t "p,p,p" -d ${P_R_BOBDIR} -f ${R_PWFILE} \
         -i ${R_ALICEDIR}/Alice.cert 2>&1
 
   CU_ACTION="Import Bob's cert into Alice's db"
-  certu -E -t "p,p,p" -d ${R_ALICEDIR} -f ${R_PWFILE} \
+  certu -E -t "p,p,p" -d ${P_R_ALICEDIR} -f ${R_PWFILE} \
         -i ${R_BOBDIR}/Bob.cert 2>&1
 
   CU_ACTION="Import Dave's cert into Alice's DB"
-  certu -E -t "p,p,p" -d ${R_ALICEDIR} -f ${R_PWFILE} \
+  certu -E -t "p,p,p" -d ${P_R_ALICEDIR} -f ${R_PWFILE} \
         -i ${R_DAVEDIR}/Dave.cert 2>&1
 
   CU_ACTION="Import Dave's cert into Bob's DB"
-  certu -E -t "p,p,p" -d ${R_BOBDIR} -f ${R_PWFILE} \
+  certu -E -t "p,p,p" -d ${P_R_BOBDIR} -f ${R_PWFILE} \
         -i ${R_DAVEDIR}/Dave.cert 2>&1
 
   if [ "$CERTFAILED" != 0 ] ; then
@@ -419,26 +435,26 @@ cert_extended_ssl()
   echo "     of a chain of CA's which are not in the same database============"
 
   echo "Server Cert"
-  cert_init_cert ${EXT_SERVERDIR} "${HOSTADDR}" 1
+  cert_init_cert ${EXT_SERVERDIR} "${HOSTADDR}" 1 ${D_EXT_SERVER}
 
   CU_ACTION="Initializing ${CERTNAME}'s Cert DB (ext.)"
-  certu -N -d "${CERTDIR}" -f "${R_PWFILE}" 2>&1
+  certu -N -d "${PROFILEDIR}" -f "${R_PWFILE}" 2>&1
 
   CU_ACTION="Generate Cert Request for $CERTNAME (ext)"
   CU_SUBJECT="CN=$CERTNAME, E=${CERTNAME}@bogus.com, O=BOGUS NSS, L=Mountain View, ST=California, C=US"
-  certu -R -d "${CERTDIR}" -f "${R_PWFILE}" -z "${R_NOISE_FILE}" -o req 2>&1
+  certu -R -d "${PROFILEDIR}" -f "${R_PWFILE}" -z "${R_NOISE_FILE}" -o req 2>&1
 
   CU_ACTION="Sign ${CERTNAME}'s Request (ext)"
   cp ${CERTDIR}/req ${SERVER_CADIR}
-  certu -C -c "chain-2-serverCA" -m "$CERTSERIAL" -v 60 -d "${SERVER_CADIR}" \
+  certu -C -c "chain-2-serverCA" -m "$CERTSERIAL" -v 60 -d "${P_SERVER_CADIR}" \
         -i req -o "${CERTNAME}.cert" -f "${R_PWFILE}" 2>&1
 
   CU_ACTION="Import $CERTNAME's Cert  -t u,u,u (ext)"
-  certu -A -n "$CERTNAME" -t "u,u,u" -d "${CERTDIR}" -f "${R_PWFILE}" \
+  certu -A -n "$CERTNAME" -t "u,u,u" -d "${PROFILEDIR}" -f "${R_PWFILE}" \
         -i "${CERTNAME}.cert" 2>&1
 
   CU_ACTION="Import Client Root CA -t T,, for $CERTNAME (ext.)"
-  certu -A -n "clientCA" -t "T,," -f "${R_PWFILE}" -d "${CERTDIR}" \
+  certu -A -n "clientCA" -t "T,," -f "${R_PWFILE}" -d "${PROFILEDIR}" \
           -i "${CLIENT_CADIR}/clientCA.ca.cert" 2>&1
   echo "Importing all the server's own CA chain into the servers DB"
   for CA in `find ${SERVER_CADIR} -name "?*.ca.cert"` ;
@@ -450,30 +466,30 @@ cert_extended_ssl()
           T="-t u,u,u"
       fi
       CU_ACTION="Import $N CA $T for $CERTNAME (ext.) "
-      certu -A -n $N  $T -f "${R_PWFILE}" -d "${CERTDIR}" \
+      certu -A -n $N  $T -f "${R_PWFILE}" -d "${PROFILEDIR}" \
           -i "${CA}" 2>&1
   done
 #============
   echo "Client Cert"
-  cert_init_cert ${EXT_CLIENTDIR} ExtendedSSLUser 1
+  cert_init_cert ${EXT_CLIENTDIR} ExtendedSSLUser 1 ${D_EXT_CLIENT}
 
   CU_ACTION="Initializing ${CERTNAME}'s Cert DB (ext.)"
-  certu -N -d "${CERTDIR}" -f "${R_PWFILE}" 2>&1
+  certu -N -d "${PROFILEDIR}" -f "${R_PWFILE}" 2>&1
 
   CU_ACTION="Generate Cert Request for $CERTNAME (ext)"
   CU_SUBJECT="CN=$CERTNAME, E=${CERTNAME}@bogus.com, O=BOGUS NSS, L=Mountain View, ST=California, C=US"
-  certu -R -d "${CERTDIR}" -f "${R_PWFILE}" -z "${R_NOISE_FILE}" -o req 2>&1
+  certu -R -d "${PROFILEDIR}" -f "${R_PWFILE}" -z "${R_NOISE_FILE}" -o req 2>&1
 
   CU_ACTION="Sign ${CERTNAME}'s Request (ext)"
   cp ${CERTDIR}/req ${CLIENT_CADIR}
-  certu -C -c "chain-2-clientCA" -m "$CERTSERIAL" -v 60 -d "${CLIENT_CADIR}" \
+  certu -C -c "chain-2-clientCA" -m "$CERTSERIAL" -v 60 -d "${P_CLIENT_CADIR}" \
         -i req -o "${CERTNAME}.cert" -f "${R_PWFILE}" 2>&1
 
   CU_ACTION="Import $CERTNAME's Cert -t u,u,u (ext)"
-  certu -A -n "$CERTNAME" -t "u,u,u" -d "${CERTDIR}" -f "${R_PWFILE}" \
+  certu -A -n "$CERTNAME" -t "u,u,u" -d "${PROFILEDIR}" -f "${R_PWFILE}" \
         -i "${CERTNAME}.cert" 2>&1
   CU_ACTION="Import Server Root CA -t C,C,C for $CERTNAME (ext.)"
-  certu -A -n "serverCA" -t "C,C,C" -f "${R_PWFILE}" -d "${CERTDIR}" \
+  certu -A -n "serverCA" -t "C,C,C" -f "${R_PWFILE}" -d "${PROFILEDIR}" \
           -i "${SERVER_CADIR}/serverCA.ca.cert" 2>&1
   echo "Importing all the client's own CA chain into the servers DB"
   for CA in `find ${CLIENT_CADIR} -name "?*.ca.cert"` ;
@@ -485,7 +501,7 @@ cert_extended_ssl()
           T="-t u,u,u"
       fi
       CU_ACTION="Import $N CA $T for $CERTNAME (ext.)"
-      certu -A -n $N  $T -f "${R_PWFILE}" -d "${CERTDIR}" \
+      certu -A -n $N  $T -f "${R_PWFILE}" -d "${PROFILEDIR}" \
           -i "${CA}" 2>&1
   done
   if [ "$CERTFAILED" != 0 ] ; then
@@ -504,17 +520,20 @@ cert_ssl()
   #
   CERTFAILED=0
   echo "$SCRIPTNAME: Creating Client CA Issued Certificates ==============="
-  cert_create_cert ${CLIENTDIR} "TestUser" 6
+  cert_create_cert ${CLIENTDIR} "TestUser" 6 ${D_CLIENT}
 
   echo "$SCRIPTNAME: Creating Server CA Issued Certificate for \\"
   echo "             ${HOSTADDR} ------------------------------------"
-  cert_init_cert ${SERVERDIR} "${HOSTADDR}" 1
-  cp ${CADIR}/*.db .
-  hw_acc
-  CU_ACTION="Creating ${CERTNAME}'s Server Cert"
-  CU_SUBJECT="CN=${CERTNAME}, O=BOGUS Netscape, L=Mountain View, ST=California, C=US"
-  certu -S -n "${CERTNAME}" -c "TestCA" -t "Pu,Pu,Pu" -d . -f "${R_PWFILE}" \
-        -z "${R_NOISE_FILE}" -v 60 2>&1
+  cert_create_cert ${SERVERDIR} "${HOSTADDR}" 1 ${D_SERVER}
+  certu -M -n "TestCA" -t "TC,TC,TC" -d ${PROFILEDIR}
+#  cert_init_cert ${SERVERDIR} "${HOSTADDR}" 1 ${D_SERVER}
+#  echo "************* Copying CA files to ${SERVERDIR}"
+#  cp ${CADIR}/*.db .
+#  hw_acc
+#  CU_ACTION="Creating ${CERTNAME}'s Server Cert"
+#  CU_SUBJECT="CN=${CERTNAME}, O=BOGUS Netscape, L=Mountain View, ST=California, C=US"
+#  certu -S -n "${CERTNAME}" -c "TestCA" -t "Pu,Pu,Pu" -d ${PROFILEDIR} \
+#	 -f "${R_PWFILE}" -z "${R_NOISE_FILE}" -v 60 2>&1
 
   if [ "$CERTFAILED" != 0 ] ; then
       cert_log "ERROR: SSL failed $RET"
@@ -533,6 +552,10 @@ cert_stresscerts()
   CERTDIR="$CLIENTDIR"
   cd "${CERTDIR}"
 
+  PROFILEDIR=${CERTDIR}
+  if [ -n "${MULTIACCESS_DBM}" ]; then
+     PROFILEDIR="multiaccess:${D_CLIENT}"
+  fi
   CERTFAILED=0
   echo "$SCRIPTNAME: Creating Client CA Issued Certificates ==============="
 
@@ -560,13 +583,13 @@ cert_fips()
 {
   CERTFAILED=0
   echo "$SCRIPTNAME: Creating FIPS 140-1 DSA Certificates =============="
-  cert_init_cert "${FIPSDIR}" "FIPS PUB 140-1 Test Certificate" 1000
+  cert_init_cert "${FIPSDIR}" "FIPS PUB 140-1 Test Certificate" 1000 "${D_FIPS}"
 
   CU_ACTION="Initializing ${CERTNAME}'s Cert DB"
-  certu -N -d "${CERTDIR}" -f "${R_FIPSPWFILE}" 2>&1
+  certu -N -d "${PROFILEDIR}" -f "${R_FIPSPWFILE}" 2>&1
 
   echo "$SCRIPTNAME: Enable FIPS mode on database -----------------------"
-  modutil -dbdir ${CERTDIR} -fips true 2>&1 <<MODSCRIPT
+  modutil -dbdir ${PROFILEDIR} -fips true 2>&1 <<MODSCRIPT
 y
 MODSCRIPT
   CU_ACTION="Enable FIPS mode on database for ${CERTNAME}"
@@ -579,7 +602,7 @@ MODSCRIPT
 
   CU_ACTION="Generate Certificate for ${CERTNAME}"
   CU_SUBJECT="CN=${CERTNAME}, E=fips@bogus.com, O=BOGUS NSS, OU=FIPS PUB 140-1, L=Mountain View, ST=California, C=US"
-  certu -S -n ${FIPSCERTNICK} -x -t "Cu,Cu,Cu" -d "${CERTDIR}" -f "${R_FIPSPWFILE}" -k dsa -m ${CERTSERIAL} -z "${R_NOISE_FILE}" 2>&1
+  certu -S -n ${FIPSCERTNICK} -x -t "Cu,Cu,Cu" -d "${PROFILEDIR}" -f "${R_FIPSPWFILE}" -k dsa -m ${CERTSERIAL} -z "${R_NOISE_FILE}" 2>&1
   if [ "$RET" -eq 0 ]; then
     cert_log "SUCCESS: FIPS passed"
   fi
