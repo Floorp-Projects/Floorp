@@ -241,6 +241,7 @@ foreach my $field (("bug_severity", "bug_status", "op_sys",
 #
 # FIXME: The excluded values parameter should go away - the QA contact
 #        fields should use NULL instead - see bug #109474.
+#        The same goes for series; no bug for that yet.
 
 sub CrossCheck {
     my $table = shift @_;
@@ -281,15 +282,15 @@ sub CrossCheck {
     }
 }
 
+CrossCheck('classifications', 'id',
+           ['products', 'classification_id']);
+
 CrossCheck("keyworddefs", "id",
            ["keywords", "keywordid"]);
 
 CrossCheck("fielddefs", "fieldid",
-           ["bugs_activity", "fieldid"]);
-
-CrossCheck("attachments", "attach_id",
-           ["flags", "attach_id"],
-           ["bugs_activity", "attach_id"]);
+           ["bugs_activity", "fieldid"],
+           ['profiles_activity', 'fieldid']);
 
 CrossCheck("flagtypes", "id",
            ["flags", "type_id"]);
@@ -302,6 +303,7 @@ CrossCheck("bugs", "bug_id",
            ["longdescs", "bug_id"],
            ["dependencies", "blocked"],
            ["dependencies", "dependson"],
+           ['flags', 'bug_id'],
            ["votes", "bug_id"],
            ["keywords", "bug_id"],
            ["duplicates", "dupe_of", "dupe"],
@@ -309,27 +311,36 @@ CrossCheck("bugs", "bug_id",
 
 CrossCheck("groups", "id",
            ["bug_group_map", "group_id"],
+           ['category_group_map', 'group_id'],
            ["group_group_map", "grantor_id"],
            ["group_group_map", "member_id"],
            ["group_control_map", "group_id"],
            ["user_group_map", "group_id"]);
 
 CrossCheck("profiles", "userid",
+           ['profiles_activity', 'userid'],
+           ['profiles_activity', 'who'],
            ["bugs", "reporter", "bug_id"],
            ["bugs", "assigned_to", "bug_id"],
            ["bugs", "qa_contact", "bug_id", ["0"]],
            ["attachments", "submitter_id", "bug_id"],
+           ['flags', 'setter_id', 'bug_id'],
+           ['flags', 'requestee_id', 'bug_id'],
            ["bugs_activity", "who", "bug_id"],
            ["cc", "who", "bug_id"],
+           ['quips', 'userid'],
            ["votes", "who", "bug_id"],
            ["longdescs", "who", "bug_id"],
            ["logincookies", "userid"],
            ["namedqueries", "userid"],
+           ['series', 'creator', 'series_id', ['0']],
            ["watch", "watcher"],
            ["watch", "watched"],
+           ['whine_events', 'owner_userid'],
+           ['whine_schedules', 'mailto_userid'],
            ["tokens", "userid"],
-           ["components", "initialowner", "name"],
            ["user_group_map", "user_id"],
+           ["components", "initialowner", "name"],
            ["components", "initialqacontact", "name", ["0"]]);
 
 CrossCheck("products", "id",
@@ -340,6 +351,16 @@ CrossCheck("products", "id",
            ["group_control_map", "product_id"],
            ["flaginclusions", "product_id", "type_id"],
            ["flagexclusions", "product_id", "type_id"]);
+
+CrossCheck('series', 'series_id',
+           ['series_data', 'series_id']);
+
+CrossCheck('series_categories', 'id',
+           ['series', 'category']);
+
+CrossCheck('whine_events', 'id',
+           ['whine_queries', 'eventid'],
+           ['whine_schedules', 'eventid']);
 
 ###########################################################################
 # Perform double field referential (cross) checks
@@ -399,8 +420,14 @@ sub DoubleCrossCheck {
     }
 }
 
+DoubleCrossCheck('attachments', 'bug_id', 'attach_id',
+                 ['flags', 'bug_id', 'attach_id'],
+                 ['bugs_activity', 'bug_id', 'attach_id']);
+
 DoubleCrossCheck("components", "product_id", "id",
-                 ["bugs", "product_id", "component_id", "bug_id"]);
+                 ["bugs", "product_id", "component_id", "bug_id"],
+                 ['flagexclusions', 'product_id', 'component_id'],
+                 ['flaginclusions', 'product_id', 'component_id']);
 
 DoubleCrossCheck("versions", "product_id", "value",
                  ["bugs", "product_id", "version", "bug_id"]);
