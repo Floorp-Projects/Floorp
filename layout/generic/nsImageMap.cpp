@@ -902,6 +902,14 @@ nsImageMap::ContentChanged(nsIDocument *aDocument,
 }
 
 NS_IMETHODIMP
+nsImageMap::ContentStateChanged(nsIDocument* aDocument,
+                                nsIContent* aContent)
+{
+  return NS_OK;
+}
+
+
+NS_IMETHODIMP
 nsImageMap::AttributeChanged(nsIDocument *aDocument,
                              nsIContent*  aContent,
                              nsIAtom*     aAttribute,

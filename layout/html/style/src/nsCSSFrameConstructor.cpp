@@ -3468,6 +3468,9 @@ ApplyRenderingChangeToTree(nsIPresContext* aPresContext,
 
   // Trigger rendering updates by damaging this frame and any
   // continuations of this frame.
+
+  // XXX this needs to detect the need for a view due to an opacity change and deal with it...
+
   while (nsnull != aFrame) {
     // Get the frame's bounding rect
     nsRect r;
@@ -3559,6 +3562,87 @@ nsCSSFrameConstructor::ContentChanged(nsIPresContext* aPresContext,
 
   return rv;
 }
+
+NS_IMETHODIMP
+nsCSSFrameConstructor::ContentStateChanged(nsIPresContext* aPresContext, 
+                                           nsIContent* aContent)
+{
+  nsresult  result = NS_OK;
+
+  nsCOMPtr<nsIPresShell> shell;
+  aPresContext->GetShell(getter_AddRefs(shell));
+  nsIFrame*     frame;
+   
+  shell->GetPrimaryFrameFor(aContent, &frame);
+  
+  PRInt32 hint    = NS_STYLE_HINT_NONE;
+  PRBool  reflow  = PR_FALSE;
+  PRBool  reframe = PR_FALSE;
+  PRBool  render  = PR_FALSE;
+  PRBool  notify  = PR_FALSE;
+
+#if 0
+  NS_FRAME_LOG(NS_FRAME_TRACE_CALLS,
+     ("HTMLStyleSheet::ContentStateChanged: content=%p[%s] frame=%p",
+      aContent, ContentTag(aContent, 0), frame));
+#endif
+
+  if (frame) {
+    nsIStyleContext* oldFrameContext;
+    frame->GetStyleContext(&oldFrameContext);
+    NS_ASSERTION(nsnull != oldFrameContext, "frame must have style context");
+    if (oldFrameContext) {
+      nsIStyleContext*  parentContext = oldFrameContext->GetParent();
+      frame->ReResolveStyleContext(aPresContext, parentContext);
+      NS_IF_RELEASE(parentContext);
+      nsIStyleContext* newFrameContext;
+      frame->GetStyleContext(&newFrameContext);
+      if (newFrameContext) {
+        if (newFrameContext != oldFrameContext) {
+          newFrameContext->CalcStyleDifference(oldFrameContext, hint);
+        }
+        NS_RELEASE(newFrameContext);
+      }
+      NS_RELEASE(oldFrameContext);
+    }    
+
+    switch (hint) {
+      default:
+      case NS_STYLE_HINT_UNKNOWN:
+      case NS_STYLE_HINT_FRAMECHANGE:
+        reframe = PR_TRUE;
+      case NS_STYLE_HINT_REFLOW:
+        reflow = PR_TRUE;
+      case NS_STYLE_HINT_VISUAL:
+        render = PR_TRUE;
+      case NS_STYLE_HINT_CONTENT:
+        notify = PR_TRUE;
+      case NS_STYLE_HINT_AURAL:
+      case NS_STYLE_HINT_NONE:
+        break;
+    }
+
+    // apply changes
+    if (reframe) {
+      result = RecreateFramesForContent(aPresContext, aContent);
+    }
+    else if (reflow) {
+      StyleChangeReflow(aPresContext, frame, nsnull);
+    }
+    else if (render) {
+      ApplyRenderingChangeToTree(aPresContext, frame);
+    }
+    else if (notify) {
+      result = frame->ContentChanged(aPresContext, aContent, nsnull);
+    }
+  }
+  else {
+    result = RecreateFramesForContent(aPresContext, aContent);
+  }
+  return result;
+}
+
+
     
 NS_IMETHODIMP
 nsCSSFrameConstructor::AttributeChanged(nsIPresContext* aPresContext,
@@ -3617,7 +3701,7 @@ nsCSSFrameConstructor::AttributeChanged(nsIPresContext* aPresContext,
 
   // apply changes
   if (PR_TRUE == reframe) {
-      RecreateFramesOnAttributeChange(aPresContext, aContent, aAttribute);
+    RecreateFramesForContent(aPresContext, aContent);
   }
   else if (PR_TRUE == restyle) {
     // If there is no frame then there is no point in re-styling it,
@@ -4155,9 +4239,8 @@ nsCSSFrameConstructor::CreateContinuingFrame(nsIPresContext* aPresContext,
 }
 
 nsresult
-nsCSSFrameConstructor::RecreateFramesOnAttributeChange(nsIPresContext* aPresContext,
-                                                       nsIContent* aContent,
-                                                       nsIAtom* aAttribute)                                   
+nsCSSFrameConstructor::RecreateFramesForContent(nsIPresContext* aPresContext,
+                                                nsIContent* aContent)                                   
 {
   nsresult rv = NS_OK;
 

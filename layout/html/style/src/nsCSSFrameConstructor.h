@@ -78,6 +78,8 @@ public:
   NS_IMETHOD ContentChanged(nsIPresContext* aPresContext,
                             nsIContent* aContent,
                             nsISupports* aSubContent);
+  NS_IMETHOD ContentStateChanged(nsIPresContext* aPresContext, 
+                                 nsIContent* aContent);
   NS_IMETHOD AttributeChanged(nsIPresContext* aPresContext,
                               nsIContent* aContent,
                               nsIAtom* aAttribute,
@@ -369,9 +371,9 @@ protected:
                                  PRBool           aIsFixedPositioned,
                                  PRBool           aCreateBlock);
 
-  nsresult RecreateFramesOnAttributeChange(nsIPresContext* aPresContext,
-                                           nsIContent* aContent,
-                                           nsIAtom* aAttribute);
+  nsresult RecreateFramesForContent(nsIPresContext* aPresContext,
+                                    nsIContent* aContent);
+
 
   nsresult CreateContinuingOuterTableFrame(nsIPresContext*  aPresContext,
                                            nsIFrame*        aFrame,

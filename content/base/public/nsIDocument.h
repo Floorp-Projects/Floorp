@@ -201,6 +201,7 @@ public:
   NS_IMETHOD EndLoad() = 0;
   NS_IMETHOD ContentChanged(nsIContent* aContent,
                             nsISupports* aSubContent) = 0;
+  NS_IMETHOD ContentStateChanged(nsIContent* aContent) = 0;
   NS_IMETHOD AttributeChanged(nsIContent* aChild,
                               nsIAtom* aAttribute,
                               PRInt32 aHint) = 0; // See nsStyleConsts fot hint values

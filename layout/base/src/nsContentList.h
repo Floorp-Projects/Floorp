@@ -72,6 +72,8 @@ public:
   NS_IMETHOD ContentChanged(nsIDocument *aDocument,
 			                      nsIContent* aContent,
                             nsISupports* aSubContent) { return NS_OK; }
+  NS_IMETHOD ContentStateChanged(nsIDocument* aDocument,
+                                 nsIContent* aContent) { return NS_OK; }
   NS_IMETHOD AttributeChanged(nsIDocument *aDocument,
                               nsIContent*  aContent,
                               nsIAtom*     aAttribute,
