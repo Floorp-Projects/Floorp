@@ -75,7 +75,7 @@ nsOutputStream& operator << (nsOutputStream& s, const nsPersistentFileDescriptor
     nsSimpleCharString data;
     d.GetData(data, dataSize);
     // First write (in hex) the length of the data to follow.  Exactly 8 bytes
-    sprintf(littleBuf, "%0.8x", dataSize);
+    sprintf(littleBuf, "%.8x", dataSize);
     s << littleBuf;
     // Now write the data itself
     s << (const char*)data;
