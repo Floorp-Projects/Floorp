@@ -47,7 +47,7 @@ function onLoad()
 {
     init();
     if (window.arguments && window.arguments[0]) {
-        selectedServerKey = window.arguments[0].smtpServerKey;
+        var selectedServerKey = window.arguments[0].smtpServerKey;
         preSelectServer(selectedServerKey);
     }
 
