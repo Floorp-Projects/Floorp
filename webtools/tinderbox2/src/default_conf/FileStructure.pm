@@ -6,8 +6,8 @@
 # partitions and this will require making directory structure in
 # get_filename() less regular then we have defined it here.
 
-# $Revision: 1.10 $ 
-# $Date: 2003/08/17 02:13:17 $ 
+# $Revision: 1.11 $ 
+# $Date: 2004/07/18 16:44:15 $ 
 # $Author: kestes%walrus.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/default_conf/FileStructure.pm,v $ 
 # $Name:  $ 
@@ -74,7 +74,7 @@ $URL_HTML = ($TinderConfig::URL_HTML ||
 
          'gunzip' => "$URL_BIN/gunzip.cgi",
 
-         'treepages' => "$URL_HTML",
+         'indexpage' => "$URL_HTML/index.html",
          
          'regenerate' => "$URL_BIN/regenerate.cgi",  
 
