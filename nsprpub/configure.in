@@ -862,7 +862,7 @@ case "$target" in
         AC_DEFINE(ppc)
         CPU_ARCH=ppc
     fi
-    DSO_LDOPTS='-dynamiclib -compatibility_version 1 -current_version 1 -all_load -install_name @executable_path/$@'
+    DSO_LDOPTS='-dynamiclib -compatibility_version 1 -current_version 1 -all_load -install_name @executable_path/$@ -headerpad_max_install_names'
     # Use the standard preprocessor (cpp)
     CFLAGS="$CFLAGS -no-cpp-precomp"
     MKSHLIB='$(CC) -arch $(CPU_ARCH) $(DSO_LDOPTS) -o $@'
