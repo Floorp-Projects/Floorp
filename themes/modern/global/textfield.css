@@ -48,6 +48,7 @@
   textfield[disabled="true"] > .textfield-internal-box
     {
       border              : 1px solid #999999;
+      background-color    : threedface;
     }
   
   .textarea-internal-box
