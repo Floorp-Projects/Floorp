@@ -1084,9 +1084,7 @@ NS_IMETHODIMP CViewSourceHTML::HandleToken(CToken* aToken,nsIParser* aParser) {
     case eToken_comment: 
       {
         nsAutoString theStr;
-        theStr.Assign(NS_LITERAL_STRING("<!--") +
-                      aToken->GetStringValue() +
-                      NS_LITERAL_STRING("-->") );
+        aToken->AppendSourceTo(theStr);
         result=WriteTag(mCommentTag,theStr,0,PR_TRUE);
       }
       break;

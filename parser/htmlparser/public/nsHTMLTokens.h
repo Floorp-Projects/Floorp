@@ -210,10 +210,14 @@ class CCommentToken: public CHTMLToken {
     virtual const char* GetClassName(void);
     virtual PRInt32     GetTokenType(void);
     virtual const nsAString& GetStringValue(void);
-            char        mLeadingChar;
+    virtual void        AppendSourceTo(nsAString& anOutputString);
+
+    nsresult ConsumeStrictComment(nsScanner& aScanner);
+    nsresult ConsumeQuirksComment(nsScanner& aScanner);
 
   protected:
-    nsString          mTextValue;
+    nsSlidingSubstring mComment; // does not include MDO & MDC
+    nsSlidingSubstring mCommentDecl; // includes MDO & MDC
 };
 
 
