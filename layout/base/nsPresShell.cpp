@@ -1566,20 +1566,29 @@ PresShell::DoCopy(nsISelectionMgr* aSelectionMgr)
       nsAutoString strBuf;
       ((nsHTMLToTXTSinkStream*)sink)->GetStringBuffer(strBuf);
 
-      nsIClipboard* clipboard;
+      nsIClipboard* clipboard = 0;
       nsresult rv = nsServiceManager::GetService(kCClipboardCID,
                                                  kIClipboardIID,
                                                  (nsISupports **)&clipboard);
-      nsITransferable * trans;
+      nsITransferable * trans = 0;
       rv = nsComponentManager::CreateInstance(kCTransferableCID, nsnull, kITransferableIID, (void**) &trans);
       if (nsnull != trans) {
         //trans->AddDataFlavor("text/xif", "XIF Format");
         trans->AddDataFlavor(kTextMime, "Text Format");
+      } else {
+        printf("PresShell::DoCopy(), trans is null.\n");
       }
 
-      trans->SetTransferString(strBuf);
-      clipboard->SetTransferable(trans, nsnull);
-      clipboard->SetClipboard();
+      if(trans) {
+        trans->SetTransferString(strBuf);
+      }
+
+      if(clipboard) {
+        clipboard->SetTransferable(trans, nsnull);
+        clipboard->SetClipboard();
+      } else {
+        printf("PresShell::DoCopy(), clipboard instance is null.\n");
+      }
 
       NS_IF_RELEASE(clipboard);
       NS_IF_RELEASE(trans);
