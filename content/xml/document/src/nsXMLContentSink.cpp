@@ -264,7 +264,7 @@ nsXMLContentSink::DidBuildModel()
       NS_ASSERTION(mDocument->IndexOf(mDocElement) != -1,
                    "mDocElement not in doc?");
 
-      mozAutoDocUpdate(mDocument, UPDATE_CONTENT_MODEL, PR_TRUE);
+      mozAutoDocUpdate docUpdate(mDocument, UPDATE_CONTENT_MODEL, PR_TRUE);
       mDocument->ContentInserted(nsnull, mDocElement,
                                  // XXXbz is this last arg relevant if
                                  // the container is null?
