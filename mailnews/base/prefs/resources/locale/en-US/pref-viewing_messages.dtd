@@ -71,6 +71,9 @@
 <!ENTITY convertEmoticons.label           "Display emoticons as graphics">
 <!ENTITY convertEmoticons.accesskey       "D">
 <!ENTITY viewingMessages.label            "Viewing Messages">
+<!-- LOCALIZATION NOTE (markMessagesRead.label): This will concatenate with
+     "xxx seconds before marking a message as read", using a number and
+     (seconds.label). -->
 <!ENTITY markMessagesRead.label           "Wait">
 <!ENTITY markMessagesRead.accesskey       "W">
 <!ENTITY seconds.label                    "seconds before marking a message as read">
