@@ -1054,7 +1054,7 @@ PRInt32 nsSmtpProtocol::SendDataResponse()
 
 #ifdef UNREADY_CODE
 	NET_Progress(CE_WINDOW_ID, XP_GetString(MK_MSG_DELIV_MAIL));
-#endif
+#endif /* UNREADY_CODE */
 
 #ifdef UNREADY_CODE
 	/* get the size of the message */
@@ -1068,7 +1068,7 @@ PRInt32 nsSmtpProtocol::SendDataResponse()
 			m_totalMessageSize = stat_entry.st_size;
 	  }
 	else
-#endif
+#endif /* UNREADY_CODE */
 	  {
 //		m_runningURL->GetBodySize(&m_totalMessageSize);
 	  }
@@ -1186,7 +1186,7 @@ PRInt32 nsSmtpProtocol::SendMessageInFile()
 #ifdef UNREADY_CODE
 		NET_Progress(CE_WINDOW_ID,
 					XP_GetString(XP_MESSAGE_SENT_WAITING_MAIL_REPLY));
-#endif
+#endif /* UNREADY_CODE */
         m_nextState = SMTP_RESPONSE;
         m_nextStateAfterResponse = SMTP_SEND_MESSAGE_RESPONSE;
         return(0);
@@ -1231,7 +1231,7 @@ PRInt32 nsSmtpProtocol::SendPostData()
 	if(m_totalMessageSize)
 		FE_SetProgressBarPercent(CE_WINDOW_ID,
 						  	 m_totalAmountWritten*100/m_totalMessageSize);
-#endif
+#endif /* UNREADY_CODE */
 
     return(status);
 }
