@@ -88,6 +88,7 @@ GtkItemFactoryEntry menu_items[] =
 //#ifdef DEBUG // turning off for now
   { "/_Debug",				nsnull,	nsnull,			0,			"<Branch>"	},
   { "/Debug/_Visual Debugging",		nsnull,	(GIFC)gtk_ifactory_cb,	VIEWER_VISUAL_DEBUGGING,nsnull },
+  { "/Debug/Visual _Event Debugging",		nsnull,	(GIFC)gtk_ifactory_cb,	VIEWER_VISUAL_EVENT_DEBUGGING,nsnull },
   { "/Debug/sep1",			nsnull,	nsnull,			0,			"<Separator>" },
   { "/Debug/Event Debugging/Toggle Paint Flashing",		nsnull,	(GIFC)gtk_ifactory_cb,	VIEWER_TOGGLE_PAINT_FLASHING,nsnull },
   { "/Debug/Event Debugging/Toggle Paint Dumping",		nsnull,	(GIFC)gtk_ifactory_cb,	VIEWER_TOGGLE_PAINT_DUMPING,nsnull },

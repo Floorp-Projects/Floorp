@@ -3041,6 +3041,23 @@ nsBrowserWindow::ToggleFrameBorders()
 }
 
 void
+nsBrowserWindow::ToggleVisualEventDebugging()
+{
+  nsILayoutDebugger* ld;
+  nsresult rv = nsComponentManager::CreateInstance(kLayoutDebuggerCID,
+                                                   nsnull,
+                                                   kILayoutDebuggerIID,
+                                                   (void **)&ld);
+  if (NS_SUCCEEDED(rv)) {
+    PRBool showing;
+    ld->GetShowEventTargetFrameBorder(&showing);
+    ld->SetShowEventTargetFrameBorder(!showing);
+    ForceRefresh();
+    NS_RELEASE(ld);
+  }
+}
+
+void
 nsBrowserWindow::ToggleBoolPrefAndRefresh(const char * aPrefName)
 {
   NS_ASSERTION(nsnull != aPrefName,"null pref name");
@@ -3182,6 +3199,11 @@ nsBrowserWindow::DispatchDebugMenu(PRInt32 aID)
   switch(aID) {
     case VIEWER_VISUAL_DEBUGGING:
       ToggleFrameBorders();
+      result = nsEventStatus_eConsumeNoDefault;
+      break;
+
+    case VIEWER_VISUAL_EVENT_DEBUGGING:
+      ToggleVisualEventDebugging();
       result = nsEventStatus_eConsumeNoDefault;
       break;
 
