@@ -75,7 +75,6 @@ REQUIRES	= \
 		  js \
 		  libfont \
 		  mariner \
-		  msg \
 		  plds \
 		  nspr20 \
 		  parse \
@@ -96,6 +95,7 @@ REQUIRES	= \
 CSRCS		= \
 		  bkmks.c \
 		  $(NULL)
+
 ifdef MOZ_LDAP
 REQUIRES += \
                    ldap \
@@ -163,7 +163,6 @@ MOCSRCS		=	\
 			moc_QtContext.cpp	\
 			moc_QtBrowserContext.cpp \
 			moc_QtBookmarksContext.cpp \
-			moc_QtHistoryContext.cpp \
 			moc_QtPrefs.cpp	\
 			moc_SaveAsDialog.cpp	\
 			moc_SecurityDialog.cpp \
@@ -176,8 +175,7 @@ MOCSRCS		=	\
                         moc_qtvbox.cpp\
 			moc_qthbox.cpp\
 			moc_qtgrid.cpp\
-                        moc_qtlabelled.cpp\
-			moc_histlistview.cpp
+                        moc_qtlabelled.cpp
 
 CPPSRCS		= 	\
 			callback.cpp	\
@@ -217,13 +215,11 @@ CPPSRCS		= 	\
 			streaming.cpp	\
 			synchron.cpp	\
 			toolbars.cpp \
-                        QtHistoryContext.cpp \
 			qtbuttonrow.cpp \
                         qtvbox.cpp            \
 			qthbox.cpp \
 			qtlabelled.cpp \
                         qtgrid.cpp            \
-			histlistview.cpp      \
 			$(MOCSRCS)
 
 OBJS		= $(CSRCS:.c=.o) $(CPPSRCS:.cpp=.o)
@@ -1101,4 +1097,4 @@ $(OBJDIR)/icon-pixmaps.inc: $(OBJDIR)/embed $(ICONS)
 ####################################################################
 
 moc_%.cpp: %.h
-	moc $< -o $@
+	$(MOC) $< -o $@
