@@ -883,20 +883,21 @@ nsBlockFrame::Reflow(nsPresContext*          aPresContext,
       PRInt32 numOverflowPlace = overflowPlace->GetLength();
       nsLineList* overflowLines = GetOverflowLines();
       if (overflowLines) {
-        line_iterator firstLine = overflowLines->begin(); 
+        nsPlaceholderFrame* lastPlaceholder = 
+          (nsPlaceholderFrame*)overflowPlace->LastChild();
+        line_iterator firstLine = overflowLines->begin();
+        nsIFrame* firstFrame = firstLine->mFirstChild;
+
+        // hook up the last placeholder with the existing overflow frames
+        NS_ASSERTION(firstFrame != lastPlaceholder, "trying to set next sibling to self");
+        lastPlaceholder->SetNextSibling(firstFrame);
         if (firstLine->IsBlock()) { 
           // Create a new line as the first line and put the floats there;
           nsLineBox* newLine = state.NewLineBox(overflowPlace->FirstChild(), numOverflowPlace, PR_FALSE);
-          firstLine = mLines.before_insert(firstLine, newLine);
+          overflowLines->push_front(newLine);
         }
         else { // floats go on 1st overflow line
-          nsIFrame* firstFrame = firstLine->mFirstChild;
           firstLine->mFirstChild = overflowPlace->FirstChild();
-          // hook up the last placeholder with the original frames
-          nsPlaceholderFrame* lastPlaceholder = 
-            (nsPlaceholderFrame*)overflowPlace->LastChild();
-          lastPlaceholder->SetNextSibling(firstFrame);
-          NS_ASSERTION(firstFrame != lastPlaceholder, "trying to set next sibling to self");
           firstLine->SetChildCount(firstLine->GetChildCount() + numOverflowPlace);
         }
       }
@@ -909,8 +910,9 @@ nsBlockFrame::Reflow(nsPresContext*          aPresContext,
         nsLineList::iterator nextToLastLine = ----end_lines();
         PushLines(state, nextToLastLine);
       }
-      state.mReflowStatus |= NS_FRAME_NOT_COMPLETE;
+      state.mReflowStatus |= NS_FRAME_NOT_COMPLETE | NS_FRAME_REFLOW_NEXTINFLOW;
     }
+
     delete overflowPlace;
   }
 
@@ -4070,9 +4072,6 @@ nsBlockFrame::PlaceLine(nsBlockReflowState& aState,
 
   // Any below current line floats to place?
   if (aState.mBelowCurrentLineFloats.NotEmpty()) {
-    // keep track of the last overflow float in case we need to undo and push the line
-    nsFrameList* overflowPlace = GetOverflowPlaceholders();
-    nsIFrame* lastPlaceholder = (overflowPlace) ? overflowPlace->LastChild() : nsnull;
     // Reflow the below-current-line floats, then add them to the
     // lines float list if there aren't any truncated floats.
     if (aState.PlaceBelowCurrentLineFloats(aState.mBelowCurrentLineFloats)) {
@@ -4082,6 +4081,8 @@ nsBlockFrame::PlaceLine(nsBlockReflowState& aState,
       // At least one float is truncated, so fix up any placeholders that got split and 
       // push the line. XXX It may be better to put the float on the next line, but this 
       // is not common enough to justify the complexity.
+      nsFrameList* overflowPlace = GetOverflowPlaceholders();
+      nsIFrame* lastPlaceholder = (overflowPlace) ? overflowPlace->LastChild() : nsnull;
       PushTruncatedPlaceholderLine(aState, aLine, lastPlaceholder, *aKeepReflowGoing);
     }
   }
