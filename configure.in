@@ -751,8 +751,6 @@ alpha*-*-osf*)
 	AC_DEFINE(NSCAP_DISABLE_TEST_DONTQUERY_CASES)
 	AC_DEFINE(NSCAP_DISABLE_DEBUG_PTR_TYPES)
     fi
-    dnl Needed in order to pick up the prototype for usleep.
-    AC_DEFINE(_XOPEN_SOURCE_EXTENDED)
     ;;
 
 *-qnx*) 
