@@ -60,7 +60,8 @@ function Tokenizer(s, f, l) {
     this.tokens = [];
     this.tokenIndex = 0;
     this.lookahead = 0;
-    this.scanNewlines = this.scanOperand = false;
+    this.scanNewlines = false;
+    this.scanOperand = true;
     this.filename = f || "";
     this.lineno = l || 1;
 }
@@ -103,13 +104,6 @@ Tokenizer.prototype = {
         this.scanNewlines = true;
         var tt = this.peek();
         this.scanNewlines = false;
-        return tt;
-    },
-
-    scanForOperand: function (method) {
-        this.scanOperand = true;
-        var tt = this[method]();
-        this.scanOperand = false;
         return tt;
     },
 
@@ -507,7 +501,7 @@ function Statement(t, x) {
         if (!x.inFunction)
             throw t.newSyntaxError("Invalid return");
         n = new Node(t);
-        tt = t.scanForOperand('peekOnSameLine');
+        tt = t.peekOnSameLine();
         if (tt != END && tt != NEWLINE && tt != SEMICOLON && tt != RIGHT_CURLY)
             n.value = Expression(t, x);
         break;
@@ -712,7 +706,6 @@ function Expression(t, x, stop) {
         return n;
     }
 
-    t.scanOperand = true;
 loop:
     while ((tt = t.get()) != END) {
         if (tt == stop &&
@@ -961,13 +954,13 @@ loop:
         }
     }
 
-    if (t.scanOperand) {
-        t.scanOperand = false;
-        throw t.newSyntaxError("Missing operand");
-    }
     if (x.hookLevel != hl)
         throw t.newSyntaxError("Missing : after ?");
+    if (t.scanOperand)
+        throw t.newSyntaxError("Missing operand");
 
+    // Resume default mode, scanning for operands, not operators.
+    t.scanOperand = true;
     t.unget();
     while (operators.length)
         reduce();
