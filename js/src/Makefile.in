@@ -320,5 +320,5 @@ jscpucfg: jscpucfg.c
 endif
 
 export:: jsautocfg.h
-	$(INSTALL) -m 444 $< $(DIST)/include
+	$(INSTALL) -m 444 $< $(PUBLIC)
 

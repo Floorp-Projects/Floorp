@@ -82,12 +82,13 @@ endif
 
 ifdef INTERNAL_TOOLS
 ifdef CROSS_COMPILE
-CC			= $(HOST_CC)
-CXX			= $(HOST_CXX)
-CFLAGS			= $(HOST_CFLAGS) -I$(DIST)/include $(NSPR_CFLAGS)
-CXXFLAGS		= $(HOST_CXXFLAGS) -I$(DIST)/include $(NSPR_CFLAGS)
-RANLIB			= $(HOST_RANLIB)
-AR			= $(HOST_AR)
+CC			:= $(HOST_CC)
+CXX			:= $(HOST_CXX)
+CFLAGS			:= $(HOST_CFLAGS) -I$(PUBLIC) $(NSPR_CFLAGS)
+CXXFLAGS		:= $(HOST_CXXFLAGS) -I$(PUBLIC) $(NSPR_CFLAGS)
+RANLIB			:= $(HOST_RANLIB)
+AR			:= $(HOST_AR)
+OS_LIBS			:= 
 endif
 endif
 
@@ -812,7 +813,7 @@ export:: $(JAVA_DESTPATH) $(JAVA_DESTPATH)/$(PACKAGE)
 all:: export
 
 clean clobber::
-	rm -f $(XPDIST)/classes/$(PACKAGE)/*.class
+	rm -f $(DIST)/classes/$(PACKAGE)/*.class
 
 endif
 endif
@@ -1052,11 +1053,11 @@ export:: FORCE
 	@echo; sleep 2; false
 endif
 
-# export .idl files to $(XPDIST)/idl
-$(XPDIST)/idl::
+# export .idl files to $(DIST)/idl
+$(DIST)/idl::
 	@if test ! -d $@; then echo Creating $@; rm -rf $@; $(NSINSTALL) -D $@; else true; fi
 
-export:: $(XPIDLSRCS) $(XPDIST)/idl
+export:: $(XPIDLSRCS) $(DIST)/idl
 	$(INSTALL) -m 444 $^
 
 # generate .h files from into $(XPIDL_GEN_DIR), then export to $(PUBLIC);
@@ -1068,7 +1069,7 @@ $(XPIDL_GEN_DIR):
 # with any addition to the directory, regenerating all .h files -> everything.
 
 $(XPIDL_GEN_DIR)/%.h: %.idl $(XPIDL_COMPILE)
-	$(XPIDL_COMPILE) -m header -w -I $(XPDIST)/idl -I$(srcdir) -o $(XPIDL_GEN_DIR)/$* $<
+	$(XPIDL_COMPILE) -m header -w -I $(DIST)/idl -I$(srcdir) -o $(XPIDL_GEN_DIR)/$* $<
 	@if test -n "$(findstring $*.h, $(EXPORTS))"; \
 	  then echo "*** WARNING: file $*.h generated from $*.idl overrides $(srcdir)/$*.h"; else true; fi
 
@@ -1079,7 +1080,7 @@ ifndef NO_GEN_XPT
 # generate intermediate .xpt files into $(XPIDL_GEN_DIR), then link
 # into $(XPIDL_MODULE).xpt and export it to $(DIST)/bin/components.
 $(XPIDL_GEN_DIR)/%.xpt: %.idl $(XPIDL_COMPILE)
-	$(XPIDL_COMPILE) -m typelib -w -I $(XPDIST)/idl -I$(srcdir) -o $(XPIDL_GEN_DIR)/$* $<
+	$(XPIDL_COMPILE) -m typelib -w -I $(DIST)/idl -I$(srcdir) -o $(XPIDL_GEN_DIR)/$* $<
 
 $(XPIDL_GEN_DIR)/$(XPIDL_MODULE).xpt: $(patsubst %.idl,$(XPIDL_GEN_DIR)/%.xpt,$(XPIDLSRCS))
 	$(XPIDL_LINK) $(XPIDL_GEN_DIR)/$(XPIDL_MODULE).xpt $^

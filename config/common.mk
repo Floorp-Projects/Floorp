@@ -105,7 +105,7 @@ JAVAH			= $(JAVAH_PROG) $(JAVAH_FLAGS)
 ######################################################################
 # jmc
 
-JMCSRCDIR		= $(XPDIST)/_jmc
+JMCSRCDIR		= $(DIST)/_jmc
 JMC_PROG		= $(JAVA) netscape.tools.jmc.Main
 JMC_CLASSPATH		= $(JMCSRCDIR)$(PATH_SEPARATOR)$(JAVAC_CLASSPATH)
 JMC_FLAGS		= -classpath $(JMC_CLASSPATH) -verbose
