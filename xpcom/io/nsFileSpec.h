@@ -20,6 +20,22 @@
  * Contributor(s): 
  */
 
+
+
+
+/* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * 
+    THESE CLASSES ARE DEPRECIATED AND UNSUPPORTED!  USE |nsIFile| and |nsILocalFile|.
+ * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
+
+
+
+
+
+
+
+
+
+
 //    First checked in on 98/11/20 by John R. McMullen in the wrong directory.
 //    Checked in again 98/12/04.
 //    Polished version 98/12/08.

@@ -32,6 +32,8 @@ class nsDirectoryService : public nsIDirectoryService, public nsIProperties, pub
   public:
 
   NS_DEFINE_STATIC_CID_ACCESSOR(NS_DIRECTORY_SERVICE_CID);
+  
+  nsresult Init();
 
   // nsISupports interface
   NS_DECL_ISUPPORTS
@@ -53,6 +55,68 @@ private:
     static PRBool ReleaseValues(nsHashKey* key, void* data, void* closure);
     nsHashtable* mHashtable;
     nsCOMPtr<nsISupportsArray> mProviders;
+
+    static nsIAtom *sCurrentProcess;
+    static nsIAtom *sComponentRegistry;
+    static nsIAtom *sComponentDirectory;
+    static nsIAtom *sOS_DriveDirectory;
+    static nsIAtom *sOS_TemporaryDirectory;
+    static nsIAtom *sOS_CurrentProcessDirectory;
+    static nsIAtom *sOS_CurrentWorkingDirectory;
+#ifdef XP_MAC
+    static nsIAtom *sDirectory;
+    static nsIAtom *sDesktopDirectory;
+    static nsIAtom *sTrashDirectory;
+    static nsIAtom *sStartupDirectory;
+    static nsIAtom *sShutdownDirectory;
+    static nsIAtom *sAppleMenuDirectory;
+    static nsIAtom *sControlPanelDirectory;
+    static nsIAtom *sExtensionDirectory;
+    static nsIAtom *sFontsDirectory;
+    static nsIAtom *sPreferencesDirectory;
+    static nsIAtom *sDocumentsDirectory;
+    static nsIAtom *sInternetSearchDirectory;
+#elif defined (XP_PC) 
+    static nsIAtom *sSystemDirectory;
+    static nsIAtom *sWindowsDirectory;
+    static nsIAtom *sHomeDirectory;
+    static nsIAtom *sDesktop;
+    static nsIAtom *sPrograms;
+    static nsIAtom *sControls;
+    static nsIAtom *sPrinters;
+    static nsIAtom *sPersonal;
+    static nsIAtom *sFavorites;
+    static nsIAtom *sStartup;
+    static nsIAtom *sRecent;
+    static nsIAtom *sSendto;
+    static nsIAtom *sBitbucket;
+    static nsIAtom *sStartmenu;
+    static nsIAtom *sDesktopdirectory;
+    static nsIAtom *sDrives;
+    static nsIAtom *sNetwork;
+    static nsIAtom *sNethood;
+    static nsIAtom *sFonts;
+    static nsIAtom *sTemplates;
+    static nsIAtom *sCommon_Startmenu;
+    static nsIAtom *sCommon_Programs;
+    static nsIAtom *sCommon_Startup;
+    static nsIAtom *sCommon_Desktopdirectory;
+    static nsIAtom *sAppdata;
+    static nsIAtom *sPrinthood;
+#elif defined (XP_UNIX) 
+    static nsIAtom *sLocalDirectory;
+    static nsIAtom *sLibDirectory;
+    static nsIAtom *sHomeDirectory;
+#elif defined (XP_BEOS)
+    static nsIAtom *sSettingsDirectory;
+    static nsIAtom *sHomeDirectory;
+    static nsIAtom *sDesktopDirectory;
+    static nsIAtom *sSystemDirectory;
+#elif defined (XP_OS2)
+    static nsIAtom *sSystemDirectory;
+#endif
+
+
 };
 
 
