@@ -2453,8 +2453,8 @@ NS_IMETHODIMP nsWindow::CaptureMouse(PRBool aCapture)
 
 NS_IMETHODIMP nsWindow::Move(PRInt32 aX, PRInt32 aY)
 {
-  //mBounds.x = aX;
-  //mBounds.y = aY;
+  mBounds.x = aX;
+  mBounds.y = aY;
 
   if (mIsToplevel && mShell)
   {
@@ -2619,7 +2619,7 @@ NS_IMETHODIMP nsWindow::GetAttention(void)
   GtkWidget *top_mozarea = GetMozArea();
   if (top_mozarea) {
     GtkWidget *top_window = gtk_widget_get_toplevel(top_mozarea);
-    if (top_window) {
+    if (top_window && GTK_WIDGET_VISIBLE(top_window)) {
       // this will raise the toplevel window
       gdk_window_show(top_window->window);
     }
