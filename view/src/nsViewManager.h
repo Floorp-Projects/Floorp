@@ -116,13 +116,13 @@ private:
   virtual ~nsViewManager();
   nsIRenderingContext *CreateRenderingContext(nsIView &aView);
   void AddRectToDirtyRegion(nsIView* aView, const nsRect &aRect) const;
-  void UpdateDirtyViews(nsIView *aView) const;
+  void UpdateDirtyViews(nsIView *aView, nsRect *aParentRect) const;
   void UpdateTransCnt(nsIView *oldview, nsIView *newview);
 
   void Refresh(nsIView *aView, nsIRenderingContext *aContext,
-                       nsIRegion *region, PRUint32 aUpdateFlags);
+               nsIRegion *region, PRUint32 aUpdateFlags);
   void Refresh(nsIView* aView, nsIRenderingContext *aContext,
-                       const nsRect *rect, PRUint32 aUpdateFlags);
+               const nsRect *rect, PRUint32 aUpdateFlags);
 
   nsIDeviceContext  *mContext;
   nsIViewObserver   *mObserver;
@@ -133,6 +133,7 @@ private:
   PRBool            mPainting;
   nsIView           *mMouseGrabber;
   nsIView           *mKeyGrabber;
+  PRInt32           mUpdateCnt;
 
   static PRUint32          mVMCount;        //number of viewmanagers
   static nsDrawingSurface  mDrawingSurface; //single drawing surface

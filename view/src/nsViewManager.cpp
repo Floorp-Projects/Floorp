@@ -230,10 +230,12 @@ NS_IMETHODIMP nsViewManager :: SetWindowDimensions(nscoord width, nscoord height
   if (nsnull != mRootView)
     mRootView->SetDimensions(width, height);
 
-//printf("new dims: %4.2f %4.2f...\n", width / 20.0f, height / 20.0f);
+//printf("new dims: %d %d\n", width, height);
   // Inform the presentation shell that we've been resized
   if (nsnull != mObserver)
     mObserver->ResizeReflow(mRootView, width, height);
+//printf("reflow done\n");
+
   return NS_OK;
 }
 
@@ -259,7 +261,6 @@ void nsViewManager :: Refresh(nsIView *aView, nsIRenderingContext *aContext, nsI
 {
   nsRect              wrect;
   nsIRenderingContext *localcx = nsnull;
-  float               scale;
   nsDrawingSurface    ds = nsnull;
 
   if (PR_FALSE == mRefreshEnabled)
@@ -285,9 +286,7 @@ void nsViewManager :: Refresh(nsIView *aView, nsIRenderingContext *aContext, nsI
 
     //couldn't get rendering context. this is ok at init time atleast
     if (nsnull == localcx)
-    {
       return;
-    }
   }
   else
     localcx = aContext;
@@ -303,18 +302,15 @@ void nsViewManager :: Refresh(nsIView *aView, nsIRenderingContext *aContext, nsI
     localcx->SelectOffScreenDrawingSurface(ds);
   }
 
-  mContext->GetAppUnitsToDevUnits(scale);
-
   PRBool  result;
-  localcx->SetClipRegion(*region, nsClipCombine_kReplace, result);
-
   nsRect  trect;
-  float   p2t;
 
-  mContext->GetDevUnitsToAppUnits(p2t);
+  if (nsnull != region)
+    localcx->SetClipRegion(*region, nsClipCombine_kUnion, result);
 
-  region->GetBoundingBox(&trect.x, &trect.y, &trect.width, &trect.height);
-  trect.ScaleRoundOut(p2t);
+  aView->GetBounds(trect);
+
+  localcx->SetClipRect(trect, nsClipCombine_kIntersect, result);
 
   // Paint the view. The clipping rect was set above set don't clip again.
   aView->Paint(*localcx, trect, NS_VIEW_FLAG_CLIP_SET, result);
@@ -325,16 +321,16 @@ void nsViewManager :: Refresh(nsIView *aView, nsIRenderingContext *aContext, nsI
   if (localcx != aContext)
     NS_RELEASE(localcx);
 
-  // Is the dirty region the same as the region we just painted?
-  nsIRegion *dirtyRegion;
-  aView->GetDirtyRegion(dirtyRegion);
-  if (nsnull != dirtyRegion)
+  // Subtract the area we just painted from the dirty region
+  if ((nsnull != region) && !region->IsEmpty())
   {
-    if ((region == dirtyRegion) || region->IsEqual(*dirtyRegion))
-      dirtyRegion->SetTo(0, 0, 0, 0);
-    else
-      dirtyRegion->Subtract(*region);
-    NS_RELEASE(dirtyRegion);
+    nsRect  pixrect = trect;
+    float   t2p;
+
+    mContext->GetAppUnitsToDevUnits(t2p);
+
+    pixrect.ScaleRoundIn(t2p);
+    region->Subtract(pixrect.x, pixrect.y, pixrect.width, pixrect.height);
   }
 
   mLastRefresh = PR_IntervalNow();
@@ -373,17 +369,18 @@ void nsViewManager :: Refresh(nsIView *aView, nsIRenderingContext *aContext, con
 
     //couldn't get rendering context. this is ok if at startup
     if (nsnull == localcx)
-    {
       return;
-    }
   }
   else
     localcx = aContext;
 
   if (aUpdateFlags & NS_VMREFRESH_DOUBLE_BUFFER)
   {
-    mRootWindow->GetClientBounds(wrect);
+    nsIWidget*  widget;
+    aView->GetWidget(widget);
+    widget->GetClientBounds(wrect);
     wrect.x = wrect.y = 0;
+    NS_RELEASE(widget);
     ds = GetDrawingSurface(*localcx, wrect);
     localcx->SelectOffScreenDrawingSurface(ds);
   }
@@ -424,53 +421,182 @@ void nsViewManager :: Refresh(nsIView *aView, nsIRenderingContext *aContext, con
   mPainting = PR_FALSE;
 }
 
-void nsViewManager::UpdateDirtyViews(nsIView *aView) const
+void nsViewManager :: UpdateDirtyViews(nsIView *aView, nsRect *aParentRect) const
 {
-  // See if the view has a non-empty dirty region
-  nsIRegion *dirtyRegion;
-  aView->GetDirtyRegion(dirtyRegion);
-  if (nsnull != dirtyRegion)
+  nsRect    pardamage;
+  nsRect    bounds;
+
+  aView->GetBounds(bounds);
+
+  //translate parent region into child coords.
+
+  if (nsnull != aParentRect)
   {
-    if (!dirtyRegion->IsEmpty())
+    pardamage = *aParentRect;
+
+    pardamage.IntersectRect(bounds, pardamage);
+    pardamage.MoveBy(-bounds.x, -bounds.y);
+  }
+  else
+    pardamage = bounds;
+
+  if (PR_FALSE == pardamage.IsEmpty())
+  {
+    nsIWidget *widget;
+
+    aView->GetWidget(widget);
+
+    if (nsnull != widget)
     {
-      nsIWidget *widget;
-      nsRect     rect;
+      float scale;
+      nsRect pixrect = pardamage;
 
-      dirtyRegion->GetBoundingBox(&rect.x, &rect.y, &rect.width, &rect.height);
-      aView->GetWidget(widget);
-      widget->Invalidate(rect, PR_FALSE);
+      mContext->GetAppUnitsToDevUnits(scale);
+      pixrect.ScaleRoundOut(scale);
+
+//printf("invalidating: view %x (pix) %d, %d\n", aView, pixrect.width, pixrect.height);
+      widget->Invalidate(pixrect, PR_FALSE);
+
       NS_RELEASE(widget);
-
-      // Clear the dirty region
-      dirtyRegion->SetTo(0, 0, 0, 0);
     }
-    NS_RELEASE(dirtyRegion);
   }
 
   // Check our child views
   nsIView *child;
+
   aView->GetChild(0, child);
+
   while (nsnull != child)
   {
-    UpdateDirtyViews(child);
+    UpdateDirtyViews(child, &pardamage);
     child->GetNextSibling(child);
   }
 }
 
+#if 0
+
+  nsRect    bounds;
+  nsIRegion *dirtyRegion, *damager;
+  PRInt32   posx, posy;
+
+  aView->GetBounds(bounds);
+
+  //translate parent region into child coords.
+
+  if (nsnull != aParentDamage)
+  {
+    float     scale;
+
+    mContext->GetAppUnitsToDevUnits(scale);
+
+    posx = NSTwipsToIntPixels(bounds.x, scale);
+    posy = NSTwipsToIntPixels(bounds.y, scale);
+
+    aParentDamage->Offset(-posx, -posy);
+  }
+
+  // See if the view has a non-empty dirty region
+
+  aView->GetDirtyRegion(dirtyRegion);
+
+  if (nsnull != dirtyRegion)
+  {
+    if (PR_FALSE == dirtyRegion->IsEmpty())
+    {
+      if (nsnull != aParentDamage)
+        dirtyRegion->Union(*aParentDamage);
+
+      damager = dirtyRegion;
+    }
+    else
+      damager = aParentDamage;
+  }
+  else
+    damager = aParentDamage;
+
+  nsIWidget *widget;
+
+  aView->GetWidget(widget);
+
+  if (nsnull != widget)
+  {
+    //have we not yet figured out the rootmost
+    //view for the damage repair? if not, keep
+    //recording widgets as we find them as the
+    //topmost widget containing the topmost
+    //damaged view.
+
+    if (nsnull == *aTopDamaged)
+      *aTopWidget = widget;
+
+    if (nsnull != damager)
+    {
+      nsRegionComplexity cplx;
+
+      damager->GetRegionComplexity(cplx);
+
+      if (cplx == eRegionComplexity_rect)
+      {
+        nsRect trect;
+
+        damager->GetBoundingBox(&trect.x, &trect.y, &trect.width, &trect.height);
+        widget->Invalidate(trect, PR_FALSE);
+      }
+      else if (cplx == eRegionComplexity_complex)
+        widget->Invalidate(*damager, PR_FALSE);
+    }
+
+    NS_RELEASE(widget);
+  }
+
+  //record the topmost damaged view
+
+  if ((nsnull == *aTopDamaged) && (damager == dirtyRegion))
+    *aTopDamaged = aView;
+
+  // Check our child views
+  nsIView *child;
+
+  aView->GetChild(0, child);
+
+  while (nsnull != child)
+  {
+    UpdateDirtyViews(child, damager, aTopDamaged, aTopWidget);
+    child->GetNextSibling(child);
+  }
+
+  //translate the parent damage region back to where it used to be
+
+  if (nsnull != aParentDamage)
+    aParentDamage->Offset(posx, posy);
+
+  if (nsnull != dirtyRegion)
+  {
+    // Clear our dirty region
+
+    dirtyRegion->SetTo(0, 0, 0, 0);
+    NS_RELEASE(dirtyRegion);
+  }
+
+#endif
+
 NS_IMETHODIMP nsViewManager :: Composite()
 {
-  // Walk the view hierarchy and for each view that has a non-empty
-  // dirty region invalidate its associated widget
-  if (nsnull != mRootView)
+  if (mUpdateCnt > 0)
   {
-    UpdateDirtyViews(mRootView);
+    if (nsnull != mRootWindow)
+      mRootWindow->Update();
+
+    mUpdateCnt = 0;
   }
+
   return NS_OK;
 }
 
 NS_IMETHODIMP nsViewManager :: UpdateView(nsIView *aView, nsIRegion *aRegion, PRUint32 aUpdateFlags)
 {
   // XXX Huh. What about the case where aRegion isn't nsull?
+  // XXX yeah? what about it?
   if (aRegion == nsnull)
   {
     nsRect  trect;
@@ -480,6 +606,7 @@ NS_IMETHODIMP nsViewManager :: UpdateView(nsIView *aView, nsIRegion *aRegion, PR
     trect.x = trect.y = 0;
     UpdateView(aView, trect, aUpdateFlags);
   }
+
   return NS_OK;
 }
 
@@ -510,6 +637,7 @@ NS_IMETHODIMP nsViewManager :: UpdateView(nsIView *aView, const nsRect &aRect, P
 
     // See if this view has a widget
     widgetView->GetWidget(widget);
+
     if (nsnull != widget)
     {
       NS_RELEASE(widget);
@@ -523,6 +651,8 @@ NS_IMETHODIMP nsViewManager :: UpdateView(nsIView *aView, const nsRect &aRect, P
 
   if (nsnull != widgetView)
   {
+    mUpdateCnt++;
+
     // Convert damage rect to coordinate space of containing view with
     // a widget
     // XXX Consolidate this code with the code above...
@@ -540,21 +670,23 @@ NS_IMETHODIMP nsViewManager :: UpdateView(nsIView *aView, const nsRect &aRect, P
     }
 
     // Add this rect to the widgetView's dirty region.
-    AddRectToDirtyRegion(widgetView, trect);
+
+    if (nsnull != widgetView)
+      UpdateDirtyViews(widgetView, &trect);
 
     // See if we should do an immediate refresh or wait
+
     if (aUpdateFlags & NS_VMREFRESH_IMMEDIATE)
     {
       Composite();
-      // XXX Composite() should return the top-most view that's dirty so
-      // we don't have to always use the root window...
-      mRootWindow->Update();
     }
-    // or if a sync paint is allowed and it's time for the compositor to
-    // do a refresh
     else if ((mFrameRate > 0) && !(aUpdateFlags & NS_VMREFRESH_NO_SYNC))
     {
+      // or if a sync paint is allowed and it's time for the compositor to
+      // do a refresh
+
       PRInt32 deltams = PR_IntervalToMilliseconds(PR_IntervalNow() - mLastRefresh);
+
       if (deltams > (1000 / (PRInt32)mFrameRate))
         Composite();
     }
@@ -572,8 +704,9 @@ NS_IMETHODIMP nsViewManager :: DispatchEvent(nsGUIEvent *aEvent, nsEventStatus &
     case NS_SIZE:
     {
       nsIView*      view = nsView::GetViewFor(aEvent->widget);
-      if (nsnull != view) {
 
+      if (nsnull != view)
+      {
         nscoord width = ((nsSizeEvent*)aEvent)->windowSize->width;
         nscoord height = ((nsSizeEvent*)aEvent)->windowSize->height;
         width = ((nsSizeEvent*)aEvent)->mWinWidth;
@@ -588,6 +721,7 @@ NS_IMETHODIMP nsViewManager :: DispatchEvent(nsGUIEvent *aEvent, nsEventStatus &
           float p2t;
           mContext->GetDevUnitsToAppUnits(p2t);
 
+//printf("resize: (pix) %d, %d\n", width, height);
           SetWindowDimensions(NSIntPixelsToTwips(width, p2t),
                               NSIntPixelsToTwips(height, p2t));
           aStatus = nsEventStatus_eConsumeNoDefault;
@@ -599,61 +733,51 @@ NS_IMETHODIMP nsViewManager :: DispatchEvent(nsGUIEvent *aEvent, nsEventStatus &
 
     case NS_PAINT:
     {
-      // XXX If there's a region associated with the paint request then it
-      // should be passed along to us; otherwise, we're going to end up doing
-      // unnecessary repainting and we end up using a bounding rect for the
-      // clip region...
       nsIView *view = nsView::GetViewFor(aEvent->widget);
+
       if (nsnull != view)
       {
         // The rect is in device units, and it's in the coordinate space of its
         // associated window.
         nsRect  trect = *((nsPaintEvent*)aEvent)->rect;
 
-        // Convert it to app units, which is what AddRectToDirtyRegion() expects
         float   p2t;
         mContext->GetDevUnitsToAppUnits(p2t);
         trect.ScaleRoundOut(p2t);
-
-        // Add the rect to the existing dirty region
-        AddRectToDirtyRegion(view, trect);
 
         // Do an immediate refresh
         if (nsnull != mContext)
         {
           nsRect  vrect;
-          nscoord varea;
+          float   varea;
 
           // Check that there's actually something to paint
           view->GetBounds(vrect);
-          varea = vrect.width * vrect.height;
-          if (varea > 0)
+          varea = (float)vrect.width * vrect.height;
+
+          if (varea > 0.0000001f)
           {
-            nsIRegion *dirtyRegion;
-            nsRect     rrect;
+            nsRect     rrect = trect;
             PRUint32   updateFlags = 0;
 
             // Auto double buffering logic.
-            // See if the paint region is greater than .75 the area of our view.
+            // See if the paint region is greater than .25 the area of our view.
             // If so, enable double buffered painting.
-            view->GetDirtyRegion(dirtyRegion);
-            dirtyRegion->GetBoundingBox(&rrect.x, &rrect.y, &rrect.width, &rrect.height);
 
-            float   p2t;
-            mContext->GetDevUnitsToAppUnits(p2t);
-            rrect.ScaleRoundOut(p2t);
             rrect.IntersectRect(rrect, vrect);
   
-            if ((((float)rrect.width * rrect.height) / (float)varea) >  0.25f)
+            if ((((float)rrect.width * rrect.height) / varea) >  0.25f)
               updateFlags |= NS_VMREFRESH_DOUBLE_BUFFER;
 
+//printf("refreshing: view: %x, %d, %d, %d, %d\n", view, trect.x, trect.y, trect.width, trect.height);
             // Refresh the view
-            Refresh(view, nsnull, dirtyRegion, updateFlags);
-            NS_RELEASE(dirtyRegion);
+            Refresh(view, ((nsPaintEvent*)aEvent)->renderingContext, &trect, updateFlags);
           }
         }
+
         aStatus = nsEventStatus_eConsumeNoDefault;
       }
+
       break;
     }
 
@@ -665,15 +789,12 @@ NS_IMETHODIMP nsViewManager :: DispatchEvent(nsGUIEvent *aEvent, nsEventStatus &
     {
       nsIView* view;
         
-      if (nsnull != mMouseGrabber && NS_IS_MOUSE_EVENT(aEvent)) {
+      if (nsnull != mMouseGrabber && NS_IS_MOUSE_EVENT(aEvent))
         view = mMouseGrabber;
-      }
-      else if (nsnull != mKeyGrabber && NS_IS_KEY_EVENT(aEvent)) {
+      else if (nsnull != mKeyGrabber && NS_IS_KEY_EVENT(aEvent))
         view = mKeyGrabber;
-      }
-      else {
+      else
         view = nsView::GetViewFor(aEvent->widget);
-      }
 
       if (nsnull != view)
       {
@@ -696,9 +817,11 @@ NS_IMETHODIMP nsViewManager :: DispatchEvent(nsGUIEvent *aEvent, nsEventStatus &
         aEvent->point.x = NSTwipsToIntPixels(aEvent->point.x, t2p);
         aEvent->point.y = NSTwipsToIntPixels(aEvent->point.y, t2p);
       }
+
       break;
     }
   }
+
   return NS_OK;
 }
 
@@ -742,6 +865,7 @@ NS_IMETHODIMP nsViewManager :: InsertChild(nsIView *parent, nsIView *child, nsIV
     //verify that the sibling exists...
 
     parent->GetChild(0, kid);
+
     while (nsnull != kid)
     {
       if (kid == sibling)
@@ -769,8 +893,9 @@ NS_IMETHODIMP nsViewManager :: InsertChild(nsIView *parent, nsIView *child, nsIV
 
     nsViewVisibility  visibility;
     child->GetVisibility(visibility);
+
     if (nsViewVisibility_kHide != visibility)
-      UpdateView(child, nsnull, 0);
+      UpdateView(child, nsnull, NS_VMREFRESH_NO_SYNC);
   }
   return NS_OK;
 }
@@ -788,12 +913,14 @@ NS_IMETHODIMP nsViewManager :: InsertChild(nsIView *parent, nsIView *child, PRIn
     //find the right insertion point...
 
     parent->GetChild(0, kid);
+
     while (nsnull != kid)
     {
       PRInt32 idx;
+
       kid->GetZIndex(idx);
 
-      if (zindex <= idx)
+      if (zindex >= idx)
         break;
 
       //get the next sibling view
@@ -813,7 +940,7 @@ NS_IMETHODIMP nsViewManager :: InsertChild(nsIView *parent, nsIView *child, PRIn
     nsViewVisibility  visibility;
     child->GetVisibility(visibility);
     if (nsViewVisibility_kHide != visibility)
-      UpdateView(child, nsnull, 0);
+      UpdateView(child, nsnull, NS_VMREFRESH_NO_SYNC);
   }
   return NS_OK;
 }
@@ -862,9 +989,9 @@ NS_IMETHODIMP nsViewManager :: MoveViewTo(nsIView *aView, nscoord aX, nscoord aY
     	nsRect oldArea(oldX, oldY, bounds.width, bounds.height);
     	nsIView* parent;
       aView->GetParent(parent);
-  	  UpdateView(parent, oldArea, 0);
+  	  UpdateView(parent, oldArea, NS_VMREFRESH_NO_SYNC);
   	  nsRect newArea(aX, aY, bounds.width, bounds.height); 
-  	  UpdateView(parent, newArea, 0);
+  	  UpdateView(parent, newArea, NS_VMREFRESH_NO_SYNC);
     }
   }
   return NS_OK;
@@ -922,7 +1049,7 @@ NS_IMETHODIMP nsViewManager :: ResizeView(nsIView *aView, nscoord width, nscoord
   trect.width = right - left;
   trect.height = bottom - y;
 
-  UpdateView(parent, trect, 0);
+  UpdateView(parent, trect, NS_VMREFRESH_NO_SYNC);
 
   //bottom edge...
 
@@ -931,7 +1058,7 @@ NS_IMETHODIMP nsViewManager :: ResizeView(nsIView *aView, nscoord width, nscoord
   trect.width = right - x;
   trect.height = bottom - top;
 
-  UpdateView(parent, trect, 0);
+  UpdateView(parent, trect, NS_VMREFRESH_NO_SYNC);
   return NS_OK;
 }
 
@@ -942,7 +1069,7 @@ NS_IMETHODIMP nsViewManager :: SetViewClip(nsIView *aView, nsRect *aRect)
 
   aView->SetClip(aRect->x, aRect->y, aRect->XMost(), aRect->YMost());
 
-  UpdateView(aView, *aRect, 0);
+  UpdateView(aView, *aRect, NS_VMREFRESH_NO_SYNC);
 
   return NS_OK;
 }
@@ -950,7 +1077,7 @@ NS_IMETHODIMP nsViewManager :: SetViewClip(nsIView *aView, nsRect *aRect)
 NS_IMETHODIMP nsViewManager :: SetViewVisibility(nsIView *aView, nsViewVisibility aVisible)
 {
   aView->SetVisibility(aVisible);
-  UpdateView(aView, nsnull, 0);
+  UpdateView(aView, nsnull, NS_VMREFRESH_NO_SYNC);
   return NS_OK;
 }
 
@@ -1084,7 +1211,7 @@ NS_IMETHODIMP nsViewManager :: SetViewContentTransparency(nsIView *aView, PRBool
     UpdateTransCnt(aView, nsnull);
     aView->SetContentTransparency(aTransparent);
     UpdateTransCnt(nsnull, aView);
-    UpdateView(aView, nsnull, 0);
+    UpdateView(aView, nsnull, NS_VMREFRESH_NO_SYNC);
   }
 
   return NS_OK;
@@ -1101,7 +1228,7 @@ NS_IMETHODIMP nsViewManager :: SetViewOpacity(nsIView *aView, float aOpacity)
     UpdateTransCnt(aView, nsnull);
     aView->SetOpacity(aOpacity);
     UpdateTransCnt(nsnull, aView);
-    UpdateView(aView, nsnull, 0);
+    UpdateView(aView, nsnull, NS_VMREFRESH_NO_SYNC);
   }
 
   return NS_OK;
@@ -1241,6 +1368,7 @@ void nsViewManager :: AddRectToDirtyRegion(nsIView* aView, const nsRect &aRect) 
   nsIRegion *dirtyRegion;
 
   aView->GetDirtyRegion(dirtyRegion);
+
   if (nsnull == dirtyRegion)
   {
     static NS_DEFINE_IID(kRegionCID, NS_REGION_CID);
@@ -1308,6 +1436,7 @@ NS_IMETHODIMP nsViewManager :: EnableRefresh(void)
   if (mFrameRate > 0)
   {
     PRInt32 deltams = PR_IntervalToMilliseconds(PR_IntervalNow() - mLastRefresh);
+
     if (deltams > (1000 / (PRInt32)mFrameRate))
       Composite();
   }
