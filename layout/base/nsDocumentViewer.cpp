@@ -375,9 +375,14 @@ public:
   NS_IMETHOD SetDOMDocument(nsIDOMDocument *aDocument);
   NS_IMETHOD GetBounds(nsRect& aResult);
   NS_IMETHOD SetBounds(const nsRect& aBounds);
+  
+  NS_IMETHOD GetPreviousViewer(nsIContentViewer** aResult);
+  NS_IMETHOD SetPreviousViewer(nsIContentViewer* aViewer);
+
   NS_IMETHOD Move(PRInt32 aX, PRInt32 aY);
   NS_IMETHOD Show();
   NS_IMETHOD Hide();
+  NS_IMETHOD Validate();
   NS_IMETHOD SetEnableRendering(PRBool aOn);
   NS_IMETHOD GetEnableRendering(PRBool* aResult);
 
@@ -526,8 +531,11 @@ protected:
   nsCOMPtr<nsISelectionListener> mSelectionListener;
   nsCOMPtr<nsIDOMFocusListener> mFocusListener;
   
+  nsCOMPtr<nsIContentViewer> mPreviousViewer;
+
   PRBool  mEnableRendering;
   PRBool  mStopped;
+  PRBool  mLoaded;
   PRInt16 mNumURLStarts;
   nsIPageSequenceFrame* mPageSeqFrame;
 
@@ -795,6 +803,7 @@ DocumentViewerImpl::DocumentViewerImpl()
   NS_INIT_ISUPPORTS();
   mEnableRendering  = PR_TRUE;
   mStopped          = PR_FALSE;
+  mLoaded           = PR_FALSE;
   mPrt              = nsnull;
   mIsPrinting       = PR_FALSE;
   
@@ -838,7 +847,17 @@ DocumentViewerImpl::~DocumentViewerImpl()
   if (mPresContext) {
     mPresContext->SetContainer(nsnull);
     mPresContext->SetLinkHandler(nsnull);
+    // XXX This is only needed because bg images have not been
+    // converted to the new image lib.  Once pav does this, we
+    // can just remove this code.  Right now it is only here
+    // for background images.
+    // stop everything but the chrome.
+    mPresContext->Stop();
   }
+
+  // Avoid leaking the old viewer.
+  if (mPreviousViewer)
+    SetPreviousViewer(nsnull);
 }
 
 /*
@@ -932,6 +951,8 @@ DocumentViewerImpl::Init(nsIWidget* aParentWidget,
 
   // Create the ViewManager and Root View...
   rv = MakeWindow(aParentWidget, aBounds);
+  Hide();
+
   if (NS_FAILED(rv)) return rv;
 
   // Create the style set...
@@ -1050,6 +1071,8 @@ DocumentViewerImpl::LoadComplete(nsresult aStatus)
   NS_ASSERTION(global, "nsIScriptGlobalObject not set for document!");
   if (!global) return NS_ERROR_NULL_POINTER;
 
+  mLoaded = PR_TRUE;
+
   // Now, fire either an OnLoad or OnError event to the document...
   if(NS_SUCCEEDED(aStatus)) {
     nsEventStatus status = nsEventStatus_eIgnore;
@@ -1065,8 +1088,8 @@ DocumentViewerImpl::LoadComplete(nsresult aStatus)
   
   // Now that the document has loaded, we can tell the presshell
   // to unsuppress painting.
-  if (mPresShell)
-    mPresShell->UnsuppressPainting(!mStopped);
+  if (mPresShell && !mStopped)
+    mPresShell->UnsuppressPainting();
 
   return rv;
 }
@@ -1114,7 +1137,6 @@ DocumentViewerImpl::Destroy()
   }
   
   mDocument = nsnull;
-  
   return NS_OK;
 }
 
@@ -1126,12 +1148,22 @@ DocumentViewerImpl::Stop(void)
     mDocument->StopDocumentLoad();
   }
 
-  if (mPresContext) {
-    // stop everything but the chrome.
-    mPresContext->Stop(PR_FALSE);
+  mStopped = PR_TRUE;
+
+  if (!mLoaded && mPresShell) {
+    // Well, we might as well paint what we have so far.
+    mPresShell->UnsuppressPainting();
+
+    if (mPresContext) {
+      // XXX This is only needed because bg images have not been
+      // converted to the new image lib.  Once pav does this, we
+      // can just remove this code.  Right now it is only here
+      // for background images.
+      // stop everything but the chrome.
+      mPresContext->Stop(PR_FALSE);
+    }
   }
 
-  mStopped = PR_TRUE;
   return NS_OK;
 }
 
@@ -1257,6 +1289,49 @@ DocumentViewerImpl::GetBounds(nsRect& aResult)
 }
 
 NS_IMETHODIMP
+DocumentViewerImpl::GetPreviousViewer(nsIContentViewer** aViewer)
+{
+  *aViewer = mPreviousViewer;
+  NS_IF_ADDREF(*aViewer);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+DocumentViewerImpl::SetPreviousViewer(nsIContentViewer* aViewer)
+{
+  if (!aViewer) {
+    // Clearing it out.
+    mPreviousViewer = nsnull;
+
+    // Now we can show, but only if we aren't dead already (which
+    // can occasionally happen when one page moves to another during the onload
+    // handler.)
+    if (mDocument)
+      Show();
+  }
+  else {
+    // In a multiple chaining situation (which occurs when running a thrashing
+    // test like i-bench or jrgm's tests with no delay), we can build up a 
+    // whole chain of viewers.  In order to avoid this, we always set our previous
+    // viewer to the MOST previous viewer in the chain, and then dump the intermediate
+    // link from the chain.  This ensures that at most only 2 documents are alive
+    // and undestroyed at any given time (the one that is showing and the one that
+    // is loading with painting suppressed).
+    aViewer->Validate();
+    nsCOMPtr<nsIContentViewer> prevViewer;
+    aViewer->GetPreviousViewer(getter_AddRefs(prevViewer));
+    if (prevViewer) {
+      SetPreviousViewer(prevViewer);
+      prevViewer->SetPreviousViewer(nsnull);
+      return NS_OK;
+    }
+  }
+
+  mPreviousViewer = aViewer;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 DocumentViewerImpl::SetBounds(const nsRect& aBounds)
 {
   NS_ENSURE_TRUE(mDocument, NS_ERROR_NOT_AVAILABLE);
@@ -1300,6 +1375,15 @@ DocumentViewerImpl::Hide(void)
   if (mWindow) {
     mWindow->Show(PR_FALSE);
   }
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+DocumentViewerImpl::Validate(void)
+{
+  NS_PRECONDITION(mWindow, "null window");
+  if (mWindow)
+    mWindow->Validate();
   return NS_OK;
 }
 

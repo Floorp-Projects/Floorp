@@ -58,6 +58,7 @@ public:
   
   // nsIWidget interface
   NS_IMETHOD              CaptureMouse(PRBool aCapture);
+  NS_IMETHOD              Validate();
   NS_IMETHOD              InvalidateRegion(const nsIRegion *aRegion, PRBool aIsSynchronous);
   NS_IMETHOD              GetClientData(void*& aClientData);
   NS_IMETHOD              SetClientData(void* aClientData);
