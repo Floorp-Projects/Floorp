@@ -3,3 +3,5 @@ Changes made to pristine png source by mozilla.org developers.
 
 2002/10/03  -- Synced with libpng-1.2.5 tree
 
+2002/10/06  -- OS/2 bustage fix.  IBM compiler defines __IBMCPP__ instead
+               of IBMCPP__ (pngconf.h).
