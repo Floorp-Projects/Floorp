@@ -41,7 +41,9 @@ class ImageConsumer;
 
 class ImageNetContextImpl : public ilINetContext {
 public:
-  ImageNetContextImpl(NET_ReloadMethod aReloadPolicy);
+  ImageNetContextImpl(NET_ReloadMethod aReloadPolicy,
+                      nsReconnectCB aReconnectCallback,
+                      void* aReconnectArg);
   ~ImageNetContextImpl();
 
   NS_DECL_ISUPPORTS
@@ -70,6 +72,8 @@ public:
 
   nsVoidArray *mRequests;
   NET_ReloadMethod mReloadPolicy;
+  nsReconnectCB mReconnectCallback;
+  void* mReconnectArg;
 };
 
 class ImageConsumer : public nsIStreamListener
@@ -328,11 +332,15 @@ ImageConsumer::~ImageConsumer()
   }
 }
 
-ImageNetContextImpl::ImageNetContextImpl(NET_ReloadMethod aReloadPolicy)
+ImageNetContextImpl::ImageNetContextImpl(NET_ReloadMethod aReloadPolicy,
+                                         nsReconnectCB aReconnectCallback,
+                                         void* aReconnectArg)
 {
   NS_INIT_REFCNT();
   mRequests = nsnull;
   mReloadPolicy = aReloadPolicy;
+  mReconnectCallback = aReconnectCallback;
+  mReconnectArg = aReconnectArg;
 }
 
 ImageNetContextImpl::~ImageNetContextImpl()
@@ -355,7 +363,7 @@ ImageNetContextImpl::Clone()
 {
   ilINetContext *cx;
 
-  if (NS_NewImageNetContext(&cx) == NS_OK) {
+  if (NS_NewImageNetContext(&cx, mReconnectCallback, mReconnectArg) == NS_OK) {
     return cx;
   }
   else {
@@ -446,14 +454,22 @@ ImageNetContextImpl::GetURL (ilIURL * aURL,
   if (aURL->QueryInterface(kIURLIID, (void **)&nsurl) == NS_OK) {
     aURL->SetReader(aReader);
         
+    // Find previously created ImageConsumer if possible
+
     ImageConsumer *ic = new ImageConsumer(aURL, this);
     NS_ADDREF(ic);
         
-    if (nsurl->Open(ic) == NS_OK) {
+    // See if a reconnect is being done...(XXX: hack!)
+    if (mReconnectCallback && (*mReconnectCallback)(mReconnectArg, ic)) {
       mRequests->AppendElement((void *)ic);
     }
     else {
-      NS_RELEASE(ic);
+      if (nsurl->Open(ic) == NS_OK) {
+        mRequests->AppendElement((void *)ic);
+      }
+      else {
+        NS_RELEASE(ic);
+      }
     }
 
     NS_RELEASE(nsurl);
@@ -473,14 +489,18 @@ ImageNetContextImpl::RequestDone(ImageConsumer *aConsumer)
 }
 
 extern "C" NS_GFX_(nsresult)
-NS_NewImageNetContext(ilINetContext **aInstancePtrResult)
+NS_NewImageNetContext(ilINetContext **aInstancePtrResult,
+                      nsReconnectCB aReconnectCallback,
+                      void* aReconnectArg)
 {
   NS_PRECONDITION(nsnull != aInstancePtrResult, "null ptr");
   if (nsnull == aInstancePtrResult) {
     return NS_ERROR_NULL_POINTER;
   }
   
-  ilINetContext *cx = new ImageNetContextImpl(NET_NORMAL_RELOAD);
+  ilINetContext *cx = new ImageNetContextImpl(NET_NORMAL_RELOAD,
+                                              aReconnectCallback,
+                                              aReconnectArg);
   if (cx == nsnull) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
