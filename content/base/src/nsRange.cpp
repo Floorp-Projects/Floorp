@@ -2067,18 +2067,20 @@ nsresult nsRange::InsertNode(nsIDOMNode* aN)
   nsCOMPtr<nsIDOMNode> tStartContainer;
   res = this->GetStartContainer(getter_AddRefs(tStartContainer));
   if(NS_FAILED(res)) return res;
-  
-  PRUint16 tNodeType;
-  aN->GetNodeType(&tNodeType);
-  if( (nsIDOMNode::CDATA_SECTION_NODE == tNodeType) ||
-      (nsIDOMNode::TEXT_NODE == tNodeType) )
+
+  nsCOMPtr<nsIDOMText> startTextNode(do_QueryInterface(tStartContainer));
+  if (startTextNode)
   {
     nsCOMPtr<nsIDOMNode> tSCParentNode;
     res = tStartContainer->GetParentNode(getter_AddRefs(tSCParentNode));
     if(NS_FAILED(res)) return res;
 
+    nsCOMPtr<nsIDOMText> secondPart;
+    res = startTextNode->SplitText(tStartOffset, getter_AddRefs(secondPart));
+    if (NS_FAILED(res)) return res;
+    
     nsCOMPtr<nsIDOMNode> tResultNode;
-    return tSCParentNode->InsertBefore(aN, tSCParentNode, getter_AddRefs(tResultNode));
+    return tSCParentNode->InsertBefore(aN, secondPart, getter_AddRefs(tResultNode));
   }  
 
   nsCOMPtr<nsIDOMNodeList>tChildList;
@@ -2089,20 +2091,12 @@ nsresult nsRange::InsertNode(nsIDOMNode* aN)
   if(NS_FAILED(res)) return res;
 
   // find the insertion point in the DOM and insert the Node
-  if(tStartOffset == (PRInt32)tChildListLength)
-  {
-    nsCOMPtr<nsIDOMNode> tNode;
-    return tStartContainer->AppendChild(aN, getter_AddRefs(tNode));
-  }
-  else
-  {
-    nsCOMPtr<nsIDOMNode>tChildNode;
-    res = tChildList->Item(tStartOffset, getter_AddRefs(tChildNode));
-    if(NS_FAILED(res)) return res;
-
-    nsCOMPtr<nsIDOMNode> tResultNode;
-    return tStartContainer->InsertBefore(aN, tChildNode, getter_AddRefs(tResultNode));
-  }
+  nsCOMPtr<nsIDOMNode>tChildNode;
+  res = tChildList->Item(tStartOffset, getter_AddRefs(tChildNode));
+  if(NS_FAILED(res)) return res;
+  
+  nsCOMPtr<nsIDOMNode> tResultNode;
+  return tStartContainer->InsertBefore(aN, tChildNode, getter_AddRefs(tResultNode));
 }
 
 nsresult nsRange::SurroundContents(nsIDOMNode* aN)
