@@ -1239,6 +1239,7 @@ sub MakeResourceAliases()
 	_InstallResources(":mozilla:xpinstall:res:MANIFEST",                                "$xpinstall_dir");
 	my($xpinstall_ch_dir) = "$chrome_dir" . "xpinstall";
 	_InstallResources(":mozilla:xpinstall:res:locale:en-US:MANIFEST",					"$xpinstall_ch_dir:locale:en-US:", 0);
+	_InstallResources(":mozilla:xpinstall:res:content:MANIFEST",						"$xpinstall_ch_dir:content:default:", 0);
 	
 	my($profile_chrome_dir) = "$chrome_dir" . "Profile";
 	_InstallResources(":mozilla:profile:resources:content:MANIFEST",							"$profile_chrome_dir:content:default", 0);
