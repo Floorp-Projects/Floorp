@@ -1280,3 +1280,29 @@ function getXmlDocument ( eventList )
     }
     return xmlDocument;
 }
+
+function startImport() {
+    var ImportExportErrorHandler = {
+        errorreport : "",
+        onLoad   : function() {},
+        onStartBatch   : function() {},
+        onEndBatch   : function() {},
+        onAddItem : function( calendarEvent ) {},
+        onModifyItem : function( calendarEvent, originalEvent ) {},
+        onDeleteItem : function( calendarEvent, nextEvent ) {},
+        onAlarm : function( calendarEvent ) {},
+        onError : function( severity, errorid, errorstring ) 
+        {
+            this.errorreport=this.errorreport+errorstring+"\n";
+        },
+        showErrors : function () {
+            if( this.errorreport != "" )
+                alert( "Errors:\n"+this.errorreport );
+        }
+
+    }
+    gICalLib.addObserver( ImportExportErrorHandler );
+    loadEventsFromFile();
+    ImportExportErrorHandler.showErrors();
+    gICalLib.removeObserver( ImportExportErrorHandler );
+}

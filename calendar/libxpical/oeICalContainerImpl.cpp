@@ -44,6 +44,9 @@ extern "C" {
 extern icalarray *builtin_timezones;
 extern char *gDefaultTzidPrefix;
 }
+
+oeIICalContainer *gContainer=nsnull;
+
 //icaltimetype ConvertFromPrtime( PRTime indate );
 void icaltimezone_init_mozilla_zones (void)
 {
@@ -187,6 +190,8 @@ oeICalContainerImpl::oeICalContainerImpl()
         m_filter->m_calendarArray = m_calendarArray;
 
         icaltimezone_init_mozilla_zones ();
+
+        gContainer = this;
 }
 
 oeICalContainerImpl::~oeICalContainerImpl()
@@ -201,6 +206,7 @@ oeICalContainerImpl::~oeICalContainerImpl()
     m_todoobserverArray = nsnull;
 
     NS_RELEASE( m_filter );
+    gContainer = nsnull;
 }
 
 /**
@@ -966,6 +972,25 @@ oeICalContainerImpl::GetAllTodos(nsISimpleEnumerator **resultList )
         nsCOMPtr<oeIICal> calendar;
         m_calendarArray->GetElementAt( i, getter_AddRefs( calendar ) );
         calendar->GetAllTodos( (nsISimpleEnumerator **)&eventEnum );
+    }
+    return NS_OK;
+}
+
+NS_IMETHODIMP oeICalContainerImpl::ReportError( PRInt16 severity, PRUint32 errorid, const char *errorstring ) {
+    PRUint32 num;
+    unsigned int i;
+    m_observerArray->Count( &num );
+    for ( i=0; i<num; i++ ) {
+        oeIICalObserver* tmpobserver;
+        m_observerArray->GetElementAt( i, (nsISupports **)&tmpobserver );
+        tmpobserver->OnError( severity, errorid, errorstring );
+    }
+
+    m_todoobserverArray->Count( &num );
+    for ( i=0; i<num; i++ ) {
+        oeIICalTodoObserver* tmpobserver;
+        m_todoobserverArray->GetElementAt( i, (nsISupports **)&tmpobserver );
+        tmpobserver->OnError( severity, errorid, errorstring );
     }
     return NS_OK;
 }

@@ -272,6 +272,7 @@ interface oeIICalContainer : nsISupports
 	nsISimpleEnumerator getAllTodos();
 
     void resetFilter();
+    void reportError( in short severity, in unsigned long errorid, in string errorstring );
 };
 
 %{ C++

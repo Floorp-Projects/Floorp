@@ -67,6 +67,8 @@
 #define DEFAULT_ALARM_LENGTH 15
 #define DEFAULT_RECUR_UNITS "weeks"
 
+extern oeIICalContainer *gContainer;
+
 char *EmptyReturn() {
     return (char*) nsMemory::Clone( "", 1 );
 }
@@ -288,6 +290,7 @@ oeICalEventImpl::oeICalEventImpl()
     SetSyncId( "" );
     NS_NewISupportsArray(getter_AddRefs(m_attachments));
     NS_NewISupportsArray(getter_AddRefs(m_contacts));
+    m_calendar=nsnull;
 }
 
 oeICalEventImpl::~oeICalEventImpl()
@@ -1693,8 +1696,12 @@ bool oeICalEventImpl::ParseIcalComponent( icalcomponent *comp )
         tmpstr = icalproperty_get_uid( prop );
         SetId( tmpstr );
     } else {
-        ReportError( oeIICal::ICAL_ERROR_PROBLEM, 0, "oeICalEventImpl::ParseIcalComponent() failed: UID not found!\n" );
-        return false;
+        ReportError( oeIICal::ICAL_ERROR_WARN, 0, "oeICalEventImpl::ParseIcalComponent() : Warning UID not found! Assigning new one." );
+        char uidstr[40];
+        GenerateUUID( uidstr );
+        SetId( uidstr );
+        prop = icalproperty_new_uid( uidstr );
+        icalcomponent_add_property( vevent, prop );
     }
 
     //method
@@ -2628,8 +2635,11 @@ icalcomponent* oeICalEventImpl::AsIcalComponent()
 }
 
 NS_IMETHODIMP oeICalEventImpl::ReportError( PRInt16 severity, PRUint32 errorid, const char *errorstring ) {
-    if( m_calendar )
+    if( m_calendar ) {
         m_calendar->ReportError( severity, errorid, errorstring );
+    } else if( gContainer ) {
+        gContainer->ReportError( severity, errorid, errorstring );
+    }
     return NS_OK;
 }
 
