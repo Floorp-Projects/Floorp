@@ -44,6 +44,7 @@ EXTRA_DSO_LDOPTS+= -lXm -lXt -lX11 -lm
 endif
 
 CPPSRCS= \
+	nsRadioButton.cpp \
 	nsFileWidget.cpp \
 	nsTextHelper.cpp \
 	nsTextWidget.cpp \
@@ -57,6 +58,7 @@ CPPSRCS= \
 	nsToolkit.cpp
 
 CPP_OBJS=				\
+ ./$(OBJDIR)/nsRadioButton.o		\
  ./$(OBJDIR)/nsFileWidget.o		\
  ./$(OBJDIR)/nsTextHelper.o		\
  ./$(OBJDIR)/nsTextWidget.o		\
