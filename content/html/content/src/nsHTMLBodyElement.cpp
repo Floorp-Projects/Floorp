@@ -260,13 +260,18 @@ BodyRule::MapFontStyleInto(nsIStyleContext* aContext, nsIPresContext* aPresConte
 {
   // set up the basefont (defaults to 3)
   nsStyleFont* font = (nsStyleFont*)aContext->GetMutableStyleData(eStyleStruct_Font);
-  const nsFont& defaultFont = aPresContext->GetDefaultFontDeprecated(); 
-  const nsFont& defaultFixedFont = aPresContext->GetDefaultFixedFontDeprecated(); 
   PRInt32 scaler;
   aPresContext->GetFontScaler(&scaler);
   float scaleFactor = nsStyleUtil::GetScalingFactor(scaler);
-  font->mFont.size = nsStyleUtil::CalcFontPointSize(3, (PRInt32)defaultFont.size, scaleFactor);
-  font->mFixedFont.size = nsStyleUtil::CalcFontPointSize(3, (PRInt32)defaultFixedFont.size, scaleFactor);
+  // apply font scaling to the body
+  font->mFont.size *= scaleFactor;
+  if (font->mFont.size < 1) {
+    font->mFont.size = 1;
+  }
+  font->mFixedFont.size *= scaleFactor;
+  if (font->mFixedFont.size < 1) {
+    font->mFixedFont.size = 1;
+  }
 
   return NS_OK;
 }
