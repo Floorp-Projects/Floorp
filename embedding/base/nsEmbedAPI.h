@@ -28,21 +28,60 @@
 #include "nsILocalFile.h"
 #include "nsIDirectoryService.h"
 
-
 /**
- * Function to initialise the Gecko embedding APIs. You *must* call this
- * method before any others!
- *
- *   aPath      -> the mozilla bin directory. If nsnull, the default is used
- *   aProvider  -> the application directory service provider. If nsnull, the
- *                 default (nsAppFileLocationProvider) is constructed and used.
+ * @file
+ * @brief The Gecko embedding API functions, structures and definitions.
  */
-extern nsresult NS_InitEmbedding(nsILocalFile *mozBinDirectory,
-                                 nsIDirectoryServiceProvider *appFileLocProvider);
+
+/**
+ * @fn nsresult NS_InitEmbedding(nsILocalFile *aMozBinDirectory, nsIDirectoryServiceProvider *aAppFileLocProvider)
+ *
+ * Initialises the Gecko embedding layer. You <I>must</I>
+ * call this method before proceeding to use Gecko. This function ensures
+ * XPCOM is started, creates the component registry if necessary and
+ * starts global services.
+ *
+ * @status FROZEN
+ *
+ * @note Use <CODE>NS_NewLocalFile</CODE> to create the file object you
+ *       supply as the bin directory path in this call. The function
+ *       may be safely called before the rest of XPCOM or embedding has
+ *       been initialised.
+ *
+ * @param aMozBinDirectory The Gecko directory containing the component
+ *                         registry and runtime libraries;
+ *                         or use <CODE>nsnull</CODE> to use the working
+ *                         directory.
+ * @param aAppFileLocProvider The object to be used by Gecko that specifies
+ *                         to Gecko where to find profiles, the component
+ *                         registry preferences and so on; or use
+ *                         <CODE>nsnull</CODE> for the default behaviour.
+ *
+ * @see NS_NewLocalFile
+ * @see nsILocalFile
+ * @see nsIDirectoryServiceProvider
+ *
+ * @return NS_OK for success;
+ *         other error codes indicate a failure during initialisation.
+ *
+ */
+extern nsresult NS_InitEmbedding(nsILocalFile *aMozBinDirectory,
+                                 nsIDirectoryServiceProvider *aAppFileLocProvider);
 
 
 /**
- * Function to call to finish the Gecko embedding APIs.
+ * @fn nsresult NS_TermEmbedding()
+ *
+ * Terminates the Gecko embedding layer. Call this function during shutdown to
+ * ensure that global services are unloaded, files are closed and
+ * XPCOM is shutdown.
+ *
+ * @status FROZEN
+ *
+ * @note Release any XPCOM objects within Gecko that you may be holding a
+ *       reference to before calling this function.
+ *
+ * @return NS_OK
  */
 extern nsresult NS_TermEmbedding();
 
@@ -56,6 +95,12 @@ extern nsresult NS_TermEmbedding();
 /* Win32 specific stuff */
 #ifdef WIN32
 #include "windows.h"
+
+/**
+ * @var typedef MSG nsEmbedNativeEvent
+ * 
+ * Embedding events are native <CODE>MSG</CODE> structs on Win32.
+ */
 typedef MSG nsEmbedNativeEvent;
 #define MOZ_SUPPORTS_EMBEDDING_EVENT_PROCESSING
 #endif
@@ -70,19 +115,34 @@ typedef MSG nsEmbedNativeEvent;
 #ifdef MOZ_SUPPORTS_EMBEDDING_EVENT_PROCESSING
 
 /**
- * Function to call during the idle time in your application and/or as each
- * event is processed. This function ensures things such as timers are fired
- * correctly.
+ * @fn nsresult NS_DoIdleEmbeddingStuff()
+ *
+ * This function should be called during the idle time in your application
+ * or as each event is processed. This function ensures things such as
+ * timers are fired correctly. It is recommended you call this function
+ * even if has no perceived effect for your platform.
+ *
+ * @status UNDER_REVIEW
+ *
+ * @return NS_OK
  */
 extern nsresult NS_DoIdleEmbeddingStuff();
 
 
 /**
- * Function to call before handling an event. It gives Gecko the chance to
- * handle the event first.
+ * @fn nsresult NS_HandleEmbeddingEvent(nsEmbedNativeEvent &aEvent, PRBool &aWasHandled)
  *
- *   aEvent      -> the native UI event
- *   aWasHandled -> returns with PR_TRUE if the event was handled by Gecko
+ * This function gives Gecko the chance to process a native window events.
+ * Call this function from your message processing loop.
+ *
+ * @status UNDER_REVIEW
+ *
+ * @param aEvent The native UI event
+ * @param aWasHandled Returns with <CODE>PR_TRUE</CODE> if the end was
+ *                    handled; in which case it should not be handled by your
+ *                    application.
+ *
+ * @return NS_OK
  */
 extern nsresult NS_HandleEmbeddingEvent(nsEmbedNativeEvent &aEvent, PRBool &aWasHandled);
 
