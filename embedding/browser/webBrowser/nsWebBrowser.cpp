@@ -56,7 +56,7 @@ NS_IMETHODIMP nsWebBrowser::Create(nsISupports* aOuter, const nsIID& aIID,
 	NS_ENSURE_NO_AGGREGATION(aOuter);
 
 	nsWebBrowser* browser = new  nsWebBrowser();
-	NS_ENSURE(browser, NS_ERROR_OUT_OF_MEMORY);
+	NS_ENSURE_TRUE(browser, NS_ERROR_OUT_OF_MEMORY);
 
 	NS_ADDREF(browser);
 	nsresult rv = browser->QueryInterface(aIID, ppv);
@@ -83,7 +83,7 @@ NS_IMETHODIMP nsWebBrowser::AddWebBrowserListener(nsIInterfaceRequestor* listene
          NS_ERROR_FAILURE);
 
    // Make sure it isn't already in the list...  This is bad!
-   NS_ENSURE(m_ListenerList->IndexOf(listener) == -1, NS_ERROR_INVALID_ARG);
+   NS_ENSURE_TRUE(m_ListenerList->IndexOf(listener) == -1, NS_ERROR_INVALID_ARG);
 
    NS_ENSURE_SUCCESS(m_ListenerList->AppendElement(listener), NS_ERROR_FAILURE);
 
@@ -104,9 +104,9 @@ NS_IMETHODIMP nsWebBrowser::RemoveWebBrowserListener(nsIInterfaceRequestor* list
    if(!listener)
       listener = (nsIInterfaceRequestor*)cookie;
 
-   NS_ENSURE(listener, NS_ERROR_INVALID_ARG);
+   NS_ENSURE_TRUE(listener, NS_ERROR_INVALID_ARG);
 
-   NS_ENSURE(m_ListenerList->RemoveElement(listener), NS_ERROR_INVALID_ARG);
+   NS_ENSURE_TRUE(m_ListenerList->RemoveElement(listener), NS_ERROR_INVALID_ARG);
 
    return NS_OK;
 }
@@ -705,7 +705,7 @@ NS_IMETHODIMP nsWebBrowser::GetCurScrollPos(PRInt32 scrollOrientation,
 
    nsCOMPtr<nsIScrollable> scroll(do_QueryInterface(m_DocShell));
 
-   NS_ENSURE(scroll, NS_ERROR_FAILURE);
+   NS_ENSURE_TRUE(scroll, NS_ERROR_FAILURE);
 
    return scroll->GetCurScrollPos(scrollOrientation, curPos);
 }
@@ -717,7 +717,7 @@ NS_IMETHODIMP nsWebBrowser::SetCurScrollPos(PRInt32 scrollOrientation,
 
    nsCOMPtr<nsIScrollable> scroll(do_QueryInterface(m_DocShell));
 
-   NS_ENSURE(scroll, NS_ERROR_FAILURE);
+   NS_ENSURE_TRUE(scroll, NS_ERROR_FAILURE);
 
    return scroll->SetCurScrollPos(scrollOrientation, curPos);
 }
@@ -729,7 +729,7 @@ NS_IMETHODIMP nsWebBrowser::SetCurScrollPosEx(PRInt32 curHorizontalPos,
 
    nsCOMPtr<nsIScrollable> scroll(do_QueryInterface(m_DocShell));
 
-   NS_ENSURE(scroll, NS_ERROR_FAILURE);
+   NS_ENSURE_TRUE(scroll, NS_ERROR_FAILURE);
 
    return scroll->SetCurScrollPosEx(curHorizontalPos, curVerticalPos);
 }
@@ -742,7 +742,7 @@ NS_IMETHODIMP nsWebBrowser::GetScrollRange(PRInt32 scrollOrientation,
 
    nsCOMPtr<nsIScrollable> scroll(do_QueryInterface(m_DocShell));
 
-   NS_ENSURE(scroll, NS_ERROR_FAILURE);
+   NS_ENSURE_TRUE(scroll, NS_ERROR_FAILURE);
 
    return scroll->GetScrollRange(scrollOrientation, minPos, maxPos);
 }
@@ -754,7 +754,7 @@ NS_IMETHODIMP nsWebBrowser::SetScrollRange(PRInt32 scrollOrientation,
 
    nsCOMPtr<nsIScrollable> scroll(do_QueryInterface(m_DocShell));
 
-   NS_ENSURE(scroll, NS_ERROR_FAILURE);
+   NS_ENSURE_TRUE(scroll, NS_ERROR_FAILURE);
 
    return scroll->SetScrollRange(scrollOrientation, minPos, maxPos);
 }
@@ -766,7 +766,7 @@ NS_IMETHODIMP nsWebBrowser::SetScrollRangeEx(PRInt32 minHorizontalPos,
 
    nsCOMPtr<nsIScrollable> scroll(do_QueryInterface(m_DocShell));
 
-   NS_ENSURE(scroll, NS_ERROR_FAILURE);
+   NS_ENSURE_TRUE(scroll, NS_ERROR_FAILURE);
 
    return scroll->SetScrollRangeEx(minHorizontalPos, maxHorizontalPos, 
       minVerticalPos, maxVerticalPos);
@@ -780,7 +780,7 @@ NS_IMETHODIMP nsWebBrowser::GetScrollbarPreferences(PRInt32 scrollOrientation,
 
    nsCOMPtr<nsIScrollable> scroll(do_QueryInterface(m_DocShell));
 
-   NS_ENSURE(scroll, NS_ERROR_FAILURE);
+   NS_ENSURE_TRUE(scroll, NS_ERROR_FAILURE);
 
    return scroll->GetScrollbarPreferences(scrollOrientation, scrollbarPref);
 }
@@ -792,7 +792,7 @@ NS_IMETHODIMP nsWebBrowser::SetScrollbarPreferences(PRInt32 scrollOrientation,
 
    nsCOMPtr<nsIScrollable> scroll(do_QueryInterface(m_DocShell));
 
-   NS_ENSURE(scroll, NS_ERROR_FAILURE);
+   NS_ENSURE_TRUE(scroll, NS_ERROR_FAILURE);
 
    return scroll->SetScrollbarPreferences(scrollOrientation, scrollbarPref);
 }
@@ -804,7 +804,7 @@ NS_IMETHODIMP nsWebBrowser::GetScrollbarVisibility(PRBool* verticalVisible,
 
    nsCOMPtr<nsIScrollable> scroll(do_QueryInterface(m_DocShell));
 
-   NS_ENSURE(scroll, NS_ERROR_FAILURE);
+   NS_ENSURE_TRUE(scroll, NS_ERROR_FAILURE);
 
    return scroll->GetScrollbarVisibility(verticalVisible, horizontalVisible);
 }
@@ -819,7 +819,7 @@ NS_IMETHODIMP nsWebBrowser::ScrollByLines(PRInt32 numLines)
 
    nsCOMPtr<nsITextScroll> scroll(do_QueryInterface(m_DocShell));
 
-   NS_ENSURE(scroll, NS_ERROR_FAILURE);
+   NS_ENSURE_TRUE(scroll, NS_ERROR_FAILURE);
 
    return scroll->ScrollByLines(numLines);
 }
@@ -830,7 +830,7 @@ NS_IMETHODIMP nsWebBrowser::ScrollByPages(PRInt32 numPages)
 
    nsCOMPtr<nsITextScroll> scroll(do_QueryInterface(m_DocShell));
 
-   NS_ENSURE(scroll, NS_ERROR_FAILURE);
+   NS_ENSURE_TRUE(scroll, NS_ERROR_FAILURE);
 
    return scroll->ScrollByPages(numPages);
 }

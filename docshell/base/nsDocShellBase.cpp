@@ -92,7 +92,7 @@ NS_IMETHODIMP nsDocShellBase::GetDocument(nsIDOMDocument** aDocument)
 
   nsCOMPtr<nsIDocument>doc;
   NS_ENSURE_SUCCESS(presShell->GetDocument(getter_AddRefs(doc)), NS_ERROR_FAILURE);
-  NS_ENSURE(doc, NS_ERROR_NULL_POINTER);
+  NS_ENSURE_TRUE(doc, NS_ERROR_NULL_POINTER);
 
   // the result's addref comes from this QueryInterface call
   NS_ENSURE_SUCCESS(CallQueryInterface(doc, aDocument), NS_ERROR_FAILURE);
@@ -142,7 +142,7 @@ NS_IMETHODIMP nsDocShellBase::GetPresContext(nsIPresContext** aPresContext)
       }
 
    nsCOMPtr<nsIDocumentViewer> docv(do_QueryInterface(mContentViewer));
-   NS_ENSURE(docv, NS_ERROR_FAILURE);
+   NS_ENSURE_TRUE(docv, NS_ERROR_FAILURE);
 
    NS_ENSURE_SUCCESS(docv->GetPresContext(*aPresContext), NS_ERROR_FAILURE);
 
@@ -200,11 +200,11 @@ NS_IMETHODIMP nsDocShellBase::GetRootDocShell(nsIDocShell** aRootDocShell)
   *aRootDocShell = this;
 
   nsCOMPtr<nsIDocShell> parent;
-  NS_ENSURE(GetParent(getter_AddRefs(parent)), NS_ERROR_FAILURE);
+  NS_ENSURE_TRUE(GetParent(getter_AddRefs(parent)), NS_ERROR_FAILURE);
   while (parent)
   {
     *aRootDocShell = parent;
-    NS_ENSURE(GetParent(getter_AddRefs(parent)), NS_ERROR_FAILURE);
+    NS_ENSURE_TRUE(GetParent(getter_AddRefs(parent)), NS_ERROR_FAILURE);
   }
   NS_IF_ADDREF(*aRootDocShell);
   return NS_OK;
@@ -324,6 +324,12 @@ NS_IMETHODIMP nsDocShellBase::GetCopyable(PRBool *aCopyable)
 
 NS_IMETHODIMP nsDocShellBase::CutSelection()
 {
+   PRBool cutable;
+   NS_ENSURE_SUCCESS(GetCutable(&cutable), NS_ERROR_FAILURE);
+   NS_ENSURE_TRUE(cutable, NS_ERROR_UNEXPECTED);
+
+
+
    //XXX Implement
    //Should check to find the current focused object.  Then cut the contents.
    return NS_ERROR_FAILURE;
@@ -794,7 +800,7 @@ NS_IMETHODIMP nsDocShellBase::GetCurScrollPos(PRInt32 scrollOrientation,
          return NS_OK;
 
       default:
-         NS_ENSURE(PR_FALSE, NS_ERROR_INVALID_ARG);
+         NS_ENSURE_TRUE(PR_FALSE, NS_ERROR_INVALID_ARG);
       }
    return NS_ERROR_FAILURE;
 }
@@ -825,7 +831,7 @@ NS_IMETHODIMP nsDocShellBase::SetCurScrollPos(PRInt32 scrollOrientation,
          break;
 
       default:
-         NS_ENSURE(PR_FALSE, NS_ERROR_INVALID_ARG);
+         NS_ENSURE_TRUE(PR_FALSE, NS_ERROR_INVALID_ARG);
       }
 
    NS_ENSURE_SUCCESS(scrollView->ScrollTo(x, y, NS_VMREFRESH_IMMEDIATE),
@@ -872,7 +878,7 @@ NS_IMETHODIMP nsDocShellBase::GetScrollRange(PRInt32 scrollOrientation,
          return NS_OK;
 
       default:
-         NS_ENSURE(PR_FALSE, NS_ERROR_INVALID_ARG);
+         NS_ENSURE_TRUE(PR_FALSE, NS_ERROR_INVALID_ARG);
       }
 
    return NS_ERROR_FAILURE;
@@ -1006,7 +1012,7 @@ nsresult nsDocShellBase::GetChildOffset(nsIDOMNode *aChild, nsIDOMNode* aParent,
    nsCOMPtr<nsIDOMNodeList> childNodes;
    NS_ENSURE_SUCCESS(aParent->GetChildNodes(getter_AddRefs(childNodes)),
       NS_ERROR_FAILURE);
-   NS_ENSURE(childNodes, NS_ERROR_FAILURE);
+   NS_ENSURE_TRUE(childNodes, NS_ERROR_FAILURE);
 
    PRInt32 i=0;
 
@@ -1015,7 +1021,7 @@ nsresult nsDocShellBase::GetChildOffset(nsIDOMNode *aChild, nsIDOMNode* aParent,
       nsCOMPtr<nsIDOMNode> childNode;
       NS_ENSURE_SUCCESS(childNodes->Item(i, getter_AddRefs(childNode)), 
          NS_ERROR_FAILURE);
-      NS_ENSURE(childNode, NS_ERROR_FAILURE);
+      NS_ENSURE_TRUE(childNode, NS_ERROR_FAILURE);
 
       if(childNode.get() == aChild)
          {
