@@ -32,6 +32,7 @@ DIRS=            \
         http     \
         keyword  \
         jar      \
+        datetime \
         res      \
 	$(NULL)
 
