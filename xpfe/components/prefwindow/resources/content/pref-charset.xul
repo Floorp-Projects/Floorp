@@ -36,6 +36,12 @@
   width="500" height="394">
 
   <script type="application/x-javascript" src="chrome://communicator/content/pref/pref-charset.js"/>
+  <script type="application/x-javascript">
+  <![CDATA[
+    var observerService = Components.classes["@mozilla.org/observer-service;1"].getService(Components.interfaces.nsIObserverService);
+    observerService.notifyObservers(null, "charsetmenu-selected", "other");
+  ]]>
+  </script>
   
 <!-- 
   <hbox class="box-smallheader" title="&charset.customize.left.header;" id="confirm_text" value="&charset.customize.save.popup;"/>

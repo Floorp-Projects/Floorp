@@ -37,6 +37,9 @@ function Startup()
   if (!InitEditorShell())
     return;
 
+  var observerService = Components.classes["@mozilla.org/observer-service;1"].getService(Components.interfaces.nsIObserverService);
+  observerService.notifyObservers(null, "charsetmenu-selected", "other");
+
   doSetOKCancel(onOK, onCancel);
 
   gDialog.TitleInput    = document.getElementById("TitleInput");

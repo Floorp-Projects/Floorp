@@ -37,6 +37,12 @@
  
   <script type="application/x-javascript" src="chrome://global/content/globalOverlay.js"></script>
   <script type="application/x-javascript" src="chrome://messenger/content/folderProps.js"></script>
+  <script type="application/x-javascript">
+  <![CDATA[
+    var observerService = Components.classes["@mozilla.org/observer-service;1"].getService(Components.interfaces.nsIObserverService);
+    observerService.notifyObservers(null, "charsetmenu-selected", "other");
+  ]]>
+  </script>
 
 <keyset id="dialogKeys"/>  
 
