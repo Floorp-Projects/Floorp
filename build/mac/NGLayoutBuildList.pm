@@ -799,11 +799,10 @@ sub MakeResourceAliases()
         _InstallManifestRDF(":mozilla:extensions:transformiix:source:examples:mozilla:transformiix:manifest.rdf", $dist_dir, $chrome_subdir, "packages:transformiix:", "skin");
     }
 
-    _InstallManifestRDF(":mozilla:themes:modern:manifest.rdf",$dist_dir, $chrome_subdir, "skins:modern:", "skin");
+ 		_InstallManifestRDF(":mozilla:themes:classic:manifest.rdf",$dist_dir, $chrome_subdir, "skins:classic:", "skin");
     _InstallManifestRDF(":mozilla:themes:blue:manifest.rdf",$dist_dir, $chrome_subdir, "skins:blue:", "skin");
-    if ($main::INCLUDE_CLASSIC_SKIN) {
-    		_InstallManifestRDF(":mozilla:themes:classic:manifest.rdf",$dist_dir, $chrome_subdir, "skins:classic:", "skin");
-    }
+    _InstallManifestRDF(":mozilla:themes:modern:manifest.rdf",$dist_dir, $chrome_subdir, "skins:modern:", "skin");
+
     _InstallManifestRDF(":mozilla:xpfe:communicator:resources:locale:en-US:manifest.rdf",    $dist_dir, $chrome_subdir, "locales:en-US:", "locale");
     
     _InstallManifestRDF(":mozilla:xpfe:communicator:resources:content:manifest.rdf", $dist_dir, $chrome_subdir, "packages:core:", "content");
