@@ -276,7 +276,7 @@ nsPluginArray::GetPlugins()
       // need to wrap each of these with a nsPluginElement, which
       // is scriptable.
       for (PRUint32 i = 0; i < mPluginCount; i++) {
-        nsIDOMPlugin* wrapper = new PluginElement(mPluginArray[i]);
+        nsIDOMPlugin* wrapper = new nsPluginElement(mPluginArray[i]);
         NS_IF_ADDREF(wrapper);
         mPluginArray[i] = wrapper;
       }
