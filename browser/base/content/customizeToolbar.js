@@ -26,6 +26,31 @@
 var gToolbarChanged = false;
 var gCurrentDragOverItem = null;
 var gDraggingFromPalette = false;
+
+function addItemToToolbar(newItem, newToolbar)
+{
+  newItem.removeAttribute("observes");
+  newItem.removeAttribute("disabled");
+  newItem.removeAttribute("type");
+
+  if (newItem.localName == "toolbaritem" && 
+      newItem.firstChild) {
+    newItem.firstChild.removeAttribute("observes");
+    if (newItem.firstChild.localName == "textbox")
+      newItem.firstChild.setAttribute("disabled", "true");
+    else
+      newItem.firstChild.removeAttribute("disabled");
+  }
+
+  enclosure = document.createElementNS("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul",
+                                       "toolbarpaletteitem");
+  
+  // Set a draggesture handler to allow drag-rearrange within the clone toolbar.
+  enclosure.setAttribute("ondraggesture", "nsDragAndDrop.startDrag(event, dragObserver)");
+  enclosure.appendChild(newItem);
+  newToolbar.appendChild(enclosure);
+}
+
 function buildDialog()
 {
   var toolbar = window.opener.document.getElementById("nav-bar");
@@ -46,6 +71,9 @@ function buildDialog()
   var toolbarItem = toolbar.firstChild;
   while (toolbarItem) {
     var newItem = toolbarItem.cloneNode(true);
+<<<<<<< customizeToolbar.js
+    addItemToToolbar(newItem, newToolbar);
+=======
     newItem.removeAttribute("observes");
     newItem.removeAttribute("disabled");
     newItem.removeAttribute("type");
@@ -66,6 +94,7 @@ function buildDialog()
     enclosure.setAttribute("ondraggesture", "gDraggingFromPalette = false; nsDragAndDrop.startDrag(event, dragObserver)");
     enclosure.appendChild(newItem);
     newToolbar.appendChild(enclosure);
+>>>>>>> 1.20
     toolbarItem = toolbarItem.nextSibling;
   }
 
@@ -290,7 +319,31 @@ function updateToolbar()
 function resetToDefault()
 {
   var toolbar = window.opener.document.getElementById("nav-bar");
+  var toolbarPalette = toolbar.palette;
   var defaultSet = toolbar.getAttribute("defaultset");
   var cloneToolbar = document.getElementById("cloneToolbar");
-  
+  while (cloneToolbar.firstChild)
+    cloneToolbar.removeChild(cloneToolbar.firstChild);
+  var items = defaultSet.split(",");
+  for (var i = 0; i < items.length; i++) {
+    var item = items[i];
+    if (!item) continue;
+
+    // Attempt to locate the item within the palette's list of children.
+    var paletteItem = toolbarPalette.firstChild;
+    while (paletteItem) {
+      var paletteID = paletteItem.getAttribute("id");
+      if (paletteID == item) {
+        var newItem = paletteItem.cloneNode(true);
+        newItem.hidden = true;
+        addItemToToolbar(newItem, cloneToolbar);
+        newItem.hidden = false;
+        break;
+      }
+        
+      paletteItem = paletteItem.nextSibling;
+    }
+  }
+
+  gToolbarChanged = true;
 }
