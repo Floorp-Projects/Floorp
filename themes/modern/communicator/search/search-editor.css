@@ -44,10 +44,10 @@
 
 #add-button
   {
-    list-style-image      : url("chrome://global/skin/scroll-left.gif");
+    list-style-image      : url("chrome://global/skin/scroll-right.gif");
   }
   
 #remove-button
   {
-    list-style-iamge      : url("chrome://global/skin/scroll-right.gif");
+    list-style-iamge      : url("chrome://global/skin/scroll-left.gif");
   }
