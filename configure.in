@@ -1021,6 +1021,27 @@ then
     AM_PATH_GTK($GTK_VERSION,,
       AC_MSG_ERROR(Test for GTK failed.))
 
+dnl ========================================================
+dnl =							   =
+dnl = --with-java-supplement				   =
+dnl =							   =
+dnl = Blackwood Java Code                                  =
+dnl =							   =
+dnl ========================================================
+if test "$no_x" != "yes"
+then
+	AC_ARG_WITH(java-supplement,
+	[  --with-java-supplement   Enable Blackwood Java Code],
+	[
+		if test "$withval" = "yes"
+		then
+			MOZ_JAVA_SUPPLEMENT=1
+    	else
+			MOZ_JAVA_SUPPLEMENT=
+    	fi
+	])
+fi
+
 	dnl ========================================================
 	dnl =
 	dnl = GLE support

@@ -646,6 +646,13 @@ END_NGMAKEFILES
 #fi
 
 #
+#  java/
+#
+if [ "$MOZ_JAVA_SUPPLEMENT" ]; then
+  add_makefiles < ${srcdir}/java/makefiles
+fi
+
+#
 # l10n/
 #
 if [ "$MOZ_L10N" ]; then
