@@ -113,7 +113,7 @@ public:
   static XFE_View * getViewOfType(XFE_View * parent, EViewType);
 
   virtual void handleDisplayPixmap(Widget, IL_Pixmap *, IL_Pixmap *, long int, long int) { return;}
-  virtual void handleNewPixmap(Widget, IL_Pixmap *, Boolean mask) { return; }
+  virtual void handleNewPixmap(Widget, IL_Pixmap *, Boolean) { return; }
   virtual void handleImageComplete(Widget, IL_Pixmap *) {return; }
 
 protected:
