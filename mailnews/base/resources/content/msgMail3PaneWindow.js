@@ -1105,8 +1105,12 @@ function FolderPaneOnClick(event)
     var col = {};
     var elt = {};
     folderTree.treeBoxObject.getCellAt(event.clientX, event.clientY, row, col, elt);
-    if (row.value == -1)
+    if (row.value == -1) {
+      if (event.originalTarget.localName == "treecol")
+        // clicking on the name column in the folder pane should not sort
+        event.preventBubble();
       return;
+    }
 
     if (elt.value == "twisty")
     {
@@ -1132,10 +1136,8 @@ function FolderPaneOnClick(event)
             }
         }
     }
-    else if ((event.originalTarget.localName == "treecol") ||
-             (event.originalTarget.localName == "slider") ||
+    else if ((event.originalTarget.localName == "slider") ||
              (event.originalTarget.localName == "scrollbarbutton")) {
-      // clicking on the name column in the folder pane should not sort
       event.preventBubble();
     }
     else if (event.detail == 2) {
