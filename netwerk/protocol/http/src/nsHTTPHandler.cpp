@@ -1479,7 +1479,6 @@ nsHTTPHandler::PrefsChanged(const char* pref)
     // general.useragent.override
     if ((bChangedAll) || !PL_strcmp(pref, UA_PREF_PREFIX "override")) {
         nsXPIDLCString uval;
-        nsresult rv = NS_OK;
         rv = mPrefs->CopyCharPref(UA_PREF_PREFIX "override",
                                   getter_Copies(uval));
         if (NS_SUCCEEDED(rv)) {

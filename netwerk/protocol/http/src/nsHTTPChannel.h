@@ -41,17 +41,22 @@
 #include "nsHTTPResponseListener.h"
 #include "nsIStreamListener.h"
 #include "nsIStreamObserver.h"
-#include "nsICachedNetData.h"
 #include "nsIProxy.h"
 #include "nsIPrompt.h"
 #include "nsIHTTPEventSink.h"
+
+#ifdef MOZ_NEW_CACHE
+#include "nsICachingChannel.h"
+#else
 #include "nsIStreamAsFile.h"
+#include "nsICachedNetData.h"
+class nsICachedNetData;
+#endif
 
 class nsIFile;
 
 class nsHTTPRequest;
 class nsHTTPResponse;
-class nsICachedNetData;
 
 #define LOOPING_REDIRECT_ERROR_URI  "chrome://necko/content/redirect_loop.xul"
 
@@ -73,7 +78,11 @@ class nsHTTPChannel : public nsIHTTPChannel,
                       public nsIInterfaceRequestor,
                       public nsIProgressEventSink,
                       public nsIProxy,
+#ifdef MOZ_NEW_CACHE
+                      public nsICachingChannel
+#else
                       public nsIStreamAsFile
+#endif
 {
 
 public:
@@ -90,7 +99,11 @@ public:
     NS_DECL_NSIINTERFACEREQUESTOR
     NS_DECL_NSIPROGRESSEVENTSINK
     NS_DECL_NSIPROXY
+#ifdef MOZ_NEW_CACHE
+    NS_DECL_NSICACHINGCHANNEL
+#else
 	NS_DECL_NSISTREAMASFILE
+#endif
 		
     // nsHTTPChannel methods:
     nsresult            Authenticate(const char *iChallenge,
@@ -105,9 +118,6 @@ public:
 
     nsresult            SetResponse(nsHTTPResponse* i_pResp);
     nsresult            GetResponseContext(nsISupports** aContext);
-    nsresult            CacheReceivedResponse(nsIStreamListener *aListener,
-                                              nsIStreamListener* *aResult);
-    nsresult            CacheAbort(PRUint32 statusCode);
 
     nsresult            OnHeadersAvailable();
 
@@ -115,7 +125,7 @@ public:
 
     nsresult            Abort();
 
-    PRUint32            getChannelState ();
+    PRUint32            getChannelState();
 
     nsresult            ReportProgress(PRUint32 aProgress,
                                        PRUint32 aProgressMax);
@@ -123,88 +133,117 @@ public:
     nsresult            BuildNotificationProxies ();
 
 protected:
+
+    nsresult            CacheReceivedResponse(nsIStreamListener *aListener,
+                                              nsIStreamListener* *aResult);
+    nsresult            CacheAbort(PRUint32 statusCode);
+
     nsresult            CheckCache();
     nsresult            ReadFromCache();
+
     nsresult            ProcessStatusCode();
     nsresult            ProcessRedirection(PRInt32 aStatusCode);
     nsresult            ProcessAuthentication(PRInt32 aStatusCode);
     nsresult            ProcessNotModifiedResponse(nsIStreamListener *aListener);
 
 public:
-    nsHTTPResponse*                     mResponse;
-
-    nsHTTPHandler*                      mHandler;
-    nsHTTPRequest*                      mRequest;
-    nsHTTPResponseListener*             mHTTPServerListener;
-    nsCOMPtr<nsISupports>               mResponseContext;
-    nsHTTPResponse*                     mCachedResponse;
-    nsCOMPtr<nsIProgressEventSink>      mProgressEventSink;
-    nsCOMPtr<nsIProgressEventSink>      mRealProgressEventSink;
+    nsISupports        *ResponseContext() { return mResponseContext; }
+    void                SetHTTPServerListener(nsHTTPResponseListener *l) { mHTTPServerListener = l; }
+    PRBool              HasCachedResponse() { return mCachedResponse != 0; }
 
 protected:
-    // for PUT/POST cases...
-    nsCOMPtr<nsIInputStream>            mRequestStream;
-    nsCOMPtr<nsIStreamObserver>         mWriteObserver;
+    nsHTTPHandler                      *mHandler;
+
+    HTTPState                           mState;
+    nsresult                            mStatus;
+
+    nsHTTPRequest                      *mRequest;
+    nsHTTPResponse                     *mResponse;
+    nsHTTPResponse                     *mCachedResponse;
+
+    nsHTTPResponseListener             *mHTTPServerListener;
 
     nsCOMPtr<nsIURI>                    mOriginalURI;
     nsCOMPtr<nsIURI>                    mURI;
     nsCOMPtr<nsIURI>                    mReferrer;
+
+    // Various event sinks
     nsCOMPtr<nsIHTTPEventSink>          mEventSink;
     nsCOMPtr<nsIHTTPEventSink>          mRealEventSink;
-    PRBool                              mConnected; 
-    HTTPState                           mState;
     nsCOMPtr<nsIPrompt>                 mPrompter;
     nsCOMPtr<nsIPrompt>                 mRealPrompter;
+    nsCOMPtr<nsIProgressEventSink>      mProgressEventSink;
+    nsCOMPtr<nsIProgressEventSink>      mRealProgressEventSink;
     nsCOMPtr<nsIInterfaceRequestor>     mCallbacks;
 
-    nsCOMPtr<nsIStreamListener>         mResponseDataListener;
-    nsCOMPtr<nsIOutputStream>           mBufOutputStream;
-
     PRUint32                            mLoadAttributes;
-
     nsCOMPtr<nsILoadGroup>              mLoadGroup;
 
+    // nsIPrincipal
     nsCOMPtr<nsISupports>               mOwner;
+
+    // SSL security info (copied from the transport)
+    nsCOMPtr<nsISupports>               mSecurityInfo;
+
+    // Listener passed into AsyncOpen()
+    nsCOMPtr<nsIStreamListener>         mResponseDataListener;
+    nsCOMPtr<nsISupports>               mResponseContext;
+
+    // Pipe output stream used by Open()
+    nsCOMPtr<nsIOutputStream>           mBufOutputStream;
+
+    // for PUT/POST cases...
+    nsCOMPtr<nsIInputStream>            mRequestStream;
     
-    // Cache-related members
+    // Cache stuff
+#ifdef MOZ_NEW_CACHE
+    nsCOMPtr<nsICacheSession>           mCacheSession;
+    nsCOMPtr<nsICacheEntryDescriptor>   mCacheEntry;
+    nsCOMPtr<nsITransport>              mCacheTransport;
+#else
     nsCOMPtr<nsICachedNetData>          mCacheEntry;
-    PRBool                              mCachedContentIsAvailable;
-    PRBool                              mCachedContentIsValid;
+    nsCOMPtr<nsIChannel>                mCacheChannel;
+    nsCOMPtr<nsISupportsArray>          mStreamAsFileObserverArray;
+#endif
+
+    // The HTTP authentication realm (may be NULL)
+    char                               *mAuthRealm;
+
+    // Proxy stuff
+    char                               *mProxyType;
+    char                               *mProxy;
+    PRInt32                             mProxyPort;
+   
+    // Pipelining stuff
+    nsHTTPPipelinedRequest             *mPipelinedRequest;
+    PRPackedBool                        mPipeliningAllowed;
+
+    // True if connected to a server
+    PRPackedBool                        mConnected; 
+
+    // If this is true, then data should be decoded as we stream
+    // it to our listener
+    PRPackedBool                        mApplyConversion;
+
+    // If this is true, then we do not have to spawn a new thread
+    // to service Open()
+    PRPackedBool                        mOpenHasEventQueue;
+     
+    // Cache-related flags
+    PRPackedBool                        mCachedContentIsAvailable;
+    PRPackedBool                        mCachedContentIsValid;
     
     // Called OnHeadersAvailable()
-    PRBool                              mFiredOnHeadersAvailable;
+    PRPackedBool                        mFiredOnHeadersAvailable;
     
-    // Called mOpenObserver->OnStartRequest
-    PRBool                              mFiredOpenOnStartRequest;
-    PRBool                              mFiredOpenOnStopRequest;
+    // If this is true then we have already tried 
+    // prehost as a response to the server challenge. 
+    // And so we need to throw a dialog box!
+    PRPackedBool                        mAuthTriedWithPrehost;
 
-    // Auth related stuff-
-    /* 
-       If this is true then we have already tried 
-       prehost as a response to the server challenge. 
-       And so we need to throw a dialog box!
-    */
-    PRBool                              mAuthTriedWithPrehost;
-    char*                               mAuthRealm;
-
-    char*                               mProxy;
-    PRInt32                             mProxyPort;
-    char*                               mProxyType;
     // if the proxy doesn't affect the protocol behavior
     // (such as socks) we want to reverse conditional proxy behavior
-    PRBool                              mProxyTransparent;
-   
-    nsresult                            mStatus;
-
-    nsCOMPtr<nsIChannel>                mCacheChannel;
-
-    PRBool                              mPipeliningAllowed;
-    nsHTTPPipelinedRequest*             mPipelinedRequest;
-    nsCOMPtr<nsISupports>               mSecurityInfo;
-    // Stream as file
-    nsCOMPtr<nsISupportsArray>						mStreamAsFileObserverArray;
-    PRBool                              mApplyConversion;
-    PRBool                              mOpenHasEventQueue;
+    PRPackedBool                        mProxyTransparent;
 };
 
 #include "nsIRunnable.h"
@@ -226,7 +265,7 @@ public:
 protected:
     nsCOMPtr<nsIChannel>        mChannel;
     nsCOMPtr<nsIStreamListener> mListener;
-    PRBool                      mProcessing;
+    PRPackedBool                mProcessing;
 };
 
 #endif /* _nsHTTPChannel_h_ */

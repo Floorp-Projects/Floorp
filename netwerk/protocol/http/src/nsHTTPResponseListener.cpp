@@ -252,7 +252,7 @@ nsHTTPServerListener::nsHTTPServerListener(nsHTTPChannel *aChannel,
     , mPipelinedRequest(request)
     , mDoingProxySSLConnect(aDoingProxySSLConnect) 
 {
-    mChannel->mHTTPServerListener = this;
+    mChannel->SetHTTPServerListener(this);
 
     nsRepository::CreateInstance(kSupportsVoidCID, NULL, 
                 kSupportsVoidIID, getter_AddRefs(mChunkHeaderEOF));
@@ -433,7 +433,7 @@ nsHTTPServerListener::OnDataAvailable(nsIRequest *request,
 
         if (NS_SUCCEEDED(rv1) && mResponseDataListener) 
             mResponseDataListener->OnDataAvailable(mChannel, 
-                    mChannel->mResponseContext, is, 0, mHeaderBuffer.Length());
+                    mChannel->ResponseContext(), is, 0, mHeaderBuffer.Length());
         
         mSimpleResponse = PR_FALSE;
     }
@@ -529,7 +529,7 @@ nsHTTPServerListener::OnDataAvailable(nsIRequest *request,
         }
 
         rv = mResponseDataListener->OnDataAvailable(mChannel,
-                                                    mChannel->mResponseContext,
+                                                    mChannel->ResponseContext(),
                                                     i_pStream, 0, i_Length);
         if (NS_FAILED(rv)) return rv;
 
@@ -581,9 +581,9 @@ nsHTTPServerListener::OnDataAvailable(nsIRequest *request,
                 if (mResponse) 
                     mResponse->GetStatus(&status);
 
-                if (status != 304 || !mChannel->mCachedResponse) {
+                if (status != 304 || !mChannel->HasCachedResponse()) {
                     mChannel->ResponseCompleted(mResponseDataListener, NS_OK, nsnull);
-                    mChannel->mHTTPServerListener = 0;
+                    mChannel->SetHTTPServerListener(nsnull);
                 }
 
                 OnStartRequest(nsnull, nsnull);
@@ -631,7 +631,7 @@ nsHTTPServerListener::OnStartRequest(nsIRequest* request, nsISupports* i_pContex
     if (req) {
         mChannel = req->mConnection;
         if (mChannel) {
-            mChannel->mHTTPServerListener = this;
+            mChannel->SetHTTPServerListener(this);
             NS_ADDREF(mChannel);
         }
         NS_RELEASE(req);
@@ -692,9 +692,9 @@ nsHTTPServerListener::OnStopRequest(nsIRequest* request, nsISupports* i_pContext
         if (mResponse) 
             mResponse->GetStatus(&status);
 
-        if (status != 304 || !mChannel->mCachedResponse) {
+        if (status != 304 || mChannel->HasCachedResponse()) {
             mChannel->ResponseCompleted(mResponseDataListener, i_Status, aStatusArg);
-            mChannel->mHTTPServerListener = 0;
+            mChannel->SetHTTPServerListener(nsnull);
         }
 
         PRUint32 capabilities = 0;
@@ -758,7 +758,7 @@ nsHTTPServerListener::OnStopRequest(nsIRequest* request, nsISupports* i_pContext
             while (NS_SUCCEEDED(mPipelinedRequest->AdvanceToNextRequest())) {
                 OnStartRequest(nsnull, nsnull);
                 mChannel->ResponseCompleted(mResponseDataListener, i_Status, aStatusArg);
-                mChannel->mHTTPServerListener = 0;
+                mChannel->SetHTTPServerListener(nsnull);
             }
 
             mHandler->ReleasePipelinedRequest(mPipelinedRequest);
@@ -810,7 +810,7 @@ nsresult nsHTTPServerListener::FireSingleOnData(nsIStreamListener *aListener,
         
         if (mBytesReceived && mResponseDataListener) {
             rv = mResponseDataListener->OnDataAvailable(mChannel, 
-                    mChannel->mResponseContext,
+                    mChannel->ResponseContext(),
                     mDataStream, 0, mBytesReceived);
         }
         mDataStream = 0;
@@ -1017,7 +1017,7 @@ nsHTTPServerListener::FinishedResponseHeaders()
     // Fire the OnStartRequest notification - now that user data is available
     //
     if (NS_SUCCEEDED(rv) && mResponseDataListener) {
-        rv = mResponseDataListener->OnStartRequest(mChannel, mChannel->mResponseContext);
+        rv = mResponseDataListener->OnStartRequest(mChannel, mChannel->ResponseContext());
         if (NS_FAILED(rv))
             LOG(("\tOnStartRequest [this=%x]. Consumer failed! Status: %x\n", this, rv));
     } 
