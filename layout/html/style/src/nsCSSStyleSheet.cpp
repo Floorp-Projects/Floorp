@@ -1974,8 +1974,16 @@ CSSStyleSheetImpl::CheckRuleForAttributes(nsICSSRule *aRule)
       nsICSSStyleRule *styleRule = NS_STATIC_CAST(nsICSSStyleRule *, aRule);
       nsCSSSelector *iter;
       for (iter = styleRule->FirstSelector(); iter; iter = iter->mNext) {
-        nsAttrSelector *sel;
-        for (sel = iter->mAttrList; sel; sel = sel->mNext) {
+        /* P.classname means we have to check the attribute "class" */
+        if (iter->mID) {
+          AtomKey idKey(nsHTMLAtoms::id);
+          mInner->mRelevantAttributes.Put(&idKey, nsHTMLAtoms::id);
+        }
+        if (iter->mClassList) {
+          AtomKey classKey(nsHTMLAtoms::kClass);
+          mInner->mRelevantAttributes.Put(&classKey, nsHTMLAtoms::kClass);
+        }
+        for (nsAttrSelector *sel = iter->mAttrList; sel; sel = sel->mNext) {
           /* store it in this sheet's attributes-that-matter table */
           /* XXX store tag name too, but handle collisions */
 #ifdef DEBUG_shaver_off
