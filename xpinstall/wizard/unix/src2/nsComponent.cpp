@@ -56,12 +56,12 @@ nsComponent::~nsComponent()
 nsComponent *
 nsComponent::Duplicate()
 {
-    nsComponent *dup = new nsComponent();
-    *dup = *this;
-    dup->InitRefCount();
-    dup->InitNext();
+    nsComponent *zdup = new nsComponent();
+    *zdup = *this;
+    zdup->InitRefCount();
+    zdup->InitNext();
 
-    return dup;
+    return zdup;
 }
 
 int

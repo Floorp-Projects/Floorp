@@ -62,6 +62,9 @@ int     main(int argc, char **argv);
 
 #define CONFIG_INI "config.ini"
 
+#if defined(DUMP)
+#undef DUMP
+#endif
 #if defined(DEBUG_sgehani) || defined(DEBUG_druidd) || defined(DEBUG_root)
 #define DUMP(_msg) printf("%s %d: %s \n", __FILE__, __LINE__, _msg);
 #else

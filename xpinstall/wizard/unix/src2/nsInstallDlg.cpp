@@ -28,6 +28,14 @@
 #include <signal.h>
 #include <pthread.h>
 
+static char         *sXPInstallEngine;
+static GtkWidget    *sMsg0Label;
+static GtkWidget    *sMajorLabel;
+static GtkWidget    *sMinorLabel;
+static GtkWidget    *sMajorProgBar;
+static GtkWidget    *sMinorProgBar;
+static int          sActivity;
+
 nsInstallDlg::nsInstallDlg() :
     mMsg0(NULL)
 {
@@ -68,7 +76,6 @@ void
 nsInstallDlg::Next(GtkWidget *aWidget, gpointer aData)
 {
     DUMP("Next");
-    int err = OK;
     int bCus;
     nsComponentList *comps = NULL;
     pthread_t ength;
@@ -107,9 +114,6 @@ nsInstallDlg::Next(GtkWidget *aWidget, gpointer aData)
     gtk_timeout_add(1, ProgressUpdater, NULL);
 
     gCtx->bMoving = TRUE;
-    return;
-
-BAIL:
     return;
 }
 
@@ -178,7 +182,8 @@ nsInstallDlg::Show(int aDirection)
         gtk_box_pack_start(GTK_BOX(hbox), sMsg0Label, FALSE, FALSE, 0);
         gtk_widget_show(hbox);
         gtk_table_attach(GTK_TABLE(mTable), hbox, 0, 1, 1, 2,
-                        GTK_FILL | GTK_EXPAND, GTK_FILL, 20, 20);
+                         static_cast<GtkAttachOptions>(GTK_FILL | GTK_EXPAND),
+			 GTK_FILL, 20, 20);
         gtk_widget_show(sMsg0Label);
 
         // vbox with two widgets packed in: label0 / progmeter0 (major)
@@ -192,7 +197,8 @@ nsInstallDlg::Show(int aDirection)
         // gtk_widget_show(sMajorProgBar);
 
         gtk_table_attach(GTK_TABLE(mTable), vbox, 0, 1, 2, 3, 
-                        GTK_FILL | GTK_EXPAND, GTK_FILL, 20, 20);
+                         static_cast<GtkAttachOptions>(GTK_FILL | GTK_EXPAND),
+			 GTK_FILL, 20, 20);
         gtk_widget_show(vbox); 
 
         // vbox with two widgets packed in: label1 / progmeter1 (minor)
@@ -206,7 +212,8 @@ nsInstallDlg::Show(int aDirection)
         // gtk_widget_show(sMinorProgBar); 
 
         gtk_table_attach(GTK_TABLE(mTable), vbox, 0, 1, 3, 4, 
-                        GTK_FILL | GTK_EXPAND, GTK_FILL, 20, 20);
+                         static_cast<GtkAttachOptions>(GTK_FILL | GTK_EXPAND),
+			 GTK_FILL, 20, 20);
         gtk_widget_show(vbox); 
         
         mWidgetsInit = TRUE;
@@ -236,9 +243,6 @@ nsInstallDlg::Show(int aDirection)
     gtk_widget_show(gCtx->installLabel);
     gtk_widget_show(gCtx->next);
 
-    return err;
-
-BAIL:
     return err;
 }
 
@@ -276,7 +280,6 @@ nsInstallDlg::WorkDammitWork(void *arg)
     DUMP("WorkDammitWork");
 
     int err = OK;
-    pthread_t *mainth = (pthread_t *) arg;
 
     // perform the installation
     nsXIEngine *engine = new nsXIEngine();

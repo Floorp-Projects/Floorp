@@ -68,9 +68,4 @@ private:
     nsSetupType         *mSetupTypeList;
 };
 
-static GtkWidget        *sBrowseBtn;
-static gint             sBrowseBtnID;
-static GtkWidget        *sFolder;
-static GSList           *sGroup;
-
 #endif /* _NS_SETUPTYPEDLG_H_ */

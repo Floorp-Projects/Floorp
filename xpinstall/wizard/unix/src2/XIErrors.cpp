@@ -22,51 +22,28 @@
  *     Samir Gehani <sgehani@netscape.com>
  */
 
-#ifndef _NS_INSTALLDLG_H_
-#define _NS_INSTALLDLG_H_
-
-#include "nsXInstallerDlg.h"
 #include "XIErrors.h"
 
-class nsInstallDlg : public nsXInstallerDlg
+/*------------------------------------------------------------------*
+ *   Default Error Handler
+ *------------------------------------------------------------------*/
+int ErrorHandler(int aErr)
 {
-public:
-    nsInstallDlg();
-    ~nsInstallDlg();
+    // XXX 1.  fix this to get a string associated with the error code
+    // XXX     from a resourced string bundle
+    // XXX
+    // XXX 2.  fix this to throw up a dialog rather than writing to stdout
 
-/*------------------------------------------------------------------*
- *   Navigation
- *------------------------------------------------------------------*/
-    static void     Back(GtkWidget *aWidget, gpointer aData);
-    static void     Next(GtkWidget *aWidget, gpointer aData);
-
-    int     Parse(nsINIParser* aParser);
-
-    int     Show(int aDirection);
-    int     Hide(int aDirection);
-
-    static void     *WorkDammitWork(void *arg); // worker thread main
-    static gint     ProgressUpdater(gpointer aData);
-
-    static void    XPIProgressCB(const char *aMsg, int aVal, int aMax);
-    static void    MajorProgressCB(char *aCompName, int aCompNum, 
-                                   int aTotalComps);
-
-    enum
+    if (aErr < FATAL_ERR_THRESHOLD)
     {
-        ACT_DOWNLOAD,
-        ACT_EXTRACT,
-        ACT_INSTALL
-    };
+        printf("Fatal error[%d]: Doom and darkness has struck!\n", aErr); 
+        exit(aErr);
+    }
+    else if (aErr < GENERAL_ERR_THRESHOLD)
+        printf("Error[%d]: Regular error so moving right along.\n", aErr);
+    else 
+        printf("Warning[%d]: We spit crap to stdout cos we can!\n", aErr); 
 
-/*------------------------------------------------------------------*
- *   INI Properties
- *------------------------------------------------------------------*/
-    int     SetMsg0(char *aMsg);
-    char    *GetMsg0();
+    return aErr;
+}
 
-private:
-    char    *mMsg0;
-};
-
-#endif /* _NS_INSTALLDLG_H_ */

@@ -27,6 +27,9 @@
 #include "check_on.xpm"
 #include "check_off.xpm"
 
+static nsSetupType     *sCustomST; // cache a pointer to the custom setup type
+static GtkWidget       *sDescLong;
+
 nsComponentsDlg::nsComponentsDlg() :
     mMsg0(NULL),
     mCompList(NULL)
@@ -236,7 +239,8 @@ nsComponentsDlg::Show(int aDirection)
         gtk_box_pack_start(GTK_BOX(hbox), msg0, FALSE, FALSE, 0);
         gtk_widget_show(hbox);
         gtk_table_attach(GTK_TABLE(mTable), hbox, 0, 1, 1, 2,
-                        GTK_FILL | GTK_EXPAND, GTK_FILL, 20, 20);
+                         static_cast<GtkAttachOptions>(GTK_FILL | GTK_EXPAND),
+			 GTK_FILL, 20, 20);
         gtk_widget_show(msg0);
 
         // 2nd row: a CList with a check box for each row (short desc)
@@ -246,7 +250,6 @@ nsComponentsDlg::Show(int aDirection)
         GdkPixmap *checked = NULL;
         GdkBitmap *un_mask = NULL;
         GdkPixmap *unchecked = NULL;
-        GtkWidget *img = NULL;
         gchar *dummy = "";
         nsComponent *currComp = sCustomST->GetComponents()->GetHead();
         GtkWidget *descLongTable = NULL;
@@ -297,7 +300,9 @@ nsComponentsDlg::Show(int aDirection)
         gtk_box_pack_start(GTK_BOX(hbox), list, TRUE, TRUE, 0);
         gtk_widget_show(hbox);
         gtk_table_attach(GTK_TABLE(mTable), hbox, 0, 1, 2, 3,
-                        GTK_FILL | GTK_EXPAND, GTK_EXPAND | GTK_FILL, 20, 0);
+                         static_cast<GtkAttachOptions>(GTK_FILL | GTK_EXPAND),
+			 static_cast<GtkAttachOptions>(GTK_EXPAND | GTK_FILL),
+			 20, 0);
 
         // XXX     3rd row: labels for ds avail and ds reqd
 
@@ -306,8 +311,9 @@ nsComponentsDlg::Show(int aDirection)
         gtk_widget_show(descLongTable);
 
         gtk_table_attach(GTK_TABLE(mTable), descLongTable, 0, 1, 4, 5,
-                            GTK_EXPAND | GTK_FILL,
-                            GTK_EXPAND | GTK_FILL, 20, 20);
+                         static_cast<GtkAttachOptions>(GTK_EXPAND | GTK_FILL),
+                         static_cast<GtkAttachOptions>(GTK_EXPAND | GTK_FILL),
+			 20, 20);
         frame = gtk_frame_new(DESCRIPTION);
         gtk_table_attach_defaults(GTK_TABLE(descLongTable), frame, 0, 1, 0, 1);
         gtk_widget_show(frame);
@@ -347,9 +353,6 @@ nsComponentsDlg::Show(int aDirection)
         gtk_widget_show(gCtx->next);
     }     
 
-    return err;
-
-BAIL:
     return err;
 }
 

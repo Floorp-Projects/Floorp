@@ -65,7 +65,4 @@ private:
     nsComponentList *mCompList;
 };
 
-static nsSetupType     *sCustomST; // cache a pointer to the custom setup type
-static GtkWidget       *sDescLong;
-
 #endif /* _NS_COMPONENTSDLG_H_ */

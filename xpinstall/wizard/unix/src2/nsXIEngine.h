@@ -88,20 +88,4 @@ private:
     char    *mTmp;
 };
 
-#define CORE_LIB_COUNT 9
-static char sCoreLibs[ CORE_LIB_COUNT * 2 ][ 32 ] = 
-{
-/*      Archive Subdir      File                            */
-/*      --------------      ----                            */
-		"bin/", 			"libjsdom.so", 
-		"bin/", 			"libmozjs.so",
-		"bin/", 			"libnspr4.so",
-		"bin/",				"libplc4.so",
-		"bin/", 			"libplds4.so",
-		"bin/",				"libxpcom.so",
-		"bin/",				"libxpistub.so",
-		"bin/components/",	"libxpinstall.so",
-		"bin/components/",	"libjar50.so"
-};
-
 #endif /* _NS_XIENGINE_H_ */
