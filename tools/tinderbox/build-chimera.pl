@@ -46,6 +46,7 @@ sub ReadHeapDumpToHash($$)
 
   my $section = 0;
   my $zone = "";
+  my $default_zone_bytes = 0;
   
   while (<DUMP_FILE>)
   {
@@ -64,9 +65,12 @@ sub ReadHeapDumpToHash($$)
     
     if ($section == 2) # we're in the detailed section
     {
-      if ($line =~ /^Zone ([^_]+)/)
+      if ($line =~ /^Zone ([^_]+).+\((\d+).+\)/)
       {
         $zone = $1;
+        if ($zone eq "DefaultMallocZone") {
+          $default_zone_bytes = $2;
+        }
         TinderUtils::print_log "  $line\n";
         next;
       }
@@ -75,14 +79,12 @@ sub ReadHeapDumpToHash($$)
       {
         if ($line =~ /(\w+)\s*=\s*(\d+)\s*\((\d+).+\)/)
         {
-          #TinderUtils::print_log "$2 $1 ($3 bytes)\n";
           my(%entry_hash) = ("count", $2,
                              "bytes", $3);
           $hashref->{$1} = \%entry_hash;
         }
         elsif ($line =~ /^<not.+>\s*=\s*(\d+)\s*\((\d+).+\)/)
         {
-          #TinderUtils::print_log "$1 malloc blocks ($2 bytes)\n";
           my(%entry_hash) = ("count", $1,
                              "bytes", $2);
           $hashref->{"malloc_block"} = \%entry_hash;
@@ -92,6 +94,8 @@ sub ReadHeapDumpToHash($$)
   }
  
   close(DUMP_FILE);
+  
+  return $default_zone_bytes;
 }
 
 sub DumpHash($)
@@ -119,12 +123,7 @@ sub ClassEntriesEqual($$)
 sub DumpHashDiffs($$)
 {
   my($beforehash, $afterhash) = @_;
-  
-  # common keys
-  my(%changed_keys);
-  #my(%before_only);
-  #my(%after_only);
-  
+    
   my($name_width) = 50;
   my($print_format) = "%10s %-${name_width}s %8d %8d\n";
 
@@ -178,14 +177,14 @@ sub DumpHashDiffs($$)
 sub ParseHeapOutput($$)
 {
   my($beforedump, $afterdump) = @_;
-
+  
   TinderUtils::print_log "Before window open:\n";
   my %before_data;
-  ReadHeapDumpToHash($beforedump, \%before_data);
+  my $before_heap = ReadHeapDumpToHash($beforedump, \%before_data);
   
   TinderUtils::print_log "After window open and close:\n";
   my %after_data;
-  ReadHeapDumpToHash($afterdump, \%after_data);
+  my $after_heap = ReadHeapDumpToHash($afterdump, \%after_data);
 
 #  DumpHash(\%before_data);
 #  DumpHash(\%after_data);
@@ -193,58 +192,64 @@ sub ParseHeapOutput($$)
   TinderUtils::print_log "Open/close window leaks:\n";
   DumpHashDiffs(\%before_data, \%after_data);
 
-}
+  my $heap_diff = $after_heap - $before_heap;
+  TinderUtils::print_log "TinderboxPrint:<acronym title=\"Per-window leaks\">Lw:".TinderUtils::PrintSize($heap_diff)."B</acronym>\n"
 
+}
 
 
 sub ChimeraWindowLeaksTest($$$$$)
 {
   my ($test_name, $build_dir, $binary, $args, $timeout_secs) = @_;
 
-  my $close_window_script =<<END_SCRIPT;
-tell application "Navigator"
-  delay 5
-  close the first window
-end tell
-END_SCRIPT
-  
-  my $new_window_script =<<END_SCRIPT;
-tell application "Navigator"
-  Get URL "http://www.mozilla.org"
-  delay 5
-  close the first window
-end tell
-END_SCRIPT
-
-  TinderUtils::print_log "Window leak test\n";
-  
   my($status) = 'success';
 
-  my $binary_basename = File::Basename::basename($binary);
-  my $binary_dir = File::Basename::dirname($binary);
-  my $binary_log = "$build_dir/$test_name.log";
-  my $cmd = $binary_basename;
-    
-  my $pid = TinderUtils::fork_and_log($build_dir, $binary_dir, $cmd, $binary_log);
-  print "got pid $pid\n";
-
-  # close the existing window 
-  system("echo '$close_window_script' | osascript");
-  # open and close a window to get to a stable point
-  system("echo '$new_window_script' | osascript");
-
-  # dump before data
   my $beforefile = "/tmp/nav_before_heap.dat";
-  system("heap $pid > $beforefile");
+  my $afterfile  = "/tmp/nav_after_heap.dat";
 
-  # run the test
-  system("echo '$new_window_script' | osascript");
-
-  # dump after data
-  my $afterfile = "/tmp/nav_after_heap.dat";
-  system("heap $pid > $afterfile");
+  my $run_test = 1;   # useful for testing parsing code
+  if ($run_test)
+  {
+    my $close_window_script =<<END_SCRIPT;
+tell application "Navigator"
+  delay 5
+  close the first window
+end tell
+END_SCRIPT
+    
+    my $new_window_script =<<END_SCRIPT;
+tell application "Navigator"
+  Get URL "about:blank"
+  delay 20
+  close the first window
+end tell
+END_SCRIPT
   
-  my $result = TinderUtils::wait_for_pid($pid, $timeout_secs);
+    TinderUtils::print_log "Window leak test\n";
+  
+    my $binary_basename = File::Basename::basename($binary);
+    my $binary_dir = File::Basename::dirname($binary);
+    my $binary_log = "$build_dir/$test_name.log";
+    my $cmd = $binary_basename;
+      
+    my $pid = TinderUtils::fork_and_log($build_dir, $binary_dir, $cmd, $binary_log);
+  
+    # close the existing window 
+    system("echo '$close_window_script' | osascript");
+    # open and close few window to get to a stable point
+    system("echo '$new_window_script' | osascript");
+  
+    # dump before data
+    system("heap $pid > $beforefile");
+  
+    # run the test
+    system("echo '$new_window_script' | osascript");
+  
+    # dump after data
+    system("heap $pid > $afterfile");
+    
+    my $result = TinderUtils::wait_for_pid($pid, $timeout_secs);
+  }
   
   ParseHeapOutput($beforefile, $afterfile);
 
@@ -320,9 +325,6 @@ sub main {
           
         TinderUtils::print_log "Clobbering chimera...\n";
         TinderUtils::run_shell_command("make clean");
-
-        my $foo = Cwd::getcwd();
-        TinderUtils::print_log "cwd = $foo\n";
           
         $status = TinderUtils::run_shell_command("make");
         TinderUtils::print_log "Status from pbxbuild: $status\n";
