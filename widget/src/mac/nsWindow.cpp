@@ -1150,7 +1150,7 @@ NS_IMETHODIMP	nsWindow::Update()
 		if (!saveUpdateRgn)
 			return NS_ERROR_OUT_OF_MEMORY;
 		if(mWindowPtr)
-			GetWindowUpdateRegion ( mWindowPtr, saveUpdateRgn );
+			::GetWindowUpdateRegion ( mWindowPtr, saveUpdateRgn );
 
 		// draw the widget
 		StPortSetter portSetter(mWindowPtr);
@@ -1679,7 +1679,7 @@ void nsWindow::UpdateWidget(nsRect& aRect, nsIRenderingContext* aContext)
 // This will also work with system floating windows over the area that is
 // scrolling.
 //
-// ¥¥¥¥ This routine really needs to be Carbonated!!!! It is nowhere close,
+// ¥¥¥¥ This routine really needs to be Carbonized!!!! It is nowhere close,
 // ¥¥¥¥ even though there are a couple of carbon ifdefs here already.
 //
 void
@@ -1744,24 +1744,24 @@ nsWindow :: ScrollBits ( Rect & inRectToScroll, PRInt32 inLeftDelta, PRInt32 inT
 #endif
 	else
 	{
-		// compute the non-visable region
-		StRegionFromPool nonVisableRgn;
-		if ( !nonVisableRgn ) return;
+		// compute the non-visible region
+		StRegionFromPool nonVisibleRgn;
+		if ( !nonVisibleRgn ) return;
 
 #if TARGET_CARBON
-    ::DiffRgn ( totalVisRgn, visRgn, nonVisableRgn );
+    ::DiffRgn ( totalVisRgn, visRgn, nonVisibleRgn );
 #else
-    ::DiffRgn ( totalVisRgn, mWindowPtr->visRgn, nonVisableRgn );
+    ::DiffRgn ( totalVisRgn, mWindowPtr->visRgn, nonVisibleRgn );
 #endif
 		
 		// compute the extra area that may need to be updated
-		// scoll the non-visable region to determine what needs updating
-		::OffsetRgn ( nonVisableRgn, inLeftDelta, inTopDelta );
+		// scoll the non-visible region to determine what needs updating
+		::OffsetRgn ( nonVisibleRgn, inLeftDelta, inTopDelta );
 		
 		// calculate a mask region to not copy the non-visble portions of the window from the port
 		StRegionFromPool copyMaskRgn;
 		if ( !copyMaskRgn ) return;
-		::DiffRgn(totalVisRgn, nonVisableRgn, copyMaskRgn);
+		::DiffRgn(totalVisRgn, nonVisibleRgn, copyMaskRgn);
 		
 		// use copybits to simulate a ScrollRect()
 		RGBColor black = { 0, 0, 0 };
@@ -1790,12 +1790,41 @@ nsWindow :: ScrollBits ( Rect & inRectToScroll, PRInt32 inLeftDelta, PRInt32 inT
 #endif
 
 		// union the update regions together and invalidate them
-		::UnionRgn(nonVisableRgn, updateRgn, updateRgn);
+		::UnionRgn(nonVisibleRgn, updateRgn, updateRgn);
 	}
 	
 #if TARGET_CARBON
   ::DisposeRgn(visRgn);
 #endif
+  // If the region to be scrolled contains regions which are currently dirty,
+  // we must scroll those too, and union them with the updateRgn.
+#if !TARGET_CARBON
+  // get a copy of the dirty region
+  StRegionFromPool  winUpdateRgn;
+  if (!winUpdateRgn) return;
+  ::BeginUpdate(mWindowPtr);
+  ::CopyRgn(mWindowPtr->visRgn, winUpdateRgn);
+  ::EndUpdate(mWindowPtr);
+  
+  StRegionFromPool  dirtyRgn;
+  if (!dirtyRgn) return;
+  // get only the part of the dirtyRgn that intersects the frame
+  ::SectRgn(winUpdateRgn, totalVisRgn, dirtyRgn);
+  // offset by the amount scrolled
+  ::OffsetRgn(dirtyRgn, inLeftDelta, inTopDelta);
+  // now intersect with the frame again
+  ::SectRgn(dirtyRgn, totalVisRgn, dirtyRgn);
+  // and add it to the dirty region
+  ::UnionRgn(updateRgn, dirtyRgn, updateRgn);
+  
+  // we also need to re-dirty the dirty rgn outside out frame,
+  // since BeginUpdate/EndUpdate cleared it.
+  ::DiffRgn(winUpdateRgn, totalVisRgn, winUpdateRgn);
+  // and add it to the dirty region
+  ::UnionRgn(updateRgn, winUpdateRgn, updateRgn);
+  
+#endif
+
 //printf("*******scrolling invalidating %ld %ld %ld %ld\n", (**updateRgn).rgnBBox.top, (**updateRgn).rgnBBox.left, (**updateRgn).rgnBBox.bottom,
 //        (**updateRgn).rgnBBox.right);
 	::InvalWindowRgn(mWindowPtr, updateRgn);
