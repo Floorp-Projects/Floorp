@@ -2233,7 +2233,7 @@ class SourceInfo {
         }
 
         int fnFirstLine = lines[0];
-        int fnEndLine = lines[0];
+        int fnEndLine = fnFirstLine + 1;
         for (int i = 1; i != lines.length; ++i) {
             int line = lines[i];
             if (line < fnFirstLine) {
