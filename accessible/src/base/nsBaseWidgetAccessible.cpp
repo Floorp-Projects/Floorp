@@ -296,7 +296,7 @@ PRBool nsLinkableAccessible::IsALink()
        walkUpContent;
        walkUpContent = walkUpContent->GetParent()) {
     nsIAtom *tag = walkUpContent->Tag();
-    if ((tag == nsAccessibilityAtoms::a || nsAccessibilityAtoms::area)) {
+    if ((tag == nsAccessibilityAtoms::a || tag == nsAccessibilityAtoms::area)) {
       // Currently we do not expose <link> tags, because they are not typically
       // in <body> and rendered.
       // We do not yet support xlinks
