@@ -24,13 +24,10 @@
 #include "nsGIFDecoder2.h"
 #include "nsIInputStream.h"
 #include "nsIComponentManager.h"
-#include "gfxIImageFrame.h"
+#include "nsIImage.h"
 #include "nsMemory.h"
 
-#include "gfxIImageContainerObserver.h"
-
-#ifndef XP_MAC
-#endif
+#include "imgIContainerObserver.h"
 
 #include "nsRect.h"
 
@@ -278,7 +275,9 @@ int EndImageFrame(
   // data, at least according to the spec, but we delay in setting the timeout for
   // the image until here to help ensure that we have the whole image frame decoded before
   // we go off and try to display another frame.
-  decoder->mImageFrame->SetTimeout(aDelayTimeout);
+
+// XXXXXXXX
+  // decoder->mImageFrame->SetTimeout(aDelayTimeout);
   decoder->mImageContainer->EndFrameDecode(aFrameNumber, aDelayTimeout);
   return 0;
 }
@@ -375,18 +374,23 @@ int HaveDecodedRow(
         
     switch (format) {
     case gfxIFormats::RGB:
+      {
+        while(rowBufIndex != decoder->mGIFStruct.rowend) {
+          *rgbRowIndex++ = cmap[PRUint8(*rowBufIndex)].red;
+          *rgbRowIndex++ = cmap[PRUint8(*rowBufIndex)].green;
+          *rgbRowIndex++ = cmap[PRUint8(*rowBufIndex)].blue;
+          ++rowBufIndex;
+        }
+
+        decoder->mImageFrame->SetImageData((PRUint8*)aRGBrowBufPtr, bpr, aRowNumber*bpr);
+      }
+      break;
     case gfxIFormats::BGR:
       {
         while(rowBufIndex != decoder->mGIFStruct.rowend) {
-#ifdef XP_PC
           *rgbRowIndex++ = cmap[PRUint8(*rowBufIndex)].blue;
           *rgbRowIndex++ = cmap[PRUint8(*rowBufIndex)].green;
           *rgbRowIndex++ = cmap[PRUint8(*rowBufIndex)].red;
-#else
-          *rgbRowIndex++ = cmap[PRUint8(*rowBufIndex)].red;
-          *rgbRowIndex++ = cmap[PRUint8(*rowBufIndex)].green;
-          *rgbRowIndex++ = cmap[PRUint8(*rowBufIndex)].blue;
-#endif
           ++rowBufIndex;
         }
 

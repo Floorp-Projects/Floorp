@@ -38,7 +38,7 @@
 
 #include "nsMemory.h"
 
-#include "gfxIImageContainerObserver.h"
+#include "imgIContainerObserver.h"
 
 // XXX we need to be sure to fire onStopDecode messages to mObserver in error cases.
 

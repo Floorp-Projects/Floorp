@@ -24,7 +24,7 @@
 #include "nsISupports.idl"
 #include "nsIRequest.idl"
 
-interface gfxIImageContainer;
+interface imgIContainer;
 interface nsIURI;
 
 /**
@@ -42,7 +42,7 @@ interface imgIRequest : nsIRequest
    * @return the image object associated with the request.
    * @attention NEED DOCS
    */
-  readonly attribute gfxIImageContainer image;
+  readonly attribute imgIContainer image;
 
   /**
    * Bits set in the return value from imageStatus

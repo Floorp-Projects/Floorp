@@ -25,8 +25,8 @@
 #include "nsPPMDecoder.h"
 
 #include "nsIInputStream.h"
-#include "gfxIImageContainer.h"
-#include "gfxIImageContainerObserver.h"
+#include "imgIContainer.h"
+#include "imgIContainerObserver.h"
 
 #include "nspr.h"
 
