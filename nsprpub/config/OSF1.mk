@@ -82,9 +82,7 @@ endif
 
 ifeq (,$(filter-out V2.0 V3.2,$(OS_RELEASE)))
 OS_CFLAGS		+= -DHAVE_INT_LOCALTIME_R
-endif
-
-ifeq (V4,$(findstring V4,$(OS_RELEASE)))
+else
 OS_CFLAGS		+= -DHAVE_POINTER_LOCALTIME_R
 endif
 
