@@ -419,21 +419,15 @@ ErrorHandler(int aErr, const char* aErrMsg)
     char errStr[16];
     
     sprintf(errStr, "%d", aErr); 
-    if (!IsErrFatal(aErr))
-    {
-	if(aErr == E_INSTALL)
-	{
-	    if (aErrMsg != NULL)
-	    {
-		sprintf(newmsg, gCtx->Res(errStr), aErrMsg);
-		sprintf(msg, gCtx->Res("ERROR"), aErr, newmsg);
-	    }
-	}
-	else
-	    sprintf(msg, gCtx->Res("ERROR"), aErr, gCtx->Res(errStr));
-    }
+    if (aErrMsg != NULL)
+       sprintf(newmsg, gCtx->Res(errStr), aErrMsg);
     else
-        sprintf(msg, gCtx->Res("FATAL_ERROR"), aErr, gCtx->Res(errStr));
+       strcpy(newmsg, gCtx->Res(errStr));
+
+    if (!IsErrFatal(aErr))
+        sprintf(msg, gCtx->Res("ERROR"), aErr, newmsg);
+    else
+        sprintf(msg, gCtx->Res("FATAL_ERROR"), aErr, newmsg);
     
     // lack of gCtx->window indicates we have not yet run RunWizard 
     // and gtk_init
