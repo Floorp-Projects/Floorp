@@ -57,6 +57,7 @@
 #include "nsIPrefService.h"
 #include "nsRegion.h"
 #include "nsInt64.h"
+#include "nsScrollPortView.h"
 
 static NS_DEFINE_IID(kBlenderCID, NS_BLENDER_CID);
 static NS_DEFINE_IID(kRegionCID, NS_REGION_CID);
@@ -1606,21 +1607,13 @@ nsViewManager::UpdateViewAfterScroll(nsIView *aView, PRInt32 aDX, PRInt32 aDY)
 {
   nsView* view = NS_STATIC_CAST(nsView*, aView);
 
-  nsPoint origin(0, 0);
-  ComputeViewOffset(view, &origin);
-
   // Look at the view's clipped rect. It may be that part of the view is clipped out
   // in which case we don't need to worry about invalidating the clipped-out part.
-  nsRect damageRect;
-  PRBool isClipped;
-  PRBool isEmpty;
-  view->GetClippedRect(damageRect, isClipped, isEmpty);
-  if (isEmpty) {
+  nsRect damageRect = view->GetClippedRect();
+  if (damageRect.IsEmpty()) {
     return;
   }
-  view->ConvertFromParentCoords(&damageRect.x, &damageRect.y);
-  damageRect.x += origin.x;
-  damageRect.y += origin.y;
+  damageRect.MoveBy(ComputeViewOffset(view));
 
   // if this is a floating view, it isn't covered by any widgets other than
   // its children, which are handled by the widget scroller.
@@ -1737,20 +1730,12 @@ NS_IMETHODIMP nsViewManager::UpdateView(nsIView *aView, const nsRect &aRect, PRU
   nsView* view = NS_STATIC_CAST(nsView*, aView);
 
   // Only Update the rectangle region of the rect that intersects the view's non clipped rectangle
-  nsRect clippedRect;
-  PRBool isClipped;
-  PRBool isEmpty;
-  view->GetClippedRect(clippedRect, isClipped, isEmpty);
-  if (isEmpty) {
+  nsRect clippedRect = view->GetClippedRect();
+  if (clippedRect.IsEmpty()) {
     return NS_OK;
   }
-  view->ConvertFromParentCoords(&clippedRect.x, &clippedRect.y);
 
   nsRect damagedRect;
-  damagedRect.x = aRect.x;
-  damagedRect.y = aRect.y;
-  damagedRect.width = aRect.width;
-  damagedRect.height = aRect.height;
   damagedRect.IntersectRect(aRect, clippedRect);
 
    // If the rectangle is not visible then abort
@@ -1778,10 +1763,7 @@ NS_IMETHODIMP nsViewManager::UpdateView(nsIView *aView, const nsRect &aRect, PRU
 
     UpdateWidgetArea(widgetParent, damagedRect, nsnull);
   } else {
-    nsPoint origin(damagedRect.x, damagedRect.y);
-    ComputeViewOffset(view, &origin);
-    damagedRect.x = origin.x;
-    damagedRect.y = origin.y;
+    damagedRect.MoveBy(ComputeViewOffset(view));
 
     nsView* realRoot = mRootView;
     while (realRoot->GetParent()) {
@@ -2152,8 +2134,7 @@ static PRBool ComputePlaceholderContainment(nsView* aView) {
 void nsViewManager::BuildDisplayList(nsView* aView, const nsRect& aRect, PRBool aEventProcessing,
                                      PRBool aCaptured, nsVoidArray* aDisplayList) {
   // compute this view's origin
-  nsPoint origin(0, 0);
-  ComputeViewOffset(aView, &origin);
+  nsPoint origin = ComputeViewOffset(aView);
     
   nsView *displayRoot = aView;
   if (!aCaptured) {
@@ -2173,8 +2154,7 @@ void nsViewManager::BuildDisplayList(nsView* aView, const nsRect& aRect, PRBool 
     
   DisplayZTreeNode *zTree;
 
-  nsPoint displayRootOrigin(0, 0);
-  ComputeViewOffset(displayRoot, &displayRootOrigin);
+  nsPoint displayRootOrigin = ComputeViewOffset(displayRoot);
   displayRoot->ConvertFromParentCoords(&displayRootOrigin.x, &displayRootOrigin.y);
     
   // Determine, for each view, whether it is or contains a ZPlaceholderView
@@ -2188,7 +2168,7 @@ void nsViewManager::BuildDisplayList(nsView* aView, const nsRect& aRect, PRBool 
     paintFloats = displayRoot->GetFloating();
   }
   CreateDisplayList(displayRoot, PR_FALSE, zTree, origin.x, origin.y,
-                    aView, &aRect, nsnull, displayRootOrigin.x, displayRootOrigin.y,
+                    aView, &aRect, displayRoot, displayRootOrigin.x, displayRootOrigin.y,
                     paintFloats, aEventProcessing);
 
   // Reparent any views that need reparenting in the Z-order tree
@@ -2648,20 +2628,14 @@ NS_IMETHODIMP nsViewManager::ResizeView(nsIView *aView, const nsRect &aRect, PRB
         InvalidateRectDifference(parentView, oldDimensions, r, NS_VMREFRESH_NO_SYNC);
       } 
     }
-
-    // nsIClipViews clip everything, including their child views. So we note that explicitly.
-    // This means nsView::GetClippedRect will now take account of the clipping effects of
-    // nsIClipViews.
-    // This will be overridden by SetViewChildClipRegion below, if necessary
-    if (IsClipView(view)) {
-      nsRect childClipRect = aRect;
-      childClipRect.x = 0;
-      childClipRect.y = 0;
-      view->SetClipChildren(PR_TRUE);
-      view->SetChildClip(childClipRect);
-    }
   }
-  
+
+  // Note that if layout resizes the view and the view has a custom clip
+  // region set, then we expect layout to update the clip region too. Thus
+  // in the case where mClipRect has been optimized away to just be a null
+  // pointer, and this resize is implicitly changing the clip rect, it's OK
+  // because layout will change it back again if necessary.
+
   return NS_OK;
 }
 
@@ -2671,59 +2645,35 @@ NS_IMETHODIMP nsViewManager::SetViewChildClipRegion(nsIView *aView, const nsRegi
  
   NS_ASSERTION(!(nsnull == view), "no view");
 
-  PRBool oldClipFlag = view->GetClipChildren();
-  nsRect oldClipRect;
-  if (oldClipFlag) {
-    view->GetChildClip(oldClipRect);
-  } else {
-    // clipping may not have been enabled, but get the area to invalidate anyway
-    view->GetDimensions(oldClipRect);
-  }
-  PRBool newClipFlag;
-  nsRect newClipRect;
+  const nsRect* oldClipRect = view->GetClipChildrenToRect();
 
-  // If the view implements nsIClipView then we ensure a clip rect is set,
-  // and it is set to no more than the bounds of the view.
-  if (aRegion != nsnull) {
-    newClipFlag = PR_TRUE;
-    newClipRect = aRegion->GetBounds();
-    if (IsClipView(view)) {
-      nsRect dims;
-      view->GetDimensions(dims);
-      newClipRect.IntersectRect(newClipRect, dims);
-    }
-  } else {
-    if (IsClipView(view)) {
-      newClipFlag = PR_TRUE;
-      view->GetDimensions(newClipRect);
-      newClipRect.x = 0;
-      newClipRect.y = 0;
-    } else {
-      newClipFlag = PR_FALSE;
-      // clipping is not enabled, but get the new unclipped area for invalidation purposes
-      view->GetDimensions(newClipRect);
-    }
+  nsRect newClipRectStorage = view->GetDimensions();
+  nsRect* newClipRect = nsnull;
+  if (aRegion) {
+    newClipRectStorage = aRegion->GetBounds();
+    newClipRect = &newClipRectStorage;
   }
 
-  if (newClipFlag == oldClipFlag
-      && (!newClipFlag || newClipRect == oldClipRect)) {
+  if ((oldClipRect != nsnull) == (newClipRect != nsnull)
+      && (!newClipRect || *newClipRect == *oldClipRect)) {
     return NS_OK;
   }
 
   // Update the view properties
-  view->SetClipChildren(newClipFlag);
-  view->SetChildClip(newClipRect);
+  view->SetClipChildrenToRect(newClipRect);
+  nsRect oldClipRectStorage =
+    oldClipRect ? *oldClipRect : view->GetDimensions();
  
   if (IsViewInserted(view)) {
     // Invalidate changed areas
     // Paint (new - old) in the current view
-    InvalidateRectDifference(view, newClipRect, oldClipRect, NS_VMREFRESH_NO_SYNC);
+    InvalidateRectDifference(view, newClipRectStorage, oldClipRectStorage, NS_VMREFRESH_NO_SYNC);
     // Paint (old - new) in the parent view, since it'll be clipped out of the current view
     nsView* parent = view->GetParent();
-    if (parent != nsnull) {
-      view->ConvertToParentCoords(&oldClipRect.x, &oldClipRect.y);
-      view->ConvertToParentCoords(&newClipRect.x, &newClipRect.y);
-      InvalidateRectDifference(parent, oldClipRect, newClipRect, NS_VMREFRESH_NO_SYNC);
+    if (parent) {
+      oldClipRectStorage += view->GetPosition();
+      newClipRectStorage += view->GetPosition();
+      InvalidateRectDifference(parent, oldClipRectStorage, newClipRectStorage, NS_VMREFRESH_NO_SYNC);
     }
   }
 
@@ -2810,15 +2760,11 @@ PRBool nsViewManager::CanScrollWithBitBlt(nsView* aView)
     return PR_FALSE; // do the safe thing
   }
 
-  nsRect r;
+  nsRect r = aView->GetClippedRect();
   // Only check the area that intersects the view's non clipped rectangle
-  PRBool isClipped;
-  PRBool isEmpty;
-  aView->GetClippedRect(r, isClipped, isEmpty);
-  if (isEmpty) {
+  if (r.IsEmpty()) {
     return PR_TRUE; // nothing to scroll
   }
-  aView->ConvertFromParentCoords(&r.x, &r.y);
 
   nsAutoVoidArray displayList;
   BuildDisplayList(aView, r, PR_FALSE, PR_FALSE, &displayList);
@@ -3243,7 +3189,15 @@ NS_IMETHODIMP nsViewManager::EndUpdateViewBatch(PRUint32 aUpdateFlags)
 
 NS_IMETHODIMP nsViewManager::SetRootScrollableView(nsIScrollableView *aScrollable)
 {
+  if (mRootScrollable) {
+    NS_STATIC_CAST(nsScrollPortView*, mRootScrollable)->
+      SetClipPlaceholdersToBounds(PR_FALSE);
+  }
   mRootScrollable = aScrollable;
+  if (mRootScrollable) {
+    NS_STATIC_CAST(nsScrollPortView*, mRootScrollable)->
+      SetClipPlaceholdersToBounds(PR_TRUE);
+  }
   return NS_OK;
 }
 
@@ -3407,12 +3361,8 @@ PRBool nsViewManager::CreateDisplayList(nsView *aView, PRBool aReparentedViewsPr
     return retval;
   }
 
-  if (!aTopView)
-    aTopView = aView;
-
   nsRect bounds = aView->GetBounds();
   nsPoint pos = aView->GetPosition();
-
 
   // -> to global coordinates (relative to aTopView)
   bounds.x += aX;
@@ -3420,8 +3370,10 @@ PRBool nsViewManager::CreateDisplayList(nsView *aView, PRBool aReparentedViewsPr
   pos.MoveBy(aX, aY);
 
   // does this view clip all its children?
-  PRBool isClipView = IsClipView(aView)
-    && !(aView->GetViewFlags() & NS_VIEW_FLAG_CONTAINS_PLACEHOLDER);
+  PRBool isClipView =
+    (aView->GetClipChildrenToBounds(PR_FALSE)
+     && !(aView->GetViewFlags() & NS_VIEW_FLAG_CONTAINS_PLACEHOLDER))
+    || aView->GetClipChildrenToBounds(PR_TRUE);
   PRBool overlap;
   nsRect irect;
     
@@ -3545,7 +3497,11 @@ PRBool nsViewManager::CreateDisplayList(nsView *aView, PRBool aReparentedViewsPr
           flags |= VIEW_TRANSPARENT;
         retval = AddToDisplayList(aView, aResult, bounds, irect, flags,
                                   aX - aOriginX, aY - aOriginY,
-                                  aEventProcessing && aRealView == aView);
+                                  aEventProcessing && aTopView == aView);
+        // We're forcing AddToDisplayList to pick up the view only
+        // during event processing, and only when aView is back at the
+        // root of the tree of acceptable views (note that when event
+        // capturing is in effect, aTopView is the capturing view)
       }
 
       // -> to global coordinates (relative to aTopView)
@@ -3599,15 +3555,19 @@ PRBool nsViewManager::AddToDisplayList(nsView *aView,
                                        nscoord aAbsX, nscoord aAbsY,
                                        PRBool aAssumeIntersection)
 {
-  PRBool empty;
-  PRBool clipped;
-  nsRect clipRect;
+  nsRect clipRect = aView->GetClippedRect();
+  PRBool clipped = clipRect != aView->GetDimensions();
 
-  aView->GetClippedRect(clipRect, clipped, empty);
+  // get clipRect into the coordinate system of aView's parent. aAbsX and
+  // aAbsY give an offset to the origin of aView's parent.
+  clipRect.MoveBy(aView->GetPosition());
   clipRect.x += aAbsX;
   clipRect.y += aAbsY;
 
   if (!clipped) {
+    // XXX this code can't be right. If we're only clipped by one pixel,
+    // then that's no reason to use a whole different rectangle.
+    NS_ASSERTION(clipRect == aClipRect, "gah!!!");
     clipRect = aClipRect;
   }
 
@@ -3833,15 +3793,14 @@ void nsViewManager::ShowDisplayList(const nsVoidArray* aDisplayList)
 #endif
 }
 
-void nsViewManager::ComputeViewOffset(nsView *aView, nsPoint *aOrigin)
+nsPoint nsViewManager::ComputeViewOffset(const nsView *aView)
 {
-  if (aOrigin) {
-    while (aView != nsnull) {
-      // compute the view's global position in the view hierarchy.
-      aView->ConvertToParentCoords(&aOrigin->x, &aOrigin->y);
-      aView = aView->GetParent();
-    }
+  nsPoint origin(0, 0);
+  while (aView) {
+    origin += aView->GetPosition();
+    aView = aView->GetParent();
   }
+  return origin;
 }
 
 PRBool nsViewManager::DoesViewHaveNativeWidget(nsView* aView)
@@ -3850,14 +3809,6 @@ PRBool nsViewManager::DoesViewHaveNativeWidget(nsView* aView)
     return (nsnull != aView->GetWidget()->GetNativeData(NS_NATIVE_WIDGET));
   return PR_FALSE;
 }
-
-PRBool nsViewManager::IsClipView(nsView* aView)
-{
-  nsIClipView *clipView = nsnull;
-  nsresult rv = aView->QueryInterface(NS_GET_IID(nsIClipView), (void **)&clipView);
-  return (rv == NS_OK && clipView != nsnull);
-}
-
 
 nsView* nsViewManager::GetWidgetView(nsView *aView)
 {

@@ -93,12 +93,28 @@ enum nsViewVisibility {
 
 // set if our widget moved. 
 #define NS_VIEW_FLAG_WIDGET_MOVED         0x0100
-#define NS_VIEW_FLAG_CLIPCHILDREN         0x0200
 
-// if set it indicates that this view should be 
+// set if this view is clipping its normal descendants
+// to its bounds. When this flag is set, child views
+// bounds need not be inside this view's bounds.
+#define NS_VIEW_FLAG_CLIP_CHILDREN_TO_BOUNDS      0x0200
+
+// set if this view is clipping its descendants (including
+// placeholders) to its bounds
+#define NS_VIEW_FLAG_CLIP_PLACEHOLDERS_TO_BOUNDS  0x0400
+
+// set if this view is clipping its normal descendants to
+// a specified region. When this flag is set, child views
+// bounds need not be inside this view's bounds. The region
+// will always lie inside this view's bounds.
+// #define NS_VIEW_FLAG_CLIP_CHILDREN_TO_REGION      0x0800
+// we don't need this flag; we just check whether mClipRect
+// is null
+
+// if set it indicates that this view should be
 // displayed above z-index:auto views if this view 
 // is z-index:auto also
-#define NS_VIEW_FLAG_TOPMOST              0x0400
+#define NS_VIEW_FLAG_TOPMOST              0x0800
 
 struct nsViewZIndex {
   PRBool mIsAuto;

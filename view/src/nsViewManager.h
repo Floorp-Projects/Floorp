@@ -287,15 +287,12 @@ private:
   void OptimizeDisplayList(const nsVoidArray* aDisplayList, const nsRegion& aDirtyRegion,
                            nsRect& aFinalTransparentRect, nsRegion& aOpaqueRgn,
                            PRBool aTreatUniformAsOpaque);
-    // Remove redundant PUSH/POP_CLIP pairs.
-  void ComputeViewOffset(nsView *aView, nsPoint *aOrigin);
 
   void AddCoveringWidgetsToOpaqueRegion(nsRegion &aRgn, nsIDeviceContext* aContext,
                                         nsView* aRootView);
 
   // Predicates
   PRBool DoesViewHaveNativeWidget(nsView* aView);
-  PRBool IsClipView(nsView* aView);
 
   void PauseTimer(void);
   void RestartTimer(void);
@@ -375,6 +372,11 @@ public: // NOT in nsIViewManager, so private to the view module
   PRBool CanScrollWithBitBlt(nsView* aView);
 
   nsresult CreateRegion(nsIRegion* *result);
+
+  // return the sum of all view offsets from aView right up to the
+  // root of this view hierarchy (the view with no parent, which might
+  // not be in this view manager).
+  static nsPoint ComputeViewOffset(const nsView *aView);
 
 private:
   nsIDeviceContext  *mContext;
