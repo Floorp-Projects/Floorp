@@ -295,8 +295,7 @@ nsXBLBinding::GetFirstBindingWithConstructor(nsIXBLBinding** aResult)
 {
   *aResult = nsnull;
 
-  nsXBLPrototypeHandler* constructor = mPrototypeBinding->GetConstructor();
-  if (constructor) {
+  if (mPrototypeBinding->GetConstructor()) {
     *aResult = this;
     NS_ADDREF(*aResult);
   }
@@ -845,8 +844,7 @@ nsXBLBinding::ExecuteAttachedHandler()
   if (mNextBinding)
     mNextBinding->ExecuteAttachedHandler();
 
-  nsCOMPtr<nsIDOMEventReceiver> rec(do_QueryInterface(mBoundElement));
-  mPrototypeBinding->BindingAttached(rec);
+  mPrototypeBinding->BindingAttached(mBoundElement);
 
   return NS_OK;
 }
@@ -854,8 +852,7 @@ nsXBLBinding::ExecuteAttachedHandler()
 NS_IMETHODIMP 
 nsXBLBinding::ExecuteDetachedHandler()
 {
-  nsCOMPtr<nsIDOMEventReceiver> rec(do_QueryInterface(mBoundElement));
-  mPrototypeBinding->BindingDetached(rec);
+  mPrototypeBinding->BindingDetached(mBoundElement);
 
   if (mNextBinding)
     mNextBinding->ExecuteDetachedHandler();

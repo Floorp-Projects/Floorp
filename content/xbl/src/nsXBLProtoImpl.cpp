@@ -54,7 +54,7 @@ nsXBLProtoImpl::InstallImplementation(nsXBLPrototypeBinding* aBinding, nsIConten
   // this prototype implementation as a guide.  The prototype implementation is compiled lazily,
   // so for the first bound element that needs a concrete implementation, we also build the
   // prototype implementation.
-  if (!mMembers)
+  if (!mMembers)  // Constructor and destructor also live in mMembers
     return NS_OK; // Nothing to do, so let's not waste time.
 
   nsIDocument* document = aBoundElement->GetDocument();

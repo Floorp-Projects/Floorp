@@ -368,22 +368,22 @@ nsXBLPrototypeBinding::FlushSkinSheets()
 }
 
 nsresult
-nsXBLPrototypeBinding::BindingAttached(nsIDOMEventReceiver* aReceiver)
+nsXBLPrototypeBinding::BindingAttached(nsIContent* aBoundElement)
 {
   if (mImplementation && mImplementation->mConstructor)
-    return mImplementation->mConstructor->BindingAttached(aReceiver);
+    return mImplementation->mConstructor->Execute(aBoundElement);
   return NS_OK;
 }
 
 nsresult
-nsXBLPrototypeBinding::BindingDetached(nsIDOMEventReceiver* aReceiver)
+nsXBLPrototypeBinding::BindingDetached(nsIContent* aBoundElement)
 {
   if (mImplementation && mImplementation->mDestructor)
-    return mImplementation->mDestructor->BindingDetached(aReceiver);
+    return mImplementation->mDestructor->Execute(aBoundElement);
   return NS_OK;
 }
 
-nsXBLPrototypeHandler*
+nsXBLProtoImplAnonymousMethod*
 nsXBLPrototypeBinding::GetConstructor()
 {
   if (mImplementation)
@@ -392,7 +392,7 @@ nsXBLPrototypeBinding::GetConstructor()
   return nsnull;
 }
 
-nsXBLPrototypeHandler*
+nsXBLProtoImplAnonymousMethod*
 nsXBLPrototypeBinding::GetDestructor()
 {
   if (mImplementation)
@@ -402,20 +402,20 @@ nsXBLPrototypeBinding::GetDestructor()
 }
 
 nsresult
-nsXBLPrototypeBinding::SetConstructor(nsXBLPrototypeHandler* aHandler)
+nsXBLPrototypeBinding::SetConstructor(nsXBLProtoImplAnonymousMethod* aMethod)
 {
   if (!mImplementation)
     return NS_ERROR_FAILURE;
-  mImplementation->mConstructor = aHandler;
+  mImplementation->mConstructor = aMethod;
   return NS_OK;
 }
 
 nsresult
-nsXBLPrototypeBinding::SetDestructor(nsXBLPrototypeHandler* aHandler)
+nsXBLPrototypeBinding::SetDestructor(nsXBLProtoImplAnonymousMethod* aMethod)
 {
   if (!mImplementation)
     return NS_ERROR_FAILURE;
-  mImplementation->mDestructor = aHandler;
+  mImplementation->mDestructor = aMethod;
   return NS_OK;
 }
 

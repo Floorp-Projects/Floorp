@@ -134,23 +134,19 @@ nsXBLContentSink::FlushText(PRBool aCreateTextNode,
   else if (mState == eXBL_InImplementation) {
     if (mSecondaryState == eXBL_InConstructor ||
         mSecondaryState == eXBL_InDestructor) {
-      // Construct a handler for the constructor/destructor.
-      // XXXdwh This is just awful.  These used to be handlers called
-      // BindingAttached and BindingDetached, and they're still implemented
-      // using handlers.  At some point, we need to change these to just
-      // be special functions on the class instead.
-      nsXBLPrototypeHandler* handler;
+      // Construct a method for the constructor/destructor.
+      nsXBLProtoImplMethod* method;
       if (mSecondaryState == eXBL_InConstructor)
-        handler = mBinding->GetConstructor();
+        method = mBinding->GetConstructor();
       else
-        handler = mBinding->GetDestructor();
+        method = mBinding->GetDestructor();
 
       // Get the text and add it to the constructor/destructor.
-      handler->AppendHandlerText(text);
+      method->AppendBodyText(text);
     }
     else if (mSecondaryState == eXBL_InGetter ||
              mSecondaryState == eXBL_InSetter) {
-      // Get the text and add it to the constructor/destructor.
+      // Get the text and add it to the getter/setter
       if (mSecondaryState == eXBL_InGetter)
         mProperty->AppendGetterText(text);
       else
@@ -284,6 +280,18 @@ nsXBLContentSink::ReportUnexpectedElement(nsIAtom* aElementName,
   NS_ENSURE_SUCCESS(rv, rv);
   
   return consoleService->LogMessage(errorObject);
+}
+
+void
+nsXBLContentSink::AddMember(nsXBLProtoImplMember* aMember)
+{
+  // Add this member to our chain.
+  if (mImplMember)
+    mImplMember->SetNext(aMember); // Already have a chain. Just append to the end.
+  else
+    mImplementation->SetMemberList(aMember); // We're the first member in the chain.
+
+  mImplMember = aMember; // Adjust our pointer to point to the new last member in the chain.
 }
 
 NS_IMETHODIMP 
@@ -481,23 +489,22 @@ nsXBLContentSink::OnOpenContainer(const PRUnichar **aAtts,
     else if (mState == eXBL_InImplementation) {
       if (aTagName == nsXBLAtoms::constructor) {
         mSecondaryState = eXBL_InConstructor;
-        nsXBLPrototypeHandler* newHandler;
-        newHandler = new nsXBLPrototypeHandler(nsnull, nsnull, nsnull, nsnull,
-                                               nsnull, nsnull, nsnull, nsnull,
-                                               nsnull, nsnull, mBinding);
-        newHandler->SetEventName(nsXBLAtoms::constructor);
-        newHandler->SetLineNumber(aLineNumber);
-        mBinding->SetConstructor(newHandler);
+        nsXBLProtoImplAnonymousMethod* newMethod =
+          new nsXBLProtoImplAnonymousMethod();
+        if (newMethod) {
+          newMethod->SetLineNumber(aLineNumber);
+          mBinding->SetConstructor(newMethod);
+          AddMember(newMethod);
+        }
       }
       else if (aTagName == nsXBLAtoms::destructor) {
-        mSecondaryState = eXBL_InDestructor;
-        nsXBLPrototypeHandler* newHandler;
-        newHandler = new nsXBLPrototypeHandler(nsnull, nsnull, nsnull, nsnull,
-                                               nsnull, nsnull, nsnull, nsnull,
-                                               nsnull, nsnull, mBinding);
-        newHandler->SetEventName(nsXBLAtoms::destructor);
-        newHandler->SetLineNumber(aLineNumber);
-        mBinding->SetDestructor(newHandler);
+        nsXBLProtoImplAnonymousMethod* newMethod =
+          new nsXBLProtoImplAnonymousMethod();
+        if (newMethod) {
+          newMethod->SetLineNumber(aLineNumber);
+          mBinding->SetDestructor(newMethod);
+          AddMember(newMethod);
+        }
       }
       else if (aTagName == nsXBLAtoms::field) {
         mSecondaryState = eXBL_InField;
@@ -731,14 +738,7 @@ nsXBLContentSink::ConstructField(const PRUnichar **aAtts, PRUint32 aLineNumber)
   mField = new nsXBLProtoImplField(name, readonly);
   if (mField) {
     mField->SetLineNumber(aLineNumber);
-    
-    // Add this member to our chain.
-    if (mImplMember)
-      mImplMember->SetNext(mField); // Already have a chain. Just append to the end.
-    else
-      mImplementation->SetMemberList(mField); // We're the first member in the chain.
-
-    mImplMember = mField; // Adjust our pointer to point to the new last member in the chain.
+    AddMember(mField);
   }
 }
 
@@ -780,13 +780,7 @@ nsXBLContentSink::ConstructProperty(const PRUnichar **aAtts)
   // parameters.
   mProperty = new nsXBLProtoImplProperty(name, onget, onset, readonly);
   if (mProperty) {
-    // Add this member to our chain.
-    if (mImplMember)
-      mImplMember->SetNext(mProperty); // Already have a chain. Just append to the end.
-    else
-      mImplementation->SetMemberList(mProperty); // We're the first member in the chain.
-
-    mImplMember = mProperty; // Adjust our pointer to point to the new last member in the chain.
+    AddMember(mProperty);
   }
 }
 
@@ -814,13 +808,7 @@ nsXBLContentSink::ConstructMethod(const PRUnichar **aAtts)
   }
 
   if (mMethod) {
-    // Add this member to our chain.
-    if (mImplMember)
-      mImplMember->SetNext(mMethod); // Already have a chain. Just append to the end.
-    else
-      mImplementation->SetMemberList(mMethod); // We're the first member in the chain.
-
-    mImplMember = mMethod; // Adjust our pointer to point to the new last member in the chain.
+    AddMember(mMethod);
   }
 }
 

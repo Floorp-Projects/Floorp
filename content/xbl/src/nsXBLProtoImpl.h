@@ -59,12 +59,12 @@ public:
   };
   ~nsXBLProtoImpl() 
   { 
-    MOZ_COUNT_DTOR(nsXBLProtoImpl); 
+    MOZ_COUNT_DTOR(nsXBLProtoImpl);
+    // Note: the constructor and destructor are in mMembers, so we'll
+    // clean them up automatically.
     for (nsXBLProtoImplMember* curr = mMembers; curr; curr=curr->GetNext())
       curr->Destroy(mClassObject != nsnull);
     delete mMembers; 
-    delete mConstructor;
-    delete mDestructor;
   };
   
   nsresult InstallImplementation(nsXBLPrototypeBinding* aBinding, nsIContent* aBoundElement);
@@ -89,8 +89,8 @@ public:
 
   nsXBLProtoImplMember* mMembers; // The members of an implementation are chained in this singly-linked list.
   
-  nsXBLPrototypeHandler* mConstructor; // Our class constructor.
-  nsXBLPrototypeHandler* mDestructor;  // Our class destructor.
+  nsXBLProtoImplAnonymousMethod* mConstructor; // Our class constructor.
+  nsXBLProtoImplAnonymousMethod* mDestructor;  // Our class destructor.
 };
 
 nsresult

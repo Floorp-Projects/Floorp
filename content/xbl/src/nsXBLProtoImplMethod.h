@@ -140,4 +140,24 @@ protected:
   };
 };
 
+class nsXBLProtoImplAnonymousMethod : public nsXBLProtoImplMethod {
+public:
+  nsXBLProtoImplAnonymousMethod() :
+    nsXBLProtoImplMethod(EmptyString().get())
+  {}
+  
+  nsresult Execute(nsIContent* aBoundElement);
+
+  // Override InstallMember; these methods never get installed as members on
+  // binding instantiations (though they may hang out in mMembers on the
+  // prototype implementation).
+  virtual nsresult InstallMember(nsIScriptContext* aContext,
+                                 nsIContent* aBoundElement, 
+                                 void* aScriptObject,
+                                 void* aTargetClassObject,
+                                 const nsCString& aClassStr) {
+    return NS_OK;
+  }
+};
+
 #endif // nsXBLProtoImplMethod_h__

@@ -119,9 +119,6 @@ public:
   already_AddRefed<nsIAtom> GetEventName();
   void SetEventName(nsIAtom* aName) { mEventName = aName; }
 
-  nsresult BindingAttached(nsIDOMEventReceiver* aReceiver);
-  nsresult BindingDetached(nsIDOMEventReceiver* aReceiver);
-
   nsXBLEventHandler* GetEventHandler()
   {
     if (!mHandler) {
