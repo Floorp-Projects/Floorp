@@ -427,7 +427,7 @@ nsHTMLDocument::StartDocumentLoad(const char* aCommand,
   PRBool needsParser=PR_TRUE;
   if (aCommand)
   {
-    if (nsDependentCString(aCommand) == NS_LITERAL_CSTRING("view delayedContentLoad")) {
+    if (!nsCRT::strcmp(aCommand, "view delayedContentLoad")) {
       needsParser = PR_FALSE;
     }
   }
