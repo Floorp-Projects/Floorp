@@ -34,9 +34,9 @@ nsSplittableFrame::~nsSplittableFrame()
 
 // Flow member functions
 
-NS_METHOD nsSplittableFrame::IsSplittable(SplittableType& aIsSplittable) const
+NS_METHOD nsSplittableFrame::IsSplittable(nsSplittableType& aIsSplittable) const
 {
-  aIsSplittable = Splittable;
+  aIsSplittable = NS_FRAME_SPLITTABLE;
   return NS_OK;
 }
 

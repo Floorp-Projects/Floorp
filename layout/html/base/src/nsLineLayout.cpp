@@ -374,11 +374,11 @@ nsLineLayout::ReflowMappedChild()
 
   // If we need the max-element size and we are splittable then we
   // have to reflow to get it.
-  nsIFrame::SplittableType splits;
+  nsSplittableType splits;
   mKidFrame->IsSplittable(splits);
 #if 0
   if (nsnull != mMaxElementSizePointer) {
-    if (nsIFrame::NotSplittable != splits) {
+    if (NS_FRAME_IS_SPLITTABLE(splits)) {
       NS_FRAME_LOG(NS_FRAME_TRACE_CHILD_REFLOW,
                    ("nsLineLayout::ReflowMappedChild: need max-element-size"));
       return ReflowChild(nsnull);
@@ -390,7 +390,7 @@ nsLineLayout::ReflowMappedChild()
   // here to properly handle reflow avoidance. To do that properly we
   // really need a first-rate protocol here (WillPlace?
   // CanAvoidReflow?) that gets the frame involved.
-  if (nsIFrame::NotSplittable != splits) {
+  if (NS_FRAME_IS_SPLITTABLE(splits)) {
     NS_FRAME_LOG(NS_FRAME_TRACE_CHILD_REFLOW,
                  ("nsLineLayout::ReflowMappedChild: splittable hack"));
     return ReflowChild(nsnull);
@@ -413,7 +413,7 @@ nsLineLayout::ReflowMappedChild()
     return ReflowChild(nsnull);
   }
 
-  if (nsIFrame::NotSplittable != splits) {
+  if (NS_FRAME_IS_SPLITTABLE(splits)) {
     // XXX a next-in-flow propogated dirty-bit eliminates this code
 
     // The splittable frame has not yet been reflowed. This means
@@ -530,7 +530,7 @@ nsLineLayout::ReflowMappedChild()
   // The child doesn't fit as is; if it's splittable then reflow it
   // otherwise return break-before status so that the non-splittable
   // child is pushed to the next line.
-  if (nsIFrame::NotSplittable != splits) {
+  if (NS_FRAME_IS_SPLITTABLE(splits)) {
     NS_FRAME_LOG(NS_FRAME_TRACE_CHILD_REFLOW,
                  ("nsLineLayout::ReflowMappedChild: can't directly fit"));
     return ReflowChild(nsnull);

@@ -178,7 +178,7 @@ public:
                                nsReflowMetrics& aMetrics);
 
   // Flow member functions
-  NS_IMETHOD  IsSplittable(SplittableType& aIsSplittable) const;
+  NS_IMETHOD  IsSplittable(nsSplittableType& aIsSplittable) const;
   NS_IMETHOD  CreateContinuingFrame(nsIPresContext*  aPresContext,
                                     nsIFrame*        aParent,
                                     nsIStyleContext* aStyleContext,

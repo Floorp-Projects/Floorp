@@ -179,7 +179,7 @@ public:
                             PRInt32         aIndexInParent);
   NS_IMETHOD GetReflowMetrics(nsIPresContext*  aPresContext,
                               nsReflowMetrics& aMetrics);
-  NS_IMETHOD IsSplittable(SplittableType& aIsSplittable) const;
+  NS_IMETHOD IsSplittable(nsSplittableType& aIsSplittable) const;
   NS_IMETHOD CreateContinuingFrame(nsIPresContext*  aPresContext,
                                    nsIFrame*        aParent,
                                    nsIStyleContext* aStyleContext,

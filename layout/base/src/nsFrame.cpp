@@ -1120,9 +1120,9 @@ NS_METHOD nsFrame::GetReflowMetrics(nsIPresContext*  aPresContext,
 
 // Flow member functions
 
-NS_METHOD nsFrame::IsSplittable(SplittableType& aIsSplittable) const
+NS_METHOD nsFrame::IsSplittable(nsSplittableType& aIsSplittable) const
 {
-  aIsSplittable = NotSplittable;
+  aIsSplittable = NS_FRAME_NOT_SPLITTABLE;
   return NS_OK;
 }
 

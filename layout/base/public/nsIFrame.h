@@ -75,9 +75,14 @@ enum nsReflowReason {
   eReflowReason_Resize       // general request to determine a desired size
 };
 
+/**
+ * Reflow state passed to a frame during reflow.
+ *
+ * @see #Reflow()
+ */
 struct nsReflowState {
   nsReflowReason   reason;         // the reason for the reflow
-  nsReflowCommand& reflowCommand;  // only used for incremental changes
+  // nsReflowCommand& reflowCommand;  // only used for incremental changes
   nsSize           maxSize;        // the available space in which to reflow
 };
 
@@ -110,6 +115,33 @@ typedef PRUint32 nsReflowStatus;
 
 #define NS_FRAME_IS_NOT_COMPLETE(status)\
   (0 != ((status) & NS_FRAME_NOT_COMPLETE))
+
+//----------------------------------------------------------------------
+
+/**
+ * Indication of how the frame can be split. This is used when doing runaround
+ * of floaters, and when pulling up child frames from a next-in-flow.
+ *
+ * The choices are splittable, not splittable at all, and splittable in
+ * a non-rectangular fashion. This last type only applies to block-level
+ * elements, and indicates whether splitting can be used when doing runaround.
+ * If you can split across page boundaries, but you expect each continuing
+ * frame to be the same width then return frSplittable and not
+ * frSplittableNonRectangular.
+ *
+ * @see #IsSplittable()
+ */
+typedef PRUint32 nsSplittableType;
+
+#define NS_FRAME_NOT_SPLITTABLE             0   // Note: not a bit!
+#define NS_FRAME_SPLITTABLE                 0x1
+#define NS_FRAME_SPLITTABLE_NON_RECTANGULAR 0x3
+
+#define NS_FRAME_IS_SPLITTABLE(type)\
+  (0 != ((type) & NS_FRAME_SPLITTABLE))
+
+#define NS_FRAME_IS_NOT_SPLITTABLE(type)\
+  (0 == ((type) & NS_FRAME_SPLITTABLE))
 
 //----------------------------------------------------------------------
 
@@ -446,24 +478,9 @@ public:
                                nsReflowMetrics& aMetrics) = 0;
 
   /**
-   * Indication of how the frame can be split. This is used when doing runaround
-   * of floaters, and when pulling up child frames from a next-in-flow.
-   *
-   * The choices are splittable, not splittable at all, and splittable in
-   * a non-rectangular fashion. This last type only applies to block-level
-   * elements, and indicates whether splitting can be used when doing runaround.
-   * If you can split across page boundaries, but you expect each continuing
-   * frame to be the same width then return frSplittable and not
-   * frSplittableNonRectangular.
-   *
-   * @see #IsSplittable()
-   */
-  enum SplittableType {NotSplittable = 0, Splittable = 1, SplittableNonRectangular = 3};
-
-  /**
    * Return how your frame can be split.
    */
-  NS_IMETHOD  IsSplittable(SplittableType& aIsSplittable) const = 0;
+  NS_IMETHOD  IsSplittable(nsSplittableType& aIsSplittable) const = 0;
 
   /**
    * Flow member functions. CreateContinuingFrame() is responsible for
