@@ -56,16 +56,57 @@
 
 static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
 
-static PRBool
-IsAscii(const PRUnichar* aString)
+/*
+ * Extracts the hostname part from the given |uSpec|, encodes it to UTF8,
+ * and use it to update the hostname part in |spec|, putting the result
+ * in |targetSpec|
+ * XXX: If the hostname is ASCII, i.e. there is no need for conversion,
+ *      |*targetSpec| would be set to nsnull.
+ */
+nsresult
+ConvertHostnameToUTF8(char* *targetSpec,
+                      const char* spec,
+                      const nsString& uSpec,
+                      nsIIOService* aIOService)
 {
-  for (const PRUnichar* p = aString; *p != 0; ++p) {
-    if (*p & ~PRUnichar(0x007f))
-      return PR_FALSE;
-  }
-  return PR_TRUE;
-}
+  nsresult rv;
 
+  *targetSpec = nsnull;
+
+  nsCOMPtr<nsIIOService> serv;
+  if (!aIOService) {
+    serv = do_GetIOService(&rv);
+    if (NS_FAILED(rv))
+      return rv;
+    aIOService = serv.get();
+  }
+
+  NS_ConvertUCS2toUTF8 specUTF8(uSpec);
+  nsXPIDLCString hostUTF8;
+
+  rv = aIOService->ExtractUrlPart(specUTF8.get(), nsIIOService::url_Host,
+                                  nsnull, nsnull, getter_Copies(hostUTF8));
+  NS_ASSERTION(NS_SUCCEEDED(rv), "Unable to extract Hostname part from URL");
+  if (NS_FAILED(rv) || hostUTF8.IsEmpty())
+    return rv;
+
+  // If hostname is pure ASCII, get out of here.
+  if (nsCRT::IsAscii(hostUTF8.get()))
+    return NS_OK;
+
+  // Try creating a URI from the original spec
+  nsCOMPtr<nsIURI> uri;
+  rv = NS_NewURI(getter_AddRefs(uri), spec, nsnull, aIOService);
+  if (NS_FAILED(rv))
+    return rv;
+
+  // replace the original hostname with hostUTF8
+  rv = uri->SetHost(hostUTF8.get());
+  if (NS_FAILED(rv))
+    return rv;
+
+  return uri->GetSpec(targetSpec);
+}
 
 nsresult
 NS_MakeAbsoluteURIWithCharset(char* *aResult,
@@ -87,7 +128,7 @@ NS_MakeAbsoluteURIWithCharset(char* *aResult,
   // necessary encodings and escaping.
   nsCAutoString spec;
 
-  if (IsAscii(aSpec.get())) {
+  if (nsCRT::IsAscii(aSpec.get())) {
     // If it's ASCII, then just copy the characters
     spec.AssignWithConversion(aSpec);
   }
@@ -98,7 +139,7 @@ NS_MakeAbsoluteURIWithCharset(char* *aResult,
     static const char kJavaScript[] = "javascript";
     nsAutoString scheme;
     if ((pos == (PRInt32)(sizeof kJavaScript - 1)) &&
-        (aSpec.Left(scheme, pos) != -1) &&
+        (aSpec.Left(scheme, pos)) &&
          scheme.EqualsIgnoreCase(kJavaScript)) {
       char buf[6+1];	// space for \uXXXX plus a NUL at the end
       spec.Truncate(0);
@@ -118,7 +159,7 @@ NS_MakeAbsoluteURIWithCharset(char* *aResult,
       // use UTF-8 instead and apply URL escape.
       static const char kMailToURI[] = "mailto";
       if ((pos == (PRInt32)(sizeof kMailToURI - 1)) &&
-          (aSpec.Left(scheme, pos) != -1) &&
+          (aSpec.Left(scheme, pos)) &&
            scheme.EqualsIgnoreCase(kMailToURI)) {
         spec = NS_ConvertUCS2toUTF8(aSpec.get());
       }
@@ -153,7 +194,7 @@ NS_MakeAbsoluteURIWithCharset(char* *aResult,
           encoder->GetMaxLength(aSpec.get(), len, &maxlen);
 
           char buf[64], *p = buf;
-          if (maxlen > sizeof(buf) - 1)
+          if (PRUint32(maxlen) > sizeof(buf) - 1)
             p = new char[maxlen + 1];
 
           if (! p)
@@ -165,9 +206,19 @@ NS_MakeAbsoluteURIWithCharset(char* *aResult,
           encoder->Finish(p, &len);
           p[len] = 0;
           spec += p;
-          
+
           if (p != buf)
             delete[] p;
+
+          // iDNS support: encode the hostname in the URL to UTF8
+          nsresult rv;
+          nsXPIDLCString newSpec;
+          rv = ConvertHostnameToUTF8(getter_Copies(newSpec), spec.get(), aSpec, aIOService);
+          if (NS_FAILED(rv))
+            return rv;
+
+          if (!newSpec.IsEmpty()) // hostname is non-ASCII
+            spec = newSpec;
         }
         else {
           // No encoder, but we've got non-ASCII data. Let's UTF-8 encode
