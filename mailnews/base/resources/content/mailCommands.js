@@ -333,7 +333,8 @@ function SubscribeOKCallback(serverURI, changeTable)
 	
 	var folder = GetMsgFolderFromUri(serverURI);
 	var server = folder.server;
-	var subscribableServer = server.QueryInterface(Components.interfaces.nsISubscribableServer);
+	var subscribableServer =
+        server.QueryInterface(Components.interfaces.nsISubscribableServer);
 
 	for (var name in changeTable) {
 		//dump(name + " = " + changeTable[name] + "\n");
@@ -349,6 +350,15 @@ function SubscribeOKCallback(serverURI, changeTable)
 			//dump("no change to " + name + "\n");
 		}
 	}
+    try {
+        var imapServer =
+            server.QueryInterface(Components.interfaces.nsIImapIncomingServer);
+        if (imapServer)
+            imapServer.reDiscoverAllFolders();
+    }
+    catch (ex) {
+        //dump("*** not an imap server\n");
+    }
 }
 
 function SaveAsFile(message)

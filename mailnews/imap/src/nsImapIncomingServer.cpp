@@ -657,7 +657,7 @@ nsImapIncomingServer::PerformExpand(nsIMsgWindow *aMsgWindow)
  
     rv = pEventQService->GetThreadEventQueue(NS_CURRENT_THREAD, getter_AddRefs(queue));
     if (NS_FAILED(rv)) return rv;
-    rv = imapService->DiscoverAllFolders(queue, rootMsgFolder, nsnull, nsnull);
+    rv = imapService->DiscoverAllFolders(queue, rootMsgFolder, this, nsnull);
  	return rv; 	
 }
 
@@ -1439,6 +1439,44 @@ NS_IMETHODIMP  nsImapIncomingServer::GetImapStringByID(PRInt32 aMsgId, PRUnichar
 	return res;
 }
 
+nsresult nsImapIncomingServer::ResetFoldersToUnverified(nsIFolder *parentFolder)
+{
+    nsresult rv = NS_OK;
+    if (!parentFolder) {
+        nsCOMPtr<nsIFolder> rootFolder;
+        rv = GetRootFolder(getter_AddRefs(rootFolder));
+        if (NS_FAILED(rv)) return rv;
+        return ResetFoldersToUnverified(rootFolder);
+    }
+    else {
+        nsCOMPtr<nsIEnumerator> subFolders;
+        nsCOMPtr<nsIMsgImapMailFolder> imapFolder =
+            do_QueryInterface(parentFolder, &rv);
+        if (NS_FAILED(rv)) return rv;
+        rv = imapFolder->SetVerifiedAsOnlineFolder(PR_FALSE);
+        rv = parentFolder->GetSubFolders(getter_AddRefs(subFolders));
+        if (NS_FAILED(rv)) return rv;
+        nsAdapterEnumerator *simpleEnumerator = new
+            nsAdapterEnumerator(subFolders);
+        if (!simpleEnumerator) return NS_ERROR_OUT_OF_MEMORY;
+        PRBool moreFolders = PR_FALSE;
+        while (NS_SUCCEEDED(simpleEnumerator->HasMoreElements(&moreFolders))
+               && moreFolders) {
+            nsCOMPtr<nsISupports> child;
+            rv = simpleEnumerator->GetNext(getter_AddRefs(child));
+            if (NS_SUCCEEDED(rv) && child) {
+                nsCOMPtr<nsIFolder> childFolder = do_QueryInterface(child,
+                                                                    &rv);
+                if (NS_SUCCEEDED(rv) && childFolder) {
+                    rv = ResetFoldersToUnverified(childFolder);
+                    if (NS_FAILED(rv)) break;
+                }
+            }
+        }
+        delete simpleEnumerator;
+    }
+    return rv;
+}
 
 nsresult nsImapIncomingServer::GetUnverifiedFolders(nsISupportsArray *aFoldersArray, PRInt32 *aNumUnverifiedFolders)
 {
@@ -1935,15 +1973,27 @@ nsImapIncomingServer::OnStartRunningUrl(nsIURI *url)
 NS_IMETHODIMP
 nsImapIncomingServer::OnStopRunningUrl(nsIURI *url, nsresult exitCode)
 {
-    nsresult rv;
+    nsresult rv = exitCode;
 
-	rv = UpdateSubscribedInSubscribeDS();
-	if (NS_FAILED(rv)) return rv;
-
-    mDoingSubscribeDialog = PR_FALSE;
-
-	rv = StopPopulatingSubscribeDS();
-	if (NS_FAILED(rv)) return rv;
+    nsCOMPtr<nsIImapUrl> imapUrl = do_QueryInterface(url);
+    if (imapUrl) {
+        nsImapAction imapAction = nsIImapUrl::nsImapTest;
+        imapUrl->GetImapAction(&imapAction);
+        switch (imapAction) {
+        case nsIImapUrl::nsImapDiscoverAllAndSubscribedBoxesUrl:
+        case nsIImapUrl::nsImapDiscoverChildrenUrl:
+            rv = UpdateSubscribedInSubscribeDS();
+            if (NS_FAILED(rv)) return rv;
+            mDoingSubscribeDialog = PR_FALSE;
+            rv = StopPopulatingSubscribeDS();
+            break;
+        case nsIImapUrl::nsImapDiscoverAllBoxesUrl:
+            DiscoveryDone();
+            break;
+        default:
+            break;
+        }
+    }
 
     return NS_OK;
 }
@@ -2153,4 +2203,12 @@ nsImapIncomingServer::GetDoingLsub(PRBool *doingLsub)
 
 	*doingLsub = mDoingLsub;
 	return NS_OK;
+}
+
+NS_IMETHODIMP
+nsImapIncomingServer::ReDiscoverAllFolders()
+{
+    nsresult rv = ResetFoldersToUnverified(nsnull);
+    rv = PerformExpand(nsnull);
+    return rv;
 }

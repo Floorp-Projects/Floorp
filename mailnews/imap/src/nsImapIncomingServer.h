@@ -64,6 +64,7 @@ public:
 
 protected:
 	nsresult GetFolder(const char* name, nsIMsgFolder** pFolder);
+    nsresult ResetFoldersToUnverified(nsIFolder *parentFolder);
 	nsresult GetUnverifiedSubFolders(nsIFolder *parentFolder, nsISupportsArray *aFoldersArray, PRInt32 *aNumUnverifiedFolders);
 	nsresult GetUnverifiedFolders(nsISupportsArray *aFolderArray, PRInt32 *aNumUnverifiedFolders);
 
