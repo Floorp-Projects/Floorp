@@ -4,7 +4,7 @@ use Cwd;
 
 $curr_dir=`cd`;
 
-open(OUTFILE,">url_list.txt") || die "Can't open url.txt $!";
+open(OUTFILE,">file_list.txt") || die "Can't open file_list.txt $!";
 opendir(D,".");
 
 @files=readdir(D);
