@@ -120,6 +120,8 @@ protected:
 
 private:
 
+  PRBool  AlwaysAppendAccessKey();
+
   CroppingStyle mCropType;
   nsString mTitle;
   nsString mCroppedTitle;
