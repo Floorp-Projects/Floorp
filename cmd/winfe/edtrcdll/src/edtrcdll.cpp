@@ -29,7 +29,7 @@ HINSTANCE g_instance; //global instance of this dll
 BOOL   WINAPI
 DllMain (HANDLE hInst, ULONG ul_reason_for_call, LPVOID lpReserved)
 {
-    g_instance=hInst;
+    g_instance= (HINSTANCE)hInst;
     switch( ul_reason_for_call ) {
     case DLL_PROCESS_ATTACH:
     case DLL_THREAD_ATTACH:
