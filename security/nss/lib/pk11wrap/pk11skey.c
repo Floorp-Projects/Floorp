@@ -1810,12 +1810,15 @@ pk11_AnyUnwrapKey(PK11SlotInfo *slot, CK_OBJECT_HANDLE wrappingKey,
         pk11_ExitKeyMonitor(symKey);
     }
     if (param_free) SECITEM_FreeItem(param_free,PR_TRUE);
-    if ((crv != CKR_OK) && (crv != CKR_DEVICE_ERROR)) {
-	/* try hand Unwrapping */
+    if (crv != CKR_OK) {
 	PK11_FreeSymKey(symKey);
-	symKey = pk11_HandUnwrap(slot, wrappingKey, &mechanism, wrappedKey, 
-	                         target, keyTemplate, templateCount, keySize, 
-				 wincx, NULL, isPerm);
+	symKey = NULL;
+	if (crv != CKR_DEVICE_ERROR) {
+	    /* try hand Unwrapping */
+	    symKey = pk11_HandUnwrap(slot, wrappingKey, &mechanism, wrappedKey, 
+				     target, keyTemplate, templateCount,
+				     keySize, wincx, NULL, isPerm);
+	}
    }
 
    return symKey;
