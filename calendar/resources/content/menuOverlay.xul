@@ -103,12 +103,11 @@
          <menuitem id="calendar-new-todo-menu"     key="new_todo_key"     label="&event.new.todo;"                   observes="new_todo_command"/>
          <menuitem id="calendar-new-calendar-menu" key="new_calendar_key" label="&calendar.context.newserver.label;" observes="new_server_command"/>
          <menuitem id="unifinder-modify-menu"      key="modify_event_key" label="&event.edit.event;"                 observes="modify_command"/>
+         <menuitem id="calendar-close" observes="close_calendar_command" label="&calendar.menu.options.close;"/>
          <menuseparator/>
          <menuitem id="calendar-mail-event" observes="send_event_command" label="&event.mail.event;"/>
          <menuseparator/>
          <menuitem id="calendar-print-menu" observes="print_command" label="&calendar.print.label;"/>
-         <menuseparator/>
-         <menuitem id="calendar-close" observes="close_calendar_command" label="&calendar.menu.options.close;"/>
       </menupopup>
    </menu>
 
