@@ -37,7 +37,7 @@ static NS_DEFINE_IID(kNetServiceCID, NS_NETSERVICE_CID);
 class ImageNetContextSyncImpl : public ilINetContext {
 public:
   ImageNetContextSyncImpl(NET_ReloadMethod aReloadPolicy);
-  ~ImageNetContextSyncImpl();
+  virtual ~ImageNetContextSyncImpl();
 
   NS_DECL_ISUPPORTS
 

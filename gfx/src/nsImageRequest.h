@@ -31,7 +31,7 @@ class ilINetContext;
 class ImageRequestImpl : public nsIImageRequest {
 public:
   ImageRequestImpl();
-  ~ImageRequestImpl();
+  virtual ~ImageRequestImpl();
   
   nsresult Init(IL_GroupContext *aGroupContext, const char* aUrl, 
                 nsIImageRequestObserver *aObserver,

@@ -42,7 +42,7 @@ class ImageGroupImpl : public nsIImageGroup
 {
 public:
   ImageGroupImpl(nsIImageManager *aManager);
-  ~ImageGroupImpl();
+  virtual ~ImageGroupImpl();
 
   nsresult Init(nsIDeviceContext *aDeviceContext, nsIURLGroup* aURLGroup);
 
