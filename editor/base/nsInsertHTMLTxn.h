@@ -40,7 +40,7 @@ public:
     * @param aSrc     the source for the HTML to insert
     * @param aEditor  the editor in which to do the work
     */
-  NS_IMETHOD Init(nsString& aSrc,
+  NS_IMETHOD Init(const nsString& aSrc,
                   nsIEditor *aEditor);
 
 private:

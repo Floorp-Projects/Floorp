@@ -94,9 +94,14 @@ public:
   NS_IMETHOD Cut();
   NS_IMETHOD Copy();
   NS_IMETHOD Paste();
+  NS_IMETHOD PasteAsQuotation();
+  NS_IMETHOD PasteAsCitedQuotation(nsString& aCitation);
+  NS_IMETHOD InsertAsQuotation(const nsString& aQuotedText);
+  NS_IMETHOD InsertAsCitedQuotation(const nsString& aQuotedText, nsString& aCitation);
 
 // Input/Output
-  NS_IMETHOD Insert(nsString& aInputString);
+  NS_IMETHOD InsertHTML(const nsString& aInputString);
+
   NS_IMETHOD BeginComposition(void);
   NS_IMETHOD SetCompositionString(const nsString& aCompositionString);
   NS_IMETHOD EndComposition(void);

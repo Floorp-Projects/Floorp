@@ -26,7 +26,7 @@ nsInsertHTMLTxn::nsInsertHTMLTxn() : EditTxn(), mSrc("")
 {
 }
 
-NS_IMETHODIMP nsInsertHTMLTxn::Init(nsString& aSrc, nsIEditor* aEditor)
+NS_IMETHODIMP nsInsertHTMLTxn::Init(const nsString& aSrc, nsIEditor* aEditor)
 {
   if (!aEditor)
     return NS_ERROR_NULL_POINTER;

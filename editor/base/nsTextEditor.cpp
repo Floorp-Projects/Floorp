@@ -66,6 +66,17 @@
 #include "nsWidgetsCID.h"
 #include "nsIFileWidget.h"
 
+// Drag & Drop, Clipboard
+#include "nsWidgetsCID.h"
+#include "nsIClipboard.h"
+#include "nsITransferable.h"
+#include "nsIFormatConverter.h"
+
+// Drag & Drop, Clipboard Support
+static NS_DEFINE_CID(kCClipboardCID,           NS_CLIPBOARD_CID);
+static NS_DEFINE_CID(kCTransferableCID,        NS_TRANSFERABLE_CID);
+static NS_DEFINE_IID(kCXIFFormatConverterCID,  NS_XIFFORMATCONVERTER_CID);
+
 class nsIFrame;
 
 
@@ -73,6 +84,10 @@ class nsIFrame;
 #include "nsIServiceManager.h"
 
 #include "nsTextEditRules.h"
+
+#include "nsIPref.h"
+#include "nsAOLCiter.h"
+#include "nsInternetCiter.h"
 
 
 static NS_DEFINE_IID(kIDOMEventReceiverIID, NS_IDOMEVENTRECEIVER_IID);
@@ -98,6 +113,8 @@ static NS_DEFINE_CID(kCRangeCID,    NS_RANGE_CID);
 
 static NS_DEFINE_IID(kIInputStreamIID, NS_IINPUTSTREAM_IID);
 static NS_DEFINE_IID(kIOutputStreamIID, NS_IOUTPUTSTREAM_IID);
+
+static NS_DEFINE_CID(kPrefServiceCID, NS_PREF_CID);
 
 #ifdef NS_DEBUG
 static PRBool gNoisy = PR_FALSE;
@@ -1044,10 +1061,90 @@ NS_IMETHODIMP nsTextEditor::Paste()
   return nsEditor::Paste();
 }
 
-NS_IMETHODIMP nsTextEditor::Insert(nsString& aInputString)
+//
+// Similar to that in nsEditor::Paste except that it does indentation:
+//
+NS_IMETHODIMP nsTextEditor::PasteAsQuotation()
 {
-  printf("nsTextEditor::Insert not yet implemented\n");
-  return NS_ERROR_NOT_IMPLEMENTED;
+#ifdef DEBUG_akkana
+  printf("nsTextEditor::PasteAsQuotation\n");
+#endif
+
+  nsString stuffToPaste;
+
+  // Get Clipboard Service
+  nsIClipboard* clipboard;
+  nsresult rv = nsServiceManager::GetService(kCClipboardCID,
+                                             nsIClipboard::GetIID(),
+                                             (nsISupports **)&clipboard);
+
+  // Create generic Transferable for getting the data
+  nsCOMPtr<nsITransferable> trans;
+  rv = nsComponentManager::CreateInstance(kCTransferableCID, nsnull, 
+                                          nsITransferable::GetIID(), 
+                                          (void**) getter_AddRefs(trans));
+  if (NS_OK == rv)
+  {
+    // Get nsITransferable interface for getting the data from the clipboard
+    if (trans)
+    {
+      // We only handle plaintext pastes here
+      nsAutoString flavor(kTextMime);
+
+      trans->AddDataFlavor(&flavor);
+
+      // Get the Data from the clipboard
+      clipboard->GetData(trans);
+
+      // Now we ask the transferable for the data
+      // it still owns the data, we just have a pointer to it.
+      // If it can't support a "text" output of the data the call will fail
+      char *str = 0;
+      PRUint32 len;
+      if (NS_OK == trans->GetTransferData(&flavor, (void **)&str, &len)) {
+
+        // Make adjustments for null terminated strings
+        if (str && len > 0) {
+          // stuffToPaste is ready for insertion into the content
+          stuffToPaste.SetString(str, len);
+        }
+      }
+    }
+  }
+  nsServiceManager::ReleaseService(kCClipboardCID, clipboard);
+
+  return InsertAsQuotation(stuffToPaste);
+}
+
+NS_IMETHODIMP nsTextEditor::InsertAsQuotation(const nsString& aQuotedText)
+{
+  // Now we have the text.  Cite it appropriately:
+  nsCOMPtr<nsICiter> citer;
+  nsCOMPtr<nsIPref> prefs;
+  nsresult rv = nsServiceManager::GetService(kPrefServiceCID,
+                                             nsIPref::GetIID(),
+                                             (nsISupports**)&prefs);
+  char citationType[6] = "\0";
+  int len = sizeof citationType / sizeof *citationType;
+  rv = prefs->GetCharPref("mail.compose.citationType", citationType, &len);
+                          
+  if (NS_SUCCEEDED(rv) && citationType[0] && len > 0
+      && !strncmp(citationType, "aol", 3))
+    citer = new nsAOLCiter;
+  else
+    citer = new nsInternetCiter;
+  nsServiceManager::ReleaseService(kPrefServiceCID, prefs);
+
+  // Let the citer quote it for us:
+  nsString quotedStuff;
+  rv = citer->GetCiteString(aQuotedText, quotedStuff);
+  if (!NS_SUCCEEDED(rv))
+    return rv;
+
+  // Insert blank lines after the quoted text:
+  quotedStuff += "\n\n";
+
+  return InsertText(quotedStuff);
 }
 
 // Useful helper method for Get/SetBodyWrapWidth:

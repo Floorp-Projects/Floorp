@@ -82,7 +82,6 @@
 #include "nsWidgetsCID.h"
 #include "nsIClipboard.h"
 #include "nsITransferable.h"
-#include "nsITransferable.h"
 #include "nsIFormatConverter.h"
 
 // Drag & Drop, Clipboard Support
@@ -941,7 +940,6 @@ NS_IMETHODIMP nsEditor::Copy()
 
 NS_IMETHODIMP nsEditor::Paste()
 {
-
   //printf("nsEditor::Paste\n");
   nsString stuffToPaste;
 
@@ -988,6 +986,22 @@ NS_IMETHODIMP nsEditor::Paste()
 
   // Now let InsertText handle the hard stuff:
   return InsertText(stuffToPaste);
+}
+
+NS_IMETHODIMP nsEditor::PasteAsQuotation()
+{
+#ifdef DEBUG
+  printf("nsEditor::PasteAsQuotation() not meaningful, shouldn't be here\n");
+#endif
+  return Paste();
+}
+
+NS_IMETHODIMP nsEditor::InsertAsQuotation(const nsString& aQuotedText)
+{
+#ifdef DEBUG
+  printf("nsEditor::PasteAsQuotation() not meaningful, shouldn't be here\n");
+#endif
+  return InsertText(aQuotedText);
 }
 
 NS_IMETHODIMP

@@ -421,7 +421,100 @@ NS_IMETHODIMP nsHTMLEditor::Paste()
   return nsTextEditor::Paste();
 }
 
-NS_IMETHODIMP nsHTMLEditor::Insert(nsString& aInputString)
+// 
+// HTML PasteAsQuotation: Paste in a blockquote type=cite
+//
+NS_IMETHODIMP nsHTMLEditor::PasteAsQuotation()
+{
+  nsAutoString citation("");
+  return PasteAsCitedQuotation(citation);
+}
+
+NS_IMETHODIMP nsHTMLEditor::PasteAsCitedQuotation(nsString& aCitation)
+{
+  printf("nsHTMLEditor::PasteAsQuotation\n");
+
+  nsresult res = nsEditor::BeginTransaction();
+
+  nsCOMPtr<nsIDOMNode> newNode;
+  nsAutoString tag("blockquote");
+  res = nsEditor::DeleteSelectionAndCreateNode(tag, getter_AddRefs(newNode));
+  if (NS_FAILED(res) || !newNode)
+    return res;
+
+  // Try to set type=cite.  Ignore it if this fails.
+  nsCOMPtr<nsIDOMElement> newElement (do_QueryInterface(newNode));
+  if (newElement)
+  {
+    nsAutoString type ("type");
+    nsAutoString cite ("cite");
+    newElement->SetAttribute(type, cite);
+  }
+
+  // Set the selection to the underneath the node we just inserted:
+  nsCOMPtr<nsIDOMSelection> selection;
+  res = GetSelection(getter_AddRefs(selection));
+  if (NS_FAILED(res) || !selection)
+  {
+#ifdef DEBUG_akkana
+    printf("Can't get selection!");
+#endif
+  }
+
+  res = selection->Collapse(newNode, 0);
+  if (NS_FAILED(res))
+  {
+#ifdef DEBUG_akkana
+    printf("Couldn't collapse");
+#endif
+  }
+
+  res = Paste();
+
+  nsEditor::EndTransaction();  // don't return this result!
+
+  return res;
+}
+
+NS_IMETHODIMP nsHTMLEditor::InsertAsQuotation(const nsString& aQuotedText)
+{
+  nsAutoString citation ("");
+  return InsertAsCitedQuotation(aQuotedText, citation);
+}
+
+NS_IMETHODIMP nsHTMLEditor::InsertAsCitedQuotation(const nsString& aQuotedText,
+                                                   nsString& aCitation)
+{
+  printf("nsHTMLEditor::InsertAsQuotation\n");
+
+  nsresult res = nsEditor::BeginTransaction();
+
+  nsCOMPtr<nsIDOMNode> newNode;
+  nsAutoString tag("blockquote");
+  res = nsEditor::DeleteSelectionAndCreateNode(tag, getter_AddRefs(newNode));
+  if (NS_FAILED(res) || !newNode)
+    return res;
+
+  // Try to set type=cite.  Ignore it if this fails.
+  nsCOMPtr<nsIDOMElement> newElement (do_QueryInterface(newNode));
+  if (newElement)
+  {
+    nsAutoString type ("type");
+    nsAutoString cite ("cite");
+    newElement->SetAttribute(type, cite);
+
+    if (aCitation.Length() > 0)
+      newElement->SetAttribute(cite, aCitation);
+  }
+
+  res = InsertHTML(aQuotedText);
+  
+  nsEditor::EndTransaction();  // don't return this result!
+
+  return res;
+}
+
+NS_IMETHODIMP nsHTMLEditor::InsertHTML(const nsString& aInputString)
 {
   nsresult res;
 
@@ -1213,6 +1306,7 @@ nsHTMLEditor::RemoveParentFromBlockContent(const nsString &aParentTag, nsIDOMRan
   }
   return result;
 }
+
 
 // TODO: Implement "outdent"
 NS_IMETHODIMP

@@ -61,6 +61,8 @@ CPPSRCS =                       \
     SplitElementTxn.cpp         \
     JoinElementTxn.cpp          \
     TransactionFactory.cpp      \
+    nsInternetCiter.cpp         \
+    nsAOLCiter.cpp              \
     $(NULL)
 
 MODULE = editor

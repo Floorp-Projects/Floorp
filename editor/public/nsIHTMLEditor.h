@@ -90,8 +90,14 @@ public:
   NS_IMETHOD Cut()=0;
   NS_IMETHOD Copy()=0;
   NS_IMETHOD Paste()=0;
+  NS_IMETHOD PasteAsQuotation()=0;
+  NS_IMETHOD PasteAsCitedQuotation(nsString& aCitation)=0;
+  NS_IMETHOD InsertAsQuotation(const nsString& aQuotedText)=0;
+  NS_IMETHOD InsertAsCitedQuotation(const nsString& aQuotedText, nsString& aCitation)=0;
 
-  NS_IMETHOD Insert(nsString &aInputString)=0;
+
+  NS_IMETHOD InsertHTML(const nsString &aInputString)=0;
+
   NS_IMETHOD OutputText(nsString& aOutputString)=0;
   NS_IMETHOD OutputHTML(nsString& aOutputString)=0;
 
