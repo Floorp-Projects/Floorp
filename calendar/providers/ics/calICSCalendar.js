@@ -106,7 +106,9 @@ calICSCalendar.prototype = {
     },
 
     // nsIStreamLoaderObserver impl
-    // Listener for download. Parse the downlaoded file
+    // Listener for download. Parse the downloaded file
+
+    // XXX use the onError observer calls
     onStreamComplete: function(loader, ctxt, status, resultLength, result)
     {
         // XXX ?? Is this ok?
@@ -118,8 +120,8 @@ calICSCalendar.prototype = {
         unicodeConverter.charset = "UTF-8";
         var str = unicodeConverter.convertFromByteArray(result, result.length);
         // Wrap parsing in a try block. Will ignore errors. That's a good thing
-        // for non-existing or empty files, but not good for wrong files.
-        // you don't want to accidently overwrite them
+        // for non-existing or empty files, but not good for invalid files.
+        // We should not accidently overwrite third party files.
         // XXX Fix that
         try {
             var calComp = this.mICSService.parseICS(str);
@@ -144,6 +146,9 @@ calICSCalendar.prototype = {
         {
             onOperationComplete: function(aCalendar, aStatus, aOperationType, aId, aDetail)
             {
+                // All events are returned. Now set up a channel and a
+                // streamloader to upload.
+                // Will call onStopRequest when finised.
                 var icsStr = calComp.serializeToICS();
 
                 var ioService = Components.classes["@mozilla.org/network/io-service;1"]
@@ -179,9 +184,8 @@ dump(">>> WriteICS "+this.mUri.spec+"\n")
     },
 
     // nsIStreamListener impl
-    // For after publishing. For error checks
+    // For after publishing. Do error checks here
     
-    // XXX use the onError observer calls
     onStartRequest: function(request, ctxt) {},
     onDataAvailable: function(request, ctxt, inStream, sourceOffset, count) {},
     onStopRequest: function(request, ctxt, status, errorMsg)
