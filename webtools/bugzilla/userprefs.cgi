@@ -395,8 +395,7 @@ SWITCH: for ($current_tab_name) {
         DoPermissions();
         last SWITCH;
     };
-    ThrowUserError("Unknown tab <code>" . html_quote($current_tab_name)
-                   . "</code>");
+    ThrowUserError("current_tab_name");
 }
 
 # Generate and return the UI (HTML page) from the appropriate template.

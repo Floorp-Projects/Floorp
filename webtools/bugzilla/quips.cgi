@@ -63,7 +63,7 @@ if ($action eq "add") {
     }
 
     if (Param('enablequips') ne "on") {
-        ThrowUserError("This site does not permit the addition of new quips");
+        ThrowUserError("no_new_quips");
         exit();
     }
     

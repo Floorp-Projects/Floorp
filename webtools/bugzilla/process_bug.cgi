@@ -558,8 +558,7 @@ if ($::FORM{'product'} ne $::dontchange) {
 my $comp_id; # Remember, can't use this for mass changes
 if ($::FORM{'component'} ne $::dontchange) {
     if (!defined $prod_id) {
-        ThrowUserError("You cannot change the component from a list of bugs " .
-                       "covering more than one product");
+        ThrowUserError("no_component_change_for_multiple_products");
     }
     $comp_id = get_component_id($prod_id,
                                 $::FORM{'component'});

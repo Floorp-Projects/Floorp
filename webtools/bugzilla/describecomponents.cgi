@@ -87,7 +87,10 @@ my $product = $::FORM{'product'};
 # cannot get any other information about that product.
 my $product_id = get_product_id($product);
 
-ThrowUserError("The product name is invalid.") unless $product_id;
+if (!$product_id) {
+    $::vars->{'product'} = $product;
+    ThrowUserError("invalid_product_name");
+}
 
 # Make sure the user is authorized to access this product.
 if (Param("usebuggroups") && GroupExists($product)) {

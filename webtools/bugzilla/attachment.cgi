@@ -142,7 +142,7 @@ sub validateID
     my ($bugid, $isprivate) = FetchSQLData();
     ValidateBugID($bugid);
     if (($isprivate > 0 ) && Param("insidergroup") && !(UserInGroup(Param("insidergroup")))) {
-        ThrowUserError("You are not permitted access to this attachment.");
+        ThrowUserError("attachment_access_denied");
     }
 }
 

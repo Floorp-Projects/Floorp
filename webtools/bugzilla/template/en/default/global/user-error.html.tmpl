@@ -75,6 +75,10 @@
     Bug aliases cannot be longer than 20 characters.
     Please choose a shorter alias.
 
+  [% ELSIF error == "attachment_access_denied" %]
+    [% title = "Access Denied" %]
+    You are not permitted access to this attachment.
+    
   [% ELSIF error == "buglist_parameters_required" %]
     [% title = "Parameters Required" %]
     [% url   = "query.cgi" %]
@@ -155,6 +159,10 @@
     [% title = "Invalid Bug ID" %]
     The bug id [% bug_id FILTER html %] is invalid.
 
+  [% ELSIF error == "invalid_product_name" %]
+    [% title = "Invalid Product Name" %]
+    The product name '[% product FILTER html %]' is invalid or does not exist.
+    
   [% ELSIF error == "invalid_username" %]
     [% title = "Invalid Username" %]
     The name <tt>[% name FILTER html %]</tt> is not a valid username.  
@@ -182,6 +190,11 @@
     [% title = "No Bugs Chosen" %]
     You apparently didn't choose any bugs to modify.
 
+  [% ELSIF error == "no_component_change_for_multiple_products" %]
+    [% title = "Action Not Permitted" %]
+    You cannot change the component for a list of bugs covering more than 
+    one product.
+                       
   [% ELSIF error == "no_dupe_stats" %]
     [% title = "Cannot Find Duplicate Statistics" %]
     There are no duplicate statistics for today ([% today %]) or yesterday.
@@ -200,6 +213,10 @@
     There are no duplicate statistics for today ([% today %]), and an error
     occurred opening yesterday's dupes file: [% error_msg FILTER html %].
     
+  [% ELSIF error == "no_new_quips" %]
+    [% title = "No New Quips" %]
+    This site does not permit the addition of new quips.
+    
   [% ELSIF error == "page_not_found" %]
     [% title = "Page not found" %]
     The page you requested cannot be found.
@@ -214,6 +231,10 @@
     [% title = "Unknown Keyword" %]
     <code>[% keyword FILTER html %]</code> is not a known keyword. 
     The legal keyword names are <a href="describekeywords.cgi">listed here</a>.
+
+  [% ELSIF error == "unknown_tab" %]
+    [% title = "Unknown Tab" %]
+    <code>[% current_tab_name FILTER html %]</code> is not a legal tab name.    
     
   [% ELSE %]
     [%# Cope with legacy calling convention, where "error" was the string

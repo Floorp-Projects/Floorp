@@ -65,8 +65,8 @@ my $product_id;
 if ($product) {
     $product_id = get_product_id($product);
     if (!$product_id) {
-        ThrowUserError("The product <tt>" . html_quote($product) . 
-                       "</tt> does not exist");
+        $vars->{'product'} = $product;
+        ThrowUserError("invalid_product_name");
     }
 }
 

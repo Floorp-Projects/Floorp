@@ -71,8 +71,8 @@ ValidateComment($comment);
 my $product = $::FORM{'product'};
 my $product_id = get_product_id($product);
 if (!$product_id) {
-    ThrowUserError("Sorry, the product <tt>" . html_quote($product) .
-                   "</tt> does not exist");
+    $vars->{'product'} = $product;
+    ThrowUserError("invalid_product_name");
 }
 
 # Set cookies
