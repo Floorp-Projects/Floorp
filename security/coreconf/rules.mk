@@ -377,7 +377,7 @@ ifeq ($(OS_ARCH),AIX)
 	grep -v ';+' $(LIBRARY_NAME).def| grep -v ';-' | sed -e 's; DATA ;;' |  sed -e 's,;;,,' | sed -e 's,;.*,,' > $@
 endif
 ifeq ($(OS_ARCH), HP-UX)
-	grep -v ';+' $(LIBRARY_NAME).def| grep -v ';-' | sed -e 's; DATA ;;' |  sed -e 's,;;,,' | sed -e 's,;,#,' | sed -e 's,^,-e ,' > $@
+	grep -v ';+' $(LIBRARY_NAME).def| grep -v ';-' | sed -e 's; DATA ;;' |  sed -e 's,;;,,' | sed -e 's,;.*,,' | sed -e 's,^,+e ,' > $@
 endif
 
 
