@@ -188,17 +188,6 @@ function UpdateBackForwardButtons()
   }
 }
 
-function UpdatePageReport(event)
-{
-  if (!gReportButton)
-    return;
-
-  if (gBrowser.mCurrentBrowser.pageReport)
-    gReportButton.setAttribute("blocked", "true");
-  else
-    gReportButton.removeAttribute("blocked");
-}
-
 function RegisterTabOpenObserver()
 {
   const observer = {
@@ -223,10 +212,7 @@ function Startup()
   gBrandBundle = document.getElementById("bundle_brand");
   gBrowser = document.getElementById("content");
   gURLBar = document.getElementById("urlbar");
-  gReportButton = document.getElementById("page-report-button");
-
-  gBrowser.addEventListener("DOMUpdatePageReport", UpdatePageReport, false);
-
+  
   var toolbox = document.getElementById("navigator-toolbox");
   toolbox.customizeDone = BrowserToolboxCustomizeDone;
 
@@ -579,14 +565,8 @@ function updateGoMenu(goMenu)
   destroyGoMenuItems(goMenu);
 
   var history = document.getElementById("hiddenHistoryTree");
-  
-  if (history.hidden) {
+  if (history.hidden)
     history.hidden = false;
-    var globalHistory = Components.classes["@mozilla.org/browser/global-history;1"]
-                                  .getService(Components.interfaces.nsIGlobalHistory);
-    var dataSource = globalHistory.QueryInterface(Components.interfaces.nsIRDFDataSource);
-    history.database.AddDataSource(dataSource);
-  }
 
   if (!history.ref)
     history.ref = "NC:HistoryRoot";
@@ -3142,12 +3122,6 @@ function displayPageInfo()
 {
     window.openDialog("chrome://navigator/content/pageInfo.xul", "_blank",
                       "dialog=no", null, "securityTab");
-}
-
-function displayPageReport()
-{
-    window.openDialog("chrome://browser/content/pageReport.xul", "_blank",
-                      "dialog=no");
 }
 
 const mediatorContractId = "@mozilla.org/appshell/window-mediator;1";

@@ -33,6 +33,7 @@
 |   Currently, this code is relatively useless for any other purpose.  In the  |
 |   longer term, this code will be restructured to make it more reusable.      |
 ------------------------------------------------------------------------------*/
+const IMAGEPERMISSION = 1;
 function nsContextMenu( xulMenu ) {
     this.target         = null;
     this.menu           = null;
@@ -100,7 +101,7 @@ nsContextMenu.prototype = {
         this.showItem( "context-reload", !( this.isTextSelected || this.onLink || this.onImage || this.onTextInput ) );
         
         this.showItem( "context-stop", !( this.isTextSelected || this.onLink || this.onImage || this.onTextInput ) );
-        this.showItem( "context-sep-stop", !( this.isTextSelected || this.onLink || this.onImage || this.onTextInput ) );
+        this.showItem( "context-sep-stop", !( this.isTextSelected || this.onLink || this.onTextInput ) );
 
         // XXX: Stop is determined in navigator.js; the canStop broadcaster is broken
         //this.setItemAttrFromNode( "context-stop", "disabled", "canStop" );
@@ -147,6 +148,11 @@ nsContextMenu.prototype = {
         this.showItem( "context-searchselect", this.isTextSelected );
         this.showItem( "frame", this.inFrame );
         this.showItem( "frame-sep", this.inFrame );
+        this.showItem( "context-blockimage", this.onImage);
+        if (this.onImage) {
+          var blockImage = document.getElementById("context-blockimage");
+          blockImage.checked = this.isImageBlocked();
+        }
     },
     initClipboardItems : function () {
 
@@ -526,6 +532,18 @@ nsContextMenu.prototype = {
     // Save URL of clicked-on image.
     saveImage : function () {
         saveURL( this.imageURL, null, "SaveImageTitle", false );
+    },
+    toggleImageBlocking : function (aBlock) {
+      var permissionmanager =
+        Components.classes["@mozilla.org/permissionmanager;1"]
+          .getService(Components.interfaces.nsIPermissionManager);
+      permissionmanager.add(this.imageURL, !aBlock, IMAGEPERMISSION);
+    },
+    isImageBlocked : function() {
+       var permissionmanager =
+         Components.classes["@mozilla.org/permissionmanager;1"]
+           .getService(Components.interfaces.nsIPermissionManager);
+       return permissionmanager.testForBlocking(this.imageURL, IMAGEPERMISSION);
     },
     // Generate email address and put it on clipboard.
     copyEmail : function () {

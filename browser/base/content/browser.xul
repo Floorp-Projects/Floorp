@@ -321,6 +321,9 @@ Contributor(s):
                 label="&setWallpaperCmd.label;"
                 accesskey="&setWallpaperCmd.accesskey;"
                 oncommand="gContextMenu.setWallpaper();"/>
+      <menuitem id="context-blockimage"
+                label="&blockImageCmd.label;" type="checkbox"            
+                oncommand="gContextMenu.toggleImageBlocking(!this.checked);"/>
       <menuitem id="context-back"
                 label="&backCmd.label;"
                 accesskey="&backCmd.accesskey;"
