@@ -143,6 +143,7 @@ sub pickplatform {
             /Mozilla.*\(Win/ && do {return "PC";};
 	    /Mozilla.*Windows NT/ && do {return "PC";};
             /Mozilla.*Linux.*86/ && do {return "PC";};
+            /Mozilla.*BSD.*86/ && do {return "PC";};
             /Mozilla.*Linux.*alpha/ && do {return "DEC";};
             /Mozilla.*OSF/ && do {return "DEC";};
             /Mozilla.*HP-UX/ && do {return "HP";};
@@ -207,6 +208,7 @@ sub pickos {
             /Mozilla.*\(.*;.*; SunOS.*\)/   && do {return "SunOS";};
             /Mozilla.*\(.*;.*; SunOS.*\)/   && do {return "SunOS";};
             /Mozilla.*\(.*;.*; BSD\/OS.*\)/ && do {return "BSDI";};
+            /Mozilla.*\(.*;.*; FreeBSD.*\)/ && do {return "FreeBSD";};
             /Mozilla.*\(Win16.*\)/          && do {return "Windows 3.1";};
             /Mozilla.*\(.*Win95.*\)/        && do {return "Windows 95";};
             /Mozilla.*\(Win98.*\)/          && do {return "Windows 98";};
