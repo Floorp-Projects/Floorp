@@ -412,10 +412,8 @@ module_del_failure="Unable to delete module"
 ;
 ; Token password prompt strings
 ;
-ask_token_password="Please enter the password or the PIN for<psm:lf>%1$s security device. "
-retry_token_password:
-Successive login failures may disable this card or database. Password is invalid. Retry? %1$s security device
-:retry_token_password
+ask_token_password="Please enter the Personal Security Password for the %1$s security device. "
+retry_token_password="Please retype the Personal Security Password for the %1$s security device.<psm:lf>Warning: Successive failures may disable the security device."
 
 ;
 ; PKCS 12 prompt strings
