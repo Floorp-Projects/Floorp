@@ -27,15 +27,15 @@
 [% PROCESS "global/field-descs.html.tmpl" %]
 
 [% BLOCK select %]
-  [% fields = ["product", "component", "version", "rep_platform",  
-               "op_sys", "bug_status", "resolution", "bug_severity", 
-               "priority", "target_milestone", "keywords", "assigned_to",
-               "reporter", "qa_contact", "votes" ] %]
+  [% rep_fields = ["product", "component", "version", "rep_platform",  
+                   "op_sys", "bug_status", "resolution", "bug_severity", 
+                   "priority", "target_milestone", "assigned_to",
+                   "reporter", "qa_contact", "votes" ] %]
 
   <select name="[% name FILTER html %]">
     <option value="">&lt;none&gt;</option>
     
-    [% FOREACH field = fields %]
+    [% FOREACH field = rep_fields %]
       [% NEXT IF field == "target_milestone" AND !Param('usetargetmilestone') %]
       [% NEXT IF field == "qa_contact" AND !Param('useqacontact') %]
       [% NEXT IF field == "votes" AND !Param('usevotes') %]      

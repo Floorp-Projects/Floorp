@@ -329,6 +329,9 @@ function selectProduct(f) {
 
 [% PROCESS "global/field-descs.html.tmpl" %]
 
+[%# If we resubmit to ourselves, we need to know if we are using a format. %]
+<input type="hidden" name="query_format" value="[% format %]">
+
 [%# *** Summary *** %]
 
 <table>

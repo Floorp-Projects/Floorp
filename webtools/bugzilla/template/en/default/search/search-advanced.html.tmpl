@@ -33,8 +33,6 @@
 [% button_name = "Search" %]
 
 <form method="get" action="buglist.cgi" name="queryform">
-  [%# If we resubmit to ourselves, we need to know if we are using a format. %]
-  <input type="hidden" name="query_format" value="[% format %]">
   
 [% PROCESS search/form.html.tmpl %]
 

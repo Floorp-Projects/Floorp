@@ -37,7 +37,8 @@
 [% row_field_disp = field_descs.$row_field || row_field %]
   
 [% IF tbl == "-total-" %]
-  [% urlbase = BLOCK %]buglist.cgi?[% buglistbase %][% END %]
+  [% urlbase = BLOCK %]buglist.cgi?[% buglistbase %]
+  [% "&amp;$tbl_vals" IF tbl_vals %][% END %]
 [% ELSE %]
   [% urlbase = BLOCK %]buglist.cgi?[% buglistbase %]&amp;
   [% tbl_field FILTER url_quote %]=[% tbl FILTER url_quote %][% END %]
@@ -120,7 +121,8 @@
       [% END %] 
       <td class="ttotal" align="right">
         <a href="[% urlbase %]&amp;
-          [% row_field FILTER url_quote %]=[% row FILTER url_quote %]">
+          [% row_field FILTER url_quote %]=[% row FILTER url_quote %]
+          [% "&amp;$col_vals" IF col_vals %]">
         [% row_total %]</a>
         [% grand_total = grand_total + row_total %]
       </td>
@@ -137,14 +139,17 @@
       
       <td class="ttotal" align="center">
         <a href="[% urlbase %]&amp;
-          [% col_field FILTER url_quote %]=[% col FILTER url_quote %]">
+          [% col_field FILTER url_quote %]=[% col FILTER url_quote %]
+          [% "&amp;$row_vals" IF row_vals %]">
         [% col_totals.$col %]</a>
       <strong>
       </td> 
     [% END %]
     <td class="ttotal" align="right">
       <strong>
-        <a href="buglist.cgi?[% urlbase %]">[% grand_total %]</a>
+        <a href="[% urlbase %]
+          [% "&amp;$row_vals" IF row_vals %]
+          [% "&amp;$col_vals" IF col_vals %]">[% grand_total %]</a>
       </strong>
     </td>
   </tr>

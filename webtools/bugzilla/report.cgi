@@ -28,6 +28,14 @@ require "CGI.pl";
 
 use vars qw($cgi $template $vars);
 
+# Go straight back to query.cgi if we are adding a boolean chart.
+if (grep(/^cmd-/, $cgi->param())) {
+    my $params = $cgi->canonicalise_query("format", "ctype");
+    print "Location: query.cgi?format=" . $cgi->param('query_format') . 
+                                           ($params ? "&$params" : "") . "\n\n";
+    exit;
+}
+
 use Bugzilla::Search;
 
 ConnectToDatabase();
@@ -216,10 +224,18 @@ if ($action eq "wrap") {
     $vars->{'format'} = $formatparam;
     $formatparam = '';
 
+    # We need to keep track of the defined restrictions on each of the 
+    # axes, because buglistbase, below, throws them away. Without this, we
+    # get buglistlinks wrong if there is a restriction on an axis field.
+    $vars->{'col_vals'} = join("&", $::buffer =~ /[&?]($col_field=[^&]+)/g);
+    $vars->{'row_vals'} = join("&", $::buffer =~ /[&?]($row_field=[^&]+)/g);
+    $vars->{'tbl_vals'} = join("&", $::buffer =~ /[&?]($tbl_field=[^&]+)/g);
+    
     # We need a number of different variants of the base URL for different
     # URLs in the HTML.
     $vars->{'buglistbase'} = $cgi->canonicalise_query(
-        "x_axis_field", "y_axis_field", "z_axis_field", "format", @axis_fields);
+                                 "x_axis_field", "y_axis_field", "z_axis_field",
+                                               "ctype", "format", @axis_fields);
     $vars->{'imagebase'}   = $cgi->canonicalise_query( 
                     $tbl_field, "action", "ctype", "format", "width", "height");
     $vars->{'switchbase'}  = $cgi->canonicalise_query( 
@@ -249,11 +265,11 @@ print "Content-Type: $format->{'ctype'}\n\n";
 # Problems with this CGI are often due to malformed data. Setting debug=1
 # prints out both data structures.
 if ($::FORM{'debug'}) {
-    use Data::Dumper;
+    require Data::Dumper;
     print "<pre>data hash:\n";
-    print Dumper(%data) . "\n\n";
+    print Data::Dumper::Dumper(%data) . "\n\n";
     print "data array:\n";
-    print Dumper(@image_data) . "\n\n</pre>";
+    print Data::Dumper::Dumper(@image_data) . "\n\n</pre>";
 }
 
 $template->process("$format->{'template'}", $vars)
