@@ -401,7 +401,7 @@ nsAboutCacheEntry::WriteCacheEntryUnavailable(nsIOutputStream *outputStream,
 {
     PRUint32 n;
     nsCAutoString buffer;
-    buffer.Assign("The cache entry you selected is no longer unavailable.");
+    buffer.Assign("The cache entry you selected is no longer available.");
     outputStream->Write(buffer, buffer.Length(), &n);
     return NS_OK;
 }
