@@ -400,6 +400,7 @@ private:
     static char *mAppName;
     static nsIDOMWindow *mInitialWindow;
     static PRBool mForceProfileStartup;
+    static PRBool mSupportingDDEExec;
     static char mMutexName[];
     friend struct MessageWindow;
 }; // nsNativeAppSupportWin
@@ -739,6 +740,7 @@ HSZ   nsNativeAppSupportWin::mTopics[nsNativeAppSupportWin::topicCount] = { 0 };
 DWORD nsNativeAppSupportWin::mInstance      = 0;
 nsIDOMWindow* nsNativeAppSupportWin::mInitialWindow = nsnull;
 PRBool nsNativeAppSupportWin::mForceProfileStartup = PR_FALSE;
+PRBool nsNativeAppSupportWin::mSupportingDDEExec   = PR_FALSE;
 
 NOTIFYICONDATA nsNativeAppSupportWin::mIconData = { sizeof(NOTIFYICONDATA),
                                                     0,
@@ -1054,6 +1056,73 @@ nsNativeAppSupportWin::FindTopic( HSZ topic ) {
     return -1;
 }
 
+// Utility function that determines if we're handling http Internet shortcuts.
+static PRBool handlingHTTP() {
+    PRBool result = PR_FALSE;
+    nsCOMPtr<nsIPref> prefService( do_GetService( NS_PREF_CONTRACTID ) );
+    if ( prefService ) {
+        prefService->GetBoolPref( "advanced.system.supportDDEExec", &result );
+    }
+    if ( result ) {
+        result = PR_FALSE; // Answer no if an error occurs.
+        // See if we're the "default browser" (i.e., handling http Internet shortcuts)        
+        nsCOMPtr<nsIWindowsHooks> winhooks( do_GetService( NS_IWINDOWSHOOKS_CONTRACTID ) );
+        if ( winhooks ) {
+            nsCOMPtr<nsIWindowsHooksSettings> settings;
+            nsresult rv = winhooks->GetSettings( getter_AddRefs( settings ) );
+            if ( NS_SUCCEEDED( rv ) ) {
+                settings->GetIsHandlingHTTP( &result );
+            }
+        }
+    }
+    return result;
+}
+
+// Utility function to delete a registry subkey.
+static DWORD deleteKey( HKEY baseKey, const char *keyName ) {
+    // Make sure input subkey isn't null.
+    DWORD rc;
+    if ( keyName && ::strlen(keyName) ) {
+        // Open subkey.
+        HKEY key;
+        rc = ::RegOpenKeyEx( baseKey,
+                             keyName,
+                             0,
+                             KEY_ENUMERATE_SUB_KEYS | DELETE,
+                             &key );
+        // Continue till we get an error or are done.
+        while ( rc == ERROR_SUCCESS ) {
+            char subkeyName[_MAX_PATH];
+            DWORD len = sizeof subkeyName;
+            // Get first subkey name.  Note that we always get the
+            // first one, then delete it.  So we need to get
+            // the first one next time, also.
+            rc = ::RegEnumKeyEx( key,
+                                 0,
+                                 subkeyName,
+                                 &len,
+                                 0,
+                                 0,
+                                 0,
+                                 0 );
+            if ( rc == ERROR_NO_MORE_ITEMS ) {
+                // No more subkeys.  Delete the main one.
+                rc = ::RegDeleteKey( baseKey, keyName );
+                break;
+            } else if ( rc == ERROR_SUCCESS ) {
+                // Another subkey, delete it, recursively.
+                rc = deleteKey( key, subkeyName );
+            }
+        }
+        // Close the key we opened.
+        ::RegCloseKey( key );
+    } else {
+        rc = ERROR_BADKEY;
+    }
+    return rc;
+}
+
+
 // Start DDE server.
 //
 // This used to be the Start() method when we were using DDE as the
@@ -1115,7 +1184,6 @@ nsNativeAppSupportWin::Stop( PRBool *aResult ) {
         *aResult = PR_TRUE;
     }
 
-
     return rv;
 }
 
@@ -1123,6 +1191,15 @@ nsNativeAppSupportWin::Stop( PRBool *aResult ) {
 NS_IMETHODIMP
 nsNativeAppSupportWin::Quit() {
     if ( mInstance ) {
+        // Undo registry setting if we need to.
+        if ( mSupportingDDEExec && handlingHTTP() ) {
+            mSupportingDDEExec = PR_FALSE;
+#if MOZ_DEBUG_DDE
+            printf( "Deleting ddexec subkey on exit\n" );
+#endif
+            deleteKey( HKEY_CLASSES_ROOT, "http\\shell\\open\\ddeexec" );
+        }
+
         // Unregister application name.
         DdeNameService( mInstance, mApplication, 0, DNS_UNREGISTER );
         // Clean up strings.
@@ -1377,7 +1454,7 @@ nsNativeAppSupportWin::HandleDDENotification( UINT uType,       // transaction t
                         // reads it and says it can be freed.
                         result = CreateDDEData( (LPBYTE)(const char*)outpt.get(),
                                                 outpt.Length() + 1 );
-#ifdef MOZ_DEBUG_DDE
+#if MOZ_DEBUG_DDE
                         printf( "WWW_GetWindowInfo->%s\n", outpt.get() );
 #endif
                     } while ( PR_FALSE );
@@ -1436,7 +1513,31 @@ nsNativeAppSupportWin::HandleDDENotification( UINT uType,       // transaction t
 #if MOZ_DEBUG_DDE
             printf( "Handling dde request: [%s]...\n", (char*)request );
 #endif
-            HandleRequest( request );
+            // Default is to open in current window.
+            PRBool new_window = PR_FALSE;
+
+            // Get the URL from the first argument in the command.
+            HSZ args = ::DdeCreateStringHandle( mInstance, (const char*)request, CP_WINANSI );
+            nsCAutoString url( ParseDDEArg( args, 0 ) );
+
+            // Read the 3rd argument in the command to determine if a
+            // new window is to be used.
+            nsCAutoString windowID( ParseDDEArg( args, 2 ) );
+
+            // "0" means to open the URL in a new window.
+            if ( windowID.Equals( "0" ) ) {
+                new_window = PR_TRUE;
+            }
+
+            // Make it look like command line args.
+            url.Insert( "mozilla -url ", 0 );
+#if MOZ_DEBUG_DDE
+            printf( "Handling dde XTYP_REQUEST request: [%s]...\n", url.get() );
+#endif
+            // Now handle it.
+            HandleRequest( LPBYTE( url.get() ), new_window );
+            // Release the args string.
+            ::DdeFreeStringHandle( mInstance, args );
             // Release the data.
             DdeUnaccessData( hdata );
             result = (HDDEDATA)DDE_FACK;
@@ -1874,6 +1975,46 @@ nsNativeAppSupportWin::GetCmdLineArgs( LPBYTE request, nsICmdLineService **aResu
 nsresult
 nsNativeAppSupportWin::EnsureProfile(nsICmdLineService* args)
 {
+  static PRBool firstTime = PR_TRUE;
+  if ( firstTime ) {
+    firstTime = PR_FALSE;
+    // Check pref for whether to set ddeexec subkey entries.
+    nsCOMPtr<nsIPref> prefService( do_GetService( NS_PREF_CONTRACTID ) );
+    PRBool supportDDEExec = PR_FALSE;
+    if ( prefService ) {
+        prefService->GetBoolPref( "advanced.system.supportDDEExec", &supportDDEExec );
+    }
+    if ( supportDDEExec && handlingHTTP() ) {
+#if MOZ_DEBUG_DDE
+printf( "Setting ddexec subkey entries\n" );
+#endif
+      // Set ddeexec default value.
+      const char ddeexec[] = "\"%1\",,-1,0,,,,";
+      ::RegSetValue( HKEY_CLASSES_ROOT,
+                     "http\\shell\\open\\ddeexec",
+                     REG_SZ,
+                     ddeexec,
+                     sizeof ddeexec );
+
+      // Set application/topic (while we're running), reset at exit.
+      ::RegSetValue( HKEY_CLASSES_ROOT,
+                     "http\\shell\\open\\ddeexec\\application",
+                     REG_SZ,
+                     mAppName,
+                     ::strlen( mAppName ) );
+
+      const char topic[] = "WWW_OpenURL";
+      ::RegSetValue( HKEY_CLASSES_ROOT,
+                     "http\\shell\\open\\ddeexec\\topic",
+                     REG_SZ,
+                     topic,
+                     sizeof topic );
+
+      // Remember we need to undo this.
+      mSupportingDDEExec = PR_TRUE;
+    }
+  }
+
   nsresult rv;
 
   nsCOMPtr<nsIProfileInternal> profileMgr(do_GetService(NS_PROFILE_CONTRACTID, &rv));

@@ -742,3 +742,10 @@ pref("plugin.expose_full_path", false); // if true navigator.plugins reveals ful
 // See bug 136985.  Gives embedders a pref to hook into to show
 // a popup blocker if they choose.
 pref("browser.popups.showPopupBlocker", true);
+
+// Pref to control whether we set ddeexec subkeys for the http
+// Internet shortcut protocol if we are handling it.  These
+// subkeys will be set only while we are running (to avoid the
+// problem of Windows showing an alert when it tries to use DDE
+// and we're not already running).
+pref("advanced.system.supportDDEExec", true);
