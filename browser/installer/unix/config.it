@@ -190,7 +190,7 @@ MessageWelcome=Welcome to %s.
 ;*** LOCALIZE ME BABY ***
 Message0=You are about to install %s $Version$.
 ;*** LOCALIZE ME BABY ***
-Message1=It is strongly recommended that you exit all Windows programs before running this Setup program.
+Message1=It is strongly recommended that you exit all instances of %s before running this Setup program.
 ;*** LOCALIZE ME BABY ***
 Message2=Click Cancel to quit Setup and then close any programs you have running.  Click Next to continue the Setup program.
 ;*** LOCALIZE ME BABY ***
