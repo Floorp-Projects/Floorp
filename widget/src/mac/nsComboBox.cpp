@@ -17,33 +17,26 @@
  */
 
 #include "nsComboBox.h"
-#include "nsColor.h"
-#include "nsGUIEvent.h"
-#include "nsString.h"
-#include "nsStringUtil.h"
+#include "nsMenu.h"
+#include <StringCompare.h>
 
-#include <Xm/RowColumn.h>
-#include <Xm/PushB.h>
-
-#define DBG 0
-
-#define INITIAL_MAX_ITEMS 128
-#define ITEMS_GROWSIZE    128
-
+NS_IMPL_ADDREF(nsComboBox);
+NS_IMPL_RELEASE(nsComboBox);
 
 //-------------------------------------------------------------------------
 //
 // nsComboBox constructor
 //
 //-------------------------------------------------------------------------
-nsComboBox::nsComboBox() : nsWindow(), nsIComboBox()
+nsComboBox::nsComboBox() : nsMacControl(), nsIListWidget(), nsIComboBox()
 {
-  mMultiSelect = PR_FALSE;
-  mBackground  = NS_RGB(124, 124, 124);
+	NS_INIT_REFCNT();
+	strcpy(gInstanceClassName, "nsComboBox");
+	SetControlType(kControlPopupButtonProc | kControlPopupFixedWidthVariant);
 
-  mMaxNumItems = INITIAL_MAX_ITEMS;
-  mItems       = (Widget *)new long[INITIAL_MAX_ITEMS];
-  mNumItems    = 0;
+	mMenuHandle	= nsnull;
+	mMenuID		=  -12345;	// so that the control doesn't look for a menu in resource
+	mMin		= mMenuID;	// when creating a popup, 'min' must contain the menuID
 }
 
 //-------------------------------------------------------------------------
@@ -53,50 +46,98 @@ nsComboBox::nsComboBox() : nsWindow(), nsIComboBox()
 //-------------------------------------------------------------------------
 nsComboBox::~nsComboBox()
 {
-  if (mItems != nsnull) {
-    delete[] mItems;
-  }
+	if (mMenuHandle)
+	{
+		::DisposeMenu(mMenuHandle);
+		mMenuHandle = nsnull;
+	}
 }
 
 //-------------------------------------------------------------------------
 //
-//  initializer
 //
 //-------------------------------------------------------------------------
-
-void nsComboBox::SetMultipleSelection(PRBool aMultipleSelections)
+NS_IMETHODIMP nsComboBox::Create(nsIWidget *aParent,
+                      const nsRect &aRect,
+                      EVENT_CALLBACK aHandleEventFunction,
+                      nsIDeviceContext *aContext,
+                      nsIAppShell *aAppShell,
+                      nsIToolkit *aToolkit,
+                      nsWidgetInitData *aInitData) 
 {
-  mMultiSelect = aMultipleSelections;
+	nsresult res = Inherited::Create(aParent, aRect, aHandleEventFunction,
+						aContext, aAppShell, aToolkit, aInitData);
+
+  	if (res == NS_OK)
+  	{
+  		mMenuID = nsMenu::GetUniqueMenuID();
+  		mMenuHandle = ::NewMenu(mMenuID, "\p");
+  		if (mMenuHandle)
+  		{
+			::SetControlData(mControl, kControlNoPart, kControlPopupButtonMenuHandleTag, sizeof(mMenuHandle), (Ptr)mMenuHandle);
+			::SetControlData(mControl, kControlNoPart, kControlPopupButtonMenuIDTag, sizeof(mMenuID), (Ptr)mMenuID);
+
+			PopupPrivateData* popupData = (PopupPrivateData*)*((*mControl)->contrlData);
+			if (popupData)
+			{
+				popupData->mHandle = mMenuHandle;
+				popupData->mID = mMenuID;
+			}
+  		}
+  		else
+  			res = NS_ERROR_FAILURE;
+  	}
+
+	return res;
 }
 
+//-------------------------------------------------------------------------
+//
+//
+//-------------------------------------------------------------------------
+nsresult nsComboBox::QueryInterface(const nsIID& aIID, void** aInstancePtr)
+{
+    if (NULL == aInstancePtr) {
+        return NS_ERROR_NULL_POINTER;
+    }
 
+	static NS_DEFINE_IID(kInsComboBoxIID, NS_ICOMBOBOX_IID);
+	static NS_DEFINE_IID(kInsListWidgetIID, NS_ILISTWIDGET_IID);
+
+	if (aIID.Equals(kInsComboBoxIID)) {
+		*aInstancePtr = (void*) ((nsIComboBox*)this);
+		NS_ADDREF_THIS();
+		return NS_OK;
+	}
+	else if (aIID.Equals(kInsListWidgetIID)) {
+		*aInstancePtr = (void*) ((nsIListWidget*)this);
+		NS_ADDREF_THIS();
+		return NS_OK;
+	}
+
+	return nsWindow::QueryInterface(aIID,aInstancePtr);
+}
+
+#pragma mark -
 //-------------------------------------------------------------------------
 //
 //  AddItemAt
 //
 //-------------------------------------------------------------------------
 
-void nsComboBox::AddItemAt(nsString &aItem, PRInt32 aPosition)
+nsresult nsComboBox::AddItemAt(nsString &aItem, PRInt32 aPosition)
 {
-  NS_ALLOC_STR_BUF(val, aItem, 256);
+	if (! mMenuHandle)
+		return NS_ERROR_NOT_INITIALIZED;
 
-  XmString str;
+	Str255 pString;
+	StringToStr255(aItem, pString);
 
-  Arg	args[30];
-  int	argc = 0;
-
-  str = XmStringCreateLocalized(val);
-  XtSetArg(args[argc], XmNlabelString, str); argc++;
-
-  Widget btn = XmCreatePushButton(mPullDownMenu, val, args, argc);
-  XtManageChild(btn);
-
-  if (mNumItems == mMaxNumItems) {
-    // [TODO] Grow array here by ITEMS_GROWSIZE
-  }
-  mItems[mNumItems++] = btn;
-
-  NS_FREE_STR_BUF(val);
+	if (aPosition == -1)
+		::MacAppendMenu(mMenuHandle, pString);
+	else
+		::MacInsertMenuItem(mMenuHandle, pString, aPosition);
+	return NS_OK;
 }
 
 //-------------------------------------------------------------------------
@@ -106,24 +147,29 @@ void nsComboBox::AddItemAt(nsString &aItem, PRInt32 aPosition)
 //-------------------------------------------------------------------------
 PRInt32  nsComboBox::FindItem(nsString &aItem, PRInt32 aStartPos)
 {
-  NS_ALLOC_STR_BUF(val, aItem, 256);
+	if (! mMenuHandle)
+		return -1;
 
-  int i;
-  PRInt32 index = -1;
-  for (i=0;i<mNumItems && index == -1;i++) {
-    XmString str;
-    XtVaGetValues(mItems[i], XmNlabelString, &str, nsnull);
-    char * text;
-    if (XmStringGetLtoR(str, XmFONTLIST_DEFAULT_TAG, &text)) {
-      if (!strcmp(text, val)) {
-        index = i;
-      }
-      XtFree(text);
-    }
-  }
-  NS_FREE_STR_BUF(val);
+	PRInt32 index = -1;
+	short itemCount = CountMenuItems(mMenuHandle);
 
-  return index;
+	if (aStartPos < itemCount)
+	{
+		Str255 searchStr;
+		StringToStr255(aItem, searchStr);
+
+		for (short i = aStartPos; i < itemCount; i ++)
+		{
+			Str255	itemStr;
+			::GetMenuItemText(mMenuHandle, i, itemStr);
+			if (::EqualString(itemStr, searchStr, FALSE, FALSE))
+			{
+				index = i;
+				break;
+			}
+		}
+	}
+	return index;
 }
 
 //-------------------------------------------------------------------------
@@ -133,7 +179,10 @@ PRInt32  nsComboBox::FindItem(nsString &aItem, PRInt32 aStartPos)
 //-------------------------------------------------------------------------
 PRInt32  nsComboBox::GetItemCount()
 {
-  return (PRInt32)mNumItems;
+	if (! mMenuHandle)
+		return 0;
+
+	return CountMenuItems(mMenuHandle);
 }
 
 //-------------------------------------------------------------------------
@@ -143,20 +192,14 @@ PRInt32  nsComboBox::GetItemCount()
 //-------------------------------------------------------------------------
 PRBool  nsComboBox::RemoveItemAt(PRInt32 aPosition)
 {
+	if (! mMenuHandle)
+		return PR_FALSE;
 
-  if (aPosition >= 0 && aPosition < mNumItems) {
-    XtUnmanageChild(mItems[aPosition]);
-    XtDestroyWidget(mItems[aPosition]);
-    int i;
-    for (i=aPosition ; i < mNumItems-1; i++) {
-      mItems[i] = mItems[i+1];
-    }
-    mItems[mNumItems-1] = NULL;
-    mNumItems--;
-    return PR_TRUE;
-  }
-  return PR_FALSE;
+	if (GetItemCount() < aPosition)
+		return PR_FALSE;
 
+	::DeleteMenuItem(mMenuHandle, aPosition);
+	return PR_TRUE;
 }
 
 //-------------------------------------------------------------------------
@@ -166,21 +209,19 @@ PRBool  nsComboBox::RemoveItemAt(PRInt32 aPosition)
 //-------------------------------------------------------------------------
 PRBool nsComboBox::GetItemAt(nsString& anItem, PRInt32 aPosition)
 {
-  PRBool result = PR_FALSE;
+	anItem = "";
 
-  if (aPosition < 0 || aPosition >= mNumItems) {
-    return result;
-  }
+	if (! mMenuHandle)
+		return PR_FALSE;
 
-  XmString str;
-  XtVaGetValues(mItems[aPosition], XmNlabelString, &str, nsnull);
-  char * text;
-  if (XmStringGetLtoR(str, XmFONTLIST_DEFAULT_TAG, &text)) {
-    anItem = text;
-    XtFree(text);
-  }
+	if (GetItemCount() < aPosition)
+		return PR_FALSE;
 
-  return result;
+	Str255	itemStr;
+	::GetMenuItemText(mMenuHandle, aPosition, itemStr);
+	Str255ToString(itemStr, anItem);
+
+  return PR_TRUE;
 }
 
 //-------------------------------------------------------------------------
@@ -188,16 +229,19 @@ PRBool nsComboBox::GetItemAt(nsString& anItem, PRInt32 aPosition)
 //  Gets the selected of selected item
 //
 //-------------------------------------------------------------------------
-void nsComboBox::GetSelectedItem(nsString& aItem)
+nsresult nsComboBox::GetSelectedItem(nsString& aItem)
 {
-  Widget w;
-  XtVaGetValues(mWidget, XmNmenuHistory, &w, NULL);
-  int i;
-  for (i=0;i<mNumItems;i++) {
-    if (mItems[i] == w) {
-      GetItemAt(aItem, i);
-    }
-  }
+	if (! mMenuHandle)
+	{
+		aItem = "";
+		return PR_FALSE;
+	}
+
+	Str255	itemStr;
+	::GetMenuItemText(mMenuHandle, ::GetControlValue(mControl), itemStr);
+	Str255ToString(itemStr, aItem);
+
+  return PR_TRUE;
 }
 
 //-------------------------------------------------------------------------
@@ -207,19 +251,10 @@ void nsComboBox::GetSelectedItem(nsString& aItem)
 //-------------------------------------------------------------------------
 PRInt32 nsComboBox::GetSelectedIndex()
 {  
-  if (!mMultiSelect) { 
-    Widget w;
-    XtVaGetValues(mWidget, XmNmenuHistory, &w, NULL);
-    int i;
-    for (i=0;i<mNumItems;i++) {
-      if (mItems[i] == w) {
-        return (PRInt32)i;
-      }
-    }
-  } else {
-    NS_ASSERTION(0, "Multi selection list box does not support GetSlectedIndex()");
-  }
-  return -1;
+	if (! mMenuHandle)
+		return -1;
+
+	return ::GetControlValue(mControl);
 }
 
 //-------------------------------------------------------------------------
@@ -227,42 +262,13 @@ PRInt32 nsComboBox::GetSelectedIndex()
 //  SelectItem
 //
 //-------------------------------------------------------------------------
-void nsComboBox::SelectItem(PRInt32 aPosition)
+nsresult nsComboBox::SelectItem(PRInt32 aPosition)
 {
-  if (!mMultiSelect) { 
-    if (aPosition >= 0 && aPosition < mNumItems) {
-      XtVaSetValues(mWidget,
-		    XmNmenuHistory, mItems[aPosition],
-		    NULL);
-    }
-  } else {
-    // this is an error
-  }
-}
+	if (! mMenuHandle)
+		return NS_ERROR_NOT_INITIALIZED;
 
-//-------------------------------------------------------------------------
-//
-//  GetSelectedCount
-//
-//-------------------------------------------------------------------------
-PRInt32 nsComboBox::GetSelectedCount()
-{
-  if (!mMultiSelect) { 
-    PRInt32 inx = GetSelectedIndex();
-    return (inx == -1? 0 : 1);
-  } else {
-    return 0;//::SendMessage(mWnd, LB_GETSELCOUNT, (int)0, (LPARAM)0);
-  }
-}
-
-//-------------------------------------------------------------------------
-//
-//  GetSelectedIndices
-//
-//-------------------------------------------------------------------------
-void nsComboBox::GetSelectedIndices(PRInt32 aIndices[], PRInt32 aSize)
-{
-  // this is an error
+	::SetControlValue(mControl, aPosition);
+	return NS_OK;
 }
 
 //-------------------------------------------------------------------------
@@ -270,310 +276,7 @@ void nsComboBox::GetSelectedIndices(PRInt32 aIndices[], PRInt32 aSize)
 //  Deselect
 //
 //-------------------------------------------------------------------------
-void nsComboBox::Deselect()
+nsresult nsComboBox::Deselect()
 {
-  if (!mMultiSelect) { 
-    //::SendMessage(mWnd, LB_SETCURSEL, (WPARAM)-1, (LPARAM)0); 
-  } else {
-    // this is an error
-  }
-
+	return SelectItem(0);
 }
-
-
-//-------------------------------------------------------------------------
-//
-// Query interface implementation
-//
-//-------------------------------------------------------------------------
-nsresult nsComboBox::QueryObject(const nsIID& aIID, void** aInstancePtr)
-{
-    nsresult result = nsWindow::QueryObject(aIID, aInstancePtr);
-
-    static NS_DEFINE_IID(kIComboBoxIID, NS_ICOMBOBOX_IID);
-    static NS_DEFINE_IID(kIListWidgetIID, NS_ILISTWIDGET_IID);
-    if (result == NS_NOINTERFACE) {
-      if (aIID.Equals(kIComboBoxIID)) {
-        *aInstancePtr = (void*) ((nsIComboBox*)&mAggWidget);
-        AddRef();
-        result = NS_OK;
-      }
-      else if (aIID.Equals(kIListWidgetIID)) {
-        *aInstancePtr = (void*) ((nsIListWidget*)&mAggWidget);
-        AddRef();
-        result = NS_OK;
-      }
-    }
-
-    return result;
-}
-
-//-------------------------------------------------------------------------
-//
-// nsComboBox Creator
-//
-//-------------------------------------------------------------------------
-void nsComboBox::Create(nsIWidget *aParent,
-                      const nsRect &aRect,
-                      EVENT_CALLBACK aHandleEventFunction,
-                      nsIDeviceContext *aContext,
-                      nsIAppShell *aAppShell,
-                      nsIToolkit *aToolkit,
-                      nsWidgetInitData *aInitData)
-{
-  aParent->AddChild(this);
-  Widget parentWidget = nsnull;
-
-  if (DBG) fprintf(stderr, "aParent 0x%x\n", aParent);
-
-  if (aParent) {
-    parentWidget = (Widget) aParent->GetNativeData(NS_NATIVE_WIDGET);
-  } else if (aAppShell) {
-    parentWidget = (Widget) aAppShell->GetNativeData(NS_NATIVE_SHELL);
-  }
-
-  InitToolkit(aToolkit, aParent);
-  InitDeviceContext(aContext, parentWidget);
-
-  if (DBG) fprintf(stderr, "Parent 0x%x\n", parentWidget);
-
-  /*mWidget = ::XtVaCreateManagedWidget("",
-                                    xmListWidgetClass,
-                                    parentWidget,
-                                    XmNitemCount, 0,
-                                    XmNwidth, aRect.width,
-                                    XmNheight, aRect.height,
-                                    XmNx, aRect.x,
-                                    XmNy, aRect.y,
-                                    nsnull);
-  */
-    Arg	args[30];
-    int	argc;
-
-    argc = 0;
-    XtSetArg(args[argc], XmNx, 0); argc++;
-    XtSetArg(args[argc], XmNy, 0); argc++;
-    mPullDownMenu = XmCreatePulldownMenu(parentWidget, "pulldown", args, argc);
-
-    argc = 0;
-    XtSetArg(args[argc], XmNmarginHeight, 0); argc++;
-    XtSetArg(args[argc], XmNmarginWidth, 0); argc++;
-    XtSetArg(args[argc], XmNrecomputeSize, False); argc++;
-    XtSetArg(args[argc], XmNresizeHeight, False); argc++;
-    XtSetArg(args[argc], XmNresizeWidth, False); argc++;
-    XtSetArg(args[argc], XmNspacing, False); argc++;
-    XtSetArg(args[argc], XmNborderWidth, 0); argc++;
-    XtSetArg(args[argc], XmNnavigationType, XmTAB_GROUP); argc++;
-    XtSetArg(args[argc], XmNtraversalOn, True); argc++;
-    XtSetArg(args[argc], XmNorientation, XmVERTICAL); argc++;
-    XtSetArg(args[argc], XmNadjustMargin, False); argc++;
-    XtSetArg(args[argc], XmNsubMenuId, mPullDownMenu); argc++;
-    XtSetArg(args[argc], XmNuserData, (XtPointer)this); argc++;
-    XtSetArg(args[argc], XmNx, aRect.x); argc++;
-    XtSetArg(args[argc], XmNy, aRect.y); argc++;
-    XtSetArg(args[argc], XmNwidth, aRect.width); argc++;
-    XtSetArg(args[argc], XmNheight, aRect.height); argc++;
-    mWidget = XmCreateOptionMenu(parentWidget, "", args, argc);
-
-    mOptionMenu = XmOptionLabelGadget(mWidget);
-    XtUnmanageChild(mOptionMenu);
-
-    /*XtVaSetValues(mWidget, 
-                  XmNx, aRect.x, 
-                  XmNy, aRect.y, 
-                  XmNwidth, aRect.width, 
-                  XmNheight, aRect.height, 
-                  nsnull);*/
-    //XtManageChild(mPullDownMenu);
-    //XtManageChild(mOptionMenu);
-
-    //XtSetMappedWhenManaged(mOptionMenu, False);
-    //XtManageChild(mOptionMenu);
-
-
-  //if (DBG) 
-
-  // save the event callback function
-  mEventCallback = aHandleEventFunction;
-
-  //InitCallbacks();
-
-}
-
-//-------------------------------------------------------------------------
-//
-// nsComboBox Creator
-//
-//-------------------------------------------------------------------------
-void nsComboBox::Create(nsNativeWidget aParent,
-                      const nsRect &aRect,
-                      EVENT_CALLBACK aHandleEventFunction,
-                      nsIDeviceContext *aContext,
-                      nsIAppShell *aAppShell,
-                      nsIToolkit *aToolkit,
-                      nsWidgetInitData *aInitData)
-{
-}
-
-//-------------------------------------------------------------------------
-//
-// move, paint, resizes message - ignore
-//
-//-------------------------------------------------------------------------
-PRBool nsComboBox::OnMove(PRInt32, PRInt32)
-{
-  return PR_FALSE;
-}
-
-//-------------------------------------------------------------------------
-//
-// paint message. Don't send the paint out
-//
-//-------------------------------------------------------------------------
-PRBool nsComboBox::OnPaint(nsPaintEvent &aEvent)
-{
-  return PR_FALSE;
-}
-
-PRBool nsComboBox::OnResize(nsSizeEvent &aEvent)
-{
-    return PR_FALSE;
-}
-
-
-//-------------------------------------------------------------------------
-//-------------------------------------------------------------------------
-//-------------------------------------------------------------------------
-//-------------------------------------------------------------------------
-#define GET_OUTER() ((nsComboBox*) ((char*)this - nsComboBox::GetOuterOffset()))
-
-
-//-------------------------------------------------------------------------
-//
-//  SetMultipleSelection
-//
-//-------------------------------------------------------------------------
-
-void nsComboBox::AggComboBox::SetMultipleSelection(PRBool aMultipleSelections)
-{
-  GET_OUTER()->SetMultipleSelection(aMultipleSelections);
-}
-
-
-//-------------------------------------------------------------------------
-//
-//  AddItemAt
-//
-//-------------------------------------------------------------------------
-
-void nsComboBox::AggComboBox::AddItemAt(nsString &aItem, PRInt32 aPosition)
-{
-  GET_OUTER()->AddItemAt(aItem, aPosition);
-}
-
-//-------------------------------------------------------------------------
-//
-//  Finds an item at a postion
-//
-//-------------------------------------------------------------------------
-PRInt32  nsComboBox::AggComboBox::FindItem(nsString &aItem, PRInt32 aStartPos)
-{
-  return  GET_OUTER()->FindItem(aItem, aStartPos);
-}
-
-//-------------------------------------------------------------------------
-//
-//  CountItems - Get Item Count
-//
-//-------------------------------------------------------------------------
-PRInt32  nsComboBox::AggComboBox::GetItemCount()
-{
-  return GET_OUTER()->GetItemCount();
-}
-
-//-------------------------------------------------------------------------
-//
-//  Removes an Item at a specified location
-//
-//-------------------------------------------------------------------------
-PRBool  nsComboBox::AggComboBox::RemoveItemAt(PRInt32 aPosition)
-{
-  return GET_OUTER()->RemoveItemAt(aPosition);
-}
-
-//-------------------------------------------------------------------------
-//
-//  Removes an Item at a specified location
-//
-//-------------------------------------------------------------------------
-PRBool nsComboBox::AggComboBox::GetItemAt(nsString& anItem, PRInt32 aPosition)
-{
-  return  GET_OUTER()->GetItemAt(anItem, aPosition);
-}
-
-//-------------------------------------------------------------------------
-//
-//  Gets the selected of selected item
-//
-//-------------------------------------------------------------------------
-void nsComboBox::AggComboBox::GetSelectedItem(nsString& aItem)
-{
-  GET_OUTER()->GetSelectedItem(aItem);
-}
-
-//-------------------------------------------------------------------------
-//
-//  Gets the list of selected otems
-//
-//-------------------------------------------------------------------------
-PRInt32 nsComboBox::AggComboBox::GetSelectedIndex()
-{  
-  return GET_OUTER()->GetSelectedIndex();
-}
-
-//-------------------------------------------------------------------------
-//
-//  SelectItem
-//
-//-------------------------------------------------------------------------
-void nsComboBox::AggComboBox::SelectItem(PRInt32 aPosition)
-{
-  GET_OUTER()->SelectItem(aPosition);
-}
-
-//-------------------------------------------------------------------------
-//
-//  GetSelectedCount
-//
-//-------------------------------------------------------------------------
-PRInt32 nsComboBox::AggComboBox::GetSelectedCount()
-{
-  return  GET_OUTER()->GetSelectedCount();
-}
-
-//-------------------------------------------------------------------------
-//
-//  GetSelectedIndices
-//
-//-------------------------------------------------------------------------
-void nsComboBox::AggComboBox::GetSelectedIndices(PRInt32 aIndices[], PRInt32 aSize)
-{
-  GET_OUTER()->GetSelectedIndices(aIndices, aSize);
-}
-
-//-------------------------------------------------------------------------
-//
-//  Deselect
-//
-//-------------------------------------------------------------------------
-void nsComboBox::AggComboBox::Deselect()
-{
-  GET_OUTER()->Deselect();
-}
-
-
-//----------------------------------------------------------------------
-
-BASE_IWIDGET_IMPL(nsComboBox, AggComboBox);
-
-

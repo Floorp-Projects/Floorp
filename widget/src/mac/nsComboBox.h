@@ -19,68 +19,53 @@
 #ifndef nsComboBox_h__
 #define nsComboBox_h__
 
-#include "nsWindow.h"
+#include "nsMacControl.h"
 #include "nsIComboBox.h"
 
-/**
- * Native Motif Listbox wrapper
- */
 
-class nsComboBox :   public nsWindow, public nsIComboBox
+class nsComboBox :	public nsMacControl,
+					public nsIListWidget,
+					public nsIComboBox
 {
+private:
+	typedef nsMacControl Inherited;
 
 public:
-    nsComboBox(nsISupports *aOuter);
-    virtual ~nsComboBox();
+   	nsComboBox();
+	virtual ~nsComboBox();
 
-    // nsISupports. Forward to the nsObject base class
-    NS_IMETHOD QueryObject(const nsIID& aIID, void** aInstancePtr);
+	// nsISupports
+	NS_IMETHOD_(nsrefcnt) AddRef();
+	NS_IMETHOD_(nsrefcnt) Release();
+	NS_IMETHOD QueryInterface(const nsIID& aIID, void** aInstancePtr);
 
-    void Create(nsIWidget *aParent,
-                const nsRect &aRect,
-                EVENT_CALLBACK aHandleEventFunction,
-                nsIDeviceContext *aContext,
-                nsIAppShell *aAppShell = nsnull,
-                nsIToolkit *aToolkit = nsnull,
-                nsWidgetInitData *aInitData = nsnull);
+	// nsIWidget
+	NS_IMETHODIMP				Create(nsIWidget *aParent,
+									const nsRect &aRect,
+									EVENT_CALLBACK aHandleEventFunction,
+									nsIDeviceContext *aContext = nsnull,
+									nsIAppShell *aAppShell = nsnull,
+									nsIToolkit *aToolkit = nsnull,
+									nsWidgetInitData *aInitData = nsnull);
 
-    void Create(nsNativeWidget aParent,
-                const nsRect &aRect, 
-                EVENT_CALLBACK aHandleEventFunction,
-                nsIDeviceContext *aContext,
-                nsIAppShell *aAppShell = nsnull,
-                nsIToolkit *aToolkit = nsnull,
-                nsWidgetInitData *aInitData = nsnull);
+	// nsIComboBox part
+	NS_IMETHOD				AddItemAt(nsString &aItem, PRInt32 aPosition);
+    NS_IMETHOD_(PRInt32)	FindItem(nsString &aItem, PRInt32 aStartPos);
+    NS_IMETHOD_(PRInt32)	GetItemCount();
+    NS_IMETHOD_(PRBool)		RemoveItemAt(PRInt32 aPosition);
+	NS_IMETHOD_(PRBool)		GetItemAt(nsString& anItem, PRInt32 aPosition);
+	NS_IMETHOD				GetSelectedItem(nsString &aItem);
+    NS_IMETHOD_(PRInt32)	GetSelectedIndex();
+    NS_IMETHOD				SelectItem(PRInt32 aPosition);
+    NS_IMETHOD				Deselect();
 
-
-    virtual PRBool    OnMove(PRInt32 aX, PRInt32 aY);
-    virtual PRBool OnPaint(nsPaintEvent & aEvent);
-    virtual PRBool OnResize(nsSizeEvent &aEvent);
-
-    // nsIComboBox interface
-    void      SetMultipleSelection(PRBool aMultipleSelections);
-    void      AddItemAt(nsString &aItem, PRInt32 aPosition);
-    PRInt32   FindItem(nsString &aItem, PRInt32 aStartPos);
-    PRInt32   GetItemCount();
-    PRBool    RemoveItemAt(PRInt32 aPosition);
-    PRBool    GetItemAt(nsString& anItem, PRInt32 aPosition);
-    void      GetSelectedItem(nsString& aItem);
-    PRInt32   GetSelectedIndex();
-    PRInt32   GetSelectedCount();
-    void      GetSelectedIndices(PRInt32 aIndices[], PRInt32 aSize);
-    void      SelectItem(PRInt32 aPosition);
-    void      Deselect() ;
+	// msWindow
+	virtual PRBool	OnPaint(nsPaintEvent & aEvent)	{return PR_TRUE;}	//¥¥¥test¥¥¥
 
 protected:
-    Widget  mPullDownMenu;
-    Widget  mOptionMenu;
-    PRBool  mMultiSelect;
-
-    Widget  * mItems; // an array of Widgets
-    int       mMaxNumItems;
-    int       mNumItems;
-
-
+	PRInt16		mMenuID;
+	MenuHandle	mMenuHandle;
 };
+
 
 #endif // nsComboBox_h__

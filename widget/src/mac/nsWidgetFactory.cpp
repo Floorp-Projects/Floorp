@@ -43,7 +43,7 @@
 
 #include "nsTextAreaWidget.h"
 //#include "nsListBox.h"
-//#include "nsComboBox.h"
+#include "nsComboBox.h"
 #include "nsLookAndFeel.h"
 
 #define MACSTATIC
@@ -162,7 +162,7 @@ nsresult nsWidgetFactory::CreateInstance(nsISupports *aOuter,
         inst = (nsISupports*)(nsWindow*)new nsCheckButton();
     }
     else if (mClassID.Equals(kCCombobox)) {
-//        inst = (nsISupports*)(nsWindow*)new nsComboBox();
+        inst = (nsISupports*)(nsWindow*)new nsComboBox();
     }
     else if (mClassID.Equals(kCRadioButton)) {
         inst = (nsISupports*)(nsWindow*)new nsRadioButton();
@@ -175,6 +175,7 @@ nsresult nsWidgetFactory::CreateInstance(nsISupports *aOuter,
     }
     else if (mClassID.Equals(kCListbox)) {
 //        inst = (nsISupports*)(nsWindow*)new nsListBox();
+					NS_NOTYETIMPLEMENTED("nsListBox");
     }
     else if (mClassID.Equals(kCHorzScrollbar)) {
         inst = (nsISupports*)(nsWindow*)new nsScrollbar(PR_FALSE);
@@ -190,9 +191,11 @@ nsresult nsWidgetFactory::CreateInstance(nsISupports *aOuter,
     }
     else if (mClassID.Equals(kCTabWidget)) {
 //        inst = (nsISupports*)(nsWindow*)new nsTabWidget();
+					NS_NOTYETIMPLEMENTED("nsTabWidget");
     }
     else if (mClassID.Equals(kCTooltipWidget)) {
  //       inst = (nsISupports*)(nsWindow*)new nsTooltipWidget();
+					NS_NOTYETIMPLEMENTED("nsTooltipWidget");
     }
     else if (mClassID.Equals(kCAppShell)) {
         inst = (nsISupports*)new nsAppShell();
@@ -226,6 +229,7 @@ nsresult nsWidgetFactory::CreateInstance(nsISupports *aOuter,
     }
     else if (mClassID.Equals(kCPopUpMenu)) {
  //       inst = (nsISupports*)new nsPopUpMenu();
+					NS_NOTYETIMPLEMENTED("nsPopUpMenu");
     }/* */
   
     if (inst == NULL) {  
