@@ -82,7 +82,7 @@ private:
   /*
    * Copying a VirtualRegisterPtr is forbidden.
    */
-  VirtuaRegisterPtr(const VirtualRegisterPtr& vRegPtr);
+  VirtualRegisterPtr(const VirtualRegisterPtr& vRegPtr);
   void operator = (const VirtualRegisterPtr& vRegPtr);
 #endif
 
