@@ -42,7 +42,6 @@ var gCommonDialogParam;
 
 function commonDialogOnLoad()
 {
-  doSetOKCancel(commonDialogOnOK, commonDialogOnCancel, commonDialogOnButton2, commonDialogOnButton3);
   gCommonDialogParam = window.arguments[0].QueryInterface(Components.interfaces.nsIDialogParamBlock);
 
   // display the main text
@@ -73,28 +72,44 @@ function commonDialogOnLoad()
 
   // set the number of command buttons
   var nButtons = gCommonDialogParam.GetInt(2);
-  if (nButtons == 1) hideElementById("cancel");
+  var string;
   switch (nButtons) {
     case 4:
-      unHideElementByID("Button3");
-      document.getElementById("Button3").label = gCommonDialogParam.GetString(11);
+      string = gCommonDialogParam.GetString(11);
+      if (string)
+        document.getElementById("Button3").label = string;
       // fall through
     case 3:
-      unHideElementByID("Button2");
-      document.getElementById("Button2").label = gCommonDialogParam.GetString(10);
+      string = gCommonDialogParam.GetString(10);
+      if (string)
+        document.getElementById("Button2").label = string;
       // fall through
     default:
     case 2:
-      var string = gCommonDialogParam.GetString(8);
-      if (string)
-        document.getElementById("ok").label = string;
-      // fall through
-    case 1:
       string = gCommonDialogParam.GetString(9);
       if (string)
         document.getElementById("cancel").label = string;
+      // fall through
+    case 1:
+      string = gCommonDialogParam.GetString(8);
+      if (string)
+        document.getElementById("ok").label = string;
       break;
   }
+  switch (nButtons) {
+    case 1:
+      hideElementById("cancel");
+      // fall through
+    default:
+    case 2:
+      hideElementById("Button2");
+      // fall through
+    case 3:
+      hideElementById("Button3");
+      // fall through
+    case 4:
+      break;
+    }
 
   // initialize the checkbox
   setCheckbox(gCommonDialogParam.GetString(1), gCommonDialogParam.GetInt(1));
