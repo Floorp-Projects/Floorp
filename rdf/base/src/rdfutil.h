@@ -52,36 +52,36 @@ class nsIURL;
 /**
  * The dreaded is-a function. Uses rdf:instanceOf to determine if aResource is aType.
  */
-PR_EXTERN(PRBool)
+PRBool
 rdf_IsA(nsIRDFDataSource* aDataSource, nsIRDFResource* aResource, nsIRDFResource* aType);
 
 /**
  * Construct a new, "anonymous" node; that is, a node with an internal
  * resource URI.
  */
-PR_EXTERN(nsresult)
+nsresult
 rdf_CreateAnonymousResource(const nsString& aContextURI, nsIRDFResource** result);
 
 /**
  * Determine if a resource is an "anonymous" resource that we've constructed
  * ourselves.
  */
-PR_EXTERN(PRBool)
+PRBool
 rdf_IsAnonymousResource(const nsString& aContextURI, nsIRDFResource* aResource);
 
-PR_EXTERN(nsresult)
+nsresult
 rdf_MakeRelativeRef(const nsString& aBaseURI, nsString& aURI);
 
-PR_EXTERN(nsresult)
+nsresult
 rdf_MakeRelativeName(const nsString& aBaseURI, nsString& aURI);
 
-PR_EXTERN(nsresult)
+nsresult
 rdf_MakeAbsoluteURI(const nsString& aBaseURI, nsString& aURI);
 
-PR_EXTERN(nsresult)
+nsresult
 rdf_MakeAbsoluteURI(nsIURL* aBaseURL, nsString& aURI);
 
-PR_EXTERN(void) SHTtest ();
+void SHTtest ();
                        
 #endif // rdfutil_h__
 

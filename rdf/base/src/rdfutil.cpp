@@ -95,7 +95,7 @@ rdf_EnsureRDFService(void)
 
 ////////////////////////////////////////////////////////////////////////
 
-PR_IMPLEMENT(PRBool)
+PRBool
 rdf_IsA(nsIRDFDataSource* aDataSource, nsIRDFResource* aResource, nsIRDFResource* aType)
 {
     nsresult rv;
@@ -185,7 +185,7 @@ rdf_IsAnonymousResource(const nsString& aContextURI, nsIRDFResource* aResource)
 }
 
 
-PR_EXTERN(nsresult)
+nsresult
 rdf_MakeRelativeRef(const nsString& aBaseURI, nsString& aURI)
 {
     // This implementation is extremely simple: e.g., it can't compute
@@ -204,7 +204,7 @@ rdf_MakeRelativeRef(const nsString& aBaseURI, nsString& aURI)
 }
 
 
-PR_EXTERN(nsresult)
+nsresult
 rdf_MakeRelativeName(const nsString& aBaseURI, nsString& aURI)
 {
     nsresult rv;
@@ -219,7 +219,7 @@ rdf_MakeRelativeName(const nsString& aBaseURI, nsString& aURI)
 }
 
 
-PR_EXTERN(nsresult)
+nsresult
 rdf_MakeAbsoluteURI(const nsString& aBaseURI, nsString& aURI)
 {
     nsresult rv;
@@ -239,7 +239,7 @@ rdf_MakeAbsoluteURI(const nsString& aBaseURI, nsString& aURI)
 }
 
 
-PR_EXTERN(nsresult)
+nsresult
 rdf_MakeAbsoluteURI(nsIURL* aURL, nsString& aURI)
 {
     nsresult rv;
