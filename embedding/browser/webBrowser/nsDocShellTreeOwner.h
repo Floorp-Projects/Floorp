@@ -49,6 +49,7 @@
 #include "nsITooltipListener.h"
 #include "nsITooltipTextProvider.h"
 #include "nsCTooltipTextProvider.h"
+#include "nsIDragDropHandler.h"
 
 #include "nsCommandHandler.h"
 
@@ -132,6 +133,7 @@ protected:
     // and the DOM. These are strong, owning refs.
    ChromeTooltipListener*         mChromeTooltipListener;
    ChromeContextMenuListener*     mChromeContextMenuListener;
+   nsCOMPtr<nsIDragDropHandler>   mChromeDragHandler;
 
    nsCOMPtr<nsIPrompt>     mPrompter;
    nsCOMPtr<nsIAuthPrompt> mAuthPrompter;

@@ -246,7 +246,12 @@
         </body>
       </method>
 
+      <field name="mDragDropHandler">
+        null
+      </field>
+      
       <constructor>
+        <![CDATA[
         if (!this.hasAttribute("disableHistory")) {
           // wire up session history
           // XXXdwh On a dynamic skin switch, we should be checking our box object to obtain
@@ -258,7 +263,22 @@
 
           this.docShell.QueryInterface(Components.interfaces.nsIDocShellHistory).globalHistory = globalHistory;      
         }
+        try {
+          this.mDragDropHandler = Components.classes["@mozilla.org:/content/content-area-dragdrop;1"]
+                                      .createInstance(Components.interfaces.nsIDragDropHandler);
+          if ( this.mDragDropHandler )
+            mDragDropHandler.hookupTo(this,null);
+        }
+        catch (x) { }
+        ]]>
       </constructor>
+      
+      <destructor>
+        <![CDATA[
+        if ( this.mDragDropHandler )
+          mDragDropHandler.detach();
+        ]]>
+      </destructor>
     </implementation>
 
   </binding>

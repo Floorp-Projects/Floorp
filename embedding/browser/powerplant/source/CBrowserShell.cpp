@@ -80,6 +80,8 @@
 
 static NS_DEFINE_IID(kWindowCID, NS_WINDOW_CID);
 
+nsCOMPtr<nsIDragHelperService> CBrowserShell::sDragHelper;
+
 //*****************************************************************************
 //***    CBrowserShellProgressListener
 //*****************************************************************************
@@ -237,7 +239,8 @@ NS_IMETHODIMP CBrowserShellProgressListener::OnSecurityChange(nsIWebProgress *aW
 
 CBrowserShell::CBrowserShell() :
     mChromeFlags(nsIWebBrowserChrome::CHROME_DEFAULT), mIsMainContent(true),
-    mContextMenuContext(nsIContextMenuListener::CONTEXT_NONE), mContextMenuDOMNode(nsnull)
+    mContextMenuContext(nsIContextMenuListener::CONTEXT_NONE), mContextMenuDOMNode(nsnull),
+    LDropArea(GetMacWindow())
 {
 	nsresult rv = CommonConstruct();
 	if (rv != NS_OK)
@@ -249,9 +252,10 @@ CBrowserShell::CBrowserShell(const SPaneInfo	&inPaneInfo,
 						  	 const SViewInfo	&inViewInfo,
 						  	 const UInt32       inChromeFlags,
 						  	 const Boolean      inIsMainContent) :
-    LView(inPaneInfo, inViewInfo),
+    LView(inPaneInfo, inViewInfo), LDropArea(GetMacWindow()),
     mChromeFlags(inChromeFlags), mIsMainContent(inIsMainContent),
     mContextMenuContext(nsIContextMenuListener::CONTEXT_NONE), mContextMenuDOMNode(nsnull)
+    
 {
 	nsresult rv = CommonConstruct();
 	if (rv != NS_OK)
@@ -260,7 +264,7 @@ CBrowserShell::CBrowserShell(const SPaneInfo	&inPaneInfo,
 
 
 CBrowserShell::CBrowserShell(LStream*	inStream) :
-	LView(inStream),
+	LView(inStream), LDropArea(GetMacWindow()),
     mContextMenuContext(nsIContextMenuListener::CONTEXT_NONE), mContextMenuDOMNode(nsnull)
 {
 	*inStream >> mChromeFlags;
@@ -1410,4 +1414,56 @@ void CBrowserShell::PostOpenURLEvent(const nsACString& url)
         Throw_(err);
     }
     UAppleEventsMgr::SendAppleEvent(getURLEvent);
+}
+
+
+void
+CBrowserShell::InsideDropArea(DragReference inDragRef)
+{
+  if ( sDragHelper ) {
+    PRBool dropAllowed = PR_FALSE;
+    sDragHelper->Tracking ( inDragRef, mEventSink, &dropAllowed );
+  }
+}
+
+
+void
+CBrowserShell::EnterDropArea( DragReference inDragRef, Boolean inDragHasLeftSender)
+{
+  sDragHelper = do_GetService ( "@mozilla.org/widget/draghelperservice;1" );
+  NS_ASSERTION ( sDragHelper, "Couldn't get a drag service, we're in biiig trouble" );
+  if ( sDragHelper )
+    sDragHelper->Enter ( inDragRef, mEventSink );
+}
+
+
+void
+CBrowserShell::LeaveDropArea( DragReference inDragRef )
+{
+  if ( sDragHelper ) {
+    sDragHelper->Leave ( inDragRef, mEventSink );
+    sDragHelper = nsnull;      
+  }
+}
+
+
+Boolean
+CBrowserShell::PointInDropArea(Point inGlobalPt)
+{
+  return true;
+}
+
+Boolean
+CBrowserShell::DragIsAcceptable( DragReference inDragRef )
+{
+  return true;
+}
+
+void
+CBrowserShell::DoDragReceive( DragReference inDragRef )
+{
+  if ( sDragHelper ) {
+    PRBool dragAccepted = PR_FALSE;
+    sDragHelper->Drop ( inDragRef, mEventSink, &dragAccepted );
+  }
 }

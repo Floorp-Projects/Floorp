@@ -33,6 +33,7 @@
 #include "nsSize.h"
 #include "nsHTMLReflowState.h"
 #include "nsIServiceManager.h"
+#include "nsComponentManagerUtils.h"
 #include "nsXPIDLString.h"
 #include "nsReadableUtils.h"
 #include "nsUnicharUtils.h"
@@ -51,6 +52,7 @@
 #include "nsIDOMMouseEvent.h"
 #include "nsIDOMEventReceiver.h"
 #include "nsIDOMNamedNodeMap.h"
+#include "nsIWebNavigation.h"
 #include "nsIDOMHTMLElement.h"
 #include "nsIPresShell.h"
 #include "nsPIDOMWindow.h"
@@ -66,6 +68,37 @@
 
 static const char sWindowWatcherContractID[] = "@mozilla.org/embedcomp/window-watcher;1";
 
+
+//
+// GetEventReceiver
+//
+// A helper routine that navigates the tricky path from a |nsWebBrowser| to
+// a |nsIDOMEventReceiver| via the window root and chrome event handler.
+//
+static nsresult
+GetEventReceiver ( nsWebBrowser* inBrowser, nsIDOMEventReceiver** outEventRcvr )
+{
+  nsCOMPtr<nsIDOMWindow> domWindow;
+  inBrowser->GetContentDOMWindow(getter_AddRefs(domWindow));
+  NS_ENSURE_TRUE(domWindow, NS_ERROR_FAILURE);
+
+  nsCOMPtr<nsPIDOMWindow> domWindowPrivate = do_QueryInterface(domWindow);
+  NS_ENSURE_TRUE(domWindowPrivate, NS_ERROR_FAILURE);
+  nsCOMPtr<nsIDOMWindowInternal> rootWindow;
+  domWindowPrivate->GetPrivateRoot(getter_AddRefs(rootWindow));
+  NS_ENSURE_TRUE(rootWindow, NS_ERROR_FAILURE);
+  nsCOMPtr<nsIChromeEventHandler> chromeHandler;
+  nsCOMPtr<nsPIDOMWindow> piWin(do_QueryInterface(rootWindow));
+  NS_ENSURE_TRUE(piWin, NS_ERROR_FAILURE);
+  piWin->GetChromeEventHandler(getter_AddRefs(chromeHandler));
+  NS_ENSURE_TRUE(chromeHandler, NS_ERROR_FAILURE);
+
+  nsCOMPtr<nsIDOMEventReceiver> rcvr = do_QueryInterface(chromeHandler);
+  *outEventRcvr = rcvr.get();
+  NS_IF_ADDREF(*outEventRcvr);
+  
+  return NS_OK;
+}
 
 
 //*****************************************************************************
@@ -772,7 +805,20 @@ nsDocShellTreeOwner :: AddChromeListeners ( )
         rv = NS_ERROR_OUT_OF_MEMORY;
     }
   }
-   
+  
+  // install the external dragDrop handler
+  if ( !mChromeDragHandler ) {
+    mChromeDragHandler = do_CreateInstance("@mozilla.org:/content/content-area-dragdrop;1", &rv);
+    NS_ASSERTION(mChromeDragHandler, "Couldn't create the chrome drag handler");
+    if ( mChromeDragHandler ) {
+      nsCOMPtr<nsIDOMEventReceiver> rcvr;
+      GetEventReceiver(mWebBrowser, getter_AddRefs(rcvr));
+      //nsCOMPtr<nsIDOMWebNavigation> webNav (do_QueryInterface(mWebBrowser));
+      nsCOMPtr<nsIDOMEventTarget> rcvrTarget(do_QueryInterface(rcvr));
+      mChromeDragHandler->HookupTo(rcvrTarget, NS_STATIC_CAST(nsIWebNavigation*, mWebBrowser));
+    }
+  }
+
   return rv;
   
 } // AddChromeListeners
@@ -789,7 +835,9 @@ nsDocShellTreeOwner :: RemoveChromeListeners ( )
     mChromeContextMenuListener->RemoveChromeListeners();
     NS_RELEASE(mChromeContextMenuListener);
   }
-  
+  if ( mChromeDragHandler )
+    mChromeDragHandler->Detach();
+
   return NS_OK;
 }
 
@@ -907,23 +955,8 @@ ChromeTooltipListener :: ~ChromeTooltipListener ( )
 NS_IMETHODIMP
 ChromeTooltipListener :: AddChromeListeners ( )
 {  
-  if ( !mEventReceiver ) {
-    nsCOMPtr<nsIDOMWindow> domWindow;
-    mWebBrowser->GetContentDOMWindow(getter_AddRefs(domWindow));
-    NS_ENSURE_TRUE(domWindow, NS_ERROR_FAILURE);
-
-    nsCOMPtr<nsPIDOMWindow> domWindowPrivate = do_QueryInterface(domWindow);
-    NS_ENSURE_TRUE(domWindowPrivate, NS_ERROR_FAILURE);
-    nsCOMPtr<nsIDOMWindowInternal> rootWindow;
-    domWindowPrivate->GetPrivateRoot(getter_AddRefs(rootWindow));
-    NS_ENSURE_TRUE(rootWindow, NS_ERROR_FAILURE);
-    nsCOMPtr<nsIChromeEventHandler> chromeHandler;
-    nsCOMPtr<nsPIDOMWindow> piWin(do_QueryInterface(rootWindow));
-    piWin->GetChromeEventHandler(getter_AddRefs(chromeHandler));
-    NS_ENSURE_TRUE(chromeHandler, NS_ERROR_FAILURE);
-
-    mEventReceiver = do_QueryInterface(chromeHandler);
-  }
+  if ( !mEventReceiver )
+    GetEventReceiver(mWebBrowser, getter_AddRefs(mEventReceiver));
   
   // Register the appropriate events for tooltips, but only if
   // the embedding chrome cares.
@@ -1374,23 +1407,8 @@ ChromeContextMenuListener :: RemoveContextMenuListener()
 NS_IMETHODIMP
 ChromeContextMenuListener :: AddChromeListeners ( )
 {  
-  if ( !mEventReceiver ) {
-    nsCOMPtr<nsIDOMWindow> domWindow;
-    mWebBrowser->GetContentDOMWindow(getter_AddRefs(domWindow));
-    NS_ENSURE_TRUE(domWindow, NS_ERROR_FAILURE);
-
-    nsCOMPtr<nsPIDOMWindow> domWindowPrivate = do_QueryInterface(domWindow);
-    NS_ENSURE_TRUE(domWindowPrivate, NS_ERROR_FAILURE);
-    nsCOMPtr<nsIDOMWindowInternal> rootWindow;
-    domWindowPrivate->GetPrivateRoot(getter_AddRefs(rootWindow));
-    NS_ENSURE_TRUE(rootWindow, NS_ERROR_FAILURE);
-    nsCOMPtr<nsIChromeEventHandler> chromeHandler;
-    nsCOMPtr<nsPIDOMWindow> piWin(do_QueryInterface(rootWindow));
-    piWin->GetChromeEventHandler(getter_AddRefs(chromeHandler));
-    NS_ENSURE_TRUE(chromeHandler, NS_ERROR_FAILURE);
-
-    mEventReceiver = do_QueryInterface(chromeHandler);
-  }
+  if ( !mEventReceiver )
+    GetEventReceiver(mWebBrowser, getter_AddRefs(mEventReceiver));
   
   // Register the appropriate events for context menus, but only if
   // the embedding chrome cares.
