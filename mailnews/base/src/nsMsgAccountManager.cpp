@@ -835,7 +835,8 @@ PRBool nsMsgAccountManager::emptyTrashOnExit(nsHashKey *aKey, void *aData,
                                  PR_FALSE);
                 if (isImap)
                     server->GetPassword(getter_Copies(passwd));
-                if (!isImap || (isImap && passwd && (const char) (*passwd)))
+                if (!isImap || (isImap && passwd && 
+                                nsCRT::strlen((const char*) passwd)))
                 {
                     nsCOMPtr<nsIUrlListener> urlListener;
                     nsresult rv;
