@@ -53,7 +53,7 @@ TimingIsEnabled(void);
  * disable.
  */
 PR_EXTERN(void)
-TimingSetEnabled(PRBool enabled);
+TimingSetEnabled(PRBool aEnabled);
 
 
 /**
@@ -63,7 +63,7 @@ TimingSetEnabled(PRBool enabled);
  * @param clock A C-string name for the clock.
  */
 PR_EXTERN(void)
-TimingStartClock(const char* clock);
+TimingStartClock(const char* aClock);
 
 /**
  * Stop the "clock" with the given name, returning the elapsed
@@ -79,14 +79,14 @@ TimingStartClock(const char* clock);
  * and was successfully stopped.
  */
 PR_EXTERN(PRBool)
-TimingStopClock(PRTime* result, const char* clock);
+TimingStopClock(PRTime* result, const char* aClock);
 
 /**
  * Return <tt>PR_TRUE</tt> if the clock with the specified
  * name exists and is running.
  */
 PR_EXTERN(PRBool)
-TimingIsClockRunning(const char* clock);
+TimingIsClockRunning(const char* aClock);
 
 /**
  * Convert an elapsed time into a human-readable string.
@@ -97,7 +97,7 @@ TimingIsClockRunning(const char* clock);
  * @return A pointer to <tt>buffer</tt>.
  */
 PR_EXTERN(char*)
-TimingElapsedTimeToString(PRTime time, char* buffer, PRUint32 size);
+TimingElapsedTimeToString(PRTime aTime, char* aBuffer, PRUint32 aSize);
 
 PR_END_EXTERN_C
 
