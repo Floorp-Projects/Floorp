@@ -1188,10 +1188,10 @@ nsresult nsWebShell::EndPageLoad(nsIWebProgress *aProgress,
               httpChannel->GetUploadStream(getter_AddRefs(inputStream));
             }
           }
-          nsCOMPtr<nsIRandomAccessStore> postDataRandomAccess(do_QueryInterface(inputStream));
-          if (postDataRandomAccess)
+          nsCOMPtr<nsISeekableStream> postDataSeekable(do_QueryInterface(inputStream));
+          if (postDataSeekable)
           {
-             postDataRandomAccess->Seek(PR_SEEK_SET, 0);
+             postDataSeekable->Seek(nsISeekableStream::NS_SEEK_SET, 0);
           }
           InternalLoad(url,                               // URI
                        referrer,                          // Refering URI

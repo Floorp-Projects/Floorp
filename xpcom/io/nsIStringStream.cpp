@@ -54,8 +54,7 @@ class BasicStringImpl
                                         BasicStringImpl();
         virtual                         ~BasicStringImpl();
 
-        NS_IMETHOD                      Seek(PRSeekWhence whence, PRInt32 offset);
-        NS_IMETHOD                      Tell(PRIntn* outWhere);
+        NS_DECL_NSISEEKABLESTREAM
         NS_IMETHOD                      GetAtEOF(PRBool* outAtEOF);
         NS_IMETHOD                      SetAtEOF(PRBool inAtEOF);
         NS_IMETHOD                      Available(PRUint32 *aLength);
@@ -123,7 +122,7 @@ BasicStringImpl::~BasicStringImpl()
 }
 
 //----------------------------------------------------------------------------------------
-NS_IMETHODIMP BasicStringImpl::Seek(PRSeekWhence whence, PRInt32 offset)
+NS_IMETHODIMP BasicStringImpl::Seek(PRInt32 whence, PRInt32 offset)
 //----------------------------------------------------------------------------------------
 {
     mLastResult = NS_OK; // reset on a seek.
@@ -132,9 +131,9 @@ NS_IMETHODIMP BasicStringImpl::Seek(PRSeekWhence whence, PRInt32 offset)
     PRInt32 newPosition=-1;
     switch (whence)
     {
-        case PR_SEEK_CUR: newPosition = mOffset + offset; break;
-        case PR_SEEK_SET: newPosition = offset; break;
-        case PR_SEEK_END: newPosition = fileSize + offset; break;
+        case NS_SEEK_CUR: newPosition = mOffset + offset; break;
+        case NS_SEEK_SET: newPosition = offset; break;
+        case NS_SEEK_END: newPosition = fileSize + offset; break;
     }
     if (newPosition < 0)
     {
@@ -151,11 +150,19 @@ NS_IMETHODIMP BasicStringImpl::Seek(PRSeekWhence whence, PRInt32 offset)
 } // StringImpl::Seek
 
 //----------------------------------------------------------------------------------------
-NS_IMETHODIMP BasicStringImpl::Tell(PRIntn* outWhere)
+NS_IMETHODIMP BasicStringImpl::Tell(PRUint32* outWhere)
 //----------------------------------------------------------------------------------------
 {
   *outWhere = mOffset;
   return NS_OK;
+}
+
+//----------------------------------------------------------------------------------------
+NS_IMETHODIMP BasicStringImpl::SetEOF()
+//----------------------------------------------------------------------------------------
+{
+  NS_NOTYETIMPLEMENTED("BasicStringImpl::SetEOF");
+  return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 //----------------------------------------------------------------------------------------
@@ -495,6 +502,7 @@ NS_IMPL_THREADSAFE_ADDREF(BasicStringImpl)
 NS_IMPL_THREADSAFE_RELEASE(BasicStringImpl)
 
 NS_IMPL_QUERY_HEAD(BasicStringImpl)
+  NS_IMPL_QUERY_BODY(nsISeekableStream)
   NS_IMPL_QUERY_BODY(nsIRandomAccessStore)
   NS_IMPL_QUERY_BODY(nsIOutputStream)
   NS_IMPL_QUERY_BODY(nsIInputStream)

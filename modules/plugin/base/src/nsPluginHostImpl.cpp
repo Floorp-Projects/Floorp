@@ -76,7 +76,7 @@
 #include "nsIIOService.h"
 #include "nsIURL.h"
 #include "nsIChannel.h"
-#include "nsIFileStream.h" // for nsIRandomAccessStore
+#include "nsIFileStream.h" // for nsISeekableStream
 #include "nsNetUtil.h"
 #include "nsIProgressEventSink.h"
 #include "nsIDocument.h"
@@ -5344,10 +5344,10 @@ NS_IMETHODIMP nsPluginHostImpl::NewPluginURLStream(const nsString& aURL,
           // XXX it's a bit of a hack to rewind the postdata stream
           // here but it has to be done in case the post data is
           // being reused multiple times.
-          nsCOMPtr<nsIRandomAccessStore> 
-          postDataRandomAccess(do_QueryInterface(postDataStream));
-          if (postDataRandomAccess)
-            postDataRandomAccess->Seek(PR_SEEK_SET, 0);
+          nsCOMPtr<nsISeekableStream> 
+          postDataSeekable(do_QueryInterface(postDataStream));
+          if (postDataSeekable)
+            postDataSeekable->Seek(nsISeekableStream::NS_SEEK_SET, 0);
 
           nsCOMPtr<nsIUploadChannel> uploadChannel(do_QueryInterface(httpChannel));
           NS_ASSERTION(uploadChannel, "http must support nsIUploadChannel");

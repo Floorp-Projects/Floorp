@@ -210,9 +210,9 @@ nsStreamTransfer::SelectFileAndTransferLocationSpec( char const *aURL,
                 nsCOMPtr<nsIHttpChannel> httpChannel( do_QueryInterface( channel ) );
                 if ( httpChannel ) {
                     // Rewind stream and attach to channel.
-                    nsCOMPtr<nsIRandomAccessStore> stream( do_QueryInterface( postData ) );
+                    nsCOMPtr<nsISeekableStream> stream( do_QueryInterface( postData ) );
                     if ( stream ) {
-                        stream->Seek( PR_SEEK_SET, 0 );
+                        stream->Seek( nsISeekableStream::NS_SEEK_SET, 0 );
                         nsCOMPtr<nsIUploadChannel> uploadChannel(do_QueryInterface(httpChannel));
                         NS_ASSERTION(uploadChannel, "http must support nsIUploadChannel");
 

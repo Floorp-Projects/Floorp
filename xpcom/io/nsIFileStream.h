@@ -39,6 +39,7 @@
 
 #include "nsIInputStream.h"
 #include "nsIOutputStream.h"
+#include "nsISeekableStream.h"
 #include "prio.h"
 
 class nsFileSpec;
@@ -76,12 +77,10 @@ public:
 class nsIRandomAccessStore
 // Supports Seek, Tell etc.
 //========================================================================================
-: public nsISupports
+: public nsISeekableStream
 {
 public:
     static const nsIID& GetIID() { static nsIID iid = NS_IRANDOMACCESS_IID; return iid; }
-    NS_IMETHOD                         Seek(PRSeekWhence whence, PRInt32 offset) = 0;
-    NS_IMETHOD                         Tell(PRIntn* outWhere) = 0;
 
 /* "PROTECTED" */
     NS_IMETHOD                         GetAtEOF(PRBool* outAtEOF) = 0;

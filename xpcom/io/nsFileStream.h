@@ -403,7 +403,7 @@ public:
                                       {
                                           PRIntn result = -1;
                                           if (mStore)
-                                              mResult = mStore->Tell(&result);
+                                              mResult = mStore->Tell((PRUint32 *)&result);
                                           return result;
                                       }
 
