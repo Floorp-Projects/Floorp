@@ -122,11 +122,8 @@ nsFieldSetFrame::Init(nsIPresContext& aPresContext, nsIFrame* aChildList)
   GetStyleData(eStyleStruct_Display, (const nsStyleStruct*&) styleDisplay);
   mInline = (NS_STYLE_DISPLAY_BLOCK != styleDisplay->mDisplay);
 
-  if (mInline) {
-    NS_NewInlineFrame(mContent, this, mFirstChild);
-  } else {
-    NS_NewBodyFrame(mContent, this, mFirstChild, PR_FALSE);
-  }
+  PRUint8 flags = (mInline) ? NS_BODY_SHRINK_WRAP : 0;
+  NS_NewBodyFrame(mContent, this, mFirstChild, flags);
   mContentFrame = mFirstChild;
 
   // Resolve style and set the style context
@@ -156,7 +153,7 @@ nsFieldSetFrame::Init(nsIPresContext& aPresContext, nsIFrame* aChildList)
       mFirstChild->SetNextSibling(frame);
       mLegendFrame = frame;
       mLegendFrame->SetNextSibling(nsnull);
-    } else {
+     } else {
       frame->SetGeometricParent(mFirstChild);
       frame->SetContentParent(mFirstChild);
     }
@@ -405,7 +402,8 @@ nsFieldSetFrame::Reflow(nsIPresContext& aPresContext,
   aDesiredSize.ascent  = aDesiredSize.height;
   aDesiredSize.descent = 0;
   if (nsnull != aDesiredSize.maxElementSize) {
-    *aDesiredSize.maxElementSize = maxElementSize;
+    aDesiredSize.maxElementSize->width  = maxElementSize.width + borderPadding.left + borderPadding.right;
+    aDesiredSize.maxElementSize->height = maxElementSize.height + borderPadding.top + borderPadding.bottom;
   }
 
   aStatus = NS_FRAME_COMPLETE;

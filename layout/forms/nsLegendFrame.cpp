@@ -94,11 +94,8 @@ nsLegendFrame::Init(nsIPresContext& aPresContext, nsIFrame* aChildList)
   GetStyleData(eStyleStruct_Display, (const nsStyleStruct*&) styleDisplay);
   mInline = (NS_STYLE_DISPLAY_BLOCK != styleDisplay->mDisplay);
 
-  if (mInline) {
-    NS_NewInlineFrame(mContent, this, mFirstChild);
-  } else {
-    NS_NewBodyFrame(mContent, this, mFirstChild, PR_FALSE);
-  }
+  PRUint8 flags = (mInline) ? NS_BODY_SHRINK_WRAP : 0;
+  NS_NewBodyFrame(mContent, this, mFirstChild, flags);
 
   // Resolve style and set the style context
   nsIStyleContext* styleContext =
@@ -132,19 +129,29 @@ nsLegendFrame::Reflow(nsIPresContext& aPresContext,
 {
   nsSize availSize(aReflowState.maxSize);
 
-  // Try to reflow the child into the available space. It might not fit
+  // reflow the child
   nsHTMLReflowState reflowState(mFirstChild, aReflowState, availSize);
-  //nsIHTMLReflow* htmlReflow = nsnull;
-  //if (NS_OK == mFirstChild->QueryInterface(kIHTMLReflowIID, (void**)&htmlReflow)) {
-    //htmlReflow->WillReflow(aPresContext);
-    //mFirstChild->MoveTo(0, 0);
-    ReflowChild(mFirstChild, aPresContext, aDesiredSize, reflowState, aStatus);
-  //}
+  ReflowChild(mFirstChild, aPresContext, aDesiredSize, reflowState, aStatus);
+
+  // get border and padding
+  const nsStyleSpacing* spacing =
+    (const nsStyleSpacing*)mStyleContext->GetStyleData(eStyleStruct_Spacing);
+  nsMargin borderPadding;
+  spacing->CalcBorderPaddingFor(this, borderPadding);
 
   // Place the child
-  nsRect rect = nsRect(0, 0, aDesiredSize.width, aDesiredSize.height);
+  nsRect rect = nsRect(borderPadding.left, borderPadding.top, aDesiredSize.width, aDesiredSize.height);
   mFirstChild->SetRect(rect);
 
+  // add in our border and padding to the size of the child
+  aDesiredSize.width  += borderPadding.left + borderPadding.right;
+  aDesiredSize.height += borderPadding.top + borderPadding.bottom;
+
+  // adjust our max element size, if necessary
+  if (aDesiredSize.maxElementSize) {
+    aDesiredSize.maxElementSize->width  += borderPadding.left + borderPadding.right;
+    aDesiredSize.maxElementSize->height += borderPadding.top + borderPadding.bottom;
+  }
   aDesiredSize.ascent  = aDesiredSize.height;
   aDesiredSize.descent = 0;
 
