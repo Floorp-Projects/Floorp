@@ -318,7 +318,7 @@ public:
    * Called to disable/enable script execution in this context.
    */
   NS_IMETHOD GetScriptsEnabled(PRBool *aEnabled) = 0;
-  NS_IMETHOD SetScriptsEnabled(PRBool aEnabled) = 0;
+  NS_IMETHOD SetScriptsEnabled(PRBool aEnabled, PRBool aFireTimeouts) = 0;
 
   /** 
    * Called to set/get information if the script context is

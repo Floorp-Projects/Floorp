@@ -1518,15 +1518,17 @@ nsJSContext::GetScriptsEnabled(PRBool *aEnabled)
 }
 
 NS_IMETHODIMP
-nsJSContext::SetScriptsEnabled(PRBool aEnabled)
+nsJSContext::SetScriptsEnabled(PRBool aEnabled, PRBool aFireTimeouts)
 {
   mScriptsEnabled = aEnabled;
 
-  nsCOMPtr<nsIScriptGlobalObject> global;
-  GetGlobalObject(getter_AddRefs(global));
+  if (aFireTimeouts) {
+    nsCOMPtr<nsIScriptGlobalObject> global;
+    GetGlobalObject(getter_AddRefs(global));
 
-  if (global) {
-    global->SetScriptsEnabled(aEnabled);
+    if (global) {
+      global->SetScriptsEnabled(aEnabled);
+    }
   }
 
   return NS_OK;
