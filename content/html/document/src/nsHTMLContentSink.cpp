@@ -99,6 +99,7 @@
 #include "nsHTMLIIDs.h"
 #include "nsTextFragment.h"
 #include "nsIScriptGlobalObject.h"
+#include "nsIScriptGlobalObjectOwner.h"
 
 #include "nsIParserService.h"
 #include "nsParserCIID.h"
@@ -136,7 +137,6 @@ const PRBool kBlockByDefault=PR_TRUE;
 #endif
 
 
-static NS_DEFINE_CID(kPrefServiceCID, NS_PREF_CID);
 static NS_DEFINE_CID(kCharsetConverterManagerCID, NS_ICHARSETCONVERTERMANAGER_CID);
 
 //----------------------------------------------------------------------
@@ -786,7 +786,7 @@ nsHTMLElementFactory::nsHTMLElementFactory()
 {
   NS_INIT_REFCNT();
 
-  nsCOMPtr<nsIPref> prefService(do_GetService(kPrefServiceCID));
+  nsCOMPtr<nsIPref> prefService(do_GetService(NS_PREF_CONTRACTID));
   if (prefService)
     prefService->GetBoolPref("nglayout.debug.enable_xbl_forms", &mUseXBLForms);
 }
@@ -2219,6 +2219,47 @@ NS_IMPL_ISUPPORTS7(HTMLContentSink,
                    nsIDocumentObserver,
                    nsIDebugDumpContent)
 
+static PRBool
+IsScriptEnabled(nsIDocument *aDoc, nsIWebShell *aContainer)
+{
+  NS_ENSURE_TRUE(aDoc && aContainer, PR_TRUE);
+
+  nsCOMPtr<nsIScriptSecurityManager> securityManager(do_GetService(NS_SCRIPTSECURITYMANAGER_CONTRACTID));
+  NS_ENSURE_TRUE(securityManager, PR_TRUE);
+
+  nsCOMPtr<nsIPrincipal> principal;
+  aDoc->GetPrincipal(getter_AddRefs(principal));
+  NS_ENSURE_TRUE(principal, PR_TRUE);
+
+  nsCOMPtr<nsIScriptGlobalObject> globalObject;
+  aDoc->GetScriptGlobalObject(getter_AddRefs(globalObject));
+
+  // Getting context is tricky if the document hasn't had it's GlobalObject set yet
+  if (!globalObject) {
+    nsCOMPtr<nsIInterfaceRequestor> requestor(do_QueryInterface(aContainer));
+    NS_ENSURE_TRUE(requestor, PR_TRUE);
+
+    nsCOMPtr<nsIScriptGlobalObjectOwner> owner;
+    requestor->GetInterface(NS_GET_IID(nsIScriptGlobalObjectOwner),
+                            getter_AddRefs(owner));
+    NS_ENSURE_TRUE(owner, PR_TRUE);
+
+    owner->GetScriptGlobalObject(getter_AddRefs(globalObject));
+    NS_ENSURE_TRUE(globalObject, PR_TRUE);
+  }
+
+  nsCOMPtr<nsIScriptContext> scriptContext;
+  globalObject->GetContext(getter_AddRefs(scriptContext));
+  NS_ENSURE_TRUE(scriptContext, PR_TRUE);
+
+  JSContext* cx = (JSContext *) scriptContext->GetNativeContext();
+  NS_ENSURE_TRUE(cx, PR_TRUE);
+
+  PRBool enabled = PR_TRUE;
+  securityManager->CanExecuteScripts(cx, principal, &enabled);
+  return enabled;
+}
+
 nsresult
 HTMLContentSink::Init(nsIDocument* aDoc,
                       nsIURI* aURL,
@@ -2259,15 +2300,6 @@ HTMLContentSink::Init(nsIDocument* aDoc,
   loader->AddObserver(this);
   
   PRBool enabled = PR_TRUE;
-  nsCOMPtr<nsIPref> prefs(do_GetService(NS_PREF_CONTRACTID));
-  NS_ASSERTION(prefs, "oops no prefs!");
-  if (prefs) {
-    prefs->GetBoolPref("javascript.enabled", &enabled);
-    if (enabled) {
-      mFlags |= NS_SINK_FLAG_SCRIPT_ENABLED;
-    }
-  }
-
   nsCOMPtr<nsIDocShell> docShell(do_QueryInterface(mWebShell));
   NS_ASSERTION(docShell,"oops no docshell!");
   if (docShell) {
@@ -2276,6 +2308,14 @@ HTMLContentSink::Init(nsIDocument* aDoc,
       mFlags |= NS_SINK_FLAG_FRAMES_ENABLED;
     }
   }
+
+
+  // Find out if scripts are enabled, if not, show <noscript> content
+  if (IsScriptEnabled(aDoc, aContainer)) {
+    mFlags |= NS_SINK_FLAG_SCRIPT_ENABLED;
+  }
+
+  nsCOMPtr<nsIPref> prefs(do_GetService(NS_PREF_CONTRACTID));
 
   mNotifyOnTimer = PR_TRUE;
   if (prefs) {
@@ -2306,10 +2346,9 @@ HTMLContentSink::Init(nsIDocument* aDoc,
     prefs->GetIntPref("content.maxtextrun", &mMaxTextRun);
   }
 
-  nsIHTMLContentContainer* htmlContainer = nsnull;
-  if (NS_SUCCEEDED(aDoc->QueryInterface(NS_GET_IID(nsIHTMLContentContainer), (void**)&htmlContainer))) {
+  nsCOMPtr<nsIHTMLContentContainer> htmlContainer(do_QueryInterface(aDoc));
+  if (htmlContainer) {
     htmlContainer->GetCSSLoader(mCSSLoader);
-    NS_RELEASE(htmlContainer);
   }
 
   // XXX this presumes HTTP header info is alread set in document
@@ -2359,6 +2398,7 @@ HTMLContentSink::Init(nsIDocument* aDoc,
   mRoot->AppendChildTo(mHead, PR_FALSE, PR_FALSE);
 
   mCurrentContext = new SinkContext(this);
+  NS_ENSURE_TRUE(mCurrentContext, NS_ERROR_OUT_OF_MEMORY);
   mCurrentContext->Begin(eHTMLTag_html, mRoot, 0, -1);
   mContextStack.AppendElement(mCurrentContext);
 
