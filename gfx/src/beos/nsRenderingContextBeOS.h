@@ -33,8 +33,6 @@
 #include "nsImageBeOS.h"
 #include "nsIDeviceContext.h"
 #include "nsVoidArray.h"
-#include "nsIScriptObjectOwner.h"
-#include "nsIDOMRenderingContext.h"
 #include "nsDrawingSurfaceBeOS.h"
 #include "nsRegionBeOS.h"
 

@@ -23,9 +23,7 @@
 #include "prprf.h"
 #include "prmem.h"
 
-static NS_DEFINE_IID(kIDOMRenderingContextIID, NS_IDOMRENDERINGCONTEXT_IID);
 static NS_DEFINE_IID(kIRenderingContextIID, NS_IRENDERING_CONTEXT_IID);
-static NS_DEFINE_IID(kIScriptObjectOwnerIID, NS_ISCRIPTOBJECTOWNER_IID);
 
 static PRLogModuleInfo * RenderingContextXlibLM = PR_NewLogModule("RenderingContextXlib");
 
@@ -67,7 +65,6 @@ nsRenderingContextXlib::nsRenderingContextXlib()
   mFontMetrics = nsnull;
   mTMatrix = nsnull;
   mP2T = 1.0f;
-  mScriptObject = nsnull;
   mStateCache = new nsVoidArray();
   mCurrentFont = nsnull;
   mCurrentLineStyle = nsLineStyle_kSolid;
@@ -112,20 +109,6 @@ nsRenderingContextXlib::QueryInterface(const nsIID&  aIID, void** aInstancePtr)
   if (aIID.Equals(kIRenderingContextIID))
   {
     nsIRenderingContext* tmp = this;
-    *aInstancePtr = (void*) tmp;
-    NS_ADDREF_THIS();
-    return NS_OK;
-  }
-  if (aIID.Equals(kIScriptObjectOwnerIID))
-  {
-    nsIScriptObjectOwner* tmp = this;
-    *aInstancePtr = (void*) tmp;
-    NS_ADDREF_THIS();
-    return NS_OK;
-  }
-  if (aIID.Equals(kIDOMRenderingContextIID))
-  {
-    nsIDOMRenderingContext* tmp = this;
     *aInstancePtr = (void*) tmp;
     NS_ADDREF_THIS();
     return NS_OK;
@@ -550,36 +533,12 @@ nsRenderingContextXlib::SetColor(nscolor aColor)
   return NS_OK;
 }
 
-NS_IMETHODIMP
-nsRenderingContextXlib::SetColor(const nsString &aColor)
-{
-  nscolor rgb;
-  if (NS_ColorNameToRGB(aColor, &rgb)) {
-    SetColor(rgb);
-  }
-  else if (NS_HexToRGB(aColor, &rgb)) {
-    SetColor(rgb);
-  }
-  return NS_OK;
-}
 
 NS_IMETHODIMP
 nsRenderingContextXlib::GetColor(nscolor &aColor) const
 {
   PR_LOG(RenderingContextXlibLM, PR_LOG_DEBUG, ("nsRenderingContextXlib::GetColor()\n"));
   aColor = mCurrentColor;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsRenderingContextXlib::GetColor(nsString &aColor)
-{
-  char cbuf[40];
-  PR_snprintf(cbuf, sizeof(cbuf), "#%02x%02x%02x",
-              NS_GET_R(mCurrentColor),
-              NS_GET_G(mCurrentColor),
-              NS_GET_B(mCurrentColor));
-  aColor = cbuf;
   return NS_OK;
 }
 
@@ -699,14 +658,6 @@ nsRenderingContextXlib::DrawLine(nscoord aX0, nscoord aY0, nscoord aX1, nscoord 
   return NS_OK;
 }
 
-
-NS_IMETHODIMP
-nsRenderingContextXlib::DrawLine2(PRInt32 aX0, PRInt32 aY0,
-                                  PRInt32 aX1, PRInt32 aY1)
-{
-  PR_LOG(RenderingContextXlibLM, PR_LOG_DEBUG, ("nsRenderingContextXlib::DrawLine2()\n"));
-  return DrawLine(aX0, aY0, aX1, aY1);
-}
 
 
 NS_IMETHODIMP
@@ -1452,18 +1403,3 @@ NS_IMETHODIMP nsRenderingContextXlib::RetrieveCurrentNativeGraphicData(PRUint32 
 {
   return NS_OK;
 }
-
-NS_IMETHODIMP
-nsRenderingContextXlib::GetScriptObject(nsIScriptContext *aContext, void** aScriptObject)
-{
-  PR_LOG(RenderingContextXlibLM, PR_LOG_DEBUG, ("nsRenderingContextXlib::GetScriptObject()\n"));
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsRenderingContextXlib::SetScriptObject(void* aScriptObject)
-{
-  PR_LOG(RenderingContextXlibLM, PR_LOG_DEBUG, ("nsRenderingContextXlib::SetScriptObject()\n"));
-  return NS_OK;
-}
-

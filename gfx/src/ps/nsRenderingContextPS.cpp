@@ -21,7 +21,6 @@
 #include <math.h>
 #include "libimg.h"
 #include "nsDeviceContextPS.h"
-#include "nsIScriptGlobalObject.h"
 #include "nsPostScriptObj.h"  
 #include "nsIRegion.h"      
 

@@ -39,8 +39,6 @@
 #include "libimg.h"
 #include "prprf.h"
 
-#include "nsIScriptGlobalObject.h"
-
 // helper clip region functions - defined at the bottom of this file.
 LONG GpiCombineClipRegion( HPS hps, HRGN hrgnCombine, LONG lOp);
 HRGN GpiCopyClipRegion( HPS hps);
@@ -172,7 +170,6 @@ class GraphicsStateCache
 } GStateCache; // XXX make this less static, I suppose
 
 // Rendering context -------------------------------------------------------
-static NS_DEFINE_IID(kIDOMRenderingContextIID, NS_IDOMRENDERINGCONTEXT_IID);
 
 NS_IMPL_ADDREF(nsRenderingContextOS2)
 NS_IMPL_RELEASE(nsRenderingContextOS2)
@@ -185,10 +182,6 @@ nsRenderingContextOS2::QueryInterface( REFNSIID aIID, void **aInstancePtr)
 
    if( aIID.Equals( nsIRenderingContext::GetIID()))
       *aInstancePtr = (void *) (nsIRenderingContext*) this;
-   else if( aIID.Equals( nsIScriptObjectOwner::GetIID()))
-      *aInstancePtr = (void *) (nsIScriptObjectOwner*) this;
-   else if( aIID.Equals( kIDOMRenderingContextIID))
-      *aInstancePtr = (void *) (nsIDOMRenderingContext*) this;
    else if( aIID.Equals( ((nsISupports*)(nsIRenderingContext*)this)->GetIID()))
       *aInstancePtr = (void *) (nsISupports*)(nsIRenderingContext*)this;
 
@@ -210,7 +203,6 @@ nsRenderingContextOS2::nsRenderingContextOS2()
    mPalette = nsnull;
    mSurface = nsnull;
    mFrontSurface = nsnull;
-   mScriptObject = nsnull;
    mColor = NS_RGB( 0, 0, 0);
    mP2T = 1.0f;
    mStateStack = nsnull;
@@ -787,54 +779,6 @@ nsresult nsRenderingContextOS2::GetCurrentTransform( nsTransform2D *&aTransform)
    return NS_OK;
 }
 
-// this is voodoo...
-NS_IMETHODIMP
-nsRenderingContextOS2::GetScriptObject( nsIScriptContext* aContext,
-                                        void** aScriptObject)
-{
-   nsresult res = NS_OK;
-   nsIScriptGlobalObject *global = aContext->GetGlobalObject();
-
-   if( !mScriptObject)
-   {
-      res = NS_NewScriptRenderingContext( aContext,
-                                   (nsISupports *)(nsIRenderingContext*)this,
-                                   global, (void**)&mScriptObject);
-   }
-   *aScriptObject = mScriptObject;
-   NS_RELEASE(global);
-   return res;
-}
-
-NS_IMETHODIMP
-nsRenderingContextOS2::SetScriptObject(void* aScriptObject)
-{
-   mScriptObject = aScriptObject;
-   return NS_OK;
-}
-
-// More daft nsIDOMRenderingContext methods
-NS_IMETHODIMP nsRenderingContextOS2::GetColor( nsString &aColor)
-{
-   char cbuf[40];
-   PR_snprintf( cbuf, sizeof(cbuf), "#%02x%02x%02x",
-                NS_GET_R(mColor),
-                NS_GET_G(mColor),
-                NS_GET_B(mColor));
-   aColor = cbuf;
-   return NS_OK;
-}
-
-NS_IMETHODIMP nsRenderingContextOS2::SetColor(const nsString& aColor)
-{
-   nscolor rgb;
-   if( NS_ColorNameToRGB(aColor, &rgb))
-      SetColor(rgb);
-   else if( NS_HexToRGB(aColor, &rgb))
-      SetColor(rgb);
-
-   return NS_OK;
-}
 
 // Drawing methods ---------------------------------------------------------
 
@@ -898,14 +842,6 @@ nsresult nsRenderingContextOS2::DrawLine( nscoord aX0, nscoord aY0, nscoord aX1,
 
    GpiMove( mSurface->mPS, ptls);
    GpiLine( mSurface->mPS, ptls + 1);
-   return NS_OK;
-}
-
-// Stupid DOM method
-nsresult nsRenderingContextOS2::DrawLine2( PRInt32 aX0, PRInt32 aY0,
-                                           PRInt32 aX1, PRInt32 aY1)
-{
-   DrawLine(aX0, aY0, aX1, aY1);
    return NS_OK;
 }
 

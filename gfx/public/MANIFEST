@@ -2,7 +2,6 @@
 # This is a list of local files which get copied to the mozilla:dist:widget directory
 #
 
-nsIDOMRenderingContext.h
 nsColor.h
 nsColorNames.h
 nsColorNameList.h

@@ -23,8 +23,6 @@
 #define _nsRenderingContextOS2_h
 
 #include "nsIRenderingContext.h"
-#include "nsIScriptObjectOwner.h"
-#include "nsIDOMRenderingContext.h"
 #include "nsTransform2D.h"
 #include "nscoord.h"
 #include "nscolor.h"
@@ -43,9 +41,7 @@ struct GraphicsState;
 
 #include "nsDrawingSurfaceOS2.h"
 
-class nsRenderingContextOS2 : public nsIRenderingContext,
-                              public nsIDOMRenderingContext,
-                              public nsIScriptObjectOwner
+class nsRenderingContextOS2 : public nsIRenderingContext
 {
  public:
    nsRenderingContextOS2();
@@ -168,13 +164,6 @@ class nsRenderingContextOS2 : public nsIRenderingContext,
 
    NS_IMETHOD GetHints( PRUint32 &aResult);
 
-   // nsIScriptObjectOwner
-   NS_IMETHOD GetScriptObject( nsIScriptContext *aContext, void** aScriptObject);
-   NS_IMETHOD SetScriptObject( void* aScriptObject);
- 
-   // nsIDOMRenderingContext
-   NS_DECL_IDOMRENDERINGCONTEXT
-
    // Convert XP-rects to OS/2 space.
    // World coordinates given & required, double inclusive rcl wanted.
    void NS2PM_ININ( const nsRect &in, RECTL &rcl);
@@ -217,7 +206,6 @@ class nsRenderingContextOS2 : public nsIRenderingContext,
    nscolor              mCurrDrawingColor;// currently selected drawing color
    nscolor              mCurrTextColor;   // currently selected text color
    nsLineStyle          mCurrLineStyle;   // currently selected line style
-   void                *mScriptObject;    // crazy script object thing.
 };
 
 inline void nsRenderingContextOS2::GetTargetHeight( PRUint32 &ht)

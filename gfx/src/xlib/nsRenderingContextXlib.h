@@ -33,16 +33,12 @@
 #include "nsImageXlib.h"
 #include "nsIDeviceContext.h"
 #include "nsVoidArray.h"
-#include "nsIScriptObjectOwner.h"
-#include "nsIDOMRenderingContext.h"
 #include "nsDrawingSurfaceXlib.h"
 #include "nsRegionXlib.h"
 
 class GraphicsState;
 
-class nsRenderingContextXlib : public nsIRenderingContext,
-                               nsIDOMRenderingContext,
-                               nsIScriptObjectOwner
+class nsRenderingContextXlib : public nsIRenderingContext
 {
  public:
   nsRenderingContextXlib();
@@ -156,14 +152,6 @@ class nsRenderingContextXlib : public nsIRenderingContext,
                                const nsRect &aDestBounds, PRUint32 aCopyFlags);
   NS_IMETHOD RetrieveCurrentNativeGraphicData(PRUint32 * ngd);
 
-  // nsIScriptObjectOwner
-  NS_IMETHOD GetScriptObject(nsIScriptContext *aContext, void** aScriptObject);
-  NS_IMETHOD SetScriptObject(void* aScriptObject);
-
-  // nsIDOMRenderingContext
-  // XXX uncomment this...
-  NS_DECL_IDOMRENDERINGCONTEXT
-
   // this is a common init function for both of the init functions.
   nsresult CommonInit(void);
 
@@ -175,7 +163,6 @@ private:
   nsRegionXlib            *mClipRegion;
   nsTransform2D           *mTMatrix;
   float                    mP2T;
-  void                    *mScriptObject;
   nscolor                  mCurrentColor;
   Display *                mDisplay;
   Screen *                 mScreen;

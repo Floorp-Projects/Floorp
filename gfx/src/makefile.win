@@ -45,7 +45,6 @@ CPP_OBJS=.\$(OBJDIR)\nsColor.obj .\$(OBJDIR)\nsColorNames.obj \
     .\$(OBJDIR)\nsTransform2D.obj \
     .\$(OBJDIR)\nsDeviceContext.obj \
 	.\$(OBJDIR)\nsImageNetContextSync.obj \
-	.\$(OBJDIR)\nsJSRenderingContext.obj \
 	.\$(OBJDIR)\nsBlender.obj
 
 LINCS=-I$(PUBLIC)\util -I$(PUBLIC)\img \
