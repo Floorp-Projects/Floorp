@@ -339,7 +339,6 @@ nsListBoxBodyFrame::NeedsRecalc()
 {
   mStringWidth = -1;
   return nsBoxFrame::NeedsRecalc();
-  printf("*** nsListBoxBodyFrame::NeedsRecalc %p\n", this);
 }
 
 /////////// nsBox ///////////////
@@ -391,8 +390,6 @@ nsListBoxBodyFrame::GetPrefSize(nsBoxLayoutState& aBoxLayoutState, nsSize& aSize
   PRInt32 size = GetFixedRowSize();
   nsIBox* box = nsnull;
   GetChildBox(&box);
-  printf("nsListBoxBodyFrame::GetPrefSize %p childbox=%p rowsize=%d height=%d newHeight=%d\n", this,
-         box, size, aSize.height, size*GetRowHeightTwips());
   if (size > -1)
     aSize.height = size*GetRowHeightTwips();
    
@@ -713,8 +710,6 @@ nsListBoxBodyFrame::GetFixedRowSize()
 void
 nsListBoxBodyFrame::SetRowHeight(nscoord aRowHeight)
 { 
-  printf("*** Setting rowheight on %p to %d (current %d)\n", this,
-         aRowHeight, mRowHeight);
   if (aRowHeight > mRowHeight) { 
     mRowHeight = aRowHeight;
     

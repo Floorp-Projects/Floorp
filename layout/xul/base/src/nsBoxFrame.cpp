@@ -931,8 +931,9 @@ nsBoxFrame::GetPrefSize(nsBoxLayoutState& aBoxLayoutState, nsSize& aSize)
 
   PRBool collapsed = PR_FALSE;
   IsCollapsed(aBoxLayoutState, collapsed);
-  if (collapsed)
+  if (collapsed) {
     return NS_OK;
+  }
 
   // if the size was not completely redefined in CSS then ask our children
   if (!nsIBox::AddCSSPrefSize(aBoxLayoutState, this, aSize))
