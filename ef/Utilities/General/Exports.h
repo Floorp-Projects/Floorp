@@ -20,21 +20,22 @@
  * Export definitions.
  */
 
-#ifdef XP_PC
-  #define NS_NATIVECALL(inReturnType) inReturnType __stdcall
-  #define NS_EXPORT __declspec(dllexport)
+#ifdef GENERATE_FOR_X86
+  #ifdef __GNUC__
+    #define NS_NATIVECALL(inReturnType) __attribute__((stdcall)) inReturnType
+    #define NS_EXPORT 
+    #define NS_EXTERN
+  #else /* MSVC */
+    #define NS_NATIVECALL(inReturnType) inReturnType __stdcall
+    #define NS_EXPORT __declspec(dllexport)
+    #ifdef IMPORTING_VM_FILES    /* Defined by all modules that import Vm header files */
+      #define NS_EXTERN __declspec(dllimport)
+    #else
+      #define NS_EXTERN __declspec(dllexport)
+    #endif
 
-  #ifdef IMPORTING_VM_FILES    /* Defined by all modules that import Vm header files */
-    #define NS_EXTERN __declspec(dllimport)
-  #else
-    #define NS_EXTERN __declspec(dllexport)
+    #pragma warning(disable: 4251)
   #endif
-
- #pragma warning(disable: 4251)
-#elif defined(LINUX) || defined(FREEBSD)
-  #define NS_NATIVECALL(inReturnType) __attribute__((stdcall)) inReturnType
-  #define NS_EXPORT 
-  #define NS_EXTERN 
 #else
   #define NS_NATIVECALL(inReturnType) inReturnType
   #define NS_EXPORT 
