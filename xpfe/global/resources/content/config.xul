@@ -38,6 +38,8 @@ Neil Rashbrook <neil@parkwaycc.co.uk>
 
 <script src="chrome://global/content/config.js"/>
 
+<stringbundle id="configBundle" src="chrome://global/locale/config.properties"/>
+
 <popup id="configContext" onpopupshowing="return updateContextMenu(this);">
   <menuitem label="&copyName.label;" accesskey="&copyName.accesskey;" oncommand="copyName();"/>
   <menuitem label="&copyValue.label;" accesskey="&copyValue.accesskey;" oncommand="copyValue();"/>
