@@ -278,7 +278,10 @@ nsGlobalWindow::CleanUp()
   ClearControllers();
 
   mOpener = nsnull;             // Forces Release
-  mContext = nsnull;            // Forces Release
+  if (mContext) {
+    mContext->SetOwner(nsnull);
+    mContext = nsnull;            // Forces Release
+  }
   mChromeEventHandler = nsnull; // Forces Release
 
   if (IsPopupSpamWindow()) {
@@ -354,6 +357,9 @@ nsGlobalWindow::SetContext(nsIScriptContext* aContext)
     mJSObject = ::JS_GetGlobalObject(cx);
   }
 
+  if (mContext) {
+    mContext->SetOwner(nsnull);
+  }
   mContext = aContext;
 
   if (mContext) {
@@ -718,7 +724,10 @@ nsGlobalWindow::SetDocShell(nsIDocShell* aDocShell)
 
     mContext->GC();
 
-    mContext = nsnull;          // force release now
+    if (mContext) {
+      mContext->SetOwner(nsnull);
+      mContext = nsnull;          // force release now
+    }
     mChromeEventHandler = nsnull; // force release now
   }
 
