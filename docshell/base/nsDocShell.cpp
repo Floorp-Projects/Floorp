@@ -3327,6 +3327,19 @@ nsDocShell::OnStateChange(nsIWebProgress * aProgress, nsIRequest * aRequest,
                     ShouldAddToGlobalHistory(uri, &updateHistory);
                     if (updateHistory) {
                         AddToGlobalHistory(uri);
+                        // this is a redirect, so hide the page from
+                        // being enumerated in history
+                        // this is temporary until bug 71482 is fixed
+                        if (mGlobalHistory) {
+                            nsCOMPtr<nsIBrowserHistory> browserHistory =
+                                do_QueryInterface(mGlobalHistory);
+                            if (browserHistory) {
+                                nsXPIDLCString urlString;
+                                if (NS_SUCCEEDED(uri->GetSpec(getter_Copies(urlString))))
+                                    browserHistory->HidePage(urlString);
+                            }
+                        }
+                            
                     }
                 }               // uri
             }                   // channel
