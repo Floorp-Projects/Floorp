@@ -964,20 +964,20 @@ fill_pd_as_nsresult(XPTParamDescriptor *pd)
 
 static gboolean
 typelib_attr_accessor(TreeState *state, XPTMethodDescriptor *meth,
-                      gboolean getter)
+                      gboolean getter, gboolean hidden)
 {
-#ifdef DEBUG_shaver_attr
-    fprintf(stdout, "DBG: adding %cetter for %s\n",
-            getter ? 'g' : 's', ATTR_IDENT(state->tree).str);
-#endif
-    if (!XPT_FillMethodDescriptor(meth, 
-                                  (PRUint8) (getter ? 
-                                    XPT_MD_GETTER : XPT_MD_SETTER),
-                                  ATTR_IDENT(state->tree).str, 1) ||
-        !fill_pd_from_type(state, meth->params,
-                           (uint8) (getter ? 
-                            (XPT_PD_RETVAL | XPT_PD_OUT) : XPT_PD_IN),
-                          ATTR_TYPE_DECL(state->tree)))
+    uint8 methflags = 0;
+    uint8 pdflags = 0;
+
+    methflags |= getter ? XPT_MD_GETTER : XPT_MD_SETTER;
+    methflags |= hidden ? XPT_MD_HIDDEN : 0;
+    if (!XPT_FillMethodDescriptor(meth, methflags,
+                                  ATTR_IDENT(state->tree).str, 1))
+        return FALSE;
+
+    pdflags |= getter ? (XPT_PD_RETVAL | XPT_PD_OUT) : XPT_PD_IN;
+    if (!fill_pd_from_type(state, meth->params, pdflags,
+                           ATTR_TYPE_DECL(state->tree)))
         return FALSE;
 
     fill_pd_as_nsresult(meth->result);
@@ -990,18 +990,25 @@ typelib_attr_dcl(TreeState *state)
 {
     XPTInterfaceDescriptor *id = CURRENT(state);
     XPTMethodDescriptor *meth;
-    gboolean ro = IDL_ATTR_DCL(state->tree).f_readonly;
+    gboolean readonly = IDL_ATTR_DCL(state->tree).f_readonly;
+
+    /* XXX this only handles the first ident; elsewhere too... */
+    IDL_tree ident =
+        IDL_LIST(IDL_ATTR_DCL(state->tree).simple_declarations).data;
+
+    /* If it's marked [noscript], mark it as hidden in the typelib. */
+    gboolean hidden = (IDL_tree_property_get(ident, "noscript") != NULL);
 
     if (!verify_attribute_declaration(state->tree))
         return FALSE;
 
-    if (!XPT_InterfaceDescriptorAddMethods(id, (PRUint16) (ro ? 1 : 2)))
+    if (!XPT_InterfaceDescriptorAddMethods(id, (PRUint16) (readonly ? 1 : 2)))
         return FALSE;
 
     meth = &id->method_descriptors[NEXT_METH(state)];
 
-    return typelib_attr_accessor(state, meth, TRUE) &&
-        (ro || typelib_attr_accessor(state, meth + 1, FALSE));
+    return typelib_attr_accessor(state, meth, TRUE, hidden) &&
+        (readonly || typelib_attr_accessor(state, meth + 1, FALSE, hidden));
 }
 
 static gboolean
