@@ -206,7 +206,14 @@
         {
             a = pop();  // catch variable type
             b = pop();  // exception object
-            push(JS2VAL_TRUE);
+            JS2Class *c = meta->objectType(b);
+            if (!JS2VAL_IS_OBJECT(a))
+                meta->reportError(Exception::badValueError, "Type expected", errorPos());
+            JS2Object *obj = JS2VAL_TO_OBJECT(a);
+            if (obj->kind != ClassKind)
+                 meta->reportError(Exception::badValueError, "Type expected", errorPos());
+            JS2Class *isClass = checked_cast<JS2Class *>(obj);
+            push(c == obj);
         }
         break;
 
