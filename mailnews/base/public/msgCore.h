@@ -141,10 +141,28 @@ NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_MAILNEWS, value)
 #  endif /* XP_WIN */
 #endif /* XP_MAC */
 
+
+/* mscott - i'm only turning  NS_MSG_BASE on for windows so
+   define it as empty for the other platforms. */
+
+#ifdef XP_WIN
+
+#ifdef _IMPL_NS_MSG_BASE
+#define NS_MSG_BASE NS_EXPORT
+#else
+#define NS_MSG_BASE NS_IMPORT
+#endif
+
+#else
+#define NS_MSG_BASE
+#endif
+
 ////////////////////////////////////////////////////////////////////////////////
 // Utilities 
 
-extern nsresult
+// mscott: one wouldn't normally have to add the NS_MSG_BASE prefix here 
+// except this function is implemented in base\util.
+nsresult NS_MSG_BASE
 nsGetMailFolderSeparator(nsString& result);
 
 ////////////////////////////////////////////////////////////////////////////////
