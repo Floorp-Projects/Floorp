@@ -4292,22 +4292,15 @@ nsImapMailFolder::SetImageCacheSessionForUrl(nsIMsgMailNewsUrl *mailurl)
   return rv;
 }
 
-NS_IMETHODIMP nsImapMailFolder::IsCurMoveCopyMessageRead(nsIImapUrl *runningUrl, PRBool *aResult)
+NS_IMETHODIMP nsImapMailFolder::GetCurMoveCopyMessageFlags(nsIImapUrl *runningUrl, PRUint32 *aResult)
 {
   nsCOMPtr <nsISupports> copyState;
   runningUrl->GetCopyState(getter_AddRefs(copyState));
   if (copyState)
   {
     nsCOMPtr<nsImapMailCopyState> mailCopyState = do_QueryInterface(copyState);
-    if (mailCopyState)
-    {
-      PRUint32 flags;
-      if (mailCopyState->m_message)
-      {
-        mailCopyState->m_message->GetFlags(&flags);
-        *aResult =(flags & MSG_FLAG_READ) != 0;
-      }
-    }
+    if (mailCopyState && mailCopyState->m_message)
+      mailCopyState->m_message->GetFlags(aResult);
   }
   return NS_OK;
 }
