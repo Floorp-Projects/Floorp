@@ -1618,9 +1618,10 @@ LookupArgOrVar(JSContext *cx, JSAtom *atom, JSTreeContext *tc,
 	       JSOp *opp, jsint *slotp)
 {
     JSObject *obj, *pobj;
+    JSFunction *fun;
     JSScopeProperty *sprop;
 
-    obj = cx->fp->scopeChain;
+    obj = js_FindVariableScope(cx, &fun);
     if (OBJ_GET_CLASS(cx, obj) != &js_FunctionClass)
     	return JS_TRUE;
     if (InWithStatement(tc))
