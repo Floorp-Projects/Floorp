@@ -74,26 +74,34 @@ PrintContext::IsPaginated(PRBool* aResult)
 NS_IMETHODIMP
 PrintContext::GetPageWidth(nscoord* aResult)
 {
+PRInt32 width,height;
+
   NS_PRECONDITION(nsnull != aResult, "null ptr");
   if (nsnull == aResult) {
     return NS_ERROR_NULL_POINTER;
   }
 
-  // XXX assumes a 1/2 margin around all sides
-  *aResult = (nscoord) NS_INCHES_TO_TWIPS(7.5);
+  mDeviceContext->GetDeviceSurfaceDimensions(width,height);
+  // a xp margin can be added here
+  *aResult = width;
+
   return NS_OK;
 }
 
 NS_IMETHODIMP
 PrintContext::GetPageHeight(nscoord* aResult)
 {
+PRInt32 width,height;
+
   NS_PRECONDITION(nsnull != aResult, "null ptr");
   if (nsnull == aResult) {
     return NS_ERROR_NULL_POINTER;
   }
 
-  // XXX assumes a 1/2 margin around all sides
-  *aResult = (nscoord) NS_INCHES_TO_TWIPS(10);
+  mDeviceContext->GetDeviceSurfaceDimensions(width,height);
+  // a xp margin or header/footer space can be added here
+  *aResult = height;
+
   return NS_OK;
 }
 
