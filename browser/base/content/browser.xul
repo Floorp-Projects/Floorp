@@ -340,8 +340,11 @@
 
         <toolbarbutton id="bookmarks-button" class="toolbarbutton-1"
                        observes="viewBookmarksSidebar"
-                       tooltiptext="&bookmarksButton.tooltip;"/>
-    
+                       tooltiptext="&bookmarksButton.tooltip;"
+                       ondragover="nsDragAndDrop.dragOver(event, bookmarksButtonObserver);"
+                       ondragdrop="nsDragAndDrop.drop(event, bookmarksButtonObserver);"
+                       ondragexit="nsDragAndDrop.dragExit(event, bookmarksButtonObserver);"/>
+
         <toolbarbutton id="new-tab-button" class="toolbarbutton-1"
                        label="&tabCmd.label;"
                        command="cmd_newNavigatorTab"
