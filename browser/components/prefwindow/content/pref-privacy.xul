@@ -64,18 +64,33 @@
       </hbox>
     </expander>
     
-    <!-- Cache -->
-    <expander id="cache" label="&cache.label;" clearlabel="&clearCache.label;" persist="open">
-      <label value="&cacheExplanation.label;"/>
-      <separator class="thin"/>
-      <hbox align="center">
-        <label value="&diskCache.label;" accesskey="&diskCache.accesskey;" control="browserCacheDiskCache"/>
-        <textbox id="browserCacheDiskCache" size="8" preftype="int"
-                  prefstring="browser.cache.disk.capacity" prefattribute="value"/>
-        <label value="&kbytes;"/>
-      </hbox>    
+    <!-- Automatic Form Fill -->
+    <expander id="formfill" label="&formfill.label;" clearlabel="&clearFormfill.label;" persist="open">
+      <description>&formfillDescription.label;</description>
+      <checkbox id="enableFormFill" label="&formfillEnable.label;" accesskey="&formfillEnable.accesskey;"
+                prefstring="browser.formfill.enable"/>
     </expander>
-    
+
+    <!-- Passwords -->
+    <expander id="passwords" label="&passwords.label;" clearlabel="&clearPasswords.label;" persist="open">
+      <hbox flex="1">
+        <vbox flex="1">
+          <description>&passwordsDescription.label;</description>
+          <checkbox id="enablePasswords" label="&passwordsEnable.label;" accesskey="&passwordsEnable.accesskey;"
+                    prefstring="signon.rememberSignons"/>
+        </vbox>
+        <vbox pack="start">
+          <button label="&viewPasswords.label;" oncommand="viewSignons();"/>
+        </vbox>
+      </hbox>
+    </expander>
+
+    <!-- Downloaded Files List -->
+    <expander id="downloads" label="&downloads.label;" clearlabel="&clearDownloads.label;" persist="open">
+      <description>&downloadsDescription.label;</description>
+      <!-- XXX - need option to disable download manager list, and number of days used --> 
+    </expander>
+
     <!-- Cookies -->
     <expander id="cookies" label="&cookies.label;" clearlabel="&clearCookies.label;" persist="open">
       <hbox flex="1">
@@ -105,31 +120,16 @@
       </hbox>
     </expander>    
     
-    <!-- Downloaded Files List -->
-    <expander id="downloads" label="&downloads.label;" clearlabel="&clearDownloads.label;" persist="open">
-      <description>&downloadsDescription.label;</description>
-      <!-- XXX - need option to disable download manager list, and number of days used --> 
-    </expander>
-
-    <!-- Automatic Form Fill -->
-    <expander id="formfill" label="&formfill.label;" clearlabel="&clearFormfill.label;" persist="open">
-      <description>&formfillDescription.label;</description>
-      <checkbox id="enableFormFill" label="&formfillEnable.label;" accesskey="&formfillEnable.accesskey;"
-                prefstring="browser.formfill.enable"/>
-    </expander>
-
-    <!-- Passwords -->
-    <expander id="passwords" label="&passwords.label;" clearlabel="&clearPasswords.label;" persist="open">
-      <hbox flex="1">
-        <vbox flex="1">
-          <description>&passwordsDescription.label;</description>
-          <checkbox id="enablePasswords" label="&passwordsEnable.label;" accesskey="&passwordsEnable.accesskey;"
-                    prefstring="signon.rememberSignons"/>
-        </vbox>
-        <vbox pack="start">
-          <button label="&viewPasswords.label;" oncommand="viewSignons();"/>
-        </vbox>
-      </hbox>
+    <!-- Cache -->
+    <expander id="cache" label="&cache.label;" clearlabel="&clearCache.label;" persist="open">
+      <label value="&cacheExplanation.label;"/>
+      <separator class="thin"/>
+      <hbox align="center">
+        <label value="&diskCache.label;" accesskey="&diskCache.accesskey;" control="browserCacheDiskCache"/>
+        <textbox id="browserCacheDiskCache" size="8" preftype="int"
+                  prefstring="browser.cache.disk.capacity" prefattribute="value"/>
+        <label value="&kbytes;"/>
+      </hbox>    
     </expander>
   </vbox>
 
