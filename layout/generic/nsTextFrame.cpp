@@ -224,7 +224,7 @@ public:
   static nsresult AddBlinkFrame(nsIPresContext* aPresContext, nsIFrame* aFrame);
   static nsresult RemoveBlinkFrame(nsIFrame* aFrame);
   
-  static PRBool   GetBlinkIsOff() { return sBlinkTextOff; }
+  static PRBool   GetBlinkIsOff() { return sState == 3; }
   
 protected:
 
@@ -245,12 +245,12 @@ protected:
 protected:
 
   static nsBlinkTimer* sTextBlinker;
-  static PRBool        sBlinkTextOff;
+  static PRInt32       sState; // 0-2 == on; 3 == off
   
 };
 
 nsBlinkTimer* nsBlinkTimer::sTextBlinker = nsnull;
-PRBool        nsBlinkTimer::sBlinkTextOff = PR_FALSE;
+PRBool        nsBlinkTimer::sState = 0;
 
 #ifdef NOISY_BLINK
 static PRTime gLastTick;
@@ -271,7 +271,7 @@ void nsBlinkTimer::Start()
   nsresult rv;
   mTimer = do_CreateInstance("@mozilla.org/timer;1", &rv);
   if (NS_OK == rv) {
-    mTimer->InitWithCallback(this, 750, nsITimer::TYPE_REPEATING_PRECISE);
+    mTimer->InitWithCallback(this, 250, nsITimer::TYPE_REPEATING_PRECISE);
   }
 }
 
@@ -320,7 +320,10 @@ NS_IMETHODIMP nsBlinkTimer::Notify(nsITimer *timer)
   // Toggle blink state bit so that text code knows whether or not to
   // render. All text code shares the same flag so that they all blink
   // in unison.
-  sBlinkTextOff = PRBool(!sBlinkTextOff);
+  sState = (sState + 1) % 4;
+  if (sState == 1 || sState == 2)
+    // States 0, 1, and 2 are all the same.
+    return NS_OK;
 
 #ifdef NOISY_BLINK
   PRTime now = PR_Now();
