@@ -103,42 +103,45 @@ static NS_DEFINE_CID(kRDFXMLDataSourceCID, NS_RDFXMLDATASOURCE_CID);
 static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
 static NS_DEFINE_CID(kPluginManagerCID, NS_PLUGINMANAGER_CID);
 
-
-// forward declaration of a private helper function
-static PRBool PR_CALLBACK DeleteEntry(nsHashKey *aKey, void *aData, void* closure);
-
 // The following static table lists all of the "default" content type mappings we are going to use.                 
-// These are only the ones handled internally.  These must be listed here so that we can do the
-// proper file-extension to content-type mapping.  These cannot be overridden by user helper app
-// prefs.
+struct nsDefaultMimeTypeEntry {
+  const char* mMimeType;
+  const char* mFileExtension;
+};
+
+// These extension->mimetype mappings are not overridable.
 static nsDefaultMimeTypeEntry defaultMimeEntries [] = 
 {
-  { TEXT_PLAIN, "txt,text", "Text File", 'TEXT', 'ttxt' },
-  { TEXT_HTML, "html,htm,shtml,ehtml", "HyperText Markup Language", 'TEXT', 'MOSS' },
-  { TEXT_RDF, "rdf", "Resource Description Framework", 'TEXT','ttxt' },
-  { TEXT_XUL, "xul", "XML-Based User Interface Language", 'TEXT', 'ttxt' },
-  { TEXT_XML,          "xml,xsl,xbl", "Extensible Markup Language", 'TEXT', 'ttxt' },
-  { "application/xhtml+xml", "xhtml,xht", "Extensible HyperText Markup Language", 'TEXT', 'ttxt' },
-#ifdef MOZ_SVG
-  { "image/svg+xml", "svg", "Scalable Vector Graphics", 'svg ', 'ttxt' },
-#endif
-  { TEXT_CSS, "css", "Style Sheet", 'TEXT', 'ttxt' },
-  { APPLICATION_JAVASCRIPT, "js", "Javascript Source File", 'TEXT', 'ttxt' },
-  { MESSAGE_RFC822, "eml", "RFC-822 data", 'TEXT', 'MOSS' },
-  { IMAGE_GIF, "gif", "GIF Image", 0,0 },
-  { IMAGE_JPG, "jpeg,jpg,jfif,pjpeg,pjp", "JPEG Image", 0, 0 },
-  { IMAGE_PNG, "png", "PNG Image", 0, 0 },
-  { IMAGE_BMP, "bmp", "BMP Image", 0, 0 },
-  { IMAGE_ICO, "ico,cur", "ICO Image", 0, 0 },
-  { IMAGE_XBM, "xbm", "XBM Image", 0, 0 },
-  { APPLICATION_XPINSTALL, "xpi", "XPInstall Install", 'xpi*','MOSS' },
+  // The following are those extensions that we're asked about during startup,
+  // sorted by order used
+  { IMAGE_GIF, "gif" },
+  { TEXT_XML, "xml" },
+  { TEXT_RDF, "rdf" },
+  { TEXT_XUL, "xul" },
+  // -- end extensions used during startup
+  { TEXT_CSS, "css" },
+  { IMAGE_JPG, "jpeg" },
+  { IMAGE_JPG, "jpg" },
+  { TEXT_HTML, "html" },
+  { TEXT_HTML, "htm" },
+  { APPLICATION_XPINSTALL, "xpi" }
+};
+
+// this is a small private struct used to help us initialize some
+// default mime types.
+struct nsExtraMimeTypeEntry {
+  const char* mMimeType; 
+  const char* mFileExtensions;
+  const char* mDescription;
+  PRUint32 mMactype;
+  PRUint32 mMacCreator;
 };
 
 // This table lists all of the 'extra" content types that we can deduce from particular
 // file extensions.  These entries also ensure that we provide a good descriptive name
 // when we encounter files with these content types and/or extensions.  These can be
 // overridden by user helper app prefs.
-static nsDefaultMimeTypeEntry extraMimeEntries [] =
+static nsExtraMimeTypeEntry extraMimeEntries [] =
 {
 #if defined(VMS)
   { APPLICATION_OCTET_STREAM, "exe,bin,sav,bck,pcsi,dcx_axpexe,dcx_vaxexe,sfx_axpexe,sfx_vaxexe", "Binary Executable", 0, 0 },
@@ -148,10 +151,27 @@ static nsDefaultMimeTypeEntry extraMimeEntries [] =
   { APPLICATION_OCTET_STREAM, "exe,bin", "Binary Executable", 0, 0 },
 #endif
   { APPLICATION_GZIP2, "gz", "gzip", 0, 0 },
-  { IMAGE_ART, "art", "ART Image", 0, 0 },
-  { IMAGE_TIFF, "tiff,tif", "TIFF Image", 0, 0 },
-  { APPLICATION_POSTSCRIPT, "ps,eps,ai", "Postscript File",0, 0 },
   { "application/x-arj", "arj", "ARJ file", 0,0 },
+  { APPLICATION_XPINSTALL, "xpi", "XPInstall Install", 'xpi*','MOSS' },
+  { APPLICATION_POSTSCRIPT, "ps,eps,ai", "Postscript File",0, 0 },
+  { APPLICATION_JAVASCRIPT, "js", "Javascript Source File", 'TEXT', 'ttxt' },
+  { IMAGE_ART, "art", "ART Image", 0, 0 },
+  { IMAGE_BMP, "bmp", "BMP Image", 0, 0 },
+  { IMAGE_GIF, "gif", "GIF Image", 0,0 },
+  { IMAGE_ICO, "ico,cur", "ICO Image", 0, 0 },
+  { IMAGE_JPG, "jpeg,jpg,jfif,pjpeg,pjp", "JPEG Image", 0, 0 },
+  { IMAGE_PNG, "png", "PNG Image", 0, 0 },
+  { IMAGE_TIFF, "tiff,tif", "TIFF Image", 0, 0 },
+  { IMAGE_XBM, "xbm", "XBM Image", 0, 0 },
+  { "image/svg+xml", "svg", "Scalable Vector Graphics", 'svg ', 'ttxt' },
+  { MESSAGE_RFC822, "eml", "RFC-822 data", 'TEXT', 'MOSS' },
+  { TEXT_PLAIN, "txt,text", "Text File", 'TEXT', 'ttxt' },
+  { TEXT_HTML, "html,htm,shtml,ehtml", "HyperText Markup Language", 'TEXT', 'MOSS' },
+  { "application/xhtml+xml", "xhtml,xht", "Extensible HyperText Markup Language", 'TEXT', 'ttxt' },
+  { TEXT_RDF, "rdf", "Resource Description Framework", 'TEXT','ttxt' },
+  { TEXT_XUL, "xul", "XML-Based User Interface Language", 'TEXT', 'ttxt' },
+  { TEXT_XML, "xml,xsl,xbl", "Extensible Markup Language", 'TEXT', 'ttxt' },
+  { TEXT_CSS, "css", "Style Sheet", 'TEXT', 'ttxt' },
 };
 
 static const char* const nonDecodableTypes [] = {
@@ -183,15 +203,6 @@ nsExternalHelperAppService::nsExternalHelperAppService()
 }
 nsresult nsExternalHelperAppService::Init()
 {
-  // we need a good guess for a size for our hash table...let's try O(n) where n = # of default
-  // entries we'll be adding to the hash table. Of course, we'll be adding more entries as we 
-  // discover those content types at run time...
-  mMimeInfoCache = new nsHashtable(NS_ARRAY_LENGTH(defaultMimeEntries));
-  if (!mMimeInfoCache)
-    return NS_ERROR_OUT_OF_MEMORY;
-
-  AddDefaultMimeTypesToCache();
-
   // Add an observer for profile change
   nsresult rv = NS_OK;
   nsCOMPtr<nsIObserverService> obs = do_GetService("@mozilla.org/observer-service;1", &rv);
@@ -202,11 +213,6 @@ nsresult nsExternalHelperAppService::Init()
 
 nsExternalHelperAppService::~nsExternalHelperAppService()
 {
-  if (mMimeInfoCache)
-  {
-    mMimeInfoCache->Reset(DeleteEntry, nsnull);
-    delete mMimeInfoCache;
-  }
 }
 
 nsresult nsExternalHelperAppService::InitDataSource()
@@ -2111,24 +2117,15 @@ NS_IMETHODIMP nsExternalHelperAppService::GetFromExtension(const char *aFileExt,
   if (fileExt.First() == '.') 
     fileExt.Cut(0, 1); // cut the '.'
  
-  nsCStringKey key(fileExt.get());
-
-  nsIMIMEInfo *cachedInfo = (nsIMIMEInfo *) mMimeInfoCache->Get(&key);
-  if (cachedInfo) {
-    cachedInfo->Clone(_retval);
-  }
-
-  // if we don't have a match in our hash table, then query the user provided
-  // data source
-  if (!*_retval) 
-    rv = GetMIMEInfoForExtensionFromDS(aFileExt, _retval);
+  // Query the user provided data source
+  rv = GetMIMEInfoForExtensionFromDS(aFileExt, _retval);
 
   // if we don't have a match in mimeTypes.rdf, then try the per-platform OS settings
   if (!*_retval)
   {
     rv = GetMIMEInfoForExtensionFromOS(aFileExt, _retval);
   }
-  else if (!cachedInfo)
+  else
   {
     // Get OS settings so we can fill the "default" fields in the MIMEInfo we got
     // from mimeTypes.rdf.
@@ -2159,24 +2156,15 @@ NS_IMETHODIMP nsExternalHelperAppService::GetFromMIMEType(const char *aMIMEType,
   nsCAutoString MIMEType(aMIMEType);
   ToLowerCase(MIMEType);
 
-  nsCStringKey key(MIMEType.get());
-
-  nsIMIMEInfo *cachedInfo = (nsIMIMEInfo *) mMimeInfoCache->Get(&key);
-  if (cachedInfo) {
-    cachedInfo->Clone(_retval);
-  }
-
-  // if we don't have a match in our hash table, then query the user provided
-  // data source containing additional content types...
-  if (!*_retval) 
-    rv = GetMIMEInfoForMimeTypeFromDS(aMIMEType, _retval);
+  // Query the user provided data source
+  rv = GetMIMEInfoForMimeTypeFromDS(aMIMEType, _retval);
 
   // if we don't have a match in mimeTypes.rdf, then try the per-platform OS settings
   if (!*_retval)
   {
     rv = GetMIMEInfoForMimeTypeFromOS(aMIMEType, _retval);
   }
-  else if (!cachedInfo)
+  else
   {
     // Get OS settings so we can fill the "default" fields in the MIMEInfo we got
     // from mimeTypes.rdf.
@@ -2203,6 +2191,15 @@ NS_IMETHODIMP nsExternalHelperAppService::GetFromMIMEType(const char *aMIMEType,
 
 NS_IMETHODIMP nsExternalHelperAppService::GetTypeFromExtension(const char *aFileExt, char **aContentType) 
 {
+  // First of all, check our default entries
+  for (PRIntn i = 0; i < NS_ARRAY_LENGTH(defaultMimeEntries); i++)
+  {
+    if (strcmp(defaultMimeEntries[i].mFileExtension, aFileExt) == 0) {
+      *aContentType = nsCRT::strdup(defaultMimeEntries[i].mMimeType);
+      return NS_OK;
+    }
+  }
+
   nsresult rv = NS_OK;
   nsCOMPtr<nsIMIMEInfo> info;
   rv = GetFromExtension(aFileExt, getter_AddRefs(info));
@@ -2416,75 +2413,4 @@ nsresult nsExternalHelperAppService::GetMIMEInfoForExtensionFromExtras(const cha
   return rv;
 }
 
-nsresult nsExternalHelperAppService::AddDefaultMimeTypesToCache()
-{
-  PRInt32 numEntries = NS_ARRAY_LENGTH(defaultMimeEntries);
-  for (PRInt32 index = 0; index < numEntries; index++)
-  {
-    // create a mime info object for each default mime entry and add it to our cache
-    nsCOMPtr<nsIMIMEInfo> mimeInfo (do_CreateInstance(NS_MIMEINFO_CONTRACTID));
-    mimeInfo->SetFileExtensions(defaultMimeEntries[index].mFileExtensions);
-    mimeInfo->SetMIMEType(defaultMimeEntries[index].mMimeType);
-    mimeInfo->SetDescription(NS_ConvertASCIItoUCS2(defaultMimeEntries[index].mDescription).get());
-    mimeInfo->SetMacType(defaultMimeEntries[index].mMactype);
-    mimeInfo->SetMacCreator(defaultMimeEntries[index].mMacCreator);
-    mimeInfo->SetPreferredAction(nsIMIMEInfo::handleInternally);
-    AddMimeInfoToCache(mimeInfo);
-  }
-
-  return NS_OK;
-}
-
-nsresult nsExternalHelperAppService::AddMimeInfoToCache(nsIMIMEInfo * aMIMEInfo)
-{
-  NS_ENSURE_ARG(aMIMEInfo);
-  nsresult rv = NS_OK;
-
-  // Next add the new root MIME mapping.
-  nsXPIDLCString mimeType;
-  nsIMIMEInfo* oldInfo;
-  rv = aMIMEInfo->GetMIMEType(getter_Copies(mimeType));
-  
-  if (NS_SUCCEEDED(rv)) {
-    nsCStringKey key(mimeType);
-    oldInfo = (nsIMIMEInfo*)mMimeInfoCache->Put(&key, aMIMEInfo);
-
-    // release the old info to prevent a leak
-    NS_IF_RELEASE(oldInfo);
-    // add a reference for the hash table entry....
-    NS_ADDREF(aMIMEInfo); 
-  }
-
-  // now we need to add entries for each file extension
-  nsCOMPtr<nsIUTF8StringEnumerator> extensions;
-
-  rv = aMIMEInfo->GetFileExtensions(getter_AddRefs(extensions));
-  if (NS_FAILED(rv) || !extensions)
-    return NS_OK; 
-
-  PRBool hasMore;
-  extensions->HasMore(&hasMore);
-  nsCAutoString ext;
-  while (hasMore) {
-    extensions->GetNext(ext);
-
-    nsCStringKey key(ext);
-
-    oldInfo = (nsIMIMEInfo*) mMimeInfoCache->Put(&key, aMIMEInfo);
-    NS_IF_RELEASE(oldInfo); // release the old info to prevent a leak
-    NS_ADDREF(aMIMEInfo); // addref this new entry in the table
-
-    extensions->HasMore(&hasMore);
-  }
-
-  return NS_OK;
-}
-
-// static helper function to help us release hash table entries...
-static PRBool DeleteEntry(nsHashKey *aKey, void *aData, void* closure) 
-{
-  nsIMIMEInfo *entry = (nsIMIMEInfo*) aData;
-	NS_RELEASE(entry);
-  return PR_TRUE;   
-};
 

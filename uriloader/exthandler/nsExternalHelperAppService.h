@@ -43,7 +43,6 @@
 
 #include "nsIRDFDataSource.h"
 #include "nsIRDFResource.h"
-#include "nsHashtable.h"
 #include "nsCOMPtr.h"
 #include "nsIObserver.h"
 #include "nsCOMArray.h"
@@ -135,12 +134,6 @@ protected:
   // and returns a CONST ptr to the string value of that target
   nsresult FillLiteralValueFromTarget(nsIRDFResource * aSource, nsIRDFResource * aProperty, const PRUnichar ** aLiteralValue);
 
-  // in addition to the in memory data source which stores the user over ride mime types, we also use a hash table
-  // for quick look ups of mime types...
-  nsHashtable   *mMimeInfoCache; // used for fast access and multi index lookups
-  // used to add entries to the mime info cache
-  virtual nsresult AddMimeInfoToCache(nsIMIMEInfo * aMIMEInfo);
-  virtual nsresult AddDefaultMimeTypesToCache();
   virtual nsresult GetMIMEInfoForMimeTypeFromExtras(const char * aContentType, nsIMIMEInfo ** aMIMEInfo );
   virtual nsresult GetMIMEInfoForExtensionFromExtras(const char * aContentType, nsIMIMEInfo ** aMIMEInfo );
 
@@ -149,17 +142,6 @@ protected:
   nsresult ExpungeTemporaryFiles();
   nsCOMArray<nsILocalFile> mTemporaryFilesList;
 };
-
-// this is a small private struct used to help us initialize some
-// default mime types.
-struct nsDefaultMimeTypeEntry {
-  const char* mMimeType; 
-  const char* mFileExtensions;
-  const char* mDescription;
-  PRUint32 mMactype;
-  PRUint32 mMacCreator;
-};
-
 
 // An external app handler is just a small little class that presents itself as 
 // a nsIStreamListener. It saves the incoming data into a temp file. The handler
