@@ -296,7 +296,7 @@ NS_IMETHODIMP nsMailboxProtocol::OnStopRequest(nsIRequest *request, nsISupports 
           // then, we have to make sure the url keeps running somehow.
 			    nsCOMPtr<nsISupports> urlSupports = do_QueryInterface(m_runningUrl);
             // put us in a state where we are always notified of incoming data
-            PR_Sleep(500);
+            PR_Sleep(PR_MicrosecondsToInterval(500UL));
             rv = m_transport->AsyncRead(this, urlSupports, msgKey, msgSize, 0, getter_AddRefs(m_request));
             NS_ASSERTION(NS_SUCCEEDED(rv), "AsyncRead failed");
             if (m_loadGroup)
