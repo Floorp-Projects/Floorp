@@ -65,10 +65,8 @@
 #endif
 
 #define USE_SETJMP
-#if defined(__GLIBC__) && __GLIBC__ >= 2
-#define _PR_POLL_AVAILABLE
-#define _PR_USE_POLL
-#endif
+#undef _PR_POLL_AVAILABLE
+#undef _PR_USE_POLL
 #define _PR_STAT_HAS_ONLY_ST_ATIME
 #if defined(__alpha)
 #define _PR_HAVE_LARGE_OFF_T
