@@ -674,6 +674,45 @@ nsMsgLocalMailFolder::CreateSubfolder(const char *folderName)
 	return rv;
 }
 
+NS_IMETHODIMP nsMsgLocalMailFolder::Compact()
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+
+NS_IMETHODIMP nsMsgLocalMailFolder::EmptyTrash()
+{
+    nsresult rv;
+    nsCOMPtr<nsIMsgFolder> trashFolder;
+    rv = GetTrashFolder(getter_AddRefs(trashFolder));
+    if (NS_SUCCEEDED(rv))
+    {
+        nsCOMPtr<nsIFolder> parent;
+        rv = GetParent(getter_AddRefs(parent));
+        if (NS_SUCCEEDED(rv) && parent)
+        {
+            nsCOMPtr<nsIMsgFolder> parentFolder;
+            parentFolder = do_QueryInterface(parent, &rv);
+            if (NS_SUCCEEDED(rv) && parentFolder)
+            {
+                nsXPIDLString idlFolderName;
+                rv = trashFolder->GetName(getter_Copies(idlFolderName));
+                if (NS_SUCCEEDED(rv))
+                {
+                    nsString folderName(idlFolderName);
+                    char *cStringName = folderName.ToNewCString();
+                    trashFolder->SetParent(nsnull);
+                    parentFolder->PropagateDelete(trashFolder, PR_TRUE);
+                    parentFolder->CreateSubfolder(cStringName);
+                    nsCRT::free(cStringName);
+                }
+            }
+        }
+    }
+    return rv;
+}
+
+
 NS_IMETHODIMP nsMsgLocalMailFolder::Delete()
 {
 	nsresult rv = GetDatabase();
