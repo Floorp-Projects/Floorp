@@ -109,39 +109,6 @@ void TypeInState::GetEnumForName(nsIAtom *aPropName, PRUint32 &aEnum)
   else if (nsIEditProperty::size==aPropName) { aEnum = NS_TYPEINSTATE_FONTSIZE; }
 }
 
-inline void TypeInState::SetProp(PRUint32 aProp, PRBool aSet)
-{
-  switch (aProp)
-  {
-    case NS_TYPEINSTATE_BOLD:
-      SetBold(aSet);
-      break;
-    case NS_TYPEINSTATE_ITALIC:
-      SetItalic(aSet);
-      break;
-    case NS_TYPEINSTATE_UNDERLINE:
-      SetUnderline(aSet);
-      break;
-  }
-}
-
-inline void TypeInState::SetPropValue(PRUint32 aProp, const nsString &aValue)
-{
-  switch (aProp)
-  {
-    case NS_TYPEINSTATE_FONTFACE:
-      SetFontFace(aValue);
-      break;
-    case NS_TYPEINSTATE_FONTCOLOR:
-      SetFontColor(aValue);
-      break;
-    case NS_TYPEINSTATE_FONTSIZE:
-      SetFontSize(aValue);
-      break;
-  }
-}
-
- 
 inline 
 PRBool TypeInState::IsSet(PRUint32 aStyle)
 {
@@ -229,5 +196,36 @@ inline
 void TypeInState::GetFontSize(nsString &aSize)
 { aSize = mFontSize; };
 
+inline void TypeInState::SetProp(PRUint32 aProp, PRBool aSet)
+{
+  switch (aProp)
+  {
+    case NS_TYPEINSTATE_BOLD:
+      SetBold(aSet);
+      break;
+    case NS_TYPEINSTATE_ITALIC:
+      SetItalic(aSet);
+      break;
+    case NS_TYPEINSTATE_UNDERLINE:
+      SetUnderline(aSet);
+      break;
+  }
+}
+
+inline void TypeInState::SetPropValue(PRUint32 aProp, const nsString &aValue)
+{
+  switch (aProp)
+  {
+    case NS_TYPEINSTATE_FONTFACE:
+      SetFontFace(aValue);
+      break;
+    case NS_TYPEINSTATE_FONTCOLOR:
+      SetFontColor(aValue);
+      break;
+    case NS_TYPEINSTATE_FONTSIZE:
+      SetFontSize(aValue);
+      break;
+  }
+}
 
 #endif
