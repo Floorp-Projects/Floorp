@@ -44,12 +44,9 @@ const gClipboardHelper = Components.classes[nsClipboardHelper_CONTRACTID].getSer
 const gAtomService = Components.classes[nsAtomService_CONTRACTID].getService(nsIAtomService);
 
 var gLockAtoms = [gAtomService.getAtom("default"), gAtomService.getAtom("user"), gAtomService.getAtom("locked")];
-// XXX get these from a string bundle
-var gLockStrs = ["default", "user set", "locked"];
+// we get these from a string bundle
+var gLockStrs = [];
 var gTypeStrs = [];
-gTypeStrs[nsIPrefBranch.PREF_STRING] = "string";
-gTypeStrs[nsIPrefBranch.PREF_INT] = "integer";
-gTypeStrs[nsIPrefBranch.PREF_BOOL] = "boolean";
 
 const PREF_IS_DEFAULT_VALUE = 0;
 const PREF_IS_USER_SET = 1;
@@ -61,6 +58,7 @@ var gFastIndex = 0;
 var gSortedColumn = "prefCol";
 var gSortFunction = null;
 var gSortDirection = 1; // 1 is ascending; -1 is descending
+var gConfigBundle = null;
 
 var view = {
   get rowCount() { return gPrefArray.length; },
@@ -258,7 +256,17 @@ function fetchPref(prefName, prefIndex)
 
 function onConfigLoad()
 {
-  document.title = "about:config";
+  // Load strings
+  gConfigBundle = document.getElementById("configBundle");
+  document.title = gConfigBundle.getString("title");
+
+  gLockStrs[PREF_IS_DEFAULT_VALUE] = gConfigBundle.getString("default");
+  gLockStrs[PREF_IS_USER_SET] = gConfigBundle.getString("user");
+  gLockStrs[PREF_IS_LOCKED] = gConfigBundle.getString("locked");
+
+  gTypeStrs[nsIPrefBranch.PREF_STRING] = gConfigBundle.getString("string");
+  gTypeStrs[nsIPrefBranch.PREF_INT] = gConfigBundle.getString("int");
+  gTypeStrs[nsIPrefBranch.PREF_BOOL] = gConfigBundle.getString("bool");
 
   var prefCount = { value: 0 };
   var prefArray = gPrefBranch.getChildList("", prefCount);
@@ -296,6 +304,7 @@ function onConfigLoad()
 function onConfigUnload()
 {
   gPrefBranch.removeObserver("", gPrefListener);
+  document.getElementById("configTree").view = null;
 }
 
 function prefColSortFunction(x, y)
@@ -376,11 +385,11 @@ function NewPref(type)
   var dummy = { value: 0 };
   // XXX get these from a string bundle
   if (gPromptService.prompt(window,
-                           "New " + gTypeStrs[type] + " value",
-                           "Enter the preference name",
-                           result,
-                           null,
-                           dummy)) {
+                            gConfigBundle.getFormattedString("new_title", [gTypeStrs[type]]),
+                            gConfigBundle.getString("new_prompt"),
+                            result,
+                            null,
+                            dummy)) {
     var pref;
     if (result.value in gPrefHash)
       pref = gPrefHash[result.value];
@@ -405,11 +414,11 @@ function ModifyPref(entry)
   var dummy = { value: 0 };
   // XXX get this from a string bundle
   if (!gPromptService.prompt(window,
-                            "Enter " + gTypeStrs[entry.typeCol] + " value",
-                            entry.prefCol,
-                            result,
-                            null,
-                            dummy))
+                             gConfigBundle.getFormattedString("modify_title", [gTypeStrs[entry.typeCol]]),
+                             entry.prefCol,
+                             result,
+                             null,
+                             dummy))
     return false;
   switch (entry.typeCol) {
     case nsIPrefBranch.PREF_BOOL:
