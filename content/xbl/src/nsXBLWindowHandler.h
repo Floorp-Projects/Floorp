@@ -83,7 +83,7 @@ protected:
 
     // create the event handler list from the given document/URI
   void GetHandlers(nsIXBLDocumentInfo* aInfo,
-                   const nsAReadableCString& aRef,
+                   const nsACString& aRef,
                    nsIXBLPrototypeHandler** aResult) ;
 
     // does the handler care about the particular event?

@@ -638,14 +638,14 @@ nsXULDocument::GetArena(nsIArena** aArena)
 // "cached XUL" type which is completely internal and may confuse
 // people
 NS_IMETHODIMP
-nsXULDocument::GetContentType(nsAWritableString& aContentType)
+nsXULDocument::GetContentType(nsAString& aContentType)
 {
     aContentType.Assign(NS_LITERAL_STRING("application/vnd.mozilla.xul+xml"));
     return NS_OK;
 }
 
 NS_IMETHODIMP
-nsXULDocument::GetContentLanguage(nsAWritableString& aContentLanguage) const
+nsXULDocument::GetContentLanguage(nsAString& aContentLanguage) const
 {
     aContentLanguage.Truncate();
     return NS_OK;
@@ -891,14 +891,14 @@ nsXULDocument::SetBaseURL(nsIURI* aURL)
 }
 
 NS_IMETHODIMP
-nsXULDocument::GetBaseTarget(nsAWritableString &aBaseTarget)
+nsXULDocument::GetBaseTarget(nsAString &aBaseTarget)
 {
   aBaseTarget.Truncate();
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsXULDocument::SetBaseTarget(const nsAReadableString &aBaseTarget)
+nsXULDocument::SetBaseTarget(const nsAString &aBaseTarget)
 {
   return NS_OK;
 }
@@ -920,14 +920,14 @@ nsXULDocument::GetStyleSheets(nsIDOMStyleSheetList** aStyleSheets)
 }
 
 NS_IMETHODIMP
-nsXULDocument::GetDocumentCharacterSet(nsAWritableString& oCharSetID)
+nsXULDocument::GetDocumentCharacterSet(nsAString& oCharSetID)
 {
     oCharSetID.Assign(mCharSetID);
     return NS_OK;
 }
 
 NS_IMETHODIMP
-nsXULDocument::SetDocumentCharacterSet(const nsAReadableString& aCharSetID)
+nsXULDocument::SetDocumentCharacterSet(const nsAString& aCharSetID)
 {
   if (!mCharSetID.Equals(aCharSetID)) {
     mCharSetID.Assign(aCharSetID);
@@ -1039,7 +1039,7 @@ nsXULDocument::SetWordBreaker(nsIWordBreaker* aWordBreaker)
 
 NS_IMETHODIMP
 nsXULDocument::GetHeaderData(nsIAtom* aHeaderField,
-                             nsAWritableString& aData) const
+                             nsAString& aData) const
 {
   aData.Truncate();
   return NS_OK;
@@ -1047,7 +1047,7 @@ nsXULDocument::GetHeaderData(nsIAtom* aHeaderField,
 
 NS_IMETHODIMP
 nsXULDocument:: SetHeaderData(nsIAtom* aHeaderField,
-                              const nsAReadableString& aData)
+                              const nsAString& aData)
 {
   return NS_OK;
 }
@@ -2329,7 +2329,7 @@ nsXULDocument::SelectAll()
 }
 
 NS_IMETHODIMP
-nsXULDocument::FindNext(const nsAReadableString &aSearchStr,
+nsXULDocument::FindNext(const nsAString &aSearchStr,
                         PRBool aMatchCase, PRBool aSearchDown,
                         PRBool &aIsFound)
 {
@@ -2511,7 +2511,7 @@ nsXULDocument::SetTitle(const PRUnichar *aTitle)
 //
 
 NS_IMETHODIMP
-nsXULDocument::AddElementForID(const nsAReadableString& aID, nsIContent* aElement)
+nsXULDocument::AddElementForID(const nsAString& aID, nsIContent* aElement)
 {
     NS_PRECONDITION(aElement != nsnull, "null ptr");
     if (! aElement)
@@ -2523,7 +2523,7 @@ nsXULDocument::AddElementForID(const nsAReadableString& aID, nsIContent* aElemen
 
 
 NS_IMETHODIMP
-nsXULDocument::RemoveElementForID(const nsAReadableString& aID, nsIContent* aElement)
+nsXULDocument::RemoveElementForID(const nsAString& aID, nsIContent* aElement)
 {
     NS_PRECONDITION(aElement != nsnull, "null ptr");
     if (! aElement)
@@ -2534,7 +2534,7 @@ nsXULDocument::RemoveElementForID(const nsAReadableString& aID, nsIContent* aEle
 }
 
 NS_IMETHODIMP
-nsXULDocument::GetElementsForID(const nsAReadableString& aID, nsISupportsArray* aElements)
+nsXULDocument::GetElementsForID(const nsAString& aID, nsISupportsArray* aElements)
 {
     NS_PRECONDITION(aElements != nsnull, "null ptr");
     if (! aElements)
@@ -2681,7 +2681,7 @@ nsXULDocument::GetDocumentElement(nsIDOMElement** aDocumentElement)
 
 
 NS_IMETHODIMP
-nsXULDocument::CreateElement(const nsAReadableString& aTagName,
+nsXULDocument::CreateElement(const nsAString& aTagName,
                              nsIDOMElement** aReturn)
 {
     NS_PRECONDITION(aReturn != nsnull, "null ptr");
@@ -2736,7 +2736,7 @@ nsXULDocument::CreateDocumentFragment(nsIDOMDocumentFragment** aReturn)
 
 
 NS_IMETHODIMP
-nsXULDocument::CreateTextNode(const nsAReadableString& aData,
+nsXULDocument::CreateTextNode(const nsAString& aData,
                               nsIDOMText** aReturn)
 {
     NS_PRECONDITION(aReturn != nsnull, "null ptr");
@@ -2761,7 +2761,7 @@ nsXULDocument::CreateTextNode(const nsAReadableString& aData,
 
 
 NS_IMETHODIMP
-nsXULDocument::CreateComment(const nsAReadableString& aData,
+nsXULDocument::CreateComment(const nsAString& aData,
                              nsIDOMComment** aReturn)
 {
     nsCOMPtr<nsIContent> comment;
@@ -2778,7 +2778,7 @@ nsXULDocument::CreateComment(const nsAReadableString& aData,
 
 
 NS_IMETHODIMP
-nsXULDocument::CreateCDATASection(const nsAReadableString& aData,
+nsXULDocument::CreateCDATASection(const nsAString& aData,
                                   nsIDOMCDATASection** aReturn)
 {
     NS_NOTREACHED("nsXULDocument::CreateCDATASection");
@@ -2787,8 +2787,8 @@ nsXULDocument::CreateCDATASection(const nsAReadableString& aData,
 
 
 NS_IMETHODIMP
-nsXULDocument::CreateProcessingInstruction(const nsAReadableString& aTarget,
-                                           const nsAReadableString& aData,
+nsXULDocument::CreateProcessingInstruction(const nsAString& aTarget,
+                                           const nsAString& aData,
                                            nsIDOMProcessingInstruction** aReturn)
 {
     NS_ENSURE_ARG_POINTER(aReturn);
@@ -2807,7 +2807,7 @@ nsXULDocument::CreateProcessingInstruction(const nsAReadableString& aTarget,
 
 
 NS_IMETHODIMP
-nsXULDocument::CreateAttribute(const nsAReadableString& aName,
+nsXULDocument::CreateAttribute(const nsAString& aName,
                                nsIDOMAttr** aReturn)
 {
     NS_NOTREACHED("nsXULDocument::CreateAttribute");
@@ -2816,7 +2816,7 @@ nsXULDocument::CreateAttribute(const nsAReadableString& aName,
 
 
 NS_IMETHODIMP
-nsXULDocument::CreateEntityReference(const nsAReadableString& aName,
+nsXULDocument::CreateEntityReference(const nsAString& aName,
                                      nsIDOMEntityReference** aReturn)
 {
     NS_NOTREACHED("nsXULDocument::CreateEntityReference");
@@ -2825,7 +2825,7 @@ nsXULDocument::CreateEntityReference(const nsAReadableString& aName,
 
 
 NS_IMETHODIMP
-nsXULDocument::GetElementsByTagName(const nsAReadableString& aTagName,
+nsXULDocument::GetElementsByTagName(const nsAString& aTagName,
                                     nsIDOMNodeList** aReturn)
 {
     nsresult rv;
@@ -2851,8 +2851,8 @@ nsXULDocument::GetElementsByTagName(const nsAReadableString& aTagName,
 }
 
 NS_IMETHODIMP
-nsXULDocument::GetElementsByAttribute(const nsAReadableString& aAttribute,
-                                      const nsAReadableString& aValue,
+nsXULDocument::GetElementsByAttribute(const nsAString& aAttribute,
+                                      const nsAString& aValue,
                                       nsIDOMNodeList** aReturn)
 {
     nsresult rv;
@@ -2881,8 +2881,8 @@ nsXULDocument::GetElementsByAttribute(const nsAReadableString& aAttribute,
 
 
 NS_IMETHODIMP
-nsXULDocument::Persist(const nsAReadableString& aID,
-                       const nsAReadableString& aAttr)
+nsXULDocument::Persist(const nsAString& aID,
+                       const nsAString& aAttr)
 {
     // If we're currently reading persisted attributes out of the
     // localstore, _don't_ re-enter and try to set them again!
@@ -3031,7 +3031,7 @@ nsXULDocument::DestroyForwardReferences()
 //
 
 NS_IMETHODIMP
-nsXULDocument::GetCharacterSet(nsAWritableString& aCharacterSet)
+nsXULDocument::GetCharacterSet(nsAString& aCharacterSet)
 {
   return GetDocumentCharacterSet(aCharacterSet);
 }
@@ -3214,7 +3214,7 @@ nsXULDocument::GetHeight(PRInt32* aHeight)
 
 NS_IMETHODIMP
 nsXULDocument::AddBinding(nsIDOMElement* aContent,
-                          const nsAReadableString& aURL)
+                          const nsAString& aURL)
 {
   nsCOMPtr<nsIBindingManager> bm;
   GetBindingManager(getter_AddRefs(bm));
@@ -3225,7 +3225,7 @@ nsXULDocument::AddBinding(nsIDOMElement* aContent,
 
 NS_IMETHODIMP
 nsXULDocument::RemoveBinding(nsIDOMElement* aContent,
-                             const nsAReadableString& aURL)
+                             const nsAString& aURL)
 {
   if (mBindingManager) {
     nsCOMPtr<nsIContent> content(do_QueryInterface(aContent));
@@ -3236,7 +3236,7 @@ nsXULDocument::RemoveBinding(nsIDOMElement* aContent,
 }
 
 NS_IMETHODIMP
-nsXULDocument::LoadBindingDocument(const nsAReadableString& aURL, nsIDOMDocument** aResult)
+nsXULDocument::LoadBindingDocument(const nsAString& aURL, nsIDOMDocument** aResult)
 {
   if (mBindingManager) {
     nsCOMPtr<nsIDocument> doc;
@@ -3269,7 +3269,7 @@ nsXULDocument::GetBindingParent(nsIDOMNode* aNode, nsIDOMElement** aResult)
 static nsresult
 GetElementByAttribute(nsIContent* aContent,
                       nsIAtom* aAttrName,
-                      const nsAReadableString& aAttrValue,
+                      const nsAString& aAttrValue,
                       PRBool aUniversalMatch,
                       nsIDOMElement** aResult)
 {
@@ -3300,8 +3300,8 @@ GetElementByAttribute(nsIContent* aContent,
 
 NS_IMETHODIMP
 nsXULDocument::GetAnonymousElementByAttribute(nsIDOMElement* aElement,
-                                              const nsAReadableString& aAttrName,
-                                              const nsAReadableString& aAttrValue,
+                                              const nsAString& aAttrName,
+                                              const nsAString& aAttrValue,
                                               nsIDOMElement** aResult)
 {
   *aResult = nsnull;
@@ -3358,7 +3358,7 @@ nsXULDocument::GetLocation(nsIDOMLocation** aLocation)
 }
 
 NS_IMETHODIMP
-nsXULDocument::GetTitle(nsAWritableString& aTitle)
+nsXULDocument::GetTitle(nsAString& aTitle)
 {
     aTitle.Assign(mDocumentTitle);
 
@@ -3366,7 +3366,7 @@ nsXULDocument::GetTitle(nsAWritableString& aTitle)
 }
 
 NS_IMETHODIMP
-nsXULDocument::SetTitle(const nsAReadableString& aTitle)
+nsXULDocument::SetTitle(const nsAString& aTitle)
 {
     for (PRInt32 i = mPresShells.Count() - 1; i >= 0; --i) {
         nsIPresShell* shell = NS_STATIC_CAST(nsIPresShell*, mPresShells[i]);
@@ -3405,14 +3405,14 @@ nsXULDocument::SetTitle(const nsAReadableString& aTitle)
 }
 
 NS_IMETHODIMP
-nsXULDocument::GetDir(nsAWritableString& aDirection)
+nsXULDocument::GetDir(nsAString& aDirection)
 {
   aDirection.Assign(NS_LITERAL_STRING("ltr"));
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsXULDocument::SetDir(const nsAReadableString& aDirection)
+nsXULDocument::SetDir(const nsAString& aDirection)
 {
   return NS_OK;
 }
@@ -3488,8 +3488,8 @@ nsXULDocument::ImportNode(nsIDOMNode* aImportedNode,
 }
 
 NS_IMETHODIMP
-nsXULDocument::CreateElementNS(const nsAReadableString& aNamespaceURI,
-                               const nsAReadableString& aQualifiedName,
+nsXULDocument::CreateElementNS(const nsAString& aNamespaceURI,
+                               const nsAString& aQualifiedName,
                                nsIDOMElement** aReturn)
 {
     NS_ENSURE_ARG_POINTER(aReturn);
@@ -3547,8 +3547,8 @@ nsXULDocument::CreateElementNS(const nsAReadableString& aNamespaceURI,
 }
 
 NS_IMETHODIMP
-nsXULDocument::CreateAttributeNS(const nsAReadableString& aNamespaceURI,
-                                 const nsAReadableString& aQualifiedName,
+nsXULDocument::CreateAttributeNS(const nsAString& aNamespaceURI,
+                                 const nsAString& aQualifiedName,
                                  nsIDOMAttr** aReturn)
 {
   NS_NOTYETIMPLEMENTED("write me");
@@ -3556,7 +3556,7 @@ nsXULDocument::CreateAttributeNS(const nsAReadableString& aNamespaceURI,
 }
 
 NS_IMETHODIMP
-nsXULDocument::GetElementById(const nsAReadableString& aId,
+nsXULDocument::GetElementById(const nsAString& aId,
                               nsIDOMElement** aReturn)
 {
     NS_ENSURE_ARG_POINTER(aReturn);
@@ -3583,8 +3583,8 @@ nsXULDocument::GetElementById(const nsAReadableString& aId,
 }
 
 NS_IMETHODIMP
-nsXULDocument::GetElementsByTagNameNS(const nsAReadableString& aNamespaceURI,
-                                      const nsAReadableString& aLocalName,
+nsXULDocument::GetElementsByTagNameNS(const nsAString& aNamespaceURI,
+                                      const nsAString& aLocalName,
                                       nsIDOMNodeList** aReturn)
 {
     nsresult rv;
@@ -3854,7 +3854,7 @@ nsXULDocument::RemoveElementsFromMapByContent(const PRUnichar* aID,
 //
 
 NS_IMETHODIMP
-nsXULDocument::GetNodeName(nsAWritableString& aNodeName)
+nsXULDocument::GetNodeName(nsAString& aNodeName)
 {
     aNodeName.Assign(NS_LITERAL_STRING("#document"));
     return NS_OK;
@@ -3862,7 +3862,7 @@ nsXULDocument::GetNodeName(nsAWritableString& aNodeName)
 
 
 NS_IMETHODIMP
-nsXULDocument::GetNodeValue(nsAWritableString& aNodeValue)
+nsXULDocument::GetNodeValue(nsAString& aNodeValue)
 {
     SetDOMStringToNull(aNodeValue);
 
@@ -3871,7 +3871,7 @@ nsXULDocument::GetNodeValue(nsAWritableString& aNodeValue)
 
 
 NS_IMETHODIMP
-nsXULDocument::SetNodeValue(const nsAReadableString& aNodeValue)
+nsXULDocument::SetNodeValue(const nsAString& aNodeValue)
 {
     return NS_ERROR_DOM_NO_MODIFICATION_ALLOWED_ERR;
 }
@@ -4044,7 +4044,7 @@ nsXULDocument::GetOwnerDocument(nsIDOMDocument** aOwnerDocument)
 
 
 NS_IMETHODIMP
-nsXULDocument::GetNamespaceURI(nsAWritableString& aNamespaceURI)
+nsXULDocument::GetNamespaceURI(nsAString& aNamespaceURI)
 {
     SetDOMStringToNull(aNamespaceURI);
 
@@ -4053,7 +4053,7 @@ nsXULDocument::GetNamespaceURI(nsAWritableString& aNamespaceURI)
 
 
 NS_IMETHODIMP
-nsXULDocument::GetPrefix(nsAWritableString& aPrefix)
+nsXULDocument::GetPrefix(nsAString& aPrefix)
 {
     SetDOMStringToNull(aPrefix);
 
@@ -4062,14 +4062,14 @@ nsXULDocument::GetPrefix(nsAWritableString& aPrefix)
 
 
 NS_IMETHODIMP
-nsXULDocument::SetPrefix(const nsAReadableString& aPrefix)
+nsXULDocument::SetPrefix(const nsAString& aPrefix)
 {
     return NS_ERROR_DOM_NO_MODIFICATION_ALLOWED_ERR;
 }
 
 
 NS_IMETHODIMP
-nsXULDocument::GetLocalName(nsAWritableString& aLocalName)
+nsXULDocument::GetLocalName(nsAString& aLocalName)
 {
     SetDOMStringToNull(aLocalName);
 
@@ -4129,8 +4129,8 @@ nsXULDocument::Normalize()
 
 
 NS_IMETHODIMP
-nsXULDocument::IsSupported(const nsAReadableString& aFeature,
-                           const nsAReadableString& aVersion,
+nsXULDocument::IsSupported(const nsAString& aFeature,
+                           const nsAString& aVersion,
                            PRBool* aReturn)
 {
   NS_NOTYETIMPLEMENTED("write me");
@@ -4138,7 +4138,7 @@ nsXULDocument::IsSupported(const nsAReadableString& aFeature,
 }
 
 NS_IMETHODIMP
-nsXULDocument::GetBaseURI(nsAWritableString &aURI)
+nsXULDocument::GetBaseURI(nsAString &aURI)
 {
   aURI.Truncate();
   if (mDocumentBaseURL) {
@@ -4151,16 +4151,16 @@ nsXULDocument::GetBaseURI(nsAWritableString &aURI)
 
 
 NS_IMETHODIMP
-nsXULDocument::LookupNamespacePrefix(const nsAReadableString& aNamespaceURI,
-                                     nsAWritableString& aPrefix)
+nsXULDocument::LookupNamespacePrefix(const nsAString& aNamespaceURI,
+                                     nsAString& aPrefix)
 {
   NS_NOTYETIMPLEMENTED("write me");
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
-nsXULDocument::LookupNamespaceURI(const nsAReadableString& aNamespacePrefix,
-                                  nsAWritableString& aNamespaceURI) 
+nsXULDocument::LookupNamespaceURI(const nsAString& aNamespacePrefix,
+                                  nsAString& aNamespaceURI) 
 {
   NS_NOTYETIMPLEMENTED("write me");
   return NS_ERROR_NOT_IMPLEMENTED;
@@ -4408,7 +4408,7 @@ nsXULDocument::StartLayout(void)
 
 nsresult
 nsXULDocument::GetElementsByTagName(nsIContent *aContent,
-                                    const nsAReadableString& aName,
+                                    const nsAString& aName,
                                     PRInt32 aNamespaceID,
                                     nsRDFDOMNodeList* aElements)
 {
@@ -4470,8 +4470,8 @@ nsXULDocument::GetElementsByTagName(nsIContent *aContent,
 
 nsresult
 nsXULDocument::GetElementsByAttribute(nsIDOMNode* aNode,
-                                        const nsAReadableString& aAttribute,
-                                        const nsAReadableString& aValue,
+                                        const nsAString& aAttribute,
+                                        const nsAString& aValue,
                                         nsRDFDOMNodeList* aElements)
 {
     nsresult rv;
@@ -4529,7 +4529,7 @@ nsXULDocument::GetElementsByAttribute(nsIDOMNode* aNode,
 
 
 nsresult
-nsXULDocument::ParseTagString(const nsAReadableString& aTagName, nsIAtom*& aName,
+nsXULDocument::ParseTagString(const nsAString& aTagName, nsIAtom*& aName,
                               nsIAtom*& aPrefix)
 {
     // Parse the tag into a name and prefix
@@ -4579,7 +4579,7 @@ nsXULDocument::RemoveEventListenerByIID(nsIDOMEventListener *aListener, const ns
 }
 
 NS_IMETHODIMP
-nsXULDocument::AddEventListener(const nsAReadableString& aType,
+nsXULDocument::AddEventListener(const nsAString& aType,
                                 nsIDOMEventListener* aListener,
                                 PRBool aUseCapture)
 {
@@ -4596,7 +4596,7 @@ nsXULDocument::AddEventListener(const nsAReadableString& aType,
 }
 
 NS_IMETHODIMP
-nsXULDocument::RemoveEventListener(const nsAReadableString& aType,
+nsXULDocument::RemoveEventListener(const nsAString& aType,
                                    nsIDOMEventListener* aListener,
                                    PRBool aUseCapture)
 {
@@ -4636,7 +4636,7 @@ nsXULDocument::DispatchEvent(nsIDOMEvent* aEvent, PRBool *_retval)
 }
 
 NS_IMETHODIMP
-nsXULDocument::CreateEvent(const nsAReadableString& aEventType,
+nsXULDocument::CreateEvent(const nsAString& aEventType,
                            nsIDOMEvent** aReturn)
 {
   // Obtain a presentation context
@@ -4690,7 +4690,7 @@ nsXULDocument::HandleEvent(nsIDOMEvent *aEvent)
 }
 
 nsresult
-nsXULDocument::CaptureEvent(const nsAReadableString& aType)
+nsXULDocument::CaptureEvent(const nsAString& aType)
 {
   nsIEventListenerManager *mManager;
 
@@ -4703,7 +4703,7 @@ nsXULDocument::CaptureEvent(const nsAReadableString& aType)
 }
 
 nsresult
-nsXULDocument::ReleaseEvent(const nsAReadableString& aType)
+nsXULDocument::ReleaseEvent(const nsAString& aType)
 {
   if (mListenerManager) {
     //mListenerManager->ReleaseEvent(aListener);

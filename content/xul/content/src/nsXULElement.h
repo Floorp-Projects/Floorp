@@ -262,7 +262,7 @@ public:
     nsCOMPtr<nsIStyleRule>   mInlineStyleRule;    // [OWNER]
     nsClassList*             mClassList;
 
-    nsresult GetAttr(PRInt32 aNameSpaceID, nsIAtom* aName, nsAWritableString& aValue);
+    nsresult GetAttr(PRInt32 aNameSpaceID, nsIAtom* aName, nsAString& aValue);
 };
 
 struct JSRuntime;
@@ -369,11 +369,11 @@ public:
     NS_IMETHOD GetNameSpaceID(PRInt32& aNameSpeceID) const;
     NS_IMETHOD GetTag(nsIAtom*& aResult) const;
     NS_IMETHOD GetNodeInfo(nsINodeInfo*& aResult) const;
-    NS_IMETHOD NormalizeAttrString(const nsAReadableString& aStr, nsINodeInfo*& aNodeInfo);
-    NS_IMETHOD SetAttr(PRInt32 aNameSpaceID, nsIAtom* aName, const nsAReadableString& aValue, PRBool aNotify);
-    NS_IMETHOD SetAttr(nsINodeInfo *aNodeInfo, const nsAReadableString& aValue, PRBool aNotify);
-    NS_IMETHOD GetAttr(PRInt32 aNameSpaceID, nsIAtom* aName, nsAWritableString& aResult) const;
-    NS_IMETHOD GetAttr(PRInt32 aNameSpaceID, nsIAtom* aName, nsIAtom*& aPrefix, nsAWritableString& aResult) const;
+    NS_IMETHOD NormalizeAttrString(const nsAString& aStr, nsINodeInfo*& aNodeInfo);
+    NS_IMETHOD SetAttr(PRInt32 aNameSpaceID, nsIAtom* aName, const nsAString& aValue, PRBool aNotify);
+    NS_IMETHOD SetAttr(nsINodeInfo *aNodeInfo, const nsAString& aValue, PRBool aNotify);
+    NS_IMETHOD GetAttr(PRInt32 aNameSpaceID, nsIAtom* aName, nsAString& aResult) const;
+    NS_IMETHOD GetAttr(PRInt32 aNameSpaceID, nsIAtom* aName, nsIAtom*& aPrefix, nsAString& aResult) const;
     NS_IMETHOD_(PRBool) HasAttr(PRInt32 aNameSpaceID, nsIAtom* aName) const;
     NS_IMETHOD UnsetAttr(PRInt32 aNameSpaceID, nsIAtom* aName, PRBool aNotify);
     NS_IMETHOD GetAttrNameAt(PRInt32 aIndex, PRInt32& aNameSpaceID, 
@@ -423,7 +423,7 @@ public:
     NS_IMETHOD SetLazyState(LazyState aFlags);
     NS_IMETHOD ClearLazyState(LazyState aFlags);
     NS_IMETHOD GetLazyState(LazyState aFlag, PRBool& aValue);
-    NS_IMETHOD AddScriptEventListener(nsIAtom* aName, const nsAReadableString& aValue);
+    NS_IMETHOD AddScriptEventListener(nsIAtom* aName, const nsAString& aValue);
     
     // nsIDOMNode (from nsIDOMElement)
     NS_DECL_NSIDOMNODE
@@ -435,9 +435,9 @@ public:
     NS_DECL_NSIDOMXULELEMENT
 
     // nsIDOMEventTarget interface (from nsIDOMEventReceiver)
-    NS_IMETHOD AddEventListener(const nsAReadableString& aType, nsIDOMEventListener* aListener, 
+    NS_IMETHOD AddEventListener(const nsAString& aType, nsIDOMEventListener* aListener, 
                                 PRBool aUseCapture);
-    NS_IMETHOD RemoveEventListener(const nsAReadableString& aType, nsIDOMEventListener* aListener, 
+    NS_IMETHOD RemoveEventListener(const nsAString& aType, nsIDOMEventListener* aListener, 
                                    PRBool aUseCapture);
     NS_IMETHOD DispatchEvent(nsIDOMEvent* aEvent, PRBool* _retval);
 
@@ -451,7 +451,7 @@ public:
     NS_IMETHOD CompileEventHandler(nsIScriptContext* aContext,
                                    void* aTarget,
                                    nsIAtom *aName,
-                                   const nsAReadableString& aBody,
+                                   const nsAString& aBody,
                                    void** aHandler);
     NS_IMETHOD GetCompiledEventHandler(nsIAtom *aName, void** aHandler);
 
@@ -472,7 +472,7 @@ protected:
     // Implementation methods
     nsresult EnsureContentsGenerated(void) const;
 
-    nsresult ExecuteOnBroadcastHandler(nsIDOMElement* anElement, const nsAReadableString& attrName);
+    nsresult ExecuteOnBroadcastHandler(nsIDOMElement* anElement, const nsAString& attrName);
 
     static nsresult
     ExecuteJSCode(nsIDOMElement* anElement, nsEvent* aEvent);
@@ -480,13 +480,13 @@ protected:
     // Static helpers
     static nsresult
     GetElementsByTagName(nsIDOMNode* aNode,
-                         const nsAReadableString& aTagName,
+                         const nsAString& aTagName,
                          nsRDFDOMNodeList* aElements);
 
     static nsresult
     GetElementsByAttribute(nsIDOMNode* aNode,
-                           const nsAReadableString& aAttributeName,
-                           const nsAReadableString& aAttributeValue,
+                           const nsAString& aAttributeName,
+                           const nsAString& aAttributeValue,
                            nsRDFDOMNodeList* aElements);
 
     static PRBool IsAncestor(nsIDOMNode* aParentNode, nsIDOMNode* aChildNode);

@@ -539,7 +539,7 @@ nsXMLContentSink::SetParser(nsIParser* aParser)
 
 // static
 void
-nsXMLContentSink::SplitXMLName(nsAReadableString& aString, nsIAtom **aPrefix,
+nsXMLContentSink::SplitXMLName(const nsAString& aString, nsIAtom **aPrefix,
                                nsIAtom **aLocalName)
 {
   nsReadingIterator<PRUnichar> iter, end;
@@ -764,7 +764,7 @@ nsXMLContentSink::ProcessBASETag()
 }
 
 nsresult
-nsXMLContentSink::ProcessHeaderData(nsIAtom* aHeader,const nsAReadableString& aValue,nsIHTMLContent* aContent)
+nsXMLContentSink::ProcessHeaderData(nsIAtom* aHeader,const nsAString& aValue,nsIHTMLContent* aContent)
 {
   nsresult rv=NS_OK;
   // XXX necko isn't going to process headers coming in from the parser          
@@ -812,7 +812,7 @@ nsXMLContentSink::ProcessMETATag()
 }
 
 NS_IMETHODIMP 
-nsXMLContentSink::SetDocumentCharset(nsAWritableString& aCharset)
+nsXMLContentSink::SetDocumentCharset(nsAString& aCharset)
 {
   if (mDocument) {
     return mDocument->SetDocumentCharacterSet(aCharset);
@@ -1819,7 +1819,7 @@ nsXMLContentSink::AddText(const PRUnichar* aText,
     mTextSize = NS_ACCUMULATION_BUFFER_SIZE;
   }
 
-  const nsAReadableString& str = Substring(aText, aText+aLength);
+  const nsAString& str = Substring(aText, aText+aLength);
 
   // Copy data from string into our buffer; flush buffer when it fills up
   PRInt32 offset = 0;

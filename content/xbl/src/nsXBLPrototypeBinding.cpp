@@ -254,7 +254,7 @@ static const PRInt32 kInsInitialSize = (NS_SIZE_IN_HEAP(sizeof(nsXBLInsertionPoi
 NS_IMPL_ISUPPORTS2(nsXBLPrototypeBinding, nsIXBLPrototypeBinding, nsISupportsWeakReference)
 
 // Constructors/Destructors
-nsXBLPrototypeBinding::nsXBLPrototypeBinding(const nsAReadableCString& aID, nsIXBLDocumentInfo* aInfo,
+nsXBLPrototypeBinding::nsXBLPrototypeBinding(const nsACString& aID, nsIXBLDocumentInfo* aInfo,
                                              nsIContent* aElement)
 : mInheritStyle(PR_TRUE), 
   mHasBaseProto(PR_TRUE),
@@ -412,7 +412,7 @@ nsXBLPrototypeBinding::LoadResources(PRBool* aResult)
 }
 
 NS_IMETHODIMP
-nsXBLPrototypeBinding::AddResource(nsIAtom* aResourceType, const nsAReadableString& aSrc)
+nsXBLPrototypeBinding::AddResource(nsIAtom* aResourceType, const nsAString& aSrc)
 {
   if (!mResources) {
     mResources = new nsXBLPrototypeResources(this);
@@ -1352,7 +1352,7 @@ nsXBLPrototypeBinding::ConstructInsertionTable(nsIContent* aContent)
 }
 
 NS_IMETHODIMP
-nsXBLPrototypeBinding::ConstructInterfaceTable(const nsAReadableString& aImpls)
+nsXBLPrototypeBinding::ConstructInterfaceTable(const nsAString& aImpls)
 {
   if (!aImpls.IsEmpty()) {
     // Obtain the interface info manager that can tell us the IID
@@ -1426,7 +1426,7 @@ nsXBLPrototypeBinding::AddResourceListener(nsIContent* aBoundElement)
 // Creation Routine ///////////////////////////////////////////////////////////////////////
 
 nsresult
-NS_NewXBLPrototypeBinding(const nsAReadableCString& aRef, nsIContent* aElement, 
+NS_NewXBLPrototypeBinding(const nsACString& aRef, nsIContent* aElement, 
                           nsIXBLDocumentInfo* aInfo, nsIXBLPrototypeBinding** aResult)
 {
   nsXBLPrototypeBinding * binding = new nsXBLPrototypeBinding(aRef, aInfo, aElement);

@@ -108,7 +108,7 @@ public:
   NS_IMETHOD WillResume(void);
   NS_IMETHOD SetParser(nsIParser* aParser);  
   NS_IMETHOD FlushPendingNotifications() { return NS_OK; }
-  NS_IMETHOD SetDocumentCharset(nsAWritableString& aCharset);
+  NS_IMETHOD SetDocumentCharset(nsAString& aCharset);
 
   // nsICSSLoaderObserver
   NS_IMETHOD StyleSheetLoaded(nsICSSStyleSheet*aSheet, PRBool aNotify);
@@ -143,7 +143,7 @@ protected:
 
   nsresult AddContentAsLeaf(nsIContent *aContent);
 
-  static void SplitXMLName(nsAReadableString& aString, nsIAtom **aPrefix,
+  static void SplitXMLName(const nsAString& aString, nsIAtom **aPrefix,
                            nsIAtom **aTagName);
   PRInt32 GetNameSpaceId(nsIAtom* aPrefix);
   nsINameSpace*    PopNameSpaces();
@@ -157,7 +157,7 @@ protected:
   nsresult ProcessBASETag();
   nsresult ProcessMETATag();
   nsresult ProcessLINKTag();
-  nsresult ProcessHeaderData(nsIAtom* aHeader,const nsAReadableString& aValue,nsIHTMLContent* aContent);
+  nsresult ProcessHeaderData(nsIAtom* aHeader,const nsAString& aValue,nsIHTMLContent* aContent);
 
   nsresult RefreshIfEnabled(nsIViewManager* vm);
   

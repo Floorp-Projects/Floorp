@@ -114,7 +114,7 @@ public:
     /**
      * Add a script event listener to the element.
      */
-    NS_IMETHOD AddScriptEventListener(nsIAtom* aName, const nsAReadableString& aValue) = 0;
+    NS_IMETHOD AddScriptEventListener(nsIAtom* aName, const nsAString& aValue) = 0;
 };
 
 #endif // nsIXULContent_h__

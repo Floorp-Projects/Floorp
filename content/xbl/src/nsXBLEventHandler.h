@@ -75,7 +75,7 @@ public:
     if (mNextHandler) mNextHandler->MarkForDeath(); mProtoHandler = nsnull; mEventReceiver = nsnull;
   }
 
-  static nsresult GetTextData(nsIContent *aParent, nsAWritableString& aResult);
+  static nsresult GetTextData(nsIContent *aParent, nsAString& aResult);
 
 protected:
   nsCOMPtr<nsIDOMEventReceiver> mEventReceiver;

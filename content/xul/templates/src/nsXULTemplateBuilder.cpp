@@ -1005,9 +1005,9 @@ nsXULTemplateBuilder::InitHTMLTemplateRoot()
 }
 
 void
-nsXULTemplateBuilder::ParseAttribute(const nsAReadableString& aAttributeValue,
-                                     void (*aVariableCallback)(nsXULTemplateBuilder*, const nsAReadableString&, void*),
-                                     void (*aTextCallback)(nsXULTemplateBuilder*, const nsAReadableString&, void*),
+nsXULTemplateBuilder::ParseAttribute(const nsAString& aAttributeValue,
+                                     void (*aVariableCallback)(nsXULTemplateBuilder*, const nsAString&, void*),
+                                     void (*aTextCallback)(nsXULTemplateBuilder*, const nsAString&, void*),
                                      void* aClosure)
 {
     nsAString::const_iterator done_parsing;
@@ -1094,7 +1094,7 @@ struct SubstituteTextClosure {
 
 nsresult
 nsXULTemplateBuilder::SubstituteText(nsTemplateMatch& aMatch,
-                                     const nsAReadableString& aAttributeValue,
+                                     const nsAString& aAttributeValue,
                                      nsAString& aResult)
 {
     // See if it's the special value "..."
@@ -1128,7 +1128,7 @@ nsXULTemplateBuilder::SubstituteText(nsTemplateMatch& aMatch,
 
 void
 nsXULTemplateBuilder::SubstituteTextAppendText(nsXULTemplateBuilder* aThis,
-                                               const nsAReadableString& aText,
+                                               const nsAString& aText,
                                                void* aClosure)
 {
     // Append aString to the closure's result
@@ -1138,7 +1138,7 @@ nsXULTemplateBuilder::SubstituteTextAppendText(nsXULTemplateBuilder* aThis,
 
 void
 nsXULTemplateBuilder::SubstituteTextReplaceVariable(nsXULTemplateBuilder* aThis,
-                                                    const nsAReadableString& aVariable,
+                                                    const nsAString& aVariable,
                                                     void* aClosure)
 {
     // Substitute the value for the variable and append to the
@@ -1208,7 +1208,7 @@ struct IsVarInSetClosure {
 
 void
 nsXULTemplateBuilder::IsVarInSet(nsXULTemplateBuilder* aThis,
-                                 const nsAReadableString& aVariable,
+                                 const nsAString& aVariable,
                                  void* aClosure)
 {
     IsVarInSetClosure* c = NS_STATIC_CAST(IsVarInSetClosure*, aClosure);
@@ -1229,7 +1229,7 @@ nsXULTemplateBuilder::IsVarInSet(nsXULTemplateBuilder* aThis,
 
 PRBool
 nsXULTemplateBuilder::IsAttrImpactedByVars(nsTemplateMatch& aMatch,
-                                           const nsAReadableString& aAttributeValue,
+                                           const nsAString& aAttributeValue,
                                            const VariableSet& aModifiedVars)
 {
     // XXX at some point, it might be good to remember what attributes
@@ -2307,7 +2307,7 @@ nsXULTemplateBuilder::CompileSimpleRule(nsIContent* aRuleElement,
 PRBool
 nsXULTemplateBuilder::CompileSimpleAttributeCondition(PRInt32 aNameSpaceID,
                                                       nsIAtom* aAttribute,
-                                                      const nsAReadableString& aValue,
+                                                      const nsAString& aValue,
                                                       InnerNode* aParentNode,
                                                       TestNode** aResult)
 {
@@ -2365,7 +2365,7 @@ nsXULTemplateBuilder::AddSimpleRuleBindings(nsTemplateRule* aRule, nsIContent* a
 
 void
 nsXULTemplateBuilder::AddBindingsFor(nsXULTemplateBuilder* aThis,
-                                     const nsAReadableString& aVariable,
+                                     const nsAString& aVariable,
                                      void* aClosure)
 {
     // We should *only* be recieving "rdf:"-style variables. Make
@@ -2380,7 +2380,7 @@ nsXULTemplateBuilder::AddBindingsFor(nsXULTemplateBuilder* aThis,
 
     // Strip it down to the raw RDF property by clobbering the "rdf:"
     // prefix
-    const nsAReadableString& propertyStr = Substring(aVariable, PRUint32(4), aVariable.Length() - 4);
+    const nsAString& propertyStr = Substring(aVariable, PRUint32(4), aVariable.Length() - 4);
 
     nsCOMPtr<nsIRDFResource> property;
     gRDFService->GetUnicodeResource(nsAutoString(propertyStr).get(), getter_AddRefs(property));

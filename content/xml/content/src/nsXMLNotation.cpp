@@ -50,9 +50,9 @@ class nsXMLNotation : public nsGenericDOMDataNode,
                       public nsIDOMNotation
 {
 public:
-  nsXMLNotation(const nsAReadableString& aName,
-                const nsAReadableString& aPublicId,
-                const nsAReadableString& aSystemId);
+  nsXMLNotation(const nsAString& aName,
+                const nsAString& aPublicId,
+                const nsAString& aSystemId);
   virtual ~nsXMLNotation();
 
   // nsISupports
@@ -81,9 +81,9 @@ protected:
 
 nsresult
 NS_NewXMLNotation(nsIContent** aInstancePtrResult,
-                  const nsAReadableString& aName,
-                  const nsAReadableString& aPublicId,
-                  const nsAReadableString& aSystemId)
+                  const nsAString& aName,
+                  const nsAString& aPublicId,
+                  const nsAString& aSystemId)
 {
   *aInstancePtrResult = new nsXMLNotation(aName, aPublicId, aSystemId);
   NS_ENSURE_TRUE(*aInstancePtrResult, NS_ERROR_OUT_OF_MEMORY);
@@ -93,9 +93,9 @@ NS_NewXMLNotation(nsIContent** aInstancePtrResult,
   return NS_OK;
 }
 
-nsXMLNotation::nsXMLNotation(const nsAReadableString& aName,
-                             const nsAReadableString& aPublicId,
-                             const nsAReadableString& aSystemId) :
+nsXMLNotation::nsXMLNotation(const nsAString& aName,
+                             const nsAString& aPublicId,
+                             const nsAString& aSystemId) :
   mName(aName), mPublicId(aPublicId), mSystemId(aSystemId)
 {
 }
@@ -118,7 +118,7 @@ NS_IMPL_RELEASE_INHERITED(nsXMLNotation, nsGenericDOMDataNode)
 
 
 NS_IMETHODIMP    
-nsXMLNotation::GetPublicId(nsAWritableString& aPublicId)
+nsXMLNotation::GetPublicId(nsAString& aPublicId)
 {
   aPublicId.Assign(mPublicId);
 
@@ -126,7 +126,7 @@ nsXMLNotation::GetPublicId(nsAWritableString& aPublicId)
 }
 
 NS_IMETHODIMP    
-nsXMLNotation::GetSystemId(nsAWritableString& aSystemId)
+nsXMLNotation::GetSystemId(nsAString& aSystemId)
 {
   aSystemId.Assign(mSystemId);
 
@@ -145,7 +145,7 @@ nsXMLNotation::GetTag(nsIAtom*& aResult) const
 }
 
 NS_IMETHODIMP
-nsXMLNotation::GetNodeName(nsAWritableString& aNodeName)
+nsXMLNotation::GetNodeName(nsAString& aNodeName)
 {
   aNodeName.Assign(mName);
   return NS_OK;

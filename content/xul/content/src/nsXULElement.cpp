@@ -710,21 +710,21 @@ nsXULElement::QueryInterface(REFNSIID iid, void** result)
 // nsIDOMNode interface
 
 NS_IMETHODIMP
-nsXULElement::GetNodeName(nsAWritableString& aNodeName)
+nsXULElement::GetNodeName(nsAString& aNodeName)
 {
     return NodeInfo()->GetQualifiedName(aNodeName);
 }
 
 
 NS_IMETHODIMP
-nsXULElement::GetNodeValue(nsAWritableString& aNodeValue)
+nsXULElement::GetNodeValue(nsAString& aNodeValue)
 {
     aNodeValue.Truncate();
     return NS_OK;
 }
 
 NS_IMETHODIMP
-nsXULElement::SetNodeValue(const nsAReadableString& aNodeValue)
+nsXULElement::SetNodeValue(const nsAString& aNodeValue)
 {
     return NS_ERROR_DOM_NO_MODIFICATION_ALLOWED_ERR;
 }
@@ -945,21 +945,21 @@ nsXULElement::GetOwnerDocument(nsIDOMDocument** aOwnerDocument)
 
 
 NS_IMETHODIMP
-nsXULElement::GetNamespaceURI(nsAWritableString& aNamespaceURI)
+nsXULElement::GetNamespaceURI(nsAString& aNamespaceURI)
 {
     return NodeInfo()->GetNamespaceURI(aNamespaceURI);
 }
 
 
 NS_IMETHODIMP
-nsXULElement::GetPrefix(nsAWritableString& aPrefix)
+nsXULElement::GetPrefix(nsAString& aPrefix)
 {
     return NodeInfo()->GetPrefix(aPrefix);
 }
 
 
 NS_IMETHODIMP
-nsXULElement::SetPrefix(const nsAReadableString& aPrefix)
+nsXULElement::SetPrefix(const nsAString& aPrefix)
 {
     // XXX: Validate the prefix string!
 
@@ -985,7 +985,7 @@ nsXULElement::SetPrefix(const nsAReadableString& aPrefix)
 
 
 NS_IMETHODIMP
-nsXULElement::GetLocalName(nsAWritableString& aLocalName)
+nsXULElement::GetLocalName(nsAString& aLocalName)
 {
     return NodeInfo()->GetLocalName(aLocalName);
 }
@@ -1264,8 +1264,8 @@ nsXULElement::Normalize()
 
 
 NS_IMETHODIMP
-nsXULElement::IsSupported(const nsAReadableString& aFeature,
-                          const nsAReadableString& aVersion,
+nsXULElement::IsSupported(const nsAString& aFeature,
+                          const nsAString& aVersion,
                           PRBool* aReturn)
 {
   NS_NOTYETIMPLEMENTED("write me!");
@@ -1277,7 +1277,7 @@ nsXULElement::IsSupported(const nsAReadableString& aFeature,
 // nsIDOMElement interface
 
 NS_IMETHODIMP
-nsXULElement::GetTagName(nsAWritableString& aTagName)
+nsXULElement::GetTagName(nsAString& aTagName)
 {
     return NodeInfo()->GetQualifiedName(aTagName);
 }
@@ -1292,8 +1292,8 @@ nsXULElement::GetNodeInfo(nsINodeInfo*& aResult) const
 }
 
 NS_IMETHODIMP
-nsXULElement::GetAttribute(const nsAReadableString& aName,
-                           nsAWritableString& aReturn)
+nsXULElement::GetAttribute(const nsAString& aName,
+                           nsAString& aReturn)
 {
     nsresult rv;
     PRInt32 nameSpaceID;
@@ -1315,8 +1315,8 @@ nsXULElement::GetAttribute(const nsAReadableString& aName,
 
 
 NS_IMETHODIMP
-nsXULElement::SetAttribute(const nsAReadableString& aName,
-                           const nsAReadableString& aValue)
+nsXULElement::SetAttribute(const nsAString& aName,
+                           const nsAString& aValue)
 {
     nsresult rv;
 
@@ -1335,7 +1335,7 @@ nsXULElement::SetAttribute(const nsAReadableString& aName,
 
 
 NS_IMETHODIMP
-nsXULElement::RemoveAttribute(const nsAReadableString& aName)
+nsXULElement::RemoveAttribute(const nsAString& aName)
 {
     nsresult rv;
 
@@ -1359,7 +1359,7 @@ nsXULElement::RemoveAttribute(const nsAReadableString& aName)
 
 
 NS_IMETHODIMP
-nsXULElement::GetAttributeNode(const nsAReadableString& aName,
+nsXULElement::GetAttributeNode(const nsAString& aName,
                                nsIDOMAttr** aReturn)
 {
     NS_PRECONDITION(aReturn != nsnull, "null ptr");
@@ -1419,7 +1419,7 @@ nsXULElement::RemoveAttributeNode(nsIDOMAttr* aOldAttr, nsIDOMAttr** aReturn)
 
 
 NS_IMETHODIMP
-nsXULElement::GetElementsByTagName(const nsAReadableString& aName,
+nsXULElement::GetElementsByTagName(const nsAString& aName,
                                    nsIDOMNodeList** aReturn)
 {
     nsresult rv;
@@ -1441,9 +1441,9 @@ nsXULElement::GetElementsByTagName(const nsAReadableString& aName,
 }
 
 NS_IMETHODIMP
-nsXULElement::GetAttributeNS(const nsAReadableString& aNamespaceURI,
-                             const nsAReadableString& aLocalName,
-                             nsAWritableString& aReturn)
+nsXULElement::GetAttributeNS(const nsAString& aNamespaceURI,
+                             const nsAString& aLocalName,
+                             nsAString& aReturn)
 {
     nsCOMPtr<nsIAtom> name(dont_AddRef(NS_NewAtom(aLocalName)));
     PRInt32 nsid;
@@ -1463,9 +1463,9 @@ nsXULElement::GetAttributeNS(const nsAReadableString& aNamespaceURI,
 }
 
 NS_IMETHODIMP
-nsXULElement::SetAttributeNS(const nsAReadableString& aNamespaceURI,
-                             const nsAReadableString& aQualifiedName,
-                             const nsAReadableString& aValue)
+nsXULElement::SetAttributeNS(const nsAString& aNamespaceURI,
+                             const nsAString& aQualifiedName,
+                             const nsAString& aValue)
 {
     nsCOMPtr<nsINodeInfoManager> nimgr;
     nsresult rv = NodeInfo()->GetNodeInfoManager(*getter_AddRefs(nimgr));
@@ -1479,8 +1479,8 @@ nsXULElement::SetAttributeNS(const nsAReadableString& aNamespaceURI,
 }
 
 NS_IMETHODIMP
-nsXULElement::RemoveAttributeNS(const nsAReadableString& aNamespaceURI,
-                                const nsAReadableString& aLocalName)
+nsXULElement::RemoveAttributeNS(const nsAString& aNamespaceURI,
+                                const nsAString& aLocalName)
 {
     PRInt32 nameSpaceId;
     nsCOMPtr<nsIAtom> tag = dont_AddRef(NS_NewAtom(aLocalName));
@@ -1491,8 +1491,8 @@ nsXULElement::RemoveAttributeNS(const nsAReadableString& aNamespaceURI,
 }
 
 NS_IMETHODIMP
-nsXULElement::GetAttributeNodeNS(const nsAReadableString& aNamespaceURI,
-                                 const nsAReadableString& aLocalName,
+nsXULElement::GetAttributeNodeNS(const nsAString& aNamespaceURI,
+                                 const nsAString& aLocalName,
                                  nsIDOMAttr** aReturn)
 {
     NS_ENSURE_ARG_POINTER(aReturn);
@@ -1527,8 +1527,8 @@ nsXULElement::SetAttributeNodeNS(nsIDOMAttr* aNewAttr,
 }
 
 NS_IMETHODIMP
-nsXULElement::GetElementsByTagNameNS(const nsAReadableString& aNamespaceURI,
-                                     const nsAReadableString& aLocalName,
+nsXULElement::GetElementsByTagNameNS(const nsAString& aNamespaceURI,
+                                     const nsAString& aLocalName,
                                      nsIDOMNodeList** aReturn)
 {
     NS_ENSURE_ARG_POINTER(aReturn);
@@ -1567,7 +1567,7 @@ nsXULElement::GetElementsByTagNameNS(const nsAReadableString& aNamespaceURI,
 }
 
 NS_IMETHODIMP
-nsXULElement::HasAttribute(const nsAReadableString& aName, PRBool* aReturn)
+nsXULElement::HasAttribute(const nsAString& aName, PRBool* aReturn)
 {
   NS_ENSURE_ARG_POINTER(aReturn);
 
@@ -1586,8 +1586,8 @@ nsXULElement::HasAttribute(const nsAReadableString& aName, PRBool* aReturn)
 }
 
 NS_IMETHODIMP
-nsXULElement::HasAttributeNS(const nsAReadableString& aNamespaceURI,
-                             const nsAReadableString& aLocalName,
+nsXULElement::HasAttributeNS(const nsAString& aNamespaceURI,
+                             const nsAString& aLocalName,
                              PRBool* aReturn)
 {
     NS_ENSURE_ARG_POINTER(aReturn);
@@ -1608,8 +1608,8 @@ nsXULElement::HasAttributeNS(const nsAReadableString& aNamespaceURI,
 }
 
 NS_IMETHODIMP
-nsXULElement::GetElementsByAttribute(const nsAReadableString& aAttribute,
-                                     const nsAReadableString& aValue,
+nsXULElement::GetElementsByAttribute(const nsAString& aAttribute,
+                                     const nsAString& aValue,
                                      nsIDOMNodeList** aReturn)
 {
     nsresult rv;
@@ -1655,7 +1655,7 @@ nsXULElement::GetXMLBaseURI(nsIURI **aURI)
 
 #if 0
 NS_IMETHODIMP
-nsXULElement::GetBaseURI(nsAWritableString &aURI)
+nsXULElement::GetBaseURI(nsAString &aURI)
 {
   // XXX TODO, should share the impl with nsXMLElement
   aURI.Truncate();
@@ -1720,7 +1720,7 @@ nsXULElement::GetLazyState(LazyState aFlag, PRBool& aResult)
 
 NS_IMETHODIMP
 nsXULElement::AddScriptEventListener(nsIAtom* aName,
-                                     const nsAReadableString& aValue)
+                                     const nsAString& aValue)
 {
     if (! mDocument)
         return NS_OK; // XXX
@@ -1797,7 +1797,7 @@ nsXULElement::RemoveEventListenerByIID(nsIDOMEventListener *aListener, const nsI
 }
 
 NS_IMETHODIMP
-nsXULElement::AddEventListener(const nsAReadableString& aType,
+nsXULElement::AddEventListener(const nsAString& aType,
                                nsIDOMEventListener* aListener,
                                PRBool aUseCapture)
 {
@@ -1814,7 +1814,7 @@ nsXULElement::AddEventListener(const nsAReadableString& aType,
 }
 
 NS_IMETHODIMP
-nsXULElement::RemoveEventListener(const nsAReadableString& aType,
+nsXULElement::RemoveEventListener(const nsAString& aType,
                                   nsIDOMEventListener* aListener,
                                   PRBool aUseCapture)
 {
@@ -1907,7 +1907,7 @@ NS_IMETHODIMP
 nsXULElement::CompileEventHandler(nsIScriptContext* aContext,
                                   void* aTarget,
                                   nsIAtom *aName,
-                                  const nsAReadableString& aBody,
+                                  const nsAString& aBody,
                                   void** aHandler)
 {
     nsresult rv;
@@ -2496,7 +2496,7 @@ nsXULElement::GetTag(nsIAtom*& aResult) const
 }
 
 NS_IMETHODIMP
-nsXULElement::NormalizeAttrString(const nsAReadableString& aStr,
+nsXULElement::NormalizeAttrString(const nsAString& aStr,
                                   nsINodeInfo*& aNodeInfo)
 {
     PRInt32 i, count = Attributes() ? Attributes()->Count() : 0;
@@ -2577,7 +2577,7 @@ nsXULElement::UnregisterAccessKey(const nsAString& aOldValue)
 // needed to maintain attribute namespace ID as well as ordering
 NS_IMETHODIMP
 nsXULElement::SetAttr(nsINodeInfo* aNodeInfo,
-                      const nsAReadableString& aValue,
+                      const nsAString& aValue,
                       PRBool aNotify)
 {
     NS_ASSERTION(nsnull != aNodeInfo, "must have attribute nodeinfo");
@@ -2742,7 +2742,7 @@ nsXULElement::SetAttr(nsINodeInfo* aNodeInfo,
 NS_IMETHODIMP
 nsXULElement::SetAttr(PRInt32 aNameSpaceID,
                       nsIAtom* aName,
-                      const nsAReadableString& aValue,
+                      const nsAString& aValue,
                       PRBool aNotify)
 {
     nsCOMPtr<nsINodeInfoManager> nimgr;
@@ -2759,7 +2759,7 @@ nsXULElement::SetAttr(PRInt32 aNameSpaceID,
 NS_IMETHODIMP
 nsXULElement::GetAttr(PRInt32 aNameSpaceID,
                       nsIAtom* aName,
-                      nsAWritableString& aResult) const
+                      nsAString& aResult) const
 {
     nsCOMPtr<nsIAtom> prefix;
     return GetAttr(aNameSpaceID, aName, *getter_AddRefs(prefix), aResult);
@@ -2769,7 +2769,7 @@ NS_IMETHODIMP
 nsXULElement::GetAttr(PRInt32 aNameSpaceID,
                       nsIAtom* aName,
                       nsIAtom*& aPrefix,
-                      nsAWritableString& aResult) const
+                      nsAString& aResult) const
 {
     NS_ASSERTION(nsnull != aName, "must have attribute name");
     if (nsnull == aName) {
@@ -3666,7 +3666,7 @@ nsXULElement::EnsureContentsGenerated(void) const
 
 nsresult
 nsXULElement::GetElementsByTagName(nsIDOMNode* aNode,
-                                   const nsAReadableString& aTagName,
+                                   const nsAString& aTagName,
                                    nsRDFDOMNodeList* aElements)
 {
     nsresult rv;
@@ -3732,8 +3732,8 @@ nsXULElement::GetElementsByTagName(nsIDOMNode* aNode,
 
 nsresult
 nsXULElement::GetElementsByAttribute(nsIDOMNode* aNode,
-                                       const nsAReadableString& aAttribute,
-                                       const nsAReadableString& aValue,
+                                       const nsAString& aAttribute,
+                                       const nsAString& aValue,
                                        nsRDFDOMNodeList* aElements)
 {
     nsresult rv;
@@ -3982,126 +3982,126 @@ nsXULElement::GetBoxObject(nsIBoxObject** aResult)
 
 // Methods for setting/getting attributes from nsIDOMXULElement
 nsresult
-nsXULElement::GetId(nsAWritableString& aId)
+nsXULElement::GetId(nsAString& aId)
 {
   GetAttribute(NS_LITERAL_STRING("id"), aId);
   return NS_OK;
 }
 
 nsresult
-nsXULElement::SetId(const nsAReadableString& aId)
+nsXULElement::SetId(const nsAString& aId)
 {
   SetAttribute(NS_LITERAL_STRING("id"), aId);
   return NS_OK;
 }
 
 nsresult
-nsXULElement::GetClassName(nsAWritableString& aClassName)
+nsXULElement::GetClassName(nsAString& aClassName)
 {
   GetAttribute(NS_LITERAL_STRING("class"), aClassName);
   return NS_OK;
 }
 
 nsresult
-nsXULElement::SetClassName(const nsAReadableString& aClassName)
+nsXULElement::SetClassName(const nsAString& aClassName)
 {
   SetAttribute(NS_LITERAL_STRING("class"), aClassName);
   return NS_OK;
 }
 
 nsresult
-nsXULElement::GetAlign(nsAWritableString& aAttr)
+nsXULElement::GetAlign(nsAString& aAttr)
 {
   GetAttribute(NS_LITERAL_STRING("align"), aAttr);
   return NS_OK;
 }
 
 nsresult
-nsXULElement::SetAlign(const nsAReadableString& aAttr)
+nsXULElement::SetAlign(const nsAString& aAttr)
 {
   SetAttribute(NS_LITERAL_STRING("align"), aAttr);
   return NS_OK;
 }
 
 nsresult
-nsXULElement::GetDir(nsAWritableString& aAttr)
+nsXULElement::GetDir(nsAString& aAttr)
 {
   GetAttribute(NS_LITERAL_STRING("dir"), aAttr);
   return NS_OK;
 }
 
 nsresult
-nsXULElement::SetDir(const nsAReadableString& aAttr)
+nsXULElement::SetDir(const nsAString& aAttr)
 {
   SetAttribute(NS_LITERAL_STRING("dir"), aAttr);
   return NS_OK;
 }
 
 nsresult
-nsXULElement::GetFlex(nsAWritableString& aAttr)
+nsXULElement::GetFlex(nsAString& aAttr)
 {
   GetAttribute(NS_LITERAL_STRING("flex"), aAttr);
   return NS_OK;
 }
 
 nsresult
-nsXULElement::SetFlex(const nsAReadableString& aAttr)
+nsXULElement::SetFlex(const nsAString& aAttr)
 {
   SetAttribute(NS_LITERAL_STRING("flex"), aAttr);
   return NS_OK;
 }
 
 nsresult
-nsXULElement::GetFlexGroup(nsAWritableString& aAttr)
+nsXULElement::GetFlexGroup(nsAString& aAttr)
 {
   GetAttribute(NS_LITERAL_STRING("flexgroup"), aAttr);
   return NS_OK;
 }
 
 nsresult
-nsXULElement::SetFlexGroup(const nsAReadableString& aAttr)
+nsXULElement::SetFlexGroup(const nsAString& aAttr)
 {
   SetAttribute(NS_LITERAL_STRING("flexgroup"), aAttr);
   return NS_OK;
 }
 
 nsresult
-nsXULElement::GetOrdinal(nsAWritableString& aAttr)
+nsXULElement::GetOrdinal(nsAString& aAttr)
 {
   GetAttribute(NS_LITERAL_STRING("ordinal"), aAttr);
   return NS_OK;
 }
 
 nsresult
-nsXULElement::SetOrdinal(const nsAReadableString& aAttr)
+nsXULElement::SetOrdinal(const nsAString& aAttr)
 {
   SetAttribute(NS_LITERAL_STRING("ordinal"), aAttr);
   return NS_OK;
 }
 
 nsresult
-nsXULElement::GetOrient(nsAWritableString& aAttr)
+nsXULElement::GetOrient(nsAString& aAttr)
 {
   GetAttribute(NS_LITERAL_STRING("orient"), aAttr);
   return NS_OK;
 }
 
 nsresult
-nsXULElement::SetOrient(const nsAReadableString& aAttr)
+nsXULElement::SetOrient(const nsAString& aAttr)
 {
   SetAttribute(NS_LITERAL_STRING("orient"), aAttr);
   return NS_OK;
 }
 
 nsresult
-nsXULElement::GetPack(nsAWritableString& aAttr)
+nsXULElement::GetPack(nsAString& aAttr)
 {
   GetAttribute(NS_LITERAL_STRING("pack"), aAttr);
   return NS_OK;
 }
 
 nsresult
-nsXULElement::SetPack(const nsAReadableString& aAttr)
+nsXULElement::SetPack(const nsAString& aAttr)
 {
   SetAttribute(NS_LITERAL_STRING("pack"), aAttr);
   return NS_OK;
@@ -4171,238 +4171,238 @@ nsXULElement::SetAllowEvents(PRBool aAttr)
 }
 
 nsresult
-nsXULElement::GetObserves(nsAWritableString& aAttr)
+nsXULElement::GetObserves(nsAString& aAttr)
 {
   GetAttribute(NS_LITERAL_STRING("observes"), aAttr);
   return NS_OK;
 }
 
 nsresult
-nsXULElement::SetObserves(const nsAReadableString& aAttr)
+nsXULElement::SetObserves(const nsAString& aAttr)
 {
   SetAttribute(NS_LITERAL_STRING("observes"), aAttr);
   return NS_OK;
 }
 
 nsresult
-nsXULElement::GetMenu(nsAWritableString& aAttr)
+nsXULElement::GetMenu(nsAString& aAttr)
 {
   GetAttribute(NS_LITERAL_STRING("menu"), aAttr);
   return NS_OK;
 }
 
 nsresult
-nsXULElement::SetMenu(const nsAReadableString& aAttr)
+nsXULElement::SetMenu(const nsAString& aAttr)
 {
   SetAttribute(NS_LITERAL_STRING("menu"), aAttr);
   return NS_OK;
 }
 
 nsresult
-nsXULElement::GetContextMenu(nsAWritableString& aAttr)
+nsXULElement::GetContextMenu(nsAString& aAttr)
 {
   GetAttribute(NS_LITERAL_STRING("contextmenu"), aAttr);
   return NS_OK;
 }
 
 nsresult
-nsXULElement::SetContextMenu(const nsAReadableString& aAttr)
+nsXULElement::SetContextMenu(const nsAString& aAttr)
 {
   SetAttribute(NS_LITERAL_STRING("contextmenu"), aAttr);
   return NS_OK;
 }
 
 nsresult
-nsXULElement::GetTooltip(nsAWritableString& aAttr)
+nsXULElement::GetTooltip(nsAString& aAttr)
 {
   GetAttribute(NS_LITERAL_STRING("tooltip"), aAttr);
   return NS_OK;
 }
 
 nsresult
-nsXULElement::SetTooltip(const nsAReadableString& aAttr)
+nsXULElement::SetTooltip(const nsAString& aAttr)
 {
   SetAttribute(NS_LITERAL_STRING("tooltip"), aAttr);
   return NS_OK;
 }
 
 nsresult
-nsXULElement::GetWidth(nsAWritableString& aAttr)
+nsXULElement::GetWidth(nsAString& aAttr)
 {
   GetAttribute(NS_LITERAL_STRING("width"), aAttr);
   return NS_OK;
 }
 
 nsresult
-nsXULElement::SetWidth(const nsAReadableString& aAttr)
+nsXULElement::SetWidth(const nsAString& aAttr)
 {
   SetAttribute(NS_LITERAL_STRING("width"), aAttr);
   return NS_OK;
 }
 
 nsresult
-nsXULElement::GetHeight(nsAWritableString& aAttr)
+nsXULElement::GetHeight(nsAString& aAttr)
 {
   GetAttribute(NS_LITERAL_STRING("height"), aAttr);
   return NS_OK;
 }
 
 nsresult
-nsXULElement::SetHeight(const nsAReadableString& aAttr)
+nsXULElement::SetHeight(const nsAString& aAttr)
 {
   SetAttribute(NS_LITERAL_STRING("height"), aAttr);
   return NS_OK;
 }
 
 nsresult
-nsXULElement::GetMinWidth(nsAWritableString& aAttr)
+nsXULElement::GetMinWidth(nsAString& aAttr)
 {
   GetAttribute(NS_LITERAL_STRING("minwidth"), aAttr);
   return NS_OK;
 }
 
 nsresult
-nsXULElement::SetMinWidth(const nsAReadableString& aAttr)
+nsXULElement::SetMinWidth(const nsAString& aAttr)
 {
   SetAttribute(NS_LITERAL_STRING("minwidth"), aAttr);
   return NS_OK;
 }
 
 nsresult
-nsXULElement::GetMinHeight(nsAWritableString& aAttr)
+nsXULElement::GetMinHeight(nsAString& aAttr)
 {
   GetAttribute(NS_LITERAL_STRING("minheight"), aAttr);
   return NS_OK;
 }
 
 nsresult
-nsXULElement::SetMinHeight(const nsAReadableString& aAttr)
+nsXULElement::SetMinHeight(const nsAString& aAttr)
 {
   SetAttribute(NS_LITERAL_STRING("minheight"), aAttr);
   return NS_OK;
 }
 
 nsresult
-nsXULElement::GetMaxWidth(nsAWritableString& aAttr)
+nsXULElement::GetMaxWidth(nsAString& aAttr)
 {
   GetAttribute(NS_LITERAL_STRING("maxwidth"), aAttr);
   return NS_OK;
 }
 
 nsresult
-nsXULElement::SetMaxWidth(const nsAReadableString& aAttr)
+nsXULElement::SetMaxWidth(const nsAString& aAttr)
 {
   SetAttribute(NS_LITERAL_STRING("maxwidth"), aAttr);
   return NS_OK;
 }
 
 nsresult
-nsXULElement::GetMaxHeight(nsAWritableString& aAttr)
+nsXULElement::GetMaxHeight(nsAString& aAttr)
 {
   GetAttribute(NS_LITERAL_STRING("maxheight"), aAttr);
   return NS_OK;
 }
 
 nsresult
-nsXULElement::SetMaxHeight(const nsAReadableString& aAttr)
+nsXULElement::SetMaxHeight(const nsAString& aAttr)
 {
   SetAttribute(NS_LITERAL_STRING("maxheight"), aAttr);
   return NS_OK;
 }
 
 nsresult
-nsXULElement::GetPersist(nsAWritableString& aAttr)
+nsXULElement::GetPersist(nsAString& aAttr)
 {
   GetAttribute(NS_LITERAL_STRING("persist"), aAttr);
   return NS_OK;
 }
 
 nsresult
-nsXULElement::SetPersist(const nsAReadableString& aAttr)
+nsXULElement::SetPersist(const nsAString& aAttr)
 {
   SetAttribute(NS_LITERAL_STRING("maxheight"), aAttr);
   return NS_OK;
 }
 
 nsresult
-nsXULElement::GetLeft(nsAWritableString& aAttr)
+nsXULElement::GetLeft(nsAString& aAttr)
 {
   GetAttribute(NS_LITERAL_STRING("left"), aAttr);
   return NS_OK;
 }
 
 nsresult
-nsXULElement::SetLeft(const nsAReadableString& aAttr)
+nsXULElement::SetLeft(const nsAString& aAttr)
 {
   SetAttribute(NS_LITERAL_STRING("left"), aAttr);
   return NS_OK;
 }
 
 nsresult
-nsXULElement::GetTop(nsAWritableString& aAttr)
+nsXULElement::GetTop(nsAString& aAttr)
 {
   GetAttribute(NS_LITERAL_STRING("top"), aAttr);
   return NS_OK;
 }
 
 nsresult
-nsXULElement::SetTop(const nsAReadableString& aAttr)
+nsXULElement::SetTop(const nsAString& aAttr)
 {
   SetAttribute(NS_LITERAL_STRING("top"), aAttr);
   return NS_OK;
 }
 
 nsresult
-nsXULElement::GetDatasources(nsAWritableString& aAttr)
+nsXULElement::GetDatasources(nsAString& aAttr)
 {
   GetAttribute(NS_LITERAL_STRING("datasources"), aAttr);
   return NS_OK;
 }
 
 nsresult
-nsXULElement::SetDatasources(const nsAReadableString& aAttr)
+nsXULElement::SetDatasources(const nsAString& aAttr)
 {
   SetAttribute(NS_LITERAL_STRING("datasources"), aAttr);
   return NS_OK;
 }
 
 nsresult
-nsXULElement::GetRef(nsAWritableString& aAttr)
+nsXULElement::GetRef(nsAString& aAttr)
 {
   GetAttribute(NS_LITERAL_STRING("ref"), aAttr);
   return NS_OK;
 }
 
 nsresult
-nsXULElement::SetRef(const nsAReadableString& aAttr)
+nsXULElement::SetRef(const nsAString& aAttr)
 {
   SetAttribute(NS_LITERAL_STRING("ref"), aAttr);
   return NS_OK;
 }
 
 nsresult
-nsXULElement::GetTooltipText(nsAWritableString& aAttr)
+nsXULElement::GetTooltipText(nsAString& aAttr)
 {
   GetAttribute(NS_LITERAL_STRING("tooltiptext"), aAttr);
   return NS_OK;
 }
 
 nsresult
-nsXULElement::SetTooltipText(const nsAReadableString& aAttr)
+nsXULElement::SetTooltipText(const nsAString& aAttr)
 {
   SetAttribute(NS_LITERAL_STRING("tooltiptext"), aAttr);
   return NS_OK;
 }
 
 nsresult
-nsXULElement::GetStatusText(nsAWritableString& aAttr)
+nsXULElement::GetStatusText(nsAString& aAttr)
 {
   GetAttribute(NS_LITERAL_STRING("statustext"), aAttr);
   return NS_OK;
 }
 
 nsresult
-nsXULElement::SetStatusText(const nsAReadableString& aAttr)
+nsXULElement::SetStatusText(const nsAString& aAttr)
 {
   SetAttribute(NS_LITERAL_STRING("statustext"), aAttr);
   return NS_OK;
@@ -4964,7 +4964,7 @@ nsXULPrototypeElement::Deserialize(nsIObjectInputStream* aStream,
 
 
 nsresult
-nsXULPrototypeElement::GetAttr(PRInt32 aNameSpaceID, nsIAtom* aName, nsAWritableString& aValue)
+nsXULPrototypeElement::GetAttr(PRInt32 aNameSpaceID, nsIAtom* aName, nsAString& aValue)
 {
     for (PRInt32 i = 0; i < mNumAttributes; ++i) {
         if (mAttributes[i].mNodeInfo->Equals(aName, aNameSpaceID)) {

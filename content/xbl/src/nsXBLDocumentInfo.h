@@ -22,8 +22,8 @@ public:
 
   NS_IMETHOD GetDocumentURI(nsCString& aDocURI) { aDocURI = mDocURI; return NS_OK; };
 
-  NS_IMETHOD GetPrototypeBinding(const nsAReadableCString& aRef, nsIXBLPrototypeBinding** aResult);
-  NS_IMETHOD SetPrototypeBinding(const nsAReadableCString& aRef, nsIXBLPrototypeBinding* aBinding);
+  NS_IMETHOD GetPrototypeBinding(const nsACString& aRef, nsIXBLPrototypeBinding** aResult);
+  NS_IMETHOD SetPrototypeBinding(const nsACString& aRef, nsIXBLPrototypeBinding* aBinding);
 
   NS_IMETHOD FlushSkinStylesheets();
 

@@ -99,22 +99,22 @@ public:
     GetElementRefResource(nsIContent* aElement, nsIRDFResource** aResult);
 
     static nsresult
-    GetTextForNode(nsIRDFNode* aNode, nsAWritableString& aResult);
+    GetTextForNode(nsIRDFNode* aNode, nsAString& aResult);
 
     static nsresult
-    MakeElementURI(nsIDocument* aDocument, const nsAReadableString& aElementID, nsCString& aURI);
+    MakeElementURI(nsIDocument* aDocument, const nsAString& aElementID, nsCString& aURI);
 
     static nsresult
-    MakeElementResource(nsIDocument* aDocument, const nsAReadableString& aElementID, nsIRDFResource** aResult);
+    MakeElementResource(nsIDocument* aDocument, const nsAString& aElementID, nsIRDFResource** aResult);
 
     static nsresult
-    MakeElementID(nsIDocument* aDocument, const nsAReadableString& aURI, nsAWritableString& aElementID);
+    MakeElementID(nsIDocument* aDocument, const nsAString& aURI, nsAString& aElementID);
 
     static nsresult
     GetResource(PRInt32 aNameSpaceID, nsIAtom* aAttribute, nsIRDFResource** aResult);
 
     static nsresult
-    GetResource(PRInt32 aNameSpaceID, const nsAReadableString& aAttribute, nsIRDFResource** aResult);
+    GetResource(PRInt32 aNameSpaceID, const nsAString& aAttribute, nsIRDFResource** aResult);
 
     static nsresult
     SetCommandUpdater(nsIDocument* aDocument, nsIContent* aElement);

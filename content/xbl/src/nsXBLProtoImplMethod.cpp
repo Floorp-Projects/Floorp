@@ -126,7 +126,7 @@ nsXBLProtoImplMethod::Destroy(PRBool aIsCompiled)
 }
 
 void 
-nsXBLProtoImplMethod::AppendBodyText(const nsAReadableString& aText)
+nsXBLProtoImplMethod::AppendBodyText(const nsAString& aText)
 {
   if (!mUncompiledMethod) {
     mUncompiledMethod = new nsXBLUncompiledMethod();
@@ -138,7 +138,7 @@ nsXBLProtoImplMethod::AppendBodyText(const nsAReadableString& aText)
 }
 
 void 
-nsXBLProtoImplMethod::AddParameter(const nsAReadableString& aText)
+nsXBLProtoImplMethod::AddParameter(const nsAString& aText)
 {
   if (!mUncompiledMethod) {
     mUncompiledMethod = new nsXBLUncompiledMethod();

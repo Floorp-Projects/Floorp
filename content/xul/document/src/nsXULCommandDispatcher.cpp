@@ -208,8 +208,8 @@ nsXULCommandDispatcher::AdvanceFocusIntoSubtree(nsIDOMElement* aElt)
 
 NS_IMETHODIMP
 nsXULCommandDispatcher::AddCommandUpdater(nsIDOMElement* aElement,
-                                          const nsAReadableString& aEvents,
-                                          const nsAReadableString& aTargets)
+                                          const nsAString& aEvents,
+                                          const nsAString& aTargets)
 {
   NS_PRECONDITION(aElement != nsnull, "null ptr");
   if (! aElement)
@@ -305,7 +305,7 @@ nsXULCommandDispatcher::RemoveCommandUpdater(nsIDOMElement* aElement)
 }
 
 NS_IMETHODIMP
-nsXULCommandDispatcher::UpdateCommands(const nsAReadableString& aEventName)
+nsXULCommandDispatcher::UpdateCommands(const nsAString& aEventName)
 {
   nsresult rv;
 
@@ -385,7 +385,7 @@ nsXULCommandDispatcher::UpdateCommands(const nsAReadableString& aEventName)
 
 PRBool
 nsXULCommandDispatcher::Matches(const nsString& aList, 
-                                const nsAReadableString& aElement)
+                                const nsAString& aElement)
 {
   if (aList.Equals(NS_LITERAL_STRING("*")))
     return PR_TRUE; // match _everything_!
@@ -419,7 +419,7 @@ nsXULCommandDispatcher::GetControllers(nsIControllers** aResult)
 }
 
 NS_IMETHODIMP
-nsXULCommandDispatcher::GetControllerForCommand(const nsAReadableString& aCommand, nsIController** _retval)
+nsXULCommandDispatcher::GetControllerForCommand(const nsAString& aCommand, nsIController** _retval)
 {
   EnsureFocusController();
   return mFocusController->GetControllerForCommand(aCommand, _retval);

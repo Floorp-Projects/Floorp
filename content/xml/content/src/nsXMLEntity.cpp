@@ -46,10 +46,10 @@ class nsXMLEntity : public nsGenericDOMDataNode,
                     public nsIDOMEntity
 {
 public:
-  nsXMLEntity(const nsAReadableString& aName, 
-              const nsAReadableString& aPublicId,
-              const nsAReadableString& aSystemId, 
-              const nsAReadableString& aNotationName);
+  nsXMLEntity(const nsAString& aName, 
+              const nsAString& aPublicId,
+              const nsAString& aSystemId, 
+              const nsAString& aNotationName);
   virtual ~nsXMLEntity();
 
   // nsISupports
@@ -82,10 +82,10 @@ protected:
 
 nsresult
 NS_NewXMLEntity(nsIContent** aInstancePtrResult,
-                const nsAReadableString& aName,
-                const nsAReadableString& aPublicId,
-                const nsAReadableString& aSystemId,
-                const nsAReadableString& aNotationName)
+                const nsAString& aName,
+                const nsAString& aPublicId,
+                const nsAString& aSystemId,
+                const nsAString& aNotationName)
 {
   *aInstancePtrResult = new nsXMLEntity(aName, aPublicId, aSystemId,
                                         aNotationName);
@@ -96,10 +96,10 @@ NS_NewXMLEntity(nsIContent** aInstancePtrResult,
   return NS_OK;
 }
 
-nsXMLEntity::nsXMLEntity(const nsAReadableString& aName,
-                         const nsAReadableString& aPublicId,
-                         const nsAReadableString& aSystemId,
-                         const nsAReadableString& aNotationName) :
+nsXMLEntity::nsXMLEntity(const nsAString& aName,
+                         const nsAString& aPublicId,
+                         const nsAString& aSystemId,
+                         const nsAString& aNotationName) :
   mName(aName), mPublicId(aPublicId), mSystemId(aSystemId),
   mNotationName(aNotationName)
 {
@@ -123,7 +123,7 @@ NS_IMPL_RELEASE_INHERITED(nsXMLEntity, nsGenericDOMDataNode)
 
 
 NS_IMETHODIMP    
-nsXMLEntity::GetPublicId(nsAWritableString& aPublicId)
+nsXMLEntity::GetPublicId(nsAString& aPublicId)
 {
   aPublicId.Assign(mPublicId);
 
@@ -131,7 +131,7 @@ nsXMLEntity::GetPublicId(nsAWritableString& aPublicId)
 }
 
 NS_IMETHODIMP    
-nsXMLEntity::GetSystemId(nsAWritableString& aSystemId)
+nsXMLEntity::GetSystemId(nsAString& aSystemId)
 {
   aSystemId.Assign(mSystemId);
 
@@ -139,7 +139,7 @@ nsXMLEntity::GetSystemId(nsAWritableString& aSystemId)
 }
 
 NS_IMETHODIMP    
-nsXMLEntity::GetNotationName(nsAWritableString& aNotationName)
+nsXMLEntity::GetNotationName(nsAString& aNotationName)
 {
   aNotationName.Assign(mNotationName);
 
@@ -158,7 +158,7 @@ nsXMLEntity::GetTag(nsIAtom*& aResult) const
 }
 
 NS_IMETHODIMP 
-nsXMLEntity::GetNodeName(nsAWritableString& aNodeName)
+nsXMLEntity::GetNodeName(nsAString& aNodeName)
 {
   aNodeName.Assign(mName);
   return NS_OK;

@@ -350,7 +350,7 @@ nsXBLDocumentInfo::~nsXBLDocumentInfo()
 }
 
 NS_IMETHODIMP
-nsXBLDocumentInfo::GetPrototypeBinding(const nsAReadableCString& aRef, nsIXBLPrototypeBinding** aResult)
+nsXBLDocumentInfo::GetPrototypeBinding(const nsACString& aRef, nsIXBLPrototypeBinding** aResult)
 {
   *aResult = nsnull;
   if (!mBindingTable)
@@ -364,7 +364,7 @@ nsXBLDocumentInfo::GetPrototypeBinding(const nsAReadableCString& aRef, nsIXBLPro
 }
 
 NS_IMETHODIMP
-nsXBLDocumentInfo::SetPrototypeBinding(const nsAReadableCString& aRef, nsIXBLPrototypeBinding* aBinding)
+nsXBLDocumentInfo::SetPrototypeBinding(const nsACString& aRef, nsIXBLPrototypeBinding* aBinding)
 {
   if (!mBindingTable)
     mBindingTable = new nsSupportsHashtable();

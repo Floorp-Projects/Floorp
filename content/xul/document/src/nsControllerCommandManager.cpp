@@ -64,7 +64,7 @@ NS_IMPL_ISUPPORTS2(nsControllerCommandManager, nsIControllerCommandManager, nsIS
 
 
 NS_IMETHODIMP
-nsControllerCommandManager::RegisterCommand(const nsAReadableString & aCommandName, nsIControllerCommand *aCommand)
+nsControllerCommandManager::RegisterCommand(const nsAString & aCommandName, nsIControllerCommand *aCommand)
 {
   nsStringKey commandKey(aCommandName);
   
@@ -81,7 +81,7 @@ nsControllerCommandManager::RegisterCommand(const nsAReadableString & aCommandNa
 
 
 NS_IMETHODIMP
-nsControllerCommandManager::UnregisterCommand(const nsAReadableString & aCommandName, nsIControllerCommand *aCommand)
+nsControllerCommandManager::UnregisterCommand(const nsAString & aCommandName, nsIControllerCommand *aCommand)
 {
   nsStringKey commandKey(aCommandName);
 
@@ -91,7 +91,7 @@ nsControllerCommandManager::UnregisterCommand(const nsAReadableString & aCommand
 
 
 NS_IMETHODIMP
-nsControllerCommandManager::FindCommandHandler(const nsAReadableString & aCommandName, nsIControllerCommand **outCommand)
+nsControllerCommandManager::FindCommandHandler(const nsAString & aCommandName, nsIControllerCommand **outCommand)
 {
   NS_ENSURE_ARG_POINTER(outCommand);
   
@@ -109,7 +109,7 @@ nsControllerCommandManager::FindCommandHandler(const nsAReadableString & aComman
 
 /* boolean isCommandEnabled (in wstring command); */
 NS_IMETHODIMP
-nsControllerCommandManager::IsCommandEnabled(const nsAReadableString & aCommandName, nsISupports *aCommandRefCon, PRBool *aResult)
+nsControllerCommandManager::IsCommandEnabled(const nsAString & aCommandName, nsISupports *aCommandRefCon, PRBool *aResult)
 {
   NS_ENSURE_ARG_POINTER(aResult);
 
@@ -133,7 +133,7 @@ nsControllerCommandManager::IsCommandEnabled(const nsAReadableString & aCommandN
 
 
 NS_IMETHODIMP
-nsControllerCommandManager::UpdateCommandState(const nsAReadableString & aCommandName, nsISupports *aCommandRefCon)
+nsControllerCommandManager::UpdateCommandState(const nsAString & aCommandName, nsISupports *aCommandRefCon)
 {
   // find the command  
   nsCOMPtr<nsIControllerCommand> commandHandler;
@@ -163,7 +163,7 @@ nsControllerCommandManager::UpdateCommandState(const nsAReadableString & aComman
 }
 
 NS_IMETHODIMP
-nsControllerCommandManager::SupportsCommand(const nsAReadableString & aCommandName, nsISupports *aCommandRefCon, PRBool *aResult)
+nsControllerCommandManager::SupportsCommand(const nsAString & aCommandName, nsISupports *aCommandRefCon, PRBool *aResult)
 {
   NS_ENSURE_ARG_POINTER(aResult);
 
@@ -181,7 +181,7 @@ nsControllerCommandManager::SupportsCommand(const nsAReadableString & aCommandNa
 
 /* void doCommand (in wstring command); */
 NS_IMETHODIMP
-nsControllerCommandManager::DoCommand(const nsAReadableString & aCommandName, nsISupports *aCommandRefCon)
+nsControllerCommandManager::DoCommand(const nsAString & aCommandName, nsISupports *aCommandRefCon)
 {
   // find the command  
   nsCOMPtr<nsIControllerCommand> commandHandler;

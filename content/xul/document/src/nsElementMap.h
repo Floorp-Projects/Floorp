@@ -106,16 +106,16 @@ public:
     virtual ~nsElementMap();
 
     nsresult
-    Add(const nsAReadableString& aID, nsIContent* aContent);
+    Add(const nsAString& aID, nsIContent* aContent);
 
     nsresult
-    Remove(const nsAReadableString& aID, nsIContent* aContent);
+    Remove(const nsAString& aID, nsIContent* aContent);
 
     nsresult
-    Find(const nsAReadableString& aID, nsISupportsArray* aResults);
+    Find(const nsAString& aID, nsISupportsArray* aResults);
 
     nsresult
-    FindFirst(const nsAReadableString& aID, nsIContent** aContent);
+    FindFirst(const nsAString& aID, nsIContent** aContent);
 
     typedef PRIntn (*nsElementMapEnumerator)(const PRUnichar* aID,
                                              nsIContent* aElement,

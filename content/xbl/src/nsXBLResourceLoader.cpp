@@ -209,7 +209,7 @@ nsXBLResourceLoader::StyleSheetLoaded(nsICSSStyleSheet* aSheet, PRBool aNotify)
 }
 
 void 
-nsXBLResourceLoader::AddResource(nsIAtom* aResourceType, const nsAReadableString& aSrc)
+nsXBLResourceLoader::AddResource(nsIAtom* aResourceType, const nsAString& aSrc)
 {
   nsXBLResource* res = new nsXBLResource(aResourceType, aSrc);
   if (!res)

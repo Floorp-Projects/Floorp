@@ -140,8 +140,8 @@ public:
     NS_IMETHOD AddOverlayReference(nsIURI* aURI);
     NS_IMETHOD GetOverlayReferences(nsISupportsArray** aResult);
 
-    NS_IMETHOD GetHeaderData(nsIAtom* aField, nsAWritableString& aData) const;
-    NS_IMETHOD SetHeaderData(nsIAtom* aField, const nsAReadableString& aData);
+    NS_IMETHOD GetHeaderData(nsIAtom* aField, nsAString& aData) const;
+    NS_IMETHOD SetHeaderData(nsIAtom* aField, const nsAString& aData);
 
     NS_IMETHOD GetDocumentPrincipal(nsIPrincipal** aResult);
     NS_IMETHOD SetDocumentPrincipal(nsIPrincipal* aPrincipal);
@@ -420,7 +420,7 @@ nsXULPrototypeDocument::GetOverlayReferences(nsISupportsArray** aResult)
 
 
 NS_IMETHODIMP
-nsXULPrototypeDocument::GetHeaderData(nsIAtom* aField, nsAWritableString& aData) const
+nsXULPrototypeDocument::GetHeaderData(nsIAtom* aField, nsAString& aData) const
 {
     // XXX Not implemented
     aData.Truncate();
@@ -429,7 +429,7 @@ nsXULPrototypeDocument::GetHeaderData(nsIAtom* aField, nsAWritableString& aData)
 
 
 NS_IMETHODIMP
-nsXULPrototypeDocument::SetHeaderData(nsIAtom* aField, const nsAReadableString& aData)
+nsXULPrototypeDocument::SetHeaderData(nsIAtom* aField, const nsAString& aData)
 {
     // XXX Not implemented
     return NS_OK;

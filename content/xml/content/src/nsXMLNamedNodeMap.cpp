@@ -56,18 +56,18 @@ public:
 
   // nsIDOMNamedNodeMap
   NS_IMETHOD    GetLength(PRUint32* aLength);
-  NS_IMETHOD    GetNamedItem(const nsAReadableString& aName,
+  NS_IMETHOD    GetNamedItem(const nsAString& aName,
                              nsIDOMNode** aReturn);
   NS_IMETHOD    SetNamedItem(nsIDOMNode* aArg, nsIDOMNode** aReturn);
-  NS_IMETHOD    RemoveNamedItem(const nsAReadableString& aName,
+  NS_IMETHOD    RemoveNamedItem(const nsAString& aName,
                                 nsIDOMNode** aReturn);
   NS_IMETHOD    Item(PRUint32 aIndex, nsIDOMNode** aReturn);
-  NS_IMETHOD    GetNamedItemNS(const nsAReadableString& aNamespaceURI,
-                               const nsAReadableString& aLocalName,
+  NS_IMETHOD    GetNamedItemNS(const nsAString& aNamespaceURI,
+                               const nsAString& aLocalName,
                                nsIDOMNode** aReturn);
   NS_IMETHOD    SetNamedItemNS(nsIDOMNode* aArg, nsIDOMNode** aReturn);
-  NS_IMETHOD    RemoveNamedItemNS(const nsAReadableString& aNamespaceURI,
-                                  const nsAReadableString&aLocalName,
+  NS_IMETHOD    RemoveNamedItemNS(const nsAString& aNamespaceURI,
+                                  const nsAString&aLocalName,
                                   nsIDOMNode** aReturn);
 
 protected:
@@ -128,7 +128,7 @@ nsXMLNamedNodeMap::GetLength(PRUint32* aLength)
 }
 
 NS_IMETHODIMP    
-nsXMLNamedNodeMap::GetNamedItem(const nsAReadableString& aName,
+nsXMLNamedNodeMap::GetNamedItem(const nsAString& aName,
                                 nsIDOMNode** aReturn)
 {
   if (!aReturn)
@@ -213,7 +213,7 @@ nsXMLNamedNodeMap::SetNamedItem(nsIDOMNode* aArg, nsIDOMNode** aReturn)
 }
 
 NS_IMETHODIMP    
-nsXMLNamedNodeMap::RemoveNamedItem(const nsAReadableString& aName,
+nsXMLNamedNodeMap::RemoveNamedItem(const nsAString& aName,
                                    nsIDOMNode** aReturn)
 {
   NS_ENSURE_ARG_POINTER(aReturn);
@@ -272,8 +272,8 @@ nsXMLNamedNodeMap::Item(PRUint32 aIndex, nsIDOMNode** aReturn)
 }
 
 nsresult
-nsXMLNamedNodeMap::GetNamedItemNS(const nsAReadableString& aNamespaceURI, 
-                                  const nsAReadableString& aLocalName,
+nsXMLNamedNodeMap::GetNamedItemNS(const nsAString& aNamespaceURI, 
+                                  const nsAString& aLocalName,
                                   nsIDOMNode** aReturn)
 {
   return NS_ERROR_NOT_IMPLEMENTED;
@@ -286,8 +286,8 @@ nsXMLNamedNodeMap::SetNamedItemNS(nsIDOMNode* aArg, nsIDOMNode** aReturn)
 }
 
 nsresult
-nsXMLNamedNodeMap::RemoveNamedItemNS(const nsAReadableString& aNamespaceURI, 
-                                     const nsAReadableString&aLocalName,
+nsXMLNamedNodeMap::RemoveNamedItemNS(const nsAString& aNamespaceURI, 
+                                     const nsAString&aLocalName,
                                      nsIDOMNode** aReturn)
 {
   return NS_ERROR_NOT_IMPLEMENTED;

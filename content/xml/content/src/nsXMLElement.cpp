@@ -263,7 +263,7 @@ nsXMLElement::GetXMLBaseURI(nsIURI **aURI)
 
 NS_IMETHODIMP
 nsXMLElement::SetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
-                      const nsAReadableString& aValue,
+                      const nsAString& aValue,
                       PRBool aNotify)
 {
   return nsGenericContainerElement::SetAttr(aNameSpaceID, aName, aValue,
@@ -272,7 +272,7 @@ nsXMLElement::SetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
 
 NS_IMETHODIMP 
 nsXMLElement::SetAttr(nsINodeInfo *aNodeInfo,
-                      const nsAReadableString& aValue,
+                      const nsAString& aValue,
                       PRBool aNotify)
 {
   NS_ENSURE_ARG_POINTER(aNodeInfo);
@@ -310,7 +310,7 @@ static nsresult WebShellToPresContext(nsIWebShell *aShell,
 }
 
 
-static nsresult CheckLoadURI(nsIURI *aBaseURI, const nsAReadableString& aURI,
+static nsresult CheckLoadURI(nsIURI *aBaseURI, const nsAString& aURI,
                              nsIURI **aAbsURI)
 {
   NS_ConvertUCS2toUTF8 str(aURI);

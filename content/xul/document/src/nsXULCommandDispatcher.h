@@ -85,8 +85,8 @@ protected:
     class Updater {
     public:
       Updater(nsIDOMElement* aElement,
-              const nsAReadableString& aEvents,
-              const nsAReadableString& aTargets)
+              const nsAString& aEvents,
+              const nsAString& aTargets)
           : mElement(aElement),
             mEvents(aEvents),
             mTargets(aTargets),
@@ -102,7 +102,7 @@ protected:
     Updater* mUpdaters;
 
     PRBool Matches(const nsString& aList, 
-                   const nsAReadableString& aElement);
+                   const nsAString& aElement);
 };
 
 #endif // nsXULCommandDispatcher_h__

@@ -124,7 +124,7 @@ nsXBLEventHandler::RemoveEventHandlers()
 /// Helpers that are relegated to the end of the file /////////////////////////////
 
 nsresult
-nsXBLEventHandler::GetTextData(nsIContent *aParent, nsAWritableString& aResult)
+nsXBLEventHandler::GetTextData(nsIContent *aParent, nsAString& aResult)
 {
   aResult.Truncate(0);
 

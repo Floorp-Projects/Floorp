@@ -58,8 +58,8 @@ public:
   virtual ~nsXBLProtoImplProperty();
   virtual void Destroy(PRBool aIsCompiled);
 
-  void AppendGetterText(const nsAReadableString& aGetter);
-  void AppendSetterText(const nsAReadableString& aSetter);
+  void AppendGetterText(const nsAString& aGetter);
+  void AppendSetterText(const nsAString& aSetter);
 
   virtual nsresult InstallMember(nsIScriptContext* aContext, nsIContent* aBoundElement, 
                                  void* aScriptObject, void* aTargetClassObject);

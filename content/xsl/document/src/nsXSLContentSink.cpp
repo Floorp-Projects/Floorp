@@ -43,7 +43,7 @@
 #include "nsITransformMediator.h"
 #include "nsIParser.h"
 #include "nsIURL.h"
-#include "nsString2.h"
+#include "nsString.h"
 #include "nsEscape.h"
 
 nsresult

@@ -77,10 +77,10 @@ public:
 
   // nsIContent
   NS_IMETHOD SetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
-                     const nsAReadableString& aValue,
+                     const nsAString& aValue,
                      PRBool aNotify);
   NS_IMETHOD SetAttr(nsINodeInfo *aNodeInfo,
-                     const nsAReadableString& aValue,
+                     const nsAString& aValue,
                      PRBool aNotify);
   NS_IMETHOD HandleDOMEvent(nsIPresContext* aPresContext,
                             nsEvent* aEvent,

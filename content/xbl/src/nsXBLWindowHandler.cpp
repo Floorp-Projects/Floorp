@@ -93,7 +93,7 @@ public:
                       nsIXBLPrototypeHandler** platformHandler,
                       nsIXBLPrototypeHandler** userHandler);
   void GetHandlers(nsIXBLDocumentInfo* aInfo,
-                   const nsAReadableCString& aRef,
+                   const nsACString& aRef,
                    nsIXBLPrototypeHandler** aResult);
 
   nsXBLSpecialDocInfo() : mInitialized(PR_FALSE) {};
@@ -145,7 +145,7 @@ void nsXBLSpecialDocInfo::LoadDocInfo()
 // 
 void
 nsXBLSpecialDocInfo::GetHandlers(nsIXBLDocumentInfo* aInfo,
-                                 const nsAReadableCString& aRef,
+                                 const nsACString& aRef,
                                  nsIXBLPrototypeHandler** aResult)
 {
   nsCOMPtr<nsIXBLPrototypeBinding> binding;

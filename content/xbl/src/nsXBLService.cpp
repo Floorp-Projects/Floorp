@@ -606,7 +606,7 @@ nsXBLService::~nsXBLService(void)
 // This function loads a particular XBL file and installs all of the bindings
 // onto the element.
 NS_IMETHODIMP
-nsXBLService::LoadBindings(nsIContent* aContent, const nsAReadableString& aURL, PRBool aAugmentFlag,
+nsXBLService::LoadBindings(nsIContent* aContent, const nsAString& aURL, PRBool aAugmentFlag,
                            nsIXBLBinding** aBinding, PRBool* aResolveStyle) 
 { 
   *aBinding = nsnull;

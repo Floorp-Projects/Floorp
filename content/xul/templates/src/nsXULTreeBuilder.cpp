@@ -155,7 +155,7 @@ protected:
      * of atoms.
      */
     nsresult
-    TokenizeProperties(const nsAReadableString& aString, nsISupportsArray* aProprerties);
+    TokenizeProperties(const nsAString& aString, nsISupportsArray* aProprerties);
 
     /**
      * Return the resource corresponding to a row in the outliner. The
@@ -1416,7 +1416,7 @@ nsXULOutlinerBuilder::GetTemplateActionCellFor(PRInt32 aRow,
 }
 
 nsresult
-nsXULOutlinerBuilder::TokenizeProperties(const nsAReadableString& aString,
+nsXULOutlinerBuilder::TokenizeProperties(const nsAString& aString,
                                          nsISupportsArray* aProperties)
 {
     NS_PRECONDITION(aProperties != nsnull, "null ptr");

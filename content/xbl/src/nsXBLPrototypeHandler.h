@@ -81,7 +81,7 @@ public:
 
   NS_IMETHOD GetHandlerElement(nsIContent** aResult);
 
-  NS_IMETHOD AppendHandlerText(const nsAReadableString& aText);
+  NS_IMETHOD AppendHandlerText(const nsAString& aText);
 
   NS_IMETHOD GetPhase(PRUint8* aResult) { *aResult = mPhase; return NS_OK; };
 
@@ -104,7 +104,7 @@ public:
 protected:
   NS_IMETHOD GetController(nsIDOMEventReceiver* aReceiver, nsIController** aResult);
   
-  inline PRInt32 GetMatchingKeyCode(const nsAReadableString& aKeyName);
+  inline PRInt32 GetMatchingKeyCode(const nsAString& aKeyName);
   void ConstructPrototype(nsIContent* aKeyElement, 
                           const PRUnichar* aEvent=nsnull, const PRUnichar* aPhase=nsnull,
                           const PRUnichar* aAction=nsnull, const PRUnichar* aCommand=nsnull,
@@ -112,7 +112,7 @@ protected:
                           const PRUnichar* aModifiers=nsnull, const PRUnichar* aButton=nsnull,
                           const PRUnichar* aClickCount=nsnull);
 
-  void GetEventType(nsAWritableString& type);
+  void GetEventType(nsAString& type);
   PRBool ModifiersMatchMask(nsIDOMUIEvent* aEvent);
 
   inline PRBool KeyEventMatched(nsIDOMKeyEvent* aKeyEvent);
