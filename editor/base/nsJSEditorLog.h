@@ -142,6 +142,11 @@ public:
   nsresult PrintUnicode(const nsString &aString);
   nsresult PrintIndent(PRInt32 aIndentLevel);
   nsresult PrintSelection();
+  nsresult PrintNode(nsIDOMNode *aNode, PRInt32 aDepth=0);
+  nsresult PrintElementNode(nsIDOMNode *aNode, PRInt32 aDepth);
+  nsresult PrintTextNode(nsIDOMNode *aNode, PRInt32 aDepth);
+  nsresult PrintAttributeNode(nsIDOMNode *aNode, PRInt32 aDepth=0);
+  nsresult PrintNodeChildren(nsIDOMNode *aNode, PRInt32 aDepth=0);
   nsresult GetNodeTreeOffsets(nsIDOMNode *aNode, PRInt32 **aResult, PRInt32 *aLength);
   nsresult Lock();
   nsresult Unlock();
