@@ -36,6 +36,9 @@ EXPORT_RESOURCE_SAMPLES = \
 	$(srcdir)/addresspanes.html \
 	$(srcdir)/editcard.xul \
 	$(srcdir)/addressbook.js \
+	$(srcdir)/selectaddress.xul \
+	$(srcdir)/selectaddress.html \
+	$(srcdir)/addressbucket.xul \
 	$(NULL)
 
 EXPORT_RESOURCE_SAMPLES_TO_REMOVE := $(addprefix $(SAMPLES_DIR)/, $(EXPORT_RESOURCE_SAMPLES))
