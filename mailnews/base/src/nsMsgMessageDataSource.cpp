@@ -65,6 +65,7 @@ nsIRDFResource* nsMsgMessageDataSource::kNC_PriorityString= nsnull;
 nsIRDFResource* nsMsgMessageDataSource::kNC_PrioritySort= nsnull;
 nsIRDFResource* nsMsgMessageDataSource::kNC_Size= nsnull;
 nsIRDFResource* nsMsgMessageDataSource::kNC_SizeSort= nsnull;
+nsIRDFResource* nsMsgMessageDataSource::kNC_Lines= nsnull;
 nsIRDFResource* nsMsgMessageDataSource::kNC_Total = nsnull;
 nsIRDFResource* nsMsgMessageDataSource::kNC_Unread = nsnull;
 nsIRDFResource* nsMsgMessageDataSource::kNC_MessageChild = nsnull;
@@ -118,6 +119,7 @@ nsMsgMessageDataSource::nsMsgMessageDataSource()
 		rdf->GetResource(NC_RDF_PRIORITY_SORT, &kNC_PrioritySort);
 		rdf->GetResource(NC_RDF_SIZE, &kNC_Size);
 		rdf->GetResource(NC_RDF_SIZE_SORT, &kNC_SizeSort);
+		rdf->GetResource(NC_RDF_LINES, &kNC_Lines);
 		rdf->GetResource(NC_RDF_TOTALMESSAGES,   &kNC_Total);
 		rdf->GetResource(NC_RDF_TOTALUNREADMESSAGES,   &kNC_Unread);
 		rdf->GetResource(NC_RDF_MESSAGECHILD,   &kNC_MessageChild);
@@ -168,6 +170,7 @@ nsMsgMessageDataSource::~nsMsgMessageDataSource (void)
 		NS_RELEASE2(kNC_PrioritySort, refcnt);
 		NS_RELEASE2(kNC_Size, refcnt);
 		NS_RELEASE2(kNC_SizeSort, refcnt);
+		NS_RELEASE2(kNC_Lines, refcnt);
 		NS_RELEASE2(kNC_Total, refcnt);
 		NS_RELEASE2(kNC_Unread, refcnt);
 		NS_RELEASE2(kNC_MessageChild, refcnt);
@@ -455,10 +458,11 @@ NS_IMETHODIMP nsMsgMessageDataSource::GetTargets(nsIRDFResource* source,
 		if((kNC_Subject == property) || (kNC_Date == property) ||
 				(kNC_Status == property) || (kNC_Flagged == property) ||
 				(kNC_PriorityString == property) || (kNC_StatusString) ||
-				(kNC_Priority == property) || (kNC_Size == property) ||
-				(kNC_IsUnread == property) || (kNC_IsImapDeleted == property) || 
-				(kNC_OrderReceived == property) || (kNC_HasAttachment == property) ||
-				(kNC_MessageType == property) || (kNC_ThreadState == property))
+				(kNC_Priority == property) || (kNC_Size == property) || 
+				(kNC_Lines == property ) || (kNC_IsUnread == property) || 
+				(kNC_IsImapDeleted == property) || (kNC_OrderReceived == property) || 
+				(kNC_HasAttachment == property) || (kNC_MessageType == property) || 
+				(kNC_ThreadState == property))
 		{
       rv = NS_NewSingletonEnumerator(targets, source);
 		}
@@ -535,6 +539,7 @@ nsMsgMessageDataSource::HasArcOut(nsIRDFResource *source, nsIRDFResource *aArc, 
                aArc == kNC_Priority ||
                aArc == kNC_PriorityString ||
                aArc == kNC_Size ||
+               aArc == kNC_Lines ||
                aArc == kNC_IsUnread ||
                aArc == kNC_HasAttachment ||
                aArc == kNC_IsImapDeleted ||
@@ -628,6 +633,7 @@ nsMsgMessageDataSource::getMessageArcLabelsOut(PRBool showThreads,
 	(*arcs)->AppendElement(kNC_Priority); 
 	(*arcs)->AppendElement(kNC_PriorityString);
 	(*arcs)->AppendElement(kNC_Size);
+	(*arcs)->AppendElement(kNC_Lines);
 	(*arcs)->AppendElement(kNC_IsUnread);
 	(*arcs)->AppendElement(kNC_HasAttachment);
 	(*arcs)->AppendElement(kNC_IsImapDeleted);
@@ -1129,6 +1135,8 @@ nsMsgMessageDataSource::createMessageNode(nsIMessage *message,
 		rv = createMessageSizeNode(message, target, PR_FALSE);
 	else if ((kNC_SizeSort == property))
 		rv = createMessageSizeNode(message, target, PR_TRUE);
+	else if ((kNC_Lines == property))
+		rv = createMessageLinesNode(message, target);
 	else if (( kNC_Total == property))
 		rv = createMessageTotalNode(message, target);
 	else if ((kNC_Unread == property))
@@ -1645,6 +1653,19 @@ nsMsgMessageDataSource::createMessageSizeNode(nsIMessage *message, nsIRDFNode **
 	}
 	else
 		rv = createIntNode(sizeInKB, target, getRDFService());
+	return rv;
+}
+
+nsresult
+nsMsgMessageDataSource::createMessageLinesNode(nsIMessage *message, nsIRDFNode **target)
+{
+	nsresult rv;
+	PRUint32 lines;
+	rv = message->GetLineCount(&lines);
+	if(NS_FAILED(rv))
+		return rv;
+	
+	rv = createIntNode(lines, target, getRDFService());
 	return rv;
 }
 

@@ -158,6 +158,8 @@ protected:
 
 	nsresult createMessageSizeNode(nsIMessage *message, nsIRDFNode **target, PRBool sort);
 
+	nsresult createMessageLinesNode(nsIMessage *message, nsIRDFNode **target);
+
 	nsresult createMessageIsUnreadNode(nsIMessage *message, nsIRDFNode **target, PRBool sort);
 	nsresult createMessageHasAttachmentNode(nsIMessage *message, nsIRDFNode **target);
 	nsresult createMessageIsImapDeletedNode(nsIMessage *message, nsIRDFNode **target);
@@ -237,6 +239,7 @@ protected:
 	static nsIRDFResource* kNC_PrioritySort;
 	static nsIRDFResource* kNC_Size;
 	static nsIRDFResource* kNC_SizeSort;
+	static nsIRDFResource* kNC_Lines;
 	static nsIRDFResource* kNC_Total;
 	static nsIRDFResource* kNC_Unread;
 	static nsIRDFResource* kNC_MessageChild;
