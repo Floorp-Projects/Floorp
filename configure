@@ -9335,8 +9335,8 @@ fi
 
 
 
-echo $ac_n "checking to determine if the C++ \"using\" keyword can change access""... $ac_c" 1>&6
-echo "configure:9340: checking to determine if the C++ \"using\" keyword can change access" >&5
+echo $ac_n "checking whether the C++ \"using\" keyword can change access""... $ac_c" 1>&6
+echo "configure:9340: checking whether the C++ \"using\" keyword can change access" >&5
 if eval "test \"`echo '$''{'ac_cv_cpp_using_can_change_access'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
 else
@@ -9372,8 +9372,8 @@ EOF
 
 fi
 
-echo $ac_n "checking to determine if the C++ \"using\" keyword resolves ambiguity""... $ac_c" 1>&6
-echo "configure:9377: checking to determine if the C++ \"using\" keyword resolves ambiguity" >&5
+echo $ac_n "checking whether the C++ \"using\" keyword resolves ambiguity""... $ac_c" 1>&6
+echo "configure:9377: checking whether the C++ \"using\" keyword resolves ambiguity" >&5
 if eval "test \"`echo '$''{'ac_cv_cpp_using_resolves_ambiguity'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
 else
@@ -9447,8 +9447,8 @@ EOF
 
 fi
 
-echo $ac_n "checking for unambiguous standard template operator!=()""... $ac_c" 1>&6
-echo "configure:9452: checking for unambiguous standard template operator!=()" >&5
+echo $ac_n "checking whether standard template operator!=() is ambiguous""... $ac_c" 1>&6
+echo "configure:9452: checking whether standard template operator!=() is ambiguous" >&5
 if eval "test \"`echo '$''{'ac_cv_cpp_unambiguous_std_notequal'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
 else
