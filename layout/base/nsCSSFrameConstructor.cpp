@@ -3236,43 +3236,39 @@ nsCSSFrameConstructor::InitializeScrollFrame(nsIPresContext*          aPresConte
   nsHTMLContainerFrame::CreateViewForFrame(*aPresContext, scrolledFrame,
                                            scrolledPseudoStyle, PR_TRUE);
 
+  // The area frame is a floater container
+  nsFrameConstructorSaveState floaterSaveState;
+  aState.PushFloaterContainingBlock(scrolledFrame, floaterSaveState);
+  
   // Process children
-  nsAbsoluteItems floaterList(scrolledFrame);
-  if (aIsAbsolutelyPositioned || aIsFixedPositioned) {
+  nsFrameConstructorSaveState absoluteSaveState;
+  nsFrameItems                childItems;
+  PRBool                      isPositionedContainingBlock = aIsAbsolutelyPositioned ||
+                                                            aIsFixedPositioned;
+
+  if (isPositionedContainingBlock) {
     // The area frame becomes a container for child frames that are
     // absolutely positioned
-    nsAbsoluteItems  absoluteItems(scrolledFrame);
-    nsFrameItems     childItems;
-    ProcessChildren(aPresContext, aState, aContent, scrolledFrame, PR_FALSE,
-                    childItems);
-
-    // Set the initial child lists
-    scrolledFrame->SetInitialChildList(*aPresContext, nsnull,
-                                       childItems.childList);
-    if (nsnull != absoluteItems.childList) {
-      scrolledFrame->SetInitialChildList(*aPresContext,
-                                         nsLayoutAtoms::absoluteList,
-                                         absoluteItems.childList);
-    }
-    if (floaterList.childList) {
-      scrolledFrame->SetInitialChildList(*aPresContext,
-                                         nsLayoutAtoms::floaterList,
-                                         floaterList.childList);
-    }
-  } else {
-    nsFrameItems childItems;
-    ProcessChildren(aPresContext, aState, aContent, scrolledFrame, PR_FALSE,
-                    childItems);
-  
-    // Set the initial child lists
-    scrolledFrame->SetInitialChildList(*aPresContext, nsnull,
-                                       childItems.childList);
-    if (floaterList.childList) {
-      scrolledFrame->SetInitialChildList(*aPresContext,
-                                         nsLayoutAtoms::floaterList,
-                                         floaterList.childList);
-    }
+    aState.PushAbsoluteContainingBlock(scrolledFrame, absoluteSaveState);
   }
+     
+  ProcessChildren(aPresContext, aState, aContent, scrolledFrame, PR_FALSE,
+                  childItems);
+    
+  // Set the scrolled frame's initial child lists
+  scrolledFrame->SetInitialChildList(*aPresContext, nsnull, childItems.childList);
+  if (isPositionedContainingBlock && aState.mAbsoluteItems.childList) {
+    scrolledFrame->SetInitialChildList(*aPresContext,
+                                       nsLayoutAtoms::absoluteList,
+                                       aState.mAbsoluteItems.childList);
+  }
+  if (aState.mFloatedItems.childList) {
+    scrolledFrame->SetInitialChildList(*aPresContext,
+                                       nsLayoutAtoms::floaterList,
+                                       aState.mFloatedItems.childList);
+  }
+
+  // Set the scroll frame's initial child list
   scrollFrame->SetInitialChildList(*aPresContext, nsnull, scrolledFrame);
   aNewFrame = scrollFrame;
 
