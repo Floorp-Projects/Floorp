@@ -27,7 +27,7 @@
 #include <stdio.h>
 #include <assert.h>
 
-#ifdef XP_PC
+#if defined(XP_PC) && !defined(XP_OS2)
 #include <windows.h>
 #endif
 
@@ -263,7 +263,7 @@ nsresult nsIMAP4TestDriver::RunDriver()
 #ifdef XP_UNIX
         m_eventQueue->ProcessPendingEvents();
 #endif
-#ifdef XP_PC	
+#if defined(XP_PC) && !defined(XP_OS2)
 		MSG msg;
 		if (PeekMessage(&msg, NULL, 0, 0, PM_REMOVE)) 
 		{

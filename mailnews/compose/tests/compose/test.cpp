@@ -447,7 +447,7 @@ int main(int argc, char *argv[])
     }    
   }
   
-#ifdef XP_PC
+#if defined(XP_PC) && !defined(XP_OS2)
   printf("Sitting in an event processing loop ...Hit Cntl-C to exit...");
   while (keepOnRunning)
   {

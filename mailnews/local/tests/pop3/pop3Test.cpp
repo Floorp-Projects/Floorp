@@ -27,7 +27,7 @@
 
 #include "nsCOMPtr.h"
 
-#ifdef XP_PC
+#if defined(XP_PC) && !defined(XP_OS2)
 #include <windows.h>
 #endif
 
@@ -198,7 +198,7 @@ nsresult nsPop3TestDriver::RunDriver()
         printf(".");
         m_eventQueue->ProcessPendingEvents();
 #endif
-#ifdef XP_PC	
+#if defined(XP_PC) && !defined(XP_OS2)	
 		MSG msg;
 		if (PeekMessage(&msg, NULL, 0, 0, PM_REMOVE)) 
 		{
