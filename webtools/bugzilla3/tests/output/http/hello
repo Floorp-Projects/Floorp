@@ -7,20 +7,19 @@ COSES
   <include href="template.html.header"/>
 </set>
 
-<text><![CDATA[
-  <p>This is the main page of the test PLIF project. It is being generated from an XML text file!</p>
-  <p>From here you may: <a href="nph-Main?command=login">Say Hello</a> or <a href="nph-Main?command=cosesEditor">Edit The Strings</a>.</p>
-  <p>If prompted for a username/password, use "open"/"sesame".</p>
-  <pre>
-]]></text>
+<text><![CDATA[  <p>Welcome to the Main PLIF Test Application</p>]]></text><br/>
 
-<text escape="html">
-  <include href="debug.dumpVars"/>
-</text>
-
-<text><![CDATA[
-  </pre>
-]]></text>
+<if lvalue="(data.session)" condition="is" rvalue="hash"><![CDATA[
+  <p>You have logged in! You may <a href="nph-Main?command=loginLogout">log out</a>.</p>
+  <p>See also:</p>
+  <ul>
+   <li><a href="nph-Main?command=cosesEditor">Edit the strings</a></li>
+   <li><a href="nph-Main?command=userPrefs">Edit user preferences</a></li>
+  </ul>
+]]></if><else><![CDATA[
+  <p>If you have already registered you may <a href="nph-Main?command=login">log in</a>.</p>
+  <p>Otherwise you may <a href="nph-Main?command=loginRequestAccount">create an account</a>.</p>
+]]></else>
 
 <include href="template.html.footer"/>
 

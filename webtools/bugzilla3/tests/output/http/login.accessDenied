@@ -15,9 +15,5 @@ COSES
   </p>
 ]]></text>
 
-<text><![CDATA[  <pre>]]><br/></text>
-<text escape="html"><include href="debug.dumpVars"/><br/></text>
-<text><![CDATA[  </pre>]]></text>
-
 <include href="template.html.footer"/>
 </text>

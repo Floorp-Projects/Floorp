@@ -23,7 +23,7 @@ contact: </text>
 <text><![CDATA[
    </p>
    <p>
-    <input type="hidden" name="command" value="SendPassword">
+    <input type="hidden" name="command" value="loginSendPassword">
     <select name="protocol">]]>
  <set variable="protocol" value="(data.contacts)" order="case insensitive lexical" source="values">
   <br/><text value="     &lt;option name=&quot;(protocol)&quot;&gt;(protocol)&lt;/option&gt;"/>
@@ -43,10 +43,6 @@ contact: </text>
    </p>
   </form>
 ]]><br/></text>
-
-<text><![CDATA[  <pre>]]><br/></text>
-<text escape="html"><include href="debug.dumpVars"/><br/></text>
-<text><![CDATA[  </pre>]]></text>
 
 <include href="template.html.footer"/>
 </text>
