@@ -4,6 +4,7 @@ var imageElement;
 var tagName = "img"
 var advanced = true;
 var wasEnableAll = false;
+var hasAnyChanged = false;
 
 // dialog initialization code
 function Startup()
@@ -124,37 +125,25 @@ function initDialog() {
   if ( alignpopup )
   {
     alignvalue = imageElement.getAttribute("align");
-    if ( alignvalue == "null" )
+    if ( alignvalue == "" )
     {
-      alignvalue = "bottom";
+      alignvalue = "at the bottom";
     }
-  
-    alignpopup.value = alignvalue;
+    dump( "popup value = " + alignvalue + "\n" );
+    alignpopup.setAttribute( "value", alignvalue );
   }
 
   // set spacing editfields
   sizevalue = imageElement.getAttribute("hspace");
-  if ( sizevalue == "null" )
-  {
-    sizevalue = "";
-  }
   dialog.imagelrInput.value = sizevalue;
   
   sizevalue = imageElement.getAttribute("vspace");
-  if ( sizevalue == "null" )
-  {
-    sizevalue = "";
-  }
   dialog.imagetbInput.value = sizevalue;
   
   sizevalue = imageElement.getAttribute("border");
-  if ( sizevalue == "null" )
-  {
-    sizevalue = "";
-  }
   dialog.imageborderInput.value = sizevalue;    
 
- doOverallEnabling();
+  doOverallEnabling();
 }
 
 function chooseFile()
@@ -163,6 +152,7 @@ function chooseFile()
   fileName = editorShell.GetLocalFileURL(window, "img");
   if (fileName && fileName != "") {
     dialog.srcInput.value = fileName;
+    doValueChanged();
   }
   // Put focus into the input field
   dialog.srcInput.focus();
@@ -185,23 +175,34 @@ function onAdvanced()
   }
 }
 
+function doValueChanged()
+{
+  if ( !hasAnyChanged )
+  {
+    hasAnyChanged = true;
+    doOverallEnabling();
+  }
+}
+
 function SelectWidthUnits()
 {
    list = document.getElementById("WidthUnits");
    value = list.options[list.selectedIndex].value;
    dump("Selected item: "+value+"\n");
+
+   doValueChanged();
 }
 
 function OnChangeSrc()
 {
   dump("OnChangeSrc ****************\n");
-  doOverallEnabling();
+  doValueChanged();
 }
 
 function doDimensionEnabling( doEnable )
 {
-  SetLabelEnabledByID( "originalsizeLabel", doEnable );
-  SetLabelEnabledByID( "customsizeLabel", doEnable );
+//  SetLabelEnabledByID( "originalsizeLabel", doEnable );
+//  SetLabelEnabledByID( "customsizeLabel", doEnable );
 
 	customradio = document.getElementById( "customsizeRadio" );
   if ( customradio )
@@ -213,9 +214,9 @@ function doDimensionEnabling( doEnable )
     SetElementEnabledByID( "heightunitSelect", doEnable && customradio.checked );
     SetElementEnabledByID( "constrainCheckbox", doEnable && customradio.checked );
 
-    SetLabelEnabledByID( "imagewidthLabel", doEnable && customradio.checked );
-    SetLabelEnabledByID( "imageheightLabel", doEnable && customradio.checked );
-    SetLabelEnabledByID( "constrainLabel", doEnable && customradio.checked );
+//    SetLabelEnabledByID( "imagewidthLabel", doEnable && customradio.checked );
+//    SetLabelEnabledByID( "imageheightLabel", doEnable && customradio.checked );
+//    SetLabelEnabledByID( "constrainLabel", doEnable && customradio.checked );
   }
 }
 
@@ -232,7 +233,7 @@ function doOverallEnabling()
   btn = document.getElementById("OK");
   if ( btn )
   {
-    btn.disabled = !canEnableAll;
+    btn.disabled = (!canEnableAll && hasAnyChanged);
   }
   
 	fieldset = document.getElementById("imagedimensionsFieldset");
@@ -242,6 +243,7 @@ function doOverallEnabling()
     doDimensionEnabling( canEnableAll );
   }
   
+    // commented out since it asserts right now
 //  SetLabelEnabledByID( "imagealignmentLabel", canEnableAll );
   SetElementEnabledByID("image.alignType", canEnableAll );
 
@@ -284,24 +286,32 @@ function onOK()
   }
   
   // spacing attributes
-  if ( dialog.imagelrInput.length > 0 )
+  if ( dialog.imagelrInput.value.length > 0 )
     imageElement.setAttribute( "hspace", dialog.imagelrInput.value );
   else
     imageElement.removeAttribute( "hspace" );
-  dump ( "hspace is " + dialog.imagelrInput.value + "\n");
   
-  if ( dialog.imagetbInput.length > 0 )
+  if ( dialog.imagetbInput.value.length > 0 )
     imageElement.setAttribute( "vspace", dialog.imagetbInput.value );
   else
     imageElement.removeAttribute( "vspace" );
-  dump ( "vspace is " + dialog.imagetbInput.value + "\n");
   
   // note this is deprecated and should be converted to stylesheets
-  if ( dialog.imageborderInput.length > 0 )
+  if ( dialog.imageborderInput.value.length > 0 )
     imageElement.setAttribute( "border", dialog.imageborderInput.value );
   else
     imageElement.removeAttribute( "border" );
-  dump ( "border is " + dialog.imageborderInput.value + "\n");
+
+  alignpopup = document.getElementById("image.alignType");
+  if ( alignpopup )
+  {
+    alignpopup.getAttribute( "value", alignvalue );
+    dump( "popup value = " + alignvalue + "\n" );
+    if ( alignvalue == "at the bottom" )
+      imageElement.removeAttribute("align");
+    else
+      imageElement.setAttribute("align", alignvalue );
+  }
 
   // handle insertion of new image
   if (insertNew) {
