@@ -776,6 +776,8 @@ nsXBLBinding::InstallEventHandlers(nsIXBLBinding** aBinding)
 
       if (found) { 
         nsCOMPtr<nsIDOMEventReceiver> receiver = do_QueryInterface(mBoundElement);
+        /*
+        // Disable ATTACHTO capability for Mozilla 1.0
         nsAutoString attachType;
         child->GetAttribute(kNameSpaceID_None, kAttachToAtom, attachType);
         if (attachType == NS_LITERAL_STRING("_document") || 
@@ -798,6 +800,7 @@ nsXBLBinding::InstallEventHandlers(nsIXBLBinding** aBinding)
           domDoc->GetElementById(attachType, getter_AddRefs(otherElement));
           receiver = do_QueryInterface(otherElement);
         }
+        */
 
         // Figure out if we're using capturing or not.
         PRBool useCapture = PR_FALSE;
