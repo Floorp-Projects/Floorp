@@ -3080,7 +3080,7 @@ NET_WriteCacheFAT(char *filename, XP_Bool final_call)
 }
 
 MODULE_PRIVATE void
-NET_CleanupCache (char * filename)
+NET_CleanupCache (void)
 {
 #ifdef NU_CACHE
     Cache_Shutdown();
