@@ -29,6 +29,8 @@ static const PRBool gNoisy = PR_FALSE;
 DeleteTextTxn::DeleteTextTxn()
   : EditTxn()
 {
+  SetTransactionDescriptionID( kTransactionID );
+  /* log description initialized in parent constructor */
 }
 
 DeleteTextTxn::~DeleteTextTxn()
