@@ -2187,6 +2187,17 @@ nsComboboxControlFrame::HandleEvent(nsIPresContext* aPresContext,
     return NS_OK;
   }
 
+  // Toggle list open and close on Alt-Down or Alt-Up
+  if (aEvent->message == NS_KEY_PRESS) {
+    nsKeyEvent* keyEvent = (nsKeyEvent*)aEvent;
+    nsInputEvent *inputEvent = (nsInputEvent*)aEvent;
+    if (!inputEvent->isShift && !inputEvent->isControl && !inputEvent->isMeta &&
+      inputEvent->isAlt && (keyEvent->keyCode == NS_VK_DOWN || (mDroppedDown && keyEvent->keyCode == NS_VK_UP)))
+        ToggleList(aPresContext);
+  }
+
+
+
   // If we have style that affects how we are selected, feed event down to
   // nsFrame::HandleEvent so that selection takes place when appropriate.
   const nsStyleUserInterface* uiStyle;
