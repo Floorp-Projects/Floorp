@@ -18,7 +18,7 @@
 <html:div style="border-style:inset" flex="100%">
 	<tree rdf:datasources="rdf:msgaccountmanager"
           rdf:containment="http://home.netscape.com/NC-rdf#Settings"
-          onclick="parent.onAccountClick(event)" id="accounttree"
+          onselect="onAccountClick(event.target)" id="accounttree"
           style="height: 100%"
           ref="msgaccounts:/">
 	  <template>

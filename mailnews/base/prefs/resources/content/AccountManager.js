@@ -38,6 +38,14 @@ function onLoad() {
 
   accountManager = mailsession.accountManager;
 
+  var tree = document.getElementById("accounttree");
+  var items = tree.getElementsByTagName("treeitem");
+  
+  if (items && items.length>0) {
+    // skip the template?
+    tree.selectItem(items[1]);
+  }
+  
   doSetOKCancel(onOk, 0);
 }
 
@@ -142,12 +150,12 @@ function onPageLoad(event, name) {
 // called when someone clicks on an account
 // figure out context by what they clicked on
 //
-function onAccountClick(event) {
+function onAccountClick(tree) {
 
+  if (tree.selectedItems.length < 1) return;
+  var node = tree.selectedItems[0];
   // get the page to load
   // (stored in the PageTag attribute of this node)
-  var node = event.target.parentNode.parentNode;
-  if (node.tagName != "treeitem") return;
   var pageId = node.getAttribute('PageTag');
 
 
