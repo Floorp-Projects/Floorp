@@ -207,6 +207,54 @@
   }
 
 
+	function EditorTestSelection()
+	{
+    appCore = XPAppCoresManager.Find(editorName);  
+    if (appCore != null)
+    {
+ 	    dump("Testing selection\n");
+	    var selection = appCore.editorSelection;
+	    if (selection)
+	    {
+		    dump("Got selection\n");
+	    	var	firstRange = selection.getRangeAt(0);
+	    	if (firstRange)
+	    	{
+	    		dump("Range contains \"");
+	    		dump(firstRange.toString() + "\"\n");
+	    	}
+	    }
+	    
+    }
+    else
+    {
+      dump("EditorAppCore has not been created!\n");
+    }
+	}
+
+	function EditorTestDocument()
+	{
+    appCore = XPAppCoresManager.Find(editorName);  
+    if (appCore != null)
+    {
+	    dump("Getting document\n");
+	    var theDoc = appCore.editorDocument;
+    	if (theDoc)
+    	{
+    		dump("Got the doc\n");
+    	  dump("Document name:" + theDoc.nodeName + "\n");
+    	  dump("Document type:" + theDoc.doctype + "\n");
+	    }
+	    else
+	    {
+	    		dump("Failed to get the doc\n");
+	    }
+    }
+    else
+    {
+      dump("EditorAppCore has not been created!\n");
+    }
+	}
 
 	/* Status calls */
 	function onBoldChange()
