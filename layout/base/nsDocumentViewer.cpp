@@ -3038,6 +3038,8 @@ DocumentViewerImpl::Print(nsIPrintSettings*       aPrintSettings,
                           nsIWebProgressListener* aWebProgressListener)
 {
 #ifdef NS_PRINTING
+  INIT_RUNTIME_ERROR_CHECKING();
+
   // Temporary code for Bug 136185
   nsCOMPtr<nsIXULDocument> xulDoc(do_QueryInterface(mDocument));
   if (xulDoc) {

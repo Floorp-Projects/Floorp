@@ -49,6 +49,10 @@
 
 #include "nsString.h"
 
+#if defined(DEBUG_rods) && defined(MOZ_LAYOUTDEBUG)
+#include "nsIDebugObject.h"
+#endif
+
 #define DOC_TITLE_LENGTH      64
 
 static NS_DEFINE_CID(kPrefCID, NS_PREF_CID);
@@ -789,8 +793,28 @@ NS_IMETHODIMP nsDeviceContextWin :: BeginDocument(PRUnichar * aTitle, PRUnichar*
     docinfo.cbSize = sizeof(docinfo);
     docinfo.lpszDocName = title != nsnull?title:"Mozilla Document";
 
-#ifdef DEBUG_rods
+#if defined(DEBUG_rods) && defined(MOZ_LAYOUTDEBUG)
     docinfo.lpszOutput = "\\p.ps";
+
+    // This is for overriding the above when doing the runtime checking
+    char * tempFileName = nsnull;
+    nsCOMPtr<nsIDebugObject>debugObj = do_GetService("@mozilla.org/debug/debugobject;1");
+    if (debugObj) {
+      PRBool isDoingTests;
+      if (NS_SUCCEEDED(debugObj->GetDoRuntimeTests(&isDoingTests)) && isDoingTests) {
+        PRUnichar * name;
+        debugObj->GetPrintFileName(&name);
+        if (name) {
+          if (*name) {
+            nsCString cStrName;
+            cStrName.AssignWithConversion(name);
+            tempFileName = ToNewCString(cStrName);
+          }
+          nsMemory::Free(name);
+        }
+        docinfo.lpszOutput = tempFileName;
+      }
+    }
 #else
     docinfo.lpszOutput = docName;
 #endif
@@ -808,6 +832,12 @@ NS_IMETHODIMP nsDeviceContextWin :: BeginDocument(PRUnichar * aTitle, PRUnichar*
 
     if (title != nsnull) delete [] title;
     if (docName != nsnull) nsMemory::Free(docName);
+
+#if defined(DEBUG_rods) && defined(MOZ_LAYOUTDEBUG)
+    if (tempFileName) {
+      nsMemory::Free(tempFileName);
+    }
+#endif
   }
 
   return rv;
