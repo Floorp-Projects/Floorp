@@ -176,6 +176,7 @@ and to ensure that no more events will be delivered for that owner.
 #elif defined(WIN16) || defined(__MINGW32__)
 #include <windows.h>
 #elif defined(XP_OS2)
+#define INCL_DOSMISC
 #define INCL_DOSPROCESS
 #include <os2.h>
 #endif
