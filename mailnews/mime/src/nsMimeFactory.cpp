@@ -41,8 +41,8 @@ static NS_DEFINE_CID(kComponentManagerCID, NS_COMPONENTMANAGER_CID);
 #include "nsMimeObjectClassAccess.h"
 static   NS_DEFINE_CID(kCMimeMimeObjectClassAccessCID, NS_MIME_OBJECT_CLASS_ACCESS_CID);
 
-#include "nsMimeHeaderConverter.h"
-static   NS_DEFINE_CID(kCMimeHeaderConverterCID, NS_MIME_HEADER_CONVERTER_CID);
+#include "nsMimeConverter.h"
+static   NS_DEFINE_CID(kCMimeConverterCID, NS_MIME_CONVERTER_CID);
 
 // These are necessary for the new stream converter/plugin interface...
 static   NS_DEFINE_IID(kINetPluginIID,      NS_INET_PLUGIN_IID);
@@ -138,9 +138,9 @@ nsresult nsMimeFactory::CreateInstance(nsISupports *aOuter, const nsIID &aIID, v
 		if (res != NS_OK)  // was there a problem creating the object ?
 		  return res;   
   }
-  else if (mClassID.Equals(kCMimeHeaderConverterCID))
+  else if (mClassID.Equals(kCMimeConverterCID))
   {
-    res = NS_NewMimeHeaderConverter((nsIMimeHeaderConverter **) &inst);
+    res = NS_NewMimeConverter((nsIMimeConverter **) &inst);
 		if (res != NS_OK)  // was there a problem creating the object ?
 		  return res;   
   }
@@ -225,7 +225,7 @@ extern "C" NS_EXPORT nsresult NSRegisterSelf(nsISupports* aServMgr, const char *
   if (NS_FAILED(rv)) goto done;
 
   // I18N Header Conversion routines
-  rv = compMgr->RegisterComponent(kCMimeHeaderConverterCID, NULL, NULL, path, 
+  rv = compMgr->RegisterComponent(kCMimeConverterCID, NULL, NULL, path, 
                                   PR_TRUE, PR_TRUE);
   if (NS_FAILED(rv)) goto done;
 
@@ -258,7 +258,7 @@ extern "C" NS_EXPORT nsresult NSUnregisterSelf(nsISupports* aServMgr, const char
   rv = compMgr->UnregisterComponent(kCMimeMimeObjectClassAccessCID, path);
   if (NS_FAILED(rv)) goto done;
   if (NS_FAILED(rv)) goto done;
-  rv = compMgr->UnregisterComponent(kCMimeHeaderConverterCID, path);
+  rv = compMgr->UnregisterComponent(kCMimeConverterCID, path);
   if (NS_FAILED(rv)) goto done;
 	rv = compMgr->UnregisterComponent(kINetPluginMIMECID, path);
   if (NS_FAILED(rv)) goto done;
