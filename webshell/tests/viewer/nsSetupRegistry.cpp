@@ -278,18 +278,15 @@ NS_SetupRegistry()
   // Create exeDir/"components"
   nsSpecialSystemDirectory sysdir(nsSpecialSystemDirectory::OS_CurrentProcessDirectory);
   sysdir += "components";
-  nsFilePath filePath(sysdir);
-  char *componentsDir = (char *) filePath;
+  const char *componentsDir = sysdir.GetAsString(); // native path
   if (componentsDir != NULL)
   {
 #ifdef XP_PC
 	  /* The PC version of the directory from filePath is of the form
 	   *	/y|/moz/mozilla/dist/bin/components
 	   * We need to remove the initial / and change the | to :
-	   * for all this to work with NSPR.
+	   * for all this to work with NSPR.	  
 	   */
-	  componentsDir++;
-	  componentsDir[1] = ':';
 #endif /* XP_PC */
 	  printf("nsComponentManager: Using components dir: %s\n", componentsDir);
 	  nsComponentManager::AutoRegister(nsIComponentManager::NS_Startup, componentsDir);
