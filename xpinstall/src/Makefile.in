@@ -67,6 +67,7 @@ LOCAL_INCLUDES	= -I$(srcdir)/../public
 EXTRA_DSO_LDOPTS =\
 			-L$(DIST)/lib \
 			-lneckoutil_s \
+			-lmozreg_s \
 			-L$(DIST)/bin \
 			-ljsdom \
 			$(ZLIB_LIBS)
