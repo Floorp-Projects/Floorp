@@ -62,7 +62,7 @@
 /**
  * A class for Processing XSL Stylesheets
  * @author <a href="mailto:kvisco@ziplink.net">Keith Visco</a>
- * @version $Revision: 1.20 $ $Date: 2001/06/10 16:41:51 $
+ * @version $Revision: 1.21 $ $Date: 2001/06/15 11:12:18 $
 **/
 class XSLTProcessor
 #ifndef TX_EXE
@@ -324,6 +324,15 @@ private:
     **/
     void processAttrValueTemplate
         (const String& attValue, String& result, Node* context, ProcessorState* ps);
+
+    /**
+     * Processes the children of the specified element using the given context node
+     * and ProcessorState
+     * @param node the context node
+     * @param xslElement the template to be processed. Must be != NULL
+     * @param ps the current ProcessorState
+    **/
+    void processChildren(Node* node, Element* xslElement, ProcessorState* ps);
 
     void processTemplate(Node* node, Node* xslTemplate, ProcessorState* ps, NamedMap* actualParams = NULL);
     void processTemplateParams(Node* xslTemplate, Node* context, ProcessorState* ps, NamedMap* actualParams);

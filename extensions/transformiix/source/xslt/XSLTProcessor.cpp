@@ -72,7 +72,7 @@
 /**
  * XSLTProcessor is a class for Processing XSL stylesheets
  * @author <a href="mailto:kvisco@ziplink.net">Keith Visco</a>
- * @version $Revision: 1.51 $ $Date: 2001/06/10 16:41:19 $
+ * @version $Revision: 1.52 $ $Date: 2001/06/15 11:12:17 $
 **/
 
 /**
@@ -978,7 +978,7 @@ void XSLTProcessor::processAction
                     if ( newAttr ) {
                         DocumentFragment* dfrag = resultDoc->createDocumentFragment();
                         ps->getNodeStack()->push(dfrag);
-                        processTemplate(node, actionElement, ps);
+                        processChildren(node, actionElement, ps);
                         ps->getNodeStack()->pop();
                         String value;
                         XMLDOMUtils::getNodeValue(dfrag, &value);
@@ -1036,13 +1036,13 @@ void XSLTProcessor::processAction
                                 expr = ps->getExpr(xslTemplate->getAttribute(TEST_ATTR));
                                 ExprResult* result = expr->evaluate(node, ps);
                                 if ( result->booleanValue() ) {
-                                    processTemplate(node, xslTemplate, ps);
+                                    processChildren(node, xslTemplate, ps);
                                     caseFound = MB_TRUE;
                                 }
                                 break;
                             }
                             case XSLType::OTHERWISE:
-                                processTemplate(node, xslTemplate, ps);
+                                processChildren(node, xslTemplate, ps);
                                 caseFound = MB_TRUE;
                                 break;
                             default: //-- invalid xsl:choose child
@@ -1057,7 +1057,7 @@ void XSLTProcessor::processAction
             {
                 DocumentFragment* dfrag = resultDoc->createDocumentFragment();
                 ps->getNodeStack()->push(dfrag);
-                processTemplate(node, actionElement, ps);
+                processChildren(node, actionElement, ps);
                 ps->getNodeStack()->pop();
                 String value;
                 if (!getText(dfrag, value, MB_FALSE,MB_TRUE)) {
@@ -1127,7 +1127,7 @@ void XSLTProcessor::processAction
                             node, ps);
                     }
                     //-- process template
-                    processTemplate(node, actionElement, ps);
+                    processChildren(node, actionElement, ps);
                     if( element ) ps->getNodeStack()->pop();
                 }
                 break;
@@ -1165,7 +1165,7 @@ void XSLTProcessor::processAction
                     //-- push nodeSet onto context stack
                     ps->getNodeSetStack()->push(nodeSet);
                     for (int i = 0; i < nodeSet->size(); i++) {
-                        processTemplate(nodeSet->get(i), xslAction, ps);
+                        processChildren(nodeSet->get(i), actionElement, ps);
                     }
                     //-- remove nodeSet from context stack
                     ps->getNodeSetStack()->pop();
@@ -1187,7 +1187,7 @@ void XSLTProcessor::processAction
 
                 ExprResult* exprResult = expr->evaluate(node, ps);
                 if ( exprResult->booleanValue() ) {
-                    processTemplate(node, actionElement, ps);
+                    processChildren(node, actionElement, ps);
                 }
                 delete exprResult;
 
@@ -1200,7 +1200,7 @@ void XSLTProcessor::processAction
 
                 DocumentFragment* dfrag = resultDoc->createDocumentFragment();
                 ps->getNodeStack()->push(dfrag);
-                processTemplate(node, actionElement, ps);
+                processChildren(node, actionElement, ps);
                 ps->getNodeStack()->pop();
                 XMLDOMUtils::getNodeValue(dfrag, &message);
                 delete dfrag;
@@ -1246,7 +1246,7 @@ void XSLTProcessor::processAction
                     }
                     DocumentFragment* dfrag = resultDoc->createDocumentFragment();
                     ps->getNodeStack()->push(dfrag);
-                    processTemplate(node, actionElement, ps);
+                    processChildren(node, actionElement, ps);
                     ps->getNodeStack()->pop();
                     String value;
                     if (!getText(dfrag, value, MB_FALSE,MB_TRUE)) {
@@ -1389,11 +1389,7 @@ void XSLTProcessor::processAction
                     }
                 }
                 //-- process children
-                Node* tmp = xslAction->getFirstChild();
-                while (tmp) {
-                    processAction(node,tmp,ps);
-                    tmp = tmp->getNextSibling();
-                }
+                processChildren(node, actionElement,ps);
                 ps->getNodeStack()->pop();
 #ifndef TX_EXE
                 if ( newDefaultNS ) {
@@ -1516,6 +1512,29 @@ NamedMap* XSLTProcessor::processParameters(Element* xslAction, Node* context, Pr
 } //-- processParameters
 
 /**
+ * Processes the children of the specified element using the given context node
+ * and ProcessorState
+ * @param node the context node
+ * @param xslElement the template to be processed. Must be != NULL
+ * @param ps the current ProcessorState
+**/
+void XSLTProcessor::processChildren(Node* node, Element* xslElement, ProcessorState* ps) {
+
+    NS_ASSERTION(xslElement,"xslElement is NULL in call to XSLTProcessor::processChildren!");
+
+    Stack* bindings = ps->getVariableSetStack();
+    NamedMap localBindings;
+    localBindings.setObjectDeletion(MB_TRUE);
+    bindings->push(&localBindings);
+    Node* child = xslElement->getFirstChild();
+    while (child) {
+        processAction(node, child, ps);
+        child = child->getNextSibling();
+    }
+    bindings->pop();
+} //-- processChildren
+
+/**
  * Processes the specified template using the given context, ProcessorState, and actual
  * parameters.
  * @param xslTemplate the template to be processed
@@ -1624,14 +1643,10 @@ ExprResult* XSLTProcessor::processVariable
         return expr->evaluate(node, ps);
     }
     else {
-        Node* tmpNode = xslVariable->getFirstChild();
         Document* resultTree = ps->getResultDocument();
         NodeStack* nodeStack = ps->getNodeStack();
         nodeStack->push(resultTree->createDocumentFragment());
-        while (tmpNode) {
-            processAction(node, tmpNode, ps);
-            tmpNode = tmpNode->getNextSibling();
-        }
+        processChildren(node, xslVariable, ps);
         Node* node = nodeStack->pop();
         //-- add clean up for This new NodeSet;
         NodeSet* nodeSet = new NodeSet();
@@ -1651,7 +1666,7 @@ void XSLTProcessor::xslCopy(Node* node, Element* action, ProcessorState* ps) {
     switch ( node->getNodeType() ) {
         case Node::DOCUMENT_NODE:
             //-- just process children
-            processTemplate(node, action, ps);
+            processChildren(node, action, ps);
             break;
         case Node::ELEMENT_NODE:
         {
@@ -1687,7 +1702,7 @@ void XSLTProcessor::xslCopy(Node* node, Element* action, ProcessorState* ps) {
             processAttributeSets(action->getAttribute(USE_ATTRIBUTE_SETS_ATTR), copy, ps);
 
             //-- process template
-            processTemplate(node, action, ps);
+            processChildren(node, action, ps);
             ps->getNodeStack()->pop();
 #ifndef TX_EXE
             if ( newDefaultNS ) {
