@@ -20,7 +20,7 @@ fi
 
 Echo()
 {
-    if [ ! "$O_SILENT" = "ON" ] ; then
+    if [ "$O_SILENT" = "OFF" ] ; then
         echo $*
     fi
 }
@@ -66,7 +66,7 @@ qa_stage_init()
     export IPLANET_TBX_URL IPLANET_DQA_URL MOZ_TBX_URL MOZ_DQA_URL
     STAGE_1=/u/sonmi/tmp/ftp_stage
     cd $STAGE_1
-    rm all.tar*
+    rm all.tar* 2>/dev/null
     TBX_STAGE=$STAGE_1/tinderbox
     DQA_STAGE=$STAGE_1/daily_qa/${DAYBUILD}
 
@@ -106,7 +106,8 @@ qa_stage_tbx()
 {
     Echo "tbx: "
     cd $TBX_RESULTDIR
-    for w in `find . $tbx_find_at -name "result.html"`
+    Echo "find from $TBX_FIND_FROM"
+    for w in `find $TBX_FIND_FROM  -name "result.html"`
     do
         if [ ! -d $TBX_STAGE/`dirname $w` ] ; then
             mkdir -p $TBX_STAGE/`dirname $w`
@@ -114,12 +115,66 @@ qa_stage_tbx()
         rm $TBX_STAGE/$w 2>/dev/null
         cat $w | reformat_qa >$TBX_STAGE/$w
     done
-    for w in `find . $tbx_find_at -name "output.log" -o  -name "results.html"`
+    for w in `find $TBX_FIND_FROM -name "output.log" -o  -name "results.html"`
     do
         if [ ! -d $TBX_STAGE/`dirname $w` ] ; then
             mkdir -p $TBX_STAGE/`dirname $w`
         fi
         cp $w $TBX_STAGE/$w
+    done
+}
+
+match_tbxdirs()
+{
+    YY=`date +%Y`
+    DD=`date +%d`
+    MM=`date +%m`
+    HH=`date +%H`
+
+    TBX_FIND_FROM="*-$YY$MM$DD-$HH.*"
+    i=$1
+    while [ $i -gt 0 ] ; do
+        i=`expr $i - 1`
+        HH=`expr $HH - 1`
+        if [ $HH -lt 0 ] ; then
+            HH=23
+            DD=`expr $DD - 1`
+            if [ $DD  -eq 0 ] ; then
+                MM=`expr $MM - 1`
+                case $MM in
+                    0)
+                        YY=`expr $YY - 1`
+                        MM=12
+                        DD=31
+                        ;;
+                    [13578]|10|12)
+                        DD=31
+                        ;;
+                    2)
+                        DD=28
+                        ;;
+                    [469]|11)
+                        DD=30
+                        ;;
+                esac
+            fi
+        fi
+        case $MM in
+            [123456789])
+               MM=0$MM
+               ;;
+        esac
+        case $DD in
+            [123456789])
+               DD=0$DD
+               ;;
+        esac
+        case $HH in
+            [0123456789])
+               HH=0$HH
+               ;;
+        esac
+        TBX_FIND_FROM="$TBX_FIND_FROM *-$YY$MM$DD-$HH.*"
     done
 }
 
@@ -136,7 +191,8 @@ eval_opts()
   O_INCREMENTAL=OFF
   BUILDDATE=`date +%m%d`
   NSSVER=tip
-  tbx_find_at=""
+
+  TBX_FIND_FROM="."
 
   while [ -n "$1" ]
   do
@@ -146,7 +202,7 @@ eval_opts()
             ;;
         -ti)
             DO_TBX=ON
-            tbx_find_at="-atime 1"
+            match_tbxdirs 2
             O_INCREMENTAL=ON
             ;;
         -t)
@@ -185,7 +241,7 @@ if [ "$DO_TBX" = "ON" ] ; then
 fi
 cd $STAGE_1
 Echo "tar..."
-if [ ! "$O_SILENT" = "ON" ] ; then
+if [ "$O_SILENT" = "ON" ] ; then
     tar cf all.tar daily_qa        tinderbox
 else
     tar cvf all.tar daily_qa        tinderbox
@@ -194,9 +250,14 @@ gzip all.tar
 SSH_AUTH_SOCK=`grep SSH_AUTH_SOCK /u/sonmi/.ssh/ssh-agent.info | sed -e 's/setenv SSH_AUTH_SOCK //' -e 's/;//'`
 SSH_AGENT_PID=`grep SSH_AGENT_PID /u/sonmi/.ssh/ssh-agent.info | sed -e 's/setenv SSH_AGENT_PID //' -e 's/;//'`
 export SSH_AUTH_SOCK SSH_AGENT_PID
-set -x
-scp all.tar.gz sonmi@stage.mozilla.org:/home/ftp/pub/security/nss
-ssh -l sonmi stage.mozilla.org '/home/sonmi/bin/nssqa_stage'
+if [ "$O_SILENT" = "OFF" ] ; then
+   set -x
+   scp all.tar.gz sonmi@stage.mozilla.org:/home/ftp/pub/security/nss
+   ssh -l sonmi stage.mozilla.org '/home/sonmi/bin/nssqa_stage '
+else
+   scp all.tar.gz sonmi@stage.mozilla.org:/home/ftp/pub/security/nss >/dev/null 2>/dev/null 
+   ssh -l sonmi stage.mozilla.org '/home/sonmi/bin/nssqa_stage ' >/dev/null 2>/dev/null 
+fi
 
 #" rlogin huey "
 #" sftp  sonmi@stage.mozilla.org"
