@@ -1,7 +1,7 @@
 #ifdef XP_MACOSX
-<!ENTITY prefWindow.size "width: 58em; height: 47em;">
+<!ENTITY prefWindow.size "width: 66em; height: 47em;">
 #else
-<!ENTITY prefWindow.size "width: 52.3em; height: 47em;">
+<!ENTITY prefWindow.size "width: 56em; height: 47em;">
 #endif
 <!ENTITY prefWindow.title "Options">
 

@@ -148,7 +148,7 @@
     </expander>
 
     <!-- Password management -->
-    <expander id="passwordManagement" label="&signonHeader.label;" open="true" persist="open" clearhidden="true">
+    <expander id="passwordManagement" label="&signonHeader.label;" persist="open" clearhidden="true">
       <hbox id="passwordManager" align="center" pack="end">
         <label class="expanderDescription" value="&signonDescription.label;" flex="1"/>
         <button label="&viewSignons.label;" accesskey="&viewSignons.accesskey;"
@@ -238,7 +238,7 @@
     </expander>
 
     <expander id="softwareupdate" label="&softwareupdate.label;" 
-              open="true" persist="open" clearhidden="true" align="left">
+              persist="open" clearhidden="true" align="left">
       <label>&softwareupdateinfo.label;</label>
       <vbox class="indent" align="left">
         <checkbox id="enableSmartUpdate"
