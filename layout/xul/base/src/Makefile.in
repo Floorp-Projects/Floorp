@@ -46,7 +46,6 @@ REQUIRES	= xpcom \
 		  webshell \
 		  pref \
 		  intl \
-		  gfx2 \
 		  imglib2 \
 		  unicharutil \
 		  xpconnect \

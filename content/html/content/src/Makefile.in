@@ -48,7 +48,6 @@ REQUIRES	= xpcom \
 		  xuldoc \
 		  caps \
 		  editor \
-		  gfx2 \
 		  imglib2 \
 		  mimetype \
 		  exthandler \

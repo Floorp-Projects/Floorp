@@ -47,7 +47,6 @@ REQUIRES	= \
 		  widget \
 		  imglib2 \
 		  gfx \
-		  gfx2 \
 		  locale \
 		  $(NULL)
 

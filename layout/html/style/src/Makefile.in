@@ -43,7 +43,6 @@ REQUIRES	= xpcom \
 		  plugin \
 		  xuldoc \
 		  imglib2 \
-		  gfx2 \
 		  $(NULL)
 
 CPPSRCS		= \

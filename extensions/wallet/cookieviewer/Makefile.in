@@ -42,7 +42,6 @@ REQUIRES	= xpcom \
 		  uriloader \
 		  locale \
 		  necko \
-		  gfx2 \
 		  $(NULL)
 
 CPPSRCS		= nsCookieViewer.cpp

@@ -34,7 +34,6 @@ MODULE_NAME	= nsGIFModule2
 
 REQUIRES	= xpcom \
 		  gfx \
-		  gfx2 \
 		  imglib2 \
 		  $(NULL)
 

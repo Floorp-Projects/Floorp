@@ -53,7 +53,6 @@ REQUIRES	= xpcom \
 		  intl \
 		  windowwatcher \
 		  imglib2 \
-		  gfx2 \
 		  uriloader \
 		  webbrwsr \
 		  debug \

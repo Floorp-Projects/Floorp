@@ -38,7 +38,6 @@ REQUIRES	= xpcom \
 		  layout \
 		  content \
 		  uriloader \
-		  gfx2 \
 		  webbrwsr \
 		  webshell \
 		  locale \

@@ -45,7 +45,6 @@ REQUIRES	= xpcom \
 		  docshell \
 		  util \
 		  locale \
-		  gfx2 \
 		  $(NULL)
 
 CPPSRCS		= nsXlibMain.cpp

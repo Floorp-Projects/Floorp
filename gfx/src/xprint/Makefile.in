@@ -43,7 +43,6 @@ REQUIRES	= xpcom \
 		  locale \
 		  uconv \
 		  unicharutil \
-		  gfx2 \
 		  imglib2 \
 		  $(NULL)
 

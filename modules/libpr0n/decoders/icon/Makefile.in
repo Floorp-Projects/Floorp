@@ -46,7 +46,6 @@ DIRS		= $(PLATFORM)
 REQUIRES	= xpcom \
 		  string \
 		  gfx \
-		  gfx2 \
 		  imglib2 \
 		  necko \
 		  $(NULL)

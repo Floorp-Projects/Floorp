@@ -46,7 +46,6 @@ REQUIRES	= xpcom \
 		  uconv \
 		  locale \
 		  unicharutil \
-		  gfx2 \
 		  imglib2 \
 		  mozcomps \
 		  intl \

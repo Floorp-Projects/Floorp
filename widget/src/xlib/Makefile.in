@@ -47,7 +47,6 @@ REQUIRES	= xpcom \
 		  htmlparser \
 		  view \
 		  necko \
-		  gfx2 \
 		  $(NULL)
 
 CPPSRCS		= \

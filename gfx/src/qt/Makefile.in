@@ -34,7 +34,6 @@ REQUIRES	= xpcom \
 		  string \
 		  widget \
 		  view \
-		  gfx2 \
 		  uconv \
 		  pref \
 		  util \

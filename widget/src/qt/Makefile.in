@@ -36,7 +36,6 @@ REQUIRES	= xpcom \
 		  layout \
 		  content \
 		  dom \
-		  gfx2 \
 		  appshell \
 		  pref \
 		  uconv \

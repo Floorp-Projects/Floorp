@@ -35,7 +35,6 @@ MODULE_NAME     = nsXBMModule
 
 REQUIRES	= xpcom \
 		  gfx \
-		  gfx2 \
 		  imglib2 \
 		  string \
 		  $(NULL)
