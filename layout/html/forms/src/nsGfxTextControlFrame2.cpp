@@ -52,6 +52,7 @@
 #include "nsIComponentManager.h"
 #include "nsIElementFactory.h"
 #include "nsIServiceManager.h"
+#include "nsIFrameSelection.h"
 
 
 static NS_DEFINE_IID(kIAnonymousContentCreatorIID,     NS_IANONYMOUS_CONTENT_CREATOR_IID);
@@ -119,6 +120,47 @@ nsGfxTextControlFrame2::~nsGfxTextControlFrame2()
 {
 }
 
+
+// XXX: wouldn't it be nice to get this from the style context!
+PRBool nsGfxTextControlFrame2::IsSingleLineTextControl() const
+{
+  PRInt32 type;
+  GetType(&type);
+  if ((NS_FORM_INPUT_TEXT==type) || (NS_FORM_INPUT_PASSWORD==type)) {
+    return PR_TRUE;
+  }
+  return PR_FALSE; 
+}
+
+// XXX: wouldn't it be nice to get this from the style context!
+PRBool nsGfxTextControlFrame2::IsPlainTextControl() const
+{
+  // need to check HTML attribute of mContent and/or CSS.
+  return PR_TRUE;
+}
+
+PRBool nsGfxTextControlFrame2::IsPasswordTextControl() const
+{
+  PRInt32 type;
+  GetType(&type);
+  if (NS_FORM_INPUT_PASSWORD==type) {
+    return PR_TRUE;
+  }
+  return PR_FALSE;
+}
+
+
+NS_IMETHOD
+nsGfxTextControlFrame2::CreateFrameFor(nsIPresContext*   aPresContext,
+                               nsIContent *      aContent,
+                               nsIFrame**        aFrame)
+{
+  aContent = nsnull;
+  return NS_ERROR_FAILURE;
+}
+
+
+
 NS_IMETHODIMP
 nsGfxTextControlFrame2::CreateAnonymousContent(nsIPresContext* aPresContext,
                                            nsISupportsArray& aChildList)
@@ -162,8 +204,25 @@ nsGfxTextControlFrame2::CreateAnonymousContent(nsIPresContext* aPresContext,
     rv = aPresContext->GetShell(getter_AddRefs(shell));
     if (NS_FAILED(rv) || !shell)
       return rv?rv:NS_ERROR_FAILURE;
+//get the document
+    nsCOMPtr<nsIDocument> doc;
+    rv = shell->GetDocument(getter_AddRefs(doc));
+    if (NS_FAILED(rv) || !doc)
+      return rv?rv:NS_ERROR_FAILURE;
+    nsCOMPtr<nsIDOMDocuemtn> domdoc = do_QueryInterface(doc, &rv);
+    if (NS_FAILED(rv) || !domdoc)
+      return rv?rv:NS_ERROR_FAILURE;
+//get the flags
+    PRUint32 editorFlags = 0;
+    if (IsPlainTextControl())
+      editorFlags |= nsIHTMLEditor::eEditorPlaintextMask;
+    if (IsSingleLineTextControl())
+      editorFlags |= nsIHTMLEditor::eEditorSingleLineMask;
+    if (IsPasswordTextControl())
+      editorFlags |= nsIHTMLEditor::eEditorPasswordMask;
+
 //initialize the editor
-    
+    mEditor->Init(domdoc, shell, mSelCon, 0);
   }
   return NS_OK;
 }

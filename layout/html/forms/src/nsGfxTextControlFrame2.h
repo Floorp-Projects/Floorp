@@ -28,6 +28,8 @@
 #include "nsIDOMMouseListener.h"
 #include "nsIAnonymousContentCreator.h"
 #include "nsIStatefulFrame.h"
+#include "nsIEditor.h"
+
 
 class nsIPresState;
 class nsGfxTextControlFrame;
@@ -56,7 +58,7 @@ public:
 #ifdef NS_DEBUG
   NS_IMETHOD GetFrameName(nsString& aResult) const
   {
-    aResult = "nsGfxControlFrame2";
+    aResult.AssignWithConversion("nsGfxControlFrame2");
     return NS_OK;
   }
 #endif
@@ -67,6 +69,15 @@ public:
   NS_DECL_ISUPPORTS_INHERITED
 protected:
   virtual PRIntn GetSkipSides() const;
+
+//helper methods
+  virtual PRBool IsSingleLineTextControl() const;
+  virtual PRBool IsPlainTextControl() const;
+  virtual PRBool IsPasswordTextControl() const;
+
+  NS_IMETHOD CreateFrameFor(nsIPresContext*   aPresContext,
+                               nsIContent *      aContent,
+                               nsIFrame**        aFrame);
 private:
   nsCOMPtr<nsIEditor> mEditor;
   nsCOMPtr<nsISelectionController> mSelCon;
