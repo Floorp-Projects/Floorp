@@ -43,7 +43,7 @@ Rights Reserved.
     <!ENTITY buttonClose.label "Close">
 	<!ENTITY searchDialogTitle.label "Search Messages">
 ]>
-<xul:window id="msg-search-dialog" xmlns:html="http://www.w3.org/TR/REC-html40"
+<window id="msg-search-dialog" xmlns:html="http://www.w3.org/TR/REC-html40"
     xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
     title="&searchDialogTitle.label;">
 
@@ -100,8 +100,8 @@ Rights Reserved.
   </box>
   <box align="vertical" class="padded">
     <titledbutton class="push" value="&buttonSearch.label;"/>
-    <titledbutton class="push" value="&buttonOptions.label;"/>
+    <titledbutton class="push" value="&buttonOptions.label;" onclick="onOptions(event);"/>
     <titledbutton class="push" value="&buttonClose.label;" onclick="window.close();"/>
   </box>
 </box>
-</xul:window>
+</window>

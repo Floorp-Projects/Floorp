@@ -21,6 +21,7 @@ include <$(DEPTH)\config\rules.mak>
 
 install:: 
 	$(MAKE_INSTALL) .\SearchDialog.xul		$(DIST)\bin\chrome\messenger\content\default
+	$(MAKE_INSTALL) .\SearchOptions.xul		$(DIST)\bin\chrome\messenger\content\default
 	$(MAKE_INSTALL) .\SearchDialog.js			$(DIST)\bin\chrome\messenger\content\default
 	$(MAKE_INSTALL) .\FilterListDialog.xul	$(DIST)\bin\chrome\messenger\content\default
 	$(MAKE_INSTALL) .\FilterListDialog.js	$(DIST)\bin\chrome\messenger\content\default

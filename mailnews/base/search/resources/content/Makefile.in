@@ -30,6 +30,7 @@ SAMPLES_DIR = $(DIST)/bin/chrome/messenger/content/default
 
 EXPORT_RESOURCE_SAMPLES = \
 	$(srcdir)/SearchDialog.xul	\
+	$(srcdir)/SearchOptions.xul	\
 	$(srcdir)/SearchDialog.js	\
 	$(srcdir)/FilterListDialog.xul	\
 	$(srcdir)/FilterListDialog.js	\

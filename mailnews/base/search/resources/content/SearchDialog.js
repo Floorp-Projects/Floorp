@@ -154,3 +154,7 @@ function OnComparatorSelect(event) {
     
 }
 // onchange="OnFieldSelect(event);"
+
+function onOptions(event) {
+    window.openDialog("chrome://messenger/content/SearchOptions.xul", "options", "chrome");
+}
