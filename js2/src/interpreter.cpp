@@ -37,15 +37,6 @@
 #include <assert.h>
 
 namespace JavaScript {
-namespace JSTypes {
-
-static JSObject kUndefinedObject;
-const JSValue kUndefinedValue(&kUndefinedObject);
-
-} // namespace JSTypes
-} // namespace JavaScript
-
-namespace JavaScript {
 namespace Interpreter {
 
 // operand access macros.
