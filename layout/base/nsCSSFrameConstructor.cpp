@@ -10060,7 +10060,7 @@ nsCSSFrameConstructor::ProcessRestyledFrames(nsStyleChangeList& aChangeList,
   aChangeList.Clear();
   return NS_OK;
 }
-
+/*
 NS_IMETHODIMP
 nsCSSFrameConstructor::ContentStatesChanged(nsIPresContext* aPresContext, 
                                             nsIContent* aContent1,
@@ -10255,7 +10255,7 @@ nsCSSFrameConstructor::ContentStatesChanged(nsIPresContext* aPresContext,
   }
   return result;
 }
-
+*/
 NS_IMETHODIMP
 nsCSSFrameConstructor::AttributeChanged(nsIPresContext* aPresContext,
                                         nsIContent* aContent,
@@ -14079,6 +14079,17 @@ nsCSSFrameConstructor::ReframeContainingBlock(nsIPresContext* aPresContext, nsIF
            NS_STATIC_CAST(void*, aFrame));
   }
 #endif
+
+  nsCOMPtr<nsIPresShell> shell;
+  aPresContext->GetShell(getter_AddRefs(shell));
+  PRBool isReflowing;
+  shell->IsReflowLocked(&isReflowing);
+  if(isReflowing) {
+    // don't ReframeContainingBlock, this will result in a crash
+    // if we remove a tree that's in reflow - see bug 121368 for testcase
+    NS_ASSERTION(0, "Atemptted to nsCSSFrameConstructor::ReframeContainingBlock during a Reflow!!!");
+    return NS_OK;
+  }
 
   // Get the first "normal" ancestor of the target frame.
   nsIFrame* containingBlock = GetIBContainingBlockFor(aFrame);
