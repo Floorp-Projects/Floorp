@@ -76,10 +76,20 @@ NS_IMETHODIMP
 nsInternetCiter::GetCiteString(const nsString& aInString, nsString& aOutString)
 {
   PRUnichar newline ('\n');      // Not XP!
+  PRUnichar cr('\r');
   PRInt32 i = 0;
   PRInt32 length = aInString.Length();
   aOutString.SetLength(0);
   PRUnichar uch = newline;
+
+  // Strip trailing new lines which will otherwise turn up
+  // as ugly quoted empty lines.
+  while(length > 0 &&
+        (aInString[length-1] == cr ||
+         aInString[length-1] == newline))
+  {
+    --length;
+  }
 
   // Loop over the string:
   while (i < length)
