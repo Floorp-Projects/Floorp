@@ -26,13 +26,13 @@ class nsINNTPArticleList : public nsISupports {
     return iid;
   }
 
-  /*  <IDL>  */
-  NS_IMETHOD Init(const nsINNTPHost *newsHost, nsINNTPNewsgroup *newsgroup) = 0;
+  /* void Init (in nsINNTPHost newsHost, in nsINNTPNewsgroup newsgroup); */
+  NS_IMETHOD Init(nsINNTPHost *newsHost, nsINNTPNewsgroup *newsgroup) = 0;
 
-  /*  <IDL>  */
+  /* void AddArticleKey (in long key); */
   NS_IMETHOD AddArticleKey(PRInt32 key) = 0;
 
-  /*  <IDL>  */
+  /* void FinishAddingArticleKeys (); */
   NS_IMETHOD FinishAddingArticleKeys() = 0;
 };
 
