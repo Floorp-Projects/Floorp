@@ -564,17 +564,14 @@ nsInstallPatch::HashFilePath(const nsFilePath& aPath)
     {
         char  ch;
         char* filePath = PL_strdup(cPath);
-        PRUint32 cnt=0;
+        char* pathIndex = filePath;
 
-        while ((ch = *filePath++) != 0) 
+        while ((ch = *pathIndex++) != 0) 
         {
             // FYI: rv = rv*37 + ch
             rv = ((rv << 5) + (rv << 2) + rv) + ch;
-            cnt++;
         }
         
-        for (PRUint32 i=0; i<=cnt; i++)
-            *filePath--;
 		PL_strfree(filePath);
     }
 
