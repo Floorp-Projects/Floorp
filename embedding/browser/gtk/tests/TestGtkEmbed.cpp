@@ -22,6 +22,8 @@ main(int argc, char **argv)
   gtk_signal_connect(GTK_OBJECT(toplevelwindow), "delete_event",
 		     GTK_SIGNAL_FUNC(destroy_cb), NULL);
 
+  gtk_widget_set_usize(toplevelwindow, 300, 400);
+
   box = gtk_vbox_new(FALSE, 2);
   gtk_container_add(GTK_CONTAINER(toplevelwindow), box);
   gtk_widget_show(box);
