@@ -61,6 +61,9 @@
 #include "nsIComponentManager.h"
 
 
+#define DEFAULT_COLUMN_WIDTH 20
+
+
 static NS_DEFINE_CID(kHTMLEditorCID, NS_HTMLEDITOR_CID);
 static NS_DEFINE_CID(kFrameSelectionCID, NS_FRAMESELECTION_CID);
 static void RemoveNewlines(nsString &aString);
@@ -440,6 +443,77 @@ nsGfxTextControlFrame2::CreateAnonymousContent(nsIPresContext* aPresContext,
   return NS_OK;
 }
 
+
+#if 0
+NS_IMETHODIMP nsGfxTextControlFrame2::Reflow(nsIPresContext*          aPresContext, 
+                                         nsHTMLReflowMetrics&     aDesiredSize,
+                                         const nsHTMLReflowState& aReflowState, 
+                                         nsReflowStatus&          aStatus)
+{
+
+  // Figure out if we are doing Quirks or Standard
+  nsCompatibility mode;
+  aPresContext->GetCompatibilityMode(&mode);
+
+  nsMargin border;
+  border.SizeTo(0, 0, 0, 0);
+  nsMargin padding;
+  padding.SizeTo(0, 0, 0, 0);
+  // Get the CSS border
+  const nsStyleSpacing* spacing;
+  GetStyleData(eStyleStruct_Spacing,  (const nsStyleStruct *&)spacing);
+  spacing->CalcBorderFor(this, border);
+  spacing->CalcPaddingFor(this, padding);
+
+  // calculate the the desired size for the text control
+  // use the suggested size if it has been set
+  nsresult rv = NS_OK;
+  nsHTMLReflowState suggestedReflowState(aReflowState);
+  if ((kSuggestedNotSet != mSuggestedWidth) || 
+      (kSuggestedNotSet != mSuggestedHeight)) {
+      // Honor the suggested width and/or height.
+    if (kSuggestedNotSet != mSuggestedWidth) {
+      suggestedReflowState.mComputedWidth = mSuggestedWidth;
+      aDesiredSize.width = mSuggestedWidth;
+    }
+
+    if (kSuggestedNotSet != mSuggestedHeight) {
+      suggestedReflowState.mComputedHeight = mSuggestedHeight;
+      aDesiredSize.height = mSuggestedHeight;
+    }
+    rv = NS_OK;
+  
+    aDesiredSize.ascent = aDesiredSize.height;
+    aDesiredSize.descent = 0;
+
+    aStatus = NS_FRAME_COMPLETE;
+  } else {
+
+    // this is the right way
+    // Quirks mode will NOT obey CSS border and padding
+    // GetDesiredSize calculates the size without CSS borders
+    // the nsLeafFrame::Reflow will add in the borders
+    if (eCompatibility_NavQuirks == mode) {
+      rv = ReflowNavQuirks(aPresContext, aDesiredSize, aReflowState, aStatus, border, padding);
+    } else {
+      rv = ReflowStandard(aPresContext, aDesiredSize, aReflowState, aStatus, border, padding);
+    }
+
+    if (NS_UNCONSTRAINEDSIZE != aReflowState.mComputedWidth) {
+      if (aReflowState.mComputedWidth > aDesiredSize.width) {
+        aDesiredSize.width = aReflowState.mComputedWidth;
+      }
+    }
+    if (NS_UNCONSTRAINEDSIZE != aReflowState.mComputedHeight) {
+      if (aReflowState.mComputedHeight > aDesiredSize.height) {
+        aDesiredSize.height = aReflowState.mComputedHeight;
+      }
+    }
+    aStatus = NS_FRAME_COMPLETE;
+  }
+
+#endif
+
 NS_IMETHODIMP nsGfxTextControlFrame2::Reflow(nsIPresContext*          aPresContext, 
                                          nsHTMLReflowMetrics&     aDesiredSize,
                                          const nsHTMLReflowState& aReflowState, 
@@ -501,7 +575,7 @@ NS_IMETHODIMP nsGfxTextControlFrame2::Reflow(nsIPresContext*          aPresConte
 
   return rv;
 }
-
+//#endif
 
 PRIntn
 nsGfxTextControlFrame2::GetSkipSides() const
@@ -657,7 +731,7 @@ nsGfxTextControlFrame2::GetSelectionController(nsIPresContext *aPresContext, nsI
   return NS_OK;
 }
 
-
+//-----------------
 nsresult 
 nsGfxTextControlFrame2::GetColRowSizeAttr(nsIFormControlFrame*  aFrame,
                                          nsIAtom *     aColSizeAttr,
@@ -693,4 +767,32 @@ nsGfxTextControlFrame2::GetColRowSizeAttr(nsIFormControlFrame*  aFrame,
   NS_RELEASE(iContent);
   
   return NS_OK;
+}
+
+
+PRInt32 
+nsGfxTextControlFrame2::GetWidthInCharacters() const
+{
+  // see if there's a COL attribute, if so it wins
+  nsCOMPtr<nsIHTMLContent> content;
+  nsresult result = mContent->QueryInterface(NS_GET_IID(nsIHTMLContent), getter_AddRefs(content));
+  if (NS_SUCCEEDED(result) && content)
+  {
+    nsHTMLValue resultValue;
+    result = content->GetHTMLAttribute(nsHTMLAtoms::cols, resultValue);
+    if (NS_CONTENT_ATTR_NOT_THERE != result) 
+    {
+      if (resultValue.GetUnit() == eHTMLUnit_Integer) 
+      {
+        return (resultValue.GetIntValue());
+      }
+    }
+  }
+
+  // otherwise, see if CSS has a width specified.  If so, work backwards to get the 
+  // number of characters this width represents.
+ 
+  
+  // otherwise, the default is just returned.
+  return DEFAULT_COLUMN_WIDTH;
 }
