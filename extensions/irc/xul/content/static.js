@@ -425,7 +425,7 @@ function initHost(obj)
         new CIRCNetwork ("undernet", [{name: "irc.undernet.org", port:6667}],
                          obj.eventPump);
     obj.networks["webbnet"] =
-        new CIRCNetwork ("webbnet", [{name: "irc.webbnet.org", port:6667}],
+        new CIRCNetwork ("webbnet", [{name: "irc.webbnet.info", port:6667}],
                          obj.eventPump);
     obj.networks["quakenet"] =
         new CIRCNetwork ("quakenet", [{name: "irc.quakenet.org", port:6667}],
