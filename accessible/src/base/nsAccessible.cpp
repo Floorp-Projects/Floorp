@@ -1066,11 +1066,12 @@ nsresult nsAccessible::AppendFlatStringFromContentNode(nsIContent *aContent, nsA
     return NS_OK; // Not HTML and not XUL -- we don't handle it yet
   }
 
-  if (aContent->Tag() == nsAccessibilityAtoms::img) {
+  nsCOMPtr<nsIAtom> tag = aContent->Tag();
+  if (tag == nsAccessibilityAtoms::img) {
     return AppendNameFromAccessibleFor(aContent, aFlatString);
   }
 
-  if (aContent->Tag() == nsAccessibilityAtoms::input) {
+  if (tag == nsAccessibilityAtoms::input) {
     nsAutoString inputType;
     aContent->GetAttr(kNameSpaceID_None, nsAccessibilityAtoms::type, inputType);
     if (inputType.LowerCaseEqualsLiteral("button") ||
@@ -1081,11 +1082,11 @@ nsresult nsAccessible::AppendFlatStringFromContentNode(nsIContent *aContent, nsA
     }
   }
 
-  if (aContent->Tag() == nsAccessibilityAtoms::object && !aContent->GetChildCount()) {
+  if (tag == nsAccessibilityAtoms::object && !aContent->GetChildCount()) {
     // If object has no alternative content children, try title
     aContent->GetAttr(kNameSpaceID_None, nsAccessibilityAtoms::title, textEquivalent);
   }
-  else if (aContent->Tag() == nsAccessibilityAtoms::br) {
+  else if (tag == nsAccessibilityAtoms::br) {
     // If it's a line break, insert a space so that words aren't jammed together
     aFlatString->AppendLiteral("\r\n");
     return NS_OK;
