@@ -22,7 +22,22 @@ srcdir		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-DIRS = public base db local news compose mime ui
+# Question: Why do we build base/util and then build base again?
+# Answer:
+# db needs libmsgbaseutil (base/util)
+# base needs db (libmailnewsmsgdb) and news (libnntp)..?
+# so db needs base and base needs db.
+# 
+# Temporary solution:  build base/util, then db, then news, then 
+# finish building base
+#
+# Real solution:
+# move base/util out of base
+# 
+# Question: how come this works on windows?
+# From makefile.win:
+# DIRS = public base db local news compose mime ui
+DIRS = public base/util db news base local compose mime ui
 
 include $(topsrcdir)/config/config.mk
 
