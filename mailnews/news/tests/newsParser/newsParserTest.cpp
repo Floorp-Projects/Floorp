@@ -180,7 +180,7 @@ nsresult newsTestDriver::GetDatabase(const char *uri)
         
         rv = nsComponentManager::CreateInstance(kCNewsDB, nsnull, nsIMsgDatabase::GetIID(), getter_AddRefs(newsDBFactory));
         if (NS_SUCCEEDED(rv) && newsDBFactory) {
-                newsDBOpen = newsDBFactory->Open(path, PR_TRUE, getter_AddRefs(m_newsDB), PR_FALSE);
+                newsDBOpen = newsDBFactory->Open(path, PR_TRUE, PR_FALSE, getter_AddRefs(m_newsDB));
 #ifdef DEBUG_sspitzer
                 if (NS_SUCCEEDED(newsDBOpen)) {
                     printf ("newsDBFactory->Open() succeeded\n");

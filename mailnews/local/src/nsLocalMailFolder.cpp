@@ -403,12 +403,12 @@ nsresult nsMsgLocalMailFolder::GetDatabase()
 		rv = nsComponentManager::CreateInstance(kCMailDB, nsnull, nsIMsgDatabase::GetIID(), getter_AddRefs(mailDBFactory));
 		if (NS_SUCCEEDED(rv) && mailDBFactory)
 		{
-			folderOpen = mailDBFactory->Open(pathSpec, PR_TRUE, getter_AddRefs(mDatabase), PR_FALSE);
+			folderOpen = mailDBFactory->Open(pathSpec, PR_TRUE, PR_FALSE, getter_AddRefs(mDatabase));
 			if(!NS_SUCCEEDED(folderOpen) &&
 				folderOpen == NS_MSG_ERROR_FOLDER_SUMMARY_OUT_OF_DATE || folderOpen == NS_MSG_ERROR_FOLDER_SUMMARY_MISSING )
 			{
 				// if it's out of date then reopen with upgrade.
-				if(!NS_SUCCEEDED(rv = mailDBFactory->Open(pathSpec, PR_TRUE, getter_AddRefs(mDatabase), PR_TRUE)))
+				if(!NS_SUCCEEDED(rv = mailDBFactory->Open(pathSpec, PR_TRUE, PR_TRUE, getter_AddRefs(mDatabase))))
 				{
 					return rv;
 				}
@@ -557,7 +557,7 @@ NS_IMETHODIMP nsMsgLocalMailFolder::CreateSubfolder(const char *folderName)
         nsIMsgDatabase *unusedDB = NULL;
 		nsCOMPtr <nsIFileSpec> dbFileSpec;
 		NS_NewFileSpecWithSpec(path, getter_AddRefs(dbFileSpec));
-		rv = mailDBFactory->Open(dbFileSpec, PR_TRUE, (nsIMsgDatabase **) &unusedDB, PR_TRUE);
+		rv = mailDBFactory->Open(dbFileSpec, PR_TRUE, PR_TRUE, (nsIMsgDatabase **) &unusedDB);
 
         if (NS_SUCCEEDED(rv) && unusedDB)
         {
@@ -824,7 +824,7 @@ nsresult  nsMsgLocalMailFolder::GetDBFolderInfoAndDB(nsIDBFolderInfo **folderInf
 	{
 		nsCOMPtr <nsIFileSpec> dbFileSpec;
 		NS_NewFileSpecWithSpec(*mPath, getter_AddRefs(dbFileSpec));
-		openErr = mailDBFactory->Open(dbFileSpec, PR_FALSE, (nsIMsgDatabase **) &mailDB, PR_FALSE);
+		openErr = mailDBFactory->Open(dbFileSpec, PR_FALSE, PR_FALSE, (nsIMsgDatabase **) &mailDB);
 	}
 
     *db = mailDB;

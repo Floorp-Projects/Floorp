@@ -159,7 +159,7 @@ NS_IMETHODIMP nsMsgDBFolder::SetCharset(PRUnichar * aCharset)
 	{
 		nsString charset(aCharset);
 		rv = folderInfo->SetCharacterSet(&charset);
-		db->Commit(kLargeCommit);
+		db->Commit(nsMsgDBCommitType::kLargeCommit);
 	}
 	return rv;
 }

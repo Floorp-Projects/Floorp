@@ -299,7 +299,7 @@ NS_IMETHODIMP nsMailboxUrl::GetMessageHeader(nsIMsgDBHdr ** aMsgHdr)
 		NS_NewFileSpecWithSpec(*m_filePath, getter_AddRefs(dbFileSpec));
 
 		if (NS_SUCCEEDED(rv) && mailDBFactory)
-			rv = mailDBFactory->Open(dbFileSpec, PR_FALSE, (nsIMsgDatabase **) getter_AddRefs(mailDB), PR_FALSE);
+			rv = mailDBFactory->Open(dbFileSpec, PR_FALSE, PR_FALSE, (nsIMsgDatabase **) getter_AddRefs(mailDB));
 		if (NS_SUCCEEDED(rv) && mailDB) // did we get a db back?
 			rv = mailDB->GetMsgHdrForKey(m_messageKey, aMsgHdr);
 	}
