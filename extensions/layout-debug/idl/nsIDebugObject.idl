@@ -51,6 +51,8 @@ interface nsIDebugObject : nsISupports
   void CreateDirectory(in wstring aDirectoryPath, in unsigned long aFlags);
 
 
+  void OutputTextToFile(in boolean aNewFile,in wstring aFilePath, in wstring aFileName, in wstring aOutputString);
+
   /**
    * Dumps the content of a window
    * @param 
