@@ -442,8 +442,9 @@ function loadStartFolder(initialUri)
         // only do this on startup, when we pass in null
         if (!initialUri && isLoginAtStartUpEnabled)
         {
-            // Perform biff on the server to check for new mail
-            defaultServer.PerformBiff();
+            // Perform biff on the server to check for new mail, except for imap
+            if (defaultServer.type != "imap") 
+              defaultServer.PerformBiff();
         } 
 
         // because the "open" state persists, we'll call
