@@ -175,14 +175,11 @@ nsNetlibService::nsNetlibService()
     /* XXXXX TEMPORARY TESTING HACK XXXXX */
     char buf[64];
     char *ver = PR_GetEnv("NG_REQUEST_VER");
-    if (!ver)
-        ver = PL_strdup("4.05");
     /* Build up the appversion. */
     sprintf(buf, "%s [%s] (%s; I)",
-        ver, 
+        (ver ? ver : "4.05"), 
         XP_AppLanguage, 
         XP_AppPlatform);
-    FREEIF(ver);
     if (XP_AppVersion)
         PR_Free((char *)XP_AppVersion);
     XP_AppVersion = PL_strdup(buf);
