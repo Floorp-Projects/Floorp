@@ -254,6 +254,12 @@ bin/components/libtransformiix.so
 bin/components/libfileview.so
 bin/components/filepicker.xpt
 bin/components/libuniversalchardet.so
+; LDAP components need to be in the browser for AutoConfig
+bin/libldap50.so
+bin/libprldap50.so
+bin/liblber50.so
+bin/components/libmozldap.so
+bin/components/mozldap.xpt
 
 bin/chrome/help.jar
 bin/chrome/toolkit.jar
@@ -319,9 +325,6 @@ bin/res/builtin/platformHTMLBindings.xml
 
 
 [mail]
-bin/libldap50.so
-bin/liblber50.so
-bin/libprldap50.so
 bin/libmsgbaseutil.so
 bin/components/addrbook.xpt
 bin/components/libaddrbook.so
@@ -329,7 +332,6 @@ bin/components/liblocalmail.so
 bin/components/libmailnews.so
 bin/components/libmime.so
 bin/components/libmimeemitter.so
-bin/components/libmozldap.so
 bin/components/libmsgcompose.so
 bin/components/libmsgdb.so
 bin/components/libmsgimap.so
@@ -342,7 +344,6 @@ bin/components/libimpComm4xMail.so
 bin/components/libabsyncsvc.so
 bin/components/mailnews.xpt
 bin/components/mime.xpt
-bin/components/mozldap.xpt
 bin/components/msgbase.xpt
 bin/components/msgcompose.xpt
 bin/components/msgdb.xpt
