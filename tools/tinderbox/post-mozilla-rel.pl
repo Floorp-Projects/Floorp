@@ -371,6 +371,9 @@ sub packit_l10n {
         if (is_windows()) {
           run_locale_shell_command "mkdir -p $stagedir/windows-xpi/";
           run_locale_shell_command "cp $package_location/*$locale.langpack.xpi $stagedir/windows-xpi/$locale.xpi";
+	} elsif (is_mac()) {
+          run_locale_shell_command "mkdir -p $stagedir/mac-xpi/";
+          run_locale_shell_command "cp $package_location/*$locale.langpack.xpi $stagedir/mac-xpi/$locale.xpi";
         } elsif (is_linux()) {
           run_locale_shell_command "mkdir -p $stagedir/linux-xpi/";
           run_locale_shell_command "cp $package_location/*$locale.langpack.xpi $stagedir/linux-xpi/$locale.xpi";
