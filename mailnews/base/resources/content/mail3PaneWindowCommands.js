@@ -774,15 +774,17 @@ function WhichPaneHasFocus()
   var threadOutliner = GetThreadOutliner();
   var searchInput = GetSearchInput();
   var folderOutliner = GetFolderOutliner();
+  var messagePane = GetMessagePane();
     
   if (top.document.commandDispatcher.focusedWindow == GetMessagePaneFrame())
-    return GetMessagePane();
+    return messagePane;
 
 	var currentNode = top.document.commandDispatcher.focusedElement;	
 	while (currentNode) {
     if (currentNode === threadOutliner ||
         currentNode === searchInput || 
-        currentNode === folderOutliner)
+        currentNode === folderOutliner ||
+        currentNode === messagePane)
       return currentNode;
 					
 		currentNode = currentNode.parentNode;
@@ -1014,99 +1016,49 @@ function GetFolderNameFromUri(uri, outliner)
 	return nameResult.Value;
 }
 
-function SwitchPaneFocus(direction)
+/* XXX hiding the search bar while it is focus kills the keyboard so we focus the thread pane */
+function SearchBarToggled()
 {
-  var gray_vertical_splitter = document.getElementById("gray_vertical_splitter"); 
-  var focusedElement = document.commandDispatcher.focusedElement;
-  var focusedElementId;
-  if (direction == "counter-clockwise")
-	{
-		if ( MessagePaneHasFocus() )
-			SetFocusThreadPane();
-		else 
-		{
-			try 
-			{ 
-				focusedElementId = focusedElement.getAttribute('id');
-				if(focusedElementId == "threadOutliner")
-				{
-					if (gray_vertical_splitter)
-					{
-						if (!(is_collapsed(gray_vertical_splitter)))
-						  SetFocusFolderPane();
-						else if(!(IsThreadAndMessagePaneSplitterCollapsed()))
-						  SetFocusMessagePane();
-					}
-					else 
-					{
-						if (!(sidebar_is_collapsed()))
-						  SetFocusFolderPane();
-						else if(!(IsThreadAndMessagePaneSplitterCollapsed()))
-						  SetFocusMessagePane();
-					}
-				}
-				else if(focusedElementId == "folderOutliner")
-				{
-					if (!(IsThreadAndMessagePaneSplitterCollapsed()))
-						SetFocusMessagePane();
-					else
-						SetFocusThreadPane();
-				}
-			}
-			catch(e) 
-			{
-				SetFocusMessagePane();
-			}
-		}
-	}
-	else
-	{
+  for (var currentNode = top.document.commandDispatcher.focusedElement; currentNode; currentNode = currentNode.parentNode) {
+    if (currentNode.getAttribute("hidden") == "true") {
+      SetFocusThreadPane();
+      return;
+    }
+  }
+}
 
-		if ( MessagePaneHasFocus() )
-		{
-			if (gray_vertical_splitter)
-			{
-				if (!(is_collapsed(gray_vertical_splitter)))
-					SetFocusFolderPane();
-				else
-					SetFocusThreadPane();
-			}
-			else 
-			{
-				if (!(sidebar_is_collapsed()))
-				  SetFocusFolderPane();
-				else
-				  SetFocusThreadPane();
-			}
-		}
-		else 
-		{
-			try 
-			{ 
-				focusedElementId = focusedElement.getAttribute('id');
-				if(focusedElementId == "threadOutliner")
-				{
-					if (!(IsThreadAndMessagePaneSplitterCollapsed()))
-						SetFocusMessagePane();
-					else if (gray_vertical_splitter)
-					{
-						if (!(is_collapsed(gray_vertical_splitter)))
-						SetFocusFolderPane();
-					}
-					else if (!(sidebar_is_collapsed()))
-						SetFocusFolderPane();
+function SwitchPaneFocus(event)
+{
+  var focusedElement = WhichPaneHasFocus();
+  var folderOutliner = GetFolderOutliner();
+  var threadOutliner = GetThreadOutliner();
+  var searchInput = GetSearchInput();
+  var messagePane = GetMessagePane();
 
-				}
-				else if(focusedElementId == "folderOutliner")
-					SetFocusThreadPane();
-			}
-			catch(e) 
-			{
-				SetFocusMessagePane();
-			}
-		}
-	}
-
+  if (event && event.shiftKey)
+  {
+    if (focusedElement == threadOutliner && searchInput.parentNode.getAttribute('hidden') != 'true')
+      searchInput.focus();
+    else if ((focusedElement == threadOutliner || focusedElement == searchInput) && !IsFolderPaneCollapsed())
+      folderOutliner.focus();
+    else if (focusedElement != messagePane && !IsThreadAndMessagePaneSplitterCollapsed())
+      SetFocusMessagePane();
+    else 
+      threadOutliner.focus();
+  }
+  else
+  {
+    if (focusedElement == searchInput)
+      threadOutliner.focus();
+    else if (focusedElement == threadOutliner && !IsThreadAndMessagePaneSplitterCollapsed())
+      SetFocusMessagePane();
+    else if (focusedElement != folderOutliner && !IsFolderPaneCollapsed())
+      folderOutliner.focus();
+    else if (searchInput.parentNode.getAttribute('hidden') != 'true')
+      searchInput.focus();
+    else
+      threadOutliner.focus();
+  }
 }
 
 function SetFocusFolderPane()

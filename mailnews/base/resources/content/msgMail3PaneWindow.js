@@ -743,7 +743,6 @@ function GetSearchInput()
     return gSearchInput;
 }
 
-
 function GetMessagePane()
 {
     if (gMessagePane) return gMessagePane;
@@ -806,6 +805,13 @@ function IsThreadAndMessagePaneSplitterCollapsed()
   catch (ex) {
 		return false;
   }
+}
+
+function IsFolderPaneCollapsed()
+{
+  var folderPaneBox = GetFolderOutliner().parentNode;
+  return folderPaneBox.getAttribute("collapsed") == "true"
+    || folderPaneBox.getAttribute("hidden") == "true";
 }
 
 function FindMessenger()
