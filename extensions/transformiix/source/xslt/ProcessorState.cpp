@@ -470,8 +470,7 @@ Node* ProcessorState::findTemplate(Node* aNode,
 
                 double tmpPriority;
                 if (!priorityAttr.isEmpty()) {
-                    Double dbl(priorityAttr);
-                    tmpPriority = dbl.doubleValue();
+                    tmpPriority = Double::toDouble(priorityAttr);
                 }
                 else {
                     tmpPriority = templ->mMatch->getDefaultPriority(aNode,

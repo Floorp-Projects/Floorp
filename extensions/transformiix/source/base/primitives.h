@@ -1,4 +1,5 @@
-/*
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+ *
  * The contents of this file are subject to the Mozilla Public
  * License Version 1.1 (the "License"); you may not use this file
  * except in compliance with the License. You may obtain a copy of
@@ -38,120 +39,51 @@
 #ifndef MITRE_PRIMITIVES_H
 #define MITRE_PRIMITIVES_H
 
-#include "TxObject.h"
 #include "baseutils.h"
 #include "TxString.h"
 
-/**
- * A wrapper for the primitive double type, and provides some simple
- * floating point related routines
-**/
-class Double : public TxObject {
-
+/*
+ * Utility class for doubles
+ */
+class Double {
 public:
+
+    /*
+     * Usefull constants
+     */
 
     static const double NaN;
     static const double POSITIVE_INFINITY;
     static const double NEGATIVE_INFINITY;
 
-    /**
-     * Creates a new Double with it's value initialized from the given String.
-     * The String will be converted to a double. If the String does not
-     * represent an IEEE 754 double, the value will be initialized to NaN
-    **/
-    Double(const String& string);
-
-    /**
-     * Returns the value of this Double as a double
-    **/
-    double doubleValue();
-
-    /**
-     * Returns the value of this Double as an int
-    **/
-    int    intValue();
-
-    /**
+    /*
      * Determines whether the given double represents positive or negative
      * inifinity
-    **/
-    static MBool isInfinite(double dbl);
+     */
+    static MBool isInfinite(double aDbl);
 
-    /**
+    /*
      * Determines whether the given double is NaN
-    **/
-    static MBool isNaN(double dbl);
+     */
+    static MBool isNaN(double aDbl);
 
-    /**
+    /*
      * Determines whether the given double is negative
-    **/
-    static MBool isNeg(double dbl);
+     */
+    static MBool isNeg(double aDbl);
 
-    /**
-     * Converts the value of the given double to a String, and places
-     * The result into the destination String.
+    /*
+     * Converts the value of the given double to a String, and appends
+     * the result to the destination String.
      * @return the given dest string
-    **/
-    static String& toString(double value, String& dest);
+     */
+    static String& toString(double aValue, String& aDest);
 
-
-private:
-    double value;
-    /**
+    /*
      * Converts the given String to a double, if the String value does not
      * represent a double, NaN will be returned
-    **/
-    static double toDouble(const String& str);
+     */
+    static double toDouble(const String& aStr);
 };
 
-
-/**
- * A wrapper for the primitive int type, and provides some simple
- * integer related routines
-**/
-class Integer : public TxObject {
-public:
-
-    /**
-     * Creates a new Integer initialized to 0.
-    **/
-    Integer();
-
-    /**
-     * Creates a new Integer initialized to the given int value.
-    **/
-    Integer(PRInt32 integer);
-
-    /**
-     * Creates a new Integer based on the value of the given String
-    **/
-    Integer(const String& str);
-
-    /**
-     * Returns the int value of this Integer
-    **/
-    int intValue();
-
-    /**
-     * Converts the value of this Integer to a String
-    **/
-    String& toString(String& dest);
-
-    /**
-     * Converts the given int to a String
-    **/
-    static String& toString(int value, String& dest);
-
-private:
-
-    PRInt32 value;
-
-    /**
-     * converts the given String to an int
-    **/
-    static int intValue(const String& src);
-
-}; //-- Integer
-
 #endif
-

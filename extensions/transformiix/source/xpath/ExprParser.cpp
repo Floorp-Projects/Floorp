@@ -328,8 +328,7 @@ Expr* ExprParser::createFilterExpr(ExprLexer& lexer) {
             break;
         case Token::NUMBER:
         {
-            StringResult str(tok->value);
-            expr = new NumberExpr(str.numberValue());
+            expr = new NumberExpr(Double::toDouble(tok->value));
             break;
         }
         default:

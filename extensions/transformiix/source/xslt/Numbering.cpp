@@ -1,4 +1,5 @@
-/*
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+ *
  * The contents of this file are subject to the Mozilla Public
  * License Version 1.1 (the "License"); you may not use this file
  * except in compliance with the License. You may obtain a copy of
@@ -110,7 +111,7 @@ void Numbering::doNumbering
     }
     //-- format counts
     for ( int i = 0; i < nbrOfCounts; i++) {
-        Integer::toString(counts[i], dest);
+        Double::toString(counts[i], dest);
     }
     delete counts;
 } //-- doNumbering
