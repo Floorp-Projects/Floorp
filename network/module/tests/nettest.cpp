@@ -24,6 +24,7 @@
 #endif
 
 #include "plstr.h"
+#include "plevent.h"
 
 #include "nsIStreamListener.h"
 #include "nsIInputStream.h"
@@ -221,6 +222,7 @@ int main(int argc, char **argv)
         return 0;
     }
 
+    PL_InitializeEventsLib("");
     nsRepository::RegisterFactory(kNetServiceCID, NETLIB_DLL, PR_FALSE, PR_FALSE);
 
     bTraceEnabled = PR_FALSE;
@@ -284,6 +286,7 @@ int main(int argc, char **argv)
 
             in = pURL->Open((PRInt32*)&result);
             ReadStreamSynchronously(in);
+            NS_IF_RELEASE(in);
             urlLoaded = 1;
         }
         
