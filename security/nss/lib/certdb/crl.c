@@ -34,7 +34,7 @@
 /*
  * Moved from secpkcs7.c
  *
- * $Id: crl.c,v 1.37 2003/09/19 04:08:48 jpierre%netscape.com Exp $
+ * $Id: crl.c,v 1.38 2003/10/25 00:41:14 jpierre%netscape.com Exp $
  */
  
 #include "cert.h"
@@ -639,7 +639,7 @@ crl_storeCRL (PK11SlotInfo *slot,char *url,
 {
     CERTSignedCrl *oldCrl = NULL, *crl = NULL;
     PRBool deleteOldCrl = PR_FALSE;
-    CK_OBJECT_HANDLE crlHandle;
+    CK_OBJECT_HANDLE crlHandle = CK_INVALID_HANDLE;
 
     PORT_Assert(newCrl);
     PORT_Assert(derCrl);
