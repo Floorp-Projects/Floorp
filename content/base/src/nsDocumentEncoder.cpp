@@ -38,6 +38,9 @@ static NS_DEFINE_CID(kComponentManagerCID, NS_COMPONENTMANAGER_CID);
 
 static NS_DEFINE_CID(kCTextEncoderCID, NS_TEXT_ENCODER_CID);
 
+static NS_DEFINE_IID(kCParserIID, NS_IPARSER_IID);
+static NS_DEFINE_IID(kCParserCID, NS_PARSER_IID);
+
 class nsTextEncoder : public nsIDocumentEncoder
 {
 public:
@@ -175,9 +178,6 @@ nsTextEncoder::EncodeToString(nsString& aOutputString)
 
     nsIParser* parser;
 
-    static NS_DEFINE_IID(kCParserIID, NS_IPARSER_IID);
-    static NS_DEFINE_IID(kCParserCID, NS_PARSER_IID);
-
     rv = nsComponentManager::CreateInstance(kCParserCID, 
                                             nsnull, 
                                             kCParserIID, 
@@ -235,9 +235,6 @@ nsTextEncoder::EncodeToStream(nsIOutputStream* aStream)
       charset = &mCharset; 
 
     nsIParser* parser;
-
-    static NS_DEFINE_IID(kCParserIID, NS_IPARSER_IID);
-    static NS_DEFINE_IID(kCParserCID, NS_PARSER_IID);
 
     rv = nsComponentManager::CreateInstance(kCParserCID, 
                                             nsnull, 
