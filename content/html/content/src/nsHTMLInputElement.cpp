@@ -1257,94 +1257,75 @@ nsHTMLInputElement::HandleDOMEvent(nsIPresContext* aPresContext,
     return NS_OK;
   }
 
-  nsCOMPtr<nsIDOMEventTarget> oldTarget;
-      
   // Do not process any DOM events if the element is disabled
   PRBool disabled;
-
   nsresult rv = GetDisabled(&disabled);
-  if (NS_FAILED(rv) || disabled) {
-    return rv;
+  NS_ENSURE_SUCCESS(rv, rv);
+  if (disabled) {
+    return NS_OK;
   }
   
-  // Bugscape 2369: Type might change during JS event handler
-  //                This pointer is only valid until
-  //                nsGenericHTMLLeafFormElement::HandleDOMEvent
-  nsIFormControlFrame* formControlFrame = GetFormControlFrame(PR_FALSE);
+  {
+    // For some reason or another we also need to check if the style shows us
+    // as disabled.
+    nsIFormControlFrame* formControlFrame = GetFormControlFrame(PR_FALSE);
+    if (formControlFrame) {
+      nsIFrame* formFrame = nsnull;
+      CallQueryInterface(formControlFrame, &formFrame);
+      if (formFrame) {
+        const nsStyleUserInterface* uiStyle;
+        formFrame->GetStyleData(eStyleStruct_UserInterface,
+                                (const nsStyleStruct *&)uiStyle);
 
-  if (formControlFrame) {
-    nsIFrame* formFrame = nsnull;
-    CallQueryInterface(formControlFrame, &formFrame);
-    if (formFrame) {
-      const nsStyleUserInterface* uiStyle;
-      formFrame->GetStyleData(eStyleStruct_UserInterface,
-                              (const nsStyleStruct *&)uiStyle);
-
-      if (uiStyle->mUserInput == NS_STYLE_USER_INPUT_NONE ||
-          uiStyle->mUserInput == NS_STYLE_USER_INPUT_DISABLED) {
-        return NS_OK;
+        if (uiStyle->mUserInput == NS_STYLE_USER_INPUT_NONE ||
+            uiStyle->mUserInput == NS_STYLE_USER_INPUT_DISABLED) {
+          return NS_OK;
+        }
       }
     }
   }
 
   // If we're a file input we have anonymous content underneath
   // that we need to hide.  We need to set the event target now
-  // to ourselves
-  //
-  // Bugscape 2369: Type might change during JS event handler
-  //                This is only valid until
-  //                nsGenericHTMLLeafFormElement::HandleDOMEvent
-  //
-  PRInt32 type;
-  GetType(&type);
+  // to ourselves and the original target to the previous target.
 
-  if (type == NS_FORM_INPUT_FILE ||
-      type == NS_FORM_INPUT_TEXT ) {
+  nsCOMPtr<nsIDOMEventTarget> oldTarget;
+  if (mType == NS_FORM_INPUT_FILE || mType == NS_FORM_INPUT_TEXT ) {
     // If the event is starting here that's fine.  If it's not
     // init'ing here it started beneath us and needs modification.
+    // XXX This happens twice (unnecessarily) since there is both a capture
+    // and a bubble stage.
     if (!(NS_EVENT_FLAG_INIT & aFlags)) {
+      // Create the DOM event.
       if (!*aDOMEvent) {
         // We haven't made a DOMEvent yet.  Force making one now.
         nsCOMPtr<nsIEventListenerManager> listenerManager;
         rv = GetListenerManager(getter_AddRefs(listenerManager));
-
-        if (NS_FAILED(rv)) {
-          return rv;
-        }
+        NS_ENSURE_SUCCESS(rv, rv);
 
         nsAutoString empty;
         rv = listenerManager->CreateEvent(aPresContext, aEvent, empty,
                                           aDOMEvent);
-
-        if (NS_FAILED(rv)) {
-          return rv;
-        }
+        NS_ENSURE_SUCCESS(rv, rv);
       }
 
-      if (!*aDOMEvent) {
-        return NS_ERROR_FAILURE;
-      }
-
-      nsCOMPtr<nsIPrivateDOMEvent> privateEvent(do_QueryInterface(*aDOMEvent));
-
-      if (!privateEvent) {
-        return NS_ERROR_FAILURE;
-      }
-
-      (*aDOMEvent)->GetTarget(getter_AddRefs(oldTarget));
-
+      // See if there is an original target already.  If not, set it to the
+      // current event target.
       nsCOMPtr<nsIDOMEventTarget> originalTarget;
-
       nsCOMPtr<nsIDOMNSEvent> nsevent(do_QueryInterface(*aDOMEvent));
-
       if (nsevent) {
         nsevent->GetOriginalTarget(getter_AddRefs(originalTarget));
       }
 
+      nsCOMPtr<nsIPrivateDOMEvent> privateEvent(do_QueryInterface(*aDOMEvent));
+      NS_ENSURE_TRUE(privateEvent, NS_ERROR_FAILURE);
+
+      (*aDOMEvent)->GetTarget(getter_AddRefs(oldTarget));
       if (!originalTarget) {
         privateEvent->SetOriginalTarget(oldTarget);
       }
 
+      // Set the target to us now.
       nsCOMPtr<nsIDOMEventTarget>
         target(do_QueryInterface((nsIDOMHTMLInputElement*)this));
 
@@ -1352,36 +1333,31 @@ nsHTMLInputElement::HandleDOMEvent(nsIPresContext* aPresContext,
     }
   }
 
-  // Preset the the value of the checkbox or the radiobutton before
-  // calling into script If the event gets "cancelled" then we have to
-  // "back out" this change, but the odds of that are slimmer than it
-  // being set each time
   //
-  // Start by remember the original value and for radio buttons we
-  // must get the currently selected radiobtn. So we go get the
-  // content instead of the frame
+  // Web pages expect the value of a radio button or checkbox to be set
+  // *before* onclick fires, and they expect that if they set the value
+  // explicitly during onclick it will not be toggled or any such nonsense.
+  // In order to support that (bug 57137 and 58460 are examples) we toggle
+  // the checked attribute *first*, and then do nothing *after* the onclick
+  // handler unless the user returns false (in which case we reset it back
+  // to its original value).
+  //
+  // This is a compatibility hack.
   //
   PRBool originalCheckedValue = PR_FALSE;
   PRBool checkWasSet         = PR_FALSE;
 
   nsCOMPtr<nsIDOMHTMLInputElement> selectedRadioButton;
 
-  if (!(aFlags & NS_EVENT_FLAG_CAPTURE) && !(aFlags & NS_EVENT_FLAG_SYSTEM_EVENT) &&
+  if (!(aFlags & NS_EVENT_FLAG_CAPTURE) &&
+      !(aFlags & NS_EVENT_FLAG_SYSTEM_EVENT) &&
       aEvent->message == NS_MOUSE_LEFT_CLICK) {
-    GetChecked(&originalCheckedValue);
-    checkWasSet = PR_TRUE;
-    switch(type) {
+    switch(mType) {
       case NS_FORM_INPUT_CHECKBOX:
         {
-          PRBool checked;
-          GetChecked(&checked);
-          SetChecked(!checked);
-          FireOnChange();
-          // Fire an event to notify accessibility
-#ifdef ACCESSIBILITY
-          FireEventForAccessibility(aPresContext,
-                                    NS_LITERAL_STRING("CheckboxStateChange"));
-#endif
+          GetChecked(&originalCheckedValue);
+          SetChecked(!originalCheckedValue);
+          checkWasSet = PR_TRUE;
         }
         break;
 
@@ -1396,19 +1372,11 @@ nsHTMLInputElement::HandleDOMEvent(nsIPresContext* aPresContext,
             }
           }
 
-          PRBool checked;
-          GetChecked(&checked);
-          if (!checked) {
+          GetChecked(&originalCheckedValue);
+          if (!originalCheckedValue) {
             SetChecked(PR_TRUE);
-            FireOnChange();
+            checkWasSet = PR_TRUE;
           }
-          // Fire an event to notify accessibility
-#ifdef ACCESSIBILITY
-          if (selectedRadioButton != this) {
-            FireEventForAccessibility(aPresContext,
-                                      NS_LITERAL_STRING("RadioStateChange"));
-          }
-#endif
         }
         break;
 
@@ -1431,10 +1399,14 @@ nsHTMLInputElement::HandleDOMEvent(nsIPresContext* aPresContext,
   // this event.  But to allow middle mouse button paste to work we must allow 
   // middle clicks to go to text fields anyway.
   PRBool noContentDispatch = aEvent->flags & NS_EVENT_FLAG_NO_CONTENT_DISPATCH;
-  if ((type == NS_FORM_INPUT_TEXT || type == NS_FORM_INPUT_PASSWORD) &&
+  if ((mType == NS_FORM_INPUT_TEXT || mType == NS_FORM_INPUT_PASSWORD) &&
       aEvent->message == NS_MOUSE_MIDDLE_CLICK) {
     aEvent->flags &= ~NS_EVENT_FLAG_NO_CONTENT_DISPATCH;
   }
+
+  // We must cache type because mType may change during JS event (bug 2369)
+  //
+  PRInt32 oldType = mType;
 
   // Try script event handlers first if its not a focus/blur event
   //we dont want the doc to get these
@@ -1446,7 +1418,7 @@ nsHTMLInputElement::HandleDOMEvent(nsIPresContext* aPresContext,
 
   if (!(aFlags & NS_EVENT_FLAG_CAPTURE) && !(aFlags & NS_EVENT_FLAG_SYSTEM_EVENT) &&
       aEvent->message == NS_MOUSE_LEFT_CLICK) {
-    switch(type) {
+    switch(oldType) {
       case NS_FORM_INPUT_SUBMIT:
       case NS_FORM_INPUT_IMAGE:
         if(mForm) {
@@ -1464,20 +1436,35 @@ nsHTMLInputElement::HandleDOMEvent(nsIPresContext* aPresContext,
   aEvent->flags |= noContentDispatch ? NS_EVENT_FLAG_NO_CONTENT_DISPATCH : NS_EVENT_FLAG_NONE;
 
   // now check to see if the event was "cancelled"
-  if (nsEventStatus_eConsumeNoDefault == *aEventStatus && checkWasSet && !(aFlags & NS_EVENT_FLAG_SYSTEM_EVENT)
-      && (type == NS_FORM_INPUT_CHECKBOX || type == NS_FORM_INPUT_RADIO)) {
-    // if it was cancelled and a radio button, then set the old
-    // selected btn to TRUE. if it is a checkbox then set it to its
-    // original value
-    if (selectedRadioButton) {
-      selectedRadioButton->SetChecked(PR_TRUE);
-    } else if (type == NS_FORM_INPUT_CHECKBOX) {
-      SetChecked(originalCheckedValue);
+  if (checkWasSet) {
+    if (*aEventStatus == nsEventStatus_eConsumeNoDefault) {
+      // if it was cancelled and a radio button, then set the old
+      // selected btn to TRUE. if it is a checkbox then set it to its
+      // original value
+      if (selectedRadioButton) {
+        selectedRadioButton->SetChecked(PR_TRUE);
+        // If this one is no longer a radio button we must reset it back to
+        // false to cancel the action.  See how the web of hack grows?
+        if (mType != NS_FORM_INPUT_RADIO) {
+          SetChecked(PR_FALSE);
+        }
+      } else if (oldType == NS_FORM_INPUT_CHECKBOX) {
+        SetChecked(originalCheckedValue);
+      }
+    } else {
+      FireOnChange();
+#ifdef ACCESSIBILITY
+      // Fire an event to notify accessibility
+      if (mType == NS_FORM_INPUT_CHECKBOX) {
+        FireEventForAccessibility(aPresContext,
+                                  NS_LITERAL_STRING("CheckboxStateChange"));
+      } else {
+        FireEventForAccessibility(aPresContext,
+                                  NS_LITERAL_STRING("RadioStateChange"));
+      }
+#endif
     }
   }
-
-  // Bugscape 2369: Frame might have changed during event handler
-  formControlFrame = GetFormControlFrame(PR_FALSE);
 
   // Finish the special file control processing...
   if (oldTarget) {
@@ -1499,9 +1486,6 @@ nsHTMLInputElement::HandleDOMEvent(nsIPresContext* aPresContext,
     }
   }
 
-  // Bugscape 2369: type might have changed during event handler
-  GetType(&type);
-
   if (NS_SUCCEEDED(rv) && 
       !(aFlags & NS_EVENT_FLAG_CAPTURE) &&
       !(aFlags & NS_EVENT_FLAG_SYSTEM_EVENT)) {
@@ -1510,11 +1494,12 @@ nsHTMLInputElement::HandleDOMEvent(nsIPresContext* aPresContext,
 
         case NS_FOCUS_CONTENT:
         {
-          if (formControlFrame) {
-            // If this is a file control, check to see if focus has bubbled
-            // up from it's child textfield or child button.  If that's the case, 
-            // don't focus this parent file control -- leave focus on the child.
-            if (type != NS_FORM_INPUT_FILE || !(aFlags & NS_EVENT_FLAG_BUBBLE)) {
+          // If this is a file control, check to see if focus has bubbled
+          // up from its child textfield or child button.  If that's the case, 
+          // don't focus this parent file control -- leave focus on the child.
+          if (mType != NS_FORM_INPUT_FILE || !(aFlags & NS_EVENT_FLAG_BUBBLE)) {
+            nsIFormControlFrame* formControlFrame = GetFormControlFrame(PR_FALSE);
+            if (formControlFrame) {
               SET_BOOLBIT(mBitField, BF_SKIP_FOCUS_EVENT, PR_TRUE);
               formControlFrame->SetFocus(PR_TRUE, PR_TRUE);
               SET_BOOLBIT(mBitField, BF_SKIP_FOCUS_EVENT, PR_FALSE);
@@ -1535,7 +1520,7 @@ nsHTMLInputElement::HandleDOMEvent(nsIPresContext* aPresContext,
                keyEvent->keyCode == NS_VK_RETURN) ||
               (aEvent->message == NS_KEY_UP &&
                keyEvent->keyCode == NS_VK_SPACE)) {
-            switch(type) {
+            switch(mType) {
               case NS_FORM_INPUT_CHECKBOX:
               case NS_FORM_INPUT_RADIO:
               {
@@ -1584,14 +1569,14 @@ nsHTMLInputElement::HandleDOMEvent(nsIPresContext* aPresContext,
           }
 
           /*
-           * If this is input type=text, and the user hit enter, fire onChange and
-           * submit the form (if we are in one)
+           * If this is input type=text, and the user hit enter, fire onChange
+           * and submit the form (if we are in one)
            *
            * Bug 99920, bug 109463 and bug 147850:
-           * (a) if there is a submit control in the form, click the first submit
-           *     control in the form.
-           * (b) if there is just one text control in the form, submit by sending
-           *     a submit event directly to the form
+           * (a) if there is a submit control in the form, click the first
+           *     submit control in the form.
+           * (b) if there is just one text control in the form, submit by
+           *     sending a submit event directly to the form
            * (c) if there is more than one text input and no submit buttons, do
            *     not submit, period.
            */
@@ -1599,7 +1584,8 @@ nsHTMLInputElement::HandleDOMEvent(nsIPresContext* aPresContext,
           if (aEvent->message == NS_KEY_PRESS &&
               (keyEvent->keyCode == NS_VK_RETURN ||
                keyEvent->keyCode == NS_VK_ENTER) &&
-              (type == NS_FORM_INPUT_TEXT || type == NS_FORM_INPUT_PASSWORD)) {
+              (mType == NS_FORM_INPUT_TEXT ||
+               mType == NS_FORM_INPUT_PASSWORD)) {
 
             if (mForm) {
               nsIFrame* primaryFrame = GetPrimaryFrame(PR_FALSE);
@@ -1683,9 +1669,9 @@ nsHTMLInputElement::HandleDOMEvent(nsIPresContext* aPresContext,
         case NS_MOUSE_RIGHT_BUTTON_DOWN:
         case NS_MOUSE_RIGHT_BUTTON_UP:
         {
-          if (type == NS_FORM_INPUT_BUTTON || 
-              type == NS_FORM_INPUT_RESET || 
-              type == NS_FORM_INPUT_SUBMIT ) {
+          if (mType == NS_FORM_INPUT_BUTTON || 
+              mType == NS_FORM_INPUT_RESET || 
+              mType == NS_FORM_INPUT_SUBMIT ) {
             nsCOMPtr<nsIDOMNSEvent> nsevent;
 
             if (aDOMEvent) {
@@ -1703,24 +1689,31 @@ nsHTMLInputElement::HandleDOMEvent(nsIPresContext* aPresContext,
         }
         case NS_MOUSE_LEFT_CLICK:
         {
-          switch(type) {
+          if (mForm && (oldType == NS_FORM_INPUT_SUBMIT ||
+                        oldType == NS_FORM_INPUT_IMAGE)) {
+            if (mType == NS_FORM_INPUT_SUBMIT || mType == NS_FORM_INPUT_IMAGE) {
+              // tell the form to forget a possible pending submission.
+              // the reason is that the script returned true (the event was
+              // ignored) so if there is a stored submission, it will miss
+              // the name/value of the submitting element, thus we need
+              // to forget it and the form element will build a new one
+              mForm->ForgetPendingSubmission();
+            } else {
+              // If the type has changed to a non-submit type, then we want to
+              // flush the stored submission if there is one (as if the submit()
+              // was allowed to succeed)
+              mForm->FlushPendingSubmission();
+            }
+          }
+          switch(mType) {
             case NS_FORM_INPUT_RESET:
             case NS_FORM_INPUT_SUBMIT:
             case NS_FORM_INPUT_IMAGE:
               {
                 if (mForm) {
-                  if (mType == NS_FORM_INPUT_SUBMIT ||
-                      mType == NS_FORM_INPUT_IMAGE) {
-                    // tell the form to forget a possible pending submission.
-                    // the reason is that the script returned true (the event was
-                    // ignored) so if there is a stored submission, it will miss
-                    // the name/value of the submitting element, thus we need
-                    // to forget it and the form element will build a new one
-                    mForm->ForgetPendingSubmission();
-                  }
                   nsFormEvent event;
                   event.eventStructType = NS_FORM_EVENT;
-                  event.message         = (type == NS_FORM_INPUT_RESET) ? NS_FORM_RESET : NS_FORM_SUBMIT;
+                  event.message         = (mType == NS_FORM_INPUT_RESET) ? NS_FORM_RESET : NS_FORM_SUBMIT;
                   event.originator      = this;
                   nsEventStatus status  = nsEventStatus_eIgnore;
 
@@ -1745,11 +1738,12 @@ nsHTMLInputElement::HandleDOMEvent(nsIPresContext* aPresContext,
       } //switch
     } else {
       if (aEvent->message == NS_MOUSE_LEFT_CLICK &&
-          (type == NS_FORM_INPUT_SUBMIT || type == NS_FORM_INPUT_IMAGE) && mForm) {
+          (oldType == NS_FORM_INPUT_SUBMIT || oldType == NS_FORM_INPUT_IMAGE) &&
+          mForm) {
         // tell the form to flush a possible pending submission.
         // the reason is that the script returned false (the event was
         // not ignored) so if there is a stored submission, it needs to
-        // be submitted immediatelly.
+        // be submitted immediately.
         mForm->FlushPendingSubmission();
       }
     } //if
