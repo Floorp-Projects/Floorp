@@ -77,7 +77,7 @@ protected:
   void NotifyObservers(SVGObserverNotifyFunction f);
   
 private:
-  nsCheapVoidArray mObservers;
+  nsSmallVoidArray mObservers;
   PRInt32 mModifyNestCount;
 };
 
