@@ -802,9 +802,9 @@ public class ScriptRuntime {
                                         Throwable t)
         throws JavaScriptException
     {
-        boolean evaluatorException = false;
+        EvaluatorException evaluator = null;
         if (t instanceof EvaluatorException) {
-            evaluatorException = true;
+            evaluator = (EvaluatorException)t;
             while (t instanceof WrappedException) {
                 t = ((WrappedException)t).getWrappedException();
             }
@@ -816,19 +816,66 @@ public class ScriptRuntime {
         } else if (t instanceof EcmaError) {
             EcmaError ee = (EcmaError)t;
             String errorName = ee.getName();
-            Object args[] = { ee.getMessage() };
-            Scriptable errorObject = cx.newObject(scope, errorName, args);
-            errorObject.put("name", errorObject, errorName);
-            errorObject.put("fileName", errorObject, ee.getSourceName());
-            errorObject.put("lineNumber", errorObject,
-                            new Integer(ee.getLineNumber()));
-            return errorObject;
-
-        } else if (!evaluatorException) {
+            return makeErrorObject(cx, scope, errorName, ee.getMessage(),
+                                   ee.getSourceName(), ee.getLineNumber());
+        } else if (evaluator == null) {
+            // Script can catch only instances of JavaScriptException,
+            // EcmaError and EvaluatorException
             Kit.codeBug();
         }
 
-        return cx.getWrapFactory().wrap(cx, scope, t, null);
+        if (t != evaluator && t instanceof EvaluatorException) {
+            // ALERT: it should not happen as throwAsUncheckedException
+            // takes care about it when exception is propagated through Java
+            // reflection calls, but for now check for it
+            evaluator = (EvaluatorException)t;
+        }
+
+        String errorName;
+        String message;
+        if (t == evaluator) {
+            // Pure evaluator exception
+            if (evaluator instanceof WrappedException) Kit.codeBug();
+            message = evaluator.getMessage();
+            errorName = "InternalError";
+        } else {
+            errorName = "JavaException";
+            message = t.getClass().getName()+": "+t.getMessage();
+        }
+
+        Scriptable errorObject = makeErrorObject(cx, scope, errorName,
+                                                 message,
+                                                 evaluator.getSourceName(),
+                                                 evaluator.getLineNumber());
+        if (t != evaluator) {
+            Object twrap = cx.getWrapFactory().wrap(cx, scope, t, null);
+            ScriptableObject.putProperty(errorObject, "javaException", twrap);
+        }
+        return errorObject;
+
+    }
+
+    private static Scriptable makeErrorObject(Context cx, Scriptable scope,
+                                              String errorName, String message,
+                                              String fileName, int lineNumber)
+        throws JavaScriptException
+    {
+        int argLength;
+        if (lineNumber > 0) {
+            argLength = 3;
+        } else {
+            argLength = 2;
+        }
+        Object args[] = new Object[argLength];
+        args[0] = message;
+        args[1] = (fileName != null) ? fileName : "";
+        if (lineNumber > 0) {
+            args[2] = new Integer(lineNumber);
+        }
+
+        Scriptable errorObject = cx.newObject(scope, errorName, args);
+        ScriptableObject.putProperty(errorObject, "name", errorName);
+        return errorObject;
     }
 
     /**

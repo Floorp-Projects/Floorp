@@ -96,7 +96,9 @@ public class NativeGlobal implements Serializable, IdFunctionMaster
                                     +"SyntaxError;"
                                     +"TypeError;"
                                     +"URIError;"
-                                    +"InternalError;");
+                                    +"InternalError;"
+                                    +"JavaException;"
+                                    );
 
         /*
             Each error constructor gets its own Error object as a prototype,
