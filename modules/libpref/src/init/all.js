@@ -198,7 +198,7 @@ pref("browser.related.disabledForDomains", "");
 pref("browser.goBrowsing.enabled", true);
 
 //Internet Search
-pref("browser.search.defaultenginename", "chrome://navigator/locale/navigator.properties");
+pref("browser.search.defaultenginename", "chrome:/communicator-region/locale/region.properties");
 
 // Print header customization
 // Use the following codes:
