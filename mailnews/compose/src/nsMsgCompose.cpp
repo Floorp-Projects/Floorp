@@ -733,7 +733,7 @@ nsMsgCompose::Initialize(nsIDOMWindowInternal *aWindow, nsIMsgComposeParams *par
     NS_ENSURE_SUCCESS(rv, rv);
 
     PRInt32 receiptType = nsIMsgMdnGenerator::eDntType;
-    rv = m_identity->GetReceiptHeaderType(&type);
+    rv = m_identity->GetReceiptHeaderType(&receiptType);
     NS_ENSURE_SUCCESS(rv, rv);
     rv = composeFields->SetReceiptHeaderType(receiptType);
     NS_ENSURE_SUCCESS(rv, rv);
