@@ -738,6 +738,7 @@ nsBoxFrame::FlowChildAt(nsIFrame* childFrame,
                      PRBool& aRedraw,
                      nsString& aReason)
 {
+      aStatus = NS_FRAME_COMPLETE;
 
       nsReflowReason reason = aReflowState.reason;
       PRBool shouldReflow = PR_TRUE;
