@@ -1126,18 +1126,29 @@ MapAttributesInto(nsIHTMLAttributes* aAttributes,
     // border and frame
     MapTableBorderInto(aAttributes, aContext, aPresContext);
 
-    // align
+    // align; Check for enumerated type (it may be another type if
+    // illegal)
     aAttributes->GetAttribute(nsHTMLAtoms::align, value);
-    if (value.GetUnit() == eHTMLUnit_Enumerated) {  // it may be another type if illegal
-      nsStyleDisplay* display = (nsStyleDisplay*)aContext->GetMutableStyleData(eStyleStruct_Display);
-      switch (value.GetIntValue()) {
-      case NS_STYLE_TEXT_ALIGN_LEFT:
-        display->mFloats = NS_STYLE_FLOAT_LEFT;
-        break;
+    if (value.GetUnit() == eHTMLUnit_Enumerated) {
+      if (NS_STYLE_TEXT_ALIGN_CENTER == value.GetIntValue()) {
+        nsStyleSpacing* spacing = (nsStyleSpacing*)
+          aContext->GetMutableStyleData(eStyleStruct_Spacing);
+        nsStyleCoord otto(eStyleUnit_Auto);
+        spacing->mMargin.SetLeft(otto);
+        spacing->mMargin.SetRight(otto);
+      }
+      else {
+        nsStyleDisplay* display = (nsStyleDisplay*)
+          aContext->GetMutableStyleData(eStyleStruct_Display);
+        switch (value.GetIntValue()) {
+        case NS_STYLE_TEXT_ALIGN_LEFT:
+          display->mFloats = NS_STYLE_FLOAT_LEFT;
+          break;
 
-      case NS_STYLE_TEXT_ALIGN_RIGHT:
-        display->mFloats = NS_STYLE_FLOAT_RIGHT;
-        break;
+        case NS_STYLE_TEXT_ALIGN_RIGHT:
+          display->mFloats = NS_STYLE_FLOAT_RIGHT;
+          break;
+        }
       }
     }
 
