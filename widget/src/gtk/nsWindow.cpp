@@ -726,6 +726,7 @@ NS_IMETHODIMP nsWindow::CaptureRollupEvents(nsIRollupListener * aListener,
       gdk_keyboard_grab(mSuperWin->bin_window, PR_TRUE, GDK_CURRENT_TIME);
 
       gdk_cursor_destroy(cursor);
+      SuppressModality(PR_TRUE);
     }
     gRollupConsumeRollupEvent = PR_TRUE;
 
@@ -744,6 +745,7 @@ NS_IMETHODIMP nsWindow::CaptureRollupEvents(nsIRollupListener * aListener,
 
     gRollupListener = nsnull;
     gRollupWidget = nsnull;
+    SuppressModality(PR_FALSE);
   }
   
   return NS_OK;
