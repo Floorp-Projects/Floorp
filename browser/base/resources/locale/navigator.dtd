@@ -14,6 +14,8 @@
 
 <!ENTITY browserCmd.label	"New Window">
 <!ENTITY browserCmd.accesskey	"N">
+<!ENTITY browserCmd.commandkey "n">
+
 <!ENTITY tabCmd.label "New Tab">
 <!ENTITY tabCmd.accesskey "T">
 <!ENTITY tabCmd.commandkey "t">
@@ -143,10 +145,6 @@
 <!ENTITY fileMenu.accesskey       "f">
 <!ENTITY newMenu.label            "New">
 <!ENTITY newMenu.accesskey          "N">
-<!-- LOCALIZATION NOTE  (newNavigatorCmd.label): Do NOT translate "Navigator" -->
-<!ENTITY newNavigatorCmd.label        "Navigator Window">
-<!ENTITY newNavigatorCmd.key        "N">
-<!ENTITY newNavigatorCmd.accesskey      "N">
 
 <!ENTITY editMenu.label         "Edit"> 
 <!ENTITY editMenu.accesskey       "e"> 
