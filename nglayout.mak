@@ -189,7 +189,7 @@ $(DIST_DIRS) $(RAPTOR_DIRS)::
 
 pull_all: pull_seamonkey
 
-pull_nglayout: pull_lizard pull_xpcom pull_imglib pull_netlib pull_nglayout \
+pull_nglayout: pull_lizard pull_xpcom pull_imglib pull_netlib pull_nglayoutcore \
 pull_editor
 
 pull_seamonkey:
@@ -241,7 +241,7 @@ pull_netlib:
 	$(CVSCO_NETWORK) $(MOZ_TOP)/network
 	$(CVSCO_NETWORK) $(MOZ_TOP)/include
 
-pull_nglayout:
+pull_nglayoutcore:
 	@cd $(MOZ_SRC)\.
 	$(CVSCO_RAPTOR) $(MOZ_TOP)/base
 	$(CVSCO_RAPTOR) $(MOZ_TOP)/dom
