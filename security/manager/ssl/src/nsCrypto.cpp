@@ -1440,7 +1440,7 @@ nsCrypto::GenerateCRMFRequest(nsIDOMCRMFObject** aReturn)
   //escrow the private key.
   //Don't addref this copy.  That way ths reference goes away
   //at the same the nsIX09Cert ref goes away.
-  nsNSSCertificate *escrowCert;
+  nsNSSCertificate *escrowCert = nsnull;
   nsCOMPtr<nsIX509Cert> nssCert;
   PRBool willEscrow = PR_FALSE;
   if (eaCert) {
@@ -1690,7 +1690,10 @@ nsP12Runnable::Run()
   return NS_OK;
 }
 
-nsCryptoRunArgs::nsCryptoRunArgs() {}
+nsCryptoRunArgs::nsCryptoRunArgs() 
+{
+  NS_INIT_REFCNT();
+}
 nsCryptoRunArgs::~nsCryptoRunArgs() {}
 
 
