@@ -31,9 +31,9 @@
 static NS_DEFINE_IID(kIDOMHTMLTableRowElementIID, NS_IDOMHTMLTABLEROWELEMENT_IID);
 
 class nsHTMLTableRowElement : public nsIDOMHTMLTableRowElement,
-                       public nsIScriptObjectOwner,
-                       public nsIDOMEventReceiver,
-                       public nsIHTMLContent
+                              public nsIScriptObjectOwner,
+                              public nsIDOMEventReceiver,
+                              public nsIHTMLContent
 {
 public:
   nsHTMLTableRowElement(nsIAtom* aTag);

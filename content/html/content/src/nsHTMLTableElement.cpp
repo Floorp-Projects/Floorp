@@ -30,10 +30,11 @@
 
 static NS_DEFINE_IID(kIDOMHTMLTableElementIID, NS_IDOMHTMLTABLEELEMENT_IID);
 
-class nsHTMLTableElement : public nsIDOMHTMLTableElement,
-                    public nsIScriptObjectOwner,
-                    public nsIDOMEventReceiver,
-                    public nsIHTMLContent
+
+class nsHTMLTableElement :  public nsIDOMHTMLTableElement,
+                            public nsIScriptObjectOwner,
+                            public nsIDOMEventReceiver,
+                            public nsIHTMLContent
 {
 public:
   nsHTMLTableElement(nsIAtom* aTag);
