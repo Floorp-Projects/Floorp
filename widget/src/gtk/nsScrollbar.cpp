@@ -312,7 +312,7 @@ NS_IMETHODIMP nsScrollbar::SetParameters (PRUint32 aMaxRange, PRUint32 aThumbSiz
 {
   if (mAdjustment) {
     int thumbSize = (((int) aThumbSize) > 0 ? aThumbSize : 1);
-    int maxRange = (((int) aMaxRange) > 0 ? aMaxRange : 10);
+    int maxRange = (((int) aMaxRange) > 0 ? aMaxRange : 1);
     int mLineIncrement = (((int) aLineIncrement) > 0 ? aLineIncrement : 1);
 
     int maxPos = maxRange - thumbSize;
@@ -323,8 +323,9 @@ NS_IMETHODIMP nsScrollbar::SetParameters (PRUint32 aMaxRange, PRUint32 aThumbSiz
     GTK_ADJUSTMENT (mAdjustment)->page_size = thumbSize;
     GTK_ADJUSTMENT (mAdjustment)->page_increment = thumbSize;
     GTK_ADJUSTMENT (mAdjustment)->step_increment = mLineIncrement;
-    // this will emit the changed signal for us
+
     gtk_adjustment_set_value (GTK_ADJUSTMENT (mAdjustment), pos);
+    gtk_signal_emit_by_name (GTK_OBJECT (mAdjustment), "changed");
   }
   return NS_OK;
 }
