@@ -51,6 +51,7 @@ class nsAccessibleEventData: public nsIAccessibleEvent
     nsAccessibleEventData(PRUint32 aEventType, nsIAccessible *aAccessible, 
                          nsIAccessibleDocument *aDocAccessible, 
                          void *aEventData);
+    virtual ~nsAccessibleEventData() {};
 
     NS_DECL_ISUPPORTS
 

@@ -65,7 +65,7 @@ NS_IMETHODIMP nsXULProgressMeterAccessibleWrap::GetMinimumValue(double *aMinimum
 NS_IMETHODIMP nsXULProgressMeterAccessibleWrap::GetCurrentValue(double *aCurrentValue)
 {
   nsAutoString currentValue;
-  GetAccValue(currentValue);
+  GetValue(currentValue);
   PRInt32 error;
   *aCurrentValue = currentValue.ToFloat(&error) / 100;
   return NS_OK;

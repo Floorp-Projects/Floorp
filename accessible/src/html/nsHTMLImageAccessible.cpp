@@ -73,12 +73,12 @@ nsLinkableAccessible(aDOMNode, aShell)
   }
 }
 
-NS_IMETHODIMP nsHTMLImageAccessible::GetAccState(PRUint32 *_retval)
+NS_IMETHODIMP nsHTMLImageAccessible::GetState(PRUint32 *_retval)
 {
   // The state is a bitfield, get our inherited state, then logically OR it with STATE_ANIMATED if this
   // is an animated image.
 
-  nsLinkableAccessible::GetAccState(_retval);
+  nsLinkableAccessible::GetState(_retval);
 
   nsCOMPtr<nsIImageLoadingContent> content(do_QueryInterface(mDOMNode));
   nsCOMPtr<imgIRequest> imageRequest;
@@ -102,8 +102,8 @@ NS_IMETHODIMP nsHTMLImageAccessible::GetAccState(PRUint32 *_retval)
 }
 
 
-/* wstring getAccName (); */
-NS_IMETHODIMP nsHTMLImageAccessible::GetAccName(nsAString& _retval)
+/* wstring getName (); */
+NS_IMETHODIMP nsHTMLImageAccessible::GetName(nsAString& _retval)
 {
   nsresult rv = NS_ERROR_FAILURE;
 
@@ -120,8 +120,8 @@ NS_IMETHODIMP nsHTMLImageAccessible::GetAccName(nsAString& _retval)
   return rv;
 }
 
-/* wstring getAccRole (); */
-NS_IMETHODIMP nsHTMLImageAccessible::GetAccRole(PRUint32 *_retval)
+/* wstring getRole (); */
+NS_IMETHODIMP nsHTMLImageAccessible::GetRole(PRUint32 *_retval)
 {
   *_retval = ROLE_GRAPHIC;
   return NS_OK;
@@ -135,7 +135,7 @@ nsIAccessible *nsHTMLImageAccessible::CreateAreaAccessible(PRInt32 areaNum)
 
    if (areaNum == -1) {
     PRInt32 numAreaMaps;
-    GetAccChildCount(&numAreaMaps);
+    GetChildCount(&numAreaMaps);
     if (numAreaMaps<=0)
       return nsnull;
     areaNum = NS_STATIC_CAST(PRUint32,numAreaMaps-1);
@@ -166,16 +166,16 @@ nsIAccessible *nsHTMLImageAccessible::CreateAreaAccessible(PRInt32 areaNum)
 }
 
 
-/* nsIAccessible getAccFirstChild (); */
-NS_IMETHODIMP nsHTMLImageAccessible::GetAccFirstChild(nsIAccessible **_retval)
+/* nsIAccessible getFirstChild (); */
+NS_IMETHODIMP nsHTMLImageAccessible::GetFirstChild(nsIAccessible **_retval)
 {
   *_retval = CreateAreaAccessible(0);
   return NS_OK;
 }
 
 
-/* nsIAccessible getAccLastChild (); */
-NS_IMETHODIMP nsHTMLImageAccessible::GetAccLastChild(nsIAccessible **_retval)
+/* nsIAccessible getLastChild (); */
+NS_IMETHODIMP nsHTMLImageAccessible::GetLastChild(nsIAccessible **_retval)
 {
   *_retval = CreateAreaAccessible(-1);
   return NS_OK;
@@ -183,7 +183,7 @@ NS_IMETHODIMP nsHTMLImageAccessible::GetAccLastChild(nsIAccessible **_retval)
 
 #ifdef NEVER
 /* long getAccChildCount (); */
-NS_IMETHODIMP nsHTMLImageAccessible::GetAccChildCount(PRInt32 *_retval)
+NS_IMETHODIMP nsHTMLImageAccessible::GetChildCount(PRInt32 *_retval)
 {
   *_retval = 0;
   if (mMapElement) {

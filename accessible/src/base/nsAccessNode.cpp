@@ -332,7 +332,7 @@ nsAccessNode::MakeAccessNode(nsIDOMNode *aNode, nsIAccessNode **aAccessNode)
 }
 
 NS_IMETHODIMP
-nsAccessNode::GetFirstChild(nsIAccessNode **aAccessNode)
+nsAccessNode::GetFirstChildNode(nsIAccessNode **aAccessNode)
 {
   NS_ENSURE_TRUE(mDOMNode, NS_ERROR_NULL_POINTER);
 
@@ -344,7 +344,7 @@ nsAccessNode::GetFirstChild(nsIAccessNode **aAccessNode)
 }
 
 NS_IMETHODIMP
-nsAccessNode::GetLastChild(nsIAccessNode **aAccessNode)
+nsAccessNode::GetLastChildNode(nsIAccessNode **aAccessNode)
 {
   NS_ENSURE_TRUE(mDOMNode, NS_ERROR_NULL_POINTER);
 
@@ -356,7 +356,7 @@ nsAccessNode::GetLastChild(nsIAccessNode **aAccessNode)
 }
 
 NS_IMETHODIMP
-nsAccessNode::GetParent(nsIAccessNode **aAccessNode)
+nsAccessNode::GetParentNode(nsIAccessNode **aAccessNode)
 {
   NS_ENSURE_TRUE(mDOMNode, NS_ERROR_NULL_POINTER);
 
@@ -368,7 +368,7 @@ nsAccessNode::GetParent(nsIAccessNode **aAccessNode)
 }
 
 NS_IMETHODIMP
-nsAccessNode::GetPreviousSibling(nsIAccessNode **aAccessNode)
+nsAccessNode::GetPreviousSiblingNode(nsIAccessNode **aAccessNode)
 {
   NS_ENSURE_TRUE(mDOMNode, NS_ERROR_NULL_POINTER);
 
@@ -380,7 +380,7 @@ nsAccessNode::GetPreviousSibling(nsIAccessNode **aAccessNode)
 }
 
 NS_IMETHODIMP
-nsAccessNode::GetNextSibling(nsIAccessNode **aAccessNode)
+nsAccessNode::GetNextSiblingNode(nsIAccessNode **aAccessNode)
 {
   NS_ENSURE_TRUE(mDOMNode, NS_ERROR_NULL_POINTER);
 
@@ -392,7 +392,7 @@ nsAccessNode::GetNextSibling(nsIAccessNode **aAccessNode)
 }
 
 NS_IMETHODIMP
-nsAccessNode::GetChildAt(PRInt32 aChildNum, nsIAccessNode **aAccessNode)
+nsAccessNode::GetChildNodeAt(PRInt32 aChildNum, nsIAccessNode **aAccessNode)
 {
   nsCOMPtr<nsIContent> child, content(do_QueryInterface(mDOMNode));
   NS_ENSURE_TRUE(content, NS_ERROR_NULL_POINTER);

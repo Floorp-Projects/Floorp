@@ -50,45 +50,45 @@ class nsXULMenuitemAccessible : public nsAccessibleWrap
 {
 public:
   nsXULMenuitemAccessible(nsIDOMNode* aDomNode, nsIWeakReference* aShell);
-  NS_IMETHOD GetAccName(nsAString& _retval); 
-  NS_IMETHOD GetAccKeyboardShortcut(nsAString& _retval);
-  NS_IMETHOD GetAccKeybinding(nsAString& _retval);
-  NS_IMETHOD GetAccState(PRUint32 *_retval); 
-  NS_IMETHOD GetAccRole(PRUint32 *_retval); 
-  NS_IMETHOD GetAccChildCount(PRInt32 *aAccChildCount);
-  NS_IMETHOD AccDoAction(PRUint8 index);
-  NS_IMETHOD GetAccActionName(PRUint8 index, nsAString& _retval);
-  NS_IMETHOD GetAccNumActions(PRUint8 *_retval);
+  NS_IMETHOD GetName(nsAString& _retval); 
+  NS_IMETHOD GetKeyboardShortcut(nsAString& _retval);
+  NS_IMETHOD GetKeyBinding(nsAString& _retval);
+  NS_IMETHOD GetState(PRUint32 *_retval); 
+  NS_IMETHOD GetRole(PRUint32 *_retval); 
+  NS_IMETHOD GetChildCount(PRInt32 *aAccChildCount);
+  NS_IMETHOD DoAction(PRUint8 index);
+  NS_IMETHOD GetActionName(PRUint8 index, nsAString& _retval);
+  NS_IMETHOD GetNumActions(PRUint8 *_retval);
 };
 
 class nsXULMenuSeparatorAccessible : public nsXULMenuitemAccessible
 {
 public:
   nsXULMenuSeparatorAccessible(nsIDOMNode* aDomNode, nsIWeakReference* aShell);
-  NS_IMETHOD GetAccName(nsAString& _retval); 
-  NS_IMETHOD GetAccState(PRUint32 *_retval); 
-  NS_IMETHOD GetAccRole(PRUint32 *_retval); 
-  NS_IMETHOD AccDoAction(PRUint8 index);
-  NS_IMETHOD GetAccActionName(PRUint8 index, nsAString& _retval);
-  NS_IMETHOD GetAccNumActions(PRUint8 *_retval);
+  NS_IMETHOD GetName(nsAString& _retval); 
+  NS_IMETHOD GetState(PRUint32 *_retval); 
+  NS_IMETHOD GetRole(PRUint32 *_retval); 
+  NS_IMETHOD DoAction(PRUint8 index);
+  NS_IMETHOD GetActionName(PRUint8 index, nsAString& _retval);
+  NS_IMETHOD GetNumActions(PRUint8 *_retval);
 };
 
 class nsXULMenupopupAccessible : public nsAccessibleWrap
 {
 public:
   nsXULMenupopupAccessible(nsIDOMNode* aDomNode, nsIWeakReference* aShell);
-  NS_IMETHOD GetAccName(nsAString& _retval); 
-  NS_IMETHOD GetAccState(PRUint32 *_retval); 
-  NS_IMETHOD GetAccRole(PRUint32 *_retval); 
+  NS_IMETHOD GetName(nsAString& _retval); 
+  NS_IMETHOD GetState(PRUint32 *_retval); 
+  NS_IMETHOD GetRole(PRUint32 *_retval); 
 };
 
 class nsXULMenubarAccessible : public nsAccessibleWrap
 {
 public:
   nsXULMenubarAccessible(nsIDOMNode* aDomNode, nsIWeakReference* aShell);
-  NS_IMETHOD GetAccName(nsAString& _retval); 
-  NS_IMETHOD GetAccState(PRUint32 *_retval); 
-  NS_IMETHOD GetAccRole(PRUint32 *_retval); 
+  NS_IMETHOD GetName(nsAString& _retval); 
+  NS_IMETHOD GetState(PRUint32 *_retval); 
+  NS_IMETHOD GetRole(PRUint32 *_retval); 
 };
 
 #endif  

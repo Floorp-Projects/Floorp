@@ -126,11 +126,11 @@ public:
   virtual ~nsHTMLSelectListAccessible() {}
 
   /* ----- nsIAccessible ----- */
-  NS_IMETHOD GetAccRole(PRUint32 *aAccRole);
-  NS_IMETHOD GetAccState(PRUint32 *_retval);
-  NS_IMETHOD GetAccFirstChild(nsIAccessible **aAccFirstChild);
-  NS_IMETHOD GetAccLastChild(nsIAccessible **aAccFirstChild);
-  NS_IMETHOD GetAccChildCount(PRInt32 *aAccChildCount) ;
+  NS_IMETHOD GetRole(PRUint32 *aRole);
+  NS_IMETHOD GetState(PRUint32 *_retval);
+  NS_IMETHOD GetFirstChild(nsIAccessible **aFirstChild);
+  NS_IMETHOD GetLastChild(nsIAccessible **aFirstChild);
+  NS_IMETHOD GetChildCount(PRInt32 *aAccChildCount) ;
 };
 
 /*
@@ -144,15 +144,15 @@ public:
   virtual ~nsHTMLSelectOptionAccessible() {}
 
   /* ----- nsIAccessible ----- */
-  NS_IMETHOD AccDoAction(PRUint8 index);
-  NS_IMETHOD GetAccActionName(PRUint8 index, nsAString& _retval);
-  NS_IMETHOD GetAccNextSibling(nsIAccessible **_retval);
-  NS_IMETHOD GetAccNumActions(PRUint8 *_retval);
-  NS_IMETHOD GetAccPreviousSibling(nsIAccessible **_retval);
-  NS_IMETHOD GetAccState(PRUint32 *_retval);
-  NS_IMETHOD GetAccRole(PRUint32 *aAccRole);
-  NS_IMETHOD GetAccParent(nsIAccessible **aParent);
-  NS_IMETHOD GetAccName(nsAString& aName);
+  NS_IMETHOD DoAction(PRUint8 index);
+  NS_IMETHOD GetActionName(PRUint8 index, nsAString& _retval);
+  NS_IMETHOD GetNextSibling(nsIAccessible **_retval);
+  NS_IMETHOD GetNumActions(PRUint8 *_retval);
+  NS_IMETHOD GetPreviousSibling(nsIAccessible **_retval);
+  NS_IMETHOD GetState(PRUint32 *_retval);
+  NS_IMETHOD GetRole(PRUint32 *aRole);
+  NS_IMETHOD GetParent(nsIAccessible **aParent);
+  NS_IMETHOD GetName(nsAString& aName);
   static nsresult GetFocusedOptionNode(nsIDOMNode *aListNode, nsIDOMNode **aFocusedOptionNode);
 };
 
@@ -167,10 +167,10 @@ public:
   virtual ~nsHTMLSelectOptGroupAccessible() {}
 
   /* ----- nsIAccessible ----- */
-  NS_IMETHOD GetAccState(PRUint32 *_retval);
-  NS_IMETHOD AccDoAction(PRUint8 index);  
-  NS_IMETHOD GetAccActionName(PRUint8 index, nsAString& _retval);
-  NS_IMETHOD GetAccNumActions(PRUint8 *_retval);
+  NS_IMETHOD GetState(PRUint32 *_retval);
+  NS_IMETHOD DoAction(PRUint8 index);  
+  NS_IMETHOD GetActionName(PRUint8 index, nsAString& _retval);
+  NS_IMETHOD GetNumActions(PRUint8 *_retval);
 };
 
 /** ------------------------------------------------------ */
@@ -188,13 +188,13 @@ public:
   virtual ~nsHTMLComboboxAccessible() {}
 
   /* ----- nsIAccessible ----- */
-  NS_IMETHOD GetAccRole(PRUint32 *_retval);
-  NS_IMETHOD GetAccChildCount(PRInt32 *_retval);
-  NS_IMETHOD GetAccState(PRUint32 *_retval);
+  NS_IMETHOD GetRole(PRUint32 *_retval);
+  NS_IMETHOD GetChildCount(PRInt32 *_retval);
+  NS_IMETHOD GetState(PRUint32 *_retval);
 
-  NS_IMETHOD GetAccLastChild(nsIAccessible **_retval);
-  NS_IMETHOD GetAccFirstChild(nsIAccessible **_retval);
-  NS_IMETHOD GetAccValue(nsAString& _retval);
+  NS_IMETHOD GetLastChild(nsIAccessible **_retval);
+  NS_IMETHOD GetFirstChild(nsIAccessible **_retval);
+  NS_IMETHOD GetValue(nsAString& _retval);
   NS_IMETHOD Shutdown();
   NS_IMETHOD Init();
 
@@ -218,15 +218,15 @@ public:
   virtual ~nsHTMLComboboxTextFieldAccessible() {}
 
   /* ----- nsIAccessible ----- */
-  NS_IMETHOD GetAccNextSibling(nsIAccessible **_retval);
-  NS_IMETHOD GetAccPreviousSibling(nsIAccessible **_retval);
-  NS_IMETHOD GetAccParent(nsIAccessible **_retval);
-  NS_IMETHOD GetAccRole(PRUint32 *_retval);
-  NS_IMETHOD GetAccValue(nsAString& _retval);
-  NS_IMETHOD GetAccState(PRUint32 *_retval);
+  NS_IMETHOD GetNextSibling(nsIAccessible **_retval);
+  NS_IMETHOD GetPreviousSibling(nsIAccessible **_retval);
+  NS_IMETHOD GetParent(nsIAccessible **_retval);
+  NS_IMETHOD GetRole(PRUint32 *_retval);
+  NS_IMETHOD GetValue(nsAString& _retval);
+  NS_IMETHOD GetState(PRUint32 *_retval);
   NS_IMETHOD GetUniqueID(void **aUniqueID);
 
-  virtual void GetBounds(nsRect& aBounds, nsIFrame** aBoundingFrame);
+  virtual void GetBoundsRect(nsRect& aBounds, nsIFrame** aBoundingFrame);
 };
 
 /**
@@ -241,18 +241,18 @@ public:
   virtual ~nsHTMLComboboxButtonAccessible() {}
 
   /* ----- nsIAccessible ----- */
-  NS_IMETHOD AccDoAction(PRUint8 index);
-  NS_IMETHOD GetAccNumActions(PRUint8 *_retval);
-  NS_IMETHOD GetAccActionName(PRUint8 index, nsAString& _retval);
-  NS_IMETHOD GetAccParent(nsIAccessible **_retval);
-  NS_IMETHOD GetAccNextSibling(nsIAccessible **_retval);
-  NS_IMETHOD GetAccPreviousSibling(nsIAccessible **_retval);
-  NS_IMETHOD GetAccName(nsAString& _retval);
-  NS_IMETHOD GetAccRole(PRUint32 *_retval);
-  NS_IMETHOD GetAccState(PRUint32 *_retval);
+  NS_IMETHOD DoAction(PRUint8 index);
+  NS_IMETHOD GetNumActions(PRUint8 *_retval);
+  NS_IMETHOD GetActionName(PRUint8 index, nsAString& _retval);
+  NS_IMETHOD GetParent(nsIAccessible **_retval);
+  NS_IMETHOD GetNextSibling(nsIAccessible **_retval);
+  NS_IMETHOD GetPreviousSibling(nsIAccessible **_retval);
+  NS_IMETHOD GetName(nsAString& _retval);
+  NS_IMETHOD GetRole(PRUint32 *_retval);
+  NS_IMETHOD GetState(PRUint32 *_retval);
   NS_IMETHOD GetUniqueID(void **aUniqueID);
 
-  virtual void GetBounds(nsRect& aBounds, nsIFrame** aBoundingFrame);
+  virtual void GetBoundsRect(nsRect& aBounds, nsIFrame** aBoundingFrame);
 };
 
 /*
@@ -270,12 +270,12 @@ public:
   virtual ~nsHTMLComboboxListAccessible() {}
 
   /* ----- nsIAccessible ----- */
-  NS_IMETHOD GetAccState(PRUint32 *aAccState);
-  NS_IMETHOD GetAccParent(nsIAccessible **aParent);
+  NS_IMETHOD GetState(PRUint32 *aState);
+  NS_IMETHOD GetParent(nsIAccessible **aParent);
   NS_IMETHOD GetUniqueID(void **aUniqueID);
-  NS_IMETHOD GetAccPreviousSibling(nsIAccessible **aAccPrevSibling);
+  NS_IMETHOD GetPreviousSibling(nsIAccessible **aAccPrevSibling);
 
-  virtual void GetBounds(nsRect& aBounds, nsIFrame** aBoundingFrame);
+  virtual void GetBoundsRect(nsRect& aBounds, nsIFrame** aBoundingFrame);
 };
 
 #endif

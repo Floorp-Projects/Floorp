@@ -58,11 +58,11 @@ nsBlockAccessible::nsBlockAccessible(nsIDOMNode* aNode, nsIWeakReference* aShell
 NS_IMPL_ISUPPORTS_INHERITED0(nsBlockAccessible, nsAccessible)
 
 /* nsIAccessible accGetAt (in long x, in long y); */
-NS_IMETHODIMP nsBlockAccessible::AccGetAt(PRInt32 tx, PRInt32 ty, nsIAccessible **_retval)
+NS_IMETHODIMP nsBlockAccessible::GetChildAtPoint(PRInt32 tx, PRInt32 ty, nsIAccessible **_retval)
 {
   // We're going to find the child that contains coordinates (tx,ty)
   PRInt32 x,y,w,h;
-  AccGetBounds(&x,&y,&w,&h);  // Get bounds for this accessible
+  GetBounds(&x,&y,&w,&h);  // Get bounds for this accessible
   if (tx >= x && tx < x + w && ty >= y && ty < y + h)
   {
     // It's within this nsIAccessible, let's drill down
@@ -70,11 +70,11 @@ NS_IMETHODIMP nsBlockAccessible::AccGetAt(PRInt32 tx, PRInt32 ty, nsIAccessible 
     nsCOMPtr<nsIAccessible> smallestChild;
     PRInt32 smallestArea = -1;
     nsCOMPtr<nsIAccessible> next;
-    GetAccFirstChild(getter_AddRefs(child));
+    GetFirstChild(getter_AddRefs(child));
     PRInt32 cx,cy,cw,ch;  // Child bounds
 
     while(child) {
-      child->AccGetBounds(&cx,&cy,&cw,&ch);
+      child->GetBounds(&cx,&cy,&cw,&ch);
       
       // ok if there are multiple frames the contain the point 
       // and they overlap then pick the smallest. We need to do this
@@ -92,7 +92,7 @@ NS_IMETHODIMP nsBlockAccessible::AccGetAt(PRInt32 tx, PRInt32 ty, nsIAccessible 
           smallestChild = child;
         }
       }
-      child->GetAccNextSibling(getter_AddRefs(next));
+      child->GetNextSibling(getter_AddRefs(next));
       child = next;
     }
 
@@ -124,22 +124,22 @@ nsAccessibleWrap(aNode, aShell)
 
 NS_IMPL_ISUPPORTS_INHERITED0(nsLeafAccessible, nsAccessible)
 
-/* nsIAccessible getAccFirstChild (); */
-NS_IMETHODIMP nsLeafAccessible::GetAccFirstChild(nsIAccessible **_retval)
+/* nsIAccessible getFirstChild (); */
+NS_IMETHODIMP nsLeafAccessible::GetFirstChild(nsIAccessible **_retval)
 {
   *_retval = nsnull;
   return NS_OK;
 }
 
-/* nsIAccessible getAccLastChild (); */
-NS_IMETHODIMP nsLeafAccessible::GetAccLastChild(nsIAccessible **_retval)
+/* nsIAccessible getLastChild (); */
+NS_IMETHODIMP nsLeafAccessible::GetLastChild(nsIAccessible **_retval)
 {
   *_retval = nsnull;
   return NS_OK;
 }
 
 /* long getAccChildCount (); */
-NS_IMETHODIMP nsLeafAccessible::GetAccChildCount(PRInt32 *_retval)
+NS_IMETHODIMP nsLeafAccessible::GetChildCount(PRInt32 *_retval)
 {
   *_retval = 0;
   return NS_OK;
@@ -160,7 +160,7 @@ nsLinkableAccessible::nsLinkableAccessible(nsIDOMNode* aNode, nsIWeakReference* 
 
 NS_IMPL_ISUPPORTS_INHERITED0(nsLinkableAccessible, nsAccessible)
 
-NS_IMETHODIMP nsLinkableAccessible::AccTakeFocus()
+NS_IMETHODIMP nsLinkableAccessible::TakeFocus()
 { 
   if (IsALink()) {
     mLinkContent->SetFocus(nsCOMPtr<nsIPresContext>(GetPresContext()));
@@ -169,10 +169,10 @@ NS_IMETHODIMP nsLinkableAccessible::AccTakeFocus()
   return NS_OK;
 }
 
-/* long GetAccState (); */
-NS_IMETHODIMP nsLinkableAccessible::GetAccState(PRUint32 *aState)
+/* long GetState (); */
+NS_IMETHODIMP nsLinkableAccessible::GetState(PRUint32 *aState)
 {
-  nsAccessible::GetAccState(aState);
+  nsAccessible::GetState(aState);
   if (IsALink()) {
     *aState |= STATE_LINKED;
     if (mIsLinkVisited)
@@ -182,13 +182,13 @@ NS_IMETHODIMP nsLinkableAccessible::GetAccState(PRUint32 *aState)
   if (IsALink()) {
     // Make sure we also include all the states of the parent link, such as focusable, focused, etc.
     PRUint32 role;
-    GetAccRole(&role);
+    GetRole(&role);
     if (role != ROLE_LINK) {
       nsCOMPtr<nsIAccessible> parentAccessible;
-      GetAccParent(getter_AddRefs(parentAccessible));
+      GetParent(getter_AddRefs(parentAccessible));
       if (parentAccessible) {
         PRUint32 orState = 0;
-        parentAccessible->GetAccState(&orState);
+        parentAccessible->GetState(&orState);
         *aState |= orState;
       }
     }
@@ -206,7 +206,7 @@ NS_IMETHODIMP nsLinkableAccessible::GetAccState(PRUint32 *aState)
 }
 
 
-NS_IMETHODIMP nsLinkableAccessible::GetAccValue(nsAString& _retval)
+NS_IMETHODIMP nsLinkableAccessible::GetValue(nsAString& _retval)
 {
   if (IsALink()) {
     nsCOMPtr<nsIDOMNode> linkNode(do_QueryInterface(mLinkContent));
@@ -219,14 +219,14 @@ NS_IMETHODIMP nsLinkableAccessible::GetAccValue(nsAString& _retval)
 
 
 /* PRUint8 getAccNumActions (); */
-NS_IMETHODIMP nsLinkableAccessible::GetAccNumActions(PRUint8 *_retval)
+NS_IMETHODIMP nsLinkableAccessible::GetNumActions(PRUint8 *_retval)
 {
   *_retval = eSingle_Action;
   return NS_OK;
 }
 
 /* wstring getAccActionName (in PRUint8 index); */
-NS_IMETHODIMP nsLinkableAccessible::GetAccActionName(PRUint8 index, nsAString& _retval)
+NS_IMETHODIMP nsLinkableAccessible::GetActionName(PRUint8 index, nsAString& _retval)
 {
   // Action 0 (default action): Jump to link
   if (index == eAction_Jump) {   
@@ -240,7 +240,7 @@ NS_IMETHODIMP nsLinkableAccessible::GetAccActionName(PRUint8 index, nsAString& _
 }
 
 /* void accDoAction (in PRUint8 index); */
-NS_IMETHODIMP nsLinkableAccessible::AccDoAction(PRUint8 index)
+NS_IMETHODIMP nsLinkableAccessible::DoAction(PRUint8 index)
 {
   // Action 0 (default action): Jump to link
   if (index == eAction_Jump) {
@@ -270,7 +270,7 @@ NS_IMETHODIMP nsLinkableAccessible::AccDoAction(PRUint8 index)
   return NS_ERROR_INVALID_ARG;
 }
 
-NS_IMETHODIMP nsLinkableAccessible::GetAccKeyboardShortcut(nsAString& _retval)
+NS_IMETHODIMP nsLinkableAccessible::GetKeyboardShortcut(nsAString& _retval)
 {
   if (IsALink()) {
     nsresult rv;
@@ -282,12 +282,12 @@ NS_IMETHODIMP nsLinkableAccessible::GetAccKeyboardShortcut(nsAString& _retval)
       rv = accService->GetAccessibleInWeakShell(linkNode, mWeakShell,
                                                 getter_AddRefs(linkAccessible));
       if (NS_SUCCEEDED(rv) && linkAccessible)
-        return linkAccessible->GetAccKeyboardShortcut(_retval);
+        return linkAccessible->GetKeyboardShortcut(_retval);
       else
         return rv;
     }
   }
-  return nsAccessible::GetAccKeyboardShortcut(_retval);;
+  return nsAccessible::GetKeyboardShortcut(_retval);;
 }
 
 PRBool nsLinkableAccessible::IsALink()

@@ -243,7 +243,7 @@ NS_IMETHODIMP nsCaretAccessible::NotifySelectionChanged(nsIDOMDocument *aDoc, ns
 }
 
 /** Return the caret's bounds */
-NS_IMETHODIMP nsCaretAccessible::AccGetBounds(PRInt32 *x, PRInt32 *y, PRInt32 *width, PRInt32 *height)
+NS_IMETHODIMP nsCaretAccessible::GetBounds(PRInt32 *x, PRInt32 *y, PRInt32 *width, PRInt32 *height)
 {
   if (!mVisible)
     return NS_ERROR_FAILURE;  // When root accessible hasn't yet called SetCaretBounds()
@@ -254,30 +254,30 @@ NS_IMETHODIMP nsCaretAccessible::AccGetBounds(PRInt32 *x, PRInt32 *y, PRInt32 *w
   return NS_OK;
 }
 
-NS_IMETHODIMP nsCaretAccessible::GetAccRole(PRUint32 *_retval)
+NS_IMETHODIMP nsCaretAccessible::GetRole(PRUint32 *_retval)
 {
   *_retval = ROLE_CARET;
   return NS_OK;
 }
 
-NS_IMETHODIMP nsCaretAccessible::GetAccState(PRUint32 *_retval)
+NS_IMETHODIMP nsCaretAccessible::GetState(PRUint32 *_retval)
 {
   *_retval = mVisible? 0: STATE_INVISIBLE;
   return NS_OK;
 }
 
-NS_IMETHODIMP nsCaretAccessible::GetAccParent(nsIAccessible **_retval)
+NS_IMETHODIMP nsCaretAccessible::GetParent(nsIAccessible **_retval)
 {   
   *_retval = nsnull;
   return NS_OK;
 }
-NS_IMETHODIMP nsCaretAccessible::GetAccPreviousSibling(nsIAccessible **_retval)
+NS_IMETHODIMP nsCaretAccessible::GetPreviousSibling(nsIAccessible **_retval)
 { 
   *_retval = nsnull;
   return NS_OK;
 }
 
-NS_IMETHODIMP nsCaretAccessible::GetAccNextSibling(nsIAccessible **_retval)
+NS_IMETHODIMP nsCaretAccessible::GetNextSibling(nsIAccessible **_retval)
 {
   *_retval = nsnull;
   return NS_OK;

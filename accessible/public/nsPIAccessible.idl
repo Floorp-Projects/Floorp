@@ -43,9 +43,9 @@ interface nsIAccessible;
 [scriptable, uuid(52F1BE88-84F7-4f7f-B31C-062AFE7DF15D)]
 interface nsPIAccessible : nsISupports
 {
-  [noscript] void setAccParent(in nsIAccessible aAccParent);
-  [noscript] void setAccFirstChild(in nsIAccessible aAccFirstChild);
-  [noscript] void setAccNextSibling(in nsIAccessible aAccNextSibling);
+  [noscript] void setParent(in nsIAccessible aAccParent);
+  [noscript] void setFirstChild(in nsIAccessible aAccFirstChild);
+  [noscript] void setNextSibling(in nsIAccessible aAccNextSibling);
   [noscript] void invalidateChildren();
   [noscript] void fireToolkitEvent(in unsigned long aEvent, in nsIAccessible aTarget, in voidPtr aData);
 };

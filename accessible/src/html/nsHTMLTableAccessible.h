@@ -48,16 +48,16 @@ public:
   NS_DECL_ISUPPORTS_INHERITED
 
   nsHTMLTableCellAccessible(nsIDOMNode* aDomNode, nsIWeakReference* aShell);
-  NS_IMETHOD GetAccRole(PRUint32 *aResult); 
-  NS_IMETHOD GetAccState(PRUint32 *aResult); 
+  NS_IMETHOD GetRole(PRUint32 *aResult); 
+  NS_IMETHOD GetState(PRUint32 *aResult); 
 };
 
 class nsHTMLTableCaptionAccessible : public nsAccessibleWrap
 {
 public:
   nsHTMLTableCaptionAccessible(nsIDOMNode* aDomNode, nsIWeakReference* aShell);
-  NS_IMETHOD GetAccState(PRUint32 *aResult);
-  NS_IMETHOD GetAccValue(nsAString& aResult);
+  NS_IMETHOD GetState(PRUint32 *aResult);
+  NS_IMETHOD GetValue(nsAString& aResult);
 };
 
 class nsHTMLTableAccessible : public nsBlockAccessible
@@ -66,9 +66,9 @@ public:
   NS_DECL_ISUPPORTS_INHERITED
 
   nsHTMLTableAccessible(nsIDOMNode* aDomNode, nsIWeakReference* aShell);
-  NS_IMETHOD GetAccRole(PRUint32 *aResult); 
-  NS_IMETHOD GetAccState(PRUint32 *aResult); 
-  NS_IMETHOD GetAccName(nsAString& aResult);
+  NS_IMETHOD GetRole(PRUint32 *aResult); 
+  NS_IMETHOD GetState(PRUint32 *aResult); 
+  NS_IMETHOD GetName(nsAString& aResult);
 };
 
 #endif  

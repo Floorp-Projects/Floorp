@@ -56,25 +56,25 @@ nsLeafAccessible(aNode, aShell)
 }
 
 /**
-  * Might need to use the GetXULAccName method from nsFormControlAcc.cpp
+  * Might need to use the GetXULName method from nsFormControlAcc.cpp
   */
-NS_IMETHODIMP nsXULTabAccessible::GetAccName(nsAString& _retval)
+NS_IMETHODIMP nsXULTabAccessible::GetName(nsAString& _retval)
 {
   nsCOMPtr<nsIDOMXULSelectControlItemElement> tab(do_QueryInterface(mDOMNode));
   if (tab)
-    return GetXULAccName(_retval);
+    return GetXULName(_retval);
   return NS_ERROR_FAILURE;
 }
 
 /** Only one action available */
-NS_IMETHODIMP nsXULTabAccessible::GetAccNumActions(PRUint8 *_retval)
+NS_IMETHODIMP nsXULTabAccessible::GetNumActions(PRUint8 *_retval)
 {
   *_retval = eSingle_Action;
   return NS_OK;
 }
 
 /** Return the name of our only action  */
-NS_IMETHODIMP nsXULTabAccessible::GetAccActionName(PRUint8 index, nsAString& _retval)
+NS_IMETHODIMP nsXULTabAccessible::GetActionName(PRUint8 index, nsAString& _retval)
 {
   if (index == eAction_Click) {
     nsAccessible::GetTranslatedString(NS_LITERAL_STRING("switch"), _retval); 
@@ -84,7 +84,7 @@ NS_IMETHODIMP nsXULTabAccessible::GetAccActionName(PRUint8 index, nsAString& _re
 }
 
 /** Tell the tab to do it's action */
-NS_IMETHODIMP nsXULTabAccessible::AccDoAction(PRUint8 index)
+NS_IMETHODIMP nsXULTabAccessible::DoAction(PRUint8 index)
 {
   if (index == eAction_Switch) {
     nsCOMPtr<nsIDOMXULSelectControlItemElement> tab(do_QueryInterface(mDOMNode));
@@ -99,7 +99,7 @@ NS_IMETHODIMP nsXULTabAccessible::AccDoAction(PRUint8 index)
 }
 
 /** We are a tab */
-NS_IMETHODIMP nsXULTabAccessible::GetAccRole(PRUint32 *_retval)
+NS_IMETHODIMP nsXULTabAccessible::GetRole(PRUint32 *_retval)
 {
   *_retval = ROLE_PAGETAB;
   return NS_OK;
@@ -108,10 +108,10 @@ NS_IMETHODIMP nsXULTabAccessible::GetAccRole(PRUint32 *_retval)
 /**
   * Possible states: focused, focusable, unavailable(disabled), offscreen
   */
-NS_IMETHODIMP nsXULTabAccessible::GetAccState(PRUint32 *_retval)
+NS_IMETHODIMP nsXULTabAccessible::GetState(PRUint32 *_retval)
 {
   // get focus and disable status from base class
-  nsLeafAccessible::GetAccState(_retval);
+  nsLeafAccessible::GetState(_retval);
 
   // In the past, tabs have been focusable in classic theme
   // They may be again in the future
@@ -144,14 +144,14 @@ nsAccessibleWrap(aNode, aShell)
 }
 
 /** We are a window*/
-NS_IMETHODIMP nsXULTabBoxAccessible::GetAccRole(PRUint32 *_retval)
+NS_IMETHODIMP nsXULTabBoxAccessible::GetRole(PRUint32 *_retval)
 {
   *_retval = ROLE_PANE;
   return NS_OK;
 }
 
 /** Possible states: normal */
-NS_IMETHODIMP nsXULTabBoxAccessible::GetAccState(PRUint32 *_retval)
+NS_IMETHODIMP nsXULTabBoxAccessible::GetState(PRUint32 *_retval)
 {
   *_retval = 0;
   return NS_OK;
@@ -159,7 +159,7 @@ NS_IMETHODIMP nsXULTabBoxAccessible::GetAccState(PRUint32 *_retval)
 
 #ifdef NEVER
 /** 2 children, tabs, tabpanels */
-NS_IMETHODIMP nsXULTabBoxAccessible::GetAccChildCount(PRInt32 *_retval)
+NS_IMETHODIMP nsXULTabBoxAccessible::GetChildCount(PRInt32 *_retval)
 {
   *_retval = 2;
   return NS_OK;
@@ -186,7 +186,7 @@ nsAccessibleWrap(aNode, aShell)
 }
 
 /** We are a Property Page */
-NS_IMETHODIMP nsXULTabPanelsAccessible::GetAccRole(PRUint32 *_retval)
+NS_IMETHODIMP nsXULTabPanelsAccessible::GetRole(PRUint32 *_retval)
 {
   *_retval = ROLE_PROPERTYPAGE;
   return NS_OK;
@@ -195,10 +195,10 @@ NS_IMETHODIMP nsXULTabPanelsAccessible::GetAccRole(PRUint32 *_retval)
 /**
   * Possible values: unavailable
   */
-NS_IMETHODIMP nsXULTabPanelsAccessible::GetAccState(PRUint32 *_retval)
+NS_IMETHODIMP nsXULTabPanelsAccessible::GetState(PRUint32 *_retval)
 {
   // get focus and disable status from base class -- skip container because we have state
-  nsAccessible::GetAccState(_retval);
+  nsAccessible::GetState(_retval);
   *_retval &= ~STATE_FOCUSABLE;
   return NS_OK;
 }
@@ -208,7 +208,7 @@ NS_IMETHODIMP nsXULTabPanelsAccessible::GetAccState(PRUint32 *_retval)
   *  the panel. XXX not sure if the "panels" object should have the
   *  same name.
   */
-NS_IMETHODIMP nsXULTabPanelsAccessible::GetAccName(nsAString& _retval)
+NS_IMETHODIMP nsXULTabPanelsAccessible::GetName(nsAString& _retval)
 {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
@@ -224,34 +224,34 @@ nsAccessibleWrap(aNode, aShell)
 }
 
 /** We are a Page Tab List */
-NS_IMETHODIMP nsXULTabsAccessible::GetAccRole(PRUint32 *_retval)
+NS_IMETHODIMP nsXULTabsAccessible::GetRole(PRUint32 *_retval)
 {
   *_retval = ROLE_PAGETABLIST;
   return NS_OK;
 }
 
 /** no actions */
-NS_IMETHODIMP nsXULTabsAccessible::GetAccNumActions(PRUint8 *_retval)
+NS_IMETHODIMP nsXULTabsAccessible::GetNumActions(PRUint8 *_retval)
 {
   *_retval = eNo_Action;
   return NS_OK;
 }
 
 /** no state -- normal */
-NS_IMETHODIMP nsXULTabsAccessible::GetAccState(PRUint32 *_retval)
+NS_IMETHODIMP nsXULTabsAccessible::GetState(PRUint32 *_retval)
 {
   *_retval = 0;
   return NS_OK;
 }
 
 /** no value */
-NS_IMETHODIMP nsXULTabsAccessible::GetAccValue(nsAString& _retval)
+NS_IMETHODIMP nsXULTabsAccessible::GetValue(nsAString& _retval)
 {
   return NS_OK;
 }
 
 /** no name*/
-NS_IMETHODIMP nsXULTabsAccessible::GetAccName(nsAString& _retval)
+NS_IMETHODIMP nsXULTabsAccessible::GetName(nsAString& _retval)
 {
   _retval.Truncate();
   return NS_OK;

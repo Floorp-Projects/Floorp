@@ -86,12 +86,12 @@ public:
 
 protected:
   virtual nsIFrame* GetBoundsFrame();
-  virtual void GetBounds(nsRect& aRect, nsIFrame** aRelativeFrame);
+  virtual void GetBoundsRect(nsRect& aRect, nsIFrame** aRelativeFrame);
   PRBool IsPartiallyVisible(PRBool *aIsOffscreen); 
   NS_IMETHOD AppendLabelText(nsIDOMNode *aLabelNode, nsAString& _retval);
   NS_IMETHOD AppendLabelFor(nsIContent *aLookNode, const nsAString *aId, nsAString *aLabel);
-  NS_IMETHOD GetHTMLAccName(nsAString& _retval);
-  NS_IMETHOD GetXULAccName(nsAString& _retval);
+  NS_IMETHOD GetHTMLName(nsAString& _retval);
+  NS_IMETHOD GetXULName(nsAString& _retval);
   NS_IMETHOD AppendFlatStringFromSubtree(nsIContent *aContent, nsAString *aFlatString);
   NS_IMETHOD AppendFlatStringFromContentNode(nsIContent *aContent, nsAString *aFlatString);
   NS_IMETHOD AppendStringWithSpaces(nsAString *aFlatString, const nsAString& textEquivalent);

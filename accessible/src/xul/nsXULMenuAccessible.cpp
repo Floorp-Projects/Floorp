@@ -53,9 +53,9 @@ nsAccessibleWrap(aDOMNode, aShell)
 { 
 }
 
-NS_IMETHODIMP nsXULMenuitemAccessible::GetAccState(PRUint32 *_retval)
+NS_IMETHODIMP nsXULMenuitemAccessible::GetState(PRUint32 *_retval)
 {
-  nsAccessible::GetAccState(_retval);
+  nsAccessible::GetState(_retval);
 
   // Focused?
   nsCOMPtr<nsIDOMElement> element(do_QueryInterface(mDOMNode));
@@ -94,15 +94,15 @@ NS_IMETHODIMP nsXULMenuitemAccessible::GetAccState(PRUint32 *_retval)
   // We get it by replacing the current offscreen bit with the parent's
   PRUint32 parentState = 0;
   nsCOMPtr<nsIAccessible> parentAccessible;
-  GetAccParent(getter_AddRefs(parentAccessible));
-  parentAccessible->GetAccState(&parentState);
+  GetParent(getter_AddRefs(parentAccessible));
+  parentAccessible->GetState(&parentState);
   *_retval &= ~STATE_OFFSCREEN;  // clear the old OFFSCREEN bit
   *_retval |= (parentState & STATE_OFFSCREEN);  // or it with the parent's offscreen bit
 
   return NS_OK;
 }
 
-NS_IMETHODIMP nsXULMenuitemAccessible::GetAccName(nsAString& _retval)
+NS_IMETHODIMP nsXULMenuitemAccessible::GetName(nsAString& _retval)
 {
   nsCOMPtr<nsIDOMElement> element(do_QueryInterface(mDOMNode));
   NS_ASSERTION(element, "No DOM element for menu  node!");
@@ -112,7 +112,7 @@ NS_IMETHODIMP nsXULMenuitemAccessible::GetAccName(nsAString& _retval)
 }
 
 //return menu accesskey: N or Alt+F
-NS_IMETHODIMP nsXULMenuitemAccessible::GetAccKeyboardShortcut(nsAString& _retval)
+NS_IMETHODIMP nsXULMenuitemAccessible::GetKeyboardShortcut(nsAString& _retval)
 {
   static PRInt32 gMenuAccesskeyModifier = -1;  // magic value of -1 indicates unitialized state
 
@@ -124,10 +124,10 @@ NS_IMETHODIMP nsXULMenuitemAccessible::GetAccKeyboardShortcut(nsAString& _retval
       return NS_OK;
 
     nsCOMPtr<nsIAccessible> parentAccessible;
-    GetAccParent(getter_AddRefs(parentAccessible));
+    GetParent(getter_AddRefs(parentAccessible));
     if (parentAccessible) {
       PRUint32 role;
-      parentAccessible->GetAccRole(&role);
+      parentAccessible->GetRole(&role);
       if (role == ROLE_MENUBAR) {
         // If top level menu item, add Alt+ or whatever modifier text to string
         // No need to cache pref service, this happens rarely
@@ -156,7 +156,7 @@ NS_IMETHODIMP nsXULMenuitemAccessible::GetAccKeyboardShortcut(nsAString& _retval
 }
 
 //return menu shortcut: Ctrl+F or Ctrl+Shift+L
-NS_IMETHODIMP nsXULMenuitemAccessible::GetAccKeybinding(nsAString& _retval)
+NS_IMETHODIMP nsXULMenuitemAccessible::GetKeyBinding(nsAString& _retval)
 {
   nsCOMPtr<nsIDOMElement> elt(do_QueryInterface(mDOMNode));
   if (elt) {
@@ -171,13 +171,13 @@ NS_IMETHODIMP nsXULMenuitemAccessible::GetAccKeybinding(nsAString& _retval)
   return NS_ERROR_FAILURE;
 }
 
-NS_IMETHODIMP nsXULMenuitemAccessible::GetAccRole(PRUint32 *_retval)
+NS_IMETHODIMP nsXULMenuitemAccessible::GetRole(PRUint32 *_retval)
 {
   *_retval = ROLE_MENUITEM;
   return NS_OK;
 }
 
-NS_IMETHODIMP nsXULMenuitemAccessible::GetAccChildCount(PRInt32 *aAccChildCount)
+NS_IMETHODIMP nsXULMenuitemAccessible::GetChildCount(PRInt32 *aAccChildCount)
 {
   // Argument of PR_FALSE indicates we don't walk anonymous children for menuitems
   CacheChildren(PR_FALSE);
@@ -185,7 +185,7 @@ NS_IMETHODIMP nsXULMenuitemAccessible::GetAccChildCount(PRInt32 *aAccChildCount)
   return NS_OK;  
 }
 
-NS_IMETHODIMP nsXULMenuitemAccessible::AccDoAction(PRUint8 index)
+NS_IMETHODIMP nsXULMenuitemAccessible::DoAction(PRUint8 index)
 {
   if (index == eAction_Select) {   // default action
     nsCOMPtr<nsIDOMXULSelectControlItemElement> selectItem(do_QueryInterface(mDOMNode));
@@ -199,17 +199,17 @@ NS_IMETHODIMP nsXULMenuitemAccessible::AccDoAction(PRUint8 index)
     }
 
     nsCOMPtr<nsIAccessible> parentAccessible;
-    GetAccParent(getter_AddRefs(parentAccessible));
+    GetParent(getter_AddRefs(parentAccessible));
     if (parentAccessible) {
       PRUint32 role;
-      parentAccessible->GetAccRole(&role);
+      parentAccessible->GetRole(&role);
       if (role == ROLE_LIST) {
         nsCOMPtr<nsIAccessible> buttonAccessible;
-        parentAccessible->GetAccPreviousSibling(getter_AddRefs(buttonAccessible));
+        parentAccessible->GetPreviousSibling(getter_AddRefs(buttonAccessible));
         PRUint32 state;
-        buttonAccessible->GetAccState(&state);
+        buttonAccessible->GetState(&state);
         if (state & STATE_PRESSED)
-          buttonAccessible->AccDoAction(eAction_Click);
+          buttonAccessible->DoAction(eAction_Click);
       }
     }
     return NS_OK;
@@ -219,7 +219,7 @@ NS_IMETHODIMP nsXULMenuitemAccessible::AccDoAction(PRUint8 index)
 }
 
 /** select us! close combo box if necessary*/
-NS_IMETHODIMP nsXULMenuitemAccessible::GetAccActionName(PRUint8 index, nsAString& _retval)
+NS_IMETHODIMP nsXULMenuitemAccessible::GetActionName(PRUint8 index, nsAString& _retval)
 {
   if (index == eAction_Select) {
     nsAccessible::GetTranslatedString(NS_LITERAL_STRING("select"), _retval); 
@@ -228,7 +228,7 @@ NS_IMETHODIMP nsXULMenuitemAccessible::GetAccActionName(PRUint8 index, nsAString
   return NS_ERROR_INVALID_ARG;
 }
 
-NS_IMETHODIMP nsXULMenuitemAccessible::GetAccNumActions(PRUint8 *_retval)
+NS_IMETHODIMP nsXULMenuitemAccessible::GetNumActions(PRUint8 *_retval)
 {
   *_retval = eSingle_Action;
   return NS_OK;
@@ -242,38 +242,38 @@ nsXULMenuitemAccessible(aDOMNode, aShell)
 { 
 }
 
-NS_IMETHODIMP nsXULMenuSeparatorAccessible::GetAccState(PRUint32 *_retval)
+NS_IMETHODIMP nsXULMenuSeparatorAccessible::GetState(PRUint32 *_retval)
 {
   // Isn't focusable, but can be offscreen
-  nsXULMenuitemAccessible::GetAccState(_retval);
+  nsXULMenuitemAccessible::GetState(_retval);
   *_retval &= STATE_OFFSCREEN;
 
   return NS_OK;
 }
 
-NS_IMETHODIMP nsXULMenuSeparatorAccessible::GetAccName(nsAString& _retval)
+NS_IMETHODIMP nsXULMenuSeparatorAccessible::GetName(nsAString& _retval)
 {
   _retval.Assign(NS_LITERAL_STRING(""));
   return NS_OK;
 }
 
-NS_IMETHODIMP nsXULMenuSeparatorAccessible::GetAccRole(PRUint32 *_retval)
+NS_IMETHODIMP nsXULMenuSeparatorAccessible::GetRole(PRUint32 *_retval)
 {
   *_retval = ROLE_SEPARATOR;
   return NS_OK;
 }
 
-NS_IMETHODIMP nsXULMenuSeparatorAccessible::AccDoAction(PRUint8 index)
+NS_IMETHODIMP nsXULMenuSeparatorAccessible::DoAction(PRUint8 index)
 {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
-NS_IMETHODIMP nsXULMenuSeparatorAccessible::GetAccActionName(PRUint8 index, nsAString& _retval)
+NS_IMETHODIMP nsXULMenuSeparatorAccessible::GetActionName(PRUint8 index, nsAString& _retval)
 {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
-NS_IMETHODIMP nsXULMenuSeparatorAccessible::GetAccNumActions(PRUint8 *_retval)
+NS_IMETHODIMP nsXULMenuSeparatorAccessible::GetNumActions(PRUint8 *_retval)
 {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
@@ -284,7 +284,7 @@ nsXULMenupopupAccessible::nsXULMenupopupAccessible(nsIDOMNode* aDOMNode, nsIWeak
 { 
 }
 
-NS_IMETHODIMP nsXULMenupopupAccessible::GetAccState(PRUint32 *_retval)
+NS_IMETHODIMP nsXULMenupopupAccessible::GetState(PRUint32 *_retval)
 {
   // We are onscreen if our parent is active
   *_retval = 0;
@@ -295,9 +295,9 @@ NS_IMETHODIMP nsXULMenupopupAccessible::GetAccState(PRUint32 *_retval)
   if (!isActive) {
     nsCOMPtr<nsIAccessible> parentAccessible;
     nsCOMPtr<nsIDOMNode> parentNode;
-    GetAccParent(getter_AddRefs(parentAccessible));
+    GetParent(getter_AddRefs(parentAccessible));
     if (parentAccessible)
-      parentAccessible->AccGetDOMNode(getter_AddRefs(parentNode));
+      parentAccessible->GetDOMNode(getter_AddRefs(parentNode));
     element = do_QueryInterface(parentNode);
     if (element)
       element->HasAttribute(NS_LITERAL_STRING("open"), &isActive);
@@ -309,7 +309,7 @@ NS_IMETHODIMP nsXULMenupopupAccessible::GetAccState(PRUint32 *_retval)
   return NS_OK;
 }
 
-NS_IMETHODIMP nsXULMenupopupAccessible::GetAccName(nsAString& _retval)
+NS_IMETHODIMP nsXULMenupopupAccessible::GetName(nsAString& _retval)
 {
   nsCOMPtr<nsIDOMElement> element(do_QueryInterface(mDOMNode));
   NS_ASSERTION(element, "No element for popup node!");
@@ -328,7 +328,7 @@ NS_IMETHODIMP nsXULMenupopupAccessible::GetAccName(nsAString& _retval)
   return NS_ERROR_FAILURE;
 }
 
-NS_IMETHODIMP nsXULMenupopupAccessible::GetAccRole(PRUint32 *_retval)
+NS_IMETHODIMP nsXULMenupopupAccessible::GetRole(PRUint32 *_retval)
 {
   *_retval = ROLE_MENUPOPUP;
   return NS_OK;
@@ -341,22 +341,22 @@ nsXULMenubarAccessible::nsXULMenubarAccessible(nsIDOMNode* aDOMNode, nsIWeakRefe
 { 
 }
 
-NS_IMETHODIMP nsXULMenubarAccessible::GetAccState(PRUint32 *_retval)
+NS_IMETHODIMP nsXULMenubarAccessible::GetState(PRUint32 *_retval)
 {
-  nsresult rv = nsAccessible::GetAccState(_retval);
+  nsresult rv = nsAccessible::GetState(_retval);
   *_retval &= ~STATE_FOCUSABLE; // Menu bar iteself is not actually focusable
   return rv;
 }
 
 
-NS_IMETHODIMP nsXULMenubarAccessible::GetAccName(nsAString& _retval)
+NS_IMETHODIMP nsXULMenubarAccessible::GetName(nsAString& _retval)
 {
   _retval = NS_LITERAL_STRING("Application");
 
   return NS_OK;
 }
 
-NS_IMETHODIMP nsXULMenubarAccessible::GetAccRole(PRUint32 *_retval)
+NS_IMETHODIMP nsXULMenubarAccessible::GetRole(PRUint32 *_retval)
 {
   *_retval = ROLE_MENUBAR;
   return NS_OK;

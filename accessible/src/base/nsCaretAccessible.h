@@ -64,12 +64,12 @@ public:
   nsCaretAccessible(nsIDOMNode* aDocumentNode, nsIWeakReference* aShell, nsRootAccessible *aRootAccessible);
 
   /* ----- nsIAccessible ----- */
-  NS_IMETHOD GetAccParent(nsIAccessible **_retval);
-  NS_IMETHOD GetAccRole(PRUint32 *_retval);
-  NS_IMETHOD GetAccState(PRUint32 *_retval);
-  NS_IMETHOD AccGetBounds(PRInt32 *x, PRInt32 *y, PRInt32 *width, PRInt32 *height);
-  NS_IMETHOD GetAccNextSibling(nsIAccessible **_retval);
-  NS_IMETHOD GetAccPreviousSibling(nsIAccessible **_retval);
+  NS_IMETHOD GetParent(nsIAccessible **_retval);
+  NS_IMETHOD GetRole(PRUint32 *_retval);
+  NS_IMETHOD GetState(PRUint32 *_retval);
+  NS_IMETHOD GetBounds(PRInt32 *x, PRInt32 *y, PRInt32 *width, PRInt32 *height);
+  NS_IMETHOD GetNextSibling(nsIAccessible **_retval);
+  NS_IMETHOD GetPreviousSibling(nsIAccessible **_retval);
 
   /* ----- nsIAccessibleCaret ------ */
   NS_IMETHOD AttachNewSelectionListener(nsIDOMNode *aFocusedNode);

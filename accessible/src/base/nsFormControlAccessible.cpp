@@ -59,10 +59,10 @@ NS_IMPL_ISUPPORTS_INHERITED0(nsFormControlAccessible, nsAccessible)
   * XUL states: focused, unavailable(disabled), focusable, ?protected?
   * HTML states: focused, unabailable(disabled), focusable, protected
   */
-NS_IMETHODIMP nsFormControlAccessible::GetAccState(PRUint32 *_retval)
+NS_IMETHODIMP nsFormControlAccessible::GetState(PRUint32 *_retval)
 {
   // Get the focused state from the nsAccessible
-  nsAccessible::GetAccState(_retval);
+  nsAccessible::GetState(_retval);
 
   PRBool disabled = PR_FALSE;
   nsresult rv = NS_ERROR_FAILURE;
@@ -94,19 +94,19 @@ NS_IMETHODIMP nsFormControlAccessible::GetAccState(PRUint32 *_retval)
   *  merely checks who is calling and then calls the appropriate
   *  protected method for the XUL or HTML element.
   */
-NS_IMETHODIMP nsFormControlAccessible::GetAccName(nsAString& _retval)
+NS_IMETHODIMP nsFormControlAccessible::GetName(nsAString& _retval)
 {
   nsCOMPtr<nsIDOMXULElement> xulFormElement(do_QueryInterface(mDOMNode));
   if (xulFormElement)
-    return GetXULAccName(_retval);
+    return GetXULName(_retval);
   else
-    return GetHTMLAccName(_retval);
+    return GetHTMLName(_retval);
 }
 
 /**
   * No Children
   */
-NS_IMETHODIMP nsFormControlAccessible::GetAccFirstChild(nsIAccessible **_retval)
+NS_IMETHODIMP nsFormControlAccessible::GetFirstChild(nsIAccessible **_retval)
 {
   *_retval = nsnull;
   return NS_OK;
@@ -115,7 +115,7 @@ NS_IMETHODIMP nsFormControlAccessible::GetAccFirstChild(nsIAccessible **_retval)
 /**
   * No Children
   */
-NS_IMETHODIMP nsFormControlAccessible::GetAccLastChild(nsIAccessible **_retval)
+NS_IMETHODIMP nsFormControlAccessible::GetLastChild(nsIAccessible **_retval)
 {
   *_retval = nsnull;
   return NS_OK;
@@ -124,7 +124,7 @@ NS_IMETHODIMP nsFormControlAccessible::GetAccLastChild(nsIAccessible **_retval)
 /**
   * No Children
   */
-NS_IMETHODIMP nsFormControlAccessible::GetAccChildCount(PRInt32 *_retval)
+NS_IMETHODIMP nsFormControlAccessible::GetChildCount(PRInt32 *_retval)
 {
   *_retval = 0;
   return NS_OK;
@@ -142,7 +142,7 @@ nsFormControlAccessible(aNode, aShell)
 /**
   *
   */
-NS_IMETHODIMP nsRadioButtonAccessible::GetAccNumActions(PRUint8 *_retval)
+NS_IMETHODIMP nsRadioButtonAccessible::GetNumActions(PRUint8 *_retval)
 {
   *_retval = eSingle_Action;
   return NS_OK;
@@ -151,7 +151,7 @@ NS_IMETHODIMP nsRadioButtonAccessible::GetAccNumActions(PRUint8 *_retval)
 /**
   *
   */
-NS_IMETHODIMP nsRadioButtonAccessible::GetAccActionName(PRUint8 index, nsAString& _retval)
+NS_IMETHODIMP nsRadioButtonAccessible::GetActionName(PRUint8 index, nsAString& _retval)
 {
   if (index == eAction_Click) {
     nsAccessible::GetTranslatedString(NS_LITERAL_STRING("select"), _retval); 
@@ -163,7 +163,7 @@ NS_IMETHODIMP nsRadioButtonAccessible::GetAccActionName(PRUint8 index, nsAString
 /**
   *
   */
-NS_IMETHODIMP nsRadioButtonAccessible::GetAccRole(PRUint32 *_retval)
+NS_IMETHODIMP nsRadioButtonAccessible::GetRole(PRUint32 *_retval)
 {
   *_retval = ROLE_RADIOBUTTON;
 

@@ -73,14 +73,14 @@ interface nsIAccessibleSelectable : nsISupports
      * If the specified object is already selected, then it does nothing.
      * @throws NS_ERROR_FAILURE if the specified object is not selectable.
      */
-    void addSelection(in long index);
+    void addChildToSelection(in long index);
 
     /**
      * Removes the specified child of the object from the object's selection.
      * If the specified object was not selected, then it does nothing.
      * @throws NS_ERROR_FAILURE if the specified object is not selectable.
      */
-    void removeSelection(in long index);
+    void removeChildFromSelection(in long index);
 
     /**
      * Clears the selection in the object so that no children in the object

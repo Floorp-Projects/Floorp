@@ -47,8 +47,8 @@ nsBlockAccessible(aDomNode, aShell)
 { 
 }
 
-/* unsigned long getAccRole (); */
-NS_IMETHODIMP nsHTMLTableCellAccessible::GetAccRole(PRUint32 *aResult)
+/* unsigned long getRole (); */
+NS_IMETHODIMP nsHTMLTableCellAccessible::GetRole(PRUint32 *aResult)
 {
 #ifndef MOZ_ACCESSIBILITY_ATK
   *aResult = ROLE_CELL;
@@ -58,9 +58,9 @@ NS_IMETHODIMP nsHTMLTableCellAccessible::GetAccRole(PRUint32 *aResult)
   return NS_OK;
 }
 
-NS_IMETHODIMP nsHTMLTableCellAccessible::GetAccState(PRUint32 *aResult)
+NS_IMETHODIMP nsHTMLTableCellAccessible::GetState(PRUint32 *aResult)
 {
-  nsAccessible::GetAccState(aResult);
+  nsAccessible::GetState(aResult);
   *aResult &= ~STATE_FOCUSABLE;   // Inherit all states except focusable state since table cells cannot be focused
   return NS_OK;
 }
@@ -73,15 +73,15 @@ nsAccessibleWrap(aDomNode, aShell)
 }
 
 NS_IMETHODIMP
-nsHTMLTableCaptionAccessible::GetAccState(PRUint32 *aResult)
+nsHTMLTableCaptionAccessible::GetState(PRUint32 *aResult)
 {
-  nsAccessible::GetAccState(aResult);
+  nsAccessible::GetState(aResult);
   *aResult &= ~STATE_FOCUSABLE;
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsHTMLTableCaptionAccessible::GetAccValue(nsAString& aResult)
+nsHTMLTableCaptionAccessible::GetValue(nsAString& aResult)
 {
   aResult.Assign(NS_LITERAL_STRING(""));  // Default name is blank
 
@@ -98,21 +98,21 @@ nsBlockAccessible(aDomNode, aShell)
 { 
 }
 
-/* unsigned long getAccRole (); */
-NS_IMETHODIMP nsHTMLTableAccessible::GetAccRole(PRUint32 *aResult)
+/* unsigned long getRole (); */
+NS_IMETHODIMP nsHTMLTableAccessible::GetRole(PRUint32 *aResult)
 {
   *aResult = ROLE_TABLE;
   return NS_OK;
 }
 
-NS_IMETHODIMP nsHTMLTableAccessible::GetAccState(PRUint32 *aResult)
+NS_IMETHODIMP nsHTMLTableAccessible::GetState(PRUint32 *aResult)
 {
-  nsAccessible::GetAccState(aResult);
+  nsAccessible::GetState(aResult);
   *aResult &= ~STATE_FOCUSABLE;   // Inherit all states except focusable state since tables cannot be focused
   return NS_OK;
 }
 
-NS_IMETHODIMP nsHTMLTableAccessible::GetAccName(nsAString& aResult)
+NS_IMETHODIMP nsHTMLTableAccessible::GetName(nsAString& aResult)
 {
   aResult.Assign(NS_LITERAL_STRING(""));  // Default name is blank
 

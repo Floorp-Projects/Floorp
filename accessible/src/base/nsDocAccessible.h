@@ -76,10 +76,10 @@ class nsDocAccessible : public nsBlockAccessible,
     nsDocAccessible(nsIDOMNode *aNode, nsIWeakReference* aShell);
     virtual ~nsDocAccessible();
 
-    NS_IMETHOD GetAccRole(PRUint32 *aAccRole);
-    NS_IMETHOD GetAccName(nsAString& aAccName);
-    NS_IMETHOD GetAccValue(nsAString& aAccValue);
-    NS_IMETHOD GetAccState(PRUint32 *aAccState);
+    NS_IMETHOD GetRole(PRUint32 *aRole);
+    NS_IMETHOD GetName(nsAString& aName);
+    NS_IMETHOD GetValue(nsAString& aValue);
+    NS_IMETHOD GetState(PRUint32 *aState);
 
     // ----- nsIScrollPositionListener ---------------------------
     NS_IMETHOD ScrollPositionWillChange(nsIScrollableView *aView, nscoord aX, nscoord aY);
@@ -104,7 +104,7 @@ class nsDocAccessible : public nsBlockAccessible,
     NS_IMETHOD Init();
 
   protected:
-    virtual void GetBounds(nsRect& aRect, nsIFrame** aRelativeFrame);
+    virtual void GetBoundsRect(nsRect& aRect, nsIFrame** aRelativeFrame);
     virtual nsIFrame* GetFrame();
     virtual nsresult AddEventListeners();
     virtual nsresult RemoveEventListeners();

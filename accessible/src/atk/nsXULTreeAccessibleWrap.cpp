@@ -82,10 +82,10 @@ NS_IMETHODIMP nsXULTreeAccessibleWrap::GetColumns(PRInt32 *aColumns)
   nsresult rv = NS_OK;
 
   nsCOMPtr<nsIAccessible> acc;
-  rv = nsAccessible::GetAccFirstChild(getter_AddRefs(acc));
+  rv = nsAccessible::GetFirstChild(getter_AddRefs(acc));
   NS_ENSURE_TRUE(acc, NS_ERROR_FAILURE);
 
-  return acc->GetAccChildCount(aColumns);
+  return acc->GetChildCount(aColumns);
 }
 
 NS_IMETHODIMP nsXULTreeAccessibleWrap::GetColumnHeader(nsIAccessibleTable **aColumnHeader)
@@ -93,7 +93,7 @@ NS_IMETHODIMP nsXULTreeAccessibleWrap::GetColumnHeader(nsIAccessibleTable **aCol
   nsresult rv = NS_OK;
 
   nsCOMPtr<nsIAccessible> acc;
-  nsAccessible::GetAccFirstChild(getter_AddRefs(acc));
+  nsAccessible::GetFirstChild(getter_AddRefs(acc));
   NS_ENSURE_TRUE(acc, NS_ERROR_FAILURE);
 
   nsCOMPtr<nsIAccessibleTable> accTable(do_QueryInterface(acc, &rv));
@@ -206,7 +206,7 @@ NS_IMETHODIMP nsXULTreeAccessibleWrap::CellRefAt(PRInt32 aRow, PRInt32 aColumn, 
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsCOMPtr<nsIDOMNode> columnNode;
-  rv = column->AccGetDOMNode(getter_AddRefs(columnNode));
+  rv = column->GetDOMNode(getter_AddRefs(columnNode));
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsCOMPtr<nsIDOMElement> columnElement(do_QueryInterface(columnNode, &rv));
@@ -372,7 +372,7 @@ NS_IMETHODIMP nsXULTreeColumnsAccessibleWrap::SetSummary(const nsAString &aSumma
 
 NS_IMETHODIMP nsXULTreeColumnsAccessibleWrap::GetColumns(PRInt32 *aColumns)
 {
-  return GetAccChildCount(aColumns);
+  return GetChildCount(aColumns);
 }
 
 NS_IMETHODIMP nsXULTreeColumnsAccessibleWrap::GetColumnHeader(nsIAccessibleTable * *aColumnHeader)
@@ -410,11 +410,11 @@ NS_IMETHODIMP nsXULTreeColumnsAccessibleWrap::GetSelectedRows(PRUint32 *rowsSize
 NS_IMETHODIMP nsXULTreeColumnsAccessibleWrap::CellRefAt(PRInt32 aRow, PRInt32 aColumn, nsIAccessible **_retval)
 {
   nsCOMPtr<nsIAccessible> next, temp;
-  GetAccFirstChild(getter_AddRefs(next));
+  GetFirstChild(getter_AddRefs(next));
   NS_ENSURE_TRUE(next, NS_ERROR_FAILURE);
 
   for (PRInt32 col = 0; col < aColumn; col++) {
-    next->GetAccNextSibling(getter_AddRefs(temp));
+    next->GetNextSibling(getter_AddRefs(temp));
     NS_ENSURE_TRUE(temp, NS_ERROR_FAILURE);
 
     next = temp;

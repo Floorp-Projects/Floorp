@@ -50,16 +50,16 @@ class nsHTMLAreaAccessible : public nsLinkableAccessible
 
 public:
   nsHTMLAreaAccessible(nsIDOMNode *domNode, nsIAccessible *accParent, nsIWeakReference* aShell);
-  NS_IMETHOD GetAccName(nsAString & _retval); 
-  NS_IMETHOD GetAccRole(PRUint32 *_retval); 
-  NS_IMETHOD GetAccFirstChild(nsIAccessible **_retval);
-  NS_IMETHOD GetAccLastChild(nsIAccessible **_retval);
-  NS_IMETHOD GetAccChildCount(PRInt32 *_retval);
-  NS_IMETHOD GetAccParent(nsIAccessible * *aAccParent);
-  NS_IMETHOD GetAccNextSibling(nsIAccessible * *aAccNextSibling);
-  NS_IMETHOD GetAccPreviousSibling(nsIAccessible * *aAccPreviousSibling);
-  NS_IMETHOD GetAccDescription(nsAString& _retval);
-  NS_IMETHOD AccGetBounds(PRInt32 *x, PRInt32 *y, PRInt32 *width, PRInt32 *height);
+  NS_IMETHOD GetName(nsAString & _retval); 
+  NS_IMETHOD GetRole(PRUint32 *_retval); 
+  NS_IMETHOD GetFirstChild(nsIAccessible **_retval);
+  NS_IMETHOD GetLastChild(nsIAccessible **_retval);
+  NS_IMETHOD GetChildCount(PRInt32 *_retval);
+  NS_IMETHOD GetParent(nsIAccessible * *aParent);
+  NS_IMETHOD GetNextSibling(nsIAccessible * *aNextSibling);
+  NS_IMETHOD GetPreviousSibling(nsIAccessible * *aPreviousSibling);
+  NS_IMETHOD GetDescription(nsAString& _retval);
+  NS_IMETHOD GetBounds(PRInt32 *x, PRInt32 *y, PRInt32 *width, PRInt32 *height);
 
 protected:
   nsIAccessible *GetAreaAccessible(nsIDOMNode *aDOMNode);

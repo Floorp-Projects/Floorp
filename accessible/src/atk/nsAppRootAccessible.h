@@ -77,16 +77,16 @@ public:
     NS_IMETHOD Shutdown();
 
     /* virtual functions from nsAccessible */
-    NS_IMETHOD GetAccName(nsAString & aAccName);
-    NS_IMETHOD GetAccDescription(nsAString & aAccDescription);
-    NS_IMETHOD GetAccRole(PRUint32 *aAccRole);
-    NS_IMETHOD GetAccParent(nsIAccessible * *aAccParent);
-    NS_IMETHOD GetAccNextSibling(nsIAccessible * *aAccNextSibling);
-    NS_IMETHOD GetAccPreviousSibling(nsIAccessible **aAccPreviousSibling);
+    NS_IMETHOD GetName(nsAString & aName);
+    NS_IMETHOD GetDescription(nsAString & aDescription);
+    NS_IMETHOD GetRole(PRUint32 *aRole);
+    NS_IMETHOD GetParent(nsIAccessible * *aParent);
+    NS_IMETHOD GetNextSibling(nsIAccessible * *aNextSibling);
+    NS_IMETHOD GetPreviousSibling(nsIAccessible **aPreviousSibling);
     NS_IMETHOD GetChildAt(PRInt32 aChildNum, nsIAccessible **aChild);
 
-    NS_IMETHOD GetAccFirstChild(nsIAccessible * *aAccFirstChild);
-    NS_IMETHOD GetAccChildCount(PRInt32 *aAccChildCount);
+    NS_IMETHOD GetFirstChild(nsIAccessible * *aFirstChild);
+    NS_IMETHOD GetChildCount(PRInt32 *aAccChildCount);
 
     // return the atk object for app root accessible
     NS_IMETHOD GetNativeInterface(void **aOutAccessible);

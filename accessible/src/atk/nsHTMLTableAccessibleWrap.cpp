@@ -113,7 +113,7 @@ nsHTMLTableAccessibleWrap::SetCaption(nsIAccessible *aCaption)
   NS_ENSURE_TRUE(table, NS_ERROR_FAILURE);
 
   nsCOMPtr<nsIDOMNode> domNode;
-  rv = aCaption->AccGetDOMNode(getter_AddRefs(domNode));
+  rv = aCaption->GetDOMNode(getter_AddRefs(domNode));
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsCOMPtr<nsIDOMNode> newDOMNode;
@@ -551,7 +551,7 @@ nsHTMLTableAccessibleWrap(aDomNode, aShell)
 }
 
 NS_IMETHODIMP
-nsHTMLTableHeadAccessible::GetAccRole(PRUint32 *aResult)
+nsHTMLTableHeadAccessible::GetRole(PRUint32 *aResult)
 {
   *aResult = ROLE_COLUMNHEADER;
   return NS_OK;
