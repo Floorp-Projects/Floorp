@@ -32,6 +32,7 @@
  */
 
 #include <stdio.h>
+#include "nspr.h"
 #include "nsLDAPConnection.h"
 
 NS_IMPL_THREADSAFE_ISUPPORTS1(nsLDAPConnection, nsILDAPConnection);
@@ -52,21 +53,65 @@ nsLDAPConnection::~nsLDAPConnection()
 
   rc = ldap_unbind_s(this->mConnectionHandle);
   if (rc != LDAP_SUCCESS) {
-    fprintf(stderr, "nsLDAPConnection::~nsLDAPConnection: %s\n", 
+#ifdef DEBUG
+    PR_fprintf(PR_STDERR, "nsLDAPConnection::~nsLDAPConnection: %s\n", 
 	    ldap_err2string(rc));
+#endif
+  }
+  
+  // XXX use delete here?
+  // XXX can delete fail?
+  //
+  if (mBindName) {
+      delete mBindName;
   }
 }
 
 // wrapper for ldap_init()
 //
 NS_IMETHODIMP
-nsLDAPConnection::Init(const char *aDefHost, PRInt16 aDefPort)
+nsLDAPConnection::Init(const char *aHost, PRInt16 aPort, const char *aBindName)
 {
-    NS_ENSURE_ARG(aDefHost);
-    NS_ENSURE_ARG(aDefPort);
+    NS_ENSURE_ARG(aHost);
+    NS_ENSURE_ARG(aPort);
 
-    this->mConnectionHandle = ldap_init(aDefHost, aDefPort);
+    if (aBindName) {
+	mBindName = new nsCString(aBindName);
+	if (!mBindName) {
+	    return NS_ERROR_OUT_OF_MEMORY;
+	}
+    } else {
+	mBindName = NULL;
+    }
+
+    this->mConnectionHandle = ldap_init(aHost, aPort);
+
     return (this->mConnectionHandle == NULL ? NS_ERROR_FAILURE : NS_OK);
+}
+
+// who we're binding as
+//
+// readonly attribute string bindName
+NS_IMETHODIMP
+nsLDAPConnection::GetBindName(char **_retval)
+{
+    NS_ENSURE_ARG_POINTER(_retval);
+    
+    // check for NULL (meaning bind anonymously)
+    //
+    if (!mBindName) {
+	*_retval = nsnull;
+    } else {
+
+	// otherwise, hand out a copy of the bind name
+	//
+	*_retval = mBindName->ToNewCString();
+	if (!(*_retval)) {
+	    return NS_ERROR_OUT_OF_MEMORY;
+	}
+    }
+
+    return NS_OK;
 }
 
 // wrapper for ldap_get_lderrno

@@ -280,3 +280,13 @@ nsLDAPMessage::GetValues(const char *aAttr, PRUint32 *aCount,
     *aValues = values;
     return NS_OK;
 }
+
+// returns an LDIF-like string representation of this message
+//
+// string toString();
+//
+NS_IMETHODIMP
+nsLDAPMessage::ToString(char* *aString)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}

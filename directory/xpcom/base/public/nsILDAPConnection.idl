@@ -47,8 +47,13 @@ interface nsILDAPConnection : nsISupports
     // return the string version of lderrno
     readonly attribute string errorString;
 
-    // wrapper for ldap_init()
-    void init(in string defhost, in short defport);
+    // who we're binding as
+    readonly attribute string bindName;
+
+    // set up the connection.  the first two params are for ldap init, 
+    // the third is for this connection
+    //
+    void init(in string aHost, in short aPort, in string aBindName);
   
     // wrapper for ldap_get_lderrno()
     long getLdErrno(out string matched, out string s);

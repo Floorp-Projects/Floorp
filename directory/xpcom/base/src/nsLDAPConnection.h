@@ -36,6 +36,7 @@
 
 #include "nsILDAPConnection.h"
 #include "ldap.h"
+#include "nsString.h"
 
 // 0d871e30-1dd2-11b2-8ea9-831778c78e93
 //
@@ -60,8 +61,8 @@ class nsLDAPConnection : public nsILDAPConnection {
   protected:
   
     // the LDAP SDK's struct for the connection
-    LDAP *mConnectionHandle;
-
+    LDAP *mConnectionHandle;	// the LDAP C SDK's connection object
+    nsCString *mBindName; 	// who to bind as
 };
 
 #endif /* _nsLDAPConnection_h_ */

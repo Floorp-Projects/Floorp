@@ -108,7 +108,7 @@ main ()
   fflush(stderr);
   myOperation = new ldapOperation(myConnection);
   returnCode = myOperation->SearchExt("ou=member_directory,o=netcenter.com", 
-				      LDAP_SCOPE_SUBTREE, "(sn=Mosedale)",
+				      LDAP_SCOPE_SUBTREE, "(sn=Rasputin)",
 				      &timeout, -1);
 
   switch (returnCode) {

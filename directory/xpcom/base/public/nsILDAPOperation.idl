@@ -48,7 +48,7 @@ interface nsILDAPOperation : nsISupports
     
     // wrapper for ldap_simple_bind()
     //
-    void simpleBind(in string binddn, in string passwd);
+    void simpleBind(in string passwd);
 
     // wrapper for ldap_search_url()
     //

@@ -91,7 +91,9 @@ protected:
   //
   nsCOMPtr<nsIStreamListener> mAsyncListener; // since we can't call mListener
                                              // directly from the worker thread
-  nsCOMPtr<nsIThread> mThread; // worker thread for this channer
+  nsCOMPtr<nsILDAPConnection> mConnection; // LDAP connection for this channel
+  nsCOMPtr<nsILDAPOperation> mOperation; // current LDAP operation
+  nsCOMPtr<nsIThread> mThread; // worker thread for this channel
   nsCOMPtr<nsIStreamListener> mListener; // whoever is listening to us
   nsCOMPtr<nsISupports> mResponseContext; 
   nsCOMPtr<nsIBufferInputStream> mReadPipeIn; // this end given to the listener

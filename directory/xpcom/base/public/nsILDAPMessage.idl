@@ -74,5 +74,9 @@ interface nsILDAPMessage : nsISupports
     // errcode (wrapper around ldap_parse_result)
     //
     long getErrorCode();
-    
+
+    // returns an LDIF-like string representation of this message
+    // XXXdmose - should use wstring here
+    //
+    string toString();
 };

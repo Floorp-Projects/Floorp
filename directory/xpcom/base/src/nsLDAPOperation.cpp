@@ -35,6 +35,7 @@
 #include "nsLDAPOperation.h"
 #include "nsILDAPMessage.h"
 #include "nsIComponentManager.h"
+#include "nsXPIDLString.h"
 
 struct timeval nsLDAPOperation::sNullTimeval = {0, 0};
 
@@ -87,10 +88,16 @@ nsLDAPOperation::GetConnection(nsILDAPConnection* *aConnection)
 // wrapper for ldap_simple_bind()
 //
 NS_IMETHODIMP
-nsLDAPOperation::SimpleBind(const char *who, const char *passwd)
+nsLDAPOperation::SimpleBind(const char *passwd)
 {
-    this->mMsgId = ldap_simple_bind(this->mConnectionHandle, who, 
-				   passwd);
+    nsresult rv;
+    nsXPIDLCString bindName;
+
+    rv = this->mConnection->GetBindName(getter_Copies(bindName));
+    if (NS_FAILED(rv))
+	return rv;
+
+    this->mMsgId = ldap_simple_bind(this->mConnectionHandle, bindName, passwd);
 
     if (this->mMsgId == -1) {
         return NS_ERROR_FAILURE;

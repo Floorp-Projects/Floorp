@@ -54,7 +54,6 @@ CPPSRCS		= \
 		nsLDAPConnection.cpp \
 		nsLDAPOperation.cpp \
 		nsLDAPURL.cpp \
-		ldapSearch.cpp \
 		$(NULL)
 
 EXTRA_DSO_LDOPTS += -lldap40 -llber40 $(MOZ_COMPONENT_LIBS) 
