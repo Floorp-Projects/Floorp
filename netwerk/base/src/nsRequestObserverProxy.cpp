@@ -55,8 +55,7 @@ nsARequestObserverEvent::nsARequestObserverEvent(nsIRequest *request,
 void PR_CALLBACK
 nsARequestObserverEvent::HandlePLEvent(PLEvent *plev)
 {
-    nsARequestObserverEvent *ev =
-        NS_REINTERPRET_CAST(nsARequestObserverEvent *, plev);
+    nsARequestObserverEvent *ev = FromPLEvent(plev);
     NS_ASSERTION(ev, "null event");
 
     // Pass control to the real event handler
@@ -67,8 +66,7 @@ nsARequestObserverEvent::HandlePLEvent(PLEvent *plev)
 void PR_CALLBACK
 nsARequestObserverEvent::DestroyPLEvent(PLEvent *plev)
 {
-    nsARequestObserverEvent *ev =
-        NS_REINTERPRET_CAST(nsARequestObserverEvent *, plev);
+    nsARequestObserverEvent *ev = FromPLEvent(plev);
     NS_ASSERTION(ev, "null event");
     delete ev;
 }

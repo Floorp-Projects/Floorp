@@ -61,6 +61,9 @@ public:
     nsARequestObserverEvent(nsIRequest *, nsISupports *);
     virtual ~nsARequestObserverEvent() {}
 
+    static nsARequestObserverEvent *FromPLEvent(PLEvent *p)
+        { return (nsARequestObserverEvent *)
+            ( (char *) p - offsetof(nsARequestObserverEvent, mEvent) ); }
     PLEvent *GetPLEvent() { return &mEvent; }
 
     /**
