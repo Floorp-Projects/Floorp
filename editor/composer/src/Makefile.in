@@ -72,3 +72,7 @@ CPPSRCS  = \
 include $(topsrcdir)/config/rules.mk
 
 INCLUDES        += -I../../libeditor/base/src
+
+EXTRA_DSO_LDOPTS += \
+		$(MOZ_COMPONENT_LIBS)
+
