@@ -15,200 +15,267 @@
  * Copyright (C) 1998 Netscape Communications Corporation.  All Rights
  * Reserved.
  */
-
-/*
-
-  A sample of XPConnect. This file contains the XPCOM factory the
-  creates for SampleImpl objects.
-
-*/
-
 #include "nsCOMPtr.h"
-#include "nscore.h"
-#include "nsIComponentManager.h"
-#include "nsIServiceManager.h"
-#include "nsXPComFactory.h"
+#include "nsIModule.h"
+#include "nsIGenericFactory.h"
 #include "nsIImportService.h"
 
 #include "ImportDebug.h"
 
-
-static NS_DEFINE_IID(kISupportsIID,        NS_ISUPPORTS_IID);
-static NS_DEFINE_IID(kIFactoryIID,         NS_IFACTORY_IID);
-static NS_DEFINE_CID(kComponentManagerCID, NS_COMPONENTMANAGER_CID);
 static NS_DEFINE_CID(kImportServiceCID,		NS_IMPORTSERVICE_CID);
 
 
 extern nsresult NS_NewImportService(nsIImportService** aImportService);
 
-class ImportFactoryImpl : public nsIFactory
+// Module implementation for the import service library
+class nsImportServiceModule : public nsIModule
 {
 public:
-    ImportFactoryImpl(const nsCID &aClass, const char* className, const char* progID);
+    nsImportServiceModule();
+    virtual ~nsImportServiceModule();
 
-    // nsISupports methods
     NS_DECL_ISUPPORTS
 
-    // nsIFactory methods
-    NS_IMETHOD CreateInstance(nsISupports *aOuter,
-                              const nsIID &aIID,
-                              void **aResult);
-
-    NS_IMETHOD LockFactory(PRBool aLock);
+    NS_DECL_NSIMODULE
 
 protected:
-    virtual ~ImportFactoryImpl();
+    nsresult Initialize();
 
-protected:
-    nsCID       mClassID;
-    const char* mClassName;
-    const char* mProgID;
+    void Shutdown();
+
+    PRBool mInitialized;
+    nsCOMPtr<nsIGenericFactory> mFactory;
 };
 
-////////////////////////////////////////////////////////////////////////
+//----------------------------------------------------------------------
 
-ImportFactoryImpl::ImportFactoryImpl(const nsCID &aClass, 
-                                   const char* className,
-                                   const char* progID)
-    : mClassID(aClass), mClassName(className), mProgID(progID)
-{
-    NS_INIT_REFCNT();
+// Functions used to create new instances of a given object by the
+// generic factory.
+
+#define MAKE_CTOR(_name)                                             \
+static NS_IMETHODIMP                                                 \
+CreateNew##_name(nsISupports* aOuter, REFNSIID aIID, void **aResult) \
+{                                                                    \
+    if (!aResult) {                                                  \
+        return NS_ERROR_INVALID_POINTER;                             \
+    }                                                                \
+    if (aOuter) {                                                    \
+        *aResult = nsnull;                                           \
+        return NS_ERROR_NO_AGGREGATION;                              \
+    }                                                                \
+    nsI##_name* inst;                                                \
+    nsresult rv = NS_New##_name(&inst);                              \
+    if (NS_FAILED(rv)) {                                             \
+        *aResult = nsnull;                                           \
+        return rv;                                                   \
+    }                                                                \
+    rv = inst->QueryInterface(aIID, aResult);                        \
+    if (NS_FAILED(rv)) {                                             \
+        *aResult = nsnull;                                           \
+    }                                                                \
+    NS_RELEASE(inst);             /* get rid of extra refcnt */      \
+    return rv;                                                       \
 }
 
-ImportFactoryImpl::~ImportFactoryImpl()
+MAKE_CTOR(ImportService)
+
+//----------------------------------------------------------------------
+
+static NS_DEFINE_IID(kIModuleIID, NS_IMODULE_IID);
+
+nsImportServiceModule::nsImportServiceModule()
+    : mInitialized(PR_FALSE)
 {
-    NS_ASSERTION(mRefCnt == 0, "non-zero refcnt at destruction");
+    NS_INIT_ISUPPORTS();
 }
 
-NS_IMETHODIMP
-ImportFactoryImpl::QueryInterface(const nsIID &aIID, void **aResult)
+nsImportServiceModule::~nsImportServiceModule()
 {
-    if (! aResult)
-        return NS_ERROR_NULL_POINTER;
+    Shutdown();
+}
 
-    // Always NULL result, in case of failure
-    *aResult = nsnull;
+NS_IMPL_ISUPPORTS(nsImportServiceModule, kIModuleIID)
 
-    if (aIID.Equals(kISupportsIID)) {
-        *aResult = NS_STATIC_CAST(nsISupports*, this);
-        AddRef();
-        return NS_OK;
-    } else if (aIID.Equals(kIFactoryIID)) {
-        *aResult = NS_STATIC_CAST(nsIFactory*, this);
-        AddRef();
+// Perform our one-time intialization for this module
+nsresult
+nsImportServiceModule::Initialize()
+{
+    if (mInitialized) {
         return NS_OK;
     }
-    return NS_NOINTERFACE;
+    mInitialized = PR_TRUE;
+    return NS_OK;
 }
 
-NS_IMPL_ADDREF(ImportFactoryImpl);
-NS_IMPL_RELEASE(ImportFactoryImpl);
-
-NS_IMETHODIMP
-ImportFactoryImpl::CreateInstance(nsISupports *aOuter,
-                                 const nsIID &aIID,
-                                 void **aResult)
+// Shutdown this module, releasing all of the module resources
+void
+nsImportServiceModule::Shutdown()
 {
-    if (! aResult)
-        return NS_ERROR_NULL_POINTER;
+    // Release the factory object
+    mFactory = nsnull;
+}
 
-    if (aOuter)
-        return NS_ERROR_NO_AGGREGATION;
-
-    *aResult = nsnull;
-
+// Create a factory object for creating instances of aClass.
+NS_IMETHODIMP
+nsImportServiceModule::GetClassObject(nsIComponentManager *aCompMgr,
+                               const nsCID& aClass,
+                               const nsIID& aIID,
+                               void** r_classObj)
+{
     nsresult rv;
 
-    nsISupports *inst = nsnull;
-	if (mClassID.Equals( kImportServiceCID)) {
-        if (NS_FAILED(rv = NS_NewImportService((nsIImportService**) &inst)))
-            return rv;    	
+    // Defensive programming: Initialize *r_classObj in case of error below
+    if (!r_classObj) {
+        return NS_ERROR_INVALID_POINTER;
+    }
+    *r_classObj = NULL;
+
+    // Do one-time-only initialization if necessary
+    if (!mInitialized) {
+        rv = Initialize();
+        if (NS_FAILED(rv)) {
+            // Initialization failed! yikes!
+            return rv;
+        }
+    }
+
+    // Choose the appropriate factory, based on the desired instance
+    // class type (aClass).
+    nsCOMPtr<nsIGenericFactory> fact;
+    if (aClass.Equals(kImportServiceCID)) {
+        if (!mFactory) {
+            // Create and save away the factory object for creating
+            // new instances of Sample. This way if we are called
+            // again for the factory, we won't need to create a new
+            // one.
+            rv = NS_NewGenericFactory(getter_AddRefs(mFactory),
+                                      CreateNewImportService);
+        }
+        fact = mFactory;
     }
     else {
-        return NS_ERROR_NO_INTERFACE;
+		rv = NS_ERROR_FACTORY_NOT_REGISTERED;
+#ifdef DEBUG
+        char* cs = aClass.ToString();
+        printf("+++ nsImportServiceModule: unable to create factory for %s\n", cs);
+        nsCRT::free(cs);
+#endif
     }
 
-    if (! inst)
-        return NS_ERROR_OUT_OF_MEMORY;
-
-    if (NS_FAILED(rv = inst->QueryInterface(aIID, aResult))) {
-        // We didn't get the right interface.
-        NS_ERROR("didn't support the interface you wanted");
+    if (fact) {
+        rv = fact->QueryInterface(aIID, r_classObj);
     }
 
-    NS_IF_RELEASE(inst);
     return rv;
 }
 
-nsresult ImportFactoryImpl::LockFactory(PRBool aLock)
+//----------------------------------------
+
+struct Components {
+    const char* mDescription;
+    const nsID* mCID;
+    const char* mProgID;
+};
+
+// The list of components we register
+static Components gComponents[] = {
+    { "Import Service Component", &kImportServiceCID,
+      "component://mozilla/import/import-service", },
+};
+#define NUM_COMPONENTS (sizeof(gComponents) / sizeof(gComponents[0]))
+
+NS_IMETHODIMP
+nsImportServiceModule::RegisterSelf(nsIComponentManager *aCompMgr,
+                          nsIFileSpec* aPath,
+                          const char* registryLocation,
+                          const char* componentType)
 {
-    // Not implemented in simplest case.
+    nsresult rv = NS_OK;
+
+#ifdef DEBUG
+    printf("*** Registering ImportService components\n");
+#endif
+
+    Components* cp = gComponents;
+    Components* end = cp + NUM_COMPONENTS;
+    while (cp < end) {
+        rv = aCompMgr->RegisterComponentSpec(*cp->mCID, cp->mDescription,
+                                             cp->mProgID, aPath, PR_TRUE,
+                                             PR_TRUE);
+        if (NS_FAILED(rv)) {
+#ifdef DEBUG
+            printf("nsImportServiceModule: unable to register %s component => %x\n",
+                   cp->mDescription, rv);
+#endif
+            break;
+        }
+        cp++;
+    }
+
+    return rv;
+}
+
+NS_IMETHODIMP
+nsImportServiceModule::UnregisterSelf(nsIComponentManager* aCompMgr,
+                            nsIFileSpec* aPath,
+                            const char* registryLocation)
+{
+#ifdef DEBUG
+    printf("*** Unregistering ImportService components\n");
+#endif
+    Components* cp = gComponents;
+    Components* end = cp + NUM_COMPONENTS;
+    while (cp < end) {
+        nsresult rv = aCompMgr->UnregisterComponentSpec(*cp->mCID, aPath);
+        if (NS_FAILED(rv)) {
+#ifdef DEBUG
+            printf("nsImportServiceModule: unable to unregister %s component => %x\n",
+                   cp->mDescription, rv);
+#endif
+        }
+        cp++;
+    }
+
     return NS_OK;
 }
 
-////////////////////////////////////////////////////////////////////////
-
-
-
-// return the proper factory to the caller
-extern "C" PR_IMPLEMENT(nsresult)
-NSGetFactory(nsISupports* aServMgr,
-             const nsCID &aClass,
-             const char *aClassName,
-             const char *aProgID,
-             nsIFactory **aFactory)
+NS_IMETHODIMP
+nsImportServiceModule::CanUnload(nsIComponentManager *aCompMgr, PRBool *okToUnload)
 {
-    if (! aFactory)
-        return NS_ERROR_NULL_POINTER;
+    if (!okToUnload) {
+        return NS_ERROR_INVALID_POINTER;
+    }
+    *okToUnload = PR_FALSE;
+    return NS_ERROR_FAILURE;
+}
 
-    ImportFactoryImpl* factory = new ImportFactoryImpl(aClass, aClassName, aProgID);
-    if (factory == nsnull)
+//----------------------------------------------------------------------
+
+static nsImportServiceModule *gModule = NULL;
+
+extern "C" NS_EXPORT nsresult NSGetModule(nsIComponentManager *servMgr,
+                                          nsIFileSpec* location,
+                                          nsIModule** return_cobj)
+{
+    nsresult rv = NS_OK;
+
+    NS_ASSERTION(return_cobj, "Null argument");
+    NS_ASSERTION(gModule == NULL, "nsImportServiceModule: Module already created.");
+
+    // Create an initialize the layout module instance
+    nsImportServiceModule *m = new nsImportServiceModule();
+    if (!m) {
         return NS_ERROR_OUT_OF_MEMORY;
+    }
 
-    NS_ADDREF(factory);
-    *aFactory = factory;
-    return NS_OK;
+    // Increase refcnt and store away nsIModule interface to m in return_cobj
+    rv = m->QueryInterface(nsIModule::GetIID(), (void**)return_cobj);
+    if (NS_FAILED(rv)) {
+        delete m;
+        m = nsnull;
+    }
+    gModule = m;                  // WARNING: Weak Reference
+    return rv;
 }
 
 
-
-extern "C" PR_IMPLEMENT(nsresult)
-NSRegisterSelf(nsISupports* aServMgr , const char* aPath)
-{
-    nsresult rv;
-
-    nsCOMPtr<nsIServiceManager> servMgr(do_QueryInterface(aServMgr, &rv));
-    if (NS_FAILED(rv)) return rv;
-
-    NS_WITH_SERVICE1(nsIComponentManager, compMgr, servMgr, kComponentManagerCID, &rv);
-    if (NS_FAILED(rv)) return rv;
-	
-	rv = compMgr->RegisterComponent(kImportServiceCID, 
-									"Import Service", 
-									"component://netscape/import/import-service",
-									aPath, PR_TRUE, PR_TRUE); 	
-		
-	IMPORT_LOG0( "*** Import Service registered.\n");
-	
-    return NS_OK;
-}
-
-
-extern "C" PR_IMPLEMENT(nsresult)
-NSUnregisterSelf(nsISupports* aServMgr, const char* aPath)
-{
-    nsresult rv;
-
-    nsCOMPtr<nsIServiceManager> servMgr(do_QueryInterface(aServMgr, &rv));
-    if (NS_FAILED(rv)) return rv;
-
-	servMgr->UnregisterService( "component://netscape/import/import-service");
-	
-    NS_WITH_SERVICE1(nsIComponentManager, compMgr, servMgr, kComponentManagerCID, &rv);
-    if (NS_FAILED(rv)) return rv;
-
-    rv = compMgr->UnregisterComponent(kImportServiceCID, aPath);
-    if (NS_FAILED(rv)) return rv;
-
-    return NS_OK;
-}
