@@ -19,8 +19,8 @@
 #       notice board display,  build display (colored squares)
 
 
-# $Revision: 1.8 $ 
-# $Date: 2002/05/01 02:06:24 $ 
+# $Revision: 1.9 $ 
+# $Date: 2002/05/02 23:53:24 $ 
 # $Author: kestes%walrus.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/lib/TinderDB.pm,v $ 
 # $Name:  $ 
@@ -762,6 +762,15 @@ status_table_row().
 =back
 
 
+=over 4
+
+=item B<event_times_vec>
+
+return a list of all the times where an even occured.
+
+
+
+=back
 
 =head1 AUTHOR
 
