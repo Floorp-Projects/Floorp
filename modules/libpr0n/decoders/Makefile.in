@@ -42,22 +42,22 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-DIRS		= $(MOZ_IMG_DECODERS)
-
-ifneq (,$(findstring icon,$(MOZ_IMG_DECODERS)))
+ifneq (,$(filter icon,$(MOZ_IMG_DECODERS)))
 ifdef MOZ_ENABLE_GNOMEUI
-DIRS    := icon/gtk $(DIRS)
+TOOL_DIRS = icon/gtk icon
 endif
 ifeq ($(OS_ARCH),WINNT)
-DIRS		:= icon/win $(DIRS)
+DIRS = icon/win icon
 endif
 ifeq ($(OS_ARCH),OS2)
-DIRS		:= icon/os2 $(DIRS)
+DIRS = icon/os2 icon
 endif
 ifneq (,$(filter mac cocoa,$(MOZ_WIDGET_TOOLKIT)))
-DIRS		:= icon/mac $(DIRS)
+DIRS = icon/mac icon
 endif
 endif # icon
+
+DIRS += $(filter-out icon,$(MOZ_IMG_DECODERS))
 
 include $(topsrcdir)/config/rules.mk
 
