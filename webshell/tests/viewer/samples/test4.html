@@ -302,5 +302,37 @@ This is like the previous table plus the list's overflow property set
 <tr><td>C41<td>C42<td>C43<td>C44
 </table>
 
+<BR>
+<P> The following table is similar to a previous table except that the direction is right-to-left. 
+It will have its 2nd row and 2nd col collapsed. A window resize may be necessary to see it properly.
+<BR>
+<table dir=rtl cellspacing=0 border=1 style="background-color:orange;">
+<caption><b>before</b></caption>
+<colgroup>
+<col>
+<col>
+<col>
+<col>
+</colgroup>
+<tr><td>C11<td>C12<td>C13<td>C14
+<tr><td>C21<td rowspan=2 colspan=2>C12 C13 C22 C23<td>C14
+<tr><td>C31<td>C34
+<tr><td>C41<td>C42<td>C43<td>C44
+</table>
+
+<table dir=rtl cellspacing=0 border=1 style="background-color:orange;">
+<caption><b>after</b></caption>
+<colgroup>
+<col>
+<col style="visibility:collapse;">
+<col>
+<col>
+</colgroup>
+<tr><td>C11<td>C12<td>C13<td>C14
+<tr style="visibility:collapse;"><td>C21<td rowspan=2 colspan=2>C12 C13 C22 C23<td>C14
+<tr><td>C31<td>C34
+<tr><td>C41<td>C42<td>C43<td>C44
+</table>
+
 </BODY>
 </HTML>
