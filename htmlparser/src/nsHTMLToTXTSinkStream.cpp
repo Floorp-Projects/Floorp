@@ -189,7 +189,7 @@ NS_New_HTMLToTXT_SinkStream(nsIHTMLContentSink** aInstancePtrResult,
     return NS_ERROR_OUT_OF_MEMORY;
   }
   it->SetWrapColumn(aWrapColumn);
-  nsAutoString ucs2(CBufDescriptor("ucs2", PR_TRUE, strlen("ucs2")));
+  nsAutoString ucs2("ucs2");
   it->SetCharsetOverride(&ucs2);
   return it->QueryInterface(NS_GET_IID(nsIHTMLContentSink), (void **)aInstancePtrResult);
 }
@@ -660,7 +660,7 @@ nsHTMLToTXTSinkStream::OpenContainer(const nsIParserNode& aNode)
 
   if (type == eHTMLTag_li)
   {
-    nsAutoString temp(CBufDescriptor("*", PR_TRUE, strlen("*")));
+    nsAutoString temp("*");
     if (mTagStackIndex > 1 && mTagStack[mTagStackIndex-2] == eHTMLTag_ol)
     {
       if (mOLStackIndex > 0)
@@ -680,7 +680,7 @@ nsHTMLToTXTSinkStream::OpenContainer(const nsIParserNode& aNode)
     mIndent += gTabSize;
   else if (type == eHTMLTag_pre)
   {
-    nsAutoString temp(CBufDescriptor(NS_LINEBREAK, PR_TRUE, strlen(NS_LINEBREAK)));
+    nsAutoString temp(NS_LINEBREAK);
     Write(temp);
     mColPos = 0;
   }
@@ -693,7 +693,7 @@ nsHTMLToTXTSinkStream::OpenContainer(const nsIParserNode& aNode)
     case eHTMLTag_ol:
     case eHTMLTag_p:
     {
-      nsAutoString temp(CBufDescriptor(NS_LINEBREAK, PR_TRUE, strlen(NS_LINEBREAK)));
+      nsAutoString temp(NS_LINEBREAK);
       Write(temp);
       mColPos = 0;
       break;
@@ -748,7 +748,7 @@ nsHTMLToTXTSinkStream::CloseContainer(const nsIParserNode& aNode)
     {
       if (mFlags & nsIDocumentEncoder::OutputFormatted)
       {
-        nsAutoString temp(CBufDescriptor(NS_LINEBREAK, PR_TRUE, strlen(NS_LINEBREAK)));
+        nsAutoString temp(NS_LINEBREAK);
         Write(temp);
         mColPos = 0;
       }
@@ -779,7 +779,7 @@ nsHTMLToTXTSinkStream::AddLeaf(const nsIParserNode& aNode)
   {
     if (mColPos > mIndent)
     {
-      nsAutoString temp(CBufDescriptor(" ", PR_TRUE, 2));
+      nsAutoString temp(" ");
       Write(temp);
       mColPos++;
     }
@@ -806,7 +806,7 @@ nsHTMLToTXTSinkStream::AddLeaf(const nsIParserNode& aNode)
   else if (type == eHTMLTag_br)
   {
     // Do this even if we're not doing formatted output:
-    nsAutoString temp(CBufDescriptor(NS_LINEBREAK, PR_TRUE, strlen(NS_LINEBREAK)));
+    nsAutoString temp(NS_LINEBREAK);
     Write(temp);
     mColPos = 0;
   }
@@ -827,7 +827,7 @@ nsHTMLToTXTSinkStream::AddLeaf(const nsIParserNode& aNode)
     }
     else if (type == eHTMLTag_newline)
     {
-      nsAutoString temp(CBufDescriptor(NS_LINEBREAK, PR_TRUE, strlen(NS_LINEBREAK)));
+      nsAutoString temp(NS_LINEBREAK);
       Write(temp);
       mColPos = 0;
     }
@@ -853,7 +853,7 @@ nsHTMLToTXTSinkStream::WriteWrapped(const nsString& aString)
       for (int i=0; i<mIndent; ++i)
         spaces[i] = ' ';
       spaces[mIndent] = '\0';
-      nsAutoString temp(CBufDescriptor(spaces, PR_TRUE, strlen(spaces)));
+      nsAutoString temp(spaces);
       Write (temp);
       mColPos += mIndent;
       nsAllocator::Free(spaces);
@@ -877,7 +877,7 @@ nsHTMLToTXTSinkStream::WriteWrapped(const nsString& aString)
         // In that case, write a linebreak and come around again.
         if (mColPos > mIndent)
         {
-          nsAutoString linebreak(CBufDescriptor(NS_LINEBREAK, PR_TRUE, strlen(NS_LINEBREAK)));
+          nsAutoString linebreak(NS_LINEBREAK);
           Write(linebreak);
           mColPos = 0;
           continue;
