@@ -4414,14 +4414,36 @@ nsresult
 nsDocument::CreateElem(nsIAtom *aName, nsIAtom *aPrefix, PRInt32 aNamespaceID,
                        PRBool aDocumentDefaultType, nsIContent **aResult)
 {
+  nsresult rv;
+#ifdef DEBUG
+  nsIParserService *parserService = nsContentUtils::GetParserServiceWeakRef();
+  NS_ASSERTION(parserService, "Can't get parserService to check name.");
+  if (parserService) {
+    nsAutoString qName;
+    if (aPrefix) {
+      aPrefix->ToString(qName);
+      qName.Append(':');
+    }
+    const char *name;
+    aName->GetUTF8String(&name);
+    AppendUTF8toUTF16(name, qName);
+
+    const PRUnichar *colon;
+    rv = parserService->CheckQName(qName, PR_TRUE, &colon);
+    NS_ASSERTION(NS_SUCCEEDED(rv),
+                 "Don't pass invalid names to nsDocument::CreateElem, "
+                 "check caller.");
+  }
+#endif
+
   *aResult = nsnull;
   
   PRInt32 elementType = aDocumentDefaultType ? mDefaultElementType :
                                                aNamespaceID;
 
   nsCOMPtr<nsINodeInfo> nodeInfo;
-  nsresult rv = mNodeInfoManager->GetNodeInfo(aName, aPrefix, aNamespaceID,
-                                              getter_AddRefs(nodeInfo));
+  rv = mNodeInfoManager->GetNodeInfo(aName, aPrefix, aNamespaceID,
+                                     getter_AddRefs(nodeInfo));
   NS_ENSURE_SUCCESS(rv, rv);
 
   return CreateElement(nodeInfo, elementType, aResult);

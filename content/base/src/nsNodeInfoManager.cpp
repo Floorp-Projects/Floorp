@@ -172,6 +172,8 @@ nsNodeInfoManager::GetNodeInfo(nsIAtom *aName, nsIAtom *aPrefix,
                                PRInt32 aNamespaceID, nsINodeInfo** aNodeInfo)
 {
   NS_ENSURE_ARG_POINTER(aName);
+  NS_ASSERTION(!aName->Equals(EmptyString()),
+               "Don't pass an empty string to GetNodeInfo, fix caller.");
 
   nsINodeInfo::nsNodeInfoInner tmpKey(aName, aPrefix, aNamespaceID);
 

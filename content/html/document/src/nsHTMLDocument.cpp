@@ -4141,6 +4141,15 @@ nsHTMLDocument::CreateElem(nsIAtom *aName, nsIAtom *aPrefix,
                "HTML elements in an HTML document should have "
                "kNamespaceID_None as their namespace ID.");
 
+  if (IsXHTML() &&
+      (aDocumentDefaultType || aNamespaceID == kNameSpaceID_XHTML)) {
+    nsCAutoString name, lcName;
+    aName->ToUTF8String(name);
+    ToLowerCase(name, lcName);
+    NS_ASSERTION(lcName.Equals(name),
+                 "aName should be lowercase, fix caller.");
+  }
+
   return nsDocument::CreateElem(aName, aPrefix, aNamespaceID,
                                 aDocumentDefaultType, aResult);
 }
