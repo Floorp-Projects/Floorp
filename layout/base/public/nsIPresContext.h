@@ -91,6 +91,11 @@ public:
    */
   NS_IMETHOD GetBaseURL(nsIURL*& aURL) = 0;
 
+  /** 
+   * Get medium of presentation
+   */
+  NS_IMETHOD GetMedium(nsIAtom*& aMedium) = 0;
+
   /**
    * Resolve style for the given piece of content that will be a child
    * of the aParentContext. Don't use this for pseudo frames.
