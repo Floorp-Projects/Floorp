@@ -148,6 +148,9 @@ LCFLAGS = \
 LLIBS=        \
  $(DIST)\lib\xpcom.lib  \
  $(DIST)\lib\expat.lib			\
+!ifdef MOZ_PERF
+ $(DIST)\lib\util.lib			\
+!endif
  $(LIBNSPR)  
 
 !ifdef MOZ_NO_DEBUG_RTL
