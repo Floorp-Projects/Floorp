@@ -1299,9 +1299,8 @@ nsresult nsExternalAppHandler::SetUpTempFile(nsIChannel * aChannel)
 #if defined(XP_MAC) || defined (XP_MACOSX)
     nsCAutoString contentType;
     mMimeInfo->GetMIMEType(contentType);
-    if (contentType &&
-      (contentType.EqualsIgnoreCase(APPLICATION_APPLEFILE) == 0) ||
-      (contentType.EqualsIgnoreCase(MULTIPART_APPLEDOUBLE) == 0))
+    if (contentType.EqualsIgnoreCase(APPLICATION_APPLEFILE) ||
+        contentType.EqualsIgnoreCase(MULTIPART_APPLEDOUBLE))
     {
       nsCOMPtr<nsIAppleFileDecoder> appleFileDecoder = do_CreateInstance(NS_IAPPLEFILEDECODER_CONTRACTID, &rv);
       if (NS_SUCCEEDED(rv) && appleFileDecoder)
