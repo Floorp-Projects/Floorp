@@ -29,6 +29,8 @@ EXPORTS= \
 		nsINNTPNewsgroup.h \
 		nsIMsgOfflineNewsState.h \
 		nsINNTPArticleList.h \
+		nsINNTPCategoryContainer.h \
+		nsINntpURL.h \
 		$(NULL)
 
 include $(topsrcdir)/config/config.mk
