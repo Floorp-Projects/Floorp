@@ -98,8 +98,6 @@ FixedTableLayoutStrategy::AssignNonPctColumnWidths(nsIPresContext*          aPre
     delete [] colWidths;
     return PR_FALSE;
   }
-  float p2t;
-  aPresContext->GetScaledPixelsToTwips(&p2t);
 
   memset(propInfo, 0, numCols*sizeof(nscoord));
   nscoord propTotal = 0;
@@ -143,16 +141,25 @@ FixedTableLayoutStrategy::AssignNonPctColumnWidths(nsIPresContext*          aPre
         const nsStylePosition* cellPosition;
         cellFrame->GetStyleData(eStyleStruct_Position, (const nsStyleStruct*&)cellPosition);
 
+        nscoord cellWidth = 0;
         PRInt32 colSpan = mTableFrame->GetEffectiveColSpan(*cellFrame);
         // Get fixed cell width if available
         if (eStyleUnit_Coord == cellPosition->mWidth.GetUnit()) {
-          colWidths[colX] = nsTableFrame::RoundToPixel(cellPosition->mWidth.GetCoordValue() / colSpan, p2t);
+          // need to add border and padding into fixed width
+          nsMargin borderPadding = nsTableFrame::GetBorderPadding(nsSize(aReflowState.mComputedWidth, 0),
+                                                                  aPixelToTwips, cellFrame);
+          cellWidth = cellPosition->mWidth.GetCoordValue() + borderPadding.left + borderPadding.right;
+          colWidths[colX] = nsTableFrame::RoundToPixel(cellWidth / (float) colSpan, aPixelToTwips);
           colFrame->SetWidth(MIN_CON, colWidths[colX]);
         }
         else if ((eStyleUnit_Percent == cellPosition->mWidth.GetUnit()) &&
                  (aComputedWidth != NS_UNCONSTRAINEDSIZE)) {
           float percent = cellPosition->mWidth.GetPercentValue();
-          colWidths[colX] = nsTableFrame::RoundToPixel(NSToCoordRound(percent * (float)availWidth / (float)colSpan), aPixelToTwips); 
+          // need to add border and padding into percent width
+          nsMargin borderPadding = nsTableFrame::GetBorderPadding(nsSize(aReflowState.mComputedWidth, 0),
+                                                                  aPixelToTwips, cellFrame);
+          cellWidth = percent * (float)availWidth + borderPadding.left + borderPadding.right;
+          colWidths[colX] = nsTableFrame::RoundToPixel(NSToCoordRound(cellWidth / (float)colSpan), aPixelToTwips); 
           colFrame->SetWidth(PCT, colWidths[colX]);
           percTotal += colWidths[colX];
         }

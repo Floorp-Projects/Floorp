@@ -623,10 +623,7 @@ void nsTableCellFrame::VerticallyAlignChild(nsIPresContext*          aPresContex
       (const nsStyleTextReset*)mStyleContext->GetStyleData(eStyleStruct_TextReset);
   /* XXX: remove tableFrame when border-collapse inherits */
   GET_PIXELS_TO_TWIPS(aPresContext, p2t);
-  nsMargin borderPadding;
-  GetBorderWidth (p2t, borderPadding);
-  nsMargin padding = nsTableFrame::GetPadding(aReflowState, this);
-  borderPadding += padding;
+  nsMargin borderPadding = nsTableFrame::GetBorderPadding(aReflowState, p2t, this);
   
   nscoord topInset = borderPadding.top;
   nscoord bottomInset = borderPadding.bottom;

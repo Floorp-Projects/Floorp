@@ -770,6 +770,7 @@ nsTableRowFrame::CalculateCellActualSize(nsIFrame* aCellFrame,
 static void 
 CalcAvailWidth(nsTableFrame&     aTableFrame,
                nscoord           aTableComputedWidth,
+               float             aPixelToTwips,
                nsTableCellFrame& aCellFrame,
                nscoord           aCellSpacingX,
                nscoord&          aColAvailWidth,
@@ -805,11 +806,12 @@ CalcAvailWidth(nsTableFrame&     aTableFrame,
     aCellFrame.GetStyleData(eStyleStruct_Position, (const nsStyleStruct *&)cellPosition);
     if (eStyleUnit_Coord == cellPosition->mWidth.GetUnit()) {
       // need to add padding into fixed width
-      nsMargin padding(0,0,0,0);
+      nsMargin borderPadding(0,0,0,0);
       if (NS_UNCONSTRAINEDSIZE != aTableComputedWidth) {
-        padding = nsTableFrame::GetPadding(nsSize(aTableComputedWidth, 0), &aCellFrame);
+        borderPadding = nsTableFrame::GetBorderPadding(nsSize(aTableComputedWidth, 0), 
+                                                       aPixelToTwips,  &aCellFrame);
       }
-      nscoord fixWidth = cellPosition->mWidth.GetCoordValue() + padding.left + padding.right;
+      nscoord fixWidth = cellPosition->mWidth.GetCoordValue() + borderPadding.left + borderPadding.right;
       aCellAvailWidth = PR_MIN(aColAvailWidth, fixWidth);
     }
   }
@@ -980,7 +982,7 @@ nsTableRowFrame::ReflowChildren(nsIPresContext*          aPresContext,
         }
         // Calculate the available width for the table cell using the known column widths
         nscoord availColWidth, availCellWidth;
-        CalcAvailWidth(aTableFrame, GetComputedWidth(aReflowState, aTableFrame),
+        CalcAvailWidth(aTableFrame, GetComputedWidth(aReflowState, aTableFrame), p2t,
                        *cellFrame, cellSpacingX, availColWidth, availCellWidth);
         if (0 == availColWidth)  availColWidth  = NS_UNCONSTRAINEDSIZE;
         if (0 == availCellWidth) availCellWidth = NS_UNCONSTRAINEDSIZE;
@@ -1261,6 +1263,7 @@ nsTableRowFrame::IR_TargetIsChild(nsIPresContext*          aPresContext,
   if (!aNextFrame) return NS_ERROR_NULL_POINTER;
   nsresult rv = NS_OK;
 
+  GET_PIXELS_TO_TWIPS(aPresContext, p2t);
   PRBool isAutoLayout = aTableFrame.IsAutoLayout();
   const nsStyleDisplay *childDisplay;
   aNextFrame->GetStyleData(eStyleStruct_Display, ((const nsStyleStruct *&)childDisplay));
@@ -1277,7 +1280,7 @@ nsTableRowFrame::IR_TargetIsChild(nsIPresContext*          aPresContext,
     nscoord cellSpacingX = aTableFrame.GetCellSpacingX();
 
     nscoord colAvailWidth, cellAvailWidth;
-    CalcAvailWidth(aTableFrame, GetComputedWidth(aReflowState, aTableFrame),
+    CalcAvailWidth(aTableFrame, GetComputedWidth(aReflowState, aTableFrame), p2t,
                    *cellFrame, cellSpacingX, colAvailWidth, cellAvailWidth);
 
     // Always let the cell be as high as it wants. We ignore the height that's
