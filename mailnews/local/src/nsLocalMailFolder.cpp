@@ -1655,7 +1655,10 @@ NS_IMETHODIMP nsMsgLocalMailFolder::EndCopy(PRBool copySucceeded)
     {
       result = GetMsgDatabase(getter_AddRefs(msgDb));
       if (NS_SUCCEEDED(result) && msgDb)
+      {
         msgDb->AddNewHdrToDB(newHdr, PR_TRUE);
+        msgDb->Commit(nsMsgDBCommitType::kLargeCommit);
+      }
     }
     mCopyState->m_parseMsgState->Clear();
 
