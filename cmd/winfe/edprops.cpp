@@ -4102,18 +4102,24 @@ void CDocMetaPage::OnSelchangeEquivList()
     CListBox *pEquivList = (CListBox*)GetDlgItem(IDC_EQUIV_LIST);
     CListBox *pMetaList = (CListBox*)GetDlgItem(IDC_META_LIST);
     
-    int iSel = pEquivList->GetCurSel();
+    int iSelEquiv = pEquivList->GetCurSel();
+    int iSelMeta = pMetaList->GetCurSel();
     BOOL bCanSetOrDelete = FALSE;
+
+    // Only one list can be selected at a time
+    // We use selected list as a "radio button" to inform
+    //   user which list the Name/Value pair applies to
+    pMetaList->SetCurSel(-1);
 
     // Don't set Name and Value if selecting the last item
     //   unless we are switch from other list
-    if ( iSel >= 0 &&
-         (-1 != pMetaList->GetCurSel() ||
-          iSel != m_iEquivCount) ) {
+    if ( iSelEquiv >= 0 &&
+         (-1 != iSelMeta ||
+          iSelEquiv != m_iEquivCount) ) {
         CString csEntry;
         CString csName;
         CString csValue;
-        pEquivList->GetText(iSel, csEntry);
+        pEquivList->GetText(iSelEquiv, csEntry);
         if (GetNameAndValue(csEntry, csName, csValue)) {
             ((CEdit*)GetDlgItem(IDC_VAR_NAME))->SetWindowText( LPCSTR(csName) );
             ((CEdit*)GetDlgItem(IDC_VAR_VALUE))->SetWindowText( LPCSTR(csValue) );
@@ -4121,12 +4127,13 @@ void CDocMetaPage::OnSelchangeEquivList()
         } else {
             ClearNameAndValue();
         }
+    } else {
+        // This will set button states depending on NAME and CONTENT strings
+        OnChangeVarNameOrValue();
+        return;
     }
     SetModified(TRUE);
-    // Only one list can be selected at a time
-    // We use selected list as a "radio button" to inform
-    //   user which list the Name/Value pair applies to
-    pMetaList->SetCurSel(-1);
+
     EnableButtons(bCanSetOrDelete);
 }
 
@@ -4135,18 +4142,22 @@ void CDocMetaPage::OnSelchangeMetaList()
     CListBox *pMetaList = (CListBox*)GetDlgItem(IDC_META_LIST);
     CListBox *pEquivList = (CListBox*)GetDlgItem(IDC_EQUIV_LIST);
     
-    int iSel = pMetaList->GetCurSel();
+    int iSelMeta = pMetaList->GetCurSel();
+    int iSelEquiv = pEquivList->GetCurSel();
     BOOL bCanSetOrDelete = FALSE;
+
+    // Only one list can be selected at a time
+    pEquivList->SetCurSel(-1);
 
     // Don't set Name and Value if selecting the last item
     //   unless we are switch from other list
-    if ( iSel >= 0 && 
-         (-1 != pEquivList->GetCurSel() ||
-          iSel != m_iMetaCount)) {
+    if ( iSelMeta >= 0 && 
+         (-1 != iSelEquiv ||
+          iSelMeta != m_iMetaCount)) {
         CString csEntry;
         CString csName;
         CString csValue;
-        pMetaList->GetText(iSel, csEntry);
+        pMetaList->GetText(iSelMeta, csEntry);
         if (GetNameAndValue(csEntry, csName, csValue)) {
             ((CEdit*)GetDlgItem(IDC_VAR_NAME))->SetWindowText( LPCSTR(csName) );
             ((CEdit*)GetDlgItem(IDC_VAR_VALUE))->SetWindowText( LPCSTR(csValue) );
@@ -4154,11 +4165,13 @@ void CDocMetaPage::OnSelchangeMetaList()
         } else {
             ClearNameAndValue();
         }
+    } else {
+        // This will set button states depending on NAME and CONTENT strings
+        OnChangeVarNameOrValue();
+        return;
     }
     SetModified(TRUE);
 
-    // Only one list can be selected at a time
-    pEquivList->SetCurSel(-1);
     EnableButtons(bCanSetOrDelete);
 }
 
@@ -4224,28 +4237,19 @@ void CDocMetaPage::OnVarSet()
             SetMetaData(FALSE, CHAR_STR(csName), CHAR_STR(csValue));
             bEquiv = FALSE;
         }
+        // Get data and rebuild both listboxes
         GetMetaData();
 
-        BOOL bCanDelete = FALSE;
-        // Set the selection to the item just set,
-        //  but set to last item if (for some very weird reason) we fail
+        // Set the selection to the blank last item in the list
         if (bEquiv) {
-            if ( -1 == pEquivList->SelectString(-1,LPCSTR(csSearch)) ) {
-                pEquivList->SetCurSel(m_iEquivCount);
-            } else {
-                bCanDelete = TRUE;
-            }
+            pEquivList->SetCurSel(m_iEquivCount);
             pMetaList->SetCurSel(-1);
         } else {
-            if ( -1 == pMetaList->SelectString(-1,LPCSTR(csSearch)) ) {
-                pMetaList->SetCurSel(m_iEquivCount);
-            } else {
-                bCanDelete = TRUE;
-            }
+            pMetaList->SetCurSel(m_iMetaCount);
             pEquivList->SetCurSel(-1);
         }
-        // We can delete if a non-blank item is selected
-        ((CButton*)GetDlgItem(IDC_VAR_DELETE))->EnableWindow(bCanDelete);
+        // Nothing to delete now
+        ((CButton*)GetDlgItem(IDC_VAR_DELETE))->EnableWindow(FALSE);
     }
    ((CEdit*)GetDlgItem(IDC_VAR_NAME))->SetFocus();
 }
@@ -4382,19 +4386,50 @@ void CDocMetaPage::GetMetaData()
 // Be sure to strip off spaces and quotes before calling this
 void CDocMetaPage::SetMetaData(BOOL bHttpEquiv, char * pName, char * pValue)
 {
+    CListBox *pMetaList = (CListBox*)GetDlgItem(IDC_META_LIST);
+    CListBox *pEquivList = (CListBox*)GetDlgItem(IDC_EQUIV_LIST);
+
+    CString csSelString;
+    CString csName;
+    CString csValue;
+    int nSel = pEquivList->GetCurSel();
+    
+    // Get the strings from which ever list has the selected item
+    if ( nSel != -1 )
+    {
+        pEquivList->GetText(nSel, csSelString);
+    } else {
+        nSel = pMetaList->GetCurSel();
+        if ( nSel != -1 )
+            pMetaList->GetText(nSel, csSelString);
+    }
+    GetNameAndValue(csSelString, csName, csValue);
+
     EDT_MetaData *pData = EDT_NewMetaData();
-    if ( pData ) {
+    if ( pData )
+    {
         pData->bHttpEquiv = bHttpEquiv;
-        if ( pName && XP_STRLEN(pName) > 0 ) {
+        if ( pName && XP_STRLEN(pName) > 0 )
+        {
             pData->pName = XP_STRDUP(pName);
-            if ( pValue && XP_STRLEN(pValue) > 0 ) {
+            if ( pValue && *pValue )
+            {
                 pData->pContent = XP_STRDUP(pValue);
+                if( csName == pName )
+                {
+                    // The NAME in edit box is same as in the selected item,
+                    // copy the Content value so we replace specifically that item
+                    pData->pPrevContent = XP_STRDUP(CHAR_STR(csValue));
+                }
+                else
+                {
+                    // We don't match an existing selection
+                    // Set this so the item is appended to the list
+                    //  rather than replacing the first existing item
+                    //  with the same name. This allows multiple items.
+                    pData->pPrevContent = pData->pContent;
+                }
                 EDT_SetMetaData(m_pMWContext, pData);
-            } else {
-                // (Don't really need to do this)
-                pData->pContent = NULL; 
-                // Remove the item            
-                EDT_DeleteMetaData(m_pMWContext, pData);
             }
             OkToClose();
         }

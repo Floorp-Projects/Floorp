@@ -619,11 +619,11 @@ BEGIN
                     WS_VSCROLL | WS_TABSTOP
     PUSHBUTTON      "E&xtra HTML...",IDC_EXTRA_HTML,180,138,62,14
     GROUPBOX        "Background ",IDC_STATIC,7,160,245,56
-    CONTROL         "&Color",IDC_OVERRIDE_COLOR,"Button",BS_AUTO3STATE | 
+    CONTROL         "&Color",IDC_OVERRIDE_COLOR,"Button",BS_AUTOCHECKBOX | 
                     WS_GROUP | WS_TABSTOP,16,173,48,10
     CONTROL         "&O",IDC_CHOOSE_COLOR,"Button",BS_OWNERDRAW | WS_TABSTOP,
                     15,186,38,12
-    CONTROL         "&Image",IDC_BKGRND_USE_IMAGE,"Button",BS_AUTO3STATE | 
+    CONTROL         "&Image",IDC_BKGRND_USE_IMAGE,"Button",BS_AUTOCHECKBOX | 
                     WS_TABSTOP,77,173,56,10
     PUSHBUTTON      "Choose I&mage...",IDC_CHOOSE_BACKGROUND,180,169,62,14
     EDITTEXT        IDC_BKGRND_IMAGE,77,186,166,14,ES_AUTOHSCROLL
