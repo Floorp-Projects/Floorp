@@ -1270,7 +1270,7 @@ endif
 
 install:: $(CHROME_DEPS)
 	@if test -f $(JAR_MANIFEST); then $(PERL) -I$(MOZILLA_DIR)/config $(MOZILLA_DIR)/config/make-jars.pl -f $(MOZ_CHROME_FILE_FORMAT) -d $(DIST)/bin/chrome -s $(srcdir) < $(JAR_MANIFEST); fi
-#	@if test -f $(JAR_MANIFEST); then $(PERL) -I$(MOZILLA_DIR)/config $(MOZILLA_DIR)/config/make-chromelist.pl $(DIST)/bin/chrome $(JAR_MANIFEST); fi
+	@if test -f $(JAR_MANIFEST); then $(PERL) -I$(MOZILLA_DIR)/config $(MOZILLA_DIR)/config/make-chromelist.pl $(DIST)/bin/chrome $(JAR_MANIFEST); fi
 
 REGCHROME = $(PERL) -I$(MOZILLA_DIR)/config $(MOZILLA_DIR)/config/add-chrome.pl $(DIST)/bin/chrome/installed-chrome.txt $(_JAR_REGCHROME_DISABLE_JAR)
 
