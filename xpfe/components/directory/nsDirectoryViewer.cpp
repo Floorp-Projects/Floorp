@@ -1389,7 +1389,9 @@ nsDirectoryViewerFactory::CreateInstance(const char *aCommand,
   PRBool viewSource = (PL_strstr(aContentType,"view-source") != 0);
 
   if ((NS_FAILED(rv) || useXUL) && !viewSource) {
-    
+    // ... and setup the original channel's content type
+    (void)aChannel->SetContentType(NS_LITERAL_CSTRING("application/vnd.mozilla.xul+xml"));
+
     // This is where we shunt the HTTP/Index stream into our datasource,
     // and open the directory viewer XUL file as the content stream to
     // load in its place.
@@ -1441,13 +1443,13 @@ nsDirectoryViewerFactory::CreateInstance(const char *aCommand,
     listener = do_QueryInterface(httpindex,&rv);
     *aDocListenerResult = listener.get();
     NS_ADDREF(*aDocListenerResult);
-
-    // ... and set the original channel's content type up
-    (void)aChannel->SetContentType(NS_LITERAL_CSTRING("application/vnd.mozilla.xul+xml"));
     
     return NS_OK;
   }
-  
+
+  // setup the original channel's content type
+  (void)aChannel->SetContentType(NS_LITERAL_CSTRING("text/html"));
+
   // Otherwise, lets use the html listing
   nsCOMPtr<nsICategoryManager> catMan(do_GetService(NS_CATEGORYMANAGER_CONTRACTID, &rv));
   if (NS_FAILED(rv))
@@ -1485,9 +1487,6 @@ nsDirectoryViewerFactory::CreateInstance(const char *aCommand,
                              aDocListenerResult);
 
   if (NS_FAILED(rv)) return rv;
-
-  // ... and set the original channel's content type up
-  (void)aChannel->SetContentType(NS_LITERAL_CSTRING("text/html"));
 
   return NS_OK;
 }
