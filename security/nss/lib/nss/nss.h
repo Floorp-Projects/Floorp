@@ -32,7 +32,7 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  *
- * $Id: nss.h,v 1.15 2001/11/30 23:32:29 relyea%netscape.com Exp $
+ * $Id: nss.h,v 1.16 2002/01/23 04:42:20 relyea%netscape.com Exp $
  */
 
 #ifndef __nss_h_
@@ -108,6 +108,8 @@ extern SECStatus NSS_InitReadWrite(const char *configdir);
  *			initialize the 	PKCS #11 module.
  *      NSS_INIT_FORCEOPEN - Continue to force initializations even if the 
  * 			databases cannot be opened.
+ *      NSS_INIT_NOROOTINIT - Don't try to look for the root certs module
+ *			automatically.
  *
  * Also NOTE: This is not the recommended method for initializing NSS. 
  * The prefered method is NSS_init().
@@ -116,6 +118,7 @@ extern SECStatus NSS_InitReadWrite(const char *configdir);
 #define NSS_INIT_NOCERTDB	0x2
 #define NSS_INIT_NOMODDB	0x4
 #define NSS_INIT_FORCEOPEN	0x8
+#define NSS_INIT_NOROOTINIT     0x10
 
 extern SECStatus NSS_Initialize(const char *configdir, 
 	const char *certPrefix, const char *keyPrefix, 

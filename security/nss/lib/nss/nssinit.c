@@ -32,7 +32,7 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  *
- # $Id: nssinit.c,v 1.33 2002/01/09 23:22:13 javi%netscape.com Exp $
+ # $Id: nssinit.c,v 1.34 2002/01/23 04:42:21 relyea%netscape.com Exp $
  */
 
 #include <ctype.h>
@@ -248,6 +248,51 @@ done:
 }
 
 
+#ifndef XP_MAC
+/*
+ * The following code is an attempt to automagically find the external root
+ * module. NOTE: This code should be checked out on the MAC! There must be
+ * some cross platform support out there to help out with this?
+ * Note: Keep the #if-defined chunks in order. HPUX must select before UNIX.
+ */
+
+static const char *dllname =
+#if defined(XP_WIN32) || defined(XP_OS2)
+	"nssckbi.dll";
+#elif defined(HPUX)
+	"libnssckbi.sl";
+#elif defined(XP_UNIX)
+	"libnssckbi.so";
+#elif defined(XP_MAC)
+	"NSS Builtin Root Certs";
+#else
+	#error "Uh! Oh! I don't know about this platform."
+#endif
+
+/* Should we have platform ifdefs here??? */
+#define FILE_SEP '/'
+
+static void
+nss_FindExternalRoot(char *dbname)
+{
+	char *path, *cp, **cur_name;
+	int len = PORT_Strlen(dbname);
+	int path_len = len - 1;
+
+	
+	path = PORT_Alloc(len+sizeof(dllname));
+	if (path == NULL) return;
+
+	/* back up to the top of the directory */
+	PORT_Memcpy(path,dbname,path_len);
+	path[path_len++] = FILE_SEP;
+	PORT_Memcpy(&path[path_len],*cur_name,PORT_Strlen(*cur_name)+1);
+	(void) SECMOD_AddNewModule("Root Certs",path, 0, 0);
+	PORT_Free(path);
+	return;
+}
+#endif
+
 /*
  * OK there are now lots of options here, lets go through them all:
  *
@@ -269,7 +314,7 @@ done:
 static SECStatus
 nss_Init(const char *configdir, const char *certPrefix, const char *keyPrefix,
 		 const char *secmodName, PRBool readOnly, PRBool noCertDB, 
-					PRBool noModDB, PRBool forceOpen)
+			PRBool noModDB, PRBool forceOpen, PRBool noRootInit)
 {
     char *moduleSpec = NULL;
     char *flags = NULL;
@@ -326,6 +371,14 @@ loser:
     }
 
     if (rv == SECSuccess) {
+#ifndef XP_MAC
+	/* only servers need this. We currently do not have a mac server */
+	if ((!readOnly) && (!noModDB) && (!noCertDB) && (!noRootInit)) {
+	    if (!SECMOD_HasRootCerts()) {
+		nss_FindExternalRoot(configdir);
+	    }
+	}
+#endif
 	/* can this function fail?? */
 	STAN_LoadDefaultNSS3TrustDomain();
 	CERT_SetDefaultCertDB((CERTCertDBHandle *)
@@ -339,14 +392,14 @@ SECStatus
 NSS_Init(const char *configdir)
 {
     return nss_Init(configdir, "", "", SECMOD_DB, PR_TRUE, 
-		PR_FALSE, PR_FALSE, PR_FALSE);
+		PR_FALSE, PR_FALSE, PR_FALSE, PR_TRUE);
 }
 
 SECStatus
 NSS_InitReadWrite(const char *configdir)
 {
     return nss_Init(configdir, "", "", SECMOD_DB, PR_FALSE, 
-		PR_FALSE, PR_FALSE, PR_FALSE);
+		PR_FALSE, PR_FALSE, PR_FALSE, PR_FALSE);
 }
 
 /*
@@ -375,7 +428,8 @@ NSS_Initialize(const char *configdir, const char *certPrefix,
 	((flags & NSS_INIT_READONLY) == NSS_INIT_READONLY),
 	((flags & NSS_INIT_NOCERTDB) == NSS_INIT_NOCERTDB),
 	((flags & NSS_INIT_NOMODDB) == NSS_INIT_NOMODDB),
-	((flags & NSS_INIT_FORCEOPEN) == NSS_INIT_FORCEOPEN));
+	((flags & NSS_INIT_FORCEOPEN) == NSS_INIT_FORCEOPEN),
+	((flags & NSS_INIT_NOROOTINIT) == NSS_INIT_NOROOTINIT));
 }
 
 /*
@@ -385,7 +439,7 @@ SECStatus
 NSS_NoDB_Init(const char * configdir)
 {
       return nss_Init(configdir?configdir:"","","",SECMOD_DB,
-					PR_TRUE,PR_TRUE,PR_TRUE,PR_TRUE);
+				PR_TRUE,PR_TRUE,PR_TRUE,PR_TRUE,PR_TRUE);
 }
 
 void
@@ -395,6 +449,7 @@ NSS_Shutdown(void)
     SECMOD_Shutdown();
     STAN_Shutdown();
 }
+
 
 
 extern const char __nss_base_rcsid[];
@@ -452,4 +507,5 @@ NSS_VersionCheck(const char *importedVersion)
     }
     return PR_TRUE;
 }
+
 
