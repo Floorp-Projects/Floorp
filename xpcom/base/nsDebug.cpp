@@ -24,6 +24,7 @@
 #include "prprf.h"
 #include "prlog.h"
 #include "prinit.h"
+#include "plstr.h"
 
 #if defined(XP_BEOS)
 /* For DEBUGGER macros */
@@ -66,7 +67,7 @@
 	      va_start(ap, format);
 	      buffer[0] = vsnprintf((char *)buffer + 1, sizeof(buffer) - 1, format, ap);
 	      va_end(ap);
-	      if (strstr(format, "Warning: ") == format)
+	      if (PL_strcasestr((char *)&buffer[1], "warning"))
 	 	      printf("еее%s\n", (char*)buffer + 1);
 	 	  else
 	 	      DebugStr(buffer);
