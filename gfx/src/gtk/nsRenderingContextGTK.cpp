@@ -1109,6 +1109,9 @@ NS_IMETHODIMP nsRenderingContextGTK::FillEllipse(nscoord aX, nscoord aY, nscoord
 
   UpdateGC();
 
+  ::gdk_draw_arc(mSurface->GetDrawable(), mGC, FALSE,
+                 x, y, w, h,
+                 0, 360 * 64);
   ::gdk_draw_arc(mSurface->GetDrawable(), mGC, TRUE,
                  x, y, w, h,
                  0, 360 * 64);
