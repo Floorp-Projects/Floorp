@@ -71,6 +71,9 @@ public:
   
   NS_IMETHOD
   GetPlugins(PRUint32 aPluginCount, nsIDOMPlugin* aPluginArray[]) = 0;
+
+  NS_IMETHOD
+  StopPluginInstance(nsIPluginInstance* aInstance) = 0;
 };
 
 #endif // nsIPluginHost_h___

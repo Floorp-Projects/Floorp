@@ -59,9 +59,10 @@ public:
 
 typedef struct nsActivePlugin
 {
-  char*               mURL;
+  char*                  mURL;
   nsIPluginInstancePeer* mPeer;
-  nsIPluginInstance*  mInstance;
+  nsIPluginInstance*     mInstance;
+  PRBool                 mStopped;
 } nsActivePlugin;
 
 #define NS_PLUGIN_FLAG_ENABLED    0x0001    //is this plugin enabled?
@@ -224,6 +225,10 @@ public:
 
   NS_IMETHOD
   NewPluginURLStream(const nsString& aURL, nsIPluginInstance *aInstance, nsIPluginStreamListener *aListener);
+
+
+  NS_IMETHOD
+  StopPluginInstance(nsIPluginInstance* aInstance);
 
 private:
 

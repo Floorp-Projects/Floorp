@@ -279,8 +279,13 @@ nsresult nsPluginFile::GetPluginInfo(nsPluginInfo& info)
 {
 	DWORD zerome, versionsize;
 	char* verbuf = nsnull;
+  const char* fileName;
 
 	const char* path = this->GetCString();
+  fileName = PL_strrchr(path, '\\');
+  if(fileName)
+   ++fileName;
+
 	versionsize = ::GetFileVersionInfoSize((char*)path, &zerome);
 	if (versionsize > 0)
 		verbuf = (char *)PR_Malloc(versionsize);
@@ -300,6 +305,7 @@ nsresult nsPluginFile::GetPluginInfo(nsPluginInfo& info)
 		info.fMimeTypeArray = MakeStringArray(info.fVariantCount, info.fMimeType);
 		info.fMimeDescriptionArray = MakeStringArray(info.fVariantCount, info.fMimeDescription);
 		info.fExtensionArray = MakeStringArray(info.fVariantCount, info.fExtensions);
+    info.fFileName = PL_strdup(fileName);
 	}
 	else
 		return NS_ERROR_FAILURE;

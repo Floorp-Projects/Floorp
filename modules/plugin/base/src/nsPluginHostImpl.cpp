@@ -86,6 +86,7 @@ nsPluginTag::nsPluginTag()
 	mLibrary = nsnull;
 	mEntryPoint = nsnull;
 	mFlags = NS_PLUGIN_FLAG_ENABLED;
+ mFileName = nsnull;
 }
 
 inline char* new_str(char* str)
@@ -118,6 +119,7 @@ nsPluginTag::nsPluginTag(nsPluginTag* aPluginTag)
 	mLibrary = nsnull;
 	mEntryPoint = nsnull;
 	mFlags = NS_PLUGIN_FLAG_ENABLED;
+ mFileName = new_str(aPluginTag->mFileName);
 }
 
 nsPluginTag::~nsPluginTag()
@@ -167,6 +169,12 @@ nsPluginTag::~nsPluginTag()
   if (nsnull != mLibrary) {
     PR_UnloadLibrary(mLibrary);
     mLibrary = nsnull;
+  }
+  
+  if(nsnull != mFileName)
+  {
+    delete [] mFileName;
+    mFileName = nsnull;
   }
 }
 
@@ -1470,10 +1478,9 @@ nsresult nsPluginHostImpl::FindStoppedPluginForURL(nsIURL* aURL, nsIPluginInstan
 
   for(i=0; i<mNumActivePlugins; i++)
   {
-    if(!PL_strcmp(url, mActivePluginList[i].mURL))
+    if(!PL_strcmp(url, mActivePluginList[i].mURL) && mActivePluginList[i].mStopped)
     {
       nsIPluginInstance* instance = mActivePluginList[i].mInstance;
-      nsIPluginInstancePeer* peer;
       nsPluginWindow    *window = nsnull;
       aOwner->GetWindow(window);
 
@@ -1486,6 +1493,8 @@ nsresult nsPluginHostImpl::FindStoppedPluginForURL(nsIURL* aURL, nsIPluginInstan
       aOwner->CreateWidget();
       instance->SetWindow(window);
       instance->Start();
+
+      mActivePluginList[i].mStopped = PR_FALSE;
 
       return NS_OK;
     }
@@ -1507,6 +1516,8 @@ void nsPluginHostImpl::AddInstanceToActiveList(nsIPluginInstance* aInstance, nsI
     mActivePluginList[mNumActivePlugins].mInstance = aInstance;
 
     aInstance->GetPeer(&(mActivePluginList[mNumActivePlugins].mPeer));
+    mActivePluginList[mNumActivePlugins].mStopped = PR_FALSE;
+
     ++mNumActivePlugins;
   }
   else
@@ -1523,6 +1534,7 @@ void nsPluginHostImpl::AddInstanceToActiveList(nsIPluginInstance* aInstance, nsI
     mActivePluginList[mOldestActivePlugin].mURL = PL_strdup(url);
     mActivePluginList[mOldestActivePlugin].mInstance = aInstance;
     aInstance->GetPeer(&(mActivePluginList[mOldestActivePlugin].mPeer));
+    mActivePluginList[mOldestActivePlugin].mStopped = PR_FALSE;
 
     ++mOldestActivePlugin;
     if(mOldestActivePlugin == MAX_ACTIVE_PLUGINS)
@@ -1727,8 +1739,7 @@ public:
 
 	NS_METHOD GetFilename(nsString& aFilename)
 	{
-		// FIXME:  need to keep the filename around.
-		aFilename = mPluginTag.mName;
+		aFilename = mPluginTag.mFileName;
 		return NS_OK;
 	}
 
@@ -1968,6 +1979,23 @@ NS_IMETHODIMP nsPluginHostImpl::NewPluginURLStream(const nsString& aURL,
   }
 
   return rv;
+}
+
+
+NS_IMETHODIMP
+nsPluginHostImpl::StopPluginInstance(nsIPluginInstance* aInstance)
+{
+  PRUint32 i;
+  for(i=0; i<mNumActivePlugins; i++)
+  {
+    if(mActivePluginList[i].mInstance == aInstance)
+    {
+      mActivePluginList[i].mStopped = PR_TRUE;
+      break;
+    }
+  }
+
+  return NS_OK;
 }
 
 /* Called by InstantiateEmbededPlugin() */
