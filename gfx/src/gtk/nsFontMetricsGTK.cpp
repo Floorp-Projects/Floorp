@@ -25,7 +25,8 @@
 
 #include <X11/Xatom.h>
 
-//#define NOISY_FONTS 1
+#undef NOISY_FONTS
+#undef REALLY_NOISY_FONTS
 
 static NS_DEFINE_IID(kIFontMetricsIID, NS_IFONT_METRICS_IID);
 
@@ -109,59 +110,96 @@ NS_IMETHODIMP nsFontMetricsGTK::Init(const nsFont& aFont, nsIDeviceContext* aCon
   //slant (r = normal, i = italic, o = oblique)
   //size in nscoords >> 1
 
-  PR_snprintf(&wildstring[namelen + 1], namelen + 200,
-             "*-%s-%s-%c-normal--*-*-%d-%d-*-*-*",
-             wildstring,
-             (aFont.weight <= NS_FONT_WEIGHT_NORMAL) ? "medium" : "bold",
-             (aFont.style == NS_FONT_STYLE_NORMAL) ? 'r' :
-             ((aFont.style == NS_FONT_STYLE_ITALIC) ? 'i' : 'o'), dpi, dpi);
-
-  fnames = ::XListFontsWithInfo(GDK_DISPLAY(), &wildstring[namelen + 1], 200, &numnames, &fonts);
-
-  if (aFont.style == NS_FONT_STYLE_ITALIC)
-    altitalicization = 'o';
-  else if (aFont.style == NS_FONT_STYLE_OBLIQUE)
-    altitalicization = 'i';
-
-  if ((numnames <= 0) && altitalicization)
+  PRBool allowFontScaling = PR_FALSE;
+  if (allowFontScaling)
   {
+    // Try 0,0 dpi first in case we have a scalable font
     PR_snprintf(&wildstring[namelen + 1], namelen + 200,
-               "*-%s-%s-%c-normal--*-*-%d-%d-*-*-*",
-	             wildstring,
-               (aFont.weight <= NS_FONT_WEIGHT_NORMAL) ? "medium" : "bold",
-               altitalicization, dpi, dpi);
-
-    fnames = ::XListFontsWithInfo(GDK_DISPLAY(), &wildstring[namelen + 1], 200, &numnames, &fonts);
+                "-*-%s-%s-%c-normal-*-*-%d-0-0-*-*-*-*",
+                wildstring,
+                (aFont.weight <= NS_FONT_WEIGHT_NORMAL) ? "medium" : "bold",
+                ((aFont.style == NS_FONT_STYLE_NORMAL)
+                 ? 'r'
+                 : ((aFont.style == NS_FONT_STYLE_ITALIC) ? 'i' : 'o')),
+                aFont.size / 2);
+    fnames = ::XListFontsWithInfo(GDK_DISPLAY(), &wildstring[namelen + 1],
+                                  200, &numnames, &fonts);
+#ifdef NOISY_FONTS
+    g_print("  trying %s[%d]", &wildstring[namelen+1], numnames);
+#endif
   }
-
 
   if (numnames <= 0)
   {
-    //we were not able to match the font name at all...
-
-    char *newname = firstFace.ToNewCString();
-
+    // If no scalable font, then try using our dpi
     PR_snprintf(&wildstring[namelen + 1], namelen + 200,
-               "*-%s-%s-%c-normal--*-*-%d-%d-*-*-*",
-               newname,
-               (aFont.weight <= NS_FONT_WEIGHT_NORMAL) ? "medium" : "bold",
-               (aFont.style == NS_FONT_STYLE_NORMAL) ? 'r' :
-               ((aFont.style == NS_FONT_STYLE_ITALIC) ? 'i' : 'o'), dpi, dpi);
+                "-*-%s-%s-%c-normal-*-*-*-%d-%d-*-*-*-*",
+                wildstring,
+                (aFont.weight <= NS_FONT_WEIGHT_NORMAL) ? "medium" : "bold",
+                (aFont.style == NS_FONT_STYLE_NORMAL) ? 'r' :
+                ((aFont.style == NS_FONT_STYLE_ITALIC) ? 'i' : 'o'), dpi, dpi);
+    fnames = ::XListFontsWithInfo(GDK_DISPLAY(), &wildstring[namelen + 1],
+                                  200, &numnames, &fonts);
+#ifdef NOISY_FONTS
+    g_print("  trying %s[%d]", &wildstring[namelen+1], numnames);
+#endif
 
-    fnames = ::XListFontsWithInfo(GDK_DISPLAY(), &wildstring[namelen + 1], 200, &numnames, &fonts);
+    if (aFont.style == NS_FONT_STYLE_ITALIC)
+      altitalicization = 'o';
+    else if (aFont.style == NS_FONT_STYLE_OBLIQUE)
+      altitalicization = 'i';
 
     if ((numnames <= 0) && altitalicization)
     {
       PR_snprintf(&wildstring[namelen + 1], namelen + 200,
-                 "*-%s-%s-%c-normal--*-*-%d-%d-*-*-*",
-                 newname,
-                 (aFont.weight <= NS_FONT_WEIGHT_NORMAL) ? "medium" : "bold",
-                 altitalicization, dpi, dpi);
+                  "-*-%s-%s-%c-normal-*-*-*-%d-%d-*-*-*-*",
+                  wildstring,
+                  (aFont.weight <= NS_FONT_WEIGHT_NORMAL) ? "medium" : "bold",
+                  altitalicization, dpi, dpi);
 
-      fnames = ::XListFontsWithInfo(GDK_DISPLAY(), &wildstring[namelen + 1], 200, &numnames, &fonts);
+      fnames = ::XListFontsWithInfo(GDK_DISPLAY(), &wildstring[namelen + 1],
+                                    200, &numnames, &fonts);
+#ifdef NOISY_FONTS
+      g_print("  trying %s[%d]", &wildstring[namelen+1], numnames);
+#endif
     }
 
-    delete [] newname;
+
+    if (numnames <= 0)
+    {
+      //we were not able to match the font name at all...
+
+      char *newname = firstFace.ToNewCString();
+
+      PR_snprintf(&wildstring[namelen + 1], namelen + 200,
+                  "-*-%s-%s-%c-normal-*-*-*-%d-%d-*-*-*-*",
+                  newname,
+                  (aFont.weight <= NS_FONT_WEIGHT_NORMAL) ? "medium" : "bold",
+                  (aFont.style == NS_FONT_STYLE_NORMAL) ? 'r' :
+                  ((aFont.style == NS_FONT_STYLE_ITALIC) ? 'i' : 'o'),
+                  dpi, dpi);
+      fnames = ::XListFontsWithInfo(GDK_DISPLAY(), &wildstring[namelen + 1],
+                                    200, &numnames, &fonts);
+#ifdef NOISY_FONTS
+      g_print("  trying %s[%d]", &wildstring[namelen+1], numnames);
+#endif
+
+      if ((numnames <= 0) && altitalicization)
+      {
+        PR_snprintf(&wildstring[namelen + 1], namelen + 200,
+                    "-*-%s-%s-%c-normal-*-*-*-%d-%d-*-*-*-*",
+                    newname,
+                    (aFont.weight <= NS_FONT_WEIGHT_NORMAL) ? "medium" : "bold",
+                    altitalicization, dpi, dpi);
+        fnames = ::XListFontsWithInfo(GDK_DISPLAY(), &wildstring[namelen + 1],
+                                      200, &numnames, &fonts);
+#ifdef NOISY_FONTS
+        g_print("  trying %s[%d]", &wildstring[namelen+1], numnames);
+#endif
+      }
+
+      delete [] newname;
+    }
   }
 
   if (numnames > 0)
@@ -251,11 +289,7 @@ char * nsFontMetricsGTK::PickAppropriateSize(char **names, XFontStruct *fonts, i
 
 void nsFontMetricsGTK::RealizeFont()
 {
-//XXX this API is dead... MMP
-//  nsNativeWidget  widget;
-//  mDeviceContext->GetNativeWidget(widget);
   XFontStruct *fontInfo;
-  nscoord CharWidths[256];
   
   fontInfo = (XFontStruct *)GDK_FONT_XFONT(mFontHandle);
 
@@ -270,17 +304,26 @@ void nsFontMetricsGTK::RealizeFont()
   mHeight = nscoord((fontInfo->ascent + fontInfo->descent) * f);
   mMaxAdvance = nscoord(fontInfo->max_bounds.width * f);
 
+  // 56% of ascent, best guess for non-true type
+  mXHeight = NSToCoordRound((float) fontInfo->ascent* f * 0.56f);
+
   unsigned long pr = 0;
 
   if (::XGetFontProperty(fontInfo, XA_X_HEIGHT, &pr))
   {
     mXHeight = nscoord(pr * f);
+#ifdef REALLY_NOISY_FONTS
+    printf("xHeight=%d\n", mXHeight);
+#endif
   }
 
   if (::XGetFontProperty(fontInfo, XA_UNDERLINE_POSITION, &pr))
   {
     /* this will only be provided from adobe .afm fonts */
     mUnderlineOffset = NSToIntRound(pr * f);
+#ifdef REALLY_NOISY_FONTS
+    printf("underlineOffset=%d\n", mUnderlineOffset);
+#endif
   }
   else
   {
@@ -291,12 +334,13 @@ void nsFontMetricsGTK::RealizeFont()
     mUnderlineOffset = -NSToIntRound(MAX (1, floor (0.1 * height + 0.5)) * f);
   }
 
-
-
   if (::XGetFontProperty(fontInfo, XA_UNDERLINE_THICKNESS, &pr))
   {
     /* this will only be provided from adobe .afm fonts */
     mUnderlineSize = nscoord(MAX(f, NSToIntRound(pr * f)));
+#ifdef REALLY_NOISY_FONTS
+    printf("underlineSize=%d\n", mUnderlineSize);
+#endif
   }
   else
   {
@@ -306,20 +350,33 @@ void nsFontMetricsGTK::RealizeFont()
     mUnderlineSize = NSToIntRound(MAX(1, floor (0.05 * height + 0.5)) * f);
   }
 
+  if (::XGetFontProperty(fontInfo, XA_SUPERSCRIPT_Y, &pr))
+  {
+    mSuperscriptOffset = nscoord(MAX(f, NSToIntRound(pr * f)));
+#ifdef REALLY_NOISY_FONTS
+    printf("superscriptOffset=%d\n", mSuperscriptOffset);
+#endif
+  }
+  else
+  {
+    mSuperscriptOffset = mXHeight;
+  }
+
+  if (::XGetFontProperty(fontInfo, XA_SUBSCRIPT_Y, &pr))
+  {
+    mSubscriptOffset = nscoord(MAX(f, NSToIntRound(pr * f)));
+#ifdef REALLY_NOISY_FONTS
+    printf("subscriptOffset=%d\n", mSubscriptOffset);
+#endif
+  }
+  else
+  {
+    mSubscriptOffset = mXHeight;
+  }
 
   /* need better way to calculate this */
   mStrikeoutOffset = NSToIntRound((mAscent + 1) / 2);
   mStrikeoutSize = mUnderlineSize;
-
-  PRUint32 i;
-
-  for (i = 0; i < 256; i++)
-  {
-    if ((i < fontInfo->min_char_or_byte2) || (i > fontInfo->max_char_or_byte2))
-      CharWidths[i] = mMaxAdvance;
-    else
-      CharWidths[i] = nscoord((fontInfo->per_char[i - fontInfo->min_char_or_byte2].width) * f);
-  }
 
   mLeading = 0;
 }
