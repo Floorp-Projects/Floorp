@@ -29,6 +29,8 @@
 
 #include "ns_globals.h" // for prLogModuleInfo
 
+fpEventOccurredType externalEventOccurred = nsnull;
+
 JNIEXPORT const char * JNICALL util_GetStringUTFChars(JNIEnv *env, 
                                                       jstring inString)
 {
@@ -135,3 +137,9 @@ JNIEXPORT  void JNICALL util_DeleteString(JNIEnv *env, jstring toDelete)
 #endif
 
 }
+
+JNIEXPORT void JNICALL util_SetEventOccurredFunction(fpEventOccurredType fp)
+{
+    externalEventOccurred = fp;
+}
+

@@ -61,6 +61,23 @@ JNIEXPORT jstring JNICALL util_NewString(JNIEnv *env, const jchar *inString,
 
 JNIEXPORT  void JNICALL util_DeleteString(JNIEnv *env, jstring toDelete); 
 
+typedef JNIEXPORT void (JNICALL * fpEventOccurredType) (void *env, 
+                                                        void *nativeEventThread,
+                                                        void *webclientEventListener,
+                                                        jlong eventType);
+
+JNIEXPORT void JNICALL util_SetEventOccurredFunction(fpEventOccurredType fp);
+
+/**
+
+ * defined in jni_util_export.cpp
+
+ * The function pointer set with util_SetEventOccurredFunction.
+
+ */
+
+extern fpEventOccurredType externalEventOccurred;
+
 #ifdef __cplusplus
 } /* extern "C" */
 #endif /* __cplusplus */
