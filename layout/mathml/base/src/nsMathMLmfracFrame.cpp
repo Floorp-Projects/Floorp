@@ -278,10 +278,10 @@ nsMathMLmfracFrame::Place(nsIPresContext*      aPresContext,
   // lspace & rspace from <mo> if we are an embellished container
   nscoord leftSpace = onePixel;
   nscoord rightSpace = onePixel;
-  if (mEmbellishData.core) {
+  if (mEmbellishData.coreFrame) {
     nsEmbellishData coreData;
     nsIMathMLFrame* mathMLFrame;
-    mEmbellishData.core->QueryInterface(NS_GET_IID(nsIMathMLFrame), (void**)&mathMLFrame);
+    mEmbellishData.coreFrame->QueryInterface(NS_GET_IID(nsIMathMLFrame), (void**)&mathMLFrame);
     mathMLFrame->GetEmbellishData(coreData);
     leftSpace = coreData.leftSpace;
     rightSpace = coreData.rightSpace;

@@ -217,6 +217,8 @@ nsMathMLFrame::GetAxisHeight(nsIRenderingContext& aRenderingContext,
                              nsIFontMetrics*      aFontMetrics,
                              nscoord&             aAxisHeight)
 {
+GetAxisHeight(aFontMetrics, aAxisHeight);
+return;
   // get the bounding metrics of the minus sign, the rendering context
   // is assumed to have been set with the font of the current style context
 #ifdef NS_DEBUG

@@ -222,8 +222,8 @@ nsMathMLmactionFrame::GetSelectedFrame()
   // if the selected child is an embellished operator,
   // we become embellished as well
   mEmbellishData.flags &= ~NS_MATHML_EMBELLISH_OPERATOR;
-  mEmbellishData.next = nsnull;
-  mEmbellishData.core = nsnull;
+  mEmbellishData.nextFrame = nsnull;
+  mEmbellishData.coreFrame = nsnull;
   mEmbellishData.direction = NS_STRETCH_DIRECTION_UNSUPPORTED;
   if (mSelectedFrame) {
     nsIMathMLFrame* mathMLFrame;
@@ -233,8 +233,8 @@ nsMathMLmactionFrame::GetSelectedFrame()
       mathMLFrame->GetEmbellishData(embellishData);
       if (NS_MATHML_IS_EMBELLISH_OPERATOR(embellishData.flags)) {
         mEmbellishData.flags |= NS_MATHML_EMBELLISH_OPERATOR;
-        mEmbellishData.next = mSelectedFrame; // yes!
-        mEmbellishData.core = embellishData.core;
+        mEmbellishData.nextFrame = mSelectedFrame; // yes!
+        mEmbellishData.coreFrame = embellishData.coreFrame;
         mEmbellishData.direction = embellishData.direction;
       }
     }

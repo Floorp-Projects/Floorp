@@ -205,7 +205,7 @@ XXX The winner is the outermost setting in conflicting settings like these:
       }
     }
     else { // no attribute, get the value from the core
-      rv = mEmbellishData.core->QueryInterface(NS_GET_IID(nsIMathMLFrame), (void**)&mathMLFrame);
+      rv = mEmbellishData.coreFrame->QueryInterface(NS_GET_IID(nsIMathMLFrame), (void**)&mathMLFrame);
       if (NS_SUCCEEDED(rv) && mathMLFrame) {
         mathMLFrame->GetEmbellishData(embellishData);
         if (NS_MATHML_EMBELLISH_IS_MOVABLELIMITS(embellishData.flags)) {
@@ -221,8 +221,8 @@ XXX The winner is the outermost setting in conflicting settings like these:
     if (NS_SUCCEEDED(rv) && underscriptMathMLFrame) {
       underscriptMathMLFrame->GetEmbellishData(embellishData);
       // core of the underscriptFrame
-      if (NS_MATHML_IS_EMBELLISH_OPERATOR(embellishData.flags) && embellishData.core) {
-        rv = embellishData.core->QueryInterface(NS_GET_IID(nsIMathMLFrame), (void**)&mathMLFrame);
+      if (NS_MATHML_IS_EMBELLISH_OPERATOR(embellishData.flags) && embellishData.coreFrame) {
+        rv = embellishData.coreFrame->QueryInterface(NS_GET_IID(nsIMathMLFrame), (void**)&mathMLFrame);
         if (NS_SUCCEEDED(rv) && mathMLFrame) {
           mathMLFrame->GetEmbellishData(embellishData);
           // if we have the accentunder attribute, tell the core to behave as 

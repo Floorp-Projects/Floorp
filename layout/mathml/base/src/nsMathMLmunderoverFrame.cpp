@@ -210,7 +210,7 @@ nsMathMLmunderoverFrame::SetInitialChildList(nsIPresContext* aPresContext,
       }
     }
     else { // no attribute, get the value from the core
-      rv = mEmbellishData.core->QueryInterface(NS_GET_IID(nsIMathMLFrame), (void**)&mathMLFrame);
+      rv = mEmbellishData.coreFrame->QueryInterface(NS_GET_IID(nsIMathMLFrame), (void**)&mathMLFrame);
       if (NS_SUCCEEDED(rv) && mathMLFrame) {
         mathMLFrame->GetEmbellishData(embellishData);
         if (NS_MATHML_EMBELLISH_IS_MOVABLELIMITS(embellishData.flags)) {
@@ -226,8 +226,8 @@ nsMathMLmunderoverFrame::SetInitialChildList(nsIPresContext* aPresContext,
     if (NS_SUCCEEDED(rv) && underscriptMathMLFrame) {
       underscriptMathMLFrame->GetEmbellishData(embellishData);
       // core of the underscriptFrame
-      if (NS_MATHML_IS_EMBELLISH_OPERATOR(embellishData.flags) && embellishData.core) {
-        rv = embellishData.core->QueryInterface(NS_GET_IID(nsIMathMLFrame), (void**)&mathMLFrame);
+      if (NS_MATHML_IS_EMBELLISH_OPERATOR(embellishData.flags) && embellishData.coreFrame) {
+        rv = embellishData.coreFrame->QueryInterface(NS_GET_IID(nsIMathMLFrame), (void**)&mathMLFrame);
         if (NS_SUCCEEDED(rv) && mathMLFrame) {
           mathMLFrame->GetEmbellishData(embellishData);
           // if we have the accentunder attribute, tell the core to behave as 
@@ -254,8 +254,8 @@ nsMathMLmunderoverFrame::SetInitialChildList(nsIPresContext* aPresContext,
     if (NS_SUCCEEDED(rv) && overscriptMathMLFrame) {
       overscriptMathMLFrame->GetEmbellishData(embellishData);
       // core of the overscriptFrame
-      if (NS_MATHML_IS_EMBELLISH_OPERATOR(embellishData.flags) && embellishData.core) {
-        rv = embellishData.core->QueryInterface(NS_GET_IID(nsIMathMLFrame), (void**)&mathMLFrame);
+      if (NS_MATHML_IS_EMBELLISH_OPERATOR(embellishData.flags) && embellishData.coreFrame) {
+        rv = embellishData.coreFrame->QueryInterface(NS_GET_IID(nsIMathMLFrame), (void**)&mathMLFrame);
         if (NS_SUCCEEDED(rv) && mathMLFrame) {
           mathMLFrame->GetEmbellishData(embellishData);
           // if we have the accent attribute, tell the core to behave as 
