@@ -54,6 +54,7 @@ class nsIProtocol;
  */
 struct nsINetService : public nsISupports 
 {
+	static const nsIID& IID() { static nsIID iid = NS_INETSERVICE_IID; return iid; }
     /**
      * Initiate an asynchronous URL load.<BR><BR>
      *

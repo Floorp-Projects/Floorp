@@ -32,6 +32,9 @@ class nsIStreamListener;
 
 class nsIConnectionInfo : public nsISupports {
 public:
+
+	static const nsIID& IID() { static nsIID iid = NS_ICONNECTIONINFO_IID; return iid; }
+
   /**
    * Get the URL associated with this connection.
    *
