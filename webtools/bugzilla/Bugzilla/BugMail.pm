@@ -221,12 +221,11 @@ sub ProcessOneBug($) {
 
     my $difftext = "";
     my $diffheader = "";
-    my $diffpart = {};
     my @diffparts;
     my $lastwho = "";
     foreach my $ref (@diffs) {
         my ($who, $what, $when, $old, $new, $attachid, $fieldname) = (@$ref);
-        $diffpart = {};
+        my $diffpart = {};
         if ($who ne $lastwho) {
             $lastwho = $who;
             $diffheader = "\n$who" . Param('emailsuffix') . " changed:\n\n";
@@ -301,8 +300,8 @@ sub ProcessOneBug($) {
     $deptext = trim($deptext);
 
     if ($deptext) {
-        #$difftext = trim($difftext . "\n\n" . $deptext);
-        $diffpart->{'text'} = trim("\n\n" . $deptext);
+        my $diffpart = {};
+        $diffpart->{'text'} = "\n" . trim("\n\n" . $deptext);
         push(@diffparts, $diffpart);
     }
 
