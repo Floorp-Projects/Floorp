@@ -138,6 +138,21 @@ ASFILES		= \
 endif
 endif
 
+# Linux ARM
+ifeq ($(OS_ARCH),Linux)
+ifeq (arm,$(findstring arm,$(OS_TEST)))
+CPPSRCS = \
+		  xptcinvoke_arm.cpp \
+		  xptcstubs_arm.cpp \
+		  $(NULL)
+endif
+ifeq (sa110,$(findstring sa110,$(OS_TEST)))   
+CPPSRCS = \
+		  xptcinvoke_arm.cpp \
+		  xptcstubs_arm.cpp \
+		  $(NULL)
+endif
+endif
 
 # we don't want the shared lib, but we want to force the creation of a static lib.
 override NO_SHARED_LIB=1
