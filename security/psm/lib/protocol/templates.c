@@ -616,5 +616,13 @@ CMTMessageTemplate EncryptRequestTemplate[] =
 {
   { CMT_DT_ITEM, offsetof(EncryptRequestMessage, keyid) },
   { CMT_DT_ITEM, offsetof(EncryptRequestMessage, data) },
+  { CMT_DT_ITEM, offsetof(EncryptRequestMessage, ctx) },
+  { CMT_DT_END }
+};
+
+CMTMessageTemplate DecryptRequestTemplate[] =
+{
+  { CMT_DT_ITEM, offsetof(DecryptRequestMessage, data) },
+  { CMT_DT_ITEM, offsetof(DecryptRequestMessage, ctx) },
   { CMT_DT_END }
 };

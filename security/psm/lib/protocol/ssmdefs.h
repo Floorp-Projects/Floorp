@@ -200,6 +200,10 @@ typedef struct _SSMString SSMString;
 #define SSM_MISC_PUT_RNG_DATA      0x00000200
 #define SSM_MISC_SDR_ENCRYPT       0x00000300
 #define SSM_MISC_SDR_DECRYPT       0x00000400
+#define SSM_MISC_UI                0x00000500
+
+/* specific UI requests */
+#define SSM_UI_CHANGE_PASSWORD     0x00000010
 
 #define SSM_SDR_ENCRYPT_REQUEST \
   (SSM_REQUEST_MESSAGE|SSM_MISC_ACTION|SSM_MISC_SDR_ENCRYPT)

@@ -599,6 +599,7 @@ typedef struct EncryptRequestMessage
 {
   CMTItem keyid;  /* May have length 0 for default */
   CMTItem data;
+  CMTItem ctx;  /* serialized void* ptr */
 } EncryptRequestMessage;
 
 extern CMTMessageTemplate EncryptRequestTemplate[];
@@ -606,8 +607,12 @@ extern CMTMessageTemplate EncryptRequestTemplate[];
 typedef struct SingleItemMessage EncryptReplyMessage;
 #define EncryptReplyTemplate SingleItemMessageTemplate
 
-typedef struct SingleItemMessage DecryptRequestMessage;
-#define DecryptRequestTemplate SingleItemMessageTemplate
+typedef struct DecryptRequestMessage
+{
+  CMTItem data;
+  CMTItem ctx;  /* serialized void* ptr */
+} DecryptRequestMessage;
+extern CMTMessageTemplate DecryptRequestTemplate[];
 
 typedef struct SingleItemMessage DecryptReplyMessage;
 #define DecryptReplyTemplate SingleItemMessageTemplate
