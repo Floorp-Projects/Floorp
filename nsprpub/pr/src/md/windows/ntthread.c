@@ -238,6 +238,13 @@ _PR_MD_CREATE_THREAD(PRThread *thread,
     }
 
     thread->md.id = thread->id;
+    /*
+     * On windows, a thread is created with a thread priority of
+     * THREAD_PRIORITY_NORMAL.
+     */
+    if (priority != PR_PRIORITY_NORMAL) {
+        _PR_MD_SET_PRIORITY(&(thread->md), priority);
+    }
 
     /* Activate the thread */
     if ( ResumeThread( thread->md.handle ) != -1)
