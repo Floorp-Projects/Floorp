@@ -357,8 +357,8 @@ nsMsgNewsFolder::AddSubfolder(nsAutoString name, nsIMsgFolder **child, char *set
 
 	uri.Append(name);
 
-	nsIRDFResource* res;
-	rv = rdf->GetResource(uri.GetBuffer(), &res);
+	nsCOMPtr<nsIRDFResource> res;
+	rv = rdf->GetResource(uri.GetBuffer(), getter_AddRefs(res));
 	if (NS_FAILED(rv))
 		return rv;
   
