@@ -172,7 +172,7 @@ nsXMLElement::GetXMLBaseURI(nsIURI **aURI)
           }
         } else {
           if (value[value_len - 1] != '/')
-            value.AppendWithConversion'/'; // Add delimiter/make sure we treat this as dir
+            value.AppendWithConversion('/'); // Add delimiter/make sure we treat this as dir
           base = value;
         }
       }
