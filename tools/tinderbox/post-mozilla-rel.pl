@@ -507,9 +507,6 @@ sub packit_l10n {
     if ($tinderstatus eq 'success' && $status != 0) {
       $tinderstatus = 'testfailed';
     }
-    if ($tinderstatus ne 'success') {
-      run_locale_shell_command "rm -f $stagedir/*$locale*";
-    }
     close LOCLOG;
 
     mail_locale_finished_message($start_time, $tinderstatus, $logfile, $locale);
