@@ -188,8 +188,10 @@ nsContentList::NamedItem(const nsString& aName, nsIDOMNode** aReturn)
     if (nsnull != content) {
       nsAutoString name;
       // XXX Should it be an EqualsIgnoreCase?
-      if ((content->GetAttribute("name", name) == eContentAttr_HasValue) &&
-	  (aName.Equals(name))) {
+      if (((content->GetAttribute("NAME", name) == eContentAttr_HasValue) &&
+	  (aName.Equals(name))) ||
+	  ((content->GetAttribute("ID", name) == eContentAttr_HasValue) &&
+	   (aName.Equals(name)))) {
 	return content->QueryInterface(kIDOMNodeIID, (void **)aReturn);
       }
     }

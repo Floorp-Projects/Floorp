@@ -39,6 +39,7 @@
 #include "CNavDTD.h"
 #include "nsIScriptGlobalObject.h"
 #include "nsContentList.h"
+#include "nsINetService.h"
 
 //#define rickgdebug 1
 #ifdef rickgdebug
@@ -502,15 +503,35 @@ nsHTMLDocument::GetAnchors(nsIDOMHTMLCollection** aAnchors)
 NS_IMETHODIMP    
 nsHTMLDocument::GetCookie(nsString& aCookie)
 {
-  //XXX TBI
-  return NS_ERROR_NOT_IMPLEMENTED;
+  nsINetService *service;
+  nsresult res = NS_OK;
+  
+  res = NS_NewINetService(&service, nsnull);
+  if ((NS_OK == res) && (nsnull != service)) {
+
+    res = service->GetCookieString(mDocumentURL, aCookie);
+
+    NS_RELEASE(service);
+  }
+
+  return res;
 }
 
 NS_IMETHODIMP    
 nsHTMLDocument::SetCookie(const nsString& aCookie)
 {
-  //XXX TBI
-  return NS_ERROR_NOT_IMPLEMENTED;
+  nsINetService *service;
+  nsresult res = NS_OK;
+  
+  res = NS_NewINetService(&service, nsnull);
+  if ((NS_OK == res) && (nsnull != service)) {
+
+    res = service->SetCookieString(mDocumentURL, aCookie);
+
+    NS_RELEASE(service);
+  }
+
+  return res;
 }
 
 NS_IMETHODIMP    
