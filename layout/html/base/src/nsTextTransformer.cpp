@@ -95,6 +95,10 @@ nsTextTransformer::Init(/*nsTextRun& aTextRun, XXX*/
     }
     offset += frag->GetLength();
   }
+  if (mNumFrags && aStartingOffset == mContentLength){
+    mCurrentFrag = mFrags + (mNumFrags -1);
+    mCurrentFragOffset = mCurrentFrag->GetLength();
+  }
 
   // Get the frames style and choose a transform proc
   const nsStyleText* styleText;
@@ -492,7 +496,7 @@ nsTextTransformer::GetPrevWord(PRBool aInWord,
         contentLen += numChars;
       }
       else {
-        while (cp > end) {
+        while (cp >= end) {
           PRUnichar ch = *cp;
           if (!XP_IS_SPACE(ch)) {
             if (CH_NBSP == ch) ch = ' ';
@@ -556,7 +560,7 @@ nsTextTransformer::GetPrevWord(PRBool aInWord,
         contentLen += numChars;
       }
       else {
-        while (cp > end) {
+        while (cp >= end) {
           PRUnichar ch = PRUnichar(*cp);
           if (!XP_IS_SPACE(ch)) {
             if (CH_NBSP == ch) ch = ' ';
