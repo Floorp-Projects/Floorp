@@ -28,7 +28,6 @@ CHROME_CONTENT_DIR = packages\core\communicator\content\search
 CHROME_L10N_DIR = locales\en-US\communicator\locale\search
 
 CHROME_CONTENT = \
-	.\default.htm \
 	.\search.js \
 	.\search.xul \
 	.\search-editor.js \
@@ -46,6 +45,7 @@ CHROME_CONTENT = \
 	$(NULL)
 
 CHROME_L10N = \
+	.\locale\en-US\default.htm \
 	.\locale\en-US\find.dtd \
 	.\locale\en-US\findresults.dtd \
 	.\locale\en-US\internet.dtd \

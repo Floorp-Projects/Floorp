@@ -130,7 +130,7 @@ function doEngineClick( event, aNode )
 	}
 	else
 	{
-		window.frames[0].document.location = "chrome://communicator/content/search/default.htm";
+		window.frames[0].document.location = "chrome://communicator/locale/search/default.htm";
 	}
 }
 
