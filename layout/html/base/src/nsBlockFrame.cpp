@@ -1025,30 +1025,12 @@ nsBaseIBFrame::PrepareInitialReflow(nsBlockReflowState& aState)
 nsresult
 nsBaseIBFrame::PrepareFrameAppendedReflow(nsBlockReflowState& aState)
 {
-  // Get the first of the newly appended frames
-  nsIFrame* firstAppendedFrame;
-  aState.reflowCommand->GetChildFrame(firstAppendedFrame);
-
-  // Add the new frames to the child list, and create new lines. Each
-  // impacted line will be marked dirty.
-  AppendNewFrames(aState.mPresContext, firstAppendedFrame);
   return NS_OK;
 }
 
 nsresult
 nsBaseIBFrame::PrepareFrameInsertedReflow(nsBlockReflowState& aState)
 {
-  // Get the inserted frame
-  nsIFrame* newFrame;
-  aState.reflowCommand->GetChildFrame(newFrame);
-
-  // Get the previous sibling frame
-  nsIFrame* prevSibling;
-  aState.reflowCommand->GetPrevSiblingFrame(prevSibling);
-
-  // Insert the frames. This marks the affected lines dirty
-  InsertNewFrames(aState.mPresContext, newFrame, prevSibling);
-
   // XXX temporary: incremental reflow doesn't (yet) work in this case
   PrepareResizeReflow(aState);
   return NS_OK;
@@ -1057,18 +1039,6 @@ nsBaseIBFrame::PrepareFrameInsertedReflow(nsBlockReflowState& aState)
 nsresult
 nsBaseIBFrame::PrepareFrameRemovedReflow(nsBlockReflowState& aState)
 {
-  if (nsnull == mLines) {
-    // Nothing to delete here
-    return NS_OK;
-  } 
-
-  // Get the deleted frame
-  nsIFrame* deletedFrame;
-  aState.reflowCommand->GetChildFrame(deletedFrame);
-
-  // Remove the frame. This marks the affected lines dirty.
-  DoRemoveFrame(aState, deletedFrame);
-
   // XXX temporary: incremental reflow doesn't (yet) work in this case
   PrepareResizeReflow(aState);
   return NS_OK;
@@ -2945,6 +2915,30 @@ nsBaseIBFrame::DrainOverflowLines()
 //////////////////////////////////////////////////////////////////////
 // Frame list manipulation routines
 
+NS_IMETHODIMP
+nsBaseIBFrame::AppendFrames(nsIPresContext& aPresContext,
+                            nsIPresShell&   aPresShell,
+                            nsIAtom*        aListName,
+                            nsIFrame*       aFrameList)
+{
+  nsresult rv = AppendNewFrames(aPresContext, aFrameList);
+  if (NS_SUCCEEDED(rv)) {
+    nsIReflowCommand* reflowCmd = nsnull;
+    nsresult rv;
+    rv = NS_NewHTMLReflowCommand(&reflowCmd, this,
+                                 nsIReflowCommand::FrameAppended,
+                                 nsnull);
+    if (NS_SUCCEEDED(rv)) {
+      if (nsnull != aListName) {
+        reflowCmd->SetChildListName(aListName);
+      }
+      aPresShell.AppendReflowCommand(reflowCmd);
+      NS_RELEASE(reflowCmd);
+    }
+  }
+  return rv;
+}
+
 nsresult
 nsBaseIBFrame::AppendNewFrames(nsIPresContext& aPresContext,
                                nsIFrame* aNewFrame)
@@ -3074,6 +3068,31 @@ nsBaseIBFrame::AppendNewFrames(nsIPresContext& aPresContext,
 
   MarkEmptyLines(aPresContext);
   return NS_OK;
+}
+
+NS_IMETHODIMP
+nsBaseIBFrame::InsertFrames(nsIPresContext& aPresContext,
+                            nsIPresShell&   aPresShell,
+                            nsIAtom*        aListName,
+                            nsIFrame*       aPrevFrame,
+                            nsIFrame*       aFrameList)
+{
+  nsresult rv = InsertNewFrames(aPresContext, aFrameList, aPrevFrame);
+  if (NS_SUCCEEDED(rv)) {
+    nsIReflowCommand* reflowCmd = nsnull;
+    nsresult rv;
+    rv = NS_NewHTMLReflowCommand(&reflowCmd, this,
+                                 nsIReflowCommand::FrameInserted,
+                                 nsnull);
+    if (NS_SUCCEEDED(rv)) {
+      if (nsnull != aListName) {
+        reflowCmd->SetChildListName(aListName);
+      }
+      aPresShell.AppendReflowCommand(reflowCmd);
+      NS_RELEASE(reflowCmd);
+    }
+  }
+  return rv;
 }
 
 // XXX rewrite to deal with a list of frames
@@ -3233,10 +3252,34 @@ nsBaseIBFrame::InsertNewFrames(nsIPresContext& aPresContext,
   return NS_OK;
 }
 
+NS_IMETHODIMP
+nsBaseIBFrame::RemoveFrame(nsIPresContext& aPresContext,
+                           nsIPresShell&   aPresShell,
+                           nsIAtom*        aListName,
+                           nsIFrame*       aOldFrame)
+{
+  nsresult rv = DoRemoveFrame(aPresContext, aOldFrame);
+  if (NS_SUCCEEDED(rv)) {
+    nsIReflowCommand* reflowCmd = nsnull;
+    nsresult rv;
+    rv = NS_NewHTMLReflowCommand(&reflowCmd, this,
+                                 nsIReflowCommand::FrameRemoved,
+                                 nsnull);
+    if (NS_SUCCEEDED(rv)) {
+      if (nsnull != aListName) {
+        reflowCmd->SetChildListName(aListName);
+      }
+      aPresShell.AppendReflowCommand(reflowCmd);
+      NS_RELEASE(reflowCmd);
+    }
+  }
+  return rv;
+}
+
 // XXX need code in here to join two inline lines together if a block
 // is deleted between them.
 nsresult
-nsBaseIBFrame::DoRemoveFrame(nsBlockReflowState& aState,
+nsBaseIBFrame::DoRemoveFrame(nsIPresContext& aPresContext,
                              nsIFrame* aDeletedFrame)
 {
   // Find the line and the previous sibling that contains
@@ -3293,7 +3336,7 @@ nsBaseIBFrame::DoRemoveFrame(nsBlockReflowState& aState,
           nsPlaceholderFrame* ph = (nsPlaceholderFrame*) aDeletedFrame;
           nsIFrame* floater = ph->GetAnchoredItem();
           if (nsnull != floater) {
-            floater->DeleteFrame(aState.mPresContext);
+            floater->DeleteFrame(aPresContext);
             if (nsnull != line->mFloaters) {
               // Wipe out the floater array for this line. It will get
               // recomputed during reflow anyway.
@@ -3333,7 +3376,7 @@ nsBaseIBFrame::DoRemoveFrame(nsBlockReflowState& aState,
       if (nsnull != nextInFlow) {
         aDeletedFrame->BreakFromNextFlow();
       }
-      aDeletedFrame->DeleteFrame(aState.mPresContext);
+      aDeletedFrame->DeleteFrame(aPresContext);
       aDeletedFrame = nextInFlow;
 
       // If line is empty, remove it now
@@ -3376,7 +3419,7 @@ nsBaseIBFrame::DoRemoveFrame(nsBlockReflowState& aState,
       prevSibling = nsnull;
     }
   }
-  MarkEmptyLines(aState.mPresContext);
+  MarkEmptyLines(aPresContext);
   return NS_OK;
 }
 
@@ -5050,7 +5093,8 @@ nsAnonymousBlockFrame::AppendFrames2(nsIPresContext& aPresContext,
                                      nsIAtom*        aListName,
                                      nsIFrame*       aFrameList)
 {
-  return nsFrame::AppendFrames(aPresContext, aPresShell, aListName, aFrameList);
+  return nsAnonymousBlockFrameSuper::AppendFrames(aPresContext, aPresShell,
+                                                  aListName, aFrameList);
 }
 
 nsresult
@@ -5060,7 +5104,9 @@ nsAnonymousBlockFrame::InsertFrames2(nsIPresContext& aPresContext,
                                      nsIFrame*       aPrevFrame,
                                      nsIFrame*       aFrameList)
 {
-  return nsFrame::InsertFrames(aPresContext, aPresShell, aListName, aPrevFrame, aFrameList);
+  return nsAnonymousBlockFrameSuper::InsertFrames(aPresContext, aPresShell,
+                                                  aListName, aPrevFrame,
+                                                  aFrameList);
 }
 
 nsresult
@@ -5069,11 +5115,12 @@ nsAnonymousBlockFrame::RemoveFrame2(nsIPresContext& aPresContext,
                                     nsIAtom*        aListName,
                                     nsIFrame*       aOldFrame)
 {
-  return nsFrame::RemoveFrame(aPresContext, aPresShell, aListName, aOldFrame);
+  return nsAnonymousBlockFrameSuper::RemoveFrame(aPresContext, aPresShell,
+                                                 aListName, aOldFrame);
 }
 
 void
-nsAnonymousBlockFrame::StealFirstFrame()
+nsAnonymousBlockFrame::RemoveFirstFrame()
 {
   nsLineBox* line = mLines;
   if (nsnull != line) {
@@ -5118,5 +5165,63 @@ nsAnonymousBlockFrame::StealFirstFrame()
 
     // Break linkage to next child after stolen frame
     firstChild->SetNextSibling(nsnull);
+  }
+}
+
+void
+nsAnonymousBlockFrame::RemoveFramesFrom(nsIFrame* aFrame)
+{
+  nsLineBox* line = mLines;
+  if (nsnull != line) {
+    // Chop the child sibling list into two pieces
+    nsFrameList tmp(line->mFirstChild);
+    nsIFrame* prevSibling = tmp.GetPrevSiblingFor(aFrame);
+    if (nsnull != prevSibling) {
+      // Chop the sibling list into two pieces
+      prevSibling->SetNextSibling(nsnull);
+
+      nsLineBox* prevLine = nsnull;
+      while (nsnull != line) {
+        nsIFrame* frame = line->mFirstChild;
+        PRInt32 i, n = line->mChildCount;
+        PRBool done = PR_FALSE;
+        for (i = 0; i < n; i++) {
+          if (frame == aFrame) {
+            // We just found the target frame (and the line its in and
+            // the previous line)
+            if (frame == line->mFirstChild) {
+              // No more children on this line, so let it get removed
+              prevLine->mNext = nsnull;
+            }
+            else {
+              // The only frames that remain on this line are the
+              // frames preceeding aFrame. Adjust the count to
+              // indicate that fact.
+              line->mChildCount = i;
+
+              // Remove the lines that follow this line
+              prevLine = line;
+              line = line->mNext;
+              prevLine->mNext = nsnull;
+            }
+            done = PR_TRUE;
+            break;
+          }
+          frame->GetNextSibling(frame);
+        }
+        if (done) {
+          break;
+        }
+        prevLine = line;
+        line = line->mNext;
+      }
+    }
+
+    // Remove all of the remaining lines
+    while (nsnull != line) {
+      nsLineBox* next = line->mNext;
+      delete line;
+      line = next;
+    }
   }
 }
