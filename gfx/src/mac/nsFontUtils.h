@@ -27,6 +27,7 @@
 
 #include "nsIFontMetrics.h"
 #include "nsIDeviceContext.h"
+#include "nsComObsolete.h"
 
 class NS_GFX nsFontUtils
 {
