@@ -19,19 +19,23 @@ public class ObjectMapper {
      */
     static final String OC_JAVAOBJECT = "javaObject";  // abstract oc
     static final String OC_SERIALOBJ  = "javaSerializedObject";//aux oc
+    static final String OC_MARSHALOBJ = "javaMarshalledObject";//aux oc   
     static final String OC_REFERENCE  = "javaNamingReference"; //aux oc
-    static final String OC_REMOTEOBJ  = "javaRemoteObject";    //aux oc
+    //static final String OC_REMOTEOBJ  = "javaRemoteObject";    //aux oc, depricated
     static final String OC_CONTAINER  = "javaContainer";  //structural oc
 
     /**
      * Schema attributes for mapping java objects to ldap entries
      */
     static final String AT_CLASSNAME   = "javaClassName";         //required
+    static final String AT_CLASSNAMES  = "javaClassNames";       //optional 
+    static final String AT_DESCRIPTION = "description";          //optional  
+    static final String AT_JAVADOC     = "javaDoc";              //optional   
     static final String AT_CODEBASE    = "javaCodeBase";         //optional
     static final String AT_SERIALDATA  = "javaSerializedData";   //required
     static final String AT_REFADDR     = "javaReferenceAddress"; //optional
     static final String AT_OBJFACTORY  = "javaFactory";          //optional 
-    static final String AT_REMOTELOC   = "javaRemoteLocation";   //required
+    //static final String AT_REMOTELOC   = "javaRemoteLocation";   //required, depricated
     
     //Default Object class for NameClassPair
     static final String DEFAULT_OBJCLASS = "javax.naming.directory.DirContext";
@@ -42,11 +46,13 @@ public class ObjectMapper {
             obj = new LdapContextImpl(entry.getDN(), ctx);
         }    
 
-        // SP is required to contact the NamingManager first to obtain an object 
+        // SP is required to contact the DirectoryManager first to obtain an object 
         try {
             String relName = LdapNameParser.getRelativeName(ctx.m_ctxDN, entry.getDN());
             Name nameObj = LdapNameParser.getParser().parse(relName);
-            obj = NamingManager.getObjectInstance(obj, nameObj, ctx, ctx.getEnvironment());
+            Attributes attrs = new AttributesImpl(entry.getAttributeSet(),
+                                                  ctx.m_ctxEnv.getUserDefBinaryAttrs());
+            obj = DirectoryManager.getObjectInstance(obj, nameObj, ctx, ctx.getEnvironment(), attrs);
         }
         catch (Exception ex) {
             if (ex instanceof NamingException) {
@@ -82,12 +88,6 @@ public class ObjectMapper {
                 return decodeRefObj(attrs);
             }
                         
-            // RMI Object                        
-            else if ((attr = attrs.getAttribute(AT_REMOTELOC)) != null) {
-                String rmiURL = (String)attr.getByteValues().nextElement();
-                return java.rmi.Naming.lookup(rmiURL);
-            }
-
             return null;
         }
         catch (Exception ex) {
@@ -119,10 +119,12 @@ public class ObjectMapper {
      */
     static LDAPAttributeSet objectToAttrSet(Object obj, String name, LdapContextImpl ctx,  Attributes attrs) throws NamingException {
     
-        // SP is required to contact the NamingManager first to obtain a state object 
+        // SP is required to contact the DirectoryManager first to obtain a state object 
         try {
             Name nameObj = LdapNameParser.getParser().parse(name);
-            obj = NamingManager.getStateToBind(obj, nameObj, ctx, ctx.getEnvironment());
+            DirStateFactory.Result stb = DirectoryManager.getStateToBind(obj, nameObj, ctx, ctx.getEnvironment(), attrs);
+            obj = stb.getObject();
+            attrs = stb.getAttributes();
         }
         catch (Exception ex) {
             if (ex instanceof NamingException) {
@@ -133,13 +135,20 @@ public class ObjectMapper {
             throw nameEx;
         }
 
-        if (attrs == null) {
+        if (obj == null) {
+            return AttributesImpl.jndiAttrsToLdapAttrSet(attrs);
+        }    
+        else if (attrs == null) {
             attrs = new BasicAttributes(/*ignoreCase=*/true);
         }    
 
         Attribute objectclass = attrs.get("objectClass");
         if (objectclass == null) {
+            objectclass = attrs.get("objectclass"); // try lower case
+        }
+        if (objectclass == null) {
             objectclass = new BasicAttribute("objectClass", "top");
+            objectclass.add(OC_CONTAINER);
             attrs.put(objectclass);
         }
         
@@ -158,13 +167,16 @@ public class ObjectMapper {
             attrs = encodeRefObj(delimChar, ((Referenceable)obj).getReference(), attrs);
         }
         
-        else  if (obj instanceof java.rmi.Remote) {
-            objectclass.add(OC_REMOTEOBJ);
-            attrs = encodeRMIObj((java.rmi.Remote)obj, attrs);
-        }
-        
         else if (obj instanceof Serializable) {
-            objectclass.add(OC_SERIALOBJ);
+            if (objectclass.contains(OC_MARSHALOBJ)) {
+                ; // do nothing
+            }
+            else if (objectclass.contains(OC_MARSHALOBJ.toLowerCase())) {
+                ; // do nothing
+            }
+            else {
+                objectclass.add(OC_SERIALOBJ);
+            }                
             attrs = encodeSerialObj((Serializable)obj , attrs);
         }
         
@@ -425,20 +437,6 @@ public class ObjectMapper {
         attrs.put(new BasicAttribute(AT_SERIALDATA, serializeObject(obj)));
         return attrs;
      }
-     
-    /**
-     * Encode RMI Object
-     */
-    static Attributes encodeRMIObj(java.rmi.Remote obj, Attributes attrs) throws NamingException{
-        if (attrs.get(AT_REMOTELOC) == null) {
-            throw new NamingException(
-            "Can not bind Remote object, "     + AT_REMOTELOC + " not specified");
-        }
-        if (attrs.get(AT_CLASSNAME) == null) {
-            attrs.put(new BasicAttribute(AT_CLASSNAME, obj.getClass().getName()));
-        }
-        return attrs;
-    }    
      
     /**
      * Encode DirContext object (merege attributes)

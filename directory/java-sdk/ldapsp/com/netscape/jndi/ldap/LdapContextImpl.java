@@ -77,8 +77,8 @@ public class LdapContextImpl implements EventDirContext, LdapContext {
      */
     public LdapContextImpl(Hashtable env) throws NamingException{
         m_ctxEnv = new ContextEnv(env); // no need to clone (Hashtable)env.clone());
-        m_ldapSvc = new LdapService(this);
-        m_ldapSvc.connect(); // BLITS but to be removed, hurts lazy resource usage
+        m_ldapSvc = new LdapService();
+        m_ldapSvc.connect(this); // BLITS but to be removed, hurts lazy resource usage
         getDN();
         getSearchConstraints();
     }
@@ -179,7 +179,7 @@ public class LdapContextImpl implements EventDirContext, LdapContext {
         if (name.startsWith("ldap://")) {
             m_ctxEnv.setProperty(ContextEnv.P_PROVIDER_URL, name);            
             close(); // Force reconnect
-            m_ldapSvc = new LdapService(this);
+            m_ldapSvc = new LdapService();
             // Return New name relative to the context
             return "";
         }
@@ -479,11 +479,11 @@ public class LdapContextImpl implements EventDirContext, LdapContext {
      */
     public DirContext getSchema(String name) throws NamingException {
         name = checkLdapUrlAsName(name);
-        return m_ldapSvc.getSchema(name);
+        return m_ldapSvc.getSchema(this, name);
     }
 
     public DirContext getSchema(Name name) throws NamingException {
-        return m_ldapSvc.getSchema(name.toString());
+        return m_ldapSvc.getSchema(this, name.toString());
     }
 
     public DirContext getSchemaClassDefinition(String name) throws NamingException {
@@ -499,7 +499,7 @@ public class LdapContextImpl implements EventDirContext, LdapContext {
      * Naming Event methods javax.naming.event.EventDirContext interface)
      */
     public void addNamingListener(String target, int scope, NamingListener l) throws NamingException {
-        EventService eventSvc = m_ldapSvc.getEventService();
+        EventService eventSvc = m_ldapSvc.getEventService(this);
         String filter = LdapService.DEFAULT_FILTER;
         SearchControls ctls = new SearchControls();
         ctls.setSearchScope(scope);
@@ -511,7 +511,7 @@ public class LdapContextImpl implements EventDirContext, LdapContext {
     }
 
     public void addNamingListener(String target, String filter, SearchControls ctls, NamingListener l)throws NamingException {
-        EventService eventSvc = m_ldapSvc.getEventService();
+        EventService eventSvc = m_ldapSvc.getEventService(this);
         eventSvc.addListener(this, target, filter, ctls, l);
 
     }
@@ -521,7 +521,7 @@ public class LdapContextImpl implements EventDirContext, LdapContext {
     }
 
     public void addNamingListener(String target, String filterExpr, Object[] filterArgs, SearchControls ctls, NamingListener l)throws NamingException {
-        EventService eventSvc = m_ldapSvc.getEventService();
+        EventService eventSvc = m_ldapSvc.getEventService(this);
         String filter = ProviderUtils.expandFilterExpr(filterExpr, filterArgs);
         eventSvc.addListener(this, target, filter, ctls, l);
     }
@@ -531,7 +531,7 @@ public class LdapContextImpl implements EventDirContext, LdapContext {
     }
 
     public void removeNamingListener(NamingListener l) throws NamingException {
-        EventService eventSvc = m_ldapSvc.getEventService();
+        EventService eventSvc = m_ldapSvc.getEventService(this);
         eventSvc.removeListener(l);
     }
 
@@ -598,10 +598,10 @@ public class LdapContextImpl implements EventDirContext, LdapContext {
 
     public void reconnect(Control[] reqCtls) throws NamingException {
         close();
-        m_ldapSvc = new LdapService(this);
+        m_ldapSvc = new LdapService();
         // This controls are to be set on the the LDAPConnection
         m_ctxEnv.setProperty(ContextEnv.P_CONNECT_CTRLS, reqCtls);
-        m_ldapSvc.connect();
+        m_ldapSvc.connect(this);
     }
     
     public Control[] getConnectControls() {

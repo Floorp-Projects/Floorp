@@ -46,7 +46,6 @@ class LdapService {
     public static final int    DEFAULT_PORT = LDAPv2.DEFAULT_PORT;    
     public static final int    DEFAULT_SSL_PORT = 636;
     
-    private LdapContextImpl m_initialCtx;
     private LDAPConnection m_ld;
     private EventService m_eventSvc;
     
@@ -59,8 +58,7 @@ class LdapService {
     private int m_clientCount;
     
         
-    public LdapService(LdapContextImpl initialCtx) {
-        m_initialCtx = initialCtx;
+    public LdapService() {
         m_ld = new LDAPConnection();
         m_clientCount = 1;
     }
@@ -72,23 +70,23 @@ class LdapService {
     /**
      * Connect to the server and send bind request to authenticate the user
      */
-    void connect() throws NamingException{
+    void connect(LdapContextImpl ctx) throws NamingException{
 
         if (m_ld.isConnected()) {
             return; //already connected
         }
         
-        LDAPUrl url = m_initialCtx.m_ctxEnv.getDirectoryServerURL();
+        LDAPUrl url = ctx.m_ctxEnv.getDirectoryServerURL();
         String host = (url != null) ? url.getHost() : DEFAULT_HOST;
         int    port = (url != null) ? url.getPort() : DEFAULT_PORT;
-        String user   = m_initialCtx.m_ctxEnv.getUserDN();
-        String passwd = m_initialCtx.m_ctxEnv.getUserPassword();
-        String socketFactory = m_initialCtx.m_ctxEnv.getSocketFactory();
-        Object cipherSuite   = m_initialCtx.m_ctxEnv.getCipherSuite();
-        int    ldapVersion   = m_initialCtx.m_ctxEnv.getLdapVersion();
-        boolean isSSLEnabled = m_initialCtx.m_ctxEnv.isSSLEnabled();
-        boolean useSimpleAuth= m_initialCtx.m_ctxEnv.useSimpleAuth();
-        LDAPControl[] ldCtrls= m_initialCtx.m_ctxEnv.getConnectControls();
+        String user   = ctx.m_ctxEnv.getUserDN();
+        String passwd = ctx.m_ctxEnv.getUserPassword();
+        String socketFactory = ctx.m_ctxEnv.getSocketFactory();
+        Object cipherSuite   = ctx.m_ctxEnv.getCipherSuite();
+        int    ldapVersion   = ctx.m_ctxEnv.getLdapVersion();
+        boolean isSSLEnabled = ctx.m_ctxEnv.isSSLEnabled();
+        String[] saslMechanisms = ctx.m_ctxEnv.getSaslMechanisms();
+        LDAPControl[] ldCtrls= ctx.m_ctxEnv.getConnectControls();
 
         // Set default ssl port if DS not specifed
         if (isSSLEnabled && url == null) {
@@ -124,16 +122,26 @@ class LdapService {
         try {
             if (ldCtrls != null) {
                 m_ld.setOption(LDAPv3.SERVERCONTROLS, ldCtrls);
-            }    
-            m_ld.connect(ldapVersion, host, port, user, passwd);            
+            }
+            
+            if (saslMechanisms != null) { // sasl Auth
+                m_ld.authenticate(ctx.m_ctxEnv.getSaslAuthId(),
+                                  saslMechanisms,
+                                  ctx.m_ctxEnv.getSaslProps(),
+                                  ctx.m_ctxEnv.getSaslCallback());
+            }
+            else { // simple auth
+                m_ld.connect(ldapVersion, host, port, user, passwd);
+            }                
         }
         catch (LDAPException e) {            
            // If ldapVersion is not specified in ctx env
            // fallback to ldap v2 if v3 is bot supported
             if (e.getLDAPResultCode() == e.PROTOCOL_ERROR &&
                 ldapVersion == 3 &&
-                m_initialCtx.m_ctxEnv.getProperty(
-                     m_initialCtx.m_ctxEnv.P_LDAP_VERSION) == null) {
+                saslMechanisms == null &&
+                ctx.m_ctxEnv.getProperty(
+                     ctx.m_ctxEnv.P_LDAP_VERSION) == null) {
                 
                 try {
                     m_ld.connect(2, host, port, user, passwd);
@@ -192,7 +200,7 @@ class LdapService {
         LDAPSearchConstraints cons=ctx.getSearchConstraints();
         boolean returnObjs = false;
                 
-        connect(); // Lazy Connect
+        connect(ctx); // Lazy Connect
 
         // Create DN by appending the name to the current context
         if (name.length() > 0) {
@@ -266,7 +274,7 @@ class LdapService {
         Debug.println(1, "LIST " + (returnBindings ? "BINDINGS" : ""));
         String base = ctx.getDN();
 
-        connect(); // Lazy Connect
+        connect(ctx); // Lazy Connect
         
         // Create DN by appending the name to the current context
         if (name.length() > 0) {
@@ -308,7 +316,7 @@ class LdapService {
         Debug.println(1, "LOOKUP");        
         String base = ctx.getDN();
 
-        connect(); // Lazy Connect
+        connect(ctx); // Lazy Connect
 
         // Create DN by appending the name to the current context
         if (name.length() > 0) {
@@ -348,7 +356,7 @@ class LdapService {
         String base = ctx.getDN();
         int scope  = LDAPConnection.SCOPE_BASE;
         
-        connect(); // Lazy Connect
+        connect(ctx); // Lazy Connect
 
         // Create DN by appending the name to the current context
         if (name.length() > 0) {
@@ -389,7 +397,7 @@ class LdapService {
         if (mods.size() == 0) {
             return;
         }
-        connect(); // Lazy Connect
+        connect(ctx); // Lazy Connect
 
         // Create DN by appending the name to the current context
         if (name.length() > 0) {
@@ -420,7 +428,7 @@ class LdapService {
         Debug.println(1, "ADD");        
         String dn = ctx.getDN();
         
-        connect(); // Lazy Connect
+        connect(ctx); // Lazy Connect
 
         // Create DN by appending the name to the current context
         if (name.length() == 0) {
@@ -453,7 +461,7 @@ class LdapService {
         Debug.println(1, "DELETE");
         String dn = ctx.getDN();
         
-        connect(); // Lazy Connect
+        connect(ctx); // Lazy Connect
 
         // Create DN by appending the name to the current context
         if (name.length() == 0) {
@@ -485,7 +493,7 @@ class LdapService {
         Debug.println(1, "RENAME");
         String dn = ctx.getDN();
         
-        connect(); // Lazy Connect
+        connect(ctx); // Lazy Connect
 
         // Create DN by appending the name to the current context
         if (name.length() == 0 || newRDN.length() == 0) {
@@ -513,16 +521,16 @@ class LdapService {
     /**
      * Schema Operations
      */
-    DirContext getSchema(String name) throws NamingException {        
-        connect(); // Lazy Connect        
+    DirContext getSchema(LdapContextImpl ctx, String name) throws NamingException {        
+        connect(ctx); // Lazy Connect        
         return new SchemaRoot(m_ld);
     }
 
     /**
      * Return the event service
      */
-    EventService getEventService() throws NamingException {
-        connect(); // Lazy Connect
+    EventService getEventService(LdapContextImpl ctx) throws NamingException {
+        connect(ctx); // Lazy Connect
         if (m_eventSvc == null) {
             m_eventSvc = new EventService(this);
         }    

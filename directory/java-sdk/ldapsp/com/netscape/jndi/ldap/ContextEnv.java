@@ -63,6 +63,11 @@ class ContextEnv extends ShareableEnv  {
     public static final String P_REFERRAL_HOPLIMIT = "java.naming.referral.limit";
     public static final String P_LDAP_VERSION = "java.naming.ldap.version";
     public static final String P_JNDIREF_SEPARATOR = "java.naming.ref.separator";
+    public static final String P_SASL_AUTHID = "java.naming.security.sasl.authorizationId";
+    public static final String P_SASL_CALLBACK = "java.naming.security.sasl.callback";
+    public static final String P_SASL_PKGS = "javax.security.sasl.client.pkgs";
+    
+    private static final String SASL_PROP_PREFIX = "javax.security.sasl";
     
     // Possible values for the Context.REFERRAL env property
     private static final String V_REFERRAL_FOLLOW = "follow";
@@ -79,7 +84,6 @@ class ContextEnv extends ShareableEnv  {
     // Possible values for the java.naming... env property
     private static final String V_AUTH_NONE = "none";
     private static final String V_AUTH_SIMPLE = "simple";
-    private static final String V_AUTH_STRONG = "strong";
 
     /**
      * Constructor for non root Contexts
@@ -286,15 +290,24 @@ class ContextEnv extends ShareableEnv  {
                 cons.setReferrals(false);
             }
             else if(mode.equalsIgnoreCase(V_REFERRAL_IGNORE)) {
-                //TODO If MANAGEDSAIT control is not supported by the server
+                //If MANAGEDSAIT control is not supported by the server
                 //(e.g. Active Directory) should enable exception and ignore it
                 cons.setServerControls(new LDAPControl(
                     LDAPControl.MANAGEDSAIT, /*critical=*/false, null));
+                cons.setReferrals(false);
             }
             else {
                 throw new IllegalArgumentException("Illegal value for " + P_REFERRAL_MODE);
             }    
         }
+    }
+
+    /**
+     * Check if referrals are to be ignored
+     */
+    boolean ignoreReferralsMode() {
+        String mode = (String)getProperty(P_REFERRAL_MODE);
+        return mode == null || mode.equalsIgnoreCase(V_REFERRAL_IGNORE);
     }
 
     /**
@@ -332,27 +345,6 @@ class ContextEnv extends ShareableEnv  {
         }
     }
 
-
-    /**
-     * Check if simple auth mode is explicitly requested. If that's the case
-     * user DN and password must be specified as well
-     */
-    boolean useSimpleAuth() throws NamingException {
-        String authMode = (String)getProperty(P_SECURITY_AUTHMODE);
-        if(authMode != null) {
-            if(authMode.equalsIgnoreCase(V_AUTH_NONE)) {
-                return false;
-            }
-            else if (authMode.equalsIgnoreCase(V_AUTH_SIMPLE)) {
-                 return true;
-            }     
-            else {
-                throw new AuthenticationNotSupportedException(
-                "Unsupported value for " + P_SECURITY_AUTHMODE);
-            }
-        }
-        return false;
-    }
 
     /**
      * Check if SSL mode is enabled
@@ -533,5 +525,76 @@ class ContextEnv extends ShareableEnv  {
         }
         return binAttrs;
     }
-    
-}
+
+    /**
+     * Check if sasl auth mode is requested. If the value of auth property is
+     * neither of (null, none, or simple) then assume it is a space separated
+     * list of sasl mechanis names
+     */
+    String[] getSaslMechanisms() {
+        String authMode = (String)getProperty(P_SECURITY_AUTHMODE);
+        if(authMode != null) {
+            if(authMode.equalsIgnoreCase(V_AUTH_NONE)) {
+                return null;
+            }
+            else if (authMode.equalsIgnoreCase(V_AUTH_SIMPLE)) {
+                 return null;
+            }     
+            else {
+                // The value must be a space separated list of sasl
+                // mechanism names
+                StringTokenizer tok = new StringTokenizer(authMode);
+                int cnt = tok.countTokens();
+                String[] mechanisms = new String[cnt];
+                for (int i=0; tok.hasMoreTokens(); i++) {
+                    mechanisms[i] = tok.nextToken();
+                }                                        
+            }
+        }
+        return null;
+    }
+
+    /**
+     * Returned all sasl properties (startwith javax.security.sasl) except
+     * AUTHID and CALLBACK, as a Hashtable. AUTHID and CALLBACK as used 
+     * directly as parameters to authenticate()
+     * 
+     */
+    Hashtable getSaslProps() {
+        Hashtable props = getAllProperties();
+        Hashtable saslProps = new Hashtable();
+        String prefixUpperCase = SASL_PROP_PREFIX.toUpperCase();
+        
+        for (Enumeration e = props.keys(); e.hasMoreElements();) {
+            String key = (String) e.nextElement();
+            if (key.startsWith(SASL_PROP_PREFIX) ||
+                key.startsWith(prefixUpperCase)) {
+                if (!key.equalsIgnoreCase(P_SASL_AUTHID) && 
+                    !key.equalsIgnoreCase(P_SASL_CALLBACK)) {
+                    saslProps.put(key, props.get(key));
+                }                    
+            }
+        }
+        return (saslProps.size() > 0) ? saslProps : null;
+
+    }
+
+    /**
+     * Return DN to be used for sasl auth. Check first the P_SASL_AUTHID
+     * property, then fallback to P_USERDN if not defined.    
+     */
+    String getSaslAuthId() {
+        String id = (String)getProperty(P_SASL_AUTHID);
+        if (id != null) {
+            return id;
+        }       
+        return (String)getProperty(P_USER_DN);
+    }        
+
+    /**
+     * Return the callback object for sasl, if specified
+     */
+    Object getSaslCallback() {
+        return getProperty(P_SASL_CALLBACK);
+    }
+}   
