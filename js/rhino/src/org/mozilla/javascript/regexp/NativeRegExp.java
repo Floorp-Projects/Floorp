@@ -1837,8 +1837,7 @@ System.out.println("Testing at " + x.cp + ", op = " + op);
                 break;
             case REOP_BOL:
                 if (x.cp != 0) {
-                    RegExpImpl reImpl = getImpl(gData.cx);
-                    if (reImpl.multiline ||
+                    if (gData.multiline ||
                             ((gData.regexp.flags & JSREG_MULTILINE) != 0)) {
                         if (!isLineTerm(gData.cpbegin[x.cp - 1])) {
                             result = null;
@@ -1854,8 +1853,7 @@ System.out.println("Testing at " + x.cp + ", op = " + op);
                 break;
             case REOP_EOL:
                 if (x.cp != gData.cpend) {
-                    RegExpImpl reImpl = getImpl(gData.cx);
-                    if (reImpl.multiline ||
+                    if (gData.multiline ||
                             ((gData.regexp.flags & JSREG_MULTILINE) != 0)) {
                         if (!isLineTerm(gData.cpbegin[x.cp])) {
                             result = null;
@@ -2454,8 +2452,8 @@ System.out.println("Testing at " + x.cp + ", op = " + op);
     private static final int INITIAL_STATESTACK = 20;
     private static final int INITIAL_BACKTRACK = 20;
 
-    private REMatchState
-    initMatch(Context cx, REGlobalData gData, NativeRegExp re)
+    private static REMatchState
+    initMatch(REGlobalData gData, NativeRegExp re, boolean multiline)
     {
         REMatchState result = new REMatchState(re.parenCount);
         int i;
@@ -2472,7 +2470,7 @@ System.out.println("Testing at " + x.cp + ", op = " + op);
             gData.stateStack[i] = new REProgState();
         gData.stateStackTop = 0;
 
-        gData.cx = cx;
+        gData.multiline = multiline;
         gData.regexp = re;
         gData.ok = true;
         gData.lastParen = 0;
@@ -2502,7 +2500,7 @@ System.out.println("Testing at " + x.cp + ", op = " + op);
         gData.start = start;
         gData.skipped = 0;
 
-        x = initMatch(cx, gData, re);
+        x = initMatch(gData, re, res.multiline);
         x.cp = cp;
 
         /*
@@ -2970,7 +2968,7 @@ class REBackTrackData {
 };
 
 class REGlobalData {
-    Context cx;
+    boolean multiline;
     NativeRegExp regexp;                /* the RE in execution */
     int lastParen;                  /* highest paren set so far */
     boolean ok;                     /* runtime error (out_of_memory only?) */
