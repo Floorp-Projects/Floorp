@@ -213,7 +213,7 @@ nsresult nsCollationMac::CompareString(const nsCollationStrength strength,
   if (NS_SUCCEEDED(res)) {
     res = AllocateRawSortKey(strength, string2, &aKey2, &aLength2);
     if (NS_SUCCEEDED(res))
-      *result = strcmp((const char *)key1, (const char *)key2); // compare keys
+      *result = strcmp((const char *)aKey1, (const char *)aKey2); // compare keys
   }
 
   // delete keys
@@ -243,7 +243,7 @@ nsresult nsCollationMac::AllocateRawSortKey(const nsCollationStrength strength,
   res = mCollation->UnicodeToChar(stringNormalized, &str);
   if (NS_SUCCEEDED(res) && str != NULL) {
     str_len = strlen(str);
-    *key = str;
+    *key = (PRUint8 *)str;
     *outLen = str_len + 1;
     
     // If no CJK then generate a collation key
@@ -254,28 +254,23 @@ nsresult nsCollationMac::AllocateRawSortKey(const nsCollationStrength strength,
         ++str;
       }
     }
-    else {
-      // No CJK support, just copy the row string.
-      // Collation key is not a string, use memcpy instead of strcpy.
+    // No CJK support, just copy the row string.
+    // ShiftJIS specific, shift hankaku kana in front of zenkaku.
+    else if (smJapanese == m_scriptcode) {
       while (*str) {
-        if ((unsigned char) *str >= 128) {
-          // ShiftJIS specific, shift hankaku kana in front of zenkaku.
-          if (smJapanese == m_scriptcode) {
-            if (*str >= 0xA0 && *str < 0xE0) {
-              *str -= (0xA0 - 0x81);
-            }
-            else if (*str >= 0x81 && *str < 0xA0) {
-              *str += (0xE0 - 0xA0);
-            } 
-          }
-          // advance 2 bytes if the API says so and not passing the end of the string
-          if (CharacterByteType((Ptr) str, 0, m_scriptcode) == smFirstByte) {
-            ++str;
-            if (!*str)
-              break;
-          }
+        if ((unsigned char) *str >= 0xA0 && (unsigned char) *str < 0xE0) {
+          *str -= (0xA0 - 0x81);
         }
-        ++str;
+        else if ((unsigned char) *str >= 0x81 && (unsigned char) *str < 0xA0) {
+          *str += (0xE0 - 0xA0);
+        } 
+        // advance 2 bytes if the API says so and not passing the end of the string
+        if (CharacterByteType((Ptr) str, 0, m_scriptcode) == smFirstByte) {
+          ++str;
+          if (!*str)
+            break;
+        }
+      ++str;
       }
     }
   }
