@@ -784,8 +784,9 @@ xptiInterfaceInfoManager::DoFullValidationMergeFromFileList(nsISupportsArray* aF
 
     if(!countOfFilesInFileList)
     {
-        // XXX do the right thing here!    
-        return PR_FALSE;
+        // maybe there are no xpt file to register.  
+        // a minimal install would have this case.
+        return PR_TRUE;
     }
 
     orderedFileArray = BuildOrderedFileArray(aFileList, aWorkingSet);
