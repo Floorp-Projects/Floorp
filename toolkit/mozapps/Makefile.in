@@ -44,20 +44,5 @@ include $(DEPTH)/config/autoconf.mk
 
 DIRS = downloads extensions update xpinstall
 
-ifneq (,$(filter mac cocoa,$(MOZ_WIDGET_TOOLKIT)))
-# XXXben this is temporary, until Thunderbird is converted to Pinstripe on MacOS X. For now, 
-#        continue to use Qute. 
-ifdef MOZ_THUNDERBIRD
-DIRS    += pref/skin downloads/skin
-else
-# Use Pinstripe on MacOS X
-DIRS	+= pref/skin/mac downloads/skin/mac 
-endif
-else
-# Use Qute on Windows and Linux
-DIRS    += pref/skin downloads/skin
-endif
-
-
 include $(topsrcdir)/config/rules.mk
 
