@@ -24,6 +24,7 @@ DIRS=            \
 	file     \
 	resource \
 	ftp      \
+    data     \
         http     \
 	$(NULL)
 
