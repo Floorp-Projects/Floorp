@@ -2761,6 +2761,31 @@ nsEditorShell::InsertSourceWithCharset(const PRUnichar *aSourceToInsert,
   return err;
 }
 
+NS_IMETHODIMP    
+nsEditorShell::RebuildDocumentFromSource(const PRUnichar *aSource)
+{
+  nsresult  err = NS_NOINTERFACE;
+  
+  nsAutoString source(aSource);
+  
+  switch (mEditorType)
+  {
+    case ePlainTextEditorType:
+    case eHTMLTextEditorType:
+      {
+        nsCOMPtr<nsIHTMLEditor>  htmlEditor = do_QueryInterface(mEditor);
+        if (htmlEditor)
+          err = htmlEditor->RebuildDocumentFromSource(source);
+      }
+      break;
+
+    default:
+      err = NS_NOINTERFACE;
+  }
+
+  return err;
+}
+
 NS_IMETHODIMP
 nsEditorShell::InsertBreak()
 {

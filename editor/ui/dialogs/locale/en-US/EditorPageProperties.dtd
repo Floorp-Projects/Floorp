@@ -28,8 +28,4 @@
 <!ENTITY authorInput.label "Author:">
 <!ENTITY descriptionInput.label "Description:">
 <!ENTITY locationNewPage.label "[New page, not saved yet]">
-<!-- LOCALIZATION NOTE (headSection.label): Don't translate "&lt;HEAD&gt;" it is the HTML tagname -->
-<!ENTITY headSection.label "Enter html source for elements and attributes to insert under the &lt;HEAD&gt; tag:">
-<!ENTITY example.label "Example: ">
-<!-- LOCALIZATION NOTE (example.value): DONT_TRANSLATE -->
-<!ENTITY example.value "&lt;meta http-equiv=&quot;Content-Type&quot; content=&quot;text/html; charset=ISO-8859-5&quot;&gt;">
+<!ENTITY EditHEADSource.label "Advanced users:<html:br/>To edit contents of the &lt;head&gt; region, use &quot;HTML Source&quot; in the View Menu or Edit Toolbar.">

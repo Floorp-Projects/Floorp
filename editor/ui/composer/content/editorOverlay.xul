@@ -131,8 +131,12 @@
     <command id="cmd_objectProperties" oncommand="goDoCommand('cmd_objectProperties')"/>
     <command id="cmd_insertChars"      oncommand="goDoCommand('cmd_insertChars')"     value="&insertCharsCmd.label;"/>
     <command id="cmd_editTable"/>
-    <command id="cmd_insertHTML"       oncommand="goDoCommand('cmd_insertHTML')"      value="&insertHTMLCmd.label;"/>
-    <command id="cmd_editHTML"         oncommand="goDoCommand('cmd_editHTML')"        value="&HTMLSourceCmd.label;"/>
+    <command id="cmd_insertHTML"       oncommand="goDoCommand('cmd_insertHTML')"     value="&insertHTMLCmd.label;"/>
+    
+    <command id="cmd_NormalMode"       oncommand="goDoCommand('cmd_NormalMode')"     value="&NormalMode.label;"/>
+    <command id="cmd_AllTagsMode"      oncommand="goDoCommand('cmd_AllTagsMode')"    value="&AllTagsMode.label;"/>
+    <command id="cmd_HTMLSourceMode"   oncommand="goDoCommand('cmd_HTMLSourceMode')"/>
+    <command id="cmd_PreviewMode"      oncommand="goDoCommand('cmd_PreviewMode')"    value="&PreviewMode.label;"/>
   </commandset>
   
   <commandset id="composerSaveMenuItems"
@@ -243,8 +247,9 @@
     <command id="cmd_DeleteCell"          oncommand="goDoCommand('cmd_DeleteCell')"/>
     <command id="cmd_DeleteCellContents"  oncommand="goDoCommand('cmd_DeleteCellContents')"/>
     <command id="cmd_NormalizeTable"      oncommand="goDoCommand('cmd_NormalizeTable')"/>
-    <command id="cmd_tableJoinCells"      oncommand="goDoCommand('cmd_tableJoinCells')"/>
-    <command id="cmd_tableSplitCell"      oncommand="goDoCommand('cmd_tableSplitCell')"/>
+    <command id="cmd_JoinTableCells"      oncommand="goDoCommand('cmd_JoinTableCells')"/>
+    <command id="cmd_SplitTableCell"      oncommand="goDoCommand('cmd_SplitTableCell')"/>
+    <command id="cmd_TableOrCellColor"    oncommand="goDoCommand('cmd_TableOrCellColor')"/>
     <command id="cmd_editTable"           oncommand="goDoCommand('cmd_editTable')"/>
   </commandset>
 
@@ -260,7 +265,7 @@
 
    	<command id="cmd_viewCompToolbar"     oncommand="goToggleToolbar('EditToolbar','cmd_viewCompToolbar');"         checked="true"/>
    	<command id="cmd_viewFormatToolbar"   oncommand="goToggleToolbar('FormatToolbar','cmd_viewFormatToolbar');"     checked="true"/>
-   	<command id="cmd_viewEditModeToolbar" oncommand="goToggleToolbar('EditModeToolbar','cmd_viewEditModeToolbar');" checked="true"/>
+   	<command id="cmd_viewEditModeToolbar" oncommand="goToggleToolbar('EditModeToolbar','cmd_viewEditModeToolbar');"/>
   	<command id="cmd_viewtaskbar"         oncommand="goToggleToolbar('taskbar','cmd_viewtaskbar');"                 checked="true"/>
 
     <!-- Obsolete; these will go away -->
@@ -322,29 +327,33 @@
       <menuitem id="menu_delete"/>
       <menuseparator id="edEditMenuSep2" />
       <menuitem id="menu_selectAll"/>
-      <menuseparator class="hide-in-IM"/>
+      <menuseparator id="sep_find" class="hide-in-IM"/>
       <menuitem id="menu_find"       accesskey="&editfind.accesskey;"            key="findkb"         observes="cmd_find" value="&findCmd.label;"/>
       <menuitem id="menu_findnext"   accesskey="&editfindnext.accesskey;"        key="findnextkb"     observes="cmd_findNext"/>
-      <menuseparator class="hide-in-IM" />
+      <menuseparator id="sep_checkspelling" class="hide-in-IM" />
       <menuitem id="menu_checkspelling" accesskey="&editcheckspelling.accesskey;"   key="checkspellingkb" observes="cmd_spelling" value="&checkSpellingCmd.label;"/>
-      <menuseparator id="sep_checkspelling" class="hide-in-IM"/>
       <menuseparator/>
       <menuitem id="menu_preferences"                                                                  observes="cmd_preferences"/>
     </menupopup>
   </menu>
 
   <!-- view menu items -->
-    <menu id="viewToolbar" value="&viewToolbarsMenu.label;" accesskey="&viewToolbarsMenu.accesskey;">
-      <menupopup> 
+  <menu id="viewToolbar" value="&viewToolbarsMenu.label;" accesskey="&viewToolbarsMenu.accesskey;">
+    <menupopup> 
 
-  		<menuitem value="&compositionToolbarCmd.label;" type="checkbox" accesskey="&compositiontb.accesskey;" observes="cmd_viewCompToolbar"  />
-  		<menuitem value="&formattingToolbarCmd.label;"  type="checkbox" accesskey="&formattingtb.accesskey;"  observes="cmd_viewFormatToolbar" />
-      <menuitem value="&editmodeToolbarCmd.label;"    type="checkbox" accesskey="&editmodetb.accesskey;"    observes="cmd_viewEditModeToolbar" />
-  		<menuitem value="&taskbarCmd.label;"            type="checkbox" accesskey="&taskbarCmd.accesskey;"    observes="cmd_viewtaskbar" />
-      </menupopup>
-    </menu>
-    <menuitem id="viewSourceMenuitem" accesskey="&HTMLsource.accesskey;" observes="cmd_editHTML"/>
-    <menupopup id = "composerCharsetMenuPopup"  oncreate="updateCharsetPopupMenu(this)" />
+  	<menuitem value="&compositionToolbarCmd.label;" type="checkbox" accesskey="&compositiontb.accesskey;" observes="cmd_viewCompToolbar"  />
+  	<menuitem value="&formattingToolbarCmd.label;"  type="checkbox" accesskey="&formattingtb.accesskey;"  observes="cmd_viewFormatToolbar" />
+    <menuitem value="&editmodeToolbarCmd.label;"    type="checkbox" accesskey="&editmodetb.accesskey;"    observes="cmd_viewEditModeToolbar" />
+  	<menuitem value="&taskbarCmd.label;"            type="checkbox" accesskey="&taskbarCmd.accesskey;"    observes="cmd_viewtaskbar" />
+    </menupopup>
+  </menu>
+
+  <menuitem id="viewNormalMode"   type="radio" accesskey="&NormalMode.accesskey;"     observes="cmd_NormalMode"/>
+  <menuitem id="viewAllTagsMode"  type="radio" accesskey="&AllTagsMode.accesskey;"    observes="cmd_AllTagsMode"/>
+  <menuitem id="viewSourceMode"   type="radio" accesskey="&HTMLSourceMode.accesskey;" observes="cmd_HTMLSourceMode" value="&HTMLSourceMode.label;"/>
+  <menuitem id="viewPreviewMode"  type="radio" accesskey="&PreviewMode.accesskey;"    observes="cmd_PreviewMode"/>
+
+  <menupopup id = "composerCharsetMenuPopup"  oncreate="updateCharsetPopupMenu(this)" />
 
   <!-- Insert menu -->
   <menu id="insertMenu" value="&insertMenu.label;" accesskey="&insertmenu.accesskey;">
@@ -354,7 +363,7 @@
       <menuitem accesskey="&insertimage.accesskey;"      observes="cmd_image"       value="&insertImageCmd.label;"/>
       <menuitem accesskey="&inserthline.accesskey;"      observes="cmd_hline"       value="&insertHLineCmd.label;"/>
       <menuitem accesskey="&inserttable.accesskey;"      observes="cmd_table"       value="&insertTableCmd.label;"/>
-      <menuitem accesskey="&insertHTMLCmd.accesskey;"       observes="cmd_insertHTML"  key="inserthtmlkb"/>
+      <menuitem accesskey="&HTMLSourceMode.accesskey;"   observes="cmd_insertHTML"  key="inserthtmlkb"/>
       <menuitem accesskey="&insertchars.accesskey;"      observes="cmd_insertChars" />
     </menupopup>
   </menu>
@@ -605,12 +614,17 @@
         </menupopup>
       </menu>
       <menuseparator />
+<!--
       <menuitem id="menu_NormalizeTable"  value="&tableFix.label;"        accesskey="&tablefix.accesskey;"       observes="cmd_NormalizeTable"/>
+-->
       <!-- menu value is set in InitTableMenu -->
-      <menuitem id="menu_tableJoinCells"                                  accesskey="&tablejoincells.accesskey;" observes="cmd_tableJoinCells"/>
-      <menuitem id="menu_tableSlitCell"   value="&tableSplitCell.label;"  accesskey="&tablesplitcell.accesskey;" observes="cmd_tableSplitCell"/>
+      <menuitem id="menu_JoinTableCells"   value="&tableJoinCells.label;"   accesskey="&tablejoincells.accesskey;"   observes="cmd_JoinTableCells"/>
+      <menuitem id="menu_SlitTableCell"    value="&tableSplitCell.label;"   accesskey="&tablesplitcell.accesskey;"   observes="cmd_SplitTableCell"/>
+      <menuseparator />
+      <!-- value is changed in InitTableMenu -->
+      <menuitem id="menu_TableOrCellColor" value="&tableOrCellColor.label;" accesskey="&formatbkgdcolormenu.accesskey;" observes="cmd_TableOrCellColor"/>
       <!-- this is shared with Format Menu -->
-      <menuitem id="menu_tableProperties" value="&tableProperties.label;" accesskey="&properties.accesskey;"     observes="cmd_editTable"/>
+      <menuitem id="menu_tableProperties"  value="&tableProperties.label;"  accesskey="&properties.accesskey;"     observes="cmd_editTable"/>
     </menupopup>
   </menu>
 
@@ -631,7 +645,7 @@
     <button class="dialog" value="&colorPicker.default.label;" oncommand="EditorRemoveTextColor('TextColorPopupButton');"/>
   </popup>
 
-  <popup id="BackColorPopup" popupanchor="bottomleft" oncreate="InitBackColorPopup()" ignorekeys="true">
+  <popup id="BackColorPopup" popupanchor="bottomleft" oncreate="InitBackColorPopup(true)" ignorekeys="true">
     <!-- Text is filled in at runtime according to what background element will be set -->
     <text class="ColorPickerLabel" id="BackColorCaption" value="Background Color" flex="1"/>
     <!-- TODO: Add "Last color picked" button and text -->
@@ -758,7 +772,7 @@
       <menuitem value="&fontVarWidth.label;"      data=""/>
       <menuitem value="&fontFixedWidth.label;"    data="tt"/>
       <menuseparator/>
-      <menuitem value="&fontHelveticaFont.label;" data="Arial, Helvetica, sans-serif"/>
+      <menuitem value="&fontHelveticaFont.label;" data="Helvetica, foo, sans-serif"/>
       <menuitem value="&fontTimes.label;"         data="Times New Roman, Times, serif"/>
       <menuitem value="&fontCourier.label;"       data="Courier New, Courier, mono"/>
     </menupopup>
@@ -821,18 +835,16 @@
           tooltip="aTooltip"            tooltiptext="&AlignPopupButton.tooltip;"/>
   
   <!-- Edit Mode toolbar -->
-  <button id="NormalModeButton"   class="edit-mode plain" type="text" selected="1" value="&normalMode.label;"    onclick="SetEditMode(1)"
-          tooltip="aTooltip"      tooltiptext="&normalMode.tooltip;"/>
-  <button id="TagModeButton"      class="edit-mode plain" type="text" selected="0" value="&showAllTags.label;"   onclick="SetEditMode(2)"
-          tooltip="aTooltip"      tooltiptext="&showAllTags.tooltip;"/>
-  <button id="SourceModeButton"   class="edit-mode plain" type="text" selected="0" value="&sourceMode.label;"    onclick="SetEditMode(3)"
-          tooltip="aTooltip"      tooltiptext="&sourceMode.tooltip;"/>
-  <button id="PreviewModeButton"  class="edit-mode plain" type="text" selected="0" value="&previewMode.label;"   onclick="SetEditMode(0)"
-          tooltip="aTooltip"      tooltiptext="&previewMode.tooltip;"/>
-  <image id="ToggleEditModeType" onclick="ToggleEditModeType()"
-          tooltip="aTooltip"      tooltiptext="&ToggleEditModeType.tooltip;"/>
+  <button id="NormalModeButton"   class="edit-mode _plain" type="text" selected="1" value="&NormalModeTab.label;"  onclick="SetEditMode(1)"
+          tooltip="aTooltip"      tooltiptext="&NormalMode.tooltip;"/>
+  <button id="TagModeButton"      class="edit-mode _plain" type="text" selected="0" value="&AllTagsMode.label;"    onclick="SetEditMode(2)"
+          tooltip="aTooltip"      tooltiptext="&AllTagsMode.tooltip;"/>
+  <button id="SourceModeButton"   class="edit-mode _plain" type="text" selected="0" value="&SourceMode.label;"     onclick="SetEditMode(3)"
+          tooltip="aTooltip"      tooltiptext="&HTMLSourceMode.tooltip;"/>
+  <button id="PreviewModeButton"  class="edit-mode _plain" type="text" selected="0" value="&PreviewMode.label;"    onclick="SetEditMode(0)"
+          tooltip="aTooltip"      tooltiptext="&PreviewMode.tooltip;"/>
 
- <!-- InsertPopupButton is used by messengercompose.xul -->
+  <!-- InsertPopupButton is used by messengercompose.xul -->
   <button class="plain format popup" id="InsertPopupButton"/>
 
 

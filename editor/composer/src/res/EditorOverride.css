@@ -43,6 +43,10 @@ a[name] {
   cursor: default;
 }
 
+a:link img, a:visited img, a:active, {
+  user-input: none;
+}
+
 input, select, textarea {
   user-select: all !important;
   user-input: none !important;

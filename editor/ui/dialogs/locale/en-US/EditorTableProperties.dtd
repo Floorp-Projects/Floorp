@@ -78,11 +78,7 @@
 <!ENTITY defaultColor.label               "Don't specify color">
 <!ENTITY size.label                       "Size">
 <!ENTITY pixels.label                     "pixels">
-<!ENTITY background.label                 "Background">
-<!ENTITY color.label                      "Color:">
-<!ENTITY image.label                      "Image:">
-<!ENTITY LeaveImageAtLocation.label       "Leave image at original location">
-<!ENTITY ChooseImage.label                "Choose Image...">
+<!ENTITY backgroundColor.label            "Background Color:">
 <!ENTITY AlignLeft.label                  "Left">
 <!ENTITY AlignCenter.label                "Center">
 <!ENTITY AlignRight.label                 "Right">

@@ -48,7 +48,7 @@
 <!ENTITY saveAsCharsetCmd.label "Save As Charset...">
 <!ENTITY filesaveascharset.accesskey "h">
 <!ENTITY previewCmd.label "Preview in Navigator">
-<!ENTITY filepreview.accesskey "b">
+<!ENTITY filepreview.accesskey "i">
 <!ENTITY sendPageCmd.label "Send Page">
 <!ENTITY sendPage.accesskey "g">
 <!ENTITY printSetupCmd.label "Page Setup...">
@@ -262,9 +262,6 @@
 <!ENTITY insertHTMLCmd.label "HTML...">
 <!ENTITY insertHTMLCmd.accesskey "h">
 
-<!ENTITY HTMLSourceCmd.label "HTML Source">
-<!ENTITY HTMLsource.accesskey "h">
-
 <!-- Format Menu -->
 <!ENTITY formatMenu.label "Format">
 <!ENTITY formatmenu.accesskey "o">
@@ -375,6 +372,9 @@
  editor.properties strings, so accesskey should be compatible with those
 -->
 <!ENTITY formatbkgdcolormenu.accesskey "b">
+<!-- This shares formatbkgdcolormenu.accesskey, so it must contain that letter -->
+<!ENTITY tableOrCellColor.label "Table Background Color">
+
 <!ENTITY removeAllStylesCmd.label "Remove All Text Styles">
 <!ENTITY formatremovestyles.accesskey "r">
 <!ENTITY formatremovestyles.keybinding "k">
@@ -520,7 +520,9 @@
 <!-- text for "Join Cells" is in editor.properties 
      ("JoinSelectedCells" and "JoinCellToRight")
      the access key must exist in both of those strings
+     But value must be set here for accesskey to draw properly
 -->
+<!ENTITY tableJoinCells.label "j">
 <!ENTITY tablejoincells.accesskey "j">
 <!ENTITY tableSplitCell.label "Split Cell">
 <!ENTITY tablesplitcell.accesskey "i">
@@ -611,14 +613,22 @@
 <!ENTITY ok.label "OK">
 <!ENTITY lastPickedColor.label "Last-picked color">
 
-<!-- Display Mode Toolbar -->
-<!ENTITY normalMode.label "Normal">
-<!ENTITY normalMode.tooltip "Show table borders and named anchors">
-<!ENTITY previewMode.label "Edit Preview">
-<!ENTITY previewMode.tooltip "Display as WYSIWYG (browser)">
-<!ENTITY showAllTags.label "Show All Tags">
-<!ENTITY showAllTags.tooltip "Display icons for all HTML tags">
-<!ENTITY sourceMode.label "HTML Source">
-<!ENTITY sourceMode.tooltip "Edit HTML source">
-<!ENTITY ToggleEditModeType.tooltip "Toggle between tab icons and text labels ">
+
+<!-- Display Mode Toolbar and View Menu items -->
+<!ENTITY NormalModeTab.label "Normal">
+<!ENTITY NormalMode.label "Normal Edit Mode">
+<!ENTITY NormalMode.accesskey "n">
+<!ENTITY NormalMode.tooltip "Show table borders and named anchors">
+<!ENTITY AllTagsMode.label "Show All Tags">
+<!ENTITY AllTagsMode.accesskey "a">
+<!ENTITY AllTagsMode.tooltip "Display icons for all HTML tags">
+
+<!ENTITY HTMLSourceMode.label "HTML Source">
+<!-- Toolbar has an image with "HTML" text, so don't include it in the string -->
+<!ENTITY SourceMode.label "Source">
+<!ENTITY HTMLSourceMode.accesskey "h">
+<!ENTITY HTMLSourceMode.tooltip "Edit HTML source">
+<!ENTITY PreviewMode.label "Preview">
+<!ENTITY PreviewMode.accesskey "p">
+<!ENTITY PreviewMode.tooltip "Display as WYSIWYG (browser)">
 

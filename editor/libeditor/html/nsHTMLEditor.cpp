@@ -76,6 +76,8 @@
 #include "nsIDOMDocumentFragment.h"
 #include "nsIPresShell.h"
 #include "nsIPresContext.h"
+#include "nsIParser.h"
+#include "nsParserCIID.h"
 #include "nsIImage.h"
 #include "nsAOLCiter.h"
 #include "nsInternetCiter.h"
@@ -119,6 +121,8 @@ static NS_DEFINE_CID(kCRangeCID,      NS_RANGE_CID);
 static NS_DEFINE_CID(kCDOMSelectionCID,      NS_DOMSELECTION_CID);
 static NS_DEFINE_IID(kFileWidgetCID,  NS_FILEWIDGET_CID);
 static NS_DEFINE_CID(kPrefServiceCID, NS_PREF_CID);
+static NS_DEFINE_IID(kCParserIID, NS_IPARSER_IID); 
+static NS_DEFINE_IID(kCParserCID, NS_PARSER_IID); 
 
 // Drag & Drop, Clipboard Support
 static NS_DEFINE_CID(kCClipboardCID,    NS_CLIPBOARD_CID);
@@ -460,7 +464,7 @@ nsHTMLEditor::SetDocumentCharacterSet(const PRUnichar* characterSet)
       PRBool newMetaCharset = PR_TRUE; 
 
       // get a list of META tags 
-      result = domdoc->GetElementsByTagName(NS_ConvertASCIItoUCS2("meta"), getter_AddRefs(metaList)); 
+      result = domdoc->GetElementsByTagName(NS_LITERAL_STRING("meta"), getter_AddRefs(metaList)); 
       if (NS_SUCCEEDED(result) && metaList) { 
         PRUint32 listLength = 0; 
         (void) metaList->GetLength(&listLength); 
@@ -474,17 +478,17 @@ nsHTMLEditor::SetDocumentCharacterSet(const PRUnichar* characterSet)
           const NS_ConvertASCIItoUCS2 content("charset="); 
           nsString currentValue; 
 
-          if (NS_FAILED(metaElement->GetAttribute(NS_ConvertASCIItoUCS2("http-equiv"), currentValue))) continue; 
+          if (NS_FAILED(metaElement->GetAttribute(NS_LITERAL_STRING("http-equiv"), currentValue))) continue; 
 
           if (kNotFound != currentValue.Find("content-type", PR_TRUE)) { 
-            if (NS_FAILED(metaElement->GetAttribute(NS_ConvertASCIItoUCS2("content"), currentValue))) continue; 
+            if (NS_FAILED(metaElement->GetAttribute(NS_LITERAL_STRING("content"), currentValue))) continue; 
 
             PRInt32 offset = currentValue.Find(content.GetUnicode(), PR_TRUE); 
             if (kNotFound != offset) {
               currentValue.Left(newMetaString, offset); // copy current value before "charset=" (e.g. text/html) 
               newMetaString.Append(content); 
               newMetaString.Append(characterSet); 
-              result = nsEditor::SetAttribute(metaElement, NS_ConvertASCIItoUCS2("content"), newMetaString); 
+              result = nsEditor::SetAttribute(metaElement, NS_LITERAL_STRING("content"), newMetaString); 
               if (NS_SUCCEEDED(result)) 
                 newMetaCharset = PR_FALSE; 
               break; 
@@ -498,12 +502,12 @@ nsHTMLEditor::SetDocumentCharacterSet(const PRUnichar* characterSet)
         nsCOMPtr<nsIDOMNode>headNode; 
         nsCOMPtr<nsIDOMNode>resultNode; 
 
-        result = domdoc->GetElementsByTagName(NS_ConvertASCIItoUCS2("head"),getter_AddRefs(headList)); 
+        result = domdoc->GetElementsByTagName(NS_LITERAL_STRING("head"),getter_AddRefs(headList)); 
         if (NS_SUCCEEDED(result) && headList) { 
           headList->Item(0, getter_AddRefs(headNode)); 
           if (headNode) { 
             // Create a new meta charset tag 
-            result = CreateNode(NS_ConvertASCIItoUCS2("meta"), headNode, 0, getter_AddRefs(resultNode)); 
+            result = CreateNode(NS_LITERAL_STRING("meta"), headNode, 0, getter_AddRefs(resultNode)); 
             if (NS_FAILED(result)) 
               return NS_ERROR_FAILURE; 
 
@@ -512,12 +516,12 @@ nsHTMLEditor::SetDocumentCharacterSet(const PRUnichar* characterSet)
               metaElement = do_QueryInterface(resultNode); 
               if (metaElement) { 
                 // not undoable, undo should undo CreateNode 
-                result = metaElement->SetAttribute(NS_ConvertASCIItoUCS2("http-equiv"), NS_ConvertASCIItoUCS2("Content-Type")); 
+                result = metaElement->SetAttribute(NS_LITERAL_STRING("http-equiv"), NS_LITERAL_STRING("Content-Type")); 
                 if (NS_SUCCEEDED(result)) { 
                   newMetaString.AssignWithConversion("text/html;charset="); 
                   newMetaString.Append(characterSet); 
                   // not undoable, undo should undo CreateNode 
-                  result = metaElement->SetAttribute(NS_ConvertASCIItoUCS2("content"), newMetaString); 
+                  result = metaElement->SetAttribute(NS_LITERAL_STRING("content"), newMetaString); 
                 } 
               } 
             } 
@@ -807,7 +811,7 @@ NS_IMETHODIMP nsHTMLEditor::TabInTable(PRBool inIsShift, PRBool *outHandled)
 
   // Find enclosing table cell from the selection (cell may be the selected element)
   nsCOMPtr<nsIDOMElement> cellElement;
-  nsresult res = GetElementOrParentByTagName(NS_ConvertASCIItoUCS2("td"), nsnull, getter_AddRefs(cellElement));
+  nsresult res = GetElementOrParentByTagName(NS_LITERAL_STRING("td"), nsnull, getter_AddRefs(cellElement));
   if (NS_FAILED(res)) return res;
   // Do nothing -- we didn't find a table cell
   if (!cellElement) return NS_OK;
@@ -2405,12 +2409,12 @@ NS_IMETHODIMP nsHTMLEditor::InsertHTMLWithCharset(const nsString& aInputString,
   nsAutoString inputString (aInputString);  // hope this does copy-on-write
  
   // Windows linebreaks: Map CRLF to LF:
-  inputString.ReplaceSubstring(NS_ConvertASCIItoUCS2("\r\n"),
-                               NS_ConvertASCIItoUCS2("\n"));
+  inputString.ReplaceSubstring(NS_LITERAL_STRING("\r\n"),
+                               NS_LITERAL_STRING("\n"));
  
   // Mac linebreaks: Map any remaining CR to LF:
-  inputString.ReplaceSubstring(NS_ConvertASCIItoUCS2("\r"),
-                               NS_ConvertASCIItoUCS2("\n"));
+  inputString.ReplaceSubstring(NS_LITERAL_STRING("\r"),
+                               NS_LITERAL_STRING("\n"));
 
   ForceCompositionEnd();
   nsAutoEditBatch beginBatching(this);
@@ -2533,6 +2537,43 @@ NS_IMETHODIMP nsHTMLEditor::InsertHTMLWithCharset(const nsString& aInputString,
   
   res = mRules->DidDoAction(selection, &ruleInfo, res);
   return res;
+}
+
+NS_IMETHODIMP
+nsHTMLEditor::RebuildDocumentFromSource(const nsString& aSourceString)
+{
+  // First, make sure there are no return chars in the document.
+  // Bad things happen if you insert returns (instead of dom newlines, \n)
+  // into an editor document.
+  nsAutoString sourceString (aSourceString);  // hope this does copy-on-write
+ 
+  // Windows linebreaks: Map CRLF to LF:
+  sourceString.ReplaceSubstring(NS_LITERAL_STRING("\r\n"),
+                                NS_LITERAL_STRING("\n"));
+ 
+  // Mac linebreaks: Map any remaining CR to LF:
+  sourceString.ReplaceSubstring(NS_LITERAL_STRING("\r"),
+                                NS_LITERAL_STRING("\n"));
+
+  ForceCompositionEnd();
+
+  // Get the document we want to replace
+  if (!mPresShellWeak) return NS_ERROR_NOT_INITIALIZED;
+  nsCOMPtr<nsIPresShell> ps = do_QueryReferent(mPresShellWeak);
+  if (!ps) return NS_ERROR_NOT_INITIALIZED;
+
+  nsCOMPtr<nsIDocument> document;
+  nsresult res = ps->GetDocument(getter_AddRefs(document));
+  if (NS_FAILED(res)) return res;
+
+  nsCOMPtr<nsIParser>  theParser; 
+  res = nsComponentManager::CreateInstance(kCParserCID,  nsnull,  kCParserIID, getter_AddRefs(theParser)); 
+
+  if (NS_FAILED(res)) return res;
+  
+  // Parse the string to rebuild the document
+  // Last 2 params: enableVerify and "this is the last chunk to parse"
+  return theParser->Parse(sourceString, (void*)document.get(), NS_LITERAL_STRING("text/html"), PR_TRUE, PR_TRUE); 
 }
 
 NS_IMETHODIMP nsHTMLEditor::InsertBreak()
@@ -2887,7 +2928,7 @@ nsHTMLEditor::GetParentBlockTags(nsStringArray *aTagList, PRBool aGetLists)
     if (aGetLists)
     {
       // Get the "ol", "ul", or "dl" parent element
-      res = GetElementOrParentByTagName(NS_ConvertASCIItoUCS2("list"), node, getter_AddRefs(blockParentElem));
+      res = GetElementOrParentByTagName(NS_LITERAL_STRING("list"), node, getter_AddRefs(blockParentElem));
       if (NS_FAILED(res)) return res;
     } 
     else 
@@ -2941,7 +2982,7 @@ nsHTMLEditor::GetParentBlockTags(nsStringArray *aTagList, PRBool aGetLists)
           if (aGetLists)
           {
             // Get the "ol", "ul", or "dl" parent element
-            res = GetElementOrParentByTagName(NS_ConvertASCIItoUCS2("list"), startParent, getter_AddRefs(blockParent));
+            res = GetElementOrParentByTagName(NS_LITERAL_STRING("list"), startParent, getter_AddRefs(blockParent));
           } 
           else 
           {
@@ -3515,6 +3556,14 @@ nsHTMLEditor::GetSelectedElement(const nsString& aTagName, nsIDOMElement** aRetu
   PRBool isCollapsed;
   selection->GetIsCollapsed(&isCollapsed);
 
+  nsAutoString domTagName;
+  nsAutoString TagName = aTagName;
+  TagName.ToLowerCase();
+  // Empty string indicates we should match any element tag
+  PRBool anyTag = (TagName.IsEmpty());
+  PRBool isLinkTag = IsLink(TagName);
+  PRBool isNamedAnchorTag = IsLink(TagName);
+  
   nsCOMPtr<nsIDOMElement> selectedElement;
   nsCOMPtr<nsIDOMRange> range;
   res = selection->GetRangeAt(0, getter_AddRefs(range));
@@ -3533,179 +3582,188 @@ nsHTMLEditor::GetSelectedElement(const nsString& aTagName, nsIDOMElement** aRetu
   res = range->GetEndOffset(&endOffset);
   if (NS_FAILED(res)) return res;
 
+  // Optimization for a single selected element
   if (startParent && startParent == endParent && (endOffset-startOffset) == 1)
   {
     nsCOMPtr<nsIDOMNode> selectedNode = GetChildAt(startParent, startOffset);
     if (NS_FAILED(res)) return NS_OK;
-
-    selectedElement = do_QueryInterface(selectedNode);
-    bNodeFound = PR_TRUE;
-  }
-
-  nsAutoString TagName = aTagName;
-  TagName.ToLowerCase();
-  // Empty string indicates we should match any element tag
-  PRBool anyTag = (TagName.IsEmpty());
-  
-  //Note that this doesn't need to go through the transaction system
-  if (IsLink(TagName))
-  {
-    // Link tag is a special case - we return the anchor node
-    //  found for any selection that is totally within a link,
-    //  included a collapsed selection (just a caret in a link)
-    nsCOMPtr<nsIDOMNode> anchorNode;
-    res = selection->GetAnchorNode(getter_AddRefs(anchorNode));
-    if (NS_FAILED(res)) return res;
-    PRInt32 anchorOffset = -1;
-    if (anchorNode)
-      selection->GetAnchorOffset(&anchorOffset);
-    
-    nsCOMPtr<nsIDOMNode> focusNode;
-    res = selection->GetFocusNode(getter_AddRefs(focusNode));
-    if (NS_FAILED(res)) return res;
-    PRInt32 focusOffset = -1;
-    if (focusNode)
-      selection->GetFocusOffset(&focusOffset);
-
-    // Link node must be the same for both ends of selection
-    if (NS_SUCCEEDED(res) && anchorNode)
+    if (selectedNode)
     {
-#ifdef DEBUG_cmanske
+      selectedNode->GetNodeName(domTagName);
+      domTagName.ToLowerCase();
+
+      // Only consider this node if requested to find a link or "any" tagname
+      if (anyTag ||
+          isLinkTag && IsLinkNode(selectedNode) ||
+          isNamedAnchorTag && IsNamedAnchorNode(selectedNode) ||
+          TagName == domTagName )
       {
-      nsAutoString name;
-      anchorNode->GetNodeName(name);
-      printf("GetSelectedElement: Anchor node of selection: ");
-      wprintf(name.GetUnicode());
-      printf(" Offset: %d\n", anchorOffset);
-      focusNode->GetNodeName(name);
-      printf("Focus node of selection: ");
-      wprintf(name.GetUnicode());
-      printf(" Offset: %d\n", focusOffset);
-      }
-#endif
-      nsCOMPtr<nsIDOMElement> parentLinkOfAnchor;
-      res = GetElementOrParentByTagName(NS_ConvertASCIItoUCS2("href"), anchorNode, getter_AddRefs(parentLinkOfAnchor));
-      // XXX: ERROR_HANDLING  can parentLinkOfAnchor be null?
-      if (NS_SUCCEEDED(res) && parentLinkOfAnchor)
-      {
-        if (isCollapsed)
-        {
-          // We have just a caret in the link
-          bNodeFound = PR_TRUE;
-        } else if(focusNode) 
-        {  // Link node must be the same for both ends of selection
-          nsCOMPtr<nsIDOMElement> parentLinkOfFocus;
-          res = GetElementOrParentByTagName(NS_ConvertASCIItoUCS2("href"), focusNode, getter_AddRefs(parentLinkOfFocus));
-          if (NS_SUCCEEDED(res) && parentLinkOfFocus == parentLinkOfAnchor)
-            bNodeFound = PR_TRUE;
-        }
-      
-        // We found a link node parent
-        if (bNodeFound) {
-          // GetElementOrParentByTagName addref'd this, so we don't need to do it here
-          *aReturn = parentLinkOfAnchor;
-          NS_IF_ADDREF(*aReturn);
-          return NS_OK;
-        }
-      }
-      else if (anchorOffset >= 0)  // Check if link node is the only thing selected
-      {
-        nsCOMPtr<nsIDOMNode> anchorChild;
-        anchorChild = GetChildAt(anchorNode,anchorOffset);
-        if (anchorChild && IsLinkNode(anchorChild) && 
-            (anchorNode == focusNode) && focusOffset == (anchorOffset+1))
-        {
-          selectedElement = do_QueryInterface(anchorChild);
-          bNodeFound = PR_TRUE;
-        }
+        bNodeFound = PR_TRUE;
+        selectedElement = do_QueryInterface(selectedNode);
       }
     }
-  } 
+  }
 
-  if (!bNodeFound && !isCollapsed)   // Don't bother to examine selection if it is collapsed
+  if (!bNodeFound)
   {
-    nsCOMPtr<nsIEnumerator> enumerator;
-    res = selection->GetEnumerator(getter_AddRefs(enumerator));
-    if (NS_SUCCEEDED(res))
+    if (isLinkTag)
     {
-      if(!enumerator)
-        return NS_ERROR_NULL_POINTER;
+      // Link tag is a special case - we return the anchor node
+      //  found for any selection that is totally within a link,
+      //  included a collapsed selection (just a caret in a link)
+      nsCOMPtr<nsIDOMNode> anchorNode;
+      res = selection->GetAnchorNode(getter_AddRefs(anchorNode));
+      if (NS_FAILED(res)) return res;
+      PRInt32 anchorOffset = -1;
+      if (anchorNode)
+        selection->GetAnchorOffset(&anchorOffset);
+    
+      nsCOMPtr<nsIDOMNode> focusNode;
+      res = selection->GetFocusNode(getter_AddRefs(focusNode));
+      if (NS_FAILED(res)) return res;
+      PRInt32 focusOffset = -1;
+      if (focusNode)
+        selection->GetFocusOffset(&focusOffset);
 
-      enumerator->First(); 
-      nsCOMPtr<nsISupports> currentItem;
-      res = enumerator->CurrentItem(getter_AddRefs(currentItem));
-      if ((NS_SUCCEEDED(res)) && currentItem)
+      // Link node must be the same for both ends of selection
+      if (NS_SUCCEEDED(res) && anchorNode)
       {
-        nsCOMPtr<nsIDOMRange> currange( do_QueryInterface(currentItem) );
-        nsCOMPtr<nsIContentIterator> iter;
-        res = nsComponentManager::CreateInstance(kCContentIteratorCID, nsnull,
-                                                    NS_GET_IID(nsIContentIterator), 
-                                                    getter_AddRefs(iter));
-        // XXX: ERROR_HANDLING  XPCOM usage
-        if ((NS_SUCCEEDED(res)) && iter)
+  #ifdef DEBUG_cmanske
         {
-          iter->Init(currange);
-          // loop through the content iterator for each content node
-          nsCOMPtr<nsIContent> content;
-          while (NS_ENUMERATOR_FALSE == iter->IsDone())
+        nsAutoString name;
+        anchorNode->GetNodeName(name);
+        printf("GetSelectedElement: Anchor node of selection: ");
+        wprintf(name.GetUnicode());
+        printf(" Offset: %d\n", anchorOffset);
+        focusNode->GetNodeName(name);
+        printf("Focus node of selection: ");
+        wprintf(name.GetUnicode());
+        printf(" Offset: %d\n", focusOffset);
+        }
+  #endif
+        nsCOMPtr<nsIDOMElement> parentLinkOfAnchor;
+        res = GetElementOrParentByTagName(NS_LITERAL_STRING("href"), anchorNode, getter_AddRefs(parentLinkOfAnchor));
+        // XXX: ERROR_HANDLING  can parentLinkOfAnchor be null?
+        if (NS_SUCCEEDED(res) && parentLinkOfAnchor)
+        {
+          if (isCollapsed)
           {
-            res = iter->CurrentNode(getter_AddRefs(content));
-            // Note likely!
-            if (NS_FAILED(res))
-              return NS_ERROR_FAILURE;
-
-             // Query interface to cast nsIContent to nsIDOMNode
-             //  then get tagType to compare to  aTagName
-             // Clone node of each desired type and append it to the aDomFrag
-            selectedElement = do_QueryInterface(content);
-            if (selectedElement)
-            {
-              // If we already found a node, then we have another element,
-              //  thus there's not just one element selected
-              if (bNodeFound)
-              {
-                bNodeFound = PR_FALSE;
-                break;
-              }
-
-              nsAutoString domTagName;
-              selectedElement->GetNodeName(domTagName);
-              domTagName.ToLowerCase();
-
-              if (anyTag)
-              {
-                // Get name of first selected element
-                selectedElement->GetTagName(TagName);
-                TagName.ToLowerCase();
-                anyTag = PR_FALSE;
-              }
-
-              // The "A" tag is a pain,
-              //  used for both link(href is set) and "Named Anchor"
-              nsCOMPtr<nsIDOMNode> selectedNode = do_QueryInterface(selectedElement);
-              if ( (IsLink(TagName) && IsLinkNode(selectedNode)) ||
-                   (IsNamedAnchor(TagName) && IsNamedAnchorNode(selectedNode)) )
-              {
-                bNodeFound = PR_TRUE;
-              } else if (TagName == domTagName) { // All other tag names are handled here
-                bNodeFound = PR_TRUE;
-              }
-              if (!bNodeFound)
-              {
-                // Check if node we have is really part of the selection???
-                break;
-              }
-            }
-            iter->Next();
+            // We have just a caret in the link
+            bNodeFound = PR_TRUE;
+          } else if(focusNode) 
+          {  // Link node must be the same for both ends of selection
+            nsCOMPtr<nsIDOMElement> parentLinkOfFocus;
+            res = GetElementOrParentByTagName(NS_LITERAL_STRING("href"), focusNode, getter_AddRefs(parentLinkOfFocus));
+            if (NS_SUCCEEDED(res) && parentLinkOfFocus == parentLinkOfAnchor)
+              bNodeFound = PR_TRUE;
+          }
+      
+          // We found a link node parent
+          if (bNodeFound) {
+            // GetElementOrParentByTagName addref'd this, so we don't need to do it here
+            *aReturn = parentLinkOfAnchor;
+            NS_IF_ADDREF(*aReturn);
+            return NS_OK;
           }
         }
-      } else {
-        // Should never get here?
-        isCollapsed = PR_TRUE;
-        printf("isCollapsed was FALSE, but no elements found in selection\n");
+        else if (anchorOffset >= 0)  // Check if link node is the only thing selected
+        {
+          nsCOMPtr<nsIDOMNode> anchorChild;
+          anchorChild = GetChildAt(anchorNode,anchorOffset);
+          if (anchorChild && IsLinkNode(anchorChild) && 
+              (anchorNode == focusNode) && focusOffset == (anchorOffset+1))
+          {
+            selectedElement = do_QueryInterface(anchorChild);
+            bNodeFound = PR_TRUE;
+          }
+        }
       }
-    } else {
-      printf("Could not create enumerator for GetSelectionProperties\n");
+    } 
+
+    if (!isCollapsed)   // Don't bother to examine selection if it is collapsed
+    {
+      nsCOMPtr<nsIEnumerator> enumerator;
+      res = selection->GetEnumerator(getter_AddRefs(enumerator));
+      if (NS_SUCCEEDED(res))
+      {
+        if(!enumerator)
+          return NS_ERROR_NULL_POINTER;
+
+        enumerator->First(); 
+        nsCOMPtr<nsISupports> currentItem;
+        res = enumerator->CurrentItem(getter_AddRefs(currentItem));
+        if ((NS_SUCCEEDED(res)) && currentItem)
+        {
+          nsCOMPtr<nsIDOMRange> currange( do_QueryInterface(currentItem) );
+          nsCOMPtr<nsIContentIterator> iter;
+          res = nsComponentManager::CreateInstance(kCContentIteratorCID, nsnull,
+                                                      NS_GET_IID(nsIContentIterator), 
+                                                      getter_AddRefs(iter));
+          if (NS_FAILED(res)) return res;
+          if (iter)
+          {
+            iter->Init(currange);
+            // loop through the content iterator for each content node
+            nsCOMPtr<nsIContent> content;
+            while (NS_ENUMERATOR_FALSE == iter->IsDone())
+            {
+              res = iter->CurrentNode(getter_AddRefs(content));
+              // Note likely!
+              if (NS_FAILED(res))
+                return NS_ERROR_FAILURE;
+
+               // Query interface to cast nsIContent to nsIDOMNode
+               //  then get tagType to compare to  aTagName
+               // Clone node of each desired type and append it to the aDomFrag
+              selectedElement = do_QueryInterface(content);
+              if (selectedElement)
+              {
+                // If we already found a node, then we have another element,
+                //  thus there's not just one element selected
+                if (bNodeFound)
+                {
+                  bNodeFound = PR_FALSE;
+                  break;
+                }
+
+                selectedElement->GetNodeName(domTagName);
+                domTagName.ToLowerCase();
+
+                if (anyTag)
+                {
+                  // Get name of first selected element
+                  selectedElement->GetTagName(TagName);
+                  TagName.ToLowerCase();
+                  anyTag = PR_FALSE;
+                }
+
+                // The "A" tag is a pain,
+                //  used for both link(href is set) and "Named Anchor"
+                nsCOMPtr<nsIDOMNode> selectedNode = do_QueryInterface(selectedElement);
+                if ( (isLinkTag && IsLinkNode(selectedNode)) ||
+                     (isNamedAnchorTag && IsNamedAnchorNode(selectedNode)) )
+                {
+                  bNodeFound = PR_TRUE;
+                } else if (TagName == domTagName) { // All other tag names are handled here
+                  bNodeFound = PR_TRUE;
+                }
+                if (!bNodeFound)
+                {
+                  // Check if node we have is really part of the selection???
+                  break;
+                }
+              }
+              iter->Next();
+            }
+          }
+        } else {
+          // Should never get here?
+          isCollapsed = PR_TRUE;
+          printf("isCollapsed was FALSE, but no elements found in selection\n");
+        }
+      } else {
+        printf("Could not create enumerator for GetSelectionProperties\n");
+      }
     }
   }
   if (bNodeFound)
@@ -3758,26 +3816,26 @@ nsHTMLEditor::CreateElementWithDefaults(const nsString& aTagName, nsIDOMElement*
     return NS_ERROR_FAILURE;
 
   // Mark the new element dirty, so it will be formatted
-  newElement->SetAttribute(NS_ConvertASCIItoUCS2("_moz_dirty"), nsAutoString());
+  newElement->SetAttribute(NS_LITERAL_STRING("_moz_dirty"), nsAutoString());
 
   // Set default values for new elements
   if (TagName.EqualsWithConversion("hr"))
   {
     // Note that we read the user's attributes for these from prefs (in InsertHLine JS)
-    newElement->SetAttribute(NS_ConvertASCIItoUCS2("align"),NS_ConvertASCIItoUCS2("center"));
-    newElement->SetAttribute(NS_ConvertASCIItoUCS2("width"),NS_ConvertASCIItoUCS2("100%"));
-    newElement->SetAttribute(NS_ConvertASCIItoUCS2("size"),NS_ConvertASCIItoUCS2("2"));
+    newElement->SetAttribute(NS_LITERAL_STRING("align"),NS_LITERAL_STRING("center"));
+    newElement->SetAttribute(NS_LITERAL_STRING("width"),NS_LITERAL_STRING("100%"));
+    newElement->SetAttribute(NS_LITERAL_STRING("size"),NS_LITERAL_STRING("2"));
   } else if (TagName.EqualsWithConversion("table"))
   {
-    newElement->SetAttribute(NS_ConvertASCIItoUCS2("cellpadding"),NS_ConvertASCIItoUCS2("2"));
-    newElement->SetAttribute(NS_ConvertASCIItoUCS2("cellspacing"),NS_ConvertASCIItoUCS2("2"));
-    newElement->SetAttribute(NS_ConvertASCIItoUCS2("border"),NS_ConvertASCIItoUCS2("1"));
+    newElement->SetAttribute(NS_LITERAL_STRING("cellpadding"),NS_LITERAL_STRING("2"));
+    newElement->SetAttribute(NS_LITERAL_STRING("cellspacing"),NS_LITERAL_STRING("2"));
+    newElement->SetAttribute(NS_LITERAL_STRING("border"),NS_LITERAL_STRING("1"));
   } else if (TagName.EqualsWithConversion("tr"))
   {
-    newElement->SetAttribute(NS_ConvertASCIItoUCS2("valign"),NS_ConvertASCIItoUCS2("top"));
+    newElement->SetAttribute(NS_LITERAL_STRING("valign"),NS_LITERAL_STRING("top"));
   } else if (TagName.EqualsWithConversion("td"))
   {
-    newElement->SetAttribute(NS_ConvertASCIItoUCS2("valign"),NS_ConvertASCIItoUCS2("top"));
+    newElement->SetAttribute(NS_LITERAL_STRING("valign"),NS_LITERAL_STRING("top"));
   }
   // ADD OTHER TAGS HERE
 
@@ -3866,9 +3924,9 @@ nsHTMLEditor::SetBackgroundColor(const nsString& aColor)
         while(cell)
         {
           if (setColor)
-            res = SetAttribute(cell, NS_ConvertASCIItoUCS2("bgcolor"), aColor);
+            res = SetAttribute(cell, NS_LITERAL_STRING("bgcolor"), aColor);
           else
-            res = RemoveAttribute(cell, NS_ConvertASCIItoUCS2("bgcolor"));
+            res = RemoveAttribute(cell, NS_LITERAL_STRING("bgcolor"));
           if (NS_FAILED(res)) break;
 
           GetNextSelectedCell(getter_AddRefs(cell), nsnull);
@@ -3885,9 +3943,9 @@ nsHTMLEditor::SetBackgroundColor(const nsString& aColor)
   }
   // Use the editor method that goes through the transaction system
   if (setColor)
-    res = SetAttribute(element, NS_ConvertASCIItoUCS2("bgcolor"), aColor);
+    res = SetAttribute(element, NS_LITERAL_STRING("bgcolor"), aColor);
   else
-    res = RemoveAttribute(element, NS_ConvertASCIItoUCS2("bgcolor"));
+    res = RemoveAttribute(element, NS_LITERAL_STRING("bgcolor"));
 
   return res;
 }
@@ -5196,11 +5254,11 @@ nsHTMLEditor::InsertAsPlaintextQuotation(const nsString& aQuotedText,
         nsCOMPtr<nsIDOMElement> preElement (do_QueryInterface(preNode));
         if (preElement)
         {
-          preElement->SetAttribute(NS_ConvertASCIItoUCS2("_moz_quote"),
-                                   NS_ConvertASCIItoUCS2("true"));
+          preElement->SetAttribute(NS_LITERAL_STRING("_moz_quote"),
+                                   NS_LITERAL_STRING("true"));
           // set style to not have unwanted vertical margins
-          preElement->SetAttribute(NS_ConvertASCIItoUCS2("style"),
-                                   NS_ConvertASCIItoUCS2("margin: 0 0 0 0px;"));
+          preElement->SetAttribute(NS_LITERAL_STRING("style"),
+                                   NS_LITERAL_STRING("margin: 0 0 0 0px;"));
         }
 
         // and set the selection inside it:
@@ -5650,13 +5708,13 @@ nsHTMLEditor::GetHeadContentsAsHTML(nsString& aOutputString)
   res = SetSelectionAroundHeadChildren(selection, mDocWeak);
   if (NS_FAILED(res)) return res;
 
-  res = OutputToString(aOutputString, NS_ConvertASCIItoUCS2("text/html"),
+  res = OutputToString(aOutputString, NS_LITERAL_STRING("text/html"),
                        nsIDocumentEncoder::OutputSelectionOnly);
   if (NS_SUCCEEDED(res))
   {
     // Selection always includes <body></body>,
     //  so terminate there
-    PRInt32 offset = aOutputString.Find(NS_ConvertASCIItoUCS2("<body"), PR_TRUE);
+    PRInt32 offset = aOutputString.Find(NS_LITERAL_STRING("<body"), PR_TRUE);
     if (offset > 0)
     {
       // Ensure the string ends in a newline
@@ -6810,7 +6868,7 @@ nsHTMLEditor::RelativeFontChangeOnTextNode( PRInt32 aSizeChange,
   }
   
   // reparent the node inside font node with appropriate relative size
-  res = InsertContainerAbove(node, &tmp, NS_ConvertASCIItoUCS2( aSizeChange==1 ? "big" : "small" ));
+  res = InsertContainerAbove(node, &tmp, aSizeChange==1 ? NS_LITERAL_STRING("big") : NS_LITERAL_STRING("small"));
   return res;
 }
 
