@@ -16,16 +16,28 @@
  * Communications Corporation. Portions created by Netscape are
  * Copyright (C) 1998-1999 Netscape Communications Corporation. All
  * Rights Reserved.
+ *
+ * Constributor(s):
+ *   R.J. Keller <rlk@trfenv.com>
  */
 
-const MOZILLA_HELP = "chrome://help/locale/mozillahelp.rdf";
-var helpFileURI = MOZILLA_HELP;
+const MOZILLA_CONTENT_PACK = "chrome://help/locale/mozillahelp.rdf";
+//Set the default content pack to the Mozilla content pack. Use the
+//setHelpFileURI function to set this value.
+var helpFileURI = MOZILLA_CONTENT_PACK;
 
-// Call this function to display a help topic.
-// uri: [chrome uri of rdf help file][?topic]
-function openHelp(topic) {
+// openHelp - Opens up the Mozilla Help Viewer with the specified
+//    topic and content pack.
+// see http://www.mozilla.org/projects/help-viewer/content_packs.html
+function openHelp(topic, contentPack)
+{
+  //cp is the content pack to use in this function. If the contentPack
+  //parameter was set, we will use that content pack. If not, we will
+  //use the default content pack set by setHelpFileURI().
+  var cp = contentPack || helpFileURI;
+
   // Try to find previously opened help.
-  var topWindow = locateHelpWindow(helpFileURI);
+  var topWindow = locateHelpWindow(cp);
 
   if ( topWindow ) {
     // Open topic in existing window.
@@ -36,7 +48,7 @@ function openHelp(topic) {
     const params = Components.classes["@mozilla.org/embedcomp/dialogparam;1"]
                              .createInstance(Components.interfaces.nsIDialogParamBlock);
     params.SetNumberStrings(2);
-    params.SetString(0, helpFileURI);
+    params.SetString(0, cp);
     params.SetString(1, topic);
     const ww = Components.classes["@mozilla.org/embedcomp/window-watcher;1"]
                          .getService(Components.interfaces.nsIWindowWatcher);
@@ -44,6 +56,7 @@ function openHelp(topic) {
   }
 }
 
+//setHelpFileURI - Sets the default content pack to use in the Help Viewer
 function setHelpFileURI(rdfURI) {
   helpFileURI = rdfURI; 
 }
@@ -54,13 +67,14 @@ function locateHelpWindow(helpFileURI) {
                                   .getService(Components.interfaces.nsIWindowMediator);
   var iterator = windowManager.getEnumerator("mozilla:help");
   var topWindow = null;
+  var currentWindow;
 
   // Loop through the help windows looking for one with the
-  // current Help URI loaded.
+  // current Help Content Pack loaded.
   while (iterator.hasMoreElements()) {
-    var aWindow = iterator.getNext();
-    if (aWindow.getHelpFileURI() == helpFileURI) {
-      topWindow = aWindow;
+    currentWindow = iterator.getNext();
+    if (currentWindow.getHelpFileURI() == helpFileURI) {
+      topWindow = currentWindow;
       break;  
     }  
   }
