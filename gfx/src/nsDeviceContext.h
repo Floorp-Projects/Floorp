@@ -68,6 +68,8 @@ public:
   NS_IMETHOD GetLocalFontName(const nsString& aFaceName, nsString& aLocalName,
                               PRBool& aAliased);
 
+  NS_IMETHOD FlushFontCache(void);
+
   NS_IMETHOD GetDepth(PRUint32& aDepth);
 
   NS_IMETHOD GetILColorSpace(IL_ColorSpace*& aColorSpace);

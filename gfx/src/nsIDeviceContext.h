@@ -236,6 +236,13 @@ public:
                               PRBool& aAliased) = 0;
 
   /**
+   * Attempt to free up resoruces by flushing out any fonts no longer
+   * referenced by anything other than the font cache itself.
+   * @return error status
+   */
+  NS_IMETHOD FlushFontCache(void) = 0;
+
+  /**
    * Return the bit depth of the device.
    */
   NS_IMETHOD GetDepth(PRUint32& aDepth) = 0;
