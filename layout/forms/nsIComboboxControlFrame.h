@@ -94,9 +94,9 @@ public:
   NS_IMETHOD RedisplaySelectedText() = 0;
 
   /**
-   * Method for the listbox to notify the combobox that onChange has been fired
+   * Method for the listbox to ask the combobox if onChange should be fired
    */
-  NS_IMETHOD SetNeedToFireOnChange(PRBool aNeedToFireOnChange) = 0;
+  NS_IMETHOD_(PRBool) NeededToFireOnChange() = 0;
 
   /**
    *
