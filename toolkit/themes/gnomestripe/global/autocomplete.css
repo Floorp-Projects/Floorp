@@ -121,7 +121,7 @@ popup[type="autocomplete"],
 .autocomplete-tree {
   -moz-appearance: none !important;
   border: none !important;
-  background-color: transparent !important;
+  background-color: -moz-field !important;
 }
 
 .autocomplete-treecol {
