@@ -34,6 +34,7 @@
 #include "nsIWebShellWindow.H"
 #include "nsIDOMEventReceiver.h"
 #include "nsIURL.h"
+
 /* Define Class IDs */
 
 static NS_DEFINE_IID(kAppShellServiceCID, NS_APPSHELL_SERVICE_CID);
@@ -193,6 +194,14 @@ nsNetSupportDialog::nsNetSupportDialog()
 	Init();
 }
 
+nsNetSupportDialog::~nsNetSupportDialog()
+{
+	NS_IF_RELEASE( mWebShell );
+	NS_IF_RELEASE( mWebShellWindow );
+	NS_IF_RELEASE( mOKButton );
+	NS_IF_RELEASE( mCancelButton );
+}
+
 void nsNetSupportDialog::Init()
 {
 	
@@ -302,12 +311,6 @@ nsresult nsNetSupportDialog::DoDialog(  nsString& inXULURL  )
   	 	return result;
   	}  	
 
-   if ( !NS_SUCCEEDED (result = appShellService->Initialize() ) )
-   {
-   		appShellService->Release();
-  		return result;
-  	}
-  	
 	nsIURL* dialogURL;
  	if (!NS_SUCCEEDED (result = NS_NewURL(&dialogURL, inXULURL ) ) )
  	{
@@ -343,7 +346,6 @@ void nsNetSupportDialog::OnOK()
 	// Fill in NetLib struct
 	*mReturnValue = kOKButton;
 	// Cleanup
-	mWebShell->Release();
 
 	mWebShellWindow->Close();
 }
@@ -351,7 +353,6 @@ void nsNetSupportDialog::OnOK()
 void nsNetSupportDialog::OnCancel()
 {
 	*mReturnValue = kCancelButton;
-	mWebShell->Release();
 	mWebShellWindow->Close();
 }
 
@@ -426,7 +427,6 @@ NS_IMETHODIMP nsNetSupportDialog::QueryInterface(REFNSIID aIID,void** aInstanceP
     *aInstancePtr = (void *)((nsIDOMMouseListener*)this);
     return NS_OK;
   }
-  
   
   return NS_NOINTERFACE;
 }
