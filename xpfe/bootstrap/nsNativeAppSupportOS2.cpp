@@ -2313,8 +2313,15 @@ nsNativeAppSupportOS2::OpenBrowserWindow( const char *args, PRBool newWindow ) {
         return NS_OK;
     } while ( PR_FALSE );
 
+    nsCOMPtr<nsICmdLineHandler> handler(do_GetService("@mozilla.org/commandlinehandler/general-startup;1?type=browser", &rv));
+    if (NS_FAILED(rv)) return rv;
+
+    nsXPIDLCString chromeUrlForTask;
+    rv = handler->GetChromeUrlForTask(getter_Copies(chromeUrlForTask));
+    if (NS_FAILED(rv)) return rv;
+
     // Last resort is to open a brand new window.
-    return OpenWindow( "chrome://navigator/content", args );
+    return OpenWindow( chromeUrlForTask, args );
 }
 
 //   This opens a special browser window for purposes of priming the pump for
