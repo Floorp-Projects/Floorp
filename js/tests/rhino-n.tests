@@ -1,3 +1,5 @@
+# bug 59861
+ecma/Date/15.9.4.3.js
 # fails due to bad java implementation of number formatting on 
 # pretty much all platforms
 ecma/LexicalConventions/7.7.3.js
@@ -37,5 +39,7 @@ js1_4/Eval/eval-001.js
 js1_4/Eval/eval-002.js
 js1_4/Eval/eval-003.js
 js1_5/Regress/regress-68498-003.js
-#Rhino doesn't implement the toSource() method
+#Rhino doesn't implement the (non-ECMA) toSource() method
 js1_5/Regress/regress-44009.js
+#Skip this test until the corresponding bug is fixed
+ecma_3/RegExp/regress-78156.js
