@@ -238,7 +238,7 @@ gtk_moz_embed_load_url(GtkWidget *widget, const char *url)
   nsCOMPtr<nsIWebNavigation> navigation = do_QueryInterface(embed_private->webBrowser);
   g_return_if_fail(navigation);
   nsString URLString;
-  URLString.SetString(url);
+  URLString.AssignWithConversion(url);
   navigation->LoadURI(URLString.GetUnicode());
 }
 
