@@ -445,6 +445,12 @@ class nsIWidget : public nsISupports {
      */
     NS_IMETHOD Enable(PRBool aState) = 0;
 
+    /*
+     * Ask whether the widget is enabled
+     * @param aState returns PR_TRUE if the widget is enabled
+     */
+    NS_IMETHOD IsEnabled(PRBool *aState) = 0;
+
     /**
      * Give focus to this widget.
      */
