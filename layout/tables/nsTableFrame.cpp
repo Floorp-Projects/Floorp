@@ -107,10 +107,13 @@ struct InnerTableReflowState {
   // The first body section row group frame, i.e. not a header or footer
   nsIFrame* firstBodySection;
 
+  // border/padding
+  nsMargin  mBorderPadding;
+
   InnerTableReflowState(nsIPresContext&          aPresContext,
                         const nsHTMLReflowState& aReflowState,
                         const nsMargin&          aBorderPadding)
-    : reflowState(aReflowState)
+    : reflowState(aReflowState), mBorderPadding(aBorderPadding)
   {
     y=0;  // border/padding???
 
@@ -2054,20 +2057,35 @@ nsTableFrame::GetSkipSides() const
 PRBool nsTableFrame::NeedsReflow(const nsHTMLReflowState& aReflowState, const nsSize& aMaxSize)
 {
   PRBool result = PR_TRUE;
-  if (eReflowReason_Incremental != aReflowState.reason) 
-  { // incremental reflows always need to be reflowed (for now)
-    if (PR_TRUE==mIsInvariantWidth)
-      result = PR_FALSE;
-    // XXX TODO: other optimization cases...
+
+  if (PR_TRUE == mIsInvariantWidth) {
+    result = PR_FALSE;
+
+  } else if ((eReflowReason_Incremental == aReflowState.reason) &&
+             (NS_UNCONSTRAINEDSIZE == aReflowState.availableHeight)) {
+    // If it's an incremental reflow and we're in galley mode, then only
+    // do a full reflow if we need to. We need to if the cell map is invalid,
+    // or the column info is invalid, or if we need to do a pass-1 reflow
+    result = !(IsCellMapValid() && IsFirstPassValid() &&
+               IsColumnCacheValid() && IsColumnWidthsValid());
   }
   return result;
 }
 
+// Called by IR_TargetIsChild() after an incremental reflow of
+// aKidFrame. Only called if we don't need a full reflow, e.g., the
+// column widths haven't changed. Not used for paginated mode, so
+// we don't need to worry about split row group frames
+//
+// Slides all the row groups following aKidFrame by the specified
+// amount
 nsresult nsTableFrame::AdjustSiblingsAfterReflow(nsIPresContext&        aPresContext,
                                                  InnerTableReflowState& aReflowState,
                                                  nsIFrame*              aKidFrame,
                                                  nscoord                aDeltaY)
 {
+  NS_PRECONDITION(NS_UNCONSTRAINEDSIZE == aReflowState.reflowState.availableHeight,
+                  "not in galley mode");
   nsIFrame* lastKidFrame = aKidFrame;
 
   if (aDeltaY != 0) {
@@ -3325,19 +3343,36 @@ NS_METHOD nsTableFrame::IR_TargetIsChild(nsIPresContext&        aPresContext,
   aNextFrame->GetRect(kidRect);
   aNextFrame->SizeTo(desiredSize.width, desiredSize.height);
 
-#if 1
-  // XXX For the time being just fall through and treat it like a
-  // pass 2 reflow...
-  // calling intialize here resets all the cached info based on new table content 
-  InvalidateColumnWidths();
-#else
-  // XXX Hack...
-  AdjustSiblingsAfterReflow(&aPresContext, aReflowState, aNextFrame, desiredSize.height -
-                            oldKidRect.height);
-  aDesiredSize.width = mRect.width;
-  aDesiredSize.height = state.y + myBorderPadding.top + myBorderPadding.bottom;
-  return NS_OK;
+  // If the column width info is valid, then adjust the row group frames
+  // that follow. Otherwise, return and we'll recompute the column widths
+  // and reflow all the row group frames
+  if (!NeedsReflow(aReflowState.reflowState,
+                   nsSize(aReflowState.reflowState.availableWidth,
+                          aReflowState.reflowState.availableHeight))) {
+    // Adjust the row groups that follow
+    AdjustSiblingsAfterReflow(aPresContext, aReflowState, aNextFrame, desiredSize.height -
+                              oldKidRect.height);
+    
+    // Return our size and our status
+    aDesiredSize.width = ComputeDesiredWidth(aReflowState.reflowState);
+    nscoord defaultHeight = aReflowState.y + aReflowState.mBorderPadding.top +
+                            aReflowState.mBorderPadding.bottom;
+    aDesiredSize.height = ComputeDesiredHeight(aPresContext, aReflowState.reflowState,
+                                               defaultHeight);
+
+    // XXX Is this needed?
+#if 0
+    AdjustForCollapsingRows(aPresContext, aDesiredSize.height);
+    AdjustForCollapsingCols(aPresContext, aDesiredSize.width);
+
+    // once horizontal borders are computed and all row heights are set, 
+    // we need to fix up length of vertical edges
+    // XXX need to figure start row and end row correctly
+    if (NS_STYLE_BORDER_COLLAPSE==GetBorderCollapseStyle())
+      DidComputeHorizontalCollapsingBorders(aPresContext, 0, 10000);
 #endif
+  }
+
   return rv;
 }
 
