@@ -2743,9 +2743,9 @@ var nsHLineCommand =
           try {
             var align = prefs.getIntPref("editor.hrule.align");
             if (align == 0 ) {
-              hLine.setAttribute("align", "left");
+              gEditor.setAttributeOrEquivalent(hLine, "align", "left", true);
             } else if (align == 2) {
-              hLine.setAttribute("align", "right");
+              gEditor.setAttributeOrEquivalent(hLine, "align", "right", true);
             }
 
             //Note: Default is center (don't write attribute)
@@ -2755,10 +2755,10 @@ var nsHLineCommand =
             if (percent)
               width = width +"%";
 
-            hLine.setAttribute("width", width);
+            gEditor.setAttributeOrEquivalent(hLine, "width", width, true);
 
             var height = prefs.getIntPref("editor.hrule.height");
-            hLine.setAttribute("size", String(height));
+            gEditor.setAttributeOrEquivalent(hLine, "size", String(height), true);
 
             var shading = prefs.getBoolPref("editor.hrule.shading");
             if (shading) {

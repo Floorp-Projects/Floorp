@@ -3162,16 +3162,22 @@ nsHTMLEditor::CreateElementWithDefaults(const nsAString& aTagName, nsIDOMElement
   if (TagName.Equals(NS_LITERAL_STRING("hr")))
   {
     // Note that we read the user's attributes for these from prefs (in InsertHLine JS)
-    newElement->SetAttribute(NS_LITERAL_STRING("width"),NS_LITERAL_STRING("100%"));
-    newElement->SetAttribute(NS_LITERAL_STRING("size"),NS_LITERAL_STRING("2"));
+    res = SetAttributeOrEquivalent(newElement, NS_LITERAL_STRING("width"),
+                                   NS_LITERAL_STRING("100%"), PR_TRUE);
+    if (NS_FAILED(res)) return res;
+    res = SetAttributeOrEquivalent(newElement, NS_LITERAL_STRING("size"),
+                                   NS_LITERAL_STRING("2"), PR_TRUE);
   } else if (TagName.Equals(NS_LITERAL_STRING("table")))
   {
-    newElement->SetAttribute(NS_LITERAL_STRING("cellpadding"),NS_LITERAL_STRING("2"));
-    newElement->SetAttribute(NS_LITERAL_STRING("cellspacing"),NS_LITERAL_STRING("2"));
-    newElement->SetAttribute(NS_LITERAL_STRING("border"),NS_LITERAL_STRING("1"));
+    res = newElement->SetAttribute(NS_LITERAL_STRING("cellpadding"),NS_LITERAL_STRING("2"));
+    if (NS_FAILED(res)) return res;
+    res = newElement->SetAttribute(NS_LITERAL_STRING("cellspacing"),NS_LITERAL_STRING("2"));
+    if (NS_FAILED(res)) return res;
+    res = newElement->SetAttribute(NS_LITERAL_STRING("border"),NS_LITERAL_STRING("1"));
   } else if (TagName.Equals(NS_LITERAL_STRING("td")))
   {
-    newElement->SetAttribute(NS_LITERAL_STRING("valign"),NS_LITERAL_STRING("top"));
+    res = SetAttributeOrEquivalent(newElement, NS_LITERAL_STRING("valign"),
+                                   NS_LITERAL_STRING("top"), PR_TRUE);
   }
   // ADD OTHER TAGS HERE
 
