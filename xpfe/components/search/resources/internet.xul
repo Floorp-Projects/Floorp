@@ -50,6 +50,7 @@
 		<tree align="horizontal" id="searchengines" border="1" style="height: 90%;" flex="100%" datasources="rdf:internetsearch" ref="NC:SearchEngineRoot">
 			<treecol id="CheckboxColumn" />
 			<treecol id="NameColumn" rdf:resource="http://home.netscape.com/NC-rdf#Name" sortActive="true" sortDirection="ascending" />
+			<treecol id="DescColumn" rdf:resource="http://home.netscape.com/NC-rdf#Description" rdf:resource2="http://home.netscape.com/NC-rdf#Name" />
 
 			<template>
                                 <treechildren>
@@ -61,6 +62,9 @@
 						<treecell>
 							<titledbutton class="iconic" src="rdf:http://home.netscape.com/NC-rdf#Icon" value="rdf:http://home.netscape.com/NC-rdf#Name" align="left" />
 						</treecell>
+						<treecell>
+							<titledbutton value="rdf:http://home.netscape.com/NC-rdf#Description" align="left" />
+						</treecell>
 					</treerow>
 				</treeitem>
                                 </treechildren>
@@ -70,6 +74,7 @@
 				<treerow>
 					<treecell value="&checkbox.column.label;"/>
 					<treecell observes="NameColumn" value="&engine.column.label;" resource="http://home.netscape.com/NC-rdf#Name" onclick="return doSort('NameColumn');" sortActive="true" sortDirection="ascending"/>
+					<treecell observes="DescColumn" value="&description.column.label;" resource="http://home.netscape.com/NC-rdf#Description" resource2="http://home.netscape.com/NC-rdf#Name" onclick="return doSort('DescColumn');" />
 				</treerow>
 			</treehead>
 		</tree>
