@@ -6,3 +6,7 @@
 .autocomplete-history-box {
   overflow: auto;
 }
+
+.autocomplete-result-popup {
+  display: -moz-xul-popup !important;
+}
