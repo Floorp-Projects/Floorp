@@ -1106,7 +1106,7 @@ box[align="vertical"] > splitter > grippy {
 
 box[align="vertical"] > splitter[collapse="after"] > grippy {
    list-style-image: url(resource:/res/toolbar/grippy-vertical-after.gif);
-
+}
 
 titledbutton.twisty
 {
