@@ -1,5 +1,5 @@
 <!-- <!DOCTYPE chapter PUBLIC "-//OASIS//DTD DocBook XML V4.1.2//EN"> -->
-<!-- $Id: installation.xml,v 1.68 2004/03/23 15:25:02 bugreport%peshkin.net Exp $ -->
+<!-- $Id: installation.xml,v 1.69 2004/03/25 11:19:00 jocuri%softhome.net Exp $ -->
 <chapter id="installing-bugzilla">
   <title>Installing Bugzilla</title>
 
@@ -565,7 +565,7 @@
           <listitem>
             <para>If you run MySQL on the same machine as your web server, you
             should disable remote access to MySQL by adding
-            the following to your <filename>/etc/my.conf</filename>:
+            the following to your <filename>/etc/my.cnf</filename>:
             </para>
             <programlisting>  [myslqd]
   # Prevent network access to MySQL.
@@ -597,7 +597,7 @@
         <para>You need to configure MySQL to accept large packets, if you
         want to have attachments larger than 64K. Add the text
         below to your
-        <filename>/etc/my.conf</filename>. 
+        <filename>/etc/my.cnf</filename>. 
         There is also a parameter in Bugzilla
         for setting the maximum allowable attachment size, (default 1MB).
         Bugzilla will only accept attachments up to the lower of these two
@@ -607,6 +607,28 @@
           <screen>  [mysqld]
   # Allow packets up to 1M
   set-variable = max_allowed_packet=1M</screen>
+      </section>
+
+      <section>
+        <title>Allow small words in full-text indexes</title>
+
+        <para>By default, words must be at least four characters in length
+        in order to be indexed by MySQL's full-text indexes. This causes
+        a lot of Bugzilla specific words to be missed, including "cc",
+        "ftp" and "uri".</para>
+
+        <para>MySQL can be configured to index those words by setting the
+        ft_min_word_len param to the minimum size of the words to index.
+        This can be done by modifying the <filename>/etc/my.cnf</filename>
+        according to the example below:</para>
+
+        <screen>  [mysqld]
+  # Allow small words in full-text indexes
+  ft_min_word_len=2</screen>
+
+        <para>Rebuilding the indexes can be done based on documentation found at
+        <ulink url="http://www.mysql.com/doc/en/Fulltext_Fine-tuning.html"/>.
+        </para>
       </section>
 
       <section>
