@@ -179,8 +179,8 @@ void nsScrollbar::DoScrollAction(ControlPartCode part)
 	NS_RELEASE(parent);
 
 	// update this scrollbar
-	this-Invalidate(PR_FALSE);
-	this->Update();
+	Invalidate(PR_FALSE);
+	Update();
 
 	StartDraw();
 }
@@ -326,6 +326,11 @@ NS_METHOD nsScrollbar::SetPosition(PRUint32 aPos)
 		aPos = 0;
 	PRUint32 aMax = mFullImageSize - mVisibleImageSize;
 	mValue = ((PRInt32)aPos) > aMax ? aMax : ((int)aPos);
+
+	// redraw the scrollbar. should update be done now, or later?
+	Invalidate(PR_FALSE);
+	Update();
+	
 	return NS_OK;
 }
 
