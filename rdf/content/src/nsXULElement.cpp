@@ -2318,31 +2318,10 @@ nsXULElement::GetParent(nsIContent*& aResult) const
     return NS_OK;
 }
 
-static void UpdateBindingParent(nsIContent* aContent, nsIContent* aBindingParent)
-{
-  aContent->SetBindingParent(aBindingParent);
-  PRInt32 count;
-  aContent->ChildCount(count);
-  for (PRInt32 i = 0; i < count; i++) {
-    nsCOMPtr<nsIContent> child;
-    aContent->ChildAt(i, *getter_AddRefs(child));
-    UpdateBindingParent(child, aBindingParent);
-  }
-}
-
 NS_IMETHODIMP
 nsXULElement::SetParent(nsIContent* aParent)
 {
     mParent = aParent; // no refcount
-
-    if (mParent) {
-      // Get the binding parent.
-      nsCOMPtr<nsIContent> bindingParent;
-      mParent->GetBindingParent(getter_AddRefs(bindingParent));
-      if (bindingParent && (bindingParent.get() != mBindingParent))
-        UpdateBindingParent((nsIStyledContent*)this, bindingParent);
-    }
-
     return NS_OK;
 }
 
@@ -4222,6 +4201,15 @@ NS_IMETHODIMP
 nsXULElement::SetBindingParent(nsIContent* aParent) 
 {
   mBindingParent = aParent; // [Weak] no addref
+  if (mBindingParent) {
+    PRInt32 count;
+    ChildCount(count);
+    for (PRInt32 i = 0; i < count; i++) {
+      nsCOMPtr<nsIContent> child;
+      ChildAt(i, *getter_AddRefs(child));
+      child->SetBindingParent(aParent);
+    }
+  }
   return NS_OK;
 }
 

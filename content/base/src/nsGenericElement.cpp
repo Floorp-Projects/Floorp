@@ -1338,32 +1338,10 @@ nsGenericElement::GetParent(nsIContent*& aResult) const
   return NS_OK;
 }
 
-static void UpdateBindingParent(nsIContent* aContent, nsIContent* aBindingParent)
-{
-  aContent->SetBindingParent(aBindingParent);
-  PRInt32 count;
-  aContent->ChildCount(count);
-  for (PRInt32 i = 0; i < count; i++) {
-    nsCOMPtr<nsIContent> child;
-    aContent->ChildAt(i, *getter_AddRefs(child));
-    UpdateBindingParent(child, aBindingParent);
-  }
-}
-
 nsresult
 nsGenericElement::SetParent(nsIContent* aParent)
 {
   mParent = aParent;
-
-  if (mParent) {
-    // Get the binding parent.
-    nsCOMPtr<nsIContent> bindingParent;
-    mParent->GetBindingParent(getter_AddRefs(bindingParent));
-    nsIContent* par = mDOMSlots ? mDOMSlots->mBindingParent : nsnull;
-    if (bindingParent && (bindingParent.get() != par))
-      UpdateBindingParent(mContent, bindingParent);
-  }
-
   return NS_OK;
 }
 
@@ -1565,6 +1543,17 @@ nsGenericElement::SetBindingParent(nsIContent* aParent)
     GetDOMSlots();
 
   mDOMSlots->mBindingParent = aParent; // Weak, so no addref happens.
+
+  if (aParent) {
+    PRInt32 count;
+    mContent->ChildCount(count);
+    for (PRInt32 i = 0; i < count; i++) {
+      nsCOMPtr<nsIContent> child;
+      mContent->ChildAt(i, *getter_AddRefs(child));
+      child->SetBindingParent(aParent);
+    }
+  }
+
   return NS_OK;
 }
 
