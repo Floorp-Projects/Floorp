@@ -54,7 +54,9 @@ extern "C" int XP_JAVA_STARTUP_FAILED;
 extern "C" int XP_JAVA_DEBUGGER_FAILED;
 extern nsIServiceManager  *g_pNSIServiceManager;
 static NS_DEFINE_CID(kPluginManagerCID, NS_PLUGINMANAGER_CID);
-static NS_DEFINE_CID(kPluginHostIID, NS_IPLUGINHOST_IID);
+//static NS_DEFINE_CID(kPluginHostIID, NS_IPLUGINHOST_IID);
+static NS_DEFINE_IID(kPluginHostIID, NS_IPLUGINHOST_IID);
+static NS_DEFINE_IID(kPluginManagerIID, NS_IPLUGINMANAGER_IID);
 
 // FIXME -- need prototypes for these functions!!! XXX
 #ifdef XP_MAC
@@ -432,9 +434,12 @@ nsJVMManager::StartupJVM(void)
     **              do JNI calls via liveconnect.
     ** nsIPlugin* plugin = NPL_LoadPluginByType(NS_JVM_MIME_TYPE);
     */
-    nsIPluginHost* pNSIPluginHost = NULL;
-    nsresult err = g_pNSIServiceManager->GetService(kPluginManagerCID, kPluginHostIID, (nsISupports**)&pNSIPluginHost);
-    if (err != NS_OK) {
+    
+	/*nsIPluginHost* pNSIPluginHost = NULL;
+    nsresult err = g_pNSIServiceManager->GetService(kPluginManagerCID, kPluginHostIID, (nsISupports**)&pNSIPluginHost);*/
+
+    nsresult err = g_pNSIServiceManager->GetService(kPluginManagerCID, kPluginManagerIID, (nsISupports**)&plugin);
+	if (err != NS_OK) {
         fStatus = nsJVMStatus_Failed;
         return fStatus;
     }
