@@ -104,6 +104,7 @@ LAYOUT_ATOM(collapseOffsetProperty, "CollapseOffsetProperty")
 LAYOUT_ATOM(inlineFrameAnnotation, "InlineFrameAnnotation")
 LAYOUT_ATOM(maxElementSizeProperty, "MaxElementSizeProperty")
 LAYOUT_ATOM(overflowProperty, "OverflowProperty")
+LAYOUT_ATOM(overflowLinesProperty, "OverflowLinesProperty")
 LAYOUT_ATOM(viewProperty, "ViewProperty")
 
 #ifdef DEBUG
