@@ -44,17 +44,21 @@ REQUIRES		= raptor js dbm nspr security pref xpcom util img \
 			  layer network netcache fileurl ftpurl abouturl \
 			  httpurl gophurl remoturl netcnvts netlib
 
-EXPORTS = nsINetService.h               \
+EXPORTS = nsINetService.h       \
           nsINetSupport.h		\
-          nsIRelatedLinks.h             \
-          nsIRefreshUrl.h                \
-          nsIConnectionInfo.h                \
-          nsIURLGroup.h                \
-          nsINetlibURL.h                \
-          nsIProtocol.h       \
-          nsIProtocolURLFactory.h       \
+          nsIRelatedLinks.h     \
+          nsIRefreshUrl.h       \
+          nsIConnectionInfo.h   \
+          nsIURLGroup.h         \
+          nsINetlibURL.h        \
+          nsIProtocol.h         \
+          nsIProtocolURLFactory.h   \
           nsIUnicharStreamLoader.h	\
           $(NULL)
+
+ifdef ENABLE_TESTS
+DIRS += tests
+endif
 
 EXPORTS := $(addprefix $(srcdir)/, $(EXPORTS))
 
