@@ -213,12 +213,16 @@ if test "$target" != "$host"; then
     if test -z "$LD"; then
 	    AC_CHECK_PROGS(LD, "${target_alias}-ld" "${target}-ld", :)
     fi
+    if test -z "$STRIP"; then
+	    AC_CHECK_PROGS(STRIP, "${target_alias}-strip" "${target}-strip", :)
+    fi
     if test -z "$DLLTOOL"; then
 	    AC_CHECK_PROGS(DLLTOOL, "${target_alias}-dlltool" "${target}-dlltool", :)
     fi
     if test -z "$WINDRES"; then
 	    AC_CHECK_PROGS(WINDRES, "${target_alias}-windres" "${target}-windres", :)
     fi
+
 else
     AC_PROG_CC
     AC_PROG_CXX
@@ -226,6 +230,7 @@ else
     AC_PATH_PROGS(AS, as, $CC)
     AC_PATH_PROGS(AR, ar, :)
     AC_PATH_PROGS(LD, ld, :)
+    AC_PATH_PROGS(STRIP, strip, :)
     AC_PATH_PROGS(DLLTOOL, dlltool, :)
     AC_PATH_PROGS(WINDRES, windres, :)
     if test -z "$HOST_CC"; then
@@ -256,7 +261,6 @@ dnl ========================================================
 AC_PROG_INSTALL
 AC_PROG_LN_S
 AC_PATH_PROGS(PERL, perl5 perl, :)
-AC_PATH_PROGS(STRIP, strip, :)
 
 dnl ========================================================
 dnl Default platform specific options
