@@ -229,9 +229,9 @@ install::buildRunems
 
 
 clobber::
-	del /Q $(DIST)\..\*.xpi
-	rmdir /S/Q $(DIST)\..\javadev
-	rmdir /S/Q $(DIST)\..\java
+	rm -rf $(DIST)\..\*.xpi
+	rm -rf $(DIST)\..\javadev
+	rm -rf $(DIST)\..\java
 
 
 clobber_all::clobber
