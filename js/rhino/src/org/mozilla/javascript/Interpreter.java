@@ -2633,9 +2633,14 @@ public class Interpreter {
                 lhs = ((Scriptable) lhs).getDefaultValue(null);
             if (rhs instanceof Scriptable)
                 rhs = ((Scriptable) rhs).getDefaultValue(null);
-            if (lhs instanceof String || rhs instanceof String) {
-                stack[stackTop] = ScriptRuntime.toString(lhs)
-                                   + ScriptRuntime.toString(rhs);
+            if (lhs instanceof String) {
+                String lstr = (String)lhs;
+                String rstr = ScriptRuntime.toString(rhs);
+                stack[stackTop] = lstr.concat(rstr);
+            } else if (rhs instanceof String) {
+                String lstr = ScriptRuntime.toString(lhs);
+                String rstr = (String)rhs;
+                stack[stackTop] = lstr.concat(rstr);
             } else {
                 double lDbl = (lhs instanceof Number)
                     ? ((Number)lhs).doubleValue() : ScriptRuntime.toNumber(lhs);
@@ -2647,7 +2652,7 @@ public class Interpreter {
         }
     }
 
-    // x + y when x is Number, see
+    // x + y when x is Number
     private static void do_add
         (Object lhs, double rDbl,
          Object[] stack, double[] stackDbl, int stackTop,
@@ -2661,10 +2666,12 @@ public class Interpreter {
             }
         }
         if (lhs instanceof String) {
+            String lstr = (String)lhs;
+            String rstr = ScriptRuntime.toString(rDbl);
             if (left_right_order) {
-                stack[stackTop] = (String)lhs + ScriptRuntime.toString(rDbl);
+                stack[stackTop] = lstr.concat(rstr);
             } else {
-                stack[stackTop] = ScriptRuntime.toString(rDbl) + (String)lhs;
+                stack[stackTop] = rstr.concat(lstr);
             }
         } else {
             double lDbl = (lhs instanceof Number)

@@ -1340,7 +1340,7 @@ public class ScriptRuntime {
                                   ((Number)val2).doubleValue());
             else
                 return new Double(toNumber(val1) + toNumber(val2));
-        return toString(val1) + toString(val2);
+        return toString(val1).concat(toString(val2));
     }
 
     public static Object postIncrement(Object value) {

@@ -109,7 +109,7 @@ public final class OptRuntime extends ScriptRuntime {
             val1 = ((Scriptable) val1).getDefaultValue(null);
         if (!(val1 instanceof String))
             return new Double(toNumber(val1) + val2);
-        return toString(val1) + toString(val2);
+        return toString(val1).concat(toString(val2));
     }
 
     public static Object add(double val1, Object val2) {
@@ -117,7 +117,7 @@ public final class OptRuntime extends ScriptRuntime {
             val2 = ((Scriptable) val2).getDefaultValue(null);
         if (!(val2 instanceof String))
             return new Double(toNumber(val2) + val1);
-        return toString(val1) + toString(val2);
+        return toString(val1).concat(toString(val2));
     }
 
     public static boolean neq(Object x, Object y) {
