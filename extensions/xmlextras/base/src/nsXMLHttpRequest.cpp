@@ -625,9 +625,9 @@ nsXMLHttpRequest::Open(const char *method, const PRUnichar *url)
     }
 
     if (argc > 2) {
-      JSBool bool;
-      JS_ValueToBoolean(cx, argv[2], &bool);
-      async = (PRBool)bool;
+      JSBool asyncBool;
+      JS_ValueToBoolean(cx, argv[2], &asyncBool);
+      async = (PRBool)asyncBool;
 
       if (argc > 3) {
         JSString* userStr;

@@ -27,9 +27,9 @@ interface nsIDOMEventListener;
 
 [scriptable, uuid(b7215e70-4157-11d4-9a42-000064657374)]
 interface nsIXMLHttpRequest : nsISupports {
-  noscript void addEventListener(in string type, 
+  [noscript] void addEventListener(in string type, 
                                  in nsIDOMEventListener listener);
-  noscript void removeEventListener(in string type,
+  [noscript] void removeEventListener(in string type,
                                     in nsIDOMEventListener listener);
   attribute nsISupports onload;
   attribute nsISupports onerror;
@@ -40,7 +40,7 @@ interface nsIXMLHttpRequest : nsISupports {
   void   abort();
   string getAllResponseHeaders();  
   string getResponseHeader(in string header);
-  noscript void   openRequest(in string method, 
+  [noscript] void   openRequest(in string method, 
                               in wstring url, 
                               in boolean async,
                               in string user, 
