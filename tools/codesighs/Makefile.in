@@ -29,14 +29,14 @@ include $(DEPTH)/config/autoconf.mk
 
 REQUIRES = $(NULL)
 
-SIMPLECSRCS += \
+CSRCS += \
 		msmap2tsv.c \
 		nm2tsv.c \
 		codesighs.c \
 		maptsvdifftool.c \
 		$(NULL)
 
-SIMPLE_PROGRAMS	= $(SIMPLECSRCS:.c=$(BIN_SUFFIX))
+SIMPLE_PROGRAMS	= $(CSRCS:.c=$(BIN_SUFFIX))
 
 include $(topsrcdir)/config/config.mk
 
