@@ -1130,6 +1130,29 @@ perl -pi -e 's@#\!/usr/bin/perl@#\!/usr/local/bin/perl@' *cgi *pl
 	</answer>
       </qandaentry>
 
+      <qandaentry>
+    <question id="faq-use-close">
+      <para>
+        Why can't I close bugs from the "Change Several Bugs at Once" page?
+      </para>
+    </question>
+    <answer>
+      <para>
+        The logic flow currently used is RESOLVED, then VERIFIED, then CLOSED.
+        You <emphasis>can</emphasis> mass-CLOSE bugs from the change several
+        bugs at once page. <emphasis>but</emphasis>, every bug listed on the
+        page has to be in VERIFIED state before the control to do it will show
+        up on the form. You can also mass-VERIFY, but every bug listed has to be
+        RESOLVED in order for the control to show up on the form. The logic
+        behind this is that if you pick one of the bugs that's not VERIFIED and
+        try to CLOSE it, the bug change will fail miserably (thus killing any
+        changes in the list after it while doing the bulk change) so it doesn't
+        even give you the choice.
+      </para>
+    </answer>
+      </qandaentry>
+
+
     </qandadiv>
 
     <qandadiv id="faq-hacking">
