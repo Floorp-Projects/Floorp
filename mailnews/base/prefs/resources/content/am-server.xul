@@ -128,13 +128,13 @@ Contributors:
 
     <checkbox wsm_persist="true" id="pop3.leaveMessagesOnServer"
               label="&leaveOnServer.label;" oncommand="setupMailOnServerUI();"
-              hidable="true" hidefor="movemail"
+              hidable="true" hidefor="imap,nntp,movemail"
               prefattribute="value"
               prefstring="mail.server.%serverkey%.leave_on_server"/>
 
     <checkbox wsm_persist="true" id="pop3.deleteMailLeftOnServer" class="indent"
               label="&deleteOnServer.label;"
-              hidable="true" hidefor="movemail"
+              hidable="true" hidefor="imap,nntp,movemail"
               prefattribute="value"
               prefstring="mail.server.%serverkey%.delete_mail_left_on_server"/>
   </vbox>
