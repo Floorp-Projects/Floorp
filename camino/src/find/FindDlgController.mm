@@ -39,22 +39,36 @@
 #import "Find.h"
 
 @interface FindDlgController(Private)
-- (NSString*)getSearchText;
+
+- (void)loadNewFindStringFromPasteboard;
+- (void)putFindStringOnPasteboard;
+
+- (NSString*)getSearchText:(BOOL*)outIsNew;
 - (BOOL)find:(BOOL)searchBack;
+
 @end
 
 @implementation FindDlgController
 
-- (void)loadFindStringFromPasteboard
+- (void)dealloc
 {
-  NSPasteboard *pasteboard = [NSPasteboard pasteboardWithName:NSFindPboard];
-  if ([[pasteboard types] containsObject:NSStringPboardType]) {
-    NSString *string = [pasteboard stringForType:NSStringPboardType];
-    if (string && [string length]) {
-      [mSearchField setStringValue: string];
-      [mFindNextButton setEnabled:YES];
-      [mFindPrevButton setEnabled:YES];
-    }
+  [mLastFindString release];
+  [super dealloc];
+}
+
+- (void)loadNewFindStringFromPasteboard
+{
+  BOOL pasteboardChanged;
+  NSString* curPasteboard = [self getSearchText:&pasteboardChanged];
+  if (pasteboardChanged)
+    [mSearchField setStringValue:curPasteboard];
+
+  [mSearchField selectText:nil];
+
+  if ([[mSearchField stringValue] length] > 0)
+  {
+    [mFindNextButton setEnabled:YES];
+    [mFindPrevButton setEnabled:YES];
   }
 }
 
@@ -63,6 +77,9 @@
   NSPasteboard *pasteboard = [NSPasteboard pasteboardWithName:NSFindPboard];
   [pasteboard declareTypes:[NSArray arrayWithObject:NSStringPboardType] owner:nil];
   [pasteboard setString:[mSearchField stringValue] forType:NSStringPboardType];
+
+  [mLastFindString release];
+  mLastFindString = [[NSString stringWithString:[mSearchField stringValue]] retain];
 }
 
 //
@@ -130,30 +147,34 @@
 //
 // Retrieve the most recent search string
 //
-- (NSString*)getSearchText
+- (NSString*)getSearchText:(BOOL*)outIsNew
 {
+  NSString* searchText;
+  
   NSPasteboard *findPboard = [NSPasteboard pasteboardWithName:NSFindPboard];
   if ([[findPboard types] indexOfObject:NSStringPboardType] != NSNotFound) 
-    return [findPboard stringForType:NSStringPboardType];
-
-  return [NSString string];
+    searchText = [findPboard stringForType:NSStringPboardType];
+  else
+    searchText = [NSString string];
+  
+  if (outIsNew)
+    *outIsNew = mLastFindString && ![mLastFindString isEqualToString:searchText];
+  
+  // remember the last pasteboard string that we saw
+  [mLastFindString release];
+  mLastFindString = [[NSString stringWithString:searchText] retain];
+  
+  return searchText;
 }
 
-//
-// -showWindow:
-//
-// override to set the current search text in the text area before showing 
-// the window
-//
-- (IBAction)showWindow:(id)sender
+- (void)windowDidBecomeKey:(NSNotification *)notification
 {
-  [mSearchField setStringValue:[self getSearchText]];
-  [super showWindow:sender];
+  [self loadNewFindStringFromPasteboard];
 }
 
--(void)windowDidLoad
+- (void)applicationWasActivated
 {
-  [mSearchField setStringValue:[self getSearchText]];  
+  [self loadNewFindStringFromPasteboard];
 }
 
 @end

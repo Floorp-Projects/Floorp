@@ -1305,6 +1305,11 @@ const int kReuseWindowOnAE = 2;
   [NSApp makeWindowsPerform:@selector(display) inOrder:YES];
 }
 
+- (void)applicationDidBecomeActive:(NSNotification *)aNotification
+{
+  [mFindDialog applicationWasActivated];
+}
+
 - (void) updatePrebinding
 {
   // For MacOS 10.2 and higher, don't do anything, since

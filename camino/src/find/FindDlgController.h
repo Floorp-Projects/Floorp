@@ -37,20 +37,21 @@
 
 #import <AppKit/AppKit.h>
 
-@interface FindDlgController : NSWindowController {
+@interface FindDlgController : NSWindowController
+{
     IBOutlet NSTextField* mSearchField;
     IBOutlet NSButton* mIgnoreCaseBox;
     IBOutlet NSButton* mWrapAroundBox;
     IBOutlet NSButton* mFindNextButton;
     IBOutlet NSButton* mFindPrevButton;
+    
+    NSString*          mLastFindString;
 }
 
 - (IBAction) findNextButton: (id)aSender;
 - (IBAction) findPreviousButton: (id)aSender;
 - (IBAction) findNextAndOrderOut: (id)aSender;
 
-  // delegates for NSTextView
-- (void)controlTextDidChange:(NSNotification *)aNotification;
-- (void)loadFindStringFromPasteboard;
-- (void)putFindStringOnPasteboard;
+- (void)applicationWasActivated;
+
 @end
