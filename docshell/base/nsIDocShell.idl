@@ -96,7 +96,7 @@ interface nsIDocShell : nsISupports
 	/*
 	Prefs to use for the DocShell.
 	*/
-	attribute nsIPref Prefs;
+	attribute nsIPref prefs;
 
 	/*
 	Returns the root DocShell instance.  Since DocShells can be nested
