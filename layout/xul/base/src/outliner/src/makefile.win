@@ -46,6 +46,8 @@ CPPSRCS=					\
 	nsOutlinerBodyFrame.cpp \
 	nsOutlinerColFrame.cpp \
 	nsOutlinerSelection.cpp \
+	nsOutlinerUtils.cpp \
+	nsOutlinerContentView.cpp \
 	$(NULL)
 
 CPP_OBJS=		\
@@ -53,9 +55,12 @@ CPP_OBJS=		\
 	.\$(OBJDIR)\nsOutlinerBodyFrame.obj \
 	.\$(OBJDIR)\nsOutlinerColFrame.obj \
 	.\$(OBJDIR)\nsOutlinerSelection.obj \
+	.\$(OBJDIR)\nsOutlinerUtils.obj \
+	.\$(OBJDIR)\nsOutlinerContentView.obj \
 	$(NULL)
 
 EXPORTS = nsOutlinerColFrame.h	\
+	nsOutlinerUtils.h \
 	$(NULL)
 
 LINCS= \
