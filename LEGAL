@@ -1,15 +1,18 @@
 Please be apprised of the following Legal Notices:
 
-A) Wang contends that its U.S. Patent No. 4, 751,669 ("the '669
-Patent") disclosing a "video text" system, is infringed by the following
-functionality in the Netscape Navigator code: 1) the animated logo and
-status line indicators --See Claims 1,8 and 9; 2)  the "File Save As"
-function --See Claims 23-27; 3) Bookmarks and Rename Bookmarks in the
-Properties window --See Claims 20-22; 4) storing HTML, GIF, and JPEG
-files and adding filename extensions based on mime types (performed in
-Windows OS) --See Claim 38.  Netscape believes the '669 Patent is
-invalid and non-infringed. Netscape is vigorously defending against
-Wang's claims.
+A) The U.S. District Court for the Eastern District of Virginia has
+ruled that the Netscape Navigator code does not infringe Wang's U.S.
+Patent No. 4,751,669 ("the '669 Patent") because: 1) HTML is not
+Videotex as defined by the '669 patent; 2) web servers are not central
+suppliers; and 3) Navigator does not "connect," as defined by the '669
+Patent, to web servers on the Internet. Wang may appeal this decision to
+the Federal Circuit. Wang contended that its Patent disclosing a
+"Videotext" system, is infringed by the following functionality in the
+Netscape Navigator code: 1) the animated logo and status line indicators
+--See Claims 1,8 and 9; 2)  the "File Save As" function --See Claims
+23-27; 3) Bookmarks and Rename Bookmarks in the Properties window --See
+Claims 20-22; 4) storing HTML, GIF, and JPEG files and adding filename
+extensions --See Claim 38
 
 B)   Intermind owns pending U.S. patent applications on communications
 systems which employ metadata ("channel objects") to define a control
