@@ -1097,6 +1097,9 @@ network/protocol/pop3/Makefile
 network/protocol/remote/Makefile
 network/protocol/smtp/Makefile
 network/util/Makefile
+rdf/Makefile
+rdf/include/Makefile
+rdf/src/Makefile
 sun-java/Makefile
 sun-java/stubs/Makefile
 sun-java/stubs/include/Makefile
