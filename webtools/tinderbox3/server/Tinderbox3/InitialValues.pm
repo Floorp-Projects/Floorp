@@ -115,7 +115,7 @@ th.status200 a,th.status201 a,th.status202 a,th.status203 a {
 }
 #tree_top {
   text-align: center;
-  vertical-align: center;
+  vertical-align: middle;
   margin-bottom: 1em;
 }
 #tree_top span {
