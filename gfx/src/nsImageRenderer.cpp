@@ -103,6 +103,18 @@ ImageRendererImpl::NewPixmap(void* aDisplayContext,
         depth = 24;
     }
 
+  // XXX When the other platforms implement GetDepth() then remove the
+  // XP_WIN ifdef
+#ifdef XP_WIN
+  PRUint32  deviceDepth;
+  dc->GetDepth(deviceDepth);
+
+  if ((8 == depth) && (deviceDepth > (PRUint32)depth)) {
+    // Don't force dithering to the color cube...
+    depth = 24;
+  }
+#endif
+
     img->Init(aWidth, aHeight, depth, 
 	      (aMask == nsnull) ? nsMaskRequirements_kNoMask : 
 	                          nsMaskRequirements_kNeeds1Bit);
@@ -126,10 +138,19 @@ ImageRendererImpl::NewPixmap(void* aDisplayContext,
         aMask->header.height = aHeight;
     }
 
-    if (aImage->header.color_space->pixmap_depth == 8) {
+    if (8 == depth) {
         IL_ColorMap *cmap;
         if (sPseudoColorSpace == nsnull) {
+#ifdef XP_WIN
+            // This needs to match the logical palette
+            // XXX Clean this up to use the one and only color space
+            // the device manager should hold...
+            IL_RGB  reserved[10];
+            memset(reserved, 0, sizeof(reserved));
+            cmap = IL_NewCubeColorMap(reserved, 10, 216 + 10);
+#else
             cmap = IL_NewCubeColorMap(nsnull, 0, 216);
+#endif
             
             if (cmap != nsnull) {
                 sPseudoColorSpace = IL_CreatePseudoColorSpace(cmap, 8, 8);

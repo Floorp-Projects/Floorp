@@ -58,36 +58,13 @@ public:
    * Return the header size of the Device Independent Bitmap(DIB).
    * @return size of header in bytes
   */
-  PRIntn      GetSizeHeader(){return sizeof(BITMAPINFOHEADER) + sizeof(RGBQUAD) * mNumPalleteColors;}
+  PRIntn      GetSizeHeader(){return sizeof(BITMAPINFOHEADER) + sizeof(RGBQUAD) * mNumPaletteColors;}
 
   /** 
     * Return the image size of the Device Independent Bitmap(DIB).
     * @return size of image in bytes
     */
   PRIntn      GetSizeImage(){ return mSizeImage; }
-
-  /** 
-   * Make a palette for the DIB.
-   * @return true or false if the palette was created
-   */
-  PRBool      MakePalette();
-
-  /** 
-   * Set the for this pixelmap to the system palette.
-   * @param  aHdc is the DC to get the palette from to use
-   * @return true or false if the palette was set
-   */
-  PRBool      SetSystemPalette(HDC* aHdc);
-
-
-  /** 
-   * Set the palette for an HDC.
-   * @param aHDC is the DC to set the palette to
-   * @param bBackround tells if the DC is in the background
-   * @return true or false if the palette was set
-   */
-  PRUintn     UsePalette(HDC* aHdc, PRBool bBackground = PR_FALSE);
-
 
   /** 
    * Calculate the number of bytes spaned for this image for a given width
@@ -194,30 +171,17 @@ private:
    */
   void CleanUp(PRBool aCleanUpAll);
 
-  /** 
-   * Calculate the amount of memory needed for the palette
-   * @param  aBitCount is the number of bits per pixel
-   */
-  void ComputePaletteSize(PRIntn aBitCount);
-
-
-  /** 
-   * Calculate the amount of memory needed for the initialization of the pixelmap
-   */
-  void ComputeMetrics();
-
   void CreateDDB(nsDrawingSurface aSurface);
 
   PRUint8 PaletteMatch(PRUint8 r, PRUint8 g, PRUint8 b);
 
   PRInt8              mNumBytesPixel;     // number of bytes per pixel
-  PRInt16             mNumPalleteColors;  // either 8 or 0
+  PRInt16             mNumPaletteColors;  // either 8 or 0
   PRInt32             mSizeImage;         // number of bytes
   PRInt32             mRowBytes;          // number of bytes per row
-  PRUint8             *mColorTable;       // color table for the bitmap
-  PRUint8             *mImageBits;         // starting address of DIB bits
+  PRUint8*            mImageBits;         // starting address of DIB bits
   PRBool              mIsOptimized;       // Have we turned our DIB into a GDI?
-  nsColorMap          *mColorMap;         // Redundant with mColorTable, but necessary
+  nsColorMap*         mColorMap;          // Redundant with mColorTable, but necessary
     
   // alpha layer members
   PRUint8             *mAlphaBits;         // alpha layer if we made one
@@ -228,9 +192,6 @@ private:
   nsPoint             mLocation;          // alpha mask location
   PRInt8              mImageCache;        // place to save off the old image for fast animation
   PRInt16             mAlphaLevel;        // an alpha level every pixel uses
-
-  // for Set/GetColorMap
-  HPALETTE            mHPalette;
   HBITMAP             mHBitmap;           // the GDI bitmaps
   HBITMAP             mAlphaHBitmap;
   LPBITMAPINFOHEADER  mBHead;             // BITMAPINFOHEADER
