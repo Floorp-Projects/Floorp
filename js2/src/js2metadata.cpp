@@ -50,8 +50,8 @@
 #include "numerics.h"
 #include "reader.h"
 #include "parser.h"
-#include "regexp.h"
 #include "js2engine.h"
+#include "regexp.h"
 #include "bytecodecontainer.h"
 #include "js2metadata.h"
 
@@ -1292,7 +1292,7 @@ namespace MetaData {
                     bCon->emitOp(eHandler, p->pos);
                     CatchClause *c = t->catches;
                     // the exception object will be the only thing on the stack
-                    ASSERT(bCon->mStackTop == 0);
+//                    ASSERT(bCon->mStackTop == 0);
                     bCon->mStackTop = 1;
                     if (bCon->mStackMax < 1) bCon->mStackMax = 1;
                     BytecodeContainer::LabelID nextCatch = NotALabel;
@@ -2291,8 +2291,12 @@ doUnary:
             {
                 RegExpExprNode *v = checked_cast<RegExpExprNode *>(p);
                 js2val args[2];
-                args[0] = engine->allocString(v->re);
-                args[1] = engine->allocString(&v->flags);
+                const String *reStr = engine->allocStringPtr(&v->re);
+                DEFINE_ROOTKEEPER(rk1, reStr);
+                const String *flagStr = engine->allocStringPtr(&v->flags);
+                DEFINE_ROOTKEEPER(rk2, flagStr);
+                args[0] = STRING_TO_JS2VAL(reStr);
+                args[1] = STRING_TO_JS2VAL(flagStr);
                 // XXX error handling during this parse? The RegExp_Constructor is
                 // going to call errorPos() on the current bCon.
                 js2val reValue = RegExp_Constructor(this, JS2VAL_NULL, args, 2);
@@ -2552,20 +2556,19 @@ doUnary:
 
                 if (b->op2->getKind() == ExprNode::identifier) {
                     IdentifierExprNode *i = checked_cast<IdentifierExprNode *>(b->op2);
-#if 0
+
                     if (*exprType) {
-                        MemberDescriptor m2;
                         Multiname multiname(&i->name);
-                        if (findLocalMember(*exprType, &multiname, ReadAccess, CompilePhase, &m2)) {
-                            if (m2.ns) {
-                                QualifiedName qname(m2.ns, multiname.name);
-                                InstanceMember *m = findInstanceMember(*exprType, &qname, ReadAccess);
-                                if (m->kind == InstanceMember::InstanceVariableKind)
-                                    returnRef = new SlotReference(checked_cast<InstanceVariable *>(m)->slotIndex);
+                        InstanceMember *mBase = findBaseInstanceMember(*exprType, &multiname, ReadAccess);
+                        if (mBase) {
+                            InstanceMember *m = getDerivedInstanceMember(*exprType, mBase, ReadAccess);
+                            if (m->memberKind == Member::InstanceVariableMember) {
+                                InstanceVariable *mv = checked_cast<InstanceVariable *>(m);
+                                returnRef = new (*referenceArena) SlotReference(mv->slotIndex);
                             }
                         }
                     }
-#endif
+
                     if (returnRef == NULL) {
                         returnRef = new (*referenceArena) DotReference(&i->name);
                         referenceArena->registerDestructor(returnRef);
@@ -3472,9 +3475,6 @@ rescan:
         else
             return JS2VAL_UNDEFINED;
     }
-
-#define JS7_ISHEX(c)    ((c) < 128 && isxdigit(c))
-#define JS7_UNHEX(c)    (uint32)(isdigit(c) ? (c) - '0' : 10 + tolower(c) - 'a')
 
     /* See ECMA-262 15.1.2.5 */
     static js2val GlobalObject_unescape(JS2Metadata *meta, const js2val /* thisValue */, js2val argv[], uint32 argc)
@@ -4424,44 +4424,24 @@ XXX see EvalAttributeExpression, where identifiers are being handled for now...
         reportError(kind, message, pos, str.c_str());
     }
 
- 
-    void JS2Metadata::initBuiltinClass(JS2Class *builtinClass, FunctionData *protoFunctions, FunctionData *staticFunctions, NativeCode *construct, NativeCode *call)
+    // Called after initBuiltinClass and after the prototype object is constructed
+    void JS2Metadata::initBuiltinClassPrototype(JS2Class *builtinClass, FunctionData *protoFunctions)
     {
-        FunctionData *pf;
-
-        builtinClass->construct = construct;
-        builtinClass->call = call;
-
-        // Adding "prototype" & "length", etc as static members of the class - not dynamic properties; XXX
         env->addFrame(builtinClass);
         {
             Variable *v = new Variable(builtinClass, OBJECT_TO_JS2VAL(builtinClass->prototype), true);
             defineLocalMember(env, engine->prototype_StringAtom, NULL, Attribute::NoOverride, false, ReadWriteAccess, v, 0, false);
-            v = new Variable(builtinClass, INT_TO_JS2VAL(1), true);
-            defineLocalMember(env, engine->length_StringAtom, NULL, Attribute::NoOverride, false, ReadWriteAccess, v, 0, false);
-
-            pf = staticFunctions;
-            if (pf) {
-                while (pf->name) {
-                    FunctionInstance *callInst = new FunctionInstance(this, functionClass->prototype, functionClass);
-                    callInst->fWrap = new FunctionWrapper(true, new ParameterFrame(JS2VAL_INACCESSIBLE, true), pf->code, env);
-                    v = new Variable(functionClass, OBJECT_TO_JS2VAL(callInst), true);
-                    defineLocalMember(env, &world.identifiers[pf->name], NULL, Attribute::NoOverride, false, ReadWriteAccess, v, 0, false);
-                    createDynamicProperty(callInst, engine->length_StringAtom, INT_TO_JS2VAL(pf->length), ReadAccess, true, false);
-                    pf++;
-                }
-            }
-        }
+        }    
         env->removeTopFrame();
-    
+
         // Add "constructor" as a dynamic property of the prototype
         FunctionInstance *fInst = new FunctionInstance(this, functionClass->prototype, functionClass);
         createDynamicProperty(fInst, engine->length_StringAtom, INT_TO_JS2VAL(1), ReadAccess, true, false);
-        fInst->fWrap = new FunctionWrapper(true, new ParameterFrame(JS2VAL_INACCESSIBLE, true), construct, env);
+        fInst->fWrap = new FunctionWrapper(true, new ParameterFrame(JS2VAL_INACCESSIBLE, true), builtinClass->construct, env);
         ASSERT(JS2VAL_IS_OBJECT(builtinClass->prototype));
         createDynamicProperty(JS2VAL_TO_OBJECT(builtinClass->prototype), &world.identifiers["constructor"], OBJECT_TO_JS2VAL(fInst), ReadWriteAccess, false, false);
     
-        pf = protoFunctions;
+        FunctionData *pf = protoFunctions;
         if (pf) {
             while (pf->name) {
 /*
@@ -4478,6 +4458,35 @@ XXX see EvalAttributeExpression, where identifiers are being handled for now...
                 pf++;
             }
         }
+    }
+ 
+    void JS2Metadata::initBuiltinClass(JS2Class *builtinClass, FunctionData *staticFunctions, NativeCode *construct, NativeCode *call)
+    {
+        FunctionData *pf;
+
+        builtinClass->construct = construct;
+        builtinClass->call = call;
+
+        // Adding "prototype" & "length", etc as static members of the class - not dynamic properties; XXX
+        env->addFrame(builtinClass);
+        {
+            Variable *v = new Variable(builtinClass, INT_TO_JS2VAL(1), true);
+            defineLocalMember(env, engine->length_StringAtom, NULL, Attribute::NoOverride, false, ReadWriteAccess, v, 0, false);
+
+            pf = staticFunctions;
+            if (pf) {
+                while (pf->name) {
+                    FunctionInstance *callInst = new FunctionInstance(this, functionClass->prototype, functionClass);
+                    callInst->fWrap = new FunctionWrapper(true, new ParameterFrame(JS2VAL_INACCESSIBLE, true), pf->code, env);
+                    v = new Variable(functionClass, OBJECT_TO_JS2VAL(callInst), true);
+                    defineLocalMember(env, &world.identifiers[pf->name], NULL, Attribute::NoOverride, false, ReadWriteAccess, v, 0, false);
+                    createDynamicProperty(callInst, engine->length_StringAtom, INT_TO_JS2VAL(pf->length), ReadAccess, true, false);
+                    pf++;
+                }
+            }
+        }
+        env->removeTopFrame();
+    
     }
 
    

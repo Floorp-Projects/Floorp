@@ -105,8 +105,9 @@ namespace MetaData {
             { NULL }
         };
 
+        meta->initBuiltinClass(meta->booleanClass, NULL, Boolean_Constructor, Boolean_Call);
         meta->booleanClass->prototype = OBJECT_TO_JS2VAL(new BooleanInstance(meta, OBJECT_TO_JS2VAL(meta->objectClass->prototype), meta->booleanClass));
-        meta->initBuiltinClass(meta->booleanClass, &prototypeFunctions[0], NULL, Boolean_Constructor, Boolean_Call);
+        meta->initBuiltinClassPrototype(meta->booleanClass, &prototypeFunctions[0]);
     }
 
 }

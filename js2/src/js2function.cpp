@@ -150,8 +150,9 @@ namespace MetaData {
         fnInst->fWrap = new FunctionWrapper(true, new ParameterFrame(JS2VAL_INACCESSIBLE, true), meta->env);
         fnInst->fWrap->bCon->emitOp(eReturnVoid, 0);
 
+        meta->initBuiltinClass(meta->functionClass, NULL, Function_Constructor, Function_Constructor);
         meta->functionClass->prototype = OBJECT_TO_JS2VAL(fnInst);
-        meta->initBuiltinClass(meta->functionClass, &prototypeFunctions[0], NULL, Function_Constructor, Function_Constructor);
+        meta->initBuiltinClassPrototype(meta->functionClass, &prototypeFunctions[0]);
     }
 
 }

@@ -124,13 +124,10 @@ js2val Error_toString(JS2Metadata *meta, const js2val thisValue, js2val *argv, u
 
 static void initErrorClass(JS2Metadata *meta, JS2Class *c, Constructor *constructor)
 {
-    c->construct = constructor;
+    meta->initBuiltinClass(c, NULL, constructor, constructor);
     c->prototype = OBJECT_TO_JS2VAL(new SimpleInstance(meta, meta->errorClass->prototype, meta->errorClass));
-
     meta->createDynamicProperty(JS2VAL_TO_OBJECT(c->prototype), &meta->world.identifiers["name"], meta->engine->allocString(c->getName()), ReadAccess, true, true);
     meta->createDynamicProperty(JS2VAL_TO_OBJECT(c->prototype), &meta->world.identifiers["message"], meta->engine->allocString("Message"), ReadAccess, true, true);
-
-    meta->initBuiltinClass(c, NULL, NULL, constructor, constructor);
 }
 
 void initErrorObject(JS2Metadata *meta)
@@ -145,10 +142,11 @@ void initErrorObject(JS2Metadata *meta)
     NamespaceList publicNamespaceList;
     publicNamespaceList.push_back(meta->publicNamespace);
 
+    meta->initBuiltinClass(meta->errorClass, NULL, Error_Constructor, Error_Constructor);
     meta->errorClass->prototype = OBJECT_TO_JS2VAL(new SimpleInstance(meta, meta->objectClass->prototype, meta->errorClass));
     meta->createDynamicProperty(JS2VAL_TO_OBJECT(meta->errorClass->prototype), &meta->world.identifiers["name"], meta->engine->allocString("Error"), ReadAccess, true, true);
     meta->createDynamicProperty(JS2VAL_TO_OBJECT(meta->errorClass->prototype), &meta->world.identifiers["message"], meta->engine->allocString("Message"), ReadAccess, true, true);
-    meta->initBuiltinClass(meta->errorClass, errorProtos, NULL, Error_Constructor, Error_Constructor);
+    meta->initBuiltinClassPrototype(meta->errorClass, errorProtos);
 
 
     initErrorClass(meta, meta->evalErrorClass, EvalError_Constructor);

@@ -150,8 +150,6 @@ namespace MetaData {
                             else
                                 break;
                         } while (true);
-                        if (jsx.hasKind(Exception::userException))  // snatch the exception before the stack gets clobbered
-                            x = pop();
                         activationStackTop = prev;      // need the one before the target function to 
                                                         // be at the top, because of postincrement
                         localFrame = activationStackTop->localFrame;
@@ -159,12 +157,11 @@ namespace MetaData {
                         bCon = activationStackTop->bCon;
                         meta->env = activationStackTop->env;
                     }
-                    else {
-                        if (jsx.hasKind(Exception::userException))
-                            x = pop();
-                    }
                     // make sure there's a JS object for the catch clause to work with
-                    if (!jsx.hasKind(Exception::userException)) {
+                    if (jsx.hasKind(Exception::userException)) {
+                        x = jsx.value;
+                    }
+                    else {
                         js2val argv[1];
                         argv[0] = allocString(new String(jsx.fullMessage()));
                         switch (jsx.kind) {

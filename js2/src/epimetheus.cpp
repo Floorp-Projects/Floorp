@@ -31,6 +31,7 @@
 #include <assert.h>
 
 #include "world.h"
+#include "strings.h"
 #include "utilities.h"
 #include "js2value.h"
 
@@ -41,8 +42,8 @@
 
 #include "reader.h"
 #include "parser.h"
-#include "regexp.h"
 #include "js2engine.h"
+#include "regexp.h"
 #include "bytecodecontainer.h"
 #include "js2metadata.h"
 

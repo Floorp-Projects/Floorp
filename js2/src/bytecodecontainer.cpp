@@ -49,11 +49,12 @@
 #include <map>
 #include <algorithm>
 
-#include "regexp.h"
+#include "strings.h"
 #include "reader.h"
 #include "parser.h"
 #include "js2engine.h"
 #include "bytecodecontainer.h"
+#include "regexp.h"
 #include "js2metadata.h"
 
 

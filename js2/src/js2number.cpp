@@ -130,8 +130,9 @@ namespace MetaData {
             { NULL }
         };
 
+        meta->initBuiltinClass(meta->numberClass, NULL, Number_Constructor, Number_Call);
         meta->numberClass->prototype = OBJECT_TO_JS2VAL(new NumberInstance(meta, meta->objectClass->prototype, meta->numberClass));
-        meta->initBuiltinClass(meta->numberClass, &prototypeFunctions[0], NULL, Number_Constructor, Number_Call);
+        meta->initBuiltinClassPrototype(meta->numberClass, &prototypeFunctions[0]);
 
     }
 

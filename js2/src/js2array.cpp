@@ -172,7 +172,7 @@ static js2val Array_toSource(JS2Metadata *meta, const js2val thisValue, js2val *
         return meta->engine->allocString("[]");
     else {
         js2val result;
-        String *s = new String();
+        String *s = new String(widenCString("["));
         for (uint32 i = 0; i < length; i++) {
             if (meta->arrayClass->readPublic(meta, &thatValue, meta->arrayClass, meta->engine->numberToString(i), RunPhase, &result)
                     && !JS2VAL_IS_UNDEFINED(result))
@@ -769,8 +769,9 @@ void initArrayObject(JS2Metadata *meta)
         { NULL }
     };
 
+    meta->initBuiltinClass(meta->arrayClass, NULL, Array_Constructor, Array_Constructor);
     meta->arrayClass->prototype = OBJECT_TO_JS2VAL(new ArrayInstance(meta, OBJECT_TO_JS2VAL(meta->objectClass->prototype), meta->arrayClass));
-    meta->initBuiltinClass(meta->arrayClass, &prototypeFunctions[0], NULL, Array_Constructor, Array_Constructor);
+    meta->initBuiltinClassPrototype(meta->arrayClass, &prototypeFunctions[0]);
 }
 
 }

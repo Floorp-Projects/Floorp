@@ -161,6 +161,7 @@ extern int64 JSLL_Zero();
 ***********************************************************************/
 #define JSLL_L2I(i, l)        ((i) = (int32)(l))
 #define JSLL_UL2I(i, ul)      ((i) = (int32)(ul))
+#define JSLL_UL2UI(ui, ul)    ((i) = (uint32)(ul))
 #define JSLL_L2UI(ui, l)      ((ui) = (uint32)(l))
 #define JSLL_L2F(f, l)        ((f) = (float64)(l))
 #define JSLL_L2D(d, l)        ((d) = (float64)(l))

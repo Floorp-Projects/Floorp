@@ -34,6 +34,8 @@
 #ifndef exception_h___
 #define exception_h___
 
+#include "systemtypes.h"
+#include "js2value.h"
 #include "strings.h"
 
 namespace JavaScript
@@ -72,6 +74,7 @@ namespace JavaScript
         size_t charNum;         // Character offset within the line that caused the error
         size_t pos;             // Offset within the input of the error
         String sourceLine;      // The text of the source line
+        js2val value;           // The value for a user exception
 
         Exception (Kind kind, const char *message):
                 kind(kind), message(widenCString(message)), lineNum(0), charNum(0) {}
@@ -88,6 +91,8 @@ namespace JavaScript
                   size_t pos, const char16 *sourceLineBegin, const char16 *sourceLineEnd):
                 kind(kind), message(message), sourceFile(sourceFile), lineNum(lineNum), charNum(charNum), pos(pos),
                 sourceLine(sourceLineBegin, sourceLineEnd) {}
+
+        Exception(js2val v) : kind(userException), lineNum(0), charNum(0), value(v) {}
 
         bool hasKind(Kind k) const {return kind == k;}
         const char *kindString() const;

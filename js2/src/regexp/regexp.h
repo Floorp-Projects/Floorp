@@ -31,144 +31,84 @@
  * file under either the NPL or the GPL.
  */
 
-#ifdef __GNUC__
- /* GCC's wchar_t is 32 bits, so we can't use it. */
- typedef uint16 char16;
- typedef uint16 uchar16;
-#else
- typedef wchar_t char16;
- typedef wchar_t uchar16;
-#endif
-typedef char16 REchar;
-
-typedef unsigned int REuint32;
-typedef int REint32;
-typedef unsigned char REuint8;
+/*
+ * This struct holds a bitmap representation of a class from a regexp.
+ * There's a list of these referenced by the classList field in the JSRegExp 
+ * struct below. The initial state has startIndex set to the offset in the
+ * original regexp source of the beginning of the class contents. The first 
+ * use of the class converts the source representation into a bitmap.
+ *
+ */
 
 
-typedef enum RE_Flags {
-    RE_IGNORECASE = 0x1,
-    RE_GLOBAL = 0x2,
-    RE_MULTILINE = 0x4
-} RE_Flags;
+typedef uint32 jsint;
+typedef char16 jschar;
+typedef bool JSBool;
+typedef uint32 uintN;
+typedef int32 intN;
+typedef uint8 jsbytecode;
+typedef char16 JSString;
+typedef char16 JSSubString;
 
-typedef enum RE_Version {
-    RE_VERSION_1,              /* octal literal support */
-    RE_VERSION_2
-} RE_Version;
-
-typedef enum RE_Error {
-    RE_NO_ERROR,
-    RE_TRAILING_SLASH,         /* a backslash just before the end of the RE */
-    RE_UNCLOSED_PAREN,         /* mis-matched parens */
-    RE_UNCLOSED_BRACKET,       /* mis-matched parens */
-    RE_UNCLOSED_CLASS,         /* '[' missing ']' */
-    RE_BACKREF_IN_CLASS,       /* used '\<digit>' in '[..]' */
-    RE_BAD_FLAG,               /* unrecognized flag (not i, g or m) */
-    RE_WRONG_RANGE,            /* range lo > range hi */
-    RE_OUT_OF_MEMORY
-} RE_Error;
-
-typedef struct RENode RENode;
 
 typedef struct RECharSet {
-    REuint8 *bits;
-    REuint32 length;
-    unsigned char sense;
+    bool converted;
+    bool sense;
+    uint16 length;
+    union {
+        uint8 *bits;
+        struct {
+            uint16 startIndex;
+            uint16 length;
+        } src;
+    } u;
 } RECharSet;
 
 
-typedef struct REState {
-    REchar *srcStart;           /* copy of source text */
-    REchar *src;                /* current parse position */
-    REchar *srcEnd;             /* end of source text */
-    REuint32 parenCount;        /* # capturing parens */
-    REuint32 flags;             /* union of flags from regexp */
-    RE_Version version;         
-    RE_Error error;             /* parse-time or runtime error */
-    REuint32 classCount;        /* number of contained []'s */
-    RECharSet *classList;       /* data for []'s */
-    RENode *result;             /* head of result tree */
-    REint32 codeLength;         /* length of bytecode */
-    REuint8 *pc;                /* start of bytecode */
-} REState;
+#define JSREG_FOLD      0x01    /* fold uppercase to lowercase */
+#define JSREG_GLOB      0x02    /* global exec, creates array of matches */
+#define JSREG_MULTILINE 0x04    /* treat ^ and $ as begin and end of line */
+
+
+struct JSRegExp {
+    uint32       parenCount:24, /* number of parenthesized submatches */
+                 flags:8;       /* flags, see above JSREG_* defines */
+    uint32       classCount;    /* count [...] bitmaps */
+    RECharSet    *classList;    /* list of [...] bitmaps */
+    const jschar *source;       /* locked source string, sans // */
+    jsbytecode   program[1];    /* regular expression bytecode */
+};
 
 typedef struct RECapture {
-    REint32 index;              /* start of contents of this capture, -1 for empty  */
-    REint32 length;             /* length of capture */
+    int16 index;              /* start of contents, -1 for empty  */
+    int16 length;             /* length of capture */
 } RECapture;
 
-typedef struct REMatchState {
-    REint32 startIndex;         /* beginning of succesful match */     
-    REint32 endIndex;           /* character beyond end of succesful match */
-    REint32 parenCount;         /* set to (n - 1), i.e. for /((a)b)/, this field is 1 */
-    RECapture parens[1];        /* first of 'n' captures, allocated at end of this struct */
-} REMatchState;
+struct REMatchResult {
+    uint32 startIndex;
+    uint32 endIndex;
+    uint32 parenCount;
+    RECapture parens[1];      /* first of 'parenCount' captures, 
+                               * allocated at end of this struct.
+                               */
+};
 
+namespace JavaScript {      
+namespace MetaData {
 
+class JS2Metadata;
 
-/*
- *  Compiles the flags source text into a union of flag values. Returns RE_NO_ERROR
- *  or RE_BAD_FLAG.
- *
- */
-RE_Error parseFlags(const REchar *flagsSource, REint32 flagsLength, REuint32 *flags);
+// Execute the re against the string starting at the index, return NULL for failure
+REMatchResult *REExecute(JS2Metadata *meta, JSRegExp *re, const jschar *str, uint32 index, uint32 length, bool globalMultiline);
 
-/* 
- *  Compiles the RegExp source into a stream of REByteCodes and fills in the REState struct.
- *  Errors are recorded in the state 'error' field and signalled by a NULL return.
- *  The RegExp source does not have any delimiters.
- */
-REState *REParse(const REchar *source, REint32 sourceLength, REuint32 flags, RE_Version version);
+// Compile the source re, return NULL for failure (error functions called)
+JSRegExp *RECompile(JS2Metadata *meta, const jschar *str, uint32 length, uint32 flags);
 
+// Compile the flag source and build a flag bit set. Return true/false for success/failure
+bool parseFlags(JS2Metadata *meta, const jschar *flagStr, uint32 length, uint32 *flags);
 
-/*
- *  Execute the RegExp against the supplied text.
- *  The return value is NULL for no match, otherwise an REMatchState struct.
- *
- */
-REMatchState *REExecute(REState *pState, const REchar *text, REint32 offset, REint32 length, int globalMulitline);
+// Execute the re against the string, but don't try advancing into the string
+REMatchResult *REMatch(JS2Metadata *meta, JSRegExp *re, const jschar *str, uint32 length);
 
-
-/*
- *  The [[Match]] implementation, applies the regexp at the start of the text
- *  only (i.e. it does not search repeatedly through the text for a match).
- *  NULL return for no match.
- *
- */
-REMatchState *REMatch(REState *pState, const REchar *text, REint32 length);
-
-
-
-/*
- *  Throw away the RegExp and all data associated with it.
- */
-void REfreeRegExp(REState *pState);
-
-
-
-
-/*
- *  Needs to be provided by the host, following these specs:
- *
- *
- * [1. If IgnoreCase is false, return ch. - not necessary in implementation]
- *
- * 2. Let u be ch converted to upper case as if by calling 
- *    String.prototype.toUpperCase on the one-character string ch.
- * 3. If u does not consist of a single character, return ch.
- * 4. Let cu be u's character.
- * 5. If ch's code point value is greater than or equal to decimal 128 and cu's
- *    code point value is less than decimal 128, then return ch.
- * 6. Return cu.
- */
-extern REchar canonicalize(REchar ch);
-
-/*
- *  The host should also provide a definition of whitespace to match the following:
- *
- */
-#ifndef RE_ISSPACE
-#define RE_ISSPACE(c) ( (c == ' ') || (c == '\t') || (c == '\n') || (c == '\r')  || (c == '\v')  || (c == '\f') )
-#endif
-
+}
+}

@@ -240,4 +240,8 @@ namespace JavaScript
 
     const char16 *skipWhiteSpace(const char16 *str, const char16 *strEnd);
 }
+
+#define JS7_ISHEX(c)    ((c) < 128 && isxdigit(c))
+#define JS7_UNHEX(c)    (uintN)(isdigit(c) ? (c) - '0' : 10 + tolower(c) - 'a')
+
 #endif /* strings_h___ */

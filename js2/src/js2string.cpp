@@ -131,9 +131,9 @@ static js2val String_search(JS2Metadata *meta, const js2val thisValue, js2val *a
         regexp = JS2VAL_NULL;
         regexp = RegExp_Constructor(meta, regexp, argv, 1);
     }
-    REState *pState = (checked_cast<RegExpInstance *>(JS2VAL_TO_OBJECT(regexp)))->mRegExp;
+    JSRegExp *re = (checked_cast<RegExpInstance *>(JS2VAL_TO_OBJECT(regexp)))->mRegExp;
 
-    REMatchState *match = REExecute(pState, str->begin(), 0, (int32)str->length(), false);
+    REMatchResult *match = REExecute(meta, re, str->begin(), 0, (int32)str->length(), false);
     if (match)
         return meta->engine->allocNumber((float64)(match->startIndex));
     else
@@ -167,8 +167,8 @@ static js2val String_match(JS2Metadata *meta, const js2val thisValue, js2val *ar
 
     RegExpInstance *thisInst = checked_cast<RegExpInstance *>(JS2VAL_TO_OBJECT(regexp));
     DEFINE_ROOTKEEPER(rk1, thisInst);
-    REState *pState = thisInst->mRegExp;
-    if ((pState->flags & RE_GLOBAL) == 0) {
+    JSRegExp *re = thisInst->mRegExp;
+    if ((re->flags & JSREG_GLOB) == 0) {
         return RegExp_exec(meta, regexp, &S, 1);                
     }
     else {
@@ -177,7 +177,7 @@ static js2val String_match(JS2Metadata *meta, const js2val thisValue, js2val *ar
         int32 index = 0;
         int32 lastIndex = 0;
         while (true) {
-            REMatchState *match = REExecute(pState, JS2VAL_TO_STRING(S)->begin(), lastIndex, toInt32(JS2VAL_TO_STRING(S)->length()), false);
+            REMatchResult *match = REExecute(meta, re, JS2VAL_TO_STRING(S)->begin(), lastIndex, toInt32(JS2VAL_TO_STRING(S)->length()), false);
             if (match == NULL)
                 break;
             if (lastIndex == match->endIndex)
@@ -185,27 +185,27 @@ static js2val String_match(JS2Metadata *meta, const js2val thisValue, js2val *ar
             else
                 lastIndex = match->endIndex;
             js2val matchStr = meta->engine->allocString(JS2VAL_TO_STRING(S)->substr(toUInt32(match->startIndex), toUInt32(match->endIndex) - match->startIndex));
-            index++;
             meta->arrayClass->writePublic(meta, OBJECT_TO_JS2VAL(A), meta->arrayClass, meta->engine->numberToString(index), true, matchStr);
+            index++;
         }
         thisInst->setLastIndex(meta, meta->engine->allocNumber((float64)lastIndex));
         return OBJECT_TO_JS2VAL(A);
     }
 }
 
-static const String interpretDollar(JS2Metadata *meta, const String *replaceStr, uint32 dollarPos, const String *searchStr, REMatchState *match, uint32 &skip)
+static const String interpretDollar(JS2Metadata *meta, const String *replaceStr, uint32 dollarPos, const String *searchStr, REMatchResult *match, uint32 &skip)
 {
     skip = 2;
     const char16 *dollarValue = replaceStr->begin() + dollarPos + 1;
     switch (*dollarValue) {
     case '$':
-	return *meta->engine->Dollar_StringAtom;
+        return *meta->engine->Dollar_StringAtom;
     case '&':
-	return searchStr->substr((uint32)match->startIndex, (uint32)match->endIndex - match->startIndex);
+        return searchStr->substr((uint32)match->startIndex, (uint32)match->endIndex - match->startIndex);
     case '`':
-	return searchStr->substr(0, (uint32)match->startIndex);
+        return searchStr->substr(0, (uint32)match->startIndex);
     case '\'':
-	return searchStr->substr((uint32)match->endIndex, (uint32)searchStr->length() - match->endIndex);
+        return searchStr->substr((uint32)match->endIndex, (uint32)searchStr->length() - match->endIndex);
     case '0':
     case '1':
     case '2':
@@ -216,24 +216,23 @@ static const String interpretDollar(JS2Metadata *meta, const String *replaceStr,
     case '7':
     case '8':
     case '9':
-	{
-	    int32 num = (int32)(*dollarValue - '0');
-	    if (num <= match->parenCount) {
-		if ((dollarPos < (replaceStr->length() - 2))
-			&& (dollarValue[1] >= '0') && (dollarValue[1] <= '9')) {
-		    int32 tmp = (num * 10) + (dollarValue[1] - '0');
-		    if (tmp <= match->parenCount) {
-			num = tmp;
-			skip = 3;
-		    }
-		}
-		return searchStr->substr((uint32)(match->parens[num - 1].index), (uint32)(match->parens[num - 1].length));
-	    }
-	}
-	// fall thru
+        {
+            int32 num = (int32)(*dollarValue - '0');
+            if (num <= match->parenCount) {
+                if ((dollarPos < (replaceStr->length() - 2)) && (dollarValue[1] >= '0') && (dollarValue[1] <= '9')) {
+                        int32 tmp = (num * 10) + (dollarValue[1] - '0');
+                        if (tmp <= match->parenCount) {
+                        num = tmp;
+                        skip = 3;
+                    }
+                }
+                return searchStr->substr((uint32)(match->parens[num - 1].index), (uint32)(match->parens[num - 1].length));
+            }
+        }
+    // fall thru
     default:
-	skip = 1;
-	return *meta->engine->Dollar_StringAtom;
+        skip = 1;
+        return *meta->engine->Dollar_StringAtom;
     }
 }
 
@@ -281,51 +280,51 @@ static js2val String_replace(JS2Metadata *meta, const js2val thisValue, js2val *
 
     if (meta->objectType(searchValue) != meta->regexpClass) {
         RegExpInstance *reInst = checked_cast<RegExpInstance *>(JS2VAL_TO_OBJECT(searchValue)); 
-        REState *pState = reInst->mRegExp;
-        REMatchState *match;
+        JSRegExp *re = reInst->mRegExp;
+        REMatchResult *match;
         String newString;
         int32 lastIndex = 0;
 
         while (true) {
-            match = REExecute(pState, S->begin(), lastIndex, toInt32(S->length()), false);
+            match = REExecute(meta, re, S->begin(), lastIndex, toInt32(S->length()), false);
             if (match) {
-            String insertString;
-            uint32 start = 0;
-            while (true) {
-                    // look for '$' in the replacement string and interpret it as necessary
-                uint32 dollarPos = replaceStr->find('$', start);
-                if ((dollarPos != String::npos) && (dollarPos < (replaceStr->length() - 1))) {
-                    uint32 skip;
-                    insertString += replaceStr->substr(start, dollarPos - start);
-                    insertString += interpretDollar(meta, replaceStr, dollarPos, S, match, skip);
-                    start = dollarPos + skip;
+                String insertString;
+                uint32 start = 0;
+                while (true) {
+                        // look for '$' in the replacement string and interpret it as necessary
+                    uint32 dollarPos = replaceStr->find('$', start);
+                    if ((dollarPos != String::npos) && (dollarPos < (replaceStr->length() - 1))) {
+                        uint32 skip;
+                        insertString += replaceStr->substr(start, dollarPos - start);
+                        insertString += interpretDollar(meta, replaceStr, dollarPos, S, match, skip);
+                        start = dollarPos + skip;
+                    }
+                    else {
+                            // otherwise, absorb the entire replacement string
+                        insertString += replaceStr->substr(start, replaceStr->length() - start);
+                        break;
+                    }
                 }
-                else {
-                        // otherwise, absorb the entire replacement string
-                    insertString += replaceStr->substr(start, replaceStr->length() - start);
-                    break;
-                }
+                    // grab everything preceding the match
+                newString += S->substr(toUInt32(lastIndex), toUInt32(match->startIndex) - lastIndex);
+                        // and then add the replacement string
+                newString += insertString;
             }
-                // grab everything preceding the match
-            newString += S->substr(toUInt32(lastIndex), toUInt32(match->startIndex) - lastIndex);
-                    // and then add the replacement string
-            newString += insertString;
+            else
+                break;
+            lastIndex = match->endIndex;        // use lastIndex to grab remainder after break
+            if ((re->flags & JSREG_GLOB) == 0)
+                break;
         }
-        else
-            break;
-        lastIndex = match->endIndex;        // use lastIndex to grab remainder after break
-        if ((pState->flags & RE_GLOBAL) == 0)
-        break;
-    }
-    newString += S->substr(toUInt32(lastIndex), toUInt32(S->length()) - lastIndex);
-    if ((pState->flags & RE_GLOBAL) == 0)
-        reInst->setLastIndex(meta, meta->engine->allocNumber((float64)lastIndex));
+        newString += S->substr(toUInt32(lastIndex), toUInt32(S->length()) - lastIndex);
+        if ((re->flags & JSREG_GLOB) == 0)
+            reInst->setLastIndex(meta, meta->engine->allocNumber((float64)lastIndex));
         return meta->engine->allocString(newString);
     }
     else {
         const String *searchStr = meta->toString(searchValue);
         DEFINE_ROOTKEEPER(rk3, searchStr);
-        REMatchState match;
+        REMatchResult match;
         uint32 pos = S->find(*searchStr, 0);
         if (pos == String::npos)
             return STRING_TO_JS2VAL(S);
@@ -381,12 +380,12 @@ static void strSplitMatch(const String *S, uint32 q, const String *R, MatchResul
     result.failure = false;
 }
 
-static void regexpSplitMatch(JS2Metadata *meta, const String *S, uint32 q, REState *RE, MatchResult &result)
+static void regexpSplitMatch(JS2Metadata *meta, const String *S, uint32 q, JSRegExp *RE, MatchResult &result)
 {
     result.failure = true;
     result.captures = NULL;
 
-    REMatchState *match = REMatch(RE, S->begin() + q, (int32)(S->length() - q));
+    REMatchResult *match = REMatch(meta, RE, S->begin() + q, (int32)(S->length() - q));
 
     if (match) {
         result.endIndex = match->startIndex + q;
@@ -428,7 +427,7 @@ static js2val String_split(JS2Metadata *meta, const js2val thisValue, js2val *ar
     uint32 s = S->size();
     uint32 p = 0;
 
-    REState *RE = NULL;
+    JSRegExp *RE = NULL;
     const String *R = NULL;
     if (meta->objectType(separatorV) == meta->regexpClass)
         RE = (checked_cast<RegExpInstance *>(JS2VAL_TO_OBJECT(separatorV)))->mRegExp;
@@ -817,8 +816,9 @@ void initStringObject(JS2Metadata *meta)
     meta->stringClass->prototype = OBJECT_TO_JS2VAL(strInst);
     strInst->mValue = meta->engine->allocStringPtr("");
 
+    meta->initBuiltinClass(meta->stringClass, &staticFunctions[0], String_Constructor, String_Call);
     meta->createDynamicProperty(strInst, meta->engine->length_StringAtom, meta->engine->allocNumber(strInst->mValue->length()), ReadAccess, true, false);
-    meta->initBuiltinClass(meta->stringClass, &prototypeFunctions[0], &staticFunctions[0], String_Constructor, String_Call);
+    meta->initBuiltinClassPrototype(meta->stringClass, &prototypeFunctions[0]);
 
 }
 

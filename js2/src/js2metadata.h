@@ -931,7 +931,7 @@ public:
     js2val getIgnoreCase(JS2Metadata *meta);
     js2val getSource(JS2Metadata *meta);
 
-    REState  *mRegExp;
+    JSRegExp  *mRegExp;
     virtual ~RegExpInstance()             { }
 };
 
@@ -1394,7 +1394,8 @@ public:
     bool deleteInstanceMember(JS2Class *c, QualifiedName *qname, bool *result);
 
     void addGlobalObjectFunction(char *name, NativeCode *code, uint32 length);
-    void initBuiltinClass(JS2Class *builtinClass, FunctionData *protoFunctions, FunctionData *staticFunctions, NativeCode *construct, NativeCode *call);
+    void initBuiltinClass(JS2Class *builtinClass, FunctionData *staticFunctions, NativeCode *construct, NativeCode *call);
+    void initBuiltinClassPrototype(JS2Class *builtinClass, FunctionData *protoFunctions);
 
     void reportError(Exception::Kind kind, const char *message, size_t pos, const char *arg = NULL);
     void reportError(Exception::Kind kind, const char *message, size_t pos, const String &name);
@@ -1406,6 +1407,7 @@ public:
     float64 convertStringToDouble(const String *str);
     bool convertValueToBoolean(js2val x);
     int32 convertValueToInteger(js2val x);
+    uint32 convertValueToUInteger(js2val x);
     js2val convertValueToGeneralNumber(js2val x);
     js2val convertValueToObject(js2val x);
 
@@ -1415,6 +1417,7 @@ public:
     js2val toGeneralNumber(js2val x)    { if (JS2VAL_IS_NUMBER(x)) return x; else return convertValueToGeneralNumber(x); }
     bool toBoolean(js2val x)            { if (JS2VAL_IS_BOOLEAN(x)) return JS2VAL_TO_BOOLEAN(x); else return convertValueToBoolean(x); }
     int32 toInteger(js2val x)           { if (JS2VAL_IS_INT(x)) return JS2VAL_TO_INT(x); else return convertValueToInteger(x); }
+    uint32 toUInteger(js2val x)         { if (JS2VAL_IS_INT(x)) return JS2VAL_TO_INT(x); else return convertValueToUInteger(x); }
     js2val toObject(js2val x)           { if (JS2VAL_IS_OBJECT(x)) return x; else return convertValueToObject(x); }
     // x is a General Number
     int64 truncateToInteger(js2val x)   { if (JS2VAL_IS_INT(x)) return JS2VAL_TO_INT(x); else return JS2Engine::float64toInt64(toFloat64(x)); }
