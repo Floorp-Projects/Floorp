@@ -78,6 +78,7 @@ public:
 	void StopUriTest(char *, PRUint32, PRInt16);
 	void GetDocumentTest(PRInt16);
 	void GetCurrentURITest(PRInt16);
+	void GetReferingURITest(PRInt16);
 	void GetSHTest(PRInt16);
 	void SetSHTest(PRInt16);
 	void LoadUriandReload(int);
