@@ -2073,7 +2073,7 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT 
 			break;
 
 		case WM_IME_COMPOSITION: {
-			COMPOSITIONFORM compForm;
+			//COMPOSITIONFORM compForm;
 			HIMC hIMEContext;
 
 			result = PR_FALSE;					// will change this if an IME message we handle
