@@ -360,6 +360,10 @@ xpcom/libxpt/xptinfo/public/Makefile
 xpcom/libxpt/xptinfo/src/Makefile
 xpcom/libxpt/xptinfo/tests/Makefile
 xpcom/idl/Makefile
+xpcom/proxy/Makefile
+xpcom/proxy/public/Makefile
+xpcom/proxy/src/Makefile
+xpcom/proxy/tests/Makefile
 silentdl/Makefile
 xpinstall/Makefile
 xpinstall/public/Makefile
