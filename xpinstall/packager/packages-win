@@ -103,6 +103,7 @@ bin\components\nslocale.dll
 bin\components\nspng.dll
 bin\components\nsprefm.dll
 bin\components\nsSidebar.js
+bin\components\nsCategoryManager.js
 bin\components\oji.dll
 bin\components\oji.xpt
 bin\components\pics.dll
