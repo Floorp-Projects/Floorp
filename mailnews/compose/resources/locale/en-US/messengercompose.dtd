@@ -26,7 +26,7 @@
 	<!ENTITY attachFileCmd.accesskey "F">
 <!ENTITY attachPageCmd.label "Attach Web Page...">
 	<!ENTITY attachPageCmd.accesskey "W">
-<!ENTITY sendNowCmd.label "Send">
+<!ENTITY sendNowCmd.label "Send Now">
 	<!ENTITY sendNowCmd.keycode "VK_ENTER">
 	<!ENTITY sendNowCmd.accesskey "d">
 <!ENTITY sendLaterCmd.label "Send Later">
