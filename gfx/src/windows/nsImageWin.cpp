@@ -236,12 +236,12 @@ PRBool nsImageWin :: Draw(nsIRenderingContext &aContext, nsDrawingSurface aSurfa
 
 //------------------------------------------------------------
 
-void nsImageWin::CompositeImage(nsIImage *aTheImage, nsPoint *aULLocation)
+void nsImageWin::CompositeImage(nsIImage *aTheImage, nsPoint *aULLocation,nsBlendQuality aBlendQuality)
 {
   // call the correct sub routine for each blend
 
   if ((mNumBytesPixel == 3) && (((nsImageWin *)aTheImage)->mNumBytesPixel == 3))
-    this->Comp24to24((nsImageWin*)aTheImage, aULLocation);
+    this->Comp24to24((nsImageWin*)aTheImage, aULLocation,aBlendQuality);
 
 }
 
@@ -275,18 +275,17 @@ PRUint8   *srcbits;
 
 //------------------------------------------------------------
 
-// this routine has to flip the y, since the bits are in bottom scan
-// line to top.
-void nsImageWin::Comp24to24(nsImageWin *aTheImage, nsPoint *aULLocation)
+PRBool nsImageWin::CalcAlphaMetrics(nsIImage *aTheImage,nsPoint *aULLocation,PRInt32 *aNumlines,
+                              PRInt32 *aNumbytes,PRUint8 **aSImage,PRUint8 **aDImage,
+                              PRUint8 **aMImage,PRInt32 *aSLSpan,PRInt32 *aDLSpan,PRInt32 *aMLSpan)
 {
+PRBool    doalpha = PR_FALSE;
 nsRect    arect,srect,drect,irect;
-PRInt32   dlinespan,slinespan,mlinespan,startx,starty,numbytes,numlines,x,y;
-PRInt16   temp;
-PRUint8   *alphabits, *d1,*d2,*s1,*s2,*m1,*m2;
-double    a1,a2;
+PRInt32   startx,starty,x,y;
+PRUint8   *alphabits;
 
   if( IsOptimized() )
-    return;
+    return doalpha;
 
   alphabits = aTheImage->GetAlphaBits();
   if(alphabits)
@@ -307,12 +306,12 @@ double    a1,a2;
   if (irect.IntersectRect(srect, drect))
     {
     // calculate destination information
-    dlinespan = this->GetLineStride();
-    numbytes = this->CalcBytesSpan(irect.width);
-    numlines = irect.height;
+    *aDLSpan = this->GetLineStride();
+    *aNumbytes = this->CalcBytesSpan(irect.width);
+    *aNumlines = irect.height;
     startx = irect.x;
     starty = this->GetHeight() - (irect.y + irect.height);
-    d1 = mImageBits + (starty * dlinespan) + (3 * startx);
+    *aDImage = mImageBits + (starty * (*aDLSpan)) + (3 * startx);
 
     // get the intersection relative to the source rectangle
     srect.SetRect(0, 0, aTheImage->GetWidth(), aTheImage->GetHeight());
@@ -320,77 +319,150 @@ double    a1,a2;
     drect.MoveBy(-aULLocation->x, -aULLocation->y);
 
     drect.IntersectRect(drect,srect);
-    slinespan = aTheImage->GetLineStride();
+    *aSLSpan = aTheImage->GetLineStride();
     startx = drect.x;
     starty = aTheImage->GetHeight() - (drect.y + drect.height);
-    s1 = aTheImage->GetBits() + (starty * slinespan) + (3 * startx);
+    *aSImage = aTheImage->GetBits() + (starty * (*aSLSpan)) + (3 * startx);
+         
+    // 24 bit
+    *aNumbytes/=3;
+    doalpha = PR_TRUE;
 
     if(alphabits)
       {
-      mlinespan = aTheImage->GetAlphaLineStride();
-      m1 = alphabits;
-      numbytes/=3;
-
-      // now go thru the image and blend (remember, its bottom upwards)
-
-      for (y = 0; y < numlines; y++)
-        {
-        s2 = s1;
-        d2 = d1;
-        m2 = m1;
-        for(x=0;x<numbytes;x++)
-          {
-          a1 = (*m2) * (1.0 / 256.0);
-          a2 = 1.0-a1;
-          temp = (PRUint16)((*d2)*a1 + (*s2)*a2);
-          if(temp>255)
-            temp = 255;
-          *d2 = (PRUint8)temp;
-          d2++;
-          s2++;
-          
-          temp = (PRUint16)((*d2)*a1 + (*s2)*a2);
-          if(temp>255)
-            temp = 255;
-          *d2 = (PRUint8)temp;
-          d2++;
-          s2++;
-
-          temp = (PRUint16)((*d2)*a1 + (*s2)*a2);
-          if(temp>255)
-            temp = 255;
-          *d2 = (PRUint8)temp;
-          d2++;
-          s2++;
-          m2++;
-        }
-
-        s1 += slinespan;
-        d1 += dlinespan;
-        m1 += mlinespan;
+      *aMLSpan = aTheImage->GetAlphaLineStride();
+      *aMImage = alphabits;
       }
-    }
     else
       {
-      // now go thru the image and blend (remember, its bottom upwards)
-
-      for(y = 0; y < numlines; y++)
-        {
-        s2 = s1;
-        d2 = d1;
-
-        for(x = 0; x < numbytes; x++)
-          {
-          *d2 = (*d2 + *s2) >> 1;
-          d2++;
-          s2++;
-          }
-
-        s1 += slinespan;
-        d1 += dlinespan;
-        }
+      aMLSpan = 0;
+      *aMImage = nsnull;
       }
   }
+
+  return doalpha;
+}
+
+//------------------------------------------------------------
+
+// this routine has to flip the y, since the bits are in bottom scan
+// line to top.
+void nsImageWin::Comp24to24(nsImageWin *aTheImage,nsPoint *aULLocation,nsBlendQuality aBlendQuality)
+{
+nsRect    arect,srect,drect,irect;
+PRInt32   dlinespan,slinespan,mlinespan,numbytes,numlines;
+PRUint8   *alphabits,*s1,*d1,*m1;
+
+  if( IsOptimized() )
+    return;
+
+  if(CalcAlphaMetrics(aTheImage,aULLocation,&numlines,&numbytes,&s1,&d1,&m1,&slinespan,&dlinespan,&mlinespan))
+    {
+    if(alphabits)
+      {
+      Do24BlendWithMask(numlines,numbytes,s1,d1,m1,slinespan,dlinespan,mlinespan,aBlendQuality);
+      }
+    else
+      {
+      Do24Blend(50,numlines,numbytes,s1,d1,slinespan,dlinespan,aBlendQuality);
+      }
+    }
+}
+
+//------------------------------------------------------------
+
+// This routine can not be fast enough
+void
+nsImageWin::Do24BlendWithMask(PRInt32 aNumlines,PRInt32 aNumbytes,PRUint8 *aSImage,PRUint8 *aDImage,PRUint8 *aMImage,PRInt32 aSLSpan,PRInt32 aDLSpan,PRInt32 aMLSpan,nsBlendQuality aBlendQuality)
+{
+PRUint8   *d1,*d2,*s1,*s2,*m1,*m2;
+PRInt32   x,y,val1,val2,temp1,inc;
+PRInt32   sspan,dspan,mspan;
+
+  if(aBlendQuality == nsHighQual )
+    inc = 1;
+  else
+    inc = 2;
+
+  sspan = aSLSpan*inc;
+  dspan = aDLSpan*inc;
+  mspan = aMLSpan*inc;
+
+
+  // now go thru the image and blend (remember, its bottom upwards)
+  s1 = aSImage;
+  d1 = aDImage;
+  m1 = aMImage;
+
+  printf("increment = %d\n",inc);
+
+  for (y = 0; y < aNumlines; y+=inc)
+    {
+    s2 = s1;
+    d2 = d1;
+    m2 = m1;
+
+    for(x=0;x<aNumbytes;x++)
+      {
+      val1 = (*m2);
+      val2 = 255-val1;
+      temp1 = (((*d2)*val1)/255)+(((*s2)*val2)/255);
+
+      if(temp1>255)
+        temp1 = 255;
+      *d2 = (unsigned char)temp1;
+      d2++;
+      s2++;
+    
+      temp1 = (((*d2)*val1)/255)+(((*s2)*val2)/255);
+      if(temp1>255)
+        temp1 = 255;
+      *d2 = (unsigned char)temp1;
+      d2++;
+      s2++;
+
+      temp1 = (((*d2)*val1)/255)+(((*s2)*val2)/255);
+      if(temp1>255)
+        temp1 = 255;
+      *d2 = (unsigned char)temp1;
+      d2++;
+      s2++;
+      m2++;
+      }
+    s1 += sspan;
+    d1 += dspan;
+    m1 += mspan;
+  }
+}
+
+//------------------------------------------------------------
+
+// This routine can not be fast enough
+void
+nsImageWin::Do24Blend(PRInt8 aBlendVal,PRInt32 aNumlines,PRInt32 aNumbytes,PRUint8 *aSImage,PRUint8 *aDImage,PRInt32 aSLSpan,PRInt32 aDLSpan,nsBlendQuality aBlendQuality)
+{
+PRInt32   x,y;
+PRUint8   *d1,*d2,*s1,*s2;
+
+  // now go thru the image and blend (remember, its bottom upwards)
+  s1 = aSImage;
+  d1 = aDImage;
+
+  for(y = 0; y < aNumlines; y++)
+    {
+    s2 = s1;
+    d2 = d1;
+
+    for(x = 0; x < aNumbytes; x++)
+      {
+      *d2 = (*d2 + *s2) >> 1;
+      d2++;
+      s2++;
+      }
+
+    s1 += aSLSpan;
+    d1 += aDLSpan;
+    }
 }
 
 //------------------------------------------------------------
@@ -400,24 +472,23 @@ nsImageWin::DuplicateImage()
 {
 PRInt32     num,i;
 nsImageWin  *theimage;
-PRUint8     *cpointer;
 
   if( IsOptimized() )
     return nsnull;
 
   theimage = new nsImageWin();
+
   NS_ADDREF(theimage);
 
   // get the header and copy it
   theimage->mBHead = (LPBITMAPINFOHEADER)new char[sizeof(BITMAPINFOHEADER) + sizeof(RGBQUAD) * theimage->mNumPalleteColors];
-  //*(theimage->mBHead) = *(this->mBHead);
   num = sizeof(BITMAPINFOHEADER) + sizeof(RGBQUAD) * theimage->mNumPalleteColors;
   memcpy(theimage->mBHead,this->mBHead,num);
 
   // set in compute metrics
   theimage->mSizeImage = this->mSizeImage;
   theimage->mRowBytes = this->mRowBytes;
-  theimage->mColorTable = (PRUint8 *)this->mBHead + sizeof(BITMAPINFOHEADER);
+  theimage->mColorTable = (PRUint8 *)theimage->mBHead + sizeof(BITMAPINFOHEADER);
   theimage->mNumBytesPixel = this->mNumBytesPixel;
   theimage->mNumPalleteColors = this->mNumPalleteColors;
   theimage->mAlphaDepth = this->mAlphaDepth;
@@ -428,7 +499,9 @@ PRUint8     *cpointer;
   theimage->mIsOptimized = this->mIsOptimized;
 
   // set up the memory
-  memset(mColorTable, 0, sizeof(RGBQUAD) * mNumPalleteColors);
+  num = sizeof(RGBQUAD) * mNumPalleteColors;
+  if(num>0)
+    memcpy(mColorTable,this->mColorTable,sizeof(RGBQUAD) * mNumPalleteColors);
 
     // the bits of the image
   if(theimage->mSizeImage>0)
@@ -458,17 +531,11 @@ PRUint8     *cpointer;
     memset(theimage->mColorMap->Index, 0, sizeof(PRUint8) * (3 * theimage->mNumPalleteColors));
 		}
 
-  cpointer = theimage->mColorTable;
   for(i = 0; i < theimage->mColorMap->NumColors; i++)
     {
 		theimage->mColorMap->Index[(3 * i) + 2] = this->mColorMap->Index[(3 * i) + 2];
 		theimage->mColorMap->Index[(3 * i) + 1] = this->mColorMap->Index[(3 * i) + 1];
 		theimage->mColorMap->Index[(3 * i)] = this->mColorMap->Index[(3 * i)];
-
-    *cpointer++ = theimage->mColorMap->Index[(3 * i) + 2];
-		*cpointer++ = theimage->mColorMap->Index[(3 * i) + 1];
-		*cpointer++ = theimage->mColorMap->Index[(3 * i)];
-		*cpointer++ = 0;
     }
 
   theimage->MakePalette();
@@ -548,6 +615,7 @@ PRBool nsImageWin :: SetSystemPalette(HDC* aHdc)
 // creates an optimized bitmap, or HBITMAP
 nsresult nsImageWin :: Optimize(nsDrawingSurface aSurface)
 {
+  return NS_OK;                 // TAKE THIS OUT
 
   HDC the_hdc = (HDC)aSurface;
 

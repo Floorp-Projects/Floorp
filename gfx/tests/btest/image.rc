@@ -29,6 +29,7 @@ IMAGETEST MENU DISCARDABLE
   POPUP "TEST"
   {
     MENUITEM "Read Mask", RDMSK
+    MENUITEM "Composit Interactive",COMPINT
     MENUITEM "Composit Test", COMPTST
     MENUITEM "Composite Speed", COMPTSTSPEED
     MENUITEM "Blit Speed",BSTNOOPT

@@ -42,6 +42,12 @@ typedef enum {
     nsMaskRequirements_kNeeds8Bit
 } nsMaskRequirements;
 
+typedef enum{
+  nsHighQual,
+  nsMedQual,
+  nsLowQual
+}nsBlendQuality;
+
 
 #define  nsImageUpdateFlags_kColorMapChanged 0x1
 #define  nsImageUpdateFlags_kBitsChanged     0x2
@@ -54,7 +60,9 @@ typedef enum {
 // Interface to Images
 class nsIImage : public nsISupports
 {
+
 public:
+
   /**
    * Build and initialize the pixelmap
    * @param aWidth The width in pixels of the desired pixelmap
@@ -183,7 +191,7 @@ public:
    * @param aTheImage The image to blend into this image
    * @param aULLocation The upper left coordinate to place the passed in image
    */
-  virtual void CompositeImage(nsIImage *aTheImage,nsPoint *aULLocation) = 0;
+  virtual void CompositeImage(nsIImage *aTheImage,nsPoint *aULLocation,nsBlendQuality aQuality) = 0;
 
   /**
    * Build an alpha mask using this image

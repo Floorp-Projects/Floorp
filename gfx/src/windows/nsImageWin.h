@@ -51,8 +51,7 @@ public:
   virtual PRInt32     GetAlphaXLoc() {return mLocation.x;}
   virtual PRInt32     GetAlphaYLoc() {return mLocation.y;}
   virtual PRInt32     GetAlphaLineStride(){ return mARowBytes; }
-  virtual void        CompositeImage(nsIImage *aTheImage,nsPoint *aULLocation);
-  
+  virtual void        CompositeImage(nsIImage *aTheImage,nsPoint *aULLocation,nsBlendQuality aQuality);
   virtual nsIImage*   DuplicateImage();
 
   /** 
@@ -102,6 +101,54 @@ public:
   void MoveAlphaMask(PRInt32 aX, PRInt32 aY){mLocation.x=aX;mLocation.y=aY;}
 
 private:
+
+  /** 
+   * Blend two 24 bit image arrays using an 8 bit alpha mask
+   * @param aNumlines  Number of lines to blend
+   * @param aNumberBytes Number of bytes per line to blend
+   * @param aSImage Pointer to beginning of the source bytes
+   * @param aDImage Pointer to beginning of the destination bytes
+   * @param aMImage Pointer to beginning of the mask bytes
+   * @param aSLSpan number of bytes per line for the source bytes
+   * @param aDLSpan number of bytes per line for the destination bytes
+   * @param aMLSpan number of bytes per line for the Mask bytes
+   * @param aBlendQuality The quality of this blend, this is for tweening if neccesary
+   */
+  void Do24BlendWithMask(PRInt32 aNumlines,PRInt32 aNumbytes,PRUint8 *aSImage,PRUint8 *aDImage,
+                PRUint8 *aMImage,PRInt32 aSLSpan,PRInt32 aDLSpan,PRInt32 aMLSpan,nsBlendQuality aBlendQuality);
+
+  /** 
+   * Blend two 24 bit image arrays using a passed in blend value
+   * @param aNumlines  Number of lines to blend
+   * @param aNumberBytes Number of bytes per line to blend
+   * @param aSImage Pointer to beginning of the source bytes
+   * @param aDImage Pointer to beginning of the destination bytes
+   * @param aMImage Pointer to beginning of the mask bytes
+   * @param aSLSpan number of bytes per line for the source bytes
+   * @param aDLSpan number of bytes per line for the destination bytes
+   * @param aMLSpan number of bytes per line for the Mask bytes
+   * @param aBlendQuality The quality of this blend, this is for tweening if neccesary
+   */
+  void Do24Blend(PRInt8 aBlendVal,PRInt32 aNumlines,PRInt32 aNumbytes,PRUint8 *aSImage,PRUint8 *aDImage,
+                PRInt32 aSLSpan,PRInt32 aDLSpan,nsBlendQuality aBlendQuality);
+
+
+  /** 
+   * Calculate the information we need to do a blend
+   * @param aNumlines  Number of lines to blend
+   * @param aNumberBytes Number of bytes per line to blend
+   * @param aSImage Pointer to beginning of the source bytes
+   * @param aDImage Pointer to beginning of the destination bytes
+   * @param aMImage Pointer to beginning of the mask bytes
+   * @param aSLSpan number of bytes per line for the source bytes
+   * @param aDLSpan number of bytes per line for the destination bytes
+   * @param aMLSpan number of bytes per line for the Mask bytes
+   */
+  PRBool CalcAlphaMetrics(nsIImage *aTheImage,nsPoint *aULLocation,PRInt32 *aNumlines,
+                PRInt32 *aNumbytes,PRUint8 **aSImage,PRUint8 **aDImage,
+                PRUint8 **aMImage,PRInt32 *SLSpan,PRInt32 *aDLSpan,PRInt32 *aMLSpan);
+
+
   /** 
    * Clean up the memory used nsImageWin.
    * @param aCleanUpAll if True, all the memory used will be released otherwise just clean up the DIB memory
@@ -118,8 +165,9 @@ private:
    * Composite a 24 bit image into another 24 bit image
    * @param aTheImage The image to blend into this image
    * @param aULLocation The upper left coordinate to place the passed in image
+   * @param aBlendQuality The quality of this blend, this is for tweening if neccesary
    */
-  void Comp24to24(nsImageWin *aTheImage,nsPoint *aULLocation);
+  void Comp24to24(nsImageWin *aTheImage,nsPoint *aULLocation,nsBlendQuality aBlendQuality);
 
 
   /** 
@@ -133,15 +181,20 @@ private:
   PRInt32             mRowBytes;          // number of bytes per row
   PRUint8             *mColorTable;       // color table for the bitmap
   PRUint8             *mImageBits;         // starting address of DIB bits
+  PRBool              mIsOptimized;       // Have we turned our DIB into a GDI?
+  nsColorMap          *mColorMap;         // Redundant with mColorTable, but necessary
+    
+  // alpha layer members
   PRUint8             *mAlphaBits;         // alpha layer if we made one
   PRInt8              mAlphaDepth;         // alpha layer depth
   PRInt16             mARowBytes;
   PRInt16             mAlphaWidth;        // alpha layer width
   PRInt16             mAlphaHeight;       // alpha layer height
   nsPoint             mLocation;          // alpha mask location
-  PRBool              mIsOptimized;       // Have we turned our DIB into a GDI?
-  nsColorMap          *mColorMap;         // Redundant with mColorTable, but necessary
-                                          // for Set/GetColorMap
+  PRInt8              mImageCache;        // place to save off the old image for fast animation
+  
+
+  // for Set/GetColorMap
   HPALETTE            mHPalette;
   HBITMAP             mHBitmap;           // the GDI bitmap
   LPBITMAPINFOHEADER  mBHead;             // BITMAPINFOHEADER
