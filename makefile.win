@@ -44,7 +44,7 @@ SECDIR=
 SECDIR=security
 !endif
 
-DISTDIRS=$(NSPRDIR) dbm $(SECDIR) xpcom caps
+DISTDIRS=$(NSPRDIR) dbm $(SECDIR) xpcom base caps
 
 !if "$(WATCOM)" != ""
 XTRADIRS = $(DISTDIRS)
