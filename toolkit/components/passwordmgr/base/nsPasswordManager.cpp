@@ -1290,20 +1290,23 @@ nsPasswordManager::HandleEvent(nsIDOMEvent* aEvent)
 class UserAutoComplete : public nsIAutoCompleteResult
 {
 public:
-  UserAutoComplete(const nsAString& aSearchString);
+  UserAutoComplete(const nsACString& aHost, const nsAString& aSearchString);
   virtual ~UserAutoComplete();
 
   NS_DECL_ISUPPORTS
   NS_DECL_NSIAUTOCOMPLETERESULT
 
   nsVoidArray mArray;
-  nsString mSearchString;
-  PRInt32 mDefaultIndex;
-  PRUint16 mResult;
+  nsCString   mHost;
+  nsString    mSearchString;
+  PRInt32     mDefaultIndex;
+  PRUint16    mResult;
 };
   
-UserAutoComplete::UserAutoComplete(const nsAString& aSearchString)
-  : mSearchString(aSearchString),
+UserAutoComplete::UserAutoComplete(const nsACString& aHost,
+                                   const nsAString& aSearchString)
+  : mHost(aHost),
+    mSearchString(aSearchString),
     mDefaultIndex(-1),
     mResult(RESULT_FAILURE)
 {
@@ -1373,6 +1376,20 @@ UserAutoComplete::GetStyleAt(PRInt32 aIndex, nsAString& aHint)
   return NS_OK;
 }
 
+NS_IMETHODIMP
+UserAutoComplete::RemoveValueAt(PRInt32 aIndex, PRBool aRemoveFromDB)
+{
+  NS_ENSURE_TRUE(aIndex >= 0 && aIndex < mArray.Count(), NS_ERROR_INVALID_ARG);
+
+  PRUnichar *user = NS_STATIC_CAST(PRUnichar*, mArray.ElementAt(aIndex));
+  if (aRemoveFromDB)
+    sPasswordManager->RemoveUser(mHost, nsDependentString(user));
+
+  nsMemory::Free(user);
+  mArray.RemoveElementAt(aIndex);
+  return NS_OK;
+}
+
 PR_STATIC_CALLBACK(int)
 SortPRUnicharComparator(const void* aElement1,
                         const void* aElement2,
@@ -1426,7 +1443,7 @@ nsPasswordManager::AutoCompleteSearch(const nsAString& aSearchString,
 
     // Get all of the matches into an array that we can sort.
 
-    result = new UserAutoComplete(aSearchString);
+    result = new UserAutoComplete(realm, aSearchString);
 
     SignonHashEntry* hashEnt;
     if (mSignonTable.Get(realm, &hashEnt)) {

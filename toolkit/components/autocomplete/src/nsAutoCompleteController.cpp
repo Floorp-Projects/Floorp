@@ -352,16 +352,9 @@ nsAutoCompleteController::HandleDelete(PRBool *_retval)
   nsAutoString search;
   mInput->GetSearchParam(search);
 
-  nsAutoString value;
-  result->GetValueAt(rowIndex, value);
-
-  nsCOMPtr<nsIAutoCompleteMdbResult> mdbResult(do_QueryInterface(result));
-  if (mdbResult) {
-    // Clear the row in our result and in the DB.
-    mdbResult->RemoveRowAt(rowIndex, PR_TRUE);
-
-    --mRowCount;
-  }
+  // Clear the row in our result and in the DB.
+  result->RemoveValueAt(rowIndex, PR_TRUE);
+  --mRowCount;
 
   // Unselect the current item.
   popup->SetSelectedIndex(-1);
