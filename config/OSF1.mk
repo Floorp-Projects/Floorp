@@ -37,7 +37,7 @@ OS_LIBS			=
 PLATFORM_FLAGS		= -taso -D_ALPHA_ -DIS_64 -DOSF1 -DOSF1$(OS_RELEASE)
 MOVEMAIL_FLAGS		=
 PORT_FLAGS		= -D_REENTRANT -DHAVE_LCHOWN -DNEED_CDEFS_H -DNTOHL_ENDIAN_H -DNEED_IOCTL_H -DMACHINE_ENDIAN_H -DHAVE_VA_LIST_STRUCT -DNEED_BYTE_ALIGNMENT -DMITSHM -DNEED_REALPATH -DHAVE_WAITID -DNEED_H_ERRNO -DNEED_SYS_TIME_H -DHAVE_SYSTEMINFO_H -DNEED_SYS_PARAM_H -DHAVE_INT32_T -DODD_VA_START -DHAVE_REMAINDER
-PDJAVA_FLAGS		=
+PDJAVA_FLAGS		= -mx32m
 
 OS_CFLAGS		= $(PLATFORM_FLAGS) $(PORT_FLAGS) $(MOVEMAIL_FLAGS)
 
@@ -72,8 +72,8 @@ endif
 ######################################################################
 
 AR			= ar rcl $@
-CC			= cc -ieee_with_inexact -std
-CCC			= cxx -ieee_with_inexact -x cxx -cfront
+CC			= cc -ieee_with_inexact -std1
+CCC			= cxx -ieee_with_inexact -msg_quiet
 SHELL			= /usr/bin/ksh
 WHOAMI			= /bin/whoami
 UNZIP_PROG		= $(NS_BIN)unzip
