@@ -596,7 +596,7 @@ PRBool nsStyleUtil::IsHTMLLink(nsIContent *aContent, nsIAtom *aTag, nsIPresConte
         // bug=23209
 
         nsXPIDLCString href;
-        link->GetHrefCString(*getter_Copies(href));
+        link->GetHrefUTF8(getter_Copies(href));
 
         if (href) {
           nsILinkHandler *linkHandler = nsnull;

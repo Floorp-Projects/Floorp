@@ -90,7 +90,7 @@ NS_IMETHODIMP nsHTMLLinkAccessibleWrap::GetURI(PRInt32 i, nsIURI **aURI)
   nsCOMPtr<nsILink> link(do_QueryInterface(mLinkContent));
   if (link) {
     nsXPIDLCString hrefValue;
-    if (NS_SUCCEEDED(link->GetHrefCString(*getter_Copies(hrefValue)))) {
+    if (NS_SUCCEEDED(link->GetHrefUTF8(getter_Copies(hrefValue)))) {
       return NS_NewURI(aURI, hrefValue, nsnull, nsnull);
     }
   }

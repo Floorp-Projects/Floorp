@@ -76,10 +76,10 @@ public:
   NS_IMETHOD SetLinkState(nsLinkState aState) = 0;
 
   /**
-    * Get a pointer to the canonical URL (i.e., fully resolved to the
-    * base URL) that this linkable element points to.  The buffer
-    * returned has been allocated for and should be deleted by the
-    * caller.
+    * Get a pointer to the UTF-8 encoded canonical URL (i.e., fully
+    * resolved to the base URL) that this link element points to.  The
+    * buffer returned has been allocated for and should be deleted by
+    * the caller.
     *
     * @param aBuf [out] A pointer to be filled in with a pointer to a
     *             null-terminated string containing the canonical URL.
@@ -87,7 +87,7 @@ public:
     *             nsnull.
     * @return NS_OK if the out pointer is filled in
     */
-  NS_IMETHOD GetHrefCString(char* &aBuf) = 0;
+  NS_IMETHOD GetHrefUTF8(char** aBuf) = 0;
 
 };
 

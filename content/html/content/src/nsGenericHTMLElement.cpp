@@ -1403,14 +1403,15 @@ nsGenericHTMLElement::FindAndSetForm(nsIFormControl *aFormControl)
 }
 
 nsresult
-nsGenericHTMLElement::HandleDOMEventForAnchors(nsIContent* aOuter,
-                                               nsIPresContext* aPresContext,
+nsGenericHTMLElement::HandleDOMEventForAnchors(nsIPresContext* aPresContext,
                                                nsEvent* aEvent,
                                                nsIDOMEvent** aDOMEvent,
                                                PRUint32 aFlags,
                                                nsEventStatus* aEventStatus)
 {
   NS_ENSURE_ARG_POINTER(aEventStatus);
+  NS_PRECONDITION(nsCOMPtr<nsILink>(do_QueryInterface(this)),
+                  "should be called only when |this| implements |nsILink|");
 
   // Try script event handlers first
   nsresult ret = nsGenericHTMLElement::HandleDOMEvent(aPresContext, aEvent,
@@ -1462,16 +1463,12 @@ nsGenericHTMLElement::HandleDOMEventForAnchors(nsIContent* aOuter,
          aEvent->message == NS_MOUSE_EXIT_SYNTH))) &&
       !(aFlags & NS_EVENT_FLAG_CAPTURE) && !(aFlags & NS_EVENT_FLAG_SYSTEM_EVENT)) {
 
-    // If we're here, then aOuter should be an nsILink. We'll use the
+    // We'll use the equivalent of |GetHrefUTF8| on the
     // nsILink interface to get a canonified URL that has been
     // correctly escaped and URL-encoded for the document's charset.
 
-    nsCOMPtr<nsILink> link = do_QueryInterface(aOuter);
-    if (!link)
-      return NS_ERROR_UNEXPECTED;
-
     nsXPIDLCString hrefCStr;
-    link->GetHrefCString(*getter_Copies(hrefCStr));
+    GetHrefUTF8ForAnchors(getter_Copies(hrefCStr));
 
     // Only bother to handle the mouse event if there was an href
     // specified.
@@ -1598,6 +1595,45 @@ nsGenericHTMLElement::HandleDOMEventForAnchors(nsIContent* aOuter,
     }
   }
   return ret;
+}
+
+nsresult
+nsGenericHTMLElement::GetHrefUTF8ForAnchors(char** aHref)
+{
+  // This is used by the three nsILink implementations and
+  // nsHTMLStyleElement.
+
+  // Get href= attribute (relative URL).
+  nsAutoString relURLSpec;
+
+  if (NS_CONTENT_ATTR_HAS_VALUE ==
+      GetAttr(kNameSpaceID_None, nsHTMLAtoms::href, relURLSpec)) {
+    // Clean up any leading or trailing whitespace
+    relURLSpec.Trim(" \t\n\r");
+
+    // Get base URL.
+    nsCOMPtr<nsIURI> baseURL;
+    GetBaseURL(getter_AddRefs(baseURL));
+
+    if (baseURL) {
+      // Get absolute URL.
+      nsCAutoString buf;
+      NS_MakeAbsoluteURIWithCharset(buf, relURLSpec, mDocument, baseURL,
+                                    nsHTMLUtils::IOService,
+                                    nsHTMLUtils::CharsetMgr);
+      *aHref = ToNewCString(buf);
+    }
+    else {
+      // Absolute URL is same as relative URL.
+      *aHref = ToNewUTF8String(relURLSpec);
+    }
+  }
+  else {
+    // Absolute URL is null to say we have no HREF.
+    *aHref = nsnull;
+  }
+
+  return NS_OK;
 }
 
 NS_IMETHODIMP
