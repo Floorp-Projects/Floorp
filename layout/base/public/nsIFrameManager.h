@@ -76,11 +76,11 @@ typedef void
 
 /**
  * Frame manager interface. The frame manager serves two purposes:
- * <li>provides a serice for mapping from content to frame and from out-of-flow
- * frame to placeholder frame
+ * <li>provides a service for mapping from content to frame and from out-of-flow
+ * frame to placeholder frame.
  * <li>handles structural modifications to the frame model. If the frame model
  * lock can be acquired, then the changes are processed immediately; otherwise,
- * they're queued and processed later
+ * they're queued and processed later.
  */
 class nsIFrameManager : public nsISupports {
 public:
@@ -99,7 +99,7 @@ public:
 
   // Gets and sets the root frame (typically the viewport). The lifetime of the
   // root frame is controlled by the frame manager. When the frame manager is
-  // destroyed it destroys the entire frame hierarchy
+  // destroyed it destroys the entire frame hierarchy.
   NS_IMETHOD GetRootFrame(nsIFrame** aRootFrame) const = 0;
   NS_IMETHOD SetRootFrame(nsIFrame* aRootFrame) = 0;
 
