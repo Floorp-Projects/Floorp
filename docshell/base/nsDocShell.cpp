@@ -126,13 +126,14 @@ nsDocShell::nsDocShell() :
   mViewMode(viewNormal),
   mLastViewMode(viewNormal),
   mRestoreViewMode(PR_FALSE),
+  mBusyFlags(BUSY_FLAGS_NONE),
   mEODForCurrentDocument (PR_FALSE),
   mURIResultedInDocument(PR_FALSE),
   mUseExternalProtocolHandler (PR_FALSE),
+  mDisallowPopupWindows(PR_FALSE),
   mParent(nsnull),
   mTreeOwner(nsnull),
-  mChromeEventHandler(nsnull),
-  mBusyFlags(BUSY_FLAGS_NONE)
+  mChromeEventHandler(nsnull)
 {
   NS_INIT_REFCNT();
 }
@@ -1665,6 +1666,7 @@ NS_IMETHODIMP nsDocShell::Create()
    // i don't want to read this pref in every time we load a url
    // so read it in once here and be done with it...
    mPrefs->GetBoolPref("network.protocols.useSystemDefaults", &mUseExternalProtocolHandler);
+   mPrefs->GetBoolPref("browser.target_new_blocked", &mDisallowPopupWindows);
 
    return NS_OK;
 }
@@ -2148,6 +2150,7 @@ NS_IMETHODIMP nsDocShell::SetCurScrollPos(PRInt32 scrollOrientation,
 
       default:
          NS_ENSURE_TRUE(PR_FALSE, NS_ERROR_INVALID_ARG);
+         x=0; y=0;    // fix compiler warning, not actually executed
       }
 
    NS_ENSURE_SUCCESS(scrollView->ScrollTo(x, y, NS_VMREFRESH_IMMEDIATE),
@@ -3039,6 +3042,32 @@ NS_IMETHODIMP nsDocShell::InternalLoad(nsIURI* aURI, nsIURI* aReferrer,
    PRUint32 aLoadType)
 #endif
 {
+    if (mDisallowPopupWindows && aWindowTarget && aWindowTarget[0] != '\0')
+    {
+        nsXPIDLCString scheme;
+        nsresult rv = aURI->GetScheme(getter_Copies(scheme));
+        if (NS_SUCCEEDED(rv) &&
+            nsCRT::strcmp(scheme, "chrome") &&
+            nsCRT::strcmp(scheme, "resource"))
+        {
+            static const char top[] = "_top";
+            if (!nsCRT::strcmp(aWindowTarget, "_blank") ||
+                !nsCRT::strcmp(aWindowTarget, "_new"))
+            {
+                aWindowTarget = top;
+            }
+            else
+            {
+                nsCOMPtr<nsIDocShellTreeItem> targetDocShell;
+                FindItemWithName(NS_ConvertASCIItoUCS2(aWindowTarget).GetUnicode(),
+                                 NS_STATIC_CAST(nsIInterfaceRequestor*, this),
+                                 getter_AddRefs(targetDocShell));
+                if (!targetDocShell)
+                    aWindowTarget = top;
+            }
+        }
+    }
+
   mURIResultedInDocument = PR_FALSE; // reset the clock...
     // Check to see if the new URI is an anchor in the existing document.
   if ((aLoadType == LOAD_NORMAL ||
