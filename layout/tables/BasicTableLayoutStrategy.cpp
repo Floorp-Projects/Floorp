@@ -1447,8 +1447,8 @@ BasicTableLayoutStrategy::AssignPctColumnWidths(const nsHTMLReflowState& aReflow
           percentContributor = cellFrame;
           if (!mIsNavQuirksMode) { 
             // need to add border and padding
-            nsMargin borderPadding = nsTableFrame::GetBorderPadding(nsSize(basis, 0), aPixelToTwips, cellFrame);
-            maxColPctWidth += borderPadding.left + borderPadding.right;
+            nsMargin cellBorderPadding = nsTableFrame::GetBorderPadding(nsSize(basis, 0), aPixelToTwips, cellFrame);
+            maxColPctWidth += cellBorderPadding.left + cellBorderPadding.right;
           }
         }
       }
@@ -1511,7 +1511,7 @@ BasicTableLayoutStrategy::AssignPctColumnWidths(const nsHTMLReflowState& aReflow
 
   if(cellInfo) for(spannedCell=spanTail; spannedCell;) {
     PRInt32 spannedRows = 0;
-    PRInt32 colX = spannedCell->col;
+    colX = spannedCell->col;
     do {
       cellInfo[spannedRows].cellFrame = spannedCell->cellFrame;
       cellInfo[spannedRows].colSpan   = spannedCell->colSpan;
@@ -1537,8 +1537,8 @@ BasicTableLayoutStrategy::AssignPctColumnWidths(const nsHTMLReflowState& aReflow
         cellPctWidth = nsTableFrame::RoundToPixel(NSToCoordRound( ((float)basis) * cellPct ), aPixelToTwips);
         if (!mIsNavQuirksMode) { 
           // need to add border and padding 
-          nsMargin borderPadding = nsTableFrame::GetBorderPadding(nsSize(basis, 0), aPixelToTwips, cellFrame);
-          cellPctWidth += borderPadding.left + borderPadding.right;
+          nsMargin cellBorderPadding = nsTableFrame::GetBorderPadding(nsSize(basis, 0), aPixelToTwips, cellFrame);
+          cellPctWidth += cellBorderPadding.left + cellBorderPadding.right;
         }
       }
       if (cellPctWidth > 0) {
