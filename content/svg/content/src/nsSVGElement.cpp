@@ -52,7 +52,7 @@
 #include "nsIServiceManager.h"
 #include "nsIXBLService.h"
 #include "nsSVGAtoms.h"
-#include "nsIStyleRule.h"
+#include "nsICSSStyleRule.h"
 #include "nsIDOMSVGSVGElement.h"
 #include "nsRuleWalker.h"
 #include "nsSVGStyleValue.h"
@@ -271,7 +271,7 @@ nsSVGElement::WalkContentStyleRules(nsRuleWalker* aRuleWalker)
 }
 
 NS_IMETHODIMP
-nsSVGElement::GetInlineStyleRule(nsIStyleRule** aStyleRule)
+nsSVGElement::GetInlineStyleRule(nsICSSStyleRule** aStyleRule)
 {
   return mStyle->GetStyleRule(this, aStyleRule);
 }

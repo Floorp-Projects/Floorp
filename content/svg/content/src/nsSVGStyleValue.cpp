@@ -65,7 +65,7 @@ public:
   NS_IMETHOD GetValueString(nsAString& aValue);
 
   // nsISVGStyleValue interface:
-  NS_IMETHOD GetStyleRule(nsIContent* aContent, nsIStyleRule** rule);
+  NS_IMETHOD GetStyleRule(nsIContent* aContent, nsICSSStyleRule** rule);
   
 protected:
   // Implementation helpers:
@@ -127,7 +127,7 @@ nsSVGStyleValue::GetValueString(nsAString& aValue)
 // nsISVGStyleValue interface:
 
 NS_IMETHODIMP
-nsSVGStyleValue::GetStyleRule(nsIContent* aContent, nsIStyleRule** rule)
+nsSVGStyleValue::GetStyleRule(nsIContent* aContent, nsICSSStyleRule** rule)
 {
   if (!mRule) {
     UpdateStyleRule(aContent);
