@@ -48,8 +48,6 @@
 #include "nsIPlatformCharset.h"
 #include "nsIServiceManager.h"
 
-#include "nsFileSpec.h" // for nsAutoCString
-
 #define ABS(i) ( (i)<0 ? 0-(i) : (i) )
 
 // Variables for grabbing
@@ -832,7 +830,7 @@ NS_IMETHODIMP nsWindow::SetTitle(const nsString& aTitle)
   }
 
   /* if the stuff above failed, replace multibyte with .... */
-  XStoreName(mDisplay, mBaseWindow, (const char *) nsAutoCString(aTitle));
+  XStoreName(mDisplay, mBaseWindow, NS_LossyConvertUCS2toASCII(aTitle).get());
 
   return NS_OK;
 }

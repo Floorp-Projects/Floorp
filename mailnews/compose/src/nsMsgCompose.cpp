@@ -1639,7 +1639,7 @@ NS_IMETHODIMP QuotingOutputStreamListener::OnStopRequest(nsIRequest *request, ns
         if (! newgroups.IsEmpty())
         {
           if ((type != nsIMsgCompType::Reply) && (type != nsIMsgCompType::ReplyToSender))
-            compFields->SetNewsgroups(nsAutoCString(newgroups));
+            compFields->SetNewsgroups(NS_LossyConvertUCS2toASCII(newgroups).get());
           if (type == nsIMsgCompType::ReplyToGroup)
             compFields->SetTo(&emptyUnichar);
         }
@@ -1679,7 +1679,7 @@ NS_IMETHODIMP QuotingOutputStreamListener::OnStopRequest(nsIRequest *request, ns
           else // Process "followup-to: newsgroup-content" here
           {
 		        if (type != nsIMsgCompType::ReplyToSender)
-			        compFields->SetNewsgroups(nsAutoCString(followUpTo));
+			        compFields->SetNewsgroups(NS_LossyConvertUCS2toASCII(followUpTo).get());
             if (type == nsIMsgCompType::Reply)
               compFields->SetTo(&emptyUnichar);
           }
@@ -1688,7 +1688,7 @@ NS_IMETHODIMP QuotingOutputStreamListener::OnStopRequest(nsIRequest *request, ns
         if (! references.IsEmpty())
           references.Append(PRUnichar(' '));
         references += messageId;
-        compFields->SetReferences(nsAutoCString(references));
+        compFields->SetReferences(NS_LossyConvertUCS2toASCII(references).get());
         
         if (needToRemoveDup)
         {

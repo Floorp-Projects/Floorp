@@ -60,7 +60,7 @@
 //  Classes defined:
 //
 //      nsFilePath, nsFileURL, nsFileSpec, nsPersistentFileDescriptor
-//      nsDirectoryIterator. Oh, and a convenience class nsAutoCString.
+//      nsDirectoryIterator.
 //
 //  Q.  How should I represent files at run time?
 //  A.  Use nsFileSpec.  Using char* will lose information on some platforms.
@@ -242,36 +242,6 @@ class nsIUnicodeDecoder;
 #define NS_FILE_RESULT(x) ns_file_convert_result((PRInt32)x)
 nsresult ns_file_convert_result(PRInt32 nativeErr);
 #define NS_FILE_FAILURE NS_FILE_RESULT(-1)
-
-//========================================================================================
-class NS_COM nsAutoCString
-//
-// This should be in nsString.h, but the owner would not reply to my proposal.  After four
-// weeks, I decided to put it in here.
-//
-// This is a quiet little class that acts as a sort of autoptr for
-// a const char*.  If you used to call nsString::ToNewCString(), just
-// to pass the result a parameter list, it was a nuisance having to
-// call delete [] on the result after the call.  Now you can say
-//     nsString myStr;
-//     ...
-//     f(nsAutoCString(myStr));
-// where f is declared as void f(const char*);  This call will
-// make a temporary char* pointer on the stack and delete[] it
-// when the function returns.
-//========================================================================================
-{
-public:
-    NS_EXPLICIT                  nsAutoCString(const nsString& other) : mCString(ToNewCString(other)) {}
-    virtual                      ~nsAutoCString();    
-                                 operator const char*() const { return mCString; }
-
-                                 // operator const char*() { return mCString; }
-                                 //  don't need this, since |operator const char*() const| can
-                                 //  serve for both |const| and non-|const| callers
-protected:
-                                 const char* mCString;
-}; // class nsAutoCString
 
 //========================================================================================
 class NS_COM nsSimpleCharString
@@ -609,8 +579,7 @@ class NS_COM nsFileURL
         void                    operator = (const char* inURLString);
         void                    operator = (const nsString& inURLString)
                                 {
-                                    const nsAutoCString string(inURLString);
-                                    *this = string;
+                                    *this = NS_LossyConvertUCS2toASCII(inURLString).get();
                                 }
         void                    operator = (const nsFilePath& inOther);
         void                    operator = (const nsFileSpec& inOther);
@@ -668,8 +637,7 @@ class NS_COM nsFilePath
         void                    operator = (const char* inUnixPathString);
         void                    operator = (const nsString& inUnixPathString)
                                 {
-                                    const nsAutoCString string(inUnixPathString);
-                                    *this = string;
+                                    *this = NS_LossyConvertUCS2toASCII(inUnixPathString).get();
                                 }
         void                    operator = (const nsFileURL& inURL);
         void                    operator = (const nsFileSpec& inOther);

@@ -169,14 +169,10 @@ nsresult nsCollationUnix::Initialize(nsILocale* locale)
   }
 
 #if defined(DEBUG_UNIX_COLLATION)
-  nsAutoCString tmp(mLocale);
-  if (NULL != (const char *)tmp) {
-    printf("nsCollationUnix::Initialize mLocale = %s\n", (const char *)tmp);
-  }
-  nsAutoCString tmp2(mCharset);
-  if (NULL != (const char *)tmp2) {
-    printf("nsCollationUnix::Initialize mCharset = %s\n", (const char *)tmp2);
-  }
+  printf("nsCollationUnix::Initialize mLocale = %s\n" 
+         "nsCollationUnix::Initialize mCharset = %s\n",
+         NS_LossyConvertUCS2toASCII(mLocale).get(),
+         NS_LossyConvertUCS2toASCII(mCharset).get());
 #endif
 
   return NS_OK;

@@ -44,10 +44,6 @@
 #include "nsIRegion.h"
 #include "nsIRollupListener.h"
 
-
-// XXX: This must go away when nsAutoCString moves out of nsFileSpec.h
-#include "nsFileSpec.h" // for nsAutoCString()
-
 class nsILookAndFeel;
 class nsIAppShell;
 class nsIToolkit;

@@ -1655,7 +1655,7 @@ nsSaveMsgListener::OnStopRequest(nsIRequest* request, nsISupports* aSupport,
     if (m_outputFormat.EqualsWithConversion(TEXT_PLAIN))
     {
       ConvertBufToPlainText(m_msgBuffer);
-      rv = nsMsgI18NSaveAsCharset(TEXT_PLAIN, (const char *)nsAutoCString(nsMsgI18NFileSystemCharset()), 
+      rv = nsMsgI18NSaveAsCharset(TEXT_PLAIN, NS_LossyConvertUCS2toASCII(nsMsgI18NFileSystemCharset()).get(), 
                                   m_msgBuffer.get(), &conBuf); 
       if ( NS_SUCCEEDED(rv) && (conBuf) )
         conLength = nsCRT::strlen(conBuf);

@@ -54,7 +54,7 @@ nsInstallUninstall::nsInstallUninstall( nsInstall* inInstall,
     mRegName.Assign(regName);
 
     char* userName = (char*)PR_Malloc(MAXREGPATHLEN);
-    PRInt32 err = VR_GetUninstallUserName( (char*) (const char*) nsAutoCString(regName), 
+    PRInt32 err = VR_GetUninstallUserName( NS_CONST_CAST(char*, NS_LossyConvertUCS2toASCII(regName).get()),
                                            userName, 
                                            MAXREGPATHLEN );
     
@@ -88,7 +88,7 @@ PRInt32 nsInstallUninstall::Complete()
     if (mInstall == NULL) 
        return nsInstall::INVALID_ARGUMENTS;
 
-    err = SU_Uninstall( (char*)(const char*) nsAutoCString(mRegName) );
+    err = SU_Uninstall( NS_CONST_CAST(char*, NS_LossyConvertUCS2toASCII(mRegName).get()) );
     
     return err;
 }

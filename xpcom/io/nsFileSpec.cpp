@@ -547,15 +547,15 @@ nsFileURL::nsFileURL(const char* inString, PRBool inCreateDirs)
 nsFileURL::nsFileURL(const nsString& inString, PRBool inCreateDirs)
 //----------------------------------------------------------------------------------------
 {
-    const nsAutoCString aString(inString);
-    const char* aCString = (const char*) aString;
+    NS_LossyConvertUCS2toASCII cstring(inString);
     if (!inString.Length())
         return;
-    NS_ASSERTION(strstr(aCString, kFileURLPrefix) == aCString, "Not a URL!");
+    NS_ASSERTION(strstr(cstring.get(), kFileURLPrefix) == cstring.get(),
+                 "Not a URL!");
     // Make canonical and absolute. Since it's a parameter to this constructor,
     // inString is escaped. We want to make an nsFilePath, which requires
     // an unescaped string.
-    nsSimpleCharString unescapedPath(aCString + kFileURLPrefixLength);
+    nsSimpleCharString unescapedPath(cstring.get() + kFileURLPrefixLength);
     unescapedPath.Unescape();
     nsFilePath path(unescapedPath, inCreateDirs);
     *this = path;
@@ -1372,17 +1372,6 @@ void nsPersistentFileDescriptor::SetData(const char* inData, PRInt32 inSize)
 //----------------------------------------------------------------------------------------
 {
     mDescriptorString.CopyFrom(inData, inSize);
-}
-
-//========================================================================================
-//    class nsAutoCString
-//========================================================================================
-
-//----------------------------------------------------------------------------------------
-nsAutoCString::~nsAutoCString()
-//----------------------------------------------------------------------------------------
-{
-    nsMemory::Free(NS_REINTERPRET_CAST(void*, NS_CONST_CAST(char*, mCString)));
 }
 
 //========================================================================================

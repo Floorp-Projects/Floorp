@@ -2276,7 +2276,7 @@ NS_IMETHODIMP nsWindow::SetTitle(const nsString& aTitle)
   }
 
   // fallback to use bad conversion
-  gtk_window_set_title(GTK_WINDOW(mShell), nsAutoCString(aTitle));
+  gtk_window_set_title(GTK_WINDOW(mShell), NS_LossyConvertUCS2toASCII(aTitle).get());
   return NS_OK;
 }
 

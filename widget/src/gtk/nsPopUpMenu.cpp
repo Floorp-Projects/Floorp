@@ -39,7 +39,6 @@
 #include "nsIWidget.h"
 
 #include "nsString.h"
-#include "nsFileSpec.h" // XXX: For nsAutoCString
 
 NS_IMPL_ISUPPORTS1(nsPopUpMenu, nsIPopUpMenu)
 
@@ -88,7 +87,7 @@ NS_METHOD nsPopUpMenu::AddItem(const nsString &aText)
 {
   GtkWidget *widget;
 
-  widget = gtk_menu_item_new_with_label ((const char*)nsAutoCString(mLabel));
+  widget = gtk_menu_item_new_with_label (NS_LossyConvertUCS2toASCII(mLabel).get());
   gtk_widget_show(widget);
   gtk_menu_shell_append (GTK_MENU_SHELL (mMenu), widget);
 
@@ -122,7 +121,7 @@ NS_METHOD nsPopUpMenu::AddMenu(nsIMenu * aMenu)
   GetNativeData(voidData);
   parentmenu = GTK_WIDGET(voidData);
 
-  item = gtk_menu_item_new_with_label ((const char*)nsAutoCString(Label));
+  item = gtk_menu_item_new_with_label (NS_LossyConvertUCS2toASCII(Label).get());
   gtk_widget_show(item);
   gtk_menu_shell_append (GTK_MENU_SHELL (parentmenu), item);
 

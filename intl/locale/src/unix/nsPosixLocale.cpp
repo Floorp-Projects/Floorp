@@ -65,12 +65,12 @@ nsPosixLocale::GetPlatformLocale(const nsString* locale,char* posixLocale, size_
   char  lang_code[MAX_LANGUAGE_CODE_LEN+1];
   char  extra[MAX_EXTRA_LEN+1];
   char  posix_locale[MAX_LOCALE_LEN+1];
-  nsAutoCString xp_locale(*locale);
+  NS_LossyConvertUCS2toASCII xp_locale(*locale);
 
-  if ((const char *)xp_locale!=nsnull) {
-    if (!ParseLocaleString((const char *)xp_locale,lang_code,country_code,extra,'-')) {
+  if (xp_locale.get()) {
+    if (!ParseLocaleString(xp_locale.get(),lang_code,country_code,extra,'-')) {
 //      strncpy(posixLocale,"C",length);
-      PL_strncpyz(posixLocale,(const char *)xp_locale,length);  // use xp locale if parse failed
+      PL_strncpyz(posixLocale,xp_locale.get(),length);  // use xp locale if parse failed
       return NS_OK;
     }
 
