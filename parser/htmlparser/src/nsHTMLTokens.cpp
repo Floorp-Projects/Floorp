@@ -933,7 +933,10 @@ nsresult CAttributeToken::Consume(PRUnichar aChar, CScanner& aScanner) {
                   mTextValue=aChar;
                   result=ConsumeQuotedString(aChar,mTextValue,aScanner);
                 }
-                else {      
+                else if(kGreaterThan==aChar){      
+                  aScanner.PutBack(aChar);
+                }
+                else {
                   mTextValue=aChar;       //it's an alphanum attribute...
                   result=ConsumeAttributeValueText(aChar,mTextValue,aScanner);
                 } 
