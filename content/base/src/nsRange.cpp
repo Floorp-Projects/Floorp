@@ -36,7 +36,7 @@ static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 static NS_DEFINE_IID(kIRangeIID, NS_IDOMRANGE_IID);
 static NS_DEFINE_IID(kIContentIID, NS_ICONTENT_IID);
 static NS_DEFINE_IID(kIDOMTextIID, NS_IDOMTEXT_IID);
-
+static NS_DEFINE_IID(kIDOMNodeIID, NS_IDOMNODE_IID);
 
 /******************************************************
  * non members
@@ -177,6 +177,7 @@ nsresult nsRange::AddToListOf(nsIDOMNode* aNode)
   }
 
   res = cN->RangeAdd(*NS_STATIC_CAST(nsIDOMRange*,this));
+  NS_RELEASE(cN);
   return res;
 }
   
@@ -199,6 +200,7 @@ nsresult nsRange::RemoveFromListOf(nsIDOMNode* aNode)
   }
 
   res = cN->RangeRemove(*NS_STATIC_CAST(nsIDOMRange*,this));
+  NS_RELEASE(cN);
   return res;
 }
 
@@ -537,6 +539,28 @@ errorLabel:
   return nsnull;
 }
 
+
+// sanity check routine for content helpers.  confirms that given 
+// is an nsIContent and that it owns one or both range endpoints.
+// returns the associated domNode for convenience 
+nsresult nsRange::ContentOwnsUs(nsIContent* aParentNode, nsIDOMNode** domNode)
+{
+  *domNode = nsnull;
+  nsresult res = aParentNode->QueryInterface(kIDOMNodeIID, (void**)domNode);
+  if (!NS_SUCCEEDED(res)) 
+  {
+    NS_NOTREACHED("nsRange::ContentOwnsUs");
+    NS_IF_RELEASE(*domNode);
+    return res;
+  }
+  if ((mStartParent != *domNode) && (mEndParent != *domNode))
+  {
+    NS_NOTREACHED("nsRange::ContentOwnsUs");
+    NS_IF_RELEASE(*domNode);
+    return NS_ERROR_UNEXPECTED;
+  }
+  return NS_OK;
+}
 
 /******************************************************
  * public functionality
@@ -1203,3 +1227,110 @@ toStringComplexLabel:
   return NS_OK;
 }
 
+
+nsresult nsRange::OwnerDestroyed(nsIContent* aParentNode)
+{
+  nsIDOMNode *domNode;
+  nsIDOMNode *grandma;
+  nsIDOMNode *newStartNode  = mStartParent;
+  nsIDOMNode *newEndNode    = mEndParent;
+  PRInt32    newStartOffset = mStartOffset;
+  PRInt32    newEndOffset   = mEndOffset;
+  
+  // sanity check - are we ourselves?
+  nsresult res = ContentOwnsUs(aParentNode,&domNode);
+  if (!NS_SUCCEEDED(res)) return res;
+   
+  if (mStartParent == domNode)
+  {
+    // promote (mStartParent,mStartOffset) to aParentNode's parent and offset
+    res = domNode->GetParentNode(&grandma);
+    if (!NS_SUCCEEDED(res))
+    {
+      // we just shot out the top of the document (or fragment).  We'd better unposition this range
+      DoSetRange(nsnull,0,nsnull,0);
+      NS_IF_RELEASE(grandma);
+      NS_RELEASE(domNode);
+      return NS_OK;
+    }
+    newStartOffset = IndexOf(domNode);
+    newStartNode = grandma;
+  }
+  if (mEndParent == domNode)
+  {
+    // promote (mStartParent,mStartOffset) to aParentNode's parent and offset
+    res = domNode->GetParentNode(&grandma);
+    if (!NS_SUCCEEDED(res))
+    {
+      // we just shot out the top of the document (or fragment).  We'd better unposition this range
+      DoSetRange(nsnull,0,nsnull,0);
+      NS_IF_RELEASE(grandma);
+      NS_RELEASE(domNode);
+      return NS_OK;
+    }
+    newEndOffset = IndexOf(domNode);
+    newEndNode = grandma;
+  }
+  res = DoSetRange(newStartNode,newStartOffset,newEndNode,newEndOffset);
+  NS_IF_RELEASE(grandma);
+  NS_RELEASE(domNode);
+  return res;
+}
+  
+
+nsresult nsRange::OwnerChildInserted(nsIContent* aParentNode, PRInt32 aOffset)
+{
+  nsIDOMNode *domNode;
+  // sanity check - are we ourselves?
+  nsresult res = ContentOwnsUs(aParentNode,&domNode);
+  if (!NS_SUCCEEDED(res)) return res;
+
+  if (mStartParent == domNode)
+  {
+    // if child inserted before start, move start offset right one
+    if (aOffset <= mStartOffset) mStartOffset++;
+  }
+  if (mEndParent == domNode)
+  {
+    // if child inserted before end, move end offset right one
+    if (aOffset <= mEndOffset) mEndOffset++;
+  }
+  NS_RELEASE(domNode);
+  return res;
+}
+  
+
+nsresult nsRange::OwnerChildRemoved(nsIContent* aParentNode, PRInt32 aOffset)
+{
+  nsIDOMNode *domNode;
+  // sanity check - are we ourselves?
+  nsresult res = ContentOwnsUs(aParentNode,&domNode);
+  if (!NS_SUCCEEDED(res)) return res;
+
+  if (mStartParent == domNode)
+  {
+    // if child deleted before start, move start offset left one
+    if (aOffset <= mStartOffset) 
+    {
+      if (mStartOffset>0) mStartOffset--;
+    }
+  }
+  if (mEndParent == domNode)
+  {
+    // if child deleted before end, move end offset left one
+    if (aOffset <= mEndOffset) 
+    {
+      if (mEndOffset>0) mEndOffset--;
+    }
+  }
+  NS_RELEASE(domNode);
+  return NS_OK;
+}
+  
+
+nsresult nsRange::OwnerChildReplaced(nsIContent* aParentNode, PRInt32 aOffset)
+{
+  // for now, same as child deleted
+  return OwnerChildRemoved(aParentNode, aOffset);
+}
+  

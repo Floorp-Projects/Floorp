@@ -25,6 +25,7 @@
 class nsIDOMNode;
 class nsIDOMDocumentFragment;
 class nsVoidArray;
+class nsIContent;
 
 class nsRange : public nsIDOMRange
 {
@@ -34,7 +35,8 @@ public:
   nsRange();
   virtual ~nsRange();
 
-  // IsPositioned attribute disappeared from the dom spec
+  // nsIDOMRange interface
+  
   NS_IMETHOD    GetIsPositioned(PRBool* aIsPositioned);
 
   NS_IMETHOD    GetStartParent(nsIDOMNode** aStartParent);
@@ -75,6 +77,16 @@ public:
   NS_IMETHOD    Clone(nsIDOMRange** aReturn);
 
   NS_IMETHOD    ToString(nsString& aReturn);
+  
+  // nsRange interface extensions
+  
+  NS_IMETHOD    OwnerDestroyed(nsIContent* aParentNode);
+  
+  NS_IMETHOD    OwnerChildInserted(nsIContent* aParentNode, PRInt32 aOffset);
+  
+  NS_IMETHOD    OwnerChildRemoved(nsIContent* aParentNode, PRInt32 aOffset);
+  
+  NS_IMETHOD    OwnerChildReplaced(nsIContent* aParentNode, PRInt32 aOffset);
   
 
 private:
@@ -124,6 +136,7 @@ private:
   
   nsresult      RemoveFromListOf(nsIDOMNode* aNode);
 
+  nsresult      ContentOwnsUs(nsIContent* aParentNode, nsIDOMNode** domNode);
 };
 
 // Make a new nsIDOMRange object
