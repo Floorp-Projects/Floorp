@@ -47,12 +47,9 @@
   {0xa39c6bff, 0x15f0, 0x11d2, \
   {0x80, 0x41, 0x0, 0x10, 0x4b, 0x98, 0x3f, 0xd4}}
 
-#ifndef XP_MAC
-class ostream;
-#endif
-
 
 class nsIUnicodeEncoder;
+class nsIOutputStream;
 
 class nsHTMLToTXTSinkStream : public nsIHTMLContentSink {
   public:
@@ -61,8 +58,7 @@ class nsHTMLToTXTSinkStream : public nsIHTMLContentSink {
    * Standard constructor
    * @update	gpk02/03/99
    */
-  nsHTMLToTXTSinkStream(); 
-  nsHTMLToTXTSinkStream(ostream& aStream); 
+  nsHTMLToTXTSinkStream(nsIOutputStream* aOutStream, nsString* aOutString); 
 
   /**
    * virtual destructor
@@ -70,8 +66,8 @@ class nsHTMLToTXTSinkStream : public nsIHTMLContentSink {
    */
   virtual ~nsHTMLToTXTSinkStream();
 
-  NS_IMETHOD_(void) SetOutputStream(ostream& aStream);
-  NS_IMETHOD        GetStringBuffer(nsString & aStrBuffer);
+  NS_IMETHOD SetCharsetOverride(const nsString* aCharset);
+
 
   // nsISupports
   NS_DECL_ISUPPORTS
@@ -113,32 +109,47 @@ class nsHTMLToTXTSinkStream : public nsIHTMLContentSink {
   NS_IMETHOD BeginContext(PRInt32 aPosition);
   NS_IMETHOD EndContext(PRInt32 aPosition);
 
+
+
 protected:
 
-    nsresult AddLeaf(const nsIParserNode& aNode, ostream& aStream);
-    void WriteAttributes(const nsIParserNode& aNode,ostream& aStream);
     
     void EnsureBufferSize(PRInt32 aNewSize);
-    void UnicodeToTXTString(const nsString& aSrc);
+
     nsresult InitEncoder(const nsString& aCharset);
+
+    void Write(const nsString& aString);
+    void EncodeToBuffer(const nsString& aString);
+    
+
 
 
 protected:
-    ostream*        mOutput;
+    nsIOutputStream* mStream;
+    nsString*        mString;
+
     PRInt32         mIndent;
     PRInt32         mColPos;
     PRBool          mDoOutput;
-    char*           mBuffer;
-    PRInt32         mBufferSize;
 
-    nsString            mStrBuffer;
+    char*           mBuffer;
+    PRInt32         mBufferLength;  // The length of the data in the buffer
+    PRInt32         mBufferSize;    // The actual size of the buffer, regardless of the data
+
     nsIUnicodeEncoder*  mUnicodeEncoder;
+    nsString            mCharsetOverride;
+   
 
 };
 
 extern NS_HTMLPARS nsresult
-NS_New_HTMLToTXT_SinkStream(nsIHTMLContentSink** aInstancePtrResult);
+NS_New_HTMLToTXT_SinkStream(nsIHTMLContentSink** aInstancePtrResult, 
+                            nsIOutputStream* aOutStream,
+                            const nsString* aCharsetOverride=nsnull);
 
+extern NS_HTMLPARS nsresult
+NS_New_HTMLToTXT_SinkStream(nsIHTMLContentSink** aInstancePtrResult, 
+                            nsString* aOutString);
 
 #endif
 

@@ -54,31 +54,30 @@ class ostream;
 #endif
 
 class nsIUnicodeEncoder;
+class nsIOutputStream;
 
 class nsHTMLContentSinkStream : public nsIHTMLContentSink {
   public:
 
-  /**
-   * Standard constructor
-   * @update	gess7/7/98
-   */
-  nsHTMLContentSinkStream(PRBool aDoFormat = PR_TRUE, PRBool aDoHeader = PR_TRUE); 
 
   /**
    * Constructor with associated stream. If you use this, it means that you want
    * this class to emits its output to the stream you provide.
-   * @update	gess7/7/98
-   * @param		aStream -- ref to stream where you want output sent
+   * @update	gpk 04/30/99
+   * @param		aOutStream -- stream where you want output sent
+   * @param		aOutStream -- ref to string where you want output sent
    */
-  nsHTMLContentSinkStream(ostream& aStream,PRBool aDoFormat = PR_TRUE, PRBool aDoHeader = PR_TRUE); 
+  nsHTMLContentSinkStream(nsIOutputStream* aOutStream, 
+                          nsString* aOutString,
+                          const nsString* aCharsetOverride,
+                          PRBool aDoFormat = PR_TRUE, 
+                          PRBool aDoHeader = PR_TRUE); 
 
   /**
    * virtual destructor
    * @update	gess7/7/98
    */
   virtual ~nsHTMLContentSinkStream();
-
-  NS_IMETHOD_(void) SetOutputStream(ostream& aStream);
 
   // nsISupports
   NS_DECL_ISUPPORTS
@@ -127,22 +126,26 @@ public:
 
 protected:
 
-    nsresult AddLeaf(const nsIParserNode& aNode, ostream& aStream);
-    void WriteAttributes(const nsIParserNode& aNode,ostream& aStream);
-    void AddStartTag(const nsIParserNode& aNode, ostream& aStream);
-    void AddEndTag(const nsIParserNode& aNode, ostream& aStream);
-    void AddIndent(ostream& aStream);
+    void WriteAttributes(const nsIParserNode& aNode);
+    void AddStartTag(const nsIParserNode& aNode);
+    void AddEndTag(const nsIParserNode& aNode);
+    void AddIndent();
 
     void EnsureBufferSize(PRInt32 aNewSize);
-    void UnicodeToHTMLString(const nsString& aSrc);
-
 
     nsresult InitEncoder(const nsString& aCharset);
 
+    void EncodeToBuffer(const nsString& aString);
+    
+    void Write(const nsString& aString);
+    void Write(const char* aCharBuffer);
+    void Write(char aChar);
 
 
 protected:
-    ostream*  mOutput;
+    nsIOutputStream* mStream;
+    nsString*        mString;
+
     int       mTabLevel;
 
     PRInt32   mIndent;
@@ -155,13 +158,24 @@ protected:
     PRBool    mDoHeader;
 
     char*     mBuffer;
-    PRInt32   mBufferSize;
+    PRInt32   mBufferLength;  // The length of the data in the buffer
+    PRInt32   mBufferSize;    // The actual size of the buffer, regardless of the data
 
     nsIUnicodeEncoder*  mUnicodeEncoder;
+    nsString            mCharsetOverride;
 };
+
 
 extern NS_HTMLPARS nsresult
 NS_New_HTML_ContentSinkStream(nsIHTMLContentSink** aInstancePtrResult, 
+                              nsIOutputStream* aOutStream,
+                              const nsString* aCharsetOverride=nsnull,
+                              PRBool aDoFormat = PR_TRUE,
+                              PRBool aDoHeader = PR_TRUE);
+
+extern NS_HTMLPARS nsresult
+NS_New_HTML_ContentSinkStream(nsIHTMLContentSink** aInstancePtrResult, 
+                              nsString* aOutString, 
                               PRBool aDoFormat = PR_TRUE,
                               PRBool aDoHeader = PR_TRUE);
 
