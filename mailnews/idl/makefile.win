@@ -16,13 +16,12 @@
 # Reserved.
 
 DEPTH=..\..
-IGNORE_MANIFEST=1
+
+MODULE=mailnews
 
 EXPORTS = MailNewsTypes.h \
 		rosetta_mailnews.h\
         $(NULL)
-
-MODULE=mailnews
 
 include <$(DEPTH)\config\rules.mak>
 

@@ -16,8 +16,6 @@
 # Reserved.
 
 DEPTH=..\..\..\..
-IGNORE_MANIFEST=1
-
 
 MAKE_OBJ_TYPE   = EXE
 PROGRAM = .\$(OBJDIR)\pop3Test.exe

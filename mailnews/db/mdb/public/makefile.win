@@ -17,7 +17,7 @@
 
 DEPTH=..\..\..\..
 
-IGNORE_MANIFEST=1
+MODULE=msgdb
 
 IDLSRCS =							\
 			$(NULL)
@@ -26,7 +26,6 @@ EXPORTS =	 						\
 			mdb.h    \
 			$(NULL)
 
-MODULE=mailnews
 
 
 include <$(DEPTH)\config\rules.mak>

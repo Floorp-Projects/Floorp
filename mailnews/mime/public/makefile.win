@@ -16,20 +16,19 @@
 # Reserved.
 
 DEPTH=..\..\..
-IGNORE_MANIFEST=1
+MODULE=mime
 
-EXPORTS =					\
+EXPORTS =							\
 	nsIStreamConverter.h			\
 	nsIMimeObjectClassAccess.h		\
-	nsIMimeConverter.h		\
-	nsIMimeEmitter.h			\
-	nsMailHeaders.h				\
+	nsIMimeConverter.h				\
+	nsIMimeEmitter.h				\
+	nsMailHeaders.h					\
 	nsIMsgHeaderParser.h			\
-	nsIMimeContentTypeHandler.h			\
-	NSIMimeURLUtils.h			\
+	nsIMimeContentTypeHandler.h		\
+	NSIMimeURLUtils.h				\
         $(NULL)
 
-MODULE=mime
 
 include <$(DEPTH)\config\rules.mak>
 
