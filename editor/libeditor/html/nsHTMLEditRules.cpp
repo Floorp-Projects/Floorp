@@ -1197,29 +1197,18 @@ nsresult
 nsHTMLEditRules::GetFormatString(nsIDOMNode *aNode, nsAString &outFormat)
 {
   if (!aNode) return NS_ERROR_NULL_POINTER;
-  nsAutoString format;
-  
+
   nsCOMPtr<nsIAtom> atom = mHTMLEditor->GetTag(aNode);
-  
-  if ( nsEditProperty::p == atom           ||
-       nsEditProperty::address == atom     ||
-       nsEditProperty::pre == atom           )
+  if (nsEditProperty::p == atom        ||
+      nsEditProperty::address == atom  ||
+      nsEditProperty::pre == atom      ||
+      nsHTMLEditUtils::IsHeader(aNode))
   {
-    atom->ToString(format);
-  }
-  else if (nsHTMLEditUtils::IsHeader(aNode))
-  {
-    nsAutoString tag;
-    nsEditor::GetTagString(aNode,tag);
-    ToLowerCase(tag);
-    format = tag;
+    atom->ToString(outFormat);
   }
   else
-  {
-    format.Truncate();
-  }
-  
-  outFormat = format;
+    outFormat.Truncate();
+
   return NS_OK;
 }    
 
@@ -6698,8 +6687,8 @@ nsHTMLEditRules::RemoveBlockStyle(nsCOMArray<nsIDOMNode>& arrayOfNodes)
       if (NS_FAILED(res)) return res;
     }
     else if (nsHTMLEditUtils::IsTable(curNode)                    || 
+             nsHTMLEditUtils::IsTableRow(curNode)                 ||
              (curNodeTag.Equals(NS_LITERAL_STRING("tbody")))      ||
-             (curNodeTag.Equals(NS_LITERAL_STRING("tr")))         ||
              (curNodeTag.Equals(NS_LITERAL_STRING("td")))         ||
              nsHTMLEditUtils::IsList(curNode)                     ||
              (curNodeTag.Equals(NS_LITERAL_STRING("li")))         ||
