@@ -126,7 +126,7 @@ void morkProbeMap::rehash_old_map(morkEnv* ev, morkMapScratch* ioScratch)
       mork_u1* k = keys + (i * keySize);
       while ( !this->ProbeMapIsKeyNil(ev, k) )
       {
-        if ( ++i >= slots ) // advanced past end? need to wrap around now?
+        if ( ++i >= (mork_pos)slots ) // advanced past end? need to wrap around now?
           i = 0; // wrap around to first slot in map's hash table
           
         if ( i == startPos ) // no void slots were found anywhere in map?
@@ -284,7 +284,7 @@ morkProbeMap::find_key_pos(morkEnv* ev, const void* inAppKey,
   mork_test outTest = this->MapTest(ev, k + (i * size), inAppKey);
   while ( outTest == morkTest_kMiss )
   {
-    if ( ++i >= slots ) // advancing goes beyond end? need to wrap around now?
+    if ( ++i >= (mork_pos)slots ) // advancing goes beyond end? need to wrap around now?
       i = 0; // wrap around to first slot in map's hash table
       
     if ( i == startPos ) // no void slots were found anywhere in map?
@@ -980,7 +980,7 @@ mork_bool morkProbeMapIter::IterFirst(morkEnv* ev,
     mork_count slots = map->sMap_Slots; // total number of key buckets
     mork_pos here = 0;  // first hash bucket
     
-    while ( here < slots )
+    while ( here < (mork_pos)slots )
     {
       if ( !map->ProbeMapIsKeyNil(ev, k + (here * size)) )
       {
@@ -1020,7 +1020,7 @@ mork_bool morkProbeMapIter::IterNext(morkEnv* ev,
         mork_num size = map->sMap_KeySize;  // number of bytes in each key
         mork_count slots = map->sMap_Slots; // total number of key buckets
         
-        while ( here < slots )
+        while ( here < (mork_pos)slots )
         {
           if ( !map->ProbeMapIsKeyNil(ev, k + (here * size)) )
           {
@@ -1051,7 +1051,7 @@ mork_bool morkProbeMapIter::IterHere(morkEnv* ev,
     {
       mork_pos here = (mork_pos) sProbeMapIter_HereIx;
       mork_count slots = map->sMap_Slots; // total number of key buckets
-      if ( sProbeMapIter_HereIx >= 0 && here < slots )
+      if ( sProbeMapIter_HereIx >= 0 && (here < (mork_pos)slots))
       {
         mork_u1* k = map->sMap_Keys;  // key array, each of size sMap_KeySize
         mork_num size = map->sMap_KeySize;  // number of bytes in each key

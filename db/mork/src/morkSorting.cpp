@@ -282,7 +282,7 @@ morkSorting::ArrayHasOid(morkEnv* ev, const mdbOid* inOid)
   MORK_USED_1(ev); 
   mork_count count = mSorting_RowArray.mArray_Fill;
   mork_pos pos = -1;
-  while ( ++pos < count )
+  while ( ++pos < (mork_pos)count )
   {
     morkRow* row = (morkRow*) mSorting_RowArray.At(pos);
     MORK_ASSERT(row);

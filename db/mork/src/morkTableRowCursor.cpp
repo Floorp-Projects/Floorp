@@ -200,7 +200,7 @@ morkTableRowCursor::NextRow(morkEnv* ev, mdbOid* outOid, mdb_pos* outPos)
       else
         ++pos;
         
-      if ( pos < array->mArray_Fill )
+      if ( pos < (mork_pos)(array->mArray_Fill) )
       {
         mCursor_Pos = pos; // update for next time
         morkRow* row = (morkRow*) array->At(pos);

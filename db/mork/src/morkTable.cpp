@@ -435,7 +435,7 @@ morkTable::ArrayHasOid(morkEnv* ev, const mdbOid* inOid)
   MORK_USED_1(ev); 
   mork_count count = mTable_RowArray.mArray_Fill;
   mork_pos pos = -1;
-  while ( ++pos < count )
+  while ( ++pos < (mork_pos)count )
   {
     morkRow* row = (morkRow*) mTable_RowArray.At(pos);
     MORK_ASSERT(row);
@@ -471,7 +471,7 @@ void morkTable::build_row_map(morkEnv* ev)
         mTable_RowMap = map; // put strong ref here
         count = mTable_RowArray.mArray_Fill;
         mork_pos pos = -1;
-        while ( ++pos < count )
+        while ( ++pos < (mork_pos)count )
         {
           morkRow* row = (morkRow*) mTable_RowArray.At(pos);
           if ( row && row->IsRow() )
@@ -494,7 +494,7 @@ morkRow* morkTable::find_member_row(morkEnv* ev, morkRow* ioRow)
   {
     mork_count count = mTable_RowArray.mArray_Fill;
     mork_pos pos = -1;
-    while ( ++pos < count )
+    while ( ++pos < (mork_pos)count )
     {
       morkRow* row = (morkRow*) mTable_RowArray.At(pos);
       if ( row == ioRow )
