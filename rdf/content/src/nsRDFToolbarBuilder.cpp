@@ -206,6 +206,8 @@ RDFToolbarBuilderImpl::AddWidgetItem(nsIContent* aElement,
         return NS_ERROR_UNEXPECTED;
     }
 
+    PRBool markAsContainer = IsContainer(aElement, aValue);
+
     // Create the <xul:titledbutton> element
     nsCOMPtr<nsIContent> toolbarItem;
     if (NS_FAILED(rv = CreateResourceElement(kNameSpaceID_XUL,
@@ -232,8 +234,8 @@ RDFToolbarBuilderImpl::AddWidgetItem(nsIContent* aElement,
             return rv;
         }
 
-        // Ignore ordinal properties
-        if (rdf_IsOrdinalProperty(property))
+        // Ignore properties that are used to indicate "tree-ness"
+        if (IsContainmentProperty(aElement, property))
             continue;
 
         PRInt32 nameSpaceID;
@@ -294,8 +296,13 @@ RDFToolbarBuilderImpl::AddWidgetItem(nsIContent* aElement,
 
     // Finally, mark this as a "container" so that we know to
     // recursively generate kids if they're asked for.
-    if (NS_FAILED(rv = toolbarItem->SetAttribute(kNameSpaceID_RDF, kContainerAtom, "true", PR_FALSE)))
-        return rv;
+    if (markAsContainer == PR_TRUE)
+    {
+        // Finally, mark this as a "container" so that we know to
+        // recursively generate kids if they're asked for.
+        if (NS_FAILED(rv = toolbarItem->SetAttribute(kNameSpaceID_RDF, kContainerAtom, "true", PR_FALSE)))
+            return rv;
+    }
 
     return NS_OK;
 }

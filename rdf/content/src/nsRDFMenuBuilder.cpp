@@ -209,15 +209,32 @@ RDFMenuBuilderImpl::AddWidgetItem(nsIContent* aElement,
         return NS_ERROR_UNEXPECTED;
     }
 
+    // Find out if we're a container or not.
+    PRBool markAsContainer = IsContainer(aElement, aValue);
+    nsCOMPtr<nsIAtom> itemAtom;
+    
+    // Figure out what atom to use based on whether or not we're a container
+    // or leaf
+    if (markAsContainer)
+    {
+        // We're a menu element
+        GetWidgetFolderAtom(getter_AddRefs(itemAtom));
+    }
+    else
+    {
+        // We're a menuitem element
+        GetWidgetItemAtom(getter_AddRefs(itemAtom));
+    }
+
     // Create the <xul:menuitem> element
     nsCOMPtr<nsIContent> menuItem;
     if (NS_FAILED(rv = CreateResourceElement(kNameSpaceID_XUL,
-                                             kMenuItemAtom,
+                                             itemAtom,
                                              aValue,
                                              getter_AddRefs(menuItem))))
         return rv;
 
-    // Add the <xul:menuitem> to the <xul:menu> element.
+    // Add the new menu item to the <xul:menu> element.
     menuParent->AppendChildTo(menuItem, PR_TRUE);
 
     // Add miscellaneous attributes by iterating _all_ of the
@@ -235,8 +252,8 @@ RDFMenuBuilderImpl::AddWidgetItem(nsIContent* aElement,
             return rv;
         }
 
-        // Ignore ordinal properties
-        if (rdf_IsOrdinalProperty(property))
+        // Ignore properties that are used to indicate "tree-ness"
+        if (IsContainmentProperty(aElement, property))
             continue;
 
         PRInt32 nameSpaceID;
@@ -291,8 +308,13 @@ RDFMenuBuilderImpl::AddWidgetItem(nsIContent* aElement,
 
     // Finally, mark this as a "container" so that we know to
     // recursively generate kids if they're asked for.
-    if (NS_FAILED(rv = menuItem->SetAttribute(kNameSpaceID_RDF, kContainerAtom, "true", PR_FALSE)))
-        return rv;
+    if (markAsContainer == PR_TRUE)
+    {
+        // Finally, mark this as a "container" so that we know to
+        // recursively generate kids if they're asked for.
+        if (NS_FAILED(rv = menuItem->SetAttribute(kNameSpaceID_RDF, kContainerAtom, "true", PR_FALSE)))
+            return rv;
+    }
 
     return NS_OK;
 }
