@@ -198,7 +198,7 @@ nsCString RegistryEntry::fullName() const {
 PRBool RegistryEntry::isAlreadySet() const {
     PRBool result = FALSE;
 
-    nsCString current = currentSetting();
+    nsCString current(currentSetting());
 
     result = ( current == setting );
 
@@ -247,7 +247,7 @@ NS_WARN_IF_FALSE( rc == ERROR_SUCCESS, (const char*)fullName() );
 // Get current setting, set new one, then save the previous.
 nsresult SavedRegistryEntry::set() {
     nsresult rv = NS_OK;
-    nsCString prev = currentSetting();
+    nsCString prev(currentSetting());
     // See if value is changing.
     if ( setting != prev ) {
         // Set new.
@@ -268,7 +268,7 @@ nsresult ProtocolRegistryEntry::set() {
 
     // Save and set corresponding DDE entry.  This stops Windows from trying to use
     // DDE (and getting an error).
-    nsCString ddeName = "Software\\Classes\\";
+    nsCString ddeName("Software\\Classes\\");
     ddeName += protocol;
     ddeName += "\\shell\\open\\ddeexec";
     SavedRegistryEntry( HKEY_LOCAL_MACHINE, ddeName, NULL, NULL ).set();
@@ -280,7 +280,7 @@ nsresult ProtocolRegistryEntry::set() {
         // "default browser."  If they are (the value there is "NSShell" or "Netscape")
         // then it will reset lots of registry entries, "stealing" them from us.
         SavedRegistryEntry special( HKEY_LOCAL_MACHINE, "Software\\Classes\\http\\shell\\open\\ddeexec\\Application", NULL, NULL );
-        nsCString specialVal = special.currentSetting();
+        nsCString specialVal(special.currentSetting());
         if ( specialVal.Equals( "NSShell" ) || specialVal.Equals( "Netscape" ) ) {
             // Reset this so Communicator will at least prompt the user.
             special.set();
@@ -307,7 +307,7 @@ nsresult SavedRegistryEntry::reset() {
     nsresult result = NS_OK;
 
     // Get current setting for this key/value.
-    nsCString current = currentSetting();
+    nsCString current(currentSetting());
 
     // Test if we "own" it.
     if ( current == setting ) {
@@ -372,7 +372,7 @@ nsresult FileTypeRegistryEntry::set() {
 
     // Set file extensions.
     for ( int i = 0; NS_SUCCEEDED( rv ) && ext[i]; i++ ) {
-        nsCString thisExt = "Software\\Classes\\";
+        nsCString thisExt("Software\\Classes\\");
         thisExt += ext[i];
         rv = SavedRegistryEntry( HKEY_LOCAL_MACHINE, thisExt, "", fileType ).set();
     }
@@ -383,13 +383,13 @@ nsresult FileTypeRegistryEntry::set() {
 
         // If we just created this file type entry, set description and default icon.
         if ( NS_SUCCEEDED( rv ) ) {
-            nsCString descKey = "Software\\Classes\\";
+            nsCString descKey("Software\\Classes\\");
             descKey += protocol;
             RegistryEntry descEntry( HKEY_LOCAL_MACHINE, descKey, NULL, desc );
             if ( descEntry.currentSetting().IsEmpty() ) {
                 descEntry.set();
             }
-            nsCString iconKey = "Software\\Classes\\";
+            nsCString iconKey("Software\\Classes\\");
             iconKey += protocol;
             iconKey += "\\DefaultIcon";
 
@@ -412,7 +412,7 @@ nsresult FileTypeRegistryEntry::reset() {
     nsresult rv = ProtocolRegistryEntry::reset();
 
     for ( int i = 0; ext[ i ]; i++ ) {
-        nsCString thisExt = "Software\\Classes\\";
+        nsCString thisExt("Software\\Classes\\");
         thisExt += ext[i];
         (void)SavedRegistryEntry( HKEY_LOCAL_MACHINE, thisExt, "", fileType ).reset();
     }
@@ -429,10 +429,10 @@ nsresult FileTypeRegistryEntry::reset() {
 nsresult EditableFileTypeRegistryEntry::set() {
     nsresult rv = FileTypeRegistryEntry::set();
     if ( NS_SUCCEEDED( rv ) ) {
-        nsCString editKey = "Software\\Classes\\";
+        nsCString editKey("Software\\Classes\\");
         editKey += protocol;
         editKey += "\\shell\\edit\\command";
-        nsCString editor = thisApplication();
+        nsCString editor(thisApplication());
         editor += " -edit \"%1\"";
         rv = RegistryEntry( HKEY_LOCAL_MACHINE, editKey, "", editor ).set();
     }
