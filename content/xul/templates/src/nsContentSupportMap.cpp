@@ -37,7 +37,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "nsContentSupportMap.h"
-#include "nsIXULContent.h"
+#include "nsXULElement.h"
 
 PLDHashTableOps nsContentSupportMap::gOps = {
     PL_DHashAllocTable,
@@ -80,10 +80,10 @@ nsContentSupportMap::Remove(nsIContent* aElement)
 
     PRUint32 count;
 
-    // If possible, use the special nsIXULContent interface to "peek"
+    // If possible, use the special nsXULElement interface to "peek"
     // at the child count without accidentally creating children as a
     // side effect, since we're about to rip 'em outta the map anyway.
-    nsCOMPtr<nsIXULContent> xulcontent = do_QueryInterface(aElement);
+    nsXULElement *xulcontent = nsXULElement::FromContent(aElement);
     if (xulcontent) {
         count = xulcontent->PeekChildCount();
     }

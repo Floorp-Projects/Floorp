@@ -70,7 +70,7 @@
 #include "nsIBindingManager.h"
 #include "nsIXBLBinding.h"
 #include "nsIURI.h"
-#include "nsIXULContent.h"
+#include "nsIXMLContent.h"
 #include "nsIXULPrototypeCache.h"
 #include "nsIXULTemplateBuilder.h"
 #include "nsIBoxObject.h"
@@ -400,12 +400,44 @@ public:
 
  */
 
+#define XUL_ELEMENT_LAZY_STATE_OFFSET ELEMENT_TYPE_SPECIFIC_BITS_OFFSET
+
 class nsXULElement : public nsGenericElement,
-                     public nsIXULContent,
                      public nsIDOMXULElement,
                      public nsIScriptEventHandlerOwner,
                      public nsIChromeEventHandler
 {
+public:
+    /**
+     * These flags are used to maintain bookkeeping information for partially-
+     * constructed content.
+     *
+     *   eChildrenMustBeRebuilt
+     *     The element's children are invalid or unconstructed, and should
+     *     be reconstructed.
+     *
+     *   eTemplateContentsBuilt
+     *     Child content that is built from a XUL template has been
+     *     constructed. 
+     *
+     *   eContainerContentsBuilt
+     *     Child content that is built by following the ``containment''
+     *     property in a XUL template has been built.
+     */
+    enum LazyState {
+        eChildrenMustBeRebuilt  = 0x1,
+        eTemplateContentsBuilt  = 0x2,
+        eContainerContentsBuilt = 0x4
+    };
+
+    /** Typesafe, non-refcounting cast from nsIContent.  Cheaper than QI. **/
+    static nsXULElement* FromContent(nsIContent *aContent)
+    {
+        if (aContent->IsContentOfType(eXUL))
+            return NS_STATIC_CAST(nsXULElement*, aContent);
+        return nsnull;
+    }
+
 public:
     static nsIXBLService* GetXBLService() {
         if (!gXBLService)
@@ -502,12 +534,17 @@ public:
                                                 PRInt32 aModType) const;
     NS_IMETHOD_(PRBool) IsAttributeMapped(const nsIAtom* aAttribute) const;
 
-    // nsIXULContent
-    NS_IMETHOD_(PRUint32) PeekChildCount() const;
-    NS_IMETHOD SetLazyState(LazyState aFlags);
-    NS_IMETHOD ClearLazyState(LazyState aFlags);
-    NS_IMETHOD GetLazyState(LazyState aFlag, PRBool& aValue);
-    NS_IMETHOD AddScriptEventListener(nsIAtom* aName, const nsAString& aValue);
+    // XUL element methods
+    PRUint32 PeekChildCount() const
+    { return mAttrsAndChildren.ChildCount(); }
+    void SetLazyState(LazyState aFlags)
+    { SetFlags(aFlags << XUL_ELEMENT_LAZY_STATE_OFFSET); }
+    void ClearLazyState(LazyState aFlags)
+    { UnsetFlags(aFlags << XUL_ELEMENT_LAZY_STATE_OFFSET); }
+    PRBool GetLazyState(LazyState aFlag)
+    { return GetFlags() & (aFlag << XUL_ELEMENT_LAZY_STATE_OFFSET); }
+    NS_HIDDEN_(nsresult) AddScriptEventListener(nsIAtom* aName,
+                                                const nsAString& aValue);
 
     // nsIDOMNode
     NS_FORWARD_NSIDOMNODE_NO_CLONENODE(nsGenericElement::)

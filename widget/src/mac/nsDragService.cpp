@@ -79,10 +79,6 @@
 #include "nsNetUtil.h"
 #include "nsILocalFileMac.h"
 
-#ifdef MOZ_XUL
-#include "nsIXULContent.h"
-#endif
-
 #include "nsIDOMElement.h"
 #include "nsIImageMac.h"
 #include "nsIImage.h"
@@ -141,8 +137,8 @@ nsDragService::ComputeGlobalRectFromFrame ( nsIDOMNode* aDOMNode, Rect & outScre
 #if USE_TRANSLUCENT_DRAGGING && defined(MOZ_XUL)
   // until bug 41237 is fixed, only do translucent dragging if the drag is in
   // the chrome or it's a link.
-  nsCOMPtr<nsIXULContent> xulContent ( do_QueryInterface(aDOMNode) );
-  if ( !xulContent ) {
+  nsCOMPtr<nsIContent> content = do_QueryInterface(aDOMNode);
+  if (!content || !content->IsContentOfType(nsIContent::eXUL)) {
     // the link node is the parent of the node we have (which is probably text or image).
     nsCOMPtr<nsIDOMNode> parent;
     aDOMNode->GetParentNode ( getter_AddRefs(parent) );

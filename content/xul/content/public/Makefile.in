@@ -47,7 +47,6 @@ MODULE		= xul
 ifdef MOZ_XUL
 EXPORTS		= \
                 nsIXULPopupListener.h \
-		nsIXULContent.h \
 		$(NULL)
 endif
 

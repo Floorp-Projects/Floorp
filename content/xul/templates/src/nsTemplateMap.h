@@ -40,6 +40,7 @@
 #define nsTemplateMap_h__
 
 #include "pldhash.h"
+#include "nsXULElement.h"
 
 class nsTemplateMap {
 protected:
@@ -85,11 +86,11 @@ public:
 
         PRUint32 count;
 
-        // If possible, use the special nsIXULContent interface to
+        // If possible, use the special nsXULElement interface to
         // "peek" at the child count without accidentally creating
         // children as a side effect, since we're about to rip 'em
         // outta the map anyway.
-        nsCOMPtr<nsIXULContent> xulcontent = do_QueryInterface(aContent);
+        nsXULElement *xulcontent = nsXULElement::FromContent(aContent);
         if (xulcontent) {
             count = xulcontent->PeekChildCount();
         }
