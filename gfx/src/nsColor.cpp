@@ -527,9 +527,9 @@ float     hue;
     if(r==max){
       hue=(float)(g-b)/(float)delta;
     } else if (g==max) {
-      hue= 2.0F+(float)(b-r)/(float)delta;
-    } else if (b==max) {
-      hue = 4.0F+(float)(r-g)/(float)delta;
+      hue= 2.0f+(float)(b-r)/(float)delta;
+    } else {   // if (b==max)
+      hue = 4.0f+(float)(r-g)/(float)delta;
     }
   }
 
@@ -552,7 +552,7 @@ float     hue;
 extern "C" NS_GFX_(void)
 NS_HSV2RGB(nscolor &aColor,PRUint16 aHue,PRUint16 aSat,PRUint16 aValue)
 {
-PRUint16  r,g,b;
+PRUint16  r=0,g=0,b=0;
 PRUint16  i,p,q,t;
 double    h,f,percent;
 
@@ -572,13 +572,13 @@ double    h,f,percent;
     // areas define how the saturation and value define the color.
     // reds behave differently than the blues
     h = (double)aHue / 60.0;
-    i = (int) floor(h);
+    i = (PRUint16) floor(h);
     f = h-(double)i;
     percent = ((double)aValue/255.0);   // this needs to be a value from 0 to 1, so a percentage
                                         // can be calculated of the saturation.
-    p = (PRIntn)(percent*(255-aSat));
-    q = (PRIntn)(percent*(255-(aSat*f)));
-    t = (PRIntn)(percent*(255-(aSat*(1.0-f))));
+    p = (PRUint16)(percent*(255-aSat));
+    q = (PRUint16)(percent*(255-(aSat*f)));
+    t = (PRUint16)(percent*(255-(aSat*(1.0-f))));
 
     // i is guarenteed to never be larger than 5.
     switch(i){
