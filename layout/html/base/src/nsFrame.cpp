@@ -4448,10 +4448,10 @@ GetCorrectedParent(nsIPresContext* aPresContext, nsIFrame* aFrame,
   nsIFrame *parent = aFrame->GetParent();
   *aSpecialParent = parent;
   if (parent) {
-    nsCOMPtr<nsIAtom> parentPseudo = parent->GetStyleContext()->GetPseudoType();
+    nsIAtom* parentPseudo = parent->GetStyleContext()->GetPseudoType();
     if (parentPseudo == nsCSSAnonBoxes::mozGCWrapperBlock ||
         parentPseudo == nsCSSAnonBoxes::mozGCWrapperInline) {
-      nsCOMPtr<nsIAtom> pseudo = aFrame->GetStyleContext()->GetPseudoType();
+      nsIAtom* pseudo = aFrame->GetStyleContext()->GetPseudoType();
       if (pseudo == nsCSSPseudoElements::before) {
         // Use the wrapped frame, which is after the |:before|.
         parent = GetNextSiblingAcrossLines(aPresContext, aFrame);
@@ -4459,7 +4459,7 @@ GetCorrectedParent(nsIPresContext* aPresContext, nsIFrame* aFrame,
         parent->GetFirstInFlow()->FirstChild(aPresContext, nsnull, &parent);
         // Now we have either the wrapped frame or the :before, but we
         // want the wrapped frame.
-        if (nsCOMPtr<nsIAtom>(parent->GetStyleContext()->GetPseudoType()) ==
+        if (parent->GetStyleContext()->GetPseudoType() ==
             nsCSSPseudoElements::before)
           parent = GetNextSiblingAcrossLines(aPresContext, parent);
       } else {
@@ -4471,7 +4471,7 @@ GetCorrectedParent(nsIPresContext* aPresContext, nsIFrame* aFrame,
     // if this frame itself is not scrolled-content, then skip any scrolled-content
     // parents since they're basically anonymous as far as the style system goes
     if (parentPseudo == nsCSSAnonBoxes::scrolledContent) {
-      nsCOMPtr<nsIAtom> pseudo = aFrame->GetStyleContext()->GetPseudoType();
+      nsIAtom* pseudo = aFrame->GetStyleContext()->GetPseudoType();
       if (pseudo != nsCSSAnonBoxes::scrolledContent) {
         do {
           parent = parent->GetParent();

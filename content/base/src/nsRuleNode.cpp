@@ -2497,7 +2497,7 @@ nsRuleNode::ComputeDisplayData(nsStyleStruct* aStartStruct,
     display = new (mPresContext) nsStyleDisplay();
   const nsStyleDisplay* parentDisplay = display;
 
-  nsCOMPtr<nsIAtom> pseudoTag = aContext->GetPseudoType();
+  nsIAtom* pseudoTag = aContext->GetPseudoType();
   PRBool generatedContent = (pseudoTag == nsCSSPseudoElements::before || 
                              pseudoTag == nsCSSPseudoElements::after);
 

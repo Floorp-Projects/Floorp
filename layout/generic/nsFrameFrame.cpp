@@ -394,7 +394,7 @@ nsHTMLFrameOuterFrame::Init(nsIPresContext*  aPresContext,
       }
     }
   
-    nsHTMLContainerFrame::CreateViewForFrame(aPresContext,this,mStyleContext,contentParent,PR_TRUE); 
+    nsHTMLContainerFrame::CreateViewForFrame(this, contentParent, PR_TRUE);
   }
   nsIView* view = GetView();
 

@@ -538,9 +538,7 @@ nsHTMLContainerFrame::ReparentFrameViewList(nsIPresContext* aPresContext,
 }
 
 nsresult
-nsHTMLContainerFrame::CreateViewForFrame(nsIPresContext* aPresContext,
-                                         nsIFrame* aFrame,
-                                         nsStyleContext* aStyleContext,
+nsHTMLContainerFrame::CreateViewForFrame(nsIFrame* aFrame,
                                          nsIFrame* aContentParentFrame,
                                          PRBool aForce)
 {
@@ -549,7 +547,7 @@ nsHTMLContainerFrame::CreateViewForFrame(nsIPresContext* aPresContext,
   }
 
   // If we don't yet have a view, see if we need a view
-  if (!(aForce || FrameNeedsView(aPresContext, aFrame, aStyleContext))) {
+  if (!(aForce || FrameNeedsView(aFrame))) {
     // don't need a view
     return NS_OK;
   }
@@ -575,7 +573,7 @@ nsHTMLContainerFrame::CreateViewForFrame(nsIPresContext* aPresContext,
   // Initialize the view
   view->Init(viewManager, aFrame->GetRect(), parentView);
 
-  SyncFrameViewProperties(aPresContext, aFrame, aStyleContext, view);
+  SyncFrameViewProperties(aFrame->GetPresContext(), aFrame, nsnull, view);
 
   // Insert the view into the view hierarchy. If the parent view is a
   // scrolling view we need to do this differently
@@ -600,7 +598,7 @@ nsHTMLContainerFrame::CreateViewForFrame(nsIPresContext* aPresContext,
 
   // XXX If it's fixed positioned, then create a widget so it floats
   // above the scrolling area
-  const nsStyleDisplay* display = aStyleContext->GetStyleDisplay();
+  const nsStyleDisplay* display = aFrame->GetStyleContext()->GetStyleDisplay();
   if (NS_STYLE_POSITION_FIXED == display->mPosition) {
     view->CreateWidget(kCChildCID);
   }

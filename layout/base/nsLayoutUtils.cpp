@@ -195,9 +195,7 @@ nsLayoutUtils::IsGeneratedContentFor(nsIContent* aContent,
     return PR_FALSE;
   }
 
-  nsStyleContext* styleContext = aFrame->GetStyleContext();
-  nsCOMPtr<nsIAtom> pseudoType = styleContext->GetPseudoType();
-  return pseudoType == aPseudoElement;
+  return aFrame->GetStyleContext()->GetPseudoType() == aPseudoElement;
 }
 
 // static

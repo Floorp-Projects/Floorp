@@ -92,9 +92,7 @@ public:
    *         so that aFrame can remember to get its Z-order from 
    *         aContentParentFrame.
    */
-  static nsresult CreateViewForFrame(nsIPresContext* aPresContext,
-                                     nsIFrame* aFrame,
-                                     nsStyleContext* aStyleContext,
+  static nsresult CreateViewForFrame(nsIFrame* aFrame,
                                      nsIFrame* aContentParentFrame,
                                      PRBool aForce);
 

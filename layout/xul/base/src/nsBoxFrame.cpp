@@ -269,10 +269,7 @@ nsBoxFrame::Init(nsIPresContext*  aPresContext,
     PRBool needsWidget = PR_FALSE;
     parent->ChildrenMustHaveWidgets(needsWidget);
     if (needsWidget) {
-
-        if (!HasView()) {
-           nsHTMLContainerFrame::CreateViewForFrame(aPresContext,this,mStyleContext,nsnull,PR_TRUE); 
-        }
+        nsHTMLContainerFrame::CreateViewForFrame(this, nsnull, PR_TRUE);
 
         nsIView* view = GetView();
         if (!view->HasWidget())
@@ -2477,8 +2474,7 @@ nsBoxFrame::CreateViewForFrame(nsIPresContext*  aPresContext,
     
     // See if the frame is a scrolled frame
     if (!aForce) {
-      nsCOMPtr<nsIAtom> pseudoTag = aStyleContext->GetPseudoType();
-      if (pseudoTag == nsCSSAnonBoxes::scrolledContent) {
+      if (aStyleContext->GetPseudoType() == nsCSSAnonBoxes::scrolledContent) {
         NS_FRAME_LOG(NS_FRAME_TRACE_CALLS,
           ("nsBoxFrame::CreateViewForFrame: scrolled frame=%p", aFrame));
         aForce = PR_TRUE;

@@ -548,8 +548,6 @@ SyncFrameViewGeometryDependentProperties(nsIPresContext*  aPresContext,
   // view's contents should be repainted and not bitblt'd
   vm->SetViewBitBltEnabled(aView, !fixedBackground);
 
-  nsCOMPtr<nsIAtom> pseudo = aFrame->GetStyleContext()->GetPseudoType();
-
   // If the frame has a solid background color, 'background-clip:border',
   // and it's a kind of frame that paints its background, and rounded borders aren't
   // clipping the background, then it's opaque.
@@ -560,15 +558,14 @@ SyncFrameViewGeometryDependentProperties(nsIPresContext*  aPresContext,
       !HasNonZeroBorderRadius(aStyleContext));
 
   PRBool drawnOnUniformField = PR_FALSE;
-  if (pseudo == nsCSSAnonBoxes::scrolledContent) {
+  if (aStyleContext->GetPseudoType() == nsCSSAnonBoxes::scrolledContent) {
     // If the nsGfxScrollFrame draws a solid unclipped background
     // color, and nothing else, then tell the view system that we're
     // drawn on a uniform field. Note that it's OK if the background
     // is clipped to the padding area, since the scrollport is within
     // the borders.
     nsIFrame* scrollFrame = aFrame->GetParent();
-    nsCOMPtr<nsIAtom> parentPseudo;
-    while ((parentPseudo = scrollFrame->GetStyleContext()->GetPseudoType())
+    while (scrollFrame->GetStyleContext()->GetPseudoType()
            == nsCSSAnonBoxes::scrolledContent) {
       scrollFrame = scrollFrame->GetParent();
     }
@@ -769,6 +766,9 @@ nsContainerFrame::SyncFrameViewAfterSizeChange(nsIPresContext*  aPresContext,
                                                nsIView*         aView,
                                                PRUint32         aFlags)
 {
+  NS_ASSERTION(!aStyleContext || aFrame->GetStyleContext() == aStyleContext,
+               "Wrong style context for frame?");
+
   if (!aView) {
     return;
   }
@@ -787,6 +787,9 @@ nsContainerFrame::SyncFrameViewProperties(nsIPresContext*  aPresContext,
                                           nsIView*         aView,
                                           PRUint32         aFlags)
 {
+  NS_ASSERTION(!aStyleContext || aFrame->GetStyleContext() == aStyleContext,
+               "Wrong style context for frame?");
+
   if (!aView) {
     return;
   }
@@ -856,11 +859,10 @@ nsContainerFrame::SyncFrameViewProperties(nsIPresContext*  aPresContext,
 }
 
 PRBool
-nsContainerFrame::FrameNeedsView(nsIPresContext* aPresContext,
-                                 nsIFrame* aFrame,
-                                 nsStyleContext* aStyleContext)
+nsContainerFrame::FrameNeedsView(nsIFrame* aFrame)
 {
-  const nsStyleVisibility* vis = aStyleContext->GetStyleVisibility();
+  nsStyleContext* sc = aFrame->GetStyleContext();
+  const nsStyleVisibility* vis = sc->GetStyleVisibility();
     
   if (vis->mOpacity != 1.0f) {
     return PR_TRUE;
@@ -870,13 +872,14 @@ nsContainerFrame::FrameNeedsView(nsIPresContext* aPresContext,
   const nsStyleBackground *color;
   PRBool isCanvas;
   PRBool hasBackground = 
-    nsCSSRendering::FindBackground(aPresContext, aFrame, &color, &isCanvas);
+    nsCSSRendering::FindBackground(aFrame->GetPresContext(),
+                                   aFrame, &color, &isCanvas);
   if (hasBackground &&
       NS_STYLE_BG_ATTACHMENT_FIXED == color->mBackgroundAttachment) {
     return PR_TRUE;
   }
     
-  const nsStyleDisplay* display = aStyleContext->GetStyleDisplay();
+  const nsStyleDisplay* display = sc->GetStyleDisplay();
 
   if (NS_STYLE_POSITION_RELATIVE == display->mPosition) {
     return PR_TRUE;
@@ -884,8 +887,7 @@ nsContainerFrame::FrameNeedsView(nsIPresContext* aPresContext,
     return PR_TRUE;
   } 
 
-  nsCOMPtr<nsIAtom>  pseudoTag = aStyleContext->GetPseudoType();
-  if (pseudoTag == nsCSSAnonBoxes::scrolledContent) {
+  if (sc->GetPseudoType() == nsCSSAnonBoxes::scrolledContent) {
     return PR_TRUE;
   }
 

@@ -138,9 +138,7 @@ nsScrollBoxFrame::SetUpScrolledFrame(nsIPresContext* aPresContext)
      return;
 
   // create a view if we don't already have one.
-  nsStyleContext* context = frame->GetStyleContext();
-  nsHTMLContainerFrame::CreateViewForFrame(aPresContext, frame,
-                                           context, nsnull, PR_TRUE);
+  nsHTMLContainerFrame::CreateViewForFrame(frame, nsnull, PR_TRUE);
 }
 
 NS_IMETHODIMP
