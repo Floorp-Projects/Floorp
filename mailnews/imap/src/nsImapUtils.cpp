@@ -121,8 +121,24 @@ nsImapURI2Path(const char* rootURI, const char* uriStr, nsFileSpec& pathResult)
 		return rv;
 	}
 
-	if (folder != "")
-	  pathResult += folder;
+  if (folder != "")
+  {
+      nsAutoString parentName = folder;
+      nsAutoString leafName = folder;
+      PRInt32 dirEnd = parentName.Find('/');
+
+      while(dirEnd > 0)
+      {
+          parentName.Right(leafName, parentName.Length() - dirEnd -1);
+          parentName.Truncate(dirEnd);
+          parentName += sbdSep;
+          pathResult += parentName;
+          parentName = leafName;
+          dirEnd = parentName.Find('/');
+      }
+      if (leafName != "")
+          pathResult += leafName;
+  }
 
 	return NS_OK;
 }
