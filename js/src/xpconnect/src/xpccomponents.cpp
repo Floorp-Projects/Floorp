@@ -25,8 +25,8 @@
 class InterfacesScriptable : public nsIXPCScriptable
 {
 public:
-    NS_DECL_ISUPPORTS;
-    XPC_DECLARE_IXPCSCRIPTABLE;
+    NS_DECL_ISUPPORTS
+    XPC_DECLARE_IXPCSCRIPTABLE
     InterfacesScriptable();
     virtual ~InterfacesScriptable();
 private:
@@ -171,8 +171,8 @@ NS_IMPL_QUERY_INTERFACE_SCRIPTABLE(nsXPCInterfaces, mScriptable)
 class ClassesScriptable : public nsIXPCScriptable
 {
 public:
-    NS_DECL_ISUPPORTS;
-    XPC_DECLARE_IXPCSCRIPTABLE;
+    NS_DECL_ISUPPORTS
+    XPC_DECLARE_IXPCSCRIPTABLE
     ClassesScriptable();
     virtual ~ClassesScriptable();
 private:

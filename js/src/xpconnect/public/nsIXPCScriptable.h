@@ -137,7 +137,7 @@ public: \
                          JSBool* retval) COND_PURE ;                        \
     NS_IMETHOD Finalize(JSContext *cx, JSObject *obj,                       \
                         nsIXPConnectWrappedNative* wrapper,                 \
-                        nsIXPCScriptable* arbitrary) COND_PURE /*;*/
+                        nsIXPCScriptable* arbitrary) COND_PURE ;
 
 
 // {8A9C85F0-BA3A-11d2-982D-006008962422}
@@ -149,13 +149,13 @@ class nsIXPCScriptable : public nsISupports
 public:
     NS_DEFINE_STATIC_IID_ACCESSOR(NS_IXPCSCRIPTABLE_IID)
 #define COND_PURE = 0
-    XPC_DECLARE_IXPCSCRIPTABLE;
+    XPC_DECLARE_IXPCSCRIPTABLE
 #undef COND_PURE
 #define COND_PURE
 };
 
 // macro test...
-// XPC_DECLARE_IXPCSCRIPTABLE;
+// XPC_DECLARE_IXPCSCRIPTABLE
 
 /***************************************************************************/
 
@@ -447,7 +447,7 @@ public:
 
 //class foo : public nsIXPCScriptable
 //{
-//    XPC_DECLARE_IXPCSCRIPTABLE;
+//    XPC_DECLARE_IXPCSCRIPTABLE
 //};
 //XPC_IMPLEMENT_FORWARD_IXPCSCRIPTABLE(foo)
 

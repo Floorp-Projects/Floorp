@@ -59,8 +59,8 @@ static void RegAllocator()
 /***************************************************************************/
 class MyScriptable : public nsIXPCScriptable
 {
-    NS_DECL_ISUPPORTS;
-    XPC_DECLARE_IXPCSCRIPTABLE;
+    NS_DECL_ISUPPORTS
+    XPC_DECLARE_IXPCSCRIPTABLE
     MyScriptable();
 };
 
@@ -109,7 +109,7 @@ MyScriptable::DefaultValue(JSContext *cx, JSObject *obj,
 
 class nsTestXPCFoo : public nsITestXPCFoo2
 {
-    NS_DECL_ISUPPORTS;
+    NS_DECL_ISUPPORTS
     NS_IMETHOD Test(int p1, int p2, int* retval);
     NS_IMETHOD Test2();
     nsTestXPCFoo();
@@ -165,7 +165,7 @@ nsTestXPCFoo::nsTestXPCFoo()
 class MyEcho : public nsIEcho
 {
 public:
-    NS_DECL_ISUPPORTS;
+    NS_DECL_ISUPPORTS
     NS_IMETHOD SetReciever(nsIEcho* aReciever);
     NS_IMETHOD SendOneString(const char* str);
     NS_IMETHOD In2OutOneInt(int input, int* output);
