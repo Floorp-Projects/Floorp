@@ -12,6 +12,9 @@
 <!ENTITY intro.label           "The file &quot;#3&quot; is of type #2 (#1), and #4 does not know how to handle this file type. This file is located at:">
 <!ENTITY intro.noDesc.label    "The file &quot;#3&quot; is of type #2, and #4 does not know how to handle this file type. This file is located at:">
 
+<!ENTITY intro.attachment.label "The site has suggested that &quot;#3&quot; be handled as an attachment. It is of type #2 (#1) and located at:">
+<!ENTITY intro.attachment.noDesc.label "The site has suggested that &quot;#3&quot; be handled as an attachment. It is of type #2 and located at:">
+
 <!ENTITY prompt.label          "What should #1 do with this file?">
 
 <!ENTITY alwaysAsk.label       "Always show this dialog before handling files of this type">

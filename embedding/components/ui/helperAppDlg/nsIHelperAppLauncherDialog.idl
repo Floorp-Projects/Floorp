@@ -66,7 +66,12 @@ interface nsILocalFile;
 interface nsIHelperAppLauncherDialog : nsISupports {
     // Show confirmation dialog for launching application (or "save to
     // disk") for content specified by aLauncher.
-    void show( in nsIHelperAppLauncher aLauncher, in nsISupports aContext );
+    // aForced is used to indicate whether this dialog was shown even though
+    // the content could have been handled by mozilla; this is used if
+    // an HTTP Server sends Content-Disposition: attachment
+    void show( in nsIHelperAppLauncher aLauncher,
+               in nsISupports aContext,
+               in boolean aForced);
 	
 	// invoke a save to file dialog instead of the full fledged helper app dialog.
 	// aDefaultFileName --> default file name to provide (can be null)
