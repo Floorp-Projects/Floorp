@@ -18,16 +18,17 @@
 # Rights Reserved.
 #
 # Contributor(s): 
+#    Axel Hecht <axel@pike.org>
+#
 
 DEPTH=..\..\..\..\..\..
 
 include <$(DEPTH)\config\rules.mak>
 
-DISTBROWSER=$(DIST)\bin\chrome\global\locale
+CHROME_DIR = global
 
-install::
-	$(MAKE_INSTALL) console.dtd $(DISTBROWSER)
+CHROME_L10N = \
+	console.dtd \
+	$(NULL)
 
-clobber::
-	rm -f $(DISTBROWSER)\console.dtd
-
+CHROME_TYPE = locale
