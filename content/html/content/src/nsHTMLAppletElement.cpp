@@ -30,7 +30,7 @@
 #include "nsIPresShell.h"
 #include "nsIFrame.h"
 
-#if defined(OJI) && !defined(XP_UNIX)
+#if defined(OJI)
 #include "nsIServiceManager.h"
 #include "nsIJVMManager.h"
 #include "nsILiveConnectManager.h"
@@ -251,7 +251,7 @@ nsHTMLAppletElement::GetStyleHintForAttributeChange(
   return NS_OK;
 }
 
-#if defined(OJI) && !defined(XP_UNIX)
+#if defined(OJI)
 extern nsresult NS_GetObjectFramePluginInstance(nsIFrame* aFrame, nsIPluginInstance*& aPluginInstance);
 #endif
 
@@ -266,7 +266,7 @@ NS_IMETHODIMP
 nsHTMLAppletElement::GetScriptObject(nsIScriptContext* aContext,
                                      void** aScriptObject)
 {
-#if defined(OJI) && !defined(XP_UNIX)
+#if defined(OJI)
 	nsresult rv = NS_OK;
 	if (!mReflectedApplet) {
 		// 1. get the script object corresponding to the <APPLET> element itself.
