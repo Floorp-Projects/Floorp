@@ -179,6 +179,7 @@ nsDOMSOFactory::Observe(nsISupports *aSubject,
 
     GlobalWindowImpl::ShutDown();
     nsDOMClassInfo::ShutDown();
+    nsJSEnvironment::ShutDown();
 
     nsCOMPtr<nsIExceptionService> xs =
       do_GetService(NS_EXCEPTIONSERVICE_CONTRACTID);
