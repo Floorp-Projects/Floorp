@@ -589,21 +589,21 @@ sub query_to_english {
         $english .= "to <i>All Repositories</i> ";
     }
     elsif( $::query_module ne 'all' && @::query_dirs == 0 ){
-        $english .= "to module <i>$::query_module</i> ";
+        $english .= "to module <i>" . html_quote($::query_module) . "</i> ";
     }
     elsif( $::FORM{dir} ne "" ) {
         my $word = "directory";
         if (@::query_dirs > 1) {
             $word = "directories";
         }
-        $english .= "to $word <i>$::FORM{dir}</i> ";
+        $english .= "to $word <i>" . html_quote($::FORM{dir}) . "</i> ";
     }
 
     if ($::query_file ne "") {
         if ($english ne 'Checkins ') {
             $english .= "and ";
         }
-        $english .= "to file $::query_file ";
+        $english .= "to file " . html_quote($::query_file) . " ";
     }
 
     if( ! ($::query_branch =~ /^[ ]*HEAD[ ]*$/i) ){
@@ -611,17 +611,17 @@ sub query_to_english {
             $english .= "on all branches ";
         }
         else {
-            $english .= "on branch <i>$::query_branch</i> ";
+            $english .= "on branch <i>" . html_quote($::query_branch) . "</i> ";
         }
     }
 
     if( $::query_who) {
-        $english .= "by $::query_who ";
+        $english .= "by " . html_quote($::query_who) . " ";
     }
 
     $::query_date_type = $::FORM{'date'};
     if( $::query_date_type eq 'hours' ){
-        $english .="in the last $::FORM{hours} hours";
+        $english .="in the last " . html_quote($::FORM{hours}) . " hours";
     }
     elsif( $::query_date_type eq 'day' ){
         $english .="in the last day";
