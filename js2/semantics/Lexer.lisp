@@ -249,13 +249,23 @@
   (hidden nil :type bool :read-only t))               ;True if this charclass should not be in the grammar
 
 
+; Return a copy of the charset expr with all parametrized nonterminals interned.
+(defun intern-charset-expr (parametrization expr)
+  (cond
+   ((or (not (consp expr)) (eq (first expr) '%)) expr)
+   ((keywordp (first expr)) (assert-type (grammar-parametrization-intern parametrization expr) nonterminal))
+   (t (mapcar #'(lambda (subexpr)
+                  (intern-charset-expr parametrization subexpr))
+              expr))))
+
+
 ; Evaluate a <set-expr> whose syntax is given at the top of this file.
 ; Return the charset.
 ; charclasses-hash is a hash table of nonterminal -> charclass.
 (defun eval-charset-expr (charclasses-hash expr)
   (cond
    ((null expr) 0)
-   ((symbolp expr)
+   ((nonterminal? expr)
     (charclass-charset
      (or (gethash expr charclasses-hash)
          (error "Character class ~S not defined" expr))))
@@ -287,7 +297,7 @@
 (defun depict-charset-source (markup-stream expr)
   (cond
    ((null expr) (error "Can't emit null charset expression"))
-   ((symbolp expr) (depict-general-nonterminal markup-stream expr :reference))
+   ((nonterminal? expr) (depict-general-nonterminal markup-stream expr :reference))
    ((consp expr)
     (case (first expr)
       ((+ ++) (depict-list markup-stream #'depict-charset-source (rest expr) :separator " | "))
@@ -429,21 +439,22 @@
                 (make-lexer-action name (incf lexer-action-number) type-expr function markup)))))
     
     (dolist (charclass-source charclasses-source)
-      (let ((nonterminal (assert-type (grammar-parametrization-intern parametrization (first charclass-source)) nonterminal))
-            (charset (eval-charset-expr charclasses-hash (ensure-proper-form (second charclass-source))))
-            (actions 
-             (mapcar #'(lambda (action-source)
-                         (let* ((lexer-action-name (second action-source))
-                                (lexer-action (gethash lexer-action-name lexer-actions)))
-                           (unless lexer-action
-                             (error "Unknown lexer-action ~S" lexer-action-name))
-                           (cons (first action-source) lexer-action)))
-                     (third charclass-source))))
+      (let* ((nonterminal (assert-type (grammar-parametrization-intern parametrization (first charclass-source)) nonterminal))
+             (charset-source (intern-charset-expr parametrization (ensure-proper-form (second charclass-source))))
+             (charset (eval-charset-expr charclasses-hash charset-source))
+             (actions 
+              (mapcar #'(lambda (action-source)
+                          (let* ((lexer-action-name (second action-source))
+                                 (lexer-action (gethash lexer-action-name lexer-actions)))
+                            (unless lexer-action
+                              (error "Unknown lexer-action ~S" lexer-action-name))
+                            (cons (first action-source) lexer-action)))
+                      (third charclass-source))))
         (when (gethash nonterminal charclasses-hash)
           (error "Attempt to redefine character class ~S" nonterminal))
         (when (charset-empty? charset)
           (error "Empty character class ~S" nonterminal))
-        (let ((charclass (make-charclass nonterminal (second charclass-source) charset actions (fourth charclass-source))))
+        (let ((charclass (make-charclass nonterminal charset-source charset actions (fourth charclass-source))))
           (push charclass charclasses)
           (setf (gethash nonterminal charclasses-hash) charclass)
           (push charset charsets))))
