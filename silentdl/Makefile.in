@@ -25,6 +25,12 @@ include $(DEPTH)/config/autoconf.mk
 MODULE		= silentdl
 LIBRARY_NAME	= silentdl
 
+CPPSRCS = \
+	nsJSSilentDownload.cpp \
+	nsJSSilentDownloadTask.cpp \
+	nsSilentDownload.cpp \
+	$(NULL)
+
 EXPORTS = nsSilentDownload.h nsIDOMSilentDownloadTask.h nsIDOMSilentDownload.h
 
 EXPORTS         := $(addprefix $(srcdir)/, $(EXPORTS))
