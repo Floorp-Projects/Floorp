@@ -50,6 +50,8 @@ protected:
   nsXULTreeGroupFrame* GetGroupFrame(nsIBox* aBox);
   nsXULTreeSliceFrame* GetRowFrame(nsIBox* aBox);
 
+private:
+  NS_IMETHOD LayoutInternal(nsIBox* aBox, nsBoxLayoutState& aState);
 };
 
 #endif

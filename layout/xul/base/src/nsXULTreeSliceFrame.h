@@ -40,6 +40,9 @@ public:
   NS_IMETHOD IsOutermostFrame(PRBool* aResult) { *aResult = PR_FALSE; return NS_OK; };
   NS_IMETHOD IsGroupFrame(PRBool* aResult) { *aResult = PR_FALSE; return NS_OK; };
   NS_IMETHOD IsRowFrame(PRBool* aResult) { *aResult = PR_TRUE; return NS_OK; };
+
+  // nsIBox
+  NS_IMETHOD GetPrefSize(nsBoxLayoutState& aState, nsSize& aSize);
   
 protected:
   nsXULTreeSliceFrame(nsIPresShell* aPresShell, PRBool aIsRoot = nsnull, nsIBoxLayout* aLayoutManager = nsnull, PRBool aDefaultHorizontal = PR_TRUE);

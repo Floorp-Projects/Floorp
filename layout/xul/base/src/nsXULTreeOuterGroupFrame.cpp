@@ -173,8 +173,9 @@ NS_NewXULTreeOuterGroupFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame, PRB
 // Constructor
 nsXULTreeOuterGroupFrame::nsXULTreeOuterGroupFrame(nsIPresShell* aPresShell, PRBool aIsRoot, nsIBoxLayout* aLayoutManager, PRBool aIsHorizontal)
 :nsXULTreeGroupFrame(aPresShell, aIsRoot, aLayoutManager, aIsHorizontal),
- mRowGroupInfo(nsnull), mRowHeight(0), mCurrentIndex(0), mTwipIndex(0), mAutoScrollTimer(nsnull),
- mTreeIsSorted(PR_FALSE), mDragOverListener(nsnull), mCurrentlyTrackingAutoScroll(PR_FALSE)
+ mRowGroupInfo(nsnull), mRowHeight(0), mCurrentIndex(0), mAutoScrollTimer(nsnull),
+ mTreeIsSorted(PR_FALSE), mDragOverListener(nsnull), mCurrentlyTrackingAutoScroll(PR_FALSE),
+ mTreeLayoutState(eTreeLayoutNormal)
 {
 }
 
@@ -281,7 +282,7 @@ nsXULTreeOuterGroupFrame::IsFixedRowSize()
 void
 nsXULTreeOuterGroupFrame::SetRowHeight(nscoord aRowHeight)
 { 
-  if (mRowHeight == 0) { 
+  if (aRowHeight > mRowHeight) { 
     mRowHeight = aRowHeight;
     nsCOMPtr<nsIContent> parent;
     mContent->GetParent(*getter_AddRefs(parent));
@@ -299,6 +300,9 @@ nsXULTreeOuterGroupFrame::SetRowHeight(nscoord aRowHeight)
     }
     nsBoxLayoutState state(mPresContext);
     MarkDirtyChildren(state); 
+    mTreeLayoutState = eTreeLayoutAbort;
+    if (mCurrentIndex > 0)
+      VerticalScroll(mCurrentIndex * mRowHeight);
   } 
 }
 
@@ -324,7 +328,7 @@ nsXULTreeOuterGroupFrame::GetYPosition()
 }
 
 void
-nsXULTreeOuterGroupFrame::VerticalScroll(PRInt32 aDelta)
+nsXULTreeOuterGroupFrame::VerticalScroll(PRInt32 aPosition)
 {
   nsIBox* box;
   GetParentBox(&box);
@@ -342,7 +346,7 @@ nsXULTreeOuterGroupFrame::VerticalScroll(PRInt32 aDelta)
   nscoord x, y;
   scrollFrame->GetScrollPosition(mPresContext, x, y);
  
-  scrollFrame->ScrollTo(mPresContext, x, aDelta);
+  scrollFrame->ScrollTo(mPresContext, x, aPosition);
 }
 
 nscoord

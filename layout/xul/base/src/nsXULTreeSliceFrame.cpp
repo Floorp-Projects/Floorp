@@ -76,3 +76,13 @@ nsXULTreeSliceFrame::nsXULTreeSliceFrame(nsIPresShell* aPresShell, PRBool aIsRoo
 nsXULTreeSliceFrame::~nsXULTreeSliceFrame()
 {
 }
+
+nsresult
+nsXULTreeSliceFrame::GetPrefSize(nsBoxLayoutState& aState, nsSize& aSize)
+{
+  nsresult rv = nsBoxFrame::GetPrefSize(aState, aSize);
+  if (NS_FAILED(rv)) return rv;
+
+  aSize.height = PR_MAX(mRect.height, aSize.height);
+  return NS_OK;
+}

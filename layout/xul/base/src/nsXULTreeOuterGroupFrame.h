@@ -42,8 +42,11 @@ class nsCSSFrameConstructor;
 class nsDragOverListener;
 class nsDragAutoScrollTimer;
 
-
-#define TREE_LINE_HEIGHT 225
+enum nsTreeLayoutState {
+  eTreeLayoutNormal,
+  eTreeLayoutAbort,
+  eTreeLayoutDirtyAll
+};
 
 class nsXULTreeRowGroupInfo {
 public:
@@ -237,6 +240,9 @@ public:
 
   PRBool IsTreeSorted ( ) const { return mTreeIsSorted; }
 
+  nsTreeLayoutState GetTreeLayoutState() { return mTreeLayoutState; }
+  void SetTreeLayoutState(nsTreeLayoutState aState) { mTreeLayoutState = aState; }
+
 protected: // Data Members
 
   void ComputeTotalRowCount(PRInt32& aRowCount, nsIContent* aParent);
@@ -254,7 +260,6 @@ protected: // Data Members
   PRInt32 mRowHeight;
   nscoord mOnePixel;
   PRInt32 mCurrentIndex; // Row-based
-  PRInt32 mTwipIndex; // Not really accurate. Used to handle thumb dragging
   PRPackedBool mTreeIsSorted;
   PRPackedBool mCurrentlyTrackingAutoScroll;    // used to track if we've done setup already
 
@@ -262,6 +267,7 @@ protected: // Data Members
     // in Init() for why this is a weak ref.
   nsDragOverListener* mDragOverListener;
   nsDragAutoScrollTimer* mAutoScrollTimer;      // actually a strong ref
+  nsTreeLayoutState mTreeLayoutState;
   
 }; // class nsXULTreeOuterGroupFrame
 
