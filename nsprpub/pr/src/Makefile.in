@@ -141,6 +141,12 @@ endif
 endif
 endif
 
+ifeq ($(OS_ARCH),OS2)
+MAPFILE = $(OBJDIR)/$(LIBRARY_NAME)$(LIBRARY_VERSION).def
+GARBAGE += $(MAPFILE)
+MKSHLIB += $(MAPFILE)
+endif
+
 ifeq ($(OS_ARCH),OSF1)
 ifeq ($(USE_PTHREADS), 1)
 OS_LIBS 	= -lpthread -lrt

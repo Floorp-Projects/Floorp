@@ -51,6 +51,10 @@
 #ifdef USE_RAMSEM
 ULONG _Far16 _Pascal Dos16GetInfoSeg(PSEL pselGlobal, PSEL pselLocal);
 
+#ifdef XP_OS2_EMX
+typedef unsigned short BOOL16;
+#endif
+
 typedef struct _LINFOSEG
 {
     USHORT  pidCurrent;

@@ -151,7 +151,7 @@ socket_io_wait( PRInt32 osfd, PRInt32 fd_type, PRIntervalTime timeout )
                 else
                     rv = _MD_SELECT(socks, 0, 1, 0, lTimeout);
 #endif                    
-                if (rv == -1 && (syserror = sock_errno()) != SOCEINTR) {
+                if (rv == -1 && (syserror = sock_errno()) != EINTR) {
                     _PR_MD_MAP_SELECT_ERROR(syserror);
                     break;
                 }
@@ -209,7 +209,7 @@ socket_io_wait( PRInt32 osfd, PRInt32 fd_type, PRIntervalTime timeout )
                 /*
                  * we don't consider EINTR a real error
                  */
-                if (rv == -1 && (syserror = sock_errno()) != SOCEINTR) {
+                if (rv == -1 && (syserror = sock_errno()) != EINTR) {
                     _PR_MD_MAP_SELECT_ERROR(syserror);
                     break;
                 }
@@ -223,7 +223,7 @@ socket_io_wait( PRInt32 osfd, PRInt32 fd_type, PRIntervalTime timeout )
                  * We loop again if _MD_SELECT timed out or got interrupted
                  * by a signal, and the timeout deadline has not passed yet.
                  */
-                if (rv == 0 || (rv == -1 && syserror == SOCEINTR)) {
+                if (rv == 0 || (rv == -1 && syserror == EINTR)) {
                     /*
                      * If _MD_SELECT timed out, we know how much time
                      * we spent in blocking, so we can avoid a
@@ -252,7 +252,7 @@ socket_io_wait( PRInt32 osfd, PRInt32 fd_type, PRIntervalTime timeout )
                         remaining = timeout - elapsed;
                     }
                 }
-            } while (rv == 0 || (rv == -1 && syserror == SOCEINTR));
+            } while (rv == 0 || (rv == -1 && syserror == EINTR));
             break;
         }
     return(rv);
@@ -269,14 +269,14 @@ _MD_Accept(PRFileDesc *fd, PRNetAddr *addr,
     while ((rv = accept(osfd, (struct sockaddr*) addr, (int*)addrlen)) == -1)
     {
         err = sock_errno();
-        if ((err == SOCEWOULDBLOCK) || (err == SOCECONNABORTED))
+        if ((err == EWOULDBLOCK) || (err == ECONNABORTED))
         {
             if (fd->secret->nonblocking) {
                 break;
             }
                 if ((rv = socket_io_wait(osfd, READ_FD, timeout)) < 0)
                     goto done;
-        } else if ((err == SOCEINTR) && (!_PR_PENDING_INTERRUPT(me))){
+        } else if ((err == EINTR) && (!_PR_PENDING_INTERRUPT(me))){
             continue;
         } else {
             break;
@@ -314,7 +314,7 @@ retry:
     {
         err = sock_errno();
 
-        if (err == SOCEINTR) {
+        if (err == EINTR) {
             if (_PR_PENDING_INTERRUPT(me)) {
                 me->flags &= ~_PR_INTERRUPT;
                 PR_SetError( PR_PENDING_INTERRUPT_ERROR, 0);
@@ -323,7 +323,7 @@ retry:
             goto retry;
         }
 
-        if (!fd->secret->nonblocking && (err == SOCEINPROGRESS))
+        if (!fd->secret->nonblocking && (err == EINPROGRESS))
         {
             /*
              * socket_io_wait() may return -1 or 1.
@@ -391,13 +391,13 @@ _PR_MD_RECV(PRFileDesc *fd, void *buf, PRInt32 amount, PRIntn flags,
     while ((rv = recv(osfd,buf,amount,flags)) == -1)
     {
         err = sock_errno();
-        if ((err == SOCEWOULDBLOCK)) {
+        if ((err == EWOULDBLOCK)) {
             if (fd->secret->nonblocking) {
                 break;
             }
             if ((rv = socket_io_wait(osfd, READ_FD, timeout)) < 0)
                 goto done;
-        } else if ((err == SOCEINTR) && (!_PR_PENDING_INTERRUPT(me))){
+        } else if ((err == EINTR) && (!_PR_PENDING_INTERRUPT(me))){
             continue;
         } else {
             break;
@@ -421,13 +421,13 @@ _PR_MD_SEND(PRFileDesc *fd, const void *buf, PRInt32 amount, PRIntn flags,
     while ((rv = send(osfd,buf,amount,flags)) == -1)
     {
         err = sock_errno();
-        if ((err == SOCEWOULDBLOCK)) {
+        if ((err == EWOULDBLOCK)) {
             if (fd->secret->nonblocking) {
                 break;
             }
             if ((rv = socket_io_wait(osfd, WRITE_FD, timeout)) < 0)
                 goto done;
-        } else if ((err == SOCEINTR) && (!_PR_PENDING_INTERRUPT(me))){
+        } else if ((err == EINTR) && (!_PR_PENDING_INTERRUPT(me))){
             continue;
         } else {
             break;
@@ -465,7 +465,7 @@ _PR_MD_SENDTO(PRFileDesc *fd, const void *buf, PRInt32 amount, PRIntn flags,
            (struct sockaddr *) addr, addrlen)) == -1)
     {
         err = sock_errno();
-        if ((err == SOCEWOULDBLOCK))
+        if ((err == EWOULDBLOCK))
         {
             if (fd->secret->nonblocking) {
                 break;
@@ -498,13 +498,13 @@ _PR_MD_RECVFROM(PRFileDesc *fd, void *buf, PRInt32 amount, PRIntn flags,
              (struct sockaddr *) addr, (int *)addrlen)) == -1))
     {
         err = sock_errno();
-        if ((err == SOCEWOULDBLOCK)) {
+        if ((err == EWOULDBLOCK)) {
             if (fd->secret->nonblocking) {
                 break;
             }
             if ((rv = socket_io_wait(osfd, READ_FD, timeout)) < 0)
                 goto done;
-        } else if ((err == SOCEINTR) && (!_PR_PENDING_INTERRUPT(me))){
+        } else if ((err == EINTR) && (!_PR_PENDING_INTERRUPT(me))){
             continue;
         } else {
             break;
@@ -541,7 +541,7 @@ _PR_MD_WRITEV(PRFileDesc *fd, const PRIOVec *iov, PRInt32 iov_size,
 
     while ((rv = writev(osfd, (const struct iovec*)iov, iov_size)) == -1) {
         err = sock_errno();
-        if ((err == SOCEWOULDBLOCK))    {
+        if ((err == EWOULDBLOCK))    {
             if (fd->secret->nonblocking) {
                 break;
             }

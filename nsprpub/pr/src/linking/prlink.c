@@ -580,9 +580,11 @@ pr_UnlockedFindLibrary(const char *name)
     while (lm) {
     const char* cp = strrchr(lm->name, PR_DIRECTORY_SEPARATOR);
     cp = cp ? cp + 1 : lm->name;
-#ifdef XP_PC
+#ifdef WIN32
         /* Windows DLL names are case insensitive... */
     if (strcmpi(np, cp) == 0) 
+#elif defined(XP_OS2)
+    if (stricmp(np, cp) == 0)
 #else
     if (strcmp(np, cp)  == 0) 
 #endif

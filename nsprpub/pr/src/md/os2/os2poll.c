@@ -265,7 +265,7 @@ retry:
     ready = _MD_SELECT(socks, rd, wt, ex, msecs);
 #endif
 
-    if (ready == -1 && errno == SOCEINTR)
+    if (ready == -1 && errno == EINTR)
     {
         if (timeout == PR_INTERVAL_NO_TIMEOUT)
             goto retry;
@@ -357,8 +357,8 @@ retry:
                     if (getsockopt(bottom->secret->md.osfd, SOL_SOCKET,
                         SO_TYPE, (char *) &optval, &optlen) == -1)
                     {
-                        PR_ASSERT(sock_errno() == SOCENOTSOCK);
-                        if (sock_errno() == SOCENOTSOCK)
+                        PR_ASSERT(sock_errno() == ENOTSOCK);
+                        if (sock_errno() == ENOTSOCK)
                         {
                             pd->out_flags = PR_POLL_NVAL;
                             ready++;

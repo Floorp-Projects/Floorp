@@ -95,6 +95,12 @@ MKSHLIB += -M $(MAPFILE)
 endif
 endif
 
+ifeq ($(OS_ARCH),OS2)
+MAPFILE = $(OBJDIR)/$(LIBRARY_NAME)$(LIBRARY_VERSION).def
+GARBAGE += $(MAPFILE)
+MKSHLIB += $(MAPFILE)
+endif
+
 EXTRA_LIBS = $(LIBNSPR)
 
 # On NCR and SCOOS, we can't link with extra libraries when

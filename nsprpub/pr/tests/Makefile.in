@@ -233,9 +233,8 @@ ifeq ($(OS_ARCH),OS2)
 ifeq ($(MOZ_OS2_TOOLS),VACPP)
   LDOPTS = -NOE -DEBUG -nologo -PMTYPE:VIO
 else
-ifeq ($(MOZ_OS2_EMX_OBJECTFORMAT),OMF)
-  LDOPTS = -Zlinker /PM:VIO
-endif
+  EXTRA_LIBS = $(OS_LIBS)
+  LDOPTS = -Zmtd -Zomf -Zlinker /PM:VIO -Zlinker /ST:0x30000
 endif
 endif
 
@@ -487,7 +486,7 @@ $(OBJDIR)/%$(PROG_SUFFIX): $(OBJDIR)/%.$(OBJ_SUFFIX)
 ifeq ($(NS_USE_GCC)_$(OS_ARCH),_WINNT)
 	link $(LDOPTS) $(EXTRA_LDOPTS) $< $(LIBPLC) $(LIBNSPR) $(EXTRA_LIBS) -out:$@
 else
-ifeq ($(OS_ARCH),OS2)
+ifeq ($(MOZ_OS2_TOOLS),VACPP)
 	$(LD) $(EXEFLAGS) $(LDOPTS) $< $(LIBPLC) $(LIBNSPR) $(OS_LIBS) $(EXTRA_LIBS)
 else
 	$(PURE) $(CC) $(XCFLAGS) $< $(LDOPTS) $(LIBPLC) $(LIBNSPR) $(EXTRA_LIBS) -o $@

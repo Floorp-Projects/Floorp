@@ -62,6 +62,10 @@ ifeq ($(MOZ_OS2_TOOLS),VACPP)
 ASFILES = os2vacpp.asm
 endif
 
+ifeq ($(MOZ_OS2_TOOLS),EMX)
+ASFILES = os2emx.s
+endif
+
 TARGETS	= $(OBJS)
 
 INCLUDES = -I$(dist_includedir) -I$(topsrcdir)/pr/include -I$(topsrcdir)/pr/include/private

@@ -329,19 +329,25 @@ int main(int argc, char **argv)
 
 #elif defined(OS2)
 
+# ifdef __EMX__
+    threadID = (TID) _beginthread((void *)threadStartFunc, NULL,
+            32768, NULL); 
+# else
     threadID = (TID) _beginthread((void(* _Optlink)(void*))threadStartFunc, NULL,
             32768, NULL); 
+# endif
     if (threadID == -1) {
         fprintf(stderr, "thread creation failed: error code %d\n", errno);
-		failed_already=1;
-		goto exit_now;
+        failed_already=1;
+        goto exit_now;
     }
     rv = DosWaitThread(&threadID, DCWW_WAIT);
-    if (debug_mode)PR_ASSERT(rv == NO_ERROR);
-	else if (rv == NO_ERROR) {
-		failed_already=1;
-		goto exit_now;
-	}
+    if (debug_mode) {
+        PR_ASSERT(rv == NO_ERROR);
+    } else if (rv != NO_ERROR) {
+        failed_already=1;
+        goto exit_now;
+    }
 
 #elif defined(XP_BEOS)
 	
