@@ -17,7 +17,6 @@
  */
 #include "nsHTMLParts.h"
 #include "nsFrame.h"
-#include "nsHTMLIIDs.h"
 
 nsresult
 NS_NewWBRFrame(nsIFrame*& aResult)
