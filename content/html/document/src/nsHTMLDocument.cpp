@@ -2637,25 +2637,28 @@ nsHTMLDocument::NamedItem(JSContext* cx, jsval* argv, PRUint32 argc,
   char *str = JS_GetStringBytes(JS_ValueToString(cx, argv[0]));
   nsAutoString name(str);
 
-  // XXX If we have a parser, it means that we're still loading the
-  // document. Since there's still content coming in (and not all
-  // may yet have been explicitly added to the document), we do
-  // a depth-first search rather than build up a table.
-  // Obviously, this may be inefficient for large documents.
-  if (nsnull != mParser) {
-    content = FindNamedItem(mRootContent, name, PR_FALSE);
-  }
-  else {
-    // If the document has completed loading, we build a table and
-    // cache the named items. The table will be updated as content
-    // is added and removed.
-    if (nsnull == mNamedItems) {
-      mNamedItems = PL_NewHashTable(10, PL_HashString, PL_CompareStrings, 
-                                    PL_CompareValues, nsnull, nsnull);
-      RegisterNamedItems(mRootContent, PR_FALSE);
+  if (!name.Equals("write") && !name.Equals("writeln") &&
+      !name.Equals("close") && !name.Equals("open")) {
+    // XXX If we have a parser, it means that we're still loading the
+    // document. Since there's still content coming in (and not all
+    // may yet have been explicitly added to the document), we do
+    // a depth-first search rather than build up a table.
+    // Obviously, this may be inefficient for large documents.
+    if (nsnull != mParser) {
+      content = FindNamedItem(mRootContent, name, PR_FALSE);
     }
+    else {
+      // If the document has completed loading, we build a table and
+      // cache the named items. The table will be updated as content
+      // is added and removed.
+      if (nsnull == mNamedItems) {
+        mNamedItems = PL_NewHashTable(10, PL_HashString, PL_CompareStrings, 
+                                      PL_CompareValues, nsnull, nsnull);
+        RegisterNamedItems(mRootContent, PR_FALSE);
+      }
 
-    content = (nsIContent *)PL_HashTableLookup(mNamedItems, str);
+      content = (nsIContent *)PL_HashTableLookup(mNamedItems, str);
+    }
   }
 
   nsIScriptContext *context = (nsIScriptContext*)JS_GetContextPrivate(cx);
