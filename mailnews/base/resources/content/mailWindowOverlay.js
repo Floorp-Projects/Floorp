@@ -239,6 +239,7 @@ function InitMessageMark()
     InitMarkReadItem("markReadToolbarItem");
     InitMarkFlaggedItem("markFlaggedMenuItem");
     InitMarkFlaggedItem("markFlaggedToolbarItem");
+    document.commandDispatcher.updateCommands('create-menu-mark');
 }
 
 function InitMarkReadItem(id)
@@ -279,6 +280,11 @@ function SelectedMessagesAreFlagged()
         isFlagged = false;
     }
     return isFlagged;
+}
+
+function getMsgToolbarMenu_init()
+{
+    document.commandDispatcher.updateCommands('create-menu-getMsgToolbar');
 }
 
 function GetFirstSelectedMsgFolder()

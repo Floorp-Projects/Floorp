@@ -68,9 +68,6 @@ Rights Reserved.
     <command id="cmd_downloadFlagged" oncommand="goDoCommand('cmd_downloadFlagged')" disabled="true"/>
     <command id="cmd_downloadSelected" oncommand="goDoCommand('cmd_downloadSelected')" disabled="true"/>
     <command id="cmd_settingsOffline" oncommand="goDoCommand('cmd_settingsOffline')" disabled="true"/>
-    <command id="cmd_getMsgsForAuthAccounts" 
-             oncommand="goDoCommand('cmd_getMsgsForAuthAccounts'); event.preventBubble()" 
-             disabled="true"/>
     
     <command id="cmd_openMessage" oncommand="goDoCommand('cmd_openMessage')" disabled="true"/>
     <command id="cmd_print" oncommand="goDoCommand('cmd_print')" disabled="true"/>
@@ -188,10 +185,6 @@ Rights Reserved.
   <command id="cmd_forwardAttachment" oncommand="goDoCommand('cmd_forwardAttachment')"/>
   <command id="cmd_editAsNew" oncommand="goDoCommand('cmd_editAsNew')"/>
   
-  <command id="cmd_markAsRead" oncommand="goDoCommand('cmd_markAsRead'); event.preventBubble()" disabled="true"/>
-  <command id="cmd_markAllRead" oncommand="goDoCommand('cmd_markAllRead'); event.preventBubble()" disabled="true"/>
-  <command id="cmd_markThreadAsRead" oncommand="goDoCommand('cmd_markThreadAsRead'); event.preventBubble()" disabled="true"/>
-  <command id="cmd_markAsFlagged" oncommand="goDoCommand('cmd_markAsFlagged'); event.preventBubble()" disabled="true"/>
   <command id="cmd_killThread" oncommand="goDoCommand('cmd_killThread')"/>
   <command id="cmd_watchThread" oncommand="goDoCommand('cmd_watchThread')"/>
 
@@ -211,6 +204,28 @@ Rights Reserved.
   <command id="button_print"/>
   <command id="button_next"/>
   <command id="button_file"/>
+</commandset>
+
+
+<commandset id="mailGetMsgMenuItems"
+            commandupdater="true"
+            events="create-menu-getMsgToolbar,create-menu-file"
+            oncommandupdate="goUpdateMailMenuItems(this)">
+
+    <command id="cmd_getMsgsForAuthAccounts" 
+             oncommand="goDoCommand('cmd_getMsgsForAuthAccounts'); event.preventBubble()" 
+             disabled="true"/>
+</commandset>
+
+<commandset id="mailMarkMenuItems"
+              commandupdater="true"
+              events="create-menu-mark"
+              oncommandupdate="goUpdateMailMenuItems(this)">
+
+    <command id="cmd_markAsRead" oncommand="goDoCommand('cmd_markAsRead'); event.preventBubble()" disabled="true"/>
+    <command id="cmd_markAllRead" oncommand="goDoCommand('cmd_markAllRead'); event.preventBubble()" disabled="true"/>
+    <command id="cmd_markThreadAsRead" oncommand="goDoCommand('cmd_markThreadAsRead'); event.preventBubble()" disabled="true"/>
+    <command id="cmd_markAsFlagged" oncommand="goDoCommand('cmd_markAsFlagged'); event.preventBubble()" disabled="true"/>
 </commandset>
 
 <broadcasterset id="mailBroadcasters">
@@ -1165,10 +1180,10 @@ Rights Reserved.
                                     label="&getMsgButton.label;" crop="right" tooltip="aTooltip" 
                                     tooltiptext="&getMsgButton.tooltip;" 
                                     observes="button_getNewMessages" datasources="rdf:msgaccountmanager" 
-                                    oncommand="goDoCommand('cmd_getNewMessages')"
+                                    oncommand="goDoCommand('cmd_getNewMessages')" 
                                     containment="http://home.netscape.com/NC-rdf#child" 
                                     ref="msgaccounts:/">
-                            <menupopup>
+                            <menupopup oncreate="getMsgToolbarMenu_init()">
                                 <menuitem label="&getAllNewMsgCmd.label;" 
                                           observes="cmd_getMsgsForAuthAccounts"/>
                                 <menuseparator/>
