@@ -60,6 +60,7 @@
 #include "nsIParser.h"
 #include "nsParserCIID.h"
 #include "nsHTMLContentSinkStream.h"
+#include "nsHTMLToTXTSinkStream.h"
 #include "nsXIFDTD.h"
 #include "nsIFrameSelection.h"
 
@@ -1503,7 +1504,12 @@ PresShell::DoCopy(nsISelectionMgr* aSelectionMgr)
 
     nsIHTMLContentSink* sink = nsnull;
 	
-    rv = NS_New_HTML_ContentSinkStream(&sink,PR_FALSE,PR_FALSE);
+
+//  rv = NS_New_HTML_ContentSinkStream(&sink,PR_FALSE,PR_FALSE);
+//  Changed to do plain text only for Dogfood -- gpk 3/14/99
+    rv = NS_New_HTMLToTXT_SinkStream(&sink);
+    
+
 
     ostream* copyStream;
     rv = aSelectionMgr->GetCopyOStream(&copyStream);
@@ -1513,7 +1519,9 @@ PresShell::DoCopy(nsISelectionMgr* aSelectionMgr)
       return rv;
     }
 
-    ((nsHTMLContentSinkStream*)sink)->SetOutputStream(*copyStream);
+//  Changed to do plain text only for Dogfood -- gpk 3/14/99
+//  ((nsHTMLContentSinkStream*)sink)->SetOutputStream(*copyStream);
+    ((nsHTMLToTXTSinkStream*)sink)->SetOutputStream(*copyStream);
 
     if (NS_OK == rv) {
       parser->SetContentSink(sink);
