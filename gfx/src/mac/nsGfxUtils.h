@@ -43,7 +43,7 @@
 #include "nsCarbonHelpers.h"
 #endif // CarbonHelpers_h__
 
-#if DEBUG && !defined(XP_MACOSX)
+#if !defined(XP_MACOSX)
 #include "macstdlibextras.h"
 #endif
 
