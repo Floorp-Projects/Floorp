@@ -52,6 +52,9 @@ function NODE_ID(aElement)
 
 function Startup()
 {
+  if (!window.arguments.length)
+    return;
+
   const rdfSvcContractID = "@mozilla.org/rdf/rdf-service;1";
   const rdfSvcIID = Components.interfaces.nsIRDFService;
   gRDFService = Components.classes[rdfSvcContractID].getService(rdfSvcIID);
@@ -69,6 +72,16 @@ function Startup()
   const dlmgrContractID = "@mozilla.org/download-manager;1";
   const dlmgrIID = Components.interfaces.nsIDownloadManager;
   gDownloadManager = Components.classes[dlmgrContractID].getService(dlmgrIID);
+
+  var ds = window.arguments[0];
+  gDownloadView.database.AddDataSource(ds);
+  gDownloadView.builder.rebuild();
+}
+
+function openPropertiesDialog()
+{
+  var selection = gDownloadView.selectedItems;
+  gDownloadManager.openProgressDialogFor(selection[0].id, window);
 }
 
 var downloadViewController = {
@@ -122,7 +135,7 @@ var downloadViewController = {
     var i;
     switch (aCommand) {
     case "cmd_properties":
-      gDownloadManager.openProgressDialogFor(selection[0].id);
+      openPropertiesDialog();
       break;
     case "cmd_openfile":
       var file = getFileForItem(selection[0]);
