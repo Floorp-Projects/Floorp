@@ -16,7 +16,7 @@
  * Corporation.  Portions created by Netscape are Copyright (C) 1998
  * Netscape Communications Corporation.  All Rights Reserved.
  */
-#include "nsGenericDomDataNode.h"
+#include "nsGenericDOMDataNode.h"
 #include "nsIEventListenerManager.h"
 #include "nsIDocument.h"
 #include "nsXIFConverter.h"
@@ -114,7 +114,7 @@ ZZContentDelegate::CreateFrame(nsIPresContext* aPresContext,
 
 //----------------------------------------------------------------------
 
-nsGenericDomDataNode::nsGenericDomDataNode()
+nsGenericDOMDataNode::nsGenericDOMDataNode()
 {
   mDocument = nsnull;
   mParent = nsnull;
@@ -134,7 +134,7 @@ nsGenericDomDataNode::nsGenericDomDataNode()
   NS_ADDREF(gContentDelegate);
 }
 
-nsGenericDomDataNode::~nsGenericDomDataNode()
+nsGenericDOMDataNode::~nsGenericDOMDataNode()
 {
   if (nsnull != mText) {
     delete [] mText;
@@ -154,7 +154,7 @@ nsGenericDomDataNode::~nsGenericDomDataNode()
 }
 
 void
-nsGenericDomDataNode::Init(nsIHTMLContent* aOuterContentObject)
+nsGenericDOMDataNode::Init(nsIHTMLContent* aOuterContentObject)
 {
   NS_ASSERTION((nsnull == mContent) && (nsnull != aOuterContentObject),
                "null ptr");
@@ -162,7 +162,7 @@ nsGenericDomDataNode::Init(nsIHTMLContent* aOuterContentObject)
 }
 
 nsresult
-nsGenericDomDataNode::GetNodeValue(nsString& aNodeValue)
+nsGenericDOMDataNode::GetNodeValue(nsString& aNodeValue)
 {
   aNodeValue.Truncate();
   aNodeValue.Append(mText, mTextLength);
@@ -170,7 +170,7 @@ nsGenericDomDataNode::GetNodeValue(nsString& aNodeValue)
 }
 
 nsresult
-nsGenericDomDataNode::SetNodeValue(const nsString& aNodeValue)
+nsGenericDOMDataNode::SetNodeValue(const nsString& aNodeValue)
 {
   PRUnichar* nt = aNodeValue.ToNewUnicode();
   if (nsnull == nt) {
@@ -190,7 +190,7 @@ nsGenericDomDataNode::SetNodeValue(const nsString& aNodeValue)
 }
 
 nsresult
-nsGenericDomDataNode::GetParentNode(nsIDOMNode** aParentNode)
+nsGenericDOMDataNode::GetParentNode(nsIDOMNode** aParentNode)
 {
   if (nsnull != mParent) {
     nsresult res = mParent->QueryInterface(kIDOMNodeIID, (void**)aParentNode);
@@ -204,7 +204,7 @@ nsGenericDomDataNode::GetParentNode(nsIDOMNode** aParentNode)
 }
 
 nsresult
-nsGenericDomDataNode::GetPreviousSibling(nsIDOMNode** aNode)
+nsGenericDOMDataNode::GetPreviousSibling(nsIDOMNode** aNode)
 {
   if (nsnull != mParent) {
     PRInt32 pos;
@@ -225,7 +225,7 @@ nsGenericDomDataNode::GetPreviousSibling(nsIDOMNode** aNode)
 }
 
 nsresult
-nsGenericDomDataNode::GetNextSibling(nsIDOMNode** aNextSibling)
+nsGenericDOMDataNode::GetNextSibling(nsIDOMNode** aNextSibling)
 {
   if (nsnull != mParent) {
     PRInt32 pos;
@@ -247,7 +247,7 @@ nsGenericDomDataNode::GetNextSibling(nsIDOMNode** aNextSibling)
 
 #if 0
 nsresult
-nsGenericDomDataNode::Equals(nsIDOMNode* aNode, PRBool aDeep, PRBool* aReturn)
+nsGenericDOMDataNode::Equals(nsIDOMNode* aNode, PRBool aDeep, PRBool* aReturn)
 {
   *aReturn = PR_FALSE;
   PRInt32 nt1, nt2;
@@ -265,7 +265,7 @@ nsGenericDomDataNode::Equals(nsIDOMNode* aNode, PRBool aDeep, PRBool* aReturn)
 // Implementation of nsIDOMData
 
 nsresult    
-nsGenericDomDataNode::GetData(nsString& aData)
+nsGenericDOMDataNode::GetData(nsString& aData)
 {
   if (nsnull != mText) {
     aData.SetString(mText, mTextLength);
@@ -274,7 +274,7 @@ nsGenericDomDataNode::GetData(nsString& aData)
 }
 
 nsresult    
-nsGenericDomDataNode::SetData(const nsString& aData)
+nsGenericDOMDataNode::SetData(const nsString& aData)
 {
   if (mText) {
     delete[] mText;
@@ -292,7 +292,7 @@ nsGenericDomDataNode::SetData(const nsString& aData)
 }
 
 nsresult    
-nsGenericDomDataNode::GetSize(PRUint32* aSize)
+nsGenericDOMDataNode::GetSize(PRUint32* aSize)
 {
   *aSize = mTextLength;
   return NS_OK;
@@ -302,7 +302,7 @@ nsGenericDomDataNode::GetSize(PRUint32* aSize)
 #define NS_DOM_INDEX_SIZE_ERR NS_ERROR_FAILURE
 
 nsresult    
-nsGenericDomDataNode::Substring(PRUint32 aStart,
+nsGenericDOMDataNode::Substring(PRUint32 aStart,
                                 PRUint32 aCount,
                                 nsString& aReturn)
 {
@@ -322,26 +322,26 @@ nsGenericDomDataNode::Substring(PRUint32 aStart,
 }
 
 nsresult    
-nsGenericDomDataNode::Append(const nsString& aData)
+nsGenericDOMDataNode::Append(const nsString& aData)
 {
   return Replace(mTextLength, 0, aData);
 }
 
 nsresult    
-nsGenericDomDataNode::Insert(PRUint32 aOffset, const nsString& aData)
+nsGenericDOMDataNode::Insert(PRUint32 aOffset, const nsString& aData)
 {
   return Replace(aOffset, 0, aData);
 }
 
 nsresult    
-nsGenericDomDataNode::Remove(PRUint32 aOffset, PRUint32 aCount)
+nsGenericDOMDataNode::Remove(PRUint32 aOffset, PRUint32 aCount)
 {
   nsAutoString empty;
   return Replace(aOffset, aCount, empty);
 }
 
 nsresult    
-nsGenericDomDataNode::Replace(PRUint32 aOffset, PRUint32 aCount,
+nsGenericDOMDataNode::Replace(PRUint32 aOffset, PRUint32 aCount,
                               const nsString& aData)
 {
   // sanitize arguments
@@ -395,7 +395,7 @@ nsGenericDomDataNode::Replace(PRUint32 aOffset, PRUint32 aCount,
 // nsIScriptObjectOwner implementation
 
 nsresult
-nsGenericDomDataNode::GetScriptObject(nsIScriptContext* aContext,
+nsGenericDOMDataNode::GetScriptObject(nsIScriptContext* aContext,
                                       void** aScriptObject)
 {
   nsresult res = NS_OK;
@@ -412,7 +412,7 @@ nsGenericDomDataNode::GetScriptObject(nsIScriptContext* aContext,
 }
 
 nsresult
-nsGenericDomDataNode::ResetScriptObject()
+nsGenericDOMDataNode::ResetScriptObject()
 {
   mScriptObject = nsnull;
   return NS_OK;
@@ -423,7 +423,7 @@ nsGenericDomDataNode::ResetScriptObject()
 // nsIDOMEventReceiver implementation
 
 nsresult
-nsGenericDomDataNode::GetListenerManager(nsIEventListenerManager** aResult)
+nsGenericDOMDataNode::GetListenerManager(nsIEventListenerManager** aResult)
 {
   if (nsnull != mListenerManager) {
     NS_ADDREF(mListenerManager);
@@ -439,13 +439,13 @@ nsGenericDomDataNode::GetListenerManager(nsIEventListenerManager** aResult)
 }
 
 nsresult
-nsGenericDomDataNode::GetNewListenerManager(nsIEventListenerManager** aResult)
+nsGenericDOMDataNode::GetNewListenerManager(nsIEventListenerManager** aResult)
 {
   return NS_NewEventListenerManager(aResult);
 } 
 
 nsresult
-nsGenericDomDataNode::AddEventListener(nsIDOMEventListener* aListener,
+nsGenericDOMDataNode::AddEventListener(nsIDOMEventListener* aListener,
                                        const nsIID& aIID)
 {
   nsIEventListenerManager *manager;
@@ -459,7 +459,7 @@ nsGenericDomDataNode::AddEventListener(nsIDOMEventListener* aListener,
 }
 
 nsresult
-nsGenericDomDataNode::RemoveEventListener(nsIDOMEventListener* aListener,
+nsGenericDOMDataNode::RemoveEventListener(nsIDOMEventListener* aListener,
                                           const nsIID& aIID)
 {
   if (nsnull != mListenerManager) {
@@ -475,13 +475,13 @@ nsGenericDomDataNode::RemoveEventListener(nsIDOMEventListener* aListener,
 
 
 nsresult
-nsGenericDomDataNode::BeginConvertToXIF(nsXIFConverter& aConverter) const
+nsGenericDOMDataNode::BeginConvertToXIF(nsXIFConverter& aConverter) const
 {
   return NS_OK;
 }
 
 nsresult
-nsGenericDomDataNode::FinishConvertToXIF(nsXIFConverter& aConverter) const
+nsGenericDOMDataNode::FinishConvertToXIF(nsXIFConverter& aConverter) const
 {
   return NS_OK;
 }
@@ -492,7 +492,7 @@ nsGenericDomDataNode::FinishConvertToXIF(nsXIFConverter& aConverter) const
  * will then be parsed into any number of formats including HTML, TXT, etc.
  */
 nsresult
-nsGenericDomDataNode::ConvertContentToXIF(nsXIFConverter& aConverter) const
+nsGenericDOMDataNode::ConvertContentToXIF(nsXIFConverter& aConverter) const
 {
   const nsIContent* content = mContent;
 
@@ -543,7 +543,7 @@ nsGenericDomDataNode::ConvertContentToXIF(nsXIFConverter& aConverter) const
 }
 
 void
-nsGenericDomDataNode::ToCString(nsString& aBuf, PRInt32 aOffset,
+nsGenericDOMDataNode::ToCString(nsString& aBuf, PRInt32 aOffset,
                                 PRInt32 aLen) const
 {
   PRUnichar* cp = mText + aOffset;
@@ -566,7 +566,7 @@ nsGenericDomDataNode::ToCString(nsString& aBuf, PRInt32 aOffset,
 }
 
 nsresult
-nsGenericDomDataNode::GetDocument(nsIDocument*& aResult) const
+nsGenericDOMDataNode::GetDocument(nsIDocument*& aResult) const
 {
   aResult = mDocument;
   NS_IF_ADDREF(mDocument);
@@ -574,14 +574,14 @@ nsGenericDomDataNode::GetDocument(nsIDocument*& aResult) const
 }
 
 nsresult
-nsGenericDomDataNode::SetDocument(nsIDocument* aDocument)
+nsGenericDOMDataNode::SetDocument(nsIDocument* aDocument)
 {
   mDocument = aDocument;
   return NS_OK;
 }
 
 nsresult
-nsGenericDomDataNode::GetParent(nsIContent*& aResult) const
+nsGenericDOMDataNode::GetParent(nsIContent*& aResult) const
 {
   NS_IF_ADDREF(mParent);
   aResult = mParent;
@@ -589,14 +589,14 @@ nsGenericDomDataNode::GetParent(nsIContent*& aResult) const
 }
 
 nsresult
-nsGenericDomDataNode::SetParent(nsIContent* aParent)
+nsGenericDOMDataNode::SetParent(nsIContent* aParent)
 {
   mParent = aParent;
   return NS_OK;
 }
 
 nsresult
-nsGenericDomDataNode::HandleDOMEvent(nsIPresContext& aPresContext,
+nsGenericDOMDataNode::HandleDOMEvent(nsIPresContext& aPresContext,
                                      nsEvent* aEvent,
                                      nsIDOMEvent** aDOMEvent,
                                      PRUint32 aFlags,
@@ -653,21 +653,21 @@ nsGenericDomDataNode::HandleDOMEvent(nsIPresContext& aPresContext,
 // Implementation of nsIHTMLContent
 
 nsresult
-nsGenericDomDataNode::Compact()
+nsGenericDOMDataNode::Compact()
 {
   return NS_OK;
 }
 
 // XXX not really implemented (yet)
 nsresult
-nsGenericDomDataNode::SizeOf(nsISizeOfHandler* aHandler) const
+nsGenericDOMDataNode::SizeOf(nsISizeOfHandler* aHandler) const
 {
   aHandler->Add(sizeof(*this));
   return NS_OK;
 }
 
 nsIContentDelegate*
-nsGenericDomDataNode::GetDelegate(nsIPresContext* aCX)
+nsGenericDOMDataNode::GetDelegate(nsIPresContext* aCX)
 {
   gContentDelegate->AddRef();
   return gContentDelegate;

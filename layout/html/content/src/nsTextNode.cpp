@@ -17,7 +17,7 @@
  * Netscape Communications Corporation.  All Rights Reserved.
  */
 #include "nsIDOMText.h"
-#include "nsGenericDomDataNode.h"
+#include "nsGenericDOMDataNode.h"
 #include "nsIScriptObjectOwner.h"
 #include "nsIDOMEventReceiver.h"
 #include "nsIHTMLContent.h"
@@ -40,6 +40,7 @@ class nsTextNode : public nsIDOMText,
 public:
   nsTextNode();
   ~nsTextNode();
+
   // nsISupports
   NS_DECL_ISUPPORTS
 
@@ -72,7 +73,7 @@ public:
                      PRBool aNotify);
 
 protected:
-  nsGenericDomDataNode mInner;
+  nsGenericDOMDataNode mInner;
 };
 
 nsresult
@@ -103,7 +104,7 @@ NS_IMPL_ADDREF(nsTextNode)
 
 NS_IMPL_RELEASE(nsTextNode)
 
-nsresult
+NS_IMETHODIMP
 nsTextNode::QueryInterface(REFNSIID aIID, void** aInstancePtr)
 {
   NS_IMPL_DOM_DATA_QUERY_INTERFACE(aIID, aInstancePtr, this)
@@ -129,7 +130,7 @@ nsTextNode::GetNodeType(PRInt32* aNodeType)
   return NS_OK;
 }
 
-nsresult
+NS_IMETHODIMP
 nsTextNode::Equals(nsIDOMNode* aNode, PRBool aDeep, PRBool* aReturn)
 {
   // XXX not yet implemented
@@ -137,7 +138,7 @@ nsTextNode::Equals(nsIDOMNode* aNode, PRBool aDeep, PRBool* aReturn)
   return NS_OK;
 }
 
-nsresult
+NS_IMETHODIMP
 nsTextNode::CloneNode(nsIDOMNode** aReturn)
 {
   nsTextNode* it = new nsTextNode();
@@ -166,7 +167,7 @@ nsTextNode::List(FILE* out, PRInt32 aIndent) const
   return NS_OK;
 }
 
-nsresult
+NS_IMETHODIMP
 nsTextNode::ToHTML(FILE* out) const
 {
   nsAutoString tmp;
@@ -175,7 +176,7 @@ nsTextNode::ToHTML(FILE* out) const
   return NS_OK;
 }
 
-nsresult
+NS_IMETHODIMP
 nsTextNode::ToHTMLString(nsString& aBuf) const
 {
   aBuf.Truncate(0);
