@@ -597,14 +597,26 @@ NS_METHOD nsWindow::SetMenuBar(nsIMenuBar* aMenuBar)
 
 NS_METHOD nsWindow::ShowMenuBar(PRBool aShow)
 {
-  return NS_ERROR_FAILURE; // todo: danm
+  if (!m_nsIMenuBar)
+    return NS_OK;
+  
+  GtkWidget *menubar;
+  void *voidData;
+  m_nsIMenuBar->GetNativeData(voidData);
+  menubar = GTK_WIDGET(voidData);
+  if (aShow)
+    gtk_widget_show(menubar);
+  else
+    gtk_widget_hide(menubar);
+
+  return NS_OK;
 }
 
 
 NS_METHOD nsWindow::IsMenuBarVisible(PRBool *aVisible)
 {
   *aVisible = PR_TRUE;
-  return NS_ERROR_FAILURE; // todo: danm
+  return NS_ERROR_FAILURE; // todo: (maybe. method isn't actually used yet.)
 }
 
 //----------------------------------------------------------------------
