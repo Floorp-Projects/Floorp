@@ -62,26 +62,26 @@
   
   <broadcaster id="args" value=""/>
 
-  <box align="horizontal">
+  <box>
     <html:label>&currentattributesfor.label;</html:label>
-    <html:div flex="100%" id="tagLabel"/>
+    <html:div flex="1" id="tagLabel"/>
   </box>
   <spring class="spacer"/>
-  <tabcontrol orient="vertical" flex="100%">
+  <tabcontrol orient="vertical" flex="1">
     <tabbox>
       <tab selected="true" value="&tabHTML.label;"/>
       <tab value="&tabCSS.label;"/>
       <tab value="&tabJSE.label;"/>
       <spring flex="1"/>
     </tabbox>
-    <tabpanel align="horizontal" flex="100%">
+    <tabpanel flex="1">
       <!-- ============================================================== -->
       <!--                        HTML Attributes                         -->
       <!-- ============================================================== -->
-        <box class="tabpanel" flex="100%" orient="vertical">
+        <box class="tabpanel" flex="1" orient="vertical">
           <tree id="HTMLATree" 
             class="AttributesTree inset" 
-            flex="100%" 
+            flex="1" 
             context="attlistPopup">
             <treecol width="35%"/>
             <treecol width="65%" style="min-width: 30%"/>
@@ -97,12 +97,12 @@
             <spring class="spacer"/>
             <titledbox orient="vertical">
               <title><text value="&AddHTMLAttributeLabel.label;"/></title>
-              <box align="horizontal">
+              <box>
                 <html:label for="AddHTMLAttributeNameInput"> &AttName.label;</html:label>
-                <html:input type="text" flex="100%" id="AddHTMLAttributeNameInput" onkeyup="doHTMLEnabling(event.which)" onmouseup="doHTMLEnabling(event.which)"/>
+                <html:input type="text" flex="1" id="AddHTMLAttributeNameInput" onkeyup="doHTMLEnabling(event.which)" onmouseup="doHTMLEnabling(event.which)"/>
                 <spring class="spacer"/>
                 <html:label for="AddHTMLAttributeValueInput"> &AttValue.label;</html:label>
-          	    <html:input type="text" flex="100%" id="AddHTMLAttributeValueInput" onkeyup="doHTMLEnabling(event.which)"/>
+          	    <html:input type="text" flex="1" id="AddHTMLAttributeValueInput" onkeyup="doHTMLEnabling(event.which)"/>
                 <button class="dialog" id="AddHTMLAttribute" oncommand="onAddHTMLAttribute(this)" value="&AddAttributeButton.label;" disabled="true"/>
               </box>
             </titledbox>
@@ -111,8 +111,8 @@
       <!-- ============================================================== -->
       <!--                         CSS Attributes                         -->
       <!-- ============================================================== -->
-        <box class="tabpanel" flex="100%" orient="vertical">
-          <tree id="CSSATree" class="AttributesTree inset" flex="100%" context="attlistPopup">
+        <box class="tabpanel" flex="1" orient="vertical">
+          <tree id="CSSATree" class="AttributesTree inset" flex="1" context="attlistPopup">
             <treecol width="35%"/>
             <treecol width="65%" style="min-width: 30%"/>
             <treehead>
@@ -127,12 +127,12 @@
             <spring class="spacer"/>
             <titledbox orient="vertical">
               <title><text value="&AddCSSAttributeLabel.label;"/></title>
-              <box align="horizontal">
+              <box>
                 <html:label for="AddCSSAttributeNameInput"> &AttName.label;</html:label>
-                <html:input type="text" flex="100%" id="AddCSSAttributeNameInput" onkeyup="doCSSEnabling(event.which)" onmouseup="doHTMLEnabling(event.which)"/>
+                <html:input type="text" flex="1" id="AddCSSAttributeNameInput" onkeyup="doCSSEnabling(event.which)" onmouseup="doHTMLEnabling(event.which)"/>
                 <spring class="spacer"/>
                 <html:label for="AddCSSAttributeValueInput"> &AttValue.label;</html:label>
-          	    <html:input type="text" flex="100%" id="AddCSSAttributeValueInput" onkeyup="doCSSEnabling(event.which)"/>
+          	    <html:input type="text" flex="1" id="AddCSSAttributeValueInput" onkeyup="doCSSEnabling(event.which)"/>
                 <button class="dialog" id="AddCSSAttribute" oncommand="onAddCSSAttribute(this)" value="&AddAttributeButton.label;" disabled="true"/>
               </box>
             </titledbox>
@@ -141,8 +141,8 @@
       <!-- ============================================================== -->
       <!--                    JavaScript Event Handlers                   -->
       <!-- ============================================================== -->
-        <box class="tabpanel" flex="100%" orient="vertical">
-          <tree id="JSEATree" class="AttributesTree inset" flex="100%" context="attlistPopup">
+        <box class="tabpanel" flex="1" orient="vertical">
+          <tree id="JSEATree" class="AttributesTree inset" flex="1" context="attlistPopup">
             <treecol width="35%"/>
             <treecol width="65%" style="min-width: 30%"/>
             <treehead>
@@ -157,12 +157,12 @@
             <spring class="spacer"/>
             <titledbox orient="vertical">
               <title><text value="&AddJSEAttributeLabel.label;"/></title>
-              <box align="horizontal">
+              <box>
                 <html:label for="AddJSEAttributeNameInput"> &AttName.label;</html:label>
-                <html:input type="text" flex="100%" id="AddJSEAttributeNameInput" onkeyup="doJSEEnabling(event.which)" onmouseup="doHTMLEnabling(event.which)"/>
+                <html:input type="text" flex="1" id="AddJSEAttributeNameInput" onkeyup="doJSEEnabling(event.which)" onmouseup="doHTMLEnabling(event.which)"/>
                 <spring class="spacer"/>
                 <html:label for="AddJSEAttributeValueInput"> &AttValue.label;</html:label>
-          	    <html:input type="text" flex="100%" id="AddJSEAttributeValueInput" onkeyup="doJSEEnabling(event.which)"/>
+          	    <html:input type="text" flex="1" id="AddJSEAttributeValueInput" onkeyup="doJSEEnabling(event.which)"/>
                 <button class="dialog" id="AddJSEAttribute" oncommand="onAddJSEAttribute(this)" value="&AddAttributeButton.label;" disabled="true"/>
               </box>
             </titledbox>
@@ -172,9 +172,9 @@
     </tabpanel>
   </tabcontrol>
 
-  <box align="horizontal">
+  <box>
     <html:div style="margin-top: 0.5em"><button class="dialog" value="&HTMLReference.label;"/></html:div>
-    <spring flex="100%"/>
+    <spring flex="1"/>
     <!-- from global dialogOverlay -->
     <html:div style="margin-top: 0.5em">
       <box id="okCancelButtons"/> 

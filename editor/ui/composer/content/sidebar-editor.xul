@@ -36,9 +36,9 @@
                'NC:EditorSidebarRoot');" orient="vertical">
 
 <script src="chrome://communicator/content/sidebar/sidebar.js" />
-<box id="sidebox" orient="vertical" flex="100%">
+<box id="sidebox" orient="vertical" flex="1">
  <box class="sidebartitle">
-  <spring flex="100%"/>
+  <spring flex="1"/>
   <titledbutton class="dialog borderless paneltitle" 
         value="&sidebar.reload.label;"
         oncommand="window.location.reload()" />

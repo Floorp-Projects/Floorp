@@ -69,12 +69,21 @@
     </radiogroup>
   </titledbox>
   <box align="horizontal">
-    <checkbox id="3dShading" value="&threeDShading.label;"/>
-    <spring flex="1"/>
-    <button class="dialog" id="SaveDefault" value="&saveSettings.label;" oncommand="onSaveDefault()"/>
+    <grid>
+      <columns><column/><column/><columns>
+      <rows>
+        <row>
+          <checkbox id="3dShading" value="&threeDShading.label;"/>
+          <button class="dialog" id="SaveDefault" value="&saveSettings.label;" oncommand="onSaveDefault()"/>
+        </row>
+        <row>
+          <spring/>
+          <!-- from EdDialogOverlay -->
+          <box id="AdvancedEdit"/>
+        </row>
+      </rows>
+    </grid>
   </box>
-  <!-- from EdDialogOverlay -->
-  <box id="AdvancedEdit"/>
 
   <!-- from global dialogOverlay -->
 	<box id="okCancelButtons"/>

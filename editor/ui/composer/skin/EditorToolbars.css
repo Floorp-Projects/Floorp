@@ -22,27 +22,64 @@
 
 /* This contains CSS just for editor toolbars */
 
-toolbox#EditorToolbox {
+#EditorToolbox {
   min-width: 1px;
 }
 
-toolbar#FormatToolbar {
+#FormatToolbar {
   border-bottom: 1px solid #003366;
 }
 
-/* SHOULD GO IN XUL.CSS */
-box[hidden="true"] {
-	display:none;
+.FormatButton {
+  border: 1px solid transparent;
+  margin: 1px 1px 1px 1px;
+	padding: 2px;
+	text-decoration: none;
+	color: inherit;
 }
 
-spring.separator_small { 
+.FormatButton[toggled="1"] {
+  border: 1px white inset;
+}
+
+.FormatButton:hover {
+  border: 1px solid white;
+	text-decoration: none;
+}
+
+.FormatButton:active {
+  margin: 2px 0px 0px 2px;
+}
+
+.separator_small { 
   width: 1em; 
+}
+
+.margin-left-right {
+  margin-left:  3px;
+  margin-right: 3px;
+}
+
+/* From button.css: */
+/* margin: 4px 7px 1px 1px; */
+/* We have too many buttons - must be closer! */
+
+.toolbar, .key-toolbar {
+  margin-right: 2px;
 }
 
 /* end of SHOULD GO IN GLOBAL */
 
-/* A small "toolbar" below content, above status */
-box#EditModeToolbar {
+/* THIS WILL GO SOON. With conversion to menulist */
+select.toolbar {
+  /* This is ignored! */
+	/*font-size: smaller;*/
+  max-width: 20em;
+  margin: 2px 3px 0px 3px;
+}
+
+
+#EditModeToolbar {
   padding:       0px;
   /* Same as "standard" toolbar background */
   border-top:    1px solid #003366;
@@ -54,77 +91,7 @@ box#EditModeToolbar {
   overflow:      hidden;
 }
 
-toolbar#FormatToolbar titledbutton.format {
-  border: 1px solid transparent;
-  margin: 1px 1px 1px 1px;
-	padding: 2px;
-	text-decoration: none;
-	color: inherit;
-}
-
-toolbar#FormatToolbar titledbutton.format[toggled="1"] {
-  border: 1px white inset;
-}
-
-toolbar#FormatToolbar titledbutton.format:hover {
-/* What we should use, but this has a blue border that doesn't look good against gray toolbars 
-	background-image:url("chrome://global/skin/otherbutton28-bg-hover.gif");
-	background-image:url("chrome://editor/skin/images/hover-teal.gif");
-	background-repeat: no-repeat;
-  background-position: center center;
-*/
-  border: 1px solid white;
-	text-decoration: none;
-  /* global class="plain" should do this! */
-}
-
-toolbar#FormatToolbar titledbutton.format:active {
-  margin: 2px 0px 0px 2px;
-}
-
-toolbar#FormatToolbar titledbutton.TextAttribute {
-	/* Make these buttons narrower */
-  padding: 2px 0px;
-  min-width: 16px; 
-  width: 16px; 
-  font-size: 19px; 
-  font-family: arial,helvetica,sans-serif;
-  /* font-family: times, serif, sans-serif; */
-}
-
-toolbar#FormatToolbar titledbutton#boldButton {
-  list-style-image:url(chrome://editor/skin/images/bold.gif); 
-  font-weight: bold; 
-}
-
-toolbar#FormatToolbar titledbutton#italicButton {
-  list-style-image:url(chrome://editor/skin/images/italic.gif); 
-  /* font-weight: bold; */
-  font-style:  italic;
-}
-
-toolbar#FormatToolbar titledbutton#underlineButton {
-  list-style-image:url(chrome://editor/skin/images/underline.gif); 
-  font-weight: normal; 
-  text-decoration: underline;
-}
-
-input#PageTitle, input#PageAuthor {
-  min-width: 5em;
-}
-
-div.toolbar-middle {
-  /* trying to center vertically in the toolbar! */
-  vertical-align: middle;
-}
-select.toolbar {
-  /* This is ignored! */
-	/*font-size: smaller;*/
-  max-width: 20em;
-  margin: 2px 3px 0px 3px;
-}
-
-box#EditModeToolbar titledbutton.DisplayModeButton {
+.EditModeButton {
   -moz-border-radius: 0px 0px 8px 8px;
   border-top: 1px solid #CCCCCC; /* Must be same as background */
   border-bottom: 1px solid #666666;
@@ -136,48 +103,48 @@ box#EditModeToolbar titledbutton.DisplayModeButton {
   background-color: #CCCCCC;
 }
 
-box#EditModeToolbar titledbutton.DisplayModeButton:hover {
+.EditModeButton:hover {
   border:  1px solid white;
 }
 
-box#EditModeToolbar titledbutton.DisplayModeButton:active {
+.EditModeButton:active {
   padding: 1px 5px -1px 3px;
 }
 
-box#EditModeToolbar titledbutton.DisplayModeButton[selected="1"] {
+.EditModeButton[selected="1"] {
   padding: 0px 4px 0px 4px;
   margin: -1px 0px 0px 0px;
   font-weight: bold;
 }
 
-box#EditModeToolbar titledbutton.DisplayModeButton[selected="1"]:active {
+.EditModeButton[selected="1"]:active {
   padding: 1px 5px -1px 3px;
 }
 
-box#EditModeToolbar div.VerticalSeparator { 
-	 height: 100%; 
-	 max-width: 1px; 
-   border-left: 1px solid darkgray;
-	 margin: 1px 0px;
+.color-caption {
+  border: 1px inset white;
 }
 
-spring.spacer3 {
-      width:  3px;
-      height: 3px;
-}
-
-spring.spacer5 {
-      width:  5px;
-      height: 5px;
-}
-
-spring.spacer-throbber {
-  /* this is throbber box width - 12 */
-	width: 56px;
-}
 
 
 /* Image URLs for all Editor toolbar buttons */
+
+#boldButton {
+  list-style-image:url(chrome://editor/skin/images/bold.gif); 
+  font-weight: bold; 
+}
+
+#italicButton {
+  list-style-image:url(chrome://editor/skin/images/italic.gif); 
+  /* font-weight: bold; */
+  font-style:  italic;
+}
+
+#underlineButton {
+  list-style-image:url(chrome://editor/skin/images/underline.gif); 
+  font-weight: normal; 
+  text-decoration: underline;
+}
 
 #newButton {
 	list-style-image:url("chrome://editor/skin/images/newfile.gif");
@@ -285,92 +252,44 @@ spring.spacer-throbber {
 	list-style-image:url("chrome://editor/skin/images/object-popup.gif");
 }
 
-text.color-caption {
-  border: 1px inset white;
+#text-align-left {
+	list-style-image:url("chrome://editor/skin/images/left.gif");
+}
+#text-align-center {
+	list-style-image:url("chrome://editor/skin/images/center.gif");
+}
+#text-align-right {
+	list-style-image:url("chrome://editor/skin/images/right.gif");
+}
+#text-align-justify {
+	list-style-image:url("chrome://editor/skin/images/justify.gif");
 }
 
-div#ColorButtons {
-  /* Width needs to be enough for overlapping
-     buttons. Note: color.gif=14px + 2 for borders.
-     We use relative position to move buttons
-     to desired positions
-  */
-  width:       30px;
-  max-width:   30px;
-  /* Other toolbar buttons are 16px high (+border and margin), 
-     so limit total height of color buttons
-     region to a compatable height
-  */
-  height:      22px;
-  max-height:  22px;
+#ColorButtons {
+  margin: 2px;
 }
-
-/* The initial layout of these buttons is:
-   BackColorPopupButton appears above TextColorPopupButton.
-   BackColorPopupButton must be 1st in XUL so that
-   TextColorPopupButton is on top after relative positioning,
-   which places TextColorPopupButton button in upper left and 
-   BackColorPopupButton button at lower right of the ColorButtons div
-*/
 
 #TextColorPopupButton {
-	list-style-image:url("chrome://editor/skin/images/color.gif");
-  border: 1px solid #CCCCCC;
+	/*list-style-image:url("chrome://editor/skin/images/color.gif");*/
+  border: 1px inset #CCCCCC;
   padding: 0px;
-  margin:  0px;
-  position: relative;
-  top:  -15px;
-  left: 1px;
-
+  margin-right:  7px;
+  margin-bottom: 7px;
+  width:  14px;
+  height: 12px;
   /* TEMP: Set color here. TODO: Set color from page */
   background-color: #AA0000;
 }
 
-#TextColorPopupButton:hover {
-  border: 1px solid white;
-}
-
 #BackColorPopupButton {
-	list-style-image:url("chrome://editor/skin/images/color.gif");
-  border: 1px solid #CCCCCC;
+	/*list-style-image:url("chrome://editor/skin/images/color.gif");*/
+  border: 1px inset #CCCCCC;
   padding: 0px;
-  margin:  0px;
-  position: relative;
-  top:  7px;
-  left: 12px;
+  margin-top:  7px;
+  margin-left: 7px;
+  width:  14px;
+  height: 12px;
 
   /* TEMP: Set color here. TODO: Set color from page */
-  background-color: yellow;
-}
-
-#BackColorPopupButton:hover {
-  border: 1px solid white;
-}
-
-/* For when we use STACK to do overlapping buttons */
-image#TextColorPopupButton {
-	list-style-image:url("chrome://editor/skin/images/color.gif");
-  border: 1px solid #CCCCCC;
-  padding: 0px;
-  margin: 0px;
-}
-
-image#BackColorPopupButton {
-	list-style-image:url("chrome://editor/skin/images/color.gif");
-  border: 1px solid #CCCCCC;
-  padding: 0px;
-  margin:  8px 8px 0px 0px;
-}
-
-titledbutton#text-align-left {
-	list-style-image:url("chrome://editor/skin/images/left.gif");
-}
-titledbutton#text-align-center {
-	list-style-image:url("chrome://editor/skin/images/center.gif");
-}
-titledbutton#text-align-right {
-	list-style-image:url("chrome://editor/skin/images/right.gif");
-}
-titledbutton#text-align-justify {
-	list-style-image:url("chrome://editor/skin/images/justify.gif");
+  background-color: #FFFF00;
 }

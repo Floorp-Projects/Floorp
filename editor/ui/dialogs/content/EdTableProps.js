@@ -200,8 +200,8 @@ function InitDialog()
   // Get Table attributes
   dialog.TableRowsInput.value = rowCount;
   dialog.TableColumnsInput.value = colCount;
-  dialog.TableHeightInput.value = InitPixelOrPercentCombobox(globalTableElement, "height", "TableHeightUnits");
-  dialog.TableWidthInput.value = InitPixelOrPercentCombobox(globalTableElement, "width", "TableWidthUnits");
+  dialog.TableHeightInput.value = InitPixelOrPercentMenulist(globalTableElement, TableElement, "height", "TableHeightUnits");
+  dialog.TableWidthInput.value = InitPixelOrPercentMenulist(globalTableElement, TableElement, "width", "TableWidthUnits");
   dialog.BorderWidthInput.value = globalTableElement.border;
   dialog.SpacingInput.value = globalTableElement.cellSpacing;
   dialog.PaddingInput.value = globalTableElement.cellPadding;
@@ -250,8 +250,8 @@ dump("Caption Element = "+captionElement+"\n");
         dialog.SelectionList.selectedItem = dialog.SelectCellItem;
         break;
     }
-    dialog.CellHeightInput.value = InitPixelOrPercentCombobox(globalCellElement, "height", "CellHeightUnits");
-    dialog.CellWidthInput.value = InitPixelOrPercentCombobox(globalCellElement, "width", "CellWidthUnits");
+    dialog.CellHeightInput.value = InitPixelOrPercentMenulist(globalCellElement, CellElement, "height", "CellHeightUnits");
+    dialog.CellWidthInput.value = InitPixelOrPercentMenulist(globalCellElement, CellElement, "width", "CellWidthUnits");
 
 //BUG: We don't support "rowSpan" or "colSpan" JS attributes?
 dump("RowSpan="+globalCellElement.rowSpan+" ColSpan="+globalCellElement.colSpan+"\n");

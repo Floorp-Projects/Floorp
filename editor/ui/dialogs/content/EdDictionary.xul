@@ -37,23 +37,23 @@
   <broadcaster id="args" value=""/>
 
 <box orient="vertical">
-  <html:label for="WordInput">&wordEditField.label;</html:label>
-  <box align="horizontal">
+  <text class="label" value="&wordEditField.label;"/>
+  <box>
     <html:input type="text" class="SpellCheckWord" id="WordInput"/>
     <spring class="bigspacer"/>
-    <button class="dialog" flex="100%" id="AddWord" oncommand="AddWord()" value="&AddButton.label;"/>
+    <button class="dialog" flex="1" id="AddWord" oncommand="AddWord()" value="&AddButton.label;"/>
   </box>
   <spring class="bigspacer"/>
-  <html:label for="WordInput">&DictionaryList.label;</html:label>
+  <text class="label" value="&DictionaryList.label;"/>
   <spring class="bigspacer"/>
-  <box align="horizontal">
-    <html:select class="SpellCheckList" id="DictionaryList" size="10"/>
+  <box>
+    <tree rows="8" class="list MinWidth20em" id="DictionaryList"/>
     <spring class="bigspacer"/>
     <box orient="vertical">
       <button class="dialog"  id="ReplaceWord" oncommand="ReplaceWord()" value="&ReplaceButton.label;"/>
       <spring class="spacer"/>
       <button class="dialog"  id="RemoveWord" oncommand="RemoveWord()" value="&RemoveButton.label;"/>
-      <spring flex="100%"/>
+      <spring flex="1"/>
       <button class="dialog CloseButton"  id="Close" oncommand="onCancel()" value="&CloseButton.label;"/>
     </box>
   </box>

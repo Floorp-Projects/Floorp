@@ -895,6 +895,9 @@ nsHTMLEditor::DeleteTableRow(PRInt32 aNumber)
 
   nsAutoEditBatch beginBatching(this);
 
+  //We control selection resetting after the insert...
+  nsSetCaretAfterTableEdit setCaret(this, table, startRowIndex, startColIndex, ePreviousRow);
+
   // Check for counts too high
   aNumber = PR_MIN(aNumber,(rowCount-startRowIndex));
 

@@ -101,7 +101,7 @@
     <!-- help menu filled from globalOverlay -->
     <menu accesskey="h" id="menu_Help"/>
 
-  <spring flex="100%"/>
+  <spring flex="1"/>
 </menubar>
 
 <toolbox id="EditorToolbox">
@@ -115,11 +115,11 @@
       <button id="findButton"/>
       <button id="spellingButton"/>
 
-      <spring flex="100%"/>
+      <spring flex="1"/>
     </toolbar>    
     </toolbox>
 
-    <editor type="content-primary" id="content-frame" src="about:blank" flex="100%"/>
+    <editor type="content-primary" id="content-frame" src="about:blank" flex="1"/>
 
     <!-- status bar, from editorOverlay.xul -->
     <toolbar id="taskbar" class="chromeclass-extrachrome" />

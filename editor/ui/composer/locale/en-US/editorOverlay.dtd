@@ -232,21 +232,23 @@
 <!ENTITY insertlink.accesskey "l">
 <!ENTITY insertAnchorCmd.label "Named Anchor...">
 <!ENTITY insertanchor.accesskey "a">
-<!ENTITY insertCharsCmd.label "Characters...">
+<!ENTITY insertCharsCmd.label "Characters and Symbols...">
 <!ENTITY insertchars.accesskey "c">
 <!ENTITY insertImageCmd.label "Image...">
 <!ENTITY insertimage.accesskey "i">
 <!ENTITY insertImageMapCmd.label "Image Map...">
 <!ENTITY insertHLineCmd.label "Horizontal Line">
-<!ENTITY inserthline.accesskey "h">
+<!ENTITY inserthline.accesskey "o">
 <!ENTITY insertTableCmd.label "Table...">
 <!ENTITY inserttable.accesskey "t">
-<!ENTITY insertHTMLSourceCmd.label "HTML Source...">
-<!ENTITY insertsource.accesskey "s">
 <!ENTITY insertLineBreakCmd.label "Line Break">
 <!ENTITY insertlinebreak.accesskey "n">
 <!ENTITY insertBreakBelowImagesCmd.label "Break Below Image(s)">
 <!ENTITY insertbreak.accesskey "b">
+
+<!-- Used in both Edit and View menus -->
+<!ENTITY HTMLSourceCmd.label "HTML Source...">
+<!ENTITY HTMLsource.accesskey "h">
 
 <!-- Format Menu -->
 <!ENTITY formatMenu.label "Format">
@@ -255,15 +257,15 @@
 <!-- Font Face SubMenu -->
 <!ENTITY fontfaceMenu.label "Font">
 <!ENTITY formatfontmenu.accesskey "f">
-<!ENTITY defaultVariableWidthCmd.label "Variable Width">
+<!ENTITY fontVarWidth.label "Variable Width">
 <!ENTITY fontvarwidth.accesskey "v">
-<!ENTITY defaultFixedWidthCmd.label "Fixed Width">
+<!ENTITY fontFixedWidth.label "Fixed Width">
 <!ENTITY fontfixedwidth.accesskey "x">
-<!ENTITY arialHelveticaFont.label "Arial, Helvetica">
+<!ENTITY fontHelveticaFont.label "Arial, Helvetica">
 <!ENTITY fonthelvetica.accesskey "l">
-<!ENTITY timesFont.label "Times">
+<!ENTITY fontTimes.label "Times">
 <!ENTITY fonttimes.accesskey "t">
-<!ENTITY courierFont.label "Courier">
+<!ENTITY fontCourier.label "Courier">
 <!ENTITY fontcourier.accesskey "c">
 
 <!-- Font Size SubMenu -->
@@ -364,8 +366,7 @@ Menu item text for "[Page|Table|Cell] Background color" is filled from
 <!ENTITY formatoutdent.keybinding "-">
 <!ENTITY headingMenu.label "Heading">
 <!ENTITY formatheadingmenu.accesskey "h">
-<!ENTITY headingNormalCmd.label "Normal">
-<!ENTITY headingnone.accesskey "n">
+
 <!ENTITY heading1Cmd.label "Heading 1">
 <!ENTITY heading1.accesskey "1">
 <!ENTITY heading2Cmd.label "Heading 2">
@@ -381,8 +382,6 @@ Menu item text for "[Page|Table|Cell] Background color" is filled from
 
 <!ENTITY paragraphMenu.label "Paragraph">
 <!ENTITY formatparagraphmenu.accesskey "p">
-<!ENTITY paragraphNormalCmd.label "Normal">
-<!ENTITY paragraphnormal.accesskey "n">
 <!ENTITY paragraphParagraphCmd.label "Paragraph">  
 <!ENTITY paragraphparagraph.accesskey "p">
 <!ENTITY paragraphBlockquoteCmd.label "Blockquote">
@@ -397,26 +396,31 @@ Menu item text for "[Page|Table|Cell] Background color" is filled from
 <!ENTITY paragraphterm.accesskey "t">
 <!ENTITY paragraphDfnDescCmd.label "Description">
 <!ENTITY paragraphdesc.accesskey "d">
+<!-- Shared by Heading and Paragraph menu, and in toolbar menulist -->
+<!ENTITY normalCmd.label "Normal">
+<!ENTITY normal.accesskey "n">
+
+<!ENTITY NormalAbbr.label "Norm.">
+<!ENTITY ParagraphAbbr.label "P">  
+<!ENTITY Heading1Abbr.label "H1">
+<!ENTITY Heading2Abbr.label "H2">
+<!ENTITY Heading3Abbr.label "H3">
+<!ENTITY Heading4Abbr.label "H4">
+<!ENTITY Heading5Abbr.label "H5">
+<!ENTITY Heading6Abbr.label "H6">
+<!ENTITY BlockquoteAbbr.label "BQ">
+<!ENTITY AddressAbbr.label "Addr.">
+<!ENTITY PreformatAbbr.label "Pre.">
+<!ENTITY DfnTermAbbr.label "DT">
+<!ENTITY DfnDescAbbr.label "DD">
 
 <!-- List menu items -->
 <!ENTITY listProps.label "List...">
 <!ENTITY formatlistmenu.accesskey "l">
 
-<!-- Style Sheet submenu -->
+<!-- Style Sheet submenu NOT IMPLEMENTED -->
 <!ENTITY stylesheetMenu.label "Apply Style Sheet">
 <!ENTITY formatstylesheetmenu.accesskey "y">
-<!ENTITY stylesheetOldstyleCmd.label "Oldstyle">
-<!ENTITY ssoldstyle.accesskey "o">
-<!ENTITY stylesheetModernistCmd.label "Modernist">
-<!ENTITY ssmodernist.accesskey "m">
-<!ENTITY stylesheetMidnightCmd.label "Midnight">
-<!ENTITY ssmidnight.accesskey "n">
-<!ENTITY stylesheetUltramarineCmd.label "Ultramarine">
-<!ENTITY ssultramarine.accesskey "u">
-<!ENTITY stylesheetChocolateCmd.label "Chocolate">
-<!ENTITY sschocolate.accesskey "c">
-<!ENTITY stylesheetSteelyCmd.label "Steely">
-<!ENTITY sssteely.accesskey "s">
 
 <!-- Align menu items -->
 <!ENTITY alignMenu.label "Align">
@@ -529,10 +533,7 @@ Menu item text for "[Page|Table|Cell] Background color" is filled from
 
 <!-- editor toolbar -->
 
-<!-- formatting toolbar -->
-<!ENTITY paragraphToolbarMenu.label "Paragraph">
-<!ENTITY fontToolbarMenu.label "Font">
-<!ENTITY sizeToolbarMenu.label "Size">
+<!-- formatting toolbar not used, but may be in future -->
 <!ENTITY formatToolbar.boldChar "B">
 <!ENTITY formatToolbar.italicChar "I">
 <!ENTITY formatToolbar.underlineChar "U">
@@ -541,5 +542,8 @@ Menu item text for "[Page|Table|Cell] Background color" is filled from
 <!ENTITY colorPicker.default.label "Reader's default color">
 <!ENTITY colorPicker.default.accesskey "r">
 
-<!ENTITY tempNotification.label "[status message]">
-<!ENTITY tempDoneLoading.label "[Document loading message]">
+<!-- Display Mode Toolbar -->
+<!ENTITY showExtraMarkup.label "Normal">
+<!ENTITY hideExtraMarkup.label "WYSIWYG">
+<!ENTITY showAllTags.label "Show All Tags">
+<!ENTITY treeModeButton.label "Tag Tree">

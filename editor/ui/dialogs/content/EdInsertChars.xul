@@ -41,41 +41,121 @@
 
   <keyset id="keyset"/>
   <broadcaster id="args" value=""/>
-  <box orient="vertical" style="min-width: 20em">
-    <titledbox orient="vertical">
-      <title>
-        <text class="label" id="insertLatinCaption" align="left" value="&insertLatin.label;"/>
-      </title>
-      <menulist flex="1" id="LatinC" oncommand="SelectLatinCategory()">
-        <menupopup>
-          <menuitem value="&accentUpper.label;"/>
-          <menuitem value="&accentLower.label;"/>
-          <menuitem value="&otherUpper.label;"/>
-          <menuitem value="&otherLower.label;"/>
-          <menuitem value="&commonSymbols.label;"/>
-        </menupopup>
-      </menulist>
-      <menulist flex="1" id="LatinL" oncommand="SelectLatinLetter()"/>
-      <menulist flex="1" id="LatinM" oncommand="SelectLatinModifier()"/>
-      <text class="label" align="center" value="&insert.label;"/>
-      <button id="AddLatin" value="&#xac00;" oncommand="InsertLatin()"/>
-    </titledbox>
+  <tabcontrol orient="vertical">
+    <tabbox>
+      <tab selected="true" value="&insertLatin.label;" oncommand="SelectTab(0)"/>
+      <tab value="&insertHangul.label;" oncommand="SelectTab(1)"/>
+      <spring flex="1"/>
+    </tabbox>
+    <tabpanel autostretch="never">
 
-    <titledbox orient="vertical">
-      <title>
-       <text class="label" id="insertHangulCaption" align="left" value="&insertHangul.label;"/>
-      </title>
-      <menulist flex="1" id="HangulL" oncommand="SelectHangul()"/>
-      <menulist flex="1" id="HangulV" oncommand="SelectHangul()"/>
-      <menulist flex="1" id="HangulT" oncommand="SelectHangul()"/>
-      <text class="label" align="center" value="&insert.label; "/>
-      <button id="AddHangul" value="&#xac00;" oncommand="InsertHangul()"/>
-    </titledbox>
+<!-- PUT SYMBOL ON SEPARATE TAB?
+      <box class="tabpanel" orient="vertical" autostretch="never">
+        <text class="label" value="&commonSymbols.label;/>
+        <grid autostretch="never">
+          <columns><column/><column/><column/><column/><column/><columns/>
+          <rows>
+            <row>
+              <button id="symbol0" oncommand="InsertSymbol(0)"/>
+              <button id="symbol1" oncommand="InsertSymbol(0)"/>
+              <button id="symbol2" oncommand="InsertSymbol(0)"/>
+              <button id="symbol3" oncommand="InsertSymbol(0)"/>
+              <button id="symbol4" oncommand="InsertSymbol(0)"/>
+            </row>
+            <row>
+              <button id="symbol5" oncommand="InsertSymbol(0)"/>
+              <button id="symbol6" oncommand="InsertSymbol(0)"/>
+              <button id="symbol7" oncommand="InsertSymbol(0)"/>
+              <button id="symbol8" oncommand="InsertSymbol(0)"/>
+              <button id="symbol9" oncommand="InsertSymbol(0)"/>
+            </row>
+          </rows>
+      </box>
+-->
+
+      <!-- ============================================================== -->
+      <!--                 Insert Latin                                   -->
+      <!-- ============================================================== -->
+      <box class="tabpanel" orient="vertical" autostretch="never" style="width: 20em">
+        <text class="label" value="&category.label;"/>
+        <menulist id="LatinC" oncommand="SelectLatinCategory()">
+          <menupopup>
+            <menuitem value="&accentUpper.label;"/>
+            <menuitem value="&accentLower.label;"/>
+            <menuitem value="&otherUpper.label;"/>
+            <menuitem value="&otherLower.label;"/>
+            <menuitem value="&commonSymbols.label;"/>
+          </menupopup>
+        </menulist>
+        <box>
+          <box orient="vertical" flex="1">
+            <!-- value is set in JS from editor.properties strings -->
+            <text class="label" id="LatinL_Label" value="&letter.label;"/>
+            <menulist class="bold larger" flex="1" id="LatinL" oncommand="SelectLatinLetter()"/>
+          </box>
+          <box orient="vertical" flex="1">
+            <text class="label" id="LatinM_Label" value="&character.label;"/>
+            <menulist class="bold larger" flex="1" id="LatinM" oncommand="SelectLatinModifier()"/>
+          </box>
+        </box>
+      </box>
+      <!-- ============================================================== -->
+      <!--                 Insert Hangul                                  -->
+      <!-- ============================================================== -->
+      <box class="tabpanel" orient="vertical" autostretch="never" style="width: 20em">
+<!--
+      <box class="tabpanel" orient="vertical" autostretch="never" style="width: 20em">
+MENULISTS INSIDE GRID ARE MESSED UP!
+        <grid>
+          <columns><column/><column/><column/></columns>
+          <rows>
+            <row>
+              <text class="label" value="L:"/>
+              <text class="label" value="+ V:"/>
+              <text class="label" value="+ T:"/>
+              <text class="label" value=" = "/>
+              <text class="label bold" id="HangulCharacter"/>
+            </row>
+            <row class="bold larger">
+              <menulist id="HangulL" oncommand="SelectHangul()"/>
+              <menulist id="HangulV" oncommand="SelectHangul()"/>
+              <menulist id="HangulT" oncommand="SelectHangul()"/>
+            </row>      
+          </rows>
+        </grid>
+-->
+        <box>
+          <box orient="vertical" autostretch="never">
+            <text class="label" value="T:"/>
+            <menulist id="HangulL" oncommand="SelectHangul()"/>
+          </box>
+          <box orient="vertical" autostretch="never">
+            <text class="label" value="+ V:"/>
+            <menulist id="HangulV" oncommand="SelectHangul()"/>
+          </box>
+          <box orient="vertical" autostretch="never">
+            <box>
+              <text class="label" value="+ L:"/>
+              <spring flex="1"/>
+              <text class="label" value="="/>
+              <text class="label bold" id="HangulCharacter"/>
+            </box>
+            <menulist id="HangulT" oncommand="SelectHangul()"/>
+          </box>
+        </box>
+      </box>
+    </tabpanel>
+  </tabcontrol>
+
+  <!-- This needs to wrap, so use html instead of text
+       the style is used be sure it doesn't determine 
+       the dialog's width.
+   -->
+  <html class="label wrap" flex="1">&nonModalMsg.label;</html>
+  <box>
+    <spring flex="1"/>
+    <button class="dialog" value="&insert.label;" oncommand="InsertCharacter()"/>
+    <button class="dialog" value="&closeButton.label;" oncommand="window.close()"/>
+    <spring flex="1"/>
   </box>
-  <!-- This needs to wrap, so use html instead of text 0-->
-  <html>&nonModalMsg.label;</html>
-  <separator class="groove"/>
-  <!-- from global dialogOverlay -->
-	<box id="okCancelButtons"/> 
-
 </window>

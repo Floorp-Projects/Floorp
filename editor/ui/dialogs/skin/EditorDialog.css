@@ -59,6 +59,10 @@ titledbox {
   font-style: italic;
 }
 
+.larger {
+  font-size: 120%;
+}
+
 
 .narrow {
   width: 3em;
@@ -68,6 +72,9 @@ titledbox {
   text-align: right;
 }
 
+.wrap {
+ width: 1em;
+}
 /* end of "should be in global.css" */
 
 .color-well {

@@ -197,13 +197,20 @@ public:
   NS_IMETHOD InsertText(const nsString& aStringToInsert)=0;
 
   /**
-   * Insert some HTML source at the current location.
+   * Insert some HTML source at the current location
+   *
+   * @param aInputString   the string to be inserted
    */
   NS_IMETHOD InsertHTML(const nsString &aInputString)=0;
 
   /**
-   * Insert some HTML source at the current location, interpreting
+   * Insert some HTML source, interpreting
    * the string argument according to the given charset.
+   *
+   * @param aInputString   the string to be inserted
+   * @param aCharset       Charset of string
+   * @param aParentNode    Parent to insert under.
+   *                       If null, insert at the current location.
    */
   NS_IMETHOD InsertHTMLWithCharset(const nsString &aInputString,
                                    const nsString& aCharset)=0;
@@ -335,6 +342,14 @@ public:
     * Returns NS_EDITOR_ELEMENT_NOT_FOUND if an element is not found (passes NS_SUCCEEDED macro)
     */
   NS_IMETHOD GetSelectedElement(const nsString& aTagName, nsIDOMElement** aReturn)=0;
+
+  /** Output the contents of the <HEAD> section as text/HTML format
+    */
+  NS_IMETHOD GetHeadContentsAsHTML(nsString& aOutputString)=0;
+
+  /** Replace all children of <HEAD> with string of HTML source
+    */
+  NS_IMETHOD ReplaceHeadContentsWithHTML(const nsString &aSourceToInsert)=0;
 
   /** Return a new element with default attribute values
     * 

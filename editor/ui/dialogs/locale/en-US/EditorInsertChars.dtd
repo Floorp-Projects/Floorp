@@ -23,7 +23,11 @@
 
 <!-- Window title -->
 <!ENTITY windowTitle.label "Insert Characters">
-<!ENTITY insertHangul.label "Korean Hangul">
+<!ENTITY closeButton.label "Close">
+<!ENTITY category.label "Category:">
+<!ENTITY letter.label "Letter:">
+<!ENTITY character.label "Character:">
+<!ENTITY insertHangul.label "Korean">
 <!ENTITY insertLatin.label "Latin">
 <!ENTITY insert.label "Insert">
 <!ENTITY accentUpper.label "Accent Uppercase">
@@ -31,4 +35,5 @@
 <!ENTITY otherUpper.label "Other Uppercase">
 <!ENTITY otherLower.label "Other Lowercase">
 <!ENTITY commonSymbols.label "Common Symbols">
+<!ENTITY symbols.label "Symbols">
 <!ENTITY nonModalMsg.label "You may leave this dialog open and return to editing the page.">

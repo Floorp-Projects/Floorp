@@ -28,3 +28,8 @@
 <!ENTITY authorInput.label "Author:">
 <!ENTITY descriptionInput.label "Description:">
 <!ENTITY locationNewPage.label "[New page, not saved yet]">
+<!-- Don't translate "&lt;HEAD&gt;" it is the HTML tagname -->
+<!ENTITY headSection.label "Enter html source for elements and attributes to insert under the &lt;HEAD&gt; tag:">
+<!ENTITY example.label "Example: ">
+<!-- Don't translate this: it is a HTML tag and attributes -->
+<!ENTITY example.value "&lt;meta http-equiv=&quot;Content-Type&quot; content=&quot;text/html; charset=ISO-8859-5&quot;&gt;">

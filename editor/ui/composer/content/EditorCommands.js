@@ -497,29 +497,19 @@ function EditorSetTextProperty(property, attribute, value)
   contentWindow.focus();
 }
 
-function EditorSelectParagraphFormat()
-{
-  var select = document.getElementById("ParagraphSelect");
-  if (select)
-  { 
-    if (select.selectedIndex == -1)
-      return;
-    editorShell.SetParagraphFormat(gParagraphTagNames[select.selectedIndex]);
-  }
-  contentWindow.focus();
-}
 
 function onParagraphFormatChange()
 {
-  var select = document.getElementById("ParagraphSelect");
-  if (select)
+  return; //TODO: REWRITE THIS
+  var menulist = document.getElementById("ParagraphSelect");
+  if (menulist)
   { 
     // If we don't match anything, set to "normal"
     var newIndex = 0;
   	var format = select.getAttribute("format");
     if ( format == "mixed")
     {
-// dump("Mixed paragraph format *******\n");
+dump("Mixed paragraph format *******\n");
       // No single type selected
       newIndex = -1;
     }
@@ -534,8 +524,8 @@ function onParagraphFormatChange()
         }
       }
     }
-    if (select.selectedIndex != newIndex)
-      select.selectedIndex = newIndex;
+    if (menulist.selectedIndex != newIndex)
+      menulist.selectedIndex = newIndex;
   }
 }
 
@@ -545,22 +535,10 @@ function EditorSetParagraphFormat(paraFormat)
   contentWindow.focus();
 }
 
-function EditorSelectFontFace() 
-{
-  var select = document.getElementById("FontFaceSelect");
-//dump("EditorSelectFontFace: "+gFontFaceNames[select.selectedIndex]+"\n");
-  if (select)
-  { 
-    if (select.selectedIndex == -1)
-      return;
-
-    EditorSetFontFace(gFontFaceNames[select.selectedIndex]);
-  }
-  contentWindow.focus();
-}
 
 function onFontFaceChange()
 {
+  return; //TODO: REWRITE THIS
   var select = document.getElementById("FontFaceSelect");
   if (select)
   { 
@@ -714,7 +692,7 @@ function EditorDecreaseFontSize()
 function EditorSelectTextColor(ColorPickerID, ColorWellID)
 {
   var color = getColorAndSetColorWell(ColorPickerID, ColorWellID);
-  dump("EditorSelectTextColor: "+color+"\n");
+dump("EditorSelectTextColor: "+color+"\n");
 
   // Close appropriate menupopup  
   var menupopup;
@@ -888,7 +866,7 @@ function EditorListProperties()
 
 function EditorPageProperties()
 {
-  window.openDialog("chrome://editor/content/EdPageProps.xul","_blank", "chrome,close,titlebar,modal", "");
+  window.openDialog("chrome://editor/content/EdPageProps.xul","_blank", "chrome,close,titlebar,modal,resizable", "");
   contentWindow.focus();
 }
 
@@ -903,7 +881,7 @@ function EditorColorProperties()
 function EditorInsertHTML()
 {
   // Resizing doesn't work!
-  window.openDialog("chrome://editor/content/EdInsSrc.xul","_blank", "chrome,close,titlebar,modal,resizeable=yes");
+  window.openDialog("chrome://editor/content/EdInsSrc.xul","_blank", "chrome,close,titlebar,modal,resizable");
   contentWindow.focus();
 }
 
@@ -1059,27 +1037,16 @@ function EditorSetDisplayMode(mode)
   editorShell.SetDisplayMode(mode);
 
   // Set the UI states
-
-  // TODO: Should we NOT have the menu items and eliminate this?
-  var showMenu = document.getElementById("ShowExtraMarkup");
-  var hideMenu = document.getElementById("HideExtraMarkup");
-  switch (mode ) {
-    case 0:
-      showMenu.setAttribute("hidden","true");
-      hideMenu.removeAttribute("hidden");
-      break;
-
-    default: // = 1
-      showMenu.removeAttribute("hidden");
-      hideMenu.setAttribute("hidden","true");
-      break;
-  }
-
   document.getElementById("WYSIWYGModeButton").setAttribute("selected",Number(mode == 0));
   document.getElementById("NormalModeButton").setAttribute("selected",Number(mode == 1));
   document.getElementById("TagModeButton").setAttribute("selected",Number(mode == 2));
   contentWindow.focus();
 }
+
+function EditorEditHTML()
+{
+  dump("EditorEditHTML NOT IMPLEMENTED\n");
+} 
 
 function EditorToggleParagraphMarks()
 {
@@ -1591,6 +1558,7 @@ function getColorAndSetColorWell(ColorPickerID, ColorWellID)
   var colorPicker = document.getElementById(ColorPickerID);
   if (colorPicker) 
   {
+dump("ColorPicker found\n");
     // Extract color from colorPicker and assign to colorWell.
     var color = colorPicker.getAttribute('color');
     dump("setColor to: "+color+"\n");

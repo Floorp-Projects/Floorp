@@ -46,7 +46,7 @@
   <keyset id="keyset"/>
 
   <tabcontrol orient="vertical">
-	  <tabbox align="horizontal" flex="100%">
+	  <tabbox flex="1">
 		  <tab id="TableTab" selected="true" oncommand="SelectTableTab()" value="&tableTab.label;"/>
 		  <tab id="CellTab" oncommand="SelectCellTab()" value="&cellTab.label;"/>
 	  	<spring flex="1"/>
@@ -58,12 +58,12 @@
           <box orient="vertical">
             <box valign="middle" autostretch="never">
               <text class="MinWidth50" align="left" for="TableRowsInput" value="&tableRows.label;"/>
-              <html:div><html:input type="text" id="TableRowsInput" size="5" onkeyup="forceInteger(this.id)" disabled="true"/></html:div>
+              <textfield class="narrow" id="TableRowsInput" onkeyup="forceInteger(this.id)" disabled="true"/>
             </box>
             <spring class="spacer"/>
             <box valign="middle" autostretch="never">
               <text class="MinWidth50" align="left" for="TableColumnsInput" value="&tableColumns.label;"/>
-              <html:input type="text" id="TableColumnsInput" size="5" onkeyup="forceInteger(this.id)" disabled="true"/>
+              <textfield class="narrow" id="TableColumnsInput" onkeyup="forceInteger(this.id)" disabled="true"/>
             </box>
           </box>
           <spring class="bigspacer"/>
@@ -71,14 +71,14 @@
           <box orient="vertical">
             <box valign="middle" autostretch="never">
               <text class="MinWidth50" align="right" for="TableHeightInput" value="&tableHeight.label;"/>
-              <html:input type="text" id="TableHeightInput" size="5" onkeyup="forceInteger(this.id)"/>
-              <html:select id="TableHeightUnits"/>
+              <textfield class="narrow" id="TableHeightInput" onkeyup="forceInteger(this.id)"/>
+              <menulist id="TableHeightUnits"/>
             </box>
             <spring class="spacer"/>
             <box valign="middle" autostretch="never">
               <text class="MinWidth50" align="right" for="TableWidthInput" value="&tableWidth.label;"/>
-              <html:input type="text" id="TableWidthInput" size="5" onkeyup="forceInteger(this.id)"/>
-              <html:select id="TableWidthUnits"/>
+              <textfield class="narrow" id="TableWidthInput" onkeyup="forceInteger(this.id)"/>
+              <menulist id="TableWidthUnits"/>
             </box>
           </box>
           <spring flex="1"/>
@@ -88,19 +88,19 @@
             <box valign="middle" autostretch="never">
               <text align="left" for="BorderWidthInput" value="&tableBorderWidth.label;"/>
               <spring class="spacer"/>
-              <html:input type="text" id="BorderWidthInput" size="3" onkeyup="forceInteger(this.id)"/>
+              <textfield class="narrow" id="BorderWidthInput" onkeyup="forceInteger(this.id)"/>
               <text align="left" value="&pixels.label;"/>
             </box>
             <spring class="spacer"/>
             <box valign="middle" autostretch="never">
               <text class="MinWidth50" align="left" for="SpacingInput" value="&tableSpacing.label;"/>
-              <html:input type="text" id="SpacingInput" size="3" onkeyup="forceInteger(this.id)"/>
+              <textfield class="narrow" id="SpacingInput" onkeyup="forceInteger(this.id)"/>
               <text align="left" value="&tablePxBetwCells.label;"/>
             </box>
             <spring class="spacer"/>
             <box valign="middle" autostretch="never">
               <text class="MinWidth50" align="left" for="PaddingInput" value="&tablePadding.label;"/>
-              <html:input type="text" id="PaddingInput" size="3" onkeyup="forceInteger(this.id)"/>
+              <textfield class="narrow" id="PaddingInput" onkeyup="forceInteger(this.id)"/>
               <!-- Use DIV instead of TEXT because label has embeded <br> -->
               <html:div>&tablePxBetwBrdrCellContent.label;</html:div>
             </box>
@@ -112,19 +112,23 @@
             <box orient="vertical" flex="1">
               <text align="left" for="TableAlignSelect" value="&tableAlignment.label;"/>
               <spring class="smallspacer"/>
-              <html:select id="TableAlignSelect">
-                <html:option value="left">&AlignLeft.label;</html:option>
-                <html:option value="center">&AlignCenter.label;</html:option>
-                <html:option value="right">&AlignRight.label;</html:option>
-              </html:select>
+              <menulist id="TableAlignSelect">
+                <menupopup>
+                  <menuitem value="&AlignLeft.label;"   data="left"/>
+                  <menuitem value="&AlignCenter.label;" data="center"/>
+                  <menuitem value="&AlignRight.label;"  data="right"/>
+                </menupopup>
+              </menulist>
               <spring class="bigspacer"/>
               <text align="left" for="CaptionSelect" value="&tableCaption.label;"/>
               <spring class="smallspacer"/>
-              <html:select id="CaptionSelect" disabled="true">
-                <html:option>&tableCaptionNone.label;</html:option>
-                <html:option>&tableCaptionAbove.label;</html:option>
-                <html:option>&tableCaptionBelow.label;</html:option>
-              </html:select>
+              <menulist id="CaptionSelect" disabled="true">
+                <menupopup>
+                  <menuitem value="&tableCaptionNone.label;"/>
+                  <menuitem value="&tableCaptionAbove.label;"/>
+                  <menuitem value="&tableCaptionBelow.label;"/>
+                </menupopup>
+              </menulist>
               <spring flex="1"/>
             </box>
           </box>
@@ -139,7 +143,7 @@
                 <image class="popup-trigger"/>
               </box>
     	        <menupopup>
-                <colorpicker id="tableBackgroundCP" palettename="standard" oncommand="GetColorAndUpdate('tableBackgroundCP','tableBackgroundCW',this);"/>
+                <colorpicker id="tableBackgroundCP" palettename="standard" onclick="GetColorAndUpdate('tableBackgroundCP','tableBackgroundCW',this);"/>
                 <button class="dialog" value="&defaultColor.label;" oncommand="GetColorAndUpdate('tableBackgroundCP','tableBackgroundCW',this)"/>
     	        </menupopup>
             </menu>
@@ -149,7 +153,7 @@
           <spring class="spacer"/>
           <box valign="middle" autostretch="never">
             <text class="MinWidth50" align="left" for="TableImageInput" value="&image.label;"/>
-              <html:input type="text" id="TableImageInput" flex="1"/>
+              <textfield id="TableImageInput" flex="1"/>
               <button class="dialog" value="&ChooseImage.label;" id="TableImageButton" oncommand="ChooseCellImage()"/>
           </box>
 <!-- Not sure if we will support this
@@ -191,14 +195,14 @@
           <box orient="vertical">
             <box valign="middle" autostretch="never">
               <text class="MinWidth50" align="left" for="CellHeightInput" value="&tableHeight.label;"/>
-              <html:input type="text" id="CellHeightInput" size="5" onkeyup="forceInteger(this.id)"/>
-              <html:select id="CellHeightUnits"/>
+              <textfield class="narrow" id="CellHeightInput" onkeyup="forceInteger(this.id)"/>
+              <menulist id="CellHeightUnits"/>
             </box>
             <spring class="spacer"/>
             <box valign="middle" autostretch="never">
               <text class="MinWidth50" align="left" for="CellWidthInput" value="&tableWidth.label;"/>
-              <html:input type="text" id="CellWidthInput" size="5" onkeyup="forceInteger(this.id)"/>
-              <html:select id="CellWidthUnits"/>
+              <textfield class="narrow" id="CellWidthInput" onkeyup="forceInteger(this.id)"/>
+              <menulist id="CellWidthUnits"/>
             </box>
           </box>
           <spring class="bigspacer"/>
@@ -208,12 +212,12 @@
           </box>
           <box orient="vertical">
             <box valign="middle" autostretch="never">
-              <html:input type="text" id="RowSpanInput" size="4" onkeyup="forceInteger(this.id)"/>
+              <textfield class="narrow" id="RowSpanInput" onkeyup="forceInteger(this.id)"/>
               <text align="left" value="&cellSpanRows.label;"/>
             </box>
             <spring class="spacer"/>
             <box valign="middle" autostretch="never">
-              <html:input type="text" id="ColSpanInput" size="4" onkeyup="forceInteger(this.id)"/>
+              <textfield class="narrow" id="ColSpanInput" onkeyup="forceInteger(this.id)"/>
               <text align="left" value="&cellSpanCols.label;"/>
             </box>
           </box>
@@ -223,24 +227,28 @@
             <title><text align="left" value="&cellContentAlignment.label;"/></title>
             <box valign="top" autostretch="never">
               <text class="MinWidth70" align="right" for="CellHAlignSelect" value="&cellHorizontal.label;"/>
-              <html:select class="MinWidth100" id="CellHAlignSelect" oncommand="SelectCellHAlign()">
-                <html:option value="left">&AlignLeft.label;</html:option>
-                <html:option value="center">&AlignCenter.label;</html:option>
-                <html:option value="right">&AlignRight.label;</html:option>
-                <html:option value="justify">&cellAlignJustify.label;</html:option>
-                <html:option value="char">&cellAlignAtChar.label;</html:option>
-              </html:select>
+              <menulist class="MinWidth100" id="CellHAlignSelect">
+                <menupopup  oncommand="SelectCellHAlign()">
+                  <menuitem value="&AlignLeft.label;"        data="left"/>
+                  <menuitem value="&AlignCenter.label;"      data="center"/>
+                  <menuitem value="&AlignRight.label;"       data="right"/>
+                  <menuitem value="&cellAlignJustify.label;" data="justify"/>
+                  <menuitem value="&cellAlignAtChar.label;"  data="char"/>
+                </menupopup>
+              </menulist>
               <spring class="spacer"/>
-              <html:input id="CellAlignCharInput" size="2" maxlength="2" visibility="hidden"/>
+              <html:input style="width: 1em" id="CellAlignCharInput" maxlength="2" visibility="hidden"/>
             </box>
             <spring class="spacer"/>
             <box valign="top" autostretch="never">
               <text class="MinWidth70" align="right" for="CellVAlignSelect" value="&cellVertical.label;"/>
-              <html:select class="MinWidth100" id="CellVAlignSelect">
-                <html:option value="top">&cellAlignTop.label;</html:option>
-                <html:option value="middle">&cellAlignMiddle.label;</html:option>
-                <html:option value="bottom">&cellAlignBottom.label;</html:option>
-              </html:select>
+              <menulist class="MinWidth100" id="CellVAlignSelect">
+                <menupopup>
+                  <menuitem value="&cellAlignTop.label;"    data="top"/>
+                  <menuitem value="&cellAlignMiddle.label;" data="middle"/>
+                  <menuitem value="&cellAlignBottom.label;" data="bottom"/>
+                </menupopup>
+              </menulist>
             </box>
           </titledbox>
           <spring class="spacer"/>
@@ -266,7 +274,7 @@
               </box>
     	        <menupopup>
                 <colorpicker id="cellBackgroundCP" palettename="standard"
-                    oncommand="GetColorAndUpdate('cellBackgroundCP','cellBackgroundCW',this)"/>
+                    onclick="GetColorAndUpdate('cellBackgroundCP','cellBackgroundCW',this)"/>
                 <button class="dialog" value="&defaultColor.label;"
                     oncommand="GetColorAndUpdate('cellBackgroundCP','cellBackgroundCW',this)"/>
     	        </menupopup>
@@ -277,7 +285,7 @@
           <spring class="spacer"/>
           <box valign="middle" autostretch="never">
             <text class="MinWidth50" align="left" for="CellImageInput" value="&image.label;" />
-            <html:input type="text" id="CellImageInput" flex="1"/>
+            <textfield id="CellImageInput" flex="1"/>
             <button class="dialog" value="&ChooseImage.label;" id="CellImageButton" oncommand="ChooseCellImage()"/>
           </box>
 <!-- Not sure if we will support this
