@@ -28,5 +28,6 @@ interface nsIDebugPlugin : nsISupports {
   void DumpLayout(in nsISupports aWindow,in wstring aFilePath,in wstring aFileName,[retval] out long aResult );
   void StartDirectorySearch(in string aFilePath);
   void GetNextFileInDirectory([retval] out string aFileName);
+  void CompareLayoutFiles(in wstring aBasePath,in wstring aVerPath,in wstring aBaseFile,in wstring aVerFile,in unsigned long aFlags,[retval] out long aResult);
 
 };

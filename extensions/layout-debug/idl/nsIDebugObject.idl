@@ -50,6 +50,13 @@ interface nsIDebugObject : nsISupports
    */
   void DumpContent(in nsISupports aUrlToDump,in wstring aFilePath,in wstring aFileName);
 
+  /**
+   * Compares the contents of frame model files
+   * @param 
+   * @param 
+   */
+  void CompareFrameModels(in wstring aBasePath,in wstring aVerPath,in wstring aBaseFile,in wstring aVerFile, in unsigned long aFlags);
+
 };
 
 
