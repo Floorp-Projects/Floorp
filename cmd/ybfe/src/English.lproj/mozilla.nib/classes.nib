@@ -1,0 +1,17 @@
+{
+    IBClasses = (
+        {
+            ACTIONS = {showHelp = id; }; 
+            CLASS = FirstResponder; 
+            LANGUAGE = ObjC; 
+            SUPERCLASS = NSObject; 
+        }, 
+        {
+            CLASS = InfoPanelController; 
+            LANGUAGE = ObjC; 
+            SUPERCLASS = NSWindowController; 
+        }, 
+        {CLASS = STEController; LANGUAGE = ObjC; SUPERCLASS = NSDocumentController; }
+    ); 
+    IBVersion = 1; 
+}

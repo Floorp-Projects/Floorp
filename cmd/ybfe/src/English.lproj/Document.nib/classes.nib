@@ -1,0 +1,8 @@
+{
+    IBClasses = (
+        {CLASS = Document; LANGUAGE = ObjC; SUPERCLASS = NSDocument; }, 
+        {CLASS = FirstResponder; LANGUAGE = ObjC; SUPERCLASS = NSObject; }, 
+        {CLASS = MySound; LANGUAGE = ObjC; SUPERCLASS = Sound; }
+    ); 
+    IBVersion = 1; 
+}
