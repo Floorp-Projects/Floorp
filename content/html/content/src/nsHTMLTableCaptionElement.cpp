@@ -192,9 +192,7 @@ MapAttributesInto(const nsIHTMLMappedAttributes* aAttributes,
 
     if (value.GetUnit() == eHTMLUnit_Enumerated) {
       PRUint8 align = value.GetIntValue();
-      nsStyleTable* tableStyle = (nsStyleTable*)
-        aContext->GetMutableStyleData(eStyleStruct_Table);
-
+      nsMutableStyleTable tableStyle(aContext);
       tableStyle->mCaptionSide = align;
     }
   }

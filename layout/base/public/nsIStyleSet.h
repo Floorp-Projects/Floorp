@@ -44,11 +44,15 @@ class nsISizeOfHandler;
 
 class nsICSSPseudoComparator;
 
-#define SHARE_STYLECONTEXTS
+//#define SHARE_STYLECONTEXTS
 
 #ifdef SHARE_STYLECONTEXTS
-#include "nsHashtable.h"
+#define USE_FAST_CACHE
+// - Fast cache uses a CRC32 on the style context to quickly find sharing candidates.
+//   Enabling it by defining USE_FAST_CACHE makes style sharing significantly faster
+//   but introduces more code and logic, and is thus potentially more error-prone
 #endif
+
 
 // IID for the nsIStyleSet interface {e59396b0-b244-11d1-8031-006008159b5a}
 #define NS_ISTYLE_SET_IID     \

@@ -233,14 +233,12 @@ MapAttributesInto(const nsIHTMLMappedAttributes* aAttributes,
 
   if (nsnull != aAttributes) {
     nsHTMLValue value;
-    nsStyleText* textStyle = nsnull;
 
     // width
     aAttributes->GetAttribute(nsHTMLAtoms::width, value);
 
     if (value.GetUnit() != eHTMLUnit_Null) {
-      nsStylePosition* position = (nsStylePosition*)
-        aContext->GetMutableStyleData(eStyleStruct_Position);
+      nsMutableStylePosition position(aContext);
       switch (value.GetUnit()) {
       case eHTMLUnit_Percent:
         position->mWidth.SetPercentValue(value.GetPercentValue());
@@ -262,21 +260,34 @@ MapAttributesInto(const nsIHTMLMappedAttributes* aAttributes,
       }
     }
 
+    PRUint8      newTextAlign;
+    nsStyleCoord newVerticalAlign;
+    PRBool       changedTextAlign = PR_FALSE;
+    PRBool       changedVerticalAlign = PR_FALSE;
+
     // align: enum
     aAttributes->GetAttribute(nsHTMLAtoms::align, value);
     if (value.GetUnit() == eHTMLUnit_Enumerated) 
     {
-      textStyle = (nsStyleText*)aContext->GetMutableStyleData(eStyleStruct_Text);
-      textStyle->mTextAlign = value.GetIntValue();
+      newTextAlign = value.GetIntValue();
+      changedTextAlign = PR_TRUE;
     }
     
     // valign: enum
     aAttributes->GetAttribute(nsHTMLAtoms::valign, value);
     if (value.GetUnit() == eHTMLUnit_Enumerated) {
-      if (nsnull==textStyle)
-        textStyle = (nsStyleText*)aContext->GetMutableStyleData(eStyleStruct_Text);
-      textStyle->mVerticalAlign.SetIntValue(value.GetIntValue(),
-                                            eStyleUnit_Enumerated);
+      newVerticalAlign.SetIntValue(value.GetIntValue(), eStyleUnit_Enumerated);
+      changedVerticalAlign = PR_TRUE;
+    }
+
+    if (changedTextAlign || changedVerticalAlign) {
+      nsMutableStyleText text(aContext);
+      if (changedTextAlign) {
+        text->mTextAlign = newTextAlign;
+      }
+      if (changedVerticalAlign) {
+        text->mVerticalAlign = newVerticalAlign;
+      }
     }
   }
 

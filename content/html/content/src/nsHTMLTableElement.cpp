@@ -1151,10 +1151,8 @@ MapTableBorderInto(const nsIHTMLMappedAttributes* aAttributes,
   }
 
   if (borderValue.GetUnit() != eHTMLUnit_Null) {
-    nsStyleBorder* border = (nsStyleBorder*)
-      aContext->GetMutableStyleData(eStyleStruct_Border);
-    nsStyleTable *tableStyle = (nsStyleTable*)
-      aContext->GetMutableStyleData(eStyleStruct_Table);
+    nsMutableStyleBorder border(aContext);
+    nsMutableStyleTable tableStyle(aContext);
     nsStyleCoord twips;
     float p2t;
 
@@ -1188,7 +1186,7 @@ MapTableBorderInto(const nsIHTMLMappedAttributes* aAttributes,
     border->mBorder.SetBottom(twips);
     border->mBorder.SetLeft(twips);
     // then account for the frame attribute
-    MapTableFrameInto(aAttributes, aContext, aPresContext, border,
+    MapTableFrameInto(aAttributes, aContext, aPresContext, border.get(),
                       aBorderStyle);
   }
 }
@@ -1219,7 +1217,7 @@ MapAttributesInto(const nsIHTMLMappedAttributes* aAttributes,
         aPresContext->GetPixelsToTwips(&p2t);
 
         nscoord onePixel = NSIntPixelsToTwips(1, p2t);
-        nsStyleBorder* borderStyleData = (nsStyleBorder*)aContext->GetMutableStyleData(eStyleStruct_Border);
+        nsMutableStyleBorder borderStyleData(aContext);
         nsStyleCoord width;
         width.SetCoordValue(onePixel);
 
@@ -1246,8 +1244,7 @@ MapAttributesInto(const nsIHTMLMappedAttributes* aAttributes,
       aAttributes->GetAttribute(nsHTMLAtoms::width, value);
 
       if (value.GetUnit() != eHTMLUnit_Null) {
-        nsStylePosition* position = (nsStylePosition*)
-          aContext->GetMutableStyleData(eStyleStruct_Position);
+        nsMutableStylePosition position(aContext);
 
         switch (value.GetUnit()) {
         case eHTMLUnit_Percent:
@@ -1273,8 +1270,7 @@ MapAttributesInto(const nsIHTMLMappedAttributes* aAttributes,
       aAttributes->GetAttribute(nsHTMLAtoms::height, value);
 
       if (value.GetUnit() != eHTMLUnit_Null) {
-        nsStylePosition* position = (nsStylePosition*)
-          aContext->GetMutableStyleData(eStyleStruct_Position);
+        nsMutableStylePosition position(aContext);
         switch (value.GetUnit()) {
         case eHTMLUnit_Percent:
           position->mHeight.SetPercentValue(value.GetPercentValue());
@@ -1288,11 +1284,6 @@ MapAttributesInto(const nsIHTMLMappedAttributes* aAttributes,
           break;
         }
       }
-
-      nsStyleBorder* borderStyleData = (nsStyleBorder*)
-        aContext->GetMutableStyleData(eStyleStruct_Border);
-      nsStyleMargin* marginStyleData = (nsStyleMargin*)
-        aContext->GetMutableStyleData(eStyleStruct_Margin);
 
       // default border style is the Nav4.6 extension which uses the
       // background color as the basis of the outset border. If the
@@ -1314,6 +1305,7 @@ MapAttributesInto(const nsIHTMLMappedAttributes* aAttributes,
       if ((eHTMLUnit_Color == value.GetUnit()) ||
           (eHTMLUnit_ColorName == value.GetUnit())) {
         nscolor color = value.GetColorValue();
+        nsMutableStyleBorder borderStyleData(aContext);
         borderStyleData->SetBorderColor(0, color);
         borderStyleData->SetBorderColor(1, color);
         borderStyleData->SetBorderColor(2, color);
@@ -1326,6 +1318,7 @@ MapAttributesInto(const nsIHTMLMappedAttributes* aAttributes,
 
       // align; Check for enumerated type (it may be another type if
       // illegal)
+      nsMutableStyleMargin marginStyleData(aContext);
       aAttributes->GetAttribute(nsHTMLAtoms::align, value);
 
       if (value.GetUnit() == eHTMLUnit_Enumerated) {
@@ -1336,8 +1329,7 @@ MapAttributesInto(const nsIHTMLMappedAttributes* aAttributes,
           marginStyleData->mMargin.SetRight(otto);
         }
         else {
-          nsStyleDisplay* display = (nsStyleDisplay*)
-            aContext->GetMutableStyleData(eStyleStruct_Display);
+          nsMutableStyleDisplay display(aContext);
 
           switch (value.GetIntValue()) {
           case NS_STYLE_TEXT_ALIGN_LEFT:
@@ -1353,25 +1345,22 @@ MapAttributesInto(const nsIHTMLMappedAttributes* aAttributes,
         }
       }
 
+    {
+      nsMutableStyleTable tableStyle(aContext);
+
       // layout
-      nsStyleTable* tableStyle=nsnull;
       aAttributes->GetAttribute(nsHTMLAtoms::layout, value);
 
       if (value.GetUnit() == eHTMLUnit_Enumerated) {
         // it may be another type if illegal
-        tableStyle = (nsStyleTable*)aContext->GetMutableStyleData(eStyleStruct_Table);
         tableStyle->mLayoutStrategy = value.GetIntValue();
       }
 
       // cellpadding
       aAttributes->GetAttribute(nsHTMLAtoms::cellpadding, value);
       if (value.GetUnit() == eHTMLUnit_Pixel) {
-        if (nsnull==tableStyle)
-          tableStyle = (nsStyleTable*)aContext->GetMutableStyleData(eStyleStruct_Table);
         tableStyle->mCellPadding.SetCoordValue(NSIntPixelsToTwips(value.GetPixelValue(), sp2t));
       } else if (value.GetUnit() == eHTMLUnit_Percent) {
-        if (!tableStyle)
-          tableStyle = (nsStyleTable*)aContext->GetMutableStyleData(eStyleStruct_Table);
         tableStyle->mCellPadding.SetPercentValue(value.GetPercentValue());
       }
 
@@ -1380,8 +1369,6 @@ MapAttributesInto(const nsIHTMLMappedAttributes* aAttributes,
       aAttributes->GetAttribute(nsHTMLAtoms::cellspacing, value);
 
       if (value.GetUnit() == eHTMLUnit_Pixel) {
-        if (nsnull==tableStyle)
-          tableStyle = (nsStyleTable*)aContext->GetMutableStyleData(eStyleStruct_Table);
         tableStyle->mBorderSpacingX.SetCoordValue(NSIntPixelsToTwips(value.GetPixelValue(), sp2t));
         tableStyle->mBorderSpacingY.SetCoordValue(NSIntPixelsToTwips(value.GetPixelValue(), sp2t));
       }
@@ -1390,8 +1377,6 @@ MapAttributesInto(const nsIHTMLMappedAttributes* aAttributes,
       aAttributes->GetAttribute(nsHTMLAtoms::cols, value);
 
       if (value.GetUnit() != eHTMLUnit_Null) {
-        if (!tableStyle)
-          tableStyle = (nsStyleTable*)aContext->GetMutableStyleData(eStyleStruct_Table);
         if (value.GetUnit() == eHTMLUnit_Integer)
           tableStyle->mCols = value.GetIntValue();
         else // COLS had no value, so it refers to all columns
@@ -1402,8 +1387,6 @@ MapAttributesInto(const nsIHTMLMappedAttributes* aAttributes,
       aAttributes->GetAttribute(nsHTMLAtoms::rules, value);
 
       if (value.GetUnit() == eHTMLUnit_Enumerated) {
-        if (nsnull==tableStyle)
-          tableStyle = (nsStyleTable*)aContext->GetMutableStyleData(eStyleStruct_Table);
         tableStyle->mRules = value.GetIntValue();
       }
 
@@ -1430,6 +1413,7 @@ MapAttributesInto(const nsIHTMLMappedAttributes* aAttributes,
           marginStyleData->mMargin.SetBottom(vspace);
         }
       }
+    }
 
       //background: color
       nsGenericHTMLElement::MapBackgroundAttributesInto(aAttributes, aContext,

@@ -207,8 +207,7 @@ MapAttributesInto(const nsIHTMLMappedAttributes* aAttributes,
     aAttributes->GetAttribute(nsHTMLAtoms::align, value);
     if (eHTMLUnit_Enumerated == value.GetUnit()) {
       // Map align attribute into auto side margins
-      nsStyleMargin* margin = (nsStyleMargin*)
-        aContext->GetMutableStyleData(eStyleStruct_Margin);
+      nsMutableStyleMargin margin(aContext);
       nsStyleCoord otto(eStyleUnit_Auto);
       nsStyleCoord zero(nscoord(0));
       switch (value.GetIntValue()) {
@@ -230,8 +229,7 @@ MapAttributesInto(const nsIHTMLMappedAttributes* aAttributes,
     // width: pixel, percent
     float p2t;
     aPresContext->GetScaledPixelsToTwips(&p2t);
-    nsStylePosition* pos = (nsStylePosition*)
-      aContext->GetMutableStyleData(eStyleStruct_Position);
+    nsMutableStylePosition pos(aContext);
     aAttributes->GetAttribute(nsHTMLAtoms::width, value);
     if (eHTMLUnit_Pixel == value.GetUnit()) {
       nscoord twips = NSIntPixelsToTwips(value.GetPixelValue(), p2t);

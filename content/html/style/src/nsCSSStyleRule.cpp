@@ -1790,7 +1790,7 @@ CSSStyleRuleImpl::MapStyleInto(nsIMutableStyleContext* aContext, nsIPresContext*
   return NS_OK;
 }
 
-nsString& Unquote(nsString& aString)
+static nsString& Unquote(nsString& aString)
 {
   PRUnichar start = aString.First();
   PRUnichar end = aString.Last();
@@ -1811,8 +1811,8 @@ MapDeclarationFontInto(nsICSSDeclaration* aDeclaration,
 {
   if (nsnull != aDeclaration) {
     nsIStyleContext* parentContext = aContext->GetParent();
-    nsStyleFont*  font = (nsStyleFont*)aContext->GetMutableStyleData(eStyleStruct_Font);
-    const nsStyleFont* parentFont = font;
+    nsMutableStyleFont font(aContext);
+    const nsStyleFont* parentFont = font.get();
     if (nsnull != parentContext) {
       parentFont = (const nsStyleFont*)parentContext->GetStyleData(eStyleStruct_Font);
     }
@@ -2104,8 +2104,8 @@ MapDeclarationTextInto(nsICSSDeclaration* aDeclaration,
   if (NS_OK == aDeclaration->GetData(kCSSTextSID, (nsCSSStruct**)&ourText)) {
     if (nsnull != ourText) {
       // Get our text style and our parent's text style
-      nsStyleText* text = (nsStyleText*) aContext->GetMutableStyleData(eStyleStruct_Text);
-      const nsStyleText* parentText = text;
+      nsMutableStyleText text(aContext);
+      const nsStyleText* parentText = text.get();
       if (nsnull != aParentContext) {
         parentText = (const nsStyleText*)aParentContext->GetStyleData(eStyleStruct_Text);
       }
@@ -2209,10 +2209,8 @@ MapDeclarationDisplayInto(nsICSSDeclaration* aDeclaration,
   if (NS_OK == aDeclaration->GetData(kCSSDisplaySID, (nsCSSStruct**)&ourDisplay)) {
     if (nsnull != ourDisplay) {
       // Get our style and our parent's style
-      nsStyleDisplay* display = (nsStyleDisplay*)
-        aContext->GetMutableStyleData(eStyleStruct_Display);
-
-      const nsStyleDisplay* parentDisplay = display;
+      nsMutableStyleDisplay display(aContext);
+      const nsStyleDisplay* parentDisplay = display.get();
       if (nsnull != aParentContext) {
         parentDisplay = (const nsStyleDisplay*)aParentContext->GetStyleData(eStyleStruct_Display);
       }
@@ -2349,9 +2347,8 @@ MapDeclarationColorInto(nsICSSDeclaration* aDeclaration,
   nsCSSColor*  ourColor;
   if (NS_OK == aDeclaration->GetData(kCSSColorSID, (nsCSSStruct**)&ourColor)) {
     if (nsnull != ourColor) {
-      nsStyleColor* color = (nsStyleColor*)aContext->GetMutableStyleData(eStyleStruct_Color);
-
-      const nsStyleColor* parentColor = color;
+      nsMutableStyleColor color(aContext);
+      const nsStyleColor* parentColor = color.get();
       if (nsnull != aParentContext) {
         parentColor = (const nsStyleColor*)aParentContext->GetStyleData(eStyleStruct_Color);
       }
@@ -2520,15 +2517,15 @@ MapDeclarationMarginInto(nsICSSDeclaration* aDeclaration,
   nsCSSMargin*  ourMargin;
   if (NS_OK == aDeclaration->GetData(kCSSMarginSID, (nsCSSStruct**)&ourMargin)) {
     if (nsnull != ourMargin) {
-      nsStyleMargin* margin = (nsStyleMargin*)aContext->GetMutableStyleData(eStyleStruct_Margin);
-      nsStylePadding* padding = (nsStylePadding*)aContext->GetMutableStyleData(eStyleStruct_Padding);
-      nsStyleBorder* border = (nsStyleBorder*)aContext->GetMutableStyleData(eStyleStruct_Border);
-      nsStyleOutline* outline = (nsStyleOutline*)aContext->GetMutableStyleData(eStyleStruct_Outline);
+      nsMutableStyleMargin margin(aContext);
+      nsMutableStylePadding padding(aContext);
+      nsMutableStyleBorder border(aContext);
+      nsMutableStyleOutline outline(aContext);
 
-      const nsStyleMargin* parentMargin = margin;
-      const nsStylePadding* parentPadding = padding;
-      const nsStyleBorder* parentBorder = border;
-      const nsStyleOutline* parentOutline = outline;
+      const nsStyleMargin* parentMargin = margin.get();
+      const nsStylePadding* parentPadding = padding.get();
+      const nsStyleBorder* parentBorder = border.get();
+      const nsStyleOutline* parentOutline = outline.get();
       if (nsnull != aParentContext) {
         parentMargin = (const nsStyleMargin*)aParentContext->GetStyleData(eStyleStruct_Margin);
         parentPadding = (const nsStylePadding*)aParentContext->GetStyleData(eStyleStruct_Padding);
@@ -2853,9 +2850,8 @@ MapDeclarationPositionInto(nsICSSDeclaration* aDeclaration,
   nsCSSPosition*  ourPosition;
   if (NS_OK == aDeclaration->GetData(kCSSPositionSID, (nsCSSStruct**)&ourPosition)) {
     if (nsnull != ourPosition) {
-      nsStylePosition* position = (nsStylePosition*)aContext->GetMutableStyleData(eStyleStruct_Position);
-
-      const nsStylePosition* parentPosition = position;
+      nsMutableStylePosition position(aContext);
+      const nsStylePosition* parentPosition = position.get();
       if (nsnull != aParentContext) {
         parentPosition = (const nsStylePosition*)aParentContext->GetStyleData(eStyleStruct_Position);
       }
@@ -2940,9 +2936,8 @@ MapDeclarationListInto(nsICSSDeclaration* aDeclaration,
   nsCSSList* ourList;
   if (NS_OK == aDeclaration->GetData(kCSSListSID, (nsCSSStruct**)&ourList)) {
     if (nsnull != ourList) {
-      nsStyleList* list = (nsStyleList*)aContext->GetMutableStyleData(eStyleStruct_List);
-
-      const nsStyleList* parentList = list;
+      nsMutableStyleList list(aContext);
+      const nsStyleList* parentList = list.get();
       if (nsnull != aParentContext) {
         parentList = (const nsStyleList*)aParentContext->GetStyleData(eStyleStruct_List);
       }
@@ -2988,9 +2983,8 @@ MapDeclarationTableInto(nsICSSDeclaration* aDeclaration,
   nsCSSTable* ourTable;
   if (NS_OK == aDeclaration->GetData(kCSSTableSID, (nsCSSStruct**)&ourTable)) {
     if (nsnull != ourTable) {
-      nsStyleTable* table = (nsStyleTable*)aContext->GetMutableStyleData(eStyleStruct_Table);
-
-      const nsStyleTable* parentTable = table;
+      nsMutableStyleTable table(aContext);
+      const nsStyleTable* parentTable = table.get();
       if (nsnull != aParentContext) {
         parentTable = (const nsStyleTable*)aParentContext->GetStyleData(eStyleStruct_Table);
       }
@@ -3057,9 +3051,8 @@ MapDeclarationContentInto(nsICSSDeclaration* aDeclaration,
   nsCSSContent* ourContent;
   if (NS_OK == aDeclaration->GetData(kCSSContentSID, (nsCSSStruct**)&ourContent)) {
     if (ourContent) {
-      nsStyleContent* content = (nsStyleContent*)aContext->GetMutableStyleData(eStyleStruct_Content);
-
-      const nsStyleContent* parentContent = content;
+      nsMutableStyleContent content(aContext);
+      const nsStyleContent* parentContent = content.get();
       if (nsnull != aParentContext) {
         parentContent = (const nsStyleContent*)aParentContext->GetStyleData(eStyleStruct_Content);
       }
@@ -3265,8 +3258,8 @@ MapDeclarationUIInto(nsICSSDeclaration* aDeclaration,
   if (NS_OK == aDeclaration->GetData(kCSSUserInterfaceSID, (nsCSSStruct**)&ourUI)) {
     if (nsnull != ourUI) {
       // Get our user interface style and our parent's user interface style
-      nsStyleUserInterface* ui = (nsStyleUserInterface*) aContext->GetMutableStyleData(eStyleStruct_UserInterface);
-      const nsStyleUserInterface* parentUI = ui;
+      nsMutableStyleUserInterface ui(aContext);
+      const nsStyleUserInterface* parentUI = ui.get();
       if (nsnull != aParentContext) {
         parentUI = (const nsStyleUserInterface*)aParentContext->GetStyleData(eStyleStruct_UserInterface);
       }
@@ -3367,8 +3360,8 @@ MapDeclarationPrintInto(nsICSSDeclaration* aDeclaration,
                        nsIMutableStyleContext* aContext, nsIStyleContext* aParentContext,
                        nsStyleFont* aFont, nsIPresContext* aPresContext)
 {
-  nsStylePrint* print = (nsStylePrint*)aContext->GetMutableStyleData(eStyleStruct_Print);
-  const nsStylePrint* parentPrint = print;
+  nsMutableStylePrint print(aContext);
+  const nsStylePrint* parentPrint = print.get();
   if (nsnull != aParentContext) {
     parentPrint = (const nsStylePrint*)aParentContext->GetStyleData(eStyleStruct_Print);
   }
@@ -3456,9 +3449,8 @@ MapDeclarationXULInto(nsICSSDeclaration* aDeclaration,
   nsCSSXUL*  ourXUL;
   if (NS_OK == aDeclaration->GetData(kCSSXULSID, (nsCSSStruct**)&ourXUL)) {
     if (nsnull != ourXUL) {
-      nsStyleXUL* xul = (nsStyleXUL*)aContext->GetMutableStyleData(eStyleStruct_XUL);
-
-      const nsStyleXUL* parentXUL = xul;
+      nsMutableStyleXUL xul(aContext);
+      const nsStyleXUL* parentXUL = xul.get();
       if (nsnull != aParentContext) {
         parentXUL = (const nsStyleXUL*)aParentContext->GetStyleData(eStyleStruct_XUL);
       }
@@ -3480,7 +3472,8 @@ void MapDeclarationInto(nsICSSDeclaration* aDeclaration,
 {
   if (nsnull != aDeclaration) {
     nsIStyleContext* parentContext = aContext->GetParent();
-    nsStyleFont* font = (nsStyleFont*)aContext->GetMutableStyleData(eStyleStruct_Font);
+    nsMutableStyleFont mutableFont(aContext);
+    nsStyleFont* font = mutableFont.get();
 
     MapDeclarationTextInto(aDeclaration, aContext, parentContext, font, aPresContext);
     MapDeclarationDisplayInto(aDeclaration, aContext, parentContext, font, aPresContext);

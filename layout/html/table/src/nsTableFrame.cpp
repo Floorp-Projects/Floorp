@@ -26,6 +26,7 @@
 #include "nsTableBorderCollapser.h"
 #include "nsIRenderingContext.h"
 #include "nsIStyleContext.h"
+#include "nsIMutableStyleContext.h"
 #include "nsStyleConsts.h"
 #include "nsIContent.h"
 #include "nsCellMap.h"
@@ -668,16 +669,18 @@ void nsTableFrame::ProcessGroupRules(nsIPresContext* aPresContext)
           if (originates) {
             nsCOMPtr<nsIStyleContext> styleContext;
             cell->GetStyleContext(getter_AddRefs(styleContext));
-            nsStyleBorder* border = (nsStyleBorder*)styleContext->GetMutableStyleData(eStyleStruct_Border);
-            if (rowX == startRow) { 
-              border->SetBorderStyle(NS_SIDE_BOTTOM, NS_STYLE_BORDER_STYLE_NONE);
-            }
-            else if (rowX == endRow) { 
-              border->SetBorderStyle(NS_SIDE_TOP, NS_STYLE_BORDER_STYLE_NONE);
-            }
-            else {
-              border->SetBorderStyle(NS_SIDE_TOP, NS_STYLE_BORDER_STYLE_NONE);
-              border->SetBorderStyle(NS_SIDE_BOTTOM, NS_STYLE_BORDER_STYLE_NONE);
+            {
+              nsMutableStyleBorder border(styleContext);
+              if (rowX == startRow) { 
+                border->SetBorderStyle(NS_SIDE_BOTTOM, NS_STYLE_BORDER_STYLE_NONE);
+              }
+              else if (rowX == endRow) { 
+                border->SetBorderStyle(NS_SIDE_TOP, NS_STYLE_BORDER_STYLE_NONE);
+              }
+              else {
+                border->SetBorderStyle(NS_SIDE_TOP, NS_STYLE_BORDER_STYLE_NONE);
+                border->SetBorderStyle(NS_SIDE_BOTTOM, NS_STYLE_BORDER_STYLE_NONE);
+              }
             }
             styleContext->RecalcAutomaticData(aPresContext);
           }
@@ -3707,7 +3710,7 @@ void nsTableFrame::MapBorderMarginPadding(nsIPresContext* aPresContext)
   if (!table)
     return;
 
-  nsStyleBorder* borderData = (nsStyleBorder*)mStyleContext->GetMutableStyleData(eStyleStruct_Border);
+  nsMutableStyleBorder borderData(mStyleContext);
 
   border_result = table->GetAttribute(nsHTMLAtoms::border,border_value);
   if (border_result == NS_CONTENT_ATTR_HAS_VALUE)

@@ -188,8 +188,7 @@ MapAttributesInto(const nsIHTMLMappedAttributes* aAttributes,
 {
   if (nsnull != aAttributes) {
     nsHTMLValue value;
-    nsStyleList* list = (nsStyleList*)
-      aContext->GetMutableStyleData(eStyleStruct_List);
+    nsMutableStyleList list(aContext);
 
     // type: enum
     aAttributes->GetAttribute(nsHTMLAtoms::type, value);

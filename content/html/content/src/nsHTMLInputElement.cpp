@@ -1361,10 +1361,8 @@ MapAttributesInto(const nsIHTMLMappedAttributes* aAttributes,
 
   aAttributes->GetAttribute(nsHTMLAtoms::align, value);
   if (eHTMLUnit_Enumerated == value.GetUnit()) {
-    nsStyleDisplay* display = (nsStyleDisplay*)
-      aContext->GetMutableStyleData(eStyleStruct_Display);
-    nsStyleText* text = (nsStyleText*)
-      aContext->GetMutableStyleData(eStyleStruct_Text);
+    nsMutableStyleDisplay display(aContext);
+    nsMutableStyleText text(aContext);
     switch (value.GetIntValue()) {
     case NS_STYLE_TEXT_ALIGN_LEFT:
       display->mFloats = NS_STYLE_FLOAT_LEFT;
@@ -1394,7 +1392,7 @@ MapAttributesInto(const nsIHTMLMappedAttributes* aAttributes,
         nscoord pad = NSIntPixelsToTwips(3, p2t);
 
         // add left and right padding around the radio button via css
-        nsStyleMargin* margin = (nsStyleMargin*) aContext->GetMutableStyleData(eStyleStruct_Margin);
+	      nsMutableStyleMargin margin(aContext);
         if (eStyleUnit_Null == margin->mMargin.GetLeftUnit()) {
           nsStyleCoord left(pad);
           margin->mMargin.SetLeft(left);

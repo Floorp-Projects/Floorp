@@ -573,10 +573,8 @@ MapAttributesInto(const nsIHTMLMappedAttributes* aAttributes,
     aAttributes->GetAttribute(nsHTMLAtoms::align, value);
     if (value.GetUnit() == eHTMLUnit_Enumerated) {
       PRUint8 align = value.GetIntValue();
-      nsStyleDisplay* display = (nsStyleDisplay*)
-        aContext->GetMutableStyleData(eStyleStruct_Display);
-      nsStyleText* text = (nsStyleText*)
-        aContext->GetMutableStyleData(eStyleStruct_Text);
+      nsMutableStyleDisplay display(aContext);
+      nsMutableStyleText text(aContext);
       switch (align) {
       case NS_STYLE_TEXT_ALIGN_LEFT:
         display->mFloats = NS_STYLE_FLOAT_LEFT;

@@ -182,8 +182,7 @@ MapAttributesInto(const nsIHTMLMappedAttributes* aAttributes,
     nsHTMLValue value;
     aAttributes->GetAttribute(nsHTMLAtoms::align, value);
     if (value.GetUnit() == eHTMLUnit_Enumerated) {
-      nsStyleText* text = (nsStyleText*)
-        aContext->GetMutableStyleData(eStyleStruct_Text);
+      nsMutableStyleText text(aContext);
       text->mTextAlign = value.GetIntValue();
     }
   }

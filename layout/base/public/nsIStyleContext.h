@@ -44,6 +44,7 @@ class nsIFrame;
 class nsIPresContext;
 class nsISupportsArray;
 class nsIStyleContext;
+class nsAutoStyleStruct;
 
 
 inline void CalcSidesFor(const nsIFrame* aFrame, const nsStyleSides& aSides, 
@@ -51,8 +52,6 @@ inline void CalcSidesFor(const nsIFrame* aFrame, const nsStyleSides& aSides,
                          const nscoord* aEnumTable, PRInt32 aNumEnums,
                          nsMargin& aResult);
 
-
-#define SHARE_STYLECONTEXTS
 
 // The lifetime of these objects is managed by the nsIStyleContext.
 
@@ -70,9 +69,13 @@ struct nsStyleFont : public nsStyleStruct {
   PRUint8 mFlags;       // [inherited] See nsStyleConsts.h
 
 protected:
-  nsStyleFont(const nsFont& aVariableFont, const nsFont& aFixedFont);
+  nsStyleFont(const nsFont& aVariableFont, const nsFont& aFixedFont)
+  : mFont(aVariableFont),
+    mFixedFont(aFixedFont)
+  {}
   nsStyleFont(nsIPresContext* aPresContext);
 };
+
 
 struct nsStyleColor : public nsStyleStruct {
   nsStyleColor(void) {}
@@ -133,6 +136,7 @@ struct nsStyleMargin: public nsStyleStruct {
     }
   }
 
+friend class StyleMarginBlob;
 protected:
   PRPackedBool  mHasCachedMargin;
   nsMargin      mCachedMargin;
@@ -164,6 +168,7 @@ struct nsStylePadding: public nsStyleStruct {
     }
   }
 
+friend class StylePaddingBlob;
 protected:
   PRPackedBool  mHasCachedPadding;
   nsMargin      mCachedPadding;
@@ -242,6 +247,7 @@ struct nsStyleBorder: public nsStyleStruct {
     }
   }
 
+friend class StyleBorderBlob;
 protected:
   PRPackedBool  mHasCachedBorder;
   nsMargin      mCachedBorder;
@@ -328,6 +334,7 @@ struct nsStyleOutline: public nsStyleStruct {
     mOutlineStyle |= (BORDER_COLOR_DEFINED | BORDER_COLOR_SPECIAL);
   }
 
+friend class StyleOutlineBlob;
 protected:
   PRPackedBool  mHasCachedOutline;
   nscoord       mCachedOutlineWidth;
@@ -341,8 +348,8 @@ protected:
 
 
 struct nsStyleList : public nsStyleStruct {
-  nsStyleList(void);
-  ~nsStyleList(void);
+  nsStyleList(void) {};
+  ~nsStyleList(void) {};
 
   PRUint8   mListStyleType;             // [inherited] See nsStyleConsts.h
   PRUint8   mListStylePosition;         // [inherited] 
@@ -350,8 +357,8 @@ struct nsStyleList : public nsStyleStruct {
 };
 
 struct nsStylePosition : public nsStyleStruct {
-  nsStylePosition(void);
-  ~nsStylePosition(void);
+  nsStylePosition(void) {};
+  ~nsStylePosition(void) {};
 
   PRUint8   mPosition;                  // [reset] see nsStyleConsts.h
 
@@ -374,8 +381,8 @@ struct nsStylePosition : public nsStyleStruct {
 };
 
 struct nsStyleText : public nsStyleStruct {
-  nsStyleText(void);
-  ~nsStyleText(void);
+  nsStyleText(void) {};
+  ~nsStyleText(void) {};
 
   PRUint8 mTextAlign;                   // [inherited] see nsStyleConsts.h
   PRUint8 mTextDecoration;              // [reset] see nsStyleConsts.h
@@ -442,8 +449,8 @@ struct nsStyleDisplay : public nsStyleStruct {
 };
 
 struct nsStyleTable: public nsStyleStruct {
-  nsStyleTable(void);
-  ~nsStyleTable(void);
+  nsStyleTable(void) {};
+  ~nsStyleTable(void) {};
 
   PRUint8       mLayoutStrategy;// [reset] see nsStyleConsts.h NS_STYLE_TABLE_LAYOUT_*
   PRUint8       mFrame;         // [reset] see nsStyleConsts.h NS_STYLE_TABLE_FRAME_*
@@ -485,8 +492,24 @@ struct nsStyleCounterData {
 #define DELETE_ARRAY_IF(array)  if (array) { delete[] array; array = nsnull; }
 
 struct nsStyleContent: public nsStyleStruct {
-  nsStyleContent(void);
-  ~nsStyleContent(void);
+  nsStyleContent(void) {
+    //mMarkerOffset(),
+    mContentCount = 0;
+    mContents = nsnull;
+    mIncrementCount = 0;
+    mIncrements = nsnull;
+    mResetCount = 0;
+    mResets = nsnull;
+    mQuotesCount = 0;
+    mQuotes = nsnull;
+  }
+
+  ~nsStyleContent(void) {
+    DELETE_ARRAY_IF(mContents);
+    DELETE_ARRAY_IF(mIncrements);
+    DELETE_ARRAY_IF(mResets);
+    DELETE_ARRAY_IF(mQuotes);
+  }
 
   PRUint32  ContentCount(void) const  { return mContentCount; } // [reset]
   nsresult  GetContentAt(PRUint32 aIndex, nsStyleContentType& aType, nsString& aContent) const {
@@ -633,6 +656,7 @@ struct nsStyleContent: public nsStyleStruct {
     return NS_ERROR_ILLEGAL_VALUE;
   }
 
+friend class StyleContentBlob;
 protected:
   PRUint32            mContentCount;
   nsStyleContentData* mContents;
@@ -648,8 +672,8 @@ protected:
 };
 
 struct nsStyleUserInterface: public nsStyleStruct {
-  nsStyleUserInterface(void);
-  ~nsStyleUserInterface(void);
+  nsStyleUserInterface(void) {};
+  ~nsStyleUserInterface(void) {};
 
   PRUint8   mUserInput;       // [inherited]
   PRUint8   mUserModify;      // [inherited] (modify-content)
@@ -658,12 +682,11 @@ struct nsStyleUserInterface: public nsStyleStruct {
   PRUnichar mKeyEquivalent;   // [reset] XXX what type should this be?
   PRUint8   mResizer;         // [reset]
   nsString  mBehavior;        // [reset] absolute url string
-
 };
 
 struct nsStylePrint: public nsStyleStruct {
-  nsStylePrint(void);
-  ~nsStylePrint(void);
+  nsStylePrint(void) {};
+  ~nsStylePrint(void) {};
 
   PRUint8       mPageBreakBefore;	// [reset] see nsStyleConsts.h NS_STYLE_PAGE_BREAK_*
   PRUint8       mPageBreakAfter;	// [reset] see nsStyleConsts.h NS_STYLE_PAGE_BREAK_*
@@ -678,8 +701,8 @@ struct nsStylePrint: public nsStyleStruct {
 
 #ifdef INCLUDE_XUL
 struct nsStyleXUL : public nsStyleStruct {
-  nsStyleXUL();
-  ~nsStyleXUL();
+  nsStyleXUL() {};
+  ~nsStyleXUL() {};
 
   // There will be seven more properties coming,
   // which is why we warrant our own struct.
@@ -747,6 +770,8 @@ inline nsBorderEdges::nsBorderEdges()
  { 0x26a4d970, 0xa342, 0x11d1, \
    {0x89, 0x74, 0x00, 0x60, 0x08, 0x91, 0x1b, 0x81} }
 
+
+
 class nsIStyleContext : public nsISupports {
 public:
   static const nsIID& GetIID() { static nsIID iid = NS_ISTYLECONTEXT_IID; return iid; }
@@ -778,21 +803,15 @@ public:
   virtual void DumpRegressionData(nsIPresContext* aPresContext, FILE* out, PRInt32 aIndent) = 0;
 #endif
 
-#ifdef SHARE_STYLECONTEXTS
   // sets aMatches to PR_TRUE if the style data of aStyleContextToMatch matches the 
   // style data of this, PR_FALSE otherwise
+#ifdef SHARE_STYLECONTEXTS
   NS_IMETHOD StyleDataMatches(nsIStyleContext* aStyleContextToMatch, PRBool *aMatches) = 0;
   NS_IMETHOD GetStyleContextKey(scKey &aKey) const = 0;
 #endif
 
-  // -------------------------------------------------------------
-  // DEPRECATED METHODS - these are all going away, stop using them
-  // get a style data struct by ID, may return null 
-  // Replace calls to this with calls to GetStyle();
+  // Get a pointer on the style data
   virtual const nsStyleStruct* GetStyleData(nsStyleStructID aSID) = 0;
-
-  // get a style data struct by ID, may return null 
-  virtual nsStyleStruct* GetMutableStyleData(nsStyleStructID aSID) = 0;
 
   // call this to prevent context from getting shared
   virtual void  ForceUnique(void) = 0;
@@ -804,6 +823,25 @@ public:
 
   // utility function: more convenient than 2 calls to GetStyleData to get border and padding
   virtual void    CalcBorderPaddingFor(const nsIFrame* aFrame, nsMargin& aBorderPadding) const = 0;
+
+  // Modify the style data
+  //
+  //   Calls to ReadMutableStyleData() and WriteMutableStyleData() must be balanced.
+  //   To enforce this, they are not made public.  You must use the helper classes 
+  //   that are defined in "nsIMutableStyleContext.h" where the constructors and
+  //   destructors call Read() and Write() for you.
+  //
+  //   For instance, to change the opacity, you should do:
+  //
+  //            nsMutableStyleColor color(myStyleContext);
+  //            color->mOpacity = 0.5f;
+  //
+  //   In some cases, you may want to put the block above between brackets {...}
+  //   so that the |nsMutableStyleColor| destructor can be called and your changes
+  //   written into the style context.
+  //
+  virtual void ReadMutableStyleData(nsStyleStructID aSID, nsStyleStruct** aStyleStruct) = 0;
+  virtual nsresult WriteMutableStyleData(nsStyleStructID aSID, nsStyleStruct* aStyleStruct) = 0;
 };
 
 

@@ -26,6 +26,7 @@
 #include "nsTableFrame.h"
 #include "nsIReflowCommand.h"
 #include "nsIStyleContext.h"
+#include "nsIMutableStyleContext.h"
 #include "nsStyleConsts.h"
 #include "nsIPresContext.h"
 #include "nsIRenderingContext.h"
@@ -868,6 +869,7 @@ void nsTableCellFrame::MapHTMLBorderStyle(nsIPresContext* aPresContext,
 
   /* The RULES code below has been disabled because collapsing borders have been disabled 
      and RULES depend on collapsing borders
+     NOTE: The place where this function was called has been disabled too.
 
   const nsStyleTable* tableStyle;
   aTableFrame->GetStyleData(eStyleStruct_Table, (const nsStyleStruct *&)tableStyle);
@@ -930,30 +932,37 @@ void nsTableCellFrame::MapBorderPadding(nsIPresContext* aPresContext)
   tableFrame->GetStyleData(eStyleStruct_Table, (const nsStyleStruct *&)tableStyle);
   const nsStylePadding* tablePaddingStyle;
   tableFrame->GetStyleData(eStyleStruct_Padding,(const nsStyleStruct *&)tablePaddingStyle);
-  nsStylePadding* paddingData = (nsStylePadding*)mStyleContext->GetMutableStyleData(eStyleStruct_Padding);
+  {
+    nsMutableStylePadding paddingData(mStyleContext);
 
-  float p2t;
-  aPresContext->GetPixelsToTwips(&p2t);
+    float p2t;
+    aPresContext->GetPixelsToTwips(&p2t);
 
-  // Get the table's cellpadding or use 2 pixels as the default if it is not set.
-  // This assumes that ua.css does not set padding for the cell.
-  nscoord defaultPadding = tableFrame->GetCellPadding();
-  if (-1 == defaultPadding) { // not set in table
-    defaultPadding = NSIntPixelsToTwips(1, p2t);
+    // Get the table's cellpadding or use 2 pixels as the default if it is not set.
+    // This assumes that ua.css does not set padding for the cell.
+    nscoord defaultPadding = tableFrame->GetCellPadding();
+    if (-1 == defaultPadding) { // not set in table
+      defaultPadding = NSIntPixelsToTwips(1, p2t);
+    }
+
+    // if the padding is not already set, set it to the table's cellpadding
+    if (eStyleUnit_Null == paddingData->mPadding.GetTopUnit()) 
+      paddingData->mPadding.SetTop(defaultPadding);
+    if (eStyleUnit_Null == paddingData->mPadding.GetRightUnit()) 
+      paddingData->mPadding.SetRight(defaultPadding); 
+    if (eStyleUnit_Null == paddingData->mPadding.GetBottomUnit())
+      paddingData->mPadding.SetBottom(defaultPadding);
+    if (eStyleUnit_Null == paddingData->mPadding.GetLeftUnit()) 
+      paddingData->mPadding.SetLeft(defaultPadding);
   }
+  /* MapHTMLBorderStyle() has been disabled because collapsing borders have been disabled 
+     and the rules in MapHTMLBorderStyle() depend on collapsing borders
 
-  // if the padding is not already set, set it to the table's cellpadding
-  if (eStyleUnit_Null == paddingData->mPadding.GetTopUnit()) 
-    paddingData->mPadding.SetTop(defaultPadding);
-  if (eStyleUnit_Null == paddingData->mPadding.GetRightUnit()) 
-    paddingData->mPadding.SetRight(defaultPadding); 
-  if (eStyleUnit_Null == paddingData->mPadding.GetBottomUnit())
-    paddingData->mPadding.SetBottom(defaultPadding);
-  if (eStyleUnit_Null == paddingData->mPadding.GetLeftUnit()) 
-    paddingData->mPadding.SetLeft(defaultPadding);
-
-  nsStyleBorder* borderData = (nsStyleBorder*)mStyleContext->GetMutableStyleData(eStyleStruct_Border);
-  MapHTMLBorderStyle(aPresContext, *borderData, tableFrame);
+  {
+    nsMutableStyleBorder borderData(mStyleContext);
+    MapHTMLBorderStyle(aPresContext, *borderData, tableFrame);
+  }
+  */
 
   MapVAlignAttribute(aPresContext, tableFrame);
   MapHAlignAttribute(aPresContext, tableFrame);
@@ -980,14 +989,14 @@ void nsTableCellFrame::MapVAlignAttribute(nsIPresContext* aPresContext, nsTableF
     const nsStyleText* colTextStyle;
     colFrame->GetStyleData(eStyleStruct_Text,(const nsStyleStruct *&)colTextStyle);
     if (colTextStyle->mVerticalAlign.GetUnit() == eStyleUnit_Enumerated) {
-      nsStyleText* cellTextStyle = (nsStyleText*)mStyleContext->GetMutableStyleData(eStyleStruct_Text);
+      nsMutableStyleText cellTextStyle(mStyleContext);
       cellTextStyle->mVerticalAlign.SetIntValue(colTextStyle->mVerticalAlign.GetIntValue(), eStyleUnit_Enumerated);
       return; // valign set from COL info
     }
   }
 
   // otherwise, set the vertical align attribute to the HTML default
-  nsStyleText* cellTextStyle = (nsStyleText*)mStyleContext->GetMutableStyleData(eStyleStruct_Text);
+  nsMutableStyleText cellTextStyle(mStyleContext);
   cellTextStyle->mVerticalAlign.SetIntValue(NS_STYLE_VERTICAL_ALIGN_MIDDLE, eStyleUnit_Enumerated);
 }
 
@@ -1012,7 +1021,7 @@ void nsTableCellFrame::MapHAlignAttribute(nsIPresContext* aPresContext,
   const nsStyleText* rowTextStyle;
   rowFrame->GetStyleData(eStyleStruct_Text,(const nsStyleStruct *&)rowTextStyle);
   if (NS_STYLE_TEXT_ALIGN_DEFAULT != rowTextStyle->mTextAlign) {
-    nsStyleText* cellTextStyle = (nsStyleText*)mStyleContext->GetMutableStyleData(eStyleStruct_Text);
+    nsMutableStyleText cellTextStyle(mStyleContext);
     cellTextStyle->mTextAlign = rowTextStyle->mTextAlign;
     return; // halign set from ROW info
   }
@@ -1025,18 +1034,18 @@ void nsTableCellFrame::MapHAlignAttribute(nsIPresContext* aPresContext,
     const nsStyleText* colTextStyle;
     colFrame->GetStyleData(eStyleStruct_Text,(const nsStyleStruct *&)colTextStyle);
     if (NS_STYLE_TEXT_ALIGN_DEFAULT != colTextStyle->mTextAlign) {
-      nsStyleText* cellTextStyle = (nsStyleText*)mStyleContext->GetMutableStyleData(eStyleStruct_Text);
+      nsMutableStyleText cellTextStyle(mStyleContext);
       cellTextStyle->mTextAlign = colTextStyle->mTextAlign;
       return; // halign set from COL info
     }
   }
 
   // otherwise, set the text align to the HTML default (center for TH, left for TD)
-  nsStyleText* cellTextStyle = (nsStyleText*)mStyleContext->GetMutableStyleData(eStyleStruct_Text);
   nsIAtom* tag;
   if (mContent) {
     mContent->GetTag(tag);
     if (tag) {
+      nsMutableStyleText cellTextStyle(mStyleContext);
       cellTextStyle->mTextAlign = (nsHTMLAtoms::th == tag)
                                   ? NS_STYLE_TEXT_ALIGN_CENTER 
                                   : NS_STYLE_TEXT_ALIGN_LEFT;

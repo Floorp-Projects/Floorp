@@ -83,6 +83,7 @@
 #include "nsIHTMLContentContainer.h"
 #include "nsIHTMLStyleSheet.h"
 #include "nsIJSScriptObject.h"
+#include "nsIStyleContext.h"
 #include "nsIMutableStyleContext.h"
 #include "nsINameSpace.h"
 #include "nsINameSpaceManager.h"

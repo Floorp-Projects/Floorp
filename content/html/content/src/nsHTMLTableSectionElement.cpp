@@ -325,22 +325,34 @@ MapAttributesInto(const nsIHTMLMappedAttributes* aAttributes,
   if (aAttributes) {
     nsHTMLValue value;
     nsHTMLValue widthValue;
-    nsStyleText* textStyle = nsnull;
+
+    PRUint8      newTextAlign;
+    nsStyleCoord newVerticalAlign;
+    PRBool       changedTextAlign = PR_FALSE;
+    PRBool       changedVerticalAlign = PR_FALSE;
 
     // align: enum
     aAttributes->GetAttribute(nsHTMLAtoms::align, value);
     if (value.GetUnit() == eHTMLUnit_Enumerated) {
-      textStyle = (nsStyleText*)aContext->GetMutableStyleData(eStyleStruct_Text);
-      textStyle->mTextAlign = value.GetIntValue();
+      newTextAlign = value.GetIntValue();
+      changedTextAlign = PR_TRUE;
     }
   
     // valign: enum
     aAttributes->GetAttribute(nsHTMLAtoms::valign, value);
     if (value.GetUnit() == eHTMLUnit_Enumerated) {
-      if (nsnull==textStyle)
-        textStyle = (nsStyleText*)aContext->GetMutableStyleData(eStyleStruct_Text);
-      textStyle->mVerticalAlign.SetIntValue(value.GetIntValue(),
-                                            eStyleUnit_Enumerated);
+      newVerticalAlign.SetIntValue(value.GetIntValue(), eStyleUnit_Enumerated);
+      changedVerticalAlign = PR_TRUE;
+    }
+
+    if (changedTextAlign || changedVerticalAlign) {
+      nsMutableStyleText text(aContext);
+      if (changedTextAlign) {
+        text->mTextAlign = newTextAlign;
+      }
+      if (changedVerticalAlign) {
+        text->mVerticalAlign = newVerticalAlign;
+      }
     }
 
     // height: pixel
@@ -348,8 +360,7 @@ MapAttributesInto(const nsIHTMLMappedAttributes* aAttributes,
     if (value.GetUnit() == eHTMLUnit_Pixel) {
       float p2t;
       aPresContext->GetScaledPixelsToTwips(&p2t);
-      nsStylePosition* pos = (nsStylePosition*)
-        aContext->GetMutableStyleData(eStyleStruct_Position);
+      nsMutableStylePosition pos(aContext);
       nscoord twips = NSIntPixelsToTwips(value.GetPixelValue(), p2t);
       pos->mHeight.SetCoordValue(twips);
     }
