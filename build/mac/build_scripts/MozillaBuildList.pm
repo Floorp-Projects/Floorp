@@ -815,6 +815,7 @@ sub BuildClientDist()
 
     #LWBRK
     InstallFromManifest(":mozilla:intl:lwbrk:public:MANIFEST",                     "$distdirectory:lwbrk:");
+    InstallFromManifest(":mozilla:intl:lwbrk:idl:MANIFEST_IDL",                    "$distdirectory:idl:");
 
     #STRRES
     InstallFromManifest(":mozilla:intl:strres:public:MANIFEST_IDL",                "$distdirectory:idl:");
@@ -1507,6 +1508,7 @@ sub BuildIDLProjects()
     BuildIDLProject(":mozilla:intl:unicharutil:macbuild:unicharutilIDL.xml",        "unicharutil");
     BuildIDLProject(":mozilla:intl:uconv:macbuild:uconvIDL.xml",                    "uconv");
     BuildIDLProject(":mozilla:intl:chardet:macbuild:chardetIDL.xml",                "chardet");
+    BuildIDLProject(":mozilla:intl:lwbrk:macbuild:lwbrkIDL.xml",                    "lwbrk");
 
     if ($main::options{iiextras})
     {
