@@ -382,7 +382,7 @@ nsEditorShell::InstantiateEditor(nsIDOMDocument *aDoc, nsIPresShell *aPresShell)
 
   if (mEditor)
     return NS_ERROR_ALREADY_INITIALIZED;
-    
+
   nsresult err = NS_OK;
   
   nsCOMPtr<nsIEditor> editor;
@@ -395,14 +395,17 @@ nsEditorShell::InstantiateEditor(nsIDOMDocument *aDoc, nsIPresShell *aPresShell)
     if (mEditorTypeString == "text")
     {
       err = editor->Init(aDoc, aPresShell, nsIHTMLEditor::eEditorPlaintextMask);
+      mEditorType = ePlainTextEditorType;
     }
     else if (mEditorTypeString == "html" || mEditorTypeString == "")  // empty string default to HTML editor
     {
       err = editor->Init(aDoc, aPresShell, 0);
+      mEditorType = eHTMLTextEditorType;
     }
     else if (mEditorTypeString == "htmlmail")  //  HTML editor with special mail rules
     {
       err = editor->Init(aDoc, aPresShell, nsIHTMLEditor::eEditorMailMask);
+      mEditorType = eHTMLTextEditorType;
     }
     else
     {
@@ -420,7 +423,6 @@ nsEditorShell::InstantiateEditor(nsIDOMDocument *aDoc, nsIPresShell *aPresShell)
     if (NS_SUCCEEDED(err) && editor)
     {
       mEditor = do_QueryInterface(editor);    // this does the addref that is the owning reference
-      mEditorType = eHTMLTextEditorType;
     }
   }
     
@@ -458,7 +460,7 @@ nsEditorShell::UpdateInterfaceState(void)
 {
   if (!mStateMaintainer)
     return NS_ERROR_NOT_INITIALIZED;
-  
+
   return mStateMaintainer->ForceUpdate();
 }  
 
@@ -938,7 +940,7 @@ nsEditorShell::PrepareDocumentForEditing(nsIURI *aUrl)
   rv = mStateMaintainer->Init(mEditor, mWebShell);
   if (NS_FAILED(rv)) return rv;
   
-  // set it up as a selection listener
+    // set it up as a selection listener
   nsCOMPtr<nsIDOMSelection> domSelection;
   rv = GetEditorSelection(getter_AddRefs(domSelection));
   if (NS_FAILED(rv)) return rv;
@@ -946,9 +948,10 @@ nsEditorShell::PrepareDocumentForEditing(nsIURI *aUrl)
   rv = domSelection->AddSelectionListener(mStateMaintainer);
   if (NS_FAILED(rv)) return rv;
 
-  // and set it up as a doc state listener
   nsCOMPtr<nsIEditor> editor = do_QueryInterface(mEditor, &rv);
   if (NS_FAILED(rv)) return rv;
+
+  // and set it up as a doc state listener
   rv = editor->AddDocumentStateListener(mStateMaintainer);
   if (NS_FAILED(rv)) return rv;
   
