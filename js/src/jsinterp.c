@@ -1353,6 +1353,7 @@ bad:
     goto out2;
 }
 
+#if JS_HAS_XML_SUPPORT
 static JSBool
 CallMethod(JSContext *cx, JSObject *obj, jsid id, uintN argc, jsval *vp)
 {
@@ -1379,6 +1380,7 @@ CallMethod(JSContext *cx, JSObject *obj, jsid id, uintN argc, jsval *vp)
     fp->sp = vp + 1;
     return ok;
 }
+#endif
 
 JSBool
 js_InternalInvoke(JSContext *cx, JSObject *obj, jsval fval, uintN flags,
@@ -1410,6 +1412,7 @@ js_InternalInvoke(JSContext *cx, JSObject *obj, jsval fval, uintN flags,
         PUSH(argv[i]);
     SAVE_SP(fp);
 
+#if JS_HAS_XML_SUPPORT
     if (flags & JSINVOKE_CALL_METHOD) {
         name = (const char *) fval;
         atom = js_Atomize(cx, name, strlen(name), 0);
@@ -1420,9 +1423,9 @@ js_InternalInvoke(JSContext *cx, JSObject *obj, jsval fval, uintN flags,
             *vp = OBJECT_TO_JSVAL(obj);
             ok = CallMethod(cx, obj, ATOM_TO_JSID(atom), argc, vp);
         }
-    } else {
+    } else
+#endif
         ok = js_Invoke(cx, argc, flags | JSINVOKE_INTERNAL);
-    }
 
     if (ok) {
         RESTORE_SP(fp);
@@ -2171,12 +2174,11 @@ js_Interpret(JSContext *cx, jsval *result)
             STORE_OPND(-1, OBJECT_TO_JSVAL(obj));
             break;
 
+#if 0
 /*
  * If the index value at sp[n] is not an int that fits in a jsval, it could
  * be an object (an XML QName, AttributeName, or AnyName).  Otherwise convert
  * it to a string atom it.
- *
- * NB: This macro knows that int jsval and int jsid are tagged identically.
  */
 #define FETCH_ELEMENT_ID(n, id)                                               \
     JS_BEGIN_MACRO                                                            \
@@ -2195,6 +2197,23 @@ js_Interpret(JSContext *cx, jsval *result)
             id = ATOM_TO_JSID(atom);                                          \
         }                                                                     \
     JS_END_MACRO
+#else
+#define FETCH_ELEMENT_ID(n, id)                                               \
+    JS_BEGIN_MACRO                                                            \
+        id = (jsid) FETCH_OPND(n);                                            \
+        if (JSVAL_IS_INT(id)) {                                               \
+            atom = NULL;                                                      \
+        } else {                                                              \
+            SAVE_SP(fp);                                                      \
+            atom = js_ValueToStringAtom(cx, (jsval)id);                       \
+            if (!atom) {                                                      \
+                ok = JS_FALSE;                                                \
+                goto out;                                                     \
+            }                                                                 \
+            id = ATOM_TO_JSID(atom);                                          \
+        }                                                                     \
+    JS_END_MACRO
+#endif
 
 #define POP_ELEMENT_ID(id)                                                    \
     JS_BEGIN_MACRO                                                            \
