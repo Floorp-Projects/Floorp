@@ -632,6 +632,9 @@ void nsTableCellFrame::VerticallyAlignChild(nsIPresContext*          aPresContex
     // cell won't have a view
     nsContainerFrame::PositionChildViews(aPresContext, firstKid);
   }
+  if (HasView()) {
+    nsContainerFrame::SyncFrameViewAfterReflow(aPresContext, this, GetView(), &desiredSize.mOverflowArea, 0);
+  }
 }
 
 // As per bug 10207, we map 'sub', 'super', 'text-top', 'text-bottom', 
