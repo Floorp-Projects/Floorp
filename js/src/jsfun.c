@@ -67,8 +67,7 @@ enum {
     ARGS_CALLEE     = -4,       /* reference from arguments to active funobj */
     FUN_ARITY       = -5,       /* number of formal parameters; desired argc */
     FUN_NAME        = -6,       /* function name, "" if anonymous */
-    FUN_CALL        = -7,       /* function's top Call object in this context */
-    FUN_CALLER      = -8        /* Function.prototype.caller, backward compat */
+    FUN_CALLER      = -7        /* Function.prototype.caller, backward compat */
 };
 
 #if JSFRAME_OVERRIDE_BITS < 8
@@ -626,7 +625,6 @@ Call(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 static JSPropertySpec call_props[] = {
     {js_arguments_str,  CALL_ARGUMENTS, JSPROP_PERMANENT,0,0},
     {"__callee__",      CALL_CALLEE,    0,0,0},
-    {"__call__",        FUN_CALL,       0,0,0},
     {0,0,0,0,0}
 };
 
@@ -659,11 +657,6 @@ call_getProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
             *vp = fp->argv ? fp->argv[-2] : OBJECT_TO_JSVAL(fp->fun->object);
         break;
 
-      case FUN_CALL:
-        if (!TEST_OVERRIDE_BIT(fp, slot))
-            *vp = OBJECT_TO_JSVAL(obj);
-        break;
-
       default:
         if ((uintN)slot < JS_MAX(fp->argc, fp->fun->nargs))
             *vp = fp->argv[slot];
@@ -689,7 +682,6 @@ call_setProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
     switch (slot) {
       case CALL_ARGUMENTS:
       case CALL_CALLEE:
-      case FUN_CALL:
         SET_OVERRIDE_BIT(fp, slot);
         break;
 
@@ -870,7 +862,6 @@ static JSPropertySpec function_props[] = {
     {js_arity_str,     FUN_ARITY,      FUNCTION_PROP_ATTRS,0,0},
     {js_length_str,    ARGS_LENGTH,    FUNCTION_PROP_ATTRS,0,0},
     {js_name_str,      FUN_NAME,       FUNCTION_PROP_ATTRS,0,0},
-    {"__call__",       FUN_CALL,       FUNCTION_PROP_ATTRS,0,0},
     {js_caller_str,    FUN_CALLER,     FUNCTION_PROP_ATTRS,0,0},
     {0,0,0,0,0}
 };
@@ -939,22 +930,16 @@ fun_getProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
               : STRING_TO_JSVAL(cx->runtime->emptyString);
         break;
 
-      case FUN_CALL:
-        if (fp && fp->fun) {
-            JSObject *callobj = js_GetCallObject(cx, fp, NULL);
-            if (!callobj)
-                return JS_FALSE;
-            *vp = OBJECT_TO_JSVAL(callobj);
-        } else {
-            *vp = JSVAL_NULL;
-        }
-        break;
-
       case FUN_CALLER:
         if (fp && fp->down && fp->down->fun)
             *vp = fp->down->argv[-2];
         else
             *vp = JSVAL_NULL;
+        if (cx->runtime->checkObjectAccess) {
+            id = ATOM_KEY(cx->runtime->atomState.callerAtom);
+            if (!cx->runtime->checkObjectAccess(cx, obj, id, JSACC_READ, vp))
+                return JS_FALSE;
+        }
         break;
 
       default:

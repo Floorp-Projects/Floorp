@@ -2685,6 +2685,16 @@ JS_CheckAccess(JSContext *cx, JSObject *obj, jsid id, JSAccessMode mode,
     return OBJ_CHECK_ACCESS(cx, obj, id, mode, vp, attrsp);
 }
 
+JS_PUBLIC_API(JSCheckAccessOp)
+JS_SetCheckObjectAccessCallback(JSRuntime *rt, JSCheckAccessOp acb)
+{
+    JSCheckAccessOp oldacb;
+
+    oldacb = rt->checkObjectAccess;
+    rt->checkObjectAccess = acb;
+    return oldacb;
+}
+
 JS_PUBLIC_API(JSBool)
 JS_GetReservedSlot(JSContext *cx, JSObject *obj, uint32 index, jsval *vp)
 {

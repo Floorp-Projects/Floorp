@@ -1041,6 +1041,9 @@ extern JS_PUBLIC_API(JSBool)
 JS_CheckAccess(JSContext *cx, JSObject *obj, jsid id, JSAccessMode mode,
                jsval *vp, uintN *attrsp);
 
+extern JS_PUBLIC_API(JSCheckAccessOp)
+JS_SetCheckObjectAccessCallback(JSRuntime *rt, JSCheckAccessOp acb);
+
 extern JS_PUBLIC_API(JSBool)
 JS_GetReservedSlot(JSContext *cx, JSObject *obj, uint32 index, jsval *vp);
 

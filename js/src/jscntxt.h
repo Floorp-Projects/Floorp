@@ -184,6 +184,12 @@ struct JSRuntime {
 #define NO_SCOPE_SHARING_TODO   ((JSScope *) 0xfeedbeef)
 #endif
 
+    /*
+     * Check property accessibility for objects of arbitrary class.  Used at
+     * present to check f.caller accessibility for any function object f.
+     */
+    JSCheckAccessOp     checkObjectAccess;
+
     /* Security principals serialization support. */
     JSPrincipalsTranscoder principalsTranscoder;
 
