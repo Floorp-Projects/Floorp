@@ -69,8 +69,6 @@ nsContextMenu.prototype = {
         this.initClipboardItems();
     },
     initOpenItems : function () {
-        var needSep = false;
-    
         // Remove open/edit link if not applicable.
         this.showItem( "context-openlink", this.onLink );
         this.showItem( "context-editlink", this.onLink );
@@ -79,7 +77,7 @@ nsContextMenu.prototype = {
         this.showItem( "context-openframe", this.inFrame );
     
         // Remove separator after open items if neither link nor frame.
-        this.showItem( "context-sep-open", this.onLink && !this.inFrame );
+        this.showItem( "context-sep-open", this.onLink || this.inFrame );
     },
     initNavigationItems : function () {
         // Back determined by canGoBack broadcaster.
@@ -290,7 +288,8 @@ nsContextMenu.prototype = {
             var styleOut = styleIn;
             if ( show ) {
                 // Remove style="display:none;".
-                styleOut.replace( "display:none;", "" );
+                styleOut = styleOut.replace( "display:none;", "" );
+
             } else {
                 // Set style="display:none;".
                 if ( styleOut.indexOf( "display:none;" ) == -1 ) {
