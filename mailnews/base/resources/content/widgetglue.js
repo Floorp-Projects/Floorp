@@ -187,11 +187,28 @@ function MsgCompactFolder(isAll)
                 }
                 else
                 {
+                    // set this so we'll reload it when compact is done
+                    gCurrentFolderToReroot = selectedFolderUri;
+                    // save off the current sort and view info so we'll
+                    // use it on the folder loaded notification
+                    var resource = RDF.GetResource(selectedFolderUri);
+                    var msgfolder = resource.QueryInterface(Components.interfaces.nsIMsgFolder);
+                    if (msgfolder)
+                    {
+                      var msgdb = msgfolder.getMsgDatabase(msgWindow);
+                      if (msgdb)
+                      {
+                        var dbFolderInfo = msgdb.dBFolderInfo;
+                        gCurrentLoadingFolderSortType = dbFolderInfo.sortType;
+                        gCurrentLoadingFolderSortOrder = dbFolderInfo.sortOrder;
+                        gCurrentLoadingFolderViewFlags = dbFolderInfo.viewFlags;
+                        gCurrentLoadingFolderViewType = dbFolderInfo.viewType;
+                      }
+                    }
                     ClearThreadPaneSelection();
                     ClearThreadPane();
                     ClearMessagePane();
-                    // set this so we'll reload it when compact is done
-                    gCurrentFolderToReroot = selectedFolderUri;
+
                 }
             }
             var i;

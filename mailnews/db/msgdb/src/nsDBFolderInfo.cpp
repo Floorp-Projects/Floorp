@@ -902,7 +902,20 @@ public:
   virtual ~nsTransferDBFolderInfo();
   NS_IMETHOD GetMailboxName(nsString *boxName);
   NS_IMETHOD SetMailboxName(nsString *boxName);
+  NS_IMETHOD GetViewType(nsMsgViewTypeValue *aViewType); 
+  NS_IMETHOD SetViewType(nsMsgViewTypeValue aViewType); 
+  NS_IMETHOD GetViewFlags(nsMsgViewFlagsTypeValue *aViewFlags); 
+  NS_IMETHOD SetViewFlags(nsMsgViewFlagsTypeValue aViewFlags); 
+  NS_IMETHOD GetSortType(nsMsgViewSortTypeValue *aSortType); 
+  NS_IMETHOD SetSortType(nsMsgViewSortTypeValue aSortType); 
+  NS_IMETHOD GetSortOrder(nsMsgViewSortOrderValue *aSortOrder); 
+  NS_IMETHOD SetSortOrder(nsMsgViewSortOrderValue aSortOrder); 
   nsString  m_boxName;
+  nsMsgViewTypeValue m_viewType;
+  nsMsgViewFlagsTypeValue m_viewFlags;
+  nsMsgViewSortTypeValue m_sortType;
+  nsMsgViewSortOrderValue m_sortOrder;
+
 };
 
 nsTransferDBFolderInfo::nsTransferDBFolderInfo() : nsDBFolderInfo(nsnull)
@@ -926,6 +939,19 @@ NS_IMETHODIMP nsDBFolderInfo::GetTransferInfo(nsIDBFolderInfo **transferInfo)
   GetMailboxName(&folderNameStr);
   newInfo->SetMailboxName(&folderNameStr);
   // ### add whatever other fields we want to copy here.
+  nsMsgViewTypeValue viewType;
+  nsMsgViewFlagsTypeValue viewFlags;
+  nsMsgViewSortTypeValue sortType;
+  nsMsgViewSortOrderValue sortOrder;
+
+  GetViewType(&viewType);
+  GetViewFlags(&viewFlags);
+  GetSortType(&sortType);
+  GetSortOrder(&sortOrder);
+  newInfo->SetViewType(viewType);
+  newInfo->SetViewFlags(viewFlags);
+  newInfo->SetSortType(sortType);
+  newInfo->SetSortOrder(sortOrder);
   return NS_OK;
 }
 
@@ -941,6 +967,10 @@ NS_IMETHODIMP nsTransferDBFolderInfo::SetMailboxName(nsString *boxName)
   return NS_OK;
 }
 
+NS_IMPL_GETSET(nsTransferDBFolderInfo, ViewType, nsMsgViewTypeValue, m_viewType);
+NS_IMPL_GETSET(nsTransferDBFolderInfo, ViewFlags, nsMsgViewFlagsTypeValue, m_viewFlags);
+NS_IMPL_GETSET(nsTransferDBFolderInfo, SortType, nsMsgViewSortTypeValue, m_sortType);
+NS_IMPL_GETSET(nsTransferDBFolderInfo, SortOrder, nsMsgViewSortOrderValue, m_sortOrder);
 
 /* void InitFromTransferInfo (in nsIDBFolderInfo transferInfo); */
 NS_IMETHODIMP nsDBFolderInfo::InitFromTransferInfo(nsIDBFolderInfo *transferInfo)
@@ -955,6 +985,19 @@ NS_IMETHODIMP nsDBFolderInfo::InitFromTransferInfo(nsIDBFolderInfo *transferInfo
   SetMailboxName(&folderNameStr);
   // ### add whatever other fields we want to copy here.
 
+  nsMsgViewTypeValue viewType;
+  nsMsgViewFlagsTypeValue viewFlags;
+  nsMsgViewSortTypeValue sortType;
+  nsMsgViewSortOrderValue sortOrder;
+
+  transferInfo->GetViewType(&viewType);
+  transferInfo->GetViewFlags(&viewFlags);
+  transferInfo->GetSortType(&sortType);
+  transferInfo->GetSortOrder(&sortOrder);
+  SetViewType(viewType);
+  SetViewFlags(viewFlags);
+  SetSortType(sortType);
+  SetSortOrder(sortOrder);
   return NS_OK;
 }
 
