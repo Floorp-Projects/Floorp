@@ -18,6 +18,19 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *
+ *
+ * This Original Code has been modified by IBM Corporation.
+ * Modifications made by IBM described herein are
+ * Copyright (c) International Business Machines
+ * Corporation, 2000
+ *
+ * Modifications to Mozilla code or documentation
+ * identified per MPL Section 3.3
+ *
+ * Date         Modified by     Description of modification
+ * 03/27/2000   IBM Corp.       Added PR_CALLBACK for Optlink
+ *                               use in OS2
  */
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -177,7 +190,7 @@ nsJVMManager::NotifyAll(void* address)
 	return (PR_CNotifyAll(address) == PR_SUCCESS ? NS_OK : NS_ERROR_FAILURE);
 }
 
-static void thread_starter(void* arg)
+static void PR_CALLBACK thread_starter(void* arg)
 {
 	nsIRunnable* runnable = (nsIRunnable*) arg;
 	if (runnable != NULL) {
