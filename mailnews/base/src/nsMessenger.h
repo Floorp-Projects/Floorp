@@ -66,6 +66,18 @@ public:
                             const char* messageUri, const char* contentType, 
                             void *closure);
   nsresult PromptIfFileExists(nsFileSpec &fileSpec);
+  nsresult DetachAttachments(PRUint32 aCount,
+                                  const char ** aContentTypeArray,
+                                  const char ** aUrlArray,
+                                  const char ** aDisplayNameArray,
+                                  const char ** aMessageUriArray,
+                                  nsCStringArray *saveFileUris);
+  nsresult SaveAllAttachments(PRUint32 count,
+                                const char **contentTypeArray,
+                                const char **urlArray,
+                                const char **displayNameArray,
+                                const char **messageUriArray,
+                                PRBool detaching);
 
 protected:
   nsresult DoDelete(nsIRDFCompositeDataSource* db, nsISupportsArray *srcArray,

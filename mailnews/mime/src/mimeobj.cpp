@@ -195,20 +195,29 @@ MimeObject_parse_begin (MimeObject *obj)
   /* If we haven't set up the state object yet, then this should be
 	 the outermost object... */
   if (obj->options && !obj->options->state)
-	{
-	  NS_ASSERTION(!obj->headers, "headers should be null");  /* should be the outermost object. */
+  {
+    NS_ASSERTION(!obj->headers, "headers should be null");  /* should be the outermost object. */
 
-	  obj->options->state = new MimeParseStateObject;
-	  if (!obj->options->state) return MIME_OUT_OF_MEMORY;
-	  obj->options->state->root = obj;
-	  obj->options->state->separator_suppressed_p = PR_TRUE; /* no first sep */
-          const char *delParts = PL_strcasestr(obj->options->url, "&del=");
-          if (delParts)
-          {
-            delParts += 5; // advance past "&del="
-            obj->options->state->partsToStrip.ParseString(delParts, ",");
-          }
-	}
+    obj->options->state = new MimeParseStateObject;
+    if (!obj->options->state) return MIME_OUT_OF_MEMORY;
+    obj->options->state->root = obj;
+    obj->options->state->separator_suppressed_p = PR_TRUE; /* no first sep */
+    const char *delParts = PL_strcasestr(obj->options->url, "&del=");
+    const char *detachLocations = PL_strcasestr(obj->options->url, "&detachTo=");
+    if (delParts)
+    {
+      const char *delEnd = PL_strcasestr(delParts + 1, "&");
+      if (!delEnd)
+        delEnd = delParts + strlen(delParts) - 1;
+      nsCAutoString partsToDel(Substring(delParts + 5, delEnd)); 
+      obj->options->state->partsToStrip.ParseString(partsToDel.get(), ",");
+    }
+    if (detachLocations)
+    {
+      detachLocations += 10; // advance past "&detachTo="
+      obj->options->state->detachToFiles.ParseString(detachLocations, ",");
+    }
+  }
 
   /* Decide whether this object should be output or not... */
   if (!obj->options || !obj->options->output_fn

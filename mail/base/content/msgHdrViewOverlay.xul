@@ -62,12 +62,28 @@
   <menuitem id="context-saveAttachment" label="&saveAsAttachmentCmd.label;" accesskey="&saveAsAttachmentCmd.accesskey;"
      oncommand="handleAttachmentSelection('saveAttachment');"/>
   <menuseparator/>
-  <menuitem id="context-saveAllAttachments" oncommand="SaveAllAttachments();" label="&saveAllAttachmentsCmd.label;" accesskey="&saveAllAttachmentsCmd.accesskey;"/>
+  <menuitem id="context-detachAttachment" label="&detachAttachmentCmd.label;" 
+     oncommand="handleAttachmentSelection('detachAttachment');"/>
+  <menuitem id="context-deleteAttachment" label="&deleteAttachmentCmd.label;" 
+     oncommand="handleAttachmentSelection('deleteAttachment');"/>
+  <menuseparator/>
+  <menuitem id="context-saveAllAttachments" oncommand="HandleAllAttachments('save');" 
+    label="&saveAllAttachmentsCmd.label;" accesskey="&saveAllAttachmentsCmd.accesskey;"/>
+  <menuitem id="context-detachAllAttachments" oncommand="HandleAllAttachments('detach');" 
+    label="&detachAllAttachmentsCmd.label;"/>
+  <menuitem id="context-deleteAllAttachments" oncommand="HandleAllAttachments('delete');" 
+    label="&deleteAllAttachmentsCmd.label;"/>
 </popup>
 
 <popup id="attachmentMenuList">
   <menuseparator/>
   <menuitem label="&saveAllAttachmentsCmd.label;" accesskey="&saveAllAttachmentsCmd.accesskey;" oncommand="SaveAllAttachments();"/>
+  <menuitem id="file-saveAllAttachments" label="&saveAllAttachmentsCmd.label;" 
+    accesskey="&saveAllAttachmentsCmd.accesskey;" oncommand="HandleAllAttachments('save');"/>
+  <menuitem id="file-detachAllAttachments" label="&detachAllAttachmentsCmd.label;" 
+    accesskey="&detachAllAttachmentsCmd.accesskey;" oncommand="HandleAllAttachments('detach');" />
+  <menuitem id="file-deleteAllAttachments" label="&deleteAllAttachmentsCmd.label;" 
+    accesskey="&deleteAllAttachmentsCmd.accesskey;" oncommand="HandleAllAttachments('delete');" />
 </popup>
 
 <popup id="copyUrlPopup" popupanchor="bottomleft">
@@ -171,7 +187,8 @@
 <!-- the message pane consists of 3 'boxes'. Box #3 is the attachment box which can be toggled into a slim or an expanded view -->   
 <hbox id="attachmentView" class="headerContainer" collapsed="true">
   <label id="attachmentLabel" class="subjectvalue" value="&attachmentsTree.label;"/>
-  <description flex="1" id="attachmentList" selectable="true" seltype="multiple" onclick="attachmentListClick(event);" ondraggesture="nsDragAndDrop.startDrag(event,attachmentAreaDNDObserver);" ondragover="nsDragAndDrop.dragOver(event, attachmentAreaDNDObserver);" context="attachmentListContext">
+    <description flex="1" id="attachmentList" selectable="true" seltype="multiple"
+      onclick="attachmentListClick(event);" ondraggesture="nsDragAndDrop.startDrag(event,attachmentAreaDNDObserver);" ondragover="nsDragAndDrop.dragOver(event, attachmentAreaDNDObserver);" context="attachmentListContext">
   </description>
 </hbox>
 

@@ -203,12 +203,15 @@ MimeMultipart_parse_line (char *line, PRInt32 length, MimeObject *obj)
                     newPart.Append('.');
                     newPart.AppendInt(container->nchildren + 1);
                     obj->options->state->strippingPart = PR_FALSE;
+ //                   obj->options->state->detachedFilePath.Truncate(0);
                     // check if this is a sub-part of a part we're stripping.
                     for (PRInt32 partIndex = 0; partIndex < obj->options->state->partsToStrip.Count(); partIndex++)
                     {
                       if (newPart.Find(*obj->options->state->partsToStrip.CStringAt(partIndex)) == 0)
                       {
                         obj->options->state->strippingPart = PR_TRUE;
+                        if (partIndex < obj->options->state->detachToFiles.Count())
+                          obj->options->state->detachedFilePath = *obj->options->state->detachToFiles.CStringAt(partIndex);
                         break;
                       }
                     }
@@ -245,17 +248,45 @@ MimeMultipart_parse_line (char *line, PRInt32 length, MimeObject *obj)
       {
         if (obj->options->state->strippingPart)
         {
-          nsCAutoString header("Content-Type: text/x-moz-deleted; name=\"Deleted: ");
+          PRBool detachingPart = obj->options->state->detachedFilePath.Length() > 0;
+
           nsCAutoString fileName;
           fileName.Adopt(MimeHeaders_get_name(mult->hdrs, obj->options));
-          header.Append(fileName);
-          status = MimeWriteAString(obj, header);
-          if (status < 0) 
-            return status;
-          status = MimeWriteAString(obj, NS_LITERAL_CSTRING("\""MSG_LINEBREAK"Content-Transfer-Encoding: 8bit"MSG_LINEBREAK));
-          MimeWriteAString(obj, NS_LITERAL_CSTRING("Content-Disposition: inline; filename=\"Deleted:"));
-          MimeWriteAString(obj, fileName);
-          MimeWriteAString(obj, NS_LITERAL_CSTRING("\""MSG_LINEBREAK"X-Mozilla-Altered: AttachmentDeleted; date=\""));
+          if (detachingPart)
+          {
+            char *contentType = MimeHeaders_get(mult->hdrs, "Content-Type", PR_FALSE, PR_FALSE);
+            MimeWriteAString(obj, NS_LITERAL_CSTRING("Content-Type: "));
+            MimeWriteAString(obj, nsDependentCString(contentType));
+            PR_Free(contentType);
+            char *contentEncoding = MimeHeaders_get(mult->hdrs, "Content-Transfer-Encoding", PR_FALSE, PR_FALSE);
+            if (contentEncoding)
+            {
+              MimeWriteAString(obj, NS_LITERAL_CSTRING(MSG_LINEBREAK));
+              MimeWriteAString(obj, NS_LITERAL_CSTRING("Content-Transfer-Encoding: "));
+              MimeWriteAString(obj, nsDependentCString(contentEncoding));
+              PR_Free(contentEncoding);
+            }
+            MimeWriteAString(obj, NS_LITERAL_CSTRING(MSG_LINEBREAK));
+            MimeWriteAString(obj, NS_LITERAL_CSTRING("Content-Disposition: attachment; filename=\""));
+            MimeWriteAString(obj, fileName);
+            MimeWriteAString(obj, NS_LITERAL_CSTRING("\""MSG_LINEBREAK));
+            MimeWriteAString(obj, NS_LITERAL_CSTRING("X-Mozilla-External-Attachment-URL: "));
+            MimeWriteAString(obj, obj->options->state->detachedFilePath);
+            MimeWriteAString(obj, NS_LITERAL_CSTRING(MSG_LINEBREAK));
+            MimeWriteAString(obj, NS_LITERAL_CSTRING("X-Mozilla-Altered: AttachmentDetached; date=\""));
+          }
+          else
+          {
+            nsCAutoString header("Content-Type: text/x-moz-deleted; name=\"Deleted: ");
+            header.Append(fileName);
+            status = MimeWriteAString(obj, header);
+            if (status < 0) 
+              return status;
+            status = MimeWriteAString(obj, NS_LITERAL_CSTRING("\""MSG_LINEBREAK"Content-Transfer-Encoding: 8bit"MSG_LINEBREAK));
+            MimeWriteAString(obj, NS_LITERAL_CSTRING("Content-Disposition: inline; filename=\"Deleted:"));
+            MimeWriteAString(obj, fileName);
+            MimeWriteAString(obj, NS_LITERAL_CSTRING("\""MSG_LINEBREAK"X-Mozilla-Altered: AttachmentDeleted; date=\""));
+          }
           nsCString result;
           char timeBuffer[128];
           PRExplodedTime now;

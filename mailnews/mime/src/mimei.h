@@ -421,7 +421,9 @@ public:
                         dexlateion did in fact occur.
                       */
   nsCStringArray partsToStrip;      /* if we're stripping parts, what parts to strip */
+  nsCStringArray detachToFiles;      /* if we're detaching parts, where each part was detached to */
   PRBool strippingPart;
+  nsCString detachedFilePath;       /* if we've detached this part, filepath of detached part */
 };
 
 

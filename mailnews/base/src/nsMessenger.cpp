@@ -303,7 +303,8 @@ public:
                               const char **urlArray,
                               const char **displayNameArray,
                               const char **messageUriArray,
-                              const char *directoryName);
+                              const char *directoryName,
+                              PRBool detachingAttachments);
     virtual ~nsSaveAllAttachmentsState();
 
     PRUint32 m_count;
@@ -313,6 +314,8 @@ public:
     char** m_urlArray;
     char** m_displayNameArray;
     char** m_messageUriArray;
+    PRBool m_detachingAttachments;
+    nsCStringArray m_savedFiles; // if detaching first, remember where we saved to.
 };
 
 //
@@ -655,14 +658,33 @@ nsMessenger::SaveAttachment(nsIFileSpec * fileSpec,
   // whacky ref counting here...what's the deal? when does saveListener get released? it's not clear.
   nsSaveMsgListener *saveListener = new nsSaveMsgListener(fileSpec, this);
   if (!saveListener)
-  {
     return NS_ERROR_OUT_OF_MEMORY;
-  }
+
   NS_ADDREF(saveListener);
 
   saveListener->m_contentType = contentType;
   if (saveState)
-      saveListener->m_saveAllAttachmentsState = saveState;
+  {
+    saveListener->m_saveAllAttachmentsState = saveState;
+    if (saveState->m_detachingAttachments)
+    {
+
+      nsFileSpec realSpec;
+      fileSpec->GetFileSpec(&realSpec);
+
+      // Create nsILocalFile from a nsFileSpec.
+      nsCOMPtr<nsILocalFile> outputFile;
+      nsresult rv = NS_FileSpecToIFile(&realSpec, getter_AddRefs(outputFile)); 
+      NS_ENSURE_SUCCESS(rv, rv);
+
+      nsCOMPtr<nsIURI> outputURI;
+      rv = NS_NewFileURI(getter_AddRefs(outputURI), outputFile);
+      NS_ENSURE_SUCCESS(rv, rv);
+      nsCAutoString fileUriSpec;
+      outputURI->GetSpec(fileUriSpec);
+      saveState->m_savedFiles.AppendCString(fileUriSpec);
+    }
+  }
 
   urlString = url;
   urlString.ReplaceSubstring("/;section", "?section");
@@ -717,7 +739,7 @@ nsMessenger::SaveAttachment(nsIFileSpec * fileSpec,
       NS_IF_RELEASE(saveListener);
       Alert("saveAttachmentFailed");
   }
-	return rv;
+  return rv;
 }
 
 NS_IMETHODIMP
@@ -835,6 +857,17 @@ nsMessenger::SaveAllAttachments(PRUint32 count,
                                 const char **displayNameArray,
                                 const char **messageUriArray)
 {
+  return SaveAllAttachments(count, contentTypeArray, urlArray, displayNameArray, messageUriArray, PR_FALSE);
+}
+
+nsresult 
+nsMessenger::SaveAllAttachments(PRUint32 count,
+                                const char **contentTypeArray,
+                                const char **urlArray,
+                                const char **displayNameArray,
+                                const char **messageUriArray,
+                                PRBool detaching)
+{
     nsresult rv = NS_ERROR_OUT_OF_MEMORY;
     nsCOMPtr<nsIFilePicker> filePicker =
         do_CreateInstance("@mozilla.org/filepicker;1", &rv);
@@ -877,7 +910,7 @@ nsMessenger::SaveAllAttachments(PRUint32 count,
                                               urlArray,
                                               displayNameArray,
                                               messageUriArray, 
-                                              (const char*) dirName);
+                                              (const char*) dirName, detaching);
     {
         nsFileSpec aFileSpec((const char *) dirName);
 
@@ -888,7 +921,8 @@ nsMessenger::SaveAllAttachments(PRUint32 count,
 
         aFileSpec += unescapedName.get();
         rv = PromptIfFileExists(aFileSpec);
-        if (NS_FAILED(rv)) return rv;
+        if (NS_FAILED(rv)) 
+          return rv;
         fileSpec->SetFromFileSpec(aFileSpec);
         rv = SaveAttachment(fileSpec, urlArray[0], messageUriArray[0], 
                             contentTypeArray[0], (void *)saveState);
@@ -1738,9 +1772,7 @@ done:
       realSpec.Delete(PR_FALSE);
     }
     if (m_messenger)
-    {
         m_messenger->Alert("saveMessageFailed");
-    }
   }
   if (killSelf)
       Release(); // no more work needs to be done; kill ourself
@@ -1973,8 +2005,20 @@ nsSaveMsgListener::OnStopRequest(nsIRequest* request, nsISupports* aSupport,
       }
       else
       {
-          delete m_saveAllAttachmentsState;
-          m_saveAllAttachmentsState = nsnull;
+          // check if we're saving attachments prior to detaching them.
+        if (m_saveAllAttachmentsState->m_detachingAttachments)
+        {
+          nsSaveAllAttachmentsState *state = m_saveAllAttachmentsState;
+          m_messenger->DetachAttachments(state->m_count,
+                                  (const char **) state->m_contentTypeArray,
+                                  (const char **) state->m_urlArray,
+                                  (const char **) state->m_displayNameArray,
+                                  (const char **) state->m_messageUriArray,
+                                  &state->m_savedFiles);
+        }
+
+        delete m_saveAllAttachmentsState;
+        m_saveAllAttachmentsState = nsnull;
       }
   }
 
@@ -2087,7 +2131,8 @@ nsSaveAllAttachmentsState::nsSaveAllAttachmentsState(PRUint32 count,
                                                      const char **urlArray,
                                                      const char **nameArray,
                                                      const char **uriArray,
-                                                     const char *dirName)
+                                                     const char *dirName,
+                                                     PRBool detachingAttachments)
 {
     PRUint32 i;
     NS_ASSERTION(count && urlArray && nameArray && uriArray && dirName, 
@@ -2107,6 +2152,7 @@ nsSaveAllAttachmentsState::nsSaveAllAttachmentsState(PRUint32 count,
         m_messageUriArray[i] = nsCRT::strdup(uriArray[i]);
     }
     m_directoryName = nsCRT::strdup(dirName);
+    m_detachingAttachments = detachingAttachments;
 }
 
 nsSaveAllAttachmentsState::~nsSaveAllAttachmentsState()
@@ -2442,6 +2488,8 @@ public:
 
   // temp
   PRBool mWrittenExtra;
+  PRBool mDetaching;
+  nsCStringArray mDetachedFileUris;
 };
 
 // 
@@ -2639,12 +2687,12 @@ nsDelAttachListener::~nsDelAttachListener()
 
 nsresult 
 nsDelAttachListener::StartProcessing(nsMessenger * aMessenger, nsIMsgWindow * aMsgWindow, 
-                                     nsAttachmentState * aAttach, PRBool aSaveFirst)
+                                     nsAttachmentState * aAttach, PRBool detaching)
 {
   aMessenger->QueryInterface(NS_GET_IID(nsIMessenger), getter_AddRefs(mMessenger));
   mMsgWindow = aMsgWindow;
   mAttach    = aAttach;
-  mSaveFirst = aSaveFirst;
+  mDetaching = detaching;
 
   nsresult rv;
 
@@ -2694,15 +2742,24 @@ nsDelAttachListener::StartProcessing(nsMessenger * aMessenger, nsIMsgWindow * aM
   const char * partId;
   const char * nextField;
   nsCAutoString sHeader("attach&del=");
+  nsCAutoString detachToHeader("&detachTo=");
   for (PRUint32 u = 0; u < mAttach->mCount; ++u)
   {
     if (u > 0)
+    {
       sHeader.Append(",");
+      if (detaching)
+        detachToHeader.Append(",");
+    }
     partId = GetAttachmentPartId(mAttach->mAttachmentArray[u].mUrl);
     nextField = PL_strchr(partId, '&');
     sHeader.Append(partId, nextField ? nextField - partId : -1);
+    if (detaching)
+      detachToHeader.Append(mDetachedFileUris.CStringAt(u)->get());
   }
 
+  if (detaching)
+    sHeader.Append(detachToHeader);
   // stream this message to our listener converting it via the attachment mime
   // converter. The listener will just write the converted message straight to disk.
   nsCOMPtr<nsISupports> listenerSupports;
@@ -2753,7 +2810,24 @@ nsMessenger::DetachAllAttachments(PRUint32 aCount,
   NS_ENSURE_ARG_POINTER(aDisplayNameArray);
   NS_ENSURE_ARG_POINTER(aMessageUriArray);
 
+  if (aSaveFirst)
+    return SaveAllAttachments(aCount, aContentTypeArray, aUrlArray, aDisplayNameArray, aMessageUriArray, PR_TRUE);
+  else
+    return DetachAttachments(aCount, aContentTypeArray, aUrlArray, aDisplayNameArray, aMessageUriArray, nsnull);
+}
+
+nsresult
+nsMessenger::DetachAttachments(PRUint32 aCount,
+                                  const char ** aContentTypeArray,
+                                  const char ** aUrlArray,
+                                  const char ** aDisplayNameArray,
+                                  const char ** aMessageUriArray,
+                                  nsCStringArray *saveFileUris)
+{
+  if (NS_FAILED(PromptIfDeleteAttachments(saveFileUris != nsnull, aCount, aDisplayNameArray)))
+    return NS_OK;
   nsresult rv = NS_OK;
+
 
   // ensure that our arguments are valid
 //  char * partId;
@@ -2800,20 +2874,20 @@ nsMessenger::DetachAllAttachments(PRUint32 aCount,
 
   // get the listener for running the url
   nsDelAttachListener * listener = new nsDelAttachListener;
-  if (!listener) return NS_ERROR_OUT_OF_MEMORY;
+  if (!listener) 
+    return NS_ERROR_OUT_OF_MEMORY;
   nsCOMPtr<nsISupports> listenerSupports; // auto-delete of the listener with error
   listener->QueryInterface(NS_GET_IID(nsISupports), getter_AddRefs(listenerSupports));
 
+  if (saveFileUris)
+    listener->mDetachedFileUris = *saveFileUris;
   // create the attachments for use by the listener
   nsAttachmentState * attach = new nsAttachmentState;
-  if (!attach) return NS_ERROR_OUT_OF_MEMORY;
+  if (!attach) 
+    return NS_ERROR_OUT_OF_MEMORY;
   rv = attach->Init(aCount, aContentTypeArray, aUrlArray, aDisplayNameArray, aMessageUriArray);
-  if (NS_FAILED(rv)) 
-  {
-    delete attach;
-    return rv;
-  }
-  rv = attach->PrepareForAttachmentDelete();
+  if (NS_SUCCEEDED(rv))
+    rv = attach->PrepareForAttachmentDelete();
   if (NS_FAILED(rv)) 
   {
     delete attach;
@@ -2822,7 +2896,7 @@ nsMessenger::DetachAllAttachments(PRUint32 aCount,
 
   // initialize our listener with the attachments and details. The listener takes ownership
   // of 'attach' immediately irrespective of the return value (error or not).
-  return listener->StartProcessing(this, mMsgWindow, attach, aSaveFirst);
+  return listener->StartProcessing(this, mMsgWindow, attach, saveFileUris != nsnull);
 }
 
 nsresult 

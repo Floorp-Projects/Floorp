@@ -1791,6 +1791,7 @@ nsMsgLocalMailFolder::CopyMessages(nsIMsgFolder* srcFolder, nsISupportsArray*
   return rv;
 }
 // for srcFolder that are on different server than the dstFolder. 
+// "this" is the parent of the new dest folder.
 nsresult
 nsMsgLocalMailFolder::CopyFolderAcrossServer(nsIMsgFolder* srcFolder, nsIMsgWindow *msgWindow,
                   nsIMsgCopyServiceListener *listener )
