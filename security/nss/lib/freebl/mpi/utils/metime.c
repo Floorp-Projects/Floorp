@@ -3,7 +3,7 @@
  *
  * Modular exponentiation timing test
  *
- * $Id: metime.c,v 1.1 2000/07/14 00:44:59 nelsonb%netscape.com Exp $
+ * $Id: metime.c,v 1.2 2000/07/17 22:37:55 nelsonb%netscape.com Exp $
  *
  * The contents of this file are subject to the Mozilla Public
  * License Version 1.1 (the "License"); you may not use this file
@@ -23,6 +23,7 @@
  * Copyright (C) 2000 Michael J. Fromberger. All Rights Reserved.
  *
  * Contributor(s):
+ *	Netscape Communications Corporation
  *
  * Alternatively, the contents of this file may be used under the
  * terms of the GNU General Public License Version 2 or later (the
@@ -35,7 +36,7 @@
  * the GPL.  If you do not delete the provisions above, a recipient
  * may use your version of this file under either the MPL or the GPL.
  *
- *  $Id: metime.c,v 1.1 2000/07/14 00:44:59 nelsonb%netscape.com Exp $
+ *  $Id: metime.c,v 1.2 2000/07/17 22:37:55 nelsonb%netscape.com Exp $
  */
 
 #include <stdio.h>
@@ -96,9 +97,16 @@ int main(int argc, char *argv[])
 
   start = clock();
   for(ix = 0; ix < num; ix++) {
+
     mpp_random_size(&a, prec);
     mpp_random_size(&c, prec);
     mpp_random_size(&m, prec);
+    /* set msb and lsb of m */
+    DIGIT(&m,0) |= 1;
+    DIGIT(&m, USED(&m)-1) |= 1L << (DIGIT_BIT - 1);
+    if (mp_cmp(&a, &m) > 0)
+      mp_sub(&a, &m, &a);
+
     mp_exptmod(&a, &c, &m, &c);
   }
   stop = clock();
