@@ -161,9 +161,9 @@ void nsFileControlFrame::MouseClicked(nsIPresContext* aPresContext)
 	  result = fileWidget->Show();
 
 	  if (result) {
-	    nsString fileName;
-	    fileWidget->GetFile(fileName);
-      mTextFrame->SetProperty(nsHTMLAtoms::value,fileName);
+	    nsFileSpec fileSpec;
+	    fileWidget->GetFile(fileSpec);
+      mTextFrame->SetProperty(nsHTMLAtoms::value,fileSpec.GetNativePathCString());
 	  }
 	  NS_RELEASE(fileWidget);
   }
