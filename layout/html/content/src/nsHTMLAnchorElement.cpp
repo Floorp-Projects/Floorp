@@ -660,8 +660,17 @@ nsHTMLAnchorElement::GetHash(nsString& aHash)
 NS_IMETHODIMP    
 nsHTMLAnchorElement::GetText(nsString& aText)
 {
-  // XXX TBI
-  return NS_ERROR_NOT_IMPLEMENTED;
+  aText.Truncate();
+
+  nsCOMPtr<nsIDOMNode> child;
+
+  mInner.GetFirstChild(getter_AddRefs(child));
+
+  if (child) {
+    child->GetNodeValue(aText);
+  }
+
+  return NS_OK;
 }
 
 NS_IMETHODIMP
