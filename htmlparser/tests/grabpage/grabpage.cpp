@@ -209,7 +209,10 @@ PageGrabber::Grab(const nsString& aURL)
   if (nsnull == cname) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
-  FILE* fp = fopen(cname, "rb");
+  FILE* fp = fopen(cname, "wb");
+  if (nsnull == fp) {
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
   printf("Copying ");
   fputs(aURL, stdout);
   printf(" to %s\n", cname);
