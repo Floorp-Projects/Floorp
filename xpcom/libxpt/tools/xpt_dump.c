@@ -628,7 +628,7 @@ XPT_DumpConstDescriptor(XPTConstDescriptor *cd, const int indent, PRBool verbose
     case TD_VOID:
         fprintf(stdout, "VOID");
         break;
-    case TD_PPNSIID:
+    case TD_PNSIID:
         if (XPT_TDP_IS_POINTER(cd->type.prefix.flags)) {
             print_IID(cd->value.iid, stdout);
         } else 
