@@ -44,8 +44,6 @@
 
 #define USE_NATIVE_TILING 1
 
-class nsFontGTK;
-
 class nsRenderingContextGTK : public nsRenderingContextImpl
 {
 public:
@@ -207,15 +205,6 @@ public:
 
   GdkGC *GetGC() { return gdk_gc_ref(mGC); }
 
-  // handle drawing 8 bit data with a 16 bit font
-  static void Widen8To16AndDraw(GdkDrawable *drawable,
-                               GdkFont     *font,
-                               GdkGC       *gc,
-                               gint         x,
-                               gint         y,
-                               const gchar *text,
-                               gint         text_length);
-
   // replacment for gdk_draw_text that doesn't do XSetFont
   static void my_gdk_draw_text(GdkDrawable *drawable,
                                GdkFont     *font,
@@ -244,7 +233,7 @@ private:
   gchar                 *mDashList;
   gint                   mDashes;
   nscolor                mCurrentColor;
-  nsFontGTK             *mCurrentFont;
+  GdkFont               *mCurrentFont;
   nsLineStyle            mCurrentLineStyle;
 
   void UpdateGC();
