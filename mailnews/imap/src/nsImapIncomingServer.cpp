@@ -32,22 +32,28 @@
 #include "nsISupportsArray.h"
 #include "nsVoidArray.h"
 #include "nsCOMPtr.h"
-
+#include "nsImapStringBundle.h"
 #include "nsIPref.h"
 
 #include "prmem.h"
 #include "plstr.h"
 #include "nsXPIDLString.h"
 #include "nsIMsgFolder.h"
-
-#include "nsCOMPtr.h"
+#include "nsIImapServerSink.h"
+#include "nsImapUtils.h"
+#include "nsIRDFService.h"
+#include "nsRDFCID.h"
+#include "nsINetSupportDialogService.h"
 
 static NS_DEFINE_CID(kCImapHostSessionList, NS_IIMAPHOSTSESSIONLIST_CID);
 static NS_DEFINE_CID(kImapProtocolCID, NS_IMAPPROTOCOL_CID);
+static NS_DEFINE_CID(kRDFServiceCID, NS_RDFSERVICE_CID);
+static NS_DEFINE_CID(kNetSupportDialogCID, NS_NETSUPPORTDIALOG_CID);
 
 /* get some implementation from nsMsgIncomingServer */
 class nsImapIncomingServer : public nsMsgIncomingServer,
-                             public nsIImapIncomingServer
+                             public nsIImapIncomingServer,
+							 public nsIImapServerSink
                              
 {
 public:
@@ -91,7 +97,11 @@ public:
 
 	NS_IMETHOD GetUnverifiedFolders(nsISupportsArray *aFolderArray, PRInt32 *aNumUnverifiedFolders);
 
-
+	// nsIImapServerSink impl
+	NS_IMETHOD PossibleImapMailbox(const char *folderPath);
+	NS_IMETHOD DiscoveryDone();
+	NS_IMETHOD  FEAlert(const PRUnichar *aString);
+	NS_IMETHOD  FEAlertFromServer(const char *aString);
 private:
     nsresult CreateImapConnection (nsIEventQueue* aEventQueue,
                                    nsIImapUrl* aImapUrl,
@@ -103,9 +113,31 @@ private:
     nsVoidArray m_urlConsumers;
 };
 
-NS_IMPL_ISUPPORTS_INHERITED(nsImapIncomingServer,
-                            nsMsgIncomingServer,
-                            nsIImapIncomingServer);
+
+NS_IMPL_ADDREF_INHERITED(nsImapIncomingServer, nsMsgIncomingServer)
+NS_IMPL_RELEASE_INHERITED(nsImapIncomingServer, nsMsgIncomingServer)
+
+NS_IMETHODIMP nsImapIncomingServer::QueryInterface(REFNSIID aIID, void** aInstancePtr)
+{
+	if (!aInstancePtr) return NS_ERROR_NULL_POINTER;
+	*aInstancePtr = nsnull;
+
+    if (aIID.Equals(nsIImapServerSink::GetIID()))
+	{
+		*aInstancePtr = NS_STATIC_CAST(nsIImapServerSink*, this);
+	}              
+	else if(aIID.Equals(nsIImapIncomingServer::GetIID()))
+	{
+		*aInstancePtr = NS_STATIC_CAST(nsIImapIncomingServer*, this);
+	}
+	if(*aInstancePtr)
+	{
+		AddRef();
+		return NS_OK;
+	}
+
+	return nsMsgIncomingServer::QueryInterface(aIID, aInstancePtr);
+}
 
                             
 nsImapIncomingServer::nsImapIncomingServer() : m_rootFolderPath(nsnull)
@@ -494,6 +526,193 @@ nsresult NS_NewImapIncomingServer(const nsIID& iid,
     return server->QueryInterface(iid, result);
 }
 
+// nsIImapServerSink impl
+NS_IMETHODIMP nsImapIncomingServer::PossibleImapMailbox(const char *folderPath)
+{
+	nsresult rv;
+    PRBool found = PR_FALSE;
+    nsCOMPtr<nsIMsgImapMailFolder> hostFolder;
+    nsCOMPtr<nsIMsgFolder> aFolder;
+ 
+    nsAutoString folderName = folderPath;
+    nsCAutoString uri;
+    uri.Append(kImapRootURI);
+    uri.Append('/');
+
+    char *username;
+    GetUsername(&username);
+    uri.Append(username);
+    uri.Append('@');
+	char *hostName = nsnull;
+	GetHostName(&hostName);
+
+	if (hostName)
+	{
+		uri.Append(hostName);
+		nsAllocator::Free(hostName);
+	}
+#if 0    
+    PRInt32 leafPos = folderName.RFindChar('/');
+    if (leafPos > 0)
+    {
+        uri.Append('/');
+        nsAutoString parentName(folderName);
+        parentName.Truncate(leafPos);
+        uri.Append(parentName);
+    }
+#endif 
+
+	nsCOMPtr<nsIFolder> rootFolder;
+    rv = GetRootFolder(getter_AddRefs(rootFolder));
+
+    if(NS_FAILED(rv))
+        return rv;
+    nsCOMPtr<nsIMsgFolder> a_nsIFolder(do_QueryInterface(rootFolder, &rv));
+
+    if (NS_FAILED(rv))
+		return rv;
+
+	hostFolder = do_QueryInterface(a_nsIFolder, &rv);
+	if (NS_FAILED(rv))
+		return rv;
+
+	nsCOMPtr <nsIMsgFolder> child;
+
+//	nsCString possibleName(aSpec->allocatedPathName);
+
+	uri.Append('/');
+	uri.Append(folderPath);
+	a_nsIFolder->GetChildWithURI(uri, PR_TRUE, getter_AddRefs(child));
+
+	if (child)
+		found = PR_TRUE;
+    if (!found)
+    {
+        hostFolder->CreateClientSubfolderInfo(folderPath);
+    }
+    
+	return NS_OK;
+}
+
+NS_IMETHODIMP nsImapIncomingServer::DiscoveryDone()
+{
+	nsresult rv = NS_ERROR_FAILURE;
+//	m_haveDiscoveredAllFolders = PR_TRUE;
+#if 0
+	if (currentContext->imapURLPane && (currentContext->imapURLPane->GetPaneType() == MSG_SUBSCRIBEPANE))
+	{
+		// Finished discovering folders for the subscribe pane.
+		((MSG_SubscribePane *)(currentContext->imapURLPane))->ReportIMAPFolderDiscoveryFinished();
+	}
+	else
+	{
+		// only do this if we're discovering folders for real (i.e. not subscribe UI)
+
+  
+		if (URL_s && URL_s->msg_pane && !URL_s->msg_pane->GetPreImapFolderVerifyUrlExitFunction())
+		{
+    		URL_s->msg_pane->SetPreImapFolderVerifyUrlExitFunction(URL_s->pre_exit_fn);
+    		URL_s->pre_exit_fn = DeleteNonVerifiedExitFunction;
+		}
+
+	    XP_ASSERT(currentContext->imapURLPane);
+
+		// Go through folders and find if there are still any that are left unverified.
+		// If so, manually LIST them to see if we can find out any info about them.
+		char *hostName = NET_ParseURL(URL_s->address, GET_HOST_PART);
+		if (hostName && currentContext->mailMaster && currentContext->imapURLPane)
+		{
+			MSG_FolderInfoContainer *hostContainerInfo = currentContext->mailMaster->GetImapMailFolderTreeForHost(hostName);
+			MSG_IMAPFolderInfoContainer *hostInfo = hostContainerInfo ? hostContainerInfo->GetIMAPFolderInfoContainer() : (MSG_IMAPFolderInfoContainer *)NULL;
+			if (hostInfo)
+			{
+				// for each folder
+
+				int32 numberOfUnverifiedFolders = hostInfo->GetUnverifiedFolders(NULL, 0);
+				if (numberOfUnverifiedFolders > 0)
+				{
+					MSG_IMAPFolderInfoMail **folderList = (MSG_IMAPFolderInfoMail **)XP_ALLOC(sizeof(MSG_IMAPFolderInfoMail*) * numberOfUnverifiedFolders);
+					if (folderList)
+					{
+						int32 numUsed = hostInfo->GetUnverifiedFolders(folderList, numberOfUnverifiedFolders);
+						for (int32 k = 0; k < numUsed; k++)
+						{
+							MSG_IMAPFolderInfoMail *currentFolder = folderList[k];
+							if (currentFolder->GetExplicitlyVerify() ||
+								((currentFolder->GetNumSubFolders() > 0) && !NoDescendantsAreVerified(currentFolder)))
+							{
+								// If there are no subfolders and this is unverified, we don't want to run
+								// this url.  That is, we want to undiscover the folder.
+								// If there are subfolders and no descendants are verified, we want to 
+								// undiscover all of the folders.
+								// Only if there are subfolders and at least one of them is verified do we want
+								// to refresh that folder's flags, because it won't be going away.
+								currentFolder->SetExplicitlyVerify(FALSE);
+								char *url = CreateIMAPListFolderURL(hostName, currentFolder->GetOnlineName(), currentFolder->GetOnlineHierarchySeparator());
+								if (url)
+								{
+									MSG_UrlQueue::AddUrlToPane(url, NULL, currentContext->imapURLPane);
+									XP_FREE(url);
+								}
+							}
+						}
+						XP_FREE(folderList);
+					}
+				}
+			}
+			XP_FREE(hostName);
+		}
+		else
+		{
+			XP_ASSERT(FALSE);
+		}
+	}
+
+#endif
+	return rv;
+}
+
+
+NS_IMETHODIMP
+nsImapIncomingServer::FEAlert(const PRUnichar* aString)
+{
+	nsresult rv;
+	NS_WITH_SERVICE(nsIPrompt, dialog, kNetSupportDialogCID, &rv);
+
+	rv = dialog->Alert(nsAutoString(aString).GetUnicode());
+    return rv;
+}
+
+NS_IMETHODIMP  nsImapIncomingServer::FEAlertFromServer(const char *aString)
+{
+	nsresult rv = NS_OK;
+	NS_WITH_SERVICE(nsIPrompt, dialog, kNetSupportDialogCID, &rv);
+
+	const char *serverSaid = aString;
+	if (serverSaid)
+	{
+		// skip over the first two words, I guess.
+		char *whereRealMessage = PL_strchr(serverSaid, ' ');
+		if (whereRealMessage)
+			whereRealMessage++;
+		if (whereRealMessage)
+			whereRealMessage = PL_strchr(whereRealMessage, ' ');
+		if (whereRealMessage)
+			whereRealMessage++;
+
+		PRUnichar *serverSaidPrefix = IMAPGetStringByID(IMAP_SERVER_SAID);
+		if (serverSaidPrefix)
+		{
+			nsAutoString message(serverSaidPrefix);
+			message += whereRealMessage ? whereRealMessage : serverSaid;
+			rv = dialog->Alert(message.GetUnicode());
+
+			PR_Free(serverSaidPrefix);
+		}
+	}
+
+    return rv;
+}
 
 NS_IMETHODIMP nsImapIncomingServer::GetUnverifiedFolders(nsISupportsArray *aFoldersArray, PRInt32 *aNumUnverifiedFolders)
 {
