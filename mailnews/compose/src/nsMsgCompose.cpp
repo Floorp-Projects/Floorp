@@ -2035,6 +2035,8 @@ NS_IMETHODIMP QuotingOutputStreamListener::OnStopRequest(nsIRequest *request, ns
         nsAutoString recipient;
         nsAutoString cc;
         nsAutoString replyTo;
+        nsAutoString mailReplyTo;
+        nsAutoString mailFollowupTo;
         nsAutoString newgroups;
         nsAutoString followUpTo;
         nsAutoString messageId;
@@ -2063,10 +2065,23 @@ NS_IMETHODIMP QuotingOutputStreamListener::OnStopRequest(nsIRequest *request, ns
             mMimeConverter->DecodeMimeHeader(outCString, cc, charset);
           }
               
-          if (recipient.Length() > 0 && cc.Length() > 0)
-            recipient.AppendLiteral(", ");
-          recipient += cc;
-          compFields->SetCc(recipient);
+          mHeaders->ExtractHeader(HEADER_MAIL_FOLLOWUP_TO, PR_TRUE, getter_Copies(outCString));
+          if (outCString)
+          {
+            mMimeConverter->DecodeMimeHeader(outCString, mailFollowupTo, charset);
+          }
+          
+          if (! mailFollowupTo.IsEmpty())
+          { // handle Mail-Followup-To (http://cr.yp.to/proto/replyto.html)
+            compFields->SetTo(mailFollowupTo);
+          }
+          else
+          { // default behaviour for messages without Mail-Followup-To
+            if (recipient.Length() > 0 && cc.Length() > 0)
+              recipient.AppendLiteral(", ");
+            recipient += cc;
+            compFields->SetCc(recipient);
+          }
 
           needToRemoveDup = PR_TRUE;
         }
@@ -2075,6 +2090,12 @@ NS_IMETHODIMP QuotingOutputStreamListener::OnStopRequest(nsIRequest *request, ns
         if (outCString)
         {
           mMimeConverter->DecodeMimeHeader(outCString, replyTo, charset);
+        }
+        
+        mHeaders->ExtractHeader(HEADER_MAIL_REPLY_TO, PR_TRUE, getter_Copies(outCString));
+        if (outCString)
+        {
+          mMimeConverter->DecodeMimeHeader(outCString, mailReplyTo, charset);
         }
         
         mHeaders->ExtractHeader(HEADER_NEWSGROUPS, PR_FALSE, getter_Copies(outCString));
@@ -2101,10 +2122,18 @@ NS_IMETHODIMP QuotingOutputStreamListener::OnStopRequest(nsIRequest *request, ns
           mMimeConverter->DecodeMimeHeader(outCString, references, charset);
         }
         
-        if (! replyTo.IsEmpty())
+        if (! ((type == nsIMsgCompType::ReplyAll) && ! mailFollowupTo.IsEmpty()))
         {
-          compFields->SetTo(replyTo);
-          needToRemoveDup = PR_TRUE;
+          if (! mailReplyTo.IsEmpty())
+          { // handle Mail-Reply-To (http://cr.yp.to/proto/replyto.html)
+            compFields->SetTo(mailReplyTo);
+            needToRemoveDup = PR_TRUE;
+          }
+          else if (! replyTo.IsEmpty())
+          { // default behaviour for messages without Mail-Reply-To
+            compFields->SetTo(replyTo);
+            needToRemoveDup = PR_TRUE;
+          }
         }
         
         if (! newgroups.IsEmpty())
