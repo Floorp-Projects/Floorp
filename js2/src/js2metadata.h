@@ -608,6 +608,8 @@ public:
 
     void markChildren();
 
+    uint32 getSize()            { return frameList.size(); }
+
 private:
     FrameList frameList;
 };

@@ -561,7 +561,9 @@ namespace MetaData {
                 for (uint32 i = 0; i < (30 - bCon->fName.length()); i++)
                     stdOut << " ";
             }
-            printFormat(stdOut, "%.4d %.4d ", pc - start, (int32)(engine->sp - engine->execStack));
+            printFormat(stdOut, "%.4d %.4d %.4d ", pc - start, 
+                            (int32)(engine->sp - engine->execStack), 
+                            (int32)(engine->activationStackTop - engine->activationStack));
         }
         else
             printFormat(stdOut, "%.4d ", pc - start);
@@ -859,10 +861,10 @@ namespace MetaData {
         activationStackTop->bCon = bCon;
         activationStackTop->pc = pc;
         activationStackTop->phase = phase;
-//        activationStackTop->topFrame = meta->env->getTopFrame();
         activationStackTop->execStackBase = stackBase;
         activationStackTop->retval = returnVal;
-        activationStackTop->env = meta->env;
+        activationStackTop->env = meta->env;    // save current env.
+        activationStackTop->topFrame = env->getTopFrame();  // remember how big the new env. is supposed to be
         activationStackTop++;
         bCon = new_bCon;
         if ((int32)bCon->getMaxStack() >= (execStackLimit - sp)) {
@@ -888,9 +890,11 @@ namespace MetaData {
         bCon = activationStackTop->bCon;
         pc = activationStackTop->pc;
         phase = activationStackTop->phase;
+        // reset the env. top
+        while (meta->env->getTopFrame() != activationStackTop->topFrame)
+            meta->env->removeTopFrame();
+        // reset to previous env.
         meta->env = activationStackTop->env;
-//        while (meta->env->getTopFrame() != activationStackTop->topFrame)
-//            meta->env->removeTopFrame();
         sp = execStack + activationStackTop->execStackBase;
         if (!JS2VAL_IS_VOID(activationStackTop->retval))    // XXX might need an actual 'returnValue' flag instead
             retval = activationStackTop->retval;

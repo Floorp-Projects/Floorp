@@ -316,6 +316,12 @@ js2val dump(JS2Metadata *meta, const js2val /* thisValue */, js2val argv[], uint
                             DynamicPropertyBinding *dpb = *dpi;
                             stdOut << "\t" << dpb->name << " = " << *meta->toString(dpb->v.value) << "\n";
                         }
+                        if (pInst->type == meta->functionClass) {
+                            FunctionWrapper *fWrap = (checked_cast<FunctionInstance *>(fObj))->fWrap;
+                            stdOut << "Function:" << "\n";
+                            stdOut << "Environment depth " << fWrap->env->getSize() << "\n";
+                            dumpBytecode(fWrap->bCon);
+                        }
                     }
                 }
             }

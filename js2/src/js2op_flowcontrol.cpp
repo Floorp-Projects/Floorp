@@ -66,11 +66,12 @@
 
     case eBreak:
         {
+            // don't update the pc in order to get the blockcount
+            // since the branch calculation doesn't include that.
             int32 offset = BytecodeContainer::getOffset(pc);
-            pc += sizeof(int32);
-            uint32 blockCount = BytecodeContainer::getShort(pc);
-            pc += sizeof(short);
-            //
+            uint32 blockCount = BytecodeContainer::getShort(pc + sizeof(int32));
+            for (uint32 i = 0; i < blockCount; i++)
+                meta->env->removeTopFrame();
             pc += offset;
         }
         break;

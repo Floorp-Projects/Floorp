@@ -263,7 +263,8 @@ namespace MetaData {
                     GoStmtNode *g = checked_cast<GoStmtNode *>(p);
                     g->blockCount = 0;
                     g->tgtID = -1;
-                    for (TargetListReverseIterator si = targetList.rbegin(), end = targetList.rend(); (g->tgtID == -1) && (si != end); si++) {
+                    for (TargetListReverseIterator si = targetList.rbegin(), end = targetList.rend(); 
+                                ((g->tgtID == -1) && (si != end)); si++) {
                         if (g->name) {
                             // Make sure the name is on the targetList as a viable break target...
                             // (only label statements can introduce names)
@@ -301,14 +302,13 @@ namespace MetaData {
                                     g->tgtID = f->breakLabelID;
                                 }
                                 break;
-                           case StmtNode::Switch:
+                            case StmtNode::Switch:
                                 {
                                     SwitchStmtNode *s = checked_cast<SwitchStmtNode *>(*si);
                                     g->tgtID = s->breakLabelID;
                                 }
                                 break;
                             }
-                            break;
                         }
                     }
                     if (g->tgtID == -1) 
@@ -320,7 +320,8 @@ namespace MetaData {
                     GoStmtNode *g = checked_cast<GoStmtNode *>(p);
                     g->blockCount = 0;
                     g->tgtID = -1;
-                    for (TargetListIterator si = targetList.begin(), end = targetList.end(); (g->tgtID == -1) && (si != end); si++) {
+                    for (TargetListIterator si = targetList.begin(), end = targetList.end();
+                                    ((g->tgtID == -1) && (si != end)); si++) {
                         if (g->name) {
                             // Make sure the name is on the targetList as a viable continue target...
                             if ((*si)->getKind() == StmtNode::label) {
@@ -351,7 +352,6 @@ namespace MetaData {
                                     g->tgtID = f->continueLabelID;
                                 }
                             }
-                            break;
                         }
                     }
                     if (g->tgtID == -1) 
@@ -749,7 +749,7 @@ namespace MetaData {
             {
                 GoStmtNode *g = checked_cast<GoStmtNode *>(p);
                 bCon->emitBranch(eBreak, g->tgtID, p->pos);
-//                bCon->
+                bCon->addShort(g->blockCount);
             }
             break;
         case StmtNode::ForIn:
@@ -813,7 +813,6 @@ namespace MetaData {
                 v->emitWriteBytecode(bCon, p->pos);
                 bCon->emitOp(ePop, p->pos);     // clear iterator value from stack
                 SetupStmt(env, phase, f->stmt);
-                targetList.pop_back();
                 bCon->setLabel(f->continueLabelID);
                 bCon->emitOp(eNext, p->pos);
                 bCon->emitBranch(eBranchTrue, loopTop, p->pos);
@@ -832,9 +831,7 @@ namespace MetaData {
                 if (f->expr2)
                     bCon->emitBranch(eBranch, testLocation, p->pos);
                 bCon->setLabel(loopTop);
-                targetList.push_back(p);
                 SetupStmt(env, phase, f->stmt);
-                targetList.pop_back();
                 bCon->setLabel(f->continueLabelID);
                 if (f->expr3) {
                     Reference *r = SetupExprNode(env, phase, f->expr3, &exprType);
@@ -915,7 +912,6 @@ namespace MetaData {
                 else
                     bCon->emitBranch(eBranch, defaultLabel, p->pos);
                 // Now emit the contents
-                targetList.push_back(p);
                 s = sw->statements;
                 while (s) {
                     if (s->getKind() == StmtNode::Case) {
@@ -926,7 +922,6 @@ namespace MetaData {
                         SetupStmt(env, phase, s);
                     s = s->next;
                 }
-                targetList.pop_back();
 
                 bCon->setLabel(sw->breakLabelID);
             }
@@ -937,9 +932,7 @@ namespace MetaData {
                 BytecodeContainer::LabelID loopTop = bCon->getLabel();
                 bCon->emitBranch(eBranch, w->continueLabelID, p->pos);
                 bCon->setLabel(loopTop);
-                targetList.push_back(p);
                 SetupStmt(env, phase, w->stmt);
-                targetList.pop_back();
                 bCon->setLabel(w->continueLabelID);
                 Reference *r = SetupExprNode(env, phase, w->expr, &exprType);
                 if (r) r->emitReadBytecode(bCon, p->pos);
@@ -952,9 +945,7 @@ namespace MetaData {
                 UnaryStmtNode *w = checked_cast<UnaryStmtNode *>(p);
                 BytecodeContainer::LabelID loopTop = bCon->getLabel();
                 bCon->setLabel(loopTop);
-                targetList.push_back(p);
                 SetupStmt(env, phase, w->stmt);
-                targetList.pop_back();
                 bCon->setLabel(w->continueLabelID);
                 Reference *r = SetupExprNode(env, phase, w->expr, &exprType);
                 if (r) r->emitReadBytecode(bCon, p->pos);
