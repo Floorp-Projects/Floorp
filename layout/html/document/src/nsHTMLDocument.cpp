@@ -261,6 +261,13 @@ nsHTMLDocument::Reset(nsIURL *aURL)
   return result;
 }
 
+NS_IMETHODIMP 
+nsHTMLDocument::GetContentType(nsString& aContentType) const
+{
+  aContentType.SetString("text/html");
+  return NS_OK;
+}
+
 NS_IMETHODIMP
 nsHTMLDocument::StartDocumentLoad(nsIURL *aURL,
                                   nsIContentViewerContainer* aContainer,

@@ -33,9 +33,14 @@
 #include "nsIContentIterator.h"
 #include "nsIDOMNodeList.h"
 #include "nsIScriptGlobalObject.h"
+#include "nsIParser.h"
+#include "nsIComponentManager.h"
+#include "nsParserCIID.h"
 
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 static NS_DEFINE_IID(kIScriptObjectOwnerIID, NS_ISCRIPTOBJECTOWNER_IID);
+static NS_DEFINE_IID(kCParserIID, NS_IPARSER_IID);
+static NS_DEFINE_IID(kCParserCID, NS_PARSER_IID);
 
 nsVoidArray* nsRange::mStartAncestors = nsnull;      
 nsVoidArray* nsRange::mEndAncestors = nsnull;        
@@ -1437,8 +1442,10 @@ nsresult nsRange::ToString(nsString& aReturn)
   // clear the string
   aReturn.Truncate();
   
-  if (!cStart || !cEnd)
-    return NS_ERROR_UNEXPECTED;
+  // If we're unpositioned, return the empty string
+  if (!cStart || !cEnd) {
+    return NS_OK;
+  }
     
   // effeciency hack for simple case
   if (cStart == cEnd)
@@ -1701,6 +1708,87 @@ nsRange::InsertFragment(const nsString& aFragment)
 #endif
 
   return NS_OK;
+}
+
+NS_IMETHODIMP    
+nsRange::IsValidFragment(const nsString& aFragment, PRBool* aReturn)
+{
+  nsresult result = NS_OK;
+  nsCOMPtr<nsIParser> parser;
+  nsITagStack* tagStack;
+
+  if (!mIsPositioned) {
+    return NS_ERROR_FAILURE;
+  }
+
+  // Create a new parser for this entire operation
+  result = nsComponentManager::CreateInstance(kCParserCID, 
+                                              nsnull, 
+                                              kCParserIID, 
+                                              (void **)getter_AddRefs(parser));
+  if (NS_SUCCEEDED(result)) {
+    result = parser->CreateTagStack(&tagStack);
+
+    if (NS_SUCCEEDED(result)) {
+      nsCOMPtr<nsIDOMNode> parent;
+      nsCOMPtr<nsIContent> content(do_QueryInterface(mStartParent, &result));
+
+      if (NS_SUCCEEDED(result)) {
+        nsCOMPtr<nsIDocument> document;
+        
+        result = content->GetDocument(*getter_AddRefs(document));
+        
+        if (NS_SUCCEEDED(result)) {
+          nsCOMPtr<nsIDOMDocument> domDocument(do_QueryInterface(document, &result));
+
+          if (NS_SUCCEEDED(result)) {
+            parent = mStartParent;
+            while (parent && 
+                   (parent != domDocument) && 
+                   NS_SUCCEEDED(result)) {
+              nsCOMPtr<nsIDOMNode> temp;
+              nsAutoString tagName;
+              PRUnichar* name = nsnull;
+              
+              parent->GetNodeName(tagName);
+              // XXX Wish we didn't have to allocate here
+              name = tagName.ToNewUnicode();
+              if (nsnull != name) {
+                tagStack->Push(name);
+                temp = parent;
+                result = temp->GetParentNode(getter_AddRefs(parent));
+              }
+              else {
+                result = NS_ERROR_OUT_OF_MEMORY;
+              }
+            }
+            
+            if (NS_SUCCEEDED(result)) {
+              nsAutoString contentType;
+
+              document->GetContentType(contentType);
+              *aReturn = parser->IsValidFragment(aFragment,
+                                                 *tagStack,
+                                                 0, contentType);
+            }
+          }
+        }
+      }
+        
+      // XXX Ick! Delete strings we allocated above.
+      PRUnichar* str = nsnull;
+      str = tagStack->Pop();
+      while (nsnull != str) {
+        delete[] str;
+        str = tagStack->Pop();
+      }
+      
+      // XXX Double Ick! Deleting something that someone else newed.
+      delete tagStack;
+    }
+  }
+
+  return result;
 }
 
 // BEGIN nsIScriptContextOwner interface implementations
