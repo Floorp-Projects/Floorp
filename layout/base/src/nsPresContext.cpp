@@ -218,6 +218,18 @@ nsPresContext::GetDefaultBackgroundColor(nscolor& aColor)
   return NS_OK;
 }
 
+NS_METHOD nsPresContext::SetDefaultColor(const nscolor& aColor)
+{
+  mDefaultColor = aColor;
+  return NS_OK;
+}
+
+NS_METHOD nsPresContext::SetDefaultBackgroundColor(const nscolor& aColor)
+{
+  mDefaultBackgroundColor = aColor;
+  return NS_OK;
+}
+
 void
 nsPresContext::GetVisibleArea(nsRect& aResult)
 {
