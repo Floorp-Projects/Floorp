@@ -817,11 +817,13 @@ void nsTableRowGroupFrame::CalculateRowHeights(nsIPresContext* aPresContext,
   rowFrame = GetFirstFrame();
   rowIndex = 0;
   while (rowFrame) {
-    nsCOMPtr<nsIAtom> rowType;
-    rowFrame->GetFrameType(getter_AddRefs(rowType));
-    if (nsLayoutAtoms::tableRowFrame == rowType.get()) {
-      // Notify the row of the new size
-      ((nsTableRowFrame *)rowFrame)->DidResize(aPresContext, aReflowState);
+    if (NS_UNCONSTRAINEDSIZE != aReflowState.availableWidth) {
+      nsCOMPtr<nsIAtom> rowType;
+      rowFrame->GetFrameType(getter_AddRefs(rowType));
+      if (nsLayoutAtoms::tableRowFrame == rowType.get()) {
+        // Notify the row of the new size
+        ((nsTableRowFrame *)rowFrame)->DidResize(aPresContext, aReflowState);
+      }
     }
 
     // Update the running row group height. The height includes frames that
@@ -1121,7 +1123,15 @@ nsTableRowGroupFrame::Reflow(nsIPresContext*          aPresContext,
     }
 
     // shrink wrap rows to height of tallest cell in that row
-    if (eReflowReason_Initial != aReflowState.reason) {
+    PRBool  isTableUnconstrainedReflow = NS_UNCONSTRAINEDSIZE ==
+                                         aReflowState.parentReflowState->availableWidth;
+
+    // Skip this step if possible. We can skip it if the table is going to be
+    // doing a pass 2 reflow. In the case where the table is getting an unconstrained
+    // reflow, then we need to do this because the table will skip the pass 2 reflow,
+    // but we need to correctly calculate the row group height and we can't if there
+    // are row spans unless we do this step
+    if ((eReflowReason_Initial != aReflowState.reason) || isTableUnconstrainedReflow) {
       CalculateRowHeights(aPresContext, aDesiredSize, aReflowState);
     }
 
