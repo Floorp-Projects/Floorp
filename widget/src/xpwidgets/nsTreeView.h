@@ -138,7 +138,7 @@ protected:
 	PRBool mDraggingColumnHeader;	// Whether or not we're dragging a column header
 
 private:
-	// tree views are widgets which exist in one-to-one correspondance with objects on
+	// tree views are widgets which exist in one-to-one correspondence with objects on
 	// the screen. Copying them does not make sense, so we outlaw it explicitly.
 	nsTreeView ( const nsTreeView & ) ;					// DON'T IMPLEMENT
 	nsTreeView & operator= ( const nsTreeView & );		// DON'T IMPLEMENT

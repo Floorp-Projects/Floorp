@@ -24,7 +24,7 @@
 class nsHierarchicalDataItem;
 
 
-class nsDataModelWidget : public ChildWindow           
+class nsDataModelWidget : public nsWindow           
 {
 public:
     virtual ~nsDataModelWidget() {};
