@@ -8,6 +8,7 @@
     max-width             : 68px;
     padding               : 11px 3px 1px 23px;
     margin                : 0px;
+    cursor                : pointer;
   }  
 
 #navigator-throbber[busy="true"]

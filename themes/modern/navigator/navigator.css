@@ -65,6 +65,7 @@ window[chromehidden~="extrachrome"] .chromeclass-extrachrome {
 #page-proxy-button 
   {
 	  list-style-image      : url("chrome://communicator/skin/bookmarks/bookmark-item.gif"); 
+	  cursor                : grab;
   } 
 
 #ubhist-keyword-popup 
