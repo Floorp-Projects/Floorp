@@ -976,8 +976,8 @@ char* String::toCharArray(char* dest) const
 {
   PRInt32 copyLoop;
 
-  for (copyLoop=0;copyLoop<strLength;copyLoop++)
-   dest[copyLoop] = strBuffer[copyLoop];
+  for (copyLoop = 0; copyLoop < strLength; copyLoop++)
+    dest[copyLoop] = (char)strBuffer[copyLoop];
 
   //Place a NULL terminator at the end of the character buffer
   dest[copyLoop] = 0;

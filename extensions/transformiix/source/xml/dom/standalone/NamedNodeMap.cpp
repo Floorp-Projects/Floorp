@@ -112,6 +112,10 @@ AttrMap::AttrMap()
     ownerElement = NULL;
 }
 
+AttrMap::~AttrMap()
+{
+}
+
 Node* AttrMap::setNamedItem(Node* arg)
 {
   if (arg->getNodeType() != Node::ATTRIBUTE_NODE)
