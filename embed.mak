@@ -59,6 +59,7 @@ EMBEDDING_EXPORTS = \
 	htmlparser \
 	dom \
 	view \
+	content \
 	layout \
 	db \
 	rdf \
@@ -114,6 +115,7 @@ EMBEDDING_INSTALLS = \
 	htmlparser \
 	dom \
 	view \
+	content \
 	layout \
 	rdf \
 	docshell \
