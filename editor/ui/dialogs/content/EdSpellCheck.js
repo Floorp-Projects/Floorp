@@ -436,7 +436,8 @@ function FillSuggestedList(misspelledWord)
 
     var len = list.getAttribute("length");
 
-    if (count == 0) {
+    if (count == 0)
+    {
       // No suggestions - show a message but don't let user select it
       var item = AppendStringToTreelistById(list, "NoSuggestedWords");
       if (item) item.setAttribute("disabled", "true");
@@ -446,6 +447,12 @@ function FillSuggestedList(misspelledWord)
       // Initialize with first suggested list by selecting it
       dialog.SuggestedList.selectedIndex = 0;
     }
+  } 
+  else
+  {
+    var item = AppendStringToTreelist(list, "");
+    if (item)
+      item.setAttribute("disabled", "true");
   }
 }
 
