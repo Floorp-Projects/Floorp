@@ -257,10 +257,14 @@ void nsWindow::InitEvent(nsGUIEvent& event, PRUint32 aEventType, nsPoint* aPoint
       cpos.x = LOWORD(pos);
       cpos.y = HIWORD(pos);
 
-      ::ScreenToClient(mWnd, &cpos);
-
-      event.point.x = cpos.x;
-      event.point.y = cpos.y;
+      if (mWnd != NULL) {
+        ::ScreenToClient(mWnd, &cpos);
+        event.point.x = 0;
+        event.point.y = 0;
+      } else {
+        event.point.x = cpos.x;
+        event.point.y = cpos.y;
+      }
     }
     else {                      // use the point override if provided
       event.point.x = aPoint->x;
