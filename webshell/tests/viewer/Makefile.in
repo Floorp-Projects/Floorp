@@ -111,6 +111,7 @@ XP_NS_UNDERBAR_CRAP	= \
 XP_LIBS			= \
 			$(XP_NS_UNDERBAR_CRAP) \
 			$(XP_DIST_LIBS) \
+			$(LOST_SYM_LIBS) \
 			$(NSPR_LIBS) \
 			$(NULL)
 
@@ -136,9 +137,21 @@ EXTRA_DEPS		= \
 			$(XP_NS_UNDERBAR_CRAP) \
 			$(NULL)
 
+include $(topsrcdir)/config/config.mk
+
+ifeq ($(OS_ARCH)$(OS_TEST),NetBSDarm32)
+NO_LD_ARCHIVE_FLAGS	:= 1
+endif
+
+ifdef NO_LD_ARCHIVE_FLAGS
+LOST_SYM_LIBS		= -lxpcomds_s -lxpcomio_s -lxptinfo -lmozreg_s
+endif
+
 include $(topsrcdir)/config/rules.mk
 
 CXXFLAGS		+= $(MOZ_TOOLKIT_REGISTRY_CFLAGS)
+
+GARBAGE			+= $(PROGRAM)_gtk $(PROGRAM)_motif $(PROGRAM)_qt $(PROGRAM)_xlib
 
 install:: $(PROGRAM) $(srcdir)/mozilla-viewer.sh
 	$(INSTALL) $(EXPORT_RESOURCE_SAMPLES) $(DIST)/bin/res/samples
@@ -165,32 +178,20 @@ $(PROGRAM)_xlib: $(PROGOBJS) $(EXTRA_DEPS) Makefile Makefile.in $(DIST)/lib/libv
 ifdef MOZ_ENABLE_GTK
 install:: $(PROGRAM)_gtk
 	$(INSTALL) -m 555 $< $(DIST)/bin
-
-clobber::
-	rm -f $(PROGRAM)_gtk
 endif
 
 ifdef MOZ_ENABLE_MOTIF
 install:: $(PROGRAM)_motif
 	$(INSTALL) -m 555 $< $(DIST)/bin
-
-clobber::
-	rm -f $(PROGRAM)_motif
 endif
 
 ifdef MOZ_ENABLE_QT
 install:: $(PROGRAM)_qt
 	$(INSTALL) -m 555 $< $(DIST)/bin
-
-clobber::
-	rm -f $(PROGRAM)_qt
 endif
 
 ifdef MOZ_ENABLE_XLIB
 install:: $(PROGRAM)_xlib
 	$(INSTALL) -m 555 $< $(DIST)/bin
-
-clobber::
-	rm -f $(PROGRAM)_xlib
 endif
 
