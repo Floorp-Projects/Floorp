@@ -50,16 +50,24 @@ extern CLogger * pLogger;
 static void onCommand(HWND hWnd, int id, HWND hWndCtl, UINT codeNotify)
 {
   CPlugin * pPlugin = (CPlugin *)GetWindowLong(hWnd, DWL_USER);
+  if(!pPlugin)
+    return;
 
   switch (id)
   {
     case IDC_RADIO_MODE_MANUAL:
       if((codeNotify == BN_CLICKED) && (IsDlgButtonChecked(hWnd, IDC_RADIO_MODE_MANUAL) == BST_CHECKED))
+      {
         pPlugin->showGUI(sg_manual);
+        pPlugin->updatePrefs(gp_mode, sg_manual);
+      }
       break;
     case IDC_RADIO_MODE_AUTO:
       if((codeNotify == BN_CLICKED) && (IsDlgButtonChecked(hWnd, IDC_RADIO_MODE_AUTO) == BST_CHECKED))
+      {
         pPlugin->showGUI(sg_auto);
+        pPlugin->updatePrefs(gp_mode, sg_auto);
+      }
       break;
     case IDC_BUTTON_FLUSH:
       pLogger->clearTarget();
@@ -70,10 +78,17 @@ static void onCommand(HWND hWnd, int id, HWND hWndCtl, UINT codeNotify)
       pLogger->clearLog();
       break;
     case IDC_EDIT_LOG_FILE_NAME:
+      if(codeNotify == EN_CHANGE)
+      {
+        char szString[256];
+        Edit_GetText(GetDlgItem(hWnd, IDC_EDIT_LOG_FILE_NAME), szString, sizeof(szString));
+        pPlugin->updatePrefs(gp_logfile, FALSE, szString);
+      }
       break;
     case IDC_CHECK_LOG_TO_FILE:
       if(codeNotify == BN_CLICKED)
       {
+        pPlugin->updatePrefs(gp_tofile, BST_CHECKED == IsDlgButtonChecked(hWnd, IDC_CHECK_LOG_TO_FILE));
         EnableWindow(GetDlgItem(hWnd, IDC_EDIT_LOG_FILE_NAME), (BST_CHECKED == IsDlgButtonChecked(hWnd, IDC_CHECK_LOG_TO_FILE)));
         pPlugin->onLogToFile(BST_CHECKED == IsDlgButtonChecked(hWnd, IDC_CHECK_LOG_TO_FILE));
       }
@@ -81,6 +96,7 @@ static void onCommand(HWND hWnd, int id, HWND hWndCtl, UINT codeNotify)
     case IDC_CHECK_LOG_TO_FRAME:
       if(codeNotify == BN_CLICKED)
       {
+        pPlugin->updatePrefs(gp_toframe, BST_CHECKED == IsDlgButtonChecked(hWnd, IDC_CHECK_LOG_TO_FRAME));
         EnableWindow(GetDlgItem(hWnd, IDC_BUTTON_FLUSH), (BST_UNCHECKED == IsDlgButtonChecked(hWnd, IDC_CHECK_SHOW_LOG))
                                                         && (BST_CHECKED == IsDlgButtonChecked(hWnd, IDC_CHECK_LOG_TO_FRAME)));
         EnableWindow(GetDlgItem(hWnd, IDC_BUTTON_CLEAR), (BST_CHECKED == IsDlgButtonChecked(hWnd, IDC_CHECK_LOG_TO_FRAME)));
@@ -91,6 +107,7 @@ static void onCommand(HWND hWnd, int id, HWND hWndCtl, UINT codeNotify)
     case IDC_CHECK_SHOW_LOG:
       if(codeNotify == BN_CLICKED)
       {
+        pPlugin->updatePrefs(gp_flush, IsDlgButtonChecked(hWnd, IDC_CHECK_SHOW_LOG) == BST_CHECKED);
         EnableWindow(GetDlgItem(hWnd, IDC_BUTTON_FLUSH), (BST_UNCHECKED == IsDlgButtonChecked(hWnd, IDC_CHECK_SHOW_LOG))
                                                         && (BST_CHECKED == IsDlgButtonChecked(hWnd, IDC_CHECK_LOG_TO_FRAME)));
         pLogger->setShowImmediatelyFlag(IsDlgButtonChecked(hWnd, IDC_CHECK_SHOW_LOG) == BST_CHECKED);

@@ -109,24 +109,41 @@ void CPlugin::savePreferences()
   getModulePath(szFileName, sizeof(szFileName));
   strcat(szFileName, szINIFile);
 
-  BOOL bParam = IsDlgButtonChecked(m_hWnd, IDC_RADIO_MODE_AUTO);
-  XP_WritePrivateProfileString(szSection, KEY_AUTO_MODE, bParam ? szYes : szNo, szFileName);
+  XP_WritePrivateProfileString(szSection, KEY_AUTO_MODE, (m_Pref_ShowGUI == sg_auto) ? szYes : szNo, szFileName);
+  XP_WritePrivateProfileString(szSection, KEY_LOG_FILE, m_Pref_szLogFile, szFileName);
+  XP_WritePrivateProfileString(szSection, KEY_SCRIPT_FILE, m_Pref_szScriptFile, szFileName);
+  XP_WritePrivateProfileString(szSection, KEY_TO_FILE, m_Pref_bToFile ? szYes : szNo, szFileName);
+  XP_WritePrivateProfileString(szSection, KEY_TO_FRAME, m_Pref_bToFrame ? szYes : szNo, szFileName);
+  XP_WritePrivateProfileString(szSection, KEY_FLUSH_NOW, m_Pref_bFlushNow ? szYes : szNo, szFileName);
+}
 
-  char szParam[256];
-  Edit_GetText(GetDlgItem(m_hWnd, IDC_EDIT_LOG_FILE_NAME), szParam, sizeof(szParam));
-  XP_WritePrivateProfileString(szSection, KEY_LOG_FILE, szParam, szFileName);
-
-  Edit_GetText(GetDlgItem(m_hWndAuto, IDC_EDIT_SCRIPT_FILE_NAME), szParam, sizeof(szParam));
-  XP_WritePrivateProfileString(szSection, KEY_SCRIPT_FILE, szParam, szFileName);
-
-  bParam = IsDlgButtonChecked(m_hWnd, IDC_CHECK_LOG_TO_FILE);
-  XP_WritePrivateProfileString(szSection, KEY_TO_FILE, bParam ? szYes : szNo, szFileName);
-
-  bParam = IsDlgButtonChecked(m_hWnd, IDC_CHECK_LOG_TO_FRAME);
-  XP_WritePrivateProfileString(szSection, KEY_TO_FRAME, bParam ? szYes : szNo, szFileName);
-
-  bParam = IsDlgButtonChecked(m_hWnd, IDC_CHECK_SHOW_LOG);
-  XP_WritePrivateProfileString(szSection, KEY_FLUSH_NOW, bParam ? szYes : szNo, szFileName);
+void CPlugin::updatePrefs(GUIPrefs prefs, int iValue, char * szValue)
+{
+  switch(prefs)
+  {
+    case gp_mode:
+      m_Pref_ShowGUI = (ShowGUI)iValue;
+      break;
+    case gp_logfile:
+      if(szValue && (strlen(szValue) < sizeof(m_Pref_szLogFile)))
+        strcpy(m_Pref_szLogFile, szValue);
+      break;
+    case gp_scriptfile:
+      if(szValue && (strlen(szValue) < sizeof(m_Pref_szScriptFile)))
+        strcpy(m_Pref_szScriptFile, szValue);
+      break;
+    case gp_tofile:
+      m_Pref_bToFile = (BOOL)iValue;
+      break;
+    case gp_toframe:
+      m_Pref_bToFrame = (BOOL)iValue;
+      break;
+    case gp_flush:
+      m_Pref_bFlushNow = (BOOL)iValue;
+      break;
+    default:
+      break;
+  }
 }
 
 void CPlugin::getModulePath(LPSTR szPath, int iSize)

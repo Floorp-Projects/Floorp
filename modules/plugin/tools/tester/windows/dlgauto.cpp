@@ -53,7 +53,8 @@ static CScripter * pScripter = NULL;
 static void onCommand(HWND hWnd, int id, HWND hWndCtl, UINT codeNotify)
 {
   CPlugin * pPlugin = (CPlugin *)GetWindowLong(hWnd, DWL_USER);
-  assert(pPlugin != NULL);
+  if(!pPlugin)
+    return;
 
   switch (id)
   {
@@ -78,6 +79,8 @@ static void onCommand(HWND hWnd, int id, HWND hWndCtl, UINT codeNotify)
       strcpy(szLogFileName, szString);
       strcat(szLogFileName, ".log");
       Edit_SetText(GetDlgItem(GetParent(hWnd), IDC_EDIT_LOG_FILE_NAME), szLogFileName);
+
+      pPlugin->updatePrefs(gp_scriptfile, FALSE, szString);
 
       break;
     }
