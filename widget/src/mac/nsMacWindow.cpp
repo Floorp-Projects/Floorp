@@ -271,6 +271,7 @@ nsMacWindow::nsMacWindow() : Inherited()
 	, mIsDialog(PR_FALSE)
 	, mMacEventHandler(nsnull)
 	, mAcceptsActivation(PR_TRUE)
+	, mIsActive(PR_FALSE)
 {
   //mMacEventHandler.reset(new nsMacEventHandler(this));
 	mMacEventHandler = (auto_ptr<nsMacEventHandler>) new nsMacEventHandler(this);
@@ -911,7 +912,12 @@ NS_IMETHODIMP nsMacWindow::PasswordFieldInit()
 	return NS_OK;
 }
 
+void nsMacWindow::SetIsActive(PRBool aActive)
+{
+  mIsActive = aActive;
+}
+
 void nsMacWindow::IsActive(PRBool* aActive)
 {
-  *aActive = NS_REINTERPRET_CAST(WindowPeek, mWindowPtr)->hilited;
+  *aActive = mIsActive;
 }
