@@ -22,7 +22,8 @@
 <?xml version="1.0"?>
 <!-- [% template_version %] -->
 <RDF xmlns="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
-     xmlns:bz="http://www.bugzilla.org/rdf#">
+     xmlns:bz="http://www.bugzilla.org/rdf#"
+     xmlns:nc="http://home.netscape.com/NC-rdf#">
 
 <bz:result about="[% Param('urlbase') %]buglist.cgi?[% urlquerypart FILTER html %]">
 
@@ -33,7 +34,7 @@
         
         <bz:bug about="[% Param('urlbase') %]show_bug.cgi?id=[% bug.id %]">
           
-          <bz:id>[% bug.id %]</bz:id>
+          <bz:id nc:parseType="Integer">[% bug.id %]</bz:id>
         
         [% FOREACH column = displaycolumns %]
           <bz:[% column %]>[% bug.$column FILTER html %]</bz:[% column %]>
