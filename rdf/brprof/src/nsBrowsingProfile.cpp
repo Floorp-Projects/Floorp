@@ -29,6 +29,7 @@
 #include "nsIRDFCursor.h"
 #include "nsHashtable.h"
 #include "nsString.h"
+#include "nsXPIDLString.h"
 #include "prclist.h"
 #include "prprf.h"
 
@@ -330,9 +331,9 @@ nsBrowsingProfile::GetDescription(char* *htmlResult)
         rv = gRDFService->GetIntLiteral(desc->mID, &intLit);
         nsIRDFResource* category;
         rv = gCategoryDB->GetSource(kOPENDIR_catid, category, PR_TRUE, &category);
-        const char* uri;
-        rv = category->GetValue(&uri);
-        char* buf2 = PR_smprintf("%s%s: %d<b>", buf, uri, desc->mVisitCount);
+        nsXPIDLCString uri;
+        rv = category->GetValue( getter_Copies(uri) );
+        char* buf2 = PR_smprintf("%s%s: %d<b>", buf, (const char*) uri, desc->mVisitCount);
         PR_smprintf_free(buf);
         if (buf2 == nsnull)
             return NS_ERROR_OUT_OF_MEMORY; 
@@ -378,14 +379,14 @@ nsBrowsingProfile::CountPageVisit(const char* initialURL)
             if (NS_SUCCEEDED(rv)) {
                 while (NS_SUCCEEDED(cursor->Advance())) {
                     nsIRDFResource* category;
-                    rv = cursor->GetSubject(&category);
+                    rv = cursor->GetSource(&category);
                     if (NS_SUCCEEDED(rv)) {
                         // found this page in a category -- count it
                         PRUint16 id;
                         rv = GetCategoryID(category, &id);
                         if (NS_SUCCEEDED(rv)) {
-                            const char* catURI;
-                            rv = category->GetValue(&catURI);
+                            nsXPIDLCString catURI;
+                            rv = category->GetValue( getter_Copies(catURI) );
                             if (NS_SUCCEEDED(rv)) {
                                 rv = RecordHit(catURI, id);
                             }
@@ -429,8 +430,8 @@ nsBrowsingProfile::GetCategoryID(nsIRDFResource* category, PRUint16 *result)
     NS_ASSERTION(catID != nsnull, "not a literal");
     if (! catID) return NS_ERROR_NO_INTERFACE;
 
-    const PRUnichar* idStr;
-    rv = catIDLiteral->GetValue(&idStr);
+    nsXPIDLString idStr;
+    rv = catIDLiteral->GetValue( getter_Copies(idStr) );
     NS_ASSERTION(NS_SUCCEEDED(rv), "unable to get literal value");
 
     PRInt32 err;
@@ -517,8 +518,8 @@ nsBrowsingProfile::OnAssert(nsIRDFResource* subject,
         nsIRDFResource* objRes;
         rv = object->QueryInterface(kIRDFResourceIID, (void**)&objRes);
         if (NS_FAILED(rv)) return rv;
-        const char* url;
-        rv = objRes->GetValue(&url);
+        nsXPIDLCString url;
+        rv = objRes->GetValue( getter_Copies(url) );
         if (NS_SUCCEEDED(rv)) {
             rv = CountPageVisit(url);
         }
