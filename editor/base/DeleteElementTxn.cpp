@@ -51,11 +51,11 @@ nsresult DeleteElementTxn::Do(void)
     return NS_ERROR_NULL_POINTER;
 #ifdef NS_DEBUG
   // begin debug output
-  nsCOMPtr<nsIDOMElement> element=mElement;
+  nsCOMPtr<nsIDOMElement> element=mElement.get();
   nsAutoString elementTag="text node";
   if (element)
     element->GetTagName(elementTag);
-  nsCOMPtr<nsIDOMElement> parentElement=mParent;
+  nsCOMPtr<nsIDOMElement> parentElement = (nsCOMPtr<nsIDOMElement>)mParent;
   nsAutoString parentElementTag="text node";
   if (parentElement)
     parentElement->GetTagName(parentElementTag);
