@@ -247,8 +247,6 @@ nsProfile::nsProfile()
 
     mIsUILocaleSpecified = PR_FALSE;
     mIsContentLocaleSpecified = PR_FALSE;
-    
-    mShutdownProfileToreDownNetwork = PR_FALSE;
 }
 
 nsProfile::~nsProfile() 
@@ -1173,7 +1171,6 @@ nsProfile::SetCurrentProfile(const PRUnichar * aCurrentProfile)
 
         // Phase 2a: Send the network teardown notification
         observerService->NotifyObservers(subject, "profile-change-net-teardown", context.get());
-        mShutdownProfileToreDownNetwork = PR_TRUE;
 
         // Phase 2b: Send the "teardown" notification
         observerService->NotifyObservers(subject, "profile-change-teardown", context.get());
@@ -1195,7 +1192,12 @@ nsProfile::SetCurrentProfile(const PRUnichar * aCurrentProfile)
     if (NS_FAILED(rv)) return rv;
     mCurrentProfileAvailable = PR_TRUE;
     
-    if (!isSwitch)
+    if (isSwitch)
+    {
+        // Bring network back online
+        observerService->NotifyObservers(subject, "profile-change-net-restore", context.get());
+    }
+    else
     {
         // Ensure that the prefs service exists so it can respond to
         // the notifications we're about to send around. It needs to.
@@ -1203,13 +1205,6 @@ nsProfile::SetCurrentProfile(const PRUnichar * aCurrentProfile)
         NS_ASSERTION(NS_SUCCEEDED(rv), "Could not get prefs service");
     }
 
-    if (mShutdownProfileToreDownNetwork)
-    {
-        // Bring network back online
-        observerService->NotifyObservers(subject, "profile-change-net-restore", context.get());
-        mShutdownProfileToreDownNetwork = PR_FALSE;
-    }
-+
     // Phase 4: Notify observers that the profile has changed - Here they respond to new profile
     observerService->NotifyObservers(subject, "profile-do-change", context.get());
 
@@ -1264,11 +1259,7 @@ NS_IMETHODIMP nsProfile::ShutDownCurrentProfile(PRUint32 shutDownType)
       if (mProfileChangeVetoed)
         return NS_OK;
       
-      // Phase 2a: Send the network teardown notification
-      observerService->NotifyObservers(subject, "profile-change-net-teardown", context.get());
-      mShutdownProfileToreDownNetwork = PR_TRUE;
-
-      // Phase 2b: Send the "teardown" notification
+      // Phase 2: Send the "teardown" notification
       observerService->NotifyObservers(subject, "profile-change-teardown", context.get());
       
       // Phase 3: Notify observers of a profile change
