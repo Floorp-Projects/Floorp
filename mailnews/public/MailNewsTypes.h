@@ -72,6 +72,42 @@ typedef enum
   MSG_HighestPriority
 } MSG_PRIORITY;
 
+// The following enums are all persistent in databases, so don't go changing the values!
+enum nsMsgSortOrder
+{
+	nsMSG_SortTypeNone = 0,
+	nsMSG_SortTypeAscending = 1,
+	nsMSG_SortTypeDescending = 2
+};
+
+// We should be using the property name we're sorting by instead of these types.
+enum nsMsgSortType
+{
+	nsMSG_SortByDate = 0x12,
+	nsMSG_SortBySubject = 0x13,
+	nsMSG_SortByAuthor = 0x14,
+	nsMSG_SortById = 0x15,
+	nsMSG_SortByThread = 0x16,
+	nsMSG_SortByPriority = 0x17,
+	nsMSG_SortByStatus = 0x18,
+	nsMSG_SortBySize = 0x19,
+	nsMSG_SortByFlagged = 0x1a,
+	nsMSG_SortByUnread = 0x1b,
+	nsMSG_SortByRecipient
+};
+
+enum nsMsgViewType
+{
+	nsMSG_ViewAny = 0,		// this view type matches any other view type, 
+							// for the purpose of matching cached views.
+							// Else, it's equivalent to ViewAllThreads
+	nsMSG_ViewAllThreads = 1,		// default view, no killed threads
+	nsMSG_ViewOnlyThreadsWithNew = 2,
+	nsMSG_ViewOnlyNewHeaders = 4,		
+	nsMSG_ViewWatchedThreadsWithNew = 5,
+	nsMSG_ViewCacheless		// this would be for cacheless imap
+};
+
 
 /* Flags about a single message.  These values are used in the MSG_MessageLine
    struct and in a folder's mozilla-status line. The summary file database
@@ -157,5 +193,6 @@ typedef enum
 											 */
 #define MSG_FLAG_TEMPLATE       0x1000000	/* this message is a template */
 #define MSG_FLAG_ATTACHMENT		0x10000000	/* this message has files attached to it */
+
 
 #endif
