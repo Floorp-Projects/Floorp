@@ -358,9 +358,10 @@ nsMenuBarX :: CommandEventHandler ( EventHandlerCallRef inHandlerChain, EventRef
           // nodes in the hash table.
           nsPRUint32Key key ( command.commandID );
           nsIMenuItem* content = NS_REINTERPRET_CAST(nsIMenuItem*, self->mObserverTable.Get(&key));
-          if ( content )
+          if ( content ) {
             content->DoCommand();
-          handled = noErr;          
+            handled = noErr;
+          }        
           break; 
         }        
 
