@@ -109,46 +109,44 @@ nsInstallFile::nsInstallFile(nsInstall* inInstall,
     //Need to parse the inPartialPath to remove any separators
     PRBool finished = PR_FALSE;
     PRUint32 offset = 0;
-    PRInt32 location = 0, pass = 0;
+    PRInt32 location = 0, nodeLength = 0;
     nsString subString;
 
-    //nsString tempPartialPath(inPartialPath);
+    location = inPartialPath.FindChar('/',PR_FALSE, offset);
+    if (location == ((PRInt32)inPartialPath.mLength - 1)) //trailing slash
+    {
+        *error = nsInstall::INVALID_ARGUMENTS;
+        return;
+    }
 
     while (!finished)
     {
-        location = inPartialPath.FindChar('/',PR_FALSE, offset);
-        if ((location < 0) && (pass == 0)) //no separators were found
+        if (location == kNotFound) //no separators were found
         {
-            nsAutoCString tempPartialPath(inPartialPath);
-            mFinalFile->Append(tempPartialPath);
-            finished = PR_TRUE;
-        }
-        else if ((location < 0) && (pass > 0) && (offset < inPartialPath.mLength)) //last occurance
-        {
-            nsresult rv = inPartialPath.Mid(subString, offset, inPartialPath.mLength-offset);
-            nsAutoCString tempSubString(subString);
-            mFinalFile->Append(tempSubString);
+            nodeLength = inPartialPath.mLength - offset;
             finished = PR_TRUE;
         }
         else
         {
-            nsresult rv = inPartialPath.Mid(subString, offset, location-offset);
+            nodeLength = location - offset;
+        }
+        
+        if (nodeLength > MAX_FILENAME) 
+        {
+            *error = nsInstall::FILENAME_TOO_LONG;
+            return;
+        }
+        else
+        {
+            nsresult rv = inPartialPath.Mid(subString, offset, nodeLength);
             nsAutoCString tempSubString(subString);
             mFinalFile->Append(tempSubString);
-            offset = location + 1;
-            pass++;
+            offset += nodeLength + 1;
+            if (!finished)
+                location = inPartialPath.FindChar('/',PR_FALSE, offset);
         }
     }
 
-    //{
-    //    nsresult rv = mFinalFile->Append(inPartialPath.ToNewCString());
-    //    if (rv != NS_OK)
-    //    {
-    //        *error = nsInstall::ILLEGAL_RELATIVE_PATH;
-    //       return;
-    //    }
-    //}
-    
     mFinalFile->Exists(&mReplaceFile);
     mVersionRegistryName  = new nsString(inComponentName);
     mJarLocation          = new nsString(inJarLocation);

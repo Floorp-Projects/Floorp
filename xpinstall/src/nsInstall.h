@@ -61,6 +61,15 @@
 
 #define XPINSTALL_BUNDLE_URL "chrome://communicator/locale/xpinstall/xpinstall.properties"
 
+//file and directory name length maximums
+#ifdef XP_MAC
+#define MAX_FILENAME 31
+#elif defined (XP_PC)
+#define MAX_FILENAME 128
+#elif defined (XP_UNIX)
+#define MAX_FILENAME 1024
+#endif
+
 class nsInstallInfo
 {
   public:
