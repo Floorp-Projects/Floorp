@@ -1,6 +1,7 @@
 globalOverlay.dtd
 dialogOverlay.dtd
 tasksOverlay.dtd
+taskbarOverlay.dtd
 commonDialog.dtd
 charsetOverlay.dtd
 charsetDetectorsOverlay.dtd

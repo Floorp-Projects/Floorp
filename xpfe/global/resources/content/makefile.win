@@ -1,3 +1,4 @@
+
 #!nmake
 #
 # The contents of this file are subject to the Netscape Public
@@ -37,6 +38,7 @@ install::
 	$(MAKE_INSTALL) globalOverlay.js $(DISTBROWSER)
 	$(MAKE_INSTALL) tasksOverlay.xul $(DISTBROWSER)
 	$(MAKE_INSTALL) tasksOverlay.js $(DISTBROWSER)
+	$(MAKE_INSTALL) taskbarOverlay.xul $(DISTBROWSER)
 	$(MAKE_INSTALL) dialogOverlay.xul $(DISTBROWSER)
 	$(MAKE_INSTALL) dialogOverlay.js $(DISTBROWSER)
 	$(MAKE_INSTALL) commonDialog.xul $(DISTBROWSER)
@@ -53,12 +55,12 @@ install::
 	$(MAKE_INSTALL) charsetDetectorsOverlay.xul $(DISTBROWSER)
 	$(MAKE_INSTALL) selectDialog.js $(DISTBROWSER)
 	$(MAKE_INSTALL) selectDialog.xul $(DISTBROWSER)
-  $(MAKE_INSTALL) widgetStateManager.js $(DISTBROWSER)
-  $(MAKE_INSTALL) wizardHandlerSet.js $(DISTBROWSER)
-  $(MAKE_INSTALL) wizardManager.js $(DISTBROWSER)
-  $(MAKE_INSTALL) wizardOverlay.js $(DISTBROWSER)
-  $(MAKE_INSTALL) wizardOverlay.xul $(DISTBROWSER)
-  $(MAKE_INSTALL) treePopups.js $(DISTBROWSER)
+	$(MAKE_INSTALL) widgetStateManager.js $(DISTBROWSER)
+	$(MAKE_INSTALL) wizardHandlerSet.js $(DISTBROWSER)
+	$(MAKE_INSTALL) wizardManager.js $(DISTBROWSER)
+	$(MAKE_INSTALL) wizardOverlay.js $(DISTBROWSER)
+	$(MAKE_INSTALL) wizardOverlay.xul $(DISTBROWSER)
+	$(MAKE_INSTALL) treePopups.js $(DISTBROWSER)
   
 clobber::
   rm -f $(DIST)\bin\chrome\global\content\default\*.*

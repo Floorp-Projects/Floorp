@@ -32,13 +32,14 @@ EXPORT_RESOURCE_CONTENT = \
 		$(srcdir)/globalOverlay.dtd \
 		$(srcdir)/dialogOverlay.dtd \
 		$(srcdir)/tasksOverlay.dtd \
+		$(srcdir)/taskbarOverlay.dtd \
 		$(srcdir)/commonDialog.dtd \
 		$(srcdir)/charsetOverlay.dtd \
 		$(srcdir)/charsetDetectorsOverlay.dtd \
 		$(srcdir)/brand.properties \
-    $(srcdir)/wizardManager.properties \
-    $(srcdir)/wizardOverlay.dtd \
-    $(srcdir)/about.dtd \
+		$(srcdir)/wizardManager.properties \
+		$(srcdir)/wizardOverlay.dtd \
+		$(srcdir)/about.dtd \
 		$(NULL)
 
 include $(topsrcdir)/config/rules.mk

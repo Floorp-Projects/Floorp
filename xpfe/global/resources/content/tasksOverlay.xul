@@ -3,6 +3,7 @@
 
 <!DOCTYPE  window SYSTEM "chrome://global/locale/tasksOverlay.dtd">
 
+<?xul-overlay href="chrome://global/content/taskbarOverlay.xul"?>
 
 <overlay id="tasksOverlay"
 		 xmlns:html="http://www.w3.org/TR/REC-html40"
@@ -74,53 +75,16 @@
   			
   	 		<titledbutton class="toolbar-flat taskbutton" align="left" id="mini-nav" value="" onclick="toNavigator();"/>
   	 		<titledbutton class="toolbar-flat taskbutton" align="left" id="mini-mail" value="" onclick="toMessengerWindow()"/>
-  	 		<titledbutton class="toolbar-flat taskbutton" align="left" id="mini-addr" value="" onclick="toAddressBook()"/>
   	 		<titledbutton class="toolbar-flat taskbutton" align="left" id="mini-comp" value="" onclick="toEditor();" />
+  	 		<titledbutton class="toolbar-flat taskbutton" align="left" id="mini-addr" value="" onclick="toAddressBook()"/>
 	      </box>
 		  <spring flex="100%"/>
 
-	 	  <box align="horizontal">
-                    <!-- The "Tasks" menu is a grab bag o' fun little tasks -->
-                    <menu>
-                      <titledbutton align="right" class="bookmarkFolder toolbar-flat"
-                                    value="&mozillaButton.label;" crop="right" />
+	 	  <box id="taskbarMenuBox" align="horizontal">
+		    <!-- taskbarOverlay.xul inserts here. -->
+          </box>
 
-                        <menupopup class="standard" popupalign="bottomleft" popupanchor="topleft">
-                          <menuitem class="standard" value="&bonsai.label;"
-                                    oncommand="OpenTaskURL('http://bonsai.mozilla.org/toplevel.cgi?treeid=SeaMonkey');"/>
-
-                          <menuitem class="standard" value="&bugzillaButton.label;"
-                                    oncommand="OpenTaskURL('http://bugzilla.mozilla.org');"/>
-
-                        </menupopup>
-
-                        <spring class="personaltoolbarspacer" flex="1"/>
-                      </menu>
-
-                      <!-- The "Open Windows" menu uses the window mediator
-                           to display all of the open windows -->
-                      <menu align="right"
-                            oncommand="ShowWindowFromResource(event.target)"
-                            datasources="rdf:window-mediator"
-                            ref="NC:WindowMediatorRoot" >
-
-                        <titledbutton align="right" class="bookmarkFolder toolbar-flat"
-                                      value="&openWinButton.label;" crop="right" />
-
-                        <template>
-                          <menupopup>
-                            <menuitem class="standard" uri="rdf:*"
-                                      value="rdf:http://home.netscape.com/NC-rdf#Name"/>
-                          </menupopup>
-                        </template>
-
-                        <menupopup class="standard" popupalign="bottomleft" popupanchor="topleft" />
-
-                        <spring class="personaltoolbarspacer" flex="1"/>
-                      </menu>
-                    </box>
-
-                    <spring flex="100%"/>
+          <spring flex="100%"/>
 	  </toolbar>
 	
 </overlay>		
