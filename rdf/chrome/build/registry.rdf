@@ -98,8 +98,7 @@
 
     <content> 
       <RDF:Description ID="chrome://editordlgs/content/">
-	    <base>resource:/chrome/editor/dialogs/skin/</base>
-        <main>EditorDialog.css</main> 
+	    <base>resource:/chrome/editor/dialogs/content<base>
       </RDF:Description> 
     </content> 
   </chrome>
