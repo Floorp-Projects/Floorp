@@ -32,7 +32,6 @@ interface nsICertificateManager : nsISupports
 {
   wstring getCertNicknames(in unsigned long type);
 
-  wstring getCertCN(in string nickname);
 };
 
 %{C++

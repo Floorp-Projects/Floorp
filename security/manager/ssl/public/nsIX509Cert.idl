@@ -34,6 +34,7 @@
  */
 
 #include "nsISupports.idl"
+#include "nsIEnumerator.idl"
 
 [scriptable, uuid(e701dfd8-1dd1-11b2-a172-ffa6cc6156ad)]
 interface nsIX509CertValidity : nsISupports {
@@ -48,6 +49,8 @@ interface nsIX509Cert : nsISupports {
    * attributes for certs
    */
   readonly attribute wstring commonName;
+  readonly attribute wstring organization;
+  readonly attribute wstring organizationalUnit;
 
   readonly attribute nsIX509CertValidity validity;
 
@@ -68,6 +71,12 @@ interface nsIX509Cert : nsISupports {
   /*
    * accessors for certs
    */
+  nsIEnumerator getChain();
+/*
+  void getChain(out PRUint32 count, 
+                [retval, array, size_is(count)] out nsIX509Cert chain);
+*/
+
   [noscript] unsigned long getRawDER(out charPtr result);
 
 };

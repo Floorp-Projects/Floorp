@@ -21,6 +21,31 @@
  *  Ian McGreer <mcgreer@netscape.com>
  */
 
+var selected_certs = [];
+var certmgr;
+
+function getSelectedCerts()
+{
+  var mine_tab = document.getElementById("mine_tab");
+  //var others_tab = document.getElementById("others_tab");
+  var websites_tab = document.getElementById("websites_tab");
+  var tree = document.getElementById('ca_treeset');
+  if (mine_tab.selected) {
+    tree = document.getElementById('mine_treeset');
+  } else if (websites_tab.selected) {
+    tree = document.getElementById('websites_treeset');
+  }
+  var items = tree.selectedItems;
+  if (items.length > 0) {
+    selected_certs = [];
+    for (var t=0; t<items.length; t++) {
+      var tokenName = items[t].firstChild.lastChild.getAttribute('value');
+      var certName  = items[t].firstChild.firstChild.getAttribute('value');
+      selected_certs[selected_certs.length] = [tokenName, certName];
+    }
+  }
+}
+
 function AddItem(children, cells, prefix, idfier)
 {
   var kids = document.getElementById(children);
@@ -35,6 +60,45 @@ function AddItem(children, cells, prefix, idfier)
   item.appendChild(row);
   item.setAttribute("id", prefix + idfier);
   kids.appendChild(item);
+}
+
+function AddNameWithToken(children, cells, prefix, idfier)
+{
+  var kids = document.getElementById(children);
+  var item = document.createElement("treeitem");
+  var row  = document.createElement("treerow");
+  for (var i=0; i<2; i++) {
+    var cell = document.createElement("treecell");
+    cell.setAttribute("class", "propertylist");
+    cell.setAttribute("value", cells[i]);
+    if (i==1) {
+      cell.setAttribute("collapsed", "true");
+    }
+    row.appendChild(cell);
+  }
+  item.appendChild(row);
+  item.setAttribute("id", prefix + idfier);
+  kids.appendChild(item);
+}
+
+function GetNameList(type, node)
+{
+  certNameList = certmgr.getCertNicknames(type);
+  if (certNameList.length > 0) {
+    var delim = certNameList[0];
+    certNameList = certNameList.split(delim);
+    certNameList.sort();
+  }
+  for (var i=1; i<certNameList.length; i++) {
+    var certname = certNameList[i];
+    var ti = certname.indexOf(":");
+    var token = "";
+    if (ti > 0) {
+      token = certname.substring(0, ti);
+      certname = certname.substring(ti+1, certname.length);
+    }
+    AddNameWithToken(node, [certname, token], node + "_", i);
+  }
 }
 
 function LoadCertNames()
@@ -55,7 +119,6 @@ function LoadCertNames()
   var nm = 0;
   for (var i=1; i<certNameList.length; i++) {
     var certname = certNameList[i];
-    var certname = certNameList[i];
     var ti = certname.indexOf(":");
     var token = "";
     if (ti > 0) {
@@ -63,27 +126,35 @@ function LoadCertNames()
       certname = certname.substring(ti+1, certname.length);
     }
     if (token == "Builtin Object Token") {
-      AddItem("builtins", [certname], "builtin_", nb);
+      AddNameWithToken("builtins", [certname, token], "builtin_", nb);
       nb++;
     } else {
-      AddItem("mycas", [certname], "myca_", nm);
+      AddNameWithToken("mycas", [certname, token], "myca_", nm);
       nm++;
     }
   }
+  GetNameList(8, "servers");
+  GetNameList(2, "mine");
 }
 
 function enableButtons()
 {
-  var tree = document.getElementById('treeset');
+  var mine_tab = document.getElementById("mine_tab");
+  //var others_tab = document.getElementById("others_tab");
+  var websites_tab = document.getElementById("websites_tab");
+  var tree = document.getElementById('ca_treeset');
+  if (mine_tab.selected) {
+    tree = document.getElementById('mine_treeset');
+  } else if (websites_tab.selected) {
+    tree = document.getElementById('websites_treeset');
+  }
   var items = tree.selectedItems;
-  var toggle="true";
+  var toggle="false";
   if (items.length == 0) {
     toggle="true";
-  } else {
-    toggle="false";
   }
 /*
-  var enablebackupbutton=document.getElementById('backupButton');
+  va enablebackupbutton=document.getElementById('backupButton');
   enablebackupbutton.setAttribute("disabled",toggle);
 */
   var enableViewButton=document.getElementById('viewButton');
@@ -116,40 +187,36 @@ function doBackupAll()
   doBackup();
 }
 
-
-function changePassword()
-{
-//  window.open("changepassword.xul","pwchange", "chrome,width=300,height=350,resizable=0,modal=1,dialog=1");
-}
-
 function deleteCerts()
 {
-  var tree = document.getElementById('treeset');
-  var items = tree.selectedItems;
-  if (items.length == 0) alert("No items are selected.");
-  else {
-    txt = "You want to delete these certificates:\n\n";
-    for (t=0; t<items.length; t++){
-      txt+=items[t].firstChild.firstChild.getAttribute('value')+'\n';
+  getSelectedCerts();
+  var windowName = "";
+  for (var t=0; t<selected_certs.length; t++) {
+    if (selected_certs[t][0]) { // token name
+      windowName = selected_certs[t].join(":");
+    } else {
+      windowName = selected_certs[t][1];
     }
-    alert(txt);
+    window.open('chrome://pippki/content/deleteCert.xul', windowName, 
+                'chrome,width=500,height=400,resizable=1');
   }
 }
-
 
 function viewCerts()
 {
-  var tree = document.getElementById('treeset');
-  var items = tree.selectedItems;
-  if (items.length == 0) {
-    alert("No items are selected.");
-    return;
-  } else {
-    for (t=0; t<items.length; t++){
-      windowName=items[t].firstChild.firstChild.getAttribute('value');
-      window.open('chrome://pippki/content/viewCertDetails.xul', 
-                  windowName, 
-                  'chrome,width=500,height=400,resizable=1');
+  getSelectedCerts();
+  var windowName = "";
+  for (var t=0; t<selected_certs.length; t++) {
+    if (selected_certs[t][0]) { // token name
+      windowName = selected_certs[t].join(":");
+    } else {
+      windowName = selected_certs[t][1];
     }
+    window.open('chrome://pippki/content/viewCertDetails.xul', windowName, 
+                'chrome,width=500,height=400,resizable=1');
   }
+}
+
+function addCerts()
+{
 }

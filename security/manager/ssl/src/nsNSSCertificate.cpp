@@ -32,12 +32,13 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  *
- * $Id: nsNSSCertificate.cpp,v 1.6 2001/03/13 00:22:13 javi%netscape.com Exp $
+ * $Id: nsNSSCertificate.cpp,v 1.7 2001/03/13 16:20:54 mcgreer%netscape.com Exp $
  */
 
 #include "prmem.h"
 
 #include "nsCOMPtr.h"
+#include "nsISupportsArray.h"
 #include "nsNSSCertificate.h"
 #include "nsIX509Cert.h"
 #include "nsString.h"
@@ -479,6 +480,71 @@ nsNSSCertificate::GetCommonName(PRUnichar **aCommonName)
   return NS_OK;
 }
 
+NS_IMETHODIMP
+nsNSSCertificate::GetOrganization(PRUnichar **aOrganization)
+{
+  NS_ENSURE_ARG(aOrganization);
+  *aOrganization = nsnull;
+  if (mCert) {
+    char *organization = CERT_GetOrgName(&mCert->subject);
+    if (organization) {
+      nsAutoString org = NS_ConvertASCIItoUCS2(organization);
+      *aOrganization = org.ToNewUnicode();
+    }
+  }
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsNSSCertificate::GetOrganizationalUnit(PRUnichar **aOrganizationalUnit)
+{
+  NS_ENSURE_ARG(aOrganizationalUnit);
+  *aOrganizationalUnit = nsnull;
+  if (mCert) {
+    char *orgunit = CERT_GetOrgUnitName(&mCert->subject);
+    if (orgunit) {
+      nsAutoString ou = NS_ConvertASCIItoUCS2(orgunit);
+      *aOrganizationalUnit = ou.ToNewUnicode();
+    }
+  }
+  return NS_OK;
+}
+
+/* 
+ * nsIEnumerator getChain(); 
+ */
+NS_IMETHODIMP
+nsNSSCertificate::GetChain(nsIEnumerator **_rvChain)
+{
+  nsresult rv;
+  CERTCertListNode *node;
+  nsIX509Cert **chain;
+  /* Get the cert chain from NSS */
+  CERTCertList *nssChain;
+  PR_LOG(gPIPNSSLog, PR_LOG_DEBUG, ("Getting chain for \"%s\"\n", mCert->nickname));
+  nssChain = CERT_GetCertChainFromCert(mCert, PR_Now(), certUsageSSLClient);
+  if (!nssChain)
+    return NS_ERROR_FAILURE;
+  /* enumerate the chain for scripting purposes */
+  nsCOMPtr<nsISupportsArray> array;
+  rv = NS_NewISupportsArray(getter_AddRefs(array));
+  if (NS_FAILED(rv)) { 
+    goto done; 
+  }
+  for (node = CERT_LIST_HEAD(nssChain);
+       !CERT_LIST_END(node, nssChain);
+       node = CERT_LIST_NEXT(node)) {
+    PR_LOG(gPIPNSSLog, PR_LOG_DEBUG, ("adding %s to chain\n", node->cert->nickname));
+    nsCOMPtr<nsIX509Cert> cert = new nsNSSCertificate(node->cert);
+    array->AppendElement(cert);
+  }
+  rv = array->Enumerate(_rvChain);
+done:
+  if (nssChain)
+    CERT_DestroyCertList(nssChain);
+  return rv;
+}
+
 /* [noscript] long getRawDER (out charPtr result) */
 NS_IMETHODIMP
 nsNSSCertificate::GetRawDER(char **result, PRUint32 *_retval)
@@ -524,26 +590,39 @@ nsNSSCertificateDB::~nsNSSCertificateDB()
 {
 }
 
-/*  [noscript] nsIX509Cert getCertByName(in nsIPK11Token aToken,
- *                                       in string aNickname);
+/*  nsIX509Cert getCertByNickname(in nsIPK11Token aToken,
+ *                                in wstring aNickname);
  */
 NS_IMETHODIMP
-nsNSSCertificateDB::GetCertByName(nsIPK11Token *aToken,
-                                  const char *nickname,
-                                  nsIX509Cert **_rvCert)
+nsNSSCertificateDB::GetCertByNickname(nsIPK11Token *aToken,
+                                      const PRUnichar *nickname,
+                                      nsIX509Cert **_rvCert)
 {
   CERTCertificate *cert = NULL;
-  nsCOMPtr<nsIX509Cert> pCert = nsnull;
-  char *foo = PL_strdup(nickname);
-  PR_LOG(gPIPNSSLog, PR_LOG_DEBUG, ("Getting \"%s\"\n", foo));
-  cert = CERT_FindCertByNickname(CERT_GetDefaultCertDB(), foo);
+  char *asciiname = NULL;
+  asciiname = NS_ConvertUCS2toUTF8(nickname); 
+  PR_LOG(gPIPNSSLog, PR_LOG_DEBUG, ("Getting \"%s\"\n", asciiname));
+#if 0
+  // what it should be, but for now...
+  if (aToken) {
+    cert = PK11_FindCertFromNickname(asciiname, NULL);
+  } else {
+    cert = CERT_FindCertByNickname(CERT_GetDefaultCertDB(), asciiname);
+  }
+#endif
+  cert = PK11_FindCertFromNickname(asciiname, NULL);
+  if (!cert) {
+    cert = CERT_FindCertByNickname(CERT_GetDefaultCertDB(), asciiname);
+  }
   if (cert) {
     PR_LOG(gPIPNSSLog, PR_LOG_DEBUG, ("got it\n"));
-    pCert = new nsNSSCertificate(cert);
+    nsCOMPtr<nsIX509Cert> pCert = new nsNSSCertificate(cert);
+    *_rvCert = pCert;
+    NS_ADDREF(*_rvCert);
+    return NS_OK;
   }
-  *_rvCert = pCert;
-  NS_ADDREF(*_rvCert);
-  return NS_OK;
+  *_rvCert = nsnull;
+  return NS_ERROR_FAILURE;
 }
 
 /* [noscript] void getCertificateNames(in nsIPK11Token aToken,
@@ -561,9 +640,13 @@ nsNSSCertificateDB::GetCertificateNames(nsIPK11Token *aToken,
    */
   CERTCertList *certList = NULL;
   PK11CertListType pk11type;
+#if 0
+  // this would seem right, but it didn't work...
+  // oh, I know why - bonks out on internal slot certs
   if (aType == nsIX509Cert::USER_CERT)
     pk11type = PK11CertListUser;
   else 
+#endif
     pk11type = PK11CertListUnique;
   certList = PK11_ListCerts(pk11type, NULL);
   if (!certList)
@@ -656,7 +739,7 @@ nsNSSCertificateDB::getCertNames(CERTCertList *certList,
 {
   CERTCertListNode *node;
   
-  PR_LOG(gPIPNSSLog, PR_LOG_DEBUG, ("List of certs:\n"));
+  PR_LOG(gPIPNSSLog, PR_LOG_DEBUG, ("List of certs %d:\n", type));
   for (node = CERT_LIST_HEAD(certList);
        !CERT_LIST_END(node, certList);
        node = CERT_LIST_NEXT(node)) {
@@ -669,6 +752,8 @@ nsNSSCertificateDB::getCertNames(CERTCertList *certList,
       }
       PR_LOG(gPIPNSSLog, PR_LOG_DEBUG, ("%s\n", node->cert->nickname));
     }
+    if (type == nsIX509Cert::USER_CERT)
+      PR_LOG(gPIPNSSLog, PR_LOG_DEBUG, ("%s\n", node->cert->nickname));
   }
 }
 

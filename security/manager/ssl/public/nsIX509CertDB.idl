@@ -49,8 +49,8 @@ native nsAutoString(nsAutoString);
 interface nsIX509CertDB : nsISupports {
 
 
-  [noscript] nsIX509Cert getCertByName(in nsIPK11Token aToken,
-                                       in string aNickname);
+  nsIX509Cert getCertByNickname(in nsIPK11Token aToken,
+                                in wstring aNickname);
 
   /*
    * getCertificateList
