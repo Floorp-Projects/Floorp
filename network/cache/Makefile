@@ -28,7 +28,7 @@ CSRCS		= \
 	mkmemcac.c	\
 	$(NULL)
 
-EXPORTS= netcache.h
+EXPORTS= netcache.h mkcache.h mkmemcac.h extcache.h
 
 REQUIRES	= network nspr2 dbm util pref js java fileurl security layer img
 
