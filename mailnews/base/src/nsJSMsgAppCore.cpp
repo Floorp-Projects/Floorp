@@ -34,6 +34,7 @@
 #include "nsIDOMXULTreeElement.h"
 #include "nsIRDFCompositeDataSource.h"
 #include "nsIMessageView.h"
+#include "nsCOMPtr.h"
 
 
 static NS_DEFINE_IID(kIScriptObjectOwnerIID, NS_ISCRIPTOBJECTOWNER_IID);
@@ -134,30 +135,52 @@ ResolveMsgAppCore(JSContext *cx, JSObject *obj, jsval id)
 
 
 //
-// Native method GetNewMail
+// Native method GetNewMessages
 //
 PR_STATIC_CALLBACK(JSBool)
-MsgAppCoreGetNewMail(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
+MsgAppCoreGetNewMessages(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
-  nsIDOMMsgAppCore *nativeThis = (nsIDOMMsgAppCore*)JS_GetPrivate(cx, obj);
+	nsIDOMMsgAppCore *nativeThis = (nsIDOMMsgAppCore*)JS_GetPrivate(cx, obj);
+	nsCOMPtr<nsIDOMXULElement> folder;
+	nsCOMPtr<nsIRDFCompositeDataSource> db;
+	nsCOMPtr<nsISupports> folderSupports, dbSupports;
 
-  *rval = JSVAL_NULL;
+	*rval = JSVAL_NULL;
+	JSBool rBool = JS_FALSE;
+	const nsString typeName;
 
   // If there's no private data, this must be the prototype, so ignore
   if (nsnull == nativeThis) {
     return JS_TRUE;
   }
 
-  if (argc >= 0) {
+	if (argc >= 2) {
 
-    if (NS_OK != nativeThis->GetNewMail()) {
-      return JS_FALSE;
+		rBool = nsJSUtils::nsConvertJSValToXPCObject(getter_AddRefs(dbSupports),
+									nsIRDFCompositeDataSource::GetIID(),
+									cx,
+									argv[0]);
+		
+		if(rBool)
+			db = do_QueryInterface(dbSupports);
+		
+		rBool = rBool && nsJSUtils::nsConvertJSValToObject(getter_AddRefs(folderSupports),
+									nsIDOMXULElement::GetIID(),
+									typeName,
+									cx,
+									argv[1]);
+
+		if(rBool)
+			folder = do_QueryInterface(folderSupports);
+
+		if (!rBool || NS_FAILED(nativeThis->GetNewMessages(db, folder))) {
+			return JS_FALSE;
     }
 
     *rval = JSVAL_VOID;
   }
   else {
-    JS_ReportError(cx, "Function GetNewMail requires 0 parameters");
+    JS_ReportError(cx, "Function GetNewMessages requires 2 parameters");
     return JS_FALSE;
   }
 
@@ -614,7 +637,7 @@ MsgAppCoreNewFolder(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval
 		return NS_OK;
 	}
 
-	if (argc >= 2) {
+	if (argc >= 3) {
 
 		rBool = nsJSUtils::nsConvertJSValToXPCObject((nsISupports**)&db,
 									nsIRDFCompositeDataSource::GetIID(),
@@ -724,7 +747,7 @@ static JSPropertySpec MsgAppCoreProperties[] =
 //
 static JSFunctionSpec MsgAppCoreMethods[] = 
 {
-  {"GetNewMail",          MsgAppCoreGetNewMail,     0},
+  {"GetNewMessages",          MsgAppCoreGetNewMessages,     2},
   {"Open3PaneWindow",          MsgAppCoreOpen3PaneWindow,     0},
   {"SetWindow",          MsgAppCoreSetWindow,     1},
   {"OpenURL",          MsgAppCoreOpenURL,     1},

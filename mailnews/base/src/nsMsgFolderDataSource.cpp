@@ -53,6 +53,7 @@ nsIRDFResource* nsMsgFolderDataSource::kNC_TotalUnreadMessages;
 // commands
 nsIRDFResource* nsMsgFolderDataSource::kNC_Delete;
 nsIRDFResource* nsMsgFolderDataSource::kNC_NewFolder;
+nsIRDFResource* nsMsgFolderDataSource::kNC_GetNewMessages;
 
 
 
@@ -90,6 +91,7 @@ nsMsgFolderDataSource::~nsMsgFolderDataSource (void)
 
   NS_RELEASE2(kNC_Delete, refcnt);
   NS_RELEASE2(kNC_NewFolder, refcnt);
+  NS_RELEASE2(kNC_GetNewMessages, refcnt);
 
   nsServiceManager::ReleaseService(kRDFServiceCID, mRDFService); // XXX probably need shutdown listener here
   mRDFService = nsnull;
@@ -134,16 +136,17 @@ NS_IMETHODIMP nsMsgFolderDataSource::Init(const char* uri)
   mRDFService->RegisterDataSource(this, PR_FALSE);
 
   if (! kNC_Child) {
-    mRDFService->GetResource(kURINC_child,   &kNC_Child);
-    mRDFService->GetResource(kURINC_MessageChild,   &kNC_MessageChild);
-    mRDFService->GetResource(kURINC_Folder,  &kNC_Folder);
-    mRDFService->GetResource(kURINC_Name,    &kNC_Name);
-    mRDFService->GetResource(kURINC_SpecialFolder, &kNC_SpecialFolder);
-    mRDFService->GetResource(kURINC_TotalMessages, &kNC_TotalMessages);
-    mRDFService->GetResource(kURINC_TotalUnreadMessages, &kNC_TotalUnreadMessages);
+    mRDFService->GetResource(NC_RDF_CHILD,   &kNC_Child);
+    mRDFService->GetResource(NC_RDF_MESSAGECHILD,   &kNC_MessageChild);
+    mRDFService->GetResource(NC_RDF_FOLDER,  &kNC_Folder);
+    mRDFService->GetResource(NC_RDF_NAME,    &kNC_Name);
+    mRDFService->GetResource(NC_RDF_SPECIALFOLDER, &kNC_SpecialFolder);
+    mRDFService->GetResource(NC_RDF_TOTALMESSAGES, &kNC_TotalMessages);
+    mRDFService->GetResource(NC_RDF_TOTALUNREADMESSAGES, &kNC_TotalUnreadMessages);
     
-	mRDFService->GetResource(kURINC_Delete, &kNC_Delete);
-    mRDFService->GetResource(kURINC_NewFolder, &kNC_NewFolder);
+	mRDFService->GetResource(NC_RDF_DELETE, &kNC_Delete);
+    mRDFService->GetResource(NC_RDF_NEWFOLDER, &kNC_NewFolder);
+    mRDFService->GetResource(NC_RDF_GETNEWMESSAGES, &kNC_GetNewMessages);
   }
   mInitialized = PR_TRUE;
   return NS_OK;
@@ -286,8 +289,13 @@ NS_IMETHODIMP nsMsgFolderDataSource::HasAssertion(nsIRDFResource* source,
                             PRBool tv,
                             PRBool* hasAssertion)
 {
-  *hasAssertion = PR_FALSE;
-  return NS_OK;
+	nsresult rv;
+	nsCOMPtr<nsIMsgFolder> folder(do_QueryInterface(source, &rv));
+	if(NS_SUCCEEDED(rv))
+		return DoFolderHasAssertion(folder, property, target, tv, hasAssertion);
+	else
+		*hasAssertion = PR_FALSE;
+	return NS_OK;
 }
 
 NS_IMETHODIMP nsMsgFolderDataSource::AddObserver(nsIRDFObserver* n)
@@ -450,6 +458,7 @@ nsMsgFolderDataSource::GetAllCommands(nsIRDFResource* source,
     if (NS_FAILED(rv)) return rv;
     cmds->AppendElement(kNC_Delete);
     cmds->AppendElement(kNC_NewFolder);
+    cmds->AppendElement(kNC_GetNewMessages);
   }
 
   if (cmds != nsnull)
@@ -473,7 +482,8 @@ nsMsgFolderDataSource::IsCommandEnabled(nsISupportsArray/*<nsIRDFResource>*/* aS
     if (NS_SUCCEEDED(rv)) {
       // we don't care about the arguments -- folder commands are always enabled
       if (!(peq(aCommand, kNC_Delete) ||
-		    peq(aCommand, kNC_NewFolder))) {
+		    peq(aCommand, kNC_NewFolder) ||
+			peq(aCommand, kNC_GetNewMessages))) {
         *aResult = PR_FALSE;
         return NS_OK;
       }
@@ -497,11 +507,17 @@ nsMsgFolderDataSource::DoCommand(nsISupportsArray/*<nsIRDFResource>*/* aSources,
 		nsCOMPtr<nsISupports> supports = getter_AddRefs((*aSources)[i]);
     nsCOMPtr<nsIMsgFolder> folder = do_QueryInterface(supports, &rv);
     if (NS_SUCCEEDED(rv)) {
-      if (peq(aCommand, kNC_Delete)) {
+      if (peq(aCommand, kNC_Delete))
+	  {
 		rv = DoDeleteFromFolder(folder, aArguments);
       }
-	  else if(peq(aCommand, kNC_NewFolder)) {
+	  else if(peq(aCommand, kNC_NewFolder)) 
+	  {
 		rv = DoNewFolder(folder, aArguments);
+	  }
+	  else if(peq(aCommand, kNC_GetNewMessages))
+	  {
+		rv = folder->GetNewMessages();
 	  }
 
     }
@@ -590,11 +606,11 @@ nsresult nsMsgFolderDataSource::NotifyPropertyChanged(nsIRDFResource *resource,
 													  nsIRDFResource *propertyResource,
 													  const char *oldValue, const char *newValue)
 {
-	nsIRDFNode *oldValueNode, *newValueNode;
+	nsCOMPtr<nsIRDFNode> oldValueNode, newValueNode;
 	nsString oldValueStr = oldValue;
 	nsString newValueStr = newValue;
-	createNode(oldValueStr, &oldValueNode);
-	createNode(newValueStr, &newValueNode);
+	createNode(oldValueStr,getter_AddRefs(oldValueNode));
+	createNode(newValueStr, getter_AddRefs(newValueNode));
 	NotifyObservers(resource, propertyResource, oldValueNode, PR_FALSE);
 	NotifyObservers(resource, propertyResource, newValueNode, PR_TRUE);
 	return NS_OK;
@@ -752,4 +768,48 @@ nsresult nsMsgFolderDataSource::DoNewFolder(nsIMsgFolder *folder, nsISupportsArr
 		rv = folder->CreateSubfolder(nameStr);
 	}
 	return rv;
+}
+
+nsresult nsMsgFolderDataSource::DoFolderHasAssertion(nsIMsgFolder *folder, nsIRDFResource *property, nsIRDFNode *target,
+													 PRBool tv, PRBool *hasAssertion)
+{
+	nsresult rv = NS_OK;
+	if(!hasAssertion)
+		return NS_ERROR_NULL_POINTER;
+
+	//We're not keeping track of negative assertions on folders.
+	if(!tv)
+	{
+		*hasAssertion = PR_FALSE;
+		return NS_OK;
+	}
+
+    if (peq(kNC_Name, property) || peq(kNC_SpecialFolder, property) || peq(kNC_TotalMessages, property)
+		|| peq(kNC_TotalUnreadMessages, property))
+	{
+		nsCOMPtr<nsIRDFResource> folderResource(do_QueryInterface(folder, &rv));
+
+		if(NS_FAILED(rv))
+			return rv;
+
+		rv = GetTargetHasAssertion(this, folderResource, property, tv, target, hasAssertion);
+	}
+	else if(peq(kNC_Child, property))
+	{
+		nsCOMPtr<nsIMsgFolder> childFolder(do_QueryInterface(target, &rv));
+		if(NS_SUCCEEDED(rv))
+			rv = folder->IsParentOf(childFolder, PR_FALSE, hasAssertion);
+	}
+	else if(peq(kNC_MessageChild, property))
+	{
+		nsCOMPtr<nsIMessage> message(do_QueryInterface(target, &rv));
+		if(NS_SUCCEEDED(rv))
+			rv = folder->HasMessage(message, hasAssertion);
+	}
+	else
+		*hasAssertion = PR_FALSE;
+
+	return rv;
+
+
 }

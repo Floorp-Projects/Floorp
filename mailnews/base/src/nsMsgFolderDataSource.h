@@ -151,6 +151,9 @@ protected:
   nsresult DoNewFolder(nsIMsgFolder *folder,
 							  nsISupportsArray *arguments);
 
+  nsresult DoFolderHasAssertion(nsIMsgFolder *folder, nsIRDFResource *property, nsIRDFNode *target,
+													 PRBool tv, PRBool *hasAssertion);
+
   static PRBool assertEnumFunc(void *aElement, void *aData);
   static PRBool unassertEnumFunc(void *aElement, void *aData);
 
@@ -167,5 +170,6 @@ protected:
   // commands
   static nsIRDFResource* kNC_Delete;
   static nsIRDFResource* kNC_NewFolder;
+  static nsIRDFResource* kNC_GetNewMessages;
 
 };

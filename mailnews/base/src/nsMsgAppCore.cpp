@@ -58,6 +58,7 @@
 #include "nsIAppShell.h"
 #include "nsIAppShellService.h"
 #include "nsAppShellCIDs.h"
+#include "nsMsgRDFUtils.h"
 
 #include "nsINetService.h"
 #include "nsCopyMessageStreamListener.h"
@@ -100,7 +101,7 @@ public:
 
   // nsIMsgAppCore
   NS_IMETHOD Open3PaneWindow();
-  NS_IMETHOD GetNewMail();
+  NS_IMETHOD GetNewMessages(nsIRDFCompositeDataSource *db, nsIDOMXULElement *folderElement);
   NS_IMETHOD SetWindow(nsIDOMWindow* aWin);
   NS_IMETHOD OpenURL(const char * url);
   NS_IMETHOD DeleteMessage(nsIDOMXULTreeElement *tree, nsIDOMXULElement *srcFolderElement, nsIDOMNodeList *nodeList);
@@ -399,33 +400,39 @@ nsMsgAppCore::Open3PaneWindow()
 }
 
 nsresult
-nsMsgAppCore::GetNewMail()
+nsMsgAppCore::GetNewMessages(nsIRDFCompositeDataSource *db, nsIDOMXULElement *folderElement)
 {
+	nsresult rv;
+	nsCOMPtr<nsIRDFResource> folderResource;
+	nsCOMPtr<nsISupportsArray> folderArray;
 
-    nsresult rv;
-    NS_WITH_SERVICE(nsIMsgMailSession, mailSession, kCMsgMailSessionCID, &rv);
-    if (NS_FAILED(rv)) return rv;
-    
-    NS_WITH_SERVICE(nsIPop3Service, pop3Service, kCPop3ServiceCID, &rv);
-    if (NS_FAILED(rv)) return rv;
+	if(!folderElement || !db)
+		return NS_ERROR_NULL_POINTER;
 
-    nsIMsgIncomingServer *server;
-    rv = mailSession->GetCurrentServer(&server);
-    if (NS_FAILED(rv)) return rv;
+	rv = folderElement->GetResource(getter_AddRefs(folderResource));
+	if(NS_FAILED(rv))
+		return rv;
 
-    nsIPop3IncomingServer *popServer;
-    rv = server->QueryInterface(nsIPop3IncomingServer::GetIID(),
-                                (void **)&popServer);
-    if (NS_SUCCEEDED(rv)) {
-        rv = pop3Service->GetNewMail(nsnull,popServer,nsnull);
-        NS_RELEASE(popServer);
-    }
-    
-    NS_RELEASE(server);
-    
-    return rv;
+	if(NS_FAILED(NS_NewISupportsArray(getter_AddRefs(folderArray))))
+		return NS_ERROR_OUT_OF_MEMORY;
+
+	folderArray->AppendElement(folderResource);
+
+    NS_WITH_SERVICE(nsIRDFService, rdfService, kRDFServiceCID, &rv);
+
+	if(NS_SUCCEEDED(rv))
+	{
+		nsCOMPtr<nsIRDFResource> getMessagesResource;
+		rv = rdfService->GetResource(NC_RDF_GETNEWMESSAGES, getter_AddRefs(getMessagesResource));
+
+		if(NS_SUCCEEDED(rv))
+		{
+			rv = db->DoCommand(folderArray, getMessagesResource, nsnull);
+		}
+	}
+	return rv;
 }
-                              
+
 extern "C"
 nsresult
 NS_NewMsgAppCore(const nsIID &aIID, void **aResult)
