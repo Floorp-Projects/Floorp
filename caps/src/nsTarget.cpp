@@ -22,8 +22,7 @@
 #include "nsPrincipalManager.h"
 #include "nsUserTarget.h"
 #include "nsUserDialogHelper.h"
-#include "xp.h"
-#include "xpgetstr.h"
+#include "prmem.h"
 #include "plhash.h"
 
 /* XXXXXXXX Begin oF HACK */
@@ -363,11 +362,11 @@ java_netscape_security_getTargetDetails(const char * charSetName, char * targetN
 		char * targetRisk, * targetDescription;
 		primTarget->GetDescription(& targetDescription);
 		primTarget->GetRisk(& targetRisk);
-		XP_STRCAT(desc, "<option>");
-		XP_STRCAT(desc, targetDescription);
-		XP_STRCAT(desc, " (");
-		XP_STRCAT(desc, targetRisk);
-		XP_STRCAT(desc, ")");
+		PL_strcat(desc, "<option>");
+		PL_strcat(desc, targetDescription);
+		PL_strcat(desc, " (");
+		PL_strcat(desc, targetRisk);
+		PL_strcat(desc, ")");
 	}
 	* details = desc;
 	// Should we consider caching the details desc?
@@ -677,7 +676,7 @@ nsTarget::nsTarget(char *name, nsIPrincipal * prin, PRInt32 risk, char * riskCol
 	/* init method makes a copy of all its arguments. Thus we need
 	 * to free the URL, which was allocated by JavaSecUI_getHelpURL.
 	 */
-	XP_FREE(url);
+	PR_Free(url);
 }
 
 nsTarget::~nsTarget(void)
@@ -959,10 +958,10 @@ nsTarget::ToString(char * * result)
 	char * prinStr = "<none>";
 	if (itsPrincipal != NULL)  itsPrincipal->ToString(& prinStr);
 	itsString = new char [strlen(TARGET_STR) + strlen(itsName) + strlen(PRIN_STR) + strlen(prinStr) + 1];
-	XP_STRCPY(itsString, TARGET_STR); 
-	XP_STRCAT(itsString, itsName); 
-	XP_STRCAT(itsString, PRIN_STR); 
-	XP_STRCAT(itsString, prinStr); 
+	PL_strcpy(itsString, TARGET_STR); 
+	PL_strcat(itsString, itsName); 
+	PL_strcat(itsString, PRIN_STR); 
+	PL_strcat(itsString, prinStr); 
 	result = & itsString;
 	return NS_OK;
 }
@@ -984,23 +983,23 @@ nsTarget::Init(char * name, nsIPrincipal * prin, nsTargetArray * targetArray,
 	PR_ASSERT(name != NULL);
 	PR_ASSERT(prin != NULL);
 	itsName = new char[strlen(name) + 1];
-	XP_STRCPY(itsName, name);
+	PL_strcpy(itsName, name);
 	itsPrincipal = prin;
 	itsRegistered = PR_FALSE;
 	itsRisk = risk;
 	if (riskColor) {
 		itsRiskColorStr = new char[strlen(riskColor) + 1];
-		XP_STRCPY(itsRiskColorStr, riskColor);
-	} else itsRiskColorStr = XP_STRDUP(JavaSecUI_getString(CAPS_TARGET_RISK_COLOR_HIGH));
+		PL_strcpy(itsRiskColorStr, riskColor);
+	} else itsRiskColorStr = PL_strdup(JavaSecUI_getString(CAPS_TARGET_RISK_COLOR_HIGH));
 	if (description == NULL) description = name;
 	itsDescriptionStr = new char[strlen(description) + 1];
-	XP_STRCPY(itsDescriptionStr, description);
+	PL_strcpy(itsDescriptionStr, description);
 	if (detailDescription == NULL) detailDescription = itsDescriptionStr;
 	itsDetailDescriptionStr = new char[strlen(detailDescription) + 1];
-	XP_STRCPY(itsDetailDescriptionStr, detailDescription);
+	PL_strcpy(itsDetailDescriptionStr, detailDescription);
 	if (url != NULL) {
 		itsURLStr = new char[strlen(url) + 1];
-		XP_STRCPY(itsURLStr, url);
+		PL_strcpy(itsURLStr, url);
 	} else itsURLStr = NULL;
 	itsTargetArray = NULL;
 	itsString = NULL;

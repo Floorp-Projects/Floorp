@@ -17,7 +17,8 @@
  */
 /*describes the state and duration of privileges*/
 #include "nsPrivilege.h"
-#include "xp.h"
+#include "prlog.h"
+#include "plstr.h"
 
 static NS_DEFINE_IID(kIPrivilegeIID, NS_IPRIVILEGE_IID);
 
@@ -125,7 +126,7 @@ nsPrivilege::ToString(char * * result)
 			privStr = "blank";
 			break;
 		default:
-			PR_ASSERT(FALSE);
+			PR_ASSERT(PR_FALSE);
 			privStr = "error";
 			break;
 	}
@@ -144,13 +145,13 @@ nsPrivilege::ToString(char * * result)
 			privStr = "blank";
 			break;
 		default:
-			PR_ASSERT(FALSE);
+			PR_ASSERT(PR_FALSE);
 			privStr = "error";
 			break;
 	}
 	itsString = new char[strlen(privStr) + strlen(durStr) + 1];
-	XP_STRCPY(itsString, privStr);
-	XP_STRCAT(itsString, durStr);
+	PL_strcpy(itsString, privStr);
+	PL_strcat(itsString, durStr);
 	result = & itsString;
 	return NS_OK;
 }

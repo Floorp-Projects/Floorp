@@ -16,7 +16,6 @@
  * Reserved.
  */
 
-#include "xp.h"
 #include "nsUserTarget.h"
 #include "prtypes.h"
 

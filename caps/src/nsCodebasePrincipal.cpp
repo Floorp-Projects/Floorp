@@ -19,7 +19,6 @@
 #include "nsCodebasePrincipal.h"
 #include "nsIComponentManager.h"
 #include "nsIServiceManager.h"
-#include "xp.h"
 #include "nsIURL.h"
 
 static NS_DEFINE_IID(kICodebasePrincipalIID, NS_ICODEBASEPRINCIPAL_IID);

@@ -26,8 +26,7 @@
  *
  */
 #include "nsUserDialogHelper.h"
-#include "xp.h"
-#include "xpgetstr.h"
+#include "prmem.h"
 #include "prprf.h"
 #include "nsTarget.h"
 
@@ -88,9 +87,9 @@ char * JavaSecUI_getHelpURL(int id)
   PR_ASSERT(tag != NULL);
   PR_ASSERT(java_sec_help_url != NULL);
 
-  char *helpURL = (char *)XP_ALLOC(strlen(java_sec_help_url) + strlen(tag) + 1);
-  XP_STRCPY(helpURL, java_sec_help_url);
-  XP_STRCAT(helpURL, tag);
+  char *helpURL = (char *)PR_Malloc(strlen(java_sec_help_url) + strlen(tag) + 1);
+  PL_strcpy(helpURL, java_sec_help_url);
+  PL_strcat(helpURL, tag);
   return helpURL;
 }
 
