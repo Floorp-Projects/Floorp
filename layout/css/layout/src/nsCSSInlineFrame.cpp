@@ -207,6 +207,8 @@ nsCSSInlineFrame::ComputeFinalSize(nsCSSInlineReflowState& aState,
 {
   // Compute default size
   nsRect bounds;
+  aState.mInlineLayout.mAvailWidth =
+    aState.mInlineLayout.mX - aState.mInlineLayout.mLeftEdge;
   nscoord lineHeight =
     aState.mInlineLayout.AlignFrames(mFirstChild, mChildCount, bounds);
 
