@@ -105,6 +105,11 @@ protected:
     nsCOMPtr<nsIZipReader>              mJAR;
     PRUint32                            mBufferSegmentSize;
     PRUint32                            mBufferMaxSize;
+
+    PRLock*                             mLock;
+    nsCOMPtr<nsIChannel>                mJarCacheTransport;
+    nsCOMPtr<nsIChannel>                mJarExtractionTransport;
+
 };
 
 #endif // nsJARChannel_h__
