@@ -32,7 +32,7 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  *
- * $Id: nss.h,v 1.13 2001/06/26 00:06:56 wtc%netscape.com Exp $
+ * $Id: nss.h,v 1.14 2001/11/19 19:04:49 relyea%netscape.com Exp $
  */
 
 #ifndef __nss_h_
@@ -130,6 +130,13 @@ SECStatus NSS_NoDB_Init(const char *configdir);
  * Close the Cert, Key databases.
  */
 extern void NSS_Shutdown(void);
+
+/*
+ * set the PKCS #11 strings for the internal token.
+ */
+void PK11_ConfigurePKCS11(char *man, char *libdes, char *tokdes, char *ptokdes,
+        char *slotdes, char *pslotdes, char *fslotdes, char *fpslotdes,
+        int minPwd, int pwRequired);
 
 SEC_END_PROTOS
 

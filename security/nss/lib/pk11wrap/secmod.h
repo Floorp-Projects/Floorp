@@ -83,6 +83,8 @@ SEC_BEGIN_PROTOS
 /* Initialization */
 extern SECMODModule *SECMOD_LoadModule(char *moduleSpec,SECMODModule *parent,
 							PRBool recurse);
+SECMODModule * SECMOD_CreateModule(char *lib, char *name, char *param, 
+								char *nss);
 
 /* Module Management */
 char **SECMOD_GetModuleSpecList(SECMODModule *module);
@@ -115,6 +117,7 @@ extern SECMODModule *SECMOD_ReferenceModule(SECMODModule *module);
 extern void SECMOD_DestroyModule(SECMODModule *module);
 extern PK11SlotInfo *SECMOD_LookupSlot(SECMODModuleID module,
 							unsigned long slotID);
+extern PK11SlotInfo *SECMOD_FindSlot(SECMODModule *module,char *name);
 
 /* Funtion reports true if at least one of the modules */
 /* of modType has been installed */

@@ -195,6 +195,7 @@ struct pzTrace_s {
     char            file[24]; /* filename */
 };
 
+PR_BEGIN_EXTERN_C
 /*
 ** conditionally compile in nssilock features
 */

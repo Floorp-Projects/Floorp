@@ -168,6 +168,18 @@ struct PK11DefaultArrayEntryStr {
 #define SECMOD_INTERNAL 1	/* internal default module */
 #define SECMOD_FIPS	2	/* internal fips module */
 
+/* default module configuration strings */
+#define SECMOD_SLOT_FLAGS "slotFlags=[RSA,DSA,DH,RC2,RC4,DES,RANDOM,SHA1,MD5,MD2,SSL,TLS,AES]"
+
+#define SECMOD_MAKE_NSS_FLAGS(fips,slot) \
+"Flags=internal,critical"fips" slotparams=("#slot"={"SECMOD_SLOT_FLAGS"})"
+
+#define SECMOD_INT_NAME "NSS Internal PKCS #11 Module"
+#define SECMOD_INT_FLAGS SECMOD_MAKE_NSS_FLAGS("",1)
+#define SECMOD_FIPS_NAME "NSS Internal FIPS PKCS #11 Module"
+#define SECMOD_FIPS_FLAGS SECMOD_MAKE_NSS_FLAGS(",fips",3)
+
+
 /*
  * What is the origin of a given Key. Normally this doesn't matter, but
  * the fortezza code needs to know if it needs to invoke the SSL3 fortezza

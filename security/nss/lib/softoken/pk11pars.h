@@ -522,7 +522,7 @@ pk11_argParseSlotInfo(PRArenaPool *arena, char *slotParams, int *retCount)
 static char *pk11_nullString = "";
 
 static char *
-pk11_formatValue(char *value,char quote)
+pk11_formatValue(PRArenaPool *arena, char *value, char quote)
 {
     char *vp,*vp2,*retval;
     int size = 0, escapes = 0;
@@ -531,7 +531,11 @@ pk11_formatValue(char *value,char quote)
 	if ((*vp == quote) || (*vp == PK11_ARG_ESCAPE)) escapes++;
 	size++;
     }
-    retval = PORT_ZAlloc(size+escapes+1);
+    if (arena) {
+	retval = PORT_ArenaZAlloc(arena,size+escapes+1);
+    } else {
+	retval = PORT_ZAlloc(size+escapes+1);
+    }
     if (retval == NULL) return NULL;
     vp2 = retval;
     for (vp=value; *vp; vp++) {
@@ -557,7 +561,7 @@ static char *pk11_formatPair(char *name,char *value, char quote)
 
     if ((need_quote && pk11_argHasChar(value,closeQuote))
 				 || pk11_argHasChar(value,PK11_ARG_ESCAPE)) {
-	value = newValue = pk11_formatValue(value,quote);
+	value = newValue = pk11_formatValue(NULL, value,quote);
 	if (newValue == NULL) return pk11_nullString;
     }
     if (need_quote) {
