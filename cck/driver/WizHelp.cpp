@@ -58,7 +58,6 @@ END_MESSAGE_MAP()
 BOOL CWizHelp::Create(LPCTSTR lpszClassName, LPCTSTR lpszWindowName, DWORD dwStyle, const RECT& rect, CWnd* pParentWnd, UINT nID, CCreateContext* pContext) 
 {
 	// TODO: Add your specialized code here and/or call the base class
-	
 	return CDialog::Create(IDD, pParentWnd);
 }
 
@@ -186,6 +185,8 @@ BOOL CWizHelp::OnInitDialog()
 		int k=Button1->Create("Button", BS_PUSHBUTTON | WS_TABSTOP|WS_VISIBLE, tmpRect, this, ID);
 	
 		*/	}
+	SetWindowPos(&wndTop,0,0,4,8,SWP_NOSIZE);	
+
 	return TRUE;  // return TRUE unless you set the focus to a control
 	              // EXCEPTION: OCX Property Pages should return FALSE
 }

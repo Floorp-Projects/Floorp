@@ -175,7 +175,6 @@ int CImgDlg::DoModal()
 BOOL CImgDlg::Create(LPCTSTR lpszClassName, LPCTSTR lpszWindowName, DWORD dwStyle, const RECT& rect, CWnd* pParentWnd, UINT nID, CCreateContext* pContext) 
 {
 	// TODO: Add your specialized code here and/or call the base class
-	
 	return CDialog::Create(IDD, pParentWnd);
 }
 
@@ -201,7 +200,8 @@ BOOL CImgDlg::OnInitDialog()
 	CDialog::OnInitDialog();
 
 	SetWindowText(imageTitle);
-	// TODO: Add extra initialization here
+	SetWindowPos(&wndTop,0,0,4,8,SWP_NOSIZE);	
+// TODO: Add extra initialization here
 	
 	return TRUE;  // return TRUE unless you set the focus to a control
 	              // EXCEPTION: OCX Property Pages should return FALSE
