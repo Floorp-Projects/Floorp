@@ -119,7 +119,6 @@ nsWindow::nsWindow() : nsBaseWidget()
 
 #ifdef NEW_DRAG_AND_DROP
     mNativeDragTarget = nsnull;
-    //mDragSource         = nsnull;
 #endif
 
 }
@@ -149,11 +148,6 @@ nsWindow::~nsWindow()
   }
 
   NS_IF_RELEASE(mHitMenu); // this should always have already been freed by the deselect
-
-#ifdef NEW_DRAG_AND_DROP
-  //NS_IF_RELEASE(mDragTarget); 
-  //NS_IF_RELEASE(mDragSource); 
-#endif
 
   delete mHitSubMenus;
   
@@ -612,16 +606,6 @@ nsresult nsWindow::StandardWindowCreate(nsIWidget *aParent,
        }
      }
    }
-   //mDragDrop = new CfDragDrop();
-   //mDragDrop->AddRef();
-   //mDragDrop->Initialize(this);
-
-   /*mDragTarget = new CfDropTarget(*mDragDrop);
-   mDragTarget->AddRef();
-
-   mDragSource = new CfDropSource(*mDragDrop);
-   mDragSource->AddRef();*/
-
 #endif
 
     // call the event callback to notify about creation
@@ -2015,8 +1999,7 @@ BOOL nsWindow::OnKeyDown( UINT aVirtualKeyCode, UINT aScanCode)
   // if we enter this if statement we expect not to get a WM_CHAR
   if (asciiKey) {
     //printf("Dispatching Key Down [%d]\n", asciiKey);
-    DispatchKeyEvent(NS_KEY_DOWN, asciiKey, aVirtualKeyCode);
-    return TRUE;
+    return DispatchKeyEvent(NS_KEY_DOWN, asciiKey, aVirtualKeyCode);
   }
 
   // always let the def proc process a WM_KEYDOWN
@@ -2051,8 +2034,7 @@ BOOL nsWindow::OnKeyUp( UINT aVirtualKeyCode, UINT aScanCode)
 
   if (asciiKey) {
     //printf("Dispatching Key Up [%d]\n", asciiKey);
-    DispatchKeyEvent(NS_KEY_UP, asciiKey, aVirtualKeyCode);
-    return TRUE;
+    return DispatchKeyEvent(NS_KEY_UP, asciiKey, aVirtualKeyCode);
   }
 
   // always let the def proc process a WM_KEYUP
