@@ -24,13 +24,13 @@
  * Larry Fitzpatrick, OpenText, lef@opentext.com
  *   -- moved initialization of DEFAULT_SIZE to NodeSet.cpp
  *
- * $Id: NodeSet.h,v 1.5 2001/01/19 21:24:41 axel%pike.org Exp $
+ * $Id: NodeSet.h,v 1.6 2001/02/15 09:21:01 axel%pike.org Exp $
  */
 
 /**
  * NodeSet
  * @author <a href="mailto:kvisco@ziplink.net">Keith Visco</a>
- * @version $Revision: 1.5 $ $Date: 2001/01/19 21:24:41 $
+ * @version $Revision: 1.6 $ $Date: 2001/02/15 09:21:01 $
 **/
 
 #ifndef TRANSFRMX_NODESET_H
@@ -123,6 +123,12 @@ public:
     **/
     Node* get(int index);
 
+    /**
+     * Returns true if duplicate checking is enabled, otherwise false.
+     *
+     * @return true if duplicate checking is enabled, otherwise false.
+    **/
+    MBool getDuplicateChecking();
 
     /**
      * Returns the index of the specified Node,
@@ -151,6 +157,16 @@ public:
     **/
     MBool remove(Node* node);
 
+
+    /**
+     * Enables or disables checking for duplicates.  By default
+     * the #add method will check for duplicate nodes. This should
+     * only be disabled when no possibility of duplicates could occur.
+     *
+     * @param checkDuplicates an MBool indicating, when true, to perform duplicate checking,
+     * otherwise duplicate checking is disabled.
+    **/
+    void setDuplicateChecking(MBool checkDuplicates);
 
     /**
      * Returns the number of elements in the NodeSet
@@ -205,6 +221,8 @@ private:
 
     int initialSize;
     int bufferSize;
+
+    MBool checkDuplicates;
 
     /**
      * The next available location in the elements array

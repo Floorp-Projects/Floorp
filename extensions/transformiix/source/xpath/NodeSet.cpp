@@ -27,7 +27,7 @@
  * Olivier Gerardin, ogerardin@vo.lu
  *    -- fixed numberValue()
  *
- * $Id: NodeSet.cpp,v 1.5 2001/01/19 21:24:41 axel%pike.org Exp $
+ * $Id: NodeSet.cpp,v 1.6 2001/02/15 09:21:00 axel%pike.org Exp $
  */
 
 #include "NodeSet.h"
@@ -40,7 +40,7 @@
  * NodeSet <BR />
  * This class was ported from XSL:P. <BR />
  * @author <A HREF="mailto:kvisco@ziplink.net">Keith Visco</A>
- * @version $Revision: 1.5 $ $Date: 2001/01/19 21:24:41 $
+ * @version $Revision: 1.6 $ $Date: 2001/02/15 09:21:00 $
 **/
 
 
@@ -81,6 +81,7 @@ NodeSet::NodeSet(const NodeSet& source) {
  * Helper method for Constructors
 **/
 void NodeSet::initialize(int size) {
+    checkDuplicates = MB_TRUE;
     elements = new Node*[size];
     for ( int i = 0; i < size; i++ ) elements[i] = 0;
     elementCount = 0;
@@ -102,7 +103,9 @@ NodeSet::~NodeSet() {
  * @return true if the Node is added to the NodeSet
 **/
 MBool NodeSet::add(Node* node) {
-    if (node && !contains(node)) {
+
+    if (node) {
+        if (checkDuplicates && contains(node)) return MB_FALSE;
         if (elementCount == bufferSize) increaseSize();
         elements[elementCount++] = node;
         return MB_TRUE;
@@ -121,7 +124,7 @@ MBool NodeSet::add(int index, Node* node)
 {
     if (!node || (index < 0) || (index > elementCount)) return MB_FALSE;
 
-    if (contains(node)) return MB_FALSE;
+    if (checkDuplicates && contains(node)) return MB_FALSE;
 
     // make sure we have room to add the object
     if (elementCount == bufferSize) increaseSize();
@@ -194,6 +197,15 @@ Node* NodeSet::get(int index) {
 } //-- get
 
 /**
+ * Returns true if duplicate checking is enabled, otherwise false.
+ *
+ * @return true if duplicate checking is enabled, otherwise false.
+**/
+MBool NodeSet::getDuplicateChecking() {
+    return checkDuplicates;
+} //-- getDuplicateChecking
+
+/**
  * Returns the index of the specified Node,
  * or -1 if the Node is not contained in the NodeSet
  * @param node the Node to get the index for
@@ -243,6 +255,18 @@ MBool NodeSet::remove(Node* node) {
     return MB_TRUE;
 } //-- remove
 
+
+/**
+ * Enables or disables checking for duplicates.  By default
+ * the #add method will check for duplicate nodes. This should
+ * only be disabled when no possibility of duplicates could occur.
+ *
+ * @param checkDuplicates an MBool indicating, when true, to perform duplicate checking,
+ * otherwise duplicate checking is disabled.
+**/
+void NodeSet::setDuplicateChecking(MBool checkDuplicates) {
+   this->checkDuplicates = checkDuplicates;
+} //-- setDuplicateChecking
 
 /**
  * Returns the number of elements in the NodeSet
