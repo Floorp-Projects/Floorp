@@ -430,7 +430,7 @@ JNIEXPORT jobject JNICALL Java_org_mozilla_dom_ElementImpl_setAttributeNode
     return NULL;
   }
 
-  ret->AddRef();
+  if (ret) ret->AddRef();
   return jattr;
 }
 
