@@ -229,6 +229,7 @@ nsresult nsMsgLocalMailFolder::AddSubfolder(nsAutoString name, nsIMsgFolder **ch
 		folder->SetFlag(MSG_FOLDER_FLAG_QUEUE);
   
 	mSubFolders->AppendElement(folder);
+	folder->SetParent(this);
 	*child = folder;
 	NS_ADDREF(*child);
 
