@@ -30,7 +30,9 @@ function Startup()
 {
   if (!InitEditorShell())
     return;
-  dump("EditorShell found for NamedAnchor Properties dialog\n");
+
+  doSetOKCancel(onOK, null);
+
   nameInput = document.getElementById("nameInput");
 
   dump("tagName = "+tagName+"\n");
@@ -93,20 +95,20 @@ function onOK()
   if (name.length == 0) {
       ShowInputErrorMessage("You must enter a name for this anchor.");
       nameInput.focus();
-      return;
+      return false;
   } else {
     // Replace spaces with "_" else it causes trouble in URL parsing
     name = ReplaceWhitespace(name, "_");
     if (AnchorNameExists(name)) {
       ShowInputErrorMessage("\""+name+"\" already exists in this page.\nPlease enter a different name.");            
       nameInput.focus();
-      return;
+      return false;
     }
     anchorElement.setAttribute("name",name);
     if (insertNew) {
       // Don't delete selected text when inserting
       editorShell.InsertElement(anchorElement, false);
     }
-    window.close();
   }
+  return true;
 }

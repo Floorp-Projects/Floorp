@@ -38,7 +38,8 @@ function Startup()
 {
   if (!InitEditorShell())
     return;
-  dump("Starting Link Properties Dialog\n");
+
+  doSetOKCancel(onOK, null);
   
   // Message was wrapped in a <label> or <div>, so actual text is a child text node
   linkCaption      = (document.getElementById("linkTextCaption")).firstChild;
@@ -206,7 +207,7 @@ function onOK()
       if (newText.length == 0) {
         ShowInputErrorMessage("You must enter some text for this link.");
         linkTextInput.focus();
-        return;
+        return false;
       }
       textNode = editorShell.editorDocument.createTextNode(newText);
       if (textNode) {
@@ -227,6 +228,6 @@ function onOK()
   }
   // Note: if HREF is empty and we were inserting a new link, do nothing
   
-  window.close();
+  return true;
 }
 

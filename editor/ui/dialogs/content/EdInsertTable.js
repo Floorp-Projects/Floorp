@@ -35,7 +35,8 @@ function Startup()
 {
   if (!InitEditorShell())
     return;
-  dump("EditoreditorShell found for Insert Table dialog\n");
+
+  doSetOKCancel(onOK, null);
 
   dump(tagName+" = InsertTable tagName\n");
   tableElement = editorShell.CreateElementWithDefaults(tagName);
@@ -71,14 +72,14 @@ function onOK()
   if (rows == "") {
     // Set focus to the offending control
     dialog.rowsInput.focus();
-    return;
+    return false;
   }
 
   columns = ValidateNumberString(dialog.columnsInput.value, 1, maxColumns);
   if (columns == "") {
     // Set focus to the offending control
     dialog.columnsInput.focus();
-    return;
+    return false;
   }
   dump("Rows = "+rows+"  Columns = "+columns+"\n");
   for (i = 0; i < rows; i++)
@@ -126,5 +127,5 @@ function onOK()
   // Don't delete selected text when inserting
   editorShell.InsertElement(tableElement, false);
 
-  window.close();
+  return true;
 }

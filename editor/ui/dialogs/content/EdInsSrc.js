@@ -25,6 +25,8 @@ function Startup()
 {
   if (!InitEditorShell())
     return;
+
+  doSetOKCancel(onOK, null);
   
   // Create dialog object to store controls for easy access
   dialog = new Object;
@@ -49,8 +51,11 @@ function onOK()
 {
   if (dialog.srcInput.value != "")
     editorShell.InsertSource(dialog.srcInput.value);
-  else dump("Null value -- not inserting\n");
-
-  window.close();
+  else {
+    dump("Null value -- not inserting\n");
+    return false;
+  }
+  
+  return true;
 }
 

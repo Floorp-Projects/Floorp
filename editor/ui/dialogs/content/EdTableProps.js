@@ -29,7 +29,8 @@ function Startup()
 {
   if (!InitEditorShell())
     return;
-  dump("EditoreditorShell found for dialog Table Properties\n");
+
+  doSetOKCancel(onOK, null);
 
   // Create dialog object to store controls for easy access
   dialog = new Object;
@@ -61,5 +62,5 @@ function onOK()
 {
 // Set attribute example:
 //  imageElement.setAttribute("src",dialog.srcInput.value);
-  window.close();
+  return true;
 }
