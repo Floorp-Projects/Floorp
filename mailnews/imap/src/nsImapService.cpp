@@ -1164,7 +1164,7 @@ nsImapService::OnlineMessageCopy(nsIEventQueue* aClientEventQueue,
         urlSpec.Append('>');
         urlSpec.Append(hierarchySeparator);
 
-        nsString folderName("", eOneByte);
+        nsString2 folderName("", eOneByte);
         GetFolderName(aSrcFolder, folderName);
         urlSpec.Append(folderName.GetBuffer());
         urlSpec.Append('>');
