@@ -483,20 +483,43 @@ NS_IMETHODIMP nsTextEditor::InsertBreak()
       result = newNode->GetParentNode(getter_AddRefs(parent));
       if (NS_SUCCEEDED(result) && parent)
       {
-        PRInt32 offsetInParent;
-        result = nsIEditorSupport::GetChildOffset(newNode, parent, offsetInParent);
+        PRInt32 offsetInParent=-1;  // we use the -1 as a marker to see if we need to compute this or not
+        nsCOMPtr<nsIDOMNode>nextNode;
+        newNode->GetNextSibling(getter_AddRefs(nextNode));
+        if (nextNode)
+        {
+          nsCOMPtr<nsIDOMCharacterData>nextTextNode;
+          nextTextNode = do_QueryInterface(nextNode);
+          if (!nextTextNode) {
+            nextNode = do_QueryInterface(newNode);
+          }
+          else { 
+            offsetInParent=0; 
+          }
+        }
+        else {
+          nextNode = do_QueryInterface(newNode);
+        }
+        result = nsEditor::GetSelection(getter_AddRefs(selection));
         if (NS_SUCCEEDED(result))
         {
-          result = nsEditor::GetSelection(getter_AddRefs(selection));
-          if (NS_SUCCEEDED(result))
+          if (-1==offsetInParent) 
           {
-            selection->Collapse(parent, offsetInParent);
-            // post-process 
-            result = mRules->DidInsertBreak(selection, result);
+            nextNode->GetParentNode(getter_AddRefs(parent));
+            result = nsIEditorSupport::GetChildOffset(nextNode, parent, offsetInParent);
+            if (NS_SUCCEEDED(result)) {
+              selection->Collapse(parent, offsetInParent+1);  // +1 to insert just after the break
+            }
+          }
+          else
+          {
+            selection->Collapse(nextNode, offsetInParent);
           }
         }
       }
     }
+    // post-process, always called if WillInsertBreak didn't return cancel==PR_TRUE
+    result = mRules->DidInsertBreak(selection, result);
   }
   nsresult endTxnResult = nsEditor::EndTransaction();  // don't return this result!
   NS_ASSERTION ((NS_SUCCEEDED(endTxnResult)), "bad end transaction result");

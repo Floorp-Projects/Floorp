@@ -1232,24 +1232,53 @@ NS_IMETHODIMP nsEditor::DeleteSelectionAndCreateNode(const nsString& aTag, nsIDO
       }
 #endif
     }
-    // split the text node
+    // split the selected node
     nsCOMPtr<nsIDOMNode> parentSelectedNode;
     PRInt32 offsetOfSelectedNode;
     result = selection->GetAnchorNodeAndOffset(getter_AddRefs(parentSelectedNode), &offsetOfSelectedNode);
     if ((NS_SUCCEEDED(result)) && parentSelectedNode)
     {
+      PRInt32 offsetOfNewNode;
       nsCOMPtr<nsIDOMNode> selectedNode;
       PRUint32 selectedNodeContentCount=0;
       nsCOMPtr<nsIDOMCharacterData>selectedParentNodeAsText;
       selectedParentNodeAsText = do_QueryInterface(parentSelectedNode);
-      if (selectedParentNodeAsText)
-      {
+      /* if the selection is a text node, split the text node if necesary
+         and compute where to put the new node
+      */
+      if (selectedParentNodeAsText) 
+      { 
+        PRInt32 indexOfTextNodeInParent;
         selectedNode = do_QueryInterface(parentSelectedNode);
         selectedNode->GetParentNode(getter_AddRefs(parentSelectedNode));
         selectedParentNodeAsText->GetLength(&selectedNodeContentCount);
+        nsIEditorSupport::GetChildOffset(selectedNode, parentSelectedNode, indexOfTextNodeInParent);
+
+        if ((offsetOfSelectedNode!=0) && (((PRUint32)offsetOfSelectedNode)!=selectedNodeContentCount))
+        {
+          nsCOMPtr<nsIDOMNode> newSiblingNode;
+          result = SplitNode(selectedNode, offsetOfSelectedNode, getter_AddRefs(newSiblingNode));
+          // now get the node's offset in it's parent, and insert the new tag there
+          if (NS_SUCCEEDED(result)) {
+            result = nsIEditorSupport::GetChildOffset(selectedNode, parentSelectedNode, offsetOfNewNode);
+          }
+        }
+        else 
+        { // determine where to insert the new node
+          if (0==offsetOfSelectedNode) {
+            offsetOfNewNode = indexOfTextNodeInParent; // insert new node as previous sibling to selection parent
+          }
+          else {                 // insert new node as last child
+            nsIEditorSupport::GetChildOffset(selectedNode, parentSelectedNode, offsetOfNewNode);
+            offsetOfNewNode++;    // offsets are 0-based, and we need the index of the new node
+          }
+        }
       }
+      /* if the selection is not a text node, split the parent node if necesary
+         and compute where to put the new node
+      */
       else
-      {
+      { // it's an interior node
         nsCOMPtr<nsIDOMNodeList>parentChildList;
         parentSelectedNode->GetChildNodes(getter_AddRefs(parentChildList));
         if ((NS_SUCCEEDED(result)) && parentChildList)
@@ -1259,46 +1288,48 @@ NS_IMETHODIMP nsEditor::DeleteSelectionAndCreateNode(const nsString& aTag, nsIDO
           {
             nsCOMPtr<nsIDOMCharacterData>selectedNodeAsText;
             selectedNodeAsText = do_QueryInterface(selectedNode);
-            if (selectedNodeAsText) {
-              selectedNodeAsText->GetLength(&selectedNodeContentCount);
+            nsCOMPtr<nsIDOMNodeList>childList;
+            selectedNode->GetChildNodes(getter_AddRefs(childList));
+            if ((NS_SUCCEEDED(result)) && childList) {
+              childList->GetLength(&selectedNodeContentCount);
             }
-            else
+            else {
+              return NS_ERROR_NULL_POINTER;
+            }
+            if ((offsetOfSelectedNode!=0) && (((PRUint32)offsetOfSelectedNode)!=selectedNodeContentCount))
             {
-              nsCOMPtr<nsIDOMNodeList>childList;
-              selectedNode->GetChildNodes(getter_AddRefs(childList));
-              if ((NS_SUCCEEDED(result)) && childList) {
-                childList->GetLength(&selectedNodeContentCount);
+              nsCOMPtr<nsIDOMNode> newSiblingNode;
+              result = SplitNode(selectedNode, offsetOfSelectedNode, getter_AddRefs(newSiblingNode));
+              // now get the node's offset in it's parent, and insert the new tag there
+              if (NS_SUCCEEDED(result)) {
+                result = nsIEditorSupport::GetChildOffset(selectedNode, parentSelectedNode, offsetOfNewNode);
               }
-              else {
-                return NS_ERROR_NULL_POINTER;
+            }
+            else 
+            { // determine where to insert the new node
+              if (0==offsetOfSelectedNode) {
+                offsetOfNewNode = 0; // insert new node as first child
+              }
+              else {                 // insert new node as last child
+                nsIEditorSupport::GetChildOffset(selectedNode, parentSelectedNode, offsetOfNewNode);
+                offsetOfNewNode++;    // offsets are 0-based, and we need the index of the new node
               }
             }
           }
         }
       }
 
-      // we only get here if result indicates a success
-      PRInt32 offsetOfNewNode;
-      if ((offsetOfSelectedNode!=0) && (((PRUint32)offsetOfSelectedNode)!=selectedNodeContentCount))
-      {
-        nsCOMPtr<nsIDOMNode> newSiblingNode;
-        result = SplitNode(selectedNode, offsetOfSelectedNode, getter_AddRefs(newSiblingNode));
-        // now get the node's offset in it's parent, and insert the new tag there
-        if (NS_SUCCEEDED(result)) {
-          result = nsIEditorSupport::GetChildOffset(selectedNode, parentSelectedNode, offsetOfNewNode);
-        }
-      }
-      else {
-        offsetOfNewNode = offsetOfSelectedNode;
-      }
-
       if (NS_SUCCEEDED(result))
       { 
         nsCOMPtr<nsIDOMNode> newNode;
         result = CreateNode(aTag, parentSelectedNode, offsetOfNewNode, getter_AddRefs(newNode));
-        selection->Collapse(parentSelectedNode, offsetOfNewNode);
+        // we want the selection to be just after the new node
+        selection->Collapse(parentSelectedNode, offsetOfNewNode+1); 
         *aNewNode = newNode;
       }
+    }
+    else {
+      printf("InsertBreak into an empty document is not yet supported\n");
     }
   }
   return result;
