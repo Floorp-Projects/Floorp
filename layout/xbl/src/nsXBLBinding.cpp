@@ -789,7 +789,7 @@ nsXBLBinding::InstallProperties(nsIContent* aBoundElement)
 
           void* getFunc = nsnull;
           void* setFunc = nsnull;
-          uintN attrs = 0;
+          uintN attrs = JSPROP_ENUMERATE;
 
           if (readOnly.EqualsWithConversion("true"))
             attrs |= JSPROP_READONLY;
