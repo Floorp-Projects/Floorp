@@ -25,36 +25,40 @@
 #include "nsIRDFResource.h"
 #include "nsIMsgSearchHitNotify.h"
 #include "nsISupportsArray.h"
-
+#include "nsIMsgSearchSession.h"
 
 #include "nsCOMPtr.h"
 
 class nsMsgSearchDataSource : public nsMsgRDFDataSource,
                               public nsIMsgSearchHitNotify
 {
- public:
-  nsMsgSearchDataSource();
-  virtual ~nsMsgSearchDataSource();
+public:
+    nsMsgSearchDataSource();
+    virtual ~nsMsgSearchDataSource();
 
-  NS_DECL_ISUPPORTS
-  NS_DECL_NSIRDFDATASOURCE
-  NS_DECL_NSIMSGSEARCHHITNOTIFY
+    NS_DECL_ISUPPORTS
+    NS_DECL_NSIMSGSEARCHHITNOTIFY
 
-  nsresult Init();
+    NS_IMETHOD GetURI(char **aResult);
+    NS_IMETHOD GetTargets(nsIRDFResource *aSource,
+                          nsIRDFResource *aProperty,
+                          PRBool aTruthValue,
+                          nsISimpleEnumerator **aResult);
+    NS_IMETHOD HasAssertion(nsIRDFResource *aSource,
+                            nsIRDFResource *aProperty,
+                            nsIRDFNode *aTarget,
+                            PRBool aTruthValue,
+                            PRBool *aResult);
+    
+    NS_IMETHOD ArcLabelsOut(nsIRDFResource *aSource,
+                            nsISimpleEnumerator **aResult);
+    nsresult Init();
 
-  private:
-  nsCOMPtr<nsISupportsArray> mObservers;
-  nsCOMPtr<nsIRDFResource> mSearchRoot;
+private:
+    nsCOMPtr<nsIRDFResource> mSearchRoot;
+    nsCOMPtr<nsIMsgSearchSession> mSearchSession;
 
-  nsresult notifyObserversAssert(nsIRDFResource *aSource,
-                                 nsIRDFResource *aTarget,
-                                 nsIRDFResource *aProperty);
-
-  // nsISupportsArray callback
-  static PRBool notifyAssert(nsISupports* aElement, void *aData);
-
-
-  static nsrefcnt gInstanceCount;
-  static nsCOMPtr<nsIRDFResource> kNC_MessageChild;
+    static nsrefcnt gInstanceCount;
+    static nsCOMPtr<nsIRDFResource> kNC_MessageChild;
   
 };
