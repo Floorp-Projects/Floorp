@@ -2960,11 +2960,12 @@ IsJavaScriptLanguage(const nsString& aName)
 nsresult
 HTMLContentSink::ResumeParsing()
 {
+  nsresult result=NS_OK;
   if (nsnull != mParser) {
-    mParser->EnableParser(PR_TRUE);
+    result=mParser->EnableParser(PR_TRUE);
   }
   
-  return NS_OK;
+  return result;
 }
 
 PRBool
