@@ -47,7 +47,6 @@
 /*
 	prototypes for external structures
 */
-
 typedef struct _net_MemoryCacheObject net_MemoryCacheObject;
 
 /* ------------------------------------------------------------------------ */
@@ -197,6 +196,7 @@ typedef struct _net_MemoryCacheObject net_MemoryCacheObject;
 #define FO_ONLY_FROM_CACHE_AND_LOAD_HTML_HELP_MAP_FILE		(FO_ONLY_FROM_CACHE | FO_LOAD_HTML_HELP_MAP_FILE)
 #define FO_ONLY_FROM_CACHE_AND_PRESENT_INLINE				(FO_ONLY_FROM_CACHE | FO_PRESENT_INLINE)
 #define FO_ONLY_FROM_CACHE_AND_NGLAYOUT         (FO_ONLY_FROM_CACHE | FO_NGLAYOUT)
+
 typedef void
 Net_GetUrlExitFunc (URL_Struct *URL_s, int status, MWContext *window_id);
 
@@ -329,16 +329,21 @@ struct URL_Struct_ {
     time_t   server_date;                 /* Date: header returned by 
 										   * HTTP servers
 										   */
-	char   * cache_file;                  /* if non-NULL then it contains
-										   * the filename of its local cache 
+    char   * cache_file;                  
+                                           /* if non-NULL then it contains
+                                           * the filename of its local cache 
 										   * file containing it's data
 										   */
+#ifdef NU_CACHE
+    void*    cache_object;
+#else
 	net_MemoryCacheObject * memory_copy;  /* if non-NULL then it contains 
 										   * a structure with
                                            * a pointer to a list of 
 										   * memory segments
                                            * containing it's data
                                            */
+#endif
 
 	void   * fe_data; 					  /* random front end data to be passed
 										   * up the line
@@ -482,7 +487,8 @@ struct URL_Struct_ {
 	char    *origin_url;                  /* original referrer of javascript: URL */
 };
 
-/* macro's (methods) to access the URL Struct
+#ifndef NU_CACHE /* Not on my branch you don't */
+/*  silly macro's (methods) to access the URL Struct that nobody uses
  */
 #define NET_URLStruct_Address(S)          S->address
 #define NET_URLStruct_AddressModified(S)  S->address_modified
@@ -491,6 +497,7 @@ struct URL_Struct_ {
 #define NET_URLStruct_ContentLength(S)    S->content_length
 #define NET_URLStruct_ContentType(S)      S->content_type
 
+#endif
 /* stream functions
  */
 typedef unsigned int
@@ -2112,7 +2119,10 @@ extern void NET_PlusToSpace(char *str);
 #define WAIS_TYPE_URL           10
 #define ABOUT_TYPE_URL          11
 #define FILE_CACHE_TYPE_URL     12
-#define MEMORY_CACHE_TYPE_URL   13
+#ifdef NU_CACHE
+#define NU_CACHE_TYPE_URL       13
+#endif
+#define MEMORY_CACHE_TYPE_URL   13 /* Will go away later */
 #define SECURE_HTTP_TYPE_URL    14
 #define INTERNAL_IMAGE_TYPE_URL 15
 #define URN_TYPE_URL            16
