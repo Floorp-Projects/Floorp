@@ -59,8 +59,12 @@ private:
 
   nsIScreen* CreateNewScreenObject ( ) ;
 
-    // cache the primary screen object to avoid memory allocation every time
+  // cache the primary screen object to avoid memory allocation every time
   nsCOMPtr<nsIScreen> mCachedMainScreen;
+
+#ifdef DEBUG
+  PRUint32 mID;
+#endif
 
 };
 

@@ -54,6 +54,11 @@
 #include "nsFontList.h"
 #include "nsPrintSession.h"
 
+#include "qtlog.h"
+
+// Initialize qt logging
+PRLogModuleInfo *gQTLogModule = PR_NewLogModule("QtGfx");
+
 // objects that just require generic constructors
 
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsFontMetricsQT)

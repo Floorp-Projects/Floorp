@@ -106,6 +106,10 @@ public:
   QFontInfo*             mFontInfo;
   QFontMetrics*          mFontMetrics;
   nsFontCharSetInfo*     mCharSetInfo;
+#ifdef DEBUG
+private:
+  PRUint32 mID;
+#endif
 };
 
 class nsFontMetricsQT : public nsIFontMetrics
@@ -213,6 +217,10 @@ protected:
     nscoord          mSpaceWidth;
 
     static QFontDatabase    *mQFontDB;
+#ifdef DEBUG
+private:
+    PRUint32 mID;
+#endif
 };
 
 class nsFontEnumeratorQT : public nsIFontEnumerator

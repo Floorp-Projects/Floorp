@@ -48,9 +48,9 @@
 
 #include <qapplication.h>
 
-//JCG #define DBG_JCG 1
+#include "qtlog.h"
 
-#ifdef DBG_JCG
+#ifdef DEBUG
 PRUint32 gDCSpecCount = 0;
 PRUint32 gDCSpecID = 0;
 #endif
@@ -61,10 +61,12 @@ PRUint32 gDCSpecID = 0;
  */
 nsDeviceContextSpecQT::nsDeviceContextSpecQT()
 {
-#ifdef DBG_JCG
+#ifdef DEBUG
   gDCSpecCount++;
   mID = gDCSpecID++;
-  printf("JCG: nsDeviceContextSpecQT CTOR (%p) ID: %d, Count: %d\n",this,mID,gDCSpecCount);
+  PR_LOG(gQTLogModule, QT_BASIC,
+      ("nsDeviceContextSpecQT CTOR (%p) ID: %d, Count: %d\n",
+       this, mID, gDCSpecCount));
 #endif
   NS_INIT_ISUPPORTS();
 }
@@ -75,9 +77,11 @@ nsDeviceContextSpecQT::nsDeviceContextSpecQT()
  */
 nsDeviceContextSpecQT::~nsDeviceContextSpecQT()
 {
-#ifdef DBG_JCG
+#ifdef DEBUG
   gDCSpecCount--;
-  printf("JCG: nsDeviceContextSpecQT DTOR (%p) ID: %d, Count: %d\n",this,mID,gDCSpecCount);
+  PR_LOG(gQTLogModule, QT_BASIC,
+      ("nsDeviceContextSpecQT DTOR (%p) ID: %d, Count: %d\n",
+       this, mID, gDCSpecCount));
 #endif
 }
 
@@ -330,7 +334,7 @@ NS_IMETHODIMP nsDeviceContextSpecQT::GetLeftMargin(float &value)
 
 NS_IMETHODIMP nsDeviceContextSpecQT::GetCopies ( int &aCopies )
 {
-  printf("WARNING: NOT IMPLEMENTED.");
+  NS_NOTREACHED("nsDeviceContextSpecQT::GetCopies not yet implemented");
   aCopies = 1;
   return NS_OK;
 }

@@ -58,6 +58,10 @@ public:
 
 protected:
     virtual ~nsDeviceContextSpecFactoryQT();
+#ifdef DEBUG
+private:
+		PRUint32 mID;
+#endif
 };
 
 #endif

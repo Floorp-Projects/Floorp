@@ -41,12 +41,11 @@
 #include "nsRenderingContextQT.h"
 
 #include "nspr.h"
+#include "qtlog.h"
 
 #define IsFlagSet(a,b) ((a) & (b))
 
-//JCG #define DBG_JCG 1
-
-#ifdef DBG_JCG
+#ifdef DEBUG
 PRUint32 gImageCount = 0;
 PRUint32 gImageID = 0;
 #endif
@@ -56,10 +55,11 @@ NS_IMPL_ISUPPORTS1(nsImageQT, nsIImage)
 //------------------------------------------------------------
 nsImageQT::nsImageQT()
 {
-#ifdef DBG_JCG
+#ifdef DEBUG
   gImageCount++;
   mID = gImageID++;
-  printf("JCG: nsImageQT CTOR (%p) ID: %d, Count: %d\n",this,mID,gImageCount);
+  PR_LOG(gQTLogModule, QT_BASIC,
+      ("nsImageQT CTOR (%p) ID: %d, Count: %d\n", this, mID, gImageCount));
 #endif
   NS_INIT_ISUPPORTS();
   mImageBits = nsnull;
@@ -89,9 +89,10 @@ nsImageQT::nsImageQT()
 //------------------------------------------------------------
 nsImageQT::~nsImageQT()
 {
-#ifdef DBG_JCG
+#ifdef DEBUG
   gImageCount--;
-  printf("JCG: nsImageQT DTOR (%p) ID: %d, Count: %d\n",this,mID,gImageCount);
+  PR_LOG(gQTLogModule, QT_BASIC,
+      ("nsImageQT DTOR (%p) ID: %d, Count: %d\n", this, mID, gImageCount));
 #endif
   if (nsnull != mImageBits) {
     delete[] (PRUint8*)mImageBits;

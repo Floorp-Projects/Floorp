@@ -42,28 +42,30 @@
 #include "nsRenderingContextQT.h"
 #include <qregion.h>
 
-//JCG #define DBG_JCG 1
+#include "qtlog.h"
 
-#ifdef DBG_JCG
+#ifdef DEBUG
 PRUint32 gRegionCount = 0;
 PRUint32 gRegionID = 0;
 #endif
 
 nsRegionQT::nsRegionQT() : mRegion()
 {
-#ifdef DBG_JCG
+#ifdef DEBUG
   gRegionCount++;
   mID = gRegionID++;
-  printf("JCG: nsRegionQT CTOR (%p) ID: %d, Count: %d\n",this,mID,gRegionCount);
+  PR_LOG(gQTLogModule, QT_BASIC,
+      ("nsRegionQT CTOR (%p) ID: %d, Count: %d\n", this, mID, gRegionCount));
 #endif
   NS_INIT_ISUPPORTS();
 }
 
 nsRegionQT::~nsRegionQT()
 {
-#ifdef DBG_JCG
+#ifdef DEBUG
   gRegionCount--;
-  printf("JCG: nsRegionQT DTOR (%p) ID: %d, Count: %d\n",this,mID,gRegionCount);
+  PR_LOG(gQTLogModule, QT_BASIC,
+      ("nsRegionQT DTOR (%p) ID: %d, Count: %d\n", this, mID, gRegionCount));
 #endif
 }
 

@@ -65,6 +65,8 @@
 
 #include "nsIScreenManager.h"
 
+#include "qtlog.h"
+
 #define QCOLOR_TO_NS_RGB(c) \
     ((nscolor)NS_RGB(c.red(),c.green(),c.blue()))
 
@@ -75,10 +77,12 @@ nscoord nsDeviceContextQT::mDpi = 96;
 enum Trace_level { ENTER, EXIT };
 
 void traceMessage(Trace_level level, const char* const item) {
+  char logBuf[1024] = ""; // let's trust that these messages won't get longer than this
   static int indent = 0;
   if (EXIT == level && indent>0) --indent;
-  for (int i=0; i<indent; i++) printf(" ");
-  printf("%s", item);
+  for (int i=0; i<indent; i++) strcat(logBuf, " ");
+  strcat(logBuf, item);
+  PR_LOG(gQTLogModule, QT_BASIC, ("%s", logBuf));
   if (ENTER == level) ++indent;
 }
 
@@ -183,11 +187,11 @@ NS_IMETHODIMP nsDeviceContextQT::Init(nsNativeWidget aNativeWidget)
   }
   SetDPI(mDpi);
 
-#ifdef DEBUG
+#ifdef MOZ_LOGGING
   static PRBool once = PR_TRUE;
   if (once) {
-    printf("GFX: dpi=%d t2p=%g p2t=%g depth=%d\n",
-           mDpi,mTwipsToPixels,mPixelsToTwips,mDepth);
+    PR_LOG(gQTLogModule, QT_BASIC, ("GFX: dpi=%d t2p=%g p2t=%g depth=%d\n",
+           mDpi,mTwipsToPixels,mPixelsToTwips,mDepth));
     once = PR_FALSE;
   }
 #endif
