@@ -550,7 +550,7 @@ void InitializeElementTable(void) {
 	    /*rootnodes,endrootnodes*/          &gRootTags,&gRootTags,	
       /*autoclose starttags and endtags*/ 0,0,0,0,
       /*parent,incl,exclgroups*/          kFlowEntity, kFlowEntity, kNone,	
-      /*special props, prop-range*/       0,kDefaultPropRange,
+      /*special props, prop-range*/       kLegalOpen,kDefaultPropRange, // Don't munge the content model around <endnote>. bug 100175
       /*special parents,kids,skip*/       0,0,eHTMLTag_unknown);
 
     Initialize( 
