@@ -60,6 +60,8 @@ LONG OS2_CombineClipRegion( HPS hps, HRGN hrgnCombine, LONG lMode);
 HRGN OS2_CopyClipRegion( HPS hps);
 #define OS2_SetClipRegion(hps,hrgn) OS2_CombineClipRegion(hps, hrgn, CRGN_COPY)
 
+BOOL doSetupFontAndTextColor = PR_TRUE;
+
 // Use these instead of native GpiSave/RestorePS because: need to store ----
 // more information, and need to be able to push from onscreen & pop onto
 // offscreen.  Potentially.
@@ -932,6 +934,9 @@ void nsRenderingContextOS2::SetupFillColor (void)
 
 void nsRenderingContextOS2::SetupFontAndTextColor (void)
 {
+   if (!doSetupFontAndTextColor) {
+      return;
+   } /* endif */
    if (mFontMetrics != mCurrFontMetrics)
    {
       // select font
@@ -1474,8 +1479,58 @@ NS_IMETHODIMP nsRenderingContextOS2::GetWidth( const PRUnichar *aString,
   nsresult temp;
   char buf[1024];
 
-  int newLength = WideCharToMultiByte( ((nsFontMetricsOS2*)mFontMetrics)->mCodePage, aString, aLength, buf, sizeof(buf));
-  temp = GetWidth( buf, newLength, aWidth);
+  PRUnichar* pstr = (PRUnichar *)(const PRUnichar *)aString;
+
+  PRUint32 start = 0;
+  nscoord tWidth;
+  BOOL createdFont = FALSE;
+  LONG oldLcid;
+  int convertedLength = 0;
+
+  aWidth = 0;
+
+  if (((nsFontMetricsOS2*)mFontMetrics)->mCodePage != 1252) {
+    for (PRUint32 i = 0; i < aLength; i++) {
+      PRUnichar c = pstr[i];
+      if ((c >= 0x0080) && (c <= 0x00FF)) {
+        if (!createdFont) {
+           nsFontHandle fh = nsnull;
+           if (mFontMetrics) {
+             mFontMetrics->GetFontHandle(fh);
+           } /* endif */
+           nsFontHandleOS2 *pHandle = (nsFontHandleOS2 *) fh;
+           FATTRS fattrs = pHandle->fattrs;
+           fattrs.usCodePage = 1252;
+           GFX (::GpiCreateLogFont (mPS, 0, 1, &fattrs), GPI_ERROR);
+           createdFont = TRUE;
+        } /* endif */
+        convertedLength = WideCharToMultiByte( ((nsFontMetricsOS2*)mFontMetrics)->mCodePage, &pstr[start], i-start, buf, sizeof(buf));
+        GetWidth((const char*)buf,convertedLength,tWidth);
+        aWidth += tWidth;
+        start = i;
+        convertedLength = WideCharToMultiByte( 1252, &pstr[start], 1, buf, sizeof(buf));
+        LONG oldLcid = GpiQueryCharSet(mPS);
+        GpiSetCharSet(mPS, 1);
+        doSetupFontAndTextColor = PR_FALSE;
+        GetWidth((const char*)buf,convertedLength,tWidth);
+        aWidth+=tWidth;
+        doSetupFontAndTextColor = PR_TRUE;
+        GpiSetCharSet(mPS, oldLcid);
+        start++;
+      } /* endif */
+    } /* endfor */
+    if (createdFont) {
+       GpiDeleteSetId(mPS, 1);
+       createdFont = FALSE;
+    } /* endif */
+  } /* endif */
+
+  convertedLength = WideCharToMultiByte( ((nsFontMetricsOS2*)mFontMetrics)->mCodePage, &pstr[start], aLength-start, buf, sizeof(buf));
+  temp = GetWidth( buf, convertedLength, tWidth);
+  aWidth+= tWidth;
+
+//  int convertedLength = WideCharToMultiByte( ((nsFontMetricsOS2*)mFontMetrics)->mCodePage, aString, aLength, buf, sizeof(buf));
+//  temp = GetWidth( buf, newLength, aWidth);
   return temp;
 }
 
@@ -1525,9 +1580,60 @@ NS_IMETHODIMP nsRenderingContextOS2 :: DrawString(const PRUnichar *aString, PRUi
 {
   char buf[1024];
 
-  int newLength = WideCharToMultiByte( ((nsFontMetricsOS2*)mFontMetrics)->mCodePage, aString, aLength, buf, sizeof(buf));
+  PRUnichar* pstr = (PRUnichar *)(const PRUnichar *)aString;
 
-  return DrawString( buf, newLength, aX, aY, aSpacing);
+  PRInt32 x = aX;
+  PRInt32 y = aY;
+
+  PRUint32 start = 0;
+  nscoord tWidth;
+  BOOL createdFont = FALSE;
+  LONG oldLcid;
+  int convertedLength = 0;
+
+  if (((nsFontMetricsOS2*)mFontMetrics)->mCodePage != 1252) {
+    for (PRUint32 i = 0; i < aLength; i++) {
+      PRUnichar c = pstr[i];
+      if ((c >= 0x0080) && (c <= 0x00FF)) {
+        if (!createdFont) {
+           nsFontHandle fh = nsnull;
+           if (mFontMetrics) {
+             mFontMetrics->GetFontHandle(fh);
+           } /* endif */
+           nsFontHandleOS2 *pHandle = (nsFontHandleOS2 *) fh;
+           FATTRS fattrs = pHandle->fattrs;
+           fattrs.usCodePage = 1252;
+           GFX (::GpiCreateLogFont (mPS, 0, 1, &fattrs), GPI_ERROR);
+           createdFont = TRUE;
+        } /* endif */
+        convertedLength = WideCharToMultiByte( ((nsFontMetricsOS2*)mFontMetrics)->mCodePage, &pstr[start], i-start, buf, sizeof(buf));
+        DrawString( buf, convertedLength, x, y, aSpacing);
+        GetWidth((const char*)buf,convertedLength,tWidth);
+        x+=tWidth;
+        start = i;
+        convertedLength = WideCharToMultiByte( 1252, &pstr[start], 1, buf, sizeof(buf));
+        LONG oldLcid = GpiQueryCharSet(mPS);
+        GpiSetCharSet(mPS, 1);
+        doSetupFontAndTextColor = PR_FALSE;
+        DrawString( buf, convertedLength, x, y, aSpacing);
+        GetWidth((const char*)buf,convertedLength,tWidth);
+        doSetupFontAndTextColor = PR_TRUE;
+        GpiSetCharSet(mPS, oldLcid);
+        x+=tWidth;
+        start++;
+      } /* endif */
+    } /* endfor */
+    if (createdFont) {
+       GpiDeleteSetId(mPS, 1);
+       createdFont = FALSE;
+    } /* endif */
+  } /* endif */
+
+  convertedLength = WideCharToMultiByte( ((nsFontMetricsOS2*)mFontMetrics)->mCodePage, &pstr[start], aLength-start, buf, sizeof(buf));
+  DrawString( buf, convertedLength, x, y, aSpacing);
+
+//    int convertedLength = WideCharToMultiByte( ((nsFontMetricsOS2*)mFontMetrics)->mCodePage, aString, aLength, buf, sizeof(buf));
+//    return DrawString( buf, newLength, aX, aY, aSpacing);
 }
 
 NS_IMETHODIMP nsRenderingContextOS2 :: DrawString(const nsString& aString,
