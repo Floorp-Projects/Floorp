@@ -7,9 +7,9 @@
 <!ENTITY age.label "age in days">
 <!ENTITY to.label "to">
 <!-- LOCALIZATION NOTE (cc.label): DONT_TRANSLATE -->
-<!ENTITY cc.label "CC">
-<!-- LOCALIZATION NOTE (toOrCc.label): Do not translate "CC" -->
-<!ENTITY toOrCc.label "to or CC">
+<!ENTITY cc.label "Cc">
+<!-- LOCALIZATION NOTE (toOrCc.label): Do not translate "cc" -->
+<!ENTITY toOrCc.label "to or cc">
 <!ENTITY status.label "status">
 <!ENTITY priority.label "priority">
 <!ENTITY body.label "body">

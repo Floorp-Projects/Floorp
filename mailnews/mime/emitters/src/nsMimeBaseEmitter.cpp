@@ -765,7 +765,7 @@ nsMimeBaseEmitter::DumpToCC()
   char * newsgroupField = GetHeaderValue(HEADER_NEWSGROUPS, mHeaderArray);
 
   // only dump these fields if we have at least one of them! When displaying news
-  // messages that didn't have a to or cc field, we'd always get an empty box
+  // messages that didn't have a To or Cc field, we'd always get an empty box
   // which looked weird.
   if (toField || ccField || bccField || newsgroupField)
   {

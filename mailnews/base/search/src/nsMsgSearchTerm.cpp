@@ -63,8 +63,8 @@ nsMsgSearchAttribEntry SearchAttribEntryTable[] =
     {nsMsgSearchAttrib::Priority,	"priority"},
     {nsMsgSearchAttrib::MsgStatus,	"status"},	
     {nsMsgSearchAttrib::To,			"to"},
-    {nsMsgSearchAttrib::CC,			"CC"},
-    {nsMsgSearchAttrib::ToOrCC,		"to or CC"}
+    {nsMsgSearchAttrib::CC,			"cc"},
+    {nsMsgSearchAttrib::ToOrCC,		"to or cc"}
 };
 
 // Take a string which starts off with an attribute
@@ -518,9 +518,9 @@ nsMsgSearchTerm::ParseAttribute(char *inStream)
 }
 
 // De stream one search term. If the condition looks like
-// condition = "(to or CC, contains, r-thompson) AND (body, doesn't contain, fred)"
+// condition = "(to or cc, contains, r-thompson) AND (body, doesn't contain, fred)"
 // This routine should get called twice, the first time
-// with "to or CC, contains, r-thompson", the second time with
+// with "to or cc, contains, r-thompson", the second time with
 // "body, doesn't contain, fred"
 
 nsresult nsMsgSearchTerm::DeStreamNew (char *inStream, PRInt16 /*length*/)

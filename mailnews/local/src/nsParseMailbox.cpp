@@ -16,7 +16,7 @@
  * Communications Corporation.  Portions created by Netscape are
  * Copyright (C) 1999 Netscape Communications Corporation. All
  * Rights Reserved.
- *
+ * 
  * Contributor(s): 
  *   Pierre Phaneuf <pp@ludusdesign.com>
  */
