@@ -2412,10 +2412,6 @@ fi
 if test -z "$SKIP_LIBRARY_CHECKS"; then
 dnl system JPEG support
 dnl ========================================================
-dnl XXX - remove this next milestone
-if test -z "$with_system_jpeg" && test "$with_jpeg"; then
-    with_system_jpeg=$with_jpeg
-fi
 MOZ_ARG_WITH_STRING(system-jpeg,
 [  --with-system-jpeg[=PFX]
                           Use installed libjpeg [installed at prefix PFX]],
@@ -2461,10 +2457,6 @@ fi
 
 dnl system ZLIB support
 dnl ========================================================
-dnl XXX - remove this next milestone
-if test -z "$with_system_zlib" && test "$with_zlib"; then
-    with_system_zlib=$with_zlib
-fi
 MOZ_ARG_WITH_STRING(system-zlib,
 [  --with-system-zlib[=PFX]
                           Use installed libz [installed at prefix PFX]],
@@ -2499,10 +2491,6 @@ fi
 
 dnl system PNG Support
 dnl ========================================================
-dnl XXX - remove this next milestone
-if test -z "$with_system_png" && test "$with_png"; then
-    with_system_png=$with_png
-fi
 MOZ_ARG_WITH_STRING(system-png, 
 [  --with-system-png[=PFX]
                           Use installed libpng [installed at prefix PFX]],
@@ -2550,10 +2538,6 @@ fi
 
 dnl system MNG Support
 dnl ========================================================
-dnl XXX - remove this next milestone
-if test -z "$with_system_mng" && test "$with_mng"; then
-    with_system_mng=$with_mng
-fi
 MOZ_ARG_WITH_STRING(system-mng, 
 [  --with-system-mng[=PFX]
                           Use installed libmng [installed at prefix PFX]],
@@ -2611,10 +2595,6 @@ MOZ_ARG_HEADER(Toolkit Options)
     dnl ========================================================
     dnl = Select the default toolkit
     dnl ========================================================
-    dnl XXX - remove this next milestone
-    if test -z "$enable_default_toolkit" && test "$enable_toolkit"; then
-        enable_default_toolkit=$enable_toolkit
-    fi
 	MOZ_ARG_ENABLE_STRING(default-toolkit,
 	[  --enable-default-toolkit=TK
                           Select default toolkit (default=<platform specific>)],
@@ -2647,10 +2627,6 @@ if test "$no_x" != "yes"; then
     dnl ========================================================
     dnl = Gtk support hackery                                  =
     dnl ========================================================
-    dnl XXX - remove this next milestone
-    if test -z "$enable_toolkit_gtk" && test "$with_gtk"; then
-        enable_toolkit_gtk=$with_gtk
-    fi
 	MOZ_ARG_ENABLE_BOOL(toolkit-gtk,
 	[  --enable-toolkit-gtk    Enable GTK+ toolkit support ],
         MOZ_ENABLE_GTK=1,
@@ -2660,10 +2636,6 @@ if test "$no_x" != "yes"; then
     dnl ========================================================
     dnl = Xlib support hackery                                 =
     dnl ========================================================
-    dnl XXX - remove this next milestone
-    if test -z "$enable_toolkit_xlib" && test "$with_xlib"; then
-        enable_toolkit_xlib=$with_xlib
-    fi
 	MOZ_ARG_ENABLE_BOOL(toolkit-xlib,
 	[  --enable-toolkit-xlib   Enable xlib toolkit support ],
         MOZ_ENABLE_XLIB=1,
@@ -2672,10 +2644,6 @@ if test "$no_x" != "yes"; then
     dnl ========================================================
     dnl = Qt support hackery                                   =
     dnl ========================================================
-    dnl XXX - remove this next milestone
-    if test -z "$enable_toolkit_qt" && test "$with_qt"; then
-        enable_toolkit_qt=$with_qt
-    fi
 	MOZ_ARG_ENABLE_BOOL(toolkit-qt,
 	[  --enable-toolkit-qt     Enable Qt Toolkit support ],
         MOZ_ENABLE_QT=1, 
@@ -2747,10 +2715,6 @@ then
     MOZ_GLE=
     MOZ_GLE_LDFLAGS=
 
-    dnl XXX - remove this next milestone
-    if test -z "$enable_gle_support" && test "$enable_gle"; then
-        enable_gle_support=$enable_gle
-    fi
 	MOZ_ARG_ENABLE_BOOL(gle,
 	[  --enable-gle-support
                           GLE support (for debugging gtk widgets) ],
@@ -3114,10 +3078,6 @@ fi
 
 MOZ_EXTENSIONS_ALL="$MOZ_EXTENSIONS_DEFAULT irc xmlterm access-builtin ctl" 
 
-dnl XXX - remove this next milestone
-if test -z "$enable_extensions" && test "$with_extensions"; then
-    enable_extensions=$with_extensions
-fi
 MOZ_ARG_ENABLE_STRING(extensions,
 [  --enable-extensions     Enable extensions],
 [ for option in `echo $enableval | sed 's/,/ /g'`; do
@@ -3202,10 +3162,6 @@ MOZ_ARG_HEADER(Individual module options)
 dnl ========================================================
 dnl = Enable Lea malloc in xpcom. OFF by default.
 dnl ========================================================
-dnl XXX - this needs to go away next milestone
-if test -z "$enable_xpcom_lea" && test "$enable_lea"; then
-    enable_xpcom_lea=$enable_lea
-fi
 MOZ_ARG_ENABLE_BOOL(xpcom-lea,
 [  --enable-xpcom-lea      Enable Lea malloc in xpcom ],
 [ XPCOM_USE_LEA=1 AC_DEFINE(XPCOM_USE_LEA) ])
@@ -3213,10 +3169,6 @@ MOZ_ARG_ENABLE_BOOL(xpcom-lea,
 dnl ========================================================
 dnl = Enable Ultrasparc specific optimizations for JS
 dnl ========================================================
-dnl XXX - this needs to go away next milestone
-if test -z "$enable_js_ultrasparc" && test "$enable_ultrasparc"; then
-    enable_js_ultrasparc=$enable_ultrasparc
-fi
 MOZ_ARG_ENABLE_BOOL(js-ultrasparc,
 [  --enable-js-ultrasparc  Enable UltraSPARC optimizations in JS],
 [case "$target_os" in
@@ -3344,10 +3296,6 @@ dnl ========================================================
 dnl = Enable/disable debug for specific modules only
 dnl =   module names beginning with ^ will be disabled 
 dnl ========================================================
-dnl XXX - this needs to go away next milestone
-if test -z "$enable_debug_modules" && test "$with_debug_modules"; then
-    enable_debug_modules=$with_debug_modules
-fi
 MOZ_ARG_ENABLE_STRING(debug-modules,
 [  --enable-debug-modules  Enable/disable debug info for specific modules],
 [ MOZ_DEBUG_MODULES=`echo $enableval| sed 's/,/ /g'` ] )
@@ -3357,10 +3305,6 @@ dnl = Enable/disable generation of debugger info for specific modules only
 dnl =    the special module name ALL_MODULES can be used to denote all modules
 dnl =    module names beginning with ^ will be disabled
 dnl ========================================================
-dnl XXX - this needs to go away next milestone
-if test -z "$enable_debugger_info_modules" && test "$with_dbgrinfo_modules"; then
-    enable_debugger_info_modules=$with_dbgrinfo_modules
-fi
 MOZ_DBGRINFO_MODULES=
 MOZ_ARG_ENABLE_STRING(debugger-info-modules,
 [  --enable-debugger-info-modules
@@ -3488,10 +3432,6 @@ MOZ_ARG_ENABLE_BOOL(efence,
 dnl ========================================================
 dnl = Enable stripping of libs & executables
 dnl ========================================================
-dnl XXX - this needs to go away next milestone
-if test -z "$enable_strip" && test "$enable_strip_libs"; then
-    enable_strip=$enable_strip_libs
-fi
 MOZ_ARG_ENABLE_BOOL(strip,
 [  --enable-strip          Enable stripping of libs & executables ],
     ENABLE_STRIP=1)
@@ -3558,10 +3498,6 @@ AC_SUBST(NS_TRACE_MALLOC)
 dnl ========================================================
 dnl = Add support for Eazel profiler
 dnl ========================================================
-dnl XXX - this needs to go away next milestone
-if test -z "$enable_eazel_profiler_support" && test "$enable_eazel_profiler"; then
-    enable_eazel_profiler_support=$enable_eazel_profiler
-fi
 MOZ_ARG_ENABLE_BOOL(eazel-profiler-support,
 [  --enable-eazel-profiler-support
                           Enable Corel/Eazel profiler support],
@@ -3572,10 +3508,6 @@ MOZ_ARG_ENABLE_BOOL(eazel-profiler-support,
     EAZEL_PROFILER_CFLAGS="-g -O -gdwarf-2 -finstrument-functions -D__NO_STRING_INLINES  -D__NO_MATH_INLINES"
     EAZEL_PROFILER_LIBS="-lprofiler -lpthread")
 
-dnl XXX - this needs to go away next milestone
-if test -z "$enable_profile_modules" && test "$with_profile_modules"; then
-    enable_profile_modules=$with_profile_modules
-fi
 MOZ_ARG_ENABLE_STRING(profile-modules,
 [  --enable-profile-modules
                           Enable/disable profiling for specific modules],
@@ -3650,10 +3582,6 @@ MOZ_ARG_ENABLE_BOOL(xterm-updates,
 dnl =========================================================
 dnl = Chrome format
 dnl =========================================================
-dnl XXX - this needs to go away next milestone
-if test -z "$enable_chrome_format" && test "$enable_chrome"; then
-    enable_chrome_format=$enable_chrome
-fi
 MOZ_ARG_ENABLE_STRING(chrome-format,
 [  --enable-chrome-format=FORMAT
                           Select FORMAT of chrome files (default=jar)],
@@ -3681,10 +3609,6 @@ MOZ_ARG_WITH_STRING(default-mozilla-five-home,
 dnl ========================================================
 dnl = Location of the mozilla user directory (default is ~/.mozilla).],
 dnl ========================================================
-dnl XXX - this needs to go away next milestone
-if test -z "$with_user_appdir" && test "$enable_homedir"; then
-    with_user_appdir=$enable_homedir
-fi
 MOZ_ARG_WITH_STRING(user-appdir,
 [  --with-user-appdir=DIR  Set user-specific appdir (default=.mozilla)],
 [ val=`echo $withval`
@@ -3952,10 +3876,6 @@ fi
 dnl ========================================================
 dnl Generate static component from list of modules
 dnl ========================================================
-dnl XXX - this needs to go away next milestone
-if test -z "$enable_meta_component_modules" && test "$enable_static_components"; then
-    enable_meta_component_modules=$enable_static_components
-fi
 MOZ_ARG_ENABLE_STRING(meta-component-modules,
 [  --enable-meta-component-modules=mod1[,mod2]
                           Build single meta-component from specified modules],
@@ -4024,11 +3944,6 @@ MOZ_ARG_ENABLE_STRING(standalone-modules,
 [  --enable-standalone-modules=mod1[,mod2]
                           Enable standalone build of specific modules],
 [ BUILD_MODULES=`echo $enableval | sed 's/,/ /g'` ] )
-
-dnl XXX also check old --enable-modules option
-if test "${BUILD_MODULES}" = "all" && test -n "$enable_modules"; then
-    BUILD_MODULES=`echo $enable_modules | sed 's/,/ /g'`
-fi
 
 dnl Disable ldap if LDAP is not building all of Mozilla
 dnl and ldap isn't in the standalone list
