@@ -43,6 +43,7 @@
 #include "nsCOMPtr.h"
 #include "nsIImageGroup.h"
 #include "nsIPref.h"
+#include "nsICharsetConverterManager.h"
 #include "nsIURL.h"
 #include "nsIEventStateManager.h"
 
@@ -146,6 +147,7 @@ protected:
   nsRect                mVisibleArea;
   nsCOMPtr<nsIDeviceContext>  mDeviceContext; // could be weak, but better safe than sorry. Cannot reintroduce cycles
                                               // since there is no dependency from gfx back to layout.
+  nsCOMPtr<nsICharsetConverterManager> mCharSets;
   nsCOMPtr<nsIAtom>     mLangGroup;
   nsCOMPtr<nsIImageGroup> mImageGroup;
   nsILinkHandler*       mLinkHandler;   // [WEAK]
