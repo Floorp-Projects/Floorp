@@ -84,8 +84,8 @@ NS_IMETHODIMP nsDocShellBase::LoadURIVia(nsIURI* aUri,
    NS_ENSURE_SUCCESS(EnsureContentListener(), NS_ERROR_FAILURE);
    mContentListener->SetPresContext(aPresContext);
 
-   NS_ENSURE_SUCCESS(uriLoader->OpenURI(aUri, nsnull, nsnull, nsnull, nsnull,
-      nsnull, mContentListener, nsnull), NS_ERROR_FAILURE);
+   NS_ENSURE_SUCCESS(uriLoader->OpenURI(aUri, nsnull, nsnull, mContentListener,
+      nsnull, nsnull, getter_AddRefs(mLoadCookie)), NS_ERROR_FAILURE);
 
    return NS_OK;
 }
