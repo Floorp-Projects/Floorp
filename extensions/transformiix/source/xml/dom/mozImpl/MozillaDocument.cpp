@@ -35,33 +35,34 @@
  
 #include "mozilladom.h" 
 #include "iostream.h" 
-#include "nsCOMPtr.h" 
-#include "nsIContent.h" 
- 
+#include "nsIContent.h"
+#include "XMLUtils.h"
+#include "nsCOMPtr.h"
+
 // 
 //Construct a Document Wrapper object without specificy a nsIDOMDocument 
 //object.  We will create an ns 
 // 
 Document::Document() 
 { 
-  /* XXX (Pvdb)
-     Do we really need this? It causes a link dependency on layout, so i
-     commented it out 'till we figure out what to do.
+    /* XXX (Pvdb)
+       Do we really need this? It causes a link dependency on layout, so i
+       commented it out 'till we figure out what to do.
 
-  nsCOMPtr<nsIDocument> document;
-  nsresult res = NS_NewXMLDocument(getter_AddRefs(document));
-  if (NS_SUCCEEDED(res) && document) {
-    document->QueryInterface(NS_GET_IID(nsIDOMDocument), (void**) &nsDocument);
-  }
-  Node::setNSObj(nsDocument, this);*/
+    nsCOMPtr<nsIDocument> document;
+    nsresult res = NS_NewXMLDocument(getter_AddRefs(document));
+    if (NS_SUCCEEDED(res) && document) {
+        document->QueryInterface(NS_GET_IID(nsIDOMDocument), (void**) &nsDocument);
+    }
+    Node::setNSObj(nsDocument, this);*/
 }
  
 // 
 //Construct a Document Wrapper object with a nsIDOMDocument object 
 // 
 Document::Document(nsIDOMDocument* document) : Node(document, this) 
-{ 
-  nsDocument = document; 
+{
+    nsDocument = document;
 } 
  
 // 
@@ -76,8 +77,8 @@ Document::~Document()
 // 
 void Document::setNSObj(nsIDOMDocument* document) 
 { 
-  Node::setNSObj(document); 
-  nsDocument = document; 
+    Node::setNSObj(document); 
+    nsDocument = document; 
 } 
  
 // 
@@ -87,24 +88,24 @@ void Document::setNSObj(nsIDOMDocument* document)
 // 
 Element* Document::getDocumentElement() 
 { 
-  nsIDOMElement* theElement = NULL; 
-  Element* elemWrapper = NULL; 
-  nsresult retval = 5; 
+    nsIDOMElement* theElement = NULL; 
+    Element* elemWrapper = NULL; 
+    nsresult retval = 5; 
  
-  if (nsDocument == NULL) 
-    return NULL; 
- 
-  //retval = nsDocument->GetDocumentElement(&theElement); 
-  //if (retval == NS_OK) 
-  if ((retval = nsDocument->GetDocumentElement(&theElement)) == NS_OK) 
-    { 
-      cout << "Document::getDocumentElement - Mozilla Call ok" << endl; 
-      return createElement(theElement); 
-    } 
-  else 
-    { 
-      cout << "Document::getDocumentElement - Mozilla Call not ok(" << hex <<retval << ")" << endl; 
+    if (nsDocument == NULL) 
       return NULL; 
+ 
+    //retval = nsDocument->GetDocumentElement(&theElement); 
+    //if (retval == NS_OK) 
+    if ((retval = nsDocument->GetDocumentElement(&theElement)) == NS_OK) 
+    { 
+        cout << "Document::getDocumentElement - Mozilla Call ok" << endl; 
+        return createElement(theElement); 
+    } 
+    else 
+    { 
+        cout << "Document::getDocumentElement - Mozilla Call not ok(" << hex <<retval << ")" << endl; 
+        return NULL; 
     } 
 } 
  
@@ -114,15 +115,15 @@ Element* Document::getDocumentElement()
 // 
 DocumentType* Document::getDoctype() 
 { 
-  nsIDOMDocumentType* theDocType = NULL; 
+    nsIDOMDocumentType* theDocType = NULL; 
  
-  if (nsDocument == NULL) 
-    return NULL; 
+    if (nsDocument == NULL) 
+        return NULL; 
  
-  if (nsDocument->GetDoctype(&theDocType) == NS_OK) 
-    return createDocumentType(theDocType); 
-  else 
-    return NULL; 
+    if (nsDocument->GetDoctype(&theDocType) == NS_OK) 
+        return createDocumentType(theDocType); 
+    else 
+        return NULL; 
 } 
  
 // 
@@ -130,15 +131,15 @@ DocumentType* Document::getDoctype()
 // 
 DOMImplementation* Document::getImplementation() 
 { 
-  nsIDOMDOMImplementation* theImpl = NULL; 
+    nsIDOMDOMImplementation* theImpl = NULL; 
  
-  if (nsDocument == NULL) 
-    return NULL; 
+    if (nsDocument == NULL) 
+        return NULL; 
  
-  if (nsDocument->GetImplementation(&theImpl) == NS_OK) 
-    return createDOMImplementation(theImpl); 
-  else 
-    return NULL; 
+    if (nsDocument->GetImplementation(&theImpl) == NS_OK) 
+        return createDOMImplementation(theImpl); 
+    else 
+        return NULL; 
 } 
  
 // 
@@ -147,34 +148,34 @@ DOMImplementation* Document::getImplementation()
 // 
 Node* Document::insertBefore(Node* newChild, Node* refChild) 
 { 
-  /* XXX HACK (Pvdb)
-     Work around Bugzilla bug #25123, we can't do insertBefore for the
-     first node. So we fiddle with SetRootContent. If the bug gets
-     resolved, defer to node implementation.
-  */
-  nsIDOMNode* returnValue = NULL;
+    /* XXX HACK (Pvdb)
+       Work around Bugzilla bug #25123, we can't do insertBefore for the
+       first node. So we fiddle with SetRootContent. If the bug gets
+       resolved, defer to node implementation.
+    */
+    nsIDOMNode* returnValue = NULL;
 
-  if (nsDocument == NULL)
-    return NULL;
+    if (nsDocument == NULL)
+        return NULL;
 
-  nsCOMPtr<nsIDocument> nsTempDocument = do_QueryInterface(nsDocument);
+    nsCOMPtr<nsIDocument> nsTempDocument = do_QueryInterface(nsDocument);
 
-  if (nsTempDocument->GetRootContent() && (newChild->getNodeType() != Node::ELEMENT_NODE)) {
-    if (nsDocument->InsertBefore(newChild->getNSObj(), refChild->getNSObj(),
-			     &returnValue) == NS_OK)
-      return ownerDocument->createWrapper(returnValue);
+    if (nsTempDocument->GetRootContent() && (newChild->getNodeType() != Node::ELEMENT_NODE)) {
+        if (nsDocument->InsertBefore(newChild->getNSObj(), refChild->getNSObj(),
+              &returnValue) == NS_OK)
+            return ownerDocument->createWrapper(returnValue);
+        else
+            return NULL;
+    }
     else
-      return NULL;
-  }
-  else
-  {
-    nsCOMPtr<nsIContent> nsRootContent = do_QueryInterface(newChild->getNSObj());
-    nsIDOMElement* theElement = NULL; 
+    {
+        nsCOMPtr<nsIContent> nsRootContent = do_QueryInterface(newChild->getNSObj());
+        nsIDOMElement* theElement = NULL; 
 
-    nsTempDocument->SetRootContent(nsRootContent);
-    nsDocument->GetDocumentElement(&theElement); 
-    return ownerDocument->createWrapper(theElement);
-  }
+        nsTempDocument->SetRootContent(nsRootContent);
+        nsDocument->GetDocumentElement(&theElement); 
+        return ownerDocument->createWrapper(theElement);
+    }
 } 
  
 // 
@@ -186,34 +187,34 @@ Node* Document::insertBefore(Node* newChild, Node* refChild)
 /* 
 Node* Document::replaceChild(Node* newChild, Node* oldChild) 
 { 
-  Node* replacedChild = NULL; 
+    Node* replacedChild = NULL; 
  
-  if (newChild->getNodeType() != Node::ELEMENT_NODE) 
+    if (newChild->getNodeType() != Node::ELEMENT_NODE) 
     { 
-      //The new child is not an Element, so perform replacement 
-      replacedChild = NodeDefinition::replaceChild(newChild, oldChild); 
+        //The new child is not an Element, so perform replacement 
+        replacedChild = NodeDefinition::replaceChild(newChild, oldChild); 
  
-      //If old node was an Element, then the document's element has been 
-      //replaced with a non-element node.  Therefore clear the documentElement 
-      //pointer 
-      if (replacedChild && (oldChild->getNodeType() == Node::ELEMENT_NODE)) 
-        documentElement = NULL; 
+        //If old node was an Element, then the document's element has been 
+        //replaced with a non-element node.  Therefore clear the documentElement 
+        //pointer 
+        if (replacedChild && (oldChild->getNodeType() == Node::ELEMENT_NODE)) 
+            documentElement = NULL; 
  
-      return replacedChild; 
+        return replacedChild; 
     } 
-  else 
+    else 
     { 
-      //A node is being replaced with an Element.  If the document does not 
-      //have an elemet yet, then just allow the replacemetn to take place. 
-      if (!documentElement) 
-        replacedChild = NodeDefinition::replaceChild(newChild, oldChild); 
-      else if (oldChild->getNodeType() == Node::ELEMENT_NODE) 
-        replacedChild = NodeDefinition::replaceChild(newChild, oldChild); 
+        //A node is being replaced with an Element.  If the document does not 
+        //have an elemet yet, then just allow the replacemetn to take place. 
+        if (!documentElement) 
+            replacedChild = NodeDefinition::replaceChild(newChild, oldChild); 
+        else if (oldChild->getNodeType() == Node::ELEMENT_NODE) 
+            replacedChild = NodeDefinition::replaceChild(newChild, oldChild); 
  
-      if (replacedChild) 
-        documentElement = (Element*)newChild; 
+        if (replacedChild) 
+            documentElement = (Element*)newChild; 
  
-      return replacedChild; 
+        return replacedChild; 
     } 
 } 
 */ 
@@ -226,46 +227,47 @@ Node* Document::replaceChild(Node* newChild, Node* oldChild)
 /* 
 Node* Document::removeChild(Node* oldChild) 
 { 
-  Node* removedChild = NULL; 
+    Node* removedChild = NULL; 
  
-  removedChild = NodeDefinition::removeChild(oldChild); 
+    removedChild = NodeDefinition::removeChild(oldChild); 
  
-  if (removedChild && (removedChild->getNodeType() == Node::ELEMENT_NODE)) 
-    documentElement = NULL; 
+    if (removedChild && (removedChild->getNodeType() == Node::ELEMENT_NODE)) 
+        documentElement = NULL; 
  
-  return removedChild; 
+    return removedChild; 
 } 
 */ 
  
 Node* Document::appendChild(Node* newChild)
 {
-  /* XXX HACK (Pvdb)
-     Work around Bugzilla bug #25123, we can't do appendChild for the
-     first node. So we fiddle with SetRootContent. If the bug gets
-     resolved, defer to node implementation.
-  */
-  nsIDOMNode* returnValue = NULL;
+    /* XXX HACK (Pvdb)
+       Work around Bugzilla bug #25123, we can't do appendChild for the
+       first node. So we fiddle with SetRootContent. If the bug gets
+       resolved, defer to node implementation.
+    */
+    nsIDOMNode* returnValue = NULL;
 
-  if (nsDocument == NULL)
-    return NULL;
+    if (nsDocument == NULL)
+        return NULL;
 
-  nsCOMPtr<nsIDocument> nsTempDocument = do_QueryInterface(nsDocument);
+    nsCOMPtr<nsIDocument> nsTempDocument = do_QueryInterface(nsDocument);
 
-  if (nsTempDocument->GetRootContent() && (newChild->getNodeType() != Node::ELEMENT_NODE)) {
-    if (nsDocument->AppendChild(newChild->getNSObj(), &returnValue) == NS_OK)
-      return ownerDocument->createWrapper(returnValue);
+    if (nsTempDocument->GetRootContent() && (newChild->getNodeType() != Node::ELEMENT_NODE)) {
+        if (nsDocument->AppendChild(newChild->getNSObj(), &returnValue) == NS_OK)
+            return ownerDocument->createWrapper(returnValue);
+        else
+            return NULL;
+    }
     else
-      return NULL;
-  }
-  else
-  {
-    nsCOMPtr<nsIContent> nsRootContent = do_QueryInterface(newChild->getNSObj());
-    nsIDOMElement* theElement = NULL; 
+    {
+        nsCOMPtr<nsIContent> nsRootContent = do_QueryInterface(newChild->getNSObj());
+        nsIDOMElement* theElement = NULL; 
 
-    nsTempDocument->SetRootContent(nsRootContent);
-    nsDocument->GetDocumentElement(&theElement); 
-    return ownerDocument->createWrapper(theElement);
-  }
+        nsTempDocument->SetRootContent(nsRootContent);
+        nsRootContent->SetDocument(nsTempDocument, PR_TRUE, PR_TRUE);
+        nsRootContent->QueryInterface(NS_GET_IID(nsIDOMElement), (void**)&theElement);
+        return ownerDocument->createWrapper(theElement);
+    }
 }
 
 // 
@@ -274,15 +276,15 @@ Node* Document::appendChild(Node* newChild)
 // 
 DocumentFragment* Document::createDocumentFragment() 
 { 
-  nsIDOMDocumentFragment* fragment = NULL; 
+    nsIDOMDocumentFragment* fragment = NULL; 
  
-  if (nsDocument == NULL) 
-    return NULL; 
+    if (nsDocument == NULL) 
+        return NULL; 
  
-  if (nsDocument->CreateDocumentFragment(&fragment) == NS_OK) 
-    return createDocumentFragment(fragment); 
-  else 
-    return NULL; 
+    if (nsDocument->CreateDocumentFragment(&fragment) == NS_OK) 
+        return createDocumentFragment(fragment); 
+    else 
+        return NULL; 
 } 
  
 // 
@@ -291,37 +293,37 @@ DocumentFragment* Document::createDocumentFragment()
 // return it to the caller. 
 // 
 DocumentFragment*  
-   Document::createDocumentFragment(nsIDOMDocumentFragment* fragment) 
+Document::createDocumentFragment(nsIDOMDocumentFragment* fragment) 
 { 
-  DocumentFragment* docFragWrapper = NULL; 
+    DocumentFragment* docFragWrapper = NULL; 
  
-  if (fragment) 
+    if (fragment) 
     { 
-      docFragWrapper =  
-	(DocumentFragment*)wrapperHashTable.retrieve((Int32)fragment); 
-       
-      if (!docFragWrapper) 
-	{ 
-	  docFragWrapper = new DocumentFragment(fragment, this); 
-	  wrapperHashTable.add(docFragWrapper, (Int32)fragment); 
-	} 
+        docFragWrapper =  
+            (DocumentFragment*)wrapperHashTable.retrieve((Int32)fragment); 
+         
+        if (!docFragWrapper) 
+        { 
+            docFragWrapper = new DocumentFragment(fragment, this); 
+            wrapperHashTable.add(docFragWrapper, (Int32)fragment); 
+        } 
     } 
  
-  return docFragWrapper; 
+    return docFragWrapper; 
 } 
  
 // 
 //Call the nsIDOMDocument::CreateElement function, and retrieve or create 
 //a wrapper object for it. 
 // 
-Element* Document::createElement(const DOMString& tagName) 
+Element* Document::createElement(const String& tagName) 
 { 
-  nsIDOMElement* element = NULL; 
- 
-  if (nsDocument->CreateElement(tagName.getConstNSString(), &element) == NS_OK) 
-    return createElement(element); 
-  else 
-    return NULL; 
+    nsIDOMElement* element = NULL; 
+
+    if (nsDocument->CreateElement(tagName.getConstNSString(), &element) == NS_OK) 
+        return createElement(element); 
+    else 
+        return NULL; 
 } 
  
 // 
@@ -331,37 +333,51 @@ Element* Document::createElement(const DOMString& tagName)
 // 
 Element* Document::createElement(nsIDOMElement* element) 
 { 
-  Element* elemWrapper = NULL; 
+    Element* elemWrapper = NULL; 
  
-  if (element) 
+    if (element) 
     { 
-      elemWrapper = (Element*)wrapperHashTable.retrieve((Int32)element); 
-       
-      if (!elemWrapper) 
-	{ 
-	  elemWrapper = new Element(element, this); 
-	  wrapperHashTable.add(elemWrapper, (Int32)element); 
-	} 
+        elemWrapper = (Element*)wrapperHashTable.retrieve((Int32)element); 
+         
+        if (!elemWrapper) 
+        { 
+            elemWrapper = new Element(element, this); 
+            wrapperHashTable.add(elemWrapper, (Int32)element); 
+        } 
     } 
  
-  return elemWrapper; 
+    return elemWrapper; 
+} 
+ 
+// 
+//Call the nsIDOMDocument::CreateElementNS function, and retrieve or create 
+//a wrapper object for it. 
+// 
+Element* Document::createElementNS(const String& namespaceURI, const String& tagName) 
+{ 
+    nsIDOMElement* element = NULL; 
+
+    if (nsDocument->CreateElementNS(namespaceURI.getConstNSString(), tagName.getConstNSString(), &element) == NS_OK) 
+        return createElement(element); 
+    else 
+        return NULL; 
 } 
  
 // 
 //Call the nsIDOMDocument::CreateAttribute function, then create or retrieve a 
 //wrapper object for it. 
 // 
-Attr* Document::createAttribute(const DOMString& name) 
+Attr* Document::createAttribute(const String& name) 
 { 
-  nsIDOMAttr* attr = NULL; 
+    nsIDOMAttr* attr = NULL; 
  
-  if (nsDocument == NULL) 
-    return NULL; 
+    if (nsDocument == NULL) 
+        return NULL; 
  
-  if (nsDocument->CreateAttribute(name.getConstNSString(), &attr) == NS_OK) 
-    return createAttribute(attr); 
-  else 
-    return NULL; 
+    if (nsDocument->CreateAttribute(name.getConstNSString(), &attr) == NS_OK) 
+        return createAttribute(attr); 
+    else 
+        return NULL; 
 } 
  
 // 
@@ -370,37 +386,37 @@ Attr* Document::createAttribute(const DOMString& name)
 // 
 Attr* Document::createAttribute(nsIDOMAttr* attr) 
 { 
-  Attr* attrWrapper = NULL; 
+    Attr* attrWrapper = NULL; 
  
-  if (attr) 
+    if (attr) 
     { 
-      attrWrapper = (Attr*)wrapperHashTable.retrieve((Int32)attr); 
+        attrWrapper = (Attr*)wrapperHashTable.retrieve((Int32)attr); 
  
-      if (!attrWrapper) 
-	{ 
-	  attrWrapper = new Attr(attr, this); 
-	  wrapperHashTable.add(attrWrapper, (Int32)attr); 
-	} 
+        if (!attrWrapper) 
+        { 
+            attrWrapper = new Attr(attr, this); 
+            wrapperHashTable.add(attrWrapper, (Int32)attr); 
+        } 
     } 
  
-  return attrWrapper; 
+    return attrWrapper; 
 } 
  
 // 
 //Call the nsIDOMDocument::CreateTextNode function, then create, or retrieve a  
 //wrapper object for it. 
 // 
-Text* Document::createTextNode(const DOMString& theData) 
+Text* Document::createTextNode(const String& theData) 
 { 
-  nsIDOMText* text = NULL; 
+    nsIDOMText* text = NULL; 
  
-  if (nsDocument == NULL) 
-    return NULL; 
+    if (nsDocument == NULL) 
+        return NULL; 
  
-  if (nsDocument->CreateTextNode(theData.getConstNSString(), &text) == NS_OK) 
-    return createTextNode(text); 
-  else 
-    return NULL; 
+    if (nsDocument->CreateTextNode(theData.getConstNSString(), &text) == NS_OK) 
+        return createTextNode(text); 
+    else 
+        return NULL; 
 } 
  
 // 
@@ -410,37 +426,37 @@ Text* Document::createTextNode(const DOMString& theData)
 // 
 Text* Document::createTextNode(nsIDOMText* text) 
 { 
-  Text* textWrapper = NULL; 
+    Text* textWrapper = NULL; 
  
-  if (text) 
+    if (text) 
     { 
-      textWrapper = (Text*)wrapperHashTable.retrieve((Int32)text); 
+        textWrapper = (Text*)wrapperHashTable.retrieve((Int32)text); 
  
-      if (!textWrapper) 
-	{ 
-	  textWrapper = new Text(text, this); 
-	  wrapperHashTable.add(textWrapper, (Int32)text); 
-	} 
+        if (!textWrapper) 
+        { 
+            textWrapper = new Text(text, this); 
+            wrapperHashTable.add(textWrapper, (Int32)text); 
+        } 
     } 
  
-  return textWrapper; 
+    return textWrapper; 
 } 
  
 // 
 //Call the nsIDOMDocument::CreateComment function, then create or retrieve a 
 //wrapper object to return to the caller. 
 // 
-Comment* Document::createComment(const DOMString& theData) 
+Comment* Document::createComment(const String& theData) 
 { 
-  nsIDOMComment* comment = NULL; 
+    nsIDOMComment* comment = NULL; 
  
-  if (nsDocument == NULL) 
-    return NULL; 
+    if (nsDocument == NULL) 
+        return NULL; 
  
-  if (nsDocument->CreateComment(theData.getConstNSString(), &comment) == NS_OK) 
-    return createComment(comment); 
-  else 
-    return NULL; 
+    if (nsDocument->CreateComment(theData.getConstNSString(), &comment) == NS_OK) 
+        return createComment(comment); 
+    else 
+        return NULL; 
 } 
  
 // 
@@ -449,38 +465,38 @@ Comment* Document::createComment(const DOMString& theData)
 //caller. 
 Comment* Document::createComment(nsIDOMComment* comment) 
 { 
-  Comment* commentWrapper = NULL; 
+    Comment* commentWrapper = NULL; 
  
-  if (comment) 
+    if (comment) 
     { 
-      commentWrapper = (Comment*)wrapperHashTable.retrieve((Int32)comment); 
+        commentWrapper = (Comment*)wrapperHashTable.retrieve((Int32)comment); 
  
-      if (!commentWrapper) 
-	{ 
-	  commentWrapper = new Comment(comment, this); 
-	  wrapperHashTable.add(commentWrapper, (Int32)comment); 
-	} 
+        if (!commentWrapper) 
+        { 
+            commentWrapper = new Comment(comment, this); 
+            wrapperHashTable.add(commentWrapper, (Int32)comment); 
+        } 
     } 
  
-  return commentWrapper; 
+    return commentWrapper; 
 } 
  
 // 
 //Call the nsIDOMDocument::CreateCDATASection function, then create or retrieve 
 //a wrapper object to return to the caller. 
 // 
-CDATASection* Document::createCDATASection(const DOMString& theData) 
+CDATASection* Document::createCDATASection(const String& theData) 
 { 
-  nsIDOMCDATASection* cdata = NULL; 
+    nsIDOMCDATASection* cdata = NULL; 
  
-  if (nsDocument == NULL) 
-    return NULL; 
+    if (nsDocument == NULL) 
+        return NULL; 
  
-  if (nsDocument->CreateCDATASection(theData.getConstNSString(), &cdata) ==  
-      NS_OK) 
-    return createCDATASection(cdata); 
-  else 
-    return NULL; 
+    if (nsDocument->CreateCDATASection(theData.getConstNSString(), &cdata) ==  
+          NS_OK) 
+        return createCDATASection(cdata); 
+    else 
+        return NULL; 
 } 
  
 // 
@@ -490,20 +506,20 @@ CDATASection* Document::createCDATASection(const DOMString& theData)
 // 
 CDATASection* Document::createCDATASection(nsIDOMCDATASection* cdata) 
 { 
-  CDATASection* cdataWrapper = NULL; 
+    CDATASection* cdataWrapper = NULL; 
  
-  if (cdata) 
+    if (cdata) 
     { 
-      cdataWrapper = (CDATASection*)wrapperHashTable.retrieve((Int32)cdata); 
+        cdataWrapper = (CDATASection*)wrapperHashTable.retrieve((Int32)cdata); 
  
-      if (!cdataWrapper) 
-	{ 
-	  cdataWrapper = new CDATASection(cdata, this); 
-	  wrapperHashTable.add(cdataWrapper, (Int32)cdata); 
-	} 
+        if (!cdataWrapper) 
+        { 
+            cdataWrapper = new CDATASection(cdata, this); 
+            wrapperHashTable.add(cdataWrapper, (Int32)cdata); 
+        } 
     } 
  
-  return cdataWrapper; 
+    return cdataWrapper; 
 } 
  
 // 
@@ -511,19 +527,19 @@ CDATASection* Document::createCDATASection(nsIDOMCDATASection* cdata)
 //create a wrapper class to return to the caller. 
 // 
 ProcessingInstruction* 
-  Document::createProcessingInstruction(const DOMString& target, 
-                                        const DOMString& data) 
+    Document::createProcessingInstruction(const String& target, 
+                                          const String& data) 
 { 
-  nsIDOMProcessingInstruction* pi = NULL; 
+    nsIDOMProcessingInstruction* pi = NULL; 
  
-  if (nsDocument == NULL) 
-    return NULL; 
+    if (nsDocument == NULL) 
+        return NULL; 
  
-  if (nsDocument->CreateProcessingInstruction(target.getConstNSString(), 
-				       data.getConstNSString(), &pi) == NS_OK) 
-    return createProcessingInstruction(pi); 
-  else 
-    return NULL; 
+    if (nsDocument->CreateProcessingInstruction(target.getConstNSString(), 
+          data.getConstNSString(), &pi) == NS_OK) 
+        return createProcessingInstruction(pi); 
+    else 
+        return NULL; 
 } 
  
 // 
@@ -534,38 +550,38 @@ ProcessingInstruction*
 ProcessingInstruction*  
 Document::createProcessingInstruction(nsIDOMProcessingInstruction* pi) 
 { 
-  ProcessingInstruction* piWrapper = NULL; 
+    ProcessingInstruction* piWrapper = NULL; 
  
-  if (pi) 
+    if (pi) 
     { 
-      piWrapper = (ProcessingInstruction*)wrapperHashTable.retrieve((Int32)pi); 
+        piWrapper = (ProcessingInstruction*)wrapperHashTable.retrieve((Int32)pi); 
  
-      if (!piWrapper) 
-	{ 
-	  piWrapper = new ProcessingInstruction(pi, this); 
-	  wrapperHashTable.add(piWrapper, (Int32)pi); 
-	} 
+        if (!piWrapper) 
+        { 
+            piWrapper = new ProcessingInstruction(pi, this); 
+            wrapperHashTable.add(piWrapper, (Int32)pi); 
+        } 
     } 
  
-  return piWrapper; 
+    return piWrapper; 
 } 
  
 // 
 //Call the nsIDOMDocument::CreateEntityReference function, then obtain a wrapper 
 //class to return to the user. 
 // 
-EntityReference* Document::createEntityReference(const DOMString& name) 
+EntityReference* Document::createEntityReference(const String& name) 
 { 
-  nsIDOMEntityReference* entityRef = NULL; 
+    nsIDOMEntityReference* entityRef = NULL; 
  
-  if (nsDocument == NULL) 
-    return NULL; 
+    if (nsDocument == NULL) 
+        return NULL; 
  
-  if (nsDocument->CreateEntityReference(name.getConstNSString(),  
-					&entityRef) == NS_OK) 
-    return createEntityReference(entityRef); 
-  else 
-    return NULL; 
+    if (nsDocument->CreateEntityReference(name.getConstNSString(),  
+          &entityRef) == NS_OK) 
+        return createEntityReference(entityRef); 
+    else 
+        return NULL; 
 } 
  
 // 
@@ -576,21 +592,21 @@ EntityReference* Document::createEntityReference(const DOMString& name)
 EntityReference*  
 Document::createEntityReference(nsIDOMEntityReference* entityRef) 
 { 
-  EntityReference* entityWrapper = NULL; 
+    EntityReference* entityWrapper = NULL; 
  
-  if (entityRef) 
+    if (entityRef) 
     { 
-      entityWrapper =  
-	(EntityReference*) wrapperHashTable.retrieve((Int32)entityRef); 
+        entityWrapper =  
+          (EntityReference*) wrapperHashTable.retrieve((Int32)entityRef); 
  
-      if (!entityWrapper) 
-	{ 
-	  entityWrapper = new EntityReference(entityRef, this); 
-	  wrapperHashTable.add(entityWrapper, (Int32)entityRef); 
-	} 
+        if (!entityWrapper) 
+        { 
+            entityWrapper = new EntityReference(entityRef, this); 
+            wrapperHashTable.add(entityWrapper, (Int32)entityRef); 
+        } 
     } 
  
-  return entityWrapper; 
+    return entityWrapper; 
 } 
  
 // 
@@ -599,20 +615,20 @@ Document::createEntityReference(nsIDOMEntityReference* entityRef)
 //it to the caller. 
 Entity* Document::createEntity(nsIDOMEntity* entity) 
 { 
-  Entity* entityWrapper = NULL; 
+    Entity* entityWrapper = NULL; 
  
-  if (entity) 
+    if (entity) 
     { 
-      entityWrapper = (Entity*)wrapperHashTable.retrieve((Int32) entity); 
+        entityWrapper = (Entity*)wrapperHashTable.retrieve((Int32) entity); 
  
-      if (!entity) 
-	{ 
-	  entityWrapper = new Entity(entity, this); 
-	  wrapperHashTable.add(entityWrapper, (Int32)entity); 
-	} 
+        if (!entity) 
+        { 
+            entityWrapper = new Entity(entity, this); 
+            wrapperHashTable.add(entityWrapper, (Int32)entity); 
+        } 
     } 
  
-  return entityWrapper; 
+    return entityWrapper; 
 } 
  
 // 
@@ -623,43 +639,43 @@ Entity* Document::createEntity(nsIDOMEntity* entity)
 // 
 Node* Document::createNode(nsIDOMNode* node) 
 { 
-  Node* nodeWrapper = NULL; 
+    Node* nodeWrapper = NULL; 
  
-  if (node) 
+    if (node) 
     { 
-      nodeWrapper = (Node*)wrapperHashTable.retrieve((Int32)node); 
+        nodeWrapper = (Node*)wrapperHashTable.retrieve((Int32)node); 
  
-      if (!nodeWrapper) 
-	{ 
-	  nodeWrapper = new Node(node, this); 
-	  wrapperHashTable.add(nodeWrapper, (Int32)node); 
-	} 
+        if (!nodeWrapper) 
+        { 
+            nodeWrapper = new Node(node, this); 
+            wrapperHashTable.add(nodeWrapper, (Int32)node); 
+        } 
     } 
  
-  return nodeWrapper; 
+    return nodeWrapper; 
 } 
  
 // 
-//Factory function for creating and hashing a DOMString object.  Note that it 
-//is specifically for wrapping nsString objects with MozillaString objects. 
+//Factory function for creating and hashing a String object.  Note that it 
+//is specifically for wrapping nsString objects with String objects. 
 //Once the object is created it is stored in the hash table. 
 // 
-DOMString* Document::createDOMString(nsString* str) 
+String* Document::createDOMString(nsString* str) 
 { 
-  DOMString* strWrapper = NULL; 
+    String* strWrapper = NULL; 
  
-  if (str) 
+    if (str) 
     { 
-      strWrapper = (DOMString*)wrapperHashTable.retrieve((Int32)str); 
+        strWrapper = (String*)wrapperHashTable.retrieve((Int32)str); 
  
-      if (!strWrapper) 
-	{ 
-	  strWrapper = new DOMString(str); 
-	  wrapperHashTable.add(strWrapper, (Int32)str); 
-	} 
+        if (!strWrapper) 
+        { 
+            strWrapper = new String(str); 
+            wrapperHashTable.add(strWrapper, (Int32)str); 
+        } 
     } 
  
-  return strWrapper; 
+    return strWrapper; 
 } 
  
 // 
@@ -667,20 +683,20 @@ DOMString* Document::createDOMString(nsString* str)
 // 
 Notation* Document::createNotation(nsIDOMNotation* notation) 
 { 
-  Notation* notationWrapper = NULL; 
+    Notation* notationWrapper = NULL; 
  
-  if (notation) 
+    if (notation) 
     { 
-      notationWrapper = (Notation*)wrapperHashTable.retrieve((Int32) notation); 
+        notationWrapper = (Notation*)wrapperHashTable.retrieve((Int32) notation); 
  
-      if (!notationWrapper) 
-	{ 
-	  notationWrapper = new Notation(notation, this); 
-	  wrapperHashTable.add(notationWrapper, (Int32)notation); 
-	} 
+        if (!notationWrapper) 
+        { 
+            notationWrapper = new Notation(notation, this); 
+            wrapperHashTable.add(notationWrapper, (Int32)notation); 
+        } 
     } 
  
-  return notationWrapper; 
+    return notationWrapper; 
 } 
  
 // 
@@ -689,20 +705,20 @@ Notation* Document::createNotation(nsIDOMNotation* notation)
 DOMImplementation*  
 Document::createDOMImplementation(nsIDOMDOMImplementation* impl) 
 { 
-  DOMImplementation* implWrapper = NULL; 
+    DOMImplementation* implWrapper = NULL; 
  
-  if (impl) 
+    if (impl) 
     { 
-      implWrapper = (DOMImplementation*)wrapperHashTable.retrieve((Int32)impl); 
+        implWrapper = (DOMImplementation*)wrapperHashTable.retrieve((Int32)impl); 
  
-      if (!implWrapper) 
-	{ 
-	  implWrapper = new DOMImplementation(impl, this); 
-	  wrapperHashTable.add(implWrapper, (Int32)impl); 
-	} 
+        if (!implWrapper) 
+        { 
+            implWrapper = new DOMImplementation(impl, this); 
+            wrapperHashTable.add(implWrapper, (Int32)impl); 
+        } 
     } 
  
-  return implWrapper; 
+    return implWrapper; 
 } 
  
 // 
@@ -710,20 +726,20 @@ Document::createDOMImplementation(nsIDOMDOMImplementation* impl)
 // 
 DocumentType* Document::createDocumentType(nsIDOMDocumentType* doctype) 
 { 
-  DocumentType* doctypeWrapper = NULL; 
+    DocumentType* doctypeWrapper = NULL; 
  
-  if (doctype) 
+    if (doctype) 
     { 
-      doctypeWrapper = (DocumentType*)wrapperHashTable.retrieve((Int32)doctype); 
+        doctypeWrapper = (DocumentType*)wrapperHashTable.retrieve((Int32)doctype); 
  
-      if (!doctypeWrapper) 
-	{ 
-	  doctypeWrapper = new DocumentType(doctype, this); 
-	  wrapperHashTable.add(doctypeWrapper, (Int32)doctype); 
-	} 
+        if (!doctypeWrapper) 
+        { 
+            doctypeWrapper = new DocumentType(doctype, this); 
+            wrapperHashTable.add(doctypeWrapper, (Int32)doctype); 
+        } 
     } 
  
-  return doctypeWrapper; 
+    return doctypeWrapper; 
 } 
  
 // 
@@ -731,20 +747,20 @@ DocumentType* Document::createDocumentType(nsIDOMDocumentType* doctype)
 // 
 NodeList* Document::createNodeList(nsIDOMNodeList* list) 
 { 
-  NodeList* listWrapper = NULL; 
+    NodeList* listWrapper = NULL; 
  
-  if (list) 
+    if (list) 
     { 
-      listWrapper = (NodeList*)wrapperHashTable.retrieve((Int32)list); 
+        listWrapper = (NodeList*)wrapperHashTable.retrieve((Int32)list); 
  
-      if (!listWrapper) 
-	{ 
-	  listWrapper = new NodeList(list, this); 
-	  wrapperHashTable.add(listWrapper, (Int32)list); 
-	} 
+        if (!listWrapper) 
+        { 
+            listWrapper = new NodeList(list, this); 
+            wrapperHashTable.add(listWrapper, (Int32)list); 
+        } 
     } 
  
-  return listWrapper; 
+    return listWrapper; 
 } 
  
 // 
@@ -752,20 +768,20 @@ NodeList* Document::createNodeList(nsIDOMNodeList* list)
 // 
 NamedNodeMap* Document::createNamedNodeMap(nsIDOMNamedNodeMap* map) 
 { 
-  NamedNodeMap* mapWrapper = NULL; 
+    NamedNodeMap* mapWrapper = NULL; 
  
-  if (map) 
+    if (map) 
     { 
-      mapWrapper = (NamedNodeMap*)wrapperHashTable.retrieve((Int32)map); 
+        mapWrapper = (NamedNodeMap*)wrapperHashTable.retrieve((Int32)map); 
  
-      if (!mapWrapper) 
-	{ 
-	  mapWrapper = new NamedNodeMap(map, this); 
-	  wrapperHashTable.add(mapWrapper, (Int32)map); 
-	} 
+        if (!mapWrapper) 
+        { 
+            mapWrapper = new NamedNodeMap(map, this); 
+            wrapperHashTable.add(mapWrapper, (Int32)map); 
+        } 
     } 
  
-  return mapWrapper; 
+    return mapWrapper; 
 } 
  
 // 
@@ -774,7 +790,7 @@ NamedNodeMap* Document::createNamedNodeMap(nsIDOMNamedNodeMap* map)
 // 
 MITREObject* Document::removeWrapper(Int32 hashValue) 
 { 
-  return wrapperHashTable.remove(hashValue); 
+    return wrapperHashTable.remove(hashValue); 
 } 
  
 // 
@@ -782,7 +798,7 @@ MITREObject* Document::removeWrapper(Int32 hashValue)
 // 
 void Document::addWrapper(MITREObject* obj, Int32 hashValue) 
 { 
-  wrapperHashTable.add(obj, hashValue); 
+    wrapperHashTable.add(obj, hashValue); 
 } 
  
 // 
@@ -790,62 +806,62 @@ void Document::addWrapper(MITREObject* obj, Int32 hashValue)
 // 
 Node* Document::createWrapper(nsIDOMNode* node) 
 { 
-  unsigned short nodeType = 0; 
+    unsigned short nodeType = 0; 
  
-  // 
-  //TK 02/15/2000 - Must make sure node is not null. 
-  if (!node) 
-    return NULL; 
+    // 
+    //TK 02/15/2000 - Must make sure node is not null. 
+    if (!node) 
+      return NULL; 
  
-  node->GetNodeType(&nodeType); 
+    node->GetNodeType(&nodeType); 
  
-  switch (nodeType) 
+    switch (nodeType) 
     { 
-    case nsIDOMNode::ELEMENT_NODE: 
-      return createElement((nsIDOMElement*)node); 
-      break; 
+        case nsIDOMNode::ELEMENT_NODE: 
+            return createElement((nsIDOMElement*)node); 
+            break; 
  
-    case nsIDOMNode::ATTRIBUTE_NODE: 
-      return createAttribute((nsIDOMAttr*)node); 
-      break; 
+        case nsIDOMNode::ATTRIBUTE_NODE: 
+            return createAttribute((nsIDOMAttr*)node); 
+            break; 
  
-    case nsIDOMNode::TEXT_NODE: 
-      return createTextNode((nsIDOMText*)node); 
-      break; 
+        case nsIDOMNode::TEXT_NODE: 
+            return createTextNode((nsIDOMText*)node); 
+            break; 
  
-    case nsIDOMNode::CDATA_SECTION_NODE: 
-      return createCDATASection((nsIDOMCDATASection*)node); 
-      break; 
+        case nsIDOMNode::CDATA_SECTION_NODE: 
+            return createCDATASection((nsIDOMCDATASection*)node); 
+           break; 
  
-    case nsIDOMNode::COMMENT_NODE: 
-      return createComment((nsIDOMComment*)node); 
-      break; 
+        case nsIDOMNode::COMMENT_NODE: 
+            return createComment((nsIDOMComment*)node); 
+            break; 
  
-    case nsIDOMNode::ENTITY_REFERENCE_NODE: 
-      return createEntityReference((nsIDOMEntityReference*)node); 
-      break; 
+        case nsIDOMNode::ENTITY_REFERENCE_NODE: 
+            return createEntityReference((nsIDOMEntityReference*)node); 
+            break; 
  
-    case nsIDOMNode::ENTITY_NODE: 
-      return createEntity((nsIDOMEntity*)node); 
-      break; 
+        case nsIDOMNode::ENTITY_NODE: 
+            return createEntity((nsIDOMEntity*)node); 
+            break; 
  
-    case nsIDOMNode::PROCESSING_INSTRUCTION_NODE: 
-      return createProcessingInstruction((nsIDOMProcessingInstruction*)node); 
-      break; 
+        case nsIDOMNode::PROCESSING_INSTRUCTION_NODE: 
+            return createProcessingInstruction((nsIDOMProcessingInstruction*)node); 
+            break; 
  
-    case nsIDOMNode::DOCUMENT_TYPE_NODE: 
-      return createDocumentType((nsIDOMDocumentType*)node); 
-      break; 
+        case nsIDOMNode::DOCUMENT_TYPE_NODE: 
+            return createDocumentType((nsIDOMDocumentType*)node); 
+            break; 
  
-    case nsIDOMNode::DOCUMENT_FRAGMENT_NODE: 
-      return createDocumentFragment((nsIDOMDocumentFragment*)node); 
-      break; 
-       
-    case nsIDOMNode::NOTATION_NODE: 
-      return createNotation((nsIDOMNotation*)node); 
-      break; 
+        case nsIDOMNode::DOCUMENT_FRAGMENT_NODE: 
+            return createDocumentFragment((nsIDOMDocumentFragment*)node); 
+            break; 
+         
+        case nsIDOMNode::NOTATION_NODE: 
+            return createNotation((nsIDOMNotation*)node); 
+            break; 
  
-    default: 
-      return createNode(node); 
+        default: 
+            return createNode(node); 
     } 
 } 

@@ -34,7 +34,7 @@
 //document.
 //
 DocumentFragment::DocumentFragment(nsIDOMDocumentFragment* docFragment, 
-				   Document* owner) : Node(docFragment, owner)
+                   Document* owner) : Node(docFragment, owner)
 {
   nsDocumentFragment = docFragment;
 }

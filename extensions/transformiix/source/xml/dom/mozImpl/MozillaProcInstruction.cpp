@@ -34,8 +34,8 @@
 //Construct a wrapper class for the given object and document
 //
 ProcessingInstruction::ProcessingInstruction(
-				       nsIDOMProcessingInstruction* procInstr,
-				       Document* owner) : 
+                       nsIDOMProcessingInstruction* procInstr,
+                       Document* owner) : 
                        Node (procInstr, owner)
 {
   nsProcessingInstruction = procInstr;
@@ -59,9 +59,9 @@ void ProcessingInstruction::setNSObj(nsIDOMProcessingInstruction* procInstr)
 
 //
 //Retrieve the Target from the Mozilla object, then wrap appropriately in
-//a MozillaString wrapper.
+//a String wrapper.
 //
-const DOMString& ProcessingInstruction::getTarget() const
+const String& ProcessingInstruction::getTarget() const
 {
   nsString* target = new nsString();
 
@@ -76,9 +76,9 @@ const DOMString& ProcessingInstruction::getTarget() const
 
 //
 //Retrieve the data from the Mozilla object, then wrap appropriately in a 
-//MozillaString wrapper.
+//String wrapper.
 //
-const DOMString& ProcessingInstruction::getData() const
+const String& ProcessingInstruction::getData() const
 {
   nsString* data = new nsString();
   
@@ -93,7 +93,7 @@ const DOMString& ProcessingInstruction::getData() const
 
 //
 //Pass the nsString wapped by theData to the Mozilla object.
-void ProcessingInstruction::setData(const DOMString& theData)
+void ProcessingInstruction::setData(const String& theData)
 {
   nsProcessingInstruction->SetData(theData.getConstNSString());
 }

@@ -130,7 +130,7 @@ ostream& operator<<(ostream& output, const String& source)
 //
 //Overloaded '=' operator to assign the value of the source string to this
 //string.  Only use String's public interface to ensure compatibility with
-//String, MozillaString, and any other object derrived from the String
+//String, and any other object derrived from the String
 //interface.  ( nsString::Assign(PRUnichar*, PRInt32) )
 //
 String& String::operator=(const String& source)
@@ -269,7 +269,7 @@ void String::insert(Int32 offset, const String& source)
 {
   //There are issues if we try to insert a string into itself using its unicode
   //buffer!  So if the provided source object is equal to this, then we are
-  //appending this MozillaString to itself, so cast source to a MozillaString
+  //appending this String to itself, so cast source to a String
   //object, and go after its nsString implementation.
   if (this == &source)
     ptrNSString->Insert(*((String)source).ptrNSString, offset);

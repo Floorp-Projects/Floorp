@@ -57,7 +57,7 @@ void DocumentType::setNSObj(nsIDOMDocumentType* documentType)
 //
 //Retrieve the name from the Mozilla object and wrap acordingly.
 //
-const DOMString& DocumentType::getName() const
+const String& DocumentType::getName() const
 {
   nsString* name = new nsString();
 

@@ -33,8 +33,8 @@
 //
 //Construct a text object with the specified document owner and data
 //
-ProcessingInstruction::ProcessingInstruction(const DOMString& theTarget,
-                                             const DOMString& theData,
+ProcessingInstruction::ProcessingInstruction(const String& theTarget,
+                                             const String& theData,
                                              Document* owner) :
                        NodeDefinition(Node::PROCESSING_INSTRUCTION_NODE,
                                       theTarget, theData, owner)
@@ -45,7 +45,7 @@ ProcessingInstruction::ProcessingInstruction(const DOMString& theTarget,
 //Return the Target of the processing instruction.  This is simply the
 //nodeName.
 //
-const DOMString& ProcessingInstruction::getTarget() const
+const String& ProcessingInstruction::getTarget() const
 {
   return nodeName;
 }
@@ -54,14 +54,14 @@ const DOMString& ProcessingInstruction::getTarget() const
 //Return the Data of the processing instruction.  This is simply the value
 //of the node, "nodeValue"
 //
-const DOMString& ProcessingInstruction::getData() const
+const String& ProcessingInstruction::getData() const
 {
   return nodeValue;
 }
 
 //
 //Set the Data element of the processing instruction.
-void ProcessingInstruction::setData(const DOMString& theData)
+void ProcessingInstruction::setData(const String& theData)
 {
   nodeValue = theData;
 }

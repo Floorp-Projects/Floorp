@@ -81,10 +81,10 @@ nsIDOMNode* Node::getNSObj()
 }
 
 //
-//Call nsIDOMNode::GetNodeName, store the results in the nodeName DOMString,
+//Call nsIDOMNode::GetNodeName, store the results in the nodeName String,
 //and return it to the caller.
 //
-const DOMString& Node::getNodeName()
+const String& Node::getNodeName()
 {
   nsresult result;
   nsCOMPtr<nsIXMLContent> nsXMLContent = do_QueryInterface(nsNode);
@@ -103,7 +103,7 @@ const DOMString& Node::getNodeName()
   if (nsXMLContent) {
     result = nsXMLContent->GetNameSpacePrefix(*getter_AddRefs(theNamespaceAtom));
     if (theNamespaceAtom && NS_SUCCEEDED(result)) {
-      DOMString theNamespacePrefix;
+      String theNamespacePrefix;
 
       theNamespaceAtom->ToString(theNamespacePrefix.getNSString());
       nodeName.insert(0, ":");
@@ -118,7 +118,7 @@ const DOMString& Node::getNodeName()
 //Call nsIDOMNode::GetNodeValue, store the results in nodeValue, and
 //return it to the caller.
 //
-const DOMString& Node::getNodeValue()
+const String& Node::getNodeValue()
 {
   if (nsNode == NULL)
     return NULL_STRING;
@@ -285,9 +285,9 @@ Document* Node::getOwnerDocument()
 
 //
 //Call nsIDOMNode::SetNodeValue(nsString*) passing it the nsString wrapped by
-//the provided DOMString.
+//the provided String.
 //
-void Node::setNodeValue(const DOMString& newNodeValue)
+void Node::setNodeValue(const String& newNodeValue)
 {
   if (nsNode != NULL)
     nsNode->SetNodeValue(newNodeValue.getConstNSString());
@@ -309,7 +309,7 @@ Node* Node::insertBefore(Node* newChild,
     return NULL;
 
   if (nsNode->InsertBefore(newChild->getNSObj(), refChild->getNSObj(),
-			   &returnValue) == NS_OK)
+               &returnValue) == NS_OK)
     return ownerDocument->createWrapper(returnValue);
   else
     return NULL;
@@ -331,7 +331,7 @@ Node* Node::replaceChild(Node* newChild,
     return NULL;
 
   if (nsNode->ReplaceChild(newChild->getNSObj(), oldChild->getNSObj(),
-			   &returnValue) == NS_OK)
+               &returnValue) == NS_OK)
     {
       //We want to remove the wrapper class from the hash table, and return
       //it to the caller.

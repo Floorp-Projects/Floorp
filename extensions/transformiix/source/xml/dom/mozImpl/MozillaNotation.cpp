@@ -59,7 +59,7 @@ void Notation::setNSObj(nsIDOMNotation* notation)
 //
 //Return the Public ID of the Notation
 //
-const DOMString& Notation::getPublicId() const
+const String& Notation::getPublicId() const
 {
   nsString* publicId = new nsString();
 
@@ -73,7 +73,7 @@ const DOMString& Notation::getPublicId() const
 }
 
 //Return the System ID of the Notation
-const DOMString& Notation::getSystemId() const
+const String& Notation::getSystemId() const
 {
   nsString* systemId = new nsString();
 

@@ -50,7 +50,7 @@ NamedNodeMap::~NamedNodeMap()
 // document for a wrapper for the returned nsIDOMNode obejct
 // (nsIDOMNamedNodeMap::GetNamedItem)
 //
-Node* NamedNodeMap::getNamedItem(const DOMString& name)
+Node* NamedNodeMap::getNamedItem(const String& name)
 {
   nsIDOMNode* node = NULL;
 
@@ -82,7 +82,7 @@ Node* NamedNodeMap::setNamedItem(Node* arg)
 // the owner documetn for a wrapper object for the result.
 // (nsIDOMNamedNodeMap::removeNamedItem)
 //
-Node* NamedNodeMap::removeNamedItem(const DOMString& name)
+Node* NamedNodeMap::removeNamedItem(const String& name)
 {
   nsIDOMNode* node = NULL;
 

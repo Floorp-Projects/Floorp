@@ -25,13 +25,13 @@
  *    -- fixed memory leak in NamedMap::hashKey method by deleting
  *       up char[] chars;
  *
- * $Id: NamedMap.cpp,v 1.2 1999/11/15 07:12:40 nisheeth%netscape.com Exp $
+ * $Id: NamedMap.cpp,v 1.3 2000/06/11 12:22:32 Peter.VanderBeken%pandora.be Exp $
  */
 
 /**
  * A Named Map for MITREObjects
  * @author <a href="kvisco@ziplink.net">Keith Visco</a>
- * @version $Revision: 1.2 $ $Date: 1999/11/15 07:12:40 $
+ * @version $Revision: 1.3 $ $Date: 2000/06/11 12:22:32 $
 **/
 
 #include "NamedMap.h"
@@ -194,7 +194,7 @@ StringList* NamedMap::keys() {
     for (int i = 0; i < numberOfBuckets; i++) {
         BucketItem* item = elements[i];
         while (item) {
-	    list->add(new String(item->key));
+            list->add(new String(item->key));
             item = item->next;
         }
     }

@@ -27,7 +27,7 @@
  * Olivier Gerardin, ogerardin@vo.lu
  *    -- fixed numberValue()
  *
- * $Id: NodeSet.cpp,v 1.2 2000/04/07 22:57:32 Peter.VanderBeken%pandora.be Exp $
+ * $Id: NodeSet.cpp,v 1.3 2000/06/11 12:22:48 Peter.VanderBeken%pandora.be Exp $
  */
 
 #include "NodeSet.h"
@@ -36,7 +36,7 @@
  * NodeSet <BR />
  * This class was ported from XSL:P. <BR />
  * @author <A HREF="mailto:kvisco@ziplink.net">Keith Visco</A>
- * @version $Revision: 1.2 $ $Date: 2000/04/07 22:57:32 $
+ * @version $Revision: 1.3 $ $Date: 2000/06/11 12:22:48 $
 **/
 
 
@@ -344,7 +344,7 @@ double NodeSet::numberValue() {
  * Creates a String representation of this ExprResult
  * @param str the destination string to append the String representation to.
 **/
-void NodeSet::stringValue(DOMString& str) {
+void NodeSet::stringValue(String& str) {
     if ( size()>0) {
         XMLDOMUtils::getNodeValue(get(0), &str);
     }

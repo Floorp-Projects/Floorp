@@ -30,8 +30,8 @@
 
 #include "dom.h"
 
-NodeDefinition::NodeDefinition(NodeType type, const DOMString& name,
-                               const DOMString& value, Document* owner)
+NodeDefinition::NodeDefinition(NodeType type, const String& name,
+                               const String& value, Document* owner)
 {
 
   nodeName = name;
@@ -84,17 +84,17 @@ void NodeDefinition::DeleteChildren()
   lastChild = NULL;
 }
 
-const DOMString& NodeDefinition::getNodeName() const
+const String& NodeDefinition::getNodeName() const
 {
   return nodeName;
 }
 
-const DOMString& NodeDefinition::getNodeValue() const
+const String& NodeDefinition::getNodeValue() const
 {
   return nodeValue;
 }
 
-const DOMString& NodeDefinition::getNodeValue()
+const String& NodeDefinition::getNodeValue()
 {
   return nodeValue;
 }
@@ -165,7 +165,7 @@ Int32 NodeDefinition::getLength()
   return length;
 }
 
-void NodeDefinition::setNodeValue(const DOMString& newNodeValue)
+void NodeDefinition::setNodeValue(const String& newNodeValue)
 {
   nodeValue = newNodeValue;
 }
@@ -344,7 +344,7 @@ Node* NodeDefinition::appendChild(Node* newChild)
 
 Node* NodeDefinition::cloneNode(MBool deep, Node* dest)
 {
-	return 0;
+    return 0;
 }
 
 MBool NodeDefinition::hasChildNodes() const

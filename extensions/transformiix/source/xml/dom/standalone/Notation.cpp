@@ -33,8 +33,8 @@
 //
 //Construct a text object with the specified document owner and data
 //
-Notation::Notation(const DOMString& name, const DOMString& pubID,
-                   const DOMString& sysID) :
+Notation::Notation(const String& name, const String& pubID,
+                   const String& sysID) :
           NodeDefinition(Node::NOTATION_NODE, name, NULL_STRING, NULL)
 {
   publicId = pubID;
@@ -44,13 +44,13 @@ Notation::Notation(const DOMString& name, const DOMString& pubID,
 //
 //Return the Public ID of the Notation
 //
-const DOMString& Notation::getPublicId() const
+const String& Notation::getPublicId() const
 {
   return publicId;
 }
 
 //Return the System ID of the Notation
-const DOMString& Notation::getSystemId() const
+const String& Notation::getSystemId() const
 {
   return systemId;
 }

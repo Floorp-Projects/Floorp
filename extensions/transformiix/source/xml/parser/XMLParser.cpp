@@ -34,7 +34,7 @@
  *    -- Removed a number of castings of XML_Char to DOM_CHAR since they
  *       were not working on Windows properly
  *
- * $Id: XMLParser.cpp,v 1.5 2000/05/02 21:57:19 Peter.VanderBeken%pandora.be Exp $
+ * $Id: XMLParser.cpp,v 1.6 2000/06/11 12:28:19 Peter.VanderBeken%pandora.be Exp $
  */
 
 #include "XMLParser.h"
@@ -123,7 +123,7 @@ Document* XMLParser::parse(istream& inputStream)
   return ps.document;
 }
 
-const DOMString& XMLParser::getErrorString()
+const String& XMLParser::getErrorString()
 {
   return errorString;
 }
@@ -163,7 +163,7 @@ void endElement(void *userData, const XML_Char* name)
 void charData(void* userData, const XML_Char* s, int len)
 {
     ParserState* ps = (ParserState*)userData;
-    DOMString data;
+    String data;
     data.append((UNICODE_CHAR*)s, len);
     ps->currentNode->appendChild(ps->document->createTextNode(data));
 } //-- charData
@@ -173,8 +173,8 @@ void charData(void* userData, const XML_Char* s, int len)
 **/
 void piHandler(void *userData, const XML_Char *target, const XML_Char *data) {
     ParserState* ps = (ParserState*)userData;
-    DOMString targetStr(target);
-    DOMString dataStr(data);
+    String targetStr(target);
+    String dataStr(data);
 
     ps->currentNode->appendChild(
         ps->document->createProcessingInstruction(targetStr, dataStr));
