@@ -405,7 +405,7 @@ function delayedStartup()
 #endif
 
   // now load bookmarks after a delay
-  var hasRead = BMSVC.ReadBookmarks();  
+  var hasRead = BMSVC.readBookmarks();  
   var bt = document.getElementById("bookmarks-ptf");
   if (bt) {
     if (hasRead)
