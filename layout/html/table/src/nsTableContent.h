@@ -29,7 +29,7 @@
  * within a table.
  *
  * @author  sclark
- * @version $Revision: 3.4 $
+ * @version $Revision: 3.5 $
  * @see
  */
 class nsTableContent : public nsHTMLContainer, public nsITableContent
@@ -98,10 +98,10 @@ public:
   /** debug method prints out this and all child frames */
   void List(FILE* out, PRInt32 aIndent) const;
 
-  PRBool InsertChildAt(nsIContent* aKid, PRInt32 aIndex);
-  PRBool ReplaceChildAt(nsIContent* aKid, PRInt32 aIndex);
-  PRBool AppendChild(nsIContent* aKid);
-  PRBool RemoveChildAt(PRInt32 aIndex);
+  NS_IMETHOD InsertChildAt(nsIContent* aKid, PRInt32 aIndex, PRBool aNotify);
+  NS_IMETHOD ReplaceChildAt(nsIContent* aKid, PRInt32 aIndex, PRBool aNotify);
+  NS_IMETHOD AppendChild(nsIContent* aKid, PRBool aNotify);
+  NS_IMETHOD RemoveChildAt(PRInt32 aIndex, PRBool aNotify);
 
 
 private:

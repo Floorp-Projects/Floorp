@@ -143,10 +143,10 @@ public:
 
 /* overrides from nsHTMLContainer */
 
-  virtual PRBool InsertChildAt(nsIContent* aKid, PRInt32 aIndex);
-  virtual PRBool ReplaceChildAt(nsIContent* aKid, PRInt32 aIndex);
-  virtual PRBool AppendChild(nsIContent* aKid);
-  virtual PRBool RemoveChildAt(PRInt32 aIndex);
+  NS_IMETHOD InsertChildAt(nsIContent* aKid, PRInt32 aIndex, PRBool aNotify);
+  NS_IMETHOD ReplaceChildAt(nsIContent* aKid, PRInt32 aIndex, PRBool aNotify);
+  NS_IMETHOD AppendChild(nsIContent* aKid, PRBool aNotify);
+  NS_IMETHOD RemoveChildAt(PRInt32 aIndex, PRBool aNotify);
 
   virtual nsresult CreateFrame(nsIPresContext*  aPresContext,
                                nsIFrame*        aParentFrame,

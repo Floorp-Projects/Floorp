@@ -126,10 +126,11 @@ void nsTableRow::ResetCellMap ()
   }
 }
 
-PRBool nsTableRow::AppendChild (nsIContent *aContent)
+NS_IMETHODIMP
+nsTableRow::AppendChild (nsIContent *aContent, PRBool aNotify)
 {
   NS_PRECONDITION(nsnull != aContent, "null ptr");
-  PRBool result = PR_FALSE;
+  nsresult rv = NS_OK;
   if (nsnull!=aContent)
   {
     // SEC: should verify that it is indeed table content before we do the cast
@@ -139,68 +140,73 @@ PRBool nsTableRow::AppendChild (nsIContent *aContent)
     {
       if (gsDebug==PR_TRUE) printf ("nsTableRow::AppendChild -- didn't get a cell, giving up to parent.\n");
       if (nsnull != mRowGroup)
-        return mRowGroup->AppendChild (aContent); // let parent have it
+        return mRowGroup->AppendChild (aContent, aNotify); // let parent have it
       return PR_FALSE;
     }
     else
     {
-      PRBool result = nsTableContent::AppendChild (aContent);
-      if (result)
+      rv = nsTableContent::AppendChild (aContent, aNotify);
+      if (NS_OK == rv)
       {
         ((nsTableCell *)aContent)->SetRow (this);
         ResetCellMap ();
       }
     }
   }
-  return result;
+  return rv;
 }
 
-PRBool nsTableRow::InsertChildAt (nsIContent *aContent, int aIndex)
+NS_IMETHODIMP
+nsTableRow::InsertChildAt (nsIContent *aContent, PRInt32 aIndex,
+                           PRBool aNotify)
 {
   NS_PRECONDITION(nsnull != aContent, "null ptr");
-  PRBool result = PR_FALSE;
+  nsresult rv = NS_OK;
   if (nsnull!=aContent)
   {
     nsTableContent *tableContent = (nsTableContent *)aContent;
     const int contentType = tableContent->GetType();
     if (contentType != nsITableContent::kTableCellType)
     {
-      return PR_FALSE;
+      return NS_OK;
     }
     else
     {
-      PRBool result = nsTableContent::InsertChildAt (aContent, aIndex);
-      if (result)
+      rv = nsTableContent::InsertChildAt (aContent, aIndex, aNotify);
+      if (NS_OK == rv)
       {
         ((nsTableCell *)aContent)->SetRow (this);
         ResetCellMap ();
       }
     }
   }
-  return result;
+  return rv;
 }
 
 
-PRBool nsTableRow::ReplaceChildAt (nsIContent *aContent, int aIndex)
+NS_IMETHODIMP
+nsTableRow::ReplaceChildAt (nsIContent *aContent, PRInt32 aIndex,
+                            PRBool aNotify)
 {
-  PRBool result = PR_FALSE;
+  nsresult rv = NS_OK;
 
   NS_PRECONDITION(nsnull!=aContent, "bad aContent arg to ReplaceChildAt");
   NS_PRECONDITION(0<=aIndex && aIndex<ChildCount(), "bad aIndex arg to ReplaceChildAt");
   if ((nsnull==aContent) || !(0<=aIndex && aIndex<ChildCount()))
-    return PR_FALSE;
+    return NS_OK;
   else
   {
     nsTableContent *tableContent = (nsTableContent *)aContent;
     const int contentType = tableContent->GetType();
     if (contentType != nsITableContent::kTableCellType)
     {
-      return PR_FALSE;
+      return NS_OK;
     }
     else
-      return PR_FALSE;
+      return NS_OK;
+#if XXX
     nsIContent * oldChild = ChildAt (aIndex); // oldChild: REFCNT++
-    result = nsTableContent::ReplaceChildAt (aContent, aIndex);
+    result = nsTableContent::ReplaceChildAt (aContent, aIndex, aNotify);
     if (result)
     {
       ((nsTableCell *)aContent)->SetRow (this);
@@ -209,26 +215,28 @@ PRBool nsTableRow::ReplaceChildAt (nsIContent *aContent, int aIndex)
       ResetCellMap ();
     }
     NS_IF_RELEASE(oldChild);                  // oldChild: REFCNT--
+#endif
   }
-  return result;
+  return rv;
 }
 
 /**
  * Remove a child at the given position. The method is ignored if
  * the index is invalid (too small or too large).
  */
-PRBool nsTableRow::RemoveChildAt (int aIndex)
+NS_IMETHODIMP
+nsTableRow::RemoveChildAt (int aIndex, PRBool aNotify)
 {
   NS_PRECONDITION(0<=aIndex && aIndex<ChildCount(), "bad aIndex arg to ReplaceChildAt");
   if (!(0<=aIndex && aIndex<ChildCount()))
-    return PR_FALSE;
+    return NS_OK;
   
-  PRBool result = PR_FALSE;
+  nsresult rv = NS_OK;
   nsIContent * oldChild = ChildAt (aIndex);   // oldChild: REFCNT++
   if (nsnull!=oldChild)
   {
-    result = nsTableContent::RemoveChildAt (aIndex);
-    if (result)
+    rv = nsTableContent::RemoveChildAt (aIndex, aNotify);
+    if (NS_OK == rv)
     {
       if (nsnull != oldChild)
         ((nsTableCell *)oldChild)->SetRow (nsnull);
@@ -236,7 +244,7 @@ PRBool nsTableRow::RemoveChildAt (int aIndex)
     }
   }
   NS_IF_RELEASE(oldChild);                    // oldChild: REFCNT--
-  return result;
+  return rv;
 }
 
 nsresult

@@ -120,7 +120,8 @@ void nsTableRowGroup::ResetCellMap ()
     mTable->ResetCellMap ();
 }
 
-PRBool nsTableRowGroup::AppendChild (nsIContent *aContent)
+NS_IMETHODIMP
+nsTableRowGroup::AppendChild (nsIContent *aContent, PRBool aNotify)
 {
   NS_PRECONDITION(nsnull!=aContent, "bad arg to AppendChild");
   PRBool result = PR_TRUE;
@@ -133,12 +134,9 @@ PRBool nsTableRowGroup::AppendChild (nsIContent *aContent)
   {
     if (gsDebug==PR_TRUE) printf ("nsTableRowGroup::AppendChild -- inserting a row into this row group.\n");
     // if it is, we'll add it here
-    PRBool result = nsTableContent::AppendChild (aContent);
-    if (result)
-    {
-      ((nsTableRow *)aContent)->SetRowGroup (this);
-      ResetCellMap ();
-    }
+    nsTableContent::AppendChild (aContent, PR_FALSE);
+    ((nsTableRow *)aContent)->SetRowGroup (this);
+    ResetCellMap ();
   }
   // otherwise, if it's a cell, create an implicit row for it
   else 
@@ -167,11 +165,11 @@ PRBool nsTableRowGroup::AppendChild (nsIContent *aContent)
         nsIAtom * trDefaultTag = NS_NewAtom(nsTablePart::kRowTagString);   // trDefaultTag: REFCNT++
         row = new nsTableRow (trDefaultTag, PR_TRUE);
         NS_RELEASE(trDefaultTag);                               // trDefaultTag: REFCNT--
-        result = AppendChild (row);
+        AppendChild (row, PR_FALSE);
         // SEC: check result
       }
       // group is guaranteed to be allocated at this point
-      result = row->AppendChild(aContent);
+      row->AppendChild(aContent, PR_FALSE);
     }
     // otherwise, punt and let the table try to insert it.  Or maybe just return a failure?
     else
@@ -180,10 +178,12 @@ PRBool nsTableRowGroup::AppendChild (nsIContent *aContent)
         result = PR_FALSE;
     }
   }
-  return result;
+  return NS_OK;
 }
 
-PRBool nsTableRowGroup::InsertChildAt (nsIContent *aContent, int aIndex)
+NS_IMETHODIMP
+nsTableRowGroup::InsertChildAt (nsIContent *aContent, PRInt32 aIndex,
+                                PRBool aNotify)
 {
   NS_PRECONDITION(nsnull!=aContent, "bad arg to InsertChildAt");
 
@@ -194,26 +194,26 @@ PRBool nsTableRowGroup::InsertChildAt (nsIContent *aContent, int aIndex)
   if (PR_FALSE==isRow)
   {
     // you should go talk to my parent if you want to insert something other than a column
-    return PR_FALSE;
+    return NS_OK;
   }
 
   // if so, add the row to this group
-  PRBool result = nsTableContent::InsertChildAt (aContent, aIndex);
-  if (result)
-  {
-    ((nsTableRow *)aContent)->SetRowGroup (this);
-    ResetCellMap ();
-  }
-  return result;
+  nsTableContent::InsertChildAt (aContent, aIndex, PR_FALSE);
+  ((nsTableRow *)aContent)->SetRowGroup (this);
+  ResetCellMap ();
+
+  return NS_OK;
 }
 
 
-PRBool nsTableRowGroup::ReplaceChildAt (nsIContent *aContent, int aIndex)
+NS_IMETHODIMP
+nsTableRowGroup::ReplaceChildAt (nsIContent *aContent, PRInt32 aIndex,
+                                 PRBool aNotify)
 {
   NS_PRECONDITION(nsnull!=aContent, "bad aContent arg to ReplaceChildAt");
   NS_PRECONDITION(0<=aIndex && aIndex<ChildCount(), "bad aIndex arg to ReplaceChildAt");
   if ((nsnull==aContent) || !(0<=aIndex && aIndex<ChildCount()))
-    return PR_FALSE;
+    return NS_OK;
 
   // is aContent a TableRow?
   PRBool isRow = IsRow(aContent);
@@ -221,12 +221,11 @@ PRBool nsTableRowGroup::ReplaceChildAt (nsIContent *aContent, int aIndex)
   // if not, ignore the request to replace the child at aIndex
   {
     // you should go talk to my parent if you want to insert something other than a column
-    return PR_FALSE;
+    return NS_OK;
   }
 
   nsIContent * lastChild = ChildAt (aIndex);  // lastChild: REFCNT++
-  PRBool result = nsTableContent::ReplaceChildAt (aContent, aIndex);
-  if (result)
+  nsTableContent::ReplaceChildAt (aContent, aIndex, PR_FALSE);
   {
     ((nsTableRow *)aContent)->SetRowGroup (this);
     if (nsnull != lastChild)
@@ -234,29 +233,29 @@ PRBool nsTableRowGroup::ReplaceChildAt (nsIContent *aContent, int aIndex)
     ResetCellMap ();
   }
   NS_IF_RELEASE(lastChild);                   // lastChild: REFCNT--
-  return result;
+  return NS_OK;
 }
 
 /**
  * Remove a child at the given position. The method is ignored if
  * the index is invalid (too small or too large).
  */
-PRBool nsTableRowGroup::RemoveChildAt (int aIndex)
+NS_IMETHODIMP
+nsTableRowGroup::RemoveChildAt (PRInt32 aIndex, PRBool aNotify)
 {
   NS_PRECONDITION(0<=aIndex && aIndex<ChildCount(), "bad aIndex arg to RemoveChildAt");
   if (!(0<=aIndex && aIndex<ChildCount()))
-    return PR_FALSE;
+    return NS_OK;
 
   nsIContent * lastChild = ChildAt (aIndex);  // lastChild: REFCNT++   
-  PRBool result = nsTableContent::RemoveChildAt (aIndex);
-  if (result)
+  nsTableContent::RemoveChildAt (aIndex, PR_FALSE);
   {
     if (nsnull != lastChild)
       ((nsTableRow *)lastChild)->SetRowGroup (nsnull);
     ResetCellMap ();
   }
   NS_IF_RELEASE(lastChild);                  // lastChild: REFCNT-- 
-  return result;
+  return NS_OK;
 }
 
 /** support method to determine if the param aContent is a TableRow object */

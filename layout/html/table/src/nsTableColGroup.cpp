@@ -149,7 +149,8 @@ int nsTableColGroup::GetColumnCount ()
   return mColCount;
 }
 
-PRBool nsTableColGroup::AppendChild (nsIContent *aContent)
+NS_IMETHODIMP
+nsTableColGroup::AppendChild (nsIContent *aContent, PRBool aNotify)
 {
   NS_ASSERTION(nsnull!=aContent, "bad arg");
 
@@ -159,7 +160,7 @@ PRBool nsTableColGroup::AppendChild (nsIContent *aContent)
   if (PR_FALSE==isCol)
   {
     // you should go talk to my parent if you want to insert something other than a column
-    return PR_FALSE;
+    return NS_OK;
   }
 
   PRBool result = PR_FALSE;
@@ -179,23 +180,26 @@ PRBool nsTableColGroup::AppendChild (nsIContent *aContent)
       NS_ASSERTION(nsnull!=col, "bad child");
       if (PR_TRUE==col->IsImplicit())
       {
-        ReplaceChildAt(aContent, colIndex);
+        ReplaceChildAt(aContent, colIndex, aNotify);
         contentHandled = PR_TRUE;
         break;
       }
     }
   }
   if (PR_FALSE==contentHandled)
-    result = nsTableContent::AppendChild (aContent);
+    result = nsTableContent::AppendChild (aContent, aNotify);
   if (result)
   {
     ((nsTableCol *)aContent)->SetColGroup (this);
     ResetColumns ();
   }
-  return result;
+
+  return NS_OK;
 }
 
-PRBool nsTableColGroup::InsertChildAt (nsIContent *aContent, int aIndex)
+NS_IMETHODIMP
+nsTableColGroup::InsertChildAt (nsIContent *aContent, PRInt32 aIndex,
+                                PRBool aNotify)
 {
   NS_ASSERTION(nsnull!=aContent, "bad arg");
 
@@ -206,21 +210,23 @@ PRBool nsTableColGroup::InsertChildAt (nsIContent *aContent, int aIndex)
   if (PR_FALSE==isCol)
   {
     // you should go talk to my parent if you want to insert something other than a column
-    return PR_FALSE;
+    return NS_OK;
   }
 
   // if so, add the row to this group
-  PRBool result = nsTableContent::InsertChildAt (aContent, aIndex);
+  PRBool result = nsTableContent::InsertChildAt (aContent, aIndex, aNotify);
   if (result)
   {
     ((nsTableCol *)aContent)->SetColGroup (this);
     ResetColumns ();
   }
-  return result;
+  return NS_OK;
 }
 
 
-PRBool nsTableColGroup::ReplaceChildAt (nsIContent * aContent, int aIndex)
+NS_IMETHODIMP
+nsTableColGroup::ReplaceChildAt (nsIContent * aContent, PRInt32 aIndex,
+                                 PRBool aNotify)
 {
   NS_ASSERTION(nsnull!=aContent, "bad arg");
   NS_ASSERTION((0<=aIndex && ChildCount()>aIndex), "bad arg");
@@ -234,12 +240,12 @@ PRBool nsTableColGroup::ReplaceChildAt (nsIContent * aContent, int aIndex)
   if (PR_FALSE==isCol)
   {
     // you should go talk to my parent if you want to insert something other than a column
-    return PR_FALSE;
+    return NS_OK;
   }
 
   nsIContent * lastChild = ChildAt (aIndex);  // lastChild : REFCNT++
   NS_ASSERTION(nsnull!=lastChild, "bad child");
-  PRBool result = nsTableContent::ReplaceChildAt (aContent, aIndex);
+  PRBool result = nsTableContent::ReplaceChildAt (aContent, aIndex, aNotify);
   if (result)
   {
     ((nsTableCol *)aContent)->SetColGroup (this);
@@ -248,19 +254,21 @@ PRBool nsTableColGroup::ReplaceChildAt (nsIContent * aContent, int aIndex)
     ResetColumns ();
   }
   NS_RELEASE(lastChild);                      // lastChild : REFCNT--
-  return result;
+
+  return NS_OK;
 }
 
 /**
  * Remove a child at the given position. The method is ignored if
  * the index is invalid (too small or too large).
  */
-PRBool nsTableColGroup::RemoveChildAt (int aIndex)
+NS_IMETHODIMP
+nsTableColGroup::RemoveChildAt (PRInt32 aIndex, PRBool aNotify)
 {
   NS_ASSERTION((0<=aIndex && ChildCount()>aIndex), "bad arg");
   nsIContent * lastChild = ChildAt (aIndex);  // lastChild: REFCNT++
   NS_ASSERTION(nsnull!=lastChild, "bad child");
-  PRBool result = nsTableContent::RemoveChildAt (aIndex);
+  PRBool result = nsTableContent::RemoveChildAt (aIndex, aNotify);
   if (result)
   {
     if (nsnull != lastChild)
@@ -268,7 +276,8 @@ PRBool nsTableColGroup::RemoveChildAt (int aIndex)
     ResetColumns ();
   }
   NS_IF_RELEASE(lastChild);                   // lastChild REFCNT--
-  return result;
+
+  return NS_OK;
 }
 
 /** support method to determine if the param aContent is a TableRow object */

@@ -191,43 +191,50 @@ void nsTableContent::List(FILE* out, PRInt32 aIndent) const
   fputs(">\n", out);
 }
 
-PRBool nsTableContent::InsertChildAt(nsIContent* aKid, PRInt32 aIndex)
+NS_IMETHODIMP
+nsTableContent::InsertChildAt(nsIContent* aKid, PRInt32 aIndex, PRBool aNotify)
 { 
-  PRBool result = nsHTMLContainer::InsertChildAt(aKid, aIndex); 
-  if (result == PR_TRUE)
-    SetTableForTableContent(aKid,mTable);
-  return result;
+  nsresult rv = nsHTMLContainer::InsertChildAt(aKid, aIndex, aNotify);
+  if (NS_OK == rv) {
+    SetTableForTableContent(aKid, mTable);
+  }
+  return rv;
 }
 
-PRBool nsTableContent::ReplaceChildAt(nsIContent* aKid, PRInt32 aIndex)
+NS_IMETHODIMP
+nsTableContent::ReplaceChildAt(nsIContent* aKid, PRInt32 aIndex, PRBool aNotify)
 { 
   nsIContent* child = ChildAt(aIndex);
-  PRBool result = nsHTMLContainer::ReplaceChildAt(aKid, aIndex); 
-  if (result == PR_TRUE)
+  nsresult rv = nsHTMLContainer::ReplaceChildAt(aKid, aIndex, aNotify);
+  if (NS_OK == rv)
   {
     SetTableForTableContent(child,nsnull);
     SetTableForTableContent(aKid,mTable);
   }
   NS_IF_RELEASE(child);
-  return result;
+
+  return rv;
 }
 
-PRBool nsTableContent::AppendChild(nsIContent* aKid)
+NS_IMETHODIMP
+nsTableContent::AppendChild(nsIContent* aKid, PRBool aNotify)
 { 
-  PRBool  result = nsHTMLContainer::AppendChild(aKid);
-  if (result == PR_TRUE)
+  nsresult rv = nsHTMLContainer::AppendChild(aKid, aNotify);
+  if (NS_OK == rv)
     SetTableForTableContent(aKid,mTable);
-  return result;
+  return rv;
 }
 
-PRBool nsTableContent::RemoveChildAt(PRInt32 aIndex)
+NS_IMETHODIMP
+nsTableContent::RemoveChildAt(PRInt32 aIndex, PRBool aNotify)
 { 
   nsTableContent* child = (nsTableContent*)ChildAt(aIndex);
-  PRBool result = nsHTMLContainer::RemoveChildAt(aIndex); 
-  if (result == PR_TRUE)
+  nsresult rv = nsHTMLContainer::RemoveChildAt(aIndex, aNotify);
+  if (NS_OK == rv)
     SetTableForTableContent(child,nsnull);
+
   NS_IF_RELEASE(child);
-  return result; 
+  return rv;
 }
 
 /* ---------- nsITableContent implementations ----------- */
