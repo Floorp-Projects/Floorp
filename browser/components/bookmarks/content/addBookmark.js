@@ -248,12 +248,12 @@ function onOK()
       const groups  = window.arguments[5];
       for (var i = 0; i < groups.length; ++i) {
         url = getNormalizedURL(groups[i].url);
-        BMDS.createBookmarkInContainer(groups[i].name, url,
+        BMDS.createBookmarkInContainer(groups[i].name, url, null, null,
                                        groups[i].charset, rSource, -1);
       }
     } else {
       url = getNormalizedURL(gFld_URL.value);
-      rSource = BMDS.createBookmark(gFld_Name.value, url, gBookmarkCharset);
+      rSource = BMDS.createBookmark(gFld_Name.value, url, null, null, gBookmarkCharset);
       if (window.arguments.length > 4 && window.arguments[4] == "newBookmark") {
         window.arguments[5].newBookmark = rSource;
       }
