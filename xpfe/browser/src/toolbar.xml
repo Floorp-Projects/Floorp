@@ -1,6 +1,5 @@
 <?xml version="1.0"?> 
 <?xml-stylesheet href="xul.css" type="text/css"?> 
-<window xmlns:xul ="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"> 
 <!DOCTYPE window> 
 
 <window>
@@ -29,8 +28,6 @@
 
   </xul:menubar>
   
-  <xul:toolbox>
-  
     <xul:toolbar>
           <html:button cmd="nsCmd:BrowserBack" style="background-color:rgb(192,192,192);">
                           <html:img src="resource:/res/toolbar/TB_Back.gif"/><html:BR/>Back
@@ -56,7 +53,5 @@
           </html:a>
     </xul:toolbar>
     
-  </xul:toolbox>
-
 </window>
 
