@@ -30,6 +30,7 @@
 class nsIMenu;
 class nsIPopUpMenu;
 class nsIWidget;
+class nsIMenuListener;
 
 /**
  * MenuItem widget
@@ -83,6 +84,18 @@ class nsIMenuItem : public nsISupports {
     *
     */
     NS_IMETHOD GetNativeData(void*& aData) = 0;
+
+   /**
+    * Adds menu listener
+    *
+    */
+    NS_IMETHOD AddMenuListener(nsIMenuListener * aMenuListener) = 0;
+
+   /**
+    * Removes menu listener
+    *
+    */
+    NS_IMETHOD RemoveMenuListener(nsIMenuListener * aMenuListener) = 0;
 
 };
 
