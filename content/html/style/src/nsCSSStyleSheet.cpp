@@ -877,6 +877,67 @@ nsresult CSSStyleSheetImpl::QueryInterface(const nsIID& aIID,
   return NS_NOINTERFACE;
 }
 
+static const PRUnichar kNullCh = PRUnichar('\0');
+
+static PRBool ValueIncludes(const nsString& aValueList, const nsString& aValue)
+{
+  nsAutoString  valueList(aValueList);
+
+  valueList.Append(kNullCh);  // put an extra null at the end
+
+  PRUnichar* start = (PRUnichar*)valueList;
+  PRUnichar* end   = start;
+
+  while (kNullCh != *start) {
+    while ((kNullCh != *start) && nsString::IsSpace(*start)) {  // skip leading space
+      start++;
+    }
+    end = start;
+
+    while ((kNullCh != *end) && (PR_FALSE == nsString::IsSpace(*end))) { // look for space or end
+      end++;
+    }
+    *end = kNullCh; // end string here
+
+    if ((start < end) && (aValue == start)) {
+      return PR_TRUE;
+    }
+
+    start = ++end;
+  }
+  return PR_FALSE;
+}
+
+static const PRUnichar kDashCh = PRUnichar('-');
+
+static PRBool ValueDashMatch(const nsString& aValueList, const nsString& aValue)
+{
+  nsAutoString  valueList(aValueList);
+
+  valueList.Append(kNullCh);  // put an extra null at the end
+
+  PRUnichar* start = (PRUnichar*)valueList;
+  PRUnichar* end   = start;
+
+  if (kNullCh != *start) {
+    while ((kNullCh != *start) && nsString::IsSpace(*start)) {  // skip leading space
+      start++;
+    }
+    end = start;
+
+    while ((kNullCh != *end) && (kDashCh != *end)) { // look for dash or end
+      end++;
+    }
+    *end = kNullCh; // end string here
+
+    if ((start < end) && (aValue == start)) {
+      return PR_TRUE;
+    }
+  }
+  return PR_FALSE;
+}
+
+
 static PRBool SelectorMatches(nsIPresContext* aPresContext,
                               nsCSSSelector* aSelector, nsIContent* aContent)
 {
@@ -891,6 +952,40 @@ static PRBool SelectorMatches(nsIPresContext* aPresContext,
     result = PR_TRUE;
     // namespace/tag match
     if (nsnull != aSelector->mAttrList) { // test for attribute match
+      nsAttrSelector* attr = aSelector->mAttrList;
+      do {
+        nsAutoString  value;
+        nsresult  attrState = aContent->GetAttribute(kNameSpaceID_Unknown, attr->mAttr, value);
+        if (NS_CONTENT_ATTR_NOT_THERE == attrState) {
+          result = PR_FALSE;
+        }
+        else {
+          switch (attr->mFunction) {
+            case NS_ATTR_FUNC_SET:    break;
+            case NS_ATTR_FUNC_EQUALS: 
+              if (attr->mCaseSensative) {
+                result = value.Equals(attr->mValue);
+              }
+              else {
+                result = value.EqualsIgnoreCase(attr->mValue);
+              }
+              break;
+            case NS_ATTR_FUNC_INCLUDES: 
+              if (PR_FALSE == attr->mCaseSensative) {
+                value.ToUpperCase();
+              }
+              result = ValueIncludes(value, attr->mValue);
+              break;
+            case NS_ATTR_FUNC_DASHMATCH: 
+              if (PR_FALSE == attr->mCaseSensative) {
+                value.ToUpperCase();
+              }
+              result = ValueDashMatch(value, attr->mValue);
+              break;
+          }
+        }
+        attr = attr->mNext;
+      } while ((PR_TRUE == result) && (nsnull != attr));
     }
     if ((PR_TRUE == result) &&
         ((nsnull != aSelector->mID) || (nsnull != aSelector->mClassList))) {  // test for ID & class match
@@ -900,13 +995,15 @@ static PRBool SelectorMatches(nsIPresContext* aPresContext,
         nsIAtom* contentID;
         htmlContent->GetID(contentID);
         if ((nsnull == aSelector->mID) || (aSelector->mID == contentID)) {
-          nsIAtom* contentClass;
-          htmlContent->GetClass(contentClass);
-          // XXX only testing for frist class right now
-          if ((nsnull == aSelector->mClassList) || (aSelector->mClassList->mAtom == contentClass)) {
-            result = PR_TRUE;
+          result = PR_TRUE;
+          nsAtomList* classList = aSelector->mClassList;
+          while (nsnull != classList) {
+            if (NS_COMFALSE == htmlContent->HasClass(classList->mAtom)) {
+              result = PR_FALSE;
+              break;
+            }
+            classList = classList->mNext;
           }
-          NS_IF_RELEASE(contentClass);
         }
         NS_RELEASE(htmlContent);
         NS_IF_RELEASE(contentID);
@@ -924,7 +1021,7 @@ static PRBool SelectorMatches(nsIPresContext* aPresContext,
         if ((NS_OK == aPresContext->GetLinkHandler(&linkHandler)) &&
             (nsnull != linkHandler)) {
           nsAutoString base, href;  // XXX base??
-          nsresult attrState = aContent->GetAttribute("href", href);
+          nsresult attrState = aContent->GetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::href, href);
 
           if (NS_CONTENT_ATTR_HAS_VALUE == attrState) {
             nsIURL* docURL = nsnull;
@@ -1081,21 +1178,15 @@ PRInt32 CSSStyleSheetImpl::RulesMatching(nsIPresContext* aPresContext,
     nsIAtom* tagAtom;
     aContent->GetTag(tagAtom);
     nsIAtom* idAtom = nsnull;
-    nsIAtom* classAtom = nsnull;
+    nsVoidArray classArray; // XXX need to recycle this guy (or make nsAutoVoidArray?)
 
     nsIHTMLContent* htmlContent;
     if (NS_OK == aContent->QueryInterface(kIHTMLContentIID, (void**)&htmlContent)) {
       htmlContent->GetID(idAtom);
-      htmlContent->GetClass(classAtom);
+      htmlContent->GetClasses(classArray);
       NS_RELEASE(htmlContent);
     }
 
-    nsVoidArray classArray; // XXX need to recycle this guy
-
-    if (nsnull != classAtom) {
-      classArray.AppendElement(classAtom);
-    }
-    // XXX need to handle multiple classes
     mRuleHash->EnumerateAllRules(tagAtom, idAtom, classArray, ContentEnumFunc, &data);
     matchCount += data.mCount;
 
@@ -1116,7 +1207,6 @@ PRInt32 CSSStyleSheetImpl::RulesMatching(nsIPresContext* aPresContext,
 
     NS_IF_RELEASE(tagAtom);
     NS_IF_RELEASE(idAtom);
-    NS_IF_RELEASE(classAtom);
   }
   NS_IF_RELEASE(presMedium);
   return matchCount;
