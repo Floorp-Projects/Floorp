@@ -506,6 +506,7 @@ public:
     DynamicInstance(JS2Class *type);
 
     JS2Class    *type;          // This instance's type
+    FunctionWrapper *fWrap;
     Invokable   *call;          // A procedure to call when this instance is used in a call expression
     Invokable   *construct;     // A procedure to call when this instance is used in a new expression
     Environment *env;           // The environment to pass to the call or construct procedure

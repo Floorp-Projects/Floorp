@@ -47,7 +47,12 @@
                 push(a);
             }
             else {
-                if (obj->kind == FixedInstanceKind) {
+                if ((obj->kind == FixedInstanceKind) || (obj->kind == DynamicInstanceKind)) {
+                    FunctionWrapper *fWrap;
+                    if (obj->kind == FixedInstanceKind)
+                        fWrap = (checked_cast<FixedInstance *>(obj))->fWrap;
+                    else
+                        fWrap = (checked_cast<DynamicInstance *>(obj))->fWrap;
                     // XXX 
                     js2val protoVal;
                     JS2Object *protoObj = meta->objectClass->prototype;
@@ -59,8 +64,6 @@
                         protoObj = JS2VAL_TO_OBJECT(protoVal);
                     }
 
-                    FixedInstance *fInst = checked_cast<FixedInstance *>(obj);
-                    FunctionWrapper *fWrap = fInst->fWrap;
                     ParameterFrame *runtimeFrame = new ParameterFrame(fWrap->compileFrame);
                     runtimeFrame->instantiate(&meta->env);
                     PrototypeInstance *pInst = new PrototypeInstance(protoObj, meta->objectClass);

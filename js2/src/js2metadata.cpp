@@ -406,10 +406,10 @@ namespace MetaData {
                         && (f->attributes == NULL)) {
                     HoistedVar *v = defineHoistedVar(env, f->function.name, p);
                     // XXX Here ths spec. has ???, so the following is tentative
-                    FixedInstance *fInst = new FixedInstance(functionClass);
-                    fInst->fWrap = new FunctionWrapper(unchecked, compileFrame);
-                    f->fWrap = fInst->fWrap;
-                    v->value = OBJECT_TO_JS2VAL(fInst);
+                    DynamicInstance *dInst = new DynamicInstance(functionClass);
+                    dInst->fWrap = new FunctionWrapper(unchecked, compileFrame);
+                    f->fWrap = dInst->fWrap;
+                    v->value = OBJECT_TO_JS2VAL(dInst);
                 }
                 else {
                     FixedInstance *fInst = new FixedInstance(functionClass);
@@ -3461,6 +3461,7 @@ deleteClassProperty:
     DynamicInstance::DynamicInstance(JS2Class *type) 
         : JS2Object(DynamicInstanceKind), 
             type(type), 
+            fWrap(NULL),
             call(NULL), 
             construct(NULL), 
             env(NULL), 
@@ -3476,6 +3477,11 @@ deleteClassProperty:
     void DynamicInstance::markChildren()
     {
         GCMARKOBJECT(type)
+        if (fWrap) {
+            GCMARKOBJECT(fWrap->compileFrame);
+            if (fWrap->bCon)
+                fWrap->bCon->mark();
+        }
         if (slots) {
             ASSERT(type);
             for (uint32 i = 0; (i < type->slotCount); i++) {
