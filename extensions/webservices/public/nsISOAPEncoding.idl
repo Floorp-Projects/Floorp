@@ -180,6 +180,61 @@ interface nsISOAPEncoding:nsISupports {
   nsIVariant decode(in nsIDOMElement aSource,
 		    in nsISchemaType aSchemaType,
 		    in nsISOAPAttachments aAttachments);
+/**
+ * Map an external schema URI to an internal one.  In an
+ * ideal world, we don't need this, but schemas change URIs,
+ * and we wind up with inconsistencies between WSDL and
+ * exchanged documents.  The external URI must not be
+ * currently mapped and if output mapping is true, then
+ * the internal URI must be unique for output mapping.
+ *
+ * @param aExternalURI the external URI to be mapped.
+ *
+ * @param aInternalURI the internal URI to be mapped.
+ *
+ * @param aOutput If true, then re-map to the output
+ *   URI when outputting.
+ *
+ * @return boolean true if succeeded, false if the
+ *   mapping was not unique as required.
+ */
+  boolean mapSchemaURI(in AString aExternalURI,
+                    in AString aInternalURI,
+                    in boolean aOutput);
+
+/**
+ * Unmap an external schema URI as mapped by
+ * mapSchemaURI.
+ *
+ * @param aExternalURI the external URI to be mapped.
+ *
+ * @return boolean true if succeeded, false if the
+ *   mapping did not exist.
+ */
+  boolean unmapSchemaURI(in AString aExternalURI);
+
+/**
+ * Get an internal schema URI from an external one.
+ *
+ * @param aExternalURI the external URI which may
+ *   have been mapped.
+ *
+ * @return The corresponding internal URI (the
+ *   original is returned if it has not been mapped).
+ */
+  AString getInternalSchemaURI(in AString aExternalURI);
+
+/**
+ * Get an external schema URI from an internal one.
+ *
+ * @param aExternalURI the external URI which may
+ *   have been mapped.
+ *
+ * @return The corresponding internal URI (the
+ *   original is returned if it has not been mapped).
+ */
+  AString getExternalSchemaURI(in AString aInternalURI);
+
 };
 
 %{C++

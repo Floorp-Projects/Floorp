@@ -55,6 +55,13 @@ NS_IMETHODIMP nsSOAPBlock::GetNamespaceURI(nsAString & aNamespaceURI)
 {
   NS_ENSURE_ARG_POINTER(&aNamespaceURI);
   if (mElement) {
+    if (mEncoding) {
+      nsAutoString temp;
+      nsresult rc = mElement->GetNamespaceURI(temp);
+      if (NS_FAILED(rc))
+        return rc;
+      return mEncoding->GetInternalSchemaURI(temp, aNamespaceURI);
+    }
     return mElement->GetNamespaceURI(aNamespaceURI);
   } else {
     aNamespaceURI.Assign(mNamespaceURI);

@@ -28,6 +28,8 @@ include $(DEPTH)/config/autoconf.mk
 
 MODULE		= wsproxytest
 LIBRARY_NAME	= wsproxytest
+EXPORT_LIBRARY = 1
+XPIDL_MODULE	= wsproxytest
 IS_COMPONENT	= 1
 MODULE_NAME	= WSPProxyTestModule
 
@@ -41,8 +43,9 @@ REQUIRES = xpcom \
 	   dom \
 	   $(NULL)
 
-XPIDLSRCS = .\nsIWSPProxyTest.idl \
-	    $(NULL)
+XPIDLSRCS       = \
+		nsIWSPProxyTest.idl \
+	        $(NULL)
 
 CPPSRCS		= \
 		wspproxytest.cpp \

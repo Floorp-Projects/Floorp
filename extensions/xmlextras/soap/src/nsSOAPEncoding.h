@@ -48,7 +48,6 @@ protected:
 class nsSOAPEncoding:public nsISOAPEncoding {
 public:
   NS_DECL_ISUPPORTS NS_DECL_NSISOAPENCODING nsSOAPEncoding();
-  nsSOAPEncoding(PRUint16 aVersion);
   nsSOAPEncoding(const nsAString & aStyleURI,
 		 nsSOAPEncodingRegistry * aRegistry,
 		 nsISOAPEncoding * aDefaultEncoding);
@@ -59,9 +58,11 @@ protected:
   nsString mStyleURI;
   nsSupportsHashtable *mEncoders;
   nsSupportsHashtable *mDecoders;
-   nsCOMPtr < nsISOAPEncoding > mRegistry;
-   nsCOMPtr < nsISOAPEncoding > mDefaultEncoding;
-   nsCOMPtr < nsISOAPEncoder > mDefaultEncoder;
-   nsCOMPtr < nsISOAPDecoder > mDefaultDecoder;
+  nsCOMPtr < nsISOAPEncoding > mRegistry;
+  nsCOMPtr < nsISOAPEncoding > mDefaultEncoding;
+  nsCOMPtr < nsISOAPEncoder > mDefaultEncoder;
+  nsCOMPtr < nsISOAPDecoder > mDefaultDecoder;
+  nsSupportsHashtable *mMappedInternal;
+  nsSupportsHashtable *mMappedExternal;
 };
 #endif

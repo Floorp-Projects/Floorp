@@ -453,7 +453,7 @@ WSPProxyTest::TestIsPrimeProxy(nsIWSPProxyTestListener* aListener)
     return NS_OK;
   }
   
-#define ISPRIMEURL "http://green.nscp.aoltw.net/vidur/wsdl/statistics.wsdl"
+#define ISPRIMEURL "http://ray.dsl.xmission.com:8080/wsdl/statistics.wsdl"
 #define ISPRIMEPORT "SpheonJSAOPStatisticsPort"
   nsresult rv = loader->LoadAsync(NS_LITERAL_STRING(ISPRIMEURL),
                                   NS_LITERAL_STRING(ISPRIMEPORT),

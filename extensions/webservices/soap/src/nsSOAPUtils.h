@@ -25,14 +25,17 @@
 
 #include "nsString.h"
 #include "nsIDOMElement.h"
+#include "nsISOAPEncoding.h"
 
 class nsSOAPUtils {
 public:
-  static void GetSpecificChildElement(nsIDOMElement * aParent,
+  static void GetSpecificChildElement(nsISOAPEncoding * aEncoding,
+                                      nsIDOMElement * aParent,
 				      const nsAString & aNamespace,
 				      const nsAString & aType,
 				      nsIDOMElement * *aElement);
-  static void GetSpecificSiblingElement(nsIDOMElement * aSibling,
+  static void GetSpecificSiblingElement(nsISOAPEncoding * aEncoding,
+                                        nsIDOMElement * aSibling,
 					const nsAString & aNamespace,
 					const nsAString & aType,
 					nsIDOMElement * *aElement);
@@ -45,14 +48,22 @@ public:
   static PRBool HasChildElements(nsIDOMElement * aElement);
 
   static void GetNextSibling(nsIDOMNode * aSibling, nsIDOMNode ** aNext);
-  static nsresult MakeNamespacePrefix(nsIDOMElement * aElement,
+  static nsresult MakeNamespacePrefix(nsISOAPEncoding *aEncoding,
+                                      nsIDOMElement * aElement,
 				      const nsAString & aURI,
 				      nsAString & aPrefix);
-  static nsresult GetNamespaceURI(nsIDOMElement * aElement,
+  static nsresult GetNamespaceURI(nsISOAPEncoding *aEncoding,
+                                  nsIDOMElement * aElement,
 				  const nsAString & aQName,
 				  nsAString & aURI);
   static nsresult GetLocalName(const nsAString & aQName,
 			       nsAString & aLocalName);
+
+  static PRBool GetAttribute(nsISOAPEncoding *aEncoding,
+                                  nsIDOMElement * aElement,
+				  const nsAString & aNamespaceURI,
+				  const nsAString & aLocalName,
+				  nsAString & aValue);
 
 // All those missing string functions have to come from somewhere...
 
@@ -60,9 +71,11 @@ public:
 
   static const nsAString *kSOAPEnvURI[];
   static const nsAString *kSOAPEncURI[];
-  static const nsAString *kXSIURI[];
-  static const nsAString *kXSURI[];
 
+  static const nsAString & kXSIURI;
+  static const nsAString & kXSURI;
+  static const nsAString & kXSIURI1999;
+  static const nsAString & kXSURI1999;
   static const nsAString & kSOAPEnvPrefix;
   static const nsAString & kSOAPEncPrefix;
   static const nsAString & kXSIPrefix;

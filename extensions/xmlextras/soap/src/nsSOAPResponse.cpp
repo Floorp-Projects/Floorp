@@ -63,7 +63,7 @@ NS_IMETHODIMP nsSOAPResponse::GetFault(nsISOAPFault * *aFault)
       return rc;
     if (rc != nsSOAPMessage::VERSION_UNKNOWN) {
       nsCOMPtr < nsIDOMElement > fault;
-      nsSOAPUtils::GetSpecificChildElement(body,
+      nsSOAPUtils::GetSpecificChildElement(nsnull, body,
 					   *nsSOAPUtils::
 					   kSOAPEnvURI[version],
 					   nsSOAPUtils::kFaultTagName,
