@@ -24,6 +24,7 @@
 #                 Byron Jones <bugzilla@glob.com.au>
 #                 Shane H. W. Travis <travis@sedsystems.ca>
 #                 Max Kanat-Alexander <mkanat@kerio.com>
+#                 Gervase Markham <gerv@gerv.net>
 
 ################################################################################
 # Module Initialization
@@ -41,6 +42,7 @@ use Bugzilla::Util;
 use Bugzilla::Constants;
 use Bugzilla::User::Setting;
 use Bugzilla::Auth;
+use Bugzilla::BugMail;
 
 use base qw(Exporter);
 @Bugzilla::User::EXPORT = qw(insert_new_user is_available_username
@@ -111,7 +113,7 @@ sub _create {
                                                        realname,
                                                        disabledtext,
                                                        mybugslink
-                                                  FROM profiles
+                                                 FROM profiles
                                                  WHERE $cond},
                                              undef,
                                              $val);
@@ -892,60 +894,146 @@ sub match_field {
 
 }
 
-sub email_prefs {
-    # Get or set (not implemented) the user's email notification preferences.
-    
+# Changes in some fields automatically trigger events. The 'field names' are
+# from the fielddefs table. We really should be using proper field names 
+# throughout.
+our %names_to_events = (
+    'Resolution'             => EVT_OPENED_CLOSED,
+    'Keywords'               => EVT_KEYWORD,
+    'CC'                     => EVT_CC,
+    'Severity'               => EVT_PROJ_MANAGEMENT,
+    'Priority'               => EVT_PROJ_MANAGEMENT,
+    'Status'                 => EVT_PROJ_MANAGEMENT,
+    'Target Milestone'       => EVT_PROJ_MANAGEMENT,
+    'Attachment description' => EVT_ATTACHMENT_DATA,
+    'Attachment mime type'   => EVT_ATTACHMENT_DATA,
+    'Attachment is patch'    => EVT_ATTACHMENT_DATA);
+
+# Returns true if the user wants mail for a given bug change.
+# Note: the "+" signs before the constants suppress bareword quoting.
+sub wants_bug_mail {
     my $self = shift;
-    return {} unless $self->id;
-    
-    # If the calling code is setting the email preferences, update the object
-    # but don't do anything else.  This needs to write email preferences back
-    # to the database.
-    if (@_) { $self->{email_prefs} = shift; return; }
-    
-    # If we already got them from the database, return the existing values.
-    return $self->{email_prefs} if $self->{email_prefs};
-    
-    # Retrieve the values from the database.
-    &::SendSQL("SELECT emailflags FROM profiles WHERE userid = $self->{id}");
-    my ($flags) = &::FetchSQLData();
+    my ($bug_id, $relationship, $fieldDiffs, $commentField, $changer) = @_;
 
-    my @roles = qw(Owner Reporter QAcontact CClist Voter);
-    my @reasons = qw(Removeme Comments Attachments Status Resolved Keywords 
-                     CC Other Unconfirmed);
+    # Don't send any mail, ever, if account is disabled 
+    # XXX Temporary Compatibility Change 1 of 2:
+    # This code is disabled for the moment to make the behaviour like the old
+    # system, which sent bugmail to disabled accounts.
+    # return 0 if $self->{'disabledtext'};
+    
+    # Make a list of the events which have happened during this bug change,
+    # from the point of view of this user.    
+    my %events;    
+    foreach my $ref (@$fieldDiffs) {
+        my ($who, $fieldName, $when, $old, $new) = @$ref;
+        # A change to any of the above fields sets the corresponding event
+        if (defined($names_to_events{$fieldName})) {
+            $events{$names_to_events{$fieldName}} = 1;
+        }
+        else {
+            # Catch-all for any change not caught by a more specific event
+            # XXX: Temporary Compatibility Change 2 of 2:
+            # This code is disabled, and replaced with the code a few lines
+            # below, in order to make the behaviour more like the original, 
+            # which only added this event if _all_ changes were of "other" type.
+            # $events{+EVT_OTHER} = 1;            
+        }
 
-    # Convert the prefs from the flags string from the database into
-    # a Perl record.  The 255 param is here because split will trim 
-    # any trailing null fields without a third param, which causes Perl 
-    # to eject lots of warnings. Any suitably large number would do.
-    my $prefs = { split(/~/, $flags, 255) };
-    
-    # Determine the value of the "excludeself" global email preference.
-    # Note that the value of "excludeself" is assumed to be off if the
-    # preference does not exist in the user's list, unlike other 
-    # preferences whose value is assumed to be on if they do not exist.
-    $prefs->{ExcludeSelf} = 
-      exists($prefs->{ExcludeSelf}) && $prefs->{ExcludeSelf} eq "on";
-    
-    # Determine the value of the global request preferences.
-    foreach my $pref (qw(FlagRequestee FlagRequester)) {
-        $prefs->{$pref} = !exists($prefs->{$pref}) || $prefs->{$pref} eq "on";
-    }
-    
-    # Determine the value of the rest of the preferences by looping over
-    # all roles and reasons and converting their values to Perl booleans.
-    foreach my $role (@roles) {
-        foreach my $reason (@reasons) {
-            my $key = "email$role$reason";
-            $prefs->{$key} = !exists($prefs->{$key}) || $prefs->{$key} eq "on";
+        # If the user is in a particular role and the value of that role
+        # changed, we need the ADDED_REMOVED event.
+        if (($fieldName eq "AssignedTo" && $relationship == REL_ASSIGNEE) ||
+            ($fieldName eq "QAContact" && $relationship == REL_QA)) 
+        {
+            $events{+EVT_ADDED_REMOVED} = 1;
+        }
+        
+        if ($fieldName eq "CC") {
+            my $login = $self->login;
+            my $inold = ($old =~ /^(.*,)?\Q$login\E(,.*)?$/);
+            my $innew = ($new =~ /^(.*,)?\Q$login\E(,.*)?$/);
+            if ($inold != $innew)
+            {
+                $events{+EVT_ADDED_REMOVED} = 1;
+            }
         }
     }
 
-    $self->{email_prefs} = $prefs;
+    if ($commentField =~ /Created an attachment \(/) {
+        $events{+EVT_ATTACHMENT} = 1;
+    }
+    elsif ($commentField ne '') {
+        $events{+EVT_COMMENT} = 1;
+    }
     
-    return $self->{email_prefs};
+    my @event_list = keys %events;
+    
+    # XXX Temporary Compatibility Change 2 of 2:
+    # See above comment.
+    if (!scalar(@event_list)) {
+      @event_list = (EVT_OTHER);
+    }
+    
+    my $wants_mail = $self->wants_mail(\@event_list, $relationship);
+
+    # The negative events are handled separately - they can't be incorporated
+    # into the first wants_mail call, because they are of the opposite sense.
+    # 
+    # We do them separately because if _any_ of them are set, we don't want
+    # the mail.
+    if ($wants_mail && $changer && ($self->{'login'} eq $changer)) {
+        $wants_mail &= $self->wants_mail([EVT_CHANGED_BY_ME], $relationship);
+    }    
+    
+    if ($wants_mail) {
+        my $dbh = Bugzilla->dbh;
+        # We don't create a Bug object from the bug_id here because we only
+        # need one piece of information, and doing so (as of 2004-11-23) slows
+        # down bugmail sending by a factor of 2. If Bug creation was more
+        # lazy, this might not be so bad.
+        my $bug_status = $dbh->selectrow_array("SELECT bug_status 
+                                                FROM bugs 
+                                                WHERE bug_id = $bug_id"); 
+         
+        if ($bug_status eq "UNCONFIRMED") {
+            $wants_mail &= $self->wants_mail([EVT_UNCONFIRMED], $relationship);
+        }
+    }
+    
+    return $wants_mail;
 }
 
+# Returns true if the user wants mail for a given set of events.
+sub wants_mail {
+    my $self = shift;
+    my ($events, $relationship) = @_;
+    
+    # Don't send any mail, ever, if account is disabled 
+    # XXX Temporary Compatibility Change 1 of 2:
+    # This code is disabled for the moment to make the behaviour like the old
+    # system, which sent bugmail to disabled accounts.
+    # return 0 if $self->{'disabledtext'};
+    
+    # No mail if there are no events
+    return 0 if !scalar(@$events);
+    
+    my $dbh = Bugzilla->dbh;
+    
+    # If a relationship isn't given, default to REL_ANY.
+    if (!defined($relationship)) {
+        $relationship = REL_ANY;
+    }
+    
+    my $wants_mail = 
+        $dbh->selectrow_array("SELECT * 
+                              FROM email_setting
+                              WHERE user_id = $self->{'id'}
+                              AND relationship = $relationship 
+                              AND event IN (" . join(",", @$events) . ") 
+                              LIMIT 1");
+    
+    return($wants_mail);
+}
+  
 sub get_userlist {
     my $self = shift;
 
@@ -1003,13 +1091,28 @@ sub insert_new_user ($$;$$) {
 
     # Insert the new user record into the database.
     $dbh->do("INSERT INTO profiles 
-                          (login_name, realname, cryptpassword, emailflags,
-                           disabledtext) 
-                   VALUES (?, ?, ?, ?, ?)",
+                          (login_name, realname, cryptpassword, disabledtext) 
+                   VALUES (?, ?, ?, ?)",
              undef, 
-             ($username, $realname, $cryptpassword, DEFAULT_EMAIL_SETTINGS,
-              $disabledtext));
+             ($username, $realname, $cryptpassword, $disabledtext));
 
+    # Turn on all email for the new user
+    my $userid = $dbh->bz_last_key('profiles', 'userid');
+
+    foreach my $rel (RELATIONSHIPS) {
+        foreach my $event (POS_EVENTS, NEG_EVENTS) {
+            $dbh->do("INSERT INTO email_setting " . 
+                     "(user_id, relationship, event) " . 
+                     "VALUES ($userid, $rel, $event)");
+        }        
+    }
+
+    foreach my $event (GLOBAL_EVENTS) {
+        $dbh->do("INSERT INTO email_setting " . 
+                 "(user_id, relationship, event) " . 
+                 "VALUES ($userid, " . REL_ANY . ", $event)");
+    }
+    
     # Return the password to the calling code so it can be included
     # in an email sent to the user.
     return $password;
@@ -1303,6 +1406,16 @@ will be set to the specified value.
 
 C<get_flag> is called with a single key name, which returns the associated
 value.
+
+=item C<wants_bug_mail>
+
+Returns true if the user wants mail for a given bug change.
+
+=item C<wants_mail>
+
+Returns true if the user wants mail for a given set of events. This method is
+more general than C<wants_bug_mail>, allowing you to check e.g. permissions
+for flag mail.
 
 =back
 

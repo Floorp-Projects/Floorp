@@ -72,6 +72,7 @@ use Bugzilla::Util;
 use Bugzilla::Error;
 use Bugzilla::Attachment;
 use Bugzilla::BugMail;
+use Bugzilla::Constants;
 
 use constant TABLES_ALREADY_LOCKED => 1;
 
@@ -482,7 +483,7 @@ sub create {
     
     # Send an email notifying the relevant parties about the flag creation.
     if (($flag->{'requestee'} 
-         && $flag->{'requestee'}->email_prefs->{'FlagRequestee'})
+         && $flag->{'requestee'}->wants_mail([EVT_FLAG_REQUESTED]))
          || $flag->{'type'}->{'cc_list'})
     {
         notify($flag, "request/email.txt.tmpl");
@@ -590,7 +591,7 @@ sub modify {
                         WHERE  id = $flag->{'id'}");
             
             # Send an email notifying the relevant parties about the fulfillment.
-            if ($flag->{'setter'}->email_prefs->{'FlagRequester'} 
+            if ($flag->{'setter'}->wants_mail([EVT_REQUESTED_FLAG]) 
                 || $flag->{'type'}->{'cc_list'})
             {
                 $flag->{'status'} = $status;
@@ -616,7 +617,7 @@ sub modify {
             
             # Send an email notifying the relevant parties about the request.
             if ($flag->{'requestee'} 
-                && ($flag->{'requestee'}->email_prefs->{'FlagRequestee'} 
+                && ($flag->{'requestee'}->wants_mail([EVT_FLAG_REQUESTED]) 
                     || $flag->{'type'}->{'cc_list'}))
             {
                 notify($flag, "request/email.txt.tmpl");

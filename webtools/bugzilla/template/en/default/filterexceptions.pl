@@ -645,9 +645,9 @@
 ],
 
 'account/prefs/email.html.tmpl' => [
-  'role', 
-  'reason.name', 
-  'reason.description',
+  'relationship.id',
+  'event.id',
+  'prefname',
 ],
 
 'account/prefs/permissions.html.tmpl' => [

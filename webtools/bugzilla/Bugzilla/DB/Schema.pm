@@ -584,7 +584,6 @@ use constant ABSTRACT_SCHEMA => {
             disabledtext   => {TYPE => 'MEDIUMTEXT', NOTNULL => 1},
             mybugslink     => {TYPE => 'BOOLEAN', NOTNULL => 1,
                                DEFAULT => 'TRUE'},
-            emailflags     => {TYPE => 'MEDIUMTEXT'},
             refreshed_when => {TYPE => 'DATETIME', NOTNULL => 1},
             extern_id      => {TYPE => 'varchar(64)'},
         ],
@@ -607,6 +606,20 @@ use constant ABSTRACT_SCHEMA => {
             profiles_activity_userid_idx  => ['userid'],
             profiles_activity_when_idx    => ['profiles_when'],
             profiles_activity_fieldid_idx => ['fieldid'],
+        ],
+    },
+
+    email_setting => {
+        FIELDS => [
+            user_id      => {TYPE => 'INT3', NOTNULL => 1},
+            relationship => {TYPE => 'INT1', NOTNULL => 1},
+            event        => {TYPE => 'INT1', NOTNULL => 1},
+        ],
+        INDEXES => [
+            email_settings_user_id_idx => ['user_id'],
+            email_settings_unique_idx  =>
+                                    {FIELDS => [qw(user_id relationship event)],
+                                     TYPE => 'UNIQUE'},
         ],
     },
 

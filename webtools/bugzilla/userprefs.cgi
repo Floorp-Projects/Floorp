@@ -37,10 +37,6 @@ require "CGI.pl";
 # Use global template variables.
 use vars qw($template $vars $userid);
 
-my @roles = ("Owner", "Reporter", "QAcontact", "CClist", "Voter");
-my @reasons = ("Removeme", "Comments", "Attachments", "Status", "Resolved", 
-               "Keywords", "CC", "Other", "Unconfirmed");
-
 ###############################################################################
 # Each panel has two functions - panel Foo has a DoFoo, to get the data 
 # necessary for displaying the panel, and a SaveFoo, to save the panel's 
@@ -175,7 +171,10 @@ sub SaveSettings {
 
 sub DoEmail {
     my $dbh = Bugzilla->dbh;
-
+    
+    ###########################################################################
+    # User watching
+    ###########################################################################
     if (Param("supportwatchers")) {
         my $watched_ref = $dbh->selectcol_arrayref(
             "SELECT profiles.login_name FROM watch, profiles"
@@ -197,81 +196,74 @@ sub DoEmail {
         $vars->{'watchers'} = \@watchers;
     }
 
-    SendSQL("SELECT emailflags FROM profiles WHERE userid = $userid");
+    ###########################################################################
+    # Role-based preferences
+    ###########################################################################
+    my $sth = Bugzilla->dbh->prepare("SELECT relationship, event " . 
+                                     "FROM email_setting " . 
+                                     "WHERE user_id = $userid");
+    $sth->execute();
 
-    my ($flagstring) = FetchSQLData();
+    my %mail;
+    while (my ($relationship, $event) = $sth->fetchrow_array()) {
+        $mail{$relationship}{$event} = 1;
+    }
 
-    # The 255 param is here, because without a third param, split will
-    # trim any trailing null fields, which causes Perl to eject lots of
-    # warnings. Any suitably large number would do.
-    my %emailflags = split(/~/, $flagstring, 255);
-
-    # Determine the value of the "excludeself" global email preference.
-    # Note that the value of "excludeself" is assumed to be off if the
-    # preference does not exist in the user's list, unlike other 
-    # preferences whose value is assumed to be on if they do not exist.
-    if (exists($emailflags{'ExcludeSelf'}) 
-        && $emailflags{'ExcludeSelf'} eq 'on')
-    {
-        $vars->{'excludeself'} = 1;
-    }
-    else {
-        $vars->{'excludeself'} = 0;
-    }
-    
-    foreach my $flag (qw(FlagRequestee FlagRequester)) {
-        $vars->{$flag} = 
-          !exists($emailflags{$flag}) || $emailflags{$flag} eq 'on';
-    }
-    
-    # Parse the info into a hash of hashes; the first hash keyed by role,
-    # the second by reason, and the value being 1 or 0 for (on or off).
-    # Preferences not existing in the user's list are assumed to be on.
-    foreach my $role (@roles) {
-        $vars->{$role} = {};
-        foreach my $reason (@reasons) {
-            my $key = "email$role$reason";
-            if (!exists($emailflags{$key}) || $emailflags{$key} eq 'on') {
-                $vars->{$role}{$reason} = 1;
-            }
-            else {
-                $vars->{$role}{$reason} = 0;
-            }
-        }
-    }
+    $vars->{'mail'} = \%mail;      
 }
 
-# Note: we no longer store "off" values in the database.
 sub SaveEmail {
-    my $updateString = "";
-    my $cgi = Bugzilla->cgi;
     my $dbh = Bugzilla->dbh;
+    my $cgi = Bugzilla->cgi;
+    
+    ###########################################################################
+    # Role-based preferences
+    ###########################################################################
+    $dbh->bz_lock_tables("email_setting WRITE");
 
-    if (defined $cgi->param('ExcludeSelf')) {
-        $updateString .= 'ExcludeSelf~on';
-    } else {
-        $updateString .= 'ExcludeSelf~';
-    }
-    
-    foreach my $flag (qw(FlagRequestee FlagRequester)) {
-        $updateString .= "~$flag~" . (defined $cgi->param($flag) ? "on" : "");
-    }
-    
-    foreach my $role (@roles) {
-        foreach my $reason (@reasons) {
-            # Add this preference to the list without giving it a value,
-            # which is the equivalent of setting the value to "off."
-            $updateString .= "~email$role$reason~";
-            
-            # If the form field for this preference is defined, then we
-            # know the checkbox was checked, so set the value to "on".
-            $updateString .= "on" if defined $cgi->param("email$role$reason");
+    # Delete all the user's current preferences
+    $dbh->do("DELETE FROM email_setting WHERE user_id = $userid");
+
+    # Repopulate the table - first, with normal events in the 
+    # relationship/event matrix.
+    # Note: the database holds only "off" email preferences, as can be implied 
+    # from the name of the table - profiles_nomail.
+    foreach my $rel (RELATIONSHIPS) {
+        # Positive events: a ticked box means "send me mail."
+        foreach my $event (POS_EVENTS) {
+            if (1 == $cgi->param("email-$rel-$event")) {
+                $dbh->do("INSERT INTO email_setting " . 
+                         "(user_id, relationship, event) " . 
+                         "VALUES ($userid, $rel, $event)");
+            }
+        }
+        
+        # Negative events: a ticked box means "don't send me mail."
+        foreach my $event (NEG_EVENTS) {
+            if (!defined($cgi->param("neg-email-$rel-$event")) ||
+                $cgi->param("neg-email-$rel-$event") != 1) 
+            {
+                $dbh->do("INSERT INTO email_setting " . 
+                         "(user_id, relationship, event) " . 
+                         "VALUES ($userid, $rel, $event)");
+            }
         }
     }
-            
-    SendSQL("UPDATE profiles SET emailflags = " . SqlQuote($updateString) . 
-            " WHERE userid = $userid");
 
+    # Global positive events: a ticked box means "send me mail."
+    foreach my $event (GLOBAL_EVENTS) {
+        if (1 == $cgi->param("email-" . REL_ANY . "-$event")) {
+            $dbh->do("INSERT INTO email_setting " . 
+                     "(user_id, relationship, event) " . 
+                     "VALUES ($userid, " . REL_ANY . ", $event)");
+        }
+    }
+
+    $dbh->bz_unlock_tables();
+
+    ###########################################################################
+    # User watching
+    ###########################################################################
     if (Param("supportwatchers") && defined $cgi->param('watchedusers')) {
         # Just in case.  Note that this much locking is actually overkill:
         # we don't really care if anyone reads the watch table.  So 

@@ -47,9 +47,22 @@ if (scalar(@list) > 0) {
         my $start_time = time;
         print "Sending mail for bug $bugid...\n";
         my $outputref = Bugzilla::BugMail::Send($bugid);
-        my ($sent, $excluded) = (scalar(@{$outputref->{sent}}),scalar(@{$outputref->{excluded}}));
-        print "$sent mails sent, $excluded people excluded.\n";
-        print "Took " . (time - $start_time) . " seconds.\n\n";
+        if ($ARGV[0] && $ARGV[0] eq "--report") {
+          print "Mail sent to:\n";
+          foreach (sort @{$outputref->{sent}}) {
+              print $_ . "\n";
+          }
+          
+          print "Excluded:\n";
+          foreach (sort @{$outputref->{excluded}}) {
+              print $_ . "\n";
+          }
+        }
+        else {
+            my ($sent, $excluded) = (scalar(@{$outputref->{sent}}),scalar(@{$outputref->{excluded}}));
+            print "$sent mails sent, $excluded people excluded.\n";
+            print "Took " . (time - $start_time) . " seconds.\n\n";
+        }    
     }
     print "Unsent mail has been sent.\n";
 }

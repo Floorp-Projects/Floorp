@@ -486,14 +486,7 @@ if (UserInGroup("editbugs")) {
 }
 
 # Email everyone the details of the new bug 
-$vars->{'mailrecipients'} = { 'cc' => \@cc,
-                              'owner' => DBID_to_name($::FORM{'assigned_to'}),
-                              'reporter' => Bugzilla->user->login,
-                              'changer' => Bugzilla->user->login };
-
-if (defined $::FORM{'qa_contact'}) {
-    $vars->{'mailrecipients'}->{'qacontact'} = DBID_to_name($::FORM{'qa_contact'});
-}
+$vars->{'mailrecipients'} = {'changer' => Bugzilla->user->login};
 
 $vars->{'id'} = $id;
 my $bug = new Bugzilla::Bug($id, $::userid);

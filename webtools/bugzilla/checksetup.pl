@@ -2485,7 +2485,8 @@ if (!($sth->fetchrow_arrayref()->[0])) {
 
 # 2000-12-18.  Added an 'emailflags' field for storing preferences about
 # when email gets sent on a per-user basis.
-if (!$dbh->bz_get_field_def('profiles', 'emailflags')) {
+if (!$dbh->bz_get_field_def('profiles', 'emailflags') && 
+    !$dbh->bz_get_field_def('email_setting', 'user_id')) {
     $dbh->bz_add_field('profiles', 'emailflags', 'mediumtext');
 }
 
@@ -3756,47 +3757,6 @@ if ($dbh->bz_get_field_def('bugs', 'short_desc')->[2]) { # if it allows nulls
     $dbh->bz_change_field_type('bugs', 'short_desc', 'mediumtext not null');
 }
 
-# 2004-12-29 - Flag email code is broke somewhere, and doesn't treat a lack
-# of FlagRequestee/er emailflags as 'on' like it's supposed to. Easiest way
-# to fix this is to make sure that everyone has these set. (bug 275599).
-# While we're at it, let's make sure everyone has some emailprefs set,
-# whether or not they've ever visited userprefs.cgi (bug 108870). In fact,
-# do this first so that the second check gets fewer hits.
-# 
-my $emailflags_count = 0;
-$sth = $dbh->prepare("SELECT userid FROM profiles " .
-                     "WHERE emailflags LIKE '' " .
-                     "OR emailflags IS NULL");
-$sth->execute();
-while (my ($userid) = $sth->fetchrow_array()) {
-    $dbh->do("UPDATE profiles SET emailflags = " .
-             $dbh->quote(Bugzilla::Constants::DEFAULT_EMAIL_SETTINGS) .
-             "WHERE userid = $userid");
-    $emailflags_count++;
-}
-
-if ($emailflags_count) {
-    print "Added default email prefs to $emailflags_count users who had none.\n" unless $silent;
-    $emailflags_count = 0;
-}
-
-
-$sth = $dbh->prepare("SELECT userid, emailflags FROM profiles " .
-                     "WHERE emailflags NOT LIKE '%Flagrequeste%' ");
-$sth->execute();
-while (my ($userid, $emailflags) = $sth->fetchrow_array()) {
-    $emailflags .= Bugzilla::Constants::DEFAULT_FLAG_EMAIL_SETTINGS;
-    $emailflags = $dbh->quote($emailflags);
-    $dbh->do("UPDATE profiles SET emailflags = $emailflags " .
-             "WHERE userid = $userid");
-    $emailflags_count++;
-}
-
-if ($emailflags_count) {
-    print "Added default Flagrequester/ee email prefs to $emailflags_count users who had none.\n" unless $silent;
-    $emailflags_count = 0;
-}
-
 # 2003-10-24 - alt@sonic.net, bug 224208
 # Support classification level
 $dbh->bz_add_field('products', 'classification_id', 'smallint DEFAULT 1');
@@ -3882,8 +3842,113 @@ if (!$dbh->bz_get_field_def('bugs', 'qa_contact')->[2]) { # if it's NOT NULL
                WHERE initialqacontact = 0");
 }
 
-} # END LEGACY CHECKS
+# 2005-03-29 - gerv@gerv.net - bug 73665.
+# Migrate email preferences to new email prefs table.
+if ($dbh->bz_get_field_def("profiles", "emailflags")) {    
+    print "Migrating email preferences to new table ...\n" unless $silent;
+    
+    # These are the "roles" and "reasons" from the original code, mapped to
+    # the new terminology of relationships and events.
+    my %relationships = ("Owner" => REL_ASSIGNEE, 
+                         "Reporter" => REL_REPORTER,
+                         "QAcontact" => REL_QA,
+                         "CClist" => REL_CC,
+                         "Voter" => REL_VOTER);
+                         
+    my %events = ("Removeme" => EVT_ADDED_REMOVED, 
+                  "Comments" => EVT_COMMENT, 
+                  "Attachments" => EVT_ATTACHMENT, 
+                  "Status" => EVT_PROJ_MANAGEMENT, 
+                  "Resolved" => EVT_OPENED_CLOSED,
+                  "Keywords" => EVT_KEYWORD, 
+                  "CC" => EVT_CC, 
+                  "Other" => EVT_OTHER,
+                  "Unconfirmed" => EVT_UNCONFIRMED);
+                                    
+    # Request preferences
+    my %requestprefs = ("FlagRequestee" => EVT_FLAG_REQUESTED,
+                        "FlagRequester" => EVT_REQUESTED_FLAG);
 
+    # Select all emailflags flag strings
+    my $sth = $dbh->prepare("SELECT userid, emailflags FROM profiles");
+    $sth->execute();
+
+    while (my ($userid, $flagstring) = $sth->fetchrow_array()) {
+        # If the user has never logged in since emailprefs arrived, and the
+        # temporary code to give them a default string never ran, then 
+        # $flagstring will be null. In this case, they just get all mail.
+        $flagstring ||= "";
+        
+        # The 255 param is here, because without a third param, split will
+        # trim any trailing null fields, which causes Perl to eject lots of
+        # warnings. Any suitably large number would do.
+        my %emailflags = split(/~/, $flagstring, 255); # Appease my editor: /
+     
+        my $sth2 = $dbh->prepare("INSERT into email_setting " .
+                                 "(user_id, relationship, event) VALUES (" . 
+                                 "$userid, ?, ?)");
+        foreach my $relationship (keys %relationships) {
+            foreach my $event (keys %events) {
+                my $key = "email$relationship$event";
+                if (!exists($emailflags{$key}) || $emailflags{$key} eq 'on') {
+                    $sth2->execute($relationships{$relationship},
+                                   $events{$event});
+                }
+            }
+        }
+
+        # Note that in the old system, the value of "excludeself" is assumed to
+        # be off if the preference does not exist in the user's list, unlike 
+        # other preferences whose value is assumed to be on if they do not 
+        # exist.
+        #
+        # This preference has changed from global to per-relationship.
+        if (!exists($emailflags{'ExcludeSelf'}) 
+            || $emailflags{'ExcludeSelf'} ne 'on')
+        {
+            foreach my $relationship (keys %relationships) {
+                $dbh->do("INSERT into email_setting " .
+                         "(user_id, relationship, event) VALUES (" . 
+                         $userid . ", " .
+                         $relationships{$relationship}. ", " .
+                         EVT_CHANGED_BY_ME . ")");
+            }
+        }
+
+        foreach my $key (keys %requestprefs) {
+            if (!exists($emailflags{$key}) || $emailflags{$key} eq 'on') {
+              $dbh->do("INSERT into email_setting " . 
+                       "(user_id, relationship, event) VALUES (" . 
+                       $userid . ", " . REL_ANY . ", " . 
+                       $requestprefs{$key} . ")");            
+            }
+        }
+    }
+   
+    # EVT_ATTACHMENT_DATA should initially have identical settings to 
+    # EVT_ATTACHMENT. 
+    CloneEmailEvent(EVT_ATTACHMENT, EVT_ATTACHMENT_DATA); 
+       
+    $dbh->bz_drop_field("profiles", "emailflags");    
+}
+
+sub CloneEmailEvent {
+    my ($source, $target) = @_;
+
+    my $sth1 = $dbh->prepare("SELECT user_id, relationship FROM email_setting
+                              WHERE event = $source");
+    my $sth2 = $dbh->prepare("INSERT into email_setting " . 
+                             "(user_id, relationship, event) VALUES (" . 
+                             "?, ?, $target)");
+    
+    $sth1->execute();
+
+    while (my ($userid, $relationship) = $sth1->fetchrow_array()) {
+        $sth2->execute($userid, $relationship);            
+    }    
+} 
+
+} # END LEGACY CHECKS
 
 # If you had to change the --TABLE-- definition in any way, then add your
 # differential change code *** A B O V E *** this comment.
@@ -4156,10 +4221,10 @@ if ($sth->rows == 0) {
 
         $dbh->do(
           q{INSERT INTO profiles (login_name, realname, cryptpassword, 
-                                  emailflags, disabledtext, refreshed_when)
+                                  disabledtext, refreshed_when)
             VALUES (?, ?, ?, ?, ?, ?)},
             undef, $login, $realname, $cryptedpassword, 
-            Bugzilla::Constants::DEFAULT_EMAIL_SETTINGS, '', '1900-01-01 00:00:00');
+            '', '1900-01-01 00:00:00');
     }
 
     # Put the admin in each group if not already    

@@ -40,102 +40,19 @@
 [% useqacontact = Param('useqacontact') %]
 [% usevotes = Param('usevotes') %]
 
-<table>
-  [% IF Param('supportwatchers') %]
-    <tr>
-      <td colspan="4">
-        <hr>
-      </td>
-    </tr>
+<p>
+  If you don't like getting a notification for "trivial"
+  changes to [% terms.bugs %], you can use the settings below to
+  filter some or all notifications.
+</p>
 
-    <tr>
-      <td colspan="4">
-        If you want to help cover for someone when they're on vacation, or if
-        you need to do the QA related to all of their [% terms.bugs %], you can tell
-        [%+ terms.Bugzilla %] to send mail related to their [% terms.bugs %] to you, too.  List the
-        email addresses of any accounts you wish to watch here, separated by
-        commas.
-      </td>
-    </tr>
-
-    <tr>
-      <th align="right">Users to watch:</th>
-      <td>
-        <input size="35" name="watchedusers" 
-               value="[% watchedusers FILTER html %]">
-      </td>
-    </tr>
-
-    <tr>
-      <th align="right" valign="baseline">Users watching you:</th>
-      <td>
-        [% IF watchers.size %]
-          [% FOREACH watcher = watchers %]
-            [% watcher FILTER html %] <br>
-          [% END %]
-        [% ELSE %]
-          Nobody is currently watching your account.
-        [% END %]
-      </td>
-    </tr>
-  [% END %]
-
-  <tr>
-    <td colspan="2">
-      <p>
-        If you don't like getting a notification for "trivial"
-        changes to [% terms.bugs %], you can use the settings below to
-        filter some (or even all) notifications.
-      </p>
-    </td>
-  </tr>
-</table>
-
-<hr>
-
-<table>
-  <tr>
-    <td colspan="2">
-      <b>Global options:</b>
-    </td>
-  </tr>
-
-  <tr>
-    <td width="150"></td>
-    <td>
-      <input type="checkbox" name="ExcludeSelf" id="ExcludeSelf" value="on"
-        [% " checked" IF excludeself %]>
-      <label for="ExcludeSelf">Only email me reports of changes made by other people</label>
-      <br>
-    </td>
-  </tr>
-  <tr>
-    <td width="150"></td>
-    <td>
-      <input type="checkbox" name="FlagRequestee" id="FlagRequestee" value="on"
-        [% " checked" IF FlagRequestee %]>
-      <label for="FlagRequestee">Email me when someone asks me to set a flag</label>
-      <br>
-    </td>
-  </tr>
-  <tr>
-    <td width="150"></td>
-    <td>
-      <input type="checkbox" name="FlagRequester" id="FlagRequester" value="on"
-        [% " checked" IF FlagRequester %]>
-      <label for="FlagRequester">Email me when someone sets a flag I asked for</label>
-      <br>
-    </td>
-  </tr>
-</table>
-<noscript>If you had Javascript active, you could toggle all of these with one click.<br></noscript>
 <script type="text/javascript">
 <!--
 function SetCheckboxes(setting) {
   for (var count = 0; count < document.userprefsform.elements.length; count++) {
     var theinput = document.userprefsform.elements[count];
     if (theinput.type == "checkbox") {
-      if (theinput.name == "ExcludeSelf") {
+      if (theinput.name.match("neg")) {
         theinput.checked = false;
       }
       else {
@@ -149,83 +66,217 @@ document.write('<input type="button" value="Enable All Mail" onclick="SetCheckbo
 document.write('<input type="button" value="Disable All Mail" onclick="SetCheckboxes(false); return false;">\n');
 // -->
 </script>
+
+<hr>
+
+<table>
+  <tr>
+    <td colspan="2">
+      <b>Global options:</b>
+    </td>
+  </tr>
+
+  <tr>
+    <td width="150"></td>
+    <td>
+      [% prefname = "email-$constants.REL_ANY-$constants.EVT_FLAG_REQUESTED" %]
+      <input type="checkbox" name="[% prefname %]" id="[% prefname %]" 
+        value="1"
+        [% " checked" IF 
+                  mail.${constants.REL_ANY}.${constants.EVT_FLAG_REQUESTED} %]>
+      <label for="[% prefname %]">Email me when someone asks me to set a flag</label>
+      <br>
+    </td>
+  </tr>
+  <tr>
+    <td width="150"></td>
+    <td>
+      [% prefname = "email-$constants.REL_ANY-$constants.EVT_REQUESTED_FLAG" %]
+      <input type="checkbox" name="[% prefname %]" id="[% prefname %]" 
+        value="1"
+        [% " checked" IF 
+                  mail.${constants.REL_ANY}.${constants.EVT_REQUESTED_FLAG} %]>
+      <label for="[% prefname %]">Email me when someone sets a flag I asked for</label>
+      <br>
+    </td>
+  </tr>
+</table>
+
 <hr>
 <b>Field/recipient specific options:</b>
 <br>
 <br>
 
+[% events = [
+    { id = constants.EVT_ADDED_REMOVED,
+      description = "I'm added to or removed from this capacity" },
+    { id = constants.EVT_OPENED_CLOSED,
+      description = "The $terms.bug is resolved or reopened" },
+    { id = constants.EVT_PROJ_MANAGEMENT,
+      description = "The priority, status, severity, or milestone changes" },
+    { id = constants.EVT_COMMENT,
+      description = "New comments are added" },
+    { id = constants.EVT_ATTACHMENT,
+      description = "New attachments are added" },
+    { id = constants.EVT_ATTACHMENT_DATA,
+      description = "Some attachment data changes" },
+    { id = constants.EVT_KEYWORD,
+      description = "The keywords field changes" },
+    { id = constants.EVT_CC,
+      description = "The CC field changes" },
+    { id = constants.EVT_OTHER,
+      description = "Any field not mentioned above changes" },
+] %]
+
+[% neg_events = [
+    { id = constants.EVT_UNCONFIRMED,
+      description = "The $terms.bug is in the UNCONFIRMED state" },
+    { id = constants.EVT_CHANGED_BY_ME,
+      description = "The change was made by me" },
+] %]
+
+[% relationships = [
+    { id = constants.REL_ASSIGNEE,
+      description = "Assignee" },
+    { id = constants.REL_QA,
+      description = "QA Contact" },
+    { id = constants.REL_REPORTER,
+      description = "Reporter" },
+    { id = constants.REL_CC,
+      description = "CCed" },
+    { id = constants.REL_VOTER,
+      description = "Voter" },
+] %]
 
 <table width="100%" border="1">
   <tr>
-    <td colspan="[% (useqacontact AND usevotes) ? '5' : ((useqacontact OR usevotes) ? '4' : '3') %]" align="center" width="50%">
+    <td colspan="[% (useqacontact AND usevotes) ? '5' : 
+                     ((useqacontact OR usevotes) ? '4' : '3') %]" 
+        align="center" width="50%">
       <b>When my relationship to this [% terms.bug %] is:</b>
     </td>
-    <td rowspan="2" width="50%">
+    <td rowspan="2" width="40%">
       <b>I want to receive mail when:</b>
     </td>
   </tr>
 
   <tr>
-    <td align="center" width="10%">
-      <b>Reporter</b>
-    </td>
-    <td align="center" width="10%">
-      <b>Assignee</b>
-    </td>
-    [% IF useqacontact %]
-      <td align="center" width="10%">
-        <b>QA Contact</b>
-      </td>
-    [% END %]
-    <td align="center" width="10%">
-      <b>CC</b>
-    </td>
-    [% IF usevotes %]
-      <td align="center" width="10%">
-        <b>Voter</b>
-      </td>
+    [% FOREACH relationship = relationships %]
+      [% NEXT IF (relationship.id == constants.REL_QA AND NOT useqacontact) OR
+                 (relationship.id == constants.REL_VOTER AND NOT usevotes) %]
+      <th align="center" width="9%">
+        [% relationship.description FILTER html %]
+      </th>
     [% END %]
   </tr>
-
-[% bugLabelLower = BLOCK %]
-[% terms.bug %]
-[% END %]
-
-  [% FOREACH reason = [
-      { name = 'Removeme',
-        description = "I'm added to or removed from this capacity" },
-      { name = 'Comments',
-        description = "New Comments are added" },
-      { name = 'Attachments',
-        description = "New Attachments are added" },
-      { name = 'Status',
-        description = "Priority, status, severity, and/or milestone changes" },
-      { name = 'Resolved',
-        description = "The ${bugLabelLower} is resolved or verified" },
-      { name = 'Keywords',
-        description = "Keywords field changes" },
-      { name = 'CC',
-        description = "CC field changes" },
-      { name = 'Other',
-        description = "Any field not mentioned above changes" },
-      { name = 'Unconfirmed',
-        description = "The ${bugLabelLower} is in the unconfirmed state" },
-  ] %]
+  
+  [% FOREACH event = events %]  
     <tr>
-      [% FOREACH role = [ "Reporter", "Owner", "QAcontact", "CClist", "Voter" ]
-       %]
-        [% NEXT IF role == "QAcontact" AND NOT useqacontact %]
-        [% NEXT IF role == "Voter" AND NOT usevotes %]
+      [% FOREACH relationship = relationships %]
+      [% NEXT IF (relationship.id == constants.REL_QA AND NOT useqacontact) OR
+                 (relationship.id == constants.REL_VOTER AND NOT usevotes) %]
         <td align="center">
-          <input type="checkbox" name="email[% role %][% reason.name %]" value="on"
-            [% " checked" IF $role.${reason.name} %]>
+          <input type="checkbox" 
+            name="email-[% relationship.id %]-[% event.id %]"
+            value="1"
+            [%# The combinations don't always make sense; disable a couple %]
+            [% IF event.id == constants.EVT_ADDED_REMOVED AND 
+                 (relationship.id == constants.REL_REPORTER OR
+                  relationship.id == constants.REL_VOTER) %]
+               disabled
+            [% ELSIF mail.${relationship.id}.${event.id} %]
+               checked
+            [% END %]>
         </td>
       [% END %]
       <td>
-        [% reason.description %]
+        [% event.description FILTER html %]
       </td>
     </tr>
   [% END %]
+  
+  <tr>
+    <td colspan="[% (useqacontact AND usevotes) ? '5' : 
+                     ((useqacontact OR usevotes) ? '4' : '3') %]" 
+        align="center" width="50%">
+      &nbsp;
+    </td>
+    <td width="40%">
+      <b>but not when (overrides above):</b>
+    </td>
+  </tr>
+
+  [% FOREACH event = neg_events %]  
+    <tr>
+      [% FOREACH relationship = relationships %]
+        [% NEXT IF (relationship.id == constants.REL_QA AND NOT useqacontact) OR
+                   (relationship.id == constants.REL_VOTER AND NOT usevotes) %]
+        <td align="center"
+          <input type="checkbox" 
+            name="neg-email-[% relationship.id %]-[% event.id %]"
+            value="1"
+            [% " checked" IF NOT mail.${relationship.id}.${event.id} %]>
+        </td>
+      [% END %]
+      <td>
+        [% event.description FILTER html %]
+      </td>
+    </tr>
+  [% END %]
+  
 </table>
+
+[%# Add hidden form fields for fields not used %]
+[% FOREACH event = events %]  
+  [% FOREACH relationship = relationships %]
+    [% IF (relationship.id == constants.REL_QA AND NOT useqacontact) OR
+          (relationship.id == constants.REL_VOTER AND NOT usevotes) %]
+      <input type="hidden" 
+        name="email-[% relationship.id %]-[% event.id %]"
+        value="[% mail.${relationship.id}.${event.id} ? "1" : "0" %]">
+    [% END %]
+  [% END %]
+[% END %]
+
+[% FOREACH event = neg_events %]  
+  [% FOREACH relationship = relationships %]
+    [% IF (relationship.id == constants.REL_QA AND NOT useqacontact) OR
+          (relationship.id == constants.REL_VOTER AND NOT usevotes) %]
+      <input type="hidden" 
+        name="neg-email-[% relationship.id %]-[% event.id %]"
+        value="[% mail.${relationship.id}.${event.id} ? "0" : "1" %]">
+    [% END %]
+  [% END %]
+[% END %]
+
+[% IF Param('supportwatchers') %]
+<hr>
+<b>User Watching</b>
+
+<p>
+If you watch a user, it is as if you are standing in their shoes for the 
+purposes of getting email. Email is sent or not according to <u>your</u>
+preferences for <u>their</u> relationship to the [% terms.bug %] 
+(e.g. Assignee). You are watching anyone on the following comma-separated list:
+</p>
+
+<p>Users to watch:
+  <input size="60" name="watchedusers" 
+         value="[% watchedusers FILTER html %]">
+</p>            
+
+<p>Users watching you:<br>
+  [% IF watchers.size %]
+    [% FOREACH watcher = watchers %]
+      [% watcher FILTER html %] <br>
+    [% END %]
+  [% ELSE %]
+    <i>None</i>
+  [% END %]
+</p>
+
+[% END %]
+
+<hr>
 
 <br>
