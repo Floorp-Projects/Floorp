@@ -64,6 +64,7 @@ XPIDLSRCS	= \
 		nsIDOMSVGAnimTransformList.idl \
 		nsIDOMSVGCircleElement.idl \
 		nsIDOMSVGDefsElement.idl \
+		nsIDOMSVGDescElement.idl \
 		nsIDOMSVGDocument.idl \
 		nsIDOMSVGElement.idl \
 		nsIDOMSVGEllipseElement.idl \
@@ -79,6 +80,7 @@ XPIDLSRCS	= \
 		nsIDOMSVGLocatable.idl \
 		nsIDOMSVGMarkerElement.idl \
 		nsIDOMSVGMatrix.idl \
+		nsIDOMSVGMetadataElement.idl \
 		nsIDOMSVGNumber.idl \
 		nsIDOMSVGNumberList.idl \
 		nsIDOMSVGPathElement.idl \
@@ -100,6 +102,7 @@ XPIDLSRCS	= \
 		nsIDOMSVGTextContentElement.idl \
 		nsIDOMSVGTextElement.idl \
 		nsIDOMSVGTextPositionElem.idl \
+		nsIDOMSVGTitleElement.idl \
 		nsIDOMSVGTransform.idl \
 		nsIDOMSVGTransformList.idl \
 		nsIDOMSVGTransformable.idl \

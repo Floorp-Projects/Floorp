@@ -74,11 +74,15 @@ NS_NewSVGStyleElement(nsIContent **aResult, nsINodeInfo *aNodeInfo);
 nsresult
 NS_NewSVGLinearGradientElement(nsIContent **aResult, nsINodeInfo *aNodeInfo);
 nsresult
+NS_NewSVGMetadataElement(nsIContent **aResult, nsINodeInfo *aNodeInfo);
+nsresult
 NS_NewSVGRadialGradientElement(nsIContent **aResult, nsINodeInfo *aNodeInfo);
 nsresult
 NS_NewSVGStopElement(nsIContent **aResult, nsINodeInfo *aNodeInfo);
 nsresult
 NS_NewSVGDefsElement(nsIContent **aResult, nsINodeInfo *aNodeInfo);
+nsresult
+NS_NewSVGDescElement(nsIContent **aResult, nsINodeInfo *aNodeInfo);
 nsresult
 NS_NewSVGScriptElement(nsIContent **aResult, nsINodeInfo *aNodeInfo);
 nsresult
@@ -87,6 +91,8 @@ nsresult
 NS_NewSVGSymbolElement(nsIContent **aResult, nsINodeInfo *aNodeInfo);
 nsresult
 NS_NewSVGMarkerElement(nsIContent **aResult, nsINodeInfo *aNodeInfo);
+nsresult
+NS_NewSVGTitleElement(nsIContent **aResult, nsINodeInfo *aNodeInfo);
 
 nsresult
 NS_NewSVGElement(nsIContent** aResult, nsINodeInfo *aNodeInfo)
@@ -123,12 +129,16 @@ NS_NewSVGElement(nsIContent** aResult, nsINodeInfo *aNodeInfo)
     return NS_NewSVGStyleElement(aResult, aNodeInfo);
   if (name == nsSVGAtoms::linearGradient)
     return NS_NewSVGLinearGradientElement(aResult, aNodeInfo);
+  if (name == nsSVGAtoms::metadata)
+    return NS_NewSVGMetadataElement(aResult, aNodeInfo);
   if (name == nsSVGAtoms::radialGradient)
     return NS_NewSVGRadialGradientElement(aResult, aNodeInfo);
   if (name == nsSVGAtoms::stop)
     return NS_NewSVGStopElement(aResult, aNodeInfo);
   if (name == nsSVGAtoms::defs)
     return NS_NewSVGDefsElement(aResult, aNodeInfo);
+  if (name == nsSVGAtoms::desc)
+    return NS_NewSVGDescElement(aResult, aNodeInfo);
   if (name == nsSVGAtoms::script)
     return NS_NewSVGScriptElement(aResult, aNodeInfo);
   if (name == nsSVGAtoms::use)
@@ -137,6 +147,8 @@ NS_NewSVGElement(nsIContent** aResult, nsINodeInfo *aNodeInfo)
     return NS_NewSVGSymbolElement(aResult, aNodeInfo);
   if (name == nsSVGAtoms::marker)
     return NS_NewSVGMarkerElement(aResult, aNodeInfo);
+  if (name == nsSVGAtoms::title)
+    return NS_NewSVGTitleElement(aResult, aNodeInfo);
 
   // if we don't know what to create, just create a standard xml element:
   return NS_NewXMLElement(aResult, aNodeInfo);
