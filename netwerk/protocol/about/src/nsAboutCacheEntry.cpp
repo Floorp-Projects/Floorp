@@ -310,6 +310,9 @@ nsAboutCacheEntry::AsyncOpen(nsIStreamListener *listener, nsISupports *context)
                              getter_AddRefs(mCacheSession));
     if (NS_FAILED(rv)) return rv;
 
+    rv = mCacheSession->SetDoomEntriesIfExpired(PR_FALSE);
+    if (NS_FAILED(rv)) return rv;
+
     mListener = listener;
     mListenerContext = context;
 
