@@ -34,6 +34,7 @@ EXPORTS = \
 	nsMsgAccountManager.h	\
 	nsMsgAccount.h			\
 	nsMsgFolderDataSource.h \
+	nsMsgFolderCache.h \
 	nsMsgMessageDataSource.h \
 	nsMessageViewDataSource.h \
 	nsMsgAccountManagerDS.h	\
@@ -69,6 +70,8 @@ CPPSRCS = \
 	nsMsgBiffManager.cpp \
 	nsMsgNotificationManager.cpp \
 	nsMsgCopyService.cpp \
+	nsMsgFolderCache.cpp \
+	nsMsgFolderCacheElement.cpp \
 	$(NULL)
 
 # we don't want the shared lib, but we want to force the creation of a static lib.
