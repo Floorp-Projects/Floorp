@@ -57,11 +57,20 @@ function NewMessage()
 
 function GetNewMail()
 {
-  var appCore = FindMsgAppCore();
-  if (appCore != null) {
-    appCore.SetWindow(window);
-    appCore.GetNewMail();
-  }
+	var folderTree = frames[0].frames[0].document.getElementById('folderTree'); 
+	var selectedFolderList = folderTree.getElementsByAttribute("selected", "true");
+	if(selectedFolderList.length > 0)
+	{
+		var selectedFolder = selectedFolderList[0];
+		
+		var appCore = FindMsgAppCore();
+		if (appCore != null) {
+			appCore.SetWindow(window);
+
+			appCore.GetNewMessages(folderTree.database, selectedFolder);
+		}
+	}
+	dump("Nothing was selected\n");
 }
 
 function MsgAccountManager()
