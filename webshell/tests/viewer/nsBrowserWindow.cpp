@@ -85,9 +85,8 @@
 // For Copy
 #include "nsIDOMSelection.h"
 
-#ifndef NEW_CLIPBOARD_SUPPORT
 #include "nsISelectionMgr.h"
-#endif
+
 
 // XXX For font setting below
 #include "nsFont.h"
