@@ -23,8 +23,8 @@
 #include "nsISupportsArray.h"
 #include "nsRepository.h"
 
-#ifdef XP_UNIX
-#include <strstream.h>
+#if defined(XP_UNIX) || defined(XP_MAC)
+#include <strstream>
 #endif
 
 #ifdef XP_PC
@@ -343,14 +343,7 @@ NS_IMETHODIMP nsTransferable::ConvertToHTML(nsString & aStr)
 
   rv = NS_New_HTML_ContentSinkStream(&sink,PR_FALSE,PR_FALSE);
 
-  ostrstream* copyStream;
-
-#ifdef XP_MAC
-  copyStream = new stringstream;
-#else
-  copyStream = new ostrstream;
-#endif
-
+  ostrstream* copyStream = new ostrstream;
 
   ((nsHTMLContentSinkStream*)sink)->SetOutputStream(*copyStream);
   if (NS_OK == rv) {
