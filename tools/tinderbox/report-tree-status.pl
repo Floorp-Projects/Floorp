@@ -102,6 +102,7 @@ sub is_tree_open {
       $sheriff_string =~ s/\\//g;
       $sheriff_string =~ s/#/[lb]/g;
       $sheriff_string =~ s/mailto://g;
+      $sheriff_string =~ s/[iI][rR][cC]://g;
       $sheriff_string =~ s/a href//g;
       $sheriff_string =~ s/[sS]heriff//g;
       $sheriff_string =~ s/[mM]onday//g;
