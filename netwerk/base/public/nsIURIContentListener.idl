@@ -25,7 +25,7 @@
 
 #include "nsISupports.idl"
 interface nsIProtocolHandler;
-interface nsIContentViewer;
+interface nsIStreamListener;
 
 [scriptable, uuid(94928AB3-8B63-11d3-989D-001083010E9B)]
 interface nsIURIContentListener : nsISupports
@@ -39,17 +39,17 @@ interface nsIURIContentListener : nsISupports
 
   /* The URIDispatcher will give the content listener a shot at handling
      the content before it tries other means. If the content listener
-     wants to handle the content then it should return a content viewer
-     it wants to handle the content....
+     wants to handle the content then it should return a stream listener
+     the data should be pushed into. 
      aContentType --> the content type we need to handle
      aCommand --> verb for the action (this comes from layout???)
      aWindowTarget --> name of the target window if any
-     aContentViewer --> the content viewer the content should be displayed in
+     aStreamListener --> the content viewer the content should be displayed in
                         You should return null for this out parameter if you do
                         not want to handle this content type.
   */
 
    void doContent(in string aContentType, in string aCommand, 
                   in string aWindowTarget, 
-                  out nsIContentViewer aContentViewer);
+                  out nsIStreamListener aContentHandler);
 };
