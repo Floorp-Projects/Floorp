@@ -1154,10 +1154,18 @@ BookmarkParser::AddBookmark(nsCOMPtr<nsIRDFContainer> aContainer,
                             nsIRDFResource*  aNodeType,
                             nsIRDFResource** bookmarkNode)
 {
-	nsresult rv;
-	nsCOMPtr<nsIRDFResource> bookmark;
+	nsresult	rv;
+	nsAutoString	fullURL(aURL);
 
-	if (NS_FAILED(rv = gRDF->GetResource(aURL, getter_AddRefs(bookmark) )))
+	// hack fix for bug # 21175:
+	// if we don't have a protocol scheme, add "http://" as a default scheme
+	if (fullURL.FindChar(PRUnichar(':')) < 0)
+	{
+		fullURL.Insert("http://", 0);
+	}
+
+	nsCOMPtr<nsIRDFResource> bookmark;
+	if (NS_FAILED(rv = gRDF->GetResource(nsCAutoString(fullURL), getter_AddRefs(bookmark) )))
 	{
 		NS_ERROR("unable to get bookmark resource");
 		return(rv);
@@ -2851,7 +2859,8 @@ nsBookmarksService::GetTarget(nsIRDFResource* aSource,
 		}
 	}
 
-	return mInner->GetTarget(aSource, aProperty, aTruthValue, aTarget);
+	rv = mInner->GetTarget(aSource, aProperty, aTruthValue, aTarget);
+	return(rv);
 }
 
 
