@@ -68,8 +68,8 @@ public:
 };
 
 class WSPProxy : public nsXPTCStubBase,
-		 public nsIWebServiceProxy,
-		 public nsIClassInfo
+                 public nsIWebServiceProxy,
+                 public nsIClassInfo
 {
 public:
   WSPProxy();
@@ -81,14 +81,14 @@ public:
 
   // Would be nice to have a NS_DECL_NSXPTCSTUBBASE
   NS_IMETHOD CallMethod(PRUint16 methodIndex,
-			const nsXPTMethodInfo* info,
-			nsXPTCMiniVariant* params);
+                        const nsXPTMethodInfo* info,
+                        nsXPTCMiniVariant* params);
   NS_IMETHOD GetInterfaceInfo(nsIInterfaceInfo** info);
     
   static nsresult Create(nsIWSDLPort* aPort,
-			 nsIInterfaceInfo* aPrimaryInterface,
-			 const nsAReadableString& aNamespace,
-			 PRBool aIsAsync, WSPProxy** aProxy);
+                         nsIInterfaceInfo* aPrimaryInterface,
+                         const nsAReadableString& aNamespace,
+                         PRBool aIsAsync, WSPProxy** aProxy);
 
 protected:
   nsCOMPtr<nsIWSDLPort> mPort;
@@ -99,7 +99,7 @@ protected:
 };
 
 class WSPCallContext : public nsIWebServiceCallContext
-		       //		       public nsISOAPResponseListener
+//                       public nsISOAPResponseListener
 {
 public:
   WSPCallContext();
@@ -109,10 +109,10 @@ public:
   NS_DECL_NSIWEBSERVICECALLCONTEXT
 
   static nsresult Create(WSPProxy* aProxy,
-			 nsISOAPCall* aSOAPCall,
-			 const nsAReadableString& aMethodName,
-			 nsIWSDLOperation* aOperation,
-			 WSPCallContext** aCallContext);
+                         nsISOAPCall* aSOAPCall,
+                         const nsAReadableString& aMethodName,
+                         nsIWSDLOperation* aOperation,
+                         WSPCallContext** aCallContext);
 
 protected:
   nsCOMPtr<WSPProxy> mProxy;
@@ -131,8 +131,8 @@ public:
   NS_DECL_NSIPROPERTYBAG
 
   static nsresult Create(nsISupports* aComplexTypeInstance,
-			 nsIInterfaceInfo* aInterfaceInfo,
-			 WSPComplexTypeWrapper** aWrapper);
+                         nsIInterfaceInfo* aInterfaceInfo,
+                         WSPComplexTypeWrapper** aWrapper);
 
 protected:
   nsCOMPtr<nsISupports> mComplexTypeInstance;
@@ -149,13 +149,13 @@ public:
 
   // Would be nice to have a NS_DECL_NSXPTCSTUBBASE
   NS_IMETHOD CallMethod(PRUint16 methodIndex,
-			const nsXPTMethodInfo* info,
-			nsXPTCMiniVariant* params);
+                        const nsXPTMethodInfo* info,
+                        nsXPTCMiniVariant* params);
   NS_IMETHOD GetInterfaceInfo(nsIInterfaceInfo** info);
 
   static nsresult Create(nsIPropertyBag* aPropertyBag,
-			 nsIInterfaceInfo* aInterfaceInfo,
-			 WSPPropertyBagWrapper** aWrapper);
+                         nsIInterfaceInfo* aInterfaceInfo,
+                         WSPPropertyBagWrapper** aWrapper);
 
 protected:
   nsCOMPtr<nsIPropertyBag> mPropertyBag;
