@@ -78,6 +78,7 @@ BOOL            gbIgnoreProgramFolderX;
 BOOL            gbRestrictedAccess;
 BOOL            gbDownloadTriggered;
 BOOL            gbAllowMultipleInstalls = FALSE;
+BOOL            gbForceInstall = FALSE;
 
 setupGen        sgProduct;
 diS             diSetup;

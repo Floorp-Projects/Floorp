@@ -294,7 +294,7 @@ void SetInstallFilesVar(LPSTR szProdDir)
   char szProgramPath[MAX_BUF];
 
   wsprintf(szProgramPath, "%s%s", szProdDir, sgProduct.szProgramName);
-  if(FileExists(szProgramPath))
+  if((!gbForceInstall) && FileExists(szProgramPath))
     sgProduct.bInstallFiles = FALSE;
 }
 
@@ -5029,12 +5029,18 @@ void PrintUsage(void)
 
   /* -h: this help
    * -a [path]: Alternate archive search path
+   * -app: ID of application which is launching the installer  (Shared installs)
+   * -app_path: Points to representative file of app (Shared installs)
+   * -dd [path]: Suggested install destination directory. (Shared installs)
+   * -f: Force install (Shared installs)
    * -n [filename]: setup's parent's process filename
    * -ma: run setup in Auto mode
+   * -mmi: Allow multiple installer instances. (Shared installs)
    * -ms: run setup in Silent mode
    * -ira: ignore the [RunAppX] sections
    * -ispf: ignore the [Program FolderX] sections that show
    *        the Start Menu shortcut folder at the end of installation.
+   * -reg_path [path]: Where to make entries in the Windows registry. (Shared installs)
    */
 
   if(sgProduct.szParentProcessFilename && *sgProduct.szParentProcessFilename != '\0')
@@ -5048,7 +5054,7 @@ void PrintUsage(void)
   GetPrivateProfileString("Strings", "UsageMsg Usage", "", szBuf, sizeof(szBuf), szFileIniConfig);
   if (lstrlen(szBuf) > 0)
   {
-  wsprintf(szUsageMsg, szBuf, szProcessFilename, "\n", "\n", "\n", "\n", "\n", "\n", "\n", "\n", "\n");
+  wsprintf(szUsageMsg, szBuf, szProcessFilename, "\n", "\n", "\n", "\n", "\n", "\n", "\n", "\n", "\n", "\n", "\n", "\n", "\n", "\n", "\n", "\n", "\n", "\n", "\n", "\n");
   PrintError(szUsageMsg, ERROR_CODE_HIDE);
 }
 }
@@ -5085,6 +5091,10 @@ DWORD ParseCommandLine(LPSTR lpszCmdLine)
       ++i;
       GetArgV(lpszCmdLine, i, szArgVBuf, sizeof(szArgVBuf));
       lstrcpy(sgProduct.szAlternateArchiveSearchPath, szArgVBuf);
+    }
+    else if(!lstrcmpi(szArgVBuf, "-f") || !lstrcmpi(szArgVBuf, "/f"))
+    {
+      gbForceInstall = TRUE;
     }
     else if(!lstrcmpi(szArgVBuf, "-n") || !lstrcmpi(szArgVBuf, "/n"))
     {
