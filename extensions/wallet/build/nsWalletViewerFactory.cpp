@@ -21,6 +21,8 @@
 #include "nsISupports.h"
 #include "nsIServiceManager.h"
 #include "nsCOMPtr.h"
+#include "nsIModule.h"
+#include "nsIGenericFactory.h"
 
 #include "nsIWalletPreview.h"
 #include "nsISignonViewer.h"
@@ -36,221 +38,367 @@ static NS_DEFINE_CID(kSignonViewerCID,            NS_SIGNONVIEWER_CID);
 static NS_DEFINE_CID(kCookieViewerCID,            NS_COOKIEVIEWER_CID);
 static NS_DEFINE_CID(kWalletEditorCID,            NS_WALLETEDITOR_CID);
 
-class nsWalletViewerFactory : public nsIFactory
-{   
-public:   
-  // nsISupports methods   
-  NS_IMETHOD QueryInterface(const nsIID &aIID,    
-                            void **aResult);   
-  NS_IMETHOD_(nsrefcnt) AddRef(void);   
-  NS_IMETHOD_(nsrefcnt) Release(void);   
 
-  // nsIFactory methods   
-  NS_IMETHOD CreateInstance(nsISupports *aOuter,   
-                            const nsIID &aIID,   
-                            void **aResult);   
+// Module implementation
+class nsWalletViewerModule : public nsIModule
+{
+public:
+    nsWalletViewerModule();
+    virtual ~nsWalletViewerModule();
 
-  NS_IMETHOD LockFactory(PRBool aLock);   
+    NS_DECL_ISUPPORTS
 
-  nsWalletViewerFactory(const nsCID &aClass);   
+    NS_DECL_NSIMODULE
 
 protected:
-  virtual ~nsWalletViewerFactory();   
+    nsresult Initialize();
 
-private:   
-  nsrefcnt  mRefCnt;   
-  nsCID     mClassID;
-};   
+    void Shutdown();
 
-nsWalletViewerFactory::nsWalletViewerFactory(const nsCID &aClass)   
-{   
-  mRefCnt = 0;
-  mClassID = aClass;
-}   
+    PRBool mInitialized;
+    nsCOMPtr<nsIGenericFactory> mWalletPreviewFactory;
+    nsCOMPtr<nsIGenericFactory> mSignonViewerFactory;
+    nsCOMPtr<nsIGenericFactory> mCookieViewerFactory;
+    nsCOMPtr<nsIGenericFactory> mWalletEditorFactory;
+};
 
-nsWalletViewerFactory::~nsWalletViewerFactory()   
-{   
-  NS_ASSERTION(mRefCnt == 0, "non-zero refcnt at destruction");   
-}   
+//----------------------------------------------------------------------
 
-nsresult
-nsWalletViewerFactory::QueryInterface(const nsIID &aIID, void **aResult)   
-{   
-  if (aResult == NULL) {   
-    return NS_ERROR_NULL_POINTER;   
-  }   
+// Functions used to create new instances of a given object by the
+// generic factory.
 
-  // Always NULL result, in case of failure   
-  *aResult = NULL;   
-
-  if (aIID.Equals(kISupportsIID)) {   
-    *aResult = (void *)(nsISupports*)this;   
-  } else if (aIID.Equals(kIFactoryIID)) {   
-    *aResult = (void *)(nsIFactory*)this;   
-  }   
-
-  if (*aResult == NULL) {   
-    return NS_NOINTERFACE;   
-  }   
-
-  AddRef(); // Increase reference count for caller   
-  return NS_OK;   
-}   
-
-nsrefcnt
-nsWalletViewerFactory::AddRef()   
-{   
-  return ++mRefCnt;   
-}   
-
-nsrefcnt
-nsWalletViewerFactory::Release()   
-{   
-  if (--mRefCnt == 0) {   
-    delete this;   
-    return 0; // Don't access mRefCnt after deleting!   
-  }   
-  return mRefCnt;   
-}  
-
-nsresult
-nsWalletViewerFactory::CreateInstance(nsISupports *aOuter,  
-                                const nsIID &aIID,  
-                                void **aResult)  
-{  
-  nsresult res;
-  PRBool refCounted = PR_TRUE;
-
-  if (aResult == NULL) {  
-    return NS_ERROR_NULL_POINTER;  
-  }  
-
-  *aResult = NULL;  
-  
-  nsISupports *inst = nsnull;
-
-  if (mClassID.Equals(kWalletPreviewCID)) {
-      if (NS_FAILED(res = NS_NewWalletPreview((nsIWalletPreview**) &inst)))
-          return res;
-  } 
-  else if (mClassID.Equals(kSignonViewerCID)) {
-      if (NS_FAILED(res = NS_NewSignonViewer((nsISignonViewer**) &inst)))
-          return res;
-  }
-  else if (mClassID.Equals(kCookieViewerCID)) {
-      if (NS_FAILED(res = NS_NewCookieViewer((nsICookieViewer**) &inst)))
-          return res;
-  } 
-  else if (mClassID.Equals(kWalletEditorCID)) {
-      if (NS_FAILED(res = NS_NewWalletEditor((nsIWalletEditor**) &inst)))
-          return res;
-  }
-  else {
-      return NS_ERROR_NO_INTERFACE;
-  }
-
-  if (inst == NULL) {  
-    return NS_ERROR_OUT_OF_MEMORY;  
-  }  
-
-  res = inst->QueryInterface(aIID, aResult);
-
-  if (refCounted) {
-    NS_RELEASE(inst);
-  }
-  else if (res != NS_OK) {  
-    // We didn't get the right interface, so clean up  
-    delete inst;  
-  }  
-
-  return res;  
-}  
-
-nsresult nsWalletViewerFactory::LockFactory(PRBool aLock)  
-{  
-  // Not implemented in simplest case.  
-  return NS_OK;
-}  
-
-////////////////////////////////////////////////////////////
-//
-////////////////////////////////////////////////////////////
-
-extern "C" PR_IMPLEMENT(nsresult)
-NSGetFactory(nsISupports* serviceMgr,
-             const nsCID &aClass,
-             const char *aClassName,
-             const char *aProgID,
-             nsIFactory **aFactory)
+static NS_IMETHODIMP                 
+CreateNewWalletPreview(nsISupports* aOuter, REFNSIID aIID, void **aResult) 
 {
-  if (nsnull == aFactory) {
-    return NS_ERROR_NULL_POINTER;
-  }
-
-  *aFactory = new nsWalletViewerFactory(aClass);
-
-  if (nsnull == aFactory) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
-
-  return (*aFactory)->QueryInterface(kIFactoryIID, (void**)aFactory);
+    if (!aResult) {                                                  
+        return NS_ERROR_INVALID_POINTER;                             
+    }
+    if (aOuter) {                                                    
+        *aResult = nsnull;                                           
+        return NS_ERROR_NO_AGGREGATION;                              
+    }   
+    nsIWalletPreview* inst = nsnull;
+    nsresult rv = NS_NewWalletPreview(&inst);
+    if (NS_FAILED(rv)) {                                             
+        *aResult = nsnull;                                           
+        return rv;                                                   
+    } 
+    rv = inst->QueryInterface(aIID, aResult);
+    if (NS_FAILED(rv)) {                                             
+        *aResult = nsnull;                                           
+    }                                                                
+    NS_RELEASE(inst);             /* get rid of extra refcnt */      
+    return rv;              
 }
 
-extern "C" PR_IMPLEMENT(nsresult)
-NSRegisterSelf(nsISupports* aServMgr , const char* aPath)
+static NS_IMETHODIMP                 
+CreateNewSignonViewer(nsISupports* aOuter, REFNSIID aIID, void **aResult) 
 {
+    if (!aResult) {                                                  
+        return NS_ERROR_INVALID_POINTER;                             
+    }
+    if (aOuter) {                                                    
+        *aResult = nsnull;                                           
+        return NS_ERROR_NO_AGGREGATION;                              
+    }   
+    nsISignonViewer* inst = nsnull;
+    nsresult rv = NS_NewSignonViewer(&inst);
+    if (NS_FAILED(rv)) {                                             
+        *aResult = nsnull;                                           
+        return rv;                                                   
+    } 
+    rv = inst->QueryInterface(aIID, aResult);
+    if (NS_FAILED(rv)) {                                             
+        *aResult = nsnull;                                           
+    }                                                                
+    NS_RELEASE(inst);             /* get rid of extra refcnt */      
+    return rv;              
+}
 
-  nsresult rv = NS_OK;
+static NS_IMETHODIMP                 
+CreateNewCookieViewer(nsISupports* aOuter, REFNSIID aIID, void **aResult) 
+{
+    if (!aResult) {                                                  
+        return NS_ERROR_INVALID_POINTER;                             
+    }
+    if (aOuter) {                                                    
+        *aResult = nsnull;                                           
+        return NS_ERROR_NO_AGGREGATION;                              
+    }   
+    nsICookieViewer* inst = nsnull;
+    nsresult rv = NS_NewCookieViewer(&inst);
+    if (NS_FAILED(rv)) {                                             
+        *aResult = nsnull;                                           
+        return rv;                                                   
+    } 
+    rv = inst->QueryInterface(aIID, aResult);
+    if (NS_FAILED(rv)) {                                             
+        *aResult = nsnull;                                           
+    }                                                                
+    NS_RELEASE(inst);             /* get rid of extra refcnt */      
+    return rv;              
+}
 
-  nsCOMPtr<nsIServiceManager> servMgr(do_QueryInterface(aServMgr, &rv));
-  if (NS_FAILED(rv)) return rv;
-
-  NS_WITH_SERVICE(nsIComponentManager, compMgr, kComponentManagerCID, &rv);
-  if (NS_FAILED(rv)) return rv;
-
-  rv = compMgr->RegisterComponent(kWalletPreviewCID,
-                                  "WalletPreview World Component",
-                                  "component://netscape/walletpreview/walletpreview-world",
-                                  aPath, PR_TRUE, PR_TRUE);
-
-  rv = compMgr->RegisterComponent(kSignonViewerCID,
-                                  "SignonViewer World Component",
-                                  "component://netscape/signonviewer/signonviewer-world",
-                                  aPath, PR_TRUE, PR_TRUE);
-
-  rv = compMgr->RegisterComponent(kCookieViewerCID,
-                                  "CookieViewer World Component",
-                                  "component://netscape/cookieviewer/cookieviewer-world",
-                                  aPath, PR_TRUE, PR_TRUE);
-
-  rv = compMgr->RegisterComponent(kWalletEditorCID,
-                                  "WalletEditor World Component",
-                                  "component://netscape/walleteditor/walleteditor-world",
-                                  aPath, PR_TRUE, PR_TRUE);
-
-  return NS_OK;
+static NS_IMETHODIMP                 
+CreateNewWalletEditor(nsISupports* aOuter, REFNSIID aIID, void **aResult) 
+{
+    if (!aResult) {                                                  
+        return NS_ERROR_INVALID_POINTER;                             
+    }
+    if (aOuter) {                                                    
+        *aResult = nsnull;                                           
+        return NS_ERROR_NO_AGGREGATION;                              
+    }   
+    nsIWalletEditor* inst = nsnull;
+    nsresult rv = NS_NewWalletEditor(&inst);
+    if (NS_FAILED(rv)) {                                             
+        *aResult = nsnull;                                           
+        return rv;                                                   
+    } 
+    rv = inst->QueryInterface(aIID, aResult);
+    if (NS_FAILED(rv)) {                                             
+        *aResult = nsnull;                                           
+    }                                                                
+    NS_RELEASE(inst);             /* get rid of extra refcnt */      
+    return rv;              
 }
 
 
-extern "C" PR_IMPLEMENT(nsresult)
-NSUnregisterSelf(nsISupports* aServMgr, const char* aPath)
+//----------------------------------------------------------------------
+
+nsWalletViewerModule::nsWalletViewerModule()
+    : mInitialized(PR_FALSE)
 {
+    NS_INIT_ISUPPORTS();
+}
 
-  nsresult rv;
+nsWalletViewerModule::~nsWalletViewerModule()
+{
+    Shutdown();
+}
 
-  nsCOMPtr<nsIServiceManager> servMgr(do_QueryInterface(aServMgr, &rv));
-  if (NS_FAILED(rv)) return rv;
+NS_IMPL_ISUPPORTS(nsWalletViewerModule, NS_GET_IID(nsIModule))
 
-  NS_WITH_SERVICE(nsIComponentManager, compMgr, kComponentManagerCID, &rv);
-  if (NS_FAILED(rv)) return rv;
+// Perform our one-time intialization for this module
+nsresult
+nsWalletViewerModule::Initialize()
+{
+    if (mInitialized) {
+        return NS_OK;
+    }
+    mInitialized = PR_TRUE;
+    return NS_OK;
+}
 
-  rv = compMgr->UnregisterComponent(kWalletPreviewCID, aPath);
+// Shutdown this module, releasing all of the module resources
+void
+nsWalletViewerModule::Shutdown()
+{
+    // Release the factory objects
+    mWalletPreviewFactory = nsnull;
+    mSignonViewerFactory = nsnull;
+    mCookieViewerFactory = nsnull;
+    mWalletEditorFactory = nsnull;
+}
 
-  rv = compMgr->UnregisterComponent(kSignonViewerCID, aPath);
+// Create a factory object for creating instances of aClass.
+NS_IMETHODIMP
+nsWalletViewerModule::GetClassObject(nsIComponentManager *aCompMgr,
+                               const nsCID& aClass,
+                               const nsIID& aIID,
+                               void** r_classObj)
+{
+    nsresult rv;
 
-  rv = compMgr->UnregisterComponent(kCookieViewerCID, aPath);
+    // Defensive programming: Initialize *r_classObj in case of error below
+    if (!r_classObj) {
+        return NS_ERROR_INVALID_POINTER;
+    }
+    *r_classObj = NULL;
 
-  rv = compMgr->UnregisterComponent(kWalletEditorCID, aPath);
+    // Do one-time-only initialization if necessary
+    if (!mInitialized) {
+        rv = Initialize();
+        if (NS_FAILED(rv)) {
+            // Initialization failed! yikes!
+            return rv;
+        }
+    }
 
-  return NS_OK;
+    // Choose the appropriate factory, based on the desired instance
+    // class type (aClass).
+    nsCOMPtr<nsIGenericFactory> fact;
+    if (aClass.Equals(kWalletPreviewCID)) {
+        if (!mWalletPreviewFactory) {
+            // Create and save away the factory object for creating
+            // new instances of WalletPreview. This way if we are called
+            // again for the factory, we won't need to create a new
+            // one.
+            rv = NS_NewGenericFactory(getter_AddRefs(mWalletPreviewFactory),
+                                      CreateNewWalletPreview);
+        }
+        fact = mWalletPreviewFactory;
+    }
+    else if (aClass.Equals(kSignonViewerCID)) {
+        if (!mSignonViewerFactory) {
+            // Create and save away the factory object for creating
+            // new instances of SignonViewer. This way if we are called
+            // again for the factory, we won't need to create a new
+            // one.
+            rv = NS_NewGenericFactory(getter_AddRefs(mSignonViewerFactory),
+                                      CreateNewSignonViewer);
+        }
+        fact = mSignonViewerFactory;
+    }
+    else if (aClass.Equals(kCookieViewerCID)) {
+        if (!mCookieViewerFactory) {
+            // Create and save away the factory object for creating
+            // new instances of CookieViewer. This way if we are called
+            // again for the factory, we won't need to create a new
+            // one.
+            rv = NS_NewGenericFactory(getter_AddRefs(mCookieViewerFactory),
+                                      CreateNewCookieViewer);
+        }
+        fact = mCookieViewerFactory;
+    }
+    else if (aClass.Equals(kWalletEditorCID)) {
+        if (!mWalletEditorFactory) {
+            // Create and save away the factory object for creating
+            // new instances of WalletEditor. This way if we are called
+            // again for the factory, we won't need to create a new
+            // one.
+            rv = NS_NewGenericFactory(getter_AddRefs(mWalletEditorFactory),
+                                      CreateNewWalletEditor);
+        }
+        fact = mWalletEditorFactory;
+    }
+    else {
+        rv = NS_ERROR_FACTORY_NOT_REGISTERED;
+#ifdef DEBUG
+        char* cs = aClass.ToString();
+        printf("+++ nsWalletViewerModule: unable to create factory for %s\n", cs);
+        nsCRT::free(cs);
+#endif
+    }
+
+    if (fact) {
+        rv = fact->QueryInterface(aIID, r_classObj);
+    }
+
+    return rv;
+}
+
+//----------------------------------------
+
+struct Components {
+    const char* mDescription;
+    const nsID* mCID;
+    const char* mProgID;
+};
+
+// The list of components we register
+static Components gComponents[] = {
+    { "WalletPreview World Component", &kWalletPreviewCID,
+      "component://netscape/walletpreview/walletpreview-world", },
+    { "SignonViewer World Component", &kSignonViewerCID,
+      "component://netscape/signonviewer/signonviewer-world", },
+    { "CookieViewer World Component", &kCookieViewerCID,
+      "component://netscape/cookieviewer/cookieviewer-world", },
+    { "WalletEditor World Component", &kWalletEditorCID,
+      "component://netscape/walleteditor/walleteditor-world", },
+};
+#define NUM_COMPONENTS (sizeof(gComponents) / sizeof(gComponents[0]))
+
+NS_IMETHODIMP
+nsWalletViewerModule::RegisterSelf(nsIComponentManager *aCompMgr,
+                             nsIFileSpec* aPath,
+                             const char* registryLocation,
+                             const char* componentType)
+{
+    nsresult rv = NS_OK;
+
+#ifdef DEBUG
+    printf("*** Registering walletviewer components\n");
+#endif
+
+    Components* cp = gComponents;
+    Components* end = cp + NUM_COMPONENTS;
+    while (cp < end) {
+        rv = aCompMgr->RegisterComponentSpec(*cp->mCID, cp->mDescription,
+                                             cp->mProgID, aPath, PR_TRUE,
+                                             PR_TRUE);
+        if (NS_FAILED(rv)) {
+#ifdef DEBUG
+            printf("nsWalletViewerModule: unable to register %s component => %x\n",
+                   cp->mDescription, rv);
+#endif
+            break;
+        }
+        cp++;
+    }
+
+    return rv;
+}
+
+NS_IMETHODIMP
+nsWalletViewerModule::UnregisterSelf(nsIComponentManager* aCompMgr,
+                               nsIFileSpec* aPath,
+                               const char* registryLocation)
+{
+#ifdef DEBUG
+    printf("*** Unregistering walletviewer components\n");
+#endif
+    Components* cp = gComponents;
+    Components* end = cp + NUM_COMPONENTS;
+    while (cp < end) {
+        nsresult rv = aCompMgr->UnregisterComponentSpec(*cp->mCID, aPath);
+        if (NS_FAILED(rv)) {
+#ifdef DEBUG
+            printf("nsWalletViewerModule: unable to unregister %s component => %x\n",
+                   cp->mDescription, rv);
+#endif
+        }
+        cp++;
+    }
+
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsWalletViewerModule::CanUnload(nsIComponentManager *aCompMgr, PRBool *okToUnload)
+{
+    if (!okToUnload) {
+        return NS_ERROR_INVALID_POINTER;
+    }
+    *okToUnload = PR_FALSE;
+    return NS_ERROR_FAILURE;
+}
+
+//----------------------------------------------------------------------
+
+static nsWalletViewerModule *gModule = NULL;
+
+extern "C" NS_EXPORT nsresult NSGetModule(nsIComponentManager *servMgr,
+                                          nsIFileSpec* location,
+                                          nsIModule** return_cobj)
+{
+    nsresult rv = NS_OK;
+
+    NS_ENSURE_ARG_POINTER(return_cobj);
+    NS_ENSURE_NOT(gModule, NS_ERROR_FAILURE);
+
+    // Create and initialize the module instance
+    nsWalletViewerModule *m = new nsWalletViewerModule();
+    if (!m) {
+        return NS_ERROR_OUT_OF_MEMORY;
+    }
+
+    // Increase refcnt and store away nsIModule interface to m in return_cobj
+    rv = m->QueryInterface(NS_GET_IID(nsIModule), (void**)return_cobj);
+    if (NS_FAILED(rv)) {
+        delete m;
+        m = nsnull;
+    }
+    gModule = m;                  // WARNING: Weak Reference
+    return rv;
 }

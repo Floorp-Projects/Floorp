@@ -22,6 +22,8 @@
 #include "nsIFactory.h"
 #include "nsIWalletService.h"
 #include "nsIServiceManager.h"
+#include "nsIModule.h"
+#include "nsIGenericFactory.h"
 
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 static NS_DEFINE_IID(kIFactoryIID,  NS_IFACTORY_IID);
@@ -34,177 +36,250 @@ static NS_DEFINE_CID(kComponentManagerCID, NS_COMPONENTMANAGER_CID);
 //#define NS_STATIC_CAST(__type, __ptr)	   ((__type)(__ptr))
 //#endif
 
-// factory functions
 nsresult NS_NewWalletService(nsIWalletService** result);
 
-class WalletFactoryImpl : public nsIFactory
+// Module implementation
+class nsWalletModule : public nsIModule
 {
 public:
-    WalletFactoryImpl(const nsCID &aClass);
+    nsWalletModule();
+    virtual ~nsWalletModule();
 
-    // nsISupports methods
     NS_DECL_ISUPPORTS
 
-    // nsIFactory methods
-    NS_IMETHOD CreateInstance(nsISupports *aOuter,
-			      const nsIID &aIID,
-			      void **aResult);
-
-    NS_IMETHOD LockFactory(PRBool aLock);
+    NS_DECL_NSIMODULE
 
 protected:
-    virtual ~WalletFactoryImpl();
+    nsresult Initialize();
 
-private:
-    nsCID     mClassID;
+    void Shutdown();
+
+    PRBool mInitialized;
+    nsCOMPtr<nsIGenericFactory> mFactory;
 };
 
-////////////////////////////////////////////////////////////////////////
+//----------------------------------------------------------------------
 
-WalletFactoryImpl::WalletFactoryImpl(const nsCID &aClass)
-{
-    NS_INIT_REFCNT();
-    mClassID = aClass;
+// Functions used to create new instances of a given object by the
+// generic factory.
+
+static NS_IMETHODIMP  
+CreateNewWallet(nsISupports* aOuter, REFNSIID aIID, void **aResult) 
+{                                                                    
+    if (!aResult) {                                                  
+        return NS_ERROR_INVALID_POINTER;                             
+    }                                                                
+    if (aOuter) {                                                    
+        *aResult = nsnull;                                           
+        return NS_ERROR_NO_AGGREGATION;                              
+    }                                                                
+    nsIWalletService* inst;                                                
+    nsresult rv = NS_NewWalletService(&inst);                              
+    if (NS_FAILED(rv)) {                                             
+        *aResult = nsnull;                                           
+        return rv;                                                   
+    }                                                                
+    rv = inst->QueryInterface(aIID, aResult);                        
+    if (NS_FAILED(rv)) {                                             
+        *aResult = nsnull;                                           
+    }                                                                
+    NS_RELEASE(inst);             /* get rid of extra refcnt */      
+    return rv;                                                       
 }
 
-WalletFactoryImpl::~WalletFactoryImpl()
+//----------------------------------------------------------------------
+
+nsWalletModule::nsWalletModule()
+    : mInitialized(PR_FALSE)
 {
-    NS_ASSERTION(mRefCnt == 0, "non-zero refcnt at destruction");
+    NS_INIT_ISUPPORTS();
 }
 
-NS_IMETHODIMP
-WalletFactoryImpl::QueryInterface(const nsIID &aIID,
-				      void **aResult)
+nsWalletModule::~nsWalletModule()
 {
-    if (! aResult) {
-	return NS_ERROR_NULL_POINTER;
-    }
+    Shutdown();
+}
 
-    // Always NULL result, in case of failure
-    *aResult = nsnull;
+NS_IMPL_ISUPPORTS(nsWalletModule, NS_GET_IID(nsIModule))
 
-    if (aIID.Equals(kISupportsIID)) {
-	*aResult = NS_STATIC_CAST(nsISupports*, this);
-	AddRef();
-	return NS_OK;
-    } else if (aIID.Equals(kIFactoryIID)) {
-        *aResult = NS_STATIC_CAST(nsIFactory*, this);
-        AddRef();
+// Perform our one-time intialization for this module
+nsresult
+nsWalletModule::Initialize()
+{
+    if (mInitialized) {
         return NS_OK;
     }
-    return NS_NOINTERFACE;
+    mInitialized = PR_TRUE;
+    return NS_OK;
 }
 
-NS_IMPL_ADDREF(WalletFactoryImpl);
-NS_IMPL_RELEASE(WalletFactoryImpl);
+// Shutdown this module, releasing all of the module resources
+void
+nsWalletModule::Shutdown()
+{
+    // Release the factory object
+    mFactory = nsnull;
+}
+
+// Create a factory object for creating instances of aClass.
+NS_IMETHODIMP
+nsWalletModule::GetClassObject(nsIComponentManager *aCompMgr,
+                               const nsCID& aClass,
+                               const nsIID& aIID,
+                               void** r_classObj)
+{
+    nsresult rv;
+
+    // Defensive programming: Initialize *r_classObj in case of error below
+    if (!r_classObj) {
+        return NS_ERROR_INVALID_POINTER;
+    }
+    *r_classObj = NULL;
+
+    // Do one-time-only initialization if necessary
+    if (!mInitialized) {
+        rv = Initialize();
+        if (NS_FAILED(rv)) {
+            // Initialization failed! yikes!
+            return rv;
+        }
+    }
+
+    // Choose the appropriate factory, based on the desired instance
+    // class type (aClass).
+    nsCOMPtr<nsIGenericFactory> fact;
+    if (aClass.Equals(kWalletServiceCID)) {
+        if (!mFactory) {
+            // Create and save away the factory object for creating
+            // new instances of Wallet. This way if we are called
+            // again for the factory, we won't need to create a new
+            // one.
+            rv = NS_NewGenericFactory(getter_AddRefs(mFactory),
+                                      CreateNewWallet);
+        }
+        fact = mFactory;
+    }
+    else {
+        rv = NS_ERROR_FACTORY_NOT_REGISTERED;
+#ifdef DEBUG
+        char* cs = aClass.ToString();
+        printf("+++ nsWalletModule: unable to create factory for %s\n", cs);
+        nsCRT::free(cs);
+#endif
+    }
+
+    if (fact) {
+        rv = fact->QueryInterface(aIID, r_classObj);
+    }
+
+    return rv;
+}
+
+//----------------------------------------
+
+struct Components {
+    const char* mDescription;
+    const nsID* mCID;
+    const char* mProgID;
+};
+
+// The list of components we register
+static Components gComponents[] = {
+    { NS_WALLETSERVICE_CLASSNAME, &kWalletServiceCID,
+      "component://netscape/wallet", },
+};
+#define NUM_COMPONENTS (sizeof(gComponents) / sizeof(gComponents[0]))
 
 NS_IMETHODIMP
-WalletFactoryImpl::CreateInstance(nsISupports *aOuter,
-			     const nsIID &aIID,
-			     void **aResult)
+nsWalletModule::RegisterSelf(nsIComponentManager *aCompMgr,
+                             nsIFileSpec* aPath,
+                             const char* registryLocation,
+                             const char* componentType)
 {
-    if (! aResult){
-	return NS_ERROR_NULL_POINTER;
-    }
-    if (aOuter) {
-	return NS_ERROR_NO_AGGREGATION;
-    }
-    *aResult = nsnull;
+    nsresult rv = NS_OK;
 
-    nsresult rv;
-    nsISupports *inst = nsnull;
-    if (mClassID.Equals(kWalletServiceCID)) {
-	if (NS_FAILED(rv = NS_NewWalletService((nsIWalletService**) &inst))) {
-	    return rv;
+#ifdef DEBUG
+    printf("*** Registering wallet components\n");
+#endif
+
+    Components* cp = gComponents;
+    Components* end = cp + NUM_COMPONENTS;
+    while (cp < end) {
+        rv = aCompMgr->RegisterComponentSpec(*cp->mCID, cp->mDescription,
+                                             cp->mProgID, aPath, PR_TRUE,
+                                             PR_TRUE);
+        if (NS_FAILED(rv)) {
+#ifdef DEBUG
+            printf("nsWalletModule: unable to register %s component => %x\n",
+                   cp->mDescription, rv);
+#endif
+            break;
         }
-    } else {
-        return NS_ERROR_NO_INTERFACE;
+        cp++;
     }
 
-
-    rv = inst->QueryInterface(aIID, aResult);
-    NS_IF_RELEASE(inst);
     return rv;
 }
 
-nsresult WalletFactoryImpl::LockFactory(PRBool aLock)
+NS_IMETHODIMP
+nsWalletModule::UnregisterSelf(nsIComponentManager* aCompMgr,
+                               nsIFileSpec* aPath,
+                               const char* registryLocation)
 {
-    // Not implemented in simplest case.
+#ifdef DEBUG
+    printf("*** Unregistering wallet components\n");
+#endif
+    Components* cp = gComponents;
+    Components* end = cp + NUM_COMPONENTS;
+    while (cp < end) {
+        nsresult rv = aCompMgr->UnregisterComponentSpec(*cp->mCID, aPath);
+        if (NS_FAILED(rv)) {
+#ifdef DEBUG
+            printf("nsWalletModule: unable to unregister %s component => %x\n",
+                   cp->mDescription, rv);
+#endif
+        }
+        cp++;
+    }
+
     return NS_OK;
 }
 
-////////////////////////////////////////////////////////////////////////
-
-
-
-// return the proper factory to the caller
-extern "C" PR_IMPLEMENT(nsresult)
-NSGetFactory(nsISupports* serviceMgr,
-             const nsCID &aClass,
-             const char *aClassName,
-             const char *aProgID,
-             nsIFactory **aFactory)
+NS_IMETHODIMP
+nsWalletModule::CanUnload(nsIComponentManager *aCompMgr, PRBool *okToUnload)
 {
-    if (! aFactory) {
-	return NS_ERROR_NULL_POINTER;
+    if (!okToUnload) {
+        return NS_ERROR_INVALID_POINTER;
     }
-    WalletFactoryImpl* factory = new WalletFactoryImpl(aClass);
-    if (factory == nsnull) {
+    *okToUnload = PR_FALSE;
+    return NS_ERROR_FAILURE;
+}
+
+//----------------------------------------------------------------------
+
+static nsWalletModule *gModule = NULL;
+
+extern "C" NS_EXPORT nsresult NSGetModule(nsIComponentManager *servMgr,
+                                          nsIFileSpec* location,
+                                          nsIModule** return_cobj)
+{
+    nsresult rv = NS_OK;
+
+    NS_ENSURE_ARG_POINTER(return_cobj);
+    NS_ENSURE_NOT(gModule, NS_ERROR_FAILURE);
+
+    // Create and initialize the module instance
+    nsWalletModule *m = new nsWalletModule();
+    if (!m) {
         return NS_ERROR_OUT_OF_MEMORY;
     }
-    NS_ADDREF(factory);
-    *aFactory = factory;
-    return NS_OK;
-}
 
-extern "C" PR_IMPLEMENT(nsresult)
-NSRegisterSelf(nsISupports* aServMgr , const char* aPath)
-{
-    nsresult rv;
-
-    nsCOMPtr<nsIServiceManager> servMgr(do_QueryInterface(aServMgr, &rv));
-    if (NS_FAILED(rv)) return rv;
-
-    nsIComponentManager* compMgr;
-    rv = servMgr->GetService(kComponentManagerCID,
-                             nsIComponentManager::GetIID(),
-                             (nsISupports**)&compMgr);
+    // Increase refcnt and store away nsIModule interface to m in return_cobj
+    rv = m->QueryInterface(NS_GET_IID(nsIModule), (void**)return_cobj);
     if (NS_FAILED(rv)) {
-        return rv;
+        delete m;
+        m = nsnull;
     }
-
-    // register wallet service
-    rv = compMgr->RegisterComponent(kWalletServiceCID,
-                                    NS_WALLETSERVICE_CLASSNAME,
-                                    NS_WALLETSERVICE_PROGID,
-                                    aPath, PR_TRUE, PR_TRUE);
-
-    
-    (void)servMgr->ReleaseService(kComponentManagerCID, compMgr);
-    return rv;
-}
-
-
-extern "C" PR_IMPLEMENT(nsresult)
-NSUnregisterSelf(nsISupports* aServMgr , const char* aPath)
-{
-    nsresult rv;
-
-    nsCOMPtr<nsIServiceManager> servMgr(do_QueryInterface(aServMgr, &rv));
-    if (NS_FAILED(rv)) {
-        return rv;
-    }
-    nsIComponentManager* compMgr;
-    rv = servMgr->GetService(kComponentManagerCID,
-                             nsIComponentManager::GetIID(),
-                             (nsISupports**)&compMgr);
-    if (NS_FAILED(rv)) {
-        return rv;
-    }
-
-    // unregister wallet component
-    rv = compMgr->UnregisterComponent(kWalletServiceCID, aPath);
-    
-    (void)servMgr->ReleaseService(kComponentManagerCID, compMgr);
+    gModule = m;                  // WARNING: Weak Reference
     return rv;
 }
