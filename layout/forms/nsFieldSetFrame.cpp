@@ -523,10 +523,13 @@ nsFieldSetFrame::Reflow(nsIPresContext*          aPresContext,
         }
     }
 
+    // use the computed width if the inner content does not fill it
+    if (aReflowState.mComputedWidth != NS_INTRINSICSIZE &&
+        aReflowState.mComputedWidth > contentRect.width) {
+      contentRect.width = aReflowState.mComputedWidth;
+    }
+
     if (mLegendFrame) {
-      // use the computed width if the inner content does not fill it
-      if (aReflowState.mComputedWidth != NS_INTRINSICSIZE && aReflowState.mComputedWidth > contentRect.width ) 
-        contentRect.width = aReflowState.mComputedWidth;
       // if the content rect is larger then the  legend we can align the legend
       if (contentRect.width > mLegendRect.width) {
         PRInt32 align = ((nsLegendFrame*)mLegendFrame)->GetAlign();
