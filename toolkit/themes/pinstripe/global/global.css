@@ -140,8 +140,11 @@ statusbarpanel {
 }
 
 #commonDialog {
-	max-width: 40em;
 	line-height: 13px;
+}
+
+#commonDialog > hbox > vbox {
+	max-width: 33em !important;
 }
 
 #header {
