@@ -41,6 +41,7 @@ REQUIRES = \
 	history \
 	helperAppDlg \
 	content \
+	webbrowserpersist \
 	$(NULL)
 
 DIRS=components \

@@ -210,7 +210,7 @@ NS_IMETHODIMP CBrowserImpl::SetChromeFlags(PRUint32 aChromeMask)
 // Ex: In response to a JavaScript Window.Open() call
 //
 //
-NS_IMETHODIMP CBrowserImpl::CreateBrowserWindow(PRUint32 chromeMask, PRInt32 aX, PRInt32 aY, PRInt32 aCX, PRInt32 aCY, nsIWebBrowser **aWebBrowser)
+/*NS_IMETHODIMP CBrowserImpl::CreateBrowserWindow(PRUint32 chromeMask, PRInt32 aX, PRInt32 aY, PRInt32 aCX, PRInt32 aCY, nsIWebBrowser **aWebBrowser)
 {
 	if(! m_pBrowserFrameGlue)
 	{
@@ -230,6 +230,7 @@ NS_IMETHODIMP CBrowserImpl::CreateBrowserWindow(PRUint32 chromeMask, PRInt32 aX,
 	    return NS_ERROR_FAILURE;
 	}
 }
+*/
 
 // Will get called in response to JavaScript window.close()
 //
