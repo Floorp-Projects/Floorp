@@ -84,16 +84,16 @@ sub pickplatform {
         return $value;
     }
     if ( Param('usebrowserinfo') ) {
-    for ($ENV{'HTTP_USER_AGENT'}) {
-        /Mozilla.*\(Windows/ && do {return "PC";};
-        /Mozilla.*\(Macintosh/ && do {return "Macintosh";};
-        /Mozilla.*\(Win/ && do {return "PC";};
-        /Mozilla.*Linux.*86/ && do {return "PC";};
-        /Mozilla.*Linux.*alpha/ && do {return "DEC";};
-        /Mozilla.*OSF/ && do {return "DEC";};
-        /Mozilla.*HP-UX/ && do {return "HP";};
-        /Mozilla.*IRIX/ && do {return "SGI";};
-        /Mozilla.*(SunOS|Solaris)/ && do {return "Sun";};
+        for ($ENV{'HTTP_USER_AGENT'}) {
+            /Mozilla.*\(Windows/ && do {return "PC";};
+            /Mozilla.*\(Macintosh/ && do {return "Macintosh";};
+            /Mozilla.*\(Win/ && do {return "PC";};
+            /Mozilla.*Linux.*86/ && do {return "PC";};
+            /Mozilla.*Linux.*alpha/ && do {return "DEC";};
+            /Mozilla.*OSF/ && do {return "DEC";};
+            /Mozilla.*HP-UX/ && do {return "HP";};
+            /Mozilla.*IRIX/ && do {return "SGI";};
+            /Mozilla.*(SunOS|Solaris)/ && do {return "Sun";};
         }
     }
     # default
@@ -106,10 +106,10 @@ sub pickversion {
     my $version = formvalue('version');
 
     if ( Param('usebrowserinfo') ) {
-    if ($version eq "") {
-        if ($ENV{'HTTP_USER_AGENT'} =~ m@Mozilla[ /]([^ ]*)@) {
-        $version = $1;
-        }
+        if ($version eq "") {
+            if ($ENV{'HTTP_USER_AGENT'} =~ m@Mozilla[ /]([^ ]*)@) {
+                $version = $1;
+            }
         }
     }
     
