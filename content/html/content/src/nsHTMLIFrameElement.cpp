@@ -50,7 +50,7 @@
 #include "nsIDocument.h"
 #include "nsIDOMDocument.h"
 #include "nsIWebNavigation.h"
-#include "nsIHTMLAttributes.h"
+#include "nsHTMLAttributes.h"
 #include "nsIChromeEventHandler.h"
 #include "nsDOMError.h"
 #include "nsRuleNode.h"

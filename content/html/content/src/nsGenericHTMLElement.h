@@ -55,7 +55,7 @@ class nsIDOMEventListener;
 class nsIDOMNodeList;
 class nsIEventListenerManager;
 class nsIFrame;
-class nsIHTMLAttributes;
+class nsHTMLAttributes;
 class nsIHTMLMappedAttributes;
 class nsIHTMLContent;
 class nsIStyleRule;
@@ -380,7 +380,7 @@ public:
                                    const nsAString& aValue,
                                    PRBool aNotify);
 
-  nsIHTMLAttributes* mAttributes;
+  nsHTMLAttributes* mAttributes;
 
   // Helper functions for <a> and <area>
   static nsresult SetProtocolInHrefString(const nsAString &aHref,

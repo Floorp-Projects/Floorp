@@ -45,7 +45,6 @@
 #include "nsISupportsArray.h"
 #include "nsHashtable.h"
 #include "nsIHTMLContent.h"
-#include "nsIHTMLAttributes.h"
 #include "nsIStyleRule.h"
 #include "nsIFrame.h"
 #include "nsHTMLAtoms.h"

@@ -223,6 +223,12 @@ public:
                                                   mInner.mNamespaceID);
   }
 
+  PRBool NameAndNamespaceEquals(nsINodeInfo *aNodeInfo) const
+  {
+    return aNodeInfo == this || aNodeInfo->Equals(mInner.mName,
+                                                  mInner.mNamespaceID);
+  }
+
   PRBool Equals(nsIAtom *aNameAtom) const
   {
     return mInner.mName == aNameAtom;

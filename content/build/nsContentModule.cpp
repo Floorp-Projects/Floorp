@@ -79,7 +79,7 @@
 #include "nsIFrameSelection.h"
 #include "nsIFrameUtil.h"
 #include "nsIGenericFactory.h"
-#include "nsIHTMLAttributes.h"
+#include "nsHTMLAttributes.h"
 #include "nsIHTMLCSSStyleSheet.h"
 #include "nsIHTMLContent.h"
 #include "nsIHTMLStyleSheet.h"

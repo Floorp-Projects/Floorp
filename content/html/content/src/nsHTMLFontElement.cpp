@@ -47,7 +47,7 @@
 #include "nsStyleConsts.h"
 #include "nsStyleUtil.h"
 #include "nsIPresContext.h"
-#include "nsIHTMLAttributes.h"
+#include "nsHTMLAttributes.h"
 #include "nsCSSDeclaration.h"
 #include "nsRuleNode.h"
 

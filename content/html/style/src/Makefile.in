@@ -85,7 +85,6 @@ EXPORTS		= \
 		nsCSSDeclaration.h \
 		nsICSSOMFactory.h \
 		nsIHTMLCSSStyleSheet.h \
-		nsIHTMLAttributes.h \
 		nsIInspectorCSSUtils.h \
 		$(NULL)
 

@@ -43,7 +43,6 @@
 class nsIAtom;
 class nsString;
 class nsHTMLValue;
-class nsIHTMLAttributes;
 class nsIHTMLMappedAttributes;
 class nsIHTMLContent;
 class nsIDocument;
@@ -64,21 +63,6 @@ public:
   NS_IMETHOD SetActiveLinkColor(nscolor aColor) = 0;
   NS_IMETHOD GetVisitedLinkColor(nscolor& aColor) = 0;
   NS_IMETHOD SetVisitedLinkColor(nscolor aColor) = 0;
-
-  // Attribute management methods
-  NS_IMETHOD SetAttributesFor(nsIHTMLContent* aContent, 
-                              nsIHTMLAttributes*& aAttributes) = 0;
-  NS_IMETHOD SetAttributeFor(nsIAtom* aAttribute, 
-                             const nsAString& aValue, 
-                             PRBool aMappedToStyle,
-                             nsIHTMLContent* aContent, 
-                             nsIHTMLAttributes*& aAttributes) = 0;
-  NS_IMETHOD SetAttributeFor(nsIAtom* aAttribute, const nsHTMLValue& aValue, 
-                             PRBool aMappedToStyle,
-                             nsIHTMLContent* aContent, 
-                             nsIHTMLAttributes*& aAttributes) = 0;
-  NS_IMETHOD UnsetAttributeFor(nsIAtom* aAttribute, nsIHTMLContent* aContent, 
-                               nsIHTMLAttributes*& aAttributes) = 0;
 
   // Mapped Attribute management methods
   NS_IMETHOD UniqueMappedAttributes(nsIHTMLMappedAttributes* aMapped,

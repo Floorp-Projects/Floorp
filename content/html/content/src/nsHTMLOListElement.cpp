@@ -44,7 +44,7 @@
 #include "nsIStyleContext.h"
 #include "nsStyleConsts.h"
 #include "nsIPresContext.h"
-#include "nsIHTMLAttributes.h"
+#include "nsHTMLAttributes.h"
 #include "nsRuleNode.h"
 
 class nsHTMLOListElement : public nsGenericHTMLContainerElement,

@@ -44,7 +44,7 @@
 #include "nsIStyleContext.h"
 #include "nsStyleConsts.h"
 #include "nsIPresContext.h"
-#include "nsIHTMLAttributes.h"
+#include "nsHTMLAttributes.h"
 #include "nsRuleNode.h"
 
 // XXX nav4 has type= start= (same as OL/UL)

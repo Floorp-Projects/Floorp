@@ -56,7 +56,7 @@
 #include "nsIStyleContext.h"
 #include "nsStyleConsts.h"
 #include "nsIPresContext.h"
-#include "nsIHTMLAttributes.h"
+#include "nsHTMLAttributes.h"
 #include "nsIFormControlFrame.h"
 #include "nsIGfxTextControlFrame.h"
 #include "nsIEventStateManager.h"

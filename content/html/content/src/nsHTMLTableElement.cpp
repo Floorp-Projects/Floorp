@@ -43,7 +43,7 @@
 #include "nsDOMError.h"
 #include "GenericElementCollection.h"
 #include "nsIHTMLContent.h"
-#include "nsIHTMLAttributes.h"
+#include "nsHTMLAttributes.h"
 #include "nsGenericHTMLElement.h"
 #include "nsHTMLAtoms.h"
 #include "nsHTMLIIDs.h"

@@ -37,7 +37,7 @@
 #include "nsISupportsArray.h"
 #include "nsHashtable.h"
 #include "nsIHTMLContent.h"
-#include "nsIHTMLAttributes.h"
+#include "nsHTMLAttributes.h"
 #include "nsILink.h"
 #include "nsStyleUtil.h"
 #include "nsIStyleRuleProcessor.h"
@@ -852,21 +852,6 @@ public:
   NS_IMETHOD SetActiveLinkColor(nscolor aColor);
   NS_IMETHOD SetVisitedLinkColor(nscolor aColor);
 
-  // Attribute management methods, aAttributes is an in/out param
-  NS_IMETHOD SetAttributesFor(nsIHTMLContent* aContent, 
-                              nsIHTMLAttributes*& aAttributes);
-  NS_IMETHOD SetAttributeFor(nsIAtom* aAttribute,
-                             const nsAString& aValue, 
-                             PRBool aMappedToStyle,
-                             nsIHTMLContent* aContent, 
-                             nsIHTMLAttributes*& aAttributes);
-  NS_IMETHOD SetAttributeFor(nsIAtom* aAttribute, const nsHTMLValue& aValue, 
-                             PRBool aMappedToStyle,
-                             nsIHTMLContent* aContent, 
-                             nsIHTMLAttributes*& aAttributes);
-  NS_IMETHOD UnsetAttributeFor(nsIAtom* aAttribute, nsIHTMLContent* aContent, 
-                               nsIHTMLAttributes*& aAttributes);
-
   // Mapped Attribute management methods
   NS_IMETHOD UniqueMappedAttributes(nsIHTMLMappedAttributes* aMapped,
                                     nsIHTMLMappedAttributes*& aUniqueMapped);
@@ -1404,75 +1389,6 @@ HTMLStyleSheetImpl::SetVisitedLinkColor(nscolor aColor)
   }
   mVisitedRule->mColor = aColor;
   return NS_OK;
-}
-
-NS_IMETHODIMP
-HTMLStyleSheetImpl::SetAttributesFor(nsIHTMLContent* aContent,
-                                     nsIHTMLAttributes*& aAttributes)
-{
-  if (aAttributes) {
-    aAttributes->SetStyleSheet(this);
-  }
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-HTMLStyleSheetImpl::SetAttributeFor(nsIAtom* aAttribute, 
-                                    const nsAString& aValue,
-                                    PRBool aMappedToStyle,
-                                    nsIHTMLContent* aContent, 
-                                    nsIHTMLAttributes*& aAttributes)
-{
-  if (!aAttributes) {
-    nsresult rv = NS_NewHTMLAttributes(&aAttributes);
-    NS_ENSURE_SUCCESS(rv, rv);
-  }
-
-  return aAttributes->SetAttributeFor(aAttribute, aValue, aMappedToStyle, 
-                                      aContent, this);
-}
-
-NS_IMETHODIMP
-HTMLStyleSheetImpl::SetAttributeFor(nsIAtom* aAttribute, 
-                                    const nsHTMLValue& aValue,
-                                    PRBool aMappedToStyle,
-                                    nsIHTMLContent* aContent, 
-                                    nsIHTMLAttributes*& aAttributes)
-{
-  nsresult rv = NS_OK;
-
-  if ((!aAttributes) && (eHTMLUnit_Null != aValue.GetUnit())) {
-    rv = NS_NewHTMLAttributes(&aAttributes);
-    NS_ENSURE_SUCCESS(rv, rv);
-  }
-
-  PRInt32 count;
-  rv = aAttributes->SetAttributeFor(aAttribute, aValue, aMappedToStyle,
-                                    aContent, this, count);
-  if (count == 0) {
-    NS_RELEASE(aAttributes);
-  }
-
-  return rv;
-}
-
-NS_IMETHODIMP
-HTMLStyleSheetImpl::UnsetAttributeFor(nsIAtom* aAttribute,
-                                      nsIHTMLContent* aContent, 
-                                      nsIHTMLAttributes*& aAttributes)
-{
-  nsresult  result = NS_OK;
-
-  if (aAttributes) {
-    PRInt32 count;
-    result = aAttributes->UnsetAttributeFor(aAttribute, aContent, this, count);
-    if (0 == count) {
-      NS_RELEASE(aAttributes);
-    }
-  }
-
-  return result;
-
 }
 
 NS_IMETHODIMP

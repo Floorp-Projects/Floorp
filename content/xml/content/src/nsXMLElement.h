@@ -48,7 +48,6 @@
 #include "nsIStyledContent.h"
 
 class nsIEventListenerManager;
-class nsIHTMLAttributes;
 class nsIURI;
 class nsIWebShell;
 

@@ -14,5 +14,4 @@ nsICSSRule.h
 nsICSSStyleRule.h
 nsICSSStyleRuleProcessor.h
 nsIHTMLCSSStyleSheet.h
-nsIHTMLAttributes.h
 nsIInspectorCSSUtils.h
