@@ -15,48 +15,24 @@
 # Copyright (C) 1998 Netscape Communications Corporation.  All Rights
 # Reserved.
 
-#
-# 
-#
 
-DEPTH		= ../../..
-MODULE		= rdf
-LIBRARY_NAME	= $(LITE_PREFIX)rdf
+DEPTH		= ../..
+MODULE		= xml
+LIBRARY_NAME	= $(LITE_PREFIX)xml
 
-REQUIRES	= nspr dbm java js htmldlgs util img layer pref
+REQUIRES	= nspr img layer util
+EXPORTS		= expat/xmlparse/xmlparse.h 
 
-JNI_GEN		= netscape.rdf.core.NativeRDF netscape.rdf.core.NativeRDFEnumeration
+CSRCS		= expat/xmltok/xmltok.c \
+		  expat/xmltok/xmlrole.c \
+		  expat/xmlparse/xmlparse.c \
+		  expat/xmlparse/hashtable.c \
+		  glue/xmlglue.c \
+		  glue/xmldom.c \
+		  glue/xmlss.c 
 
-CSRCS		= bmk2mcf.c \
-		  vocab.c \
-		  nlcstore.c \
-		  mcff2mcf.c \
-		  rdfht.c \
-		  remstore.c \
-		  glue.c \
-		  utils.c \
-		  fs2rdf.c \
-		  hist2rdf.c \
-		  rdfparse.c \
-		  pm2rdf.c \
-		  es2mcf.c \
-		  columns.c \
-		  scook.c \
-		  rdfjava.c \
-		  mcf.c \
-		  ht.c \
-		  $(NULL)
-
-LOCAL_INCLUDES	= -I$(PUBLIC)/rdf
+LOCAL_INCLUDES	= -I./expat/xmltok -I./expat/xmlparse/ -I./glue
 
 include $(DEPTH)/config/rules.mk
 
 $(LIBRARY): $(OBJS)
-
-test:	$(OBJDIR)/test
-
-.PHONY: test
-
-$(OBJDIR)/test: $(OBJDIR)/test.o $(LIBRARY)
-	    @$(MAKE_OBJDIR)
-	    $(CC) -o $@ $(OBJDIR)/test.o $(LIBRARY) $(LIBNSPR) $(DIST)/lib/libdbm.$(LIB_SUFFIX) $(LDFLAGS)

@@ -28,6 +28,7 @@ DIRS		= \
 	libfont \
 	libreg \
 	rdf \
+	xml \
 	schedulr \
 	security \
 	$(NULL)

@@ -89,6 +89,7 @@ REQUIRES	= \
 		  hook \
 		  pref \
 		  rdf \
+		  xml \
 		  security \
 		  softupdt \
 		  libreg \
@@ -223,6 +224,7 @@ BASIC_LIBS	= \
 		  $(DIST)/lib/libxlate.a \
 		  $(DIST)/lib/lib$(LITE_PREFIX)net.a \
 		  $(DIST)/lib/lib$(LITE_PREFIX)rdf.a \
+		  $(DIST)/lib/lib$(LITE_PREFIX)xml.a \
 		  $(DIST)/lib/lib$(LITE_PREFIX)lay.a \
 		  $(DIST)/lib/libpng.a \
 		  $(DIST)/lib/libmariner.a \
