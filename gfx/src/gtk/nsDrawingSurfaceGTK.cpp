@@ -16,9 +16,17 @@
  * Reserved.
  */
 
-#include <gtk/gtk.h>
+#if defined (HAVE_IPC_H) && defined (HAVE_SHM_H) && defined (HAVE_XSHM_H)
+#define USE_SHM
+#endif
+
 #include <gdk/gdkx.h>
 #include <gdk/gdkprivate.h>
+#ifdef USE_SHM
+#include <sys/ipc.h>
+#include <sys/shm.h>
+#include <X11/extensions/XShm.h>
+#endif /* USE_SHM */
 #include "nsDrawingSurfaceGTK.h"
 
 static NS_DEFINE_IID(kIDrawingSurfaceIID, NS_IDRAWING_SURFACE_IID);
@@ -149,16 +157,33 @@ NS_IMETHODIMP nsDrawingSurfaceGTK :: Lock(PRInt32 aX, PRInt32 aY,
   mLockFlags = aFlags;
 
   // Obtain an ximage from the pixmap.
-  //  g_print("gdk_get_use_xshm() = %i\n", gdk_get_use_xshm());
+#if USE_SHM
+  if (gdk_get_use_xshm())
+  {
+    mImage = gdk_image_new(GDK_IMAGE_FASTEST,
+                           gdk_rgb_get_visual(),
+                           mLockWidth,
+                           mLockHeight);
 
-  mImage = ::gdk_image_get(mPixmap, mLockX, mLockY, mLockWidth, mLockHeight);
- 
-  // The bits will be in the ximage.
-  *aBits = mImage->mem;
+    XShmGetImage(GDK_DISPLAY(),
+                 GDK_WINDOW_XWINDOW(mPixmap),
+                 GDK_IMAGE_XIMAGE(mImage),
+                 mLockX, mLockY,
+                 0xFFFFFFFF);
 
+  }
+  else
+  {
+#endif /* USE_SHM */
+    mImage = ::gdk_image_get(mPixmap, mLockX, mLockY, mLockWidth, mLockHeight);
+#if USE_SHM
+  }
+#endif /* USE_SHM */
 
-  *aWidthBytes = mImage->bpl;
-  *aStride = mImage->bpl;
+  *aBits = GDK_IMAGE_XIMAGE(mImage)->data;
+
+  *aWidthBytes = GDK_IMAGE_XIMAGE(mImage)->bytes_per_line;
+  *aStride = GDK_IMAGE_XIMAGE(mImage)->bytes_per_line;
 
 
 #if 0
@@ -234,31 +259,13 @@ NS_IMETHODIMP nsDrawingSurfaceGTK :: Unlock(void)
             mLockWidth, mLockHeight);
 #endif
 
-#if XSHM
-    if (gdk_get_use_xshm())
-    {
-      XShmPutImage(GDK_DISPLAY(),
-                   GDK_WINDOW_XWINDOW(mPixmap),
-                   GDK_GC_XGC(mGC),
-                   GDK_IMAGE_XIMAGE(mImage),
+    gdk_draw_image(mPixmap,
+                   mGC,
+                   mImage,
                    0, 0,
                    mLockX, mLockY,
-                   mLockWidth, mLockHeight,
-                   False);
-      gdk_flush();
-    }
-    else
-    {
-#endif
-      gdk_draw_image(mPixmap,
-                     mGC,
-                     mImage,
-                     0, 0,
-                     mLockX, mLockY,
-                     mLockWidth, mLockHeight);
-#ifdef XSHM
-    }
-#endif
+                   mLockWidth, mLockHeight);
+
   }
 
   if (mImage)
@@ -353,3 +360,4 @@ GdkDrawable *nsDrawingSurfaceGTK::GetDrawable(void)
 {
   return mPixmap;
 }
+
