@@ -16,41 +16,33 @@
 // Contributors:
 //     Stephen Lee <slee@uk.bnsmc.com>
 
-// variable below should be initialised according to whether
-// browser is IE 5.0 or earlier, but should be false for IE 5.5
 
-var is_IE5=(navigator.appVersion.search(/MSIE 5.0/g)>0);
+// Use no_result variable to avoid problems with "undefined" on some browsers
 
-// Bodge to get round IE5 not understanding "undefined", "shift" and "unshift"
+var no_result="---";
 
-var no_result=is_IE5?"---":undefined;
+// do_unshift(l, s) is equivalent to l.unshift(s), but some browsers do not
+// support the built-in function.
 
 function do_unshift(l, s) {
-  if(is_IE5) {
-    l.length = l.length + 1;
-    for (var i=l.length-1; i>0; i--) {
-      l[i] = l[i-1];
-    }
-    l[0] = s;
-    return l.length;
+  l.length = l.length + 1;
+  for (var i=l.length-1; i>0; i--) {
+    l[i] = l[i-1];
   }
-  else {
-    return l.unshift(s);
-  }
+  l[0] = s;
+  return l.length;
 }
 
+// do_shift(l) is equivalent to l.shift(s), but some browsers do not
+// support the built-in function.
+
 function do_shift(l) {
-  if(is_IE5) {
-    var l0=l[0];
-    for (var i=0; i<l.length-1; i++) {
-      l[i] = l[i+1];
-    }
-    l.length = l.length - 1;
-    return l0;
+  var l0=l[0];
+  for (var i=0; i<l.length-1; i++) {
+    l[i] = l[i+1];
   }
-  else {
-    return l.shift();
-  }
+  l.length = l.length - 1;
+  return l0;
 }
 
 function go_to (url) {
