@@ -282,7 +282,7 @@ sub DoPermissions {
             "ORDER BY name");
     while (MoreSQLData()) {
         my ($nam, $desc) = FetchSQLData();
-        if (UserCanBlessGroup($nam)) {
+        if (Bugzilla->user->can_bless($nam)) {
             push(@set_bits, {"desc" => $desc, "name" => $nam});
         }
     }

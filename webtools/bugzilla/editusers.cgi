@@ -153,7 +153,7 @@ sub EmitFormElements ($$$$)
             print "<TD COLSPAN=2 ALIGN=LEFT><B>User is a member of these groups</B></TD>\n";
             while (MoreSQLData()) {
                 my ($groupid, $name, $description, $checked, $isderived, $isregexp) = FetchSQLData();
-                next unless ($editall || UserCanBlessGroup($name));
+                next unless ($editall || Bugzilla->user->can_bless($name));
                 PushGlobalSQLState();
                 SendSQL("SELECT user_id " .
                         "FROM user_group_map " .
@@ -726,7 +726,7 @@ if ($action eq 'update') {
     my $chggrp = 0;
     SendSQL("SELECT id, name FROM groups");
     while (my ($groupid, $name) = FetchSQLData()) {
-        next unless ($editall || UserCanBlessGroup($name));
+        next unless ($editall || Bugzilla->user->can_bless($name));
         if ($::FORM{"oldgroup_$groupid"} != ($::FORM{"group_$groupid"} ? 1 : 0)) {
             # group membership changed
             PushGlobalSQLState();

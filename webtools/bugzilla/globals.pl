@@ -1033,36 +1033,6 @@ sub UserInGroup {
     return defined Bugzilla->user->groups->{$_[0]};
 }
 
-sub UserCanBlessGroup {
-    my ($groupname) = (@_);
-    PushGlobalSQLState();
-    # check if user explicitly can bless group
-    SendSQL("SELECT groups.id FROM groups, user_group_map 
-        WHERE groups.id = user_group_map.group_id 
-        AND user_group_map.user_id = $::userid
-        AND isbless = 1
-        AND groups.name = " . SqlQuote($groupname));
-    my $result = FetchOneColumn();
-    PopGlobalSQLState();
-    if ($result) {
-        return 1;
-    }
-    PushGlobalSQLState();
-    # check if user is a member of a group that can bless this group
-    # this group does not count
-    SendSQL("SELECT groups.id FROM groups, user_group_map, 
-        group_group_map 
-        WHERE groups.id = grantor_id 
-        AND user_group_map.user_id = $::userid
-        AND user_group_map.isbless = 0
-        AND group_group_map.grant_type = " . GROUP_BLESS . "
-        AND user_group_map.group_id = member_id
-        AND groups.name = " . SqlQuote($groupname));
-    $result = FetchOneColumn();
-    PopGlobalSQLState();
-    return $result; 
-}
-
 sub BugInGroupId {
     my ($bugid, $groupid) = (@_);
     PushGlobalSQLState();

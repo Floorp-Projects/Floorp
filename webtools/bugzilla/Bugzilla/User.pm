@@ -247,6 +247,38 @@ sub groups {
     return $self->{groups};
 }
 
+sub bless_groups {
+    my $self = shift;
+
+    return $self->{bless_groups} if defined $self->{bless_groups};
+    return {} unless $self->id;
+
+    my $dbh = Bugzilla->dbh;
+    # Get all groups for the user where:
+    #    + They have direct bless privileges
+    #    + They are a member of a group that inherits bless privs.
+    # Because of the second requirement, derive_groups must be up-to-date
+    # for this to function properly in all circumstances.
+    my $bless_groups = $dbh->selectcol_arrayref(
+        q{SELECT DISTINCT groups.name, groups.id
+            FROM groups, user_group_map, group_group_map AS ggm
+           WHERE user_group_map.user_id = ?
+             AND ((user_group_map.isbless = 1
+                   AND groups.id=user_group_map.group_id)
+                  OR (groups.id = ggm.grantor_id
+                      AND ggm.grant_type = } . GROUP_BLESS .
+                   q{ AND user_group_map.group_id = ggm.member_id
+                      AND user_group_map.isbless = 0))},
+         { Columns=>[1,2] }, $self->{id});
+
+    # The above gives us an arrayref [name, id, name, id, ...]
+    # Convert that into a hashref
+    my %bless_groups_hashref = @$bless_groups;
+    $self->{bless_groups} = \%bless_groups_hashref;
+
+    return $self->{bless_groups};
+}
+
 sub in_group {
     my ($self, $group) = @_;
 
@@ -467,32 +499,15 @@ sub derive_groups {
 sub can_bless {
     my $self = shift;
 
-    return $self->{can_bless} if defined $self->{can_bless};
-    return 0 unless $self->id;
-
-    my $dbh = Bugzilla->dbh;
-    # First check if the user can explicitly bless a group
-    my $res = $dbh->selectrow_arrayref(q{SELECT 1
-                                           FROM user_group_map
-                                          WHERE user_id=?
-                                            AND isbless=1},
-                                       undef,
-                                       $self->{id});
-    if (!$res) {
-        # Now check if user is a member of a group that can bless a group
-        $res = $dbh->selectrow_arrayref(q{SELECT 1
-                                            FROM user_group_map, group_group_map
-                                           WHERE user_group_map.user_id=?
-                                             AND user_group_map.group_id=member_id
-                                             AND group_group_map.grant_type=} .
-                                                 GROUP_BLESS,
-                                        undef,
-                                        $self->{id});
+    if (!scalar(@_)) {
+        # If we're called without an argument, just return 
+        # whether or not we can bless at all.
+        return scalar(keys %{$self->bless_groups}) ? 1 : 0;
     }
 
-    $self->{can_bless} = $res ? 1 : 0;
-
-    return $self->{can_bless};
+    # Otherwise, we're checking a specific group
+    my $group_name = shift;
+    return exists($self->bless_groups->{$group_name});
 }
 
 sub flatten_group_membership {
@@ -1136,6 +1151,13 @@ intended for cases where we are not looking at the currently logged in user,
 and only need to make a quick check for the group, where calling C<groups>
 and getting all of the groups would be overkill.
 
+=item C<bless_groups>
+
+Returns a hashref of group names for groups that the user can bless. The keys
+are the names of the groups, whilst the values are the respective group ids.
+(This is so that a set of all groupids for groups the user can bless can be
+obtained by C<values(%{$user->bless_groups})>.)
+
 =item C<can_see_bug(bug_id)>
 
 Determines if the user can see the specified bug.
@@ -1198,7 +1220,12 @@ all MySQL supported, this will go away.
 
 =item C<can_bless>
 
-Returns C<1> if the user can bless at least one group. Otherwise returns C<0>.
+When called with no arguments:
+Returns C<1> if the user can bless at least one group, returns C<0> otherwise.
+
+When called with one argument:
+Returns C<1> if the user can bless the group with that name, returns
+C<0> otherwise.
 
 =item C<set_flags>
 =item C<get_flag>
