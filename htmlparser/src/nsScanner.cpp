@@ -135,24 +135,25 @@ PRInt32 CScanner::RewindToMark(void){
  *  to back up to this point if the need should arise, such as when
  *  tokenization gets interrupted.
  *
- *  @update  gess 5/12/98
+ *  @update  gess 7/29/98
  *  @param   
  *  @return  
  */
 PRInt32 CScanner::Mark(void){
-  if(mOffset>0)
+  if((mOffset>0) && (mOffset>eBufferSizeThreshold)) {
     mBuffer.Cut(0,mOffset);   //delete chars up to mark position
-  mOffset=0;
+    mOffset=0;
+  }
   return 0;
 }
-
+ 
 
 /** 
  * Append data to our underlying input buffer as
  * if it were read from an input stream.
  *
  * @update  gess4/3/98
- * @return  error code
+ * @return  error code 
  */
 PRBool CScanner::Append(nsString& aBuffer) {
   mBuffer.Append(aBuffer);

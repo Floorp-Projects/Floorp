@@ -144,24 +144,9 @@ friend class CTokenHandler;
      */
     virtual PRInt32 ResumeParse();
 
-    /**
-     * Causes the parser to scan foward, collecting nearby (sequential)
-     * attribute tokens into the given node.
-     * @update	gess5/11/98
-     * @param   node to store attributes
-     * @return  number of attributes added to node.
-     */
-    virtual PRInt32 CollectAttributes(nsCParserNode& aNode,PRInt32 aCount);
-
-    /**
-     * Causes the next skipped-content token (if any) to
-     * be consumed by this node.
-     * @update	gess5/11/98
-     * @param   node to consume skipped-content
-     * @param   holds the number of skipped content elements encountered
-     * @return  Error condition.
-     */
-    virtual PRInt32 CollectSkippedContent(nsCParserNode& aNode,PRInt32& aCount);
+		virtual CToken* PushToken(CToken* theToken);
+		virtual CToken* PopToken();
+		virtual CToken* PeekToken();
 
     /**
      *  This debug routine is used to cause the tokenizer to

@@ -483,7 +483,7 @@ PRInt32 nsXIFDTD::HandleWhiteSpaceToken(CToken* aToken) {
   //Begin by gathering up attributes...
   nsCParserNode node((CHTMLToken*)aToken);
   PRInt16       attrCount=aToken->GetAttributeCount();
-  PRInt32       result=(0==attrCount) ? kNoError : mParser->CollectAttributes(node,attrCount);
+  PRInt32       result=(0==attrCount) ? kNoError : CollectAttributes(node,attrCount);
 
   if(kNoError==result)
   {
@@ -557,7 +557,7 @@ PRInt32 nsXIFDTD::HandleStartToken(CToken* aToken) {
   //Begin by gathering up attributes...
   nsCParserNode   node = ((CHTMLToken*)aToken);
   PRInt16         attrCount=aToken->GetAttributeCount();
-  PRInt32         result=(0==attrCount) ? kNoError : mParser->CollectAttributes(node,attrCount);
+  PRInt32         result=(0==attrCount) ? kNoError : CollectAttributes(node,attrCount);
 
   if(kNoError==result)
   {
@@ -1673,6 +1673,66 @@ nsresult nsXIFDTD::ConsumeToken(CToken*& aToken){
     if(NS_OK==result)
       result=theScanner->Eof();
   } //while
+  return result;
+}
+
+/**
+ * Retrieve the attributes for this node, and add then into
+ * the node.
+ *
+ * @update  gess4/22/98
+ * @param   aNode is the node you want to collect attributes for
+ * @param   aCount is the # of attributes you're expecting
+ * @return error code (should be 0)
+ */
+PRInt32 nsXIFDTD::CollectAttributes(nsCParserNode& aNode,PRInt32 aCount){
+/*
+  nsDequeIterator end=mParserContext->mTokenDeque.End();
+
+  int attr=0;
+  for(attr=0;attr<aCount;attr++) {
+    if(*mParserContext->mCurrentPos<end) {
+      CToken* tkn=(CToken*)(++(*mParserContext->mCurrentPos));
+      if(tkn){
+        if(eToken_attribute==eHTMLTokenTypes(tkn->GetTokenType())){
+          aNode.AddAttribute(tkn);
+        } 
+        else (*mParserContext->mCurrentPos)--;
+      }
+      else return kInterrupted;
+    }
+    else return kInterrupted;
+  }
+*/
+  return kNoError;
+}
+
+
+/**
+ * Causes the next skipped-content token (if any) to
+ * be consumed by this node.
+ * @update	gess5/11/98
+ * @param   node to consume skipped-content
+ * @param   holds the number of skipped content elements encountered
+ * @return  Error condition.
+ */
+PRInt32 nsXIFDTD::CollectSkippedContent(nsCParserNode& aNode,PRInt32& aCount) {
+  PRInt32           result=kNoError;
+/*
+  eHTMLTokenTypes   subtype=eToken_attribute;
+  nsDequeIterator   end=mParserContext->mTokenDeque.End();
+
+  aCount=0;
+  while((*mParserContext->mCurrentPos!=end) && (eToken_attribute==subtype)) {
+    CToken* tkn=(CToken*)(++(*mParserContext->mCurrentPos));
+    subtype=eHTMLTokenTypes(tkn->GetTokenType());
+    if(eToken_skippedcontent==subtype) {
+      aNode.SetSkippedContent(tkn);
+      aCount++;
+    } 
+    else (*mParserContext->mCurrentPos)--;
+  }
+*/
   return result;
 }
 

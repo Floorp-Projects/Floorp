@@ -26,7 +26,6 @@
  */
 CToken::CToken(PRInt32 aTag) : mTextValue() {
   mTypeID=aTag;
-  mStringInit=PR_FALSE;
   mAttrCount=0;
 }
 
@@ -38,7 +37,6 @@ CToken::CToken(PRInt32 aTag) : mTextValue() {
  */
 CToken::CToken(const nsString& aName) : mTextValue(aName) {
   mTypeID=0;
-  mStringInit=PR_TRUE;
   mAttrCount=0;
 }
 
@@ -50,7 +48,6 @@ CToken::CToken(const nsString& aName) : mTextValue(aName) {
  */
 CToken::CToken(const char* aName) : mTextValue(aName) {
   mTypeID=0;
-  mStringInit=PR_TRUE;
   mAttrCount=0;
 }
  
@@ -62,6 +59,19 @@ CToken::CToken(const char* aName) : mTextValue(aName) {
 CToken::~CToken() {
 }
 
+
+/**
+ * This method gets called when a token is about to be reused
+ * for some other purpose. The token should initialize itself 
+ * to some reasonable default values.
+ * @update	gess7/25/98
+ * @param   aTag
+ * @param   aString
+ */
+void CToken::Reinitialize(PRInt32 aTag, const nsString& aString){
+  mTypeID=0;
+  mAttrCount=0;
+}
  
 /**
  *  Virtual method used to tell this toke to consume his
