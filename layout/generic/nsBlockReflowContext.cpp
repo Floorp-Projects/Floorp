@@ -45,9 +45,6 @@ nsBlockReflowContext::nsBlockReflowContext(nsIPresContext& aPresContext,
     mMetrics(aComputeMaxElementSize ? &mMaxElementSize : nsnull)
 {
   mStyleSpacing = nsnull;
-#ifdef DEBUG
-  mIndent = 0;
-#endif
 }
 
 PRBool
@@ -71,12 +68,9 @@ nsBlockReflowContext::IsHTMLParagraph(nsIFrame* aFrame)
 }
 
 nscoord
-nsBlockReflowContext::ComputeCollapsedTopMargin(nsHTMLReflowState& aRS)
+nsBlockReflowContext::ComputeCollapsedTopMargin(nsIPresContext& aPresContext,
+                                                nsHTMLReflowState& aRS)
 {
-#ifdef NOISY_VERTICAL_MARGINS
-  mIndent++;
-#endif
-
   // Get aFrame's top margin
   nscoord topMargin = aRS.computedMargin.top;
 
@@ -99,9 +93,10 @@ nsBlockReflowContext::ComputeCollapsedTopMargin(nsHTMLReflowState& aRS)
         // it. For its margins to be computed we need to have a reflow
         // state for it.
         nsSize availSpace(aRS.computedWidth, aRS.computedHeight);
-        nsHTMLReflowState reflowState(mPresContext, aRS, childFrame,
+        nsHTMLReflowState reflowState(aPresContext, aRS, childFrame,
                                       availSpace);
-        generationalTopMargin = ComputeCollapsedTopMargin(reflowState);
+        generationalTopMargin =
+          ComputeCollapsedTopMargin(aPresContext, reflowState);
       }
     }
   }
@@ -111,11 +106,9 @@ nsBlockReflowContext::ComputeCollapsedTopMargin(nsHTMLReflowState& aRS)
   nscoord collapsedTopMargin = MaxMargin(topMargin, generationalTopMargin);
 
 #ifdef NOISY_VERTICAL_MARGINS
-  nsFrame::IndentBy(stdout, mIndent);
   nsFrame::ListTag(stdout, aRS.frame);
   printf(": topMargin=%d generationalTopMargin=%d => %d\n",
          topMargin, generationalTopMargin, collapsedTopMargin);
-  mIndent--;
 #endif
 
   return collapsedTopMargin;
@@ -171,7 +164,7 @@ nsBlockReflowContext::ReflowBlock(nsIFrame* aFrame,
     nsFrame::ListTag(stdout, mOuterReflowState.frame);
     printf(": prevBottomMargin=%d\n", aPrevBottomMargin);
 #endif
-    topMargin = ComputeCollapsedTopMargin(reflowState);
+    topMargin = ComputeCollapsedTopMargin(mPresContext, reflowState);
 
     // Collapse that value with the previous bottom margin to perform
     // the sibling to sibling collaspe.
@@ -325,53 +318,6 @@ nsBlockReflowContext::ReflowBlock(nsIFrame* aFrame,
   }
 
   return rv;
-}
-
-/**
- * The CSS2 spec, section 8.3.1 defines margin collapsing to apply to
- * vertical margins of block boxes. And the spec also indicates that
- * this should be done for two or more adjacent vertical margins. It
- * also indicates that the margins collapse between boxes that are
- * next to each other or nested.
- */
-void
-nsBlockReflowContext::CollapseMargins(const nsMargin& aMargin,
-                                      nscoord aCarriedOutTopMargin,
-                                      nscoord aCarriedOutBottomMargin,
-                                      nscoord aFrameHeight,
-                                      nscoord aPrevBottomMargin,
-                                      nscoord& aTopMarginResult,
-                                      nscoord& aBottomMarginResult)
-{
-  // Compute the collapsed top margin value. The top margin value is a
-  // 3 way margin collapse. First we collapse the carried out top
-  // margin with the block frames top margin (this is a CSS2 "nested"
-  // collapse). Then we collapse that value with the previous bottom
-  // margin (because the collapsed margin is adjacent to the previous
-  // bottom margin).
-  nscoord carriedTopMargin = aCarriedOutTopMargin;
-  nscoord topMargin = aMargin.top;
-  topMargin = MaxMargin(topMargin, carriedTopMargin);
-  topMargin = MaxMargin(topMargin, aPrevBottomMargin);
-
-  // Compute the collapsed bottom margin value. The bottom margin
-  // value is a 2 way margin collapse. Collapse the carried out bottom
-  // margin with the block frames bottom margin (this is a CSS2
-  // "nested" collapse).
-  nscoord carriedBottomMargin = aCarriedOutBottomMargin;
-  nscoord bottomMargin = aMargin.bottom;
-  bottomMargin = MaxMargin(bottomMargin, carriedBottomMargin);
-
-  // If the block line is empty then we collapse the top and bottom
-  // margin values (because the margins are adjacent).
-  if (0 == aFrameHeight) {
-    nscoord collapsedMargin = MaxMargin(topMargin, bottomMargin);
-    topMargin = 0;
-    bottomMargin = collapsedMargin;
-  }
-
-  aTopMarginResult = topMargin;
-  aBottomMarginResult = bottomMargin;
 }
 
 /**
