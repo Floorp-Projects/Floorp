@@ -473,22 +473,24 @@ nsresult nsMsgSearchSession::Initialize()
 
 nsresult nsMsgSearchSession::BeginSearching()
 {
-	nsresult err = NS_OK;
-
-	// Here's a sloppy way to start the URL, but I don't really have time to
-	// unify the scheduling mechanisms. If the first scope is a newsgroup, and
-	// it's not Dredd-capable, we build the URL queue. All other searches can be
-	// done with one URL
-
-	nsMsgSearchScopeTerm *scope = m_scopeList.ElementAt(0);
-	if (scope->m_attribute == nsMsgSearchScope::Newsgroup /* && !scope->m_folder->KnowsSearchNntpExtension() */ && scope->m_searchServer)
-		err = BuildUrlQueue ();
-	else if (scope->m_attribute == nsMsgSearchScope::MailFolder && !scope->IsOfflineMail())
-		err = BuildUrlQueue ();
-	else
-		err = SearchWOUrls();
-
-	return err;
+  nsresult err = NS_OK;
+  
+  // Here's a sloppy way to start the URL, but I don't really have time to
+  // unify the scheduling mechanisms. If the first scope is a newsgroup, and
+  // it's not Dredd-capable, we build the URL queue. All other searches can be
+  // done with one URL
+  
+  if (m_window)
+    m_window->SetStopped(PR_FALSE);
+  nsMsgSearchScopeTerm *scope = m_scopeList.ElementAt(0);
+  if (scope->m_attribute == nsMsgSearchScope::Newsgroup /* && !scope->m_folder->KnowsSearchNntpExtension() */ && scope->m_searchServer)
+    err = BuildUrlQueue ();
+  else if (scope->m_attribute == nsMsgSearchScope::MailFolder && !scope->IsOfflineMail())
+    err = BuildUrlQueue ();
+  else
+    err = SearchWOUrls();
+  
+  return err;
 }
 
 
@@ -519,6 +521,13 @@ nsresult nsMsgSearchSession::GetNextUrl()
   nsCOMPtr <nsIMsgMessageService> msgService;
   nsXPIDLCString folderUri;
 
+  PRBool stopped = PR_FALSE;
+
+  if (m_window)
+    m_window->GetStopped(&stopped);
+  if (stopped)
+    return NS_OK;
+
   m_urlQueue.CStringAt(m_idxRunningScope, nextUrl);
   nsMsgSearchScopeTerm *currentTerm = GetRunningScope();
   nsCOMPtr <nsIMsgFolder> folder = currentTerm->m_folder;
@@ -546,8 +555,13 @@ nsresult nsMsgSearchSession::AddUrl(const char *url)
 {
   nsMsgSearchSession *searchSession = (nsMsgSearchSession *) aClosure;
   PRBool done;
+  PRBool stopped = PR_FALSE;
+
   searchSession->TimeSlice(&done);
-  if (done)
+  if (searchSession->m_window)
+    searchSession->m_window->GetStopped(&stopped);
+
+  if (done || stopped)
   {
     aTimer->Cancel();
     searchSession->m_backgroundTimer = nsnull;
