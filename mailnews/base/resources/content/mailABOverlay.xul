@@ -1,8 +1,5 @@
 <?xml version="1.0"?>
 
-<!-- platform specific commands -->
-<?xul-overlay href="chrome://messenger/content/platformMailOverlay.xul"?>
-
 <!DOCTYPE overlay SYSTEM "chrome://messenger/locale/mailOverlay.dtd">
 
 <overlay id="mailABOverlay"
