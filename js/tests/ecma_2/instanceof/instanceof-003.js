@@ -16,6 +16,9 @@ I think this should be 'false'
 
     Author:             christine@netscape.com
     Date:               12 november 1997
+
+Modified to conform to ECMA3
+https://bugzilla.mozilla.org/show_bug.cgi?id=281606
 */
     var SECTION = "instanceof-003";
     var VERSION = "ECMA_2";
@@ -37,10 +40,20 @@ I think this should be 'false'
 
     var o = {};
 
+// https://bugzilla.mozilla.org/show_bug.cgi?id=281606
+try
+{
     AddTestCase(
         "o = {}; o instanceof o",
-        false,
+        "error",
         o instanceof o );
-
+}
+catch(e)
+{
+    AddTestCase(
+        "o = {}; o instanceof o",
+        "error",
+        "error" );
+}
 
     test();
