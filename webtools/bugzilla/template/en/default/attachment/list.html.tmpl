@@ -25,6 +25,7 @@
     <th bgcolor="#cccccc" align="left">Attachment</th>
     <th bgcolor="#cccccc" align="left">Type</th>
     <th bgcolor="#cccccc" align="left">Created</th>
+    <th bgcolor="#cccccc" align="left">Size</th>
     [% IF show_attachment_flags %]
       <th bgcolor="#cccccc" align="left">Flags</th>
     [% END %]
@@ -47,6 +48,7 @@
       </td>
 
       <td valign="top">[% attachment.date FILTER time %]</td>
+      <td valign="top">[% attachment.datasize FILTER unitconvert %]</td>
 
       [% IF show_attachment_flags %]
         <td valign="top">
@@ -82,7 +84,7 @@
   [% END %]
 
   <tr>
-    <td colspan="[% show_attachment_flags ? 4 : 3 %]">
+    <td colspan="[% show_attachment_flags ? 5 : 4 %]">
       <a href="attachment.cgi?bugid=[% bugid %]&amp;action=enter">Create a New Attachment</a> (proposed patch, testcase, etc.)
     </td>
     [% IF attachments.size %]

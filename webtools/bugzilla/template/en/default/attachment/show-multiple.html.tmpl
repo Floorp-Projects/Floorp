@@ -40,7 +40,7 @@
   <div align="center">
   <table class="attachment_info" cellspacing="0" cellpadding="4" border="1" width="75%">
     <tr>
-      <td valign="top" bgcolor="#cccccc" colspan="5">
+      <td valign="top" bgcolor="#cccccc" colspan="6">
         <big><b>Attachment #[% a.attachid %]</b></big>
       </td>
     </tr>
@@ -62,6 +62,7 @@
       </td>
 
       <td valign="top">[% a.date FILTER time %]</td>
+      <td valign="top">[% a.datasize FILTER unitconvert %]</td>
 
       <td valign="top">
         [% IF a.statuses.size == 0 %]

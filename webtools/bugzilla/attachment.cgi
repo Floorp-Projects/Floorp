@@ -746,7 +746,8 @@ sub viewall
         $privacy = "AND isprivate < 1 ";
     }
     SendSQL("SELECT attach_id, DATE_FORMAT(creation_ts, '%Y.%m.%d %H:%i'),
-            mimetype, description, ispatch, isobsolete, isprivate 
+            mimetype, description, ispatch, isobsolete, isprivate, 
+            LENGTH(thedata)
             FROM attachments WHERE bug_id = $::FORM{'bugid'} $privacy 
             ORDER BY attach_id");
   my @attachments; # the attachments array
@@ -754,8 +755,8 @@ sub viewall
   {
     my %a; # the attachment hash
     ($a{'attachid'}, $a{'date'}, $a{'contenttype'}, 
-     $a{'description'}, $a{'ispatch'}, $a{'isobsolete'}, $a{'isprivate'}) 
-                                                               = FetchSQLData();
+     $a{'description'}, $a{'ispatch'}, $a{'isobsolete'}, $a{'isprivate'},
+     $a{'datasize'}) = FetchSQLData();
     $a{'isviewable'} = isViewable($a{'contenttype'});
 
     # Add the hash representing the attachment to the array of attachments.
@@ -943,9 +944,9 @@ sub edit
   # Users cannot edit the content of the attachment itself.
 
   # Retrieve the attachment from the database.
-  SendSQL("SELECT description, mimetype, filename, bug_id, ispatch, isobsolete, isprivate 
+  SendSQL("SELECT description, mimetype, filename, bug_id, ispatch, isobsolete, isprivate, LENGTH(thedata)
            FROM attachments WHERE attach_id = $::FORM{'id'}");
-  my ($description, $contenttype, $filename, $bugid, $ispatch, $isobsolete, $isprivate) = FetchSQLData();
+  my ($description, $contenttype, $filename, $bugid, $ispatch, $isobsolete, $isprivate, $datasize) = FetchSQLData();
 
   my $isviewable = isViewable($contenttype);
 
@@ -980,6 +981,7 @@ sub edit
   $vars->{'ispatch'} = $ispatch; 
   $vars->{'isobsolete'} = $isobsolete; 
   $vars->{'isprivate'} = $isprivate; 
+  $vars->{'datasize'} = $datasize;
   $vars->{'isviewable'} = $isviewable; 
   $vars->{'attachments'} = \@bugattachments; 
   $vars->{'GetBugLink'} = \&GetBugLink;

@@ -258,6 +258,30 @@ sub create {
                 return $var;
             } ,
 
+            # Format a filesize in bytes to a human readable value
+            unitconvert => sub
+            {
+                my ($data) = @_;
+                my $retval = "";
+                my %units = (
+                    'KB' => 1024,
+                    'MB' => 1024 * 1024,
+                    'GB' => 1024 * 1024 * 1024,
+                );
+
+                if ($data < 1024) {
+                    return "$data bytes";
+                } 
+                else {
+                    my $u;
+                    foreach $u ('GB', 'MB', 'KB') {
+                        if ($data >= $units{$u}) {
+                            return sprintf("%.2f %s", $data/$units{$u}, $u);
+                        }
+                    }
+                }
+            },
+
             # Format a time for display (more info in Bugzilla::Util)
             time => \&Bugzilla::Util::format_time,
 

@@ -1111,6 +1111,7 @@ END
                 quoteUrls => sub { return $_; },
                 bug_link => [ sub { return sub { return $_; } }, 1],
                 csv => sub { return $_; },
+                unitconvert => sub { return $_; },
                 time => sub { return $_; },
                 none => sub { return $_; } ,
                },
