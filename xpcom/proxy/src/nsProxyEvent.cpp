@@ -446,7 +446,8 @@ nsProxyObject::Post( PRUint32 methodIndex, nsXPTMethodInfo *methodInfo, nsXPTCMi
 
         if (callDirectly)
         {
-            EventHandler(event); 
+            EventHandler(event);
+            PL_DestroyEvent(event);
             // there is no need to call the DestroyHandler() because
             // there is no need to wake up the nested event loop.
         }
