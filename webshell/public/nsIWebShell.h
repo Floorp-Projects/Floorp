@@ -159,55 +159,6 @@ public:
                   PRBool aAllowPlugins = PR_TRUE,
                   PRBool aIsSunkenBorder = PR_FALSE) = 0;
 
-
-  /********* XXX Stuff to be replaced by nsIBaseWindow *********/
-  
-  /**
-   * Notify the WebShell that its parent's window is being destroyed.  After 
-   * being destroyed, a WebShell is no longer visible and can no longer display 
-   * documents.
-   */
-  NS_IMETHOD Destroy() = 0;
-
-  /**
-   * Make the WebShell visible.
-   */
-  NS_IMETHOD Show() = 0;
-
-  /**
-   * Make the WebShell invisible.
-   */
-  NS_IMETHOD Hide() = 0;
-
-  /**
-   * Resize the WebShell to the given dimensions.
-   */
-  NS_IMETHOD SetBounds(PRInt32 x, PRInt32 y, PRInt32 w, PRInt32 h) = 0;
-
-  NS_IMETHOD MoveTo(PRInt32 aX, PRInt32 aY) = 0;
-
-  /**
-   * Return the current dimensions of the WebShell.
-   */
-  NS_IMETHOD GetBounds(PRInt32 &x, PRInt32 &y, PRInt32 &w, PRInt32 &h) = 0;
-
-  /**
-   * Give the WebShell window focus.
-   */
-  NS_IMETHOD SetFocus() = 0;
-
-  /**
-   * Force the WebShell to repaint its window.
-   */
-  NS_IMETHOD Repaint(PRBool aForce) = 0;
-
-  // Chrome api's
-  NS_IMETHOD SetTitle(const PRUnichar *aTitle) = 0;
-
-  NS_IMETHOD GetTitle(PRUnichar **aResult) = 0;
-  /********* XXX End Stuff to be replaced by nsIBaseWindow ******/
-
-
   NS_IMETHOD RemoveFocus() = 0;
 
 
@@ -265,11 +216,6 @@ public:
    * Return the parent WebShell.
    */
   NS_IMETHOD GetParent(nsIWebShell*& aParent) = 0;
-
-	/**
-	 * Get the parent WebShell and allow the content/chrome sandbox to be crossed
-	 */
-	NS_IMETHOD GetParentEvenIfChrome(nsIWebShell*& aParent) = 0;
 
   /**
    * Get the referrer of the link using this WebShell.
