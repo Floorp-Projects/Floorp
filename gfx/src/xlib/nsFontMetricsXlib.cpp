@@ -609,9 +609,12 @@ static const nsFontCharSetMapXlib gConstCharSetMap[] =
   { "tis620.2533-1",      &FLG_THAI,    &TIS620        },
   { "tis620-0",           &FLG_THAI,    &TIS620        },
   { "iso8859-11",         &FLG_THAI,    &TIS620        },
-  { "ucs2.cjk-0",         &FLG_NONE,    &Unknown       },
-  { "ucs2.cjk_japan-0",   &FLG_NONE,    &Unknown       },
-  { "ucs2.cjk_taiwan-0",  &FLG_NONE,    &Unknown       },
+  { "ucs2.cjk-0",         &FLG_NONE,    &ISO106461     },
+  { "ucs2.cjk_china-0",   &FLG_ZHCN,    &ISO106461     },
+  { "ucs2.cjk_japan-0",   &FLG_JA,      &ISO106461     },
+  { "ucs2.cjk_korea-0",   &FLG_KO,      &ISO106461     },
+  { "ucs2.cjk_taiwan-0",  &FLG_ZHTW,    &ISO106461     },
+  { "ucs2.thai-0",        &FLG_THAI,    &ISO106461     },
 #ifdef SUNCTL
   { "sun.unicode.india-0",&FLG_INDIC,   &SunIndic      },
 #endif /* SUNCTL */

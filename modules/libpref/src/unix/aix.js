@@ -49,3 +49,7 @@ pref("font.name.serif.x-cyrillic", "dt-interface system-iso8859-5");
 pref("font.name.sans-serif.x-cyrillic", "dt-interface system-iso8859-5");
 pref("font.name.monospace.x-cyrillic", "dt-interface user-iso8859-5");
 
+// Override default Unicode fonts
+pref("font.name.serif.x-unicode", "dt-interface system-ucs2.cjk_japan-0");
+pref("font.name.sans-serif.x-unicode", "dt-interface system-ucs2.cjk_japan-0");
+pref("font.name.monospace.x-unicode", "dt-interface user-ucs2.cjk_japan-0");
