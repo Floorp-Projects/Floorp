@@ -1663,11 +1663,7 @@ mips-sony-newsos*)
     AC_DEFINE(__svr4__)
     AC_DEFINE(SOLARIS)
     AC_DEFINE(HAVE_FCNTL_FILE_LOCKING)
-    if test -n "$USE_64"; then
-        MDCPUCFG_H=_solaris64.cfg
-    else
-        MDCPUCFG_H=_solaris32.cfg
-    fi
+    MDCPUCFG_H=_solaris.cfg
     PR_MD_CSRCS=solaris.c
     LD=/usr/ccs/bin/ld
     MKSHLIB='$(CC) $(DSO_LDOPTS) -o $@'
