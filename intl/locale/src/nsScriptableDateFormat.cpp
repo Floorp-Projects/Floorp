@@ -92,7 +92,7 @@ private:
 NS_IMPL_ISUPPORTS1(nsScriptableDateFormat, nsIScriptableDateFormat)
 
 NS_IMETHODIMP nsScriptableDateFormat::FormatDateTime(
-                            const PRUnichar *locale, 
+                            const PRUnichar *aLocale, 
                             nsDateFormatSelector dateFormatSelector, 
                             nsTimeFormatSelector timeFormatSelector, 
                             PRInt32 year, 
@@ -103,61 +103,59 @@ NS_IMETHODIMP nsScriptableDateFormat::FormatDateTime(
                             PRInt32 second, 
                             PRUnichar **dateTimeString)
 {
-  nsCOMPtr<nsILocale> aLocale;
-  nsresult rv;
-  *dateTimeString = NULL;
+  nsAutoString localeName(aLocale);
+  *dateTimeString = nsnull;
 
   // get locale service 
-  nsCOMPtr<nsILocaleService> localeService = 
-           do_GetService(kLocaleServiceCID, &rv);
-  if (NS_SUCCEEDED(rv)) {
-    rv = (locale && *locale) ? 
-      localeService->NewLocale(nsDependentString(locale), getter_AddRefs(aLocale)) :
-      localeService->GetApplicationLocale(getter_AddRefs(aLocale));
+  nsCOMPtr<nsILocaleService> localeService = do_GetService(kLocaleServiceCID);
+  if (!localeService)
+    return NS_ERROR_NOT_AVAILABLE;
 
-    if (NS_SUCCEEDED(rv) && aLocale) {
-      nsCOMPtr<nsIDateTimeFormat> aDateTimeFormat = do_CreateInstance(kDateTimeFormatCID);
+  nsCOMPtr<nsILocale> locale;
+  if (localeName.IsEmpty())
+    localeService->GetApplicationLocale(getter_AddRefs(locale));
+  else
+    localeService->NewLocale(localeName, getter_AddRefs(locale));
 
-      if (aDateTimeFormat) {
-        struct tm tmTime;
-        time_t  timetTime;
+  if (!locale)
+    return NS_ERROR_NOT_AVAILABLE;
 
-        memset( &tmTime, 0, sizeof(tmTime) );
-        tmTime.tm_year = year - 1900;
-        tmTime.tm_mon = month - 1;
-        tmTime.tm_mday = day;
-        tmTime.tm_hour = hour;
-        tmTime.tm_min = minute;
-        tmTime.tm_sec = second;
-        tmTime.tm_yday = tmTime.tm_wday = 0;
-        tmTime.tm_isdst = -1;
-        timetTime = mktime(&tmTime);
-        if ((time_t)-1 != timetTime) {
-          rv = aDateTimeFormat->FormatTime(aLocale, dateFormatSelector, timeFormatSelector, 
-                                           timetTime, mStringOut);
-          if (NS_SUCCEEDED(rv)) {
-            *dateTimeString = ToNewUnicode(mStringOut);
-          }
-        }
-        else {
-          // if mktime fails (e.g. year <= 1970), then try NSPR.
-          PRTime prtime;
-          char string[32];
-          sprintf(string, "%.2d/%.2d/%d %.2d:%.2d:%.2d", month, day, year, hour, minute, second);
-          if (PR_SUCCESS != PR_ParseTimeString(string, PR_FALSE, &prtime)) {
-            rv = NS_ERROR_ILLEGAL_VALUE; // invalid arg value
-          }
-          else {
-            rv = aDateTimeFormat->FormatPRTime(aLocale, dateFormatSelector, timeFormatSelector, 
-                                               prtime, mStringOut);
-            if (NS_SUCCEEDED(rv)) {
-              *dateTimeString = ToNewUnicode(mStringOut);
-            }
-          }
-        }
-      }
-    }
+  nsCOMPtr<nsIDateTimeFormat> dateTimeFormat = do_CreateInstance(kDateTimeFormatCID);
+  if (!dateTimeFormat)
+    return NS_ERROR_NOT_AVAILABLE;
+  tm tmTime;
+  time_t timetTime;
+
+  memset(&tmTime, 0, sizeof(tmTime));
+  tmTime.tm_year = year - 1900;
+  tmTime.tm_mon = month - 1;
+  tmTime.tm_mday = day;
+  tmTime.tm_hour = hour;
+  tmTime.tm_min = minute;
+  tmTime.tm_sec = second;
+  tmTime.tm_yday = tmTime.tm_wday = 0;
+  tmTime.tm_isdst = -1;
+  timetTime = mktime(&tmTime);
+
+  nsresult rv;
+
+  if ((time_t)-1 != timetTime) {
+    rv = dateTimeFormat->FormatTime(locale, dateFormatSelector, timeFormatSelector, 
+                                     timetTime, mStringOut);
   }
+  else {
+    // if mktime fails (e.g. year <= 1970), then try NSPR.
+    PRTime prtime;
+    char string[32];
+    sprintf(string, "%.2d/%.2d/%d %.2d:%.2d:%.2d", month, day, year, hour, minute, second);
+    if (PR_SUCCESS != PR_ParseTimeString(string, PR_FALSE, &prtime))
+      return NS_ERROR_ILLEGAL_VALUE; // invalid arg value
+
+    rv = dateTimeFormat->FormatPRTime(locale, dateFormatSelector, timeFormatSelector, 
+                                      prtime, mStringOut);
+  }
+  if (NS_SUCCEEDED(rv))
+    *dateTimeString = ToNewUnicode(mStringOut);
 
   return rv;
 }
