@@ -53,9 +53,6 @@ sub Told {
         my $bug = $1;
         $self->FetchBug($event, $bug, 'bugs', 0, 0);
         $self->{'bugsHistory'}->{$target}->{$bug} = time() if $bug =~ /^[0-9]+$/os;
-    } elsif ($message =~ /^\s*(...+?)\s+bugs\s*$/osi) {
-        my $target = $event->{'target'};
-        $self->FetchBug($event, $1, 'dwim', 0, 0);
     } elsif ($message =~ /^\s*bug-?total\s+(.+?)\s*$/osi) {
         $self->FetchBug($event, $1, 'total', 0, 0);
     } elsif ($self->isAdmin($event)) {
@@ -112,6 +109,18 @@ sub Heard {
         return $self->SUPER::Heard(@_);
     }
     return 0; # we've dealt with it, no need to do anything else.
+}
+
+sub Baffled {
+    my $self = shift;
+    my ($event, $message) = @_;
+    if ($message =~ /^\s*(...+?)\s+bugs\s*$/osi) {
+        my $target = $event->{'target'};
+        $self->FetchBug($event, $1, 'dwim', 0, 0);
+    } else {
+        return $self->SUPER::Baffled(@_);
+    }
+    return 0;
 }
 
 sub Felt {
