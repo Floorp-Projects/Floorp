@@ -103,7 +103,7 @@ prop_iterator_finalize(JSContext *cx, JSObject *obj)
     iter_state = obj->slots[JSSLOT_ITR_STATE];
     iteratee = obj->slots[JSSLOT_PARENT];
     if (iter_state != JSVAL_NULL && !JSVAL_IS_PRIMITIVE(iteratee)) {
-	OBJ_ENUMERATE(cx, JSVAL_TO_OBJECT(iteratee), JSENUMERATE_DESTROY, 
+	OBJ_ENUMERATE(cx, JSVAL_TO_OBJECT(iteratee), JSENUMERATE_DESTROY,
 	              &iter_state, NULL);
     }
     js_RemoveRoot(cx->runtime, &obj->slots[JSSLOT_PARENT]);
@@ -451,12 +451,11 @@ js_Invoke(JSContext *cx, uintN argc, JSBool constructing)
 
         /* Try converting to function, for closure and API compatibility. */
         /*
-        *   We attempt the conversion under all circumstances for 1.2, but
-        *   only if there is a call op defined otherwise. 
-        */
+         * We attempt the conversion under all circumstances for 1.2, but
+         * only if there is a call op defined otherwise.
+         */
         if ((cx->version == JSVERSION_1_2)
-            || ((ops == &js_ObjectOps) ? 
-                    (clasp->call != 0) : (ops->call != 0)) ) {
+            || ((ops == &js_ObjectOps) ? clasp->call : ops->call)) {
 	    ok = clasp->convert(cx, funobj, JSTYPE_FUNCTION, &v);
             if (!ok)
 	        goto out2;
@@ -701,6 +700,14 @@ out2:
     /* Store the return value and restore sp just above it. */
     *vp = frame.rval;
     fp->sp = vp + 1;
+
+    /*
+     * Store the location of the JSOP_CALL or JSOP_EVAL that generated the
+     * return value, but only if this is an external (compiled from script
+     * source) call that has stack budget for the generating pc.
+     */
+    if (fp->script && !fp->internalCall)
+        vp[-fp->script->depth] = (jsval)fp->pc;
     return ok;
 
 bad:
@@ -710,8 +717,8 @@ bad:
 }
 
 JSBool
-js_CallFunctionValue(JSContext *cx, JSObject *obj, jsval fval,
-		     uintN argc, jsval *argv, jsval *rval)
+js_InternalCall(JSContext *cx, JSObject *obj, jsval fval,
+		uintN argc, jsval *argv, jsval *rval)
 {
     JSStackFrame *fp, *oldfp, frame;
     jsval *oldsp, *sp;
@@ -737,7 +744,9 @@ js_CallFunctionValue(JSContext *cx, JSObject *obj, jsval fval,
     for (i = 0; i < argc; i++)
 	PUSH(argv[i]);
     SAVE_SP(fp);
+    fp->internalCall = JS_TRUE;
     ok = js_Invoke(cx, argc, JS_FALSE);
+    fp->internalCall = JS_FALSE;
     if (ok) {
 	RESTORE_SP(fp);
 	*rval = POP();
@@ -1902,7 +1911,7 @@ js_Interpret(JSContext *cx, jsval *result)
 	  case JSOP_NEG:
 	    POP_NUMBER(cx, d);
 #ifdef HPUX
-            /* 
+            /*
              * Negation of a zero doesn't produce a negative
              * zero on HPUX. Perform the operation by bit
              * twiddling.
@@ -1935,7 +1944,7 @@ js_Interpret(JSContext *cx, jsval *result)
 		/* XXX clean up to avoid special cases above ObjectOps layer */
 		(clasp = OBJ_GET_CLASS(cx, obj2),
 		 clasp == &js_FunctionClass || clasp == &js_ClosureClass) ||
-                 !obj2->map->ops->construct) 
+                 !obj2->map->ops->construct)
             {
 		fun = js_ValueToFunction(cx, vp, JS_TRUE);
 		if (!fun) {
@@ -1961,7 +1970,7 @@ js_Interpret(JSContext *cx, jsval *result)
 		proto = JSVAL_IS_OBJECT(rval) ? JSVAL_TO_OBJECT(rval) : NULL;
 		parent = OBJ_GET_PARENT(cx, obj2);
 
-                if ((OBJ_GET_CLASS(cx, obj2) == &js_FunctionClass) && 
+                if ((OBJ_GET_CLASS(cx, obj2) == &js_FunctionClass) &&
                     (cl = ((JSFunction *)JS_GetPrivate(cx, obj2))->clasp) != 0)
                 {
                     clasp = cl;
@@ -2814,11 +2823,11 @@ js_Interpret(JSContext *cx, jsval *result)
 out:
 
 #if JS_HAS_EXCEPTIONS
-    /* 
+    /*
      * Has an exception been raised?
      */
     if (!ok && cx->throwing) {
-        /* 
+        /*
          * call hook if set
          */
 	if (rt->throwHook) {
@@ -2848,7 +2857,7 @@ out:
 
         /*
          * Look for a try block within this frame that can catch the exception.
-         */ 
+         */
         tn = script->trynotes;
         if (tn) {
             offset = PTRDIFF(pc, script->code, jsbytecode);

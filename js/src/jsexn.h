@@ -43,7 +43,7 @@ extern JSBool
 js_ErrorToException(JSContext *cx, const char *message, JSErrorReport *reportp);
 
 /*
- * Called if an api call to js_Execute or js_CallFunctionValue fails; calls the
+ * Called if a JS API call to js_Execute or js_InternalCall fails; calls the
  * error reporter with the error report associated with any uncaught exception
  * that has been raised.  Returns true if there was an exception pending, and
  * the error reporter was actually called.

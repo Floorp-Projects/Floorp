@@ -694,7 +694,7 @@ obj_watch_handler(JSContext *cx, JSObject *obj, jsval id, jsval old, jsval *nvp,
     argv[0] = id;
     argv[1] = old;
     argv[2] = *nvp;
-    return js_CallFunctionValue(cx, obj, OBJECT_TO_JSVAL(funobj), 3, argv, nvp);
+    return js_InternalCall(cx, obj, OBJECT_TO_JSVAL(funobj), 3, argv, nvp);
 }
 
 static JSBool
@@ -753,7 +753,7 @@ obj_hasOwnProperty(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
     JSObject *obj2;
     JSProperty *prop;
     JSAtom *atom;
-    
+
     atom = js_ValueToStringAtom(cx, *argv);
     if (atom == NULL || !OBJ_LOOKUP_PROPERTY(cx, obj, (jsid)atom, &obj2, &prop))
         return JS_FALSE;
@@ -786,7 +786,7 @@ obj_propertyIsEnumerable(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
     JSAtom *atom;
     uintN attrs;
     JSBool ok;
-    
+
     atom = js_ValueToStringAtom(cx, *argv);
     if (atom == NULL || !OBJ_LOOKUP_PROPERTY(cx, obj, (jsid)atom, &obj2, &prop))
         return JS_FALSE;
@@ -1874,7 +1874,7 @@ js_SetProperty(JSContext *cx, JSObject *obj, jsid id, jsval *vp)
 	    if (OBJ_GET_PROPERTY(cx, assignobj, (jsid)rt->atomState.assignAtom,
 				 &aval) &&
 		JSVAL_IS_FUNCTION(cx, aval) &&
-		js_CallFunctionValue(cx, assignobj, aval, 1, vp, &rval))
+		js_InternalCall(cx, assignobj, aval, 1, vp, &rval))
 	    {
 		*vp = rval;
 		JS_SetErrorReporter(cx, older);
@@ -2135,7 +2135,7 @@ js_DefaultValue(JSContext *cx, JSObject *obj, JSType hint, jsval *vp)
 	    return JS_FALSE;
 	if (!JSVAL_IS_PRIMITIVE(v)) {
 	    JSType type = JS_TypeOfValue(cx, v);
-	    if (type == hint || 
+	    if (type == hint ||
 	        (type == JSTYPE_FUNCTION && hint == JSTYPE_OBJECT)) {
 		goto out;
 	    }
@@ -2533,7 +2533,7 @@ js_TryMethod(JSContext *cx, JSObject *obj, JSAtom *atom,
     if (OBJ_GET_PROPERTY(cx, obj, (jsid)atom, &fval) &&
 	JSVAL_IS_OBJECT(fval) &&
 	fval != JSVAL_NULL) {
-	ok = js_CallFunctionValue(cx, obj, fval, argc, argv, rval);
+	ok = js_InternalCall(cx, obj, fval, argc, argv, rval);
     } else {
         ok = JS_TRUE;
     }
@@ -2641,7 +2641,7 @@ void printString(JSString *str) {
 
 void printVal(jsval val);
 
-void printObj(JSObject *jsobj) { 
+void printObj(JSObject *jsobj) {
     jsuint i;
     jsval val;
     JSClass *clasp;

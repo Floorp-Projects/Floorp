@@ -674,9 +674,9 @@ sort_compare(const void *a, const void *b, void *arg)
     } else {
 	argv[0] = av;
 	argv[1] = bv;
-	ok = js_CallFunctionValue(cx,
-				  OBJ_GET_PARENT(cx, JSVAL_TO_OBJECT(fval)),
-				  fval, 2, argv, &rval);
+	ok = js_InternalCall(cx,
+			     OBJ_GET_PARENT(cx, JSVAL_TO_OBJECT(fval)),
+			     fval, 2, argv, &rval);
 	if (ok) {
 	    ok = js_ValueToNumber(cx, rval, &cmp);
 	    /* Clamp cmp to -1, 0, 1. */
