@@ -64,8 +64,8 @@ private:
 	nsVoidArray                     mChildren;
 	PRUint32                        mLoadType;  
 	PRUint32                        mID;
-  PRBool                          mIsFrameNavigation;
-  PRBool                          mSaveLayoutState;
+  PRPackedBool                    mIsFrameNavigation;
+  PRPackedBool                    mSaveLayoutState;
   PRPackedBool                    mExpired;
   nsCOMPtr<nsISupports>           mCacheKey;
   nsISHEntry *                    mParent;  // weak reference
