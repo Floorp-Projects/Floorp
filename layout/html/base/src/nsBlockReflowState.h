@@ -939,13 +939,17 @@ ListTag(stdout); printf(": reflow: maxSize=%d,%d computedSize=%d,%d\n",
   nscoord minLineHeight = nsHTMLReflowState::CalcLineHeight(aPresContext, this);
   inlineReflow.SetMinLineHeight(minLineHeight);
 
+  if (eReflowReason_Resize != aReflowState.reason) {
+    RenumberLists();
+    ComputeTextRuns(aPresContext);
+  }
+
   nsresult rv = NS_OK;
   nsIFrame* target;
   switch (aReflowState.reason) {
   case eReflowReason_Initial:
     DrainOverflowLines();
     rv = PrepareInitialReflow(state);
-    ComputeTextRuns(aPresContext);
     mState &= ~NS_FRAME_FIRST_REFLOW;
     break;
 
@@ -976,7 +980,6 @@ ListTag(stdout); printf(": reflow: maxSize=%d,%d computedSize=%d,%d\n",
       inlineReflow.SetNextRCFrame(state.mNextRCFrame);
 
       // Now do the reflow
-      ComputeTextRuns(aPresContext);
       rv = PrepareChildIncrementalReflow(state);
     }
     break;
@@ -996,7 +999,9 @@ ListTag(stdout); printf(": reflow: maxSize=%d,%d computedSize=%d,%d\n",
       aStatus = NS_FRAME_COMPLETE;
     }
     else {
+#ifdef DEBUG_kipp
       ListTag(stdout); printf(": block is not complete\n");
+#endif
     }
   }
 
@@ -1137,6 +1142,15 @@ nsBlockFrame::ComputeFinalSize(const nsHTMLReflowState& aReflowState,
     // Store away the final value
     aMetrics.maxElementSize->width = maxWidth;
     aMetrics.maxElementSize->height = maxHeight;
+#ifdef DEBUG_kipp
+    if ((maxWidth > aMetrics.width) || (maxHeight > aMetrics.height)) {
+      ListTag(stdout);
+      printf(": WARNING: max-element-size:%d,%d desired:%d,%d maxSize:%d,%d\n",
+             maxWidth, maxHeight, aMetrics.width, aMetrics.height,
+             aState.mReflowState.availableWidth,
+             aState.mReflowState.availableHeight);
+    }
+#endif
 #ifdef NOISY_MAX_ELEMENT_SIZE
     ListTag(stdout);
     printf(": max-element-size:%d,%d desired:%d,%d maxSize:%d,%d\n",
@@ -1300,6 +1314,10 @@ nsBlockFrame::PrepareChildIncrementalReflow(nsBlockReflowState& aState)
 void
 nsBlockFrame::UpdateBulletPosition()
 {
+  if (nsnull == mBullet) {
+    // Don't bother if there is no bullet
+    return;
+  }
   const nsStyleList* styleList;
   GetStyleData(eStyleStruct_List, (const nsStyleStruct*&) styleList);
   if (NS_STYLE_LIST_STYLE_POSITION_INSIDE == styleList->mListStylePosition) {
@@ -2117,6 +2135,7 @@ nsBlockFrame::AttributeChanged(nsIPresContext* aPresContext,
     return rv;
   }
   if (nsHTMLAtoms::start == aAttribute) {
+    // XXX Not sure if this is necessary anymore
     RenumberLists();
 
     nsCOMPtr<nsIPresShell> shell;
@@ -2153,6 +2172,7 @@ nsBlockFrame::AttributeChanged(nsIPresContext* aPresContext,
       // Tell the enclosing block frame to renumber list items within
       // itself
       if (nsnull != blockParent) {
+        // XXX Not sure if this is necessary anymore
         blockParent->RenumberLists();
 
         nsCOMPtr<nsIPresShell> shell;
@@ -3089,9 +3109,19 @@ nsBlockFrame::PostPlaceLine(nsBlockReflowState& aState,
       ComputeLineMaxElementSize(aState, aLine, &lineMaxElementSize);
     }
     if (lineMaxElementSize.width > aState.mMaxElementSize.width) {
+#ifdef NOISY_MAX_ELEMENT_SIZE
+      ListTag(stdout); printf(": old max-element-size.width=%d new=%d\n",
+                              aState.mMaxElementSize.width,
+                              lineMaxElementSize.width);
+#endif
       aState.mMaxElementSize.width = lineMaxElementSize.width;
     }
     if (lineMaxElementSize.height > aState.mMaxElementSize.height) {
+#ifdef NOISY_MAX_ELEMENT_SIZE
+      ListTag(stdout); printf(": old max-element-size.height=%d new=%d\n",
+                              aState.mMaxElementSize.height,
+                              lineMaxElementSize.height);
+#endif
       aState.mMaxElementSize.height = lineMaxElementSize.height;
     }
   }
@@ -3309,10 +3339,6 @@ nsBlockFrame::AppendFrames(nsIPresContext& aPresContext,
 
   nsresult rv = AppendNewFrames(aPresContext, aFrameList);
   if (NS_SUCCEEDED(rv)) {
-    // Update secondary state
-    RenumberLists();
-    ComputeTextRuns(aPresContext);
-
     // Generate reflow command to reflow the dirty lines
     nsIReflowCommand* reflowCmd = nsnull;
     nsresult rv;
@@ -3474,10 +3500,6 @@ nsBlockFrame::InsertFrames(nsIPresContext& aPresContext,
 #endif
 
   if (NS_SUCCEEDED(rv)) {
-    // Update secondary state
-    RenumberLists();
-    ComputeTextRuns(aPresContext);
-
     // Generate reflow command to reflow the dirty lines
     nsIReflowCommand* reflowCmd = nsnull;
     nsresult rv;
@@ -3699,10 +3721,6 @@ nsBlockFrame::RemoveFrame(nsIPresContext& aPresContext,
   }
 
   if (NS_SUCCEEDED(rv)) {
-    // Update secondary state
-    RenumberLists();
-    ComputeTextRuns(aPresContext);
-
     // Generate reflow command to reflow the dirty lines
     nsIReflowCommand* reflowCmd = nsnull;
     nsresult rv;
@@ -4655,7 +4673,6 @@ nsBlockFrame::SetInitialChildList(nsIPresContext& aPresContext,
     if (NS_FAILED(rv)) {
       return rv;
     }
-    RenumberLists();
 
     // Create list bullet if this is a list-item. Note that this is done
     // here so that RenumberLists will work (it needs the bullets to
