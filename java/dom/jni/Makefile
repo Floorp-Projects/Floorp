@@ -13,10 +13,10 @@
 # Inc. Portions created by Sun are Copyright (C) 1999 Sun Microsystems,
 # Inc. All Rights Reserved. 
 
-DEPTH		= /opt/mozilla
-topsrcdir	= $(DEPTH)
-srcdir		= .
-VPATH		= .
+DEPTH		= ../../..
+topsrcdir	= /opt/mozilla
+srcdir		= /opt/mozilla/java/dom/jni
+VPATH		= /opt/mozilla/java/dom/jni
 
 include $(DEPTH)/config/autoconf.mk
 
@@ -36,10 +36,9 @@ CPPSRCS		= \
 	org_mozilla_dom_NamedNodeMapImpl.cpp \
 	org_mozilla_dom_NodeImpl.cpp \
 	org_mozilla_dom_NodeListImpl.cpp \
+	org_mozilla_dom_NotationImpl.cpp \
 	org_mozilla_dom_ProcessingInstructionImpl.cpp \
 	org_mozilla_dom_TextImpl.cpp 
-
-#	org_mozilla_dom_NotationImpl.cpp \
 
 include $(topsrcdir)/config/config.mk
 

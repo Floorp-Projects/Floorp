@@ -33,9 +33,7 @@ jclass JavaDOMGlobals::entityReferenceClass = NULL;
 jclass JavaDOMGlobals::namedNodeMapClass = NULL;
 jclass JavaDOMGlobals::nodeClass = NULL;
 jclass JavaDOMGlobals::nodeListClass = NULL;
-#if 0
 jclass JavaDOMGlobals::notationClass = NULL;
-#endif
 jclass JavaDOMGlobals::processingInstructionClass = NULL;
 jclass JavaDOMGlobals::textClass = NULL;
 
@@ -186,12 +184,10 @@ void JavaDOMGlobals::Initialize(JNIEnv *env)
     env->GetStaticFieldID(nodeClass, "TEXT_NODE", "S");
   if (!nodeTypeTextFID) return;
 
-#if 0
   notationClass = env->FindClass("org/mozilla/dom/NotationImpl");
   if (!notationClass) return;
   notationClass = (jclass) env->NewGlobalRef(notationClass);
   if (!notationClass) return;
-#endif
 
   processingInstructionClass = env->FindClass("org/mozilla/dom/ProcessingInstructionImpl");
   if (!processingInstructionClass) return;
@@ -323,7 +319,6 @@ void JavaDOMGlobals::Destroy(JNIEnv *env)
   }
   nodeClass = NULL;
 
-#if 0
   env->DeleteGlobalRef(notationClass);
   if (env->ExceptionOccurred()) {
     PR_LOG(log, PR_LOG_ERROR, 
@@ -332,7 +327,6 @@ void JavaDOMGlobals::Destroy(JNIEnv *env)
     return;
   }
   notationClass = NULL;
-#endif
 
   env->DeleteGlobalRef(processingInstructionClass);
   if (env->ExceptionOccurred()) {
@@ -401,11 +395,7 @@ jobject JavaDOMGlobals::CreateNodeSubtype(JNIEnv *env,
     break;
 
   case nsIDOMNode::NOTATION_NODE:
-    PR_LOG(log, PR_LOG_ERROR, 
-	   ("JavaDOMGlobals::CreateNodeSubtype: Unsupported: allocating Node of type Notation\n"));
-#if 0
     clazz = notationClass;
-#endif
     break;
 
   case nsIDOMNode::PROCESSING_INSTRUCTION_NODE:
