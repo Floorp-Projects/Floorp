@@ -73,6 +73,14 @@ public:
   // Initialization
   NS_IMETHOD Init(nsIPresShell* aPresShell, nsIStyleSet* aStyleSet) = 0;
 
+  /**
+   * After Destroy is called, all methods should return
+   * NS_ERROR_NOT_AVAILABLE.  Destroy should be called when the
+   * frame tree managed by the frame manager is no longer being
+   * displayed.
+   */
+  NS_IMETHOD Destroy() = 0;
+
   // Gets and sets the root frame (typically the viewport). The lifetime of the
   // root frame is controlled by the frame manager. When the frame manager is
   // destroyed it destroys the entire frame hierarchy
