@@ -41,6 +41,7 @@ EXTRA_DSO_LDOPTS = \
 	-L$(DIST)/lib	\
 	$(NSPR_LIBS)	\
 	-lxpcom		\
+	-lreg		\
 	-lraptorbase	\
 	-lrdfutil_s	\
 	-lmork		\
