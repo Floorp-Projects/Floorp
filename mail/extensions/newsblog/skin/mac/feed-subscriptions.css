@@ -36,22 +36,37 @@
 #
 # ***** END LICENSE BLOCK ******
 
-/* ::::: Folder Pane icons :::::: */
+/* ::::: Feed Subscription UI icons :::::: */
 
-treechildren::-moz-tree-image(folderNameCol, serverType-rss) {
-  list-style-image: url("chrome://messenger/skin/icons/message-news.png");
+#subscriptionsDialog { 
+  padding: 14px;
 }
 
-treechildren::-moz-tree-image(folderNameCol, isServer-true, serverType-rss) {
-  list-style-image: url("chrome://messenger/skin/icons/server-newsblog.png");
+#subscriptionChildren::-moz-tree-image(folderNameCol) {
+  margin-right: 2px;
+  list-style-image: url("chrome://messenger/skin/icons/folder-newsgroup.png");
 }
 
-treechildren::-moz-tree-image(folderNameCol, specialFolder-Trash) {
-  list-style-image: url("chrome://messenger/skin/icons/folder-trash.png");
+#subscriptionChildren::-moz-tree-image(folderNameCol, container) {
+  list-style-image: url("chrome://messenger/skin/icons/folder-closed.png");
 }
 
-/* ..... Saved Search Folder, Hack to force the saved search artwork to show up for virtual folders in RSS accounts ..... */
+#subscriptionChildren::-moz-tree-image(folderNameCol, container, open) {
+  list-style-image: url("chrome://messenger/skin/icons/folder-open.png");
+}
 
-treechildren::-moz-tree-image(folderNameCol, serverType-rss, specialFolder-Virtual) {
-  list-style-image: url("chrome://messenger-newsblog/skin/icons/folder-search-rss.png");
+#rssFeedInfoBox {
+  border: 1px solid ThreeDShadow;
+  -moz-border-radius: 0px;
+  margin: 4px;
+  padding: 0px;
+}
+
+#rssFeedInfoBox textbox {
+  background-color: transparent;
+}
+
+#backgroundBox {
+  background-color: #FFFFFF; 
+  opacity: 0.5;
 }

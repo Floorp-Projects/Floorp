@@ -95,9 +95,8 @@ var nsNewsBlogFeedDownloader =
       if (feedUrlArray[url])
       {        
         id = rdf.GetResource(feedUrlArray[url]);
-        feed = new Feed(id);
+        feed = new Feed(id, aFolder.server);
         feed.folder = aFolder;
-        feed.server = aFolder.server;
         gNumPendingFeedDownloads++; // bump our pending feed download count
         feed.download(true, progressNotifier);
       }
@@ -109,21 +108,27 @@ var nsNewsBlogFeedDownloader =
     if (!gExternalScriptsLoaded)
       loadScripts();
 
-   // we don't support the ability to subscribe to several feeds at once yet...
-   // for now, abort the subscription if we are already in the middle of subscribing to a feed
-   // via drag and drop.
-   if (gNumPendingFeedDownloads)
-   {
-     debug('Aborting RSS subscription. Feed downloads already in progress\n');
-     return;
-   }
+    // we don't support the ability to subscribe to several feeds at once yet...
+    // for now, abort the subscription if we are already in the middle of subscribing to a feed
+    // via drag and drop.
+    if (gNumPendingFeedDownloads)
+    {
+      debug('Aborting RSS subscription. Feed downloads already in progress\n');
+      return;
+    }
+
+    // make sure we aren't already subscribed to this feed before we attempt to subscribe to it.
+    if (feedAlreadyExists(aUrl, aFolder.server))
+    {
+      aMsgWindow.statusFeedback.showStatusString(GetNewsBlogStringBundle().GetStringFromName('subscribe-feedAlreadySubscribed'));     
+      return;
+    }
 
     var rdf = Components.classes["@mozilla.org/rdf/rdf-service;1"]
               .getService(Components.interfaces.nsIRDFService);
     
     var itemResource = rdf.GetResource(aUrl);
-    var feed = new Feed(itemResource);
-    feed.server = aFolder.server;
+    var feed = new Feed(itemResource, aFolder.server);
     feed.quickMode = feed.server.getBoolAttribute('quickMode');
 
     if (!aFolder.isServer) // if the root server, create a new folder for the feed

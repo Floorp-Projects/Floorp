@@ -17,8 +17,8 @@
     if (lastSubscriptionWindow)
       lastSubscriptionWindow.focus();
     else 
-      window.openDialog("chrome://messenger-newsblog/content/subscriptions.xul", "",
-                        "centerscreen,resizable=yes", { server: aRSSServer});
+      window.openDialog("chrome://messenger-newsblog/content/feed-subscriptions.xul", "",
+                        "centerscreen,chrome,dialog=no,resizable", { server: aRSSServer});
   }
 
   function openSubscriptionsDialogFromFolderPane()

@@ -2,17 +2,4 @@
 <!ENTITY folderContextRSSSubscribe.label    "Manage Subscriptions...">
 <!ENTITY folderContextRSSSubscribe.accesskey   "M">
 
-<!-- Subscription Dialog -->
-<!ENTITY newsBlogSubscriptions.label "RSS Subscriptions">
-<!ENTITY subscriptionDesc.label "Manage your RSS Subscriptions.">
-<!ENTITY feedNameTreeCol.label "Name">
-<!ENTITY locationTreeCol.label "Location">
-<!ENTITY addButton.label       "Add">
-<!ENTITY addButton.accesskey   "A">
-<!ENTITY editButton.label      "Edit">
-<!ENTITY editButton.accesskey  "E">
-<!ENTITY deleteButton.label    "Delete">
-<!ENTITY deleteButton.accesskey   "D">
-
-<!ENTITY feedNameTreeCol.label "Name">
 

@@ -1,13 +1,13 @@
 <!-- Feed Properties Dialog -->
-<!ENTITY window.title "News Feed Properties">
+<!ENTITY window.title "Feed Properties">
 
-<!ENTITY feedFolder.label "Store Feed Articles in: ">
+<!ENTITY feedFolder.label "Store Articles in: ">
 <!ENTITY feedFolder.accesskey "S">
-
-<!ENTITY choosethisfolder.label  "choose this folder">
 
 <!ENTITY feedLocation.label "Feed URL: ">
 <!ENTITY feedLocation.accesskey "F">
+
+<!ENTITY choosethisfolder.label  "choose this folder">
 
 <!ENTITY quickMode.label "Show the article summary instead of loading the web page">
 <!ENTITY quickMode.accesskey "h">

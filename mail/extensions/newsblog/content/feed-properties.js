@@ -45,6 +45,7 @@ function onLoad()
   document.getElementById('selectFolder').setAttribute('ref', window.arguments[0].serverURI);
 
   SetFolderPicker(window.arguments[0].folderURI ? window.arguments[0].folderURI : window.arguments[0].serverURI, 'selectFolder');
+  document.getElementById('selectFolder').setInitialSelection();
 
   document.getElementById('rssAccountMenuItem').label = window.arguments[0].serverPrettyName;
   document.getElementById('rssAccountMenuItem').value = window.arguments[0].serverURI;
@@ -53,7 +54,7 @@ function onLoad()
   document.getElementById('quickMode').checked = window.arguments[0].quickMode;
 
   // if we are editing an existing feed, disable the top level account
-  if (window.arguments[0].folderURI)
+  if (!window.arguments[0].newFeed)
     document.getElementById('rssAccountMenuItem').setAttribute('disabled', 'true');
 }
 

@@ -131,6 +131,7 @@
 * locale/@AB_CD@/messenger-newsblog/contents.rdf             (generic/chrome/messenger-newsblog/contents.rdf)
   locale/@AB_CD@/messenger-newsblog/newsblog.dtd             (@AB_CD@/chrome/messenger-newsblog/newsblog.dtd)
   locale/@AB_CD@/messenger-newsblog/newsblog.properties      (@AB_CD@/chrome/messenger-newsblog/newsblog.properties)
+  locale/@AB_CD@/messenger-newsblog/feed-subscriptions.dtd   (@AB_CD@/chrome/messenger-newsblog/feed-subscriptions.dtd)
   locale/@AB_CD@/messenger-newsblog/feed-properties.dtd      (@AB_CD@/chrome/messenger-newsblog/feed-properties.dtd)
   locale/@AB_CD@/messenger-newsblog/am-newsblog.properties   (@AB_CD@/chrome/messenger-newsblog/am-newsblog.properties)
   locale/@AB_CD@/messenger-newsblog/am-newsblog.dtd          (@AB_CD@/chrome/messenger-newsblog/am-newsblog.dtd)

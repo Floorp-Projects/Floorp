@@ -73,9 +73,10 @@ var FeedCache =
   }
 };
 
-function Feed(aResource) 
+function Feed(aResource, aRSSServer) 
 {
   this.resource = aResource.QueryInterface(Components.interfaces.nsIRDFResource);
+  this.server = aRSSServer;
 }
 
 Feed.prototype = 
@@ -347,15 +348,15 @@ Feed.prototype =
   cleanupParsingState: function(aFeed) 
   {
     // now that we are done parsing the feed, remove the feed from our feed cache
-    FeedCache.removeFeed(feed.url);
+    FeedCache.removeFeed(aFeed.url);
     aFeed.removeInvalidItems();
 
     // let's be sure to flush any feed item changes back to disk
-    var ds = getItemsDS(feed.server);
+    var ds = getItemsDS(aFeed.server);
     ds.QueryInterface(Components.interfaces.nsIRDFRemoteDataSource).Flush(); // flush any changes
 
     if (aFeed.downloadCallback)
-      aFeed.downloadCallback.downloaded(feed, kNewsBlogSuccess);
+      aFeed.downloadCallback.downloaded(aFeed, kNewsBlogSuccess);
 
     this.request = null; // force the xml http request to go away. This helps reduce some nasty assertions on shut down. 
     this.itemsToStore = "";

@@ -1,4 +1,41 @@
-// XXX Rename this to global.js
+# -*- Mode: Java; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+# ***** BEGIN LICENSE BLOCK *****
+# Version: MPL 1.1/GPL 2.0/LGPL 2.1
+#
+# The contents of this file are subject to the Mozilla Public License Version
+# 1.1 (the "License"); you may not use this file except in compliance with
+# the License. You may obtain a copy of the License at
+# http://www.mozilla.org/MPL/
+#
+# Software distributed under the License is distributed on an "AS IS" basis,
+# WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+# for the specific language governing rights and limitations under the
+# License.
+#
+# The Original Code is Thunderbird RSS Utils
+#
+# The Initial Developer of the Original Code is
+# The Mozilla Foundation.
+# Portions created by the Initial Developer are Copyright (C) 2005
+# the Initial Developer. All Rights Reserved.
+#
+# Contributor(s):
+#  Myk Melez <myk@mozilla.org>
+#  Scott MacGregor <mscott@mozilla.org>
+#
+# Alternatively, the contents of this file may be used under the terms of
+# either the GNU General Public License Version 2 or later (the "GPL"), or
+# the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+# in which case the provisions of the GPL or the LGPL are applicable instead
+# of those above. If you wish to allow use of your version of this file only
+# under the terms of either the GPL or the LGPL, and not to allow others to
+# use your version of this file under the terms of the MPL, indicate your
+# decision by deleting the provisions above and replace them with the notice
+# and other provisions required by the GPL or the LGPL. If you do not delete
+# the provisions above, a recipient may use your version of this file under
+# the terms of any one of the MPL, the GPL or the LGPL.
+#
+# ***** END LICENSE BLOCK ******
 
 // Whether or not to dump debugging messages to the console.
 const DEBUG = false;
@@ -8,10 +45,7 @@ if (DEBUG)
 else
   debug = function() {}
 
-var rdf =
-  Components
-    .classes["@mozilla.org/rdf/rdf-service;1"]
-      .getService(Components.interfaces.nsIRDFService);
+var rdf = Components.classes["@mozilla.org/rdf/rdf-service;1"].getService(Components.interfaces.nsIRDFService);
 
 const RDF_NS = "http://www.w3.org/1999/02/22-rdf-syntax-ns#";
 const RDF_TYPE = rdf.GetResource(RDF_NS + "type");
@@ -47,40 +81,44 @@ const RDF_LITERAL_TRUE = rdf.GetLiteral("true");
 const RDF_LITERAL_FALSE = rdf.GetLiteral("false");
 
 // XXX There's a containerutils in forumzilla.js that this should be merged with.
-var containerUtils =
-  Components
-    .classes["@mozilla.org/rdf/container-utils;1"]
-      .getService(Components.interfaces.nsIRDFContainerUtils);
+var containerUtils = Components.classes["@mozilla.org/rdf/container-utils;1"]
+                               .getService(Components.interfaces.nsIRDFContainerUtils);
 
-var fileHandler =
-  Components
-    .classes["@mozilla.org/network/io-service;1"]
-      .getService(Components.interfaces.nsIIOService)
-        .getProtocolHandler("file")
-          .QueryInterface(Components.interfaces.nsIFileProtocolHandler);
+var fileHandler = Components.classes["@mozilla.org/network/io-service;1"].getService(Components.interfaces.nsIIOService)
+                            .getProtocolHandler("file").QueryInterface(Components.interfaces.nsIFileProtocolHandler);
 
-function addFeed(url, title, destFolder) {
-    var ds = getSubscriptionsDS(destFolder.server);
-    var feeds = getSubscriptionsList(destFolder.server);
+// helper routine that checks our subscriptions list array and returns true if the url 
+// is already in our list. This is used to prevent the user from subscribing to the same
+// feed multiple times for the same server...
+function feedAlreadyExists(aUrl, aServer)
+{
+  var feeds = getSubscriptionsList(aServer);
+  return feeds.IndexOf(rdf.GetResource(aUrl)) != -1;
+}
 
-    // Generate a unique ID for the feed.
-    var id = url;
-    var i = 1;
-    while (feeds.IndexOf(rdf.GetResource(id)) != -1 && ++i < 1000)
-        id = url + i;
-    if (id == 1000)
-        throw("couldn't generate a unique ID for feed " + url);
+function addFeed(url, title, destFolder) 
+{
+  var ds = getSubscriptionsDS(destFolder.server);
+  var feeds = getSubscriptionsList(destFolder.server);
 
-    // Add the feed to the list.
-    id = rdf.GetResource(id);
-    feeds.AppendElement(id);
-    ds.Assert(id, RDF_TYPE, FZ_FEED, true);
-    ds.Assert(id, DC_IDENTIFIER, rdf.GetLiteral(url), true);
-    if (title)
-        ds.Assert(id, DC_TITLE, rdf.GetLiteral(title), true);
-		ds.Assert(id, FZ_DESTFOLDER, destFolder, true);
-    ds = ds.QueryInterface(Components.interfaces.nsIRDFRemoteDataSource);
-    ds.Flush();
+  // Generate a unique ID for the feed.
+  var id = url;
+  var i = 1;
+  while (feeds.IndexOf(rdf.GetResource(id)) != -1 && ++i < 1000)
+    id = url + i;
+  if (id == 1000)
+    throw("couldn't generate a unique ID for feed " + url);
+
+  // Add the feed to the list.
+  id = rdf.GetResource(id);
+  feeds.AppendElement(id);
+  ds.Assert(id, RDF_TYPE, FZ_FEED, true);
+  ds.Assert(id, DC_IDENTIFIER, rdf.GetLiteral(url), true);
+  if (title)
+    ds.Assert(id, DC_TITLE, rdf.GetLiteral(title), true);
+	ds.Assert(id, FZ_DESTFOLDER, destFolder, true);
+  ds = ds.QueryInterface(Components.interfaces.nsIRDFRemoteDataSource);
+  ds.Flush();
 }
 
 // updates the "feedUrl" property in the message database for the folder in question.
@@ -106,12 +144,15 @@ function updateFolderFeedUrl(aFolder, aFeedUrl, aRemoveUrl)
   msgdb.Close(true);
 }
 
-function getNodeValue(node) {
+function getNodeValue(node) 
+{
   if (node && node.textContent)
     return node.textContent;
-  else if (node && node.firstChild) {
+  else if (node && node.firstChild) 
+  {
     var ret = "";
-    for (var child = node.firstChild; child; child = child.nextSibling) {
+    for (var child = node.firstChild; child; child = child.nextSibling) 
+    {
       var value = getNodeValue(child);
       if (value)
         ret += value;
@@ -124,9 +165,11 @@ function getNodeValue(node) {
   return null;
 }
 
-function getRDFTargetValue(ds, source, property) {
+function getRDFTargetValue(ds, source, property) 
+{
   var node = ds.GetTarget(source, property, true);
-  if (node) {
+  if (node) 
+  {
     node = node.QueryInterface(Components.interfaces.nsIRDFLiteral);
     if (node)
       return node.Value;
@@ -135,31 +178,34 @@ function getRDFTargetValue(ds, source, property) {
 }
 
 var gFzSubscriptionsDS; // cache
-function getSubscriptionsDS(server) {
-    if (gFzSubscriptionsDS)
-        return gFzSubscriptionsDS;
-
-    var file = getSubscriptionsFile(server);
-    var url = fileHandler.getURLSpecFromFile(file);
-
-    gFzSubscriptionsDS = rdf.GetDataSourceBlocking(url);
-
-    if (!gFzSubscriptionsDS)
-        throw("can't get subscriptions data source");
-
+function getSubscriptionsDS(server) 
+{
+  if (gFzSubscriptionsDS)
     return gFzSubscriptionsDS;
+
+  var file = getSubscriptionsFile(server);
+  var url = fileHandler.getURLSpecFromFile(file);
+
+  gFzSubscriptionsDS = rdf.GetDataSourceBlocking(url);
+
+  if (!gFzSubscriptionsDS)
+    throw("can't get subscriptions data source");
+
+  return gFzSubscriptionsDS;
 }
 
-function getSubscriptionsList(server) {
-    var ds = getSubscriptionsDS(server);
-    var list = ds.GetTarget(FZ_ROOT, FZ_FEEDS, true);
-    //list = feeds.QueryInterface(Components.interfaces.nsIRDFContainer);
-    list = list.QueryInterface(Components.interfaces.nsIRDFResource);
-    list = containerUtils.MakeSeq(ds, list);
-    return list;
+function getSubscriptionsList(server) 
+{
+  var ds = getSubscriptionsDS(server);
+  var list = ds.GetTarget(FZ_ROOT, FZ_FEEDS, true);
+  //list = feeds.QueryInterface(Components.interfaces.nsIRDFContainer);
+  list = list.QueryInterface(Components.interfaces.nsIRDFResource);
+  list = containerUtils.MakeSeq(ds, list);
+  return list;
 }
 
-function getSubscriptionsFile(server) {
+function getSubscriptionsFile(server) 
+{
   server.QueryInterface(Components.interfaces.nsIRssIncomingServer);
   var file = server.subscriptionsDataSourcePath;
 
@@ -170,7 +216,8 @@ function getSubscriptionsFile(server) {
   return file;
 }
 
-function createSubscriptionsFile(file) {
+function createSubscriptionsFile(file) 
+{
   file = new LocalFile(file, MODE_WRONLY | MODE_CREATE);
   file.write('\
 <?xml version="1.0"?>\n\
@@ -189,31 +236,32 @@ function createSubscriptionsFile(file) {
 }
 
 var gFzItemsDS; // cache
-function getItemsDS(server) {
-    if (gFzItemsDS)
-        return gFzItemsDS;
-
-    var file = getItemsFile(server);
-    var url = fileHandler.getURLSpecFromFile(file);
-
-    gFzItemsDS = rdf.GetDataSourceBlocking(url);
-    if (!gFzItemsDS)
-        throw("can't get subscriptions data source");
-
-    // Note that it this point the datasource may not be loaded yet.
-    // You have to QueryInterface it to nsIRDFRemoteDataSource and check
-    // its "loaded" property to be sure.  You can also attach an observer
-    // which will get notified when the load is complete.
-
+function getItemsDS(server) 
+{
+  if (gFzItemsDS)
     return gFzItemsDS;
+
+  var file = getItemsFile(server);
+  var url = fileHandler.getURLSpecFromFile(file);
+  gFzItemsDS = rdf.GetDataSourceBlocking(url);
+  if (!gFzItemsDS)
+    throw("can't get subscriptions data source");
+
+  // Note that it this point the datasource may not be loaded yet.
+  // You have to QueryInterface it to nsIRDFRemoteDataSource and check
+  // its "loaded" property to be sure.  You can also attach an observer
+  // which will get notified when the load is complete.
+  return gFzItemsDS;
 }
 
-function getItemsFile(server) {
+function getItemsFile(server) 
+{
   server.QueryInterface(Components.interfaces.nsIRssIncomingServer);
   var file = server.feedItemsDataSourcePath;
 
   // If the file doesn't exist, create it.
-  if (!file.exists()) {
+  if (!file.exists()) 
+  {
     var newfile = new LocalFile(file, MODE_WRONLY | MODE_CREATE);
     newfile.write('\
 <?xml version="1.0"?>\n\
@@ -227,20 +275,22 @@ function getItemsFile(server) {
   return file;
 }
 
-function removeAssertions(ds, resource) {
-    var properties = ds.ArcLabelsOut(resource);
-    var property;
-    while (properties.hasMoreElements()) {
-        property = properties.getNext();
-        var values = ds.GetTargets(resource, property, true);
-        var value;
-        while (values.hasMoreElements()) {
-            value = values.getNext();
-            ds.Unassert(resource, property, value, true);
-        }
+function removeAssertions(ds, resource) 
+{
+  var properties = ds.ArcLabelsOut(resource);
+  var property;
+  while (properties.hasMoreElements()) 
+  {
+    property = properties.getNext();
+    var values = ds.GetTargets(resource, property, true);
+    var value;
+    while (values.hasMoreElements()) 
+    {
+      value = values.getNext();
+      ds.Unassert(resource, property, value, true);
     }
+  }
 }
-
 
 // Date validator for RSS feeds
 const FZ_RFC822_RE = "^(((Mon)|(Tue)|(Wed)|(Thu)|(Fri)|(Sat)|(Sun)), *)?\\d\\d?"
@@ -248,30 +298,34 @@ const FZ_RFC822_RE = "^(((Mon)|(Tue)|(Wed)|(Thu)|(Fri)|(Sat)|(Sun)), *)?\\d\\d?"
 + " +\\d\\d(\\d\\d)? +\\d\\d:\\d\\d(:\\d\\d)? +(([+-]?\\d\\d\\d\\d)|(UT)|(GMT)"
 + "|(EST)|(EDT)|(CST)|(CDT)|(MST)|(MDT)|(PST)|(PDT)|\\w)$";
 
-function isValidRFC822Date(pubDate){
-    var regex = new RegExp(FZ_RFC822_RE);
-    return regex.test(pubDate);
+function isValidRFC822Date(pubDate)
+{
+  var regex = new RegExp(FZ_RFC822_RE);
+  return regex.test(pubDate);
 }
 
-function dateRescue(dateString){
+function dateRescue(dateString)
+{
   // Deal with various kinds of invalid dates
   // Just timestamps for now.
-  if(!isNaN(parseInt(dateString))) {//It's an integer, so maybe it's a timestamp
+  if(!isNaN(parseInt(dateString))) 
+  { //It's an integer, so maybe it's a timestamp
     var d = new Date(parseInt(dateString)*1000);
     var now = new Date();
     var yeardiff = now.getFullYear()-d.getFullYear();
     debug("Rescue Timestamp date: " + d.toString() + "\nYear diff:" + yeardiff + "\n");
-    if((yeardiff >= 0) && (yeardiff<3)){
+    if((yeardiff >= 0) && (yeardiff<3))
+    {
       //it's quite likely the correct date
       return d.toString();
     }
   }
   // Can't help. Set to current time.
   return (new Date()).toString();
-  
-}
+} 
 
 // Could be a prototype on String, but I don't know the policy on that
-function trimString(s){
-    return(s.replace(/^\s+/,'').replace(/\s+$/,''));
+function trimString(s)
+{
+  return(s.replace(/^\s+/,'').replace(/\s+$/,''));
 }
