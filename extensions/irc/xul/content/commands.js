@@ -996,6 +996,11 @@ function cmdServer(e)
         client.addNetwork(name, [{name: e.hostname, port: e.port,
                                         password: e.password}])
     }
+    else if (e.password)
+    {
+        /* update password on existing server. */
+        client.networks[name].serverList[0].password = e.password;
+    }
 
     return client.connectToNetwork(name);
 }

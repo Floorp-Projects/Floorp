@@ -362,7 +362,7 @@ function updateChannel()
 
         setText("usercount", getMsg(MSG_FMT_USERCOUNT,
                                     [view.getUsersLength(), view.opCount,
-                                     view.voiceCount]));
+                                     view.halfopCount, view.voiceCount]));
         setAttribute("usercount", "condition", "green");
 
         if (view.topic)

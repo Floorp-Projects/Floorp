@@ -719,7 +719,11 @@ function my_notice (e)
 CIRCNetwork.prototype.on303 = /* ISON (aka notify) reply */
 function my_303 (e)
 {
-    var onList = stringTrim(e.params[2].toLowerCase()).split(/\s+/);
+    var onList = new Array();
+    // split() gives an array of one item ("") when splitting "", which we
+    // don't want, so only do the split if there's something to split.
+    if (e.params[2])
+        onList = stringTrim(e.params[2].toLowerCase()).split(/\s+/);
     var offList = new Array();
     var newArrivals = new Array();
     var newDepartures = new Array();
@@ -933,9 +937,9 @@ function my_352 (e)
     }
     
     var status = e.params[7];
-    if (e.params[7] == "G")
+    if (e.params[7][0] == "G")
         status = MSG_GONE;
-    else if (e.params[7] == "H")
+    else if (e.params[7][0] == "H")
         status = MSG_HERE;
         
     e.user.display(getMsg(MSG_WHO_MATCH,
