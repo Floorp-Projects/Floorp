@@ -35,13 +35,14 @@ class nsMenuBarListener : public nsIDOMKeyListener, public nsIDOMMouseListener,
 public:
   /** default constructor
    */
-  nsMenuBarListener();
+  nsMenuBarListener(nsMenuBarFrame* aMenuBar);
   /** default destructor
    */
   virtual ~nsMenuBarListener();
    
   virtual nsresult HandleEvent(nsIDOMEvent* aEvent);
   virtual nsresult MouseMove(nsIDOMEvent* aMouseEvent);
+  virtual nsresult DragMove(nsIDOMEvent* aMouseEvent);
   virtual nsresult MouseDown(nsIDOMEvent* aMouseEvent);
   virtual nsresult MouseUp(nsIDOMEvent* aMouseEvent);
   virtual nsresult MouseClick(nsIDOMEvent* aMouseEvent);
@@ -50,11 +51,12 @@ public:
   virtual nsresult MouseOut(nsIDOMEvent* aMouseEvent);
   virtual nsresult KeyUp(nsIDOMEvent* aMouseEvent);
   virtual nsresult KeyDown(nsIDOMEvent* aMouseEvent);
-  virtual nsresult KeyPressed(nsIDOMEvent* aMouseEvent);
+  virtual nsresult KeyPress(nsIDOMEvent* aMouseEvent);
   
   NS_DECL_ISUPPORTS
 
 protected:
+  nsMenuBarFrame* mMenuBarFrame;
 };
 
 

@@ -29,7 +29,7 @@
 
 #include "nsToolbarFrame.h"
 
-class nsMenuBarListener;
+#include "nsMenuBarListener.h"
 
 nsresult NS_NewMenuBarFrame(nsIFrame** aResult) ;
 
@@ -37,6 +37,12 @@ class nsMenuBarFrame : public nsToolbarFrame
 {
 public:
   nsMenuBarFrame();
+
+  NS_IMETHOD Init(nsIPresContext&  aPresContext,
+                  nsIContent*      aContent,
+                  nsIFrame*        aParent,
+                  nsIStyleContext* aContext,
+                  nsIFrame*        aPrevInFlow);
 
 protected:
   nsMenuBarListener* mMenuBarListener;
