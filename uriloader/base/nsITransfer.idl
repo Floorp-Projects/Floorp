@@ -36,15 +36,15 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "nsIWebProgressListener.idl"
+#include "nsIWebProgressListener2.idl"
 
 interface nsIURI;
 interface nsIObserver;
 interface nsIWebBrowserPersist;
 interface nsIMIMEInfo;
 
-[scriptable, uuid(e57c27f8-2a4e-4d80-bf80-1ffd634c734e)]
-interface nsITransfer : nsIWebProgressListener {
+[scriptable, uuid(4af66079-938d-4093-9cc4-561dac709c7b)]
+interface nsITransfer : nsIWebProgressListener2 {
 
     /**
      * Initializes the transfer with certain properties.  This function must
@@ -74,12 +74,6 @@ interface nsITransfer : nsIWebProgressListener {
               in nsIMIMEInfo aMIMEInfo,
               in long long startTime,
               in nsIWebBrowserPersist aPersist);
-
-    /**
-     * Optional; transferring information is passed to this listener and used to
-     * update client UI.
-     */
-    attribute nsIWebProgressListener listener;
 
     /**
      * If set, receives notifications of events like cancel ("oncancel").

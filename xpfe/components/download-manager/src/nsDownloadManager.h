@@ -108,6 +108,7 @@ class nsDownload : public nsIDownload,
 {
 public:
   NS_DECL_NSIWEBPROGRESSLISTENER
+  NS_DECL_NSIWEBPROGRESSLISTENER2
   NS_DECL_NSITRANSFER
   NS_DECL_NSIDOWNLOAD
   NS_DECL_NSIOBSERVER
@@ -121,7 +122,7 @@ public:
   nsresult Resume();
   void DisplayDownloadFinishedAlert();
 
-  void SetDialogListener(nsIWebProgressListener* aInternalListener) {
+  void SetDialogListener(nsIWebProgressListener2* aInternalListener) {
     mDialogListener = aInternalListener;
   }
   void SetDialog(nsIProgressDialog* aDialog) {
@@ -165,8 +166,7 @@ private:
 
   nsCOMPtr<nsIURI> mTarget;
   nsCOMPtr<nsIURI> mSource;
-  nsCOMPtr<nsIWebProgressListener> mListener;
-  nsCOMPtr<nsIWebProgressListener> mDialogListener;
+  nsCOMPtr<nsIWebProgressListener2> mDialogListener;
   nsCOMPtr<nsIWebBrowserPersist> mPersist;
   nsCOMPtr<nsIRequest> mRequest;
   nsCOMPtr<nsIProgressDialog> mDialog;

@@ -264,6 +264,10 @@ interface nsIWebProgressListener : nsISupports
    *
    * NOTE: If any progress value is unknown, or if its value would exceed the
    * maximum value of type long, then its value is replaced with -1.
+   *
+   * NOTE: If the object also implements nsIWebProgressListener2 and the caller
+   * knows about that interface, this function will not be called. Instead,
+   * nsIWebProgressListener2::onProgressChange64 will be called.
    */
   void onProgressChange(in nsIWebProgress aWebProgress,
                         in nsIRequest aRequest,

@@ -44,7 +44,7 @@ interface nsIRequest;
 interface nsIStreamListener;
 interface nsIFile;
 interface nsIMIMEInfo;
-interface nsIWebProgressListener;
+interface nsIWebProgressListener2;
 interface nsIInterfaceRequestor;
 
 /**
@@ -98,7 +98,7 @@ interface nsPIExternalAppLauncher : nsISupports
  * A helper app launcher is a small object created to handle the launching
  * of an external application.
  */
-[scriptable, uuid(15437993-9732-4aaf-977b-69a16b6334ff)]
+[scriptable, uuid(955baa49-7f87-469a-b5f3-e611c083d202)]
 interface nsIHelperAppLauncher : nsISupports
 {
   /**
@@ -144,7 +144,7 @@ interface nsIHelperAppLauncher : nsISupports
    * This reference will be released when the download is finished (after the
    * listener receives the STATE_STOP notification).
    */
-  void setWebProgressListener(in nsIWebProgressListener aWebProgressListener);
+  void setWebProgressListener(in nsIWebProgressListener2 aWebProgressListener);
 
   /**
    * when the stand alone progress window actually closes, it calls this method

@@ -1,4 +1,4 @@
-#
+# vim:set noet:
 # ***** BEGIN LICENSE BLOCK *****
 # Version: MPL 1.1/GPL 2.0/LGPL 2.1
 #
@@ -88,6 +88,7 @@ XPIDLSRCS = 							\
 				nsIDownload.idl   \
 				nsITransfer.idl \
 				nsIDocumentLoader.idl		\
+				nsIWebProgressListener2.idl \
 				$(NULL)
 
 EXPORTS = 							\

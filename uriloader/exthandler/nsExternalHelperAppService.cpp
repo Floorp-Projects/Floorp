@@ -77,6 +77,7 @@
 #include "nsNetUtil.h"
 #include "nsIIOService.h"
 #include "nsNetCID.h"
+#include "nsChannelProperties.h"
 
 #include "nsMimeTypes.h"
 // used for header disposition information.
@@ -84,6 +85,7 @@
 #include "nsIEncodedChannel.h"
 #include "nsIMultiPartChannel.h"
 #include "nsIObserverService.h" // so we can be a profile change observer
+#include "nsIPropertyBag2.h" // for the 64-bit content length
 
 #if defined(XP_MAC) || defined (XP_MACOSX)
 #include "nsILocalFileMac.h"
@@ -1361,8 +1363,8 @@ nsExternalAppHandler::nsExternalAppHandler(nsIMIMEInfo * aMIMEInfo,
 , mStopRequestIssued(PR_FALSE)
 , mProgressListenerInitialized(PR_FALSE)
 , mReason(aReason)
-, mProgress(0)
 , mContentLength(-1)
+, mProgress(0)
 , mRequest(nsnull)
 {
 
@@ -1398,7 +1400,7 @@ NS_IMETHODIMP nsExternalAppHandler::Observe(nsISupports *aSubject, const char *a
 }
 
 
-NS_IMETHODIMP nsExternalAppHandler::SetWebProgressListener(nsIWebProgressListener * aWebProgressListener)
+NS_IMETHODIMP nsExternalAppHandler::SetWebProgressListener(nsIWebProgressListener2 * aWebProgressListener)
 { 
   // this call back means we've succesfully brought up the 
   // progress window so set the appropriate flag, even though
@@ -1607,20 +1609,33 @@ nsresult nsExternalAppHandler::SetUpTempFile(nsIChannel * aChannel)
 
 NS_IMETHODIMP nsExternalAppHandler::OnStartRequest(nsIRequest *request, nsISupports * aCtxt)
 {
-  NS_ENSURE_ARG_POINTER(request);
+  NS_PRECONDITION(request, "OnStartRequest without request?");
 
   mRequest = request;
 
   nsCOMPtr<nsIChannel> aChannel = do_QueryInterface(request);
 
-  // Get content length and URI.
+  // Get content length
+  nsresult rv;
+  nsCOMPtr<nsIPropertyBag2> props(do_QueryInterface(request, &rv));
+  if (props) {
+    rv = props->GetPropertyAsInt64(NS_CHANNEL_PROP_CONTENT_LENGTH,
+                                   &mContentLength.mValue);
+  }
+  // If that failed, ask the channel
+  if (NS_FAILED(rv) && aChannel) {
+    PRInt32 len;
+    aChannel->GetContentLength(&len);
+    mContentLength = len;
+  }
+
+  // Now get the URI
   if (aChannel)
   {
-    aChannel->GetContentLength(&mContentLength);
     aChannel->GetURI(getter_AddRefs(mSourceUrl));
   }
 
-  nsresult rv = SetUpTempFile(aChannel);
+  rv = SetUpTempFile(aChannel);
   if (NS_FAILED(rv)) {
     mCanceled = PR_TRUE;
     request->Cancel(rv);
@@ -1940,19 +1955,10 @@ NS_IMETHODIMP nsExternalAppHandler::OnDataAvailable(nsIRequest *request, nsISupp
     }
     if (NS_SUCCEEDED(rv))
     {
-      // Set content length if we haven't already got it.
-      if (mContentLength == -1)
-      {
-        nsCOMPtr<nsIChannel> aChannel(do_QueryInterface(request));
-        if (aChannel)
-        {
-          aChannel->GetContentLength(&mContentLength);
-        }
-      }
       // Send progress notification.
       if (mWebProgressListener)
       {
-        mWebProgressListener->OnProgressChange(nsnull, request, mProgress, mContentLength, mProgress, mContentLength);
+        mWebProgressListener->OnProgressChange64(nsnull, request, mProgress, mContentLength, mProgress, mContentLength);
       }
     }
     else
@@ -2055,7 +2061,7 @@ nsresult nsExternalAppHandler::ExecuteDesiredAction()
     {
       if (!mCanceled)
       {
-        mWebProgressListener->OnProgressChange(nsnull, nsnull, mContentLength, mContentLength, mContentLength, mContentLength);
+        mWebProgressListener->OnProgressChange64(nsnull, nsnull, mContentLength, mContentLength, mContentLength, mContentLength);
       }
       mWebProgressListener->OnStateChange(nsnull, nsnull, nsIWebProgressListener::STATE_STOP, NS_OK);
     }
@@ -2067,7 +2073,7 @@ nsresult nsExternalAppHandler::ExecuteDesiredAction()
 NS_IMETHODIMP nsExternalAppHandler::GetMIMEInfo(nsIMIMEInfo ** aMIMEInfo)
 {
   *aMIMEInfo = mMimeInfo;
-  NS_IF_ADDREF(*aMIMEInfo);
+  NS_ADDREF(*aMIMEInfo);
   return NS_OK;
 }
 

@@ -54,7 +54,7 @@ class nsDownloadProxy : public nsIDownload
 public:
 
   nsDownloadProxy() { }
-  virtual ~nsDownloadProxy() { };
+  virtual ~nsDownloadProxy() { }
 
   NS_DECL_ISUPPORTS
 
@@ -66,7 +66,8 @@ public:
                      nsIWebBrowserPersist* aPersist) {
     nsresult rv;
     nsCOMPtr<nsIDownloadManager> dm = do_GetService("@mozilla.org/download-manager;1", &rv);
-    if (NS_FAILED(rv)) return rv;
+    if (NS_FAILED(rv))
+      return rv;
     
     rv = dm->AddDownload(nsIDownloadManager::DOWNLOAD_TYPE_DOWNLOAD, aSource, aTarget, 
                          aDisplayName, nsnull, aMIMEInfo, aStartTime, aPersist, 
@@ -141,16 +142,6 @@ public:
     return mInner->GetSize(aSize);
   }
 
-  NS_IMETHODIMP GetListener(nsIWebProgressListener** aListener)
-  {
-    return mInner->GetListener(aListener);
-  }
-
-  NS_IMETHODIMP SetListener(nsIWebProgressListener* aListener)
-  {
-    return mInner->SetListener(aListener);
-  }
-  
   NS_IMETHODIMP GetObserver(nsIObserver** aObserver)
   {
     return mInner->GetObserver(aObserver);
@@ -209,10 +200,32 @@ public:
   {
     nsCOMPtr<nsIWebProgressListener> listener = do_QueryInterface(mInner);
     if (listener)
-      return listener->OnProgressChange(aWebProgress, aRequest, aCurSelfProgress,
-                                        aMaxSelfProgress, aCurTotalProgress, aMaxTotalProgress);
+      return listener->OnProgressChange(aWebProgress, aRequest,
+                                        aCurSelfProgress,
+                                        aMaxSelfProgress,
+                                        aCurTotalProgress,
+                                        aMaxTotalProgress);
     return NS_OK;
   }
+
+  NS_IMETHODIMP OnProgressChange64(nsIWebProgress *aWebProgress,
+                                   nsIRequest *aRequest,
+                                   PRInt64 aCurSelfProgress,
+                                   PRInt64 aMaxSelfProgress,
+                                   PRInt64 aCurTotalProgress,
+                                   PRInt64 aMaxTotalProgress)
+  {
+    nsCOMPtr<nsIWebProgressListener2> listener = do_QueryInterface(mInner);
+    if (listener)
+      return listener->OnProgressChange64(aWebProgress, aRequest,
+                                          aCurSelfProgress,
+                                          aMaxSelfProgress,
+                                          aCurTotalProgress,
+                                          aMaxTotalProgress);
+    return NS_OK;
+  }
+
+
 
   NS_IMETHODIMP OnSecurityChange(nsIWebProgress *aWebProgress,
                                  nsIRequest *aRequest, PRUint32 aState)
@@ -227,6 +240,7 @@ private:
   nsCOMPtr<nsIDownload> mInner;
 };
 
-NS_IMPL_ISUPPORTS3(nsDownloadProxy, nsIDownload, nsITransfer, nsIWebProgressListener)  
+NS_IMPL_ISUPPORTS4(nsDownloadProxy, nsIDownload, nsITransfer,
+                   nsIWebProgressListener, nsIWebProgressListener2)
 
 #endif

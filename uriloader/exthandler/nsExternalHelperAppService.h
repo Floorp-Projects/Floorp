@@ -46,9 +46,11 @@
 #include "prlog.h"
 #include "prtime.h"
 
+#include "nsInt64.h"
+
 #include "nsIExternalHelperAppService.h"
 #include "nsIExternalProtocolService.h"
-#include "nsIWebProgressListener.h"
+#include "nsIWebProgressListener2.h"
 #include "nsIHelperAppLauncherDialog.h"
 
 #include "nsIMIMEInfo.h"
@@ -385,8 +387,8 @@ protected:
   PRUint32 mReason;
 
   PRTime mTimeDownloadStarted;
-  PRInt32 mContentLength;
-  PRInt32 mProgress; /**< Number of bytes received (for sending progress notifications). */
+  nsInt64 mContentLength;
+  nsInt64 mProgress; /**< Number of bytes received (for sending progress notifications). */
 
   /**
    * When we are told to save the temp file to disk (in a more permament
@@ -469,7 +471,7 @@ protected:
    */
   void SendStatusChange(ErrorType type, nsresult aStatus, nsIRequest *aRequest, const nsAFlatString &path);
   
-  nsCOMPtr<nsIWebProgressListener> mWebProgressListener;
+  nsCOMPtr<nsIWebProgressListener2> mWebProgressListener;
   nsCOMPtr<nsIChannel> mOriginalChannel; /**< in the case of a redirect, this will be the pre-redirect channel. */
   nsCOMPtr<nsIHelperAppLauncherDialog> mDialog;
 

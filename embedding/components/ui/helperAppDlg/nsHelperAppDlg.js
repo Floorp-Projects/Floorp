@@ -233,6 +233,14 @@ nsHelperAppDialog.prototype = {
                                     aMaxTotalProgress ) {
         },
 
+        onProgressChange64: function( aWebProgress,
+                                      aRequest,
+                                      aCurSelfProgress,
+                                      aMaxSelfProgress,
+                                      aCurTotalProgress,
+                                      aMaxTotalProgress ) {
+        },
+
         onStateChange: function( aWebProgress, aRequest, aStateFlags, aStatus ) {
         },
 

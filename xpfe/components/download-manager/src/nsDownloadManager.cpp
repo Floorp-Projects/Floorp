@@ -805,7 +805,7 @@ nsDownloadManager::OpenProgressDialogFor(nsIDownload* aDownload, nsIDOMWindow* a
   dialog->SetObserver(internalDownload);
 
   // now set the listener so we forward notifications to the dialog
-  nsCOMPtr<nsIWebProgressListener> listener = do_QueryInterface(dialog);
+  nsCOMPtr<nsIWebProgressListener2> listener = do_QueryInterface(dialog);
   internalDownload->SetDialogListener(listener);
   
   internalDownload->SetDialog(dialog);
@@ -922,7 +922,8 @@ nsDownloadManager::Observe(nsISupports* aSubject, const char* aTopic, const PRUn
 ///////////////////////////////////////////////////////////////////////////////
 // nsDownload
 
-NS_IMPL_ISUPPORTS4(nsDownload, nsIDownload, nsITransfer, nsIWebProgressListener, nsIObserver)
+NS_IMPL_ISUPPORTS5(nsDownload, nsIDownload, nsITransfer, nsIWebProgressListener,
+                   nsIWebProgressListener2, nsIObserver)
 
 nsDownload::nsDownload(nsDownloadManager* aManager,
                        nsIURI* aTarget,
@@ -1019,19 +1020,17 @@ nsDownload::Observe(nsISupports* aSubject, const char* aTopic, const PRUnichar* 
   return NS_OK;
 }
 
-
 ///////////////////////////////////////////////////////////////////////////////
-// nsIWebProgressListener
+// nsIWebProgressListener2
 
 NS_IMETHODIMP
-nsDownload::OnProgressChange(nsIWebProgress *aWebProgress,
-                             nsIRequest *aRequest,
-                             PRInt32 aCurSelfProgress,
-                             PRInt32 aMaxSelfProgress,
-                             PRInt32 aCurTotalProgress,
-                             PRInt32 aMaxTotalProgress)
+nsDownload::OnProgressChange64(nsIWebProgress *aWebProgress,
+                               nsIRequest *aRequest,
+                               PRInt64 aCurSelfProgress,
+                               PRInt64 aMaxSelfProgress,
+                               PRInt64 aCurTotalProgress,
+                               PRInt64 aMaxTotalProgress)
 {
-
   if (!mRequest)
     mRequest = aRequest; // used for pause/resume
 
@@ -1058,38 +1057,47 @@ nsDownload::OnProgressChange(nsIWebProgress *aWebProgress,
   else
     mPercentComplete = -1;
 
-  mCurrBytes = (PRInt32)((PRFloat64)aCurTotalProgress / 1024.0 + .5);
-  mMaxBytes = (PRInt32)((PRFloat64)aMaxTotalProgress / 1024 + .5);
-
-  if (mListener) {
-    mListener->OnProgressChange(aWebProgress, aRequest, aCurSelfProgress, aMaxSelfProgress,
-                                aCurTotalProgress, aMaxTotalProgress);
-  }
+  mCurrBytes = ((PRFloat64)aCurTotalProgress / 1024.0 + .5);
+  mMaxBytes = ((PRFloat64)aMaxTotalProgress / 1024 + .5);
 
   if (mDownloadManager->MustUpdateUI()) {
     nsCOMPtr<nsIDownloadProgressListener> internalListener;
     mDownloadManager->GetInternalListener(getter_AddRefs(internalListener));
     if (internalListener) {
       internalListener->OnProgressChange(aWebProgress, aRequest, aCurSelfProgress, aMaxSelfProgress,
-                                          aCurTotalProgress, aMaxTotalProgress, this);
+                                         aCurTotalProgress, aMaxTotalProgress, this);
     }
   }
 
   if (mDialogListener) {
-    mDialogListener->OnProgressChange(aWebProgress, aRequest, aCurSelfProgress, aMaxSelfProgress,
-                                          aCurTotalProgress, aMaxTotalProgress);
+    mDialogListener->OnProgressChange64(aWebProgress, aRequest, aCurSelfProgress, aMaxSelfProgress,
+                                        aCurTotalProgress, aMaxTotalProgress);
   }
 
   return NS_OK;
 }
 
+///////////////////////////////////////////////////////////////////////////////
+// nsIWebProgressListener
+
+NS_IMETHODIMP
+nsDownload::OnProgressChange(nsIWebProgress *aWebProgress,
+                             nsIRequest *aRequest,
+                             PRInt32 aCurSelfProgress,
+                             PRInt32 aMaxSelfProgress,
+                             PRInt32 aCurTotalProgress,
+                             PRInt32 aMaxTotalProgress)
+{
+  return OnProgressChange64(aWebProgress, aRequest,
+                            aCurSelfProgress, aMaxSelfProgress,
+                            aCurTotalProgress, aMaxTotalProgress);
+}
+
+
 NS_IMETHODIMP
 nsDownload::OnLocationChange(nsIWebProgress *aWebProgress,
                              nsIRequest *aRequest, nsIURI *aLocation)
 {
-  if (mListener)
-    mListener->OnLocationChange(aWebProgress, aRequest, aLocation);
-
   if (mDownloadManager->MustUpdateUI()) {
     nsCOMPtr<nsIDownloadProgressListener> internalListener;
     mDownloadManager->GetInternalListener(getter_AddRefs(internalListener));
@@ -1115,9 +1123,6 @@ nsDownload::OnStatusChange(nsIWebProgress *aWebProgress,
     if (NS_SUCCEEDED(rv))
       mDownloadManager->DownloadEnded(path, aMessage);
   }
-
-  if (mListener)
-    mListener->OnStatusChange(aWebProgress, aRequest, aStatus, aMessage);
 
   if (mDownloadManager->MustUpdateUI()) {
     nsCOMPtr<nsIDownloadProgressListener> internalListener;
@@ -1206,9 +1211,6 @@ nsDownload::OnStateChange(nsIWebProgress* aWebProgress,
   // access to out member vars!
   nsRefPtr<nsDownload> kungFuDeathGrip(this);
   
-  if (mListener)
-    mListener->OnStateChange(aWebProgress, aRequest, aStateFlags, aStatus);
-
   // We need to update mDownloadState before updating the dialog, because
   // that will close and call CancelDownload if it was the last open window.
   nsresult rv = NS_OK;
@@ -1287,9 +1289,6 @@ NS_IMETHODIMP
 nsDownload::OnSecurityChange(nsIWebProgress *aWebProgress,
                              nsIRequest *aRequest, PRUint32 aState)
 {
-  if (mListener)
-    mListener->OnSecurityChange(aWebProgress, aRequest, aState);
-
   if (mDownloadManager->MustUpdateUI()) {
     nsCOMPtr<nsIDownloadProgressListener> internalListener;
     mDownloadManager->GetInternalListener(getter_AddRefs(internalListener));
@@ -1374,21 +1373,6 @@ NS_IMETHODIMP
 nsDownload::GetSize(PRUint64* aSize)
 {
   *aSize = mMaxBytes;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsDownload::SetListener(nsIWebProgressListener* aListener)
-{
-  mListener = aListener;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsDownload::GetListener(nsIWebProgressListener** aListener)
-{
-  *aListener = mListener;
-  NS_IF_ADDREF(*aListener);
   return NS_OK;
 }
 

@@ -138,20 +138,6 @@ public:
     return mInner->GetSize(aSize);
   }
 
-  NS_IMETHODIMP GetListener(nsIWebProgressListener** aListener)
-  {
-    if (!mInner)
-      return NS_ERROR_NOT_INITIALIZED;
-    return mInner->GetListener(aListener);
-  }
-
-  NS_IMETHODIMP SetListener(nsIWebProgressListener* aListener)
-  {
-    if (!mInner)
-      return NS_ERROR_NOT_INITIALIZED;
-    return mInner->SetListener(aListener);
-  }
-  
   NS_IMETHODIMP GetObserver(nsIObserver** aObserver)
   {
     if (!mInner)
@@ -218,10 +204,31 @@ public:
   {
     nsCOMPtr<nsIWebProgressListener> listener = do_QueryInterface(mInner);
     if (listener)
-      return listener->OnProgressChange(aWebProgress, aRequest, aCurSelfProgress,
-                                        aMaxSelfProgress, aCurTotalProgress, aMaxTotalProgress);
+      return listener->OnProgressChange(aWebProgress, aRequest,
+                                        aCurSelfProgress,
+                                        aMaxSelfProgress,
+                                        aCurTotalProgress,
+                                        aMaxTotalProgress);
     return NS_OK;
   }
+
+  NS_IMETHODIMP OnProgressChange64(nsIWebProgress *aWebProgress,
+                                   nsIRequest *aRequest,
+                                   PRInt64 aCurSelfProgress,
+                                   PRInt64 aMaxSelfProgress,
+                                   PRInt64 aCurTotalProgress,
+                                   PRInt64 aMaxTotalProgress)
+  {
+    if (!mInner)
+      return NS_ERROR_NOT_INITIALIZED;
+    return mInner->OnProgressChange64(aWebProgress, aRequest,
+                                      aCurSelfProgress,
+                                      aMaxSelfProgress,
+                                      aCurTotalProgress,
+                                      aMaxTotalProgress);
+  }
+
+
 
   NS_IMETHODIMP OnSecurityChange(nsIWebProgress *aWebProgress,
                                  nsIRequest *aRequest, PRUint32 aState)
@@ -236,6 +243,7 @@ private:
   nsCOMPtr<nsIDownload> mInner;
 };
 
-NS_IMPL_ISUPPORTS3(nsDownloadProxy, nsIDownload, nsITransfer, nsIWebProgressListener)  
+NS_IMPL_ISUPPORTS4(nsDownloadProxy, nsIDownload, nsITransfer,
+                   nsIWebProgressListener, nsIWebProgressListener2)
 
 #endif

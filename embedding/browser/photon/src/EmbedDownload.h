@@ -45,7 +45,7 @@
 #include "PtMozilla.h"
 
 /* download related */
-class EmbedDownload : public nsIWebProgressListener
+class EmbedDownload : public nsIWebProgressListener2
 {
 
 public:
@@ -60,6 +60,7 @@ public:
 
 	NS_DECL_ISUPPORTS
 	NS_DECL_NSIWEBPROGRESSLISTENER
+	NS_DECL_NSIWEBPROGRESSLISTENER2
 
 private:
 	PtMozillaWidget_t *mMozillaWidget;

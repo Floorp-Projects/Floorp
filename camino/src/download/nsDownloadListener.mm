@@ -62,7 +62,9 @@ nsDownloadListener::~nsDownloadListener()
 {
 }
 
-NS_IMPL_ISUPPORTS_INHERITED3(nsDownloadListener, CHDownloader, nsIDownload, nsITransfer, nsIWebProgressListener)
+NS_IMPL_ISUPPORTS_INHERITED4(nsDownloadListener, CHDownloader, nsIDownload,
+                             nsITransfer, nsIWebProgressListener,
+                             nsIWebProgressListener2)
 
 #pragma mark -
 
@@ -179,21 +181,6 @@ nsDownloadListener::GetMIMEInfo(nsIMIMEInfo * *aMIMEInfo)
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
-/* attribute nsIWebProgressListener listener; */
-NS_IMETHODIMP
-nsDownloadListener::GetListener(nsIWebProgressListener * *aListener)
-{
-  NS_ENSURE_ARG_POINTER(aListener);
-  NS_IF_ADDREF(*aListener = (nsIWebProgressListener *)this);
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsDownloadListener::SetListener(nsIWebProgressListener * aListener)
-{
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
 /* attribute nsIObserver observer; */
 NS_IMETHODIMP
 nsDownloadListener::GetObserver(nsIObserver * *aObserver)
@@ -230,6 +217,22 @@ nsDownloadListener::OnProgressChange(nsIWebProgress *aWebProgress,
 {
   [mDownloadDisplay setProgressTo:aCurTotalProgress ofMax:aMaxTotalProgress];
   return NS_OK;
+}
+
+/* void onProgressChange64 (in nsIWebProgress aWebProgress, in nsIRequest aRequest, in long long aCurSelfProgress, in long long aMaxSelfProgress, in long long aCurTotalProgress, in long long aMaxTotalProgress); */
+NS_IMETHODIMP 
+nsDownloadListener::OnProgressChange64(nsIWebProgress *aWebProgress, 
+                                       nsIRequest *aRequest, 
+                                       PRInt64 aCurSelfProgress, 
+                                       PRInt64 aMaxSelfProgress, 
+                                       PRInt64 aCurTotalProgress, 
+                                       PRInt64 aMaxTotalProgress)
+{
+  // XXX truncates 64-bit to 32-bit
+  return OnProgressChange(aProgress, aRequest,
+                          PRInt32(curSelfProgress), PRInt32(maxSelfProgress),
+                          PRInt32(curTotalProgress), PRInt32(maxTotalProgress));
+
 }
 
 /* void onLocationChange (in nsIWebProgress aWebProgress, in nsIRequest aRequest, in nsIURI location); */

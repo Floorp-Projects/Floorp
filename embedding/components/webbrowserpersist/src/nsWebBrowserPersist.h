@@ -54,7 +54,7 @@
 #include "nsITransport.h"
 #include "nsIProgressEventSink.h"
 #include "nsILocalFile.h"
-#include "nsIWebProgressListener.h"
+#include "nsIWebProgressListener2.h"
 
 #include "nsHashtable.h"
 #include "nsVoidArray.h"
@@ -197,6 +197,12 @@ private:
     nsCOMPtr<nsIMIMEService>  mMIMEService;
     nsCOMPtr<nsIURI>          mURI;
     nsCOMPtr<nsIWebProgressListener> mProgressListener;
+    /**
+     * Progress listener for 64-bit values; this is the same object as
+     * mProgressListener, but is a member to avoid having to qi it for each
+     * progress notification.
+     */
+    nsCOMPtr<nsIWebProgressListener2> mProgressListener2;
     nsHashtable               mOutputMap;
     nsHashtable               mUploadList;
     nsHashtable               mURIMap;
