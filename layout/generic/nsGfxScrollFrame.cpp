@@ -33,7 +33,6 @@
 #include "nsIAreaFrame.h"
 #include "nsGfxScrollFrame.h"
 #include "nsLayoutAtoms.h"
-#include "nsIWebShell.h"
 #include "nsIXMLContent.h"
 #include "nsXULAtoms.h"
 #include "nsHTMLAtoms.h"
@@ -44,8 +43,6 @@
 #include "nsIDocumentObserver.h"
 #include "nsIDocument.h"
 #include "nsIScrollPositionListener.h"
-
-static NS_DEFINE_IID(kIWebShellIID, NS_IWEB_SHELL_IID);
 
 static NS_DEFINE_IID(kWidgetCID, NS_CHILD_CID);
 static NS_DEFINE_IID(kScrollingViewCID, NS_SCROLLING_VIEW_CID);

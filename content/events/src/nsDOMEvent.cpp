@@ -23,10 +23,10 @@
 #include "nsIContent.h"
 #include "nsIRenderingContext.h"
 #include "nsIWidget.h"
-#include "nsIWebShell.h"
 #include "nsIPresShell.h"
 #include "nsPrivateTextRange.h"
 #include "nsIDocument.h"
+#include "nsIViewManager.h"
 #include "nsIPrivateCompositionEvent.h"
 
 static NS_DEFINE_IID(kIDOMNodeIID, NS_IDOMNODE_IID);
@@ -37,7 +37,6 @@ static NS_DEFINE_IID(kIDOMUIEventIID, NS_IDOMUIEVENT_IID);
 static NS_DEFINE_IID(kIDOMNSUIEventIID, NS_IDOMNSUIEVENT_IID);
 static NS_DEFINE_IID(kIPrivateDOMEventIID, NS_IPRIVATEDOMEVENT_IID);
 static NS_DEFINE_IID(kIPrivateTextEventIID, NS_IPRIVATETEXTEVENT_IID);
-static NS_DEFINE_IID(kIWebShellIID, NS_IWEB_SHELL_IID);
 static NS_DEFINE_IID(kIPrivateCompositionEventIID,NS_IPRIVATECOMPOSITIONEVENT_IID);
 
 static char* mEventNames[] = {

@@ -33,11 +33,9 @@
 #include "nsIAreaFrame.h"
 #include "nsScrollPortFrame.h"
 #include "nsLayoutAtoms.h"
-#include "nsIWebShell.h"
 #include "nsIBox.h"
 
 /*
-static NS_DEFINE_IID(kIWebShellIID, NS_IWEB_SHELL_IID);
 
 static NS_DEFINE_IID(kWidgetCID, NS_CHILD_CID);
 static NS_DEFINE_IID(kScrollingViewCID, NS_SCROLLING_VIEW_CID);
@@ -49,9 +47,6 @@ static NS_DEFINE_IID(kAreaFrameIID, NS_IAREAFRAME_IID);
 
 
 */
-
-
-static NS_DEFINE_IID(kIWebShellIID, NS_IWEB_SHELL_IID);
 
 static NS_DEFINE_IID(kWidgetCID, NS_CHILD_CID);
 static NS_DEFINE_IID(kScrollPortViewCID, NS_SCROLL_PORT_VIEW_CID);
