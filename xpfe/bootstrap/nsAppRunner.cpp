@@ -262,27 +262,19 @@ static nsresult HandleEditorStartup( nsICmdLineService* cmdLineArgs, nsIPref *pr
 	rv = cmdLineArgs->GetCmdLineValue("-edit", &cmdResult);
   if (NS_SUCCEEDED(rv))
   {
-    if (forceLaunchEditor || (cmdResult && (PL_strcmp("1",cmdResult)==0))) {
+    if (forceLaunchEditor || cmdResult) {
       urlstr = "chrome://editor/content/";
-      withArgs = "about:blank";
-     
+      if (cmdResult) {
+        if (PL_strcmp("1",cmdResult)==0) {
+          // this signals no URL after "-edit"?
+          withArgs = "about:blank";
+        } else {
+          // We have a URL -- Should we do some URL validating here?
+          withArgs = cmdResult;
+        }
+      }     
       OpenWindow( urlstr, withArgs.GetUnicode() );
     }
-
-    // Check for -editor -- this will eventually go away
-    if (nsnull == urlstr)
-    {
-      rv = cmdLineArgs->GetCmdLineValue("-editor", &cmdResult);
-      if (NS_SUCCEEDED(rv))
-      {
-        if (cmdResult && (PL_strcmp("1",cmdResult)==0)) {
-          printf(" -editor no longer supported, use -edit instead!\n");
-          return NS_ERROR_FAILURE;		
-        }
-      }
-    }
-
-     
   }
     
 	return NS_OK;
