@@ -131,6 +131,7 @@ protected:
                     nsISelection **aDomSel);
   PRBool IsRangeVisible(nsIPresShell *aPresShell, nsIPresContext *aPresContext,
                          nsIDOMRange *aRange, PRBool aMustBeVisible, 
+                         PRBool aGetTopVisibleLeaf,
                          nsIDOMRange **aNewRange);
   nsresult FindItNow(PRBool aIsRepeatingSameChar, PRBool aIsLinksOnly, 
                      PRBool aIsFirstVisiblePreferred, PRBool aIsBackspace);

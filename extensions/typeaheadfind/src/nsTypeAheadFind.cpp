@@ -52,6 +52,7 @@
 #include "nsIDOMWindowInternal.h"
 #include "nsPIDOMWindow.h"
 #include "nsIDOMEventTarget.h"
+#include "nsIDOMNSUIEvent.h"
 #include "nsIChromeEventHandler.h"
 #include "nsIDOMNSEvent.h"
 #include "nsIPref.h"
@@ -520,6 +521,7 @@ nsTypeAheadFind::KeyPress(nsIDOMEvent* aEvent)
     return NS_ERROR_FAILURE;
   }
 
+
   // ---------- Is the keytroke in a new window? -------------------
 
   nsCOMPtr<nsIDocument> doc;
@@ -970,7 +972,7 @@ nsTypeAheadFind::FindItNow(PRBool aIsRepeatingSameChar, PRBool aIsLinksOnly,
       }
 
       if (!IsRangeVisible(presShell, presContext, returnRange,
-                          aIsFirstVisiblePreferred,
+                          aIsFirstVisiblePreferred, PR_FALSE,
                           getter_AddRefs(mStartPointRange)) ||
           (aIsRepeatingSameChar && !isStartingLink) ||
           (aIsLinksOnly && !isInsideLink) ||
@@ -1170,8 +1172,9 @@ nsTypeAheadFind::GetSearchContainers(nsISupports *aContainer,
     // Ensure visible range, move forward if necessary
     // This uses ignores the return value, but usese the side effect of
     // IsRangeVisible. It returns the first visible range after searchRange
-    IsRangeVisible(presShell, presContext, mSearchRange,
-                   aIsFirstVisiblePreferred, getter_AddRefs(mStartPointRange));
+    IsRangeVisible(presShell, presContext, mSearchRange, 
+                   aIsFirstVisiblePreferred, PR_TRUE, 
+                   getter_AddRefs(mStartPointRange));
   }
   else {
     PRInt32 startOffset;
@@ -1188,8 +1191,10 @@ nsTypeAheadFind::GetSearchContainers(nsISupports *aContainer,
       startNode = rootNode;
     }
 
-    mStartPointRange->SetEnd(startNode, startOffset);
-    mStartPointRange->Collapse(PR_FALSE); // collapse to end
+    // We need to set the start point this way, other methods haven't worked
+    mStartPointRange->SelectNode(startNode);
+    mStartPointRange->SetStart(startNode, startOffset);
+    mStartPointRange->Collapse(PR_TRUE); // collapse to start
   }
 
   *aPresShell = presShell;
@@ -1267,7 +1272,8 @@ nsTypeAheadFind::RangeStartsInsideLink(nsIDOMRange *aRange,
     nsCOMPtr<nsILink> link(do_QueryInterface(startContent));
 
     if (link) {
-      *aIsInsideLink = PR_TRUE;
+      nsCOMPtr<nsIAtom> hrefAtom(do_GetAtom("href"));
+      *aIsInsideLink = startContent->HasAttr(kNameSpaceID_None, hrefAtom);
 
       return;
     }
@@ -1491,13 +1497,13 @@ nsTypeAheadFind::CancelFind()
 {
   // Stop current find if:
   //   1. Escape pressed
-  //   2. Window switched
-  //   3. User clicks in window
-  //   4. Selection is moved/changed
-  //   5. Window scrolls
-  //   6. Focus is moved
+  //   2. Selection is moved/changed
+  //   3. User clicks in window (if it changes the selection)
+  //   4. Window scrolls
+  //   5. User tabs (this can move the selection)
+  //   6. Timer expires
 
-  if (!mTypeAheadBuffer.IsEmpty()) {
+  if (!mTypeAheadBuffer.IsEmpty() || mRepeatingMode != eRepeatingNone) {
     mTypeAheadBuffer.Truncate();
     DisplayStatus(PR_FALSE, nsnull, PR_TRUE); // Clear status
     nsCOMPtr<nsIPresShell> presShell(do_QueryReferent(mFocusedWeakShell));
@@ -1754,6 +1760,7 @@ PRBool
 nsTypeAheadFind::IsRangeVisible(nsIPresShell *aPresShell,
                                 nsIPresContext *aPresContext,
                                 nsIDOMRange *aRange, PRBool aMustBeInViewPort,
+                                PRBool aGetTopVisibleLeaf,
                                 nsIDOMRange **aFirstVisibleRange)
 {
   // We need to know if the range start is visible.
@@ -1800,27 +1807,30 @@ nsTypeAheadFind::IsRangeVisible(nsIPresShell *aPresShell,
   nsRect relFrameRect;
   nsIView *containingView = nsnull;
   nsPoint frameOffset;
-  frame->GetRect(relFrameRect);
-  frame->GetOffsetFromView(aPresContext, frameOffset, &containingView);
-  if (!containingView) {
-    // no view -- not visible
-
-    return PR_FALSE;
-  }
-
-  relFrameRect.x = frameOffset.x;
-  relFrameRect.y = frameOffset.y;
-
   float p2t;
   aPresContext->GetPixelsToTwips(&p2t);
-  nsRectVisibility rectVisibility;
-  viewManager->GetRectVisibility(containingView, relFrameRect,
-                                 NS_STATIC_CAST(PRUint16, (kMinPixels * p2t)),
-                                 &rectVisibility);
+  nsRectVisibility rectVisibility = nsRectVisibility_kAboveViewport;
 
-  if (rectVisibility != nsRectVisibility_kAboveViewport &&
-      rectVisibility != nsRectVisibility_kZeroAreaRect) {
-    return PR_TRUE;
+  if (!aGetTopVisibleLeaf) {
+    frame->GetRect(relFrameRect);
+    frame->GetOffsetFromView(aPresContext, frameOffset, &containingView);
+    if (!containingView) {
+      // no view -- not visible
+
+      return PR_FALSE;
+    }
+
+    relFrameRect.x = frameOffset.x;
+    relFrameRect.y = frameOffset.y;
+
+    viewManager->GetRectVisibility(containingView, relFrameRect,
+                                   NS_STATIC_CAST(PRUint16, (kMinPixels * p2t)),
+                                   &rectVisibility);
+
+    if (rectVisibility != nsRectVisibility_kAboveViewport &&
+        rectVisibility != nsRectVisibility_kZeroAreaRect) {
+      return PR_TRUE;
+    }
   }
 
   // We know that the target range isn't usable because it's not in the
@@ -1837,8 +1847,8 @@ nsTypeAheadFind::IsRangeVisible(nsIPresShell *aPresShell,
     return PR_FALSE;
   }
 
-  while (rectVisibility == nsRectVisibility_kAboveViewport &&
-         rectVisibility != nsRectVisibility_kZeroAreaRect) {
+  while (rectVisibility == nsRectVisibility_kAboveViewport ||
+         rectVisibility == nsRectVisibility_kZeroAreaRect) {
     frameTraversal->Next();
     nsISupports* currentItem;
     frameTraversal->CurrentItem(&currentItem);
