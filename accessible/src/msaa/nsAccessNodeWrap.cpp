@@ -47,7 +47,8 @@
 #include "nsIDOMViewCSS.h"
 #include "nsIFrame.h"
 #include "nsINameSpaceManager.h"
-#include "nsIPref.h"
+#include "nsIPrefService.h"
+#include "nsIPrefBranch.h"
 #include "nsIPresShell.h"
 #include "nsIScriptGlobalObject.h"
 #include "nsIServiceManager.h"
@@ -61,7 +62,6 @@ LPFNNOTIFYWINEVENT nsAccessNodeWrap::gmNotifyWinEvent = nsnull;
 LPFNGETGUITHREADINFO nsAccessNodeWrap::gmGetGUIThreadInfo = nsnull;
 
 PRBool nsAccessNodeWrap::gIsEnumVariantSupportDisabled = 0;
-static NS_DEFINE_CID(kPrefCID, NS_PREF_CID);
 
 /* For documentation of the accessibility architecture, 
  * see http://lxr.mozilla.org/seamonkey/source/accessible/accessible-docs.html
@@ -530,9 +530,9 @@ void nsAccessNodeWrap::InitAccessibility()
     return;
   }
 
-  nsCOMPtr<nsIPref> prefService(do_GetService(kPrefCID));
-  if (prefService) {
-    prefService->GetBoolPref("accessibility.disableenumvariant", &gIsEnumVariantSupportDisabled);
+  nsCOMPtr<nsIPrefBranch> prefBranch(do_GetService(NS_PREFSERVICE_CONTRACTID));
+  if (prefBranch) {
+    prefBranch->GetBoolPref("accessibility.disableenumvariant", &gIsEnumVariantSupportDisabled);
   }
 
   if (!gmUserLib) {
