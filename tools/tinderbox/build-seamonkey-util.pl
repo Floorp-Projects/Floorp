@@ -22,7 +22,7 @@ use File::Path;     # for rmtree();
 use Config;         # for $Config{sig_name} and $Config{sig_num}
 use File::Find ();
 
-$::UtilsVersion = '$Revision: 1.186 $ ';
+$::UtilsVersion = '$Revision: 1.187 $ ';
 
 package TinderUtils;
 
@@ -1574,33 +1574,59 @@ sub run_all_tests {
       
       my $args;
 
-      $args = "new.log old.log diff.log";
+      my $new_log   = "new.log";
+      my $old_log   = "old.log";
+      my $diff_log  = "diff.log";
+      my $test_name = "CodesizeConversionTest";
+      my $test_log  = "$test_name.log";
+
+      $args = "$new_log $old_log $diff_log";
 
       print_log "\$build_dir = $build_dir";
 
+      # Clear the logs from the last run, so we can properly test for success.
+      unlink("$build_dir/$new_log");
+      unlink("$build_dir/$test_log");
+
       my $test_result =
-        FileBasedTest("CodesizeConversionTest", 
+        FileBasedTest($test_name, 
                       "$build_dir", 
                       "$build_dir",  # run top of tree, not in dist.
                       ["autosummary.linux.bash $args"],
                       $Settings::CodesizeTestTimeout,
-                      "FAILED",
-                      0, 0);  # Timeout means failure.
+                      "FAILED", # Fake out failure mode, test file instead.
+                      0, 0);    # Timeout means failure.
 
-      if($test_result eq 'success') {
+      # Set status based on file creation.
+      if (-e "$build_dir/$new_log") {
+        print_log "found $build_dir/$new_log\n";
+        $test_result = 'success';
+
+        #
+        # Extract data.
+        #
+        my $z_data = extract_token_from_file("$build_dir/$test_log", "__codesize", ":");
+        chomp($z_data);
+        my $time = POSIX::strftime "%Y:%m:%d:%H:%M:%S", localtime;
+        print_log "TinderboxPrint:" .
+        "<a title=\"Garrett's codesize test (bytes)\" href=\"http://$Settings::results_server/graph/query.cgi?testname=codesize&tbox=" .
+          ::hostname() . "&autoscale=1&units=bytes&days=7&avg=1&showpoint=$time,$z_data\">Z:$z_data" . "</a>\n";
+
+        if($Settings::TestsPhoneHome) {
+          send_results_to_server($z_data, "--", "codesize", ::hostname());
+        }
+
+        my $zdiff_data = extract_token_from_file("$build_dir/$test_log", "__codesizeDiff", ":");
+        chomp($zdiff_data);
+        print_log "TinderboxPrint:Zdiff:$zdiff_data\n";
+
+        # Get ready for next cycle.
         rename("$build_dir/new.log", "$build_dir/old.log");
       } else {
-        unlink("$build_dir/new.log");
+        print_log "Error: $build_dir/$new_log not found.\n";
+        $test_result = 'buildfailed';
       }
 
-      if(-e "$build_dir/new.log") {
-        print "found $build_dir/new.log\n";
-      } else {
-        print "no $build_dir/new.log\n";
-      }
-
-      # back to build_dir
-      #chdir($build_dir);
     }
 
 
