@@ -2173,6 +2173,22 @@ PK11_GetModuleID(PK11SlotInfo *slot)
     return slot->module->moduleID;
 }
 
+static void
+pk11_zeroTerminatedToBlankPadded(CK_CHAR *buffer, size_t buffer_size)
+{
+    CK_CHAR *walk = buffer;
+    CK_CHAR *end = buffer + buffer_size;
+
+    /* find the NULL */
+    while (walk < end && *walk != '\0') {
+	walk++;
+    }
+
+    /* clear out the buffer */
+    while (walk < end) {
+	*walk++ = ' ';
+    }
+}
 
 /* return the slot info structure */
 SECStatus
@@ -2181,7 +2197,17 @@ PK11_GetSlotInfo(PK11SlotInfo *slot, CK_SLOT_INFO *info)
     CK_RV crv;
 
     if (!slot->isThreadSafe) PK11_EnterSlotMonitor(slot);
+    /*
+     * some buggy drivers do not fill the buffer completely, 
+     * erase the buffer first
+     */
+    PORT_Memset(info->slotDescription,' ',sizeof(info->slotDescription));
+    PORT_Memset(info->manufacturerID,' ',sizeof(info->manufacturerID));
     crv = PK11_GETTAB(slot)->C_GetSlotInfo(slot->slotID,info);
+    pk11_zeroTerminatedToBlankPadded(info->slotDescription,
+					sizeof(info->slotDescription));
+    pk11_zeroTerminatedToBlankPadded(info->manufacturerID,
+					sizeof(info->manufacturerID));
     if (!slot->isThreadSafe) PK11_ExitSlotMonitor(slot);
     if (crv != CKR_OK) {
 	PORT_SetError(PK11_MapError(crv));
@@ -2196,7 +2222,21 @@ PK11_GetTokenInfo(PK11SlotInfo *slot, CK_TOKEN_INFO *info)
 {
     CK_RV crv;
     if (!slot->isThreadSafe) PK11_EnterSlotMonitor(slot);
+    /*
+     * some buggy drivers do not fill the buffer completely, 
+     * erase the buffer first
+     */
+    PORT_Memset(info->label,' ',sizeof(info->label));
+    PORT_Memset(info->manufacturerID,' ',sizeof(info->manufacturerID));
+    PORT_Memset(info->model,' ',sizeof(info->model));
+    PORT_Memset(info->serialNumber,' ',sizeof(info->serialNumber));
     crv = PK11_GETTAB(slot)->C_GetTokenInfo(slot->slotID,info);
+    pk11_zeroTerminatedToBlankPadded(info->label,sizeof(info->label));
+    pk11_zeroTerminatedToBlankPadded(info->manufacturerID,
+					sizeof(info->manufacturerID));
+    pk11_zeroTerminatedToBlankPadded(info->model,sizeof(info->model));
+    pk11_zeroTerminatedToBlankPadded(info->serialNumber,
+					sizeof(info->serialNumber));
     if (!slot->isThreadSafe) PK11_ExitSlotMonitor(slot);
     if (crv != CKR_OK) {
 	PORT_SetError(PK11_MapError(crv));
