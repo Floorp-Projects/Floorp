@@ -539,7 +539,7 @@ static nsModuleComponentInfo gNetModuleInfo[] = {
     // from netwerk/mime:
     { "The MIME mapping service", 
       NS_MIMESERVICE_CID,
-      "component:||netscape|mime",
+      "component:||netscape|mimeold",
       nsMIMEService::Create
     },
     { "xml mime datasource", 
