@@ -831,11 +831,7 @@ il_size(il_container *ic)
 }
 
 
-#ifdef XP_OS2
-#define IL_SIZE_CHUNK   16384
-#else
 #define IL_SIZE_CHUNK   128
-#endif
 #ifdef XP_MAC
 #    if TARGET_CPU_PPC
 #        define IL_PREFERRED_CHUNK 8192
@@ -845,13 +841,8 @@ il_size(il_container *ic)
 #        define IL_OFFSCREEN_CHUNK 128
 #    endif
 #else /* !XP_MAC */
-#ifdef XP_OS2
-#    define IL_PREFERRED_CHUNK (12*1024)
-#    define IL_OFFSCREEN_CHUNK ( 6*1024)
-#else
 #    define IL_PREFERRED_CHUNK  2048 
 #    define IL_OFFSCREEN_CHUNK 128 
-#endif
 #endif
 
 int
