@@ -282,16 +282,14 @@ nsXPCWrappedJSClass::CallMethod(nsXPCWrappedJS* wrapper, uint16 methodIndex,
     JSErrorReporter older;
     JSBool success;
     JSContext* cx = GetJSContext();
-    nsIAllocator* al = NULL;
     JSBool InConversionsDone = JS_FALSE;
+    nsID* conditional_iid = NULL;
+    JSBool iidIsOwned = JS_FALSE;
 
     // XXX ASSUMES that retval is last arg.
     paramCount = info->GetParamCount();
     argc = paramCount -
             (paramCount && info->GetParam(paramCount-1).IsRetval() ? 1 : 0);
-
-    if(!(al = nsXPConnect::GetAllocator()))
-        goto pre_call_clean_up;
 
     if(!IsReflectable(methodIndex))
         goto pre_call_clean_up;
@@ -311,7 +309,6 @@ nsXPCWrappedJSClass::CallMethod(nsXPCWrappedJS* wrapper, uint16 methodIndex,
     // build the args
     for(i = 0; i < argc; i++)
     {
-        const nsID* conditional_iid = NULL;
         const nsXPTParamInfo& param = info->GetParam(i);
         const nsXPTType& type = param.GetType();
         jsval val;
@@ -327,8 +324,12 @@ nsXPCWrappedJSClass::CallMethod(nsXPCWrappedJS* wrapper, uint16 methodIndex,
 
             if(type.TagPart() == nsXPTType::T_INTERFACE)
             {
-                if(!(conditional_iid = param.GetInterfaceIID()))
+                if(NS_FAILED(GetInterfaceInfo()->
+                                    GetIIDForParam(&param, &conditional_iid)))
+                {
                     goto pre_call_clean_up;
+                }
+                iidIsOwned = JS_TRUE;
             }
             else if(type.TagPart() == nsXPTType::T_INTERFACE_IS)
             {
@@ -350,6 +351,15 @@ nsXPCWrappedJSClass::CallMethod(nsXPCWrappedJS* wrapper, uint16 methodIndex,
                                           conditional_iid, NULL))
             {
                 goto pre_call_clean_up;
+            }
+            if(conditional_iid)
+            {
+                if(iidIsOwned)
+                {
+                    XPCMem::Free((void*)conditional_iid);
+                    iidIsOwned = JS_FALSE;
+                }
+                conditional_iid = NULL;
             }
         }
 
@@ -399,13 +409,23 @@ pre_call_clean_up:
         else
         {
             void** pp;
-            if((NULL != (pp = (void**) params[i].val.p)) && NULL != *pp && al)
+            if((NULL != (pp = (void**) params[i].val.p)) && NULL != *pp)
             {
                 if(param.IsIn())
-                    al->Free(*pp);
+                    XPCMem::Free(*pp);
                 *pp = NULL;
             }
         }
+    }
+
+    if(conditional_iid)
+    {
+        if(iidIsOwned)
+        {
+            XPCMem::Free((void*)conditional_iid);
+            iidIsOwned = JS_FALSE;
+        }
+        conditional_iid = NULL;
     }
 
     if(!InConversionsDone)
@@ -435,8 +455,7 @@ pre_call_clean_up:
         if(param.IsOut())
         {
             jsval val;
-            nsIAllocator* conditional_al = NULL;
-            const nsID* conditional_iid = NULL;
+            JSBool useAllocator = JS_FALSE;
             const nsXPTType& type = param.GetType();
             nsXPCMiniVariant* pv;
 
@@ -451,8 +470,12 @@ pre_call_clean_up:
 
             if(type.TagPart() == nsXPTType::T_INTERFACE)
             {
-                if(!(conditional_iid = param.GetInterfaceIID()))
+                if(NS_FAILED(GetInterfaceInfo()->
+                                    GetIIDForParam(&param, &conditional_iid)))
+                {
                     break;
+                }
+                iidIsOwned = JS_TRUE;
             }
             else if(type.TagPart() == nsXPTType::T_INTERFACE_IS)
             {
@@ -464,11 +487,21 @@ pre_call_clean_up:
                     break;
             }
             else if(type.IsPointer())
-                conditional_al = al;
+                useAllocator = JS_TRUE;
 
             if(!XPCConvert::JSData2Native(cx, &pv->val, val, type,
-                                        conditional_al, conditional_iid, NULL))
+                                        useAllocator, conditional_iid, NULL))
                 break;
+
+            if(conditional_iid)
+            {
+                if(iidIsOwned)
+                {
+                    XPCMem::Free((void*)conditional_iid);
+                    iidIsOwned = JS_FALSE;
+                }
+                conditional_iid = NULL;
+            }
         }
     }
 
@@ -476,7 +509,7 @@ pre_call_clean_up:
     // to cleanup any junk that *did* get converted.
     if(i != paramCount)
     {
-        // XXX major spagetti!
+        // XXX major spaghetti!
         InConversionsDone = JS_FALSE;
         goto pre_call_clean_up;
     }
@@ -486,8 +519,10 @@ pre_call_clean_up:
 done:
     if(argv && argv != argsBuffer)
         delete [] argv;
-    if(al)
-        NS_RELEASE(al);
+
+    if(conditional_iid && iidIsOwned)
+        XPCMem::Free((void*)conditional_iid);
+
     return retval;
 }
 
@@ -524,14 +559,10 @@ nsXPCWrappedJSClass::DebugDump(int depth)
     XPC_LOG_ALWAYS(("nsXPCWrappedJSClass @ %x with mRefCnt = %d", this, mRefCnt));
     XPC_LOG_INDENT();
         char* name;
-        nsIAllocator* al;
         mInfo->GetName(&name);
         XPC_LOG_ALWAYS(("interface name is %s", name));
-        if(name && NULL != (al = nsXPConnect::GetAllocator()))
-        {
-            al->Free(name);
-            NS_RELEASE(al);
-        }
+        if(name)
+            XPCMem::Free(name);
         char * iid = mIID.ToString();
         XPC_LOG_ALWAYS(("IID number is %s", iid));
         delete iid;

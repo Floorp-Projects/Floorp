@@ -44,6 +44,9 @@ class nsIJSID : public nsISupports {
   /* boolean init (in string idString); */
   NS_IMETHOD init(const char *idString, PRBool *_retval) = 0;
 
+  /* string toString (); */
+  NS_IMETHOD toString(char **_retval) = 0;
+
 #ifdef XPIDL_JS_STUBS
   static NS_EXPORT_(JSObject *) InitJSClass(JSContext *cx);
   static NS_EXPORT_(JSObject *) GetJSObject(JSContext *cx, nsIJSID *priv);

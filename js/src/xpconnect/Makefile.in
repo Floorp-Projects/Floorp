@@ -49,17 +49,15 @@ CPPSRCS=		\
 	xpcwrappedjsclass.cpp	\
 	xpcwrappednative.cpp	\
 	xpcwrappednativeclass.cpp	\
-	xpt_cpp.cpp			\
 	$(NULL)
 
 EXPORTS	= \
-    nsIInterfaceInfo.h \
-    nsIInterfaceInfoManager.h \
     nsIXPCScriptable.h \
     nsIXPConnect.h     \
     xpccomponents.h     \
     xpcjsid.h     \
     xpclog.h     \
+    xpctest.h     \
 	$(NULL)
 
 EXPORTS := $(addprefix $(srcdir)/, $(EXPORTS))

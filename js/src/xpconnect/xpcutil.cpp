@@ -48,6 +48,7 @@ void  XPCMem::HeapMinimize()
 
 void* XPCMem::Clone(const void* ptr,  PRUint32 size)
 {
+    if(!ptr) return NULL;
     void* p = Allocator()->Alloc(size);
     if(p) memcpy(p, ptr, size);
     return p;

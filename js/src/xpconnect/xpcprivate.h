@@ -117,14 +117,21 @@ public:
                                    int WrappedJSClassMapSize,
                                    int WrappedNativeClassMapSize);
 
-    JSContext*      GetJSContext()      {return mJSContext;}
-    JSObject*       GetGlobalObject()   {return mGlobalObj;}
-    nsXPConnect*    GetXPConnect()      {return mXPConnect;}
+    JSContext*      GetJSContext()      const {return mJSContext;}
+    JSObject*       GetGlobalObject()   const {return mGlobalObj;}
+    nsXPConnect*    GetXPConnect()      const {return mXPConnect;}
 
-    JSObject2WrappedJSMap*     GetWrappedJSMap()          {return mWrappedJSMap;}
-    Native2WrappedNativeMap*   GetWrappedNativeMap()      {return mWrappedNativeMap;}
-    IID2WrappedJSClassMap*     GetWrappedJSClassMap()     {return mWrappedJSClassMap;}
-    IID2WrappedNativeClassMap* GetWrappedNativeClassMap() {return mWrappedNativeClassMap;}
+    JSObject2WrappedJSMap*     GetWrappedJSMap()          const 
+        {return mWrappedJSMap;}
+    Native2WrappedNativeMap*   GetWrappedNativeMap()      const 
+        {return mWrappedNativeMap;}
+    IID2WrappedJSClassMap*     GetWrappedJSClassMap()     const 
+        {return mWrappedJSClassMap;}
+    IID2WrappedNativeClassMap* GetWrappedNativeClassMap() const 
+        {return mWrappedNativeClassMap;}
+
+    jsid GetConstructorStrID() const {return mConstuctorStrID;}
+    jsid GetToStringStrID() const    {return mToStringStrID;}
 
     JSBool Init(JSObject* aGlobalObj = NULL);
     void DebugDump(int depth);
@@ -146,6 +153,8 @@ private:
     Native2WrappedNativeMap* mWrappedNativeMap;
     IID2WrappedJSClassMap* mWrappedJSClassMap;
     IID2WrappedNativeClassMap* mWrappedNativeClassMap;
+    jsid mConstuctorStrID;
+    jsid mToStringStrID;
 };
 
 /***************************************************************************/
@@ -570,7 +579,7 @@ public:
 
     static JSBool JSData2Native(JSContext* cx, void* d, jsval s,
                                 const nsXPTType& type,
-                                nsIAllocator* al, const nsID* iid,
+                                JSBool useAllocator, const nsID* iid,
                                 uintN* pErr);
 private:
     XPCConvert(); // not implemented
@@ -619,6 +628,9 @@ public:
     /* boolean init (in string idString); */
     NS_IMETHOD init(const char *idString, PRBool *_retval);
 
+    /* string toString (); */
+    NS_IMETHOD toString(char **_retval);
+
     nsJSIID();
     virtual ~nsJSIID();
 
@@ -662,6 +674,9 @@ public:
 
     /* nsISupports newInstance (); */
     NS_IMETHOD newInstance(nsISupports **_retval);
+
+    /* string toString (); */
+    NS_IMETHOD toString(char **_retval);
 
     nsJSCID();
     virtual ~nsJSCID();
