@@ -20,47 +20,46 @@
  * Contributor(s): 
  */
 
-#include "nsIAppShellComponent.idl"
 #include "domstubs.idl"
 #include "nsIChannel.idl"
 
-/*----------------------------- nsIStreamTransfer ------------------------------
-| This file describes Mozilla's general-purpose "stream transfer" component.   |
-| This component is used to display a progress dialog while performing any of  |
-| a variety of different "stream transfers."                                   |
-|                                                                              |
-| Basically, this component transfers data from an input stream to an          |
-| output stream while displaying a progress dialog.  The component also        |
-| offers some standard implementations of commonly-used input and output       |
-| stream handlers (such as prompting for a destination file, writing the       |
-| input stream to an output file, loading an input URL, etc.).                 |
-|                                                                              |
-| Select the appropriate transfer function depending on your requirements.     |
-|                                                                              |
-| Note that all methods are "asynchronous" in that they return before the      |
-| stream transfer is completed.  The result generally indicates only whether   |
-| or not the stream transfer was successfully initiated.                       |
-------------------------------------------------------------------------------*/
+/*----------------------------- nsIStreamTransfer -----------------------------
+| This file describes Mozilla's general-purpose "stream transfer" component.  |
+| This component is used to display a progress dialog while performing any of |
+| a variety of different "stream transfers."                                  |
+|                                                                             |
+| Basically, this component transfers data from an input stream to an         |
+| output stream while displaying a progress dialog.  The component also       |
+| offers some standard implementations of commonly-used input and output      |
+| stream handlers (such as prompting for a destination file, writing the      |
+| input stream to an output file, loading an input URL, etc.).                |
+|                                                                             |
+| Select the appropriate transfer function depending on your requirements.    |
+|                                                                             |
+| Note that all methods are "asynchronous" in that they return before the     |
+| stream transfer is completed.  The result generally indicates only whether  |
+| or not the stream transfer was successfully initiated.                      |
+-----------------------------------------------------------------------------*/
 [scriptable, uuid(a6cf90f0-15b3-11d2-932e-00805f8add32)]
-interface nsIStreamTransfer : nsIAppShellComponent {
+interface nsIStreamTransfer : nsISupports {
 
-    /*-------------------- SelectFileAndTransferLocation -----------------------
-    | Prompt the user for a destination file and then transfer the data, using |
-    | the argument channel as source, to that file, while showing a progress   |
-    | dialog.                                                                  |
+    /*-------------------- SelectFileAndTransferLocation ----------------------
+    | Prompt the user for a destination file and then transfer the data, using|
+    | the argument channel as source, to that file, while showing a progress  |
+    | dialog.                                                                 |
     --------------------------------------------------------------------------*/
     [noscript] void SelectFileAndTransferLocation( in nsIChannel aChannel,
 	                                               in nsIDOMWindowInternal parent );
 
-    /*------------------ SelectFileAndTransferLocationSpec ---------------------
-    | Prompt the user for a destination file and then transfer the data, using |
-    | the argument URL as source, to that file, while showing a progress       |
-    | dialog.  The "don't validate" flag indicates whether or not to use the   |
-    | VALIDATE_NEVER load flag to force loading from the cache. That would be  |
-    | appropriate when saving a page being viewed, for example.  An post data  |
-    | input stream can be passed in and it will be attached to the http        |
-    | channel as the "upload stream."                                          |
-    --------------------------------------------------------------------------*/
+    /*------------------ SelectFileAndTransferLocationSpec --------------------
+    | Prompt the user for a destination file and then transfer the data, using|
+    | the argument URL as source, to that file, while showing a progress      |
+    | dialog.  The "don't validate" flag indicates whether or not to use the  |
+    | VALIDATE_NEVER load flag to force loading from the cache. That would be |
+    | appropriate when saving a page being viewed, for example.  An post data |
+    | input stream can be passed in and it will be attached to the http       |
+    | channel as the "upload stream."                                         |
+    -------------------------------------------------------------------------*/
     void SelectFileAndTransferLocationSpec( in string       aURL,
                                             in nsIDOMWindowInternal parent,
                                             in string       contentType,
@@ -71,6 +70,6 @@ interface nsIStreamTransfer : nsIAppShellComponent {
 
 
 %{C++
-#define NS_ISTREAMTRANSFER_CONTRACTID NS_IAPPSHELLCOMPONENT_CONTRACTID "/xfer;1"
+#define NS_ISTREAMTRANSFER_CONTRACTID "@mozilla.org/appshell/component/xfer;1"
 #define NS_ISTREAMTRANSFER_CLASSNAME "Mozilla Stream Transfer Component"
 %}
