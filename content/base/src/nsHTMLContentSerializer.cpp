@@ -83,6 +83,7 @@ nsHTMLContentSerializer::nsHTMLContentSerializer()
 {
   mColPos = 0;
   mIndent = 0;
+  mAddSpace = PR_FALSE;
   mInBody = PR_FALSE;
   mInCDATA = PR_FALSE;
 }
@@ -456,6 +457,11 @@ nsHTMLContentSerializer::AppendElementStart(nsIDOMElement *aElement,
   if (LineBreakBeforeOpen(name, hasDirtyAttr)) {
     AppendToString(mLineBreak, aStr);
     mColPos = 0;
+    mAddSpace = PR_FALSE;
+  }
+  else if (mAddSpace) {
+    AppendToString(PRUnichar(' '), aStr);
+    mAddSpace = PR_FALSE;
   }
 
   StartIndentation(name, hasDirtyAttr, aStr);
@@ -584,6 +590,11 @@ nsHTMLContentSerializer::AppendElementEnd(nsIDOMElement *aElement,
   if (LineBreakBeforeClose(name, hasDirtyAttr)) {
     AppendToString(mLineBreak, aStr);
     mColPos = 0;
+    mAddSpace = PR_FALSE;
+  }
+  else if (mAddSpace) {
+    AppendToString(PRUnichar(' '), aStr);
+    mAddSpace = PR_FALSE;
   }
 
   EndIndentation(name, hasDirtyAttr, aStr);
@@ -632,101 +643,146 @@ nsHTMLContentSerializer::AppendToString(const PRUnichar aChar,
 }
 
 void 
-nsHTMLContentSerializer::AppendToStringWrapped(const nsAString& aStr,
+nsHTMLContentSerializer::AppendToStringWrapped(const nsASingleFragmentString& aStr,
                                                nsAString& aOutputStr,
                                                PRBool aTranslateEntities)
 {
-  PRInt32 length = aStr.Length();
+  // indicates a space has been seen, position is stored in lastSpace
+  PRBool    spaceSeen = PR_FALSE;
 
-  nsAutoString line;
-  PRBool    done = PR_FALSE;
-  PRInt32   indx = 0;
-  PRInt32   strOffset = 0;
-  PRInt32   lineLength, oldLineEnd;
-  PRBool    addSpace = PR_FALSE;
-  
-  // Find the end of the first old line
-  oldLineEnd = aStr.FindChar(PRUnichar('\n'), 0);
-  
-  while ((!done) && (strOffset < length)) {
-    if (addSpace) {
-      AppendToString(NS_LITERAL_STRING(" "), aOutputStr);
-      addSpace = PR_FALSE;
-    }
-    
-    // This is how much is needed to fill up the new line
-    PRInt32 leftInLine = mMaxColumn - mColPos;
-    
-    // This is the last position in the current old line
-    PRInt32 oldLineLimit;
-    if (oldLineEnd == kNotFound) {
-      oldLineLimit = length;
-    }
-    else {
-      oldLineLimit = oldLineEnd;
-    }
-    
-    PRBool addLineBreak = PR_FALSE;
+  // indicates non-whitespace has been seen, position is stored in lastChar
+  PRBool    charSeen = PR_FALSE;
 
-    // if we can fill up the new line with less than what's
-    // in the current old line...
-    if (((strOffset + leftInLine) < oldLineLimit) || (leftInLine < 0))  {
+  PRBool    addLineBreak = PR_FALSE;
+
+  nsASingleFragmentString::const_char_iterator pos, end, segStart, lastSpace, lastChar;
+
+  aStr.BeginReading(pos);
+  aStr.EndReading(end);
+  if (pos == end) {
+    return;
+  }
+
+  // if the current line already has text on it, such as a tag,
+  // leading whitespace is significant, so add a space back
+  // after skipping over the whitespace
+  if ((mColPos > 0) && (*pos == ' ' || *pos == '\n')) {
+    mAddSpace = PR_TRUE;
+  }
+
+  for (;;) {
+
+    // skip leading spaces
+    while (*pos == ' ' || *pos == '\n') {
+      ++pos;
+      if (pos == end) {
+        return;
+      }
+    }
+    segStart = pos;
+    lastChar = pos;
+    spaceSeen = PR_FALSE;
+    charSeen = PR_TRUE;
+
+    if (addLineBreak) {
+      aOutputStr.Append(mLineBreak);
+      mAddSpace = PR_FALSE;
+      mColPos = 0;
+    }
+
+    while (mColPos < mMaxColumn) {
+      PRUnichar c = *pos;
+
+      if (c == ' ') {
+        lastSpace = pos;
+        spaceSeen = PR_TRUE;
+      }
+      else if (c == '\n') {
+        if (charSeen) {
+          if (mAddSpace) {
+            aOutputStr.Append(PRUnichar(' '));
+          }
+
+          aOutputStr.Append(segStart, lastChar - segStart + 1);
+          charSeen = PR_FALSE;
+        }
+        mAddSpace = PR_TRUE;
+        segStart = pos;
+        spaceSeen = PR_FALSE;
+        ++segStart;
+      }
+      else {
+        lastChar = pos;
+        charSeen = PR_TRUE;
+      }
+
+      ++pos;
+      ++mColPos;
+
+      if (pos == end) {
+        if (!charSeen || pos == segStart) {
+          // nothing to append, or nothing meaningful to append
+          return;
+        }
+        if (mAddSpace) {
+          aOutputStr.Append(PRUnichar(' '));
+          mAddSpace = PR_FALSE;
+        }
+
+        aOutputStr.Append(segStart, lastChar - segStart + 1);
+
+        // if the string ended in whitespace, set mAddSpace to true
+        if (pos != lastChar+1) {
+          mAddSpace = PR_TRUE;
+        }
+        return;
+      }
+    }
+
+    if (spaceSeen) {
+      if (mAddSpace) {
+        aOutputStr.Append(PRUnichar(' '));
+        mAddSpace = PR_FALSE;
+      }
+
+      // write up to the last space encountered
+      aOutputStr.Append(segStart, lastSpace - segStart);
+
+      // back up to that wrapping point for the next run through the loop
+      pos = lastSpace;
+      // add a line break before any more text
       addLineBreak = PR_TRUE;
-      
-      // Look for the next word end to break
-      if (leftInLine < 0) {
-        //if we have already crossed the limit of 72 columns, immediately start searching for next white space.
-        indx = aStr.FindChar(PRUnichar(' '), strOffset);
-      }
-      else {
-        //if the limit of 72 chars is not yet reached, start looking for next appropriate break only after 72 column.
-        indx = aStr.FindChar(PRUnichar(' '), strOffset + leftInLine);
-      }
-      // If it's after the end of the current line, then break at
-      // the current line
-      if ((indx == kNotFound) || 
-          ((oldLineEnd != kNotFound) && (oldLineEnd < indx))) {
-        indx = oldLineEnd;
-      }
     }
     else {
-      indx = oldLineEnd;
-    }
-    
-    // if there was no place to break, then just add the entire string
-    if (indx == kNotFound) {
-      if (strOffset == 0) {
-        AppendToString(aStr, aOutputStr, aTranslateEntities);
+
+      // if we're past the wrapping width with no place to wrap at,
+      // find the next whitespace and wrap there
+      while (pos != end && *pos != ' ' && *pos != '\n') {
+        ++pos;
       }
-      else {
-        lineLength = length - strOffset;
-        line = Substring(aStr, strOffset, lineLength);
-        AppendToString(line, aOutputStr, aTranslateEntities);
-      }
-      done = PR_TRUE;
-    }
-    else {
-      // Add the part of the current old line that's part of the 
-      // new line
-      lineLength = indx - strOffset;
-      line = Substring(aStr, strOffset, lineLength);
-      AppendToString(line, aOutputStr, aTranslateEntities);
-      
-      // if we've reached the end of an old line, don't add the
-      // old line break and find the end of the next old line.
-      if (indx == oldLineEnd) {
-        oldLineEnd = aStr.FindChar(PRUnichar('\n'), indx+1);
-        if (lineLength > 0) {
-          addSpace = PR_TRUE;
+
+      if (mAddSpace) {
+        // whitespace was needed before the next segment, so we can put
+        // a newline instead of a space, and avoid getting a lone line
+        aOutputStr.Append(mLineBreak);
+        addLineBreak = PR_FALSE;
+
+        mColPos = pos - segStart;
+
+        // if the string doesn't end in whitespace, set mAddSpace to false
+        if (pos == end) {
+          mAddSpace = PR_FALSE;
         }
       }
-      
-      if (addLineBreak) {
-        AppendToString(mLineBreak, aOutputStr);
-        mColPos = 0;
-        addSpace = PR_FALSE;
+      else {
+        // no choice but to write a long line and wrap immediately after it
+        addLineBreak = PR_TRUE;
       }
-      strOffset = indx+1;
+      aOutputStr.Append(segStart, pos - segStart);
+
+      if (pos == end) {
+        return;
+      }
     }
   }
 }

@@ -98,7 +98,7 @@ class nsHTMLContentSerializer : public nsXMLContentSerializer {
                               PRBool aIncrColumn = PR_TRUE);
   virtual void AppendToStringConvertLF(const nsAString& aStr,
                                        nsAString& aOutputStr);
-  virtual void AppendToStringWrapped(const nsAString& aStr,
+  virtual void AppendToStringWrapped(const nsASingleFragmentString& aStr,
                                      nsAString& aOutputStr,
                                      PRBool aTranslateEntities);
   PRBool HasLongLines(const nsString& text, PRInt32& aLastNewlineOffset);
@@ -117,6 +117,11 @@ class nsHTMLContentSerializer : public nsXMLContentSerializer {
   PRPackedBool  mDoHeader;
   PRPackedBool  mBodyOnly;
   PRPackedBool  mIsCopying; // Set to PR_TRUE only while copying
+
+  // Indicates that a space will be added if and only if content is
+  // continued on the same line while serializing source.  Otherwise,
+  // the newline character acts as the whitespace and no space is needed.
+  PRPackedBool  mAddSpace;
 
   // To keep track of First LI child of OL in selected range 
   PRPackedBool  mIsFirstChildOfOL;
