@@ -42,7 +42,7 @@
 #include <Pt.h>
 #include <photon/PtServer.h>
 #include "PtRawDrawContainer.h"
-#include "nsCRT.h"					/* JPB - Added to get around nsCRT undeclared issues... */
+#include "nsCRT.h"
 
 #include "nsWindow.h"
 #include "nsWidgetsCID.h"
@@ -77,16 +77,6 @@ static PhTile_t *GetWindowClipping( PtWidget_t *aWidget );
 nsIRollupListener *nsWindow::gRollupListener = nsnull;
 nsIWidget         *nsWindow::gRollupWidget = nsnull;
 static PtWidget_t	*gMenuRegion;
-
-/* avoid making a costly PhWindowQueryVisible call */
-static PhRect_t gConsoleRect;
-static PRBool gConsoleRectValid = PR_FALSE;
-#define QueryVisible( )	{\
-													if( gConsoleRectValid == PR_FALSE ) { \
-															PhWindowQueryVisible( Ph_QUERY_GRAPHICS, 0, 1, &gConsoleRect ); \
-															gConsoleRectValid = PR_TRUE;\
-															} \
-													}
 
 //-------------------------------------------------------------------------
 //
@@ -127,12 +117,13 @@ NS_IMETHODIMP nsWindow::WidgetToScreen( const nsRect& aOldRect, nsRect& aNewRect
 	PhPoint_t pos, offset;
 	PtWidget_t *disjoint = PtFindDisjoint( mWidget );
 
-	QueryVisible( );
+	PhRect_t console;
+	PhWindowQueryVisible( Ph_QUERY_GRAPHICS, 0, 1, &console );
 
 	PtGetAbsPosition( disjoint, &pos.x, &pos.y );
 	PtWidgetOffset( mWidget, &offset );
-	aNewRect.x = pos.x + offset.x + aOldRect.x - gConsoleRect.ul.x;
-	aNewRect.y = pos.y + offset.y + aOldRect.y - gConsoleRect.ul.y;
+	aNewRect.x = pos.x + offset.x + aOldRect.x - console.ul.x;
+	aNewRect.y = pos.y + offset.y + aOldRect.y - console.ul.y;
 
 	aNewRect.width = aOldRect.width;
 	aNewRect.height = aOldRect.height;
@@ -313,9 +304,11 @@ NS_METHOD nsWindow::CreateNative( PtWidget_t *parentWidget ) {
 	}
     else if ((mWindowType == eWindowType_toplevel) && parentWidget)
     {
-			QueryVisible( );
-      pos.x += gConsoleRect.ul.x;
-      pos.y += gConsoleRect.ul.y;
+			PhRect_t console;
+			PhWindowQueryVisible( Ph_QUERY_GRAPHICS, 0, 1, &console );
+
+      pos.x += console.ul.x;
+      pos.y += console.ul.y;
     	PtSetArg( &arg[arg_count++], Pt_ARG_POS, &pos, 0 );
     }
 
@@ -346,12 +339,14 @@ NS_METHOD nsWindow::CreateNative( PtWidget_t *parentWidget ) {
 
 	  	int	fields = Ph_REGION_PARENT|Ph_REGION_HANDLE| Ph_REGION_FLAGS|Ph_REGION_ORIGIN|Ph_REGION_EV_SENSE|Ph_REGION_EV_OPAQUE|Ph_REGION_RECT;
 	  	int sense =  Ph_EV_BUT_PRESS | Ph_EV_BUT_RELEASE | Ph_EV_BUT_REPEAT;
+			PtCallback_t cb_destroyed = { MenuRegionDestroyed, NULL };
 
       PtSetArg( &arg[arg_count++], Pt_ARG_REGION_FIELDS,   fields, fields );
       PtSetArg( &arg[arg_count++], Pt_ARG_REGION_PARENT,   Ph_ROOT_RID, 0 );
       PtSetArg( &arg[arg_count++], Pt_ARG_REGION_SENSE,    sense | Ph_EV_DRAG|Ph_EV_EXPOSE, sense | Ph_EV_DRAG|Ph_EV_EXPOSE);
       PtSetArg( &arg[arg_count++], Pt_ARG_REGION_OPAQUE,   sense | Ph_EV_DRAG|Ph_EV_EXPOSE|Ph_EV_DRAW|Ph_EV_BLIT, sense |Ph_EV_DRAG|Ph_EV_EXPOSE|Ph_EV_DRAW|Ph_EV_BLIT);
       PtSetArg( &arg[arg_count++], Pt_ARG_FLAGS, Pt_DELAY_REALIZE, Pt_GETS_FOCUS | Pt_DELAY_REALIZE);
+			PtSetArg( &arg[arg_count++], Pt_CB_DESTROYED, &cb_destroyed, 0 );
       mWidget = PtCreateWidget( PtRegion, parentWidget, arg_count, arg);
 
     	// Must also create the client-area widget
@@ -371,7 +366,7 @@ NS_METHOD nsWindow::CreateNative( PtWidget_t *parentWidget ) {
 		PtSetArg( &arg[arg_count++], Pt_ARG_FLAGS, Pt_DELAY_REALIZE, Pt_DELAY_REALIZE);
 		PtSetArg( &arg[arg_count++], Pt_ARG_WINDOW_RENDER_FLAGS, render_flags, -1 );
 		PtSetArg( &arg[arg_count++], Pt_ARG_WINDOW_MANAGED_FLAGS, 0, Ph_WM_CLOSE );
-		PtSetArg( &arg[arg_count++], Pt_ARG_WINDOW_NOTIFY_FLAGS, Ph_WM_CLOSE|Ph_WM_MOVE, ~0 );
+		PtSetArg( &arg[arg_count++], Pt_ARG_WINDOW_NOTIFY_FLAGS, Ph_WM_CLOSE, ~0 );
 		PtSetArg( &arg[arg_count++], Pt_ARG_FILL_COLOR, Pg_TRANSPARENT, 0 );
 
 		PtRawCallback_t cb_raw = { Ph_EV_INFO, EvInfo, NULL };
@@ -581,10 +576,12 @@ NS_IMETHODIMP nsWindow::Resize(PRInt32 aWidth, PRInt32 aHeight, PRBool aRepaint)
 		// center the dialog
 		if( mWindowType == eWindowType_dialog ) {
 			PhPoint_t p;
-			QueryVisible( );
+			PhRect_t console;
+			PhWindowQueryVisible( Ph_QUERY_GRAPHICS, 0, 1, &console );
+
 			PtCalcAbsPosition( NULL, NULL, &dim, &p );
-			p.x -= gConsoleRect.ul.x;
-			p.y -= gConsoleRect.ul.y;
+			p.x -= console.ul.x;
+			p.y -= console.ul.y;
 			Move(p.x, p.y); // the move should be in coordinates assuming the console is 0, 0
 			}
 		if( aRepaint == PR_FALSE )  PtStartFlux(mWidget);
@@ -618,9 +615,6 @@ int nsWindow::WindowWMHandler( PtWidget_t *widget, void *data, PtCallbackInfo_t 
 {
 	PhWindowEvent_t *we = (PhWindowEvent_t *) cbinfo->cbdata;
 	switch( we->event_f ) {
-		case Ph_WM_MOVE:
-			gConsoleRectValid = PR_FALSE; /* force a call tp PhWindowQueryVisible() next time, since we might have moved this window into a different console */
-			break;
 		case Ph_WM_CLOSE:
 		  {
 				nsWindow * win = (nsWindow*) data;
@@ -867,9 +861,10 @@ NS_METHOD nsWindow::Move( PRInt32 aX, PRInt32 aY ) {
 		case eWindowType_dialog:
 		case eWindowType_toplevel:
 			/* Offset to the current virtual console */
-			QueryVisible( );
-			aX += gConsoleRect.ul.x;
-			aY += gConsoleRect.ul.y;
+			PhRect_t console;
+			PhWindowQueryVisible( Ph_QUERY_GRAPHICS, 0, 1, &console );
+			aX += console.ul.x;
+			aY += console.ul.y;
 			break;
 		}
 
@@ -928,4 +923,19 @@ inline nsIRegion *nsWindow::GetRegion()
   NS_ASSERTION(NULL != region, "Null region context");
   
   return region;  
+}
+
+/*
+	widget is a PtRegion representing the native widget for a menu - reset the mParent->mLastMenu
+	since it points to an widget being destroyed
+*/
+int nsWindow::MenuRegionDestroyed( PtWidget_t *widget, void *data, PtCallbackInfo_t *cbinfo )
+{
+	nsWindow *pWin = (nsWindow *) GetInstance( widget );
+	if( pWin ) {
+		nsWindow *parent = ( nsWindow * ) pWin->mParent;
+		if( parent && parent->mLastMenu == widget )
+			parent->mLastMenu = nsnull;
+		}
+	return Pt_CONTINUE;
 }

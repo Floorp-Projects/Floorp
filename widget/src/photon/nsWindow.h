@@ -140,9 +140,9 @@ private:
   NS_IMETHOD            CreateNative(PtWidget_t *parentWidget);
 
   static int            ResizeHandler( PtWidget_t *widget, void *data, PtCallbackInfo_t *cbinfo );
-	static int						OpeningHandler( PtWidget_t *widget, void *data, PtCallbackInfo_t *cbinfo );
 	static int            EvInfo( PtWidget_t *widget, void *data, PtCallbackInfo_t *cbinfo );
   static int            WindowWMHandler( PtWidget_t *widget, void *data, PtCallbackInfo_t *cbinfo );
+  static int            MenuRegionDestroyed( PtWidget_t *widget, void *data, PtCallbackInfo_t *cbinfo );
 
   inline NS_IMETHOD     ModalEventFilter(PRBool aRealEvent, void *aEvent, PRBool *aForWindow)
 		{
