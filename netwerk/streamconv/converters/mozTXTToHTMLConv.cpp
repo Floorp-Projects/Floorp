@@ -37,8 +37,6 @@
 #include "nsIIOService.h"
 #include "nsIServiceManager.h"
 
-#define DEBUG_BenB
-
 mozTXTToHTMLConv::mozTXTToHTMLConv()
 {
   NS_INIT_ISUPPORTS();
