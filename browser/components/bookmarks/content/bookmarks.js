@@ -559,7 +559,7 @@ var BookmarksCommand = {
 
   createNewSeparator: function (aTarget)
   {
-    var rSeparator  = BMSVC.createSeparatorResource();
+    var rSeparator  = BMSVC.createSeparator();
     var selection   = BookmarksUtils.getSelectionFromResource(rSeparator);
     BookmarksUtils.insertSelection("newseparator", selection, aTarget)
   },
