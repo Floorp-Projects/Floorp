@@ -105,7 +105,7 @@ $(DEPTH)/build/build_number: FORCE
 	@$(MAKE_OBJDIR)
 	$(RM) $@
 	$(PERL) $(srcdir)/bdate.pl > $@
-	$(PERL) $(srcdir)/aboutime.pl $(topsrcdir)/l10n/us/xp/about-all.html $@
+	$(PERL) $(srcdir)/aboutime.pl $(topsrcdir)/xpfe/browser/src/navigator.xul $@
 
 $(DEPTH)/modules/libpref/src/init/all.js: FORCE
 	$(PERL) $(srcdir)/set-timebomb.pl 0 30
