@@ -372,6 +372,8 @@ void CTests::OnToolsRemoveAllGH()
 void CTests::OnToolsTestYourMethod()
 {
 	// place your test code here
+
+   GoToIndexTest();
 }
 
 // ***********************************************************************
@@ -741,6 +743,7 @@ void CTests::PurgeHistoryTest(nsISHistory* theSessionHistory, PRInt32 numEntries
 // Url table for web navigation
 NavElement UrlTable[] = {
 	{"http://www.yahoo.com/", nsIWebNavigation::LOAD_FLAGS_NONE},
+	{"http://www.oracle.com/", nsIWebNavigation::LOAD_FLAGS_NONE},
 	{"http://www.sun.com/", nsIWebNavigation::LOAD_FLAGS_IS_REFRESH},
 	{"http://www.netscape.com/", nsIWebNavigation::LOAD_FLAGS_IS_LINK},
 	{"http://www.aol.com/", nsIWebNavigation::LOAD_FLAGS_REPLACE_HISTORY}
@@ -776,7 +779,7 @@ void CTests::OnInterfacesNsiwebnav()
 
    CQaUtils::QAOutput("Run a few LoadURI() tests.", 2);
 
-	for (i=0; i < 4; i++)
+	for (i=0; i < 5; i++)
 	{
 		LoadUriTest(UrlTable[i].theUri, UrlTable[i].theFlag);
 		switch (i)
@@ -790,7 +793,12 @@ void CTests::OnInterfacesNsiwebnav()
 		case 2:
 			ReloadTest(nsIWebNavigation::LOAD_FLAGS_BYPASS_PROXY);
 			break;
+		// simulate shift-reload
 		case 3:
+			ReloadTest(nsIWebNavigation::LOAD_FLAGS_BYPASS_CACHE | 
+					   nsIWebNavigation::LOAD_FLAGS_BYPASS_PROXY);
+			break;
+		case 4:
 			ReloadTest(nsIWebNavigation::LOAD_FLAGS_CHARSET_CHANGE);
 			break;
 		}
@@ -929,6 +937,11 @@ void CTests::ReloadTest(const unsigned long theFlag)
 	   break;
    case nsIWebNavigation::LOAD_FLAGS_CHARSET_CHANGE:
 	   strcpy(theFlagName, "LOAD_FLAGS_BYPASS_PROXY");
+	   break;
+   case nsIWebNavigation::LOAD_FLAGS_BYPASS_CACHE | \
+	   nsIWebNavigation::LOAD_FLAGS_BYPASS_PROXY: \
+	   strcpy(theFlagName, "nsIWebNavigation::LOAD_FLAGS_BYPASS_CACHE | \
+							nsIWebNavigation::LOAD_FLAGS_BYPASS_PROXY");
 	   break;
    }
 
