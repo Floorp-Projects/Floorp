@@ -37,6 +37,8 @@ CPPSRCS=                                \
  nsDefaultHelper.cpp	\
  nsWindowMediator.cpp \
  nsSessionHistory.cpp \
+ nsDialogParamBlock.cpp \
+ nsCommonDialogs.cpp \
  $(NULL)
 
 CPP_OBJS=                               \
@@ -53,6 +55,8 @@ CPP_OBJS=                               \
    .\$(OBJDIR)\nsDefaultHelper.obj        \
      .\$(OBJDIR)\nsWindowMediator.obj        \
      .\$(OBJDIR)\nsSessionHistory.obj \
+    .\$(OBJDIR)\nsDialogParamBlock.obj \
+	.\$(OBJDIR)\nsCommonDialogs.obj \
  $(NULL)
 
 LINCS=-I$(PUBLIC)\raptor                \
