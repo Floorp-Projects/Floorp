@@ -180,6 +180,7 @@ sub pickos {
             /\(.*QNX.*\)/ && do {return "Neutrino";};
             /\(.*VMS.*\)/ && do {return "OpenVMS";};
             /\(.*Windows XP.*\)/ && do {return "Windows XP";};
+            /\(.*Windows NT 5\.2.*\)/ && do {return "Windows Server 2003";};
             /\(.*Windows NT 5\.1.*\)/ && do {return "Windows XP";};
             /\(.*Windows 2000.*\)/ && do {return "Windows 2000";};
             /\(.*Windows NT 5.*\)/ && do {return "Windows 2000";};

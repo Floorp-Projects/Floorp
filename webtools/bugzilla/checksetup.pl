@@ -631,6 +631,7 @@ LocalVar('opsys', '
         "Windows 2000",
         "Windows NT",
         "Windows XP",
+        "Windows Server 2003",
         "Mac System 7",
         "Mac System 7.5",
         "Mac System 7.6.1",
