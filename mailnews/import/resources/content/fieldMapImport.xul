@@ -45,8 +45,10 @@ Rights Reserved.
 				ondragover="return DragOverTree(event);"
 				ondraggesture="return BeginDrag( event);"
 				ondragdrop="return DropOnTree( event);">
-			<treecol style="width:35%"/>
-			<treecol id="dataColumn" style="width:65%"/>
+      <treecolgroup>
+			  <treecol flex="35" style="width:0px"/>
+			  <treecol flex="65" id="dataColumn" style="width:0px"/>
+      </treecolgroup>
 
 			<treehead>
 				<treerow id="headRow">
@@ -55,7 +57,7 @@ Rights Reserved.
 				</treerow>
 			</treehead>
 
-			<treechildren id="fieldBody"/>
+			<treechildren id="fieldBody" flex="1"/>
 		</tree>
 	</box>
 	

@@ -41,15 +41,17 @@
     <box style="min-height:200px">
     <searchterms id="searchterms"/>
     <tree class="inset" flex="1" id="searchTermTree">
-      <treecol width="1*"/>
-      <treecol width="4*"/>
-      <treecol width="0*"/>
-      <treecol width="4*"/>
-      <treecol width="0*"/>
-      <treecol width="4*"/>
-      <treecol width="0*"/>
-        
-      <treechildren id="searchTermList">
+      <treecolgroup>
+        <treecol flex="1"/>
+        <treecol flex="4"/>
+        <treecol flex="0"/>
+        <treecol flex="4"/>
+        <treecol flex="0"/>
+        <treecol flex="4"/>
+        <treecol flex="0"/>
+      </treecolgroup>
+
+      <treechildren flex="1" id="searchTermList">
 
 <!-- this is what the treerows will look like:
         <treeitem id="searchListItem">

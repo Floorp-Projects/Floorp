@@ -40,9 +40,9 @@ Rights Reserved.
 				  ondragdrop="return DropOnAddressingWidgetTree(event);"
 				  style="border:solid black 1px">
 				  
-        <treecols>
+        <treecolgroup>
           <treecol flex="1"/>
-        </treecols>
+        </treecolgroup>
 
 				<treechildren flex="1" id="addressWidgetBody">
 					<treeitem>
