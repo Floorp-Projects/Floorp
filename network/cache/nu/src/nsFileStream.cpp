@@ -18,14 +18,16 @@
  */
 
 #include "nsFileStream.h"
+#include "prlog.h"
 
-nsFileStream::nsFileStream(XP_File* i_pFile):m_pFile(i_pFile)
+nsFileStream::nsFileStream(PRFileDesc* i_pFile):m_pFile(i_pFile)
 {
     PR_ASSERT(m_pFile);
 }
 
 nsFileStream::~nsFileStream()
 {
+    //close the file if not closed. todo
 }
 
 /*
@@ -54,18 +56,25 @@ PRInt32 nsFileStream::Read(void* o_Buffer, PRUint32 i_Len)
 {
     if (m_pFile)
     {
-        int status = XP_FileRead(o_Buffer, i_Len, *m_pFile);
-        return status;
+        return PR_Read(m_pFile, o_Buffer, i_Len);
     }
     return 0;
+}
+
+void nsFileStream::Reset(void)
+{
+    //Reset states/offsets etc.
+    if (m_pFile)
+    {
+        PR_Seek(m_pFile, 0, PR_SEEK_SET);
+    }
 }
 
 PRInt32 nsFileStream::Write(const void* i_Buffer, PRUint32 i_Len)
 {
     if (m_pFile)
     {
-        int status = XP_FileWrite(i_Buffer, i_Len, *m_pFile);
-        return status;
+        return PR_Write(m_pFile, i_Buffer, i_Len);
     }
     return 0;
 }

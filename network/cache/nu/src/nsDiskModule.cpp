@@ -27,10 +27,14 @@
 #include "prmem.h"
 #include "plstr.h"
 #include "prlog.h"
+#include "prclist.h"
+#include "prio.h"
 
 #include "nsDiskModule.h"
 #include "nsCacheObject.h"
 #include "nsCacheManager.h"
+#include "nsFileStream.h"
+#include "nsCachePref.h"
 
 #include "mcom_db.h"
 
@@ -42,6 +46,17 @@
         PR_ASSERT(res);                 \
     }
 
+typedef struct {
+    PRCList link;
+    nsCacheObject* cacheObject;
+} recentlyUsedObject;
+
+//File static list of recently used cache objects
+static PRCList g_RecentlyUsedList;
+static char* g_FullFilename=0;
+const static PRUint16 MAX_FILENAME_LEN = 512;
+
+char* FullFilename(const char* i_Filename);
 //
 // Constructor: nsDiskModule
 //
@@ -49,6 +64,8 @@ nsDiskModule::nsDiskModule(const PRUint32 size):
     nsCacheModule(size),
     m_pDB(0)
 {
+    /* initialize the list recently used urls*/
+    PR_INIT_CLIST(&g_RecentlyUsedList);
 }
 
 nsDiskModule::~nsDiskModule()
@@ -59,6 +76,15 @@ nsDiskModule::~nsDiskModule()
         (*m_pDB->close)(m_pDB);
         m_pDB = 0;
     }
+    recentlyUsedObject* obj;
+    while (!PR_CLIST_IS_EMPTY(&g_RecentlyUsedList)) 
+    {
+        obj = (recentlyUsedObject*) PR_LIST_HEAD(&g_RecentlyUsedList);
+        PR_FREEIF(obj->cacheObject);
+        PR_REMOVE_LINK(&obj->link);
+        PR_DELETE(obj);
+    }
+    PR_ASSERT(PR_CLIST_IS_EMPTY(&g_RecentlyUsedList));
 }
 
 PRBool nsDiskModule::AddObject(nsCacheObject* io_pObject)
@@ -159,6 +185,8 @@ nsCacheObject* nsDiskModule::GetObject(const char* i_url) const
     if (!m_pDB || !i_url || !*i_url)
         return 0;
 
+    //TODO check from recently used list. 
+
     DBT key, data;
 
     key.data = (void*) i_url;
@@ -168,6 +196,8 @@ nsCacheObject* nsDiskModule::GetObject(const char* i_url) const
     {
         nsCacheObject* pTemp = new nsCacheObject();
         pTemp->Info(data.data);
+        recentlyUsedObject* pNode = PR_NEW(recentlyUsedObject);
+        PR_APPEND_LINK(&pNode->link, &g_RecentlyUsedList);
         return pTemp;
     }
 
@@ -177,6 +207,32 @@ nsCacheObject* nsDiskModule::GetObject(const char* i_url) const
 nsStream* nsDiskModule::GetStreamFor(const nsCacheObject* i_pObject)
 {
     ENSURE_INIT;
+    MonitorLocker ml(this);
+    if (i_pObject)
+    {
+        if (Contains((nsCacheObject*)i_pObject))
+        {
+            nsStream* pStream = i_pObject->Stream();
+            if (pStream)
+                return pStream;
+        }
+        PR_ASSERT(*i_pObject->Filename());
+
+        char* fullname = FullFilename(i_pObject->Filename());
+
+        // Set up a new stream for this object
+        PRFileDesc* pFD = PR_Open(
+            fullname ? fullname : i_pObject->Filename(), 
+            PR_CREATE_FILE | PR_RDWR,
+            600);// Read and write by owner only
+
+        if (pFD)
+        {
+            return new nsFileStream(pFD);
+        }
+        
+        return 0;
+    }
     return 0;
 }
 
@@ -268,4 +324,16 @@ void nsDiskModule::SetSize(const PRUint32 i_Size)
     }
 }
 
+char* FullFilename(const char* i_Filename)
+{
+    if (0 == g_FullFilename)
+    {
+        g_FullFilename = new char[MAX_FILENAME_LEN];
+        if (0 == g_FullFilename)
+            return 0;
+    }
+    PL_strcpy(g_FullFilename, nsCachePref::GetInstance()->DiskCacheFolder());
+    PL_strcat(g_FullFilename, i_Filename);
+    return g_FullFilename;
+}
 #undef ENSURE_INIT
