@@ -21,15 +21,6 @@
 
 #include "usertlbr.h"
 
-//  Window Control IDs for NavCenter.
-//  Improves findability.
-#define NC_IDW(ID) (AFX_IDW_PANE_LAST - (ID))
-#define NC_IDW_MISCVIEW NC_IDW(0)
-#define NC_IDW_SELECTOR NC_IDW(1)
-#define NC_IDW_OUTLINER NC_IDW(2)
-#define NC_IDW_HTMLPANE NC_IDW(3)
-#define NC_IDW_DRAGEDGE NC_IDW(5)
-#define NC_IDW_NAVMENU NC_IDW(6)
 
 
 #define ICONXPOS  5

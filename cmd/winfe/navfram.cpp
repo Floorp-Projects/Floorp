@@ -57,7 +57,6 @@ BEGIN_MESSAGE_MAP(CNSNavFrame, CFrameWnd)
 	ON_WM_LBUTTONUP()
 	ON_MESSAGE(WM_SIZEPARENT, OnSizeParent)
 	ON_WM_CLOSE()
-	ON_WM_PAINT()
 	//}}AFX_MSG_MAP
 END_MESSAGE_MAP()
 #define MFS_MOVEFRAME       0x00000800L // no sizing, just moving
@@ -72,7 +71,6 @@ END_MESSAGE_MAP()
 
 CNSNavFrame::CNSNavFrame()
 {
-	m_pSelector = NULL;
 	m_nsContent= NULL;
 	m_bDragging = FALSE;
 	m_DragWnd = NULL;
@@ -82,17 +80,24 @@ CNSNavFrame::CNSNavFrame()
 
 CNSNavFrame::~CNSNavFrame()
 {
-	if (m_dwOverDockStyle != DOCKSTYLE_FLOATING)
+	if (m_dwOverDockStyle == DOCKSTYLE_DOCKEDLEFT)
 	{
 		PREF_SetIntPref(gPrefDockPercentage, m_DockSize);
-		PREF_SetIntPref(gPrefDockOrientation, m_dwOverDockStyle);
 	}
-	else
+	else if (m_dwOverDockStyle == DOCKSTYLE_FLOATING)
 	{
 		PREF_SetRectPref(gPrefFloatRect, (int16)m_rectFloat.left, (int16)m_rectFloat.top, (int16)m_rectFloat.right, (int16)m_rectFloat.bottom);
 	}
+}
 
-	// delete m_pNavTitle;
+void CNSNavFrame::OnClose()
+{
+	if (m_dwOverDockStyle == DOCKSTYLE_FLOATING)
+	{
+		GetWindowRect(&m_rectFloat);
+	}
+
+	CFrameWnd::OnClose();
 }
 
 void CNSNavFrame::UpdateTitleBar(HT_View pView)
@@ -103,12 +108,6 @@ void CNSNavFrame::UpdateTitleBar(HT_View pView)
 
 	SetWindowText(title);
 }
-
-void CNSNavFrame::OnClose( )
-{
-	CFrameWnd::OnClose();
-}
-
 
 int CNSNavFrame::OnCreate(LPCREATESTRUCT lpCreateStruct)
 {
@@ -135,6 +134,8 @@ int CNSNavFrame::OnCreate(LPCREATESTRUCT lpCreateStruct)
 //------------------------------------------------------------------------
 void CNSNavFrame::CreateNewNavCenter(CNSGenFrame* pParentFrame, BOOL useViewType, HT_ViewType viewType) 
 {
+// OBSOLETE: WILL GO AWAY SOON
+
 // Read in our float rect pref.
 	int16 left,right,top, bottom;
 	PREF_GetRectPref(gPrefFloatRect,&left, &top, &right, &bottom);
@@ -155,8 +156,7 @@ void CNSNavFrame::CreateNewNavCenter(CNSGenFrame* pParentFrame, BOOL useViewType
     m_DockSize = (int)width;
 	
 // Read in our dockstyle
-	m_dwOverDockStyle = DOCKSTYLE_VERTLEFT;
-	PREF_GetIntPref(gPrefDockOrientation, &m_dwOverDockStyle);
+	m_dwOverDockStyle = DOCKSTYLE_DOCKEDLEFT;
 
 // Find out if a view should be displayed
 	
@@ -170,9 +170,6 @@ void CNSNavFrame::CreateNewNavCenter(CNSGenFrame* pParentFrame, BOOL useViewType
 		// Create a floating window
 		m_dwOverDockStyle = DOCKSTYLE_FLOATING;
 	}
-
-// Put the selector buttons into the pane.
-	m_pSelector->PopulatePane();
 
 // Show the window.
 	ShowWindow(SW_SHOW);
@@ -199,6 +196,11 @@ void CNSNavFrame::DeleteNavCenter()
 
 	PostMessage(WM_CLOSE);
 
+	UnhookFromButton();
+}
+
+void CNSNavFrame::UnhookFromButton()
+{
 	if (m_pButton)
 	{
 		m_pButton->SetDepressed(FALSE);
@@ -211,24 +213,6 @@ void CNSNavFrame::DeleteNavCenter()
 
 BOOL CNSNavFrame::OnCreateClient(LPCREATESTRUCT lpcs, CCreateContext* pContext)
 {
-/*
-	m_nsContent = new CRDFContentView();
-	m_pSelector = new CSelector(m_nsContent);
-	m_pNavTitle = new CNavTitleBar();
-
-	CRect  rect1;
-	rect1.left = rect1.top = 0;
-	rect1.right =  MIN_CATEGORY_WIDTH;
-	rect1.bottom = 1;
-	m_pSelector->Create( NULL, "", WS_CHILD | WS_VISIBLE, rect1, 
-		this, NC_IDW_SELECTOR, pContext );
-
-	rect1.right = rect1.bottom = 1;
-	m_pNavTitle->Create(NULL, "", WS_CHILD | WS_VISIBLE, rect1, this, NC_IDW_NAVMENU, pContext);
-
-	m_nsContent->Create( NULL, "", WS_CHILD | WS_VISIBLE, rect1, 
-		this , NC_IDW_OUTLINER, pContext);
-*/
 	m_nsContent = CRDFContentView::DisplayRDFTreeFromResource(this, 0, 0, 100, 100, m_Node, pContext); 
 	CRDFOutliner* pOutliner = (CRDFOutliner*)(m_nsContent->GetOutlinerParent()->GetOutliner());
 	SetHTNode(HT_TopNode(pOutliner->GetHTView()));
@@ -246,77 +230,30 @@ BOOL CNSNavFrame::OnCreateClient(LPCREATESTRUCT lpcs, CCreateContext* pContext)
 	PREF_GetIntPref(gPrefDockPercentage, &width);
     m_DockSize = (int)width;
 	
-	// Read in our dockstyle
-	m_dwOverDockStyle = DOCKSTYLE_VERTLEFT;
-	PREF_GetIntPref(gPrefDockOrientation, &m_dwOverDockStyle);
-
 	return TRUE;
 }
 
 void CNSNavFrame::OnSize( UINT nType, int cx, int cy )
 {
-	if(GetHTPane() && !XP_IsNavCenterDocked(GetHTPane())) 
+	if(m_dwOverDockStyle == DOCKSTYLE_FLOATING) 
 	{
 		// Make sure our float rect always matches our size when floating.
 		GetWindowRect(&m_rectFloat);
+		PREF_SetRectPref(gPrefFloatRect, (int16)m_rectFloat.left, (int16)m_rectFloat.top, (int16)m_rectFloat.right, (int16)m_rectFloat.bottom);
 	}
-	else
+	else if (m_dwOverDockStyle == DOCKSTYLE_DOCKEDLEFT)
 	{
 		// Recompute our docked percentage if the tree is visible
 		CRect rect;
 		GetClientRect(&rect);
-		if (IsTreeVisible())
-		{
-			CalcClientArea(&m_parentRect);
-			if (m_dwOverDockStyle == DOCKSTYLE_VERTLEFT || m_dwOverDockStyle == DOCKSTYLE_VERTRIGHT)
-				m_DockWidth = m_DockSize = rect.Width();
-			else m_DockHeight = m_DockSize = rect.Height();
-		}
+		CalcClientArea(&m_parentRect);
+		m_DockWidth = m_DockSize = rect.Width();
+		PREF_SetIntPref(gPrefDockPercentage, m_DockSize);
 	}
 
 	int top = 0;
-	if (m_dwOverDockStyle == DOCKSTYLE_FLOATING || m_dwOverDockStyle == DOCKSTYLE_VERTLEFT ||
-		m_dwOverDockStyle == DOCKSTYLE_VERTRIGHT) 
-	{
-		CRect tempRect;
-		// We want to handle the redraw ourself to reduce the flickering.  
-	/*	m_pSelector->GetClientRect(&tempRect);
-		m_pSelector->MapWindowPoints( this, &tempRect);
-		m_pSelector->SetWindowPos( NULL, 0, top, MIN_CATEGORY_WIDTH, cy - STARTY - top, SWP_NOREPOSITION  | SWP_NOREDRAW);
-		if ((tempRect.Height()) < cy - STARTY) 
-		{
-			int orgHeight = tempRect.Height();
-			tempRect.top = tempRect.bottom;
-			tempRect.bottom =  tempRect.top + (cy - orgHeight);
-			MapWindowPoints(m_pSelector, &tempRect);
-			m_pSelector->InvalidateRect( &tempRect, TRUE);
-		}
-
-		m_pNavTitle->ShowWindow(SW_SHOW);
-		m_pNavTitle->SetWindowPos(NULL, MIN_CATEGORY_WIDTH+2, top, cx - MIN_CATEGORY_WIDTH, NAVBAR_HEIGHT, SWP_NOREPOSITION);
-		m_nsContent->SetWindowPos( NULL, MIN_CATEGORY_WIDTH+2, top+NAVBAR_HEIGHT, cx - MIN_CATEGORY_WIDTH - 2, cy - STARTY - top - NAVBAR_HEIGHT, 0);
-	*/
-		m_nsContent->SetWindowPos(NULL, 0, 0, cx, cy, 0);
-	}
-	else 
-	{  //dock horiz.
-		CRect tempRect;
-		m_pSelector->GetClientRect(&tempRect);
-		m_pSelector->MapWindowPoints( this, &tempRect);
-		m_pSelector->SetWindowPos( NULL, STARTX, top, cx - STARTX, MIN_CATEGORY_HEIGHT, SWP_NOREPOSITION  | SWP_NOREDRAW);
-		if ((tempRect.Width()) < cx - STARTX) {
-			int orgWidth = tempRect.Width();
-			tempRect.right = tempRect.left;
-			tempRect.right =  tempRect.left + (cx - orgWidth);
-			MapWindowPoints(m_pSelector, &tempRect);
-			m_pSelector->InvalidateRect( &tempRect, FALSE);
-		}
-		m_nsContent->SetWindowPos( NULL, STARTX, MIN_CATEGORY_HEIGHT + 2 ,
-						cx - STARTX, cy - MIN_CATEGORY_HEIGHT, SWP_NOREPOSITION | SWP_NOREDRAW);
-	}
-	ShowWindow(SW_SHOW);
-	if (m_DragWnd && IsTreeVisible())
-		m_DragWnd->ShowWindow(SW_SHOW);
+	CRect tempRect;
+	m_nsContent->SetWindowPos(NULL, 0, 0, cx, cy, 0);
 }
 
 BOOL CNSNavFrame::PreCreateWindow(CREATESTRUCT & cs)
@@ -332,17 +269,54 @@ CNSNavFrame* CNSNavFrame::CreateFramedRDFViewFromResource(CWnd* pParent, int xPo
 											 int width, int height, HT_Resource node)
 {
 	CNSNavFrame* pNavFrame = new CNSNavFrame();
-	pNavFrame->SetDockStyle(DOCKSTYLE_FLOATING);
 	pNavFrame->SetHTNode(node);
 	pNavFrame->Create(NULL, HT_GetNodeName(node), WS_POPUP, 
 					  CRect(xPos, yPos, width, height),
 					  pParent);
-	pNavFrame->SetWindowPos(&wndTopMost, xPos, yPos, width, height, 0);
-	pNavFrame->ShowWindow(SW_SHOW);
+	pNavFrame->ShowWindow(SW_HIDE);
+
+	HT_View view = HT_GetSelectedView(pNavFrame->GetHTPane());
 	
 	CRDFOutliner* pOutliner = (CRDFOutliner*)(pNavFrame->GetContentView()->GetOutlinerParent()->GetOutliner());
-	pOutliner->SetIsPopup(TRUE);
+	
+	// Display in the appropriate spot depending on our tree state (docked, standalone, or popup)
+	CString treeState = HT_GetTreeStateForButton(node);
+	if (treeState == "Popup" || treeState == "popup")
+	{
+		// Actually appear at the specified position and set the popup flag to be true.
+		pNavFrame->SetDockStyle(DOCKSTYLE_POPUP);
+	
+		pNavFrame->SetWindowPos(&wndTopMost, xPos, yPos, width, height, 0);
+		pNavFrame->ShowWindow(SW_SHOW);
+		pOutliner->SetIsPopup(TRUE);
+		
+	}
+	else if (treeState == "Docked" || treeState == "docked")
+	{
+		// We're supposed to come up docked to the window.  Call DockFrame after setting
+		// the correct dock style
+		pNavFrame->SetDockStyle(DOCKSTYLE_DOCKEDLEFT);
+		
+		// Use the toolbar button to get to the top-level frame.
+		CRDFToolbarButton* pButton = (CRDFToolbarButton*)HT_GetNodeFEData(node);
+		CFrameWnd* pBaseWnd = pButton->GetTopLevelFrame();
+		if(pBaseWnd && pBaseWnd->IsKindOf(RUNTIME_CLASS(CNSGenFrame))) 
+		{
+			CNSGenFrame* pFrame = (CNSGenFrame *)pBaseWnd;
+			pNavFrame->DockFrame(pFrame, DOCKSTYLE_DOCKEDLEFT);
+		}
+		else pNavFrame->DeleteNavCenter(); // Somehow couldn't find the window. Should never happen.
+	}
+	/*else if (treeState == "Standalone" || treeState == "standalone")
+	{
+		pNavFrame->SetDockStyle(DOCKSTYLE_FLOATING);
+		pNavFrame->MoveWindow(pNavFrame->GetFloatRect());
+		pNavFrame->ForceFloat(TRUE);
+	}*/
+
 	pOutliner->SetFocus();
+	
+	pNavFrame->ShowWindow(SW_SHOW);
 
 	return pNavFrame;
 }
@@ -406,8 +380,7 @@ void CNSNavFrame::Move(CPoint pt)       // called when mouse has moved
 	short dwOverDockStyle = CanDock(pt);
 	m_dockingDragRect =  m_parentRect;
 		
-	if (dwOverDockStyle == DOCKSTYLE_VERTLEFT ||
-		dwOverDockStyle == DOCKSTYLE_VERTRIGHT)
+	if (dwOverDockStyle == DOCKSTYLE_DOCKEDLEFT)
 	{
 		int height = m_dockingDragRect.Height();
 		m_dockingDragRect.right = m_dockingDragRect.left + m_DockWidth;
@@ -416,12 +389,6 @@ void CNSNavFrame::Move(CPoint pt)       // called when mouse has moved
 			yOffset = height;
 		m_dockingDragRect.top = pt.y - yOffset;
 		m_dockingDragRect.bottom = m_dockingDragRect.top + height;
-	}
-	else if (dwOverDockStyle == DOCKSTYLE_HORZTOP ||
-			 dwOverDockStyle == DOCKSTYLE_HORZBOTTOM) 
-	{
-		m_dockingDragRect.top = pt.y - (int)m_DockHeight;
-		m_dockingDragRect.bottom = m_dockingDragRect.top + m_DockHeight;
 	}
 	else 
 	{
@@ -554,32 +521,12 @@ void CNSNavFrame::ForceFloat(BOOL show)
     if (pLayout)
 		pLayout->RecalcLayout();
 
-	// Select a new view if we were formerly collapsed.
-	if (m_pSelector && m_pSelector->GetCurrentButton() == NULL)
-		m_pSelector->SelectNthView(0);
-
-/*
-	if (show)
-	{
-		m_nsContent->ShowWindow(SW_SHOW);
-		m_nsContent->CalcChildSizes();
-	}
-*/
 }
 
 void CNSNavFrame::ComputeDockingSizes()
 {
-    if (IsTreeVisible())
-	{
-		m_DockWidth = m_DockSize + 1;  // Not sure what the error is here yet.
-		m_DockHeight = m_DockSize + 1;
-	}
-	else
-	{
-
-		m_DockWidth = MIN_CATEGORY_WIDTH;
-		m_DockHeight = MIN_CATEGORY_HEIGHT;
-	}
+    m_DockWidth = m_DockSize + 1;  // Not sure what the error is here yet.
+	m_DockHeight = m_DockSize + 1;
 }
 
 
@@ -611,11 +558,14 @@ void CNSNavFrame::DockFrame(CNSGenFrame* pParent, short dockStyle)
 			}
 		}
 		
+		// Notify HT of our new state.
+		HT_SetTreeStateForButton(HT_TopNode(HT_GetSelectedView(GetHTPane())), "Docked");
+
 		CRect rect = m_dockingDragRect;
 
 		// Hide the window before we move it.
 		m_dwOverDockStyle = dockStyle;
-		if (m_dwOverDockStyle == DOCKSTYLE_VERTLEFT || m_dwOverDockStyle == DOCKSTYLE_VERTRIGHT) 
+		if (m_dwOverDockStyle == DOCKSTYLE_DOCKEDLEFT) 
 		{
 			GetDesktopWindow()->MapWindowPoints( pView, &rect ); 
 			
@@ -651,35 +601,20 @@ void CNSNavFrame::DockFrame(CNSGenFrame* pParent, short dockStyle)
 
 		// Figure out the correct location to display the resize bar.
 		CRect dragBarRect(rect);
-		if (m_dwOverDockStyle == DOCKSTYLE_VERTLEFT) {
+		if (m_dwOverDockStyle == DOCKSTYLE_DOCKEDLEFT) 
+		{
 			dragBarRect.left = rect.right;
 			dragBarRect.right = dragBarRect.left+ DRAGWIDTH;
 		}
-		else if (m_dwOverDockStyle == DOCKSTYLE_VERTRIGHT) {
-			dragBarRect.right = rect.left;
-			dragBarRect.left = dragBarRect.right - DRAGWIDTH;
-		}
-		else if (m_dwOverDockStyle == DOCKSTYLE_HORZTOP) {
-			dragBarRect.top = rect.bottom;
-			dragBarRect.bottom = dragBarRect.top + DRAGWIDTH;
-		}
-		else if (m_dwOverDockStyle == DOCKSTYLE_HORZBOTTOM) {
-			dragBarRect.bottom = rect.top;
-			dragBarRect.top = dragBarRect.bottom - DRAGWIDTH;
-		}
-		if (!m_DragWnd) {
+		
+		if (!m_DragWnd) 
+		{
 			m_DragWnd = new CDragBar(dragBarRect, this);
-#ifdef XP_WIN32
 			m_DragWnd->CreateEx(0, NULL, "GridEdge", WS_CHILD | WS_VISIBLE, 
 					 dragBarRect.left, dragBarRect.top, 
 					 dragBarRect.right - dragBarRect.left,
 					 dragBarRect.bottom - dragBarRect.top, 
 					 GetParentFrame()->GetSafeHwnd(), (HMENU)NC_IDW_DRAGEDGE, NULL);
-#else
-			m_DragWnd->Create(0, "GridEdge", WS_CHILD | WS_VISIBLE, 
-					 dragBarRect, 
-					 GetParentFrame(), NC_IDW_DRAGEDGE);
-#endif
 		}
 		// If we are not yet docked
 		m_DragWnd->SetOrientation(m_dwOverDockStyle);
@@ -709,8 +644,7 @@ void CNSNavFrame::EndDrag(CPoint pt)             // drop
 	CRect rect;
 	CRect parentRect;
 
-	if (dwOverDockStyle == DOCKSTYLE_VERTLEFT || dwOverDockStyle == DOCKSTYLE_VERTRIGHT ||
-		dwOverDockStyle == DOCKSTYLE_HORZTOP || dwOverDockStyle == DOCKSTYLE_HORZBOTTOM) 
+	if (dwOverDockStyle == DOCKSTYLE_DOCKEDLEFT)
 	{
         CNSGenFrame* pFrame = NULL;
         CFrameGlue *pGlue = CFrameGlue::GetLastActiveFrame(MWContextBrowser, FEU_FINDBROWSERANDEDITOR);
@@ -728,15 +662,7 @@ void CNSNavFrame::EndDrag(CPoint pt)             // drop
 		MoveWindow( m_rectDrag);
 		
 		// If it had a button associated with it, now it doesn't.
-		if (m_pButton)
-		{
-			CRDFToolbarHolder* pHolder = (CRDFToolbarHolder*)
-					(m_pButton->GetParent()->GetParent()->GetParent());
-			pHolder->SetCurrentButton(NULL);
-			m_pButton->SetDepressed(FALSE);
-			m_pButton->Invalidate();
-			m_pButton = NULL;
-		}
+		UnhookFromButton();
 	}
 
 	ShowWindow(SW_SHOW);
@@ -804,23 +730,18 @@ void CNSNavFrame::DrawFocusRect(short dwOverDockStyle, BOOL bRemoveRect)
 	CRect rect;
 	CBrush* pWhiteBrush = CBrush::FromHandle((HBRUSH)::GetStockObject(WHITE_BRUSH));
 	CBrush* pBrush = pWhiteBrush;
-	if (dwOverDockStyle == DOCKSTYLE_HORZTOP || dwOverDockStyle == DOCKSTYLE_HORZBOTTOM)	{
+	if (dwOverDockStyle == DOCKSTYLE_DOCKEDLEFT)
+	{
 		rect = m_dockingDragRect;
 	}
-	else if (dwOverDockStyle == DOCKSTYLE_VERTLEFT || dwOverDockStyle == DOCKSTYLE_VERTRIGHT) {
-		rect = m_dockingDragRect;
-	}
-	else {
+	else 
+	{
 		rect = m_rectDrag;
 	}
 	if (bRemoveRect)
 		size.cx = size.cy = 0;
 
-#ifdef XP_WIN32
 	CBrush* pDitherBrush = CDC::GetHalftoneBrush();
-#else
-	CBrush* pDitherBrush =  CBrush::FromHandle((HBRUSH)::GetStockObject(GRAY_BRUSH));
-#endif
 
 	// draw it and remember last size
 	WFE_DrawDragRect(m_pDC, &rect, size, &m_rectLast, m_sizeLast,
@@ -862,16 +783,7 @@ short CNSNavFrame::CanDock(CPoint pt, BOOL mapDesktop)
 		if (m_parentRect.PtInRect(pt)) {
 			if ((pt.x < (m_parentRect.left +m_DockWidth)) &&
 				pt.x > m_parentRect.left)
-				dockStyle = DOCKSTYLE_VERTLEFT;
-		//	else if	(( pt.x > (m_parentRect.right - m_DockWidth)) &&
-		//		pt.x < m_parentRect.right)
-		//		dockStyle = DOCKSTYLE_VERTRIGHT;
-		//	else if ((pt.y < (m_parentRect.top +m_DockHeight)) &&
-		//		 pt.y > m_parentRect.top)
-		//	   dockStyle = DOCKSTYLE_HORZTOP;
-		//	else if	(( pt.y > (m_parentRect.bottom - m_DockHeight)) &&
-		//		 pt.y < m_parentRect.bottom)
-		//	   dockStyle = DOCKSTYLE_HORZBOTTOM;
+				dockStyle = DOCKSTYLE_DOCKEDLEFT;
 		}
 	}
 	else {
@@ -954,34 +866,26 @@ LRESULT CNSNavFrame::OnSizeParent(WPARAM, LPARAM lParam)
 
 	CRect dragRect(resizeRect);
 	
-	if (m_dwOverDockStyle == DOCKSTYLE_VERTLEFT) {
-		//dragRect.top += 10;
-		//dragRect.bottom -= 10;
-
+	if (m_dwOverDockStyle == DOCKSTYLE_DOCKEDLEFT) 
+	{
 		resizeRect.right = lpLayout->rect.left + oldRect.Width();
 		if (oldDragRect.left != resizeRect.right) // we move the drag bar.  Need to resize here.
 			resizeRect.right += oldDragRect.left - resizeRect.right;
 
-		if (IsTreeVisible())
-		{
-			
-			CWnd* pParent = GetParent();
-			CRect parentRect;
-			pParent->GetClientRect(&parentRect);
+		CWnd* pParent = GetParent();
+		CRect parentRect;
+		pParent->GetClientRect(&parentRect);
 
-			if (parentRect.Width() < resizeRect.Width() + DRAGWIDTH)
-			{
-				resizeRect.right = resizeRect.left + parentRect.Width() - DRAGWIDTH;
-			}
+		if (parentRect.Width() < resizeRect.Width() + DRAGWIDTH)
+		{
+			resizeRect.right = resizeRect.left + parentRect.Width() - DRAGWIDTH;
 		}
-	
+		
 		dragRect.left = resizeRect.right;
 		dragRect.right = dragRect.left + DRAGWIDTH;
 
-		if (IsTreeVisible())
-			lpLayout->rect.left = resizeRect.right + DRAGWIDTH;
-		else lpLayout->rect.left = resizeRect.right;
-
+		lpLayout->rect.left = resizeRect.right + DRAGWIDTH;
+		
 		m_DragWnd->SetRect(dragRect);
 		m_DockWidth = resizeRect.Width();
 	}
@@ -992,8 +896,7 @@ LRESULT CNSNavFrame::OnSizeParent(WPARAM, LPARAM lParam)
 								resizeRect.bottom - resizeRect.top, SWP_SHOWWINDOW );
 		m_dockingDragRect = resizeRect;
 
-		if (IsTreeVisible())
-			m_DragWnd->SetWindowPos( &wndBottom, dragRect.left, dragRect.top, dragRect.Width(), 
+		m_DragWnd->SetWindowPos( &wndBottom, dragRect.left, dragRect.top, dragRect.Width(), 
 									 dragRect.Height(), SWP_SHOWWINDOW );
 
 	}
@@ -1008,152 +911,7 @@ static void FillSolidRect(HDC hdc, RECT* rect, COLORREF clr)
 }
 
 
-//------------------------------------------------------------------------------
-// void CNSNavFrame::OnPaint( )
-//
-//	This function is used to paint the background on CNSNavFrame
-//------------------------------------------------------------------------------
 
-void CNSNavFrame::OnPaint( )
-{
-	CRect rect;
-	GetClientRect(&rect);
-	CDC* pDC = GetDC();
-	HDC hdc = pDC->GetSafeHdc();
-	CRect rect1;
-	CRgn pRgn;
-	
-	HBRUSH hBr = ::CreateSolidBrush((COLORREF)GetSysColor(COLOR_3DSHADOW));
-	HPEN hPen = ::CreatePen(PS_SOLID, 1,(COLORREF)GetSysColor(COLOR_3DLIGHT)); 
-
-	HPEN hOldPen;
-	hOldPen = (HPEN)::SelectObject(hdc, hPen);
-	if (m_dwOverDockStyle == DOCKSTYLE_FLOATING || 
-		m_dwOverDockStyle == DOCKSTYLE_VERTLEFT || 
-		m_dwOverDockStyle == DOCKSTYLE_VERTRIGHT) {
-
-		// paint the div line between selector pane and content pane.
-		rect1 = rect;
-		rect1.left = rect.left + MIN_CATEGORY_WIDTH;
-		rect1.right = rect1.left + 2;
-		::FillRect(hdc, &rect1, hBr);
-		::SelectObject(hdc, (HPEN)::GetStockObject(WHITE_PEN));
-		::MoveToEx(hdc, rect1.left+1, rect1.top, NULL);
-		::LineTo(hdc, rect1.left+1, rect1.bottom);
-	}
-	else {
-
-		// paint the div line between selector pane and content pane.
-		rect1 = rect;
-		rect1.top = rect.top + MIN_CATEGORY_HEIGHT;
-		rect1.bottom = rect1.top + 2;
-		::FillRect(hdc, &rect1, hBr);
-		::SelectObject(hdc, (HPEN)::GetStockObject(WHITE_PEN));
-		::MoveToEx(hdc, rect1.left, rect1.top+1, NULL);
-		::LineTo(hdc, rect1.right, rect1.top+1);
-	}
-	::SelectObject(hdc, hOldPen);
-	VERIFY(::DeleteObject(hPen));
-	VERIFY(::DeleteObject(hBr));
-	ReleaseDC(pDC);
-	CFrameWnd::OnPaint();
-}
-
-void CNSNavFrame::CollapseWindow()
-{
-	if (m_dwOverDockStyle == DOCKSTYLE_FLOATING) {
-		// Handle floating window differently.  Floating window does not have
-		// m_DragWnd and m_pParent.
-	}
-	else 
-	{	
-		// Move m_DragWnd when we want to collapse docking window.
-		CRect tempRect;
-		GetWindowRect(&tempRect);;
-		CRect dragBox;
-		m_DragWnd->GetRect(dragBox);
-	
-		if (m_dwOverDockStyle == DOCKSTYLE_HORZTOP)
-		{
-			dragBox.top -= (tempRect.Height() - MIN_CATEGORY_HEIGHT - DRAGWIDTH);
-			dragBox.bottom = dragBox.top + DRAGWIDTH;
-		}
-		else if (m_dwOverDockStyle == DOCKSTYLE_HORZBOTTOM)
-		{
-			dragBox.top += (tempRect.Height() - MIN_CATEGORY_HEIGHT - DRAGWIDTH);
-			dragBox.bottom = dragBox.top + DRAGWIDTH;
-		}
-		else if (m_dwOverDockStyle == DOCKSTYLE_VERTLEFT)
-		{
-			dragBox.left -= (tempRect.Width() - MIN_CATEGORY_WIDTH);
-			dragBox.right = dragBox.left + DRAGWIDTH;
-		}
-		else 
-		{
-			// docked to the right
-			dragBox.left += (tempRect.Width() - MIN_CATEGORY_WIDTH - DRAGWIDTH);
-			dragBox.right += dragBox.left + DRAGWIDTH;
-		}
-			
-		m_pSelector->UnSelectAll();
-
-		if (GetParentFrame()) 
-		{
-			m_DragWnd->SetRect(dragBox);
-			m_DragWnd->MoveWindow(dragBox);
-			m_DragWnd->ShowWindow(SW_HIDE);
-			GetParentFrame()->RecalcLayout();
-		}
-	}
-}
-
-
-void CNSNavFrame::ExpandWindow()
-{
-	if (m_dwOverDockStyle == DOCKSTYLE_FLOATING) {
-		// Handle floating window differently.  Floating window does not have
-		// m_DragWnd and  m_pParent.
-	}
-	else {	// Move m_DragWnd when we want to expand docking window.
-	
-		ComputeDockingSizes();
-
-		CRect tempRect;
-		GetClientRect(&tempRect);;
-		CRect dragBox;
-		m_DragWnd->GetRect(dragBox);
-		int step = 0;
-		if (m_dwOverDockStyle == DOCKSTYLE_HORZTOP || m_dwOverDockStyle == DOCKSTYLE_HORZBOTTOM)
-			step = m_DockHeight - MIN_CATEGORY_HEIGHT;
-		else
-			step = m_DockWidth - MIN_CATEGORY_WIDTH;
-
-		if (m_dwOverDockStyle == DOCKSTYLE_HORZTOP) 
-		{
-			dragBox.top += step;
-			dragBox.bottom = dragBox.top + DRAGWIDTH;
-		}
-		else if (m_dwOverDockStyle == DOCKSTYLE_HORZBOTTOM) {
-			dragBox.bottom -=  step;
-			dragBox.top = dragBox.bottom - DRAGWIDTH;
-		}
-		else  if (m_dwOverDockStyle == DOCKSTYLE_VERTLEFT) {
-			dragBox.left += step;
-			dragBox.right = dragBox.left + DRAGWIDTH;
-		}
-		else  if (m_dwOverDockStyle == DOCKSTYLE_VERTRIGHT) {
-			dragBox.right -= step;
-			dragBox.left = dragBox.right - DRAGWIDTH;
-		}
-
-		if (GetParentFrame()) {
-			m_DragWnd->ShowWindow(SW_HIDE);
-			m_DragWnd->SetRect(dragBox);
-			m_DragWnd->MoveWindow(dragBox);
-			GetParentFrame()->RecalcLayout();
-		}
-	}
-}
 
 /////////////////////////////////////////////////////////////////////////////
 // CNSNavFrame diagnostics

@@ -214,8 +214,7 @@ class CRDFToolbar;
 
 class CCustToolbar : public CControlBar {
 
-
-private:
+protected:
 	CFrameWnd *			m_pParent;
 	CDragToolbar**		m_pToolbarArray;
 	CDragToolbar**		m_pHiddenToolbarArray;
@@ -326,7 +325,7 @@ protected:
 	int	 CheckClosedButtons(CPoint point);
 	BOOL PointInClosedTab(CPoint point, HTAB_BITMAP tabType, int nNumClosedButtons, int nStartX,
 						  int nBottom);
-	void DrawSeparator(HDC hDC, int nStartX, int nEndX, int nStartY, BOOL bToolbarSeparator = TRUE);
+	virtual void DrawSeparator(int i, HDC hDC, int nStartX, int nEndX, int nStartY, BOOL bToolbarSeparator = TRUE);
 	void SwitchChildren(CDragToolbar *pOriginal, CDragToolbar *pSwitch, int dir, int yPoint);
 	int  FindIndex(CDragToolbar *pToolbar);
 	CDragToolbar *FindToolbarFromPoint(CPoint point, CDragToolbar *pIgnore);

@@ -22,21 +22,32 @@
 #include "htrdf.h"
 #include "usertlbr.h"
 
-#define NAVBAR_HEIGHT 23
+#define NAVBAR_CONTROLSTRIP_HEIGHT 18
+#define NAVBAR_TITLEBAR_HEIGHT 23
+#define NAVBAR_TOTAL_HEIGHT 41
 #define NAVBAR_CLOSEBOX	16
 
 
 class CNavTitleBar : public CWnd, public CCustomImageObject
 {
-	BOOL m_bHasFocus;	// Determines what colors to use for the caption
+	BOOL m_bHasFocus;	// Determines what colors to use for the caption (OBSOLETE)
 	CPoint m_PointHit;	// MouseDown tracking
-	CString titleText;	// Name of the current workspace
+	
+	COLORREF m_ControlStripForegroundColor;
+	COLORREF m_ControlStripBackgroundColor;
+	CString m_ControlStripBackgroundImageURL;
+	CRDFImage* m_pControlStripBackgroundImage;
 
 	COLORREF m_ForegroundColor;
 	COLORREF m_BackgroundColor;
 	CString m_BackgroundImageURL;
 	CRDFImage* m_pBackgroundImage;
 	HT_View m_View; // The current HT_View.
+
+	BOOL m_bShowTitleText;
+
+	CRect cachedCloseRect;
+	CRect cachedModeRect;
 
 public:
 	CNavTitleBar();

@@ -287,6 +287,8 @@ public:
 	COLORREF GetShadowColor() { return m_ShadowColor; }
 	COLORREF GetHighlightColor() { return m_HighlightColor; }
 
+	void ComputeColorsForSeparators();
+
 	CRDFImage* GetBackgroundImage() { return m_pBackgroundImage; }
 	void SetBackgroundColor(COLORREF c) { m_BackgroundColor = c; }
 	void SetForegroundColor(COLORREF c) { m_ForegroundColor = c; }
@@ -352,6 +354,10 @@ public:
 	{
 		return new CRDFDragToolbar();
 	}
+
+protected:
+	virtual void DrawSeparator(int i, HDC hDC, int nStartX, int nEndX, int nStartY, BOOL bToolbarSeparator = TRUE);
+	
 };
 
 #endif

@@ -21,6 +21,7 @@
 #include "shcut.h"
 #include "dropmenu.h"
 #include "prefapi.h"
+#include "xp_ncent.h"
 #include "rdfliner.h"
 #include "urlbar.h"
 
@@ -308,7 +309,7 @@ void CRDFToolbarButton::DrawPicturesAndTextMode(HDC hDC, CRect rect)
 	{
 		CRDFToolbar* theToolbar = (CRDFToolbar*)GetParent();
 		void* data;
-		HT_GetNodeData(HT_TopNode(theToolbar->GetHTView()), gNavCenter->toolbarBitmapPosition, HT_COLUMN_STRING, &data);
+		HT_GetTemplateData(HT_TopNode(theToolbar->GetHTView()), gNavCenter->toolbarBitmapPosition, HT_COLUMN_STRING, &data);
 		if (data)
 		{
 			CString position((char*)data);
@@ -329,7 +330,7 @@ void CRDFToolbarButton::DrawPicturesMode(HDC hDC, CRect rect)
 	{
 		CRDFToolbar* theToolbar = (CRDFToolbar*)GetParent();
 		void* data;
-		HT_GetNodeData(HT_TopNode(theToolbar->GetHTView()), gNavCenter->toolbarBitmapPosition, HT_COLUMN_STRING, &data);
+		HT_GetTemplateData(HT_TopNode(theToolbar->GetHTView()), gNavCenter->toolbarBitmapPosition, HT_COLUMN_STRING, &data);
 		if (data)
 		{
 			CString position((char*)data);
@@ -384,7 +385,7 @@ CSize CRDFToolbarButton::GetButtonSizeFromChars(CString s, int c)
 		{
 			CRDFToolbar* theToolbar = (CRDFToolbar*)GetParent();
 			void* data;
-			HT_GetNodeData(HT_TopNode(theToolbar->GetHTView()), gNavCenter->toolbarBitmapPosition, HT_COLUMN_STRING, &data);
+			HT_GetTemplateData(HT_TopNode(theToolbar->GetHTView()), gNavCenter->toolbarBitmapPosition, HT_COLUMN_STRING, &data);
 			if (data)
 			{
 				CString position((char*)data);
@@ -406,7 +407,7 @@ void CRDFToolbarButton::GetPicturesAndTextModeTextRect(CRect &rect)
 	{
 		CRDFToolbar* theToolbar = (CRDFToolbar*)GetParent();
 		void* data;
-		HT_GetNodeData(HT_TopNode(theToolbar->GetHTView()), gNavCenter->toolbarBitmapPosition, HT_COLUMN_STRING, &data);
+		HT_GetTemplateData(HT_TopNode(theToolbar->GetHTView()), gNavCenter->toolbarBitmapPosition, HT_COLUMN_STRING, &data);
 		if (data)
 		{
 			CString position((char*)data);
@@ -427,7 +428,7 @@ void CRDFToolbarButton::GetPicturesModeTextRect(CRect &rect)
 	{
 		CRDFToolbar* theToolbar = (CRDFToolbar*)GetParent();
 		void* data;
-		HT_GetNodeData(HT_TopNode(theToolbar->GetHTView()), gNavCenter->toolbarBitmapPosition, HT_COLUMN_STRING, &data);
+		HT_GetTemplateData(HT_TopNode(theToolbar->GetHTView()), gNavCenter->toolbarBitmapPosition, HT_COLUMN_STRING, &data);
 		if (data)
 		{
 			CString position((char*)data);
@@ -881,24 +882,29 @@ void CRDFToolbarButton::FillInMenu(HT_Resource theNode)
 	MapWindowPoints(frame, &point, 1);
 */
 
-	if (!m_bDepressed)
+	CRDFToolbarHolder* pHolder = (CRDFToolbarHolder*)(GetParent()->GetParent()->GetParent());
+	CRDFToolbarButton* pOldButton = pHolder->GetCurrentButton();
+	if (pOldButton != NULL)
+	{
+		pOldButton->GetTreeView()->DeleteNavCenter();
+	}
+	pHolder->SetCurrentButton(NULL);
+	
+	if (!m_bDepressed && pOldButton != this)
 	{
 		CPoint point = RequestMenuPlacement();
 		m_pTreeView = CNSNavFrame::CreateFramedRDFViewFromResource(NULL, point.x, point.y, 300, 500, m_Node);
-		SetDepressed(TRUE);
-		m_pTreeView->SetRDFButton(this);
-		CRDFToolbarHolder* pHolder = (CRDFToolbarHolder*)(GetParent()->GetParent()->GetParent());
-		if (pHolder->GetCurrentButton() != NULL)
+		CRDFOutliner* pOutliner = (CRDFOutliner*)(m_pTreeView->GetContentView()->GetOutlinerParent()->GetOutliner());
+		if (pOutliner->IsPopup() || XP_IsNavCenterDocked(m_pTreeView->GetHTPane()))
 		{
-			pHolder->GetCurrentButton()->GetTreeView()->DeleteNavCenter();
+			SetDepressed(TRUE);
+			m_pTreeView->SetRDFButton(this);
 			pHolder->SetCurrentButton(this);
 		}
-	}
-	else
-	{
-		// Delete NavCenter.
-		m_pTreeView->DeleteNavCenter();
-		m_pTreeView = NULL;
+		else
+		{
+			m_pTreeView = NULL;
+		}
 	}
 
 	/*
@@ -1436,7 +1442,7 @@ CRDFToolbar::CRDFToolbar(HT_View htView, int nMaxButtons, int nToolbarStyle, int
 	m_nNumberOfRows = 1;
 	m_nRowHeight = LINKTOOLBARHEIGHT;
 	void* data;
-	HT_GetNodeData(HT_TopNode(GetHTView()), gNavCenter->toolbarBitmapPosition, HT_COLUMN_STRING, &data);
+	HT_GetTemplateData(HT_TopNode(GetHTView()), gNavCenter->toolbarBitmapPosition, HT_COLUMN_STRING, &data);
 	if (data)
 	{
 		CString position((char*)data);
@@ -1485,7 +1491,7 @@ int CRDFToolbar::Create(CWnd *pParent)
 	BOOL fixedSize = FALSE;
 
 	void* data;
-	HT_GetNodeData(topNode, gNavCenter->toolbarButtonsFixedSize, HT_COLUMN_STRING, &data);
+	HT_GetTemplateData(topNode, gNavCenter->toolbarButtonsFixedSize, HT_COLUMN_STRING, &data);
 	if (data)
 	{
 		CString answer((char*)data);
@@ -1527,10 +1533,10 @@ void CRDFToolbar::AddHTButton(HT_Resource item)
 
 	// Fetch the button's tooltip and status bar text.
 	void* data;
-	HT_GetNodeData(item, gNavCenter->buttonTooltipText, HT_COLUMN_STRING, &data);
+	HT_GetTemplateData(item, gNavCenter->buttonTooltipText, HT_COLUMN_STRING, &data);
 	if (data)
 		tooltipText = (char*)data;
-	HT_GetNodeData(item, gNavCenter->buttonStatusbarText, HT_COLUMN_STRING, &data);
+	HT_GetTemplateData(item, gNavCenter->buttonStatusbarText, HT_COLUMN_STRING, &data);
 	if (data)
 		statusBarText = (char*)data;
 
@@ -2137,6 +2143,26 @@ int CRDFToolbar::GetRowWidth()
 	return m_nWidth - RIGHT_TOOLBAR_MARGIN - LEFT_TOOLBAR_MARGIN - SPACE_BETWEEN_BUTTONS;
 }
 
+void CRDFToolbar::ComputeColorsForSeparators()
+{
+	// background color
+	HT_Resource top = HT_TopNode(GetHTView());
+	void* data;
+	COLORREF backgroundColor = GetSysColor(COLOR_BTNFACE);
+	COLORREF shadowColor = backgroundColor;
+	COLORREF highlightColor = backgroundColor;
+
+	HT_GetTemplateData(top, gNavCenter->viewBGColor, HT_COLUMN_STRING, &data);
+	if (data)
+	{
+		WFE_ParseColor((char*)data, &backgroundColor);
+	}
+	Compute3DColors(backgroundColor, highlightColor, shadowColor);
+	SetBackgroundColor(backgroundColor);
+	SetHighlightColor(highlightColor);
+	SetShadowColor(shadowColor);
+}
+
 void CRDFToolbar::OnPaint(void)
 {
 	CRect rcClient, updateRect, buttonRect, intersectRect;
@@ -2153,7 +2179,7 @@ void CRDFToolbar::OnPaint(void)
 	COLORREF shadowColor = backgroundColor;
 	COLORREF highlightColor = backgroundColor;
 
-	HT_GetNodeData(top, gNavCenter->viewBGColor, HT_COLUMN_STRING, &data);
+	HT_GetTemplateData(top, gNavCenter->viewBGColor, HT_COLUMN_STRING, &data);
 	if (data)
 	{
 		WFE_ParseColor((char*)data, &backgroundColor);
@@ -2172,7 +2198,7 @@ void CRDFToolbar::OnPaint(void)
 
 	// Foreground color
 	COLORREF foregroundColor = GetSysColor(COLOR_BTNTEXT);
-	HT_GetNodeData(top, gNavCenter->viewFGColor, HT_COLUMN_STRING, &data);
+	HT_GetTemplateData(top, gNavCenter->viewFGColor, HT_COLUMN_STRING, &data);
 	if (data)
 	{
 		WFE_ParseColor((char*)data, &foregroundColor);
@@ -2181,7 +2207,7 @@ void CRDFToolbar::OnPaint(void)
 
 	// Rollover color
 	COLORREF rolloverColor = RGB(0, 0, 255);
-	HT_GetNodeData(top, gNavCenter->viewRolloverColor, HT_COLUMN_STRING, &data);
+	HT_GetTemplateData(top, gNavCenter->viewRolloverColor, HT_COLUMN_STRING, &data);
 	if (data)
 	{
 		WFE_ParseColor((char*)data, &rolloverColor);
@@ -2190,7 +2216,7 @@ void CRDFToolbar::OnPaint(void)
 
 	// Pressed color
 	COLORREF pressedColor = RGB(0, 0, 128);
-	HT_GetNodeData(top, gNavCenter->viewPressedColor, HT_COLUMN_STRING, &data);
+	HT_GetTemplateData(top, gNavCenter->viewPressedColor, HT_COLUMN_STRING, &data);
 	if (data)
 	{
 		WFE_ParseColor((char*)data, &pressedColor);
@@ -2199,7 +2225,7 @@ void CRDFToolbar::OnPaint(void)
 
 	// Disabled color
 	COLORREF disabledColor = -1;
-	HT_GetNodeData(top, gNavCenter->viewDisabledColor, HT_COLUMN_STRING, &data);
+	HT_GetTemplateData(top, gNavCenter->viewDisabledColor, HT_COLUMN_STRING, &data);
 	if (data)
 	{
 		WFE_ParseColor((char*)data, &disabledColor);
@@ -2208,7 +2234,7 @@ void CRDFToolbar::OnPaint(void)
 
 	// Background image URL
 	CString backgroundImageURL = "";
-	HT_GetNodeData(top, gNavCenter->viewBGURL, HT_COLUMN_STRING, &data);
+	HT_GetTemplateData(top, gNavCenter->viewBGURL, HT_COLUMN_STRING, &data);
 	if (data)
 		backgroundImageURL = (char*)data;
 	SetBackgroundImage(NULL); // Clear out the BG image.
@@ -2372,10 +2398,10 @@ void CRDFDragToolbar::OnPaint(void)
 		CPoint bitmapStart(!m_bMouseInTab ? 0 : OPEN_BUTTON_WIDTH ,HTAB_TOP_START);
 
 		//First do top of the tab
+		FEU_TransBlt( pDC->m_hDC, 0, 0, OPEN_BUTTON_WIDTH, HTAB_TOP_HEIGHT,
+	  			 pBmpDC->m_hDC, bitmapStart.x, bitmapStart.y,WFE_GetUIPalette(NULL), 
+				  GetSysColor(COLOR_BTNFACE));   
 
-		::BitBlt(pDC->m_hDC, 0, 0, OPEN_BUTTON_WIDTH, HTAB_TOP_HEIGHT,
-	  			 pBmpDC->m_hDC, bitmapStart.x, bitmapStart.y, SRCCOPY);
-	
 		//Now do the middle portion of the tab
 		int y = HTAB_TOP_HEIGHT;
 
@@ -2383,8 +2409,9 @@ void CRDFDragToolbar::OnPaint(void)
 
 		while(y < rect.bottom - HTAB_BOTTOM_HEIGHT)
 		{
-			::BitBlt(pDC->m_hDC, 0, y, OPEN_BUTTON_WIDTH, HTAB_MIDDLE_HEIGHT,
-		  			 pBmpDC->m_hDC, bitmapStart.x, bitmapStart.y, SRCCOPY);
+			FEU_TransBlt(pDC->m_hDC, 0, y, OPEN_BUTTON_WIDTH, HTAB_MIDDLE_HEIGHT,
+		  			 pBmpDC->m_hDC, bitmapStart.x, bitmapStart.y, WFE_GetUIPalette(NULL), 
+				  GetSysColor(COLOR_BTNFACE));
 
 			y += HTAB_MIDDLE_HEIGHT;
 
@@ -2395,8 +2422,9 @@ void CRDFDragToolbar::OnPaint(void)
 
 		bitmapStart.y = HTAB_BOTTOM_START;
 
-		::BitBlt(pDC->m_hDC, 0, y, OPEN_BUTTON_WIDTH, HTAB_BOTTOM_HEIGHT,
-	  			 pBmpDC->m_hDC, bitmapStart.x, bitmapStart.y, SRCCOPY);
+		FEU_TransBlt(pDC->m_hDC, 0, y, OPEN_BUTTON_WIDTH, HTAB_BOTTOM_HEIGHT,
+	  			 pBmpDC->m_hDC, bitmapStart.x, bitmapStart.y, WFE_GetUIPalette(NULL), 
+				  GetSysColor(COLOR_BTNFACE));
 
 
 		// Cleanup
@@ -2441,6 +2469,51 @@ CRDFToolbarHolder::~CRDFToolbarHolder()
 		m_ToolbarPane = NULL;
 		HT_DeletePane(oldPane);
 	}
+}
+
+void CRDFToolbarHolder::DrawSeparator(int i, HDC hDC, int nStartX, int nEndX, int nStartY, 
+								 BOOL bToolbarSeparator)
+{
+	// Get the toolbar and force it to compute its colors.
+	COLORREF highlightColor = ::GetSysColor(COLOR_BTNHIGHLIGHT);
+	COLORREF shadowColor = ::GetSysColor(COLOR_BTNSHADOW);
+
+	if (m_nNumOpen >= i)
+	{
+		CRDFToolbar* pToolbar = (CRDFToolbar*)(m_pToolbarArray[i]->GetToolbar());
+		pToolbar->ComputeColorsForSeparators();
+		
+		shadowColor = pToolbar->GetShadowColor();
+		highlightColor = pToolbar->GetHighlightColor();
+	}
+
+	HPEN pen = ::CreatePen(PS_SOLID, 1, shadowColor);
+	HPEN pOldPen = (HPEN)::SelectObject(hDC, pen);
+
+	::MoveToEx(hDC, nStartX, nStartY, NULL);
+	::LineTo(hDC, nEndX, nStartY);
+
+	::SelectObject(hDC, pOldPen);
+
+	::DeleteObject(pen);
+
+	if(bToolbarSeparator)
+	{       
+		pen = ::CreatePen(PS_SOLID, 1, highlightColor);	
+	}
+	else
+	{
+		pen = ::CreatePen(PS_SOLID, 1, highlightColor);
+	}
+
+	::SelectObject(hDC, pen);
+
+	::MoveToEx(hDC, nStartX, nStartY + 1, NULL);
+
+	::LineTo(hDC, nEndX, nStartY + 1);
+
+	::SelectObject(hDC, pOldPen);
+	::DeleteObject(pen);
 }
 
 void CRDFToolbarHolder::InitializeRDFData()

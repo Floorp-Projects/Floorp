@@ -528,10 +528,10 @@ CNSNavFrame *CNSGenFrame::GetDockedNavCenter()
     CNSNavFrame *pRetval = NULL;
     
     //  Do we have one?
-    CWnd *pWnd = GetDescendantWindow(NC_IDW_SELECTOR);
-    if(pWnd && pWnd->IsKindOf(RUNTIME_CLASS(CSelector))) {
-        CSelector *pSelector = (CSelector *)pWnd;
-        CFrameWnd *pFrame = pSelector->GetParentFrame();
+    CWnd *pWnd = GetDescendantWindow(NC_IDW_OUTLINER);
+    if(pWnd) 
+	{
+        CFrameWnd *pFrame = pWnd->GetParentFrame();
         if(pFrame && pFrame->IsKindOf(RUNTIME_CLASS(CNSNavFrame))) {
             pRetval = (CNSNavFrame *)pFrame;
         }

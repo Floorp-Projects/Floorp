@@ -20,7 +20,7 @@
 #include "netsvw.h"
 #include "xp_ncent.h"
 #include "pain.h"
-#include "navcntr.h"
+#include "navfram.h"
 
 CPaneCX *wfe_CreateNavCenterHTMLPain(HWND hParent)
 {

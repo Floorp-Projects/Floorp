@@ -1395,11 +1395,11 @@ void CCustToolbar::OnPaint()
 
 	if(m_nNumOpen != 0)
 	{
-		DrawSeparator(hMemDC, rcClient.left, rcClient.right, nStartY, TRUE);
+		DrawSeparator(0, hMemDC, rcClient.left, rcClient.right, nStartY, TRUE);
 	}
 	else
 	{
-		DrawSeparator(hMemDC, rcClient.left, rcClient.right, nStartY, FALSE);
+		DrawSeparator(0, hMemDC, rcClient.left, rcClient.right, nStartY, FALSE);
 	}
 	nStartY += SPACE_BETWEEN_TOOLBARS;
 
@@ -1423,11 +1423,11 @@ void CCustToolbar::OnPaint()
 
 				if(nNumOpenButtons != m_nNumOpen)
 				{
-					DrawSeparator(hMemDC, rcClient.left, rcClient.right, nStartY, TRUE);
+					DrawSeparator(i, hMemDC, rcClient.left, rcClient.right, nStartY, TRUE);
 				}
 				else
 				{
-					DrawSeparator(hMemDC, rcClient.left, rcClient.right, nStartY, FALSE);
+					DrawSeparator(i, hMemDC, rcClient.left, rcClient.right, nStartY, FALSE);
 				}
 
 				nStartY +=SPACE_BETWEEN_TOOLBARS;
@@ -1464,7 +1464,7 @@ void CCustToolbar::OnPaint()
 	}
 
 	if(m_bBottomBorder)
-		DrawSeparator(hMemDC, rcClient.left, rcClient.right, rcClient.bottom - 2, TRUE);
+		DrawSeparator(0, hMemDC, rcClient.left, rcClient.right, rcClient.bottom - 2, TRUE);
 	
 	::BitBlt(hSrcDC, 0, 0, rcClient.Width(), rcClient.Height(), hMemDC, 0, 0,
 					SRCCOPY);
@@ -1804,7 +1804,7 @@ BOOL CCustToolbar::PointInClosedTab(CPoint point, HTAB_BITMAP tabType, int nNumC
 
 // if bToolbarSeparator is true then draw a grey line and a white line.  If it's false then it is the
 // separator between the last toolbar and the closed buttons so draw a grey line and a black line
-void CCustToolbar::DrawSeparator(HDC hDC, int nStartX, int nEndX, int nStartY, BOOL bToolbarSeparator)
+void CCustToolbar::DrawSeparator(int i, HDC hDC, int nStartX, int nEndX, int nStartY, BOOL bToolbarSeparator)
 {
 
 	HPEN pen = ::CreatePen(PS_SOLID, 1, GetSysColor(COLOR_BTNSHADOW));

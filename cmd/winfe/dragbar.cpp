@@ -157,9 +157,6 @@ void CDragBar::DrawFocusRect(BOOL bRemoveRect)
 
 void CDragBar::OnLButtonDown(UINT nFlags, CPoint point) 
 {
-	if (!m_dockedFrame->IsTreeVisible())
-		return;
-
 	//	Capture mouse events.
 	InitLoop();
 
@@ -193,7 +190,7 @@ void CDragBar::OnLButtonDown(UINT nFlags, CPoint point)
 
 void CDragBar::OnRButtonDown(UINT nFlags, CPoint point)
 {
-	m_dockedFrame->CollapseWindow();
+	//m_dockedFrame->CollapseWindow();
 }
 
 void CDragBar::EndDrag()
@@ -236,9 +233,7 @@ void CDragBar::Move( CPoint point )
 void CDragBar::OnMouseMove( UINT nFlags, CPoint point )
 {
 	if(m_bDragging == TRUE)	return;
-	if (!m_dockedFrame->IsTreeVisible())  // Cannot drag when tree is closed.
-		return;
-
+	
 	static HCURSOR hcurLast = NULL;
 	static HCURSOR hcurDestroy = NULL;
 	static UINT uLastCursorID = 0;
@@ -352,15 +347,8 @@ void CDragBar::CalcClientArea(RECT* lpRectClient)
 	lpRectClient->right = layout.rect.right;
 	lpRectClient->top = layout.rect.top;
 	lpRectClient->bottom = layout.rect.bottom;
-	if (dockStyle == DOCKSTYLE_VERTLEFT) 
+	if (dockStyle == DOCKSTYLE_DOCKEDLEFT) 
 	   lpRectClient->left += MIN_CATEGORY_WIDTH;
-	else if (dockStyle == DOCKSTYLE_VERTRIGHT) 
-	   lpRectClient->right -= MIN_CATEGORY_WIDTH;
-	else if (dockStyle == DOCKSTYLE_HORZTOP) 
-	   lpRectClient->top += MIN_CATEGORY_HEIGHT;
-	else if (dockStyle == DOCKSTYLE_HORZBOTTOM) 
-	   lpRectClient->bottom -= MIN_CATEGORY_HEIGHT;
-
 }
 
 BOOL CDragBar::Track()

@@ -22,10 +22,19 @@
 #ifndef NAVFRAM
 #define NAVFRAM
 #include "navbar.h"
-#include "navcntr.h"
-#include "navcontv.h"
 #include "genframe.h"
 #include "dragbar.h"   
+#include "rdfliner.h"
+
+//  Window Control IDs for NavCenter.
+//  Improves findability.
+#define NC_IDW(ID) (AFX_IDW_PANE_LAST - (ID))
+#define NC_IDW_MISCVIEW NC_IDW(0)
+#define NC_IDW_SELECTOR NC_IDW(1)
+#define NC_IDW_OUTLINER NC_IDW(2)
+#define NC_IDW_HTMLPANE NC_IDW(3)
+#define NC_IDW_DRAGEDGE NC_IDW(5)
+#define NC_IDW_NAVMENU NC_IDW(6)
 
 #ifdef XP_WIN32
 #define EXPAND_STEP			10
@@ -43,20 +52,18 @@
 #define NAVFRAME_WIDTH 300
 #define NAVFRAME_HEIGHT 480
 #define DOCKSTYLE_FLOATING		0
-#define DOCKSTYLE_VERTLEFT		1
-#define DOCKSTYLE_VERTRIGHT		2
-#define DOCKSTYLE_HORZTOP		3
-#define DOCKSTYLE_HORZBOTTOM	4
+#define DOCKSTYLE_DOCKEDLEFT	1
+#define DOCKSTYLE_POPUP			2
 
 // This is a CFrameWnd window that knows how to dock and float.  This 
 // frame comtains 2 panes.  The left pane is for the selector.  The right pane is to
 // display the content for the selector.
-static CString gPrefDockOrientation = "browser.navcenter.dockstyle";
 static CString gPrefDockPercentage = "browser.navcenter.docked.tree.width";
 static CString gPrefFloatRect = "browser.navcenter.floating.rect";
-static CString gPrefSelectorVisible = "browser.navcenter.docked.selector.visible";
 
 BOOL nsModifyStyle(HWND hWnd, int nStyleOffset,DWORD dwRemove, DWORD dwAdd, UINT nFlags = 0);
+
+class CRDFContentView;
 
 class CNSNavFrame : public CFrameWnd
 {
@@ -102,23 +109,22 @@ public:
 	void ForceFloat(BOOL show = TRUE);
 	int32 GetDockStyle() { return m_dwOverDockStyle;}
 	void SetDockStyle(int32 d) { m_dwOverDockStyle = d; }
-	void ExpandWindow();
-	void CollapseWindow();
 
 	void ComputeDockingSizes();
 	void UpdateTitleBar(HT_View pView);
 
+	CRect GetFloatRect() { return m_rectFloat; }
+
 public:
     HT_Pane GetHTPane();
-	CNavTitleBar* GetNavTitleBar() { return m_pNavTitle; }
-	BOOL IsTreeVisible() { return TRUE; } //m_pSelector->IsTreeVisible(); }
 	
 	void SetHTNode(HT_Resource node) { m_Node = node; }
 	void SetRDFButton(CRDFToolbarButton* pButton) { m_pButton = pButton; }
 	CRDFToolbarButton* GetRDFButton() { return m_pButton; }
 
+	void UnhookFromButton();
+
 protected:  // control bar embedded members
-	friend class CSelector;
 	BOOL		m_bDragging;		// TRUE if we are dragging this FRAME
 	BOOL		m_bDitherLast;		// 
 	int32		m_dwOverDockStyle;	// The orientation 
@@ -141,15 +147,12 @@ protected:  // control bar embedded members
 	int m_DockWidth, m_DockHeight, m_DockSize;  // Used to determine docking sizes.
 	int m_nXOffset, m_nYOffset;
 
-	CSelector* m_pSelector;		// the selector pane.
 	CRDFContentView *m_nsContent;	// the content pane.
-	CNavTitleBar* m_pNavTitle;	// the embedded title strip.
-
+	
 // Generated message map functions
 protected:
 	void CNSNavFrame::CalcClientArea(RECT* lpRectClient, CNSGenFrame * pParentFrame = NULL);
 	void CNSNavFrame::DockFrame(CNSGenFrame* pParent, short dockStyle);
-	afx_msg void OnPaint();
 	//{{AFX_MSG(CNSNavFrame)
 	virtual BOOL OnCreateClient(LPCREATESTRUCT lpcs, CCreateContext* pContext);
 	afx_msg int OnCreate(LPCREATESTRUCT lpCreateStruct);

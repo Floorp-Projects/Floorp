@@ -208,7 +208,7 @@ CRDFOutliner::CRDFOutliner (CRDFOutlinerParent* theParent, HT_Pane thePane, HT_V
 :COutliner(FALSE), m_pAncestor(NULL), m_Pane(thePane), m_View(theView), m_Parent(theParent), m_EditField(NULL),
 m_nSortType(HT_NO_SORT), m_nSortColumn(HT_NO_SORT), m_hEditTimer(0), m_hDragRectTimer(0),
 m_bNeedToClear(FALSE), m_nSelectedColumn(0), m_bDoubleClick(FALSE), m_Node(NULL), 
-m_bDataSourceInWindow(FALSE), m_NavTitleBar(NULL), m_bInNavigationMode(FALSE), m_bIsPopup(FALSE)
+m_bDataSourceInWindow(FALSE), m_NavTitleBar(NULL), m_bIsPopup(FALSE)
 {
     ApiApiPtr(api);
     m_pUnkUserImage = api->CreateClassInstance(APICLASS_IMAGEMAP,NULL,(APISIGNATURE)IDB_BOOKMARKS);
@@ -246,7 +246,11 @@ void CRDFOutliner::OnSize( UINT nType, int cx, int cy )
 
 void CRDFOutliner::HandleEvent(HT_Notification ns, HT_Resource n, HT_Event whatHappened) 
 {
-	if (whatHappened == HT_EVENT_NODE_OPENCLOSE_CHANGED)
+	if (whatHappened == HT_EVENT_VIEW_MODECHANGED)
+	{
+		ToggleModes();
+	}
+	else if (whatHappened == HT_EVENT_NODE_OPENCLOSE_CHANGED)
 	{
 		FinishExpansion(HT_GetNodeIndex(m_View, n));
 	}
@@ -909,7 +913,7 @@ void CRDFOutliner::SelectItem(int iSel,int mode,UINT flags)
 			if (m_bNeedToClear)
 			{
 				HT_SetSelection(m_Node);
-				if (m_bNeedToEdit && !m_bDoubleClick && !m_bUseSingleClick)
+				if (m_bNeedToEdit && !m_bDoubleClick && m_bUseInlineEditing)
 				{
 
 					CRDFCommandMap& map = m_Parent->GetColumnCommandMap(); 
@@ -1002,14 +1006,26 @@ BOOL CRDFOutliner::IsDocked()
 	return theFrame->IsChild(this);
 }
 
-void CRDFOutliner::SetNavigationMode(BOOL mode)
+void CRDFOutliner::ToggleModes()
 {
-	m_bInNavigationMode = mode;
-	((CRDFOutlinerParent*)GetParent())->EnableHeaders(!m_bInNavigationMode);
+	void* data;
+
+	// Whether or not to show column headers
+	HT_GetTemplateData(HT_TopNode(m_View), gNavCenter->showColumnHeaders, HT_COLUMN_STRING, &data);
+	BOOL show = TRUE;
+	if (data)
+	{
+		char* answer = (char*)data;
+		show = stricmp(answer, "No");
+	}
+
+	((CRDFOutlinerParent*)GetParent())->EnableHeaders(show);
 
 	// Need to invalidate the title strip.
 	CRDFContentView* pView = (CRDFContentView*)(GetParent()->GetParent());
 	pView->GetTitleBar()->Invalidate();
+
+	Invalidate();
 }
 
 void CRDFOutliner::OnSelDblClk(int iLine)
@@ -1786,57 +1802,28 @@ void CRDFOutliner::OnPaint()
 	void* data;
 	PRBool foundData = FALSE;
 	
-	if (m_bInNavigationMode)
-	{
-		// Options for navigation mode.
-		// Inherit colors from the toolbar if we point to a button.
-		CFrameWnd* pFrameWnd = GetParentFrame();
-		if (pFrameWnd->IsKindOf(RUNTIME_CLASS(CNSNavFrame)))
-		{
-			// We have a parent navframe that could POTENTIALLY be attached to a button.
-			CNSNavFrame* pNav = (CNSNavFrame*)pFrameWnd;
-			if (pNav->GetRDFButton() != NULL)
-			{
-				// There's a button from which to inherit colors.
-				CRDFToolbar* pToolbar = (CRDFToolbar*)(pNav->GetRDFButton()->GetParent());
-				m_ForegroundColor = m_SortForegroundColor = pToolbar->GetForegroundColor();
-				m_BackgroundColor = m_SortBackgroundColor = pToolbar->GetBackgroundColor();
-			}
-		}
-		else
-		{
-			// Use some defaults
-			m_ForegroundColor = m_SortForegroundColor = RGB(0,0,0);
-			m_BackgroundColor = m_SortBackgroundColor = RGB(240,240,240);
-		}
-
-		m_bHasPipes = FALSE;
-		m_bDrawDividers = FALSE;
-		m_bUseSingleClick = TRUE;
-	}
-	else
-	{
-		// Options for management mode.
-		m_ForegroundColor = RGB(0,0,0);
-		m_BackgroundColor = RGB(240,240,240);
-		m_SortBackgroundColor = RGB(224,224,224);
-		m_SortForegroundColor = RGB(0,0,0);
-		m_bHasPipes = TRUE;
-		m_bDrawDividers = TRUE;
-		m_bUseSingleClick = FALSE;
-	}
+	// Options for management mode style by default.
+	m_ForegroundColor = RGB(0,0,0);
+	m_BackgroundColor = RGB(240,240,240);
+	m_SortBackgroundColor = RGB(224,224,224);
+	m_SortForegroundColor = RGB(0,0,0);
+	m_bHasPipes = TRUE;
+	m_bDrawDividers = TRUE;
+	m_bUseSingleClick = FALSE;
+	m_bUseInlineEditing = TRUE;
+	m_bUseSelection = TRUE;
 
 	// Foreground color
-	HT_GetNodeData(top, gNavCenter->viewFGColor, HT_COLUMN_STRING, &data);
+	HT_GetTemplateData(top, gNavCenter->viewFGColor, HT_COLUMN_STRING, &data);
 	if (data)
 		WFE_ParseColor((char*)data, &m_ForegroundColor);
 	
 	// background color
-	HT_GetNodeData(top, gNavCenter->viewBGColor, HT_COLUMN_STRING, &data);
+	HT_GetTemplateData(top, gNavCenter->viewBGColor, HT_COLUMN_STRING, &data);
 	if (data)
 		WFE_ParseColor((char*)data, &m_BackgroundColor);
 	
-	HT_GetNodeData(top, gNavCenter->showTreeConnections, HT_COLUMN_STRING, &data);
+	HT_GetTemplateData(top, gNavCenter->showTreeConnections, HT_COLUMN_STRING, &data);
 	if (data)
 	{
 		CString answer((char*)data);
@@ -1845,12 +1832,12 @@ void CRDFOutliner::OnPaint()
 	}
 	
 	// Sort foreground color
-	HT_GetNodeData(top, gNavCenter->sortColumnFGColor, HT_COLUMN_STRING, &data);
+	HT_GetTemplateData(top, gNavCenter->sortColumnFGColor, HT_COLUMN_STRING, &data);
 	if (data)
 		WFE_ParseColor((char*)data, &m_SortForegroundColor);
 	
 	// Sort background color
-	HT_GetNodeData(top, gNavCenter->sortColumnBGColor, HT_COLUMN_STRING, &data);
+	HT_GetTemplateData(top, gNavCenter->sortColumnBGColor, HT_COLUMN_STRING, &data);
 	if (data)
 		WFE_ParseColor((char*)data, &m_SortBackgroundColor);
 	
@@ -1859,31 +1846,31 @@ void CRDFOutliner::OnPaint()
 	Compute3DColors(m_BackgroundColor, m_HighlightColor, m_ShadowColor);
 
 	// Selection foreground color
-	HT_GetNodeData(top, gNavCenter->selectionFGColor, HT_COLUMN_STRING, &data);
+	HT_GetTemplateData(top, gNavCenter->selectionFGColor, HT_COLUMN_STRING, &data);
 	if (data)
 		WFE_ParseColor((char*)data, &m_SelectionForegroundColor);
 	else m_SelectionForegroundColor = RGB(255,255,255);
 
 	// Selection background color
-	HT_GetNodeData(top, gNavCenter->selectionBGColor, HT_COLUMN_STRING, &data);
+	HT_GetTemplateData(top, gNavCenter->selectionBGColor, HT_COLUMN_STRING, &data);
 	if (data)
 		WFE_ParseColor((char*)data, &m_SelectionBackgroundColor);
 	else m_SelectionBackgroundColor = RGB(0,0,128);
 
 	// Background image URL
 	m_BackgroundImageURL = "";
-	HT_GetNodeData(top, gNavCenter->viewBGURL, HT_COLUMN_STRING, &data);
+	HT_GetTemplateData(top, gNavCenter->viewBGURL, HT_COLUMN_STRING, &data);
 	if (data)
 		m_BackgroundImageURL = (char*)data;
 	m_pBackgroundImage = NULL; // Clear out the BG image.
 
 	// Divider color
 	m_DividerColor = RGB(255,255,255);
-	HT_GetNodeData(top, gNavCenter->dividerColor, HT_COLUMN_STRING, &data);
+	HT_GetTemplateData(top, gNavCenter->dividerColor, HT_COLUMN_STRING, &data);
 	if (data)
 		WFE_ParseColor((char*)data, &m_DividerColor);
 	
-	HT_GetNodeData(top, gNavCenter->showDivider, HT_COLUMN_STRING, &data);
+	HT_GetTemplateData(top, gNavCenter->showDivider, HT_COLUMN_STRING, &data);
 	if (data)
 	{
 		CString answer((char*)data);
@@ -1891,6 +1878,30 @@ void CRDFOutliner::OnPaint()
 			m_bDrawDividers = FALSE;
 	}
 	
+	HT_GetTemplateData(top, gNavCenter->useSelection, HT_COLUMN_STRING, &data);
+	if (data)
+	{
+		CString answer((char*)data);
+		if (answer.GetLength() > 0 && (answer.GetAt(0) == 'n' || answer.GetAt(0) == 'N'))
+			m_bUseSelection = FALSE;
+	}
+	
+	HT_GetTemplateData(top, gNavCenter->useInlineEditing, HT_COLUMN_STRING, &data);
+	if (data)
+	{
+		CString answer((char*)data);
+		if (answer.GetLength() > 0 && (answer.GetAt(0) == 'n' || answer.GetAt(0) == 'N'))
+			m_bUseInlineEditing = FALSE;
+	}
+	
+	HT_GetTemplateData(top, gNavCenter->useSingleClick, HT_COLUMN_STRING, &data);
+	if (data)
+	{
+		CString answer((char*)data);
+		if (answer.GetLength() > 0 && (answer.GetAt(0) == 'Y' || answer.GetAt(0) == 'y'))
+			m_bUseSingleClick = TRUE;
+	}
+
 	HPALETTE pOldPalette = NULL;
 	if (sysInfo.m_iBitsPerPixel < 16 && (::GetDeviceCaps(pdc.m_hDC, RASTERCAPS) & RC_PALETTE))
 	{
@@ -3560,20 +3571,20 @@ void CRDFOutlinerParent::OnPaint ( )
 
 	// Foreground color
 	void* data;
-	HT_GetNodeData(top, gNavCenter->columnHeaderFGColor, HT_COLUMN_STRING, &data);
+	HT_GetTemplateData(top, gNavCenter->columnHeaderFGColor, HT_COLUMN_STRING, &data);
 	if (data)
 		WFE_ParseColor((char*)data, &m_ForegroundColor);
 	else m_ForegroundColor = RGB(0,0,0);
 
 	// background color
-	HT_GetNodeData(top, gNavCenter->columnHeaderBGColor, HT_COLUMN_STRING, &data);
+	HT_GetTemplateData(top, gNavCenter->columnHeaderBGColor, HT_COLUMN_STRING, &data);
 	if (data)
 		WFE_ParseColor((char*)data, &m_BackgroundColor);
 	else m_BackgroundColor = RGB(192,192,192);
 
 	// Background image URL
 	m_BackgroundImageURL = "";
-	HT_GetNodeData(top, gNavCenter->columnHeaderBGURL, HT_COLUMN_STRING, &data);
+	HT_GetTemplateData(top, gNavCenter->columnHeaderBGURL, HT_COLUMN_STRING, &data);
 	if (data)
 		m_BackgroundImageURL = (char*)data;
 	m_pBackgroundImage = NULL; // Clear out the BG image.
@@ -3772,6 +3783,8 @@ void CRDFOutlinerParent::CreateColumns ( void )
 	((CRDFOutliner*)m_pOutliner)->OnSize(0, rcClient.right, rcClient.bottom);
 
 	Invalidate();
+
+	theOutliner->ToggleModes();
 }
 
 BOOL CRDFOutlinerParent::RenderData( int iColumn, CRect & rect, CDC &dc, LPCTSTR text )
@@ -3975,8 +3988,8 @@ void CRDFContentView::OnSize ( UINT nType, int cx, int cy )
 	CView::OnSize ( nType, cx, cy );
 	if (IsWindow(m_pOutlinerParent->m_hWnd)) 
 	{
-		m_pNavBar->MoveWindow(0,0, cx, NAVBAR_HEIGHT);
-		m_pOutlinerParent->MoveWindow ( 0, NAVBAR_HEIGHT, cx, cy-NAVBAR_HEIGHT);
+		m_pNavBar->MoveWindow(0,0, cx, NAVBAR_TOTAL_HEIGHT);
+		m_pOutlinerParent->MoveWindow ( 0, NAVBAR_TOTAL_HEIGHT, cx, cy-NAVBAR_TOTAL_HEIGHT);
 	}
 }
 
@@ -4028,9 +4041,6 @@ CRDFContentView* CRDFContentView::DisplayRDFTreeFromPane(CWnd* pParent, int xPos
 	// Retrieve the RDF Outliner.
 	CRDFOutliner* pOutliner = (CRDFOutliner*)newParent->GetOutliner();
 	
-	// Set to navigation mode.
-	pOutliner->SetNavigationMode(TRUE);
-
 	// Set our FE data to be the outliner.
 	HT_SetViewFEData(HT_GetSelectedView(thePane), pOutliner);
     

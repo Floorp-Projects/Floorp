@@ -20,7 +20,6 @@
 
 #include "stdafx.h"
 #include "navbar.h"
-#include "navcntr.h"
 #include "navfram.h"
 #include "usertlbr.h"
 #include "dropmenu.h"
@@ -63,10 +62,6 @@ void CNavTitleBar::OnPaint( )
 	CPaintDC dc(this);
 	CRect rect;
 	GetClientRect(&rect);
-	
-//	if (m_bHasFocus)
-//		m_pMenuButton->SetCustomColors(::GetSysColor(COLOR_CAPTIONTEXT), ::GetSysColor(COLOR_ACTIVECAPTION));
-//	else m_pMenuButton->SetCustomColors(::GetSysColor(COLOR_INACTIVECAPTIONTEXT), ::GetSysColor(COLOR_INACTIVECAPTION));
 
 	// Read in all the properties
 	if (!m_View) return;
@@ -75,55 +70,48 @@ void CNavTitleBar::OnPaint( )
 	void* data;
 	PRBool foundData = FALSE;
 	
-	CRDFOutliner* pOutliner = (CRDFOutliner*)HT_GetViewFEData(m_View);
-	if (pOutliner->InNavigationMode())
-	{
-		m_ForegroundColor = pOutliner->GetForegroundColor();
-		m_BackgroundColor = pOutliner->GetBackgroundColor();
-		m_BackgroundImageURL = pOutliner->GetBackgroundImageURL();
-	}
-	else
-	{
-		m_ForegroundColor = RGB(255,255,255);
-		m_BackgroundColor = RGB(64,64,64);
-		m_BackgroundImageURL = "";
-	}
+	m_ForegroundColor = RGB(0,0,0);
+	m_BackgroundColor = RGB(192,192,192);
+	m_BackgroundImageURL = "";
 
+	m_ControlStripForegroundColor = RGB(255,255,255);
+	m_ControlStripBackgroundColor = RGB(64,64,64);
+	m_ControlStripBackgroundImageURL = "";
+
+	// Control strip colors
 	// Foreground color
-	HT_GetNodeData(topNode, gNavCenter->titleBarFGColor, HT_COLUMN_STRING, &data);
+	HT_GetTemplateData(topNode, gNavCenter->controlStripFGColor, HT_COLUMN_STRING, &data);
 	if (data)
 		WFE_ParseColor((char*)data, &m_ForegroundColor);
 	
 	// background color
-	HT_GetNodeData(topNode, gNavCenter->titleBarBGColor, HT_COLUMN_STRING, &data);
+	HT_GetTemplateData(topNode, gNavCenter->controlStripBGColor, HT_COLUMN_STRING, &data);
 	if (data)
 		WFE_ParseColor((char*)data, &m_BackgroundColor);
 	
 	// Background image URL
-	HT_GetNodeData(topNode, gNavCenter->titleBarBGURL, HT_COLUMN_STRING, &data);
+	HT_GetTemplateData(topNode, gNavCenter->controlStripBGURL, HT_COLUMN_STRING, &data);
+	if (data)
+		m_ControlStripBackgroundImageURL = (char*)data;
+	m_pControlStripBackgroundImage = NULL; // Clear out the BG image.
+
+	// Main Title strip colors
+	// Foreground color
+	HT_GetTemplateData(topNode, gNavCenter->titleBarFGColor, HT_COLUMN_STRING, &data);
+	if (data)
+		WFE_ParseColor((char*)data, &m_ForegroundColor);
+	
+	// background color
+	HT_GetTemplateData(topNode, gNavCenter->titleBarBGColor, HT_COLUMN_STRING, &data);
+	if (data)
+		WFE_ParseColor((char*)data, &m_BackgroundColor);
+	
+	// Background image URL
+	HT_GetTemplateData(topNode, gNavCenter->titleBarBGURL, HT_COLUMN_STRING, &data);
 	if (data)
 		m_BackgroundImageURL = (char*)data;
 	m_pBackgroundImage = NULL; // Clear out the BG image.
 	
-	CBrush faceBrush(m_BackgroundColor); // (::GetSysColor(m_bHasFocus? COLOR_ACTIVECAPTION : COLOR_INACTIVECAPTION));
-
-	if (m_BackgroundImageURL != "")
-	{
-		// There's a background that needs to be drawn.
-		m_pBackgroundImage = LookupImage(m_BackgroundImageURL, NULL);
-	}
-
-	if (m_pBackgroundImage && m_pBackgroundImage->FrameSuccessfullyLoaded())
-	{
-		// Draw the strip of the background image that should be placed
-		// underneath this line.
-		PaintBackground(dc.m_hDC, rect, m_pBackgroundImage);
-	}
-	else
-	{
-		dc.FillRect(&rect, &faceBrush);
-	}
-
 	HPALETTE pOldPalette = NULL;
 	if (sysInfo.m_iBitsPerPixel < 16 && (::GetDeviceCaps(dc.m_hDC, RASTERCAPS) & RC_PALETTE))
 	{
@@ -135,10 +123,56 @@ void CNavTitleBar::OnPaint( )
 		// Find the nearest match in our palette for our colors.
 		ResolveToPaletteColor(m_BackgroundColor, hPalette);
 		ResolveToPaletteColor(m_ForegroundColor, hPalette);
+		ResolveToPaletteColor(m_ControlStripBackgroundColor, hPalette);
+		ResolveToPaletteColor(m_ControlStripForegroundColor, hPalette);
 	}
 
-	// Draw the text.
-	//HFONT font = WFE_GetUIFont(dc.m_hDC);
+	CRect controlStripRect(rect);
+	CRect titleBarRect(rect);
+	controlStripRect.bottom = NAVBAR_CONTROLSTRIP_HEIGHT;
+	titleBarRect.top = NAVBAR_CONTROLSTRIP_HEIGHT;
+	titleBarRect.bottom = NAVBAR_TOTAL_HEIGHT;
+
+	CBrush faceBrush(m_BackgroundColor); 
+	if (m_BackgroundImageURL != "")
+	{
+		// There's a background that needs to be drawn.
+		m_pBackgroundImage = LookupImage(m_BackgroundImageURL, NULL);
+	}
+
+	if (m_pBackgroundImage && m_pBackgroundImage->FrameSuccessfullyLoaded())
+	{
+		// Draw the strip of the background image that should be placed
+		// underneath this line.
+		PaintBackground(dc.m_hDC, titleBarRect, m_pBackgroundImage);
+	}
+	else
+	{
+		dc.FillRect(&titleBarRect, &faceBrush);
+	}
+
+	CBrush controlStripFaceBrush(m_ControlStripBackgroundColor); 
+	if (m_ControlStripBackgroundImageURL != "")
+	{
+		// There's a background that needs to be drawn.
+		m_pControlStripBackgroundImage = LookupImage(m_ControlStripBackgroundImageURL, NULL);
+	}
+
+	if (m_pControlStripBackgroundImage && m_pControlStripBackgroundImage->FrameSuccessfullyLoaded())
+	{
+		// Draw the strip of the background image that should be placed
+		// underneath this line.
+		PaintBackground(dc.m_hDC, controlStripRect, m_pControlStripBackgroundImage);
+	}
+	else
+	{
+		dc.FillRect(&controlStripRect, &controlStripFaceBrush);
+	}
+
+	
+	// Draw the title strip text.
+	CString titleText(HT_GetNodeName(HT_TopNode(m_View)));
+
 	CFont arialFont;
 	LOGFONT lf;
 	XP_MEMSET(&lf,0,sizeof(LOGFONT));
@@ -149,19 +183,19 @@ void CNavTitleBar::OnPaint( )
 	HFONT font = (HFONT)arialFont.GetSafeHandle();
 
 	HFONT hOldFont = (HFONT)::SelectObject(dc.m_hDC, font);
-	CRect sizeRect(0,0,10000,0);
+	CRect sizeRect(titleBarRect);
 	int height = ::DrawText(dc.m_hDC, titleText, titleText.GetLength(), &sizeRect, DT_CALCRECT | DT_WORDBREAK);
 	
-	if (sizeRect.Width() > rect.Width() - NAVBAR_CLOSEBOX - 9)
+	if (sizeRect.Width() > rect.Width() - 9)
 	{
 		// Don't write into the close box area!
-		sizeRect.right = sizeRect.left + (rect.Width() - NAVBAR_CLOSEBOX - 9);
+		sizeRect.right = sizeRect.left + (rect.Width() - 9);
 	}
 	sizeRect.left += 4;	// indent slightly horizontally
 	sizeRect.right += 4;
 
 	// Center the text vertically.
-	sizeRect.top = (rect.Height() - height) / 2;
+	sizeRect.top = NAVBAR_CONTROLSTRIP_HEIGHT + (titleBarRect.Height() - height) / 2;
 	sizeRect.bottom = sizeRect.top + height;
 
 	// Draw the text
@@ -173,23 +207,77 @@ void CNavTitleBar::OnPaint( )
 	oldColor = dc.SetTextColor(m_ForegroundColor);
 	dc.DrawText((LPCSTR)titleText, -1, &sizeRect, nFormat);
 
+	// Draw the control strip text.
+	CString modeText("details");
+	HT_GetTemplateData(topNode, gNavCenter->controlStripModeText, HT_COLUMN_STRING, &data);
+	if (data)
+		modeText = (char*)data;
+
+	CFont smallArialFont;
+	LOGFONT lf2;
+	XP_MEMSET(&lf2,0,sizeof(LOGFONT));
+	lf2.lfHeight = 90;
+	lf2.lfWeight = 400;
+	strcpy(lf2.lfFaceName, "Arial");
+	smallArialFont.CreatePointFontIndirect(&lf2, &dc);
+	HFONT smallFont = (HFONT)smallArialFont.GetSafeHandle();
+
+	::SelectObject(dc.m_hDC, smallFont);
+	CRect modeRect(controlStripRect);
+	int smallHeight = ::DrawText(dc.m_hDC, modeText, modeText.GetLength(), &modeRect, DT_CALCRECT | DT_WORDBREAK);
+	
+	if (modeRect.Width() > rect.Width() - 9)
+	{
+		// Don't write into the close box area!
+		modeRect.right = modeRect.left + (rect.Width() - 9);
+	}
+	modeRect.left += 4;	// indent slightly horizontally
+	modeRect.right += 4;
+
+	// Center the text vertically.
+	modeRect.top = (controlStripRect.Height() - smallHeight) / 2;
+	modeRect.bottom = modeRect.top + smallHeight;
+
+	// Cache the rect
+	cachedModeRect.top = 0;
+	cachedModeRect.left = 0;
+	cachedModeRect.bottom = NAVBAR_CONTROLSTRIP_HEIGHT;
+	cachedModeRect.right = modeRect.right;
+
+	// Now compute the close box rect.
+	CString closeText("close");
+	HT_GetTemplateData(topNode, gNavCenter->controlStripCloseText, HT_COLUMN_STRING, &data);
+	if (data)
+		closeText = (char*)data;
+
+	CRect closeRect(controlStripRect);
+	::DrawText(dc.m_hDC, closeText, closeText.GetLength(), &closeRect, DT_CALCRECT | DT_WORDBREAK);
+	
+	int closeWidth = closeRect.Width();
+
+	closeRect.right = rect.right - 4;
+	closeRect.left = closeRect.right - closeWidth;
+
+	// Center the text vertically.
+	closeRect.top = modeRect.top;
+	closeRect.bottom = modeRect.bottom;
+
+	// Cache the rect
+	cachedCloseRect.top = 0;
+	cachedCloseRect.left = 0;
+	cachedCloseRect.bottom = NAVBAR_CONTROLSTRIP_HEIGHT;
+	cachedCloseRect.right = closeRect.right;
+
+	// Draw the text
+	dc.SetTextColor(m_ControlStripForegroundColor);
+	dc.DrawText((LPCSTR)closeText, -1, &closeRect, nFormat);
+	dc.DrawText((LPCSTR)modeText, -1, &modeRect, nFormat);
+
 	dc.SetTextColor(oldColor);
 	dc.SetBkMode(nOldBkMode);
-	
-	int top = rect.top + (rect.Height() - NAVBAR_CLOSEBOX)/2;
-	int left = rect.right - (3*(NAVBAR_CLOSEBOX+1)) - 4;
-	
-	HDC hDC = dc.m_hDC;
-	CRDFImage* pImage = LookupImage("http://rdf.netscape.com/rdf/closebox.gif", NULL);
-	DrawRDFImage(pImage, left, top, 16, 16, hDC, m_BackgroundColor);
+	::SelectObject(dc.m_hDC, hOldFont);
 
-	left += NAVBAR_CLOSEBOX+1;
-	pImage = LookupImage("http://rdf.netscape.com/rdf/closebox.gif", NULL);
-	DrawRDFImage(pImage, left, top, 16, 16, hDC, m_BackgroundColor);
-
-	left += NAVBAR_CLOSEBOX+1;
-	pImage = LookupImage("http://rdf.netscape.com/rdf/closebox.gif", NULL);
-	DrawRDFImage(pImage, left, top, 16, 16, hDC, m_BackgroundColor);
+	
 }
 
 int CNavTitleBar::OnCreate(LPCREATESTRUCT lpCreateStruct)
@@ -199,38 +287,19 @@ int CNavTitleBar::OnCreate(LPCREATESTRUCT lpCreateStruct)
 
 void CNavTitleBar::OnLButtonDown (UINT nFlags, CPoint point )
 {
-	// Called when the user clicks on the menu bar.  Start a drag or collapse the view.
-	CRect rect;
-	GetClientRect(&rect);
+	// Called when the user clicks on us.  Start a drag, switch modes, or close the view.
 	
-	int left = rect.right - NAVBAR_CLOSEBOX - 5;
-	int right = left + NAVBAR_CLOSEBOX;
-	int top = rect.top + (rect.Height() - NAVBAR_CLOSEBOX)/2;
-	int bottom = top + NAVBAR_CLOSEBOX;
-
-	CRect closeBoxRect(left, top, right, bottom);
-	left -= NAVBAR_CLOSEBOX;
-	right -= NAVBAR_CLOSEBOX;
-	CRect modeBoxRect(left, top, right, bottom);
-	left -= NAVBAR_CLOSEBOX;
-	right -= NAVBAR_CLOSEBOX;
-	CRect sortBoxRect(left, top, right, bottom);
-
-	if (closeBoxRect.PtInRect(point))
+	if (cachedCloseRect.PtInRect(point))
 	{
 		// Destroy the window.
 		CFrameWnd* pFrameWnd = GetParentFrame();
 		if (pFrameWnd->IsKindOf(RUNTIME_CLASS(CNSNavFrame)))
 			((CNSNavFrame*)pFrameWnd)->DeleteNavCenter();
 	}
-	else if (modeBoxRect.PtInRect(point))
+	else if (cachedModeRect.PtInRect(point))
 	{
 		CRDFOutliner* pOutliner = (CRDFOutliner*)HT_GetViewFEData(m_View);
-		pOutliner->SetNavigationMode(!pOutliner->InNavigationMode());
-	}
-	else if (sortBoxRect.PtInRect(point))
-	{
-		
+		HT_ToggleTreeMode(m_View);
 	}
 	else
 	{
@@ -259,6 +328,9 @@ void CNavTitleBar::OnMouseMove(UINT nFlags, CPoint point)
 			navFrameParent->StartDrag(point);
 		}
 	}
+	else
+	{
+	}
 }
 
 void CNavTitleBar::OnLButtonUp(UINT nFlags, CPoint point)
@@ -276,15 +348,6 @@ void CNavTitleBar::OnSize( UINT nType, int cx, int cy )
 
 void CNavTitleBar::SetHTView(HT_View view)
 {
-	titleText = "";
 	m_View = view;
-	if (view)
-	{
-		HT_Resource r = HT_TopNode(view);
-		if (r)
-		{
-			titleText = HT_GetNodeName(r);
-		}
-		Invalidate();
-	}
+	Invalidate();
 }

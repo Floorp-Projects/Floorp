@@ -1333,8 +1333,6 @@ $(OUTDIR)\mozilla.dep: $(DEPTH)\cmd\winfe\mkfiles32\mozilla.mak
 	$(DEPTH)\cmd\winfe\mucwiz.cpp  
 	$(DEPTH)\cmd\winfe\mucproc.cpp 
 	$(DEPTH)\cmd\winfe\navbar.cpp 
-	$(DEPTH)\cmd\winfe\navcntr.cpp  
-	$(DEPTH)\cmd\winfe\navcontv.cpp  
 	$(DEPTH)\cmd\winfe\navfram.cpp  
 	$(DEPTH)\cmd\winfe\navigate.cpp   
 	$(DEPTH)\cmd\winfe\ncapiurl.cpp 

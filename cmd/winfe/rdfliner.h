@@ -127,18 +127,15 @@ private:
 	CString m_BackgroundImageURL;			// The URL of the background image.
 	CRDFImage* m_pBackgroundImage;	// The image for the background.
 
-	BOOL m_bBarColor;				// The color of the tree connections.
-
-	BOOL m_bUseSingleClick;			// Single click vs. double click
-	BOOL m_bUseHyperbolicScaling;	// Whether or not to use hyperbolic scaling.
+	COLORREF m_BarColor;				// The color of the tree connections.
 
 	CString m_WindowTarget;			// The target window for this tree view.  If "", then the
 									// last active window is assumed.
 
-	BOOL m_bInNavigationMode;	// The tree view has two different sets of defaults that
-								// it will assume if no value is defined for a specific
-								// property.  These defaults are based on whether or not
-								// the user is browsing or managing data.
+	BOOL m_bUseSingleClick;			// Are we single click?
+	BOOL m_bUseInlineEditing;		// Do we allow inline editing?
+	BOOL m_bUseSelection;			// Do we allow selection?
+
 	BOOL m_bIsPopup;			// Whether or not we're a popup tree.
 
 public:
@@ -157,10 +154,9 @@ public:
 	int GetSortColumn() { return m_nSortColumn; }
 	int GetSortType() { return m_nSortType; }
 	BOOL IsPopup() { return m_bIsPopup; }
-	BOOL InNavigationMode() { return m_bInNavigationMode; }
-
+	
 	// Setters
-	void SetNavigationMode(BOOL inMode);
+	void ToggleModes();
 	void SetIsPopup(BOOL isPopup) { m_bIsPopup = isPopup; }
 
 	void SetHTView(HT_View v); 
