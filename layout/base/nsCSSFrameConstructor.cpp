@@ -2746,7 +2746,7 @@ nsCSSFrameConstructor::ConstructRadioControlFrame(nsIPresShell*        aPresShel
 	if (GetFormElementRenderingMode(aPresContext, eWidgetType_Radio) == eWidgetRendering_Gfx)
 		rv = NS_NewGfxRadioControlFrame(aPresShell, &aNewFrame);
 	else
-    rv = NS_NewNativeRadioControlFrame(aPresShell, &aNewFrame);
+    NS_ASSERTION(0, "We longer support native widgets");
 
   if (NS_FAILED(rv)) {
     aNewFrame = nsnull;
@@ -2757,7 +2757,7 @@ nsCSSFrameConstructor::ConstructRadioControlFrame(nsIPresShell*        aPresShel
   aPresContext->ResolvePseudoStyleContextFor(aContent, nsHTMLAtoms::radioPseudo, 
     aStyleContext, PR_FALSE, getter_AddRefs(radioStyle));
   nsIRadioControlFrame* radio = nsnull;
-  if (NS_SUCCEEDED(aNewFrame->QueryInterface(kIRadioControlFrameIID, (void**)&radio))) {
+  if (aNewFrame != nsnull && NS_SUCCEEDED(aNewFrame->QueryInterface(kIRadioControlFrameIID, (void**)&radio))) {
     radio->SetRadioButtonFaceStyleContext(radioStyle);
     NS_RELEASE(radio);
   }
@@ -2773,7 +2773,8 @@ nsCSSFrameConstructor::ConstructCheckboxControlFrame(nsIPresShell*        aPresS
 	if (GetFormElementRenderingMode(aPresContext, eWidgetType_Checkbox) == eWidgetRendering_Gfx)
 		rv = NS_NewGfxCheckboxControlFrame(aPresShell, &aNewFrame);
 	else
-    rv = NS_NewNativeCheckboxControlFrame(aPresShell, &aNewFrame);
+    NS_ASSERTION(0, "We longer support native widgets");
+
 
   if (NS_FAILED(rv)) {
     aNewFrame = nsnull;
@@ -2843,7 +2844,7 @@ nsCSSFrameConstructor::ConstructButtonControlFrame(nsIPresShell*        aPresShe
 	if (GetFormElementRenderingMode(aPresContext, eWidgetType_Button) == eWidgetRendering_Gfx)
 		rv = NS_NewGfxButtonControlFrame(aPresShell, &aNewFrame);
 	else
-    rv = NS_NewNativeButtonControlFrame(aPresShell, &aNewFrame);
+    NS_ASSERTION(0, "We longer support native widgets");
 
   if (NS_FAILED(rv)) {
     aNewFrame = nsnull;
@@ -2889,7 +2890,7 @@ nsCSSFrameConstructor::ConstructTextControlFrame(nsIPresShell*        aPresShell
   }
   if (!aNewFrame)
   {
-    rv = NS_NewNativeTextControlFrame(aPresShell, &aNewFrame);
+    NS_ASSERTION(0, "We longer support native widgets");
   }
   return rv;
 }
@@ -3162,12 +3163,12 @@ nsCSSFrameConstructor::ConstructSelectFrame(nsIPresShell*        aPresShell,
 #endif
       }
     } else {
-      rv = NS_NewNativeSelectControlFrame(aPresShell, &aNewFrame);
+      NS_ASSERTION(0, "We longer support native widgets");
     }
   }
   else {
     // Not frame based. Use a SelectFrame which creates a native widget.
-     rv = NS_NewNativeSelectControlFrame(aPresShell, &aNewFrame);
+    NS_ASSERTION(0, "We longer support native widgets");
   }
 
   return rv;
@@ -3577,7 +3578,7 @@ nsCSSFrameConstructor::ConstructFrameByTag(nsIPresShell*        aPresShell,
         rv = NS_NewObjectFrame(aPresShell, &newFrame);
       }
       else if (nsHTMLAtoms::fieldset == aTag) {
-//#define DO_NEWFIELDSET
+#define DO_NEWFIELDSET
 #ifdef DO_NEWFIELDSET
         rv = ConstructFieldSetFrame(aPresShell, aPresContext, aState, aContent, aParentFrame,
                                     aTag, aStyleContext, newFrame,  processChildren,
