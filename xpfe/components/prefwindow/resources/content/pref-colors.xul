@@ -37,7 +37,7 @@
 
   <script language="JavaScript">
   <![CDATA[
-    _elementIDs = ["foregroundText", "background", "unvisitedLinks", "visitedLinks", "browserUnderlineAnchors", "browserUseDocumentColors"];
+    var _elementIDs = ["foregroundText", "background", "unvisitedLinks", "visitedLinks", "browserUnderlineAnchors", "browserUseDocumentColors"];
   ]]>
   </script>
   
