@@ -33,7 +33,7 @@ nsXPCWrappedJSClass::GetNewOrUsedClass(XPCContext* xpcc,
                                        REFNSIID aIID)
 {
     IID2WrappedJSClassMap* map;
-    nsXPCWrappedJSClass* clazz = NULL;
+    nsXPCWrappedJSClass* clazz = nsnull;
 
     NS_PRECONDITION(xpcc, "bad param");
 
@@ -48,7 +48,7 @@ nsXPCWrappedJSClass::GetNewOrUsedClass(XPCContext* xpcc,
     else
     {
         nsIInterfaceInfoManager* iimgr;
-        if(NULL != (iimgr = nsXPConnect::GetInterfaceInfoManager()))
+        if(nsnull != (iimgr = nsXPConnect::GetInterfaceInfoManager()))
         {
             nsIInterfaceInfo* info;
             if(NS_SUCCEEDED(iimgr->GetInfoForIID(&aIID, &info)))
@@ -57,7 +57,7 @@ nsXPCWrappedJSClass::GetNewOrUsedClass(XPCContext* xpcc,
                 {
                     clazz = new nsXPCWrappedJSClass(xpcc, aIID, info);
                     if(!clazz->mDescriptors)
-                        NS_RELEASE(clazz);  // sets clazz to NULL
+                        NS_RELEASE(clazz);  // sets clazz to nsnull
                 }
                 NS_RELEASE(info);
             }
@@ -73,7 +73,7 @@ nsXPCWrappedJSClass::nsXPCWrappedJSClass(XPCContext* xpcc, REFNSIID aIID,
       mInfo(aInfo),
       mName(nsnull),
       mIID(aIID),
-      mDescriptors(NULL)
+      mDescriptors(nsnull)
 {
     NS_ADDREF(mInfo);
 
@@ -88,7 +88,7 @@ nsXPCWrappedJSClass::nsXPCWrappedJSClass(XPCContext* xpcc, REFNSIID aIID,
         if(methodCount)
         {
             int wordCount = (methodCount/32)+1;
-            if(NULL != (mDescriptors = new uint32[wordCount]))
+            if(nsnull != (mDescriptors = new uint32[wordCount]))
             {
                 int i;
                 // init flags to 0;
@@ -103,7 +103,7 @@ nsXPCWrappedJSClass::nsXPCWrappedJSClass(XPCContext* xpcc, REFNSIID aIID,
                     else
                     {
                         delete [] mDescriptors;
-                        mDescriptors = NULL;
+                        mDescriptors = nsnull;
                         break;
                     }
                 }
@@ -137,7 +137,7 @@ nsXPCWrappedJSClass::CallQueryInterfaceOnJSObject(JSObject* jsobj, REFNSIID aIID
     JSBool success = JS_FALSE;
 
     if(!cx)
-        return NULL;
+        return nsnull;
 
     id = xpc_NewIDObject(cx, aIID);
 
@@ -145,7 +145,7 @@ nsXPCWrappedJSClass::CallQueryInterfaceOnJSObject(JSObject* jsobj, REFNSIID aIID
     {
         jsval e;
         JSBool hadExpection = JS_GetPendingException(cx, &e);
-        JSErrorReporter older = JS_SetErrorReporter(cx, NULL);
+        JSErrorReporter older = JS_SetErrorReporter(cx, nsnull);
         jsval args[1] = {OBJECT_TO_JSVAL(id)};
         success = JS_CallFunctionName(cx, jsobj, XPC_QUERY_INTERFACE_STR,
                                       1, args, &retval);
@@ -158,7 +158,7 @@ nsXPCWrappedJSClass::CallQueryInterfaceOnJSObject(JSObject* jsobj, REFNSIID aIID
             JS_ClearPendingException(cx);
     }
 
-    return success ? retObj : NULL;
+    return success ? retObj : nsnull;
 }
 
 /***************************************************************************/
@@ -183,7 +183,7 @@ public:
 
     static void* GetSingleton()
     {
-        static WrappedJSIdentity* singleton = NULL;
+        static WrappedJSIdentity* singleton = nsnull;
         if(!singleton)
             singleton = new WrappedJSIdentity();
         return (void*) singleton;
@@ -213,7 +213,7 @@ nsXPCWrappedJSClass::DelegatedQueryInterface(nsXPCWrappedJS* self,
     // This includes checking for nsISupports and the iid of self.
     // And it also checks for other wrappers that have been constructed
     // for this object.
-    if(NULL != (sibling = self->Find(aIID)))
+    if(nsnull != (sibling = self->Find(aIID)))
     {
         NS_ADDREF(sibling);
         *aInstancePtr = (void*) sibling;
@@ -272,7 +272,7 @@ nsXPCWrappedJSClass::DelegatedQueryInterface(nsXPCWrappedJS* self,
 
     // else...
     // no can do
-    *aInstancePtr = NULL;
+    *aInstancePtr = nsnull;
     return NS_NOINTERFACE;
 }
 
@@ -300,7 +300,7 @@ nsXPCWrappedJSClass::CallMethod(nsXPCWrappedJS* wrapper, uint16 methodIndex,
                                 nsXPTCMiniVariant* params)
 {
     jsval* stackbase;
-    jsval* sp = NULL;
+    jsval* sp = nsnull;
     uint8 i;
     uint8 argc=0;
     jsval result;
@@ -310,7 +310,7 @@ nsXPCWrappedJSClass::CallMethod(nsXPCWrappedJS* wrapper, uint16 methodIndex,
     JSBool success;
     JSContext* cx = GetJSContext();
     JSBool InConversionsDone = JS_FALSE;
-    nsID* conditional_iid = NULL;
+    nsID* conditional_iid = nsnull;
     JSBool iidIsOwned = JS_FALSE;
     JSObject* obj = wrapper->GetJSObject();
     const char* name = info->GetName();
@@ -339,7 +339,7 @@ nsXPCWrappedJSClass::CallMethod(nsXPCWrappedJS* wrapper, uint16 methodIndex,
     // but is a good optimization compared to calling JS_AddRoot for each item.
 
     // setup stack
-    if(NULL == (stackbase = sp = js_AllocStack(cx, argc + 2, &mark)))
+    if(nsnull == (stackbase = sp = js_AllocStack(cx, argc + 2, &mark)))
     {
         retval = NS_ERROR_OUT_OF_MEMORY;
         goto pre_call_clean_up;
@@ -402,7 +402,7 @@ nsXPCWrappedJSClass::CallMethod(nsXPCWrappedJS* wrapper, uint16 methodIndex,
             }
 
             if(!XPCConvert::NativeData2JS(cx, &val, &pv->val, type,
-                                          conditional_iid, NULL))
+                                          conditional_iid, nsnull))
             {
                 goto pre_call_clean_up;
             }
@@ -413,7 +413,7 @@ nsXPCWrappedJSClass::CallMethod(nsXPCWrappedJS* wrapper, uint16 methodIndex,
                     nsAllocator::Free((void*)conditional_iid);
                     iidIsOwned = JS_FALSE;
                 }
-                conditional_iid = NULL;
+                conditional_iid = nsnull;
             }
         }
 
@@ -452,22 +452,22 @@ pre_call_clean_up:
             if(param.IsIn())
             {
                 nsISupports** pp;
-                if((NULL != (pp = (nsISupports**) params[i].val.p)) &&
-                    NULL != *pp)
+                if((nsnull != (pp = (nsISupports**) params[i].val.p)) &&
+                    nsnull != *pp)
                 {
                     (*pp)->Release();
-                    *pp = NULL;
+                    *pp = nsnull;
                 }
             }
         }
         else
         {
             void** pp;
-            if((NULL != (pp = (void**) params[i].val.p)) && NULL != *pp)
+            if((nsnull != (pp = (void**) params[i].val.p)) && nsnull != *pp)
             {
                 if(param.IsIn())
                     nsAllocator::Free(*pp);
-                *pp = NULL;
+                *pp = nsnull;
             }
         }
     }
@@ -479,7 +479,7 @@ pre_call_clean_up:
             nsAllocator::Free((void*)conditional_iid);
             iidIsOwned = JS_FALSE;
         }
-        conditional_iid = NULL;
+        conditional_iid = nsnull;
     }
 
     if(!InConversionsDone)
@@ -592,7 +592,7 @@ pre_call_clean_up:
                 useAllocator = JS_TRUE;
 
             if(!XPCConvert::JSData2Native(cx, &pv->val, val, type,
-                                        useAllocator, conditional_iid, NULL))
+                                        useAllocator, conditional_iid, nsnull))
                 break;
 
             if(conditional_iid)
@@ -602,7 +602,7 @@ pre_call_clean_up:
                     nsAllocator::Free((void*)conditional_iid);
                     iidIsOwned = JS_FALSE;
                 }
-                conditional_iid = NULL;
+                conditional_iid = nsnull;
             }
         }
     }
@@ -660,13 +660,13 @@ nsXPCWrappedJSClass::GetInterfaceName()
 JSObject*
 nsXPCWrappedJSClass::NewOutObject()
 {
-    return JS_NewObject(GetJSContext(), &WrappedJSOutArg_class, NULL, NULL);
+    return JS_NewObject(GetJSContext(), &WrappedJSOutArg_class, nsnull, nsnull);
 }
 
 void
 nsXPCWrappedJSClass::XPCContextBeingDestroyed()
 {
-    mXPCContext = NULL;
+    mXPCContext = nsnull;
 }
 
 NS_IMETHODIMP

@@ -33,7 +33,7 @@ nsXPCWrappedNative::AddRef(void)
 
     if(1 == ++mRefCnt && mRoot != this)
         NS_ADDREF(mRoot);
-    else if(2 == mRefCnt && NULL != (xpcc = mClass->GetXPCContext()))
+    else if(2 == mRefCnt && nsnull != (xpcc = mClass->GetXPCContext()))
         JS_AddNamedRoot(xpcc->GetJSContext(), &mJSObj,
                         "nsXPCWrappedNative::mJSObj");
     return mRefCnt;
@@ -53,7 +53,7 @@ nsXPCWrappedNative::Release(void)
     if(1 == mRefCnt)
     {
         XPCContext* xpcc;
-        if(NULL != (xpcc = mClass->GetXPCContext()))
+        if(nsnull != (xpcc = mClass->GetXPCContext()))
             JS_RemoveRoot(xpcc->GetJSContext(), &mJSObj);
     }
     return mRefCnt;
@@ -64,13 +64,13 @@ nsXPCWrappedNative::JSObjectFinalized(JSContext *cx, JSObject *obj)
 {
     nsIXPCScriptable* ds;
     nsIXPCScriptable* as;
-    if(NULL != (ds = GetDynamicScriptable()) &&
-       NULL != (as = GetArbitraryScriptable()))
+    if(nsnull != (ds = GetDynamicScriptable()) &&
+       nsnull != (as = GetArbitraryScriptable()))
         ds->Finalize(cx, obj, this, as);
 
     // pass through to the real JSObject finalization code
     JS_FinalizeStub(cx, obj);
-    mJSObj = NULL;
+    mJSObj = nsnull;
     Release();
 }
 
@@ -81,11 +81,11 @@ nsXPCWrappedNative::GetNewOrUsedWrapper(XPCContext* xpcc,
                                        REFNSIID aIID)
 {
     Native2WrappedNativeMap* map;
-    nsISupports* rootObj = NULL;
-    nsISupports* realObj = NULL;
+    nsISupports* rootObj = nsnull;
+    nsISupports* realObj = nsnull;
     nsXPCWrappedNative* root;
-    nsXPCWrappedNative* wrapper = NULL;
-    nsXPCWrappedNativeClass* clazz = NULL;
+    nsXPCWrappedNative* wrapper = nsnull;
+    nsXPCWrappedNativeClass* clazz = nsnull;
 
     NS_PRECONDITION(xpcc, "bad param");
     NS_PRECONDITION(aObj, "bad param");
@@ -94,7 +94,7 @@ nsXPCWrappedNative::GetNewOrUsedWrapper(XPCContext* xpcc,
     if(!map)
     {
         NS_ASSERTION(map,"bad map");
-        return NULL;
+        return nsnull;
     }
 
     // always find the native root
@@ -125,7 +125,7 @@ nsXPCWrappedNative::GetNewOrUsedWrapper(XPCContext* xpcc,
     // do the security check if necessary
 
     nsIXPCSecurityManager* sm;
-    if(NULL != (sm = xpcc->GetSecurityManager()) &&
+    if(nsnull != (sm = xpcc->GetSecurityManager()) &&
        (xpcc->GetSecurityManagerFlags() &
         nsIXPCSecurityManager::HOOK_CREATE_WRAPPER) &&
        NS_OK != sm->CanCreateWrapper(xpcc->GetJSContext(), aIID, realObj))
@@ -147,12 +147,12 @@ nsXPCWrappedNative::GetNewOrUsedWrapper(XPCContext* xpcc,
         if(rootObj == realObj)
         {
             // the root will do double duty as the interface wrapper
-            wrapper = root = new nsXPCWrappedNative(realObj, clazz, NULL);
+            wrapper = root = new nsXPCWrappedNative(realObj, clazz, nsnull);
             if(!wrapper)
                 goto return_wrapper;
             if(!wrapper->mJSObj)
             {
-                NS_RELEASE(wrapper);    // sets wrapper to NULL
+                NS_RELEASE(wrapper);    // sets wrapper to nsnull
                 goto return_wrapper;
             }
 
@@ -168,14 +168,14 @@ nsXPCWrappedNative::GetNewOrUsedWrapper(XPCContext* xpcc,
             if(!rootClazz)
                 goto return_wrapper;
 
-            root = new nsXPCWrappedNative(rootObj, rootClazz, NULL);
+            root = new nsXPCWrappedNative(rootObj, rootClazz, nsnull);
             NS_RELEASE(rootClazz);
 
             if(!root)
                 goto return_wrapper;
             if(!root->mJSObj)
             {
-                NS_RELEASE(root);    // sets root to NULL
+                NS_RELEASE(root);    // sets root to nsnull
                 goto return_wrapper;
             }
             map->Add(root);
@@ -193,7 +193,7 @@ nsXPCWrappedNative::GetNewOrUsedWrapper(XPCContext* xpcc,
             goto return_wrapper;
         if(!wrapper->mJSObj)
         {
-            NS_RELEASE(wrapper);    // sets wrapper to NULL
+            NS_RELEASE(wrapper);    // sets wrapper to nsnull
             goto return_wrapper;
         }
     }
@@ -224,13 +224,13 @@ nsXPCWrappedNative::nsXPCWrappedNative(nsISupports* aObj,
                                      nsXPCWrappedNativeClass* aClass,
                                      nsXPCWrappedNative* root)
     : mObj(aObj),
-      mJSObj(NULL),
+      mJSObj(nsnull),
       mClass(aClass),
-      mDynamicScriptable(NULL),
+      mDynamicScriptable(nsnull),
       mDynamicScriptableFlags(0),
       mRoot(root ? root : this),
-      mNext(NULL),
-      mFinalizeListener(NULL)
+      mNext(nsnull),
+      mFinalizeListener(nsnull)
 {
     NS_PRECONDITION(mObj, "bad object to wrap");
     NS_PRECONDITION(mClass, "bad class for wrapper");
@@ -259,9 +259,9 @@ nsXPCWrappedNative::nsXPCWrappedNative(nsISupports* aObj,
         nsIXPCScriptable* as;
         XPCContext* xpcc;
 
-        if(NULL != (ds = GetDynamicScriptable()) &&
-           NULL != (as = GetArbitraryScriptable()) &&
-           NULL != (xpcc = GetClass()->GetXPCContext()))
+        if(nsnull != (ds = GetDynamicScriptable()) &&
+           nsnull != (as = GetArbitraryScriptable()) &&
+           nsnull != (xpcc = GetClass()->GetXPCContext()))
         {
             ds->Create(xpcc->GetJSContext(), GetJSObject(), this, as);
             if(mRoot == this)
@@ -275,7 +275,7 @@ void
 nsXPCWrappedNative::XPCContextBeingDestroyed()
 {
     XPCContext* xpcc;
-    if(mJSObj && mClass && NULL != (xpcc = mClass->GetXPCContext()))
+    if(mJSObj && mClass && nsnull != (xpcc = mClass->GetXPCContext()))
         JS_RemoveRoot(xpcc->GetJSContext(), &mJSObj);
 }
 
@@ -308,9 +308,9 @@ nsXPCWrappedNative::~nsXPCWrappedNative()
         nsXPCWrappedNativeClass* clazz;
         XPCContext* xpcc;
         Native2WrappedNativeMap* map;
-        if(NULL != (clazz = GetClass()) &&
-           NULL != (xpcc = clazz->GetXPCContext()) &&
-           NULL != (map = xpcc->GetWrappedNativeMap()))
+        if(nsnull != (clazz = GetClass()) &&
+           nsnull != (xpcc = clazz->GetXPCContext()) &&
+           nsnull != (map = xpcc->GetWrappedNativeMap()))
         {
             map->Remove(this);
         }
@@ -339,9 +339,9 @@ nsXPCWrappedNative::Find(REFNSIID aIID)
         if(aIID.Equals(cur->GetIID()))
             return cur;
 
-    } while(NULL != (cur = cur->mNext));
+    } while(nsnull != (cur = cur->mNext));
 
-    return NULL;
+    return nsnull;
 }
 
 /***************************************************************************/
@@ -358,7 +358,7 @@ nsXPCWrappedNative::GetArbitraryScriptable(nsIXPCScriptable** p)
         return NS_OK;
     }
     // else...
-    *p = NULL;
+    *p = nsnull;
     return NS_ERROR_NO_INTERFACE;
 }
 
@@ -374,7 +374,7 @@ nsXPCWrappedNative::GetDynamicScriptable(nsIXPCScriptable** p)
         return NS_OK;
     }
     // else...
-    *p = NULL;
+    *p = nsnull;
     return NS_ERROR_NO_INTERFACE;
 }
 

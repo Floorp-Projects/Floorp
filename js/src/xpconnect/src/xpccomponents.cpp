@@ -99,11 +99,11 @@ nsXPCInterfaces::LookupProperty(JSContext *cx, JSObject *obj,
                                 JSBool* retval)
 {
     if(NS_SUCCEEDED(arbitrary->LookupProperty(cx, obj, id, objp, propp, wrapper,
-                                              NULL, retval)) && *retval)
+                                              nsnull, retval)) && *retval)
         return NS_OK;
     CacheDynaProp(cx, obj, id, wrapper, arbitrary);
     return arbitrary->LookupProperty(cx, obj, id, objp, propp, wrapper,
-                                     NULL, retval);
+                                     nsnull, retval);
 }
 
 NS_IMETHODIMP
@@ -114,12 +114,12 @@ nsXPCInterfaces::GetProperty(JSContext *cx, JSObject *obj,
                              JSBool* retval)
 {
     if(NS_SUCCEEDED(arbitrary->GetProperty(cx, obj, id, vp, wrapper,
-                                           NULL, retval)) && *retval &&
+                                           nsnull, retval)) && *retval &&
                                            *vp != JSVAL_VOID)
         return NS_OK;
 
     CacheDynaProp(cx, obj, id, wrapper, arbitrary);
-    return arbitrary->GetProperty(cx, obj, id, vp, wrapper, NULL, retval);
+    return arbitrary->GetProperty(cx, obj, id, vp, wrapper, nsnull, retval);
 }
 
 
@@ -219,7 +219,7 @@ nsXPCInterfaces::RealizeInterface(JSContext *cx, JSObject *obj,
         jsid id;
         JSString *jstrid;
 
-        if(NULL != (jstrid = JS_InternString(cx, iface_name)) &&
+        if(nsnull != (jstrid = JS_InternString(cx, iface_name)) &&
            JS_ValueToId(cx, STRING_TO_JSVAL(jstrid), &id))
         {
             CacheDynaProp(cx, obj, id, wrapper, arbitrary);
@@ -233,10 +233,10 @@ nsXPCInterfaces::CacheDynaProp(JSContext *cx, JSObject *obj, jsid id,
                                nsIXPCScriptable* arbitrary)
 {
     jsval idval;
-    const char* property_name = NULL;
+    const char* property_name = nsnull;
 
     if(JS_IdToValue(cx, id, &idval) && JSVAL_IS_STRING(idval) &&
-       (property_name = JS_GetStringBytes(JSVAL_TO_STRING(idval))) != NULL &&
+       (property_name = JS_GetStringBytes(JSVAL_TO_STRING(idval))) != nsnull &&
        property_name[0] != '{') // we only allow interfaces by name here
     {
         nsJSIID* nsid = nsJSIID::NewID(property_name);
@@ -256,7 +256,7 @@ nsXPCInterfaces::CacheDynaProp(JSContext *cx, JSObject *obj, jsid id,
                         JSBool retval;
                         jsval val = OBJECT_TO_JSVAL(idobj);
                         arbitrary->SetProperty(cx, obj, id, &val, wrapper,
-                                               NULL, &retval);
+                                               nsnull, &retval);
                     }
                     NS_RELEASE(nsid_wrapper);
                 }
@@ -352,11 +352,11 @@ nsXPCClasses::LookupProperty(JSContext *cx, JSObject *obj,
                              JSBool* retval)
 {
     if(NS_SUCCEEDED(arbitrary->LookupProperty(cx, obj, id, objp, propp, wrapper,
-                                              NULL, retval)) && *retval)
+                                              nsnull, retval)) && *retval)
         return NS_OK;
     CacheDynaProp(cx, obj, id, wrapper, arbitrary);
     return arbitrary->LookupProperty(cx, obj, id, objp, propp, wrapper,
-                                     NULL, retval);
+                                     nsnull, retval);
 }
 
 NS_IMETHODIMP
@@ -367,12 +367,12 @@ nsXPCClasses::GetProperty(JSContext *cx, JSObject *obj,
                           JSBool* retval)
 {
     if(NS_SUCCEEDED(arbitrary->GetProperty(cx, obj, id, vp, wrapper,
-                                           NULL, retval)) && *retval &&
+                                           nsnull, retval)) && *retval &&
                                            *vp != JSVAL_VOID)
         return NS_OK;
 
     CacheDynaProp(cx, obj, id, wrapper, arbitrary);
-    return arbitrary->GetProperty(cx, obj, id, vp, wrapper, NULL, retval);
+    return arbitrary->GetProperty(cx, obj, id, vp, wrapper, nsnull, retval);
 }
 
 
@@ -458,7 +458,7 @@ nsXPCClasses::RealizeClass(JSContext *cx, JSObject *obj,
         jsid id;
         JSString *jstrid;
 
-        if(NULL != (jstrid = JS_InternString(cx, class_name)) &&
+        if(nsnull != (jstrid = JS_InternString(cx, class_name)) &&
            JS_ValueToId(cx, STRING_TO_JSVAL(jstrid), &id))
         {
             CacheDynaProp(cx, obj, id, wrapper, arbitrary);
@@ -472,10 +472,10 @@ nsXPCClasses::CacheDynaProp(JSContext *cx, JSObject *obj, jsid id,
                             nsIXPCScriptable* arbitrary)
 {
     jsval idval;
-    const char* property_name = NULL;
+    const char* property_name = nsnull;
 
     if(JS_IdToValue(cx, id, &idval) && JSVAL_IS_STRING(idval) &&
-       (property_name = JS_GetStringBytes(JSVAL_TO_STRING(idval))) != NULL &&
+       (property_name = JS_GetStringBytes(JSVAL_TO_STRING(idval))) != nsnull &&
        property_name[0] != '{') // we only allow progids here
     {
         nsJSCID* nsid = nsJSCID::NewID(property_name);
@@ -495,7 +495,7 @@ nsXPCClasses::CacheDynaProp(JSContext *cx, JSObject *obj, jsid id,
                         JSBool retval;
                         jsval val = OBJECT_TO_JSVAL(idobj);
                         arbitrary->SetProperty(cx, obj, id, &val, wrapper,
-                                               NULL, &retval);
+                                               nsnull, &retval);
                     }
                     NS_RELEASE(nsid_wrapper);
                 }
@@ -592,11 +592,11 @@ nsXPCClassesByID::LookupProperty(JSContext *cx, JSObject *obj,
                                  JSBool* retval)
 {
     if(NS_SUCCEEDED(arbitrary->LookupProperty(cx, obj, id, objp, propp, wrapper,
-                                              NULL, retval)) && *retval)
+                                              nsnull, retval)) && *retval)
         return NS_OK;
     CacheDynaProp(cx, obj, id, wrapper, arbitrary, JS_FALSE);
     return arbitrary->LookupProperty(cx, obj, id, objp, propp, wrapper,
-                                     NULL, retval);
+                                     nsnull, retval);
 }
 
 NS_IMETHODIMP
@@ -607,12 +607,12 @@ nsXPCClassesByID::GetProperty(JSContext *cx, JSObject *obj,
                               JSBool* retval)
 {
     if(NS_SUCCEEDED(arbitrary->GetProperty(cx, obj, id, vp, wrapper,
-                                           NULL, retval)) && *retval &&
+                                           nsnull, retval)) && *retval &&
                                            *vp != JSVAL_VOID)
         return NS_OK;
 
     CacheDynaProp(cx, obj, id, wrapper, arbitrary, JS_FALSE);
-    return arbitrary->GetProperty(cx, obj, id, vp, wrapper, NULL, retval);
+    return arbitrary->GetProperty(cx, obj, id, vp, wrapper, nsnull, retval);
 }
 
 
@@ -705,7 +705,7 @@ nsXPCClassesByID::RealizeClass(JSContext *cx, JSObject *obj,
         jsid id;
         JSString *jstrid;
 
-        if(NULL != (jstrid = JS_InternString(cx, class_name)) &&
+        if(nsnull != (jstrid = JS_InternString(cx, class_name)) &&
            JS_ValueToId(cx, STRING_TO_JSVAL(jstrid), &id))
         {
             CacheDynaProp(cx, obj, id, wrapper, arbitrary, knownToBeRegistered);
@@ -744,10 +744,10 @@ nsXPCClassesByID::CacheDynaProp(JSContext *cx, JSObject *obj, jsid id,
                                 JSBool knownToBeRegistered)
 {
     jsval idval;
-    const char* property_name = NULL;
+    const char* property_name = nsnull;
 
     if(JS_IdToValue(cx, id, &idval) && JSVAL_IS_STRING(idval) &&
-       (property_name = JS_GetStringBytes(JSVAL_TO_STRING(idval))) != NULL &&
+       (property_name = JS_GetStringBytes(JSVAL_TO_STRING(idval))) != nsnull &&
        property_name[0] == '{') // we only allow canonical CLSIDs here
     {
         // in this case we are responsible for verifying that the
@@ -773,7 +773,7 @@ nsXPCClassesByID::CacheDynaProp(JSContext *cx, JSObject *obj, jsid id,
                         JSBool retval;
                         jsval val = OBJECT_TO_JSVAL(idobj);
                         arbitrary->SetProperty(cx, obj, id, &val, wrapper,
-                                               NULL, &retval);
+                                               nsnull, &retval);
                     }
                     NS_RELEASE(nsid_wrapper);
                 }
@@ -840,7 +840,7 @@ nsXPCResults::FillCache(JSContext *cx, JSObject *obj,
         if(!(jstrid = JS_InternString(cx, name)) ||
            !JS_ValueToId(cx, STRING_TO_JSVAL(jstrid), &id) ||
            !JS_NewNumberValue(cx, (jsdouble)rv, &val) ||
-           NS_FAILED(arbitrary->SetProperty(cx, obj, id, &val, wrapper, NULL, &retval)) ||
+           NS_FAILED(arbitrary->SetProperty(cx, obj, id, &val, wrapper, nsnull, &retval)) ||
            !retval)
         {
             JS_ReportOutOfMemory(cx);
@@ -893,7 +893,7 @@ nsXPCResults::LookupProperty(JSContext *cx, JSObject *obj,
     if(!mCacheFilled)
         FillCache(cx, obj, wrapper, arbitrary);
     return arbitrary->LookupProperty(cx, obj, id, objp, propp, wrapper,
-                                     NULL, retval);
+                                     nsnull, retval);
 }
 
 NS_IMETHODIMP
@@ -905,7 +905,7 @@ nsXPCResults::GetProperty(JSContext *cx, JSObject *obj,
 {
     if(!mCacheFilled)
         FillCache(cx, obj, wrapper, arbitrary);
-    return arbitrary->GetProperty(cx, obj, id, vp, wrapper, NULL, retval);
+    return arbitrary->GetProperty(cx, obj, id, vp, wrapper, nsnull, retval);
 }
 
 
@@ -1079,7 +1079,7 @@ nsXPCComponents::GetProperty(JSContext *cx, JSObject *obj,
         if(JS_NewNumberValue(cx, (jsdouble) xpcc->GetLastResult(), vp))
             return NS_OK;
     }
-    return arbitrary->GetProperty(cx, obj, id, vp, wrapper, NULL, retval);
+    return arbitrary->GetProperty(cx, obj, id, vp, wrapper, nsnull, retval);
 }
 
 NS_IMETHODIMP
@@ -1090,7 +1090,7 @@ nsXPCComponents::SetProperty(JSContext *cx, JSObject *obj,
                              JSBool* retval)
 {
     if(mCreating)
-        return arbitrary->SetProperty(cx, obj, id, vp, wrapper, NULL, retval);
+        return arbitrary->SetProperty(cx, obj, id, vp, wrapper, nsnull, retval);
     *retval = JS_TRUE;
     return NS_OK;
 }

@@ -64,7 +64,7 @@ void nsJSID::reset()
     if(mName && mName != gNoString)
         delete [] mName;
 
-    mNumber = mName = NULL;
+    mNumber = mName = nsnull;
 }
 
 PRBool
@@ -227,7 +227,7 @@ nsJSID::NewID(const char* str)
 NS_IMETHODIMP
 nsJSIID::QueryInterface(REFNSIID aIID, void** aInstancePtr)
 {
-  if (NULL == aInstancePtr) {
+  if (nsnull == aInstancePtr) {
     return NS_ERROR_NULL_POINTER;
   }
   if (aIID.Equals(NS_GET_IID(nsISupports)) ||
@@ -237,7 +237,7 @@ nsJSIID::QueryInterface(REFNSIID aIID, void** aInstancePtr)
     NS_ADDREF_THIS();
     return NS_OK;
   }
-  *aInstancePtr = NULL;
+  *aInstancePtr = nsnull;
   return NS_NOINTERFACE;
 }
 
@@ -274,7 +274,7 @@ nsJSIID::resolveName()
     if(!mDetails.nameIsSet())
     {
         nsIInterfaceInfoManager* iim;
-        if(NULL != (iim = nsXPConnect::GetInterfaceInfoManager()))
+        if(nsnull != (iim = nsXPConnect::GetInterfaceInfoManager()))
         {
             char* name;
             if(NS_SUCCEEDED(iim->GetNameForIID(mDetails.getID(), &name)) && name)
@@ -313,7 +313,7 @@ nsJSIID::NewID(const char* str)
         else
         {
             nsIInterfaceInfoManager* iim;
-            if(NULL != (iim = nsXPConnect::GetInterfaceInfoManager()))
+            if(nsnull != (iim = nsXPConnect::GetInterfaceInfoManager()))
             {
                 nsID* pid;
                 if(NS_SUCCEEDED(iim->GetIIDForName(str, &pid)) && pid)
@@ -433,10 +433,10 @@ CIDCreateInstance::Call(JSContext *cx, JSObject *obj,
     // Do the security check if necessary
 
     XPCContext* xpcc;
-    if(NULL != (xpcc = nsXPConnect::GetContext(cx)))
+    if(nsnull != (xpcc = nsXPConnect::GetContext(cx)))
     {
         nsIXPCSecurityManager* sm;
-        if(NULL != (sm = xpcc->GetSecurityManager()) &&
+        if(nsnull != (sm = xpcc->GetSecurityManager()) &&
            (xpcc->GetSecurityManagerFlags() &
             nsIXPCSecurityManager::HOOK_CREATE_INSTANCE) &&
            NS_OK != sm->CanCreateInstance(cx, *cid))
@@ -451,13 +451,13 @@ CIDCreateInstance::Call(JSContext *cx, JSObject *obj,
 
     // If an IID was passed in then use it
     // XXX should it be JS error to pass something that is *not* and JSID?
-    const nsID* piid = NULL;
+    const nsID* piid = nsnull;
     if(argc)
     {
         JSObject* iidobj;
         jsval val = *argv;
         if(!JSVAL_IS_VOID(val) && !JSVAL_IS_NULL(val) &&
-            JSVAL_IS_OBJECT(val) && NULL != (iidobj = JSVAL_TO_OBJECT(val)))
+            JSVAL_IS_OBJECT(val) && nsnull != (iidobj = JSVAL_TO_OBJECT(val)))
         {
             piid = xpc_JSObjectToID(cx, iidobj);
         }
@@ -468,7 +468,7 @@ CIDCreateInstance::Call(JSContext *cx, JSObject *obj,
     nsISupports* inst;
     nsresult rv;
 
-    rv = nsComponentManager::CreateInstance(*cid, NULL, *piid, (void**) &inst);
+    rv = nsComponentManager::CreateInstance(*cid, nsnull, *piid, (void**) &inst);
     NS_ASSERTION(NS_FAILED(rv) || inst, "component manager returned success, but instance is null!");
     nsAllocator::Free(cid);
 
@@ -479,7 +479,7 @@ CIDCreateInstance::Call(JSContext *cx, JSObject *obj,
         return NS_OK;
     }
 
-    nsIXPConnectWrappedNative* instWrapper = NULL;
+    nsIXPConnectWrappedNative* instWrapper = nsnull;
 
     nsIXPConnect* xpc = nsXPConnect::GetXPConnect();
     if(xpc)
@@ -541,7 +541,7 @@ ServiceReleaser::~ServiceReleaser() {}
 NS_IMETHODIMP
 ServiceReleaser::AboutToRelease(nsISupports* aObj)
 {
-    return nsServiceManager::ReleaseService(mCID, aObj, NULL);
+    return nsServiceManager::ReleaseService(mCID, aObj, nsnull);
 }
 
 /*********************************************/
@@ -637,10 +637,10 @@ CIDGetService::Call(JSContext *cx, JSObject *obj,
     // Do the security check if necessary
 
     XPCContext* xpcc;
-    if(NULL != (xpcc = nsXPConnect::GetContext(cx)))
+    if(nsnull != (xpcc = nsXPConnect::GetContext(cx)))
     {
         nsIXPCSecurityManager* sm;
-        if(NULL != (sm = xpcc->GetSecurityManager()) &&
+        if(nsnull != (sm = xpcc->GetSecurityManager()) &&
            (xpcc->GetSecurityManagerFlags() &
             nsIXPCSecurityManager::HOOK_GET_SERVICE) &&
            NS_OK != sm->CanGetService(cx, *cid))
@@ -655,13 +655,13 @@ CIDGetService::Call(JSContext *cx, JSObject *obj,
 
     // If an IID was passed in then use it
     // XXX should it be JS error to pass something that is *not* and JSID?
-    const nsID* piid = NULL;
+    const nsID* piid = nsnull;
     if(argc)
     {
         JSObject* iidobj;
         jsval val = *argv;
         if(!JSVAL_IS_VOID(val) && !JSVAL_IS_NULL(val) &&
-            JSVAL_IS_OBJECT(val) && NULL != (iidobj = JSVAL_TO_OBJECT(val)))
+            JSVAL_IS_OBJECT(val) && nsnull != (iidobj = JSVAL_TO_OBJECT(val)))
         {
             piid = xpc_JSObjectToID(cx, iidobj);
         }
@@ -672,7 +672,7 @@ CIDGetService::Call(JSContext *cx, JSObject *obj,
     nsISupports* srvc;
     nsresult rv;
 
-    rv = nsServiceManager::GetService(*cid, *piid, &srvc, NULL);
+    rv = nsServiceManager::GetService(*cid, *piid, &srvc, nsnull);
     NS_ASSERTION(NS_FAILED(rv) || srvc, "service manager returned success, but service is null!");
 
     if(NS_FAILED(rv) || !srvc)
@@ -682,7 +682,7 @@ CIDGetService::Call(JSContext *cx, JSObject *obj,
         return NS_OK;
     }
 
-    nsIXPConnectWrappedNative* srvcWrapper = NULL;
+    nsIXPConnectWrappedNative* srvcWrapper = nsnull;
 
     nsIXPConnect* xpc = nsXPConnect::GetXPConnect();
     if(xpc)
@@ -693,7 +693,7 @@ CIDGetService::Call(JSContext *cx, JSObject *obj,
 
     if(NS_FAILED(rv) || !srvcWrapper)
     {
-        nsServiceManager::ReleaseService(*cid, srvc, NULL);
+        nsServiceManager::ReleaseService(*cid, srvc, nsnull);
         nsAllocator::Free(cid);
         ThrowException(NS_ERROR_XPC_CANT_CREATE_WN, cx);
         *retval = JS_FALSE;
@@ -733,7 +733,7 @@ CIDGetService::Call(JSContext *cx, JSObject *obj,
 NS_IMETHODIMP
 nsJSCID::QueryInterface(REFNSIID aIID, void** aInstancePtr)
 {
-  if (NULL == aInstancePtr) {
+  if (nsnull == aInstancePtr) {
     return NS_ERROR_NULL_POINTER;
   }
   if (aIID.Equals(NS_GET_IID(nsISupports)) ||
@@ -743,7 +743,7 @@ nsJSCID::QueryInterface(REFNSIID aIID, void** aInstancePtr)
     NS_ADDREF_THIS();
     return NS_OK;
   }
-  *aInstancePtr = NULL;
+  *aInstancePtr = nsnull;
   return NS_NOINTERFACE;
 }
 
@@ -849,7 +849,7 @@ nsJSCID::GetGetService(nsISupports * *aGetService)
 JSObject *
 xpc_NewIDObject(JSContext *cx, const nsID& aID)
 {
-    JSObject *obj = NULL;
+    JSObject *obj = nsnull;
 
     char* idString = aID.ToString();
     if(idString)
@@ -881,9 +881,9 @@ xpc_NewIDObject(JSContext *cx, const nsID& aID)
 nsID*
 xpc_JSObjectToID(JSContext *cx, JSObject* obj)
 {
-    nsID* id = NULL;
+    nsID* id = nsnull;
     if(!cx || !obj)
-        return NULL;
+        return nsnull;
 
     // NOTE: this call does NOT addref
     nsXPCWrappedNative* wrapper =

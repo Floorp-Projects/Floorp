@@ -39,20 +39,20 @@ GetMyStack()
         if(PR_FAILURE == PR_NewThreadPrivateIndex(&index, xpc_StackDtorCB))
         {
             NS_ASSERTION(0, "PR_NewThreadPrivateIndex failed!");
-            return NULL;
+            return nsnull;
         }
     }
 
     myStack = (nsDeque*) PR_GetThreadPrivate(index);
     if(!myStack)
     {
-        if(NULL != (myStack = new nsDeque(nsnull)))
+        if(nsnull != (myStack = new nsDeque(nsnull)))
         {
             if(PR_FAILURE == PR_SetThreadPrivate(index, myStack))
             {
                 NS_ASSERTION(0, "PR_SetThreadPrivate failed!");
                 delete myStack;
-                myStack = NULL;
+                myStack = nsnull;
             }
         }
         else
@@ -89,7 +89,7 @@ NS_IMPL_ISUPPORTS(nsXPCThreadJSContextStackImpl, knsXPCThreadJSContextStackImplI
 nsXPCThreadJSContextStackImpl*
 nsXPCThreadJSContextStackImpl::GetSingleton()
 {
-    static nsXPCThreadJSContextStackImpl* singleton = NULL;
+    static nsXPCThreadJSContextStackImpl* singleton = nsnull;
     if(!singleton)
         singleton = new nsXPCThreadJSContextStackImpl();
     if(singleton)

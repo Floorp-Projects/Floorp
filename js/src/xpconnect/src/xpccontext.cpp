@@ -61,7 +61,7 @@ XPCContext::newXPCContext(JSContext* aJSContext,
         return xpcc;
     }
     delete xpcc;
-    return NULL;
+    return nsnull;
 }
 
 XPCContext::XPCContext(JSContext* aJSContext,
@@ -90,7 +90,7 @@ XPCContext::XPCContext(JSContext* aJSContext,
         }
     }
     mLastResult = NS_OK;
-    mSecurityManager = NULL;
+    mSecurityManager = nsnull;
     mSecurityManagerFlags = 0;
     mException = nsnull;
 }
@@ -128,22 +128,22 @@ XPCContext::~XPCContext()
     // important to notify the objects before the classes
     if(mWrappedJSMap)
     {
-        mWrappedJSMap->Enumerate(WrappedJSDestroyCB, NULL);
+        mWrappedJSMap->Enumerate(WrappedJSDestroyCB, nsnull);
         delete mWrappedJSMap;
     }
     if(mWrappedNativeMap)
     {
-        mWrappedNativeMap->Enumerate(WrappedNativeDestroyCB, NULL);
+        mWrappedNativeMap->Enumerate(WrappedNativeDestroyCB, nsnull);
         delete mWrappedNativeMap;
     }
     if(mWrappedNativeClassMap)
     {
-        mWrappedNativeClassMap->Enumerate(WrappedNativeClassDestroyCB, NULL);
+        mWrappedNativeClassMap->Enumerate(WrappedNativeClassDestroyCB, nsnull);
         delete mWrappedNativeClassMap;
     }
     if(mWrappedJSClassMap)
     {
-        mWrappedJSClassMap->Enumerate(WrappedJSClassDestroyCB, NULL);
+        mWrappedJSClassMap->Enumerate(WrappedJSClassDestroyCB, nsnull);
         delete mWrappedJSClassMap;
     }
     JS_RemoveArgumentFormatter(mJSContext, XPC_ARG_FORMATTER_FORMAT_STR);
@@ -153,7 +153,7 @@ XPCContext::~XPCContext()
 }
 
 JSBool
-XPCContext::Init(JSObject* aGlobalObj /*= NULL*/)
+XPCContext::Init(JSObject* aGlobalObj /*= nsnull*/)
 {
     if(aGlobalObj)
         mGlobalObj = aGlobalObj;

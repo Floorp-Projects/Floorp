@@ -29,10 +29,10 @@ XPCJSThrower::~XPCJSThrower() {}
 char*
 XPCJSThrower::BuildCallerString(JSContext* cx)
 {
-    JSStackFrame* iter = NULL;
+    JSStackFrame* iter = nsnull;
     JSStackFrame* fp;
 
-    while(NULL != (fp = JS_FrameIterator(cx, &iter)) )
+    while(nsnull != (fp = JS_FrameIterator(cx, &iter)) )
     {
         JSScript* script = JS_GetFrameScript(cx, fp);
         jsbytecode* pc = JS_GetFramePC(cx, fp);
@@ -45,7 +45,7 @@ XPCJSThrower::BuildCallerString(JSContext* cx)
                            filename ? filename : "<unknown>",
                            JS_PCToLineNumber(cx, script, pc));
     }
-    return NULL;
+    return nsnull;
 }
 #endif
 
@@ -55,7 +55,7 @@ XPCJSThrower::Verbosify(JSContext* cx,
                         const XPCNativeMemberDescriptor* desc,
                         char** psz, PRBool own)
 {
-    char* sz = NULL;
+    char* sz = nsnull;
 
     if(clazz && desc)
         sz = JS_smprintf("%s [%s.%s]",
@@ -80,7 +80,7 @@ XPCJSThrower::ThrowBadResultException(nsresult rv,
     char* sz;
     const char* format;
     const char* name;
-    JSString* str = NULL;
+    JSString* str = nsnull;
 
     /*
     *  If there is a pending exception when the native call returns and
@@ -136,7 +136,7 @@ XPCJSThrower::ThrowBadParamException(nsresult rv,
 {
     char* sz;
     const char* format;
-    JSString* str = NULL;
+    JSString* str = nsnull;
 
     if(!nsXPCException::NameAndFormatForNSResult(rv, nsnull, &format))
         format = "";
@@ -160,7 +160,7 @@ XPCJSThrower::ThrowException(nsresult rv,
 {
     char* sz;
     const char* format;
-    JSString* str = NULL;
+    JSString* str = nsnull;
 
     if(!nsXPCException::NameAndFormatForNSResult(rv, nsnull, &format))
         format = "";

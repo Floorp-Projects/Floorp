@@ -278,7 +278,7 @@ XPCConvert::NativeData2JS(JSContext* cx, jsval* d, const void* s,
                 if(!iface)
                     break;
                 nsIScriptObjectOwner* owner;
-                JSObject* aJSObj = NULL;
+                JSObject* aJSObj = nsnull;
                 // is this a wrapped JS object?
                 if(nsXPCWrappedJSClass::IsWrappedJS(iface))
                 {
@@ -302,10 +302,10 @@ XPCConvert::NativeData2JS(JSContext* cx, jsval* d, const void* s,
                     JSObject* globalObject;
                     nsISupports* domObject;
                     NS_ASSERTION(owner,"QI succeeded but yielded NULL!");
-                    if(NULL != (globalObject =
+                    if(nsnull != (globalObject =
                                     JS_GetGlobalObject(cx)) &&
                        ObjectHasPrivate(cx, globalObject) &&
-                       NULL != (domObject = (nsISupports*)
+                       nsnull != (domObject = (nsISupports*)
                                     JS_GetPrivate(cx, globalObject)))
                     {
                         nsIScriptGlobalObject* scriptObject;
@@ -314,7 +314,7 @@ XPCConvert::NativeData2JS(JSContext* cx, jsval* d, const void* s,
                                             (void**)&scriptObject)))
                         {
                             NS_ASSERTION(scriptObject,"QI succeeded but yielded NULL!");
-                            nsIScriptContext* scriptContext = NULL;
+                            nsIScriptContext* scriptContext = nsnull;
                             scriptObject->GetContext(&scriptContext);
                             if(scriptContext)
                             {
@@ -334,7 +334,7 @@ XPCConvert::NativeData2JS(JSContext* cx, jsval* d, const void* s,
                 else
                 {
                     // we need to build a wrapper
-                    nsXPCWrappedNative* wrapper = NULL;
+                    nsXPCWrappedNative* wrapper = nsnull;
                     XPCContext* xpcc;
                     if(!iid ||
                        !(xpcc = nsXPConnect::GetContext(cx)) ||
@@ -455,7 +455,7 @@ XPCConvert::JSData2Native(JSContext* cx, void* d, jsval s,
         break;
     case nsXPTType::T_CHAR   :
         {
-            char* bytes=NULL;
+            char* bytes=nsnull;
             JSString* str;
 
             if(!(str = JS_ValueToString(cx, s))||
@@ -468,7 +468,7 @@ XPCConvert::JSData2Native(JSContext* cx, void* d, jsval s,
         }
     case nsXPTType::T_WCHAR  :
         {
-            jschar* chars=NULL;
+            jschar* chars=nsnull;
             JSString* str;
             if(!(str = JS_ValueToString(cx, s))||
                !(chars = JS_GetStringChars(str)))
@@ -497,7 +497,7 @@ XPCConvert::JSData2Native(JSContext* cx, void* d, jsval s,
             NS_ASSERTION(useAllocator,"trying to convert a JSID to nsID without allocator : this would leak");
 
             JSObject* obj;
-            const nsID* pid=NULL;
+            const nsID* pid=nsnull;
 
             if(JSVAL_IS_VOID(s) || JSVAL_IS_NULL(s))
             {
@@ -508,7 +508,7 @@ XPCConvert::JSData2Native(JSContext* cx, void* d, jsval s,
                     return JS_FALSE;
                 }
                 // else ...
-                *((const nsID**)d) = NULL;
+                *((const nsID**)d) = nsnull;
                 return JS_TRUE;
             }
 
@@ -529,7 +529,7 @@ XPCConvert::JSData2Native(JSContext* cx, void* d, jsval s,
 
         case nsXPTType::T_CHAR_STR:
         {
-            char* bytes=NULL;
+            char* bytes=nsnull;
             JSString* str;
 
             if(JSVAL_IS_VOID(s) || JSVAL_IS_NULL(s))
@@ -541,7 +541,7 @@ XPCConvert::JSData2Native(JSContext* cx, void* d, jsval s,
                     return JS_FALSE;
                 }
                 // else ...
-                *((char**)d) = NULL;
+                *((char**)d) = nsnull;
                 return JS_TRUE;
             }
 
@@ -567,7 +567,7 @@ XPCConvert::JSData2Native(JSContext* cx, void* d, jsval s,
 
         case nsXPTType::T_WCHAR_STR:
         {
-            jschar* chars=NULL;
+            jschar* chars=nsnull;
             JSString* str;
 
             if(JSVAL_IS_VOID(s) || JSVAL_IS_NULL(s))
@@ -579,7 +579,7 @@ XPCConvert::JSData2Native(JSContext* cx, void* d, jsval s,
                     return JS_FALSE;
                 }
                 // else ...
-                *((jschar**)d) = NULL;
+                *((jschar**)d) = nsnull;
                 return JS_TRUE;
             }
 
@@ -609,7 +609,7 @@ XPCConvert::JSData2Native(JSContext* cx, void* d, jsval s,
         {
             NS_ASSERTION(iid,"can't do interface conversions without iid");
             JSObject* obj;
-            nsISupports* iface = NULL;
+            nsISupports* iface = nsnull;
 
             if(JSVAL_IS_VOID(s) || JSVAL_IS_NULL(s))
             {
@@ -620,7 +620,7 @@ XPCConvert::JSData2Native(JSContext* cx, void* d, jsval s,
                     return JS_FALSE;
                 }
                 // else ...
-                *((nsISupports**)d) = NULL;
+                *((nsISupports**)d) = nsnull;
                 return JS_TRUE;
             }
 
@@ -632,7 +632,7 @@ XPCConvert::JSData2Native(JSContext* cx, void* d, jsval s,
 
             // is this really a native xpcom object with a wrapper?
             nsXPCWrappedNative* wrapper;
-            if(NULL != (wrapper =
+            if(nsnull != (wrapper =
                nsXPCWrappedNativeClass::GetWrappedNativeOfJSObject(cx,obj)))
             {
                 iface = wrapper->GetNative();
@@ -648,7 +648,7 @@ XPCConvert::JSData2Native(JSContext* cx, void* d, jsval s,
                     iface->QueryInterface(*iid, (void**)&iface);
                 else
                 {
-                    *((nsISupports**)d) = NULL;
+                    *((nsISupports**)d) = nsnull;
                     return JS_TRUE;
                 }
             }
@@ -656,7 +656,7 @@ XPCConvert::JSData2Native(JSContext* cx, void* d, jsval s,
             {
                 // lets try to build a wrapper around the JSObject
                 XPCContext* xpcc;
-                if(NULL != (xpcc = nsXPConnect::GetContext(cx)))
+                if(nsnull != (xpcc = nsXPConnect::GetContext(cx)))
                     iface = nsXPCWrappedJS::GetNewOrUsedWrapper(xpcc, obj, *iid);
             }
             if(iface)
@@ -725,7 +725,7 @@ XPCConvert::JSValToXPCException(JSContext* cx,
 
         // is this really a native xpcom object with a wrapper?
         nsXPCWrappedNative* wrapper;
-        if(NULL != (wrapper =
+        if(nsnull != (wrapper =
            nsXPCWrappedNativeClass::GetWrappedNativeOfJSObject(cx,obj)))
         {
             nsIXPCException* iface;
@@ -757,7 +757,7 @@ XPCConvert::JSValToXPCException(JSContext* cx,
             {
                 // lets try to build a wrapper around the JSObject
                 XPCContext* xpcc;
-                if(NULL != (xpcc = nsXPConnect::GetContext(cx)))
+                if(nsnull != (xpcc = nsXPConnect::GetContext(cx)))
                 {
                     return (nsIXPCException*)
                         nsXPCWrappedJS::GetNewOrUsedWrapper(xpcc, obj,

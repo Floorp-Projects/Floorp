@@ -52,7 +52,7 @@ JSContext2XPCContextMap::newMap(int size)
     if(map && map->mHashtable)
         return map;
     delete map;
-    return NULL;
+    return nsnull;
 }
 
 
@@ -60,7 +60,7 @@ JSContext2XPCContextMap::JSContext2XPCContextMap(int size)
 {
     mHashtable = JS_NewHashTable(size, hash_root,
                                  JS_CompareValues, JS_CompareValues,
-                                 NULL, NULL);
+                                 nsnull, nsnull);
 }
 
 JSContext2XPCContextMap::~JSContext2XPCContextMap()
@@ -80,7 +80,7 @@ JSObject2WrappedJSMap::newMap(int size)
     if(map && map->mHashtable)
         return map;
     delete map;
-    return NULL;
+    return nsnull;
 }
 
 
@@ -88,7 +88,7 @@ JSObject2WrappedJSMap::JSObject2WrappedJSMap(int size)
 {
     mHashtable = JS_NewHashTable(size, hash_root,
                                  JS_CompareValues, JS_CompareValues,
-                                 NULL, NULL);
+                                 nsnull, nsnull);
 }
 
 JSObject2WrappedJSMap::~JSObject2WrappedJSMap()
@@ -108,14 +108,14 @@ Native2WrappedNativeMap::newMap(int size)
     if(map && map->mHashtable)
         return map;
     delete map;
-    return NULL;
+    return nsnull;
 }
 
 Native2WrappedNativeMap::Native2WrappedNativeMap(int size)
 {
     mHashtable = JS_NewHashTable(size, hash_root,
                                  JS_CompareValues, JS_CompareValues,
-                                 NULL, NULL);
+                                 nsnull, nsnull);
 }
 
 Native2WrappedNativeMap::~Native2WrappedNativeMap()
@@ -135,14 +135,14 @@ IID2WrappedJSClassMap::newMap(int size)
     if(map && map->mHashtable)
         return map;
     delete map;
-    return NULL;
+    return nsnull;
 }
 
 IID2WrappedJSClassMap::IID2WrappedJSClassMap(int size)
 {
     mHashtable = JS_NewHashTable(size, hash_IID,
                                  compare_IIDs, JS_CompareValues,
-                                 NULL, NULL);
+                                 nsnull, nsnull);
 }
 
 IID2WrappedJSClassMap::~IID2WrappedJSClassMap()
@@ -162,14 +162,14 @@ IID2WrappedNativeClassMap::newMap(int size)
     if(map && map->mHashtable)
         return map;
     delete map;
-    return NULL;
+    return nsnull;
 }
 
 IID2WrappedNativeClassMap::IID2WrappedNativeClassMap(int size)
 {
     mHashtable = JS_NewHashTable(size, hash_IID,
                                  compare_IIDs, JS_CompareValues,
-                                 NULL, NULL);
+                                 nsnull, nsnull);
 }
 
 IID2WrappedNativeClassMap::~IID2WrappedNativeClassMap()

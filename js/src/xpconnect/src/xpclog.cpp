@@ -34,7 +34,7 @@
 static char*    g_Spaces;
 static int      g_InitState = 0;
 static int      g_Indent = 0;
-static PRLogModuleInfo* g_LogMod = NULL;
+static PRLogModuleInfo* g_LogMod = nsnull;
 
 static PRBool Init()
 {
