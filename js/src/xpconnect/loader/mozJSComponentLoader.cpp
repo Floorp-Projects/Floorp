@@ -194,7 +194,7 @@ mozJSComponentLoader::Init(nsIComponentManager *aCompMgr, nsISupports *aReg)
     return NS_OK;
 }
 
-NS_IMETHODIMP
+nsresult
 mozJSComponentLoader::ReallyInit()
 {
     nsresult rv;
