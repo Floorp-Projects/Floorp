@@ -541,7 +541,7 @@ if ($action eq 'delete') {
                          profiles WRITE,
                          milestones WRITE,
                          flaginclusions WRITE,
-                         flagexclusions WRITE);
+                         flagexclusions WRITE");
 
     # According to MySQL doc I cannot do a DELETE x.* FROM x JOIN Y,
     # so I have to iterate over bugs and delete all the indivial entries
