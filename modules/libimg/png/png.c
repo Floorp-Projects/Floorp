@@ -135,7 +135,7 @@ png_check_sig(png_bytep sig, int num)
 }
 
 /* Function to allocate memory for zlib and clear it to 0. */
-voidpf /* PRIVATE */
+voidpf PNGAPI
 png_zalloc(voidpf png_ptr, uInt items, uInt size)
 {
    png_uint_32 num_bytes = (png_uint_32)items * size;
@@ -157,7 +157,7 @@ png_zalloc(voidpf png_ptr, uInt items, uInt size)
 }
 
 /* function to free memory for zlib */
-void /* PRIVATE */
+void PNGAPI
 png_zfree(voidpf png_ptr, voidpf ptr)
 {
    png_free((png_structp)png_ptr, (png_voidp)ptr);
@@ -255,7 +255,7 @@ png_destroy_info_struct(png_structp png_ptr, png_infopp info_ptr_ptr)
  * and applications using it are urged to use png_create_info_struct()
  * instead.
  */
-void /* PRIVATE */
+void PNGAPI
 png_info_init(png_infop info_ptr)
 {
    png_debug(1, "in png_info_init\n");
@@ -667,7 +667,7 @@ png_get_header_version(png_structp png_ptr)
 }
 
 #ifdef PNG_HANDLE_AS_UNKNOWN_SUPPORTED
-int /* PRIVATE */
+int PNGAPI
 png_handle_as_unknown(png_structp png_ptr, png_bytep chunk_name)
 {
    /* check chunk_name and return "keep" value if it's on the list, else 0 */
