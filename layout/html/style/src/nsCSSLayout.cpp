@@ -300,6 +300,7 @@ GetStyleDimension(nsIPresContext* aPresContext,
     // on the containing block's <B>width</B>.
     // XXX need to subtract out padding, also this needs
     // to be synced with nsFrame's IsPercentageBase
+    // XXX should this be geometric parent
     aFrame->GetContentParent(parentFrame);
     while (nsnull != parentFrame) {
       nsBlockFrame* block;
@@ -312,6 +313,7 @@ GetStyleDimension(nsIPresContext* aPresContext,
         rv = PR_TRUE;
         break;
       }
+      parentFrame->GetContentParent(parentFrame);
     }
     break;
   default:
@@ -336,8 +338,8 @@ nsCSSLayout::GetStyleSize(nsIPresContext* aPresContext,
   nsIStyleContext* sc = nsnull;
   aFrame->GetStyleContext(aPresContext, sc);
   if (nsnull != sc) {
-    nsStylePosition* pos = (nsStylePosition*
-      ) sc->GetData(eStyleStruct_Position);
+    nsStylePosition* pos = (nsStylePosition*)
+      sc->GetData(eStyleStruct_Position);
     if (GetStyleDimension(aPresContext, aFrame, pos, pos->mWidth,
                           aStyleSize.width)) {
       rv |= NS_SIZE_HAS_WIDTH;
