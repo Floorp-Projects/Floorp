@@ -43,15 +43,5 @@ Rights Reserved.
     </box>
   </box>
 
-  <spring class="spacer"/>
-  <spring class="spacer"/>
-  <box align="vertical">
-    <html>&newsPasswordTitle.label;</html>
-    <html>&newsPasswordDesc.label;</html>
-    <spring class="spacer"/>
-    <box>
-      <html:input type="checkbox" id="usePassword" name="usePassword"/>
-      <text class="label" for="usePassword" value="&newsUsePasswordCheckbox.label;"/>
-    </box>
-  </box>
+  <!-- no ui for pushed auth, since it doesn't work yet -->
 </window>
