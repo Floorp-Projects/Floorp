@@ -32,6 +32,8 @@ class InvokeTestTargetInterface : public nsISupports
 public:
     NS_IMETHOD AddTwoInts(PRInt32 p1, PRInt32 p2, PRInt32* retval) = 0;
     NS_IMETHOD MultTwoInts(PRInt32 p1, PRInt32 p2, PRInt32* retval) = 0;
+    NS_IMETHOD AddTwoLLs(PRInt64 p1, PRInt64 p2, PRInt64* retval) = 0;
+    NS_IMETHOD MultTwoLLs(PRInt64 p1, PRInt64 p2, PRInt64* retval) = 0;
 };
 
 class InvokeTestTarget : public InvokeTestTargetInterface
@@ -40,6 +42,8 @@ public:
     NS_DECL_ISUPPORTS
     NS_IMETHOD AddTwoInts(PRInt32 p1, PRInt32 p2, PRInt32* retval);
     NS_IMETHOD MultTwoInts(PRInt32 p1, PRInt32 p2, PRInt32* retval);
+    NS_IMETHOD AddTwoLLs(PRInt64 p1, PRInt64 p2, PRInt64* retval);
+    NS_IMETHOD MultTwoLLs(PRInt64 p1, PRInt64 p2, PRInt64* retval);
 
     InvokeTestTarget();
 };
@@ -67,18 +71,41 @@ InvokeTestTarget::MultTwoInts(PRInt32 p1, PRInt32 p2, PRInt32* retval)
     return NS_OK;
 }        
 
+NS_IMETHODIMP 
+InvokeTestTarget::AddTwoLLs(PRInt64 p1, PRInt64 p2, PRInt64* retval)
+{
+    *retval = p1 + p2;
+    return NS_OK;
+}
+
+NS_IMETHODIMP 
+InvokeTestTarget::MultTwoLLs(PRInt64 p1, PRInt64 p2, PRInt64* retval)
+{
+    *retval = p1 * p2;
+    return NS_OK;
+}
+
 int main()
 {
     InvokeTestTarget *test = new InvokeTestTarget();
 
     PRInt32 out;
+    PRInt64 out64;
     printf("calling direct:\n");
     if(NS_SUCCEEDED(test->AddTwoInts(1,1,&out)))
         printf("\t1 + 1 = %d\n", out);
     else
         printf("\tFAILED");
+    if(NS_SUCCEEDED(test->AddTwoLLs(1LL,1LL,&out64)))
+        printf("\t1L + 1L = %dL\n", out);
+    else
+        printf("\tFAILED");
     if(NS_SUCCEEDED(test->MultTwoInts(2,2,&out)))
         printf("\t2 * 2 = %d\n", out);
+    else
+        printf("\tFAILED");
+    if(NS_SUCCEEDED(test->MultTwoLLs(2LL,2LL,&out64)))
+        printf("\t2L * 2L = %dL\n", out);
     else
         printf("\tFAILED");
 
@@ -104,6 +131,23 @@ int main()
     else
         printf("\tFAILED");
 
+    var[0].val.i64 = 1LL;
+    var[0].type = nsXPTType::T_I64;
+    var[0].flags = 0;
+
+    var[1].val.i64 = 1LL;
+    var[1].type = nsXPTType::T_I64;
+    var[1].flags = 0;
+
+    var[2].val.i64 = 0;
+    var[2].type = nsXPTType::T_I64;
+    var[2].flags = nsXPTCVariant::PTR_IS_DATA;
+    var[2].ptr = &var[2].val.i64;
+
+    if(NS_SUCCEEDED(XPTC_InvokeByIndex(test, 5, 3, var)))
+        printf("\t1L * 1L = %dL\n", var[2].val.i64);
+    else
+        printf("\tFAILED");
 
     var[0].val.i32 = 2;
     var[0].type = nsXPTType::T_I32;
@@ -123,5 +167,24 @@ int main()
     else
         printf("\tFAILED");
 
+    var[0].val.i64 = 2LL;
+    var[0].type = nsXPTType::T_I64;
+    var[0].flags = 0;
+
+    var[1].val.i64 = 2LL;
+    var[1].type = nsXPTType::T_I64;
+    var[1].flags = 0;
+
+    var[2].val.i64 = 0;
+    var[2].type = nsXPTType::T_I64;
+    var[2].flags = nsXPTCVariant::PTR_IS_DATA;
+    var[2].ptr = &var[2].val.i64;
+
+    if(NS_SUCCEEDED(XPTC_InvokeByIndex(test, 6, 3, var)))
+        printf("\t2L * 2L = %dL\n", var[2].val.i64);
+    else
+        printf("\tFAILED");
+
     return 0;
 }
+
