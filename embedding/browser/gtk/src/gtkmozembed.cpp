@@ -17,6 +17,7 @@
  * 
  * Contributor(s):
  *   Christopher Blizzard <blizzard@mozilla.org>
+ *   Ramiro Estrugo <ramiro@eazel.com>
  */
 #include "gtkmozembed.h"
 #include "nsIWebBrowser.h"
@@ -42,6 +43,7 @@ public:
   nsCOMPtr<nsISupportsArray>  topLevelWindowWebShells;
   nsVoidArray                 topLevelWindows;
   GdkSuperWin                *superwin;
+  nsCString		     mInitialURL;
 };
 
 static void
@@ -198,7 +200,7 @@ gtk_moz_embed_new(void)
 }
 
 void
-gtk_moz_embed_load_url(GtkWidget *widget, char *url)
+gtk_moz_embed_load_url(GtkWidget *widget, const char *url)
 {
   GtkMozEmbed        *embed;
   GtkMozEmbedPrivate *embed_private;
@@ -207,7 +209,17 @@ gtk_moz_embed_load_url(GtkWidget *widget, char *url)
   g_return_if_fail (GTK_IS_MOZ_EMBED(widget));
 
   embed = GTK_MOZ_EMBED(widget);
+
   embed_private = (GtkMozEmbedPrivate *)embed->data;
+
+  // If the widget aint realized, save the url for later
+  if (!GTK_WIDGET_REALIZED(widget))
+  {
+	  embed_private->mInitialURL = url;
+
+	  return;
+  }
+
   nsCOMPtr<nsIWebNavigation> navigation = do_QueryInterface(embed_private->webBrowser);
   if (!navigation)
     g_print("Warning: failed to QI webBrowser to nsIWebNavigation\n");
@@ -282,6 +294,14 @@ gtk_moz_embed_realize(GtkWidget *widget)
   nsCOMPtr<nsIURIContentListener> uriListener;
   uriListener = do_QueryInterface(embed_private->embed);
   embed_private->webBrowser->SetParentURIContentListener(uriListener);
+
+  // If an initial url was stored, load it
+  if (embed_private->mInitialURL)
+  {
+	  const char * foo = (const char *) embed_private->mInitialURL;
+	  gtk_moz_embed_load_url (widget, foo);
+	  embed_private->mInitialURL = "";
+  }
 }
 
 void
