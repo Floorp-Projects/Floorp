@@ -36,7 +36,7 @@
 #include "nsIEventQueueService.h"
 #include "nsXPIDLString.h"
 #include "nsRDFCID.h"
-
+#include "nsEscape.h"
 #include "nsIMsgStatusFeedback.h"
 #include "nsIPref.h"
 
@@ -441,10 +441,8 @@ nsImapService::CreateStartOfImapUrl(nsIImapUrl ** imapUrl,
         // when the incoming server works were done. We might also need to
         // pass in the port number
         urlSpec = "imap://";
-#if 0
         urlSpec.Append(username);
         urlSpec.Append('@');
-#endif
         urlSpec.Append(hostname);
 		urlSpec.Append(':');
 		urlSpec.Append("143"); // mscott -- i know this is bogus...i'm i a hurry =)
@@ -2072,8 +2070,59 @@ NS_IMETHODIMP nsImapService::MakeAbsolute(const char *aRelativeSpec, nsIURI *aBa
 
 NS_IMETHODIMP nsImapService::NewURI(const char *aSpec, nsIURI *aBaseURI, nsIURI **_retval)
 {
-	// i just haven't implemented this yet...I will be though....
-	return NS_ERROR_NOT_IMPLEMENTED;
+    nsCOMPtr<nsIImapUrl> aImapUrl;
+	nsresult rv = nsComponentManager::CreateInstance(kImapUrlCID, nsnull, NS_GET_IID(nsIImapUrl), getter_AddRefs(aImapUrl));
+    if (NS_SUCCEEDED(rv))
+    {
+        aImapUrl->Initialize(nsnull);
+        // now extract lots of fun information...
+        nsCOMPtr<nsIMsgMailNewsUrl> mailnewsUrl = do_QueryInterface(aImapUrl);
+        nsCAutoString unescapedSpec = aSpec;
+        nsUnescape(unescapedSpec);
+        mailnewsUrl->SetSpec((char *) unescapedSpec); // set the url spec...
+
+        nsXPIDLCString userName;
+        nsXPIDLCString hostName;
+        nsXPIDLCString folderName;
+        
+        // extract the user name and host name information...
+        rv = mailnewsUrl->GetHost(getter_Copies(hostName));
+        if (NS_FAILED(rv)) return rv;
+        rv = mailnewsUrl->GetPreHost(getter_Copies(userName));
+        if (NS_FAILED(rv)) return rv;
+        // if we can't get a folder name out of the url then I think this is an error
+        aImapUrl->CreateCanonicalSourceFolderPathString(getter_Copies(folderName));
+        if (NS_FAILED(rv)) return rv;
+        
+        nsCOMPtr<nsIMsgIncomingServer> aServer;
+        rv = nsGetImapServer(userName, hostName, getter_AddRefs(aServer));
+        // if we can't extract the imap server from this url then give up!!!
+        if (NS_FAILED(rv)) return rv;
+
+        // now try to get the folder in question...
+        nsCOMPtr<nsIFolder> aRootFolder;
+        aServer->GetRootFolder(getter_AddRefs(aRootFolder));
+
+        if (aRootFolder)
+        {
+            nsCOMPtr<nsISupports> aSupports;
+            rv = aRootFolder->GetChildNamed(folderName, getter_AddRefs(aSupports));
+            if (NS_SUCCEEDED(rv))
+            {
+                nsCOMPtr<nsIImapMessageSink> msgSink = do_QueryInterface(aSupports);
+                rv = aImapUrl->SetImapMessageSink(msgSink);
+
+                nsCOMPtr<nsIMsgFolder> msgFolder = do_QueryInterface(aSupports);
+                rv = SetImapUrlSink(msgFolder, aImapUrl);	
+            }
+
+        }
+    
+        // we got an imap url, so be sure to return it...
+        aImapUrl->QueryInterface(NS_GET_IID(nsIURI), (void **) _retval);
+    }
+
+    return rv;
 }
 
 NS_IMETHODIMP nsImapService::NewChannel(const char *verb, nsIURI *aURI, nsILoadGroup *aGroup, nsIEventSinkGetter *eventSinkGetter, nsIChannel **_retval)
