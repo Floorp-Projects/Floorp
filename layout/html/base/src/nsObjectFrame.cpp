@@ -2966,7 +2966,27 @@ nsresult nsPluginInstanceOwner::EnsureCachedAttrParamArrays()
 
   // let's fill in our attributes
   PRInt16 c = 0;
-  for (PRInt16 index = 0; index < numRealAttrs; index++) {
+
+  // Some plugins (eg Flash, see bug 234675.) are actually sensitive to the
+  // attribute order.  So we want to make sure we give the plugin the
+  // attributes in the order they came in in the source, to be compatible with
+  // other browsers.  Now in HTML, the storage order is the reverse of the
+  // source order, while in XML and XHTML it's the same as the source order
+  // (see the AddAttributes functions in the HTML and XML content sinks).
+  PRInt16 start, end, increment;
+  if (content->IsContentOfType(nsIContent::eHTML) &&
+      content->GetNodeInfo()->NamespaceEquals(kNameSpaceID_None)) {
+    // HTML.  Walk attributes in reverse order.
+    start = numRealAttrs - 1;
+    end = -1;
+    increment = -1;
+  } else {
+    // XHTML or XML.  Walk attributes in forward order.
+    start = 0;
+    end = numRealAttrs;
+    increment = 1;
+  }
+  for (PRInt16 index = start; index != end; index += increment) {
     PRInt32 nameSpaceID;
     nsCOMPtr<nsIAtom> atom;
     nsCOMPtr<nsIAtom> prefix;
