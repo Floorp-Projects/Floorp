@@ -186,12 +186,15 @@ void fe_AddTypeToList(NET_cdataStruct *cd_item)
 			app->how_handle = HANDLE_VIA_NETSCAPE;
 		else if (csCmd == MIME_PROMPT)
 			app->how_handle = HANDLE_UNKNOWN;	
-        else if (csCmd == MIME_OLE)	{
+    else if (csCmd == MIME_OLE)
 			app->how_handle = HANDLE_BY_OLE;
-		}
-        else if (csCmd == MIME_SHELLEXECUTE)	{
+    else if (csCmd == MIME_SHELLEXECUTE)
 			app->how_handle = HANDLE_SHELLEXECUTE;
-		}
+//~~~
+    else if (csCmd == MIME_PLUGIN)
+			app->how_handle = HANDLE_VIA_PLUGIN;
+    else if (csCmd == MIME_PLUGINAPPLET)
+			app->how_handle = HANDLE_VIA_PLUGINAPPLET;
 		else {
 			char	szFile[_MAX_FNAME];
 			
@@ -731,9 +734,11 @@ const char *GetMimeCmd(int load_action)
 
 		case HANDLE_UNKNOWN:
 			return MIME_SHELLEXECUTE;	//????? What should this be set to ???
-
+//~~~
 		case HANDLE_VIA_PLUGIN:
-			return MIME_SHELLEXECUTE;	//????? What should this be set to ???
+			return MIME_PLUGIN;
+		case HANDLE_VIA_PLUGINAPPLET:
+			return MIME_PLUGINAPPLET;
 
 		default:
 			return MIME_SHELLEXECUTE;	//????? What should this be set to ???			
@@ -1513,11 +1518,18 @@ fe_ChangeFileType(NET_cdataStruct *pcdata, LPCSTR lpszMimeType, int nHowToHandle
 		// Make sure we don't leave old Netscape specific information lying around. Note that
 		// for types that Netscape can handle internally it's assumed we're handling it unless
 		// it's marked as HANDLE_EXTERNAL in the Netscape specific information
-		if (pHelperApp->how_handle == HANDLE_EXTERNAL || pHelperApp->how_handle == HANDLE_SAVE) {
+		if (pHelperApp->how_handle == HANDLE_EXTERNAL || pHelperApp->how_handle == HANDLE_SAVE
+//~~~      
+        || pHelperApp->how_handle == HANDLE_VIA_PLUGIN || pHelperApp->how_handle == HANDLE_VIA_PLUGINAPPLET) {
 			// This gets saved in fe_CleanupFileFormatTypes()
 			if (pHelperApp->how_handle == HANDLE_SAVE)
 				pHelperApp->csCmd = MIME_SAVE;
-			pHelperApp->bChanged = TRUE;
+			if (pHelperApp->how_handle == HANDLE_VIA_PLUGIN)
+				pHelperApp->csCmd = MIME_PLUGIN;
+			if (pHelperApp->how_handle == HANDLE_VIA_PLUGINAPPLET)
+				pHelperApp->csCmd = MIME_PLUGINAPPLET;
+
+      pHelperApp->bChanged = TRUE;
 		
 		} else {
 			// Remove any existing entry for this MIME type. If the MIME type isn't listed in the
