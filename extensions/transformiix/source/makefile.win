@@ -24,7 +24,7 @@ include <$(DEPTH)/config/config.mak>
 
 DIRS=base net xml xpath xslt
 
-!ifdef TX_EXE
+!ifndef MOZ_XSL
 DIRS = $(DIRS) main
 !endif
 

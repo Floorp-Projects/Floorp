@@ -31,7 +31,7 @@
  *   -- 20000326
  *     -- added Mozilla integration code
  *
- * $Id: URIUtils.h,v 1.14 2001/06/10 11:30:29 axel%pike.org Exp $
+ * $Id: URIUtils.h,v 1.15 2001/06/10 13:50:49 axel%pike.org Exp $
  */
 
 #ifndef TRANSFRMX_URIUTILS_H
@@ -39,7 +39,7 @@
 
 #include "TxString.h"
 #include "baseutils.h"
-#ifdef TX_EXE
+#ifndef MOZ_XSL
 #include <fstream.h>
 #endif
 
@@ -48,7 +48,7 @@
  * A utility class for URI handling
  * Not yet finished, only handles file URI at this point
  * @author <a href="mailto:kvisco@ziplink.net">Keith Visco</a>
- * @version $Revision: 1.14 $ $Date: 2001/06/10 11:30:29 $
+ * @version $Revision: 1.15 $ $Date: 2001/06/10 13:50:49 $
  *
 **/
 

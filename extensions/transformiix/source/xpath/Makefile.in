@@ -26,7 +26,7 @@ VPATH           = @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-ifndef TX_EXE
+ifdef MOZ_XSL
 MODULE = transformiix
 REQUIRES = string xpcom dom layout widget caps js
 endif
@@ -65,7 +65,7 @@ CPPSRCS = AdditiveExpr.cpp \
         UnionExpr.cpp \
         VariableRefExpr.cpp \
         XPathNames.cpp
-ifndef TX_EXE
+ifdef MOZ_XSL
 CPPSRCS += XPathProcessor.cpp \
            nsNodeSet.cpp
 endif
@@ -76,7 +76,7 @@ INCLUDES += -I$(srcdir)/../base -I$(srcdir)/../xml \
         -I$(srcdir)/../xml/dom -I$(srcdir)/../xml/util \
         -I$(srcdir)/../xslt -I$(srcdir)/../xslt/util \
         -I$(srcdir)/../xslt/functions
-ifndef TX_EXE
+ifdef MOZ_XSL
 INCLUDES += -I$(srcdir)
 endif
 
