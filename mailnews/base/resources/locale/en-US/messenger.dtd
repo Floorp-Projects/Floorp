@@ -166,8 +166,6 @@ Rights Reserved.
 <!ENTITY sortDescending.accesskey "D">
 <!ENTITY msgsMenu.label "Messages">
 <!ENTITY msgsMenu.accesskey "a">
-<!ENTITY threadsMsgsCmd.label "Threaded">
-<!ENTITY threadsMsgsCmd.accesskey "T">
 <!ENTITY allMsgsCmd.label "All">
 <!ENTITY allMsgsCmd.accesskey "A">
 <!ENTITY expandOrCollapseMenu.label "Expand/Collapse">

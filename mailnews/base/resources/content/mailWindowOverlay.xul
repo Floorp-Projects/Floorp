@@ -1052,11 +1052,6 @@ Rights Reserved.
           <menuitem id="viewThreadsWithUnreadMenuItem" type="radio" name="viewmessages" label="&threadsWithUnreadCmd.label;" accesskey="&threadsWithUnreadCmd.accesskey;" disabled="true" observes="cmd_viewThreadsWithUnread"/>
           <menuitem id="viewWatchedThreadsWithUnreadMenuItem" type="radio" name="viewmessages" label="&watchedThreadsWithUnreadCmd.label;" accesskey="&watchedThreadsWithUnreadCmd.accesskey;" disabled="true" observes="cmd_viewWatchedThreadsWithUnread"/>
           <menuseparator/>
-          <menuitem id="menu_showThreads"
-           type="checkbox"
-           label="&threadsMsgsCmd.label;"
-           accesskey="&threadsMsgsCmd.accesskey;"
-           observes="cmd_sortByThread"/>
           <menuitem id="viewIgnoredThreadsMenuItem" type="checkbox" label="&ignoredThreadsCmd.label;" disabled="true" observes="cmd_viewIgnoredThreads" accesskey="&ignoredThreadsCmd.accesskey;"/>
           <menuseparator/>
           <menuitem label="&expandAllThreadsCmd.label;" accesskey="&expandAllThreadsCmd.accesskey;" key="key_expandAllThreads" disabled="true" observes="cmd_expandAllThreads"/>
