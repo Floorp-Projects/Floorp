@@ -61,7 +61,7 @@ static void EnsureNSSInitialized(PRBool triggeredByNSSComponent)
   haveLoaded = PR_TRUE;
   
   if (triggeredByNSSComponent) {
-    // Me must prevent a recursion, as nsNSSComponent creates
+    // We must prevent a recursion, as nsNSSComponent creates
     // additional instances
     return;
   }

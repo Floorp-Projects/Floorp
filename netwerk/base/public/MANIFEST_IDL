@@ -50,6 +50,5 @@ nsIWebFilters.idl
 nsISecurityEventSink.idl
 nsISecretDecoderRing.idl
 nsISecureBrowserUI.idl
-nsISecurityManagerComponent.idl
 nsIByteRangeRequest.idl
 nsIMultiPartChannel.idl

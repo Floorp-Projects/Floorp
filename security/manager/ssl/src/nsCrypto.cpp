@@ -1447,10 +1447,6 @@ nsCrypto::GenerateCRMFRequest(nsIDOMCRMFObject** aReturn)
   nrv = holder->GetJSObject(&script_obj);
   NS_ENSURE_SUCCESS(nrv, nrv);
 
-  // Before doing this, lets' make sure the NSS Component has 
-  // initialized itself.
-  nsCOMPtr<nsISecurityManagerComponent> nss = 
-                                      do_GetService(PSM_COMPONENT_CONTRACTID);
   //Put up some UI warning that someone is trying to 
   //escrow the private key.
   //Don't addref this copy.  That way ths reference goes away
@@ -2039,8 +2035,6 @@ nsCrypto::Alert(const nsAString& aMessage)
 NS_IMETHODIMP
 nsCrypto::Logout()
 {
-  nsCOMPtr<nsISecurityManagerComponent> nss = 
-                     do_GetService(PSM_COMPONENT_CONTRACTID);
   PK11_LogoutAll();
   return NS_OK;
 }

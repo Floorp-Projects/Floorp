@@ -32,7 +32,6 @@
 #include "nsIInterfaceRequestor.h"
 #include "nsIInterfaceRequestorUtils.h"
 #include "nsIServiceManager.h"
-#include "nsISecurityManagerComponent.h"
 #include "nsIWindowWatcher.h"
 #include "nsIPrompt.h"
 #include "nsProxiedService.h"
@@ -107,10 +106,6 @@ nsSecretDecoderRing::nsSecretDecoderRing()
 {
   // initialize superclass
   NS_INIT_ISUPPORTS();
-
-  // (Possibly) create the Security Manager component to get things
-  // initialized
-  nsCOMPtr<nsISecurityManagerComponent> nss = do_GetService(PSM_COMPONENT_CONTRACTID);
 }
 
 // nsSecretDecoderRing destructor

@@ -1098,20 +1098,12 @@ nsNSSComponent::Init()
 }
 
 /* nsISupports Implementation for the class */
-NS_IMPL_THREADSAFE_ISUPPORTS6(nsNSSComponent,
-                              nsISecurityManagerComponent,
+NS_IMPL_THREADSAFE_ISUPPORTS5(nsNSSComponent,
                               nsISignatureVerifier,
                               nsIEntropyCollector,
                               nsINSSComponent,
                               nsIObserver,
                               nsISupportsWeakReference);
-
-NS_IMETHODIMP
-nsNSSComponent::DisplaySecurityAdvisor()
-{
-  return NS_ERROR_NOT_IMPLEMENTED; // not implemented
-}
-
 
 //---------------------------------------------
 // Functions Implementing nsISignatureVerifier
@@ -1141,15 +1133,6 @@ nsNSSComponent::HashEnd(HASHContext* ctx, unsigned char** hash,
 {
   HASH_End(ctx, *hash, hashLen, maxLen);
   HASH_Destroy(ctx);
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsNSSComponent::GetPassword(char **aRet)
-{
-  // This functionality is only used in wallet.
-  // This interface can go away once we get rid of PSM 1.x.
-  *aRet = nsnull;
   return NS_OK;
 }
 
@@ -1611,7 +1594,6 @@ PSMContentDownloader::PSMContentDownloader(PRUint32 type)
     mDoSilentDownload(PR_FALSE)
 {
   NS_INIT_ISUPPORTS();
-  mNSS = do_GetService(PSM_COMPONENT_CONTRACTID);
 }
 
 PSMContentDownloader::~PSMContentDownloader()
