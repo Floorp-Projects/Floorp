@@ -627,14 +627,22 @@ nsMathMLmoFrame::Stretch(nsIPresContext*      aPresContext,
   }
   mPresentationData.flags |= NS_MATHML_STRETCH_DONE;
 
+  nsIFrame* firstChild = mFrames.FirstChild();
+
   // get the axis height;
   const nsStyleFont *font = NS_STATIC_CAST(const nsStyleFont*,
     mStyleContext->GetStyleData(eStyleStruct_Font));
   nsCOMPtr<nsIFontMetrics> fm;
   aRenderingContext.SetFont(font->mFont, nsnull);
   aRenderingContext.GetFontMetrics(*getter_AddRefs(fm));
-  nscoord leading = 0, axisHeight, height;
+  nscoord axisHeight, height;
   GetAxisHeight(aRenderingContext, fm, axisHeight);
+
+  // get the leading to be left at the top and the bottom of the stretched char
+  // this seems more reliable than using fm->GetLeading() on suspicious fonts               
+  nscoord em;
+  GetEmHeight(fm, em);
+  nscoord leading = NSToCoordRound(0.2f * em);
 
   // Operators that are stretchy, or those that are to be centered
   // to cater for fonts that are not math-aware, are handled by the MathMLChar
@@ -805,12 +813,6 @@ nsMathMLmoFrame::Stretch(nsIPresContext*      aPresContext,
           }
           mBoundingMetrics.ascent = height - mBoundingMetrics.descent;
         }
-
-        // get the leading to be left at the top and the bottom of the stretched char
-        // this seems more reliable than using fm->GetLeading() on suspicious fonts               
-        nscoord em;
-        GetEmHeight(fm, em);
-        leading = NSToCoordRound(0.2f * em); // so, leading remains 0 if we don't get here
       }
     }
   }
@@ -843,11 +845,17 @@ nsMathMLmoFrame::Stretch(nsIPresContext*      aPresContext,
         NS_MATHML_EMBELLISH_IS_ACCENTUNDER(parentData.flags)) &&
        parentData.coreFrame != this;
   }
-  if (isAccent) {
+  if (isAccent && firstChild) {
+    // see bug 188467 for what is going on here
+    nscoord dy = aDesiredStretchSize.ascent - (mBoundingMetrics.ascent + leading);
     aDesiredStretchSize.ascent = mBoundingMetrics.ascent + leading;
-    aDesiredStretchSize.descent = mBoundingMetrics.descent + leading;
+    aDesiredStretchSize.descent = mBoundingMetrics.descent;
+
+    nsPoint origin;
+    firstChild->GetOrigin(origin);
+    firstChild->MoveTo(aPresContext, origin.x, origin.y - dy);
   }
-  else {
+  else if (useMathMLChar) {
     nscoord ascent, descent;
     fm->GetMaxAscent(ascent);
     fm->GetMaxDescent(descent);
@@ -899,7 +907,7 @@ nsMathMLmoFrame::Stretch(nsIPresContext*      aPresContext,
         mMathMLChar.SetRect(nsRect(rect.x + leftSpace, rect.y, rect.width, rect.height));
       }
       else {
-        nsIFrame* childFrame = mFrames.FirstChild();
+        nsIFrame* childFrame = firstChild;
         while (childFrame) {
           childFrame->GetRect(rect);
           childFrame->MoveTo(aPresContext, rect.x + leftSpace, rect.y);
@@ -913,7 +921,6 @@ nsMathMLmoFrame::Stretch(nsIPresContext*      aPresContext,
     return NS_OK;
 
   nsRect rect;
-  nsIFrame* firstChild = mFrames.FirstChild();
   firstChild->GetRect(rect);
   if (useMathMLChar) {
     // even though our child text frame is not doing the rendering, we make it play
