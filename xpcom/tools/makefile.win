@@ -23,6 +23,4 @@ DIRS = windows \
        registry \
        $(NULL)
 
-# removed !ifdef BUILD_XPIDL above...
-
 include <$(DEPTH)\config\rules.mak>
