@@ -25,16 +25,21 @@
 
 #include "nsError.h"
 
+// this component is for an MFC app; it's Windows. make sure this is defined.
+#ifndef XP_WIN
+#define XP_WIN
+#endif
+
 class nsIFactory;
 
 // factory creator, in hard and soft link formats
 extern "C" NS_EXPORT nsresult NS_NewPromptServiceFactory(nsIFactory** aFactory);
-typedef nsresult (CALLBACK *MakeFactoryType)(nsIFactory **);
+typedef nsresult (__cdecl *MakeFactoryType)(nsIFactory **);
 #define kPromptServiceFactoryFuncName "NS_NewPromptServiceFactory"
 
 // initialization function, in hard and soft link formats
 extern "C" NS_EXPORT void InitPromptService(HINSTANCE instance);
-typedef nsresult (CALLBACK *InitPromptServiceType)(HINSTANCE instance);
+typedef nsresult (__cdecl *InitPromptServiceType)(HINSTANCE instance);
 #define kPromptServiceInitFuncName "InitPromptService"
 
 #endif
