@@ -130,7 +130,8 @@ var DocumentStateListener =
     
     // hack! Should not need this updateCommands, but there is some controller
     //  bug that this works around. ??
-    window.content.focus();
+    // comment out the following line because it cause 41573 IME problem on Mac
+    //window.content.focus();
     window.updateCommands("create");
     window.updateCommands("save");
   }
