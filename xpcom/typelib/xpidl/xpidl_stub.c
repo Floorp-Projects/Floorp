@@ -151,7 +151,8 @@ static gboolean
 emit_convert_result(TreeState *state, const char *from, const char *to,
                     const char *extra_indent)
 {
-    switch (IDL_NODE_TYPE(state->tree)) {
+    IDL_tree_type type = IDL_NODE_TYPE(state->tree);
+    switch (type) {
       case IDLN_TYPE_INTEGER:
         fprintf(state->file,
                 "%s  if (!JS_NewNumberValue(cx, (jsdouble) %s, %s))\n"
@@ -160,9 +161,10 @@ emit_convert_result(TreeState *state, const char *from, const char *to,
                 extra_indent);
         break;
       case IDLN_TYPE_STRING:
+      case IDLN_TYPE_WIDE_STRING:
         fprintf(state->file,
-                "%s  JSString *str = JS_NewStringCopyZ(cx, %s);\n",
-                extra_indent, from);
+                "%s  JSString *str = JS_New%sStringCopyZ(cx, %s);\n",
+                extra_indent, (type == IDLN_TYPE_STRING) ? "" : "UC", from);
         /* XXXbe must free 'from' using priv's nsIAllocator iff not weak! */
         if (IDL_tree_property_get(state->tree, "shared") != NULL) {
             fputs("oink\n", state->file);
