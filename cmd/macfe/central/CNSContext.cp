@@ -553,9 +553,21 @@ void CNSContext::SwitchLoadURL(
 	URL_Struct*				inURL,
 	FO_Present_Types		inOutputFormat)
 {
-	if ((inURL->address != NULL) && XP_STRCMP(inURL->address, "about:document") != 0 /*&& XP_IsContextBusy( this->fHContext ) */)
-		XP_InterruptContext(&mContext);
-
+	// 98-09-15 (pinkerton)
+	// When we load a new url, the HTML can specify a target. If that target is not one of the existing
+	// named contexts, a new window will be created to load/display this url. In this case, it is totally
+	// unnecessary to call XP_InterruptContext() on the current context because we will be creating a brand 
+	// new context for the new browser window. XP_IC() also has the side effect that it will stop animated
+	// gifs, etc -- it's not just unnecessary, it's just plain the wrong thing to do.
+	//
+	// So we check and see if we can find the named target in the context list. If we cannot, don't stop what 
+	// the current context is doing because we will be opening up a new window to load it later.
+	MWContext* newContext = XP_FindNamedContextInList(&mContext, inURL->window_target);
+	if ( newContext ) {
+		if ((inURL->address != NULL) && XP_STRCMP(inURL->address, "about:document") != 0 /*&& XP_IsContextBusy( this->fHContext ) */)
+			XP_InterruptContext(&mContext);
+	}
+	
 	// Don't broadcast the notification that a copy of one or more messages
 	// will take place: just forward it to the EarlManager... If we broadcast
 	// it through the front-end, the Netscape icon doesn't stop spinning
