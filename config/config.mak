@@ -200,16 +200,15 @@ CFLAGS=$(CFLAGS) -DMOZ_FULLCIRCLE
 !endif
 
 !ifdef MODULAR_NETLIB
-CFLAGS=$(CFLAGS) -DMODULAR_NETLIB -DNS_MT_SUPPORTED -DNETLIB_THREAD -DNS_NET_FILE -DCookieManagement -DPrivacySiteInfo
-!else
-# Defines for new cookie management...
-CFLAGS=$(CFLAGS) -DCookieManagement -DPrivacySiteInfo
-
+CFLAGS=$(CFLAGS) -DMODULAR_NETLIB -DNS_MT_SUPPORTED -DNETLIB_THREAD -DNS_NET_FILE
 !endif
 
-# Defines for new privacy features...
-!ifdef MOZ_TRANSACTION_RECEIPTS 
-CFLAGS=$(CFLAGS) -DTRANSACTION_RECEIPTS
+# Defines for cookie management feature...
+CFLAGS=$(CFLAGS) -DCookieManagement
+
+# Defines for single signon and client wallet features...
+!ifndef MOZ_NO_WALLET_HACK
+CFLAGS=$(CFLAGS) -DSingleSignon -DClientWallet
 !endif
 
 # TODO Cleanup later -Gagan
