@@ -341,6 +341,14 @@ function HideMenus()
 	if(message_menuitem)
 		message_menuitem.setAttribute("hidden", "true");
 
+	var showSearchToolbar = document.getElementById('menu_showSearchToolbar');
+	if(showSearchToolbar)
+		showSearchToolbar.setAttribute("hidden", "true");
+
+	var showSearch_showMessage_Separator = document.getElementById('menu_showSearch_showMessage_Separator');
+	if(showSearch_showMessage_Separator)
+		showSearch_showMessage_Separator.setAttribute("hidden", "true");
+
 	var expandOrCollapseMenu = document.getElementById('menu_expandOrCollapse');
 	if(expandOrCollapseMenu)
 		expandOrCollapseMenu.setAttribute("hidden", "true");
