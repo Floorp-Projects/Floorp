@@ -29,6 +29,7 @@ XPIDL_MODULE = necko_dns
 XPIDLSRCS =                  \
         .\nsIDNSListener.idl \
         .\nsIDNSService.idl  \
+        .\nsIIDNService.idl  \
         $(NULL)
 
 include <$(DEPTH)/config/rules.mak>
