@@ -1,1 +1,68 @@
-Dummy placeholder until these directories are hooked up correctly.
+<?xml version="1.0"?>
+<!-- 
+  The contents of this file are subject to the Netscape Public
+  License Version 1.1 (the "License"); you may not use this file
+  except in compliance with the License. You may obtain a copy of
+  the License at http://www.mozilla.org/NPL/
+  
+  Software distributed under the License is distributed on an "AS
+  IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+  implied. See the License for the specific language governing
+  rights and limitations under the License.
+  
+  The Original Code is Mozilla Communicator client code, released
+  March 31, 1998.
+  
+  The Initial Developer of the Original Code is Netscape
+  Communications Corporation. Portions created by Netscape are
+  Copyright (C) 1998-1999 Netscape Communications Corporation. All
+  Rights Reserved.
+  
+  Contributor(s):
+  Jason Kersey (kerz@netscape.com)
+-->
+
+<?xml-stylesheet href="chrome://communicator/skin/" type="text/css"?>
+
+<!DOCTYPE dialog SYSTEM "chrome://communicator/locale/wallet/WalletPreview.dtd" >
+
+<dialog title="&windowtitle.label;"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        ondialogaccept="return Save();"
+        ondialogcancel="return Cancel();"
+        ondialoghelp="return doHelpButton();"
+        orient="vertical" class="dialog" onload="Startup()">
+
+  <script type="application/x-javascript" src="chrome://global/content/strres.js" />
+  <script type="application/x-javascript" src="chrome://communicator/content/wallet/WalletPreview.js"/>
+  <script type="application/x-javascript" src="chrome://wallet/content/walletOverlay.js"/>
+  <script type="application/x-javascript" src="chrome://help/content/contextHelp.js"/>
+
+  <keyset id="dialogKeys"/>
+
+  <label value="&heading.label;"/>    
+  
+  <spacer/>
+  
+  <hbox class="inset" flex="1" style="overflow: auto">
+    <grid class="indent" flex="1">
+      <columns flex="1">
+        <column flex="1" crop="right"/>
+        <column flex="2"/>
+      </columns>
+      <rows id="rows"/>      
+    </grid>
+  </hbox>
+  
+  <hbox>
+    <checkbox id="checkbox" label="&bypass.label;"/>
+  </hbox>
+
+  <hbox>
+    <button label="&viewdata.label;" oncommand="formShow();"/>
+    <spacer flex="1"/>
+    <button dlgtype="accept" class="dialog-button"/>
+    <button dlgtype="cancel" class="dialog-button"/>
+    <button dlgtype="help" class="dialog-button"/>
+  </hbox>
+</dialog>
