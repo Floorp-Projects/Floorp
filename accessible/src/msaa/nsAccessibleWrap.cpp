@@ -385,16 +385,34 @@ STDMETHODIMP nsAccessibleWrap::get_accKeyboardShortcut(
 STDMETHODIMP nsAccessibleWrap::get_accFocus( 
       /* [retval][out] */ VARIANT __RPC_FAR *pvarChild)
 {
-  // Since documents manage the child focus in Mozilla, we 
-  // only return a focused IAccessible in 
-  // nsDocAccessibleWrap::get_accFocus)()
-  // We return CHILDID_SELF if we currently have focus
+  // VT_EMPTY:    None. This object does not have the keyboard focus itself
+  //              and does not contain a child that has the keyboard focus.
+  // VT_I4:       lVal is CHILDID_SELF. The object itself has the keyboard focus.
+  // VT_I4:       lVal contains the child ID of the child element with the keyboard focus.
+  // VT_DISPATCH: pdispVal member is the address of the IDispatch interface
+  //              for the child object with the keyboard focus.
+
+  if (!mDOMNode) {
+    return E_FAIL; // This node is shut down
+  }
 
   VariantInit(pvarChild);
-  pvarChild->vt = VT_EMPTY;
-  if (mDOMNode && mDOMNode == gLastFocusedNode) {
-    pvarChild->vt = VT_I4;
-    pvarChild->lVal = CHILDID_SELF;
+  if (mDOMNode == gLastFocusedNode) {
+     pvarChild->vt = VT_I4;
+     pvarChild->lVal = CHILDID_SELF;
+     return S_OK;
+  }
+
+  // Return the current IAccessible child that has focus
+  pvarChild->vt = VT_EMPTY; // Fallback when focus isn't a child of this
+  nsCOMPtr<nsIAccessible> focusedAccessible;
+  if (NS_SUCCEEDED(GetFocusedChild(getter_AddRefs(focusedAccessible)))) {
+    nsCOMPtr<nsIAccessible> parentAccessible;
+    focusedAccessible->GetParent(getter_AddRefs(parentAccessible));
+    if (parentAccessible == this) {
+      pvarChild->vt = VT_DISPATCH;
+      pvarChild->pdispVal = NativeAccessible(focusedAccessible);
+    }
   }
 
   return S_OK;
