@@ -33,7 +33,7 @@
 #define	MD5_BYTE	unsigned char
 #define	MD5_WORD	unsigned int
 
-typedef	union md5_endian {
+union md5_endian {
 #ifdef IS_LITTLE_ENDIAN
 	MD5_WORD	m_word;
 	struct	{
