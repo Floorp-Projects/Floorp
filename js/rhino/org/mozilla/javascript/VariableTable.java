@@ -130,6 +130,17 @@ public class VariableTable {
         itsVariableNames.put(vName, new Integer(index));
     }
     
+    // This should only be called very early in compilation
+    public void removeLocal(String name) {
+        for (int i=0; i < itsVariables.size(); i++) {
+            LocalVariable v = (LocalVariable) itsVariables.elementAt(i);
+            if (v.getName().equals(name)) {
+                itsVariables.removeElementAt(i);
+                return;
+            }
+        }
+    }
+    
     // a list of the formal parameters and local variables
     protected Vector itsVariables = new Vector();    
 
