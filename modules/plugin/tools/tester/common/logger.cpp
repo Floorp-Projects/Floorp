@@ -105,19 +105,14 @@ BOOL CLogger::onNPP_DestroyStream(NPStream * npStream)
 
 static void FixUpOutputString(char * aString)
 {
-  // search for "<html" substring in both lower and 
-  // upper cases and replace with "<@tml".
+  // replace angle brackets with rect brackets
   char * p = aString;
-  while(p = strstr(p, "<html")) {
-    p++;
-    *p = '@';
-  }
+  while(p = strstr(p, "<"))
+    *p = '[';
 
   p = aString;
-  while(p = strstr(p, "<HTML")) {
-    p++;
-    *p = '@';
-  }
+  while(p = strstr(p, ">"))
+    *p = ']';
 }
 
 BOOL CLogger::appendToLog(NPAPI_Action action, DWORD dwTickEnter, DWORD dwTickReturn, 
