@@ -1061,8 +1061,13 @@ NS_IMETHODIMP nsMsgLocalMailFolder::EmptyTrash(nsIMsgWindow *msgWindow,
           parentFolder->CreateSubfolder(NS_LITERAL_STRING("Trash").get(),nsnull);
           nsCOMPtr<nsIMsgFolder> newTrashFolder;
           rv = GetTrashFolder(getter_AddRefs(newTrashFolder));
-          if (NS_SUCCEEDED(rv) && newTrashFolder)
+          if (NS_SUCCEEDED(rv) && newTrashFolder) {
             newTrashFolder->SetDBTransferInfo(transferInfo);
+            // update the summary totals so the front end will
+            // show the right thing for the new trash folder
+            // see bug #161999
+            newTrashFolder->UpdateSummaryTotals(PR_TRUE);
+          }
         }
     }
     return rv;

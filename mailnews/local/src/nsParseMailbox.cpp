@@ -1534,7 +1534,7 @@ void nsParseNewMailState::DoneParsingFolder(nsresult status)
 
 PRInt32 nsParseNewMailState::PublishMsgHeader(nsIMsgWindow *msgWindow)
 {
-  PRBool		moved = PR_FALSE;
+  PRBool moved = PR_FALSE;
   
   FinishHeader();
   
@@ -1556,7 +1556,7 @@ PRInt32 nsParseNewMailState::PublishMsgHeader(nsIMsgWindow *msgWindow)
         if (!(oldFlags & MSG_FLAG_READ)) // don't mark read messages as new.
           m_newMsgHdr->OrFlags(MSG_FLAG_NEW, &newFlags);
         
-        m_mailDB->AddNewHdrToDB (m_newMsgHdr, PR_TRUE);
+        m_mailDB->AddNewHdrToDB(m_newMsgHdr, PR_TRUE);
       }
     }		// if it was moved by imap filter, m_parseMsgState->m_newMsgHdr == nsnull
     m_newMsgHdr = nsnull;

@@ -1492,7 +1492,7 @@ nsNNTPProtocol::ParseURL(nsIURI * aURL, char ** aGroup, char ** aMessageID,
     // if we get here, we, we are either doing:
     // news://host/message-id or news://host/*
     // (but not news://host/message-id?cancel)
-    // for authentication, we se set m_newsFolder to be the server's folder.
+    // for authentication, we set m_newsFolder to be the server's folder.
     // while we are here, we set m_nntpServer.
     rv = nntpService->DecomposeNewsURI(serverURI.get(), getter_AddRefs(folder), &m_key);
     NS_ENSURE_SUCCESS(rv,rv);

@@ -880,14 +880,12 @@ nsMsgFolderDataSource::OnItemIntPropertyChanged(nsISupports *item,
 	nsCOMPtr<nsIMsgFolder> folder = do_QueryInterface(item);
 	if(folder)
 	{
-
-		if (kTotalMessagesAtom == property)
-			OnTotalMessagePropertyChanged(folder, oldValue, newValue);
-		else if (kTotalUnreadMessagesAtom == property)
-			OnUnreadMessagePropertyChanged(folder, oldValue, newValue);
-                else if (kFolderSizeAtom == property)
-			OnFolderSizePropertyChanged(folder, oldValue, newValue);
-
+    if (kTotalMessagesAtom == property)
+      OnTotalMessagePropertyChanged(folder, oldValue, newValue);
+    else if (kTotalUnreadMessagesAtom == property)
+      OnUnreadMessagePropertyChanged(folder, oldValue, newValue);
+    else if (kFolderSizeAtom == property)
+      OnFolderSizePropertyChanged(folder, oldValue, newValue);
 	}
 	return NS_OK;
 }

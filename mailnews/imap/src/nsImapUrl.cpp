@@ -199,8 +199,7 @@ NS_IMETHODIMP nsImapUrl::GetFolder(nsIMsgFolder **aMsgFolder)
   NS_ENSURE_ARG_POINTER(m_imapFolder);
 
   nsCOMPtr<nsIMsgFolder> folder = do_QueryReferent(m_imapFolder);
-  *aMsgFolder = folder;
-  NS_IF_ADDREF(*aMsgFolder);
+  NS_IF_ADDREF(*aMsgFolder = folder);
   return NS_OK;
 }
 
