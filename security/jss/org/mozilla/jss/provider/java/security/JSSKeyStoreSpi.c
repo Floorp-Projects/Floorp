@@ -503,14 +503,13 @@ engineGetCertificateTraversalCallback
     return travStat;
 }
         
-
-JNIEXPORT jbyteArray JNICALL
-Java_org_mozilla_jss_provider_java_security_JSSKeyStoreSpi_getDERCert
-    (JNIEnv *env, jobject this, jstring alias)
+static CERTCertificate*
+lookupCertByNickname(JNIEnv *env, jobject this, jstring alias)
 {
     PK11SlotInfo *slot;
     EngineGetCertificateCBInfo cbinfo = {NULL,NULL};
     jbyteArray derCertBA = NULL;
+    PRStatus status = PR_FAILURE;
 
     if( alias == NULL ) goto finish;
 
@@ -522,26 +521,67 @@ Java_org_mozilla_jss_provider_java_security_JSSKeyStoreSpi_getDERCert
     cbinfo.targetNickname = (*env)->GetStringUTFChars(env, alias, NULL);
     if(cbinfo.targetNickname == NULL ) goto finish;
 
-    if( traverseTokenObjects(   env,
-                                slot,
-                                engineGetCertificateTraversalCallback,
-                                CERT,
-                                (void*) &cbinfo)
-            != PR_SUCCESS )
-    {
-        goto finish;
-    }
-
-    if( cbinfo.cert != NULL ) {
-        derCertBA = JSS_SECItemToByteArray(env, &cbinfo.cert->derCert);
-    }
+    status  = traverseTokenObjects( env,
+                                    slot,
+                                    engineGetCertificateTraversalCallback,
+                                    CERT,
+                                    (void*) &cbinfo);
 
 finish:
     if( cbinfo.targetNickname != NULL ) {
         (*env)->ReleaseStringUTFChars(env, alias, cbinfo.targetNickname);
     }
-    if( cbinfo.cert != NULL) {
+    if( status != PR_SUCCESS && cbinfo.cert != NULL) {
         CERT_DestroyCertificate(cbinfo.cert);
+        cbinfo.cert = NULL;
+    }
+    return cbinfo.cert;
+}
+
+JNIEXPORT jobject JNICALL
+Java_org_mozilla_jss_provider_java_security_JSSKeyStoreSpi_getCertObject
+    (JNIEnv *env, jobject this, jstring alias)
+{
+    CERTCertificate *cert = NULL;
+    jobject certObj = NULL;
+
+    cert = lookupCertByNickname(env, this, alias);
+    if( cert == NULL ) {
+        goto finish;
+    }
+
+    certObj = JSS_PK11_wrapCert(env, &cert);
+
+finish:
+    if( cert != NULL ) {
+        CERT_DestroyCertificate(cert);
+    }
+    if( certObj == NULL ) {
+        PR_ASSERT( (*env)->ExceptionOccurred(env) );
+    }
+    return certObj;
+}
+
+JNIEXPORT jbyteArray JNICALL
+Java_org_mozilla_jss_provider_java_security_JSSKeyStoreSpi_getDERCert
+    (JNIEnv *env, jobject this, jstring alias)
+{
+    CERTCertificate * cert = NULL;
+    jbyteArray derCertBA = NULL;
+
+    cert = lookupCertByNickname(env, this, alias);
+    if( cert == NULL ) {
+        goto finish;
+    }
+
+    derCertBA = JSS_SECItemToByteArray(env, &cert->derCert);
+
+finish:
+    if( cert != NULL) {
+        CERT_DestroyCertificate(cert);
+    }
+    if( derCertBA == NULL ) {
+        PR_ASSERT( (*env)->ExceptionOccurred(env) );
     }
     return derCertBA;
 }

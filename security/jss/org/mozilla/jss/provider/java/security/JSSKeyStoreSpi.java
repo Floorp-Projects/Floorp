@@ -54,6 +54,10 @@ import org.mozilla.jss.pkcs11.TokenProxy;
 import org.mozilla.jss.crypto.CryptoToken;
 import org.mozilla.jss.crypto.TokenSupplierManager;
 import org.mozilla.jss.crypto.SecretKeyFacade;
+import org.mozilla.jss.crypto.X509Certificate;
+import org.mozilla.jss.crypto.TokenException;
+import org.mozilla.jss.crypto.TokenRuntimeException;
+import org.mozilla.jss.CryptoManager;
 
 /**
  * The JSS implementation of the JCA KeyStore SPI.
@@ -169,6 +173,7 @@ public class JSSKeyStoreSpi extends java.security.KeyStoreSpi {
     }
 
     private native byte[] getDERCert(String alias);
+    private native X509Certificate getCertObject(String alias);
 
     public String engineGetCertificateAlias(Certificate cert) {
       try {
@@ -181,14 +186,28 @@ public class JSSKeyStoreSpi extends java.security.KeyStoreSpi {
     private native String getCertNickname(byte[] derCert);
         
     public Certificate[] engineGetCertificateChain(String alias) {
-        Certificate cert = engineGetCertificate(alias);
-        if( cert == null ) {
+      try {
+        X509Certificate leaf = getCertObject(alias);
+        if( leaf == null ) {
             return null;
-        } else {
-            Certificate[] certs = new Certificate[1];
-            certs[0] = cert;
-            return certs;
         }
+        CryptoManager cm = CryptoManager.getInstance();
+        X509Certificate[] jssChain = cm.buildCertificateChain(leaf);
+
+        Certificate[] chain = new Certificate[jssChain.length];
+        for( int i=0; i < chain.length; ++i) {
+            chain[i] = certFactory.generateCertificate(
+                        new ByteArrayInputStream(jssChain[i].getEncoded()) );
+        }
+        return chain;
+      } catch(TokenException te ) {
+            throw new TokenRuntimeException(te.toString());
+      } catch(CryptoManager.NotInitializedException e) {
+            throw new RuntimeException("CryptoManager not initialized");
+      } catch(CertificateException ce) {
+            ce.printStackTrace();
+            return null;
+      }
     }
 
     /*

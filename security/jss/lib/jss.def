@@ -258,6 +258,7 @@ Java_org_mozilla_jss_ssl_SSLSocket_setCipherPreferenceDefault;
 Java_org_mozilla_jss_ssl_SSLSocket_getCipherPreference;
 Java_org_mozilla_jss_CryptoManager_configureOCSPNative;
 Java_org_mozilla_jss_pkcs11_PK11SymKey_getLength;
+Java_org_mozilla_jss_provider_java_security_JSSKeyStoreSpi_getCertObject;
 ;+    local:
 ;+       *;
 ;+};
