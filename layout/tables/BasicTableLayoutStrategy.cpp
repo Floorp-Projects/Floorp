@@ -1065,7 +1065,7 @@ BasicTableLayoutStrategy::AssignPctColumnWidths(const nsHTMLReflowState aReflowS
 {
   mTableFrame->SetHasCellSpanningPctCol(PR_FALSE); // this gets refigured below
   PRInt32 numRows = mTableFrame->GetRowCount();
-  PRInt32 numCols = mTableFrame->GetColCount();
+  PRInt32 numCols = mTableFrame->GetColCount(); // consider cols at end without orig cells 
   nscoord spacingX = mTableFrame->GetCellSpacingX();
   PRInt32 colX, rowX; 
 
@@ -1081,8 +1081,14 @@ BasicTableLayoutStrategy::AssignPctColumnWidths(const nsHTMLReflowState aReflowS
     // on percent cells/cols. This probably should only be a NavQuirks thing, since
     // a percentage based cell or column on an auto table should force the column to auto
     basis = 0;                 
-    float* rawPctValues = new float[mTableFrame->GetColCount()]; // store the raw pct values, allow for spans past the effective numCols
+    float* rawPctValues = new float[numCols]; // store the raw pct values, allow for spans past the effective numCols
     if (!rawPctValues) return NS_ERROR_OUT_OF_MEMORY;
+    //XXX not sure if this really sets each element to 0.0f
+    //memset(rawPctValues, 0.0f, numCols * sizeof(float));
+    for (colX = 0; colX < numCols; colX++) {
+      rawPctValues[colX] = 0.0f;
+    }
+
     for (colX = 0; colX < numCols; colX++) { 
       nsTableColFrame* colFrame = mTableFrame->GetColFrame(colX);
       if (!colFrame) continue;
