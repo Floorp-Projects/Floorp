@@ -315,6 +315,11 @@ OS_LDFLAGS = /DEBUG /OPT:REF /OPT:nowin98
 ifdef MOZ_PROFILE
 OS_LDFLAGS += /PDB:NONE
 endif
+endif
+
+# /FIXED:NO is needed for Quantify to work, but it increases the size
+# of executables, so only use it if building for Quantify.
+ifdef MOZ_QUANTIFY
 WIN32_EXE_LDFLAGS=/FIXED:NO
 endif
 

@@ -4851,6 +4851,14 @@ MOZ_ARG_WITH_STRING(insure-exclude-dirs,
     MOZ_INSURE_EXCLUDE_DIRS="config $withval" )
 
 dnl ========================================================
+dnl = Support for Quantify (Windows)
+dnl ========================================================
+MOZ_ARG_ENABLE_BOOL(quantify,
+[  --enable-quantify      Enable Quantify support (Windows only) ],
+    MOZ_QUANTIFY=1,
+    MOZ_QUANTIFY= )
+
+dnl ========================================================
 dnl = Support for demangling undefined symbols
 dnl ========================================================
 if test -z "$SKIP_LIBRARY_CHECKS"; then
@@ -5720,6 +5728,7 @@ AC_SUBST(MOZ_USE_NATIVE_UCONV)
 AC_SUBST(MOZ_INSURE)
 AC_SUBST(MOZ_INSURE_DIRS)
 AC_SUBST(MOZ_INSURE_EXCLUDE_DIRS)
+AC_SUBST(MOZ_QUANTIFY)
 AC_SUBST(MOZ_INSURIFYING)
 AC_SUBST(MOZ_LDAP_XPCOM)
 AC_SUBST(MOZ_LDAP_XPCOM_EXPERIMENTAL)
@@ -5784,6 +5793,7 @@ AC_SUBST(MOZ_APP_VERSION)
 
 dnl win32 options
 AC_SUBST(MOZ_PROFILE)
+AC_SUBST(MOZ_DEBUG_SYMBOLS)
 AC_SUBST(MOZ_COVERAGE)
 AC_SUBST(MOZ_MAPINFO)
 AC_SUBST(MOZ_BROWSE_INFO)
