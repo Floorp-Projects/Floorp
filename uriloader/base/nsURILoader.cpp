@@ -85,7 +85,7 @@ public:
     // nsIStreamObserver methods:
     NS_DECL_NSISTREAMOBSERVER
 
-	  // nsIStreamListener methods:
+    // nsIStreamListener methods:
     NS_DECL_NSISTREAMLISTENER
 
 protected:
@@ -363,7 +363,7 @@ nsresult nsDocumentOpenInfo::DispatchContent(nsIChannel * aChannel, nsISupports 
 
       // BEFORE we fail and bring up the unknown content handler dialog...
       // try to detect if there is a helper application we an use instead...
-      if (mCommand == nsIURILoader::viewUserClick && !contentStreamListener)
+      if (/* mCommand == nsIURILoader::viewUserClick && */ !contentStreamListener)
       {
         nsCOMPtr<nsIURI> uri;
         PRBool abortProcess = PR_FALSE;
@@ -821,9 +821,9 @@ NS_IMETHODIMP nsURILoader::DispatchContent(const char * aContentType,
        PRInt32 i = 0;
        // keep looping until we get a content listener back
        for(i = 0; i < m_listeners->Count() && !foundContentHandler; i++)
-	     {
-	        //nsIURIContentListener's aren't refcounted.
-		      nsIURIContentListener * listener =(nsIURIContentListener*)m_listeners->ElementAt(i);
+       {
+          //nsIURIContentListener's aren't refcounted.
+          nsIURIContentListener * listener =(nsIURIContentListener*)m_listeners->ElementAt(i);
           if (listener)
           {
               foundContentHandler = ShouldHandleContent(listener, aContentType, 
