@@ -1267,6 +1267,8 @@ NS_IMETHODIMP nsEditor::Paste()
     mJSEditorLog->Paste();
 #endif // ENABLE_JS_EDITOR_LOG
 
+  nsIImage * image = nsnull;
+
   //printf("nsEditor::Paste\n");
   nsString stuffToPaste;
 
@@ -1285,25 +1287,39 @@ NS_IMETHODIMP nsEditor::Paste()
     // Get the nsITransferable interface for getting the data from the clipboard
     if (trans) {
       // Create the desired DataFlavor for the type of data we want to get out of the transferable
-      nsAutoString flavor(kTextMime);
+      nsAutoString htmlFlavor(kHTMLMime);
+      nsAutoString textFlavor(kTextMime);
+      nsAutoString imageFlavor(kJPEGImageMime);
 
-      trans->AddDataFlavor(&flavor);
+      trans->AddDataFlavor(&htmlFlavor);
+      trans->AddDataFlavor(&textFlavor);
+      trans->AddDataFlavor(&imageFlavor);
 
       // Get the Data from the clipboard
-      clipboard->GetData(trans);
-
-      // Now we ask the transferable for the data
-      // it still owns the data, we just have a pointer to it.
-      // If it can't support a "text" output of the data the call will fail
-      char *str = 0;
-      PRUint32 len;
-      if (NS_OK == trans->GetTransferData(&flavor, (void **)&str, &len)) {
-
-        // Make adjustments for null terminated strings
-        if (str && len > 0) {
-          // stuffToPaste is ready for insertion into the content
-          stuffToPaste.SetString(str, len);
+      if (NS_OK == clipboard->GetData(trans)) {
+        nsAutoString flavor;
+        char *       data;
+        PRUint32     len;
+        if (NS_OK == trans->GetAnyTransferData(&flavor, (void **)&data, &len)) {
+          printf("Got flavor [%s]\n", flavor.ToNewCString());
+          if (flavor.Equals(htmlFlavor)) {
+            if (data && len > 0) { // stuffToPaste is ready for insertion into the content
+              stuffToPaste.SetString(data, len);
+              rv = InsertText(stuffToPaste);
+            }
+          } else if (flavor.Equals(textFlavor)) {
+            if (data && len > 0) { // stuffToPaste is ready for insertion into the content
+              stuffToPaste.SetString(data, len);
+              rv = InsertText(stuffToPaste);
+            }
+          } else if (flavor.Equals(imageFlavor)) {
+            image = (nsIImage *)data;
+            // Insert Image code here
+            NS_RELEASE(image);
+            rv = NS_ERROR_FAILURE; // for now give error code
+          }
         }
+
       }
     }
   }
@@ -1312,7 +1328,7 @@ NS_IMETHODIMP nsEditor::Paste()
   //printf("Trying to insert '%s'\n", stuffToPaste.ToNewCString());
 
   // Now let InsertText handle the hard stuff:
-  return InsertText(stuffToPaste);
+  return rv;
 }
 
 NS_IMETHODIMP nsEditor::PasteAsQuotation()
