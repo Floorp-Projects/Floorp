@@ -9999,7 +9999,9 @@ nsCSSFrameConstructor::AttributeChanged(nsIPresContext* aPresContext,
           // first check if it is a background change: 
           // - if it is then we may need to notify the canvas frame
           //   so it can take care of invalidating the whole canvas
-          if (aAttribute == nsHTMLAtoms::bgcolor || aAttribute == nsHTMLAtoms::background) {
+          if (aAttribute == nsHTMLAtoms::bgcolor ||
+              aAttribute == nsHTMLAtoms::background ||
+              aAttribute == nsHTMLAtoms::style) {
             // see if the content element is the root (HTML) or BODY element
             // NOTE: the assumption here is that the background color or image on
             //       the BODY or HTML element need to have the canvas frame invalidate

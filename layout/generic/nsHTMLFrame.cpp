@@ -691,7 +691,8 @@ CanvasFrame::AttributeChanged(nsIPresContext* aPresContext,
 // if the background color or image is changing, invalidate the canvas
   if (aHint > 0){
     if (aAttribute == nsHTMLAtoms::bgcolor ||
-        aAttribute == nsHTMLAtoms::background) {
+        aAttribute == nsHTMLAtoms::background ||
+        aAttribute == nsHTMLAtoms::style) {
       Invalidate(aPresContext,mRect,PR_FALSE);
     }
   }
