@@ -762,6 +762,7 @@ nsresult nsTableOuterFrame::SizeAndPlaceChildren(const nsSize&          aInnerSi
   return rv;
 }
 
+
 // computes the table width 
 nscoord nsTableOuterFrame::ComputeAvailableTableWidth(const nsHTMLReflowState& aReflowState)
 {
@@ -782,8 +783,15 @@ nscoord nsTableOuterFrame::ComputeAvailableTableWidth(const nsHTMLReflowState& a
       break;
   
     case eStyleUnit_Auto:
-      maxWidth = aReflowState.availableWidth;
-      break;
+      {
+        const nsStyleSpacing* spacing =
+          (const nsStyleSpacing*)mStyleContext->GetStyleData(eStyleStruct_Spacing);
+        nsMargin margin(0,0,0,0);
+        // XXX handle percentages
+        spacing->GetMargin(margin);
+        maxWidth = aReflowState.availableWidth - margin.left - margin.right;
+        break;
+      }
   
     case eStyleUnit_Percent:
       maxWidth = (nscoord)((float)aReflowState.availableWidth * position->mWidth.GetPercentValue());
