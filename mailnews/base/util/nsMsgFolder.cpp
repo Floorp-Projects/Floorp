@@ -465,6 +465,7 @@ nsMsgFolder::parseURI(PRBool needServer)
         rv = parentMsgFolder->GetServer(getter_AddRefs(server));
     }
 
+    // no parent. do the extra work of asking
     if (!server && needServer) {
       // Get username and hostname so we can get the server
       nsXPIDLCString userName;
@@ -498,11 +499,57 @@ nsMsgFolder::parseURI(PRBool needServer)
       if (NS_FAILED(rv)) return rv;
       
     }
-    
+
     // keep weak ref to server - do not addref!
     m_server = server;
-    
+
   } /* !m_server */
+    
+  // now try to find the local path for this folder
+  if (m_server) {
+    
+    nsXPIDLCString urlPath;
+    url->GetFilePath(getter_Copies(urlPath));
+
+    // transform the filepath from the URI, such as
+    // "/folder1/folder2/foldern"
+    // to
+    // "folder1.sbd/folder2.sbd/foldern"
+    // (remove leading / and add .sbd to first n-1 folders)
+    // to be appended onto the server's path
+      
+    nsCAutoString newPath;
+
+    char *newStr;
+    char *token =
+      nsCRT::strtok(NS_CONST_CAST(char *,(const char*)urlPath), "/", &newStr);
+
+    // trick to make sure we only add the path to the first n-1 folders
+    PRBool haveFirst=PR_FALSE;
+    while (token) {
+      // skip leading '/' (and other // style things)
+      if (nsCRT::strcmp(token, "")==0) continue;
+
+        // add .sbd onto the previous path
+      if (haveFirst) newPath+=".sbd";
+        
+      newPath += "/";
+      newPath += token;
+      haveFirst=PR_TRUE;
+
+      token = nsCRT::strtok(newStr, "/", &newStr);
+    }
+
+    // now append munged path onto server path
+    nsCOMPtr<nsIFileSpec> serverPath;
+    rv = m_server->GetLocalPath(getter_AddRefs(serverPath));
+    if (NS_FAILED(rv)) return rv;
+
+    if (serverPath) {
+      serverPath->AppendRelativeUnixPath(newPath.GetBuffer());
+      mPath = serverPath;
+    }
+  }
     
   return NS_OK;
 }
@@ -1701,24 +1748,25 @@ nsMsgFolder::GetMsgDatabase(nsIMsgDatabase** aMsgDatabase)
 NS_IMETHODIMP
 nsMsgFolder::GetPath(nsIFileSpec * *aPath)
 {
-  nsresult rv;
-  nsCOMPtr<nsIMsgIncomingServer> server;
+  NS_ENSURE_ARG_POINTER(aPath);
+  nsresult rv=NS_OK;
+
+  if (!mPath)
+    rv = parseURI(PR_TRUE);
   
-  rv = GetServer(getter_AddRefs(server));
-  if (NS_FAILED(rv)) return rv;
-  if (!server) return NS_ERROR_FAILURE;
-
-
-  nsCOMPtr<nsIFileSpec> path;
-  rv = server->GetLocalPath(getter_AddRefs(path));
+  *aPath = mPath;
+  NS_IF_ADDREF(*aPath);
+  
   return rv;
-
 }
 
 NS_IMETHODIMP
-nsMsgFolder::SetPath(nsIFileSpec  * /* aPath */)
+nsMsgFolder::SetPath(nsIFileSpec  *aPath)
 {
-	return NS_ERROR_NOT_IMPLEMENTED;
+  // XXX - make a local copy!
+  mPath = aPath;
+
+  return NS_OK;
 }
 
 NS_IMETHODIMP

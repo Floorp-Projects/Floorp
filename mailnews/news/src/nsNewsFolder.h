@@ -90,7 +90,6 @@ public:
 	NS_IMETHOD CreateMessageFromMsgDBHdr(nsIMsgDBHdr *msgDBHdr, nsIMessage **message);
   NS_IMETHOD GetNewMessages(nsIMsgWindow *aWindow);
 
-  NS_IMETHOD GetPath(nsIFileSpec** aPathName);
 	NS_IMETHOD GetCanSubscribe(PRBool *aResult);
 	NS_IMETHOD GetCanFileMessages(PRBool *aResult);
 	NS_IMETHOD GetCanCreateSubfolders(PRBool *aResult);

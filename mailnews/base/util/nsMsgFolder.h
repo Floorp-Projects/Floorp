@@ -270,7 +270,7 @@ protected:
   PRBool mIsServerIsValid;
   PRBool mIsServer;
   nsString mName;
-  
+  nsCOMPtr<nsIFileSpec> mPath;
 };
 
 #endif

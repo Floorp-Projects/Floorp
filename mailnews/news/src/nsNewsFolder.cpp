@@ -813,21 +813,6 @@ NS_IMETHODIMP nsMsgNewsFolder::GetRememberedPassword(char ** password)
   return NS_OK;
 }
 
-NS_IMETHODIMP nsMsgNewsFolder::GetPath(nsIFileSpec** aPathName)
-{
-  nsresult rv;
-  if (! mPath) {
-    mPath = new nsNativeFileSpec("");
-    if (! mPath)
-    	return NS_ERROR_OUT_OF_MEMORY;
-
-    rv = nsNewsURI2Path(kNewsRootURI, mURI, *mPath);
-    if (NS_FAILED(rv)) return rv;
-  }
-  rv = NS_NewFileSpecWithSpec(*mPath, aPathName);
-  return rv;
-}
-
 /* this is news, so remember that DeleteMessage is really CANCEL */
 NS_IMETHODIMP nsMsgNewsFolder::DeleteMessages(nsISupportsArray *messages,
                                               nsIMsgWindow *msgWindow, PRBool deleteStorage)

@@ -1032,21 +1032,6 @@ NS_IMETHODIMP nsMsgLocalMailFolder::GetRememberedPassword(char ** password)
   return NS_OK;
 }
 
-NS_IMETHODIMP nsMsgLocalMailFolder::GetPath(nsIFileSpec ** aPathName)
-{
-	nsresult rv;
-  if (! mPath) {
-  	mPath = new nsFileSpec("");
-  	if (! mPath)
-  		return NS_ERROR_OUT_OF_MEMORY;
-  
-    rv = nsLocalURI2Path(kMailboxRootURI, mURI, *mPath);
-    if (NS_FAILED(rv)) return rv;
-  }
-  rv = NS_NewFileSpecWithSpec(*mPath, aPathName);
-
-  return rv;
-}
 
 nsresult
 nsMsgLocalMailFolder::GetTrashFolder(nsIMsgFolder** result)

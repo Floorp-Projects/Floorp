@@ -161,6 +161,7 @@ NS_IMETHODIMP nsImapMailFolder::QueryInterface(REFNSIID aIID, void** aInstancePt
 	return nsMsgDBFolder::QueryInterface(aIID, aInstancePtr);
 }
 
+#if 0
 NS_IMETHODIMP nsImapMailFolder::GetPath(nsIFileSpec** aPathName)
 {
 	nsresult rv;
@@ -178,6 +179,7 @@ NS_IMETHODIMP nsImapMailFolder::GetPath(nsIFileSpec** aPathName)
 
 	return NS_OK;
 }
+
 NS_IMETHODIMP nsImapMailFolder::SetPath(nsIFileSpec * aPathName)
 {
 	if (!aPathName)
@@ -190,6 +192,7 @@ NS_IMETHODIMP nsImapMailFolder::SetPath(nsIFileSpec * aPathName)
 	}
 	return aPathName->GetFileSpec(m_pathName);
 }
+#endif
 
 
 NS_IMETHODIMP nsImapMailFolder::Enumerate(nsIEnumerator* *result)

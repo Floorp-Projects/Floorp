@@ -165,8 +165,10 @@ public:
                                          **message);
     NS_IMETHOD GetNewMessages(nsIMsgWindow *aWindow);
 
+#if 0
     NS_IMETHOD GetPath(nsIFileSpec** aPathName);
 	NS_IMETHOD SetPath(nsIFileSpec * aPath);
+#endif
 
     // nsIMsgImapMailFolder methods
 	NS_DECL_NSIMSGIMAPMAILFOLDER

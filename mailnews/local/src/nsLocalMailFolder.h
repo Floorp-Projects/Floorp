@@ -131,9 +131,6 @@ public:
 	NS_IMETHOD CreateMessageFromMsgDBHdr(nsIMsgDBHdr *msgDBHdr, nsIMessage **message);
 	NS_IMETHOD GetNewMessages(nsIMsgWindow *aWindow);
 
-	// nsIMsgMailFolder
-	NS_IMETHOD GetPath(nsIFileSpec ** aPathName);
-
     // overriding nsMsgDBFolder::GetMsgDatabase() method
   NS_IMETHOD GetMsgDatabase(nsIMsgDatabase **aMsgDatabase);
 
