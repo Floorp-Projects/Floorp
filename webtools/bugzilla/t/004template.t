@@ -94,7 +94,7 @@ close SAVEERR;
 foreach my $file(@testitems) {
     open(TMPL,"$include_path/$file");
     my $firstline = <TMPL>;
-    if ($firstline =~ /<!-- \d+\.\d+\@[\w\._]+ -->/) {
+    if ($firstline =~ /\d+\.\d+\@[\w\.-]+/) {
         ok(1,"$file has a version string");
     } else {
         ok(0,"$file does not have a version string --ERROR");
