@@ -135,7 +135,9 @@ nsEventQueueImpl::~nsEventQueueImpl()
 #endif
 
   if (mEventQueue) {
-    NotifyObservers(gDestroyedNotification);
+    // Perhaps CheckForDeactivation wasn't called...
+    if (mCouldHaveEvents)
+      NotifyObservers(gDestroyedNotification);
     PL_DestroyEventQueue(mEventQueue);
   }
 }
@@ -233,6 +235,19 @@ nsEventQueueImpl::NotifyObservers(const char *aTopic)
     nsCOMPtr<nsIEventQueue> kungFuDeathGrip(this);
     nsCOMPtr<nsISupports> us(do_QueryInterface(kungFuDeathGrip));
     os->NotifyObservers(us, aTopic, NULL);
+  }
+}
+
+void
+nsEventQueueImpl::CheckForDeactivation()
+{
+  if (mCouldHaveEvents && !mAcceptingEvents && !PL_EventAvailable(mEventQueue)) {
+    if (PL_IsQueueOnCurrentThread(mEventQueue)) {
+      mCouldHaveEvents = PR_FALSE;
+      NotifyObservers(gDestroyedNotification);
+      NS_RELEASE_THIS(); // balance ADDREF from the constructor
+    } else
+      NS_ERROR("CheckForDeactivation called from wrong thread!");
   }
 }
 
