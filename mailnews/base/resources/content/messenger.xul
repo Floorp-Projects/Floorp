@@ -463,7 +463,7 @@ Rights Reserved.
 	   </menu>
 	   </menupopup>
     </menu>
-    <menu name ="&searchMenu.label;">
+    <menu value="&searchMenu.label;">
         <menupopup>
 		<menuitem value="&findCmd.label;" onaction="MsgFind();"/>
         <menuitem value="&findAgainCmd.label;" onaction="MsgFindAgain();"/>
