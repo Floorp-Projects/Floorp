@@ -410,11 +410,11 @@ function OutputEmailAddresses(parentBox, defaultParentDiv, emailAddresses, inclu
         // addresses to reach the cutoff valve yet then add it to the default (short) div.
         if (includeShortLongToggle && optionalLongDiv)
         {
-          InsertEmailAddressUnderEnclosingBox(parentBox, optionalLongDiv, emailAddress, fullAddress, name);
+          InsertEmailAddressUnderEnclosingBox(parentBox, optionalLongDiv, true, emailAddress, fullAddress, name);
         }
         if (!includeShortLongToggle || (numAddressesParsed < gNumAddressesToShow))
         {
-          InsertEmailAddressUnderEnclosingBox(parentBox, defaultParentDiv, emailAddress, fullAddress, name);
+          InsertEmailAddressUnderEnclosingBox(parentBox, defaultParentDiv, includeShortLongToggle, emailAddress, fullAddress, name);
         }
         
         numAddressesParsed++;
@@ -435,9 +435,12 @@ function OutputEmailAddresses(parentBox, defaultParentDiv, emailAddresses, inclu
    parentBox --> the enclosing box for all the email addresses for this header. This is needed
                  to control visibility of the header.
    parentDiv --> the DIV the email addresses need to be inserted into.
+   includesToggleButton --> true if the parentDiv includes a toggle button we want contnet inserted BEFORE
+                            false if the parentDiv does not contain a toggle button. This is required in order
+                            to properly detect if we should be inserting addresses before this node....
 */
    
-function InsertEmailAddressUnderEnclosingBox(parentBox, parentDiv, emailAddress, fullAddress, displayName) 
+function InsertEmailAddressUnderEnclosingBox(parentBox, parentDiv, includesToggleButton, emailAddress, fullAddress, displayName) 
 {
   if ( parentBox ) 
   { 
@@ -448,14 +451,20 @@ function InsertEmailAddressUnderEnclosingBox(parentBox, parentDiv, emailAddress,
       if (parentDiv.childNodes.length)
       {
         var child = parentDiv.childNodes[parentDiv.childNodes.length - 1]; 
-        if (parentDiv.childNodes.length > 1)
+        if (parentDiv.childNodes.length > 1 || (!includesToggleButton && parentDiv.childNodes.length >= 1) )
         {
           var textNode = document.createElement("text");
           textNode.setAttribute("value", ", ");
           textNode.setAttribute("class", "emailSeparator");
-          parentDiv.insertBefore(textNode, child);
+          if (includesToggleButton)
+            parentDiv.insertBefore(textNode, child);
+          else
+            parentDiv.appendChild(textNode);
         }
-        itemInDocument = parentDiv.insertBefore(item, child);
+        if (includesToggleButton)
+          itemInDocument = parentDiv.insertBefore(item, child);
+        else
+          itemInDocument = parentDiv.appendChild(item);
       }
       else
       {
@@ -643,21 +652,28 @@ function fillBoxWithAllHeaders(containerBox, boxPartOfPopup)
   {
     var innerBox = document.createElement('box');
     innerBox.setAttribute("class", "headerBox");
-    innerBox.setAttribute("align", "horizontal");
+    innerBox.setAttribute("orient", "horizontal");
     if (boxPartOfPopup)
         innerBox.setAttribute("autostretch", "never");
 
     // for each header, create a header value and header name then assign those values...
+    var headerValueBox = document.createElement('hbox');
+    headerValueBox.setAttribute("class", "headerValueBox");
+
 	  var newHeaderTitle  = document.createElement('text');
     newHeaderTitle.setAttribute("class", "headerdisplayname");
 	  newHeaderTitle.setAttribute("value", currentHeaderData[header].headerName + ':');
-	  innerBox.appendChild(newHeaderTitle);
+    headerValueBox.appendChild(newHeaderTitle);
+
+	  innerBox.appendChild(headerValueBox);
 
     var newHeaderValue = document.createElement('html');
     // make sure we are properly resized...
 //    if (boxPartOfPopup)
 //        newHeaderValue.setAttribute("width", window.innerWidth*.65);
     newHeaderValue.setAttribute("class", "headerValue");
+    if (!boxPartOfPopup)
+      newHeaderValue.setAttribute("flex", "1");
     innerBox.appendChild(newHeaderValue);
     containerBox.appendChild(innerBox);
     ProcessHeaderValue(innerBox, newHeaderValue, currentHeaderData[header], boxPartOfPopup);
@@ -697,11 +713,13 @@ function ProcessHeaderValue(containingBox, containerNode, header, boxPartOfPopup
     headerName = headerName.toLowerCase();
     if (!boxPartOfPopup && (headerName == "cc" || headerName == "from" || headerName == "to"))
     {
-      OutputEmailAddresses(containingBox, containerNode, header.headerValue, "", "", "")
+      OutputEmailAddresses(containingBox, containerNode, header.headerValue, false, "", "")
       return;
     }
     
-    var textNode = document.createTextNode(header.headerValue);
+    var headerValue = header.headerValue;
+    headerValue = headerValue.replace(/\n|\r/g,"");
+    var textNode = document.createTextNode(headerValue);
     if (headerName == "subject")
     {
         containerNode.setAttribute("class", "subjectvalue headerValue");

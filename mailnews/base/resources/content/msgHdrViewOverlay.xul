@@ -32,8 +32,7 @@ Rights Reserved.
 
 	<toolbox id="msgHeaderView">
     <toolbar id="viewAllHeadersToolbar" hidden="true">
-        <box id="viewAllHeadersBox" class="header-part1" orient="vertical" flex="1" collapsed="true">
-        </box>
+        <box id="viewAllHeadersBox" class="header-part1" orient="vertical" flex="1" collapsed="true"/>
     </toolbar>
 
 		<toolbar id="headerPart1" hidden="true">
