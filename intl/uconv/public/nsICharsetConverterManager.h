@@ -63,6 +63,7 @@ class nsICharsetConverterManager : public nsISupports
 {
 public:
 
+  static const nsIID& GetIID() { static nsIID iid = kICharsetConverterManagerIID; return iid; }
   /**
    * Find and instantiate a Converter able to encode from Unicode into the 
    * destination charset.
