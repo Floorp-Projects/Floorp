@@ -2529,11 +2529,11 @@ nsWidget::GetXIC()
     gInputStyle = nsIMEGtkIC::GetInputStyle();
   }
   if (gPreeditFontset == nsnull) {
-    gPreeditFontset = gdk_fontset_load("-*-*-*-r-*-*-16-*-*-*-*-*-*-*");
+    gPreeditFontset = gdk_fontset_load("-*-*-medium-r-*-*-16-*-*-*-*-*-*-*");
     mXICFontSize = 16;          // default
   }
   if (gStatusFontset == nsnull) {
-    gStatusFontset = gdk_fontset_load("-*-*-*-r-*-*-16-*-*-*-*-*-*-*");
+    gStatusFontset = gdk_fontset_load("-*-*-medium-r-*-*-16-*-*-*-*-*-*-*");
   }
   IMEGetShellWidget();
   if (!gInputStyle || !gPreeditFontset || !gStatusFontset || !mIMEShellWidget) {
@@ -2629,7 +2629,7 @@ nsWidget::SetXICBaseFontSize(int height)
       gdk_font_unref(gPreeditFontset);
     }
     char xlfdbase[128];
-    sprintf(xlfdbase, "-*-*-*-r-*-*-%d-*-*-*-*-*-*-*", height);
+    sprintf(xlfdbase, "-*-*-medium-r-*-*-%d-*-*-*-*-*-*-*", height);
     gPreeditFontset = gdk_fontset_load(xlfdbase);
     if (gPreeditFontset) {
       mXIC->SetPreeditFont(gPreeditFontset);
