@@ -1804,7 +1804,8 @@ void CSSStyleSheetImpl::AppendStyleRule(nsICSSStyleRule* aRule)
 PRInt32 CSSStyleSheetImpl::StyleRuleCount(void) const
 {
   if (mOrderedRules.IsNotNull()) {
-    return mOrderedRules->Count();
+    // cast away const-ness
+    return ((nsISupportsArrayPtr)mOrderedRules)->Count();
   }
   return 0;
 }
@@ -1883,7 +1884,8 @@ void CSSStyleSheetImpl::List(FILE* out, PRInt32 aIndent) const
     child = ((CSSStyleSheetImpl*)child)->mNext;
   }
 
-  PRInt32 count = (mWeightedRules.IsNotNull() ? mWeightedRules->Count() : 0);
+  // cast away const-ness
+  PRInt32 count = (mWeightedRules.IsNotNull() ? ((nsISupportsArrayPtr)mWeightedRules)->Count() : 0);
 
   for (index = 0; index < count; index++) {
     nsICSSStyleRulePtr rule = (nsICSSStyleRule*)mWeightedRules->ElementAt(index);
