@@ -296,24 +296,22 @@ nsCertTree::GetCertsByTypeFromCertList(CERTCertList *aCertList,
   nsresult rv = NS_NewISupportsArray(getter_AddRefs(certarray));
   if (NS_FAILED(rv)) return PR_FALSE;
   CERTCertListNode *node;
-  int i, count = 0;
+  int count = 0;
   for (node = CERT_LIST_HEAD(aCertList);
        !CERT_LIST_END(node, aCertList);
        node = CERT_LIST_NEXT(node)) {
     if (getCertType(node->cert) == aType) {
       nsCOMPtr<nsIX509Cert> pipCert = new nsNSSCertificate(node->cert);
       if (pipCert) {
-        for (i=0; i<count; i++) {
-          nsCOMPtr<nsISupports> isupport = 
-            dont_AddRef(certarray->ElementAt(i));
-          nsCOMPtr<nsIX509Cert> cert = do_QueryInterface(isupport);
+        int i;
+        for (i = 0; i < count; ++i) {
+          nsCOMPtr<nsIX509Cert> cert = do_QueryElementAt(certarray, i);
           if ((*aCertCmpFn)(aCertCmpFnArg, pipCert, cert) < 0) {
-            certarray->InsertElementAt(pipCert, i);
             break;
           }
         }
-        if (i == count) certarray->AppendElement(pipCert);
-          count++;
+        certarray->InsertElementAt(pipCert, i);
+        ++count;
       }
     }
   }
