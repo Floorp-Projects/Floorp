@@ -34,6 +34,7 @@
 #include "nsIDocument.h"
 #include "nsVoidArray.h"
 #include "nsIDOMText.h"
+#include "nsDOMError.h"
 #include "nsIContentIterator.h"
 #include "nsIDOMNodeList.h"
 #include "nsIScriptGlobalObject.h"
@@ -968,6 +969,10 @@ nsresult nsRange::SetStart(nsIDOMNode* aParent, PRInt32 aOffset)
 
 nsresult nsRange::SetStartBefore(nsIDOMNode* aSibling)
 {
+  if (nsnull == aSibling) {
+    // Not the correct one to throw, but spec doesn't say what is
+    return NS_ERROR_DOM_NOT_OBJECT_ERR;
+  }
   nsCOMPtr<nsIDOMNode>theSibling( do_QueryInterface(aSibling) );
   PRInt32 indx = IndexOf(theSibling);
   nsIDOMNode *nParent;
@@ -978,6 +983,10 @@ nsresult nsRange::SetStartBefore(nsIDOMNode* aSibling)
 
 nsresult nsRange::SetStartAfter(nsIDOMNode* aSibling)
 {
+  if (nsnull == aSibling) {
+    // Not the correct one to throw, but spec doesn't say what is
+    return NS_ERROR_DOM_NOT_OBJECT_ERR;
+  }
   nsCOMPtr<nsIDOMNode>theSibling( do_QueryInterface(aSibling) );
   PRInt32 indx = IndexOf(theSibling) + 1;
   nsIDOMNode *nParent;
@@ -1013,6 +1022,10 @@ nsresult nsRange::SetEnd(nsIDOMNode* aParent, PRInt32 aOffset)
 
 nsresult nsRange::SetEndBefore(nsIDOMNode* aSibling)
 {
+  if (nsnull == aSibling) {
+    // Not the correct one to throw, but spec doesn't say what is
+    return NS_ERROR_DOM_NOT_OBJECT_ERR;
+  }
   nsCOMPtr<nsIDOMNode>theSibling( do_QueryInterface(aSibling) );
   PRInt32 indx = IndexOf(theSibling);
   nsIDOMNode *nParent;
@@ -1023,6 +1036,10 @@ nsresult nsRange::SetEndBefore(nsIDOMNode* aSibling)
 
 nsresult nsRange::SetEndAfter(nsIDOMNode* aSibling)
 {
+  if (nsnull == aSibling) {
+    // Not the correct one to throw, but spec doesn't say what is
+    return NS_ERROR_DOM_NOT_OBJECT_ERR;
+  }
   nsCOMPtr<nsIDOMNode>theSibling( do_QueryInterface(aSibling) );
   PRInt32 indx = IndexOf(theSibling) + 1;
   nsIDOMNode *nParent;
@@ -1795,62 +1812,66 @@ nsRange::CreateContextualFragment(const nsString& aFragment,
 
       if (NS_SUCCEEDED(result)) {
         nsCOMPtr<nsIDocument> document;
+        nsCOMPtr<nsIDOMDocument> domDocument;
         
         result = content->GetDocument(*getter_AddRefs(document));
+        if (document && NS_SUCCEEDED(result)) {
+          domDocument = do_QueryInterface(document, &result);
+        }
+
+        parent = mStartParent;
+        while (parent && 
+               (parent != domDocument) && 
+               NS_SUCCEEDED(result)) {
+          nsCOMPtr<nsIDOMNode> temp;
+          nsAutoString tagName;
+          PRUnichar* name = nsnull;
+          PRUint16 nodeType;
+          
+          parent->GetNodeType(&nodeType);
+          if (nsIDOMNode::ELEMENT_NODE == nodeType) {
+            parent->GetNodeName(tagName);
+            // XXX Wish we didn't have to allocate here
+            name = tagName.ToNewUnicode();
+            if (name) {
+              tagStack->Push(name);
+              temp = parent;
+              result = temp->GetParentNode(getter_AddRefs(parent));
+            }
+            else {
+              result = NS_ERROR_OUT_OF_MEMORY;
+            }
+          }
+          else {
+            temp = parent;
+            result = temp->GetParentNode(getter_AddRefs(parent));
+          }
+        }
         
         if (NS_SUCCEEDED(result)) {
-          nsCOMPtr<nsIDOMDocument> domDocument(do_QueryInterface(document, &result));
-
+          nsAutoString contentType;
+          nsIHTMLFragmentContentSink* sink;
+          
+          result = NS_NewHTMLFragmentContentSink(&sink);
           if (NS_SUCCEEDED(result)) {
-            parent = mStartParent;
-            while (parent && 
-                   (parent != domDocument) && 
-                   NS_SUCCEEDED(result)) {
-              nsCOMPtr<nsIDOMNode> temp;
-              nsAutoString tagName;
-              PRUnichar* name = nsnull;
-              PRUint16 nodeType;
-
-              parent->GetNodeType(&nodeType);
-              if (nsIDOMNode::ELEMENT_NODE == nodeType) {
-                parent->GetNodeName(tagName);
-                // XXX Wish we didn't have to allocate here
-                name = tagName.ToNewUnicode();
-                if (name) {
-                  tagStack->Push(name);
-                  temp = parent;
-                  result = temp->GetParentNode(getter_AddRefs(parent));
-                }
-                else {
-                  result = NS_ERROR_OUT_OF_MEMORY;
-                }
-              }
-              else {
-                temp = parent;
-                result = temp->GetParentNode(getter_AddRefs(parent));
-              }
+            parser->SetContentSink(sink);
+            if (document) {
+              document->GetContentType(contentType);
             }
+            else {
+              // Who're we kidding. This only works for html.
+              contentType.SetString("text/html");
+            }
+
+            result = parser->ParseFragment(aFragment, (void*)0,
+                                           *tagStack,
+                                           0, contentType);
             
             if (NS_SUCCEEDED(result)) {
-              nsAutoString contentType;
-              nsIHTMLFragmentContentSink* sink;
-                
-              result = NS_NewHTMLFragmentContentSink(&sink);
-              if (NS_SUCCEEDED(result)) {
-                parser->SetContentSink(sink);
-                document->GetContentType(contentType);
-
-                result = parser->ParseFragment(aFragment, (void*)0,
-                                               *tagStack,
-                                               0, contentType);
-                
-                if (NS_SUCCEEDED(result)) {
-                  sink->GetFragment(aReturn);
-                }
-                
-                NS_RELEASE(sink);
-              }
+              sink->GetFragment(aReturn);
             }
+            
+            NS_RELEASE(sink);
           }
         }
       }
