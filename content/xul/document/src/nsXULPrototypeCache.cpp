@@ -180,7 +180,9 @@ nsXULPrototypeCache::~nsXULPrototypeCache()
 }
 
 
-NS_IMPL_THREADSAFE_ISUPPORTS1(nsXULPrototypeCache, nsIXULPrototypeCache)
+NS_IMPL_THREADSAFE_ISUPPORTS2(nsXULPrototypeCache,
+                              nsIXULPrototypeCache,
+                              nsIObserver)
 
 
 NS_IMETHODIMP
