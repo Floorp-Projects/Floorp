@@ -41,6 +41,7 @@
 #include "nsCalUserList.h"
 #include "nsCalSessionMgr.h"
 #include "capi.h"
+#include "nsCalScheduler.h"
 
 /*
  * CalendarShell Class Declaration
@@ -102,18 +103,18 @@ public:
   nsICalendarContainer * mDocumentContainer ;
   nsIXPFCObserverManager * mObserverManager;
 
-private:
   CAPISession mCAPISession;
   CAPIHandle mCAPIHandle;
-  NSCalendar * m_pCalendar;
+  NSCalendar * mpCalendar;
   nsCalLoggedInUser* mpLoggedInUser;
 
   JulianString msCalURL;  /* the calendar associated with this user */
   char * mCAPIPassword;   /* the password which must be entered by the user */
 
-  nsCalUserList m_UserList;
-  nsCalList m_CalList;
-  nsCalSessionMgr m_SessionMgr;
+  nsCalUserList mUserList;
+  nsCalList mCalList;
+  nsCalSessionMgr mSessionMgr;
+  nsCalScheduler mScheduler;
   nsICommandServer * mCommandServer;
 
 };

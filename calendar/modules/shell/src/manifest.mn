@@ -23,6 +23,7 @@ CPPSRCS = \
 	nsCalList.cpp \
 	nsCalSession.cpp \
 	nsCalSessionMgr.cpp \
+	nsCalScheduler.cpp \
 	nsCalLoggedInUser.cpp \
 	nsCalendarWidget.cpp \
 	nsCalendarShell.cpp \

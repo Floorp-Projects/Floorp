@@ -35,32 +35,17 @@
 #include "julnstr.h"
 #include "nsDateTime.h"
 
+class nsCalendarShell;
+
 class nsCalScheduler  
 {
+  nsCalendarShell* mpShell;
 public:
 	nsCalScheduler();
 	virtual ~nsCalScheduler();
+  nsresult InitialLoadData();
+  nsresult SetShell(nsCalendarShell* p) {mpShell = p; return NS_OK; }
 
-/**
- * Fetch events from the supplied curl that overlap the
- * supplied date range.
- * @param sCurl       the curl describing the data source
- * @param u           the user who is asking for the data
- * @param psPassword  the password needed to login to this url
- * @param dStart      range start time
- * @param dEnd        range end time
- * @param ppsPropList array of property names to load
- * @param iPropCount  number of items in ppsPropList
- * @param pCal        the calendar into which these events should be loaded
- * @return 0 on success
- */
-  nsresult FetchEventsByRange( 
-      const JulianString& sCurl,
-      DateTime dStart,
-      DateTime dEnd,
-      char** ppsPropList,
-      int iPropCount,
-      NSCalendar* pCal);
 };
 
 #endif // !defined(AFX_NSCALSCHEDULER_H__A53027E1_42D1_11D2_8ED8_0060088A4B1D__INCLUDED_)

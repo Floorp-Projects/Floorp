@@ -105,78 +105,6 @@ nsresult NS_RegisterApplicationShellFactory()
 }
 
 /*
- *  CAPI Callback used to fetch data from a general CAPI location
- *  Gets nsCalStreamReader object.  
- *  If parse not started yet.
- *     Start the parser - the parser will block automatically when
- *     no more data to parse.
- *  When parse is blocked, set size handled
- */
-int RcvData(void * pData, 
-            char * pBuf, 
-            size_t iSize, 
-            size_t * piTransferred)
-{
-    nsCalStreamReader * pCalStreamReader = (nsCalStreamReader *) pData;
-    nsCapiCallbackReader * pCapiCallbackReader = pCalStreamReader->getReader();
-    if (!pCalStreamReader->isParseStarted())
-    {
-        PRMonitor * pMon = (PRMonitor*) pCalStreamReader->getCallerData();
-        pCalStreamReader->setParseStarted();
-
-        /*
-         * Start up the thread that will receive the ical data
-         */
-        PR_ExitMonitor(pMon);
-    }
-
-    /*
-     * We're going to be adding a new buffer (unicode string) to the 
-     * list of data. We don't want the other thread accessing the list
-     * while we're doing this. So, we enter the monitor...
-     */
-    PR_EnterMonitor((PRMonitor *)pCapiCallbackReader->getMonitor());
-
-    /*
-     * if we're finished, set the CapiCallbackReader to finished.
-     */
-    if (iSize == 0)
-    {
-      pCapiCallbackReader->setFinished();
-    }
-    else
-    {
-      /*
-       * XXX: may want to ensure that pBuf is 0 terminated.
-       */
-      char * pBufCopy = new char[strlen(pBuf)];
-      strncpy(pBufCopy, pBuf, (size_t) strlen(pBuf));
-      nsCapiBufferStruct * capiBuffer = new nsCapiBufferStruct();
-      capiBuffer->m_pBuf = pBufCopy;
-      capiBuffer->m_pBufSize = iSize;
-      pCapiCallbackReader->AddBuffer(capiBuffer);
-      *piTransferred = iSize;
-    }
-
-    /*
-     * The parsing thread may be waiting on more data before it
-     * can continue. When this happens, it enters a PR_WAIT for
-     * this monitor. We've just finished adding more data, so we
-     * want to notify the other thread now if it's waiting.
-     */
-    PR_Notify((PRMonitor *)pCapiCallbackReader->getMonitor());
-    PR_ExitMonitor((PRMonitor *)pCapiCallbackReader->getMonitor());
-
-    /*
-     * Now that another buffer is available for parsing, we want 
-     * the parsing thread to take over. This will help keep the 
-     * list of unparsed buffers to a minimum.
-     */
-    // PR_Sleep(PR_INTERVAL_NO_WAIT);
-    return iSize > 0 ? 0 : -1;
-}
-
-/*
  * nsCalendarShell Definition
  */
 nsCalendarShell::nsCalendarShell()
@@ -187,7 +115,7 @@ nsCalendarShell::nsCalendarShell()
   mDocumentContainer = nsnull ;
   mObserverManager = nsnull;
   mCAPIPassword = nsnull;
-  m_pCalendar = nsnull;
+  mpCalendar = nsnull;
   mpLoggedInUser = nsnull;
   mCommandServer = nsnull;
   mCAPISession = nsnull;
@@ -196,15 +124,15 @@ nsCalendarShell::nsCalendarShell()
 
 nsCalendarShell::~nsCalendarShell()
 {
-  m_SessionMgr.GetAt(0L)->mCapi->CAPI_DestroyHandles(mCAPISession, &mCAPIHandle, 1, 0L);
+  mSessionMgr.GetAt(0L)->mCapi->CAPI_DestroyHandles(mCAPISession, &mCAPIHandle, 1, 0L);
   Logoff();
 
   NS_IF_RELEASE(mObserverManager);
 
   if (mCAPIPassword)
     PR_Free(mCAPIPassword);
-  if (m_pCalendar)
-    delete m_pCalendar;
+  if (mpCalendar)
+    delete mpCalendar;
   if (mpLoggedInUser)
     delete mpLoggedInUser;
 
@@ -245,225 +173,27 @@ NS_IMPL_RELEASE(nsCalendarShell)
 
 nsresult nsCalendarShell::Init()
 {
+  mScheduler.SetShell(this);
 
   /*
    * Register class factrories needed for application
    */
-
   RegisterFactories() ;
 
   /*
    * Load Application Prefs
    */
-
   LoadPreferences();
 
   /*
    * Logon to the system
    */
-
   Logon();
 
   /*
    * Create the UI
    */
-
   LoadUI();
-
-  return NS_OK;
-}
-
-/**
- * This is a useful piece of code but it's in the wrong
- * place. Given a path, it ensures that the path exists, creating
- * whatever needs to be created.
- * @return NS_OK on success
- *         file creation errors otherwise.
- */
-nsresult nsCalendarShell::EnsureUserPath( JulianString& sPath )
-{
-  JulianString sTmp;
-  PRInt32 i;
-  nsCurlParser::ConvertToFileChars(sPath);
-  for (i = 0; -1 != (i = sPath.Strpbrk(i,"/\\")); i++ )
-  {
-    sTmp = sPath.Left(i);
-    if (PR_SUCCESS != PR_Access(sTmp.GetBuffer(), PR_ACCESS_EXISTS))
-    {
-      /*
-       * Try to create it...
-       */
-      if (PR_SUCCESS != PR_MkDir(sTmp.GetBuffer(),PR_RDWR))
-      {
-        PRInt32 iError = PR_GetError();
-        return (nsresult) iError;
-      }
-    }
-  }
-
-  /*
-   * OK, the path was there or it has been created. Now make
-   * sure we can write to it.
-   */
-  if (PR_SUCCESS != PR_Access(sPath.GetBuffer(), PR_ACCESS_WRITE_OK))
-  {
-      PRInt32 iError = PR_GetError();
-      return (nsresult) iError;
-  }
-
-  return NS_OK;
-}
-
-/* 
- * required to set gasViewPropList and giViewPropListCount for now
- * will need to change local CAPI so null gasViewPropList will return 
- * all properties.
- */
-char * gasViewPropList[10] = {
-  "ATTENDEE", "DTSTART", "DTEND", "UID", "RECURRENCE-ID",
-    "DTSTAMP", "SUMMARY", "DESCRIPTION", "ORGANIZER", "TRANSP"
-};
-int giViewPropListCount = 10;
-
-/**
- * Given an nsICapi interface, log in and get some initial data.
- * @return NS_OK on success.
- */
-nsresult nsCalendarShell::InitialLoadData()
-{
-  nsresult res;
-  ErrorCode status = ZERO_ERROR;
-  DateTime d;
-  char * psDTStart = 0;
-  char * psDTEnd = 0;
-  CAPIStream RcvStream = 0;
-  CAPIStatus capiStatus;
-  JulianPtrArray * pParsedCalList = new JulianPtrArray(); // destroyed
-  nsCalStreamReader * pCalStreamReader = 0;  // destroyed
-  PRThread * parseThread = 0;
-  PRThread * mainThread = 0;
-  PRMonitor * pCBReaderMonitor = 0; /// destroyed
-  PRMonitor *pThreadMonitor = 0; /// destroyed
-
-  /*
-   * Select the capi interface to use for this operation...
-   */
-  nsICapi* pCapi = m_SessionMgr.GetAt(0L)->mCapi;
-
-  /*
-   * Begin a calendar for the logged in user...
-   */
-  m_pCalendar = new NSCalendar(0);
-  SetNSCalendar(m_pCalendar);
-
-  /*
-   * Set up the range of time for which we'll pull events...
-   */
-  int iOffset = 30;
-  d.prevDay(iOffset);
-  psDTStart = d.toISO8601().toCString("");
-  d.nextDay(2 * iOffset);
-  psDTEnd = d.toISO8601().toCString("");
-
-  /*
-   * The data is actually read and parsed in another thread. Set it all
-   * up here...
-   */
-  mainThread = PR_CurrentThread();    
-  pCBReaderMonitor = PR_NewMonitor();  // destroyed
-  nsCapiCallbackReader * capiReader = new nsCapiCallbackReader(pCBReaderMonitor);
-  pThreadMonitor = ::PR_NewMonitor(); // destroyed
-  PR_EnterMonitor(pThreadMonitor);
-  pCalStreamReader = new nsCalStreamReader(capiReader, pParsedCalList, parseThread, pThreadMonitor);
-  parseThread = PR_CreateThread(PR_USER_THREAD,
-                 main_CalStreamReader,
-                 pCalStreamReader,
-                 PR_PRIORITY_NORMAL,
-                 PR_LOCAL_THREAD,
-                 PR_UNJOINABLE_THREAD,
-                 0);
-
-  capiStatus = pCapi->CAPI_SetStreamCallbacks(
-    mCAPISession, &RcvStream, 0,0,RcvData, pCalStreamReader,0);
-
-  if (CAPI_ERR_OK != capiStatus)
-    return 1;   /* XXX: really need to fix this up */
-
-  {
-    /* XXX: Get rid of the local variables  as soon as 
-     *      local capi can take a null list or as soon as
-     *      cs&t capi can take a list.
-     */
-  nsCurlParser sessionURL(msCalURL);
-  char** asList = gasViewPropList;
-  int iListSize = giViewPropListCount;
-
-  if (nsCurlParser::eCAPI == sessionURL.GetProtocol())
-  {
-    asList = 0;
-    iListSize = 0;
-  }
-
-  capiStatus = pCapi->CAPI_FetchEventsByRange( 
-      mCAPISession, &mCAPIHandle, 1, 0,
-      psDTStart, psDTEnd, 
-      asList, iListSize, RcvStream);
-  }  
-  
-  if (CAPI_ERR_OK != capiStatus)
-    return 1;   /* XXX: really need to fix this up */
-
-  /*
-   * Wait here until we know the thread completed.
-   */
-  if (!pCalStreamReader->isParseFinished() )
-  {
-    PR_EnterMonitor(pThreadMonitor);
-    PR_Wait(pThreadMonitor,PR_INTERVAL_NO_TIMEOUT);
-    PR_ExitMonitor(pThreadMonitor);
-  }
-
-  /*
-   * Load the retrieved events ito our calendar...
-   */
-  int i,j;
-  NSCalendar* pCal;
-  JulianPtrArray* pEventList;
-  ICalComponent* pEvent;
-  for ( i = 0; i < pParsedCalList->GetSize(); i++)
-  {
-    pCal = (NSCalendar*)pParsedCalList->GetAt(i);
-    pEventList = pCal->getEvents();
-    if (0 != pEventList)
-    {
-      for (j = 0; j < pEventList->GetSize(); j++)
-      {
-        pEvent = (ICalComponent*)pEventList->GetAt(j);
-        if (0 != pEvent)
-          m_pCalendar->addEvent(pEvent);
-      }
-    }
-  }
-
-  /**
-   * cleanup allocated memory
-   */
-  delete [] psDTStart; psDTStart = 0;
-  delete [] psDTEnd; psDTEnd = 0;
-  delete pCalStreamReader; pCalStreamReader = 0;
-  delete capiReader; capiReader = 0;
-  PR_DestroyMonitor(pThreadMonitor);
-  PR_DestroyMonitor(pCBReaderMonitor);
-  /* todo: need to delete calendars in pParsedCalList without deleting events in it */
-  capiStatus = pCapi->CAPI_DestroyStreams(mCAPISession, &RcvStream, 1, 0);
-  if (CAPI_ERR_OK != capiStatus)
-    return 1;   /* XXX: really need to fix this up */
-
-  /*
-   * register the calendar...
-   */
-  if (NS_OK != (res = m_CalList.Add(m_pCalendar)))
-    return res;
 
   return NS_OK;
 }
@@ -490,7 +220,7 @@ nsresult nsCalendarShell::Logon()
   /*
    *  Ask the session manager for a session...
    */
-  res = m_SessionMgr.GetSession(
+  res = mSessionMgr.GetSession(
         msCalURL.GetBuffer(),  // may contain a password, if so it will be used
         0L, 
         GetCAPIPassword(), 
@@ -506,17 +236,23 @@ nsresult nsCalendarShell::Logon()
     sHandle.Prepend(":");   // this is disgusting. we must get cst to fix this
   }
 
-  s = m_SessionMgr.GetAt(0L)->mCapi->CAPI_GetHandle(mCAPISession,sHandle.GetBuffer(),0,&mCAPIHandle);
+  s = mSessionMgr.GetAt(0L)->mCapi->CAPI_GetHandle(mCAPISession,sHandle.GetBuffer(),0,&mCAPIHandle);
 
   if (CAPI_ERR_OK != s)
     return NS_OK;
 
-  switch(theURL.GetProtocol())
+  /*
+   * Begin a calendar for the logged in user...
+   */
+  mpCalendar = new NSCalendar(0);
+  SetNSCalendar(mpCalendar);
+
+ switch(theURL.GetProtocol())
   {
     case nsCurlParser::eFILE:
     case nsCurlParser::eCAPI:
     {
-      InitialLoadData();
+      mScheduler.InitialLoadData();
     }
     break;
 
@@ -535,7 +271,7 @@ nsresult nsCalendarShell::Logoff()
   /*
    * Shut down any open CAPI sessions.
    */
-  m_SessionMgr.Shutdown();
+  mSessionMgr.Shutdown();
 
   return NS_OK;
 }
@@ -693,7 +429,7 @@ nsresult nsCalendarShell::LoadPreferences()
   /*
    * Add the logged in user to the user list...
    */
-  m_UserList.Add( mpLoggedInUser );
+  mUserList.Add( mpLoggedInUser );
 
   /*
    *  Get the local cal address.
@@ -789,7 +525,7 @@ nsresult nsCalendarShell::LoadUI()
     return res ;
 
   mDocumentContainer->SetApplicationShell((nsIApplicationShell*)this);
-  //((nsCalendarContainer *)mDocumentContainer)->m_pCalendarShell = this;
+  //((nsCalendarContainer *)mDocumentContainer)->mpCalendarShell = this;
 
   mDocumentContainer->SetToolbarManager(mShellInstance->GetToolbarManager());
 
@@ -875,13 +611,13 @@ CAPISession nsCalendarShell::GetCAPISession()
 
 nsresult nsCalendarShell::SetNSCalendar(NSCalendar * aNSCalendar)
 {
-  m_pCalendar = aNSCalendar;
+  mpCalendar = aNSCalendar;
   return NS_OK;
 }
 
 NSCalendar * nsCalendarShell::GetNSCalendar()
 {
-  return (m_pCalendar);
+  return (mpCalendar);
 }
 
 
