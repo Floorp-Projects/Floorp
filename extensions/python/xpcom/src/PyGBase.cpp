@@ -89,7 +89,14 @@ PyG_Base::PyG_Base(PyObject *instance, const nsIID &iid)
 	// If XPCOM reference count logging is enabled, then allow us to give the Python class.
 	PyObject *realInstance = PyObject_GetAttrString(instance, "_obj_");
 	PyObject *r = PyObject_Repr(realInstance);
-	const char *szRepr = PyString_AsString(r);
+	const char *szRepr;
+	if (r==NULL) {
+		PyXPCOM_LogError("Getting the __repr__ of the object failed");
+		PyErr_Clear();
+		szRepr = "(repr failed!)";
+	}
+	else
+		szRepr = PyString_AsString(r);
 	if (szRepr==NULL) szRepr = "";
 	int reprOffset = *szRepr=='<' ? 1 : 0;
 	static const char *reprPrefix = "component:";
