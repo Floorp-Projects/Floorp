@@ -43,6 +43,11 @@
 #include "nsISupportsArray.h"
 #include "nsString.h"
 
+#include <CoreFoundation/CoreFoundation.h>
+#include <CFNumber.h>
+#include <CFString.h>
+#include <CFBase.h>
+
 class nsSafariProfileMigrator : public nsIBrowserProfileMigrator
 {
 public:
