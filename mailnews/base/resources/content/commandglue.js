@@ -1,8 +1,6 @@
 var messenger = Components.classes['component://netscape/messenger'].createInstance();
 messenger = messenger.QueryInterface(Components.interfaces.nsIMessenger);
 
-var composeAppCore;
-
 var RDF = Components.classes['component://netscape/rdf/rdf-service'].getService();
 RDF = RDF.QueryInterface(Components.interfaces.nsIRDFService);
 
@@ -21,11 +19,7 @@ function FindMessenger()
 function OpenURL(url)
 {
   dump("\n\nOpenURL from XUL\n\n\n");
-  var appCore = FindMessenger();
-  if (appCore != null) {
-    appCore.SetWindow(window);
-    appCore.OpenURL(url);
-  }
+  messenger.OpenURL(url);
 }
 
 function ComposeMessage(tree, nodeList, messenger, type)
@@ -68,12 +62,7 @@ function GetNewMessages()
 	if(selectedFolderList.length > 0)
 	{
 		var selectedFolder = selectedFolderList[0];
-		
-		var appCore = FindMessenger();
-		if (appCore != null) {
-			appCore.SetWindow(window);
-			appCore.GetNewMessages(folderTree.database, selectedFolder);
-		}
+		messenger.GetNewMessages(folderTree.database, selectedFolder);
 	}
 	else {
 		dump("Nothing was selected\n");
@@ -82,11 +71,8 @@ function GetNewMessages()
 
 function MsgAccountManager()
 {
-  var appCore = FindMessenger();
-  if (appCore != null) {
     dump('Opening account manager..\n');
-    appCore.AccountManager(window);
-  }
+    messenger.AccountManager(window);
 }
 
 function MsgSubscribe()
@@ -121,13 +107,10 @@ function ComposeMessageWithType(type)
   if(tree) {
     dump("tree is valid\n");
     var nodeList = tree.getElementsByAttribute("selected", "true");
-    var appCore = FindMessenger();
     dump("message type ");
     dump(type);
     dump("\n");
-    if (appCore && nodeList)
-      appCore.SetWindow(window);
-      ComposeMessage(tree, nodeList, appCore, type);
+    ComposeMessage(tree, nodeList, messenger, type);
   }
 }
 

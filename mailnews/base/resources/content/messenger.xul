@@ -38,7 +38,7 @@
 <!ENTITY pageSetupCmd.label ".Page Setup...">  
 <!ENTITY printPreviewCmd.label ".Print Preview">  
 <!ENTITY printCmd.label ".Print">  
-<!ENTITY closeCmd.label ".Close">  
+<!ENTITY closeCmd.label "Close">  
 <!ENTITY exitCmd.label "Exit">  
 <!ENTITY editMenu.label "Edit"> 
 <!ENTITY undoCmd.label ".Undo">  
@@ -236,7 +236,9 @@
 <window xmlns:html="http://www.w3.org/TR/REC-html40"
 	xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
 	title="&messengerWindow.title;"
-        style="width:100%;height:100%">
+	onload="OnLoad()"
+	onunload="OnUnload()"
+    style="width:100%;height:100%">
 
 <html:script src="chrome://messenger/content/widgetglue.js"/>
 <html:script src="chrome://messenger/content/commandglue.js"/>

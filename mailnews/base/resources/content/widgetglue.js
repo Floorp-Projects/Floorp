@@ -1,19 +1,3 @@
-
-function MsgStartUp()
-{
-  dump("StartUp: Messenger\n");
-  var appCore = FindMessenger();
-  if (appCore != null) {
-	dump("In MsgStartUp()");
-    dump("Initializing AppCore and setting Window\n");
-    appCore.SetWindow(window);
-	ChangeFolderByURI("mailbox://Inbox");
-	//In the future we'll want to read this in from a preference.
-	MsgViewAllMsgs();
-
-  }
-}
-
 function MsgLoadNewsMessage(url)
 {
   dump("\n\nMsgLoadNewsMessage from XUL\n");
@@ -49,47 +33,37 @@ function MsgDeleteMessage()
 {
   dump("\nMsgDeleteMessage from XUL\n");
   var tree = frames[0].frames[1].document.getElementById('threadTree');
-  if(tree)
+  if(tree) {
     dump("tree is valid\n");
-  var appCore = FindMessenger();
-  if (appCore != null) {
-    dump("\nAppcore isn't null in MsgDeleteMessage\n");
-    appCore.SetWindow(window);
 	//get the selected elements
     var messageList = tree.getElementsByAttribute("selected", "true");
 	//get the current folder
 	var srcFolder = tree.childNodes[5];
-    appCore.DeleteMessages(tree, srcFolder, messageList);
+    messenger.DeleteMessages(tree, srcFolder, messageList);
   }
 }
 
 function MsgDeleteFolder()
 {
-	var appCore = FindMessenger();
-	if (appCore != null) {
-		appCore.SetWindow(window);
-		//get the selected elements
-		var tree = frames[0].frames[0].document.getElementById('folderTree');
-		var folderList = tree.getElementsByAttribute("selected", "true");
-		var i;
-		var folder, parent;
-		for(i = 0; i < folderList.length; i++)
-		{
-			folder = folderList[i];
-		    folderuri = folder.getAttribute('id');
-			dump(folderuri);
-
-			parent = folder.parentNode.parentNode;	
-		    var parenturi = parent.getAttribute('id');
-			if(parenturi)
-				dump(parenturi);
-			else
-				dump("No parenturi");
-			dump("folder = " + folder.nodeName + "\n"); 
-			dump("parent = " + parent.nodeName + "\n"); 
-
-			appCore.DeleteFolders(tree.database, parent, folder);
-		}
+	//get the selected elements
+	var tree = frames[0].frames[0].document.getElementById('folderTree');
+	var folderList = tree.getElementsByAttribute("selected", "true");
+	var i;
+	var folder, parent;
+	for(i = 0; i < folderList.length; i++)
+	{
+		folder = folderList[i];
+	    folderuri = folder.getAttribute('id');
+		dump(folderuri);
+		parent = folder.parentNode.parentNode;	
+	    var parenturi = parent.getAttribute('id');
+		if(parenturi)
+			dump(parenturi);
+		else
+			dump("No parenturi");
+		dump("folder = " + folder.nodeName + "\n"); 
+		dump("parent = " + parent.nodeName + "\n"); 
+		messenger.DeleteFolders(tree.database, parent, folder);
 	}
 
 
@@ -136,13 +110,9 @@ function MsgCopyMessage(destFolder)
 	{
 		//Get the selected messages to copy
 		var messageList = tree.getElementsByAttribute("selected", "true");
-		var appCore = FindMessenger();
-		if (appCore != null) {
-		    appCore.SetWindow(window);
-			//get the current folder
-			var srcFolder = tree.childNodes[5];
-			appCore.CopyMessages(srcFolder, destFolder, messageList);
-		}
+		//get the current folder
+		var srcFolder = tree.childNodes[5];
+		messenger.CopyMessages(srcFolder, destFolder, messageList, false);
 	}	
 }
 
@@ -157,13 +127,9 @@ function MsgMoveMessage(destFolder)
 	{
 		//Get the selected messages to copy
 		var messageList = tree.getElementsByAttribute("selected", "true");
-		var appCore = FindMessenger();
-		if (appCore != null) {
-		    appCore.SetWindow(window);
-			//get the current folder
-			var srcFolder = tree.childNodes[5];
-			appCore.MoveMessages(srcFolder, destFolder, messageList);
-		}
+		//get the current folder
+		var srcFolder = tree.childNodes[5];
+		messenger.CopyMessages(srcFolder, destFolder, messageList, true);
 	}	
 }
 
@@ -173,11 +139,7 @@ function MsgViewAllMsgs()
 
     var tree = frames[0].frames[1].document.getElementById('threadTree'); 
 
-	var appCore = FindMessenger();
-	if (appCore != null) {
-	    appCore.SetWindow(window);
-		appCore.ViewAllMessages(tree.database);
-	}
+	messenger.ViewAllMessages(tree.database);
 
 	//hack to make it get new view.  
 	var currentFolder = tree.childNodes[5].getAttribute('id');
@@ -191,11 +153,7 @@ function MsgViewUnreadMsg()
 
     var tree = frames[0].frames[1].document.getElementById('threadTree'); 
 
-	var appCore = FindMessenger();
-	if (appCore != null) {
-	    appCore.SetWindow(window);
-		appCore.ViewUnreadMessages(tree.database);
-	}
+	messenger.ViewUnreadMessages(tree.database);
 
 	//hack to make it get new view.  
 	var currentFolder = tree.childNodes[5].getAttribute('id');
@@ -210,11 +168,7 @@ function MsgViewAllThreadMsgs()
 
     var tree = frames[0].frames[1].document.getElementById('threadTree'); 
 
-	var appCore = FindMessenger();
-	if (appCore != null) {
-	    appCore.SetWindow(window);
-		appCore.ViewAllThreadMessages(tree.database);
-	}
+	messenger.ViewAllThreadMessages(tree.database);
 
 	//hack to make it get new view.  
 	var currentFolder = tree.childNodes[5].getAttribute('id');
@@ -247,13 +201,8 @@ function MsgNewFolder()
 	var selectedFolderList = folderTree.getElementsByAttribute("selected", "true");
 	var selectedFolder = selectedFolderList[0];
 
-	var appCore = FindMessenger();
-	if (appCore != null) {
-	    appCore.SetWindow(window);
-		//Note this is temporary hardcoding until I can get this from a dialog
-		appCore.NewFolder(folderTree.database, selectedFolder, "New Folder");
-	}
-
+	//Note this is temporary hardcoding until I can get this from a dialog
+	messenger.NewFolder(folderTree.database, selectedFolder, "New Folder");
 }
 
 
@@ -343,14 +292,9 @@ function MsgMarkMsgAsRead(markRead)
 {
   dump("\MsgMarkMsgAsRead from XUL\n");
   var tree = frames[0].frames[1].document.getElementById('threadTree');
-  var appCore = FindMessenger();
-  if (appCore != null) {
-    appCore.SetWindow(window);
-	//get the selected elements
-    var messageList = tree.getElementsByAttribute("selected", "true");
-    appCore.MarkMessagesRead(tree.database, messageList, markRead);
-  }
-
+  //get the selected elements
+  var messageList = tree.getElementsByAttribute("selected", "true");
+  messenger.MarkMessagesRead(tree.database, messageList, markRead);
 }
 
 function MsgMarkThreadAsRead() {}

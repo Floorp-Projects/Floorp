@@ -5,31 +5,39 @@ function WizardPage() {}
 function PageSetup() {}
 function PrintPreview() {}
 function Print() {}
-function Close() {}
+
+function OnLoad()
+{
+	messenger.SetWindow(window);
+}
+
+function OnUnload()
+{
+	dump("\nOnUnload from XUL\nClean up ...\n");
+	messenger.OnUnload();
+}
+
+function Close() 
+{
+	dump("\nClose from XUL\nDo something...\n");
+	messenger.Close();
+}
+
 function Exit()
 {
   dump("\nExit from XUL\n");
-  var appCore = FindMessenger();
-  if (appCore != null) {
-    dump("\nAppcore isn't null in Exit\n");
-    appCore.SetWindow(window);
-    appCore.exit();
-  }
+  messenger.Exit();
 }
 
 function CharacterSet(){}
+
 function MessengerSetDefaultCharacterSet(aCharset)
 {
-  var appCore = FindMessenger(); 
-  if (appCore != null) {
     dump(aCharset);dump("\n");
-    appCore.SetDocumentCharset(aCharset);
+    messenger.SetDocumentCharset(aCharset);
 	var folderResource = GetSelectedFolderResource();
 	SetFolderCharset(folderResource, aCharset);
     MsgReload();
-  } else {
-    dump("Messenger has not been created!\n");
-  }
 }
 
 function NavigatorWindow()
