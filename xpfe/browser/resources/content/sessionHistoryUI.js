@@ -136,33 +136,56 @@ function addToUrlbarHistory()
          var unused = { };
          var scheme = ioService.extractScheme(urlToAdd, unused, unused);
        } catch(e) {
-        urlToAdd = "http://" + urlToAdd;
+         urlToAdd = "http://" + urlToAdd;
        }
-       var uriToAdd  = ioService.newURI(urlToAdd, null);
+       
+       try {
+         var uriToAdd  = ioService.newURI(urlToAdd, null);
+       }
+       catch(e) {
+         // it isn't a valid url
+         // we'll leave uriToAdd as "undefined" and handle that later
+       }
 
        while(elements.hasMoreElements()) {
           entry = elements.getNext();
-          if (entry) {
-             index ++;
-             entry= entry.QueryInterface(Components.interfaces.nsIRDFLiteral);
-             var rdfValue = entry.Value;
+          if (!entry) continue;
 
-             try {
-               var unused = { };
-               var scheme = ioService.extractScheme(rdfValue, unused, unused);
-             } catch(e) {
-                rdfValue = "http://" + rdfValue;
+          index ++;
+          entry= entry.QueryInterface(Components.interfaces.nsIRDFLiteral);
+          var rdfValue = entry.Value;
+
+          try {
+            var unused = { };
+            var scheme = ioService.extractScheme(rdfValue, unused, unused);
+          } catch(e) {
+            rdfValue = "http://" + rdfValue;
+          }
+
+          if (uriToAdd) {
+            try {
+              var rdfUri = ioService.newURI(rdfValue, null);
+                 
+              if (rdfUri.equals(uriToAdd)) {
+                // URI already present in the database
+                // Remove it from its current position.
+                // It is inserted to the top after the while loop.
+                entries.RemoveElementAt(index, true);
+                break;
+              }
             }
+               
+            // the uri is still not recognized by the ioservice
+            catch(ex) {
+              // no problem, we'll handle this below
+            }
+          }
 
-             var rdfUri = ioService.newURI(rdfValue, null);
-             
-             if (rdfUri.equals(uriToAdd)) {
-                 // URI already present in the database
-                 // Remove it from its current position.
-                 // It is inserted to the top after the while loop.
-                 entries.RemoveElementAt(index, true);
-                 break;
-             }
+          // if we got this far, then something is funky with the URIs,
+          // so we need to do a straight string compare of the raw strings
+          if (urlToAdd == rdfValue) {
+            entries.RemoveElementAt(index, true);
+            break;
           }
        }   // while
 
@@ -176,7 +199,7 @@ function addToUrlbarHistory()
        // this grow without bound.
        for (index = entries.GetCount(); index > MAX_HISTORY_ITEMS; --index) {
            entries.RemoveElementAt(index, true);
-        }  // for
+       }  // for
    }  // localstore
 }
 
