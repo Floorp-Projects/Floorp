@@ -699,11 +699,12 @@ sub do_quickparse {
         }
         close( BUILDLOG );
         
-        if( -r "$tree/ignorebuilds.pl" ){
-            require "$tree/ignorebuilds.pl";
-        }
-        foreach my $z (keys(%$ignore_builds)) {
-            delete $build{$z};  # We're supposed to ignore this build entirely.
+        if( -r "$t/ignorebuilds.pl" ){
+            require "$t/ignorebuilds.pl";
+            foreach my $z (keys(%$ignore_builds)) {
+                delete $build{$z}; # We're supposed to ignore this
+                                   # build entirely.
+            }
         }
         my @keys = sort keys %build;
 
