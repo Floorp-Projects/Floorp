@@ -568,7 +568,8 @@ nsMsgI18NParseMetaCharset(nsFileSpec* fileSpec)
     if (*buffer == nsCRT::CR || *buffer == nsCRT::LF || *buffer == 0) 
       continue; 
 
-    for (int i = 0; i < (int)PL_strlen(buffer); i++) { 
+    PRUint32 len = PL_strlen(buffer);
+    for (PRUint32 i = 0; i < len; i++) { 
       buffer[i] = toupper(buffer[i]); 
     } 
 
@@ -590,6 +591,7 @@ nsMsgI18NParseMetaCharset(nsFileSpec* fileSpec)
       { 
         PL_strncpy(charset, token, sizeof(charset));
         charset[sizeof(charset)-1] = '\0';
+        break;
       } 
     } 
   } 
