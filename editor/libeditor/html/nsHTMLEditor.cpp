@@ -48,6 +48,7 @@
 #include "nsIPref.h"
 #include "nsIDOMDocumentFragment.h"
 #include "nsIPresShell.h"
+#include "prprf.h"
 
 #ifdef ENABLE_JS_EDITOR_LOG
 #include "nsJSEditorLog.h"
@@ -2159,22 +2160,24 @@ nsHTMLEditor::CreateElementWithDefaults(const nsString& aTagName, nsIDOMElement*
     {
       char buf[16];
       PRInt32 iAlign;
+      // Currently using 0=left, 1=center, and 2=right
       if( NS_SUCCEEDED(mPrefs->GetIntPref("editor.hrule.align", &iAlign)))
       {
         switch (iAlign) {
-          case 1:
+          case 0:
             align = "left";
             break;
-          case 3:
+          case 2:
             align = "right";
             break;
         }
       }
       PRInt32 iHeight;
+      PRUint32 count;
       if( NS_SUCCEEDED(mPrefs->GetIntPref("editor.hrule.height", &iHeight)))
       {
-        itoa(iHeight, buf, 16);
-        if (buf)
+        count = PR_snprintf(buf, 16, "%d", iHeight);
+        if (count > 0)
         {
           height = buf;
         }
@@ -2184,8 +2187,8 @@ nsHTMLEditor::CreateElementWithDefaults(const nsString& aTagName, nsIDOMElement*
       if( NS_SUCCEEDED(mPrefs->GetIntPref("editor.hrule.width", &iWidth)) &&
           NS_SUCCEEDED(mPrefs->GetBoolPref("editor.hrule.width_percent", &bPercent)))
       {
-        itoa(iWidth, buf, 16);
-        if (buf)
+        count = PR_snprintf(buf, 16, "%d", iWidth);
+        if (count > 0)
         {
           width = buf;
           if (bPercent)
@@ -2287,7 +2290,7 @@ nsHTMLEditor::SaveHLineSettings(nsIDOMElement* aElement)
     char widthChar[32] = {""};
     PRInt32 iWidth = atoi(width.ToCString(widthChar, 32));
     if (iWidth > 0) {
-      mPrefs->SetIntPref("editor.hrule.height", iWidth);
+      mPrefs->SetIntPref("editor.hrule.width", iWidth);
       mPrefs->SetBoolPref("editor.hrule.width_percent", (width.Find("%") > 0));
     }
 

@@ -59,11 +59,14 @@
       </td>
     </tr>
     <tr>
-    <td colspan="2" align="right">
+    <td colspan="2">
       <hr width="100%"/>
-      <button class="spaced" id="Advanced" onclick="onAdvanced()">Advanced Attributes</button>  
-      <button class="spaced" id="OK" onclick="onOK()">OK</button>  
-      <button class="spaced" id="Cancel" onclick="onCancel()" width="50">Cancel</button>
+      <xul:box align="horizontal" id="status-bar">
+        <button class="spaced" id="Advanced" onclick="onAdvanced()">Advanced Attributes</button>
+		    <xul:spring flex="100%"/>
+        <button class="spaced" id="OK" onclick="onOK()">OK</button>  
+        <button class="spaced" id="Cancel" onclick="onCancel()" width="50">Cancel</button>
+      </xul:box>
     </td>
   </tr>
 </table>

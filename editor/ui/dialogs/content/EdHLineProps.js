@@ -9,8 +9,6 @@ var shading = true;
 // dialog initialization code
 function Startup()
 {
-  dump("Doing Startup...\n");
-
   // get the editor shell from the parent window
   editorShell = window.opener.editorShell;
   editorShell = editorShell.QueryInterface(Components.interfaces.nsIEditorShell);
@@ -19,8 +17,13 @@ function Startup()
     window.close();
     return;
   }
+
+dump("HLINE PROPS 1\n");
+
   // Get the selected horizontal line
   hLineElement = window.editorShell.GetSelectedElement(tagName);
+
+dump("HLINE PROPS 2\n");
 
   if (!hLineElement) {
     // We should never be here if not editing an existing HLine
@@ -28,6 +31,7 @@ function Startup()
     window.close();
     return;
   }
+dump("HLINE PROPS 3\n");
 
   // Create dialog object to store controls for easy access
   dialog = new Object;
@@ -39,10 +43,7 @@ function Startup()
   dialog.shading = document.getElementById("3dShading");
   dialog.pixelOrPercentButton = document.getElementById("pixelOrPercentButton");
 
-  dump(dialog.heightInput+dialog.widthInput+dialog.shading+dialog.pixelOrPercentButton+"\n");
-  //dump("PixelOrPercent value="+dialog.pixelOrPercentButton.value+"\n");
-  //dump("PixelOrPercent name="+dialog.pixelOrPercentButton.name+"\n");
-
+dump("HLINE PROPS 4\n");
   // Initialize control values based on existing attributes
 
   dialog.heightInput.value = hLineElement.getAttribute("height");
@@ -50,11 +51,15 @@ function Startup()
   // Use convert to number, then back to string to strip of "%"
   dialog.widthInput.value = (width - 0) + "";
 
+dump("HLINE PROPS 5\n");
+
   // This assumes initial button text is "pixels"
   if (width.search(/%/) > 0) {
     dialog.pixelOrPercentButton.value = "percent";
     percentChar = "%";
   }
+
+dump("HLINE PROPS 6\n");
 
   align = hLineElement.getAttribute("align");
   if (align == "center") {
@@ -68,6 +73,7 @@ function Startup()
   dump("Width ="+width+" Align ="+align+" NoShade="+noshade+"\n");
   dialog.shading.checked = (noshade == "");
 
+dump("HLINE PROPS 3\n");
   // SET FOCUS TO FIRST CONTROL
   dialog.heightInput.focus();
 }
@@ -150,5 +156,6 @@ function OnOK()
 {
   if (ValidateData()) {
     window.close();
+    dump("CLOSING EdHLineProps\n");
   }  
 }
