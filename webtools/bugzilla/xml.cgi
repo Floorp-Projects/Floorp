@@ -53,6 +53,6 @@ print Bug::XML_Header( Param("urlbase"), $::param{'version'},
 foreach my $id (@ids) {
   my $bug = new Bug($id, $::userid);
   print $bug->emitXML;
-$bug->bug_status("BLAH");
 }
+
 print Bug::XML_Footer;

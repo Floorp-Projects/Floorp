@@ -30,14 +30,13 @@ require "globals.pl";
 require "CGI.pl";
 package Bug;
 use CGI::Carp qw(fatalsToBrowser);
-my %bug;
 my %ok_field;
 
 for my $key (qw (bug_id product version rep_platform op_sys bug_status 
                 resolution priority bug_severity component assigned_to
                 reporter bug_file_loc short_desc target_milestone 
                 qa_contact status_whiteboard creation_ts groupset 
-                delta_ts votes) ){
+                delta_ts error votes) ){
     $ok_field{$key}++;
     }
 
@@ -45,6 +44,7 @@ for my $key (qw (bug_id product version rep_platform op_sys bug_status
 #
 sub new {
   my $type = shift();
+  my %bug;
 
   # create a ref to an empty hash and bless it
   #
@@ -119,45 +119,45 @@ sub initBug  {
                        "groupset", "delta_ts", "votes") {
 	$fields{$field} = shift @row;
 	if ($fields{$field}) {
-	    $bug{$field} = $fields{$field};
+	    $self->{$field} = $fields{$field};
 	}
 	$count++;
     }
   } else {
     &::SendSQL("select groupset from bugs where bug_id = $bug_id");
     if (@row = &::FetchSQLData()) {
-      $bug{'bug_id'} = $bug_id;
-      $bug{'error'} = "NotPermitted";
+      $self->{'bug_id'} = $bug_id;
+      $self->{'error'} = "NotPermitted";
       return $self;
     } else {
-      $bug{'bug_id'} = $bug_id;
-      $bug{'error'} = "NotFound";
+      $self->{'bug_id'} = $bug_id;
+      $self->{'error'} = "NotFound";
       return $self;
     }
   }
 
-  if ($bug{'short_desc'}) {
-    $bug{'short_desc'} = QuoteXMLChars( $bug{'short_desc'} );
+  if ($self->{'short_desc'}) {
+    $self->{'short_desc'} = QuoteXMLChars( $self->{'short_desc'} );
   }
 
-  if (defined $bug{'status_whiteboard'}) {
-    $bug{'status_whiteboard'} = QuoteXMLChars($bug{'status_whiteboard'});
+  if (defined $self->{'status_whiteboard'}) {
+    $self->{'status_whiteboard'} = QuoteXMLChars($self->{'status_whiteboard'});
   }
 
-  $bug{'assigned_to'} = &::DBID_to_real_or_loginname($bug{'assigned_to'});
-  $bug{'reporter'} = &::DBID_to_real_or_loginname($bug{'reporter'});
+  $self->{'assigned_to'} = &::DBID_to_real_or_loginname($self->{'assigned_to'});
+  $self->{'reporter'} = &::DBID_to_real_or_loginname($self->{'reporter'});
 
   my $ccSet = new RelationSet;
   $ccSet->mergeFromDB("select who from cc where bug_id=$bug_id");
   my @cc = $ccSet->toArrayOfStrings();
   if (@cc) {
-    $bug{'cc'} = \@cc;
+    $self->{'cc'} = \@cc;
   }
 
-  if (&::Param("useqacontact") && (defined $bug{'qa_contact'}) ) {
-    my $name = $bug{'qa_contact'} > 0 ? &::DBID_to_name($bug{'qa_contact'}) :"";
+  if (&::Param("useqacontact") && (defined $self->{'qa_contact'}) ) {
+    my $name = $self->{'qa_contact'} > 0 ? &::DBID_to_name($self->{'qa_contact'}) :"";
     if ($name) {
-      $bug{'qa_contact'} = $name;
+      $self->{'qa_contact'} = $name;
     }
   }
 
@@ -172,7 +172,7 @@ sub initBug  {
         push(@list, &::FetchOneColumn());
     }
     if (@list) {
-      $bug{'keywords'} = &::html_quote(join(', ', @list));
+      $self->{'keywords'} = &::html_quote(join(', ', @list));
     }
   }
 
@@ -192,7 +192,7 @@ sub initBug  {
     }
   }
   if (@attachments) {
-    $bug{'attachments'} = \@attachments;
+    $self->{'attachments'} = \@attachments;
   }
 
   &::SendSQL("select bug_id, who, bug_when, thetext 
@@ -208,17 +208,17 @@ sub initBug  {
     push @longdescs, \%longdesc;
   }
   if (@longdescs) {
-    $bug{'longdescs'} = \@longdescs;
+    $self->{'longdescs'} = \@longdescs;
   }
 
   if (&::Param("usedependencies")) {
     my @depends = EmitDependList("blocked", "dependson", $bug_id);
     if ( @depends ) {
-      $bug{'dependson'} = \@depends;
+      $self->{'dependson'} = \@depends;
     }
     my @blocks = EmitDependList("dependson", "blocked", $bug_id);
     if ( @blocks ) {
-      $bug{'blocks'} = \@blocks;
+      $self->{'blocks'} = \@blocks;
     }
   }
   return $self;
@@ -234,9 +234,9 @@ sub emitXML {
   my $xml;
 
 
-  if (exists $bug{'error'}) {
-    $xml .= "<bug error=\"$bug{'error'}\">\n";
-    $xml .= "  <bug_id>$bug{'bug_id'}</bug_id>\n";
+  if (exists $self->{'error'}) {
+    $xml .= "<bug error=\"$self->{'error'}\">\n";
+    $xml .= "  <bug_id>$self->{'bug_id'}</bug_id>\n";
     $xml .= "</bug>\n";
     return $xml;
   }
@@ -248,41 +248,41 @@ sub emitXML {
       "component", "reporter", "target_milestone", "bug_severity", 
       "creation_ts", "qa_contact", "op_sys", "resolution", "bug_file_loc",
       "short_desc", "keywords", "status_whiteboard") {
-    if ($bug{$field}) {
-      $xml .= "  <$field>" . $bug{$field} . "</$field>\n";
+    if ($self->{$field}) {
+      $xml .= "  <$field>" . $self->{$field} . "</$field>\n";
     }
   }
 
   foreach my $field ("dependson", "blocks", "cc") {
-    if (defined $bug{$field}) {
-      for (my $i=0 ; $i < @{$bug{$field}} ; $i++) {
-        $xml .= "  <$field>" . $bug{$field}[$i] . "</$field>\n";
+    if (defined $self->{$field}) {
+      for (my $i=0 ; $i < @{$self->{$field}} ; $i++) {
+        $xml .= "  <$field>" . $self->{$field}[$i] . "</$field>\n";
       }
     }
   }
 
-  if (defined $bug{'longdescs'}) {
-    for (my $i=0 ; $i < @{$bug{'longdescs'}} ; $i++) {
+  if (defined $self->{'longdescs'}) {
+    for (my $i=0 ; $i < @{$self->{'longdescs'}} ; $i++) {
       $xml .= "  <long_desc>\n"; 
-      $xml .= "   <who>" . &::DBID_to_name($bug{'longdescs'}[$i]->{'who'}) 
+      $xml .= "   <who>" . &::DBID_to_name($self->{'longdescs'}[$i]->{'who'}) 
                          . "</who>\n"; 
-      $xml .= "   <bug_when>" . $bug{'longdescs'}[$i]->{'bug_when'} 
+      $xml .= "   <bug_when>" . $self->{'longdescs'}[$i]->{'bug_when'} 
                               . "</bug_when>\n"; 
-      $xml .= "   <thetext>" . QuoteXMLChars($bug{'longdescs'}[$i]->{'thetext'})
+      $xml .= "   <thetext>" . QuoteXMLChars($self->{'longdescs'}[$i]->{'thetext'})
                              . "</thetext>\n"; 
       $xml .= "  </long_desc>\n"; 
     }
   }
 
-  if (defined $bug{'attachments'}) {
-    for (my $i=0 ; $i < @{$bug{'attachments'}} ; $i++) {
+  if (defined $self->{'attachments'}) {
+    for (my $i=0 ; $i < @{$self->{'attachments'}} ; $i++) {
       $xml .= "  <attachment>\n"; 
-      $xml .= "    <attachid>" . $bug{'attachments'}[$i]->{'attachid'}
+      $xml .= "    <attachid>" . $self->{'attachments'}[$i]->{'attachid'}
                               . "</attachid>\n"; 
-      $xml .= "    <date>" . $bug{'attachments'}[$i]->{'date'} . "</date>\n"; 
-      $xml .= "    <desc>" . $bug{'attachments'}[$i]->{'desc'} . "</desc>\n"; 
-    # $xml .= "    <type>" . $bug{'attachments'}[$i]->{'type'} . "</type>\n"; 
-    # $xml .= "    <data>" . $bug{'attachments'}[$i]->{'data'} . "</data>\n"; 
+      $xml .= "    <date>" . $self->{'attachments'}[$i]->{'date'} . "</date>\n"; 
+      $xml .= "    <desc>" . $self->{'attachments'}[$i]->{'desc'} . "</desc>\n"; 
+    # $xml .= "    <type>" . $self->{'attachments'}[$i]->{'type'} . "</type>\n"; 
+    # $xml .= "    <data>" . $self->{'attachments'}[$i]->{'data'} . "</data>\n"; 
       $xml .= "  </attachment>\n"; 
     }
   }
@@ -355,12 +355,12 @@ sub AUTOLOAD {
   $attr =~ s/.*:://;
   return unless $attr=~ /[^A-Z]/;
   if (@_) {
-    $bug{$attr} = shift;
+    $self->{$attr} = shift;
     return;
   }
-  confess "invalid bug attribute $attr" unless $ok_field{$attr};
-  if (defined $bug{$attr}) {
-    return $bug{$attr};
+  confess ("invalid bug attribute $attr") unless $ok_field{$attr};
+  if (defined $self->{$attr}) {
+    return $self->{$attr};
   } else {
     return '';
   }
