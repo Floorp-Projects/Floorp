@@ -52,8 +52,13 @@ public class FileLocator {
 	static final RevisionTable revisionTable = new RevisionTable();
 	static final BlameTable blameTable = new BlameTable();
 
+    public static String getFileLocation(byte[] line) throws IOException {
+        return getFileLocation(new String(line));
+    }
+
 	public static String getFileLocation(String line) throws IOException {
-		int leftBracket = line.indexOf('[');
+        // start from the LAST occurence of '[', as C++ symbols can include it.
+		int leftBracket = line.lastIndexOf('[');
 		if (leftBracket == -1)
 			return line;
 		int rightBracket = line.indexOf(']', leftBracket + 1);
@@ -69,7 +74,13 @@ public class FileLocator {
 			offset = Integer.parseInt(line.substring(comma + 1, rightBracket));
 		} catch (NumberFormatException nfe) {
 			return line;
+		} catch (StringIndexOutOfBoundsException sobe) {
+		    System.err.println("### Error processing line: " + line);
+		    System.err.println("### comma = " + comma + ", rightBracket = " + rightBracket);
+		    System.err.flush();
+		    return line;
 		}
+		
 		FileTable table = (FileTable) fileTables.get(fullPath);
 		if (table == null) {
 			table = new FileTable(fullPath);
