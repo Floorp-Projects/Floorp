@@ -42,6 +42,8 @@ MATHML_ATOM(fontsize, "-moz-math-font-size") // different from fontsize_
 MATHML_ATOM(fontstyle, "-moz-math-font-style") // different from fontstyle_
 MATHML_ATOM(fontstyle_stretchy, ":-moz-math-font-style-stretchy")
 MATHML_ATOM(fontstyle_anonymous, ":-moz-math-font-style-anonymous")
+MATHML_ATOM(mozMathInline, ":-moz-math-inline")
+MATHML_ATOM(mozMathTable, ":-moz-math-table")
 
 // Alphabetical list of MathML frame types
 MATHML_ATOM(ordinaryMathMLFrame, "OrdinaryMathMLFrame")
