@@ -125,13 +125,6 @@ static NS_DEFINE_CID(kDocumentCharsetInfoCID, NS_DOCUMENTCHARSETINFO_CID);
 static NS_DEFINE_CID(kCharsetConverterManagerCID, NS_ICHARSETCONVERTERMANAGER_CID);
 
 
-#ifdef DEBUG
-#ifndef DEBUG_pavlov
-#define FORCE_CHECKIN_GUIDELINES
-#endif /* DEBUG_pavlov */
-#endif /* DEBUG */
-
-
 // Stuff to implement find/findnext
 #include "nsIFindComponent.h"
 #ifdef DEBUG_warren
@@ -2004,11 +1997,6 @@ NS_IMETHODIMP nsBrowserContentHandler::GetDefaultArgs(PRUnichar **aDefaultArgs)
 
     nsString args;
 
-#ifdef FORCE_CHECKIN_GUIDELINES
-    printf("FOR DEBUG BUILDS ONLY:  we are forcing you to see the checkin guidelines when you open a browser window\n");
-    args.AssignWithConversion("http://www.mozilla.org/quality/checkin-guidelines.html");
-#else
-
     nsresult rv;
     nsXPIDLCString url;
     static PRBool timebombChecked = PR_FALSE;
@@ -2081,7 +2069,6 @@ NS_IMETHODIMP nsBrowserContentHandler::GetDefaultArgs(PRUnichar **aDefaultArgs)
     if (NS_SUCCEEDED(rv) && (const char *)url && (PL_strlen((const char *)url))) {              
         args.AssignWithConversion((const char *) url);
     }
-#endif /* FORCE_CHECKIN_GUIDELINES */
 
     *aDefaultArgs = args.ToNewUnicode(); 
     return NS_OK;

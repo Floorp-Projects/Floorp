@@ -3244,6 +3244,9 @@ NS_IMETHODIMP nsDocShell::GetRootScrollableView(nsIScrollableView** aOutScrollVi
    NS_ENSURE_SUCCESS(viewManager->GetRootScrollableView(aOutScrollView),
       NS_ERROR_FAILURE);
 
+   NS_ASSERTION(*aOutScrollView, "no scroll view");
+   if (!*aOutScrollView) return NS_ERROR_FAILURE;
+
    return NS_OK;
 } 
 
