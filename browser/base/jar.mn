@@ -12,6 +12,8 @@ browser.jar:
         content/browser/viewSourceOverlay.xul         (content/viewSourceOverlay.xul)
         content/browser/openLocation.xul              (content/openLocation.xul)
         content/browser/openLocation.js               (content/openLocation.js)
+        content/browser/pageReport.xul                (content/pageReport.xul)
+        content/browser/pageReport.js                 (content/pageReport.js)
         content/browser/search.xml                    (content/search.xml)
 
 classic.jar:
@@ -65,6 +67,7 @@ en-US.jar:
         locale/en-US/browser/viewSource.dtd           (locale/viewSource.dtd)
         locale/en-US/browser/openLocation.dtd         (locale/openLocation.dtd)
         locale/en-US/browser/openLocation.properties  (locale/openLocation.properties)
+        locale/en-US/browser/pageReport.dtd           (locale/pageReport.dtd)
 
 US.jar:
         locale/US/browser-region/region.properties    (locale/region.properties)
