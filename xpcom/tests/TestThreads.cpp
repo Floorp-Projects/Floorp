@@ -30,6 +30,50 @@
 #include "nsCOMPtr.h"
 #include "nsIServiceManager.h"
 
+class nsConcurrentRunner : public nsIRunnable {
+public:
+    NS_DECL_ISUPPORTS
+
+    NS_IMETHOD Run() {
+        nsCOMPtr<nsIThread> thread;
+        nsresult rv = nsIThread::GetCurrent(getter_AddRefs(thread));
+        if (NS_FAILED(rv)) {
+            printf("failed to get current thread\n");
+            return rv;
+        }
+
+        mTestInt = 666;
+        PR_Sleep(PR_SecondsToInterval(1));
+
+        if (mTestInt != 666)
+            printf("Illegal access.  Data corruption detected.\n");
+
+        mTestInt = 0;
+        PR_Sleep(PR_SecondsToInterval(2));
+
+        if (mTestInt != 0)
+            printf("Illegal access.  Data corruption detected.\n");
+
+        // if we don't do something slow, we'll never see the other
+        // worker threads run
+        PR_Sleep(PR_MillisecondsToInterval(1));
+
+        return rv;
+    }
+
+    nsConcurrentRunner(){
+        NS_INIT_REFCNT();
+        mTestInt = 0;
+    }
+
+private:
+    PRInt32 mTestInt;
+
+};
+
+NS_IMPL_THREADSAFE_ISUPPORTS1(nsConcurrentRunner, nsIRunnable);
+
+
 class nsRunner : public nsIRunnable {
 public:
     NS_DECL_ISUPPORTS
@@ -139,6 +183,26 @@ TestThreadPools(PRUint32 poolMinSize, PRUint32 poolMaxSize,
     return rv;
 }
 
+nsresult
+TestThreadPoolsConcurrent(PRUint32 poolMinSize, 
+                          PRUint32 poolMaxSize, 
+                          PRUint32 nRequests)
+{
+    nsCOMPtr<nsIThreadPool> pool;
+    nsresult rv = NS_NewThreadPool(getter_AddRefs(pool), poolMinSize, poolMaxSize);
+    if (NS_FAILED(rv)) {
+        printf("failed to create thead pool\n");
+        return rv;
+    }
+    
+    nsConcurrentRunner* runner = new nsConcurrentRunner();
+
+    for (PRUint32 i = 0; i < nRequests; i++) {
+        rv = pool->DispatchRequest(runner);
+    }
+    rv = pool->Shutdown();
+    return rv;
+}
 
 class nsStressRunner : public nsIRunnable {
 public:
@@ -291,6 +355,9 @@ main(int argc, char** argv)
         // this test delays between each request to give threads a chance to 
         // decide to go away:
         rv = TestThreadPools(4, 8, 32, PR_MillisecondsToInterval(1000));
+        if (NS_FAILED(rv)) return -1;
+
+        rv = TestThreadPoolsConcurrent(4, 32, 1000);
         if (NS_FAILED(rv)) return -1;
     }
 
