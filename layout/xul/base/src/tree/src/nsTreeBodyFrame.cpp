@@ -3406,6 +3406,10 @@ nsTreeBodyFrame::EnsureColumns()
     if (!colsFrame)
       return;
 
+    const nsStyleVisibility* vis = 
+      (const nsStyleVisibility*)mStyleContext->GetStyleData(eStyleStruct_Visibility);
+    PRBool normalDirection = (vis->mDirection == NS_STYLE_DIRECTION_LTR);
+
     nsIBox* colsBox;
     CallQueryInterface(colsFrame, &colsBox);
     nsIBox* colBox = nsnull;
@@ -3421,10 +3425,17 @@ nsTreeBodyFrame::EnsureColumns()
       if (tag == nsXULAtoms::treecol) {
         // Create a new column structure.
         nsTreeColumn* col = new nsTreeColumn(content, frame);
-        if (currCol)
-          currCol->SetNext(col);
-        else mColumns = col;
-        currCol = col;
+        if (normalDirection) {
+          if (currCol)
+            currCol->SetNext(col);
+          else
+            mColumns = col;
+          currCol = col;
+        }
+        else {
+          col->SetNext(mColumns);
+          mColumns = col;
+        }
       }
 
       colBox->GetNextBox(&colBox);
