@@ -34,6 +34,7 @@
 #include "nsFileSpecWithUIImpl.h"
 #include "nsIComboBox.h"
 #include "nsISound.h"
+#include "nsFontRetrieverService.h"
 
 #include "nsWidgetsCID.h"
 
@@ -60,6 +61,7 @@
 #include "nsClipboard.h"
 #include "nsTransferable.h"
 #include "nsXIFFormatConverter.h"
+#include "nsDragService.h"
 
 #include "nsPhWidgetLog.h"
 
@@ -86,7 +88,7 @@ static NS_DEFINE_IID(kCMenuItem,      NS_MENUITEM_CID);
 static NS_DEFINE_IID(kCMenuButton,    NS_MENUBUTTON_CID);
 static NS_DEFINE_IID(kCPopUpMenu,     NS_POPUPMENU_CID);
 #endif
-
+static NS_DEFINE_IID(kCFontRetrieverService,    NS_FONTRETRIEVERSERVICE_CID);
 static NS_DEFINE_IID(kCImageButton,   NS_IMAGEBUTTON_CID);
 
 // Drag & Drop, Clipboard
@@ -94,8 +96,7 @@ static NS_DEFINE_IID(kCDataObj,       NS_DATAOBJ_CID);
 static NS_DEFINE_IID(kCClipboard,     NS_CLIPBOARD_CID);
 static NS_DEFINE_IID(kCTransferable,  NS_TRANSFERABLE_CID);
 static NS_DEFINE_IID(kCXIFFormatConverter,  NS_XIFFORMATCONVERTER_CID);
-//static NS_DEFINE_IID(kCDragService,   NS_DRAGSERVICE_CID);
-//static NS_DEFINE_IID(kCFileListTransferable, NS_FILELISTTRANSFERABLE_CID);
+static NS_DEFINE_IID(kCDragService,   NS_DRAGSERVICE_CID);
 
 static NS_DEFINE_IID(kISupportsIID,   NS_ISUPPORTS_IID);
 static NS_DEFINE_IID(kIFactoryIID,    NS_IFACTORY_IID);
@@ -185,42 +186,42 @@ nsresult nsWidgetFactory::CreateInstance( nsISupports *aOuter,
     nsISupports *inst = nsnull;
     if (mClassID.Equals(kCWindow)) {
 	  PR_LOG(PhWidLog, PR_LOG_DEBUG,("nsWidgetFactory::CreateInstance of nsWindow\n"));
-      inst = (nsISupports *)new nsWindow();
+      inst = (nsISupports *)(nsBaseWidget*)new nsWindow();
     }
     else if (mClassID.Equals(kCChild)) {
       PR_LOG(PhWidLog, PR_LOG_DEBUG,("nsWidgetFactory::CreateInstance of nsChildWindow\n"));
-      inst = (nsISupports *)new ChildWindow();
+      inst = (nsISupports *)(nsBaseWidget*)new ChildWindow();
     }
     else if (mClassID.Equals(kCButton)) {
 	  PR_LOG(PhWidLog, PR_LOG_DEBUG,( "nsWidgetFactory::CreateInstance of nsButton\n" ));
-      inst = (nsISupports *)(nsWidget *)new nsButton();
+      inst = (nsISupports *)(nsBaseWidget*)(nsWidget *)new nsButton();
     }
     else if (mClassID.Equals(kCTextField)) {
     PR_LOG(PhWidLog, PR_LOG_DEBUG,("nsWidgetFactory::CreateInstance of TextField\n"));
-      inst = (nsISupports *) (nsWidget *) new nsTextWidget();
+      inst = (nsISupports *)(nsBaseWidget*)(nsWidget *) new nsTextWidget();
     }
     else if (mClassID.Equals(kCHorzScrollbar)) {
 	  PR_LOG(PhWidLog, PR_LOG_DEBUG,( "nsWidgetFactory::CreateInstance of HorzScrollBar\n" ));
-      inst = (nsISupports *) (nsWidget *) new nsScrollbar( PR_FALSE );
+      inst = (nsISupports *)(nsBaseWidget*)(nsWidget *) new nsScrollbar( PR_FALSE );
     }
     else if (mClassID.Equals(kCVertScrollbar)) {
 	  PR_LOG(PhWidLog, PR_LOG_DEBUG,( "nsWidgetFactory::CreateInstance of VertScrollBar\n" ));
-      inst = (nsISupports *) (nsWidget *) new nsScrollbar( PR_TRUE );
+      inst = (nsISupports *)(nsBaseWidget*)(nsWidget *) new nsScrollbar( PR_TRUE );
     }
     else if (mClassID.Equals(kCCheckButton)) {
 	  PR_LOG(PhWidLog, PR_LOG_DEBUG,( "nsWidgetFactory::CreateInstance of nsCheckButton\n" ));
-      inst = (nsISupports *)(nsWidget *)new nsCheckButton();
+      inst = (nsISupports *)(nsBaseWidget*)(nsWidget *)new nsCheckButton();
     }
     else if (mClassID.Equals(kCRadioButton)) {
 	  PR_LOG(PhWidLog, PR_LOG_DEBUG,( "nsWidgetFactory::CreateInstance of nsRadioButton\n" ));
-      inst = (nsISupports *)(nsWidget *)new nsRadioButton();
+      inst = (nsISupports *)(nsBaseWidget*)(nsWidget *)new nsRadioButton();
     }
     else if (mClassID.Equals(kCTextArea)) {
-      inst = (nsISupports *) (nsWidget *) new nsTextAreaWidget();
+      inst = (nsISupports *)(nsBaseWidget*)(nsWidget *) new nsTextAreaWidget();
 	  PR_LOG(PhWidLog, PR_LOG_DEBUG,( "nsWidgetFactory::CreateInstance of TextArea\n" ));
     }
     else if (mClassID.Equals(kCListbox)) {
-      inst = (nsISupports *) (nsWidget *) new nsListBox();
+      inst = (nsISupports *)(nsBaseWidget*)(nsWidget *) new nsListBox();
 	  PR_LOG(PhWidLog, PR_LOG_DEBUG,( "nsWidgetFactory::CreateInstance of nsListBox\n" ));
 	}
     else if (mClassID.Equals(kCFileOpen)) {
@@ -228,7 +229,7 @@ nsresult nsWidgetFactory::CreateInstance( nsISupports *aOuter,
 	  PR_LOG(PhWidLog, PR_LOG_DEBUG,( "nsWidgetFactory::CreateInstance of nsFileWidget\n" ));
     }
     else if (mClassID.Equals(kCCombobox)) {
-      inst = (nsISupports *) (nsWidget *) new nsComboBox();
+      inst = (nsISupports *)(nsBaseWidget*)(nsWidget *) new nsComboBox();
  	  PR_LOG(PhWidLog, PR_LOG_DEBUG,( "nsWidgetFactory::CreateInstance of nsComboBox\n" ));
     }
     else if (mClassID.Equals(kCSound)) {
@@ -284,6 +285,14 @@ nsresult nsWidgetFactory::CreateInstance( nsISupports *aOuter,
         PR_LOG(PhWidLog, PR_LOG_DEBUG,( "nsWidgetFactory::CreateInstance of nsXIFFormatConverter\n" ));
         inst = (nsISupports*)new nsXIFFormatConverter();
     }
+    else if (mClassID.Equals(kCFontRetrieverService)) {
+        PR_LOG(PhWidLog, PR_LOG_DEBUG,( "nsWidgetFactory::CreateInstance of nsIFontRetrieverService\n" ));
+        inst = (nsISupports*)(nsIFontRetrieverService *) new nsFontRetrieverService();
+    }
+    else if (mClassID.Equals(kCDragService)) {
+        PR_LOG(PhWidLog, PR_LOG_DEBUG,( "nsWidgetFactory::CreateInstance of nsIDragService\n" ));
+        inst = (nsISupports*) (nsIDragService *) new nsDragService();
+	}
     else if (mClassID.Equals(kCFileSpecWithUI))
     {
         PR_LOG(PhWidLog, PR_LOG_DEBUG,( "nsWidgetFactory::CreateInstance of nsFileSpecWithUIImpl\n" ));

@@ -37,7 +37,10 @@ CPPSRCS		= \
 		nsCheckButton.cpp \
 		nsClipboard.cpp \
 		nsComboBox.cpp \
+		nsDragService.cpp \
 		nsFileWidget.cpp \
+		nsFontRetrieverService.cpp \
+		nsFontSizeIterator.cpp \
 		nsLabel.cpp \
 		nsListBox.cpp \
 		nsLookAndFeel.cpp \
