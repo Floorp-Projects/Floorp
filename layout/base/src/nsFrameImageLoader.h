@@ -48,6 +48,7 @@ public:
                   const nsString& aURL,
                   const nscolor* aBackgroundColor,
                   nsIFrame* aTargetFrame,
+                  const nsSize& aDesiredSize,
                   nsFrameImageLoaderCB aCallBack,
                   PRBool aNeedSizeUpdate,
                   PRBool aNeedErrorNotification);
@@ -70,6 +71,7 @@ protected:
   nsSize mSize;
   nsImageError mError;
   nsIFrame* mTargetFrame;
+  nsSize mDesiredSize;
   nsFrameImageLoaderCB mCallBack;
   nsIPresContext* mPresContext;
   nsIImageRequest* mImageRequest;
