@@ -310,11 +310,6 @@ nsListControlFrame::Reflow(nsIPresContext*          aPresContext,
   // then initialize it before reflow
     if (mIsAllContentHere && !mHasBeenInitialized) {
       if (PR_FALSE == mIsAllFramesHere) {
-#ifdef DEBUG_rodsXXX
-        printf("**********************************************************\n");
-        printf("**********************************************************\n");
-        printf("**********************************************************\n");
-#endif
         CheckIfAllFramesHere();
       }
       if (mIsAllFramesHere && !mHasBeenInitialized) {
@@ -1799,32 +1794,12 @@ nsListControlFrame::ToggleSelected(PRInt32 aIndex)
 PRBool nsListControlFrame::CheckIfAllFramesHere()
 {
   // Get the number of optgroups and options
-/*  PRInt32 numContentItems = 0;
+  PRInt32 numContentItems = 0;
   nsCOMPtr<nsIDOMNode> node(do_QueryInterface(mContent));
   if (node) {
-    CountAllChild(node, numContentItems);
+    mIsAllFramesHere = NS_OK == CountAllChild(node, numContentItems);
   }
-  //printf("number of items %d ", numContentItems);
-
-  // now count the number of block frames
-  // each option is in a block frame
-  PRInt32 numFrames = 0;
-  nsIFrame * areaFrame = nsnull;
-  FirstChild(nsnull, &areaFrame);
-  if (areaFrame) {
-    nsIFrame * child = nsnull;
-    areaFrame->FirstChild(nsnull, &child);
-    while (child) {
-      nsIFrame * blkFrame;
-      if (NS_SUCCEEDED(child->QueryInterface(kBlockFrameCID,(void**)&blkFrame))) {
-        numFrames++;
-      }
-      child->GetNextSibling(&child);
-    }
-  }
-  */
   // now make sure we have a frame each piece of content
-  mIsAllFramesHere = PR_TRUE;//numFrames == numContentItems;
 
   return mIsAllFramesHere;
 }
