@@ -713,7 +713,6 @@ var gPersistObj;
 //    if (!aSaveCopy && success)
 //      window.editorShell.editor.ResetModificationCount();  // this should cause notification to listeners that document has changed
 
-const webPersist = Components.interfaces.nsIWebBrowserPersist;
 function OutputFileWithPersistAPI(editorDoc, aDestinationLocation, aRelatedFilesParentDir, aMimeType)
 {
   gPersistObj = null;
@@ -723,35 +722,14 @@ function OutputFileWithPersistAPI(editorDoc, aDestinationLocation, aRelatedFiles
       imeEditor.ForceCompositionEnd();
     } catch (e) {}
 
-  var isLocalFile = false;
-  try {
-    var tmp1 = aDestinationLocation.QueryInterface(Components.interfaces.nsIFile);
-    isLocalFile = true;
-  } 
-  catch (e) {
-    try {
-      var tmp = aDestinationLocation.QueryInterface(Components.interfaces.nsIURI);
-      isLocalFile = tmp.schemeIs("file");
-    }
-    catch (e) {}
-  }
-
   try {
     // we should supply a parent directory if/when we turn on functionality to save related documents
-    var persistObj = Components.classes["@mozilla.org/embedding/browser/nsWebBrowserPersist;1"].createInstance(webPersist);
+    var persistObj = Components.classes["@mozilla.org/embedding/browser/nsWebBrowserPersist;1"].createInstance(Components.interfaces.nsIWebBrowserPersist);
     persistObj.progressListener = gEditorOutputProgressListener;
     
     var wrapColumn = GetWrapColumn();
     var outputFlags = GetOutputFlags(aMimeType, wrapColumn);
 
-    // for 4.x parity as well as improving readability of file locally on server
-    // this will always send crlf for upload (http/ftp)
-    if (!isLocalFile) // if we aren't saving locally then send both cr and lf
-      outputFlags |= webPersist.ENCODE_FLAGS_CR_LINEBREAKS | webPersist.ENCODE_FLAGS_LF_LINEBREAKS;
-
-    persistObj.persistFlags = persistObj.persistFlags 
-                            | webPersist.PERSIST_FLAGS_NO_BASE_TAG_MODIFICATIONS
-                            | webPersist.PERSIST_FLAGS_FIXUP_ORIGINAL_DOM;
     persistObj.saveDocument(editorDoc, aDestinationLocation, aRelatedFilesParentDir, 
                             aMimeType, outputFlags, wrapColumn);
     gPersistObj = persistObj;
@@ -764,11 +742,11 @@ function OutputFileWithPersistAPI(editorDoc, aDestinationLocation, aRelatedFiles
 // returns output flags based on mimetype, wrapCol and prefs
 function GetOutputFlags(aMimeType, aWrapColumn)
 {
-  var outputFlags = webPersist.ENCODE_FLAGS_ENCODE_ENTITIES;
+  var outputFlags = 256;  // nsIDocumentEncoder.OutputEncodeEntities
   if (aMimeType == "text/plain")
   {
     // When saving in "text/plain" format, always do formatting
-    outputFlags |= webPersist.ENCODE_FLAGS_FORMATTED;
+    outputFlags |= 2;  // nsIDocumentEncoder.OutputFormatted
   }
   else
   {
@@ -776,13 +754,13 @@ function GetOutputFlags(aMimeType, aWrapColumn)
     try {
       var prefs = GetPrefs();
       if (prefs.getBoolPref("editor.prettyprint"))
-        outputFlags |= webPersist.ENCODE_FLAGS_FORMATTED;
+        outputFlags |= 2;  // nsIDocumentEncoder.OutputFormatted
     }
     catch (e) {}
   }
 
   if (aWrapColumn > 0)
-    outputFlags |= webPersist.ENCODE_FLAGS_WRAP;
+    outputFlags |= 32;  // nsIDocumentEncoder.OutputWrap;
 
   return outputFlags;
 }
@@ -1215,7 +1193,7 @@ function SaveDocument(aSaveAs, aSaveCopy, aMimeType)
           if (oldLocation == curParentString || IsUrlAboutBlank(oldLocation))
             parentDir = null;
           else
-            parentDir = tempLocalFile.parent;  // this is wrong if parent is the root!
+            parentDir = tempLocalFile.parent;
         }
       }
       else
