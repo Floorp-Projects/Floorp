@@ -28,7 +28,9 @@ include <$(DEPTH)\config\rules.mak>
 install:: $(LIBRARY)
 	$(MAKE_INSTALL) htmlbindings.xml $(DIST)\bin\res\builtin
 	$(MAKE_INSTALL) buttonBindings.xml $(DIST)\bin\res\builtin
+	$(MAKE_INSTALL) selectBindings.xml $(DIST)\bin\res\builtin
 
 clobber::
 	rm -f $(DIST)\bin\res\builtin\htmlbindings.xml
 	rm -f $(DIST)\bin\res\builtin\buttonBindings.xml
+	rm -f $(DIST)\bin\res\builtin\selectBindings.xml

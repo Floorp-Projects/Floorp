@@ -17,8 +17,11 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *   David Hyatt & Ben Goodger
  */
+@import url(resource:/res/builtin/textfields.css);
 @import url(resource:/res/builtin/buttons.css);
+@import url(resource:/res/builtin/select.css);
 
 @namespace url(http://www.w3.org/1999/xhtml); /* set default namespace to HTML */
  
@@ -30,20 +33,80 @@
 input[type="image"], 
 input[type="checkbox"], 
 input[type="radio"], 
-select, fieldset, legend {
-  display: none; 
+fieldset, legend, select {
+  display                 : none; 
 }
 
-input {
-  -moz-user-focus: normal;
-}
+input, input[type="text"], input[type="password"]
+  {
+    cursor                : text;
+    text-align            : start;
+    vertical-align        : bottom;
+    -moz-box-sizing       : border-box;
+    -moz-user-focus       : normal;
+    -moz-binding          : url("resource:///res/builtin/platformHTMLBindings.xml#inputFields");
+  }
+
+.input-inner
+  {
+    -moz-binding          : none;
+  }
 
 button
-{
-  -moz-binding        : url("resource:///res/builtin/platformButtonBindings.xml#button");
-}
+  {
+    -moz-binding          : url("resource:///res/builtin/platformButtonBindings.xml#button");
+  }
 
 input[type="button"],input[type="submit"],input[type="reset"] {
-  -moz-binding        : url("resource:///res/builtin/platformButtonBindings.xml#inputButton");
+  -moz-binding            : url("resource:///res/builtin/platformButtonBindings.xml#inputButton");
+  cursor                  : default;
 }
 
+/**
+ <select/> Widget
+ **/
+ 
+select[size]
+  {
+    -moz-binding          : url("resource:///res/builtin/platformSelectBindings.xml#select-size");
+  }
+  
+select, select[size="1"]
+  {
+    -moz-user-focus       : normal;
+    -moz-user-select      : none;
+    -moz-binding          : url("resource:///res/builtin/platformSelectBindings.xml#select");
+    display               : inline;
+  }
+  
+ /* <select size=">1"/> */
+  
+select[size] > optgroup,
+select[size] > option,
+select[size] optgroup[open="true"] > option,
+select[size] optgroup[open="true"] > optgroup
+  {
+    display               : block !important;
+  }  
+  
+select[size] optgroup
+  {
+    -moz-binding          : url("resource:///res/builtin/platformSelectBindings.xml#optgroup-size");
+  }  
+  
+select[size] option
+  {
+    -moz-binding          : url("resource:///res/builtin/platformSelectBindings.xml#option-size");
+  }   
+  
+select optgroup, select[size="1"] optgroup
+  {
+    -moz-binding          : url("resource:///res/builtin/platformSelectBindings.xml#optgroup");
+  }  
+  
+select option, select[size="1"] option
+  {
+    -moz-binding          : url("resource:///res/builtin/platformSelectBindings.xml#option");
+  }   
+  
+  

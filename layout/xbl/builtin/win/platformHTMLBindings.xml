@@ -5,6 +5,11 @@
    xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
  
   <binding id="inputFields" extends="resource:///res/builtin/htmlBindings.xml#inputFieldsBase">
+  <!--  <content>
+      <xul:box class="text-input-internal-box">
+        <html:input class="text-input" flex="1" inherits="onfocus,onblur,value,type,maxlength,disabled,size,readonly"/>
+      </xul:box>
+    </content>-->
     <handlers>
       <handler event="keypress" keycode="VK_UP" command="cmd_charPrevious"/>
       <handler event="keypress" keycode="VK_DOWN" command="cmd_charNext"/>
