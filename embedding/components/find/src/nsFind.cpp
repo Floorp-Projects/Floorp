@@ -264,7 +264,7 @@ nsFindContentIterator::PositionAt(nsIContent* aCurNode)
     MaybeSetupInnerIterator();
     if (mInnerIterator) {
       // same rationale as in Next() and Prev() above
-      if (!mFindForward) {
+      if (!mFindBackward) {
         mInnerIterator->First();
         mOuterIterator->First();
       }
