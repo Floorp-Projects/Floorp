@@ -247,73 +247,84 @@ NSRegisterSelf(nsISupports* aServMgr, const char* path)
   NS_WITH_SERVICE1(nsIComponentManager, compMgr, aServMgr, kComponentManagerCID, &rv);
   if (NS_FAILED(rv)) return rv;
 
-  rv = compMgr->RegisterComponent(kMailboxUrlCID, nsnull, nsnull,
+  rv = compMgr->RegisterComponent(kMailboxUrlCID,
+                                  "Mailbox URL",
+                                  NS_MAILBOXURL_PROGID,
                                   path, PR_TRUE, PR_TRUE);
   if (NS_FAILED(rv)) finalResult = rv;
 
-  rv = compMgr->RegisterComponent(kMailboxServiceCID, nsnull, 
-								  "component://netscape/messenger/mailboxservice", 
+  rv = compMgr->RegisterComponent(kMailboxServiceCID,
+                                  "Mailbox Service",
+                                  NS_MAILBOXSERVICE_PROGID1, 
                                   path, PR_TRUE, PR_TRUE);
   if (NS_FAILED(rv)) finalResult = rv;
 
-  rv = compMgr->RegisterComponent(kMailboxServiceCID, nsnull, 
-								  "component://netscape/messenger/messageservice;type=mailbox", 
+  rv = compMgr->RegisterComponent(kMailboxServiceCID,
+                                  "Mailbox Service",
+                                  NS_MAILBOXSERVICE_PROGID2, 
                                   path, PR_TRUE, PR_TRUE);
   if (NS_FAILED(rv)) finalResult = rv;
 
-  rv = compMgr->RegisterComponent(kMailboxServiceCID, nsnull, 
-								  "component://netscape/messenger/messageservice;type=mailbox_message", 
+  rv = compMgr->RegisterComponent(kMailboxServiceCID,
+                                  "Mailbox Service", 
+                                  NS_MAILBOXSERVICE_PROGID3, 
                                   path, PR_TRUE, PR_TRUE);
   if (NS_FAILED(rv)) finalResult = rv;
 
   rv = compMgr->RegisterComponent(kMailboxServiceCID,  
-                                    "Mailbox Protocol Handler",
-                                    NS_NETWORK_PROTOCOL_PROGID_PREFIX "mailbox",
-                                    path, PR_TRUE, PR_TRUE);
-  if (NS_FAILED(rv)) finalResult = rv;
-
-  rv = compMgr->RegisterComponent(kMailboxParserCID, nsnull, nsnull,
+                                  "Mailbox Protocol Handler",
+                                  NS_MAILBOXSERVICE_PROGID4,
                                   path, PR_TRUE, PR_TRUE);
   if (NS_FAILED(rv)) finalResult = rv;
 
-  rv = compMgr->RegisterComponent(kPop3UrlCID, nsnull, nsnull,
-								  path, PR_TRUE, PR_TRUE);
+  rv = compMgr->RegisterComponent(kMailboxParserCID,
+                                  "Mailbox Parser",
+                                  NS_MAILBOXPARSER_PROGID,
+                                  path, PR_TRUE, PR_TRUE);
   if (NS_FAILED(rv)) finalResult = rv;
 
-  rv = compMgr->RegisterComponent(kPop3ServiceCID, nsnull, 
-								  "component://netscape/messenger/popservice",
-								  path, PR_TRUE, PR_TRUE);
+  rv = compMgr->RegisterComponent(kPop3UrlCID,
+                                  "Pop3 URL"
+                                  NS_POP3URL_PROGID,
+                                  nsnull,
+                                  path, PR_TRUE, PR_TRUE);
+  if (NS_FAILED(rv)) finalResult = rv;
+
+  rv = compMgr->RegisterComponent(kPop3ServiceCID,
+                                  "Pop3 Service", 
+                                  NS_POP3SERVICE_PROGID1,
+                                  path, PR_TRUE, PR_TRUE);
   if (NS_FAILED(rv)) finalResult = rv;
 
   rv = compMgr->RegisterComponent(kPop3ServiceCID,  
-                                    "POP Protocol Handler",
-                                    NS_NETWORK_PROTOCOL_PROGID_PREFIX "pop3",
-                                    path, PR_TRUE, PR_TRUE);
+                                  "POP Protocol Handler",
+                                  NS_POP3SERVICE_PROGID2,
+                                  path, PR_TRUE, PR_TRUE);
 
   if (NS_FAILED(rv)) finalResult = rv;
 
   // register our RDF resource factories:
   rv = compMgr->RegisterComponent(kLocalMailFolderResourceCID,
                                   "Local Mail Folder Resource Factory",
-                                  NS_RDF_RESOURCE_FACTORY_PROGID_PREFIX "mailbox",
+                                  NS_LOCALMAILFOLDERRESOURCE_PROGID,
                                   path, PR_TRUE, PR_TRUE);
   if (NS_FAILED(rv)) finalResult = rv;
 
    rv = compMgr->RegisterComponent(kMailboxMessageResourceCID,
                                    "Local Message Resource Factory",
-                                   NS_RDF_RESOURCE_FACTORY_PROGID_PREFIX "mailbox_message",
+                                   NS_MAILBOXMESSAGERESOURCE_PROGID,
                                    path, PR_TRUE, PR_TRUE);
    if (NS_FAILED(rv)) finalResult = rv;
 
   rv = compMgr->RegisterComponent(kPop3IncomingServerCID,
                                   "Pop3 Incoming Server",
-                                  "component://netscape/messenger/server&type=pop3",
+                                  NS_POP3INCOMINGSERVER_PROGID,
                                   path, PR_TRUE, PR_TRUE);
 	
   if (NS_FAILED(rv)) finalResult = rv;
    rv = compMgr->RegisterComponent(kParseMailMsgStateCID,
                                   "Parse MailMessage State",
-                                  "component://netscape/messenger/messagestateparser",
+                                  NS_PARSEMAILMSGSTATE_PROGID,
                                   path, PR_TRUE, PR_TRUE);
   
                                   

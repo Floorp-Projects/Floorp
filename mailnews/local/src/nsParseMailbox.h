@@ -150,13 +150,6 @@ inline int	nsParseMailMessageState::msg_UnHex(char C)
 		 ((C >= 'a' && C <= 'f') ? C - 'a' + 10 : 0)));
 }
 
-// give the mailbox parser a CID so we can go through a factory to create an instance of the mailbox...
-/* 46EFCB10-CB6D-11d2-8065-006008128C4E */
-
-#define NS_MAILBOXPARSER_CID                      \
-{ 0x8597ab60, 0xd4e2, 0x11d2,                  \
-    { 0x80, 0x69, 0x0, 0x60, 0x8, 0x12, 0x8c, 0x4e } }
-
 // This class is part of the mailbox parsing state machine 
 class nsMsgMailboxParser : public nsIStreamListener, public nsParseMailMessageState, public nsMsgLineBuffer, public nsMsgLineBufferHandler 
 {
