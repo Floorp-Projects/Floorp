@@ -29,15 +29,15 @@ include $(topsrcdir)/config/rules.mk
 SAMPLES_DIR = $(DIST)/bin/res/mailnews/compose
 
 EXPORT_RESOURCE_SAMPLES = \
-	./msgcompose.xul \
-	./msgcomposebody.html \
-	./send.gif \
-	./quote.gif \
-	./address.gif \
-	./attach.gif \
-	./spelling.gif \
-	./save.gif \
-	./stop.gif \
+	$(srcdir)/msgcompose.xul \
+	$(srcdir)/msgcomposebody.html \
+	$(srcdir)/send.gif \
+	$(srcdir)/quote.gif \
+	$(srcdir)/address.gif \
+	$(srcdir)/attach.gif \
+	$(srcdir)/spelling.gif \
+	$(srcdir)/save.gif \
+	$(srcdir)/stop.gif \
 	$(NULL)
 
 EXPORT_RESOURCE_SAMPLES_TO_REMOVE := $(addprefix $(SAMPLES_DIR)/, $(EXPORT_RESOURCE_SAMPLES))
