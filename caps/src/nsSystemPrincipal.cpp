@@ -31,7 +31,7 @@
 #include "nsXPIDLString.h"
 
 
-NS_IMPL_QUERY_INTERFACE1(nsSystemPrincipal, nsIPrincipal)
+NS_IMPL_QUERY_INTERFACE2_CI(nsSystemPrincipal, nsIPrincipal, nsISerializable)
 
 NSBASEPRINCIPALS_ADDREF(nsSystemPrincipal);
 NSBASEPRINCIPALS_RELEASE(nsSystemPrincipal);
@@ -123,6 +123,24 @@ nsSystemPrincipal::DisableCapability(const char *capability, void **annotation)
     // Can't disable the capabilities of the system principal.
     // XXX might be handy to be able to do so!
     return NS_ERROR_FAILURE;
+}
+
+//////////////////////////////////////////
+// Methods implementing nsISerializable //
+//////////////////////////////////////////
+
+NS_IMETHODIMP
+nsSystemPrincipal::Read(nsIObjectInputStream* aStream)
+{
+    // no-op: CID is sufficient to identify the mSystemPrincipal singleton
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsSystemPrincipal::Write(nsIObjectOutputStream* aStream)
+{
+    // no-op: CID is sufficient to identify the mSystemPrincipal singleton
+    return NS_OK;
 }
 
 /////////////////////////////////////////////

@@ -21,11 +21,11 @@
  *   Scott Collins <scc@mozilla.org>: |do_QueryElementAt|
  */
 
-#include "nsISupports.idl"
+#include "nsISerializable.idl"
 #include "nsIEnumerator.idl"
 
 [scriptable, uuid(83b6019c-cbc4-11d2-8cca-0060b0fc14a3)]
-interface nsICollection : nsISupports
+interface nsICollection : nsISerializable
 {
 
   PRUint32 Count();

@@ -1,0 +1,77 @@
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+ * The contents of this file are subject to the Netscape Public
+ * License Version 1.1 (the "License"); you may not use this file
+ * except in compliance with the License. You may obtain a copy of
+ * the License at http://www.mozilla.org/NPL/
+ *  
+ * Software distributed under the License is distributed on an "AS
+ * IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+ * implied. See the License for the specific language governing
+ * rights and limitations under the License.
+ *  
+ * The Original Code is Mozilla FastLoad code.
+ * 
+ * The Initial Developer of the Original Code is Netscape
+ * Communications Corporation. Portions created by Netscape are
+ * Copyright (C) 2001 Netscape Communications Corporation. All
+ * Rights Reserved.
+ *
+ * Contributor(s):
+ *   Brendan Eich <brendan@mozilla.org> (original author)
+ */
+
+#include "nsISupports.idl"
+#include "nsrootidl.idl"
+
+interface nsICollection;
+
+/**
+ * The nsIFastLoadFileControl interface is used as an extension to classes
+ * implementing nsIObjectInputStream or nsIObjectOutputStream, so that those
+ * stream types can be used with nsIFastLoadService to get, set, and compute
+ * FastLoad file checksums, update and check FastLoad file dependencies, and
+ * multiplex documents loaded via non-blocking i/o.
+ *
+ * If an nsIObjectInputStream or nsIObjectOutputStream implementation doesn't
+ * implement nsIFastLoadFileControl, that implementation may still be useful
+ * for object serialization, but it cannot be used to read or write a Mozilla
+ * FastLoad file.
+ */
+[scriptable, uuid(8a1e2c63-af50-4147-af7e-26289dc180dd)]
+interface nsIFastLoadFileControl : nsISupports
+{
+    /**
+     * Get, set, and compute the FastLoad file checksum.  The attribute gets
+     * and sets the recorded checksum value from the FastLoad file header,
+     * while the method computes the correct checksum of the implementation's
+     * underlying FastLoad file, independent of the header's checksum value
+     * (which is treated as zero when computing the checksum).
+     */
+    attribute PRUint32 checksum;
+    PRUint32 computeChecksum();
+
+    /**
+     * Get the collection of dependency nsIFile instances recorded during the
+     * FastLoad file write or read/update process, and checked during the read
+     * process to invalidate the FastLoad file if any dependencies are newer.
+     */
+    readonly attribute nsICollection dependencies;
+
+    /**
+     * Multiplexed document control methods.  A FastLoad file may contain
+     * multiple interleaved documents identified by a URI specifier string,
+     * and indexed for fast multiplexor select by an opaque URI object key.
+     * You StartMuxedDocument when initiating a document load, then Select
+     * before every batch of calls to (de)serialize document data, and End
+     * when the load completes.
+     *
+     * Document multiplexing is necessary to support incremental FastLoad
+     * development in a non-blocking i/o architecture such as Mozilla, where
+     * some (but not all, at first, or for a while during development) of the
+     * results of parsing and compiling various inputs can be multiplexed to
+     * or from a FastLoad file.
+     */
+    void startMuxedDocument(in nsISupports aURI, in string aURISpec);
+    void selectMuxedDocument(in nsISupports aURI);
+    void endMuxedDocument(in nsISupports aURI);
+};

@@ -22,6 +22,7 @@
 
 #include "nsIInputStream.idl"
 #include "nsIOutputStream.idl"
+#include "nsISeekableStream.idl"
 
 interface nsIFile;
 
@@ -35,21 +36,6 @@ interface nsIFileInputStream : nsIInputStream
 interface nsIFileOutputStream : nsIOutputStream
 {
     void init(in nsIFile file, in long ioFlags, in long perm);
-};
-
-[scriptable, uuid(e9de5df0-c7ec-11d3-8cda-0060b0fc14a3)]
-interface nsISeekableStream : nsISupports
-{
-    // correspond to PRSeekWhence values
-    const long NS_SEEK_SET = 0;
-    const long NS_SEEK_CUR = 1;
-    const long NS_SEEK_END = 2;
-    
-    void seek(in long whence, in long offset);
-    unsigned long tell();
-
-    // truncate stream to the current offset
-    void setEOF();
 };
 
 [scriptable, uuid(616f5b48-da09-11d3-8cda-0060b0fc14a3)]

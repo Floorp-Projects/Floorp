@@ -955,12 +955,9 @@ nsJSCID::HasInstance(nsIXPConnectWrappedNative *wrapper,
         nsIClassInfo* ci = other_wrapper->GetClassInfo();
         if(ci)
         {
-            nsID* cid;
-            if(NS_SUCCEEDED(ci->GetClassID(&cid)) && cid)
-            {
-                *bp = cid->Equals(*mDetails.GetID());
-                nsMemory::Free((char*)cid);
-            }
+            nsID cid;
+            if(NS_SUCCEEDED(ci->GetClassID(&cid)))
+                *bp = cid.Equals(*mDetails.GetID());
         }
     }
     return rv;

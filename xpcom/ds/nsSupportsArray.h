@@ -37,6 +37,8 @@ public:
 
   NS_DECL_ISUPPORTS
 
+  NS_DECL_NSISERIALIZABLE
+
   // nsICollection methods:
   NS_IMETHOD Count(PRUint32 *result) { *result = mCount; return NS_OK; }
   NS_IMETHOD GetElementAt(PRUint32 aIndex, nsISupports* *result) {

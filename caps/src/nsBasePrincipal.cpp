@@ -318,3 +318,106 @@ nsBasePrincipal::GetPreferences(char** aPrefName, char** aID,
     }
     return NS_OK;
 }
+
+PR_STATIC_CALLBACK(nsresult)
+ReadAnnotationEntry(nsIObjectInputStream* aStream, nsHashKey** aKey,
+                    void** aData)
+{
+    nsresult rv;
+    nsCStringKey* key = new nsCStringKey(aStream, &rv);
+    if (NS_FAILED(rv)) return rv;
+
+    PRUint32 value;
+    rv = aStream->Read32(&value);
+    if (NS_FAILED(rv)) {
+        delete key;
+        return rv;
+    }
+
+    *aKey = key;
+    *aData = (void*) value;
+    return NS_OK;
+}
+
+PR_STATIC_CALLBACK(void)
+FreeAnnotationEntry(nsIObjectInputStream* aStream, nsHashKey* aKey,
+                    void* aData)
+{
+    if (aKey)
+        delete NS_STATIC_CAST(nsCStringKey*, aKey);
+}
+
+nsresult
+nsBasePrincipal::Read(nsIObjectInputStream* aStream)
+{
+    nsresult rv;
+
+    PRUint32 annotationCount;
+    rv = aStream->Read32(&annotationCount);
+    if (NS_FAILED(rv)) return rv;
+
+    for (PRInt32 i = 0, n = PRInt32(annotationCount); i < n; i++) {
+        nsHashtable *ht = new nsHashtable(aStream,
+                                          ReadAnnotationEntry,
+                                          FreeAnnotationEntry,
+                                          &rv);
+        NS_ASSERTION(NS_SUCCEEDED(rv) || ht == nsnull,
+                     "failure but non-null return from nsHashtable ctor!");
+        if (NS_FAILED(rv)) return rv;
+
+        if (!mAnnotations.InsertElementAt(NS_REINTERPRET_CAST(void*, ht), i)) {
+            delete ht;
+            return NS_ERROR_OUT_OF_MEMORY;
+        }
+    }
+
+    PRBool hasCapabilities;
+    rv = aStream->ReadBoolean(&hasCapabilities);
+    if (NS_SUCCEEDED(rv) && hasCapabilities) {
+        mCapabilities = new nsHashtable(aStream,
+                                        ReadAnnotationEntry,
+                                        FreeAnnotationEntry,
+                                        &rv);
+    }
+    if (NS_FAILED(rv)) return rv;
+
+    rv = NS_ReadOptionalStringZ(aStream, &mPrefName);
+    if (NS_FAILED(rv)) return rv;
+
+    return NS_OK;
+}
+
+PR_STATIC_CALLBACK(nsresult)
+WriteScalarValue(nsIObjectOutputStream* aStream, void* aData)
+{
+    PRUint32 value = (PRUint32) aData;
+
+    return aStream->Write32(value);
+}
+
+nsresult
+nsBasePrincipal::Write(nsIObjectOutputStream* aStream)
+{
+    nsresult rv;
+
+    PRUint32 annotationCount = PRUint32(mAnnotations.Count());
+    rv = aStream->Write32(annotationCount);
+    if (NS_FAILED(rv)) return rv;
+
+    for (PRInt32 i = 0, n = PRInt32(annotationCount); i < n; i++) {
+        nsHashtable *ht = NS_REINTERPRET_CAST(nsHashtable *, mAnnotations[i]);
+        rv = ht->Write(aStream, WriteScalarValue);
+        if (NS_FAILED(rv)) return rv;
+    }
+
+    PRBool hasCapabilities = (mCapabilities != nsnull);
+    rv = aStream->WriteBoolean(hasCapabilities);
+    if (NS_SUCCEEDED(rv) && hasCapabilities)
+        rv = mCapabilities->Write(aStream, WriteScalarValue);
+    if (NS_FAILED(rv)) return rv;
+
+    rv = NS_WriteOptionalStringZ(aStream, mPrefName);
+    if (NS_FAILED(rv)) return rv;
+
+    return NS_OK;
+}

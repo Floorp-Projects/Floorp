@@ -19,11 +19,6 @@
  *
  */
 
-[ptr] native nsString(nsString); 
-%{ C++
-#include "nsString.h"
-%}
-
 #include "nsIOutputStream.idl"
 #include "nsrootidl.idl"
 
@@ -73,14 +68,31 @@ interface nsIBinaryOutputStream : nsIOutputStream {
      * Write an opaque byte array to a binary stream.
      */
     void writeBytes([size_is(aLength)] in string aString, in PRUint32 aLength);
-
-    /**
-     * Write a string (possibly containing embedded NULs) to a binary stream.
-     */
-    [noscript] void writeString(in nsString aString);
 };
 
 %{C++
+
 NS_COM nsresult
 NS_NewBinaryOutputStream(nsIBinaryOutputStream* *aResult, nsIOutputStream* aDestStream);
+
+inline nsresult
+NS_WriteOptionalStringZ(nsIBinaryOutputStream* aStream, const char* aString)
+{
+    PRBool nonnull = (aString != nsnull);
+    nsresult rv = aStream->WriteBoolean(nonnull);
+    if (NS_SUCCEEDED(rv) && nonnull)
+        rv = aStream->WriteStringZ(aString);
+    return rv;
+}
+
+inline nsresult
+NS_WriteOptionalWStringZ(nsIBinaryOutputStream* aStream, const PRUnichar* aString)
+{
+    PRBool nonnull = (aString != nsnull);
+    nsresult rv = aStream->WriteBoolean(nonnull);
+    if (NS_SUCCEEDED(rv) && nonnull)
+        rv = aStream->WriteWStringZ(aString);
+    return rv;
+}
+
 %}

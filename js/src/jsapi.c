@@ -2694,6 +2694,16 @@ JS_SetReservedSlot(JSContext *cx, JSObject *obj, uint32 index, jsval v)
     return JS_TRUE;
 }
 
+JS_PUBLIC_API(JSPrincipalsDecoder)
+JS_SetPrincipalsDecoder(JSRuntime *rt, JSPrincipalsDecoder pd)
+{
+    JSPrincipalsDecoder oldpd;
+    
+    oldpd = rt->principalsDecoder;
+    rt->principalsDecoder = pd;
+    return oldpd;
+}
+
 JS_PUBLIC_API(JSFunction *)
 JS_NewFunction(JSContext *cx, JSNative native, uintN nargs, uintN flags,
                JSObject *parent, const char *name)
@@ -2958,10 +2968,29 @@ JS_NewScriptObject(JSContext *cx, JSScript *script)
 {
     JSObject *obj;
 
+    /*
+     * We use a dummy stack frame to protect the script from a GC caused
+     * by debugger-hook execution.
+     *
+     * XXX We really need a way to manage local roots and such more
+     * XXX automatically, at which point we can remove this one-off hack
+     * XXX and others within the engine.  See bug 40757 for discussion.
+     */
+    JSStackFrame dummy;
+
     CHECK_REQUEST(cx);
+    
+    memset(&dummy, 0, sizeof dummy);
+    dummy.down = cx->fp;
+    dummy.script = script;
+    cx->fp = &dummy;
+
     obj = js_NewObject(cx, &js_ScriptClass, NULL, NULL);
+
+    cx->fp = dummy.down;
     if (!obj)
         return NULL;
+
     if (script) {
         if (!JS_SetPrivate(cx, obj, script))
             return NULL;

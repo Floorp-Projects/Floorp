@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
  *
  * The contents of this file are subject to the Netscape Public License
  * Version 1.0 (the "NPL"); you may not use this file except in
@@ -44,7 +44,7 @@ nsMozIconURI::~nsMozIconURI()
 {
 }
 
-NS_IMPL_THREADSAFE_ISUPPORTS2(nsMozIconURI, nsIMozIconURI, nsIURI)
+NS_IMPL_THREADSAFE_ISUPPORTS3(nsMozIconURI, nsIMozIconURI, nsIURI, nsISerializable)
 
 #define NS_MOZICON_SCHEME           "moz-icon:"
 #define NS_MOZ_ICON_DELIMITER        '?'
@@ -415,6 +415,5 @@ nsMozIconURI::GetFileExtension(char ** aFileExtension)
 
   return NS_OK;
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////

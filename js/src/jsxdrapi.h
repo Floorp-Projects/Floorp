@@ -108,7 +108,7 @@ struct JSXDRState {
     uintN       numclasses;
     uintN       maxclasses;
     void        *reghash;
-    void        *data;
+    void        *userdata;
 };
 
 extern JS_PUBLIC_API(void)
@@ -122,6 +122,12 @@ JS_XDRMemGetData(JSXDRState *xdr, uint32 *lp);
 
 extern JS_PUBLIC_API(void)
 JS_XDRMemSetData(JSXDRState *xdr, void *data, uint32 len);
+
+extern JS_PUBLIC_API(uint32)
+JS_XDRMemDataLeft(JSXDRState *xdr);
+
+extern JS_PUBLIC_API(void)
+JS_XDRMemResetData(JSXDRState *xdr);
 
 extern JS_PUBLIC_API(void)
 JS_XDRDestroy(JSXDRState *xdr);
@@ -173,7 +179,8 @@ JS_XDRFindClassById(JSXDRState *xdr, uint32 id);
  */
 #define JSXDR_MAGIC_SCRIPT_1        0xdead0001
 #define JSXDR_MAGIC_SCRIPT_2        0xdead0002
-#define JSXDR_MAGIC_SCRIPT_CURRENT  JSXDR_MAGIC_SCRIPT_2
+#define JSXDR_MAGIC_SCRIPT_3        0xdead0003
+#define JSXDR_MAGIC_SCRIPT_CURRENT  JSXDR_MAGIC_SCRIPT_3
 
 JS_END_EXTERN_C
 

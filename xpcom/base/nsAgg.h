@@ -88,7 +88,7 @@ _class::AddRef(void)                                                        \
 NS_IMETHODIMP_(nsrefcnt)                                                    \
 _class::Release(void)                                                       \
 {                                                                           \
-	return fOuter->Release();                                               \
+    return fOuter->Release();                                               \
 }                                                                           \
                                                                             \
 NS_IMETHODIMP                                                               \
@@ -125,12 +125,14 @@ _class::Internal::Release(void)                                             \
 
 // for use with QI macros in nsISupportsUtils.h:
 
-#define NS_IMPL_AGGREGATED_QUERY_HEAD(_class)                                              \
-NS_IMETHODIMP _class::AggregatedQueryInterface(REFNSIID aIID, void** aInstancePtr)         \
-{                                                                                          \
-  NS_ASSERTION(aInstancePtr, "AggregatedQueryInterface requires a non-NULL destination!"); \
-  if ( !aInstancePtr )                                                                     \
-    return NS_ERROR_NULL_POINTER;                                                          \
+#define NS_IMPL_AGGREGATED_QUERY_HEAD(_class)                               \
+NS_IMETHODIMP                                                               \
+_class::AggregatedQueryInterface(REFNSIID aIID, void** aInstancePtr)        \
+{                                                                           \
+  NS_ASSERTION(aInstancePtr,                                                \
+               "AggregatedQueryInterface requires a non-NULL result ptr!"); \
+  if ( !aInstancePtr )                                                      \
+    return NS_ERROR_NULL_POINTER;                                           \
   nsISupports* foundInterface;
 
 #endif /* nsAgg_h___ */

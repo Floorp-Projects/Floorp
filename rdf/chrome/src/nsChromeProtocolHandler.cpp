@@ -73,7 +73,7 @@ static NS_DEFINE_CID(kXULPrototypeCacheCID,      NS_XULPROTOTYPECACHE_CID);
 //  which will fire the listener's OnStopRequest() and remove the
 //  channel from the load group.
 //
-//  Each is done asynchronously to allbow the stack to unwind back to
+//  Each is done asynchronously to allow the stack to unwind back to
 //  the main event loop. This avoids any weird re-entrancy that occurs
 //  if we try to immediately fire the On[Start|Stop]Request().
 //

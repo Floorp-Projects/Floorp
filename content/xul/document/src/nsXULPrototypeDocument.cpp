@@ -32,6 +32,8 @@
 */
 
 #include "nsCOMPtr.h"
+#include "nsIObjectInputStream.h"
+#include "nsIObjectOutputStream.h"
 #include "nsIPrincipal.h"
 #include "nsIScriptGlobalObject.h"
 #include "nsIScriptGlobalObjectOwner.h"
@@ -40,6 +42,7 @@
 #include "nsIServiceManager.h"
 #include "nsISupportsArray.h"
 #include "nsIURI.h"
+#include "nsIXULDocument.h"
 #include "nsIXULPrototypeDocument.h"
 #include "jsapi.h"
 #include "nsString.h"
@@ -105,6 +108,9 @@ public:
     // nsISupports interface
     NS_DECL_ISUPPORTS
 
+    // nsISerializable interface
+    NS_DECL_NSISERIALIZABLE
+
     // nsIXULPrototypeDocument interface
     NS_IMETHOD GetURI(nsIURI** aResult);
     NS_IMETHOD SetURI(nsIURI* aURI);
@@ -124,9 +130,13 @@ public:
     NS_IMETHOD GetDocumentPrincipal(nsIPrincipal** aResult);
     NS_IMETHOD SetDocumentPrincipal(nsIPrincipal* aPrincipal);
 
+    NS_IMETHOD AwaitLoadDone(nsIXULDocument* aDocument, PRBool* aResult);
+    NS_IMETHOD NotifyLoadDone();
+
     // nsIScriptGlobalObjectOwner methods
     NS_DECL_NSISCRIPTGLOBALOBJECTOWNER
 
+    NS_DEFINE_STATIC_CID_ACCESSOR(NS_XULPROTOTYPEDOCUMENT_CID);
 
 protected:
     nsCOMPtr<nsIURI> mURI;
@@ -136,6 +146,9 @@ protected:
     nsCOMPtr<nsIPrincipal> mDocumentPrincipal;
 
     nsCOMPtr<nsIScriptGlobalObject> mGlobalObject;
+
+    PRPackedBool mLoaded;
+    nsCOMPtr<nsICollection> mPrototypeWaiters;
 
     nsXULPrototypeDocument();
     virtual ~nsXULPrototypeDocument();
@@ -189,7 +202,8 @@ JSClass nsXULPDGlobalObject::gSharedGlobalClass = {
 
 nsXULPrototypeDocument::nsXULPrototypeDocument()
     : mRoot(nsnull),
-      mGlobalObject(nsnull)
+      mGlobalObject(nsnull),
+      mLoaded(PR_FALSE)
 {
     NS_INIT_REFCNT();
 }
@@ -213,19 +227,16 @@ nsXULPrototypeDocument::Init()
 nsXULPrototypeDocument::~nsXULPrototypeDocument()
 {
     if (mGlobalObject) {
-      mGlobalObject->SetContext(nsnull); // remove circular reference
-      mGlobalObject->SetGlobalObjectOwner(nsnull); // just in case
+        mGlobalObject->SetContext(nsnull); // remove circular reference
+        mGlobalObject->SetGlobalObjectOwner(nsnull); // just in case
     }
     delete mRoot;
 }
 
-NS_IMPL_ADDREF(nsXULPrototypeDocument)
-NS_IMPL_RELEASE(nsXULPrototypeDocument)
-
-NS_INTERFACE_MAP_BEGIN(nsXULPrototypeDocument)
-    NS_INTERFACE_MAP_ENTRY(nsIXULPrototypeDocument)
-    NS_INTERFACE_MAP_ENTRY(nsIScriptGlobalObjectOwner)
-NS_INTERFACE_MAP_END
+NS_IMPL_ISUPPORTS3(nsXULPrototypeDocument,
+                   nsIXULPrototypeDocument,
+                   nsIScriptGlobalObjectOwner,
+                   nsISerializable)
 
 NS_IMETHODIMP
 NS_NewXULPrototypeDocument(nsISupports* aOuter, REFNSIID aIID, void** aResult)
@@ -250,6 +261,62 @@ NS_NewXULPrototypeDocument(nsISupports* aOuter, REFNSIID aIID, void** aResult)
     NS_RELEASE(result);
 
     return rv;
+}
+
+
+//----------------------------------------------------------------------
+//
+// nsISerializable methods
+//
+
+#define XUL_FAST_LOAD_VERSION   0
+
+NS_IMETHODIMP
+nsXULPrototypeDocument::Read(nsIObjectInputStream* aStream)
+{
+    nsresult rv;
+
+    PRUint32 version;
+    rv = aStream->Read32(&version);
+    if (NS_FAILED(rv)) return rv;
+
+    if (version != XUL_FAST_LOAD_VERSION)
+        return NS_ERROR_FAILURE;
+
+    rv = aStream->ReadObject(PR_TRUE, getter_AddRefs(mURI));
+    if (NS_FAILED(rv)) return rv;
+
+    // XXXbe more to come
+    return NS_OK;
+}
+
+
+NS_IMETHODIMP
+nsXULPrototypeDocument::Write(nsIObjectOutputStream* aStream)
+{
+    nsresult rv;
+
+    rv = aStream->Write32(XUL_FAST_LOAD_VERSION);
+    if (NS_FAILED(rv)) return rv;
+
+    rv = aStream->WriteCompoundObject(mURI, NS_GET_IID(nsIURI), PR_TRUE);
+    if (NS_FAILED(rv)) return rv;
+
+    nsCOMPtr<nsIScriptContext> scriptContext;
+    rv = mGlobalObject->GetContext(getter_AddRefs(scriptContext));
+    if (NS_FAILED(rv)) return rv;
+
+#if 0
+    rv = mRoot->Serialize(aStream, scriptContext);
+    if (NS_FAILED(rv)) return rv;
+
+    nsCOMPtr<nsISupportsArray> mStyleSheetReferences;
+    nsCOMPtr<nsISupportsArray> mOverlayReferences;
+    nsCOMPtr<nsIPrincipal> mDocumentPrincipal;
+
+    nsCOMPtr<nsIScriptGlobalObject> mGlobalObject;
+#endif
+    return NS_OK;
 }
 
 
@@ -381,6 +448,58 @@ nsXULPrototypeDocument::SetDocumentPrincipal(nsIPrincipal* aPrincipal)
 {
     mDocumentPrincipal = aPrincipal;
     return NS_OK;
+}
+
+
+
+NS_IMETHODIMP
+nsXULPrototypeDocument::AwaitLoadDone(nsIXULDocument* aDocument, PRBool* aResult)
+{
+    nsresult rv = NS_OK;
+
+    *aResult = mLoaded;
+
+    if (!mLoaded) {
+        if (!mPrototypeWaiters) {
+            nsCOMPtr<nsISupportsArray> supportsArray;
+            rv = NS_NewISupportsArray(getter_AddRefs(supportsArray));
+            if (NS_FAILED(rv)) return rv;
+
+            mPrototypeWaiters = do_QueryInterface(supportsArray);
+        }
+
+        rv = mPrototypeWaiters->AppendElement(aDocument);
+    }
+
+    return rv;
+}
+
+
+NS_IMETHODIMP
+nsXULPrototypeDocument::NotifyLoadDone()
+{
+    nsresult rv = NS_OK;
+
+    mLoaded = PR_TRUE;
+
+    if (mPrototypeWaiters) {
+        PRUint32 n;
+        rv = mPrototypeWaiters->Count(&n);
+        if (NS_SUCCEEDED(rv)) {
+            for (PRUint32 i = 0; i < n; i++) {
+                nsCOMPtr<nsIXULDocument> doc;
+                rv = mPrototypeWaiters->GetElementAt(i, getter_AddRefs(doc));
+                if (NS_FAILED(rv)) break;
+
+                rv = doc->OnPrototypeLoadDone();
+                if (NS_FAILED(rv)) break;
+            }
+        }
+
+        mPrototypeWaiters = nsnull;
+    }
+
+    return rv;
 }
 
 //----------------------------------------------------------------------

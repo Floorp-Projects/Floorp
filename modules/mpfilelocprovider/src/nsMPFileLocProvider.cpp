@@ -199,7 +199,7 @@ nsMPFileLocProvider::GetFile(const char *prop, PRBool *persistant, nsIFile **_re
     else if (inAtom == sApp_UsersPanels50)
     {
         // Here we differ from nsFileLocator - It checks for the
-        // existance of this file and if it does not exist, copies
+        // existence of this file and if it does not exist, copies
         // it from the defaults folder to the profile folder. Since
         // WE set up any profile folder, we'll make sure it's copied then.
         
@@ -210,7 +210,7 @@ nsMPFileLocProvider::GetFile(const char *prop, PRBool *persistant, nsIFile **_re
     else if (inAtom == sApp_UsersMimeTypes50)
     {
         // Here we differ from nsFileLocator - It checks for the
-        // existance of this file and if it does not exist, copies
+        // existence of this file and if it does not exist, copies
         // it from the defaults folder to the profile folder. Since
         // WE set up any profile folder, we'll make sure it's copied then.
         
@@ -227,7 +227,7 @@ nsMPFileLocProvider::GetFile(const char *prop, PRBool *persistant, nsIFile **_re
     else if (inAtom == sApp_SearchFile50)
     {
         // Here we differ from nsFileLocator - It checks for the
-        // existance of this file and if it does not exist, copies
+        // existence of this file and if it does not exist, copies
         // it from the defaults folder to the profile folder. Since
         // WE set up any profile folder, we'll make sure it's copied then.
         

@@ -26,5 +26,5 @@
 interface nsIBaseStream : nsISupports
 {
     /** Close the stream. */
-    void Close();
+    void close();
 };

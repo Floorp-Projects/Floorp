@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
  *
  * The contents of this file are subject to the Netscape Public
  * License Version 1.1 (the "License"); you may not use this file
@@ -255,7 +255,7 @@ nsFileIO::GetInputStream(nsIInputStream * *aInputStream)
         NS_ADDREF(*aInputStream);
 #else
         rv = NS_NewBufferedInputStream(aInputStream,
-                                       fileIn, NS_OUTPUT_STREAM_BUFFER_SIZE);
+                                       fileIn, NS_INPUT_STREAM_BUFFER_SIZE);
 #endif
     }
     NS_RELEASE(fileIn);
@@ -327,7 +327,7 @@ nsFileStream::~nsFileStream()
     Close();
 }
 
-NS_IMPL_THREADSAFE_ISUPPORTS1(nsFileStream, nsISeekableStream);
+NS_IMPL_THREADSAFE_ISUPPORTS1(nsFileStream, nsISeekableStream)
 
 nsresult
 nsFileStream::Close()
@@ -413,7 +413,7 @@ NS_IMPL_ISUPPORTS_INHERITED3(nsFileInputStream,
                              nsFileStream,
                              nsIInputStream,
                              nsIFileInputStream,
-                             nsILineInputStream);
+                             nsILineInputStream)
 
 NS_METHOD
 nsFileInputStream::Create(nsISupports *aOuter, REFNSIID aIID, void **aResult)
@@ -451,9 +451,9 @@ nsFileInputStream::Init(nsIFile* file, PRInt32 ioFlags, PRInt32 perm)
 NS_IMETHODIMP
 nsFileInputStream::Close()
 {
-  PR_FREEIF(mLineBuffer);
-  mLineBuffer = 0; // prevents badness if Close() is called again after failing
-  return nsFileStream::Close();
+    PR_FREEIF(mLineBuffer);
+    mLineBuffer = nsnull;       // in case Close() is called again after failing
+    return nsFileStream::Close();
 }
 
 NS_IMETHODIMP
@@ -485,32 +485,33 @@ nsFileInputStream::Read(char * buf, PRUint32 count, PRUint32 *result)
 }
 
 NS_IMETHODIMP
-nsFileInputStream::ReadLine(nsAWritableString & aLine, PRBool *_retval) {
-  if (!mLineBuffer) {
-    nsresult rv = NS_InitLineBuffer(&mLineBuffer);
-    if (NS_FAILED(rv)) return rv;
-  }
-  return NS_ReadLine(this, mLineBuffer, aLine, _retval);
+nsFileInputStream::ReadLine(nsAWritableString & aLine, PRBool *_retval)
+{
+    if (!mLineBuffer) {
+        nsresult rv = NS_InitLineBuffer(&mLineBuffer);
+        if (NS_FAILED(rv)) return rv;
+    }
+    return NS_ReadLine(this, mLineBuffer, aLine, _retval);
 }
 
 NS_IMETHODIMP
 nsFileInputStream::ReadSegments(nsWriteSegmentFun writer, void * closure, PRUint32 count, PRUint32 *_retval)
 {
-   PRUint32 nBytes;
-   char *readBuf = (char *)nsMemory::Alloc(count);
-   if (!readBuf)
-     return NS_ERROR_OUT_OF_MEMORY;
+     PRUint32 nBytes;
+     char *readBuf = (char *)nsMemory::Alloc(count);
+     if (!readBuf)
+         return NS_ERROR_OUT_OF_MEMORY;
+     
+     nsresult rv = Read(readBuf, count, &nBytes);
    
-   nsresult rv = Read(readBuf, count, &nBytes);
- 
-   *_retval = 0;
-   if (NS_SUCCEEDED(rv)) {
-     rv = writer(this, closure, readBuf, 0, nBytes, _retval);
-     NS_ASSERTION(NS_SUCCEEDED(rv) ? nBytes == *_retval : PR_TRUE, "Didn't write all Data.");
-   }
- 
-   nsMemory::Free(readBuf);
-   return rv;
+     *_retval = 0;
+     if (NS_SUCCEEDED(rv)) {
+         rv = writer(this, closure, readBuf, 0, nBytes, _retval);
+         NS_ASSERTION(NS_SUCCEEDED(rv) ? nBytes == *_retval : PR_TRUE, "Didn't write all Data.");
+     }
+   
+     nsMemory::Free(readBuf);
+     return rv;
 }
 
 NS_IMETHODIMP
@@ -537,10 +538,11 @@ nsFileInputStream::SetObserver(nsIInputStreamObserver * aObserver)
 ////////////////////////////////////////////////////////////////////////////////
 // nsFileOutputStream
 
-NS_IMPL_ISUPPORTS_INHERITED2(nsFileOutputStream, 
+NS_IMPL_ISUPPORTS_INHERITED3(nsFileOutputStream, 
                              nsFileStream,
                              nsIOutputStream,
-                             nsIFileOutputStream);
+                             nsIFileOutputStream,
+                             nsISeekableOutputStream)
  
 NS_METHOD
 nsFileOutputStream::Create(nsISupports *aOuter, REFNSIID aIID, void **aResult)
@@ -566,7 +568,7 @@ nsFileOutputStream::Init(nsIFile* file, PRInt32 ioFlags, PRInt32 perm)
     nsCOMPtr<nsILocalFile> localFile = do_QueryInterface(file, &rv);
     if (NS_FAILED(rv)) return rv;
     if (ioFlags == -1)
-        ioFlags = PR_WRONLY | PR_CREATE_FILE | PR_TRUNCATE;
+        ioFlags = PR_RDWR | PR_CREATE_FILE | PR_TRUNCATE;
     if (perm <= 0)
         perm = 0664;
     return localFile->OpenNSPRFileDesc(ioFlags, perm, &mFD);
@@ -644,6 +646,23 @@ nsFileOutputStream::SetObserver(nsIOutputStreamObserver * aObserver)
 {
     NS_NOTREACHED("SetObserver");
     return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+nsFileOutputStream::Fill(char * buf, PRUint32 count, PRUint32 *result)
+{
+    if (mFD == nsnull)
+        return NS_BASE_STREAM_CLOSED;
+
+    PRInt32 cnt = PR_Read(mFD, buf, count);
+    if (cnt == -1) {
+        return NS_ErrorAccordingToNSPR();
+    }
+    if (PR_Seek(mFD, -cnt, PR_SEEK_CUR) == -1) {
+        return NS_ErrorAccordingToNSPR();
+    }
+    *result = cnt;
+    return NS_OK;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

@@ -338,14 +338,17 @@ js_XDRScript(JSXDRState *xdr, JSScript **scriptp, JSBool *hasMagic)
     numtrys = 0;
 
     /*
-     * Encode prologLength and version after script->length (_2), but decode
-     * both new (_2) and old, prolog&version-free (_1) scripts.
+     * Encode prologLength and version after script->length (_2 or greater),
+     * but decode both new (>= _2) and old, prolog&version-free (_1) scripts.
+     * Version _3 supports principals serialization.
      */
     if (xdr->mode == JSXDR_ENCODE)
         magic = JSXDR_MAGIC_SCRIPT_CURRENT;
     if (!JS_XDRUint32(xdr, &magic))
         return JS_FALSE;
-    if (magic != JSXDR_MAGIC_SCRIPT_2 && magic != JSXDR_MAGIC_SCRIPT_1) {
+    if (magic != JSXDR_MAGIC_SCRIPT_3 &&
+        magic != JSXDR_MAGIC_SCRIPT_2 &&
+        magic != JSXDR_MAGIC_SCRIPT_1) {
         *hasMagic = JS_FALSE;
         return JS_TRUE;
     }
@@ -375,7 +378,7 @@ js_XDRScript(JSXDRState *xdr, JSScript **scriptp, JSBool *hasMagic)
 
     if (!JS_XDRUint32(xdr, &length))
         return JS_FALSE;
-    if (magic == JSXDR_MAGIC_SCRIPT_2) {
+    if (magic >= JSXDR_MAGIC_SCRIPT_2) {
         if (!JS_XDRUint32(xdr, &prologLength))
             return JS_FALSE;
         if (!JS_XDRUint32(xdr, &version))
@@ -386,7 +389,7 @@ js_XDRScript(JSXDRState *xdr, JSScript **scriptp, JSBool *hasMagic)
         script = js_NewScript(xdr->cx, length);
         if (!script)
             return JS_FALSE;
-        if (magic == JSXDR_MAGIC_SCRIPT_2) {
+        if (magic >= JSXDR_MAGIC_SCRIPT_2) {
             script->main += prologLength;
             script->version = (JSVersion) version;
         }
@@ -406,6 +409,33 @@ js_XDRScript(JSXDRState *xdr, JSScript **scriptp, JSBool *hasMagic)
         !JS_XDRUint32(xdr, &depth) ||
         !JS_XDRUint32(xdr, &numtrys)) {
         goto error;
+    }
+
+    if (magic >= JSXDR_MAGIC_SCRIPT_3) {
+        JSPrincipals *principals;
+        uint32 encodeable;
+
+        if (xdr->mode == JSXDR_ENCODE) {
+            principals = script->principals;
+            encodeable = (principals && principals->encode);
+            if (!JS_XDRUint32(xdr, &encodeable))
+                goto error;
+            if (encodeable && !principals->encode(xdr, principals))
+                goto error;
+        } else {
+            if (!JS_XDRUint32(xdr, &encodeable))
+                goto error;
+            if (encodeable) {
+                if (!xdr->cx->runtime->principalsDecoder) {
+                    JS_ReportErrorNumber(xdr->cx, js_GetErrorMessage, NULL,
+                                         JSMSG_CANT_DECODE_PRINCIPALS);
+                    goto error;
+                }
+                if (!xdr->cx->runtime->principalsDecoder(xdr, &principals))
+                    goto error;
+                script->principals = principals;
+            }
+        }
     }
 
     if (xdr->mode == JSXDR_DECODE) {

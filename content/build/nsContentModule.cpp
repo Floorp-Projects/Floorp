@@ -71,6 +71,7 @@
 #ifdef MOZ_XUL
 #include "nsXULAtoms.h"
 #include "nsXULContentUtils.h"
+#include "nsIXULPrototypeDocument.h"
 #endif
 
 static nsContentModule *gModule = NULL;
@@ -333,6 +334,8 @@ static Components gComponents[] = {
     "@mozilla.org/xul/xul-controllers;1", },
   { "XUL Prototype Cache", NS_XULPROTOTYPECACHE_CID,
     "@mozilla.org/xul/xul-prototype-cache;1", },
+  { NS_XULPROTOTYPEDOCUMENT_CLASSNAME, NS_XULPROTOTYPEDOCUMENT_CID,
+    nsnull, },
   { "XUL Element Factory", NS_XULELEMENTFACTORY_CID,
     NS_ELEMENT_FACTORY_CONTRACTID_PREFIX "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul", },
 #endif

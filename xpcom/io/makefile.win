@@ -25,42 +25,50 @@ MODULE = xpcom
 ################################################################################
 ## exports
 
-EXPORTS =                          \
-        nsEscape.h                 \
-        nsLinebreakConverter.h     \
-        nsFileSpec.h               \
-        nsFileSpecStreaming.h      \
-        nsFileStream.h             \
-        nsSpecialSystemDirectory.h \
-        nsIFileStream.h            \
-        nsIStringStream.h          \
-        nsIUnicharInputStream.h    \
-        nsStorageStream.h          \
-        nsScriptableInputStream.h  \
-        nsDirectoryService.h       \
-        nsDirectoryServiceDefs.h   \
-        nsAppDirectoryServiceDefs.h \
-        nsStringIO.h               \
+EXPORTS =                               \
+        nsAppDirectoryServiceDefs.h     \
+        nsDirectoryService.h            \
+        nsDirectoryServiceDefs.h        \
+        nsEscape.h                      \
+        nsFastLoadPtr.h                 \
+        nsFastLoadService.h             \
+        nsFileSpec.h                    \
+        nsFileSpecStreaming.h           \
+        nsFileStream.h                  \
+        nsIFileStream.h                 \
+        nsIStringStream.h               \
+        nsIUnicharInputStream.h         \
+        nsLinebreakConverter.h          \
+        nsScriptableInputStream.h       \
+        nsSpecialSystemDirectory.h      \
+        nsStorageStream.h               \
+        nsStringIO.h                    \
         $(NULL)                 
 
 NO_XPT_GEN=1
 XPIDL_MODULE = xpcom_io
 
-XPIDLSRCS =                         \
-        .\nsIPipe.idl               \
-        .\nsIInputStream.idl        \
-        .\nsIOutputStream.idl       \
-        .\nsIBinaryInputStream.idl  \
-        .\nsIBinaryOutputStream.idl \
-        .\nsIScriptableInputStream.idl \
-        .\nsIStorageStream.idl      \
-        .\nsIFileSpec.idl           \
-        .\nsIFile.idl               \
-        .\nsILocalFile.idl          \
-        .\nsIDirectoryService.idl   \
-        .\nsIByteArrayInputStream.idl  \
-        .\nsIInputStreamTee.idl \
-        .\nsILineInputStream.idl \
+XPIDLSRCS =                             \
+        .\nsIBinaryInputStream.idl      \
+        .\nsIBinaryOutputStream.idl     \
+        .\nsIByteArrayInputStream.idl   \
+        .\nsIDirectoryService.idl       \
+        .\nsIFastLoadFileControl.idl    \
+        .\nsIFastLoadService.idl        \
+        .\nsIFile.idl                   \
+        .\nsIFileSpec.idl               \
+        .\nsIInputStream.idl            \
+        .\nsIInputStreamTee.idl         \
+        .\nsILineInputStream.idl        \
+        .\nsILocalFile.idl              \
+        .\nsIObjectInputStream.idl      \
+        .\nsIObjectOutputStream.idl     \
+        .\nsIOutputStream.idl           \
+        .\nsIPipe.idl                   \
+        .\nsIScriptableInputStream.idl  \
+        .\nsISeekableStream.idl         \
+        .\nsIStorageStream.idl          \
+        .\nsIStreamBufferAccess.idl     \
         $(NULL)
 
 ################################################################################
@@ -78,33 +86,35 @@ LINCS = $(LINCS) -I$(PUBLIC)\raptor     # until we sort out the filespec/widgets
 
 LCFLAGS = -D_IMPL_NS_COM -D_IMPL_NS_BASE -DWIN32_LEAN_AND_MEAN
 
-CPP_OBJS =                                       \
-        .\$(OBJDIR)\nsDirectoryService.obj       \
-        .\$(OBJDIR)\nsLocalFileWin.obj           \
-        .\$(OBJDIR)\nsLocalFileCommon.obj           \
-        .\$(OBJDIR)\nsBinaryStream.obj           \
-        .\$(OBJDIR)\nsEscape.obj                 \
-        .\$(OBJDIR)\nsLinebreakConverter.obj     \
-        .\$(OBJDIR)\nsFileStream.obj             \
-        .\$(OBJDIR)\nsIFileStream.obj            \
-        .\$(OBJDIR)\nsIStringStream.obj          \
-        .\$(OBJDIR)\nsSegmentedBuffer.obj        \
-        .\$(OBJDIR)\nsPipe2.obj                  \
-        .\$(OBJDIR)\nsStorageStream.obj          \
-        .\$(OBJDIR)\nsUnicharInputStream.obj     \
-        .\$(OBJDIR)\nsScriptableInputStream.obj  \
-        .\$(OBJDIR)\nsFileSpec.obj               \
-        .\$(OBJDIR)\nsFileSpecImpl.obj           \
-        .\$(OBJDIR)\nsFileSpecStreaming.obj      \
-        .\$(OBJDIR)\nsSpecialSystemDirectory.obj \
-        .\$(OBJDIR)\nsByteArrayInputStream.obj	 \
+CPP_OBJS =                                        \
         .\$(OBJDIR)\nsAppFileLocationProvider.obj \
-        .\$(OBJDIR)\nsInputStreamTee.obj \
+        .\$(OBJDIR)\nsBinaryStream.obj            \
+        .\$(OBJDIR)\nsByteArrayInputStream.obj    \
+        .\$(OBJDIR)\nsDirectoryService.obj        \
+        .\$(OBJDIR)\nsEscape.obj                  \
+        .\$(OBJDIR)\nsFastLoadFile.obj            \
+        .\$(OBJDIR)\nsFastLoadService.obj         \
+        .\$(OBJDIR)\nsFileSpec.obj                \
+        .\$(OBJDIR)\nsFileSpecImpl.obj            \
+        .\$(OBJDIR)\nsFileSpecStreaming.obj       \
+        .\$(OBJDIR)\nsFileStream.obj              \
+        .\$(OBJDIR)\nsIFileStream.obj             \
+        .\$(OBJDIR)\nsIStringStream.obj           \
+        .\$(OBJDIR)\nsInputStreamTee.obj          \
+        .\$(OBJDIR)\nsLinebreakConverter.obj      \
+        .\$(OBJDIR)\nsLocalFileCommon.obj         \
+        .\$(OBJDIR)\nsLocalFileWin.obj            \
+        .\$(OBJDIR)\nsPipe2.obj                   \
+        .\$(OBJDIR)\nsScriptableInputStream.obj   \
+        .\$(OBJDIR)\nsSegmentedBuffer.obj         \
+        .\$(OBJDIR)\nsSpecialSystemDirectory.obj  \
+        .\$(OBJDIR)\nsStorageStream.obj           \
+        .\$(OBJDIR)\nsUnicharInputStream.obj      \
         $(NULL)
 
 include <$(DEPTH)\config\rules.mak>
 
 install:: $(LIBRARY)
-	$(MAKE_INSTALL) $(LIBRARY) $(DIST)\lib
+        $(MAKE_INSTALL) $(LIBRARY) $(DIST)\lib
 clobber::
         rm -f $(DIST)\lib\$(LIBRARY_NAME).lib

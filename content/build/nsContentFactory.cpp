@@ -169,19 +169,21 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsContentHTTPStartup)
 #include "nsIXULDocument.h"
 #include "nsIXULPopupListener.h"
 #include "nsIXULPrototypeCache.h"
+#include "nsIXULPrototypeDocument.h"
 #include "nsIController.h"
 #include "nsIControllers.h"
 #include "nsIControllerCommand.h"
 
-static NS_DEFINE_CID(kXULSortServiceCID,     NS_XULSORTSERVICE_CID);
-static NS_DEFINE_CID(kXULTemplateBuilderCID, NS_XULTEMPLATEBUILDER_CID);
-static NS_DEFINE_CID(kXULOutlinerBuilderCID, NS_XULOUTLINERBUILDER_CID);
-static NS_DEFINE_CID(kXULContentSinkCID,     NS_XULCONTENTSINK_CID);
-static NS_DEFINE_CID(kXULDocumentCID,        NS_XULDOCUMENT_CID);
-static NS_DEFINE_CID(kXULPopupListenerCID,   NS_XULPOPUPLISTENER_CID);
-static NS_DEFINE_CID(kXULElementFactoryCID,  NS_XULELEMENTFACTORY_CID);
-static NS_DEFINE_CID(kXULPrototypeCacheCID,  NS_XULPROTOTYPECACHE_CID);
-static NS_DEFINE_CID(kXULControllersCID,     NS_XULCONTROLLERS_CID);
+static NS_DEFINE_CID(kXULSortServiceCID,       NS_XULSORTSERVICE_CID);
+static NS_DEFINE_CID(kXULTemplateBuilderCID,   NS_XULTEMPLATEBUILDER_CID);
+static NS_DEFINE_CID(kXULOutlinerBuilderCID,   NS_XULOUTLINERBUILDER_CID);
+static NS_DEFINE_CID(kXULContentSinkCID,       NS_XULCONTENTSINK_CID);
+static NS_DEFINE_CID(kXULDocumentCID,          NS_XULDOCUMENT_CID);
+static NS_DEFINE_CID(kXULPopupListenerCID,     NS_XULPOPUPLISTENER_CID);
+static NS_DEFINE_CID(kXULElementFactoryCID,    NS_XULELEMENTFACTORY_CID);
+static NS_DEFINE_CID(kXULPrototypeCacheCID,    NS_XULPROTOTYPECACHE_CID);
+static NS_DEFINE_CID(kXULPrototypeDocumentCID, NS_XULPROTOTYPEDOCUMENT_CID);
+static NS_DEFINE_CID(kXULControllersCID,       NS_XULCONTROLLERS_CID);
 
 extern nsresult NS_NewXULElementFactory(nsIElementFactory** aResult);
 extern NS_IMETHODIMP NS_NewXULControllers(nsISupports* aOuter, REFNSIID aIID, void** aResult);
@@ -588,6 +590,13 @@ nsContentFactory::CreateInstance(nsISupports *aOuter,
     res = NS_NewXULPrototypeCache(nsnull, NS_GET_IID(nsIXULPrototypeCache), (void**) &inst);
     if (NS_FAILED(res)) {
       LOG_NEW_FAILURE("NS_NewXULPrototypeCache", res);
+      return res;
+    }
+  }
+  else if (mClassID.Equals(kXULPrototypeDocumentCID)) {
+    res = NS_NewXULPrototypeDocument(nsnull, NS_GET_IID(nsIXULPrototypeDocument), (void**) &inst);
+    if (NS_FAILED(res)) {
+      LOG_NEW_FAILURE("NS_NewXULPrototypeDocument", res);
       return res;
     }
   }

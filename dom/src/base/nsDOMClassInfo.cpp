@@ -1718,11 +1718,9 @@ nsDOMClassInfo::GetClassDescription(char **aClassDescription)
 }
 
 NS_IMETHODIMP
-nsDOMClassInfo::GetClassID(nsCID **aClassID)
+nsDOMClassInfo::GetClassID(nsCID *aClassID)
 {
-  *aClassID = nsnull;
-
-  return NS_OK;
+  return NS_ERROR_NOT_AVAILABLE;
 }
 
 NS_IMETHODIMP

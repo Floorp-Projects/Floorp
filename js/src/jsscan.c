@@ -677,27 +677,28 @@ AddToTokenBuf(JSContext *cx, JSTokenBuf *tb, jschar c)
 }
 
 /*
-* We encountered a '\', check for a following unicode
-* escape sequence - returning it's value if so.
-* Otherwise, non-destructively return the original '\'.
-*/
+ * We have encountered a '\': check for a Unicode escape sequence after it,
+ * returning the character code value if we found a Unicode escape sequence.
+ * Otherwise, non-destructively return the original '\'.
+ */
 static int32
 GetUnicodeEscape(JSTokenStream *ts)
 {
     jschar cp[5];
     int32 c;
-    if (PeekChars(ts, 5, cp) && (cp[0] == 'u') &&
-	    JS7_ISHEX(cp[1]) && JS7_ISHEX(cp[2]) &&
-	    JS7_ISHEX(cp[3]) && JS7_ISHEX(cp[4])) {
-	c = (((((JS7_UNHEX(cp[1]) << 4)
-		+ JS7_UNHEX(cp[2])) << 4)
-	      + JS7_UNHEX(cp[3])) << 4)
-	    + JS7_UNHEX(cp[4]);
-	SkipChars(ts, 5);
+
+    if (PeekChars(ts, 5, cp) && cp[0] == 'u' &&
+        JS7_ISHEX(cp[1]) && JS7_ISHEX(cp[2]) &&
+        JS7_ISHEX(cp[3]) && JS7_ISHEX(cp[4]))
+    {
+        c = (((((JS7_UNHEX(cp[1]) << 4)
+                + JS7_UNHEX(cp[2])) << 4)
+              + JS7_UNHEX(cp[3])) << 4)
+            + JS7_UNHEX(cp[4]);
+        SkipChars(ts, 5);
+        return c;
     }
-    else
-        c = '\\';
-    return c;
+    return '\\';
 }
 
 JSTokenType
@@ -1199,7 +1200,7 @@ skipline:
             tp->t_op = JSOP_SUB;
             c = TOK_ASSIGN;
         } else if (MatchChar(ts, c)) {
-            if ((PeekChar(ts) == '>') && !(ts->flags & TSF_DIRTYLINE))
+            if (PeekChar(ts) == '>' && !(ts->flags & TSF_DIRTYLINE))
                 goto skipline;
             c = TOK_DEC;
         } else {

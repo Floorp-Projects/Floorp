@@ -33,7 +33,10 @@
 #include "nsIPref.h"
 #include "nsXPIDLString.h"
 
-NS_IMPL_QUERY_INTERFACE2(nsCodebasePrincipal, nsICodebasePrincipal, nsIPrincipal)
+NS_IMPL_QUERY_INTERFACE3_CI(nsCodebasePrincipal,
+                            nsICodebasePrincipal,
+                            nsIPrincipal,
+                            nsISerializable)
 
 NSBASEPRINCIPALS_ADDREF(nsCodebasePrincipal);
 NSBASEPRINCIPALS_RELEASE(nsCodebasePrincipal);
@@ -213,6 +216,31 @@ nsCodebasePrincipal::Equals(nsIPrincipal *other, PRBool *result)
     return NS_OK;
 }
 
+//////////////////////////////////////////
+// Methods implementing nsISerializable //
+//////////////////////////////////////////
+
+NS_IMETHODIMP
+nsCodebasePrincipal::Read(nsIObjectInputStream* aStream)
+{
+    nsresult rv;
+
+    rv = nsBasePrincipal::Read(aStream);
+    if (NS_FAILED(rv)) return rv;
+
+    return aStream->ReadObject(PR_TRUE, getter_AddRefs(mURI));
+}
+
+NS_IMETHODIMP
+nsCodebasePrincipal::Write(nsIObjectOutputStream* aStream)
+{
+    nsresult rv;
+
+    rv = nsBasePrincipal::Write(aStream);
+    if (NS_FAILED(rv)) return rv;
+
+    return aStream->WriteObject(mURI, PR_TRUE);
+}
 
 /////////////////////////////////////////////
 // Constructor, Destructor, initialization //

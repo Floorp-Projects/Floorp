@@ -239,3 +239,4 @@ MSG_DEF(JSMSG_USELESS_EXPR,           163, 0, JSEXN_TYPEERR, "useless expression
 MSG_DEF(JSMSG_REDECLARED_PARAM,       164, 1, JSEXN_TYPEERR, "redeclaration of formal parameter {0}")
 MSG_DEF(JSMSG_NEWREGEXP_FLAGGED,      165, 0, JSEXN_TYPEERR, "can't supply flags when constructing one RegExp from another")
 MSG_DEF(JSMSG_RESERVED_SLOT_RANGE,    166, 0, JSEXN_RANGEERR, "reserved slot index out of range")
+MSG_DEF(JSMSG_CANT_DECODE_PRINCIPALS, 167, 0, JSEXN_INTERNALERR, "can't decode JSPrincipals")

@@ -111,11 +111,9 @@ NS_IMETHODIMP nsGenericFactory::GetClassDescription(char * *aClassDescription)
     return NS_OK;
 }
 
-NS_IMETHODIMP nsGenericFactory::GetClassID(nsCID **aClassID)
+NS_IMETHODIMP nsGenericFactory::GetClassID(nsCID *aClassID)
 {
-    *aClassID = (nsCID *)nsMemory::Clone(&mInfo->mCID, sizeof(nsCID));
-    if (!*aClassID)
-        return NS_ERROR_OUT_OF_MEMORY;
+    *aClassID = mInfo->mCID;
     return NS_OK;
 }
 

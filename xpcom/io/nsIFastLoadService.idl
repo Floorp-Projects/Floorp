@@ -1,0 +1,114 @@
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+ * The contents of this file are subject to the Netscape Public
+ * License Version 1.1 (the "License"); you may not use this file
+ * except in compliance with the License. You may obtain a copy of
+ * the License at http://www.mozilla.org/NPL/
+ *  
+ * Software distributed under the License is distributed on an "AS
+ * IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+ * implied. See the License for the specific language governing
+ * rights and limitations under the License.
+ *  
+ * The Original Code is Mozilla FastLoad code.
+ * 
+ * The Initial Developer of the Original Code is Netscape
+ * Communications Corporation. Portions created by Netscape are
+ * Copyright (C) 2001 Netscape Communications Corporation. All
+ * Rights Reserved.
+ *
+ * Contributor(s):
+ *   Brendan Eich <brendan@mozilla.org> (original author)
+ */
+
+#include "nsISupports.idl"
+#include "nsrootidl.idl"
+
+interface nsIFile;
+interface nsIInputStream;
+interface nsIOutputStream;
+interface nsIObjectInputStream;
+interface nsIObjectOutputStream;
+
+[scriptable, uuid(715577db-d9c5-464a-a32e-0a40c29b22d4)]
+interface nsIFastLoadFileIO : nsISupports
+{
+    readonly attribute nsIInputStream  inputStream;
+    readonly attribute nsIOutputStream outputStream;
+};
+
+[scriptable, uuid(759e475e-0c23-4dbf-b1b8-78c9369e3072)]
+interface nsIFastLoadService : nsISupports
+{
+    nsIFile newFastLoadFile(in string aBaseName);
+
+    nsIObjectInputStream  newInputStream(in nsIInputStream aSrcStream,
+                                         out PRUint32 aChecksum);
+    nsIObjectOutputStream newOutputStream(in nsIOutputStream aDestStream);
+
+    // Flag values for the currentDirection attribute and the aDirectionFlags
+    // parameter to startMuxedDocument.
+    const PRInt32 NS_FASTLOAD_READ = 1;
+    const PRInt32 NS_FASTLOAD_WRITE = 2;
+
+    /**
+     * XXX The only stream legal to set as current is one returned by the
+     * newInputStream or newOutputStream methods, above.
+     */
+    attribute nsIObjectInputStream  currentInputStream;
+    attribute nsIObjectOutputStream currentOutputStream;
+    attribute nsIFastLoadFileIO     currentFileIO;
+    readonly attribute PRInt32      currentDirection;
+
+    /**
+     * Consumers of currentInputStream and currentOutputStream should
+     * attempt to demultiplex data from the current input stream only if
+     * fastLoadService->StartMuxedDocument(uri, urispec, NS_FASTLOAD_READ)
+     * succeeds.  If StartMuxedDocument fails with NS_ERROR_NOT_AVAILABLE,
+     * callers should slow-load the document and multiplex its data to the
+     * current output stream.
+     */
+    void   startMuxedDocument(in nsISupports aURI,
+                              in string aURISpec,
+                              in PRInt32 aDirectionFlags);
+    void   selectMuxedDocument(in nsISupports aURI);
+    void   endMuxedDocument(in nsISupports aURI);
+
+    void   appendDependency(in string aFileName);
+    PRTime maxDependencyModifiedTime();
+
+    [noscript] void getFastLoadReferent(inout nsISupports aPtr);
+
+    [noscript] void readFastLoadPtr(in nsIObjectInputStream aInputStream,
+                                    inout nsISupports aPtr);
+
+    [noscript] void writeFastLoadPtr(in nsIObjectOutputStream aOutputStream,
+                                     in nsISupports aPtr);
+};
+
+%{C++
+#define NS_FAST_LOAD_SERVICE_CLASSNAME "Mozilla FastLoad Service"
+
+#define NS_FAST_LOAD_SERVICE_CID \
+    {0xc943093c,0xac94,0x4bee,{0x84,0x0b,0x8b,0x5a,0x6e,0x31,0x4f,0xa7}}
+
+#define NS_FAST_LOAD_SERVICE_CONTRACTID \
+    "@mozilla.org/fast-load-service;1"
+
+#ifndef nsCOMPtr_h___
+# include "nsCOMPtr.h"
+#endif
+#ifndef nsIServiceManager_h___
+# include "nsIServiceManager.h"
+#endif
+
+inline nsresult
+NS_AppendFastLoadDependency(const char* aFileName)
+{
+    nsCOMPtr<nsIFastLoadService>
+        fastLoadService(do_GetService(NS_FAST_LOAD_SERVICE_CONTRACTID));
+    if (!fastLoadService)
+        return NS_OK;
+    return fastLoadService->AppendDependency(aFileName);
+}
+
+%}

@@ -1,0 +1,44 @@
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+ * The contents of this file are subject to the Netscape Public
+ * License Version 1.1 (the "License"); you may not use this file
+ * except in compliance with the License. You may obtain a copy of
+ * the License at http://www.mozilla.org/NPL/
+ *  
+ * Software distributed under the License is distributed on an "AS
+ * IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+ * implied. See the License for the specific language governing
+ * rights and limitations under the License.
+ *  
+ * The Original Code is Mozilla FastLoad code.
+ *
+ * The Initial Developer of the Original Code is Netscape
+ * Communications Corporation.  Portions created by Netscape are
+ * Copyright (C) 2001 Netscape Communications Corporation. All
+ * Rights Reserved.
+ *
+ * Contributor(s):
+ */
+
+#include "nsISupports.idl"
+#include "nsrootidl.idl"
+
+[scriptable, uuid(e9de5df0-c7ec-11d3-8cda-0060b0fc14a3)]
+interface nsISeekableStream : nsISupports
+{
+    // NB: these must correspond to PRSeekWhence values.
+    const PRInt32 NS_SEEK_SET = 0;
+    const PRInt32 NS_SEEK_CUR = 1;
+    const PRInt32 NS_SEEK_END = 2;
+    
+    void seek(in PRInt32 whence, in PRInt32 offset);
+    PRUint32 tell();
+
+    // truncate stream to the current offset
+    void setEOF();
+};
+
+[uuid(ac3fa453-e173-4044-b827-62d6e45346c6)]
+interface nsISeekableOutputStream : nsISupports
+{
+    unsigned long fill(in charPtr buf, in unsigned long count);
+};

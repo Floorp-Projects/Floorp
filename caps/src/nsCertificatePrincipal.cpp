@@ -29,7 +29,10 @@
 
 static NS_DEFINE_IID(kICertificatePrincipalIID, NS_ICERTIFICATEPRINCIPAL_IID);
 
-NS_IMPL_QUERY_INTERFACE2(nsCertificatePrincipal, nsICertificatePrincipal, nsIPrincipal)
+NS_IMPL_QUERY_INTERFACE3_CI(nsCertificatePrincipal,
+                            nsICertificatePrincipal,
+                            nsIPrincipal,
+                            nsISerializable)
 
 NSBASEPRINCIPALS_ADDREF(nsCertificatePrincipal);
 NSBASEPRINCIPALS_RELEASE(nsCertificatePrincipal);
@@ -41,14 +44,14 @@ NS_IMETHODIMP
 nsCertificatePrincipal::GetCertificateID(char** aCertificateID) 
 {
     *aCertificateID = nsCRT::strdup(mCertificateID);
-	return *mCertificateID ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
+    return *mCertificateID ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
 }
 
 NS_IMETHODIMP
 nsCertificatePrincipal::GetCommonName(char** aCommonName)
 {
     *aCommonName = nsCRT::strdup(mCommonName);
-	return *aCommonName ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
+    return *aCommonName ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
 }
 
 NS_IMETHODIMP
@@ -56,7 +59,7 @@ nsCertificatePrincipal::SetCommonName(const char* aCommonName)
 {
     PR_FREEIF(mCommonName);
     mCommonName = nsCRT::strdup(aCommonName);
-	return * mCommonName ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
+    return * mCommonName ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
 }
 
 ///////////////////////////////////////
@@ -135,6 +138,44 @@ nsCertificatePrincipal::HashValue(PRUint32 *result)
     if (NS_FAILED(ToString(&str)) || !str) return NS_ERROR_FAILURE;
     *result = nsCRT::HashCode(str, nsnull);
     nsCRT::free(str);
+    return NS_OK;
+}
+
+//////////////////////////////////////////
+// Methods implementing nsISerializable //
+//////////////////////////////////////////
+
+NS_IMETHODIMP
+nsCertificatePrincipal::Read(nsIObjectInputStream* aStream)
+{
+    nsresult rv;
+
+    rv = nsBasePrincipal::Read(aStream);
+    if (NS_FAILED(rv)) return rv;
+
+    rv = aStream->ReadStringZ(&mCertificateID);
+    if (NS_FAILED(rv)) return rv;
+
+    rv = NS_ReadOptionalStringZ(aStream, &mCommonName);
+    if (NS_FAILED(rv)) return rv;
+
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsCertificatePrincipal::Write(nsIObjectOutputStream* aStream)
+{
+    nsresult rv;
+
+    rv = nsBasePrincipal::Write(aStream);
+    if (NS_FAILED(rv)) return rv;
+
+    rv = aStream->WriteStringZ(mCertificateID);
+    if (NS_FAILED(rv)) return rv;
+
+    rv = NS_WriteOptionalStringZ(aStream, mCommonName);
+    if (NS_FAILED(rv)) return rv;
+
     return NS_OK;
 }
 

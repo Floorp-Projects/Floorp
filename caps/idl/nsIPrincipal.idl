@@ -24,7 +24,7 @@
 
 /* Defines the abstract interface for a principal. */
 
-#include "nsISupports.idl"
+#include "nsISerializable.idl"
 
 %{C++
 struct JSPrincipals;
@@ -35,40 +35,38 @@ interface nsIPref;
 [ptr] native JSPrincipals(JSPrincipals);
 
 [uuid(ff9313d0-25e1-11d2-8160-006008119d7a)]
-interface nsIPrincipal : nsISupports {
+interface nsIPrincipal : nsISerializable {
 
-	// Values of capabilities for each principal. Order is
-	// significant: if an operation is performed on a set
-	// of capabilities, the minimum is computed.
-	const short ENABLE_DENIED				 = 1;
-	const short ENABLE_UNKNOWN               = 2;
-	const short ENABLE_WITH_USER_PERMISSION  = 3;
-	const short ENABLE_GRANTED				 = 4;
+    // Values of capabilities for each principal. Order is
+    // significant: if an operation is performed on a set
+    // of capabilities, the minimum is computed.
+    const short ENABLE_DENIED                = 1;
+    const short ENABLE_UNKNOWN               = 2;
+    const short ENABLE_WITH_USER_PERMISSION  = 3;
+    const short ENABLE_GRANTED               = 4;
 
-	string ToString();
+    string ToString();
 
-	string ToUserVisibleString();
+    string ToUserVisibleString();
 
     void GetPreferences(out string prefName, out string id, 
                         out string grantedList, out string deniedList);
 
-	boolean Equals(in nsIPrincipal other);
+    boolean Equals(in nsIPrincipal other);
 
-	unsigned long HashValue();
+    unsigned long HashValue();
 
-	JSPrincipals GetJSPrincipals();
+    JSPrincipals GetJSPrincipals();
 
     short CanEnableCapability(in string capability);
 
     void SetCanEnableCapability(in string capability, in short canEnable);
 
     boolean IsCapabilityEnabled(in string capability, in voidPtr annotation);
-	
-	void EnableCapability(in string capability, inout voidPtr annotation);
+    
+    void EnableCapability(in string capability, inout voidPtr annotation);
 
     void RevertCapability(in string capability, inout voidPtr annotation);
 
     void DisableCapability(in string capability, inout voidPtr annotation);
 };
-
-

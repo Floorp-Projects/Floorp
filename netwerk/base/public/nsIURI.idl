@@ -178,7 +178,7 @@ interface nsIURI : nsISupports
  * *** What you most likely will want is NS_STANDARDURL_CID which is much more 
  * full featured. Look at nsIURL.idl for more details.
  *
- * NOTE: CIDs are declared in nsNetCID.h
+ * NOTE: CIDs are declared in build/nsNetCID.h
  */
 
 %{C++

@@ -1024,15 +1024,18 @@ JS_SetReservedSlot(JSContext *cx, JSObject *obj, uint32 index, jsval v);
 /*
  * Security protocol.
  */
-typedef struct JSPrincipals {
+struct JSPrincipals {
     char *codebase;
-    void *(*getPrincipalArray)(JSContext *cx, struct JSPrincipals *);
-    JSBool (*globalPrivilegesEnabled)(JSContext *cx, struct JSPrincipals *);
+    void * (* JS_DLL_CALLBACK getPrincipalArray)(JSContext *cx, JSPrincipals *);
+    JSBool (* JS_DLL_CALLBACK globalPrivilegesEnabled)(JSContext *cx, JSPrincipals *);
 
     /* Don't call "destroy"; use reference counting macros below. */
     uintN refcount;
-    void (*destroy)(JSContext *cx, struct JSPrincipals *);
-} JSPrincipals;
+    void (* JS_DLL_CALLBACK destroy)(JSContext *cx, struct JSPrincipals *);
+
+    /* XDR API extension hook; if null then this principals isn't XDRable. */
+    JSBool (* JS_DLL_CALLBACK encode)(JSXDRState *xdr, JSPrincipals *);
+};
 
 #define JSPRINCIPALS_HOLD(cx, principals)               \
     ((principals)->refcount++)
@@ -1040,6 +1043,9 @@ typedef struct JSPrincipals {
     ((--((principals)->refcount) == 0)                  \
         ? (*(principals)->destroy)((cx), (principals))  \
         : (void) 0)
+
+extern JS_PUBLIC_API(JSPrincipalsDecoder)
+JS_SetPrincipalsDecoder(JSRuntime *rt, JSPrincipalsDecoder pd);
 
 /************************************************************************/
 

@@ -38,5 +38,5 @@ interface nsIJARURI : nsIURI {
      * Returns the entry specified for this JAR URI.
      * eg ocean.html
      */
-	attribute string JAREntry;
+    attribute string JAREntry;
 };

@@ -28,8 +28,9 @@
 
 static NS_DEFINE_IID(kIAggregatePrincipalIID, NS_IAGGREGATEPRINCIPAL_IID);
 
-NS_IMPL_QUERY_INTERFACE4(nsAggregatePrincipal, nsIAggregatePrincipal, 
-                         nsICertificatePrincipal, nsICodebasePrincipal, nsIPrincipal)
+NS_IMPL_QUERY_INTERFACE5_CI(nsAggregatePrincipal, nsIAggregatePrincipal, 
+                            nsICertificatePrincipal, nsICodebasePrincipal,
+                            nsIPrincipal, nsISerializable)
 
 NSBASEPRINCIPALS_ADDREF(nsAggregatePrincipal);
 NSBASEPRINCIPALS_RELEASE(nsAggregatePrincipal);
@@ -355,6 +356,44 @@ nsAggregatePrincipal::GetPreferences(char** aPrefName, char** aID,
         return NS_ERROR_FAILURE;
     return PrimaryChild->GetPreferences(aPrefName, aID, 
                                           aGrantedList, aDeniedList);
+}
+
+//////////////////////////////////////////
+// Methods implementing nsISerializable //
+//////////////////////////////////////////
+
+NS_IMETHODIMP
+nsAggregatePrincipal::Read(nsIObjectInputStream* aStream)
+{
+    nsresult rv;
+
+    rv = nsBasePrincipal::Read(aStream);
+    if (NS_FAILED(rv)) return rv;
+
+    rv = NS_ReadOptionalObject(aStream, PR_TRUE, getter_AddRefs(mCertificate));
+    if (NS_FAILED(rv)) return rv;
+
+    rv = NS_ReadOptionalObject(aStream, PR_TRUE, getter_AddRefs(mCodebase));
+    if (NS_FAILED(rv)) return rv;
+
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsAggregatePrincipal::Write(nsIObjectOutputStream* aStream)
+{
+    nsresult rv;
+
+    rv = nsBasePrincipal::Write(aStream);
+    if (NS_FAILED(rv)) return rv;
+
+    rv = NS_WriteOptionalObject(aStream, mCertificate, PR_TRUE);
+    if (NS_FAILED(rv)) return rv;
+
+    rv = NS_WriteOptionalObject(aStream, mCodebase, PR_TRUE);
+    if (NS_FAILED(rv)) return rv;
+
+    return NS_OK;
 }
 
 /////////////////////////////////////////////

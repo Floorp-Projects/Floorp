@@ -36,6 +36,7 @@
 #define NS_AGGREGATEPRINCIPAL_CID \
 { 0x867cf414, 0x1dd2, 0x11b2, \
 { 0x82, 0x66, 0xca, 0x64, 0x3b, 0xbc, 0x35, 0x64 }}
+
 /* 867cf414-1dd2-11b2-8266-ca643bbc3564 */
 class nsAggregatePrincipal : public nsIAggregatePrincipal,
                              public nsICertificatePrincipal,
@@ -46,6 +47,7 @@ public:
 
     NS_DEFINE_STATIC_CID_ACCESSOR(NS_AGGREGATEPRINCIPAL_CID)
     NS_DECL_ISUPPORTS
+    NS_DECL_NSISERIALIZABLE
     NS_DECL_NSIAGGREGATEPRINCIPAL
     NS_DECL_NSICERTIFICATEPRINCIPAL
     NS_DECL_NSICODEBASEPRINCIPAL
@@ -87,7 +89,7 @@ public:
     
     nsAggregatePrincipal();
 
-	virtual ~nsAggregatePrincipal(void);
+    virtual ~nsAggregatePrincipal(void);
 
 protected:
     nsCOMPtr<nsIPrincipal> mCertificate;

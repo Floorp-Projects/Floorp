@@ -28,6 +28,8 @@
 #include "nsJSPrincipals.h"
 #include "nsVoidArray.h"
 #include "nsHashtable.h"
+#include "nsIObjectInputStream.h"
+#include "nsIObjectOutputStream.h"
 
 class nsBasePrincipal: public nsIPrincipal {
 public:
@@ -65,6 +67,12 @@ public:
     nsresult
     InitFromPersistent(const char* aPrefName,const char* aID, 
                        const char* aGrantedList, const char* aDeniedList);
+
+    NS_IMETHOD
+    Read(nsIObjectInputStream* aStream);
+
+    NS_IMETHOD
+    Write(nsIObjectOutputStream* aStream);
 
     static const char Invalid[];
 
