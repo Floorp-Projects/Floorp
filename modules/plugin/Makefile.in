@@ -55,12 +55,6 @@ DIRS		+= tools/tester/common tools/tester/os2
 endif
 endif
  
-ifdef ENABLE_TESTS
-ifeq (,$(filter WINNT, Darwin, Linux,$(OS_ARCH)))
-DIRS		+= tools/sdk
-endif
-endif
-
 include $(topsrcdir)/config/rules.mk
 
 $(DIST)/bin/plugins:
