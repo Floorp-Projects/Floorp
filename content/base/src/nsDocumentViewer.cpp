@@ -354,6 +354,8 @@ DocumentViewerImpl::Init(nsNativeWidget aNativeParent,
         // Make shell an observer for next time
         mPresShell->BeginObservingDocument();
 
+//XXX I don't think this should be done *here*; and why paint nothing
+//(which turns out to cause black flashes!)???
         // Resize-reflow this time
         mPresShell->InitialReflow(width, height);
 
