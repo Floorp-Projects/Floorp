@@ -29,6 +29,7 @@ extern "C" {
 #endif /* __cplusplus */
 
 extern void  gtk_moz_embed_get_nsIWebBrowser  (GtkMozEmbed *embed, nsIWebBrowser **retval);
+extern PRUnichar *gtk_moz_embed_get_title_unichar (GtkMozEmbed *embed);
 
 #ifdef __cplusplus
 }
