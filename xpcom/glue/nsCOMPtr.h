@@ -236,7 +236,7 @@
     Update: ramiro is working on getting these into the configuration system.
   */
 
-#if defined(__GNUG__) && (__GNUC_MINOR__ <= 90)
+#if defined(__GNUG__) && (__GNUC_MINOR__ <= 90) && !defined(SOLARIS)
   #define NSCAP_NO_MEMBER_USING_DECLARATIONS
 
   #if (defined(LINUX) || defined(__bsdi__)) && (__GNUC_MINOR__ <= 7)
