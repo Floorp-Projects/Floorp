@@ -45,12 +45,12 @@ function Startup()
   
   // Default string for new page is set from DTD string in XUL,
   //   so set only if not new doc URL
-  var location = editorShell.editorDocument.location;
+  var location = GetDocumentUrl();
   var lastmodString = GetString("Unknown");
 
   if (!IsUrlAboutBlank(location))
   {
-    gDialog.PageLocation.setAttribute("value", editorShell.editorDocument.location);
+    gDialog.PageLocation.setAttribute("value", GetDocumentUrl());
 
     // Get last-modified file date+time
     // TODO: Convert this to local time?

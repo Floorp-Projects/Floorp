@@ -228,6 +228,7 @@ var DocumentStateListener =
 {
   NotifyDocumentCreated: function()
   {
+dump(" ***** DocumentStateListener called in JS ********************\n");
     // Call EditorSetDefaultPrefsAndDoctype first so it gets the default author before initing toolbars
     EditorSetDefaultPrefsAndDoctype();
     EditorInitToolbars();
@@ -464,12 +465,12 @@ function DocumentHasBeenSaved()
 {
   var fileurl = "";
   try {
-    fileurl = window._content.location;
+    fileurl = GetDocumentUrl();
   } catch (e) {
     return false;
   }
 
-  if (fileurl == "" || IsUrlAboutBlank(fileurl))
+  if (!fileurl || IsUrlAboutBlank(fileurl))
     return false;
 
   // We have a file URL already
@@ -588,12 +589,13 @@ function EditorSetDocumentCharacterSet(aCharset)
   if(editorShell)
   {
     editorShell.SetDocumentCharacterSet(aCharset);
-    if( !IsUrlAboutBlank(editorShell.editorDocument.location))
+    var docUrl = GetDocumentUrl();
+    if( !IsUrlAboutBlank(docUrl))
     {
       // reloading the document will reverse any changes to the META charset, 
       // we need to put them back in, which is achieved by a dedicated listener
       editorShell.RegisterDocumentStateListener( DocumentReloadListener );
-      editorShell.LoadUrl(editorShell.editorDocument.location);
+      editorShell.LoadUrl(docUrl);
     }
   }
 }
@@ -1335,12 +1337,12 @@ function SetEditMode(mode)
       }
       // Get the entire document's source string
 
-      var flags = gOutputEncodeEntities;
+      var flags = 256; // OutputEncodeEntities;
 
       try { 
         var prettyPrint = gPrefs.getBoolPref("editor.prettyprint");
         if (prettyPrint)
-          flags |= gOutputFormatted;
+          flags |= 2; // OutputFormatted
 
       } catch (e) {}
 
@@ -1607,7 +1609,7 @@ function BuildRecentMenu(savePrefs)
   // Current page is the "0" item in the list we save in prefs,
   //  but we don't include it in the menu.
   var curTitle = window.editorShell.editorDocument.title;
-  var curUrl = window.editorShell.editorDocument.location;
+  var curUrl = GetDocumentUrl();
   var historyCount = 10;
   try { historyCount = gPrefs.getIntPref("editor.history.url_maximum"); } catch(e) {}
   var titleArray = new Array(historyCount);
@@ -1953,7 +1955,7 @@ function EditorSetDefaultPrefsAndDoctype()
   }
 
   /* only set default prefs for new documents */
-  if (!IsUrlAboutBlank(window.editorShell.editorDocument.location))
+  if (!IsUrlAboutBlank(GetDocumentUrl()))
     return;
 
   // search for author meta tag.
@@ -2638,4 +2640,3 @@ function GetHTMLOrCSSStyleValue(element, attrName, cssPropertyName)
   }
   return value;
 }
-

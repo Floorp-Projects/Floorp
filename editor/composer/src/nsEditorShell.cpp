@@ -427,8 +427,8 @@ NS_IMETHODIMP
 nsEditorShell::IsSupportedTextType(const char* aMIMEType, PRBool *aResult)
 {
   NS_ENSURE_ARG_POINTER(aResult);
-  NS_ENSURE_ARG_POINTER(aMIMEType);
   *aResult = PR_FALSE;
+  NS_ENSURE_ARG_POINTER(aMIMEType);
 
   PRInt32 i = 0;
   while (gSupportedTextTypes[i])
@@ -1843,9 +1843,14 @@ nsEditorShell::UpdateWindowTitleAndRecentMenu(PRBool aSaveToPrefs)
       nsCOMPtr<nsIURL> url = do_QueryInterface(docFileSpec);
       if (url)
       {
+        // Prefix filename with scheme so user can tell if editing a remote vs. local file
+        nsXPIDLCString schemeChar;
+        docFileSpec->GetScheme(getter_Copies(schemeChar));
         nsXPIDLCString fileNameChar;
         url->GetFileName(getter_Copies(fileNameChar));
         windowCaption += NS_LITERAL_STRING(" [") +
+                         NS_ConvertASCIItoUCS2(schemeChar) +
+                         NS_LITERAL_STRING(":/.../") +
                          NS_ConvertASCIItoUCS2(fileNameChar) +
                          NS_LITERAL_STRING("]");
       }
@@ -4902,39 +4907,7 @@ nsEditorShell::HandleMouseClickOnElement(nsIDOMElement *aElement, PRInt32 aClick
 
   *_retval = PR_FALSE;
 
-  // We'll only look at single and double-click
-  if (aClickCount > 2) return NS_OK;
-  
   nsresult rv = NS_OK;
-
-/*
-#if DEBUG_cmanske
-  nsAutoString TagName;
-  aElement->GetTagName(TagName);
-  ToLowerCase(TagName);
-  printf("***** Element clicked on: %s, x=%d, y=%d\n",
-         NS_LossyConvertUCS2toASCII(TagName).get(), x, y);
-#endif
-*/
-  if (mDisplayMode == eDisplayModeAllTags) 
-  {
-    // Always select the element in AllTags mode
-    //  in other modes, clicking on images, hline, etc 
-    //  already selects them correctly
-    // Selection here is used to make clicking on the 
-    //  background image in ShowAllTags mode select
-    //  contents of a element
-    // TODO: It would be great if we could use x, y to restrict
-    //  where you click for easier caret placement near border with content,
-    //  but:
-    //  1. We can get x,y, relative to either screen or "widget" (contentWindow)
-    //      origin, but not the element clicked on!
-    //  2.  we need to get the size of the element!
-
-    rv = SelectElement(aElement);
-    if (NS_SUCCEEDED(rv))
-      *_retval = PR_TRUE;
-  }
 
   // For double-click, edit element properties
   if (aClickCount == 2)
@@ -4942,7 +4915,13 @@ nsEditorShell::HandleMouseClickOnElement(nsIDOMElement *aElement, PRInt32 aClick
     // In "All Tags" mode, use AdvancedProperties,
     //  in others use appriate object property dialog
     if (mDisplayMode == eDisplayModeAllTags)
+    {
+        // We must select element here because we don't do that for
+        //  body, table, td, tr, caption elements in nsEditorShellMouseListener 
+        rv = SelectElement(aElement);
+        if (NS_FAILED(rv)) return rv;
         rv = DoControllerCommand(NS_LITERAL_STRING("cmd_advancedProperties"));
+    }
     else
         rv = DoControllerCommand(NS_LITERAL_STRING("cmd_objectProperties"));
         

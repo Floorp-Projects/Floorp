@@ -332,20 +332,183 @@ var nsOpenCommand =
   }
 };
 
+// ******* File output commands and utilities ******** //
 //-----------------------------------------------------------------------------------
-function GetDocumentURI(aDOMDoc)
+var nsSaveCommand =
 {
-  // in C++ was returning nsIURI now returning url string
-  if (!aDOMDoc)
-    return "";
+  isCommandEnabled: function(aCommand, dummy)
+  {
+    return window.editorShell && 
+      (window.editorShell.documentModified || 
+       IsUrlAboutBlank(GetDocumentUrl()) ||
+       window.gHTMLSourceChanged);
+  },
+  
+  doCommand: function(aCommand)
+  {
+    var result = false;
+    if (window.editorShell)
+    {
+      var docUrl = window.GetDocumentUrl();
+      var isAboutBlank = IsUrlAboutBlank(docUrl);
 
-  try {
-    var aDOMHTMLDoc = aDOMDoc.QueryInterface(Components.interfaces.nsIDOMHTMLDocument);
-    return aDOMHTMLDoc.URL;
+      // Saving remote files should use publish command
+      if (isAboutBlank || (GetScheme(docUrl) == "file"))
+      {
+        FinishHTMLSource();
+        result = SaveDocument(isAboutBlank, false, editorShell.contentsMIMEType);
+        window._content.focus();
+      }
+      else
+      {
+        goDoCommand("cmd_publish");
+        return true;
+      }
+    }
+    return result;
   }
-  catch (e) {}
-  return "";
 }
+
+var nsSaveAsCommand =
+{
+  isCommandEnabled: function(aCommand, dummy)
+  {
+    return (window.editorShell && window.editorShell.documentEditable);
+  },
+
+  doCommand: function(aCommand)
+  {
+    if (window.editorShell)
+    {
+      FinishHTMLSource();
+      var result = SaveDocument(true, false, editorShell.contentsMIMEType);
+      window._content.focus();
+      return result;
+    }
+    return false;
+  }
+}
+
+var nsExportToTextCommand =
+{
+  isCommandEnabled: function(aCommand, dummy)
+  {
+    return (window.editorShell && window.editorShell.documentEditable);
+  },
+
+  doCommand: function(aCommand)
+  {
+    if (window.editorShell)
+    {
+      FinishHTMLSource();
+      var result = SaveDocument(true, true, "text/plain");
+      window._content.focus();
+      return result;
+    }
+    return false;
+  }
+}
+
+var nsSaveAsCharsetCommand =
+{
+  isCommandEnabled: function(aCommand, dummy)
+  {
+    return (window.editorShell && window.editorShell.documentEditable);
+  },
+  doCommand: function(aCommand)
+  {    
+    FinishHTMLSource();
+    window.ok = false;
+    window.exportToText = false;
+    window.openDialog("chrome://editor/content/EditorSaveAsCharset.xul","_blank", "chrome,close,titlebar,modal,resizable=yes");
+
+    if (window.newTitle != null) {
+      try {
+        editorShell.SetDocumentTitle(window.newTitle);
+      } 
+      catch (ex) {}
+    }    
+
+    if (window.ok)
+    {
+      if (window.exportToText)
+      {
+        window.ok = SaveDocument(true, true, "text/plain");
+      }
+      else
+      {
+        window.ok = SaveDocument(true, false, editorShell.contentsMIMEType);
+      }
+    }
+
+    window._content.focus();
+    return window.ok;
+  }
+};
+
+var nsPublishCommand =
+{
+  isCommandEnabled: function(aCommand, dummy)
+  {
+    return window.editorShell && 
+      (window.editorShell.documentModified || 
+       IsUrlAboutBlank(GetDocumentUrl()) ||
+       window.gHTMLSourceChanged);
+  },
+  
+  doCommand: function(aCommand)
+  {
+    if (window.editorShell)
+    {
+      var docURL = GetDocumentUrl();
+      var publishData;
+
+      // If new page or we haven't published to a site
+      //   containing docURL before, use the publish dialog 
+      if (IsUrlAboutBlank(docURL) || (publishData = GetPublishDataFromUrl(docURL)) == null)
+      {
+        goDoCommand("cmd_publishAs");
+      }
+      else
+      {
+        FinishHTMLSource();
+        Publish(publishData);
+      }
+      window._content.focus();
+      return true;
+    }
+    return false;
+  }
+}
+
+var nsPublishAsCommand =
+{
+  isCommandEnabled: function(aCommand, dummy)
+  {
+    return (window.editorShell && window.editorShell.documentEditable);
+  },
+
+  doCommand: function(aCommand)
+  {
+    if (window.editorShell)
+    {
+      FinishHTMLSource();
+
+      // Launch Publish dialog
+      // Object to pass back data from dialog
+      var publishData = {};
+      window.ok = false;
+      window.openDialog("chrome://editor/content/EditorPublish.xul","_blank", "chrome,close,titlebar,modal", "", publishData);
+      if (window.ok)
+      {
+        Publish(publishData);
+        return true;
+      }
+    }
+    return false;
+  }
+}
+// ------- output utilites   ----- //
 
 // returns a fileExtension string
 function GetExtensionBasedOnMimeType(aMIMEType)
@@ -455,7 +618,6 @@ function PromptForSaveLocation(aDoSaveAsText, aEditorType, aMIMEType, ahtmlDocum
     try {
       var docURI = Components.classes["@mozilla.org/file/local;1"].createInstance(Components.interfaces.nsIURI);
       docURI.spec = aDocumentURLString;
-      dump("testing scheme for "+docURI.spec+"\n");
       isLocalFile = docURI.schemeIs("file");
     }
     catch (e) {}
@@ -524,7 +686,7 @@ function PromptAndSetTitleIfNone(aHTMLDoc)
   return confirmed;
 }
 
-/******** output functionality (saving, publishing, export, etc.) **********/
+var gPersistObj;
 
 // Don't forget to do these things after calling OutputFileWithPersistAPI:
 //    window.editorShell.doAfterSave(doUpdateURLOnDocument, urlstring);  // we need to update the url before notifying listeners
@@ -533,6 +695,7 @@ function PromptAndSetTitleIfNone(aHTMLDoc)
 
 function OutputFileWithPersistAPI(editorDoc, aDestinationLocation, aRelatedFilesParentDir, aMimeType)
 {
+  gPersistObj = null;
   try {
     var imeEditor = window.editorShell.editor.QueryInterface(Components.interfaces.nsIEditorIMESupport);
     if (imeEditor)
@@ -549,6 +712,7 @@ function OutputFileWithPersistAPI(editorDoc, aDestinationLocation, aRelatedFiles
 
     persistObj.saveDocument(editorDoc, aDestinationLocation, aRelatedFilesParentDir, 
                             aMimeType, outputFlags, wrapColumn);
+    gPersistObj = persistObj;
   }
   catch(e) { dump("caught an error, bail\n"); return false; }
 
@@ -593,35 +757,63 @@ function GetWrapColumn()
   return wrapCol;
 }
 
+function GetPromptService()
+{
+  var promptService;
+  try {
+    promptService = Components.classes["@mozilla.org/embedcomp/prompt-service;1"].getService();
+    promptService = promptService.QueryInterface(Components.interfaces.nsIPromptService);
+  }
+  catch (e) {}
+  return promptService;
+}
+
 const gShowDebugOutputStateChange = false;
 const gShowDebugOutputProgress = false;
 const gShowDebugOutputLocationChange = false;
 const gShowDebugOutputStatusChange = false;
 const gShowDebugOutputSecurityChange = false;
+
 var gEditorOutputProgressListener =
 {
   onStateChange : function(aWebProgress, aRequest, aStateFlags, aStatus)
   {
+    // Use this to access onStateChange flags
+    const nsIWebProgressListener = Components.interfaces.nsIWebProgressListener;
+    var requestSpec;
+    try {
+      var channel = aRequest.QueryInterface(Components.interfaces.nsIChannel);
+      if (channel)
+        requestSpec = StripUsernamePasswordFromURI(channel.URI);
+    } catch (e) {
+      if ( gShowDebugOutputStateChange)
+        dump("***** onStateChange; NO REQUEST CHANNEL\n");
+    }
+
     if (gShowDebugOutputStateChange)
     {
-      try {
-        var channel = aRequest.QueryInterface(Components.interfaces.nsIChannel);
-        dump("***** onStateChange request: " + channel.URI.spec + "\n");
-      } catch (e) { dump("***** onStateChange; NO REQUEST CHANNEL\n"); }
-      if (aStateFlags == 65552)  // STATE_IS_REQUEST + STATE_STOP
-        dump("*****     state flags are isRequest and Stop\n");
-      else if (aStateFlags == 65537)
-        dump("*****     state flags are isRequest and Start\n");
-      else if (aStateFlags == 262145)
-        dump("*****     state flags are isNetwork and Start\n");
-      else if (aStateFlags == 262160)
-        dump("*****     state flags are isNetwork and Stop\n");
-      else if (aStateFlags == 327681)
-        dump("*****     state flags are isRequest and Start and isNetwork\n");
-      else if (aStateFlags == 327696)
-        dump("*****     state flags are isRequest and Stop  and isNetwork\n");
-      else
-        dump("*****     state flags are "+aStateFlags+"\n");
+      dump("***** onStateChange request: " + requestSpec + "\n");
+      dump("      state flags: ");
+
+      if (aStateFlags & nsIWebProgressListener.STATE_START)
+        dump(" STATE_START, ");
+      if (aStateFlags & nsIWebProgressListener.STATE_STOP)
+        dump(" STATE_STOP, ");
+      if (aStateFlags & nsIWebProgressListener.STATE_IS_NETWORK)
+        dump(" STATE_IS_NETWORK ");
+
+      dump("\n");
+    }
+    // This is how to detect end of file upload of HTML file:
+    if (gPublishData)
+    {
+      var pubSpec = gPublishData.publishUrl + gPublishData.docDir + gPublishData.filename;
+      if ((aStateFlags & nsIWebProgressListener.STATE_STOP) &&
+          (aStateFlags & nsIWebProgressListener.STATE_IS_NETWORK)
+           && requestSpec && requestSpec == pubSpec)
+      {
+        // Do window.editorShell.doAfterSave(true, docUrl) and related stuff here
+      }
     }
   },
 
@@ -636,7 +828,19 @@ var gEditorOutputProgressListener =
       }
       catch (e) {}
       dump("*****       self:  "+aCurSelfProgress+" / "+aMaxSelfProgress+"\n");
-      dump("*****       total: "+aCurTotalProgress+" / "+aMaxTotalProgress+"\n");
+      dump("*****       total: "+aCurTotalProgress+" / "+aMaxTotalProgress+"\n\n");
+
+      if (gPersistObj)
+      {
+        if(gPersistObj.currentState == gPersistObj.PERSIST_STATE_READY)
+          dump(" Persister is ready to save data\n\n");
+        else if(gPersistObj.currentState == gPersistObj.PERSIST_STATE_SAVING)
+          dump(" Persister is saving data.\n\n");
+        else if(gPersistObj.currentState == gPersistObj.PERSIST_STATE_FINISHED)
+        {
+          dump(" PERSISTER HAS FINISHED SAVING DATA\n\n\n");
+        }
+      }
     }
   },
 
@@ -691,6 +895,16 @@ var gEditorOutputProgressListener =
         dump("*****        status is ACCESS_DENIED\n");
       else
         dump("*****        status is " + aStatus + "\n");
+
+      if (gPersistObj)
+      {
+        if(gPersistObj.currentState == gPersistObj.PERSIST_STATE_READY)
+          dump(" Persister is ready to save data\n\n");
+        else if(gPersistObj.currentState == gPersistObj.PERSIST_STATE_SAVING)
+          dump(" Persister is saving data.\n\n");
+        else if(gPersistObj.currentState == gPersistObj.PERSIST_STATE_FINISHED)
+          dump(" PERSISTER HAS FINISHED SAVING DATA\n\n\n");
+      }
     }
   },
 
@@ -715,107 +929,147 @@ var gEditorOutputProgressListener =
   },
 
 // nsIPrompt
- alert : function(dlgTitle, text)
- {
-   AlertWithTitle(dlgTitle, text);
- },
- alertCheck : function(dialogTitle, text, checkBoxLabel, checkValue)
- {
-   AlertWithTitle(dialogTitle, text);
-   dump("***** warning: checkbox not shown to user\n");
- },
- confirm : function(dlgTitle, text)
- {
-   return ConfirmWithTitle(dlgTitle, text, null, null);
- },
- confirmCheck : function(dlgTitle, text, checkBoxLabel, checkValue)
- {
-   var promptServ = GetPromptService();
-   if (!promptServ)
+  alert : function(dlgTitle, text)
+  {
+    AlertWithTitle(dlgTitle, text);
+  },
+  alertCheck : function(dialogTitle, text, checkBoxLabel, checkValue)
+  {
+    AlertWithTitle(dialogTitle, text);
+    dump("***** warning: checkbox not shown to user\n");
+  },
+  confirm : function(dlgTitle, text)
+  {
+    return ConfirmWithTitle(dlgTitle, text, null, null);
+  },
+  confirmCheck : function(dlgTitle, text, checkBoxLabel, checkValue)
+  {
+    var promptServ = GetPromptService();
+    if (!promptServ)
+      return;
+
+    promptServ.confirmEx(window, dlgTitle, text, nsIPromptService.STD_OK_CANCEL_BUTTONS,
+                         "", "", "", checkBoxLabel, checkValue, outButtonPressed);
+  },
+  confirmEx : function(dlgTitle, text, btnFlags, btn0Title, btn1Title, btn2Title, checkBoxLabel, checkVal, outBtnPressed)
+  {
+    var promptServ = GetPromptService();
+    if (!promptServ)
      return;
 
-   promptServ.confirmEx(window, dlgTitle, text, nsIPromptService.STD_OK_CANCEL_BUTTONS,
-                        "", "", "", checkBoxLabel, checkValue, outButtonPressed);
- },
- confirmEx : function(dlgTitle, text, btnFlags, btn0Title, btn1Title, btn2Title, checkBoxLabel, checkVal, outBtnPressed)
- {
-   var promptServ = GetPromptService();
-   if (!promptServ)
-     return;
-
-   promptServ.confirmEx(window, dlgTitle, text, btnFlags,
+    promptServ.confirmEx(window, dlgTitle, text, btnFlags,
                         btn0Title, btn1Title, btn2Title,
                         checkBoxLabel, checkVal, outBtnPressed);
- },
- prompt : function(dlgTitle, text, inoutText, checkBoxLabel, checkValue)
- {
-   var promptServ = GetPromptService();
-   if (!promptServ)
+  },
+  prompt : function(dlgTitle, text, inoutText, checkBoxLabel, checkValue)
+  {
+    var promptServ = GetPromptService();
+    if (!promptServ)
      return false;
 
-   return promptServ.prompt(window, dlgTitle, text, inoutText, checkBoxLabel, checkValue);
- },
- promptPassword : function(dlgTitle, text, password, checkBoxLabel, checkValue)
- {
-   var promptServ = GetPromptService();
-   if (!promptServ)
-     return false;
+    return promptServ.prompt(window, dlgTitle, text, inoutText, checkBoxLabel, checkValue);
+  },
+  promptPassword : function(dlgTitle, text, password, checkBoxLabel, checkValue)
+  {
+    var promptServ = GetPromptService();
+    if (!promptServ)
+      return false;
 
-   return promptServ.promptPassword(window, dlgTitle, text, password, checkBoxLabel, checkValue);
- },
- promptUsernameAndPassword : function(dlgTitle, text, login, pw, checkBoxLabel, checkValue)
- {
-   var promptServ = GetPromptService();
-   if (!promptServ)
-     return false;
+    return promptServ.promptPassword(window, dlgTitle, text, password, checkBoxLabel, checkValue);
+  },
+  promptUsernameAndPassword : function(dlgTitle, text, login, pw, checkBoxLabel, checkValue)
+  {
+    var promptServ = GetPromptService();
+    if (!promptServ)
+      return false;
 
-   return promptServ.promptUsernameAndPassword(window, dlgTitle, text, login, pw, checkBoxLabel, checkValue);
- },
- select : function(dlgTitle, text, count, selectList, outSelection)
- {
-   var promptServ = GetPromptService();
-   if (!promptServ)
-     return false;
+    return promptServ.promptUsernameAndPassword(window, dlgTitle, text, login, pw, checkBoxLabel, checkValue);
+  },
+  select : function(dlgTitle, text, count, selectList, outSelection)
+  {
+    var promptServ = GetPromptService();
+    if (!promptServ)
+      return false;
 
-   return promptServ.select(window, dlgTitle, text, count, selectList, outSelection);
- },
+    return promptServ.select(window, dlgTitle, text, count, selectList, outSelection);
+  },
 
 // nsIAuthPrompt
- prompt : function(dlgTitle, text, pwrealm, savePW, defaultText, result)
- {
-   dump("authprompt prompt! pwrealm="+pwrealm+"\n");
-   var promptServ = GetPromptService();
-   if (!promptServ)
-     return false;
+  prompt : function(dlgTitle, text, pwrealm, savePW, defaultText, result)
+  {
+    dump("authprompt prompt! pwrealm="+pwrealm+"\n");
+    var promptServ = GetPromptService();
+    if (!promptServ)
+      return false;
 
-   var saveCheck = {value:savePW};
-   return promptServ.prompt(window, dlgTitle, text, defaultText, pwrealm, saveCheck);
- },
- promptUsernameAndPassword : function(dlgTitle, text, pwrealm, savePW, user, pw)
- {
-   dump("authprompt promptUsernameAndPassword!  "+dlgTitle+" "+text+", pwrealm="+pwrealm+"\n");
-   var promptServ = GetPromptService();
-   if (!promptServ)
-     return false;
+    var saveCheck = {value:savePW};
+    return promptServ.prompt(window, dlgTitle, text, defaultText, pwrealm, saveCheck);
+  },
+  promptUsernameAndPassword : function(dlgTitle, text, pwrealm, savePW, user, pw)
+  {
+    dump("authprompt promptUsernameAndPassword!  "+dlgTitle+" "+text+", pwrealm="+pwrealm+"\n");
+    var promptServ = GetPromptService();
+    if (!promptServ)
+      return false;
 
-   var saveCheck = {value:savePW};
-   return promptServ.promptUsernameAndPassword(window, dlgTitle, text, user, pw, GetString("SaveUsernamePassword"), saveCheck);
+    var saveCheck = {value:savePW};
+    // Initialize with user's previous preference for this site
+    if (gPublishData)
+      saveCheck.value = gPublishData.savePassword;
 
- },
- promptPassword : function(dlgTitle, text, pwrealm, savePW, pw)
- {
-   dump("auth promptPassword!  "+dlgTitle+" "+text+", pwrealm="+pwrealm+"\n");
-   var promptServ = GetPromptService();
-   if (!promptServ)
-     return false;
+    var ret = promptServ.promptUsernameAndPassword(window, dlgTitle, text, user, pw, GetString("SavePassword"), saveCheck);
 
-   // XXX Do we have to save the password to password database?
-   // Why do we have to supply the "save passord" checkbox text?
-   // cmanske to investigate these issues
+    //XXX We really shouldn't do this until publishing completed successfully
+    if (ret && gPublishData)
+      SaveUsernamePasswordFromPrompt(gPublishData, user.value, pw.value, saveCheck.value);
 
-   var saveCheck = {value:savePW};
-   return promptServ.promptPassword(window, dlgTitle, text, pw, GetString("SavePassword"), saveCheck);
- }
+    return ret;
+  },
+  promptPassword : function(dlgTitle, text, pwrealm, savePW, pw)
+  {
+    dump("auth promptPassword!  "+dlgTitle+" "+text+", pwrealm="+pwrealm+"\n");
+    var promptServ = GetPromptService();
+    if (!promptServ)
+      return false;
+
+    var saveCheck = {value:savePW};
+    // Initialize with user's previous preference for this site
+    if (gPublishData)
+      saveCheck.value = gPublishData.savePassword;
+
+    var ret = promptServ.promptPassword(window, dlgTitle, text, pw, GetString("SavePassword"), saveCheck);
+
+    //XXX We really shouldn't do this until publishing completed successfully
+    if (ret && gPublishData)
+      SaveUsernamePasswordFromPrompt(gPublishData, gPublishData.username, pw.value, saveCheck.value);
+
+    return ret;
+  }
+}
+
+// Save any data that the user supplied in a prompt dialog
+function SaveUsernamePasswordFromPrompt(publishData, username, password, savePassword)
+{
+  if (!publishData || !username)
+    return;
+
+  var usernameChanged = gPublishData.username != username;
+  var savePasswordChanged = gPublishData.savePassword != savePassword;
+  publishData.username = username;
+  publishData.password = password;
+  publishData.savePassword = savePassword;
+  
+  if (usernameChanged || savePasswordChanged)
+  {
+    // A publishing pref item was changed (this will also save the password)
+    SavePublishDataToPrefs(publishData);
+  }
+  else if (savePassword)
+  {
+    // Publish pref data is correct.
+    // Probably user error in publish dialog, so save just password
+    SavePassword(publishData);
+  }
 }
 
 // throws an error or returns true if user attempted save; false if user canceled save
@@ -843,7 +1097,7 @@ function SaveDocument(aSaveAs, aSaveCopy, aMimeType)
   if (saveAsTextFile)
     aMimeType = "text/plain";
 
-  var urlstring = GetDocumentURI(editorDoc);
+  var urlstring = GetDocumentUrl();
   var mustShowFileDialog = (aSaveAs || IsUrlAboutBlank(urlstring) || (urlstring == ""));
   var replacing = !aSaveAs;
   var titleChanged = false;
@@ -962,175 +1216,98 @@ function SaveDocument(aSaveAs, aSaveCopy, aMimeType)
   return success;
 }
 
-var nsSaveCommand =
+//-------------------------------  Publishing
+var gPublishData;
+
+function Publish(publishData)
 {
-  isCommandEnabled: function(aCommand, dummy)
+  if (!publishData)
+    return false;
+
+  var docURI = CreateURIFromPublishData(publishData, true);
+  if (!docURI)
+    return false;
+
+  // Set global for username password requests
+  gPublishData = publishData;
+
+  var otherFilesURI = CreateURIFromPublishData(publishData, false);
+  gStateFlag = 0;
+  gStatus = 0;
+  var success = OutputFileWithPersistAPI(window.editorShell.editorDocument, 
+                                         docURI, otherFilesURI, window.editorShell.contentsMIMEType);
+
+  if (success)
   {
-    return window.editorShell && 
-      (window.editorShell.documentModified || 
-       IsUrlAboutBlank(window.editorShell.editorDocument.location) ||
-       window.gHTMLSourceChanged);
-  },
+    //XXX We really shouldn't continue here unless we get confirmation that file was really uploaded
+    // Get the new docUrl from the "browse location" in case "publish location" was FTP
+    var docUrl = GetDocUrlFromPublishData(publishData);
+    try {
+      if (docUrl)
+        window.editorShell.doAfterSave(true, docUrl);  // we need to update the url before notifying listeners
+
+      window.editorShell.editor.ResetModificationCount();  // this should cause notification to listeners that document has changed
+    } catch (e) {}
+  }
+
+
+  return success;
+}
+
+// Create a nsIURI object filled in with all required publishing info
+function CreateURIFromPublishData(publishData, doDocUri)
+{
+  if (!publishData || !publishData.publishUrl)
+    return null;
+
+  var URI;
+  try {
+    URI = Components.classes["@mozilla.org/network/standard-url;1"].createInstance(Components.interfaces.nsIURI);
+
+    if (!URI)
+      return null;
+
+    var spec = publishData.publishUrl;
+    if (doDocUri)
+      spec += FormatDirForPublishing(publishData.docDir) + publishData.filename; 
+    else
+      spec += FormatDirForPublishing(publishData.otherDir);
+
+    URI.spec = spec;
+
+    if (publishData.username)
+      URI.username = publishData.username;
+    if (publishData.password)
+      URI.password = publishData.password;
+  }
+  catch (e) {}
+
+  return URI;
+}
+
+// Resolve the correct "http:" document URL when publishing via ftp
+function GetDocUrlFromPublishData(publishData)
+{
+  if (!publishData || !publishData.filename || !publishData.publishUrl)
+    return "";
+
+  // If user was previously editing an "ftp" url, then keep that as the new scheme
+  var url;
+  var docScheme = GetScheme(GetDocumentUrl());
+
+  if (docScheme == "ftp" || !publishData.browseUrl)
+    url = publishData.publishUrl;
+  else
+    url = publishData.browseUrl;
   
-  doCommand: function(aCommand)
-  {
-    var result = false;
-    if (window.editorShell)
-    {
-      FinishHTMLSource(); // In editor.js
-      var isAboutBlank = IsUrlAboutBlank(window.editorShell.editorDocument.location);
-//      var isLocalFile = (0 == window.editorShell.editorDocument.location.href.indexOf("file", 0));
-      result = SaveDocument(isAboutBlank, false, editorShell.contentsMIMEType);
-      window._content.focus();
-    }
-    return result;
-  }
+  url += FormatDirForPublishing(publishData.docDir) + publishData.filename;
+
+  return url;
 }
 
-var nsSaveAsCommand =
-{
-  isCommandEnabled: function(aCommand, dummy)
-  {
-    return (window.editorShell && window.editorShell.documentEditable);
-  },
-
-  doCommand: function(aCommand)
-  {
-    if (window.editorShell)
-    {
-      FinishHTMLSource();
-      var result = SaveDocument(true, false, editorShell.contentsMIMEType);
-      window._content.focus();
-      return result;
-    }
-    return false;
-  }
-}
-
-var nsExportToTextCommand =
-{
-  isCommandEnabled: function(aCommand, dummy)
-  {
-    return (window.editorShell && window.editorShell.documentEditable);
-  },
-
-  doCommand: function(aCommand)
-  {
-    if (window.editorShell)
-    {
-      FinishHTMLSource();
-      var result = SaveDocument(true, true, "text/plain");
-      window._content.focus();
-      return result;
-    }
-    return false;
-  }
-}
-
-var nsSaveAsCharsetCommand =
-{
-  isCommandEnabled: function(aCommand, dummy)
-  {
-    return (window.editorShell && window.editorShell.documentEditable);
-  },
-  doCommand: function(aCommand)
-  {    
-    FinishHTMLSource();
-    window.ok = false;
-    window.exportToText = false;
-    window.openDialog("chrome://editor/content/EditorSaveAsCharset.xul","_blank", "chrome,close,titlebar,modal,resizable=yes");
-
-    if (window.newTitle != null) {
-      try {
-        editorShell.SetDocumentTitle(window.newTitle);
-      } 
-      catch (ex) {}
-    }    
-
-    if (window.ok)
-    {
-      if (window.exportToText)
-      {
-        window.ok = SaveDocument(true, true, "text/plain");
-      }
-      else
-      {
-        window.ok = SaveDocument(true, false, editorShell.contentsMIMEType);
-      }
-    }
-
-    window._content.focus();
-    return window.ok;
-  }
-};
+// ****** end of save / publish **********//
 
 //-----------------------------------------------------------------------------------
-var nsPublishCommand =
-{
-  isCommandEnabled: function(aCommand, dummy)
-  {
-    return window.editorShell && 
-      (window.editorShell.documentModified || 
-       IsUrlAboutBlank(window.editorShell.editorDocument.location) ||
-       window.gHTMLSourceChanged);
-  },
-  
-  doCommand: function(aCommand)
-  {
-    if (window.editorShell)
-    {
-      FinishHTMLSource(); // In editor.js
-
-      // If new page, we must use the publish dialog 
-      if (IsUrlAboutBlank(window.editorShell.editorDocument.location))
-        goDoCommand("cmd_publishAs");
-      else
-        window.ok = SaveDocument(false, false, editorShell.contentsMIMEType);
-
-      window._content.focus();
-      return true;
-    }
-    return false;
-  }
-}
-
-var nsPublishAsCommand =
-{
-  isCommandEnabled: function(aCommand, dummy)
-  {
-    return (window.editorShell && window.editorShell.documentEditable);
-  },
-
-  doCommand: function(aCommand)
-  {
-    if (window.editorShell)
-    {
-      FinishHTMLSource();
-
-      // Launch Publish dialog
-      // Object to pass back data from dialog
-      var publishData = { 
-        SiteName : "",
-        UserName : "",
-        Password : "",
-        Filename : "",
-        DestinationDir : "",
-        BrowseDir : "",
-        RelatedDocs : {}
-      }
-
-      window.ok = window.openDialog("chrome://editor/content/EditorPublish.xul","_blank", "chrome,close,titlebar,modal", "", publishData);
-      if (window.ok)
-      {
-dump(" * Publishing info: UserName="+publishData.UserName+", Password="+publishData.Password+", Filename="+publishData.Filename+"\n   Destination="+publishData.DestinationDir+", Browse dir="+publishData.BrowseDir+"\n");
-      }    
-      window._content.focus();
-      return window.ok;
-    }
-    return false;
-  }
-}
-
 var nsPublishSettingsCommand =
 {
   isCommandEnabled: function(aCommand, dummy)
@@ -1159,7 +1336,7 @@ var nsRevertCommand =
   {
     return (window.editorShell && 
             window.editorShell.documentModified &&
-            !IsUrlAboutBlank(window.editorShell.editorDocument.location));
+            !IsUrlAboutBlank(GetDocumentUrl()));
   },
 
   doCommand: function(aCommand)
@@ -1188,7 +1365,7 @@ var nsRevertCommand =
       if(result.value == 0)
       {
         FinishHTMLSource();
-        window.editorShell.LoadUrl(editorShell.editorDocument.location);
+        window.editorShell.LoadUrl(GetDocumentUrl());
       }
     }
   }
@@ -1281,7 +1458,7 @@ var nsSendPageCommand =
     {
       // Launch Messenger Composer window with current page as contents
       var pageTitle = window.editorShell.editorDocument.title;
-      var pageUrl = window.editorShell.editorDocument.location.href;
+      var pageUrl = GetDocumentUrl();
       try
       {
         openComposeWindow(pageUrl, pageTitle);        
@@ -1378,9 +1555,12 @@ var nsSpellingCommand =
 
   doCommand: function(aCommand)
   {
+    window.spellCheckCompleted = false;
     try {
       window.openDialog("chrome://editor/content/EdSpellCheck.xul", "_blank",
               "chrome,close,titlebar,modal", "");
+
+      dump("*** Spell Checking completed = "+window.spellCheckCompleted+"\n");
     }
     catch(ex) {
       dump("*** Exception error: SpellChecker Dialog Closing\n");
@@ -1413,7 +1593,7 @@ var nsValidateCommand =
         return;
     }
 
-    URL2Validate = window.editorShell.editorDocument.location;
+    URL2Validate = GetDocumentUrl();
     // See if it's a file:
     var ifile = Components.classes["@mozilla.org/file/local;1"].createInstance().QueryInterface(Components.interfaces.nsIFile);
     try {
@@ -1595,7 +1775,7 @@ var nsIsIndexCommand =
   doCommand: function(aCommand)
   {
     var isindexElement = editorShell.CreateElementWithDefaults("isindex");
-    isindexElement.setAttribute("prompt", editorShell.GetContentsAs("text/plain", gOutputSelectionOnly));
+    isindexElement.setAttribute("prompt", editorShell.GetContentsAs("text/plain", 1)); // OutputSelectionOnly
     editorShell.InsertElementAtSelection(isindexElement, true);
   }
 };

@@ -42,8 +42,7 @@ function UseOtherPage()
 {
 dump("UseOtherPage\n");
   // Reload the URL -- that will get other editor's contents
-  //editorShell.LoadUrl(editorShell.editorDocument.location);
-  setTimeout("editorShell.LoadUrl(editorShell.editorDocument.location)", 10);
+  setTimeout("editorShell.LoadUrl(GetDocumentUrl())", 10);
   SaveWindowLocation();
   return true;
 }

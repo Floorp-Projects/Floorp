@@ -64,7 +64,7 @@
             <row align="center">
               <label value="&siteList.label;"/>
               <!-- Contents filled in at runtime -->
-              <menulist id="SiteList" class="minWidth15" onSelect="SelectSiteList();"/>
+              <menulist id="SiteList" class="minWidth15" oncommand="SelectSiteList();"/>
               <hbox>
                 <button label="&newSiteButton.label;" oncommand="AddNewSite();"/>
                 <spacer flex="1"/>
@@ -93,23 +93,29 @@
                   persist="more" style="min-width:6em !important"/>
           <spacer flex="1"/>
         </hbox>
-        <vbox id="MoreSection">
-          <groupbox>
-            <caption label="&siteDirector.label;"/>
-            <label value="&siteDirList.label;"/>
-            <hbox flex="1">
-              <!-- Contents filled in at runtime -->
-              <menulist id="DirList" class="minWidth20" editable="true" flex="1"/>
-              <button label="&chooseDirButton.label;" oncommand="ChooseDir();"/>
-              <spacer flex="1"/>
-            </hbox>
-<!--
-            <hbox>
-              <button id="SetDefaultSiteAndDirButton" label="&setDefSiteAndDir.label;" oncommand="SetDefault();"/>
-              <spacer flex="1"/>
-            </hbox>
+
+        <vbox id="MoreSection" align="stretch">
+          <label value="&docDirList.label;"/>
+          <hbox align="center">
+            <!-- Contents filled in at runtime -->
+            <menulist id="DocDirList" class="minWidth20" editable="true"  flex="1"
+                      oninput="onInputSettings();"/>
+<!-- 
+            <button label="&chooseDirButton.label;" oncommand="ChooseDir(gDialog.DocDirList);" disabled="true"/>
 -->
-          </groupbox>
+          </hbox>
+          <spacer class="spacer"/>
+          <checkbox id="OtherDirCheckbox" label="&otherDirList.label;" oncommand="doEnabling();"/>
+          <hbox align="center">
+            <!-- Contents filled in at runtime -->
+            <menulist id="OtherDirList" class="minWidth20" editable="true" flex="1"
+                      oninput="onInputSettings();"/>
+<!-- 
+            <button label="&chooseDirButton.label;" oncommand="ChooseDir(gDialog.OtherDirList);" disabled="true"/>
+-->
+          </hbox>
+          <spacer flex="1"/>
+<!-- FOR FUTURE USE: Tree of associated files for more control over destination, whether to upload, etc.
           <groupbox>
             <caption label="&relatedDocs.label;"/>
             <tree rows="6" class="list" id="RelatedDocsList" flex="1">
@@ -118,6 +124,7 @@
               </treecolgroup>
             </tree>
           </groupbox>
+-->
         </vbox>
       </vbox><!-- Publish Panel -->
 

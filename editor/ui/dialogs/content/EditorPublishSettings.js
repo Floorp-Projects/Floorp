@@ -38,7 +38,7 @@ function Startup()
   gDialog.SiteNameInput       = document.getElementById("SiteNameInput");
   gDialog.PublishUrlInput     = document.getElementById("PublishUrlInput");
   gDialog.BrowseUrlInput      = document.getElementById("BrowseUrlInput");
-  gDialog.UserNameInput       = document.getElementById("UserNameInput");
+  gDialog.UsernameInput       = document.getElementById("UsernameInput");
   gDialog.OkButton            = document.documentElement.getButton("accept");
 
   gPublishSiteData = GetPublishSiteData();
@@ -76,7 +76,7 @@ function FillSiteList()
 
   for (i = 0; i < count; i++)
   {
-    var name = gPublishSiteData[i][gNameIndex];
+    var name = gPublishSiteData[i].siteName;
     var menuitem = AppendStringToTreelist(gDialog.SiteList, name);
 
     // Add a cell before the text to display a check for default site
@@ -152,7 +152,7 @@ function SetDefault()
   if (index >= 0)
   {
     gDefaultSiteIndex = index;
-    gDefaultSiteName = gPublishSiteData[index][gNameIndex];
+    gDefaultSiteName = gPublishSiteData[index].siteName;
   }
 }
 
@@ -177,34 +177,22 @@ function SelectSiteList()
 
 function InitSiteSettings(selectedSiteIndex)
 {
-  var siteName = "";
-  var publishUrl = "";
-  var browseUrl = "";
-  var username = "";
-  var password = "";
   var savePassord = false;
 
-  if (gPublishSiteData && selectedSiteIndex >= 0)
-  {
-    siteName = gPublishSiteData[selectedSiteIndex][gNameIndex];
-    publishUrl = gPublishSiteData[selectedSiteIndex][gUrlIndex];
-    browseUrl = gPublishSiteData[selectedSiteIndex][gBrowseIndex];
-    username = gPublishSiteData[selectedSiteIndex][gUserNameIndex];
-    // TODO: HOW TO GET PASSWORD???
-  }
+  var haveData = (gPublishSiteData && selectedSiteIndex != -1);
+
+  gDialog.SiteNameInput.value = haveData ? gPublishSiteData[selectedSiteIndex].siteName : "";
+  gDialog.PublishUrlInput.value = haveData ? gPublishSiteData[selectedSiteIndex].publishUrl : "";
+  gDialog.BrowseUrlInput.value = haveData ? gPublishSiteData[selectedSiteIndex].browseUrl : "";
+  gDialog.UsernameInput.value = haveData ? gPublishSiteData[selectedSiteIndex].username : "";
 
   gDialog.SiteList.selectedIndex = selectedSiteIndex;
-  gDialog.SiteNameInput.value   = siteName;
-  gDialog.PublishUrlInput.value = publishUrl;
-  gDialog.BrowseUrlInput.value  = browseUrl;
-  gDialog.UserNameInput.value   = username;
 
   gSettingsChanged = false;
 }
 
 function onInputSettings()
 {
-dump(" * onInputSettings\n");
   // TODO: Save current data during SelectSite1 and compare here
   //       to detect if real change has occurred?
   gSettingsChanged = true;
@@ -219,7 +207,7 @@ function UpdateSettings()
     ShowInputErrorMessage(GetString("MissingSiteNameError"), gDialog.SiteNameInput);
     return false;
   }
-  var newUrl = TrimString(gDialog.PublishUrlInput.value);
+  var newUrl = FormatUrlForPublishing(gDialog.PublishUrlInput.value);
   if (!newUrl)
   {
     ShowInputErrorMessage(GetString("MissingPublishUrlError"), gDialog.PublishUrlInput);
@@ -246,18 +234,18 @@ dump(" * Create new gPublishSiteData\n");
   }
 dump(" * UpdateSettings: NEW DATA AT index="+siteIndex+", gPublishSiteData.length="+gPublishSiteData.length+"\n");
 
-  gPublishSiteData[siteIndex] = new Array(gSiteDataLength);
-  gPublishSiteData[siteIndex][gNameIndex] = newName;
-  gPublishSiteData[siteIndex][gUrlIndex] = newUrl;
-  gPublishSiteData[siteIndex][gBrowseIndex] = TrimString(gDialog.BrowseUrlInput.value);
-  gPublishSiteData[siteIndex][gUserNameIndex] = TrimString(gDialog.UserNameInput.value);
+  gPublishSiteData[siteIndex] = {};
+  gPublishSiteData[siteIndex].siteName = newName;
+  gPublishSiteData[siteIndex].publishUrl = newUrl;
+  gPublishSiteData[siteIndex].browseUrl = FormatUrlForPublishing(gDialog.BrowseUrlInput.value);
+  gPublishSiteData[siteIndex].username = TrimString(gDialog.UsernameInput.value);
 
   if (siteIndex == gDefaultSiteIndex)
     gDefaultSiteName = newName;
 
 dump("  Default SiteName = "+gDefaultSiteName+", Index="+gDefaultSiteIndex+"\n");
 
-dump("New Site Array: data="+gPublishSiteData[siteIndex][gNameIndex]+","+gPublishSiteData[siteIndex][gUrlIndex]+","+gPublishSiteData[siteIndex][gBrowseIndex]+","+gPublishSiteData[siteIndex][gUserNameIndex]+"\n");
+dump("New Site Array: data="+gPublishSiteData[siteIndex].siteName+","+gPublishSiteData[siteIndex].publishUrl+","+gPublishSiteData[siteIndex].browseUrl+","+gPublishSiteData[siteIndex].username+"\n");
 
   var count = gPublishSiteData.length;
   if (count > 1)
@@ -268,9 +256,9 @@ dump("New Site Array: data="+gPublishSiteData[siteIndex][gNameIndex]+","+gPublis
     //Find previous items in sorted list
     for (var i = 0; i < count; i++)
     {
-  dump(" Name #"+i+" = "+gPublishSiteData[i][gNameIndex]+"\n");
+  dump(" Name #"+i+" = "+gPublishSiteData[i].siteName+"\n");
 
-      if (gPublishSiteData[i][gNameIndex] == newName)
+      if (gPublishSiteData[i].siteName == newName)
       {
         siteIndex = i;
         break;
@@ -281,7 +269,7 @@ dump("New Site Array: data="+gPublishSiteData[siteIndex][gNameIndex]+","+gPublis
   // When adding the very first site, assume that's the default
   if (count == 1 && !gDefaultSiteName)
   {
-    gDefaultSiteName = gPublishSiteData[0][gNameIndex];
+    gDefaultSiteName = gPublishSiteData[0].siteName;
     gDefaultSiteIndex = 0;
   }
 
