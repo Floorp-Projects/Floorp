@@ -511,7 +511,7 @@ NS_IMETHODIMP nsImapMailFolder::GetMessages(nsIEnumerator* *result)
     else
     {
         rv = GetDatabase();
-        
+
         if(NS_SUCCEEDED(rv))
         {
             nsIEnumerator *msgHdrEnumerator = nsnull;
@@ -526,9 +526,10 @@ NS_IMETHODIMP nsImapMailFolder::GetMessages(nsIEnumerator* *result)
         }
         else
             return rv;
-
-        rv = imapService->SelectFolder(m_eventQueue, this, this, nsnull);
     }
+
+    if (NS_SUCCEEDED(rv))
+        rv = imapService->SelectFolder(m_eventQueue, this, this, nsnull);
 
     m_urlRunning = PR_TRUE;
     nsServiceManager::ReleaseService(kCImapService, imapService);
@@ -904,7 +905,7 @@ NS_IMETHODIMP nsImapMailFolder::PossibleImapMailbox(
     {
         nsIMsgFolder *child = nsnull;
         nsAutoString folderName = aSpec->allocatedPathName;
-        AddSubfolder(folderName, &child);
+        rv = AddSubfolder(folderName, &child);
         NS_IF_RELEASE(child);
     }
     aEnumerator->Release();
@@ -984,6 +985,12 @@ NS_IMETHODIMP nsImapMailFolder::UpdateImapMailboxInfo(
 			// Create a new summary file, update the folder message counts, and
 			// Close the summary file db.
 			rv = mailDBFactory->Open(dbName, PR_TRUE, &m_mailDatabase, PR_FALSE);
+
+			// ********** Important *************
+			// David, help me here I don't know this is right or wrong
+			if (rv == NS_MSG_ERROR_FOLDER_SUMMARY_MISSING)
+					rv = NS_OK;
+
 			if (NS_FAILED(rv) && m_mailDatabase)
 			{
 				m_mailDatabase->ForceClosed();
@@ -1130,6 +1137,9 @@ NS_IMETHODIMP nsImapMailFolder::SetupHeaderParseStream(
     nsIImapProtocol* aProtocol, StreamInfo* aStreamInfo)
 {
     nsresult rv = NS_ERROR_FAILURE;
+
+	if (!m_mailDatabase)
+		GetDatabase();
 
 	m_nextMessageByteLength = aStreamInfo->size;
 	if (!m_msgParser)
