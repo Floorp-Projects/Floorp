@@ -44,7 +44,6 @@ nsBlockReflowContext::nsBlockReflowContext(nsIPresContext& aPresContext,
     mOuterReflowState(aParentRS),
     mMetrics(aComputeMaxElementSize ? &mMaxElementSize : nsnull)
 {
-  mCompactMarginWidth = 0;
   mStyleSpacing = nsnull;
 #ifdef DEBUG
   mIndent = 0;
@@ -159,7 +158,6 @@ nsBlockReflowContext::ReflowBlock(nsIFrame* aFrame,
                                 availSpace, reason);
   aComputedOffsets = reflowState.computedOffsets;
   reflowState.lineLayout = nsnull;
-  reflowState.mCompactMarginWidth = mCompactMarginWidth;
   if (!aIsAdjacentWithTop) {
     reflowState.isTopOfPage = PR_FALSE;  // make sure this is cleared
   }
@@ -410,7 +408,7 @@ nsBlockReflowContext::PlaceBlock(PRBool aForceFit,
       // Collapse the bottom margin with the top margin that was already
       // applied.
       nscoord newBottomMargin = MaxMargin(collapsedBottomMargin, mTopMargin);
-      *aBottomMarginResult = collapsedBottomMargin;
+      *aBottomMarginResult = newBottomMargin;
     }
 
     // Empty blocks do not have anything special done to them and they
