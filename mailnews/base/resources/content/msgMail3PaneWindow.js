@@ -24,9 +24,11 @@
 var showPerformance = false;
 var msgNavigationService;
 
-var gFolderTree;
+var gFolderTree; 
 var gThreadTree;
 var gMessagePane;
+var gMessagePaneFrame;
+
 var gThreadAndMessagePaneSplitter = null;
 var gUnreadCount = null;
 var gTotalCount = null;
@@ -182,7 +184,7 @@ function HandleDeleteOrMoveMsgFailed(folder)
     gBatching = false;
     var threadTree = GetThreadTree();
     //threadTree.treeBoxObject.endBatch();
-    dump("XXX end tree batch (delete or move failed)\n");
+    //dump("XXX end tree batch (delete or move failed)\n");
   }
 
   ThreadPaneSelectionChange(true);
@@ -218,7 +220,7 @@ function HandleDeleteOrMoveMsgCompleted(folder)
     if (gBatching) {
       gBatching = false;
       //threadTree.treeBoxObject.endBatch();
-      dump("XXX end tree batch (delete or move succeeded)\n");
+      //dump("XXX end tree batch (delete or move succeeded)\n");
     }
 
     ThreadPaneSelectionChange(true);
@@ -595,6 +597,13 @@ function GetMessagePane()
     if (gMessagePane) return gMessagePane;
     gMessagePane = document.getElementById("messagepanebox");
     return gMessagePane;
+}
+
+function GetMessagePaneFrame()
+{
+    if (gMessagePaneFrame) return gMessagePaneFrame;
+    gMessagePaneFrame = top.frames['messagepane'];
+    return gMessagePaneFrame;
 }
 
 function FindInSidebar(currentWindow, id)
@@ -975,7 +984,7 @@ function SetNextMessageAfterDelete()
    if (!gBatching && (GetNumSelectedMessages() > 3)) {
      gBatching = true;
      //tree.treeBoxObject.beginBatch();
-     dump("XXX begin tree batch\n");
+     //dump("XXX begin tree batch\n");
    }
 }
 

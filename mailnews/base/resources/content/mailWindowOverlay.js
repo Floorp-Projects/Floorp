@@ -305,7 +305,7 @@ function MsgDeleteMessage(reallyDelete, fromToolbar)
             return;
         }
     }
-    dump("tree is valid\n");
+    //dump("tree is valid\n");
     //get the selected elements
 
     var compositeDataSource = GetCompositeDataSource("DeleteMessages");

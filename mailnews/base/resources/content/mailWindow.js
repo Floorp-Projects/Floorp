@@ -428,7 +428,7 @@ function loadStartPage() {
 			var startpage = pref.getLocalizedUnicharPref("mailnews.start_page.url");
             if (startpage != "") {
                 window.frames["messagepane"].location = startpage;
-                dump("start message pane with: " + startpage + "\n");
+                //dump("start message pane with: " + startpage + "\n");
 				ClearMessageSelection();
             }
         }

@@ -976,7 +976,7 @@ function SetTemplateTreeItemOpen(open)
 
 function SwitchPaneFocus(direction)
 {
-        var gray_vertical_splitter = document.getElementById("gray_vertical_splitter");
+        var gray_vertical_splitter = document.getElementById("gray_vertical_splitter"); 
         var focusedElement = document.commandDispatcher.focusedElement;
         var focusedElementId;
         if (direction == "counter-clockwise")
@@ -1072,19 +1072,22 @@ function SwitchPaneFocus(direction)
 
 function SetFocusFolderPane()
 {
-	document.getElementById("folderTree").focus();
+    var folderTree = GetFolderTree();
+    folderTree.focus();
 	return;
 }
 
 function SetFocusThreadPane()
 {
-	document.getElementById("threadTree").focus();
+    var threadTree = GetThreadTree();
+    threadTree.focus();
 	return;
 }
 
 function SetFocusMessagePane()
 {
-	top.frames['messagepane'].focus();
+	var messagePaneFrame = GetMessagePaneFrame();
+    messagePaneFrame.focus();
 	return;
 }
 
