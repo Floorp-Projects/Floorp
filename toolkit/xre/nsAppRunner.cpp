@@ -1456,6 +1456,11 @@ public:
 };
 #endif
 
+#ifdef MOZ_WIDGET_GTK2
+#include "prlink.h"
+typedef void (*_g_set_application_name_fn)(const gchar *application_name);
+#endif
+
 int xre_main(int argc, char* argv[], const nsXREAppData* aAppData)
 {
   nsresult rv;
@@ -1597,6 +1602,19 @@ int xre_main(int argc, char* argv[], const nsXREAppData* aAppData)
   gtk_set_locale();
 #endif
   gtk_init(&gArgc, &gArgv);
+
+#if defined(MOZ_WIDGET_GTK2)
+  // g_set_application_name () is only defined in glib2.2 and higher.
+  PRLibrary *glib2;
+  _g_set_application_name_fn _g_set_application_name =
+      (_g_set_application_name_fn)PR_FindFunctionSymbolAndLibrary("g_set_application_name", &glib2);
+  if (_g_set_application_name) {
+    _g_set_application_name(gAppData->appName);
+  }
+  if (glib2) {
+    PR_UnloadLibrary(glib2);
+  }
+#endif
 
   gtk_widget_set_default_visual(gdk_rgb_get_visual());
   gtk_widget_set_default_colormap(gdk_rgb_get_cmap());
