@@ -28,7 +28,7 @@
   It is designed to be used as inline input to nsCSSProps.cpp *only*
   through the magic of C preprocessing.
 
-  All entires must be enclosed in the macro CSS_PROP which will have cruel
+  All entries must be enclosed in the macro CSS_PROP which will have cruel
   and unusual things done to it
 
   It is recommended (but not strictly necessary) to keep all entries
@@ -36,18 +36,29 @@
 
   Requirements:
 
-  Entries are in the form: (name,id,impact). 'id' must always be the same as 
+  Entries are in the form: (name,id,effect). 'id' must always be the same as 
   'name' except that all hyphens ('-') in 'name' are converted to underscores 
   ('_') in 'id'. This lets us do nice things with the macros without having to 
   copy/convert strings at runtime. 
   
   'name' entries *must* use only lowercase characters.
 
-  ** Break these invarient and bad things will happen. **    
+  ** Break these invariants and bad things will happen. **    
   
-  The third argument is the style impact resultant in a change to the property
+  The third argument says what needs to be recomputed when the property
+  changes.
  ******/
 
+// For notes XXX bug 3935 below, the names being parsed do not correspond
+// to the constants used internally.  It would be nice to bring the
+// constants into line sometime.
+
+// The parser will refuse to parse properties marked with -x-.
+
+// Those marked XXX bug 48973 are CSS2 properties that we support
+// differently from the spec for UI requirements.  If we ever
+// support them correctly the old constants need to be renamed and
+// new ones should be entered.
 
 CSS_PROP(-moz-border-radius, _moz_border_radius, VISUAL)
 CSS_PROP(-moz-border-radius-topleft, _moz_border_radius_topLeft, VISUAL)
@@ -66,9 +77,9 @@ CSS_PROP(background-color, background_color, VISUAL)
 CSS_PROP(background-image, background_image, VISUAL)
 CSS_PROP(background-position, background_position, VISUAL)
 CSS_PROP(background-repeat, background_repeat, VISUAL)
-CSS_PROP(background-x-position, background_x_position, VISUAL)
-CSS_PROP(background-y-position, background_y_position, VISUAL)
-CSS_PROP(behavior, behavior, REFLOW)
+CSS_PROP(-x-background-x-position, background_x_position, VISUAL) // XXX bug 3935
+CSS_PROP(-x-background-y-position, background_y_position, VISUAL) // XXX bug 3935
+CSS_PROP(-moz-binding, behavior, REFLOW) // XXX bug 3935
 CSS_PROP(border, border, REFLOW)
 CSS_PROP(border-bottom, border_bottom, REFLOW)
 CSS_PROP(border-bottom-color, border_bottom_color, VISUAL)
@@ -91,17 +102,17 @@ CSS_PROP(border-top-color, border_top_color, VISUAL)
 CSS_PROP(border-top-style, border_top_style, REFLOW)  // on/off will need reflow
 CSS_PROP(border-top-width, border_top_width, REFLOW)
 CSS_PROP(border-width, border_width, REFLOW)
-CSS_PROP(border-x-spacing, border_x_spacing, REFLOW)
-CSS_PROP(border-y-spacing, border_y_spacing, REFLOW)
+CSS_PROP(-x-border-x-spacing, border_x_spacing, REFLOW) // XXX bug 3935
+CSS_PROP(-x-border-y-spacing, border_y_spacing, REFLOW) // XXX bug 3935
 CSS_PROP(bottom, bottom, REFLOW)
-CSS_PROP(box-sizing, box_sizing, REFLOW)
+CSS_PROP(-moz-box-sizing, box_sizing, REFLOW) // XXX bug 3935
 CSS_PROP(caption-side, caption_side, REFLOW)
 CSS_PROP(clear, clear, REFLOW)
 CSS_PROP(clip, clip, VISUAL)
-CSS_PROP(clip-bottom, clip_bottom, VISUAL)
-CSS_PROP(clip-left, clip_left, VISUAL)
-CSS_PROP(clip-right, clip_right, VISUAL)
-CSS_PROP(clip-top, clip_top, VISUAL)
+CSS_PROP(-x-clip-bottom, clip_bottom, VISUAL) // XXX bug 3935
+CSS_PROP(-x-clip-left, clip_left, VISUAL) // XXX bug 3935
+CSS_PROP(-x-clip-right, clip_right, VISUAL) // XXX bug 3935
+CSS_PROP(-x-clip-top, clip_top, VISUAL) // XXX bug 3935
 CSS_PROP(color, color, VISUAL)
 CSS_PROP(content, content, FRAMECHANGE)
 CSS_PROP(counter-increment, counter_increment, REFLOW)
@@ -115,7 +126,7 @@ CSS_PROP(display, display, FRAMECHANGE)
 CSS_PROP(elevation, elevation, AURAL)
 CSS_PROP(empty-cells, empty_cells, VISUAL)
 CSS_PROP(float, float, FRAMECHANGE)
-CSS_PROP(float-edge, float_edge, REFLOW)
+CSS_PROP(-moz-float-edge, float_edge, REFLOW) // XXX bug 3935
 CSS_PROP(font, font, REFLOW)
 CSS_PROP(font-family, font_family, REFLOW)
 CSS_PROP(font-size, font_size, REFLOW)
@@ -125,7 +136,7 @@ CSS_PROP(font-style, font_style, REFLOW)
 CSS_PROP(font-variant, font_variant, REFLOW)
 CSS_PROP(font-weight, font_weight, REFLOW)
 CSS_PROP(height, height, REFLOW)
-CSS_PROP(key-equivalent, key_equivalent, CONTENT) // This will need some other notification, but what?
+CSS_PROP(-moz-key-equivalent, key_equivalent, CONTENT) // This will need some other notification, but what? // XXX bug 3935
 CSS_PROP(left, left, REFLOW)
 CSS_PROP(letter-spacing, letter_spacing, REFLOW)
 CSS_PROP(line-height, line_height, REFLOW)
@@ -144,12 +155,12 @@ CSS_PROP(max-height, max_height, REFLOW)
 CSS_PROP(max-width, max_width, REFLOW)
 CSS_PROP(min-height, min_height, REFLOW)
 CSS_PROP(min-width, min_width, REFLOW)
-CSS_PROP(opacity, opacity, VISUAL)
+CSS_PROP(-moz-opacity, opacity, VISUAL) // XXX bug 3935
 CSS_PROP(orphans, orphans, REFLOW)
-CSS_PROP(-moz-outline, outline, VISUAL)  // XXX This is temporary fix for nsbeta3+ Bug 48973, turning outline into mozoutline
-CSS_PROP(outline-color, outline_color, VISUAL)
-CSS_PROP(outline-style, outline_style, VISUAL)
-CSS_PROP(outline-width, outline_width, VISUAL)
+CSS_PROP(-moz-outline, outline, VISUAL)  // XXX This is temporary fix for nsbeta3+ Bug 48973, turning outline into -moz-outline  XXX bug 48973
+CSS_PROP(-moz-outline-color, outline_color, VISUAL) // XXX bug 48973
+CSS_PROP(-moz-outline-style, outline_style, VISUAL) // XXX bug 48973
+CSS_PROP(-moz-outline-width, outline_width, VISUAL) // XXX bug 48973
 CSS_PROP(overflow, overflow, FRAMECHANGE)
 CSS_PROP(padding, padding, REFLOW)
 CSS_PROP(padding-bottom, padding_bottom, REFLOW)
@@ -166,17 +177,17 @@ CSS_PROP(pause-before, pause_before, AURAL)
 CSS_PROP(pitch, pitch, AURAL)
 CSS_PROP(pitch-range, pitch_range, AURAL)
 CSS_PROP(play-during, play_during, AURAL)
-CSS_PROP(play-during-flags, play_during_flags, AURAL)
+CSS_PROP(-x-play-during-flags, play_during_flags, AURAL) // XXX why is this here?
 CSS_PROP(position, position, FRAMECHANGE)
 CSS_PROP(quotes, quotes, REFLOW)
-CSS_PROP(quotes-close, quotes_close, REFLOW)
-CSS_PROP(quotes-open, quotes_open, REFLOW)
-CSS_PROP(resizer, resizer, FRAMECHANGE)
+CSS_PROP(-x-quotes-close, quotes_close, REFLOW) // XXX bug 3935
+CSS_PROP(-x-quotes-open, quotes_open, REFLOW) // XXX bug 3935
+CSS_PROP(-moz-resizer, resizer, FRAMECHANGE) // XXX bug 3935
 CSS_PROP(richness, richness, AURAL)
 CSS_PROP(right, right, REFLOW)
 CSS_PROP(size, size, REFLOW)
-CSS_PROP(size-height, size_height, REFLOW)
-CSS_PROP(size-width, size_width, REFLOW)
+CSS_PROP(-x-size-height, size_height, REFLOW) // XXX bug 3935
+CSS_PROP(-x-size-width, size_width, REFLOW) // XXX bug 3935
 CSS_PROP(speak, speak, AURAL)
 CSS_PROP(speak-header, speak_header, AURAL)
 CSS_PROP(speak-numeral, speak_numeral, AURAL)
@@ -188,17 +199,17 @@ CSS_PROP(text-align, text_align, REFLOW)
 CSS_PROP(text-decoration, text_decoration, VISUAL)
 CSS_PROP(text-indent, text_indent, REFLOW)
 CSS_PROP(text-shadow, text_shadow, VISUAL)
-CSS_PROP(text-shadow-color, text_shadow_color, VISUAL)
-CSS_PROP(text-shadow-radius, text_shadow_radius, VISUAL)
-CSS_PROP(text-shadow-x, text_shadow_x, VISUAL)
-CSS_PROP(text-shadow-y, text_shadow_y, VISUAL)
+CSS_PROP(-x-text-shadow-color, text_shadow_color, VISUAL) // XXX bug 3935
+CSS_PROP(-x-text-shadow-radius, text_shadow_radius, VISUAL) // XXX bug 3935
+CSS_PROP(-x-text-shadow-x, text_shadow_x, VISUAL) // XXX bug 3935
+CSS_PROP(-x-text-shadow-y, text_shadow_y, VISUAL) // XXX bug 3935
 CSS_PROP(text-transform, text_transform, REFLOW)
 CSS_PROP(top, top, REFLOW)
 CSS_PROP(unicode-bidi, unicode_bidi, REFLOW)
-CSS_PROP(user-focus, user_focus, CONTENT)
-CSS_PROP(user-input, user_input, FRAMECHANGE) // XXX ???
-CSS_PROP(user-modify, user_modify, FRAMECHANGE)
-CSS_PROP(user-select, user_select, CONTENT)
+CSS_PROP(-moz-user-focus, user_focus, CONTENT) // XXX bug 3935
+CSS_PROP(-moz-user-input, user_input, FRAMECHANGE) // XXX ??? // XXX bug 3935
+CSS_PROP(-moz-user-modify, user_modify, FRAMECHANGE) // XXX bug 3935
+CSS_PROP(-moz-user-select, user_select, CONTENT) // XXX bug 3935
 CSS_PROP(vertical-align, vertical_align, REFLOW)
 CSS_PROP(visibility, visibility, REFLOW)  // reflow for collapse
 CSS_PROP(voice-family, voice_family, AURAL)
