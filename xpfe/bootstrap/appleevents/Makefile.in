@@ -68,7 +68,7 @@ CPPSRCS		= \
     nsAEWindowClass.cpp \
     nsMacUtils.cpp \
     nsWindowUtils.cpp \
-    ../nsDocLoadObserver.cpp \
+    nsDocLoadObserver.cpp \
     $(NULL)
 
 
@@ -99,6 +99,12 @@ $(RSRC_DEST): $(SDEF_SRC)
 
 libs:: $(RSRC_DEST)
 
-GARBAGE += $(RES_DEST) $(RSRC_DEST)
+# workaround gcc -MD dependency issue by copying source to local dir
+export:: $(srcdir)/../nsDocLoadObserver.cpp
+	$(INSTALL) $< .
+
+GARBAGE += $(RES_DEST) $(RSRC_DEST) \
+	../nsDocLoadObserver.$(OBJ_SUFFIX) nsDocLoadObserver.cpp \
+	$(NULL)
 
 OS_CXXFLAGS += -fexceptions
