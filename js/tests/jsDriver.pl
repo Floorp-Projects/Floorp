@@ -899,7 +899,7 @@ sub expand_user_test_list {
             s/\r*\n*$//;
             if (!(/\s*\#/)) {
                 # It's not a comment, so process it
-                push (@retval, &expand_test_list_entry(&xp_path($_)));
+                push (@retval, &expand_test_list_entry($_));
             }
         }
 
@@ -936,8 +936,8 @@ sub expand_test_list_entry {
         my $i;
 
         foreach $i (0 .. $#test_files) {
-            $test_files[$i] = &xp_path($suite_and_test_dir . "/" .
-                                       $test_files[$i]);
+            $test_files[$i] = $suite_and_test_dir . $path_sep .
+              $test_files[$i];
         }
 
         splice (@retval, $#retval + 1, 0, @test_files);
