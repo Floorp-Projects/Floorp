@@ -42,6 +42,7 @@ public:
 
 protected:
     nsIRDFDataSource* mDataSource;
+    PRBool mStarted;
 };
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -131,15 +132,12 @@ public:
     // nsRDFArrayArcsCursor methods:
     nsRDFArrayArcsCursor(nsIRDFDataSource* aDataSource,
                          nsIRDFNode* node,
-                         nsIRDFResource* predicate,
                          nsISupportsArray* arcs);
     virtual ~nsRDFArrayArcsCursor();
 
 protected:
     nsresult GetPredicate(nsIRDFResource** aPredicate) {
-        *aPredicate = mPredicate;
-        NS_ADDREF(mPredicate);
-        return NS_OK;
+        return GetValue((nsIRDFNode**)aPredicate);
     }
 
     nsresult GetNode(nsIRDFNode* *result) {
@@ -149,7 +147,6 @@ protected:
     }
     
     nsIRDFNode* mNode;
-    nsIRDFResource* mPredicate;
 };
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -182,10 +179,8 @@ public:
     // nsRDFArrayArcsOutCursor methods:
     nsRDFArrayArcsOutCursor(nsIRDFDataSource* aDataSource,
                             nsIRDFResource* subject,
-                            nsIRDFResource* predicate,
                             nsISupportsArray* arcs)
-        : nsRDFArrayArcsCursor(aDataSource, subject,
-                               predicate, arcs) {}
+        : nsRDFArrayArcsCursor(aDataSource, subject, arcs) {}
     virtual ~nsRDFArrayArcsOutCursor() {}
 };
 
@@ -219,10 +214,8 @@ public:
     // nsRDFArrayArcsInCursor methods:
     nsRDFArrayArcsInCursor(nsIRDFDataSource* aDataSource,
                             nsIRDFNode* object,
-                            nsIRDFResource* predicate,
                             nsISupportsArray* arcs)
-        : nsRDFArrayArcsCursor(aDataSource, object,
-                               predicate, arcs) {}
+        : nsRDFArrayArcsCursor(aDataSource, object, arcs) {}
     virtual ~nsRDFArrayArcsInCursor() {}
 };
 
@@ -246,6 +239,7 @@ public:
 protected:
     nsIRDFDataSource* mDataSource;
     nsIEnumerator* mEnum;
+    PRBool mStarted;
 };
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -295,15 +289,12 @@ public:
     // nsRDFEnumeratorArcsOutCursor methods:
     nsRDFEnumeratorArcsCursor(nsIRDFDataSource* aDataSource,
                               nsIRDFNode* node,
-                              nsIRDFResource* predicate,
                               nsIEnumerator* arcs);
     virtual ~nsRDFEnumeratorArcsCursor();
 
 protected:
     nsresult GetPredicate(nsIRDFResource** aPredicate) {
-        *aPredicate = mPredicate;
-        NS_ADDREF(mPredicate);
-        return NS_OK;
+        return GetValue((nsIRDFNode**)aPredicate);
     }
 
     nsresult GetNode(nsIRDFNode* *result) {
@@ -313,7 +304,6 @@ protected:
     }
     
     nsIRDFNode* mNode;
-    nsIRDFResource* mPredicate;
 };
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -346,10 +336,8 @@ public:
     // nsRDFEnumeratorArcsOutCursor methods:
     nsRDFEnumeratorArcsOutCursor(nsIRDFDataSource* aDataSource,
                                  nsIRDFResource* subject,
-                                 nsIRDFResource* predicate,
                                  nsIEnumerator* arcs)
-        : nsRDFEnumeratorArcsCursor(aDataSource, subject,
-                                    predicate, arcs) {}
+        : nsRDFEnumeratorArcsCursor(aDataSource, subject, arcs) {}
     virtual ~nsRDFEnumeratorArcsOutCursor() {}
 };
 
@@ -383,10 +371,8 @@ public:
     // nsRDFEnumeratorArcsInCursor methods:
     nsRDFEnumeratorArcsInCursor(nsIRDFDataSource* aDataSource,
                                 nsIRDFNode* object,
-                                nsIRDFResource* predicate,
                                 nsIEnumerator* arcs)
-        : nsRDFEnumeratorArcsCursor(aDataSource, object,
-                                    predicate, arcs) {}
+        : nsRDFEnumeratorArcsCursor(aDataSource, object, arcs) {}
     virtual ~nsRDFEnumeratorArcsInCursor() {}
 };
 

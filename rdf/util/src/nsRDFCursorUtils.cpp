@@ -22,7 +22,8 @@
 
 nsRDFArrayCursor::nsRDFArrayCursor(nsIRDFDataSource* aDataSource,
                                    nsISupportsArray* valueArray)
-    : nsSupportsArrayEnumerator(valueArray), mDataSource(aDataSource)
+    : nsSupportsArrayEnumerator(valueArray), mDataSource(aDataSource),
+      mStarted(PR_FALSE)
 {
     NS_IF_ADDREF(mDataSource);
 }
@@ -38,9 +39,13 @@ NS_IMPL_ISUPPORTS_INHERITED(nsRDFArrayCursor,
 
 NS_IMETHODIMP nsRDFArrayCursor::Advance(void)
 { 
-    nsresult rv = Next();
-    if (NS_SUCCEEDED(rv)) return rv;
-    return NS_ERROR_RDF_CURSOR_EMPTY;
+    if (mStarted) {
+        nsresult rv = Next();
+        if (NS_SUCCEEDED(rv)) return rv;
+        return NS_ERROR_RDF_CURSOR_EMPTY;
+    }
+    mStarted = PR_TRUE;
+    return IsDone() == NS_OK ? NS_ERROR_RDF_CURSOR_EMPTY : NS_OK;
 }
 
 NS_IMETHODIMP nsRDFArrayCursor::GetDataSource(nsIRDFDataSource** aDataSource)
@@ -115,6 +120,7 @@ nsRDFSingletonAssertionCursor::nsRDFSingletonAssertionCursor(nsIRDFDataSource* a
     : mDataSource(aDataSource), mNode(node), mPredicate(predicate),
       mValue(nsnull), mInverse(inverse), mTruthValue(truthValue), mConsumed(PR_FALSE)
 {
+    NS_INIT_REFCNT();
     NS_ADDREF(mDataSource);
     NS_ADDREF(mNode);
     NS_ADDREF(mPredicate);
@@ -149,8 +155,11 @@ nsRDFSingletonAssertionCursor::QueryInterface(REFNSIID iid, void** result)
 
 NS_IMETHODIMP nsRDFSingletonAssertionCursor::Advance(void)
 {
-    mConsumed = PR_TRUE;    
-    return NS_ERROR_RDF_CURSOR_EMPTY;
+    if (!mConsumed) {
+        mConsumed = PR_TRUE;    
+        return NS_ERROR_RDF_CURSOR_EMPTY;
+    }
+    return NS_OK;
 }
 
 NS_IMETHODIMP nsRDFSingletonAssertionCursor::GetDataSource(nsIRDFDataSource** aDataSource)
@@ -225,18 +234,15 @@ NS_IMETHODIMP nsRDFSingletonAssertionCursor::GetTruthValue(PRBool *aTruthValue)
 
 nsRDFArrayArcsCursor::nsRDFArrayArcsCursor(nsIRDFDataSource* aDataSource,
                                            nsIRDFNode* node,
-                                           nsIRDFResource* predicate,
                                            nsISupportsArray* arcs)
-    : nsRDFArrayCursor(aDataSource, arcs), mNode(node), mPredicate(predicate)
+    : nsRDFArrayCursor(aDataSource, arcs), mNode(node)
 {
     NS_ADDREF(mNode);
-    NS_ADDREF(mPredicate);
 }
 
 nsRDFArrayArcsCursor::~nsRDFArrayArcsCursor()
 {
     NS_RELEASE(mNode);
-    NS_RELEASE(mPredicate);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -255,8 +261,9 @@ NS_IMPL_ISUPPORTS_INHERITED(nsRDFArrayArcsInCursor,
 
 nsRDFEnumeratorCursor::nsRDFEnumeratorCursor(nsIRDFDataSource* aDataSource,
                                              nsIEnumerator* valueEnumerator)
-    : mDataSource(aDataSource), mEnum(valueEnumerator)
+    : mDataSource(aDataSource), mEnum(valueEnumerator), mStarted(PR_FALSE)
 {
+    NS_INIT_REFCNT();
     NS_IF_ADDREF(mEnum);
     NS_IF_ADDREF(mDataSource);
 }
@@ -287,9 +294,13 @@ nsRDFEnumeratorCursor::QueryInterface(REFNSIID iid, void** result)
 
 NS_IMETHODIMP nsRDFEnumeratorCursor::Advance(void)
 { 
-    nsresult rv = mEnum->Next();
-    if (NS_SUCCEEDED(rv)) return rv;
-    return NS_ERROR_RDF_CURSOR_EMPTY;
+    if (mStarted) {
+        nsresult rv = mEnum->Next();
+        if (NS_SUCCEEDED(rv)) return rv;
+        return NS_ERROR_RDF_CURSOR_EMPTY;
+    }
+    mStarted = PR_TRUE;
+    return mEnum->IsDone() == NS_OK ? NS_ERROR_RDF_CURSOR_EMPTY : NS_OK;
 }
 
 NS_IMETHODIMP nsRDFEnumeratorCursor::GetDataSource(nsIRDFDataSource** aDataSource)
@@ -358,18 +369,15 @@ NS_IMETHODIMP nsRDFEnumeratorAssertionCursor::GetTruthValue(PRBool *aTruthValue)
 
 nsRDFEnumeratorArcsCursor::nsRDFEnumeratorArcsCursor(nsIRDFDataSource* aDataSource,
                                                      nsIRDFNode* node,
-                                                     nsIRDFResource* predicate,
                                                      nsIEnumerator* arcs)
-    : nsRDFEnumeratorCursor(aDataSource, arcs), mNode(node), mPredicate(predicate)
+    : nsRDFEnumeratorCursor(aDataSource, arcs), mNode(node)
 {
     NS_ADDREF(mNode);
-    NS_ADDREF(mPredicate);
 }
 
 nsRDFEnumeratorArcsCursor::~nsRDFEnumeratorArcsCursor()
 {
     NS_RELEASE(mNode);
-    NS_RELEASE(mPredicate);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
