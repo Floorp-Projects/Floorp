@@ -29,41 +29,6 @@ nsPageFrame::nsPageFrame(nsIContent* aContent, nsIFrame* aParent)
 {
 }
 
-void nsPageFrame::CreateFirstChild(nsIPresContext* aPresContext)
-{
-  // XXX this is a copy of the root-content-frame's version
-
-  // Create a frame for the body child
-  PRInt32 i, n;
-  mContent->ChildCount(n);
-  for (i = 0; i < n; i++) {
-    nsIContent* child;
-    mContent->ChildAt(i, child);
-    if (nsnull != child) {
-      nsIAtom* tag;
-      child->GetTag(tag);
-      // XXX added frameset check, is it necessary, what is a page frame anyway
-      if ((nsHTMLAtoms::body == tag) || (nsHTMLAtoms::frameset == tag)) {
-        // XXX CONSTRUCTION
-#if 0
-        // Create a frame
-        nsIContentDelegate* cd = child->GetDelegate(aPresContext);
-        if (nsnull != cd) {
-          nsIStyleContext* kidStyleContext =
-            aPresContext->ResolveStyleContextFor(child, mStyleContext);
-          nsresult rv = cd->CreateFrame(aPresContext, child, this,
-                                        kidStyleContext, mFirstChild);
-          NS_RELEASE(kidStyleContext);
-          NS_RELEASE(cd);
-        }
-#endif
-      }
-      NS_IF_RELEASE(tag);
-      NS_RELEASE(child);
-    }
-  }
-}
-
 NS_METHOD nsPageFrame::Reflow(nsIPresContext&          aPresContext,
                               nsHTMLReflowMetrics&     aDesiredSize,
                               const nsHTMLReflowState& aReflowState,
@@ -106,24 +71,20 @@ NS_METHOD nsPageFrame::Reflow(nsIPresContext&          aPresContext,
 
   } else {
     // Do we have any children?
-    if (nsnull == mFirstChild) {
-      if (nsnull == mPrevInFlow) {
-        // Create the first child frame
-        CreateFirstChild(&aPresContext);
-      } else {
-        nsPageFrame*  prevPage = (nsPageFrame*)mPrevInFlow;
-  
-        nsIFrame* prevLastChild = prevPage->LastFrame(mFirstChild);
-  
-        // Create a continuing child of the previous page's last child
-        nsIStyleContext* kidSC;
-        prevLastChild->GetStyleContext(kidSC);
-        nsresult rv = prevLastChild->CreateContinuingFrame(aPresContext, this,
-                                                           kidSC, mFirstChild);
-        NS_RELEASE(kidSC);
-      }
+    // XXX We should use the overflow list instead...
+    if ((nsnull == mFirstChild) && (nsnull != mPrevInFlow)) {
+      nsPageFrame*  prevPage = (nsPageFrame*)mPrevInFlow;
+
+      nsIFrame* prevLastChild = prevPage->LastFrame(prevPage->mFirstChild);
+
+      // Create a continuing child of the previous page's last child
+      nsIStyleContext* kidSC;
+      prevLastChild->GetStyleContext(kidSC);
+      nsresult rv = prevLastChild->CreateContinuingFrame(aPresContext, this,
+                                                         kidSC, mFirstChild);
+      NS_RELEASE(kidSC);
     }
-  
+
     // Resize our frame allowing it only to be as big as we are
     // XXX Pay attention to the page's border and padding...
     if (nsnull != mFirstChild) {
@@ -194,7 +155,15 @@ NS_METHOD nsPageFrame::Paint(nsIPresContext&      aPresContext,
 
 NS_METHOD nsPageFrame::ListTag(FILE* out) const
 {
-  fprintf(out, "*PAGE@%p", this);
+  fprintf(out, "*Page<");
+  nsIAtom* atom;
+  mContent->GetTag(atom);
+  if (nsnull != atom) {
+    nsAutoString tmp;
+    atom->ToString(tmp);
+    fputs(tmp, out);
+  }
+  fprintf(out, ">(%d)@%p", ContentIndexInContainer(this), this);
   return NS_OK;
 }
 

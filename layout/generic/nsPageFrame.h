@@ -41,9 +41,6 @@ public:
 
   // Debugging
   NS_IMETHOD  ListTag(FILE* out = stdout) const;
-
-protected:
-  void CreateFirstChild(nsIPresContext* aPresContext);
 };
 
 #endif /* nsPageFrame_h___ */
