@@ -16,7 +16,7 @@
 # Copyright (C) 1998 Netscape Communications Corporation. All
 # Rights Reserved.
 #
-# Contributor(s): 
+# Contributor(s): Jeremy Morton (jez9999@runbox.com)
 #
 
 DEPTH		= ../..
@@ -243,6 +243,9 @@ else
 ICON_DIR=$(MOZ_WIDGET_TOOLKIT)
 endif
 
+# Include icons based on widget toolkit; not all platforms need the same set.
+
+# All-platform icons
 DESKTOP_ICONS = \
 	abcardWindow \
 	addressbookWindow \
@@ -262,6 +265,20 @@ DESKTOP_ICONS = \
 	venkman-window \
 	winInspectorMain \
 	$(NULL) 
+
+ifeq (windows,$(MOZ_WIDGET_TOOLKIT))
+# Windows icons
+DESKTOP_ICONS += \
+	gif-file \
+	html-file \
+	misc-file \
+	image-file \
+	jpeg-file \
+	script-file \
+	xml-file \
+	xul-file \
+	$(NULL)
+endif
 
 ifeq ($(ICON_DIR),gtk)
 DESKTOP_ICONS_SMALL=$(patsubst %,%16,$(DESKTOP_ICONS))
