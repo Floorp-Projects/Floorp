@@ -29,7 +29,7 @@
  * the GPL.  If you do not delete the provisions above, a recipient
  * may use your version of this file under either the MPL or the
  * GPL.
- *  $Id: mpi_hp.c,v 1.2 2001/01/08 01:01:35 nelsonb%netscape.com Exp $
+ *  $Id: mpi_hp.c,v 1.3 2001/01/08 05:58:34 nelsonb%netscape.com Exp $
  */
 
 /* This file contains routines that perform vector multiplication.  */
@@ -67,11 +67,6 @@ s_mpv_sqr_add_prop(const mp_digit *pa, mp_size a_len, mp_digit *ps)
 #define MAX_STACK_DIGITS 258
 #define MULTACC512_LEN   (512 / MP_DIGIT_BIT)
 #define HP_MPY_ADD_FN    (a_len == MULTACC512_LEN ? multacc512 : maxpy_little)
-/* temporary hack XXX 
-** prime generator fails when using multacc512 so disable it for now. 
-*/
-#undef  HP_MPY_ADD_FN
-#define HP_MPY_ADD_FN    maxpy_little
 
 /* c = a * b */
 void 

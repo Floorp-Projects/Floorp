@@ -613,7 +613,16 @@ multacc512
     std     S15,64(pR)              ; save result[8]
     add,dc  zero,zero,v0            ; return carry from R8
 
-    std     v0,72(pR)               ; save final carry as result[9]
+    CMPIB,*= 0,v0,$L0               ; if no overflow, exit
+    LDO     8(pR),pR
+
+$FINAL1                             ; Final carry propagation
+    LDD     64(pR),v0
+    LDO     8(pR),pR
+    ADDI    1,v0,v0
+    CMPIB,*= 0,v0,$FINAL1           ; Keep looping if there is a carry.
+    STD     v0,56(pR)
+$L0
     bv      zero(rp)                ; -> caller
     ldo     -ST_SZ(sp),sp           ; pop stack
 
