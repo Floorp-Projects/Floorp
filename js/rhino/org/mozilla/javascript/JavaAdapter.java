@@ -87,21 +87,30 @@ public class JavaAdapter extends ScriptableObject {
                IllegalAccessException, InvocationTargetException,
                ClassNotFoundException, NoSuchFieldException
     {
-        Class superClass = Object.class;
+        Class superClass = null;
         Class[] intfs = new Class[args.length-1];
         int interfaceCount = 0;
         for (int i=0; i < args.length-1; i++) {
             if (!(args[i] instanceof NativeJavaClass)) {
-                // TODO: report error
-                throw new RuntimeException("expected java class object");
+                throw NativeGlobal.constructError(cx, "TypeError", 
+                        "expected java class object", ctorObj);
             }
             Class c = ((NativeJavaClass) args[i]).getClassObject();
             if (!c.isInterface()) {
+                if (superClass != null) {
+                    String msg = "Only one class may be extended by a " +
+                                 "JavaAdapter. Had " + superClass.getName() +
+                                 " and " + c.getName();
+                    throw NativeGlobal.constructError(cx, "TypeError", msg, 
+                                                      ctorObj);
+                }
                 superClass = c;
-                break;
             }
             intfs[interfaceCount++] = c;
         }
+        
+        if (superClass == null)
+            superClass = Object.class;
         
         Class[] interfaces = new Class[interfaceCount];
         System.arraycopy(intfs, 0, interfaces, 0, interfaceCount);
