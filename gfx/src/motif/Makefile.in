@@ -36,19 +36,23 @@ CPPSRCS		= \
 		nsImageMotif.cpp \
 		$(NULL)
 
-EXTRA_DSO_LDOPTS += -L$(DIST)/bin -lxlibrgb $(TK_LIBS)
+ifdef TOOLKIT_EXORCISM
+EXTRA_DSO_LDOPTS += -L$(DIST)/bin -lxlibrgb $(MOZ_MOTIF_LDFLAGS)
+else
+EXTRA_DSO_LDOPTS += $(TK_LIBS)
+endif
 
 include $(topsrcdir)/config/rules.mk
 
-LIBS		+= \
-		-L$(DIST)/bin \
-		-lxpcom \
-		-lraptorgfx \
-		-lmozreg \
-		$(NSPR_LIBS) \
-		$(XLDFLAGS) \
-		$(XLIBS) \
+ifdef TOOLKIT_EXORCISM
+CXXFLAGS += $(MOZ_MOTIF_CFLAGS)
+else
+CXXFLAGS += $(TK_CFLAGS)
+endif
+
+DEFINES		+= -D_IMPL_NS_GFXNONXP
+
+INCLUDES	+= \
+		-I$(srcdir)/. \
+		-I$(srcdir)/.. \
 		$(NULL)
-
-DEFINES		+= -D_IMPL_NS_GFXONXP
-

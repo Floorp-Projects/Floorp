@@ -30,12 +30,6 @@ MODULE=raptor
 
 REQUIRES=util img xpcom raptor netlib ps
 
-DEFINES += -D_IMPL_NS_GFXONXP -DUSE_MOZILLA_TYPES
-CXXFLAGS += $(TK_CFLAGS)
-INCLUDES += $(TK_CFLAGS)
-
-EXTRA_DSO_LDOPTS += -L$(DIST)/bin -lxlibrgb -L/usr/X11R6/lib -lXext -lX11
-
 CPPSRCS =\
 	nsDeviceContextSpecFactoryX.cpp \
 	nsDeviceContextSpecXlib.cpp \
@@ -48,6 +42,24 @@ CPPSRCS =\
 	nsRenderingContextXlib.cpp \
 	$(NULL)
 
+ifdef TOOLKIT_EXORCISM
+EXTRA_DSO_LDOPTS += -L$(DIST)/bin -lxlibrgb $(MOZ_XLIB_LDFLAGS)
+else
+EXTRA_DSO_LDOPTS += $(TK_LIBS)
+endif
+
 include $(topsrcdir)/config/rules.mk
 
+ifdef TOOLKIT_EXORCISM
+CXXFLAGS += $(MOZ_XLIB_CFLAGS)
+else
+CXXFLAGS += $(TK_CFLAGS)
+endif
+
+DEFINES		+= -D_IMPL_NS_GFXNONXP
+
+INCLUDES	+= \
+		-I$(srcdir)/. \
+		-I$(srcdir)/.. \
+		$(NULL)
 

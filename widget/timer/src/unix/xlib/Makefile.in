@@ -26,19 +26,17 @@ include $(topsrcdir)/config/config.mk
 
 ifdef TOOLKIT_EXORCISM
 
-LIBRARY_NAME = timer_xlib
-IS_COMPONENT=1
-REQUIRES=xpcom
-CXXFLAGS += $(TK_CFLAGS)
-INCLUDES += $(TK_CFLAGS) -I$(srcdir)/..
+LIBRARY_NAME	= timer_xlib
+IS_COMPONENT	= 1
+REQUIRES		= xpcom
+INCLUDES		+= $(MOZ_XLIB_CFLAGS) -I$(srcdir)/..
 
-CPPSRCS = \
-	nsTimerXlib.cpp \
-	nsTimerXlibFactory.cpp \
-	$(NULL)
+CPPSRCS			= \
+				nsTimerXlib.cpp \
+				nsTimerXlibFactory.cpp \
+				$(NULL)
 
-#EXTRA_DSO_LDOPTS += $(TK_LIBS)
-EXTRA_DSO_LDOPTS += -L/usr/X11R6/lib -lX11
+EXTRA_DSO_LDOPTS += $(MOZ_XLIB_LDFLAGS)
 
 else
 

@@ -37,7 +37,20 @@ endif
 DIRS = ps $(XLIB_RGB_DIRS) $(MOZ_GFX_TOOLKIT)
 
 ifdef TOOLKIT_EXORCISM
-DIRS = ps $(XLIB_RGB_DIRS) xlib gtk motif
+DIRS = ps $(XLIB_RGB_DIRS) 
+
+ifdef MOZ_ENABLE_GTK
+  DIRS += gtk
+endif
+
+ifdef MOZ_ENABLE_MOTIF
+  DIRS += motif
+endif
+
+ifdef MOZ_ENABLE_XLIB
+  DIRS += xlib
+endif
+
 else
 DIRS = ps $(XLIB_RGB_DIRS) $(MOZ_GFX_TOOLKIT)
 endif

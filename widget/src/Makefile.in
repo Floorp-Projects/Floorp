@@ -30,7 +30,21 @@ include $(DEPTH)/config/autoconf.mk
 ##  source tree.
 ##
 ifdef TOOLKIT_EXORCISM
-DIRS = xpwidgets gtk xlib motif unix_services
+DIRS = xpwidgets 
+
+ifdef MOZ_ENABLE_GTK
+  DIRS += gtk
+endif
+
+ifdef MOZ_ENABLE_MOTIF
+  DIRS += motif
+endif
+
+ifdef MOZ_ENABLE_XLIB
+  DIRS += xlib
+endif
+
+DIRS += unix_services
 else
 DIRS = xpwidgets $(MOZ_WIDGET_TOOLKIT)
 endif

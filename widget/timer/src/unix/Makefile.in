@@ -26,8 +26,17 @@ include $(topsrcdir)/config/config.mk
 
 ifdef TOOLKIT_EXORCISM
 
-DIRS = $(MOZ_WIDGET_TOOLKIT)
-DIRS = gtk motif xlib
+ifdef MOZ_ENABLE_GTK
+  DIRS += gtk
+endif
+
+ifdef MOZ_ENABLE_MOTIF
+  DIRS += motif
+endif
+
+ifdef MOZ_ENABLE_XLIB
+  DIRS += xlib
+endif
 
 LIBRARY_NAME = timer_s
 

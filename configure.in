@@ -780,9 +780,251 @@ then
   AC_SUBST(MOZ_USING_XLIBRGB)
 fi
 
+
+dnl ========================================================
+dnl =													   =
+dnl = --with-gtk										   =
+dnl = 													   =
+dnl = Gtk support hackery                                  =
+dnl = 													   =
+dnl ========================================================
+if test "$no_x" != "yes"
+then
+	AC_ARG_WITH(gtk,
+	[  --with-gtk         Enable gtk support ],
+	[
+		if test "$withval" = "yes"
+		then
+			MOZ_ENABLE_GTK=1
+    	else
+			MOZ_ENABLE_GTK=
+    	fi
+	])
+fi
+
+if test "$MOZ_ENABLE_GTK"
+then
+    AM_PATH_GTK($GTK_VERSION,,
+      AC_MSG_ERROR(Test for GTK failed.))
+
+    AC_ARG_WITH(static-gtk,
+    [  --with-static-gtk       link gtk statically if possible],
+	sysstaticgtk=$withval)
+
+    if test "$sysstaticgtk" != "yes"; then
+       MOZ_GTK_LDFLAGS=$GTK_LIBS
+    else
+       changequote(,)
+
+       GTK_LIBS_LOC=`echo $GTK_LIBS | sed 's/\(.*\)\(-lgtk.*\)/\1/'`
+
+       GTK_STATIC_LOC=`echo $GTK_LIBS | sed 's/^ *-L\([^ ]*\) .*$/\1/'`
+       GTK_STATIC=`echo $GTK_LIBS | sed 's/^.*-l\(gtk[^ ]*\) .*/\1/'`
+       GDK_STATIC=`echo $GTK_LIBS | sed 's/^.*-l\(gdk[^ ]*\) .*/\1/'`
+
+       GLIB_STATIC_LOC=`echo $GTK_LIBS | sed -e 's/^.*-lgdk[^ ]* *-L\([^ ]*\).*$/\1/' -e 's/^.* -lgdk[^ ]* .*$//'`
+       if test ! "$GLIB_STATIC_LOC" ; then
+         GLIB_STATIC_LOC=$GTK_STATIC_LOC
+       fi
+       GMODULE_STATIC=`echo $GTK_LIBS | sed 's/^.*-l\(gmodule[^ ]*\) .*/\1/'`
+       GLIB_STATIC=`echo $GTK_LIBS | sed 's/^.*-l\(glib[^ ]*\) .*/\1/'`
+
+       GTK_OTHER_LIBS=`echo $GTK_LIBS | sed 's/^.*-lglib *\(.*\)/\1/'`
+
+       changequote([,])
+
+       MOZ_GTK_LDFLAGS="$GTK_STATIC_LOC/lib${GTK_STATIC}.a"
+       MOZ_GTK_LDFLAGS="$MOZ_GTK_LDFLAGS $GTK_STATIC_LOC/lib${GDK_STATIC}.a"
+       MOZ_GTK_LDFLAGS="$MOZ_GTK_LDFLAGS $GLIB_STATIC_LOC/lib${GMODULE_STATIC}.a"
+       MOZ_GTK_LDFLAGS="$MOZ_GTK_LDFLAGS $GLIB_STATIC_LOC/lib${GLIB_STATIC}.a"
+       MOZ_GTK_LDFLAGS="$MOZ_GTK_LDFLAGS $GTK_LIBS_LOC $GTK_OTHER_LIBS"
+    fi
+
+    MOZ_GTK_CFLAGS=$GTK_CFLAGS
+fi
+dnl ========================================================
+dnl = 													   =
+dnl = End Gtk support hackery                              =
+dnl = 													   =
+dnl ========================================================
+
+
+dnl ========================================================
+dnl =													   =
+dnl = --with-motif										   =
+dnl = 													   =
+dnl = Motif support hackery                                =
+dnl = 													   =
+dnl ========================================================
+if test "$no_x" != "yes"
+then
+	AC_ARG_WITH(motif,
+	[  --with-motif         Enable motif support ],
+	[
+		if test "$withval" = "yes"
+		then
+			MOZ_ENABLE_MOTIF=1
+    	else
+			MOZ_ENABLE_MOTIF=
+    	fi
+	])
+fi
+
+if test "$MOZ_ENABLE_MOTIF"
+then
+	AC_MSG_CHECKING(for motif insanity)
+
+    if test "$x_includes"
+	then
+		MOTIF_XINCS="-xif -I$x_includes"
+    fi
+
+    detect_motif="${srcdir}/config/mkdetect/detect_motif.sh -cc $CC $MOTIF_XINCS"
+    MOTIF_VERSION=`${detect_motif}`
+    MOTIF_INCLUDES=`${detect_motif} -if`
+    MOTIF_STATIC_FLAGS=`${detect_motif} -sf`
+    MOTIF_DYNAMIC_FLAGS=`${detect_motif} -df`
+    MOTIF_DYNAMIC_PATHS=`${detect_motif} -dp`
+dnl    MOTIF_REQUIRES_XPM=`${detect_motif} -xpm`
+    MOTIF_REQUIRES_XPM="False"
+
+    ${srcdir}/config/mkdetect/detect_motif.sh --cleanup
+
+    if test "$MOTIF_REQUIRES_XPM" = "True" -o "$MOTIF_VERSION" = "2.1"
+	then
+        _SAVE_LDFLAGS="$LDFLAGS"
+    	LDFLAGS="$XLDFLAGS $LDFLAGS"
+	fi
+
+	if test "$MOTIF_REQUIRES_XPM" = "True"
+	then
+	    AC_CHECK_LIB(Xpm, XpmWriteFileFromImage, 
+		XPM_LIBS="-lXpm", 
+		[MISSING_MOTIF="$MISSING_MOTIF -lXpm"], $XLIBS)
+	fi
+
+	if test "$MOTIF_VERSION" = "2.1"
+	then
+	    AC_CHECK_LIB(Xp, XpGetPrinterList, 
+		MOTIF_XP_LIBS="-lXp",
+		[MISSING_MOTIF="$MISSING_MOTIF -lXp"], $XLIBS)
+	fi
+
+	LDFLAGS="$_SAVE_LDFLAGS"
+
+    MOZ_MOTIF_LDFLAGS="$XLDFLAGS $MOZ_MOTIF_LDFLAGS"
+
+    if test "$MOTIF_STATIC_LIB" = "unknown" -a "$MOTIF_DYNAMIC_LIB" = "unknown"
+	then
+		AC_MSG_RESULT(no)
+	else
+		AC_MSG_RESULT(yes)
+    fi
+
+    # Get rid of offending error values
+    if test "$MOTIF_DYNAMIC_PATHS" = "unknown"
+	then 
+		MOTIF_DYNAMIC_PATHS=
+    fi
+
+    if test "$MOTIF_DYNAMIC_FLAGS" = "unknown"
+	then 
+		MOTIF_DYNAMIC_FLAGS=
+    fi
+
+    if test "$MOTIF_STATIC_FLAGS" = "unknown"
+	then 
+		MOTIF_STATIC_FLAGS=
+    fi
+
+    if test "$MOTIF_INCLUDE_DIR" = "unknown"
+	then
+		MOTIF_INCLUDE_DIR=
+    fi
+
+    MOZ_MOTIF_LDFLAGS="$MOTIF_XP_LIBS $MOZ_MOTIF_LDFLAGS $X_LIBS $XT_LIBS $XMU_LIBS $XPM_LIBS $XEXT_LIBS $X11_LIBS $XSM_LIBS $XICE_LIBS"
+
+    AC_ARG_WITH(static-motif,
+    [  --with-static-motif     link Motif statically if possible],
+	sysstaticmotif=$withval)
+
+    if test "$sysstaticmotif" != "yes"; then
+	_SAVE_LDFLAGS="$LDFLAGS"
+    	LDFLAGS="$MOTIF_DYNAMIC_PATHS $XLDFLAGS $LDFLAGS"
+    	AC_CHECK_LIB(Xm, XmStringCreate, 
+	    MOZ_MOTIF_LDFLAGS="$MOTIF_DYNAMIC_PATHS $MOTIF_DYNAMIC_FLAGS $MOZ_MOTIF_LDFLAGS",
+	    [MISSING_MOTIF="$MISSING_MOTIF $MOTIF_DYNAMIC_FLAGS"], 
+	    $MOTIF_DYNAMIC_PATHS $MOZ_MOTIF_LDFLAGS $XLIBS)
+	LDFLAGS="$_SAVE_LDFLAGS"
+    else
+    	AC_CHECK_LIB(Xm, XmStringCreate, 
+	    MOZ_MOTIF_LDFLAGS="$MOTIF_STATIC_FLAGS $MOZ_MOTIF_LDFLAGS",
+	    [MISSING_MOTIF="$MISSING_MOTIF $MOTIF_STATIC_FLAGS"], 
+	    $MOZ_MOTIF_LDFLAGS $XLIBS)
+    fi
+
+    MOZ_MOTIF_CFLAGS="$MOTIF_INCLUDES"
+fi
+dnl ========================================================
+dnl = 													   =
+dnl = End Motif support hackery                            =
+dnl = 													   =
+dnl ========================================================
+
+
+dnl ========================================================
+dnl =													   =
+dnl = --with-xlib										   =
+dnl = 													   =
+dnl = Xlib support hackery                                =
+dnl = 													   =
+dnl ========================================================
+if test "$no_x" != "yes"
+then
+	AC_ARG_WITH(xlib,
+	[  --with-xlib         Enable xlib support ],
+	[
+		if test "$withval" = "yes"
+		then
+			MOZ_ENABLE_XLIB=1
+    	else
+			MOZ_ENABLE_XLIB=
+    	fi
+	])
+fi
+
+if test "$MOZ_ENABLE_XLIB"
+then
+	AC_MSG_CHECKING(for xlib insanity)
+	AC_MSG_RESULT(yes)
+
+    MOZ_XLIB_CFLAGS="$X_CFLAGS"
+    MOZ_XLIB_LDFLAGS="$XLDFLAGS"
+    MOZ_XLIB_LDFLAGS="$MOZ_XLIB_LDFLAGS $XEXT_LIBS $X11_LIBS"
+fi
+dnl ========================================================
+dnl = 													   =
+dnl = End Xlib support hackery                             =
+dnl = 													   =
+dnl ========================================================
+
 AC_SUBST(GTK_CONFIG)
 AC_SUBST(TK_CFLAGS)
 AC_SUBST(TK_LIBS)
+
+AC_SUBST(MOZ_ENABLE_GTK)
+AC_SUBST(MOZ_ENABLE_MOTIF)
+AC_SUBST(MOZ_ENABLE_XLIB)
+AC_SUBST(MOZ_ENABLE_GTK)
+AC_SUBST(MOZ_ENABLE_MOTIF)
+AC_SUBST(MOZ_ENABLE_XLIB)
+AC_SUBST(MOZ_GTK_CFLAGS)
+AC_SUBST(MOZ_GTK_LDFLAGS)
+AC_SUBST(MOZ_MOTIF_CFLAGS)
+AC_SUBST(MOZ_MOTIF_LDFLAGS)
+AC_SUBST(MOZ_XLIB_CFLAGS)
+AC_SUBST(MOZ_XLIB_LDFLAGS)
+AC_SUBST(MOZ_SINGLE_TOOLKIT)
 
 XCFLAGS="$X_CFLAGS"
 
