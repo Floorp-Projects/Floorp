@@ -1206,9 +1206,7 @@ const char kDirServiceContractID[] = "@mozilla.org/file/directory_service;1";
   nsCOMPtr<nsIDocShell> docShell = dont_AddRef([self getDocShell]);
   nsCOMPtr<nsIDocCharset> charset ( do_QueryInterface(docShell) );
   if ( charset ) {
-    nsAutoString charsetStr;
-    [inCharset assignTo_nsAString:charsetStr];
-    charset->SetCharset(charsetStr.get());
+    charset->SetCharset([inCharset cString]);
     [self reload:nsIWebNavigation::LOAD_FLAGS_CHARSET_CHANGE];
   }
 }
@@ -1225,9 +1223,9 @@ const char kDirServiceContractID[] = "@mozilla.org/file/directory_service;1";
       focusedWindow->GetDocument(getter_AddRefs(domDoc));
       nsCOMPtr<nsIDocument> doc ( do_QueryInterface(domDoc) );
       if ( doc ) {
-        nsAutoString charset;
+        nsCAutoString charset;
         doc->GetDocumentCharacterSet(charset);
-        return [NSString stringWith_nsAString:charset];
+        return [NSString stringWithCString:charset.get()];
       }
     }
   }
@@ -1240,9 +1238,9 @@ const char kDirServiceContractID[] = "@mozilla.org/file/directory_service;1";
     wind->GetDocument(getter_AddRefs(domDoc));
     nsCOMPtr<nsIDocument> doc ( do_QueryInterface(domDoc) );
     if ( doc ) {
-      nsAutoString charset;
+      nsCAutoString charset;
       doc->GetDocumentCharacterSet(charset);
-      return [NSString stringWith_nsAString:charset];
+      return [NSString stringWithCString:charset.get()];
     }
   }
   return nil;
