@@ -20,13 +20,16 @@
 
 /*
 
-  A helper class used to implement attributes.
+  A set of helper classes used to implement attributes.
 
 */
 
 #ifndef nsXULAttributes_h__
 #define nsXULAttributes_h__
 
+#include "nsIDOMAttr.h"
+#include "nsIDOMNamedNodeMap.h"
+#include "nsIScriptObjectOwner.h"
 #include "nsIStyleRule.h"
 #include "nsString.h"
 #include "nsIAtom.h"
@@ -61,53 +64,88 @@ struct nsClassList {
   nsClassList*  mNext;
 };
 
-struct nsXULAttribute
+////////////////////////////////////////////////////////////////////////
+
+class nsXULAttribute : public nsIDOMAttr,
+                       public nsIScriptObjectOwner
 {
-    nsXULAttribute(PRInt32 aNameSpaceID, nsIAtom* aName, const nsString& aValue)
-    {
-      mNameSpaceID = aNameSpaceID;
-      NS_IF_ADDREF(aName);
-      mName = aName;
-      mValue = aValue;
-    }
+private:
+    nsXULAttribute(nsIContent* aContent,
+                   PRInt32 aNameSpaceID,
+                   nsIAtom* aName,
+                   const nsString& aValue);
 
-    ~nsXULAttribute()
-    {
-      NS_IF_RELEASE(mName);
-    }
+    ~nsXULAttribute();
 
-    PRInt32 mNameSpaceID;
-    nsIAtom* mName;
-    nsString mValue;
+    friend nsresult
+    NS_NewXULAttribute(nsXULAttribute** aResult,
+                       nsIContent* aContent,
+                       PRInt32 aNameSpaceID,
+                       nsIAtom* aName,
+                       const nsString& aValue);
+
+public:
+
+    // nsISupports interface
+    NS_DECL_ISUPPORTS
+
+    // nsIDOMNode interface
+    NS_DECL_IDOMNODE
+
+    // nsIDOMAttr interface
+    NS_DECL_IDOMATTR
+
+    // nsIScriptObjectOwner interface
+    NS_IMETHOD GetScriptObject(nsIScriptContext* aContext, void** aScriptObject);
+    NS_IMETHOD SetScriptObject(void *aScriptObject);
+
+    // Implementation methods
+    const nsString& GetQualifiedName();
+
+    PRInt32 GetNameSpaceID();
+    nsIAtom* GetName();
+    const nsString& GetValue();
+
+    // Publicly exposed to make life easier. This is a private class
+    // anyway.
+    PRInt32     mNameSpaceID;
+    nsIAtom*    mName;
+    nsString    mValue;
+
+private:
+    nsIContent* mContent;
+    void*       mScriptObject;
 };
 
-class nsXULAttributes
+nsresult
+NS_NewXULAttribute(nsXULAttribute** aResult,
+                   nsIContent* aContent,
+                   PRInt32 aNameSpaceID,
+                   nsIAtom* aName,
+                   const nsString& aValue);
+
+////////////////////////////////////////////////////////////////////////
+
+class nsXULAttributes : public nsIDOMNamedNodeMap,
+                        public nsIScriptObjectOwner
 {
 public:
-    nsXULAttributes()
-        : mClassList(nsnull), mStyleRule(nsnull)
-    {
-        mAttributes = new nsVoidArray();
-    }
+    // nsISupports interface
+    NS_DECL_ISUPPORTS
 
-    ~nsXULAttributes(void)
-    {
-        if (nsnull != mAttributes) {
-          PRInt32 count = mAttributes->Count();
-          PRInt32 index;
-          for (index = 0; index < count; index++) {
-              nsXULAttribute* attr = (nsXULAttribute*)mAttributes->ElementAt(index);
-              delete attr;
-          }
-        }
-        delete mAttributes;
-    }
+    // nsIDOMNamedNodeMap interface
+    NS_DECL_IDOMNAMEDNODEMAP
 
+    // nsIScriptObjectOwner interface
+    NS_IMETHOD GetScriptObject(nsIScriptContext* aContext, void** aScriptObject);
+    NS_IMETHOD SetScriptObject(void *aScriptObject);
+
+    // Implementation methods
     // VoidArray Helpers
-    PRInt32 Count() { return mAttributes->Count(); };
-    nsXULAttribute* ElementAt(PRInt32 i) { return (nsXULAttribute*)mAttributes->ElementAt(i); };
-    void AppendElement(nsXULAttribute* aElement) { mAttributes->AppendElement((void*)aElement); };
-    void RemoveElementAt(PRInt32 index) { mAttributes->RemoveElementAt(index); };
+    PRInt32 Count() { return mAttributes.Count(); };
+    nsXULAttribute* ElementAt(PRInt32 i) { return (nsXULAttribute*)mAttributes.ElementAt(i); };
+    void AppendElement(nsXULAttribute* aElement) { mAttributes.AppendElement((void*)aElement); };
+    void RemoveElementAt(PRInt32 index) { mAttributes.RemoveElementAt(index); };
 
     // Style Helpers
     nsresult GetClasses(nsVoidArray& aArray) const;
@@ -117,12 +155,26 @@ public:
     nsresult UpdateStyleRule(nsIURL* aDocURL, const nsString& aValue);
     nsresult GetInlineStyleRule(nsIStyleRule*& aRule);
 
-public:
-    nsClassList* mClassList;
+private:
+    friend nsresult
+    NS_NewXULAttributes(nsXULAttributes** aResult, nsIContent* aContent);
+
+    nsXULAttributes(nsIContent* aContent);
+    virtual ~nsXULAttributes();
+
+    static void
+    ParseClasses(const nsString& aClassString, nsClassList** aClassList);
+
+    nsIContent*   mContent;
+    nsClassList*  mClassList;
     nsIStyleRule* mStyleRule;
-    nsVoidArray* mAttributes;
+    nsVoidArray   mAttributes;
+    void*         mScriptObject;
 };
 
+
+nsresult
+NS_NewXULAttributes(nsXULAttributes** aResult, nsIContent* aContent);
 
 #endif // nsXULAttributes_h__
 
