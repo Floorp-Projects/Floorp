@@ -25,6 +25,7 @@
 
 <?xml-stylesheet href="chrome://communicator/skin/" type="text/css"?>
 <?xml-stylesheet href="chrome://communicator/skin/bookmarks/bookmarksWindow.css" type="text/css"?>
+
 <?xul-overlay href="chrome://communicator/content/utilityOverlay.xul"?>
 <?xul-overlay href="chrome://global/content/globalOverlay.xul"?>
 <?xul-overlay href="chrome://communicator/content/bookmarks/bookmarksOverlay.xul"?>
@@ -73,7 +74,7 @@
             oncommand="gBookmarksShell.manageBookmarks();"/>
   </box>
   
-  <tree id="bookmarksTree" context="bmContext" ref="NC:BookmarksRoot"
+  <tree id="bookmarksTree" context="bmContext" ref="NC:BookmarksRoot" class="sidebarTree"
         datasources="rdf:bookmarks rdf:files rdf:httpindex rdf:localsearch rdf:internetsearch"
         flags="dont-test-empty"
         ondragover="nsDragAndDrop.dragOver(event, bookmarksDNDObserver);"

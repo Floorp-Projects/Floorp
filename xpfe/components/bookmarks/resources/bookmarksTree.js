@@ -106,6 +106,11 @@ BookmarksTree.prototype = {
     //    mpt claims that 'Cmd+U' is the excel equivalent.
     editCell: function (aSelectedItem, aCell)
     {
+      // XXX throw up properties dialog with name selected so user can rename
+      //     that way, until Outliner conversion allows us to use IL again. 
+      goDoCommand("cmd_properties");
+      return; // Disable inline edit for now.
+
       var editCell = aSelectedItem.firstChild.childNodes[aCell];
       if (editCell.getAttribute("editable") != "true")
         return;
@@ -231,6 +236,72 @@ BookmarksTree.prototype = {
     // to create new bookmarks/folders.
     createBookmarkItem: function (aMode, aSelectedItem)
     {
+      /////////////////////////////////////////////////////////////////////////
+      // HACK HACK HACK HACK HACK         
+      // Disable Inline-Edit for now and just use a dialog. 
+      
+      // XXX - most of this is just copy-pasted from the other two folder
+      //       creation functions. Yes it's ugly, but it'll do the trick for 
+      //       now as this is in no way intended to be a long-term solution.
+
+      const kPromptSvcContractID = "@mozilla.org/embedcomp/prompt-service;1";
+      const kPromptSvcIID = Components.interfaces.nsIPromptService;
+      const kPromptSvc = Components.classes[kPromptSvcContractID].getService(kPromptSvcIID);
+      
+      var defaultValue  = gBookmarksShell.getLocaleString("ile_newfolder");
+      var dialogTitle   = gBookmarksShell.getLocaleString("newfolder_dialog_title");
+      var dialogMsg     = gBookmarksShell.getLocaleString("newfolder_dialog_msg");
+      var stringValue   = { value: defaultValue };
+      if (kPromptSvc.prompt(window, dialogTitle, dialogMsg, stringValue, null, { value: 0 })) {
+        var relativeNode = gBookmarksShell.tree;
+        if (aSelectedItem && aSelectedItem.localName != "tree") {
+          // By default, create adjacent to the selected item
+          relativeNode = aSelectedItem;
+          if (relativeNode.getAttribute("container") == "true" && 
+              relativeNode.getAttribute("open") == "true") {
+            // But if it's an open container, the relative node should be the last child. 
+            var treechildren = ContentUtils.childByLocalName(relativeNode, "treechildren");
+            if (treechildren && treechildren.hasChildNodes()) 
+              relativeNode = treechildren.lastChild;
+          }
+        }
+
+        var parentNode = relativeNode ? gBookmarksShell.findRDFNode(relativeNode, false) : gBookmarksShell.tree;
+        if (relativeNode) {
+          // If we're attempting to create a folder as a subfolder of an open folder,
+          // we need to set the parentFolder to be relativeNode, which will be the
+          // parent of the new folder, rather than the parent of the relativeNode,
+          // which will result in the folder being created in an incorrect position
+          // (adjacent to the relativeNode).
+          var selKids = ContentUtils.childByLocalName(relativeNode, "treechildren");
+          if (selKids && selKids.hasChildNodes() && selKids.lastChild == dummyItem)
+            parentNode = relativeNode;
+        }
+
+        var args = [{ property: NC_NS + "parent",
+                      resource: NODE_ID(parentNode) },
+                    { property: NC_NS + "Name",
+                      literal:  stringValue.value }];
+        
+        const kBMDS = gBookmarksShell.RDF.GetDataSource("rdf:bookmarks");
+        kBMDS.AddObserver(newFolderRDFObserver);
+        var relId = relativeNode ? NODE_ID(relativeNode) : "NC:BookmarksRoot";
+        BookmarksUtils.doBookmarksCommand(relId, NC_NS_CMD + "newfolder", args);
+        kBMDS.RemoveObserver(newFolderRDFObserver);
+        var newFolderItem = document.getElementById(newFolderRDFObserver._newFolderURI);
+        gBookmarksShell.tree.focus();
+        gBookmarksShell.tree.selectItem(newFolderItem);
+        // Can't use newFolderItem because it may not have been created yet. Hack, huh?
+        var index = gBookmarksShell.tree.getIndexOfItem(relativeNode);
+        gBookmarksShell.tree.ensureIndexIsVisible(index+1);
+      }
+      
+      return; 
+      
+      // HACK HACK HACK HACK HACK         
+      /////////////////////////////////////////////////////////////////////////
+
+      /* Disable inline edit for now
       const kXULNS = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
       var dummyItem = document.createElementNS(kXULNS, "treeitem");
       dummyItem = gBookmarksShell.createBookmarkFolderDecorations(dummyItem);
@@ -297,6 +368,7 @@ BookmarksTree.prototype = {
       dummyCell.setMode("edit");
       dummyCell.addObserver(this.onEditFolderName, "accept", [dummyCell, relativeNode, dummyItem]);
       dummyCell.addObserver(this.onEditFolderName, "reject", [dummyCell, relativeNode, dummyItem]);
+      */
     }
   },
 
@@ -416,6 +488,9 @@ BookmarksTree.prototype = {
   // editable cells.
   treeClicked: function (aEvent)
   {
+    // We are disabling Inline Edit for now. It's too buggy in the old XUL tree widget.
+    // A more solid implementation will follow the conversion to outliner. 
+/*
     if (this.tree.selectedItems.length > 1 || aEvent.detail > 1 || aEvent.button != 0) {
       gSelectionTracker.clickCount = 0;
       return;
@@ -453,6 +528,7 @@ BookmarksTree.prototype = {
         }
       }
     }
+*/
   },
 
   treeOpen: function (aEvent)
@@ -477,15 +553,17 @@ BookmarksTree.prototype = {
   treeKeyPress: function (aEvent)
   {
     if (this.tree.selectedItems.length > 1) return;
+
+ /* Disabling Inline Edit
     if (aEvent.keyCode == 113 && aEvent.shiftKey) {
       const kNodeId = NODE_ID(this.tree.currentItem);
       if (this.resolveType(kNodeId) == NC_NS + "Bookmark")
         gBookmarksShell.commands.editCell (this.tree.currentItem, 1);
     }
-    else if (aEvent.keyCode == 113)
+    else */
+    if (aEvent.keyCode == 113)
       goDoCommand("cmd_rename");
-    else if (aEvent.keyCode == 13 &&
-             this.tree.currentItem.firstChild.getAttribute("inline-edit") != "true")
+    else if (aEvent.keyCode == 13) // && this.tree.currentItem.firstChild.getAttribute("inline-edit") != "true")
       goDoCommand(aEvent.altKey ? "cmd_properties" : "cmd_open");
   },
 
@@ -527,7 +605,6 @@ BookmarksTree.prototype = {
       case "cmd_newfolder":
       case "cmd_newseparator":
       case "cmd_find":
-      case "cmd_bm_copylink":
       case "cmd_properties":
       case "cmd_rename":
       case "cmd_setnewbookmarkfolder":
@@ -571,7 +648,6 @@ BookmarksTree.prototype = {
       case "cmd_import":
       case "cmd_export":
         return true;
-      case "cmd_bm_copylink":
       case "cmd_properties":
       case "cmd_rename":
         return numSelectedItems == 1;
@@ -614,7 +690,6 @@ BookmarksTree.prototype = {
       case "cmd_newbookmark":
       case "cmd_newfolder":
       case "cmd_newseparator":
-      case "cmd_bm_copylink":
       case "cmd_properties":
       case "cmd_rename":
       case "cmd_open":
@@ -648,7 +723,7 @@ BookmarksTree.prototype = {
     {
       var commands = ["cmd_properties", "cmd_rename", "cmd_bm_copy",
                       "cmd_bm_paste", "cmd_bm_cut", "cmd_bm_delete",
-                      "cmd_setpersonaltoolbarfolder", "cmd_bm_copylink",
+                      "cmd_setpersonaltoolbarfolder", 
                       "cmd_setnewbookmarkfolder",
                       "cmd_setnewsearchfolder", "cmd_bm_fileBookmark", 
                       "cmd_openfolderinnewwindow", "cmd_openfolder"];
