@@ -35,7 +35,7 @@ function OnLoadMessenger()
 {
 	messenger.SetWindow(window);
     window.frames["messagepane"].location =
-      "http://www.mozilla.org/mailnews/prefs-info.html";
+      "http://people.netscape.com/sspitzer/startpage.html";
 }
 
 function OnUnloadMessenger()
