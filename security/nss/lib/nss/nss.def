@@ -284,9 +284,7 @@ DER_UTCTimeToTime
 DES_CreateContext
 DES_Decrypt
 DES_DestroyContext
-DES_Do1Block
 DES_Encrypt
-DES_MakeSchedule
 DES_PadBuffer
 DH_Derive
 DH_GenParam
@@ -295,10 +293,8 @@ DSAU_ConvertSignedToFixedUnsigned
 DSAU_ConvertUnsignedToSigned
 DSAU_DecodeDerSig
 DSAU_EncodeDerSig
-DSA_GenerateGlobalRandomBytes
 DSA_NewKey
 DSA_NewKeyFromSeed
-DSA_RandomUpdate
 DSA_SignDigest
 DSA_SignDigestWithSeed
 DSA_SignatureTemplate
@@ -774,7 +770,6 @@ RNG_RNGInit
 RNG_RNGShutdown
 RNG_RandomUpdate
 RNG_SystemInfoForRNG
-RNG_UpdateAndEnd_FIPS186_1
 RSA_CheckSign
 RSA_CheckSignRaw
 RSA_CheckSignRecover
