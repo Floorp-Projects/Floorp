@@ -426,12 +426,11 @@ nsDocShell::LoadURI(nsIURI* aURI, nsIDocShellLoadInfo* aLoadInfo, PRUint32 aLoad
            shEntry->GetLoadType(&lt);
            // Convert the DocShellInfoLoadType returned by the 
            // previous function to loadType
-           loadType = ConvertDocShellLoadInfoToLoadType((nsDocShellInfoLoadType)lt);         
+           loadType = ConvertDocShellLoadInfoToLoadType((nsDocShellInfoLoadType)lt);
         }
       }
     }
   }
-
   if (shEntry) {
       // Load is from SH. SH does normal load only
       mViewMode = viewNormal;
@@ -3904,6 +3903,20 @@ nsresult nsDocShell::AddToSessionHistory(nsIURI *aURI,
     PRInt32 index = 0;
     mSessionHistory->GetIndex(&index);
     mSessionHistory->GetEntryAtIndex(index, PR_FALSE, getter_AddRefs(entry));
+    // see if the entry has any children and remove if any.
+    if (entry) {
+      nsCOMPtr<nsISHContainer> shContainer(do_QueryInterface(entry));
+      if (shContainer) {
+        PRInt32 childCount=0;
+        shContainer->GetChildCount(&childCount);
+        // Remove all children of this entry 
+        for(PRInt32 i=0; i<childCount; i++) {
+          nsCOMPtr<nsISHEntry> child;
+          shContainer->GetChildAt(i, getter_AddRefs(child));
+          shContainer->RemoveChild(child);
+        }  
+      }
+    }
   }
   
   // Create a new entry if necessary.
