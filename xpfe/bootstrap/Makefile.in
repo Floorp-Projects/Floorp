@@ -236,6 +236,10 @@ DEFINES += -DSPLASH_XPM=\"$(SPLASH_XPM)\"
 LIBS += $(MOZ_GTK2_LIBS)
 endif
 
+ifeq ($(MOZ_WIDGET_TOOLKIT),qt)
+LIBS += $(MOZ_QT_LDFLAGS)
+endif
+
 # Add explicit X11 dependency when building against X11 toolkits
 ifneq (,$(filter gtk gtk2 qt xlib,$(MOZ_WIDGET_TOOLKIT)))
 LIBS += $(XLDFLAGS) $(XLIBS)
