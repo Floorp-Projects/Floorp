@@ -41,22 +41,21 @@
 <!ENTITY attachmentsCmd.label ".Attachments">
 <!ENTITY wrapCmd.label ".Wrap Long Lines">
 <!ENTITY dcharMenu.label "Character Set">
-<!--LOCALIZATION NOTE dcharIso1Cmd.label Don't change any of the ISO numbers here -->
 <!ENTITY dcharIso1Cmd.label "Western (ISO-8859-1)">
 <!ENTITY dcharIso2Cmd.label "Central European (ISO-8859-2)">
-<!ENTITY dcharIso3Cmd.label "Esperanto/Maltese (ISO-8859-3)">
+<!ENTITY dcharIso3Cmd.label "South European (ISO-8859-3)">
 <!ENTITY dcharIso4Cmd.label "Baltic (ISO-8859-4)">
 <!ENTITY dcharIso9Cmd.label "Turkish (ISO-8859-9)">
-<!ENTITY dcharIso10Cmd.label "Northern European (ISO-8859-10)">
+<!ENTITY dcharIso10Cmd.label "Nordic (ISO-8859-10)">
 <!ENTITY dcharIso14Cmd.label "Celtic (ISO-8859-14)">
-<!ENTITY dcharIso15Cmd.label "New Western (ISO-8859-15)">
+<!ENTITY dcharIso15Cmd.label "Western (ISO-8859-15)">
 <!ENTITY dcharJapanCmd.label "Japanese (ISO-2022-JP)">
-<!ENTITY dcharTradChiBigCmd.label "Traditional Chinese (Big5)">
-<!ENTITY dcharSimpChiGbCmd.label "Simplified Chinese (GB2312)">
+<!ENTITY dcharTradChiBigCmd.label "Chinese Traditional (Big5)">
+<!ENTITY dcharSimpChiGbCmd.label "Chinese Simplified (GB2312)">
 <!ENTITY dcharKoreanCmd.label "Korean (EUC-KR)">
-<!ENTITY dcharUtf8Cmd.label "UTF-8">
+<!ENTITY dcharUtf8Cmd.label "Unicode (UTF-8)">
 <!ENTITY dcharRusCmd.label "Cyrillic (KOI8-R)">
-<!ENTITY dcharUkrCmd.label "Ukrainian (KOI8-U)">
+<!ENTITY dcharUkrCmd.label "Cyrillic/Ukrainian (KOI8-U)">
 <!ENTITY dcharIsoGreekCmd.label "Greek (ISO-8859-7)">
 <!ENTITY dcharVietViCmd.label "Vietnamese (VISCII)">
 <!ENTITY dcharThaiCmd.label "Thai (TIS-620)">

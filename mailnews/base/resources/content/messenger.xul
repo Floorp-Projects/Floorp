@@ -252,71 +252,87 @@ Rights Reserved.
       <menuitem value="&pageSourceCmd.label;" oncommand="MsgViewPageSource();"/>
       <menuitem value="&pageInfoCmd.label;" oncommand="MsgViewPageInfo();"/>
       <menuseparator/>
-      <menu value="&dcharMenu.label;">
-	         <menupopup>
-			 <menuitem value="&dcharIso1Cmd.label;" oncommand="MessengerSetDefaultCharacterSet('ISO-8859-1');"/>
-	         <menuitem value="&dcharIso2Cmd.label;" oncommand="MessengerSetDefaultCharacterSet('ISO-8859-2');"/>
-	         <menuitem value="&dcharIso3Cmd.label;" oncommand="MessengerSetDefaultCharacterSet('ISO-8859-3');"/>
-	         <menuitem value="&dcharIso4Cmd.label;" oncommand="MessengerSetDefaultCharacterSet('ISO-8859-4');"/>
-	         <menuitem value="&dcharIso9Cmd.label;" oncommand="MessengerSetDefaultCharacterSet('ISO-8859-9');"/>
-	         <menuitem value="&dcharIso10Cmd.label;" oncommand="MessengerSetDefaultCharacterSet('ISO-8859-10');"/>
-	         <menuitem value="&dcharIso13Cmd.label;" oncommand="MessengerSetDefaultCharacterSet('ISO-8859-13');"/>
-	         <menuitem value="&dcharIso14Cmd.label;" oncommand="MessengerSetDefaultCharacterSet('ISO-8859-14');"/>
-	         <menuitem value="&dcharIso15Cmd.label;" oncommand="MessengerSetDefaultCharacterSet('ISO-8859-15');"/>
-	         <menuitem value="&dcharWinLat2Cmd.label;" oncommand="MessengerSetDefaultCharacterSet('windows-1250');"/>
-	         <menuitem value="&dcharWinLat1Cmd.label;" oncommand="MessengerSetDefaultCharacterSet('windows-1252');"/>
-	         <menuitem value="&dcharWinLat5Cmd.label;" oncommand="MessengerSetDefaultCharacterSet('windows-1254');"/>
-	         <menuitem value="&dcharWinBalRimCmd.label;" oncommand="MessengerSetDefaultCharacterSet('windows-1257');"/>
-	         <menuitem value="&dcharMacRomCmd.label;" oncommand="MessengerSetDefaultCharacterSet('x-mac-roman');"/>
-	         <menuitem value="&dcharMacCenEuroCmd.label;" oncommand="MessengerSetDefaultCharacterSet('x-mac-ce');"/>
-	         <menuitem value="&dcharMacTurCmd.label;" oncommand="MessengerSetDefaultCharacterSet('x-mac-turkish');"/>
-	         <menuitem value="&dcharMacCroaCmd.label;" oncommand="MessengerSetDefaultCharacterSet('x-mac-croatian');"/>
-	         <menuitem value="&dcharMacRomanianCmd.label;" oncommand="MessengerSetDefaultCharacterSet('x-mac-romanian');"/>
-	         <menuitem value="&dcharMacIceCmd.label;" oncommand="MessengerSetDefaultCharacterSet('x-mac-icelandic');"/>
-                 <menuseparator />
-	         <menuitem value="&dcharJapanCmd.label;" oncommand="MessengerSetDefaultCharacterSet('ISO-2022-JP');"/>
-	         <menuitem value="&dcharJapanShiftjsCmd.label;" oncommand="MessengerSetDefaultCharacterSet('Shift_JIS');"/>
-	         <menuitem value="&dcharJapanEucCmd.label;" oncommand="MessengerSetDefaultCharacterSet('EUC-JP');"/>
-                 <menuseparator />
-	         <menuitem value="&dcharTradChiBigCmd.label;" oncommand="MessengerSetDefaultCharacterSet('Big5');"/>
-	         <menuitem value="&dcharTriChiEucCmd.label;" oncommand="MessengerSetDefaultCharacterSet('x-euc-tw');"/>
-	         <menuitem value="&dcharSimpChiGbCmd.label;" oncommand="MessengerSetDefaultCharacterSet('GB2312');"/>
-                 <menuseparator />
- 	         <menuitem value="&dcharKoreanCmd.label;" oncommand="MessengerSetDefaultCharacterSet('EUC-KR');"/>
-                 <menuseparator />
-	         <menuitem value="&dcharUtf7Cmd.label;" oncommand="MessengerSetDefaultCharacterSet('UTF-7');"/>
-	         <menuitem value="&dcharUtf8Cmd.label;" oncommand="MessengerSetDefaultCharacterSet('UTF-8');"/>
-                 <menuseparator />
-	         <menuitem value="&dcharIsoCyrCmd.label;" oncommand="MessengerSetDefaultCharacterSet('ISO-8859-5');"/>
-	         <menuitem value="&dcharEcmaCyrCmd.label;" oncommand="MessengerSetDefaultCharacterSet('ISO-IR-111');"/>
-	         <menuitem value="&dcharWinCyrCmd.label;" oncommand="MessengerSetDefaultCharacterSet('windows-1251');"/>
-	         <menuitem value="&dcharDosCyrCmd.label;" oncommand="MessengerSetDefaultCharacterSet('IBM866');"/>
-	         <menuitem value="&dcharMacCyrCmd.label;" oncommand="MessengerSetDefaultCharacterSet('x-mac-cyrillic');"/>
-	         <menuitem value="&dcharMacUkrCmd.label;" oncommand="MessengerSetDefaultCharacterSet('x-mac-ukrainian');"/>
-	         <menuitem value="&dcharRusCmd.label; " oncommand="MessengerSetDefaultCharacterSet('KOI8-R');"/>
-	         <menuitem value="&dcharUkrCmd.label;" oncommand="MessengerSetDefaultCharacterSet('KOI8-U');"/>
-                 <menuseparator />
-	         <menuitem value="&dcharIsoGreekCmd.label;" oncommand="MessengerSetDefaultCharacterSet('ISO-8859-7');"/>
-	         <menuitem value="&dcharWinGreekCmd.label;" oncommand="MessengerSetDefaultCharacterSet('windows-1253');"/>
-	         <menuitem value="&dcharMacGreekCmd.label;" oncommand="MessengerSetDefaultCharacterSet('x-mac-greek');"/>
-                 <menuseparator />
-	         <menuitem value="&dcharWinVietCmd.label;" oncommand="MessengerSetDefaultCharacterSet('windows-1258');"/>
-	         <menuitem value="&dcharVietTcnCmd.label;" oncommand="MessengerSetDefaultCharacterSet('x-viet-tcvn5712');"/>
-	         <menuitem value="&dcharVietViCmd.label;" oncommand="MessengerSetDefaultCharacterSet('VISCII');"/>
-	         <menuitem value="&dcharVieVpCmd.label;" oncommand="MessengerSetDefaultCharacterSet('x-viet-vps');"/>
-                 <menuseparator />
-	         <menuitem value="&dcharThaiCmd.label;" oncommand="MessengerSetDefaultCharacterSet('TIS-620');"/>
-                 <menuseparator />
-	         <menuitem value="&dcharArmCmd.label;" oncommand="MessengerSetDefaultCharacterSet('ARMSCII-8');"/>
-                 <menuseparator />
-	         <menuitem value="&dcharIso6Cmd.label;" oncommand="MessengerSetDefaultCharacterSet('ISO-8859-6');"/>
-	         <menuitem value="&dcharCp1256Cmd.label;" oncommand="MessengerSetDefaultCharacterSet('windows-1256');"/>
-                 <menuseparator />
-	         <menuitem value="&dcharIso8Cmd.label;" oncommand="MessengerSetDefaultCharacterSet('ISO-8859-8');"/>
-	         <menuitem value="&dcharCp1255Cmd.label;" oncommand="MessengerSetDefaultCharacterSet('windows-1255');"/>
-	         </menupopup>
-	   </menu>
-	   </menupopup>
+                <menu value="&dcharMenu.label;">
+                     <menupopup>
+                                 <menuitem value="&dcharIso1Cmd.label;" oncommand="MessengerSetDefaultCharacterSet('ISO-8859-1');"/>
+                                 <menuitem value="&dcharIso15Cmd.label;" oncommand="MessengerSetDefaultCharacterSet('ISO-8859-15');"/>
+                                 <menuitem value="&dcharIso2Cmd.label;" oncommand="MessengerSetDefaultCharacterSet('ISO-8859-2');"/>
+                                 <menuitem value="&dcharIso3Cmd.label;" oncommand="MessengerSetDefaultCharacterSet('ISO-8859-3');"/>
+                                 <menuitem value="&dcharIso4Cmd.label;" oncommand="MessengerSetDefaultCharacterSet('ISO-8859-4');"/>
+                                 <menuitem value="&dcharIsoGreekCmd.label;" oncommand="MessengerSetDefaultCharacterSet('ISO-8859-7');"/>
+                                 <menuitem value="&dcharIso9Cmd.label;" oncommand="MessengerSetDefaultCharacterSet('ISO-8859-9');"/>
+                                 <menuitem value="&dcharIso10Cmd.label;" oncommand="MessengerSetDefaultCharacterSet('ISO-8859-10');"/>
+                                 <menuitem value="&dcharIso13Cmd.label;" oncommand="MessengerSetDefaultCharacterSet('ISO-8859-13');"/>
+                                 <menuitem value="&dcharIso14Cmd.label;" oncommand="MessengerSetDefaultCharacterSet('ISO-8859-14');"/>
+                        </menupopup>
+                 </menu>
+                 <menu value="&dcharMenu1.label;">
+                     <menupopup>
+                                 <menuitem value="&dcharJapanCmd.label;" oncommand="MessengerSetDefaultCharacterSet('ISO-2022-JP');"/>
+                                 <menuitem value="&dcharJapanShiftjsCmd.label;" oncommand="MessengerSetDefaultCharacterSet('Shift_JIS');"/>
+                                 <menuitem value="&dcharJapanEucCmd.label;" oncommand="MessengerSetDefaultCharacterSet('EUC-JP');"/>
+                                         <menuseparator />
+                                 <menuitem value="&dcharTradChiBigCmd.label;" oncommand="MessengerSetDefaultCharacterSet('Big5');"/>
+                                 <menuitem value="&dcharTriChiEucCmd.label;" oncommand="MessengerSetDefaultCharacterSet('x-euc-tw');"/>
+                                 <menuitem value="&dcharSimpChiGbCmd.label;" oncommand="MessengerSetDefaultCharacterSet('GB2312');"/>
+                                         <menuseparator />
+                                 <menuitem value="&dcharKoreanCmd.label;" oncommand="MessengerSetDefaultCharacterSet('EUC-KR');"/>
+                                         <menuseparator />
+                                 <menuitem value="&dcharUtf7Cmd.label;" oncommand="MessengerSetDefaultCharacterSet('UTF-7');"/>
+                                 <menuitem value="&dcharUtf8Cmd.label;" oncommand="MessengerSetDefaultCharacterSet('UTF-8');"/>
+                        </menupopup>
+                 </menu>
+                 <menu value="&dcharMenu2.label;">
+                     <menupopup>
+                                 <menuitem value="&dcharRusCmd.label; " oncommand="MessengerSetDefaultCharacterSet('KOI8-R');"/>
+                                 <menuitem value="&dcharIsoCyrCmd.label;" oncommand="MessengerSetDefaultCharacterSet('ISO-8859-5');"/>
+                                 <menuitem value="&dcharWinCyrCmd.label;" oncommand="MessengerSetDefaultCharacterSet('windows-1251');"/>
+                                 <menuitem value="&dcharEcmaCyrCmd.label;" oncommand="MessengerSetDefaultCharacterSet('ISO-IR-111');"/>
+                                 <menuitem value="&dcharDosCyrCmd.label;" oncommand="MessengerSetDefaultCharacterSet('IBM866');"/>
+                                 <menuitem value="&dcharMacCyrCmd.label;" oncommand="MessengerSetDefaultCharacterSet('x-mac-cyrillic');"/>
+                                 <menuitem value="&dcharUkrCmd.label;" oncommand="MessengerSetDefaultCharacterSet('KOI8-U');"/>
+                                 <menuitem value="&dcharMacUkrCmd.label;" oncommand="MessengerSetDefaultCharacterSet('x-mac-ukrainian');"/>
+                        </menupopup>
+                 </menu>
+                 <menu value="&dcharMenu3.label;">
+                     <menupopup>
+                                 <menuitem value="&dcharWinVietCmd.label;" oncommand="MessengerSetDefaultCharacterSet('windows-1258');"/>
+                                 <menuitem value="&dcharVietTcnCmd.label;" oncommand="MessengerSetDefaultCharacterSet('x-viet-tcvn5712');"/>
+                                 <menuitem value="&dcharVietViCmd.label;" oncommand="MessengerSetDefaultCharacterSet('VISCII');"/>
+                                 <menuitem value="&dcharVieVpCmd.label;" oncommand="MessengerSetDefaultCharacterSet('x-viet-vps');"/>
+                                         <menuseparator />
+                                 <menuitem value="&dcharThaiCmd.label;" oncommand="MessengerSetDefaultCharacterSet('TIS-620');"/>
+                                         <menuseparator />
+                                 <menuitem value="&dcharArmCmd.label;" oncommand="MessengerSetDefaultCharacterSet('ARMSCII-8');"/>
+                                         <menuseparator />
+                                 <menuitem value="&dcharIso6Cmd.label;" oncommand="MessengerSetDefaultCharacterSet('ISO-8859-6');"/>
+                                 <menuitem value="&dcharCp1256Cmd.label;" oncommand="MessengerSetDefaultCharacterSet('windows-1256');"/>
+                                         <menuseparator />
+                                 <menuitem value="&dcharIso8Cmd.label;" oncommand="MessengerSetDefaultCharacterSet('ISO-8859-8');"/>
+                                 <menuitem value="&dcharCp1255Cmd.label;" oncommand="MessengerSetDefaultCharacterSet('windows-1255');"/>
+                        </menupopup>
+                 </menu>
+                 <menu value="&dcharMenu4.label;">
+                     <menupopup>
+                                 <menuitem value="&dcharMacRomCmd.label;" oncommand="MessengerSetDefaultCharacterSet('x-mac-roman');"/>
+                                 <menuitem value="&dcharMacCenEuroCmd.label;" oncommand="MessengerSetDefaultCharacterSet('x-mac-ce');"/>
+                                 <menuitem value="&dcharMacTurCmd.label;" oncommand="MessengerSetDefaultCharacterSet('x-mac-turkish');"/>
+                                 <menuitem value="&dcharMacCroaCmd.label;" oncommand="MessengerSetDefaultCharacterSet('x-mac-croatian');"/>
+                                 <menuitem value="&dcharMacRomanianCmd.label;" oncommand="MessengerSetDefaultCharacterSet('x-mac-romanian');"/>
+                                 <menuitem value="&dcharMacIceCmd.label;" oncommand="MessengerSetDefaultCharacterSet('x-mac-icelandic');"/>
+                                 <menuitem value="&dcharMacGreekCmd.label;" oncommand="MessengerSetDefaultCharacterSet('x-mac-greek');"/>
+                        </menupopup>
+                 </menu>
+                 <menu value="&dcharMenu5.label;">
+                     <menupopup>
+                                 <menuitem value="&dcharWinLat1Cmd.label;" oncommand="MessengerSetDefaultCharacterSet('windows-1252');"/>
+                                 <menuitem value="&dcharWinLat2Cmd.label;" oncommand="MessengerSetDefaultCharacterSet('windows-1250');"/>
+                                 <menuitem value="&dcharWinLat5Cmd.label;" oncommand="MessengerSetDefaultCharacterSet('windows-1254');"/>
+                                 <menuitem value="&dcharWinBalRimCmd.label;" oncommand="MessengerSetDefaultCharacterSet('windows-1257');"/>
+                                 <menuitem value="&dcharWinGreekCmd.label;" oncommand="MessengerSetDefaultCharacterSet('windows-1253');"/>
+                        </menupopup>
+                 </menu>
+          </menupopup>
     </menu>
     <menu value="&searchMenu.label;">
         <menupopup>

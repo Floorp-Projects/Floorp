@@ -227,155 +227,86 @@
       <menuitem id="formatToolbarMenuitem" accesskey="&viewformattingtb.accesskey;"  observes="Editor:ToggleFormattingToolbar"/>
       <menuitem id="viewSourceMenuitem" value="&viewPageSource.label;" accesskey="&viewpagesource.accesskey;" oncommand="EditorViewSource();" />
 
-    <menu id="charsetMenu" value="&dcharMenu.label;" accesskey="&viewcharsetmenu.accesskey;">
-      <menupopup>
-       <menuitem value="&dcharIso1Cmd.label;" 
-           accesskey="&charsetLatin1.accesskey;"
-           oncommand="EditorSetDocumentCharacterSet('ISO-8859-1');"/>
-       <menuitem value="&dcharIso2Cmd.label;"
-           accesskey="&charsetLatin2.accesskey;"
-           oncommand="EditorSetDocumentCharacterSet('ISO-8859-2');"/>
-       <menuitem value="&dcharIso3Cmd.label;"
-           accesskey="&charsetLatin3.accesskey;"
-           oncommand="EditorSetDocumentCharacterSet('ISO-8859-3');"/>
-       <menuitem value="&dcharIso4Cmd.label;"
-           accesskey="&charsetLatin4.accesskey;"
-           oncommand="EditorSetDocumentCharacterSet('ISO-8859-4');"/>
-       <menuitem value="&dcharIso9Cmd.label;"
-           accesskey="&charsetLatin5.accesskey;"
-           oncommand="EditorSetDocumentCharacterSet('ISO-8859-9');"/>
-       <menuitem value="&dcharIso10Cmd.label;"
-           accesskey="&charsetLatin6.accesskey;"
-           oncommand="EditorSetDocumentCharacterSet('ISO-8859-10');"/>
-       <menuitem value="&dcharIso13Cmd.label;"
-           accesskey="&charsetLatin7.accesskey;"
-           oncommand="EditorSetDocumentCharacterSet('ISO-8859-13');"/>
-       <menuitem value="&dcharIso14Cmd.label;"
-           accesskey="&charsetLatin8.accesskey;"
-           oncommand="EditorSetDocumentCharacterSet('ISO-8859-14');"/>
-       <menuitem value="&dcharIso15Cmd.label;"
-           accesskey="&charsetLatin9.accesskey;"
-           oncommand="EditorSetDocumentCharacterSet('ISO-8859-15');"/>
-       <menuitem value="&dcharWinLat2Cmd.label;"
-           accesskey="&charsetWinLatin2.accesskey;"
-           oncommand="EditorSetDocumentCharacterSet('windows-1250');"/>
-       <menuitem value="&dcharWinLat1Cmd.label;"
-           accesskey="&charsetWinLatin1.accesskey;"
-           oncommand="EditorSetDocumentCharacterSet('windows-1252');"/>
-       <menuitem value="&dcharWinLat5Cmd.label;"
-           accesskey="&charsetWinLatin5.accesskey;"
-           oncommand="EditorSetDocumentCharacterSet('windows-1254');"/>
-       <menuitem value="&dcharWinBalRimCmd.label;"
-           accesskey="&charsetWinBaltic.accesskey;"
-           oncommand="EditorSetDocumentCharacterSet('windows-1257');"/>
-       <menuitem value="&dcharMacRomCmd.label;"
-           accesskey="&charsetMacRoman.accesskey;"
-           oncommand="EditorSetDocumentCharacterSet('x-mac-roman');"/>
-       <menuitem value="&dcharMacCenEuroCmd.label;"
-           accesskey="&charsetMacCentralEurope.accesskey;"
-           oncommand="EditorSetDocumentCharacterSet('x-mac-ce');"/>
-       <menuitem value="&dcharMacTurCmd.label;"
-           oncommand="EditorSetDocumentCharacterSet('x-mac-turkish');"/>
-       <menuitem value="&dcharMacCroaCmd.label;"
-           accesskey="&charsetMacCroatian.accesskey;"
-           oncommand="EditorSetDocumentCharacterSet('x-mac-croatian');"/>
-       <menuitem value="&dcharMacRomanianCmd.label;"
-           oncommand="EditorSetDocumentCharacterSet('x-mac-romanian');"/>
-       <menuitem value="&dcharMacIceCmd.label;"
-           accesskey="&charsetMacIcelandic.accesskey;"
-           oncommand="EditorSetDocumentCharacterSet('x-mac-icelandic');"/>
-         <menuseparator />
-       <menuitem value="&dcharJapanCmd.label;"
-           accesskey="&charsetJIS.accesskey;"
-           oncommand="EditorSetDocumentCharacterSet('ISO-2022-JP');"/>
-       <menuitem value="&dcharJapanShiftjsCmd.label;"
-           accesskey="&charsetshiftJIS.accesskey;"
-           oncommand="EditorSetDocumentCharacterSet('Shift_JIS');"/>
-       <menuitem value="&dcharJapanEucCmd.label;"
-           accesskey="&charsetJapaneseEUC.accesskey;"
-           oncommand="EditorSetDocumentCharacterSet('EUC-JP');"/>
-         <menuseparator />
-       <menuitem value="&dcharTradChiBigCmd.label;"
-           accesskey="&charsetChineseBig5.accesskey;"
-           oncommand="EditorSetDocumentCharacterSet('Big5');"/>
-       <menuitem value="&dcharTriChiEucCmd.label;"
-           oncommand="EditorSetDocumentCharacterSet('x-euc-tw');"/>
-       <menuitem value="&dcharSimpChiGbCmd.label;"
-           accesskey="&charsetChineseSimplified.accesskey;"
-           oncommand="EditorSetDocumentCharacterSet('GB2312');"/>
-         <menuseparator />
-       <menuitem value="&dcharKoreanCmd.label;"
-           accesskey="&charsetKorean.accesskey;"
-           oncommand="EditorSetDocumentCharacterSet('EUC-KR');"/>
-         <menuseparator />
-       <menuitem value="&dcharUtf7Cmd.label;"
-           accesskey="&charsetUTF7.accesskey;"
-           oncommand="EditorSetDocumentCharacterSet('UTF-7');"/>
-       <menuitem value="&dcharUtf8Cmd.label;"
-           accesskey="&charsetUTF8.accesskey;"
-           oncommand="EditorSetDocumentCharacterSet('UTF-8');"/>
-         <menuseparator />
-       <menuitem value="&dcharIsoCyrCmd.label;"
-           accesskey="&charsetISOCyrillic.accesskey;"
-           oncommand="EditorSetDocumentCharacterSet('ISO-8859-5');"/>
-       <menuitem value="&dcharEcmaCyrCmd.label;"
-           oncommand="EditorSetDocumentCharacterSet('ISO-IR-111');"/>
-       <menuitem value="&dcharWinCyrCmd.label;"
-           oncommand="EditorSetDocumentCharacterSet('windows-1251');"/>
-       <menuitem value="&dcharDosCyrCmd.label;"
-           accesskey="&charsetDOSCyrillic.accesskey;"
-           oncommand="EditorSetDocumentCharacterSet('IBM866');"/>
-       <menuitem value="&dcharMacCyrCmd.label;"
-           oncommand="EditorSetDocumentCharacterSet('x-mac-cyrillic');"/>
-       <menuitem value="&dcharMacUkrCmd.label;"
-           oncommand="EditorSetDocumentCharacterSet('x-mac-ukrainian');"/>
-       <menuitem value="&dcharRusCmd.label;"
-           accesskey="&charsetRussian.accesskey;"
-           oncommand="EditorSetDocumentCharacterSet('KOI8-R');"/>
-       <menuitem value="&dcharUkrCmd.label;"
-           accesskey="&charsetUkrainian.accesskey;"
-           oncommand="EditorSetDocumentCharacterSet('KOI8-U');"/>
-         <menuseparator />
-       <menuitem value="&dcharIsoGreekCmd.label;"
-           accesskey="&charsetGreek.accesskey;"
-           oncommand="EditorSetDocumentCharacterSet('ISO-8859-7');"/>
-       <menuitem value="&dcharWinGreekCmd.label;"
-           oncommand="EditorSetDocumentCharacterSet('windows-1253');"/>
-       <menuitem value="&dcharMacGreekCmd.label;"
-           oncommand="EditorSetDocumentCharacterSet('x-mac-greek');"/>
-         <menuseparator />
-       <menuitem value="&dcharWinVietCmd.label;"
-           accesskey="&charsetWinVietnamese.accesskey;"
-           oncommand="EditorSetDocumentCharacterSet('windows-1258');"/>
-       <menuitem value="&dcharVietTcnCmd.label;"
-           oncommand="EditorSetDocumentCharacterSet('x-viet-tcvn5712');"/>
-       <menuitem value="&dcharVietViCmd.label;"
-           oncommand="EditorSetDocumentCharacterSet('VISCII');"/>
-       <menuitem value="&dcharVieVpCmd.label;"
-           oncommand="EditorSetDocumentCharacterSet('x-viet-vps');"/>
-         <menuseparator />
-       <menuitem value="&dcharThaiCmd.label;"
-           accesskey="&charsetThai.accesskey;"
-           oncommand="EditorSetDocumentCharacterSet('TIS-620');"/>
-         <menuseparator />
-       <menuitem value="&dcharArmCmd.label;"
-           accesskey="&charsetArmenian.accesskey;"
-           oncommand="EditorSetDocumentCharacterSet('ARMSCII-8');"/>
-         <menuseparator />
-       <menuitem value="&dcharIso6Cmd.label;"
-           accesskey="&charsetArabic.accesskey;"
-           oncommand="EditorSetDocumentCharacterSet('ISO-8859-6');"/>
-       <menuitem value="&dcharCp1256Cmd.label;"
-           oncommand="EditorSetDocumentCharacterSet('windows-1256');"/>
-         <menuseparator />
-       <menuitem value="&dcharIso8Cmd.label;"
-           accesskey="&charsetHebrew.accesskey;"
-           oncommand="EditorSetDocumentCharacterSet('ISO-8859-8');"/>
-       <menuitem value="&dcharCp1255Cmd.label;"
-           accesskey="&charsetWinHebrew.accesskey;"
-           oncommand="EditorSetDocumentCharacterSet('windows-1255');"/>
-       </menupopup>
-     </menu>
+                <menu  id="charsetMenu" value="&dcharMenu.label;" accesskey="&viewcharsetmenu.accesskey;">
+                     <menupopup>
+                                 <menuitem value="&dcharIso1Cmd.label;" accesskey="&charsetLatin1.accesskey;" oncommand="EditorSetDocumentCharacterSet('ISO-8859-1');"/>
+                                 <menuitem value="&dcharIso15Cmd.label;" accesskey="&charsetLatin9.accesskey;" oncommand="EditorSetDocumentCharacterSet('ISO-8859-15');"/>
+                                 <menuitem value="&dcharIso2Cmd.label;" accesskey="&charsetLatin2.accesskey;" oncommand="EditorSetDocumentCharacterSet('ISO-8859-2');"/>
+                                 <menuitem value="&dcharIso3Cmd.label;" accesskey="&charsetLatin3.accesskey;" oncommand="EditorSetDocumentCharacterSet('ISO-8859-3');"/>
+                                 <menuitem value="&dcharIso4Cmd.label;" accesskey="&charsetLatin4.accesskey;" oncommand="EditorSetDocumentCharacterSet('ISO-8859-4');"/>
+                                 <menuitem value="&dcharIsoGreekCmd.label;" accesskey="&charsetGreek.accesskey;" oncommand="EditorSetDocumentCharacterSet('ISO-8859-7');"/>
+                                 <menuitem value="&dcharIso9Cmd.label;" accesskey="&charsetLatin5.accesskey;" oncommand="EditorSetDocumentCharacterSet('ISO-8859-9');"/>
+                                 <menuitem value="&dcharIso10Cmd.label;" accesskey="&charsetLatin6.accesskey;" oncommand="EditorSetDocumentCharacterSet('ISO-8859-10');"/>
+                                 <menuitem value="&dcharIso13Cmd.label;" accesskey="&charsetLatin7.accesskey;" oncommand="EditorSetDocumentCharacterSet('ISO-8859-13');"/>
+                                 <menuitem value="&dcharIso14Cmd.label;" accesskey="&charsetLatin8.accesskey;" oncommand="EditorSetDocumentCharacterSet('ISO-8859-14');"/>
+                        </menupopup>
+                 </menu>
+                 <menu  id="charsetMenu1" value="&dcharMenu1.label;" accesskey="&viewcharsetmenu1.accesskey;">
+                     <menupopup>
+                                 <menuitem value="&dcharJapanCmd.label;" accesskey="&charsetJIS.accesskey;" oncommand="EditorSetDocumentCharacterSet('ISO-2022-JP');"/>
+                                 <menuitem value="&dcharJapanShiftjsCmd.label;" accesskey="&charsetshiftJIS.accesskey;" oncommand="EditorSetDocumentCharacterSet('Shift_JIS');"/>
+                                 <menuitem value="&dcharJapanEucCmd.label;" accesskey="&charsetJapaneseEUC.accesskey;" oncommand="EditorSetDocumentCharacterSet('EUC-JP');"/>
+                                         <menuseparator />
+                                 <menuitem value="&dcharTradChiBigCmd.label;" accesskey="&charsetChineseBig5.accesskey;" oncommand="EditorSetDocumentCharacterSet('Big5');"/>
+                                 <menuitem value="&dcharTriChiEucCmd.label;" accesskey="&charsetChineseEUC.accesskey;" oncommand="EditorSetDocumentCharacterSet('x-euc-tw');"/>
+                                 <menuitem value="&dcharSimpChiGbCmd.label;" accesskey="&charsetChineseSimplified.accesskey;" oncommand="EditorSetDocumentCharacterSet('GB2312');"/>
+                                         <menuseparator />
+                                 <menuitem value="&dcharKoreanCmd.label;" accesskey="&charsetKorean.accesskey;" oncommand="EditorSetDocumentCharacterSet('EUC-KR');"/>
+                                         <menuseparator />
+                                 <menuitem value="&dcharUtf7Cmd.label;" accesskey="&charsetUTF7.accesskey;" oncommand="EditorSetDocumentCharacterSet('UTF-7');"/>
+                                 <menuitem value="&dcharUtf8Cmd.label;" accesskey="&charsetUTF8.accesskey;" oncommand="EditorSetDocumentCharacterSet('UTF-8');"/>
+                        </menupopup>
+                 </menu>
+                 <menu  id="charsetMenu2" value="&dcharMenu2.label;" accesskey="&viewcharsetmenu2.accesskey;">
+                     <menupopup>
+                                 <menuitem value="&dcharRusCmd.label;" accesskey="&charsetRussian.accesskey;" oncommand="EditorSetDocumentCharacterSet('KOI8-R');"/>
+                                 <menuitem value="&dcharIsoCyrCmd.label;" accesskey="&charsetISOCyrillic.accesskey;" oncommand="EditorSetDocumentCharacterSet('ISO-8859-5');"/>
+                                 <menuitem value="&dcharWinCyrCmd.label;" accesskey="&charsetWinCyrillic.accesskey;" oncommand="EditorSetDocumentCharacterSet('windows-1251');"/>
+                                 <menuitem value="&dcharEcmaCyrCmd.label;" accesskey="&charsetECMACyrillic.accesskey;" oncommand="EditorSetDocumentCharacterSet('ISO-IR-111');"/>
+                                 <menuitem value="&dcharDosCyrCmd.label;" accesskey="&charsetDOSCyrillic.accesskey;" oncommand="EditorSetDocumentCharacterSet('IBM866');"/>
+                                 <menuitem value="&dcharMacCyrCmd.label;" accesskey="&charsetMacCyrillic.accesskey;" oncommand="EditorSetDocumentCharacterSet('x-mac-cyrillic');"/>
+                                 <menuitem value="&dcharUkrCmd.label;" accesskey="&charsetUkrainian.accesskey;" oncommand="EditorSetDocumentCharacterSet('KOI8-U');"/>
+                                 <menuitem value="&dcharMacUkrCmd.label;" accesskey="&charsetMacUkrainian.accesskey;" oncommand="EditorSetDocumentCharacterSet('x-mac-ukrainian');"/>
+                        </menupopup>
+                 </menu>
+                 <menu  id="charsetMenu3" value="&dcharMenu3.label;" accesskey="&viewcharsetmenu3.accesskey;">
+                     <menupopup>
+                                 <menuitem value="&dcharWinVietCmd.label;" accesskey="&charsetWinVietnamese.accesskey;" oncommand="EditorSetDocumentCharacterSet('windows-1258');"/>
+                                 <menuitem value="&dcharVietTcnCmd.label;" accesskey="&charsetVietnameseTCN.accesskey;" oncommand="EditorSetDocumentCharacterSet('x-viet-tcvn5712');"/>
+                                 <menuitem value="&dcharVietViCmd.label;" accesskey="&charsetVietnameseVIS.accesskey;" oncommand="EditorSetDocumentCharacterSet('VISCII');"/>
+                                 <menuitem value="&dcharVieVpCmd.label;" accesskey="&charsetVietnameseVPS.accesskey;" oncommand="EditorSetDocumentCharacterSet('x-viet-vps');"/>
+                                         <menuseparator />
+                                 <menuitem value="&dcharThaiCmd.label;" accesskey="&charsetThai.accesskey;" oncommand="EditorSetDocumentCharacterSet('TIS-620');"/>
+                                         <menuseparator />
+                                 <menuitem value="&dcharArmCmd.label;" accesskey="&charsetArmenian.accesskey;" oncommand="EditorSetDocumentCharacterSet('ARMSCII-8');"/>
+                                         <menuseparator />
+                                 <menuitem value="&dcharIso6Cmd.label;" accesskey="&charsetArabic.accesskey;" oncommand="EditorSetDocumentCharacterSet('ISO-8859-6');"/>
+                                 <menuitem value="&dcharCp1256Cmd.label;" accesskey="&charsetWinArabic.accesskey;" oncommand="EditorSetDocumentCharacterSet('windows-1256');"/>
+                                         <menuseparator />
+                                 <menuitem value="&dcharIso8Cmd.label;" accesskey="&charsetHebrew.accesskey;" oncommand="EditorSetDocumentCharacterSet('ISO-8859-8');"/>
+                                 <menuitem value="&dcharCp1255Cmd.label;" accesskey="&charsetWinHebrew.accesskey;" oncommand="EditorSetDocumentCharacterSet('windows-1255');"/>
+                        </menupopup>
+                 </menu>
+                 <menu id="charsetMenu4" value="&dcharMenu4.label;" accesskey="&viewcharsetmenu4.accesskey;">
+                     <menupopup>
+                                 <menuitem value="&dcharMacRomCmd.label;" accesskey="&charsetMacRoman.accesskey;" oncommand="EditorSetDocumentCharacterSet('x-mac-roman');"/>
+                                 <menuitem value="&dcharMacCenEuroCmd.label;" accesskey="&charsetMacCentralEurope.accesskey;" oncommand="EditorSetDocumentCharacterSet('x-mac-ce');"/>
+                                 <menuitem value="&dcharMacTurCmd.label;" accesskey="&charsetMacTurkish.accesskey;" oncommand="EditorSetDocumentCharacterSet('x-mac-turkish');"/>
+                                 <menuitem value="&dcharMacCroaCmd.label;" accesskey="&charsetMacCroatian.accesskey;" oncommand="EditorSetDocumentCharacterSet('x-mac-croatian');"/>
+                                 <menuitem value="&dcharMacRomanianCmd.label;" accesskey="&charsetMacRomanian.accesskey;" oncommand="EditorSetDocumentCharacterSet('x-mac-romanian');"/>
+                                 <menuitem value="&dcharMacIceCmd.label;" accesskey="&charsetMacIcelandic.accesskey;" oncommand="EditorSetDocumentCharacterSet('x-mac-icelandic');"/>
+                                 <menuitem value="&dcharMacGreekCmd.label;" accesskey="&charsetMacGreek.accesskey;" oncommand="EditorSetDocumentCharacterSet('x-mac-greek');"/>
+                        </menupopup>
+                 </menu>
+                 <menu id="charsetMenu5" value="&dcharMenu5.label;" accesskey="&viewcharsetmenu4.accesskey;">
+                     <menupopup>
+                                 <menuitem value="&dcharWinLat1Cmd.label;" accesskey="&charsetWinLatin1.accesskey;" oncommand="EditorSetDocumentCharacterSet('windows-1252');"/>
+                                 <menuitem value="&dcharWinLat2Cmd.label;" accesskey="&charsetWinLatin2.accesskey;" oncommand="EditorSetDocumentCharacterSet('windows-1250');"/>
+                                 <menuitem value="&dcharWinLat5Cmd.label;" accesskey="&charsetWinLatin5.accesskey;" oncommand="EditorSetDocumentCharacterSet('windows-1254');"/>
+                                 <menuitem value="&dcharWinBalRimCmd.label;" accesskey="&charsetWinBaltic.accesskey;" oncommand="EditorSetDocumentCharacterSet('windows-1257');"/>
+                                 <menuitem value="&dcharWinGreekCmd.label;" accesskey="&charsetWinGreek.accesskey;" oncommand="EditorSetDocumentCharacterSet('windows-1253');"/>
+                        </menupopup>
+                 </menu>
 
     <!-- Insert menu -->
     <menu id="insertMenu" value="&insertMenu.label;" accesskey="&insertmenu.accesskey;">
