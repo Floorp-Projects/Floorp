@@ -41,9 +41,6 @@
     <key id="openeditorkb"   key="&fileopen.keybinding;"   observes="cmd_open"  modifiers="accel"/>
     <key id="openremoteeditorkb"  key="&fileopenremote.keybinding;"  observes="cmd_openRemote"  modifiers="accel,shift"/>
     <key id="savekb"         key="&filesave.keybinding;"   observes="cmd_save" modifiers="accel"/>
-<!-- For bug 78255, but need too check for conflicts before using this
-    <key id="saveaskb"       key="&filesave.keybinding;"   observes="cmd_saveAs" modifiers="accel, shift"/>
--->
     <key id="closekb"        key="&fileclose.keybinding;"  observes="cmd_close"  modifiers="accel"/>
     <key id="printkb"        key="&fileprint.keybinding;"  observes="cmd_print"  modifiers="accel"/>
     <key id="key_quit"/>
