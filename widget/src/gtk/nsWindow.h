@@ -186,11 +186,9 @@ protected:
   GtkWidget   *mMozArea;
   GtkWidget   *mMozAreaClosestParent;
 
-  nsIMenuBar *mMenuBar;
   // are we doing a grab?
   static PRBool      mIsGrabbing;
   static nsWindow   *mGrabWindow;
-  static GHashTable *mWindowLookupTable;
 private:
   nsresult     SetIcon(GdkPixmap *window_pixmap, 
                        GdkBitmap *window_mask);
@@ -211,9 +209,6 @@ public:
   ChildWindow();
   ~ChildWindow();
   virtual PRBool IsChild() const;
-#ifndef USE_SUPERWIN
-  NS_IMETHOD Destroy(void);
-#endif
 };
 
 #endif // Window_h__

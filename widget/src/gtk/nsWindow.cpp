@@ -62,9 +62,6 @@ gint handle_toplevel_focus_out(
 // are we grabbing?
 PRBool      nsWindow::mIsGrabbing = PR_FALSE;
 nsWindow   *nsWindow::mGrabWindow = NULL;
-// this is a hash table that contains a list of the
-// shell_window -> nsWindow * lookups
-GHashTable *nsWindow::mWindowLookupTable = NULL;
 
 //-------------------------------------------------------------------------
 //
@@ -90,9 +87,6 @@ nsWindow::nsWindow()
   mIsTooSmall = PR_FALSE;
   mIsUpdating = PR_FALSE;
   mBlockFocusEvents = PR_FALSE;
-  if (mWindowLookupTable == NULL) {
-    mWindowLookupTable = g_hash_table_new(g_int_hash, g_int_equal);
-  }
 }
 
 //-------------------------------------------------------------------------
@@ -201,52 +195,32 @@ nsWindow::DestroyNative(void)
     mSuperWin = nsnull;
   }
   else if(mSuperWin) {
-    // remove the key from the hash table for the shell_window
-    g_hash_table_remove(mWindowLookupTable, mSuperWin->shell_window);
     gdk_superwin_destroy(mSuperWin);
     mSuperWin = NULL;
   }
 }
 
-// this function will find all of the children of the bin_window and
-// will try to destroy them if they are superwindows, calling Destroy()
-// on them.  this is so that we can keep track of which widgets
-// have been destroyed. 
+// this function will walk the list of children and destroy them.
+// the reason why this is here is that because of the superwin code
+// it's very likely that we will never get notification of the
+// the destruction of the child windows.  so, we have to beat the
+// layout engine to the punch.  CB 
 
 void
 nsWindow::DestroyNativeChildren(void)
 {
-  if (mSuperWin) {
-    GList *children;
-    children = gdk_window_get_children(mSuperWin->bin_window);
-    if (children) {
-      GList *tmp_list = children;
-      while (tmp_list) {
-        GdkWindow *this_window = (GdkWindow *)tmp_list->data;
-        void *user_data = NULL;
-        // get the user data.  this will be set on a widget.
-        gdk_window_get_user_data(this_window, (gpointer *)&user_data);
-        if (user_data) {
-          if (GTK_IS_WIDGET(user_data)) {
-            GtkWidget *this_widget = (GtkWidget *)user_data;
-            gtk_widget_destroy(this_widget);
-          }
-        }
-        else {
-          // ok, this is probably a superwin->shell_window.
-          // check to see if we can get it.
-          nsWindow *thisWindow = (nsWindow *)g_hash_table_lookup(mWindowLookupTable, this_window);
-          if (thisWindow) {
-            thisWindow->Destroy();
-          }
-        }
-        
-        // move to the next element, please.
-        // thank you.  come again.
-        tmp_list = tmp_list->next;
+  nsCOMPtr <nsIEnumerator> children (getter_AddRefs(GetChildren()));
+  
+  if (children) {
+    children->First();
+    do {
+      nsISupports *child;
+      if (NS_SUCCEEDED(children->CurrentItem(&child))) {
+        nsIWidget *childWindow = NS_STATIC_CAST(nsIWidget *, child);
+        NS_RELEASE(child);
+        childWindow->Destroy();
       }
-      g_list_free(children);
-    }
+    } while(NS_SUCCEEDED(children->Next()));
   }
 }
 
@@ -1042,10 +1016,6 @@ NS_METHOD nsWindow::CreateNative(GtkObject *parentWidget)
       mSuperWin = gdk_superwin_new(superwin->bin_window,
                                    mBounds.x, mBounds.y,
                                    mBounds.width, mBounds.height);
-      // add the shell_window for this window to the table lookup
-      // this is so that as part of destruction we can find the superwin
-      // associated with the window.
-      g_hash_table_insert(mWindowLookupTable, mSuperWin->shell_window, this);
     }
     else
       g_print("warning: attempted to CreateNative() without a superwin parent\n");
@@ -1809,12 +1779,15 @@ NS_IMETHODIMP nsWindow::EndResizingChildren(void)
 
 PRBool nsWindow::OnKey(nsKeyEvent &aEvent)
 {
-  PRBool releaseWidget = PR_FALSE;
+
+  PRBool    releaseWidget = PR_FALSE;
+  nsWidget *widget = NULL;
 
   // rewrite the key event to the window with 'de focus
   if (focusWindow) {
+    widget = focusWindow;
+    NS_ADDREF(widget);
     aEvent.widget = focusWindow;
-    NS_ADDREF(aEvent.widget);
     releaseWidget = PR_TRUE;
   }
   if (mEventCallback) {
@@ -1822,7 +1795,7 @@ PRBool nsWindow::OnKey(nsKeyEvent &aEvent)
   }
 
   if (releaseWidget)
-    NS_RELEASE(aEvent.widget);
+    NS_RELEASE(widget);
 
   return PR_FALSE;
 }
@@ -2749,18 +2722,3 @@ PRBool ChildWindow::IsChild() const
   return PR_TRUE;
 }
 
-#ifndef USE_SUPERWIN
-
-NS_METHOD ChildWindow::Destroy()
-{
-#ifdef NOISY_DESTROY
-  IndentByDepth(stdout);
-  printf("ChildWindow::Destroy:%p  \n", this);
-#endif
-
-  // Skip over baseclass Destroy method which doesn't do what we want;
-  // instead make sure widget destroy method gets invoked.
-  return nsWidget::Destroy();
-}
-
-#endif
