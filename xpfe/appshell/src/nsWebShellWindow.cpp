@@ -1969,6 +1969,9 @@ void nsWebShellWindow::ShowAppropriateChrome()
   if (NS_FAILED(chromeDoc->GetDocumentElement(getter_AddRefs(rootElement))) || !rootElement)
     return;
 
+  // special treatment for the menubar
+  ShowMenuBar(mChromeMask & NS_CHROME_MENU_BAR_ON ? PR_TRUE : PR_FALSE);
+
   // get a list of this document's elements with the chromeclass attribute specified
   xulRoot = do_QueryInterface(rootElement);
   if (xulRoot) { // todo (maybe) the longer, straight DOM (not RDF) version?
@@ -1989,25 +1992,24 @@ void nsWebShellWindow::ShowAppropriateChrome()
           // show or hide the element according to its chromeclass and the chromemask
           domElement->GetAttribute("chromeclass", chromeClass);
           makeChange = PR_FALSE;
-          if (chromeClass == "menubar") {
-            if (!(mChromeMask & NS_CHROME_MENU_BAR_ON))
-              mWindow->ShowMenuBar(PR_FALSE);
+          if (chromeClass == "toolbar") {
+            makeChange = PR_TRUE;
+            flag = mChromeMask & NS_CHROME_TOOL_BAR_ON;
           } else if (chromeClass == "location") {
             makeChange = PR_TRUE;
             flag = mChromeMask & NS_CHROME_LOCATION_BAR_ON;
+          } else if (chromeClass == "directories") {
+            makeChange = PR_TRUE;
+            flag = mChromeMask & NS_CHROME_PERSONAL_TOOLBAR_ON;
           } else if (chromeClass == "status") {
             makeChange = PR_TRUE;
             flag = mChromeMask & NS_CHROME_STATUS_BAR_ON;
-          } else if (chromeClass == "toolbar") {
-            makeChange = PR_TRUE;
-            flag = mChromeMask & NS_CHROME_TOOL_BAR_ON;
           }
-          if (makeChange) {
+          if (makeChange)
             if (flag)
               domElement->RemoveAttribute("chromehidden");
             else
-              domElement->SetAttribute("chromehidden", "");
-          }
+              domElement->SetAttribute("chromehidden", "T");
         }
       }
     }
@@ -2423,6 +2425,10 @@ NS_IMETHODIMP nsWebShellWindow::SetProgress(PRInt32 aProgress, PRInt32 aProgress
 NS_IMETHODIMP
 nsWebShellWindow::ShowMenuBar(PRBool aShow)
 {
+  if (aShow)
+    mChromeMask |= NS_CHROME_MENU_BAR_ON;
+  else
+    mChromeMask &= ~NS_CHROME_MENU_BAR_ON;
   return mWindow->ShowMenuBar(aShow);
 }
 

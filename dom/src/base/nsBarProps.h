@@ -45,8 +45,8 @@ public:
 
   NS_IMETHOD_(void) SetBrowserWindow(nsIBrowserWindow *aBrowser);
 
-  NS_IMETHOD        GetVisible(PRBool *aVisible) = 0;
-  NS_IMETHOD        SetVisible(PRBool aVisible) = 0;
+  NS_IMETHOD        GetVisible(PRBool *aVisible, PRUint32 aChromeFlag);
+  NS_IMETHOD        SetVisible(PRBool aVisible, PRUint32 aChromeFlag);
 
 protected:
   nsIBrowserWindow* mBrowser;
