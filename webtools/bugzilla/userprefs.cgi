@@ -20,7 +20,12 @@ use strict;
 
 require "CGI.pl";
 
-
+# Shut up misguided -w warnings about "used only once".  "use vars" just
+# doesn't work for me.
+sub sillyness {
+    my $zz;
+    $zz = $::defaultqueryname;
+}
 
 my $userid;
 
@@ -154,21 +159,24 @@ sub ShowFooter {
     EmitEntry("The 'My bugs' link at the footer of each page", $entry);
     SendSQL("SELECT name, linkinfooter FROM namedqueries " .
             "WHERE userid = $userid");
-    my $found = 0;
+    my $count = 0;
     while (MoreSQLData()) {
         my ($name, $linkinfooter) = (FetchSQLData());
         if ($name eq $::defaultqueryname) {
             next;
         }
-        $found = 1;
         my $entry =
-            BuildPulldown("query-" . value_quote($name),
+            BuildPulldown("query-$count",
                           [["0", "should only appear in the query page"],
                            ["1", "should appear on the footer of every page"]],
                           $linkinfooter);
         EmitEntry("Your query named '$name'", $entry);
+        my $q = value_quote($name);
+        print qq{<INPUT TYPE=HIDDEN NAME="name-$count" VALUE="$q">\n};
+        $count++;
     }
-    if (!$found) {
+    print qq{<INPUT TYPE=HIDDEN NAME="numqueries" VALUE="$count">\n};
+    if (!$count) {
         print qq{
 <TR><TD COLSPAN="2">
 If you go create remembered queries in the <A HREF="query.cgi">query page</A>,
@@ -187,14 +195,18 @@ sub SaveFooter {
         my ($name, $linkinfooter) = (FetchSQLData());
         $old{$name} = $linkinfooter;
     }
-    foreach my $name (keys %old) {
-        if (exists $::FORM{"query-$name"}) {
-            my $new = $::FORM{"query-$name"};
+    
+    for (my $c=0 ; $c<$::FORM{'numqueries'} ; $c++) {
+        my $name = $::FORM{"name-$c"};
+        if (exists $old{$name}) {
+            my $new = $::FORM{"query-$c"};
             if ($new ne $old{$name}) {
                 SendSQL("UPDATE namedqueries SET linkinfooter = $new " .
                         "WHERE userid = $userid " .
                         "AND name = " . SqlQuote($name));
             }
+        } else {
+            Error("Hmm, the $name query seems to have gone away.");
         }
     }
     SendSQL("UPDATE profiles SET mybugslink = '" . $::FORM{'mybugslink'} .
@@ -214,6 +226,10 @@ print "Content-type: text/html\n\n";
 GetVersionTable();
 
 PutHeader("Preferences", "Preferences", $::COOKIE{'Bugzilla_login'});
+
+#  foreach my $k (sort(keys(%::FORM))) {
+#      print "<pre>" . value_quote($k) . ": " . value_quote($::FORM{$k}) . "\n</pre>";
+#  }
 
 my $bank = $::FORM{'bank'} || "account";
 
