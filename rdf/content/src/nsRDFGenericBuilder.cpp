@@ -74,9 +74,7 @@
 #include "nsIDOMXULDocument.h"
 
 #define	XUL_TEMPLATES			1
-/*
 #define	XUL_TEMPLATES_ASSERTIONS	1
-*/
 
 ////////////////////////////////////////////////////////////////////////
 
