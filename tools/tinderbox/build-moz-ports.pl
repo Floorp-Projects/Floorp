@@ -6,7 +6,7 @@ use Sys::Hostname;
 use POSIX "sys_wait_h";
 use Cwd;
 
-$Version = '$Revision: 1.23 $';
+$Version = '$Revision: 1.24 $';
 
 sub InitVars {
     # PLEASE FILL THIS IN WITH YOUR PROPER EMAIL ADDRESS
@@ -29,13 +29,10 @@ sub InitVars {
     $CVS = 'cvs -q';
     $CVSCO = 'checkout -P';
 
-    # Set these proper values for your tinderbox server
-    $Tinderbox_server = 'tinderbox-daemon\@cvs-mirror.mozilla.org';
-
     # You'll need to change these to suit your machine's needs
     $BaseDir = '/builds/tinderbox/SeaMonkey';
     $NSPRDir = '/builds/tinderbox/SeaMonkey/nspr';
-    $DisplayServer = 'crucible.mcom.com:0.0';
+    $DisplayServer = 'costarica.mcom.com:0.0';
 
     # These shouldn't really need to be changed
     $BinaryName = '/dist/bin/apprunner';
@@ -54,6 +51,7 @@ sub InitVars {
     $NSCommModule = 'CommercialClient50All';
     $NSPRArgs = 'DIST=' . $NSPRDir . ' MOZILLA_CLIENT=1 NSDISTMODE=copy NO_MDUPDATE=1 ';
     $ShellOverride = ''; # Only used if the default shell is too stupid
+    $Tinderbox_server = 'tinderbox-daemon\@cvs-mirror.mozilla.org';
     $TopLevel = '.';
     $Topsrcdir = 'mozilla';
 }
@@ -61,8 +59,9 @@ sub InitVars {
 sub SetupEnv {
     umask(0);
     $ENV{"CVSROOT"} = ':pserver:anonymous@cvs-mirror.mozilla.org:/cvsroot';
-    $ENV{"LD_LIBRARY_PATH"} = $NSPRDir . '/lib:' . $BaseDir . '/' . $DirName . '/mozilla/' . $ObjDir . '/dist/bin:/usr/lib/png:/usr/local/lib';
     $ENV{"DISPLAY"} = $DisplayServer;
+    $ENV{"LD_LIBRARY_PATH"} = $NSPRDir . '/lib:' . $BaseDir . '/' . $DirName . '/mozilla/' . $ObjDir . '/dist/bin:/usr/lib/png:/usr/local/lib';
+    $ENV{"TMPDIR"} = '.';
 }
 
 sub SetupPath {
@@ -337,7 +336,7 @@ sub BuildIt {
     # With only one it makes no sense to use this.
     $jflag = "-j $cpus" if ( $cpus > 1 );
 
-    print "Starting dir is : $StartDir\n";
+    print "Starting dir is: $StartDir\n";
 
     while ( ! $EarlyExit ) {
 	chdir("$StartDir");
@@ -449,17 +448,6 @@ sub BuildIt {
 	}
 	close(CONFIGURE);
 
-	print "--- config.cache.\n";
-	print LOG "--- config.cache.\n";
-	open (CONFIGURE, "config.cache");
-	while (<CONFIGURE>) {
-		print $_;
-		print LOG $_;
-	}
-	close(CONFIGURE);
-	print "--- config.cache.\n";
-	print LOG "--- config.cache.\n";
-
 	# If we are building depend, rebuild dependencies
 	if ( $BuildDepend ) {
 	    $ClobberTarget = '';
@@ -521,13 +509,13 @@ sub BuildIt {
 	close(LOG);
 	chdir("$StartDir");
 
-	# this fun line added on 2/5/98. do not remove. Translated to english,
+	# This fun line added on 2/5/98.  Do not remove.  Translated to english,
 	# that's "take any line longer than 1000 characters, and split it into less
 	# than 1000 char lines.  If any of the resulting lines is
 	# a dot on a line by itself, replace that with a blank line."  
 	# This is to prevent cases where a <cr>.<cr> occurs in the log file.  Sendmail
 	# interprets that as the end of the mail, and truncates the log before
-	# it gets to Tinderbox.  (terry weismann, chris yeh)
+	# it gets to Tinderbox.  (Terry Weismann, Chris Yeh)
 	#
 	# This was replaced by a perl 'port' of the above, writen by 
 	# preed@netscape.com; good things: no need for system() call, and now it's
