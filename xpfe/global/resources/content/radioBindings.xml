@@ -64,7 +64,7 @@
       <handler type="click">
         try
           {
-            if( event.target.nodeName == "radio" )
+            if( event.target.localName == "radio" )
               this.selectedItem = event.target;
           }
         catch(e)
@@ -74,7 +74,7 @@
       <handler type="keypress" key=" ">
         try
           {
-            if( event.target.nodeName == "radio" )
+            if( event.target.localName == "radio" )
               this.selectedItem = event.target;
           }
         catch(e)

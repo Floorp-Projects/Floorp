@@ -19,7 +19,7 @@
         onkeypress="
 			var v = document.commandDispatcher.focusedElement;
 			
-			if (v &amp;&amp; (v.tagName == 'INPUT' || v.tagName == 'TEXTAREA')) {
+			if (v &amp;&amp; (v.localName == 'INPUT' || v.localName == 'TEXTAREA')) {
 			  return true;
             }
 
