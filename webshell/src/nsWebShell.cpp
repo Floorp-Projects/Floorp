@@ -1990,77 +1990,95 @@ nsWebShell::LoadURL(const PRUnichar *aURLSpec,
                     const PRUint32 aLocalIP)
 {
   nsresult rv;
-  nsAutoString urlSpec;
-  nsString urlStr = aURLSpec;
-  urlStr.Trim(" ", PR_TRUE, PR_TRUE);
-  convertFileToURL(urlStr, urlSpec);
+  nsString2 urlStr = aURLSpec;
 
 #ifdef NECKO
   CancelRefreshURITimers();
 #endif // NECKO
 
-//#ifdef NECKO
-//  nsCOMPtr<nsIURI> url;
-//  rv = NS_NewURI(getter_AddRefs(url), urlSpec);
-//  if (NS_FAILED(rv)) return rv;
-//#else
+  // first things first. try to create a uri out of the string.
+  nsIURI *uri = nsnull;
+  rv = NS_NewURI(&uri, urlStr, nsnull);
+  if (NS_FAILED(rv)) {
+    // no dice.
+    nsAutoString urlSpec;
+    urlStr.Trim(" ", PR_TRUE, PR_TRUE);
 
-  PRInt32 colon, fSlash;
-  PRUnichar port;
-  fSlash=urlSpec.FindChar('/');
-  
+    // see if we've got a file url.
+    convertFileToURL(urlStr, urlSpec);
+    rv = NS_NewURI(&uri, urlSpec, nsnull);
+    if (NS_FAILED(rv)) {
+      // no dice, try more tricks
 
-  // if no scheme (protocol) is found, assume http.
-  if ( ((colon=urlSpec.FindChar(':')) == -1) // no colon at all
-       || ( (fSlash > -1) && (colon > fSlash) ) // the only colon comes after the first slash
-       || ( (colon < urlSpec.Length()-1) // the first char after the first colon is a digit (i.e. a port)
-            && ((port=urlSpec.CharAt(colon+1)) <= '9')
-            && (port > '0') )) {
-    // find host name
-    int hostPos = urlSpec.FindCharInSet("./:");
-    if (hostPos == -1) {
-      hostPos = urlSpec.Length();
+      PRInt32 colon, fSlash = urlSpec.FindChar('/');
+      PRUnichar port;
+      // if no scheme (protocol) is found, assume http.
+      if ( ((colon=urlSpec.FindChar(':')) == -1) // no colon at all
+           || ( (fSlash > -1) && (colon > fSlash) ) // the only colon comes after the first slash
+           || ( (colon < urlSpec.Length()-1) // the first char after the first colon is a digit (i.e. a port)
+                && ((port=urlSpec.CharAt(colon+1)) <= '9')
+                && (port > '0') )) {
+        // find host name
+        PRInt32 hostPos = urlSpec.FindCharInSet("./:");
+        if (hostPos == -1) {
+          hostPos = urlSpec.Length();
+        }
+
+        // extract host name
+        nsAutoString hostSpec;
+        urlSpec.Left(hostSpec, hostPos);
+
+        // insert url spec corresponding to host name
+        if (hostSpec.EqualsIgnoreCase("ftp")) {
+          urlSpec.Insert("ftp://", 0, 6);
+        } else {
+          urlSpec.Insert("http://", 0, 7);
+        }
+      } // end if colon
+      rv = NS_NewURI(&uri, urlSpec, nsnull);
+      if (NS_FAILED(rv)) {
+        // no dice, even more tricks?
+        return rv;
+      }
     }
 
-    // extract host name
-    nsAutoString hostSpec;
-    urlSpec.Left(hostSpec, hostPos);
-
-    // insert url spec corresponding to host name
-    if (hostSpec.EqualsIgnoreCase("www")) {
-      nsString ftpDef("http://");
-      urlSpec.Insert(ftpDef, 0, 7);
-    } else if (hostSpec.EqualsIgnoreCase("ftp")) {
-      nsString ftpDef("ftp://");
-      urlSpec.Insert(ftpDef, 0, 6);
-    } else {
-      nsString httpDef("http://");
-      urlSpec.Insert(httpDef, 0, 7);
-    }
   }
+
+  char *scheme = nsnull, *CUriSpec = nsnull;
+
+  rv = uri->GetScheme(&scheme);
+  if (NS_FAILED(rv)) return rv;
+  rv = uri->GetSpec(&CUriSpec);
+  NS_RELEASE(uri);
+  if (NS_FAILED(rv)) return rv;
+
+  nsAutoString uriSpec(CUriSpec);
+  nsAllocator::Free(CUriSpec);
+
+  mURL = uriSpec;
 
 
   //Take care of mailto: url
-  nsIWebShell * root= nsnull;
-  PRInt32 index = urlSpec.Find("mailto:", PR_TRUE);
   PRBool  isMail= PR_FALSE, isBrowser = PR_FALSE;
-  if (index == 0) {
+
+  nsAutoString mailTo("mailto");
+  if (mailTo.Equals(scheme, PR_TRUE)) {
      isMail = PR_TRUE;
   }
+  nsAllocator::Free(scheme);
 
-  
-  nsresult res = GetRootWebShell(root);
-  if (NS_SUCCEEDED(res) && root) {
+  nsIWebShell * root= nsnull;
+  rv = GetRootWebShell(root);
+  if (NS_SUCCEEDED(rv) && root) {
      nsIDocumentLoaderObserver * dlObserver = nsnull;
  
-     res = root->GetDocLoaderObserver(dlObserver);
-     if (NS_SUCCEEDED(res) && dlObserver) {
+     rv = root->GetDocLoaderObserver(dlObserver);
+     if (NS_SUCCEEDED(rv) && dlObserver) {
         isBrowser = PR_TRUE;
+        NS_RELEASE(dlObserver);
      }
-     NS_IF_RELEASE(dlObserver); 
   }
 
-  
   /* Ask the URL dispatcher to take car of this URL only if it is a
    * mailto: link clicked inside a browser or any link clicked
    * inside a *non-browser* window. Note this mechanism s'd go away once 
@@ -2071,26 +2089,25 @@ nsWebShell::LoadURL(const PRUnichar *aURLSpec,
 
     if (root) {
        nsCOMPtr<nsIUrlDispatcher>  urlDispatcher = nsnull;
-       res = GetUrlDispatcher(*getter_AddRefs(urlDispatcher));
-       if (NS_SUCCEEDED(res) && urlDispatcher) {
+       rv = GetUrlDispatcher(*getter_AddRefs(urlDispatcher));
+       if (NS_SUCCEEDED(rv) && urlDispatcher) {
 		  printf("calling HandleUrl\n");
           urlDispatcher->HandleUrl(LinkCommand.GetUnicode(), 
-                                   urlSpec.GetUnicode(), aPostDataStream);
+                                   mURL.GetUnicode(), aPostDataStream);
           return NS_OK;          
        }
+       NS_RELEASE(root);
     }
   }
-  NS_IF_RELEASE(root);  
 
 
-   mURL = urlSpec.GetUnicode();
-   
+  
   /* If this is one of the frames, get it from the top level shell */
 
   if (aModifyHistory) {
 	  nsCOMPtr<nsIWebShell> webShell;
-	  nsresult res = GetRootWebShell(*getter_AddRefs(webShell));
-	  if (NS_SUCCEEDED(res) && webShell)
+	  rv = GetRootWebShell(*getter_AddRefs(webShell));
+	  if (NS_SUCCEEDED(rv) && webShell)
 	  {
       nsCOMPtr<nsISessionHistory> shist;
 	    webShell->GetSessionHistory(*getter_AddRefs(shist));
@@ -2103,7 +2120,7 @@ nsWebShell::LoadURL(const PRUnichar *aURLSpec,
   }
    
 
-  nsString* url = new nsString(urlSpec);
+  nsString* url = new nsString(uriSpec);
   if (aModifyHistory) {
     // Discard part of history that is no longer reachable
     PRInt32 i, n = mHistory.Count();
@@ -2139,11 +2156,8 @@ nsWebShell::LoadURL(const PRUnichar *aURLSpec,
     }
   }
   
-  const PRUnichar * urlString=nsnull;
-  GetURL(&urlString);
-  nsAutoString  newURL(urlString);
 
-  return DoLoadURL(newURL, aCommand, aPostDataStream, aType, aLocalIP);
+  return DoLoadURL(uriSpec, aCommand, aPostDataStream, aType, aLocalIP);
 //#endif
 }
 
