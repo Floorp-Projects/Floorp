@@ -146,6 +146,8 @@ function file_attachments()
 
 function InitEditMessagesMenu()
 {
+  goSetMenuValue('cmd_delete', 'valueDefault');
+  goSetAccessKey('cmd_delete', 'valueDefaultAccessKey');
   document.commandDispatcher.updateCommands('create-menu-edit');
 }
 

@@ -117,11 +117,6 @@ var FolderPaneController =
 	
 	onEvent: function(event)
 	{
-		// on blur events set the menu item texts back to the normal values
-		if ( event == 'blur' )
-        {
-			goSetMenuValue('cmd_delete', 'valueDefault');
-        }
 	}
 };
 
@@ -686,7 +681,6 @@ var DefaultController =
 		// on blur events set the menu item texts back to the normal values
 		if ( event == 'blur' )
         {
-			goSetMenuValue('cmd_delete', 'valueDefault');
             goSetMenuValue('cmd_undo', 'valueDefault');
             goSetMenuValue('cmd_redo', 'valueDefault');
         }
