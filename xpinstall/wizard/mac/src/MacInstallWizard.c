@@ -383,7 +383,7 @@ void ErrorHandler(short errCode)
     }
     else
     {
-        pstrcpy(pMessage, "\pSystem error: ");
+        pstrcpy(pMessage, "\pInstallation failed due to error: ");
         pstrcat(pMessage, pErrNo);
     }  
         
