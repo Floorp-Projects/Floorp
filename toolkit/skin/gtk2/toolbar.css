@@ -48,7 +48,7 @@ toolbar {
 }
 
 /* in browser.xul, the menubar is inside a toolbar... */
-toolbar > toolbaritem > menubar {
+toolbaritem > menubar {
   -moz-appearance: none !important;
 }
 
