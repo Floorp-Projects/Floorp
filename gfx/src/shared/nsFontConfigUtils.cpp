@@ -221,7 +221,7 @@ AddFFREandLog(FcPattern *aPattern, nsCString aFamily,
     if (NS_FFRECountHyphens(aFamily) >= 3)
         return;
 
-    if (PR_LOG_TEST(aLogModule, PR_LOG_DEBUG)) {
+    if (aLogModule && PR_LOG_TEST(aLogModule, PR_LOG_DEBUG)) {
         printf("\tadding generic font from preferences: %s\n",
                aFamily.get());
     }
