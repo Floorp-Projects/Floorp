@@ -39,9 +39,11 @@
  
   <groupbox>
     <caption>
-      <label value="&language.label;" 
-             accesskey="&language.accesskey;" 
-             control="selectLangs"/>
+      <hbox align="center">
+        <label value="&language.label;" 
+               accesskey="&language.accesskey;" 
+               control="selectLangs"/>
+      </hbox>
       <menulist id="selectLangs" oncommand="selectLanguage();"
                 preftype="localizedstring" prefstring="font.language.group"
                 wsm_attributes="value">
