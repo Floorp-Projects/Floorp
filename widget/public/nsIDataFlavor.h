@@ -43,6 +43,8 @@
 #define kGIFImageMime  "image/gif"
 #define kDropFilesMime "text/dropfiles"
 
+class nsIDataFlavor;
+
 class nsIDataFlavor : public nsISupports {
 
   public:
@@ -62,14 +64,22 @@ class nsIDataFlavor : public nsISupports {
     *
     * @param  aMimeStr string to be set
     */
-    NS_IMETHOD GetMimeType(nsString & aMimeStr) = 0;
+    NS_IMETHOD GetMimeType(nsString & aMimeStr) const = 0;
 
   /**
     * Gets the Human readable version of the mime string 
     *
     * @param  aReadableStr string to be set
     */
-    NS_IMETHOD GetHumanPresentableName(nsString & aReadableStr) = 0;
+    NS_IMETHOD GetHumanPresentableName(nsString & aReadableStr) const = 0;
+
+  /**
+    * Check to see if aDataFlavor's Mime type is the same 
+    *
+    * @param  aDataFlavor flavor to check
+    * @returns NS_OK if the Mime Type string are identical otherwise, it returns NS_ERROR_FAILURE
+    */
+    NS_IMETHOD Equals(const nsIDataFlavor * aDataFlavor) = 0;
 
 
 };

@@ -86,7 +86,7 @@ NS_METHOD nsDataFlavor::Init(const nsString & aMimeType, const nsString & aHuman
   * 
   *
   */
-NS_METHOD nsDataFlavor::GetMimeType(nsString & aMimeStr)
+NS_METHOD nsDataFlavor::GetMimeType(nsString & aMimeStr) const
 {
   aMimeStr = mMimeType;
   return NS_OK;
@@ -96,7 +96,7 @@ NS_METHOD nsDataFlavor::GetMimeType(nsString & aMimeStr)
   * 
   *
   */
-NS_METHOD nsDataFlavor::GetHumanPresentableName(nsString & aHumanPresentableName)
+NS_METHOD nsDataFlavor::GetHumanPresentableName(nsString & aHumanPresentableName) const
 {
   aHumanPresentableName = mHumanPresentableName;
   return NS_OK;
@@ -106,17 +106,11 @@ NS_METHOD nsDataFlavor::GetHumanPresentableName(nsString & aHumanPresentableName
   * 
   *
   */
-NS_METHOD nsDataFlavor::GetNativeData(void ** aData)
+NS_METHOD nsDataFlavor::Equals(const nsIDataFlavor * aDataFlavor)
 {
-  return NS_OK;
-}
+  nsString mimeInQues;
+  aDataFlavor->GetMimeType(mimeInQues);
 
-/**
-  * 
-  *
-  */
-NS_METHOD nsDataFlavor::SetNativeData(void * aData)
-{
-  return NS_OK;
+  return (mMimeType.Equals(mimeInQues)?NS_OK:NS_ERROR_FAILURE);
 }
 
