@@ -12,7 +12,8 @@ use vars qw(@ISA);
 my $do_spawn = $^O eq 'os2';
 
 sub croak {
-    exec $0 ($0, 'ABORT'); # do not call shutdown handlers
+    $0 =~ m/^(.*)$/os; # untaint $0 so that we can call it below:
+    exec { $1 } ($1, '--abort'); # do not call shutdown handlers
     exit(); # exit (implicit in exec() actually)   
 }
 

@@ -85,7 +85,6 @@
 $SIG{'INT'}  = sub { &killed('INT'); };
 $SIG{'KILL'} = sub { &killed('KILL'); };
 $SIG{'TERM'} = sub { &killed('TERM'); };
-$SIG{'CHLD'} = sub { wait(); }; # reap children
 
 # this allows us to exit() without shutting down (by exec($0)ing)
 BEGIN { exit() if ((defined($ARGV[0])) and ($ARGV[0] eq '--abort')); }
@@ -120,6 +119,7 @@ use Net::IRC 0.7; # 0.7 is not backwards compatible with 0.63 for CTCP responses
 use IO::SecurePipe; # internal based on IO::Pipe
 use IO::Select;
 use Socket;
+use POSIX ":sys_wait_h";
 use Carp qw(cluck confess);
 use Configuration; # internal
 use Mails; # internal
@@ -189,7 +189,7 @@ my $sleepdelay = 60;
 my $connectTimeout = 120;
 my $delaytime = 1.3; # amount of time to wait between outputs
 my $recentMessageCountLimit = 5; # upper limit
-my $recentMessageCountDecrementRate = 0.2; # how much to take off per $delayTime
+my $recentMessageCountDecrementRate = 0.2; # how much to take off per $delaytime
 my $recentMessageCountPenalty = 10; # if we hit the limit, bump it up by this much
 my $variablepattern = '[-_:a-zA-Z0-9]+';
 my %users = ('admin' => &newPassword('password')); # default password for admin
@@ -328,11 +328,10 @@ sub connect {
     &debug("connected! woohoo!");
 
     # add the handlers
-    &debug("adding IRC handlers");
+    &debug("adding event handlers");
 
     # $bot->debug(1); # this can help when debugging API stuff
 
-    &debug(" + informational ");
     $bot->add_global_handler([ # Informational messages -- print these to the console
         251, # RPL_LUSERCLIENT
         252, # RPL_LUSEROP
@@ -355,26 +354,22 @@ sub connect {
         407, # too many targets
     ], \&on_notice);
     
-    &debug(" + end of startup ");
     $bot->add_global_handler([ # should only be one command here - when to join channels
         376, # RPL_ENDOFMOTD
         422, # nomotd
     ], \&on_connect);  
     
-    &debug(" + nick management ");
-        $bot->add_global_handler([ # when to change nick name
+    $bot->add_global_handler([ # when to change nick name
         433, # ERR_NICKNAMEINUSE
         436, # nick collision
     ], \&on_nick_taken); 
     
-    &debug(" + connection management ");
     $bot->add_global_handler([ # when to give up and go home
         'disconnect', 'kill', # bad connection, booted offline
         465, # ERR_YOUREBANNEDCREEP
     ], \&on_disconnected);
     $bot->add_handler('destroy', \&on_destroy); # when object is GCed.
 
-    &debug(" + channel handlers");
     $bot->add_handler('msg', \&on_private); # /msg bot hello
     $bot->add_handler('public', \&on_public);  # hello
     $bot->add_handler('notice', \&on_noticemsg); # notice messages
@@ -390,7 +385,6 @@ sub connect {
     $bot->add_handler('umode', \&on_umode); # when modes of user change (by IRCop or ourselves)
     # XXX could add handler for 474, # ERR_BANNEDFROMCHAN
 
-    &debug(" + whois messages");
     $bot->add_handler([ # ones we handle to get our hostmask
         311, # whoisuser
     ], \&on_whois);
@@ -411,15 +405,12 @@ sub connect {
         366, # RPL_ENDOFNAMES "<channel> :End of /NAMES list"
     ], \&on_join_channel);
 
-    &debug(" + CTCP handlers");
     $bot->add_handler('cping', \&on_cping); # client to client ping
     $bot->add_handler('crping', \&on_cpong); # client to client ping (response)
     $bot->add_handler('cversion', \&on_version); # version info of mozbot.pl
     $bot->add_handler('csource', \&on_source); # where is mozbot.pl's source
     $bot->add_handler('caction', \&on_me); # when someone says /me 
     $bot->add_handler('cgender', \&on_gender); # guess
-
-    &debug("handlers added");
 
     $bot->schedule($connectTimeout, \&on_check_connect);
 
@@ -550,7 +541,12 @@ sub on_connect {
     } # close the scope for the %struct variable
 
     # tell the modules they have joined IRC
-    foreach my $module (@modules) { $module->JoinedIRC({'bot'=>$self}); }
+    my $event = newEvent({
+        'bot' => $self,
+    });
+    foreach my $module (@modules) {
+        $module->JoinedIRC($event);
+    }
 
     # join the channels
     &debug('going to join: '.join(',', @channels));
@@ -568,7 +564,9 @@ sub on_connect {
 
     # tell the modules to set up the scheduled commands
     &debug('setting up scheduler...');
-    foreach my $module (@modules) { $module->Schedule({'bot'=>$self}); } 
+    foreach my $module (@modules) {
+        $module->Schedule($event);
+    }
 
     # enable the drainmsgqueue
     &drainmsgqueue($self);
@@ -605,6 +603,13 @@ sub on_disconnected {
         $serverRestrictsIRCNames = $server;
         &Configuration::Save($cfgfile, &configStructure(\$serverRestrictsIRCNames));
         &debug('Hrm, $server didn\'t like our IRC name. Trying again with a simpler one.');
+        &debug("The full message from the server was: '$reason'");
+    } elsif ($reason =~ /Excess Flood/osi) {
+        # increase the delay by 20%
+        $delaytime = $delaytime * 1.2;
+        &Configuration::Save($cfgfile, &configStructure(\$delaytime));
+        &debug('Hrm, we it seems flooded the server. Trying again with a delay 20% longer.');
+        &debug("The full message from the server was: '$reason'");
     } else {
         &debug("eek! disconnected from network: '$reason'");
     }
@@ -622,7 +627,12 @@ sub on_join_channel {
     &Configuration::Save($cfgfile, &configStructure(\@channels));
     &debug("joined $channel, about to autojoin modules...");
     foreach (@modules) {
-        $_->JoinedChannel({'bot' => $self, 'channel' => $channel, 'target' => $channel, 'nick' => $nick}, $channel);
+        $_->JoinedChannel(newEvent({
+            'bot' => $self,
+            'channel' => $channel,
+            'target' => $channel,
+            'nick' => $nick
+        }), $channel);
     }
 }
 
@@ -763,6 +773,12 @@ sub on_version { &do(@_, 'CTCPVersion'); }
 sub on_source { &do(@_, 'CTCPSource'); }
 sub on_cping { &do(@_, 'CTCPPing'); }
 
+sub newEvent($) {
+    my $event = shift;
+    $event->{'time'} = time();
+    return $event;
+}
+
 sub toToChannel {
     my $self = shift;
     my $channel;
@@ -785,7 +801,7 @@ sub do {
     my $event = shift @_;
     my $to = $event->to;
     my $channel = &toToChannel($self, @$to);
-    my $e = {
+    my $e = newEvent({
         'bot' => $self,
         '_event' => $event, # internal internal internal do not use... ;-)
         'channel' => $channel,
@@ -798,10 +814,9 @@ sub do {
         'subtype' => $event->type,
         'firsttype' => $_[0],
         'nick' => $self->nick(),
-        'time' => time(),
         # level   (set below)
         # type  (set below)
-    };
+    });
     # updated admin field if person is an admin
     if ($authenticatedUsers{$event->userhost}) {
         if (($userFlags{$authenticatedUsers{$event->userhost}} & 1) == 1) {
@@ -932,7 +947,7 @@ sub drainmsgqueue {
                 &debug("Unknown action '$do' intended for '$who' (content: '$msg') ignored.");
             }
             if (defined($type)) {
-                &doLog({
+                &doLog(newEvent({
                     'bot' => $self,
                     '_event' => undef,
                     'channel' => &toToChannel($self, $who),
@@ -947,7 +962,7 @@ sub drainmsgqueue {
                     'nick' => $self->nick,
                     'level' => 0,
                     'type' => $type,
-                });
+                }));
             }
         }
         if (@msgqueue > 0) {
@@ -1097,9 +1112,11 @@ sub bot_select {
            (${$pipe}->{'BotModules_Module'}->{'_shutdown'} ? 
             ' (nevermind, module has shutdown)': ''));
     kill 9, ${$pipe}->{'BotModules_PID'}; # ensure child is dead
-    &debug("child ${$pipe}->{'BotModules_PID'} exited.");
+    # non-blocking reap of any pending zombies
+    1 while waitpid(-1,WNOHANG) > 0;
     return if ${$pipe}->{'BotModules_Module'}->{'_shutdown'}; # see unload()
     eval {
+        ${$pipe}->{'BotModules_Event'}->{'time'} = time(); # update the time field of the event
         ${$pipe}->{'BotModules_Module'}->ChildCompleted(
             ${$pipe}->{'BotModules_Event'},
             ${$pipe}->{'BotModules_ChildType'}, 
@@ -1491,6 +1508,7 @@ sub doScheduled {
     return if ($self->{'_shutdown'}); # see unload()
     # $self->debug("scheduled event occured; $times left @ $time second interval");
     eval {
+        $event->{'time'} = time(); # update the time field of the event
         $self->Scheduled($event, @data);
         $self->schedule($event, $time, --$times, @data);
     };
@@ -2506,7 +2524,7 @@ sub Told {
                 }
                 $self->saveConfig();
             }
-        } elsif ($message =~ /^\s*(?:shutup,?\s+please)\s*[?!.]*\s*$/osi) {
+        } elsif ($message =~ /^\s*(?:shut\s*up,?\s+please)\s*[?!.]*\s*$/osi) {
             my $lost = @msgqueue;
             @msgqueue = ();
             if ($lost) {
