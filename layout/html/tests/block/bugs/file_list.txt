@@ -108,3 +108,7 @@ file:///s:/mozilla/layout/html/tests/block/bugs/43882-9.html
 file:///s:/mozilla/layout/html/tests/block/bugs/43882-10.html
 file:///s:/mozilla/layout/html/tests/block/bugs/43882-11.html
 file:///s:/mozilla/layout/html/tests/block/bugs/43882-12.html
+file:///s:/mozilla/layout/html/tests/block/bugs/43882-13.html
+file:///s:/mozilla/layout/html/tests/block/bugs/43882-14.html
+file:///s:/mozilla/layout/html/tests/block/bugs/43882-15.html
+file:///s:/mozilla/layout/html/tests/block/bugs/43882-16.html
