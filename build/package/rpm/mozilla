@@ -117,6 +117,13 @@ export MOZILLA_FIVE_HOME
 ##
 ## Set LD_LIBRARY_PATH
 ##
-LD_LIBRARY_PATH=/usr/lib/mozilla/lib:$LD_LIBRARY_PATH
+if [ "$LD_LIBRARY_PATH" ]
+then
+  LD_LIBRARY_PATH=/usr/lib/mozilla/lib:$LD_LIBRARY_PATH
+else
+  LD_LIBRARY_PATH=/usr/lib/mozilla/lib
+fi
 
-exec ./$MOZ_PROGRAM ${1+"$@"}
+export LD_LIBRARY_PATH
+
+exec $MOZ_PROGRAM ${1+"$@"}
