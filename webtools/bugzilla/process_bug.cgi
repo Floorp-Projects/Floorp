@@ -120,9 +120,23 @@ foreach my $field ("dependson", "blocked") {
 ######################################################################
 
 print "Content-type: text/html\n\n";
+$vars->{'title'} = "Bug processed";
+
+# Set the title if we can see a mid-air coming. This test may have false
+# negatives, but never false positives, and should catch the majority of cases.
+# It only works at all in the single bug case.
+if (defined($::FORM{'id'})) {
+    SendSQL("SELECT delta_ts FROM bugs WHERE bug_id = $::FORM{'id'}");
+    my $delta_ts = FetchOneColumn();
+    
+    if (defined $::FORM{'delta_ts'} && $delta_ts && 
+        $::FORM{'delta_ts'} ne $delta_ts) 
+    {
+        $vars->{'title'} = "Mid-air collision!";
+    }
+}
 
 # Start displaying the response page.
-$vars->{'title'} = "Bug processed";
 $template->process("global/header.html.tmpl", $vars)
   || ThrowTemplateError($template->error());
 
