@@ -103,50 +103,6 @@ nsMenuItem::~nsMenuItem()
 }
 
 //-------------------------------------------------------------------------
-void nsMenuItem::Create(nsIWidget      *aMBParent, 
-                        GtkWidget      *aParent, 
-                        const nsString &aLabel, 
-                        PRBool         aIsSeparator)
-{
-  mTarget  = aMBParent;
-  mLabel   = aLabel;
-
-  if (NULL == aParent || nsnull == aMBParent) {
-    return;
-  }
-
-  char * nameStr = mLabel.ToNewCString();
-  if(aIsSeparator) {
-    mIsSeparator = PR_TRUE;
-    mMenuItem = gtk_menu_item_new();
-  }else{
-    mIsSeparator = PR_FALSE;
-    mMenuItem = gtk_menu_item_new_with_label(nameStr);
-  }
-  gtk_widget_show(mMenuItem);
- 
-  gtk_signal_connect (GTK_OBJECT (mMenuItem), "activate",
-                      GTK_SIGNAL_FUNC(menu_item_activate_handler),
-		      this);
-  delete[] nameStr;
-}
-
-//-------------------------------------------------------------------------
-NS_METHOD nsMenuItem::Create(nsIMenu * aParent)
-{
-  mIsSeparator = PR_TRUE;
-  return NS_OK;
-}
-
-//-------------------------------------------------------------------------
-NS_METHOD nsMenuItem::Create(nsIPopUpMenu * aParent)
-{
-  mIsSeparator = PR_TRUE;
-  return NS_OK;
-}
-
-
-//-------------------------------------------------------------------------
 GtkWidget *nsMenuItem::GetNativeParent()
 {
   void * voidData;
@@ -203,48 +159,50 @@ nsIWidget * nsMenuItem::GetMenuBarParent(nsISupports * aParent)
 }
 
 //-------------------------------------------------------------------------
-NS_METHOD nsMenuItem::Create(nsISupports    * aParent, 
-                             const nsString & aLabel, 
-                             PRBool           aIsSeparator)
+NS_METHOD nsMenuItem::Create(nsISupports *aParent, 
+                             const nsString &aLabel, 
+                             PRBool aIsSeparator)
                             
 {
   if (nsnull == aParent) {
     return NS_ERROR_FAILURE;
   }
 
-  if(aParent){
+  if(aParent) {
     nsIMenu * menu;
     aParent->QueryInterface(kIMenuIID, (void**) &menu);
     mMenuParent = menu;
     NS_RELEASE(menu);
   }
-  nsIWidget   * widget  = nsnull; // MenuBar's Parent
-  nsISupports * sups;
+
+  nsIWidget   *widget = nsnull; // MenuBar's Parent
+  nsISupports *sups;
   if (NS_OK == aParent->QueryInterface(kISupportsIID,(void**)&sups)) {
     widget = GetMenuBarParent(sups);
-    //GetMenuBarParent will call release for us
-    //NS_RELEASE(sups);
+    // GetMenuBarParent will call release for us
+    // NS_RELEASE(sups);
+    mTarget = widget;
   }
 
-  Create(widget, GetNativeParent(), aLabel, aIsSeparator);
-//  aParent->AddMenuItem(this);
+  mIsSeparator = aIsSeparator;
+  mLabel = aLabel;
 
-  return NS_OK;
-}
+  // create the native menu item
 
-//-------------------------------------------------------------------------
-NS_METHOD nsMenuItem::Create(nsIPopUpMenu   *aParent, 
-                             const nsString &aLabel,  
-                             PRUint32        aCommand)
-{
-  mPopUpParent = aParent;
 
-  nsIWidget * widget = nsnull;
-  if (NS_OK != aParent->GetParent(widget)) {
-    widget = nsnull;
+  if(mIsSeparator) {
+    mMenuItem = gtk_menu_item_new();
+  } else {
+    char *nameStr = aLabel.ToNewCString();
+    mMenuItem = gtk_menu_item_new_with_label(nameStr);
+    delete[] nameStr;
   }
-
-  Create(widget, GetNativeParent(), aLabel, PR_FALSE);
+  
+  gtk_widget_show(mMenuItem);
+ 
+  gtk_signal_connect (GTK_OBJECT (mMenuItem), "activate",
+                      GTK_SIGNAL_FUNC(menu_item_activate_handler),
+                      this);
 
   return NS_OK;
 }
@@ -274,6 +232,11 @@ NS_METHOD nsMenuItem::SetEnabled(PRBool aIsEnabled)
 //-------------------------------------------------------------------------
 NS_METHOD nsMenuItem::GetEnabled(PRBool *aIsEnabled)
 {
+  if (GTK_WIDGET_STATE(mMenuItem) == GTK_STATE_INSENSITIVE)
+    aIsEnabled = PR_FALSE;
+  else
+    aIsEnabled = PR_TRUE;
+
   return NS_OK;
 }
 
@@ -356,23 +319,22 @@ nsEventStatus nsMenuItem::MenuSelected(const nsMenuEvent & aMenuEvent)
   return nsEventStatus_eIgnore;
 }
 //-------------------------------------------------------------------------
-nsEventStatus nsMenuItem::MenuDeselected(const nsMenuEvent & aMenuEvent)
+nsEventStatus nsMenuItem::MenuDeselected(const nsMenuEvent &aMenuEvent)
 {
   g_print("nsMenuItem::MenuDeselected\n");
   return nsEventStatus_eIgnore;
 }
 //-------------------------------------------------------------------------
-nsEventStatus nsMenuItem::MenuConstruct(
-    const nsMenuEvent & aMenuEvent,
-    nsIWidget         * aParentWindow, 
-    void              * menuNode,
-    void              * aWebShell)
+nsEventStatus nsMenuItem::MenuConstruct(const nsMenuEvent &aMenuEvent,
+                                        nsIWidget *aParentWindow, 
+                                        void *menuNode,
+                                        void *aWebShell)
 {
   g_print("nsMenuItem::MenuConstruct\n");
   return nsEventStatus_eIgnore;
 }
 //-------------------------------------------------------------------------
-nsEventStatus nsMenuItem::MenuDestruct(const nsMenuEvent & aMenuEvent)
+nsEventStatus nsMenuItem::MenuDestruct(const nsMenuEvent &aMenuEvent)
 {
   g_print("nsMenuItem::MenuDestruct\n");
   return nsEventStatus_eIgnore;
@@ -380,20 +342,21 @@ nsEventStatus nsMenuItem::MenuDestruct(const nsMenuEvent & aMenuEvent)
 
 //-------------------------------------------------------------------------
 /**
-* Sets the JavaScript Command to be invoked when a "gui" event occurs on a source widget
-* @param aStrCmd the JS command to be cached for later execution
-* @return NS_OK 
-*/
-NS_METHOD nsMenuItem::SetCommand(const nsString & aStrCmd)
+ * Sets the JavaScript Command to be invoked when a "gui" event
+ * occurs on a source widget
+ * @param aStrCmd the JS command to be cached for later execution
+ * @return NS_OK 
+ */
+NS_METHOD nsMenuItem::SetCommand(const nsString &aStrCmd)
 {
   return NS_OK;
 }
 
 //-------------------------------------------------------------------------
 /**
-* Executes the "cached" JavaScript Command 
-* @return NS_OK if the command was executed properly, otherwise an error code
-*/
+ * Executes the "cached" JavaScript Command 
+ * @return NS_OK if the command was executed properly, otherwise an error code
+ */
 NS_METHOD nsMenuItem::DoCommand()
 {
   nsresult rv = NS_ERROR_FAILURE;
@@ -404,31 +367,31 @@ NS_METHOD nsMenuItem::DoCommand()
   nsCOMPtr<nsIContentViewerContainer> contentViewerContainer;
   contentViewerContainer = do_QueryInterface(mWebShell);
   if (!contentViewerContainer) {
-      NS_ERROR("Webshell doesn't support the content viewer container interface");
-      g_print("Webshell doesn't support the content viewer container interface");
-      return rv;
+    NS_ERROR("Webshell doesn't support the content viewer container interface");
+    g_print("Webshell doesn't support the content viewer container interface");
+    return rv;
   }
 
   nsCOMPtr<nsIContentViewer> contentViewer;
   if (NS_FAILED(rv = contentViewerContainer->GetContentViewer(getter_AddRefs(contentViewer)))) {
-      NS_ERROR("Unable to retrieve content viewer.");
-      g_print("Unable to retrieve content viewer.");
-      return rv;
+    NS_ERROR("Unable to retrieve content viewer.");
+    g_print("Unable to retrieve content viewer.");
+    return rv;
   }
 
   nsCOMPtr<nsIDocumentViewer> docViewer;
   docViewer = do_QueryInterface(contentViewer);
   if (!docViewer) {
-      NS_ERROR("Document viewer interface not supported by the content viewer.");
-      g_print("Document viewer interface not supported by the content viewer.");
-      return rv;
+    NS_ERROR("Document viewer interface not supported by the content viewer.");
+    g_print("Document viewer interface not supported by the content viewer.");
+    return rv;
   }
 
   nsCOMPtr<nsIPresContext> presContext;
   if (NS_FAILED(rv = docViewer->GetPresContext(*getter_AddRefs(presContext)))) {
-      NS_ERROR("Unable to retrieve the doc viewer's presentation context.");
-      g_print("Unable to retrieve the doc viewer's presentation context.");
-      return rv;
+    NS_ERROR("Unable to retrieve the doc viewer's presentation context.");
+    g_print("Unable to retrieve the doc viewer's presentation context.");
+    return rv;
   }
 
   nsEventStatus status = nsEventStatus_eIgnore;
@@ -439,9 +402,9 @@ NS_METHOD nsMenuItem::DoCommand()
   nsCOMPtr<nsIContent> contentNode;
   contentNode = do_QueryInterface(mDOMElement);
   if (!contentNode) {
-      NS_ERROR("DOM Node doesn't support the nsIContent interface required to handle DOM events.");
-      g_print("DOM Node doesn't support the nsIContent interface required to handle DOM events.");
-      return rv;
+    NS_ERROR("DOM Node doesn't support the nsIContent interface required to handle DOM events.");
+    g_print("DOM Node doesn't support the nsIContent interface required to handle DOM events.");
+    return rv;
   }
 
   rv = contentNode->HandleDOMEvent(*presContext, &event, nsnull, NS_EVENT_FLAG_INIT, status);

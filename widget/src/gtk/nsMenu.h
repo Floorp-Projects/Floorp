@@ -67,7 +67,6 @@ public:
   NS_IMETHOD GetItemCount(PRUint32 &aCount);
   NS_IMETHOD GetItemAt(const PRUint32 aPos, nsISupports *& aMenuItem);
   NS_IMETHOD InsertItemAt(const PRUint32 aPos, nsISupports * aMenuItem);
-  NS_IMETHOD InsertSeparator(const PRUint32 aPos);
   NS_IMETHOD RemoveItem(const PRUint32 aPos);
   NS_IMETHOD RemoveAll();
   NS_IMETHOD GetNativeData(void** aData);
@@ -91,7 +90,6 @@ protected:
     nsIDOMElement * menuElement,
     nsIDOMNode    * menuNode);
     
-  void       Create(GtkWidget *aParent, const nsString &aLabel);
   GtkWidget  *GetNativeParent();
 
   nsString   mLabel;
