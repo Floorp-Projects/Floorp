@@ -1439,8 +1439,7 @@ js_Interpret(JSContext *cx, jsval *result)
 	    /* Make sure rval is a string for uniformity and compatibility. */
 	    if (!JSVAL_IS_INT(rval)) {
 		rval = ATOM_KEY((JSAtom *)rval);
-	    } else if (JSVERSION_1_0 <= cx->version &&
-		       cx->version <= JSVERSION_1_1) {
+	    } else if (cx->version != JSVERSION_1_2) {
 		str = js_NumberToString(cx, (jsdouble) JSVAL_TO_INT(rval));
 		if (!str) {
 		    ok = JS_FALSE;
