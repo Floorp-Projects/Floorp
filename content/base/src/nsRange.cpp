@@ -58,8 +58,8 @@ nsVoidArray* nsRange::mStartAncestorOffsets = nsnull;
 nsVoidArray* nsRange::mEndAncestorOffsets = nsnull;  
 
 nsresult NS_NewContentIterator(nsIContentIterator** aInstancePtrResult);
-nsresult NS_NewGeneratedContentIterator(nsIContentIterator** aInstancePtrResult);
-
+nsresult NS_NewGenRegularIterator(nsIContentIterator** aInstancePtrResult);
+nsresult NS_NewGenSubtreeIterator(nsIContentIterator** aInstancePtrResult);
 
 /******************************************************
  * stack based utilty class for managing monitor
