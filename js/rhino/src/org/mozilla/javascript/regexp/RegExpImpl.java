@@ -34,9 +34,9 @@ public class RegExpImpl implements RegExpProxy {
         return obj instanceof NativeRegExp;
     }
 
-    public Object newRegExp(Scriptable scope, String source, String global)
+    public Object newRegExp(Context cx, Scriptable scope, String source, String global)
     {
-        return new NativeRegExp(scope, source, global);
+        return new NativeRegExp(cx, scope, source, global);
     }
     
     public Object executeRegExp(Object regExp, Scriptable scopeObj, 
@@ -151,7 +151,7 @@ public class RegExpImpl implements RegExpProxy {
                 opt = null;
             }
             Scriptable scope = ScriptableObject.getTopLevelScope(funObj);
-            re = new NativeRegExp(scope, src, opt);
+            re = new NativeRegExp(cx, scope, src, opt);
         }
         data.regexp = re;
 
