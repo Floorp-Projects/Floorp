@@ -35,22 +35,41 @@
 
 import org.mozilla.javascript.*;
 
-public class Counter extends ScriptableObject {
-    // The zero-argument constructor used by Rhino runtime to create instances
-    public Counter() { }
+/**
+ * An example illustrating how to create a JavaScript object and retrieve
+ * properties and call methods.
+ * <p>
+ * Output should be:
+ * <pre>
+ * count = 0
+ * count = 1
+ * resetCount
+ * count = 0
+ * </pre>
+ */
+public class CounterTest {
 
-    // Method jsConstructor defines the JavaScript constructor 
-    public void jsConstructor(int a) { count = a; }
+  public static void main(String[] args) throws Exception
+  {
+    Context cx = Context.enter();
+    Scriptable scope = cx.initStandardObjects(null);
+    ScriptableObject.defineClass(scope, Counter.class);
 
-    // The class name is defined by the getClassName method
-    public String getClassName() { return "Counter"; }
+    Scriptable testCounter = cx.newObject(scope, "Counter");
+    
+    Object count = ScriptableObject.getProperty(testCounter, "count");
+    System.out.println("count = " + count);
 
-    // The method jsGet_count defines the count property. 
-    public int jsGet_count() { return count++; }
+    count = ScriptableObject.getProperty(testCounter, "count");
+    System.out.println("count = " + count);
 
-    // Methods can be defined using the jsFunction_ prefix. Here we define 
-    //  resetCount for JavaScript. 
-    public void jsFunction_resetCount() { count = 0; }
+    ScriptableObject.callMethod(testCounter, "resetCount", new Object[0]);
+    System.out.println("resetCount");
 
-    private int count;
+    count = ScriptableObject.getProperty(testCounter, "count");
+    System.out.println("count = " + count);
+
+    Context.exit();
+  } 
+
 }
