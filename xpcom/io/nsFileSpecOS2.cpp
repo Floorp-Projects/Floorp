@@ -705,14 +705,7 @@ nsresult nsFileSpec::MoveToDir(const nsFileSpec& inNewParentDirectory)
         destPath += leafname;
         nsCRT::free(leafname);
 
-        // MoveFile returns non-zero if succeeds
-#ifdef XP_OS2
-        int copyOK = 0;
-#else
-        int copyOK = MoveFile(GetCString(), destPath);
-#endif
-
-        if (copyOK)
+        if (DosMove(GetCString(), destPath) == NO_ERROR)
         {
             *this = inNewParentDirectory + GetLeafName(); 
             return NS_OK;
