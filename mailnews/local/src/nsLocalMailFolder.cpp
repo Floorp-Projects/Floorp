@@ -332,28 +332,39 @@ nsMsgLocalMailFolder::GetSubFolders(nsIEnumerator* *result)
     nsCOMPtr<nsIFileSpec> pathSpec;
     nsresult rv = GetPath(getter_AddRefs(pathSpec));
     if (NS_FAILED(rv)) return rv;
-	
-	nsFileSpec path;
-	rv = pathSpec->GetFileSpec(&path);
+    
+    nsFileSpec path;
+    rv = pathSpec->GetFileSpec(&path);
     if (NS_FAILED(rv)) return rv;
-#if 0
-	//Make sure our path isn't the empty path.
-	nsFileSpec emptyPath("");
-	if(path == emptyPath)
-		return NS_ERROR_FAILURE;
-#endif 
-
+    
     if (!path.IsDirectory())
       AddDirectorySeparator(path);
-  
-	if(NS_FAILED(rv)) return rv;
-
+    
+    if(NS_FAILED(rv)) return rv;
+    
     // we have to treat the root folder specially, because it's name
     // doesn't end with .sbd
     PRInt32 newFlags = MSG_FOLDER_FLAG_MAIL;
     if (path.IsDirectory()) {
       newFlags |= (MSG_FOLDER_FLAG_DIRECTORY | MSG_FOLDER_FLAG_ELIDED);
       SetFlag(newFlags);
+      if (mDepth == 0)
+      {
+        // make sure we have all the default mailbox created
+        nsFileSpec fileSpec;
+        fileSpec = path + "Inbox";
+        if (!fileSpec.Exists()) { nsOutputFileStream outStream(fileSpec); }
+        fileSpec = path + "Trash";
+        if (!fileSpec.Exists()) { nsOutputFileStream outStream(fileSpec); }
+        fileSpec = path + "Sent";
+        if (!fileSpec.Exists()) { nsOutputFileStream outStream(fileSpec); }
+        fileSpec = path + "Drafts";
+        if (!fileSpec.Exists()) { nsOutputFileStream outStream(fileSpec); }
+        fileSpec = path + "Templates";
+        if (!fileSpec.Exists()) { nsOutputFileStream outStream(fileSpec); }
+        fileSpec = path + "Unsent Messages";
+        if (!fileSpec.Exists()) { nsOutputFileStream outStream(fileSpec); }
+      }
       rv = CreateSubFolders(path);
     }
     UpdateSummaryTotals(PR_FALSE);
@@ -1135,6 +1146,27 @@ nsMsgLocalMailFolder::GetTrashFolder(nsIMsgFolder** result)
 			PRUint32 numFolders;
 			rv = rootFolder->GetFoldersWithFlag(MSG_FOLDER_FLAG_TRASH, result,
                                           1, &numFolders);
+#if 0
+      // ** jt -- This shouldn't be needed. The OS should prevent
+      // user from deleting the trash folder while we are running the app.
+      // The only thing we need to do is to make sure that we have all
+      // the default mailboxes created when startup.
+      if (NS_FAILED(rv))
+      {
+        nsCOMPtr<nsIFileSpec> pathSpec;
+        nsFileSpec fileSpec;
+        rv = rootFolder->GetPath(getter_AddRefs(pathSpec));
+        if (NS_SUCCEEDED(rv))
+        {
+          rv = pathSpec->GetFileSpec(&fileSpec);
+          if (NS_SUCCEEDED(rv))
+          {
+            nsFileSpec trashSpec = fileSpec + "Trash";
+            nsOutputFileStream trashStream(fileSpec);
+          }
+        }
+      }
+#endif
     }
     return rv;
 }
