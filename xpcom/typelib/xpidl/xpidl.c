@@ -41,12 +41,14 @@ FindMode(char *mode)
     return NULL;
 }
 
-gboolean enable_debug       = FALSE;
-gboolean enable_warnings    = FALSE;
-gboolean verbose_mode       = FALSE;
+gboolean enable_debug             = FALSE;
+gboolean enable_warnings          = FALSE;
+gboolean verbose_mode             = FALSE;
+gboolean emit_typelib_annotations = FALSE;
 
 static char xpidl_usage_str[] =
 "Usage: %s [-m mode] [-w] [-v] [-I path] [-o basename] filename.idl\n"
+"       -a emit annotaions to typelib\n"
 "       -w turn on warnings (recommended)\n"
 "       -v verbose mode (NYI)\n"
 "       -I add entry to start of include path for ``#include \"nsIThing.idl\"''\n"
@@ -133,6 +135,9 @@ int main(int argc, char *argv[])
             /* fall through */
           case 0:               /* - is a legal input filename (stdin)  */
             goto done_options;
+          case 'a':
+            emit_typelib_annotations = TRUE;
+            break;
           case 'w':
             enable_warnings = TRUE;
             break;

@@ -27,6 +27,7 @@
 class nsXPTMethodInfo;
 class nsXPTConstant;
 class nsXPTParamInfo;
+class nsXPTType;
 
 // {215DBE04-94A7-11d2-BA58-00805F8A5DD7}
 #define NS_IINTERFACEINFO_IID   \
@@ -50,7 +51,7 @@ public:
     NS_IMETHOD GetConstantCount(uint16* count) = 0;
 
     // These include methods and constants of parents.
-    // There do *not* make copies ***explicit bending of XPCOM rules***
+    // These do *not* make copies ***explicit bending of XPCOM rules***
     NS_IMETHOD GetMethodInfo(uint16 index, const nsXPTMethodInfo** info) = 0;
     NS_IMETHOD GetMethodInfoForName(const char* methodName, uint16 *index,
                                     const nsXPTMethodInfo** info) = 0;
@@ -63,6 +64,22 @@ public:
     // returns IAllocatator alloc'd copy
     NS_IMETHOD GetIIDForParam(uint16 methodIndex, const nsXPTParamInfo* param, 
                               nsIID** iid) = 0;
+
+    // These do *not* make copies ***explicit bending of XPCOM rules***
+    NS_IMETHOD GetTypeForParam(uint16 methodIndex, 
+                               const nsXPTParamInfo* param,
+                               uint16 dimension,
+                               nsXPTType* type) = 0;
+
+    NS_IMETHOD GetSizeIsArgNumberForParam(uint16 methodIndex, 
+                                          const nsXPTParamInfo* param,
+                                          uint16 dimension,
+                                          uint8* argnum) = 0;
+
+    NS_IMETHOD GetLengthIsArgNumberForParam(uint16 methodIndex, 
+                                            const nsXPTParamInfo* param,
+                                            uint16 dimension,
+                                            uint8* argnum) = 0;
 };
 
 #endif /* nsIInterfaceInfo_h___ */

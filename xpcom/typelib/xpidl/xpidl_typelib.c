@@ -33,6 +33,7 @@ struct priv_data {
     XPTInterfaceDescriptor *current;
     uint16 next_method;
     uint16 next_const;
+    uint16 next_type;   /* used for 'additional_types' for idl arrays */
 };
 
 #define HEADER(state)     (((struct priv_data *)state->priv)->header)
@@ -41,6 +42,7 @@ struct priv_data {
 #define CURRENT(state)    (((struct priv_data *)state->priv)->current)
 #define NEXT_METH(state)  (((struct priv_data *)state->priv)->next_method)
 #define NEXT_CONST(state) (((struct priv_data *)state->priv)->next_const)
+#define NEXT_TYPE(state)  (((struct priv_data *)state->priv)->next_type)
 
 #ifdef DEBUG_shaver
 /* #define DEBUG_shaver_sort */
@@ -377,50 +379,64 @@ pass_1(TreeState *state)
         ok = TRUE;
     } else {
         /* write the typelib */
-        time_t now;
-        char *annotate_val, *data, *timestr;
-        PRUint32 i, len, header_sz, annotation_len, written_so_far;
         XPTState *xstate = XPT_NewXDRState(XPT_ENCODE, NULL, 0);
         XPTCursor curs, *cursor = &curs;
-        static char *annotation_format = "Created from %s.idl\nCreation date: %s"
-                                         "Interfaces:";
+        PRUint32 i, len, header_sz;
+        char *data;
 
-        /* fill in the annotations, listing resolved interfaces in order */
+        if(emit_typelib_annotations) {
+            PRUint32 annotation_len, written_so_far;
+            char *annotate_val, *timestr;
+            time_t now;
+            static char *annotation_format = 
+                "Created from %s.idl\nCreation date: %sInterfaces:";
 
-        (void)time(&now);
-        timestr = ctime(&now);
+            /* fill in the annotations, listing resolved interfaces in order */
 
-        /* Avoid dependence on nspr; no PR_smprintf and friends. */
+            (void)time(&now);
+            timestr = ctime(&now);
 
-        /* How large should the annotation string be? */
-        annotation_len = strlen(annotation_format) + strlen(state->basename) +
-            strlen(timestr);
-        for (i = 0; i < HEADER(state)->num_interfaces; i++) {
-            XPTInterfaceDirectoryEntry *ide;
-            ide = &HEADER(state)->interface_directory[i];
-            if (ide->interface_descriptor) {
-                annotation_len += strlen(ide->name) + 1;
+            /* Avoid dependence on nspr; no PR_smprintf and friends. */
+
+            /* How large should the annotation string be? */
+            annotation_len = strlen(annotation_format) + 
+                             strlen(state->basename) +
+                             strlen(timestr);
+            for (i = 0; i < HEADER(state)->num_interfaces; i++) {
+                XPTInterfaceDirectoryEntry *ide;
+                ide = &HEADER(state)->interface_directory[i];
+                if (ide->interface_descriptor) {
+                    annotation_len += strlen(ide->name) + 1;
+                }
             }
+
+            annotate_val = (char *) malloc(annotation_len);
+            written_so_far = sprintf(annotate_val, annotation_format,
+                                     state->basename, timestr);
+
+            for (i = 0; i < HEADER(state)->num_interfaces; i++) {
+                XPTInterfaceDirectoryEntry *ide;
+                ide = &HEADER(state)->interface_directory[i];
+                if (ide->interface_descriptor) {
+                    written_so_far += sprintf(annotate_val + written_so_far, 
+                                              " %s", ide->name);
+                }
+            }
+
+            HEADER(state)->annotations =
+                XPT_NewAnnotation(XPT_ANN_LAST | XPT_ANN_PRIVATE,
+                                  XPT_NewStringZ("xpidl 0.99.9"),
+                                  XPT_NewStringZ(annotate_val));
+            free(annotate_val);
+        } else {
+            HEADER(state)->annotations =
+                XPT_NewAnnotation(XPT_ANN_LAST, NULL, NULL);
         }
 
-        annotate_val = (char *) malloc(annotation_len);
-        written_so_far = sprintf(annotate_val, annotation_format,
-                                 state->basename, timestr);
-
-        for (i = 0; i < HEADER(state)->num_interfaces; i++) {
-            XPTInterfaceDirectoryEntry *ide;
-            ide = &HEADER(state)->interface_directory[i];
-            if (ide->interface_descriptor) {
-                written_so_far += sprintf(annotate_val + written_so_far, 
-                                          " %s", ide->name);
-            }
+        if (!HEADER(state)->annotations) {
+            /* XXX report out of memory error */
+            return FALSE;
         }
-
-        HEADER(state)->annotations =
-            XPT_NewAnnotation(XPT_ANN_LAST | XPT_ANN_PRIVATE,
-                              XPT_NewStringZ("xpidl 0.99.9"),
-                              XPT_NewStringZ(annotate_val));
-        free(annotate_val);
 
 #ifdef DEBUG_shaver_misc
         fprintf(stderr, "writing the typelib\n");
@@ -479,9 +495,10 @@ typelib_interface(TreeState *state)
     XPTInterfaceDirectoryEntry *ide;
     XPTInterfaceDescriptor *id;
     uint16 parent_id = 0;
-    PRUint8 interface_flags =
-        IDL_tree_property_get(IDL_INTERFACE(iface).ident, "scriptable") ?
-            XPT_ID_SCRIPTABLE : 0;
+    PRUint8 interface_flags = 0;
+
+    if(IDL_tree_property_get(IDL_INTERFACE(iface).ident, "scriptable"))
+        interface_flags |= XPT_ID_SCRIPTABLE;
 
     ide = FindInterfaceByName(HEADER(state)->interface_directory,
                               HEADER(state)->num_interfaces, name);
@@ -521,6 +538,7 @@ typelib_interface(TreeState *state)
 
     NEXT_METH(state) = 0;
     NEXT_CONST(state) = 0;
+    NEXT_TYPE(state) = 0;
 
     state->tree = IDL_INTERFACE(iface).body;
     if (state->tree && !xpidl_process_node(state))
@@ -532,11 +550,97 @@ typelib_interface(TreeState *state)
 }
 
 static gboolean
+find_arg_with_name(TreeState *state, const char *name, int16 *argnum)
+{
+    int16 count;
+    IDL_tree params;
+
+    XPT_ASSERT(state);
+    XPT_ASSERT(name);
+    XPT_ASSERT(argnum);
+
+    params = IDL_OP_DCL(IDL_NODE_UP(IDL_NODE_UP(state->tree))).parameter_dcls;
+    for (count = 0;
+         params != NULL && IDL_LIST(params).data != NULL;
+         params = IDL_LIST(params).next, count++)
+    {
+        const char *cur_name = IDL_IDENT(
+                IDL_PARAM_DCL(IDL_LIST(params).data).simple_declarator).str;
+        if (!strcmp(cur_name, name)) {
+            /* XXX ought to verify that this is the right type here */
+            *argnum = count;
+            return TRUE;
+        }
+    }
+    return FALSE;
+}
+
+static gboolean
 fill_td_from_type(TreeState *state, XPTTypeDescriptor *td, IDL_tree type)
 {
     IDL_tree up;
 
     if (type) {
+
+        /* deal with array */
+
+        if (IDL_NODE_TYPE(state->tree) == IDLN_PARAM_DCL) {
+            IDL_tree sd = IDL_PARAM_DCL(state->tree).simple_declarator;
+            if(IDL_tree_property_get(sd, "array")) {
+                const char *size_is;
+                const char *length_is;
+                int16 size_is_argnum;
+                int16 length_is_argnum;
+
+                /* size_is is required! */
+                size_is = IDL_tree_property_get(sd, "size_is");
+                if (!size_is) {
+                    IDL_tree_error(type, "[array] requires [size_is()]\n");
+                    return FALSE;
+                }
+
+                if (!find_arg_with_name(state, size_is, &size_is_argnum)) {
+                    IDL_tree_error(type, "can't find matching argument for "
+                                   "[size_is(%s)]\n", size_is);
+                    return FALSE;
+                }
+
+                /* length_is is optional */
+                length_is = IDL_tree_property_get(sd, "length_is");
+                if (length_is &&
+                    !find_arg_with_name(state, length_is, &length_is_argnum)) {
+                    IDL_tree_error(type, "can't find matching argument for "
+                                   "[length_is(%s)]\n", length_is);
+                    return FALSE;
+                }
+
+                td->argnum = size_is_argnum;
+                if (length_is) {
+                    td->prefix.flags = TD_ARRAY_WITH_LENGTH | XPT_TDP_POINTER;
+                    td->argnum2 = length_is_argnum;
+                } else {
+                    td->prefix.flags = TD_ARRAY | XPT_TDP_POINTER;
+                }
+
+                /* 
+                * XXX - NOTE - this will be broken for multidimensional 
+                * arrays because of the realloc XPT_InterfaceDescriptorAddTypes
+                * uses. The underlying 'td' can change as we recurse in to get
+                * additional dimensions. Luckily, we don't yet support more
+                * than on dimension in the arrays
+                */
+                /* setup the additional_type */                
+                if (!XPT_InterfaceDescriptorAddTypes(CURRENT(state), 1)) {
+                    g_error("out of memory\n");
+                    return FALSE;
+                }
+                td->type.additional_type = NEXT_TYPE(state);
+                td = &CURRENT(state)->additional_types[NEXT_TYPE(state)];
+                NEXT_TYPE(state)++ ;
+            }
+        }
+
+handle_typedef:
         switch (IDL_NODE_TYPE(type)) {
           case IDLN_TYPE_INTEGER: {
               gboolean sign = IDL_TYPE_INTEGER(type).f_signed;
@@ -617,27 +721,14 @@ handle_iid_is:
                                               "iid_is");
                 }
                 if (iid_is) {
-                    int16 argnum = -1, count;
-                    IDL_tree params = IDL_OP_DCL(IDL_NODE_UP(IDL_NODE_UP(state->tree))).parameter_dcls;
-                    for (count = 0;
-                         params != NULL && IDL_LIST(params).data != NULL;
-                         params = IDL_LIST(params).next, count++)
-                    {
-                        char *name;
-                        name = IDL_IDENT(IDL_PARAM_DCL(IDL_LIST(params).data).simple_declarator).str;
-                        if (!strcmp(name, iid_is)) {
-                            /* XXX verify that this is an nsid here */
-                            argnum = count;
-                            break;
-                        }
-                    }
-                    if (argnum < 0) {
+                    int16 argnum;
+                    if (!find_arg_with_name(state, iid_is, &argnum)) {
                         IDL_tree_error(type, "can't find matching argument for "
                                        "[iid_is(%s)]\n", iid_is);
                         return FALSE;
-                      }
+                    }
                     td->prefix.flags = TD_INTERFACE_IS_TYPE | XPT_TDP_POINTER;
-                    td->type.argnum = argnum;
+                    td->argnum = argnum;
                 } else {
                     td->prefix.flags = TD_INTERFACE_TYPE | XPT_TDP_POINTER;
                     ide = FindInterfaceByName(ides, num_ifaces, className);
@@ -714,7 +805,19 @@ handle_iid_is:
                     fprintf(stderr, "following %s typedef to %s\n",
                             IDL_IDENT(type).str, IDL_NODE_TYPE_NAME(new_type));
 #endif
-                    return fill_td_from_type(state, td, new_type);
+                    /* 
+                    *  Do a nice messy goto rather than recursion so that
+                    *  we can avoid screwing up the *array* information.
+                    */
+/*                    return fill_td_from_type(state, td, new_type); */
+                    if (new_type) {
+                        type = new_type;
+                        goto handle_typedef;
+                    } else {
+                        /* do what we would do in recursion if !type */
+                        td->prefix.flags = TD_VOID;
+                        return TRUE;
+                    }
                 }
                 IDL_tree_error(type, "can't handle %s ident in param list\n",
 #ifdef DEBUG_shaver
@@ -881,10 +984,7 @@ typelib_op_dcl(TreeState *state)
         op_flags |= XPT_MD_HIDDEN;
     if (op_notxpcom)
         op_flags |= XPT_MD_NOTXPCOM;
-/*
-    if (op->f_varargs)
-        op_flags |= XPT_MD_VARARGS;
-*/
+
     /* XXXshaver constructor? */
 
 #ifdef DEBUG_shaver_method

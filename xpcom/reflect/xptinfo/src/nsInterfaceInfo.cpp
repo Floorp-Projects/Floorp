@@ -250,6 +250,130 @@ nsInterfaceInfo::GetIIDForParam(uint16 methodIndex,
     return paramRecord->GetIID(iid);
 }
 
+NS_IMETHODIMP 
+nsInterfaceInfo::GetTypeForParam(uint16 methodIndex, 
+                                 const nsXPTParamInfo* param,
+                                 uint16 dimension,
+                                 nsXPTType* type)
+{
+    NS_PRECONDITION(param, "bad pointer");
+    NS_PRECONDITION(type, "bad pointer");
+
+    if (methodIndex < mMethodBaseIndex)
+        return mParent->GetTypeForParam(methodIndex, param, dimension, type);
+
+    if (methodIndex >= mMethodBaseIndex + mMethodCount) {
+        NS_ASSERTION(0, "bad index");
+        return NS_ERROR_INVALID_ARG;
+    }
+
+    const XPTTypeDescriptor *td = &param->type;
+    const XPTTypeDescriptor *additional_types =
+                this->mInterfaceRecord->interfaceDescriptor->additional_types;
+
+    for(uint16 i = 0; i < dimension; i++) {
+        uint8 tag = XPT_TDP_TAG(td->prefix);
+        if (tag != TD_ARRAY && tag != TD_ARRAY_WITH_LENGTH) {
+            NS_ASSERTION(0, "bad dimension");
+            return NS_ERROR_INVALID_ARG;
+        }
+        td = &additional_types[td->type.additional_type];
+    }
+
+    *type = nsXPTType(td->prefix);
+    return NS_OK;
+}
+
+NS_IMETHODIMP 
+nsInterfaceInfo::GetSizeIsArgNumberForParam(uint16 methodIndex, 
+                                            const nsXPTParamInfo* param,
+                                            uint16 dimension,
+                                            uint8* argnum)
+{
+    NS_PRECONDITION(param, "bad pointer");
+    NS_PRECONDITION(argnum, "bad pointer");
+    NS_PRECONDITION(dimension > 0, "arrays have no size_is for dimension 0");
+
+    if (methodIndex < mMethodBaseIndex)
+        return mParent->GetSizeIsArgNumberForParam(methodIndex, param, 
+                                                   dimension, argnum);
+
+    if (methodIndex >= mMethodBaseIndex + mMethodCount) {
+        NS_ASSERTION(0, "bad index");
+        return NS_ERROR_INVALID_ARG;
+    }
+
+    const XPTTypeDescriptor *td = &param->type;
+    const XPTTypeDescriptor *additional_types =
+                this->mInterfaceRecord->interfaceDescriptor->additional_types;
+
+    uint16 depth = dimension;
+    while (1)
+    {
+        uint8 tag = XPT_TDP_TAG(td->prefix);
+        if (tag != TD_ARRAY && tag != TD_ARRAY_WITH_LENGTH) {
+            NS_ASSERTION(0, "bad dimension");
+            return NS_ERROR_INVALID_ARG;
+        }
+
+        if (0 == --depth)
+            break;
+
+        td = &additional_types[td->type.additional_type];
+    }
+
+    *argnum = td->argnum;
+    return NS_OK;
+}
+
+NS_IMETHODIMP 
+nsInterfaceInfo::GetLengthIsArgNumberForParam(uint16 methodIndex, 
+                                              const nsXPTParamInfo* param,
+                                              uint16 dimension,
+                                              uint8* argnum)
+{
+    NS_PRECONDITION(param, "bad pointer");
+    NS_PRECONDITION(argnum, "bad pointer");
+    NS_PRECONDITION(dimension > 0, "arrays have no length_is for dimension 0");
+
+    if (methodIndex < mMethodBaseIndex)
+        return mParent->GetLengthIsArgNumberForParam(methodIndex, param, 
+                                                     dimension, argnum);
+
+    if (methodIndex >= mMethodBaseIndex + mMethodCount) {
+        NS_ASSERTION(0, "bad index");
+        return NS_ERROR_INVALID_ARG;
+    }
+
+    const XPTTypeDescriptor *td = &param->type;
+    const XPTTypeDescriptor *additional_types =
+                this->mInterfaceRecord->interfaceDescriptor->additional_types;
+
+    uint16 depth = dimension;
+    while (1)
+    {
+        uint8 tag = XPT_TDP_TAG(td->prefix);
+        if (tag != TD_ARRAY && tag != TD_ARRAY_WITH_LENGTH) {
+            NS_ASSERTION(0, "bad dimension");
+            return NS_ERROR_INVALID_ARG;
+        }
+
+        if (0 == --depth) {
+            if (tag != TD_ARRAY_WITH_LENGTH) {
+                NS_ASSERTION(0, "asked for length_is for dimension without one");
+                return NS_ERROR_INVALID_ARG;
+            }
+            break;
+        }
+
+        td = &additional_types[td->type.additional_type];
+    }
+
+    *argnum = td->argnum2;
+    return NS_OK;
+}
+
+
 #ifdef DEBUG
 #include <stdio.h>
 void

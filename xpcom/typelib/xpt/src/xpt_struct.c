@@ -47,10 +47,12 @@ DoInterfaceDirectoryEntryIndex(XPTCursor *cursor,
 #endif
 
 static PRBool
-DoConstDescriptor(XPTCursor *cursor, XPTConstDescriptor *cd);
+DoConstDescriptor(XPTCursor *cursor, XPTConstDescriptor *cd,
+                  XPTInterfaceDescriptor *id);
 
 static PRBool
-DoMethodDescriptor(XPTCursor *cursor, XPTMethodDescriptor *md);
+DoMethodDescriptor(XPTCursor *cursor, XPTMethodDescriptor *md, 
+                   XPTInterfaceDescriptor *id);
 
 static PRBool
 DoAnnotation(XPTCursor *cursor, XPTAnnotation **annp);
@@ -62,10 +64,12 @@ static PRBool
 DoTypeDescriptorPrefix(XPTCursor *cursor, XPTTypeDescriptorPrefix *tdp);
 
 static PRBool
-DoTypeDescriptor(XPTCursor *cursor, XPTTypeDescriptor *td);
+DoTypeDescriptor(XPTCursor *cursor, XPTTypeDescriptor *td,
+                 XPTInterfaceDescriptor *id);
 
 static PRBool
-DoParamDescriptor(XPTCursor *cursor, XPTParamDescriptor *pd);
+DoParamDescriptor(XPTCursor *cursor, XPTParamDescriptor *pd,
+                  XPTInterfaceDescriptor *id);
 
 XPT_PUBLIC_API(PRUint32)
 XPT_SizeOfHeader(XPTHeader *header)
@@ -81,10 +85,10 @@ XPT_SizeOfHeader(XPTHeader *header)
         size += 1; /* Annotation prefix */
         if (XPT_ANN_IS_PRIVATE(ann->flags))
             size += 2 + ann->creator->length + 2 + ann->private_data->length;
-	last = ann;
-	ann = ann->next;
+        last = ann;
+        ann = ann->next;
     } while (!XPT_ANN_IS_LAST(last->flags));
-    
+        
     return size;
 }
 
@@ -361,6 +365,23 @@ XPT_NewInterfaceDescriptor(PRUint16 parent_interface, PRUint16 num_methods,
 }
 
 XPT_PUBLIC_API(PRBool)
+XPT_InterfaceDescriptorAddTypes(XPTInterfaceDescriptor *id, PRUint16 num)
+{
+    XPTTypeDescriptor *old = id->additional_types, *new;
+
+    /* XXX should grow in chunks to minimize realloc overhead */
+    new = XPT_REALLOC(old,
+                (id->num_additional_types + num) * sizeof(XPTTypeDescriptor));
+    if (!new)
+        return PR_FALSE;
+
+    memset(new + id->num_additional_types, 0, sizeof(XPTTypeDescriptor) * num);
+    id->additional_types = new;
+    id->num_additional_types += num;
+    return PR_TRUE;
+}
+
+XPT_PUBLIC_API(PRBool)
 XPT_InterfaceDescriptorAddMethods(XPTInterfaceDescriptor *id, PRUint16 num)
 {
     XPTMethodDescriptor *old = id->method_descriptors, *new;
@@ -395,32 +416,38 @@ XPT_InterfaceDescriptorAddConsts(XPTInterfaceDescriptor *id, PRUint16 num)
 }
 
 XPT_PUBLIC_API(PRUint32)
-XPT_SizeOfTypeDescriptor(XPTTypeDescriptor *td)
+XPT_SizeOfTypeDescriptor(XPTTypeDescriptor *td, XPTInterfaceDescriptor *id)
 {
     PRUint32 size = 1; /* prefix */
     if (XPT_TDP_TAG(td->prefix) == TD_INTERFACE_TYPE)
         size += 2; /* interface_index */
     else if (XPT_TDP_TAG(td->prefix) == TD_INTERFACE_IS_TYPE)
         size += 1; /* arg_num */
+    else if (XPT_TDP_TAG(td->prefix) == TD_ARRAY)
+        size += 1 + XPT_SizeOfTypeDescriptor(
+                        &id->additional_types[td->type.additional_type], id);
+    else if (XPT_TDP_TAG(td->prefix) == TD_ARRAY_WITH_LENGTH)
+        size += 2 + XPT_SizeOfTypeDescriptor(
+                        &id->additional_types[td->type.additional_type], id);
     return size;
 }
 
 XPT_PUBLIC_API(PRUint32)
-XPT_SizeOfMethodDescriptor(XPTMethodDescriptor *md)
+XPT_SizeOfMethodDescriptor(XPTMethodDescriptor *md, XPTInterfaceDescriptor *id)
 {
     PRUint32 i, size =  1 /* flags */ + 4 /* name */ + 1 /* num_args */;
 
     for (i = 0; i < md->num_args; i++) 
-        size += 1 + XPT_SizeOfTypeDescriptor(&md->params[i].type);
+        size += 1 + XPT_SizeOfTypeDescriptor(&md->params[i].type, id);
 
-    size += 1 + XPT_SizeOfTypeDescriptor(&md->result->type);
+    size += 1 + XPT_SizeOfTypeDescriptor(&md->result->type, id);
     return size;
 }
 
 XPT_PUBLIC_API(PRUint32)
-XPT_SizeOfConstDescriptor(XPTConstDescriptor *cd)
+XPT_SizeOfConstDescriptor(XPTConstDescriptor *cd, XPTInterfaceDescriptor *id)
 {
-    PRUint32 size = 4 /* name */ + XPT_SizeOfTypeDescriptor(&cd->type);
+    PRUint32 size = 4 /* name */ + XPT_SizeOfTypeDescriptor(&cd->type, id);
 
     switch (XPT_TDP_TAG(cd->type.prefix)) {
       case TD_INT8:
@@ -458,9 +485,9 @@ XPT_SizeOfInterfaceDescriptor(XPTInterfaceDescriptor *id)
     PRUint32 size = 2 /* parent interface */ + 2 /* num_methods */
         + 2 /* num_constants */ + 1 /* flags */, i;
     for (i = 0; i < id->num_methods; i++)
-        size += XPT_SizeOfMethodDescriptor(&id->method_descriptors[i]);
+        size += XPT_SizeOfMethodDescriptor(&id->method_descriptors[i], id);
     for (i = 0; i < id->num_constants; i++)
-        size += XPT_SizeOfConstDescriptor(&id->const_descriptors[i]);
+        size += XPT_SizeOfConstDescriptor(&id->const_descriptors[i], id);
     return size;
 }
 
@@ -508,7 +535,7 @@ DoInterfaceDescriptor(XPTCursor *outer, XPTInterfaceDescriptor **idp)
     }
     
     for (i = 0; i < id->num_methods; i++) {
-        if (!DoMethodDescriptor(cursor, &id->method_descriptors[i]))
+        if (!DoMethodDescriptor(cursor, &id->method_descriptors[i], id))
             goto error;   
     }
     
@@ -524,7 +551,7 @@ DoInterfaceDescriptor(XPTCursor *outer, XPTInterfaceDescriptor **idp)
     }
     
     for (i = 0; i < id->num_constants; i++) {
-        if (!DoConstDescriptor(cursor, &id->const_descriptors[i])) {
+        if (!DoConstDescriptor(cursor, &id->const_descriptors[i], id)) {
             goto error;
         }
     }
@@ -551,12 +578,13 @@ XPT_FillConstDescriptor(XPTConstDescriptor *cd, char *name,
 }
 
 PRBool
-DoConstDescriptor(XPTCursor *cursor, XPTConstDescriptor *cd)
+DoConstDescriptor(XPTCursor *cursor, XPTConstDescriptor *cd,
+                  XPTInterfaceDescriptor *id)
 {
     PRBool ok = PR_FALSE;
 
     if (!XPT_DoCString(cursor, &cd->name) ||
-        !DoTypeDescriptor(cursor, &cd->type)) {
+        !DoTypeDescriptor(cursor, &cd->type, id)) {
 
         return PR_FALSE;
     }
@@ -636,7 +664,8 @@ XPT_FillMethodDescriptor(XPTMethodDescriptor *meth, PRUint8 flags, char *name,
 }
 
 PRBool
-DoMethodDescriptor(XPTCursor *cursor, XPTMethodDescriptor *md)
+DoMethodDescriptor(XPTCursor *cursor, XPTMethodDescriptor *md,
+                   XPTInterfaceDescriptor *id)
 {
     XPTMode mode = cursor->state->mode;
     int i;
@@ -653,7 +682,7 @@ DoMethodDescriptor(XPTCursor *cursor, XPTMethodDescriptor *md)
     }
 
     for(i = 0; i < md->num_args; i++) {
-        if (!DoParamDescriptor(cursor, &md->params[i]))
+        if (!DoParamDescriptor(cursor, &md->params[i], id))
             goto error;
     }
     
@@ -664,7 +693,7 @@ DoMethodDescriptor(XPTCursor *cursor, XPTMethodDescriptor *md)
     }
 
     if (!md->result ||
-        !DoParamDescriptor(cursor, md->result))
+        !DoParamDescriptor(cursor, md->result, id))
         goto error;
     
     return PR_TRUE;
@@ -682,10 +711,11 @@ XPT_FillParamDescriptor(XPTParamDescriptor *pd, PRUint8 flags,
 }
 
 PRBool
-DoParamDescriptor(XPTCursor *cursor, XPTParamDescriptor *pd)
+DoParamDescriptor(XPTCursor *cursor, XPTParamDescriptor *pd, 
+                  XPTInterfaceDescriptor *id)
 {
     if (!XPT_Do8(cursor, &pd->flags) ||
-        !DoTypeDescriptor(cursor, &pd->type))
+        !DoTypeDescriptor(cursor, &pd->type, id))
         return PR_FALSE;
         
     return PR_TRUE;
@@ -699,7 +729,8 @@ DoTypeDescriptorPrefix(XPTCursor *cursor, XPTTypeDescriptorPrefix *tdp)
 }
 
 PRBool
-DoTypeDescriptor(XPTCursor *cursor, XPTTypeDescriptor *td)
+DoTypeDescriptor(XPTCursor *cursor, XPTTypeDescriptor *td,
+                 XPTInterfaceDescriptor *id)
 {
     if (!DoTypeDescriptorPrefix(cursor, &td->prefix)) {
         goto error;
@@ -708,13 +739,31 @@ DoTypeDescriptor(XPTCursor *cursor, XPTTypeDescriptor *td)
     if (XPT_TDP_TAG(td->prefix) == TD_INTERFACE_TYPE) {
         if (!XPT_Do16(cursor, &td->type.interface))
             goto error;
-    } else {
-        if (XPT_TDP_TAG(td->prefix) == TD_INTERFACE_IS_TYPE) {
-            if (!XPT_Do8(cursor, &td->type.argnum))
-                goto error;
-        }
+    } 
+    else if (XPT_TDP_TAG(td->prefix) == TD_INTERFACE_IS_TYPE) {
+        if (!XPT_Do8(cursor, &td->argnum))
+            goto error;
     }
-   
+    else if (XPT_TDP_TAG(td->prefix) == TD_ARRAY ||
+             XPT_TDP_TAG(td->prefix) == TD_ARRAY_WITH_LENGTH) {
+        if (!XPT_Do8(cursor, &td->argnum))
+            goto error;
+
+        if (XPT_TDP_TAG(td->prefix) == TD_ARRAY_WITH_LENGTH)
+            if (!XPT_Do8(cursor, &td->argnum2))
+                goto error;
+
+        if (cursor->state->mode == XPT_DECODE) {
+            if(!XPT_InterfaceDescriptorAddTypes(id, 1))
+                goto error;
+            td->type.additional_type = id->num_additional_types - 1;
+        }
+        if (!DoTypeDescriptor(cursor, 
+                              &id->additional_types[td->type.additional_type], 
+                              id))
+            goto error;
+    }
+
     return PR_TRUE;
     
     XPT_ERROR_HANDLE(td);    

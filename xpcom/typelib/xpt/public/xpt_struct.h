@@ -183,6 +183,25 @@ struct XPTInterfaceDescriptor {
     PRUint16                num_constants;
     XPTConstDescriptor      *const_descriptors;
     PRUint8                 flags;
+
+    /* additional_types are used for arrays where we may need multiple
+    *  XPTTypeDescriptors for a single XPTMethodDescriptor. Since we still
+    *  want to have a simple array of XPTMethodDescriptor (each with a single
+    *  embedded XPTTypeDescriptor), a XPTTypeDescriptor can have a reference
+    *  to an 'additional_type'. That reference is an index in this 
+    *  "additional_types" array. So a given XPTMethodDescriptor might have 
+    *  a whole chain of these XPTTypeDescriptors to represent, say, a multi
+    *  dimensional array.
+    *
+    *  Note that in the typelib file these additional types are stored 'inline'
+    *  in the MethodDescriptor. But, in the typelib MethodDescriptors can be 
+    *  of varying sizes, where in XPT's in memory mapping of the data we want 
+    *  them to be of fixed size. This additional_types scheme is here to allow 
+    *  for that.
+    */
+
+    XPTTypeDescriptor       *additional_types;
+    PRUint16                num_additional_types;
 };
 
 #define XPT_ID_SCRIPTABLE           0x80
@@ -200,6 +219,9 @@ XPT_GetInterfaceIndexByName(XPTInterfaceDirectoryEntry *ide_block,
 extern XPT_PUBLIC_API(XPTInterfaceDescriptor *)
 XPT_NewInterfaceDescriptor(PRUint16 parent_interface, PRUint16 num_methods,
                            PRUint16 num_constants, PRUint8 flags);
+
+extern XPT_PUBLIC_API(PRBool)
+XPT_InterfaceDescriptorAddTypes(XPTInterfaceDescriptor *id, PRUint16 num);
 
 extern XPT_PUBLIC_API(PRBool)
 XPT_InterfaceDescriptorAddMethods(XPTInterfaceDescriptor *id, PRUint16 num);
@@ -280,22 +302,30 @@ enum XPTTypeDescriptorTags {
     TD_PSTRING           = 16,
     TD_PWSTRING          = 17,
     TD_INTERFACE_TYPE    = 18,
-    TD_INTERFACE_IS_TYPE = 19
+    TD_INTERFACE_IS_TYPE = 19,
+    TD_ARRAY             = 20,
+    TD_ARRAY_WITH_LENGTH = 21
 };
 
 struct XPTTypeDescriptor {
     XPTTypeDescriptorPrefix prefix;
+    PRUint8 argnum;
+    PRUint8 argnum2;
     union {
         PRUint16 interface;
-        PRUint8  argnum;
+        PRUint16 additional_type;
     } type;
 };
 
+/* this is bogus
 #define XPT_TYPEDESCRIPTOR_SIZE (1 + 2)
+*/
 
 #define XPT_COPY_TYPE(to, from)                                               \
   (to).prefix.flags = (from).prefix.flags;                                    \
-  (to).type.interface = (from).type.interface;
+  (to).argnum = (from).argnum;                                                \
+  (to).argnum2 = (from).argnum2;                                              \
+  (to).type.additional_type = (from).type.additional_type;
 
 /*
  * A ConstDescriptor is a variable-size record that records the name and 
@@ -361,7 +391,9 @@ struct XPTParamDescriptor {
 #define XPT_PD_IS_RETVAL(flags) (flags & XPT_PD_RETVAL)
 #define XPT_PD_IS_SHARED(flags) (flags & XPT_PD_SHARED)
 
+/* this is bogus
 #define XPT_PARAMDESCRIPTOR_SIZE (XPT_TYPEDESCRIPTOR_SIZE + 1)
+*/
 
 extern XPT_PUBLIC_API(PRBool)
 XPT_FillParamDescriptor(XPTParamDescriptor *pd, PRUint8 flags,
@@ -438,13 +470,13 @@ XPT_NewAnnotation(PRUint8 flags, XPTString *creator, XPTString *private_data);
 */
 
 extern XPT_PUBLIC_API(PRUint32)
-XPT_SizeOfTypeDescriptor(XPTTypeDescriptor *td);
+XPT_SizeOfTypeDescriptor(XPTTypeDescriptor *td, XPTInterfaceDescriptor *id);
 
 extern XPT_PUBLIC_API(PRUint32)
-XPT_SizeOfMethodDescriptor(XPTMethodDescriptor *md);
+XPT_SizeOfMethodDescriptor(XPTMethodDescriptor *md, XPTInterfaceDescriptor *id);
 
 extern XPT_PUBLIC_API(PRUint32)
-XPT_SizeOfConstDescriptor(XPTConstDescriptor *cd);
+XPT_SizeOfConstDescriptor(XPTConstDescriptor *cd, XPTInterfaceDescriptor *id);
 
 extern XPT_PUBLIC_API(PRUint32)
 XPT_SizeOfInterfaceDescriptor(XPTInterfaceDescriptor *id);

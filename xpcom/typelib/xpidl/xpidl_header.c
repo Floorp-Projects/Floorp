@@ -616,7 +616,13 @@ write_param(IDL_tree param_tree, FILE *outfile)
     if (IDL_PARAM_DCL(param_tree).attr != IDL_PARAM_IN)
         fputc('*', outfile);
 
+    /* arrays get a bonus * too */
+    /* XXX Should this be a leading '*' or a trailing "[]" ?*/
+    if (IDL_tree_property_get(IDL_PARAM_DCL(param_tree).simple_declarator, "array"))
+        fputc('*', outfile);
+
     fputs(IDL_IDENT(IDL_PARAM_DCL(param_tree).simple_declarator).str, outfile);
+
     return TRUE;
 }
 
