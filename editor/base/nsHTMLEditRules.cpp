@@ -35,6 +35,7 @@
 #include "nsIStyleContext.h"
 #include "nsIPresShell.h"
 #include "nsLayoutCID.h"
+#include "nsISupportsArray.h"
 
 class nsIFrame;
 
