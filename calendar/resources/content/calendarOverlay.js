@@ -27,9 +27,8 @@ var gPendingEvents = new Array();
 
 function openCalendar() 
 {
-   var wmdata = Components.classes["@mozilla.org/rdf/datasource;1?name=window-mediator"].getService();
-   var wmediator = wmdata.QueryInterface(Components.interfaces.nsIWindowMediator);
-
+   var wmediator = Components.classes["@mozilla.org/appshell/window-mediator;1"].getService(Components.interfaces.nsIWindowMediator);
+      
    var calendarWindow = wmediator.getMostRecentWindow( "calendarMainWindow" );
    //the topWindow is always null, but it loads chrome://calendar/content/calendar.xul into the open window.
 
