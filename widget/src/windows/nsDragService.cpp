@@ -267,16 +267,6 @@ NS_IMETHODIMP nsDragService::IsDataFlavorSupported(const char *aDataFlavor, PRBo
 }
 
 //-------------------------------------------------------------------------
-NS_IMETHODIMP nsDragService::GetCurrentSession (nsIDragSession ** aSession)
-{
-  if ( !aSession )
-    return NS_ERROR_FAILURE;
-
-  *aSession = (nsIDragSession *)this;
-  NS_ADDREF(*aSession);
-  return NS_OK;
-}
-
 
 //
 // IsCollectionObject
