@@ -1,0 +1,478 @@
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+; Base Thunderbird Package File for Linux
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+[thunderbird]
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+; Mail Specific Files
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+components/libmail.so
+components/libimport.so
+
+components/addrbook.xpt
+components/mime.xpt
+components/mailnews.xpt
+components/msgbase.xpt
+components/msgcompose.xpt
+components/msgdb.xpt
+components/msgimap.xpt
+components/msglocal.xpt
+components/msgnews.xpt
+components/msgsearch.xpt
+components/import.xpt
+components/impComm4xMail.xpt
+components/mailview.xpt
+
+chrome/mail.jar
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+; Mail Extensions (smime, etc.)
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+components/offlineStartup.js
+components/mdn-service.js
+components/libsmimestb.so
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+; Chrome Files
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+chrome/qute.jar
+chrome/en-US-mail.jar
+;;this maybe incorrect but we use win because of 
+;;a static installed-chrome.txt
+chrome/en-win.jar
+;;chrome/en-unix.jar
+chrome/overlayinfo/messenger/content/overlays.rdf
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+; Default Profile Settings
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+; default pref files
+defaults/pref/*
+greprefs/*
+defaults/messenger/mailViews.dat
+defaults/profile/localstore.rdf
+defaults/profile/mimeTypes.rdf
+defaults/profile/US/localstore.rdf
+defaults/profile/US/mimeTypes.rdf
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+; App extensions to Mail
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+; LDAP components 
+components/libmozldap.so
+components/mozldap.xpt
+components/nsLDAPPrefsService.js
+libldap50.so
+libprldap50.so
+
+; wallet
+components/libwallet.so
+components/wallet.xpt 
+components/signonviewer.xpt 
+
+; download progress
+components/nsProgressDialog.js
+components/nsHelperAppDlg.js
+components/nsDownloadProgressListener.js
+components/downloadmanager.xpt
+
+; spellchecker (may not be present)
+components/libmyspell.so
+components/spellchecker.xpt
+components/libspellchecker.so
+;; XXX these two files are bogus, they should not be in components/myspell...
+components/myspell/*
+
+; xpinstall (needed to dynamically install themes
+components/libxpinstall.so
+components/xpinstall.xpt
+
+; xmlextras (for RSS feeds and the like)
+components/libxmlextras.so
+components/xmlextras.xpt
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+; base browser for unix (from basebrowser-unix)
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+; 
+; launch script
+; 
+run-mozilla.sh
+
+; 
+; NSPR:
+; 
+libnspr4.so
+libplc4.so
+libplds4.so
+
+; 
+; Javascript:
+; 
+libmozjs.so
+
+; 
+; XPCOM:
+; 
+libxpcom.so 
+libxpistub.so
+libxpcom_compat.so
+components/xpcom_base.xpt
+components/xpcom_components.xpt
+components/xpcom_ds.xpt
+components/xpcom_io.xpt
+components/xpcom_threads.xpt
+components/xpcom_xpti.xpt
+components/libxpcom_compat_c.so
+components/xpcom_obsolete.xpt
+
+; xpconnect
+components/libxpconnect.so
+components/xpconnect.xpt
+
+; 
+; XP widgets/graphics
+; 
+
+libgkgfx.so 
+libgtkxtbin.so 
+libgtkembedmoz.so 
+libxlibrgb.so
+components/libgfx_gtk.so
+components/libgfxps.so
+components/libgfxxprint.so
+components/libwidget_gtk.so
+components/libwidget_gtk2.so
+components/widget.xpt
+components/gfx.xpt 
+
+; layout
+components/libgklayout.so                   
+;components/libgkparser.so                 
+components/layout_base.xpt              
+components/layout_xul.xpt               
+components/layout_xul_tree.xpt               
+components/content_base.xpt
+components/libhtmlpars.so                 
+components/htmlparser.xpt
+components/content_html.xpt
+components/content_htmldoc.xpt
+components/content_xmldoc.xpt
+components/content_xslt.xpt
+components/xultmpl.xpt
+components/xuldoc.xpt
+
+;;libmoz_art_lgpl.so
+;;res/dtd/xhtml11.dtd
+;;components/libgklayout.so                   
+;;	components/layout_base.xpt              
+;;components/layout_xul.xpt
+;;components/layout_xul_tree.xpt               
+;;components/content_base.xpt
+
+; Imaging:
+libmozz.so
+components/libimglib2.so
+components/imglib2.xpt
+
+; accessibility (out of process API support)
+components/libaccessibility.so              
+components/accessibility.xpt                 
+components/accessibility-atk.xpt
+
+
+; caps
+components/libcaps.so
+components/caps.xpt                     
+
+; 
+; Components: (need to trim fat)
+; 
+
+components/libnsappshell.so
+components/appshell.xpt 
+
+
+; cookies
+;;components/libcookie.so                   
+components/libdocshell.so                 
+components/docshell.xpt
+components/uriloader.xpt
+components/libchrome.so                   
+;components/chrome.xpt                   
+components/libwebbrwsr.so
+components/webBrowser_core.xpt
+components/libembedcomponents.so
+components/windowwatcher.xpt
+components/webbrowserpersist.xpt
+components/commandhandler.xpt
+; we need mozbrwser.xpt for nsIXULWindow.xpt
+components/mozbrwsr.xpt
+
+; jar
+components/libjar50.so
+components/jar.xpt
+
+; prefs
+components/pref.xpt                     
+components/libpref.so
+
+; profile
+components/libprofile.so                  
+components/profile.xpt
+
+; rdf
+components/librdf.so
+components/rdf.xpt
+
+; session history - MAYBE NOT NEEDED
+;;components/shistory.xpt
+
+; optional typeaheadfind 
+; (docs at http://www.mozilla.org/projects/ui/accessibility/typeaheadfind.html)
+;components/libtypeaheadfind.so
+;components/typeaheadfind.xpt
+
+
+; required l10n libraries
+
+components/intl.xpt
+components/locale.xpt
+components/libuconv.so
+components/libi18n.so
+components/uconv.xpt
+components/unicharutil.xpt
+
+; 
+; DOM:
+; 
+components/libjsdom.so 
+components/dom.xpt                      
+components/dom_base.xpt
+components/dom_core.xpt
+components/dom_css.xpt
+components/dom_events.xpt
+components/dom_html.xpt
+components/dom_range.xpt
+components/dom_stylesheets.xpt
+components/dom_traversal.xpt
+components/dom_views.xpt
+components/dom_xbl.xpt
+components/dom_xul.xpt
+
+; "javascript:" URLs
+components/libjsd.so
+components/jsurl.xpt
+
+; editor / composer for HTML compose
+components/libeditor.so                   
+components/editor.xpt
+components/composer.xpt
+components/libcomposer.so
+components/txmgr.xpt
+components/libtxmgr.so
+
+
+; find functionality
+; Optional - only if your code uses nsIWebBrowserFind
+components/txtsvc.xpt
+
+; netwerk
+components/libnecko.so
+components/necko.xpt                    
+components/necko_about.xpt              
+components/necko_data.xpt               
+components/necko_dns.xpt                
+components/necko_http.xpt               
+components/necko_jar.xpt                
+components/necko_res.xpt                
+components/necko_strconv.xpt
+components/necko_file.xpt
+components/necko_cache.xpt
+components/necko_cookie.xpt         
+components/nsProxyAutoConfig.js
+
+; optional for FTP support
+;;components/libnecko2.so                   
+;;components/necko_ftp.xpt                
+
+
+; psm2
+; Optional - only if you need HTTPS support
+;;components/libpipboot.so
+;;components/pipboot.xpt
+;;components/libpipnss.so
+;;components/pipnss.xpt
+;; chrome/pipnss.jar ;; apparently not needed
+;;components/libpippki.so
+;;components/pippki.xpt
+;;defaults/pref/security-prefs.js
+;;libnss3.so
+;;libsmime3.so
+;;libsoftokn3.chk
+;;libsoftokn3.so
+;;libssl3.so
+;;libnssckbi.so
+
+
+; core platform files
+regxpcom
+thunderbird-bin
+components/libappcomps.so
+components/autocomplete.xpt
+;;components/alerts.xpt
+components/jsdservice.xpt
+components/find.xpt
+components/chardet.xpt
+components/jsconsole-clhandler.js
+components/layout_xul_tree.xpt
+components/libmork.so
+components/libmozfind.so
+components/mozfind.xpt
+components/mimetype.xpt
+components/libnsprefm.so
+components/prefmigr.xpt
+;components/proxyObject.xpt
+components/exthandler.xpt
+components/embed_base.xpt
+components/webshell_idls.xpt
+components/widget.xpt
+components/windowds.xpt
+;;components/libwalletviewers.so
+components/helperAppDlg.xpt
+components/progressDlg.xpt
+components/dom_xpath.xpt
+;;AccessibleMarshal.dll
+components/lwbrk.xpt
+components/nsCloseAllWindows.js
+;;components/winhooks.xpt
+components/libxremoteservice.so
+components/libxremote_client.so
+components/libfileview.so
+
+; plugins
+; Optional - only if you need plugin support
+;components/libgkplugin.so
+;components/plugin.xpt
+
+
+; wallet
+; Optional - only if you need password persistence
+;;components/libwallet.so
+;;components/wallet.xpt                  
+
+; download progress
+; Optional - you can implement your own download progress dialog
+;   then this is no longer required
+;;components/nsProgressDialog.js
+;;components/nsHelperAppDlg.js
+;;components/nsDownloadProgressListener.js
+
+
+; xmlextras, optional for XMLHttpRequest support
+components/libxmlextras.so
+components/xmlextras.xpt
+
+res/ua.css
+res/html.css
+res/quirk.css
+res/forms.css
+res/platform-forms.css
+res/charsetData.properties
+res/charsetalias.properties
+res/langGroups.properties
+res/language.properties
+;res/wincharset.properties
+res/builtin/*
+res/entityTables/*
+
+; editor resource files
+res/EditorOverride.css
+res/grabber.gif
+res/table-add-column-after-active.gif
+res/table-add-column-after-hover.gif
+res/table-add-column-after.gif
+res/table-add-column-before-active.gif
+res/table-add-column-before-hover.gif
+res/table-add-column-before.gif
+res/table-add-row-after-active.gif
+res/table-add-row-after-hover.gif
+res/table-add-row-after.gif
+res/table-add-row-before-active.gif
+res/table-add-row-before-hover.gif
+res/table-add-row-before.gif
+res/table-remove-column-active.gif
+res/table-remove-column-hover.gif
+res/table-remove-column.gif
+res/table-remove-row-active.gif
+res/table-remove-row-hover.gif
+res/table-remove-row.gif
+
+;;res/language.properties
+;;res/langGroups.properties
+;;res/charsetData.properties
+;;res/charsetalias.properties
+;;res/unixcharset.properties
+;;; res/strres.properties 
+
+; required prefs files
+greprefs/*
+
+
+;
+; Widget-Toolkit and Res (consult hyatt@netscape.com before modifying):
+; 
+;;chrome/embed.jar
+components/nsFilePicker.js
+components/filepicker.xpt
+
+; 
+; res:
+; 
+;;res/html.css   
+;;res/quirk.css
+;;res/viewsource.css
+;;res/ua.css
+;;res/forms.css
+;;res/platform-forms.css
+;;res/arrow.gif
+;;res/arrowd.gif
+;;res/loading-image.gif
+;;res/broken-image.gif
+;;res/builtin/*
+;;res/entityTables/html40Special.properties
+;;res/entityTables/htmlEntityVersion.properties
+;;res/entityTables/html40Latin1.properties
+;;res/entityTables/html40Symbols.properties
+;;res/entityTables/transliterate.properties
+
+;
+; Optional for MathML
+;
+;res/mathml.css
+;res/dtd/mathml.dtd
+;res/entityTables/mathml20.properties
+;res/fonts/mathfont.properties
+;res/fonts/mathfontCMEX10.properties
+;res/fonts/mathfontCMSY10.properties
+;res/fonts/mathfontMath1.properties
+;res/fonts/mathfontMath2.properties
+;res/fonts/mathfontMath4.properties
+;res/fonts/mathfontMTExtra.properties
+;res/fonts/mathfontPUA.properties
+;res/fonts/mathfontSymbol.properties
+;components/libucvmath.so
+
+; p3p
+;;components/libp3p.so
+;;components/p3p.xpt
