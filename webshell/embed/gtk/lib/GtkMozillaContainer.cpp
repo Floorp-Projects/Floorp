@@ -17,6 +17,7 @@
 #include "GtkMozillaContainer.h"
 
 #include "nsRepository.h"
+#include "nsIBaseWindow.h"
 #include "nsIWebShell.h"
 #include "nsIURL.h"
 #include "nsIIOService.h"
@@ -112,7 +113,10 @@ GtkMozillaContainer::Show()
 
   if (mWebShell) 
   {
-    mWebShell->Show();
+    nsCOMPtr<nsIBaseWindow> window = do_QueryInterface(mWebShell);
+    if (window) {
+      window->SetVisibility(PR_TRUE);
+    }
   }
 }
 
@@ -132,7 +136,11 @@ GtkMozillaContainer::Resize(gint w, gint h)
     alloc.height = h;
     // gtk_widget_size_allocate(GTK_WIDGET(mozilla), &alloc); 
     gdk_superwin_resize(mSuperWin, width, height);
-    mWebShell->SetBounds(0, 0, width, height);
+
+    nsCOMPtr<nsIBaseWindow> window = do_QueryInterface(mWebShell);
+    if (window) {
+      window->SetPositionAndSize(0, 0, width, height, PR_FALSE);
+    }
   }
 }
 
