@@ -301,7 +301,6 @@ public:
 #endif
 
   PRBool IsTimeToNotify();
-  PRBool IsInScript();
 
   nsresult SetDocumentTitle(const nsAString& aTitle);
   nsresult AddAttributes(const nsIParserNode& aNode, nsIHTMLContent* aContent,
@@ -376,7 +375,6 @@ public:
   PRPackedBool mScrolledToRefAlready;
   PRPackedBool mNeedToBlockParser;
 
-  PRInt32 mInScript;
   PRInt32 mInNotification;
   nsCOMPtr<nsIDOMHTMLFormElement> mCurrentForm;
   nsCOMPtr<nsIHTMLContent> mCurrentMap;
@@ -5391,7 +5389,7 @@ HTMLContentSink::BeginUpdate(nsIDocument *aDocument)
   // notification to occur. Since this could result in frame
   // creation, make sure we've flushed everything before we
   // continue
-  if (mInScript && !mInNotification && mCurrentContext) {
+  if (!mInNotification && mCurrentContext) {
     result = mCurrentContext->FlushTags(PR_TRUE);
   }
 
@@ -5406,7 +5404,7 @@ HTMLContentSink::EndUpdate(nsIDocument *aDocument)
   // something else in the script processing caused the
   // notification to occur. Update our notion of how much
   // has been flushed to include any new content.
-  if (mInScript && !mInNotification) {
+  if (!mInNotification) {
     UpdateAllContexts();
   }
 
@@ -5515,23 +5513,13 @@ HTMLContentSink::PreEvaluateScript()
   mCurrentContext->FlushTags(PR_FALSE);
   mCurrentContext->SetPreAppend(PR_TRUE);
 
-  mInScript++;
-
   return PR_TRUE;
 }
 
 void
 HTMLContentSink::PostEvaluateScript()
 {
-  mInScript--;
-
   mCurrentContext->SetPreAppend(PR_FALSE);
-}
-
-PRBool
-HTMLContentSink::IsInScript()
-{
-  return mInScript > 0;
 }
 
 NS_IMETHODIMP
