@@ -271,6 +271,8 @@ public:
     StaticMember *cloneContent; // Used during cloning operation to prevent cloning of duplicates (i.e. once
                                 // a clone exists for this member it's recorded here and used for any other
                                 // bindings that refer to this member.)
+                                // Also used thereafter by 'assignArguments' to initialize the singular
+                                // variable instantations in a parameter frame.
 
     virtual StaticMember *clone()       { ASSERT(false); return NULL; }
 };
@@ -751,17 +753,21 @@ public:
 // Frames holding bindings for invoked functions
 class ParameterFrame : public Frame {
 public:
-    ParameterFrame(js2val thisObject, bool prototype) : Frame(ParameterKind), thisObject(thisObject), prototype(prototype) { }    
-    ParameterFrame(ParameterFrame *pluralFrame) : Frame(ParameterKind, pluralFrame), thisObject(JS2VAL_UNDEFINED), prototype(pluralFrame->prototype) { }
+    ParameterFrame(js2val thisObject, bool prototype) : Frame(ParameterKind), thisObject(thisObject), prototype(prototype), positional(NULL), positionalCount(0) { }    
+    ParameterFrame(ParameterFrame *pluralFrame) : Frame(ParameterKind, pluralFrame), thisObject(JS2VAL_UNDEFINED), prototype(pluralFrame->prototype), positional(NULL), positionalCount(0) { }
 
-    Plurality plurality;
+//    Plurality plurality;
     js2val thisObject;              // The value of this; none if this function doesn't define this;
                                     // inaccessible if this function defines this but the value is not 
                                     // available because this function hasn't been called yet.
 
     bool prototype;                 // true if this function is not an instance method but defines this anyway
 
+    Variable **positional;          // list of positional parameters, in order
+    uint32 positionalCount;
+
     virtual void instantiate(Environment *env);
+    void assignArguments(js2val *argBase, uint32 argCount);
     virtual void markChildren();
 };
 

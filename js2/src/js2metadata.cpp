@@ -401,9 +401,19 @@ namespace MetaData {
                 if (pb) {
                     NamespaceList publicNamespaceList;
                     publicNamespaceList.push_back(publicNamespace);
+                    uint32 pCount = 0;
+                    while (pb) {
+                        pCount++;
+                        pb = pb->next;
+                    }
+                    pb = f->function.parameters;
+                    compileFrame->positional = new Variable *[pCount];
+                    compileFrame->positionalCount = pCount;
+                    pCount = 0;
                     while (pb) {
                         // XXX define a static binding for each parameter
                         Variable *v = new Variable();
+                        compileFrame->positional[pCount++] = v;
                         pb->mn = defineStaticMember(env, pb->name, &publicNamespaceList, Attribute::NoOverride, false, ReadWriteAccess, v, p->pos);
                         pb = pb->next;
                     }
@@ -3966,6 +3976,22 @@ deleteClassProperty:
     {
         env->instantiateFrame(pluralFrame, this);
     }
+
+    // Assume that instantiate has been called, the plural frame will contain
+    // the cloned Variables assigned into this (singular) frame. Use the 
+    // incoming values to initialize the positionals.
+    void ParameterFrame::assignArguments(js2val *argBase, uint32 argCount)
+    {
+        ASSERT(pluralFrame->kind == ParameterKind);
+        ParameterFrame *plural = checked_cast<ParameterFrame *>(pluralFrame);
+        ASSERT((plural->positionalCount == 0) || (plural->positional != NULL));
+        for (uint32 i = 0; ((i < argCount) && (i < plural->positionalCount)); i++) {
+            ASSERT(plural->positional[i]->cloneContent);
+            ASSERT(plural->positional[i]->cloneContent->kind == Member::Variable);
+            (checked_cast<Variable *>(plural->positional[i]->cloneContent))->value = argBase[i];
+        }
+    }
+
 
     // gc-mark all contained JS2Objects and visit contained structures to do likewise
     void ParameterFrame::markChildren()
