@@ -81,6 +81,10 @@ function BeginDragResultTree(event)
     
 	// if the click is on the tree proper, ignore it. We only care about clicks on items.
 
+    if (event.target.localName != "treecell" &&
+        event.target.localName != "treeitem")
+        return false;
+
 	var tree = resultsTree;
 	if ( event.target == tree )
 		return(true);					// continue propagating the event
@@ -137,6 +141,10 @@ function BeginDragResultTree(event)
 function DropOnDirectoryTree(event)
 {
 	debugDump("DropOnTree\n");
+
+    if (event.target.localName != "treecell" &&
+        event.target.localName != "treeitem")
+        return false;
 
 	var RDF = GetRDFService();
 	if (!RDF) return(false);

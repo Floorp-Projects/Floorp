@@ -277,5 +277,12 @@ function AbDeleteDirectory()
 	top.addressbook.deleteAddressBooks(dirTree.database, parentArray, dirTree.selectedItems);
 }
 
+function clickResultsTree(event)
+{
+    if (event.target.localName != "treecell" &&
+        event.target.localName != "treeitem")
+        return;
 
+	if ( event.detail == 2 ) top.AbEditCard();
+}
 
