@@ -27,6 +27,7 @@
 #include "nsAboutBlank.h"
 #include "nsAboutBloat.h"
 #include "nsAboutCredits.h"
+#include "mzAboutMozilla.h"
 
 static nsModuleComponentInfo components[] = 
 {
@@ -53,6 +54,12 @@ static nsModuleComponentInfo components[] =
      NS_ABOUT_MODULE_PROGID_PREFIX "credits",
      nsAboutCredits::Create
    },
+
+   { "about:mozilla",
+     MZ_ABOUT_MOZILLA_MODULE_CID,
+     NS_ABOUT_MODULE_PROGID_PREFIX "mozilla",
+     mzAboutMozilla::Create
+   },	     
 };
 
 NS_IMPL_NSGETMODULE("nsAboutProtocolModule", components);

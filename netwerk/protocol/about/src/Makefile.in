@@ -39,6 +39,7 @@ CPPSRCS		= \
 		nsAboutBlank.cpp \
 		nsAboutBloat.cpp \
 		nsAboutCredits.cpp \
+		mzAboutMozilla.cpp \
 		$(NULL)
 
 EXTRA_DSO_LDOPTS += $(MOZ_COMPONENT_LIBS)

@@ -38,6 +38,7 @@ CPP_OBJS=                                      \
 	.\$(OBJDIR)\nsAboutBlank.obj           \
 	.\$(OBJDIR)\nsAboutBloat.obj           \
 	.\$(OBJDIR)\nsAboutCredits.obj		 	\
+	.\$(OBJDIR)\mzAboutMozilla.obj		\
 	$(NULL)
 
 LOCAL_INCLUDES=-I.	
