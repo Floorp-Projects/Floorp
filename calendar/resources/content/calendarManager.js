@@ -702,8 +702,21 @@ calendarManager.prototype.getRemoteCalendarText = function calMan_getRemoteCalen
                                        .getService(Components.interfaces.nsIPromptService);
 
          var retval = false;
-         if( typeof( result ) != "string" ) //for 1.7 compatibility
-             result = String.fromCharCode.apply(this, result);
+         if( typeof( result ) != "string" ) { //for 1.7 compatibility
+           // Result is an array of integer unicode values.
+           // Convert to string by applying String.fromCharCode static function.
+           // Function.apply can take array of length < expt(2, 16),
+           // so convert slices half that length to strings, then join strings.
+           var sliceStringArray = new Array();
+           for (var start = 0, end;
+                start < (end = Math.min(result.length, start + 32768));
+                start = end) { 
+             var slice = result.slice(start, end);
+             var sliceString = String.fromCharCode.apply(null, slice);
+             sliceStringArray[sliceStringArray.length] = sliceString;
+           }
+           result = sliceStringArray.join("");
+         }
 
          var ch;
          try {
