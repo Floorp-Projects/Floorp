@@ -127,7 +127,7 @@ nsresult XPCDispObject::COMCreateInstance(const char * className, PRBool testScr
     }
     if(FAILED(hr))
         return hr;
-    PRBool scriptableOK = testScriptability;
+    PRBool scriptableOK = PR_TRUE;
     if (testScriptability)
     {
         const DWORD scriptOk = INTERFACESAFE_FOR_UNTRUSTED_CALLER |
@@ -137,12 +137,10 @@ nsresult XPCDispObject::COMCreateInstance(const char * className, PRBool testScr
     
     // Didn't have the safe for scripting category so lets look at IObjectSafety
     CComPtr<IDispatch> disp;
-    if (scriptableOK || !testScriptability)
-    {
-        HRESULT hResult = disp.CoCreateInstance(classID);
-        if (FAILED(hResult))
-            return hResult;
-    }
+    HRESULT hResult = disp.CoCreateInstance(classID);
+    if (FAILED(hResult))
+        return hResult;
+
     // If we're testing scriptability and it didn't have a scripting category
     // we'll check via the IObjectSafety interface
     if (testScriptability && !scriptableOK)
