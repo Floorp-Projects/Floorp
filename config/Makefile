@@ -98,7 +98,7 @@ $(DEPTH)/build/build_number: FORCE
 	perl5 aboutime.pl $(DEPTH)/l10n/us/xp/about-all.html $@
 
 $(DEPTH)/modules/libpref/src/init/all.js: FORCE
-	perl set-timebomb.pl
+	perl set-timebomb.pl 0 30
 
 $(OBJDIR)/bdate$(BIN_SUFFIX): $(OBJDIR)/bdate.o
 	@$(MAKE_OBJDIR)

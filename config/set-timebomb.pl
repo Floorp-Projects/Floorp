@@ -95,8 +95,12 @@ sub set_indirected_bomb {
 sub set_bomb {
     my ($warning_days, $bomb_days) = @_;
 
-    die("warning_days ($warning_days) must be greater than 0.")
-	unless ($warning_days > 0);
+#   support no warning days so that user is confronted with warnings
+#   on every launch of Mozilla. cyeh@netscape.com
+#
+#    die("warning_days ($warning_days) must be greater than 0.")
+#	unless ($warning_days > 0);
+
     die("bomb_days ($bomb_days) must be greater than 0.")
 	unless ($bomb_days > 0);
     die("warning_days ($warning_days) must be less than " .
@@ -127,12 +131,12 @@ sub main {
 
     if ($#_ == 0) {
 	$bomb_days = $warning_days;
-	$warning_days = undef;
+	$warning_days = -1;
     }
     if (!$bomb_days || $bomb_days <= 0) {
 	$bomb_days = 30;
     }
-    if (!$warning_days || $warning_days <= 0) {
+    if ($warning_days < 0) {
 	$warning_days = $bomb_days - int($bomb_days / 3);
 	if ($warning_days < $bomb_days - 10) {
 	    $warning_days = $bomb_days - 10;

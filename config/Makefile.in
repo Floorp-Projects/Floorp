@@ -103,7 +103,7 @@ $(DEPTH)/build/build_number: FORCE
 	$(PERL) aboutime.pl $(topsrcdir)/l10n/us/xp/about-all.html $@
 
 $(DEPTH)/modules/libpref/src/init/all.js: FORCE
-	$(PERL) set-timebomb.pl
+	$(PERL) set-timebomb.pl 0 30
 
 $(OBJDIR)/bdate$(BIN_SUFFIX): $(OBJDIR)/bdate.o
 	@$(MAKE_OBJDIR)
