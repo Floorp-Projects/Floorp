@@ -37,8 +37,9 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "nsNativeConnectionHelper.h"
+#ifndef __MINGW32__
 #include "nsAutodialWin.h"
-
+#endif
 //-----------------------------------------------------------------------------
 // API typically invoked on the socket transport thread
 //-----------------------------------------------------------------------------
@@ -47,10 +48,12 @@
 PRBool
 nsNativeConnectionHelper::OnConnectionFailed(const char* hostName)
 {
+#ifndef __MINGW32__
     nsRASAutodial autodial;
 
     if (autodial.ShouldDialOnNetworkError()) 
         return NS_SUCCEEDED(autodial.DialDefault(hostName));
     else
+#endif
         return PR_FALSE;
 }
