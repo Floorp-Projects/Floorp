@@ -1657,8 +1657,7 @@ public abstract class ScriptableObject implements Scriptable {
         do {
             Slot slot = slots[i];
             if (slot == null || slot == REMOVED) {
-                count++;
-                if ((4 * count) > (3 * slots.length)) {
+                if ((4 * (count+1)) > (3 * slots.length)) {
                     grow();
                     return getSlotToSet(id, index, getterSlot);
                 }
@@ -1666,6 +1665,7 @@ public abstract class ScriptableObject implements Scriptable {
                 slot.stringKey = id;
                 slot.intKey = index;
                 slots[i] = slot;
+                count++;
                 return slot;
             }
             if (slot.intKey == index && 
@@ -1701,7 +1701,6 @@ public abstract class ScriptableObject implements Scriptable {
      */
     private synchronized void grow() {
         Slot[] newSlots = new Slot[slots.length*2 + 1];
-        int newCount = 0;
         for (int j=slots.length-1; j >= 0 ; j--) {
             Slot slot = slots[j];
             if (slot == null || slot == REMOVED)
@@ -1717,10 +1716,8 @@ public abstract class ScriptableObject implements Scriptable {
             // on the MS JVM
             //synchronized (slot) { }
             newSlots[k] = slot;
-            newCount++;
         }
         slots = newSlots;
-        count = newCount;
     }
 
     private static Hashtable getExclusionList() {
