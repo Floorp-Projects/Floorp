@@ -45,6 +45,18 @@ use vars qw($template $vars $userid);
 
 my %seen;
 my %edgesdone;
+my %bugtitles; # html title attributes for imagemap areas
+
+
+# CreateImagemap: This sub grabs a local filename as a parameter, reads the 
+# dot-generated image map datafile residing in that file and turns it into
+# an HTML map element. THIS SUB IS ONLY USED FOR LOCAL DOT INSTALLATIONS.
+# The map datafile won't necessarily contain the bug summaries, so we'll
+# pull possible HTML titles from the %bugtitles hash (filled elsewhere
+# in the code)
+
+# The dot mapdata lines have the following format (\nsummary is optional):
+# rectangle (LEFTX,TOPY) (RIGHTX,BOTTOMY) URLBASE/show_bug.cgi?id=BUGNUM BUGNUM[\nSUMMARY]
 
 sub CreateImagemap {
     my $mapfilename = shift;
@@ -56,9 +68,19 @@ sub CreateImagemap {
         if($line =~ /^default ([^ ]*)(.*)$/) {
             $default = qq{<area alt="" shape="default" href="$1">\n};
         }
+
         if ($line =~ /^rectangle \((.*),(.*)\) \((.*),(.*)\) (http[^ ]*)(.*)?$/) {
-            my $bugsummary = value_quote($6);
-            $map .= qq{<area alt="bug$bugsummary" name="bug$bugsummary" shape="rect" href="$5" coords="$1,$4,$3,$2">\n};
+            my ($leftx, $rightx, $topy, $bottomy, $url) = ($1, $3, $2, $4, $5);
+
+            # Pick up bugid from the mapdata label field. Getting the title from
+            # bugtitle hash instead of mapdata allows us to get the summary even
+            # when showsummary is off, and also gives us status and resolution.
+
+            my ($bugid) = ($6 =~ /^\s*(\d+)/);
+            my $bugtitle = value_quote($bugtitles{$bugid});
+            $map .= qq{<area alt="bug $bugid" name="bug$bugid" shape="rect" } .
+                    qq{title="$bugtitle" href="$url" } .
+                    qq{coords="$leftx,$topy,$rightx,$bottomy">\n};
         }
     }
     close MAP;
@@ -138,21 +160,26 @@ if ($::FORM{'doall'}) {
 foreach my $k (keys(%seen)) {
     my $summary = "";
     my $stat;
-    if ($::FORM{'showsummary'}) {
-        if (CanSeeBug($k, $::userid)) {
-            SendSQL("SELECT bug_status, short_desc FROM bugs " .
-                                  "WHERE bugs.bug_id = $k");
-            ($stat, $summary) = FetchSQLData();
-            $stat = "NEW" if !defined $stat;
-            $summary = "" if !defined $summary;
-        }
-    } else {
-        SendSQL("SELECT bug_status FROM bugs WHERE bug_id = $k");
-        $stat = FetchOneColumn();
+    my $resolution;
+
+    # Retrieve bug information from the database
+ 
+    SendSQL("SELECT bug_status, resolution, short_desc FROM bugs " .
+            "WHERE bugs.bug_id = $k");
+    ($stat, $resolution, $summary) = FetchSQLData();
+    $stat ||= 'NEW';
+    $resolution ||= '';
+    $summary ||= '';
+
+    # Resolution and summary are shown only if user can see the bug
+    if (!CanSeeBug($k, $::userid)) {
+        $resolution = $summary = '';
     }
+
+
     my @params;
 
-    if ($summary ne "") {
+    if ($summary ne "" && $::FORM{'showsummary'}) {
         $summary =~ s/([\\\"])/\\$1/g;
         push(@params, qq{label="$k\\n$summary"});
     }
@@ -169,6 +196,17 @@ foreach my $k (keys(%seen)) {
         print $fh "$k [" . join(',', @params) . "]\n";
     } else {
         print $fh "$k\n";
+    }
+
+    # Push the bug tooltip texts into a global hash so that 
+    # CreateImagemap sub (used with local dot installations) can
+    # use them later on.
+    $bugtitles{$k} = trim("$stat $resolution");
+
+    # Show the bug summary in tooltips only if not shown on 
+    # the graph and it is non-empty (the user can see the bug)
+    if (!$::FORM{'showsummary'} && $summary ne "") {
+        $bugtitles{$k} .= " - $summary";
     }
 }
 
@@ -187,6 +225,9 @@ if ($webdotbase =~ /^https?:/) {
      $vars->{'map_url'} = $url . ".map";
 } else {
     # Local dot installation
+
+    # First, generate the png image file from the .dot source
+
     my $dotfh;
     my ($pngfh, $pngfilename) = File::Temp::tempfile("XXXXXXXXXX",
                                                      SUFFIX => '.png',
@@ -196,6 +237,10 @@ if ($webdotbase =~ /^https?:/) {
     close DOT;
     close $pngfh;
     $vars->{'image_url'} = $pngfilename;
+
+    # Then, generate a imagemap datafile that contains the corner data
+    # for drawn bug objects. Pass it on to CreateImagemap that
+    # turns this monster into html.
 
     my ($mapfh, $mapfilename) = File::Temp::tempfile("XXXXXXXXXX",
                                                      SUFFIX => '.map',
