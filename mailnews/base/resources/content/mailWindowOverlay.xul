@@ -175,6 +175,8 @@ Rights Reserved.
   <command id="cmd_find" oncommand="goDoCommand('cmd_find')" disabled="true"/>
   <command id="cmd_findAgain" oncommand="goDoCommand('cmd_findAgain')" disabled="true"/>
   <command id="cmd_findPrev"  oncommand="goDoCommand('cmd_findPrev')"  disabled="true"/>
+  <command id="cmd_findTypeText"/>
+  <command id="cmd_findTypeLinks"/>
   <command id="cmd_stop" oncommand="MsgStop();"/>
 </commandset>
 
@@ -322,6 +324,8 @@ Rights Reserved.
   <key id="key_findPrev"  key="&findPrevCmd.key;"    oncommand="goDoCommand('cmd_findPrev')"  modifiers="accel, shift"/>
   <key keycode="&findAgainCmd.key2;"   oncommand="goDoCommand('cmd_findAgain')"/>
   <key keycode="&findPrevCmd.key2;"    oncommand="goDoCommand('cmd_findPrev')"  modifiers="shift"/>
+  <key id="key_findTypeText"/>
+  <key id="key_findTypeLinks"/>
   <key id="key_stop" keycode="VK_ESCAPE" command="cmd_stop"/>
   <keyset id="viewZoomKeys"/>
 
@@ -1041,6 +1045,9 @@ Rights Reserved.
       <menuitem label="&findCmd.label;" key="key_find" accesskey="&findCmd.accesskey;" observes="cmd_find"/>
       <menuitem label="&findAgainCmd.label;" key="key_findAgain" accesskey="&findAgainCmd.accesskey;" observes="cmd_findAgain"/>
       <menuitem label="&findPrevCmd.label;"  key="key_findPrev"  accesskey="&findPrevCmd.accesskey;"  observes="cmd_findPrev"/>
+      <menuseparator/> 
+      <menuitem id="menu_findTypeLinks"/>
+      <menuitem id="menu_findTypeText"/>
       <menuseparator/>
       <menuitem id="menu_properties" label="&folderPropsCmd.label;"
                 accesskey="&folderPropsCmd.accesskey;"
