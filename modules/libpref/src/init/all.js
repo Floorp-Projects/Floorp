@@ -458,6 +458,10 @@ pref("network.http.accept.default", "text/xml,application/xml,application/xhtml+
 
 pref("network.http.sendRefererHeader",      2); // 0=don't send any, 1=send only on clicks, 2=send on image requests as well
 
+// Controls whether we send HTTPS referres to other HTTPS sites.
+// By default this is enabled for compatibility (see bug 141641)
+pref("network.http.sendSecureXSiteReferrer", true);
+
 // Maximum number of consecutive redirects before aborting.
 pref("network.http.redirection-limit", 10);
 

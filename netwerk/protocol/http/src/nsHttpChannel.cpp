@@ -2529,8 +2529,8 @@ nsHttpChannel::SetReferrer(nsIURI *referrerIn, PRUint32 referrerType)
             if (!isHTTPS)
                 return NS_OK;
 
-            if ((nsCRT::strcasecmp(referrerHost.get(), host.get()) != 0) &&
-                (!nsHttpHandler::get()->SendSecureXSiteReferrer()))
+            if ((!nsHttpHandler::get()->SendSecureXSiteReferrer()) &&
+                (nsCRT::strcasecmp(referrerHost.get(), host.get()) != 0))
                 return NS_OK;
         }
     }
