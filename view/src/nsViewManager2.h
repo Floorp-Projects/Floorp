@@ -256,7 +256,7 @@ private:
    * @param aRect rectangle in twips to test for visibility 
    * @returns PR_TRUE if the rect is visible, PR_FALSE otherwise.
 	 */
-  PRBool IsRectVisible(nsIView *aView, const nsRect &aRect);
+  NS_IMETHOD IsRectVisible(nsIView *aView, const nsRect &aRect, PRBool aMustBeFullyVisible, PRBool *isVisible);
 
   nsresult ProcessWidgetChanges(nsIView* aView);
 

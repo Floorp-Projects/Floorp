@@ -1183,7 +1183,9 @@ NS_IMETHODIMP nsViewManager2::UpdateView(nsIView *aView, const nsRect &aRect, PR
    // enhancement since invalidating a native widget
    // can be expensive.
    // This also checks for silly request like damagedRect.width = 0 or damagedRect.height = 0
-  if (! IsRectVisible(aView, damagedRect)) {
+  PRBool isVisible;
+  IsRectVisible(aView, damagedRect, PR_FALSE, &isVisible);
+  if (!isVisible) {
     return NS_OK;
   }
 
@@ -2847,34 +2849,43 @@ nsresult nsViewManager2::GetAbsoluteRect(nsIView *aView, const nsRect &aRect,
 }
 
 
-PRBool nsViewManager2::IsRectVisible(nsIView *aView, const nsRect &aRect)
+NS_IMETHODIMP nsViewManager2::IsRectVisible(nsIView *aView, const nsRect &aRect, PRBool aMustBeEntirelyVisible, PRBool *aIsVisible)
 {
+  // The parameter PRBool aMustBeEntirelyVisible determines if rectangle that is partially on the screen
+  // and partially off the screen should be counted as visible
+
+  *aIsVisible = PR_FALSE;
   if (aRect.width == 0 || aRect.height == 0) {
-    return PR_FALSE;
+    return NS_OK;
   }
 
 	// is this view even visible?
 	nsViewVisibility  visibility;
 	aView->GetVisibility(visibility);
   if (visibility == nsViewVisibility_kHide) {
-		return PR_FALSE; 
+		return NS_OK; 
   }
 
    // Calculate the absolute coordinates for the visible rectangle   
   nsRect visibleRect;
   if (GetVisibleRect(visibleRect) == NS_ERROR_FAILURE) {
-    return PR_TRUE;
+    *aIsVisible = PR_TRUE;
+    return NS_OK;
   }
 
    // Calculate the absolute coordinates of the aRect passed in.
    // aRects values are relative to aView
   nsRect absRect;
   if ((GetAbsoluteRect(aView, aRect, absRect)) == NS_ERROR_FAILURE) {
-    return PR_TRUE;
+    *aIsVisible = PR_TRUE;
+    return NS_OK;
   }
  
     // Compare the visible rect against the rect passed in.
-  PRBool overlaps = absRect.IntersectRect(absRect, visibleRect);
+  if (aMustBeEntirelyVisible)
+    *aIsVisible = visibleRect.Contains(absRect);
+  else
+    *aIsVisible = absRect.IntersectRect(absRect, visibleRect);
 
 #if 0
   // Debugging code
@@ -2887,10 +2898,10 @@ PRBool nsViewManager2::IsRectVisible(nsIView *aView, const nsRect &aRect)
   } else {
    toggle++;
   }
-  printf("***overlaps %d\n", overlaps);
+  printf("***overlaps %d\n", *aIsVisible);
 #endif
 
-  return overlaps;
+  return NS_OK;
 }
 
 
