@@ -9074,6 +9074,10 @@ EOF
 #define UNIX_ASYNC_DNS 1
 EOF
 
+  cat >> confdefs.h <<\EOF
+#define NEW_CLIPBOARD_SUPPORT 1
+EOF
+
 fi
 
 cat >> confdefs.h <<\EOF
