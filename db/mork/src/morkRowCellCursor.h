@@ -76,7 +76,8 @@ public: // dynamic type identification
   { return IsNode() && mNode_Derived == morkDerived_kRowCellCursor; }
 // } ===== end morkNode methods =====
 
-public: // typing
+public: // errors
+  static void NilRowObjectError(morkEnv* ev);
   static void NonRowCellCursorTypeError(morkEnv* ev);
 
 public: // other cell cursor methods
