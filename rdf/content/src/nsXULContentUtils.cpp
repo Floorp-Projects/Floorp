@@ -345,7 +345,9 @@ nsXULContentUtils::GetElementResource(nsIContent* aElement, nsIRDFResource** aRe
     // Perform a reverse mapping from an element in the content model
     // to an RDF resource.
     nsresult rv;
-    nsAutoString id;
+
+    PRUnichar buf[128];
+    nsAutoString id(CBufDescriptor(buf, PR_TRUE, sizeof(buf) / sizeof(PRUnichar), 0));
 
     nsCOMPtr<nsIAtom> kIdAtom( dont_AddRef(NS_NewAtom("id")) );
     rv = aElement->GetAttribute(kNameSpaceID_None, kIdAtom, id);
@@ -379,7 +381,8 @@ nsXULContentUtils::GetElementRefResource(nsIContent* aElement, nsIRDFResource** 
     // to an RDF resource. Check for a "ref" attribute first, then
     // fallback on an "id" attribute.
     nsresult rv;
-    nsAutoString uri;
+    PRUnichar buf[128];
+    nsAutoString uri(CBufDescriptor(buf, PR_TRUE, sizeof(buf) / sizeof(PRUnichar), 0));
 
     nsCOMPtr<nsIAtom> kIdAtom( dont_AddRef(NS_NewAtom("ref")) );
     rv = aElement->GetAttribute(kNameSpaceID_None, kIdAtom, uri);

@@ -62,6 +62,7 @@
 #include "nsIXULSortService.h"
 #include "nsLayoutCID.h"
 #include "nsRDFCID.h"
+#include "nsIXULContent.h"
 #include "nsIXULContentUtils.h"
 #include "nsString.h"
 #include "nsVoidArray.h"
@@ -169,9 +170,8 @@ public:
     IsIgnoreableAttribute(PRInt32 aNameSpaceID, nsIAtom* aAtom);
 
     nsresult
-    GetSubstitutionText(nsIRDFResource* aResource,
-                        const nsString& aSubstitution,
-                        nsString& aResult);
+    SubstituteText(nsIRDFResource* aResource,
+                   nsString& aAttributeValue);
 
     nsresult
     BuildContentFromTemplate(nsIContent *aTemplateNode,
@@ -280,7 +280,6 @@ protected:
     static nsIXULContentUtils*    gXULUtils;
 
     static nsIAtom* kContainerAtom;
-    static nsIAtom* kContainerContentsGeneratedAtom;
     static nsIAtom* kContainmentAtom;
     static nsIAtom* kEmptyAtom;
     static nsIAtom* kIdAtom;
@@ -288,7 +287,6 @@ protected:
     static nsIAtom* kInstanceOfAtom;
     static nsIAtom* kIsContainerAtom;
     static nsIAtom* kIsEmptyAtom;
-    static nsIAtom* kLazyContentAtom;
     static nsIAtom* kNaturalOrderPosAtom;
     static nsIAtom* kOpenAtom;
     static nsIAtom* kPersistAtom;
@@ -297,7 +295,6 @@ protected:
     static nsIAtom* kResourceAtom;
     static nsIAtom* kRuleAtom;
     static nsIAtom* kTemplateAtom;
-    static nsIAtom* kTemplateContentsGeneratedAtom;
     static nsIAtom* kTextAtom;
     static nsIAtom* kTreeAtom;
     static nsIAtom* kTreeChildrenAtom;
@@ -326,7 +323,6 @@ nsrefcnt            RDFGenericBuilderImpl::gRefCnt = 0;
 nsIXULSortService*	RDFGenericBuilderImpl::gXULSortService = nsnull;
 
 nsIAtom* RDFGenericBuilderImpl::kContainerAtom;
-nsIAtom* RDFGenericBuilderImpl::kContainerContentsGeneratedAtom;
 nsIAtom* RDFGenericBuilderImpl::kContainmentAtom;
 nsIAtom* RDFGenericBuilderImpl::kEmptyAtom;
 nsIAtom* RDFGenericBuilderImpl::kIdAtom;
@@ -334,7 +330,6 @@ nsIAtom* RDFGenericBuilderImpl::kIgnoreAtom;
 nsIAtom* RDFGenericBuilderImpl::kInstanceOfAtom;
 nsIAtom* RDFGenericBuilderImpl::kIsContainerAtom;
 nsIAtom* RDFGenericBuilderImpl::kIsEmptyAtom;
-nsIAtom* RDFGenericBuilderImpl::kLazyContentAtom;
 nsIAtom* RDFGenericBuilderImpl::kNaturalOrderPosAtom;
 nsIAtom* RDFGenericBuilderImpl::kOpenAtom;
 nsIAtom* RDFGenericBuilderImpl::kPersistAtom;
@@ -343,7 +338,6 @@ nsIAtom* RDFGenericBuilderImpl::kRefAtom;
 nsIAtom* RDFGenericBuilderImpl::kResourceAtom;
 nsIAtom* RDFGenericBuilderImpl::kRuleAtom;
 nsIAtom* RDFGenericBuilderImpl::kTemplateAtom;
-nsIAtom* RDFGenericBuilderImpl::kTemplateContentsGeneratedAtom;
 nsIAtom* RDFGenericBuilderImpl::kTextAtom;
 nsIAtom* RDFGenericBuilderImpl::kTreeAtom;
 nsIAtom* RDFGenericBuilderImpl::kTreeChildrenAtom;
@@ -409,7 +403,6 @@ RDFGenericBuilderImpl::~RDFGenericBuilderImpl(void)
     --gRefCnt;
     if (gRefCnt == 0) {
         NS_IF_RELEASE(kContainerAtom);
-        NS_IF_RELEASE(kContainerContentsGeneratedAtom);
         NS_IF_RELEASE(kContainmentAtom);
         NS_IF_RELEASE(kEmptyAtom);
         NS_IF_RELEASE(kIdAtom);
@@ -417,7 +410,6 @@ RDFGenericBuilderImpl::~RDFGenericBuilderImpl(void)
         NS_IF_RELEASE(kInstanceOfAtom);
         NS_IF_RELEASE(kIsContainerAtom);
         NS_IF_RELEASE(kIsEmptyAtom);
-        NS_IF_RELEASE(kLazyContentAtom);
         NS_IF_RELEASE(kNaturalOrderPosAtom);
         NS_IF_RELEASE(kOpenAtom);
         NS_IF_RELEASE(kPersistAtom);
@@ -426,7 +418,6 @@ RDFGenericBuilderImpl::~RDFGenericBuilderImpl(void)
         NS_IF_RELEASE(kResourceAtom);
         NS_IF_RELEASE(kRuleAtom);
         NS_IF_RELEASE(kTemplateAtom);
-        NS_IF_RELEASE(kTemplateContentsGeneratedAtom);
         NS_IF_RELEASE(kTextAtom);
         NS_IF_RELEASE(kTreeAtom);
         NS_IF_RELEASE(kTreeChildrenAtom);
@@ -474,7 +465,6 @@ RDFGenericBuilderImpl::Init()
 {
     if (gRefCnt++ == 0) {
         kContainerAtom                  = NS_NewAtom("container");
-        kContainerContentsGeneratedAtom = NS_NewAtom("containercontentsgenerated");
         kContainmentAtom                = NS_NewAtom("containment");
         kEmptyAtom                      = NS_NewAtom("empty");
         kIdAtom                         = NS_NewAtom("id");
@@ -482,7 +472,6 @@ RDFGenericBuilderImpl::Init()
         kInstanceOfAtom                 = NS_NewAtom("instanceOf");
         kIsContainerAtom                = NS_NewAtom("iscontainer");
         kIsEmptyAtom                    = NS_NewAtom("isempty");
-        kLazyContentAtom                = NS_NewAtom("lazycontent");
         kNaturalOrderPosAtom            = NS_NewAtom("pos");
         kOpenAtom                       = NS_NewAtom("open");
         kPersistAtom                    = NS_NewAtom("persist");
@@ -491,7 +480,6 @@ RDFGenericBuilderImpl::Init()
         kResourceAtom                   = NS_NewAtom("resource");
         kRuleAtom                       = NS_NewAtom("rule");
         kTemplateAtom                   = NS_NewAtom("template");
-        kTemplateContentsGeneratedAtom  = NS_NewAtom("templatecontentsgenerated");
         kTextAtom                       = NS_NewAtom("text");
         kTreeAtom                       = NS_NewAtom("tree");
         kTreeChildrenAtom               = NS_NewAtom("treechildren");
@@ -812,20 +800,20 @@ RDFGenericBuilderImpl::CloseContainer(nsIContent* aElement)
         if (NS_FAILED(rv)) return rv;
     }
 
+    // Force the XUL element to remember that it needs to re-generate
+    // its kids next time around.
+    nsCOMPtr<nsIXULContent> xulcontent = do_QueryInterface(aElement);
+    NS_ASSERTION(xulcontent != nsnull, "not an nsIXULContent");
+    if (! xulcontent)
+        return NS_ERROR_UNEXPECTED;
+
+    rv = xulcontent->SetLazyState(nsIXULContent::eChildrenMustBeRebuilt);
+	if (NS_FAILED(rv)) return rv;
+
     // Clear the contents-generated attribute so that the next time we
     // come back, we'll regenerate the kids we just killed.
-    rv = aElement->UnsetAttribute(kNameSpaceID_None,
-                                  kContainerContentsGeneratedAtom,
-                                  PR_FALSE);
+    rv = xulcontent->ClearLazyState(nsIXULContent::eContainerContentsBuilt);
     if (NS_FAILED(rv)) return rv;
-
-    // XXX Hack. Setting this attribute forces the RDF element to
-    // remember that it needs to be re-generated next time around.
-	rv = aElement->SetAttribute(kNameSpaceID_None,
-                                kLazyContentAtom,
-                                nsAutoString("true"),
-                                PR_FALSE);
-	if (NS_FAILED(rv)) return rv;
 
     return NS_OK;
 }
@@ -848,27 +836,19 @@ RDFGenericBuilderImpl::RebuildContainer(nsIContent* aElement)
     rv = RemoveGeneratedContent(aElement);
     if (NS_FAILED(rv)) return rv;
 
-    // Clear the contents-generated attribute so that the next time we
-    // come back, we'll regenerate the kids we just killed.
-    rv = aElement->UnsetAttribute(kNameSpaceID_None,
-                                  kContainerContentsGeneratedAtom,
-                                  PR_FALSE);
-    if (NS_FAILED(rv)) return rv;
+    // Forces the XUL element to remember that it needs to
+    // re-generate its children next time around.
+    nsCOMPtr<nsIXULContent> xulcontent = do_QueryInterface(aElement);
+    if (xulcontent) {
+        rv = xulcontent->SetLazyState(nsIXULContent::eChildrenMustBeRebuilt);
+        if (NS_FAILED(rv)) return rv;
 
-    // XXX Hack. Setting this attribute forces the RDF element to
-    // remember that it needs to be re-generated next time around.
-	rv = aElement->SetAttribute(kNameSpaceID_None,
-                                kLazyContentAtom,
-                                nsAutoString("true"),
-                                PR_FALSE);
-	if (NS_FAILED(rv)) return rv;
+        rv = xulcontent->ClearLazyState(nsIXULContent::eTemplateContentsBuilt);
+        if (NS_FAILED(rv)) return rv;
 
-    // Since we're changing the 'ref' attribute, we'll need to
-    // rebuild content for _this_ resource template, too.
-    rv = aElement->UnsetAttribute(kNameSpaceID_None,
-                                  kTemplateContentsGeneratedAtom,
-                                  PR_FALSE);
-    if (NS_FAILED(rv)) return rv;
+        rv = xulcontent->ClearLazyState(nsIXULContent::eContainerContentsBuilt);
+        if (NS_FAILED(rv)) return rv;
+    }
 
     // Do it!!!
     rv = CreateContents(aElement);
@@ -940,9 +920,15 @@ RDFGenericBuilderImpl::CreateElement(PRInt32 aNameSpaceID,
         NS_ASSERTION(NS_SUCCEEDED(rv), "unable to get resource URI");
         if (NS_FAILED(rv)) return rv;
 
-        nsAutoString id;
+        PRUnichar buf[128];
+        nsAutoString id(CBufDescriptor(buf, PR_TRUE, sizeof(buf) / sizeof(PRUnichar), 0));
+
+#if 0 // XXX c'mon, this URI is _never_ going to be relative to the document!
         rv = gXULUtils->MakeElementID(doc, nsAutoString(uri), id);
         if (NS_FAILED(rv)) return rv;
+#endif
+
+        id = uri;
 
         rv = result->SetAttribute(kNameSpaceID_None, kIdAtom, id, PR_FALSE);
         NS_ASSERTION(NS_SUCCEEDED(rv), "unable to set id attribute");
@@ -1024,13 +1010,18 @@ RDFGenericBuilderImpl::OnAssert(nsIRDFResource* aSource,
             // because we know that _eventually_ the contents will be
             // generated (via CreateContents()) when somebody asks for
             // them later.
-            nsAutoString contentsGenerated;
-            rv = element->GetAttribute(kNameSpaceID_None,
-                                       kContainerContentsGeneratedAtom,
-                                       contentsGenerated);
-			if (NS_FAILED(rv)) return rv;
+            PRBool contentsGenerated;
+            nsCOMPtr<nsIXULContent> xulcontent = do_QueryInterface(element);
+            if (xulcontent) {
+                rv = xulcontent->GetLazyState(nsIXULContent::eContainerContentsBuilt, contentsGenerated);
+                if (NS_FAILED(rv)) return rv;
+            }
+            else {
+                // HTML is always generated
+                contentsGenerated = PR_TRUE;
+            }
 
-            if ((rv != NS_CONTENT_ATTR_HAS_VALUE) || !contentsGenerated.Equals("true"))
+            if (! contentsGenerated)
                 return NS_OK;
 
             // Okay, it's a "live" element, so go ahead and append the new
@@ -1135,13 +1126,18 @@ RDFGenericBuilderImpl::OnUnassert(nsIRDFResource* aSource,
             // But if the contents of aElement _haven't_ yet been
             // generated, then just ignore the unassertion: nothing is
             // in the content model to remove.
-            nsAutoString contentsGenerated;
-            rv = element->GetAttribute(kNameSpaceID_None,
-                                       kContainerContentsGeneratedAtom,
-                                       contentsGenerated);
-            if (NS_FAILED(rv)) return rv;
+            PRBool contentsGenerated;
+            nsCOMPtr<nsIXULContent> xulcontent = do_QueryInterface(element);
+            if (xulcontent) {
+                rv = xulcontent->GetLazyState(nsIXULContent::eContainerContentsBuilt, contentsGenerated);
+                if (NS_FAILED(rv)) return rv;
+            }
+            else {
+                // HTML is always generated
+                contentsGenerated = PR_TRUE;
+            }
 
-            if ((rv != NS_CONTENT_ATTR_HAS_VALUE) || !contentsGenerated.Equals("true"))
+            if (! contentsGenerated)
                 return NS_OK;
 
             // Okay, it's a "live" element, so go ahead and remove the
@@ -1254,13 +1250,18 @@ RDFGenericBuilderImpl::OnChange(nsIRDFResource* aSource,
             // But if the contents of aElement _haven't_ yet been
             // generated, then just ignore: nothing is in the content
             // model to remove.
-            nsAutoString contentsGenerated;
-            rv = element->GetAttribute(kNameSpaceID_None,
-                                       kContainerContentsGeneratedAtom,
-                                       contentsGenerated);
-            if (NS_FAILED(rv)) return rv;
+            PRBool contentsGenerated;
+            nsCOMPtr<nsIXULContent> xulcontent = do_QueryInterface(element);
+            if (xulcontent) {
+                rv = xulcontent->GetLazyState(nsIXULContent::eContainerContentsBuilt, contentsGenerated);
+                if (NS_FAILED(rv)) return rv;
+            }
+            else {
+                // HTML is always generated
+                contentsGenerated = PR_TRUE;
+            }
 
-            if ((rv != NS_CONTENT_ATTR_HAS_VALUE) || !contentsGenerated.Equals("true"))
+            if (! contentsGenerated)
                 return NS_OK;
 
             // Okay, it's a "live" element, so go ahead and remove the
@@ -1352,11 +1353,8 @@ RDFGenericBuilderImpl::IsTemplateRuleMatch(nsIContent* aElement,
 
 		// Note: some attributes must be skipped on XUL template rule subtree
 
-		// never compare against {}:container attribute
-		if ((attr.get() == kLazyContentAtom) && (attrNameSpaceID == kNameSpaceID_None))
-			continue;
 		// never compare against rdf:property attribute
-		else if ((attr.get() == kPropertyAtom) && (attrNameSpaceID == kNameSpaceID_RDF))
+		if ((attr.get() == kPropertyAtom) && (attrNameSpaceID == kNameSpaceID_RDF))
 			continue;
 		// never compare against rdf:instanceOf attribute
 		else if ((attr.get() == kInstanceOfAtom) && (attrNameSpaceID == kNameSpaceID_RDF))
@@ -1366,9 +1364,6 @@ RDFGenericBuilderImpl::IsTemplateRuleMatch(nsIContent* aElement,
 			continue;
 		// never compare against {}:xulcontentsgenerated attribute
 		else if ((attr.get() == kXULContentsGeneratedAtom) && (attrNameSpaceID == kNameSpaceID_None))
-			continue;
-		// never compare against {}:itemcontentsgenerated attribute (bogus)
-		else if ((attr.get() == kTemplateContentsGeneratedAtom) && (attrNameSpaceID == kNameSpaceID_None))
 			continue;
 
         nsAutoString value;
@@ -1407,7 +1402,8 @@ RDFGenericBuilderImpl::IsTemplateRuleMatch(nsIContent* aElement,
             rv = mDB->GetTarget(aChild, property, PR_TRUE, getter_AddRefs(target));
             if (NS_FAILED(rv)) return rv;
 
-            nsAutoString targetStr;
+            PRUnichar buf[128];
+            nsAutoString targetStr(CBufDescriptor(buf, PR_TRUE, sizeof(buf) / sizeof(PRUnichar), 0));
             rv = gXULUtils->GetTextForNode(target, targetStr);
             NS_ASSERTION(NS_SUCCEEDED(rv), "unable to get text for target");
             if (NS_FAILED(rv)) return rv;
@@ -1511,12 +1507,8 @@ RDFGenericBuilderImpl::FindTemplate(nsIContent* aElement,
 PRBool
 RDFGenericBuilderImpl::IsIgnoreableAttribute(PRInt32 aNameSpaceID, nsIAtom* aAttribute)
 {
-    // never copy rdf:container attribute
-    if ((aAttribute == kLazyContentAtom) && (aNameSpaceID == kNameSpaceID_None)) {
-        return PR_TRUE;
-    }
     // never copy rdf:property attribute
-    else if ((aAttribute == kPropertyAtom) && (aNameSpaceID == kNameSpaceID_RDF)) {
+    if ((aAttribute == kPropertyAtom) && (aNameSpaceID == kNameSpaceID_RDF)) {
         return PR_TRUE;
     }
     // never copy rdf:instanceOf attribute
@@ -1531,10 +1523,6 @@ RDFGenericBuilderImpl::IsIgnoreableAttribute(PRInt32 aNameSpaceID, nsIAtom* aAtt
     else if ((aAttribute == kURIAtom) && (aNameSpaceID == kNameSpaceID_None)) {
         return PR_TRUE;
     }
-    // never copy {}:templatecontentsgenerated attribute (bogus)
-    else if ((aAttribute == kTemplateContentsGeneratedAtom) && (aNameSpaceID == kNameSpaceID_None)) {
-        return PR_TRUE;
-    }
     else {
         return PR_FALSE;
     }
@@ -1542,21 +1530,23 @@ RDFGenericBuilderImpl::IsIgnoreableAttribute(PRInt32 aNameSpaceID, nsIAtom* aAtt
 
 
 nsresult
-RDFGenericBuilderImpl::GetSubstitutionText(nsIRDFResource* aResource,
-                                           const nsString& aSubstitution,
-                                           nsString& aResult)
+RDFGenericBuilderImpl::SubstituteText(nsIRDFResource* aResource,
+                                      nsString& aAttributeValue)
 {
     nsresult rv;
 
-    if (aSubstitution.Find("rdf:") == 0) {
-        // found an attribute which wants to bind
-        // its value to RDF so look it up in the
-        // graph
-        nsAutoString propertyStr(aSubstitution);
-        propertyStr.Cut(0,4);
+    if (aAttributeValue.Equals("...") || aAttributeValue.Equals("rdf:*")) {
+        const char *uri = nsnull;
+        aResource->GetValueConst(&uri);
+        aAttributeValue = uri;
+    }
+    else if (aAttributeValue.Find("rdf:") == 0) {
+        // found an attribute which wants to bind its value to RDF so
+        // look it up in the graph
+        aAttributeValue.Cut(0,4);
 
         nsCOMPtr<nsIRDFResource> property;
-        rv = gRDFService->GetUnicodeResource(propertyStr.GetUnicode(), getter_AddRefs(property));
+        rv = gRDFService->GetUnicodeResource(aAttributeValue.GetUnicode(), getter_AddRefs(property));
         if (NS_FAILED(rv)) return rv;
 
         nsCOMPtr<nsIRDFNode> valueNode;
@@ -1564,20 +1554,15 @@ RDFGenericBuilderImpl::GetSubstitutionText(nsIRDFResource* aResource,
         if (NS_FAILED(rv)) return rv;
 
         if ((rv != NS_RDF_NO_VALUE) && (valueNode)) {
-            rv = gXULUtils->GetTextForNode(valueNode, aResult);
+            rv = gXULUtils->GetTextForNode(valueNode, aAttributeValue);
             if (NS_FAILED(rv)) return rv;
         }
         else {
-            aResult.Truncate();
+            aAttributeValue.Truncate();
         }
     }
-    else if (aSubstitution.Equals("...") || aSubstitution.Equals("rdf:*")) {
-        const char *uri = nsnull;
-        aResource->GetValueConst(&uri);
-        aResult = uri;
-    }
     else {
-        aResult = aSubstitution;
+        // Nothing to do!
     }
 
     return NS_OK;
@@ -1632,17 +1617,20 @@ RDFGenericBuilderImpl::BuildContentFromTemplate(nsIContent *aTemplateNode,
 		// check whether this item is the "resource" element
 		PRBool isResourceElement = PR_FALSE;
 
-        nsAutoString idValue;
-        rv = tmplKid->GetAttribute(kNameSpaceID_None,
-                                   kURIAtom,
-                                   idValue);
-        if (NS_FAILED(rv)) return rv;
+        {
+            PRUnichar buf[128];
+            nsAutoString idValue(CBufDescriptor(buf, PR_TRUE, sizeof(buf) / sizeof(PRUnichar), 0));
+            rv = tmplKid->GetAttribute(kNameSpaceID_None,
+                                       kURIAtom,
+                                       idValue);
+            if (NS_FAILED(rv)) return rv;
 
-        if ((rv == NS_CONTENT_ATTR_HAS_VALUE) &&
-            (idValue.Equals("...") || idValue.Equals("rdf:*"))) {
-            isResourceElement = PR_TRUE;
-            aIsUnique = PR_FALSE;
-		}
+            if ((rv == NS_CONTENT_ATTR_HAS_VALUE) &&
+                (idValue.Equals("...") || idValue.Equals("rdf:*"))) {
+                isResourceElement = PR_TRUE;
+                aIsUnique = PR_FALSE;
+            }
+        }
 
 		nsCOMPtr<nsIAtom> tag;
 		rv = tmplKid->GetTag(*getter_AddRefs(tag));
@@ -1664,14 +1652,11 @@ RDFGenericBuilderImpl::BuildContentFromTemplate(nsIContent *aTemplateNode,
                 // Mark the element's contents as being generated so
                 // that any re-entrant calls don't trigger an infinite
                 // recursion.
-                rv = realKid->SetAttribute(kNameSpaceID_None,
-                                           kTemplateContentsGeneratedAtom,
-                                           nsAutoString("true"),
-                                           PR_FALSE);
-                NS_ASSERTION(NS_SUCCEEDED(rv), "unable to set contents-generated attribute");
-                if (NS_FAILED(rv)) return rv;
-
-                
+                nsCOMPtr<nsIXULContent> xulcontent = do_QueryInterface(realKid);
+                if (xulcontent) {
+                    rv = xulcontent->SetLazyState(nsIXULContent::eTemplateContentsBuilt);
+                    if (NS_FAILED(rv)) return rv;
+                }
             }
 
             // Recurse until we get to the resource element.
@@ -1697,13 +1682,13 @@ RDFGenericBuilderImpl::BuildContentFromTemplate(nsIContent *aTemplateNode,
         else if ((tag.get() == kTextAtom) && (nameSpaceID == kNameSpaceID_XUL)) {
             // <xul:text value="..."> is replaced by text of the
             // actual value of the rdf:resource attribute for the given node
-            nsAutoString	attrValue;
+            PRUnichar attrbuf[128];
+            nsAutoString attrValue(CBufDescriptor(attrbuf, PR_TRUE, sizeof(attrbuf) / sizeof(PRUnichar), 0));
             rv = tmplKid->GetAttribute(kNameSpaceID_None, kValueAtom, attrValue);
             if (NS_FAILED(rv)) return rv;
 
             if ((rv == NS_CONTENT_ATTR_HAS_VALUE) && (attrValue.Length() > 0)) {
-                nsAutoString text;
-                rv = GetSubstitutionText(aChild, attrValue, text);
+                rv = SubstituteText(aChild, attrValue);
                 if (NS_FAILED(rv)) return rv;
 
                 nsCOMPtr<nsITextContent> content;
@@ -1713,7 +1698,7 @@ RDFGenericBuilderImpl::BuildContentFromTemplate(nsIContent *aTemplateNode,
                                                         getter_AddRefs(content));
                 if (NS_FAILED(rv)) return rv;
 
-                rv = content->SetText(text.GetUnicode(), text.Length(), PR_FALSE);
+                rv = content->SetText(attrValue.GetUnicode(), attrValue.Length(), PR_FALSE);
                 if (NS_FAILED(rv)) return rv;
 
                 rv = aRealNode->AppendChildTo(nsCOMPtr<nsIContent>( do_QueryInterface(content) ), aNotify);
@@ -1733,11 +1718,6 @@ RDFGenericBuilderImpl::BuildContentFromTemplate(nsIContent *aTemplateNode,
             if (NS_FAILED(rv)) return rv;
 
             rv = realKid->SetAttribute(kNameSpaceID_None, kTemplateAtom, templateID, PR_FALSE);
-            if (NS_FAILED(rv)) return rv;
-
-            // mark it as a container so that its contents get
-            // generated. Bogus as all git up.
-            rv = realKid->SetAttribute(kNameSpaceID_None, kLazyContentAtom, nsAutoString("true"), PR_FALSE);
             if (NS_FAILED(rv)) return rv;
 
             // set natural order hint
@@ -1763,27 +1743,21 @@ RDFGenericBuilderImpl::BuildContentFromTemplate(nsIContent *aTemplateNode,
                 rv = tmplKid->GetAttributeNameAt(attr, attribNameSpaceID, *getter_AddRefs(attribName));
                 if (NS_FAILED(rv)) return rv;
 
-                // only copy attributes that aren't already set on the
-                // node. XXX Why would it already be set?!?
-                {
-                    nsAutoString attribValue;
-                    rv = realKid->GetAttribute(attribNameSpaceID, attribName, attribValue);
-                    if (NS_FAILED(rv)) return rv;
-
-                    if (rv == NS_CONTENT_ATTR_HAS_VALUE) continue;
-                }
-
                 if (! IsIgnoreableAttribute(attribNameSpaceID, attribName)) {
-                    nsAutoString attribValue;
+                    // Create a buffer here, because there's a good
+                    // chance that an attribute in the template is
+                    // going to be an RDF URI, which is usually
+                    // longish.
+                    PRUnichar attrbuf[128];
+                    nsAutoString attribValue(CBufDescriptor(attrbuf, PR_TRUE, sizeof(attrbuf) / sizeof(PRUnichar), 0));
                     rv = tmplKid->GetAttribute(attribNameSpaceID, attribName, attribValue);
                     if (NS_FAILED(rv)) return rv;
 
                     if (rv == NS_CONTENT_ATTR_HAS_VALUE) {
-                        nsAutoString text;
-                        rv = GetSubstitutionText(aChild, attribValue, text);
+                        rv = SubstituteText(aChild, attribValue);
                         if (NS_FAILED(rv)) return rv;
 
-                        rv = realKid->SetAttribute(attribNameSpaceID, attribName, text, PR_FALSE);
+                        rv = realKid->SetAttribute(attribNameSpaceID, attribName, attribValue, PR_FALSE);
                         if (NS_FAILED(rv)) return rv;
                     }
                 }
@@ -1816,6 +1790,17 @@ RDFGenericBuilderImpl::BuildContentFromTemplate(nsIContent *aTemplateNode,
                 // If we just built HTML, then we have to recurse "by
                 // hand" because HTML won't build itself up lazily.
                 rv = BuildContentFromTemplate(tmplKid, realKid, aIsUnique, aChild, -1, aNotify);
+                if (NS_FAILED(rv)) return rv;
+            }
+            else {
+                // Otherwise, just mark the XUL element as requiring
+                // more work to be done. We'll get around to it when
+                // somebody asks for it.
+                nsCOMPtr<nsIXULContent> xulcontent = do_QueryInterface(realKid);
+                if (! xulcontent)
+                    return NS_ERROR_UNEXPECTED;
+
+                rv = xulcontent->SetLazyState(nsIXULContent::eChildrenMustBeRebuilt);
                 if (NS_FAILED(rv)) return rv;
             }
         }
@@ -1914,7 +1899,7 @@ RDFGenericBuilderImpl::CreateWidgetItem(nsIContent *aElement,
 
 nsresult
 RDFGenericBuilderImpl::SynchronizeUsingTemplate(nsIContent* aTemplateNode,
-                                                nsIContent* aTreeItemElement,
+                                                nsIContent* aRealElement,
                                                 eUpdateAction aAction,
                                                 nsIRDFResource* aProperty,
                                                 nsIRDFNode* aValue)
@@ -1965,13 +1950,13 @@ RDFGenericBuilderImpl::SynchronizeUsingTemplate(nsIContent* aTemplateNode,
                 if (NS_FAILED(rv)) return rv;
 
                 if ((text.Length() > 0) && (aAction == eSet)) {
-                    aTreeItemElement->SetAttribute(attribNameSpaceID,
+                    aRealElement->SetAttribute(attribNameSpaceID,
                                                    attribName,
                                                    text,
                                                    PR_TRUE);
                 }
                 else {
-                    aTreeItemElement->UnsetAttribute(attribNameSpaceID,
+                    aRealElement->UnsetAttribute(attribNameSpaceID,
                                                      attribName,
                                                      PR_TRUE);
                 }
@@ -1981,13 +1966,18 @@ RDFGenericBuilderImpl::SynchronizeUsingTemplate(nsIContent* aTemplateNode,
 
     // See if we've generated kids for this node yet. If we have, then
 	// recursively sync up template kids with content kids
-    nsAutoString contentsGenerated;
-    rv = aTreeItemElement->GetAttribute(kNameSpaceID_None,
-                                        kTemplateContentsGeneratedAtom,
-                                        contentsGenerated);
-    if (NS_FAILED(rv)) return rv;
+    PRBool contentsGenerated = PR_TRUE;
+    nsCOMPtr<nsIXULContent> xulcontent = do_QueryInterface(aRealElement);
+    if (xulcontent) {
+        rv = xulcontent->GetLazyState(nsIXULContent::eTemplateContentsBuilt,
+                                      contentsGenerated);
+        if (NS_FAILED(rv)) return rv;
+    }
+    else {
+        // HTML content will _always_ have been generated up-front
+    }
 
-    if ((rv == NS_CONTENT_ATTR_HAS_VALUE) && (contentsGenerated.Equals("true"))) {
+    if (contentsGenerated) {
         PRInt32 count;
         rv = aTemplateNode->ChildCount(count);
         if (NS_FAILED(rv)) return rv;
@@ -2001,7 +1991,7 @@ RDFGenericBuilderImpl::SynchronizeUsingTemplate(nsIContent* aTemplateNode,
                 break;
 
             nsCOMPtr<nsIContent> realKid;
-            rv = aTreeItemElement->ChildAt(loop, *getter_AddRefs(realKid));
+            rv = aRealElement->ChildAt(loop, *getter_AddRefs(realKid));
             if (NS_FAILED(rv)) return rv;
 
             if (! realKid)
@@ -2083,24 +2073,23 @@ RDFGenericBuilderImpl::CreateContainerContents(nsIContent* aElement, nsIRDFResou
     // See if the element's templates contents have been generated:
     // this prevents a re-entrant call from triggering another
     // generation.
-    nsAutoString attrValue;
-    rv = aElement->GetAttribute(kNameSpaceID_None,
-                                kContainerContentsGeneratedAtom,
-                                attrValue);
-    NS_ASSERTION(NS_SUCCEEDED(rv), "unable to test container-contents-generated attribute");
-    if (NS_FAILED(rv)) return rv;
+    PRBool contentsGenerated;
+    nsCOMPtr<nsIXULContent> xulcontent = do_QueryInterface(aElement);
+    if (xulcontent) {
+        rv = xulcontent->GetLazyState(nsIXULContent::eContainerContentsBuilt, contentsGenerated);
+        if (NS_FAILED(rv)) return rv;
+    }
+    else {
+        // HTML is always generated
+        contentsGenerated = PR_TRUE;
+    }
 
-    if ((rv == NS_CONTENT_ATTR_HAS_VALUE) && (attrValue.Equals("true")))
+    if (contentsGenerated)
         return NS_RDF_ELEMENT_WAS_CREATED;
 
     // Now mark the element's contents as being generated so that
     // any re-entrant calls don't trigger an infinite recursion.
-    rv = aElement->SetAttribute(kNameSpaceID_None,
-                                kContainerContentsGeneratedAtom,
-                                nsAutoString("true"),
-                                PR_FALSE);
-    NS_ASSERTION(NS_SUCCEEDED(rv), "unable to set container-contents-generated attribute");
-    if (NS_FAILED(rv)) return rv;
+    rv = xulcontent->SetLazyState(nsIXULContent::eContainerContentsBuilt);
 
     // XXX Eventually, we may want to factor this into one method that
     // handles RDF containers (RDF:Bag, et al.) and another that
@@ -2174,22 +2163,20 @@ RDFGenericBuilderImpl::CreateTemplateContents(nsIContent* aElement, const nsStri
     // See if the element's templates contents have been generated:
     // this prevents a re-entrant call from triggering another
     // generation.
-    nsAutoString attrValue;
-    rv = aElement->GetAttribute(kNameSpaceID_None,
-                                kTemplateContentsGeneratedAtom,
-                                attrValue);
-    NS_ASSERTION(NS_SUCCEEDED(rv), "unable to test template-contents-generated attribute");
+    nsCOMPtr<nsIXULContent> xulcontent = do_QueryInterface(aElement);
+    if (! xulcontent)
+        return NS_OK; // HTML content is _always_ generated up-front
+
+    PRBool contentsGenerated;
+    rv = xulcontent->GetLazyState(nsIXULContent::eTemplateContentsBuilt, contentsGenerated);
     if (NS_FAILED(rv)) return rv;
 
-    if ((rv == NS_CONTENT_ATTR_HAS_VALUE) && (attrValue.Equals("true")))
+    if (contentsGenerated)
         return NS_OK;
 
     // Now mark the element's contents as being generated so that
     // any re-entrant calls don't trigger an infinite recursion.
-    rv = aElement->SetAttribute(kNameSpaceID_None,
-                                kTemplateContentsGeneratedAtom,
-                                nsAutoString("true"),
-                                PR_FALSE);
+    rv = xulcontent->SetLazyState(nsIXULContent::eTemplateContentsBuilt);
     NS_ASSERTION(NS_SUCCEEDED(rv), "unable to set template-contents-generated attribute");
     if (NS_FAILED(rv)) return rv;
 

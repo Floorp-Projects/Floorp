@@ -852,7 +852,6 @@ protected:
     static PRInt32 gRefCnt;
     static nsIAtom*  kContainerContentsGeneratedAtom;
     static nsIAtom*  kIdAtom;
-    static nsIAtom*  kLazyContentAtom;
     static nsIAtom*  kObservesAtom;
     static nsIAtom*  kOpenAtom;
     static nsIAtom*  kPersistAtom;
@@ -942,7 +941,6 @@ protected:
 PRInt32 XULDocumentImpl::gRefCnt = 0;
 nsIAtom* XULDocumentImpl::kContainerContentsGeneratedAtom;
 nsIAtom* XULDocumentImpl::kIdAtom;
-nsIAtom* XULDocumentImpl::kLazyContentAtom;
 nsIAtom* XULDocumentImpl::kObservesAtom;
 nsIAtom* XULDocumentImpl::kOpenAtom;
 nsIAtom* XULDocumentImpl::kPersistAtom;
@@ -990,7 +988,6 @@ XULDocumentImpl::XULDocumentImpl(void)
     if (gRefCnt++ == 0) {
         kContainerContentsGeneratedAtom = NS_NewAtom("containercontentsgenerated");
         kIdAtom                         = NS_NewAtom("id");
-        kLazyContentAtom                = NS_NewAtom("lazycontent");
         kObservesAtom                   = NS_NewAtom("observes");
         kOpenAtom                       = NS_NewAtom("open");
         kPersistAtom                    = NS_NewAtom("persist");
@@ -1103,7 +1100,6 @@ XULDocumentImpl::~XULDocumentImpl()
     if (--gRefCnt == 0) {
         NS_IF_RELEASE(kContainerContentsGeneratedAtom);
         NS_IF_RELEASE(kIdAtom);
-        NS_IF_RELEASE(kLazyContentAtom);
         NS_IF_RELEASE(kObservesAtom);
         NS_IF_RELEASE(kOpenAtom);
         NS_IF_RELEASE(kPersistAtom);
