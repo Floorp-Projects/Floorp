@@ -124,7 +124,7 @@ BOOL CWizHelp::OnInitDialog()
 		CRect tmpRect = CRect(GlobalWid[count].location.x, GlobalWid[count].location.y, (GlobalWid[count].location.x + GlobalWid[count].size.width), (GlobalWid[count].location.y + GlobalWid[count].size.height));
 
 //		int k=((CButton*)Button1)->Create("Button1", BS_PUSHBUTTON | WS_TABSTOP|WS_VISIBLE | WS_CHILD, tmpRect, this, ID);
-		int k=Button1->Create("GlobalWid[count].value", BS_PUSHBUTTON | WS_TABSTOP|WS_VISIBLE, tmpRect, this, GlobalWid[count].ButtonID);
+		int k=Button1->Create(GlobalWid[count].value, BS_PUSHBUTTON | WS_TABSTOP|WS_VISIBLE, tmpRect, this, GlobalWid[count].ButtonID);
 
 		
 	}
