@@ -154,6 +154,72 @@ NS_IMETHODIMP nsMsgThread::GetNumUnreadChildren (PRUint32 *result)
 		return NS_ERROR_NULL_POINTER;
 }
 
+PRBool nsMsgThread::::TryReferenceThreading(nsIMsgDBHdr *newHeader)
+{
+	// start at end of references to find immediate parent in thread
+	PRBool addedChild = PR_FALSE;
+	PRBool done = PR_FALSE;
+
+	for (int32 refIndex = newHeader->GetNumReferences() - 1; !done && refIndex >= 0; refIndex--)
+	{
+		nsCOMPtr <nsIMsgDBHdr>  refHdr;
+		refHdr = messageDB->GetNeoMessageHdrForHashMessageID(newHeader->GetReferenceId(refIndex));
+		if (refHdr)
+		{
+			// position iterator at child pos.
+			childIterator.reset();
+			while (TRUE)
+			{
+				MessageKey curMsgId = childIterator.currentID();
+				if (curMsgId == 0)
+					break;
+				if (curMsgId == refHdr->fID)
+					break;
+				childIterator.nextID();
+			}
+			// new header is a reply to header at child index. Its level
+			// is the childIndex header + 1. We need
+			// to put it in the m_children array with the other children of
+			// the document we are a reply to, in date order.
+			newHeader->SetLevel(refHdr->GetLevel() + 1);
+			while (childIterator.currentID() != 0 && !done)
+			{
+				MessageKey msgId = childIterator.currentID();
+				if (msgId != 0)
+				{
+					nsIMsgDBHdr *childHdr = (nsIMsgDBHdr *) childIterator.currentObject();
+					if (childHdr != NULL)
+					{
+						// If the current header is at a equal or higher level, we've reached the end
+						// of the current level, so insert here.
+						// If the current header is at the desired level, and is later than
+						// the new header, put the new header before the current header.
+						// Or if we're at the end, insert here.
+						if ((childHdr != refHdr && childHdr->GetLevel() <= refHdr->GetLevel())
+							|| (childHdr->GetLevel() == newHeader->GetLevel() 
+								&& newHeader->GetDate() < childHdr->GetDate())
+							|| childIterator.nextID() == 0) // evil side effect - advance cursor
+						{
+							messageDB->AddNeoHdr(newHeader);
+							// it seems if we get to the end, addHere sticks object at
+							// beginning of parts list. That's not what we want.
+							if (childIterator.currentID() != 0)
+								childIterator.addHere(newHeader, TRUE /* insert before cursor */);
+							else
+								childIterator.addObject(newHeader);
+							newHeader->unrefer();	// adding a newHeader to a part mgr adds a reference
+							done = PR_TRUE;
+							addedChild = PR_TRUE;
+						}
+					}
+				}
+			}
+			refHdr->unrefer();
+			break;
+		}
+	}
+	return addedChild;
+}
 
 NS_IMETHODIMP nsMsgThread::AddChild(nsIMsgDBHdr *child, PRBool threadInThread)
 {

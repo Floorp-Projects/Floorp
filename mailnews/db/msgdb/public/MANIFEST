@@ -23,5 +23,4 @@ nsImapMailDatabase.h
 nsNewsDatabase.h
 nsDBFolderInfo.h
 nsMsgHdr.h
-nsIDBChangeListener.h
 nsMsgThread.h

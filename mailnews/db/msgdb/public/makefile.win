@@ -20,6 +20,8 @@ MODULE=msgdb
 
 XPIDLSRCS =	\
 			.\nsIDBFolderInfo.idl		\
+			.\nsIDBChangeListener.idl		\
+			.\nsIDBChangeAnnouncer.idl		\
 			$(NULL)
 
 ################################################################################
@@ -33,8 +35,6 @@ EXPORTS =	 						\
 			nsNewsDatabase.h		\
 			nsDBFolderInfo.h	    \
 			nsMsgHdr.h				\
-			nsIDBChangeListener.h	\
-			nsIDBFolderInfo.h		\
 			nsMsgThread.h			\
 			$(NULL)
 

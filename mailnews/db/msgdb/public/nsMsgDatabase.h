@@ -25,6 +25,7 @@
 #include "nsString.h"
 #include "nsFileSpec.h"
 #include "nsIDBChangeListener.h"
+#include "nsIDBChangeAnnouncer.h"
 #include "nsMsgMessageFlags.h"
 #include "nsISupportsArray.h"
 #include "nsDBFolderInfo.h"
@@ -75,12 +76,6 @@ public:
  //Returns whether or not this database contains the given key
   NS_IMETHOD ContainsKey(nsMsgKey key, PRBool *containsKey);
 
-  // create a new message header from a hdrStruct. Caller must release resulting header,
-  // after adding any extra properties they want.
-  NS_IMETHOD CreateNewHdrAndAddToDB(PRBool *newThread,
-                                    nsMsgHdrStruct *hdrStruct,
-                                    nsIMsgDBHdr **newHdr,
-                                    PRBool notify);
   // Must call AddNewHdrToDB after creating. The idea is that you create
   // a new header, fill in its properties, and then call AddNewHdrToDB.
   // AddNewHdrToDB will send notifications to any listeners.
@@ -89,9 +84,6 @@ public:
 
   NS_IMETHOD CopyHdrFromExistingHdr(nsMsgKey key, nsIMsgDBHdr *existingHdr, nsIMsgDBHdr **newHdr);
   NS_IMETHOD AddNewHdrToDB(nsIMsgDBHdr *newHdr, PRBool notify);
-  // extract info from an nsIMsgDBHdr into a nsMsgHdrStruct
-  NS_IMETHOD GetMsgHdrStructFromnsMsgHdr(nsIMsgDBHdr *msgHdr, 
-                                         nsMsgHdrStruct *hdrStruct);
 
 #if HAVE_INT_ENUMERATORS
   NS_IMETHOD EnumerateKeys(nsIEnumerator* *outputKeys);

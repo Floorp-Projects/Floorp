@@ -24,6 +24,9 @@
 
 class nsIMsgDBHdr;
 class nsIDBChangeListener;
+
+#include "nsIDBChangeAnnouncer.h"
+
 class nsIEnumerator;
 class nsThreadMessageHdr;       // XXX where's the public interface to this?
 class nsMsgKeyArray;
@@ -36,38 +39,6 @@ enum nsMsgDBCommitType {
   kLargeCommit,
   kSessionCommit,
   kCompressCommit
-};
-
-struct nsMsgHdrStruct {
-  nsMsgKey      m_threadId; 
-  nsMsgKey      m_messageKey;     
-  nsString      m_subject;      // should be nsCString when it's impl
-  nsString      m_author;       // should be nsCString when it's impl
-  nsString      m_messageId;    // should be nsCString when it's impl
-  nsString      m_references;   // should be nsCString when it's impl
-  nsString      m_recipients;   // should be nsCString when it's impl
-  time_t        m_date;         // is there some sort of PR type I should use for this?
-  PRUint32      m_messageSize;  // lines for news articles, bytes for local mail and imap messages
-  PRUint32      m_flags;
-  PRInt16       m_numChildren;  // for top-level threads
-  PRInt16       m_numNewChildren;       // for top-level threads
-  nsMsgPriority m_priority;
-};
-
-class nsIDBChangeAnnouncer : public nsISupports {
-public:
-
-  // these 2 calls return NS_OK on success, NS_COMFALSE on failure
-  NS_IMETHOD AddListener(nsIDBChangeListener *listener) = 0;
-  NS_IMETHOD RemoveListener(nsIDBChangeListener *listener) = 0;
-
-  NS_IMETHOD NotifyKeyChangeAll(nsMsgKey keyChanged, PRUint32 aOldFlags, PRUint32 aNewFlags, 
-                                nsIDBChangeListener *instigator) = 0;
-  NS_IMETHOD NotifyKeyAddedAll(nsMsgKey keyAdded, PRInt32 flags, 
-                               nsIDBChangeListener *instigator) = 0;
-  NS_IMETHOD NotifyKeyDeletedAll(nsMsgKey keyDeleted, PRInt32 flags, 
-                                 nsIDBChangeListener *instigator) = 0;
-  NS_IMETHOD NotifyAnnouncerGoingAway(void) = 0;
 };
 
 class nsIMsgDatabase : public nsIDBChangeAnnouncer {
@@ -88,22 +59,12 @@ public:
   //Returns whether or not this database contains the given key
   NS_IMETHOD ContainsKey(nsMsgKey key, PRBool *containsKey) = 0;
 
-  // create a new message header from a hdrStruct. Caller must release resulting header,
-  // after adding any extra properties they want.
-  NS_IMETHOD CreateNewHdrAndAddToDB(PRBool *newThread,
-                                    nsMsgHdrStruct *hdrStruct,
-                                    nsIMsgDBHdr **newHdr,
-                                    PRBool notify) = 0;
-
-  // Must call AddNewHdrToDB after creating. The idea is that you create
+   // Must call AddNewHdrToDB after creating. The idea is that you create
   // a new header, fill in its properties, and then call AddNewHdrToDB.
   // AddNewHdrToDB will send notifications to any listeners.
   NS_IMETHOD CreateNewHdr(nsMsgKey key, nsIMsgDBHdr **newHdr) = 0;
 
   NS_IMETHOD AddNewHdrToDB(nsIMsgDBHdr *newHdr, PRBool notify) = 0;
-  // extract info from an nsIMsgDBHdr into a nsMsgHdrStruct
-  NS_IMETHOD GetMsgHdrStructFromnsMsgHdr(nsIMsgDBHdr *msgHdr, 
-                                         nsMsgHdrStruct *hdrStruct) = 0;
 
   NS_IMETHOD CopyHdrFromExistingHdr(nsMsgKey key, nsIMsgDBHdr *existingHdr, nsIMsgDBHdr **newHdr) = 0;
 
