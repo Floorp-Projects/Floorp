@@ -19,8 +19,9 @@
         {
             // Create data object and initialize.
             data = new Object;
-            data.key             = document.getElementById("data.key");
-            data.ignoreCase      = document.getElementById("data.ignoreCase");
+            data.findKey         = document.getElementById("data.findKey");
+            //data.replaceKey      = document.getElementById("data.replaceKey");
+            data.caseSensitive   = document.getElementById("data.caseSensitive");
             data.wrap            = document.getElementById("data.wrap");
             data.searchBackwards = document.getElementById("data.searchBackwards");
             data.execute         = document.getElementById("data.execute");
@@ -30,11 +31,11 @@
         {
             // Create dialog object and initialize.
             dialog = new Object;
-            dialog.key             = document.getElementById("dialog.key");
-            dialog.ignoreCase      = document.getElementById("dialog.ignoreCase");
+            dialog.findKey         = document.getElementById("dialog.findKey");
+            dialog.caseSensitive   = document.getElementById("dialog.caseSensitive");
             dialog.wrap            = document.getElementById("dialog.wrap");
             dialog.searchBackwards = document.getElementById("dialog.searchBackwards");
-            dialog.ok              = document.getElementById("dialog.ok");
+            dialog.find            = document.getElementById("dialog.find");
             dialog.cancel          = document.getElementById("dialog.cancel");
             dialog.enabled         = false;
         }
@@ -42,14 +43,12 @@
         function loadDialog()
         {
             // Set initial dialog field contents.
-            dialog.key.setAttribute( "value", data.key.getAttribute("value") );
+            dialog.findKey.setAttribute( "value", data.findKey.getAttribute("value") );
 
-            // Note: dialog.ignoreCase is actually "Case Sensitive" so
-            //       we must reverse things when getting the data.
-            if ( data.ignoreCase.getAttribute("value") == "true" ) {
-                dialog.ignoreCase.removeAttribute( "checked" );
+            if ( data.caseSensitive.getAttribute("value") == "true" ) {
+                dialog.caseSensitive.setAttribute( "checked", "" );
             } else {
-                dialog.ignoreCase.setAttribute( "checked", "" );
+                dialog.caseSensitive.removeAttribute( "checked" );
             }
 
             if ( data.wrap.getAttribute("value") == "true" ) {
@@ -65,22 +64,20 @@
             }
             
             // disable the OK button if no text
-            if (dialog.key.getAttribute("value") == "") {
-	            dialog.ok.setAttribute( "disabled", "" );
+            if (dialog.findKey.getAttribute("value") == "") {
+	            dialog.find.setAttribute( "disabled", "" );
 	       	}
         }
 
         function loadData()
         {
             // Set data attributes per user input.
-            data.key.setAttribute( "value", dialog.key.value );
+            data.findKey.setAttribute( "value", dialog.findKey.value );
 
-            // Note: dialog.ignoreCase is actually "Case Sensitive" so
-            //       we must reverse things when storing the data.
-            if ( dialog.ignoreCase.checked ) {
-                data.ignoreCase.setAttribute( "value", "false" );
+            if ( dialog.caseSensitive.checked ) {
+                data.caseSensitive.setAttribute( "value", "true" );
             } else {
-                data.ignoreCase.setAttribute( "value", "true" );
+                data.caseSensitive.setAttribute( "value", "false" );
             }
 
             if ( dialog.wrap.checked ) {
@@ -100,15 +97,15 @@
         {
             dump( "data.key = " + data.key + "\n" );
                 dump( "\tvalue=" + data.key.getAttribute("value") + "\n" );
-            dump( "data.ignoreCase = " + data.ignoreCase + "\n" );
-                dump( "\tvalue=" + data.ignoreCase.getAttribute("value") + "\n" );
+            dump( "data.caseSensitive = " + data.caseSensitive + "\n" );
+                dump( "\tvalue=" + data.caseSensitive.getAttribute("value") + "\n" );
             dump( "data.searchBackwards = " + data.searchBackwards + "\n" );
                 dump( "\tvalue=" + data.searchBackwards.getAttribute("value") + "\n" );
             dump( "data.wrap = " + data.wrap + "\n" );
                 dump( "\tvalue=" + data.wrap.getAttribute("value") + "\n" );
             dump( "data.execute = " + data.execute + "\n" );
                 dump( "\tkey=" + data.execute.getAttribute("key") + "\n" );
-                dump( "\tignoreCase=" + data.execute.getAttribute("ignorecase") + "\n" );
+                dump( "\tcaseSensitive=" + data.execute.getAttribute("caseSensitive") + "\n" );
                 dump( "\tsearchBackwards=" + data.execute.getAttribute("searchBackwards") + "\n" );
                 dump( "\twrap=" + data.execute.getAttribute("wrap") + "\n" );
         }
@@ -125,7 +122,7 @@
             loadDialog();
         }
 
-        function ok()
+        function find()
         {
             // Note: This is broken!  We must detect whether the user has changed
             //       the dialog contents and only trigger "find" if they have.
@@ -135,8 +132,8 @@
             loadData();
 
             // Set data.execute argument attributes from data.
-            data.execute.setAttribute( "key", data.key.getAttribute("value") );
-            data.execute.setAttribute( "ignoreCase", data.ignoreCase.getAttribute("value") );
+            data.execute.setAttribute( "findKey", data.findKey.getAttribute("value") );
+            data.execute.setAttribute( "caseSensitive", data.caseSensitive.getAttribute("value") );
             data.execute.setAttribute( "searchBackwards", data.searchBackwards.getAttribute("value") );
             data.execute.setAttribute( "wrap", data.wrap.getAttribute("value") );
 
@@ -152,22 +149,21 @@
 
         function onTyping( key )
         {
-		//if ( key == 13 &amp;&amp; dialog.enabled ) {
             if ( key == 13 && dialog.enabled) {
                 ok();
             } else
             {
                 if ( dialog.enabled ) {
                     // Disable OK if they delete all the text.
-                    if ( dialog.key.value == "" ) {
+                    if ( dialog.findKey.value == "" ) {
                         dialog.enabled = false;
-                        dialog.ok.setAttribute( "disabled", "" );
+                        dialog.find.setAttribute( "disabled", "" );
                     }
                 } else {
                     // Enable OK once the user types something.
-                    if ( dialog.key.value != "" ) {
+                    if ( dialog.findKey.value != "" ) {
                         dialog.enabled = true;
-                        dialog.ok.removeAttribute( "disabled" );
+                        dialog.find.removeAttribute( "disabled" );
                     }
                 }
             }
