@@ -37,7 +37,9 @@
     &sidebar.customize.title.label;
   </html:div>
 
-  <html:hr />
+  <html:div>
+    <html:hr />
+  </html:div>
 
   <html:div class="subtitle">
     &sidebar.customize.current.label;
@@ -66,7 +68,9 @@
 
   </box>
 
-  <html:hr/>
+  <html:div>
+    <html:hr />
+  </html:div>
 
   <html:div class="subtitle">
     &sidebar.customize.additional.label;
@@ -76,7 +80,7 @@
 
  <!-- datasources="chrome://sidebar/content/sidebar-registry.rdf"-->
 
-      <tree id="other-panels"
+      <tree id="other-panels" flex='100%'
             datasources="resource:/chrome/sidebar/content/default/sidebar-registry.rdf"
             onclick="selected()"
             ref="NC:SidebarRoot" >
@@ -110,7 +114,9 @@
 
   </box> 
 
-  <html:hr/>
+  <html:div>
+    <html:hr />
+  </html:div>
 
   <box align="horizontal">
     <spring flex="48%"/>
