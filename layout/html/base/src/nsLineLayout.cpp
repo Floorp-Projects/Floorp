@@ -247,6 +247,17 @@ nsLineLayout::Initialize(nsBlockReflowState& aState, nsLineData* aLine)
 
   mLineHeight = 0;
 
+  mNoWrap = PR_FALSE;
+  nsIStyleContext* sc;
+  mBlock->GetStyleContext(mPresContext, sc);
+  const nsStyleText* styleText = (const nsStyleText*)
+    sc->GetStyleData(eStyleStruct_Text);
+  switch (styleText->mWhiteSpace) {
+  case NS_STYLE_WHITESPACE_PRE:
+  case NS_STYLE_WHITESPACE_NOWRAP:
+    mNoWrap = PR_TRUE;
+    break;
+  }
 
   return rv;
 }
@@ -645,20 +656,34 @@ nsLineLayout::ReflowChild(nsReflowCommand* aReflowCommand,
   nsMargin kidMargin;
   kidSpacing->CalcMarginFor(kidFrame, kidMargin);
   if (!mUnconstrainedWidth) {
-    kidAvailSize.width -= kidMargin.left + kidMargin.right;
-    if (!isFirstChild && (kidAvailSize.width <= 0)) {
-      // No room.
-      if (!didBreak && CanBreak()) {
-        kidFrame = mState.mKidFrame;
-        didBreak = PR_TRUE;
-        goto reflow_it_again_sam;
+    if (mNoWrap) {
+      // When our reflow is constrained and we are we are not supposed
+      // to wrap make sure the child will fit regardless of how much
+      // space is left.
+      if (isBlock) {
+        // Never give a block an infinite width
+        kidAvailSize.width = mRightEdge - mLeftEdge;
       }
+      else {
+        kidAvailSize.width = NS_UNCONSTRAINEDSIZE;
+      }
+    }
+    else {
+      kidAvailSize.width -= kidMargin.left + kidMargin.right;
+      if (!isFirstChild && (kidAvailSize.width <= 0)) {
+        // No room.
+        if (!didBreak && CanBreak()) {
+          kidFrame = mState.mKidFrame;
+          didBreak = PR_TRUE;
+          goto reflow_it_again_sam;
+        }
 
-      // XXX Make sure child is dirty for next time
-      kidFrame->WillReflow(*mPresContext);
-      NS_FRAME_LOG(NS_FRAME_TRACE_CHILD_REFLOW,
-                   ("nsLineLayout::ReflowChild: !fit"));
-      return NS_LINE_LAYOUT_BREAK_BEFORE;
+        // XXX Make sure child is dirty for next time
+        kidFrame->WillReflow(*mPresContext);
+        NS_FRAME_LOG(NS_FRAME_TRACE_CHILD_REFLOW,
+                     ("nsLineLayout::ReflowChild: !fit"));
+        return NS_LINE_LAYOUT_BREAK_BEFORE;
+      }
     }
   }
 
@@ -867,34 +892,6 @@ nsLineLayout::ReflowChild(nsReflowCommand* aReflowCommand,
       }
     }
   }
-#if 0
-  else if (!NS_FRAME_IS_COMPLETE(kidReflowStatus)) {
-    // The child seems to have fit. However, it's not complete. See if
-    // we need to split at the break frame or not.
-    if ((nsnull != mBreakFrame) && (mBreakFrame != mState.mKidFrame)) {
-      // We know that we have a break frame.
-
-      // We also know that the break frame is not the frame we just
-      // reflow (therefore it's either a previous child or it's a
-      // frame inside one of our children).
-
-      // Because the break frame is set we know that the current
-      // "word" is not complete. Therefore we must break.
-
-      // XXX This is not quite sufficient for the first-word case: if
-      // an inline-frame child decides to stop reflowing because it
-      // runs out of space, yet we haven't finished the word (and it
-      // might finish the word) the inline-frame will have prematurely
-      // stopped!
-
-      if (!didBreak && CanBreak()) {
-        kidFrame = mState.mKidFrame;
-        didBreak = PR_TRUE;
-        goto reflow_it_again_sam;
-      }
-    }
-  }
-#endif
 
   // Non-aware children that take up space act like words; which means
   // that space immediately following them must not be skipped over.
