@@ -701,7 +701,7 @@ NS_IMETHODIMP nsWebShellWindow::FindWebShellWithName(const PRUnichar* aName,
   // This will need to be enhanced to search for (owned?) named
   // windows at some point.
   if ( mWebShell ) {
-      //rv = mWebShell->FindChildWithName( aName, aResult );
+      rv = mWebShell->FindChildWithName( aName, aResult );
   }
 
   return rv;
