@@ -37,6 +37,7 @@
 
 static NS_DEFINE_CID(kAppShellServiceCID, NS_APPSHELL_SERVICE_CID);
 static NS_DEFINE_CID(kMsgComposeCID, NS_MSGCOMPOSE_CID);
+static NS_DEFINE_CID(kMsgCompFieldsCID, NS_MSGCOMPFIELDS_CID);
 static NS_DEFINE_CID(kMsgDraftCID, NS_MSGDRAFT_CID);
 
 nsMsgComposeService::nsMsgComposeService()
@@ -212,27 +213,26 @@ nsresult nsMsgComposeService::OpenComposeWindowWithValues(const PRUnichar *msgCo
 														  const PRUnichar *body,
 														  const PRUnichar *attachment)
 {
-	nsAutoString args = "";
 	nsresult rv;
-
-	args.Append("format=");
-	args.Append(format);
+	nsCOMPtr<nsIMsgCompFields> pCompFields;
+    rv = nsComponentManager::CreateInstance(kMsgCompFieldsCID,
+                                 nsnull,
+                                 nsCOMTypeInfo<nsIMsgCompFields>::GetIID(), 
+                                 getter_AddRefs(pCompFields));
+    if (NS_SUCCEEDED(rv) && pCompFields)
+    {
+		if (to)			{pCompFields->SetTo(to);}
+		if (cc)			{pCompFields->SetCc(cc);}
+		if (bcc)		{pCompFields->SetBcc(bcc);}
+		if (newsgroups)	{pCompFields->SetNewsgroups(newsgroups);}
+		if (subject)	{pCompFields->SetSubject(subject);}
+		if (attachment)	{pCompFields->SetAttachments(attachment);}
+		if (body)		{pCompFields->SetBody(body);}
 	
-	if (to)			{args.Append(",to="); args.Append(to);}
-	if (cc)			{args.Append(",cc="); args.Append(cc);}
-	if (bcc)		{args.Append(",bcc="); args.Append(bcc);}
-	if (newsgroups)	{args.Append(",newsgroups="); args.Append(newsgroups);}
-	if (subject)	{args.Append(",subject="); args.Append(subject);}
-	if (attachment)	{args.Append(",attachment="); args.Append(attachment);}
-	if (body)		{args.Append(",body="); args.Append(body);} //Body need to be the last one!
-
-	if (msgComposeWindowURL && *msgComposeWindowURL)
-        rv = openWindow( msgComposeWindowURL, args.GetUnicode() );
-	else
-        rv = openWindow( nsString("chrome://messengercompose/content/").GetUnicode(),
-                         args.GetUnicode() );
-	
-	return rv;
+		rv = OpenComposeWindowWithCompFields(msgComposeWindowURL, format, pCompFields);
+    }
+    
+    return rv;
 }
 
 nsresult nsMsgComposeService::OpenComposeWindowWithCompFields(const PRUnichar *msgComposeWindowURL,
