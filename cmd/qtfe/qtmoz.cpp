@@ -1,4 +1,4 @@
-/* $Id: qtmoz.cpp,v 1.2 1998/09/30 00:23:35 cls%seawood.org Exp $
+/* $Id: qtmoz.cpp,v 1.3 1998/10/02 20:59:36 cls%seawood.org Exp $
  *
  * The contents of this file are subject to the Netscape Public License
  * Version 1.0 (the "NPL"); you may not use this file except in
@@ -20,6 +20,9 @@
  * Tvete.  All Rights Reserved.
  */
 
+// This is a kludge to get around the fact that DEBUG turns on internal QT
+// debugging information that we do not want.
+
 #ifdef DEBUG
 #undef DEBUG
 #define DEBUG_qt
@@ -29,14 +32,15 @@
 #include <qapp.h>
 #include <qsocknot.h>
 #include <qmsgbox.h>
-#include "client.h"
-#include "QtEventPusher.h"
-#include "mainwindow.h"
-#include "streaming.h"
 
 #ifdef DEBUG_qt
 #define DEBUG
 #endif
+
+#include "client.h"
+#include "QtEventPusher.h"
+#include "mainwindow.h"
+#include "streaming.h"
 
 #include "qtfe_err.h"
 #include "plevent.h"
@@ -148,15 +152,7 @@ extern "C" void XP_AssertAtLine( char *fileName, int line )
 
 #endif
 
-#if !defined( NDEBUG ) && !defined(XP_WIN)
-extern "C" char *NOT_NULL(const char *p)
-{
-    ASSERT(p != 0 );
-    return (char*)p;
-}
-#endif
-
-#if defined(XP_UNIX)
+#if defined(XP_UNIX) && defined(SW_THREADS)
 extern "C" int PR_XGetXtHackFD(void);
 #endif
 extern "C" Bool QTFE_Confirm(MWContext * context, const char * Msg);
@@ -1103,7 +1099,7 @@ mozilla_main(int argc, char** argv)
      * are adding here, then we know that Qt is calling us, so it is
      * safe to release the X lock. -- erik
      */
-#if defined(XP_UNIX)
+#if defined(XP_UNIX) && defined(SW_THREADS)
     if ( (fd = PR_XGetXtHackFD()) >= 0 )
 	new QSocketNotifier( fd, QSocketNotifier::Read, qApp );
 #endif
