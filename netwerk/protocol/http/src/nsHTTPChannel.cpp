@@ -81,34 +81,31 @@ extern PRLogModuleInfo* gHTTPLog;
 #define LOG(args) PR_LOG(gHTTPLog, PR_LOG_DEBUG, args)
 
 
-nsHTTPChannel::nsHTTPChannel(nsIURI* i_URL, nsHTTPHandler* i_Handler): 
-    mResponse(nsnull),
-    mHandler(dont_QueryInterface(i_Handler)),
-    mRequest(nsnull),
-    mHTTPServerListener(nsnull),
-    mResponseContext(nsnull),
-    mCachedResponse(nsnull),
-    mURI(dont_QueryInterface(i_URL)),
-    mConnected(PR_FALSE),
-    mState(HS_IDLE),
-    mLoadAttributes(LOAD_NORMAL),
-    mLoadGroup(nsnull),
-    mCachedContentIsAvailable(PR_FALSE),
-    mCachedContentIsValid(PR_FALSE),
-    mFiredOnHeadersAvailable(PR_FALSE),
-    mFiredOpenOnStartRequest(PR_FALSE),
-    mFiredOpenOnStopRequest(PR_FALSE),
-    mAuthTriedWithPrehost(PR_FALSE),
-    mAuthRealm(nsnull),
-    mProxy(0),
-    mProxyPort(-1),
-    mProxyType(nsnull),
-    mProxyTransparent(PR_FALSE),
-    mStatus(NS_OK),
-    mPipeliningAllowed(PR_TRUE),
-    mPipelinedRequest(nsnull),
-    mApplyConversion(PR_TRUE),
-    mOpenHasEventQueue(PR_TRUE)
+nsHTTPChannel::nsHTTPChannel(nsIURI *aURL, nsHTTPHandler *aHandler)
+    : mHandler(dont_QueryInterface(aHandler))
+    , mState(HS_IDLE)
+    , mStatus(NS_OK)
+    , mRequest(nsnull)
+    , mResponse(nsnull)
+    , mCachedResponse(nsnull)
+    , mHTTPServerListener(nsnull)
+    , mURI(dont_QueryInterface(aURL))
+    , mLoadAttributes(LOAD_NORMAL)
+    , mLoadGroup(nsnull)
+    , mAuthRealm(nsnull)
+    , mProxyType(nsnull)
+    , mProxy(nsnull)
+    , mProxyPort(-1)
+    , mPipelinedRequest(nsnull)
+    , mPipeliningAllowed(PR_TRUE)
+    , mConnected(PR_FALSE)
+    , mApplyConversion(PR_TRUE)
+    , mOpenHasEventQueue(PR_TRUE)
+    , mCachedContentIsAvailable(PR_FALSE)
+    , mCachedContentIsValid(PR_FALSE)
+    , mFiredOnHeadersAvailable(PR_FALSE)
+    , mAuthTriedWithPrehost(PR_FALSE)
+    , mProxyTransparent(PR_FALSE)
 {
     NS_INIT_ISUPPORTS();
 
