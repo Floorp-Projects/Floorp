@@ -1767,6 +1767,9 @@ nsTableRowGroupFrame::GetLine(PRInt32 aLineNumber, nsIFrame** aFirstFrameOnLine,
   // not gonna touch aLineBounds right now
 
   CellData* firstCellData = cellMap->GetCellAt(aLineNumber, 0);
+  if(!firstCellData) 
+    return NS_ERROR_FAILURE;
+
   *aFirstFrameOnLine = (nsIFrame*)firstCellData->GetCellFrame();
   if(!(*aFirstFrameOnLine))
   {
