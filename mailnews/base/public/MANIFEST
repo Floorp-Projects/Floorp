@@ -24,7 +24,6 @@ nsMsgLocalFolderHdrs.h
 nsMsgHeaderMasks.h
 nsMsgMessageFlags.h
 nsIMsgHost.h
-nsIMsgGroupRecord.h
 nsIFolder.h
 nsIMsg.h
 nsIMsgFolder.h
@@ -36,5 +35,12 @@ nsIFolderListener.h
 nsIMsgMailSession.h
 nsIMsgIdentity.h
 nsIDOMMsgAppCore.h
+nsIMsgGroupRecord.h
 nsICopyMessageListener.h
 nsIMessageView.h
+nsIMsgSignature.h
+nsIMsgVCard.h
+nsIMsgAccount.h
+nsIMsgAccountManager.h
+nsIMsgIdentity.h
+nsIMsgIncomingServer.h

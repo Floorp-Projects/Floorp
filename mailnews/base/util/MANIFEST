@@ -22,3 +22,6 @@ nsUInt32Array.h
 nsNewsSet.h
 nsMsgFolder.h
 nsLocalFolderSummarySpec.h
+nsMsgIdentity.h
+nsMsgIncomingServer.h
+
