@@ -1797,7 +1797,7 @@ nsWebShellWindow::OnEndDocumentLoad(nsIDocumentLoader* loader,
   nsCOMPtr<nsIDOMDocument> menubarDOMDoc(GetNamedDOMDoc(nsAutoString("this"))); // XXX "this" is a small kludge for code reused
   if (menubarDOMDoc)
   {
-    #ifdef XP_MAC
+    #if defined XP_MAC || defined XP_BEOS
     LoadMenus(menubarDOMDoc, mWindow);
     // Context Menu test
     nsCOMPtr<nsIDOMElement> element;
