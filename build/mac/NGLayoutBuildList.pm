@@ -249,6 +249,8 @@ sub BuildDist()
     InstallFromManifest(":mozilla:layout:base:src:MANIFEST",						"$distdirectory:layout:");
 	InstallFromManifest(":mozilla:layout:events:public:MANIFEST",					"$distdirectory:layout:");
 	InstallFromManifest(":mozilla:layout:events:src:MANIFEST",						"$distdirectory:layout:");
+	InstallFromManifest(":mozilla:layout:xml:document:public:MANIFEST",				"$distdirectory:layout:");
+	InstallFromManifest(":mozilla:layout:xml:content:public:MANIFEST",				"$distdirectory:layout:");
 
 	#WIDGET
     InstallFromManifest(":mozilla:widget:public:MANIFEST",							"$distdirectory:widget:");
@@ -272,6 +274,9 @@ sub BuildDist()
 
 	#HTMLPARSER
    InstallFromManifest(":mozilla:htmlparser:src:MANIFEST",							"$distdirectory:htmlparser:");
+   
+    #RDF
+     InstallFromManifest(":mozilla:rdf:include:MANIFEST",							"$distdirectory:rdf:");
 
 	#EDITOR
    InstallFromManifest(":mozilla:editor:public:MANIFEST",							"$distdirectory:editor:");
@@ -458,6 +463,10 @@ sub BuildLayoutProjects()
 
 	BuildProject(":mozilla:widget:macbuild:widget.mcp",									"widget$D.shlb");
 	MakeAlias(":mozilla:widget:macbuild:widget$D.shlb",									"$dist_dir");
+	
+	# This isn't quite ready yet...
+	#BuildProject(":mozilla:rdf:macbuild:rdf.mcp",										"rdf$D.shlb");
+	#MakeAlias(":mozilla:rdf:macbuild:rdf$D.shlb",										"$dist_dir");
 	
 	BuildProject(":mozilla:webshell:macbuild:webshell.mcp",								"webshell$D.shlb");
 	MakeAlias(":mozilla:webshell:macbuild:webshell$D.shlb",								"$dist_dir");
