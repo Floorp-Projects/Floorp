@@ -22,8 +22,6 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-DEFINES =
-
 EXPORTS =						\
     nsITransaction.h			\
     nsITransactionListener.h	\
