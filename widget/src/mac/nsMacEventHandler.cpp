@@ -169,6 +169,9 @@ PRBool nsMacEventHandler::HandleMenuCommand(
 	if (toolkit)
 		focusedWidget = toolkit->GetFocus();
 	
+	if (!focusedWidget)
+		return PR_FALSE;
+	
 	// nsEvent
 	nsMenuEvent menuEvent;
 	menuEvent.eventStructType = NS_MENU_EVENT;
@@ -1182,7 +1185,8 @@ PRBool nsMacEventHandler::HandleStartComposition(void)
 	if (toolkit)
 		focusedWidget = toolkit->GetFocus();
 	
-	if (!focusedWidget) return PR_FALSE;
+	if (!focusedWidget)
+		return PR_FALSE;
 
 	//
 	// create the nsCompositionEvent
@@ -1219,7 +1223,8 @@ PRBool nsMacEventHandler::HandleEndComposition(void)
 	if (toolkit)
 		focusedWidget = toolkit->GetFocus();
 	
-	if (!focusedWidget) return PR_FALSE;
+	if (!focusedWidget)
+		return PR_FALSE;
 
 	//
 	// create the nsCompositionEvent
@@ -1256,7 +1261,8 @@ PRBool nsMacEventHandler::HandleTextEvent(void)
 	if (toolkit)
 		focusedWidget = toolkit->GetFocus();
 	
-	if (!focusedWidget) return PR_FALSE;
+	if (!focusedWidget)
+		return PR_FALSE;
 
 	//
 	// create the nsCompositionEvent
