@@ -299,19 +299,28 @@ NS_METHOD nsTableCellFrame::Reflow(nsIPresContext& aPresContext,
     printf(" content returned desired width %d given avail width %d\n",
             kidSize.width, availSize.width);
   }
-  // Nav4 hack for 0 width cells.  
-  // Empty cells are assigned a width of 3px
+  // Nav4 hack for 0 dimensioned cells.  
+  // Empty cells are assigned a width and height of 4px
   // see testcase "cellHeights.html"
   if (0==kidSize.width)
   {
     float p2t;
     aPresContext.GetScaledPixelsToTwips(p2t);
-    kidSize.width=NSIntPixelsToTwips(3, p2t);
+    kidSize.width=NSIntPixelsToTwips(4, p2t);
     if (nsnull!=aDesiredSize.maxElementSize && 0==pMaxElementSize->width)
-          pMaxElementSize->width=NSIntPixelsToTwips(3, p2t);
-    if (gsDebug) printf ("setting child width from 0 to %d for nav4 compatibility\n", NSIntPixelsToTwips(1, p2t));
+          pMaxElementSize->width=NSIntPixelsToTwips(4, p2t);
+    if (gsDebug) printf ("setting child width from 0 to %d for nav4 compatibility\n", NSIntPixelsToTwips(4, p2t));
   }
-  // end Nav4 hack for 0 width cells
+  if (0==kidSize.height)
+  {
+    float p2t;
+    aPresContext.GetScaledPixelsToTwips(p2t);
+    kidSize.height=NSIntPixelsToTwips(4, p2t);
+    if (nsnull!=aDesiredSize.maxElementSize && 0==pMaxElementSize->width)
+          pMaxElementSize->height=NSIntPixelsToTwips(4, p2t);
+    if (gsDebug) printf ("setting child height from 0 to %d for nav4 compatibility\n", NSIntPixelsToTwips(4, p2t));
+  }
+  // end Nav4 hack for 0 dimensioned cells
 #endif
   if (PR_TRUE==gsDebug || PR_TRUE==gsDebugNT)
   {
@@ -345,9 +354,10 @@ NS_METHOD nsTableCellFrame::Reflow(nsIPresContext& aPresContext,
   // next determine the cell's width
   nscoord cellWidth = kidSize.width;      // at this point, we've factored in the cell's style attributes
 
-  // NAV4 compatibility: only add insets if cell content was not 0 width
-  if (0!=cellWidth)
+  if (NS_UNCONSTRAINEDSIZE!=availSize.width)  // only add in insets if we previously subtracted them out
+  {
     cellWidth += leftInset + rightInset;    // factor in insets
+  }
 
   // set the cell's desired size and max element size
   aDesiredSize.width = cellWidth;
@@ -357,10 +367,8 @@ NS_METHOD nsTableCellFrame::Reflow(nsIPresContext& aPresContext,
   if (nsnull!=aDesiredSize.maxElementSize)
   {
     *aDesiredSize.maxElementSize = *pMaxElementSize;
-    // NAV4 compatibility: only add insets if cell content was not 0 min height
     if (0!=pMaxElementSize->height)
       aDesiredSize.maxElementSize->height += topInset + bottomInset;
-    // NAV4 compatibility: only add insets if cell content was not 0 min width
     if (0!=pMaxElementSize->width)
       aDesiredSize.maxElementSize->width += leftInset + rightInset;
   }
@@ -529,15 +537,16 @@ void nsTableCellFrame::MapBorderMarginPadding(nsIPresContext* aPresContext)
   // padding information in the cell. If these attributes
   // are not defined, the the cells attributes are used
 
-  nscoord   padding = 0;
-  nscoord   spacing = 0;
-  nscoord   border  = 1;
-
   nsTableFrame* tableFrame;
   nsTableFrame::GetTableFrame(this, tableFrame);
   NS_ASSERTION(tableFrame,"Table must not be null");
   if (!tableFrame)
     return;
+
+  nscoord   padding = tableFrame->GetCellPadding();
+  nscoord   spacing = tableFrame->GetCellSpacing();
+  nscoord   border  = 1;
+
 
   // get the table frame style context, and from it get cellpadding, cellspacing, and border info
   const nsStyleTable* tableStyle;
@@ -546,19 +555,14 @@ void nsTableCellFrame::MapBorderMarginPadding(nsIPresContext* aPresContext)
   tableFrame->GetStyleData(eStyleStruct_Spacing,(const nsStyleStruct *&)tableSpacingStyle);
   nsStyleSpacing* spacingData = (nsStyleSpacing*)mStyleContext->GetMutableStyleData(eStyleStruct_Spacing);
 
-  // check to see if cellpadding or cellspacing is defined
-  if (tableStyle->mCellPadding.GetUnit() != eStyleUnit_Null || 
-      tableStyle->mCellSpacing.GetUnit() != eStyleUnit_Null)
-  {
-    spacingData->mMargin.SetTop(tableStyle->mCellSpacing);
-    spacingData->mMargin.SetLeft(tableStyle->mCellSpacing);
-    spacingData->mMargin.SetBottom(tableStyle->mCellSpacing);
-    spacingData->mMargin.SetRight(tableStyle->mCellSpacing);
-    spacingData->mPadding.SetTop(tableStyle->mCellPadding);
-    spacingData->mPadding.SetLeft(tableStyle->mCellPadding);
-    spacingData->mPadding.SetBottom(tableStyle->mCellPadding);
-    spacingData->mPadding.SetRight(tableStyle->mCellPadding); 
-  }
+  spacingData->mMargin.SetTop(spacing);
+  spacingData->mMargin.SetLeft(spacing);
+  spacingData->mMargin.SetBottom(spacing);
+  spacingData->mMargin.SetRight(spacing);
+  spacingData->mPadding.SetTop(padding);
+  spacingData->mPadding.SetLeft(padding);
+  spacingData->mPadding.SetBottom(padding);
+  spacingData->mPadding.SetRight(padding); 
 
   // get border information from the table
   if (tableStyle->mRules!= NS_STYLE_TABLE_RULES_NONE)

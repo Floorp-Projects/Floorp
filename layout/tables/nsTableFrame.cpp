@@ -286,11 +286,27 @@ nsTableFrame::nsTableFrame()
   nsCRT::memset (mColumnWidths, 0, mColumnWidthsLength*sizeof(PRInt32));
   mCellMap = new nsCellMap(0, 0);
   mColGroups=nsnull;
+  mDefaultCellSpacing=0;
+  mDefaultCellPadding=0;
   // XXX for now these are a memory leak
   if (nsnull == gColGroupAtom) {
     gColGroupAtom = NS_NewAtom("ColGroup-list");
   }
 }
+
+NS_IMETHODIMP
+nsTableFrame::Init(nsIPresContext&  aPresContext,
+                   nsIContent*      aContent,
+                   nsIFrame*        aParent,
+                   nsIStyleContext* aContext)
+{
+  float p2t = aPresContext.GetPixelsToTwips();
+  mDefaultCellSpacing = NSIntPixelsToTwips(2, p2t);
+  mDefaultCellPadding = NSIntPixelsToTwips(1, p2t);
+
+  return nsHTMLContainerFrame::Init(aPresContext, aContent, aParent, aContext);
+}
+
 
 nsTableFrame::~nsTableFrame()
 {
@@ -3583,16 +3599,38 @@ NS_METHOD nsTableFrame::GetCellMarginData(nsTableCellFrame* aKidFrame, nsMargin&
   return result;
 }
 
+// XXX: could cache this.  But be sure to check style changes if you do!
 nscoord nsTableFrame::GetCellSpacing()
 {
   nsTableFrame* tableFrame = this;
   const nsStyleTable* tableStyle;
   GetStyleData(eStyleStruct_Table, (const nsStyleStruct *&)tableStyle);
   nscoord cellSpacing = 0;
-  if (tableStyle->mCellSpacing.GetUnit() == eStyleUnit_Coord)
+  if (tableStyle->mCellSpacing.GetUnit() == eStyleUnit_Coord) {
     cellSpacing = tableStyle->mCellSpacing.GetCoordValue();
+  }
+  else {
+    cellSpacing = mDefaultCellSpacing;
+  }
   return cellSpacing;
 }
+
+// XXX: could cache this.  But be sure to check style changes if you do!
+nscoord nsTableFrame::GetCellPadding()
+{
+  nsTableFrame* tableFrame = this;
+  const nsStyleTable* tableStyle;
+  GetStyleData(eStyleStruct_Table, (const nsStyleStruct *&)tableStyle);
+  nscoord cellPadding = 0;
+  if (tableStyle->mCellPadding.GetUnit() == eStyleUnit_Coord) {
+    cellPadding = tableStyle->mCellPadding.GetCoordValue();
+  }
+  else  {
+    cellPadding = mDefaultCellPadding;
+  }
+  return cellPadding;
+}
+
 
 void nsTableFrame::GetColumnsByType(const nsStyleUnit aType, 
                                     PRInt32& aOutNumColumns,

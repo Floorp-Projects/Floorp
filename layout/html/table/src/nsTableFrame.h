@@ -77,6 +77,12 @@ public:
   friend nsresult 
   NS_NewTableFrame(nsIFrame*& aResult);
 
+  NS_IMETHOD Init(nsIPresContext&  aPresContext,
+                  nsIContent*      aContent,
+                  nsIFrame*        aParent,
+                  nsIStyleContext* aContext);
+
+
   // nsISupports
   NS_IMETHOD QueryInterface(const nsIID& aIID, void** aInstancePtr);
 
@@ -189,6 +195,9 @@ public:
 
   /** helper to get the cell spacing style value */
   virtual nscoord GetCellSpacing();
+
+  /** helper to get the cell spacing style value */
+  virtual nscoord GetCellPadding();
           
   /**
     * Calculate Layout Information
@@ -623,6 +632,8 @@ private:
   ColumnInfoCache *mColCache;       // cached information about the table columns
   nsITableLayoutStrategy * mTableLayoutStrategy; // the layout strategy for this frame
   nsIFrame*    mColGroups;          // the list of colgroup frames
+  nscoord      mDefaultCellSpacing; // the default cell spacing for this table
+  nscoord      mDefaultCellPadding; // the default cell padding for this table
 };
 
 
