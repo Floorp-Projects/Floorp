@@ -55,6 +55,11 @@ public:
 
   NS_IMETHOD SetParent(nsIContent* aParent) = 0;
 
+  /**
+   * Get the namespace that this tag is defined in
+   */
+  NS_IMETHOD GetNameSpaceID(PRInt32& aResult) const = 0;
+
   NS_IMETHOD GetTag(nsIAtom*& aResult) const = 0;
 
   NS_IMETHOD CanContainChildren(PRBool& aResult) const = 0;
