@@ -112,7 +112,13 @@ interface nsICacheEntryDescriptor : nsISupports
      * a descriptor to the object.
      */
     void markValid();
+
+    /**
+     *  Explicitly close the descriptor (optional).
+     */
     
+    void  close();
+
     /**
      * Methods for accessing meta data.  Meta data is a table of key/value
      * string pairs.  The strings do not have to conform to any particular
