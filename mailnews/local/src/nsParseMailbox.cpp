@@ -1234,19 +1234,10 @@ int nsParseMailMessageState::FinalizeHeaders()
 				if (references != nsnull)
 					m_newMsgHdr->SetReferences(references->value);
 				if (date) {
-					time_t	resDate = 0;
-					PRTime resultTime, intermediateResult, microSecondsPerSecond;
+					PRTime resultTime;
 					PRStatus timeStatus = PR_ParseTimeString (date->value, PR_FALSE, &resultTime);
-
-					LL_I2L(microSecondsPerSecond, PR_USEC_PER_SEC);
-					LL_DIV(intermediateResult, resultTime, microSecondsPerSecond);
-					LL_L2I(resDate, intermediateResult);
-					if (resDate < 0) 
-						resDate = 0;
-
-					// no reason to store milliseconds, since they aren't specified
 					if (PR_SUCCESS == timeStatus)
-						m_newMsgHdr->SetDate(resDate);
+						m_newMsgHdr->SetDate(nsTime(resultTime));
 				}
 				if (priority)
 					m_newMsgHdr->SetPriority(priority->value);

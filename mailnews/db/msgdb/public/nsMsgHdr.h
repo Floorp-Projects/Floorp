@@ -40,8 +40,8 @@ public:
     NS_IMETHOD SetUint32Property(const char *propertyName, PRUint32 propertyVal);
     NS_IMETHOD GetNumReferences(PRUint16 *result);
     NS_IMETHOD GetStringReference(PRInt32 refNum, nsString2 &resultReference);
-    NS_IMETHOD GetDate(time_t *result);
-    NS_IMETHOD SetDate(time_t date);
+    NS_IMETHOD GetDate(PRTime *result);
+    NS_IMETHOD SetDate(PRTime date);
     NS_IMETHOD SetMessageId(const char *messageId);
     NS_IMETHOD SetReferences(const char *references);
     NS_IMETHOD SetCCList(const char *ccList);
@@ -111,7 +111,7 @@ protected:
 
     nsMsgKey	m_threadId; 
     nsMsgKey	m_messageKey; 	//news: article number, mail mbox offset, imap uid...
-    time_t  		m_date;                         
+    PRTime  		m_date;                         
     PRUint32		m_messageSize;	// lines for news articles, bytes for mail messages
     PRUint32		m_statusOffset;	// offset in a local mail message of the mozilla status hdr
     PRUint32		m_flags;

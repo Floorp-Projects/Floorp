@@ -535,7 +535,7 @@ nsresult nsMsgSearchOfflineMail::MatchTerms(nsIMsgDBHdr *msgToMatch,
             break;
         case nsMsgSearchAttribDate:
 			{
-				time_t date;
+				PRTime date;
 				msgToMatch->GetDate(&date);
 				err = pTerm->MatchDate (date);
 			}
@@ -567,7 +567,7 @@ nsresult nsMsgSearchOfflineMail::MatchTerms(nsIMsgDBHdr *msgToMatch,
             break;
         case nsMsgSearchAttribAgeInDays:
 			{
-				time_t date;
+				PRTime date;
 				msgToMatch->GetDate(&date);
 	            err = pTerm->MatchAge (date);
 			}

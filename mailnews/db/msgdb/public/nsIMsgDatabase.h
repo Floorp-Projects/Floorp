@@ -125,7 +125,7 @@ public:
   NS_IMETHOD HasAttachments(nsMsgKey key, PRBool *pHasThem) = 0;
 
   NS_IMETHOD MarkAllRead(nsMsgKeyArray *thoseMarked) = 0;
-  NS_IMETHOD MarkReadByDate (time_t te, time_t endDate, nsMsgKeyArray *markedIds) = 0;
+  NS_IMETHOD MarkReadByDate (PRTime te, PRTime endDate, nsMsgKeyArray *markedIds) = 0;
 
   NS_IMETHOD DeleteMessages(nsMsgKeyArray* nsMsgKeys, nsIDBChangeListener *instigator) = 0;
   NS_IMETHOD DeleteMessage(nsMsgKey key, 
@@ -136,7 +136,7 @@ public:
 
   NS_IMETHOD UndoDelete(nsIMsgDBHdr *msgHdr) = 0;
 
-  NS_IMETHOD MarkLater(nsMsgKey key, time_t *until) = 0;
+  NS_IMETHOD MarkLater(nsMsgKey key, PRTime until) = 0;
   NS_IMETHOD MarkMarked(nsMsgKey key, PRBool mark,
                         nsIDBChangeListener *instigator) = 0;
   NS_IMETHOD MarkOffline(nsMsgKey key, PRBool offline,

@@ -207,7 +207,7 @@ NS_IMETHODIMP nsMsgFilter::GetAction(nsMsgRuleActionType *type, void **value)
 NS_IMETHODIMP nsMsgFilter::LogRuleHit(nsOutputStream *stream, nsIMsgDBHdr *msgHdr)
 {
 	char	*filterName = "";
-	time_t	date;
+	PRTime	date;
 	char	dateStr[40];	/* 30 probably not enough */
 	nsMsgRuleActionType actionType;
 	void				*value;
@@ -218,8 +218,9 @@ NS_IMETHODIMP nsMsgFilter::LogRuleHit(nsOutputStream *stream, nsIMsgDBHdr *msgHd
 	GetAction(&actionType, &value);
 	nsresult res;
     res = msgHdr->GetDate(&date);
-	struct tm* tmTime = localtime(&date);
-	strftime(dateStr, 100, "%m/%d/%Y %I:%M %p", tmTime);
+   	PRExplodedTime exploded;
+    PR_ExplodeTime(date, PR_LocalTimeParameters, &exploded);
+    PR_FormatTimeUSEnglish(dateStr, 100, "%m/%d/%Y %I:%M %p", &exploded);
 
 	msgHdr->GetAuthor(author);
 	msgHdr->GetSubject(subject);

@@ -99,7 +99,7 @@ NS_IMETHODIMP nsMessage::GetStringReference(PRInt32 refNum, nsString2 &resultRef
 		return NS_ERROR_FAILURE;
 }
 
-NS_IMETHODIMP nsMessage::GetDate(time_t *result)
+NS_IMETHODIMP nsMessage::GetDate(PRTime *result)
 {
 	if(mMsgHdr)
 		return mMsgHdr->GetDate(result);
@@ -107,7 +107,7 @@ NS_IMETHODIMP nsMessage::GetDate(time_t *result)
 		return NS_ERROR_FAILURE;
 }
 
-NS_IMETHODIMP nsMessage::SetDate(time_t date)
+NS_IMETHODIMP nsMessage::SetDate(PRTime date)
 {
 	if(mMsgHdr)
 		return mMsgHdr->SetDate(date);

@@ -166,7 +166,7 @@ typedef struct nsMsgSearchValue
     {
         char *string;
         nsMsgPriority priority;
-        time_t date;
+        PRTime date;
         PRUint32 msgStatus; /* see MSG_FLAG in msgcom.h */
         PRUint32 size;
         nsMsgKey key;
@@ -370,18 +370,18 @@ public:
 											PRUint32 headersSize, /* size of the NULL terminated list of headers */
 											PRBool ForFilters /* true if we are filtering */);
 	nsresult MatchString (nsString2 *, const char *charset, PRBool body = FALSE);
-	nsresult MatchDate (time_t);
+	nsresult MatchDate (PRTime);
 	nsresult MatchStatus (PRUint32);
 	nsresult MatchPriority (nsMsgPriority);
 	nsresult MatchSize (PRUint32);
 	nsresult MatchRfc822String(const char *, const char *charset);
-	nsresult MatchAge (time_t);
+	nsresult MatchAge (PRTime);
 
 	nsresult EnStreamNew (nsString2 &stream);
 	nsresult DeStream (char *, PRInt16 length);
 	nsresult DeStreamNew (char *, PRInt16 length);
 
-	nsresult GetLocalTimes (time_t, time_t, struct tm &, struct tm &);
+	nsresult GetLocalTimes (PRTime, PRTime, PRExplodedTime &, PRExplodedTime &);
 
 	PRBool IsBooleanOpAND() { return m_booleanOp == nsMsgSearchBooleanAND ? PR_TRUE : PR_FALSE;}
 	nsMsgSearchBooleanOp GetBooleanOp() {return m_booleanOp;}

@@ -339,8 +339,11 @@ nsDBFolderInfo::ChangeExpungedBytes(PRInt32 delta)
     return NS_OK;
 }
 
-PRBool nsDBFolderInfo::AddLaterKey(nsMsgKey key, time_t *until)
+PRBool nsDBFolderInfo::AddLaterKey(nsMsgKey key, PRTime until)
 {
+	//ducarroz: if until represente a folder time stamp,
+	//          therefore it should be declared as a PRInt32.
+	//          Else, it should be a PRTime.
 	return PR_FALSE;
 }
 
@@ -349,8 +352,11 @@ PRInt32	nsDBFolderInfo::GetNumLatered()
 	return 0;
 }
 
-nsMsgKey	nsDBFolderInfo::GetLateredAt(PRInt32 laterIndex, time_t *pUntil)
+nsMsgKey	nsDBFolderInfo::GetLateredAt(PRInt32 laterIndex, PRTime pUntil)
 {
+	//ducarroz: if until represente a folder time stamp,
+	//          therefore it should be declared as a PRInt32.
+	//          Else, it should be a PRTime.
 	return nsMsgKey_None;
 }
 

@@ -100,8 +100,7 @@ NS_IMETHODIMP nsMailDatabase::Open(nsIFileSpec *aFolderName, PRBool create, nsIM
 			{
 				PRInt32 numNewMessages;
                 PRUint32 folderSize;
-				PRInt32 folderDateInSeconds;
-                time_t  folderDate;
+                PRInt32  folderDate;
 				nsFileSpec::TimeStamp actualFolderTimeStamp;
 
 				mailDB->m_folderSpec->GetModDate(actualFolderTimeStamp) ;
@@ -109,8 +108,7 @@ NS_IMETHODIMP nsMailDatabase::Open(nsIFileSpec *aFolderName, PRBool create, nsIM
 
 				folderInfo->GetNumNewMessages(&numNewMessages);
                 folderInfo->GetFolderSize(&folderSize);
-                folderInfo->GetFolderDate(&folderDateInSeconds);
-				folderDate = folderDateInSeconds;
+                folderInfo->GetFolderDate(&folderDate);
 				if (folderSize != mailDB->m_folderSpec->GetFileSize()||
                     folderDate != actualFolderTimeStamp ||
                     numNewMessages < 0)
@@ -360,8 +358,7 @@ void nsMailDatabase::UpdateFolderFlag(nsIMsgDBHdr *mailHdr, PRBool bSet,
 		{
 			nsFileSpec::TimeStamp actualFolderTimeStamp;
 			m_folderSpec->GetModDate(actualFolderTimeStamp) ;
-
-
+			
 			m_dbFolderInfo->SetFolderSize(m_folderSpec->GetFileSize());
 			m_dbFolderInfo->SetFolderDate(actualFolderTimeStamp);
 		}
@@ -525,20 +522,14 @@ nsresult nsMailDatabase::PrePopulate()
 {
 	nsIMsgDBHdr	*msg;
 	nsMsgHdr	*newHdr = NULL;
-	PRTime resultTime, intermediateResult, microSecondsPerSecond;
-	resultTime = PR_Now();
-	time_t resDate;
-
-	LL_I2L(microSecondsPerSecond, PR_USEC_PER_SEC);
-	LL_DIV(intermediateResult, resultTime, microSecondsPerSecond);
-	LL_L2I(resDate, intermediateResult);
+	PRTime      now = PR_Now();
 
 	nsresult rv = CreateNewHdr(1, &msg);
     if (NS_FAILED(rv)) return rv;
     newHdr = NS_STATIC_CAST(nsMsgHdr*, msg);          // closed system, cast ok
 	newHdr->SetAuthor("bird@celtics.com (Larry Bird)");
 	newHdr->SetSubject("Why the Lakers suck");
-	newHdr->SetDate(resDate);
+	newHdr->SetDate(now);
 	newHdr->SetRecipients("riley@heat.com (Pat Riley)", PR_FALSE);
 	AddNewHdrToDB (newHdr, PR_TRUE);
 	newHdr->Release();
@@ -548,7 +539,7 @@ nsresult nsMailDatabase::PrePopulate()
     newHdr = NS_STATIC_CAST(nsMsgHdr*, msg);          // closed system, cast ok
 	newHdr->SetAuthor("shaq@brick.com (Shaquille O'Neal)");
 	newHdr->SetSubject("Anyone here know how to shoot free throws?");
-	newHdr->SetDate(resDate);
+	newHdr->SetDate(now);
 	AddNewHdrToDB (newHdr, PR_TRUE);
 	newHdr->Release();
 
@@ -557,7 +548,7 @@ nsresult nsMailDatabase::PrePopulate()
     newHdr = NS_STATIC_CAST(nsMsgHdr*, msg);          // closed system, cast ok
 	newHdr->SetAuthor("dj@celtics.com (Dennis Johnson)");
 	newHdr->SetSubject("Has anyone seen my jump shot?");
-	newHdr->SetDate(resDate);
+	newHdr->SetDate(now);
 	AddNewHdrToDB (newHdr, PR_TRUE);
 	newHdr->Release();
 
@@ -566,7 +557,7 @@ nsresult nsMailDatabase::PrePopulate()
     newHdr = NS_STATIC_CAST(nsMsgHdr*, msg);          // closed system, cast ok
 	newHdr->SetAuthor("sichting@celtics.com (Jerry Sichting)");
 	newHdr->SetSubject("Tips for fighting 7' 4\" guys");
-	newHdr->SetDate(resDate);
+	newHdr->SetDate(now);
 	AddNewHdrToDB (newHdr, PR_TRUE);
 	newHdr->Release();
 	return NS_OK;

@@ -40,8 +40,8 @@ void nsMsgHdr::Init()
 	m_cachedValuesInitialized = PR_FALSE;
 	m_statusOffset = -1;
 	m_messageKey = nsMsgKey_None;
-	m_date = 0;
 	m_messageSize = 0;
+	m_date = LL_ZERO;
 	m_csID = 0;
 	m_flags = 0;
 	m_mdbRow = NULL;
@@ -65,8 +65,10 @@ nsresult nsMsgHdr::InitCachedValues()
 
 		err = GetUInt32Column(m_mdb->m_flagsColumnToken, &m_flags);
 		err = GetUInt32Column(m_mdb->m_messageSizeColumnToken, &m_messageSize);
+
 	    err = GetUInt32Column(m_mdb->m_dateColumnToken, &uint32Value);
-		m_date = uint32Value;
+	    nsMsgDatabase::Seconds2PRTime(uint32Value, &m_date);
+
 		err = GetUInt32Column(m_mdb->m_messageThreadIdColumnToken, &m_threadId);
 		err = GetUInt32Column(m_mdb->m_numReferencesColumnToken, &uint32Value);
 		if (NS_SUCCEEDED(err))
@@ -246,7 +248,7 @@ NS_IMETHODIMP nsMsgHdr::GetStringReference(PRInt32 refNum, nsString2 &resultRefe
 	return err;
 }
 
-NS_IMETHODIMP nsMsgHdr::GetDate(time_t *result) 
+NS_IMETHODIMP nsMsgHdr::GetDate(PRTime *result) 
 {
 	*result = m_date;
     return NS_OK;
@@ -382,9 +384,12 @@ NS_IMETHODIMP nsMsgHdr::SetStatusOffset(PRUint32 statusOffset)
 	return SetUInt32Column(statusOffset, m_mdb->m_statusOffsetColumnToken);
 }
 
-NS_IMETHODIMP nsMsgHdr::SetDate(time_t date)
+NS_IMETHODIMP nsMsgHdr::SetDate(PRTime date)
 {
-    return SetUInt32Column((PRUint32) date, m_mdb->m_dateColumnToken);
+	m_date = date;
+	PRUint32 seconds;
+	nsMsgDatabase::PRTime2Seconds(date, &seconds);
+    return SetUInt32Column((PRUint32) seconds, m_mdb->m_dateColumnToken);
 }
 
 NS_IMETHODIMP nsMsgHdr::GetStatusOffset(PRUint32 *result)

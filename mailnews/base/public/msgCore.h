@@ -36,6 +36,8 @@
 #include "nsEscape.h"
 #include "nsFileSpec.h"
 
+#include "nsTime.h"
+
 class nsIMessage;
 class nsIMsgFolder;
 

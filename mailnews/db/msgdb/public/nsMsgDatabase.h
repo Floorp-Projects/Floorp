@@ -139,7 +139,7 @@ public:
   NS_IMETHOD HasAttachments(nsMsgKey key, PRBool *pHasThem);
 
   NS_IMETHOD MarkAllRead(nsMsgKeyArray *thoseMarked);
-  NS_IMETHOD MarkReadByDate (time_t te, time_t endDate, nsMsgKeyArray *markedIds);
+  NS_IMETHOD MarkReadByDate (PRTime te, PRTime endDate, nsMsgKeyArray *markedIds);
 
   NS_IMETHOD DeleteMessages(nsMsgKeyArray* nsMsgKeys, nsIDBChangeListener *instigator);
   NS_IMETHOD DeleteMessage(nsMsgKey key, 
@@ -150,7 +150,7 @@ public:
 
   NS_IMETHOD UndoDelete(nsIMsgDBHdr *msgHdr);
 
-  NS_IMETHOD MarkLater(nsMsgKey key, time_t *until);
+  NS_IMETHOD MarkLater(nsMsgKey key, PRTime until);
   NS_IMETHOD MarkMarked(nsMsgKey key, PRBool mark,
                         nsIDBChangeListener *instigator);
   NS_IMETHOD MarkOffline(nsMsgKey key, PRBool offline,
@@ -214,6 +214,10 @@ public:
 	static	struct mdbYarn *UInt32ToYarn(struct mdbYarn *yarn, PRUint32 i);
 	static	void			YarnTonsString(struct mdbYarn *yarn, nsString *str);
 	static	void			YarnToUInt32(struct mdbYarn *yarn, PRUint32 *i);
+	
+	// helper functions to convert a 64bits PRTime into a 32bits value (compatible time_t) and vice versa.
+	static void				PRTime2Seconds(PRTime prTime, PRUint32 *seconds);
+	static void				Seconds2PRTime(PRUint32 seconds, PRTime *prTime);
 
 	static void		CleanupCache();
 #ifdef DEBUG

@@ -1360,7 +1360,7 @@ NS_IMETHODIMP nsMsgDatabase::MarkAllRead(nsMsgKeyArray *thoseMarked)
 	return rv;
 }
 
-NS_IMETHODIMP nsMsgDatabase::MarkReadByDate (time_t startDate, time_t endDate, nsMsgKeyArray *markedIds)
+NS_IMETHODIMP nsMsgDatabase::MarkReadByDate (PRTime startDate, PRTime endDate, nsMsgKeyArray *markedIds)
 {
 	nsresult rv;
 	nsMsgHdr	*pHeader;
@@ -1371,15 +1371,21 @@ NS_IMETHODIMP nsMsgDatabase::MarkReadByDate (time_t startDate, time_t endDate, n
     rv = EnumerateMessages(&hdrs);
     if (NS_FAILED(rv)) 
 		return rv;
+		
+	nsTime t_startDate(startDate);
+	nsTime t_endDate(endDate);
+		
 	for (hdrs->First(); hdrs->IsDone() != NS_OK; hdrs->Next()) 
 	{
         rv = hdrs->CurrentItem((nsISupports**)&pHeader);
         NS_ASSERTION(NS_SUCCEEDED(rv), "nsMsgDBEnumerator broken");
         if (NS_FAILED(rv)) break;
 
-		time_t headerDate;
+		PRTime headerDate;
         (void)pHeader->GetDate(&headerDate);
-		if (headerDate > startDate && headerDate <= endDate)
+        nsTime t_headerDate(headerDate);
+        
+		if (t_headerDate > t_startDate && t_headerDate <= t_endDate)
 		{
 			PRBool isRead;
             nsMsgKey key;
@@ -1400,7 +1406,7 @@ NS_IMETHODIMP nsMsgDatabase::MarkReadByDate (time_t startDate, time_t endDate, n
 	return rv;
 }
 
-NS_IMETHODIMP nsMsgDatabase::MarkLater(nsMsgKey key, time_t *until)
+NS_IMETHODIMP nsMsgDatabase::MarkLater(nsMsgKey key, PRTime until)
 {
 	PR_ASSERT(m_dbFolderInfo);
 	if (m_dbFolderInfo != NULL)
@@ -2164,6 +2170,25 @@ nsresult nsMsgDatabase::UInt32ToRowCellColumn(nsIMdbRow *row, mdb_token columnTo
     
 	*pResult = result;
 }
+
+/* static */void nsMsgDatabase::PRTime2Seconds(PRTime prTime, PRUint32 *seconds)
+{
+	PRInt64 microSecondsPerSecond, intermediateResult;
+	
+	LL_I2L(microSecondsPerSecond, PR_USEC_PER_SEC);
+	LL_DIV(intermediateResult, prTime, microSecondsPerSecond);
+    LL_L2UI((*seconds), intermediateResult);
+}
+
+/* static */void nsMsgDatabase::Seconds2PRTime(PRUint32 seconds, PRTime *prTime)
+{
+	PRInt64 microSecondsPerSecond, intermediateResult;
+	
+	LL_I2L(microSecondsPerSecond, PR_USEC_PER_SEC);
+    LL_UI2L(intermediateResult, seconds);
+	LL_MUL((*prTime), intermediateResult, microSecondsPerSecond);
+}
+
 
 PRUint32 nsMsgDatabase::GetCurVersion()
 {

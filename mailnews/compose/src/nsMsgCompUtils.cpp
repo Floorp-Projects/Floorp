@@ -23,7 +23,7 @@
 #include "nsINetService.h"
 #include "nsMailHeaders.h"
 #include "nsMsgI18N.h"
-#include "xp_time.h"
+//#include "xp_time.h"
 #include "nsMsgCompPrefs.h"
 #include "nsIMsgHeaderParser.h"
 #include "nsIMimeURLUtils.h"
@@ -836,7 +836,9 @@ GenerateGlobalRandomBytes(unsigned char *buf, PRInt32 len)
   {
    /* Seed the random-number generator with current time so that
     * the numbers will be different every time we run.    */
-   srand( (unsigned)time( NULL ) );
+   PRInt32 aTime;
+   LL_L2I(aTime, PR_Now());
+   srand( (unsigned)aTime );
    firstTime = PR_FALSE;
   }
 
@@ -1102,7 +1104,14 @@ GIVE_UP_ON_CONTENT_BASE:
 char *
 msg_generate_message_id (nsIMsgIdentity *identity)
 {
-	time_t now = XP_TIME();
+	PRUint32 now;
+	PRTime prNow = PR_Now();
+	PRInt64 microSecondsPerSecond, intermediateResult;
+	
+	LL_I2L(microSecondsPerSecond, PR_USEC_PER_SEC);
+	LL_DIV(intermediateResult, prNow, microSecondsPerSecond);
+    LL_L2UI(now, intermediateResult);
+
 	PRUint32 salt = 0;
 	const char *host = 0;
   

@@ -283,9 +283,12 @@ nsresult nsMsgNotificationManager::AddNewMailNotification(nsIMsgFolder *folder)
 	}
 
 	//Supposedly rdf will convert this into a localized time string.
-	time_t currentTime = time(nsnull);
-	struct tm *localTime = localtime(&currentTime);
-	timeStampString = asctime(localTime);
+	PRExplodedTime explode;
+	PR_ExplodeTime( PR_Now(), PR_LocalTimeParameters, &explode);
+	char buffer[128];
+	PR_FormatTime(buffer, sizeof(buffer), "%m/%d/%Y %I:%M %p", &explode);
+	timeStampString = buffer;
+	
 	rv = rdfService->GetLiteral(timeStampString.GetUnicode(), getter_AddRefs(timeStamp));
 	if(NS_SUCCEEDED(rv))
 	{

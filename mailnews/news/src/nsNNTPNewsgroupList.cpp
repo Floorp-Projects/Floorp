@@ -614,21 +614,14 @@ nsNNTPNewsgroupList::ParseLine(char *line, PRUint32 * message_number)
 
   GET_TOKEN ();	
   if (line) {
-	time_t  resDate = 0;
-	PRTime resultTime, intermediateResult, microSecondsPerSecond;
-	PRStatus status = PR_ParseTimeString (line, PR_FALSE, &resultTime);
-	LL_I2L(microSecondsPerSecond, PR_USEC_PER_SEC);
-	LL_DIV(intermediateResult, resultTime, microSecondsPerSecond);
-	LL_L2I(resDate, intermediateResult);
-	if (resDate < 0) 
-		resDate = 0;
-	
-	// no reason to store milliseconds, since they aren't specified
+	PRTime date;
+	PRStatus status = PR_ParseTimeString (line, PR_FALSE, &date);
 	if (PR_SUCCESS == status) {
+
 #ifdef DEBUG_NEWS
-		printf("date = %s, %ld\n", line, resDate);
+		printf("date = %s, %ld\n", line, date);
 #endif
-		rv = newMsgHdr->SetDate(resDate);		/* date */
+		rv = newMsgHdr->SetDate(date);					/* date */
 		if (NS_FAILED(rv)) return rv;
 	}
   }

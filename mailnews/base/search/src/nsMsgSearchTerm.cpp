@@ -322,16 +322,13 @@ nsresult nsMsgSearchTerm::OutputValue(nsString2 &outputStr)
 		{
 		case nsMsgSearchAttribDate:
 		{
-			struct tm *p = localtime(&m_value.u.date);
-			if (p)
-			{
-				// wow, so tm_mon is 0 based, tm_mday is 1 based.
-				char dateBuf[100];
-				strftime (dateBuf, sizeof(dateBuf), "%d-%b-%Y", p);
-				outputStr += dateBuf;
-			}
-			else 
-				outputStr += "01/01/70";
+			PRExplodedTime exploded;
+			PR_ExplodeTime(m_value.u.date, PR_LocalTimeParameters, &exploded);
+
+			// wow, so tm_mon is 0 based, tm_mday is 1 based.
+			char dateBuf[100];
+			PR_FormatTimeUSEnglish (dateBuf, sizeof(dateBuf), "%d-%b-%Y", &exploded);
+			outputStr += dateBuf;
 			break;
 		}
 		case nsMsgSearchAttribMsgStatus:
@@ -884,50 +881,40 @@ nsresult nsMsgSearchTerm::MatchRfc822String (const char *string, const char *cha
 }
 
 
-nsresult nsMsgSearchTerm::GetLocalTimes (time_t a, time_t b, struct tm &aTm, struct tm &bTm)
+nsresult nsMsgSearchTerm::GetLocalTimes (PRTime a, PRTime b, PRExplodedTime &aExploded, PRExplodedTime &bExploded)
 {
-	// Isolate the RTL time weirdnesses here: 
-	// (1) Must copy the tm since localtime has a static tm
-	// (2) localtime can fail if it doesn't like the time_t. Must check the tm* for nsnull
-
-	struct tm *p = localtime(&a);
-	if (p)
-	{
-		memcpy (&aTm, p, sizeof(struct tm));
-		p = localtime(&b);
-		if (p) 
-		{
-			memcpy (&bTm, p, sizeof(struct tm));
-			return NS_OK;
-		}
-	}
-	return NS_ERROR_INVALID_ARG;
+	PR_ExplodeTime(a, PR_LocalTimeParameters, &aExploded);
+	PR_ExplodeTime(b, PR_LocalTimeParameters, &bExploded);
+	return NS_OK;
 }
 
 
-nsresult nsMsgSearchTerm::MatchDate (time_t dateToMatch)
+nsresult nsMsgSearchTerm::MatchDate (PRTime dateToMatch)
 {
 	nsresult err = NS_COMFALSE;
+	nsTime t_date(dateToMatch);
+	
 	switch (m_operator)
 	{
 	case nsMsgSearchOpIsBefore:
-		if (dateToMatch < m_value.u.date)
+		if (t_date < nsTime(m_value.u.date))
 			err = NS_OK;
 		break;
 	case nsMsgSearchOpIsAfter:
 		{
-			time_t adjustedDate = m_value.u.date + 60*60*24; // we want to be greater than the next day....
-			if (dateToMatch > adjustedDate)
+			nsTime adjustedDate = nsTime(m_value.u.date);
+			adjustedDate += 60*60*24; // we want to be greater than the next day....
+			if (t_date > adjustedDate)
 				err = NS_OK;
 		}
 		break;
 	case nsMsgSearchOpIs:
 		{
-			struct tm tmToMatch, tmThis;
+			PRExplodedTime tmToMatch, tmThis;
 			if (NS_OK == GetLocalTimes (dateToMatch, m_value.u.date, tmToMatch, tmThis))
 			{
 				if (tmThis.tm_year == tmToMatch.tm_year &&
-					tmThis.tm_mon == tmToMatch.tm_mon &&
+					tmThis.tm_month == tmToMatch.tm_month &&
 					tmThis.tm_mday == tmToMatch.tm_mday)
 					err = NS_OK;
 			}
@@ -935,11 +922,11 @@ nsresult nsMsgSearchTerm::MatchDate (time_t dateToMatch)
 		break;
 	case nsMsgSearchOpIsnt:
 		{
-			struct tm tmToMatch, tmThis;
+			PRExplodedTime tmToMatch, tmThis;
 			if (NS_OK == GetLocalTimes (dateToMatch, m_value.u.date, tmToMatch, tmThis))
 			{
 				if (tmThis.tm_year != tmToMatch.tm_year ||
-					tmThis.tm_mon != tmToMatch.tm_mon ||
+					tmThis.tm_month != tmToMatch.tm_month ||
 					tmThis.tm_mday != tmToMatch.tm_mday)
 					err = NS_OK;
 			}
@@ -952,7 +939,7 @@ nsresult nsMsgSearchTerm::MatchDate (time_t dateToMatch)
 }
 
 
-nsresult nsMsgSearchTerm::MatchAge (time_t msgDate)
+nsresult nsMsgSearchTerm::MatchAge (PRTime msgDate)
 {
 	nsresult err = NS_COMFALSE;
 #ifdef DO_AGE_YET

@@ -104,9 +104,9 @@ public:
 	nsresult			AddToNewMDB();
 	// accessor methods.
 
-	PRBool				AddLaterKey(nsMsgKey key, time_t *until);
+	PRBool				AddLaterKey(nsMsgKey key, PRTime until);
 	PRInt32				GetNumLatered();
-	nsMsgKey			GetLateredAt(PRInt32 laterIndex, time_t *pUntil);
+	nsMsgKey			GetLateredAt(PRInt32 laterIndex, PRTime pUntil);
 	void				RemoveLateredAt(PRInt32 laterIndex);
 
 	void				SetViewType(PRInt32 viewType);

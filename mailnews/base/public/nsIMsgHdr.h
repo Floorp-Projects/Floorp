@@ -42,8 +42,8 @@ public:
     NS_IMETHOD SetUint32Property(const char *propertyName, PRUint32 propertyVal) = 0;
     NS_IMETHOD GetNumReferences(PRUint16 *result) = 0;
     NS_IMETHOD GetStringReference(PRInt32 refNum, nsString2 &resultReference) = 0;
-    NS_IMETHOD GetDate(time_t *result) = 0;
-    NS_IMETHOD SetDate(time_t date) = 0;
+    NS_IMETHOD GetDate(PRTime *result) = 0;
+    NS_IMETHOD SetDate(PRTime date) = 0;
     NS_IMETHOD SetMessageId(const char *messageId) = 0;
     NS_IMETHOD SetReferences(const char *references) = 0;
     NS_IMETHOD SetCCList(const char *ccList) = 0;

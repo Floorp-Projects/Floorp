@@ -588,12 +588,26 @@ nsMsgMessageDataSource::createMessageDateNode(nsIMessage *message,
 	if(NS_FAILED(rv))
 		return rv;
   PRInt32 error;
-  time_t aTime = date.ToInteger(&error, 16);
-  struct tm* tmTime = localtime(&aTime);
+  PRUint32 aLong = date.ToInteger(&error, 16);
+  // As the time is stored in seconds, we need to multiply it by PR_USEC_PER_SEC,
+  // to get back a valid 64 bits value
+  PRInt64 microSecondsPerSecond, intermediateResult;
+  PRTime aTime;
+  LL_I2L(microSecondsPerSecond, PR_USEC_PER_SEC);
+  LL_UI2L(intermediateResult, aLong);
+  LL_MUL(aTime, intermediateResult, microSecondsPerSecond);
+  
+  PRExplodedTime explode;
+  PR_ExplodeTime(aTime, PR_LocalTimeParameters, &explode);
+
   nsString dateString;
+  
+  
+/* ducarroz: FormatTMTime doesn't seems to work correctly on Mac and doen't work with PRExplodedTime!
+             I will use PR_FormatTime until FormatTMTime is fixed.
   if(mDateTimeFormat)
 	  rv = mDateTimeFormat->FormatTMTime(mApplicationLocale, kDateFormatShort, kTimeFormatNoSeconds, 
-		                tmTime, dateString); 
+		                (tm*)&explode, dateString); 
   //Ensure that we always have some string for the date.
   if(!mDateTimeFormat || NS_FAILED(rv))
   {
@@ -601,6 +615,11 @@ nsMsgMessageDataSource::createMessageDateNode(nsIMessage *message,
 	  rv = NS_OK;
   }
   if(NS_SUCCEEDED(rv))
+*/
+	char buffer[128];
+	PR_FormatTime(buffer, sizeof(buffer), "%m/%d/%Y %I:%M %p", &explode);
+	dateString = buffer;
+
 	  rv = createNode(dateString, target);
   return rv;
 }
