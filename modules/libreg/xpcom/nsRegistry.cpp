@@ -128,7 +128,7 @@ protected:
 ------------------------------------------------------------------------------*/
 struct nsRegValueEnumerator : public nsRegSubtreeEnumerator {
     // Override CurrentItem to allocate nsRegistryValue objects.
-    nsresult CurrentItem( nsISupports **result );
+    NS_IMETHOD CurrentItem( nsISupports **result );
 
     // Override advance() to use proper NR_RegEnumEntries.
     NS_IMETHOD advance();

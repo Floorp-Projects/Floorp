@@ -61,6 +61,7 @@ CPPSRCS =			\
 	nsSupportsArrayEnumerator.cpp	\
 	nsConjoiningEnumerator.cpp	\
 	nsTraceRefcnt.cpp	\
+	nsRegistry.cpp \
         nsXPComFactory.cpp      \
         nsEventQueueService.cpp \
         nsAllocator.cpp         \
@@ -80,6 +81,7 @@ CPP_OBJS = \
 	.\$(OBJDIR)\nsSupportsArrayEnumerator.obj		\
 	.\$(OBJDIR)\nsConjoiningEnumerator.obj		\
 	.\$(OBJDIR)\nsTraceRefcnt.obj		\
+	.\$(OBJDIR)\nsRegistry.obj     \
         .\$(OBJDIR)\nsXPComFactory.obj          \
         .\$(OBJDIR)\nsEventQueueService.obj     \
         .\$(OBJDIR)\nsAllocator.obj             \
