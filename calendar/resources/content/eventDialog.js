@@ -81,7 +81,6 @@ var gDateFormatter = new DateFormater();  // used to format dates and times
 var gEvent;          // event being edited
 var gOnOkFunction;   // function to be called when user clicks OK
 
-var gChangeEndTime = true; //
 var gTimeDifference = 3600000;  //when editing an event, we change the end time if the start time is changing. This is the difference for the event time.
 var gDefaultAlarmLength = 15; //number of minutes to default the alarm to
 var gCategoryManager;
@@ -113,16 +112,10 @@ function loadCalendarEventDialog()
    
    gMode = args.mode;
    
-   //if( args.CategoryManager )
-   //   gCategoryManager = args.CategoryManager;
-
-   // remember function to call when OK is clicked
-   
    gOnOkFunction = args.onOk;
    gEvent = args.calendarEvent;
    
-   // mode is "new or "edit"
-   // show proper header
+   // mode is "new or "edit" - show proper header
    var titleDataItem = null;
 
    if( "new" == args.mode )
@@ -137,22 +130,6 @@ function loadCalendarEventDialog()
    var titleString = titleDataItem.getAttribute( "value" );
    document.getElementById("calendar-new-eventwindow").setAttribute("title", titleString);
 
-   //create the category drop down
-   //if( !gCategoryManager )
-   //   Categories = opener.gCategoryManager.getAllCategories();
-   //else
-   //   Categories = gCategoryManager.getAllCategories();
-   var Categories = new Array();
-
-   var MenuPopup = document.getElementById( "category-field-menupopup" );
-   for ( i in Categories ) 
-   {
-       var MenuItem = document.createElement( "menuitem" );
-       MenuItem.setAttribute( "value", Categories[i].id );
-       MenuItem.setAttribute( "label", Categories[i].name );
-       MenuPopup.appendChild( MenuItem );
-   }
-
    // fill in fields from the event
    var startDate = new Date( gEvent.start.getTime() );
    var endDate = new Date( gEvent.end.getTime() );
@@ -164,8 +141,9 @@ function loadCalendarEventDialog()
    if ( gEvent.recurForever ) 
    {
       var today = new Date();
-      gEvent.recurEnd.setTime( today );
+      gEvent.recurEnd.setTime( startDate );
    }
+
    var recurEndDate = new Date( gEvent.recurEnd.getTime() );
    
    setDateFieldValue( "repeat-end-date-text", recurEndDate );
@@ -397,13 +375,15 @@ function onDatePick( datepopup )
    
    datepopup.dateField.editDate = datepopup.value;
 
-   //change the end date of recurring events to today, if the new date is after today.
-
    var Now = new Date();
 
-   if ( datepopup.value > Now ) 
+   //change the end date of recurring events to today, if the new date is after today and repeat is not checked.
+
+   if ( datepopup.value > Now && !getFieldValue( "repeat-checkbox", "checked" ) ) 
    {
       document.getElementById( "repeat-end-date-text" ).value = formatDate( datepopup.value );
+
+      document.getElementById( "repeat-end-date-text" ).editDate = datepopup.value;
    }
 
    updateAdvancedWeekRepeat();
