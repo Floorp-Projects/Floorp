@@ -53,6 +53,7 @@ EXPORT_RESOURCE_SAMPLES = \
 	$(srcdir)/reply.gif \
 	$(srcdir)/forward.gif \
 	$(srcdir)/trash.gif \
+	$(srcdir)/newsHost.gif \
 	$(NULL)
 
 EXPORT_RESOURCE_SAMPLES_TO_REMOVE := $(addprefix $(SAMPLES_DIR)/, $(EXPORT_RESOURCE_SAMPLES))
