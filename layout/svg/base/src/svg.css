@@ -62,7 +62,7 @@ style {
  display: none;
 }
 
-svg, symbol, image, marker, pattern, foreignObject { overflow: hidden }
+svg:not(:root), symbol, image, marker, pattern, foreignObject { overflow: hidden }
 
 symbol {
  display: none;
