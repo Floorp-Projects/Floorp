@@ -123,8 +123,7 @@ Contributors:
   <vbox iscontrolcontainer="true" align="start">
     <checkbox hidable="true" hidefor="imap,nntp"
               wsm_persist="true" id="server.downloadOnBiff"
-              label="&downloadOnBiff.label;" observes="broadcaster_doBiff"
-              prefattribute="value"
+              label="&downloadOnBiff.label;" prefattribute="value"
               prefstring="mail.server.%serverkey%.download_on_biff"/>
 
     <checkbox wsm_persist="true" id="pop3.leaveMessagesOnServer"
