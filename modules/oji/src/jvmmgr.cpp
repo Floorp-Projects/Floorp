@@ -724,29 +724,29 @@ nsJVMMgr::GetJVMStatus(void)
 }
 
 PRBool
-nsJVMMgr::MaybeStartupLiveConnect(JSContext* cx, JSObject* obj)
+nsJVMMgr::MaybeStartupLiveConnect()
 {
     if (fJSJavaVM)
         return PR_TRUE;
 
-    if (IsLiveConnectEnabled()) {
-        JSJ_Init(&jsj_callbacks);
-        nsIJVMPlugin* plugin = GetJVMPlugin();
-        if (plugin) {
-            const char* classpath = NULL;
-            nsresult err = plugin->GetClassPath(&classpath);
-            if (err) return err;
-            JavaVM* javaVM = NULL;
-            err = plugin->GetJavaVM(&javaVM);
-            if (err) return err;
-            fJSJavaVM = JSJ_ConnectToJavaVM(javaVM, classpath);
-            if (fJSJavaVM) {
-                JSJ_InitJSContext(cx, obj, NULL);
-            }
-            // plugin->Release(); // GetJVMPlugin no longer calls AddRef
-            return PR_TRUE;
-        }
-    }
+	do {
+	    if (IsLiveConnectEnabled() && StartupJVM() == nsJVMStatus_Running) {
+	        JSJ_Init(&jsj_callbacks);
+	        nsIJVMPlugin* plugin = GetJVMPlugin();
+	        if (plugin) {
+	            const char* classpath = NULL;
+	            nsresult err = plugin->GetClassPath(&classpath);
+	            if (err != NS_OK) break;
+	            JavaVM* javaVM = NULL;
+	            err = plugin->GetJavaVM(&javaVM);
+	            if (err != NS_OK) break;
+	            fJSJavaVM = JSJ_ConnectToJavaVM(javaVM, classpath);
+	            if (fJSJavaVM != NULL)
+	                return PR_TRUE;
+	            // plugin->Release(); // GetJVMPlugin no longer calls AddRef
+	        }
+	    }
+	} while (0);
     return PR_FALSE;
 }
 
@@ -764,8 +764,11 @@ nsJVMMgr::MaybeShutdownLiveConnect(void)
 PRBool
 nsJVMMgr::IsLiveConnectEnabled(void)
 {
-    return LM_GetMochaEnabled()
-        && GetJVMStatus() == nsJVMStatus_Running;
+	if (LM_GetMochaEnabled()) {
+		nsJVMStatus status = GetJVMStatus();
+		return (status == nsJVMStatus_Enabled || status == nsJVMStatus_Running);
+	}
+	return PR_FALSE;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1207,12 +1210,12 @@ JVM_GetJNIEnv(void)
 }
 
 PR_IMPLEMENT(PRBool)
-JVM_MaybeStartupLiveConnect(JSContext* cx, JSObject* obj)
+JVM_MaybeStartupLiveConnect()
 {
     PRBool result = PR_FALSE;
     nsJVMMgr* mgr = JVM_GetJVMMgr();
     if (mgr) {
-        result = mgr->MaybeStartupLiveConnect(cx, obj);
+        result = mgr->MaybeStartupLiveConnect();
         mgr->Release();
     }
     return result;
