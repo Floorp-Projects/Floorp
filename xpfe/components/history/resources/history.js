@@ -129,10 +129,10 @@ function historyOnSelect()
 
     if (url && !rowIsContainer) {
         // matches scheme://(hostname)...
-        match = url.match(/.*:\/\/([^\/:]*)/);
+        match = url.match(/^.*?:\/\/(?:([^\/:]*)(?::([^\/:]*))?@)?([^\/:]*)(?::([^\/:]*))?(.*)$/);
 
         if (match && match.length>1)
-            gLastHostname = match[1];
+            gLastHostname = match[3];
       
         gHistoryStatus.label = url;
     }
@@ -202,12 +202,14 @@ nsHistoryController.prototype =
             if (!gGlobalHistory)
                 gGlobalHistory = Components.classes["@mozilla.org/browser/global-history;1"].getService(Components.interfaces.nsIBrowserHistory);
             gGlobalHistory.removePagesFromHost(gLastHostname, false)
+            gHistoryOutliner.builder.rebuild();
             return true;
 
         case "cmd_deleteByDomain":
             if (!gGlobalHistory)
                 gGlobalHistory = Components.classes["@mozilla.org/browser/global-history;1"].getService(Components.interfaces.nsIBrowserHistory);
             gGlobalHistory.removePagesFromHost(gLastDomain, true)
+            gHistoryOutliner.builder.rebuild();
             return true;
 
         default:
@@ -236,7 +238,9 @@ var historyDNDObserver = {
 
 function validClickConditions(event)
 {
-  var container = isContainer(gHistoryOutliner, gHistoryOutliner.currentIndex);
+  var currentIndex = gHistoryOutliner.currentIndex;
+  if (currentIndex == -1) return false;
+  var container = isContainer(gHistoryOutliner, currentIndex);
   return (event.button == 0 &&
           event.originalTarget.localName == 'outlinerchildren' &&
           !container && gHistoryStatus);
