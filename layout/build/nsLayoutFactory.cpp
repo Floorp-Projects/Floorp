@@ -348,28 +348,7 @@ LayoutScriptNameSet::AddNameSet(nsIScriptContext* aScriptContext)
 //
 ////////////////////////////////////////////////////////////
 
-// The goal of this class is to hold onto the specified service
-// until DLL unload time.
-class ScriptNameSetRegistryHolder {
-public:
-  static nsIScriptNameSetRegistry *gRegistry;
-  
-  ScriptNameSetRegistryHolder() {};
-  ~ScriptNameSetRegistryHolder() {
-    if (gRegistry) {
-      nsServiceManager::ReleaseService(kCScriptNameSetRegistryCID,
-                                       gRegistry);
-      gRegistry = nsnull;
-    }
-  }
-};
-
-nsIScriptNameSetRegistry* ScriptNameSetRegistryHolder::gRegistry = nsnull;
-static ScriptNameSetRegistryHolder gManager;
-
-////////////////////////////////////////////////////////////
-//
-////////////////////////////////////////////////////////////
+static nsIScriptNameSetRegistry *gRegistry;
 
 // return the proper factory to the caller
 #if defined(XP_MAC) && defined(MAC_STATIC)
@@ -388,13 +367,13 @@ NSGetFactory(nsISupports* serviceMgr,
              nsIFactory **aFactory)
 #endif
 {
-  if (nsnull == ScriptNameSetRegistryHolder::gRegistry) {
+  if (nsnull == gRegistry) {
     nsresult result = nsServiceManager::GetService(kCScriptNameSetRegistryCID,
                                                    kIScriptNameSetRegistryIID,
-                                                   (nsISupports **)&ScriptNameSetRegistryHolder::gRegistry);
+                                                   (nsISupports **)&gRegistry);
     if (NS_OK == result) {
       LayoutScriptNameSet* nameSet = new LayoutScriptNameSet();
-      ScriptNameSetRegistryHolder::gRegistry->AddExternalNameSet(nameSet);
+      gRegistry->AddExternalNameSet(nameSet);
     }
   }
 
