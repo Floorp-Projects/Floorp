@@ -85,7 +85,11 @@ nsProxyObject::Post(  PRUint32        methodIndex,           /* which method to 
     PL_ENTER_EVENT_QUEUE_MONITOR(mDestQueue);
 
     PLEvent *event = PR_NEW(PLEvent);
-    if (event == NULL) return NS_ERROR_OUT_OF_MEMORY;
+    if (event == NULL) 
+    {
+        PL_EXIT_EVENT_QUEUE_MONITOR(mDestQueue);
+        return NS_ERROR_OUT_OF_MEMORY;   
+    }
     
     NS_ASSERTION(mRealObject, "no native object");
 

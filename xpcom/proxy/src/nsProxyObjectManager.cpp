@@ -149,62 +149,69 @@ nsProxyObjectManager::GetProxyObject(PLEventQueue *destQueue,
 {
     *aProxyObject = nsnull;
     
+    // 1. Create a proxy for creating an instance on another thread.
+
     nsIProxyCreateInstance* ciProxy = nsnull;
     nsProxyCreateInstance* ciObject = new nsProxyCreateInstance();
     
     if (ciObject == nsnull)
         return NS_ERROR_NULL_POINTER;
 
-    GetProxyObject(destQueue, nsIProxyCreateInstance::GetIID(), ciObject, (void**)&ciProxy);
+    nsresult rv = GetProxyObject(destQueue, nsIProxyCreateInstance::GetIID(), ciObject, (void**)&ciProxy);
     
-    // release ownership of ciObject so that ciProxy owns it.
-    if (ciObject)
-        NS_RELEASE(ciObject);
-
-    
-    if (ciProxy == nsnull)
+    if (NS_FAILED(rv))
     {
-        return NS_ERROR_NULL_POINTER;
+        delete ciObject;
+        return rv;
     }
+        
+    // 2. now create a new instance of the request object via our proxy.
 
-    
     nsISupports* aObj;
 
-    nsresult rv = ciProxy->CreateInstanceByIID(aClass, 
-                                               aDelegate, 
-                                               aIID, 
-                                               (void**)&aObj);
+    rv = ciProxy->CreateInstanceByIID(aClass, 
+                                      aDelegate, 
+                                      aIID, 
+                                      (void**)&aObj);
+
     
+    // 3.  Delete the create instance proxy and its real object.
+    
+    delete ciObject;
+    NS_RELEASE(ciProxy);
 
-    if (aObj == nsnull)
-        return rv;
 
-
-    GetProxyObject(destQueue, aIID, aObj, aProxyObject);
-
-    // release ownership of aObj so that aProxyObject owns it.
-    if (aObj)
-        NS_RELEASE(aObj);
-
-    if (aProxyObject != nsnull)
+    // 4.  Check to see if creating the requested instance failed.
+    if ( NS_FAILED(rv))
     {
-        return NS_OK;
+        return rv;
     }
 
-    return NS_ERROR_FACTORY_NOT_REGISTERED; //fix error code?
+    // 5.  Now create a proxy object for the requested object.
+
+    rv = GetProxyObject(destQueue, aIID, aObj, aProxyObject);
+
+    
+    // 6. release ownership of aObj so that aProxyObject owns it.
+    
+    NS_RELEASE(aObj);
+
+    // 7. return the error returned from GetProxyObject.  Either way, we our out of here.
+
+    return rv;   
 }
 
 nsHashtable* 
 nsProxyObjectManager::GetRealObjectToProxyObjectMap()
 {
-    NS_ASSERTION(mProxyObjectMap, "no hashtable");
+    NS_VERIFY(mProxyObjectMap, "no hashtable");
     return mProxyObjectMap;
 }   
 
 nsHashtable*
 nsProxyObjectManager::GetIIDToProxyClassMap()
 {
-    NS_ASSERTION(mProxyClassMap, "no hashtable");
+    NS_VERIFY(mProxyClassMap, "no hashtable");
     return mProxyClassMap;
 }   
 
