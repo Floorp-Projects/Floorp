@@ -600,13 +600,13 @@ if ($action eq 'delete') {
             my $bugid = FetchOneColumn();
 
             my $query =
-                $::db->query("DELETE FROM attachments WHERE bug_id=$bugid")
+                $::db->do("DELETE FROM attachments WHERE bug_id=$bugid")
                 or die "$::db_errstr";
             $query =
-                $::db->query("DELETE FROM bugs_activity WHERE bug_id=$bugid")
+                $::db->do("DELETE FROM bugs_activity WHERE bug_id=$bugid")
                 or die "$::db_errstr";
             $query =
-                $::db->query("DELETE FROM dependencies WHERE blocked=$bugid")
+                $::db->do("DELETE FROM dependencies WHERE blocked=$bugid")
                 or die "$::db_errstr";
         }
         print "Attachments, bug activity and dependencies deleted.<BR>\n";
