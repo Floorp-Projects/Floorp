@@ -42,6 +42,7 @@ REQUIRES = \
 	helperAppDlg \
 	content \
 	webbrowserpersist \
+	xpinstall \
 	$(NULL)
 
 DIRS=components \
