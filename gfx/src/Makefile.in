@@ -64,6 +64,9 @@ ifdef MOZ_ENABLE_XLIB
 DIRS		+= xlibrgb xlib
 endif
 
+ifdef MOZ_ENABLE_PHOTON
+DIRS		+= photon
+endif
 endif
 
 CPPSRCS		= \

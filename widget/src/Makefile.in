@@ -55,6 +55,10 @@ ifdef MOZ_ENABLE_QT
 DIRS		+= qt
 endif
 
+ifdef MOZ_ENABLE_PHOTON
+DIRS		+= photon
+endif
+
 else
 ifdef MOZ_ENABLE_GTK
 DIRS            += gtkxtbin
