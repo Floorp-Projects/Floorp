@@ -252,12 +252,27 @@ public:
                          const nsRect& aUnavailableSpace);
 
   /**
+   * Remove the regions associated with this floating frame and its
+   * next-sibling list.  Some of the frames may never have been added;
+   * we just skip those. This is not fully general; it only works as
+   * long as the N frames to be removed are the last N frames to have
+   * been added; if there's a frame in the middle of them that should
+   * not be removed, YOU LOSE.
+   *
+   * This can only be done at the end of the life of this space manager. The only
+   * methods it is safe to call after this are XMost() and YMost().
+   */
+  nsresult RemoveTrailingRegions(nsIFrame* aFrameList);
+
+protected:
+  /**
    * Remove the region associated with aFrane.
+   *
+   * doesn't work in the general case!
    *
    * Returns NS_OK if successful and NS_ERROR_INVALID_ARG if there is no region
    * tagged with aFrame
    */
-protected: /* doesn't work in the general case */
   nsresult RemoveRegion(nsIFrame* aFrame);
 
 public:
@@ -335,7 +350,6 @@ protected:
   struct SpaceManagerState {
     nscoord mX, mY;
     nsIFrame *mLastFrame;
-    nscoord mXMost;
     nscoord mLowestTop;
     SpaceManagerState *mNext;
   };
@@ -408,7 +422,6 @@ protected:
   nsIFrame* const mFrame;     // frame associated with the space manager
   nscoord         mX, mY;     // translation from local to global coordinate space
   BandList        mBandList;  // header/sentinel for circular linked list of band rects
-  nscoord         mXMost;
   nscoord         mLowestTop;  // the lowest *top*
   FrameInfo*      mFrameInfoMap;
   nsIntervalSet   mFloatDamage;

@@ -45,6 +45,7 @@
 #include "nsCSSPseudoElements.h"
 #include "nsIView.h"
 #include "nsIScrollableView.h"
+#include "nsPlaceholderFrame.h"
 
 /**
  * A namespace class for static layout utilities.
@@ -171,6 +172,23 @@ nsLayoutUtils::GetPageFrame(nsIFrame* aFrame)
       return frame;
     }
   }
+  return nsnull;
+}
+
+nsIFrame*
+nsLayoutUtils::GetFloatFromPlaceholder(nsIFrame* aFrame) {
+  if (nsLayoutAtoms::placeholderFrame != aFrame->GetType()) {
+    return nsnull;
+  }
+
+  nsIFrame *outOfFlowFrame =
+    NS_STATIC_CAST(nsPlaceholderFrame*, aFrame)->GetOutOfFlowFrame();
+  // This is a hack.
+  if (outOfFlowFrame &&
+      !outOfFlowFrame->GetStyleDisplay()->IsAbsolutelyPositioned()) {
+    return outOfFlowFrame;
+  }
+
   return nsnull;
 }
 

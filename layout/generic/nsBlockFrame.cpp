@@ -78,6 +78,7 @@
 #ifdef ACCESSIBILITY
 #include "nsIAccessibilityService.h"
 #endif
+#include "nsLayoutUtils.h"
 
 #ifdef IBMBIDI
 #include "nsBidiPresUtils.h"
@@ -658,6 +659,12 @@ nsBlockFrame::Reflow(nsPresContext*          aPresContext,
 
       FinishAndStoreOverflow(&aMetrics);
 
+#ifdef DEBUG
+      if (gNoisy) {
+        gNoiseIndent--;
+      }
+#endif
+
       return NS_OK;
     }
   }
@@ -921,8 +928,8 @@ nsBlockFrame::Reflow(nsPresContext*          aPresContext,
 
   // XXX_perf get rid of this!  This is one of the things that makes
   // incremental reflow O(N^2).
-  BuildFloatList();
-  
+  BuildFloatList(state);
+
   // Compute our final size
   ComputeFinalSize(aReflowState, state, aMetrics);
   FinishAndStoreOverflow(&aMetrics);
@@ -2066,6 +2073,20 @@ nsBlockFrame::ReflowDirtyLines(nsBlockReflowState& aState)
         return rv;
       }
       if (!keepGoing) {
+#ifdef DEBUG
+        if (gNoisyReflow) {
+          gNoiseIndent--;
+          nsRect lca(line->GetCombinedArea());
+          IndentBy(stdout, gNoiseIndent);
+          printf("line=%p mY=%d newBounds={%d,%d,%d,%d} newCombinedArea={%d,%d,%d,%d} deltaY=%d mPrevBottomMargin=%d childCount=%d\n",
+                 NS_STATIC_CAST(void*, line.get()), aState.mY,
+                 line->mBounds.x, line->mBounds.y,
+                 line->mBounds.width, line->mBounds.height,
+                 lca.x, lca.y, lca.width, lca.height,
+                 deltaY, aState.mPrevBottomMargin.get(),
+                 line->GetChildCount());
+        }
+#endif
         if (0 == line->GetChildCount()) {
           DeleteLine(aState, line, line_end);
         }
@@ -6479,38 +6500,30 @@ nsBlockFrame::ReflowBullet(nsBlockReflowState& aState,
 // This is used to scan overflow frames for any float placeholders,
 // and add their floats to the list represented by aHead and aTail. We
 // only search the inline descendants.
-static void CollectOverflowFloats(nsIFrame* aFrame, nsIFrame* aBlockParent,
-                                  nsIFrame** aHead, nsIFrame** aTail) {
+static void CollectFloats(nsIFrame* aFrame, nsIFrame* aBlockParent,
+                          nsIFrame** aHead, nsIFrame** aTail) {
   while (aFrame) {
     // Don't descend into block children
     if (!aFrame->GetStyleDisplay()->IsBlockLevel()) {
-      if (nsLayoutAtoms::placeholderFrame == aFrame->GetType()) {
-        nsIFrame *outOfFlowFrame =
-          NS_STATIC_CAST(nsPlaceholderFrame*, aFrame)->GetOutOfFlowFrame();
+      nsIFrame *outOfFlowFrame = nsLayoutUtils::GetFloatFromPlaceholder(aFrame);
+      if (outOfFlowFrame) {
         // Make sure that its parent is the block we care
         // about. Otherwise we don't want to mess around with it because
         // it belongs to someone else. I think this could happen if the
         // overflow lines contain a block descendant which owns its own
         // floats.
-        if (outOfFlowFrame &&
-            !outOfFlowFrame->GetStyleDisplay()->IsAbsolutelyPositioned()) {
-          NS_ASSERTION(outOfFlowFrame->GetParent() == aBlockParent,
-                       "Out of flow frame doesn't have the expected parent");
-          // It's not an absolute or fixed positioned frame, so it must
-          // be a float!
-          // XXX This is a lame-o way of detecting a float, but it's the
-          // only way apparently
-          if (!*aHead) {
-            *aHead = *aTail = outOfFlowFrame;
-          } else {
-            (*aTail)->SetNextSibling(outOfFlowFrame);
-            *aTail = outOfFlowFrame;
-          }
+        NS_ASSERTION(outOfFlowFrame->GetParent() == aBlockParent,
+                     "Out of flow frame doesn't have the expected parent");
+        if (!*aHead) {
+          *aHead = *aTail = outOfFlowFrame;
+        } else {
+          (*aTail)->SetNextSibling(outOfFlowFrame);
+          *aTail = outOfFlowFrame;
         }
       }
 
-      CollectOverflowFloats(aFrame->GetFirstChild(nsnull), aBlockParent,
-                            aHead, aTail);
+      CollectFloats(aFrame->GetFirstChild(nsnull), aBlockParent,
+                    aHead, aTail);
     }
     
     aFrame = aFrame->GetNextSibling();
@@ -6519,7 +6532,7 @@ static void CollectOverflowFloats(nsIFrame* aFrame, nsIFrame* aBlockParent,
 
 //XXX get rid of this -- its slow
 void
-nsBlockFrame::BuildFloatList()
+nsBlockFrame::BuildFloatList(nsBlockReflowState& aState)
 {
   // Accumulate float list into mFloats.
   // Use the float cache to speed up searching the lines for floats.
@@ -6558,11 +6571,24 @@ nsBlockFrame::BuildFloatList()
     head = nsnull;
     current = nsnull;
 
-    CollectOverflowFloats(overflowLines->front()->mFirstChild,
-                          this, &head, &current);
+    CollectFloats(overflowLines->front()->mFirstChild,
+                  this, &head, &current);
 
     if (current) {
       current->SetNextSibling(nsnull);
+
+      // Floats that were pushed should be removed from our space
+      // manager.  Otherwise the space manager's YMost or XMost might
+      // be larger than necessary, causing this block to get an
+      // incorrect desired height (or width).  Some of these floats
+      // may not actually have been added to the space manager because
+      // they weren't reflowed before being pushed; that's OK,
+      // RemoveRegions will ignore them. It is safe to do this here
+      // because we know from here on the space manager will only be
+      // used for its XMost and YMost, not to place new floats and
+      // lines.
+      aState.mSpaceManager->RemoveTrailingRegions(head);
+
       nsFrameList* frameList = new nsFrameList(head);
       if (frameList) {
         SetOverflowOutOfFlows(frameList);
