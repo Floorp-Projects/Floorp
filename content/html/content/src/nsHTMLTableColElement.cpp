@@ -151,8 +151,8 @@ nsHTMLTableColElement::CloneNode(PRBool aDeep, nsIDOMNode** aReturn)
 }
 
 NS_IMPL_STRING_ATTR(nsHTMLTableColElement, Align, align)
-NS_IMPL_STRING_ATTR(nsHTMLTableColElement, Ch, ch)
-NS_IMPL_STRING_ATTR(nsHTMLTableColElement, ChOff, choff)
+NS_IMPL_STRING_ATTR(nsHTMLTableColElement, Ch, _char)
+NS_IMPL_STRING_ATTR(nsHTMLTableColElement, ChOff, charoff)
 NS_IMPL_INT_ATTR(nsHTMLTableColElement, Span, span)
 NS_IMPL_STRING_ATTR(nsHTMLTableColElement, VAlign, valign)
 NS_IMPL_STRING_ATTR(nsHTMLTableColElement, Width, width)
