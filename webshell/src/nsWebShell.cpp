@@ -71,6 +71,19 @@ static PRLogModuleInfo* gLogModule = PR_NewLogModule("webwidget");
 #define WEB_TRACE(_bit,_args)
 #endif
 
+
+#if XP_UNIX
+  // XXX. This should be changed. 
+  // Allow the event queue to be setup from outside
+  // the webshell.
+PLEventQueue* gWebShell_UnixEventQueue;
+
+void nsWebShell_SetUnixEventQueue(PLEventQueue* aEventQueue)
+{
+  gWebShell_UnixEventQueue = aEventQueue;
+}
+#endif
+
 //----------------------------------------------------------------------
 
 class nsWebShell : public nsIWebShell,
@@ -1104,6 +1117,15 @@ OnLinkClickEvent::OnLinkClickEvent(nsWebShell* aHandler,
   PLEventQueue* eventQueue = PL_GetMainEventQueue();
   PL_PostEvent(eventQueue, this);
 #endif
+
+#ifdef XP_UNIX
+  PL_InitEvent(this, nsnull,
+               (PLHandleEventProc) ::HandlePLEvent,
+               (PLDestroyEventProc) ::DestroyPLEvent);
+
+  PL_PostEvent(gWebShell_UnixEventQueue, this);
+#endif
+
 }
 
 OnLinkClickEvent::~OnLinkClickEvent()
