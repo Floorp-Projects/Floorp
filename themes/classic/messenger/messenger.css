@@ -449,6 +449,10 @@ treecell.enabledcol > .tree-button {
   list-style-image: url("chrome://messenger/skin/readmail.gif");
 }
 
+dummy {
+  behavior: url(chrome://messenger/content/mailWidgets.xml#dummy);
+}
+
 searchattribute {
   behavior: url(chrome://messenger/content/mailWidgets.xml#searchattribute);
 }
@@ -464,3 +468,16 @@ searchvalue {
 searchterm {
  behavior: url(chrome://messenger/content/mailWidgets.xml#searchterm);
 }
+
+.treecell-mailcardicon
+  {
+    border-bottom       : 1px solid #CACAFF !important;
+    padding             : 0px;
+  }
+  
+.textfield-mailcardicon
+  {
+    list-style-image    : url("chrome://messenger/skin/abcard.gif");
+  }
+  
+  

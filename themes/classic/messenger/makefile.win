@@ -98,6 +98,7 @@ install::
 	$(MAKE_INSTALL) message-mail.gif $(DIST)\bin\chrome\skins\$(THEME)\messenger\skin
 	$(MAKE_INSTALL) message-news-new.gif $(DIST)\bin\chrome\skins\$(THEME)\messenger\skin
 	$(MAKE_INSTALL) message-news.gif $(DIST)\bin\chrome\skins\$(THEME)\messenger\skin
+	$(MAKE_INSTALL) messenger.css $(DIST)\bin\chrome\skins\$(THEME)\messenger\skin
 	$(MAKE_INSTALL) more.gif $(DIST)\bin\chrome\skins\$(THEME)\messenger\skin
 	$(MAKE_INSTALL) newmsg-disabled.gif $(DIST)\bin\chrome\skins\$(THEME)\messenger\skin
 	$(MAKE_INSTALL) newmsg-hover-active.gif $(DIST)\bin\chrome\skins\$(THEME)\messenger\skin
