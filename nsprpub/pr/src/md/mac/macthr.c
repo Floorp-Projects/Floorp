@@ -18,6 +18,8 @@
 
 #include "primpl.h"
 
+#include <string.h>
+
 #include <Types.h>
 #include <Timer.h>
 #include <OSUtils.h>

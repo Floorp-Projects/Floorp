@@ -16,19 +16,28 @@
  * Reserved.
  */
 
+#include <string.h>
+
 #include <Types.h>
 #include <Files.h>
+#include <Devices.h>
 #include <Folders.h>
 #include <Errors.h>
+#include <Resources.h>
+#include <Processes.h>
+#include <TextUtils.h>
 
 #include <fcntl.h>
 
+#include "FullPath.h"		/* MoreFiles */
+
 #include "primpl.h"
 #include "MacErrorHandling.h"
+#include "mdmac.h"
+
+#include "macio.h"
 
 /* forward declarations */
-OSErr ConvertUnixPathToMacPath(const char *, char **);
-OSErr ConvertUnixPathToFSSpec(const char *unixPath, FSSpec *fileSpec);
 extern unsigned long gJanuaryFirst1970Seconds;
 
 extern void WaitOnThisThread(PRThread *thread, PRIntervalTime timeout);
@@ -256,11 +265,11 @@ PRInt32 ReadWriteProc(PRFileDesc *fd, void *buf, PRUint32 bytes, IOOperation op)
 			if ( bytes > 20480L )
 			{
 	   			me->io_pending = PR_TRUE; /* Only mark thread io pending in async call */
-				(void) PBReadAsync(&pbAsync);
+				(void) PBReadAsync(&pbAsync.pb);
 			}
 			else
 			{
-				(void) PBReadSync(&pbAsync);
+				(void) PBReadSync(&pbAsync.pb);
 				/*
 				** This is probbaly redundant but want to make sure we indicate the read
 				** is complete so we don't wander off into the Sargasso Sea of Mac
@@ -273,7 +282,7 @@ PRInt32 ReadWriteProc(PRFileDesc *fd, void *buf, PRUint32 bytes, IOOperation op)
 		{
 			/* writes are currently always async so mark thread io pending */
 	   		me->io_pending = PR_TRUE;
-			(void) PBWriteAsync(&pbAsync);
+			(void) PBWriteAsync(&pbAsync.pb);
 		}
 		
 		/* See if the i/o call is still pending before we actually yield */
@@ -1105,8 +1114,6 @@ exit:
 	return err;
 }
 
-
-#include <Processes.h>
 
 static ProcessInfoRec gNavigatorProcInfo;
 static FSSpec gGutsFolder;

@@ -40,19 +40,16 @@
 #include "primpl.h"
 #include "prgc.h"
 
+#include "mactime.h"
 
-#define UNIMPLEMENTED_ROUTINE			\
-	DebugStr("\pNot Implemented Yet");	\
-	return 0;
+#include "mdmac.h"
 
 //
 // Local routines
 //
-void PStrFromCStr(const char *, Str255);
 unsigned char GarbageCollectorCacheFlusher(PRUint32 size);
 
 extern PRThread *gPrimaryThread;
-
 
 
 //##############################################################################
@@ -375,7 +372,7 @@ void CleanupTermProc(void)
 //	be truncated to fit into an Str255 if necessary.
 //  If the C String pointer is NULL, the pascal string's length is set to zero
 //
-extern void 
+void 
 PStrFromCStr(const char* src, Str255 dst)
 {
 	short 	length  = 0;

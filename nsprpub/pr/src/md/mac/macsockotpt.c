@@ -19,8 +19,11 @@
 /* This turns on UNIX style errors in OT 1.1 headers */
 #define OTUNIXERRORS 1
 
+#include <string.h>
+
 #include <Gestalt.h>
 #include <OpenTransport.h>
+#include <OSUtils.h>
 
 #define GESTALT_OPEN_TPT_PRESENT        gestaltOpenTptPresentMask
 #define GESTALT_OPEN_TPT_TCP_PRESENT    gestaltOpenTptTCPPresentMask
@@ -534,7 +537,7 @@ TryAgain:
 
 ErrorExit:
     if ((err == kOTNoAddressErr) && (++retryCount <= 4)) {
-        long finalTicks;
+        unsigned long finalTicks;
     
         Delay(100,&finalTicks);
         goto TryAgain;
