@@ -1089,7 +1089,7 @@ cookie_SetCookieString(char * curURL, char * setCookieHeader, time_t timeToExpir
   char *cur_path = cookie_ParseURL(curURL, GET_PATH_PART);
   char *cur_host = cookie_ParseURL(curURL, GET_HOST_PART);
   char *semi_colon, *ptr, *equal;
-  PRBool xxx=PR_FALSE, isDomain=PR_FALSE, accept=PR_FALSE;
+  PRBool xxx=PR_FALSE, isDomain=PR_FALSE, acceptIt=PR_FALSE;
   PRBool bCookieAdded;
   PRBool pref_scd = PR_FALSE;
 
@@ -1138,7 +1138,7 @@ cookie_SetCookieString(char * curURL, char * setCookieHeader, time_t timeToExpir
     *semi_colon++ = '\0';
 
     /* there must be some attributes. (hopefully) */
-    if (ptr=PL_strcasestr(semi_colon, "secure=")) {
+    if ((ptr=PL_strcasestr(semi_colon, "secure="))) {
       char cPre=*(ptr-1), cPost=*(ptr+6);
       if (((cPre==' ') || (cPre==';')) && (!cPost || (cPost==' ') || (cPost==';'))) {
         xxx = PR_TRUE;
@@ -1335,10 +1335,10 @@ cookie_SetCookieString(char * curURL, char * setCookieHeader, time_t timeToExpir
       cookie_Undefer();
       return;
     } else {
-      accept = PR_TRUE;
+      acceptIt = PR_TRUE;
     }
   }
-  if( (cookie_GetWarningPref() ) && !accept ) {
+  if((cookie_GetWarningPref()) && !acceptIt) {
     /* the user wants to know about cookies so let them know about every one that
      * is set and give them the choice to accept it or not
      */
@@ -1575,7 +1575,7 @@ COOKIE_SetCookieStringFromHttp(char * curURL, char * setCookieHeader, char * ser
    *  to based on his preference to deal with foreign cookies. If it's not inline, just set
    *  the cookie.
    */
-  char *ptr=NULL, *date=NULL;
+  char *ptr=NULL;
   time_t gmtCookieExpires=0, expires=0, sDate;
 
 #ifdef later // We need to come back and fix this.  - Neeti
@@ -2068,7 +2068,7 @@ cookie_FixQuoted(char* s) {
   int count = PL_strlen(s);
   char *quote = s;
   unsigned int i, j;
-  while (quote = PL_strchr(quote, '"')) {
+  while ((quote = PL_strchr(quote, '"'))) {
     count = count++;
     quote++;
   }
@@ -2211,7 +2211,7 @@ COOKIE_GetCookieListForViewer(nsString& aCookieList) {
 
   /* generate the list of cookies in alphabetical order */
   cookie = NULL;
-  while (cookie = NextCookieAfter(cookie, &cookieNum)) {
+  while ((cookie = NextCookieAfter(cookie, &cookieNum))) {
     char *fixed_name = cookie_FixQuoted(cookie->name);
     char *fixed_value = cookie_FixQuoted(cookie->cookie);
     char *fixed_domain_or_host = cookie_FixQuoted(cookie->host);
