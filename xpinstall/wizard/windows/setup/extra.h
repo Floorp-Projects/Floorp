@@ -30,6 +30,7 @@ struct diskSpaceNode
 {
   ULONGLONG       ullSpaceRequired;
   LPSTR           szPath;
+  LPSTR           szVDSPath;
   dsN             *Next;
   dsN             *Prev;
 };
@@ -179,6 +180,7 @@ void              SaveInstallerFiles(void);
 void              ResetComponentAttributes(char *szFileIni);
 BOOL              IsInList(DWORD dwCurrentItem, DWORD dwItems, DWORD *dwItemsSelected);
 int               LocateExistingPath(char *szPath, char *szExistingPath, DWORD dwExistingPathSize);
+BOOL              ContainsReparseTag(char *szPath, char *szReparsePath, DWORD dwReparsePathSize);
 
 BOOL              bSDInit;
 
