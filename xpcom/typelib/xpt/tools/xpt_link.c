@@ -101,7 +101,7 @@ main(int argc, char **argv)
     XPTState *state;
     XPTCursor curs, *cursor = &curs;
     XPTHeader *header;
-    XPTInterfaceDirectoryEntry *newIDE, *IDE_array;
+    XPTInterfaceDirectoryEntry *IDE_array = NULL;
     XPTInterfaceDescriptor *id;
     XPTTypeDescriptor *td;
     XPTAnnotation *ann, *first_ann;
@@ -109,7 +109,7 @@ main(int argc, char **argv)
     size_t flen = 0;
     char *head, *data, *whole;
     FILE *in, *out;
-    fixElement *newFix, *fix_array;
+    fixElement *fix_array = NULL;
     int i,j;
     int k = 0;
 
@@ -171,40 +171,42 @@ main(int argc, char **argv)
             }                                        
             
             totalNumberOfInterfaces += header->num_interfaces;
-            if (k == 0) {
-                IDE_array = XPT_CALLOC(totalNumberOfInterfaces * sizeof(XPTInterfaceDirectoryEntry));
-                fix_array = XPT_CALLOC(totalNumberOfInterfaces * sizeof(fixElement));
-            } else {
-                newIDE = XPT_REALLOC(IDE_array, totalNumberOfInterfaces * sizeof(XPTInterfaceDirectoryEntry));
-                newFix = XPT_REALLOC(fix_array, totalNumberOfInterfaces * sizeof(fixElement));
-
+            if (header->num_interfaces > 0) {
+                XPTInterfaceDirectoryEntry *newIDE;
+                fixElement *newFix;
+  
+                newIDE = (XPTInterfaceDirectoryEntry *)
+                    XPT_REALLOC(IDE_array, totalNumberOfInterfaces * sizeof(XPTInterfaceDirectoryEntry));
                 if (!newIDE) {
                     perror("FAILED: XPT_REALLOC of IDE_array");
                     return 1;
                 }
-                if (!newFix) {
-                    perror("FAILED: XPT_REALLOC of newFix");
-                    return 1;
-                }
                 IDE_array = newIDE;
-                fix_array = newFix;
-            }
-            
-            for (j=0; j<header->num_interfaces; j++) {
-                if (!copy_IDE(&header->interface_directory[j], 
-                              &IDE_array[k])) {
-                    perror("FAILED: 1st copying of IDE");
+
+                newFix = (fixElement *)
+                    XPT_REALLOC(fix_array, totalNumberOfInterfaces * sizeof(fixElement));
+                if (!newFix) {
+                    perror("FAILED: XPT_REALLOC of fix_array");
                     return 1;
                 }
-                fix_array[k].iid = IDE_array[k].iid;
-                fix_array[k].name = IDE_array[k].name;
-                fix_array[k].file_num = i-2;
-                fix_array[k].interface_num = j+1;
-                fix_array[k].is_deleted = PR_FALSE;
-                fix_array[k].maps_to_file_num = i-2;
-                fix_array[k].maps_to_interface_num = j+1;
-
-                k++;
+                fix_array = newFix;
+            
+                for (j=0; j<header->num_interfaces; j++) {
+                    if (!copy_IDE(&header->interface_directory[j], 
+                                  &IDE_array[k])) {
+                        perror("FAILED: 1st copying of IDE");
+                        return 1;
+                    }
+                    fix_array[k].iid = IDE_array[k].iid;
+                    fix_array[k].name = IDE_array[k].name;
+                    fix_array[k].file_num = i-2;
+                    fix_array[k].interface_num = j+1;
+                    fix_array[k].is_deleted = PR_FALSE;
+                    fix_array[k].maps_to_file_num = i-2;
+                    fix_array[k].maps_to_interface_num = j+1;
+                    
+                    k++;
+                }
             }
             
             /* Copy the annotations.
