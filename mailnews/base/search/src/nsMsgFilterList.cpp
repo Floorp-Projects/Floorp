@@ -623,7 +623,11 @@ nsresult nsMsgFilterList::SaveTextFilters()
 
 nsMsgFilterList::~nsMsgFilterList()
 {
-
+	if (m_fileStream)
+	{
+		m_fileStream->close();
+		delete m_fileStream;
+	}
 	// filters should be released for free, because only isupports array
 	// is holding onto them, right?
 //	PRUint32			filterCount;
