@@ -64,6 +64,8 @@ function createShortcuts()
   scLicenseDesc        = "License";
   scProfileDesc        = "Profile Manager";
   scProfileDescParam   = "-ProfileManager";
+  scSafeModeDesc       = "$ProductName$ (No Extensions)";
+  scSafeModeDescParam  = "-no-extensions";
   scFolderName         = "$ProductName$";
 
   fileMailIcon              = getFolder("Chrome", "icons/default/messengerWindow.ico");
@@ -159,15 +161,24 @@ function createShortcuts()
       File.dirCreate(fDefShortcuts);
 
     /* create the shortcuts */
-    File.windowsShortcut(fileExe, fFolderDesktop, scExeDesc,     fProgram,  "",                 fileExe, 0);
-    File.windowsShortcut(fileExe, fFolderPath,    scExeDesc,     fProgram,  "",                 fileExe, 0);
-    File.windowsShortcut(fileExe, fDefShortcuts,  scExeDesc,     fProgram,  "",                 fileExe, 0);
-    File.windowsShortcut(fileExe, fFolderPath,    scProfileDesc, fProgram,  scProfileDescParam, fileExe, 0);
-    File.windowsShortcut(fileReadme,  fFolderPath, scReadmeDesc,  fProgram, "",                 fileReadme, 0);
-    File.windowsShortcut(fileLicense, fFolderPath, scLicenseDesc, fProgram, "",                 fileLicense, 0);
+    // Create the Shortcuts
+    winreg.setRootKey(winreg.HKEY_CURRENT_USER);
+    subkey              = "SOFTWARE\\$CompanyName$\\$ProductName$\\$UserAgent$\\Main";
+    if (winreg.getValueNumber(subkey, "Create Desktop Shortcut") != 0)
+        File.windowsShortcut(fileExe, fFolderDesktop, scExeDesc, fProgram, "", fileExe, 0);
+
+    if (winreg.getValueNumber(subkey, "Create Start Menu Shortcut") != 0) {
+      File.windowsShortcut(fileExe, fFolderPath, scExeDesc, fProgram, "", fileExe, 0);
+      File.windowsShortcut(fileExe, fFolderPath,    scProfileDesc, fProgram,  scProfileDescParam, fileExe, 0);
+      File.windowsShortcut(fileExe, fFolderPath,    scSafeModeDesc, fProgram,  scSafeModeDescParam, fileExe, 0);
+      File.windowsShortcut(fileReadme, fFolderPath, scReadmeDesc, fProgram, "", fileReadme, 0);
+      File.windowsShortcut(fileLicense, fFolderPath, scLicenseDesc, fProgram, "", fileLicense, 0);
+    }
+    File.windowsShortcut(fileExe, fDefShortcuts, scExeDesc,      fProgram, "",                  fileExe, 0);
+    File.windowsShortcut(fileExe, fDefShortcuts, scSafeModeDesc, fProgram, scSafeModeDescParam, fileExe, 0);
 
     // create shortcut in the Quick Launch folder
-    if(folderQuickLaunchExists)
+    if (winreg.getValueNumber(subkey, "Create Quick Launch Shortcut") != 0 && folderQuickLaunchExists)
       File.windowsShortcut(fileExe, fFolderQuickLaunch, scExeDesc, fProgram,  "", fileExe, 0);
 
     if(!restrictedAccess)

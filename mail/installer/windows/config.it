@@ -310,17 +310,19 @@ Message0=Select or clear the additional components you want to install.
 [Dialog Windows Integration]
 ; Note - this dialog isn't actually used yet!
 Show Dialog=TRUE
+Registry Key=SOFTWARE\\$CompanyName$\\$ProductName$\\$UserAgent$\\Main
 ;*** LOCALIZE ME BABY ***
-Title=Windows Integration
+Title=Set Up Shortcuts
 ;*** LOCALIZE ME BABY ***
-Sub Title=Create Shortcuts and set Default Browser
+Sub Title=Creates Program Icons
 ;*** LOCALIZE ME BABY ***
-Message0=Create %s shortcuts:
+Message0=Create icons for $ProductShortName$:
 
-; Only a maximum of 4 "Windows Integration-Item"s are allowded.  Each Item
+
+; Only a maximum of 3 "Windows Integration-Item"s are allowded.  Each Item
 ; shows up as a checkbox in the Windows Integration dialog.
 [Windows Integration-Item0]
-CheckBoxState=TRUE
+CheckBoxState=FALSE
 ;*** LOCALIZE ME BABY ***
 Description=On my Desktop
 Archive=
@@ -335,12 +337,6 @@ Archive=
 CheckBoxState=TRUE
 ;*** LOCALIZE ME BABY ***
 Description=In my Quick Launch bar
-Archive=
-
-[Windows Integration-Item3]
-CheckBoxState=TRUE
-;*** LOCALIZE ME BABY ***
-Description=Use %s as my Default Mail Client.
 Archive=
 
 [Dialog Program Folder]
