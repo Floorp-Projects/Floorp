@@ -108,16 +108,31 @@ input[type="text"]#urlbar {
 
 /* Rules for the personal toolbar. The <titledbutton> and <menu> elements
    that are direct children of the <toolbar> are slightly different than
-   recursively generated submenus */
+   recursively generated submenus
+
+   The structure of the personal toolbar is:
+
+   toolbar class="main-bar"
+     titledbutton
+	 titledbutton
+	 menu
+	   titledbutton
+	   menupopup [1]
+	     menuitem
+		   3 titledbuttons
+		 menu
+		   3 titledbuttons
+		   menupopup (like [1])
+   */
 
 toolbar.main-bar > titledbutton,
-toolbar.main-bar .menu-left
+toolbar.main-bar menuitem > .menu-left
 {
   list-style-image: url('chrome://navigator/skin/location.gif');
 }
 
 toolbar.main-bar > titledbutton:hover,
-toolbar.main-bar .menu-left:hover
+toolbar.main-bar menuitem:hover > .menu-left
 {
   list-style-image: url('chrome://navigator/skin/location-hover.gif');
 }
@@ -126,6 +141,47 @@ toolbar.main-bar > menu > titledbutton,
 toolbar.main-bar menu > .menu-left
 {
   list-style-image: url('chrome://bookmarks/skin/bookmark-folder-closed.gif');
+}
+
+toolbar.main-bar > menu[open="true"] > titledbutton,
+toolbar.main-bar menu[open="true"] > .menu-left
+{
+  list-style-image: url('chrome://bookmarks/skin/bookmark-folder-open.gif');
+}
+
+/* override menu hover colors for nested menuitems and nested menus */
+
+toolbar.main-bar menuitem, toolbar.main-bar menu
+{
+  background: inherit;
+  color: inherit;
+}
+
+/* override the hover image that goes with that color change */
+
+toolbar.main-bar menu > .menu-right,
+toolbar.main-bar menu[menuactive="true"] > .menu-right
+{
+  list-style-image: url("chrome://global/skin/menu-arrow.gif");
+}
+
+/* Hover borders */
+
+toolbar.main-bar menuitem,
+toolbar.main-bar > menu > titledbutton
+{
+  border: 1px solid transparent;
+}
+
+/* Note: no rule for
+ * toolbar.main-bar menupopup > menu:hover
+ * since submenus open automatically 
+ */
+
+toolbar.main-bar menuitem:hover,
+toolbar.main-bar > menu:hover > titledbutton
+{
+  border: 1px white outset;
 }
 
 /**
