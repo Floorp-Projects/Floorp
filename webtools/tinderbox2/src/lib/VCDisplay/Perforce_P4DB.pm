@@ -4,8 +4,8 @@
 # have installed perforce with P4DB to let your webserver render html
 # pages of your VC repository.
 
-# $Revision: 1.5 $ 
-# $Date: 2004/06/08 00:00:12 $ 
+# $Revision: 1.6 $ 
+# $Date: 2004/06/15 01:16:54 $ 
 # $Author: kestes%walrus.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/lib/VCDisplay/Perforce_P4DB.pm,v $ 
 # $Name:  $ 
@@ -80,7 +80,7 @@ $TIMEQUERY = $P4DB_URL."/filesChangedSince.cgi";
 
 $BLAME = $P4DB_URL."/fileViewer.cgi";
 $GUESS = $P4DB_URL."/fileSearch.cgi";
-
+$CHANGEVIEW=$P4DB_URL."/changeView.cgi";
 
 # convert time() format to form that p4db uses in
 #    filesChangedSince.cgi
@@ -174,10 +174,10 @@ sub prepare_perforce_args {
     ($args{'mindate'} && $args{'maxdate'}) && 
     ($args{'mindate'} > $args{'maxdate'}) && 
         (die (
-              "Bonsai mindate is GREATER then maxdate.\n".
-              "Bonsai requires that mindate be an earlier time then maxdate.\n".
-              "mindate: $args{'mindate'}: ".time2bonsai($args{'mindate'})."\n".
-              "maxdate: $args{'maxdate'}: ".time2bonsai($args{'maxdate'})."\n".
+              "Perforce mindate is GREATER then maxdate.\n".
+              "Perforce requires that mindate be an earlier time then maxdate.\n".
+              "mindate: $args{'mindate'}: ".time2p4db($args{'mindate'})."\n".
+              "maxdate: $args{'maxdate'}: ".time2p4db($args{'maxdate'})."\n".
               ""));
 
     # Perforce does not seem to allow us to specify a time interval.
@@ -301,6 +301,21 @@ sub query {
   } else {
       $args{'href'} = ("$QUERY?".join('&', @url_args));
   }
+
+  my ($output) = HTMLPopUp::Link(%args);
+
+  return $output;
+}
+
+
+# p4db has a nice page for viewing particular change sets. This breaks
+# the tinderbox abstractions because the notion of a changeset is
+# particular to perforce but I will allow vc_perforce to use it.
+
+sub changeView {
+  my (%args) = @_;
+
+  $args{'href'} = "$CHANGEVIEW?CH=".$args{'change_num'};
 
   my ($output) = HTMLPopUp::Link(%args);
 

@@ -75,8 +75,8 @@
 # Contributor(s): 
 
 
-# $Revision: 1.26 $ 
-# $Date: 2004/06/08 11:48:00 $ 
+# $Revision: 1.27 $ 
+# $Date: 2004/06/15 01:16:55 $ 
 # $Author: kestes%walrus.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/lib/TinderDB/VC_Perforce.pm,v $ 
 # $Name:  $ 
@@ -156,7 +156,7 @@ use Utils;
 use VCDisplay;
 
 
-$VERSION = ( qw $Revision: 1.26 $ )[1];
+$VERSION = ( qw $Revision: 1.27 $ )[1];
 
 @ISA = qw(TinderDB::BasicTxtDB);
 
@@ -524,12 +524,34 @@ sub render_authors {
             
             my ($vc_info);
             $vc_info .= "Filespec: $filespec <br>\n";
-            $vc_info .= "Changes: @change_nums <br>\n";
             
             # The Link Choices inside the popup.
 
             my $link_choices = "Checkins by <b>$author</b><br>";
-            $link_choices .= " for $vc_info \n<br>";
+            $link_choices .= " for $vc_info \n";
+
+            # Most VCDisplay's do not have this function but the
+            # perforce p4db does and we try to use it if possible. I
+            # do not see a clean way to break this abstraction so I
+            # peek at the configuration information.
+
+            if ($TinderConfig::VCDisplayImpl == 'VCDisplay::Perforce_P4DB') {
+                require 'VCDisplay/Perforce_P4DB.pm';
+
+                foreach $change_num (@change_nums) {
+                    $link_choices .= 
+                        VCDisplay::Perforce_P4DB::changeView(
+                                                             'change_num' => $change_num,
+                                                             "linktxt" => "Change: $change_num",
+                                                             );
+                    $link_choices .= "<br>";
+                }
+            } else {
+                $link_choices .= "Changes: @change_nums <br>\n";
+            }
+
+            $link_choices .= "<br>\n";
+
             $link_choices .= 
               VCDisplay::query(
                                'tree' => $tree,
