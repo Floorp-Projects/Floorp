@@ -134,14 +134,13 @@ txAttribute::txAttribute(nsAutoPtr<Expr> aName, nsAutoPtr<Expr> aNamespace,
 nsresult
 txAttribute::execute(txExecutionState& aEs)
 {
-    nsresult rv = NS_OK;
-
-    ExprResult* exprRes = mName->evaluate(aEs.getEvalContext());
-    NS_ENSURE_TRUE(exprRes, NS_ERROR_FAILURE);
+    nsRefPtr<txAExprResult> exprRes;
+    nsresult rv = mName->evaluate(aEs.getEvalContext(),
+                                  getter_AddRefs(exprRes));
+    NS_ENSURE_SUCCESS(rv, rv);
 
     nsAutoString name;
     exprRes->stringValue(name);
-    delete exprRes;
 
     if (!XMLUtils::isValidQName(name) ||
         TX_StringEqualsAtom(name, txXMLAtoms::xmlns)) {
@@ -155,12 +154,12 @@ txAttribute::execute(txExecutionState& aEs)
     PRInt32 nsId = kNameSpaceID_None;
     if (!name.IsEmpty()) {
         if (mNamespace) {
-            exprRes = mNamespace->evaluate(aEs.getEvalContext());
-            NS_ENSURE_TRUE(exprRes, NS_ERROR_FAILURE);
+            rv = mNamespace->evaluate(aEs.getEvalContext(),
+                                      getter_AddRefs(exprRes));
+            NS_ENSURE_SUCCESS(rv, rv);
 
             nsAutoString nspace;
             exprRes->stringValue(nspace);
-            delete exprRes;
 
             if (!nspace.IsEmpty()) {
 #ifdef TX_EXE
@@ -186,13 +185,12 @@ txAttribute::execute(txExecutionState& aEs)
         name.Cut(0, 6);
     }
 
-    txTextHandler* handler =
-        NS_STATIC_CAST(txTextHandler*, aEs.popResultHandler());
+    nsAutoPtr<txTextHandler> handler(
+        NS_STATIC_CAST(txTextHandler*, aEs.popResultHandler()));
     if (!name.IsEmpty()) {
         // add attribute if everything was ok
         aEs.mResultHandler->attribute(name, nsId, handler->mValue);
     }
-    delete handler;
 
     return NS_OK;
 }
@@ -224,10 +222,10 @@ txCheckParam::execute(txExecutionState& aEs)
 {
     nsresult rv = NS_OK;
     if (aEs.mTemplateParams) {
-        ExprResult* exprRes =
-            NS_STATIC_CAST(ExprResult*, aEs.mTemplateParams->get(mName));
+        nsRefPtr<txAExprResult> exprRes;
+        aEs.mTemplateParams->getVariable(mName, getter_AddRefs(exprRes));
         if (exprRes) {
-            rv = aEs.bindVariable(mName, exprRes, MB_FALSE);
+            rv = aEs.bindVariable(mName, exprRes);
             NS_ENSURE_SUCCESS(rv, rv);
 
             aEs.gotoInstruction(mBailTarget);
@@ -247,13 +245,14 @@ txConditionalGoto::txConditionalGoto(nsAutoPtr<Expr> aCondition,
 nsresult
 txConditionalGoto::execute(txExecutionState& aEs)
 {
-    ExprResult* exprRes = mCondition->evaluate(aEs.getEvalContext());
-    NS_ENSURE_TRUE(exprRes, NS_ERROR_FAILURE);
+    nsRefPtr<txAExprResult> exprRes;
+    nsresult rv = mCondition->evaluate(aEs.getEvalContext(),
+                                       getter_AddRefs(exprRes));
+    NS_ENSURE_SUCCESS(rv, rv);
 
     if (!exprRes->booleanValue()) {
         aEs.gotoInstruction(mTarget);
     }
-    delete exprRes;
 
     return NS_OK;
 }
@@ -261,8 +260,8 @@ txConditionalGoto::execute(txExecutionState& aEs)
 nsresult
 txComment::execute(txExecutionState& aEs)
 {
-    txTextHandler* handler =
-        NS_STATIC_CAST(txTextHandler*, aEs.popResultHandler());
+    nsAutoPtr<txTextHandler> handler(
+        NS_STATIC_CAST(txTextHandler*, aEs.popResultHandler()));
     PRUint32 length = handler->mValue.Length();
     PRInt32 pos = 0;
     while ((pos = handler->mValue.FindChar('-', (PRUint32)pos)) != kNotFound) {
@@ -274,7 +273,6 @@ txComment::execute(txExecutionState& aEs)
     }
 
     aEs.mResultHandler->comment(handler->mValue);
-    delete handler;
 
     return NS_OK;
 }
@@ -428,34 +426,33 @@ txCopyOf::txCopyOf(nsAutoPtr<Expr> aSelect)
 nsresult
 txCopyOf::execute(txExecutionState& aEs)
 {
-    nsresult rv = NS_OK;
-    ExprResult* exprRes = mSelect->evaluate(aEs.getEvalContext());
-    NS_ENSURE_TRUE(exprRes, NS_ERROR_FAILURE);
+    nsRefPtr<txAExprResult> exprRes;
+    nsresult rv = mSelect->evaluate(aEs.getEvalContext(),
+                                    getter_AddRefs(exprRes));
+    NS_ENSURE_SUCCESS(rv, rv);
 
     switch (exprRes->getResultType()) {
-        case ExprResult::NODESET:
+        case txAExprResult::NODESET:
         {
-            NodeSet* nodes = NS_STATIC_CAST(NodeSet*, exprRes);
+            NodeSet* nodes = NS_STATIC_CAST(NodeSet*,
+                                            NS_STATIC_CAST(txAExprResult*,
+                                                           exprRes));
             int i;
             for (i = 0; i < nodes->size(); ++i) {
                 Node* node = nodes->get(i);
                 rv = copyNode(node, aEs);
-                if (NS_FAILED(rv)) {
-                    delete exprRes;
-                    return rv;
-                }
+                NS_ENSURE_SUCCESS(rv, rv);
             }
             break;
         }
-        case ExprResult::RESULT_TREE_FRAGMENT:
+        case txAExprResult::RESULT_TREE_FRAGMENT:
         {
-            txResultTreeFragment* rtf = NS_STATIC_CAST(txResultTreeFragment*,
-                                                       exprRes);
+            txResultTreeFragment* rtf =
+                NS_STATIC_CAST(txResultTreeFragment*,
+                               NS_STATIC_CAST(txAExprResult*, exprRes));
             rv = rtf->flushToHandler(aEs.mResultHandler);
-            if (NS_FAILED(rv)) {
-                delete exprRes;
-                return rv;
-            }
+            NS_ENSURE_SUCCESS(rv, rv);
+
             break;
         }
         default:
@@ -468,8 +465,6 @@ txCopyOf::execute(txExecutionState& aEs)
             break;
         }
     }
-    
-    delete exprRes;
     
     return NS_OK;
 }
@@ -575,8 +570,10 @@ txLREAttribute::execute(txExecutionState& aEs)
         mLocalName->ToString(nodeName);
     }
 
-    nsAutoPtr<ExprResult> exprRes(mValue->evaluate(aEs.getEvalContext()));
-    NS_ENSURE_TRUE(exprRes, NS_ERROR_FAILURE);
+    nsRefPtr<txAExprResult> exprRes;
+    nsresult rv = mValue->evaluate(aEs.getEvalContext(),
+                                   getter_AddRefs(exprRes));
+    NS_ENSURE_SUCCESS(rv, rv);
 
     nsAString* value = exprRes->stringValuePointer();
     if (value) {
@@ -599,8 +596,8 @@ txMessage::txMessage(PRBool aTerminate)
 nsresult
 txMessage::execute(txExecutionState& aEs)
 {
-    txTextHandler* handler =
-        NS_STATIC_CAST(txTextHandler*, aEs.popResultHandler());
+    nsAutoPtr<txTextHandler> handler(
+        NS_STATIC_CAST(txTextHandler*, aEs.popResultHandler()));
 
     nsCOMPtr<nsIConsoleService> consoleSvc = 
       do_GetService("@mozilla.org/consoleservice;1");
@@ -609,7 +606,6 @@ txMessage::execute(txExecutionState& aEs)
         logString.Append(handler->mValue);
         consoleSvc->LogStringMessage(logString.get());
     }
-    delete handler;
 
     return mTerminate ? NS_ERROR_XSLT_ABORTED : NS_OK;
 }
@@ -655,22 +651,22 @@ txProcessingInstruction::txProcessingInstruction(nsAutoPtr<Expr> aName)
 nsresult
 txProcessingInstruction::execute(txExecutionState& aEs)
 {
-    txTextHandler* handler =
-        NS_STATIC_CAST(txTextHandler*, aEs.popResultHandler());
+    nsAutoPtr<txTextHandler> handler(
+        NS_STATIC_CAST(txTextHandler*, aEs.popResultHandler()));
     XMLUtils::normalizePIValue(handler->mValue);
 
-    ExprResult* exprRes = mName->evaluate(aEs.getEvalContext());
-    NS_ENSURE_TRUE(exprRes, NS_ERROR_FAILURE);
+    nsRefPtr<txAExprResult> exprRes;
+    nsresult rv = mName->evaluate(aEs.getEvalContext(),
+                                  getter_AddRefs(exprRes));
+    NS_ENSURE_SUCCESS(rv, rv);
 
     nsAutoString name;
     exprRes->stringValue(name);
-    delete exprRes;
 
     // Check name validity (must be valid NCName and a PITarget)
     // XXX Need to check for NCName and PITarget
     if (!XMLUtils::isValidQName(name)) {
         // XXX ErrorReport: bad PI-target
-        delete handler;
         return NS_ERROR_FAILURE;
     }
 
@@ -696,17 +692,18 @@ txPushNewContext::~txPushNewContext()
 nsresult
 txPushNewContext::execute(txExecutionState& aEs)
 {
-    nsresult rv = NS_OK;
-    ExprResult* exprRes = mSelect->evaluate(aEs.getEvalContext());
-    NS_ENSURE_TRUE(exprRes, NS_ERROR_FAILURE);
+    nsRefPtr<txAExprResult> exprRes;
+    nsresult rv = mSelect->evaluate(aEs.getEvalContext(),
+                                    getter_AddRefs(exprRes));
+    NS_ENSURE_SUCCESS(rv, rv);
 
-    if (exprRes->getResultType() != ExprResult::NODESET) {
-        delete exprRes;
+    if (exprRes->getResultType() != txAExprResult::NODESET) {
         // XXX ErrorReport: nodeset expected
         return NS_ERROR_XSLT_NODESET_EXPECTED;
     }
     
-    NodeSet* nodes = NS_STATIC_CAST(NodeSet*, exprRes);
+    NodeSet* nodes =
+        NS_STATIC_CAST(NodeSet*, NS_STATIC_CAST(txAExprResult*, exprRes));
     
     if (nodes->isEmpty()) {
         aEs.gotoInstruction(mBailTarget);
@@ -727,11 +724,8 @@ txPushNewContext::execute(txExecutionState& aEs)
     rv = sorter.sortNodeSet(nodes, &aEs);
     NS_ENSURE_SUCCESS(rv, rv);
     
-    txNodeSetContext* context = new txOwningNodeSetContext(nodes, &aEs);
-    if (!context) {
-        delete exprRes;
-        return NS_ERROR_OUT_OF_MEMORY;
-    }
+    txNodeSetContext* context = new txNodeSetContext(nodes, &aEs);
+    NS_ENSURE_TRUE(context, NS_ERROR_OUT_OF_MEMORY);
 
     context->next();
 
@@ -851,29 +845,27 @@ txSetParam::txSetParam(const txExpandedName& aName, nsAutoPtr<Expr> aValue)
 nsresult
 txSetParam::execute(txExecutionState& aEs)
 {
+    nsresult rv = NS_OK;
     if (!aEs.mTemplateParams) {
-        aEs.mTemplateParams = new txExpandedNameMap(PR_TRUE);
+        aEs.mTemplateParams = new txVariableMap;
         NS_ENSURE_TRUE(aEs.mTemplateParams, NS_ERROR_OUT_OF_MEMORY);
     }
 
-    ExprResult* exprRes;
+    nsRefPtr<txAExprResult> exprRes;
     if (mValue) {
-        exprRes = mValue->evaluate(aEs.getEvalContext());
-        NS_ENSURE_TRUE(exprRes, NS_ERROR_FAILURE);
+        rv = mValue->evaluate(aEs.getEvalContext(),
+                              getter_AddRefs(exprRes));
+        NS_ENSURE_SUCCESS(rv, rv);
     }
     else {
-        txRtfHandler* rtfHandler =
-            NS_STATIC_CAST(txRtfHandler*, aEs.popResultHandler());
-        exprRes = rtfHandler->createRTF();
-        delete rtfHandler;
-        NS_ENSURE_TRUE(exprRes, NS_ERROR_OUT_OF_MEMORY);
+        nsAutoPtr<txRtfHandler> rtfHandler(
+            NS_STATIC_CAST(txRtfHandler*, aEs.popResultHandler()));
+        rv = rtfHandler->getAsRTF(getter_AddRefs(exprRes));
+        NS_ENSURE_SUCCESS(rv, rv);
     }
     
-    nsresult rv = aEs.mTemplateParams->add(mName, exprRes);
-    if (NS_FAILED(rv)) {
-        delete exprRes;
-        return rv;
-    }
+    rv = aEs.mTemplateParams->bindVariable(mName, exprRes);
+    NS_ENSURE_SUCCESS(rv, rv);
     
     return NS_OK;
 }
@@ -887,26 +879,20 @@ txSetVariable::txSetVariable(const txExpandedName& aName,
 nsresult
 txSetVariable::execute(txExecutionState& aEs)
 {
-    ExprResult* exprRes;
+    nsresult rv = NS_OK;
+    nsRefPtr<txAExprResult> exprRes;
     if (mValue) {
-        exprRes = mValue->evaluate(aEs.getEvalContext());
-        NS_ENSURE_TRUE(exprRes, NS_ERROR_FAILURE);
+        rv = mValue->evaluate(aEs.getEvalContext(), getter_AddRefs(exprRes));
+        NS_ENSURE_SUCCESS(rv, rv);
     }
     else {
-        txRtfHandler* rtfHandler =
-            NS_STATIC_CAST(txRtfHandler*, aEs.popResultHandler());
-        exprRes = rtfHandler->createRTF();
-        delete rtfHandler;
-        NS_ENSURE_TRUE(exprRes, NS_ERROR_OUT_OF_MEMORY);
+        nsAutoPtr<txRtfHandler> rtfHandler(
+            NS_STATIC_CAST(txRtfHandler*, aEs.popResultHandler()));
+        rv = rtfHandler->getAsRTF(getter_AddRefs(exprRes));
+        NS_ENSURE_SUCCESS(rv, rv);
     }
     
-    nsresult rv = aEs.bindVariable(mName, exprRes, MB_TRUE);
-    if (NS_FAILED(rv)) {
-        delete exprRes;
-        return rv;
-    }
-    
-    return NS_OK;
+    return aEs.bindVariable(mName, exprRes);
 }
 
 txStartElement::txStartElement(nsAutoPtr<Expr> aName,
@@ -921,14 +907,13 @@ txStartElement::txStartElement(nsAutoPtr<Expr> aName,
 nsresult
 txStartElement::execute(txExecutionState& aEs)
 {
-    nsresult rv = NS_OK;
-
-    ExprResult* exprRes = mName->evaluate(aEs.getEvalContext());
-    NS_ENSURE_TRUE(exprRes, NS_ERROR_FAILURE);
+    nsRefPtr<txAExprResult> exprRes;
+    nsresult rv = mName->evaluate(aEs.getEvalContext(),
+                                  getter_AddRefs(exprRes));
+    NS_ENSURE_SUCCESS(rv, rv);
 
     nsAutoString name;
     exprRes->stringValue(name);
-    delete exprRes;
 
     if (!XMLUtils::isValidQName(name)) {
         // tunkate name to indicate failure
@@ -938,12 +923,12 @@ txStartElement::execute(txExecutionState& aEs)
     PRInt32 nsId = kNameSpaceID_None;
     if (!name.IsEmpty()) {
         if (mNamespace) {
-            exprRes = mNamespace->evaluate(aEs.getEvalContext());
-            NS_ENSURE_TRUE(exprRes, NS_ERROR_FAILURE);
+            rv = mNamespace->evaluate(aEs.getEvalContext(),
+                                      getter_AddRefs(exprRes));
+            NS_ENSURE_SUCCESS(rv, rv);
 
             nsAutoString nspace;
             exprRes->stringValue(nspace);
-            delete exprRes;
 
             if (!nspace.IsEmpty()) {
 #ifdef TX_EXE
@@ -1044,8 +1029,10 @@ txValueOf::txValueOf(nsAutoPtr<Expr> aExpr, PRBool aDOE)
 nsresult
 txValueOf::execute(txExecutionState& aEs)
 {
-    nsAutoPtr<ExprResult> exprRes(mExpr->evaluate(aEs.getEvalContext()));
-    NS_ENSURE_TRUE(exprRes, NS_ERROR_FAILURE);
+    nsRefPtr<txAExprResult> exprRes;
+    nsresult rv = mExpr->evaluate(aEs.getEvalContext(),
+                                  getter_AddRefs(exprRes));
+    NS_ENSURE_SUCCESS(rv, rv);
 
     nsAString* value = exprRes->stringValuePointer();
     if (value) {
@@ -1060,7 +1047,6 @@ txValueOf::execute(txExecutionState& aEs)
             aEs.mResultHandler->characters(valueStr, mDOE);
         }
     }
-
 
     return NS_OK;
 }

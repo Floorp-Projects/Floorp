@@ -57,7 +57,7 @@ PRUint32 txForwardContext::position()
 }
 
 nsresult txForwardContext::getVariable(PRInt32 aNamespace, nsIAtom* aLName,
-                                 ExprResult*& aResult)
+                                       txAExprResult*& aResult)
 {
     NS_ASSERTION(mInner, "mInner is null!!!");
     return mInner->getVariable(aNamespace, aLName, aResult);
@@ -73,6 +73,12 @@ void* txForwardContext::getPrivateContext()
 {
     NS_ASSERTION(mInner, "mInner is null!!!");
     return mInner->getPrivateContext();
+}
+
+txResultRecycler* txForwardContext::recycler()
+{
+    NS_ASSERTION(mInner, "mInner is null!!!");
+    return mInner->recycler();
 }
 
 void txForwardContext::receiveError(const nsAString& aMsg, nsresult aRes)

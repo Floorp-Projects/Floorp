@@ -25,6 +25,7 @@
 
 #include "Expr.h"
 #include "ExprResult.h"
+#include "txIXPathContext.h"
 
 UnaryExpr::UnaryExpr(Expr* expr)
 {
@@ -43,20 +44,25 @@ UnaryExpr::~UnaryExpr()
  * for evaluation.
  * @return the result of the evaluation.
  */
-ExprResult* UnaryExpr::evaluate(txIEvalContext* aContext)
+nsresult
+UnaryExpr::evaluate(txIEvalContext* aContext, txAExprResult** aResult)
 {
-    ExprResult* exprRes = expr->evaluate(aContext);
+    *aResult = nsnull;
+
+    nsRefPtr<txAExprResult> exprRes;
+    nsresult rv = expr->evaluate(aContext, getter_AddRefs(exprRes));
+    NS_ENSURE_SUCCESS(rv, rv);
+
     double value = exprRes->numberValue();
-    delete exprRes;
 #ifdef HPUX
     /*
      * Negation of a zero doesn't produce a negative
      * zero on HPUX. Perform the operation by multiplying with
      * -1.
      */
-    return new NumberResult(-1 * value);
+    return aContext->recycler()->getNumberResult(-1 * value, aResult);
 #else
-    return new NumberResult(-value);
+    return aContext->recycler()->getNumberResult(-value, aResult);
 #endif
 }
 

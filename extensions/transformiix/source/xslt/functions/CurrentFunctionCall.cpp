@@ -19,18 +19,23 @@ CurrentFunctionCall::CurrentFunctionCall()
  * @return NodeSet containing the context node used for the complete
  * Expr or Pattern.
  */
-ExprResult* CurrentFunctionCall::evaluate(txIEvalContext* aContext)
+nsresult
+CurrentFunctionCall::evaluate(txIEvalContext* aContext, txAExprResult** aResult)
 {
+    *aResult = nsnull;
+
+    if (!requireParams(0, 0, aContext))
+        return NS_ERROR_XPATH_BAD_ARGUMENT_COUNT;
+
     txExecutionState* es = 
         NS_STATIC_CAST(txExecutionState*, aContext->getPrivateContext());
     if (!es) {
         NS_ASSERTION(0,
             "called xslt extension function \"current\" with wrong context");
-        // Just return an empty nodeset, this at least has the right
-        // result type.
-        return new NodeSet();
+        return NS_ERROR_UNEXPECTED;
     }
-    return new NodeSet(es->getEvalContext()->getContextNode());
+    return aContext->recycler()->getNodeSet(
+          es->getEvalContext()->getContextNode(), aResult);
 }
 
 nsresult CurrentFunctionCall::getNameAtom(nsIAtom** aAtom)

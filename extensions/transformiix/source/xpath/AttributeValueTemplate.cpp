@@ -29,6 +29,7 @@
 
 #include "Expr.h"
 #include "ExprResult.h"
+#include "txIXPathContext.h"
 
 /**
  * Create a new AttributeValueTemplate
@@ -59,17 +60,31 @@ void AttributeValueTemplate::addExpr(Expr* expr) {
  * for evaluation
  * @return the result of the evaluation
 **/
-ExprResult* AttributeValueTemplate::evaluate(txIEvalContext* aContext)
+nsresult
+AttributeValueTemplate::evaluate(txIEvalContext* aContext,
+                                 txAExprResult** aResult)
 {
+    *aResult = nsnull;
+
     txListIterator iter(&expressions);
-    nsAutoString result;
+    nsRefPtr<StringResult> strRes;
+    nsresult rv = aContext->recycler()->getStringResult(getter_AddRefs(strRes));
+    NS_ENSURE_SUCCESS(rv, rv);
+
     while (iter.hasNext()) {
         Expr* expr = (Expr*)iter.next();
-        ExprResult* exprResult = expr->evaluate(aContext);
-        exprResult->stringValue(result);
-        delete exprResult;
+        nsRefPtr<txAExprResult> exprResult;
+        nsresult rv = expr->evaluate(aContext, getter_AddRefs(exprResult));
+        NS_ENSURE_SUCCESS(rv, rv);
+
+        exprResult->stringValue(strRes->mValue);
     }
-    return new StringResult(result);
+
+    *aResult = strRes;
+
+    NS_ADDREF(*aResult);
+
+    return NS_OK;
 } //-- evaluate
 
 /**

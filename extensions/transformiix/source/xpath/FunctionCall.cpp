@@ -27,6 +27,7 @@
 #include "ExprResult.h"
 #include "nsIAtom.h"
 #include "txIXPathContext.h"
+#include "NodeSet.h"
 
 /**
  * This class represents a FunctionCall as defined by the XSL Working Draft
@@ -70,12 +71,12 @@ void FunctionCall::evaluateToString(Expr* aExpr, txIEvalContext* aContext,
                                     nsAString& aDest)
 {
     NS_ASSERTION(aExpr, "missing expression");
-    ExprResult* exprResult = aExpr->evaluate(aContext);
-    if (!exprResult)
+    nsRefPtr<txAExprResult> exprResult;
+    nsresult rv = aExpr->evaluate(aContext, getter_AddRefs(exprResult));
+    if (NS_FAILED(rv))
         return;
 
     exprResult->stringValue(aDest);
-    delete exprResult;
 }
 
 /*
@@ -84,13 +85,12 @@ void FunctionCall::evaluateToString(Expr* aExpr, txIEvalContext* aContext,
 double FunctionCall::evaluateToNumber(Expr* aExpr, txIEvalContext* aContext)
 {
     NS_ASSERTION(aExpr, "missing expression");
-    ExprResult* exprResult = aExpr->evaluate(aContext);
-    if (!exprResult)
+    nsRefPtr<txAExprResult> exprResult;
+    nsresult rv = aExpr->evaluate(aContext, getter_AddRefs(exprResult));
+    if (NS_FAILED(rv))
         return Double::NaN;
 
-    double result = exprResult->numberValue();
-    delete exprResult;
-    return result;
+    return exprResult->numberValue();
 }
 
 /*
@@ -99,33 +99,39 @@ double FunctionCall::evaluateToNumber(Expr* aExpr, txIEvalContext* aContext)
 MBool FunctionCall::evaluateToBoolean(Expr* aExpr, txIEvalContext* aContext)
 {
     NS_ASSERTION(aExpr, "missing expression");
-    ExprResult* exprResult = aExpr->evaluate(aContext);
-    if (!exprResult)
-        return MB_FALSE;
+    nsRefPtr<txAExprResult> exprResult;
+    nsresult rv = aExpr->evaluate(aContext, getter_AddRefs(exprResult));
+    if (NS_FAILED(rv))
+        return PR_FALSE;
 
-    MBool result = exprResult->booleanValue();
-    delete exprResult;
-    return result;
+    return exprResult->booleanValue();
 }
 
 /*
  * Evaluates the given Expression and converts its result to a NodeSet.
  * If the result is not a NodeSet NULL is returned.
  */
-NodeSet* FunctionCall::evaluateToNodeSet(Expr* aExpr, txIEvalContext* aContext)
+nsresult
+FunctionCall::evaluateToNodeSet(Expr* aExpr, txIEvalContext* aContext,
+                                NodeSet** aResult)
 {
     NS_ASSERTION(aExpr, "Missing expression to evaluate");
-    ExprResult* exprResult = aExpr->evaluate(aContext);
-    if (!exprResult)
-        return 0;
+    *aResult = nsnull;
 
-    if (exprResult->getResultType() != ExprResult::NODESET) {
+    nsRefPtr<txAExprResult> exprRes;
+    nsresult rv = aExpr->evaluate(aContext, getter_AddRefs(exprRes));
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    if (exprRes->getResultType() != txAExprResult::NODESET) {
         aContext->receiveError(NS_LITERAL_STRING("NodeSet expected as argument"), NS_ERROR_XSLT_NODESET_EXPECTED);
-        delete exprResult;
-        return 0;
+        return NS_ERROR_XSLT_NODESET_EXPECTED;
     }
 
-    return (NodeSet*)exprResult;
+    *aResult =
+        NS_STATIC_CAST(NodeSet*, NS_STATIC_CAST(txAExprResult*, exprRes));
+    NS_ADDREF(*aResult);
+
+    return NS_OK;
 }
 
 PRBool FunctionCall::requireParams(PRInt32 aParamCountMin,

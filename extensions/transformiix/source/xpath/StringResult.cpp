@@ -33,14 +33,17 @@
 /**
  * Default Constructor
 **/
-StringResult::StringResult() {
-} //-- StringResult
+StringResult::StringResult(txResultRecycler* aRecycler)
+    : txAExprResult(aRecycler)
+{
+}
 
 /**
  * Creates a new StringResult with the value of the given String parameter
  * @param str the String to use for initialization of this StringResult's value
 **/
-StringResult::StringResult(const nsAString& str) : mValue(str)
+StringResult::StringResult(const nsAString& aValue, txResultRecycler* aRecycler)
+    : txAExprResult(aRecycler), mValue(aValue)
 {
 }
 
@@ -48,13 +51,8 @@ StringResult::StringResult(const nsAString& str) : mValue(str)
  * Virtual Methods from ExprResult
 */
 
-ExprResult* StringResult::clone()
-{
-    return new StringResult(mValue);
-}
-
 short StringResult::getResultType() {
-    return ExprResult::STRING;
+    return txAExprResult::STRING;
 } //-- getResultType
 
 void StringResult::stringValue(nsAString& str)  {

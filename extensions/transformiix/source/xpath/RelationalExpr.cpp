@@ -30,6 +30,7 @@
 #include "Expr.h"
 #include "NodeSet.h"
 #include "XMLDOMUtils.h"
+#include "txIXPathContext.h"
 
 RelationalExpr::RelationalExpr(Expr* aLeftExpr, Expr* aRightExpr,
                                RelationalExprType aOp)
@@ -41,26 +42,31 @@ RelationalExpr::RelationalExpr(Expr* aLeftExpr, Expr* aRightExpr,
  *  Compares the two ExprResults based on XPath 1.0 Recommendation (section 3.4)
  */
 PRBool
-RelationalExpr::compareResults(ExprResult* aLeft, ExprResult* aRight)
+RelationalExpr::compareResults(txIEvalContext* aContext, txAExprResult* aLeft,
+                               txAExprResult* aRight)
 {
     short ltype = aLeft->getResultType();
     short rtype = aRight->getResultType();
+    nsresult rv = NS_OK;
 
     // Handle case for just Left NodeSet or Both NodeSets
-    if (ltype == ExprResult::NODESET) {
-        if (rtype == ExprResult::BOOLEAN) {
+    if (ltype == txAExprResult::NODESET) {
+        if (rtype == txAExprResult::BOOLEAN) {
             BooleanResult leftBool(aLeft->booleanValue());
-            return compareResults(&leftBool, aRight);
+            return compareResults(aContext, &leftBool, aRight);
         }
 
         NodeSet* nodeSet = NS_STATIC_CAST(NodeSet*, aLeft);
-        StringResult strResult;
+        nsRefPtr<StringResult> strResult;
+        rv = aContext->recycler()->getStringResult(getter_AddRefs(strResult));
+        NS_ENSURE_SUCCESS(rv, rv);
+
         int i;
         for (i = 0; i < nodeSet->size(); ++i) {
             Node* node = nodeSet->get(i);
-            strResult.mValue.Truncate();
-            XMLDOMUtils::getNodeValue(node, strResult.mValue);
-            if (compareResults(&strResult, aRight)) {
+            strResult->mValue.Truncate();
+            XMLDOMUtils::getNodeValue(node, strResult->mValue);
+            if (compareResults(aContext, strResult, aRight)) {
                 return PR_TRUE;
             }
         }
@@ -69,20 +75,23 @@ RelationalExpr::compareResults(ExprResult* aLeft, ExprResult* aRight)
     }
 
     // Handle case for Just Right NodeSet
-    if (rtype == ExprResult::NODESET) {
-        if (ltype == ExprResult::BOOLEAN) {
+    if (rtype == txAExprResult::NODESET) {
+        if (ltype == txAExprResult::BOOLEAN) {
             BooleanResult rightBool(aRight->booleanValue());
-            return compareResults(aLeft, &rightBool);
+            return compareResults(aContext, aLeft, &rightBool);
         }
 
         NodeSet* nodeSet = NS_STATIC_CAST(NodeSet*, aRight);
-        StringResult strResult;
+        nsRefPtr<StringResult> strResult;
+        rv = aContext->recycler()->getStringResult(getter_AddRefs(strResult));
+        NS_ENSURE_SUCCESS(rv, rv);
+
         int i;
         for (i = 0; i < nodeSet->size(); ++i) {
             Node* node = nodeSet->get(i);
-            strResult.mValue.Truncate();
-            XMLDOMUtils::getNodeValue(node, strResult.mValue);
-            if (compareResults(aLeft, &strResult)) {
+            strResult->mValue.Truncate();
+            XMLDOMUtils::getNodeValue(node, strResult->mValue);
+            if (compareResults(aContext, aLeft, strResult)) {
                 return PR_TRUE;
             }
         }
@@ -96,12 +105,14 @@ RelationalExpr::compareResults(ExprResult* aLeft, ExprResult* aRight)
         nsAString *lString, *rString;
 
         // If either is a bool, compare as bools.
-        if (ltype == ExprResult::BOOLEAN || rtype == ExprResult::BOOLEAN) {
+        if (ltype == txAExprResult::BOOLEAN ||
+            rtype == txAExprResult::BOOLEAN) {
             result = aLeft->booleanValue() == aRight->booleanValue();
         }
 
         // If either is a number, compare as numbers.
-        else if (ltype == ExprResult::NUMBER || rtype == ExprResult::NUMBER) {
+        else if (ltype == txAExprResult::NUMBER ||
+                 rtype == txAExprResult::NUMBER) {
             double lval = aLeft->numberValue();
             double rval = aRight->numberValue();
 #if defined(XP_WIN) || defined(XP_OS2)
@@ -167,16 +178,22 @@ RelationalExpr::compareResults(ExprResult* aLeft, ExprResult* aRight)
     return PR_FALSE;
 }
 
-ExprResult*
-RelationalExpr::evaluate(txIEvalContext* aContext)
+nsresult
+RelationalExpr::evaluate(txIEvalContext* aContext, txAExprResult** aResult)
 {
-    nsAutoPtr<ExprResult> lResult(mLeftExpr->evaluate(aContext));
-    NS_ENSURE_TRUE(lResult, nsnull);
+    *aResult = nsnull;
+    nsRefPtr<txAExprResult> lResult;
+    nsresult rv = mLeftExpr->evaluate(aContext, getter_AddRefs(lResult));
+    NS_ENSURE_SUCCESS(rv, rv);
 
-    nsAutoPtr<ExprResult> rResult(mRightExpr->evaluate(aContext));
-    NS_ENSURE_TRUE(rResult, nsnull);
+    nsRefPtr<txAExprResult> rResult;
+    rv = mRightExpr->evaluate(aContext, getter_AddRefs(rResult));
+    NS_ENSURE_SUCCESS(rv, rv);
+    
+    aContext->recycler()->
+        getBoolResult(compareResults(aContext, lResult, rResult), aResult);
 
-    return new BooleanResult(compareResults(lResult, rResult));
+    return NS_OK;
 }
 
 void

@@ -58,15 +58,15 @@ VariableRefExpr::~VariableRefExpr()
  * for evaluation
  * @return the result of the evaluation
 **/
-ExprResult* VariableRefExpr::evaluate(txIEvalContext* aContext)
+nsresult
+VariableRefExpr::evaluate(txIEvalContext* aContext, txAExprResult** aResult)
 {
-    ExprResult* exprResult = 0;
-    nsresult rv = aContext->getVariable(mNamespace, mLocalName, exprResult);
+    nsresult rv = aContext->getVariable(mNamespace, mLocalName, *aResult);
     if (NS_FAILED(rv)) {
       // XXX report error, undefined variable
-      return new StringResult(NS_LITERAL_STRING("error"));
+      return rv;
     }
-    return exprResult->clone();
+    return NS_OK;
 }
 
 /**

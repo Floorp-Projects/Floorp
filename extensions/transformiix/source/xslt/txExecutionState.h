@@ -101,7 +101,7 @@ public:
         txStylesheet::ImportFrame* mFrame;
         PRInt32 mModeNsId;
         nsIAtom* mModeLocalName;
-        txExpandedNameMap* mParams;
+        txVariableMap* mParams;
     };
 
     // Stack functions
@@ -115,10 +115,10 @@ public:
     txAXMLEventHandler* popResultHandler();
     nsresult pushTemplateRule(txStylesheet::ImportFrame* aFrame,
                               const txExpandedName& aMode,
-                              txExpandedNameMap* aParams);
+                              txVariableMap* aParams);
     void popTemplateRule();
-    nsresult pushParamMap(txExpandedNameMap* aParams);
-    txExpandedNameMap* popParamMap();
+    nsresult pushParamMap(txVariableMap* aParams);
+    txVariableMap* popParamMap();
 
     // state-getting functions
     txIEvalContext* getEvalContext();
@@ -126,7 +126,7 @@ public:
     Node* retrieveDocument(const nsAString& uri, const nsAString& baseUri);
     nsresult getKeyNodes(const txExpandedName& aKeyName, Document* aDocument,
                          const nsAString& aKeyValue, PRBool aIndexIfNotFound,
-                         const NodeSet** aResult);
+                         NodeSet** aResult);
     TemplateRule* getCurrentTemplateRule();
 
     // state-modification functions
@@ -137,14 +137,14 @@ public:
     void gotoInstruction(txInstruction* aNext);
     void returnFromTemplate();
     nsresult bindVariable(const txExpandedName& aName,
-                          ExprResult* aValue, MBool aOwned);
+                          txAExprResult* aValue);
     void removeVariable(const txExpandedName& aName);
 
     txAXMLEventHandler* mOutputHandler;
     txAXMLEventHandler* mResultHandler;
     txAOutputHandlerFactory* mOutputHandlerFactory;
 
-    txExpandedNameMap* mTemplateParams;
+    nsAutoPtr<txVariableMap> mTemplateParams;
 
     nsRefPtr<txStylesheet> mStylesheet;
 
@@ -159,7 +159,7 @@ private:
     txInstruction* mNextInstruction;
     txVariableMap* mLocalVariables;
     txVariableMap mGlobalVariableValues;
-    nsAutoPtr<ExprResult> mGlobalVarPlaceholderValue;
+    nsRefPtr<txAExprResult> mGlobalVarPlaceholderValue;
     PRInt32 mRecursionDepth;
 
     TemplateRule* mTemplateRules;
@@ -173,6 +173,7 @@ private:
 
     txLoadedDocumentsHash mLoadedDocuments;
     txKeyHash mKeyHash;
+    nsRefPtr<txResultRecycler> mRecycler;
 
     static const PRInt32 kMaxRecursionDepth;
 };

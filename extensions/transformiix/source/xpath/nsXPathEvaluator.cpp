@@ -76,6 +76,17 @@ nsXPathEvaluator::CreateExpression(const nsAString & aExpression,
                                    nsIDOMXPathNSResolver *aResolver,
                                    nsIDOMXPathExpression **aResult)
 {
+    nsresult rv = NS_OK;
+    if (!mRecycler) {
+        nsRefPtr<txResultRecycler> recycler = new txResultRecycler;
+        NS_ENSURE_TRUE(recycler, NS_ERROR_OUT_OF_MEMORY);
+        
+        rv = recycler->init();
+        NS_ENSURE_SUCCESS(rv, rv);
+        
+        mRecycler = recycler;
+    }
+
     nsCOMPtr<nsIDocument> doc = do_QueryReferent(mDocument);
     ParseContextImpl pContext(aResolver, !doc || doc->IsCaseSensitive());
     Expr* expression = ExprParser::createExpr(PromiseFlatString(aExpression),
@@ -83,7 +94,7 @@ nsXPathEvaluator::CreateExpression(const nsAString & aExpression,
     if (!expression)
         return NS_ERROR_DOM_INVALID_EXPRESSION_ERR;
 
-    *aResult = new nsXPathExpression(expression);
+    *aResult = new nsXPathExpression(expression, mRecycler);
     if (!*aResult) {
         delete expression;
         return NS_ERROR_OUT_OF_MEMORY;

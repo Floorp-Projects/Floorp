@@ -27,43 +27,46 @@ SystemPropertyFunctionCall::SystemPropertyFunctionCall(txNamespaceMap* aMappings
  * @return the result of the evaluation
  * @see FunctionCall.h
 **/
-ExprResult* SystemPropertyFunctionCall::evaluate(txIEvalContext* aContext)
+nsresult
+SystemPropertyFunctionCall::evaluate(txIEvalContext* aContext,
+                                     txAExprResult** aResult)
 {
-    ExprResult* result = nsnull;
+    *aResult = nsnull;
 
-    if (requireParams(1, 1, aContext)) {
-        txListIterator iter(&params);
-        Expr* param = (Expr*)iter.next();
-        ExprResult* exprResult = param->evaluate(aContext);
-        if (exprResult->getResultType() == ExprResult::STRING) {
-            nsAutoString property;
-            exprResult->stringValue(property);
-            txExpandedName qname;
-            nsresult rv = qname.init(property, mMappings, MB_TRUE);
-            if (NS_SUCCEEDED(rv) &&
-                qname.mNamespaceID == kNameSpaceID_XSLT) {
-                if (qname.mLocalName == txXSLTAtoms::version) {
-                    result = new NumberResult(1.0);
-                }
-                else if (qname.mLocalName == txXSLTAtoms::vendor) {
-                    result = new StringResult(NS_LITERAL_STRING("Transformiix"));
-                }
-                else if (qname.mLocalName == txXSLTAtoms::vendorUrl) {
-                    result = new StringResult(NS_LITERAL_STRING("http://www.mozilla.org/projects/xslt/"));
-                }
-            }
-        }
-        else {
-            NS_NAMED_LITERAL_STRING(err, "Invalid argument passed to system-property(), expecting String");
-            aContext->receiveError(err, NS_ERROR_XPATH_INVALID_ARG);
-            result = new StringResult(err);
-        }
+    if (!requireParams(1, 1, aContext)) {
+        return NS_ERROR_XPATH_BAD_ARGUMENT_COUNT;
     }
 
-    if (!result) {
-        result = new StringResult();
+    txListIterator iter(&params);
+    Expr* param = (Expr*)iter.next();
+    nsRefPtr<txAExprResult> exprResult;
+    nsresult rv = param->evaluate(aContext, getter_AddRefs(exprResult));
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    nsAutoString property;
+    exprResult->stringValue(property);
+    txExpandedName qname;
+    rv = qname.init(property, mMappings, MB_TRUE);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    if (qname.mNamespaceID == kNameSpaceID_XSLT) {
+        if (qname.mLocalName == txXSLTAtoms::version) {
+            return aContext->recycler()->getNumberResult(1.0, aResult);
+        }
+        if (qname.mLocalName == txXSLTAtoms::vendor) {
+            return aContext->recycler()->getStringResult(
+                  NS_LITERAL_STRING("Transformiix"), aResult);
+        }
+        if (qname.mLocalName == txXSLTAtoms::vendorUrl) {
+            return aContext->recycler()->getStringResult(
+                  NS_LITERAL_STRING("http://www.mozilla.org/projects/xslt/"),
+                  aResult);
+        }
     }
-    return result;
+    aContext->recycler()->getEmptyStringResult(aResult);
+
+    return NS_OK;
+
 }
 
 nsresult SystemPropertyFunctionCall::getNameAtom(nsIAtom** aAtom)

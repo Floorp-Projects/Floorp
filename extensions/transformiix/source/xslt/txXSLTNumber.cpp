@@ -114,14 +114,15 @@ txXSLTNumber::getValueList(Expr* aValueExpr, txPattern* aCountPattern,
                            nsAString& aValueString)
 {
     aValueString.Truncate();
-    
+    nsresult rv = NS_OK;
+
     // If the value attribute exists then use that
     if (aValueExpr) {
-        ExprResult* result = aValueExpr->evaluate(aContext);
-        NS_ENSURE_TRUE(result, NS_ERROR_FAILURE);
+        nsRefPtr<txAExprResult> result;
+        rv = aValueExpr->evaluate(aContext, getter_AddRefs(result));
+        NS_ENSURE_SUCCESS(rv, rv);
 
         double value = result->numberValue();
-        delete result;
 
         if (Double::isInfinite(value) || Double::isNaN(value) ||
             value < 0.5) {
@@ -319,12 +320,12 @@ txXSLTNumber::getCounters(Expr* aGroupSize, Expr* aGroupSeparator,
     nsAutoString groupSeparator;
     PRInt32 groupSize = 0;
     if (aGroupSize && aGroupSeparator) {
-        ExprResult* sizeRes = aGroupSize->evaluate(aContext);
-        NS_ENSURE_TRUE(sizeRes, NS_ERROR_FAILURE);
+        nsRefPtr<txAExprResult> exprRes;
+        rv = aGroupSize->evaluate(aContext, getter_AddRefs(exprRes));
+        NS_ENSURE_SUCCESS(rv, rv);
         
         nsAutoString sizeStr;
-        sizeRes->stringValue(sizeStr);
-        delete sizeRes;
+        exprRes->stringValue(sizeStr);
 
         double size = Double::toDouble(sizeStr);
         groupSize = (PRInt32)size;
@@ -332,20 +333,19 @@ txXSLTNumber::getCounters(Expr* aGroupSize, Expr* aGroupSeparator,
             groupSize = 0;
         }
         
-        ExprResult* sepRes = aGroupSeparator->evaluate(aContext);
-        NS_ENSURE_TRUE(sepRes, NS_ERROR_FAILURE);
+        rv = aGroupSeparator->evaluate(aContext, getter_AddRefs(exprRes));
+        NS_ENSURE_SUCCESS(rv, rv);
         
-        sepRes->stringValue(groupSeparator);
-        delete sepRes;
+        exprRes->stringValue(groupSeparator);
     }
 
     nsAutoString format;
     if (aFormat) {
-        ExprResult* formatRes = aFormat->evaluate(aContext);
-        NS_ENSURE_TRUE(formatRes, NS_ERROR_FAILURE);
+        nsRefPtr<txAExprResult> formatRes;
+        rv = aFormat->evaluate(aContext, getter_AddRefs(formatRes));
+        NS_ENSURE_SUCCESS(rv, rv);
         
         formatRes->stringValue(format);
-        delete formatRes;
     }
     PRUint32 formatLen = format.Length();
     PRUint32 formatPos = 0;
