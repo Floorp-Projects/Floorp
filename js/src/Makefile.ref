@@ -128,7 +128,7 @@ ifdef JS_EDITLINE
 # Use the editline library, built locally.
 PREDIRS += editline
 DEFINES += -DEDITLINE
-PROG_LIBS += -Leditline/$(OBJDIR) -ledit
+PROG_LIBS += editline/$(OBJDIR)/libedit.a
 endif
 endif
 
