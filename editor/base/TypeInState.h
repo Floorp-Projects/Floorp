@@ -35,10 +35,13 @@ public:
   NS_IMETHOD NotifySelectionChanged();
 
   void GetEnumForName(nsIAtom *aPropName, PRUint32 &aEnum);
+  void GetPropertyIsString(PRUint32 aProp, PRUint32 &aIsString);
 
   void SetProp(PRUint32 aProp, PRBool aSet);
+  void GetProp(PRUint32 aProp, PRBool& aSet);
 
   void SetPropValue(PRUint32 aProp, const nsString &aValue);
+  void GetPropValue(PRUint32 aProp, nsString &aValue);
 
   PRBool IsSet(PRUint32 aStyle);
   PRBool IsAnySet();
@@ -108,6 +111,29 @@ void TypeInState::GetEnumForName(nsIAtom *aPropName, PRUint32 &aEnum)
   else if (nsIEditProperty::color==aPropName) { aEnum = NS_TYPEINSTATE_FONTCOLOR; }
   else if (nsIEditProperty::size==aPropName) { aEnum = NS_TYPEINSTATE_FONTSIZE; }
 }
+
+
+inline
+void TypeInState::GetPropertyIsString(PRUint32 aProp, PRUint32 &aIsString)
+{
+  switch (aProp)
+  {
+    case NS_TYPEINSTATE_BOLD:
+    case NS_TYPEINSTATE_ITALIC:
+    case NS_TYPEINSTATE_UNDERLINE:
+      aIsString = PR_FALSE;
+      break;
+
+    case NS_TYPEINSTATE_FONTFACE:
+    case NS_TYPEINSTATE_FONTCOLOR:
+    case NS_TYPEINSTATE_FONTSIZE:
+      aIsString = PR_TRUE;
+      break;
+    default:
+      NS_NOTREACHED("Unknown property");
+  }
+}
+
 
 inline 
 PRBool TypeInState::IsSet(PRUint32 aStyle)
@@ -227,6 +253,42 @@ inline void TypeInState::SetPropValue(PRUint32 aProp, const nsString &aValue)
       break;
   }
 }
+
+
+inline
+void TypeInState::GetProp(PRUint32 aProp, PRBool& aSet)
+{
+  switch (aProp)
+  {
+    case NS_TYPEINSTATE_BOLD:
+      aSet = GetBold();
+      break;
+    case NS_TYPEINSTATE_ITALIC:
+      aSet = GetItalic();
+      break;
+    case NS_TYPEINSTATE_UNDERLINE:
+      aSet = GetUnderline();
+      break;
+  }
+}
+
+inline
+void TypeInState::GetPropValue(PRUint32 aProp, nsString &aValue)
+{
+  switch (aProp)
+  {
+    case NS_TYPEINSTATE_FONTFACE:
+      GetFontFace(aValue);
+      break;
+    case NS_TYPEINSTATE_FONTCOLOR:
+      GetFontColor(aValue);
+      break;
+    case NS_TYPEINSTATE_FONTSIZE:
+      GetFontSize(aValue);
+      break;
+  }
+}
+
 
 #endif	// TypeInState_h__
 
