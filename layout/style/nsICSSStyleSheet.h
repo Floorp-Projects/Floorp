@@ -83,6 +83,7 @@ public:
   NS_IMETHOD  SetOwningNode(nsIDOMNode* aOwningNode) = 0;
 
   NS_IMETHOD  SetOwnerRule(nsICSSImportRule* aOwnerRule) = 0;
+  NS_IMETHOD  GetOwnerRule(nsICSSImportRule** aOwnerRule) = 0;
   
   // get head of namespace chain for sheet
   NS_IMETHOD  GetNameSpace(nsINameSpace*& aNameSpace) const = 0;

@@ -70,17 +70,20 @@
 NS_IMETHOD GetStyleSheet(nsIStyleSheet*& aSheet) const; \
 NS_IMETHOD SetStyleSheet(nsICSSStyleSheet* aSheet); \
 NS_IMETHOD SetParentRule(nsICSSGroupRule* aRule); \
+NS_IMETHOD GetDOMRule(nsIDOMCSSRule** aDOMRule); \
 NS_IMETHOD MapRuleInfoInto(nsRuleData* aRuleData);
 
 #define IMPL_STYLE_RULE_INHERIT(_class, super) \
 NS_IMETHODIMP _class::GetStyleSheet(nsIStyleSheet*& aSheet) const { return super::GetStyleSheet(aSheet); }  \
 NS_IMETHODIMP _class::SetStyleSheet(nsICSSStyleSheet* aSheet) { return super::SetStyleSheet(aSheet); }  \
 NS_IMETHODIMP _class::SetParentRule(nsICSSGroupRule* aRule) { return super::SetParentRule(aRule); }  \
+NS_IMETHODIMP _class::GetDOMRule(nsIDOMCSSRule** aDOMRule) { return CallQueryInterface(this, aDOMRule); }  \
 NS_IMETHODIMP _class::MapRuleInfoInto(nsRuleData* aRuleData) { return NS_OK; } 
 
 #define IMPL_STYLE_RULE_INHERIT2(_class, super) \
 NS_IMETHODIMP _class::GetStyleSheet(nsIStyleSheet*& aSheet) const { return super::GetStyleSheet(aSheet); }  \
 NS_IMETHODIMP _class::SetParentRule(nsICSSGroupRule* aRule) { return super::SetParentRule(aRule); }  \
+NS_IMETHODIMP _class::GetDOMRule(nsIDOMCSSRule** aDOMRule) { return CallQueryInterface(this, aDOMRule); }  \
 NS_IMETHODIMP _class::MapRuleInfoInto(nsRuleData* aRuleData) { return NS_OK; } 
 
 // -------------------------------
@@ -151,7 +154,7 @@ CSSGroupRuleRuleListImpl::Item(PRUint32 aIndex, nsIDOMCSSRule** aReturn)
 
     result = mGroupRule->GetStyleRuleAt(aIndex, *getter_AddRefs(rule));
     if (rule) {
-      result = CallQueryInterface(rule, aReturn);
+      result = rule->GetDOMRule(aReturn);
     } else if (result == NS_ERROR_ILLEGAL_VALUE) {
       result = NS_OK; // per spec: "Return Value ... null if ... not a valid index."
     }
@@ -329,7 +332,7 @@ NS_IMETHODIMP
 CSSCharsetRuleImpl::GetParentRule(nsIDOMCSSRule** aParentRule)
 {
   if (mParentRule) {
-    return CallQueryInterface(mParentRule, aParentRule);
+    return mParentRule->GetDOMRule(aParentRule);
   }
   *aParentRule = nsnull;
   return NS_OK;
@@ -589,7 +592,7 @@ NS_IMETHODIMP
 CSSImportRuleImpl::GetParentRule(nsIDOMCSSRule** aParentRule)
 {
   if (mParentRule) {
-    return CallQueryInterface(mParentRule, aParentRule);
+    return mParentRule->GetDOMRule(aParentRule);
   }
   *aParentRule = nsnull;
   return NS_OK;
@@ -1019,14 +1022,16 @@ CSSMediaRuleImpl::GetCssText(nsAString& aCssText)
   if (mRules) {
     mRules->Count(&count);
     for (index = 0; index < count; index++) {
-      nsCOMPtr<nsIDOMCSSRule> rule;
-      mRules->QueryElementAt(index, NS_GET_IID(nsIDOMCSSRule), getter_AddRefs(rule));
-      if (rule) {
-        nsAutoString tempString;
-        rule->GetCssText(tempString);
-        aCssText.Append(NS_LITERAL_STRING("  "));
-        aCssText.Append(tempString);
-        aCssText.Append(NS_LITERAL_STRING("\n"));
+      nsCOMPtr<nsICSSRule> rule;
+      mRules->GetElementAt(index, getter_AddRefs(rule));
+      nsCOMPtr<nsIDOMCSSRule> domRule;
+      rule->GetDOMRule(getter_AddRefs(domRule));
+      if (domRule) {
+        nsAutoString cssText;
+        domRule->GetCssText(cssText);
+        aCssText.Append(NS_LITERAL_STRING("  ") +
+                        cssText +
+                        NS_LITERAL_STRING("\n"));
       }
     }
   }
@@ -1056,7 +1061,7 @@ NS_IMETHODIMP
 CSSMediaRuleImpl::GetParentRule(nsIDOMCSSRule** aParentRule)
 {
   if (mParentRule) {
-    return CallQueryInterface(mParentRule, aParentRule);
+    return mParentRule->GetDOMRule(aParentRule);
   }
   *aParentRule = nsnull;
   return NS_OK;
@@ -1333,7 +1338,7 @@ NS_IMETHODIMP
 CSSNameSpaceRuleImpl::GetParentRule(nsIDOMCSSRule** aParentRule)
 {
   if (mParentRule) {
-    return CallQueryInterface(mParentRule, aParentRule);
+    return mParentRule->GetDOMRule(aParentRule);
   }
   *aParentRule = nsnull;
   return NS_OK;

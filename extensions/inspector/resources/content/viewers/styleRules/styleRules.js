@@ -330,18 +330,7 @@ function StyleRuleView(aObject)
   if (doesQI(aObject, "nsIDOMCSSStyleSheet")) {
     this.mSheetRules = aObject.cssRules;
   } else {
-    this.mRules = this.mDOMUtils.getStyleRules(aObject);
-  }
-
-  if (this.mRules) {
-    for (var i = this.mRules.Count(); i >= 0; --i) {
-      var rule = this.mRules.GetElementAt(i);
-      try {
-        rule = XPCU.QI(rule, "nsIDOMCSSStyleRule");
-      } catch (ex) {
-        this.mRules.RemoveElement(rule);
-      }
-    }
+    this.mRules = this.mDOMUtils.getCSSStyleRules(aObject);
   }
 }
 

@@ -42,6 +42,7 @@
 
 class nsICSSStyleSheet;
 class nsICSSGroupRule;
+class nsIDOMCSSRule;
 class nsAString;
 
 // IID for the nsICSSRule interface {b9791e20-1a04-11d3-805a-006008159b5a}
@@ -69,6 +70,8 @@ public:
   NS_IMETHOD SetParentRule(nsICSSGroupRule* aRule) = 0;
 
   NS_IMETHOD Clone(nsICSSRule*& aClone) const = 0;
+
+  NS_IMETHOD GetDOMRule(nsIDOMCSSRule** aDOMRule) = 0;
 };
 
 /* Define global NS_New* functions for rules that don't need their own

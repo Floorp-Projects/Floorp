@@ -63,7 +63,7 @@ public:
   virtual nsresult GetCSSParsingEnvironment(nsIURI** aBaseURI,
                                             nsICSSLoader** aCSSLoader,
                                             nsICSSParser** aCSSParser);
-  virtual nsresult GetParent(nsISupports **aParent);
+  virtual nsresult GetParentRule(nsIDOMCSSRule **aParent);
 
 protected:
   virtual nsresult DeclarationChanged();

@@ -149,23 +149,6 @@ nsDOMCSSDeclaration::GetLength(PRUint32* aLength)
 }
 
 NS_IMETHODIMP
-nsDOMCSSDeclaration::GetParentRule(nsIDOMCSSRule** aParentRule)
-{
-  NS_ENSURE_ARG_POINTER(aParentRule);
-  *aParentRule = nsnull;
-
-  nsCOMPtr<nsISupports> parent;
-
-  GetParent(getter_AddRefs(parent));
-
-  if (parent) {
-    CallQueryInterface(parent, aParentRule);
-  }
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP
 nsDOMCSSDeclaration::GetPropertyCSSValue(const nsAString& aPropertyName,
                                          nsIDOMCSSValue** aReturn)
 {
