@@ -14,6 +14,8 @@
 				<string>shtml</string>
 				<string>xml</string>
 				<string>xhtml</string>
+				<string>shtm</string>
+				<string>xhtm</string>
 			</array>
 			<key>CFBundleTypeIconFile</key>
 			<string>fileHtml.icns</string>
@@ -179,8 +181,8 @@
 			</array>
 		</dict>
 	</array>
-  <key>mozNewProfileDirName</key>
-  <string>Camino</string>
+	<key>mozNewProfileDirName</key>
+	<string>Camino</string>
 	<key>mozOldProfileDirName</key>
 	<string>Chimera</string>
 </dict>
