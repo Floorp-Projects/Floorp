@@ -99,7 +99,6 @@ nsRenderingContextWin :: nsRenderingContextWin()
 {
   NS_INIT_REFCNT();
 
-  //mFont = nsnull;
   mDC = NULL;
   mMainDC = NULL;
   mDCOwner = nsnull;
@@ -114,6 +113,7 @@ nsRenderingContextWin :: nsRenderingContextWin()
   mCurrBrushColor = NULL;
   mCurrFontMetrics = nsnull;
   mCurrPenColor = NULL;
+  mNullPen = NULL;
 #ifdef NS_DEBUG
   mInitialized = PR_FALSE;
 #endif
@@ -168,27 +168,29 @@ nsRenderingContextWin :: ~nsRenderingContextWin()
     }
 
     if (NULL != mCurrBrush)
-    {
       ::DeleteObject(mCurrBrush);
-      mCurrBrush = NULL;
-    }
-    else if (NULL != mBlackBrush)
+
+    if ((NULL != mBlackBrush) && (mBlackBrush != mCurrBrush))
       ::DeleteObject(mBlackBrush);
 
+    mCurrBrush = NULL;
     mBlackBrush = NULL;
 
     //don't kill the font because the font cache/metrics owns it
     mCurrFont = NULL;
 
     if (NULL != mCurrPen)
-    {
       ::DeleteObject(mCurrPen);
-      mCurrPen = NULL;
-    }
-    else if (NULL != mBlackPen)
+
+    if ((NULL != mBlackPen) && (mBlackPen != mCurrPen))
       ::DeleteObject(mBlackPen);
 
+    if ((NULL != mNullPen) && (mNullPen != mCurrPen))
+      ::DeleteObject(mNullPen);
+
+    mCurrPen = NULL;
     mBlackPen = NULL;
+    mNullPen = NULL;
   }
 
   if (nsnull != mStateCache)
@@ -283,6 +285,8 @@ nsresult nsRenderingContextWin :: CommonInit(void)
 
   mBlackPen = ::CreatePen(PS_SOLID, 0, RGB(0, 0, 0));
   mOrigSolidPen = ::SelectObject(mDC, mBlackPen);
+
+  mNullPen = ::CreatePen(PS_NULL, 0, 0);
 
   return NS_OK;
 }
@@ -604,8 +608,8 @@ void nsRenderingContextWin::DrawPolygon(nsPoint aPoints[], PRInt32 aNumPoints)
   lb.lbStyle = BS_NULL;
   lb.lbColor = 0;
   lb.lbHatch = 0;
-  HBRUSH brush = ::CreateBrushIndirect(&lb);
   SetupSolidPen();
+  HBRUSH brush = ::CreateBrushIndirect(&lb);
   HBRUSH oldBrush = ::SelectObject(mDC, brush);
   ::Polygon(mDC, pp0, int(aNumPoints));
   ::SelectObject(mDC, oldBrush);
@@ -642,11 +646,9 @@ void nsRenderingContextWin::FillPolygon(nsPoint aPoints[], PRInt32 aNumPoints)
   int pfm = ::GetPolyFillMode(mDC);
   ::SetPolyFillMode(mDC, WINDING);
   SetupSolidBrush();
-  HPEN pen = ::CreatePen(PS_NULL, 0, 0);
-  HPEN oldPen = ::SelectObject(mDC, pen);
+  HPEN oldPen = ::SelectObject(mDC, mNullPen);
   ::Polygon(mDC, pp0, int(aNumPoints));
   ::SelectObject(mDC, oldPen);
-  ::DeleteObject(pen);
   ::SetPolyFillMode(mDC, pfm);
 
   // Release temporary storage if necessary
@@ -667,7 +669,6 @@ void nsRenderingContextWin :: DrawEllipse(nscoord aX, nscoord aY, nscoord aWidth
   HBRUSH oldBrush = ::SelectObject(mDC, ::GetStockObject(NULL_BRUSH));
   
   ::Ellipse(mDC, aX, aY, aX + aWidth, aY + aHeight);
-  
   ::SelectObject(mDC, oldBrush);
 }
 
