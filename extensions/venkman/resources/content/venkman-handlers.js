@@ -98,6 +98,13 @@ function con_step()
     return true;
 }
 
+console.doCommandReload =
+function con_reload ()
+{
+    if ("childData" in console.sourceView)
+        console.sourceView.childData.reloadSource();
+}
+
 console.onDebugTrap =
 function con_ondt (type)
 {
@@ -326,6 +333,7 @@ function con_ieval (e)
                 refreshValues();
                 var l = $.length;
                 $[l] = rv;
+                
                 display (getMsg(MSN_FMT_TMP_ASSIGN, [l, formatValue (rv)]),
                          MT_FEVAL_OUT);
             }
