@@ -23,6 +23,8 @@
  * 
  */
 
+
+
 #ifndef DTDUTILS_
 #define DTDUTILS_
 
@@ -50,6 +52,7 @@
 
 void DebugDumpContainmentRules(nsIDTD& theDTD,const char* aFilename,const char* aTitle);
 void DebugDumpContainmentRules2(nsIDTD& theDTD,const char* aFilename,const char* aTitle);
+
 
 class nsTagStack {
 public:
