@@ -1069,6 +1069,11 @@ public:
   NS_IMETHOD FlushPendingNotifications(PRBool aUpdateViews);
 
   /**
+   * Recreates the frames for a node
+   */
+  NS_IMETHOD RecreateFramesFor(nsIContent* aContent);
+
+  /**
    * Post a request to handle a DOM event after Reflow has finished.
    */
   NS_IMETHOD PostDOMEvent(nsIContent* aContent, nsEvent* aEvent);
@@ -3871,6 +3876,27 @@ PresShell::CancelAllReflowCommands()
   DoneRemovingReflowCommands();
 
   return NS_OK;
+}
+
+NS_IMETHODIMP
+PresShell::RecreateFramesFor(nsIContent* aContent)
+{
+  NS_ENSURE_TRUE(mPresContext, NS_ERROR_FAILURE);
+
+  nsCOMPtr<nsIStyleSet> styleSet;
+  nsresult rv = GetStyleSet(getter_AddRefs(styleSet));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsCOMPtr<nsIStyleFrameConstruction> frameConstruction;
+  rv = styleSet->GetStyleFrameConstruction(getter_AddRefs(frameConstruction));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // Don't call RecreateFramesForContent since that is not exported and we want
+  // to keep the number of entrypoints down.
+
+  nsStyleChangeList changeList;
+  changeList.AppendChange(nsnull, aContent, nsChangeHint_ReconstructFrame);
+  return frameConstruction->ProcessRestyledFrames(changeList, mPresContext);
 }
 
 NS_IMETHODIMP

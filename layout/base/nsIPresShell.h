@@ -288,6 +288,10 @@ public:
   NS_IMETHOD CancelReflowCommand(nsIFrame* aTargetFrame, nsReflowType* aCmdType) = 0;
   NS_IMETHOD CancelAllReflowCommands() = 0;
 
+  /**
+   * Recreates the frames for a node
+   */
+  NS_IMETHOD RecreateFramesFor(nsIContent* aContent) = 0;
 
   /**
    * Determine if it is safe to flush all pending notifications
