@@ -918,13 +918,13 @@ nsMsgIncomingServer::ClearAllValues()
 NS_IMETHODIMP
 nsMsgIncomingServer::RemoveFiles()
 {
-	// this is not ready for prime time.  the problem is that if files are in use, they won't
-	// get deleted properly.  for example, when we get here, we may have .msf files in open
-	// and in use.  I need to think about this some more.
+        // IMPORTANT, see bug #77652
+        // don't turn this code on yet.  we don't inform the user that
+	// we are going to be deleting the directory, and they might have
+	// tweaked their localPath pref for this server to point to 
+	// somewhere they didn't want deleted.
+        // until we tell them, we shouldn't do the delete.
 #if 0
-#ifdef DEBUG_MSGINCOMING_SERVER
-	printf("remove files for %s\n", (const char *)m_serverKey);
-#endif /* DEBUG_MSGINCOMING_SERVER */
 	nsresult rv = NS_OK;
 	nsCOMPtr <nsIFileSpec> localPath;
 	rv = GetLocalPath(getter_AddRefs(localPath));
