@@ -55,6 +55,7 @@
 #MOZ_CO_TAG = <tag>
 NSPR_CO_TAG = NSPRPUB_CLIENT_BRANCH
 PSM_CO_TAG = SECURITY_CLIENT_BRANCH
+LDAPCSDK_CO_TAG = LDAPCSDK_40_BRANCH
 BUILD_MODULES = all
 
 #######################################################################
@@ -188,6 +189,16 @@ endif
 CVSCO_NSPR = cvs $(CVS_FLAGS) co $(NSPR_CO_FLAGS) $(CVS_CO_DATE_FLAGS) $(NSPR_CO_MODULE)
 
 ####################################
+# CVS defines for the C LDAP SDK
+#
+LDAPCSDK_CO_MODULE = DirectorySDKSourceC
+LDAPCSDK_CO_FLAGS := -P
+ifdef LDAPCSDK_CO_TAG
+  LDAPCSDK_CO_FLAGS := $(LDAPCSDK_CO_FLAGS) -r $(LDAPCSDK_CO_TAG)
+endif
+CVSCO_LDAPCSDK = cvs $(CVS_FLAGS) co $(LDAPCSDK_CO_FLAGS) $(CVS_CO_DATE_FLAGS) $(LDAPCSDK_CO_MODULE)
+
+####################################
 # CVS defines for standalone modules
 #
 ifneq ($(BUILD_MODULES),all)
@@ -262,6 +273,7 @@ real_checkout:
 	  if test -f $$failed; then false; else true; fi; }; \
 	cvs_co $(CVSCO_NSPR) && \
 	cvs_co $(CVSCO_PSM) && \
+        cvs_co $(CVSCO_LDAPCSDK) && \
 	cvs_co $(CVSCO_SEAMONKEY)
 	@echo "checkout finish: "`date` | tee -a $(CVSCO_LOGFILE)
 	@: Check the log for conflicts. ;\
