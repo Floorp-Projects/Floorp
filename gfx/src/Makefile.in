@@ -144,3 +144,6 @@ endif
 libs:: icon_0.gif icon_1.gif
 	$(INSTALL) -m 555 $^ $(DIST)/bin/res/gfx
 
+install:: icon_0.gif icon_1.gif
+	$(SYSINSTALL) -m 555 $^ $(DESTDIR)$(mozappdir)/res/gfx
+

@@ -739,6 +739,9 @@ endif
 endif
 endif # WINNT
 
+# Use nsinstall in copy mode to install files on the system
+SYSINSTALL	= $(NSINSTALL) -t
+
 ######################################################################
 ### Java Stuff - see common.mk
 ######################################################################

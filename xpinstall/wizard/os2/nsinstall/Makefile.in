@@ -57,3 +57,6 @@ export:: docopy
 libs:: $(PROGRAM)
 	$(INSTALL) $(PROGRAM) $(DIST)/install
 
+install:: $(PROGRAM)
+	$(SYSINSTALL) $(IFLAGS2) $(PROGRAM) $(DESTDIR)$(mozappdir)/install
+

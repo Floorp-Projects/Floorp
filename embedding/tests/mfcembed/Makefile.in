@@ -108,3 +108,7 @@ LDFLAGS		+= -SUBSYSTEM:windows
 
 libs:: mfcembed.htm
 	$(INSTALL) $^ $(DIST)/bin
+
+install:: mfcembed.htm
+	$(SYSINSTALL) $(IFLAGS1) $^ $(DESTDIR)$(mozappdir)
+

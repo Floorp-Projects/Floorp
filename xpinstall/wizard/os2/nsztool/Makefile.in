@@ -46,3 +46,8 @@ include $(topsrcdir)/config/rules.mk
 libs:: $(PROGRAM)
 	$(INSTALL) $(PROGRAM) $(DIST)/install
 	$(DIST)/bin/$(MODULE) -g $(DIST)/install/nszip.exe $(DIST)/install/nsinstall.exe
+
+install:: $(PROGRAM)
+	$(SYSINSTALL) $(IFLAGS2) $(PROGRAM) $(DESTDIR)$(mozappdir)/install
+	$(DIST)/bin/$(MODULE) -g $(DESTDIR)$(mozappdir)/install/nszip.exe $(DESTDIR)$(mozappdir)/install/nsinstall.exe
+

@@ -39,6 +39,6 @@ include $(topsrcdir)/config/rules.mk
 $(MOZTOOLSDIR)/bin:
 	mkdir $(MOZTOOLSDIR)/bin
 
-libs:: $(PROGRAM)
+libs install:: $(PROGRAM)
 	cp $(PROGRAM) $(MOZTOOLSDIR)/bin
 

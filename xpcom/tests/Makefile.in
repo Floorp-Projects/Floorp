@@ -96,3 +96,6 @@ endif
 libs::
 	$(INSTALL) $(srcdir)/test.properties $(DIST)/bin/res
 
+install::
+	$(SYSINSTALL) $(IFLAGS1) $(srcdir)/test.properties $(DESTDIR)$(mozappdir)/res
+

@@ -47,8 +47,5 @@ XPIDLSRCS = \
       nsIAccessibleProvider.idl \
       $(NULL)
 
-EXPORTS = \
-  $(NULL)
-
 include $(topsrcdir)/config/rules.mk
 

@@ -30,9 +30,14 @@ MOZILLA_VERSION = @MOZILLA_VERSION@
 prefix		= @prefix@
 exec_prefix	= @exec_prefix@
 bindir		= @bindir@
-includedir	= @includedir@
+includedir	= @includedir@/mozilla-$(MOZILLA_VERSION)
 libdir		= @libdir@
 datadir		= @datadir@
+mandir		= @mandir@
+
+mozappdir	= $(libdir)/mozilla-$(MOZILLA_VERSION)
+mredir		= $(libdir)/mre/mre-$(MOZILLA_VERSION)
+mrelibdir	= $(mredir)/lib
 
 DIST		= $(DEPTH)/dist
 

@@ -131,3 +131,6 @@ endif
 libs:: $(EXPORT_RESOURCE)
 	$(INSTALL) $^ $(DIST)/bin/res
 
+install:: $(EXPORT_RESOURCE)
+	$(SYSINSTALL) $(IFLAGS1) $^ $(DESTDIR)$(mozappdir)/res 
+

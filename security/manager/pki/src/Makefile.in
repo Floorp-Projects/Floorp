@@ -48,9 +48,6 @@ MODULE_NAME	= PKI
 EXPORT_LIBRARY	= 1
 META_COMPONENT	= crypto
 
-EXPORTS =  \
-	$(NULL)
-
 CPPSRCS = \
 	nsNSSDialogs.cpp \
 	nsPKIModule.cpp \
@@ -82,7 +79,4 @@ EXTRA_DSO_LDOPTS += \
 		$(MOZ_COMPONENT_LIBS) \
 		$(MOZ_JS_LIBS) \
 		$(NULL)
-
-EXTRA_LIBS	+= \
-        $(NULL)
 

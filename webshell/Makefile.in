@@ -73,3 +73,9 @@ libs::
 	$(INSTALL) $(EXPORT_RESOURCE_SAMPLES) $(DIST)/bin/res/samples
 	$(INSTALL) $(EXPORT_RESOURCE_THROBBER) $(DIST)/bin/res/throbber
 	$(INSTALL) $(srcdir)/tests/viewer/resources/viewer.properties $(DIST)/bin/res
+
+install::
+	$(SYSINSTALL) $(IFLAGS1) $(EXPORT_RESOURCE_SAMPLES) $(DESTDIR)$(mozappdir)/res/samples
+	$(SYSINSTALL) $(IFLAGS1) $(EXPORT_RESOURCE_THROBBER) $(DESTDIR)$(mozappdir)/res/throbber
+	$(SYSINSTALL) $(IFLAGS1) $(srcdir)/tests/viewer/resources/viewer.properties $(DESTDIR)$(mozappdir)/res
+

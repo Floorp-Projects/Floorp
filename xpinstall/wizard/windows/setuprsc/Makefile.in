@@ -55,3 +55,6 @@ export:: $(EXPORTS)
 libs:: $(SHARED_LIBRARY)
 	$(INSTALL) $< $(DIST)/install
 
+install:: $(SHARED_LIBRARY)
+	$(INSTALL) $< $(DESTDIR)$(mozappdir)/install
+

@@ -30,3 +30,7 @@ include $(topsrcdir)/config/rules.mk
 
 libs:: $(TARGETS)
 	$(INSTALL) $(srcdir)/platformHTMLBindings.xml $(DIST)/bin/res/builtin
+
+install:: platformHTMLBindings.xml
+	$(SYSINSTALL) $(IFLAGS1) $< $(DESTDIR)$(mozappdir)/res/builtin
+

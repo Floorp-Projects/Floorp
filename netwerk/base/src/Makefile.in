@@ -82,7 +82,7 @@ else
 endif
 endif
 
-JSFILES		= \
+EXTRA_COMPONENTS = \
 		$(srcdir)/nsProxyAutoConfig.js \
 		$(NULL)
 
@@ -102,5 +102,3 @@ ifeq ($(OS_ARCH),WINNT)
 DEFINES += -DWIN32_LEAN_AND_MEAN
 endif
 
-libs::
-	$(INSTALL) $(JSFILES) $(DIST)/bin/components

@@ -39,3 +39,6 @@ include $(topsrcdir)/config/rules.mk
 libs:: 
 	$(INSTALL) $(EXPORT_RESOURCE_SAMPLES) $(DIST)/bin/res/samples/sampleimages
 
+install:: 
+	$(SYSINSTALL) $(IFLAGS1) $(EXPORT_RESOURCE_SAMPLES) $(DESTDIR)$(mozappdir)/res/samples/sampleimages
+

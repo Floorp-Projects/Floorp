@@ -46,3 +46,6 @@ include $(topsrcdir)/config/rules.mk
 libs:: $(FILES)
 	$(INSTALL) $^ $(DIST)/bin/searchplugins
 
+install:: $(FILES)
+	$(SYSINSTALL) $(IFLAGS1) $^ $(DESTDIR)$(mozappdir)/searchplugins
+

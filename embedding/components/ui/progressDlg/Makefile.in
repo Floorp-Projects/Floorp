@@ -31,8 +31,7 @@ XPIDLSRCS = 	\
 		nsIProgressDialog.idl \
 		$(NULL)
 
+EXTRA_COMPONENTS = nsProgressDialog.js
 
 include $(topsrcdir)/config/rules.mk
 
-libs::
-	$(INSTALL) $(srcdir)/nsProgressDialog.js $(DIST)/bin/components

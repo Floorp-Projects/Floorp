@@ -30,11 +30,9 @@ XPIDLSRCS = \
 	nsIHelperAppLauncherDialog.idl \
 	$(NULL)
 
-JSCOMPONENTS = \
+EXTRA_COMPONENTS = \
 	nsHelperAppDlg.js \
 	$(NULL)
 
 include $(topsrcdir)/config/rules.mk
 
-libs:: $(JSCOMPONENTS)
-	$(INSTALL) $^ $(DIST)/bin/components

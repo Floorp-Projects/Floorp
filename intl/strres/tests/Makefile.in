@@ -57,3 +57,6 @@ INCLUDES	+= -I$(srcdir)/../src
 libs::
 	$(INSTALL) $(EXPORT_RESOURCE) $(DIST)/bin/res
 
+install::
+	$(SYSINSTALL) $(IFLAGS1) $(EXPORT_RESOURCE) $(DESTDIR)$(mozappdir)/res
+

@@ -55,6 +55,7 @@ FORCE_SHARED_LIB = 1
 FORCE_USE_PIC	= 1
 
 NO_DIST_INSTALL	= 1
+NO_INSTALL = 1
 
 include $(topsrcdir)/config/rules.mk
 
@@ -68,4 +69,8 @@ endif
 
 libs:: install-plugin
 
+install:: $(SHARED_LIBRARY)
+ifdef SHARED_LIBRARY
+	$(SYSINSTALL) $(IFLAGS2) $< $(DESTDIR)$(mozappdir)/plugins
+endif
 

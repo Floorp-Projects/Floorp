@@ -86,6 +86,9 @@ XMLTERM_SCRIPTS = \
 libs:: 
 	$(INSTALL) -m 555 $(XMLTERM_SCRIPTS) $(DIST)/bin
 
+install:: 
+	$(SYSINSTALL) -m 555 $(XMLTERM_SCRIPTS) $(DESTDIR)$(mozappdir)
+
 xpi::
 	zip $(DIST)/bin/$(XPIFILE) install.js
 	cd $(DIST); zip -g bin/$(XPIFILE) \

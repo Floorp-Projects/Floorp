@@ -61,3 +61,7 @@ EXPORT_RESOURCE_CONTENT = \
 libs::
 	$(INSTALL) $(EXPORT_RESOURCE_CONTENT) $(DIST)/bin/res/dtd
 	$(INSTALL) $(srcdir)/mathml.css $(DIST)/bin/res
+
+install::
+	$(SYSINSTALL) $(IFLAGS1) $(EXPORT_RESOURCE_CONTENT) $(DESTDIR)$(mozappdir)/res/dtd
+	$(SYSINSTALL) $(IFLAGS1) $(srcdir)/mathml.css $(DESTDIR)$(mozappdir)/res
