@@ -47,30 +47,30 @@ Contributor(s):
   <script type="application/x-javascript" src="chrome://browser/content/find/findDialog.js"/>
   <stringbundle id="findBundle" src="chrome://global/browser/locale/find/findDialog.properties"/>
   
-  <vbox flex="1">
   <hbox flex="1">
-    <label value="&findField.label;" accesskey="&findField.accesskey;" control="dialog.findKey"/>
-    <textbox id="dialog.findKey" flex="1" oninput="doEnabling();"/>
-    <vbox align="start">
+    <vbox flex="1">
+      <hbox flex="1">
+        <label value="&findField.label;" accesskey="&findField.accesskey;" control="dialog.findKey"/>
+        <textbox id="dialog.findKey" flex="1" oninput="doEnabling();"/>
+      </hbox>
+      <hbox flex="1">
+        <vbox pack="center" flex="1">
+          <checkbox id="dialog.caseSensitive" label="&caseSensitiveCheckbox.label;" accesskey="&caseSensitiveCheckbox.accesskey;"/>
+          <checkbox id="dialog.wrap" label="&wrapCheckbox.label;" accesskey="&wrapCheckbox.accesskey;"/>
+        </vbox>
+        <groupbox orient="horizontal" align="start" flex="1">
+          <caption label="&direction.label;"/>
+          <radiogroup orient="horizontal" flex="1">
+            <radio id="radioUp" label="&up.label;" accesskey="&up.accesskey;"/>
+            <radio id="radioDown" label="&down.label;" accesskey="&down.label;" selected="true"/>
+          </radiogroup>
+        </groupbox>
+      </hbox>
+    </vbox>
+    <vbox flex="1">
       <button id="btnFind" label="&findButton.label;" accesskey="&findButton.accesskey;"
               default="true" oncommand="return onAccept();"/>
-    </vbox>
-  </hbox>
-  <hbox flex="1">
-    <vbox pack="center" flex="1">
-      <checkbox id="dialog.caseSensitive" label="&caseSensitiveCheckbox.label;" accesskey="&caseSensitiveCheckbox.accesskey;"/>
-      <checkbox id="dialog.wrap" label="&wrapCheckbox.label;" accesskey="&wrapCheckbox.accesskey;"/>
-    </vbox>
-    <groupbox orient="horizontal" align="start" flex="1">
-      <caption label="&direction.label;"/>
-      <radiogroup orient="horizontal" flex="1">
-        <radio id="radioUp" label="&up.label;" accesskey="&up.accesskey;"/>
-        <radio id="radioDown" label="&down.label;" accesskey="&down.label;" selected="true"/>
-      </radiogroup>
-    </groupbox>
-    <vbox align="start">
       <button label="&cancelButton.label;" oncommand="close();"/>
     </vbox>
   </hbox>
-  </vbox>
 </window>

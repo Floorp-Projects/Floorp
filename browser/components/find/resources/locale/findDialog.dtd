@@ -6,7 +6,7 @@
 <!ENTITY findField.accesskey "n">
 <!ENTITY caseSensitiveCheckbox.label "Match case">
 <!ENTITY caseSensitiveCheckbox.accesskey "c">
-<!ENTITY wrapCheckbox.label "Wrap around">
+<!ENTITY wrapCheckbox.label "Wrap">
 <!ENTITY wrapCheckbox.accesskey "W">
 <!ENTITY backwardsCheckbox.label "Search backwards">
 <!ENTITY backwardsCheckbox.accesskey "b">
