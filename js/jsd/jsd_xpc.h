@@ -42,9 +42,9 @@
 #include "nsCOMPtr.h"
 #include "nspr.h"
 
-#if defined(DEBUG_rginda_l)
-#   define DEBUG_verbose
-#endif
+// #if defined(DEBUG_rginda_l)
+// #   define DEBUG_verbose
+// #endif
 
 struct LiveEphemeral {
     /* link in a chain of live values list */
