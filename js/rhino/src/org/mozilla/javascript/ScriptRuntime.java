@@ -709,10 +709,10 @@ public class ScriptRuntime {
         } else if (t instanceof EcmaError) {
             return ((EcmaError)t).getErrorObject();
         } else {
-            if (!(t instanceof WrappedException)) Context.codeBug();
-            do {
+            if (!(t instanceof EvaluatorException)) Context.codeBug();
+            while (t instanceof WrappedException) {
                 t = ((WrappedException)t).getWrappedException();
-            } while (t instanceof WrappedException);
+            }
             if (t instanceof JavaScriptException) {
                 return ((JavaScriptException)t).getValue();
             } else if (t instanceof EcmaError) {
