@@ -32,7 +32,7 @@
 # complete rewrite by Ken Estes, Mail.com (kestes@staff.mail.com).
 # Contributor(s): 
 
-package TinderDB::VC;
+package TinderDB::VC_CVS;
 
 # the raw CVS implemenation of the Version Control DB for Tinderbox.
 # This column of the status table will report who has changed files in
@@ -129,7 +129,7 @@ use TreeData;
 use VCDisplay;
 
 
-$VERSION = ( qw $Revision: 1.12 $ )[1];
+$VERSION = ( qw $Revision: 1.13 $ )[1];
 
 @ISA = qw(TinderDB::BasicTxtDB);
 
@@ -137,7 +137,7 @@ $VERSION = ( qw $Revision: 1.12 $ )[1];
 # HTML columns.  This registers the subclass with TinderDB and defines
 # the order of the HTML columns.
 
-push @TinderDB::HTML_COLUMNS, TinderDB::VC->new();
+push @TinderDB::HTML_COLUMNS, TinderDB::VC_CVS->new();
 
 
 
@@ -209,8 +209,8 @@ sub time2cvsformat {
         gmtime($time);
   $mon++;
   $year += 1900;
-  $cvs_date_str = sprintf("%02u/%02u/%04u %02u:%02u:%02u GMT",
-                          $mon, $mday, $year, $hour, $min, $sec);
+  my ($cvs_date_str) = sprintf("%02u/%02u/%04u %02u:%02u:%02u GMT",
+                               $mon, $mday, $year, $hour, $min, $sec);
 
   return $cvs_date_str;
 }
@@ -235,49 +235,209 @@ sub trim_db_history {
 }
 
 
+# Return the most recent times that we recieved treestate and checkin
+# data.
+
+sub find_last_data {
+  my ($tree) = @_;
+
+  # sort numerically descending
+  my (@times) = sort {$b <=> $a} keys %{ $DATABASE{$tree} };
+
+  my ($last_tree_data, $second2last_tree_data, $last_cvs_data);
+
+  foreach $time (@times) {
+
+    # We must check $second2last_tree_data before $last_tree_data or
+    # we may end up with both pointing to the same entry.
+
+    (defined($last_tree_data)) &&
+      (!defined($second2last_tree_data)) &&
+	(defined($DATABASE{$tree}{$time}{'treestate'})) &&
+	  ($second2last_tree_data = $time);
+
+    (!defined($last_tree_data)) &&
+      (defined($DATABASE{$tree}{$time}{'treestate'})) &&
+	($last_tree_data = $time);
+    
+    (!defined($last_cvs_data)) &&
+      (defined($DATABASE{$tree}{$time}{'author'})) &&
+	($last_cvs_data = $time);
+    
+    
+    # do not iterate through the whole histroy.  Stop after we have
+    # the data we need.
+    
+    (defined($last_cvs_data)) &&
+      (defined($second2last_cvs_data)) &&
+	(defined($last_tree_data)) &&
+	  last;
+
+  } # foreach $time (@times) 
+
+
+  return ($last_tree_data, $second2last_tree_data, $last_cvs_data);
+}
+
+
+
+# Hold this here for a minute while I debug a new version
+# this will be deleted in about 5 minutes.
+
+sub foo {
+  my ($tree) = @_;
+
+  # sort numerically descending
+  my (@times) = sort {$b <=> $a} keys %{ $DATABASE{$tree} };
+
+  my ($last_data);
+
+  my($current_state, $current_begin, @series_times, @delete);
+
+  foreach $time (@times) {
+    
+    if (defined($DATABASE{$tree}{$time}{'treestate'})) {
+      
+      if (
+	  ($DATABASE{$tree}{$time}{'treestate'} eq $current_state) &&
+	  (($current_begin - $time) < $main::SECONDS_PER_HOUR)
+	  
+	 ) {
+
+	# if the new state is part of a series of states then add it
+	# to the list.
+
+	push @series_times, $time;
+
+      }else{
+
+	# list complete  or initalize for first time through
+      
+	# schedule a purge if list big enough
+
+	if(scalar(@series_times) > 2) {
+
+	  # Leave the two outlying data points of the series but purge
+	  # the middle ones.
+
+	  shift @series_times;
+	  pop @series_times;
+          push @delete, @series_times;
+	}
+
+	# start again with the new state as the beginning of the
+	# series.
+
+	undef @series_times;
+	push @series_times, $time;
+	$current_state = $DATABASE{$tree}{$time}{'treestate'};
+	$current_begin = $time;
+
+      }
+
+    } # if (defined($DATABASE{$tree}{$time}{'treestate'})
+
+        
+    # find the last time we got data
+
+    (defined($DATABASE{$tree}{$time})) &&
+    (defined($DATABASE{$tree}{$time}{'author'})) &&
+      (!defined($last_data)) &&
+	($last_data = $time);
+    
+    # do not iterate through the whole histroy.  Stop after not more
+    # then two complete series have been done.
+
+    (defined($last_data)) &&
+      ( $time < ($main::TIME - (2*$main::SECONDS_PER_HOUR) ) ) && 
+        last;
+
+  } # foreach $time (@times) 
+
+  # schedule a purge if list big enough
+  
+  if(scalar(@series_times) > 2) {
+    
+    # Leave the two outlying data points of the series but purge
+    # the middle ones.
+    
+    shift @series_times;
+    pop @series_times;
+    push @delete, @series_times;
+  }
+  
+
+  # actually remove the extra data 
+
+  foreach $time (@delete) {
+    delete $DATABASE{$tree}{$time}{'treestate'};
+    
+    (defined($DATABASE{$tree}{$time})) &&
+      (scalar(%{ $DATABASE{$tree}{$time} }) == 0) &&
+        delete $DATABASE{$tree}{$time};
+  }
+
+  return $last_data;
+}
+
+
+
+
 # get the recent data from CVS and the treestate file.
 
 sub apply_db_updates {
   my ($self, $tree,) = @_;
   
-  # VC_Bonsai provides a TreeState implementation but most VC
-  # implementations will not
+  my ($new_tree_state) = TinderHeader::gettree_header('TreeState', $tree);
+  my ($last_tree_data, $second2last_tree_data, $last_cvs_data) = 
+    find_last_data($tree);
 
-  my ($tree_state) = TinderHeader::gettree_header('TreeState', $tree);
- 
-  # sort numerically descending
-  @times = sort {$b <=> $a} keys %{ $DATABASE{$tree} };
+  # Store the latest treestate in the database along with the checkin
+  # data.
 
-  my $last_data = 0;
-  foreach $time (@times) {
+  # Take this opportunity to perform an optimization of the database.
 
-    # Purge duplicate 'treestate' entries to keep the DB size down.  
-    # Data::Dumper takes a long time and this really helps speed things up.
+  # We purge duplicate 'treestate' entries (entries at consecutive
+  # times which have the same state) to keep the DB size down.
+  # Data::Dumper takes a long time and reducing the data that it needs
+  # to process really helps speed things up.
 
-    # If we delete too many duplicates then we loose information when
-    # the database is trimmed. We need to keep some duplicates arround
-    # for debuging and for "redundancy". Only delete duplicates during
-    # the list hour.  Notice we are still removing 90% of the duplicates.
+  # If we delete too many duplicates then we loose information when
+  # the database is trimmed. We need to keep some duplicates arround
+  # for debuging and for "redundancy". Only delete duplicates during
+  # the last hour.  Notice we are still removing 90% of the
+  # duplicates.
 
-    ( ($main::TIME - $time) < $main::SECONDS_PER_HOUR ) &&
-    ($DATABASE{$tree}{$time}{'treestate'}) &&
-    ($DATABASE{$tree}{$time}{'treestate'} eq $tree_state) &&
-      delete $DATABASE{$tree}{$time}{'treestate'};
+  # If we have three data points in a row, and all of them have the
+  # same state and the oldest is less then an hour old, then we can
+  # delete the middle state.  While writing this code I kept trying to
+  # make do with only one older state being remembered.  The problem
+  # is that if you keep deleting the oldest member you always have
+  # exactly one entry which is only five minutes old.
+
+  if ( 
+      defined($last_tree_data) && 
+      defined($second2last_tree_data) &&
+
+      ($new_tree_state eq $DATABASE{$tree}{$last_tree_data}{'treestate'}) &&
+      ($new_tree_state eq $DATABASE{$tree}{$second2last_tree_data}{'treestate'}) &&
+
+      ( ($main::TIME - $second2last_tree_data) < $main::SECONDS_PER_HOUR )
+     ) {
+    delete $DATABASE{$tree}{$last_tree_data}{'treestate'};
     
-    # find the last time we got CVS data
-    ($DATABASE{$tree}{$time}{'author'}) || next;
-    $last_data = $time;
-    last;
- } 
+    (scalar(%{ $DATABASE{$tree}{$last_tree_data} }) == 0) &&
+      delete $DATABASE{$tree}{$last_tree_data};
+  }
 
-  $DATABASE{$tree}{$main::TIME}{'treestate'} = $tree_state;
-
-  ($last_data) ||
-   ($last_data = $main::TIME - $TinderDB::TRIM_SECONDS );
+  $DATABASE{$tree}{$main::TIME}{'treestate'} = $new_tree_state;
+   
+  ($last_cvs_data) ||
+   ($last_cvs_data = $main::TIME - $TinderDB::TRIM_SECONDS );
   
-  my $cvs_date_str = time2cvsformat($last_data);
+  my ($cvs_date_str) = time2cvsformat($last_cvs_data);
 
-  my $num_updates = 0;
+  my ($num_updates) = 0;
 
   # see comments about CVS history at the top of this file for details
   # about this commmand and limitations in CVS.
@@ -285,10 +445,10 @@ sub apply_db_updates {
   # for testing here is a good command at my site
   #  cvs -d /devel/java_repository history -c -a -D '400000 seconds ago' 
 
-  my @cmd = ('cvs', 
-             '-d', $TreeData::VC_TREE{$tree}{'root'}, 
-             'history',
-             '-c', '-a', '-D', $cvs_date_str,);
+  my (@cmd) = ('cvs', 
+               '-d', $TreeData::VC_TREE{$tree}{'root'}, 
+               'history',
+               '-c', '-a', '-D', $cvs_date_str,);
 
 
   # We have a good chance that all the trees we are interested in will
@@ -298,7 +458,7 @@ sub apply_db_updates {
   # possible.
 
 
-  my @cvs_output = main::cache_cmd(@cmd);
+  my (@cvs_output) = main::cache_cmd(@cmd);
 
   if ($cvs_output[0] !~  m/^No records selected.\n/) {
 
@@ -409,7 +569,7 @@ sub status_table_legend {
            "</td></tr></thead>\n");
 
   foreach $state (TreeData::get_all_tree_states()) {
-    my $color = TreeData::TreeState2color($state);
+    my ($color) = TreeData::TreeState2color($state);
     $out .= ("\t\t<tr bgcolor=\"$color\">".
              "<td>Tree State: $state</td></tr>\n");
   }
@@ -463,7 +623,7 @@ sub status_table_start {
 sub status_table_row {
   my ($self, $row_times, $row_index, $tree, ) = @_;
 
-  my @outrow = ();
+  my (@outrow) = ();
 
   # we assume that tree states only change rarely so there are very
   # few cells which have more then one state associated with them.
@@ -472,7 +632,7 @@ sub status_table_row {
   # find all the authors who changed code at any point in this cell
   # find the tree state for this cell.
 
-  my %authors = ();
+  my (%authors) = ();
   
   while (1) {
    my ($time) = $DB_TIMES[$NEXT_DB];
@@ -482,15 +642,23 @@ sub status_table_row {
 
     $NEXT_DB++;
 
-    if ($DATABASE{$tree}{$time}{'treestate'}) {
+    if (defined($DATABASE{$tree}{$time}{'treestate'})) {
       $LAST_TREESTATE = $DATABASE{$tree}{$time}{'treestate'};
     }
 
-    foreach $author (keys %{ $DATABASE{$tree}{$time}{'author'} }) {
-      foreach $file (keys %{ $DATABASE{$tree}{$time}{'author'}{$author} }) {
-        $authors{$author}{$time}{$file} = 1;
-      }
-    }
+    # Now invert the data structure.
+   
+    # Inside each cell, we want all the posts by the same author to
+    # appear together.  The previous data structure allowed us to find
+    # out what data was in each cell.
+   if (defined($DATABASE{$tree}{$time}{'author'})) {
+     foreach $author (keys %{ $DATABASE{$tree}{$time}{'author'} }) {
+       foreach $file (keys %{ $DATABASE{$tree}{$time}{'author'}{$author} }) {
+         $authors{$author}{$time}{$file} = 1;
+       }
+     }
+   }
+
   } # while (1)
 
   # If there is no treestate, then the tree state has not changed
@@ -498,30 +666,32 @@ sub status_table_row {
   # apply_db_updates().  It is possible that there are no treestates at
   # all this should not prevent the VC column from being rendered.
 
-  my $color = TreeData::TreeState2color($LAST_TREESTATE);
+  my ($color) = TreeData::TreeState2color($LAST_TREESTATE);
 
   ($LAST_TREESTATE) && ($color) &&
     ($color = "bgcolor=$color");
   
-  my $query_links = '';
+  my ($query_links) = '';
   if ( scalar(%authors) ) {
     
     # find the times which bound the cell so that we can set up a
     # VC query.
-    
-    $maxdate = $row_times->[$row_index];
+
+    my ($mindate) = $row_times->[$row_index];
+
+    my ($maxdate);
     if ($row_index > 0){
-      $mindate = $row_times->[$row_index - 1];
+      $maxdate = $row_times->[$row_index - 1];
     } else {
-      $mindate = $main::TIME;
+      $maxdate = $main::TIME;
     }
-    my $format_maxdate = HTMLPopUp::timeHTML($maxdate);
-    my $format_mindate = HTMLPopUp::timeHTML($mindate);
-    my $time_interval_str = "$format_maxdate to $format_mindate",
+    my ($format_maxdate) = HTMLPopUp::timeHTML($maxdate);
+    my ($format_mindate) = HTMLPopUp::timeHTML($mindate);
+    my ($time_interval_str) = "$format_maxdate to $format_mindate";
 
     # create a string of all VC data for displaying with the checkin table
 
-    my $vc_info;
+    my ($vc_info);
     foreach $key ('module',) {
       $vc_info .= "$key: $TreeData::VC_TREE{$tree}{$key} <br>\n";
     }
@@ -588,12 +758,12 @@ sub status_table_row {
       # link point to its query method otherwise you want a 'mailto:'
       # link
 
-      my $query_link = "";
+      my ($query_link) = "";
       if ( 
           ($TinderConfig::VCDisplayImpl) && 
           ($TinderConfig::VCDisplayImpl =~ 'None') 
          ) {
-        
+
         $query_link .= 
           HTMLPopUp::Link(
                           "href" => "mailto: $author",
@@ -617,10 +787,11 @@ sub status_table_row {
       # can debug the HTML.
 
       $query_link = "\t\t".$query_link."\n";
+      my ($date_str) = localtime($mindate)."-".localtime($maxdate);
 
       $query_links .= (
                        "\t\t<!-- VC: ".("Author: $author, ".
-                                        "Time: '".localtime($time)."', ".
+                                        "Time: '$date_str', ".
                                         "Tree: $tree, ".
                                        "").
                        "  -->\n".
