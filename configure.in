@@ -3258,7 +3258,7 @@ dnl ========================================================
 
 MOZ_EXTENSIONS_DEFAULT=" cookie wallet content-packs xml-rpc xmlextras help pref transformiix venkman inspector irc universalchardet typeaheadfind"
 
-MOZ_EXTENSIONS_ALL="$MOZ_EXTENSIONS_DEFAULT xmlterm access-builtin p3p interfaceinfo" 
+MOZ_EXTENSIONS_ALL="$MOZ_EXTENSIONS_DEFAULT xmlterm access-builtin p3p interfaceinfo datetime finger" 
 
 MOZ_ARG_ENABLE_STRING(extensions,
 [  --enable-extensions     Enable extensions],
