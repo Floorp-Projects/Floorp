@@ -931,8 +931,10 @@ char *xpFileTypeToName(XP_FileType type) {
             return PL_strdup("%USER%%COOKIE_F%");
         case (xpHTTPCookiePermission):
             return PL_strdup("%USER%%COOKIE_PERMISSION_F%");
+#ifdef SingleSignon
         case (xpHTTPSingleSignon):
             return PL_strdup("%USER%%SIGNON_F%");
+#endif
 
         default:
             break;
@@ -1081,7 +1083,9 @@ NET_InitFilesAndDirs(void) {
     // Setup files.
     fileMgr->SetFileAssoc(COOKIE_FILE_TOK, COOKIE_FILE, USER_DIR_TOK);
     fileMgr->SetFileAssoc(COOKIE_PERMISSION_FILE_TOK, COOKIE_PERMISSION_FILE, USER_DIR_TOK);
+#ifdef SingleSignon
     fileMgr->SetFileAssoc(SIGNON_FILE_TOK, SIGNON_FILE, USER_DIR_TOK);
+#endif
     fileMgr->SetFileAssoc(CACHE_DB_F_TOK, CACHE_DB_FILE, CACHE_DIR_TOK);
     return TRUE;
 }
@@ -1466,7 +1470,9 @@ XP_FileOpen(const char * name, XP_FileType type, const XP_FilePerm perm)
         case xpFileToPost:
         case xpHTTPCookie:
         case xpHTTPCookiePermission:
+#ifdef SingleSignon
         case xpHTTPSingleSignon:
+#endif
         {
             XP_File fp;
             char* newName = WH_FileName(name, type);
