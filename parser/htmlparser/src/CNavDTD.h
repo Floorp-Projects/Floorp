@@ -527,10 +527,14 @@ protected:
     PRInt32             mLineNumber;
     nsParser*           mParser;
     nsITokenizer*       mTokenizer;
-#ifdef  NS_DEBUG
+
+// FAILING to define these variables causes 
+// the non-debug build to fail. -- gpk
+//#ifdef  NS_DEBUG
     PRUint32            mComputedCRC32;
     PRUint32            mExpectedCRC32;
-#endif
+//#endif
+
 };
 
 extern NS_HTMLPARS nsresult NS_NewNavHTMLDTD(nsIDTD** aInstancePtrResult);
