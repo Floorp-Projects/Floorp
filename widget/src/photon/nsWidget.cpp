@@ -310,7 +310,15 @@ NS_METHOD nsWidget::Show( PRBool bState ) {
 		  PtSetResources(mWidget, 1, &arg);
 		  EnableDamage( mWidget, PR_TRUE );
 		  PtDamageWidget(mWidget);
-			}
+#ifdef Ph_REGION_NOTIFY			
+		  PhRegion_t region;
+		  PtWidget_t *mWgt;
+		  mWgt = (PtWidget_t*) GetNativeData( NS_NATIVE_WIDGET );
+		  region.flags = Ph_REGION_NOTIFY | Ph_FORCE_BOUNDARY;
+		  region.rid = PtWidgetRid(mWgt);
+		  PhRegionChange(Ph_REGION_FLAGS, 0, &region, NULL, NULL);
+#endif
+		}
 		else {
 			PtWidgetToFront( mWidget );
 //			EnableDamage( mWidget, PR_FALSE );
