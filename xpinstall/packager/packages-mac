@@ -14,6 +14,13 @@
 viewer:defaults:profile:en-DE:*
 viewer:chrome:locales:en-DE:*
 
+[deflenus]
+;
+; default files for en-US
+viewer:defaults:profile:bookmarks.html
+viewer:defaults:profile:panels.rdf
+viewer:defaults:profile:search.rdf
+
 [xpcom]
 viewer:Component Registry
 viewer:Components:libjar.shlb 
