@@ -242,6 +242,11 @@ bin\res\samples\*
 bin\res\builtin\htmlBindings.xml
 bin\res\builtin\platformHTMLBindings.xml
 
+; download progress
+bin\components\nsProgressDialog.js
+bin\components\nsHelperAppDlg.js
+bin\components\nsDownloadProgressListener.js
+
 [mail]
 bin\msgbsutl.dll
 bin\components\addrbook.dll
