@@ -107,7 +107,6 @@ function Startup()
 
 function InitLanguageMenu(curLang)
 {
-  ClearMenulist(dialog.LanguageMenulist);
 
   var o1 = {};
   var o2 = {};
@@ -130,10 +129,10 @@ function InitLanguageMenu(curLang)
 
   var languageBundle;
   var regionBundle;
-  var menuStr;
   var menuStr2;
   var isoStrArray;
   var defaultIndex = 0;
+  var langId;
 
   // Try to load the language string bundle.
 
@@ -157,32 +156,42 @@ function InitLanguageMenu(curLang)
   for (var i = 0; i < dictList.length; i++)
   {
     try {
+      langId = dictList[i];
       isoStrArray = dictList[i].split("-");
 
-      if (languageBundle && isoStrArray[0])
-        menuStr = languageBundle.GetStringFromName(isoStrArray[0].toLowerCase());
+      dictList[i] = new Array(2); // first subarray element - pretty name
+      dictList[i][1] = langId;    // second subarray element - language ID
 
-      if (regionBundle && menuStr && isoStrArray.length > 1 && isoStrArray[1])
+      if (languageBundle && isoStrArray[0])
+        dictList[i][0] = languageBundle.GetStringFromName(isoStrArray[0].toLowerCase());
+
+      if (regionBundle && dictList[i][0] && isoStrArray.length > 1 && isoStrArray[1])
       {
         menuStr2 = regionBundle.GetStringFromName(isoStrArray[1].toLowerCase());
         if (menuStr2)
-          menuStr = menuStr + "/" + menuStr2;
+          dictList[i][0] = dictList[i][0] + "/" + menuStr2;
       }
 
-      if (!menuStr)
-        menuStr = dictList[i];
+      if (!dictList[i][0])
+        dictList[i][0] = dictList[i][1];
     } catch (ex) {
       // GetStringFromName throws an exception when
       // a key is not found in the bundle. In that
       // case, just use the original dictList string.
 
-      menuStr = dictList[i];
+      dictList[i][0] = dictList[i][1];
     }
+  }
+  
+  // note this is not locale-aware collation, just simple ASCII-based sorting
+  // we really need to add loacel-aware JS collation, see bug XXXXX
+  dictList.sort();
 
-    if (curLang && dictList[i] == curLang)
-      defaultIndex = i;
-
-    AppendLabelAndValueToMenulist(dialog.LanguageMenulist, menuStr, dictList[i]);
+  for (var i = 0; i < dictList.length; i++)
+  {
+    AppendLabelAndValueToMenulist(dialog.LanguageMenulist, dictList[i][0], dictList[i][1]);
+    if (curLang && dictList[i][1] == curLang)
+      defaultIndex = i+2; //first two items are pre-populated and fixed
   }
 
   // Now make sure the correct item in the menu list is selected.
@@ -386,10 +395,12 @@ function EditDictionary()
 
 function SelectLanguage()
 {
-  var item = dialog.LanguageMenulist.selectedItem;
-
   try {
-    spellChecker.SetCurrentDictionary(item.value);
+    var item = dialog.LanguageMenulist.selectedItem;
+    if (item.value != "more-cmd")
+      spellChecker.SetCurrentDictionary(item.value);
+    else
+      window.openDialog( getBrowserURL(), "_blank", "chrome,all,dialog=no,modal", xlateURL('urn:clienturl:composer:spellcheckers'));
   } catch (ex) {
     dump(ex);
   }
