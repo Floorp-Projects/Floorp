@@ -135,3 +135,6 @@
 <!ENTITY addressBookCmd.accesskey "A">
 
 <!ENTITY helpMenu.accesskey            "H">
+
+<!ENTITY walletPasswordManager.label     "Password Manager">
+<!ENTITY walletPasswordManager.accesskey "p">
