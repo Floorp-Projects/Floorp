@@ -39,21 +39,11 @@
 #include "nsISupportsArray.h"
 #include "nsIEnumerator.h"
 
-/* for XP_FilePerm */
-#include "xp_file.h"
-
-/* for XP_HashTable */
-#include "xp_hash.h"
-
-/* for XP_StripLine */
-#include "xp_str.h"
-
-/* for LINEBREAK, etc */
-#include "fe_proto.h"
-
 #include "prprf.h"
 #include "prmem.h"
 #include "plstr.h"
+#include "plhash.h"
+#include "prio.h"
 
 /* temporary hacks to test if this compiles */
 typedef void MSG_GroupName;
@@ -356,7 +346,7 @@ private:
 	int ReorderGroup (nsINNTPNewsgroup *groupToMove, nsINNTPNewsgroup *groupToMoveBefore, PRInt32 *newIdx);
 
 protected:
-	void OpenGroupFile(const XP_FilePerm permissions = XP_FILE_UPDATE_BIN);
+	void OpenGroupFile(const PRIntn = PR_WRONLY);
 	PRInt32 RememberLine(char* line);
 	static PRInt32 ProcessLine_s(char* line, PRUint32 line_size, void* closure);
 	PRInt32 ProcessLine(char* line, PRUint32 line_size);
@@ -431,7 +421,7 @@ protected:
 	nsVoidArray m_searchableHeaders;
 	// ### mwelch Added to determine what charsets can be used
 	//            for each table.
-	XP_HashTable m_searchableGroupCharsets;
+	PLHashTable * m_searchableGroupCharsets;
 
 	nsVoidArray m_propertiesForGet;
 	nsVoidArray m_valuesForGet;
@@ -458,7 +448,7 @@ protected:
 									  // hostinfo file opened.  This is the
 									  // one.
 
-	XP_File m_groupFile;		// File handle to the hostinfo file.
+	PRFileDesc * m_groupFile;		// File handle to the hostinfo file.
 	char* m_groupFilePermissions; // Permissions used to create the above
 								  // file handle.
 
@@ -474,14 +464,6 @@ protected:
 };
 
 nsNNTPHost * nsNNTPHost::M_FileOwner = NULL;
-
-extern "C" {
-	extern int MK_OUT_OF_MEMORY;
-	extern int MK_UNABLE_TO_OPEN_NEWSRC;
-	extern int MK_MIME_ERROR_WRITING_FILE;
-
-	extern int MK_MSG_CANT_MOVE_FOLDER;
-}
 
 NS_IMPL_ISUPPORTS(nsNNTPHost, GetIID())
 
@@ -503,8 +485,7 @@ nsNNTPHost::nsNNTPHost(const char *name, PRInt32 port)
 	if (port == 0) port = NEWS_PORT;
 	m_port = port;
 
-	m_searchableGroupCharsets = XP_HashTableNew(20, XP_StringHash,
-												(XP_HashCompFunction) PL_strcmp);
+	m_searchableGroupCharsets = PL_NewHashTable(20, PL_HashString, PL_CompareStrings, PL_CompareValues, nsnull, nsnull);
 
 	m_nameAndPort = NULL;
 	m_fullUIName = NULL;
@@ -565,7 +546,7 @@ nsNNTPHost::CleanUp() {
 		// We do NOT free the individual key/value pairs,
 		// because deleting m_searchableGroups above has
 		// already caused this to happen.
-		XP_HashTableDestroy(m_searchableGroupCharsets);
+		PL_HashTableDestroy(m_searchableGroupCharsets);
 		m_searchableGroupCharsets = NULL;
 	}
     return NS_OK;
@@ -574,7 +555,7 @@ nsNNTPHost::CleanUp() {
 
 
 void
-nsNNTPHost::OpenGroupFile(const XP_FilePerm permissions)
+nsNNTPHost::OpenGroupFile(const PRIntn permissions)
 {
 #ifdef PROTOCOL_DEBUG
 
@@ -1834,7 +1815,7 @@ nsNNTPHost::SwitchNewsToCategoryContainer(nsINNTPNewsgroup *newsInfo)
 	if (groupIndex != -1)
 	{
         // create a category container to hold this newsgroup
-		nsINNTPCategoryContainer *newCatCont;
+		nsINNTPCategoryContainer *newCatCont = nsnull;
         // formerly newsInfo->CloneIntoCategoryContainer();
 #if 0                           // not implemented yet
         NS_NewCategoryContainerFromNewsgroup(&newCatCont, newsInfo);
@@ -1978,7 +1959,7 @@ nsNNTPHost::GetDBDirName()
 		PL_strncpyz(hashedname, m_filename, MAX_HOST_NAME_LEN + 1);
 		if (needshash) {
 			PR_snprintf(hashedname + MAX_HOST_NAME_LEN - 8, 9, "%08lx",
-						(unsigned long) XP_StringHash2(m_filename));
+						(unsigned long) PL_HashString(m_filename));
 		}
 		m_dbfilename = new char [PL_strlen(hashedname) + 15];
 #if defined(XP_WIN16) || defined(XP_OS2)
@@ -2137,7 +2118,7 @@ nsNNTPHost::AddSearchableGroup (const char *group)
 
 			space++; // walk over to the start of the charsets
 			// Add the group -> charset association.
-			XP_Puthash(m_searchableGroupCharsets, ourGroup, space);
+			PL_HashTableAdd(m_searchableGroupCharsets, ourGroup, space);
 		}
 	}
     return NS_OK;
@@ -2200,7 +2181,7 @@ nsNNTPHost::QuerySearchableGroupCharsets(const char *group, char **result)
     if (gotGroup)
 	{
 		// Look up the searchable group for its supported charsets
-		*result = (char *) XP_Gethash(m_searchableGroupCharsets, searchableGroup, NULL);
+		*result = (char *) PL_HashTableLookup(m_searchableGroupCharsets, searchableGroup);
 	}
 
 	return NS_OK;
