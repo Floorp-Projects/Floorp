@@ -74,6 +74,8 @@ public:
 
   NS_IMETHOD    Writeln(JSContext* cx, jsval* argv, PRUint32 argc)=0;
 
+  NS_IMETHOD    Clear()=0;
+
   NS_IMETHOD    CaptureEvents(PRInt32 aEventFlags)=0;
 
   NS_IMETHOD    ReleaseEvents(PRInt32 aEventFlags)=0;
@@ -102,6 +104,7 @@ public:
   NS_IMETHOD    Open(JSContext* cx, jsval* argv, PRUint32 argc);  \
   NS_IMETHOD    Write(JSContext* cx, jsval* argv, PRUint32 argc);  \
   NS_IMETHOD    Writeln(JSContext* cx, jsval* argv, PRUint32 argc);  \
+  NS_IMETHOD    Clear();  \
   NS_IMETHOD    CaptureEvents(PRInt32 aEventFlags);  \
   NS_IMETHOD    ReleaseEvents(PRInt32 aEventFlags);  \
   NS_IMETHOD    RouteEvent(nsIDOMEvent* aEvt);  \
@@ -128,6 +131,7 @@ public:
   NS_IMETHOD    Open(JSContext* cx, jsval* argv, PRUint32 argc) { return _to Open(cx, argv, argc); }  \
   NS_IMETHOD    Write(JSContext* cx, jsval* argv, PRUint32 argc) { return _to Write(cx, argv, argc); }  \
   NS_IMETHOD    Writeln(JSContext* cx, jsval* argv, PRUint32 argc) { return _to Writeln(cx, argv, argc); }  \
+  NS_IMETHOD    Clear() { return _to Clear(); }  \
   NS_IMETHOD    CaptureEvents(PRInt32 aEventFlags) { return _to CaptureEvents(aEventFlags); }  \
   NS_IMETHOD    ReleaseEvents(PRInt32 aEventFlags) { return _to ReleaseEvents(aEventFlags); }  \
   NS_IMETHOD    RouteEvent(nsIDOMEvent* aEvt) { return _to RouteEvent(aEvt); }  \

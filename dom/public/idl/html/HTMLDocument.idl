@@ -43,6 +43,7 @@
      void                      open(/* ... */);
      void                      write(/* ... */);
      void                      writeln(/* ... */);
+     void                      clear();
 
      void captureEvents(in long eventFlags);
      void releaseEvents(in long eventFlags);
