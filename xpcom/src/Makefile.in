@@ -41,7 +41,6 @@ CPPSRCS		= \
 	nsSupportsArrayEnumerator.cpp \
 	nsConjoiningEnumerator.cpp	\
 	nsTraceRefcnt.cpp \
-	nsProxyEvent.cpp \
 	nsXPComFactory.cpp \
 	nsXPIDLString.cpp \
 	nsEventQueueService.cpp \
