@@ -48,13 +48,15 @@ struct ConverterInfo
 {
   nsString      * mCharset;
   const nsCID   * mCID;
+  PRBool          mFreeCID;
 
   ConverterInfo()
-  :  mCharset(nsnull), mCID(nsnull) {}
+  :  mCharset(nsnull), mCID(nsnull), mFreeCID(PR_FALSE) {}
 
   ~ConverterInfo()
   {
     if (mCharset != NULL) delete mCharset;
+    if (mFreeCID) delete (nsCID*)mCID;
   }
 };
 
@@ -281,11 +283,13 @@ nsresult nsCharsetConverterManager::CreateMapping()
         str.Assign(dest);
         GetCharsetName(&str,&mEncArray[mEncSize].mCharset);
         mEncArray[mEncSize].mCID = cid;
+        mEncArray[mEncSize].mFreeCID = PR_TRUE;
         mEncSize++;
       } else if (!strcmp(dest, "Unicode")) {
         str.Assign(src);
         GetCharsetName(&str,&mDecArray[mDecSize].mCharset);
         mDecArray[mDecSize].mCID = cid;
+        mDecArray[mEncSize].mFreeCID = PR_TRUE;
         mDecSize++;
       }
 
