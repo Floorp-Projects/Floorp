@@ -176,6 +176,7 @@ PRInt32 nsXULDocument::gRefCnt = 0;
 
 nsIAtom* nsXULDocument::kAttributeAtom;
 nsIAtom* nsXULDocument::kCommandUpdaterAtom;
+nsIAtom* nsXULDocument::kContextAtom;
 nsIAtom* nsXULDocument::kDataSourcesAtom;
 nsIAtom* nsXULDocument::kElementAtom;
 nsIAtom* nsXULDocument::kIdAtom;
@@ -185,9 +186,12 @@ nsIAtom* nsXULDocument::kOpenAtom;
 nsIAtom* nsXULDocument::kOverlayAtom;
 nsIAtom* nsXULDocument::kPersistAtom;
 nsIAtom* nsXULDocument::kPositionAtom;
+nsIAtom* nsXULDocument::kPopupAtom;
 nsIAtom* nsXULDocument::kRefAtom;
 nsIAtom* nsXULDocument::kRuleAtom;
+nsIAtom* nsXULDocument::kStyleAtom;
 nsIAtom* nsXULDocument::kTemplateAtom;
+nsIAtom* nsXULDocument::kTooltipAtom;
 
 nsIAtom* nsXULDocument::kCoalesceAtom;
 nsIAtom* nsXULDocument::kAllowNegativesAtom;
@@ -474,6 +478,7 @@ nsXULDocument::~nsXULDocument()
     if (--gRefCnt == 0) {
         NS_IF_RELEASE(kAttributeAtom);
         NS_IF_RELEASE(kCommandUpdaterAtom);
+        NS_IF_RELEASE(kContextAtom);
         NS_IF_RELEASE(kDataSourcesAtom);
         NS_IF_RELEASE(kElementAtom);
         NS_IF_RELEASE(kIdAtom);
@@ -483,9 +488,12 @@ nsXULDocument::~nsXULDocument()
         NS_IF_RELEASE(kOverlayAtom);
         NS_IF_RELEASE(kPersistAtom);
         NS_IF_RELEASE(kPositionAtom);
+        NS_IF_RELEASE(kPopupAtom);
         NS_IF_RELEASE(kRefAtom);
         NS_IF_RELEASE(kRuleAtom);
+        NS_IF_RELEASE(kStyleAtom);
         NS_IF_RELEASE(kTemplateAtom);
+        NS_IF_RELEASE(kTooltipAtom);
 
 	NS_IF_RELEASE(kCoalesceAtom);
 	NS_IF_RELEASE(kAllowNegativesAtom);
@@ -2782,7 +2790,46 @@ nsXULDocument::AddSubtreeToDocument(nsIContent* aElement)
         if (NS_FAILED(rv)) return rv;
     }
 
-    // 4. Recurse to children.
+    // 4. See if we've got any 'special' attributes that are
+    // document-specific, and need extra work to be done.
+    {
+        PRInt32 count;
+        aElement->GetAttributeCount(count);
+
+        for (PRInt32 i = 0; i < count; ++i) {
+            PRInt32 nameSpaceID;
+            nsCOMPtr<nsIAtom> attr;
+            aElement->GetAttributeNameAt(i, nameSpaceID, *getter_AddRefs(attr));
+
+            PRBool reset = PR_FALSE;
+
+            if (nameSpaceID == kNameSpaceID_None) {
+                nsIID iid;
+                rv = gXULUtils->GetEventHandlerIID(attr, &iid, &reset);
+                if (NS_FAILED(rv)) return rv;
+
+                if (! reset) {
+                    if ((attr.get() == kPopupAtom) ||
+                        (attr.get() == kTooltipAtom) ||
+                        (attr.get() == kContextAtom) ||
+                        (attr.get() == kStyleAtom)) {
+                        reset = PR_TRUE;
+                    }
+                }
+            }
+
+            if (reset) {
+                nsAutoString value;
+                rv = aElement->GetAttribute(nameSpaceID, attr, value);
+                if (NS_FAILED(rv)) return rv;
+
+                rv = aElement->SetAttribute(nameSpaceID, attr, value, PR_FALSE);
+                if (NS_FAILED(rv)) return rv;
+            }
+        }
+    }
+
+    // 5. Recurse to children.
     PRInt32 count;
     nsCOMPtr<nsIXULContent> xulcontent = do_QueryInterface(aElement);
     rv = xulcontent ? xulcontent->PeekChildCount(count) : aElement->ChildCount(count);
@@ -3427,6 +3474,7 @@ nsXULDocument::Init()
     if (gRefCnt++ == 0) {
         kAttributeAtom      = NS_NewAtom("attribute");
         kCommandUpdaterAtom = NS_NewAtom("commandupdater");
+        kContextAtom        = NS_NewAtom("context");
         kDataSourcesAtom    = NS_NewAtom("datasources");
         kElementAtom        = NS_NewAtom("element");
         kIdAtom             = NS_NewAtom("id");
@@ -3435,10 +3483,13 @@ nsXULDocument::Init()
         kOpenAtom           = NS_NewAtom("open");
         kOverlayAtom        = NS_NewAtom("overlay");
         kPersistAtom        = NS_NewAtom("persist");
+        kPopupAtom          = NS_NewAtom("popup");
         kPositionAtom       = NS_NewAtom("position");
         kRefAtom            = NS_NewAtom("ref");
         kRuleAtom           = NS_NewAtom("rule");
+        kStyleAtom          = NS_NewAtom("style");
         kTemplateAtom       = NS_NewAtom("template");
+        kTooltipAtom        = NS_NewAtom("tooltip");
 
         kCoalesceAtom       = NS_NewAtom("coalesceduplicatearcs");
         kAllowNegativesAtom = NS_NewAtom("allownegativeassertions");

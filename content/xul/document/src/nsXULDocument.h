@@ -462,6 +462,7 @@ protected:
 
     static nsIAtom*  kAttributeAtom;
     static nsIAtom*  kCommandUpdaterAtom;
+    static nsIAtom*  kContextAtom;
     static nsIAtom*  kDataSourcesAtom;
     static nsIAtom*  kElementAtom;
     static nsIAtom*  kIdAtom;
@@ -470,10 +471,13 @@ protected:
     static nsIAtom*  kOpenAtom;
     static nsIAtom*  kOverlayAtom;
     static nsIAtom*  kPersistAtom;
+    static nsIAtom*  kPopupAtom;
     static nsIAtom*  kPositionAtom;
     static nsIAtom*  kRefAtom;
     static nsIAtom*  kRuleAtom;
+    static nsIAtom*  kStyleAtom;
     static nsIAtom*  kTemplateAtom;
+    static nsIAtom*  kTooltipAtom;
 
     static nsIAtom*  kCoalesceAtom;
     static nsIAtom*  kAllowNegativesAtom;
