@@ -3996,7 +3996,10 @@ LO_ProcessTag(void *data_object, PA_Tag *tag, intn status)
         if (doc_data && doc_data->is_inline_stream && (!state || 
             (lo_InsideLayer(state) && !lo_IsCurrentLayerDynamic(state))))
             return 0;
-        
+
+        if (context->compositor)
+            CL_SetCompositorEnabled(context->compositor, PR_TRUE);
+
 		if (status == PA_ABORT)
 		{
 #ifdef OLD_MSGS
@@ -4204,7 +4207,11 @@ XP_TRACE(("Initializing new doc %d\n", doc_id));
         if (context->compositor) {
             lo_CreateDefaultLayers(context, &doc_layer, &body_layer);
             CL_ScrollCompositorWindow(context->compositor, 0, 0);
-            CL_SetCompositorEnabled(context->compositor, PR_TRUE);
+
+            /* Instead of enabling the compositor here, we do so at
+            the end of layout so that perceived performance increases
+            because blank page time is reduced. */
+            /* CL_SetCompositorEnabled(context->compositor, PR_TRUE); */
         }
 		
 		top_state = lo_NewTopState(context, doc_data->url);
