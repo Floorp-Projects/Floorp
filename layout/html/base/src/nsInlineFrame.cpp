@@ -216,7 +216,47 @@ nsInlineFrame::Reflow(nsIPresContext*          aPresContext,
   if (nsnull == aReflowState.mLineLayout) {
     return NS_ERROR_INVALID_ARG;
   }
-  DrainOverflow(aPresContext);
+
+  PRBool  lazilySetParentPointer = PR_FALSE;
+
+  // Check for an overflow list with our prev-in-flow
+  nsInlineFrame* prevInFlow = (nsInlineFrame*)mPrevInFlow;
+  if (nsnull != prevInFlow) {
+    nsIFrame* prevOverflowFrames = prevInFlow->GetOverflowFrames(aPresContext, PR_TRUE);
+
+    if (prevOverflowFrames) {
+      // When pushing and pulling frames we need to check for whether any
+      // views need to be reparented.
+      nsHTMLContainerFrame::ReparentFrameViewList(aPresContext, prevOverflowFrames,
+                                                  prevInFlow, this);
+
+      if (aReflowState.reason == eReflowReason_Initial) {
+        // If it's the initial reflow, then our child list must be empty, so
+        // just set the child list rather than calling InsertFrame(). This avoids
+        // having to get the last child frame in the list.
+        // Note that we don't set the parent pointer for the new frames. Instead wait
+        // to do this until we actually reflow the frame. If the overflow list contains
+        // thousands of frames this is a big performance issue (see bug #5588)
+        NS_ASSERTION(mFrames.IsEmpty(), "child list is not empty for initial reflow");
+        mFrames.SetFrames(prevOverflowFrames);
+        lazilySetParentPointer = PR_TRUE;
+
+      } else {
+        // Insert the new frames at the beginning of the child list
+        // and set their parent pointer
+        mFrames.InsertFrames(this, nsnull, prevOverflowFrames);
+      }
+    }
+  }
+
+  // It's also possible that we have an overflow list for ourselves
+  if (aReflowState.reason != eReflowReason_Initial) {
+    nsIFrame* overflowFrames = GetOverflowFrames(aPresContext, PR_TRUE);
+    if (overflowFrames) {
+      NS_ASSERTION(mFrames.NotEmpty(), "overflow list w/o frames");
+      mFrames.AppendFrames(nsnull, overflowFrames);
+    }
+  }
 
   if (IsFrameTreeTooDeep(aReflowState, aMetrics)) {
 #ifdef DEBUG_kipp
@@ -238,6 +278,7 @@ nsInlineFrame::Reflow(nsIPresContext*          aPresContext,
   irs.mPrevFrame = nsnull;
   irs.mNextInFlow = (nsInlineFrame*) mNextInFlow;
   irs.mNextRCFrame = nsnull;
+  irs.mSetParentPointer = lazilySetParentPointer;
   if (eReflowReason_Incremental == aReflowState.reason) {
     // Peel off the next frame in the path if this is an incremental
     // reflow aimed at one of the children.
@@ -299,32 +340,6 @@ nsInlineFrame::ReflowDirtyChild(nsIPresShell* aPresShell, nsIFrame* aChild)
   return NS_OK;
 }
 
-void
-nsInlineFrame::DrainOverflow(nsIPresContext* aPresContext)
-{
-  // Check for an overflow list with our prev-in-flow
-  nsInlineFrame* prevInFlow = (nsInlineFrame*)mPrevInFlow;
-  if (nsnull != prevInFlow) {
-    nsIFrame* prevOverflowFrames = prevInFlow->GetOverflowFrames(aPresContext, PR_TRUE);
-
-    if (prevOverflowFrames) {
-      // When pushing and pulling frames we need to check for whether any
-      // views need to be reparented.
-      for (nsIFrame* f = prevOverflowFrames; f; f->GetNextSibling(&f)) {
-        nsHTMLContainerFrame::ReparentFrameView(aPresContext, f, prevInFlow, this);
-      }
-      mFrames.InsertFrames(this, nsnull, prevOverflowFrames);
-    }
-  }
-
-  // It's also possible that we have an overflow list for ourselves
-  nsIFrame* overflowFrames = GetOverflowFrames(aPresContext, PR_TRUE);
-  if (overflowFrames) {
-    NS_ASSERTION(mFrames.NotEmpty(), "overflow list w/o frames");
-    mFrames.AppendFrames(nsnull, overflowFrames);
-  }
-}
-
 nsresult
 nsInlineFrame::ReflowFrames(nsIPresContext* aPresContext,
                             const nsHTMLReflowState& aReflowState,
@@ -353,6 +368,11 @@ nsInlineFrame::ReflowFrames(nsIPresContext* aPresContext,
   PRBool done = PR_FALSE;
   while (nsnull != frame) {
     PRBool reflowingFirstLetter = lineLayout->GetFirstLetterStyleOK();
+
+    // Check if we should lazily set the child frame's parent pointer
+    if (irs.mSetParentPointer) {
+      frame->SetParent(this);
+    }
     rv = ReflowInlineFrame(aPresContext, aReflowState, irs, frame, aStatus);
     if (NS_FAILED(rv)) {
       done = PR_TRUE;
@@ -722,9 +742,16 @@ nsFirstLineFrame::PullOneFrame(nsIPresContext* aPresContext, InlineReflowState& 
   return frame;
 }
 
-void
-nsFirstLineFrame::DrainOverflow(nsIPresContext* aPresContext)
+NS_IMETHODIMP
+nsFirstLineFrame::Reflow(nsIPresContext* aPresContext,
+                         nsHTMLReflowMetrics& aMetrics,
+                         const nsHTMLReflowState& aReflowState,
+                         nsReflowStatus& aStatus)
 {
+  if (nsnull == aReflowState.mLineLayout) {
+    return NS_ERROR_INVALID_ARG;
+  }
+
   // Check for an overflow list with our prev-in-flow
   nsFirstLineFrame* prevInFlow = (nsFirstLineFrame*)mPrevInFlow;
   if (nsnull != prevInFlow) {
@@ -746,18 +773,6 @@ nsFirstLineFrame::DrainOverflow(nsIPresContext* aPresContext)
     ReParentChildListStyle(aPresContext, mStyleContext, frames);
     mFrames.AppendFrames(nsnull, overflowFrames);
   }
-}
-
-NS_IMETHODIMP
-nsFirstLineFrame::Reflow(nsIPresContext* aPresContext,
-                         nsHTMLReflowMetrics& aMetrics,
-                         const nsHTMLReflowState& aReflowState,
-                         nsReflowStatus& aStatus)
-{
-  if (nsnull == aReflowState.mLineLayout) {
-    return NS_ERROR_INVALID_ARG;
-  }
-  DrainOverflow(aPresContext);
 
   // Set our own reflow state (additional state above and beyond
   // aReflowState)
