@@ -28,6 +28,7 @@
 #include "nsIPKCS11Slot.h"
 #include "nsIPKCS11Module.h"
 #include "nsIPKCS11ModuleDB.h"
+#include "nsICryptoFIPSInfo.h"
 #include "nsString.h"
 #include "pk11func.h"
 #include "nsNSSShutDown.h"
@@ -68,11 +69,13 @@ private:
   void destructorSafeDestroyNSSReference();
 };
 
-class nsPKCS11ModuleDB : public nsIPKCS11ModuleDB
+class nsPKCS11ModuleDB : public nsIPKCS11ModuleDB,
+                         public nsICryptoFIPSInfo
 {
 public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSIPKCS11MODULEDB
+  NS_DECL_NSICRYPTOFIPSINFO
 
   nsPKCS11ModuleDB();
   virtual ~nsPKCS11ModuleDB();
