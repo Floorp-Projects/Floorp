@@ -1,14 +1,17 @@
 #wiz-back-button {
-  list-style-image            : url("chrome://global/skin/scroll-left.gif");
+  list-style-image            : url("chrome://global/skin/flat-left-arrow.gif");
 }
-#wiz-back-button[disabled] {
-  list-style-image            : url("chrome://global/skin/scroll-left-disabled.gif");
-}
+
 #wiz-next-button {
-  list-style-image            : url("chrome://global/skin/scroll-right.gif");
+  list-style-image            : url("chrome://global/skin/flat-right-arrow.gif");
 }
+
+#wiz-back-button[disabled] {
+  list-style-image            : url("chrome://global/skin/flat-left-arrow-disabled.gif");
+}
+
 #wiz-next-button[disabled] {
-  list-style-image            : url("chrome://global/skin/scroll-right-disabled.gif");
+  list-style-image            : url("chrome://global/skin/flat-right-arrow-disabled.gif");
 }
 
 box#wizardButtons {
