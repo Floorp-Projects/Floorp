@@ -508,7 +508,8 @@ void nsZlibAllocator::zFree(void *ptr)
   return;
 }
 
-static void *zlibAlloc(void *opaque, uInt items, uInt size)
+PR_STATIC_CALLBACK(void *)
+zlibAlloc(void *opaque, uInt items, uInt size)
 {
   nsZlibAllocator *zallocator = (nsZlibAllocator *)opaque;
   if (zallocator)
@@ -517,7 +518,8 @@ static void *zlibAlloc(void *opaque, uInt items, uInt size)
     return calloc(items, size);
 }
 
-static void zlibFree(void *opaque, void *ptr)
+PR_STATIC_CALLBACK(void)
+zlibFree(void *opaque, void *ptr)
 {
   nsZlibAllocator *zallocator = (nsZlibAllocator *)opaque;
   if (zallocator)
