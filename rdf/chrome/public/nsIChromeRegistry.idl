@@ -53,6 +53,7 @@ interface nsIChromeRegistry : nsISupports
 
   /**
    * Convert a chrome URL to a "real" using the information in the registry.
+   * Does not modify aChromeURL.
    *
    * @param aChromeURL the URL that is to be converted.
    */

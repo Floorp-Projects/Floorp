@@ -597,21 +597,18 @@ nsChromeProtocolHandler::NewChannel(nsIURI* aURI,
     else {
         // Miss. Resolve the chrome URL using the registry and do a
         // normal necko load.
-        nsCOMPtr<nsIURI> chromeURI;
-        rv = aURI->Clone(getter_AddRefs(chromeURI)); // don't mangle the original
-        if (NS_FAILED(rv)) return rv;
-
         //nsXPIDLCString oldSpec;
         //aURI->GetSpec(getter_Copies(oldSpec));
         //printf("*************************** %s\n", (const char*)oldSpec);
 
         nsXPIDLCString spec;
-        rv = reg->ConvertChromeURL(chromeURI, getter_Copies(spec));
+        rv = reg->ConvertChromeURL(aURI, getter_Copies(spec));
         if (NS_FAILED(rv)) return rv;
 
         nsCOMPtr<nsIIOService> ioServ(do_GetService(kIOServiceCID, &rv));
         if (NS_FAILED(rv)) return rv;
 
+        nsCOMPtr<nsIURI> chromeURI;
         rv = ioServ->NewURI(spec, nsnull, getter_AddRefs(chromeURI));
         if (NS_FAILED(rv)) return rv;
 
