@@ -130,7 +130,8 @@ typedef PRUint32 nsFrameState;
 // If this bit is set, then the frame reflects content that may be selected
 #define NS_FRAME_SELECTED_CONTENT 0x00000200
 
-// If this bit is set, then the frame is dirty and needs to be reflowed
+// If this bit is set, then the frame is dirty and needs to be reflowed.
+// This bit is set when the frame is first created
 #define NS_FRAME_IS_DIRTY 0x00000400
 
 // The low 16 bits of the frame state word are reserved by this API.
@@ -224,7 +225,8 @@ public:
    *
    * @param   aListName the name of the child list. A NULL pointer for the atom
    *            name means the unnamed principal child list
-   * @param   aChildList list of child frames
+   * @param   aChildList list of child frames. Each of the frames has its
+   *			NS_FRAME_IS_DIRTY bit set
    * @return  NS_ERROR_INVALID_ARG if there is no child list with the specified
    *            name,
    *          NS_ERROR_UNEXPECTED if the frame is an atomic frame or if the
@@ -243,7 +245,8 @@ public:
    *
    * @param   aListName the name of the child list. A NULL pointer for the atom
    *            name means the unnamed principal child list
-   * @param   aFrameList list of child frames to append
+   * @param   aFrameList list of child frames to append. Each of the frames has
+   *			its NS_FRAME_IS_DIRTY bit set
    * @return  NS_ERROR_INVALID_ARG if there is no child list with the specified
    *            name,
    *          NS_ERROR_UNEXPECTED if the frame is an atomic frame
@@ -262,7 +265,8 @@ public:
    * @param   aListName the name of the child list. A NULL pointer for the atom
    *            name means the unnamed principal child list
    * @param   aPrevFrame the frame to insert frames <b>after</b>
-   * @param   aFrameList list of child frames to insert <b>after</b> aPrevFrame
+   * @param   aFrameList list of child frames to insert <b>after</b> aPrevFrame.
+   *			Each of the frames has its NS_FRAME_IS_DIRTY bit set
    * @return  NS_ERROR_INVALID_ARG if there is no child list with the specified
    *            name,
    *          NS_ERROR_UNEXPECTED if the frame is an atomic frame
@@ -301,7 +305,8 @@ public:
    * @param   aListName the name of the child list. A NULL pointer for the atom
    *            name means the unnamed principal child list
    * @param   aOldFrame the frame to remove
-   * @param   aNewFrame the frame to replace it with
+   * @param   aNewFrame the frame to replace it with. The new frame has its
+   *		    NS_FRAME_IS_DIRTY bit set
    * @return  NS_ERROR_INVALID_ARG if there is no child list with the specified
    *            name,
    *          NS_ERROR_UNEXPECTED if the frame is an atomic frame
