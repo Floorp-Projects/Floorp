@@ -27,11 +27,14 @@
 #include "nsIIOService.h"
 #include "nsIServiceManager.h"
 #include "nsIStreamListener.h"
+#include "nsIURI.h"
 #include "nsIChannel.h"
 #include "nsIInterfaceRequestor.h"
 #include "nsIProgressEventSink.h"
-
+#include "nsIInputStream.h"
 #include "nsIStreamConverterService.h"
+#include "nsIHttpChannel.h"
+#include "nsHTTPEnums.h"
 
 #include "nsVoidArray.h"
 #include "nsXPIDLString.h"
@@ -40,32 +43,6 @@
 static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
 static NS_DEFINE_CID(kURILoaderCID, NS_URI_LOADER_CID);
 static NS_DEFINE_CID(kStreamConverterServiceCID, NS_STREAMCONVERTERSERVICE_CID);
-
-// mscott - i ripped this event sink getter class off of the one in the old
-// webshell doc loader...
-
-class nsUriLoaderCapabilities : public nsIInterfaceRequestor {
-public:
-  NS_DECL_ISUPPORTS
-
-  nsUriLoaderCapabilities(nsIProgressEventSink *aProgressEventsink) {
-    NS_INIT_REFCNT();
-    mProgressEventSink = aProgressEventsink;
-  }
-
-  virtual ~nsUriLoaderCapabilities() {};
-
-  NS_IMETHOD GetInterface(const nsIID& anIID, void** aSink) {
-    if (mProgressEventSink) {
-        return mProgressEventSink->QueryInterface(anIID, aSink);
-    }
-    return NS_ERROR_FAILURE;
-  }
-private:
-  nsCOMPtr<nsIProgressEventSink> mProgressEventSink;
-};
-
-NS_IMPL_ISUPPORTS1(nsUriLoaderCapabilities, nsIInterfaceRequestor);
 
 /* 
  * The nsDocumentOpenInfo contains the state required when a single document
@@ -78,14 +55,15 @@ class nsDocumentOpenInfo : public nsIStreamListener
 public:
     nsDocumentOpenInfo();
 
-    nsresult Init(nsIURIContentListener * aContentListener);
+    nsresult Init(nsISupports * aWindowContext);
 
     NS_DECL_ISUPPORTS
 
     nsresult Open(nsIURI *aURL, 
                   const char * aWindowTarget,
-                  nsIProgressEventSink * aProgressEventSink,
+                  nsISupports * aWindowContext,
                   nsIURI * aReferringURI,
+                  nsIInputStream * aInputStream,
                   nsISupports * aOpenContext,
                   nsISupports ** aCurrentOpenContext);
 
@@ -108,7 +86,13 @@ protected:
     nsCString m_windowTarget;
 };
 
-NS_IMPL_ISUPPORTS2(nsDocumentOpenInfo, nsIStreamObserver, nsIStreamListener);
+NS_IMPL_ADDREF(nsDocumentOpenInfo);
+NS_IMPL_RELEASE(nsDocumentOpenInfo);
+
+NS_INTERFACE_MAP_BEGIN(nsDocumentOpenInfo)
+   NS_INTERFACE_MAP_ENTRY(nsIStreamObserver)
+   NS_INTERFACE_MAP_ENTRY(nsIStreamListener)
+NS_INTERFACE_MAP_END
 
 nsDocumentOpenInfo::nsDocumentOpenInfo()
 {
@@ -119,16 +103,19 @@ nsDocumentOpenInfo::~nsDocumentOpenInfo()
 {
 }
 
-nsresult nsDocumentOpenInfo::Init(nsIURIContentListener * aContentListener)
+nsresult nsDocumentOpenInfo::Init(nsISupports * aWindowContext)
 {
-  m_contentListener = aContentListener;
-  return NS_OK;
+  // ask the window context if it has a uri content listener...
+  nsresult rv = NS_OK;
+  m_contentListener = do_GetInterface(aWindowContext, &rv);
+  return rv;
 }
 
 nsresult nsDocumentOpenInfo::Open(nsIURI *aURI, 
                                   const char * aWindowTarget,
-                                  nsIProgressEventSink * aProgressEventSink,
+                                  nsISupports * aWindowContext,
                                   nsIURI * aReferringURI,
+                                  nsIInputStream * aPostData,
                                   nsISupports * aOpenContext,
                                   nsISupports ** aCurrentOpenContext)
 {
@@ -142,9 +129,10 @@ nsresult nsDocumentOpenInfo::Open(nsIURI *aURI,
   // store any local state
   m_windowTarget = aWindowTarget;
 
-  // turn the arguments we received into something we can pass into NewChannelFromURI:
-  // that means turning the progress event sink into an event sink getter...
-  nsCOMPtr<nsIInterfaceRequestor> notificationCallbacks = new nsUriLoaderCapabilities(aProgressEventSink);
+  // get the requestor for the window context...
+  nsCOMPtr<nsIInterfaceRequestor> requestor = do_QueryInterface(aWindowContext);
+
+
   // and get the load group out of the open context
   nsCOMPtr<nsILoadGroup> aLoadGroup = do_QueryInterface(aOpenContext);
   if (!aLoadGroup)
@@ -166,9 +154,32 @@ nsresult nsDocumentOpenInfo::Open(nsIURI *aURI,
   if (NS_SUCCEEDED(rv))
   {
     nsCOMPtr<nsIChannel> aChannel;
-    rv = pNetService->NewChannelFromURI("", aURI, aLoadGroup, notificationCallbacks,
+    rv = pNetService->NewChannelFromURI("", aURI, aLoadGroup, requestor,
                                         nsIChannel::LOAD_NORMAL, aReferringURI, getter_AddRefs(aChannel));
     if (NS_FAILED(rv)) return rv; // uhoh we were unable to get a channel to handle the url!!!
+    // figure out if we need to set the post data stream on the channel...right now, 
+    // this is only done for http channels.....
+
+    if (aPostData || aReferringURI)
+    {
+      nsCOMPtr<nsIHTTPChannel> httpChannel(do_QueryInterface(aChannel));
+      if (httpChannel)
+      {
+          if (aPostData)
+          {
+              httpChannel->SetRequestMethod(HM_POST);
+              httpChannel->SetPostDataStream(aPostData);
+          }
+          if (aReferringURI) 
+          {
+              // Referer - misspelled, but per the HTTP spec
+              nsCOMPtr<nsIAtom> key = NS_NewAtom("referer");
+              nsXPIDLCString aSpec;
+              aReferringURI->GetSpec(getter_Copies(aSpec));
+              httpChannel->SetRequestHeader(key, aSpec);
+          }
+      }
+    } // if post data || a refferring uri
     rv =  aChannel->AsyncRead(0, -1, nsnull, this);
   }
 
@@ -290,7 +301,13 @@ nsURILoader::~nsURILoader()
     delete m_listeners;
 }
 
-NS_IMPL_ISUPPORTS1(nsURILoader, nsIURILoader)
+NS_IMPL_ADDREF(nsURILoader);
+NS_IMPL_RELEASE(nsURILoader);
+
+NS_INTERFACE_MAP_BEGIN(nsURILoader)
+   NS_INTERFACE_MAP_ENTRY(nsIURILoader)
+   NS_INTERFACE_MAP_ENTRY(nsPIURILoaderWithPostData)
+NS_INTERFACE_MAP_END
 
 NS_IMETHODIMP nsURILoader::RegisterContentListener(nsIURIContentListener * aContentListener)
 {
@@ -313,25 +330,49 @@ NS_IMETHODIMP nsURILoader::UnRegisterContentListener(nsIURIContentListener * aCo
 
 NS_IMETHODIMP nsURILoader::OpenURI(nsIURI *aURI, 
                                    const char * aWindowTarget,
-                                   nsIProgressEventSink *aProgressEventSink, 
-                                   nsIURIContentListener *aContentListener,
+                                   nsISupports * aWindowContext,
                                    nsIURI *aReferringURI,
                                    nsISupports *aOpenContext, 
                                    nsISupports **aCurrentOpenContext)
 {
-  return OpenURIVia(aURI, aWindowTarget, aProgressEventSink,
-                    aContentListener, aReferringURI, aOpenContext, aCurrentOpenContext,
-                    0 /* ip address */); 
+  return OpenURIVia(aURI, aWindowTarget, aWindowContext, aReferringURI, aOpenContext, 
+                    aCurrentOpenContext, 0 /* ip address */); 
 }
 
 NS_IMETHODIMP nsURILoader::OpenURIVia(nsIURI *aURI, 
                                       const char * aWindowTarget,
-                                      nsIProgressEventSink *aProgressEventSink, 
-                                      nsIURIContentListener *aContentListener,
+                                      nsISupports * aWindowContext,
                                       nsIURI *aReferringURI,
                                       nsISupports *aOpenContext, 
                                       nsISupports **aCurrentOpenContext,
                                       PRUint32 aLocalIP)
+{
+  // forward our call
+  return OpenURIWithPostDataVia(aURI, aWindowTarget, aWindowContext, aReferringURI, nsnull  /* post stream */,
+                                aOpenContext,aCurrentOpenContext, aLocalIP);
+}
+
+NS_IMETHODIMP nsURILoader::OpenURIWithPostData(nsIURI *aURI, 
+                                  const char *aWindowTarget, 
+                                  nsISupports * aWindowContext,
+                                  nsIURI *aReferringURI, 
+                                  nsIInputStream *aPostDataStream, 
+                                  nsISupports *aOpenContext, 
+                                  nsISupports **aCurrentOpenContext)
+{
+  return OpenURIWithPostDataVia(aURI, aWindowTarget, aWindowContext, aReferringURI, 
+                                aPostDataStream, aOpenContext, aCurrentOpenContext, 0);
+
+}
+
+NS_IMETHODIMP nsURILoader::OpenURIWithPostDataVia(nsIURI *aURI, 
+                                     const char *aWindowTarget, 
+                                     nsISupports * aWindowContext,
+                                     nsIURI *aReferringURI, 
+                                     nsIInputStream *aPostDataStream,                                     
+                                     nsISupports *aOpenContext, 
+                                     nsISupports **aCurrentOpenContext, 
+                                     PRUint32 adapterBinding)
 {
   // we need to create a DocumentOpenInfo object which will go ahead and open the url
   // and discover the content type....
@@ -345,15 +386,16 @@ NS_IMETHODIMP nsURILoader::OpenURIVia(nsIURI *aURI,
   if (!loader) return NS_ERROR_OUT_OF_MEMORY;
 
   NS_ADDREF(loader);
-  loader->Init(aContentListener);    // Extra Info
+  loader->Init(aWindowContext);    // Extra Info
 
   // now instruct the loader to go ahead and open the url
-  rv = loader->Open(aURI, aWindowTarget, aProgressEventSink,  
-                    aReferringURI, aOpenContext, aCurrentOpenContext);
+  rv = loader->Open(aURI, aWindowTarget, aWindowContext,  
+                    aReferringURI, aPostDataStream, aOpenContext, aCurrentOpenContext);
   NS_RELEASE(loader);
 
   return NS_OK;
 }
+
 
 nsresult nsURILoader::DispatchContent(const char * aContentType,
                                       const char * aCommand,
