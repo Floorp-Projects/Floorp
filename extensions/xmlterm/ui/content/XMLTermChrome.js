@@ -40,7 +40,7 @@ function StartupXMLTerm() {
    xmltwin.xmlterm = xmltshell;
 
   if (window.arguments != null)
-     window.title = "xmlterm: "+window.arguments;
+     document.title = "xmlterm: "+window.arguments;
 
    // Initialize XMLTerm shell in content window with argvals
    window.xmlterm.init(xmltwin, "", window.arguments);
