@@ -23,6 +23,7 @@
  *   Christopher Blizzard <blizzard@mozilla.org>
  */
 
+
 #include "nspr.h"
 #include "prlong.h"
 #include "nsHTTPChannel.h"
@@ -57,7 +58,7 @@
 #include "nsIThread.h"
 #include "nsIEventQueueService.h"
 #include "nsIProxyObjectManager.h"
-#include "nsIPasswordManagerUtils.h"
+#include "nsIWalletService.h"
 #include "netCore.h"
 
 // FIXME - Temporary include.  Delete this when cache is enabled on all 
@@ -67,6 +68,7 @@
 
 static NS_DEFINE_CID(kNetModuleMgrCID, NS_NETMODULEMGR_CID);
 static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
+static NS_DEFINE_CID(kWalletServiceCID, NS_WALLETSERVICE_CID);
 
 #if defined(PR_LOGGING)
 extern PRLogModuleInfo* gHTTPLog;
@@ -2233,22 +2235,22 @@ nsHTTPChannel::ProcessStatusCode(void)
 				{
 					pEngine->SetAuthString(mURI, 0);
 
-					NS_WITH_SERVICE(nsIPasswordManager, passwordManager, 
-						PASSWORDMANAGER_PROGID, &rv);
+					NS_WITH_SERVICE(nsIWalletService, walletService, 
+						kWalletServiceCID, &rv);
 
 					if (NS_SUCCEEDED(rv))
 					{
 						NS_WITH_SERVICE(nsIProxyObjectManager, pom, 
 							kProxyObjectManagerCID, &rv);
  
-						nsCOMPtr<nsIPasswordManager> pPasswordManager;
+						nsCOMPtr<nsIWalletService> pWalletService;
 						if (NS_SUCCEEDED(pom->GetProxyForObject(NS_UI_THREAD_EVENTQ, 
-								 NS_GET_IID(nsIPasswordManager), passwordManager, 
-								 PROXY_SYNC, getter_AddRefs(pPasswordManager))))
+								 NS_GET_IID(nsIWalletService), walletService, 
+								 PROXY_SYNC, getter_AddRefs(pWalletService))))
 						{
 							nsXPIDLCString uri;
 							if (NS_SUCCEEDED(mURI->GetSpec(getter_Copies(uri))))
-								pPasswordManager->RemoveUser(uri, nsnull);
+								pWalletService->SI_RemoveUser(uri, nsnull);
 						}
 					}
 
