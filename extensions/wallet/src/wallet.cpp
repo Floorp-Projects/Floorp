@@ -738,7 +738,7 @@ Wallet_SetKey(PRBool isNewkey) {
   }
 
   char * newkey;
-  if (wallet_KeySize() == 0) {
+  if ((wallet_KeySize() == 0) && !isNewkey) {
     newkey = PL_strdup("");
   } else {
     newkey = wallet_GetString(password);
