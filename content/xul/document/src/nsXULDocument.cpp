@@ -92,6 +92,7 @@
 #include "nsIScriptContextOwner.h"
 #include "nsIScriptGlobalObject.h"
 #include "nsIScriptObjectOwner.h"
+#include "nsIScriptSecurityManager.h"
 #include "nsIServiceManager.h"
 #include "nsIStreamListener.h"
 #include "nsIStreamLoadableDocument.h"
@@ -537,7 +538,7 @@ public:
 
     virtual nsIURI* GetDocumentURL() const;
 
-    virtual nsIPrincipal* GetDocumentPrincipal() const;
+    virtual nsIPrincipal* GetDocumentPrincipal();
 
     NS_IMETHOD GetDocumentLoadGroup(nsILoadGroup **aGroup) const;
 
@@ -1553,12 +1554,25 @@ XULDocumentImpl::GetDocumentURL() const
 }
 
 nsIPrincipal* 
-XULDocumentImpl::GetDocumentPrincipal() const
+XULDocumentImpl::GetDocumentPrincipal()
 {
-    nsIPrincipal* result = mDocumentPrincipal;
-    NS_IF_ADDREF(result);
-    return result;
+  if (!mDocumentPrincipal) {
+    nsresult rv;
+    NS_WITH_SERVICE(nsIScriptSecurityManager, securityManager,
+                    NS_SCRIPTSECURITYMANAGER_PROGID, &rv);
+    if (NS_FAILED(rv)) 
+        return nsnull;
+    if (NS_FAILED(securityManager->CreateCodebasePrincipal(mDocumentURL, 
+                    getter_AddRefs(mDocumentPrincipal))))
+    {
+        return nsnull;
+    }
+  }
+  nsIPrincipal *result = mDocumentPrincipal;
+  NS_ADDREF(result);
+  return result;
 }
+
 
 NS_IMETHODIMP
 XULDocumentImpl::GetDocumentLoadGroup(nsILoadGroup **aGroup) const
