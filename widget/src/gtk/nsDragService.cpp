@@ -28,6 +28,7 @@
 #include "nsVoidArray.h"
 #include "nsXPIDLString.h"
 #include "nsPrimitiveHelpers.h"
+#include "nsWidget.h"
 #include <gtk/gtkinvisible.h>
 #include <gdk/gdkx.h>
 
@@ -144,6 +145,9 @@ nsDragService::InvokeDragSession (nsIDOMNode *aDOMNode,
     gdk_event.button.x_root = 0;
     gdk_event.button.y_root = 0;
 
+    // before we start our drag, give the widget code a chance to
+    // clean up any state.
+    nsWidget::DragStarted();
     // start our drag.
     GdkDragContext *context = gtk_drag_begin(mHiddenWidget,
                                              sourceList,

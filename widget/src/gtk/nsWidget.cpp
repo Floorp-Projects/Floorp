@@ -117,6 +117,18 @@ void nsWidget::GetLastEventTime(guint32 *aTime)
     *aTime = sLastEventTime;
 }
 
+void nsWidget::DragStarted(void)
+{
+  if (sButtonMotionTarget)
+  {
+    sButtonMotionTarget = nsnull;
+    sButtonMotionRootX = -1;
+    sButtonMotionRootY = -1;
+    sButtonMotionWidgetX = -1;
+    sButtonMotionWidgetY = -1;
+  }
+}
+
 #ifdef USE_XIM
 nsresult nsWidget::KillICSpotTimer ()
 {
