@@ -1436,7 +1436,7 @@ class nsBookmarksService : public nsIBookmarksService,
 			   public nsIRDFObserver
 {
 protected:
-	nsCOMPtr<nsIRDFDataSource>	mInner;
+	nsIRDFDataSource*		mInner;
 	PRBool				mBookmarksAvailable;
 	PRBool				mDirty;
 	nsCOMPtr<nsITimer>		mTimer;
@@ -1612,7 +1612,7 @@ public:
 
 
 nsBookmarksService::nsBookmarksService()
-	: mBookmarksAvailable(PR_FALSE), mDirty(PR_FALSE)
+	: mInner(nsnull), mBookmarksAvailable(PR_FALSE), mDirty(PR_FALSE)
 #ifdef	XP_MAC
 	,mIEFavoritesAvailable(PR_FALSE)
 #endif
@@ -1635,6 +1635,7 @@ nsBookmarksService::~nsBookmarksService()
 	// has probably already been destroyed
 	// Flush();
 	bm_ReleaseGlobals();
+	NS_IF_RELEASE(mInner);
 }
 
 
@@ -2432,7 +2433,9 @@ nsBookmarksService::Release()
 	NS_LOG_RELEASE(this, mRefCnt, "nsBookmarksService");
 
 	if (mInner && mRefCnt == 1) {
+		nsIRDFDataSource* tmp = mInner;
 		mInner = nsnull;
+		NS_IF_RELEASE(tmp);
 		return 0;
 	}
 	else if (mRefCnt == 0) {
@@ -3471,7 +3474,7 @@ nsBookmarksService::ReadBookmarks()
 	// so we need to forget about any previous bookmarks
 	mInner = nsnull;
 	if (NS_FAILED(rv = nsComponentManager::CreateInstance(kRDFInMemoryDataSourceCID,
-				nsnull, nsIRDFDataSource::GetIID(), getter_AddRefs(mInner))))
+				nsnull, nsIRDFDataSource::GetIID(), (void**) &mInner)))
 		return(rv);
 
 	rv = mInner->AddObserver(this);
