@@ -105,7 +105,7 @@ extern "C" char * FE_GetProgramDirectory(char *buffer, int length) {
     return buffer;
 }
 #elif defined (XP_UNIX)
-extern "C" void fe_GetProgramDirectory(char *buffer, int length) {
+extern "C" char * fe_GetProgramDirectory(char *buffer, int length) {
     printf("XXX: returning /tmp for the fe_GetProgramDirectory!\n");
     strcpy(buffer, "/tmp/");
     return buffer;
