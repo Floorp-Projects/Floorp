@@ -204,25 +204,43 @@
       <qandaentry>
 	<question id="faq-general-bonsaitools">
 	  <para>
-	    Why do the scripts say "/usr/bonsaitools/bin/perl" instead of
-	    "/usr/bin/perl" or something else?
+	    What is <filename>/usr/bonsaitools/bin/perl</filename>?
 	  </para>
 	</question>
 	<answer>
 	  <para>
-	     Mozilla.org uses /usr/bonsaitools/bin/perl, because originally
-       Terry wanted a place to put a version of Perl and other tools 
-       that was strictly under his control. 
-    </para>
-		<para>
-		  We always recommend that, if possible, you keep the path
-		  as /usr/bonsaitools/bin/perl, and simply add symlink.  
-      This will make upgrading
-		  your Bugzilla much easier in the future.
-		</para>
+            Bugzilla used to have the path to perl on the shebang line set to
+            <filename>/usr/bonsaitools/bin/perl</filename> because when
+            Terry first started writing the code for mozilla.org he needed a
+            version of Perl and other tools that were completely under his
+            control.  This location was abandoned for the 2.18 release in favor
+            of the more sensible <filename>/usr/bin/perl</filename>.  If you
+            installed an older verion of Bugzilla and created the symlink we
+            suggested, you can remove it now (provided that you don't have
+            anything else, such as Bonsai, using it and you don't intend to
+            reinstall an older version of Bugzilla).
+          </para>
 	</answer>
       </qandaentry>
 
+      <qandaentry>
+        <question id="faq-general-perlpath">
+          <para>
+            My perl is not located at <filename>/usr/bin/perl</filename>, is
+            there an easy way to change it everywhere it needs to be changed?
+          </para>
+        </question>
+        <answer>
+          <para>
+            Yes, the following bit of perl magic will change all the shebang
+            lines.  Be sure to change <filename>/usr/local/bin/perl</filename>
+            to your path to the perl binary.
+          </para>
+          <programlisting>
+perl -pi -e 's@#\!/usr/bin/perl@#\!/usr/local/bin/perl@' *cgi *pl
+          </programlisting>
+        </answer>
+      </qandaentry>
 
       <qandaentry>
 	<question id="faq-general-cookie">

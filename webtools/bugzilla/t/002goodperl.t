@@ -48,7 +48,7 @@ foreach my $file (@testitems) {
     $file =~ m/.*\.(.*)/;
     my $ext = $1;
 
-    if ($file_line1 !~ /\/usr\/bonsaitools\/bin\/perl/) {
+    if ($file_line1 !~ m#/usr/bin/perl#) {
         ok(1,"$file does not have a shebang");	
     } else {
         my $flags;
@@ -71,7 +71,7 @@ foreach my $file (@testitems) {
             next;
         }
 
-        if ($file_line1 =~ m#/usr/bonsaitools/bin/perl -$flags#) {
+        if ($file_line1 =~ m#/usr/bin/perl -$flags#) {
             ok(1,"$file uses -$flags");
         } else {
             ok(0,"$file is MISSING -$flags --WARNING");
