@@ -34,6 +34,7 @@ $CLOBBER_LIBS = 1;			# turn on to clobber existing libs and .xSYM files before
 # The following two options will delete all files, but leave the directory structure intact.
 $CLOBBER_DIST_ALL = 0;      # turn on to clobber all aliases/files inside dist (headers/xsym/libs)
 $CLOBBER_DIST_LIBS = 0;     # turn on to clobber only aliases/files for libraries/sym files in dist
+$USE_XPIDL = 0;             # turn on to use the XPIDL plugin to generate files.
 
 $MOZ_FULLCIRCLE = 0;
 
