@@ -3392,7 +3392,13 @@ nsMsgLocalMailFolder::OnMessageClassified(const char *aMsgURL, nsMsgJunkStatus a
   nsCOMPtr <nsIMsgDBHdr> msgHdr;
   rv = GetMsgDBHdrFromURI(aMsgURL, getter_AddRefs(msgHdr));
   NS_ENSURE_SUCCESS(rv, rv);
-  msgHdr->SetStringProperty("junkscore", (aClassification == nsIJunkMailPlugin::JUNK) ? "100" : "0");
+
+  nsMsgKey msgKey;
+  rv = msgHdr->GetMessageKey(&msgKey);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  mDatabase->SetStringProperty(msgKey, "junkscore", (aClassification == nsIJunkMailPlugin::JUNK) ? "100" : "0");
+
   nsCOMPtr<nsISpamSettings> spamSettings;
   nsXPIDLCString spamFolderURI;
   PRBool moveOnSpam = PR_FALSE;
@@ -3411,8 +3417,6 @@ nsMsgLocalMailFolder::OnMessageClassified(const char *aMsgURL, nsMsgJunkStatus a
       spamSettings->GetMoveOnSpam(&moveOnSpam);
       if (moveOnSpam)
       {
-        nsMsgKey msgKey;
-        msgHdr->GetMessageKey(&msgKey);
         mSpamKeysToMove.Add(msgKey);
         willMoveMessage = PR_TRUE;
       }
@@ -3426,8 +3430,6 @@ nsMsgLocalMailFolder::OnMessageClassified(const char *aMsgURL, nsMsgJunkStatus a
     spamSettings->GetSpamFolderURI(getter_Copies(spamFolderURI));
     if (!spamFolderURI.IsEmpty())
     {
-        nsMsgKey msgKey;
-        msgHdr->GetMessageKey(&msgKey);
         nsCOMPtr <nsIRDFService> rdfService = do_GetService("@mozilla.org/rdf/rdf-service;1",&rv);
         NS_ENSURE_SUCCESS(rv, rv);
 
