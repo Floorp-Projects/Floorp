@@ -305,6 +305,7 @@ namespace JSTypes {
         {
             if (mGetter == NULL)
                 mGetter = new FunctionMap();
+            mProperties[name] = kUndefinedValue;
             (*mGetter)[name] = getter;
         }
 
@@ -312,6 +313,7 @@ namespace JSTypes {
         {
             if (mSetter == NULL)
                 mSetter = new FunctionMap();
+            mProperties[name] = kUndefinedValue;
             (*mSetter)[name] = setter;
         }
 
@@ -398,6 +400,7 @@ namespace JSTypes {
         uint32 top;
     public:
 
+        static JSFunction *Array_length_getter;
         static void initArrayObject(JSScope *g);
 
         JSArray() : JSObject(ArrayPrototypeObject), elements(1)                     { setClass(ArrayString); top = 0; }

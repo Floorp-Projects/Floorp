@@ -25,6 +25,7 @@ bool XMLTag::getValue(const String &name, String &value)
 
 XMLLexer::XMLLexer(const char *filename)
 {
+    base = NULL;
     FILE *f = fopen(filename, "r");
     if (f) {
         fseek(f, 0, SEEK_END);

@@ -966,7 +966,28 @@ JSValue Context::interpret(ICodeModule* iCode, const JSValues& args)
                             else
                                 (*registers)[dst(gp).first] = value.object->getProperty(*src2(gp));
                         } else {
-                            (*registers)[dst(gp).first] = value.object->getProperty(*src2(gp));
+                            JSFunction *getter = value.object->getter(*src2(gp));
+                            if (getter) {
+                                if (getter->isNative()) {
+                                    JSValues argv(1);
+                                    JSValues::size_type i = 1;
+                                    argv[0] = value;
+                                    JSValue result = static_cast<JSNativeFunction*>(getter)->mCode(this, argv);
+                                    if (dst(gp).first != NotARegister)
+                                        (*registers)[dst(gp).first] = result;
+                                    break;
+                                }
+                                else {
+                                    mLinkage = new Linkage(mLinkage, ++mPC, mActivation, mGlobal, dst(gp), mICode, mCurrentClosure);
+                                    mICode = getter->getICode();
+                                    mActivation = new Activation(mICode->itsMaxRegister, value);
+                                    registers = &mActivation->mRegisters;
+                                    mPC = mICode->its_iCode->begin();
+                                    endPC = mICode->its_iCode->end();
+                                }
+                            }
+                            else
+                                (*registers)[dst(gp).first] = value.object->getProperty(*src2(gp));
                         }
                     }
                     // XXX runtime error
@@ -1055,14 +1076,24 @@ using JSString throughout.
                         if (inst) {
                             if (inst->hasGetter(src2(gs))) {
                                 JSFunction* getter = inst->getter(src2(gs));
-                                ASSERT(!getter->isNative());
-                                mLinkage = new Linkage(mLinkage, ++mPC, mActivation, mGlobal, dst(gs), mICode, mCurrentClosure);
-                                mICode = getter->getICode();
-                                mActivation = new Activation(mICode->itsMaxRegister, value);
-                                registers = &mActivation->mRegisters;
-                                mPC = mICode->its_iCode->begin();
-                                endPC = mICode->its_iCode->end();
-                                continue;
+                                if (getter->isNative()) {
+                                    JSValues argv(1);
+                                    JSValues::size_type i = 1;
+                                    argv[0] = value;
+                                    JSValue result = static_cast<JSNativeFunction*>(getter)->mCode(this, argv);
+                                    if (dst(gs).first != NotARegister)
+                                        (*registers)[dst(gs).first] = result;
+                                    break;
+                                }
+                                else {
+                                    mLinkage = new Linkage(mLinkage, ++mPC, mActivation, mGlobal, dst(gs), mICode, mCurrentClosure);
+                                    mICode = getter->getICode();
+                                    mActivation = new Activation(mICode->itsMaxRegister, value);
+                                    registers = &mActivation->mRegisters;
+                                    mPC = mICode->its_iCode->begin();
+                                    endPC = mICode->its_iCode->end();
+                                    continue;
+                                }
                             }
                             else
                                 (*registers)[dst(gs).first] = (*inst)[src2(gs)];
@@ -1089,14 +1120,25 @@ using JSString throughout.
                         if (inst) {
                             if (inst->hasSetter(src1(ss))) {
                                 JSFunction* setter = inst->setter(src1(ss));
-                                ASSERT(!setter->isNative());
-                                mLinkage = new Linkage(mLinkage, ++mPC, mActivation, mGlobal, TypedRegister(NotARegister, &Null_Type), mICode, mCurrentClosure);
-                                mICode = setter->getICode();
-                                mActivation = new Activation(mICode->itsMaxRegister, value, (*registers)[src2(ss).first]);
-                                registers = &mActivation->mRegisters;
-                                mPC = mICode->its_iCode->begin();
-                                endPC = mICode->its_iCode->end();
-                                continue;
+                                if (setter->isNative()) {
+                                    JSValues argv(2);
+                                    JSValues::size_type i = 1;
+                                    argv[0] = value;
+                                    argv[1] = (*registers)[src2(ss).first];
+                                    JSValue result = static_cast<JSNativeFunction*>(setter)->mCode(this, argv);
+                                    if (dst(ss).first != NotARegister)
+                                        (*registers)[dst(ss).first] = result;
+                                    break;
+                                }
+                                else {
+                                    mLinkage = new Linkage(mLinkage, ++mPC, mActivation, mGlobal, TypedRegister(NotARegister, &Null_Type), mICode, mCurrentClosure);
+                                    mICode = setter->getICode();
+                                    mActivation = new Activation(mICode->itsMaxRegister, value, (*registers)[src2(ss).first]);
+                                    registers = &mActivation->mRegisters;
+                                    mPC = mICode->its_iCode->begin();
+                                    endPC = mICode->its_iCode->end();
+                                    continue;
+                                }
                             }
                             else
                                 (*inst)[src1(ss)] = (*registers)[src2(ss).first];

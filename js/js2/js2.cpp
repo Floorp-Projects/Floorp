@@ -171,6 +171,25 @@ static JSValue load(Context *cx, const JSValues &argv)
     return result;
 }
 
+static JSValue loadxml(Context *cx, const JSValues &argv)
+{
+
+    JSValue result;
+    size_t n = argv.size();
+    if (n > 1) {
+        for (size_t i = 1; i < n; ++i) {
+            JSValue val = argv[i].toString();
+            if (val.isString()) {
+                String fileName(*val.string);
+                std::string str(fileName.length(), char());
+                std::transform(fileName.begin(), fileName.end(), str.begin(), narrow);
+                cx->loadClass(str.c_str());
+            }
+        }
+    }
+    return result;
+}
+
 static bool goGeorge = false;
 
 static JSValue george(Context *, const JSValues &)
@@ -234,6 +253,7 @@ static void readEvalPrint(FILE *in, World &world)
     global.defineNativeFunction(world.identifiers["print"], print);
     global.defineNativeFunction(world.identifiers["dump"], dump);
     global.defineNativeFunction(world.identifiers["load"], load);
+    global.defineNativeFunction(world.identifiers["loadxml"], loadxml);
     global.defineNativeFunction(world.identifiers["george"], george);
 //   global.defineNativeFunction(world.identifiers["time"], time);
 

@@ -2533,6 +2533,7 @@ void ICodeGenerator::readICode(const char *fileName)
                     ParameterList *theParameterList = new ParameterList();
                     theParameterList->add(mContext->getWorld().identifiers["this"], TypedRegister(0, thisClass), false);
                     uint32 pCount = 1;
+                    StringFormatter s;
                     XMLNodeList &parameters = element->children();
                     for (XMLNodeList::const_iterator k = parameters.begin(); k != parameters.end(); k++) {
                         XMLNode *parameter = *k;
@@ -2542,10 +2543,15 @@ void ICodeGenerator::readICode(const char *fileName)
                             element->getValue(widenCString("name"), parameterName);
                             element->getValue(widenCString("type"), parameterTypeName);
                             JSType *parameterType = findType(mContext->getWorld().identifiers[parameterTypeName]);
-                            theParameterList->add(mContext->getWorld().identifiers[parameterName], TypedRegister(pCount++, parameterType), false);
+                            theParameterList->add(mContext->getWorld().identifiers[parameterName], TypedRegister(pCount, parameterType), false);
+                            s << pCount - 1;
+                            theParameterList->add(mContext->getWorld().identifiers[s.getString()], TypedRegister(pCount, parameterType), false);
+                            s.clear();
+                            pCount++;
                         }
                     }
-                    
+                    theParameterList->setPositionalCount(pCount);
+
                     JSType *resultType = findType(mContext->getWorld().identifiers[resultTypeName]);
                     String &body = element->body();
                     if (body.length()) {

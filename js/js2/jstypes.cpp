@@ -253,23 +253,37 @@ static JSValue date_invokor(Context *, const JSValues&)
 JSString* JSArray::ArrayString = new JSString("Array");
 
 JSObject *JSArray::ArrayPrototypeObject = NULL;
+JSFunction *JSArray::Array_length_getter = NULL;
+
+static JSValue array_length(Context *cx, const JSValues& argv)
+{
+    // argv[0] better be an array object
+    uint32 argCount = argv.size();
+    if ((argCount > 0) & argv[0].isArray()) {
+        JSArray *thisArray = argv[0].array;
+        return thisArray->length();
+    }
+    return kUndefinedValue;
+}
 
 static JSValue array_constructor(Context *, const JSValues& argv)
 {
+    JSArray *result = NULL;
     // argv[0] will be NULL
     uint32 argCount = argv.size();
     if (argCount > 1)
         if (argCount > 2) { // then it's a bunch of elements
-            JSArray *result = new JSArray(argCount - 1);
+            result = new JSArray(argCount - 1);
             for (uint32 i = 1; i < argCount; i++) {
                 (*result)[i - 1] = argv[i];
             }
-            return JSValue(result);
         }
         else
-            return JSValue(new JSArray(JSValue::valueToUInt32(argv[1]).u32));
+            result = new JSArray(JSValue::valueToUInt32(argv[1]).u32);
     else
-        return JSValue(new JSArray());
+        result = new JSArray();
+    result->setGetter(widenCString("length"), JSArray::Array_length_getter);
+    return JSValue(result);
 }
 
 static JSValue array_toString(Context *, const JSValues& argv)
@@ -308,6 +322,8 @@ void JSArray::initArrayObject(JSScope *g)
     ASSERT(g->getProperty(*ArrayString).isObject());
     JSObject *arrayVariable = g->getProperty(*ArrayString).object;
     arrayVariable->setProperty(widenCString("prototype"), JSValue(ArrayPrototypeObject));   // should be DontEnum, DontDelete, ReadOnly    
+
+    Array_length_getter = new JSNativeFunction(array_length);
 }
 
 /**************************************************************************************/
