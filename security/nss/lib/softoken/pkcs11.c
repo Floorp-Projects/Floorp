@@ -2406,10 +2406,15 @@ CK_RV NSC_Finalize (CK_VOID_PTR pReserved)
     return CKR_OK;
 }
 
+extern const char __nss_softokn_rcsid[];
+extern const char __nss_softokn_sccsid[];
 
 /* NSC_GetInfo returns general information about Cryptoki. */
 CK_RV  NSC_GetInfo(CK_INFO_PTR pInfo)
 {
+    volatile char c; /* force a reference that won't get optimized away */
+
+    c = __nss_softokn_rcsid[0] + __nss_softokn_sccsid[0]; 
     pInfo->cryptokiVersion.major = 2;
     pInfo->cryptokiVersion.minor = 11;
     PORT_Memcpy(pInfo->manufacturerID,manufacturerID,32);
