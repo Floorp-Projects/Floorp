@@ -257,7 +257,6 @@ RDFXULBuilderImpl::RDFXULBuilderImpl(void)
     NS_INIT_REFCNT();
 
     if (gRefCnt++ == 0) {
-        // XXX should hold on to the manager for the duration, as well.
         nsresult rv;
         if (NS_SUCCEEDED(rv = nsRepository::CreateInstance(kNameSpaceManagerCID,
                                                            nsnull,
