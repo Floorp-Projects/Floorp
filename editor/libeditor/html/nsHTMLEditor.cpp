@@ -1974,6 +1974,8 @@ nsHTMLEditor::GetSelectedElement(const nsString& aTagName, nsIDOMElement** aRetu
                           if (link)
                           {
                             *aReturn =link;
+                            // Getters must addref
+                            NS_ADDREF(*aReturn);
                           }
                           return NS_OK;
                         }
@@ -2007,6 +2009,8 @@ nsHTMLEditor::GetSelectedElement(const nsString& aTagName, nsIDOMElement** aRetu
   {
     
     *aReturn = selectedElement;  
+    // Getters must addref
+    NS_ADDREF(*aReturn);
   }
   return res;
 }
