@@ -25,9 +25,6 @@
 /* Implementations of nsIControllerCommand for composer commands */
 
 
-var promptService = Components.classes["@mozilla.org/embedcomp/prompt-service;1"].getService();
-promptService = promptService.QueryInterface(Components.interfaces.nsIPromptService);
-
 //-----------------------------------------------------------------------------------
 function SetupHTMLEditorCommands()
 {
@@ -39,7 +36,9 @@ function SetupHTMLEditorCommands()
   // Include everthing a text editor does
   SetupTextEditorCommands();
 
-  dump("Registering HTML editor commands\n");
+  //dump("Registering HTML editor commands\n");
+
+  controller.registerCommand("cmd_renderedHTMLEnabler",           nsDummyHTMLCommand);
 
   controller.registerCommand("cmd_listProperties",  nsListPropertiesCommand);
   controller.registerCommand("cmd_pageProperties",  nsPagePropertiesCommand);
@@ -92,7 +91,7 @@ function SetupTextEditorCommands()
   if (!controller)
     return;
   
-  dump("Registering plain text editor commands\n");
+  //dump("Registering plain text editor commands\n");
   
   controller.registerCommand("cmd_find",       nsFindCommand);
   controller.registerCommand("cmd_findNext",   nsFindNextCommand);
@@ -179,7 +178,7 @@ function SetupComposerWindowCommands()
 function GetEditorController()
 {
   var numControllers = window._content.controllers.getControllerCount();
-  
+    
   // count down to find a controller that supplies a nsIControllerCommandManager interface
   for (var i = numControllers; i >= 0 ; i --)
   {
@@ -187,11 +186,16 @@ function GetEditorController()
     
     try { 
       var controller = window._content.controllers.getControllerAt(i);
+      
       var interfaceRequestor = controller.QueryInterface(Components.interfaces.nsIInterfaceRequestor);
       if (!interfaceRequestor) continue;
     
       commandManager = interfaceRequestor.getInterface(Components.interfaces.nsIControllerCommandManager);
-    } catch(ex) {}
+    }
+    catch(ex)
+    {
+        //dump(ex + "\n");
+    }
 
     if (commandManager)
       return commandManager;
@@ -239,6 +243,22 @@ function PrintNodeID(id)
 {
   PrintObject(document.getElementById(id));
 }
+
+//-----------------------------------------------------------------------------------
+var nsDummyHTMLCommand =
+{
+  isCommandEnabled: function(aCommand, dummy)
+  {
+    return (window.editorShell && window.editorShell.documentEditable && IsEditingRenderedHTML());
+  },
+
+  doCommand: function(aCommand)
+  {
+    // do nothing
+    dump("Hey, who's calling the dummy command?\n");
+  }
+
+};
 
 //-----------------------------------------------------------------------------------
 var nsOpenCommand =
@@ -295,7 +315,7 @@ var nsSaveCommand =
     {
       FinishHTMLSource(); // In editor.js
       var doSaveAs = window.editorShell.editorDocument.location == "about:blank";
-      var result = window.editorShell.saveDocument(doSaveAs, false, window.gDefaultSaveMimeType);
+      var result = window.editorShell.saveDocument(doSaveAs, false, editorShell.contentsMIMEType);
       window._content.focus();
       return result;
     }
@@ -315,7 +335,7 @@ var nsSaveAsCommand =
     if (window.editorShell)
     {
       FinishHTMLSource();
-      var result = window.editorShell.saveDocument(true, false, window.gDefaultSaveMimeType);
+      var result = window.editorShell.saveDocument(true, false, editorShell.contentsMIMEType);
       window._content.focus();
       return result;
     }
@@ -363,7 +383,7 @@ var nsSaveAsCharsetCommand =
       }
       else
       {
-      window.ok = window.editorShell.saveDocument(true, false, window.gDefaultSaveMimeType);
+        window.ok = window.editorShell.saveDocument(true, false, editorShell.contentsMIMEType);
       }
     }
     window._content.focus();
@@ -384,6 +404,9 @@ var nsRevertCommand =
   doCommand: function(aCommand)
   {
     // Confirm with the user to abandon current changes
+    var promptService = Components.classes["@mozilla.org/embedcomp/prompt-service;1"].getService();
+    promptService = promptService.QueryInterface(Components.interfaces.nsIPromptService);
+
     if (promptService)
     {
       var result = {value:0};
@@ -477,7 +500,7 @@ var nsPreviewCommand =
 {
   isCommandEnabled: function(aCommand, dummy)
   {
-    return (window.editorShell != null && (DocumentHasBeenSaved() || window.editorShell.documentModified));
+    return (window.editorShell && IsEditorContentHTML() && (DocumentHasBeenSaved() || window.editorShell.documentModified));
   },
 
   doCommand: function(aCommand)
@@ -612,7 +635,7 @@ var nsImageCommand =
 {
   isCommandEnabled: function(aCommand, dummy)
   {
-    return (window.editorShell && window.editorShell.documentEditable);
+    return (window.editorShell && window.editorShell.documentEditable && IsEditingRenderedHTML());
   },
   doCommand: function(aCommand)
   {
@@ -626,7 +649,7 @@ var nsHLineCommand =
 {
   isCommandEnabled: function(aCommand, dummy)
   {
-    return (window.editorShell && window.editorShell.documentEditable);
+    return (window.editorShell && window.editorShell.documentEditable && IsEditingRenderedHTML());
   },
   doCommand: function(aCommand)
   {
@@ -695,7 +718,7 @@ var nsLinkCommand =
 {
   isCommandEnabled: function(aCommand, dummy)
   {
-    return (window.editorShell && window.editorShell.documentEditable);
+    return (window.editorShell && window.editorShell.documentEditable && IsEditingRenderedHTML());
   },
   doCommand: function(aCommand)
   {
@@ -709,7 +732,7 @@ var nsAnchorCommand =
 {
   isCommandEnabled: function(aCommand, dummy)
   {
-    return (window.editorShell && window.editorShell.documentEditable);
+    return (window.editorShell && window.editorShell.documentEditable && IsEditingRenderedHTML());
   },
   doCommand: function(aCommand)
   {
@@ -723,7 +746,7 @@ var nsInsertHTMLCommand =
 {
   isCommandEnabled: function(aCommand, dummy)
   {
-    return (window.editorShell && window.editorShell.documentEditable);
+    return (window.editorShell && window.editorShell.documentEditable && IsEditingRenderedHTML());
   },
   doCommand: function(aCommand)
   {
@@ -737,7 +760,7 @@ var nsInsertCharsCommand =
 {
   isCommandEnabled: function(aCommand, dummy)
   {
-    return (window.editorShell && window.editorShell.documentEditable);
+    return (window.editorShell && window.editorShell.documentEditable && IsEditingRenderedHTML());
   },
   doCommand: function(aCommand)
   {
@@ -750,7 +773,7 @@ var nsInsertBreakCommand =
 {
   isCommandEnabled: function(aCommand, dummy)
   {
-    return (window.editorShell && window.editorShell.documentEditable);
+    return (window.editorShell && window.editorShell.documentEditable && IsEditingRenderedHTML());
   },
   doCommand: function(aCommand)
   {
@@ -763,7 +786,7 @@ var nsInsertBreakAllCommand =
 {
   isCommandEnabled: function(aCommand, dummy)
   {
-    return (window.editorShell && window.editorShell.documentEditable);
+    return (window.editorShell && window.editorShell.documentEditable && IsEditingRenderedHTML());
   },
   doCommand: function(aCommand)
   {
@@ -776,7 +799,7 @@ var nsListPropertiesCommand =
 {
   isCommandEnabled: function(aCommand, dummy)
   {
-    return (window.editorShell && window.editorShell.documentEditable);
+    return (window.editorShell && window.editorShell.documentEditable && IsEditingRenderedHTML());
   },
   doCommand: function(aCommand)
   {
@@ -791,7 +814,7 @@ var nsPagePropertiesCommand =
 {
   isCommandEnabled: function(aCommand, dummy)
   {
-    return (window.editorShell && window.editorShell.documentEditable);
+    return (window.editorShell && window.editorShell.documentEditable && IsEditingRenderedHTML());
   },
   doCommand: function(aCommand)
   {
@@ -806,7 +829,7 @@ var nsObjectPropertiesCommand =
   isCommandEnabled: function(aCommand, dummy)
   {
     var isEnabled = false;
-    if (window.editorShell && window.editorShell.documentEditable)
+    if (window.editorShell && window.editorShell.documentEditable && IsEditingRenderedHTML())
     {
       isEnabled = (GetObjectForProperties() != null ||
                    window.editorShell.GetSelectedElement("href") != null);
@@ -870,7 +893,7 @@ var nsSetSmiley =
 {
   isCommandEnabled: function(aCommand, dummy)
   {
-    return ( window.editorShell && window.editorShell.documentEditable);
+    return ( window.editorShell && window.editorShell.documentEditable && IsEditingRenderedHTML());
 
   },
 
@@ -959,7 +982,7 @@ var nsAdvancedPropertiesCommand =
 {
   isCommandEnabled: function(aCommand, dummy)
   {
-    return (window.editorShell && window.editorShell.documentEditable);
+    return (window.editorShell && window.editorShell.documentEditable && IsEditingRenderedHTML());
   },
   doCommand: function(aCommand)
   {
@@ -974,7 +997,7 @@ var nsColorPropertiesCommand =
 {
   isCommandEnabled: function(aCommand, dummy)
   {
-    return (window.editorShell && window.editorShell.documentEditable);
+    return (window.editorShell && window.editorShell.documentEditable && IsEditingRenderedHTML());
   },
   doCommand: function(aCommand)
   {
@@ -989,7 +1012,7 @@ var nsRemoveLinksCommand =
   isCommandEnabled: function(aCommand, dummy)
   {
     // We could see if there's any link in selection, but it doesn't seem worth the work!
-    return (window.editorShell && window.editorShell.documentEditable);
+    return (window.editorShell && window.editorShell.documentEditable && IsEditingRenderedHTML());
   },
   doCommand: function(aCommand)
   {
@@ -1004,7 +1027,7 @@ var nsNormalModeCommand =
 {
   isCommandEnabled: function(aCommand, dummy)
   {
-    return true; //(window.editorShell && window.editorShell.documentEditable);
+    return IsEditorContentHTML(); //(window.editorShell && window.editorShell.documentEditable);
   },
   doCommand: function(aCommand)
   {
@@ -1017,7 +1040,7 @@ var nsAllTagsModeCommand =
 {
   isCommandEnabled: function(aCommand, dummy)
   {
-    return (window.editorShell && window.editorShell.documentEditable);
+    return (window.editorShell && window.editorShell.documentEditable && IsEditorContentHTML());
   },
   doCommand: function(aCommand)
   {
@@ -1030,7 +1053,7 @@ var nsHTMLSourceModeCommand =
 {
   isCommandEnabled: function(aCommand, dummy)
   {
-    return (window.editorShell && window.editorShell.documentEditable);
+    return (window.editorShell && window.editorShell.documentEditable && IsEditorContentHTML());
   },
   doCommand: function(aCommand)
   {
@@ -1043,7 +1066,7 @@ var nsPreviewModeCommand =
 {
   isCommandEnabled: function(aCommand, dummy)
   {
-    return (window.editorShell && window.editorShell.documentEditable);
+    return (window.editorShell && window.editorShell.documentEditable && IsEditorContentHTML());
   },
   doCommand: function(aCommand)
   {
@@ -1058,7 +1081,7 @@ var nsInsertOrEditTableCommand =
 {
   isCommandEnabled: function(aCommand, dummy)
   {
-    return (window.editorShell && window.editorShell.documentEditable);
+    return (window.editorShell && window.editorShell.documentEditable && IsEditingRenderedHTML());
   },
   doCommand: function(aCommand)
   {
@@ -1153,7 +1176,7 @@ var nsInsertTableCommand =
 {
   isCommandEnabled: function(aCommand, dummy)
   {
-    return (window.editorShell && window.editorShell.documentEditable);
+    return window.editorShell && window.editorShell.documentEditable && IsEditingRenderedHTML();
   },
   doCommand: function(aCommand)
   {
@@ -1359,7 +1382,7 @@ var nsJoinTableCellsCommand =
 {
   isCommandEnabled: function(aCommand, dummy)
   {
-    if (window.editorShell && window.editorShell.documentEditable)
+    if (window.editorShell && window.editorShell.documentEditable && IsEditingRenderedHTML())
     {
       var tagNameObj = new Object;
       var countObj = new Object;
@@ -1407,7 +1430,7 @@ var nsSplitTableCellCommand =
 {
   isCommandEnabled: function(aCommand, dummy)
   {
-    if (window.editorShell && window.editorShell.documentEditable)
+    if (window.editorShell && window.editorShell.documentEditable && IsEditingRenderedHTML())
     {
       var tagNameObj = new Object;
       var countObj = new Object;
@@ -1507,6 +1530,8 @@ var nsConvertToTable =
 {
   isCommandEnabled: function(aCommand, dummy)
   {
+    if (window.editorShell && window.editorShell.documentEditable && IsEditingRenderedHTML())
+    {
     var selection = window.editorShell.editorSelection;
 
     if (selection && !selection.isCollapsed)
@@ -1525,6 +1550,7 @@ var nsConvertToTable =
         return false
       
       return true;
+      }
     }
     return false;
   },
@@ -1537,3 +1563,4 @@ var nsConvertToTable =
     window._content.focus();
   }
 };
+

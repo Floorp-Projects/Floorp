@@ -70,7 +70,6 @@ var gColorObj = new Object();
 var gPrefs;
 var gDefaultTextColor = "";
 var gDefaultBackgroundColor = "";
-var gDefaultSaveMimeType = "text/html";
 
 // These must be kept in synch with the XUL <options> lists
 var gFontSizeNames = new Array("xx-small","x-small","small","medium","large","x-large","xx-large");
@@ -108,6 +107,17 @@ function TextEditorOnLoad()
 function PageIsEmptyAndUntouched()
 {
   return (editorShell != null) && (editorShell.documentIsEmpty == true) && (docWasModified == false);
+}
+
+function IsEditorContentHTML()
+{
+  return (editorShell.contentsMIMEType == "text/html");
+}
+
+// are we editing HTML (i.e. neither in HTML source mode, nor editing a text file)
+function IsEditingRenderedHTML()
+{
+    return IsEditorContentHTML() && (gEditorDisplayMode != DisplayModeSource);
 }
 
 // This is called when the real editor document is created,
@@ -189,7 +199,7 @@ function EditorStartup(editorType, editorElement)
   EditorSharedStartup();
 
   // Commands specific to the Composer Application window,
-  //  (i.e., not embeded editors)
+  //  (i.e., not embedded editors)
   //  such as file-related commands, HTML Source editing, Edit Modes...
   SetupComposerWindowCommands();
 
@@ -211,17 +221,17 @@ function EditorSharedStartup()
       case "html":
       case "htmlmail":
         SetupHTMLEditorCommands();
-        window.gDefaultSaveMimeType = "text/html";
+        editorShell.contentsMIMEType = "text/html";
         break;
       case "text":
       case "textmail":
         SetupTextEditorCommands();
-        window.gDefaultSaveMimeType = "text/plain";
+        editorShell.contentsMIMEType = "text/plain";
         break;
       default:
         dump("INVALID EDITOR TYPE: "+editorShell.editorType+"\n");
         SetupTextEditorCommands();
-        window.gDefaultSaveMimeType = "text/plain";
+        editorShell.contentsMIMEType = "text/plain";
         break;
   }
 
@@ -395,6 +405,9 @@ function CheckAndSaveDocument(reasonToSave, allowDontSave)
   var dialogMsg = window.editorShell.GetString("SaveFilePrompt");
   dialogMsg = (dialogMsg.replace(/%title%/,title)).replace(/%reason%/,reasonToSave);
 
+  var promptService = Components.classes["@mozilla.org/embedcomp/prompt-service;1"].getService();
+  promptService = promptService.QueryInterface(Components.interfaces.nsIPromptService);
+
   var result = {value:0};
   promptService.confirmEx(window, dialogTitle, dialogMsg,
   						  (promptService.BUTTON_TITLE_SAVE * promptService.BUTTON_POS_0) +
@@ -406,7 +419,7 @@ function CheckAndSaveDocument(reasonToSave, allowDontSave)
    if (result.value == 0)
    {
      // Save
-     var success = window.editorShell.saveDocument(false, false, window.gDefaultSaveMimeType);
+     var success = window.editorShell.saveDocument(false, false, editorShell.contentsMIMEType);
      return success;
    }
 
@@ -1230,15 +1243,15 @@ function SetDisplayMode(mode)
       // Switch to the sourceWindow (second in the deck)
       gContentWindowDeck.setAttribute("index","1");
 
-      DisableMenusForHTMLSource(true);
-
-      //Hide the formating toolbar if not already hidden
+      //Hide the formatting toolbar if not already hidden
       gFormatToolbarHidden = gFormatToolbar.getAttribute("hidden");
       if (gFormatToolbarHidden != "true")
       {
         gFormatToolbar.setAttribute("hidden", "true");
       }
 
+      // update commands to disable stuff
+      window.updateCommands("mode_switch");
       gSourceContentWindow.focus();
     }
     else
@@ -1247,12 +1260,13 @@ function SetDisplayMode(mode)
       gContentWindowDeck.setAttribute("index","0");
 
       // Restore menus and toolbars
-      DisableMenusForHTMLSource(false);
-
       if (gFormatToolbarHidden != "true")
       {
         gFormatToolbar.setAttribute("hidden", gFormatToolbarHidden);
       }
+
+      // update commands to re-enable stuff
+      window.updateCommands("mode_switch");
 
       gContentWindow.focus();
     }
@@ -1285,51 +1299,6 @@ function SetDisplayMode(mode)
     return true;
   }
   return false;
-}
-
-// We disable all items in View menu except Edit mode and sidebar items
-function DisableMenusForHTMLSource(disable)
-{
-  // Disable toolbar buttons
-  DisableItem("spellingButton", disable);
-  DisableItem("imageButton", disable);
-  DisableItem("hlineButton", disable);
-  DisableItem("tableButton", disable);
-  DisableItem("linkButton", disable);
-  DisableItem("namedAnchorButton", disable);
-
-  // Any toolbar can be toggled on/off except the format toolbar
-  DisableItem("viewFormatToolbar", disable);
-
-
-  // Top-level menus that we completely hide
-  CollapseItem("insertMenu", disable);
-  CollapseItem("formatMenu", disable);
-  CollapseItem("tableMenu", disable);
-
-  // Edit menu items
-  DisableItem("menu_find", disable);
-  DisableItem("menu_findnext", disable);
-  DisableItem("menu_replace", disable);
-  DisableItem("menu_checkspelling", disable);
-
-  // Disable all items in the view menu except mode switch items
-  var viewMenu = document.getElementById("viewMenu");
-  // menuitems are children of the menupopup child
-  var children = viewMenu.firstChild.childNodes;
-  for (var i = 0; i < children.length; i++)
-  {
-    var item = children.item(i);
-    if (item.id != "viewToolbar" &&
-        item.id != "viewNormalMode" &&
-        item.id != "viewAllTagsMode" &&
-        item.id != "viewSourceMode" &&
-        item.id != "viewPreviewMode" &&
-        item.id != "sidebar-menu")
-    {
-      DisableItem(item.id, disable);
-    }
-  }
 }
 
 function EditorToggleParagraphMarks()
@@ -1529,8 +1498,10 @@ function  getUnicharPref(aPrefName, aDefVal)
 
 function EditorInitFormatMenu()
 {
-  InitObjectPropertiesMenuitem("objectProperties");
-  InitRemoveStylesMenuitems("removeStylesMenuitem", "removeLinksMenuitem");
+  try {
+    InitObjectPropertiesMenuitem("objectProperties");
+    InitRemoveStylesMenuitems("removeStylesMenuitem", "removeLinksMenuitem");
+  } catch(ex) {}
   // Set alignment check
 }
 
@@ -1542,9 +1513,12 @@ function InitObjectPropertiesMenuitem(id)
   var menuItem = document.getElementById(id);
   if (!menuItem) return null;
 
-  var element = GetObjectForProperties();
+  var element;
   var menuStr = GetString("ObjectProperties");
   var name;
+
+  if (IsEditingRenderedHTML())
+    element = GetObjectForProperties();
 
   if (element && element.nodeName)
   {
@@ -1671,6 +1645,18 @@ function InitAlignMenu()
 function EditorInitToolbars()
 {
   // Nothing to do now, but we might want some state updating here
+  if (!IsEditorContentHTML())
+  {
+    //Hide the formating toolbar
+    gFormatToolbar.setAttribute("hidden", "true");
+
+    //Hide the edit mode toolbar
+    gEditModeBar.setAttribute("hidden", "true");
+    
+    DisableItem("cmd_viewFormatToolbar", true);
+    DisableItem("cmd_viewEditModeToolbar", true);
+  }
+
 }
 
 function EditorSetDefaultPrefsAndDoctype()
@@ -2044,7 +2030,7 @@ function IsSpellCheckerInstalled()
   var spellcheckerClass = Components.classes["@mozilla.org/spellchecker;1"];
   gHaveSpellChecker = (spellcheckerClass != null);
   gSoughtSpellChecker = true;
-  dump("Have SpellChecker = "+gHaveSpellChecker+"\n");
+  //dump("Have SpellChecker = "+gHaveSpellChecker+"\n");
   return gHaveSpellChecker;
 }
 
@@ -2059,7 +2045,7 @@ function IsFindInstalled()
   var findClass = Components.classes["@mozilla.org/appshell/component/find;1"];
   gHaveFind = (findClass != null);
   gSoughtFind = true;
-  dump("Have Find = "+gHaveFind+"\n");
+  //dump("Have Find = "+gHaveFind+"\n");
   return gHaveFind;
 }
 
@@ -2139,7 +2125,9 @@ function GetPrefsService()
 //   with this "oncreate" hander:
 function EditorInitTableMenu()
 {
-  InitJoinCellMenuitem("menu_JoinTableCells");
+  try {
+    InitJoinCellMenuitem("menu_JoinTableCells");
+  } catch (ex) {}
 
   // Set enable states for all table commands
   goUpdateTableMenuItems(document.getElementById("composerTableMenuItems"));
@@ -2159,7 +2147,12 @@ function InitJoinCellMenuitem(id)
   // Use "Join selected cells if there's more than 1 cell selected
   var tagNameObj = new Object;
   var countObj = new Object;
-  if (window.editorShell.GetSelectedOrParentTableElement(tagNameObj, countObj) && countObj.value > 1)
+  var foundElement;
+  
+  if (IsEditingRenderedHTML())
+    foundElement = window.editorShell.GetSelectedOrParentTableElement(tagNameObj, countObj);
+    
+  if (foundElement && countObj.value > 1)
     menuText = GetString("JoinSelectedCells");
   else
     menuText = GetString("JoinCellToRight");
@@ -2195,9 +2188,9 @@ function InitRemoveStylesMenuitems(removeStylesId, removeLinksId)
 function goUpdateTableMenuItems(commandset)
 {
   var enabled = false;
-
   var enabledIfTable = false;
-  if (window.editorShell && window.editorShell.documentEditable)
+
+  if (window.editorShell && window.editorShell.documentEditable && IsEditingRenderedHTML())
   {
     var selectedCountObj = new Object();
     var tagNameObj = new Object();
@@ -2246,13 +2239,13 @@ function goUpdateTableMenuItems(commandset)
 
 function IsInTable()
 {
-  return (window.editorShell && window.editorShell.documentEditable &&
+  return (window.editorShell && window.editorShell.documentEditable && IsEditingRenderedHTML() &&
           null != window.editorShell.GetElementOrParentByTagName("table", null));
 }
 
 function IsInTableCell()
 {
-  return (window.editorShell && window.editorShell.documentEditable &&
+  return (window.editorShell && window.editorShell.documentEditable && IsEditingRenderedHTML() &&
           null != window.editorShell.GetElementOrParentByTagName("td", null));
 }
 
@@ -2476,3 +2469,4 @@ function SwitchInsertCharToAnotherEditorOrClose()
     window.InsertCharWindow.close();
   }
 }
+

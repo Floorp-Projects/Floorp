@@ -94,6 +94,24 @@ nsBaseComposerCommand::SetCommandNodeState(const nsAReadableString & aCommandNam
   return uiNode->SetAttribute(NS_ConvertASCIItoUCS2("state"), inNodeState);
 }
 
+//--------------------------------------------------------------------------------------------------------------------
+PRBool
+nsBaseComposerCommand::EditingHTML(nsIEditorShell* inEditorShell)
+//--------------------------------------------------------------------------------------------------------------------
+{
+  nsXPIDLCString  mimeType;
+  inEditorShell->GetContentsMIMEType(getter_Copies(mimeType));
+  if (nsCRT::strcmp(mimeType, "text/html") != 0)
+    return PR_FALSE;
+
+  PRBool sourceMode = PR_FALSE;
+  inEditorShell->IsHTMLSourceMode(&sourceMode);
+  if (sourceMode)
+    return PR_FALSE;
+    
+  return PR_TRUE;
+}
+
 
 #ifdef XP_MAC
 #pragma mark -
@@ -119,23 +137,12 @@ nsBaseStateUpdatingCommand::IsCommandEnabled(const nsAReadableString & aCommandN
 {
   nsCOMPtr<nsIEditorShell> editorShell = do_QueryInterface(refCon);
   *outCmdEnabled = PR_FALSE;  
-  if (!editorShell) return NS_OK;
-  // check for plain text?
-  nsCOMPtr<nsIEditor> editor;
-  editorShell->GetEditor(getter_AddRefs(editor));
-  if (!editor) return NS_OK;
  
-  // Enable commands only if not in HTML source edit mode
-  PRBool sourceMode = PR_FALSE;
-  editorShell->IsHTMLSourceMode(&sourceMode);
-  *outCmdEnabled = !sourceMode;
-    
-  // also udpate the command state  
-  nsresult rv = UpdateCommandState(aCommandName, refCon);
-  if (NS_FAILED(rv))
+  if (editorShell && EditingHTML(editorShell))
   {
-    *outCmdEnabled = PR_FALSE;
-    return NS_OK;
+    *outCmdEnabled = PR_TRUE;
+    // also udpate the command state. 
+    UpdateCommandState(aCommandName, refCon);
   }
   
   return NS_OK;
@@ -472,7 +479,7 @@ nsRemoveListCommand::IsCommandEnabled(const nsAReadableString & aCommandName, ns
 {
   nsCOMPtr<nsIEditorShell> editorShell = do_QueryInterface(refCon);
   *outCmdEnabled = PR_FALSE;
-  if (editorShell)
+  if (editorShell && EditingHTML(editorShell))
   {
     // It is enabled if we are in any list type
     PRBool bMixed;
@@ -515,7 +522,7 @@ nsIndentCommand::IsCommandEnabled(const nsAReadableString & aCommandName, nsISup
 {
   nsCOMPtr<nsIEditorShell> editorShell = do_QueryInterface(refCon);
   *outCmdEnabled = PR_FALSE;
-  if (editorShell)
+  if (editorShell && EditingHTML(editorShell))
   {
     nsCOMPtr<nsIEditor> editor;
     editorShell->GetEditor(getter_AddRefs(editor));
@@ -547,7 +554,7 @@ nsOutdentCommand::IsCommandEnabled(const nsAReadableString & aCommandName, nsISu
 {
   nsCOMPtr<nsIEditorShell> editorShell = do_QueryInterface(refCon);
   *outCmdEnabled = PR_FALSE;
-  if (editorShell)
+  if (editorShell && EditingHTML(editorShell))
   {
     nsCOMPtr<nsIEditor> editor;
     editorShell->GetEditor(getter_AddRefs(editor));
@@ -571,7 +578,7 @@ nsOutdentCommand::DoCommand(const nsAReadableString & aCommandName, nsISupports 
   nsCOMPtr<nsIEditorShell> editorShell = do_QueryInterface(refCon);
 
   nsresult rv = NS_OK;
-  if (editorShell)
+  if (editorShell && EditingHTML(editorShell))
   {
     nsAutoString indentStr; indentStr.AssignWithConversion("outdent");
     rv = editorShell->Indent(indentStr.GetUnicode());
@@ -602,7 +609,7 @@ nsMultiStateCommand::IsCommandEnabled(const nsAReadableString & aCommandName, ns
 {
   nsCOMPtr<nsIEditorShell> editorShell = do_QueryInterface(refCon);
   *outCmdEnabled = PR_FALSE;
-  if (editorShell)
+  if (editorShell && EditingHTML(editorShell))
   {
     nsCOMPtr<nsIEditor> editor;
     editorShell->GetEditor(getter_AddRefs(editor));
@@ -923,7 +930,7 @@ nsRemoveStylesCommand::IsCommandEnabled(const nsAReadableString & aCommandName, 
 {
   nsCOMPtr<nsIEditorShell> editorShell = do_QueryInterface(refCon);
   *outCmdEnabled = PR_FALSE;
-  if (editorShell)
+  if (editorShell && EditingHTML(editorShell))
   {
     nsCOMPtr<nsIEditor> editor;
     editorShell->GetEditor(getter_AddRefs(editor));
@@ -968,7 +975,7 @@ nsIncreaseFontSizeCommand::IsCommandEnabled(const nsAReadableString & aCommandNa
 {
   nsCOMPtr<nsIEditorShell> editorShell = do_QueryInterface(refCon);
   *outCmdEnabled = PR_FALSE;
-  if (editorShell)
+  if (editorShell && EditingHTML(editorShell))
   {
     nsCOMPtr<nsIEditor> editor;
     editorShell->GetEditor(getter_AddRefs(editor));
@@ -1006,7 +1013,7 @@ nsDecreaseFontSizeCommand::IsCommandEnabled(const nsAReadableString & aCommandNa
 {
   nsCOMPtr<nsIEditorShell> editorShell = do_QueryInterface(refCon);
   *outCmdEnabled = PR_FALSE;
-  if (editorShell)
+  if (editorShell && EditingHTML(editorShell))
   {
     nsCOMPtr<nsIEditor> editor;
     editorShell->GetEditor(getter_AddRefs(editor));

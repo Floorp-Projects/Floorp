@@ -59,6 +59,8 @@ protected:
   nsresult    GetCommandNodeState(const nsAReadableString & aCommandName, nsIEditorShell* editorShell, nsString& outNodeState);
   nsresult    SetCommandNodeState(const nsAReadableString & aCommandName, nsIEditorShell* editorShell, const nsString& inNodeState);
 
+  // are we in HTML edit mode (not source view or plain text editing)
+  PRBool      EditingHTML(nsIEditorShell* inEditorShell);
 };
 
 

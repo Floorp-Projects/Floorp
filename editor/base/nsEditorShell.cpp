@@ -100,6 +100,8 @@
 #include "nsILookAndFeel.h"
 
 #include "nsIChromeRegistry.h"
+#include "nsCExternalHandlerService.h"
+#include "nsIMIMEService.h"
 
 ///////////////////////////////////////
 // Editor Includes
@@ -207,13 +209,14 @@ GetChromeElement(nsIDocShell *aShell, const char *aID, nsIDOMElement **aElement)
 // Utility to set and attribute of a UI element
 static nsresult 
 SetChromeAttribute(nsIDocShell *aShell, const char *aID, 
-                    const char *aName,  const nsString &aValue)
+                    const nsAString& aName,  const nsAString &aValue)
 {
   nsCOMPtr<nsIDOMElement> elem;
   nsresult rv = GetChromeElement(aShell, aID, getter_AddRefs(elem));
+
+  // Set the text attribute.
   if (NS_SUCCEEDED(rv) && elem)
-    // Set the text attribute.
-    rv = elem->SetAttribute( NS_ConvertASCIItoUCS2(aName), aValue);
+    rv = elem->SetAttribute(aName, aValue);
 
   return rv;
 }
@@ -254,6 +257,8 @@ nsEditorShell::nsEditorShell()
 ,  mCloseWindowWhenLoaded(PR_FALSE)
 ,  mCantEditReason(eCantEditNoReason)
 ,  mEditorType(eUninitializedEditorType)
+,  mContentMIMEType("text/html")
+,  mContentTypeKnown(PR_FALSE)
 ,  mWrapColumn(0)
 ,  mSuggestedWordIndex(0)
 ,  mDictionaryIndex(0)
@@ -434,6 +439,37 @@ nsEditorShell::ResetEditingState()
   // URL load, they don't get transferred to the new editor.
 
   return NS_OK;
+}
+
+
+// is this a MIME type that we support the editing of, in plain text mode?
+const char* const gSupportedTextTypes[] = {
+  "text/plain",
+  "text/css",
+  "text/rdf",
+  "text/xml",
+  "text/xsl",
+  "text/javascript",    // obsolete type
+  "application/x-javascript",
+  "text/xul",           // obsolete type
+  "application/vnd.mozilla.xul+xml",
+  NULL      // IMPORTANT! Null must be at end
+};
+
+PRBool
+nsEditorShell::IsSupportedTextType(const char* aMIMEType)
+{
+  PRInt32   i = 0;
+  
+  while (gSupportedTextTypes[i])
+  {
+    if (nsCRT::strcmp(gSupportedTextTypes[i], aMIMEType) == 0)
+      return PR_TRUE;
+  
+    i ++;
+  }
+  
+  return PR_FALSE;
 }
 
 nsresult    
@@ -884,6 +920,21 @@ nsEditorShell::GetEditorType(PRUnichar **_retval)
   return NS_OK;
 }
 
+/* attribute string contentsMIMEType; */
+NS_IMETHODIMP
+nsEditorShell::GetContentsMIMEType(char * *aContentsMIMEType)
+{
+  NS_ENSURE_ARG_POINTER(aContentsMIMEType);
+  *aContentsMIMEType = mContentMIMEType.ToNewCString();
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsEditorShell::SetContentsMIMEType(const char * aContentsMIMEType)
+{
+  mContentMIMEType.Assign(aContentsMIMEType ? aContentsMIMEType : "");
+  return NS_OK;
+}
 
 nsresult
 nsEditorShell::InstantiateEditor(nsIDOMDocument *aDoc, nsIPresShell *aPresShell)
@@ -895,58 +946,66 @@ nsEditorShell::InstantiateEditor(nsIDOMDocument *aDoc, nsIPresShell *aPresShell)
   if (mEditor)
     return NS_ERROR_ALREADY_INITIALIZED;
 
-  nsresult err = NS_OK;
+  nsresult rv = NS_OK;
   
   nsCOMPtr<nsIEditor> editor;
-  err = nsComponentManager::CreateInstance(kHTMLEditorCID, nsnull, NS_GET_IID(nsIEditor), getter_AddRefs(editor));
-  if(!editor)
-    err = NS_ERROR_OUT_OF_MEMORY;
+  rv = nsComponentManager::CreateInstance(kHTMLEditorCID, nsnull, NS_GET_IID(nsIEditor), getter_AddRefs(editor));
+  if (NS_FAILED(rv)) return rv;
+
   nsCOMPtr<nsISelectionController> selCon = do_QueryInterface(aPresShell);
   
-  if (NS_SUCCEEDED(err))
+  if (mEditorTypeString.EqualsWithConversion("text"))
   {
-    if (mEditorTypeString.EqualsWithConversion("text"))
+    PRInt16 flags = nsIPlaintextEditor::eEditorPlaintextMask | nsIPlaintextEditor::eEditorEnableWrapHackMask;
+    if (mMailCompose) flags |= nsIPlaintextEditor::eEditorMailMask;
+    rv = editor->Init(aDoc, aPresShell, nsnull, selCon, flags);
+    mEditorType = ePlainTextEditorType;
+  }
+  else if (mEditorTypeString.EqualsWithConversion("html") || mEditorTypeString.IsEmpty())  // empty string default to HTML editor
+  {
+    PRUint32    editorFlags = 0;
+    EEditorType editorType  = eHTMLTextEditorType;
+    
+    // if the MIME type of the docment we are editing is text/plain, make a text editor
+    if (IsSupportedTextType(mContentMIMEType))
     {
-      PRInt16 flags = nsIPlaintextEditor::eEditorPlaintextMask | nsIPlaintextEditor::eEditorEnableWrapHackMask;
-      if (mMailCompose) flags |= nsIPlaintextEditor::eEditorMailMask;
-      err = editor->Init(aDoc, aPresShell, nsnull, selCon, flags);
-      mEditorType = ePlainTextEditorType;
+      editorFlags = nsIPlaintextEditor::eEditorPlaintextMask;
+      editorType  = ePlainTextEditorType;
     }
-    else if (mEditorTypeString.EqualsWithConversion("html") || mEditorTypeString.IsEmpty())  // empty string default to HTML editor
-    {
-      err = editor->Init(aDoc, aPresShell, nsnull, selCon, 0);
-      mEditorType = eHTMLTextEditorType;
-    }
-    else if (mEditorTypeString.EqualsWithConversion("htmlmail"))  //  HTML editor with special mail rules
-    {
-      err = editor->Init(aDoc, aPresShell, nsnull, selCon, nsIPlaintextEditor::eEditorMailMask);
-      mEditorType = eHTMLTextEditorType;
-    }
-    else
-    {
-      err = NS_ERROR_INVALID_ARG;    // this is not an editor we know about
+    
+    rv = editor->Init(aDoc, aPresShell, nsnull, selCon, editorFlags);
+    mEditorType = editorType;
+  }
+  else if (mEditorTypeString.EqualsWithConversion("htmlmail"))  //  HTML editor with special mail rules
+  {
+    rv = editor->Init(aDoc, aPresShell, nsnull, selCon, nsIPlaintextEditor::eEditorMailMask);
+    mEditorType = eHTMLTextEditorType;
+  }
+  else
+  {
+    rv = NS_ERROR_INVALID_ARG;    // this is not an editor we know about
 #if DEBUG
-      nsAutoString  errorMsg; errorMsg.AssignWithConversion("Failed to init editor. Unknown editor type \"");
-      errorMsg += mEditorTypeString;
-      errorMsg.AppendWithConversion("\"\n");
-      char  *errorMsgCString = errorMsg.ToNewCString();
-         NS_WARNING(errorMsgCString);
-         nsCRT::free(errorMsgCString);
+    nsAutoString  errorMsg; errorMsg.AssignWithConversion("Failed to init editor. Unknown editor type \"");
+    errorMsg += mEditorTypeString;
+    errorMsg.AppendWithConversion("\"\n");
+    char  *errorMsgCString = errorMsg.ToNewCString();
+    NS_WARNING(errorMsgCString);
+    nsCRT::free(errorMsgCString);
 #endif
-    }
+  }
 
     // disable the preference style sheet so we can override colors
-    if (NS_SUCCEEDED(err)) {
-      err = aPresShell->EnablePrefStyleRules(PR_FALSE,0);
-    }
+  if (NS_SUCCEEDED(rv))
+  {
+    rv = aPresShell->EnablePrefStyleRules(PR_FALSE,0);
+  }
 
-    if (NS_SUCCEEDED(err) && editor)
-    {
-      mEditor = do_QueryInterface(editor);    // this does the addref that is the owning reference
-    }
+  if (NS_SUCCEEDED(rv) && editor)
+  {
+    mEditor = do_QueryInterface(editor);    // this does the addref that is the owning reference
   }
     
-  return err;
+  return rv;
 }
 
 
@@ -1688,6 +1747,27 @@ nsEditorShell::CheckOpenWindowForURLMatch(const PRUnichar* inFileURL, nsIDOMWind
   return NS_OK;
 }
 
+// helper function
+static nsresult GetExtensionForMIMEType(const char* inMIMEType, nsACString& outExtension)
+{
+  nsresult  rv;
+  nsCOMPtr<nsIMIMEService> mimeService = do_GetService(NS_MIMESERVICE_CONTRACTID, &rv);
+  if (NS_FAILED(rv)) return rv;
+  
+  nsCOMPtr<nsIMIMEInfo>   mimeInfo;
+  rv = mimeService->GetFromMIMEType(inMIMEType, getter_AddRefs(mimeInfo));
+  if (NS_FAILED(rv)) return rv;
+
+  nsXPIDLCString  fileExtension;
+  rv = mimeInfo->FirstExtension(getter_Copies(fileExtension));
+  if (NS_FAILED(rv)) return rv;
+  
+  outExtension.Assign(fileExtension);
+
+  return NS_OK;
+}
+
+
 NS_IMETHODIMP 
 nsEditorShell::SaveDocument(PRBool aSaveAs, PRBool aSaveCopy, const PRUnichar* aMimeType, PRBool *_retval)
 {
@@ -1696,13 +1776,20 @@ nsEditorShell::SaveDocument(PRBool aSaveAs, PRBool aSaveCopy, const PRUnichar* a
 
   NS_ENSURE_ARG_POINTER((aMimeType));
 
-  nsAutoString mimeType(aMimeType);
-  PRBool saveAsText = mimeType.EqualsWithConversion("text/plain");
+  nsCAutoString mimeTypeCStr; mimeTypeCStr.AssignWithConversion(aMimeType);
+  PRBool saveAsText = IsSupportedTextType(mimeTypeCStr);
 
   // Currently, we only understand plain text and html
-  if (!mimeType.EqualsWithConversion("text/html") && !saveAsText)
+  if (!mimeTypeCStr.Equals("text/html") && !saveAsText)
     return NS_ERROR_FAILURE;
 
+  nsAutoString    mimeType(aMimeType);
+  
+  // if we're saving as text, force the text/plain MIME type (because we use this
+  // to get a content serializer on save)
+  if (saveAsText)
+    mimeType.Assign(NS_LITERAL_STRING("text/plain").get());
+  
   switch (mEditorType)
   {
     case ePlainTextEditorType:
@@ -1858,11 +1945,12 @@ nsEditorShell::SaveDocument(PRBool aSaveAs, PRBool aSaveCopy, const PRUnichar* a
                 title.ReplaceChar(" .\\/@:", (PRUnichar)'_');
               }
 
+              // get the correct extension from the MIME type here
               fileName = title;
-              if (saveAsText)
-                fileName.AppendWithConversion(".txt");
-              else
-                fileName.AppendWithConversion(".html");
+              nsCAutoString fileExt(saveAsText ? "txt" : "html");
+              GetExtensionForMIMEType(mimeTypeCStr.get(), fileExt);
+              fileName.Append(PRUnichar('.'));
+              fileName.AppendWithConversion(fileExt);
             } 
             else  // have a file spec
             {
@@ -1881,9 +1969,12 @@ nsEditorShell::SaveDocument(PRBool aSaveAs, PRBool aSaveCopy, const PRUnichar* a
                   index = fileName.RFind(".shtml", PR_TRUE);
                 if (index > 0)
                 {
+                  nsCAutoString fileExt("txt");
+                  GetExtensionForMIMEType(mimeTypeCStr.get(), fileExt);
+
                   // Truncate after "." and append "txt" extension
                   fileName.SetLength(index+1);
-                  fileName.AppendWithConversion("txt");
+                  fileName.AppendWithConversion(fileExt);
                 }
               }
 
@@ -4934,6 +5025,8 @@ nsEditorShell::OnStateChange(nsIWebProgress *aProgress,
                              PRInt32 aStateFlags,
                              nsresult aStatus)
 {
+  nsresult    rv = NS_OK;
+  
   //
   // A Request has started...
   //
@@ -4942,7 +5035,8 @@ nsEditorShell::OnStateChange(nsIWebProgress *aProgress,
     // Page level notification...
     if (aStateFlags & nsIWebProgressListener::STATE_IS_NETWORK)
     {
-      StartPageLoad();
+      nsCOMPtr<nsIChannel> channel(do_QueryInterface(aRequest));
+      StartPageLoad(channel);
     }
     // Document level notification...
     if (aStateFlags & nsIWebProgressListener::STATE_IS_DOCUMENT)
@@ -5013,12 +5107,36 @@ nsEditorShell::OnSecurityChange(nsIWebProgress *aWebProgress,
   return NS_OK;
 }
 
-nsresult nsEditorShell::StartPageLoad()
+nsresult nsEditorShell::StartPageLoad(nsIChannel *aChannel)
 {
+  nsXPIDLCString  contentType;
+  aChannel->GetContentType(getter_Copies(contentType));
+  
+  // save the original MIME type; we'll use it later
+  mContentMIMEType.Assign(contentType.get() ? contentType : "");
+  
+  if (nsCRT::strcmp(contentType, "text/html") == 0)
+  {
+    // fine, do nothing
+    mContentTypeKnown = PR_TRUE;
+  }
+  else if (IsSupportedTextType(contentType))
+  {
+    // set the mime type to text/plain so that it renders as text
+    aChannel->SetContentType("text/plain");
+    mContentTypeKnown = PR_TRUE;
+  }
+  else
+  {
+    // we don't know what this is yet. It might be HTML loaded from 
+    // a directory URL (http://www.foo.com/). We'll know the real
+    // MIME type later.
+    mContentTypeKnown = PR_FALSE;
+  }
+
   // Start the throbber
   // TODO: We should also start/stop it for saving and publishing?
-  SetChromeAttribute( mDocShell, "Editor:Throbber", "busy", 
-                      NS_ConvertASCIItoUCS2("true") );
+  SetChromeAttribute( mDocShell, "Editor:Throbber", NS_LITERAL_STRING("busy"), NS_LITERAL_STRING("true") );
 
   // set up a parser observer
   if (!mParserObserver)
@@ -5029,6 +5147,7 @@ nsresult nsEditorShell::StartPageLoad()
     }
     NS_ADDREF(mParserObserver);
     mParserObserver->RegisterTagToWatch("FRAMESET");
+    mParserObserver->RegisterTagToWatch("IFRAME");
     mParserObserver->Start();
   }
 
@@ -5048,12 +5167,31 @@ nsresult nsEditorShell::EndPageLoad(nsIDOMWindow *aDOMWindow,
     NS_RELEASE(mParserObserver);
   }
 
-  SetChromeAttribute( mDocShell, "Editor:Throbber", "busy", 
-                      NS_ConvertASCIItoUCS2("false") );
+  SetChromeAttribute( mDocShell, "Editor:Throbber", NS_LITERAL_STRING("busy"), NS_LITERAL_STRING("false") );
+
+  // Is this a MIME type we can handle?
+  if (aChannel)
+  {
+    // if we didn't get the content-type at the start of the load, get it now
+    if (!mContentTypeKnown)
+    {
+      nsXPIDLCString  contentType;
+      aChannel->GetContentType(getter_Copies(contentType));
+
+      if (contentType.get())
+        mContentMIMEType.Assign(contentType);
+    }
+  }    
+    
+  if ( !mContentMIMEType.Equals("text/html") && !IsSupportedTextType(mContentMIMEType) )
+  {
+      mCloseWindowWhenLoaded = PR_TRUE;
+      mCantEditReason = eCantEditMimeType;
+  }
 
   nsAutoString doneText;
   GetBundleString(NS_LITERAL_STRING("LoadingDone"), doneText);
-  SetChromeAttribute(mDocShell, "statusText", "label", doneText);
+  SetChromeAttribute(mDocShell, "statusText", NS_LITERAL_STRING("label"), doneText);
 
   // Display an Alert dialog if the page cannot be edited...
   if (mCloseWindowWhenLoaded)
@@ -5101,6 +5239,7 @@ nsresult nsEditorShell::EndPageLoad(nsIDOMWindow *aDOMWindow,
   {
     nsCOMPtr<nsIURI>  url;
     aChannel->GetURI(getter_AddRefs(url));
+
     (void) PrepareDocumentForEditing(aDOMWindow, url);
   }
   
@@ -5143,24 +5282,6 @@ nsresult nsEditorShell::EndDocumentLoad(nsIDOMWindow *aDOMWindow,
   nsCOMPtr<nsIRefreshURI> refreshURI = do_QueryInterface(mContentAreaDocShell);
   if (refreshURI)
     refreshURI->CancelRefreshURITimers();
-
-  // Is this a MIME type we can handle?
-  if (aChannel)
-  {
-    char  *contentType;
-    aChannel->GetContentType(&contentType);
-    if (contentType)
-    {
-      if ( (nsCRT::strcmp(contentType, "text/html") != 0) &&
-           (nsCRT::strcmp(contentType, "text/plain") != 0))
-      {
-        mCloseWindowWhenLoaded = PR_TRUE;
-        mCantEditReason = eCantEditMimeType;
-      }
-  
-      nsMemory::Free(contentType);
-    }
-  }
   
   return NS_OK;
 }

@@ -250,7 +250,7 @@
       </box>
     </deck>
 
-    <box id="EditModeToolbar" hidden="false" autostretch="never" valign="middle" persist="hidden collapsed">
+    <box id="EditModeToolbar" hidden="false" autostretch="never" valign="middle" persist="collapsed">
       <tabs id="EditModeTabs" class="tabs-bottom" flex="1">
         <tab id="NormalModeButton"/>
         <tab id="TagModeButton"/>

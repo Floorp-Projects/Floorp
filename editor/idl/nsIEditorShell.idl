@@ -45,6 +45,7 @@ interface nsIEditorShell : nsISupports
   attribute nsIDOMWindowInternal webShellWindow;
   attribute nsIDOMWindowInternal contentWindow;
   attribute wstring              editorType;
+  attribute string               contentsMIMEType;
            
   readonly attribute nsIEditor editor;
   
