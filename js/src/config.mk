@@ -154,8 +154,8 @@ DEPENDENCIES    = $(OBJDIR)/.md
 LCJAR = js15lc30.jar
 
 # Library name
-LIB := lib
+LIBDIR := lib
 ifeq ($(CPU_ARCH), x86_64)
-LIB := lib64
+LIBDIR := lib64
 endif
 

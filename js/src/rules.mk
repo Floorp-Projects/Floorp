@@ -153,18 +153,18 @@ endif
 
 export:
 	+$(LOOP_OVER_PREDIRS)	
-	mkdir -p $(DIST)/include $(DIST)/$(LIB) $(DIST)/bin
+	mkdir -p $(DIST)/include $(DIST)/$(LIBDIR) $(DIST)/bin
 ifneq "$(strip $(HFILES))" ""
 	$(CP) $(HFILES) $(DIST)/include
 endif
 ifneq "$(strip $(LIBRARY))" ""
-	$(CP) $(LIBRARY) $(DIST)/$(LIB)
+	$(CP) $(LIBRARY) $(DIST)/$(LIBDIR)
 endif
 ifneq "$(strip $(JARS))" ""
-	$(CP) $(JARS) $(DIST)/$(LIB)
+	$(CP) $(JARS) $(DIST)/$(LIBDIR)
 endif
 ifneq "$(strip $(SHARED_LIBRARY))" ""
-	$(CP) $(SHARED_LIBRARY) $(DIST)/$(LIB)
+	$(CP) $(SHARED_LIBRARY) $(DIST)/$(LIBDIR)
 endif
 ifneq "$(strip $(PROGRAM))" ""
 	$(CP) $(PROGRAM) $(DIST)/bin
