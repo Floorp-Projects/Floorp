@@ -1,0 +1,93 @@
+<?xml version="1.0"?> 
+<?xml-stylesheet href="chrome://global/skin/" type="text/css"?>
+
+<!DOCTYPE window SYSTEM "chrome://messenger/locale/pref-connection.dtd" >
+<dialog xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        onload="window.opener.top.initPanel('chrome://messenger/content/pref-connection.xul', window);"
+        buttons="accept,cancel" ondialogaccept="return onConnectionsDialogOK(event);"
+        title="&lHeader;">
+        
+  <stringbundle id="bundle_prefutilities"
+                src="chrome://pref/locale/prefutilities.properties"/>
+  <script type="application/x-javascript" src="chrome://messenger/content/pref-connection.js"/>
+  
+  <groupbox>
+    <caption label="&proxyTitle.label;"/>
+      
+      <radiogroup id="networkProxyType" prefstring="network.proxy.type">
+        <radio value="0" label="&directTypeRadio.label;" accesskey="&directTypeRadio.accesskey;" oncommand="DoEnabling();"/>
+        <radio value="1" label="&manualTypeRadio.label;" accesskey="&manualTypeRadio.accesskey;" oncommand="DoEnabling();"/>
+        
+        <grid class="indent">
+          <columns>
+            <column/>
+            <column flex="1"/>
+          </columns>
+        
+          <rows>
+            <row align="center">
+              <hbox pack="end">
+                <label value="&http.label;" accesskey="&http.accesskey;" control="networkProxyHTTP"/>
+              </hbox>
+              <textbox id="networkProxyHTTP" preftype="string" prefstring="network.proxy.http"/>
+              <label value="&port.label;" accesskey="&HTTPport.accesskey;" control="networkProxyHTTP_Port"/>
+              <textbox id="networkProxyHTTP_Port" preftype="int" prefstring="network.proxy.http_port"
+                       size="5"/>
+            </row>
+
+            <row align="center">
+              <hbox pack="end">
+                <label value="&ssl.label;" accesskey="&ssl.accesskey;" control="networkProxySSL"/>
+              </hbox>
+              <textbox id="networkProxySSL" preftype="string" prefstring="network.proxy.ssl"/>
+              <label value="&port.label;" accesskey="&SSLport.accesskey;" control="networkProxySSL_Port"/>
+              <textbox id="networkProxySSL_Port" preftype="int" prefstring="network.proxy.ssl_port"
+                       size="5"/>
+            </row>
+
+            <row align="center">
+              <hbox pack="end">
+                <label value="&socks.label;" accesskey="&socks.accesskey;" control="networkProxySOCKS"/>
+              </hbox>
+              <textbox id="networkProxySOCKS" preftype="string" prefstring="network.proxy.socks"/>
+              <label value="&port.label;" accesskey="&SOCKSport.accesskey;" control="networkProxySOCKS_Port"/>
+              <textbox id="networkProxySOCKS_Port" preftype="int" prefstring="network.proxy.socks_port"
+                       size="5"/>
+            </row>
+
+            <row>
+              <spacer/>
+              <radiogroup id="networkProxySOCKSVersion" orient="horizontal"
+                          prefstring="network.proxy.socks_version">
+                <radio id="networkProxySOCKSVersion4" value="4" label="&socks4.label;" accesskey="&socks4.accesskey;"/>
+                <radio id="networkProxySOCKSVersion5" value="5" label="&socks5.label;" accesskey="&socks5.accesskey;"/>
+              </radiogroup>
+            </row>
+
+            <row align="center"> 
+              <hbox pack="end">
+                <label value="&noproxy.label;" accesskey="&noproxy.accesskey;" control="networkProxyNone"/>
+              </hbox>
+              <textbox id="networkProxyNone" preftype="string" prefstring="network.proxy.no_proxies_on"/>
+            </row>
+
+            <row>
+              <spacer/>
+              <label value="&noproxyExplain.label;" control="networkProxyNone"/>
+            </row>
+          </rows>
+        </grid>
+
+        <radio value="2" label="&autoTypeRadio.label;" accesskey="&autoTypeRadio.accesskey;" oncommand="DoEnabling();"/>
+        <hbox class="indent" align="center">
+          <textbox id="networkProxyAutoconfigURL" flex="1" 
+                   preftype="string" prefstring="network.proxy.autoconfig_url"/>
+          <button id="autoReload" label="&reload.label;" accesskey="&reload.accesskey;"
+                  oncommand="ReloadPAC();"
+                  prefstring="pref.advanced.proxies.disable_button.reload"/>
+        </hbox>
+      </radiogroup>
+
+  </groupbox>
+</dialog>
+

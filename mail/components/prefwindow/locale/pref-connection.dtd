@@ -1,0 +1,28 @@
+<!ENTITY  lHeader                       "Connection Settings">
+
+<!ENTITY proxyTitle.label "Configure Proxies to Access the Internet">
+<!ENTITY directTypeRadio.label         "Direct connection to the Internet">
+<!ENTITY directTypeRadio.accesskey     "d">
+<!ENTITY manualTypeRadio.label         "Manual proxy configuration">
+<!ENTITY manualTypeRadio.accesskey     "m">
+<!ENTITY http.label                    "HTTP Proxy:">
+<!ENTITY http.accesskey                "h">
+<!ENTITY ssl.label                     "SSL Proxy:">
+<!ENTITY ssl.accesskey                 "s">
+<!ENTITY socks.label                   "SOCKS Host:">
+<!ENTITY socks.accesskey               "c">
+<!ENTITY socks4.label                  "SOCKS v4">
+<!ENTITY socks4.accesskey              "k">
+<!ENTITY socks5.label                  "SOCKS v5">
+<!ENTITY socks5.accesskey              "v">
+<!ENTITY port.label                    "Port:">
+<!ENTITY HTTPport.accesskey            "p">
+<!ENTITY SSLport.accesskey             "o">
+<!ENTITY SOCKSport.accesskey           "t">
+<!ENTITY noproxy.label                 "No Proxy for:">
+<!ENTITY noproxy.accesskey             "n">
+<!ENTITY noproxyExplain.label          "Example: .mozilla.org, .net.nz">
+<!ENTITY autoTypeRadio.label           "Automatic proxy configuration URL:">
+<!ENTITY autoTypeRadio.accesskey       "a">
+<!ENTITY reload.label                  "Reload">
+<!ENTITY reload.accesskey              "l">
