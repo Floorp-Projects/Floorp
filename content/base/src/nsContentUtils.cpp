@@ -1541,7 +1541,8 @@ nsContentUtils::GenerateStateKey(nsIContent* aContent,
   return NS_OK;
 }
 
-/* static */ nsresult
+// static
+nsresult
 nsContentUtils::NewURIWithDocumentCharset(nsIURI** aResult,
                                           const nsAString& aSpec,
                                           nsIDocument* aDocument,
@@ -1553,6 +1554,88 @@ nsContentUtils::NewURIWithDocumentCharset(nsIURI** aResult,
 
   return NS_NewURI(aResult, NS_ConvertUCS2toUTF8(aSpec), originCharset.get(),
                    aBaseURI, sIOService);
+}
+
+// static
+PRBool
+nsContentUtils::BelongsInForm(nsIDOMHTMLFormElement *aForm,
+                              nsIContent *aContent)
+{
+  NS_PRECONDITION(aForm, "Must have a form");
+  NS_PRECONDITION(aContent, "Must have a content node");
+
+  nsCOMPtr<nsIContent> form(do_QueryInterface(aForm));
+
+  if (!form) {
+    NS_ERROR("This should not happen, form is not an nsIContent!");
+
+    return PR_TRUE;
+  }
+
+  if (form == aContent) {
+    // A form does not belong inside itself, so we return false here
+
+    return PR_FALSE;
+  }
+
+  nsCOMPtr<nsIContent> content;
+
+  aContent->GetParent(getter_AddRefs(content));
+
+  while (content) {
+    if (content == form) {
+      // aContent is contained within the form so we return true.
+
+      return PR_TRUE;
+    }
+
+    nsCOMPtr<nsIAtom> tag;
+
+    content->GetTag(getter_AddRefs(tag));
+
+    if (tag == nsHTMLAtoms::form) {
+      // The child is contained within a form, but not the right form
+      // so we ignore it.
+
+      return PR_FALSE;
+    }
+
+    nsIContent *tmp = content;
+
+    tmp->GetParent(getter_AddRefs(content));
+  }
+
+  PRInt32 count = 0;
+
+  form->ChildCount(count);
+
+  if (count > 0) {
+    // The form is a container but aContent wasn't inside the form,
+    // return false
+
+    return PR_FALSE;
+  }
+
+  // The form is a leaf and aContent wasn't inside any other form so
+  // we check whether the content comes after the form.  If it does,
+  // return true.  If it does not, then it couldn't have been inside
+  // the form in the HTML.
+  nsCOMPtr<nsIDOM3Node> contentAsDOM3(do_QueryInterface(aContent));
+  PRUint16 comparisonFlags = 0;
+  nsresult rv = NS_OK;
+  if (contentAsDOM3) {
+    rv = contentAsDOM3->CompareDocumentPosition(aForm, &comparisonFlags);
+  }
+  if (NS_FAILED(rv) ||
+      comparisonFlags & nsIDOM3Node::DOCUMENT_POSITION_PRECEDING) {
+    // We could be in this form!
+    // In the future, we may want to get document.forms, look at the
+    // form after aForm, and if aContent is after that form after
+    // aForm return false here....
+    return PR_TRUE;
+  }
+  
+  return PR_FALSE;
 }
 
 void

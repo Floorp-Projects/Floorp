@@ -263,6 +263,18 @@ public:
                                             const nsAString& aSpec,
                                             nsIDocument* aDocument,
                                             nsIURI* aBaseURI);
+
+  /**
+   * Determine whether aContent is in some way associated with aForm.  If the
+   * form is a container the only elements that are considered to be associated
+   * with a form are the elements that are contained within the form. If the
+   * form is a leaf element then all elements will be accepted into this list,
+   * since this can happen due to content fixup when a form spans table rows or
+   * table cells.
+   */
+  static PRBool BelongsInForm(nsIDOMHTMLFormElement *aForm,
+                              nsIContent *aContent);
+  
 private:
   static nsresult GetDocumentAndPrincipal(nsIDOMNode* aNode,
                                           nsIDocument** aDocument,
