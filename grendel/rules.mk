@@ -60,5 +60,5 @@ all clean distclean resources::
 	done
 
 run::
-	java -classpath $(DISTDIR):extlib/OROMatcher.jar:extlib/activation.jar:extlib/jaxp.jar:extlib/jhall.jar:extlib/ldapjdk.jar:extlib/mail.jar:extlib/parser.jar grendel.Main
+	java -classpath $(DISTDIR):extlib/OROMatcher.jar:extlib/activation.jar:extlib/jaxp.jar:extlib/jhall.jar:extlib/ldapjdk.jar:extlib/mail.jar:extlib/pop3.jar:extlib/parser.jar grendel.Main
 
