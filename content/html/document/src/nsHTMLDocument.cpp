@@ -3752,29 +3752,20 @@ nsHTMLDocument::ResolveName(const nsAString& aName,
   PRUint32 length;
   list->GetLength(&length);
 
-  if (length) {
+  if (length > 0) {
     if (length == 1) {
-      // Onle one element in the list, return the list in stead of
+      // Only one element in the list, return the element instead of
       // returning the list
 
       nsCOMPtr<nsIDOMNode> node;
 
       list->Item(0, getter_AddRefs(node));
 
-      if (aForm && node) {
-        // document.forms["foo"].bar should not map to <form
-        // name="bar"> so we check here to see if we found a form and
-        // if we did we ignore what we found in the document. This
-        // doesn't deal with the case where more than one element in
-        // found in the document (i.e. there are two named items in
-        // the document that have the name we're looking for), that
-        // case is dealt with in nsFormContentList
-
-        nsCOMPtr<nsIDOMHTMLFormElement> f(do_QueryInterface(node));
-
-        if (f) {
-          node = nsnull;
-        }
+      nsCOMPtr<nsIContent> ourContent(do_QueryInterface(node));
+      if (aForm && ourContent &&
+          !nsContentUtils::BelongsInForm(aForm, ourContent)) {
+        // This is not the content you are looking for
+        node = nsnull;
       }
 
       *aResult = node;
@@ -3783,43 +3774,40 @@ nsHTMLDocument::ResolveName(const nsAString& aName,
       return NS_OK;
     }
 
-    if (length > 1) {
-      // The list contains more than one element, return the whole
-      // list, unless...
+    // The list contains more than one element, return the whole
+    // list, unless...
 
-      if (aForm) {
-        // ... we're called from a form, in that case we create a
-        // nsFormContentList which will filter out the elements in the
-        // list that don't belong to aForm
+    if (aForm) {
+      // ... we're called from a form, in that case we create a
+      // nsFormContentList which will filter out the elements in the
+      // list that don't belong to aForm
 
-        nsFormContentList *fc_list = new nsFormContentList(aForm, *list);
-        NS_ENSURE_TRUE(fc_list, NS_ERROR_OUT_OF_MEMORY);
+      nsFormContentList *fc_list = new nsFormContentList(aForm, *list);
+      NS_ENSURE_TRUE(fc_list, NS_ERROR_OUT_OF_MEMORY);
 
-        PRUint32 len;
-        fc_list->GetLength(&len);
+      PRUint32 len;
+      fc_list->GetLength(&len);
 
-        if (len < 2) {
-          // After t nsFormContentList is done filtering there's zero
-          // or one element in the list, return that element, or null
-          // if there's no element in the list.
+      if (len < 2) {
+        // After the nsFormContentList is done filtering there's either
+        // nothing or one element in the list.  Return that element, or null
+        // if there's no element in the list.
 
-          nsCOMPtr<nsIDOMNode> node;
+        nsCOMPtr<nsIDOMNode> node;
 
-          fc_list->Item(0, getter_AddRefs(node));
+        fc_list->Item(0, getter_AddRefs(node));
 
-          *aResult = node;
-          NS_IF_ADDREF(*aResult);
+        NS_IF_ADDREF(*aResult = node);
 
-          delete fc_list;
+        delete fc_list;
 
-          return NS_OK;
-        }
-
-        list = fc_list;
+        return NS_OK;
       }
 
-      return CallQueryInterface(list, aResult);
+      list = fc_list;
     }
+
+    return CallQueryInterface(list, aResult);
   }
 
   // No named items were found, see if there's one registerd by id for
@@ -3837,8 +3825,7 @@ nsHTMLDocument::ResolveName(const nsAString& aName,
         tag == nsHTMLAtoms::img    ||
         tag == nsHTMLAtoms::object ||
         tag == nsHTMLAtoms::applet) {
-      *aResult = e;
-      NS_ADDREF(*aResult);
+      NS_ADDREF(*aResult = e);
     }
   }
 

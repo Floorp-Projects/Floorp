@@ -147,77 +147,6 @@ nsBaseContentList::Shutdown()
 
 // nsFormContentList
 
-// This helper function checks if aContent is in some way associated
-// with aForm, this check is only successful if the form is a
-// container (and a form is a container as long as the document is
-// wellformed). If the form is a container the only elements that are
-// considerd to be associated with a form are the elements that are
-// contained within the form. If the form is a leaf element then all
-// the elements will be accepted into this list.
-
-static PRBool BelongsInForm(nsIDOMHTMLFormElement *aForm,
-                            nsIContent *aContent)
-{
-  nsCOMPtr<nsIContent> form(do_QueryInterface(aForm));
-
-  if (!form) {
-    NS_WARNING("This should not happen, form is not an nsIContent!");
-
-    return PR_TRUE;
-  }
-
-  if (form.get() == aContent) {
-    // The list for aForm contains the form itself, forms should not
-    // be reachable by name in the form namespace, so we return false
-    // here.
-
-    return PR_FALSE;
-  }
-
-  nsCOMPtr<nsIContent> content;
-
-  aContent->GetParent(getter_AddRefs(content));
-
-  while (content) {
-    if (content == form) {
-      // aContent is contained within the form so we return true.
-
-      return PR_TRUE;
-    }
-
-    nsCOMPtr<nsIAtom> tag;
-
-    content->GetTag(getter_AddRefs(tag));
-
-    if (tag.get() == nsHTMLAtoms::form) {
-      // The child is contained within a form, but not the right form
-      // so we ignore it.
-
-      return PR_FALSE;
-    }
-
-    nsIContent *tmp = content;
-
-    tmp->GetParent(getter_AddRefs(content));
-  }
-
-  PRInt32 count = 0;
-
-  form->ChildCount(count);
-
-  if (!count) {
-    // The form is a leaf and aContent wasn't inside any other form so
-    // we return true
-
-    return PR_TRUE;
-  }
-
-  // The form is a container but aContent wasn't inside the form,
-  // return false
-
-  return PR_FALSE;
-}
-
 nsFormContentList::nsFormContentList(nsIDOMHTMLFormElement *aForm,
                                      nsBaseContentList& aContentList)
   : nsBaseContentList()
@@ -235,7 +164,7 @@ nsFormContentList::nsFormContentList(nsIDOMHTMLFormElement *aForm,
 
     nsCOMPtr<nsIContent> c(do_QueryInterface(item));
 
-    if (c && BelongsInForm(aForm, c)) {
+    if (c && nsContentUtils::BelongsInForm(aForm, c)) {
       AppendElement(c);
     }
   }
