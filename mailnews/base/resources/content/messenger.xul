@@ -38,8 +38,8 @@ Rights Reserved.
 		onload="OnLoadMessenger()"
 		onunload="OnUnloadMessenger()"
 		align="vertical"
-        width="800"
-        height="600"
+        width="640"
+        height="480"
         persist="width height x y"
 		windowtype="mail:3pane">
 
