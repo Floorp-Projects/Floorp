@@ -147,7 +147,7 @@ class NS_COM nsRecyclingAllocator {
                          const char *id = NULL);
     ~nsRecyclingAllocator();
 
-    NS_IMETHOD Init(PRUint32 nbucket, PRUint32 recycleAfter, const char *id);
+    nsresult Init(PRUint32 nbucket, PRUint32 recycleAfter, const char *id);
 
     // Allocation and free routines
     void* Malloc(PRUint32 size, PRBool zeroit = PR_FALSE);

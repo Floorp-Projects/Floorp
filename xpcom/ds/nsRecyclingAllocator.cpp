@@ -94,7 +94,7 @@ nsRecyclingAllocator::nsRecyclingAllocator(PRUint32 nbucket, PRUint32 recycleAft
     Init(nbucket, recycleAfter, id);
 }
 
-NS_IMETHODIMP
+nsresult
 nsRecyclingAllocator::Init(PRUint32 nbucket, PRUint32 recycleAfter, const char *id)
 {
     nsAutoLock lock(mLock);
