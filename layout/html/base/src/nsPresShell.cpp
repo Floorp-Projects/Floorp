@@ -1902,10 +1902,6 @@ PresShell::Destroy()
   if (mHaveShutDown)
     return NS_OK;
 
-  if (mReflowCommandTable.ops) {
-    PL_DHashTableFinish(&mReflowCommandTable);
-  }
-  
   // If our paint suppression timer is still active, kill it.
   if (mPaintSuppressionTimer) {
     mPaintSuppressionTimer->Cancel();
@@ -1987,8 +1983,14 @@ PresShell::Destroy()
   eventQueue->RevokeEvents(this);
 
   CancelAllReflowCommands();
+
   KillResizeEventTimer();
 
+  // Now that mReflowCommandTable won't be accessed anymore, finish it
+  if (mReflowCommandTable.ops) {
+    PL_DHashTableFinish(&mReflowCommandTable);
+  }
+  
   mHaveShutDown = PR_TRUE;
 
   return NS_OK;
