@@ -195,6 +195,8 @@ nsThrobber::~nsThrobber()
 
   if (0 == --gNumThrobbers) {
     delete gThrobbers;
+    // Do this in case an event shows up later for the throbber...
+    gThrobbers = nsnull;
   }
 }
 
