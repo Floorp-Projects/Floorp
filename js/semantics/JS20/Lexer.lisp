@@ -275,7 +275,7 @@
          (production :punctuator (#\- #\-) punctuator-decrement (punctuator "--"))
          (production :punctuator (#\- #\=) punctuator-minus-equals (punctuator "-="))
          (production :punctuator (#\- #\>) punctuator-arrow (punctuator "->"))
-         (production :punctuator (#\.) punctuator-period (punctuator "."))
+         (production :punctuator (#\.) punctuator-dot (punctuator "."))
          (production :punctuator (#\. #\.) punctuator-double-dot (punctuator ".."))
          (production :punctuator (#\. #\. #\.) punctuator-triple-dot (punctuator "..."))
          (production :punctuator (#\:) punctuator-colon (punctuator ":"))
