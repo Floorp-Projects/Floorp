@@ -257,7 +257,7 @@ ORDERFILE = mozilla-bin.order
 $(PROGRAM) : $(LDSCRIPT) $(ORDERFILE)
 
 $(LDSCRIPT): $(ORDERFILE)
-	$(PERL) $(topsrcdir)/config/mklinkscript.pl -o $@ $(ORDERFILE)
+	$(PERL) $(topsrcdir)/config/mklinkscript.pl -o $@ $<
 
 endif
 
