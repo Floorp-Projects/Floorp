@@ -45,6 +45,8 @@
 #include "nsClipboard.h"
 #include "nsIRollupListener.h"
 
+#include "nsIPref.h"
+
 #include "nsICharsetConverterManager.h"
 #include "nsIPlatformCharset.h"
 #include "nsIServiceManager.h"
@@ -81,6 +83,9 @@ extern "C" int usleep(unsigned int);
 #define kWindowPositionSlop 10
 
 static NS_DEFINE_IID(kCDragServiceCID,  NS_DRAGSERVICE_CID);
+
+static PRBool gRaisePrefInitialized = PR_FALSE;
+static PRBool gRaiseWindows         = PR_TRUE;
 
 gint handle_mozarea_focus_in (
     GtkWidget *      aWidget, 
@@ -160,6 +165,20 @@ nsWindow::nsWindow()
   mDragMotionX = 0;
   mDragMotionY = 0;
   mDragMotionTime = 0;
+
+  // check to see if we should set our raise pref
+  if (!gRaisePrefInitialized) {
+    gRaisePrefInitialized = PR_TRUE;
+    nsCOMPtr<nsIPref> prefs = do_GetService(NS_PREF_CONTRACTID);
+    if (prefs) {
+      PRBool val = PR_TRUE;
+      nsresult rv;
+      rv = prefs->GetBoolPref("mozilla.widget.raise-on-setfocus",
+                              &val);
+      if (NS_SUCCEEDED(rv))
+        gRaiseWindows = val;
+    }
+  }
 }
 
 //-------------------------------------------------------------------------
@@ -1065,6 +1084,14 @@ nsWindow::SetFocus(void)
 #endif /* DEBUG_FOCUS */
 
   GtkWidget *top_mozarea = GetMozArea();
+  GtkWidget *toplevel = nsnull;
+
+  if (top_mozarea)
+    toplevel = gtk_widget_get_toplevel(top_mozarea);
+
+  // map the window if the pref says to
+  if (gRaiseWindows)
+    GetAttention();
 
 #ifdef DEBUG_FOCUS
   printf("top moz area is %p\n", NS_STATIC_CAST(void *, top_mozarea));
@@ -1079,7 +1106,6 @@ nsWindow::SetFocus(void)
   if (top_mozarea && !GTK_WIDGET_HAS_FOCUS(top_mozarea)) {
     // If the toplevel window doesn't have an nsWindow data pointer
     // then we are embedded.
-    GtkWidget *toplevel = gtk_widget_get_toplevel(top_mozarea);
     gpointer data = gtk_object_get_data(GTK_OBJECT(toplevel), "nsWindow");
     // We're embedded so always set focus unconditionally.
     if (!data) {
