@@ -41,7 +41,14 @@ sub Told {
             # first, build the help file...
             my %topicList;
             foreach my $module (@modules) {
-                my $commands = $module->Help($event);
+                my $commands;
+                eval {
+                    $commands = $module->Help($event);
+                };
+                if ($@) {
+                    $self->debug("Module $module is having errors reporting help:\n$@");
+                    next;
+                }
                 if ($commands->{''}) {
                     my @commands = grep { /./os } keys %$commands;
                     $topicList{lc($module->{'_name'})} = [] unless defined($topicList{lc($module->{'_name'})});
