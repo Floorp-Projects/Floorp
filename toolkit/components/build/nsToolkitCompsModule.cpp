@@ -38,7 +38,6 @@
 #include "nsIGenericFactory.h"
 #include "nsAppStartup.h"
 #include "nsUserInfo.h"
-#include "nsCommandLineService.h"
 #include "nsXPFEComponentsCID.h"
 
 #if defined(MOZ_PHOENIX) || defined(MOZ_SUNBIRD)
@@ -63,7 +62,6 @@
 
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsAppStartup, Init)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsUserInfo)
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsCmdLineService)
 
 #if defined(MOZ_PHOENIX) || defined(MOZ_SUNBIRD)
 #ifdef XP_WIN
@@ -105,11 +103,6 @@ static const nsModuleComponentInfo components[] =
     NS_USERINFO_CID,
     NS_USERINFO_CONTRACTID,
     nsUserInfoConstructor },
-
-  { "Command Line Service",
-    NS_COMMANDLINESERVICE_CID,
-    NS_COMMANDLINESERVICE_CONTRACTID,
-    nsCmdLineServiceConstructor },
 
 #if defined(MOZ_PHOENIX) || defined(MOZ_SUNBIRD)
 #ifdef XP_WIN
