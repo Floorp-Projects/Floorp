@@ -45,7 +45,8 @@ static NS_DEFINE_CID(kSocketTransportServiceCID, NS_SOCKETTRANSPORTSERVICE_CID);
 static void *PR_CALLBACK
 TransactionReleaseEventHandler(PLEvent *ev)
 {
-    nsHttpTransaction *trans = (nsHttpTransaction *) PL_GetEventOwner(ev);
+    nsHttpTransaction *trans =
+            NS_STATIC_CAST(nsHttpTransaction *, PL_GetEventOwner(ev));
 
     LOG(("TransactionReleaseEventHandler [trans=%x refcnt=%u] calling release...\n",
         trans, trans->RefCnt()));
@@ -125,11 +126,11 @@ nsHttpConnection::SetTransaction(nsHttpTransaction *transaction)
     NS_ADDREF(mTransaction);
 
     // grab a reference to the calling thread's event queue.
-    mEventQ = 0;
+    mConsumerEventQ = 0;
     nsCOMPtr<nsIEventQueueService> eqs;
     nsHttpHandler::get()->GetEventQueueService(getter_AddRefs(eqs));
     if (eqs)
-        eqs->ResolveEventQueue(NS_CURRENT_EVENTQ, getter_AddRefs(mEventQ));
+        eqs->ResolveEventQueue(NS_CURRENT_EVENTQ, getter_AddRefs(mConsumerEventQ));
 
     // build a proxy for the progress event sink
     mProgressSink = 0;
@@ -139,7 +140,7 @@ nsHttpConnection::SetTransaction(nsHttpTransaction *transaction)
             nsCOMPtr<nsIProxyObjectManager> mgr;
             nsHttpHandler::get()->GetProxyObjectManager(getter_AddRefs(mgr));
             if (mgr)
-                mgr->GetProxyForObject(mEventQ,
+                mgr->GetProxyForObject(mConsumerEventQ,
                                        NS_GET_IID(nsIProgressEventSink),
                                        temp,
                                        PROXY_ASYNC | PROXY_ALWAYS,
@@ -301,7 +302,7 @@ nsHttpConnection::ProxyStepUp()
 PRBool
 nsHttpConnection::CanReuse()
 {
-    return (mReuseCount < mMaxReuseCount) && 
+    return mKeepAlive && (mReuseCount < mMaxReuseCount) && 
            (NowInSeconds() - mLastActiveTime < mIdleTimeout) && IsAlive();
 }
 
@@ -315,6 +316,20 @@ nsHttpConnection::IsAlive()
     nsresult rv = mSocketTransport->IsAlive(0, &isAlive);
     NS_ASSERTION(NS_SUCCEEDED(rv), "IsAlive test failed");
     return isAlive;
+}
+
+void
+nsHttpConnection::DropTransaction()
+{
+    // the assertion here is that the transaction will not be destroyed
+    // by this release.  we unfortunately don't have a threadsafe way of
+    // asserting this.
+    NS_IF_RELEASE(mTransaction);
+    mTransaction = 0;
+    mProgressSink = 0;
+    
+    // if the transaction was dropped, then we cannot reuse this connection.
+    mKeepAlive = PR_FALSE;
 }
 
 void
@@ -420,7 +435,7 @@ nsHttpConnection::ProxyReleaseTransaction(nsHttpTransaction *trans)
     LOG(("nsHttpConnection::ProxyReleaseTransaction [this=%x trans=%x refcnt=%u]\n",
         this, trans, trans->RefCnt()));
 
-    NS_ENSURE_TRUE(mEventQ, NS_ERROR_NOT_INITIALIZED);
+    NS_ENSURE_TRUE(mConsumerEventQ, NS_ERROR_NOT_INITIALIZED);
     NS_ENSURE_ARG_POINTER(trans);
 
     PLEvent *event = new PLEvent;
@@ -431,7 +446,7 @@ nsHttpConnection::ProxyReleaseTransaction(nsHttpTransaction *trans)
                  TransactionReleaseEventHandler,
                  TransactionReleaseDestroyHandler);
 
-    return mEventQ->PostEvent(event);
+    return mConsumerEventQ->PostEvent(event);
 }
 
 nsresult
