@@ -507,10 +507,10 @@ PRBool nsMacEventHandler::DragEvent ( unsigned int aMessage, Point aMouseGlobal,
 
 	nsWindow* widgetHit = mTopLevelWidget->FindWidgetHit(hitPointLocal);
 	if ( widgetHit ) {
-		// adjust from local coordinates to window coordinates in case the top level widget
+		// adjust from local coordinates to window coordinates in case the hit widget
 		// isn't at 0, 0
 		nsRect bounds;
-		mTopLevelWidget->GetBounds(bounds);
+		widgetHit->GetBounds(bounds);
 		nsPoint widgetOrigin(bounds.x, bounds.y);
 		widgetHit->LocalToWindowCoordinate(widgetOrigin);
 		widgetHitPoint.MoveBy(-widgetOrigin.x, -widgetOrigin.y);		
