@@ -21,6 +21,7 @@
 #include "nsIPresContext.h"
 #include "nsIPresShell.h"
 #include "nsWidgetsCID.h"
+#include "nsIContentConnector.h"
 #include "nsViewsCID.h"
 #include "nsIView.h"
 #include "nsIViewManager.h"
@@ -171,10 +172,12 @@ private:
   nsPluginInstanceOwner *mInstanceOwner;
   nsIURL                *mFullURL;
   nsIFrame              *mFirstChild;
+  nsIWidget				*mWidget;
 };
 
 nsObjectFrame::~nsObjectFrame()
 {
+  NS_IF_RELEASE(mWidget);
   NS_IF_RELEASE(mInstanceOwner);
 
   NS_IF_RELEASE(mFullURL);
@@ -334,6 +337,102 @@ nsObjectFrame::Reflow(nsIPresContext&          aPresContext,
 {
   // Get our desired size
   GetDesiredSize(&aPresContext, aReflowState, aMetrics);
+
+  // Handle the clsid instantiation of arbitrary widgets
+  nsAutoString classid;
+  PRInt32 nameSpaceID;
+  mContent->GetNameSpaceID(nameSpaceID);
+  if (NS_CONTENT_ATTR_HAS_VALUE == 
+			 mContent->GetAttribute(nameSpaceID, nsHTMLAtoms::classid, classid))
+  {
+		// A widget with a certain classID may need to be instantiated.
+		nsString protocol;
+		classid.Left(protocol, 5);
+		if (protocol == "clsid")
+		{
+			// We are looking at a class ID for an XPCOM object. We need to create the
+			// widget that corresponds to this object.
+			classid.Cut(0, 6); // Strip off the clsid:. What's left is the class ID.
+			static NS_DEFINE_IID(kCTreeViewCID, NS_TREEVIEW_CID);
+			static NS_DEFINE_IID(kCToolbarCID, NS_TOOLBAR_CID);
+			static NS_DEFINE_IID(kCAppShellCID, NS_APPSHELL_CID);
+			static NS_DEFINE_IID(kIContentConnectorIID, NS_ICONTENTCONNECTOR_IID);
+			
+			nsCID aWidgetCID;
+			// These are some builtin types that we know about for now.
+			// (Eventually this will move somewhere else.)
+			if (classid == "treeview")
+				aWidgetCID = kCTreeViewCID;
+			else if (classid == "toolbar")
+				aWidgetCID = kCToolbarCID;
+			else if (classid == "browser")
+				aWidgetCID = kCAppShellCID;
+			else
+			{
+				// parse it.
+				char* buffer;
+				PRInt32 buflen = classid.Length();
+
+                if (buflen > 0) {
+                  buffer = (char *)PR_Malloc(buflen + 1);
+
+                  if (nsnull != buffer)
+                    classid.ToCString(buffer, buflen + 1);
+              
+				  aWidgetCID.Parse(buffer);
+				  PR_Free((void*)buffer);
+				}
+			}
+
+			// let's try making a widget.
+				
+			if (mInstanceOwner == nsnull)
+			{
+				mInstanceOwner = new nsPluginInstanceOwner();
+				NS_ADDREF(mInstanceOwner);
+				mInstanceOwner->Init(&aPresContext, this);
+				
+			}
+
+			if (mWidget == nsnull)
+			{
+				GetDesiredSize(&aPresContext, aReflowState, aMetrics);
+				nsIView *parentWithView;
+				nsPoint origin;
+				GetOffsetFromView(origin, parentWithView);
+				// Just make the frigging widget.
+
+				float           t2p = aPresContext.GetTwipsToPixels();
+
+				PRInt32 x = NSTwipsToIntPixels(origin.x, t2p);
+				PRInt32 y = NSTwipsToIntPixels(origin.y, t2p);
+				PRInt32 width = NSTwipsToIntPixels(aMetrics.width, t2p);
+				PRInt32 height = NSTwipsToIntPixels(aMetrics.height, t2p);
+				nsRect r = nsRect(x, y, width, height);
+				
+				static NS_DEFINE_IID(kIWidgetIID, NS_IWIDGET_IID);
+				nsresult rv = nsRepository::CreateInstance(aWidgetCID, nsnull, kIWidgetIID,
+									   (void**)&mWidget);
+				nsIWidget *parent;
+				parentWithView->GetOffsetFromWidget(nsnull, nsnull, parent);
+				mWidget->Create(parent, r, nsnull, nsnull);
+
+				// See if the widget implements the CONTENT CONNECTOR interface.  If it
+				// does, we can hand it the content subtree for further processing.
+				nsIContentConnector* cc;
+	
+				if (NS_OK == mWidget->QueryInterface(kIContentConnectorIID, (void**)&cc))
+				{
+				   cc->SetContentRoot(mContent);
+				   NS_IF_RELEASE(cc);
+				}
+				mWidget->Show(PR_TRUE);
+			}	
+		}
+
+		aStatus = NS_FRAME_COMPLETE;
+		return NS_OK;
+  }
 
   // XXX deal with border and padding the usual way...wrap it up!
 
@@ -542,6 +641,13 @@ nsObjectFrame::DidReflow(nsIPresContext& aPresContext,
           inst->SetWindow(window);
           NS_RELEASE(inst);
         }
+
+		if (mWidget)
+		{
+			PRInt32 x = NSTwipsToIntPixels(origin.x, t2p);
+			PRInt32 y = NSTwipsToIntPixels(origin.y, t2p);
+			mWidget->Move(x, y);
+		}
       }
     }
   }
