@@ -36,8 +36,8 @@
         "/.\\1/",
         "HI!" + String.fromCharCode(1),
         "HI!+ String.fromCharCode(1)",
-        1,
-        ["!1"] );
+        2,
+        ["!\1"] );
 
 // backreference
     AddRegExpCases( /(.)\041/, "/(.)\\041/", "HI!", "HI!", 1, ["I!", "I"] );
