@@ -57,6 +57,7 @@ public:
   virtual void Cancel();
   virtual PRUint32 GetDelay() { return mDelay; }
   virtual void SetDelay(PRUint32 aDelay) { mDelay=aDelay; };
+  virtual void* GetClosure() { return mClosure; }
 
   void FireTimeout();
 
@@ -96,6 +97,7 @@ TimerImpl::TimerImpl()
   mNext = NULL;
   mTimerId = 0;
   mDelay = 0;
+  mClosure = NULL;
 }
 
 TimerImpl::~TimerImpl()

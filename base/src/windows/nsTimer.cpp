@@ -59,6 +59,8 @@ public:
   virtual PRUint32 GetDelay() { return mDelay; }
   virtual void SetDelay(PRUint32 aDelay) {};
 
+  virtual void* GetClosure() { return mClosure; }
+
 private:
   nsresult Init(PRUint32 aDelay);
 
