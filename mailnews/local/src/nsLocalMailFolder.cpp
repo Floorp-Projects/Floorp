@@ -3419,6 +3419,9 @@ nsMsgLocalMailFolder::SpamFilterClassifyMessages(const char **aURIArray, PRUint3
 NS_IMETHODIMP
 nsMsgLocalMailFolder::OnMessageClassified(const char *aMsgURI, nsMsgJunkStatus aClassification)
 {
+  if (mNumFilterClassifyRequests > 0)
+    --mNumFilterClassifyRequests;
+
   nsCOMPtr<nsIMsgIncomingServer> server;
   nsresult rv = GetServer(getter_AddRefs(server));
   NS_ENSURE_SUCCESS(rv, rv);
@@ -3496,7 +3499,7 @@ nsMsgLocalMailFolder::OnMessageClassified(const char *aMsgURI, nsMsgJunkStatus a
     NS_ENSURE_SUCCESS(rv,rv);
   }
 
-  if (--mNumFilterClassifyRequests == 0)
+  if (mNumFilterClassifyRequests == 0)
   {
     if (mSpamKeysToMove.GetSize() > 0)
     {
