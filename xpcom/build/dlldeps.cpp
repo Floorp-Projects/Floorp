@@ -55,6 +55,7 @@
 #include "nsISizeOfHandler.h"
 #include "nsTextFormater.h"
 #include "nsStorageStream.h"
+#include "nsLinebreakConverter.h"
 #include "nsIBinaryInputStream.h"
 #include "nsIInterfaceRequestor.h"
 #ifdef DEBUG
@@ -127,4 +128,8 @@ void XXXNeverCalled()
     NS_NewSizeOfHandler(0);
     nsStorageStream();
     NS_NewBinaryInputStream(0, 0);
+	nsString foo;
+	nsLinebreakConverter::ConvertStringLineBreaks(foo, 
+		nsLinebreakConverter::eLinebreakAny, nsLinebreakConverter::eLinebreakContent);
+
 }
