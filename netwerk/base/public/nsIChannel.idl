@@ -304,6 +304,10 @@ interface nsIChannel : nsIRequest
     nsIOutputStream openOutputStream();
 
     /**
+	 * !!WARNING!!: this interface method has become obsolete....I don't believe
+	 * anyone actually implements this anymore. Just go ahead and call AsyncRead
+	 * directly.
+	 *
      * Opens the channel asynchronously. The nsIStreamObserver's OnStartRequest
      * method is called back when the channel actually becomes open, providing 
      * the content type. Its OnStopRequest method is called when the channel
