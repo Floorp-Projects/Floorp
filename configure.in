@@ -966,15 +966,15 @@ case "$target" in
     fi
 
     if test "$MOZ_TOOLS"; then
-        _MOZTOOLS=`cd $MOZ_TOOLS && pwd`
-        if test "$?" != "0" || test -z "$_MOZTOOLS"; then
+        MOZ_TOOLS_DIR=`cd $MOZ_TOOLS && pwd`
+        if test "$?" != "0" || test -z "$MOZ_TOOLS_DIR"; then
             AC_MSG_ERROR([cd \$MOZ_TOOLS failed. MOZ_TOOLS ==? $MOZ_TOOLS])
         fi
-        _MOZTOOLS=`echo $_MOZTOOLS | sed -e 's|^/cygdrive/||' -e 's|/|:/|'`
-        GLIB_CFLAGS="-I${_MOZTOOLS}/include"
-        GLIB_LIBS="${_MOZTOOLS}/lib/glib-1.2.lib"
-        LIBIDL_CFLAGS="-I${_MOZTOOLS}/include"
-        LIBIDL_LIBS="${_MOZTOOLS}/lib/libidl-0.6.lib ${_MOZTOOLS}/lib/glib-1.2.lib"
+        MOZ_TOOLS_DIR=`echo $MOZ_TOOLS_DIR | sed -e 's|^/cygdrive/||' -e 's|/|:/|'`
+        GLIB_CFLAGS='-I$(MOZ_TOOLS_DIR)/include'
+        GLIB_LIBS='$(MOZ_TOOLS_DIR)/lib/glib-1.2.lib'
+        LIBIDL_CFLAGS='-I$(MOZ_TOOLS_DIR)/include'
+        LIBIDL_LIBS='$(MOZ_TOOLS_DIR)/lib/libidl-0.6.lib $(MOZ_TOOLS_DIR)/lib/glib-1.2.lib'
    else
         AC_MSG_ERROR([MOZ_TOOLS is not set])
     fi
@@ -4213,6 +4213,7 @@ AC_SUBST(MOZ_PROFILE)
 AC_SUBST(MOZ_COVERAGE)
 AC_SUBST(MOZ_MAPINFO)
 AC_SUBST(MOZ_BROWSE_INFO)
+AC_SUBST(MOZ_TOOLS_DIR)
 
 dnl Disable profile at startup, hack for tinderbox.
 if test "$MOZ_BYPASS_PROFILE_AT_STARTUP"; then
