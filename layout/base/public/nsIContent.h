@@ -34,7 +34,7 @@ class nsIPresContext;
 class nsString;
 class nsString;
 class nsVoidArray;
-class nsXIFConverter;
+class nsIXIFConverter;
 class nsIDOMEvent;
 class nsIContent;
 class nsISupportsArray;
@@ -243,9 +243,9 @@ public:
    * ConvertContentToXIF -- typically does nothing unless there is text content
    * FinishConvertToXIF -- closes a container
    */
-  NS_IMETHOD BeginConvertToXIF(nsXIFConverter& aConverter) const = 0;
-  NS_IMETHOD ConvertContentToXIF(nsXIFConverter& aConverter) const = 0;
-  NS_IMETHOD FinishConvertToXIF(nsXIFConverter& aConverter) const = 0;
+  NS_IMETHOD BeginConvertToXIF(nsIXIFConverter *aConverter) const = 0;
+  NS_IMETHOD ConvertContentToXIF(nsIXIFConverter * aConverter) const = 0;
+  NS_IMETHOD FinishConvertToXIF(nsIXIFConverter * aConverter) const = 0;
 
   /**
    * Inform content of range ownership changes.  This allows content

@@ -49,7 +49,7 @@ class nsIDOMEvent;
 class nsIDeviceContext;
 class nsIParser;
 class nsIDOMNode;
-class nsXIFConverter;
+class nsIXIFConverter;
 class nsINameSpaceManager;
 class nsIDOMDocumentFragment;
 class nsILineBreaker;
@@ -310,10 +310,10 @@ public:
     * but we will use a string for now -- gpk
   */
   NS_IMETHOD   CreateXIF(nsString & aBuffer, nsIDOMSelection* aSelection = nsnull) = 0;
-  NS_IMETHOD   ToXIF(nsXIFConverter& aConverter, nsIDOMNode* aNode) = 0;
-  virtual void BeginConvertToXIF(nsXIFConverter& aConverter, nsIDOMNode* aNode) = 0;
-  virtual void ConvertChildrenToXIF(nsXIFConverter& aConverter, nsIDOMNode* aNode) = 0;
-  virtual void FinishConvertToXIF(nsXIFConverter& aConverter, nsIDOMNode* aNode) = 0;
+  NS_IMETHOD   ToXIF(nsIXIFConverter * aConverter, nsIDOMNode* aNode) = 0;
+  virtual void BeginConvertToXIF(nsIXIFConverter * aConverter, nsIDOMNode* aNode) = 0;
+  virtual void ConvertChildrenToXIF(nsIXIFConverter * aConverter, nsIDOMNode* aNode) = 0;
+  virtual void FinishConvertToXIF(nsIXIFConverter * aConverter, nsIDOMNode* aNode) = 0;
 
   /* Helper methods to help determine the logical positioning of content */
   virtual PRBool IsInSelection(nsIDOMSelection* aSelection, const nsIContent *aContent) const = 0;
