@@ -75,9 +75,11 @@ void
 nsXKBModeSwitch::ControlWorkaround(gboolean grab_during_popup,
                                    gboolean ungrab_during_mode_switch)
 {
+#ifdef DEBUG_bzbarsky
   NS_WARNING("nsXKBModeSwitch::ControlWorkaround:");
   NS_WARNING(nsPrintfCString("    grab_during_popup = %d", grab_during_popup).get());
   NS_WARNING(nsPrintfCString("    ungrab_during_mode_switch = %d", ungrab_during_mode_switch).get());
+#endif
   gGrabDuringPopup = grab_during_popup;
   gUnGrabDuringModeSwitch = ungrab_during_mode_switch;
 
