@@ -215,7 +215,7 @@ NS_METHOD nsSound::Play(nsIURI *aURI)
     nsFileSpec chromeFile;
     if (NS_SUCCEEDED(rv) && aUrl) { 
     	rv = aUrl->GetFilePath(getter_Copies(tempPath));
-    	if ( NS_FAILED(rv) || tempPath == (char *) NULL ) {
+    	if ( NS_FAILED(rv) || tempPath == NULL ) {
 		printf( "Sound: unable to get path on URI\n" );
         	NS_IF_RELEASE( inputStream );
         	return NS_ERROR_FAILURE;
