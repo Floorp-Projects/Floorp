@@ -40,6 +40,7 @@
 #include <netinet/tcp.h>
 #else
 #ifdef XP_MAC
+#include <Events.h> // for WaitNextEvent
 #else /* Windows */
 #include <windows.h>
 #include <winsock.h>
@@ -261,8 +262,13 @@ PCMT_CONTROL CMT_EstablishControlConnection(char            *inPath,
     char *newWorkingDir;
     char oldWorkingDir[MAX_PATH_LEN];
     int i;
-    char *path;
+    char *path = NULL;
     size_t stringLen;
+
+    /*	On the Mac, we do special magic in the Seamonkey PSM component, so
+    	if PSM isn't launched by the time we reach this point, we're not doing well. */
+#ifndef XP_MAC
+
     struct stat stbuf;
     
     /*
@@ -307,6 +313,8 @@ PCMT_CONTROL CMT_EstablishControlConnection(char            *inPath,
         goto loser;
     }
     setWorkingDir(oldWorkingDir);
+#endif
+
     /*
      * Now try to connect to the psm server.  We will try to connect
      * a maximum of 30 times and then give up.
@@ -328,6 +336,16 @@ PCMT_CONTROL CMT_EstablishControlConnection(char            *inPath,
 	  break;
 	}
     }
+#elif defined(XP_MAC)
+	for (i=0; i<30; i++) 
+	{
+		EventRecord theEvent;
+		WaitNextEvent(0, &theEvent, 30, NULL);
+		control = CMT_ControlConnect(mutex, sockFuncs);
+		if (control != NULL) 
+			break;
+	}
+
 #else
     /*
      * Figure out how to sleep for a while first
