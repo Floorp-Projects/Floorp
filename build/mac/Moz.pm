@@ -413,7 +413,7 @@ sub InstallResources($;$;$)
 			}
 	}
 
-
+ 
  sub SetBuildNumber
  {
 
@@ -428,9 +428,14 @@ sub InstallResources($;$;$)
    close (BDATE);
    close (OUTPUT);
 
-   system ("perl :mozilla:config:aboutime.pl :mozilla:xpfe:browser:resources:locale:en-US:navigator.dtd :mozilla:config:build_number");
-   system ("perl :mozilla:config:aboutime.pl :mozilla:xpfe:browser:resources:content:viewSource.xul :mozilla:config:build_number");
-
+   if ($main::DEBUG) {
+	   system ("perl :mozilla:config:build_header.pl :mozilla:build:mac:nsBuildID.h :mozilla:config:build_number");
+   }
+   else {
+   	   system ("perl :mozilla:config:build_header.pl :mozilla:build:mac:nsBuildID.h :mozilla:config:build_number");
+	   system ("perl :mozilla:config:aboutime.pl :mozilla:xpfe:browser:resources:locale:en-US:navigator.dtd :mozilla:config:build_number");
+	   system ("perl :mozilla:config:aboutime.pl :mozilla:xpfe:browser:resources:content:viewSource.xul :mozilla:config:build_number");
+   }
  }
 
 sub SetAgentString

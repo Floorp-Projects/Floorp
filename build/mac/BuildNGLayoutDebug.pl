@@ -190,6 +190,8 @@ if ($pull{all}) {
    Checkout();
 }
 
+SetBuildNumber();
+
 BuildDist();
 
 chdir($MOZ_SRC);
