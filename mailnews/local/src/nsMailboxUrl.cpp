@@ -34,6 +34,7 @@
 #include "nsLocalUtils.h"
 #include "nsIMsgDatabase.h"
 #include "nsMsgDBCID.h"
+#include "nsMsgBaseCID.h"
 #include "nsIMsgHdr.h"
 
 #include "nsXPIDLString.h"

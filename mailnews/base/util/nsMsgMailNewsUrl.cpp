@@ -18,6 +18,7 @@
 
 #include "msgCore.h"
 #include "nsMsgMailNewsUrl.h"
+#include "nsMsgBaseCID.h"
 
 #ifdef XP_PC
 #include <windows.h>    // for InterlockedIncrement
