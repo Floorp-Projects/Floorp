@@ -33,7 +33,6 @@
 #include "nsScanner.h"
 #include "plstr.h"
 #include "nsIParserFilter.h"
-#include "nshtmlpars.h"
 #include "nsWellFormedDTD.h"
 #include "nsViewSourceHTML.h" 
 #include "nsIStringStream.h"
@@ -363,7 +362,7 @@ nsParser::nsParser(nsITokenObserver* anObserver) {
       rv = eventService->GetThreadEventQueue(NS_CURRENT_THREAD, getter_AddRefs(mEventQueue));
     }
 
-    NS_ASSERTION(mEventQueue, "event queue is null");
+   // NS_ASSERTION(mEventQueue, "event queue is null");
   }
 }
 
@@ -650,82 +649,84 @@ public:
       return kNotFound; // Ref. bug 89732
     }
 
-    const CharT *cp=mBuffer+mOffset+mLength;  //skip last word
+    if (mOffset >= 0) {
+      const CharT *cp=mBuffer+mOffset+mLength;  //skip last word
 
-    mLength=0;  //reset this
-    mOffset=-1; //reset this        
+      mLength=0;  //reset this
+      mOffset=-1; //reset this        
 
-    //now skip whitespace...
+      //now skip whitespace...
 
-    CharT target=0;
-    PRBool    done=PR_FALSE;
+      CharT target=0;
+      PRBool    done=PR_FALSE;
 
-    while((!done) && (cp++<mEndBuffer)) {
-      switch(*cp) {
-        case kSpace:  case kNewLine:
-        case kCR:     case kTab:
-        case kEqual:
-          continue;
+      while((!done) && (cp++<mEndBuffer)) {
+        switch(*cp) {
+          case kSpace:  case kNewLine:
+          case kCR:     case kTab:
+          case kEqual:
+            continue;
 
-        case kQuote:
-          target=*cp;
-          if (aSkipQuotes) {
-            cp++;
-          }
-          done=PR_TRUE;
-          break;
-
-        case kMinus:
-          target=*cp;
-          done=PR_TRUE;
-          break;
-
-        default:
-          done=PR_TRUE;
-          break;
-      }
-    }
-
-    if(cp<mEndBuffer) {  
-
-      const CharT *firstcp=cp; //hang onto this...      
-      PRInt32 theDashCount=2;
-
-      cp++; //just skip first letter to simplify processing...
-
-      //ok, now find end of this word
-      while(cp++<mEndBuffer) {
-        if(kQuote==target) {
-          if(kQuote==*cp) {
-            cp++;
-            break; //we found our end...
-          }
-        }
-        else if(kMinus==target) {
-          //then let's look for SGML comments
-          if(kMinus==*cp) {
-            if(4==++theDashCount) {
+          case kQuote:
+            target=*cp;
+            if (aSkipQuotes) {
               cp++;
+            }
+            done=PR_TRUE;
+            break;
+
+          case kMinus:
+            target=*cp;
+            done=PR_TRUE;
+            break;
+
+          default:
+            done=PR_TRUE;
+            break;
+        }
+      }
+
+      if(cp<mEndBuffer) {  
+
+        const CharT *firstcp=cp; //hang onto this...      
+        PRInt32 theDashCount=2;
+
+        cp++; //just skip first letter to simplify processing...
+
+        //ok, now find end of this word
+        while(cp++<mEndBuffer) {
+          if(kQuote==target) {
+            if(kQuote==*cp) {
+              cp++;
+              break; //we found our end...
+            }
+          }
+          else if(kMinus==target) {
+            //then let's look for SGML comments
+            if(kMinus==*cp) {
+              if(4==++theDashCount) {
+                cp++;
+                break;
+              }
+            }
+          }
+          else {
+            if((kSpace==*cp) ||
+               (kNewLine==*cp) ||
+               (kGreaterThan==*cp) ||
+               (kQuote==*cp) ||
+               (kCR==*cp) ||
+               (kTab==*cp) || 
+               (kEqual == *cp)) {
               break;
             }
           }
         }
-        else {
-          if((kSpace==*cp) ||
-             (kNewLine==*cp) ||
-             (kGreaterThan==*cp) ||
-             (kQuote==*cp) ||
-             (kCR==*cp) ||
-             (kTab==*cp) || 
-             (kEqual == *cp)) {
-            break;
-          }
-        }
+
+        mLength=cp-firstcp;
+        mOffset = (0<mLength) ? firstcp-mBuffer : -1;
+
       }
-
-      mLength=cp-firstcp;
-      mOffset = (0<mLength) ? firstcp-mBuffer : -1;
-
     }
 
     return mOffset;

@@ -3,17 +3,8 @@
 #
 
 nshtmlpars.h
-nsIContentSink.h
-nsIHTMLContentSink.h
-nsIHTMLFragmentContentSink.h
-nsITokenizer.h
 nsHTMLTokens.h
-nsIParserNode.h
-nsIParserFilter.h
-nsIParser.h
 nsToken.h
-nsIDTDDebug.h
-nsIDTD.h
 CNavDTD.h
 nsHTMLTags.h
 nsHTMLTagList.h
@@ -21,7 +12,4 @@ nsParserCIID.h
 nsHTMLEntities.h
 nsHTMLEntityList.h
 nsWellFormedDTD.h
-nsIExpatTokenizer.h
 nsParserError.h
-nsIElementObserver.h
-nsIParserService.h

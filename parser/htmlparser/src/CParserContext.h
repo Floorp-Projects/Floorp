@@ -35,7 +35,6 @@
 #include "nsScanner.h"
 #include "nsIStreamListener.h"
 #include "nsString.h"
-#include "nshtmlpars.h"
 
 /**
  * Note that the parser is given FULL access to all

@@ -19,15 +19,34 @@
 #
 # Contributor(s): 
 
-DEPTH=..
+DEPTH=..\..
 
+include <$(DEPTH)\config\config.mak>
 
-DIRS = public src \
-!if !defined(DISABLE_TESTS)
-    robot \
-    robot\test \
-    tests \
+MODULE  = htmlparser
+
+EXPORTS =                       \
+	nsITokenizer.h              \
+	nsIExpatTokenizer.h         \
+	nsIContentSink.h            \
+	nsIHTMLContentSink.h        \
+	nsIHTMLFragmentContentSink.h\
+	nsIParserNode.h             \
+	nsIParser.h                 \
+	nsIParserFilter.h           \
+	nsIDTD.h                    \
+	nsIElementObserver.h        \
+	nsIParserService.h          \
+	nshtmlpars.h                \
+	nsHTMLTagList.h             \
+	nsHTMLTags.h                \
+	nsHTMLTokens.h              \
+	nsParserError.h             \
+	nsParserCIID.h              \
+	nsToken.h                   \
+!if !defined(MOZ_DISABLE_DTD_DEBUG)
+	nsILoggingSink.h            \
 !endif
-    $(NULL)
+	$(NULL)
 
 include <$(DEPTH)\config\rules.mak>

@@ -44,7 +44,6 @@
 #include "nsIMarkupDocumentViewer.h"
 #include "nsINodeInfo.h"
 #include "nsHTMLTokens.h"  
-#include "nsHTMLEntities.h" 
 #include "nsCRT.h"
 #include "nsSupportsArray.h"
 #include "jsapi.h" // for JSVERSION_* and JS_VersionToString

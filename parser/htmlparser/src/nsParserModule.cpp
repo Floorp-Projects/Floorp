@@ -28,7 +28,6 @@
 #include "nsIModule.h"
 #include "nsParserCIID.h"
 #include "nsParser.h"
-#include "nsLoggingSink.h"
 #include "nsWellFormedDTD.h"
 #include "CNavDTD.h"
 #include "COtherDTD.h"
@@ -36,11 +35,14 @@
 #include "nsViewSourceHTML.h"
 #include "nsHTMLEntities.h"
 #include "nsHTMLTokenizer.h"
-#include "nsXMLTokenizer.h"
 //#include "nsTextTokenizer.h"
 #include "nsExpatTokenizer.h"
 #include "nsIParserService.h"
 #include "nsElementTable.h"
+
+#if !defined(MOZ_DISABLE_DTD_DEBUG)
+#include "nsLoggingSink.h"
+#endif
 
 static NS_DEFINE_IID(kIParserServiceIID, NS_IPARSERSERVICE_IID);
 
@@ -148,8 +150,11 @@ nsParserService::IsBlock(PRInt32 aId, PRBool& aIsBlock) const
 
 //----------------------------------------------------------------------
 
-static NS_DEFINE_CID(kParserCID, NS_PARSER_CID);
+#if !defined(MOZ_DISABLE_DTD_DEBUG)
 static NS_DEFINE_CID(kLoggingSinkCID, NS_LOGGING_SINK_CID);
+#endif
+
+static NS_DEFINE_CID(kParserCID, NS_PARSER_CID);
 static NS_DEFINE_CID(kWellFormedDTDCID, NS_WELLFORMEDDTD_CID);
 static NS_DEFINE_CID(kNavDTDCID, NS_CNAVDTD_CID);
 static NS_DEFINE_CID(kCOtherDTDCID, NS_COTHER_DTD_CID);
@@ -157,8 +162,11 @@ static NS_DEFINE_CID(kCTransitionalDTDCID, NS_CTRANSITIONAL_DTD_CID);
 static NS_DEFINE_CID(kViewSourceDTDCID, NS_VIEWSOURCE_DTD_CID);
 static NS_DEFINE_CID(kParserServiceCID, NS_PARSERSERVICE_CID);
 
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsParser)
+#if !defined(MOZ_DISABLE_DTD_DEBUG)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsLoggingSink)
+#endif
+
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsParser)
 NS_GENERIC_FACTORY_CONSTRUCTOR(CWellFormedDTD)
 NS_GENERIC_FACTORY_CONSTRUCTOR(CNavDTD)
 NS_GENERIC_FACTORY_CONSTRUCTOR(COtherDTD)
@@ -167,8 +175,12 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(CViewSourceHTML)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsParserService)
 
 static nsModuleComponentInfo gComponents[] = {
-  { "Parser", NS_PARSER_CID, NULL, nsParserConstructor },
+
+#if !defined(MOZ_DISABLE_DTD_DEBUG)
   { "Logging sink", NS_LOGGING_SINK_CID, NULL, nsLoggingSinkConstructor },
+#endif
+
+  { "Parser", NS_PARSER_CID, NULL, nsParserConstructor },
   { "Well formed DTD", NS_WELLFORMEDDTD_CID, NULL, CWellFormedDTDConstructor },
   { "Navigator HTML DTD", NS_CNAVDTD_CID, NULL, CNavDTDConstructor },
   { "OTHER DTD", NS_COTHER_DTD_CID, NULL, COtherDTDConstructor },

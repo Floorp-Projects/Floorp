@@ -22,7 +22,7 @@
 DEPTH=..
 
 
-DIRS = src \
+DIRS = public src \
 !if !defined(DISABLE_TESTS)
     robot \
     robot\test \

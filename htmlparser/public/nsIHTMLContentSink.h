@@ -257,6 +257,11 @@ public:
 
 };
 
+#if !defined(MOZ_DISABLE_DTD_DEBUG)
+
+#include "nshtmlpars.h"
 extern NS_HTMLPARS nsresult NS_NewHTMLNullSink(nsIContentSink** aInstancePtrResult);
+
+#endif
 
 #endif /* nsIHTMLContentSink_h___ */
