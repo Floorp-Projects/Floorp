@@ -57,7 +57,7 @@ namespace VM {
         return f;
     }
 
-    Formatter& operator<< (Formatter& f, ArgList& al)
+    Formatter& operator<< (Formatter& f, const ArgList& al)
     {
         const RegisterList& rl = al.mList;
         const JSValues& registers = al.mRegisters;

@@ -187,7 +187,7 @@ namespace VM {
     
     Formatter& operator<< (Formatter& f, Instruction& i);
     Formatter& operator<< (Formatter& f, RegisterList& rl);
-    Formatter& operator<< (Formatter& f, ArgList& al);
+    Formatter& operator<< (Formatter& f, const ArgList& al);
     
     /********************************************************************/
     
