@@ -86,10 +86,9 @@ nsMsgSendPart::~nsMsgSendPart()
 		delete m_children[i];
 
 	delete [] m_children;
-    delete [] m_buffer;
+    PR_FREEIF(m_buffer);
 	PR_FREEIF(m_other);
-	if (m_filename)
-		delete [] m_filename;
+	PR_FREEIF(m_filename);
 	PR_FREEIF(m_type);
 }
 
@@ -161,7 +160,7 @@ int nsMsgSendPart::AppendOtherHeaders(const char* more)
 	if (!more || !*more)
 		return 0;
 
-	char* tmp = new char[PL_strlen(m_other) + PL_strlen(more) + 2];
+	char* tmp = (char *) PR_Malloc(sizeof(char) * (PL_strlen(m_other) + PL_strlen(more) + 2));
 	if (!tmp)
 		return MK_OUT_OF_MEMORY;
 
@@ -525,20 +524,22 @@ int nsMsgSendPart::Write()
       if (mySpec.Valid())
         length = mySpec.GetFileSize();
 
-      m_buffer = new char[length + 1];
-      if (m_buffer) {
+      m_buffer = (char *) PR_Malloc(sizeof(char) * (length + 1));
+      if (m_buffer) 
+	  {
         file = PR_Open(m_filename, PR_RDONLY, 0);
-        if (file) {
+        if (file) 
+		{
           PR_Read(file, m_buffer, length);
           PR_Close(file);
           m_buffer[length] = '\0';
           file = NULL;
-          if (m_filename)
-            delete [] m_filename;
+          PR_FREEIF(m_filename);
           m_filename = NULL;
         }
-        else {
-          delete [] m_buffer;
+        else 
+		{
+		  PR_Free(m_buffer);
           m_buffer = NULL;
         }
       }
