@@ -1535,8 +1535,6 @@ nsXULDocument::SetStyleSheetApplicableState(nsIStyleSheet* aSheet,
                                             PRBool aApplicable)
 {
     NS_PRECONDITION(nsnull != aSheet, "null arg");
-    PRInt32 count;
-    PRInt32 i;
 
     // If we're actually in the document style sheet list
     if (-1 != mStyleSheets.IndexOf((void *)aSheet)) {
@@ -1551,6 +1549,7 @@ nsXULDocument::SetStyleSheetApplicableState(nsIStyleSheet* aSheet,
     // XXX Some (nsHTMLEditor, eg) call this function for sheets that
     // are not document sheets!  So we have to always notify.
 
+    PRInt32 i;
     // if an observer removes itself, we're ok (not if it removes others though)
     for (i = mObservers.Count() - 1; i >= 0; --i) {
         nsIDocumentObserver*  observer =
