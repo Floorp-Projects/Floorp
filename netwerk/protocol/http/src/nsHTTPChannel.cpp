@@ -1823,6 +1823,10 @@ nsresult nsHTTPChannel::ResponseCompleted(nsIStreamListener *aListener,
         }
     }
 
+    // Release the cache entry as soon as we are done. This helps as it can
+    // flush any cache records and do maintenance.
+    mCacheEntry = nsnull;
+
     //
     // After the consumer has been notified, remove the channel from its 
     // load group...  This will trigger an OnStopRequest from the load group.
