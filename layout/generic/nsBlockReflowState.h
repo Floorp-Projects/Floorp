@@ -229,13 +229,11 @@ public:
     mBand.GetAvailableSpace(mY - BorderPadding().top, mAvailSpaceRect);
 
 #ifdef NOISY_INCREMENTAL_REFLOW
-    if (mReflowState.reason == eReflowReason_Incremental) {
-      nsFrame::IndentBy(stdout, gNoiseIndent);
-      printf("GetAvailableSpace: band=%d,%d,%d,%d count=%d\n",
-             mAvailSpaceRect.x, mAvailSpaceRect.y,
-             mAvailSpaceRect.width, mAvailSpaceRect.height,
-             mBand.GetTrapezoidCount());
-    }
+    nsFrame::IndentBy(stdout, gNoiseIndent);
+    printf("GetAvailableSpace: band=%d,%d,%d,%d count=%d\n",
+           mAvailSpaceRect.x, mAvailSpaceRect.y,
+           mAvailSpaceRect.width, mAvailSpaceRect.height,
+           mBand.GetTrapezoidCount());
 #endif
   }
 
@@ -250,13 +248,11 @@ public:
     mBand.GetAvailableSpace(aY - BorderPadding().top, mAvailSpaceRect);
 
 #ifdef NOISY_INCREMENTAL_REFLOW
-    if (mReflowState.reason == eReflowReason_Incremental) {
-      nsFrame::IndentBy(stdout, gNoiseIndent);
-      printf("GetAvailableSpace: band=%d,%d,%d,%d count=%d\n",
-             mAvailSpaceRect.x, mAvailSpaceRect.y,
-             mAvailSpaceRect.width, mAvailSpaceRect.height,
-             mBand.GetTrapezoidCount());
-    }
+    nsFrame::IndentBy(stdout, gNoiseIndent);
+    printf("GetAvailableSpace: band=%d,%d,%d,%d count=%d\n",
+           mAvailSpaceRect.x, mAvailSpaceRect.y,
+           mAvailSpaceRect.width, mAvailSpaceRect.height,
+           mBand.GetTrapezoidCount());
 #endif
   }
 
@@ -1822,7 +1818,6 @@ nsBlockFrame::ComputeFinalSize(const nsHTMLReflowState& aReflowState,
     }
   }
 #ifdef NOISY_COMBINED_AREA
-  IndentBy(stdout, GetDepth());
   ListTag(stdout);
   printf(": ca=%d,%d,%d,%d\n", xa, ya, xb-xa, yb-ya);
 #endif
@@ -2132,10 +2127,16 @@ nsBlockFrame::ReflowDirtyLines(nsBlockReflowState& aState)
     aState.mReflowState.reflowCommand->GetType(type);
     IndentBy(stdout, gNoiseIndent);
     ListTag(stdout);
-    printf(": incrementally reflowing dirty lines: type=%s(%d)\n",
+    printf(": incrementally reflowing dirty lines: type=%s(%d)",
            kReflowCommandType[type], type);
-    gNoiseIndent++;
   }
+  else {
+    IndentBy(stdout, gNoiseIndent);
+    ListTag(stdout);
+    printf(": reflowing dirty lines");
+  }
+  printf(" computedWidth=%d\n", aState.mReflowState.mComputedWidth);
+  gNoiseIndent++;
 #endif
 
   // Check whether this is an incremental reflow
@@ -2148,15 +2149,13 @@ nsBlockFrame::ReflowDirtyLines(nsBlockReflowState& aState)
   nscoord deltaY = 0;
   while (nsnull != line) {
 #ifdef NOISY_INCREMENTAL_REFLOW
-    if (aState.mReflowState.reason == eReflowReason_Incremental) {
-      IndentBy(stdout, gNoiseIndent);
-      printf("line=%p mY=%d dirty=%s oldBounds=%d,%d,%d,%d deltaY=%d mPrevBottomMargin=%d\n",
-             line, aState.mY, line->IsDirty() ? "yes" : "no",
-             line->mBounds.x, line->mBounds.y,
-             line->mBounds.width, line->mBounds.height,
-             deltaY, aState.mPrevBottomMargin);
-      gNoiseIndent++;
-    }
+    IndentBy(stdout, gNoiseIndent);
+    printf("line=%p mY=%d dirty=%s oldBounds=%d,%d,%d,%d deltaY=%d mPrevBottomMargin=%d\n",
+           line, aState.mY, line->IsDirty() ? "yes" : "no",
+           line->mBounds.x, line->mBounds.y,
+           line->mBounds.width, line->mBounds.height,
+           deltaY, aState.mPrevBottomMargin);
+    gNoiseIndent++;
 #endif
     if (line->IsDirty()) {
       // Compute the dirty lines "before" YMost, after factoring in
@@ -2201,15 +2200,13 @@ nsBlockFrame::ReflowDirtyLines(nsBlockReflowState& aState)
       }
     }
 #ifdef NOISY_INCREMENTAL_REFLOW
-    if (aState.mReflowState.reason == eReflowReason_Incremental) {
-      gNoiseIndent--;
-      IndentBy(stdout, gNoiseIndent);
-      printf("line=%p mY=%d newBounds=%d,%d,%d,%d deltaY=%d mPrevBottomMargin=%d\n",
-             line, aState.mY,
-             line->mBounds.x, line->mBounds.y,
-             line->mBounds.width, line->mBounds.height,
-             deltaY, aState.mPrevBottomMargin);
-    }
+    gNoiseIndent--;
+    IndentBy(stdout, gNoiseIndent);
+    printf("line=%p mY=%d newBounds=%d,%d,%d,%d deltaY=%d mPrevBottomMargin=%d\n",
+           line, aState.mY,
+           line->mBounds.x, line->mBounds.y,
+           line->mBounds.width, line->mBounds.height,
+           deltaY, aState.mPrevBottomMargin);
 #endif
 
     // If this is an inline frame then its time to stop
@@ -2298,13 +2295,11 @@ nsBlockFrame::ReflowDirtyLines(nsBlockReflowState& aState)
   }
 
 #ifdef NOISY_INCREMENTAL_REFLOW
-  if (aState.mReflowState.reason == eReflowReason_Incremental) {
-    gNoiseIndent--;
-    IndentBy(stdout, gNoiseIndent);
-    ListTag(stdout);
-    printf(": done reflowing dirty lines (status=%x)\n",
-           aState.mReflowStatus);
-  }
+  gNoiseIndent--;
+  IndentBy(stdout, gNoiseIndent);
+  ListTag(stdout);
+  printf(": done reflowing dirty lines (status=%x)\n",
+         aState.mReflowStatus);
 #endif
 
   return rv;
@@ -2925,7 +2920,10 @@ nsBlockFrame::ReflowBlockFrame(nsBlockReflowState& aState,
   // Clear past floaters before the block if the clear style is not none
   aLine->mBreakType = display->mBreakType;
   if (NS_STYLE_CLEAR_NONE != aLine->mBreakType) {
-    applyTopMargin = aState.ClearPastFloaters(aLine->mBreakType);
+    PRBool alsoApplyTopMargin = aState.ClearPastFloaters(aLine->mBreakType);
+    if (alsoApplyTopMargin) {
+      applyTopMargin = PR_TRUE;
+    }
 #ifdef NOISY_VERTICAL_MARGINS
     ListTag(stdout);
     printf(": y=%d child ", aState.mY);
@@ -3756,7 +3754,7 @@ nsBlockFrame::PlaceLine(nsBlockReflowState& aState,
   }
   PostPlaceLine(aState, aLine, maxElementSize);
 
-  // Add the already placed current-line flaoters to the line
+  // Add the already placed current-line floaters to the line
   aLine->mFloaters.Append(aState.mCurrentLineFloaters);
 
   // Any below current line floaters to place?
@@ -3846,13 +3844,13 @@ nsBlockFrame::PostPlaceLine(nsBlockReflowState& aState,
 
   // Update xmost
   nscoord xmost = aLine->mBounds.XMost();
-  if (xmost > aState.mKidXMost) {
 #ifdef DEBUG
-    if (CRAZY_WIDTH(xmost)) {
-      ListTag(stdout);
-      printf(": line=%p xmost=%d\n", aLine, xmost);
-    }
+  if (CRAZY_WIDTH(xmost)) {
+    ListTag(stdout);
+    printf(": line=%p xmost=%d\n", aLine, xmost);
+  }
 #endif
+  if (xmost > aState.mKidXMost) {
     aState.mKidXMost = xmost;
   }
 }
@@ -5100,13 +5098,29 @@ nsBlockReflowState::PlaceFloater(nsFloaterCache* aFloaterCache,
   // coordinates are computed <b>relative to the translation in the
   // spacemanager</b> which means that the impacted region will be
   // <b>inside</b> the border/padding area.
+  PRBool okToAddRectRegion = PR_TRUE;
   if (NS_STYLE_FLOAT_LEFT == floaterDisplay->mFloats) {
     *aIsLeftFloater = PR_TRUE;
     region.x = mAvailSpaceRect.x;
   }
   else {
     *aIsLeftFloater = PR_FALSE;
-    region.x = mAvailSpaceRect.XMost() - region.width;
+    if (mUnconstrainedWidth) {
+      // When we are in an unconstrained width reflow (e.g. inside a
+      // table cell) there is no point in placing the right floaters
+      // because they will be placed inifinitely far to the right and
+      // therefore they will have no real effect on reflow. However,
+      // they will wreak havoc with the line's width and the
+      // combined-area so we just skip placing them there at all.
+      //
+      // XXX To keep the combined area in the ballpark, however, we
+      // pretend that the floater ended up at the left margin...
+      okToAddRectRegion = PR_FALSE;
+      region.x = mAvailSpaceRect.x;
+    }
+    else {
+      region.x = mAvailSpaceRect.XMost() - region.width;
+    }
   }
   const nsMargin& borderPadding = BorderPadding();
   region.y = mY - borderPadding.top;
@@ -5120,7 +5134,9 @@ nsBlockReflowState::PlaceFloater(nsFloaterCache* aFloaterCache,
   }
 
   // Place the floater in the space manager
-  mSpaceManager->AddRectRegion(floater, region);
+  if (okToAddRectRegion) {
+    mSpaceManager->AddRectRegion(floater, region);
+  }
 
   // Save away the floaters region in the spacemanager, after making
   // it relative to the containing block's frame instead of relative
@@ -5161,7 +5177,7 @@ nsBlockReflowState::PlaceFloater(nsFloaterCache* aFloaterCache,
   mY = saveY;
 
 #ifdef NOISY_INCREMENTAL_REFLOW
-  if (mReflowState.reason == eReflowReason_Incremental) {
+  {
     nsRect r;
     floater->GetRect(r);
     nsFrame::IndentBy(stdout, gNoiseIndent);
@@ -5203,11 +5219,9 @@ void
 nsBlockReflowState::ClearFloaters(nscoord aY, PRUint8 aBreakType)
 {
 #ifdef NOISY_INCREMENTAL_REFLOW
-  if (mReflowState.reason == eReflowReason_Incremental) {
-    nsFrame::IndentBy(stdout, gNoiseIndent);
-    printf("clear floaters: in: mY=%d aY=%d(%d)\n",
-           mY, aY, aY - BorderPadding().top);
-  }
+  nsFrame::IndentBy(stdout, gNoiseIndent);
+  printf("clear floaters: in: mY=%d aY=%d(%d)\n",
+         mY, aY, aY - BorderPadding().top);
 #endif
 
 #ifdef NOISY_FLOATER_CLEARING
@@ -5221,10 +5235,8 @@ nsBlockReflowState::ClearFloaters(nscoord aY, PRUint8 aBreakType)
   GetAvailableSpace();
 
 #ifdef NOISY_INCREMENTAL_REFLOW
-  if (mReflowState.reason == eReflowReason_Incremental) {
-    nsFrame::IndentBy(stdout, gNoiseIndent);
-    printf("clear floaters: out: mY=%d(%d)\n", mY, mY - bp.top);
-  }
+  nsFrame::IndentBy(stdout, gNoiseIndent);
+  printf("clear floaters: out: mY=%d(%d)\n", mY, mY - bp.top);
 #endif
 }
 
@@ -5801,63 +5813,6 @@ nsBlockFrame::SetInitialChildList(nsIPresContext& aPresContext,
   return NS_OK;
 }
 
-#if 0
-void
-nsBlockFrame::RenumberLists()
-{
-  // Setup initial list ordinal value
-  PRInt32 ordinal = 1;
-  nsIHTMLContent* hc;
-  if (mContent && (NS_OK == mContent->QueryInterface(kIHTMLContentIID, (void**) &hc))) {
-    nsHTMLValue value;
-    if (NS_CONTENT_ATTR_HAS_VALUE ==
-        hc->GetHTMLAttribute(nsHTMLAtoms::start, value)) {
-      if (eHTMLUnit_Integer == value.GetUnit()) {
-        ordinal = value.GetIntValue();
-        if (ordinal <= 0) {
-          ordinal = 1;
-        }
-      }
-    }
-    NS_RELEASE(hc);
-  }
-
-  // Get to first-in-flow
-  nsBlockFrame* block = this;
-  while (nsnull != block->mPrevInFlow) {
-    block = (nsBlockFrame*) block->mPrevInFlow;
-  }
-
-  // For each flow-block...
-  while (nsnull != block) {
-    // For each frame in the flow-block...
-    nsIFrame* frame = block->mLines ? block->mLines->mFirstChild : nsnull;
-    while (nsnull != frame) {
-      // If the frame is a list-item and the frame implements our
-      // block frame API then get it's bullet and set the list item
-      // ordinal.
-      const nsStyleDisplay* display;
-      frame->GetStyleData(eStyleStruct_Display,
-                          (const nsStyleStruct*&) display);
-      if (NS_STYLE_DISPLAY_LIST_ITEM == display->mDisplay) {
-        // Make certain that the frame isa block-frame in case
-        // something foriegn has crept in.
-        nsBlockFrame* listItem;
-        if (NS_OK == frame->QueryInterface(kBlockFrameCID,
-                                           (void**) &listItem)) {
-          if (nsnull != listItem->mBullet) {
-            ordinal =
-              listItem->mBullet->SetListItemOrdinal(ordinal);
-          }
-        }
-      }
-      frame->GetNextSibling(&frame);
-    }
-    block = (nsBlockFrame*) block->mNextInFlow;
-  }
-}
-#endif
-
 PRBool
 nsBlockFrame::FrameStartsCounterScope(nsIFrame* aFrame)
 {
@@ -5900,13 +5855,45 @@ nsBlockFrame::RenumberLists()
 
   // Get to first-in-flow
   nsBlockFrame* block = (nsBlockFrame*) GetFirstInFlow();
-  RenumberListsIn(block, &ordinal);
+  RenumberListsInBlock(block, &ordinal);
 }
 
-void
+PRBool
+nsBlockFrame::RenumberListsInBlock(nsBlockFrame* aBlockFrame,
+                                   PRInt32* aOrdinal)
+{
+  PRBool renumberedABullet = PR_FALSE;
+
+  while (nsnull != aBlockFrame) {
+    // Examine each line in the block
+    nsLineBox* line = aBlockFrame->mLines;
+    while (line) {
+      nsIFrame* kid = line->mFirstChild;
+      PRInt32 n = line->mChildCount;
+      while (--n >= 0) {
+        PRBool kidRenumberedABullet = RenumberListsFor(kid, aOrdinal);
+        if (kidRenumberedABullet) {
+          line->MarkDirty();
+          renumberedABullet = PR_TRUE;
+        }
+        kid->GetNextSibling(&kid);
+      }
+      line = line->mNext;
+    }
+
+    // Advance to the next continuation
+    aBlockFrame->GetNextInFlow((nsIFrame**) &aBlockFrame);
+  }
+
+  return renumberedABullet;
+}
+
+// XXX temporary code: after ib work is done in frame construction
+// code this can be removed.
+PRBool
 nsBlockFrame::RenumberListsIn(nsIFrame* aContainerFrame, PRInt32* aOrdinal)
 {
-  nsresult rv;
+  PRBool renumberedABullet = PR_FALSE;
 
   // For each flow-block...
   while (nsnull != aContainerFrame) {
@@ -5914,64 +5901,83 @@ nsBlockFrame::RenumberListsIn(nsIFrame* aContainerFrame, PRInt32* aOrdinal)
     nsIFrame* kid;
     aContainerFrame->FirstChild(nsnull, &kid);
     while (nsnull != kid) {
-      // If the frame is a list-item and the frame implements our
-      // block frame API then get it's bullet and set the list item
-      // ordinal.
-      const nsStyleDisplay* display;
-      kid->GetStyleData(eStyleStruct_Display,
-                        (const nsStyleStruct*&) display);
-      if (NS_STYLE_DISPLAY_LIST_ITEM == display->mDisplay) {
-        // Make certain that the frame isa block-frame in case
-        // something foriegn has crept in.
-        nsBlockFrame* listItem;
-        rv = kid->QueryInterface(kBlockFrameCID, (void**)&listItem);
-        if (NS_SUCCEEDED(rv)) {
-          if (nsnull != listItem->mBullet) {
-            PRBool changed;
-            *aOrdinal = listItem->mBullet->SetListItemOrdinal(*aOrdinal,
-                                                              &changed);
-            if (changed) {
-              // Maybe generate a reflow of the bullet
-            }
-          }
-
-          // XXX temporary? if the list-item has child list-items they
-          // should be numbered too; especially since the list-item is
-          // itself (ASSUMED!) not to be a counter-reseter.
-          RenumberListsIn(kid, aOrdinal);
-        }
-      }
-      else if (NS_STYLE_DISPLAY_BLOCK == display->mDisplay) {
-        if (FrameStartsCounterScope(kid)) {
-          // Don't bother recursing into a block frame that is a new
-          // counter scope. Any list-items in there will be handled by
-          // it.
-        }
-        else {
-          // If the display=block element ISA block-frame then go
-          // ahead and recurse into it as it might have child
-          // list-items.
-          nsBlockFrame* kidBlock;
-          rv = kid->QueryInterface(kBlockFrameCID, (void**) &kidBlock);
-          if (NS_SUCCEEDED(rv)) {
-            RenumberListsIn(kid, aOrdinal);
-          }
-        }
-      } else if (NS_STYLE_DISPLAY_INLINE == display->mDisplay) {
-        // If the display=inline element ISA nsInlineFrame then go
-        // ahead and recurse into it as it might have child
-        // list-items.
-        nsInlineFrame* kidInline;
-        rv = kid->QueryInterface(nsInlineFrame::kInlineFrameCID,
-                                 (void**) &kidInline);
-        if (NS_SUCCEEDED(rv)) {
-          RenumberListsIn(kid, aOrdinal);
-        }
+      PRBool kidRenumberedABullet = RenumberListsFor(kid, aOrdinal);
+      if (kidRenumberedABullet) {
+        renumberedABullet = PR_TRUE;
       }
       kid->GetNextSibling(&kid);
     }
     aContainerFrame->GetNextInFlow(&aContainerFrame);
   }
+  return renumberedABullet;
+}
+
+PRBool
+nsBlockFrame::RenumberListsFor(nsIFrame* aKid, PRInt32* aOrdinal)
+{
+  PRBool kidRenumberedABullet = PR_FALSE;
+
+  // If the frame is a list-item and the frame implements our
+  // block frame API then get it's bullet and set the list item
+  // ordinal.
+  const nsStyleDisplay* display;
+  aKid->GetStyleData(eStyleStruct_Display,
+                    (const nsStyleStruct*&) display);
+  if (NS_STYLE_DISPLAY_LIST_ITEM == display->mDisplay) {
+    // Make certain that the frame isa block-frame in case
+    // something foreign has crept in.
+    nsBlockFrame* listItem;
+    nsresult rv = aKid->QueryInterface(kBlockFrameCID, (void**)&listItem);
+    if (NS_SUCCEEDED(rv)) {
+      if (nsnull != listItem->mBullet) {
+        PRBool changed;
+        *aOrdinal = listItem->mBullet->SetListItemOrdinal(*aOrdinal,
+                                                          &changed);
+        if (changed) {
+          kidRenumberedABullet = PR_TRUE;
+        }
+      }
+
+      // XXX temporary? if the list-item has child list-items they
+      // should be numbered too; especially since the list-item is
+      // itself (ASSUMED!) not to be a counter-reseter.
+      PRBool meToo = RenumberListsInBlock(listItem, aOrdinal);
+      if (meToo) {
+        kidRenumberedABullet = PR_TRUE;
+      }
+    }
+  }
+  else if (NS_STYLE_DISPLAY_BLOCK == display->mDisplay) {
+    if (FrameStartsCounterScope(aKid)) {
+      // Don't bother recursing into a block frame that is a new
+      // counter scope. Any list-items in there will be handled by
+      // it.
+    }
+    else {
+      // If the display=block element ISA block-frame then go
+      // ahead and recurse into it as it might have child
+      // list-items.
+      nsBlockFrame* kidBlock;
+      nsresult rv = aKid->QueryInterface(kBlockFrameCID, (void**) &kidBlock);
+      if (NS_SUCCEEDED(rv)) {
+        kidRenumberedABullet = RenumberListsInBlock(kidBlock, aOrdinal);
+      }
+    }
+  } else if (NS_STYLE_DISPLAY_INLINE == display->mDisplay) {
+    // XXX temporary code: after ib work is done in frame construction
+    // code this can be removed.
+
+    // If the display=inline element ISA nsInlineFrame then go
+    // ahead and recurse into it as it might have child
+    // list-items.
+    nsInlineFrame* kidInline;
+    nsresult rv = aKid->QueryInterface(nsInlineFrame::kInlineFrameCID,
+                                       (void**) &kidInline);
+    if (NS_SUCCEEDED(rv)) {
+      kidRenumberedABullet = RenumberListsIn(aKid, aOrdinal);
+    }
+  }
+  return kidRenumberedABullet;
 }
 
 void

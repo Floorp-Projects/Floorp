@@ -340,7 +340,12 @@ protected:
 
   void RenumberLists();
 
-  void RenumberListsIn(nsIFrame* aContainerFrame, PRInt32* aOrdinal);
+  PRBool RenumberListsIn(nsIFrame* aContainerFrame, PRInt32* aOrdinal);
+
+  PRBool RenumberListsInBlock(nsBlockFrame* aContainerFrame,
+                              PRInt32* aOrdinal);
+
+  PRBool RenumberListsFor(nsIFrame* aKid, PRInt32* aOrdinal);
 
   PRBool FrameStartsCounterScope(nsIFrame* aFrame);
 
