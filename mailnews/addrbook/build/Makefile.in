@@ -37,6 +37,7 @@ EXPORTS= \
 
 SHARED_LIBRARY_LIBS =	\
 	$(DIST)/lib/libaddrbook_s.a	\
+	$(DIST)/lib/libmsgmork_s.a		\
 	$(NULL)
 
 EXTRA_DSO_LDOPTS = 	\
