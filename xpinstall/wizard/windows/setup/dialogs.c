@@ -805,6 +805,78 @@ LRESULT CALLBACK DlgProcSetupType(HWND hDlg, UINT msg, WPARAM wParam, LONG lPara
   return(0);
 }
 
+void DrawLBText(LPDRAWITEMSTRUCT lpdis, DWORD dwACFlag)
+{
+  siC     *siCTemp  = NULL;
+  TCHAR   tchBuffer[MAX_BUF];
+  TEXTMETRIC tm;
+  DWORD      y;
+
+  siCTemp = SiCNodeGetObject(lpdis->itemID, FALSE, dwACFlag);
+  if(siCTemp != NULL)
+  {
+    SendMessage(lpdis->hwndItem, LB_GETTEXT, lpdis->itemID, (LPARAM)tchBuffer);
+
+    if((lpdis->itemAction & ODA_FOCUS) && (lpdis->itemState & ODS_SELECTED))
+    {
+      // remove the focus rect on the previous selected item
+      DrawFocusRect(lpdis->hDC, &(lpdis->rcItem));
+    }
+
+    siCTemp = SiCNodeGetObject(lpdis->itemID, FALSE, dwACFlag);
+    if(lpdis->itemAction & ODA_FOCUS)
+    {
+      if((lpdis->itemState & ODS_SELECTED) &&
+        !(lpdis->itemState & ODS_FOCUS))
+      {
+        if(siCTemp->dwAttributes & SIC_DISABLED)
+          SetTextColor(lpdis->hDC,        GetSysColor(COLOR_GRAYTEXT));
+        else
+        {
+          SetTextColor(lpdis->hDC,        GetSysColor(COLOR_WINDOWTEXT));
+          SetBkColor(lpdis->hDC,          GetSysColor(COLOR_WINDOW));
+        }
+      }
+      else
+      {
+        if(siCTemp->dwAttributes & SIC_DISABLED)
+          SetTextColor(lpdis->hDC,        GetSysColor(COLOR_GRAYTEXT));
+        else
+        {
+          SetTextColor(lpdis->hDC,        GetSysColor(COLOR_HIGHLIGHTTEXT));
+          SetBkColor(lpdis->hDC,          GetSysColor(COLOR_HIGHLIGHT));
+        }
+      }
+    }
+    else if(lpdis->itemAction & ODA_DRAWENTIRE)
+    {
+      if(siCTemp->dwAttributes & SIC_DISABLED)
+        SetTextColor(lpdis->hDC, GetSysColor(COLOR_GRAYTEXT));
+      else
+        SetTextColor(lpdis->hDC, GetSysColor(COLOR_WINDOWTEXT));
+    }
+
+    // If a screen reader is being used we want to redraw the text whether
+    //   it has focus or not because the text changes whenever the checkbox
+    //   changes.
+    if( gSystemInfo.bScreenReader || (lpdis->itemAction & (ODA_DRAWENTIRE | ODA_FOCUS)) )
+    {
+      // Display the text associated with the item.
+      GetTextMetrics(lpdis->hDC, &tm);
+      y = (lpdis->rcItem.bottom + lpdis->rcItem.top - tm.tmHeight) / 2;
+
+      ExtTextOut(lpdis->hDC,
+                 CX_CHECKBOX + 5,
+                 y,
+                 ETO_OPAQUE | ETO_CLIPPED,
+                 &(lpdis->rcItem),
+                 tchBuffer,
+                 strlen(tchBuffer),
+                 NULL);
+    }
+  }
+}
+
 void DrawCheck(LPDRAWITEMSTRUCT lpdis, DWORD dwACFlag)
 {
   siC     *siCTemp  = NULL;
@@ -851,8 +923,19 @@ void DrawCheck(LPDRAWITEMSTRUCT lpdis, DWORD dwACFlag)
 void lbAddItem(HWND hList, siC *siCComponent)
 {
   DWORD dwItem;
+  TCHAR tchBuffer[MAX_BUF];
 
-  dwItem = SendMessage(hList, LB_ADDSTRING, 0, (LPARAM)siCComponent->szDescriptionShort);
+  lstrcpy(tchBuffer, siCComponent->szDescriptionShort);
+  if(gSystemInfo.bScreenReader)
+  {
+    lstrcat(tchBuffer, " - ");
+    if(!(siCComponent->dwAttributes & SIC_SELECTED))
+      lstrcat(tchBuffer, sgInstallGui.szUnchecked);
+    else
+      lstrcat(tchBuffer, sgInstallGui.szChecked);
+  }
+  dwItem = SendMessage(hList, LB_ADDSTRING, 0, (LPARAM)tchBuffer);
+
   if(siCComponent->dwAttributes & SIC_DISABLED)
     SendMessage(hList, LB_SETITEMDATA, dwItem, (LPARAM)hbmpBoxCheckedDisabled);
   else if(siCComponent->dwAttributes & SIC_SELECTED)
@@ -868,9 +951,12 @@ void InvalidateLBCheckbox(HWND hwndListBox)
   // retrieve the rectangle of all list items to update.
   GetClientRect(hwndListBox, &rcCheckArea);
 
-  // set the right coordinate of the rectangle to be the same
-  // as the right edge of the bitmap drawn.
-  rcCheckArea.right = CX_CHECKBOX;
+  // Set the right coordinate of the rectangle to be the same
+  //   as the right edge of the bitmap drawn.
+  // But if a screen reader is being used we want to redraw the text
+  //   as well as the checkbox so we do not set the right coordinate.
+  if(!gSystemInfo.bScreenReader)
+    rcCheckArea.right = CX_CHECKBOX;
 
   // It then invalidates the checkbox region to be redrawn.
   // Invalidating the region sends a WM_DRAWITEM message to
@@ -893,20 +979,21 @@ void ToggleCheck(HWND hwndListBox, DWORD dwIndex, DWORD dwACFlag)
   {
     if(dwAttributes & SIC_SELECTED)
     {
-      SiCNodeSetAttributes(dwIndex, SIC_SELECTED, FALSE, FALSE, dwACFlag);
+      SiCNodeSetAttributes(dwIndex, SIC_SELECTED, FALSE, FALSE, dwACFlag, hwndListBox);
+
       szToggledReferenceName = SiCNodeGetReferenceName(dwIndex, FALSE, dwACFlag);
-      ResolveDependees(szToggledReferenceName);
+      ResolveDependees(szToggledReferenceName, hwndListBox);
     }
     else
     {
-      SiCNodeSetAttributes(dwIndex, SIC_SELECTED, TRUE, FALSE, dwACFlag);
-      bMoreToResolve = ResolveDependencies(dwIndex);
+      SiCNodeSetAttributes(dwIndex, SIC_SELECTED, TRUE, FALSE, dwACFlag, hwndListBox);
+      bMoreToResolve = ResolveDependencies(dwIndex, hwndListBox);
 
       while(bMoreToResolve)
-        bMoreToResolve = ResolveDependencies(-1);
+        bMoreToResolve = ResolveDependencies(-1, hwndListBox);
 
       szToggledReferenceName = SiCNodeGetReferenceName(dwIndex, FALSE, dwACFlag);
-      ResolveDependees(szToggledReferenceName);
+      ResolveDependees(szToggledReferenceName, hwndListBox);
     }
 
     InvalidateLBCheckbox(hwndListBox);
@@ -936,10 +1023,10 @@ WNDPROC SubclassWindow( HWND hWnd, WNDPROC NewWndProc)
 // ************************************************************************
 LRESULT CALLBACK NewListBoxWndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
-  DWORD               dwPosX;
-  DWORD               dwPosY;
-  DWORD               dwIndex;
-
+  DWORD   dwPosX;
+  DWORD   dwPosY;
+  DWORD   dwIndex;
+  
   switch(uMsg)
   {
     case WM_CHAR:
@@ -984,8 +1071,6 @@ LRESULT CALLBACK DlgProcSelectComponents(HWND hDlg, UINT msg, WPARAM wParam, LON
   HWND                hwndLBComponents;
   RECT                rDlg;
   TCHAR               tchBuffer[MAX_BUF];
-  TEXTMETRIC          tm;
-  DWORD               y;
   LPDRAWITEMSTRUCT    lpdis;
   ULONGLONG           ullDSBuf;
   char                szBuf[MAX_BUF];
@@ -1069,63 +1154,7 @@ LRESULT CALLBACK DlgProcSelectComponents(HWND hDlg, UINT msg, WPARAM wParam, LON
       if(lpdis->itemID == -1)
         break;
 
-      SendMessage(lpdis->hwndItem, LB_GETTEXT, lpdis->itemID, (LPARAM)tchBuffer);
-      if((lpdis->itemAction & ODA_FOCUS) && (lpdis->itemState & ODS_SELECTED))
-      {
-        // remove the focus rect on the previous selected item
-        DrawFocusRect(lpdis->hDC, &(lpdis->rcItem));
-      }
-
-      siCTemp = SiCNodeGetObject(lpdis->itemID, FALSE, AC_COMPONENTS);
-      if(lpdis->itemAction & ODA_FOCUS)
-      {
-        if((lpdis->itemState & ODS_SELECTED) &&
-          !(lpdis->itemState & ODS_FOCUS))
-        {
-          if(siCTemp->dwAttributes & SIC_DISABLED)
-            SetTextColor(lpdis->hDC,        GetSysColor(COLOR_GRAYTEXT));
-          else
-          {
-            SetTextColor(lpdis->hDC,        GetSysColor(COLOR_WINDOWTEXT));
-            SetBkColor(lpdis->hDC,          GetSysColor(COLOR_WINDOW));
-          }
-        }
-        else
-        {
-          if(siCTemp->dwAttributes & SIC_DISABLED)
-            SetTextColor(lpdis->hDC,        GetSysColor(COLOR_GRAYTEXT));
-          else
-          {
-            SetTextColor(lpdis->hDC,        GetSysColor(COLOR_HIGHLIGHTTEXT));
-            SetBkColor(lpdis->hDC,          GetSysColor(COLOR_HIGHLIGHT));
-          }
-        }
-      }
-      else if(lpdis->itemAction & ODA_DRAWENTIRE)
-      {
-        if(siCTemp->dwAttributes & SIC_DISABLED)
-          SetTextColor(lpdis->hDC, GetSysColor(COLOR_GRAYTEXT));
-        else
-          SetTextColor(lpdis->hDC, GetSysColor(COLOR_WINDOWTEXT));
-      }
-
-      if(lpdis->itemAction & (ODA_DRAWENTIRE | ODA_FOCUS))
-      {
-        // Display the text associated with the item.
-        GetTextMetrics(lpdis->hDC, &tm);
-        y = (lpdis->rcItem.bottom + lpdis->rcItem.top - tm.tmHeight) / 2;
-
-        ExtTextOut(lpdis->hDC,
-                   CX_CHECKBOX + 5,
-                   y,
-                   ETO_OPAQUE | ETO_CLIPPED,
-                   &(lpdis->rcItem),
-                   tchBuffer,
-                   strlen(tchBuffer),
-                   NULL);
-
-      }
-      
+	  DrawLBText(lpdis, AC_COMPONENTS);
       DrawCheck(lpdis, AC_COMPONENTS);
 
       // draw the focus rect on the selected item
@@ -1188,8 +1217,6 @@ LRESULT CALLBACK DlgProcSelectAdditionalComponents(HWND hDlg, UINT msg, WPARAM w
   HWND                hwndLBComponents;
   RECT                rDlg;
   TCHAR               tchBuffer[MAX_BUF];
-  TEXTMETRIC          tm;
-  DWORD               y;
   LPDRAWITEMSTRUCT    lpdis;
   ULONGLONG           ullDSBuf;
   char                szBuf[MAX_BUF];
@@ -1273,62 +1300,7 @@ LRESULT CALLBACK DlgProcSelectAdditionalComponents(HWND hDlg, UINT msg, WPARAM w
       if(lpdis->itemID == -1)
         break;
 
-      SendMessage(lpdis->hwndItem, LB_GETTEXT, lpdis->itemID, (LPARAM)tchBuffer);
-      if((lpdis->itemAction & ODA_FOCUS) && (lpdis->itemState & ODS_SELECTED))
-      {
-        // remove the focus rect on the previous selected item
-        DrawFocusRect(lpdis->hDC, &(lpdis->rcItem));
-      }
-
-      siCTemp = SiCNodeGetObject(lpdis->itemID, FALSE, AC_ADDITIONAL_COMPONENTS);
-      if(lpdis->itemAction & ODA_FOCUS)
-      {
-        if((lpdis->itemState & ODS_SELECTED) &&
-          !(lpdis->itemState & ODS_FOCUS))
-        {
-          if(siCTemp->dwAttributes & SIC_DISABLED)
-            SetTextColor(lpdis->hDC,        GetSysColor(COLOR_GRAYTEXT));
-          else
-          {
-            SetTextColor(lpdis->hDC,        GetSysColor(COLOR_WINDOWTEXT));
-            SetBkColor(lpdis->hDC,          GetSysColor(COLOR_WINDOW));
-          }
-        }
-        else
-        {
-          if(siCTemp->dwAttributes & SIC_DISABLED)
-            SetTextColor(lpdis->hDC,        GetSysColor(COLOR_GRAYTEXT));
-          else
-          {
-            SetTextColor(lpdis->hDC,        GetSysColor(COLOR_HIGHLIGHTTEXT));
-            SetBkColor(lpdis->hDC,          GetSysColor(COLOR_HIGHLIGHT));
-          }
-        }
-      }
-      else if(lpdis->itemAction & ODA_DRAWENTIRE)
-      {
-        if(siCTemp->dwAttributes & SIC_DISABLED)
-          SetTextColor(lpdis->hDC, GetSysColor(COLOR_GRAYTEXT));
-        else
-          SetTextColor(lpdis->hDC, GetSysColor(COLOR_WINDOWTEXT));
-      }
-
-      if(lpdis->itemAction & (ODA_DRAWENTIRE | ODA_FOCUS))
-      {
-        // Display the text associated with the item.
-        GetTextMetrics(lpdis->hDC, &tm);
-        y = (lpdis->rcItem.bottom + lpdis->rcItem.top - tm.tmHeight) / 2;
-
-        ExtTextOut(lpdis->hDC,
-                   CX_CHECKBOX + 5,
-                   y,
-                   ETO_OPAQUE | ETO_CLIPPED,
-                   &(lpdis->rcItem),
-                   tchBuffer,
-                   strlen(tchBuffer),
-                   NULL);
-      }
-      
+      DrawLBText(lpdis, AC_ADDITIONAL_COMPONENTS);
       DrawCheck(lpdis, AC_ADDITIONAL_COMPONENTS);
 
       // draw the focus rect on the selected item

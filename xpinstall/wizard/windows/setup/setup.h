@@ -515,6 +515,8 @@ typedef struct dlgInstall
     char szReadme_[MAX_BUF];
     char szPause_[MAX_BUF];
     char szResume_[MAX_BUF];
+    char szChecked[MAX_BUF];
+    char szUnchecked[MAX_BUF];
 } installGui;
 
 /* structure message stream */
@@ -543,6 +545,7 @@ struct sSysInfo
   DWORD dwMemoryAvailablePhysical;
   DWORD dwScreenX;
   DWORD dwScreenY;
+  BOOL  bScreenReader;
 };
 
 typedef struct diskSpaceNode dsN;
