@@ -355,6 +355,9 @@ nsHTMLImageElement::GetStyleHintForAttributeChange(
     const nsIAtom* aAttribute,
     PRInt32 *aHint) const
 {
-  nsGenericHTMLElement::SetStyleHintForCommonAttributes(aNode, aAttribute, aHint);
+  if (aAttribute == nsHTMLAtoms::src)
+    *aHint = NS_STYLE_HINT_CONTENT;
+  else
+    nsGenericHTMLElement::SetStyleHintForCommonAttributes(aNode, aAttribute, aHint);
   return NS_OK;
 }
