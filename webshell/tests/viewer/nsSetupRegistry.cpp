@@ -145,6 +145,7 @@ static NS_DEFINE_CID(kHTMLStyleSheetCID,        NS_HTMLSTYLESHEET_CID);
 static NS_DEFINE_CID(kTextNodeCID,              NS_TEXTNODE_CID);
 static NS_DEFINE_CID(kSelectionCID,             NS_SELECTION_CID);
 static NS_DEFINE_CID(kRangeListCID,				NS_RANGELIST_CID);
+static NS_DEFINE_CID(kFrameUtilCID,             NS_FRAME_UTIL_CID);
 
 extern "C" void
 NS_SetupRegistry()
@@ -210,4 +211,5 @@ NS_SetupRegistry()
   nsRepository::RegisterFactory(kTextNodeCID,       LAYOUT_DLL, PR_FALSE, PR_FALSE);
   nsRepository::RegisterFactory(kSelectionCID,      LAYOUT_DLL, PR_FALSE, PR_FALSE);
   nsRepository::RegisterFactory(kRangeListCID,		LAYOUT_DLL, PR_FALSE, PR_FALSE);
+  nsRepository::RegisterFactory(kFrameUtilCID,      LAYOUT_DLL, PR_FALSE, PR_FALSE);
 }
