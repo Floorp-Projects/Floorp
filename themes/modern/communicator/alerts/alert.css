@@ -39,6 +39,8 @@
   == Styles specific to the alerts dialog.
   ======================================================================= */
 
+@import url("chrome://global/skin/");
+
 @namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
 
 .alertBox {
@@ -52,12 +54,21 @@
 
 .alertImageBox {
   margin-left: 4px;
-  margin-right: 6px;
   min-height: 46px;
 }
 
 .alertTitle {
   font-weight: bold;
+}
+
+.alertTextBox {
+  margin-top: 4px;
+  margin-right: 6px;
+  margin-left: 6px;
+}
+
+.alertText {
+  margin-right: 6px;
 }
 
 .alertText[clickable="true"] {

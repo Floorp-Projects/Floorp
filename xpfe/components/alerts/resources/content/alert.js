@@ -37,7 +37,6 @@
 
 var gCurrentHeight = 0;
 var gFinalHeight = 50;
-var gWidth = 260;
 var gSlideIncrement = 1;
 var gSlideTime = 10;
 var gOpenTime = 3000; // total time the alert should stay up once we are done animating.
@@ -46,11 +45,7 @@ var gAlertListener = null;
 var gAlertTextClickable = false;
 var gAlertCookie = "";
 
-// fudge factor constants used to help guess a good width for the alert
-var imageWidthFudgeFactor = 40; // an alert image should be 26 pixels wide plus a fudge factor
-var alertTextFudgeMultiplier = 7;
-
-function onAlertLoad()
+function prefillAlertInfo()
 {
   // unwrap all the args....
   // arguments[0] --> the image src url
@@ -61,16 +56,10 @@ function onAlertLoad()
   // arguments[5] --> an optional callback listener (nsIAlertListener)
 
   document.getElementById('alertImage').setAttribute('src', window.arguments[0]);
-  document.getElementById('alertTitleLabel').firstChild.nodeValue = window.arguments[1];
-  document.getElementById('alertTextLabel').firstChild.nodeValue = window.arguments[2];
+  document.getElementById('alertTitleLabel').setAttribute('value', window.arguments[1]);
+  document.getElementById('alertTextLabel').setAttribute('value', window.arguments[2]);
   gAlertTextClickable = window.arguments[3];
   gAlertCookie = window.arguments[4];
- 
-  // HACK: we need to make sure the alert is wide enough to cleanly hold the image
-  // plus the length of the text passed in. Unfortunately we currently have no way to convert
-  // .ems into pixels. So I'm "faking" this by multiplying the length of the alert text by a fudge
-  // factor. I'm then adding to that the width of the image + a small fudge factor. 
-  window.outerWidth = imageWidthFudgeFactor + window.arguments[2].length * alertTextFudgeMultiplier; 
 
   if (gAlertTextClickable)
     document.getElementById('alertTextLabel').setAttribute('clickable', true);
@@ -78,7 +67,10 @@ function onAlertLoad()
   // the 5th argument is optional
   if (window.arguments[5])
    gAlertListener = window.arguments[5].QueryInterface(Components.interfaces.nsIAlertListener);
+}
 
+function onAlertLoad()
+{
   // read out our initial settings from prefs.
   try 
   {
@@ -88,16 +80,14 @@ function onAlertLoad()
     gSlideIncrement = prefBranch.getIntPref("alerts.slideIncrement");
     gSlideTime = prefBranch.getIntPref("alerts.slideIncrementTime");
     gOpenTime = prefBranch.getIntPref("alerts.totalOpenTime");
-    gFinalHeight = prefBranch.getIntPref("alerts.height");
   } catch (ex) {}
 
-  // offset the alert by 10 pixels from the far right edge of the screen
-  gWidth = window.outerWidth + 10;
-
-  window.moveTo(screen.availWidth, screen.availHeight); // move it offscreen initially
-  // force a resize on the window to make sure it is wide enough then after that, begin animating the alert.
-  setTimeout('window.resizeTo(gWidth - 10, 1);', 1);   
-  setTimeout(animateAlert, 10);
+  sizeToContent();
+  gFinalHeight = window.outerHeight;
+  window.outerHeight = 0;
+  // be sure to offset the alert by 10 pixels from the far right edge of the screen
+  window.moveTo( (screen.availLeft + screen.availWidth - window.outerWidth) - 10, screen.availTop + screen.availHeight - window.outerHeight);
+  setTimeout(animateAlert, gSlideTime);
 }
 
 function animateAlert()
@@ -105,8 +95,9 @@ function animateAlert()
   if (gCurrentHeight < gFinalHeight)
   {
     gCurrentHeight += gSlideIncrement;
-    window.outerHeight = gCurrentHeight;
-    window.moveTo((screen.availWidth - gWidth), screen.availHeight - gCurrentHeight); 
+
+    window.screenY -= gSlideIncrement;
+    window.outerHeight += gSlideIncrement;
     setTimeout(animateAlert, gSlideTime);
   }
   else
@@ -118,8 +109,9 @@ function closeAlert()
   if (gCurrentHeight)
   {
     gCurrentHeight -= gSlideIncrement;
-    window.outerHeight = gCurrentHeight;
-    window.moveTo((screen.availWidth - gWidth), screen.availHeight - gCurrentHeight); 
+
+    window.screenY += gSlideIncrement;
+    window.outerHeight -= gSlideIncrement;
     setTimeout(closeAlert, gSlideTime);
   }
   else
