@@ -10,7 +10,7 @@ use Sys::Hostname;
 use POSIX "sys_wait_h";
 use Cwd;
 
-$Version = '$Revision: 1.42 $ ';
+$Version = '$Revision: 1.43 $ ';
 
 
 sub PrintUsage {
@@ -108,7 +108,7 @@ sub ConditionalArgs {
   $fe          = 'mozilla-bin';
   $RelBinaryName  = "dist/bin/$fe";
   #$FullBinaryName  = "$BaseDir/$DirName/$TopLevel/$Topsrcdir/$RelBinaryName";
-  $ENV{CVSROOT} = ":pserver:$cvsuser\@cvs.mozilla.org:/cvsroot";
+  $ENV{CVSROOT} = ":pserver:$cvsuser%netscape.com\@cvs.mozilla.org:/cvsroot";
   print "build-seamonkey.pl: CVSROOT = $ENV{CVSROOT}\n";
   $CVSCO      .= " -r $BuildTag" unless $BuildTag eq '';
 }
