@@ -820,7 +820,7 @@ nsMultiMixedConv::ParseHeaders(nsIChannel *aChannel, char *&aPtr,
 
         if (newLine == cursor) {
             // move the newLine beyond the double linefeed marker
-            if ( (newLine - cursor) < ((PRInt32)cursorLen - lineFeedIncrement) ) {
+            if ( (newLine - cursor) <= ((PRInt32)cursorLen - lineFeedIncrement) ) {
                 newLine += lineFeedIncrement;
             }
             cursorLen -= (newLine - cursor);
