@@ -1126,6 +1126,12 @@ PRInt32 nsPop3Protocol::AuthResponse(nsIInputStream* inputStream,
         m_pop3Server->SetPop3CapabilityFlags(m_pop3ConData->capability_flags);
     }
     else
+    if (!PL_strcasecmp (line, "PLAIN")) 
+    {
+        SetCapFlag(POP3_HAS_AUTH_PLAIN);
+        m_pop3Server->SetPop3CapabilityFlags(m_pop3ConData->capability_flags);
+    }
+    else
     if (!PL_strcasecmp (line, "LOGIN")) 
     {
         SetCapFlag(POP3_HAS_AUTH_LOGIN);
@@ -1150,11 +1156,13 @@ PRInt32 nsPop3Protocol::ProcessAuth()
     }
     else
     {
+        if (TestCapFlag(POP3_HAS_AUTH_PLAIN))
+            m_pop3ConData->next_state = POP3_SEND_USERNAME;
+        else
         if (TestCapFlag(POP3_HAS_AUTH_LOGIN))
             m_pop3ConData->next_state = POP3_AUTH_LOGIN;
         else
         if (TestCapFlag(POP3_HAS_AUTH_USER))
-            // don't combine with if POP3_HAS_AUTH_CRAM_MD5 above!
             m_pop3ConData->next_state = POP3_SEND_USERNAME;
         else
             return(Error(POP3_SERVER_ERROR));
@@ -1185,6 +1193,10 @@ PRInt32 nsPop3Protocol::AuthFallback()
         if (TestCapFlag(POP3_HAS_AUTH_APOP))
             // if APOP enabled, disable it
             ClearCapFlag(POP3_HAS_AUTH_APOP);
+        else
+        if (TestCapFlag(POP3_HAS_AUTH_PLAIN))
+            // if PLAIN enabled, disable it
+            ClearCapFlag(POP3_HAS_AUTH_PLAIN);
         else
         if(TestCapFlag(POP3_HAS_AUTH_LOGIN | POP3_HAS_AUTH_USER))
             // if LOGIN or USER enabled,
@@ -1235,7 +1247,7 @@ PRInt32 nsPop3Protocol::AuthLoginResponse()
         m_pop3ConData->next_state = POP3_PROCESS_AUTH;
     }
     else
-    m_pop3ConData->next_state = POP3_SEND_USERNAME;
+        m_pop3ConData->next_state = POP3_SEND_USERNAME;
 
     m_pop3ConData->pause_for_read = PR_FALSE;
 
@@ -1256,14 +1268,17 @@ PRInt32 nsPop3Protocol::SendUsername()
     }
     else
     {
+        if (TestCapFlag(POP3_HAS_AUTH_PLAIN))
+            cmd = "AUTH PLAIN";
+        else
         if (TestCapFlag(POP3_HAS_AUTH_LOGIN))
-	    {
+        {
             char *base64Str =
                 PL_Base64Encode(m_username.get(), m_username.Length(), nsnull);
             cmd = base64Str;
             PR_Free(base64Str);
         }
-        else 
+        else
         {
             cmd = "USER ";
             cmd += m_username;
@@ -1285,10 +1300,10 @@ PRInt32 nsPop3Protocol::SendPassword()
 
     nsXPIDLCString password;
     PRBool okayValue = PR_TRUE;
-	nsresult rv = GetPassword(getter_Copies(password), &okayValue);
+    nsresult rv = GetPassword(getter_Copies(password), &okayValue);
     if (NS_SUCCEEDED(rv) && !okayValue)
     {
-    // user has canceled the password prompt
+        // user has canceled the password prompt
         m_pop3ConData->next_state = POP3_ERROR_DONE;
         return NS_ERROR_ABORT;
     }
@@ -1362,6 +1377,23 @@ PRInt32 nsPop3Protocol::SendPassword()
     }
     else
     {
+        if (TestCapFlag(POP3_HAS_AUTH_PLAIN))
+        {
+            char plain_string[512];
+            int len = 1; /* first <NUL> char */
+
+            memset(plain_string, 0, 512);
+            PR_snprintf(&plain_string[1], 510, "%s", m_username.get());
+            len += m_username.Length();
+            len++; /* second <NUL> char */
+            PR_snprintf(&plain_string[len], 511-len, "%s", password.get());
+            len += password.Length();
+
+            char *base64Str = PL_Base64Encode(plain_string, len, nsnull);
+            cmd = base64Str;
+            PR_Free(base64Str);
+        }
+        else
         if (TestCapFlag(POP3_HAS_AUTH_LOGIN)) 
         {
             char * base64Str = 
