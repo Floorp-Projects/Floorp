@@ -8,6 +8,7 @@ mailnews/Makefile
 mailnews/base/Makefile
 mailnews/base/public/Makefile
 mailnews/base/src/Makefile
+mailnews/base/util/Makefile
 mailnews/base/build/Makefile
 mailnews/base/tests/Makefile
 mailnews/db/Makefile
@@ -21,6 +22,7 @@ mailnews/db/msgdb/src/Makefile
 mailnews/local/Makefile
 mailnews/local/public/Makefile
 mailnews/local/src/Makefile
+mailnews/local/build/Makefile
 mailnews/local/tests/Makefile
 mailnews/local/tests/pop3/Makefile
 mailnews/local/tests/mailbox/Makefile
