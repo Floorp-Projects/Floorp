@@ -53,8 +53,10 @@
 #include "nsWeakReference.h"
 #include "nsIDOMNodeList.h"
 #include "nsIBindingManager.h"
+#include "nsIStringBundle.h"
 
 #define ACCESSIBLE_BUNDLE_URL "chrome://global-platform/locale/accessible.properties"
+#define PLATFORM_KEYS_BUNDLE_URL "chrome://global-platform/locale/platformKeys.properties"
 
 class nsIContent;
 class nsIDocShell;
@@ -75,6 +77,7 @@ public:
   virtual ~nsAccessible();
 
   NS_IMETHOD GetAccName(nsAString& _retval);
+  NS_IMETHOD GetAccKeyboardShortcut(nsAString& _retval);
   NS_IMETHOD GetAccParent(nsIAccessible **_retval); 
   NS_IMETHOD GetAccNextSibling(nsIAccessible **_retval); 
   NS_IMETHOD GetAccPreviousSibling(nsIAccessible **_retval); 
@@ -107,6 +110,8 @@ protected:
   NS_IMETHOD CacheOptimizations(nsIAccessible *aParent, PRInt32 aSiblingIndex, nsIDOMNodeList *aSiblingList);
   // helper method to verify frames
   static PRBool IsCorrectFrameType(nsIFrame* aFrame, nsIAtom* aAtom);
+  static nsresult InitStringBundleService();
+  static nsresult GetFullKeyName(const nsAString& aModifierName, const nsAString& aKeyName, nsAString& aStringOut);
   static nsresult GetTranslatedString(const nsAString& aKey, nsAString& aStringOut);
   void GetScrollOffset(nsRect *aRect);
   void GetScreenOrigin(nsIPresContext *aPresContext, nsIFrame *aFrame, nsRect *aRect);
@@ -117,6 +122,10 @@ protected:
   nsCOMPtr<nsIAccessible> mParent;
   nsCOMPtr<nsIDOMNodeList> mSiblingList; // If some of our computed siblings are anonymous content nodes, cache node list
   PRInt32 mSiblingIndex; // Cache where we are in list of kids that we got from nsIBindingManager::GetContentList(parentContent)
+
+  static PRUint32 gInstanceCount;
+  static nsIStringBundle *gStringBundle;
+  static nsIStringBundle *gKeyStringBundle;
 };
 
 

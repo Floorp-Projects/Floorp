@@ -43,6 +43,11 @@
 #include "nsIDOMElement.h"
 #include "nsIDOMXULElement.h"
 #include "nsIDOMXULSelectCntrlItemEl.h"
+#include "nsIDOMKeyEvent.h"
+#include "nsIPref.h"
+#include "nsIServiceManager.h"
+
+static NS_DEFINE_CID(kPrefCID, NS_PREF_CID);
 
 // ------------------------ Menu Item -----------------------------
 
@@ -110,6 +115,48 @@ NS_IMETHODIMP nsXULMenuitemAccessible::GetAccName(nsAString& _retval)
   return NS_OK;
 }
 
+NS_IMETHODIMP nsXULMenuitemAccessible::GetAccKeyboardShortcut(nsAString& _retval)
+{
+  static PRInt32 gMenuAccesskeyModifier = -1;  // magic value of -1 indicates unitialized state
+
+  nsCOMPtr<nsIDOMElement> elt(do_QueryInterface(mDOMNode));
+  if (elt) {
+    nsAutoString accesskey;
+    elt->GetAttribute(NS_LITERAL_STRING("accesskey"), accesskey);
+    if (accesskey.IsEmpty())
+      return NS_OK;
+
+    nsCOMPtr<nsIAccessible> parentAccessible;
+    GetAccParent(getter_AddRefs(parentAccessible));
+    if (parentAccessible) {
+      PRUint32 role;
+      parentAccessible->GetAccRole(&role);
+      if (role == ROLE_MENUBAR) {
+        // If top level menu item, add Alt+ or whatever modifier text to string
+        // No need to cache pref service, this happens rarely
+        if (gMenuAccesskeyModifier == -1) {  // Need to initialize cached global accesskey pref
+          gMenuAccesskeyModifier = 0;
+          nsresult result;
+          nsCOMPtr<nsIPref> prefService(do_GetService(kPrefCID, &result));
+          if (NS_SUCCEEDED(result) && prefService)
+            prefService->GetIntPref("ui.key.menuAccessKey", &gMenuAccesskeyModifier);
+        }
+        nsAutoString propertyKey;
+        switch (gMenuAccesskeyModifier) {
+          case nsIDOMKeyEvent::DOM_VK_CONTROL: propertyKey = NS_LITERAL_STRING("VK_CONTROL"); break;
+          case nsIDOMKeyEvent::DOM_VK_ALT: propertyKey = NS_LITERAL_STRING("VK_ALT"); break;
+          case nsIDOMKeyEvent::DOM_VK_META: propertyKey = NS_LITERAL_STRING("VK_META"); break;
+        }
+        if (!propertyKey.IsEmpty())
+          nsAccessible::GetFullKeyName(propertyKey, accesskey, _retval);
+      }
+    }
+    if (_retval.IsEmpty())
+      _retval = accesskey;
+    return NS_OK;
+  }
+  return NS_ERROR_FAILURE;
+}
 
 NS_IMETHODIMP nsXULMenuitemAccessible::GetAccRole(PRUint32 *_retval)
 {

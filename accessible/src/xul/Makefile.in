@@ -41,6 +41,7 @@ REQUIRES = \
   layout \
   locale \
   necko \
+  pref \
   string \
   uriloader \
   view \

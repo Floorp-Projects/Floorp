@@ -422,6 +422,17 @@ STDMETHODIMP Accessible::get_accKeyboardShortcut(
       /* [retval][out] */ BSTR __RPC_FAR *pszKeyboardShortcut)
 {
   *pszKeyboardShortcut = NULL;
+  nsCOMPtr<nsIAccessible> a;
+  GetNSAccessibleFor(varChild,a);
+  if (a) {
+    nsAutoString shortcut;
+    nsresult rv = a->GetAccKeyboardShortcut(shortcut);
+    if (NS_FAILED(rv))
+      return S_FALSE;
+
+    *pszKeyboardShortcut = ::SysAllocString(shortcut.get());
+    return S_OK;
+  }
   return S_FALSE;
 }
 

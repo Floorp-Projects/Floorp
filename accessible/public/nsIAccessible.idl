@@ -42,6 +42,8 @@ interface nsIAccessible : nsISupports
   readonly attribute DOMString accValue;
 
   readonly attribute DOMString accDescription;
+  readonly attribute DOMString accKeyboardShortcut;
+
   readonly attribute unsigned long accRole;
   readonly attribute unsigned long accState;
   readonly attribute unsigned long accExtState;

@@ -62,8 +62,8 @@
   *     - nsXULComboboxAccessible      <menulist />
   *        - nsHTMLTextFieldAccessible
   *        - nsXULComboboxButtonAccessible    
-  *         - nsXULSelectListAccessible      <menupopup />
-  *            - nsXULSelectOptionAccessible(s)   <menuitem />
+  *        - nsXULSelectListAccessible      <menupopup />
+  *           - nsXULSelectOptionAccessible(s)   <menuitem />
   */
 
 /** ------------------------------------------------------ */

@@ -26,8 +26,10 @@ REQUIRES = \
   content \
   dom \
   gfx \
+  intl \
   layout \
   necko \
+  pref \
   string \
   widget \
   xpcom \

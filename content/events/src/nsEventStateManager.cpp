@@ -89,6 +89,7 @@
 #include "nsXULAtoms.h"
 #include "nsIDOMXULElement.h"
 #include "nsIDOMXULDocument.h"
+#include "nsIDOMKeyEvent.h"
 #include "nsIObserverService.h"
 #include "nsIDocShell.h"
 #include "nsIMarkupDocumentViewer.h"
@@ -139,6 +140,7 @@ nsIDocument * gLastFocusedDocument = 0; // Strong reference
 nsIPresContext* gLastFocusedPresContext = 0; // Weak reference
 
 PRUint32 nsEventStateManager::mInstanceCount = 0;
+PRInt32 nsEventStateManager::gGeneralAccesskeyModifier = -1; // magic value of -1 means uninitialized
 
 enum {
  MOUSE_SCROLL_N_LINES,
@@ -210,6 +212,8 @@ nsEventStateManager::Init()
 
   if (NS_SUCCEEDED(rv)) {
     mPrefService->GetBoolPref("nglayout.events.dispatchLeftClickOnly", &mLeftClickOnly);
+    if (nsEventStateManager::gGeneralAccesskeyModifier == -1)  // magic value of -1 means uninitialized
+      mPrefService->GetIntPref("ui.key.generalAccessKey", &nsEventStateManager::gGeneralAccesskeyModifier);
   }
 
   return rv;
@@ -762,18 +766,17 @@ nsEventStateManager::PreHandleEvent(nsIPresContext* aPresContext,
     {
 
       nsKeyEvent* keyEvent = (nsKeyEvent*)aEvent;
-#if defined(XP_MAC) || defined(XP_MACOSX)
-    // (pinkerton, joki, saari) IE5 for mac uses Control for access keys. The HTML4 spec
-    // suggests to use command on mac, but this really sucks (imagine someone having a "q"
-    // as an access key and not letting you quit the app!). As a result, we've made a 
-    // command decision 1 day before tree lockdown to change it to the control key.
-    PRBool isSpecialAccessKeyDown = keyEvent->isControl;
-#else
-    PRBool isSpecialAccessKeyDown = keyEvent->isAlt;
-#endif
-      //This is to prevent keyboard scrolling while alt modifier in use.
+
+      PRBool isSpecialAccessKeyDown = PR_FALSE;
+      switch (gGeneralAccesskeyModifier) {
+        case nsIDOMKeyEvent::DOM_VK_CONTROL: isSpecialAccessKeyDown = keyEvent->isControl; break;
+        case nsIDOMKeyEvent::DOM_VK_ALT: isSpecialAccessKeyDown = keyEvent->isAlt; break;
+        case nsIDOMKeyEvent::DOM_VK_META: isSpecialAccessKeyDown = keyEvent->isMeta; break;
+      }
+
+      //This is to prevent keyboard scrolling while alt or other accesskey modifier in use.
       if (isSpecialAccessKeyDown) {
-        //Alt key is down, we may need to do an accesskey
+        //Alt or other accesskey modifier is down, we may need to do an accesskey
         if (mAccessKeys) {
           //Someone registered an accesskey.  Find and activate it.
           PRUnichar accKey = nsCRT::ToLower((char)keyEvent->charCode);

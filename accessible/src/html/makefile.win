@@ -29,6 +29,7 @@ REQUIRES = \
   gfx2 \
   htmlparser \
   imglib2 \
+  intl \
   layout \
   locale \
   necko \
