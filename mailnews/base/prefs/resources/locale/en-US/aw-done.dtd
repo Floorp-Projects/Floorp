@@ -3,4 +3,5 @@
 <!ENTITY completionText.label "You have entered all the information required to set up this account.">
 <!ENTITY userNamePrefix.label "User Name:">
 <!ENTITY emailPrefix.label "Email Address:">
+<!-- LOCALIZATION NOTE (setupAnother.label) : do not translate the 2 "&quot" in the next line -->
 <!ENTITY setupAnother.label "Click &quot;Set up Another&quot; to save these settings and set up another account.">

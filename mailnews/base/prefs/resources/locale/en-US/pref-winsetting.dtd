@@ -18,10 +18,10 @@ Communications Corporation. Portions created by Netscape are
 Rights Reserved.
 --> 
 
-<!-- LOCALIZATION NOTE pref-winsetting.dtd UI for Mail & News Window Settings prefs -->
+<!-- LOCALIZATION NOTE pref-winsetting.dtd: UI for Mail & News Window Settings prefs -->
 <!ENTITY window.title "Window Setting">
 <!ENTITY pane.title "Window Setting">
-<!-- LOCALIZATION NOTE chooseLayout.label Never translate the product name "Messenger" -->
+<!-- LOCALIZATION NOTE chooseLayout.label: Never translate the product name "Messenger" -->
 <!ENTITY chooseLayout.label "Choose which layout you prefer for the Messenger window:">
 <!-- LOCALIZATION NOTE chooseExp.label Never translate the product name "Messenger" -->
 <!ENTITY chooseExp.label "Note:  a change to this setting will only take effect the next time you open a Messenger window.">
