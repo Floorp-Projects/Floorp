@@ -210,13 +210,14 @@ NS_IMETHODIMP nsCaret::GetWindowRelativeCoordinates(nsPoint& outCoordinates, PRB
 	if (NS_FAILED(err))
 		return err;
 		
+/*
 	// is this a text node?
 	nsCOMPtr<nsIDOMCharacterData>	nodeAsText = do_QueryInterface(focusNode);
 	// note that we only work with text nodes here, unlike when drawing the caret.
 	// this is because this routine is intended for IME support, which only cares about text.
 	if (!nodeAsText)
 		return NS_ERROR_UNEXPECTED;
-	
+*/	
 	nsCOMPtr<nsIContent>contentNode = do_QueryInterface(focusNode);
 	if (!contentNode)
 		return NS_ERROR_FAILURE;

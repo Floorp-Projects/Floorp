@@ -31,6 +31,11 @@
 #include "nsIFontMetrics.h"
 #include "nsIRenderingContext.h"
 
+//FOR SELECTION
+#include "nsIContent.h"
+#include "nsIFrameSelection.h"
+//END INCLUDES FOR SELECTION
+
 class BRFrame : public nsFrame {
 public:
   // nsIFrame
@@ -40,19 +45,20 @@ public:
                    const nsRect& aDirtyRect,
                    nsFramePaintLayer aWhichLayer);
 #endif
-
-  // nsIHTMLReflow
-  NS_IMETHOD Reflow(nsIPresContext& aPresContext,
-                    nsHTMLReflowMetrics& aDesiredSize,
-                    const nsHTMLReflowState& aReflowState,
-                    nsReflowStatus& aStatus);
   NS_IMETHOD GetContentAndOffsetsFromPoint(nsIPresContext& aCX,
                          const nsPoint& aPoint,
                          nsIContent** aNewContent,
                          PRInt32& aContentOffset,
                          PRInt32& aContentOffsetEnd,
                          PRBool&  aBeginFrameContent);
+  NS_IMETHOD PeekOffset(nsIPresContext* aPresContext, 
+                         nsPeekOffsetStruct *aPos);
 
+  // nsIHTMLReflow
+  NS_IMETHOD Reflow(nsIPresContext& aPresContext,
+                    nsHTMLReflowMetrics& aDesiredSize,
+                    const nsHTMLReflowState& aReflowState,
+                    nsReflowStatus& aStatus);
 protected:
   virtual ~BRFrame();
 };
@@ -176,13 +182,37 @@ NS_IMETHODIMP BRFrame::GetContentAndOffsetsFromPoint(nsIPresContext& aCX,
                                                      PRInt32&        aOffsetEnd,
                                                      PRBool&         aBeginFrameContent)
 {
-  nsresult result = nsFrame::GetContentAndOffsetsFromPoint(aCX,aPoint,aContent,aOffsetBegin,aOffsetEnd,aBeginFrameContent);
-
-  if (NS_SUCCEEDED(result))
-  {
-    // BRFrames should return a collapsed selection before itself
-    aOffsetEnd = aOffsetBegin;
-  }
-
+  if (!mContent)
+    return NS_ERROR_NULL_POINTER;
+  nsresult result = mContent->GetParent(*aContent);
+  if (NS_SUCCEEDED(result) && *aContent)
+    result = (*aContent)->IndexOf(mContent, aOffsetBegin);
+  aOffsetEnd = aOffsetBegin;
+  aBeginFrameContent = PR_TRUE;
   return result;
+}
+
+NS_IMETHODIMP BRFrame::PeekOffset(nsIPresContext* aPresContext, nsPeekOffsetStruct *aPos)
+{
+  if (!aPos)
+    return NS_ERROR_NULL_POINTER;
+
+  nsCOMPtr<nsIContent> parentContent;
+  PRInt32 offsetBegin; //offset of this content in its parents child list. base 0
+
+  nsresult result = mContent->GetParent(*getter_AddRefs(parentContent));
+
+
+  if (NS_SUCCEEDED(result) && parentContent)
+    result = parentContent->IndexOf(mContent, offsetBegin);
+
+  if (aPos->mAmount != eSelectLine && aPos->mAmount != eSelectBeginLine 
+      && aPos->mAmount != eSelectEndLine) //then we must do the adjustment to make sure we leave this frame
+  {
+    if (aPos->mDirection == eDirNext)
+      aPos->mStartOffset = offsetBegin +1;//go to end to make sure we jump to next node.
+    else
+      aPos->mStartOffset = offsetBegin; //we start at beginning to make sure we leave this frame.
+  }
+  return nsFrame::PeekOffset(aPresContext, aPos);//now we let the default take over.
 }
