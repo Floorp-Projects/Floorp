@@ -2357,34 +2357,23 @@ void MapDeclarationInto(nsICSSDeclaration* aDeclaration,
           ui->mUserInput = parentUI->mUserInput;
         }
 
-        // modify-content: enum, inherit
-        if (eCSSUnit_Enumerated == ourUI->mModifyContent.GetUnit()) {
-          ui->mModifyContent = ourUI->mModifyContent.GetIntValue();
+        // user-modify: enum, inherit
+        if (eCSSUnit_Enumerated == ourUI->mUserModify.GetUnit()) {
+          ui->mUserModify = ourUI->mUserModify.GetIntValue();
         }
-        else if (eCSSUnit_Inherit == ourUI->mModifyContent.GetUnit()) {
-          ui->mModifyContent = parentUI->mModifyContent;
-        }
-
-        // selection-style: none, enum, inherit
-        if (eCSSUnit_Enumerated == ourUI->mSelectionStyle.GetUnit()) {
-          ui->mSelectionStyle = ourUI->mSelectionStyle.GetIntValue();
-        }
-        else if (eCSSUnit_None == ourUI->mSelectionStyle.GetUnit()) {
-          ui->mSelectionStyle = NS_STYLE_SELECTION_STYLE_NONE;
-        }
-        else if (eCSSUnit_Inherit == ourUI->mSelectionStyle.GetUnit()) {
-          ui->mSelectionStyle = parentUI->mSelectionStyle;
+        else if (eCSSUnit_Inherit == ourUI->mUserModify.GetUnit()) {
+          ui->mUserModify = parentUI->mUserModify;
         }
 
-        // auto-select: none, enum, inherit
-        if (eCSSUnit_Enumerated == ourUI->mAutoSelect.GetUnit()) {
-          ui->mAutoSelect = ourUI->mAutoSelect.GetIntValue();
+        // user-select: none, enum, inherit
+        if (eCSSUnit_Enumerated == ourUI->mUserSelect.GetUnit()) {
+          ui->mUserSelect = ourUI->mUserSelect.GetIntValue();
         }
-        else if (eCSSUnit_None == ourUI->mAutoSelect.GetUnit()) {
-          ui->mAutoSelect = NS_STYLE_AUTO_SELECT_NONE;
+        else if (eCSSUnit_None == ourUI->mUserSelect.GetUnit()) {
+          ui->mUserSelect = NS_STYLE_USER_SELECT_NONE;
         }
-        else if (eCSSUnit_Inherit == ourUI->mAutoSelect.GetUnit()) {
-          ui->mAutoSelect = parentUI->mAutoSelect;
+        else if (eCSSUnit_Inherit == ourUI->mUserSelect.GetUnit()) {
+          ui->mUserSelect = parentUI->mUserSelect;
         }
 
         // key-equivalent: none, enum XXX, inherit
@@ -2402,18 +2391,18 @@ void MapDeclarationInto(nsICSSDeclaration* aDeclaration,
           }
         }
 
-        // auto-tab: auto, none, enum, inherit
-        if (eCSSUnit_Enumerated == ourUI->mAutoTab.GetUnit()) {
-          ui->mAutoTab = ourUI->mAutoTab.GetIntValue();
+        // user-focus: none, normal, enum, inherit
+        if (eCSSUnit_Enumerated == ourUI->mUserFocus.GetUnit()) {
+          ui->mUserFocus = ourUI->mUserFocus.GetIntValue();
         }
-        else if (eCSSUnit_Auto == ourUI->mAutoTab.GetUnit()) {
-          ui->mAutoTab = NS_STYLE_AUTO_TAB_AUTO;
+        else if (eCSSUnit_None == ourUI->mUserFocus.GetUnit()) {
+          ui->mUserFocus = NS_STYLE_USER_FOCUS_NONE;
         }
-        else if (eCSSUnit_None == ourUI->mAutoTab.GetUnit()) {
-          ui->mAutoTab = NS_STYLE_AUTO_TAB_NONE;
+        else if (eCSSUnit_Normal == ourUI->mUserFocus.GetUnit()) {
+          ui->mUserFocus = NS_STYLE_USER_FOCUS_NORMAL;
         }
-        else if (eCSSUnit_Inherit == ourUI->mAutoTab.GetUnit()) {
-          ui->mAutoTab = parentUI->mAutoTab;
+        else if (eCSSUnit_Inherit == ourUI->mUserFocus.GetUnit()) {
+          ui->mUserFocus = parentUI->mUserFocus;
         }
 
         // resizer: auto, none, enum, inherit

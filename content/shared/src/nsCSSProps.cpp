@@ -142,17 +142,6 @@ nsCSSProps::GetStringValue(nsCSSProperty aProperty)
 
 
 // Keyword id tables for variant/enum parsing
-const PRInt32 nsCSSProps::kAutoSelectKTable[] = {
-  eCSSKeyword_select, NS_STYLE_AUTO_SELECT_SELECT,
-  -1,-1
-};
-
-const PRInt32 nsCSSProps::kAutoTabKTable[] = {
-  eCSSKeyword_activate_next,  NS_STYLE_AUTO_TAB_ACTIVATE_NEXT,
-  eCSSKeyword_select_next,    NS_STYLE_AUTO_TAB_SELECT_NEXT,
-  -1,-1
-};
-
 const PRInt32 nsCSSProps::kAzimuthKTable[] = {
   eCSSKeyword_left_side,    NS_STYLE_AZIMUTH_LEFT_SIDE,
   eCSSKeyword_far_left,     NS_STYLE_AZIMUTH_FAR_LEFT,
@@ -416,14 +405,6 @@ const PRInt32 nsCSSProps::kListStyleKTable[] = {
   -1,-1
 };
 
-const PRInt32 nsCSSProps::kModifyContentKTable[] = {
-  eCSSKeyword_read_only,  NS_STYLE_MODIFY_CONTENT_READ_ONLY,
-  eCSSKeyword_read_write, NS_STYLE_MODIFY_CONTENT_READ_WRITE,
-  eCSSKeyword_write_only, NS_STYLE_MODIFY_CONTENT_WRITE_ONLY,
-  eCSSKeyword_toggle,     NS_STYLE_MODIFY_CONTENT_TOGGLE,
-  -1,-1
-};
-
 const PRInt32 nsCSSProps::kOutlineColorKTable[] = {
   eCSSKeyword_invert, NS_STYLE_COLOR_INVERT,
   -1,-1
@@ -488,13 +469,6 @@ const PRInt32 nsCSSProps::kResizerKTable[] = {
   eCSSKeyword_both,       NS_STYLE_RESIZER_BOTH,
   eCSSKeyword_horizontal, NS_STYLE_RESIZER_HORIZONTAL,
   eCSSKeyword_vertical,   NS_STYLE_RESIZER_VERTICAL,
-  -1,-1
-};
-
-const PRInt32 nsCSSProps::kSelectionStyleKTable[] = {
-  eCSSKeyword_any,  NS_STYLE_SELECTION_STYLE_ANY,
-  eCSSKeyword_line, NS_STYLE_SELECTION_STYLE_LINE,
-  eCSSKeyword_all,  NS_STYLE_SELECTION_STYLE_ALL,
   -1,-1
 };
 
@@ -567,9 +541,35 @@ const PRInt32 nsCSSProps::kUnicodeBidiKTable[] = {
   -1,-1
 };
 
+const PRInt32 nsCSSProps::kUserFocusKTable[] = {
+  eCSSKeyword_select_all,     NS_STYLE_USER_FOCUS_SELECT_ALL,
+  eCSSKeyword_select_before,  NS_STYLE_USER_FOCUS_SELECT_BEFORE,
+  eCSSKeyword_select_after,   NS_STYLE_USER_FOCUS_SELECT_AFTER,
+  eCSSKeyword_select_same,    NS_STYLE_USER_FOCUS_SELECT_SAME,
+  eCSSKeyword_select_menu,    NS_STYLE_USER_FOCUS_SELECT_MENU,
+  -1,-1
+};
+
 const PRInt32 nsCSSProps::kUserInputKTable[] = {
   eCSSKeyword_enabled,  NS_STYLE_USER_INPUT_ENABLED,
   eCSSKeyword_disabled, NS_STYLE_USER_INPUT_DISABLED,
+  -1,-1
+};
+
+const PRInt32 nsCSSProps::kUserModifyKTable[] = {
+  eCSSKeyword_read_only,  NS_STYLE_USER_MODIFY_READ_ONLY,
+  eCSSKeyword_read_write, NS_STYLE_USER_MODIFY_READ_WRITE,
+  eCSSKeyword_write_only, NS_STYLE_USER_MODIFY_WRITE_ONLY,
+  eCSSKeyword_toggle,     NS_STYLE_USER_MODIFY_TOGGLE,
+  eCSSKeyword_tri_state,  NS_STYLE_USER_MODIFY_TRI_STATE,
+  -1,-1
+};
+
+const PRInt32 nsCSSProps::kUserSelectKTable[] = {
+  eCSSKeyword_text,     NS_STYLE_USER_SELECT_TEXT,
+  eCSSKeyword_element,  NS_STYLE_USER_SELECT_ELEMENT,
+  eCSSKeyword_elements, NS_STYLE_USER_SELECT_ELEMENTS,
+  eCSSKeyword_all,      NS_STYLE_USER_SELECT_ALL,
   -1,-1
 };
 
@@ -650,12 +650,6 @@ static const PRInt32 kBackgroundYPositionKTable[] = {
   case eCSSProperty__moz_border_radius:
     break;
   
-  case eCSSProperty_auto_select:
-    return SearchKeywordTable(aValue, kAutoSelectKTable);
-
-  case eCSSProperty_auto_tab:
-    return SearchKeywordTable(aValue, kAutoTabKTable);
-
   case eCSSProperty_azimuth:
     return SearchKeywordTable(aValue, kAzimuthKTable);
 
@@ -830,9 +824,6 @@ static const PRInt32 kBackgroundYPositionKTable[] = {
   case eCSSProperty_min_width:
     break;
 
-  case eCSSProperty_modify_content:
-    return SearchKeywordTable(aValue, kModifyContentKTable);
-
   case eCSSProperty_opacity:
   case eCSSProperty_orphans:
   case eCSSProperty_outline:
@@ -895,9 +886,6 @@ static const PRInt32 kBackgroundYPositionKTable[] = {
   case eCSSProperty_right:
     break;
 
-  case eCSSProperty_selection_style:
-    return SearchKeywordTable(aValue, kSelectionStyleKTable);
-
   case eCSSProperty_size:
     break;
 
@@ -949,8 +937,17 @@ static const PRInt32 kBackgroundYPositionKTable[] = {
   case eCSSProperty_unicode_bidi:
     return SearchKeywordTable(aValue, kUnicodeBidiKTable);
 
+  case eCSSProperty_user_focus:
+    return SearchKeywordTable(aValue, kUserFocusKTable);
+
   case eCSSProperty_user_input:
     return SearchKeywordTable(aValue, kUserInputKTable);
+
+  case eCSSProperty_user_modify:
+    return SearchKeywordTable(aValue, kUserModifyKTable);
+
+  case eCSSProperty_user_select:
+    return SearchKeywordTable(aValue, kUserSelectKTable);
 
   case eCSSProperty_vertical_align:
     return SearchKeywordTable(aValue, kVerticalAlignKTable);

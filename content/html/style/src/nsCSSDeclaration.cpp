@@ -779,11 +779,10 @@ nsCSSUserInterface::nsCSSUserInterface(void)
 
 nsCSSUserInterface::nsCSSUserInterface(const nsCSSUserInterface& aCopy)
   : mUserInput(aCopy.mUserInput),
-    mModifyContent(aCopy.mModifyContent),
-    mSelectionStyle(aCopy.mSelectionStyle),
-    mAutoSelect(aCopy.mAutoSelect),
+    mUserModify(aCopy.mUserModify),
+    mUserSelect(aCopy.mUserSelect),
     mKeyEquivalent(nsnull),
-    mAutoTab(aCopy.mAutoTab),
+    mUserFocus(aCopy.mUserFocus),
     mResizer(aCopy.mResizer)
 {
   CSS_IF_COPY(mKeyEquivalent, nsCSSValueList);
@@ -806,15 +805,14 @@ void nsCSSUserInterface::List(FILE* out, PRInt32 aIndent) const
   nsAutoString buffer;
 
   mUserInput.AppendToString(buffer, eCSSProperty_user_input);
-  mModifyContent.AppendToString(buffer, eCSSProperty_modify_content);
-  mSelectionStyle.AppendToString(buffer, eCSSProperty_selection_style);
-  mAutoSelect.AppendToString(buffer, eCSSProperty_auto_select);
+  mUserModify.AppendToString(buffer, eCSSProperty_user_modify);
+  mUserSelect.AppendToString(buffer, eCSSProperty_user_select);
   nsCSSValueList*  keyEquiv = mKeyEquivalent;
   while (nsnull != keyEquiv) {
     keyEquiv->mValue.AppendToString(buffer, eCSSProperty_key_equivalent);
     keyEquiv= keyEquiv->mNext;
   }
-  mAutoTab.AppendToString(buffer, eCSSProperty_auto_tab);
+  mUserFocus.AppendToString(buffer, eCSSProperty_user_focus);
   mResizer.AppendToString(buffer, eCSSProperty_resizer);
   fputs(buffer, out);
 }
@@ -1535,25 +1533,23 @@ CSSDeclarationImpl::AppendValue(nsCSSProperty aProperty, const nsCSSValue& aValu
 
     // nsCSSUserInterface
     case eCSSProperty_user_input:
-    case eCSSProperty_modify_content:
-    case eCSSProperty_selection_style:
-    case eCSSProperty_auto_select:
+    case eCSSProperty_user_modify:
+    case eCSSProperty_user_select:
     case eCSSProperty_key_equivalent:
-    case eCSSProperty_auto_tab:
+    case eCSSProperty_user_focus:
     case eCSSProperty_resizer:
       CSS_ENSURE(UserInterface) {
         switch (aProperty) {
           case eCSSProperty_user_input:       mUserInterface->mUserInput = aValue;      break;
-          case eCSSProperty_modify_content:   mUserInterface->mModifyContent = aValue;  break;
-          case eCSSProperty_selection_style:  mUserInterface->mSelectionStyle = aValue; break;
-          case eCSSProperty_auto_select:      mUserInterface->mAutoSelect = aValue;     break;
-          case eCSSProperty_key_equivalent:
+          case eCSSProperty_user_modify:      mUserInterface->mUserModify = aValue;     break;
+          case eCSSProperty_user_select:      mUserInterface->mUserSelect = aValue;     break;
+          case eCSSProperty_key_equivalent: 
             CSS_ENSURE_DATA(mUserInterface->mKeyEquivalent, nsCSSValueList) {
               mUserInterface->mKeyEquivalent->mValue = aValue;
               CSS_IF_DELETE(mUserInterface->mKeyEquivalent->mNext);
             }
             break;
-          case eCSSProperty_auto_tab:         mUserInterface->mAutoTab = aValue;        break;
+          case eCSSProperty_user_focus:       mUserInterface->mUserFocus = aValue;      break;
           case eCSSProperty_resizer:          mUserInterface->mResizer = aValue;        break;
           CSS_BOGUS_DEFAULT; // make compiler happy
         }
@@ -2221,20 +2217,18 @@ CSSDeclarationImpl::SetValueImportant(nsCSSProperty aProperty)
 
       // nsCSSUserInterface
       case eCSSProperty_user_input:
-      case eCSSProperty_modify_content:
-      case eCSSProperty_selection_style:
-      case eCSSProperty_auto_select:
-      case eCSSProperty_auto_tab:
+      case eCSSProperty_user_modify:
+      case eCSSProperty_user_select:
+      case eCSSProperty_user_focus:
       case eCSSProperty_resizer:
         if (nsnull != mUserInterface) {
           CSS_ENSURE_IMPORTANT(UserInterface) {
             switch (aProperty) {
-              CSS_CASE_IMPORTANT(eCSSProperty_user_input,       mUserInterface->mUserInput);
-              CSS_CASE_IMPORTANT(eCSSProperty_modify_content,   mUserInterface->mModifyContent);
-              CSS_CASE_IMPORTANT(eCSSProperty_selection_style,  mUserInterface->mSelectionStyle);
-              CSS_CASE_IMPORTANT(eCSSProperty_auto_select,      mUserInterface->mAutoSelect);
-              CSS_CASE_IMPORTANT(eCSSProperty_auto_tab,         mUserInterface->mAutoTab);
-              CSS_CASE_IMPORTANT(eCSSProperty_resizer,          mUserInterface->mResizer);
+              CSS_CASE_IMPORTANT(eCSSProperty_user_input,   mUserInterface->mUserInput);
+              CSS_CASE_IMPORTANT(eCSSProperty_user_modify,  mUserInterface->mUserModify);
+              CSS_CASE_IMPORTANT(eCSSProperty_user_select,  mUserInterface->mUserSelect);
+              CSS_CASE_IMPORTANT(eCSSProperty_user_focus,   mUserInterface->mUserFocus);
+              CSS_CASE_IMPORTANT(eCSSProperty_resizer,      mUserInterface->mResizer);
               CSS_BOGUS_DEFAULT; // make compiler happy
             }
           }
@@ -2885,24 +2879,22 @@ CSSDeclarationImpl::GetValue(nsCSSProperty aProperty, nsCSSValue& aValue)
 
     // nsCSSUserInterface
     case eCSSProperty_user_input:
-    case eCSSProperty_modify_content:
-    case eCSSProperty_selection_style:
-    case eCSSProperty_auto_select:
+    case eCSSProperty_user_modify:
+    case eCSSProperty_user_select:
     case eCSSProperty_key_equivalent:
-    case eCSSProperty_auto_tab:
+    case eCSSProperty_user_focus:
     case eCSSProperty_resizer:
       if (nsnull != mUserInterface) {
         switch (aProperty) {
           case eCSSProperty_user_input:       aValue = mUserInterface->mUserInput;       break;
-          case eCSSProperty_modify_content:   aValue = mUserInterface->mModifyContent;   break;
-          case eCSSProperty_selection_style:  aValue = mUserInterface->mSelectionStyle;  break;
-          case eCSSProperty_auto_select:      aValue = mUserInterface->mAutoSelect;      break;
+          case eCSSProperty_user_modify:      aValue = mUserInterface->mUserModify;      break;
+          case eCSSProperty_user_select:      aValue = mUserInterface->mUserSelect;      break;
           case eCSSProperty_key_equivalent:
             if (nsnull != mUserInterface->mKeyEquivalent) {
               aValue = mUserInterface->mKeyEquivalent->mValue;
             }
             break;
-          case eCSSProperty_auto_tab:         aValue = mUserInterface->mAutoTab;         break;
+          case eCSSProperty_user_focus:       aValue = mUserInterface->mUserFocus;       break;
           case eCSSProperty_resizer:          aValue = mUserInterface->mResizer;         break;
           CSS_BOGUS_DEFAULT; // make compiler happy
         }

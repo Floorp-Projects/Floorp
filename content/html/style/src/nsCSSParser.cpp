@@ -1774,7 +1774,7 @@ CSSParserImpl::ParseDeclarationBlock(PRInt32& aErrorCode,
   if (NS_OK == NS_NewCSSDeclaration(&declaration)) {
     PRInt32 count = 0;
     for (;;) {
-      PRInt32 hint;
+      PRInt32 hint = NS_STYLE_HINT_NONE;
       if (ParseDeclaration(aErrorCode, declaration, aCheckForBraces, hint)) {
         count++;  // count declarations
       }
@@ -2763,12 +2763,6 @@ PRBool CSSParserImpl::ParseSingleValueProperty(PRInt32& aErrorCode,
     NS_ERROR("not currently parsed here");
     return PR_FALSE;
 
-  case eCSSProperty_auto_select:
-    return ParseVariant(aErrorCode, aValue, VARIANT_HOK,
-                        nsCSSProps::kAutoSelectKTable);
-  case eCSSProperty_auto_tab:
-    return ParseVariant(aErrorCode, aValue, VARIANT_AHK | VARIANT_NONE,
-                        nsCSSProps::kAutoTabKTable);
   case eCSSProperty_azimuth:
     return ParseAzimuth(aErrorCode, aValue);
   case eCSSProperty_background_attachment:
@@ -2898,9 +2892,6 @@ PRBool CSSParserImpl::ParseSingleValueProperty(PRInt32& aErrorCode,
   case eCSSProperty_min_height:
   case eCSSProperty_min_width:
     return ParseVariant(aErrorCode, aValue, VARIANT_HLP, nsnull);
-  case eCSSProperty_modify_content:
-    return ParseVariant(aErrorCode, aValue, VARIANT_HK,
-                        nsCSSProps::kModifyContentKTable);
   case eCSSProperty_opacity:
     return ParseVariant(aErrorCode, aValue, VARIANT_HPN, nsnull);
   case eCSSProperty_orphans:
@@ -2946,9 +2937,6 @@ PRBool CSSParserImpl::ParseSingleValueProperty(PRInt32& aErrorCode,
                         nsCSSProps::kResizerKTable);
   case eCSSProperty_richness:
     return ParseVariant(aErrorCode, aValue, VARIANT_HN, nsnull);
-  case eCSSProperty_selection_style:
-    return ParseVariant(aErrorCode, aValue, VARIANT_HOK,
-                        nsCSSProps::kSelectionStyleKTable);
   case eCSSProperty_speak:
     return ParseVariant(aErrorCode, aValue, VARIANT_HMK | VARIANT_NONE,
                         nsCSSProps::kSpeakKTable);
@@ -2982,9 +2970,18 @@ PRBool CSSParserImpl::ParseSingleValueProperty(PRInt32& aErrorCode,
   case eCSSProperty_unicode_bidi:
     return ParseVariant(aErrorCode, aValue, VARIANT_HMK,
                         nsCSSProps::kUnicodeBidiKTable);
+  case eCSSProperty_user_focus:
+    return ParseVariant(aErrorCode, aValue, VARIANT_HMK | VARIANT_NONE,
+                        nsCSSProps::kUserFocusKTable);
   case eCSSProperty_user_input:
     return ParseVariant(aErrorCode, aValue, VARIANT_AHK | VARIANT_NONE,
                         nsCSSProps::kUserInputKTable);
+  case eCSSProperty_user_modify:
+    return ParseVariant(aErrorCode, aValue, VARIANT_HK,
+                        nsCSSProps::kUserModifyKTable);
+  case eCSSProperty_user_select:
+    return ParseVariant(aErrorCode, aValue, VARIANT_HOK,
+                        nsCSSProps::kUserSelectKTable);
   case eCSSProperty_vertical_align:
     return ParseVariant(aErrorCode, aValue, VARIANT_HKLP,
                         nsCSSProps::kVerticalAlignKTable);
