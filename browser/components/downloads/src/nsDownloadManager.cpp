@@ -67,8 +67,7 @@ static NS_DEFINE_CID(kRDFServiceCID, NS_RDFSERVICE_CID);
 static NS_DEFINE_CID(kStringBundleServiceCID, NS_STRINGBUNDLESERVICE_CID);
 static PRBool gQuitting = PR_FALSE;
 
-#define DOWNLOAD_MANAGER_FE_URL "chrome://browser/content/downloadmanager/downloadmanager.xul"
-#define DOWNLOAD_MANAGER_BUNDLE "chrome://browser/locale/downloadmanager/downloadmanager.properties"
+#define DOWNLOAD_MANAGER_BUNDLE "chrome://browser/locale/downloads/downloadmanager.properties"
 #define INTERVAL 500
 
 static nsIRDFResource* gNC_DownloadsRoot = nsnull;
