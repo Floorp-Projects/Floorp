@@ -35,7 +35,24 @@ updateitem {
   background-color: Window;
 }
 
+.updateItemFromLabel {
+  padding-top: 2px;
+}
+
 .updateItemIcon {
   list-style-image: url("chrome://mozapps/skin/xpinstall/xpinstallItemGeneric.png");
+}
+
+.updateItemChecked {
+  margin: 0px 0px 3px 0px;
+  padding: 0px;
+}
+
+.updateItemChecked .checkbox-label-box {
+  display: none;
+}
+
+#alert {
+  list-style-image: url("chrome://mozapps/skin/update/warning.gif"); 
 }
 

@@ -42,25 +42,77 @@
 //
 
 const nsIExtensionItem = Components.interfaces.nsIExtensionItem;
+const MISMATCH = Components.interfaces.nsIExtensionManager.UPDATE_TYPE_MISMATCH;
+const USERINVOKED = Components.interfaces.nsIExtensionManager.UPDATE_TYPE_USERINVOKED;
+
 var gExtensionItems = [];
 var gUpdater = null;
 
 var gUpdateWizard = {
-  _items: [],
-  _itemsToUpdate: [],
+  // The items to check for updates for (e.g. an extension, some subset of extensions, 
+  // all extensions, a list of compatible extensions, etc...)
+  items: [],
+  // The items that we found updates available for
+  itemsToUpdate: [],
+  // The items that we successfully installed updates for
+  updatedCount: 0,
 
+  shouldSuggestAutoChecking: false,
+  shouldAutoCheck: false,
+  
   init: function ()
   {
     gUpdater = window.arguments[0].QueryInterface(Components.interfaces.nsIExtensionItemUpdater);
     for (var i = 1; i < window.arguments.length; ++i)
-      this._items.push(window.arguments[i].QueryInterface(nsIExtensionItem));
+      this.items.push(window.arguments[i].QueryInterface(nsIExtensionItem));
+      
+    var pref = Components.classes["@mozilla.org/preferences-service;1"]
+                         .getService(Components.interfaces.nsIPrefBranch);
+    this.shouldSuggestAutoChecking = (gUpdater.updateType == MISMATCH) && 
+                                     !pref.getBoolPref("update.extensions.enabled");
 
+    if (gUpdater.updateType == USERINVOKED) {
+      document.getElementById("mismatch").setAttribute("next", "checking");
+      document.documentElement.advance();
+    }
+    
     gMismatchPage.init();
   },
   
   uninit: function ()
   {
     gUpdatePage.uninit();
+  },
+  
+  onWizardFinish: function ()
+  {
+    if (this.shouldSuggestAutoChecking) {
+      var pref = Components.classes["@mozilla.org/preferences-service;1"]
+                           .getService(Components.interfaces.nsIPrefBranch);
+      pref.setBoolPref("update.extensions.enabled", this.shouldAutoCheck); 
+    }
+  },
+  
+  setButtonLabels: function (aBackButton, aBackButtonIsDisabled, 
+                             aNextButton, aNextButtonIsDisabled,
+                             aCancelButton, aCancelButtonIsDisabled)
+  {
+    var strings = document.getElementById("updateStrings");
+    
+    var back = document.documentElement.getButton("back");
+    if (aBackButton)
+      back.label = strings.getString(aBackButton);
+    back.disabled = aBackButtonIsDisabled;
+
+    var next = document.documentElement.getButton("next");
+    if (aNextButton)
+      next.label = strings.getString(aNextButton);
+    next.disabled = aNextButtonIsDisabled;
+    
+    var cancel = document.documentElement.getButton("cancel");
+    if (aCancelButton)
+      cancel.label = strings.getString(aCancelButton);
+    cancel.disabled = aCancelButtonIsDisabled;
   }
 };
 
@@ -69,24 +121,20 @@ var gMismatchPage = {
   init: function ()
   {
     var incompatible = document.getElementById("mismatch.incompatible");
-    
-    for (var i = 0; i < gUpdateWizard._items.length; ++i) {
-      var item = gUpdateWizard._items[i];
+    for (var i = 0; i < gUpdateWizard.items.length; ++i) {
+      var item = gUpdateWizard.items[i];
       var listitem = document.createElement("listitem");
       listitem.setAttribute("label", item.name + " " + item.version);
       incompatible.appendChild(listitem);
     }
-    
-    var strings = document.getElementById("updateStrings");
-    var next = document.documentElement.getButton("next");
-    next.label = strings.getString("mismatchCheckNow");
-    var cancel = document.documentElement.getButton("cancel");
-    cancel.label = strings.getString("mismatchDontCheck");
   },
   
-  onPageAdvanced: function ()
+  onPageShow: function ()
   {
-    dump("*** mismatch page advanced\n");
+    gUpdateWizard.setButtonLabels(null, true, 
+                                  "mismatchCheckNow", false, 
+                                  "mismatchDontCheck", false);
+    document.documentElement.getButton("next").focus();
   }
 };
 
@@ -100,15 +148,10 @@ var gUpdatePage = {
   
   onPageShow: function ()
   {
-    var strings = document.getElementById("updateStrings");
-    var next = document.documentElement.getButton("next");
-    next.label = strings.getString("nextButtonText");
-    next.disabled = true;
-    var cancel = document.documentElement.getButton("cancel");
-    cancel.label = strings.getString("cancelButtonText");
-    cancel.disabled = true;
-    var back = document.documentElement.getButton("back");
-    back.disabled = true;
+    gUpdateWizard.setButtonLabels(null, true, 
+                                  "nextButtonText", true, 
+                                  "cancelButtonText", true);
+    document.documentElement.getButton("next").focus();
 
     var os = Components.classes["@mozilla.org/observer-service;1"]
                        .getService(Components.interfaces.nsIObserverService);
@@ -134,17 +177,16 @@ var gUpdatePage = {
     case "update-item-started":
       break;
     case "update-item-ended":
-      dump("*** update-item-ended\n");
-      gUpdateWizard._itemsToUpdate.push(aSubject);
+      gUpdateWizard.itemsToUpdate.push(aSubject);
       
       ++this._completeCount;
       
       var progress = document.getElementById("checking.progress");
-      progress.value = Math.ceil(this._completeCount / gUpdateWizard._itemsToUpdate.length) * 100;
+      progress.value = Math.ceil(this._completeCount / gUpdateWizard.itemsToUpdate.length) * 100;
       
       break;
     case "update-ended":
-      if (gUpdateWizard._itemsToUpdate.length > 0)
+      if (gUpdateWizard.itemsToUpdate.length > 0)
         document.getElementById("checking").setAttribute("next", "found");
       document.documentElement.advance();
       break;
@@ -156,27 +198,76 @@ var gFoundPage = {
   
   onPageShow: function ()
   {
-    var strings = document.getElementById("updateStrings");
-    var next = document.documentElement.getButton("next");
-    next.label = strings.getString("installButtonText");
-    next.disabled = false;
-    var back = document.documentElement.getButton("back");
-    back.disabled = true;
-
+    gUpdateWizard.setButtonLabels(null, true, 
+                                  "installButtonText", false, 
+                                  null, false);
+    document.documentElement.getButton("next").focus();
+    
     var list = document.getElementById("foundList");
-    for (var i = 0; i < gUpdateWizard._itemsToUpdate.length; ++i) {
+    for (var i = 0; i < gUpdateWizard.itemsToUpdate.length; ++i) {
       var updateitem = document.createElement("updateitem");
       list.appendChild(updateitem);
       
-      var item = gUpdateWizard._itemsToUpdate[i];
+      var item = gUpdateWizard.itemsToUpdate[i];
       updateitem.name = item.name + " " + item.version;
       updateitem.url = item.xpiURL;
+      updateitem.checked = true;
       if (item.iconURL != "")
         updateitem.icon = item.iconURL;
     }
   },
 };
 
+var gInstallingPage = {
+
+  onPageShow: function ()
+  {
+    gUpdateWizard.setButtonLabels(null, true, 
+                                  "nextButtonText", true, 
+                                  null, true);
+
+    // Get XPInstallManager and kick off download/install 
+    // process, registering us as an observer. 
+    
+    //XXXben
+    window.advance = function()
+    {
+      document.getElementById("installing").setAttribute("next", "finished");
+      document.documentElement.advance();
+    }
+    setTimeout("advance()", 2000);
+  },
+
+};
+
+var gFinishedPage = {
+
+  onPageShow: function ()
+  {
+    gUpdateWizard.setButtonLabels(null, true, null, true, null, true);
+    document.documentElement.getButton("finish").focus();
+    
+    var iR = document.getElementById("incompatibleRemaining");
+    var iR2 = document.getElementById("incompatibleRemaining2");
+    var fEC = document.getElementById("finishedEnableChecking");
+
+    if (gUpdateWizard.shouldSuggestAutoChecking) {
+      iR.hidden = true;
+      iR2.hidden = false;
+      fEC.hidden = false;
+      fEC.click();
+    }
+    else {
+      iR.hidden = false;
+      iR2.hidden = true;
+      fEC.hidden = true;
+    }
+    
+    if (gUpdater.updateType == MISMATCH) {
+      document.getElementById("finishedMismatch").hidden = false;
+    }
+  }
+};
 
 
 # -*- Mode: Java; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-

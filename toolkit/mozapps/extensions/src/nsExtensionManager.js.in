@@ -254,7 +254,7 @@ nsExtensionManager.prototype = {
     var appID = pref.getCharPref(PREF_EM_APP_ID);
     var appVersion = pref.getCharPref(PREF_EM_APP_VERSION);
 
-    var updater = new nsExtensionItemUpdater(aItems, appID, appVersion);
+    var updater = new nsExtensionItemUpdater(aUpdateType, aItems, appID, appVersion);
     
     switch (aUpdateType) {
     case Components.interfaces.nsIExtensionManager.UPDATE_TYPE_MISMATCH:
@@ -276,6 +276,12 @@ nsExtensionManager.prototype = {
       break;
     }
   },
+  
+  getItemList: function (aItemID, aType, aCountRef)
+  {
+    this._ensureDS();
+    return this._ds.getItemList(aItemID, aType, aCountRef);
+  },    
   
   // Themes
   installTheme: function (aThemeID)
@@ -321,8 +327,9 @@ nsExtensionManager.prototype = {
   }
 };
 
-function nsExtensionItemUpdater(aItems, aTargetAppID, aTargetAppVersion) 
+function nsExtensionItemUpdater(aUpdateType, aItems, aTargetAppID, aTargetAppVersion) 
 {
+  this._updateType = aUpdateType;
   this._items = aItems;
   this._count = aItems.length;
   this._appID = aTargetAppID;
@@ -343,6 +350,11 @@ nsExtensionItemUpdater.prototype = {
     wspFactory.createProxyAsync("http://localhost:8080/axis/services/VersionCheck?wsdl", 
                                 "VersionCheck", "", true, this);
   },
+  
+  get updateType()
+  {
+    return this._updateType;
+  },  
 
   /////////////////////////////////////////////////////////////////////////////
   // nsExtensionItemUpdater
@@ -456,6 +468,38 @@ nsExtensionsDataSource.prototype = {
     return items;
   },
   
+  getItemList: function (aItemID, aType, aCountRef)
+  {
+    var items = [];
+    if (aItemID) {
+      var item = Components.classes["@mozilla.org/extensions/item;1"]
+                            .createInstance(Components.interfaces.nsIExtensionItem);
+      item.init(aItemID, this.getExtensionProperty(aItemID, "version"),
+                this.getExtensionProperty(aItemID, "name"),
+                -1, "", "", aType);
+      items.push(item);
+    }
+    else {
+      var ctr = Components.classes["@mozilla.org/rdf/container;1"]
+                          .createInstance(Components.interfaces.nsIRDFContainer);
+      ctr.Init(this, this._rdf.GetResource("urn:mozilla:extension:root"));
+      
+      var elements = ctr.GetElements();
+      while (elements.hasMoreElements()) {
+        var e = elements.getNext().QueryInterface(Components.interfaces.nsIRDFResource);
+        var id = this._stripPrefix(e.Value);
+        var item = Components.classes["@mozilla.org/extensions/item;1"]
+                              .createInstance(Components.interfaces.nsIExtensionItem);
+        item.init(id, this.getExtensionProperty(id, "version"),
+                  this.getExtensionProperty(id, "name"),
+                  -1, "", "", aType);
+        items.push(item);
+      }
+    }
+    aCountRef.value = items.length;
+    return items;
+  },
+  
   _setProperty: function (aDS, aSource, aProperty, aNewValue)
   {
     var oldValue = aDS.GetTarget(aSource, aProperty, true);
@@ -515,7 +559,11 @@ nsExtensionsDataSource.prototype = {
     var key = aProfile ? "ProfD" : "ProfD"; // XXXben - XCurProcDir
     var extensionsFile = fileLocator.get(key, Components.interfaces.nsIFile);
     extensionsFile.append("extensions");
+    
     var extensionsDir = extensionsFile.clone();
+    if (!extensionsDir.exists())
+      extensionsDir.create(Components.interfaces.nsIFile.DIRECTORY_TYPE, 0755);
+    
     extensionsFile.append("extensions.rdf");
     
     if (!extensionsFile.exists()) {

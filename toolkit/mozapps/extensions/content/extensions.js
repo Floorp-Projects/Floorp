@@ -2,6 +2,7 @@
 // Globals
 
 const kObserverServiceProgID = "@mozilla.org/observer-service;1";
+const nsIExtensionItem = Components.interfaces.nsIExtensionItem;
 
 var gExtensionManager = null;
 var gDownloadListener = null;
@@ -364,45 +365,13 @@ var gExtensionsViewController = {
     },
     
     cmd_update: function ()
-    {
-      var items = this._getItemList(null);
-      gExtensionManager.update(items, item.length, 
+    { 
+      var id = stripPrefix(gExtensionsView.selected.id);
+      var items = gExtensionManager.getItemList(id, nsIExtensionItem.TYPE_EXTENSION, { });
+      gExtensionManager.update(items, items.length, 
                                Components.interfaces.nsIExtensionManager.UPDATE_TYPE_USERINVOKED);
     },
 
-    _getItemList: function (aItemID) 
-    {
-      var items = [];
-      if (aItemID) {
-        var item = Components.classes["@mozilla.org/extensions/item;1"]
-                             .createInstance(Components.interfaces.nsIExtensionItem);
-        item.init(aItemID, this.getExtensionProperty(aItemID, "version"),
-                  this.getExtensionProperty(aItemID, "name"),
-                  -1, "", "",
-                  Components.interfaces.nsIExtensionItem.TYPE_EXTENSION); // XXXben
-        items.push(item);
-      }
-      else {
-        var ctr = Components.classes["@mozilla.org/rdf/container;1"]
-                            .createInstance(Components.interfaces.nsIRDFContainer);
-        ctr.Init(this, this._rdf.GetResource("urn:mozilla:extension:root"));
-        
-        var elements = ctr.GetElements();
-        while (elements.hasMoreElements()) {
-          var e = elements.getNext().QueryInterface(Components.interfaces.nsIRDFResource);
-          var id = this._stripPrefix(e.Value);
-          var item = Components.classes["@mozilla.org/extensions/item;1"]
-                               .createInstance(Components.interfaces.nsIExtensionItem);
-          item.init(id, this.getExtensionProperty(id, "version"),
-                    this.getExtensionProperty(id, "name"),
-                    -1, "", "",
-                    Components.interfaces.nsIExtensionItem.TYPE_EXTENSION); // XXXben
-          items.push(item);
-        }
-      }
-      return items;
-    },
-    
     cmd_uninstall: function ()
     {
       // Confirm the uninstall
