@@ -8,7 +8,7 @@
   <treechildren id="appearanceChildren">
     <treeitem id="content-packs-panel" insertafter="themes-panel">
       <treerow>
-        <treecell class="treecell-indent" url="chrome://content-packs/content/pref-contentpacks.xul" label="&sample.label;"/>
+        <treecell class="treecell-indent" url="chrome://content-packs/content/pref-contentpacks.xul" label="&content.label;"/>
       </treerow>
     </treeitem>
   </treechildren>

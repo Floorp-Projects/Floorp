@@ -1,11 +1,164 @@
-<?xml version="1.0"?>
+<?xml version="1.0"?> 
+<!--
+   The contents of this file are subject to the Netscape Public
+   License Version 1.1 (the "License"); you may not use this file
+   except in compliance with the License. You may obtain a copy of
+   the License at http://www.mozilla.org/NPL/
+    
+   Software distributed under the License is distributed on an "AS
+   IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+   implied. See the License for the specific language governing
+   rights and limitations under the License.
 
-<?xml-stylesheet href="chrome://communicator/skin/"?>
+  Contributor(s):  J. M. Betak <loadrunner@betak.net>
+                    Josh Soref  <timeless@mac.com>
+  -->
 
-<!DOCTYPE window SYSTEM "chrome://content-packs/locale/pref-contentpacks.dtd">
+<?xml-stylesheet href="chrome://communicator/skin/" type="text/css"?>
 
-<window id="prefContentPacks"
-        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
-  <text value="&test.label;"/>
-</window>        
+<?xul-overlay href="chrome://global/content/dialogOverlay.xul"?>
+<?xul-overlay href="chrome://global/content/globalOverlay.xul"?>
+<?xul-overlay href="chrome://communicator/content/utilityOverlay.xul"?>
 
+<!DOCTYPE window [
+<!ENTITY % brandDTD SYSTEM "chrome://global/locale/brand.dtd" >
+%brandDTD;
+<!ENTITY % prefContentDTD SYSTEM "chrome://content-packs/locale/pref-contentpacks.dtd" >
+%prefContentDTD;
+]>
+
+<window xmlns:html="http://www.w3.org/1999/xhtml"
+		    xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        class="color-dialog"
+        onload="parent.initPanel('chrome://content-packs/content/pref-contentpacks.xul');"
+        orient="vertical">
+
+  <stringbundle id="bundle_contentPack"
+                src="chrome://content-packs/locale/contentpacks.properties"/>
+
+  <stringbundle id="bundle_brand"
+                src="chrome://global/locale/brand.properties"/>
+
+  <script type="application/x-javascript">
+  <![CDATA[
+    var _elementIDs = ["contentPackTree"];
+
+
+    function Startup()
+    {
+      var tree = document.getElementById( "contentPackTree" );
+      var regionName = tree.getAttribute("prefvalue");
+      var elements = tree.getElementsByAttribute("value", regionName);
+
+      if (elements.length) {
+        tree.selectItem(elements[0].parentNode.parentNode);
+      } else {
+        tree.selectedIndex = 0;
+      }
+      parent.hPrefWindow.registerOKCallbackFunc( SwitchContentPack );
+    }
+
+
+    function SwitchContentPack()
+    {
+      var oldContentPack = parent.hPrefWindow.getPref( "string", "general.useragent.contentlocale");
+      var newContentPack;
+
+      try {
+        var tree = document.getElementById("contentPackTree");
+        if (tree) {
+         var selectedItem = tree.selectedItems.length ? tree.selectedItems[0] : null;
+          if (selectedItem) {
+            var newContentPack = selectedItem.firstChild.firstChild.getAttribute("value");
+          }
+        } else {
+          var newContentPack = parent.hPrefWindow.wsm.dataManager.getItemData( "chrome://communicator/content/pref/pref-content.xul", "contentPackTree" ).prefvalue;
+        }
+      }
+      catch (e) {}
+      
+      if (newContentPack && (newContentPack != oldContentPack))
+      {
+        try {
+          var chromeRegistry = Components.classes["@mozilla.org/chrome/chrome-registry;1"].getService();
+          if ( chromeRegistry ) {
+            chromeRegistry = chromeRegistry.QueryInterface( Components.interfaces.nsIChromeRegistry );
+          }
+          chromeRegistry.selectLocale(newContentPack, true);
+          var contentBundle = document.getElementById("bundle_contentPack");
+          var brandBundle = document.getElementById("bundle_brand");
+          var alertText = contentBundle.getString("contentAlert");
+          alertText = alertText.replace(/%brand%/g, brandBundle.getString("brandShortName"));
+          var titleText = contentBundle.GetStringFromName("languageTitle");
+          var promptService = Components.classes["@mozilla.org/embedcomp/prompt-service;1"].getService();
+          promptService = promptService.QueryInterface(Components.interfaces.nsIPromptService)
+          promptService.alert(window, titleText, alertText);
+        }
+        catch(e) {
+          return false;
+        }
+      }
+      return true;	
+    }
+
+
+    function SelectContentPack()
+    {
+      var tree = document.getElementById("contentPackTree");
+      var selectedItem = tree.selectedItems.length ? tree.selectedItems[0] : null;
+
+      if (selectedItem) {
+        var regionName = selectedItem.firstChild.firstChild.getAttribute("value");
+        tree.setAttribute("prefvalue", regionName);
+      }
+    }
+
+
+    function DownloadRegionPacks()
+    {
+      window.openDialog("chrome://navigator/content/navigator.xul", "_blank", "chrome,all,dialog=no", xlateURL("urn:clienturl:viewmenu:intlwebcontent"));
+    }
+  ]]>
+  </script>
+
+  <box class="box-smallheader" title="&lHeader;"/>
+
+  <html>&contentIntro.label;</html>
+  <separator class="thin"/>
+  <html>&installedContentPacks.label;</html>
+  
+  <tree class="inset" id="contentPackTree" flex="1" rows="5" 
+        ref="urn:mozilla:locale:root" datasources="rdf:chrome"
+        sortResource="http://www.mozilla.org/rdf/chrome#name"
+        pref="true" preftype="localizedstring" prefstring="general.useragent.contentlocale" 
+        prefvalue="" prefattribute="prefvalue" wsm_attributes="prefvalue"
+        multiple="false" onselect="SelectContentPack();"
+        sortDirection="ascending">
+    <treecolgroup>
+      <treecol flex="1"/>
+    </treecolgroup>
+    <template xmlns:chrome="http://www.mozilla.org/rdf/chrome#">
+      <rule chrome:localeType="region">
+        <treechildren flex="1">
+          <treeitem id="treechildren" uri="..." translation="true" nselected="false" >
+            <treerow>
+              <treecell label="rdf:http://www.mozilla.org/rdf/chrome#displayName"
+                        value="rdf:http://www.mozilla.org/rdf/chrome#name"/>
+            </treerow>
+          </treeitem>
+        </treechildren>
+      </rule>
+    </template>
+  </tree>
+
+  <separator class="thin"/>
+
+  <box orient="horizontal">
+      <!--separator flex="1"/     -->
+      <!-- see blocker bug 84232  -->
+      <!--button id="downloadContentPacks" label="&downloadContentPacks.label;" accesskey="&downloadContentPacks.accesskey;" oncommand="DownloadRegionPacks()"/-->
+  </box>
+
+  <separator flex="1"/>
+
+</window>
