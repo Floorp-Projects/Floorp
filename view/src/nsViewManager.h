@@ -200,6 +200,9 @@ private:
 	void ShowDisplayList(PRInt32 flatlen);
 	void ComputeViewOffset(nsIView *aView, nsPoint *aOrigin);
 
+    void AddCoveringWidgetsToOpaqueRegion(nsIRegion* aRgn, nsIDeviceContext* aContext,
+                                          nsIView* aRootView);
+
 	// Predicates
 	PRBool DoesViewHaveNativeWidget(nsIView* aView);
 	PRBool IsClipView(nsIView* aView);
