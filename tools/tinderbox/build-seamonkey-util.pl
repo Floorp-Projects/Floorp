@@ -21,7 +21,7 @@ use File::Basename; # for basename();
 use Config; # for $Config{sig_name} and $Config{sig_num}
 
 
-$::UtilsVersion = '$Revision: 1.121 $ ';
+$::UtilsVersion = '$Revision: 1.122 $ ';
 
 package TinderUtils;
 
@@ -1691,7 +1691,7 @@ sub BloatTest {
       my $leaks_string = "\n\nTinderboxPrint:<a title=\"refcnt Leaks\"href=\"http://$Settings::results_server/graph/query.cgi?testname=" . $testname_prefix . "refcnt_leaks&units=bytes&tbox=" . ::hostname() . "&autoscale=1&days=7\">" . $label_prefix . "Lk:" . PrintSize($leaks) . "B</a>\n\n";
       print_log $leaks_string;
       
-      my $bloat_string = "\n\nTinderboxPrint:<a title=\"refcnt Bloat\"href=\"http://$Settings::results_server/graph/query.cgi?testname=" . $testname_prefix . "refcnt_bloat&units=bytes&tbox=" . ::hostname() . "&autoscale=1&days=7\">" . $label_prefix . "Lk:" . PrintSize($bloat) . "B</a>\n\n";
+      my $bloat_string = "\n\nTinderboxPrint:<a title=\"refcnt Bloat\"href=\"http://$Settings::results_server/graph/query.cgi?testname=" . $testname_prefix . "refcnt_bloat&units=bytes&tbox=" . ::hostname() . "&autoscale=1&days=7\">" . $label_prefix . "Bl:" . PrintSize($bloat) . "B</a>\n\n";
       print_log $bloat_string;
       
       # Report numbers to server.
