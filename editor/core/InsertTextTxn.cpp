@@ -57,7 +57,7 @@ nsresult InsertTextTxn::Merge(PRBool *aDidMerge, nsITransaction *aTransaction)
   // set out param default value
   if (nsnull!=aDidMerge)
     *aDidMerge=PR_FALSE;
-
+/* XXX: Doesn't compile on Mac.  While the hell not???
   if ((nsnull!=aDidMerge) && (nsnull!=aTransaction))
   {
     // if aTransaction isa InsertTextTxn, absorb it
@@ -71,6 +71,7 @@ nsresult InsertTextTxn::Merge(PRBool *aDidMerge, nsITransaction *aTransaction)
     }
     *aDidMerge = PR_TRUE;
   }
+*/
   return NS_OK;
 }
 
