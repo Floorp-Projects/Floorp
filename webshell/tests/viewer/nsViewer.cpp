@@ -138,11 +138,12 @@ OnLinkClickEvent::OnLinkClickEvent(DocObserver* aHandler,
     NS_NewPostData(aPostData, &mPostData);
   }
 
+#ifdef XP_PC
   PL_InitEvent(this, nsnull,
                (PLHandleEventProc) ::HandleEvent,
                (PLDestroyEventProc) ::DestroyEvent);
 
-#ifdef XP_PC
+
   PLEventQueue* eventQueue = PL_GetMainEventQueue();
   PL_PostEvent(eventQueue, this);
 #endif
@@ -407,7 +408,8 @@ void PrintHelpInfo(char **argv)
 
 void nsViewer::ProcessArguments(int argc, char **argv)
 {
- for (int i = 1; i < argc; i++) {
+ int i;
+ for (i = 1; i < argc; i++) {
     if (argv[i][0] == '-') {
       if (strncmp(argv[i], "-p", 2) == 0) {
         gDoPurify = PR_TRUE;
@@ -840,7 +842,9 @@ void nsViewer::CleanupViewer(nsDocLoader* aDl)
 
 nsDocLoader* nsViewer::SetupViewer(nsIWidget **aMainWindow)
 {
+#ifdef XP_PC
   PL_InitializeEventsLib("");
+#endif
 
   gWindows = new nsVoidArray();
 

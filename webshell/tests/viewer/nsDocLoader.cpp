@@ -244,7 +244,8 @@ void nsDocLoader::CancelAll()
   if (mURLList)
   {
     PRInt32 count = mURLList->Count();
-    for (int i = 0; i < count; i++)
+    int i;
+    for (i = 0; i < count; i++)
     {
       nsString* s = (nsString*)mURLList->ElementAt(i);
       delete s;
