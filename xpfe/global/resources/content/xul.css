@@ -707,8 +707,6 @@ grippy {
 .tree-splitter {
   width: 0px;
   max-width: 0px;
-  min-width: 0% ! important;
-  min-height: 0% ! important;
   -moz-box-ordinal-group: 2147483646;
 }
 

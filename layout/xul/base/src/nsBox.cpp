@@ -1010,11 +1010,6 @@ nsIBox::AddCSSMinSize(nsBoxLayoutState& aState, nsIBox* aBox, nsSize& aSize)
            aSize.width = min;
            widthSet = PR_TRUE;
         }
-    } else if (position->mMinWidth.GetUnit() == eStyleUnit_Percent) {
-        float min = position->mMinWidth.GetPercentValue();
-        NS_ASSERTION(min == 0.0f, "Non-zero percentage values not currently supported");
-        aSize.width = 0;
-        widthSet = PR_TRUE;
     }
 
     if (position->mMinHeight.GetUnit() == eStyleUnit_Coord) {
@@ -1023,11 +1018,6 @@ nsIBox::AddCSSMinSize(nsBoxLayoutState& aState, nsIBox* aBox, nsSize& aSize)
            aSize.height = min;
            heightSet = PR_TRUE;
         }
-    } else if (position->mMinHeight.GetUnit() == eStyleUnit_Percent) {
-        float min = position->mMinHeight.GetPercentValue();
-        NS_ASSERTION(min == 0.0f, "Non-zero percentage values not currently supported");
-        aSize.height = 0;
-        heightSet = PR_TRUE;
     }
 
     nsIContent* content = aBox->GetContent();
@@ -1238,25 +1228,14 @@ nsBox::AddInset(nsIBox* aBox, nsSize& aSize)
 void
 nsBox::BoundsCheck(nscoord& aMin, nscoord& aPref, nscoord& aMax)
 {
-   if (aMax < aMin)
-       aMax = aMin;
+   if (aMin > aMax)
+       aMin = aMax;
 
    if (aPref > aMax)
        aPref = aMax;
 
    if (aPref < aMin)
        aPref = aMin;
-}
-
-void
-nsBox::BoundsCheckMinMax(nsSize& aMinSize, nsSize& aMaxSize)
-{
-  if (aMaxSize.width < aMinSize.width) {
-    aMaxSize.width = aMinSize.width;
-  }
-
-  if (aMaxSize.height < aMinSize.height)
-    aMaxSize.height = aMinSize.height;
 }
 
 void
