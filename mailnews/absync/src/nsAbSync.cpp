@@ -921,7 +921,7 @@ nsAbSync::GenerateProtocolForCard(nsIAbCard *aCard, PRBool aAddId, nsString &pro
 
           NS_FREE_XPCOM_ALLOCATED_POINTER_ARRAY(prefCount, prefNames);
         }
-       }
+      }
     }
 
     char *tLine = ToNewCString(tProtLine);
@@ -1063,7 +1063,7 @@ nsAbSync::ThisCardHasChanged(nsIAbCard *aCard, syncMappingRecord *newSyncRecord,
     {
       newSyncRecord->flags |= SYNC_ADD;
 
-	    nsresult rv = NS_OK;
+      nsresult rv = NS_OK;
       nsCOMPtr<nsIAbMDBCard> dbcard(do_QueryInterface(aCard, &rv)); 
       NS_ENSURE_SUCCESS(rv, rv);
       if (NS_FAILED(dbcard->GetKey(&aKey)))
@@ -1119,15 +1119,15 @@ char*
 BuildSyncTimestamp(void)
 {
   static char       result[75] = "";
-	PRExplodedTime    now;
+  PRExplodedTime    now;
   char              buffer[128] = "";
 
   // Generate envelope line in format of:  From - Sat Apr 18 20:01:49 1998
   //
   // Use PR_FormatTimeUSEnglish() to format the date in US English format,
-	// then figure out what our local GMT offset is, and append it (since
-	// PR_FormatTimeUSEnglish() can't do that.) Generate four digit years as
-	// per RFC 1123 (superceding RFC 822.)
+  // then figure out what our local GMT offset is, and append it (since
+  // PR_FormatTimeUSEnglish() can't do that.) Generate four digit years as
+  // per RFC 1123 (superceding RFC 822.)
   //
   PR_ExplodeTime(PR_Now(), PR_LocalTimeParameters, &now);
 	PR_FormatTimeUSEnglish(buffer, sizeof(buffer),
@@ -1135,7 +1135,7 @@ BuildSyncTimestamp(void)
 						   &now);
   
   // This value must be in ctime() format, with English abbreviations.
-	// PL_strftime("... %c ...") is no good, because it is localized.
+  // PL_strftime("... %c ...") is no good, because it is localized.
   //
   PL_strcpy(result, "Last - ");
   PL_strcpy(result + 7, buffer);
@@ -1286,7 +1286,7 @@ nsAbSync::AnalyzeAllRecords(nsIAddrDatabase *aDatabase, nsIAbDirectory *director
                 // be the ID from the local database for this card entry
                 //
                 PRUint32    aKey;
-	              nsresult rv = NS_OK;
+                nsresult rv = NS_OK;
                 nsCOMPtr<nsIAbMDBCard> dbcard(do_QueryInterface(card, &rv)); 
                 if (NS_FAILED(rv) || !dbcard)
                   continue;
@@ -1420,7 +1420,7 @@ nsAbSync::AnalyzeAllRecords(nsIAddrDatabase *aDatabase, nsIAbDirectory *director
         // be the ID from the local database for this card entry
         //
         PRUint32    aKey;
-	      nsresult rv = NS_OK;
+        nsresult rv = NS_OK;
         nsCOMPtr<nsIAbMDBCard> dbcard(do_QueryInterface(card, &rv)); 
         if (NS_FAILED(rv) || !dbcard)
           continue;
@@ -1864,7 +1864,7 @@ nsAbSync::DeleteCardByServerID(PRInt32 aServerID)
       nsCOMPtr<nsIAbCard> card;
       card = do_QueryInterface(obj, &rv);
 
-	    nsresult rv = NS_OK;
+      nsresult rv = NS_OK;
       nsCOMPtr<nsIAbMDBCard> dbcard(do_QueryInterface(card, &rv)); 
       if (NS_FAILED(rv) || !dbcard)
         continue;
