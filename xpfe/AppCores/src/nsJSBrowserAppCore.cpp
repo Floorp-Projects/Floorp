@@ -196,7 +196,42 @@ BrowserAppCoreForward(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsv
 }
 
 
-#ifdef ClientWallet
+//
+// Native method LoadUrl
+//
+PR_STATIC_CALLBACK(JSBool)
+BrowserAppCoreLoadUrl(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
+{
+  nsIDOMBrowserAppCore *nativeThis = (nsIDOMBrowserAppCore*)JS_GetPrivate(cx, obj);
+  JSBool rBool = JS_FALSE;
+  nsAutoString b0;
+
+  *rval = JSVAL_NULL;
+
+  // If there's no private data, this must be the prototype, so ignore
+  if (nsnull == nativeThis) {
+    return JS_TRUE;
+  }
+
+  if (argc >= 1) {
+
+    nsJSUtils::nsConvertJSValToString(b0, cx, argv[0]);
+
+    if (NS_OK != nativeThis->LoadUrl(b0)) {
+      return JS_FALSE;
+    }
+
+    *rval = JSVAL_VOID;
+  }
+  else {
+    JS_ReportError(cx, "Function loadUrl requires 1 parameters");
+    return JS_FALSE;
+  }
+
+  return JS_TRUE;
+}
+
+
 //
 // Native method WalletEditor
 //
@@ -322,43 +357,6 @@ BrowserAppCoreWalletSamples(JSContext *cx, JSObject *obj, uintN argc, jsval *arg
   }
   else {
     JS_ReportError(cx, "Function walletSamples requires 0 parameters");
-    return JS_FALSE;
-  }
-
-  return JS_TRUE;
-}
-#endif
-
-
-//
-// Native method LoadUrl
-//
-PR_STATIC_CALLBACK(JSBool)
-BrowserAppCoreLoadUrl(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
-{
-  nsIDOMBrowserAppCore *nativeThis = (nsIDOMBrowserAppCore*)JS_GetPrivate(cx, obj);
-  JSBool rBool = JS_FALSE;
-  nsAutoString b0;
-
-  *rval = JSVAL_NULL;
-
-  // If there's no private data, this must be the prototype, so ignore
-  if (nsnull == nativeThis) {
-    return JS_TRUE;
-  }
-
-  if (argc >= 1) {
-
-    nsJSUtils::nsConvertJSValToString(b0, cx, argv[0]);
-
-    if (NS_OK != nativeThis->LoadUrl(b0)) {
-      return JS_FALSE;
-    }
-
-    *rval = JSVAL_VOID;
-  }
-  else {
-    JS_ReportError(cx, "Function loadUrl requires 1 parameters");
     return JS_FALSE;
   }
 
@@ -730,13 +728,11 @@ static JSFunctionSpec BrowserAppCoreMethods[] =
 {
   {"back",          BrowserAppCoreBack,     0},
   {"forward",          BrowserAppCoreForward,     0},
-#ifdef ClientWallet
+  {"loadUrl",          BrowserAppCoreLoadUrl,     1},
   {"walletEditor",          BrowserAppCoreWalletEditor,     0},
   {"walletSafeFillin",          BrowserAppCoreWalletSafeFillin,     0},
   {"walletQuickFillin",          BrowserAppCoreWalletQuickFillin,     0},
   {"walletSamples",          BrowserAppCoreWalletSamples,     0},
-#endif
-  {"loadUrl",          BrowserAppCoreLoadUrl,     1},
   {"setToolbarWindow",          BrowserAppCoreSetToolbarWindow,     1},
   {"setContentWindow",          BrowserAppCoreSetContentWindow,     1},
   {"setWebShellWindow",          BrowserAppCoreSetWebShellWindow,     1},
@@ -802,7 +798,7 @@ BrowserAppCore(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rva
 //
 // BrowserAppCore class initialization
 //
-nsresult NS_InitBrowserAppCoreClass(nsIScriptContext *aContext, void **aPrototype)
+extern "C" NS_DOM nsresult NS_InitBrowserAppCoreClass(nsIScriptContext *aContext, void **aPrototype)
 {
   JSContext *jscontext = (JSContext *)aContext->GetNativeContext();
   JSObject *proto = nsnull;
