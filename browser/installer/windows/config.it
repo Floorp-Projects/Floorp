@@ -663,9 +663,9 @@ Description Long=Tools for web developers including an error console, the Docume
 Archive=adt.xpi
 $InstallSize$:adt
 $InstallSizeArchive$:adt.xpi
-Attributes=FORCE_UPGRADE|VISIBLE|DISABLED
-Force Upgrade File0=[SETUP PATH]\chrome\venkman.jar
-Force Upgrade File1=[SETUP PATH]\chrome\inspector.jar
+Attributes=FORCE_UPGRADE|VISIBLE
+;Force Upgrade File0=[SETUP PATH]\chrome\venkman.jar
+Force Upgrade File0=[SETUP PATH]\chrome\inspector.jar
 FileCount=$FileCount$
 
 [Component Uninstaller]
