@@ -223,9 +223,9 @@ NS_IMETHODIMP nsHTMLImageMapAccessible::GetEndIndex(PRInt32 *aEndIndex)
 }
 
 /* nsIURI getURI (in long i); */
-NS_IMETHODIMP nsHTMLImageMapAccessible::GetURI(PRInt32 aIndex, nsIURI **_retval)
+NS_IMETHODIMP nsHTMLImageMapAccessible::GetURI(PRInt32 aIndex, nsIURI **aURI)
 {
-  *_retval = nsnull;
+  *aURI = nsnull;
 
   nsCOMPtr<nsIDOMHTMLCollection> mapAreas;
   mMapElement->GetAreas(getter_AddRefs(mapAreas));
@@ -246,7 +246,7 @@ NS_IMETHODIMP nsHTMLImageMapAccessible::GetURI(PRInt32 aIndex, nsIURI **_retval)
         nsCOMPtr<nsIDOMElement> area(do_QueryInterface(domNode));
         nsAutoString hrefValue;
         if (NS_SUCCEEDED(area->GetAttribute(NS_LITERAL_STRING("href"), hrefValue))) {
-          return NS_NewURI(_retval, hrefValue, nsnull, baseURI);
+          return NS_NewURI(aURI, hrefValue, nsnull, baseURI);
         }
       }
     }
@@ -257,15 +257,22 @@ NS_IMETHODIMP nsHTMLImageMapAccessible::GetURI(PRInt32 aIndex, nsIURI **_retval)
 
 /* nsIAccessible getObject (in long i); */
 NS_IMETHODIMP nsHTMLImageMapAccessible::GetObject(PRInt32 aIndex,
-                                                  nsIAccessible **_retval)
+                                                  nsIAccessible **aAccessible)
 {
-  *_retval = CreateAreaAccessible(aIndex);
+  *aAccessible = CreateAreaAccessible(aIndex);
   return NS_OK;
 }
 
 /* boolean isValid (); */
-NS_IMETHODIMP nsHTMLImageMapAccessible::IsValid(PRBool *_retval)
+NS_IMETHODIMP nsHTMLImageMapAccessible::IsValid(PRBool *aIsValid)
 {
-  *_retval = PR_TRUE;
+  *aIsValid = PR_TRUE;
+  return NS_OK;
+}
+
+/* boolean isSelected (); */
+NS_IMETHODIMP nsHTMLImageMapAccessible::IsSelected(PRBool *aIsSelected)
+{
+  *aIsSelected = PR_FALSE;
   return NS_OK;
 }

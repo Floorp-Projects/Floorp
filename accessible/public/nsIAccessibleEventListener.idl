@@ -83,6 +83,7 @@ interface nsIAccessibleEventListener : nsISupports
   const unsigned long EVENT_ATK_TABLE_COLUMN_INSERT    = 0x0114;
   const unsigned long EVENT_ATK_TABLE_COLUMN_DELETE    = 0x0115;
   const unsigned long EVENT_ATK_TABLE_COLUMN_REORDER   = 0x0116;
+  const unsigned long EVENT_ATK_LINK_SELECTED          = 0x0117;
   
   [noscript]
   void handleEvent(in unsigned long aEvent, in nsIAccessible aTarget, in voidPtr aData);

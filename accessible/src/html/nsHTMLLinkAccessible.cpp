@@ -82,6 +82,7 @@ NS_IMETHODIMP nsHTMLLinkAccessible::GetAccState(PRUint32 *_retval)
   return NS_OK;
 }
 
+//-------------------------- nsIAccessibleHyperLink -------------------------
 /* readonly attribute long anchors; */
 NS_IMETHODIMP nsHTMLLinkAccessible::GetAnchors(PRInt32 *aAnchors)
 {
@@ -107,18 +108,18 @@ NS_IMETHODIMP nsHTMLLinkAccessible::GetEndIndex(PRInt32 *aEndIndex)
 }
 
 /* nsIURI getURI (in long i); */
-NS_IMETHODIMP nsHTMLLinkAccessible::GetURI(PRInt32 i, nsIURI **_retval)
+NS_IMETHODIMP nsHTMLLinkAccessible::GetURI(PRInt32 i, nsIURI **aURI)
 {
   //I do not know why we have to retrun a nsIURI instead of
   //nsILink or just a string of url. Anyway, maybe nsIURI is
   //more powerful for the future.
-  *_retval = nsnull;
+  *aURI = nsnull;
 
   nsCOMPtr<nsILink> link(do_QueryInterface(mLinkContent));
   if (link) {
     nsXPIDLCString hrefValue;
     if (NS_SUCCEEDED(link->GetHrefCString(*getter_Copies(hrefValue)))) {
-      return NS_NewURI(_retval, hrefValue, nsnull, nsnull);
+      return NS_NewURI(aURI, hrefValue, nsnull, nsnull);
     }
   }
 
@@ -127,18 +128,27 @@ NS_IMETHODIMP nsHTMLLinkAccessible::GetURI(PRInt32 i, nsIURI **_retval)
 
 /* nsIAccessible getObject (in long i); */
 NS_IMETHODIMP nsHTMLLinkAccessible::GetObject(PRInt32 aIndex,
-                                              nsIAccessible **_retval)
+                                              nsIAccessible **aAccessible)
 {
   if (0 != aIndex)
     return NS_ERROR_FAILURE;
   
-  return QueryInterface(NS_GET_IID(nsIAccessible), (void **)_retval);
+  return QueryInterface(NS_GET_IID(nsIAccessible), (void **)aAccessible);
 }
 
 /* boolean isValid (); */
-NS_IMETHODIMP nsHTMLLinkAccessible::IsValid(PRBool *_retval)
+NS_IMETHODIMP nsHTMLLinkAccessible::IsValid(PRBool *aIsValid)
 {
   // I have not found the cause which makes this attribute false.
-  *_retval = PR_TRUE;
+  *aIsValid = PR_TRUE;
+  return NS_OK;
+}
+
+/* boolean isSelected (); */
+NS_IMETHODIMP nsHTMLLinkAccessible::IsSelected(PRBool *aIsSelected)
+{
+  nsCOMPtr<nsIDOMNode> focusedNode;
+  GetFocusedNode(getter_AddRefs(focusedNode));
+  *aIsSelected = (focusedNode == mDOMNode);
   return NS_OK;
 }

@@ -1630,3 +1630,45 @@ NS_IMETHODIMP nsAccessible::HandleEvent(PRUint32 aEvent, nsIAccessible *aTarget,
   GetAccParent(getter_AddRefs(parent));
   return parent ? parent->HandleEvent(aEvent, aTarget, aData) : NS_ERROR_NOT_IMPLEMENTED;
 }
+
+#ifdef MOZ_ACCESSIBILITY_ATK
+// static helper function
+nsresult nsAccessible::GetParentBlockNode(nsIDOMNode *aCurrentNode, nsIDOMNode **aBlockNode)
+{
+  *aBlockNode = nsnull;
+
+  nsCOMPtr<nsIContent> content(do_QueryInterface(aCurrentNode));
+  if (!content)
+    return NS_ERROR_FAILURE;
+
+  nsCOMPtr<nsIDocument> doc;
+  content->GetDocument(*getter_AddRefs(doc));
+  if (!doc)
+    return NS_ERROR_FAILURE;
+
+  nsCOMPtr<nsIPresShell> presShell;
+  doc->GetShellAt(0, getter_AddRefs(presShell));
+
+  nsIFrame* frame = nsnull;
+  nsCOMPtr<nsIAtom> frameType;
+  presShell->GetPrimaryFrameFor(content, &frame);
+  if (frame)
+    frame->GetFrameType(getter_AddRefs(frameType));
+  while (frame && frameType != nsLayoutAtoms::blockFrame) {
+    nsIFrame* parentFrame = nsnull;
+    frame->GetParent(&parentFrame);
+    if (parentFrame)
+      parentFrame->GetFrameType(getter_AddRefs(frameType));
+    frame = parentFrame;
+  }
+
+  if (! frame)
+    return NS_ERROR_FAILURE;
+
+  frame->GetContent(getter_AddRefs(content));
+  nsCOMPtr<nsIDOMNode> domNode(do_QueryInterface(content));
+  *aBlockNode = domNode;
+  NS_IF_ADDREF(*aBlockNode);
+  return NS_OK;
+}
+#endif  //MOZ_ACCESSIBILITY_ATK
