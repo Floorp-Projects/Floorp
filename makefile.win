@@ -136,8 +136,8 @@ rebase:
 !if defined(MOZILLA_OFFICIAL)
 !if defined(FIND)
 !if "$(REBASE)" != ""
-	echo rebasing $(DIST)
-        $(FIND) $(DIST) -name "*.dll" > rebase.lst
+	echo rebasing $(DIST:\=/)
+        $(FIND) $(DIST:\=/) -name "*.dll" > rebase.lst
         $(REBASE) -b 60000000 -R . -G rebase.lst
         del rebase.lst
 !else
@@ -154,9 +154,9 @@ splitsymbols:
 !if "$(SPLITSYM)" != ""
 	echo splitting symbols out of binaries
 	cd $(MOZ_SRC)\mozilla
-	$(FIND) $(DIST) -name "*.dll" -exec $(SPLITSYM) {} ;
-	$(FIND) $(DIST) -name "*.exe" -exec $(SPLITSYM) {} ;
-	$(FIND) $(DIST) -name "*.EXE" -exec $(SPLITSYM) {} ;
+	$(FIND) $(DIST:\=/) -name "*.dll" -exec $(SPLITSYM) {} ;
+	$(FIND) $(DIST:\=/) -name "*.exe" -exec $(SPLITSYM) {} ;
+	$(FIND) $(DIST:\=/) -name "*.EXE" -exec $(SPLITSYM) {} ;
 
 !else
         echo No splitsym defined.
