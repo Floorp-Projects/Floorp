@@ -35,14 +35,16 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-const nsIExtensionManager       = Components.interfaces.nsIExtensionManager;
-const nsIUpdateService          = Components.interfaces.nsIUpdateService;
+const nsIExtensionManager         = Components.interfaces.nsIExtensionManager;
+const nsIUpdateService            = Components.interfaces.nsIUpdateService;
+const nsIUpdateItem               = Components.interfaces.nsIUpdateItem;
 
-const PREF_EM_APP_ID            = "app.id";
-const PREF_EM_APP_VERSION       = "app.version";
-const PREF_EM_LAST_APP_VERSION  = "extensions.lastAppVersion";
-const PREF_UPDATE_COUNT         = "update.extensions.count";
-const PREF_UPDATE_EXT_WSDL_URI  = "update.extensions.wsdl";
+const PREF_EM_APP_ID              = "app.id";
+const PREF_EM_APP_VERSION         = "app.version";
+const PREF_EM_LAST_APP_VERSION    = "extensions.lastAppVersion";
+const PREF_UPDATE_COUNT           = "update.extensions.count";
+const PREF_UPDATE_EXT_WSDL_URI    = "update.extensions.wsdl";
+const PREF_EM_WASINSAFEMODE       = "extensions.wasInSafeMode";
 
 const DIR_EXTENSIONS          = "Extensions";
 const DIR_UNINSTALL           = "Uninstall";
@@ -56,6 +58,7 @@ const FILE_UNINSTALL_LOG      = "Uninstall";
 const FILE_DEFAULTS           = "Defaults";
 const FILE_AUTOREG            = ".autoreg";
 const FILE_EXTENSION_MANIFEST = "extension.rdf";
+const FILE_WASINSAFEMODE      = "Safe Mode";
 
 ///////////////////////////////////////////////////////////////////////////////
 //
@@ -548,7 +551,8 @@ nsExtensionEnabler.prototype = {
   
   onRegisterChrome: function (aProviderName, aFile, aChromeType, aIsProfile)
   {
-    this._cr.setAllowOverlaysForPackage(aProviderName, this._enable)
+    if (aChromeType == this._reader.CHROME_TYPE_PACKAGE)
+      this._cr.setAllowOverlaysForPackage(aProviderName, this._enable);
   },
   
   onAddFile: function (aFile)
@@ -597,82 +601,134 @@ nsExtensionManager.prototype = {
       //          time now.
       this._cleanDirs();
     
-      var fileLocator = Components.classes["@mozilla.org/file/directory_service;1"]
-                                  .getService(Components.interfaces.nsIProperties);
-      var autoregFile = fileLocator.get("ProfD", Components.interfaces.nsIFile);
-      autoregFile.append(".autoreg");
-      if (autoregFile.exists()) {
-        var ww = Components.classes["@mozilla.org/embedcomp/window-watcher;1"]
-                           .getService(Components.interfaces.nsIWindowWatcher);
-        var win = ww.openWindow(null, "chrome://mozapps/content/extensions/finalize.xul", 
-                                "", "chrome,centerscreen,dialog", null);
-      
-        // An existing autoreg file is an indication that something major has 
-        // happened to the extensions datasource (install/uninstall/enable/disable)
-        // and as such we must load it now and see what needs to happen.
-        this._ensureDS();
-        
-        // Look for items that need to be installed
-        var items = this._ds.getItemsWithFlagSet("toBeInstalled");
-        for (var i = 0; i < items.length; ++i)
-          this._finalizeInstall(items[i]);
-        
-        // Look for extensions that need to be enabled
-        items = this._ds.getItemsWithFlagSet("toBeEnabled");
-        for (var i = 0; i < items.length; ++i)
-          this._finalizeEnableDisable(items[i], false);
-        
-        // Look for extensions that need to be disabled
-        items = this._ds.getItemsWithFlagSet("toBeDisabled");
-        for (var i = 0; i < items.length; ++i)
-          this._finalizeEnableDisable(items[i], true);
-        
-        // Look for extensions that need to be removed
-        items = this._ds.getItemsWithFlagSet("toBeUninstalled");
-        for (var i = 0; i < items.length; ++i)
-          this._finalizeUninstall(items[i]);
+      var cmdLineSvc = Components.classes["@mozilla.org/appshell/commandLineService;1"]
+                                 .getService(Components.interfaces.nsICmdLineService);
+      var safeMode = cmdLineSvc.getCmdLineValue("-no-extensions") != null;
+      if (!safeMode) {
+        var pref = Components.classes["@mozilla.org/preferences-service;1"]
+                             .getService(Components.interfaces.nsIPrefBranch);
+        var wasInSafeModeFile = getFile("ProfD", [DIR_EXTENSIONS, FILE_WASINSAFEMODE]);
+        if (wasInSafeModeFile.exists()) {
+          var win = this._showProgressWindow();
+          this._ensureDS();
           
-        // Clean up any helper objects
-        delete this._extInstaller;
-        delete this._extUninstaller;
-        delete this._extEnabler;
+          // Walk the list of extensions and re-activate overlays for packages 
+          // that aren't disabled.
+          var items = this._ds.getItemsWithFlagUnset("disabled");
+          for (var i = 0; i < items.length; ++i)
+            this._finalizeEnableDisable(items[i], false);
+            
+          wasInSafeModeFile.remove(false);
+          
+          win.close();
+        }
+
+        this._finishOperations();
+        this._loadDefaults();      
+      }
+      else {
+        var win = this._showProgressWindow();
+      
+        this._ensureDS();
+        var items = this._ds.getItemList(null, nsIUpdateItem.TYPE_EXTENSION, {});
+        for (var i = 0; i < items.length; ++i)
+          this._finalizeEnableDisable(items[i].id, true);
+          
+        this._ds.safeMode = true;
+
+        var wasInSafeModeFile = getFile("ProfD", [DIR_EXTENSIONS, FILE_WASINSAFEMODE]);
+        if (!wasInSafeModeFile.exists())
+          wasInSafeModeFile.create(Components.interfaces.nsIFile.NORMAL_FILE_TYPE, 0644);
           
         win.close();
-        
-        // Now that we've finalized the EM operation, remove the autoreg file so
-        // we don't do this every time we start.
-        autoregFile.remove(false);
       }
+    }
+  },
+  
+  _finishOperations: function ()
+  {
+    var autoregFile = getFile("ProfD", [FILE_AUTOREG]);
+    if (autoregFile.exists()) {
+      var win = this._showProgressWindow();
+    
+      // An existing autoreg file is an indication that something major has 
+      // happened to the extensions datasource (install/uninstall/enable/disable)
+      // and as such we must load it now and see what needs to happen.
+      this._ensureDS();
       
-      // Load default preferences files for all extensions
-      var defaultsManifest = fileLocator.get("ProfD", Components.interfaces.nsIFile);
-      defaultsManifest.append(DIR_EXTENSIONS);
-      defaultsManifest.append(FILE_DEFAULTS);
-      if (defaultsManifest.exists()) {
-        var pref = Components.classes["@mozilla.org/preferences-service;1"]
-                            .getService(Components.interfaces.nsIPrefService);
-        var fis = Components.classes["@mozilla.org/network/file-input-stream;1"]
-                            .createInstance(Components.interfaces.nsIFileInputStream);
-        fis.init(defaultsManifest, -1, -1, false);
-        var lis = fis.QueryInterface(Components.interfaces.nsILineInputStream);
-        var line = { value: "" };
-        var more = false;
-        do {
-          more = lis.readLine(line);
-          var lf = Components.classes["@mozilla.org/file/local;1"]
-                              .createInstance(Components.interfaces.nsILocalFile);
-          var path = line.value;
-          if (path) {
-            lf.initWithPath(path);
-            
-            if (lf.exists())
-              pref.readUserPrefs(lf);
-          }
+      // Look for items that need to be installed
+      var items = this._ds.getItemsWithFlagSet("toBeInstalled");
+      for (var i = 0; i < items.length; ++i)
+        this._finalizeInstall(items[i]);
+      
+      // Look for extensions that need to be enabled
+      items = this._ds.getItemsWithFlagSet("toBeEnabled");
+      for (var i = 0; i < items.length; ++i)
+        this._finalizeEnableDisable(items[i], false);
+      
+      // Look for extensions that need to be disabled
+      items = this._ds.getItemsWithFlagSet("toBeDisabled");
+      for (var i = 0; i < items.length; ++i)
+        this._finalizeEnableDisable(items[i], true);
+      
+      // Look for extensions that need to be removed
+      items = this._ds.getItemsWithFlagSet("toBeUninstalled");
+      for (var i = 0; i < items.length; ++i)
+        this._finalizeUninstall(items[i]);
+        
+      // Clean up any helper objects
+      delete this._extInstaller;
+      delete this._extUninstaller;
+      delete this._extEnabler;
+        
+      win.close();
+      
+      // Now that we've finalized the EM operation, remove the autoreg file so
+      // we don't do this every time we start.
+      autoregFile.remove(false);
+    }
+  },
+  
+  // XXXben - this is actually a cheap stunt to load all the chrome registry 
+  //          services required to register/unregister packages... the synchronous
+  //          nature of this code ensures the window will never actually appear
+  //          on screen. 
+  _showProgressWindow: function ()
+  {
+    var ww = Components.classes["@mozilla.org/embedcomp/window-watcher;1"]
+                       .getService(Components.interfaces.nsIWindowWatcher);
+    return ww.openWindow(null, "chrome://mozapps/content/extensions/finalize.xul", 
+                         "", "chrome,centerscreen,dialog", null);
+  },
+  
+  _loadDefaults: function ()
+  {
+    // Load default preferences files for all extensions
+    var defaultsManifest = getFile("ProfD", 
+                                   [DIR_EXTENSIONS, FILE_DEFAULTS]);
+    if (defaultsManifest.exists()) {
+      var pref = Components.classes["@mozilla.org/preferences-service;1"]
+                          .getService(Components.interfaces.nsIPrefService);
+      var fis = Components.classes["@mozilla.org/network/file-input-stream;1"]
+                          .createInstance(Components.interfaces.nsIFileInputStream);
+      fis.init(defaultsManifest, -1, -1, false);
+      var lis = fis.QueryInterface(Components.interfaces.nsILineInputStream);
+      var line = { value: "" };
+      var more = false;
+      do {
+        more = lis.readLine(line);
+        var lf = Components.classes["@mozilla.org/file/local;1"]
+                            .createInstance(Components.interfaces.nsILocalFile);
+        var path = line.value;
+        if (path) {
+          lf.initWithPath(path);
+          
+          if (lf.exists())
+            pref.readUserPrefs(lf);
         }
-        while (more);
-        fis.close();
       }
-      break;
+      while (more);
+      fis.close();
     }
   },
   
@@ -704,7 +760,7 @@ nsExtensionManager.prototype = {
         }
         var updates = Components.classes["@mozilla.org/updates/update-service;1"]
                                 .getService(Components.interfaces.nsIUpdateService);
-        updates.checkForUpdates(items, items.length, Components.interfaces.nsIUpdateItem.TYPE_ADDON, 
+        updates.checkForUpdates(items, items.length, nsIUpdateItem.TYPE_ADDON, 
                                 nsIUpdateService.SOURCE_EVENT_MISMATCH,
                                 null);
         
@@ -717,6 +773,11 @@ nsExtensionManager.prototype = {
     pref.setCharPref(PREF_EM_LAST_APP_VERSION, currAppVersion);
     
     return rv;
+  },
+  
+  get inSafeMode() 
+  {
+    return this._ds.safeMode;
   },
   
   _writeProfileFile: function (aFile, aGetDirFunc, aWriteLineFunc)
@@ -738,7 +799,7 @@ nsExtensionManager.prototype = {
     const MODE_TRUNCATE = 0x20;
     fos.init(aFile, MODE_WRONLY | MODE_CREATE | MODE_TRUNCATE, 0664, 0);
 
-    var extensions = this.getItemList(null, Components.interfaces.nsIUpdateItem.TYPE_EXTENSION, { });
+    var extensions = this.getItemList(null, nsIUpdateItem.TYPE_EXTENSION, { });
     for (var i = 0; i < extensions.length; ++i) {
       var extension = extensions[i];
     
@@ -941,7 +1002,7 @@ nsExtensionManager.prototype = {
     var appVersion = pref.getCharPref(PREF_EM_APP_VERSION);
 
     if (aItems.length == 0) {
-      var anyType = Components.interfaces.nsIUpdateItem.TYPE_ANY;
+      var anyType = nsIUpdateItem.TYPE_ANY;
       aItems = this.getItemList(null, anyType, { });
     }
     var updater = new nsExtensionItemUpdater(aItems, appID, appVersion);
@@ -1262,7 +1323,11 @@ function nsExtensionsDataSource()
 }
 
 nsExtensionsDataSource.prototype = {
-  _rdf: null,
+  _rdf                : null,
+  _appExtensions      : null,
+  _profileExtensions  : null,  
+  _composite          : null,
+  safeMode            : false,
   
   _emR: function (aProperty) 
   {
@@ -1324,7 +1389,7 @@ nsExtensionsDataSource.prototype = {
         item.init(id, this.getExtensionProperty(id, "version"),
                   this.getExtensionProperty(id, "name"),
                   -1, "", "", this.getExtensionProperty(id, "updateURL"), 
-                  Components.interfaces.nsIUpdateItem.TYPE_EXTENSION); // XXXben
+                  nsIUpdateItem.TYPE_EXTENSION); // XXXben
         items.push(item);
       }
     }
@@ -1373,6 +1438,25 @@ nsExtensionsDataSource.prototype = {
       var e = sources.getNext().QueryInterface(Components.interfaces.nsIRDFResource);
       
       items.push(this._stripPrefix(e.Value));
+    }
+    return items;
+  },
+  
+  getItemsWithFlagUnset: function (aFlag)
+  {
+    var items = [];
+    
+    var ctr = Components.classes["@mozilla.org/rdf/container;1"]
+                        .createInstance(Components.interfaces.nsIRDFContainer);
+    ctr.Init(this, this._rdf.GetResource("urn:mozilla:extension:root"));
+    
+    var elements = ctr.GetElements();
+    while (elements.hasMoreElements()) {
+      var e = elements.getNext().QueryInterface(Components.interfaces.nsIRDFResource);
+      
+      var value = this.GetTarget(e, this._emR(aFlag), true);
+      if (!value)
+        items.push(this._stripPrefix(e.Value));
     }
     return items;
   },
@@ -1570,11 +1654,6 @@ nsExtensionsDataSource.prototype = {
   
   /////////////////////////////////////////////////////////////////////////////
   // nsIRDFDataSource
-
-  _appExtensions: null,
-  _profileExtensions: null,  
-  _composite: null,
-  
   get URI()
   {
     return "rdf:extensions";
@@ -1618,6 +1697,11 @@ nsExtensionsDataSource.prototype = {
     else if (aProperty.EqualsNode(this._emR("installLocation"))) {
       var arcs = this._profileExtensions.ArcLabelsOut(aSource);
       return arcs.hasMoreElements() ? this._emL("profile") : this._emL("global");
+    }
+    else if (aProperty.EqualsNode(this._emR("disabled"))) {
+      if (this.safeMode) 
+        return this._emL("true");
+      // fall through to default.
     }
     
     return this._composite.GetTarget(aSource, aProperty, aTruthValue);

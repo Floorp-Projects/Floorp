@@ -62,6 +62,8 @@ interface nsIExtensionManager : nsISupports
    */
   boolean checkForMismatches();
 
+  readonly attribute boolean inSafeMode;
+
   void update([array, size_is(aItemCount)] in nsIUpdateItem aItems,
                in unsigned long aItemCount);
 
