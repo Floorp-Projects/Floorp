@@ -47,6 +47,8 @@ fi
 if [ -n "$MOZ_OBJ" ]
 then
   MOZ_OBJ=`echo $MOZ_OBJ | sed -e"s,@TOPSRCDIR@,$MOZ_TEST_BASE/mozilla,"`
+  CFG_GUESS=`$MOZ_TEST_BASE/mozilla/build/autoconf/config.guess`
+  MOZ_OBJ=`echo $MOZ_OBJ | sed -e"s,@CONFIG_GUESS@,$CFG_GUESS/,"`
 else
   MOZ_OBJ=$MOZ_TEST_BASE/mozilla/
 fi
@@ -56,16 +58,14 @@ if [ "$w1" = "" ]; then
  MOZ_TEST_VIEWER="${MOZ_OBJ}dist/bin/mozilla-viewer.sh -- -d 500"
 else
  MOZ_TEST_VIEWER="${MOZ_OBJ}dist/bin/viewer.exe"
- if test ! -f $MOZ_TEST_VIEWER; then
-  MOZ_TEST_VIEWER="${MOZ_OBJ}dist/win32_d.obj/bin/viewer.exe"
- fi
 fi
 # These are needed by runtests.sh
 MOZ_TEST_VIEWER=`nodots $MOZ_TEST_VIEWER`
 MOZ_TEST_BASE=`nodots $MOZ_TEST_BASE`
 export MOZ_TEST_VIEWER
 export MOZ_TEST_BASE
-
+XPCOM_DEBUG_BREAK="warn"
+export XPCOM_DEBUG_BREAK
 case $1 in
   baseline|verify|clean)
     ;;

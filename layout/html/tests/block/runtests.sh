@@ -63,25 +63,27 @@ run_tests() {
         mkdir verify
         echo
         if [ "$w1" = "" ]; then
-          echo $MOZ_TEST_VIEWER $print_flags -o verify/ -f $tests_file
-          $MOZ_TEST_VIEWER $print_flags -o verify/ -rd baseline/ -f $tests_file
+          echo $MOZ_TEST_VIEWER $print_flags -B 1 -o verify/ -f $tests_file
+          $MOZ_TEST_VIEWER $print_flags -B 1 -o verify/ -rd baseline/ -f $tests_file
         else
-          echo $MOZ_TEST_VIEWER $print_flags -o verify\\ -rd baseline\\ -f $tests_file
-          $MOZ_TEST_VIEWER $print_flags -o verify\\ -rd baseline\\ -f $tests_file
+          echo $MOZ_TEST_VIEWER $print_flags -B 1 -o verify\\ -rd baseline\\ -f $tests_file
+          $MOZ_TEST_VIEWER $print_flags -B 1 -o verify\\ -rd baseline\\ -f $tests_file
         fi
     else
         echo "no mode specified to run_tests()"
         exit 1
     fi
 }
+
 w1=`uname | grep WIN`
 if [ "$w1" = "" ]; then
  TESTS_FILE=/tmp/$$-tests.txt
 else
- TESTS_FILE=$TEMP\\$$-tests.txt
+ TESTS_FILE=$TEMP/$$-tests.txt
  TESTS_FILE=`cygpath -w $TESTS_FILE`
- MOZ_TEST_BASE=`cygpath -w $MOZ_TEST_BASE | sed -e 's|\\|/|g'`
+ MOZ_TEST_BASE=`cygpath -m $MOZ_TEST_BASE`
 fi
+
 cp /dev/null $TESTS_FILE
 
 for FILE in `ls file_list.txt file_list[0-9].txt 2> /dev/null`; do
