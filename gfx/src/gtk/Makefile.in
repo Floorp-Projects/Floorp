@@ -79,7 +79,6 @@ CPPSRCS		= \
 		nsGfxFactoryGTK.cpp \
 		nsGraphicsStateGTK.cpp \
 		nsImageGTK.cpp \
-		nsRegionGTK.cpp \
 		nsGCCache.cpp \
 		nsRenderingContextGTK.cpp \
 		nsScreenGtk.cpp \
@@ -87,13 +86,27 @@ CPPSRCS		= \
 		nsPrintOptionsGTK.cpp \
 		$(NULL)
 
+ifdef MOZ_ENABLE_GTK
+CPPSRCS 	+= \
+		nsRegionGTK.cpp \
+		$(NULL)
+endif
+
+ifdef MOZ_ENABLE_GTK2
+CPPSRCS		+= \
+		nsRegionGTK2.cpp \
+		$(NULL)
+endif
+
 ifdef NATIVE_THEME_SUPPORT
 CPPSRCS		+= nsNativeThemeGTK.cpp
 endif
 
 # If not primary toolkit, install in secondary path
 ifneq (gtk,$(MOZ_GFX_TOOLKIT))
+ifneq (gtk2, $(MOZ_GFX_TOOLKIT))
 INACTIVE_COMPONENT = 1
+endif
 endif
 
 ifdef MOZ_ENABLE_XPRINT
@@ -105,20 +118,30 @@ GARBAGE         += $(X11SHARED_LCPPSRCS) $(XPU_LCSRCS) $(wildcard *.$(OBJ_SUFFIX
 
 include $(topsrcdir)/config/rules.mk
 
-EXTRA_DSO_LDOPTS += $(MOZ_GTK_LDFLAGS)
-CXXFLAGS	+= $(MOZ_GTK_CFLAGS) 
-CFLAGS		+= $(MOZ_GTK_CFLAGS)
+EXTRA_DSO_LDOPTS += $(MOZ_GTK_LDFLAGS) $(MOZ_GTK2_LIBS)
+CXXFLAGS	+= $(MOZ_GTK_CFLAGS) $(MOZ_GTK2_CFLAGS)
+CFLAGS		+= $(MOZ_GTK_CFLAGS) $(MOZ_GTK2_CFLAGS)
 
 ifdef MOZ_ENABLE_XINERAMA
 GFX_XINERAMA_LIBS += $(MOZ_XINERAMA_LIBS)
 endif
 
+ifdef MOZ_ENABLE_GTK
 EXTRA_DSO_LDOPTS += $(MOZ_COMPONENT_LIBS) \
 		-lgkgfx \
 		$(GFX_XINERAMA_LIBS) \
 		-lgtksuperwin \
 		$(MOZ_JS_LIBS) \
 		$(NULL)
+endif
+
+ifdef MOZ_ENABLE_GTK2
+EXTRA_DSO_LDOPTS += $(MOZ_COMPONENT_LIBS) \
+		-lgkgfx \
+		$(GFX_XINERAMA_LIBS) \
+		$(MOZ_JS_LIBS) \
+		$(NULL)
+endif
 
 DEFINES		+= -D_IMPL_NS_GFXNONXP
 ifeq ($(OS_ARCH), Linux)

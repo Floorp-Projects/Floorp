@@ -61,7 +61,7 @@ ifdef MOZ_ENABLE_GTK
 DIRS        += gtk
 endif
 ifdef MOZ_ENABLE_GTK2
-DIRS        += gtk2
+DIRS        += gtk
 endif
 ifdef MOZ_ENABLE_QT
 DIRS        += qt
@@ -98,14 +98,14 @@ ifeq (,$(filter windows,$(MOZ_WIDGET_TOOLKIT)))
 CPPSRCS += nsCompressedCharMap.cpp
 endif
 
-ifneq (,$(filter gtk xlib os2,$(MOZ_WIDGET_TOOLKIT)))
+ifneq (,$(filter gtk gtk2 xlib os2,$(MOZ_WIDGET_TOOLKIT)))
 CPPSRCS += \
         nsRegion.cpp \
         nsRegionImpl.cpp \
         $(NULL)
 endif
 
-ifneq (,$(filter gtk xlib beos,$(MOZ_WIDGET_TOOLKIT)))
+ifneq (,$(filter gtk gtk2 xlib beos,$(MOZ_WIDGET_TOOLKIT)))
 CPPSRCS += imgScaler.cpp
 endif
 

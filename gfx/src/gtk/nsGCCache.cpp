@@ -121,6 +121,8 @@ nsGCCache::ReportStats() {
               );
 }
 
+#ifdef MOZ_WIDGET_GTK
+
 GdkRegion *
 nsGCCache::gdk_region_copy(GdkRegion *region)
 {
@@ -128,6 +130,8 @@ nsGCCache::gdk_region_copy(GdkRegion *region)
 
   return gdk_regions_union(region, copyRegion);
 }
+
+#endif
 
 /* Dispose of entries matching the given flags, compressing the GC cache */
 void nsGCCache::Flush(unsigned long flags)
@@ -195,7 +199,12 @@ GdkGC *nsGCCache::GetGC(GdkWindow *window, GdkGCValues *gcv, GdkGCValuesMask fla
     entry->clipRegion = NULL;
     //printf("creating new gc=%X\n",entry->gc); 
   }
+#ifdef MOZ_WIDGET_GTK
   else if ( ((GdkGCPrivate*)entry->gc)->ref_count > 1 ) {
+#endif /* MOZ_WIDGET_GTK */
+#ifdef MOZ_WIDGET_GTK2
+  else if ( G_OBJECT(entry->gc)->ref_count > 1 ) {
+#endif /* MOZ_WIDGET_GTK2 */
     // Old GC still in use, create new
     gdk_gc_unref(entry->gc);
     entry->gc=gdk_gc_new_with_values(window, gcv, flags);

@@ -253,8 +253,18 @@ nsresult nsDrawingSurfaceGTK :: Init(GdkDrawable *aDrawable, GdkGC *aGC)
   mGC = gdk_gc_ref(aGC);
   mPixmap = aDrawable;
 
+#ifdef MOZ_WIDGET_GTK
   mWidth  = ((GdkWindowPrivate*)aDrawable)->width;
   mHeight = ((GdkWindowPrivate*)aDrawable)->height;
+#endif /* MOZ_WIDGET_GTK */
+
+#ifdef MOZ_WIDGET_GTK2
+  gint width = 0;
+  gint height = 0;
+  gdk_drawable_get_size(aDrawable, &width, &height);
+  mWidth = width;
+  mHeight = height;
+#endif /* MOZ_WIDGET_GTK2 */
 
   // XXX was i smoking crack when i wrote this comment?
   // this is definatly going to be on the screen, as it will be the window of a
