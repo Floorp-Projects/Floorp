@@ -325,6 +325,8 @@ void nsInputFileStream::AssignFrom(nsISupports* stream)
 nsOutputFileStream::nsOutputFileStream(nsIFileSpec* inSpec)
 //----------------------------------------------------------------------------------------
 {
+	if (!inSpec)
+		return;
 	nsIOutputStream* stream;
 	if (NS_FAILED(inSpec->GetOutputStream(&stream)))
 	  return;
