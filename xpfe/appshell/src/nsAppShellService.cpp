@@ -453,114 +453,177 @@ nsAppShellService::Run(void)
 
 
 NS_IMETHODIMP
-nsAppShellService::Quit()
+nsAppShellService::Quit(PRUint32 aFerocity)
 {
   // Quit the application. We will asynchronously call the appshell's
   // Exit() method via the ExitCallback() to allow one last pass
   // through any events in the queue. This guarantees a tidy cleanup.
   nsresult rv = NS_OK;
+  PRBool postedExitEvent = PR_FALSE;
 
   if (mShuttingDown)
     return NS_OK;
-
   mShuttingDown = PR_TRUE;
 
-  /* Enumerate through each open window and close it. It's important to do
-     this before we shut down anything else because this can control whether
-     we really quit at all. e.g. if one of these windows has an onunload
-     handler that opens a new window. Ugh. I know.
-  */
-  if (mWindowMediator) {
-    nsCOMPtr<nsISimpleEnumerator> windowEnumerator;
-    mWindowMediator->GetEnumerator(nsnull, getter_AddRefs(windowEnumerator));
+  /* eForceQuit doesn't actually work; it can cause a subtle crash if
+     there are windows open which have unload handlers which open
+     new windows. Use eAttemptQuit for now. */
+  if (aFerocity == eForceQuit)
+    return NS_ERROR_FAILURE;
 
-    if (windowEnumerator) {
-      PRBool more;
+  if (aFerocity == eConsiderQuit && mQuitOnLastWindowClosing) {
+    // attempt quit if the last window has been unregistered/closed
 
-      while (1) {
-        rv = windowEnumerator->HasMoreElements(&more);
-        if (NS_FAILED(rv) || !more)
-          break;
+    PRBool windowsRemain = PR_TRUE;
 
-        nsCOMPtr<nsISupports> isupports;
-        rv = windowEnumerator->GetNext(getter_AddRefs(isupports));
-        if (NS_FAILED(rv))
-          break;
+    if (mWindowMediator) {
+      nsCOMPtr<nsISimpleEnumerator> windowEnumerator;
+      mWindowMediator->GetEnumerator(nsnull, getter_AddRefs(windowEnumerator));
+      if (windowEnumerator)
+        windowEnumerator->HasMoreElements(&windowsRemain);
+    }
+    if (!windowsRemain) {
+      aFerocity = eAttemptQuit;
 
-        nsCOMPtr<nsIDOMWindowInternal> window = do_QueryInterface(isupports);
-        NS_ASSERTION(window != nsnull, "not an nsIDOMWindowInternal");
-        if (! window)
-          continue;
+#if defined(XP_MAC) || defined(XP_MACOSX)
+      // if no hidden window is available (perhaps due to initial
+      // Profile Manager window being cancelled), then just quit. We don't have
+      // to worry about focusing the hidden window, because it will get
+      // activated by the OS since it is visible (but waaaay offscreen).
+      nsCOMPtr<nsIBaseWindow> hiddenWin(do_QueryInterface(mHiddenWindow));
+      if (hiddenWin)
+        aFerocity = eConsiderQuit; // don't quit after all
+#else
+      // Check to see if we should quit in this case.
+      if (mNativeAppSupport) {
+        PRBool serverMode = PR_FALSE;
+        mNativeAppSupport->GetIsServerMode(&serverMode);
+        if (serverMode) {
+          // stop! give control to server mode
+          mShuttingDown = PR_FALSE;
+          mNativeAppSupport->OnLastWindowClosing();
+          return NS_OK;
+        }
+      }
+#endif 
+    }
+  }
 
-        window->Close();
+  /* Currently aFerocity can never have the value of eForceQuit here.
+     That's temporary (in an unscheduled kind of way) and logically
+     this code is part of the eForceQuit case, so I'm checking against
+     that value anyway. Reviewers made me add this comment. */
+  if (aFerocity == eAttemptQuit || aFerocity == eForceQuit) {
+    /* Enumerate through each open window and close it. It's important to do
+       this before we forcequit because this can control whether we really quit
+       at all. e.g. if one of these windows has an unload handler that
+       opens a new window. Ugh. I know. */
+    if (mWindowMediator) {
+      nsCOMPtr<nsISimpleEnumerator> windowEnumerator;
+
+      mWindowMediator->GetEnumerator(nsnull, getter_AddRefs(windowEnumerator));
+
+      if (windowEnumerator) {
+
+        while (1) {
+          PRBool more;
+          if (NS_FAILED(rv = windowEnumerator->HasMoreElements(&more)) || !more)
+            break;
+
+          nsCOMPtr<nsISupports> isupports;
+          rv = windowEnumerator->GetNext(getter_AddRefs(isupports));
+          if (NS_FAILED(rv))
+            break;
+
+          nsCOMPtr<nsIDOMWindowInternal> window = do_QueryInterface(isupports);
+          NS_ASSERTION(window, "not an nsIDOMWindowInternal");
+          if (!window)
+            continue;
+
+          window->Close();
+        }
+      }
+
+      if (aFerocity == eAttemptQuit) {
+
+        aFerocity = eForceQuit; // assume success
+
+        /* Were we able to immediately close all windows? if not, eAttemptQuit
+           failed. This could happen for a variety of reasons; in fact it's
+           very likely. Perhaps we're being called from JS and the window->Close
+           method hasn't had a chance to wrap itself up yet. So give up.
+           We'll return (with eConsiderQuit) as the remaining windows are
+           closed. */
+        mWindowMediator->GetEnumerator(nsnull, getter_AddRefs(windowEnumerator));
+        if (windowEnumerator) {
+          PRBool more;
+          if (NS_SUCCEEDED(windowEnumerator->HasMoreElements(&more)) && more) {
+            aFerocity = eAttemptQuit;
+            rv = NS_ERROR_FAILURE;
+          }
+        }
       }
     }
   }
 
-  /* did we close all windows? if not, we can't quit yet. but that's
-     alright, we started windows shutting down. when the last one goes,
-     we'll come back. */
-  if (mWindowMediator) {
-    nsCOMPtr<nsISimpleEnumerator> windowEnumerator;
-    mWindowMediator->GetEnumerator(nsnull, getter_AddRefs(windowEnumerator));
-    if (windowEnumerator) {
-      PRBool more;
-      if (NS_SUCCEEDED(windowEnumerator->HasMoreElements(&more)) && more) {
-        mShuttingDown = PR_FALSE;
-        return NS_ERROR_FAILURE;
-      }
+  if (aFerocity == eForceQuit) {
+    // do it!
+
+    // first shutdown native app support; doing this first will prevent new
+    // requests to open additional windows coming in.
+    if (mNativeAppSupport) {
+      mNativeAppSupport->Quit();
+      mNativeAppSupport = 0;
     }
-  }
 
-  // Shutdown native app support; doing this first will prevent new
-  // requests to open additional windows coming in.
-  if (mNativeAppSupport) {
-    mNativeAppSupport->Quit();
-    mNativeAppSupport = 0;
-  }
-
-  {
     nsCOMPtr<nsIWebShellWindow> hiddenWin(do_QueryInterface(mHiddenWindow));
     if (hiddenWin) {
       ClearXPConnectSafeContext();
       hiddenWin->Close();
     }
     mHiddenWindow = nsnull;
+    
+    // no matter what, make sure we send the exit event.  If
+    // worst comes to worst, we'll do a leaky shutdown but we WILL
+    // shut down. Well, assuming that all *this* stuff works ;-).
+    nsCOMPtr<nsIEventQueueService> svc = do_GetService(kEventQueueServiceCID, &rv);
+    if (NS_SUCCEEDED(rv)) {
+
+      nsCOMPtr<nsIEventQueue> queue;
+      rv = svc->GetThreadEventQueue(NS_CURRENT_THREAD, getter_AddRefs(queue));
+      if (NS_SUCCEEDED(rv)) {
+
+        ExitEvent* event = new ExitEvent;
+        if (event) {
+          PL_InitEvent(NS_REINTERPRET_CAST(PLEvent*, event),
+                       nsnull,
+                       HandleExitEvent,
+                       DestroyExitEvent);
+
+          event->mService = this;
+          NS_ADDREF(event->mService);
+
+          rv = queue->EnterMonitor();
+          if (NS_SUCCEEDED(rv))
+            rv = queue->PostEvent(NS_REINTERPRET_CAST(PLEvent*, event));
+          if (NS_SUCCEEDED(rv))
+            postedExitEvent = PR_TRUE;
+          queue->ExitMonitor();
+
+          if (NS_FAILED(rv)) {
+            NS_RELEASE(event->mService);
+            delete event;
+          }
+        } else
+          rv = NS_ERROR_OUT_OF_MEMORY;
+      }
+    }
   }
-  
-  // Note that we don't allow any premature returns from the above
-  // loop: no matter what, make sure we send the exit event.  If
-  // worst comes to worst, we'll do a leaky shutdown but we WILL
-  // shut down. Well, assuming that all *this* stuff works ;-).
-  nsCOMPtr<nsIEventQueueService> svc = do_GetService(kEventQueueServiceCID, &rv);
-  if (NS_FAILED(rv)) return rv;
 
-  nsCOMPtr<nsIEventQueue> queue;
-  rv = svc->GetThreadEventQueue(NS_CURRENT_THREAD, getter_AddRefs(queue));
-  if (NS_FAILED(rv)) return rv;
-
-  ExitEvent* event = new ExitEvent;
-  if (!event)
-    return NS_ERROR_OUT_OF_MEMORY;
-
-  PL_InitEvent(NS_REINTERPRET_CAST(PLEvent*, event),
-                nsnull,
-                HandleExitEvent,
-                DestroyExitEvent);
-
-  event->mService = this;
-  NS_ADDREF(event->mService);
-
-  rv = queue->EnterMonitor();
-  if (NS_SUCCEEDED(rv))
-    rv = queue->PostEvent(NS_REINTERPRET_CAST(PLEvent*, event));
-  queue->ExitMonitor();
-
-  if (NS_FAILED(rv)) {
-    NS_RELEASE(event->mService);
-    delete event;
-  }
-
+  // turn off the reentrancy check flag, but not if we have
+  // more asynchronous work to do still.
+  if (!postedExitEvent)
+    mShuttingDown = PR_FALSE;
   return rv;
 }
 
@@ -862,8 +925,6 @@ nsAppShellService::RegisterTopLevelWindow(nsIXULWindow* aWindow)
 NS_IMETHODIMP
 nsAppShellService::UnregisterTopLevelWindow(nsIXULWindow* aWindow)
 {
-  PRBool windowsRemain = PR_TRUE;
-
   if (mDeleteCalled) {
     /* return an error code in order to:
        - avoid doing anything with other member variables while we are in
@@ -879,14 +940,8 @@ nsAppShellService::UnregisterTopLevelWindow(nsIXULWindow* aWindow)
   NS_ENSURE_ARG_POINTER(aWindow);
 
   // tell the window mediator
-  if (mWindowMediator) {
-    nsCOMPtr<nsISimpleEnumerator> windowEnumerator;
+  if (mWindowMediator)
     mWindowMediator->UnregisterWindow(aWindow);
-
-    mWindowMediator->GetEnumerator(nsnull, getter_AddRefs(windowEnumerator));
-    if (windowEnumerator)
-      windowEnumerator->HasMoreElements(&windowsRemain);
-  }
 	
   // tell the window watcher
   if (mWindowWatcher) {
@@ -899,35 +954,6 @@ nsAppShellService::UnregisterTopLevelWindow(nsIXULWindow* aWindow)
     }
   }
 
-  // now quit if the last window has been unregistered (unless we shouldn't)
-
-  if (!mQuitOnLastWindowClosing)
-    return NS_OK;
-
-  if (!windowsRemain) {
-      
-#if defined(XP_MAC) || defined(XP_MACOSX)
-    // if no hidden window is available (perhaps due to initial
-    // Profile Manager window being cancelled), then just quit. We don't have
-    // to worry about focussing the hidden window, because it will get activated
-    // by the OS since it is visible (but waaaay offscreen).
-    nsCOMPtr<nsIBaseWindow> hiddenWin(do_QueryInterface(mHiddenWindow));
-    if (!hiddenWin)
-      Quit();
-#else
-    // Check to see if we should quit in this case.
-    if (mNativeAppSupport) {
-      PRBool serverMode = PR_FALSE;
-      mNativeAppSupport->GetIsServerMode(&serverMode);
-      if (serverMode) {
-        mNativeAppSupport->OnLastWindowClosing(aWindow);
-        return NS_OK;
-      }
-    }
-
-    Quit();
-#endif 
-  }
   return NS_OK;
 }
 
