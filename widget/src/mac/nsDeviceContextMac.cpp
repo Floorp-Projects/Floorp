@@ -24,6 +24,7 @@
 #include "nspr.h"
 #include "il_util.h"
 #include <FixMath.h>
+#include <Fonts.h>
 
 static NS_DEFINE_IID(kDeviceContextIID, NS_IDEVICE_CONTEXT_IID);
 
@@ -147,7 +148,33 @@ NS_IMETHODIMP nsDeviceContextMac::GetILColorSpace(IL_ColorSpace*& aColorSpace)
 
 NS_IMETHODIMP nsDeviceContextMac :: CheckFontExistence(const nsString& aFontName)
 {
-  return nsnull;
+  	short fontNum;
+	if (GetMacFontNumber(aFontName, fontNum))
+		return NS_OK;
+	else
+		return NS_ERROR_FAILURE;
+}
+
+
+//------------------------------------------------------------------------
+
+bool nsDeviceContextMac :: GetMacFontNumber(const nsString& aFontName, short &fontNum)
+{
+	Str255 	systemFontName;
+	Str255	aStr;
+
+	aStr[0] = aFontName.Length();
+	aFontName.ToCString((char*)&aStr[1], sizeof(aStr)-1);
+
+	::GetFNum(aStr, &fontNum);
+	if (fontNum == 0)
+	{
+		// Either we didn't find the font, or we were looking for the system font
+		::GetFontName(0, systemFontName);
+		return ::EqualString(aStr, systemFontName, FALSE, FALSE );
+	}
+	else
+		return true;
 }
 
 //------------------------------------------------------------------------
