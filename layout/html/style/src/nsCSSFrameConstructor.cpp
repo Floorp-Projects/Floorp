@@ -2684,7 +2684,7 @@ nsCSSFrameConstructor::ConstructTableRowGroupFrame(nsIPresShell*            aPre
   if (IsScrollable(aPresContext, styleDisplay)) {
     // Create an area container for the frame
     BuildScrollFrame(aPresShell, aPresContext, aState, aContent, aStyleContext, 
-                     aNewFrame, parentFrame, scrollFrame, aStyleContext);
+                     aNewFrame, parentFrame, nsnull, scrollFrame, aStyleContext);
 
   } 
   else {
@@ -3450,6 +3450,7 @@ nsCSSFrameConstructor::ConstructDocElementFrame(nsIPresShell*        aPresShell,
                                            aDocElement,
                                            styleContext,
                                            aParentFrame,
+                                           nsnull,
                                            nsCSSAnonBoxes::scrolledContent,
                                            mDocument,
                                            PR_FALSE,
@@ -3887,6 +3888,7 @@ nsCSSFrameConstructor::ConstructRootFrame(nsIPresShell*        aPresShell,
                                                   aDocElement,
                                                   styleContext,
                                                   viewportFrame,
+                                                  nsnull,
                                                   rootPseudo,
                                                   mDocument,
                                                   PR_TRUE,
@@ -5433,7 +5435,8 @@ nsCSSFrameConstructor::ConstructXULFrame(nsIPresShell*            aPresShell,
         if (IsScrollable(aPresContext, display)) {
 
           // set the top to be the newly created scrollframe
-          BuildScrollFrame(aPresShell, aPresContext, aState, aContent, aStyleContext, newFrame, aParentFrame,
+          BuildScrollFrame(aPresShell, aPresContext, aState, aContent,
+                           aStyleContext, newFrame, aParentFrame, nsnull,
                            topFrame, aStyleContext);
 
           // we have a scrollframe so the parent becomes the scroll frame.
@@ -5455,7 +5458,8 @@ nsCSSFrameConstructor::ConstructXULFrame(nsIPresShell*            aPresShell,
         if (IsScrollable(aPresContext, display)) {
 
           // set the top to be the newly created scrollframe
-          BuildScrollFrame(aPresShell, aPresContext, aState, aContent, aStyleContext, newFrame, aParentFrame,
+          BuildScrollFrame(aPresShell, aPresContext, aState, aContent,
+                           aStyleContext, newFrame, aParentFrame, nsnull,
                            topFrame, aStyleContext);
 
           // we have a scrollframe so the parent becomes the scroll frame.
@@ -5479,7 +5483,8 @@ nsCSSFrameConstructor::ConstructXULFrame(nsIPresShell*            aPresShell,
         if (IsScrollable(aPresContext, display)) {
 
           // set the top to be the newly created scrollframe
-          BuildScrollFrame(aPresShell, aPresContext, aState, aContent, aStyleContext, newFrame, aParentFrame,
+          BuildScrollFrame(aPresShell, aPresContext, aState, aContent,
+                           aStyleContext, newFrame, aParentFrame, nsnull,
                            topFrame, aStyleContext);
 
           // we have a scrollframe so the parent becomes the scroll frame.
@@ -5502,7 +5507,8 @@ nsCSSFrameConstructor::ConstructXULFrame(nsIPresShell*            aPresShell,
         if (IsScrollable(aPresContext, display)) {
 
           // set the top to be the newly created scrollframe
-          BuildScrollFrame(aPresShell, aPresContext, aState, aContent, aStyleContext, newFrame, aParentFrame,
+          BuildScrollFrame(aPresShell, aPresContext, aState, aContent,
+                           aStyleContext, newFrame, aParentFrame, nsnull,
                            topFrame, aStyleContext);
 
           // we have a scrollframe so the parent becomes the scroll frame.
@@ -5667,7 +5673,8 @@ nsCSSFrameConstructor::ConstructXULFrame(nsIPresShell*            aPresShell,
         if (IsScrollable(aPresContext, display)) {
 
           // set the top to be the newly created scrollframe
-          BuildScrollFrame(aPresShell, aPresContext, aState, aContent, aStyleContext, newFrame, aParentFrame,
+          BuildScrollFrame(aPresShell, aPresContext, aState, aContent,
+                           aStyleContext, newFrame, aParentFrame, nsnull,
                            topFrame, aStyleContext);
 
           // we have a scrollframe so the parent becomes the scroll frame.
@@ -5694,7 +5701,8 @@ nsCSSFrameConstructor::ConstructXULFrame(nsIPresShell*            aPresShell,
         if (IsScrollable(aPresContext, display)) {
 
           // set the top to be the newly created scrollframe
-          BuildScrollFrame(aPresShell, aPresContext, aState, aContent, aStyleContext, newFrame, aParentFrame,
+          BuildScrollFrame(aPresShell, aPresContext, aState, aContent,
+                           aStyleContext, newFrame, aParentFrame, nsnull,
                            topFrame, aStyleContext);
 
           // we have a scrollframe so the parent becomes the scroll frame.
@@ -5739,7 +5747,8 @@ nsCSSFrameConstructor::ConstructXULFrame(nsIPresShell*            aPresShell,
             NS_NewListBoxScrollPortFrame(aPresShell, &scrollPort);
           }
           // set the top to be the newly created scrollframe
-          BuildScrollFrame(aPresShell, aPresContext, aState, aContent, aStyleContext, newFrame, aParentFrame,
+          BuildScrollFrame(aPresShell, aPresContext, aState, aContent,
+                           aStyleContext, newFrame, aParentFrame, nsnull,
                            topFrame, aStyleContext, scrollPort);
 
           // we have a scrollframe so the parent becomes the scroll frame.
@@ -5771,7 +5780,8 @@ nsCSSFrameConstructor::ConstructXULFrame(nsIPresShell*            aPresShell,
         if (IsScrollable(aPresContext, display)) {
 
           // set the top to be the newly created scrollframe
-          BuildScrollFrame(aPresShell, aPresContext, aState, aContent, aStyleContext, newFrame, aParentFrame,
+          BuildScrollFrame(aPresShell, aPresContext, aState, aContent,
+                           aStyleContext, newFrame, aParentFrame, nsnull,
                            topFrame, aStyleContext);
 
           // we have a scrollframe so the parent becomes the scroll frame.
@@ -5800,7 +5810,8 @@ nsCSSFrameConstructor::ConstructXULFrame(nsIPresShell*            aPresShell,
         if (IsScrollable(aPresContext, display)) {
 
           // set the top to be the newly created scrollframe
-          BuildScrollFrame(aPresShell, aPresContext, aState, aContent, aStyleContext, newFrame, aParentFrame,
+          BuildScrollFrame(aPresShell, aPresContext, aState, aContent,
+                           aStyleContext, newFrame, aParentFrame, nsnull,
                            topFrame, aStyleContext);
 
           // we have a scrollframe so the parent becomes the scroll frame.
@@ -5823,7 +5834,8 @@ nsCSSFrameConstructor::ConstructXULFrame(nsIPresShell*            aPresShell,
          if (IsScrollable(aPresContext, display)) {
 
           // set the top to be the newly created scrollframe
-          BuildScrollFrame(aPresShell, aPresContext, aState, aContent, aStyleContext, newFrame, aParentFrame,
+          BuildScrollFrame(aPresShell, aPresContext, aState, aContent,
+                           aStyleContext, newFrame, aParentFrame, nsnull,
                            topFrame, aStyleContext);
 
           // we have a scrollframe so the parent becomes the scroll frame.
@@ -6021,18 +6033,19 @@ nsCSSFrameConstructor::ConstructXULFrame(nsIPresShell*            aPresShell,
 #endif
 
 already_AddRefed<nsStyleContext>
-nsCSSFrameConstructor::BeginBuildingScrollFrame(nsIPresShell* aPresShell, 
-                                                nsIPresContext*         aPresContext,
-                                               nsFrameConstructorState& aState,
-                                               nsIContent*              aContent,
-                                               nsStyleContext*          aContentStyle,
-                                               nsIFrame*                aParentFrame,
-                                               nsIAtom*                 aScrolledPseudo,
-                                               nsIDocument*             aDocument,
-                                               PRBool                   aIsRoot,
-                                               nsIFrame*&               aNewFrame,                                                                                             
-                                               nsIFrame*&               aScrollableFrame,
-                                               nsIFrame*                aScrollPortFrame)
+nsCSSFrameConstructor::BeginBuildingScrollFrame(nsIPresShell*            aPresShell, 
+                                                nsIPresContext*          aPresContext,
+                                                nsFrameConstructorState& aState,
+                                                nsIContent*              aContent,
+                                                nsStyleContext*          aContentStyle,
+                                                nsIFrame*                aParentFrame,
+                                                nsIFrame*                aContentParentFrame,
+                                                nsIAtom*                 aScrolledPseudo,
+                                                nsIDocument*             aDocument,
+                                                PRBool                   aIsRoot,
+                                                nsIFrame*&               aNewFrame,
+                                                nsIFrame*&               aScrollableFrame,
+                                                nsIFrame*                aScrollPortFrame)
 {
   // Check to see the type of parent frame so we know whether we need to 
   // turn off/on scaling for the scrollbars
@@ -6061,9 +6074,9 @@ nsCSSFrameConstructor::BeginBuildingScrollFrame(nsIPresShell* aPresShell,
   PRBool isGfx = HasGfxScrollbars();
 
   if (isGfx) {
-  
-    BuildGfxScrollFrame(aPresShell, aPresContext, aState, aContent, aDocument, aParentFrame,
-                        contentStyle, aIsRoot, gfxScrollFrame, anonymousItems, aScrollPortFrame);
+    BuildGfxScrollFrame(aPresShell, aPresContext, aState, aContent, aDocument,
+                        aParentFrame, aContentParentFrame, contentStyle,
+                        aIsRoot, gfxScrollFrame, anonymousItems, aScrollPortFrame);
 
     scrollFrame = anonymousItems.childList; // get the scrollport from the anonymous list
     parentFrame = gfxScrollFrame;
@@ -6080,11 +6093,40 @@ nsCSSFrameConstructor::BeginBuildingScrollFrame(nsIPresShell* aPresShell,
                         parentFrame, contentStyle, nsnull, scrollFrame);
 
   } else {
+    // native scrollbarss
     NS_NewScrollFrame(aPresShell, &scrollFrame);
     aNewFrame = scrollFrame;
     parentFrame = aParentFrame;
     InitAndRestoreFrame(aPresContext, aState, aContent, 
                         parentFrame, contentStyle, nsnull, scrollFrame);
+
+
+    // need to hook up the native scroll window's content parent
+    if (nsnull != aContentParentFrame) {
+      nsIView* view = nsnull;
+      scrollFrame->GetView(aPresContext, &view);
+      if (view) {
+        nsCOMPtr<nsIViewManager> vm;
+        view->GetViewManager(*getter_AddRefs(vm));
+        nsIView* parentView;
+        view->GetParent(parentView);
+
+        nsIView* zParentView = parentView;
+        aContentParentFrame->GetView(aPresContext, &zParentView);
+
+        if (nsnull == zParentView) {
+         nsIFrame* zParentFrame = nsnull;
+          aContentParentFrame->GetParentWithView(aPresContext, &zParentFrame);
+          NS_ASSERTION(zParentFrame, "GetParentWithView failed");
+          zParentFrame->GetView(aPresContext, &zParentView);
+          NS_ASSERTION(zParentView, "no parent with view");
+        }
+
+        if (zParentView != parentView) {
+          vm->InsertZPlaceholder(zParentView, view, nsnull, PR_TRUE);
+        }
+      }
+    }
   }
 
   nsStyleContext* aScrolledChildStyle = aPresContext->ResolvePseudoStyleContextFor(aContent,
@@ -6180,16 +6222,17 @@ nsCSSFrameConstructor::FinishBuildingScrollFrame(nsIPresContext*      aPresConte
  * @param aScrolledContentStyle the style that was resolved for the scrolled frame. (returned)
  */
 nsresult
-nsCSSFrameConstructor::BuildScrollFrame       (nsIPresShell* aPresShell, 
-                                               nsIPresContext*          aPresContext,
-                                               nsFrameConstructorState& aState,
-                                               nsIContent*              aContent,
-                                               nsStyleContext*          aContentStyle,
-                                               nsIFrame*                aScrolledFrame,
-                                               nsIFrame*                aParentFrame,
-                                               nsIFrame*&               aNewFrame, 
-                                               nsStyleContext*&         aScrolledContentStyle,
-                                               nsIFrame*                aScrollPortFrame)                                                                                                                                          
+nsCSSFrameConstructor::BuildScrollFrame(nsIPresShell*            aPresShell, 
+                                        nsIPresContext*          aPresContext,
+                                        nsFrameConstructorState& aState,
+                                        nsIContent*              aContent,
+                                        nsStyleContext*          aContentStyle,
+                                        nsIFrame*                aScrolledFrame,
+                                        nsIFrame*                aParentFrame,
+                                        nsIFrame*                aContentParentFrame,
+                                        nsIFrame*&               aNewFrame, 
+                                        nsStyleContext*&         aScrolledContentStyle,
+                                        nsIFrame*                aScrollPortFrame)
 {
     // Check to see the type of parent frame so we know whether we need to 
     // turn off/on scaling for the scrollbars
@@ -6217,6 +6260,7 @@ nsCSSFrameConstructor::BuildScrollFrame       (nsIPresShell* aPresShell,
                                                     aContent,
                                                     aContentStyle,
                                                     aParentFrame,
+                                                    aContentParentFrame,
                                                     nsCSSAnonBoxes::scrolledContent,
                                                     mDocument,
                                                     PR_FALSE,
@@ -6251,17 +6295,18 @@ nsCSSFrameConstructor::BuildScrollFrame       (nsIPresShell* aPresShell,
  * If we are building GFX scrollframes this will create one
  */
 nsresult
-nsCSSFrameConstructor::BuildGfxScrollFrame (nsIPresShell* aPresShell, 
+nsCSSFrameConstructor::BuildGfxScrollFrame (nsIPresShell*            aPresShell, 
                                             nsIPresContext*          aPresContext,
-                                             nsFrameConstructorState& aState,
-                                             nsIContent*              aContent,
-                                             nsIDocument*             aDocument,
-                                             nsIFrame*                aParentFrame,
-                                             nsStyleContext*          aStyleContext,
-                                             PRBool                   aIsRoot,
-                                             nsIFrame*&               aNewFrame,
-                                             nsFrameItems&            aAnonymousFrames,
-                                             nsIFrame*                aScrollPortFrame)
+                                            nsFrameConstructorState& aState,
+                                            nsIContent*              aContent,
+                                            nsIDocument*             aDocument,
+                                            nsIFrame*                aParentFrame,
+                                            nsIFrame*                aContentParentFrame,
+                                            nsStyleContext*          aStyleContext,
+                                            PRBool                   aIsRoot,
+                                            nsIFrame*&               aNewFrame,
+                                            nsFrameItems&            aAnonymousFrames,
+                                            nsIFrame*                aScrollPortFrame)
 {
 #ifdef INCLUDE_XUL
   NS_NewGfxScrollFrame(aPresShell, &aNewFrame, aDocument, aIsRoot);
@@ -6271,7 +6316,7 @@ nsCSSFrameConstructor::BuildGfxScrollFrame (nsIPresShell* aPresShell,
 
   // Create a view
   nsHTMLContainerFrame::CreateViewForFrame(aPresContext, aNewFrame,
-                                             aStyleContext, nsnull, PR_FALSE);
+                                           aStyleContext, aContentParentFrame, PR_FALSE);
 
   
   if (!aScrollPortFrame)
@@ -6377,8 +6422,8 @@ nsCSSFrameConstructor::ConstructFrameByDisplayType(nsIPresShell*            aPre
 
     nsStyleContext* newStyle;
     // Build the scrollframe it
-    BuildScrollFrame(aPresShell, aPresContext, aState, aContent, aStyleContext, scrolledFrame, geometricParent,
-                     newFrame, newStyle);
+    BuildScrollFrame(aPresShell, aPresContext, aState, aContent, aStyleContext,
+                     scrolledFrame, geometricParent, adjParentFrame, newFrame, newStyle);
 
     // buildscrollframe sets the primary frame.
     primaryFrameSet = PR_TRUE;
