@@ -36,9 +36,6 @@ class nsIStyleRule : public nsISupports {
 public:
   static const nsIID& GetIID() { static nsIID iid = NS_ISTYLE_RULE_IID; return iid; }
 
-  NS_IMETHOD Equals(const nsIStyleRule* aRule, PRBool& aResult) const = 0;
-  NS_IMETHOD HashValue(PRUint32& aValue) const = 0;
-
   NS_IMETHOD GetStyleSheet(nsIStyleSheet*& aSheet) const = 0;
 
   // Strength is an out-of-band weighting, useful for mapping CSS ! important
