@@ -35,7 +35,7 @@
 #define NSSCKFW_H
 
 #ifdef DEBUG
-static const char NSSCKFW_CVS_ID[] = "@(#) $RCSfile: nssckfw.h,v $ $Revision: 1.1 $ $Date: 2000/03/31 19:43:26 $ $Name:  $";
+static const char NSSCKFW_CVS_ID[] = "@(#) $RCSfile: nssckfw.h,v $ $Revision: 1.2 $ $Date: 2002/03/06 21:41:35 $ $Name:  $";
 #endif /* DEBUG */
 
 /*
@@ -121,6 +121,17 @@ NSSCKFWInstance_CreateMutex
 
 NSS_EXTERN NSSUTF8 *
 NSSCKFWInstance_GetConfigurationData
+(
+  NSSCKFWInstance *fwInstance
+);
+
+/*
+ * NSSCKFWInstance_GetInitArgs
+ *
+ */
+
+NSS_EXTERN CK_C_INITIALIZE_ARGS_PTR
+NSSCKFWInstance_GetInitArgs
 (
   NSSCKFWInstance *fwInstance
 );

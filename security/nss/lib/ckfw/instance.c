@@ -32,7 +32,7 @@
  */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: instance.c,v $ $Revision: 1.4 $ $Date: 2002/02/13 02:26:45 $ $Name:  $";
+static const char CVS_ID[] = "@(#) $RCSfile: instance.c,v $ $Revision: 1.5 $ $Date: 2002/03/06 21:41:34 $ $Name:  $";
 #endif /* DEBUG */
 
 /*
@@ -58,6 +58,7 @@ static const char CVS_ID[] = "@(#) $RCSfile: instance.c,v $ $Revision: 1.4 $ $Da
  *  NSSCKFWInstance_MayCreatePthreads
  *  NSSCKFWInstance_CreateMutex
  *  NSSCKFWInstance_GetConfigurationData
+ *  NSSCKFWInstance_GetInitArgs
  *
  *  -- implement public accessors --
  *  nssCKFWInstance_GetMDInstance
@@ -65,6 +66,7 @@ static const char CVS_ID[] = "@(#) $RCSfile: instance.c,v $ $Revision: 1.4 $ $Da
  *  nssCKFWInstance_MayCreatePthreads
  *  nssCKFWInstance_CreateMutex
  *  nssCKFWInstance_GetConfigurationData
+ *  nssCKFWInstance_GetInitArgs 
  *
  *  -- private accessors --
  *  nssCKFWInstance_CreateSessionHandle
@@ -518,6 +520,25 @@ nssCKFWInstance_GetConfigurationData
 #endif /* NSSDEBUG */
 
   return fwInstance->configurationData;
+}
+
+/*
+ * nssCKFWInstance_GetInitArgs
+ *
+ */
+CK_C_INITIALIZE_ARGS_PTR
+nssCKFWInstance_GetInitArgs
+(
+  NSSCKFWInstance *fwInstance
+)
+{
+#ifdef NSSDEBUG
+  if( CKR_OK != nssCKFWInstance_verifyPointer(fwInstance) ) {
+    return (CK_C_INITIALIZE_ARGS_PTR)NULL;
+  }
+#endif /* NSSDEBUG */
+
+    return fwInstance->pInitArgs;
 }
 
 /*
@@ -1304,3 +1325,23 @@ NSSCKFWInstance_GetConfigurationData
 
   return nssCKFWInstance_GetConfigurationData(fwInstance);
 }
+
+/*
+ * NSSCKFWInstance_GetInitArgs
+ *
+ */
+NSS_IMPLEMENT CK_C_INITIALIZE_ARGS_PTR
+NSSCKFWInstance_GetInitArgs
+(
+  NSSCKFWInstance *fwInstance
+)
+{
+#ifdef DEBUG
+  if( CKR_OK != nssCKFWInstance_verifyPointer(fwInstance) ) {
+    return (CK_C_INITIALIZE_ARGS_PTR)NULL;
+  }
+#endif /* DEBUG */
+
+  return nssCKFWInstance_GetInitArgs(fwInstance);
+}
+
