@@ -1417,27 +1417,35 @@ public class NativeRegExp extends ScriptableObject implements Function {
 	    num = grState.state.parenCount;
 	    kidMatch = matchRENodes(grState.state, grState.kid, grState.next, index);
 	    if (kidMatch == -1) {
-	        grState.state.parenCount = num;
-	        if (previousKid != -1)
-	            matchRENodes(grState.state, grState.kid, grState.next, previousKid);
-	        return matchRENodes(grState.state, grState.next, grState.stop, index);
+            match = matchRENodes(grState.state, grState.next, null, index);
+            if (match != -1) {
+	            grState.state.parenCount = num;
+	            if (previousKid != -1)
+	                matchRENodes(grState.state, grState.kid, grState.next, previousKid);
+	            return match;
+            }
+            else
+                return -1;
 	    }
 	    else {
-	        if (kidMatch == index) return kidMatch;    /* no point pursuing an empty match forever */
+            if (kidMatch == index) {
+	            if (previousKid != -1)
+	                matchRENodes(grState.state, grState.kid, grState.next, previousKid);
+                return kidMatch;    /* no point pursuing an empty match forever */
+            }
 	        if ((grState.maxKid == 0) || (++grState.kidCount < grState.maxKid)) {
 	            match = greedyRecurse(grState, kidMatch, index);
 	            if (match != -1) return match;
 	            --grState.kidCount;
-	            grState.state.parenCount = num;
-	            matchRENodes(grState.state, grState.kid, grState.next, index);
 	        }
-	        match = matchRENodes(grState.state, grState.next, grState.stop, kidMatch);
-	        if (match != -1) return match;
-	/* No subsequent kid could complete; final backtrack attempt with zero kids */        
 	        grState.state.parenCount = num;
-	        if (previousKid != -1)
-	            matchRENodes(grState.state, grState.kid, grState.next, previousKid);
-	        return matchRENodes(grState.state, grState.next, grState.stop, index);
+	        match = matchRENodes(grState.state, grState.next, null, kidMatch);
+            if (match != -1) {
+	            matchRENodes(grState.state, grState.kid, grState.next, index);
+	            return kidMatch;
+            }
+            else
+                return -1;
 	    }
 	}
 
@@ -1513,14 +1521,17 @@ public class NativeRegExp extends ScriptableObject implements Function {
 							// Have matched the exact count required, 
 							// need to match the rest of the regexp.
 							break;
-						if ((ren.flags & RENode.MINIMAL) == 0)
-							return matchGreedyKid(state, ren, stop, num,
+                        if ((ren.flags & RENode.MINIMAL) == 0) {
+							int kidMatch = matchGreedyKid(state, ren, stop, num,
                                                         index, lastKid);
+                            if (kidMatch != -1)
+                                index = kidMatch;
+                        }        
 						else {
 							index = matchNonGreedyKid(state, ren, num,
 														ren.max, index);
 							if (index == -1) return -1;
-						}						
+                        }				
                     }
 					break;
                 case REOP_PLUS: {
@@ -1528,18 +1539,27 @@ public class NativeRegExp extends ScriptableObject implements Function {
 														ren.next, index);
 						if (kidMatch == -1)
 						    return -1;
-						if ((ren.flags & RENode.MINIMAL) == 0)
-						    return matchGreedyKid(state, ren, stop, 1, 
+                        if ((ren.flags & RENode.MINIMAL) == 0) {
+						    index = matchGreedyKid(state, ren, stop, 1, 
 															kidMatch, index);
-						index = matchNonGreedyKid(state, ren, 1, 0, kidMatch);
+                            if (index == -1)
+                                index = kidMatch;
+                        }
+                        else
+						    index = matchNonGreedyKid(state, ren, 1, 0, kidMatch);
 						if (index == -1) return -1;
                     }
 					break;
                 case REOP_STAR:					
-					if ((ren.flags & RENode.MINIMAL) == 0)
-					    return matchGreedyKid(state, ren, stop, 0, index, -1);
-					index = matchNonGreedyKid(state, ren, 0, 0, index);
-					if (index == -1) return -1;
+                    if ((ren.flags & RENode.MINIMAL) == 0) {
+					    int kidMatch = matchGreedyKid(state, ren, stop, 0, index, -1);
+                        if (kidMatch != -1)
+                            index = kidMatch;
+                    }
+                    else {
+					    index = matchNonGreedyKid(state, ren, 0, 0, index);
+					    if (index == -1) return -1;
+                    }
 					break;
                 case REOP_OPT: {
                         int saveNum = state.parenCount;
@@ -1665,8 +1685,7 @@ public class NativeRegExp extends ScriptableObject implements Function {
                 case REOP_DOTSTARMIN: {
                         int cp2;
                         for (cp2 = index; cp2 < input.length; cp2++) {
-                            int cp3 = matchRENodes(state, ren.next,
-                                                            stop, cp2);
+                            int cp3 = matchRENodes(state, ren.next, stop, cp2);
                             if (cp3 != -1) return cp3;
             		        if (input[cp2] == '\n')
             		            return -1;
@@ -1679,10 +1698,11 @@ public class NativeRegExp extends ScriptableObject implements Function {
                             if (input[cp2] == '\n')
                                 break;
                         while (cp2 >= index) {
-                            int cp3 = matchRENodes(state, ren.next,
-                                                            stop, cp2);
-                            if (cp3 != -1)
-                                return cp3;
+                            int cp3 = matchRENodes(state, ren.next, stop, cp2);
+                            if (cp3 != -1) {
+                                index = cp2;
+                                break;
+                            }
                             cp2--;
                         }
                         return -1;
