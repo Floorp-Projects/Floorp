@@ -38,9 +38,15 @@
 #define _NS_NSSCERTIFICATE_H_
 
 #include "nsIX509Cert.h"
+#include "nsIX509CertDB.h"
+
 #include "prtypes.h"
 #include "cert.h"
 #include "secitem.h"
+
+#define NS_X509CERTDB_CID { 0x78e5b720, 0x0442, 0x11d5, \
+    { 0xac, 0x56, 0x00, 0x00, 0x64, 0x65, 0x73, 0x74 } }
+#define NS_X509CERTDB_CONTRACTID "@mozilla.org/x509certdb;1"
 
 /* Certificate */
 class nsNSSCertificate : public nsIX509Cert 
@@ -49,7 +55,7 @@ public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSIX509CERT
 
-  nsNSSCertificate(const char *certDER, int derLen);
+  nsNSSCertificate(char *certDER, int derLen);
   nsNSSCertificate(CERTCertificate *cert);
   /* from a request? */
   virtual ~nsNSSCertificate();
@@ -57,6 +63,19 @@ public:
 
 private:
   CERTCertificate *mCert;
+};
+
+class nsNSSCertificateDB : public nsIX509CertDB
+{
+public:
+  NS_DECL_ISUPPORTS
+  NS_DECL_NSIX509CERTDB
+
+  nsNSSCertificateDB(); 
+  ~nsNSSCertificateDB();
+
+private:
+
 };
 
 #endif /* _NS_NSSCERTIFICATE_H_ */

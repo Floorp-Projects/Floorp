@@ -1,0 +1,114 @@
+<?xml version="1.0"?>
+<!-- 
+   - The contents of this file are subject to the Mozilla Public
+   - License Version 1.1 (the "License"); you may not use this file
+   - except in compliance with the License. You may obtain a copy of
+   - the License at http://www.mozilla.org/MPL/
+   - 
+   - Software distributed under the License is distributed on an "AS
+   - IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+   - implied. See the License for the specific language governing
+   - rights and limitations under the License.
+   - 
+   - The Original Code is mozilla.org code.
+   - 
+   - The Initial Developer of the Original Code is Netscape
+   - Communications Corp.  Portions created by Netscape are
+   - Copyright (C) 2001 Netscape Communications Corp.  All
+   - Rights Reserved.
+   - 
+   - Contributor(s):
+   -   Ian McGreer <mcgreer@netscape.com>
+  -->
+
+<?xml-stylesheet href="chrome://global/skin/" type="text/css"?>
+
+<!DOCTYPE window SYSTEM "chrome://pippki/locale/pippki.dtd">
+
+<window
+  id="download_cert" title="&downloadCert.title;"
+  xmlns:html="http://www.w3.org/1999/xhtml"
+  xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"      
+  debug="false"
+  height="320"
+  width="460"
+  onload="onLoad();"
+>
+
+<script src="chrome://global/content/strres.js" />
+<script src="downloadcert.js"/>
+
+<box orient="vertical" style="margin: 5px;" flex="1">
+
+  <!--  Let 'em know what they're doing -->
+  <box orient="vertical">
+    <html>&downloadCert.message1;</html>
+  </box>
+
+  <separator />
+
+  <!--  checkboxes for trust bits
+     -  "do you want to?"
+     -  * trust for SSL
+     -  * trust for email
+     -  * trust for object signing
+    -->
+  <box orient = "vertical">
+    <html id="message2"/>
+    <checkbox value="&downloadCert.trustSSL;" checked="false" 
+     id="trustSSL"/>
+    <checkbox value="&downloadCert.trustEmail;" checked="false" 
+     id="trustEmail"/>
+    <checkbox value="&downloadCert.trustObjSign;" checked="false" 
+     id="trustObjSign"/>
+  </box>
+
+  <separator />
+
+  <!--  buttons for viewing cert and policies
+     -  "suggested you view the following:"
+     -  <>  view cert
+     -  <>  view policy
+    -->
+  <box orient="vertical">
+    <html>&downloadCert.message3;</html>
+    <separator />
+    <grid>
+      <columns>
+        <column />
+        <column />
+      </columns>
+      <rows>
+        <row>
+          <button id="viewC-button" class="dialog" 
+                  value="&downloadCert.viewCert.label;"
+                  style="width: 8ex" oncommand="viewCert();"/> 
+          <html>&downloadCert.viewCert.text;</html>
+        </row>
+        <row>
+          <button id="viewP-button" class="dialog" 
+                  value="&downloadCert.viewPolicy.label;"
+                  style="width: 8ex" oncommand="viewPolicy();" /> 
+          <html>&downloadCert.viewPolicy.text;</html>
+        </row>
+      </rows>
+    </grid>
+  </box>
+
+  <separator />
+
+  <!--  usual runaround
+     -  <ok>  <cancel> <help>
+    -->
+  <box orient="horizontal" align="center">
+    <button id="ok-button" class="dialog" value="&ok.label;"
+         style="width: 8ex" oncommand="doOK();"/> 
+    <button id="cancel-button" class="dialog" value="&cancel.label;"
+         style="width: 8ex" oncommand="doCancel();" /> 
+    <button id="help-button" class="dialog" value="&help.label;"
+         style="width: 8ex" oncommand="alert('Help to add here');" /> 
+  </box>
+
+</box>
+
+</window>

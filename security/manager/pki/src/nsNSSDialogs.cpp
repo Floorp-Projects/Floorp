@@ -202,10 +202,11 @@ nsNSSDialogs::~nsNSSDialogs()
 {
 }
 
-NS_IMPL_THREADSAFE_ISUPPORTS4(nsNSSDialogs, nsINSSDialogs, 
+NS_IMPL_THREADSAFE_ISUPPORTS5(nsNSSDialogs, nsINSSDialogs, 
                                             nsITokenPasswordDialogs,
                                             nsISecurityWarningDialogs,
-                                            nsIBadCertListener)
+                                            nsIBadCertListener,
+                                            nsICertificateDialogs)
 
 nsresult
 nsNSSDialogs::Init()
@@ -583,6 +584,60 @@ nsNSSDialogs::ConfirmDialog(nsIInterfaceRequestor *ctx, const char *prefName,
   if (!prefValue) {
     mPref->SetBoolPref(prefName, PR_FALSE);
   }
+
+  return rv;
+}
+
+/* void downloadCACert (in nsIInterfaceRequestor ctx,
+                        in nsIX509Cert cert,
+                        out trust,
+                        out canceled); */
+NS_IMETHODIMP 
+nsNSSDialogs::DownloadCACert(nsIInterfaceRequestor *ctx, 
+                             nsIX509Cert *cert,
+                             PRUint32 *_trust,
+                             PRBool *_canceled)
+{
+  nsresult rv;
+
+  *_canceled = PR_FALSE;
+
+  // Get the parent window for the dialog
+  nsCOMPtr<nsIDOMWindowInternal> parent = do_GetInterface(ctx);
+
+  nsCOMPtr<nsIDialogParamBlock> block = do_CreateInstance(kDialogParamBlockCID);
+  if (!block) return NS_ERROR_FAILURE;
+
+  nsXPIDLString commonName;
+  rv = cert->GetCommonName(getter_Copies(commonName));
+  if (NS_FAILED(rv))
+    return rv;
+  rv = block->SetString(1, commonName);
+  if (NS_FAILED(rv)) return rv;
+
+  rv = nsNSSDialogHelper::openDialog(parent, 
+                                   "chrome://pippki/content/downloadcert.xul",
+                                     block);
+  if (NS_FAILED(rv)) return rv;
+
+  PRInt32 status;
+  PRInt32 ssl, email, objsign;
+
+  rv = block->GetInt(1, &status);
+  if (NS_FAILED(rv)) return rv;
+  rv = block->GetInt(2, &ssl);
+  if (NS_FAILED(rv)) return rv;
+  rv = block->GetInt(3, &email);
+  if (NS_FAILED(rv)) return rv;
+  rv = block->GetInt(4, &objsign);
+  if (NS_FAILED(rv)) return rv;
+ 
+  *_trust = nsIX509Cert::UNTRUSTED;
+  *_trust |= (ssl) ? nsIX509Cert::TRUSTED_SSL : 0;
+  *_trust |= (email) ? nsIX509Cert::TRUSTED_EMAIL : 0;
+  *_trust |= (objsign) ? nsIX509Cert::TRUSTED_OBJSIGN : 0;
+
+  *_canceled = (status == 0)?PR_TRUE:PR_FALSE;
 
   return rv;
 }

@@ -36,6 +36,7 @@
 #include "nsSDR.h"
 
 #include "nsPK11TokenDB.h"
+#include "nsNSSCertificate.h"
 
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsNSSComponent, Init)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsSecureBrowserUIImpl)
@@ -43,6 +44,8 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsSSLSocketProvider)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsTLSSocketProvider)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsSecretDecoderRing)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsPK11TokenDB)
+NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(CertContentListener, init)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsNSSCertificateDB)
 
 static nsModuleComponentInfo components[] =
 {
@@ -129,6 +132,21 @@ static nsModuleComponentInfo components[] =
     NS_PK11TOKENDB_CONTRACTID,
     nsPK11TokenDBConstructor
   },
+
+  {
+    "Generic Certificate Content Handler",
+    NS_CERTCONTENTLISTEN_CID,
+    NS_CERTCONTENTLISTEN_CONTRACTID,
+    CertContentListenerConstructor
+  },
+
+  {
+    "X509 Certificate Database",
+    NS_X509CERTDB_CID,
+    NS_X509CERTDB_CONTRACTID,
+    nsNSSCertificateDBConstructor
+  }
+
 };
 
 NS_IMPL_NSGETMODULE("NSS", components);

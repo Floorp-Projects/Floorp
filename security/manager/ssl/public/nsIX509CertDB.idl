@@ -35,10 +35,15 @@
 
 #include "nsISupports.idl"
 
+interface nsIX509Cert;
+
 [scriptable, uuid(a5b8fb1a-ee62-11d4-998b-00b0d02354a0)]
 interface nsIX509CertDB : nsISupports {
-  /*
-   * We'l add methods as we need them.
-   */
+
+  void importCertificate(in nsIX509Cert cert, 
+                         in unsigned long type,
+                         in unsigned long trust,
+                         in wstring nickname); 
+
 };
 

@@ -62,6 +62,7 @@ LLIBS   = \
     $(DIST)/lib/pk11wrap.lib \
     $(DIST)/lib/certdb.lib \
     $(DIST)/lib/softoken.lib \
+    $(DIST)/lib/pkcs7.lib \
     $(DIST)/lib/freebl.lib \
     $(DIST)/lib/secutil.lib \
     $(DIST)/lib/dbm.lib \
