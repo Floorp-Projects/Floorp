@@ -2375,6 +2375,8 @@ XSLTProcessor::TransformDocument(nsIDOMNode* aSourceDOM,
     }
     mDocument->Reset(channel, loadGroup);
 
+    nsCOMPtr<nsIContent> root;
+
     // Start of block to ensure the destruction of the ProcessorState
     // before the destruction of the documents.
     {
@@ -2432,6 +2434,11 @@ XSLTProcessor::TransformDocument(nsIDOMNode* aSourceDOM,
     }
     // End of block to ensure the destruction of the ProcessorState
     // before the destruction of the documents.
+
+    mOutputHandler->getRootContent(getter_AddRefs(root));
+    if (root) {
+        mDocument->ContentInserted(nsnull, root, 0);
+    }
 
     mObserver = aObserver;
     SignalTransformEnd();
