@@ -212,7 +212,6 @@ bin/components/signonviewer.xpt
 bin/components/strres.dll
 bin/components/txmgr.dll
 bin/components/txmgr.xpt
-bin/components/txtsvc.dll
 ;bin/components/uconv.dll
 bin/components/mozuconv.dll
 bin/components/uconv.xpt
@@ -452,6 +451,12 @@ bin/chrome/icons/default/winInspectorMain.ico
 bin/defaults/pref/inspector.js
 bin/res/inspector/viewer-registry.rdf
 bin/res/inspector/search-registry.rdf
+
+[typeaheadfind]
+bin/components/typahead.dll
+bin/components/typeaheadfind.xpt
+bin/chrome/typeaheadfind.jar
+bin/defaults/pref/typeaheadfind.js
 
 ;Things that aren't packaged and why (or not why)
 ;accproxy.dll - I don't know
