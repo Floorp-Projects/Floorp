@@ -472,6 +472,13 @@ RRT_HEADER:
   {
         nsCAutoString userAgentString;
 #ifdef MOZ_THUNDERBIRD
+
+    nsXPIDLCString userAgentOverride;
+    prefs->GetCharPref("general.useragent.override", getter_Copies(userAgentOverride));
+
+    // allow a user to override the default UA
+    if (!userAgentOverride)
+    {
     nsCOMPtr<nsIStringBundleService> stringService = do_GetService(NS_STRINGBUNDLE_CONTRACTID, &rv);
     if (NS_SUCCEEDED(rv)) 
 	{
@@ -501,6 +508,9 @@ RRT_HEADER:
 		userAgentString += ")";
 	  }
 	}
+    } 
+    else
+      userAgentString = userAgentOverride;
 #else
         pHTTPHandler->GetUserAgent(userAgentString);
 #endif
