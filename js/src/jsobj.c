@@ -170,7 +170,8 @@ static JSBool
 obj_setSlot(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 {
     JSObject *pobj;
-    uint32 slot, attrs;
+    uint32 slot;
+    uintN attrs;
 
     if (!JSVAL_IS_OBJECT(*vp))
         return JS_TRUE;
