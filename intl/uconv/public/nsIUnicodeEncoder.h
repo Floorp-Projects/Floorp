@@ -73,7 +73,7 @@ public:
   enum {
     kOnError_Signal,        // on an error, stop and signal
     kOnError_CallBack,      // on an error, call the error handler
-    kOnError_Replace,       // on an error, replace with a different character
+    kOnError_Replace       // on an error, replace with a different character
   };
 
   /**
