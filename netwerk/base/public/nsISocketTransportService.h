@@ -48,6 +48,10 @@ public:
   NS_IMETHOD CreateTransport(const char* host, PRInt32 port,
                              nsIChannel* *result) = 0;
 
+  NS_IMETHOD CreateTransport(const char* host, PRInt32 port,
+                             const char* socketType,
+                             nsIChannel* *result) = 0;
+
   NS_IMETHOD Shutdown(void) = 0;
 };
 
