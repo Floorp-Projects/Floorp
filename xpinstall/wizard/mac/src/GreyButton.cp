@@ -19,17 +19,15 @@
  * Contributors:
  *     Michael C. Amorose
  */
-
+//dougt: you need to send michael@michael-amorose.com mail about using this.
 
 /*---------------------------------------------------------------------*
  *	Routines for drawing standard AGA pushbutton.
  *	Loosely based on code by Zig Zichterman.
  *---------------------------------------------------------------------*/
 
+#include "MacInstallWizard.h"
 
-#ifndef _MIW_H_
-	#include "MacInstallWizard.h"
-#endif
 
 pascal void FrameGreyButton( Rect *buttonFrame )
 {

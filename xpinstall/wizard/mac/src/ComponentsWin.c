@@ -20,10 +20,7 @@
  *     Samir Gehani <sgehani@netscape.com>
  */
 
-
-#ifndef _MIW_H_
-	#include "MacInstallWizard.h"
-#endif
+#include "MacInstallWizard.h"
 
 
 /*-----------------------------------------------------------*
@@ -54,16 +51,16 @@ ShowComponentsWin(void)
 
 	// get controls
 	listBoxRect = Get1Resource('RECT', rCompListBox);
-	reserr = ResError();
+	reserr = ResError();  //dougt: this does not do what you think
 	if (reserr == noErr)
 	{
-		HLockHi((Handle)listBoxRect);
+		HLockHi((Handle)listBoxRect);  //dougt: no hi.
 		gControls->cw->compListBox = (Rect) **((Rect **)listBoxRect);
 		HUnlock((Handle)listBoxRect);
+		ErrorHandler();
 	}
 	else
 	{
-		ErrorHandler();
 		return;
 	}
 	gControls->cw->compDescBox = GetNewControl(rCompDescBox, gWPtr);
@@ -71,7 +68,7 @@ ShowComponentsWin(void)
 	gControls->cw->compListBox.right -= kScrollBarWidth;
 	SetRect(&dataBounds, 0, 0, 1, gControls->cfg->numComps);
 	SetPt( &cSize, 0, 0);
-	gControls->cw->compList = lnew(&gControls->cw->compListBox, &dataBounds, 
+	gControls->cw->compList = lnew(&gControls->cw->compListBox, &dataBounds,    //dougt: what is this call!! it should be LNew()??
 									&cSize, 0, gWPtr, TRUE, FALSE, FALSE, TRUE);
 	
 	// populate controls

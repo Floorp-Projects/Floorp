@@ -21,9 +21,7 @@
  */
 
 
-#ifndef _MIW_H_
-	#include "MacInstallWizard.h"
-#endif
+#include "MacInstallWizard.h"
 
 
 /*-----------------------------------------------------------*
@@ -65,30 +63,35 @@ void
 ParseConfig(void)
 { 	
 	OSErr	err;
-	char 	**cfgText;
+	char 	*cfgText;
 
-	gControls->cfg = (Config*) NewPtrClear(sizeof(Config));	
-	
-	if(!ReadConfigFile(cfgText))
+	gControls->cfg = (Config*) NewPtrClear(sizeof(Config));		
+//dougt: what happens when allocation fails!		
+
+	if(!ReadConfigFile(&cfgText))
 	{
 			ErrorHandler();
 			return;
 	}
 	
-	ERR_CHECK(PopulateLicWinKeys(*cfgText));
-	ERR_CHECK(PopulateWelcWinKeys(*cfgText));
-	ERR_CHECK(PopulateCompWinKeys(*cfgText));
-	ERR_CHECK(PopulateSetupTypeWinKeys(*cfgText));
-	ERR_CHECK(PopulateTermWinKeys(*cfgText));
-	ERR_CHECK(PopulateIDIKeys(*cfgText));
+	ERR_CHECK(PopulateLicWinKeys(cfgText));
+	ERR_CHECK(PopulateWelcWinKeys(cfgText));
+	ERR_CHECK(PopulateCompWinKeys(cfgText));
+	ERR_CHECK(PopulateSetupTypeWinKeys(cfgText));
+	ERR_CHECK(PopulateTermWinKeys(cfgText));
+	ERR_CHECK(PopulateIDIKeys(cfgText));
 	
-	DisposePtr(*cfgText);
+    if (cfgText)
+	    DisposePtr(cfgText);
 }
 
 Boolean
 ReadConfigFile(char **text)
 {
-	Boolean				bSuccess = true;
+//dougt: nitpick, I would have the initial bSuccess set to false, and only change to true when this function really
+//       succeeds.  If you also set text to null from the get go, you can return the else statement during the read
+//       of the file.
+    Boolean				bSuccess = true;
 	OSErr 				err;
 	FSSpec 				cfgFile;
 	long				dirID, dataSize;
@@ -110,7 +113,8 @@ ReadConfigFile(char **text)
 	if (dataSize > 0)
 	{
 		*text = (char*) NewPtrClear(dataSize);
-		if (err = FSRead(vRefNum, &dataSize, *text))
+//dougt: what happens when allocation fails!	
+        if (err = FSRead(vRefNum, &dataSize, *text))
 			bSuccess = false;
 	}
 	else
@@ -133,6 +137,7 @@ PopulateLicWinKeys(char *cfgText)
 	
 	/* LicenseWin: license file name */
 	gControls->cfg->licFileName = NewHandleClear(kValueMaxLen);
+//dougt: what happens when allocation fails!	
 	if (!FillKeyValueUsingResID(sLicDlg, sLicFile, gControls->cfg->licFileName, cfgText))
 		err = eParseFailed;
 	
@@ -146,14 +151,21 @@ PopulateWelcWinKeys(char *cfgText)
 	
 	/* WelcomeWin: message strings */
 	gControls->cfg->welcMsg[0] = NewHandleClear(kValueMaxLen);
+//dougt: what happens when allocation fails!	
 	if (!FillKeyValueUsingResID(sWelcDlg, sMsg0, gControls->cfg->welcMsg[0], cfgText))
-		err = eParseFailed;
+		err = eParseFailed;  //dougt: shouldn't you return now?
 		
 	gControls->cfg->welcMsg[1] = NewHandleClear(kValueMaxLen);
-	FillKeyValueUsingResID(sWelcDlg, sMsg1, gControls->cfg->welcMsg[1], cfgText);
+//dougt: what happens when allocation fails!	
+
+//dougt: why don;t you care about the error in this case?
+    FillKeyValueUsingResID(sWelcDlg, sMsg1, gControls->cfg->welcMsg[1], cfgText);
 		
 	gControls->cfg->welcMsg[2] = NewHandleClear(kValueMaxLen);
-	FillKeyValueUsingResID(sWelcDlg, sMsg2, gControls->cfg->welcMsg[2], cfgText);
+//dougt: what happens when allocation fails!	
+
+//dougt: why don;t you care about the error in this case?
+FillKeyValueUsingResID(sWelcDlg, sMsg2, gControls->cfg->welcMsg[2], cfgText);
 		
 	return err;
 }
@@ -469,8 +481,10 @@ FillKeyValueUsingSLID(short stringListID, short dlgID, short keyID, Handle dest,
 	if (FillKeyValueUsingName(sectionName, key, dest, cfgText))
 		bFound = true;
 
-	DisposePtr(sectionName);
-	DisposePtr(key);
+	if(sectionName)
+        DisposePtr(sectionName);
+	if(key)
+        DisposePtr(key);
 	return bFound;
 }
 
@@ -484,17 +498,19 @@ FillKeyValueUsingName(char *sectionName, char *keyName, Handle dest, char *cfgTe
 	Boolean		bFound = false;
 	
 	value = (char*) NewPtrClear(kValueMaxLen);
-	
+//dougt: what happens when allocation fails!		
 	if (FindKeyValue(cfgText, sectionName, keyName, value))
 	{
 		HLock(dest);
 		len = strlen(value);
 		strncpy(*dest, value, len);
+//dougt: would it be better here to do the accual allocation, PtrToHandle()?  
+// This way we could reduce the mem footprint by not having to allocate the max each time.
 		HUnlock(dest);
 		bFound = true;
 	}
-	
-	DisposePtr(value);
+	if (value)
+	    DisposePtr(value);
 	return bFound;
 }
 
@@ -508,31 +524,41 @@ FindKeyValue(const char *cfg, const char *inSectionName, const char *inKey, char
 	sectionName = 	(char *) NewPtrClear( kSNameMaxLen );
 	section = 		(char *) NewPtrClear( kSectionMaxLen ); 
 	key = 			(char *) NewPtrClear( kKeyMaxLen );
-	
+//dougt: what happens when allocation fails!	
+    
 	/* find next section   [cfgPtr moved past next section per iteration] */
-	while(GetNextSection(cfgPtr, sectionName, section))
+//dougt: you are passing a pointer (cfgPtr) to a function that wants a char**.  evil
+    while(GetNextSection(cfgPtr, sectionName, section))
 	{
-		if (strncmp(sectionName, inSectionName, strlen(inSectionName)) == 0)	
+//dougt: why not use strcmp here?  
+        if (strncmp(sectionName, inSectionName, strlen(inSectionName)) == 0)	
 		{
 			*sectionPtr = section;
 			
 			/* find next key   [sectionPtr moved past next key per iteration] */
-			while(GetNextKeyVal(sectionPtr, key, outValue))
+//dougt: you are passing a pointer (sectionPtr) to a function that wants a char**.  evil
+            while(GetNextKeyVal(sectionPtr, key, outValue))
 			{
+//dougt: why not use strcmp here?
 				if (strncmp(key, inKey, strlen(key)) == 0)
 				{
-					DisposePtr(key);
-					DisposePtr(sectionName);
-					DisposePtr(section);
+					if(key) 
+                        DisposePtr(key);
+					if(sectionName) 
+                        DisposePtr(sectionName);
+					if(section) 
+                        DisposePtr(section);
 					return true;
 				}
 			}
 		}
 	}
-
-	DisposePtr(key);
-	DisposePtr(sectionName);
-	DisposePtr(section);
+    if(key) 
+        DisposePtr(key);
+    if(sectionName) 
+        DisposePtr(sectionName);
+    if(section) 
+        DisposePtr(section);
 	
 	return false; 
 }
@@ -671,6 +697,9 @@ GetNextKeyVal(char **inSection, char *outKey, char *outVal)
  * Makes a copy of the C string, converts the copy to a Pascal string,
  * and returns the Pascal string copy
  */
+
+//dougt: can you use the toolbox routines?  what about double bite chars?
+
 unsigned char *CToPascal(char *str)
 {
 	register char *p,*q;

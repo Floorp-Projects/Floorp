@@ -20,15 +20,12 @@
  *     Samir Gehani <sgehani@netscape.com>
  */
 
-
-#ifndef _MIW_H_
-	#include "MacInstallWizard.h"
-#endif
-
+#include "MacInstallWizard.h"
 
 /*-----------------------------------------------------------*
  *   globals
  *-----------------------------------------------------------*/
+//dougt: maybe you should init these here to null
 Boolean 	gDone;
 WindowPtr 	gWPtr;
 short		gCurrWin;
@@ -75,6 +72,7 @@ void Init(void)
 		ErrorHandler();
 		return;
 	}
+//dougt: will sd put up some ui while the main thread blocks?
 
 	/* block/busy wait till download finishes */
 	while (1)
@@ -91,7 +89,7 @@ void Init(void)
 #endif /* CFG_IS_REMOTE == 1 */
 
 	gWPtr = GetNewCWindow(rRootWin, NULL, (WindowPtr) -1);	
-	GetIndString( winTitle, rStringList, sNSInstTitle);
+    GetIndString( winTitle, rStringList, sNSInstTitle);
 	//pstrcpy(winTitle, "\pNetscape Installer Dude");
 	SetWTitle( gWPtr, winTitle );	
 	MakeMenus();
@@ -135,11 +133,11 @@ InitOptObject(void)
 	OSErr	err=noErr;
 	
 	gControls->opt = (Options*)NewPtrClear(sizeof(Options));
-	
+//dougt: what happens when allocation fails!	
 	/* SetupTypeWin options */
 	gControls->opt->instChoice = 1;		
 	gControls->opt->folder = (unsigned char *)NewPtrClear(64*sizeof(unsigned char));
-	
+//dougt: what happens when allocation fails!	
 	ERR_CHECK(GetCWD(&gControls->opt->dirID, &gControls->opt->vRefNum));
 	ERR_CHECK(FSMakeFSSpec(gControls->opt->vRefNum, gControls->opt->dirID, NULL, &tmp));
 	
@@ -159,6 +157,7 @@ InitControlsObject(void)
 	gControls->stw 	= (SetupTypeWin *) 	NewPtrClear(sizeof(SetupTypeWin));	
 	gControls->cw 	= (CompWin *) 		NewPtrClear(sizeof(CompWin));
 	gControls->tw 	= (TermWin*) 		NewPtrClear(sizeof(TermWin));
+//dougt: what happens when allocation fails!
 }
 
 void InitManagers(void)
@@ -179,13 +178,14 @@ void InitManagers(void)
 
 void MakeMenus(void)
 {
-	Handle 		mbarHdl;
+//dougt: the use of ErrorHandler is wrong here.  Since it will not 'exit to shell', execution will continue which is not desired.
+    Handle 		mbarHdl;
 	MenuHandle	menuHdl;
 	OSErr		err;
 	
 	if ( !(mbarHdl = GetNewMBar( rMBar)) )
 		ErrorHandler();
-	SetMenuBar(mbarHdl);
+	SetMenuBar(mbarHdl);   //dougt: if mbarHdl allocation failes above, poof.
 	
 	if (menuHdl = GetMenuHandle(mApple)) 
 	{
@@ -240,6 +240,7 @@ void MainEventLoop(void)
  
 void ErrorHandler(void)
 {
+//TODO: this needs to be fixed.  
 	SysBeep(10);
 	gDone = true;
 }
@@ -253,6 +254,7 @@ void Shutdown(void)
 	// TO DO
 		
 /* deallocate all controls */	
+//dougt: check for null before deleting!
 	DisposePtr( (char*) gControls->lw);
 	// DisposeControl(gControls->nextB);  
 	// DisposeControl(gControls->backB);
