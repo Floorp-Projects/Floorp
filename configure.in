@@ -2060,8 +2060,14 @@ AC_CACHE_CHECK(for usable wchar_t (2 bytes, unsigned),
                 ac_cv_have_usable_wchar="no",
                 ac_cv_have_usable_wchar="maybe")])
 if test "$ac_cv_have_usable_wchar" = "yes"; then
-    AC_DEFINE(HAVE_CPP_2BYTE_WCHAR_T)
-    HAVE_CPP_2BYTE_WCHAR_T=1
+	case $target in
+	*-aix4.3*)
+		;;
+	*)
+		AC_DEFINE(HAVE_CPP_2BYTE_WCHAR_T)
+		HAVE_CPP_2BYTE_WCHAR_T=1
+		;;
+	esac
 else
 dnl This is really gcc-only
 dnl Do this test using CXX instead of CC since some versions of gcc
