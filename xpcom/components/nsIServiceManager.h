@@ -23,6 +23,14 @@
 
 class nsIShutdownListener;
 
+#define NS_ISERVICEMANAGER_IID                       \
+{ /* cf0df3b0-3401-11d2-8163-006008119d7a */         \
+    0xcf0df3b0,                                      \
+    0x3401,                                          \
+    0x11d2,                                          \
+    {0x81, 0x63, 0x00, 0x60, 0x08, 0x11, 0x9d, 0x7a} \
+}
+
 /**
  * The nsIServiceManager manager interface provides a means to obtain
  * global services in an application. The service manager depends on the 
@@ -67,6 +75,7 @@ class nsIShutdownListener;
 class nsIServiceManager : public nsISupports {
 public:
 
+    NS_DEFINE_STATIC_IID_ACCESSOR(NS_ISERVICEMANAGER_IID);
     NS_IMETHOD
     GetService(const nsCID& aClass, const nsIID& aIID,
                nsISupports* *result,
@@ -91,13 +100,6 @@ public:
 
 };
 
-#define NS_ISERVICEMANAGER_IID                       \
-{ /* cf0df3b0-3401-11d2-8163-006008119d7a */         \
-    0xcf0df3b0,                                      \
-    0x3401,                                          \
-    0x11d2,                                          \
-    {0x81, 0x63, 0x00, 0x60, 0x08, 0x11, 0x9d, 0x7a} \
-}
 
 #define NS_ERROR_SERVICE_NOT_FOUND      NS_ERROR_GENERATE_SUCCESS(NS_ERROR_MODULE_XPCOM, 22)
 #define NS_ERROR_SERVICE_IN_USE         NS_ERROR_GENERATE_SUCCESS(NS_ERROR_MODULE_XPCOM, 23)
