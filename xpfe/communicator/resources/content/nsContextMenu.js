@@ -339,7 +339,7 @@ nsContextMenu.prototype = {
                 
                 // Link?
                 if ( !this.onLink && 
-                    ( localname === "A"    ||
+                    ( (localname === "A" && elem.href) ||
                       localname === "AREA" ||
                       elem.getAttributeNS( "http://www.w3.org/1999/xlink", "type") == "simple" ) ) {
                     // Clicked on a link.
