@@ -85,8 +85,8 @@ endif
 #   (See build pages, http://www.mozilla.org/build/unix.html, 
 #    for how to set up myconfig.sh.)
 run_for_side_effects := \
-	$(shell build/autoconf/myconfig2defs.sh > .client-defs.mk)
--include .client-defs.mk
+	$(shell build/autoconf/myconfig2defs.sh $(TOPSRCDIR)/.client-defs.mk)
+include $(TOPSRCDIR)/.client-defs.mk
 
 ifdef MOZ_OBJDIR
   OBJDIR := $(MOZ_OBJDIR)
@@ -251,7 +251,7 @@ $(TOPSRCDIR)/configure: $(TOPSRCDIR)/configure.in $(EXTRA_CONFIG_DEPS)
 	cd $(TOPSRCDIR); $(AUTOCONF)
 endif
 
-$(OBJDIR)/Makefile: nspr $(TOPSRCDIR)/configure $(TOPSRCDIR)/allmakefiles.sh
+$(OBJDIR)/Makefile: $(TOPSRCDIR)/configure $(TOPSRCDIR)/allmakefiles.sh $(TOPSRCDIR)/.client-defs.mk
 	@if test ! -d $(OBJDIR); then $(MKDIR) $(OBJDIR); fi
 	@echo cd $(OBJDIR); 
 	@echo ../configure $(CONFIG_FLAGS)
@@ -270,7 +270,7 @@ endif
 # Build it
 #
 
-build:  $(OBJDIR)/Makefile 
+build:  nspr $(OBJDIR)/Makefile 
 	cd $(OBJDIR); $(MAKE);
 
 # Build & install nspr.  Classic build, no autoconf.
