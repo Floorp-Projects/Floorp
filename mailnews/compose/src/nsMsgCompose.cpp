@@ -1789,19 +1789,23 @@ nsMsgCompose::ProcessSignature(nsIMsgIdentity *identity, nsString *aMsgBody)
     {
       aMsgBody->Append(htmlBreak);
       if (!htmlSig)
+      {
         aMsgBody->Append("<pre>");
+        aMsgBody->Append(CRLF);
+      }
     }
     else
       aMsgBody->Append(CRLF);
     
     aMsgBody->Append(dashes);
 
-    if (m_composeHTML)
-      aMsgBody->Append(htmlBreak);
-    else
+    if ( (!m_composeHTML) || ((m_composeHTML) && (!htmlSig)) )
       aMsgBody->Append(CRLF);
+    else if (m_composeHTML)
+      aMsgBody->Append(htmlBreak);
     
     aMsgBody->Append(sigData);
+
     if ( (m_composeHTML) && (!htmlSig) )
       aMsgBody->Append("</pre>");
   }
