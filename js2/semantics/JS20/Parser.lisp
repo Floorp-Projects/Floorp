@@ -461,6 +461,13 @@
     (production :use-includes-excludes (exclude :use-name-patterns) use-includes-excludes-exclude-list)
     (production :use-includes-excludes (include :use-name-patterns) use-includes-excludes-include-list)
     
+    (production :use-name-patterns (*) use-name-patterns-wildcard)
+    (production :use-name-patterns (:use-name-pattern-list) use-name-patterns-use-name-pattern-list)
+    
+    (production :use-name-pattern-list (:identifier) use-name-pattern-list-one)
+    (production :use-name-pattern-list (:use-name-pattern-list \, :identifier) use-name-pattern-list-more)
+    
+    #|
     (production :use-name-patterns (:use-name-pattern) use-name-patterns-one)
     (production :use-name-patterns (:use-name-patterns \, :use-name-pattern) use-name-patterns-more)
     
@@ -475,6 +482,7 @@
     
     (production :wildcard-pattern (*) wildcard-pattern-all)
     (production :wildcard-pattern ($regular-expression) wildcard-pattern-regular-expression)
+    |#
     
     
     (? js2
