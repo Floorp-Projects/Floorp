@@ -522,6 +522,9 @@ RDFTreeBuilderImpl::AddWidgetItem(nsIContent* aElement,
         return NS_ERROR_UNEXPECTED;
     }
 
+    // Find out if we're a container or not.
+    PRBool markAsContainer = PR_FALSE;
+
     // Create the <xul:treeitem> element
     nsCOMPtr<nsIContent> treeItem;
     if (NS_FAILED(rv = CreateResourceElement(kNameSpaceID_XUL,
@@ -555,7 +558,6 @@ RDFTreeBuilderImpl::AddWidgetItem(nsIContent* aElement,
         return rv;
     }
 
-    PRBool markAsContainer = PR_FALSE;
     while (NS_SUCCEEDED(rv = arcs->Advance())) {
         nsCOMPtr<nsIRDFResource> property;
         if (NS_FAILED(rv = arcs->GetPredicate(getter_AddRefs(property)))) {
@@ -622,7 +624,7 @@ RDFTreeBuilderImpl::AddWidgetItem(nsIContent* aElement,
         return rv;
     }
 
-    if (markAsContainer == PR_TRUE)
+    if (markAsContainer)
     {
         // Finally, mark this as a "container" so that we know to
         // recursively generate kids if they're asked for.

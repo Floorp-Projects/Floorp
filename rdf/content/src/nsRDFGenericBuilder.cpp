@@ -1371,6 +1371,29 @@ RDFGenericBuilderImpl::IsContainmentProperty(nsIContent* aElement, nsIRDFResourc
         return PR_FALSE;
 }
 
+PRBool
+RDFGenericBuilderImpl::IsContainer(nsIContent* aElement, nsIRDFResource* aResource)
+{
+    PRBool result = PR_FALSE;
+    nsCOMPtr<nsIRDFArcsOutCursor> arcs;
+    if (NS_FAILED(mDB->ArcLabelsOut(aResource, getter_AddRefs(arcs)))) {
+        NS_ERROR("unable to get arcs out");
+        return result;
+    }
+
+    while (NS_SUCCEEDED(arcs->Advance())) {
+        nsCOMPtr<nsIRDFResource> property;
+        if (NS_FAILED(arcs->GetPredicate(getter_AddRefs(property)))) {
+            NS_ERROR("unable to get cursor value");
+            return result;
+        }
+
+        // Ignore properties that are used to indicate "tree-ness"
+        if (IsContainmentProperty(aElement, property))
+            return PR_TRUE;
+    }
+    return result;
+}
 
 PRBool
 RDFGenericBuilderImpl::IsOpen(nsIContent* aElement)

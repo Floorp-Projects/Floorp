@@ -106,6 +106,9 @@ public:
     IsContainmentProperty(nsIContent* aElement, nsIRDFResource* aProperty);
 
     PRBool
+    IsContainer(nsIContent* aParentElement, nsIRDFResource* aTargetResource);
+
+    PRBool
     IsOpen(nsIContent* aElement);
 
     PRBool
