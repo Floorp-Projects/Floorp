@@ -43,7 +43,7 @@ enum { eButtonPressed = 0, eCheckboxState = 1, eNumberButtons = 2, eNumberEditfi
 private:
 };
 
-const char* kPromptURL="chrome://global/content/baseconfirm.xul";
+const char* kPromptURL="chrome://global/content/commonDialog.xul";
 
 const char* kQuestionIconURL ="chrome://global/skin/question-icon.gif";
 const char* kAlertIconURL ="chrome://global/skin/alert-icon.gif";
