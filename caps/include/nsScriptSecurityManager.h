@@ -285,6 +285,8 @@ public:
 
     JSContext* GetSafeJSContext();
 
+    static nsScriptSecurityManager *gScriptSecMan;
+
 private:
 
     // GetScriptSecurityManager is the only call that can make one
