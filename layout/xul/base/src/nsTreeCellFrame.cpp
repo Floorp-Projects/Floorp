@@ -22,6 +22,7 @@
 #include "nsHTMLAtoms.h"
 #include "nsTreeCellFrame.h"
 #include "nsTreeFrame.h"
+#include "nsTreeRowFrame.h"
 #include "nsIStyleContext.h"
 #include "nsIPresContext.h"
 #include "nsIPresShell.h"
@@ -200,9 +201,29 @@ nsTreeCellFrame::HandleMouseDownEvent(nsIPresContext& aPresContext,
 									                    nsGUIEvent*     aEvent,
 									                    nsEventStatus&  aEventStatus)
 {
-  if (mIsHeader)
-  {
-	  // Nothing to do?
+  if (mIsHeader) {
+    nsTableColFrame* leftFlex = nsnull;
+    nsPoint point = ((nsMouseEvent*)aEvent)->point;
+    if (CanResize(point, &leftFlex))
+    {
+	    // Begin capturing events.
+      nsIFrame* frame;
+      GetParent(&frame);
+      nsTreeRowFrame* treeRow = (nsTreeRowFrame*)frame;
+      treeRow->HeaderDrag(PR_TRUE);
+
+      // Inform the tree row of the flexing column
+      treeRow->SetFlexingColumn(leftFlex);
+      nsRect rect;
+      GetRect(rect);
+      treeRow->SetHeaderPosition(point.x + rect.x);
+
+      // Ensure accurate annotation
+      nsTableFrame* tableFrame = nsnull;
+      nsTableFrame::GetTableFrame(this, tableFrame);
+      nsTreeFrame* treeFrame = (nsTreeFrame*)tableFrame;
+      treeFrame->AnnotateColumns();
+    }
   }
   else
   {
@@ -255,7 +276,7 @@ nsTreeCellFrame::HandleMouseExitEvent(nsIPresContext& aPresContext,
 }
 
 PRBool
-nsTreeCellFrame::CanResize(nsPoint& aPoint) {
+nsTreeCellFrame::CanResize(nsPoint& aPoint, nsTableColFrame** aResult) {
   nsRect rect;
   GetRect(rect);
   PRInt32 diff = (rect.x + rect.width) - aPoint.x;
@@ -268,8 +289,21 @@ nsTreeCellFrame::CanResize(nsPoint& aPoint) {
   parent->ChildCount(count);
   count--;
 
-  if ((index > 0 && diff <= 60) || ((rect.width - diff) <= 60 && index < count)) {
-    return PR_TRUE;
+  PRBool onLeftEdge = (index > 0 && (rect.width - diff) <= 90);
+  PRBool onRightEdge = (index < count && diff <= 90);
+
+  if (onLeftEdge || onRightEdge) {
+    // We're over the right place.
+    // Ensure that we have flexible columns to the left and to the right.
+    nsTableFrame* tableFrame = nsnull;
+    nsTableFrame::GetTableFrame(this, tableFrame);
+    nsTreeFrame* treeFrame = (nsTreeFrame*)tableFrame;  
+    
+    if (onLeftEdge)
+      index--;
+
+    return (treeFrame->ContainsFlexibleColumn(0, index, aResult) &&
+            treeFrame->ContainsFlexibleColumn(index+1, count-1, nsnull)); 
   }
   
   return PR_FALSE;
@@ -282,11 +316,8 @@ nsTreeCellFrame::GetCursor(nsIPresContext& aPresContext,
 {
   if (mIsHeader) {
     // Figure out if the point is over the resize stuff.
-    nsRect rect;
-    GetRect(rect);
-    PRInt32 diff = (rect.x + rect.width) - aPoint.x;
-
-    if (CanResize(aPoint)) {
+    nsTableColFrame* dummy = nsnull;
+    if (CanResize(aPoint, &dummy)) {
       aCursor = NS_STYLE_CURSOR_W_RESIZE;
     }
     else {

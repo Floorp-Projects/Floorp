@@ -22,6 +22,7 @@
 
 class nsTreeCellFrame;
 class nsTreeRowGroupFrame;
+class nsTableColFrame;
 
 class nsTreeRowFrame : public nsTableRowFrame
 {
@@ -46,8 +47,30 @@ public:
                   nsIStyleContext* aContext,
                   nsIFrame*        aPrevInFlow); // Overridden to set whether we're a column header 
 
+  NS_IMETHOD GetFrameForPoint(const nsPoint& aPoint, // Overridden to capture events
+                              nsIFrame**     aFrame);
+
+  NS_IMETHOD HandleEvent(nsIPresContext& aPresContext,
+                        nsGUIEvent* aEvent,
+                        nsEventStatus& aEventStatus);
+
+  NS_IMETHOD HandleMouseUpEvent(nsIPresContext& aPresContext,
+                                nsGUIEvent* aEvent,
+                                nsEventStatus& aEventStatus);
+
+  NS_IMETHOD HandleHeaderDragEvent(nsIPresContext& aPresContext,
+                                   nsGUIEvent* aEvent,
+                                   nsEventStatus& aEventStatus);
+
+  NS_IMETHOD GetCursor(nsIPresContext& aPresContext,
+                                     nsPoint&        aPoint,
+                                     PRInt32&        aCursor);
+
   NS_IMETHOD HeaderDrag(PRBool aGrabber);
-  PRBool DraggingHeader();
+  PRBool DraggingHeader() { return mDraggingHeader; };
+
+  void SetFlexingColumn(nsTableColFrame* aTableColFrame) { mFlexingCol = aTableColFrame; };
+  void SetHeaderPosition(PRInt32 aHeaderPos) { mHeaderPosition = aHeaderPos; };
 
 protected:
   nsTreeRowFrame();
@@ -56,4 +79,8 @@ protected:
 protected: // Data Members
   PRBool mIsHeader;
   PRInt32 mGeneration;
+  PRBool mDraggingHeader;
+  nsIFrame* mHitFrame;
+  nsTableColFrame* mFlexingCol;
+  PRInt32 mHeaderPosition;
 }; // class nsTreeRowFrame

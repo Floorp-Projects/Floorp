@@ -23,11 +23,13 @@
 #include "nsIContent.h"
 #include "nsCSSRendering.h"
 #include "nsTreeCellFrame.h"
+#include "nsTableColFrame.h"
 #include "nsCellMap.h"
 #include "nsIDOMXULTreeElement.h"
 #include "nsINameSpaceManager.h"
 #include "nsTreeRowGroupFrame.h"
 #include "nsXULAtoms.h"
+#include "nsHTMLAtoms.h"
 #include "nsIDOMNodeList.h"
 #include "nsIDOMXULTreeElement.h"
 #include "nsTreeTwistyListener.h"
@@ -60,7 +62,7 @@ NS_NewTreeFrame (nsIFrame** aNewFrame)
 
 // Constructor
 nsTreeFrame::nsTreeFrame()
-:nsTableFrame(),mSlatedForReflow(PR_FALSE), mTwistyListener(nsnull), mGeneration(0), mMaxGeneration(0) { }
+:nsTableFrame(),mSlatedForReflow(PR_FALSE), mTwistyListener(nsnull), mGeneration(0), mUseGeneration(PR_TRUE) { }
 
 // Destructor
 nsTreeFrame::~nsTreeFrame()
@@ -310,11 +312,11 @@ nsTreeFrame::Reflow(nsIPresContext&          aPresContext,
   if (rect.width != aReflowState.mComputedWidth && aReflowState.reason == eReflowReason_Resize) {
     // We're doing a resize and changing the width of the table. All rows must
     // reflow. Reset our generation.
-    mGeneration = 0;
+    SetUseGeneration(PR_FALSE);
   }
-  else {
+  
+  if (UseGeneration()) {
     ++mGeneration;
-    mMaxGeneration = mGeneration;
   }
 
   nsresult rv = nsTableFrame::Reflow(aPresContext, aDesiredSize, aReflowState, aStatus);
@@ -329,8 +331,8 @@ nsTreeFrame::Reflow(nsIPresContext&          aPresContext,
 
   aDesiredSize.ascent = aDesiredSize.height;
   
-  if (mGeneration == 0)
-    mGeneration = mMaxGeneration;
+  if (!UseGeneration())
+    SetUseGeneration(PR_TRUE);
 
   return rv;
 }
@@ -386,4 +388,57 @@ nsTreeFrame::Init(nsIPresContext&  aPresContext,
   target->AddEventListener("mousedown", mTwistyListener, PR_TRUE); 
 	
   return rv;
+}
+
+NS_IMETHODIMP
+nsTreeFrame::AnnotateColumns()
+{
+  // Iterate over the column frames and set proportional width attributes on all flexible
+  // columns.
+  PRInt32 columnCount = GetColCount();
+  for (PRInt32 i = 0; i < columnCount; i++) {
+    nsTableColFrame* result = GetColFrame(i);
+    nsCOMPtr<nsIContent> colContent;
+    result->GetContent(getter_AddRefs(colContent));
+    nsCOMPtr<nsIAtom> fixedAtom = dont_AddRef(NS_NewAtom("fixed"));
+    if (colContent) {
+      nsAutoString fixedValue;
+      colContent->GetAttribute(kNameSpaceID_None, fixedAtom, fixedValue);
+      if (fixedValue != "true") {
+        // We are a proportional column and should be annotated with our current
+        // width.
+        PRInt32 colWidth = GetColumnWidth(i);
+        char ch[100];
+        sprintf(ch,"%d*", colWidth);
+        nsAutoString propColWidth(ch);
+        colContent->SetAttribute(kNameSpaceID_None, nsHTMLAtoms::width, propColWidth,
+                                 PR_FALSE); // Suppress a notification.
+      }
+    }
+  }
+  return NS_OK;
+}
+
+PRBool
+nsTreeFrame::ContainsFlexibleColumn(PRInt32 aStartIndex, PRInt32 aEndIndex, 
+                                    nsTableColFrame** aResult)
+{
+  for (PRInt32 i = aEndIndex; i >= aStartIndex; i--) {
+    nsTableColFrame* result = GetColFrame(i);
+    nsCOMPtr<nsIContent> colContent;
+    result->GetContent(getter_AddRefs(colContent));
+    nsCOMPtr<nsIAtom> fixedAtom = dont_AddRef(NS_NewAtom("fixed"));
+    if (colContent) {
+      nsAutoString fixedValue;
+      colContent->GetAttribute(kNameSpaceID_None, fixedAtom, fixedValue);
+      if (fixedValue != "true") {
+        // We are a proportional column.
+        if (aResult)
+          *aResult = result;
+        return PR_TRUE;
+      }
+    }
+  }
+
+  return PR_FALSE;
 }
