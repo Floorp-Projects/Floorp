@@ -176,7 +176,9 @@ nsCSSToken::AppendToString(nsString& aBuffer)
 MOZ_DECL_CTOR_COUNTER(nsCSSScanner)
 
 nsCSSScanner::nsCSSScanner()
+#ifdef CSS_REPORT_PARSE_ERRORS
   : mError(mErrorBuf, NS_ARRAY_LENGTH(mErrorBuf), 0)
+#endif
 {
   MOZ_COUNT_CTOR(nsCSSScanner);
   if (!gLexTableSetup) {
