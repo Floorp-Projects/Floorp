@@ -300,42 +300,45 @@ public class FunctionObject extends NativeFunction {
         return findMethods(getMethodList(clazz), name);
     }
     
-    public static Method[] findMethods(Method[] methods, String name) {
+    static Method[] findMethods(Method[] methods, String name) {
         // Usually we're just looking for a single method, so optimize
         // for that case.
         Vector v = null;
-        Method[] result = null;
+        Method first = null;
         for (int i=0; i < methods.length; i++) {
             if (methods[i] == null)
                 continue;
             if (methods[i].getName().equals(name)) {
-                if (result == null) {
-                    result = new Method[1];
-                    result[0] = methods[i];
+                if (first == null) {
+                    first = methods[i];
                 } else {
                     if (v == null) {
                         v = new Vector(5);
-                        v.addElement(result[0]);
+                        v.addElement(first);
                     }
                     v.addElement(methods[i]);
                 }
             }
         }
-        if (v == null)
-            return result;
-        result = new Method[v.size()];
+        if (v == null) {
+            if (first == null)
+                return null;
+            Method[] single = { first };
+            return single;
+        }
+        Method[] result = new Method[v.size()];
         v.copyInto(result);
         return result;
     }
 
-    public static Method[] getMethodList(Class clazz) {
+    static Method[] getMethodList(Class clazz) {
         Method[] cached = methodsCache; // get once to avoid synchronization
         if (cached != null && cached[0].getDeclaringClass() == clazz)
             return cached;
-        Method[] methods = clazz.getMethods();
+        Method[] methods = clazz.getDeclaredMethods();
         int count = 0;
         for (int i=0; i < methods.length; i++) {
-            if (methods[i].getDeclaringClass() != clazz) {
+            if (!Modifier.isPublic(methods[i].getModifiers())) {
                 methods[i] = null;
             } else {
                 count++;
