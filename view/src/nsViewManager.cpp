@@ -2413,11 +2413,13 @@ PRBool nsViewManager::CreateDisplayList(nsIView *aView, PRInt32 *aIndex,
     {
       nsIView *child = nsnull;
       for (aView->GetChild(0, child); child != nsnull; child->GetNextSibling(child)) {
+#if 0
         child->GetZIndex(zindex);
         if (zindex < 0) {
           gotNegativeZ = PR_TRUE;
           continue;
         }
+#endif        
         retval = CreateDisplayList(child, aIndex, aOriginX, aOriginY, aRealView, aTopView, aDamageRect, lrect.x, lrect.y);
         if (retval)
           break;
