@@ -120,7 +120,7 @@ class nsInstallFileOpItem : public nsInstallObject
     PRInt32       NativeFileOpFileExecute(nsFileSpec* aTarget, nsString* aParams);
     PRInt32       NativeFileOpFileMove(nsFileSpec* aSrc, nsFileSpec* aTarget);
     PRInt32       NativeFileOpFileRename(nsFileSpec* aSrc, nsString* aTarget);
-    PRInt32       NativeFileOpWindowsShortcut(nsFileSpec* mTarget, nsFileSpec* mShortcutPath, nsString* mDescription, nsFileSpec* mWorkingPath, nsString* mParams, nsFileSpec* mIcon, PRInt32 mIconId);
+    PRInt32       NativeFileOpWindowsShortcut(nsFileSpec* aTarget, nsFileSpec* aShortcutPath, nsString* aDescription, nsFileSpec* aWorkingPath, nsString* aParams, nsFileSpec* aIcon, PRInt32 aIconId);
     PRInt32       NativeFileOpMacAlias(nsFileSpec* aSrc, nsFileSpec* aTarget);
     PRInt32       NativeFileOpUnixLink();
 

@@ -428,22 +428,22 @@ nsInstallFileOpItem::NativeFileOpFileRename(nsFileSpec* aSrc, nsString* aTarget)
 }
 
 PRInt32
-nsInstallFileOpItem::NativeFileOpWindowsShortcut(nsFileSpec* mTarget, nsFileSpec* mShortcutPath, nsString* mDescription, nsFileSpec * mWorkingPath, nsString* mParams, nsFileSpec* mIcon, PRInt32 mIconId)
+nsInstallFileOpItem::NativeFileOpWindowsShortcut(nsFileSpec* aTarget, nsFileSpec* aShortcutPath, nsString* aDescription, nsFileSpec* aWorkingPath, nsString* aParams, nsFileSpec* aIcon, PRInt32 aIconId)
 {
 #ifdef _WINDOWS
-  char *cDescription  = mDescription->ToNewCString();
-  char *cParams       = mParams->ToNewCString();
+  char *cDescription  = aDescription->ToNewCString();
+  char *cParams       = aParams->ToNewCString();
 
   if((cDescription == nsnull) || (cParams == nsnull))
     return nsInstall::OUT_OF_MEMORY;
 
-  CreateALink(mTarget->GetNativePathCString(),
-              mShortcutPath->GetNativePathCString(),
+  CreateALink(aTarget->GetNativePathCString(),
+              aShortcutPath->GetNativePathCString(),
               cDescription,
-              mWorkingPath->GetNativePathCString(),
+              aWorkingPath->GetNativePathCString(),
               cParams,
-              mIcon->GetNativePathCString(),
-              mIconId);
+              aIcon->GetNativePathCString(),
+              aIconId);
 
   if(cDescription)
     delete(cDescription);
