@@ -959,6 +959,7 @@ case "$target" in
     AC_DEFINE_UNQUOTED(WINVER,0x400)
     AC_DEFINE(MSVC4)
     AC_DEFINE(STDC_HEADERS)
+    AC_DEFINE(NEW_H, <new>)
     TARGET_MD_ARCH=win32
     _PLATFORM_DEFAULT_TOOLKIT='windows'
     BIN_SUFFIX='.exe'
@@ -1614,6 +1615,14 @@ AC_CHECK_HEADERS(X11/XKBlib.h)
 
 dnl These are all the places some variant of statfs can be hiding.
 AC_CHECK_HEADERS(sys/statvfs.h sys/statfs.h sys/vfs.h sys/mount.h)
+
+dnl Check whether the compiler supports the new-style C++ standard
+dnl library headers (i.e. <new>) or needs the old "new.h"
+AC_LANG_CPLUSPLUS
+NEW_H=new.h
+AC_CHECK_HEADER(new, [NEW_H=new])
+AC_DEFINE_UNQUOTED(NEW_H, <$NEW_H>)
+AC_LANG_C
 
 case $target in
 *-aix4.3*|*-aix5*)

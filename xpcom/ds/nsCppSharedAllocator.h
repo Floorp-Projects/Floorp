@@ -3,7 +3,7 @@
 
 #include "nsMemory.h"     // for |nsMemory|
 #include "nscore.h"       // for |NS_XXX_CAST|
-#include <new.h>					// to allow placement |new|
+#include NEW_H					// to allow placement |new|
 
 
   // under Metrowerks (Mac), we don't have autoconf yet

@@ -37,7 +37,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "nsIntervalSet.h"
-#include <new.h>
+#include NEW_H
 
 nsIntervalSet::nsIntervalSet(IntervalSetAlloc aAlloc, IntervalSetFree aFree,
                              void* aAllocatorClosure)
