@@ -104,7 +104,7 @@ sub createPrimitiveOperationsH {
 	unlink ($PrimitiveOperationsH) or break;
 	$gLastPrimEnumName = outputEnumFromListX("PrimitiveOperation", $PrimitiveOperationsH, 0, \@gPrimitiveInfo, \&primInfoToEnumDescriptor);
 	open FILE, ">>$PrimitiveOperationsH" or die "Couldn't open $PrimitiveOperationsEnumFN: $!\n";
-	print FILE "\nconst nPrimitiveOperations = $gLastPrimEnumName + 1;\n";
+	print FILE "\nconst int nPrimitiveOperations = $gLastPrimEnumName + 1;\n";
 	close FILE;
 }
 
