@@ -70,8 +70,8 @@
              selection.select(row.value);
              select.selectElement.setOptionsSelectedByIndex(row.value, row.value,
                                                             true, true, false, false);
-             if ("onchange" in this)
-               this.onchange();
+             if ("onchange" in select)
+               select.onchange();
            }
          }
       ]]>
