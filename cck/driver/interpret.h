@@ -41,7 +41,6 @@ public:
 	BOOL BrowseFile(WIDGET *curWidget);
 	BOOL BrowseDir(WIDGET *curWidget);
 	BOOL Progress();  // Not actually used right now
-	void ExecuteCommand(char *command, int showflag,DWORD wait);
 	BOOL IterateListBox(char *parms);
 	CString replaceVars(CString str, char *listval);
 	CString replaceVars(char *str, char *listval);

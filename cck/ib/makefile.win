@@ -31,11 +31,13 @@ IS_COMPONENT = 1
 
 OBJS=					\
 	.\$(OBJDIR)\ib.obj		\
+	.\$(OBJDIR)\ifuncns.obj		\
 	$(NULL)
 
 LINCS=  $(LINCS) \
 		-I..\include \
-		-I$(PUBLIC)\zlib  \
+		-I$(DIST)\$(OBJDIR)\include \
+		-I$(DEPTH)\xpinstall\wizard\windows\setup \
 		$(NULL)
 
 MAKE_OBJ_TYPE = DLL
@@ -60,6 +62,8 @@ LCFLAGS = $(LCFLAGS) \
 # These are the libraries we need to link with to create the dll
 LLIBS= $(LLIBS)       \
  ../lib/globals.lib \
+ $(DIST)\lib\jar_s.lib  \
+ $(DIST)\lib\zlib_s.lib  \
  $(NULL)  
 
 !ifdef MOZ_NO_DEBUG_RTL
@@ -74,6 +78,9 @@ include <$(DEPTH)\cck\InitDist.win>
 libs:: $(DLL)
 	$(MAKE_INSTALL) .\$(OBJDIR)\$(DLLNAME).dll $(CCKDIST)\CCKTool
 	$(MAKE_INSTALL) .\$(OBJDIR)\$(DLLNAME).lib ..\lib
+
+export::
+	$(MAKE_INSTALL) script.ib $(CCKDIST)\CCKTool
 
 #clobber::
 #	rm -f $(DIST)\bin\$(DLLNAME).dll

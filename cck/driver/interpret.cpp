@@ -91,9 +91,9 @@ BOOL CInterpret::NewConfig(WIDGET *curWidget, CString globalsName, CString Dialo
 	if (d == INVALID_HANDLE_VALUE)
 	{
 		if (!DialogTitle.IsEmpty())
-			CopyDir(FooCopy,newDir,"NULL");
+			CopyDir(FooCopy,newDir,NULL, FALSE);
 		else 
-			CopyDir(Template,newDir,"NULL");
+			CopyDir(Template,newDir,NULL, FALSE);
 	}
 	else
 	{
@@ -234,26 +234,6 @@ BOOL CInterpret::Progress()
 #endif
 
 	return TRUE;
-}
-
-void CInterpret::ExecuteCommand(char *command, int showflag, DWORD wait)
-{
-	STARTUPINFO	startupInfo; 
-	PROCESS_INFORMATION	processInfo; 
-
-	memset(&startupInfo, 0, sizeof(startupInfo));
-	memset(&processInfo, 0, sizeof(processInfo));
-
-	startupInfo.cb = sizeof(STARTUPINFO);
-	startupInfo.dwFlags = STARTF_USESHOWWINDOW;
-	//startupInfo.wShowWindow = SW_SHOW;
-	startupInfo.wShowWindow = showflag;
-
-	BOOL executionSuccessful = CreateProcess(NULL, command, NULL, NULL, TRUE, 
-												NORMAL_PRIORITY_CLASS, NULL, NULL, 
-												&startupInfo, &processInfo); 
-	DWORD error = GetLastError();
-	WaitForSingleObject(processInfo.hProcess, wait);
 }
 
 BOOL CInterpret::IterateListBox(char *parms)
@@ -707,7 +687,7 @@ BOOL CInterpret::interpret(CString cmds, WIDGET *curWidget)
 					CString todir = replaceVars(parms, NULL);
 					CString ext = p2;
 					BrowseDir(curWidget);
-					CopyDir(returnDir,todir,ext);
+					CopyDir(returnDir,todir,ext,FALSE);
 				}
 				else if (strcmp(pcmd, "DisplayImage") == 0)
 				{
@@ -821,7 +801,7 @@ BOOL CInterpret::interpret(CString cmds, WIDGET *curWidget)
 						*p2++ = '\0';
 						CString from = replaceVars(parms, NULL);
 						CString to = replaceVars(p2, NULL);
-						CopyDir(from, to,"NULL");
+						CopyDir(from, to, NULL, TRUE);
 					}
 				}
 				else if (strcmp(pcmd, "SetGlobal") == 0)

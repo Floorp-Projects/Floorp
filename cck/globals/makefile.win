@@ -41,6 +41,7 @@ MAKE_OBJ_TYPE = DLL
 DLLNAME = globals
 DLL=.\$(OBJDIR)\$(DLLNAME).dll
 
+# -LDd creates debug version of library
 CFLAGS = \
 	-W3 \
 	-GX \
@@ -49,6 +50,10 @@ CFLAGS = \
 	-D_AFXDLL \
 	-D_MBCS \
 	-FD \
+	-LDd \
+	-MDd \
+	-Yd \
+	-Zi \
 	-c \
 	$(CFLAGS)
 
@@ -66,11 +71,11 @@ include <$(DEPTH)\config\rules.mak>
 include <$(DEPTH)\cck\InitDist.win>
 
 export:: $(DLLNAME).h
-	$(MAKE_INSTALL) .\$(OBJDIR)\$(DLLNAME).dll $(CCKDIST)\CCKTool
+	$(MAKE_INSTALL) $(DLLNAME).h ..\include
 
 libs:: $(DLL)
 	$(MAKE_INSTALL) .\$(OBJDIR)\$(DLLNAME).lib ..\lib
-	$(MAKE_INSTALL) $(DLLNAME).h ..\include
+	$(MAKE_INSTALL) .\$(OBJDIR)\$(DLLNAME).dll $(CCKDIST)\CCKTool
 
 #clobber::
 #	rm -f $(DIST)\bin\$(DLLNAME).dll

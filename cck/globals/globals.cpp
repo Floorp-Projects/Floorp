@@ -53,7 +53,7 @@ char *GetGlobal(CString theName)
 }
 
 extern "C" __declspec(dllexport)
-void CopyDir(CString from, CString to, CString extension)
+void CopyDir(CString from, CString to, LPCTSTR extension, int overwrite)
 {
 	WIN32_FIND_DATA data;
 	HANDLE d;
@@ -80,15 +80,15 @@ void CopyDir(CString from, CString to, CString extension)
 			tchild = to + "\\" + data.cFileName;
 			tmp = data.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY;
 			if (tmp == FILE_ATTRIBUTE_DIRECTORY)
-				CopyDir(fchild, tchild,"NULL");
+				CopyDir(fchild, tchild, NULL, overwrite);
 			else
 			{
 				CString spot=fchild;
 				int loc = fchild.Find('.');
 				if (loc)
 					spot.Delete(0,loc+1);
-				if ((spot.CompareNoCase(extension)==0) || (extension.Compare("NULL") ==0))
-					CopyFile((const char *) fchild, (const char *) tchild, FALSE);
+				if (!extension || (spot.CompareNoCase((CString)extension)==0))
+					CopyFile((const char *) fchild, (const char *) tchild, !overwrite);
 			}									
 		}
 
@@ -96,5 +96,26 @@ void CopyDir(CString from, CString to, CString extension)
 	}
 
 	FindClose(d);
+}
+
+extern "C" __declspec(dllexport)
+void ExecuteCommand(char *command, int showflag, DWORD wait)
+{
+	STARTUPINFO	startupInfo; 
+	PROCESS_INFORMATION	processInfo; 
+
+	memset(&startupInfo, 0, sizeof(startupInfo));
+	memset(&processInfo, 0, sizeof(processInfo));
+
+	startupInfo.cb = sizeof(STARTUPINFO);
+	startupInfo.dwFlags = STARTF_USESHOWWINDOW;
+	//startupInfo.wShowWindow = SW_SHOW;
+	startupInfo.wShowWindow = showflag;
+
+	BOOL executionSuccessful = CreateProcess(NULL, command, NULL, NULL, TRUE, 
+												NORMAL_PRIORITY_CLASS, NULL, NULL, 
+												&startupInfo, &processInfo); 
+	DWORD error = GetLastError();
+	WaitForSingleObject(processInfo.hProcess, wait);
 }
 
