@@ -2668,7 +2668,7 @@ EOF
 	   ;;
  	esac
     if test "$GNU_CC"; then
-	    AS='$(CC) -x assembler-with-cpp -D_ASM -mips2'
+	    AS='$(CC) -x assembler-with-cpp -D_ASM -mips2 $(INCLUDES)'
 	    CFLAGS="$CFLAGS -Wall -Wno-format"
 	    _OPTIMIZE_FLAGS="-O6"
     else
@@ -2714,19 +2714,7 @@ EOF
 
     fi
     case "${target_os}" in
-	irix5*)
-	    ;;
-	*)
-	    cat >> confdefs.h <<\EOF
-#define _PR_HAVE_SGI_PRDA_PROCMASK 1
-EOF
-
-	    ;;
-	esac
-    case "${target_os}" in
 	irix6.5*)
-	    ;;
-	*)
 	    if test -z "$GNU_CC"; then
 		    CFLAGS="$CFLAGS -mips3"
 	    fi
@@ -2736,6 +2724,18 @@ EOF
 
 	    cat >> confdefs.h <<\EOF
 #define _PR_HAVE_GETPROTO_R_POINTER 1
+EOF
+
+	    cat >> confdefs.h <<\EOF
+#define _PR_HAVE_SGI_PRDA_PROCMASK 1
+EOF
+
+	    ;;
+	irix5*)
+	    ;;
+	*)
+	    cat >> confdefs.h <<\EOF
+#define _PR_HAVE_SGI_PRDA_PROCMASK 1
 EOF
 
 	    ;;
