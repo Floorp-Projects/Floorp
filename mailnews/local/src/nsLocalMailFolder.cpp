@@ -2539,11 +2539,11 @@ NS_IMETHODIMP nsMsgLocalMailFolder::EndCopy(PRBool copySucceeded)
       NS_ENSURE_SUCCESS(rv,rv);
     }
   }
-	//Copy the header to the new database
-	if(copySucceeded && mCopyState->m_message)
-	{ //  CopyMessages() goes here; CopyFileMessage() never gets in here because
+  //Copy the header to the new database
+  if(copySucceeded && mCopyState->m_message)
+  { //  CopyMessages() goes here; CopyFileMessage() never gets in here because
     //  the mCopyState->m_message will be always null for file message
-
+    
     nsCOMPtr<nsIMsgDBHdr> newHdr;
     
     if(!mCopyState->m_parseMsgState)
@@ -2551,28 +2551,30 @@ NS_IMETHODIMP nsMsgLocalMailFolder::EndCopy(PRBool copySucceeded)
       if(mDatabase)
       {
         rv = mDatabase->CopyHdrFromExistingHdr(mCopyState->m_curDstKey,
-                                               mCopyState->m_message, PR_TRUE,
-                                               getter_AddRefs(newHdr));
+          mCopyState->m_message, PR_TRUE,
+          getter_AddRefs(newHdr));
         PRUint32 newHdrFlags;
-
-
         // turn off offline flag - it's not valid for local mail folders.
         if (newHdr)
           newHdr->AndFlags(~MSG_FLAG_OFFLINE, &newHdrFlags);
-
-        PRBool isImap;
-        if (NS_SUCCEEDED(rv) && localUndoTxn)
-          localUndoTxn->GetSrcIsImap(&isImap);
-        if (NS_SUCCEEDED(rv) && localUndoTxn && (!isImap || !mCopyState->m_copyingMultipleMessages))
-        {
-          nsMsgKey aKey;
-          mCopyState->m_message->GetMessageKey(&aKey);
-          localUndoTxn->AddSrcKey(aKey);
-          localUndoTxn->AddDstKey(mCopyState->m_curDstKey);
-        }
       }
       else
         mCopyState->m_undoMsgTxn = nsnull; //null out the transaction because we can't undo w/o the msg db
+    }
+    
+    // if we plan on allowing undo, (if we have a mCopyState->m_parseMsgState or not)
+    // we need to save the source and dest keys on the undo txn.
+    // see bug #179856 for details
+    PRBool isImap;
+    if (NS_SUCCEEDED(rv) && localUndoTxn) {
+      localUndoTxn->GetSrcIsImap(&isImap);
+      if (!isImap || !mCopyState->m_copyingMultipleMessages)
+      {
+        nsMsgKey aKey;
+        mCopyState->m_message->GetMessageKey(&aKey);
+        localUndoTxn->AddSrcKey(aKey);
+        localUndoTxn->AddDstKey(mCopyState->m_curDstKey);
+      }
     }
   }
   if (mCopyState->m_dummyEnvelopeNeeded)
@@ -2580,7 +2582,7 @@ NS_IMETHODIMP nsMsgLocalMailFolder::EndCopy(PRBool copySucceeded)
     mCopyState->m_fileStream->seek(PR_SEEK_END, 0);
     *(mCopyState->m_fileStream) << MSG_LINEBREAK;
     if (mCopyState->m_parseMsgState)
-        mCopyState->m_parseMsgState->ParseAFolderLine(CRLF, MSG_LINEBREAK_LEN);
+      mCopyState->m_parseMsgState->ParseAFolderLine(CRLF, MSG_LINEBREAK_LEN);
   }
 
   // CopyFileMessage() and CopyMessages() from servers other than mailbox

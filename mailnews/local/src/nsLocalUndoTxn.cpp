@@ -244,6 +244,12 @@ nsLocalMoveCopyMsgTxn::UndoTransaction()
     nsCOMPtr<nsIMsgDBHdr> oldHdr;
     nsCOMPtr<nsIMsgDBHdr> newHdr;
 
+    // protect against a bogus undo txn without any source keys
+    // see bug #179856 for details
+    NS_ASSERTION(count, "no source keys");
+    if (!count)
+      return NS_ERROR_UNEXPECTED;
+
     if (m_isMove)
     {
         if (m_srcIsImap4)
@@ -349,6 +355,12 @@ nsLocalMoveCopyMsgTxn::RedoTransaction()
     {
         if (m_srcIsImap4)
         {
+            // protect against a bogus undo txn without any source keys
+            // see bug #179856 for details
+            NS_ASSERTION(m_srcKeyArray.GetSize(), "no source keys");
+            if (!m_srcKeyArray.GetSize())
+              return NS_ERROR_UNEXPECTED;
+          
             PRBool deleteFlag = PR_FALSE; //message is un-deleted- we are trying to redo
             CheckForToggleDelete(srcFolder, m_srcKeyArray.GetAt(0), &deleteFlag); // there could have been a toggle
             rv = UndoImapDeleteFlag(srcFolder, m_srcKeyArray, deleteFlag);

@@ -189,6 +189,12 @@ nsImapMoveCopyMsgTxn::UndoTransaction(void)
       nsMsgImapDeleteModel deleteModel;
       rv = GetImapDeleteModel(srcFolder, &deleteModel);
 
+      // protect against a bogus undo txn without any source keys
+      // see bug #179856 for details
+      NS_ASSERTION(m_srcKeyArray.GetSize(), "no source keys");
+      if (!m_srcKeyArray.GetSize())
+        return NS_ERROR_UNEXPECTED;
+
       if (NS_SUCCEEDED(rv) && deleteModel == nsMsgImapDeleteModels::IMAPDelete)
         CheckForToggleDelete(srcFolder, m_srcKeyArray.GetAt(0), &deletedMsgs);
 
@@ -263,6 +269,13 @@ nsImapMoveCopyMsgTxn::RedoTransaction(void)
             PRBool deletedMsgs = PR_FALSE;  //default will be false unless imapDeleteModel;
             nsMsgImapDeleteModel deleteModel;
             rv = GetImapDeleteModel(srcFolder, &deleteModel);
+            
+            // protect against a bogus undo txn without any source keys
+            // see bug #179856 for details
+            NS_ASSERTION(m_srcKeyArray.GetSize(), "no source keys");
+            if (!m_srcKeyArray.GetSize())
+              return NS_ERROR_UNEXPECTED;
+
             if (NS_SUCCEEDED(rv) && deleteModel == nsMsgImapDeleteModels::IMAPDelete)
               rv = CheckForToggleDelete(srcFolder, m_srcKeyArray.GetAt(0), &deletedMsgs);
 
