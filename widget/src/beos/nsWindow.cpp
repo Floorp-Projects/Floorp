@@ -1166,7 +1166,9 @@ NS_METHOD nsWindow::Enable(PRBool aState)
     
 NS_METHOD nsWindow::IsEnabled(PRBool *aState)
 {
+    NS_ENSURE_ARG_POINTER(aState);
     // looks easy enough, but...
+    *aState = PR_TRUE;
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 

@@ -577,7 +577,7 @@ NS_IMETHODIMP nsWidget::Enable(PRBool aState)
 NS_IMETHODIMP nsWidget::IsEnabled(PRBool *aState)
 {
   NS_ENSURE_ARG_POINTER(aState);
-  *aState = mWidget && GTK_WIDGET_SENSITIVE(mWidget) ? PR_TRUE : PR_FALSE;
+  *aState = !mWidget || GTK_WIDGET_SENSITIVE(mWidget);
   return NS_OK;
 }
 
