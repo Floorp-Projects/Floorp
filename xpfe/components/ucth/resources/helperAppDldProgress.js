@@ -32,12 +32,11 @@ var helperAppLoader;
 // random global variables...
 var started   = false;
 var completed = false;
-var startTime;
+var startTime = 0;
 // since this progress dialog is brought up after we've already started downloading, we need to record the # bytes already 
 // downloaded before we started showing progress. This is used to make sure our time remaining calculation works correctly...
-var initialByteOffset;
 var elapsed = 0;
-var interval = 1000; // Update every 1000 milliseconds.
+var interval = 500; // Update every 500 milliseconds.
 var lastUpdate = -interval; // Update initially.
 
 // These are to throttle down the updating of the download rate figure.
@@ -79,18 +78,8 @@ var progressListener = {
     
     onProgressChange: function(aWebProgress, aRequest, aCurSelfProgress, aMaxSelfProgress, aCurTotalProgress, aMaxTotalProgress)
     {
-      // Check for first time.
-      if ( !started ) 
-      {
-        // Initialize download start time.
-        started = true;
-        startTime = ( new Date() ).getTime();
-        initialByteOffset = aCurTotalProgress;
-      }
 
       var overallProgress = aCurTotalProgress;
-
-      aCurTotalProgress -= initialByteOffset;
 
       // Get current time.
       var now = ( new Date() ).getTime();
@@ -262,8 +251,17 @@ function formatSeconds( secs )
 
 function loadDialog() {
   var sourceUrlValue = {};
-  var targetFile =  helperAppLoader.getDownloadInfo(sourceUrlValue);
+  var initialDownloadTimeValue = {};
+  var targetFile =  helperAppLoader.getDownloadInfo(sourceUrlValue, initialDownloadTimeValue);
   var sourceUrl = sourceUrlValue.value;
+  startTime = initialDownloadTimeValue.value / 1000;
+
+  // set the elapsed time on the first pass...
+  var now = ( new Date() ).getTime();
+  var elapsed = now - startTime;
+  // Update elapsed time display.
+  dialog.timeElapsed.setAttribute("value", formatSeconds( elapsed / 1000 ));
+  dialog.timeLeft.setAttribute("value", formatSeconds( 0 ));
 
   dialog.location.setAttribute("value", sourceUrlValue.value.spec );
   dialog.fileName.setAttribute( "value", targetFile.unicodePath );
