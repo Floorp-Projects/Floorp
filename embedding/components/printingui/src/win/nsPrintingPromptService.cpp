@@ -56,7 +56,7 @@
 
 static const char *kPrintProgressDialogURL  = "chrome://global/content/printProgress.xul";
 static const char *kPrtPrvProgressDialogURL = "chrome://global/content/printPreviewProgress.xul";
-static const char *kPageSetupDialogURL      = "chrome://communicator/content/printPageSetup.xul";
+static const char *kPageSetupDialogURL      = "chrome://global/content/printPageSetup.xul";
 
 // Static Data 
 static HINSTANCE gInstance;
