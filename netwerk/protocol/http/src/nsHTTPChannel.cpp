@@ -2024,7 +2024,7 @@ nsHTTPChannel::ProcessNotModifiedResponse (nsIStreamListener *aListener)
     NS_ADDREF(cacheListener);
 
     cacheListener->SetListener(aListener);
-    mResponseDataListener = aListener;
+    mResponseDataListener = 0/* aListener */;
 
     rv = mCacheTransport->AsyncRead(cacheListener, mResponseContext);
     if (NS_FAILED(rv)) {
