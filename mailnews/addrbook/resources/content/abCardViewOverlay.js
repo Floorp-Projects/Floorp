@@ -25,7 +25,7 @@ function OnLoadCardView()
 	cvData = new Object;
 
 	// Card View Box
-	cvData.CardViewBox		= doc.getElementById("CardViewBox");
+	cvData.CardViewBox		= doc.getElementById("CardViewInnerBox");
 	// Title
 	cvData.CardTitle		= doc.getElementById("CardTitle");
 	// Name section
