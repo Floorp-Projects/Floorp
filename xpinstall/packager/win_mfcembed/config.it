@@ -678,4 +678,4 @@ Domain1=$ArchiveUrl$
 Timing=pre launchapp
 Wait=TRUE
 Target=gre-win32-installer.exe
-Parameters=-mmi -ma -app mfcembed -app_path [SETUP PATH]\mfcembed.exe
+Parameters=-mmi -ma -app mfcembed -app_path "[SETUP PATH]"\mfcembed.exe
