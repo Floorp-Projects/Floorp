@@ -50,8 +50,8 @@ radio:focus {
   
 /* ..... disabled state ..... */
 
-radio[disabled="true"][label] > .internal-box > html {
-  color: #999999;
+radio[disabled="true"][label] > .internal-box > .checkbox-label {
+  color: #9FA6AE;
 }
 
 /* ..... internal box ..... */
@@ -66,41 +66,45 @@ radio > .internal-box > .checkmark-box {
 
 /* ::::: radio icon and label ::::: */
 
-radio[label] > .internal-box > html,
+radio[label] > .internal-box > .checkbox-label,
 radio.iconic > .internal-box > .icon {
   margin: 0px 0px 0px 0px;
   padding: 0px 2px 0px 0px;
 }
 
-radio.iconic > .internal-box > html {
+radio.iconic > .internal-box > .checkbox-label {
   margin-left: 2px;
 }
     
 /* ::::: checkmark image ::::: */
 
-radio > .internal-box > .checkmark-box > image {
+radio > .internal-box > .checkmark-box > .checkbox-check {
+  width: 12px;
+  height: 12px;
   list-style-image: url("chrome://global/skin/radio/radio.gif");
 }
 
-radio:hover:active > .internal-box > .checkmark-box > image {
+radio:hover:active > .internal-box > .checkmark-box > .checkbox-check {
   list-style-image: url("chrome://global/skin/radio/radio-act.gif");
 }
 
-radio[disabled="true"] > .internal-box > checkmark-box > image {
+radio[disabled="true"] > .internal-box > .checkmark-box > .checkbox-check,
+radio[disabled="true"]:hover:active > .internal-box > .checkmark-box > .checkbox-check {
   list-style-image: url("chrome://global/skin/radio/radio-dis.gif");
 }
 
 /* ..... checked state ..... */
 
-radio[checked="true"] > .internal-box > .checkmark-box > image {
+radio[checked="true"] > .internal-box > .checkmark-box > .checkbox-check {
   list-style-image: url("chrome://global/skin/radio/radio-check.gif");
 }
   
-radio[checked="true"][disabled="true"] > .internal-box > .checkmark-box > image {
-  list-style-image: url("chrome://global/skin/radio/radio-dis-check.gif.gif");
+radio[checked="true"][disabled="true"] > .internal-box > .checkmark-box > .checkbox-check,
+radio[checked="true"][disabled="true"]:hover:active > .internal-box > .checkmark-box > .checkbox-check {
+  list-style-image: url("chrome://global/skin/radio/radio-dis-check.gif");
 }
 
-radio[checked="true"]:hover:active > .internal-box > .checkmark-box > image {
+radio[checked="true"]:hover:active > .internal-box > .checkmark-box > .checkbox-check {
   list-style-image: url("chrome://global/skin/radio/radio-act-check.gif");  
 }
 

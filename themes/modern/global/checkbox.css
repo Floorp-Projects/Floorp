@@ -47,7 +47,7 @@ checkbox:focus {
 
 checkbox[disabled="true"][label] > .internal-box > html,
 checkbox[disabled="true"][label]:hover:active > .internal-box > html {
-  color: #999999;
+  color: #9FA6AE;
 }
 
 /* ..... internal box ..... */
@@ -74,6 +74,8 @@ checkbox > .internal-box > .checkbox-icon {
 /* ::::: checkmark image ::::: */
 
 checkbox > .internal-box > .checkmark-box > .checkbox-check {
+  width: 12px;
+  height: 12px;
   list-style-image: url("chrome://global/skin/checkbox/cbox.gif");
 }
   
