@@ -803,27 +803,29 @@ retry:
 		c = GetChar(ts);
 		radix = 16;
 	    } else if (JS7_ISDEC(c)) {
+                radix = 8;
+	    }
+	}
+
+	while (JS7_ISHEX(c)) {
+	    if (radix < 16) {
+                if (JS7_ISLET(c))
+                    break;
+
 		/*
 		 * We permit 08 and 09 as decimal numbers, which makes our
 		 * behaviour a superset of the ECMA numeric grammar.  We might
 		 * not always be so permissive, so we warn about it.
 		 */
-		if (c > '7' && JSVERSION_IS_ECMA(cx->version)) {
+		if (radix == 8 && c >= '8') {
 		    if (!js_ReportCompileErrorNumber(cx, ts, JSREPORT_WARNING,
                                                      JSMSG_BAD_OCTAL,
                                                      c == '8' ? "08" : "09")) {
                         RETURN(TOK_ERROR);
                     }
 		    radix = 10;
-		} else {
-		    radix = 8;
 		}
-	    }
-	}
-
-	while (JS7_ISHEX(c)) {
-	    if (radix < 16 && (JS7_ISLET(c) || (radix == 8 && c >= '8')))
-		break;
+            }
 	    if (!AddToTokenBuf(cx, &ts->tokenbuf, (jschar)c))
 		RETURN(TOK_ERROR);
 	    c = GetChar(ts);

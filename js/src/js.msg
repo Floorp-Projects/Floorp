@@ -217,7 +217,7 @@ MSG_DEF(JSMSG_UNTERMINATED_REGEXP,    141, 0, JSEXN_SYNTAXERR, "unterminated reg
 MSG_DEF(JSMSG_BAD_REGEXP_FLAG,        142, 0, JSEXN_SYNTAXERR, "invalid flag after regular expression")
 MSG_DEF(JSMSG_SHARPVAR_TOO_BIG,       143, 0, JSEXN_SYNTAXERR, "overlarge sharp variable number")
 MSG_DEF(JSMSG_ILLEGAL_CHARACTER,      144, 0, JSEXN_SYNTAXERR, "illegal character")
-MSG_DEF(JSMSG_BAD_OCTAL,              145, 1, JSEXN_NONE, "{0} is not a legal ECMA-262 numeric constant")
+MSG_DEF(JSMSG_BAD_OCTAL,              145, 1, JSEXN_NONE, "{0} is not a legal ECMA-262 octal constant")
 MSG_DEF(JSMSG_BAD_INDIRECT_CALL,      146, 1, JSEXN_EVALERR, "function {0} must be called directly, and not by way of a function of another name.")
 MSG_DEF(JSMSG_UNCAUGHT_EXCEPTION,     147, 1, JSEXN_NONE, "uncaught exception: {0}")
 MSG_DEF(JSMSG_INVALID_BACKREF,        148, 0, JSEXN_SYNTAXERR, "non-octal digit in an escape sequence that doesn't match a back-reference")
