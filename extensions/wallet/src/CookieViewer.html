@@ -36,14 +36,9 @@
           selname.options[i-1].selected = 0;
           goneC.value = goneC.value + selname.options[i-1].value + ",";
           deleted_cookies[selname.options[i-1].value] = 1;
-          for (j=i ; j<selname.options.length ; j++) {
-            selname.options[j-1] = selname.options[j];
-          }
-          selname.options[selname.options.length-1] = null;
+          selname.remove(i-1);
         }
       }
-      top.loadCookiesList(); /* not needed in 4.5 */
-
       top.frames[prop_frame].document.open();
       top.frames[prop_frame].document.close();
     }
@@ -58,13 +53,9 @@
           selname.options[i-1].selected = 0;
           goneP.value = goneP.value + selname.options[i-1].value + ",";
           deleted_permissions[selname.options[i-1].value] = 1;
-          for (j=i; j < selname.options.length; j++) {
-            selname.options[j-1] = selname.options[j];
-          }
-          selname.options[selname.options.length-1] = null;
+          selname.remove(i-1);
         }
       }
-      top.loadPermissionsList(); /* not needed in 4.5 */
     }
 
     function loadCookies(){

@@ -42,13 +42,9 @@
           selname.options[i-1].selected = 0;
           goneS.value = goneS.value + selname.options[i-1].value + ",";
           deleted_signons[selname.options[i-1].value] = 1;
-          for (j=i ; j<selname.options.length ; j++) {
-            selname.options[j-1] = selname.options[j];
-          }
-          selname.options[selname.options.length-1] = null;
+          selname.remove(i-1);
         }
       }
-      top.loadSignonsList(); /* not needed in 4.5 */
     }
 
     function DeleteRejectSelected() {
@@ -61,13 +57,9 @@
           selname.options[i-1].selected = 0;
           goneR.value = goneR.value + selname.options[i-1].value + ",";
           deleted_rejects[selname.options[i-1].value] = 1;
-          for (j=i; j < selname.options.length; j++) {
-            selname.options[j-1] = selname.options[j];
-          }
-          selname.options[selname.options.length-1] = null;
+          selname.remove(i-1);
         }
       }
-      top.loadRejectsList(); /* not needed in 4.5 */
     }
 
     function DeleteNopreviewSelected() {
@@ -80,13 +72,9 @@
           selname.options[i-1].selected = 0;
           goneP.value = goneP.value + selname.options[i-1].value + ",";
           deleted_nopreviews[selname.options[i-1].value] = 1;
-          for (j=i; j < selname.options.length; j++) {
-            selname.options[j-1] = selname.options[j];
-          }
-          selname.options[selname.options.length-1] = null;
+          selname.remove(i-1);
         }
       }
-      top.loadNopreviewsList(); /* not needed in 4.5 */
     }
 
     function DeleteNocaptureSelected() {
@@ -99,13 +87,9 @@
           selname.options[i-1].selected = 0;
           goneC.value = goneC.value + selname.options[i-1].value + ",";
           deleted_nocaptures[selname.options[i-1].value] = 1;
-          for (j=i; j < selname.options.length; j++) {
-            selname.options[j-1] = selname.options[j];
-          }
-          selname.options[selname.options.length-1] = null;
+          selname.remove(i-1);
         }
       }
-      top.loadNocapturesList(); /* not needed in 4.5 */
     }
 
     function loadSignons(){
