@@ -51,6 +51,9 @@ my @masterlist = ("opendate", "changeddate", "bug_severity", "priority",
                   "resolution", "product", "component", "version", "op_sys",
                   "votes");
 
+if (Param("usebugaliases")) {
+    unshift(@masterlist, "alias");
+}
 if (Param("usetargetmilestone")) {
     push(@masterlist, "target_milestone");
 }

@@ -378,6 +378,7 @@ sub DefineColumn {
 
 # Column:     ID                    Name                           Title
 DefineColumn("bug_id"            , "bugs.bug_id"                , "ID"               );
+DefineColumn("alias"             , "bugs.alias"                 , "Alias"           );
 DefineColumn("opendate"          , "bugs.creation_ts"           , "Opened"           );
 DefineColumn("changeddate"       , "bugs.delta_ts"              , "Changed"          );
 DefineColumn("bug_severity"      , "bugs.bug_severity"          , "Severity"         );
