@@ -573,6 +573,14 @@ nsMultiMixedConv::OnDataAvailable(nsIRequest *request, nsISupports *context,
         }
         else {
             mNewPart = PR_TRUE;
+            // Reset state so we don't carry it over from part to part
+            mContentType.Truncate();
+            mContentLength = -1;
+            mContentDisposition.Truncate();
+            mIsByteRangeRequest = PR_FALSE;
+            mByteRangeStart = 0;
+            mByteRangeEnd = 0;
+            
             rv = SendStop(NS_OK);
             if (NS_FAILED(rv)) ERR_OUT
             // reset the token to front. this allows us to treat
@@ -873,7 +881,7 @@ nsMultiMixedConv::ParseHeaders(nsIChannel *aChannel, char *&aPtr,
                                PRUint32 &aLen, PRBool *_retval) {
     // NOTE: this data must be ascii.
     // NOTE: aPtr is NOT null terminated!
-	nsresult rv = NS_OK;
+    nsresult rv = NS_OK;
     char *cursor = aPtr, *newLine = nsnull;
     PRUint32 cursorLen = aLen;
     PRBool done = PR_FALSE;
