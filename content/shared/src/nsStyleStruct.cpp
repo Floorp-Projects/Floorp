@@ -461,6 +461,7 @@ nsStyleBorder::nsStyleBorder(nsIPresContext* aPresContext)
 nsStyleBorder::nsStyleBorder(const nsStyleBorder& aSrc)
 {
   nsCRT::memcpy((nsStyleBorder*)this, &aSrc, sizeof(nsStyleBorder));
+  mBorderColors = nsnull;
   if (aSrc.mBorderColors) {
     EnsureBorderColors();
     for (PRInt32 i = 0; i < 4; i++)

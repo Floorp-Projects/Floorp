@@ -305,7 +305,7 @@ struct nsBorderColors {
 };
 
 struct nsStyleBorder: public nsStyleStruct {
-  nsStyleBorder() {};
+  nsStyleBorder() :mBorderColors(nsnull) {};
   nsStyleBorder(nsIPresContext* aContext);
   nsStyleBorder(const nsStyleBorder& aBorder);
   ~nsStyleBorder(void) {
