@@ -33,6 +33,8 @@ class nsAnonymousBlockFrame;
 
 #define nsInlineFrameSuper nsHTMLContainerFrame
 
+#define NS_INLINE_FRAME_CONTAINS_PERCENT_AWARE_CHILD 0X00010000
+
 /**
  * Inline frame class.
  *
@@ -95,8 +97,8 @@ protected:
     nsIFrame* mNextRCFrame;
     nsIFrame* mPrevFrame;
     nsInlineFrame* mNextInFlow;
-    PRBool mSetParentPointer;  // when reflowing child frame first set its
-                               // parent frame pointer
+    PRPackedBool mSetParentPointer;  // when reflowing child frame first set its
+                                     // parent frame pointer
 
     InlineReflowState()  {
       mNextRCFrame = nsnull;
@@ -129,6 +131,7 @@ protected:
   virtual void PushFrames(nsIPresContext* aPresContext,
                           nsIFrame* aFromChild,
                           nsIFrame* aPrevSibling);
+
 };
 
 //----------------------------------------------------------------------

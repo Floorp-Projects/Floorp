@@ -549,6 +549,41 @@ nsInlineFrame::ReflowFrames(nsIPresContext* aPresContext,
   return rv;
 }
 
+static 
+void SetContainsPercentAwareChild(nsIFrame *aFrame)
+{
+  nsFrameState myFrameState;
+  aFrame->GetFrameState(&myFrameState);
+  aFrame->SetFrameState(myFrameState | NS_INLINE_FRAME_CONTAINS_PERCENT_AWARE_CHILD);
+}
+
+static
+void MarkPercentAwareFrame(nsIPresContext *aPresContext, 
+                           nsInlineFrame  *aInline,
+                           nsIFrame       *aFrame)
+{
+  nsFrameState childFrameState;
+  aFrame->GetFrameState(&childFrameState);
+  if (childFrameState & NS_FRAME_REPLACED_ELEMENT) 
+  { // aFrame is a replaced element, check it's style
+    if (nsLineLayout::IsPercentageAwareReplacedElement(aPresContext, aFrame)) {
+      SetContainsPercentAwareChild(aInline);
+    }
+  }
+  else
+  {
+    nsIFrame *child;
+    aFrame->FirstChild(aPresContext, nsnull, &child);
+    if (child)
+    { // aFrame is an inline container frame, check my frame state
+      if (childFrameState & NS_INLINE_FRAME_CONTAINS_PERCENT_AWARE_CHILD) {
+        SetContainsPercentAwareChild(aInline); // if a child container is effected, so am I
+      }
+    }
+    // else frame is a leaf that we don't care about
+  }   
+}
+
 nsresult
 nsInlineFrame::ReflowInlineFrame(nsIPresContext* aPresContext,
                                  const nsHTMLReflowState& aReflowState,
@@ -561,6 +596,15 @@ nsInlineFrame::ReflowInlineFrame(nsIPresContext* aPresContext,
   PRBool pushedFrame;
   nsresult rv = lineLayout->ReflowFrame(aFrame, &irs.mNextRCFrame, aStatus,
                                         nsnull, pushedFrame);
+  /* This next block is for bug 28811
+     Test the child frame for %-awareness, 
+     and mark this frame with a bit if it is %-aware.
+     Don't bother if this frame is already marked
+  */
+  if (!(mState & NS_INLINE_FRAME_CONTAINS_PERCENT_AWARE_CHILD)) {  
+    MarkPercentAwareFrame(aPresContext, this, aFrame);
+  }
+
   if (NS_FAILED(rv)) {
     return rv;
   }

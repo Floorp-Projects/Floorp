@@ -251,6 +251,12 @@ public:
 
   static PRBool TreatFrameAsBlock(nsIFrame* aFrame);
 
+  static PRBool IsPercentageUnitSides(const nsStyleSides* aSides);
+
+  static PRBool IsPercentageAwareReplacedElement(nsIPresContext *aPresContext, 
+                                                 nsIFrame       *aFrame);
+
+
   //----------------------------------------
 
   nsIPresContext* mPresContext;
