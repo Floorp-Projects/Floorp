@@ -604,7 +604,7 @@ private:
   nsCString m_logonCookie;
   PRInt16 m_logonPort;
   
-  static nsXPIDLString mAcceptLanguages;
+  nsXPIDLString mAcceptLanguages;
   
   // progress stuff
   void SetProgressString(PRInt32 stringId);

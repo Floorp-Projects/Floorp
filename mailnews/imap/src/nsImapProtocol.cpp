@@ -127,7 +127,6 @@ static NS_DEFINE_CID(kStreamListenerTeeCID, NS_STREAMLISTENERTEE_CID);
 #define IMAP_ENV_AND_DB_HEADERS IMAP_ENV_HEADERS IMAP_DB_HEADERS
 static const PRIntervalTime kImapSleepTime = PR_MillisecondsToInterval(1000);
 static PRInt32 gPromoteNoopToCheckCount = 0;
-nsXPIDLString nsImapProtocol::mAcceptLanguages;
 static const PRUint32 kFlagChangesBeforeCheck = 10;
 static const PRInt32 kMaxSecondsBeforeCheck = 600;
 
@@ -339,14 +338,6 @@ nsresult nsImapProtocol::GlobalInitialization()
     prefBranch->GetBoolPref("mail.imap.use_envelope_cmd",
                             &gUseEnvelopeCmd);
     prefBranch->GetBoolPref("mail.imap.use_literal_plus", &gUseLiteralPlus);
-    nsCOMPtr<nsIPrefLocalizedString> prefString;
-    prefBranch->GetComplexValue("intl.accept_languages",
-                                NS_GET_IID(nsIPrefLocalizedString),
-                                getter_AddRefs(prefString));
-    if (prefString) {
-      prefString->ToString(getter_Copies(mAcceptLanguages));
-    }
-
     return NS_OK;
 }
 
@@ -366,6 +357,18 @@ nsImapProtocol::nsImapProtocol() : nsMsgProtocol(nsnull),
     
   if (!gInitialized)
     GlobalInitialization();
+
+  // read in the accept languages preference
+  nsCOMPtr<nsIPrefBranch> prefBranch(do_GetService(NS_PREFSERVICE_CONTRACTID)); 
+  if (prefBranch)
+  {
+    nsCOMPtr<nsIPrefLocalizedString> prefString;
+    prefBranch->GetComplexValue("intl.accept_languages",
+                                NS_GET_IID(nsIPrefLocalizedString),
+                                getter_AddRefs(prefString));
+    if (prefString)
+      prefString->ToString(getter_Copies(mAcceptLanguages));
+  }
 
     // ***** Thread support *****
   m_thread = nsnull;
