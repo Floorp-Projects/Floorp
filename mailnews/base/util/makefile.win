@@ -21,7 +21,7 @@ IGNORE_MANIFEST=1
 include <$(DEPTH)\config\config.mak>
 
 LIBRARY_NAME=msgcoreutil
-MODULE= mailnewsutil
+MODULE= mailnews
 REQUIRES=xpcom js nspr dom
 
 DEFINES=-D_IMPL_NS_HTML -DWIN32_LEAN_AND_MEAN
