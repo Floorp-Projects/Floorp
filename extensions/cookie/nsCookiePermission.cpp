@@ -111,7 +111,8 @@ nsCookiePermission::TestPermission(nsIURI *aURI,
 
       if (rememberDecision && mPermissionManager) {
         // Remember this decision
-        mPermissionManager->Add(aURI, nsIPermissionManager::COOKIE_TYPE, *aPermission);
+        mPermissionManager->Add(aURI, nsIPermissionManager::COOKIE_TYPE, 
+                                *aPermission ? nsIPermissionManager::ALLOW_ACTION : nsIPermissionManager::DENY_ACTION);
       }
     }
   } else {

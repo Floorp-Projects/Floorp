@@ -581,8 +581,8 @@ nsPermissionManager::Write()
    */
   static const char kTab[] = "\t";
   static const char kNew[] = "\n";
-  static const char kTrue[] = "F";
-  static const char kFalse[] = "T";
+  static const char kTrue[] = "T";
+  static const char kFalse[] = "F";
 
   PRInt32 hostCount = mPermissionList.Count();
   for (PRInt32 i = 0; i < hostCount; ++i) {
