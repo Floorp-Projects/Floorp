@@ -376,7 +376,9 @@ CK_RV FC_GetSlotInfo(CK_SLOT_ID slotID, CK_SLOT_INFO_PTR pInfo) {
 /* FC_GetAttributeValue obtains the value of one or more object attributes. */
  CK_RV FC_GetAttributeValue(CK_SESSION_HANDLE hSession,
  CK_OBJECT_HANDLE hObject,CK_ATTRIBUTE_PTR pTemplate,CK_ULONG usCount) {
-    PK11_FIPSCHECK();
+    /* depend on the normal soft token to protect sensitive objects and
+     * data */
+    PK11_FIPSFATALCHECK();
     return NSC_GetAttributeValue(hSession,hObject,pTemplate,usCount);
 }
 
