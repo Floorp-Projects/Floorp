@@ -214,9 +214,6 @@ public:
                                nsPrintObject*     aPO,
                                PRUint32         aDelay);
 
-  //---------------------------------------------------------------------
-  // Static Methods
-  //---------------------------------------------------------------------
   PRBool IsWindowsInOurSubTree(nsIDOMWindow * aDOMWindow);
   PRBool IsParentAFrameSet(nsIWebShell * aParent);
   PRBool IsThereAnIFrameSelected(nsIWebShell* aWebShell,
@@ -229,9 +226,12 @@ public:
   // get the currently infocus frame for the document viewer
   already_AddRefed<nsIDOMWindow> FindFocusedDOMWindow();
 
-  void GetWebShellTitleAndURL(nsIWebShell* aWebShell, nsIDocument* aDoc,
-                              PRUnichar** aTitle, PRUnichar** aURLStr);
-
+  //---------------------------------------------------------------------
+  // Static Methods
+  //---------------------------------------------------------------------
+  static void GetDocumentTitleAndURL(nsIDocument* aDoc,
+                                     PRUnichar** aTitle,
+                                     PRUnichar** aURLStr);
   static void GetDisplayTitleAndURL(nsPrintObject*      aPO, 
                                     nsIPrintSettings* aPrintSettings, 
                                     const PRUnichar*  aBrandName,
@@ -240,6 +240,11 @@ public:
                                     eDocTitleDefault  aDefType = eDocTitleDefNone);
   static void ShowPrintErrorDialog(nsresult printerror,
                                    PRBool aIsPrinting = PR_TRUE);
+  static void GetPresShellAndRootContent(nsIDocShell *  aDocShell,
+                                         nsIPresShell** aPresShell,
+                                         nsIContent**   aContent);
+
+  static PRBool HasFramesetChild(nsIContent* aContent);
 
   PRBool   CheckBeforeDestroy();
   nsresult Cancelled();

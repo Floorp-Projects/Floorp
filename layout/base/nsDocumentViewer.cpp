@@ -350,9 +350,6 @@ public:
   // nsIDocumentViewerPrint Printing Methods
   NS_DECL_NSIDOCUMENTVIEWERPRINT
 
-  // Helpers (also used by nsPrintEngine)
-  PRBool IsWebShellAFrameSet(nsIWebShell * aParent);
-
 protected:
   virtual ~DocumentViewerImpl();
 
@@ -1688,92 +1685,7 @@ DocumentViewerImpl::CreateStyleSet(nsIDocument* aDocument,
 }
 
 
-//---------------------------------------------------------------------
-// Note this is also defined in nsPrintEngine
-// They can't share it because nsPrintEngine may not be available
-// when printing isn't turned on
-static nsIPresShell *
-GetPresShellFor(nsIDocShell* aDocShell)
-{
-  nsCOMPtr<nsIDOMDocument> domDoc(do_GetInterface(aDocShell));
-  if (!domDoc) return nsnull;
-
-  nsCOMPtr<nsIDocument> doc(do_QueryInterface(domDoc));
-  if (!doc) return nsnull;
-
-  return doc->GetShellAt(0);
-}
-
-//---------------------------------------------------------------------
-// This gets ref counted copies of the PresShell and Root Content
-// for a given nsIWebShell
-void
-DocumentViewerImpl::GetPresShellAndRootContent(nsIWebShell *  aWebShell,
-                                               nsIPresShell** aPresShell,
-                                               nsIContent**   aContent)
-{
-  NS_ASSERTION(aWebShell, "Pointer is null!");
-  NS_ASSERTION(aPresShell, "Pointer is null!");
-  NS_ASSERTION(aContent, "Pointer is null!");
-
-  *aContent   = nsnull;
-  *aPresShell = nsnull;
-
-  nsCOMPtr<nsIDocShell> docShell(do_QueryInterface(aWebShell));
-
-  nsIPresShell *presShell = GetPresShellFor(docShell);
-  if (!presShell)
-    return;
-
-  nsCOMPtr<nsIDocument> doc;
-  presShell->GetDocument(getter_AddRefs(doc));
-  if (!doc)
-    return;
-
-  NS_IF_ADDREF(*aContent = doc->GetRootContent());
-  NS_ADDREF(*aPresShell = presShell);
-}
-
-//---------------------------------------------------------------------
-nsresult
-DocumentViewerImpl::FindFrameSetWithIID(nsIContent * aParentContent,
-                                        const nsIID& aIID)
-{
-  PRUint32 numChildren = aParentContent->GetChildCount();
-
-  // do a breadth search across all siblings
-  PRUint32 inx;
-  for (inx = 0; inx < numChildren; ++inx) {
-    nsIContent *child = aParentContent->GetChildAt(inx);
-
-    if (child) {
-      nsCOMPtr<nsISupports> temp;
-      if (NS_SUCCEEDED(child->QueryInterface(aIID, (void**)getter_AddRefs(temp)))) {
-        return NS_OK;
-      }
-    }
-  }
-
-  return NS_ERROR_FAILURE;
-}
-
 //-------------------------------------------------------
-PRBool
-DocumentViewerImpl::IsWebShellAFrameSet(nsIWebShell * aWebShell)
-{
-  NS_ASSERTION(aWebShell, "Pointer is null!");
-
-  PRBool doesContainFrameSet = PR_FALSE;
-  nsCOMPtr<nsIPresShell> presShell;
-  nsCOMPtr<nsIContent>   rootContent;
-  GetPresShellAndRootContent(aWebShell, getter_AddRefs(presShell), getter_AddRefs(rootContent));
-  if (rootContent) {
-    if (NS_SUCCEEDED(FindFrameSetWithIID(rootContent, NS_GET_IID(nsIDOMHTMLFrameSetElement)))) {
-      doesContainFrameSet = PR_TRUE;
-    }
-  }
-  return doesContainFrameSet;
-}
 
 nsresult
 DocumentViewerImpl::MakeWindow(nsIWidget* aParentWidget,

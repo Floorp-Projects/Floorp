@@ -85,9 +85,6 @@ public:
 
   virtual void OnDonePrinting() = 0;
 
-  virtual nsresult FindFrameSetWithIID(nsIContent * aParentContent, const nsIID& aIID) = 0;
-
-  virtual void GetPresShellAndRootContent(nsIWebShell * aWebShell, nsIPresShell** aPresShell, nsIContent** aContent) = 0;
 };
 
 /* Use this macro when declaring classes that implement this interface. */
@@ -102,8 +99,6 @@ public:
   virtual void     IncrementDestroyRefCount(); \
   virtual void     ReturnToGalleyPresentation(); \
   virtual void     InstallNewPresentation(); \
-  virtual void     OnDonePrinting(); \
-  virtual nsresult FindFrameSetWithIID(nsIContent * aParentContent, const nsIID& aIID); \
-  virtual void     GetPresShellAndRootContent(nsIWebShell * aWebShell, nsIPresShell** aPresShell, nsIContent** aContent);
+  virtual void     OnDonePrinting();
 
 #endif /* nsIDocumentViewerPrint_h___ */
