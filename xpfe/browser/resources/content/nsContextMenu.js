@@ -280,7 +280,9 @@ nsContextMenu.prototype = {
                 }
             } else if ( this.target.parentNode.tagName == "scrollbar" 
                         ||
-                        this.target.parentNode.tagName == "thumb" ) {
+                        this.target.parentNode.tagName == "thumb" 
+                        || 
+                        this.target.parentNode.tagName == "xul:slider") {
                 this.shouldDisplay = false;
             } else {
                 try {
