@@ -453,6 +453,9 @@ nsLocalFile::nsLocalFile()
 	mSpec.vRefNum = 0;
 	mSpec.parID = 0;
 	mSpec.name[0] = 0;
+
+	mResolvedWasAlias = false;
+	mResolvedWasFolder = false;
 }
 
 nsLocalFile::~nsLocalFile()
@@ -491,6 +494,13 @@ nsLocalFile::MakeDirty()
 	mResolvedSpec.vRefNum = 0;
 	mResolvedSpec.parID = 0;
 	mResolvedSpec.name[0] = 0;
+	
+	mTargetSpec.vRefNum = 0;
+	mTargetSpec.parID = 0;
+	mTargetSpec.name[0] = 0;
+
+	mResolvedWasAlias = false;
+	mResolvedWasFolder = false;
 }
 
 
@@ -543,13 +553,11 @@ nsLocalFile::ResolveAndStat(PRBool resolveTerminal)
 	{
 		// Resolve the alias to the original file.
 		FSSpec	spec = mResolvedSpec;
-		Boolean targetIsFolder;	  
-		Boolean wasAliased;	  
-		err = ::ResolveAliasFile(&spec, TRUE, &targetIsFolder, &wasAliased);
+		err = ::ResolveAliasFile(&spec, TRUE, &mResolvedWasFolder, &mResolvedWasAlias);
 		if (err != noErr)
 			return MacErrorMapper(err);
 		else
-			mResolvedSpec = spec;
+			mTargetSpec = spec;
 	}		
 		
 	
@@ -659,7 +667,7 @@ nsLocalFile::OpenNSPRFileDesc(PRInt32 flags, PRInt32 mode, PRFileDesc **_retval)
 	OSErr err = noErr;
 
 	// Resolve the alias to the original file.
-	FSSpec	spec = mResolvedSpec;
+	FSSpec	spec = mTargetSpec;
 	Boolean targetIsFolder;	  
 	Boolean wasAliased;	  
 	err = ::ResolveAliasFile(&spec, TRUE, &targetIsFolder, &wasAliased);
@@ -716,7 +724,7 @@ nsLocalFile::OpenANSIFileDesc(const char *mode, FILE * *_retval)
    
    
    // Resolve the alias to the original file.
-	FSSpec	spec = mResolvedSpec;
+	FSSpec	spec = mTargetSpec;
 	Boolean targetIsFolder;	  
 	Boolean wasAliased;	  
 	OSErr err = ::ResolveAliasFile(&spec, TRUE, &targetIsFolder, &wasAliased);
@@ -952,6 +960,8 @@ nsLocalFile::GetPath(char **_retval)
 	{
 		case eInitWithPath:
 			*_retval = (char*) nsAllocator::Clone(mWorkingPath, strlen(mWorkingPath)+1);
+			if (!*_retval)
+				return NS_ERROR_OUT_OF_MEMORY;
 			break;
 		
 		case eInitWithFSSpec:
@@ -960,10 +970,12 @@ nsLocalFile::GetPath(char **_retval)
 			Handle	fullPathHandle;
 			ResolveAndStat(PR_TRUE);
 			(void)::FSpGetFullPath(&mResolvedSpec, &fullPathLen, &fullPathHandle);
-			if (!fullPathHandle) return NS_ERROR_OUT_OF_MEMORY;
+			if (!fullPathHandle)
+				return NS_ERROR_OUT_OF_MEMORY;
 			
 			char* fullPath = (char *)nsAllocator::Alloc(fullPathLen + 1);
-			if (!fullPath) return NS_ERROR_OUT_OF_MEMORY;
+			if (!fullPath)
+				return NS_ERROR_OUT_OF_MEMORY;
 			
 			::HLock(fullPathHandle);
 			nsCRT::memcpy(fullPath, *fullPathHandle, fullPathLen);			
@@ -979,6 +991,13 @@ nsLocalFile::GetPath(char **_retval)
 			// we really shouldn't get here
 			break;
 	}
+	
+	// For cross platform reasons we need to make sure that even if we have a path to a
+	// directory we don't return the trailing colon.  This used to break the component
+	// manager (Bugzilla bug #26102)
+	PRUint32 lastChar = strlen(*_retval) - 1;
+	if ((*_retval)[lastChar] == ':')
+		(*_retval)[lastChar] = '\0';
 
 	return NS_OK;
 }
@@ -1030,7 +1049,7 @@ nsLocalFile::Load(PRLibrary * *_retval)
 	// Use the new PR_LoadLibraryWithFlags which allows us to use a FSSpec
 	PRLibSpec libSpec;
 	libSpec.type = PR_LibSpec_MacIndexedFragment;
-	libSpec.value.mac_indexed_fragment.fsspec = &mResolvedSpec;
+	libSpec.value.mac_indexed_fragment.fsspec = &mTargetSpec;
 	libSpec.value.mac_indexed_fragment.index = 0;
 	*_retval =	PR_LoadLibraryWithFlags(libSpec, 0);
 	
@@ -1140,7 +1159,7 @@ nsLocalFile::GetFileSize(PRInt64 *aFileSize)
 	
 	long dataSize, resSize;
 	
-	OSErr err = FSpGetFileSize(&mResolvedSpec, &dataSize, &resSize);
+	OSErr err = FSpGetFileSize(&mTargetSpec, &dataSize, &resSize);
 							   
 	if (err != noErr)
 		return MacErrorMapper(err);
@@ -1170,7 +1189,7 @@ nsLocalFile::SetFileSize(PRInt64 aFileSize)
 		LL_L2I(aNewLength, aFileSize);
 		
 		// Need to open the file to set the size
-		if (::FSpOpenDF(&mResolvedSpec, fsWrPerm, &refNum) != noErr)
+		if (::FSpOpenDF(&mTargetSpec, fsWrPerm, &refNum) != noErr)
 			return NS_ERROR_FILE_ACCESS_DENIED;
 
 		err = ::SetEOF(refNum, aNewLength);
@@ -1274,7 +1293,7 @@ nsLocalFile::Exists(PRBool *_retval)
 	(void)ResolveAndStat(PR_TRUE);
 	
 	FSSpec temp;
-	if (::FSMakeFSSpec(mResolvedSpec.vRefNum, mResolvedSpec.parID, mResolvedSpec.name, &temp) == noErr)
+	if (::FSMakeFSSpec(mTargetSpec.vRefNum, mTargetSpec.parID, mTargetSpec.name, &temp) == noErr)
 		*_retval = PR_TRUE;
 
 	return NS_OK;
@@ -1325,7 +1344,7 @@ nsLocalFile::IsDirectory(PRBool *_retval)
 	
 	long dirID;
 	Boolean isDirectory;
-	if ((::FSpGetDirectoryID(&mResolvedSpec, &dirID, &isDirectory) == noErr) && isDirectory)
+	if ((::FSpGetDirectoryID(&mTargetSpec, &dirID, &isDirectory) == noErr) && isDirectory)
 		*_retval = PR_TRUE;
 
 	return NS_OK;
@@ -1344,7 +1363,7 @@ nsLocalFile::IsFile(PRBool *_retval)
 	
 	long dirID;
 	Boolean isDirectory;
-	if ((::FSpGetDirectoryID(&mResolvedSpec, &dirID, &isDirectory) == noErr) && !isDirectory)
+	if ((::FSpGetDirectoryID(&mTargetSpec, &dirID, &isDirectory) == noErr) && !isDirectory)
 		*_retval = PR_TRUE;
 
 	return NS_OK;
@@ -1542,6 +1561,14 @@ NS_IMETHODIMP nsLocalFile::GetResolvedFSSpec(FSSpec *fileSpec)
 
 }
 
+NS_IMETHODIMP nsLocalFile::GetTargetFSSpec(FSSpec *fileSpec)
+{
+	NS_ENSURE_ARG(fileSpec);
+	*fileSpec = mTargetSpec;
+	return NS_OK;
+
+}
+
 NS_IMETHODIMP nsLocalFile::SetAppendedPath(const char *aPath)
 {
 	MakeDirty();
@@ -1566,7 +1593,7 @@ NS_IMETHODIMP nsLocalFile::GetFileTypeAndCreator(OSType *type, OSType *creator)
 	ResolveAndStat(PR_TRUE);
 	
 	FInfo info;
-	OSErr err = ::FSpGetFInfo(&mResolvedSpec, &info);
+	OSErr err = ::FSpGetFInfo(&mTargetSpec, &info);
 	if (err != noErr)
 		return NS_ERROR_FILE_NOT_FOUND;
 	*type = info.fdType;
@@ -1578,7 +1605,7 @@ NS_IMETHODIMP nsLocalFile::GetFileTypeAndCreator(OSType *type, OSType *creator)
 NS_IMETHODIMP nsLocalFile::SetFileTypeAndCreator(OSType type, OSType creator)
 {
 	FInfo info;
-	OSErr err = ::FSpGetFInfo(&mResolvedSpec, &info);
+	OSErr err = ::FSpGetFInfo(&mTargetSpec, &info);
 	if (err != noErr)
 		return NS_ERROR_FILE_NOT_FOUND;
 	
@@ -1588,7 +1615,7 @@ NS_IMETHODIMP nsLocalFile::SetFileTypeAndCreator(OSType type, OSType creator)
 	if (creator)
 		info.fdCreator = creator;
 	
-	err = ::FSpSetFInfo(&mResolvedSpec, &info);
+	err = ::FSpSetFInfo(&mTargetSpec, &info);
 	if (err != noErr)
 		return NS_ERROR_FILE_ACCESS_DENIED;
 	
