@@ -125,8 +125,12 @@ nsLookAndFeelFloatPref nsXPLookAndFeel::sFloatPrefs[] =
 
 
 // This array MUST be kept in the same order as the color list in nsILookAndFeel.h.
-
-char* nsXPLookAndFeel::sColorPrefs[] =
+/* XXX If you add any strings longer than
+ * "ui.-moz-mac-accentlightesthighlight"
+ * to the following array then you MUST update the
+ * sizes of the sColorPrefs array in nsXPLookAndFeel.h
+ */
+const char nsXPLookAndFeel::sColorPrefs[][36] =
 {
   "ui.windowBackground",
   "ui.windowForeground",
