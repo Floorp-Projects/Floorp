@@ -26,6 +26,7 @@ MODULE=raptor
 XPIDL_MODULE=appshell 
 
 XPIDLSRCS =                        \
+        .\nsIXULWindow.idl       \
         .\nsIFileLocator.idl       \
         .\nsIAppShellService.idl   \
        	.\nsIWindowMediator.idl	   \
