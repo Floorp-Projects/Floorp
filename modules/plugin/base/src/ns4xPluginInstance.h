@@ -54,9 +54,9 @@
 #include "prlink.h"  // for PRLibrary
 #include "nsIScriptablePlugin.h"
 
-#ifdef MOZ_WIDGET_GTK
+#if defined (MOZ_WIDGET_GTK) || defined (MOZ_WIDGET_GTK2)
 #include <gtk/gtk.h>
-#elif MOZ_WIDGET_XLIB
+#elif defined (MOZ_WIDGET_XLIB)
 #include "xlibxtbin.h"
 #endif
 
@@ -169,13 +169,13 @@ protected:
      */
     NPPluginFuncs* fCallbacks;
 
-#ifdef MOZ_WIDGET_GTK
+#if defined (MOZ_WIDGET_GTK) || defined (MOZ_WIDGET_GTK2)
    /**
     * Special GtkXtBin widget that encapsulates the Xt toolkit
     * within a Gtk Application
     */
    GtkWidget *mXtBin;
-#elif MOZ_WIDGET_XLIB
+#elif defined (MOZ_WIDGET_XLIB)
    xtbin *mXlibXtBin;
 #endif
 

@@ -164,7 +164,7 @@
 #include "nsIDocShell.h"
 
 #ifdef XP_UNIX
-#if defined(MOZ_WIDGET_GTK)
+#if defined(MOZ_WIDGET_GTK) || defined (MOZ_WIDGET_GTK2)
 #include <gdk/gdkx.h> // for GDK_DISPLAY()
 #elif defined(MOZ_WIDGET_QT)
 #include <qwindowdefs.h> // for qt_xdisplay()
@@ -2734,7 +2734,7 @@ NS_IMETHODIMP nsPluginHostImpl::GetValue(nsPluginManagerVariable aVariable, void
 #if defined(XP_UNIX) && !defined(XP_MACOSX) && !defined(NO_X11)
   if (nsPluginManagerVariable_XDisplay == aVariable) {
     Display** value = NS_REINTERPRET_CAST(Display**, aValue);
-#if defined(MOZ_WIDGET_GTK)
+#if defined(MOZ_WIDGET_GTK) || defined (MOZ_WIDGET_GTK2)
     *value = GDK_DISPLAY();
 #elif defined(MOZ_WIDGET_QT)
     *value = qt_xdisplay();

@@ -59,11 +59,18 @@
 #endif
 
 //needed for nppdf plugin
-#if defined(MOZ_WIDGET_GTK)
+#ifdef MOZ_WIDGET_GTK
 #include <gdk/gdk.h>
 #include <gdk/gdkx.h>
 #include "gtkxtbin.h"
 #endif
+
+#ifdef MOZ_WIDGET_GTK2
+#include <gdk/gdk.h>
+#include <gdk/gdkx.h>
+#include "gtk2xtbin.h"
+#endif
+
 
 // POST/GET stream type
 enum eNPPStreamTypeInternal {
@@ -1172,13 +1179,13 @@ _getvalue(NPP npp, NPNVariable variable, void *result)
   switch(variable) {
 #ifdef XP_UNIX
   case NPNVxDisplay : {
-#if defined(MOZ_WIDGET_GTK)
+#if defined(MOZ_WIDGET_GTK) || defined(MOZ_WIDGET_GTK2)
     // adobe nppdf calls XtGetApplicationNameAndClass(display, &instance, &class)
     // we have to init Xt toolkit before get XtDisplay
     // just call gtk_xtbin_new(w,0) once
     static GtkWidget *gtkXtBinHolder = 0;
     if (!gtkXtBinHolder) {
-      gtkXtBinHolder = gtk_xtbin_new((GdkWindow*)&gdk_root_parent,0);
+      gtkXtBinHolder = gtk_xtbin_new(GDK_ROOT_PARENT(),0);
       // it crashes on destroy, let it leak
       // gtk_widget_destroy(gtkXtBinHolder);
     }
