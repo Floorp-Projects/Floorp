@@ -972,9 +972,6 @@ BOOL CNetscapeApp::InitInstance()
     // Get the main NSPR event queue
     mozilla_event_queue  = PR_GetMainEventQueue();
 
-#ifndef MOZ_NGLAYOUT
-    LM_InitMocha();
-#endif /* MOZ_NGLAYOUT */
 
     // Initialize the XP file extension mapping
     NET_InitFileFormatTypes(NULL, NULL);
@@ -1625,6 +1622,11 @@ BOOL CNetscapeApp::InitInstance()
 
 	STARTUP_np();
 
+#ifndef MOZ_NGLAYOUT
+    LM_InitMocha();
+#endif /* MOZ_NGLAYOUT */
+
+
 	// if PE mode, start up java too!
 #if defined(OJI) || defined(JAVA)
 	if (m_bAccountSetupStartupJava) {
@@ -1653,22 +1655,19 @@ BOOL CNetscapeApp::InitInstance()
 #if defined(OJI) || defined(JAVA)
 	// if PE mode, check if java environment is valid
 	if (m_bAccountSetupStartupJava) {
-
+        PRBool started = PR_FALSE;
 #ifdef OJI
         JRIEnv* ee = NULL;
-        JVMMgr* jvmMgr = JVM_GetJVMMgr();
+        nsJVMMgr* jvmMgr = JVM_GetJVMMgr();
         if (jvmMgr) {
-            NPIJVMPlugin* jvm = jvmMgr->GetJVM();
-            if (jvm) {
-                ee = jvm->EnsureExecEnv();
-                jvm->Release();
-            }
+            started = jvmMgr->StartupJVM() == nsJVMStatus_Running;
             jvmMgr->Release();
         }
 #else
         JRIEnv * ee = JRI_GetCurrentEnv();
+        started = ee != NULL;
 #endif
-        if (ee == NULL)  {
+        if (started)  {
             CString szJavaStartupErr = "You are starting up an application that needs java.\nPlease turn on java in your navigator's preference and try again.";
             AfxMessageBox(szJavaStartupErr, MB_OK);
             m_bAccountSetupStartupJava = FALSE;

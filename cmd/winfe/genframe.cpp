@@ -2370,19 +2370,7 @@ void CGenericFrame::OnDisplayPrivacyTutorial()
 void CGenericFrame::OnToggleJavaConsole()
 {
 #ifdef OJI
-    JVMMgr* jvmMgr = JVM_GetJVMMgr();
-    if (jvmMgr == NULL) 
-	return;
-    NPIJVMPlugin* jvm = jvmMgr->GetJVM();
-    if (jvm) {
-	if (jvm->IsConsoleVisible()) {
-	    jvm->HideConsole();
-	} else {
-	    jvm->ShowConsole();
-	}
-	jvm->Release();
-    }
-    jvmMgr->Release();
+    JVM_ToggleConsole();
 #else
     if( LJ_IsConsoleShowing() ) {
       LJ_HideConsole();
@@ -2395,20 +2383,10 @@ void CGenericFrame::OnToggleJavaConsole()
 void CGenericFrame::OnUpdateJavaConsole(CCmdUI* pCmdUI)
 {   
 #ifdef OJI
-    JVMMgr* jvmMgr = JVM_GetJVMMgr();
-    if (jvmMgr == NULL) {
-	pCmdUI->Enable(FALSE);
-    }
-    NPIJVMPlugin* jvm = jvmMgr->GetJVM();
-    if (jvm) {
-	if (jvm->GetJVMStatus() != JVMStatus_Failed) {
-	    pCmdUI->SetCheck(jvm->IsConsoleVisible());
-	} else {
-	    pCmdUI->Enable(FALSE);
-	}
-	jvm->Release();
-    }
-    jvmMgr->Release();
+    if (JVM_IsJVMAvailable()) 
+        pCmdUI->SetCheck(JVM_IsConsoleVisible());
+    else
+        pCmdUI->Enable(FALSE);
 #else
     if (LJJavaStatus_Failed != LJ_GetJavaStatus()) {
 	pCmdUI->SetCheck( LJ_IsConsoleShowing() );

@@ -1198,7 +1198,7 @@ inline UINT CMapStringToObNoCase::HashKey(LPCTSTR key) const
 void WFE_LJ_StartupJava(void)
 {
 #ifdef OJI
-    JVMMgr* jvmMgr = JVM_GetJVMMgr();
+    nsJVMMgr* jvmMgr = JVM_GetJVMMgr();
     if (jvmMgr) {
         jvmMgr->StartupJVM();
         jvmMgr->Release();
@@ -1211,21 +1211,7 @@ void WFE_LJ_StartupJava(void)
 void WFE_LJ_StartDebugger(void)
 {
 #ifdef OJI
-    JVMMgr* jvmMgr = JVM_GetJVMMgr();
-    if (jvmMgr) {
-        NPIJVMPlugin* jvm = jvmMgr->GetJVM();
-        if (jvm) {
-            static NS_DEFINE_IID(kISymantecDebuggerIID, NP_ISYMANTECDEBUGGER_IID);
-            NPISymantecDebugger* debugger;
-            if (jvm->QueryInterface(kISymantecDebuggerIID, (void**)&debugger) == NS_OK) {
-                // XXX should we make sure the vm is started first?
-                debugger->StartDebugger(NPSymantecDebugPort_SharedMemory);
-                debugger->Release();
-            }
-            jvm->Release();
-        }
-        jvmMgr->Release();
-    }
+    JVM_StartDebugger();
 #elif defined(JAVA)
     LJ_StartDebugger(LJDebugPort_SharedMemory);
 #endif

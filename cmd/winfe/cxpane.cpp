@@ -1541,6 +1541,16 @@ char* getBuiltInAttribute (LO_BuiltinStruct *pBuiltin_struct, char* att) {
 	int n = 0;
 	if (!pBuiltin_struct || !att)
 		return NULL;
+#ifdef OJI
+	while (n < pBuiltin_struct->attributes.n) {
+		char* attName = *(pBuiltin_struct->attributes.names + n);
+		char* attValue = *(pBuiltin_struct->attributes.values + n);
+		if (attName && (stricmp(attName, att) == 0)) {
+			return attValue; 
+		}
+		n++;
+	}
+#else
 	while (n < pBuiltin_struct->attribute_cnt) {
 		char* attName = *(pBuiltin_struct->attribute_list + n);
 		char* attValue = *(pBuiltin_struct->value_list + n);
@@ -1549,6 +1559,7 @@ char* getBuiltInAttribute (LO_BuiltinStruct *pBuiltin_struct, char* att) {
 		}
 		n++;
 	}
+#endif
 	return NULL;
 }
 
@@ -1577,7 +1588,11 @@ void CPaneCX::DisplayBuiltin(MWContext *pContext, int iLocation, LO_BuiltinStruc
 		char* url = getBuiltInAttribute(pBuiltin_struct, "data");
 		char* target = getBuiltInAttribute(pBuiltin_struct, "target");
 		if (pBuiltin_struct->FE_Data == NULL ){
+#ifdef OJI
+			CRDFContentView* pWnd = CRDFContentView::DisplayRDFTreeFromSHACK(cWnd, xPos, yPos, width, height, url == NULL ? "" :url , pBuiltin_struct->attributes.n, pBuiltin_struct->attributes.names, pBuiltin_struct->attributes.values);
+#else
 			CRDFContentView* pWnd = CRDFContentView::DisplayRDFTreeFromSHACK(cWnd, xPos, yPos, width, height, url == NULL ? "" :url , pBuiltin_struct->attribute_cnt, pBuiltin_struct->attribute_list, pBuiltin_struct->value_list);
+#endif
 			((CRDFOutliner*)pWnd->GetOutlinerParent()->GetOutliner())->SetWindowTarget(target);
 			pBuiltin_struct->FE_Data = pWnd;
 		}

@@ -650,10 +650,10 @@ BOOL fe_ShutdownJava()
 
 #if defined(OJI)
 
-    JVMMgr* jvmMgr = JVM_GetJVMMgr();
+    nsJVMMgr* jvmMgr = JVM_GetJVMMgr();
     if (jvmMgr == NULL) 
         return FALSE;
-    bRetval = (jvmMgr->ShutdownJVM() == JVMStatus_Enabled);
+    bRetval = (jvmMgr->ShutdownJVM() == nsJVMStatus_Enabled);
     // XXX suspend all java threads
     jvmMgr->Release();
 
