@@ -74,7 +74,8 @@ nsWindow::nsWindow()
 nsWindow::~nsWindow()
 {
   OnDestroy();
-  gtk_widget_destroy(mWidget);
+  if (GTK_IS_WIDGET(mWidget))
+    gtk_widget_destroy(mWidget);
   if (nsnull != mGC) {
     gdk_gc_destroy(mGC);
     mGC = nsnull;
