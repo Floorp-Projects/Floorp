@@ -735,7 +735,10 @@ EmitPropOp(JSContext *cx, JSParseNode *pn, JSOp op, JSCodeGenerator *cg)
     JSAtomListElement *ale;
 
     pn2 = pn->pn_expr;
-    if (pn->pn_type == TOK_DOT && pn2->pn_type == TOK_NAME) {
+    if (op == JSOP_GETPROP &&
+        pn->pn_type == TOK_DOT &&
+        pn2->pn_type == TOK_NAME) {
+        /* Try to optimize arguments.length into JSOP_ARGCNT. */
         if (!LookupArgOrVar(cx, &cg->treeContext, pn2))
             return JS_FALSE;
         if (pn2->pn_op == JSOP_ARGUMENTS &&
@@ -770,7 +773,10 @@ EmitElemOp(JSContext *cx, JSParseNode *pn, JSOp op, JSCodeGenerator *cg)
 
     left = pn->pn_left;
     right = pn->pn_right;
-    if (left->pn_type == TOK_NAME && right->pn_type == TOK_NUMBER) {
+    if (op == JSOP_GETELEM &&
+        left->pn_type == TOK_NAME &&
+        right->pn_type == TOK_NUMBER) {
+        /* Try to optimize arguments[0] into JSOP_ARGSUB. */
         if (!LookupArgOrVar(cx, &cg->treeContext, left))
             return JS_FALSE;
         if (left->pn_op == JSOP_ARGUMENTS &&

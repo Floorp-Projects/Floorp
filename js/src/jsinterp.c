@@ -416,8 +416,9 @@ js_GetArgument(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
     JSFunction *fun;
     JSStackFrame *fp;
 
-    JS_ASSERT(OBJ_GET_CLASS(cx, obj) == &js_FunctionClass);
-    fun = (JSFunction *) JS_GetPrivate(cx, obj);
+    fun = (JSFunction *)JS_GetInstancePrivate(cx, obj, &js_FunctionClass, NULL);
+    if (!fun)
+        return JS_TRUE;
     for (fp = cx->fp; fp; fp = fp->down) {
         /* Find most recent non-native function frame. */
         if (fp->fun && !fp->fun->native) {
@@ -437,8 +438,9 @@ js_SetArgument(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
     JSFunction *fun;
     JSStackFrame *fp;
 
-    JS_ASSERT(OBJ_GET_CLASS(cx, obj) == &js_FunctionClass);
-    fun = (JSFunction *) JS_GetPrivate(cx, obj);
+    fun = (JSFunction *)JS_GetInstancePrivate(cx, obj, &js_FunctionClass, NULL);
+    if (!fun)
+        return JS_TRUE;
     for (fp = cx->fp; fp; fp = fp->down) {
         /* Find most recent non-native function frame. */
         if (fp->fun && !fp->fun->native) {
@@ -459,8 +461,9 @@ js_GetLocalVariable(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
     JSStackFrame *fp;
     jsint slot;
 
-    JS_ASSERT(OBJ_GET_CLASS(cx, obj) == &js_FunctionClass);
-    fun = (JSFunction *) JS_GetPrivate(cx, obj);
+    fun = (JSFunction *)JS_GetInstancePrivate(cx, obj, &js_FunctionClass, NULL);
+    if (!fun)
+        return JS_TRUE;
     for (fp = cx->fp; fp; fp = fp->down) {
         /* Find most recent non-native function frame. */
         if (fp->fun && !fp->fun->native) {
@@ -483,8 +486,9 @@ js_SetLocalVariable(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
     JSStackFrame *fp;
     jsint slot;
 
-    JS_ASSERT(OBJ_GET_CLASS(cx, obj) == &js_FunctionClass);
-    fun = (JSFunction *) JS_GetPrivate(cx, obj);
+    fun = (JSFunction *)JS_GetInstancePrivate(cx, obj, &js_FunctionClass, NULL);
+    if (!fun)
+        return JS_TRUE;
     for (fp = cx->fp; fp; fp = fp->down) {
         /* Find most recent non-native function frame. */
         if (fp->fun && !fp->fun->native) {

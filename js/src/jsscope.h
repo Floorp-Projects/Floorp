@@ -179,7 +179,7 @@ extern void
 js_DestroyScope(JSContext *cx, JSScope *scope);
 
 extern JSHashNumber
-js_HashValue(jsval v);
+js_HashId(jsid id);
 
 extern jsval
 js_IdToValue(jsid id);

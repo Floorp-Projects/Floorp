@@ -476,9 +476,9 @@ js_DestroyScope(JSContext *cx, JSScope *scope)
 }
 
 JSHashNumber
-js_HashValue(jsval v)
+js_HashId(jsid id)
 {
-    return js_hash_id((const void *)v);
+    return js_hash_id((const void *)id);
 }
 
 jsval

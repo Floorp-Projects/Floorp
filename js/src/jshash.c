@@ -462,7 +462,7 @@ JS_HashString(const void *key)
 
     h = 0;
     for (s = (const unsigned char *)key; *s; s++)
-        h = (h >> 28) ^ (h << 4) ^ *s;
+        h = (h >> (JS_HASH_BITS - 4)) ^ (h << 4) ^ *s;
     return h;
 }
 
