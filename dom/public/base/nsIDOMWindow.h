@@ -28,6 +28,7 @@
 class nsIDOMNavigator;
 class nsIDOMElement;
 class nsIDOMDocument;
+class nsIDOMBarProp;
 class nsIDOMScreen;
 class nsIDOMHistory;
 class nsIDOMWindowCollection;
@@ -56,6 +57,20 @@ public:
   NS_IMETHOD    GetParent(nsIDOMWindow** aParent)=0;
 
   NS_IMETHOD    GetTop(nsIDOMWindow** aTop)=0;
+
+  NS_IMETHOD    GetMenubar(nsIDOMBarProp** aMenubar)=0;
+
+  NS_IMETHOD    GetToolbar(nsIDOMBarProp** aToolbar)=0;
+
+  NS_IMETHOD    GetLocationbar(nsIDOMBarProp** aLocationbar)=0;
+
+  NS_IMETHOD    GetPersonalbar(nsIDOMBarProp** aPersonalbar)=0;
+
+  NS_IMETHOD    GetStatusbar(nsIDOMBarProp** aStatusbar)=0;
+
+  NS_IMETHOD    GetScrollbars(nsIDOMBarProp** aScrollbars)=0;
+
+  NS_IMETHOD    GetDirectories(nsIDOMBarProp** aDirectories)=0;
 
   NS_IMETHOD    GetClosed(PRBool* aClosed)=0;
 
@@ -156,6 +171,13 @@ public:
   NS_IMETHOD    GetHistory(nsIDOMHistory** aHistory);  \
   NS_IMETHOD    GetParent(nsIDOMWindow** aParent);  \
   NS_IMETHOD    GetTop(nsIDOMWindow** aTop);  \
+  NS_IMETHOD    GetMenubar(nsIDOMBarProp** aMenubar);  \
+  NS_IMETHOD    GetToolbar(nsIDOMBarProp** aToolbar);  \
+  NS_IMETHOD    GetLocationbar(nsIDOMBarProp** aLocationbar);  \
+  NS_IMETHOD    GetPersonalbar(nsIDOMBarProp** aPersonalbar);  \
+  NS_IMETHOD    GetStatusbar(nsIDOMBarProp** aStatusbar);  \
+  NS_IMETHOD    GetScrollbars(nsIDOMBarProp** aScrollbars);  \
+  NS_IMETHOD    GetDirectories(nsIDOMBarProp** aDirectories);  \
   NS_IMETHOD    GetClosed(PRBool* aClosed);  \
   NS_IMETHOD    GetFrames(nsIDOMWindowCollection** aFrames);  \
   NS_IMETHOD    GetOpener(nsIDOMWindow** aOpener);  \
@@ -218,6 +240,13 @@ public:
   NS_IMETHOD    GetHistory(nsIDOMHistory** aHistory) { return _to GetHistory(aHistory); } \
   NS_IMETHOD    GetParent(nsIDOMWindow** aParent) { return _to GetParent(aParent); } \
   NS_IMETHOD    GetTop(nsIDOMWindow** aTop) { return _to GetTop(aTop); } \
+  NS_IMETHOD    GetMenubar(nsIDOMBarProp** aMenubar) { return _to GetMenubar(aMenubar); } \
+  NS_IMETHOD    GetToolbar(nsIDOMBarProp** aToolbar) { return _to GetToolbar(aToolbar); } \
+  NS_IMETHOD    GetLocationbar(nsIDOMBarProp** aLocationbar) { return _to GetLocationbar(aLocationbar); } \
+  NS_IMETHOD    GetPersonalbar(nsIDOMBarProp** aPersonalbar) { return _to GetPersonalbar(aPersonalbar); } \
+  NS_IMETHOD    GetStatusbar(nsIDOMBarProp** aStatusbar) { return _to GetStatusbar(aStatusbar); } \
+  NS_IMETHOD    GetScrollbars(nsIDOMBarProp** aScrollbars) { return _to GetScrollbars(aScrollbars); } \
+  NS_IMETHOD    GetDirectories(nsIDOMBarProp** aDirectories) { return _to GetDirectories(aDirectories); } \
   NS_IMETHOD    GetClosed(PRBool* aClosed) { return _to GetClosed(aClosed); } \
   NS_IMETHOD    GetFrames(nsIDOMWindowCollection** aFrames) { return _to GetFrames(aFrames); } \
   NS_IMETHOD    GetOpener(nsIDOMWindow** aOpener) { return _to GetOpener(aOpener); } \

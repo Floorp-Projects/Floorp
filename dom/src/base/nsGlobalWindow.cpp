@@ -34,6 +34,7 @@
 #include "nsEventListenerManager.h"
 #include "nsIEventStateManager.h"
 #include "nsDOMEvent.h"
+#include "nsIDOMBarProp.h"
 #include "nsIDOMMouseListener.h"
 #include "nsIDOMKeyListener.h"
 #include "nsIDOMMouseMotionListener.h"
@@ -56,6 +57,7 @@
 #include "nsIContentViewer.h"
 #include "nsScreen.h"
 #include "nsHistory.h"
+#include "nsBarProps.h"
 
 #if defined(OJI)
 #include "nsIJVMManager.h"
@@ -105,6 +107,12 @@ GlobalWindowImpl::GlobalWindowImpl()
   mNavigator = nsnull;
   mScreen = nsnull;
   mHistory = nsnull;
+  mMenubar = nsnull;
+  mToolbar = nsnull;
+  mLocationbar = nsnull;
+  mPersonalbar = nsnull;
+  mStatusbar = nsnull;
+  mScrollbars = nsnull;
   mLocation = nsnull;
   mFrames = nsnull;
   mOpener = nsnull;
@@ -132,6 +140,12 @@ GlobalWindowImpl::~GlobalWindowImpl()
   NS_IF_RELEASE(mNavigator);
   NS_IF_RELEASE(mScreen);
   NS_IF_RELEASE(mHistory);
+  NS_IF_RELEASE(mMenubar);
+  NS_IF_RELEASE(mToolbar);
+  NS_IF_RELEASE(mLocationbar);
+  NS_IF_RELEASE(mPersonalbar);
+  NS_IF_RELEASE(mStatusbar);
+  NS_IF_RELEASE(mScrollbars);
   NS_IF_RELEASE(mLocation);
   NS_IF_RELEASE(mFrames);
   NS_IF_RELEASE(mOpener);
@@ -282,28 +296,34 @@ GlobalWindowImpl::SetWebShell(nsIWebShell *aWebShell)
     mFrames->SetWebShell(aWebShell);
   }
 
-  if (mWebShell)
-  {
-	  // Get our enclosing chrome shell and retrieve its global window impl, so that we can
-	  // do some forwarding to the chrome document.
-	  nsCOMPtr<nsIWebShell> chromeShell;
-	  mWebShell->GetContainingChromeShell(getter_AddRefs(chromeShell));
-	  if (chromeShell) {
-	    // Convert the chrome shell to a DOM window.
-	    nsCOMPtr<nsIScriptContextOwner> contextOwner = do_QueryInterface(chromeShell);
-	    if (contextOwner) {
-	      nsCOMPtr<nsIScriptGlobalObject> globalObject;
-	      if (NS_OK == contextOwner->GetScriptGlobalObject(getter_AddRefs(globalObject))) {
-	        nsCOMPtr<nsIDOMWindow> chromeWindow = do_QueryInterface(globalObject);
-	        if (chromeWindow) {
-	          nsCOMPtr<nsIDOMDocument> chromeDoc;
-	          chromeWindow->GetDocument(getter_AddRefs(chromeDoc));
-	          nsCOMPtr<nsIDocument> realDoc = do_QueryInterface(chromeDoc);
-	          mChromeDocument = realDoc.get(); // Don't addref it
-	        }
-	      }
-	    }
-	  }
+  if (mWebShell) {
+    // tell our member elements about the new browserwindow
+    nsIBrowserWindow *browser = nsnull;
+    GetBrowserWindowInterface(browser);
+
+    if (nsnull != mMenubar)
+      mMenubar->SetBrowserWindow(browser);
+
+    // Get our enclosing chrome shell and retrieve its global window impl, so that we can
+    // do some forwarding to the chrome document.
+    nsCOMPtr<nsIWebShell> chromeShell;
+    mWebShell->GetContainingChromeShell(getter_AddRefs(chromeShell));
+    if (chromeShell) {
+      // Convert the chrome shell to a DOM window.
+      nsCOMPtr<nsIScriptContextOwner> contextOwner = do_QueryInterface(chromeShell);
+      if (contextOwner) {
+        nsCOMPtr<nsIScriptGlobalObject> globalObject;
+        if (NS_OK == contextOwner->GetScriptGlobalObject(getter_AddRefs(globalObject))) {
+          nsCOMPtr<nsIDOMWindow> chromeWindow = do_QueryInterface(globalObject);
+          if (chromeWindow) {
+            nsCOMPtr<nsIDOMDocument> chromeDoc;
+            chromeWindow->GetDocument(getter_AddRefs(chromeDoc));
+            nsCOMPtr<nsIDocument> realDoc = do_QueryInterface(chromeDoc);
+            mChromeDocument = realDoc.get(); // Don't addref it
+          }
+        }
+      }
+    }
   }
 }
 
@@ -397,6 +417,126 @@ GlobalWindowImpl::GetHistory(nsIDOMHistory** aHistory)
   NS_IF_ADDREF(mHistory);
 
   return NS_OK;
+}
+
+NS_IMETHODIMP
+GlobalWindowImpl::GetMenubar(nsIDOMBarProp** aMenubar)
+{
+  nsIBrowserWindow *browser;
+
+  if (nsnull == mMenubar) {
+    mMenubar = new MenubarPropImpl();
+    if (nsnull != mMenubar) {
+      NS_ADDREF(mMenubar);
+      if (nsnull != mWebShell && NS_OK == GetBrowserWindowInterface(browser))
+        mMenubar->SetBrowserWindow(browser);
+    }
+  }
+
+  *aMenubar = mMenubar;
+  NS_IF_ADDREF(mMenubar);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+GlobalWindowImpl::GetToolbar(nsIDOMBarProp** aToolbar)
+{
+  nsIBrowserWindow *browser;
+
+  if (nsnull == mToolbar) {
+    mToolbar = new ToolbarPropImpl();
+    if (nsnull != mToolbar) {
+      NS_ADDREF(mToolbar);
+      if (nsnull != mWebShell && NS_OK == GetBrowserWindowInterface(browser))
+        mToolbar->SetBrowserWindow(browser);
+    }
+  }
+
+  *aToolbar = mToolbar;
+  NS_IF_ADDREF(mToolbar);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+GlobalWindowImpl::GetLocationbar(nsIDOMBarProp** aLocationbar)
+{
+  nsIBrowserWindow *browser;
+
+  if (nsnull == mLocationbar) {
+    mLocationbar = new LocationbarPropImpl();
+    if (nsnull != mLocationbar) {
+      NS_ADDREF(mLocationbar);
+      if (nsnull != mWebShell && NS_OK == GetBrowserWindowInterface(browser))
+        mLocationbar->SetBrowserWindow(browser);
+    }
+  }
+
+  *aLocationbar = mLocationbar;
+  NS_IF_ADDREF(mLocationbar);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+GlobalWindowImpl::GetPersonalbar(nsIDOMBarProp** aPersonalbar)
+{
+  nsIBrowserWindow *browser;
+
+  if (nsnull == mPersonalbar) {
+    mPersonalbar = new PersonalbarPropImpl();
+    if (nsnull != mPersonalbar) {
+      NS_ADDREF(mPersonalbar);
+      if (nsnull != mWebShell && NS_OK == GetBrowserWindowInterface(browser))
+        mPersonalbar->SetBrowserWindow(browser);
+    }
+  }
+
+  *aPersonalbar = mPersonalbar;
+  NS_IF_ADDREF(mPersonalbar);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+GlobalWindowImpl::GetStatusbar(nsIDOMBarProp** aStatusbar)
+{
+  nsIBrowserWindow *browser;
+
+  if (nsnull == mStatusbar) {
+    mStatusbar = new StatusbarPropImpl();
+    if (nsnull != mStatusbar) {
+      NS_ADDREF(mStatusbar);
+      if (nsnull != mWebShell && NS_OK == GetBrowserWindowInterface(browser))
+        mStatusbar->SetBrowserWindow(browser);
+    }
+  }
+
+  *aStatusbar = mStatusbar;
+  NS_IF_ADDREF(mStatusbar);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+GlobalWindowImpl::GetScrollbars(nsIDOMBarProp** aScrollbars)
+{
+  nsIBrowserWindow *browser;
+
+  if (nsnull == mScrollbars) {
+    mScrollbars = new ScrollbarsPropImpl();
+    if (nsnull != mScrollbars) {
+      NS_ADDREF(mScrollbars);
+      if (nsnull != mWebShell && NS_OK == GetBrowserWindowInterface(browser))
+        mScrollbars->SetBrowserWindow(browser);
+    }
+  }
+
+  *aScrollbars = mScrollbars;
+  NS_IF_ADDREF(mScrollbars);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+GlobalWindowImpl::GetDirectories(nsIDOMBarProp** aDirectories)
+{
+  return GetPersonalbar(aDirectories);
 }
 
 NS_IMETHODIMP

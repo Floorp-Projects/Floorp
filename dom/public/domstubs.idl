@@ -53,6 +53,9 @@ interface nsIDOMScreen : nsISupports {};
 [scriptable, uuid(896d1d20-b4c4-11d2-bd93-00805f8ae3f4)]
 interface nsIDOMHistory : nsISupports {};
 
+[scriptable, uuid(9eb2c150-1d56-11d3-8221-0060083a0bcf)]
+interface nsIDOMBarProp : nsISupports {};
+
 [scriptable, uuid(a6cf906f-15b3-11d2-932e-00805f8add32)]
 interface nsIDOMWindowCollection : nsISupports {};
 
@@ -66,6 +69,13 @@ interface nsIDOMWindow : nsISupports {
     readonly attribute  nsIDOMHistory history;
     readonly attribute  nsIDOMWindow parent;
     readonly attribute  nsIDOMWindow top;
+    readonly attribute  nsIDOMBarProp menubar;
+    readonly attribute  nsIDOMBarProp toolbar;
+    readonly attribute  nsIDOMBarProp locationbar;
+    readonly attribute  nsIDOMBarProp personalbar;
+    readonly attribute  nsIDOMBarProp statusbar;
+    readonly attribute  nsIDOMBarProp scrollbars;
+    readonly attribute  nsIDOMBarProp directories;
     readonly attribute  boolean closed;
     readonly attribute  nsIDOMWindowCollection frames;
              attribute  nsIDOMWindow opener;
