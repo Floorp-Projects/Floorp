@@ -833,6 +833,7 @@ toolbar[mode="text"] > #window-controls > toolbarbutton > .toolbarbutton-text {
 #urlbar[level="broken"] > .autocomplete-textbox-container {
   background-color: #F5F6BE; /* #F7F898; */
   color: #000000;
+  -moz-appearance: none;
 }
 
 #urlbar[level="high"] > .autocomplete-textbox-container > .info-icon {
