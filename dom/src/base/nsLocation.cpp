@@ -357,8 +357,12 @@ LocationImpl::GetHref(nsString& aHref)
 
   if (nsnull != mWebShell) {
     const PRUnichar *href;
-    mWebShell->GetHistoryIndex(index);
-    result = mWebShell->GetURL(index, &href);
+    /* no need to use session history to get the url for the
+     * current document. Fix until webshell's generic session history
+     * is restored. S'd work even otherwise
+     */
+    //mWebShell->GetHistoryIndex(index);
+    result = mWebShell->GetURL (&href);
     aHref = href;
   }
 
