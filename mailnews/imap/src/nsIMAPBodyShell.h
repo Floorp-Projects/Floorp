@@ -79,6 +79,7 @@ public:
 
 	virtual PRBool ShouldExplicitlyFetchInline();
 	virtual PRBool ShouldExplicitlyNotFetchInline();
+        virtual PRBool IsLastTextPart(const char *partNumberString) {return PR_TRUE;}
 
 protected:																// If stream is PR_FALSE, simply returns the content length that will be generated
 	virtual PRInt32	GeneratePart(PRBool stream, PRBool prefetch);					// the body of the part itself
@@ -120,7 +121,7 @@ protected:
 protected:
 	nsIMAPBodyShell *m_shell;		// points back to the shell
 	PRBool	m_isValid;				// If this part is valid.
-	int		m_partNumber;			// part number on this hierarchy level
+	int	m_partNumber;			// part number on this hierarchy level
 	char	*m_partNumberString;	// string representation of this part's full-hierarchy number.  Define 0 to be the top-level message
 	char	*m_partData;			// data for this part.  NULL if not filled in yet.
 	char	*m_headerData;			// data for this part's MIME header.  NULL if not filled in yet.
@@ -173,6 +174,7 @@ public:
 	virtual PRBool	PreflightCheckAllInline();
 	virtual PRInt32	Generate(PRBool stream, PRBool prefetch);		// Generates an HTML representation of this part.  Returns content length generated, -1 if failed.
 	virtual nsIMAPBodypart	*FindPartWithNumber(const char *partNum);	// Returns the part object with the given number
+        virtual PRBool IsLastTextPart(const char *partNumberString);
 
 protected:
 	virtual PRBool ParseIntoObjects();
@@ -272,42 +274,42 @@ public:
 
   virtual PRBool GetShowAttachmentsInline();  // Returns TRUE if the user has the pref "Show Attachments Inline" set.
                                               // Returns FALSE if the setting is "Show Attachments as Links"
-	PRBool	PreflightCheckAllInline();		  // Returns PR_TRUE if all parts are inline, PR_FALSE otherwise.  Does not generate anything.
+  PRBool	PreflightCheckAllInline();		  // Returns PR_TRUE if all parts are inline, PR_FALSE otherwise.  Does not generate anything.
 
-	// Helpers
-	nsImapProtocol *GetConnection() { return m_protocolConnection; }
-	PRBool	GetPseudoInterrupted();
-	PRBool DeathSignalReceived();
-	nsCString &GetUID() { return m_UID; }
-	const char	*GetFolderName() { return m_folderName; }
-	char	*GetGeneratingPart() { return m_generatingPart; }
-	PRBool	IsBeingGenerated() { return m_isBeingGenerated; }	// Returns PR_TRUE if this is in the process of being
-																// generated, so we don't re-enter
-	PRBool IsShellCached() { return m_cached; }
-	void	SetIsCached(PRBool isCached) { m_cached = isCached; }
-	PRBool	GetGeneratingWholeMessage() { return m_generatingWholeMessage; }
-	IMAP_ContentModifiedType	GetContentModified() { return m_contentModified; }
-	void	SetContentModified(IMAP_ContentModifiedType modType) { m_contentModified = modType; }
+  // Helpers
+  nsImapProtocol *GetConnection() { return m_protocolConnection; }
+  PRBool	GetPseudoInterrupted();
+  PRBool DeathSignalReceived();
+  nsCString &GetUID() { return m_UID; }
+  const char	*GetFolderName() { return m_folderName; }
+  char	*GetGeneratingPart() { return m_generatingPart; }
+  PRBool	IsBeingGenerated() { return m_isBeingGenerated; }	// Returns PR_TRUE if this is in the process of being
+															  // generated, so we don't re-enter
+  PRBool IsShellCached() { return m_cached; }
+  void	SetIsCached(PRBool isCached) { m_cached = isCached; }
+  PRBool	GetGeneratingWholeMessage() { return m_generatingWholeMessage; }
+  IMAP_ContentModifiedType	GetContentModified() { return m_contentModified; }
+  void	SetContentModified(IMAP_ContentModifiedType modType) { m_contentModified = modType; }
 
 protected:
 
-	nsIMAPBodypartMessage	*m_message;
+  nsIMAPBodypartMessage	*m_message;
 
-	nsIMAPMessagePartIDArray	*m_prefetchQueue;	// array of pipelined part prefetches.  Ok, so it's not really a queue.
+  nsIMAPMessagePartIDArray        *m_prefetchQueue;	// array of pipelined part prefetches.  Ok, so it's not really a queue.
 
-	PRBool				m_isValid;
-	nsImapProtocol		*m_protocolConnection;	// Connection, for filling in parts
-	nsCString			m_UID;					// UID of this message
-	char				*m_folderName;			// folder that contains this message
-	char				*m_generatingPart;		// If a specific part is being generated, this is it.  Otherwise, NULL.
-	PRBool				m_isBeingGenerated;		// PR_TRUE if this body shell is in the process of being generated
-	PRBool				m_gotAttachmentPref;      // Whether or not m_showAttachmentsInline has been initialized 
-	PRBool				m_showAttachmentsInline; // Whether or not we should display attachment inline
-	PRBool				m_cached;				// Whether or not this shell is cached
-	PRBool				m_generatingWholeMessage;	// whether or not we are generating the whole (non-MPOD) message
-													// Set to PR_FALSE if we are generating by parts
-	IMAP_ContentModifiedType	m_contentModified;	// under what conditions the content has been modified.
-													// Either IMAP_CONTENT_MODIFIED_VIEW_INLINE or IMAP_CONTENT_MODIFIED_VIEW_AS_LINKS
+  PRBool                          m_isValid;
+  nsImapProtocol                  *m_protocolConnection;  // Connection, for filling in parts
+  nsCString                       m_UID;                  // UID of this message
+  char                            *m_folderName;          // folder that contains this message
+  char                            *m_generatingPart;      // If a specific part is being generated, this is it.  Otherwise, NULL.
+  PRBool                          m_isBeingGenerated;     // PR_TRUE if this body shell is in the process of being generated
+  PRBool                          m_gotAttachmentPref;    // Whether or not m_showAttachmentsInline has been initialized 
+  PRBool                          m_showAttachmentsInline; // Whether or not we should display attachment inline
+  PRBool                          m_cached;                 // Whether or not this shell is cached
+  PRBool                          m_generatingWholeMessage; // whether or not we are generating the whole (non-MPOD) message
+                                                          // Set to PR_FALSE if we are generating by parts
+  IMAP_ContentModifiedType        m_contentModified;	// under what conditions the content has been modified.
+                                                        // Either IMAP_CONTENT_MODIFIED_VIEW_INLINE or IMAP_CONTENT_MODIFIED_VIEW_AS_LINKS
 };
 
 
