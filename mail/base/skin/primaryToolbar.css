@@ -439,11 +439,10 @@ toolbar[iconsize="small"] #button-mark[disabled] {
 /* ::::: message notification bar style rules ::::: */
 
 .msgNotificationBar {
-  border-bottom: 1px solid;
-  -moz-border-bottom-colors: #000000;
-  -moz-appearance: toolbox;
-  background-color: -moz-Dialog;
-  color: black;
+  background-color: InfoBackground;
+  color: InfoText;  
+  border-bottom: 1px solid ThreeDDarkShadow;
+  padding: 3px;
 }
 
 .msgNotificationBarText {
@@ -453,7 +452,6 @@ toolbar[iconsize="small"] #button-mark[disabled] {
 #junkBarImage {
   list-style-image: url("chrome://messenger/skin/icons/mail-toolbar-small.png");
   -moz-image-region: rect(0px 128px 16px 112px);
-  padding-left: 3px;
 }
 
 #junkIcon {
@@ -462,11 +460,9 @@ toolbar[iconsize="small"] #button-mark[disabled] {
 
 #remoteContentImage {
   list-style-image: url("chrome://messenger/skin/icons/remote-blocked.png"); 
-  padding: 3px;
 }
 
 #phishingBarImage {
 /* for now, temporarily copy the remote image icon until we can get a new one */
   list-style-image: url("chrome://messenger/skin/icons/remote-blocked.png"); 
-  padding: 3px;
 }
