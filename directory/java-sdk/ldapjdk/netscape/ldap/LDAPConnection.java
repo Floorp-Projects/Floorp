@@ -209,14 +209,17 @@ public class LDAPConnection implements LDAPv3, Cloneable {
     /**
      * Properties
      */
-    private final static Float SdkVersion = new Float(3.04f);
+    private final static Float SdkVersion = new Float(3.06f);
     private final static Float ProtocolVersion = new Float(3.0f);
     private final static String SecurityVersion = new String("none,simple,sasl");
     private final static Float MajorVersion = new Float(3.0f);
-    private final static Float MinorVersion = new Float(0.05f);
+    private final static Float MinorVersion = new Float(0.06f);
     private final static String DELIM = "#";
     private final static String PersistSearchPackageName =
       "netscape.ldap.controls.LDAPPersistSearchControl";
+    private final static String EXTERNAL_MECHANISM = "SASLExternalMechanism";
+    private final static String EXTERNAL_MECHANISM_PACKAGE =
+      "com.netscape.sasl.mechanisms";
 
    /**
     * Constructs a new <CODE>LDAPConnection</CODE> object,
@@ -845,7 +848,29 @@ public class LDAPConnection implements LDAPv3, Cloneable {
                 }
             }
         }
+
+        authenticateSSLConnection();
         return newThread;
+    }
+
+    /**
+     * Do certificate-based authentication if client authentication was
+     * specified at construction time.
+     * @exception LDAPException if certificate-based authentication fails.
+     */
+    private void authenticateSSLConnection() throws LDAPException {
+
+        // if this is SSL
+        if ((m_factory != null) &&
+          (m_factory instanceof LDAPSSLSocketFactoryExt)) {
+
+            boolean isClientAuth =
+              ((LDAPSSLSocketFactoryExt)m_factory).isClientAuth();
+
+            if (isClientAuth)
+                authenticate(null, EXTERNAL_MECHANISM,
+                  EXTERNAL_MECHANISM_PACKAGE, null, null);
+        }
     }
 
     /**
@@ -1115,16 +1140,21 @@ public class LDAPConnection implements LDAPv3, Cloneable {
                 argNames[3] = "java.util.Properties";
                 argNames[4] = "com.netscape.sasl.SASLClientCB";
 
+                String mechanismName = m_mechanismDriver.getClass().getName();
                 byte[] outVals = (byte[])invokeMethod(m_mechanismDriver,
-                  m_mechanismDriver.getClass().getName(),
-                  "startAuthentication", arg1, argNames);
+                  mechanismName, "startAuthentication", arg1, argNames);
 
 
+                boolean isExternal = isExternalMechanism(mechanismName);
                 int resultCode = LDAPException.SASL_BIND_IN_PROGRESS;
                 JDAPBindResponse response = null;
                 while (!checkForSASLBindCompletion(resultCode)) {
                     response = saslBind(outVals);
                     resultCode = response.getResultCode();
+
+                    if (isExternal)
+                        continue;
+
                     String challenge = response.getCredentials();
                     byte[] b = challenge.getBytes();
 
@@ -1134,14 +1164,12 @@ public class LDAPConnection implements LDAPv3, Cloneable {
                     arg2Names[0] = "[B";  //class name for byte array
 
                     outVals = (byte[])invokeMethod(m_mechanismDriver,
-                        m_mechanismDriver.getClass().getName(),
-                        "evaluateResponse", arg2, arg2Names);
+                        mechanismName, "evaluateResponse", arg2, arg2Names);
                 }
 
                 // Make sure authentication REALLY is complete
                 Boolean bool = (Boolean)invokeMethod(m_mechanismDriver,
-                    m_mechanismDriver.getClass().getName(),
-                    "isComplete", null, null);
+                    mechanismName, "isComplete", null, null);
                 if (!bool.booleanValue()) {
                     // Authentication session hijacked!
                     throw new LDAPException("The server indicates that " +
@@ -1151,14 +1179,24 @@ public class LDAPConnection implements LDAPv3, Cloneable {
                 }
 
                 m_security = invokeMethod(m_mechanismDriver,
-                    m_mechanismDriver.getClass().getName(),
-                    "getSecurityLayer", null, null);
+                    mechanismName, "getSecurityLayer", null, null);
                 th.setSecurityLayer(m_security);
                 updateThreadConnTable();
+            } catch (LDAPException e) {
+                throw e;
             } catch (Exception e) {
                 throw new LDAPException(e.toString(), LDAPException.OTHER);
             }
         }
+    }
+
+    private boolean isExternalMechanism(String name) {
+        String s = name;
+        int dot = name.lastIndexOf( '.' );
+        if ( (dot >= 0) && (dot < (name.length()-1)) ) {
+            s = name.substring( dot + 1 );
+        }
+        return s.equals( EXTERNAL_MECHANISM );
     }
 
     private Object invokeMethod(Object obj, String packageName,
@@ -1228,7 +1266,7 @@ public class LDAPConnection implements LDAPv3, Cloneable {
         } else if (resultCode == LDAPException.SASL_BIND_IN_PROGRESS) {
             return false;
         } else {
-            throw new LDAPException("sasl", resultCode);
+            throw new LDAPException("Authentication failed", resultCode);
         }
     }
 
@@ -3549,6 +3587,12 @@ public class LDAPConnection implements LDAPv3, Cloneable {
                 DN = dn;
             else
                 DN = newDN;
+            // If this was a one-level search, and a direct subordinate
+            // has a referral, there will be a "?base" in the URL, and
+            // we have to rewrite the scope from one to base
+            if ( u[i].getUrl().indexOf("?base") > -1 ) {
+                scope = SCOPE_BASE;
+            }
 
             LDAPSearchResults res = null;
             LDAPSearchConstraints newcons = (LDAPSearchConstraints)cons.clone();
@@ -3955,6 +3999,9 @@ class LDAPConnThread extends Thread {
                   request instanceof JDAPUnbindRequest)) {
                 /* Only worry about toNotify if we expect a response... */
                 this.m_requests.put (new Integer (msg.getId()), toNotify);
+                /* Notify the backlog checker that there may be another outstanding
+                   request */
+                resultRetrieved(); 
             }
             toNotify.setID( msg.getId() );
         }
@@ -4082,6 +4129,7 @@ class LDAPConnThread extends Thread {
                 // If there are any threads waiting for a regular response
                 // message, we have to go read the next incoming message
                 if ( !(l instanceof LDAPSearchListener) ) {
+                    doWait = false;
                     break;
                 }
                 // If the backlog of any search thread is too great,
@@ -4091,7 +4139,6 @@ class LDAPConnThread extends Thread {
                 if ( (sl.getConstraints().getBatchSize() != 0) &&
                      (sl.getCount() >= m_maxBacklog) ) {
                     doWait = true;
-                    break;
                 }
             }
             if ( doWait ) {
