@@ -80,6 +80,12 @@ PRBool OnMacOSX();
 #include "nsIScriptContext.h"
 #include "jsapi.h"
 
+/* for the "remigration" stuff */
+#include "nsIPrefService.h"
+#include "nsIPrefBranch.h"
+#include "nsIPromptService.h"
+#include "nsIStringBundle.h"
+
 #include "nsAppShellService.h"
 #include "nsIProfileInternal.h"
 
@@ -234,8 +240,7 @@ nsAppShellService::DoProfileStartup(nsICmdLineService *aCmdLineService, PRBool c
     nsresult rv;
 
     nsCOMPtr<nsIProfileInternal> profileMgr(do_GetService(NS_PROFILE_CONTRACTID, &rv));
-    NS_ASSERTION(NS_SUCCEEDED(rv), "failed to get profile manager");
-    if (NS_FAILED(rv)) return rv;
+    NS_ENSURE_SUCCESS(rv,rv);
 
     PRBool saveQuitOnLastWindowClosing = mQuitOnLastWindowClosing;
     mQuitOnLastWindowClosing = PR_FALSE;
@@ -247,10 +252,147 @@ nsAppShellService::DoProfileStartup(nsICmdLineService *aCmdLineService, PRBool c
         rv = NS_OK;
     }
     
-    mQuitOnLastWindowClosing = saveQuitOnLastWindowClosing;
+    if (NS_SUCCEEDED(rv)) {
+        rv = CheckAndRemigrateDefunctProfile();
+        NS_ASSERTION(NS_SUCCEEDED(rv), "failed to check and remigrate profile");
+        rv = NS_OK;
+    }
 
+    mQuitOnLastWindowClosing = saveQuitOnLastWindowClosing;
     return rv;
 }
+
+nsresult
+nsAppShellService::CheckAndRemigrateDefunctProfile()
+{
+  nsresult rv;
+
+  nsCOMPtr<nsIPrefBranch> prefBranch;
+  nsCOMPtr<nsIPrefService> prefs = do_GetService(NS_PREFSERVICE_CONTRACTID, &rv);
+  NS_ENSURE_SUCCESS(rv,rv);
+  rv = prefs->GetBranch(nsnull, getter_AddRefs(prefBranch));
+  NS_ENSURE_SUCCESS(rv,rv);
+
+  PRInt32 secondsBeforeDefunct;
+  rv = prefBranch->GetIntPref("profile.seconds_until_defunct", &secondsBeforeDefunct);
+  NS_ENSURE_SUCCESS(rv,rv);
+
+  // -1 is the value for "never go defunct"
+  // if the pref is set to -1, we'll never prompt the user to remigrate
+  // see all.js (and all-ns.js)
+  if (secondsBeforeDefunct == -1)
+    return NS_OK;
+
+  // used for converting
+  // seconds -> millisecs
+  // and microsecs -> millisecs
+  PRInt64 oneThousand = LL_INIT(0, 1000);
+  
+  PRInt64 defunctInterval;
+  // Init as seconds
+  LL_I2L(defunctInterval, secondsBeforeDefunct);
+  // Convert secs to millisecs
+  LL_MUL(defunctInterval, defunctInterval, oneThousand);
+        
+  nsCOMPtr<nsIProfileInternal> profileMgr(do_GetService(NS_PROFILE_CONTRACTID, &rv));
+  NS_ENSURE_SUCCESS(rv,rv);
+
+  nsXPIDLString profileName;
+  PRInt64 lastModTime;
+  profileMgr->GetCurrentProfile(getter_Copies(profileName));
+  rv = profileMgr->GetProfileLastModTime(profileName.get(), &lastModTime);
+  NS_ENSURE_SUCCESS(rv,rv);
+
+  // convert "now" from microsecs to millisecs
+  PRInt64 nowInMilliSecs = PR_Now(); 
+  LL_DIV(nowInMilliSecs, nowInMilliSecs, oneThousand);
+  
+  // determine (using the pref value) when the profile would be considered defunct
+  PRInt64 defunctIntervalAgo;
+  LL_SUB(defunctIntervalAgo, nowInMilliSecs, defunctInterval);
+
+  // if we've used our current 6.x / mozilla profile more recently than
+  // when we'd consider it defunct, don't remigrate
+  if (LL_CMP(lastModTime, >, defunctIntervalAgo))
+    return NS_OK;
+  
+  nsCOMPtr<nsILocalFile> origProfileDir;
+  rv = profileMgr->GetOriginalProfileDir(profileName, getter_AddRefs(origProfileDir));
+  // if this fails
+  // then the current profile is a new one (not from 4.x) 
+  // so we are done.
+  if (NS_FAILED(rv))
+    return NS_OK;
+  
+  // Now, we know that a matching 4.x profile exists
+  // See if it has any newer files in it than our defunct profile.
+  nsCOMPtr<nsISimpleEnumerator> dirEnum;
+  rv = origProfileDir->GetDirectoryEntries(getter_AddRefs(dirEnum));
+  NS_ENSURE_SUCCESS(rv,rv);
+  
+  PRBool promptForRemigration = PR_FALSE;
+  PRBool hasMore;
+  while (NS_SUCCEEDED(dirEnum->HasMoreElements(&hasMore)) && hasMore) {
+    nsCOMPtr<nsILocalFile> currElem;
+    rv = dirEnum->GetNext(getter_AddRefs(currElem));
+    NS_ENSURE_SUCCESS(rv,rv);
+    
+    PRInt64 currElemModTime;
+    rv = currElem->GetLastModifiedTime(&currElemModTime);
+    NS_ENSURE_SUCCESS(rv,rv);
+    // if this file in our 4.x profile is more recent than when we last used our mozilla / 6.x profile
+    // we should prompt for re-migration
+    if (LL_CMP(currElemModTime, >, lastModTime)) {
+      promptForRemigration = PR_TRUE;
+      break;
+    }
+  }
+  
+  // If nothing in the 4.x dir is newer than our defunct profile, return.
+  if (!promptForRemigration)
+    return NS_OK;
+ 
+  nsCOMPtr<nsIStringBundleService> stringBundleService(do_GetService(NS_STRINGBUNDLE_CONTRACTID, &rv));
+  NS_ENSURE_SUCCESS(rv,rv);
+
+  nsCOMPtr<nsIStringBundle> migrationBundle, brandBundle;
+  rv = stringBundleService->CreateBundle("chrome://communicator/locale/profile/migration.properties", getter_AddRefs(migrationBundle));
+  NS_ENSURE_SUCCESS(rv,rv);
+
+  rv = stringBundleService->CreateBundle("chrome://global/locale/brand.properties", getter_AddRefs(brandBundle));
+  NS_ENSURE_SUCCESS(rv,rv);
+
+  nsXPIDLString brandName;
+  rv = brandBundle->GetStringFromName(NS_LITERAL_STRING("brandShortName").get(), getter_Copies(brandName));
+  NS_ENSURE_SUCCESS(rv,rv);
+ 
+  nsXPIDLString dialogText;
+  rv = migrationBundle->GetStringFromName(NS_LITERAL_STRING("confirmRemigration").get(), getter_Copies(dialogText));
+  NS_ENSURE_SUCCESS(rv,rv);
+
+  nsCOMPtr<nsIPromptService> promptService(do_GetService("@mozilla.org/embedcomp/prompt-service;1", &rv));
+  NS_ENSURE_SUCCESS(rv,rv);
+  PRInt32 buttonPressed;
+  rv = promptService->ConfirmEx(nsnull, brandName.get(),
+    dialogText.get(),
+    (nsIPromptService::BUTTON_POS_0 * 
+    nsIPromptService::BUTTON_TITLE_YES) + 
+    (nsIPromptService::BUTTON_POS_1 * 
+    nsIPromptService::BUTTON_TITLE_NO),
+    nsnull, nsnull, nsnull, nsnull, nsnull, &buttonPressed);
+  NS_ENSURE_SUCCESS(rv,rv);
+  
+  if (buttonPressed == 0) {
+    // Need to shut down the current profile before remigrating it
+    profileMgr->ShutDownCurrentProfile(nsIProfile::SHUTDOWN_PERSIST);
+    // If this fails, it will restore what was there.
+    rv = profileMgr->RemigrateProfile(profileName.get());
+    NS_ASSERTION(NS_SUCCEEDED(rv), "Remigration of profile failed.");
+    // Whether or not we succeeded or failed, need to reset this.
+    profileMgr->SetCurrentProfile(profileName.get());
+  }
+  return NS_OK;
+}   
 
 NS_IMETHODIMP
 nsAppShellService::CreateHiddenWindow()

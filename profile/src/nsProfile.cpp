@@ -328,7 +328,6 @@ nsProfile::~nsProfile()
    if (--gInstanceCount == 0) {
         
       delete gProfileDataAccess;
-
       delete gLocaleProfiles;
 
       NS_IF_RELEASE(sApp_PrefsDirectory50);
@@ -1058,7 +1057,41 @@ NS_IMETHODIMP nsProfile::GetOriginalProfileDir(const PRUnichar *profileName, nsI
     NS_ENSURE_ARG_POINTER(originalDir);
     *originalDir = nsnull;
 
+    Update4xProfileInfo();
     return gProfileDataAccess->GetOriginalProfileDir(profileName, originalDir);
+}
+
+NS_IMETHODIMP nsProfile::GetProfileLastModTime(const PRUnichar *profileName, PRInt64 *_retval)
+{
+    NS_ENSURE_ARG(profileName);
+    NS_ENSURE_ARG_POINTER(_retval);
+    nsresult rv;
+    
+    // First, see if we can get the lastModTime from the registry.
+    // We only started putting it there from mozilla1.0.1
+    // The mod time will be zero if it has not been set.
+    ProfileStruct *profileInfo = nsnull;
+    rv = gProfileDataAccess->GetValue(profileName, &profileInfo);
+    if (NS_SUCCEEDED(rv)) {
+        PRInt64 lastModTime = profileInfo->lastModTime;
+        delete profileInfo;
+        if (!LL_IS_ZERO(lastModTime)) {
+            *_retval = lastModTime;
+            return NS_OK;
+        }
+    }
+
+    // Since we couldn't get a valid mod time from the registry,
+    // check the date of prefs.js. Since August, 2000 it is always
+    // written out on quitting the application.
+    nsCOMPtr<nsIFile> profileDir;
+    rv = GetProfileDir(profileName, getter_AddRefs(profileDir));
+    if (NS_FAILED(rv))
+        return rv;
+    rv = profileDir->Append("prefs.js");  
+    if (NS_FAILED(rv))
+        return rv;
+    return profileDir->GetLastModifiedTime(_retval);
 }
 
 NS_IMETHODIMP nsProfile::GetDefaultProfileParentDir(nsIFile **aDefaultProfileParentDir)
@@ -1172,9 +1205,12 @@ nsProfile::SetCurrentProfile(const PRUnichar * aCurrentProfile)
         
         // Phase 3: Notify observers of a profile change
         observerService->NotifyObservers(subject, "profile-before-change", context.get());        
+        
+        UpdateCurrentProfileModTime(PR_FALSE);        
     }
 
     // Do the profile switch    
+    mCurrentProfileName.Assign(aCurrentProfile);    
     gProfileDataAccess->SetCurrentProfile(aCurrentProfile);
     gProfileDataAccess->mProfileDataChanged = PR_TRUE;
     gProfileDataAccess->UpdateRegistry(nsnull);
@@ -1233,31 +1269,37 @@ NS_IMETHODIMP nsProfile::ShutDownCurrentProfile(PRUint32 shutDownType)
 {
     nsresult rv;
     
-    nsCOMPtr<nsIObserverService> observerService = 
-             do_GetService("@mozilla.org/observer-service;1", &rv);
-    NS_ENSURE_TRUE(observerService, NS_ERROR_FAILURE);
-    
-    nsISupports *subject = (nsISupports *)((nsIProfile *)this);
-
-    NS_NAMED_LITERAL_STRING(cleanseString, "shutdown-cleanse");
-    NS_NAMED_LITERAL_STRING(persistString, "shutdown-persist");
-    const nsAFlatString& context = (shutDownType == SHUTDOWN_CLEANSE) ? cleanseString : persistString;
-           
-    // Phase 1: See if anybody objects to the profile being changed.
-    mProfileChangeVetoed = PR_FALSE;        
-    observerService->NotifyObservers(subject, "profile-approve-change", context.get());
-    if (mProfileChangeVetoed)
+    // if shutDownType is not a well know value, skip the notifications
+    // see DoOnShutdown() in nsAppRunner.cpp for where we use this behaviour to our benefit
+    if (shutDownType == SHUTDOWN_PERSIST || shutDownType == SHUTDOWN_CLEANSE) {
+      nsCOMPtr<nsIObserverService> observerService = 
+        do_GetService("@mozilla.org/observer-service;1", &rv);
+      NS_ENSURE_TRUE(observerService, NS_ERROR_FAILURE);
+      
+      nsISupports *subject = (nsISupports *)((nsIProfile *)this);
+      
+      NS_NAMED_LITERAL_STRING(cleanseString, "shutdown-cleanse");
+      NS_NAMED_LITERAL_STRING(persistString, "shutdown-persist");
+      const nsAFlatString& context = (shutDownType == SHUTDOWN_CLEANSE) ? cleanseString : persistString;
+      
+      // Phase 1: See if anybody objects to the profile being changed.
+      mProfileChangeVetoed = PR_FALSE;        
+      observerService->NotifyObservers(subject, "profile-approve-change", context.get());
+      if (mProfileChangeVetoed)
         return NS_OK;
-
-    // Phase 2: Send the "teardown" notification
-    observerService->NotifyObservers(subject, "profile-change-teardown", context.get());
-    
-    // Phase 3: Notify observers of a profile change
-    observerService->NotifyObservers(subject, "profile-before-change", context.get());        
+      
+      // Phase 2: Send the "teardown" notification
+      observerService->NotifyObservers(subject, "profile-change-teardown", context.get());
+      
+      // Phase 3: Notify observers of a profile change
+      observerService->NotifyObservers(subject, "profile-before-change", context.get());        
+    }
 
     rv = UndefineFileLocations();
     NS_ASSERTION(NS_SUCCEEDED(rv), "Could not undefine file locations");
+    UpdateCurrentProfileModTime(PR_TRUE);
     mCurrentProfileAvailable = PR_FALSE;
+    mCurrentProfileName.Truncate(0);
     
     return NS_OK;
 }
@@ -1440,7 +1482,8 @@ nsresult nsProfile::SetProfileDir(const PRUnichar *profileName, nsIFile *profile
     rv = profileDir->Exists(&exists);
     if (NS_SUCCEEDED(rv) && !exists)
         rv = profileDir->Create(nsIFile::DIRECTORY_TYPE, 0775);
-    if (NS_FAILED(rv)) return rv;
+    if (NS_FAILED(rv)) 
+        return rv;
     
     nsCOMPtr<nsILocalFile> localFile(do_QueryInterface(profileDir));
     NS_ENSURE_TRUE(localFile, NS_ERROR_FAILURE);                
@@ -1448,11 +1491,15 @@ nsresult nsProfile::SetProfileDir(const PRUnichar *profileName, nsIFile *profile
     ProfileStruct* aProfile = new ProfileStruct();
     NS_ENSURE_TRUE(aProfile, NS_ERROR_OUT_OF_MEMORY);
 
-
-    aProfile->profileName     = profileName;
+    aProfile->profileName = profileName;
     aProfile->SetResolvedProfileDir(localFile);
     aProfile->isMigrated = PR_TRUE;
     aProfile->isImportType = PR_FALSE;
+
+    // convert "now" from microsecs to millisecs
+    PRInt64 oneThousand = LL_INIT(0, 1000);
+    PRInt64 nowInMilliSecs = PR_Now();
+    LL_DIV(aProfile->creationTime, nowInMilliSecs, oneThousand); 
 
     gProfileDataAccess->SetValue(aProfile);
     
@@ -1771,6 +1818,7 @@ NS_IMETHODIMP nsProfile::ForgetCurrentProfile()
 
     gProfileDataAccess->mForgetProfileCalled = PR_TRUE;
     mCurrentProfileAvailable = PR_FALSE;
+    mCurrentProfileName.Truncate(0);
     
     return rv;
 }
@@ -1943,6 +1991,22 @@ char * nsProfile::GetOldRegLocation()
     return nsnull;
 }
 
+nsresult nsProfile::UpdateCurrentProfileModTime(PRBool updateRegistry)
+{
+    nsresult rv;
+
+    // convert "now" from microsecs to millisecs
+    PRInt64 oneThousand = LL_INIT(0, 1000);
+    PRInt64 nowInMilliSecs = PR_Now();
+    LL_DIV(nowInMilliSecs, nowInMilliSecs, oneThousand); 
+    
+    rv = gProfileDataAccess->SetProfileLastModTime(mCurrentProfileName.get(), nowInMilliSecs);
+    if (NS_SUCCEEDED(rv) && updateRegistry) {
+        gProfileDataAccess->mProfileDataChanged = PR_TRUE;
+        gProfileDataAccess->UpdateRegistry(nsnull);
+    }
+    return rv;
+}
 
 // Migrate profile information from the 4x registry to 5x registry.
 NS_IMETHODIMP nsProfile::MigrateProfileInfo()
@@ -2080,41 +2144,22 @@ nsresult nsProfile::UndefineFileLocations()
 // Set the profile to the current profile....debatable.
 // Calls PrefMigration service to do the Copy and Diverge
 // of 4x Profile information
-NS_IMETHODIMP 
-nsProfile::MigrateProfile(const PRUnichar* profileName, PRBool showProgressAsModalWindow)
+nsresult 
+nsProfile::MigrateProfileInternal(const PRUnichar* profileName,
+                                  nsIFile* oldProfDir,
+                                  nsIFile* newProfDir)
 {
     NS_ENSURE_ARG_POINTER(profileName);   
-
-    nsresult rv = NS_OK;
 
 #if defined(DEBUG_profile)
     printf("Inside Migrate Profile routine.\n" );
 #endif
 
-    nsCOMPtr<nsIFile> oldProfDir;    
-    nsCOMPtr<nsIFile> newProfDir;
- 
-    rv = GetProfileDir(profileName, getter_AddRefs(oldProfDir));
-    if (NS_FAILED(rv)) return rv;
-   
-    rv = NS_GetSpecialDirectory(NS_APP_USER_PROFILES_ROOT_DIR, getter_AddRefs(newProfDir));
-    if (NS_FAILED(rv)) return rv;
-    rv = newProfDir->AppendUnicode(profileName);
-    if (NS_FAILED(rv)) return rv;
-    
-    // This is unfortunate: There is no CreateUniqueUnicode
-    rv = newProfDir->CreateUnique(nsIFile::DIRECTORY_TYPE, 0775);
-    if (NS_FAILED(rv)) return rv;
-    
-    // always create level indirection when migrating
-    rv = AddLevelOfIndirection(newProfDir);
-    if (NS_FAILED(rv)) return rv;
-
     // Call migration service to do the work.
     nsCOMPtr <nsIPrefMigration> pPrefMigrator;
 
 
-    rv = nsComponentManager::CreateInstance(kPrefMigrationCID, 
+    nsresult rv = nsComponentManager::CreateInstance(kPrefMigrationCID, 
                                             nsnull,
                                             NS_GET_IID(nsIPrefMigration),
                                             getter_AddRefs(pPrefMigrator));
@@ -2137,7 +2182,7 @@ nsProfile::MigrateProfile(const PRUnichar* profileName, PRBool showProgressAsMod
     // you can do this a bunch of times.
     rv = pPrefMigrator->AddProfilePaths(oldProfDirStr, newProfDirStr);  
 
-    rv = pPrefMigrator->ProcessPrefs(showProgressAsModalWindow);
+    rv = pPrefMigrator->ProcessPrefs(PR_TRUE); // param is ignored
     if (NS_FAILED(rv)) return rv;
 
     // check for diskspace errors  
@@ -2198,9 +2243,87 @@ nsProfile::MigrateProfile(const PRUnichar* profileName, PRBool showProgressAsMod
     rv = SetProfileDir(profileName, newProfDir);
     if (NS_FAILED(rv)) return rv;
 
+    gProfileDataAccess->SetMigratedFromDir(profileName, oldProfDirLocal);
     gProfileDataAccess->mProfileDataChanged = PR_TRUE;
     gProfileDataAccess->UpdateRegistry(nsnull);
 
+    return rv;
+}
+
+NS_IMETHODIMP 
+nsProfile::MigrateProfile(const PRUnichar* profileName)
+{
+    NS_ENSURE_ARG(profileName);   
+
+    nsresult rv = NS_OK;
+
+    nsCOMPtr<nsIFile> oldProfDir;    
+    nsCOMPtr<nsIFile> newProfDir;
+ 
+    rv = GetProfileDir(profileName, getter_AddRefs(oldProfDir));
+    if (NS_FAILED(rv)) 
+      return rv;
+   
+    rv = NS_GetSpecialDirectory(NS_APP_USER_PROFILES_ROOT_DIR, getter_AddRefs(newProfDir));
+    if (NS_FAILED(rv)) 
+      return rv;
+
+    rv = newProfDir->AppendUnicode(profileName);
+    if (NS_FAILED(rv)) 
+      return rv;
+    
+    rv = newProfDir->CreateUnique(nsIFile::DIRECTORY_TYPE, 0775);
+    if (NS_FAILED(rv)) 
+      return rv;
+    
+    // always create level indirection when migrating
+    rv = AddLevelOfIndirection(newProfDir);
+    if (NS_FAILED(rv))
+      return rv;
+
+    return MigrateProfileInternal(profileName, oldProfDir, newProfDir);
+}
+
+NS_IMETHODIMP 
+nsProfile::RemigrateProfile(const PRUnichar* profileName)
+{
+    NS_ENSURE_ARG_POINTER(profileName);
+    
+    nsCOMPtr<nsIFile> profileDir;
+    nsresult rv = GetProfileDir(profileName, getter_AddRefs(profileDir));
+    NS_ENSURE_SUCCESS(rv,rv);
+
+    nsCOMPtr<nsIFile> newProfileDir;
+    rv = profileDir->Clone(getter_AddRefs(newProfileDir));
+    NS_ENSURE_SUCCESS(rv,rv);
+
+    // The profile list used by GetOriginalProfileDir is the one with ALL 4.x
+    // profiles - even ones for which there's a moz profile of the same name.
+    nsCOMPtr<nsILocalFile> oldProfileDir;
+    rv = GetOriginalProfileDir(profileName, getter_AddRefs(oldProfileDir));
+    NS_ENSURE_SUCCESS(rv,rv);
+
+    // In case of error, we'll restore what we've renamed.
+    nsXPIDLCString origDirLeafName;
+    rv = profileDir->GetLeafName(getter_Copies(origDirLeafName));
+    NS_ENSURE_SUCCESS(rv,rv);
+     
+    // Backup what we're remigrating by renaming it and leaving in place
+    // XXX todo: what if <xxxxxxxx>.slt-old already exists?
+    nsCAutoString newDirLeafName(origDirLeafName + NS_LITERAL_CSTRING("-old"));
+    rv = profileDir->MoveTo(nsnull, newDirLeafName.get());
+    NS_ENSURE_SUCCESS(rv,rv);
+    
+    // Create a new directory for the remigrated profile
+    rv = newProfileDir->Create(nsIFile::DIRECTORY_TYPE, 0775);
+    NS_ASSERTION(NS_SUCCEEDED(rv), "failed to create new directory for the remigrated profile");
+    if (NS_SUCCEEDED(rv))
+        rv = MigrateProfileInternal(profileName, oldProfileDir, newProfileDir);
+        
+    if (NS_FAILED(rv)) {
+        newProfileDir->Remove(PR_TRUE);
+        profileDir->MoveTo(nsnull, origDirLeafName);
+    }
     return rv;
 }
 
@@ -2266,7 +2389,7 @@ NS_IMETHODIMP nsProfile::MigrateAllProfiles()
     if (NS_FAILED(rv)) return rv;
     for (PRUint32 i = 0; i < numOldProfiles; i++)
     {
-        rv = MigrateProfile(nameArray[i], PR_FALSE /* don't show progress as modal window */);
+        rv = MigrateProfile(nameArray[i]);
         if (NS_FAILED(rv)) break;
     }
     NS_FREE_XPCOM_ALLOCATED_POINTER_ARRAY(numOldProfiles, nameArray);

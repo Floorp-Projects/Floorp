@@ -33,10 +33,12 @@
 class ProfileStruct
 {    
 public:
-     explicit ProfileStruct() { }
+     ProfileStruct();
      ProfileStruct(const ProfileStruct& src);
                 
     ~ProfileStruct() { }
+    
+     ProfileStruct& operator=(const ProfileStruct& rhs);
     
     /*
      * GetResolvedProfileDir returns the directory specified in the
@@ -63,12 +65,19 @@ public:
      * Methods used by routines which internalize
      * and externalize profile info.
      */
-    nsresult    InternalizeLocation(nsIRegistry *aRegistry, nsRegistryKey profKey, PRBool is4x, PRBool isOld50);
+    nsresult    InternalizeLocation(nsIRegistry *aRegistry, nsRegistryKey profKey, PRBool is4x);
     nsresult    ExternalizeLocation(nsIRegistry *aRegistry, nsRegistryKey profKey);
+    nsresult    InternalizeMigratedFromLocation(nsIRegistry *aRegistry, nsRegistryKey profKey);
+    nsresult    ExternalizeMigratedFromLocation(nsIRegistry *aRegistry, nsRegistryKey profKey);
     
 public:
     nsString    profileName;
     PRBool      isMigrated;
+
+    // The directory from which this profile was migrated from (if any)
+    // Added in mozilla1.0.1 and maintained in the registry
+    nsCOMPtr<nsILocalFile> migratedFrom;
+
     nsString    NCProfileName;
     nsString    NCDeniedService;
     nsString    NCEmailAddress;
@@ -76,6 +85,11 @@ public:
     PRBool      updateProfileEntry;
     // this flag detemines if we added this profile to the list for the import module.
     PRBool      isImportType; 
+    // These fields were added in mozilla1.0.1 and maintained in the registry.
+    // Values are in milliseconds since midnight Jan 1, 1970 GMT (same as nsIFile)
+    // Their values will be LL_ZERO if undefined.
+    PRInt64     creationTime;
+    PRInt64     lastModTime; 
 
 private:
     nsresult    EnsureDirPathExists(nsILocalFile *aFile, PRBool *wasCreated);
@@ -115,6 +129,8 @@ public:
     void GetFirstProfile(PRUnichar **firstProfile);
     nsresult GetProfileList(PRInt32 whichKind, PRUint32 *length, PRUnichar ***result);
     nsresult GetOriginalProfileDir(const PRUnichar *profileName, nsILocalFile **orginalDir);
+    nsresult SetMigratedFromDir(const PRUnichar *profileName, nsILocalFile *orginalDir);
+    nsresult SetProfileLastModTime(const PRUnichar *profileName, PRInt64 lastModTime);
 
     // if fromImport is true all the 4.x profiles will be added to mProfiles with the isImportType flag set.
     // pass fromImport as True only if you are calling from the Import Module.
