@@ -431,7 +431,7 @@ protected:
 
   public:
     URLEnumerator(mdb_column aURLColumn,
-                  mdb_column aSelectColumn = mdb_column(-1),
+                  mdb_column aSelectColumn = mdb_column(0),
                   void* aSelectValue = nsnull,
                   PRInt32 aSelectValueLen = 0) :
       mURLColumn(aURLColumn),
@@ -979,7 +979,7 @@ nsGlobalHistory::GetSources(nsIRDFResource* aProperty,
     // See if aProperty is something we understand, and create an
     // URLEnumerator to select URLs with the appropriate value.
 
-    mdb_column col = -1; // == "not a property that I grok"
+    mdb_column col = 0; // == "not a property that I grok"
     void* value = nsnull;
     PRInt32 len = 0;
 
@@ -1035,7 +1035,7 @@ nsGlobalHistory::GetSources(nsIRDFResource* aProperty,
       }
     }
 
-    if (col != -1) {
+    if (col) {
       // The URLEnumerator takes ownership of the bytes allocated in |value|.
       URLEnumerator* result = new URLEnumerator(kToken_URLColumn, col, value, len);
       if (! result)
@@ -1769,7 +1769,7 @@ nsGlobalHistory::URLEnumerator::~URLEnumerator()
 PRBool
 nsGlobalHistory::URLEnumerator::IsResult(nsIMdbRow* aRow)
 {
-  if (mSelectColumn != -1) {
+  if (mSelectColumn) {
     mdb_err err;
 
     nsIMdbCell* cell;
