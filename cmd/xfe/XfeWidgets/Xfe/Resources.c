@@ -142,6 +142,19 @@ XfeSubResourceGetWidgetStringValue(Widget		w,
 										NULL);
 }
 /*----------------------------------------------------------------------*/
+/* extern */ XmString
+XfeSubResourceGetWidgetXmStringValue(Widget		w,
+									 String		resource_name,
+									 String		resource_class)
+{
+	return XfeSubResourceGetXmStringValue(_XfeParent(w),
+										  XtName(w),
+										  XfeClassNameForWidget(w),
+										  resource_name,
+										  resource_class,
+										  NULL);
+}
+/*----------------------------------------------------------------------*/
 
 
 /*----------------------------------------------------------------------*/

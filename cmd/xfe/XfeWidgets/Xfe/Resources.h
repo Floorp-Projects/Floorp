@@ -68,8 +68,19 @@ XfeSubResourceGetPixelValue			(Widget		parent,
 									 String		resource_class,
 									 Pixel		default_value);
 /*----------------------------------------------------------------------*/
+
+/*----------------------------------------------------------------------*/
+/*																		*/
+/* Obtain a single resource directly from a widget.						*/
+/*																		*/
+/*----------------------------------------------------------------------*/
 extern String
 XfeSubResourceGetWidgetStringValue	(Widget		w,
+									 String		resource_name,
+									 String		resource_class);
+/*----------------------------------------------------------------------*/
+extern XmString
+XfeSubResourceGetWidgetXmStringValue(Widget		w,
 									 String		resource_name,
 									 String		resource_class);
 /*----------------------------------------------------------------------*/
