@@ -22,7 +22,7 @@
 
 #if defined(DEBUG_ftang)
 //#define KE_DEBUG
-#define DEBUG_IME
+//#define DEBUG_IME
 //#define DEBUG_IME2
 //#define DEBUG_KBSTATE
 #endif
@@ -57,10 +57,6 @@
 #include "nsNativeDragTarget.h"
 #include "nsIRollupListener.h"
 #include "nsIRegion.h"
-
-// we define the following because there are some MS sample code say
-// we should do it. We are not sure we really need it.
-#define IME_FROM_ON_CHAR
 
 //~~~ windowless plugin support
 #include "nsplugindefs.h"
@@ -109,21 +105,6 @@ extern HINSTANCE g_hinst;
 #define IME_Y_OFFSET	0
 
 
-#ifdef IME_FROM_ON_CHAR
-static PRBool NS_IsDBCSLeadByte(UINT aCP, BYTE aByte)
-{
-   switch(aCP) {
-       case 932: 
-         return (((0x81<=aByte)&&(aByte<=0x9F))||((0xE0<=aByte)&&(aByte<=0xFC)));
-       case 936:
-       case 949:
-       case 950: 
-         return ((0x81<=aByte)&&(aByte<=0xFE));
-       default: 
-         return PR_FALSE;
-   };
-}
-#endif // IME_FROM_ON_CHAR
 
 #define IS_IME_CODEPAGE(cp) ((932==(cp))||(936==(cp))||(949==(cp))||(950==(cp)))
 
@@ -220,18 +201,21 @@ nsWindow::nsWindow() : nsBaseWidget()
 	  mIMECompClauseStringSize = 0;
 	  mIMECompClauseStringLength = 0;
 
-    WORD kblayout = (WORD)GetKeyboardLayout(0);
-    LangIDToCP((WORD)(0x0FFFFL & kblayout), mCurrentKeyboardCP);
-
-#ifdef IME_FROM_ON_CHAR
-	mHaveDBCSLeadByte = false;
-	mDBCSLeadByte = '\0';
-#endif // IME_FROM_ON_CHAR
+   static BOOL gbInitHKL = FALSE;
+   if(! gbInitHKL)
+   {
+     gbInitHKL = TRUE;
+     gKeyboardLayout = GetKeyboardLayout(0);
+     LangIDToCP((WORD)(0x0FFFFL & (DWORD)gKeyboardLayout), gCurrentKeyboardCP);
+   }
 
   mNativeDragTarget = nsnull;
   mIsTopWidgetWindow = PR_FALSE;
 }
 
+
+HKL nsWindow::gKeyboardLayout = 0;
+UINT nsWindow::gCurrentKeyboardCP = 0;
 
 //-------------------------------------------------------------------------
 //
@@ -2186,38 +2170,6 @@ PRBool nsWindow::DispatchKeyEvent(PRUint32 aEventType, WORD aCharCode, UINT aVir
   return result;
 }
 
-//-----------------------------------------------------
-static BOOL IsKeypadKey(UINT vCode, long isExtended)
-{
-    switch (vCode) {
-        case VK_HOME:  
-        case VK_END:   
-        case VK_PRIOR: 
-        case VK_NEXT:  
-        case VK_UP:    
-        case VK_DOWN:  
-        case VK_LEFT:  
-        case VK_RIGHT: 
-        case VK_CLEAR:
-        case VK_INSERT:
-            // extended are not keypad keys
-            if (isExtended) 
-                break;
-        case VK_NUMPAD0:
-        case VK_NUMPAD1:
-        case VK_NUMPAD2:
-        case VK_NUMPAD3:
-        case VK_NUMPAD4:
-        case VK_NUMPAD5:
-        case VK_NUMPAD6:
-        case VK_NUMPAD7:
-        case VK_NUMPAD8:
-        case VK_NUMPAD9:
-            return TRUE;
-    }
-
-    return FALSE;
-}
 
 //-------------------------------------------------------------------------
 //
@@ -2295,69 +2247,6 @@ ULONG nsWindow::IsSpecialChar(UINT aVirtualKeyCode, WORD *aAsciiKey)
   return keyType;
 }
 
-//-------------------------------------------------------------------------
-//
-// change the virtual key coming from windows into an ascii code
-//
-//-------------------------------------------------------------------------
-BOOL TranslateToAscii(BYTE *aKeyState, 
-                      UINT  aVirtualKeyCode, 
-                      UINT  aScanCode, 
-                      WORD *aAsciiKey)
-{
-  WORD asciiBuf;
-  BOOL bIsExtended;
-
-  bIsExtended = TRUE;
-  *aAsciiKey   = 0;
-  switch (aVirtualKeyCode) {
-    case VK_TAB:
-    case VK_HOME:
-    case VK_END:
-    case VK_PRIOR:
-    case VK_NEXT:
-    case VK_UP:
-    case VK_DOWN:
-    case VK_LEFT:
-    case VK_RIGHT:
-    case VK_F1: 
-    case VK_F2:  
-    case VK_F3:  
-    case VK_F4:  
-    case VK_F5:   
-    case VK_F6:   
-    case VK_F7:   
-    case VK_F8:   
-    case VK_F9:    
-    case VK_F10:   
-    case VK_F11:   
-    case VK_F12:  
-      *aAsciiKey = aVirtualKeyCode;
-      break;
-
-
-    case VK_DELETE:
-      *aAsciiKey = '\177'; 
-      bIsExtended = FALSE;   
-      break;
-
-    case VK_RETURN:
-      *aAsciiKey = '\n';   
-      bIsExtended = FALSE;   
-      break;
-
-    default:        
-      bIsExtended = FALSE;
-
-      if (::ToAscii(aVirtualKeyCode, aScanCode, aKeyState, &asciiBuf, FALSE) == 1) {
-        *aAsciiKey = (char)asciiBuf;
-      }
-
-      break;
-  }
-  return bIsExtended;
-}
-
 
 //-------------------------------------------------------------------------
 //
@@ -2421,7 +2310,7 @@ BOOL nsWindow::OnKeyUp( UINT aVirtualKeyCode, UINT aScanCode)
     case STANDARD_KEY: {
       BYTE keyState[256];
       ::GetKeyboardState(keyState);
-      ::ToAscii(aVirtualKeyCode, aScanCode, keyState, &asciiKey, FALSE);
+      ::ToAsciiEx(aVirtualKeyCode, aScanCode, keyState, &asciiKey, FALSE, gKeyboardLayout);
       } break;
 
     case SPECIAL_KEY:
@@ -2449,14 +2338,6 @@ BOOL nsWindow::OnChar( UINT mbcsCharCode, UINT virtualKeyCode, bool isMultiByte 
   char		charToConvert[2];
   size_t	length;
 
-#ifdef IME_FROM_ON_CHAR
-  if (isMultiByte) {
-	  charToConvert[0]=HIBYTE(mbcsCharCode);
-	  charToConvert[1] = LOBYTE(mbcsCharCode);
-	  length=2;
-  } 
-  else 
-#endif
   {
 	  charToConvert[0] = LOBYTE(mbcsCharCode);
 	  length=1;
@@ -2480,7 +2361,7 @@ BOOL nsWindow::OnChar( UINT mbcsCharCode, UINT virtualKeyCode, bool isMultiByte 
     } 
     else 
     {
-      ::MultiByteToWideChar(mCurrentKeyboardCP,MB_PRECOMPOSED,charToConvert,length,
+      ::MultiByteToWideChar(gCurrentKeyboardCP,MB_PRECOMPOSED,charToConvert,length,
 	    &uniChar,sizeof(uniChar));
       virtualKeyCode = 0;
       mIsShiftDown = PR_FALSE;
@@ -2625,38 +2506,10 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT 
             //
             if (ch==0x0d || ch==0x08) {
 
-#ifdef IME_FROM_ON_CHAR
-                mHaveDBCSLeadByte = PR_FALSE;
-#endif // IME_FROM_ON_CHAR
-
                 result = OnChar(ch,ch==0x0d ? VK_RETURN : VK_BACK,true);
                 break;
             }
   
-#ifdef IME_FROM_ON_CHAR
-            //
-            // check first to see if we have the first byte of a two-byte DBCS sequence
-            //  if so, store it away and do nothing until we get the second sequence
-            //
-            if (NS_IsDBCSLeadByte(mCurrentKeyboardCP, ch) && !mHaveDBCSLeadByte) {
-                mHaveDBCSLeadByte = TRUE;
-                mDBCSLeadByte = ch;
-                result = PR_TRUE;
-                break;
-            }
-  
-            //
-            // at this point, we may have the second byte of a DBCS sequence or a single byte
-            // character, depending on the previous message.  Check and handle accordingly
-            //
-            if (mHaveDBCSLeadByte) {
-                char_result = (mDBCSLeadByte << 8) | ch;
-                mHaveDBCSLeadByte = FALSE;
-                mDBCSLeadByte = 0;
-                result = OnChar(char_result,ch,true);
-            } 
-            else 
-#endif // IME_FROM_ON_CHAR
             {
                 char_result = ch;
                 result = OnChar(char_result,ch,false);
@@ -2683,8 +2536,18 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT 
                 mIsAltDown     = (0 == (KF_ALTDOWN & HIWORD(lParam)))&& IS_VK_DOWN(NS_VK_ALT);
             }
 
+            // Note- The origional code pass (HIWORD(lParam)) to OnKeyUp as 
+            // scan code. Howerver, this break Alt+Num pad input.
+            // http://msdn.microsoft.com/library/psdk/winui/keybinpt_8qp5.htm
+            // state the following-
+            //  Typically, ToAscii performs the translation based on the 
+            //  virtual-key code. In some cases, however, bit 15 of the
+            //  uScanCode parameter may be used to distinguish between a key 
+            //  press and a key release. The scan code is used for
+            //  translating ALT+number key combinations.
+
             if (!mIMEIsComposing)
-              result = OnKeyUp(wParam, (HIWORD(lParam) & 0xFF));
+              result = OnKeyUp(wParam, (HIWORD(lParam) ));
 			      else
 				      result = PR_FALSE;
 
@@ -2721,8 +2584,18 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT 
                 mIsControlDown = (0 == (KF_ALTDOWN & HIWORD(lParam)))&& IS_VK_DOWN(NS_VK_CONTROL);
                 mIsAltDown     = (0 == (KF_ALTDOWN & HIWORD(lParam)))&& IS_VK_DOWN(NS_VK_ALT);
             }
+            // Note- The origional code pass (HIWORD(lParam)) to OnKeyDown as 
+            // scan code. Howerver, this break Alt+Num pad input.
+            // http://msdn.microsoft.com/library/psdk/winui/keybinpt_8qp5.htm
+            // state the following-
+            //  Typically, ToAscii performs the translation based on the 
+            //  virtual-key code. In some cases, however, bit 15 of the
+            //  uScanCode parameter may be used to distinguish between a key 
+            //  press and a key release. The scan code is used for
+            //  translating ALT+number key combinations.
+
             if (!mIMEIsComposing)
-               result = OnKeyDown(wParam, (HIWORD(lParam) & 0xFF));
+               result = OnKeyDown(wParam, (HIWORD(lParam)));
 	    else
 	       result = PR_FALSE;
             }
@@ -2745,12 +2618,11 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT 
         case WM_LBUTTONDOWN:
             //SetFocus(); // this is bad
             //RelayMouseEvent(msg,wParam, lParam); 
-            if(mIMEIsComposing) {
-            	nsresult res = ResetInputState();
-            	NS_ASSERTION(NS_SUCCEEDED(res) , "ResetInputState failed");
-            }
+            {
+            nsresult res = ResetInputState();
+            NS_ASSERTION(NS_SUCCEEDED(res) , "ResetInputState failed");
             result = DispatchMouseEvent(NS_MOUSE_LEFT_BUTTON_DOWN);
-            break;
+            } break;
 
         case WM_LBUTTONUP:
             //RelayMouseEvent(msg,wParam, lParam); 
@@ -2762,12 +2634,11 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT 
             break;
 
         case WM_MBUTTONDOWN:
-            if(mIMEIsComposing) {
-            	nsresult res = ResetInputState();
-            	NS_ASSERTION(NS_SUCCEEDED(res) , "ResetInputState failed");
-            }
+            { 
+            nsresult res = ResetInputState();
+            NS_ASSERTION(NS_SUCCEEDED(res) , "ResetInputState failed");
             result = DispatchMouseEvent(NS_MOUSE_MIDDLE_BUTTON_DOWN);
-            break;
+            } break;
 
         case WM_MBUTTONUP:
             result = DispatchMouseEvent(NS_MOUSE_MIDDLE_BUTTON_UP);
@@ -2778,12 +2649,11 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT 
             break;
 
         case WM_RBUTTONDOWN:
-            if(mIMEIsComposing) {
-            	nsresult res = ResetInputState();
-            	NS_ASSERTION(NS_SUCCEEDED(res) , "ResetInputState failed");
-            }
+            {
+            nsresult res = ResetInputState();
+            NS_ASSERTION(NS_SUCCEEDED(res) , "ResetInputState failed");
             result = DispatchMouseEvent(NS_MOUSE_RIGHT_BUTTON_DOWN);            
-            break;
+            } break;
 
         case WM_RBUTTONUP:
             result = DispatchMouseEvent(NS_MOUSE_RIGHT_BUTTON_UP);
@@ -3015,8 +2885,7 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT 
 					break;
 
 				case WM_INPUTLANGCHANGE: 
-					result = OnInputLangChange( 
-								(WORD)(lParam&0x0FFFF), 
+					result = OnInputLangChange((HKL)lParam, 
 								aRetValue);
 					break;
 
@@ -3817,14 +3686,14 @@ nsWindow::HandleTextEvent(HIMC hIMEContext,PRBool aCheckAttr)
   //
   // convert the composition string text into unicode before it is sent to xp-land
   //
-  unicharSize = ::MultiByteToWideChar(mCurrentKeyboardCP,MB_PRECOMPOSED,
+  unicharSize = ::MultiByteToWideChar(gCurrentKeyboardCP,MB_PRECOMPOSED,
 	mIMECompString->GetBuffer(),
 	mIMECompString->Length(),
 	NULL,0);
 
   mIMECompUnicode->SetCapacity(unicharSize+1);
 
-  unicharSize = ::MultiByteToWideChar(mCurrentKeyboardCP,MB_PRECOMPOSED,
+  unicharSize = ::MultiByteToWideChar(gCurrentKeyboardCP,MB_PRECOMPOSED,
 	mIMECompString->GetBuffer(),
 	mIMECompString->Length(),
 	(PRUnichar*)mIMECompUnicode->GetUnicode(),
@@ -3971,11 +3840,11 @@ nsWindow::MapDBCSAtrributeArrayToUnicodeOffsets(PRUint32* textRangeListLengthRes
 		*textRangeListLengthResult = 2;
 		*textRangeListResult = new nsTextRange[2];
 		(*textRangeListResult)[0].mStartOffset=0;
-		substringLength = ::MultiByteToWideChar(mCurrentKeyboardCP,MB_PRECOMPOSED,
+		substringLength = ::MultiByteToWideChar(gCurrentKeyboardCP,MB_PRECOMPOSED,
 			mIMECompString->GetBuffer(), maxlen,NULL,0);
 		(*textRangeListResult)[0].mEndOffset = substringLength;
 		(*textRangeListResult)[0].mRangeType = NS_TEXTRANGE_RAWINPUT;
-		substringLength = ::MultiByteToWideChar(mCurrentKeyboardCP,MB_PRECOMPOSED,mIMECompString->GetBuffer(),
+		substringLength = ::MultiByteToWideChar(gCurrentKeyboardCP,MB_PRECOMPOSED,mIMECompString->GetBuffer(),
 								cursor,NULL,0);
 		(*textRangeListResult)[1].mStartOffset=substringLength;
 		(*textRangeListResult)[1].mEndOffset = substringLength;
@@ -3995,7 +3864,7 @@ nsWindow::MapDBCSAtrributeArrayToUnicodeOffsets(PRUint32* textRangeListLengthRes
 		// figure out the cursor position
 		//
 		
-		substringLength = ::MultiByteToWideChar(mCurrentKeyboardCP,
+		substringLength = ::MultiByteToWideChar(gCurrentKeyboardCP,
           MB_PRECOMPOSED,mIMECompString->GetBuffer(),cursor,NULL,0);
 		(*textRangeListResult)[0].mStartOffset=substringLength;
 		(*textRangeListResult)[0].mEndOffset = substringLength;
@@ -4017,7 +3886,7 @@ nsWindow::MapDBCSAtrributeArrayToUnicodeOffsets(PRUint32* textRangeListLengthRes
         PlatformToNSAttr(mIMEAttributeString[lastMBCSOffset]);
 			(*textRangeListResult)[rangePointer].mStartOffset = lastUnicodeOffset;
 
-			lastUnicodeOffset += ::MultiByteToWideChar(mCurrentKeyboardCP,
+			lastUnicodeOffset += ::MultiByteToWideChar(gCurrentKeyboardCP,
 				MB_PRECOMPOSED,mIMECompString->GetBuffer()+lastMBCSOffset,
 				current-lastMBCSOffset,NULL,0);
 
@@ -4034,20 +3903,20 @@ nsWindow::MapDBCSAtrributeArrayToUnicodeOffsets(PRUint32* textRangeListLengthRes
 
 
 //==========================================================================
-BOOL nsWindow::OnInputLangChange(WORD aLangID, LRESULT *oRetValue)			
+BOOL nsWindow::OnInputLangChange(HKL aHKL, LRESULT *oRetValue)			
 {
-#ifdef DEBUG_IME2
+#ifdef KE_DEBUG
 	printf("OnInputLanguageChange\n");
 #endif
 
 
-	*oRetValue = LangIDToCP(aLangID,mCurrentKeyboardCP);
-
-#ifdef IME_FROM_ON_CHAR
-	// reset this when we change keyboard layout
-	mHaveDBCSLeadByte=PR_FALSE; 
-#endif
-
+        if(gKeyboardLayout != aHKL) 
+        {
+          gKeyboardLayout = aHKL;
+	  *oRetValue = LangIDToCP((WORD)((DWORD)gKeyboardLayout & 0x0FFFF),
+                                  gCurrentKeyboardCP);
+        }
+	ResetInputState();
 	return PR_FALSE;   // always pass to child window
 }
 //==========================================================================
@@ -4155,12 +4024,16 @@ BOOL nsWindow::OnIMEComposition(LPARAM  aGCS)
 			mIMECompClauseStringSize = compClauseLen+32;
 		}
 
-		compClauseLen = ::ImmGetCompositionString(hIMEContext,
+		long compClauseLen2 = ::ImmGetCompositionString(hIMEContext,
 				GCS_COMPCLAUSE,
 				mIMECompClauseString,
 				mIMECompClauseStringSize * sizeof(PRUint32)) 
                                       / sizeof(PRUint32);
+                NS_ASSERTION(compClauseLen2 == compClauseLen, "strange result");
+                if(compClauseLen > compClauseLen2)
+                  compClauseLen = compClauseLen2;
 		mIMECompClauseStringLength = compClauseLen;
+ 
 
 		//--------------------------------------------------------
 		// 3. Get GCS_CURSOPOS
@@ -4184,6 +4057,12 @@ BOOL nsWindow::OnIMEComposition(LPARAM  aGCS)
 
 #ifdef DEBUG_IME
 		fprintf(stderr,"GCS_COMPSTR compStrLen = %d\n", compStrLen);
+#endif
+#ifdef DEBUG
+                for(int kk=0;kk<mIMECompClauseStringLength;kk++)
+                {
+                  NS_ASSERTION(mIMECompClauseString[kk] <= mIMECompString->mLength, "illegal pos");
+                }
 #endif
 		//--------------------------------------------------------
 		// 5. Sent the text event
@@ -4392,7 +4271,7 @@ NS_IMETHODIMP nsWindow::PasswordFieldEnter(PRUint32& oState)
 #ifdef DEBUG_KBSTATE
 	printf("PasswordFieldEnter\n");
 #endif 
-	if(IS_IME_CODEPAGE(mCurrentKeyboardCP))
+	if(IS_IME_CODEPAGE(gCurrentKeyboardCP))
 	{
 		HIMC hIMC = ::ImmGetContext(mWnd);
 		if(hIMC) {
@@ -4416,7 +4295,7 @@ NS_IMETHODIMP nsWindow::PasswordFieldExit(PRUint32 aState)
 #ifdef DEBUG_KBSTATE
 	printf("PasswordFieldExit\n");
 #endif 
-	if(IS_IME_CODEPAGE(mCurrentKeyboardCP))
+	if(IS_IME_CODEPAGE(gCurrentKeyboardCP))
 	{
 		HIMC hIMC = ::ImmGetContext(mWnd);
 		if(hIMC) {

@@ -196,7 +196,7 @@ protected:
     BOOL                    OnKeyUp( UINT aVirtualKeyCode, UINT aScanCode);
 
 
-    BOOL                    OnInputLangChange(WORD aLangID, LRESULT *oResult);			
+    BOOL                    OnInputLangChange(HKL aHKL, LRESULT *oResult);			
     BOOL                    OnIMEChar(BYTE aByte1, BYTE aByte2, LPARAM aKeyState);
     BOOL                    OnIMEComposition(LPARAM  aGCS);			
     BOOL                    OnIMECompositionFull();			
@@ -281,12 +281,12 @@ protected:
 	PRInt32		mIMECompClauseStringLength;
 	PRInt32		mIMECompClauseStringSize;
 	long		mIMECursorPosition;
-	UINT		mCurrentKeyboardCP;
+
+	static UINT		gCurrentKeyboardCP;
+	static HKL		gKeyboardLayout;
 
   PRBool  mIsInMouseCapture;
 
-	BOOL		mHaveDBCSLeadByte;
-	unsigned char mDBCSLeadByte;
 
     // Drag & Drop
     nsNativeDragTarget * mNativeDragTarget;
