@@ -494,9 +494,13 @@ NS_IMETHODIMP nsStreamConverter::Init(nsIURI *aURI, nsIStreamListener * aOutList
 	// call into us..
   nsXPIDLCString contentTypeToUse;
   GetContentType(getter_Copies(contentTypeToUse));
-  rv = NS_NewInputStreamChannel(getter_AddRefs(mOutgoingChannel), aURI, nsnull, contentTypeToUse, -1);
-  if (NS_FAILED(rv)) 
-    return rv;
+  // mscott --> my theory is that we don't need this fake outgoing channel. Let's use the
+  // original channel and just set our content type ontop of the original channel...
+  aChannel->SetContentType(contentTypeToUse);
+
+  //rv = NS_NewInputStreamChannel(getter_AddRefs(mOutgoingChannel), aURI, nsnull, contentTypeToUse, -1);
+  //if (NS_FAILED(rv)) 
+  //    return rv;
   
   // Set system principal for this document, which will be dynamically generated 
   NS_WITH_SERVICE(nsIScriptSecurityManager, securityManager, 
@@ -507,7 +511,7 @@ NS_IMETHODIMP nsStreamConverter::Init(nsIURI *aURI, nsIStreamListener * aOutList
   if (NS_FAILED(rv = securityManager->GetSystemPrincipal(getter_AddRefs(principal))))
     return rv;
   nsCOMPtr<nsISupports> owner = do_QueryInterface(principal);
-  if (NS_FAILED(rv = mOutgoingChannel->SetOwner(owner)))
+  if (NS_FAILED(rv = aChannel->SetOwner(owner)))
     return rv;
   
   // We will first find an appropriate emitter in the repository that supports 
@@ -552,7 +556,7 @@ NS_IMETHODIMP nsStreamConverter::Init(nsIURI *aURI, nsIStreamListener * aOutList
   // initialize our emitter
   if (NS_SUCCEEDED(rv) && mEmitter)
   {
-    mEmitter->Initialize(aURI, mOutgoingChannel, newType);
+    mEmitter->Initialize(aURI, aChannel, newType);
     mEmitter->SetPipe(mInputStream, mOutputStream);
     mEmitter->SetOutputListener(aOutListener);
   }
@@ -576,19 +580,11 @@ NS_IMETHODIMP nsStreamConverter::Init(nsIURI *aURI, nsIStreamListener * aOutList
     }
   }
 
-  // initialize our emitter
-	if (NS_SUCCEEDED(rv) && mEmitter)
-	{
-	  mEmitter->Initialize(aURI, mOutgoingChannel, newType);
-	  mEmitter->SetPipe(mInputStream, mOutputStream);
-	  mEmitter->SetOutputListener(aOutListener);
-	}
-
   if (mOutputType == nsMimeOutput::nsMimeMessageSource)
     return NS_OK;
   else
   {
-    mBridgeStream = bridge_create_stream(mEmitter, this, aURI, newType, whattodo, mOutgoingChannel);
+    mBridgeStream = bridge_create_stream(mEmitter, this, aURI, newType, whattodo, aChannel);
     if (!mBridgeStream)
       return NS_ERROR_OUT_OF_MEMORY;
     else
@@ -811,9 +807,20 @@ nsStreamConverter::OnStartRequest(nsIChannel * aChannel, nsISupports *ctxt)
   mConvertContentTime = PR_IntervalNow();
 #endif
 
+  // here's a little bit of hackery....
+  // since the mime converter is now between the channel
+  // and the 
+  nsresult rv = NS_OK;
+  if (aChannel)
+  {
+    nsXPIDLCString contentType;
+    GetContentType(getter_Copies(contentType));
+    aChannel->SetContentType(contentType);
+  }
+
 	// forward the start rquest to any listeners
   if (mOutListener)
-  	mOutListener->OnStartRequest(mOutgoingChannel, ctxt);
+  	mOutListener->OnStartRequest(aChannel, ctxt);
 	return NS_OK;
 }
 
@@ -885,7 +892,7 @@ nsStreamConverter::OnStopRequest(nsIChannel * aChannel, nsISupports *ctxt, nsres
 
   // forward on top request to any listeners
   if (mOutListener)
-    mOutListener->OnStopRequest(mOutgoingChannel, ctxt, status, errorMsg);
+    mOutListener->OnStopRequest(/* mOutgoingChannel */ aChannel, ctxt, status, errorMsg);
     
 
   mAlreadyKnowOutputType = PR_FALSE;
