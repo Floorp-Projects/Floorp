@@ -1042,11 +1042,10 @@ nsHTMLEditRules::WillDeleteSelection(nsIDOMSelection *aSelection,
           // is next node a text node?
           else if ( mEditor->IsTextNode(nextNode) )
           {
-            // delete last character
+            // delete first character
             nsCOMPtr<nsIDOMCharacterData>nodeAsText;
             nodeAsText = do_QueryInterface(nextNode);
-            nodeAsText->GetLength((PRUint32*)&offset);
-            res = aSelection->Collapse(nextNode,offset);
+            res = aSelection->Collapse(nextNode,0);
             // just return without setting handled to true.
             // default code will take care of actual deletion
             return res;
@@ -2416,6 +2415,58 @@ nsHTMLEditRules::GetTableContent(nsIDOMNode *aNode, nsCOMPtr<nsISupportsArray> *
 }
 
 ///////////////////////////////////////////////////////////////////////////
+// GetListContent: take a list element and get it's editable, non-list contents
+//                  
+nsresult
+nsHTMLEditRules::GetListContent(nsIDOMNode *aNode, nsCOMPtr<nsISupportsArray> *outArrayOfNodes)
+{
+  if (!aNode || !outArrayOfNodes) return NS_ERROR_NULL_POINTER;
+
+  // make a array
+  nsresult res = NS_NewISupportsArray(getter_AddRefs(*outArrayOfNodes));
+  if (NS_FAILED(res)) return res;
+  
+  // make an iter
+  nsCOMPtr<nsIContentIterator> iter;
+  res = nsComponentManager::CreateInstance(kContentIteratorCID, nsnull,
+                                            NS_GET_IID(nsIContentIterator), 
+                                            getter_AddRefs(iter));
+  if (NS_FAILED(res)) return res;
+  if (!iter)          return NS_ERROR_FAILURE;
+
+  nsCOMPtr<nsIContent> content;
+  nsCOMPtr<nsIDOMNode> node;
+  nsCOMPtr<nsISupports> isupports;
+  
+  // iterate node and build up array of non-list content
+  content = do_QueryInterface(aNode);
+  iter->Init(content);
+  while (NS_ENUMERATOR_FALSE == iter->IsDone())
+  {
+    res = iter->CurrentNode(getter_AddRefs(content));
+    if (NS_FAILED(res)) return res;
+    node = do_QueryInterface(content);
+    if (!node) return NS_ERROR_FAILURE;
+    if (nsHTMLEditUtils::IsList(node) || nsHTMLEditUtils::IsListItem(node))
+    {
+      nsCOMPtr <nsIDOMNode> child, tmp;
+      res = mEditor->GetFirstEditableChild(node, &child);
+      if (NS_FAILED(res)) return res;
+      while (child)
+      {
+        isupports = do_QueryInterface(child);
+        (*outArrayOfNodes)->AppendElement(isupports);
+        mEditor->GetNextHTMLSibling(child, &tmp);
+        child = tmp;
+      }
+    }
+    res = iter->Next();
+    if (NS_FAILED(res)) return res;
+  }
+  return res;
+}
+
+///////////////////////////////////////////////////////////////////////////
 // IsFirstNode: Are we the first edittable node in our parent?
 //                  
 PRBool
@@ -3035,6 +3086,14 @@ nsHTMLEditRules::GetParagraphFormatNodes(nsCOMPtr<nsISupportsArray> *outArrayOfN
       (*outArrayOfNodes)->RemoveElementAt(i);
       nsCOMPtr<nsISupportsArray> arrayOfTableContent;
       res = GetTableContent(testNode, &arrayOfTableContent);
+      if (NS_FAILED(res)) return res;
+      (*outArrayOfNodes)->AppendElements(arrayOfTableContent);
+    }
+    else if (nsHTMLEditUtils::IsList(testNode) || nsHTMLEditUtils::IsListItem(testNode))
+    {
+      (*outArrayOfNodes)->RemoveElementAt(i);
+      nsCOMPtr<nsISupportsArray> arrayOfTableContent;
+      res = GetListContent(testNode, &arrayOfTableContent);
       if (NS_FAILED(res)) return res;
       (*outArrayOfNodes)->AppendElements(arrayOfTableContent);
     }
