@@ -77,12 +77,8 @@
         ]]>
       </property>
         
-      <property name="disableAutocomplete"
-                onset="return this.setAttribute('disableAutocomplete', val);"
-                onget="return this.getAttribute('disableAutocomplete');"/>
-
+      <property name="disableAutocomplete">false</property>
       <property name="autoCompleteTimer">0</property>
-
       <property name="ignoreInputEventTimer">0</property>
 
       <property name="lastResults">
@@ -104,7 +100,7 @@
               if (status == Components.interfaces.nsIAutoCompleteStatus.failed)
                 return;
               
-              if (me.disableAutocomplete == "true")
+              if (me.disableAutocomplete)
                 return;
 
               me.lastResults = result;
@@ -210,7 +206,7 @@
             callListener: function(me, action) {
               switch (action) {
                 case 'startLookup':
-                  if (me.disableAutocomplete == "true")
+                  if (me.disableAutocomplete)
                     return;
                   inputElement = document.getAnonymousNodes(me)[0].firstChild;
                   if (!me.lastResults || inputElement.value != me.lastResults.searchString)
@@ -227,7 +223,7 @@
                     me.autoCompleteTimer = 0;
                   }
                   me.needToAutocomplete = false;
-                  if (this.disableAutocomplete == "true")
+                  if (this.disableAutocomplete)
                     return;
                   var inputElement = document.getAnonymousNodes(me)[0].firstChild;
                   me.autoCompleteSession.onAutoComplete(inputElement.value, me.lastResults, me.autoCompleteListener);
@@ -237,7 +233,7 @@
 
             finishAutoComplete: function(me, event) {
               me.privatefunc.closePopupMenu(me);
-              if (me.disableAutocomplete == "true")
+              if (me.disableAutocomplete)
                   return;
 
               var inputElement = document.getAnonymousNodes(me)[0].firstChild;
@@ -338,7 +334,7 @@
               me.privatefunc.closePopupMenu(me);
               me.lastKeyPressed = 0;
 
-              if (me.disableAutocomplete == "true")
+              if (me.disableAutocomplete)
                 return;
 
               // We want to autocomplete only if the user is editing at the end of the text
@@ -350,7 +346,7 @@
             },
 
             processKeyPress: function(me, event) {
-              if (me.disableAutocomplete == "true") {
+              if (me.disableAutocomplete) {
                 me.privatefunc.closePopupMenu(me);
                 return;
               }
