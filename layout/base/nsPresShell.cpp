@@ -108,6 +108,7 @@
 #ifdef NS_DEBUG
 #include "nsIFrameDebug.h"
 #endif
+#include "prenv.h"
 
 #ifdef MOZ_REFLOW_PERF_DSP
 #include "nsIRenderingContext.h"
@@ -1247,12 +1248,42 @@ VerifyStyleTree(nsIPresContext* aPresContext, nsIFrameManager* aFrameManager)
 #endif
 
 #ifdef NS_DEBUG
-/**
- * Note: the log module is created during library initialization which
- * means that you cannot perform logging before then.
- */
-static PRLogModuleInfo* gLogModule;
+// Set the environment variable GECKO_VERIFY_REFLOW_FLAGS to one or
+// more of the following flags (comma separated) for handy debug
+// output.
 static PRUint32 gVerifyReflowFlags;
+
+struct VerifyReflowFlags {
+  char*    name;
+  PRUint32 bit;
+};
+
+static VerifyReflowFlags gFlags[] = {
+  { "verify",                VERIFY_REFLOW_ON },
+  { "reflow",                VERIFY_REFLOW_NOISY },
+  { "all",                   VERIFY_REFLOW_ALL },
+  { "list-commands",         VERIFY_REFLOW_DUMP_COMMANDS },
+  { "noisy-commands",        VERIFY_REFLOW_NOISY_RC },
+  { "really-noisy-commands", VERIFY_REFLOW_REALLY_NOISY_RC },
+  { "space-manager",         VERIFY_REFLOW_INCLUDE_SPACE_MANAGER },
+  { "resize",                VERIFY_REFLOW_DURING_RESIZE_REFLOW },
+};
+
+#define NUM_VERIFY_REFLOW_FLAGS (sizeof(gFlags) / sizeof(gFlags[0]))
+
+static void
+ShowVerifyReflowFlags()
+{
+  printf("Here are the available GECKO_VERIFY_REFLOW_FLAGS:\n");
+  VerifyReflowFlags* flag = gFlags;
+  VerifyReflowFlags* limit = gFlags + NUM_VERIFY_REFLOW_FLAGS;
+  while (flag < limit) {
+    printf("  %s\n", flag->name);
+    ++flag;
+  }
+  printf("Note: GECKO_VERIFY_REFLOW_FLAGS is a comma separated list of flag\n");
+  printf("names (no whitespace)\n");
+}
 #endif
 
 static PRBool gVerifyReflowEnabled;
@@ -1264,8 +1295,41 @@ nsIPresShell::GetVerifyReflowEnable()
   static PRBool firstTime = PR_TRUE;
   if (firstTime) {
     firstTime = PR_FALSE;
-    gLogModule = PR_NewLogModule("verifyreflow");
-    gVerifyReflowFlags = gLogModule->level;
+    char* flags = PR_GetEnv("GECKO_VERIFY_REFLOW_FLAGS");
+    if (flags) {
+      PRBool error = PR_FALSE;
+
+      for (;;) {
+        char* comma = PL_strchr(flags, ',');
+        if (comma)
+          *comma = '\0';
+
+        PRBool found = PR_FALSE;
+        VerifyReflowFlags* flag = gFlags;
+        VerifyReflowFlags* limit = gFlags + NUM_VERIFY_REFLOW_FLAGS;
+        while (flag < limit) {
+          if (PL_strcasecmp(flag->name, flags) == 0) {
+            gVerifyReflowFlags |= flag->bit;
+            found = PR_TRUE;
+            break;
+          }
+          ++flag;
+        }
+
+        if (! found)
+          error = PR_TRUE;
+
+        if (! comma)
+          break;
+
+        *comma = ',';
+        flags = comma + 1;
+      }
+
+      if (error)
+        ShowVerifyReflowFlags();
+    }
+
     if (VERIFY_REFLOW_ON & gVerifyReflowFlags) {
       gVerifyReflowEnabled = PR_TRUE;
     }
