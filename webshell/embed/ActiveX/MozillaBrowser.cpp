@@ -23,7 +23,7 @@
 #include "MozillaControl.h"
 #include "MozillaBrowser.h"
 #include "IEHtmlDocument.h"
-
+#include <mshtmhst.h>   // IDocHostShowUI
 
 static const TCHAR *c_szInvalidArg = _T("Invalid parameter");
 static const TCHAR *c_szUninitialized = _T("Method called while control is uninitialized");
