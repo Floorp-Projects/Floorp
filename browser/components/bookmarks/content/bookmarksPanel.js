@@ -39,11 +39,11 @@
 
 ////////////////////////////////////////////////////////////////////////////////
 // Get the two bookmarks utility libraries running, attach controllers, focus
-// tree widget, etc. 
+// search box, etc. 
 function Startup() 
 {
-  var bookmarksView = document.getElementById("bookmarks-view");  
-  bookmarksView.treeBoxObject.selection.select(0);
+  var searchBox = document.getElementById("search-box");
+  searchBox.focus();
 }
 
 function manageBookmarks() {
