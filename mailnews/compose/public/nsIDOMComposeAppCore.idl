@@ -25,7 +25,6 @@
 #include "nsIDOMEditorAppCore.idl"
 #include "nsIDOMMsgAppCore.idl"
 
-native nsString(nsString*);
 native nsAutoString(nsAutoString&);
 
 [object, uuid(D4779C9A-CAA6-11d2-A6F2-0060B0EB39B5)]
@@ -40,7 +39,7 @@ interface nsIDOMComposeAppCore : nsIDOMBaseAppCore {
 			in nsIDOMNodeList node, 
 			in nsIDOMMsgAppCore msgAppCore, 
 			in long messageType);
-    void SendMessage(in nsAutoString addrTo, 
+    void SendMsg(in nsAutoString addrTo, 
 			in nsAutoString addrCc, 
 			in nsAutoString addrBcc,
             in nsAutoString newsgroup,
@@ -49,7 +48,7 @@ interface nsIDOMComposeAppCore : nsIDOMBaseAppCore {
     long SendMessage2();
 
     attribute boolean useHtml;
-    readonly attribute long wrappingPosition;
+    readonly attribute long wrapColumn;
 };
 
 /* hack to make MsgAppCore visible from AppCore */
