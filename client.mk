@@ -362,17 +362,6 @@ CHECKOUT_CALENDAR := true
 FASTUPDATE_CALENDAR := true
 endif
 
-
-# because some cygwin tools can't handle native dos-drive paths & vice-versa
-# force configure to use a relative path for --srcdir
-# need a better check for win32
-# and we need to get OBJDIR earlier
-ifdef MOZ_TOOLS
-_tmpobjdir := $(shell cygpath -u $(OBJDIR))
-_abs2rel := $(shell cygpath -w $(TOPSRCDIR)/build/unix/abs2rel.pl | sed -e 's|\\|/|g')
-_OBJ2SRCPATH := $(shell $(_abs2rel) $(TOPSRCDIR) $(_tmpobjdir))
-endif 
-
 #######################################################################
 # Rules
 # 
@@ -590,8 +579,8 @@ else
   CONFIGURE := $(TOPSRCDIR)/configure
 endif
 
-ifdef _OBJ2SRCPATH
-CONFIGURE_ARGS := --srcdir=$(_OBJ2SRCPATH) $(CONFIGURE_ARGS)
+ifdef MOZ_TOOLS
+  CONFIGURE := $(TOPSRCDIR)/configure
 endif
 
 $(OBJDIR)/Makefile $(OBJDIR)/config.status: $(CONFIG_STATUS_DEPS)

@@ -2,9 +2,12 @@
 
 # make-jars [-f] [-v] [-l] [-d <chromeDir>] [-s <srcdir>] < <jar.mn>
 
+if ($^O ne "cygwin") {
 # we'll be pulling in some stuff from the script directory
-use FindBin;
+require FindBin;
+import FindBin;
 push @INC, $FindBin::Bin;
+}
 
 use strict;
 

@@ -287,13 +287,14 @@ else
 # compiler optimization bugs, as well as running with Quantify.
 ifdef MOZ_PROFILE
 MOZ_OPTIMIZE_FLAGS=-Zi -O1 -UDEBUG -DNDEBUG
-OS_LDFLAGS = /DEBUG /DEBUGTYPE:CV /OPT:REF /OPT:nowin98
+OS_LDFLAGS = /DEBUG /DEBUGTYPE:CV /PDB:NONE /OPT:REF /OPT:nowin98
+WIN32_EXE_LDFLAGS=/FIXED:NO
 endif
 
 # if MOZ_COVERAGE is set, we handle pdb files slightly differently
 ifdef MOZ_COVERAGE
 MOZ_OPTIMIZE_FLAGS=-Zi -O1 -UDEBUG -DNDEBUG
-OS_LDFLAGS = /DEBUG /DEBUGTYPE:CV /OPT:REF /OPT:nowin98
+OS_LDFLAGS = /DEBUG /DEBUGTYPE:CV /PDB:NONE /OPT:REF /OPT:nowin98
 endif
 # MOZ_COVERAGE
 
@@ -468,6 +469,7 @@ else
 XPIDL_COMPILE 	= $(DIST)/bin/xpidl$(BIN_SUFFIX)
 XPIDL_LINK	= $(DIST)/bin/xpt_link$(BIN_SUFFIX)
 endif
+MIDL		= midl
 
 ifeq ($(OS_ARCH),OS2)
 PATH_SEPARATOR	:= \;
@@ -720,7 +722,7 @@ GARBAGE		+= $(DEPENDENCIES) $(MKDEPENDENCIES) $(MKDEPENDENCIES).bak core $(wildc
 
 ifeq (,$(filter-out WINNT, $(OS_ARCH)))
 ifeq ($(OS_ARCH),WINNT)
-NSINSTALL	= $(MOZ_TOOLS_DIR)/bin/nsinstall
+NSINSTALL	= $(CYGWIN_WRAPPER) $(MOZ_TOOLS_DIR)/bin/nsinstall
 else
 NSINSTALL	= nsinstall
 endif

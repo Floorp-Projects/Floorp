@@ -46,7 +46,7 @@ GARBAGE		+= build.dtd
 
 build.dtd: build.dtd.in $(DEPTH)/config/build_number
 	@$(RM) -f $@
-	$(PERL) -I$(topsrcdir)/config $(topsrcdir)/config/aboutime.pl $@ $(DEPTH)/config/build_number $<
+	$(PERL) -I$(topsrcdir)/config $(topsrcdir)/config/aboutime.pl $@ $(DEPTH)/config/build_number $(srcdir)/build.dtd.in
 
 libs::
 	@$(REGCHROME) locale en-US/global-platform en-$(CHROME_PLATFORM).jar

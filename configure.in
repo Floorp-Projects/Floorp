@@ -434,6 +434,7 @@ LIB_SUFFIX=a
 ASM_SUFFIX=s
 TARGET_MD_ARCH=unix
 DIRENT_INO=d_ino
+CYGWIN_WRAPPER=
 
 MOZ_JPEG_CFLAGS=
 MOZ_JPEG_LIBS='-L$(DIST)/lib -lmozjpeg'
@@ -901,16 +902,23 @@ case "$target" in
         MKSHLIB_FORCE_ALL=
         MKSHLIB_UNFORCE_ALL=
     else
+        CYGWIN_WRAPPER=${srcdir}/build/cygwin-wrapper
         CC=cl
         CXX=cl
         HOST_CC=cl
+        HOST_CXX=cl
         LD=link
         AR='lib -NOLOGO -OUT:"$@"'
         AR_FLAGS=
         RANLIB='echo not_ranlib'
         STRIP='echo not_strip'
-        RC=rc.exe
+        RC='$(CYGWIN_WRAPPER) rc.exe'
         PERL=perl
+        _WIN32_PERL=$PERL
+        if test "`${PERL} -v | grep -c cygwin  2>/dev/null`" != 0; then
+            PERL="${CYGWIN_WRAPPER} -up ${PERL}"
+            _CYGWIN_PERL=1
+        fi
         XARGS=xargs
         ZIP=zip
         UNZIP=unzip
@@ -3264,7 +3272,11 @@ if test -z "$MOZ_JSDEBUGGER" && test `echo "$MOZ_EXTENSIONS" | grep -c venkman` 
 fi
 
 dnl Remove dupes
+if test -n "${_CYGWIN_PERL}"; then
 MOZ_EXTENSIONS=`${PERL} ${srcdir}/build/unix/uniq.pl ${MOZ_EXTENSIONS}`
+else
+MOZ_EXTENSIONS=`${CYGWIN_WRAPPER} ${PERL} ${srcdir}/build/unix/uniq.pl ${MOZ_EXTENSIONS}`
+fi
 
 dnl ========================================================
 dnl experimental ldap features
@@ -4446,6 +4458,7 @@ AC_SUBST(MOZ_COVERAGE)
 AC_SUBST(MOZ_MAPINFO)
 AC_SUBST(MOZ_BROWSE_INFO)
 AC_SUBST(MOZ_TOOLS_DIR)
+AC_SUBST(CYGWIN_WRAPPER)
 
 dnl Disable profile at startup, hack for tinderbox.
 if test "$MOZ_BYPASS_PROFILE_AT_STARTUP"; then
@@ -4679,7 +4692,18 @@ dnl This does not change the $MAKEFILES variable.
 dnl
 dnl OpenVMS gets a line overflow on the long eval command, so use a temp file.
 dnl
-echo $MAKEFILES | $PERL $srcdir/build/autoconf/acoutput-fast.pl > conftest.sh
+my_srcdir=$srcdir
+case "$target_os" in
+msvc*|mksnt*|cygwin*|mingw*)
+    my_srcdir=`cygpath -w ${srcdir} | sed  's|\\\\|/|g'`
+    MAKEFILES=`echo $MAKEFILES | sed -e 's|/cygdrive/\(.\)/|\1:/|g'`
+    my_perl=$_WIN32_PERL
+    ;;
+*)
+    my_perl=$PERL
+    ;;
+esac
+echo $MAKEFILES | $my_perl $my_srcdir/build/autoconf/acoutput-fast.pl > conftest.sh
 . ./conftest.sh
 rm conftest.sh
 

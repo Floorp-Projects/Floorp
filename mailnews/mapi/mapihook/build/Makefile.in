@@ -43,16 +43,21 @@ OS_LIBS		+= rpcrt4.lib
 
 MIDL_GENERATED_FILES = msgMapi.h msgMapi_p.c msgMapi_i.c dlldata.c
 
-GARBAGE	+= $(MIDL_GENERATED_FILES) done_gen
+GARBAGE	+= $(MIDL_GENERATED_FILES) done_gen $(addprefix $(srcdir)/,$(CSRCS))
 
 include $(topsrcdir)/config/rules.mk
 
 DEFINES += -DREGISTER_PROXY_DLL -DUNICODE -D_UNICODE
 
-export:: done_gen
+$(MIDL_GENERATED_FILES): done_gen
 
 done_gen: msgMapi.idl
-	midl $(UNICODE_FLAGS) $<
+	$(MIDL) $(UNICODE_FLAGS) $(srcdir)/msgMapi.idl
 	touch $@
 
-$(MIDL_GENERATED_FILES): done_gen
+$(addprefix $(srcdir)/,$(CSRCS)): %.c: done_gen
+	cp $(@F) $@
+
+export:: done_gen $(addprefix $(srcdir)/,$(CSRCS))
+
+
