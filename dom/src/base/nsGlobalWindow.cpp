@@ -194,7 +194,9 @@ GlobalWindowImpl::SetNewDocument(nsIDOMDocument *aDocument)
     }
     
     NS_RELEASE(mDocument);
-    JS_GC((JSContext *)mContext->GetNativeContext());
+    if (nsnull != mContext) {
+      JS_GC((JSContext *)mContext->GetNativeContext());
+    }
   }
 
   mDocument = aDocument;

@@ -33,6 +33,8 @@
 #include "nsIPostToServer.h"
 #include "nsIFactory.h"
 #include "nsIContentViewerContainer.h"
+#include "nsIDocumentLoaderObserver.h"
+#include "nsVoidArray.h"
 
 // XXX: Only needed for dummy factory...
 #include "nsIDocument.h"
@@ -376,6 +378,9 @@ public:
 
     void LoadURLComplete(nsISupports* loader);
 
+    NS_IMETHOD AddObserver(nsIDocumentLoaderObserver *aObserver);
+    NS_IMETHOD RemoveObserver(nsIDocumentLoaderObserver *aObserver);
+
 protected:
     virtual ~nsDocLoaderImpl();
 
@@ -391,6 +396,7 @@ protected:
 
     nsDocLoaderImpl* mParent;
     nsISupportsArray* mChildDocLoaderList;
+    nsVoidArray mObservers;
 };
 
 
@@ -582,6 +588,16 @@ void nsDocLoaderImpl::LoadURLComplete(nsISupports* aBindInfo)
 
     rv = m_LoadingDocsList->RemoveElement(aBindInfo);
 
+    if (0 == m_LoadingDocsList->Count()) {
+      PRInt32 count = mObservers.Count();
+      PRInt32 index;
+
+      for (index = 0; index < count; index++) {
+        nsIDocumentLoaderObserver* observer = (nsIDocumentLoaderObserver*)mObservers.ElementAt(index);
+        observer->OnConnectionsComplete();
+      }
+    }
+
     /*
      * If the entry was not found in the list, then it must have been cancelled
      * via Stop(...).  
@@ -625,7 +641,29 @@ PRBool nsDocLoaderImpl::StopDocLoaderEnumerator(nsISupports* aElement, void* aDa
     return PR_TRUE;
 }
 
+/*
+ * Do not hold refs to the objects in the observer lists.  Observers
+ * are expected to remove themselves upon their destruction if they
+ * have not removed themselves previously
+ */
+NS_IMETHODIMP
+nsDocLoaderImpl::AddObserver(nsIDocumentLoaderObserver* aObserver)
+{
+  // Make sure the observer isn't already in the list
+  if (mObservers.IndexOf(aObserver) == -1) {
+    mObservers.AppendElement(aObserver);
+  }
+  return NS_OK;
+}
 
+NS_IMETHODIMP
+nsDocLoaderImpl::RemoveObserver(nsIDocumentLoaderObserver* aObserver)
+{
+  if (PR_TRUE == mObservers.RemoveElement(aObserver)) {
+    return NS_OK;
+  }
+  return NS_ERROR_FAILURE;
+}
 
 /****************************************************************************
  * nsDocumentBindInfo implementation...

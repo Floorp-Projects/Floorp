@@ -174,21 +174,20 @@ DocumentViewerImpl::~DocumentViewerImpl()
     NS_IF_RELEASE(mWindow);
 
     if (nsnull != mDocument) {
-      //XXX I don't think we'll need to do this eventually but for
-      //now we need it to drop JS objects - joki
+      //Break global object circular reference on the document
+      //created in the DocViewer Init
       nsIScriptContextOwner *mOwner = mDocument->GetScriptContextOwner();
       if (nsnull != mOwner) {
-        nsIScriptContext *mContext;
-        mOwner->GetScriptContext(&mContext);
-        if (nsnull != mContext) {
-          mContext->RunGC();
-          NS_RELEASE(mContext);
+        nsIScriptGlobalObject *mGlobal;
+        mOwner->GetScriptGlobalObject(&mGlobal);
+        if (nsnull != mGlobal) {
+          mGlobal->SetNewDocument(nsnull);
+          NS_RELEASE(mGlobal);
         }
         NS_RELEASE(mOwner);
+
+        mDocument->SetScriptContextOwner(nsnull);
       }
-      //Need to break documents circular reference on
-      //the webshell created in the DocViewer Init
-      mDocument->SetScriptContextOwner(nsnull);
       NS_RELEASE(mDocument);
     }
     

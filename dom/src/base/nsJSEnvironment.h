@@ -37,7 +37,6 @@ public:
   virtual void*                     GetNativeContext();
   virtual nsresult     InitClasses();
   virtual nsresult     InitContext(nsIScriptGlobalObject *aGlobalObject);
-  virtual void     RunGC();
 };
 
 class nsJSEnvironment {
@@ -52,6 +51,7 @@ public:
   nsIScriptContext* GetNewContext();
 
   static nsJSEnvironment *GetScriptingEnvironment();
+
 };
 
 #endif /* nsJSEnvironment_h___ */
