@@ -6146,8 +6146,17 @@ nsBlockFrame::HandleEvent(nsIPresContext* aPresContext,
     nsCOMPtr<nsIPresShell> shell;
     nsresult rv = aPresContext->GetShell(getter_AddRefs(shell));
     if (NS_SUCCEEDED(rv)){
+      nsCOMPtr<nsISelectionController> selCon;
+      rv = GetSelectionController(aPresContext, getter_AddRefs(selCon));
       nsCOMPtr<nsIFrameSelection> frameselection;
-      if (NS_SUCCEEDED(shell->GetFrameSelection(getter_AddRefs(frameselection))) && frameselection){
+      if (NS_SUCCEEDED(rv) && selCon)
+      {
+        frameselection = do_QueryInterface(selCon); //this MAY implement
+      }
+      if (!frameselection)
+        shell->GetFrameSelection(getter_AddRefs(frameselection));
+      if (frameselection)
+      {
           PRBool mouseDown = PR_FALSE;
           if (NS_FAILED(frameselection->GetMouseDownState(&mouseDown)) || !mouseDown) 
             return NS_OK;//do not handle

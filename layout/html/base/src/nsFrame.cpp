@@ -708,7 +708,16 @@ nsFrame::Paint(nsIPresContext*      aPresContext,
     }
 
     if (NS_SUCCEEDED(result) && shell){
-      result = shell->GetFrameSelection(getter_AddRefs(frameSelection));
+
+      nsCOMPtr<nsISelectionController> selCon;
+      result = GetSelectionController(aPresContext, getter_AddRefs(selCon));
+      nsCOMPtr<nsIFrameSelection> frameselection;
+      if (NS_SUCCEEDED(result) && selCon)
+      {
+        frameSelection = do_QueryInterface(selCon); //this MAY implement
+      }
+      if (!frameSelection)
+        result = shell->GetFrameSelection(getter_AddRefs(frameSelection));
       if (NS_SUCCEEDED(result) && frameSelection){
         result = frameSelection->LookUpSelection(newContent, offset, 
                               1, &details, PR_FALSE);
@@ -777,7 +786,15 @@ nsFrame::HandleEvent(nsIPresContext* aPresContext,
     {
     if (NS_SUCCEEDED(rv)){
       nsCOMPtr<nsIFrameSelection> frameselection;
-      if (NS_SUCCEEDED(shell->GetFrameSelection(getter_AddRefs(frameselection))) && frameselection){
+      nsCOMPtr<nsISelectionController> selCon;
+      rv = GetSelectionController(aPresContext, getter_AddRefs(selCon));
+      if (NS_SUCCEEDED(rv) && selCon)
+      {
+        frameselection = do_QueryInterface(selCon); //this MAY implement
+      }
+      if (!frameselection)
+        rv = shell->GetFrameSelection(getter_AddRefs(frameselection));
+      if (NS_SUCCEEDED(rv) && frameselection){
           PRBool mouseDown = PR_FALSE;
           if (NS_SUCCEEDED(frameselection->GetMouseDownState(&mouseDown)) && mouseDown)
             HandleDrag(aPresContext, aEvent, aEventStatus);            
@@ -787,14 +804,42 @@ nsFrame::HandleEvent(nsIPresContext* aPresContext,
   case NS_MOUSE_LEFT_BUTTON_DOWN:
     {
       nsCOMPtr<nsIFrameSelection> frameselection;
-      if (NS_SUCCEEDED(shell->GetFrameSelection(getter_AddRefs(frameselection))) && frameselection)
+      nsCOMPtr<nsISelectionController> selCon;
+      rv = GetSelectionController(aPresContext, getter_AddRefs(selCon));
+      if (NS_SUCCEEDED(rv) && selCon)
       {
-        frameselection->SetMouseDownState( PR_TRUE);//not important if it fails here
+        frameselection = do_QueryInterface(selCon); //this MAY implement
+      }
+      if (!frameselection)
+        rv = shell->GetFrameSelection(getter_AddRefs(frameselection));
+      if (NS_SUCCEEDED(rv) && frameselection)
+      {
+        frameselection->SetMouseDownState( PR_TRUE );//not important if it fails here
       }
       HandlePress(aPresContext, aEvent, aEventStatus);
     }break;
   case NS_MOUSE_LEFT_BUTTON_UP:
-    HandleRelease(aPresContext, aEvent, aEventStatus);
+    {
+      nsFrameState  state;
+      GetFrameState(&state);
+      if (state & NS_FRAME_INDEPENDENT_SELECTION) 
+      {
+        nsCOMPtr<nsIFrameSelection> frameselection;
+        nsCOMPtr<nsISelectionController> selCon;
+        rv = GetSelectionController(aPresContext, getter_AddRefs(selCon));
+        if (NS_SUCCEEDED(rv) && selCon)
+        {
+          frameselection = do_QueryInterface(selCon); //this MAY implement
+        }
+        if (!frameselection)
+          return NS_ERROR_FAILURE;
+        if (NS_SUCCEEDED(rv) && frameselection)
+        {
+          frameselection->SetMouseDownState( PR_FALSE );//redandant in normal cases but we MUST tell this selection by hand here
+        }
+      }
+      HandleRelease(aPresContext, aEvent, aEventStatus);
+    }
     break;
   default:
     break;
@@ -953,7 +998,15 @@ nsFrame::HandlePress(nsIPresContext* aPresContext,
                                  startPos, contentOffsetEnd, beginContent)))
     {
       nsCOMPtr<nsIFrameSelection> frameselection;
-      if (NS_SUCCEEDED(shell->GetFrameSelection(getter_AddRefs(frameselection))) && frameselection)
+      nsCOMPtr<nsISelectionController> selCon;
+      rv = GetSelectionController(aPresContext, getter_AddRefs(selCon));
+      if (NS_SUCCEEDED(rv) && selCon)
+      {
+        frameselection = do_QueryInterface(selCon); //this MAY implement
+      }
+      if (!frameselection)
+        rv = shell->GetFrameSelection(getter_AddRefs(frameselection));
+      if (NS_SUCCEEDED(rv) && frameselection)
       {
         frameselection->SetMouseDownState(PR_TRUE);//not important if it fails here
 
@@ -1081,8 +1134,14 @@ NS_IMETHODIMP nsFrame::HandleDrag(nsIPresContext* aPresContext,
     return result;
 
   nsCOMPtr<nsIFrameSelection> frameselection;
-
-  result = presShell->GetFrameSelection(getter_AddRefs(frameselection));
+  nsCOMPtr<nsISelectionController> selCon;
+  result = GetSelectionController(aPresContext, getter_AddRefs(selCon));
+  if (NS_SUCCEEDED(result) && selCon)
+  {
+    frameselection = do_QueryInterface(selCon); //this MAY implement
+  }
+  if (!frameselection)
+    result = presShell->GetFrameSelection(getter_AddRefs(frameselection));
 
   if (NS_SUCCEEDED(result) && frameselection)
   {
@@ -1124,8 +1183,14 @@ NS_IMETHODIMP nsFrame::HandleRelease(nsIPresContext* aPresContext,
   if (NS_SUCCEEDED(result))
   {
     nsCOMPtr<nsIFrameSelection> frameselection;
-
-    result = presShell->GetFrameSelection(getter_AddRefs(frameselection));
+    nsCOMPtr<nsISelectionController> selCon;
+    result = GetSelectionController(aPresContext, getter_AddRefs(selCon));
+    if (NS_SUCCEEDED(result) && selCon)
+    {
+      frameselection = do_QueryInterface(selCon); //this MAY implement
+    }
+    if (!frameselection)
+      result = presShell->GetFrameSelection(getter_AddRefs(frameselection));
 
     if (NS_SUCCEEDED(result) && frameselection)
       frameselection->StopAutoScrollTimer();

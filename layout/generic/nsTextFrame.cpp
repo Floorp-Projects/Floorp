@@ -1804,7 +1804,14 @@ nsTextFrame::PaintUnicodeText(nsIPresContext* aPresContext,
 
       nsresult rv = aPresContext->GetShell(getter_AddRefs(shell));
       if (NS_SUCCEEDED(rv) && shell){
-        rv = shell->GetFrameSelection(getter_AddRefs(frameSelection));
+        nsCOMPtr<nsISelectionController> selCon;
+        rv = GetSelectionController(aPresContext, getter_AddRefs(selCon));
+        if (NS_SUCCEEDED(rv) && selCon)
+        {
+          frameSelection = do_QueryInterface(selCon); //this MAY implement
+        }
+        if (!frameSelection)
+          rv = shell->GetFrameSelection(getter_AddRefs(frameSelection));
         if (NS_SUCCEEDED(rv) && frameSelection){
           nsCOMPtr<nsIContent> content;
           PRInt32 offset;
@@ -2317,7 +2324,14 @@ nsTextFrame::PaintTextSlowly(nsIPresContext* aPresContext,
       nsCOMPtr<nsIFrameSelection> frameSelection;
       nsresult rv = aPresContext->GetShell(getter_AddRefs(shell));
       if (NS_SUCCEEDED(rv) && shell){
-        rv = shell->GetFrameSelection(getter_AddRefs(frameSelection));
+        nsCOMPtr<nsISelectionController> selCon;
+        rv = GetSelectionController(aPresContext, getter_AddRefs(selCon));
+        if (NS_SUCCEEDED(rv) && selCon)
+        {
+          frameSelection = do_QueryInterface(selCon); //this MAY implement
+        }
+        if (!frameSelection)
+          rv = shell->GetFrameSelection(getter_AddRefs(frameSelection));
         if (NS_SUCCEEDED(rv) && frameSelection){
           nsCOMPtr<nsIContent> content;
           PRInt32 offset;
@@ -2516,7 +2530,14 @@ nsTextFrame::PaintAsciiText(nsIPresContext* aPresContext,
       nsCOMPtr<nsIFrameSelection> frameSelection;
       nsresult rv = aPresContext->GetShell(getter_AddRefs(shell));
       if (NS_SUCCEEDED(rv) && shell){
-        rv = shell->GetFrameSelection(getter_AddRefs(frameSelection));
+        nsCOMPtr<nsISelectionController> selCon;
+        rv = GetSelectionController(aPresContext, getter_AddRefs(selCon));
+        if (NS_SUCCEEDED(rv) && selCon)
+        {
+          frameSelection = do_QueryInterface(selCon); //this MAY implement
+        }
+        if (!frameSelection)
+          rv = shell->GetFrameSelection(getter_AddRefs(frameSelection));
         if (NS_SUCCEEDED(rv) && frameSelection){
           nsCOMPtr<nsIContent> content;
           PRInt32 offset;
@@ -2919,7 +2940,14 @@ nsTextFrame::SetSelected(nsIPresContext* aPresContext,
 
     nsresult rv = aPresContext->GetShell(getter_AddRefs(shell));
     if (NS_SUCCEEDED(rv) && shell){
-      rv = shell->GetFrameSelection(getter_AddRefs(frameSelection));
+      nsCOMPtr<nsISelectionController> selCon;
+      rv = GetSelectionController(aPresContext, getter_AddRefs(selCon));
+      if (NS_SUCCEEDED(rv) && selCon)
+      {
+        frameSelection = do_QueryInterface(selCon); //this MAY implement
+      }
+      if (!frameSelection)
+        rv = shell->GetFrameSelection(getter_AddRefs(frameSelection));
       if (NS_SUCCEEDED(rv) && frameSelection){
         nsCOMPtr<nsIContent> content;
         PRInt32 offset;
