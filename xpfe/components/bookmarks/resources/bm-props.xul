@@ -23,144 +23,158 @@
 -->
 
 <?xml-stylesheet href="chrome://bookmarks/skin/" type="text/css"?>
+<?xml-stylesheet href="chrome://bookmarks/skin/bm-props.css" type="text/css"?>
+
+<?xul-overlay href="chrome://global/content/dialogOverlay.xul"?>
 
 <!DOCTYPE window SYSTEM "chrome://bookmarks/locale/bm-props.dtd" >
-<xul:window
-  xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-  xmlns="http://www.w3.org/TR/REC-html40"
-  title="&bookmarks.title.label;"
-  onload="Init();"
-  class="dialog"
-  align="vertical">
-  <script language="JavaScript" src="chrome://global/content/strres.js" />
-  <script src="bm-props.js" />
 
-  <table style="width:100%; margin:1em;">
-    <tr>
-      <td colspan="2">
-      		<b>&bookmarks.name.label;</b><br />
-	      	<input type="text" id="name" style="width:100%;"/>
-      </td>
-    </tr>
-    <tr>
-    	<td colspan="2">
-      		<b>&bookmarks.location.label;</b><br />
-		<input type="text" id="url" style="width:100%;"/>
-	</td>
-    </tr>
-    <tr>
-      <td colspan="2">
-      	<b>&bookmarks.shortcut.label;</b><br />
-      	<input type="text" id="shortcut" style="width:100%;"/>
-      </td>
-    </tr>
-    <tr>
-      <td colspan="2">
-      	<b>&bookmarks.description.label;</b><br />
-      	<textarea id="description" style="width:100%;" wrap="hard"></textarea>
-      </td>
-    </tr>
-    
-    <tr id="scheduleSeparator">
-    	<td colspan="2">
-    		<hr/>
-    	</td>
-    </tr>
-    
-    <tr id="scheduleInfo">
-    	<td valign="top" width="55%" >
-		<fieldset>
-		<legend><b>&checkforupdates.legend.label;</b></legend>
-		&check.label;
-    		<select id="dayRange">
-    			<option value="">&checknever.label;</option>
-    			<option value="0123456">&checkeveryday.label;</option>
-    			<option value="12345">&checkweekdays.label;</option>
-    			<option value="06">&checkweekends.label;</option>
-    			<option value="1">&checkmondays.label;</option>
-    			<option value="2">&checktuesdays.label;</option>
-    			<option value="3">&checkwednesdays.label;</option>
-    			<option value="4">&checkthursdays.label;</option>
-    			<option value="5">&checkfridays.label;</option>
-    			<option value="6">&checksaturdays.label;</option>
-    			<option value="0">&checksundays.label;</option>
-    		</select>
-    		<p/>
-    		&from.label; 
-    		<select id="startHourRange">
-    			<option value="0">&midnight.label;</option>
-    			<option value="1">&AMone.label;</option>
-    			<option value="2">&AMtwo.label;</option>
-    			<option value="3">&AMthree.label;</option>
-    			<option value="4">&AMfour.label;</option>
-    			<option value="5">&AMfive.label;</option>
-    			<option value="6">&AMsix.label;</option>
-    			<option value="7">&AMseven.label;</option>
-    			<option value="8">&AMeight.label;</option>
-    			<option value="9">&AMnine.label;</option>
-    			<option value="10">&AMten.label;</option>
-    			<option value="11">&AMeleven.label;</option>
-    			<option value="12">&noon.label;</option>
-    			<option value="13">&PMone.label;</option>
-    			<option value="14">&PMtwo.label;</option>
-    			<option value="15">&PMthree.label;</option>
-    			<option value="16">&PMfour.label;</option>
-    			<option value="17">&PMfive.label;</option>
-    			<option value="18">&PMsix.label;</option>
-    			<option value="19">&PMseven.label;</option>
-    			<option value="20">&PMeight.label;</option>
-    			<option value="21">&PMnine.label;</option>
-    			<option value="22">&PMten.label;</option>
-    			<option value="23">&PMeleven.label;</option>
-    		</select>
-    		&to.label; 
-    		<select id="endHourRange">
-    			<option value="1">&AMone.label;</option>
-    			<option value="2">&AMtwo.label;</option>
-    			<option value="3">&AMthree.label;</option>
-    			<option value="4">&AMfour.label;</option>
-    			<option value="5">&AMfive.label;</option>
-    			<option value="6">&AMsix.label;</option>
-    			<option value="7">&AMseven.label;</option>
-    			<option value="8">&AMeight.label;</option>
-    			<option value="9">&AMnine.label;</option>
-    			<option value="10">&AMten.label;</option>
-    			<option value="11">&AMeleven.label;</option>
-    			<option value="12">&noon.label;</option>
-    			<option value="13">&PMone.label;</option>
-    			<option value="14">&PMtwo.label;</option>
-    			<option value="15">&PMthree.label;</option>
-    			<option value="16">&PMfour.label;</option>
-    			<option value="17">&PMfive.label;</option>
-    			<option value="18">&PMsix.label;</option>
-    			<option value="19">&PMseven.label;</option>
-    			<option value="20">&PMeight.label;</option>
-    			<option value="21">&PMnine.label;</option>
-    			<option value="22">&PMten.label;</option>
-    			<option value="23">&PMeleven.label;</option>
-    			<option value="24">&midnight.label;</option>
-    		</select>
-    		<br/>
-    		&every.label;<input id="duration" size="4" value="60" />&minutes.label;
-		</fieldset>
-    	</td>
-    	<td>
-		<fieldset>
-			<legend><b>&notifications.legend.label;</b></legend>
-	    		<label><input id="bookmarkIcon" type="checkbox" />&notification.icon.label;</label><br/>
-	    		<label><input id="playSound" type="checkbox" disabled="true" />&notification.sound.label;</label><br/>
-	    		<label><input id="showAlert" type="checkbox" />&notification.alert.label;</label><br/>
-	    		<label><input id="openWindow" type="checkbox" />&notification.window.label;</label><br/>
-	    	</fieldset>
-    	</td>
-    </tr>
-    
-    <tr>
-    	<td colspan="2" align="right">
-		<xul:titledbutton class="dialog push" onclick="Cancel();" value="&bookmarks.cancel.label;"/>
-		<xul:titledbutton class="dialog push" onclick="Commit();" value="&bookmarks.ok.label;"/>
-    	</td>
-    </tr>
-    
-  </table>
-</xul:window>
+<window
+	xmlns:html="http://www.w3.org/TR/REC-html40"
+	xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+	title="&bookmarks.windowtitle.label;"
+	onload="Init()"
+	class="dialog" align="vertical">
+ 
+	<html:script language="Javascript" src="chrome://global/content/globalOverlay.js"/>  
+	<html:script language="JavaScript" src="chrome://global/content/strres.js" />
+	<html:script language="JavaScript" src="chrome://bookmarks/content/bm-props.js" />
+
+<box id="Tabs" align="horizontal">
+	<titledbutton class="push" value="General Information" onclick="return switchTab(0)" />
+	<titledbutton id="ScheduleTab" class="push" value="Schedule" onclick="return switchTab(1)" />
+</box>
+
+<deck id="Deck">
+	<titledbox orient="vertical" class="deckouterbox">
+		<title><text value="&bookmarks.information.label;" /></title>
+
+		<box id="nameBox" align="vertical">
+			<text value="&bookmarks.name.label;" />
+			<html:input id="name" />
+		</box>
+
+		<box id="locationBox" align="vertical">
+			<text value="&bookmarks.location.label;" />
+			<html:input id="url" />
+		</box>
+
+		<box id="shortcutBox" align="vertical">
+			<text value="&bookmarks.shortcut.label;" />
+			<html:input id="shortcut" />
+		</box>
+
+		<box id="descriptionBox" align="vertical">
+			<text value="&bookmarks.description.label;" />
+			<html:textarea id="description" />
+		</box>
+	</titledbox>
+
+	<titledbox orient="vertical" class="deckouterbox">
+		<title><text value="&checkforupdates.legend.label;" /></title>
+
+		<box align="horizontal">
+			<text value="&when.label;" />
+			<menulist id="dayRange">
+				<menupopup>
+					<menuitem data="" value="&checknever.label;"/>
+					<menuseparator />
+					<menuitem data="0123456" value="&checkeveryday.label;"/>
+					<menuitem data="12345" value="&checkweekdays.label;"/>
+					<menuitem data="06" value="&checkweekends.label;"/>
+					<menuitem data="1" value="&checkmondays.label;"/>
+					<menuitem data="2" value="&checktuesdays.label;"/>
+					<menuitem data="3" value="&checkwednesdays.label;"/>
+					<menuitem data="4" value="&checkthursdays.label;"/>
+					<menuitem data="5" value="&checkfridays.label;"/>
+					<menuitem data="6" value="&checksaturdays.label;"/>
+					<menuitem data="0" value="&checksundays.label;"/>
+				</menupopup>
+			</menulist>
+			<spring align="horizontal" flex="1" />
+			<text value="&from.label;" />
+			<menulist id="startHourRange">
+				<menupopup>
+					<menuitem data="0" value="&midnight.label;"/>
+					<menuitem data="1" value="&AMone.label;"/>
+					<menuitem data="2" value="&AMtwo.label;"/>
+					<menuitem data="3" value="&AMthree.label;"/>
+					<menuitem data="4" value="&AMfour.label;"/>
+					<menuitem data="5" value="&AMfive.label;"/>
+					<menuitem data="6" value="&AMsix.label;"/>
+					<menuitem data="7" value="&AMseven.label;"/>
+					<menuitem data="8" value="&AMeight.label;"/>
+					<menuitem data="9" value="&AMnine.label;"/>
+					<menuitem data="10" value="&AMten.label;"/>
+					<menuitem data="11" value="&AMeleven.label;"/>
+					<menuitem data="12" value="&noon.label;"/>
+					<menuitem data="13" value="&PMone.label;"/>
+					<menuitem data="14" value="&PMtwo.label;"/>
+					<menuitem data="15" value="&PMthree.label;"/>
+					<menuitem data="16" value="&PMfour.label;"/>
+					<menuitem data="17" value="&PMfive.label;"/>
+					<menuitem data="18" value="&PMsix.label;"/>
+					<menuitem data="19" value="&PMseven.label;"/>
+					<menuitem data="20" value="&PMeight.label;"/>
+					<menuitem data="21" value="&PMnine.label;"/>
+					<menuitem data="22" value="&PMten.label;"/>
+					<menuitem data="23" value="&PMeleven.label;"/>
+				</menupopup>
+			</menulist>
+		</box>
+		<box align="horizontal">
+			<spring align="horizontal" flex="1" />
+			<text value="&to.label;" />
+			<menulist id="endHourRange">
+				<menupopup>
+					<menuitem data="1" value="&AMone.label;"/>
+					<menuitem data="2" value="&AMtwo.label;"/>
+					<menuitem data="3" value="&AMthree.label;"/>
+					<menuitem data="4" value="&AMfour.label;"/>
+					<menuitem data="5" value="&AMfive.label;"/>
+					<menuitem data="6" value="&AMsix.label;"/>
+					<menuitem data="7" value="&AMseven.label;"/>
+					<menuitem data="8" value="&AMeight.label;"/>
+					<menuitem data="9" value="&AMnine.label;"/>
+					<menuitem data="10" value="&AMten.label;"/>
+					<menuitem data="11" value="&AMeleven.label;"/>
+					<menuitem data="12" value="&noon.label;"/>
+					<menuitem data="13" value="&PMone.label;"/>
+					<menuitem data="14" value="&PMtwo.label;"/>
+					<menuitem data="15" value="&PMthree.label;"/>
+					<menuitem data="16" value="&PMfour.label;"/>
+					<menuitem data="17" value="&PMfive.label;"/>
+					<menuitem data="18" value="&PMsix.label;"/>
+					<menuitem data="19" value="&PMseven.label;"/>
+					<menuitem data="20" value="&PMeight.label;"/>
+					<menuitem data="21" value="&PMnine.label;"/>
+					<menuitem data="22" value="&PMten.label;"/>
+					<menuitem data="23" value="&PMeleven.label;"/>
+					<menuitem data="24" value="&midnight.label;"/>
+				</menupopup>
+			</menulist>
+		</box>
+		<box align="horizontal">
+			<spring align="horizontal" flex="1" />
+			<text value="&every.label;" />
+			<html:input id="duration" size="4" value="60" />
+			<text value="&minutes.label;" />
+		</box>
+
+		<titledbox orient="vertical">
+			<title><text value="&notifications.legend.label;" /></title>
+
+			<checkbox id="bookmarkIcon" value="&notification.icon.label;" />
+			<checkbox id="showAlert" value="&notification.alert.label;" />
+			<checkbox id="openWindow" value="&notification.window.label;" />
+			<checkbox id="playSound" disabled="true" value="&notification.sound.label;" />
+		</titledbox>
+	</titledbox>
+</deck>
+
+<box autostretch="never">
+	<spring flex="1"/>
+	<box id="okCancelButtons"/>
+</box>
+
+</window>

@@ -22,9 +22,6 @@
 
 var NC_NAMESPACE_URI = "http://home.netscape.com/NC-rdf#";
 
-// string bundle
-var bundle = null;
-
 // XXX MAKE SURE that the "url" field is LAST!
 // This is important for what happens if/when the URL itself is changed.
 // Ask rjc@netscape.com if you want to know why exactly this is.
@@ -50,12 +47,14 @@ var Bookmarks = RDF.GetDataSource("rdf:bookmarks");
 // Init() will fill this in.
 var bookmark_url = '';
 
+
+
 function Init()
 {
-  // initialise the string bundle.
-  bundle = srGetStrBundle("chrome://bookmarks/locale/bookmark.properties");
-  
   bookmark_url = window.arguments[0];
+
+  // set up action buttons
+  doSetOKCancel(Commit, Cancel);
 
   // Initialize the properties panel by copying the values from the
   // RDF graph into the fields on screen.
@@ -75,6 +74,20 @@ function Init()
     if (value) field.value = value;
   }
 
+/*
+	// try and set window title
+	var nameNode = document.getElementById("name");
+	if (nameNode)
+	{
+		var name = nameNode.value;
+		if (name && name != "")
+		{
+			dump("\n    Set window name to '" + name + "'\n");
+			window.title = name;
+		}
+	}
+*/
+
   // check bookmark schedule
     var value = Bookmarks.GetTarget(RDF.GetResource(bookmark_url),
                                     RDF.GetResource("http://home.netscape.com/WEB-rdf#Schedule"),
@@ -93,11 +106,11 @@ function Init()
 		value = value.substr(sep+1, value.length-1);
 
 		var dayNode = document.getElementById("dayRange");
-		for (var x=0; x < dayNode.options.length; x++)
+		for (var x=0; x < dayNode.childNodes[0].childNodes.length; x++)
 		{
-			if (dayNode.options[x].value == days)
+			if (dayNode.childNodes[0].childNodes[x].getAttribute("data") == days)
 			{
-				dayNode.selectedIndex = x;
+				dayNode.selectedItem = dayNode.childNodes[0].childNodes[x];
 				break;
 			}
 		}
@@ -121,27 +134,27 @@ function Init()
 
 		// set start hour
 		var startHourNode = document.getElementById("startHourRange");
-		for (var x=0; x < startHourNode.options.length; x++)
+		for (var x=0; x < startHourNode.childNodes[0].childNodes.length; x++)
 		{
-			if (startHourNode.options[x].value == startHour)
+			if (startHourNode.childNodes[0].childNodes[x].getAttribute("data") == startHour)
 			{
-				startHourNode.selectedIndex = x;
+				startHourNode.selectedItem = startHourNode.childNodes[0].childNodes[x];
 				break;
 			}
 		}
 
 		// set end hour
 		var endHourNode = document.getElementById("endHourRange");
-		for (var x=0; x < endHourNode.options.length; x++)
+		for (var x=0; x < endHourNode.childNodes[0].childNodes.length; x++)
 		{
-			if (endHourNode.options[x].value == endHour)
+			if (endHourNode.childNodes[0].childNodes[x].getAttribute("data") == endHour)
 			{
-				endHourNode.selectedIndex = x;
+				endHourNode.selectedItem = endHourNode.childNodes[0].childNodes[x];
 				break;
 			}
 		}
 	}
-	
+
 	// get duration
 	if ((sep = value.indexOf("|")) > 0)
 	{
@@ -155,26 +168,22 @@ function Init()
 	// get notification method
     	if (value.indexOf("icon") >= 0)
     	{
-    		document.getElementById("bookmarkIcon").setAttribute("checked", "1");
     		document.getElementById("bookmarkIcon").checked = true;
     	}
     	if (value.indexOf("sound") >= 0)
     	{
-    		document.getElementById("playSound").setAttribute("checked", "1");
     		document.getElementById("playSound").checked = true;
     	}
     	if (value.indexOf("alert") >= 0)
     	{
-    		document.getElementById("showAlert").setAttribute("checked", "1");
     		document.getElementById("showAlert").checked = true;
     	}
     	if (value.indexOf("open") >= 0)
     	{
-    		document.getElementById("openWindow").setAttribute("checked", "1");
     		document.getElementById("openWindow").checked = true;
     	}
     }
-  
+
   // if its a container, disable some things
   var isContainerFlag = RDFC.IsContainer(Bookmarks, RDF.GetResource(bookmark_url));
   if (!isContainerFlag)
@@ -185,31 +194,42 @@ function Init()
   	//            of this is the "File System" container.
   }
 
-  if (isContainerFlag)
-  {
-    // If it is a folder, it has no URL.
-    dump("disabling url field for folder\n");
-    document.getElementById("url").disabled = true;
-    // If it is a folder, it has no Shortcut URL.
-    dump("disabling shortcut url field for folder\n");
-    document.getElementById("shortcut").disabled = true;
+	if (isContainerFlag)
+	{
+		// If it is a folder, it has no URL.
+		var locationBox = document.getElementById("locationBox");
+		if (locationBox)
+		{
+			dump("Hide location box\n");
+			var parentNode = locationBox.parentNode;
+			parentNode.removeChild(locationBox);
+		}
 
-	// If it is a folder, no scheduling!
-	var scheduleSepNode = document.getElementById("scheduleSeparator");
-	if (scheduleSepNode)
-	{
-		var parentNode = scheduleSepNode.parentNode;
-		parentNode.removeChild(scheduleSepNode);
+		// If it is a folder, it has no Shortcut URL.
+		var shortcutBox = document.getElementById("shortcutBox");
+		if (shortcutBox)
+		{
+			dump("Hide shortcut box\n");
+			var parentNode = shortcutBox.parentNode;
+			parentNode.removeChild(shortcutBox);
+		}
 	}
-	var scheduleNode = document.getElementById("scheduleInfo");
-	if (scheduleNode)
+
+	if ((bookmark_url.indexOf("http://") != 0) && (bookmark_url.indexOf("https://") != 0))
 	{
-		var parentNode = scheduleNode.parentNode;
-		parentNode.removeChild(scheduleNode);
+		// only allow scheduling of http/https URLs
+		var scheduleTab = document.getElementById("ScheduleTab");
+		if (scheduleTab)
+		{
+			dump("Hide schedule tab\n");
+			var parentNode = scheduleTab.parentNode;
+			parentNode.removeChild(scheduleTab);
+		}
 	}
-  }
-  window.sizeToContent();
+
+	window.sizeToContent();
 }
+
 
 
 function Commit()
@@ -222,11 +242,16 @@ function Commit()
   for (var i = 0; i < Fields.length; ++i)
   {
     var field = document.getElementById(Fields[i]);
+    // if the field was removed, just skip it
+    if (!field)	continue;
 
     // Get the new value as a literal, using 'null' if the value is
     // empty.
     var newvalue = field.value;
     dump("field value = " + newvalue + "\n");
+
+    // if the field was removed, just skip it
+    if (!Properties[i])	continue;
 
     var oldvalue = Bookmarks.GetTarget(RDF.GetResource(bookmark_url),
                                        RDF.GetResource(Properties[i]),
@@ -234,7 +259,12 @@ function Commit()
 
     if (oldvalue) oldvalue = oldvalue.QueryInterface(Components.interfaces.nsIRDFLiteral);
 
-    if ((newvalue) && (i == Fields.length-1))
+    if ((newvalue) && (Properties[i] == (NC_NAMESPACE_URI + "ShortcutURL")))
+    {
+    	// shortcuts are always lowercased internally
+    	newvalue = newvalue.toLowerCase();
+    }
+    else if ((newvalue) && (Properties[i] == (NC_NAMESPACE_URI + "URL")))
     {
     	// we're dealing with the URL attribute;
     	// if a scheme isn't specified, use "http://"
@@ -251,67 +281,73 @@ function Commit()
     }
   }
   
-  // Update bookmark schedule if necessary
-  	var scheduleRes = "http://home.netscape.com/WEB-rdf#Schedule";
-	var oldvalue = Bookmarks.GetTarget(RDF.GetResource(bookmark_url),
-                               RDF.GetResource(scheduleRes), true);
-        var newvalue = "";
-
-	var dayRange = "";
-	var dayRangeNode = document.getElementById("dayRange");
-	if (dayRangeNode)
+	// Update bookmark schedule if necessary;
+	// if the tab was removed, just skip it
+	var scheduleTab = document.getElementById("ScheduleTab");
+	if (scheduleTab)
 	{
-		dayRange = dayRangeNode.options[dayRangeNode.selectedIndex].value;
-	}
-	if (dayRange != "")
-	{
-		var startHourRange = "";
-		var startHourRangeNode = document.getElementById("startHourRange");
-		if (startHourRangeNode)
-		{
-			startHourRange = startHourRangeNode.options[startHourRangeNode.selectedIndex].value;
-		}
-		var endHourRange = "";
-		var endHourRangeNode = document.getElementById("endHourRange");
-		if (endHourRangeNode)
-		{
-			endHourRange = endHourRangeNode.options[endHourRangeNode.selectedIndex].value;
-		}
+	  	var scheduleRes = "http://home.netscape.com/WEB-rdf#Schedule";
+		var oldvalue = Bookmarks.GetTarget(RDF.GetResource(bookmark_url),
+	                               RDF.GetResource(scheduleRes), true);
+	        var newvalue = "";
 
-		if (startHourRange > endHourRange)
+		var dayRange = "";
+		var dayRangeNode = document.getElementById("dayRange");
+		if (dayRangeNode)
 		{
-			var temp = startHourRange;
-			startHourRange = endHourRange;
-			endHourRange = temp;
+			dayRange = dayRangeNode.selectedItem.getAttribute("data");
 		}
-
-		var duration = document.getElementById("duration").value;
-		if (duration == "")
+		if (dayRange != "")
 		{
-			alert( bundle.GetStringFromName("pleaseEnterADuration") );
-			return(false);
+			var startHourRange = "";
+			var startHourRangeNode = document.getElementById("startHourRange");
+			if (startHourRangeNode)
+			{
+				startHourRange = startHourRangeNode.selectedItem.getAttribute("data");
+			}
+			var endHourRange = "";
+			var endHourRangeNode = document.getElementById("endHourRange");
+			if (endHourRangeNode)
+			{
+				endHourRange = endHourRangeNode.selectedItem.getAttribute("data");
+			}
+
+			if (startHourRange > endHourRange)
+			{
+				var temp = startHourRange;
+				startHourRange = endHourRange;
+				endHourRange = temp;
+			}
+
+			var duration = document.getElementById("duration").value;
+			if (duration == "")
+			{
+				var bundle = srGetStrBundle("chrome://bookmarks/locale/bookmark.properties");
+				alert( bundle.GetStringFromName("pleaseEnterADuration") );
+				return(false);
+			}
+
+			var method = "";
+			if (document.getElementById("bookmarkIcon").checked)	method += ",icon";
+			if (document.getElementById("playSound").checked)	method += ",sound";
+			if (document.getElementById("showAlert").checked)	method += ",alert";
+			if (document.getElementById("openWindow").checked)	method += ",open";
+			if (method.length < 1)
+			{
+				var bundle = srGetStrBundle("chrome://bookmarks/locale/bookmark.properties");
+				alert( bundle.GetStringFromName("pleaseSelectANotification") );
+				return(false);
+			}
+			method = method.substr(1, method.length - 1);	// trim off the initial comma
+
+			dump("dayRange: " + dayRange + "\n");
+			dump("startHourRange: " + startHourRange + "\n");
+			dump("endHourRange: " + endHourRange + "\n");
+			dump("duration: " + duration + "\n");
+			dump("method: " + method + "\n");
+			
+			newvalue = dayRange + "|" + startHourRange + "-" + endHourRange + "|" + duration + "|" + method;
 		}
-
-		var method = "";
-		if (document.getElementById("bookmarkIcon").checked)	method += ",icon";
-		if (document.getElementById("playSound").checked)	method += ",sound";
-		if (document.getElementById("showAlert").checked)	method += ",alert";
-		if (document.getElementById("openWindow").checked)	method += ",open";
-		if (method.length < 1)
-		{
-			alert("Please select a notification method.");
-			return(false);
-		}
-		method = method.substr(1, method.length - 1);	// trim off the initial comma
-
-		dump("dayRange: " + dayRange + "\n");
-		dump("startHourRange: " + startHourRange + "\n");
-		dump("endHourRange: " + endHourRange + "\n");
-		dump("duration: " + duration + "\n");
-		dump("method: " + method + "\n");
-		
-		newvalue = dayRange + "|" + startHourRange + "-" + endHourRange + "|" + duration + "|" + method;
-
 	}
 
 	if (updateAttribute(scheduleRes, oldvalue, newvalue) == true)
@@ -319,24 +355,26 @@ function Commit()
 		changed = true;
 	}
 
+	if (changed == true)
+	{
+		dump("re-writing bookmarks.html\n");
+		var remote = Bookmarks.QueryInterface(Components.interfaces.nsIRDFRemoteDataSource);
+		if (remote)
+		{
+			remote.Flush();
+		}
+	}
 
-  if (changed == true)
-  {
-    dump("re-writing bookmarks.html\n");
-    var remote = Bookmarks.QueryInterface(Components.interfaces.nsIRDFRemoteDataSource);
-    if (remote)
-    {
-	    remote.Flush();
-    }
-  }
-
-  window.close();
+	window.close();
 }
+
 
 
 function updateAttribute(prop, oldvalue, newvalue)
 {
-  var changed = false;
+	var changed = false;
+
+	if (!prop)	return(changed)
 
     newvalue = (newvalue != '') ? RDF.GetLiteral(newvalue) : null;
 
@@ -370,8 +408,17 @@ function updateAttribute(prop, oldvalue, newvalue)
 }
 
 
+
 function Cancel()
 {
   // Ignore any changes.
   window.close();
+}
+
+
+
+function switchTab( aPageIndex )
+{
+	var deck = document.getElementById( "Deck" );
+	if (deck)	deck.setAttribute( "index", aPageIndex );
 }
