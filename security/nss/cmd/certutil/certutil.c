@@ -642,8 +642,7 @@ listCerts(CERTCertDBHandle *handle, char *name, PK11SlotInfo *slot,
     } else {
 #endif
 	/* List certs on a non-internal slot. */
-	if ( PK11_IsFIPS() || 
-	     (!PK11_IsFriendly(slot) && PK11_NeedLogin(slot)) )
+	if (!PK11_IsFriendly(slot) && PK11_NeedLogin(slot))
 	    PK11_Authenticate(slot, PR_TRUE, pwarg);
 	if (name) {
 	    CERTCertificate *the_cert;
@@ -937,6 +936,7 @@ printKeyCB(SECKEYPublicKey *key, SECItem *data, void *arg)
 struct secuCBData {
     FILE *file;
     int	keycount;
+    void *wincx;
 };
 
 /* callback for listing certs through pkcs11 */
@@ -949,7 +949,7 @@ secu_PrintKeyFromCert(CERTCertificate *cert, void *data)
 
     cbdata = (struct secuCBData *)data;
     out = cbdata->file;
-    key = PK11_FindPrivateKeyFromCert(PK11_GetInternalKeySlot(), cert, NULL);
+    key = PK11_FindPrivateKeyFromCert(PK11_GetInternalKeySlot(), cert, cbdata->wincx);
     if (!key) {
 	fprintf(out, "XXX could not extract key for %s.\n", cert->nickname);
 	return SECFailure;
@@ -970,6 +970,7 @@ listKeys(PK11SlotInfo *slot, KeyType keyType, void *pwarg)
 
     cbdata.keycount = 0;
     cbdata.file = stdout;
+    cbdata.wincx = pwarg;
 
 #ifdef notdef
     if (PK11_IsInternal(slot)) {
