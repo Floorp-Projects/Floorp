@@ -20,35 +20,37 @@
 #
 # Contributor(s): 
 
-use lib "../bonsai";
+use FileHandle;
+use File::Copy 'move';
+use Fcntl qw(:DEFAULT :flock);
 
+use lib "../bonsai";
 require 'tbglobals.pl';
 
 $F_DEBUG=1;
 
+# Process args:
+#   $days: How many days of data to process.
+#   $tree: Which tree to use.
+my ($days, $tree) = process_args();
 
-$days = 2;
+# Only allow one process at a time to re-write "who.dat".
+#
+my $lock = lock_datafile($tree);
 
-if ($ARGV[0] eq "-days") {
-    shift @ARGV;
-    $days = shift @ARGV;
-}
-
-$tree = $ARGV[0];
-
-open(SEMFILE, ">>$tree/buildwho.sem") || die "Couldn't open semaphore file!";
-if (!flock(SEMFILE, 2 + 4)) {   # 2 means "lock"; 4 means "fail immediately if
-                                # lock already taken".
-    print "buildwho.pl: Another process is currently building the database.\n";
-    exit(0);
-}
-
+# Grab globals for this tree:
+#   $cvs_module:  The checkout module
+#   $cvs_branch:  The current branch
+#   $cvs_root:    The path to the cvs root
+#   $bonsai_tree: The data directory for this tree in ../bonsai
+#
 require "$tree/treedata.pl";
 
-if( $cvs_root eq '' ){
+# Setup global variables for bonsai query
+#
+if ($cvs_root eq '') {
     $CVS_ROOT = '/m/src';
-}
-else {
+} else {
     $CVS_ROOT = $cvs_root;
 }
 
@@ -60,43 +62,72 @@ $CHECKIN_INDEX_FILE = "/d/webdocs/projects/bonsai/data/index${CVS_REPOS_SUFIX}";
 
 require 'cvsquery.pl';
 
-print "cvsroot='$CVS_ROOT'\n";
+print "cvsroot='$CVS_ROOT'\n" if $F_DEBUG;
 
-&build_who;
+build_who($tree);
 
-flock(SEMFILE, 8);              # '8' is magic 'unlock' const.
-close SEMFILE;
+unlock_datafile($lock);
 
+# End of main
+##################################################################
+sub process_args {
+  my ($days, $tree);
+  
+  if ($ARGV[0] eq '-days') {
+    ($days, $tree) = @ARGV[1,2];
+  } else {
+    ($days, $tree) = (2, $ARGV[0]);
+  }
+  return $days, $tree;
+}
+
+sub lock_datafile {
+    my ($tree) = @_;
+
+    my $lock_fh = new FileHandle ">>$tree/buildwho.sem"
+      or die "Couldn't open semaphore file!";
+
+    # Get an exclusive lock with a non-blocking request
+    unless (flock($lock_fh, LOCK_EX|LOCK_NB)) {
+        die "buildwho.pl: Lock unavailable: $!";
+    }
+    return $lock_fh;
+}
+
+sub unlock_datafile {
+    my ($lock_fh) = @_;
+
+    flock $lock_fh, LOCK_UN;  # Free the lock
+    close $lock_fh;
+}
 
 sub build_who {
-    open(BUILDLOG, "<$tree/build.dat" );
-    $line = <BUILDLOG>;
-    close(BUILDLOG);
-
-    #($j,$query_date_min) = split(/\|/, $line);
+    my ($tree) = @_;
     $query_date_min = time - (60 * 60 * 24 * $days);
 
-    if( $F_DEBUG ){
-        print "Minimum date: $query_date_min\n";
-    }
+    print "Minimum date: $query_date_min\n" if $F_DEBUG;
 
     $query_module=$cvs_module;
     $query_branch=$cvs_branch;
 
-    open(WHOLOG, ">$tree/who.dat" );
+
+    my $who_file = "$tree/who.dat";
+    my $temp_who_file = "$who_file.$$";
+    open(WHOLOG, ">$temp_who_file");
 
     chdir "../bonsai";
     $::TreeID = $bonsai_tree;
-    $result = &query_checkins(%mod_map);
+    my $result = &query_checkins(%mod_map);
 
     $last_who='';
     $last_date=0;
     for $ci (@$result) {
-        if( $ci->[$CI_DATE] != $last_date || $ci->[$CI_WHO] ne $last_who ){
+        if ($ci->[$CI_DATE] != $last_date or $ci->[$CI_WHO] ne $last_who) {
             print WHOLOG "$ci->[$CI_DATE]|$ci->[$CI_WHO]\n";
         }
         $last_who=$ci->[$CI_WHO];
         $last_date=$ci->[$CI_DATE];
     }
-    close( WHOLOG );
+    close (WHOLOG);
+    move($temp_who_file, $who_file);
 }
