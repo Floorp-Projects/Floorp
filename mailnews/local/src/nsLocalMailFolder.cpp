@@ -153,6 +153,15 @@ nsMsgLocalMailFolder::CreateSubFolders(nsFileSpec &path)
       if (NS_FAILED(rv))
         return rv;        // continue?
       delete[] uriStr;
+      folder->SetFlag(MSG_FOLDER_FLAG_MAIL);
+
+	  if(currentFolderName == "Inbox")
+		folder->SetFlag(MSG_FOLDER_FLAG_INBOX);
+	  else if(currentFolderName == "Trash")
+		folder->SetFlag(MSG_FOLDER_FLAG_TRASH);
+	  else if(currentFolderName == "Unsent Messages" || currentFolderName == "Outbox")
+		folder->SetFlag(MSG_FOLDER_FLAG_QUEUE);
+	  
       mSubFolders->AppendElement(folder);
     }
     (void)nsServiceManager::ReleaseService(kRDFServiceCID, rdf);

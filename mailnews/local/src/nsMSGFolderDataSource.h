@@ -129,6 +129,7 @@ protected:
   static nsIRDFResource* kNC_Name;
   static nsIRDFResource* kNC_Columns;
   static nsIRDFResource* kNC_MSGFolderRoot;
+  static nsIRDFResource* kNC_SpecialFolder;
 
   static nsIRDFResource* kNC_Subject;
   static nsIRDFResource* kNC_Sender;

@@ -61,6 +61,7 @@ nsIRDFResource* nsMSGFolderDataSource::kNC_MessageChild;
 nsIRDFResource* nsMSGFolderDataSource::kNC_Folder;
 nsIRDFResource* nsMSGFolderDataSource::kNC_Name;
 nsIRDFResource* nsMSGFolderDataSource::kNC_MSGFolderRoot;
+nsIRDFResource* nsMSGFolderDataSource::kNC_SpecialFolder;
 
 nsIRDFResource* nsMSGFolderDataSource::kNC_Subject;
 nsIRDFResource* nsMSGFolderDataSource::kNC_Sender;
@@ -79,6 +80,7 @@ DEFINE_RDF_VOCAB(NC_NAMESPACE_URI, NC, child);
 DEFINE_RDF_VOCAB(NC_NAMESPACE_URI, NC, MessageChild);
 DEFINE_RDF_VOCAB(NC_NAMESPACE_URI, NC, Name);
 DEFINE_RDF_VOCAB(NC_NAMESPACE_URI, NC, Folder);
+DEFINE_RDF_VOCAB(NC_NAMESPACE_URI, NC, SpecialFolder);
 
 DEFINE_RDF_VOCAB(NC_NAMESPACE_URI, NC, Subject);
 DEFINE_RDF_VOCAB(NC_NAMESPACE_URI, NC, Sender);
@@ -184,6 +186,7 @@ nsMSGFolderDataSource::~nsMSGFolderDataSource (void)
   NS_RELEASE2(kNC_Folder, refcnt);
   NS_RELEASE2(kNC_Name, refcnt);
   NS_RELEASE2(kNC_MSGFolderRoot, refcnt);
+  NS_RELEASE2(kNC_SpecialFolder, refcnt);
 
   NS_RELEASE2(kNC_Subject, refcnt);
   NS_RELEASE2(kNC_Sender, refcnt);
@@ -243,6 +246,7 @@ NS_IMETHODIMP nsMSGFolderDataSource::Init(const char* uri)
     gRDFService->GetResource(kURINC_Folder,  &kNC_Folder);
     gRDFService->GetResource(kURINC_Name,    &kNC_Name);
     gRDFService->GetResource(kURINC_MSGFolderRoot, &kNC_MSGFolderRoot);
+	gRDFService->GetResource(kURINC_SpecialFolder, &kNC_SpecialFolder);
 
     gRDFService->GetResource(kURINC_Subject, &kNC_Subject);
     gRDFService->GetResource(kURINC_Sender, &kNC_Sender);
@@ -306,7 +310,7 @@ NS_IMETHODIMP nsMSGFolderDataSource::GetTarget(nsIRDFResource* source,
   if (! tv)
     return NS_ERROR_RDF_NO_VALUE;
 
-
+	//XXX these need to start being their own functions
   nsCOMPtr<nsIMsgFolder> folder(do_QueryInterface(source, &rv));
   if (NS_SUCCEEDED(rv)) {
     if (peq(kNC_Name, property)) {
@@ -318,8 +322,26 @@ NS_IMETHODIMP nsMSGFolderDataSource::GetTarget(nsIRDFResource* source,
       PR_FREEIF(name);
       return rv;
     }
+	else if (peq(kNC_SpecialFolder, property)) {
+		PRUint32 flags;
+		rv = folder->GetFlags(&flags);
+		if(NS_FAILED(rv)) return rv;
+
+		nsString specialFolderString;
+
+		if(flags & MSG_FOLDER_FLAG_INBOX)
+			specialFolderString = "Inbox";
+		else if(flags & MSG_FOLDER_FLAG_TRASH)
+			specialFolderString = "Trash";
+		else if(flags & MSG_FOLDER_FLAG_QUEUE)
+			specialFolderString = "Unsent Messages";
+		else
+			specialFolderString = "none";
+
+		createNode(specialFolderString, target);
+	}
 #if 1
-    if (peq(kNC_Child, property)) {
+    else if (peq(kNC_Child, property)) {
 
       nsIEnumerator* subFolders;
       rv = folder->GetSubFolders(&subFolders);
@@ -338,7 +360,7 @@ NS_IMETHODIMP nsMSGFolderDataSource::GetTarget(nsIRDFResource* source,
       return rv;
     }
     
-    if (peq(kNC_MessageChild, property)){
+    else if (peq(kNC_MessageChild, property)){
       nsIEnumerator* messages;
       rv = folder->GetMessages(&messages);
       if (NS_SUCCEEDED(rv)) {
@@ -490,7 +512,7 @@ NS_IMETHODIMP nsMSGFolderDataSource::GetTargets(nsIRDFResource* source,
       *targets = cursor;
       rv = NS_OK;
     }
-    else if(peq(kNC_Name, property) || peq(kNC_Sender, property))
+    else if(peq(kNC_Name, property) || peq(kNC_SpecialFolder, property))
     {
       nsRDFSingletonAssertionCursor* cursor =
         new nsRDFSingletonAssertionCursor(this, source, property);
@@ -609,6 +631,7 @@ NS_IMETHODIMP nsMSGFolderDataSource::ArcLabelsOut(nsIRDFResource* source,
   if (NS_SUCCEEDED(source->QueryInterface(nsIMsgFolder::GetIID(), (void**)&folder)))
   {
     arcs->AppendElement(kNC_Name);
+	arcs->AppendElement(kNC_SpecialFolder);
 #if 1
     nsIEnumerator* subFolders;
     if(NS_SUCCEEDED(folder->GetSubFolders(&subFolders)))
