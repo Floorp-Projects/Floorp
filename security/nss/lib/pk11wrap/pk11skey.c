@@ -3812,13 +3812,11 @@ PK11_HashBuf(SECOidTag hashAlg, unsigned char *out, unsigned char *in,
 	return rv;
     }
 
-    /* we need the output length ... maybe this should be table driven...*/
-    switch (hashAlg) {
-    case  SEC_OID_SHA1: max_length = SHA1_LENGTH; break;
-    case  SEC_OID_MD2: max_length = MD2_LENGTH; break;
-    case  SEC_OID_MD5: max_length = MD5_LENGTH; break;
-    default: max_length = 16; break;
-    }
+    /* XXX This really should have been an argument to this function! */
+    max_length = HASH_ResultLenByOidTag(hashAlg);
+    PORT_Assert(max_length);
+    if (!max_length)
+    	max_length = HASH_LENGTH_MAX;
 
     rv = PK11_DigestFinal(context,out,&out_length,max_length);
     PK11_DestroyContext(context, PR_TRUE);

@@ -34,7 +34,7 @@
 /*
  * CMS signerInfo methods.
  *
- * $Id: cmssiginfo.c,v 1.13 2002/10/25 22:46:48 nelsonb%netscape.com Exp $
+ * $Id: cmssiginfo.c,v 1.14 2002/12/12 06:05:38 nelsonb%netscape.com Exp $
  */
 
 #include "cmslocal.h"
@@ -162,7 +162,7 @@ NSS_CMSSignerInfo_Sign(NSSCMSSignerInfo *signerinfo, SECItem *digest, SECItem *c
     CERTCertificate *cert;
     SECKEYPrivateKey *privkey = NULL;
     SECOidTag digestalgtag;
-    SECOidTag signalgtag;
+    SECOidTag pubkAlgTag;
     SECItem signature = { 0 };
     SECStatus rv;
     PLArenaPool *poolp, *tmppoolp;
@@ -199,25 +199,30 @@ NSS_CMSSignerInfo_Sign(NSSCMSSignerInfo *signerinfo, SECItem *digest, SECItem *c
      * XXX I think there should be a cert-level interface for this,
      * so that I do not have to know about subjectPublicKeyInfo...
      */
-    signalgtag = SECOID_GetAlgorithmTag(algID);
+    pubkAlgTag = SECOID_GetAlgorithmTag(algID);
     if (signerinfo->signerIdentifier.identifierType == NSSCMSSignerID_SubjectKeyID) {
       SECOID_DestroyAlgorithmID(&freeAlgID, PR_FALSE);
     }
 
-    /* Fortezza MISSI have weird signature formats.  Map them to standard DSA formats */
-    signalgtag = PK11_FortezzaMapSig(signalgtag);
+    /* Fortezza MISSI have weird signature formats.  
+     * Map them to standard DSA formats 
+     */
+    pubkAlgTag = PK11_FortezzaMapSig(pubkAlgTag);
 
     if (signerinfo->authAttr != NULL) {
+	SECOidTag signAlgTag;
 	SECItem encoded_attrs;
 
 	/* find and fill in the message digest attribute. */
-	rv = NSS_CMSAttributeArray_SetAttr(poolp, &(signerinfo->authAttr), SEC_OID_PKCS9_MESSAGE_DIGEST, digest, PR_FALSE);
+	rv = NSS_CMSAttributeArray_SetAttr(poolp, &(signerinfo->authAttr), 
+	                       SEC_OID_PKCS9_MESSAGE_DIGEST, digest, PR_FALSE);
 	if (rv != SECSuccess)
 	    goto loser;
 
 	if (contentType != NULL) {
 	    /* if the caller wants us to, find and fill in the content type attribute. */
-	    rv = NSS_CMSAttributeArray_SetAttr(poolp, &(signerinfo->authAttr), SEC_OID_PKCS9_CONTENT_TYPE, contentType, PR_FALSE);
+	    rv = NSS_CMSAttributeArray_SetAttr(poolp, &(signerinfo->authAttr), 
+	                    SEC_OID_PKCS9_CONTENT_TYPE, contentType, PR_FALSE);
 	    if (rv != SECSuccess)
 		goto loser;
 	}
@@ -244,12 +249,14 @@ NSS_CMSSignerInfo_Sign(NSSCMSSignerInfo *signerinfo, SECItem *digest, SECItem *c
 
 	encoded_attrs.data = NULL;
 	encoded_attrs.len = 0;
-	if (NSS_CMSAttributeArray_Encode(tmppoolp, &(signerinfo->authAttr), &encoded_attrs) == NULL)
+	if (NSS_CMSAttributeArray_Encode(tmppoolp, &(signerinfo->authAttr), 
+	                &encoded_attrs) == NULL)
 	    goto loser;
 
-	rv = SEC_SignData(&signature, encoded_attrs.data, encoded_attrs.len, privkey,
-			   NSS_CMSUtil_MakeSignatureAlgorithm(digestalgtag, signalgtag));
-	PORT_FreeArena(tmppoolp, PR_FALSE);	/* awkward memory management :-( */
+	signAlgTag = NSS_CMSUtil_MakeSignatureAlgorithm(digestalgtag, pubkAlgTag);
+	rv = SEC_SignData(&signature, encoded_attrs.data, encoded_attrs.len, 
+	                  privkey, signAlgTag);
+	PORT_FreeArena(tmppoolp, PR_FALSE); /* awkward memory management :-( */
     } else {
 	rv = SGN_Digest(privkey, digestalgtag, &signature, digest);
     }
@@ -259,12 +266,14 @@ NSS_CMSSignerInfo_Sign(NSSCMSSignerInfo *signerinfo, SECItem *digest, SECItem *c
     if (rv != SECSuccess)
 	goto loser;
 
-    if (SECITEM_CopyItem(poolp, &(signerinfo->encDigest), &signature) != SECSuccess)
+    if (SECITEM_CopyItem(poolp, &(signerinfo->encDigest), &signature) 
+          != SECSuccess)
 	goto loser;
 
     SECITEM_FreeItem(&signature, PR_FALSE);
 
-    if (SECOID_SetAlgorithmID(poolp, &(signerinfo->digestEncAlg), signalgtag, NULL) != SECSuccess)
+    if (SECOID_SetAlgorithmID(poolp, &(signerinfo->digestEncAlg), pubkAlgTag, 
+                              NULL) != SECSuccess)
 	goto loser;
 
     return SECSuccess;

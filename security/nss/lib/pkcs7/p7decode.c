@@ -34,7 +34,7 @@
 /*
  * PKCS7 decoding, verification.
  *
- * $Id: p7decode.c,v 1.8 2002/07/30 22:51:13 relyea%netscape.com Exp $
+ * $Id: p7decode.c,v 1.9 2002/12/12 06:05:36 nelsonb%netscape.com Exp $
  */
 
 #include "nssrenam.h"
@@ -263,10 +263,6 @@ static SECStatus
 sec_pkcs7_decoder_start_digests (SEC_PKCS7DecoderContext *p7dcx, int depth,
 				 SECAlgorithmID **digestalgs)
 {
-    SECAlgorithmID *algid;
-    SECOidData *oiddata;
-    const SECHashObject *digobj;
-    void *digcx;
     int i, digcnt;
 
     if (digestalgs == NULL)
@@ -305,26 +301,10 @@ sec_pkcs7_decoder_start_digests (SEC_PKCS7DecoderContext *p7dcx, int depth,
      * Create a digest context for each algorithm.
      */
     for (i = 0; i < digcnt; i++) {
-	algid = digestalgs[i];
-	oiddata = SECOID_FindOID(&(algid->algorithm));
-	if (oiddata == NULL) {
-	    digobj = NULL;
-	} else {
-	    switch (oiddata->offset) {
-	      case SEC_OID_MD2:
-		digobj = HASH_GetHashObject(HASH_AlgMD2);
-		break;
-	      case SEC_OID_MD5:
-		digobj = HASH_GetHashObject(HASH_AlgMD5);
-		break;
-	      case SEC_OID_SHA1:
-		digobj = HASH_GetHashObject(HASH_AlgSHA1);
-		break;
-	      default:
-		digobj = NULL;
-		break;
-	    }
-	}
+	SECAlgorithmID *     algid  = digestalgs[i];
+	SECOidTag            oidTag = SECOID_FindOIDTag(&(algid->algorithm));
+	const SECHashObject *digobj = HASH_GetHashObjectByOidTag(oidTag);
+	void *digcx;
 
 	/*
 	 * Skip any algorithm we do not even recognize; obviously,
@@ -1637,32 +1617,14 @@ sec_pkcs7_verify_signature(SEC_PKCS7ContentInfo *cinfo,
     algiddata = SECOID_FindOID (&(signerinfo->digestAlg.algorithm));
 
     if (detached_digest != NULL) {
-	switch (digest_type) {
-	  default:
-	  case HASH_AlgNULL:
+	HASH_HashType found_type = HASH_GetHashTypeByOidTag(algiddata->offset);
+	unsigned int hashLen     = HASH_ResultLen(digest_type);
+
+	if (digest_type != found_type || 
+	    digest_type == HASH_AlgNULL || 
+	    detached_digest->len != hashLen) {
 	    PORT_SetError (SEC_ERROR_PKCS7_BAD_SIGNATURE);
 	    goto done;
-	  case HASH_AlgMD2:
-	    PORT_Assert (detached_digest->len == MD2_LENGTH);
-	    if (algiddata->offset != SEC_OID_MD2) {
-		PORT_SetError (SEC_ERROR_PKCS7_BAD_SIGNATURE);
-		goto done;
-	    }
-	    break;
-	  case HASH_AlgMD5:
-	    PORT_Assert (detached_digest->len == MD5_LENGTH);
-	    if (algiddata->offset != SEC_OID_MD5) {
-		PORT_SetError (SEC_ERROR_PKCS7_BAD_SIGNATURE);
-		goto done;
-	    }
-	    break;
-	  case HASH_AlgSHA1:
-	    PORT_Assert (detached_digest->len == SHA1_LENGTH);
-	    if (algiddata->offset != SEC_OID_SHA1) {
-		PORT_SetError (SEC_ERROR_PKCS7_BAD_SIGNATURE);
-		goto done;
-	    }
-	    break;
 	}
 	digest = detached_digest;
     } else {

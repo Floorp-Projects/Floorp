@@ -722,7 +722,10 @@ CERT_GetFirstEmailAddress;
 CERT_GetNextEmailAddress;
 CERT_VerifySignedDataWithPubKeyInfo;
 CERT_VerifySignedDataWithPublicKey;
+HASH_GetHashObjectByOidTag;
+HASH_GetHashTypeByOidTag;
 PK11_WaitForTokenEvent;
+SECITEM_ItemsAreEqual;
 ;+    local:
 ;+       *;
 ;+};

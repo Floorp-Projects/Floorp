@@ -34,7 +34,7 @@
 /*
  * PKCS7 encoding.
  *
- * $Id: p7encode.c,v 1.5 2001/11/08 00:15:16 relyea%netscape.com Exp $
+ * $Id: p7encode.c,v 1.6 2002/12/12 06:05:36 nelsonb%netscape.com Exp $
  */
 
 #include "nssrenam.h"
@@ -589,26 +589,9 @@ sec_pkcs7_encoder_start_contexts (SEC_PKCS7ContentInfo *cinfo,
     }
 
     if (digestalg != NULL) {
-	SECOidData *oiddata;
+	SECOidTag  oidTag = SECOID_FindOIDTag(&(digestalg->algorithm));
 
-	oiddata = SECOID_FindOID (&(digestalg->algorithm));
-	if (oiddata != NULL) {
-	    switch (oiddata->offset) {
-	      case SEC_OID_MD2:
-		p7ecx->digestobj = HASH_GetHashObject(HASH_AlgMD2);
-		break;
-	      case SEC_OID_MD5:
-		p7ecx->digestobj = HASH_GetHashObject(HASH_AlgMD5);
-		break;
-	      case SEC_OID_SHA1:
-		p7ecx->digestobj = HASH_GetHashObject(HASH_AlgSHA1);
-		break;
-	      default:
-		/* XXX right error? */
-		PORT_SetError (SEC_ERROR_INVALID_ALGORITHM);
-		break;
-	    }
-	}
+	p7ecx->digestobj = HASH_GetHashObjectByOidTag(oidTag);
 	if (p7ecx->digestobj != NULL) {
 	    p7ecx->digestcx = (* p7ecx->digestobj->create) ();
 	    if (p7ecx->digestcx == NULL)
@@ -865,6 +848,12 @@ sec_pkcs7_pick_sign_alg (SECOidTag hashalg, SECOidTag encalg)
 	    return SEC_OID_PKCS1_MD5_WITH_RSA_ENCRYPTION;
 	  case SEC_OID_SHA1:
 	    return SEC_OID_PKCS1_SHA1_WITH_RSA_ENCRYPTION;
+	  case SEC_OID_SHA256:
+	    return SEC_OID_PKCS1_SHA256_WITH_RSA_ENCRYPTION;
+	  case SEC_OID_SHA384:
+	    return SEC_OID_PKCS1_SHA384_WITH_RSA_ENCRYPTION;
+	  case SEC_OID_SHA512:
+	    return SEC_OID_PKCS1_SHA512_WITH_RSA_ENCRYPTION;
 	  default:
 	    return SEC_OID_UNKNOWN;
 	}
