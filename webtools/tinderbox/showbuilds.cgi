@@ -72,6 +72,7 @@ $rel_path = '';
 &do_flash,            exit if $form{flash};
 &do_panel,            exit if $form{panel};
 &do_hdml,             exit if $form{hdml};
+&do_vxml,             exit if $form{vxml};
 &do_tinderbox,        exit;
 
 # end of main
@@ -991,4 +992,27 @@ sub do_hdml {
    </HDML>
   };
 
+}
+
+sub do_vxml {
+  print "Content-type: text/vxml\n\n";
+  print '<?xml version="1.0"?><!DOCTYPE vxml>';
+
+  %state_symbols = (success=>'green',busted=>'red',testfailed=>'test failed');
+
+  print "<vxml><block><form>";
+
+  if (is_tree_state_available()) {
+    print "<audio>$::tree is " .
+      (is_tree_open() ? 'open' : 'closed') . "</audio>";
+  }
+  my (%build, %times);
+  tb_loadquickparseinfo($::tree, \%build, \%times);
+
+  foreach my $buildname (sort keys %build) {
+    print "<pause>100</pause>";
+    print "<audio>$buildname is $state_symbols{$build{$buildname}} </audio>";
+  }
+  print "<pause>200</pause><audio>adios</audio>";
+  print "</form></block></vxml>";
 }
