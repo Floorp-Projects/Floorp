@@ -309,6 +309,7 @@ function loadEventHandlers(event)
   // Filter out events that are not about the document load we are interested in
   if (event.originalTarget == _content.document) {
     UpdateBookmarksLastVisitedDate(event);
+    UpdateInternetSearchResults(event);
     checkForDirectoryListing();
     postURLToNativeWidget();
   }
@@ -2125,4 +2126,30 @@ function SidebarFinishClick() {
 // SidebarCleanUpExpandCollapse() - Respond to grippy click.
 function SidebarCleanUpExpandCollapse() {
   setTimeout("document.persist('boxSidebar', 'hidden');",100);
+}
+
+function UpdateInternetSearchResults(event)
+{
+  var url = getWebNavigation().currentURI.spec;
+  if (url) {
+    try {
+      var autoOpenSearchPanel = 
+        pref.getBoolPref("browser.search.opensidebarsearchpanel");
+
+      if (autoOpenSearchPanel || isSearchPanelOpen())
+      {
+        if (!gSearchService)
+          gSearchService = Components.classes["@mozilla.org/rdf/datasource;1?name=internetsearch"]
+                                         .getService(Components.interfaces.nsIInternetSearchService);
+
+        var searchInProgressFlag = gSearchService.FindInternetSearchResults(url);
+
+        if (searchInProgressFlag) {
+          if (autoOpenSearchPanel)
+            RevealSearchPanel();
+        }
+      }
+    } catch (ex) {
+    }
+  }
 }
