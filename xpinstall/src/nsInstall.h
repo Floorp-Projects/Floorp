@@ -54,6 +54,8 @@
 #include "nsIServiceManager.h"
 #include "nsIComponentManager.h"
 #include "nsIProperties.h"
+#include "nsIEnumerator.h"
+#include "nsIJAR.h"
 
 class nsInstallInfo
 {
@@ -115,6 +117,7 @@ class nsInstall
             PATCH_BAD_CHECKSUM_RESULT   = -222,
             UNINSTALL_FAILED            = -223,
             PACKAGE_FOLDER_NOT_SET      = -224,
+            EXTRACTION_FAILED           = -225,
             GESTALT_UNKNOWN_ERR         = -5550,
             GESTALT_INVALID_ARGUMENT    = -5551,
             
@@ -221,7 +224,7 @@ class nsInstall
         JSObject*           mWinProfileObject;
         
         nsString            mJarFileLocation;
-        void*               mJarFileData;
+        nsIJAR*             mJarFileData;
         
         nsString            mInstallArguments;
         nsString            mPackageFolder;

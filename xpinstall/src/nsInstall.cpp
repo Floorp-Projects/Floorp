@@ -43,7 +43,7 @@
 #include "prmem.h"
 
 #include "VerReg.h"
-#include "zipfile.h"
+//#include "zipfile.h" // replaced by nsIJAR.h
 
 #include "nsInstall.h"
 #include "nsInstallFolder.h"
@@ -108,12 +108,13 @@ nsInstallInfo::GetLocalFile(char **aPath)
 static NS_DEFINE_IID(kISoftwareUpdateIID, NS_ISOFTWAREUPDATE_IID);
 static NS_DEFINE_IID(kSoftwareUpdateCID,  NS_SoftwareUpdate_CID);
 
+static NS_DEFINE_IID(kIJARIID, NS_IJAR_IID);
+static NS_DEFINE_IID(kJARCID,  NS_JAR_CID);
 
 nsInstall::nsInstall()
 {
     mScriptObject           = nsnull;           // this is the jsobject for our context
-    mVersionInfo            = nsnull;           // this is the version information passed to us in StartInstall()
-    mJarFileData            = nsnull;           // this is an opaque handle to the jarfile.  
+    mVersionInfo            = nsnull;           // this is the version information passed to us in StartInstall()             
     mRegistryPackageName    = "";               // this is the name that we will add into the registry for the component we are installing 
     mUIName                 = "";               // this is the name that will be displayed in UI.
 
@@ -123,8 +124,12 @@ nsInstall::nsInstall()
     mJarFileLocation    = "";
     mInstallArguments   = "";
 
+    // mJarFileData is an opaque handle to the jarfile.
+    nsresult rv = nsComponentManager::CreateInstance(kJARCID, nsnull, kIJARIID, 
+                                                     (void**) &mJarFileData);
+
     nsISoftwareUpdate *su;
-    nsresult rv = nsServiceManager::GetService(kSoftwareUpdateCID, 
+    rv = nsServiceManager::GetService(kSoftwareUpdateCID, 
                                                kISoftwareUpdateIID,
                                                (nsISupports**) &su);
     
@@ -686,6 +691,8 @@ nsInstall::GetComponentFolder(const nsString& aComponentName, const nsString& aS
     char*       componentCString;
     char        dir[MAXREGPATHLEN];
     nsFileSpec  nsfsDir;
+
+// FIX: aSubdirectory is not processed at all in this function.
 
     *aFolder = nsnull;
 
@@ -1676,17 +1683,19 @@ nsInstall::SetInstallArguments(const nsString& args)
 PRInt32 
 nsInstall::OpenJARFile(void)
 {    
-    
-    PRInt32 result = ZIP_OpenArchive(nsAutoCString(mJarFileLocation),  &mJarFileData);
-    
+    PRInt32 result;
+
+    nsresult rv = mJarFileData->Open( nsAutoCString(mJarFileLocation), &result );
+    if (NS_FAILED(rv))
+        return UNEXPECTED_ERROR;
+
     return result;
 }
 
 void
 nsInstall::CloseJARFile(void)
 {
-    ZIP_CloseArchive(&mJarFileData);
-    mJarFileData = nsnull;
+    NS_IF_RELEASE(mJarFileData);
 }
 
 
@@ -1708,7 +1717,7 @@ nsInstall::ExtractFileFromJar(const nsString& aJarfile, nsFileSpec* aSuggestedNa
          
         // Get the extention of the file in the jar.
         
-        PRInt32 result = aJarfile.RFind(".");
+        result = aJarfile.RFind(".");
         if (result != -1)
         {            
             // We found an extention.  Add it to the tempfileName string
@@ -1733,7 +1742,13 @@ nsInstall::ExtractFileFromJar(const nsString& aJarfile, nsFileSpec* aSuggestedNa
     // We will overwrite what is in the way.  is this something that we want to do?  
     extractHereSpec->Delete(PR_FALSE);
 
-    result  = ZIP_ExtractFile( mJarFileData, nsAutoCString(aJarfile), nsNSPRPath( *extractHereSpec ) );
+    nsresult rv = mJarFileData->Extract( nsAutoCString(aJarfile), nsNSPRPath( *extractHereSpec ), &result );
+    if (NS_FAILED(rv))
+    {
+        if (extractHereSpec != nsnull)
+            delete extractHereSpec;
+        return EXTRACTION_FAILED;
+    }
     
     if (result == 0)
     {
@@ -1751,38 +1766,59 @@ nsInstall::ExtractFileFromJar(const nsString& aJarfile, nsFileSpec* aSuggestedNa
 PRInt32 
 nsInstall::ExtractDirEntries(const nsString& directory, nsVector *paths)
 {
-    PRInt32 err;
-    char    buf[512];  // XXX: need an XP "max path"
+    char                *buf;
+    nsISimpleEnumerator *jarEnum = nsnull;
+    nsIJARItem          *currJARItem = nsnull;
 
     if ( paths )
     {
         nsString pattern(directory);
         pattern += "/?*";
+        PRInt32 prefix_length = directory.Length();
 
-        void* find = ZIP_FindInit( mJarFileData, nsAutoCString(pattern) );
+        nsresult rv = mJarFileData->Find( nsAutoCString(pattern), &jarEnum );
+        if (NS_FAILED(rv) || !jarEnum)
+            goto handle_err;
 
-        if ( find ) 
+        PRBool bMore;
+        rv = jarEnum->HasMoreElements(&bMore);
+        if (NS_FAILED(rv)) 
+            goto handle_err;
+
+        while (bMore)
         {
-            PRInt32 prefix_length = directory.Length();
-            if ( prefix_length >= sizeof(buf)-1 )
-                return UNEXPECTED_ERROR;
-
-            err = ZIP_FindNext( find, buf, sizeof(buf) );
-            while ( err == ZIP_OK ) 
+            rv = jarEnum->GetNext( (nsISupports**) &currJARItem );
+            if (currJARItem)
             {
-                paths->Add(new nsString(buf+prefix_length));
-                err = ZIP_FindNext( find, buf, sizeof(buf) );
+                // expensive 'buf' callee malloc per iteration!
+                rv = currJARItem->GetName(&buf);
+                if (NS_FAILED(rv)) 
+                    goto handle_err;
+                if (buf)
+                {
+                    if ( prefix_length >= sizeof(buf)-1 )
+                    {
+                        PR_FREEIF( buf );
+                        goto handle_err;
+                    }
+                    paths->Add( new nsString(buf+prefix_length) ); // XXX manipulation should be in caller
+                    PR_FREEIF( buf );
+                }
+                NS_IF_RELEASE(currJARItem);
             }
-            ZIP_FindFree( find );
+            rv = jarEnum->HasMoreElements(&bMore);
+            if (NS_FAILED(rv)) 
+                goto handle_err;
         }
-        else
-            err = ZIP_ERR_GENERAL;
-
-        if ( err == ZIP_ERR_FNF )
-            return SUCCESS;   // found them all
     }
 
-    return UNEXPECTED_ERROR;
+    NS_IF_RELEASE(jarEnum);
+    return SUCCESS;
+
+handle_err:    
+    NS_IF_RELEASE(jarEnum);                         
+    NS_IF_RELEASE(currJARItem); 
+    return EXTRACTION_FAILED;
 }
 
 void
