@@ -2138,6 +2138,15 @@ nsXULDocument::ContentRemoved(nsIContent* aContainer,
         nsIDocumentObserver*  observer = (nsIDocumentObserver*)mObservers[i];
         observer->ContentRemoved(this, aContainer,
                                  aChild, aIndexInContainer);
+
+        // XXXdwh hack to avoid crash, since an observer removes itself
+        // during ContentRemoved.
+        PRInt32 newCount = mObservers.Count();
+        if (newCount < count) {
+          PRInt32 diff = (count - newCount);
+          count -= diff;
+          i -= diff;
+        }
     }
     return NS_OK;
 }
