@@ -88,6 +88,7 @@
 #include "nsIDOMElement.h"
 #include "nsIDOMDocumentEvent.h"
 #include "nsIDOMEvent.h"
+#include "nsIDOMKeyEvent.h"
 #include "nsIDOMPopupBlockedEvent.h"
 #include "nsIDOMPkcs11.h"
 #include "nsDOMString.h"
@@ -3099,14 +3100,21 @@ GlobalWindowImpl::CheckForAbusePoint()
               break;
           }
           break;
-        case NS_KEY_EVENT :
+        case NS_KEY_EVENT : {
+          PRUint32 key = NS_STATIC_CAST(nsKeyEvent *, currentEvent)->keyCode;
           switch(currentEvent->message) {
             case NS_KEY_PRESS :
-              if (::ContainsEventName("keypress", eventPref))
+              // return key on focused button. see note at NS_MOUSE_LEFT_CLICK.
+              if (key == nsIDOMKeyEvent::DOM_VK_RETURN)
+                abuse = openAllowed;
+              else if (::ContainsEventName("keypress", eventPref))
                 abuse = openControlled;
               break;
             case NS_KEY_UP :
-              if (::ContainsEventName("keyup", eventPref))
+              // space key on focused button. see note at NS_MOUSE_LEFT_CLICK.
+              if (key == nsIDOMKeyEvent::DOM_VK_SPACE)
+                abuse = openAllowed;
+              else if (::ContainsEventName("keyup", eventPref))
                 abuse = openControlled;
               break;
             case NS_KEY_DOWN :
@@ -3115,6 +3123,7 @@ GlobalWindowImpl::CheckForAbusePoint()
               break;
           }
           break;
+        }
         case NS_MOUSE_EVENT :
           switch(currentEvent->message) {
             case NS_MOUSE_LEFT_BUTTON_UP :
