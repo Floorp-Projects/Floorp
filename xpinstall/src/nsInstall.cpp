@@ -394,7 +394,7 @@ nsInstall::AddDirectory(const nsString& aRegName,
             bInstall = PR_TRUE;
         }
         
-        delete fullRegNameCString;
+        delete [] fullRegNameCString;
         
         if (bInstall)
         {
@@ -528,7 +528,7 @@ nsInstall::AddSubcomponent(const nsString& aRegName,
     
     
     if (qualifiedRegNameString != nsnull)
-        delete qualifiedRegNameString;
+        delete [] qualifiedRegNameString;
 
     if (versionNewer) 
     {
