@@ -242,3 +242,43 @@
       color               : #FF0000;
     }
 
+/** 
+ * button styles for taskbar, sidebar headers, etc.
+ **/
+.button-toolbar-4
+  {
+    color                 : #99CCCC;
+    background            : inherit;
+    font                  : inherit;
+    border                : none;
+    padding               : 1px !important;
+    margin                : 0px;
+  }
+
+.button-toolbar-4:hover 
+  {
+    text-decoration       : none;
+    background-color      : #336699;
+    color                 : #CCFFFF;
+  }
+
+.button-toolbar-4:hover:active 
+  {
+    text-decoration       : none;
+    color                 : #CCFFFF;
+    padding               : 2px 0px 0px 2px !important;
+  }
+  
+menubutton.button-toolbar-4
+  {
+    behavior              : url("resource:/chrome/menulistBindings.xml#menubutton-single-right");
+  }
+  
+.button-toolbar-4 > .button-internal-box,
+.button-toolbar-4 > .menubutton-internal-box
+  {
+    border                : none !important;
+    padding               : 0px !important;
+  }  
+
+  

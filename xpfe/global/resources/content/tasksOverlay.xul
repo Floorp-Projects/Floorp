@@ -82,23 +82,16 @@
 
         </menupopup>
       </menu>
-
-      <toolbar id="taskbar" class="chromeclass-status" persist="collapsed">
-        <box id="taskButtons" align="horizontal">
-          <titledbutton class="toolbar-flat taskbutton" align="left" id="mini-nav" value="" onclick="toNavigator();"/>
-          <titledbutton class="toolbar-flat taskbutton" align="left" id="mini-mail" value="" onclick="toMessengerWindow()"/>
-          <titledbutton class="toolbar-flat taskbutton" align="left" id="mini-comp" value="" onclick="toEditor();" />
-          <!-- toolbarseparator align="horizontal" class="line"/ -->
-          <titledbutton class="toolbar-flat taskbutton" align="left" id="mini-addr" value="" onclick="toAddressBook()"/>
-        </box>
-        <box id="taskbarMenuBox" align="horizontal">
-          <!-- taskbarOverlay.xul inserts here. -->
-        </box>
-
-	 	<box id="taskbarGotoMenuBox" align="right">
-		  <!-- taskbarOverlay.xul inserts here. -->
-    	</box>
-
-      </toolbar>
-
+    
+  <toolbar id="taskbar" class="toolbar-standard chromeclass-status" persist="collapsed">
+    <box id="taskButtons">
+      <button class="button-toolbar-4 plain taskbutton" id="mini-nav" onclick="toNavigator();"/>
+      <button class="button-toolbar-4 plain taskbutton" id="mini-mail" onclick="toMessengerWindow()"/>
+      <button class="button-toolbar-4 plain taskbutton" id="mini-comp" onclick="toEditor();" />
+      <button class="button-toolbar-4 plain taskbutton" id="mini-addr" onclick="toAddressBook()"/>
+    </box>
+    <box id="taskbarMenuBox"/>
+    <box id="taskbarGotoMenuBox" align="right"/>
+  </toolbar>
+      
 </overlay>

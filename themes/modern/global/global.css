@@ -28,215 +28,114 @@
 @namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"); 
 @namespace html url("http://www.w3.org/TR/REC-html40"); 
 
-html|* {
-  border: 1px solid green !important;
-}
+/**
+ * XXX-DEBUG: HTML namespace/titledbutton striping. 
+ **/ 
+  html|* 
+    {
+      border              : 1px solid green !important;
+    }
+  
+  html|form 
+    {
+      border              : none !important;
+    }
+  
+  titledbutton 
+    {
+      border              : 1px solid purple !important;
+    }
 
-html|form {
-  border: none !important;
-}
-
-titledbutton {
-  border: 1px solid purple !important;
-}
-
-/**********************************
- * Window
- **********************************/
+/**  
+ * XUL <window> element
+ **/
+  window 
+    { 
+      background-color    : #FFFFFF;
+      padding             : 0px;
+    }
+  
+  window[wait-cursor] 
+    { 
+      cursor              : wait !important; 
+    }
+  
+  window.dialog 
+    { 
+      background-color    : #CCCCCC;
+      padding             : 7px 5px 5px 5px;
+    }
 
 /**
- * The is the outer most tag in a xul document all xul
- * content will be inside it.
- *
- * -  font: 3mm tahoma,arial,helvetica,sans-serif; moved to intl.css
- */
-window { 
-  background-color: white;
-  padding: 0px;
-}
-
-window[wait-cursor] { cursor: wait !important; }
-
-/**
- * This is a special class of window used for dialogs
- */
-window.dialog 
-  { 
-    background-color      : #CCCCCC;
-    padding               : 7px 5px 5px 5px;
-  }
-
-/**********************************
- * XUL widgets
- **********************************/
-
-/******** Box *********/
-
-:-moz-horizontal-box-debug {
-  border: 2px solid blue;
-  border-top-width: 10px;
-  padding: 2px;
-  margin: 2px;
-  color: white;
-}
-
-:-moz-vertical-box-debug {
-  border: 2px solid red;
-  border-left-width: 10px;
-  padding: 2px;
-  margin: 2px;
-  color: white;
-}
+ * XUL <box> debugging
+ **/
+  :-moz-horizontal-box-debug 
+    {
+      border              : 2px solid blue;
+      border-top-width    : 10px;
+      padding             : 2px;
+      margin              : 2px;
+      color               : white;
+    }
+  
+  :-moz-vertical-box-debug 
+    {
+      border              : 2px solid red;
+      border-left-width   : 10px;
+      padding             : 2px;
+      margin              : 2px;
+      color               : white;
+    }
 
 /**
- * Throbber
- */
-/* FIX ME - move these gifs to global */
-titledbutton#Throbber {
-	border: none;
-	margin-top: 8px;
-	margin-left: 9px;
-	list-style-image: url("chrome://global/skin/animthrob_single.gif");
-	background-image: none;
-}
+ * Utility icons (used for alert dialogs, etc)
+ **/
+  .message-icon 
+    {
+      list-style-image    : url("chrome://global/skin/message-icon.gif");
+    }
 
-titledbutton#Throbber:hover:active {
-	margin-top: 9px;
-	margin-left: 10px;
-}
-
-titledbutton#Throbber[busy="true"] {
-	list-style-image:url("chrome://global/skin/animthrob.gif");
-}
-
-/* icons titledbuttons */
-.message-icon {
-  list-style-image: url("chrome://global/skin/message-icon.gif");
-}
-.alert-icon {
-  list-style-image: url("chrome://global/skin/alert-icon.gif");
-}
-.error-icon {
-  list-style-image: url("chrome://global/skin/error-icon.gif");
-}
-.question-icon {
-  list-style-image: url("chrome://global/skin/question-icon.gif");
-}
+  .alert-icon 
+    {
+      list-style-image    : url("chrome://global/skin/alert-icon.gif");
+    }
+  
+  .error-icon 
+    {
+      list-style-image    : url("chrome://global/skin/error-icon.gif");
+    }
+  
+  .question-icon 
+    {
+      list-style-image    : url("chrome://global/skin/question-icon.gif");
+    }
 
 /**
  * status-bar
  */
-#status-bar 
-  {
-	  background-color      : #CCCCCC;
-	  user-focus            : ignore;
-    overflow              : hidden
-  }
-
-/******** Titled buttons **********/
-titledbutton.toolbar-flat {
-   color: #99CCCC;
-   font: inherit;
-   border: none;
-   padding: 1px;
-   margin: 0px;
-}
-
-titledbutton.toolbar-flat:hover {
-  text-decoration: none;
-  background-color: #336699;
-  color: #CCFFFF;
-}
-
-titledbutton.toolbar-flat:hover:active {
-  text-decoration: none;
-  color: #CCFFFF;
-  padding: 2px 0px 0px 2px;
-}
-
-titledbutton.push[toggled="1"] {
-  border-top: 1px solid #666666;
-  border-bottom: 1px solid white;
-  border-left: 1px solid #666666;
-  border-right: 1px solid white;
-  padding: 3px 1px 1px 3px;
-  margin: 2px;
-}
-
-titledbutton.push[toggled="2"] {
-   background-color: lightgray;
-   border: 1px solid #999999;
-	margin: 2px;
-}
-
-titledbutton.popup {
-	list-style-image:url(chrome://global/skin/taskbar-popup-arrow.gif);
-}
-
-/**********************************
- * custom XBL widgets
- **********************************/
+  #status-bar 
+    {
+      border-top          : 1px solid #003366;
+  	  background-color    : #CCCCCC;
+  	  user-focus          : ignore;
+      overflow            : hidden
+    }
 
 /**
- * texttab folder lookalike e.g. for sidebar panel headers
- */
+ * html|iframe default sizing 
+ **/
+  html|iframe 
+    {
+      min-width           : 10px;
+      min-height          : 10px;
+      width               : 100px;
+      height              : 100px;
+      border              : none;
+    }
 
-box.texttab{
-  behavior: url("chrome://global/content/globalBindings.xml#texttab");
-  padding-top: 2px;
-  min-height: 10px;
-  min-width: 10px;
-}
-
-
-box.texttab[selected="true"] {
-  border-bottom: 1px solid white;
-}
-
-box.texttab > .remain-space{
-  border-bottom:1px solid black;
-}
-
-box.texttab > .tab-leftedge {
-  list-style-image: url("chrome://global/skin/tab-leftedge.gif");
-}
-
-box.texttab > .tab-rightedge {
-  list-style-image: url("chrome://global/skin/tab-rightedge.gif");
-}
-
-box.texttab[selected="true"] > .tab-leftedge {
-  list-style-image: url("chrome://global/skin/seltab-leftedge.gif");
-}
-
-box.texttab[selected="true"]  > .tab-rightedge {
-  list-style-image: url("chrome://global/skin/seltab-rightedge.gif");
-}
-
-box.texttab > .textholder {
-  border-top: 1px solid black;
-  background-color: #CCCCCC;
-}
-
-box.texttab[selected="true"] > .textholder {
-  background-color: white;
-  font-weight: bold;
-}
-
-/**********************************
- * HTML components in the window tag
- **********************************/
-html|iframe {
- min-width: 10px;
- min-height: 10px;
- width: 100px;
- height: 100px;
- border: none;
-}
-
-
-/** XUL <progressmeter> **/
-
+/** 
+ * XUL <progressmeter> 
+ **/
   progressmeter[mode="undetermined"] > .progressmeter-internal-box
     {
       background-image    : url(chrome://global/skin/progressmeter-busy.gif);

@@ -148,6 +148,14 @@
       padding             : 0px;
     }
     
+
+/** 
+ * utility class for buttons with associated popup
+ **/
+.button-popup 
+  {
+	  list-style-image      : url(chrome://global/skin/taskbar-popup-arrow.gif);
+  }
     
     
     

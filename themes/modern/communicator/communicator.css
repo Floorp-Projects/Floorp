@@ -21,7 +21,56 @@
 @namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"); /* set default namespace to XUL */
 @namespace html url("http://www.w3.org/TR/REC-html40"); /* namespace for HTML elements */
 
-#status-bar 
-  {
-    border-top            : #003366;
-  }
+/**
+ * texttab folder lookalike e.g. for sidebar panel headers
+ */
+
+  .box-texttab
+    {
+      behavior            : url("chrome://global/content/globalBindings.xml#texttab");
+      padding-top         : 2px;
+      min-height          : 10px;
+      min-width           : 10px;
+    }
+  
+  .box-texttab[selected="true"] 
+    {
+      border-bottom       : 1px solid white;
+    }
+  
+  .box-texttab > .remain-space
+    {
+      border-bottom       : 1px solid black;
+    }
+  
+  .box-texttab > .tab-leftedge 
+    {
+      list-style-image    : url("chrome://global/skin/tab-leftedge.gif");
+    }
+  
+  .box-texttab > .tab-rightedge 
+    {
+      list-style-image    : url("chrome://global/skin/tab-rightedge.gif");
+    }
+  
+  .box-texttab[selected="true"] > .tab-leftedge 
+    {
+      list-style-image    : url("chrome://global/skin/seltab-leftedge.gif");
+    }
+  
+  .box-texttab[selected="true"]  > .tab-rightedge 
+    {
+      list-style-image    : url("chrome://global/skin/seltab-rightedge.gif");
+    }
+  
+  .box-texttab > .textholder 
+    {
+      border-top          : 1px solid black;  
+      background-color    : #CCCCCC;
+    }
+  
+  .box-texttab[selected="true"] > .textholder 
+    {
+      background-color    : white;
+      font-weight         : bold;
+    }
