@@ -188,6 +188,7 @@ public:
                          nsIRDFResource*   aCommand,
                          nsISupportsArray/*<nsIRDFResource>*/* aArguments);
 
+    NS_IMETHOD GetLoaded(PRBool* _result);
 	NS_IMETHOD Init(const char *uri);
 	NS_IMETHOD Flush();
 	NS_IMETHOD Refresh(PRBool sync);
@@ -288,13 +289,25 @@ static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 
 // nsIRDFDataSource interface
 
-nsresult
+NS_IMETHODIMP
+LocalStoreImpl::GetLoaded(PRBool* _result)
+{
+	nsCOMPtr<nsIRDFRemoteDataSource> remote = do_QueryInterface(mInner);
+    NS_ASSERTION(remote != nsnull, "not an nsIRDFRemoteDataSource");
+	if (! remote)
+        return NS_ERROR_UNEXPECTED;
+
+    return remote->GetLoaded(_result);
+}
+
+
+NS_IMETHODIMP
 LocalStoreImpl::Init(const char *uri)
 {
 	return(NS_OK);
 }
 
-nsresult
+NS_IMETHODIMP
 LocalStoreImpl::Flush()
 {
 	nsCOMPtr<nsIRDFRemoteDataSource> remote = do_QueryInterface(mInner);
@@ -305,7 +318,7 @@ LocalStoreImpl::Flush()
     return remote->Flush();
 }
 
-nsresult
+NS_IMETHODIMP
 LocalStoreImpl::Refresh(PRBool sync)
 {
 	nsCOMPtr<nsIRDFRemoteDataSource> remote = do_QueryInterface(mInner);
