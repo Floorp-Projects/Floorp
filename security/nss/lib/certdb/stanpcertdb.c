@@ -157,7 +157,7 @@ __CERT_AddTempCertToPerm(CERTCertificate *cert, char *nickname,
 	stanNick = nssUTF8_Duplicate((NSSUTF8 *)nickname, c->object.arena);
     }
     /* Delete the temp instance */
-    nssCertificateStore_Remove(context->certStore, c);
+    nssCertificateStore_Remove(context->certStore, c, PR_TRUE);
     c->object.cryptoContext = NULL;
     /* Import the perm instance onto the internal token */
     slot = PK11_GetInternalKeySlot();
@@ -607,7 +607,7 @@ CERT_DestroyCertificate(CERTCertificate *cert)
 	    if (refCount == 2) {
 		NSSCryptoContext *cc = tmp->object.cryptoContext;
 		if (cc != NULL) {
-		    nssCertificateStore_Remove(cc->certStore, tmp);
+		    nssCertificateStore_Remove(cc->certStore, tmp, PR_FALSE);
 		} else {
 		    nssTrustDomain_RemoveCertFromCache(td, tmp);
 		}
