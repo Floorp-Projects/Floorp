@@ -507,6 +507,9 @@ private:
   // each action. They are called by ProcessAuthenticatedStateUrl.
   void OnLSubFolders();
   void OnAppendMsgFromFile();
+
+  char *GetFolderPathString(); // OK to call from UI thread
+
   char * OnCreateServerSourceFolderPathString();
   char * OnCreateServerDestinationFolderPathString();
   nsresult CreateServerSourceFolderPathString(char **result);

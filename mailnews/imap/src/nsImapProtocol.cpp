@@ -1730,7 +1730,7 @@ NS_IMETHODIMP nsImapProtocol::CanHandleUrl(nsIImapUrl * aImapUrl,
       m_runningUrl->GetRequiredImapState(&curUrlImapState);
       if (curUrlImapState == nsIImapUrl::nsImapSelectedState)
       {
-        char *folderName = OnCreateServerSourceFolderPathString();
+        char *folderName = GetFolderPathString();
         if (!curSelectedUrlFolderName.Equals(folderName))
           pendingUrlFolderName.Assign(folderName);
         inSelectedState = PR_TRUE;
@@ -5321,6 +5321,33 @@ char * nsImapProtocol::OnCreateServerSourceFolderPathString()
   if (onlineDelimiter)
       nsCRT::free(onlineDelimiter);
 
+  m_runningUrl->CreateServerSourceFolderPathString(&sourceMailbox);
+
+  return sourceMailbox;
+}
+
+//caller must free using PR_Free, safe to call from ui thread
+char * nsImapProtocol::GetFolderPathString()
+{
+  char *sourceMailbox = nsnull;
+  char onlineSubDirDelimiter = 0;
+  PRUnichar hierarchyDelimiter = 0;
+  nsCOMPtr <nsIMsgFolder> msgFolder;
+
+  m_runningUrl->GetOnlineSubDirSeparator(&onlineSubDirDelimiter);
+  nsCOMPtr<nsIMsgMailNewsUrl> mailnewsUrl = do_QueryInterface(m_runningUrl);
+  mailnewsUrl->GetFolder(getter_AddRefs(msgFolder));
+  if (msgFolder)
+  {
+    nsCOMPtr <nsIMsgImapMailFolder> imapFolder = do_QueryInterface(msgFolder);
+    if (imapFolder)
+    {
+      imapFolder->GetHierarchyDelimiter(&hierarchyDelimiter);
+      if (hierarchyDelimiter != kOnlineHierarchySeparatorUnknown
+          && onlineSubDirDelimiter != (char) hierarchyDelimiter)
+          m_runningUrl->SetOnlineSubDirSeparator ((char) hierarchyDelimiter);
+    }
+  }
   m_runningUrl->CreateServerSourceFolderPathString(&sourceMailbox);
 
   return sourceMailbox;
