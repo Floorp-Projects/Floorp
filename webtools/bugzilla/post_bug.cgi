@@ -79,6 +79,22 @@ $::FORM{'reporter'} = DBNameToIdAndCheck($::FORM{'reporter'});
 my @bug_fields = ("reporter", "product", "version", "rep_platform",
                   "bug_severity", "priority", "op_sys", "assigned_to",
                   "bug_status", "bug_file_loc", "short_desc", "component");
+
+if (Param("useqacontact")) {
+    SendSQL("select initialqacontact from components where program=" .
+            SqlQuote($::FORM{'product'}) .
+            " and value=" . SqlQuote($::FORM{'component'}));
+    my $qacontact = FetchOneColumn();
+    if (defined $qacontact && $qacontact ne "") {
+        $::FORM{'qa_contact'} = DBNameToIdAndCheck($qacontact, 1);
+        push(@bug_fields, "qa_contact");
+    }
+}
+
+
+
+
+
 my $query = "insert into bugs (\n" . join(",\n", @bug_fields) . ",
 creation_ts, long_desc )
 values (

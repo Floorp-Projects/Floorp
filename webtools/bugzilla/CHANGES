@@ -10,6 +10,14 @@ query the CVS tree.  For example,
 will tell you what has been changed in the last week.
 
 
+2/3/99 Added a new column "initialqacontact" to the components table that gives
+an initial QA contact field.  It may be empty if you wish the initial qa
+contact to be empty.  If you're not using the QA contact field, you don't need
+to add this column, but you might as well be safe and add it anyway:
+
+	alter table components add column initialqacontact tinytext not null;
+
+
 2/2/99 Added a new column "milestoneurl" to the products table that gives a URL
 which is to describe the currently defined milestones for a product.  If you
 don't use target milestone, you might be able to get away without adding this
