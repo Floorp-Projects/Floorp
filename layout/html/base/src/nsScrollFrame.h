@@ -68,7 +68,7 @@ protected:
   virtual PRIntn GetSkipSides() const;
 
 private:
-  nsresult CreateScrollingView();
+  nsresult CreateScrollingView(nsIPresContext& aPresContext);
 };
 
 #endif /* nsScrollFrame_h___ */
