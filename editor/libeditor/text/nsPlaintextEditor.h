@@ -248,6 +248,8 @@ protected:
   nsCOMPtr<nsIDOMEventListener> mDragListenerP;
   nsCOMPtr<nsIDOMEventListener> mFocusListenerP;
   PRBool 	mIsComposing;
+  PRBool  mWrapToWindow;
+  PRInt32 mWrapColumn;
   PRInt32 mMaxTextLength;
   PRInt32 mInitTriggerCounter;
 

@@ -144,6 +144,7 @@ pref("news.max_articles",                   500);
 pref("news.mark_old_read",                  false);
 
 pref("mailnews.wraplength",                 72);
+pref("mail.compose.wrap_to_window_width",   true);
 
 pref("mailnews.reply_on_top",               0); // 0=bottom 1=top 2=select+bottom 3=select+top
 
