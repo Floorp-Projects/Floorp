@@ -66,6 +66,7 @@ namespace MetaData {
     // Begin execution of a bytecodeContainer
     js2val JS2Engine::interpret(Phase execPhase, BytecodeContainer *targetbCon, Environment *env)
     {
+        packageFrame = env->getPackageFrame();
         jsr(execPhase, targetbCon, sp - execStack, JS2VAL_VOID, env);
         ActivationFrame *f = activationStackTop;
         js2val result;
@@ -508,18 +509,33 @@ namespace MetaData {
         { eNext,  "Next", 0 },
         { eForValue,  "ForValue", 0 },
 
-        { eFrameSlotRead,  "FrameSlotRead", U16 },          // <slot index:u16>
-        { eFrameSlotWrite,  "FrameSlotWrite", U16 },         // <slot index:u16>
+        { eFrameSlotRead, "FrameSlotRead", U16 },           // <slot index:u16>
+        { eFrameSlotRef, "FrameSlotRef", U16 },             // <slot index:u16>
+        { eFrameSlotWrite, "FrameSlotWrite", U16 },         // <slot index:u16>
+        { eFrameSlotDelete, "FrameSlotDelete", U16 },       // <slot index:u16>
+        { eFrameSlotPostInc, "FrameSlotPostInc", U16 },     // <slot index:u16>
+        { eFrameSlotPostDec, "FrameSlotPostDec", U16 },     // <slot index:u16>
+        { eFrameSlotPreInc, "FrameSlotPreInc", U16 },       // <slot index:u16>
+        { eFrameSlotPreDec, "FrameSlotPreDec", U16 },       // <slot index:u16>
+
+        { ePackageSlotRead, "PackageSlotRead", U16 },           // <slot index:u16>
+        { ePackageSlotRef, "PackageSlotRef", U16 },             // <slot index:u16>
+        { ePackageSlotWrite, "PackageSlotWrite", U16 },         // <slot index:u16>
+        { ePackageSlotDelete, "PackageSlotDelete", U16 },       // <slot index:u16>
+        { ePackageSlotPostInc, "PackageSlotPostInc", U16 },     // <slot index:u16>
+        { ePackageSlotPostDec, "PackageSlotPostDec", U16 },     // <slot index:u16>
+        { ePackageSlotPreInc, "PackageSlotPreInc", U16 },       // <slot index:u16>
+        { ePackageSlotPreDec, "PackageSlotPreDec", U16 },       // <slot index:u16>
 
         { eLexicalRead,  "LexicalRead", NAME_INDEX },       // <multiname index:u16>
-        { eLexicalWrite,  "LexicalWrite", NAME_INDEX },      // <multiname index:u16>
-        { eLexicalInit,  "LexicalInit", NAME_INDEX },      // <multiname index:u16>
-        { eLexicalRef,  "LexicalRef", NAME_INDEX },        // <multiname index:u16>
-        { eLexicalDelete,  "LexicalDelete", NAME_INDEX },     // <multiname index:u16>
-        { eDotRead,  "DotRead", NAME_INDEX },           // <multiname index:u16>
-        { eDotWrite,  "DotWrite", NAME_INDEX },          // <multiname index:u16>
-        { eDotRef,  "DotRef", NAME_INDEX },            // <multiname index:u16>
-        { eDotDelete,  "DotDelete", NAME_INDEX },         // <multiname index:u16>
+        { eLexicalWrite,  "LexicalWrite", NAME_INDEX },     // <multiname index:u16>
+        { eLexicalInit,  "LexicalInit", NAME_INDEX },       // <multiname index:u16>
+        { eLexicalRef,  "LexicalRef", NAME_INDEX },         // <multiname index:u16>
+        { eLexicalDelete,  "LexicalDelete", NAME_INDEX },   // <multiname index:u16>
+        { eDotRead,  "DotRead", NAME_INDEX },               // <multiname index:u16>
+        { eDotWrite,  "DotWrite", NAME_INDEX },             // <multiname index:u16>
+        { eDotRef,  "DotRef", NAME_INDEX },                 // <multiname index:u16>
+        { eDotDelete,  "DotDelete", NAME_INDEX },           // <multiname index:u16>
         { eBracketRead,  "BracketRead", 0 },
         { eBracketWrite,  "BracketWrite", 0 },
         { eBracketRef,  "BracketRef", 0 },
@@ -760,6 +776,19 @@ namespace MetaData {
         case eLexicalDelete:
             return 1;       // push boolean result
 
+        case eFrameSlotRead:
+        case ePackageSlotRead:
+            return 1;          // push value
+        case eFrameSlotWrite:
+        case ePackageSlotWrite:
+            return 0;          // leaves value on stack
+        case eFrameSlotRef:
+        case ePackageSlotRef:
+            return 2;          // push base and value
+        case eFrameSlotDelete:
+        case ePackageSlotDelete:
+            return 1;          // push boolean result;
+
         case eDotRead:
             return 0;       // pop a base, push the value
         case eDotWrite:
@@ -822,16 +851,21 @@ namespace MetaData {
         case eForValue:     // leave the iterator helper
             return 1;       // and push iteration value
 
-        case eFrameSlotRead:
-            return 1;           // push value
-        case eFrameSlotWrite:
-            return -1;          // doesn't leave value on stack
+        case eFrameSlotPostInc:
+        case eFrameSlotPostDec:
+        case eFrameSlotPreInc:
+        case eFrameSlotPreDec:
+        case ePackageSlotPostInc:
+        case ePackageSlotPostDec:
+        case ePackageSlotPreInc:
+        case ePackageSlotPreDec:
+            return 1;           // push the new/old value
 
         case eLexicalPostInc:
         case eLexicalPostDec:
         case eLexicalPreInc:
         case eLexicalPreDec:
-            return 1;       // push the new/old value
+            return 1;           // push the new/old value
 
         case eDotPostInc:
         case eDotPostDec:
@@ -887,6 +921,7 @@ namespace MetaData {
         activationStackTop->env = meta->env;    // save current environment, to be restored on rts
         activationStackTop->newEnv = env;       // and save the new environment, if an exception occurs, we can't depend on meta->env
         activationStackTop->topFrame = env->getTopFrame();  // remember how big the new env. is supposed to be so that local frames don't accumulate
+        localFrame = checked_cast<NonWithFrame *>(activationStackTop->topFrame);
         activationStackTop++;
         if (new_bCon) {
             bCon = new_bCon;

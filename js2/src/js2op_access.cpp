@@ -261,9 +261,8 @@
         {
             uint16 slotIndex = BytecodeContainer::getShort(pc);
             pc += sizeof(short);
-            NonWithFrame *f = checked_cast<NonWithFrame *>(meta->env->getTopFrame());
-            a = pop();
-            (*f->slots)[slotIndex] = a;
+            a = top();
+            (*localFrame->slots)[slotIndex] = a;
         }
         break;
 
@@ -271,7 +270,6 @@
         {
             uint16 slotIndex = BytecodeContainer::getShort(pc);
             pc += sizeof(short);
-            NonWithFrame *f = checked_cast<NonWithFrame *>(meta->env->getTopFrame());
             // XXX some kind of code here?
         }
         break;
@@ -280,8 +278,32 @@
         {
             uint16 slotIndex = BytecodeContainer::getShort(pc);
             pc += sizeof(short);
-            NonWithFrame *f = checked_cast<NonWithFrame *>(meta->env->getTopFrame());
-            push((*f->slots)[slotIndex]);
+            push((*localFrame->slots)[slotIndex]);
+        }
+        break;
+
+    case ePackageSlotWrite:
+        {
+            uint16 slotIndex = BytecodeContainer::getShort(pc);
+            pc += sizeof(short);
+            a = top();
+            (*packageFrame->slots)[slotIndex] = a;
+        }
+        break;
+
+    case ePackageSlotDelete:
+        {
+            uint16 slotIndex = BytecodeContainer::getShort(pc);
+            pc += sizeof(short);
+            // XXX some kind of code here?
+        }
+        break;
+
+    case ePackageSlotRead:
+        {
+            uint16 slotIndex = BytecodeContainer::getShort(pc);
+            pc += sizeof(short);
+            push((*packageFrame->slots)[slotIndex]);
         }
         break;
 

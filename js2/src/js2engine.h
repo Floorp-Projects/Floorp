@@ -106,6 +106,15 @@ enum JS2Op {
     eFrameSlotPreInc,   // <slot index:u16>
     eFrameSlotPreDec,   // <slot index:u16>
 
+    ePackageSlotRead,     // <slot index:u16>
+    ePackageSlotRef,      // <slot index:u16>
+    ePackageSlotWrite,    // <slot index:u16>
+    ePackageSlotDelete,   // <slot index:u16>
+    ePackageSlotPostInc,  // <slot index:u16>
+    ePackageSlotPostDec,  // <slot index:u16>
+    ePackageSlotPreInc,   // <slot index:u16>
+    ePackageSlotPreDec,   // <slot index:u16>
+
     eLexicalRead,       // <multiname index:u16>
     eLexicalWrite,      // <multiname index:u16>
     eLexicalInit,       // <multiname index:u16>
@@ -170,6 +179,7 @@ enum JS2Op {
 
 
 class Frame;
+class NonWithFrame;
 class ParameterFrame;
 class Environment;
 
@@ -331,6 +341,10 @@ public:
 
     std::stack<HandlerData *> mTryStack;
     std::stack<uint8 *> finallyStack;
+
+    // For frame slot references:
+    NonWithFrame *packageFrame;
+    NonWithFrame *localFrame;
 
     void pushHandler(uint8 *pc);
     void popHandler();

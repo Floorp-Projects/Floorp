@@ -439,8 +439,7 @@ namespace MetaData {
                                         && ((topFrame->kind == PackageKind)
                                                         || (topFrame->kind == BlockFrameKind)
                                                         || (topFrame->kind == ParameterKind)) ) {
-                                    DynamicVariable *v = defineHoistedVar(env, f->function.name, p, false);
-                                    v->value = OBJECT_TO_JS2VAL(fObj);
+                                    LocalMember *v = defineHoistedVar(env, f->function.name, p, false, OBJECT_TO_JS2VAL(fObj));
                                 }
                                 else {
                                     Variable *v = new Variable(functionClass, OBJECT_TO_JS2VAL(fObj), true);
@@ -500,7 +499,7 @@ namespace MetaData {
                                         && !immutable
                                         && (vs->attributes == NULL)
                                         && (vb->type == NULL)) {
-                            defineHoistedVar(env, name, p, true);
+                            defineHoistedVar(env, name, p, true, JS2VAL_UNDEFINED);
                         }
                         else {
                             a = Attribute::toCompoundAttribute(attr);
@@ -517,7 +516,7 @@ namespace MetaData {
                                     // Set type to FUTURE_TYPE - it will be resolved during 'Setup'. The value is either FUTURE_VALUE
                                     // for 'const' - in which case the expression is compile time evaluated (or attempted) or set
                                     // to INACCESSIBLE until run time initialization occurs.
-                                    Variable *v = new Variable(FUTURE_TYPE, immutable ? JS2VAL_FUTUREVALUE : JS2VAL_INACCESSIBLE, immutable);
+                                    Variable *v = new Variable(FUTURE_TYPE, immutable ? JS2VAL_FUTUREVALUE : JS2VAL_FUTUREVALUE, immutable);
                                     vb->member = v;
                                     v->vb = vb;
                                     vb->mn = defineLocalMember(env, name, a->namespaces, a->overrideMod, a->xplicit, ReadWriteAccess, v, p->pos, true);
@@ -2058,54 +2057,97 @@ doUnary:
                 returnRef = new (*referenceArena) LexicalReference(&i->name, cxt.strict);
                 referenceArena->registerDestructor(returnRef);
                 ((LexicalReference *)returnRef)->variableMultiname.addNamespace(cxt);
-#if 0                
                 // Try to find this identifier at compile time, we have to stop if we reach
                 // a frame that supports dynamic properties - the identifier could be
                 // created at runtime without us finding it here.
+                // We're looking to find both the type of the reference (to store into exprType)
+                // and to see if we can change the reference to a FrameSlot or Slot (for member
+                // functions)
                 Multiname *multiname = &((LexicalReference *)returnRef)->variableMultiname;
                 FrameListIterator fi = env->getBegin();
-                while (fi != env->getEnd()) {
+                bool keepLooking = true;
+                while (fi != env->getEnd() && keepLooking) {
                     Frame *fr = *fi;
                     if (fr->kind == WithFrameKind)
                         // XXX unless it's provably not a dynamic object that been with'd??
                         break;
-                    NonWithFrame *pf = checked_cast<NonWithFrame *>(*fi);
-                    if (pf->kind != ClassKind) {
-                        LocalMember *m = findFlatMember(pf, multiname, ReadAccess, CompilePhase);
-                        if (m && m->kind == Member::Variable) {
-                            *exprType = checked_cast<Variable *>(m)->type;
-                            break;
-                        }
-                        if (pf->kind == PackageKind)
-                            break;
-                    }
-                    else {
-                        JS2Class *c = checked_cast<JS2Class *>(pf);
-                        MemberDescriptor m2;
-                        if (findLocalMember(c, multiname, ReadAccess, CompilePhase, &m2) 
-                                && m2.localMember) {
-                            if (m2.localMember->kind == LocalMember::Variable)
-                                *exprType = checked_cast<Variable *>(m2.localMember)->type;
-                            break;
-                        }
-                        if (m2.ns) {   // an instance member
-                            QualifiedName qname(m2.ns, multiname->name);
-                            InstanceMember *m = findInstanceMember(c, &qname, ReadAccess);
+                    NonWithFrame *pf = checked_cast<NonWithFrame *>(fr);
+                    switch (pf->kind) {
+                    default:
+                        keepLooking = false;
+                        break;
+                    case BlockFrameKind:
+                        {
+                            LocalMember *m = findLocalMember(pf, multiname, ReadAccess);
                             if (m) {
-                                if (m->kind == InstanceMember::InstanceVariableKind)
-                                    *exprType = checked_cast<InstanceVariable *>(m)->type;
+                                switch (checked_cast<LocalMember *>(m)->memberKind) {
+                                case LocalMember::VariableMember:
+                                    *exprType = checked_cast<Variable *>(m)->type;
+                                    break;
+                                case LocalMember::FrameVariableMember:
+                                    ASSERT(!checked_cast<FrameVariable *>(m)->packageSlot);
+                                    returnRef = new (*referenceArena) FrameSlotReference(checked_cast<FrameVariable *>(m)->frameSlot);
+                                    break;
+                                }                                        
                                 break;
+                                keepLooking = false;
                             }
-                            else
-                                break;  // XXX Shouldn't findLocalMember guarantee this not possible?
                         }
-                        else
-                            break;
-                            // XXX ok to keep going? Suppose the class allows dynamic properties?
+                        break;
+                    case ClassKind: 
+                        {
+                            // look for this identifier in the static members
+                            // (do we have a this?)
+                            // If the class allows dynamic members, have to stop the search here
+                            keepLooking = false;
+                        }
+                        break;
+                    case PackageKind:
+                        {
+                            JS2Class *limit = objectType(pf);
+                            InstanceMember *mBase = findBaseInstanceMember(limit, multiname, ReadAccess);
+                            if (mBase)
+                                // XXX *exprType = mBase->...
+                                keepLooking = false;
+                            else {
+                                js2val base = OBJECT_TO_JS2VAL(pf);
+                                Member *m = findCommonMember(&base, multiname, ReadAccess, false);
+                                if (m) {
+                                    switch (m->memberKind) {
+                                    case Member::ForbiddenMember:
+                                    case Member::DynamicVariableMember:
+                                    case Member::FrameVariableMember:
+                                    case Member::VariableMember:
+                                    case Member::ConstructorMethodMember:
+                                    case Member::SetterMember:
+                                    case Member::GetterMember:
+                                        switch (checked_cast<LocalMember *>(m)->memberKind) {
+                                        case LocalMember::VariableMember:
+                                            *exprType = checked_cast<Variable *>(m)->type;
+                                            break;
+                                        case LocalMember::FrameVariableMember:
+                                            ASSERT(checked_cast<FrameVariable *>(m)->packageSlot);
+                                            returnRef = new (*referenceArena) PackageSlotReference(checked_cast<FrameVariable *>(m)->frameSlot);
+                                            break;
+                                        }                                        
+                                        break;
+                                    case Member::InstanceVariableMember:
+                                    case Member::InstanceMethodMember:
+                                    case Member::InstanceGetterMember:
+                                    case Member::InstanceSetterMember:
+                                        // XXX checked_cast<InstanceMember *>(m)
+                                        break;
+                                    }
+                                    keepLooking = false;
+                                }
+                            }
+                            // XXX if package allows dynamic members, stop looking
+                            keepLooking = false;
+                        }
+                        break;
                     }
                     fi++;
                 }
-#endif
             }
             break;
         case ExprNode::Delete:
@@ -2630,7 +2672,12 @@ doUnary:
             LocalBindingEntry *lbe = *bi2;
             singularFrame->localBindings.insert(lbe->name, lbe->clone());
         }
-
+        if (pluralFrame->slots) {
+            size_t count = pluralFrame->slots->size();
+            singularFrame->slots = new std::vector<js2val>(count);
+            for (size_t i = 0; i < count; i++)
+                (*singularFrame->slots)[i] = (*pluralFrame->slots)[i];
+        }
     }
 
     // need to mark all the frames in the environment - otherwise a marked frame that
@@ -2978,13 +3025,12 @@ doUnary:
     // will shadow a parameter with the same name for compatibility with ECMAScript Edition 3. 
     // If there are multiple function definitions, the initial value is the last function definition. 
     
-    LocalMember *JS2Metadata::defineHoistedVar(Environment *env, const String *id, StmtNode *p, bool isVar)
+    LocalMember *JS2Metadata::defineHoistedVar(Environment *env, const String *id, StmtNode *p, bool isVar, js2val initVal)
     {
-        LocalMember *result;
+        LocalMember *result = NULL;
         FrameListIterator regionalFrameEnd = env->getRegionalEnvironment();
         NonWithFrame *regionalFrame = checked_cast<NonWithFrame *>(*regionalFrameEnd);
-        ASSERT((regionalFrame->kind == PackageKind) || (regionalFrame->kind == ParameterKind));
-          
+        ASSERT((regionalFrame->kind == PackageKind) || (regionalFrame->kind == ParameterKind));          
 rescan:
         // run through all the existing bindings, to see if this variable already exists.
         LocalBinding *bindingResult = NULL;
@@ -3019,7 +3065,8 @@ rescan:
             }
             else
                 lbe = *lbeP;
-            result = new FrameVariable(regionalFrame->allocateSlot());
+            result = new FrameVariable(regionalFrame->allocateSlot(), (regionalFrame->kind == PackageKind));
+            (*regionalFrame->slots)[checked_cast<FrameVariable *>(result)->frameSlot] = initVal;
             LocalBinding *sb = new LocalBinding(ReadWriteAccess, result, true);
             lbe->bindingList.push_back(LocalBindingEntry::NamespaceBinding(publicNamespace, sb));
         }
@@ -3029,14 +3076,15 @@ rescan:
             else {
                 if ((bindingResult->accesses != ReadWriteAccess)
                         || ((bindingResult->content->memberKind != LocalMember::DynamicVariableMember)
-                              && (bindingResult->content->memberKind != LocalMember::FrameVariableMember))
+                              && (bindingResult->content->memberKind != LocalMember::FrameVariableMember)))
                     reportError(Exception::definitionError, "Illegal redefinition of {0}", p->pos, id);
-
-                result = bindingResult->content;
+                else {
+                    result = bindingResult->content;
+                    writeLocalMember(result, initVal, true);
+                }
             }
             // At this point a hoisted binding of the same var already exists, so there is no need to create another one
         }
-
         return result;
     }
 
@@ -3551,14 +3599,15 @@ XXX see EvalAttributeExpression, where identifiers are being handled for now...
         return result;
     }        
 
-    InstanceMember *JS2Metadata::findBaseInstanceMember(JS2Class *limit, Multiname *multiname, Access access)
+    // Start from the root class (Object) and proceed through more specific classes that are ancestors of c
+    InstanceMember *JS2Metadata::findBaseInstanceMember(JS2Class *c, Multiname *multiname, Access access)
     {
         InstanceMember *result = NULL;
-        if (limit->super) {
-            result = findBaseInstanceMember(limit->super, multiname, access);
+        if (c->super) {
+            result = findBaseInstanceMember(c->super, multiname, access);
             if (result) return result;
         }
-        return findLocalInstanceMember(limit, multiname, access);
+        return findLocalInstanceMember(c, multiname, access);
     }
 
     // getDerivedInstanceMember returns the most derived instance member whose name includes that of mBase and 
@@ -3709,6 +3758,20 @@ XXX see EvalAttributeExpression, where identifiers are being handled for now...
                 *rval = v->value;
                 return true;
             }
+        case LocalMember::FrameVariableMember:
+            {
+                if (phase == CompilePhase) 
+                    reportError(Exception::compileExpressionError, "Inappropriate compile time expression", engine->errorPos());
+                FrameVariable *f = checked_cast<FrameVariable *>(m);
+                if (f->packageSlot)
+                    *rval = (*env->getPackageFrame()->slots)[f->frameSlot];
+                else {
+                    FrameListIterator fi = env->getRegionalFrame();
+                    ASSERT((*fi)->kind == ParameterKind);
+                    *rval = (*checked_cast<NonWithFrame *>(*(fi - 1))->slots)[f->frameSlot];
+                }
+            }
+            return true;
         case LocalMember::DynamicVariableMember:
             if (phase == CompilePhase) 
                 reportError(Exception::compileExpressionError, "Inappropriate compile time expression", engine->errorPos());
@@ -3741,11 +3804,23 @@ XXX see EvalAttributeExpression, where identifiers are being handled for now...
                 if (!initFlag
                         && (JS2VAL_IS_INACCESSIBLE(v->value) 
                                 || (v->immutable && !JS2VAL_IS_UNINITIALIZED(v->value))))
-                    if (flags == JS2)
+                    if (!cxt.E3compatibility)
                         reportError(Exception::propertyAccessError, "Forbidden access", engine->errorPos());
                     else    // quietly ignore the write for JS1 compatibility
                         return true;
                 v->value = v->type->implicitCoerce(this, newValue);
+            }
+            return true;
+        case LocalMember::FrameVariableMember:
+            {
+                FrameVariable *f = checked_cast<FrameVariable *>(m);
+                if (f->packageSlot)
+                    (*env->getPackageFrame()->slots)[f->frameSlot] = newValue;
+                else {
+                    FrameListIterator fi = env->getRegionalFrame();
+                    ASSERT((*fi)->kind == ParameterKind);
+                    (*checked_cast<NonWithFrame *>(*(fi - 1))->slots)[f->frameSlot] = newValue;
+                }
             }
             return true;
         case LocalMember::DynamicVariableMember:

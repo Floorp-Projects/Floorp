@@ -455,12 +455,13 @@ public:
 
 class FrameVariable : public LocalMember {
 public:
-    FrameVariable(uint16 frameSlot) : LocalMember(Member::FrameVariableMember), frameSlot(frameSlot), sealed(false) { } 
+    FrameVariable(uint16 frameSlot, bool packageSlot) : LocalMember(Member::FrameVariableMember), frameSlot(frameSlot), packageSlot(packageSlot), sealed(false) { } 
 
     uint16 frameSlot;
+    bool packageSlot;               // true if the variable is in a package frame
 
     bool sealed;                    // true if this variable cannot be deleted using the delete operator
-    virtual LocalMember *clone()       { return new FrameVariable(frameSlot); }
+    virtual LocalMember *clone()       { return new FrameVariable(frameSlot, packageSlot); }
 };
 
 class ConstructorMethod : public LocalMember {
@@ -651,7 +652,7 @@ public:
 
     LocalBindingMap localBindings;              // Map of qualified names to members defined in this frame
 
-    std::vector<js2val> *slots;                 // temporaries allocted in this frame
+    std::vector<js2val> *slots;                 // temporaries or frame variables allocted in this frame
     uint16 allocateSlot();
 
     virtual void instantiate(Environment * /*env*/)  { ASSERT(false); }
@@ -1067,6 +1068,52 @@ public:
     virtual int hasStackEffect()                                            { return 1; }
 };
 
+class FrameSlotReference : public Reference {
+// A special case of a DotReference with an FrameSl instead of a D
+public:
+    FrameSlotReference(uint32 slotIndex) : slotIndex(slotIndex) { }
+    virtual ~FrameSlotReference()	{ }
+
+    virtual void emitReadBytecode(BytecodeContainer *bCon, size_t pos)      { bCon->emitOp(eFrameSlotRead, pos); bCon->addShort((uint16)slotIndex); }
+    virtual void emitWriteBytecode(BytecodeContainer *bCon, size_t pos)     { bCon->emitOp(eFrameSlotWrite, pos); bCon->addShort((uint16)slotIndex); }
+    virtual void emitReadForInvokeBytecode(BytecodeContainer *bCon, size_t pos)     { bCon->emitOp(eFrameSlotRef, pos); bCon->addShort((uint16)slotIndex); }
+    virtual void emitReadForWriteBackBytecode(BytecodeContainer *bCon, size_t pos)  { emitReadForInvokeBytecode(bCon, pos); }
+    virtual void emitWriteBackBytecode(BytecodeContainer *bCon, size_t pos)         { emitWriteBytecode(bCon, pos); }
+
+    virtual void emitPostIncBytecode(BytecodeContainer *bCon, size_t pos)   { bCon->emitOp(eFrameSlotPostInc, pos); bCon->addShort((uint16)slotIndex); }
+    virtual void emitPostDecBytecode(BytecodeContainer *bCon, size_t pos)   { bCon->emitOp(eFrameSlotPostDec, pos); bCon->addShort((uint16)slotIndex); }
+    virtual void emitPreIncBytecode(BytecodeContainer *bCon, size_t pos)    { bCon->emitOp(eFrameSlotPreInc, pos); bCon->addShort((uint16)slotIndex); }
+    virtual void emitPreDecBytecode(BytecodeContainer *bCon, size_t pos)    { bCon->emitOp(eFrameSlotPreDec, pos); bCon->addShort((uint16)slotIndex); }
+
+    virtual void emitDeleteBytecode(BytecodeContainer *bCon, size_t pos)    { bCon->emitOp(eFalse, pos); /* bCon->emitOp(eFrameSlotDelete, pos); bCon->addShort((uint16)slotIndex); */ }
+
+    uint32 slotIndex;
+    virtual int hasStackEffect()                                            { return 0; }
+};
+
+class PackageSlotReference : public Reference {
+// A special case of a DotReference with an PackageSl instead of a D
+public:
+    PackageSlotReference(uint32 slotIndex) : slotIndex(slotIndex) { }
+    virtual ~PackageSlotReference()	{ }
+
+    virtual void emitReadBytecode(BytecodeContainer *bCon, size_t pos)      { bCon->emitOp(ePackageSlotRead, pos); bCon->addShort((uint16)slotIndex); }
+    virtual void emitWriteBytecode(BytecodeContainer *bCon, size_t pos)     { bCon->emitOp(ePackageSlotWrite, pos); bCon->addShort((uint16)slotIndex); }
+    virtual void emitReadForInvokeBytecode(BytecodeContainer *bCon, size_t pos)     { bCon->emitOp(ePackageSlotRef, pos); bCon->addShort((uint16)slotIndex); }
+    virtual void emitReadForWriteBackBytecode(BytecodeContainer *bCon, size_t pos)  { emitReadForInvokeBytecode(bCon, pos); }
+    virtual void emitWriteBackBytecode(BytecodeContainer *bCon, size_t pos)         { emitWriteBytecode(bCon, pos); }
+
+    virtual void emitPostIncBytecode(BytecodeContainer *bCon, size_t pos)   { bCon->emitOp(ePackageSlotPostInc, pos); bCon->addShort((uint16)slotIndex); }
+    virtual void emitPostDecBytecode(BytecodeContainer *bCon, size_t pos)   { bCon->emitOp(ePackageSlotPostDec, pos); bCon->addShort((uint16)slotIndex); }
+    virtual void emitPreIncBytecode(BytecodeContainer *bCon, size_t pos)    { bCon->emitOp(ePackageSlotPreInc, pos); bCon->addShort((uint16)slotIndex); }
+    virtual void emitPreDecBytecode(BytecodeContainer *bCon, size_t pos)    { bCon->emitOp(ePackageSlotPreDec, pos); bCon->addShort((uint16)slotIndex); }
+
+    virtual void emitDeleteBytecode(BytecodeContainer *bCon, size_t pos)    { bCon->emitOp(eFalse, pos); /* bCon->emitOp(ePackageSlotDelete, pos); bCon->addShort((uint16)slotIndex); */ }
+
+    uint32 slotIndex;
+    virtual int hasStackEffect()                                            { return 0; }
+};
+
 
 class NamedArgument {
 public:
@@ -1260,7 +1307,7 @@ public:
     LocalMember *findFlatMember(NonWithFrame *container, Multiname *multiname, Access access, Phase phase);
     InstanceBinding *resolveInstanceMemberName(JS2Class *js2class, Multiname *multiname, Access access, Phase phase, QualifiedName *qname);
 
-    DynamicVariable *defineHoistedVar(Environment *env, const String *id, StmtNode *p, bool isVar);
+    LocalMember *defineHoistedVar(Environment *env, const String *id, StmtNode *p, bool isVar, js2val initVal);
     Multiname *defineLocalMember(Environment *env, const String *id, NamespaceList &namespaces, Attribute::OverrideModifier overrideMod, bool xplicit, Access access, LocalMember *m, size_t pos, bool enumerable);
     InstanceMember *defineInstanceMember(JS2Class *c, Context *cxt, const String *id, NamespaceList &namespaces, 
                                                                     Attribute::OverrideModifier overrideMod, bool xplicit,

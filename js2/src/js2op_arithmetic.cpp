@@ -1154,10 +1154,9 @@
         {
             uint16 slotIndex = BytecodeContainer::getShort(pc);
             pc += sizeof(short);
-            NonWithFrame *f = checked_cast<NonWithFrame *>(meta->env->getTopFrame());
-            a = (*f->slots)[slotIndex];
+            a = (*localFrame->slots)[slotIndex];
             float64 num = meta->toFloat64(a);
-            (*f->slots)[slotIndex] = allocNumber(num + 1.0);
+            (*localFrame->slots)[slotIndex] = allocNumber(num + 1.0);
             pushNumber(num);
         }
         break;
@@ -1165,10 +1164,9 @@
         {
             uint16 slotIndex = BytecodeContainer::getShort(pc);
             pc += sizeof(short);
-            NonWithFrame *f = checked_cast<NonWithFrame *>(meta->env->getTopFrame());
-            a = (*f->slots)[slotIndex];
+            a = (*localFrame->slots)[slotIndex];
             float64 num = meta->toFloat64(a);
-            (*f->slots)[slotIndex] = allocNumber(num - 1.0);
+            (*localFrame->slots)[slotIndex] = allocNumber(num - 1.0);
             pushNumber(num);
         }
         break;
@@ -1176,21 +1174,60 @@
         {
             uint16 slotIndex = BytecodeContainer::getShort(pc);
             pc += sizeof(short);
-            NonWithFrame *f = checked_cast<NonWithFrame *>(meta->env->getTopFrame());
-            a = (*f->slots)[slotIndex];
+            a = (*localFrame->slots)[slotIndex];
             float64 num = meta->toFloat64(a);
             a = pushNumber(num + 1.0);
-            (*f->slots)[slotIndex] = a;
+            (*localFrame->slots)[slotIndex] = a;
         }
         break;
     case eFrameSlotPreDec:
         {
             uint16 slotIndex = BytecodeContainer::getShort(pc);
             pc += sizeof(short);
-            NonWithFrame *f = checked_cast<NonWithFrame *>(meta->env->getTopFrame());
-            a = (*f->slots)[slotIndex];
+            a = (*localFrame->slots)[slotIndex];
             float64 num = meta->toFloat64(a);
             a = pushNumber(num - 1.0);
-            (*f->slots)[slotIndex] = a;
+            (*localFrame->slots)[slotIndex] = a;
+        }
+        break;
+
+    case ePackageSlotPostInc:
+        {
+            uint16 slotIndex = BytecodeContainer::getShort(pc);
+            pc += sizeof(short);
+            a = (*packageFrame->slots)[slotIndex];
+            float64 num = meta->toFloat64(a);
+            (*packageFrame->slots)[slotIndex] = allocNumber(num + 1.0);
+            pushNumber(num);
+        }
+        break;
+    case ePackageSlotPostDec:
+        {
+            uint16 slotIndex = BytecodeContainer::getShort(pc);
+            pc += sizeof(short);
+            a = (*packageFrame->slots)[slotIndex];
+            float64 num = meta->toFloat64(a);
+            (*packageFrame->slots)[slotIndex] = allocNumber(num - 1.0);
+            pushNumber(num);
+        }
+        break;
+    case ePackageSlotPreInc:
+        {
+            uint16 slotIndex = BytecodeContainer::getShort(pc);
+            pc += sizeof(short);
+            a = (*packageFrame->slots)[slotIndex];
+            float64 num = meta->toFloat64(a);
+            a = pushNumber(num + 1.0);
+            (*packageFrame->slots)[slotIndex] = a;
+        }
+        break;
+    case ePackageSlotPreDec:
+        {
+            uint16 slotIndex = BytecodeContainer::getShort(pc);
+            pc += sizeof(short);
+            a = (*packageFrame->slots)[slotIndex];
+            float64 num = meta->toFloat64(a);
+            a = pushNumber(num - 1.0);
+            (*packageFrame->slots)[slotIndex] = a;
         }
         break;
