@@ -49,7 +49,7 @@
 #include "nsIMsgIncomingServer.h"
 #include "nsIImapIncomingServer.h"
 #include "nsIImapService.h"
-#include "nsIMsgMailSession.h"
+#include "nsIMsgAccountManager.h"
 #include "nsIImapLog.h"
 #include "nsIImapMailFolderSink.h"
 #include "nsIImapMessageSink.h"
@@ -396,17 +396,17 @@ nsresult nsIMAP4TestDriver::OnExit()
 	return NS_OK;
 }
 
-static NS_DEFINE_CID(kCMsgMailSessionCID, NS_MSGMAILSESSION_CID); 
-
 nsresult nsIMAP4TestDriver::OnIdentityCheck()
 {
 	nsresult result = NS_OK;
 
-	NS_WITH_SERVICE(nsIMsgMailSession, mailSession, kCMsgMailSessionCID, &result); 
-	if (NS_SUCCEEDED(result) && mailSession)
+	NS_WITH_SERVICE(nsIMsgAccountManager, accountManager,
+                    NS_MSGACCOUNTMANAGER_PROGID, &result);
+
+	if (NS_SUCCEEDED(result) && accountManager)
 	{
 		nsIMsgIncomingServer * server = nsnull;
-		result = mailSession->GetCurrentServer(&server);
+		result = accountManager->GetCurrentServer(&server);
 		if (NS_SUCCEEDED(result) && server)
 		{
 			char * value = nsnull;
