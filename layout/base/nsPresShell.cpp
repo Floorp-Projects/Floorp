@@ -109,6 +109,8 @@
 #ifdef NS_DEBUG
 #include "nsIFrameDebug.h"
 #endif
+  // for |#ifdef DEBUG| code
+#include "nsSpaceManager.h"
 #include "prenv.h"
 
 #ifdef MOZ_REFLOW_PERF_DSP
