@@ -347,6 +347,7 @@ CERTUTIL_GeneratePrivateKey(KeyType keytype, PK11SlotInfo *slot, int size,
 	    dsaparams = &default_pqg_params;
 	}
 	params = dsaparams;
+	break;
       default:
 	return NULL;
     }
