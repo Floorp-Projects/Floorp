@@ -22,14 +22,14 @@ srcdir		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-MODULE=pm_progress
+MODULE=prefmigr
 
-XPIDLSRCS = nsIPrefMigrationProgress.idl
+XPIDLSRCS = 	nsIPrefMigrationProgress.idl	\
+		nsIPrefMigration.idl	\
+		$(NULL)
 
-EXPORTS=	\
-	nsIPrefMigration.h   \
-	nsPrefMigrationIIDs.h  \
-	$(NULL)
+EXPORTS=	nsPrefMigrationIIDs.h  \
+		$(NULL)
 
 EXPORTS		:= $(addprefix $(srcdir)/, $(EXPORTS))
 

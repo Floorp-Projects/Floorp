@@ -61,6 +61,7 @@
 #endif
 
 #include "nsIPrefMigration.h"
+#include "nsPrefMigrationIIDs.h"
 
 // included for XPlatform coding 
 #include "nsFileStream.h"
@@ -2242,17 +2243,17 @@ NS_IMETHODIMP nsProfile::MigrateProfile(const char* profileName)
 
 
 	// Call migration service to do the work.
-	nsIPrefMigration *pPrefMigrator = nsnull;
+	nsCOMPtr <nsIPrefMigration> pPrefMigrator;
 
 
 	rv = nsComponentManager::CreateInstance(kPrefMigration_CID, 
                                           nsnull, 
                                           kIPrefMigration_IID, 
-                                          (void**) &pPrefMigrator);
+					getter_AddRefs(pPrefMigrator));
     if (NS_FAILED(rv)) return rv;
                                       
-	rv = pPrefMigrator->ProcessPrefs((char *)oldProfDir.GetCString(), 
-                                (char *)newProfDir.GetCString());
+	rv = pPrefMigrator->ProcessPrefs(oldProfDir.GetCString(), 
+                                newProfDir.GetCString());
 
 	if (NS_FAILED(rv)) return rv;
 

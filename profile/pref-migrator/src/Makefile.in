@@ -26,6 +26,10 @@ LIBRARY_NAME=nsprefm
 
 IS_COMPONENT=1
 
+EXPORTS=nsPrefMigration.h	\
+	nsPrefMigrationFactory.h \
+	$(NULL)
+
 CPPSRCS = \
 	nsPMProgressDlg.cpp \
 	nsPrefMigration.cpp \

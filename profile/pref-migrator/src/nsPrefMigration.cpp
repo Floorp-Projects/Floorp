@@ -35,6 +35,7 @@
 #include "net.h"
 
 #include "nsPrefMigration.h"
+#include "nsPrefMigrationFactory.h"
 #include "nsPMProgressDlg.h"
 
 #define NEW_DIR_PERMISSIONS 00700
@@ -175,7 +176,7 @@ NS_IMPL_RELEASE(nsPrefMigration)
  *
  *-------------------------------------------------------------------------*/
 NS_IMETHODIMP
-nsPrefMigration::ProcessPrefs(char* oldProfilePathStr, char* newProfilePathStr)
+nsPrefMigration::ProcessPrefs(const char* oldProfilePathStr, const char * newProfilePathStr)
 { 
   char *oldPOPMailPathStr = nsnull;
   char *oldIMAPMailPathStr= nsnull; 
@@ -481,7 +482,7 @@ nsPrefMigration::ProcessPrefs(char* oldProfilePathStr, char* newProfilePathStr)
  *---------------------------------------------------------------------------*/
 
 nsresult
-nsPrefMigration::CreateNewUser5Tree(char* oldProfilePath, char* newProfilePath)
+nsPrefMigration::CreateNewUser5Tree(const char* oldProfilePath, const char* newProfilePath)
 {
   nsresult rv;
   
@@ -544,7 +545,7 @@ nsPrefMigration::CreateNewUser5Tree(char* oldProfilePath, char* newProfilePath)
  *
  *--------------------------------------------------------------------------------*/
 nsresult
-nsPrefMigration::GetDirFromPref(char *oldProfilePath, char* newProfilePath, const char *newDirName, char* pref, char** newPath, char** oldPath)
+nsPrefMigration::GetDirFromPref(const char *oldProfilePath, const char* newProfilePath, const char *newDirName, char* pref, char** newPath, char** oldPath)
 {
   PRInt32 foundPref;
   nsresult rv;

@@ -17,15 +17,14 @@
 
 DEPTH=..\..\..
 
-MODULE=pm_progress 
+MODULE=prefmigr
 
 DEFINES=-D_IMPL_NS_DOM 
-EXPORTS= nsIPrefMigration.h   \
-         nsPrefMigrationIIDs.h  \
+EXPORTS=nsPrefMigrationIIDs.h
 
-XPIDLSRCS = .\nsIPrefMigrationProgress.idl        
-
-
+XPIDLSRCS = 	.\nsIPrefMigrationProgress.idl        \
+		.\nsIPrefMigration.idl			\
+		$(NULL)
 
 include <$(DEPTH)\config\rules.mak>
 

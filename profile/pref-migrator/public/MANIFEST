@@ -13,7 +13,8 @@
 # Copyright (C) 1998 Netscape Communications Corporation.  All Rights
 # Reserved.
 #
-# This is a list of local files which get copied to the mozilla:dist:editor directory
+# This is a list of local files which get copied to the mozilla:dist:??? directory
 #
-
 nsIPrefMigrationProgress.idl
+nsIPrefMigration.idl
+nsPrefMigrationIIDs.h
