@@ -73,15 +73,7 @@
 #include "nsIURI.h"
 #include "nsIServiceManager.h"
 #include "nsICharsetAlias.h"
-#include "nsIPref.h"
-#include "nsICharsetDetector.h"
-#include "prmem.h"
-#include "prtime.h"
-#include "nsIWebShellServices.h"
-#include "nsICharsetDetectionAdaptor.h"
-#include "nsCharsetDetectionAdaptorCID.h"
 #include "nsICharsetAlias.h"
-#include "nsIParserFilter.h"
 #include "nsNetUtil.h"
 #include "nsDOMError.h"
 #include "nsScriptSecurityManager.h"
@@ -109,41 +101,12 @@ static NS_DEFINE_CID(kHTMLStyleSheetCID,NS_HTMLSTYLESHEET_CID);
 // XXX The XML world depends on the html atoms
 #include "nsHTMLAtoms.h"
 
-#define DETECTOR_CONTRACTID_MAX 127
-static char g_detector_contractid[DETECTOR_CONTRACTID_MAX + 1];
-static PRBool gInitDetector = PR_FALSE;
-static PRBool gPlugDetector = PR_FALSE;
-
 static const char* kLoadAsData = "loadAsData";
 
 // ==================================================================
 // =
 // ==================================================================
 
-
-static int PR_CALLBACK
-MyPrefChangedCallback(const char*aPrefName, void* instance_data)
-{
-        nsresult rv;
-        nsCOMPtr<nsIPref> prefs = 
-                 do_GetService(NS_PREF_CONTRACTID, &rv);
-        PRUnichar* detector_name = nsnull;
-        if(NS_SUCCEEDED(rv) && NS_SUCCEEDED(
-             rv = prefs->GetLocalizedUnicharPref("intl.charset.detector",
-                                     &detector_name)))
-        {
-			if(nsCRT::strlen(detector_name) > 0) {
-				PL_strncpy(g_detector_contractid, NS_CHARSET_DETECTOR_CONTRACTID_BASE,DETECTOR_CONTRACTID_MAX);
-				PL_strncat(g_detector_contractid, NS_ConvertUCS2toUTF8(detector_name).get(),DETECTOR_CONTRACTID_MAX);
-				gPlugDetector = PR_TRUE;
-			} else {
-				g_detector_contractid[0]=0;
-				gPlugDetector = PR_FALSE;
-			}
-            PR_FREEIF(detector_name);
-        }
-	return 0;
-}
 
 NS_EXPORT nsresult
 NS_NewDOMDocument(nsIDOMDocument** aInstancePtrResult,
