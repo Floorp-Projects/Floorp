@@ -93,6 +93,8 @@ protected:
   void EnsureCheckBoxWidget();
   void EnsureScrollbarWidget();
   void EnsureGripperWidget();
+  void EnsureEntryWidget();
+  void EnsureArrowWidget();
 
 private:
   nsCOMPtr<nsIAtom> mCheckedAtom;

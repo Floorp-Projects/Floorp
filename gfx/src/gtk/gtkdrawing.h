@@ -91,6 +91,14 @@ void
 moz_gtk_gripper_paint(GdkWindow* window, GtkStyle* style, GdkRectangle* rect,
                       GdkRectangle* clipRect, GtkWidgetState* state);
 
+void
+moz_gtk_entry_paint(GdkWindow* window, GtkStyle* style, GdkRectangle* rect,
+                    GdkRectangle* clipRect, GtkWidgetState* state);
+
+void
+moz_gtk_dropdown_arrow_paint(GdkWindow* window, GtkStyle* style, GdkRectangle* rect,
+                             GdkRectangle* clipRect, GtkWidgetState* state);
+
 #ifdef __cplusplus
 }
 #endif /* __cplusplus */
