@@ -751,3 +751,4 @@ pref("network.autodial-helper.enabled", true);
 // problem of Windows showing an alert when it tries to use DDE
 // and we're not already running).
 pref("advanced.system.supportDDEExec", true);
+pref("browser.xul.error_pages.enabled", true);
