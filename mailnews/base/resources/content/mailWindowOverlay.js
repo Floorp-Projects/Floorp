@@ -497,8 +497,6 @@ function SetMenuItemLabel(menuItemId, customLabel)
 function InitMessageLabel(menuType)
 {
     /* this code gets the label strings and changes the menu labels */
-    var prefs = Components.classes["@mozilla.org/preferences;1"].getService(Components.interfaces.nsIPref);
-    var prefBranch = prefs.getDefaultBranch(null);
     var color;
 
     try
