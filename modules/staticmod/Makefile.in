@@ -81,15 +81,25 @@ EXTRA_DSO_LDOPTS += \
 		-ljsdom
 endif
 
-#EXTRA_DSO_LDOPTS += $(MOZ_COMPONENT_LIBS)
-
 ifdef MOZ_META_COMPONENTS
 # Force XPCOM_TRANSLATE_NSGM_ENTRY_POINT to be defined so the macros
 # in nsIGenericFactory.h will come out in the wash.
 DEFINES += -DMETA_MODULE=\"$(LIBRARY_NAME)\" -DXPCOM_TRANSLATE_NSGM_ENTRY_POINT
-ifeq ($(LIBRARY_NAME),meta_crypto)
-EXTRA_LIBS += $(NSS_LIBS)
+ifeq ($(LIBRARY_NAME),meta_mail)
+EXTRA_DSO_LDOPTS += \
+	$(DIST)/lib/$(LIB_PREFIX)rdfutil_s.$(LIB_SUFFIX) \
+	$(NULL)
 endif
+ifeq ($(LIBRARY_NAME),meta_crypto)
+EXTRA_DSO_LDOPTS += \
+	$(MOZ_JS_LIBS) \
+	$(NSS_LIBS) \
+	$(NULL)
+endif
+EXTRA_DSO_LDOPTS += \
+	$(MOZ_UNICHARUTIL_LIBS) \
+	$(MOZ_COMPONENT_LIBS) \
+	$(NULL)
 endif
 
 GARBAGE += $(CPPSRCS)
