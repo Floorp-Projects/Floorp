@@ -698,6 +698,10 @@ nsXBLBinding::GenerateAnonymousContent()
   if (hasContent || hasInsertionPoints) {
     nsCOMPtr<nsIDocument> doc;
     mBoundElement->GetDocument(*getter_AddRefs(doc));
+
+    // XXX doc will be null if we're in the midst of paint suppression.
+    if (! doc)
+      return NS_OK;
     
     nsCOMPtr<nsIBindingManager> bindingManager;
     doc->GetBindingManager(getter_AddRefs(bindingManager));
