@@ -423,10 +423,11 @@ xpcom/tools/registry/Makefile
 #
 silentdl/Makefile
 xpinstall/Makefile
+xpinstall/notifier/Makefile
+xpinstall/packager/Makefile
 xpinstall/public/Makefile
 xpinstall/res/Makefile
 xpinstall/src/Makefile
-xpinstall/notifier/Makefile
 xpfe/Makefile
 xpfe/AppCores/Makefile
 xpfe/AppCores/public/Makefile
