@@ -30,7 +30,7 @@
 
 // foward declarations...
 
-nsresult NS_MsgBuildMailtoUrl(const nsFilePath& aFilePath, const nsString& aSender, const nsString& aRecipients, nsIURL ** aUrl);
+nsresult NS_MsgBuildMailtoUrl(const nsFilePath& aFilePath, const nsString& aHostName, const nsString& aSender, const nsString& aRecipients, nsIURL ** aUrl);
 nsresult NS_MsgLoadMailtoUrl(nsIURL * aUrl, nsISupports * aConsumer);
 
 nsSmtpService::nsSmtpService()
@@ -43,13 +43,13 @@ nsSmtpService::~nsSmtpService()
 
 NS_IMPL_THREADSAFE_ISUPPORTS(nsSmtpService, nsISmtpService::IID());
 
-nsresult nsSmtpService::SendMailMessage(const nsFilePath& aFilePath,  const nsString& aSender, const nsString& aRecipients, nsIURL ** aURL)
+nsresult nsSmtpService::SendMailMessage(const nsFilePath& aFilePath, const nsString& aHostName, const nsString& aSender, const nsString& aRecipients, nsIURL ** aURL)
 {
 	nsIURL * urlToRun = nsnull;
 	nsresult rv = NS_OK;
 
 	NS_LOCK_INSTANCE();
-	rv = NS_MsgBuildMailtoUrl(aFilePath, aSender, aRecipients, &urlToRun); // this ref counts urlToRun
+	rv = NS_MsgBuildMailtoUrl(aFilePath, aHostName, aSender, aRecipients, &urlToRun); // this ref counts urlToRun
 	if (NS_SUCCEEDED(rv) && urlToRun)
 	{	
 		rv = NS_MsgLoadMailtoUrl(urlToRun, nsnull);
@@ -70,7 +70,7 @@ nsresult nsSmtpService::SendMailMessage(const nsFilePath& aFilePath,  const nsSt
 #define TEMP_DEFAULT_HOST "nsmail-2.mcom.com:25"
 
 // short cut function for creating a mailto url...
-nsresult NS_MsgBuildMailtoUrl(const nsFilePath& aFilePath, const nsString& aSender, const nsString& aRecipients, nsIURL ** aUrl)
+nsresult NS_MsgBuildMailtoUrl(const nsFilePath& aFilePath, const nsString& aHostName, const nsString& aSender, const nsString& aRecipients, nsIURL ** aUrl)
 {
 	// mscott: this function is a convience hack until netlib actually dispatches smtp urls.
 	// in addition until we have a session to get a password, host and other stuff from, we need to use default values....
@@ -83,9 +83,12 @@ nsresult NS_MsgBuildMailtoUrl(const nsFilePath& aFilePath, const nsString& aSend
 	{
 		// assemble a url spec...
 		char * recipients = aRecipients.ToNewCString();
-		char * urlSpec= PR_smprintf("mailto://%s/%s", TEMP_DEFAULT_HOST, recipients ? recipients : "");
+		char * hostName = aHostName.ToNewCString();
+		char * urlSpec= PR_smprintf("mailto://%s:%d/%s", hostName && *hostName ? hostName : TEMP_DEFAULT_HOST, 25, recipients ? recipients : "");
 		if (recipients)
 			delete [] recipients;
+		if (hostName)
+			delete [] hostName;
 		if (urlSpec)
 		{
 			smtpUrl->ParseURL(urlSpec);  // load the spec we were given...

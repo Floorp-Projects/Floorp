@@ -4920,7 +4920,7 @@ nsMsgSendMimeDeliveryState::DeliverFileAsMail ()
   if (NS_SUCCEEDED(rv) && smtpService)
   {	
 	  // mscott --> eventually we want to pass buf (minus the mailto: part) into here....
-	  rv = smtpService->SendMailMessage(filePath, m_fields->GetFrom(), buf, nsnull);
+	  rv = smtpService->SendMailMessage(filePath, "", m_fields->GetFrom(), buf, nsnull);
 	  nsServiceManager::ReleaseService(kSmtpServiceCID, smtpService);
   }
 
