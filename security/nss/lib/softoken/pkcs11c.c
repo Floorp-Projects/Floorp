@@ -174,55 +174,7 @@ static CK_RV
 pk11_CryptInit(CK_SESSION_HANDLE hSession, CK_MECHANISM_PTR pMechanism,
 		 CK_OBJECT_HANDLE hKey, CK_ATTRIBUTE_TYPE etype,
 		 PK11ContextType contextType, PRBool isEncrypt);
-/*
- * Calculate a Lynx checksum for CKM_LYNX_WRAP mechanism.
- */
-static CK_RV
-pk11_calcLynxChecksum(CK_SESSION_HANDLE hSession, CK_OBJECT_HANDLE hWrapKey,
-	unsigned char *checksum, unsigned char *key, CK_ULONG len)
-{
 
-    CK_BYTE E[10];
-    CK_ULONG Elen = sizeof (E);
-    CK_BYTE C[8];
-    CK_ULONG Clen = sizeof (C);
-    unsigned short sum1 = 0, sum2 = 0;
-    CK_MECHANISM mech = { CKM_DES_ECB, NULL, 0 };
-    int i;
-    CK_RV crv;
-
-    if (len != 8) return CKR_WRAPPED_KEY_LEN_RANGE;
-    
-    /* zero the parity bits */
-    for (i=0; i < 8; i++) {
-	sum1 = sum1 + key[i];
-	sum2 = sum2 + sum1;
-    }
-
-    /* encrypt with key 1 */
-
-    crv = pk11_CryptInit(hSession,&mech,hWrapKey,CKA_WRAP, PK11_ENCRYPT, 
-								PR_TRUE);
-    if (crv != CKR_OK) return crv;
-
-    crv = NSC_Encrypt(hSession,key,len,E,&Elen);
-    if (crv != CKR_OK) return crv;
-
-    E[8] = (sum2 >> 8) & 0xff;
-    E[9] = sum2 & 0xff;
-
-    crv = pk11_CryptInit(hSession,&mech,hWrapKey,CKA_WRAP, PK11_ENCRYPT, 
-								PR_TRUE);
-    if (crv != CKR_OK) return crv;
-
-    crv = NSC_Encrypt(hSession,&E[2],len,C,&Clen);
-    if (crv != CKR_OK) return crv;
-
-    checksum[0] = C[6];
-    checksum[1] = C[7];
-    
-    return CKR_OK;
-}
 /* NSC_DestroyObject destroys an object. */
 CK_RV
 NSC_DestroyObject(CK_SESSION_HANDLE hSession, CK_OBJECT_HANDLE hObject)
@@ -3476,8 +3428,6 @@ CK_RV NSC_WrapKey(CK_SESSION_HANDLE hSession,
     PK11Attribute *attribute;
     PK11Object *key;
     CK_RV crv;
-    PRBool isLynks = PR_FALSE;
-    CK_ULONG len = 0;
 
     session = pk11_SessionFromHandle(hSession);
     if (session == NULL) {
@@ -3498,11 +3448,6 @@ CK_RV NSC_WrapKey(CK_SESSION_HANDLE hSession,
 		crv = CKR_KEY_TYPE_INCONSISTENT;
 		break;
 	    }
-	    if (pMechanism->mechanism == CKM_KEY_WRAP_LYNKS) {
-		isLynks = PR_TRUE;
-		pMechanism->mechanism = CKM_DES_ECB;
-		len = *pulWrappedKeyLen;
-	    }
      
 	    crv = pk11_CryptInit(hSession, pMechanism, hWrappingKey, 
 					CKA_WRAP, PK11_ENCRYPT, PR_TRUE);
@@ -3513,17 +3458,6 @@ CK_RV NSC_WrapKey(CK_SESSION_HANDLE hSession,
 	    crv = NSC_Encrypt(hSession, (CK_BYTE_PTR)attribute->attrib.pValue, 
 		    attribute->attrib.ulValueLen,pWrappedKey,pulWrappedKeyLen);
 
-	    if (isLynks && (crv == CKR_OK)) {
-		unsigned char buf[2];
-		crv = pk11_calcLynxChecksum(hSession,hWrappingKey,buf,
-			(unsigned char*)attribute->attrib.pValue,
-			attribute->attrib.ulValueLen);
-		if (len >= 10) {
-		    pWrappedKey[8] = buf[0];
-		    pWrappedKey[9] = buf[1];
-		    *pulWrappedKeyLen = 10;
-		}
-	    }
 	    pk11_FreeAttribute(attribute);
 	    break;
 
@@ -3772,7 +3706,6 @@ CK_RV NSC_UnwrapKey(CK_SESSION_HANDLE hSession,
     PK11Slot *slot = pk11_SlotFromSessionHandle(hSession);
     SECItem bpki;
     CK_OBJECT_CLASS target_type = CKO_SECRET_KEY;
-    PRBool isLynks = PR_FALSE;
 
     /*
      * now lets create an object to hang the attributes off of
@@ -3801,13 +3734,6 @@ CK_RV NSC_UnwrapKey(CK_SESSION_HANDLE hSession,
 	return crv;
     }
 
-    /* LYNKS is a special key wrapping mechanism */
-    if (pMechanism->mechanism == CKM_KEY_WRAP_LYNKS) {
-	isLynks = PR_TRUE;
-	pMechanism->mechanism = CKM_DES_ECB;
-	ulWrappedKeyLen -= 2; /* don't decrypt the checksum */
-    }
-
     crv = pk11_CryptInit(hSession,pMechanism,hUnwrappingKey,CKA_UNWRAP,
 							PK11_DECRYPT, PR_FALSE);
     if (crv != CKR_OK) {
@@ -3833,19 +3759,6 @@ CK_RV NSC_UnwrapKey(CK_SESSION_HANDLE hSession,
 	    if (!pk11_hasAttribute(key,CKA_KEY_TYPE)) {
 		crv = CKR_TEMPLATE_INCOMPLETE;
 		break;
-	    }
-
-	    /* verify the Lynx checksum */
-	    if (isLynks) {
-		unsigned char checkSum[2];
-		crv = pk11_calcLynxChecksum(hSession,hUnwrappingKey,checkSum,
-								buf,bsize);
-		if (crv != CKR_OK) break;
-		if ((ulWrappedKeyLen != 8) || (pWrappedKey[8] != checkSum[0]) 
-			|| (pWrappedKey[9] != checkSum[1])) {
-		    crv = CKR_WRAPPED_KEY_INVALID;
-		    break;
-		}
 	    }
 
 	    if(key_length == 0) {
