@@ -263,7 +263,7 @@ echo"
 if ($application=="thunderbird") {
 echo"<SPAN style=\"font-size: 10pt; color: #00F\">Extension Install Instructions for Thunderbird Users:</SPAN><BR>
 <SPAN style=\"font-size: 8pt;\">(1) Right-Click the link above and choose \"Save Link As...\" to Download and save the file to your hard disk.<BR>
-(2) In Mozilla Thunderbird, open the theme manager (Tools Menu/Themes)<BR>
+(2) In Mozilla Thunderbird, open the extension manager (Tools Menu/Extensions)<BR>
 (3) Click the Install button, and locate/select the file you downloaded and click \"OK\"</SPAN><BR>
 ";
 }
