@@ -165,6 +165,10 @@ public:
                    const nsRect& aDirtyRect,
                    nsFramePaintLayer aWhichLayer);
 
+  /** nsIFrame method overridden to handle table specifics
+  */
+  NS_IMETHOD SetSelected(nsIDOMRange *aRange,PRBool aSelected, nsSpread aSpread);
+
   /** inner tables are reflowed in two steps.
     * <pre>
     * if mFirstPassValid is false, this is our first time through since content was last changed
@@ -186,6 +190,8 @@ public:
                     nsHTMLReflowMetrics&     aDesiredSize,
                     const nsHTMLReflowState& aReflowState,
                     nsReflowStatus&          aStatus);
+
+
 
   /** allow the cell and row attributes to effect the column frame
     * currently, the only reason this exists is to support the HTML "rule"

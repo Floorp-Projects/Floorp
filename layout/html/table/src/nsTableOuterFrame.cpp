@@ -217,6 +217,14 @@ NS_METHOD nsTableOuterFrame::Paint(nsIPresContext&      aPresContext,
   return NS_OK;
 }
 
+NS_IMETHODIMP nsTableOuterFrame::SetSelected(nsIDOMRange *aRange,PRBool aSelected, nsSpread aSpread)
+{
+  nsresult result = nsFrame::SetSelected(aRange,aSelected, aSpread);
+  if (NS_SUCCEEDED(result) && mInnerTableFrame)
+    return mInnerTableFrame->SetSelected(aRange,aSelected, aSpread);
+  return result;
+}
+
 PRBool nsTableOuterFrame::NeedsReflow(const nsHTMLReflowState& aReflowState, const nsSize& aMaxSize)
 {
   PRBool result=PR_TRUE;

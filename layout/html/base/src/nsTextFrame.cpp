@@ -239,7 +239,7 @@ public:
                          PRInt32&        aOffset);
 
 
-  NS_IMETHOD SetSelected(nsIDOMRange *aRange,PRBool aSelected, PRBool aSpread);
+  NS_IMETHOD SetSelected(nsIDOMRange *aRange,PRBool aSelected, nsSpread aSpread);
 
   NS_IMETHOD PeekOffset(nsSelectionAmount aAmount,
                         nsDirection aDirection,
@@ -1808,77 +1808,85 @@ nsTextFrame::GetPosition(nsIPresContext& aPresContext,
 // [HACK] Foward Declarations
 void ForceDrawFrame(nsFrame * aFrame);
 
+//null range means the whole thing
 NS_IMETHODIMP
-nsTextFrame::SetSelected(nsIDOMRange *aRange,PRBool aSelected, PRBool aSpread)
+nsTextFrame::SetSelected(nsIDOMRange *aRange,PRBool aSelected, nsSpread aSpread)
 {
-  if (!aRange)
-    return NS_ERROR_NULL_POINTER;
   nsresult result;
-  if (aSpread){
+  if (eSpreadAcross == aSpread){
     nsIFrame *frame = GetPrevInFlow();
     while(frame){
-      frame->SetSelected(aRange,aSelected,PR_FALSE);
+      frame->SetSelected(aRange,aSelected,eSpreadNone);
       result = frame->GetPrevInFlow(&frame);
       if (NS_FAILED(result))
         break;
     }
     frame = GetNextInFlow();
     while(frame){
-      frame->SetSelected(aRange,aSelected,PR_FALSE);
+      frame->SetSelected(aRange,aSelected,eSpreadNone);
       result = frame->GetNextInFlow(&frame);
       if (NS_FAILED(result))
         break;
     }
   }
-  //lets see if the range contains us, if so we must redraw!
-  nsCOMPtr<nsIDOMNode> endNode;
-  PRInt32 endOffset;
-  nsCOMPtr<nsIDOMNode> startNode;
-  PRInt32 startOffset;
-  aRange->GetEndParent(getter_AddRefs(endNode));
-  aRange->GetEndOffset(&endOffset);
-  aRange->GetStartParent(getter_AddRefs(startNode));
-  aRange->GetStartOffset(&startOffset);
-  nsCOMPtr<nsIContent> content;
-  result = GetContent(getter_AddRefs(content));
-  nsCOMPtr<nsIDOMNode> thisNode;
-  thisNode = do_QueryInterface(content);
-
-  PRBool found = PR_FALSE;
-  if (thisNode == startNode){
-    if ((mContentOffset + mContentLength) >= startOffset){
-      found = PR_TRUE;
-      if (thisNode == endNode){ //special case
-/*#ifndef SHOW_SELECTION_CURSOR
-        if (aSelected && (endOffset == startOffset)) //no need to redraw since drawing takes place with cursor
-          found = PR_FALSE;
-#endif
-*/
-        if (mContentOffset > endOffset)
-          found = PR_FALSE;
-      }
-    }
-  }
-  else if (thisNode == endNode){
-    if (mContentOffset < endOffset)
-      found = PR_TRUE;
-    else
-      found = PR_FALSE;
-  }
-  else
-    found = PR_TRUE;
   nsFrameState  frameState;
   GetFrameState(&frameState);
   if ( aSelected )
     frameState |=  NS_FRAME_SELECTED_CONTENT;
   else
     frameState &= ~NS_FRAME_SELECTED_CONTENT;
+
+  PRBool found = PR_FALSE;
+  if (aRange) {
+    //lets see if the range contains us, if so we must redraw!
+    nsCOMPtr<nsIDOMNode> endNode;
+    PRInt32 endOffset;
+    nsCOMPtr<nsIDOMNode> startNode;
+    PRInt32 startOffset;
+    aRange->GetEndParent(getter_AddRefs(endNode));
+    aRange->GetEndOffset(&endOffset);
+    aRange->GetStartParent(getter_AddRefs(startNode));
+    aRange->GetStartOffset(&startOffset);
+    nsCOMPtr<nsIContent> content;
+    result = GetContent(getter_AddRefs(content));
+    nsCOMPtr<nsIDOMNode> thisNode;
+    thisNode = do_QueryInterface(content);
+
+    if (thisNode == startNode){
+      if ((mContentOffset + mContentLength) >= startOffset){
+        found = PR_TRUE;
+        if (thisNode == endNode){ //special case
+  /*#ifndef SHOW_SELECTION_CURSOR
+          if (aSelected && (endOffset == startOffset)) //no need to redraw since drawing takes place with cursor
+            found = PR_FALSE;
+  #endif
+  */
+          if (mContentOffset > endOffset)
+            found = PR_FALSE;
+        }
+      }
+    }
+    else if (thisNode == endNode){
+      if (mContentOffset < endOffset)
+        found = PR_TRUE;
+      else
+        found = PR_FALSE;
+    }
+    else
+      found = PR_TRUE;
+  }
+  else {
+    if ( aSelected != (PRBool)(frameState | NS_FRAME_SELECTED_CONTENT) ){
+      found = PR_TRUE;
+    }
+  }
+
   SetFrameState(frameState);
   if (found){ //if range contains this frame...
     nsRect frameRect;
     GetRect(frameRect);
     nsRect rect(0, 0, frameRect.width, frameRect.height);
-    Invalidate(rect, PR_TRUE);
+    Invalidate(rect, PR_FALSE);
 //    ForceDrawFrame(this);
   }
   return NS_OK;

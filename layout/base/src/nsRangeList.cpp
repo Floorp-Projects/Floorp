@@ -759,7 +759,6 @@ if (!aGuiEvent)
     nsKeyEvent *keyEvent = (nsKeyEvent *)aGuiEvent; //this is ok. It really is a keyevent
     nsCOMPtr<nsIDOMNode> weakNodeUsed;
     PRInt32 offsetused = 0;
-    nsIFrame *resultFrame;
     nsSelectionAmount amount = eSelectCharacter;
     if (keyEvent->isControl)
       amount = eSelectWord;
@@ -782,7 +781,7 @@ if (!aGuiEvent)
           nsCOMPtr<nsIContent> content = do_QueryInterface(weakNodeUsed);
           if (content){
             result = mTracker->GetPrimaryFrameFor(content, &frame);
-            if (NS_SUCCEEDED(result) && NS_SUCCEEDED(frame->PeekOffset(amount, eDirPrevious, offsetused, getter_AddRefs(content), &offsetused, PR_FALSE)) && resultFrame){
+            if (NS_SUCCEEDED(result) && NS_SUCCEEDED(frame->PeekOffset(amount, eDirPrevious, offsetused, getter_AddRefs(content), &offsetused, PR_FALSE)) && content){
               result = TakeFocus(content, offsetused, offsetused, keyEvent->isShift);
             }
             result = ScrollIntoView();
@@ -807,7 +806,7 @@ if (!aGuiEvent)
           nsCOMPtr<nsIContent> content = do_QueryInterface(weakNodeUsed);
           if (content){
             result = mTracker->GetPrimaryFrameFor(content, &frame);
-            if (NS_SUCCEEDED(result) && NS_SUCCEEDED(frame->PeekOffset(amount, eDirNext, offsetused, getter_AddRefs(content), &offsetused, PR_FALSE)) && resultFrame){
+            if (NS_SUCCEEDED(result) && NS_SUCCEEDED(frame->PeekOffset(amount, eDirNext, offsetused, getter_AddRefs(content), &offsetused, PR_FALSE)) && content){
               result = TakeFocus(content, offsetused, offsetused, keyEvent->isShift);
             }
             result = ScrollIntoView();
@@ -900,7 +899,7 @@ nsRangeList::selectFrames(nsIDOMRange *aRange, PRBool aFlags)
         return result;
       result = mTracker->GetPrimaryFrameFor(content, &frame);
       if (NS_SUCCEEDED(result) && frame)
-         frame->SetSelected(aRange,aFlags,PR_TRUE);//spread from here to hit all frames in flow
+         frame->SetSelected(aRange,aFlags,eSpreadAcross);//spread from here to hit all frames in flow
       result = iter->Next();
       if (NS_FAILED(result))
       	return result;

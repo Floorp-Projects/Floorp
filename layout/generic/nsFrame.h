@@ -208,7 +208,7 @@ public:
   NS_IMETHOD  GetFrameName(nsString& aResult) const;
   NS_IMETHOD  DumpRegressionData(FILE* out, PRInt32 aIndent);
   NS_IMETHOD  VerifyTree() const;
-  NS_IMETHOD  SetSelected(nsIDOMRange *aRange,PRBool aSelected, PRBool aSpread);
+  NS_IMETHOD  SetSelected(nsIDOMRange *aRange,PRBool aSelected, nsSpread aSpread);
   NS_IMETHOD  GetSelected(PRBool *aSelected) const;
   NS_IMETHOD  PeekOffset(nsSelectionAmount aAmount,
                         nsDirection aDirection,
