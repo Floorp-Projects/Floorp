@@ -1,0 +1,140 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ *
+ * The contents of this file are subject to the Mozilla Public
+ * License Version 1.1 (the "License"); you may not use this file
+ * except in compliance with the License. You may obtain a copy of
+ * the License at http://www.mozilla.org/MPL/
+ * 
+ * Software distributed under the License is distributed on an "AS
+ * IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+ * implied. See the License for the specific language governing
+ * rights and limitations under the License.
+ * 
+ * The Original Code is mozilla.org code.
+ * 
+ * The Initial Developer of the Original Code is Netscape
+ * Communications Corporation. Portions created by Netscape are
+ * Copyright (C) 1999-2000 Netscape Communications Corporation. All
+ * Rights Reserved.
+ * 
+ * Contributor(s): 
+ *   Stuart Parmenter <pavlov@netscape.com>
+ */
+
+#include "nsISupports.idl"
+
+interface nsIURL;
+interface nsIFileURL;
+interface nsILocalFile;
+interface nsIDOMWindowInternal;
+
+/**
+ * nsIFilePicker interface
+ *
+ * @author Stuart Parmenter <pavlov@netscape.com>
+ * @version 1.1
+ * @note Need to look at changing filtering for gfx2.  Talk to Mike Pinkerton <pinkerton@netscape.com> about this.
+ * @see "gfx2"
+ **/
+[scriptable, uuid(0db4f996-1dd2-11b2-99b7-b7c666fe92f8)]
+interface nsIFilePicker : nsISupports
+{
+  /**
+   * File picker modes
+   * @name init_modes
+   * @see init()
+   */
+  //@{
+  const short modeOpen        = 0;              // Load a file or directory
+  const short modeSave        = 1;              // Save a file or directory
+  const short modeGetFolder   = 2;              // Select a fodler/directory
+  //@}
+
+  /**
+   * Return values from show()
+   * @name show_returns
+   * @see show()
+   */
+  //@{
+  const short returnOK        = 0;              // User hit cancel, ignore selection
+  const short returnCancel    = 1;              // User hit Ok, process selection
+  const short returnReplace   = 2;              // User acknowledged file already exists so ok to replace, process selection
+  //@}
+
+  /**
+   * Pre-defined filter types
+   * @name filter_types
+   * @see appendFilters()
+   */
+  //@{
+  const long filterAll        = 0x01;           // *.*
+  const long filterHTML       = 0x02;           // *.html; *.htm
+  const long filterText       = 0x04;           // *.txt
+  const long filterImages     = 0x08;           // *.png; *.gif; *.jpg; *.jpeg
+  const long filterXML        = 0x10;           // *.xml
+  const long filterXUL        = 0x20;           // *.xul
+  //@}
+
+
+  /**
+   * Initialize the file widget.
+   *
+   * @param      parent   nsIDOMWindowInternal parent.  This dialog should be dependant on this parent.
+   * @param      title    The title for the file widget
+   * @param      mode     load, save, or get folder
+   *
+   */
+  void init(in nsIDOMWindowInternal parent, [const] in wstring title, in short mode);
+
+  /**
+   * Append to the  filter list with things from the predefined list
+   *
+   * @param      filters  mask of filters i.e. (filterAll | filterHTML)
+   *
+   */
+  void appendFilters(in long filterMask);
+
+  /**
+   * Add a filter
+   *
+   * @param      title    name of the filter
+   * @param      filter   extentions to filter -- semicolon and space seperated
+   *
+   */
+  void appendFilter(in wstring title,
+                    in wstring filter);
+
+  /* what is this? */
+  attribute wstring defaultString;
+
+  /**
+   * Set the directory that the file open/save dialog initially displays
+   *
+   * @param      displayDirectory  the name of the directory
+   *
+   */
+  attribute nsILocalFile displayDirectory;
+
+
+  /**
+   * Get the nsILocalFile for the file or directory.
+   *
+   * @return Returns the file currently selected
+   */
+  readonly attribute nsILocalFile file;
+
+  /**
+   * Get the nsIFileURL for the file or directory.
+   *
+   * @return Returns the file currently selected
+   */
+  readonly attribute nsIFileURL fileURL;
+
+  /**
+   * Show File Dialog. The dialog is displayed modally.
+   *
+   * @return returnOK if the user selects OK, returnCancel if the user selects cancel
+   *
+   */
+  short show();
+};

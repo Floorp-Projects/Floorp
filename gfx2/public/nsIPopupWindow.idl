@@ -1,0 +1,76 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ *
+ * The contents of this file are subject to the Mozilla Public
+ * License Version 1.1 (the "License"); you may not use this file
+ * except in compliance with the License. You may obtain a copy of
+ * the License at http://www.mozilla.org/MPL/
+ * 
+ * Software distributed under the License is distributed on an "AS
+ * IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+ * implied. See the License for the specific language governing
+ * rights and limitations under the License.
+ * 
+ * The Original Code is mozilla.org code.
+ * 
+ * The Initial Developer of the Original Code is Netscape
+ * Communications Corporation. Portions created by Netscape are
+ * Copyright (C) 2000 Netscape Communications Corporation. All
+ * Rights Reserved.
+ * 
+ * Contributor(s): 
+ *   Stuart Parmenter <pavlov@netscape.com>
+ *   Rod Spears <rods@netscape.com>
+ *   Kevin McCluskey <kmcclusk@netscape.com>
+ *   Mike Pinkerton <pinkerton@netscape.com>
+ *   ... and other people
+ */
+
+#include "nsISupports.idl"
+#include "gfxtypes.idl"
+
+interface nsIWindow;
+interface nsIPixmap;
+
+/**
+ * nsIPopupWindow interface
+ *
+ * @author Stuart Parmenter <pavlov@netscape.com>
+ * @version 0.0
+ * @see nsIWindow
+ * @see "gfx2"
+ **/
+[scriptable, uuid(4a210674-1dd2-11b2-8451-dbd941f8d393)]
+interface nsIPopupWindow : nsISupports
+{
+  /**
+   * Initialize a popup window
+   * The popup window represents a window that can be drawn into via
+   * a query interface to nsIDrawable
+   * @see nsIDrawable
+   *
+   * @param aParent  the parent window
+   * @param aX       the x position, in pixels, relative to aParent.
+   * @param aY       the y position, in pixels, relative to aParent.
+   * @param aWidth   the width, in pixels, of the window.
+   * @param aHeight  the height, in pixels, of the window.
+   */
+  void init(in nsIWindow aParent,
+            in gfx_coord aX,
+            in gfx_coord aY,
+            in gfx_dimension aWidth,
+            in gfx_dimension aHeight);
+
+  /**
+   * Bring the window to the top (infront of all other windows)
+   */
+  void bringToTop();
+
+  /**
+   * eeeeeek!
+   * @attention NEEDS DOCS
+   * @warning this may not be implemented on all platforms
+   * @exception NS_ERROR_NOT_IMPLEMENTED If this is not implemented.
+   */
+  void setTransparency(in nsIPixmap mask);
+};
+

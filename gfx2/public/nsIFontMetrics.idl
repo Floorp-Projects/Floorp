@@ -1,0 +1,221 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ *
+ * The contents of this file are subject to the Mozilla Public
+ * License Version 1.1 (the "License"); you may not use this file
+ * except in compliance with the License. You may obtain a copy of
+ * the License at http://www.mozilla.org/MPL/
+ * 
+ * Software distributed under the License is distributed on an "AS
+ * IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+ * implied. See the License for the specific language governing
+ * rights and limitations under the License.
+ * 
+ * The Original Code is mozilla.org code.
+ * 
+ * The Initial Developer of the Original Code is Netscape
+ * Communications Corporation. Portions created by Netscape are
+ * Copyright (C) 2000 Netscape Communications Corporation. All
+ * Rights Reserved.
+ * 
+ * Contributor(s): 
+ *   Stuart Parmenter <pavlov@netscape.com>
+ *   Erik van der Poel <erik@netscape.com>
+ */
+
+#include "nsISupports.idl"
+#include "gfxtypes.idl"
+
+interface nsIAtom;
+
+typedef voidPtr nsFontHandle;
+
+/**
+ * Font metrics interface
+ *
+ * This interface may be somewhat misnamed. A better name might be
+ * nsIFontList. The style system uses the nsFont struct for various font
+ * properties, one of which is font-family, which can contain a *list* of
+ * font names. The nsFont struct is "realized" by asking the device context
+ * to cough up an nsIFontMetrics object, which contains a list of real font
+ * handles, one for each font mentioned in font-family (and for each fallback
+ * when we fall off the end of that list).
+ *
+ * The style system needs to have access to certain metrics, such as the
+ * em height (for the CSS "em" unit), and we use the first Western font's
+ * metrics for that purpose. The platform-specific implementations are
+ * expected to select non-Western fonts that "fit" reasonably well with the
+ * Western font that is loaded at Init time.
+ *
+ * @version 1.1
+ */
+
+[scriptable, uuid(ff47d78c-1dd1-11b2-839b-b4ba9c43f22a)]
+interface nsIFontMetrics : nsISupports
+{
+  /**
+   * Initialize the font metrics. Call this after creating the font metrics.
+   * Font metrics you get from the font cache do NOT need to be initialized
+   *
+   * @see nsIOutputDevice#getFontMetrics()
+   */
+  [noscript] void init([const] in nsFont aFont,
+                       in nsIAtom aLangGroup);
+
+
+  /**
+   * Returns the width (in app units) of a unicode character
+   * If no font has been Set, the results are undefined.
+   * @param aString string to measure
+   * @param aLength number of characters in string
+   * @return width
+   */
+  gfx_coord getCharWidth([const] in PRUnichar aChar);
+
+  /**
+   * Returns the width (in app units) of an 8-bit character
+   * If no font has been Set, the results are undefined.
+   * @param aString string to measure
+   * @param aLength number of characters in string
+   * @return width
+   */ 
+  gfx_coord getCCharWidth([const] in char aChar);
+
+  /**
+   * Returns the width (in app units) of a Unicode character string
+   * If no font has been Set, the results are undefined.
+   * @param aString string to measure
+   * @param aLength number of characters in string
+   * @return width
+   */
+  gfx_coord getStringWidth([const] in wstring aString,
+                           in long aLength);
+
+  /**
+   * Returns the width (in app units) of an 8-bit character string
+   * If no font has been Set, the results are undefined.
+   * @param aString string to measure
+   * @param aLength number of characters in string
+   * @return width
+   */
+  gfx_coord getCStringWidth([const] in string aString,
+                            in long aLength);
+
+  /**
+   * Return the font's italic slope, i.e., the tangent of the italic angle.
+   * The slope = 0 for an upright font. It is > 0 for a forward-slanted
+   * font (italic style) and is < 0 for a back-slanted font.
+   */
+  readonly attribute float italicSlope;
+
+  /**
+   * Return the font's xheight property, scaled into app-units.
+   */
+  readonly attribute gfx_coord XHeight;
+
+  /**
+   * Return the font's superscript offset (the distance from the
+   * baseline to where a superscript's baseline should be placed). The
+   * value returned will be a positive value.
+   */
+  readonly attribute gfx_coord superscriptOffset;
+
+  /**
+   * Return the font's subscript offset (the distance from the
+   * baseline to where a subscript's baseline should be placed). The
+   * value returned will be a positive value.
+   */
+  readonly attribute gfx_coord subscriptOffset;
+
+  /**
+   * Return the font's strikeout offset (the distance from the 
+   * baseline to where a strikeout should be placed) and size
+   * Positive values are above the baseline, negative below.
+   */
+  void getStrikeout(out gfx_coord aOffset, out gfx_coord aSize);
+
+  /**
+   * Return the font's underline offset (the distance from the 
+   * baseline to where a underline should be placed) and size.
+   * Positive values are above the baseline, negative below.
+   */
+  void getUnderline(out gfx_coord aOffset, out gfx_coord aSize);
+
+  /**
+   * Returns the height (in app units) of the font. This is ascent plus descent
+   * plus any internal leading
+   *
+   * This method will be removed once the callers have been moved over to the
+   * new GetEmHeight (and possibly GetMaxHeight).
+   */
+  readonly attribute gfx_coord height;
+
+  /**
+   * Returns the normal line height (em height + leading).
+   */
+  readonly attribute gfx_coord normalLineHeight;
+
+  /**
+   * Returns the amount of internal leading (in app units) for the font. This
+   * is computed as the "height  - (ascent + descent)"
+   */
+  readonly attribute gfx_coord leading;
+
+  /**
+   * Returns the height (in app units) of the Western font's em square. This is
+   * em ascent plus em descent.
+   */
+  readonly attribute gfx_coord emHeight;
+
+  /**
+   * Returns, in app units, the ascent part of the Western font's em square.
+   */
+  readonly attribute gfx_coord emAscent;
+
+  /**
+   * Returns, in app units, the descent part of the Western font's em square.
+   */
+  readonly attribute gfx_coord emDescent;
+
+  /**
+   * Returns the height (in app units) of the Western font's bounding box.
+   * This is max ascent plus max descent.
+   */
+  readonly attribute gfx_coord maxHeight;
+
+  /**
+   * Returns, in app units, the maximum distance characters in this font extend
+   * above the base line.
+   */
+  readonly attribute gfx_coord maxAscent;
+
+  /**
+   * Returns, in app units, the maximum distance characters in this font extend
+   * below the base line.
+   */
+  readonly attribute gfx_coord maxDescent;
+
+  /**
+   * Returns, in app units, the maximum character advance for the font
+   */
+  readonly attribute gfx_coord maxAdvance;
+
+  /**
+   * Returns the font associated with these metrics
+   */
+  [noscript] readonly attribute nsFont font;
+
+  /**
+   * Returns the language group associated with these metrics
+   */
+  readonly attribute nsIAtom langGroup;
+
+  /**
+   * Returns the font handle associated with these metrics
+   */
+  [noscript] readonly attribute nsFontHandle fontHandle;
+
+  /**
+   * Returns the average character width
+   */
+  readonly attribute gfx_coord aveCharWidth;
+};
