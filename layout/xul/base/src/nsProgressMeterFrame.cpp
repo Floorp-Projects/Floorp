@@ -181,8 +181,8 @@ nsProgressMeterFrame :: nsProgressMeterFrame ( )
 	NS_ADDREF(gStripeAnimator);
 
 	mProgress = float(0.0);
-	mHorizontal = true;
-	mUndetermined = false;
+	mHorizontal = PR_TRUE;
+	mUndetermined = PR_FALSE;
 	mStripeOffset = 0;
 }
 
@@ -246,7 +246,7 @@ nsProgressMeterFrame::setProgress(nsAutoString progress)
 }
 
 void
-nsProgressMeterFrame::setSize(nsAutoString sizeString, int& size, bool& isPercent)
+nsProgressMeterFrame::setSize(nsAutoString sizeString, int& size, PRBool& isPercent)
 {
 	// -1 means unset
 	size = -1;
@@ -259,9 +259,9 @@ nsProgressMeterFrame::setSize(nsAutoString sizeString, int& size, bool& isPercen
 	sizeString.ToCString(w,100);
     
 	if (w[length-1] == '%')
-		isPercent = true;
+		isPercent = PR_TRUE;
 	else
-		isPercent = false;
+		isPercent = PR_FALSE;
 
 	// convert to and integer
 	PRInt32 error;
@@ -286,18 +286,18 @@ void
 nsProgressMeterFrame::setAlignment(nsAutoString progress)
 {
     if (progress.EqualsIgnoreCase("vertical"))
-		mHorizontal = false;
+		mHorizontal = PR_FALSE;
     else
-		mHorizontal = true;
+		mHorizontal = PR_TRUE;
 }
 
 void
 nsProgressMeterFrame::setMode(nsAutoString mode)
 {
     if (mode.EqualsIgnoreCase("undetermined"))
-		mUndetermined = true;
+		mUndetermined = PR_TRUE;
     else
-		mUndetermined = false;
+		mUndetermined = PR_FALSE;
 }
 
 
@@ -555,7 +555,7 @@ nsProgressMeterFrame::PaintBarStripped(nsIPresContext& aPresContext, nsIRenderin
 
   nsRect sr(rect.x,rect.y,stripeWidthInTwips,rect.height);
 
-  bool onoff = false;
+  PRBool onoff = PR_FALSE;
   nscolor c;
 
 

@@ -46,6 +46,8 @@
 #include "nsIStyleContext.h"
 #include "nsIPresContext.h"
 
+#include "prtypes.h"
+
 class nsIPresContext;
 class nsIStyleContext;
 
@@ -126,11 +128,11 @@ private:
   void setProgress(nsAutoString progress);
   void setAlignment(nsAutoString alignment);
   void setMode(nsAutoString mode);
-  void setSize(nsAutoString s, int& size, bool& isPercent);
+  void setSize(nsAutoString s, int& size, PRBool& isPercent);
 
   nsCOMPtr<nsIStyleContext>    mBarStyle;
-  float mProgress;
-  bool  mHorizontal;
-  bool  mUndetermined;
-  int   mStripeOffset;
+  float   mProgress;
+  PRBool  mHorizontal;
+  PRBool  mUndetermined;
+  int     mStripeOffset;
 }; // class nsProgressMeterFrame
