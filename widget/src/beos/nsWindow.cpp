@@ -43,8 +43,6 @@
 #include <app/Message.h>
 #include <app/MessageRunner.h>
 
-#include "nsBeOSCursors.h"
-
 #ifdef DRAG_DROP
 //#include "nsDropTarget.h"
 #include "DragDrop.h"
@@ -846,7 +844,6 @@ NS_METHOD nsWindow::Show(PRBool bState)
 
 NS_METHOD nsWindow::CaptureRollupEvents(nsIRollupListener * aListener, PRBool aDoCapture, PRBool aConsumeRollupEvent)
 {
-  return NS_OK;
 }
 
 //-------------------------------------------------------------------------
@@ -1176,120 +1173,84 @@ NS_METHOD nsWindow::SetFont(const nsFont &aFont)
 
 NS_METHOD nsWindow::SetCursor(nsCursor aCursor)
 {
-  if(!mView)
-  {
-    return NS_ERROR_FAILURE;
-  }
-  
+ 
   // Only change cursor if it's changing
-  if (aCursor != mCursor)
-  {
-    BCursor const *newCursor = B_CURSOR_SYSTEM_DEFAULT;
-      
-    switch (aCursor)
-    {
-      case eCursor_standard:
-        newCursor = B_CURSOR_SYSTEM_DEFAULT;
-        break;
-              
-      case eCursor_wait:
-        newCursor = B_CURSOR_WAIT;
-        break;
-      
-      case eCursor_select:
-        newCursor = B_CURSOR_I_BEAM;
-        break;
-      
-      case eCursor_hyperlink:
-        newCursor = B_CURSOR_HYPERLINK;
-        break;
-      
-      case eCursor_sizeWE:
-        newCursor = B_CURSOR_WESTEAST;
-        break;
-      
-      case eCursor_sizeNS:
-        newCursor = B_CURSOR_NORTHSOUTH;
-        break;
-      
-      case eCursor_sizeNW:
-        newCursor = B_CURSOR_NORTHWEST;
-        break;
-      
-      case eCursor_sizeSE:
-        newCursor = B_CURSOR_SOUTHEAST;
-        break;
-      
-      case eCursor_sizeNE:
-        newCursor = B_CURSOR_NORTHEAST;
-        break;
-          
-      case eCursor_sizeSW:
-        newCursor = B_CURSOR_SOUTHWEST;
-        break;
-        
-      case eCursor_arrow_north:
-      case eCursor_arrow_north_plus:
-        newCursor = B_CURSOR_NORTH;
-        break;
-        
-      case eCursor_arrow_south:
-      case eCursor_arrow_south_plus:
-        newCursor = B_CURSOR_SOUTH;
-        break;
-        
-      case eCursor_arrow_east:
-      case eCursor_arrow_east_plus:
-        newCursor = B_CURSOR_EAST;
-        break;
-        
-      case eCursor_arrow_west:
-      case eCursor_arrow_west_plus:
-        newCursor = B_CURSOR_WEST;
-        break;
-             
-      case eCursor_spinning:
-        newCursor = B_CURSOR_SPINNING;
-        break;
 
-      case eCursor_crosshair:
-        newCursor = B_CURSOR_CROSS;
-        break;
+  //XXX mCursor isn't always right.  Scrollbars and others change it, too.
+  //XXX If we want this optimization we need a better way to do it.
+  //if (aCursor != mCursor) {
+//    HCURSOR newCursor = NULL;
+
+    switch(aCursor) {
+    case eCursor_select:
+//      newCursor = ::LoadCursor(NULL, IDC_IBEAM);
+      break;
       
-      case eCursor_help:
-        newCursor = B_CURSOR_HELP;
-        break;
-        
-      case eCursor_grab:
-      case eCursor_grabbing:
-        newCursor = B_CURSOR_GRAB;
-        break;
-        
-      case eCursor_move:
-        newCursor = B_CURSOR_MOVE;
-        break;
-        
-      case eCursor_copy:
-        newCursor = B_CURSOR_COPY;
-        break;
-        
-      case eCursor_alias:
-        newCursor = B_CURSOR_ALIAS;
-        break;
-        
-      default:
-        NS_ASSERTION(0, "Invalid cursor type");
-        break;
+    case eCursor_wait:
+//      newCursor = ::LoadCursor(NULL, IDC_WAIT);
+      break;
+
+    case eCursor_hyperlink: {
+//      newCursor = ::LoadCursor(nsToolkit::mDllInstance, MAKEINTRESOURCE(IDC_SELECTANCHOR));
+      break;
     }
-    
-    if (mView && mView->LockLooper())
-    {
+
+    case eCursor_standard:
+//      newCursor = ::LoadCursor(NULL, IDC_ARROW);
+      break;
+
+    case eCursor_sizeWE:
+//      newCursor = ::LoadCursor(NULL, IDC_SIZEWE);
+      break;
+
+    case eCursor_sizeNS:
+//      newCursor = ::LoadCursor(NULL, IDC_SIZENS);
+      break;
+
+    case eCursor_arrow_north:
+//      newCursor = ::LoadCursor(nsToolkit::mDllInstance, MAKEINTRESOURCE(IDC_ARROWNORTH));
+      break;
+
+    case eCursor_arrow_north_plus:
+//      newCursor = ::LoadCursor(nsToolkit::mDllInstance, MAKEINTRESOURCE(IDC_ARROWNORTHPLUS));
+      break;
+
+    case eCursor_arrow_south:
+//      newCursor = ::LoadCursor(nsToolkit::mDllInstance, MAKEINTRESOURCE(IDC_ARROWSOUTH));
+      break;
+
+    case eCursor_arrow_south_plus:
+//      newCursor = ::LoadCursor(nsToolkit::mDllInstance, MAKEINTRESOURCE(IDC_ARROWSOUTHPLUS));
+      break;
+
+    case eCursor_arrow_east:
+//      newCursor = ::LoadCursor(nsToolkit::mDllInstance, MAKEINTRESOURCE(IDC_ARROWEAST));
+      break;
+
+    case eCursor_arrow_east_plus:
+//      newCursor = ::LoadCursor(nsToolkit::mDllInstance, MAKEINTRESOURCE(IDC_ARROWEASTPLUS));
+      break;
+
+    case eCursor_arrow_west:
+//      newCursor = ::LoadCursor(nsToolkit::mDllInstance, MAKEINTRESOURCE(IDC_ARROWWEST));
+      break;
+
+    case eCursor_arrow_west_plus:
+//      newCursor = ::LoadCursor(nsToolkit::mDllInstance, MAKEINTRESOURCE(IDC_ARROWWESTPLUS));
+      break;
+
+    default:
+      NS_ASSERTION(0, "Invalid cursor type");
+      break;
+    }
+
+#if 0
+    if (NULL != newCursor) {
       mCursor = aCursor;
-      mView->SetViewCursor(newCursor, true);
-      mView->UnlockLooper();
+      HCURSOR oldCursor = ::SetCursor(newCursor);
     }
-  }
-
+#endif
+  //}
   return NS_OK;
 }
     
