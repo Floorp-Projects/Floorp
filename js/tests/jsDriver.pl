@@ -51,11 +51,12 @@ local $opt_bug_url = "http://bugzilla.mozilla.org/show_bug.cgi?id=";
 local $opt_trace = 0;
 local $opt_console_failures = 0;
 local $opt_lxr_url = "http://lxr.mozilla.org/mozilla/source/js/tests/";
+local $opt_exit_munge = 1;
 
 # command line option definition
 local $options = "b=s bugurl>b c=s classpath>c e=s engine>e f=s file>f " .
   "h help>h i j=s javapath>j k confail>k l=s list>l L=s neglist>L " .
-  "p=s testpath>p s=s shellpath>s t trace>t u=s lxrurl>u";
+  "p=s testpath>p s=s shellpath>s t trace>t u=s lxrurl>u x noexitmunge>x";
 
 &parse_args;
 
@@ -151,10 +152,16 @@ sub execute_tests {
               " 2>&1 |");	
         @output = <OUTPUT>;
         close (OUTPUT);
-        
-        # signal information in the lower 8 bits, exit code above that
-        $got_exit = ($? >> 8);
-        $exit_signal = ($? & 255);
+
+        if ($opt_exit_munge == 1) {
+            # signal information in the lower 8 bits, exit code above that
+            $got_exit = ($? >> 8);
+            $exit_signal = ($? & 255);
+        } else {
+            # user says not to munge the exit code
+            $got_exit = $?;
+            $exit_signal = 0;
+        }
 
         $failure_lines = "";
         $bug_line = "";
@@ -363,9 +370,6 @@ sub parse_args {
             
         } elsif ($option eq "s") {
             $opt_shell_path = $value;
-            if (!($opt_shell_path =~ /[\/\\]$/)) {
-                $opt_shell_path .= "/";
-            }
             &dd ("opt: setting shell path to '$opt_shell_path'.");
             
         } elsif ($option eq "t") {
@@ -376,6 +380,10 @@ sub parse_args {
         } elsif ($option eq "u") {
             &dd ("opt: setting lxr url to '$value'.");
             $opt_lxr_url = $value;
+            
+        } elsif ($option eq "x") {
+            &dd ("opt: turning off exit munging.");
+            $opt_exit_munge = 0;
             
         } else {
             &usage;
@@ -425,7 +433,10 @@ sub usage {
        "(-s|--shellpath) <path>   Location of JavaScript shell.\n" .
        "(-t|--trace)              Trace script execution.\n" .
        "(-u|--lxrurl) <url>       Complete URL to tests subdirectory on lxr.\n" .
-       "                          (default is $opt_lxr_url)\n\n");    
+       "                          (default is $opt_lxr_url)\n"
+       "(-x|--noexitmunge) <url>  Don't do exit code munging (try this if it\n" .
+       "                          seems like your exit codes are turning up\n" .
+       "                          as exit signals.\n");
     exit (1);
     
 }
