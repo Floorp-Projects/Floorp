@@ -1,0 +1,38 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN" "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en">
+<head>
+	<title>Testcase for bug 282754</title>
+
+	<style type="text/css">
+		p {
+			width: 329px;
+			height: 25px;
+			position: relative;
+			background: red;
+		}
+
+		p.with-overflow-hidden
+		{
+			overflow: hidden;
+		}
+
+		span {
+			background: lime;
+			position: absolute;
+			width: 100%;
+			height: 100%;
+		}
+
+
+	</style>
+
+</head>
+
+<body>
+
+<p class="with-overflow-hidden"><span></span>Test</p>
+
+<p class="without-overflow-hidden"><span></span>Test</p>
+
+</body>
+</html>
