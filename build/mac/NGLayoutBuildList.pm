@@ -696,7 +696,7 @@ sub MakeResourceAliases()
 		_InstallResources(":mozilla:xpfe:components:search:resources:locale:en-US:MANIFEST",		"$search_locale_chrome_dir");
 
 		# Make copies (not aliases) of the various search files
-		_InstallResources(":mozilla:xpfe:components:search:datasets:MANIFEST",			"${search_locale_chrome_dir}Search Plugins", 1);
+		_InstallResources(":mozilla:xpfe:components:search:datasets:MANIFEST",			"${dist_dir}Search Plugins", 1);
 	}
 	{
 		my($sidebar_content_chrome_dir) = "$communicator_content_chrome_dir"."sidebar:";
