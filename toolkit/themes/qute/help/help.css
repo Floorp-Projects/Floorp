@@ -63,11 +63,11 @@ menubutton:not([disabled="true"]):hover:active {
 # All toolbar button images are 30x30 for the Help Viewer.
 #
  #help-back-button { -moz-image-region: rect(0px 30px 30px 0px); }
- #help-back-button[buttonover="true"] { -moz-image-region: rect(30px 30px 60px 0px); }
+ #help-back-button:hover { -moz-image-region: rect(30px 30px 60px 0px); }
  #help-back-button[disabled="true"] { -moz-image-region: rect(60px 30px 90px 0px); }
 
  #help-forward-button { -moz-image-region: rect(0px 60px 30px 30px); }
- #help-forward-button[buttonover="true"] { -moz-image-region: rect(30px 60px 60px 30px); }
+ #help-forward-button:hover { -moz-image-region: rect(30px 60px 60px 30px); }
  #help-forward-button[disabled="true"] { -moz-image-region: rect(60px 60px 90px 30px); }
 
  #help-find-button { -moz-image-region: rect(0px 240px 30px 210px); }
@@ -89,11 +89,11 @@ menubutton:not([disabled="true"]):hover:active {
  #help-zoom-small-button:hover { -moz-image-region: rect(30px 60px 60px 30px); }
 
  #help-sidebar-button { -moz-image-region: rect(0px 90px 60px 60px); }
- #help-sidebar-button { -moz-image-region: rect(30px 90px 60px 60px); }
+ #help-sidebar-button:hover { -moz-image-region: rect(30px 90px 60px 60px); }
 
 # ** Toolbar Customization stuff **
 toolbar[mode="icons"] > toolbarbutton > .toolbarbutton-icon,
-toolbar[mode="text"] > toolbarbutton > .toolbarbutton-text 
+toolbar[mode="text"] > toolbarbutton > .toolbarbutton-text,
 toolbar[mode="icons"] > toolbarbutton[type="menu-button"] > .toolbarbutton-icon,
 toolbar[mode="text"] > toolbarbutton[type="menu-button"] > .toolbarbutton-text {
 	display: -moz-box;
