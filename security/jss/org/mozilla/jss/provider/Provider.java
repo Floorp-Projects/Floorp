@@ -76,7 +76,7 @@ public class Provider extends java.security.Provider {
         /////////////////////////////////////////////////////////////
         // SecureRandom
         /////////////////////////////////////////////////////////////
-        put("mozilla.pkcs11.prng",
+        put("SecureRandom.pkcs11prng",
             "org.mozilla.jss.provider.PKCS11SecureRandom");
     }
 }
