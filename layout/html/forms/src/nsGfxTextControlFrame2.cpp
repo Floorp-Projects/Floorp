@@ -2675,7 +2675,13 @@ nsGfxTextControlFrame2::GetEditor(nsIEditor **aEditor)
   return NS_OK;
 }
 
-
+NS_IMETHODIMP
+nsGfxTextControlFrame2::OwnsValue(PRBool* aOwnsValue)
+{
+  NS_PRECONDITION(aOwnsValue, "aOwnsValue must be non-null");
+  *aOwnsValue = mUseEditor;
+  return NS_OK;
+}
 
 NS_IMETHODIMP
 nsGfxTextControlFrame2::GetTextLength(PRInt32* aTextLength)
@@ -3307,10 +3313,19 @@ void nsGfxTextControlFrame2::GetTextControlFrameState(nsAWritableString& aValue)
   else
   {
     // Otherwise get the value from content.
-    nsCOMPtr<nsITextControlElement> control = do_QueryInterface(mContent);
-    if (control)
+    nsCOMPtr<nsIDOMHTMLInputElement> inputControl = do_QueryInterface(mContent);
+    if (inputControl)
     {
-      control->GetValueInternal(aValue);
+      inputControl->GetValue(aValue);
+    }
+    else
+    {
+      nsCOMPtr<nsIDOMHTMLTextAreaElement> textareaControl
+          = do_QueryInterface(mContent);
+      if (textareaControl)
+      {
+        textareaControl->GetValue(aValue);
+      }
     }
   }
 }
@@ -3386,11 +3401,20 @@ nsGfxTextControlFrame2::SetTextControlFrameState(const nsAReadableString& aValue
   }
   else
   {
-    // Otherwise get the value from content.
-    nsCOMPtr<nsITextControlElement> control = do_QueryInterface(mContent);
-    if (control)
+    // Otherwise set the value in content.
+    nsCOMPtr<nsIDOMHTMLInputElement> inputControl = do_QueryInterface(mContent);
+    if (inputControl)
     {
-      control->SetValueInternal(aValue);
+      inputControl->SetValue(aValue);
+    }
+    else
+    {
+      nsCOMPtr<nsIDOMHTMLTextAreaElement> textareaControl
+          = do_QueryInterface(mContent);
+      if (textareaControl)
+      {
+        textareaControl->SetValue(aValue);
+      }
     }
   }
 }
