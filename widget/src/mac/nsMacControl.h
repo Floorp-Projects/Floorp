@@ -62,6 +62,8 @@ protected:
 	virtual void		GetRectForMacControl(nsRect &outRect);
 	void						SetupMacControlFont();
 	void						ControlChanged(PRInt32 aNewValue);
+	void						NSStringSetControlTitle(ControlHandle theControl, nsString title);
+	void						SetupMacControlFontForScript(short theScript);
 	
 	nsString				mLabel;
 	PRBool					mWidgetArmed;
