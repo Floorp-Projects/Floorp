@@ -144,6 +144,9 @@
 #include "nsIXBLService.h"
 
 
+#define DOM_MIN_TIMEOUT_VALUE 10 // 10ms
+
+
 static nsIEntropyCollector* gEntropyCollector       = nsnull;
 static PRInt32              gRefCnt                 = 0;
 nsIXPConnect *GlobalWindowImpl::sXPConnect          = nsnull;
@@ -4262,6 +4265,13 @@ GlobalWindowImpl::SetTimeoutOrInterval(PRBool aIsInterval, PRInt32 *aReturn)
                      aIsInterval ? kSetIntervalStr : kSetTimeoutStr);
 
     return ncc->SetExceptionWasThrown(PR_TRUE);
+  }
+
+  if (interval < DOM_MIN_TIMEOUT_VALUE) {
+    // Don't allow timeouts less than DOM_MIN_TIMEOUT_VALUE from
+    // now...
+
+    interval = DOM_MIN_TIMEOUT_VALUE;
   }
 
   timeout = new nsTimeoutImpl();
