@@ -331,6 +331,11 @@ NS_IMETHODIMP nsImageFrame::OnStartContainer(imgIRequest *aRequest, nsIPresConte
   mInitialLoadCompleted = PR_TRUE;
 
   nscoord w, h;
+#ifdef DEBUG_pavlov
+  NS_ENSURE_ARG_POINTER(aImage);
+#else
+  if (!aImage) return NS_ERROR_INVALID_ARG;
+#endif
   aImage->GetWidth(&w);
   aImage->GetHeight(&h);
 
