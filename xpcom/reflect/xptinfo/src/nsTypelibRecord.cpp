@@ -35,3 +35,22 @@ nsTypelibRecord::nsTypelibRecord(int size, nsTypelibRecord *in_next,
     this->interfaceRecords[size] = NULL;
 }
 
+void
+nsTypelibRecord::Destroy(nsIAllocator* aAllocator)
+{
+    XPT_FreeHeader(header);
+    header = nsnull;
+    aAllocator->Free(interfaceRecords);
+    interfaceRecords = nsnull;
+}
+
+void nsTypelibRecord::DestroyList(nsTypelibRecord* aList,
+                                  nsIAllocator* aAllocator)
+{
+    while (aList) {
+        nsTypelibRecord* next = aList->next;
+        aList->Destroy(aAllocator);
+        delete aList;
+        aList = next;
+    }
+}

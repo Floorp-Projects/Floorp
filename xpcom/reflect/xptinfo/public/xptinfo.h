@@ -57,6 +57,10 @@ PR_BEGIN_EXTERN_C
 // Even if this is a service, it is cool to provide a direct accessor
 XPTI_PUBLIC_API(nsIInterfaceInfoManager*)
 XPTI_GetInterfaceInfoManager();
+
+// Even if this is a service, it is cool to provide a direct accessor
+XPTI_PUBLIC_API(void)
+XPTI_FreeInterfaceInfoManager();
 PR_END_EXTERN_C
 
 

@@ -37,11 +37,16 @@ public:
     nsTypelibRecord(int size, nsTypelibRecord *in_next, XPTHeader *in_header,
                     nsIAllocator *allocator);
 
+    static void DestroyList(nsTypelibRecord* aList, nsIAllocator* aAllocator);
+
     // array of pointers to (potentially shared) interface records,
     // NULL terminated.
     nsInterfaceRecord **interfaceRecords;
     nsTypelibRecord *next;
     XPTHeader *header;
+
+protected:
+    void Destroy(nsIAllocator* aAllocator);
 };    
 
 #endif /* nsTypelibRecord_h___ */

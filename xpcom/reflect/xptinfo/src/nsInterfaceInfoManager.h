@@ -54,6 +54,7 @@ class nsInterfaceInfoManager : public nsIInterfaceInfoManager
 public:
     virtual ~nsInterfaceInfoManager();
     static nsInterfaceInfoManager* GetInterfaceInfoManager();
+    static void FreeInterfaceInfoManager();
     static nsIAllocator* GetAllocator(nsInterfaceInfoManager* iim = NULL);
 
 private:
