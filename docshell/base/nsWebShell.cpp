@@ -786,7 +786,7 @@ nsWebShell::HandleLinkClickEvent(nsIContent *aContent,
             NS_ASSERTION(NS_SUCCEEDED(rv), "can't create simple uri");
             if (NS_SUCCEEDED(rv))
             {
-                rv = uri->SetSpec(spec);
+                rv = uri->SetSpec(spec.get());
                 NS_ASSERTION(NS_SUCCEEDED(rv), "spec is invalid");
                 if (NS_SUCCEEDED(rv))
                 {

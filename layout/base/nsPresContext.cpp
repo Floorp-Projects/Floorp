@@ -361,7 +361,7 @@ nsPresContext::GetFontPreferences()
     // get font.size.[generic].[langGroup]
     // size=0 means 'Auto', i.e., generic fonts retain the size of the variable font
     MAKE_FONT_PREF_KEY(pref, "font.size", generic_dot_langGroup);
-    rv = mPrefs->GetIntPref(pref, &size);
+    rv = mPrefs->GetIntPref(pref.get(), &size);
     if (NS_SUCCEEDED(rv) && size > 0) {
       if (unit == eUnit_px) {
         font->size = NSFloatPixelsToTwips((float)size, p2t);

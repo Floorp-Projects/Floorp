@@ -205,7 +205,7 @@ nsresult nsDefaultURIFixup::ConvertFileToStringURI(nsString& aIn,
           ConvertStringURIToFileCharset(aIn, file);
         }
 
-        nsresult rv = NS_NewLocalFile(file, PR_FALSE, getter_AddRefs(filePath));
+        nsresult rv = NS_NewLocalFile(file.get(), PR_FALSE, getter_AddRefs(filePath));
         if (NS_SUCCEEDED(rv))
         {
             nsXPIDLCString fileurl;
