@@ -691,7 +691,7 @@ nsWebShell::OnLeaveLink()
 
   if (browserChrome)  {
       rv = browserChrome->SetStatus(nsIWebBrowserChrome::STATUS_LINK,
-                                    NS_LITERAL_STRING("").get());
+                                    EmptyString().get());
   }
   return rv;
 }

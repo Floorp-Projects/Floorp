@@ -45,6 +45,7 @@
 #include "nsCSSProps.h"
 #include "nsCOMPtr.h"
 #include "nsIURL.h"
+#include "nsReadableUtils.h"
 
 #include "nsContentUtils.h"
 
@@ -325,17 +326,17 @@ CSS2PropertiesTearoff::QueryInterface(REFNSIID aIID, void** aInstancePtr)
 // nsIDOMNSCSS2Properties
 
 #define CSS_PROP(name_, id_, method_, datastruct_, member_, type_, iscoord_) \
-  NS_IMETHODIMP                                                         \
-  CSS2PropertiesTearoff::Get##method_(nsAString& aValue)                \
-  {                                                                     \
-    return mOuter->GetPropertyValue(NS_LITERAL_STRING(#name_), aValue); \
-  }                                                                     \
-                                                                        \
-  NS_IMETHODIMP                                                         \
-  CSS2PropertiesTearoff::Set##method_(const nsAString& aValue)          \
-  {                                                                     \
-    return mOuter->SetProperty(NS_LITERAL_STRING(#name_), aValue,       \
-                               NS_LITERAL_STRING(""));                  \
+  NS_IMETHODIMP                                                              \
+  CSS2PropertiesTearoff::Get##method_(nsAString& aValue)                     \
+  {                                                                          \
+    return mOuter->GetPropertyValue(NS_LITERAL_STRING(#name_), aValue);      \
+  }                                                                          \
+                                                                             \
+  NS_IMETHODIMP                                                              \
+  CSS2PropertiesTearoff::Set##method_(const nsAString& aValue)               \
+  {                                                                          \
+    return mOuter->SetProperty(NS_LITERAL_STRING(#name_), aValue,            \
+                               EmptyString());                               \
   }
 
 #define CSS_PROP_LIST_EXCLUDE_INTERNAL

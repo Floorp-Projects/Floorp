@@ -938,7 +938,7 @@ nsMenuX::LoadSubMenu( nsIMenu * pParentMenu, nsIContent* inMenuItemContent )
     if (!webShell)
         return;
     nsCOMPtr<nsISupports> supports(do_QueryInterface(pParentMenu));
-    pnsMenu->Create(supports, menuName, NS_LITERAL_STRING(""), mManager, webShell, inMenuItemContent);
+    pnsMenu->Create(supports, menuName, EmptyString(), mManager, webShell, inMenuItemContent);
 
     // set if it's enabled or disabled
     nsAutoString disabled;

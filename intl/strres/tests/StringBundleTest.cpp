@@ -133,7 +133,6 @@ main(int argc, char *argv[])
   }
 
   nsAutoString v;
-  v.Assign(NS_LITERAL_STRING(""));
   PRUnichar *ptrv = nsnull;
   char *value = nsnull;
 

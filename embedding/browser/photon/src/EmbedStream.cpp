@@ -34,6 +34,7 @@
 #include "EmbedStream.h"
 #include "EmbedPrivate.h"
 #include "EmbedWindow.h"
+#include "nsReadableUtils.h"
 
 // nsIInputStream interface
 
@@ -119,7 +120,7 @@ EmbedStream::OpenStream(const char *aBaseURI, const char *aContentType)
   rv = NS_NewInputStreamChannel(getter_AddRefs(mChannel), uri,
 				NS_STATIC_CAST(nsIInputStream *, this),
 				nsDependentCString(aContentType),
-                NS_LITERAL_CSTRING("") );
+				EmptyCString());
   if (NS_FAILED(rv))
     return rv;
 

@@ -114,7 +114,7 @@ nsFTPDirListingConv::AsyncConvertData(const PRUnichar *aFromType, const PRUnicha
                                   uri,
                                   nsnull,
                                   NS_LITERAL_CSTRING(APPLICATION_HTTP_INDEX_FORMAT),
-                                  NS_LITERAL_CSTRING(""));
+                                  EmptyCString());
     NS_RELEASE(uri);
     if (NS_FAILED(rv)) return rv;
 
@@ -283,7 +283,7 @@ nsFTPDirListingConv::GetHeaders(nsACString& headers,
     nsCAutoString spec;
     uri->GetPassword(pw);
     if (!pw.IsEmpty()) {
-         rv = uri->SetPassword(NS_LITERAL_CSTRING(""));
+         rv = uri->SetPassword(EmptyCString());
          if (NS_FAILED(rv)) return rv;
          rv = uri->GetAsciiSpec(spec);
          if (NS_FAILED(rv)) return rv;

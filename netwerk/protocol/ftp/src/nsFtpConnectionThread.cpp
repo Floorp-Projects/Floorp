@@ -1141,7 +1141,7 @@ nsFtpState::R_pass() {
                 nsresult rv = mURL->GetPrePath(prePath);
                 NS_ASSERTION(NS_SUCCEEDED(rv), "Failed to get prepath");
                 if (NS_SUCCEEDED(rv)) {
-                    pm->RemoveUser(prePath, NS_LITERAL_STRING(""));
+                    pm->RemoveUser(prePath, EmptyString());
                 }
             }
         }

@@ -1059,9 +1059,9 @@ nsEventStateManager::CreateClickHoldTimer(nsIPresContext* inPresContext,
       // check for the |popup| attribute
       nsAutoString popup;
       clickedContent->GetAttr(kNameSpaceID_None, nsXULAtoms::popup, popup);
-      if (popup != NS_LITERAL_STRING(""))
+      if (!popup.IsEmpty())
         return;
-      
+
       // check for a <menubutton> like bookmarks
       if (clickedContent->Tag() == nsXULAtoms::menubutton)
         return;

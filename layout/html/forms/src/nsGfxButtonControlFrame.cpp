@@ -307,7 +307,7 @@ nsGfxButtonControlFrame::GetDefaultLabel(nsString& aString)
     rv = nsFormControlHelper::GetLocalizedString(propname, NS_LITERAL_STRING("Browse").get(), aString);
   }
   else {
-    aString.Assign(NS_LITERAL_STRING(""));
+    aString.Truncate();
     rv = NS_OK;
   }
   return rv;

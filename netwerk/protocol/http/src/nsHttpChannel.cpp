@@ -473,7 +473,7 @@ nsHttpChannel::SetupTransaction()
             nsCOMPtr<nsIURI> tempURI;
             rv = mURI->Clone(getter_AddRefs(tempURI));
             if (NS_FAILED(rv)) return rv;
-            rv = tempURI->SetUserPass(NS_LITERAL_CSTRING(""));
+            rv = tempURI->SetUserPass(EmptyCString());
             if (NS_FAILED(rv)) return rv;
             rv = tempURI->GetAsciiSpec(path);
             if (NS_FAILED(rv)) return rv;
@@ -1709,7 +1709,7 @@ nsHttpChannel::SetupReplacementChannel(nsIURI       *newURI,
 
             // replicate original call to SetUploadStream...
             if (mUploadStreamHasHeaders)
-                uploadChannel->SetUploadStream(mUploadStream, NS_LITERAL_CSTRING(""), -1);
+                uploadChannel->SetUploadStream(mUploadStream, EmptyCString(), -1);
             else {
                 const char *ctype = mRequestHead.PeekHeader(nsHttp::Content_Type);
                 const char *clen  = mRequestHead.PeekHeader(nsHttp::Content_Length);
@@ -2947,12 +2947,12 @@ nsHttpChannel::SetReferrer(nsIURI *referrer)
     if (NS_FAILED(rv)) return rv;
 
     // strip away any userpass; we don't want to be giving out passwords ;-)
-    clone->SetUserPass(NS_LITERAL_CSTRING(""));
+    clone->SetUserPass(EmptyCString());
 
     // strip away any fragment per RFC 2616 section 14.36
     nsCOMPtr<nsIURL> url = do_QueryInterface(clone);
     if (url)
-        url->SetRef(NS_LITERAL_CSTRING(""));
+        url->SetRef(EmptyCString());
 
     nsCAutoString spec;
     rv = clone->GetAsciiSpec(spec);

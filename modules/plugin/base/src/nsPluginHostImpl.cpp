@@ -5691,7 +5691,7 @@ NS_IMETHODIMP nsPluginHostImpl::NewPluginURLStream(const nsString& aURL,
           nsCOMPtr<nsIUploadChannel> uploadChannel(do_QueryInterface(httpChannel));
           NS_ASSERTION(uploadChannel, "http must support nsIUploadChannel");
 
-          uploadChannel->SetUploadStream(postDataStream, NS_LITERAL_CSTRING(""), -1);
+          uploadChannel->SetUploadStream(postDataStream, EmptyCString(), -1);
         }
 
         if (aHeadersData) 

@@ -2846,10 +2846,12 @@ nsChromeRegistry::GetProfileRoot(nsACString& aFileURL)
        defaultUserChromeFile->AppendNative(NS_LITERAL_CSTRING("chrome"));
        defaultUserChromeFile->AppendNative(NS_LITERAL_CSTRING("userChrome-example.css"));
 
+       const nsAFlatCString& empty = EmptyCString();
+
        // copy along
        // It aint an error if these files dont exist
-       (void) defaultUserContentFile->CopyToNative(userChromeDir, NS_LITERAL_CSTRING(""));
-       (void) defaultUserChromeFile->CopyToNative(userChromeDir, NS_LITERAL_CSTRING(""));
+       defaultUserContentFile->CopyToNative(userChromeDir, empty);
+       defaultUserChromeFile->CopyToNative(userChromeDir, empty);
      }
    }
    if (NS_FAILED(rv))

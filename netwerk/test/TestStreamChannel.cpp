@@ -214,10 +214,11 @@ RunTest(nsIFile *file)
     if (uri)
         uri->SetSpec(NS_LITERAL_CSTRING("foo://bar"));
 
+    const nsAFlatCString& empty = EmptyCString();
+
     nsCOMPtr<nsIChannel> chan;
-    rv = NS_NewInputStreamChannel(getter_AddRefs(chan), uri, stream,
-                                  NS_LITERAL_CSTRING(""),
-                                  NS_LITERAL_CSTRING(""));
+    rv = NS_NewInputStreamChannel(getter_AddRefs(chan), uri, stream, empty,
+				  empty);
     if (NS_FAILED(rv)) return rv;
 
     rv = chan->SetNotificationCallbacks(new MyCallbacks());

@@ -225,8 +225,8 @@ nsStyleUpdatingCommand::GetCurrentState(nsIEditor *aEditor,
   PRBool allOfSelectionHasProp = PR_FALSE;
 
   nsCOMPtr<nsIAtom> styleAtom = do_GetAtom(aTagName);
-  rv = htmlEditor->GetInlineProperty(styleAtom, NS_LITERAL_STRING(""), 
-                                     NS_LITERAL_STRING(""), 
+  rv = htmlEditor->GetInlineProperty(styleAtom, EmptyString(), 
+                                     EmptyString(), 
                                      &firstOfSelectionHasProp, 
                                      &anyOfSelectionHasProp, 
                                      &allOfSelectionHasProp);
@@ -353,8 +353,7 @@ nsListCommand::ToggleState(nsIEditor *aEditor, const char* aTagName)
     rv = editor->RemoveList(listType);    
   else
   {
-    nsString empty;
-    rv = editor->MakeOrChangeList(listType, PR_FALSE, empty);
+    rv = editor->MakeOrChangeList(listType, PR_FALSE, EmptyString());
   }
   
   return rv;
@@ -484,7 +483,7 @@ nsRemoveListCommand::DoCommand(const char *aCommandName, nsISupports *refCon)
   if (editor)
   {
     // This removes any list type
-    rv = editor->RemoveList(nsString());
+    rv = editor->RemoveList(EmptyString());
   }
 
   return rv;  
@@ -769,15 +768,15 @@ nsFontFaceStateCommand::SetState(nsIEditor *aEditor, nsString& newState)
   if (newState.Equals(NS_LITERAL_STRING("tt")))
   {
     // The old "teletype" attribute  
-    rv = htmlEditor->SetInlineProperty(ttAtom, NS_LITERAL_STRING(""), 
-                                       NS_LITERAL_STRING(""));  
+    rv = htmlEditor->SetInlineProperty(ttAtom, EmptyString(), 
+                                       EmptyString());  
     // Clear existing font face
     rv = htmlEditor->RemoveInlineProperty(fontAtom, NS_LITERAL_STRING("face"));
   }
   else
   {
     // Remove any existing TT nodes
-    rv = htmlEditor->RemoveInlineProperty(ttAtom, NS_LITERAL_STRING(""));  
+    rv = htmlEditor->RemoveInlineProperty(ttAtom, EmptyString());  
 
     if (newState.IsEmpty() || newState.Equals(NS_LITERAL_STRING("normal"))) {
       rv = htmlEditor->RemoveInlineProperty(fontAtom, NS_LITERAL_STRING("face"));
@@ -814,7 +813,7 @@ nsFontSizeStateCommand::GetCurrentState(nsIEditor *aEditor,
   PRBool firstHas, anyHas, allHas;
   nsresult rv = htmlEditor->GetInlinePropertyWithAttrValue(fontAtom,
                                          NS_LITERAL_STRING("size"),
-                                         NS_LITERAL_STRING(""),
+                                         EmptyString(),
                                          &firstHas, &anyHas, &allHas,
                                          outStateString);
   if (NS_FAILED(rv)) return rv;
@@ -855,11 +854,11 @@ nsFontSizeStateCommand::SetState(nsIEditor *aEditor, nsString& newState)
     if (NS_FAILED(rv)) return rv;
 
     nsCOMPtr<nsIAtom> bigAtom = do_GetAtom("big");
-    rv = htmlEditor->RemoveInlineProperty(bigAtom, NS_LITERAL_STRING(""));  
+    rv = htmlEditor->RemoveInlineProperty(bigAtom, EmptyString());  
     if (NS_FAILED(rv)) return rv;
 
     nsCOMPtr<nsIAtom> smallAtom = do_GetAtom("small");
-    rv = htmlEditor->RemoveInlineProperty(smallAtom, NS_LITERAL_STRING(""));  
+    rv = htmlEditor->RemoveInlineProperty(smallAtom, EmptyString());  
     if (NS_FAILED(rv)) return rv;
   } else {
     // set the size

@@ -139,7 +139,7 @@ nsGopherDirListingConv::AsyncConvertData(const PRUnichar *aFromType,
                                   mUri,
                                   nsnull,
                                   NS_LITERAL_CSTRING(APPLICATION_HTTP_INDEX_FORMAT),
-                                  NS_LITERAL_CSTRING(""));
+                                  EmptyCString());
     if (NS_FAILED(rv)) return rv;
 
     return NS_OK;

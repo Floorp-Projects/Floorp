@@ -318,7 +318,7 @@ nsEditingSession::SetupEditorOnWindow(nsIDOMWindow *aWindow)
     {
       nsAutoString mimeType;
       if (NS_SUCCEEDED(nsdoc->GetContentType(mimeType)))
-        mimeCType = NS_ConvertUCS2toUTF8(mimeType);
+        CopyUTF16toUTF8(mimeType, mimeCType);
 
       if (IsSupportedTextType(mimeCType.get()))
       {

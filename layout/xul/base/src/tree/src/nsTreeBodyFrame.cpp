@@ -815,7 +815,7 @@ NS_IMETHODIMP nsTreeBodyFrame::GetColumnIndex(const PRUnichar *aColID, PRInt32 *
 
 NS_IMETHODIMP nsTreeBodyFrame::GetColumnID(PRInt32 colIndex, nsAString & _retval)
 {
-  _retval = NS_LITERAL_STRING("");
+  _retval.Truncate();
   for (nsTreeColumn* currCol = mColumns; currCol; currCol = currCol->GetNext()) {
     if (currCol->GetColIndex() == colIndex) {
       _retval = currCol->GetID();
@@ -2243,7 +2243,7 @@ nsTreeBodyFrame::PaintColumn(nsTreeColumn*        aColumn,
   aColumn->GetElement()->GetAttr(kNameSpaceID_None, nsXULAtoms::insertbefore, attr);
   if (attr.Equals(NS_LITERAL_STRING("true")))
     mScratchArray->AppendElement(nsXULAtoms::insertbefore);
-  attr.Assign(NS_LITERAL_STRING(""));
+  attr.Truncate();
   aColumn->GetElement()->GetAttr(kNameSpaceID_None, nsXULAtoms::insertafter, attr);
   if (attr.Equals(NS_LITERAL_STRING("true")))
     mScratchArray->AppendElement(nsXULAtoms::insertafter);

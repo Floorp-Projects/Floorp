@@ -410,7 +410,7 @@ nsresult nsDocumentOpenInfo::DispatchContent(nsIRequest *request, nsISupports * 
     {
       nsAutoString dispToken;
       // Get the disposition type
-      rv = mimehdrpar->GetParameter(disposition, "", NS_LITERAL_CSTRING(""), 
+      rv = mimehdrpar->GetParameter(disposition, "", EmptyCString(), 
                                     PR_FALSE, nsnull, dispToken);
       // RFC 2183, section 2.8 says that an unknown disposition
       // value should be treated as "attachment"

@@ -97,7 +97,7 @@ nsXMLPrettyPrinter::PrettyPrint(nsIDocument* aDocument)
                 do_QueryInterface(defaultView);
             if (defaultCSSView) {
                 defaultCSSView->GetComputedStyle(frameElem,
-                                                 NS_LITERAL_STRING(""),
+                                                 EmptyString(),
                                                  getter_AddRefs(computedStyle));
             }
         }
@@ -186,9 +186,10 @@ nsXMLPrettyPrinter::PrettyPrint(nsIDocument* aDocument)
     NS_ASSERTION(binding, "Prettyprint binding doesn't implement nsIObserver");
     NS_ENSURE_TRUE(binding, NS_ERROR_UNEXPECTED);
     
-    rv = binding->Observe(resultFragment, "prettyprint-dom-created", NS_LITERAL_STRING("").get());
+    rv = binding->Observe(resultFragment, "prettyprint-dom-created",
+                          EmptyString().get());
     NS_ENSURE_SUCCESS(rv, rv);
-    
+
     // Observe the document so we know when to switch to "normal" view
     aDocument->AddObserver(this);
     mDocument = aDocument;

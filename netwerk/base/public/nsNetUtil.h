@@ -288,8 +288,8 @@ inline nsresult
 NS_NewInputStreamChannel(nsIChannel      **result,
                          nsIURI           *uri,
                          nsIInputStream   *stream,
-                         const nsACString &contentType    = NS_LITERAL_CSTRING(""),
-                         const nsACString &contentCharset = NS_LITERAL_CSTRING(""))
+                         const nsACString &contentType    = EmptyCString(),
+                         const nsACString &contentCharset = EmptyCString())
 {
     nsresult rv;
     static NS_DEFINE_CID(kInputStreamChannelCID, NS_INPUTSTREAMCHANNEL_CID);

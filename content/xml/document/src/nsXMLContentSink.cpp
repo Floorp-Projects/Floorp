@@ -229,7 +229,7 @@ nsXMLContentSink::DidBuildModel()
   if (mTitleText.IsEmpty()) {
     nsCOMPtr<nsIDOMNSDocument> dom_doc(do_QueryInterface(mDocument));
     if (dom_doc) {
-      dom_doc->SetTitle(NS_LITERAL_STRING(""));
+      dom_doc->SetTitle(EmptyString());
     }
   }
 

@@ -678,8 +678,8 @@ ReportToConsole(const PRUnichar* aMessageName, const PRUnichar **aParams,
                                     getter_Copies(errorText));
   NS_ENSURE_SUCCESS(rv, rv);
   rv = errorObject->Init(errorText.get(),
-                         NS_LITERAL_STRING("").get(), /* file name */
-                         NS_LITERAL_STRING("").get(), /* source line */
+                         EmptyString().get(), /* file name */
+                         EmptyString().get(), /* source line */
                          0, /* line number */
                          0, /* column number */
                          aErrorFlags,
@@ -1783,7 +1783,7 @@ CSSLoaderImpl::LoadChildSheet(nsICSSStyleSheet* aParentSheet,
                    state, getter_AddRefs(sheet));
   NS_ENSURE_SUCCESS(rv, rv);
 
-  NS_NAMED_LITERAL_STRING(empty, "");
+  const nsAString& empty = EmptyString();
   rv = PrepareSheet(sheet, empty, empty, aMedia);
   NS_ENSURE_SUCCESS(rv, rv);
   
@@ -1855,7 +1855,7 @@ CSSLoaderImpl::InternalLoadAgentSheet(nsIURI* aURL,
                             getter_AddRefs(sheet));
   NS_ENSURE_SUCCESS(rv, rv);
 
-  NS_NAMED_LITERAL_STRING(empty, "");
+  const nsAString& empty = EmptyString();
   rv = PrepareSheet(sheet, empty, empty, nsnull);
   NS_ENSURE_SUCCESS(rv, rv);
   

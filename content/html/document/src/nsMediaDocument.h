@@ -82,7 +82,7 @@ protected:
                              const char* const* aFormatNames = sFormatNames,
                              PRInt32            aWidth = 0,
                              PRInt32            aHeight = 0,
-                             const nsAString&   aStatus = NS_LITERAL_STRING(""));
+                             const nsAString&   aStatus = EmptyString());
 
   nsCOMPtr<nsIStringBundle>     mStringBundle;
   static const char* const      sFormatNames[4];

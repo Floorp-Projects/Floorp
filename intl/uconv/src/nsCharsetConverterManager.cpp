@@ -342,14 +342,14 @@ NS_IMETHODIMP
 nsCharsetConverterManager::GetDecoderList(nsIUTF8StringEnumerator ** aResult)
 {
   return GetList(NS_LITERAL_CSTRING(NS_UNICODEDECODER_NAME),
-                 NS_LITERAL_CSTRING(""), aResult);
+                 EmptyCString(), aResult);
 }
 
 NS_IMETHODIMP
 nsCharsetConverterManager::GetEncoderList(nsIUTF8StringEnumerator ** aResult)
 {
   return GetList(NS_LITERAL_CSTRING(NS_UNICODEENCODER_NAME),
-                 NS_LITERAL_CSTRING(""), aResult);
+                 EmptyCString(), aResult);
 }
 
 NS_IMETHODIMP

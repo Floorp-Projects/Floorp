@@ -621,8 +621,8 @@ nsHTMLInputElement::SetDefaultChecked(PRBool aDefaultChecked)
   nsresult rv;
 
   if (aDefaultChecked) {
-    rv = SetAttr(kNameSpaceID_None, nsHTMLAtoms::checked,
-                 NS_LITERAL_STRING(""), PR_TRUE);
+    rv = SetAttr(kNameSpaceID_None, nsHTMLAtoms::checked, EmptyString(),
+                 PR_TRUE);
   } else {
     rv = UnsetAttr(kNameSpaceID_None, nsHTMLAtoms::checked, PR_TRUE);
   }
@@ -1817,7 +1817,7 @@ nsHTMLInputElement::StringToAttribute(nsIAtom* aAttribute,
         // If the type is being changed to file, set the element value
         // to the empty string. This is for security.
         if (table->value == NS_FORM_INPUT_FILE) {
-          SetValue(NS_LITERAL_STRING(""));
+          SetValue(EmptyString());
         }
         aResult.SetIntValue(table->value, eHTMLUnit_Enumerated);
         mType = table->value;  // set the type of this input
@@ -2210,7 +2210,7 @@ nsHTMLInputElement::Reset()
     case NS_FORM_INPUT_FILE:
     {
       // Resetting it to blank should not perform security check
-      rv = SetValueInternal(NS_LITERAL_STRING(""), nsnull);
+      rv = SetValueInternal(EmptyString(), nsnull);
       break;
     }
     // Value is the same as defaultValue for hidden inputs

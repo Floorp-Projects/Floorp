@@ -389,7 +389,7 @@ nsresult nsJSChannel::Init(nsIURI *aURI)
     // treat it as html.
     rv = NS_NewInputStreamChannel(getter_AddRefs(channel), aURI, mIOThunk,
                                   NS_LITERAL_CSTRING("text/html"),
-                                  NS_LITERAL_CSTRING(""));
+                                  EmptyCString());
     if (NS_FAILED(rv)) return rv;
 
     rv = mIOThunk->Init(aURI);

@@ -2506,10 +2506,10 @@ nsXULElement::UnsetAttr(PRInt32 aNameSpaceID, nsIAtom* aName, PRBool aNotify)
     if (aNameSpaceID == kNameSpaceID_None) {
         if (aName == nsXULAtoms::clazz) {
             // If CLASS is being unset, delete our class list.
-            Attributes()->UpdateClassList(NS_LITERAL_STRING(""));
+            Attributes()->UpdateClassList(EmptyString());
         } else if (aName == nsXULAtoms::style) {
             nsCOMPtr<nsIURI> baseURI = GetBaseURI();
-            Attributes()->UpdateStyleRule(baseURI, NS_LITERAL_STRING(""));
+            Attributes()->UpdateStyleRule(baseURI, EmptyString());
             // AttributeChanged() will handle the style reresolution
         }
     }
