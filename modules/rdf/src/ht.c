@@ -1613,93 +1613,6 @@ struct	{
 
 
 
-#if 0
-void
-htMetaTagURLExitFunc (URL_Struct *urls, int status, MWContext *cx)
-{
-	NET_AllHeaders		*headers;
-	RDF_Resource		r;
-	char			*temp;
-	unsigned long		headerNum=0,matchNum;
-
-struct	{
-	char		*name;
-	RDF_Resource	r;
-	} matches[9];
-
-	/* Note: if more elements are added, adjust the size of the array above! */
-
-	matches[0].name = "description";	matches[0].r = gWebData->RDF_description;
-	matches[1].name = "keyword";		matches[1].r = gWebData->RDF_keyword;
-	matches[2].name = "smallIcon";		matches[2].r = gNavCenter->RDF_smallIcon;
-	matches[3].name = "largeIcon";		matches[3].r = gNavCenter->RDF_largeIcon;
-	matches[4].name = "smallPressedIcon";	matches[4].r = gNavCenter->RDF_smallPressedIcon;
-	matches[5].name = "largePressedIcon";	matches[5].r = gNavCenter->RDF_largePressedIcon;
-	matches[6].name = "smallRolloverIcon";	matches[6].r = gNavCenter->RDF_smallRolloverIcon;
-	matches[7].name = "largeRolloverIcon";	matches[7].r = gNavCenter->RDF_largeRolloverIcon;
-	matches[8].name = NULL;			matches[8].r = NULL;
-
-	if (urls != NULL)
-	{
-		if ((headers = &(urls->all_headers)) != NULL)
-		{
-			if ((r = RDF_GetResource(gNCDB, urls->address, 1)) != NULL)
-			{
-				while (headers->key[headerNum] != NULL)
-				{
-					for (matchNum=0; matches[matchNum].name != NULL; matchNum++)
-					{
-						if (!strcmp(headers->key[headerNum], matches[matchNum].name))
-						{
-							if (headers->value[headerNum] != NULL)
-							{
-								/* if already exists, don't change */
-								if ((temp = RDF_GetSlotValue(gNCDB, r,
-									matches[matchNum].r, RDF_STRING_TYPE,
-									PR_FALSE, PR_TRUE)) != NULL)
-								{
-									freeMem(temp);
-								}
-								else
-								{
-									RDF_Assert(gNCDB, r, matches[matchNum].r,
-										headers->value[headerNum],
-										RDF_STRING_TYPE);
-								}
-							}
-						}
-					}
-					++headerNum;
-				}
-			}
-		}
-	}
-}
-#endif
-
-
-
-#if 0
-void
-htLookInCacheForMetaTags(char *url)
-{
-	URL_Struct      	*urls;
-
-	XP_ASSERT(url != NULL);
-
-	if (url != NULL)
-	{
-		if ((urls = NET_CreateURLStruct(url,  NET_DONT_RELOAD)) != NULL)
-		{
-			NET_GetURL(urls, FO_ONLY_FROM_CACHE_AND_PRESENT,
-				gRDFMWContext(NULL), htMetaTagURLExitFunc);
-		}
-	}
-}
-#endif
-
-
-
 PR_PUBLIC_API(void)
 HT_AddBookmark (char *url, char *optionalTitle)
 {
@@ -4489,11 +4402,11 @@ HT_DoMenuCmd(HT_Pane pane, HT_MenuCmd menuCmd)
 	{
 		case	HT_CMD_NEW_WORKSPACE:
 		/* XXX localization */
-		if (FE_Confirm(((MWContext *)gRDFMWContext(NULL)),
+		if (FE_Confirm(((MWContext *)gRDFMWContext(*(pane->db->translators))),
 				"Create a workspace for remote data?"))
 		{
 			/* XXX localization */
-			if ((url = FE_Prompt(((MWContext *)gRDFMWContext(NULL)),
+			if ((url = FE_Prompt(((MWContext *)gRDFMWContext(*(pane->db->translators))),
 					"Enter the URL for the remote workspace:", "http://")) != NULL)
 			{
 				if (url[0] != '\0')
@@ -4516,7 +4429,7 @@ HT_DoMenuCmd(HT_Pane pane, HT_MenuCmd menuCmd)
 					url = NULL;
 				}
 			} while (rNode != NULL);
-			if ((url != NULL) && (title = FE_Prompt(((MWContext *)gRDFMWContext(NULL)),
+			if ((url != NULL) && (title = FE_Prompt(((MWContext *)gRDFMWContext(*(pane->db->translators))),
 					XP_GetString(RDF_NEWWORKSPACEPROMPT), "")) != NULL)
 			{
 				if (!strcmp(title, "about"))
@@ -4550,7 +4463,7 @@ HT_DoMenuCmd(HT_Pane pane, HT_MenuCmd menuCmd)
 		case	HT_CMD_DELETE_WORKSPACE:
 		if (view == NULL)	break;
 		if ((topNode = HT_TopNode(view)) == NULL)	break;
-		if (FE_Confirm(((MWContext *)gRDFMWContext(NULL)),
+		if (FE_Confirm(((MWContext *)gRDFMWContext(*(pane->db->translators))),
 				PR_smprintf(XP_GetString(RDF_DELETEWORKSPACE),
 				HT_GetViewName(topNode->view))))
 		{
@@ -4610,7 +4523,7 @@ HT_DoMenuCmd(HT_Pane pane, HT_MenuCmd menuCmd)
 				chrome.show_scrollbar = TRUE;
 
 				urls = NET_CreateURLStruct(resourceID(node->node), NET_DONT_RELOAD);
-				FE_MakeNewWindow((MWContext *)gRDFMWContext(NULL), urls, NULL, &chrome);
+				FE_MakeNewWindow((MWContext *)gRDFMWContext(*(pane->db->translators)), urls, NULL, &chrome);
 				break;
 
 				case	HT_CMD_OPEN_COMPOSER:
@@ -4631,7 +4544,7 @@ HT_DoMenuCmd(HT_Pane pane, HT_MenuCmd menuCmd)
 				uniqueCount = 0;
 				if (menuCmd == HT_CMD_NEW_BOOKMARK)
 				{
-					if ((url = FE_Prompt(((MWContext *)gRDFMWContext(NULL)),
+					if ((url = FE_Prompt(((MWContext *)gRDFMWContext(*(pane->db->translators))),
 							"URL:", "http://")) == NULL)	break;
 
 					if (!strcmp(url, "about"))
@@ -4915,7 +4828,7 @@ HT_DoMenuCmd(HT_Pane pane, HT_MenuCmd menuCmd)
 						if (ht_checkPassword(node, false) == PR_FALSE)	break;
 					}
 #endif
-					FE_PromptForFileName(((MWContext *)gRDFMWContext(NULL)),
+					FE_PromptForFileName(((MWContext *)gRDFMWContext(*(pane->db->translators))),
 						"", NULL, false, false,
 						(ReadFileNameCallbackFunction)exportCallback,
 						(void *)node->node);
@@ -4923,7 +4836,7 @@ HT_DoMenuCmd(HT_Pane pane, HT_MenuCmd menuCmd)
 				break;
 
 				case	HT_CMD_EXPORTALL:
-				FE_PromptForFileName(((MWContext *)gRDFMWContext(NULL)),
+				FE_PromptForFileName(((MWContext *)gRDFMWContext(*(pane->db->translators))),
 					NULL, NETSCAPE_RDF_FILENAME, false, false,
 					(ReadFileNameCallbackFunction)exportCallback,
 					(void *)gNavCenter->RDF_Top);
@@ -5014,13 +4927,13 @@ HT_DoMenuCmd(HT_Pane pane, HT_MenuCmd menuCmd)
 				{
 					if (ht_checkPassword(node, true) == PR_FALSE)	break;
 				}
-				if ((password1 = FE_PromptPassword(((MWContext *)gRDFMWContext(NULL)),
+				if ((password1 = FE_PromptPassword(((MWContext *)gRDFMWContext(*(pane->db->translators))),
 								XP_GetString(RDF_NEWPASSWORD))) == NULL)	break;
-				if ((password2 = FE_PromptPassword(((MWContext *)gRDFMWContext(NULL)),
+				if ((password2 = FE_PromptPassword(((MWContext *)gRDFMWContext(*(pane->db->translators))),
 								XP_GetString(RDF_CONFIRMPASSWORD))) == NULL)	break;
 				if (strcmp(password1, password2))
 				{
-					FE_Alert(((MWContext *)gRDFMWContext(NULL)), XP_GetString(RDF_MISMATCHPASSWORD));
+					FE_Alert(((MWContext *)gRDFMWContext(*(pane->db->translators))), XP_GetString(RDF_MISMATCHPASSWORD));
 					break;
 				}
 				ht_SetPassword(node, password1);
@@ -5605,7 +5518,7 @@ htVerifyUniqueToken(HT_Resource node, void *token, uint32 tokenType, char *data)
 				data, resourceID(r));
 			if (msg != NULL)
 			{
-				ok = FE_Confirm(((MWContext *)gRDFMWContext(NULL)), msg);
+				ok = FE_Confirm(((MWContext *)gRDFMWContext(*(node->view->pane->db->translators))), msg);
 				XP_FREE(msg);
 			}
 		}
@@ -7345,7 +7258,7 @@ HT_Properties (HT_Resource node)
 
 		if ((context = XP_GetNavCenterContext(node->view->pane)) == NULL)
 		{
-			context = gRDFMWContext(NULL);
+			context = gRDFMWContext(*(node->view->pane->db->translators));
 		}
 		XP_MakeHTMLDialog(context, &rdfWorkspacePropDialogInfo,
 			RDF_MAIN_TITLE, strings, node, PR_TRUE);
@@ -8602,12 +8515,12 @@ htRemoveChild(HT_Resource parent, HT_Resource child, PRBool moveToTrash)
 		{
 			if (HT_IsContainer(child))
 			{
-				if (!FE_Confirm(((MWContext *)gRDFMWContext(NULL)),
+				if (!FE_Confirm(((MWContext *)gRDFMWContext(*(child->view->pane->db->translators))),
 					PR_smprintf(XP_GetString(RDF_DELETEFOLDER),
 					resourceID(child->node))))	return(true);
 				if (fsRemoveDir(NULL, resourceID(child->node), true) == true)
 				{
-					FE_Alert(((MWContext *)gRDFMWContext(NULL)),
+					FE_Alert(((MWContext *)gRDFMWContext(*(child->view->pane->db->translators))),
 						PR_smprintf(XP_GetString(RDF_UNABLETODELETEFOLDER),
 						resourceID(child->node)));
 					return(true);
@@ -8615,12 +8528,12 @@ htRemoveChild(HT_Resource parent, HT_Resource child, PRBool moveToTrash)
 			}
 			else
 			{
-				if (!FE_Confirm(((MWContext *)gRDFMWContext(NULL)),
+				if (!FE_Confirm(((MWContext *)gRDFMWContext(*(child->view->pane->db->translators))),
 					PR_smprintf(XP_GetString(RDF_DELETEFILE),
 					 resourceID(child->node))))	return(true);
 				if (CallPRWriteAccessFileUsingFileURL(resourceID(child->node)))
 				{
-					FE_Alert(((MWContext *)gRDFMWContext(NULL)),
+					FE_Alert(((MWContext *)gRDFMWContext(*(child->view->pane->db->translators))),
 						PR_smprintf(XP_GetString(RDF_UNABLETODELETEFILE),
 						resourceID(child->node)));
 					return(true);
@@ -8792,7 +8705,7 @@ ht_checkPassword(HT_Resource node, PRBool alwaysCheck)
 				name = 	 resourceID(node->node);
 			}
 
-			if ((userPassword = FE_PromptPassword(((MWContext *)gRDFMWContext(NULL)),
+			if ((userPassword = FE_PromptPassword(((MWContext *)gRDFMWContext(*(node->view->pane->db->translators))),
 						PR_smprintf(XP_GetString(RDF_ENTERPASSWORD),
 						name))) != NULL)
 			{
@@ -8803,7 +8716,7 @@ ht_checkPassword(HT_Resource node, PRBool alwaysCheck)
 				}
 				else
 				{
-					FE_Alert(((MWContext *)gRDFMWContext(NULL)), XP_GetString(RDF_MISMATCHPASSWORD));
+					FE_Alert(((MWContext *)gRDFMWContext(*(node->view->pane->db->translators))), XP_GetString(RDF_MISMATCHPASSWORD));
 				}
 			}
 		}
