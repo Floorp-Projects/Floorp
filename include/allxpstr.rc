@@ -6497,6 +6497,18 @@ ResDef(XP_EDT_REPLACE_CELLS, (XP_MSG_BASE + 846),
 ResDef(XP_EDT_PASTE_AS_TABLE, (XP_MSG_BASE + 847),
 "Paste text as a new table?")
 
+ResDef(XP_EDT_CHARSET_LABEL, (XP_MSG_BASE + 849),
+"The character set label of this page is '%s'.")
+ResDef(XP_EDT_CHARSET_CANT_EDIT, (XP_MSG_BASE + 850),
+"\nCommunicator does not recognize this and cannot edit it.")
+ResDef(XP_EDT_CURRENT_CHARSET, (XP_MSG_BASE + 851),
+"\nYour current character set is '%s'.")
+ResDef(XP_EDT_CHARSET_EDIT_REPLACE, (XP_MSG_BASE + 852),
+"\nSelect OK to edit the page and change the character set label to '%s'.")
+ResDef(XP_EDT_CHARSET_EDIT_CANCEL, (XP_MSG_BASE + 853),
+"\nSelect Cancel to abort editing this page.")
+ResDef(XP_EDT_CHARSET_EDIT_NOREPLACE, (XP_MSG_BASE + 854),
+"\nSelect Cancel to edit the page and keep '%s'.")
 
 ResDef(MK_ADDR_DELETE_ALL, XP_MSG_BASE+860, "Delete From All Lists")  /* new entry in address book context menus - delete all from list */
 ResDef(MK_ADDR_IMPORT_CARDS, XP_MSG_BASE+861, "Adding cards to %s") /* line text for progress window on importing an address book */
