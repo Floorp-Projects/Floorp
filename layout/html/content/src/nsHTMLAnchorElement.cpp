@@ -202,17 +202,16 @@ nsHTMLAnchorElement::Blur()
 NS_IMETHODIMP
 nsHTMLAnchorElement::Focus()
 {
-  nsIDocument* doc; // Strong
-  nsresult rv = GetDocument(doc);
+  nsCOMPtr<nsIDocument> doc; // Strong
+  nsresult rv = GetDocument(*getter_AddRefs(doc));
   if (NS_FAILED(rv)) { return rv; }
   if (!doc) { return NS_ERROR_NULL_POINTER; }
 
   PRInt32 numShells = doc->GetNumberOfShells();
-  nsIPresShell* shell = nsnull; // Strong
   nsCOMPtr<nsIPresContext> context;
   for (PRInt32 i=0; i<numShells; i++) 
   {
-    shell = doc->GetShellAt(i);
+    nsCOMPtr<nsIPresShell> shell = getter_AddRefs(doc->GetShellAt(i));
     if (!shell) { return NS_ERROR_NULL_POINTER; }
 
     rv = shell->GetPresContext(getter_AddRefs(context));
@@ -221,10 +220,7 @@ nsHTMLAnchorElement::Focus()
 
     rv = SetFocus(context);
     if (NS_FAILED(rv)) { return rv; }
-
-    NS_RELEASE(shell);
   }
-  NS_RELEASE(doc);
 
   return NS_OK;
 }
