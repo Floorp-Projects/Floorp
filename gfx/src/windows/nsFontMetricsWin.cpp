@@ -4175,6 +4175,19 @@ GenerateSingleByte(nsCharsetInfo* aSelf)
   }
   mb[145] = 145;
   mb[146] = 146;
+
+  if (aSelf->mCodePage == 1250) {
+    mb[138] = 138;
+    mb[140] = 140;
+    mb[141] = 141;
+    mb[142] = 142;
+    mb[143] = 143;
+    mb[154] = 154;
+    mb[156] = 156;
+    mb[158] = 158;
+    mb[159] = 159;
+  }
+
   for (i = 160; i < 255; ++i) {
     mb[i] = i;
   }
