@@ -19,6 +19,8 @@
 #include "nsToken.h"
 #include "nsScanner.h"
 
+MOZ_DECL_CTOR_COUNTER(CToken);
+
 static int TokenCount=0;
 static int DelTokenCount=0;
 
@@ -35,6 +37,7 @@ int CToken::GetTokenCount(){return TokenCount-DelTokenCount;}
  *  @update gess 7/21/98
  */
 CToken::CToken(PRInt32 aTag) : mTextValue() {
+  MOZ_COUNT_CTOR(CToken);
   mTypeID=aTag;
   mAttrCount=0;
   TokenCount++;
@@ -49,6 +52,7 @@ CToken::CToken(PRInt32 aTag) : mTextValue() {
  *  @param  nsString--name of token
  */
 CToken::CToken(const nsString& aName) : mTextValue(aName) {
+  MOZ_COUNT_CTOR(CToken);
   mTypeID=0;
   mAttrCount=0;
   TokenCount++;
@@ -63,6 +67,7 @@ CToken::CToken(const nsString& aName) : mTextValue(aName) {
  *  @param  aName--char* containing name of token
  */
 CToken::CToken(const char* aName) : mTextValue(aName) {
+  MOZ_COUNT_CTOR(CToken);
   mTypeID=0;
   mAttrCount=0;
   TokenCount++;
@@ -76,6 +81,7 @@ CToken::CToken(const char* aName) : mTextValue(aName) {
  *  @update gess 3/25/98
  */
 CToken::~CToken() {
+  MOZ_COUNT_DTOR(CToken);
   DelTokenCount++;
 }
 
