@@ -250,7 +250,7 @@ nsIAtom*  nsDirectoryService::sFontsDirectory = nsnull;
 nsIAtom*  nsDirectoryService::sPreferencesDirectory = nsnull;
 nsIAtom*  nsDirectoryService::sDocumentsDirectory = nsnull;
 nsIAtom*  nsDirectoryService::sInternetSearchDirectory = nsnull;
-#elif defined (XP_PC) 
+#elif defined (XP_PC) && !defined(XP_OS2)
 nsIAtom*  nsDirectoryService::sSystemDirectory = nsnull;
 nsIAtom*  nsDirectoryService::sWindowsDirectory = nsnull;
 nsIAtom*  nsDirectoryService::sHomeDirectory = nsnull;
@@ -356,7 +356,7 @@ nsDirectoryService::Init()
     nsDirectoryService::sPreferencesDirectory       = NS_NewAtom("system.PreferencesDirectory");
     nsDirectoryService::sDocumentsDirectory         = NS_NewAtom("system.DocumentsDirectory");
     nsDirectoryService::sInternetSearchDirectory    = NS_NewAtom("system.InternetSearchDirectory");
-#elif defined (XP_PC) 
+#elif defined (XP_PC) && !defined(XP_OS2)
     nsDirectoryService::sSystemDirectory            = NS_NewAtom("system.SystemDirectory");
     nsDirectoryService::sWindowsDirectory           = NS_NewAtom("system.WindowsDirectory");
     nsDirectoryService::sHomeDirectory              = NS_NewAtom("system.HomeDirectory");
@@ -446,7 +446,7 @@ nsDirectoryService::~nsDirectoryService()
      NS_IF_RELEASE(nsDirectoryService::sPreferencesDirectory);
      NS_IF_RELEASE(nsDirectoryService::sDocumentsDirectory);
      NS_IF_RELEASE(nsDirectoryService::sInternetSearchDirectory);
-#elif defined (XP_PC) 
+#elif defined (XP_PC) && !defined(XP_OS2)
      NS_IF_RELEASE(nsDirectoryService::sSystemDirectory);
      NS_IF_RELEASE(nsDirectoryService::sWindowsDirectory);
      NS_IF_RELEASE(nsDirectoryService::sHomeDirectory);
@@ -749,7 +749,7 @@ nsDirectoryService::GetFile(const char *prop, PRBool *persistant, nsIFile **_ret
         nsSpecialSystemDirectory fileSpec(nsSpecialSystemDirectory::Mac_InternetSearchDirectory); 
         rv = NS_FileSpecToIFile(&fileSpec, getter_AddRefs(localFile));  
     }   
-#elif defined (XP_PC)        
+#elif defined (XP_PC) && !defined(XP_OS2)
     else if (inAtom == nsDirectoryService::sSystemDirectory)
     {
         nsSpecialSystemDirectory fileSpec(nsSpecialSystemDirectory::Win_SystemDirectory); 
