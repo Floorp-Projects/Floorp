@@ -30,7 +30,7 @@
 			<separator class="thin"/>
 			<radiogroup orient="vertical">
 				<radio value="&openSaveAttachmentOpen.label;" oncommand="onOpen();" />
-				<radio id="save_it" value="&openSaveAttachmentSave.label;" oncommand="onSave();" checked="true" />
+				<radio id="saveIt" value="&openSaveAttachmentSave.label;" oncommand="onSave();" checked="true"/>
 			</radiogroup>
 			<separator class="thin"/>
 		</box>

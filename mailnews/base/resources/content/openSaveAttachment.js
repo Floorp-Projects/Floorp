@@ -34,10 +34,9 @@ function onLoad()
   var saveit = document.getElementById("saveIt");
   if (saveit)
   {
-    item.setAttribute('checked', true);
     window.arguments[0].opval = 2;
   }
-  doSetOKCancel(0, onCancel);
+  doSetOKCancel(0, onCancel, 0, 0);
 }
 
 function onOpen()
@@ -53,4 +52,5 @@ function onSave()
 function onCancel()
 {
   window.arguments[0].opval = 0;
+  return true;
 }
