@@ -203,6 +203,12 @@ NS_IMETHODIMP GlobalWindowImpl::GetContext(nsIScriptContext **aContext)
 
 NS_IMETHODIMP GlobalWindowImpl::SetNewDocument(nsIDOMDocument *aDocument)
 {
+   if(mXPConnectObjectHash)
+      {
+      delete mXPConnectObjectHash;
+      mXPConnectObjectHash = nsnull;
+      }
+
    if(mFirstDocumentLoad)
       {
       mFirstDocumentLoad = PR_FALSE;
@@ -2337,16 +2343,14 @@ NS_IMETHODIMP GlobalWindowImpl::OpenInternal(JSContext* cx, jsval* argv,
    PRUint32 argc, PRBool aDialog, nsIDOMWindow** aReturn)
 {
    PRUint32 chromeFlags;
-   nsAutoString mAbsURL, name;
+   nsAutoString name;
    JSString* str;
    char* options;
    *aReturn = nsnull;
    PRBool nameSpecified = PR_FALSE;
-   PRBool loadURL = PR_TRUE;
+   nsCOMPtr<nsIURI> uriToLoad;
 
-   if(argc == 0)
-      loadURL = PR_FALSE;
-   else if(argc > 0)
+   if(argc > 0)
       {
       JSString *mJSStrURL = JS_ValueToString(cx, argv[0]);
       NS_ENSURE_TRUE(mJSStrURL, NS_ERROR_FAILURE);
@@ -2354,10 +2358,9 @@ NS_IMETHODIMP GlobalWindowImpl::OpenInternal(JSContext* cx, jsval* argv,
       nsAutoString mURL;
       mURL.Assign(JS_GetStringChars(mJSStrURL));
     
-      if(mURL.Equals(""))
-         loadURL = PR_FALSE;
-      else 
+      if(!mURL.Equals("")) 
          {
+         nsAutoString mAbsURL;
          if(mDocument)
             {
             // Build absolute URL relative to this document.
@@ -2377,11 +2380,10 @@ NS_IMETHODIMP GlobalWindowImpl::OpenInternal(JSContext* cx, jsval* argv,
             // No document.  Probably because this window's URL hasn't finished
             // loading.  All we can do is hope the URL we've been given is absolute.
             mAbsURL.Assign(JS_GetStringChars(mJSStrURL));
-            nsCOMPtr<nsIURI> test;
             // Make URI; if mAbsURL is relative (or otherwise bogus) this will fail.
-            NS_ENSURE_SUCCESS(NS_NewURI(getter_AddRefs(test), mAbsURL),
-               NS_ERROR_FAILURE);
             }
+         NS_ENSURE_SUCCESS(NS_NewURI(getter_AddRefs(uriToLoad), mAbsURL),
+            NS_ERROR_FAILURE);
          }
       }
   
@@ -2443,7 +2445,7 @@ NS_IMETHODIMP GlobalWindowImpl::OpenInternal(JSContext* cx, jsval* argv,
       AttachArguments(*aReturn, argv+3, argc-3);
 
    nsCOMPtr<nsIScriptSecurityManager> secMan;
-   if(loadURL)
+   if(uriToLoad)
       {
       // Get security manager, check to see if URI is allowed.
       nsCOMPtr<nsIURI> newUrl;
@@ -2452,8 +2454,7 @@ NS_IMETHODIMP GlobalWindowImpl::OpenInternal(JSContext* cx, jsval* argv,
                                           getter_AddRefs(scriptCX));
       if(!scriptCX ||
          NS_FAILED(scriptCX->GetSecurityManager(getter_AddRefs(secMan))) ||
-         NS_FAILED(NS_NewURI(getter_AddRefs(newUrl), mAbsURL)) ||
-         NS_FAILED(secMan->CheckLoadURIFromScript(cx, newUrl))) 
+         NS_FAILED(secMan->CheckLoadURIFromScript(cx, uriToLoad))) 
          return NS_ERROR_FAILURE;
       }
 
@@ -2462,33 +2463,22 @@ NS_IMETHODIMP GlobalWindowImpl::OpenInternal(JSContext* cx, jsval* argv,
    else 
       newDocShellItem->SetName(nsnull);
 
-   nsCOMPtr<nsIWebShell> webShell(do_QueryInterface(newDocShellItem));
-   if(loadURL)
+   nsCOMPtr<nsIDocShell> newDocShell(do_QueryInterface(newDocShellItem));
+   if(uriToLoad)
       {
-      //XXXPERFORMANCE, we should get the uri and load it directly
-      //instead of loading with the character string.
-      nsCOMPtr<nsIWebNavigation> webNav(do_QueryInterface(newDocShellItem));
-      NS_ENSURE_TRUE(webNav, NS_ERROR_FAILURE);
       nsCOMPtr<nsIPrincipal> principal;
       if (NS_FAILED(secMan->GetSubjectPrincipal(getter_AddRefs(principal))))
          return NS_ERROR_FAILURE;
       nsCOMPtr<nsICodebasePrincipal> codebase = do_QueryInterface(principal);
+
+      nsCOMPtr<nsIURI> codebaseURI;
       if(codebase)
          {
-         nsCOMPtr<nsIURI> codebaseURI;
          nsresult rv;
          if (NS_FAILED(rv = codebase->GetURI(getter_AddRefs(codebaseURI))))
             return rv;
-         nsXPIDLCString spec;
-         if (NS_FAILED(rv = codebaseURI->GetSpec(getter_Copies(spec))))
-            return rv;
-         nsAutoString referrer(spec);
-         webShell->LoadURL(mAbsURL.GetUnicode(), nsnull, PR_TRUE, 
-                           nsIChannel::LOAD_NORMAL, 0, nsnull, 
-                           referrer.GetUnicode());
-         } 
-      else
-         webNav->LoadURI(mAbsURL.GetUnicode());
+         }
+      newDocShell->LoadURI(uriToLoad, codebaseURI); 
       }
 
    if(windowIsNew)
