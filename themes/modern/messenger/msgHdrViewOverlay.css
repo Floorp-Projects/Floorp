@@ -40,9 +40,9 @@ mail-emailaddress {
 .buttonTopSpacer     { height: .3em; }
 .buttonSpacer        { width: .5em; }
 .headerBox              { overflow: hidden; min-width:50px;}
-.header-part1           { background-color: #EEEEEE; border: none; }
-.header-part2           { background-color: #CCCCCC; border: none; }
-.header-part3           { background-color: #CCCCCC; border: none; }
+.header-part1           { background-color: #EEEEEE; border: none; color: #000000; }
+.header-part2           { background-color: #CCCCCC; border: none; color: #000000; }
+.header-part3           { background-color: #CCCCCC; border: none; color: #000000; }
 
 #msgHeaderView > toolbar > .toolbar-holder {
   border: none;

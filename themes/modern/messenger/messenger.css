@@ -82,21 +82,8 @@ iframe {
 #button-getmsg {
   -moz-binding          : url("chrome://communicator/skin/menubuttonBindings.xml#menubutton-dual-standard");
   margin                : 3px 3px 1px 3px;
-  text-align            : center;
   list-style-image      : url("chrome://messenger/skin/getmsg.gif");
 }
-
-#button-getmsg > .menubutton-dual-stack > .menubutton-dual-button
-  {
-    margin                : 0px;
-    padding               : 0px;
-  }
-
-#button-getmsg > .menubutton-dual-stack > .menubutton-dual-dropmarker-box
-  {
-    margin-left           : 25px;
-    margin-top            : 21px;
-  }
 
 #button-getmsg[disabled="true"],
 #button-getmsg[disabled="true"] > .menubutton-dual-stack > .menubutton-dual-button:hover,
@@ -267,20 +254,7 @@ iframe {
   {
     -moz-binding          : url("chrome://communicator/skin/menubuttonBindings.xml#menubutton-dual-standard");
     margin                : 3px 3px 1px 3px;
-    text-align            : center;
     list-style-image      : url("chrome://messenger/skin/mark.gif");
-  }
-
-#button-mark > .menubutton-dual-stack > .menubutton-dual-button
-  {
-    margin                : 0px;
-    padding               : 0px;
-  }
-
-#button-mark > .menubutton-dual-stack > .menubutton-dual-dropmarker-box
-  {
-    margin-left       : 22px;
-    margin-top				: 21px;
   }
     
 #button-mark[disabled="true"],
@@ -304,20 +278,7 @@ iframe {
   {
     -moz-binding          : url("chrome://communicator/skin/menubuttonBindings.xml#menubutton-dual-standard");
     margin                : 3px 3px 1px 3px;
-    text-align            : center;
     list-style-image      : url("chrome://global/skin/print.gif");
-  }
-
-#button-print > .menubutton-dual-stack > .menubutton-dual-button
-  {
-  	margin				  : 0px;
-  	padding				  : 0px;
-  }
-
-#button-print > .menubutton-dual-stack > .menubutton-dual-dropmarker-box
-  {
-    margin-left       : 22px;
-    margin-top				: 21px;
   }
 
 #button-print[disabled="true"],
