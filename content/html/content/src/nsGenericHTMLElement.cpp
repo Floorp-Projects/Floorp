@@ -880,7 +880,8 @@ nsGenericHTMLElement::GetInnerHTML(nsAString& aInnerHTML)
 
   NS_ENSURE_TRUE(docEncoder, NS_ERROR_FAILURE);
 
-  docEncoder->Init(doc, NS_LITERAL_STRING("text/html"), 0);
+  docEncoder->Init(doc, NS_LITERAL_STRING("text/html"),
+                   nsIDocumentEncoder::OutputEncodeEntities);
 
   nsCOMPtr<nsIDOMRange> range(new nsRange);
   NS_ENSURE_TRUE(range, NS_ERROR_OUT_OF_MEMORY);
