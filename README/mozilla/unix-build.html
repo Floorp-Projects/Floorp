@@ -1,16 +1,15 @@
 <HTML>
 <HEAD>
-<TITLE>Building Mozilla on unix platforms</TITLE>
+<TITLE>Building the Mozilla client on unix platforms</TITLE>
 </HEAD>
 <BODY BGCOLOR="#FFFFFF" TEXT="#000000" LINK="#0000EE" VLINK="#551A8B"
 ALINK="#FF0000">
 <HR>
-<H1>
-Building Mozilla on Unix platforms</H1>
+<H1>Building the Mozilla client on Unix platforms</H1>
 
 <H2>
-Daniel Nunes, <TT><A HREF="mailto:leaf@netscape.com">leaf@netscape.com</A></TT></H2>
-v 1.0, June 1998
+Daniel Nunes, <TT><A HREF="mailto:leaf@mozilla.org">leaf@mozilla.org</A></TT></H2>
+v 1.2, 1998-11-02
 
 <P>
 <HR><I>How to build Mozilla on a Unix System.</I>
@@ -27,10 +26,10 @@ v 1.0, June 1998
 <A HREF="#ss2.2">2.2 Requirements</A></LI>
 
 <LI>
-<A HREF="#ss2.3">2.3 Set up the Build Environment</A></LI>
+<A HREF="#ss2.3">2.3 Build the Lizard</A></LI>
 
 <LI>
-<A HREF="#ss2.4">2.4 Build the Lizard </A></LI>
+<A HREF="#ss2.4">2.4 After the Build</A></LI>
 </UL>
 
 <H2>3. <A HREF="#s3"> Common Problems </A></H2>
@@ -39,18 +38,27 @@ v 1.0, June 1998
 <H2><A NAME="s1">1. Introduction</A></H2>
 
 <P>
+Perhaps you are interested in building classic Mozilla, before the 
+fall of the old layout engine, and the rise of the new. If so, the
+<B><A HREF="classic-unix.html">Classic Mozilla Build document</A></B> 
+is what you're looking for.
+
+<P>
+ 
+<P>
 What this document is: A guide to building the Mozilla application.
 <BR>
 This includes:
 <OL>
 <LI> A listing of the development tools you will need to build Mozilla. </LI>
-<LI> A list of environment variables you will need to set before building. </LI>
+<LI> A sample set of commands to build Mozilla using the Autoconf 
+build system. </LI>
 </OL>
 <P>
 If you're looking for documentation on developing features or fixing bugs,
 the Mozilla
-<A HREF="http://www.mozilla.org/docs/tplist/tplist.html">Technical Documents
-</A> or <A HREF="http://www.mozilla.org/library.html"> Library </A>
+<A HREF="../tplist.html">Technical Documents</A> or 
+<A HREF="../../../library.html"> Library </A>
 are probably what you're looking for.
 <P>
 <HR>
@@ -59,24 +67,56 @@ are probably what you're looking for.
 <UL>Each of the following subsections describes, or gives references to
 descriptions of, the steps necessary to build Mozilla.
 </UL>
+<UL>
 <H2><A NAME="ss2.1">2.1 Get the Code</A></H2>
 <P>
 <UL>
-There are two principal ways of getting the code,
-<A HREF="http://www.mozilla.org/download.html"> ftp</A> and
-<A HREF="http://www.mozilla.org/cvs.html"> CVS</A>.
-CVS will provide the least outdated code for building, but is
-slower than ftp.
+
+Eventually, there will be two principal ways of getting the code,
+<A HREF="../../../download.html"> ftp</A> and
+<A HREF="../../../cvs.html"> CVS</A>.
+CVS will provide the most current code for building, but is
+slower than ftp. Ftp drops are generally produced once per month,
+and are known to compile on some machine, somewhere.
+
+<B>For now</B>, however, you must do the following to obtain the newest 
+browser source:
+<BR>
+<CODE>
+cvs co mozilla/nglayout.mk<BR>
+cd mozilla<BR>
+gmake -f nglayout.mk pull_all<BR>
+</CODE>
+<BR>
+This should pull all the right source.
 </UL>
 <P>
 <H2><A NAME="ss2.2">2.2 Requirements</A></H2>
 <UL>
-The following need to be installed:
+The following should be installed:
 <UL>
-<LI>Motif 1.2 (2.1 recommended for RedHat Linux)
-<LI>GNU C/C++ compiler 2.7.2
+<LI>Motif 1.2
+<LI>The native C/C++ compiler (or GNU C/C++ compiler 2.7.2 in lieu of the 
+    native compiler)
 <LI>GNU make 3.74 or better
-<LI>Perl (or, if you have no Perl, then set <CODE>PERL=/bin/echo</CODE>)
+<LI>Perl5
+<LI><A HREF="../../../projects/autoconf/">Autconf</A> requirements, 
+    including NSPR.
+<LI><CODE>LD_LIBRARY_PATH</CODE> must include the path to the NSPR
+    shared objects.<BR>
+    For most people, this means adding <CODE>/usr/local/nspr/lib</CODE> 
+    to <CODE>LD_LIBRARY_PATH</CODE> 
+    (either:
+     <BR> 
+    <CODE>setenv LD_LIBRARY_PATH ${LD_LIBRARY_PATH}:/usr/local/nspr/lib</CODE>
+     <BR>
+      or 
+     <BR>
+    <CODE>export LD_LIBRARY_PATH=${LD_LIBRARY_PATH}:/usr/local/nspr/lib</CODE>
+     .<BR>
+     If you get an error like "No such variable" then omit the 
+     <CODE>${LD_LIBRARY_PATH}:</CODE> part
+   )
 </UL>
 <P>
 Your hardware should be equal to, or better than:
@@ -85,51 +125,37 @@ Your hardware should be equal to, or better than:
 </UL>
 </UL>
 <P>
-<H2><A NAME="ss2.3">2.3 Setup the Build Environment</A></H2>
+<H2><A NAME="ss2.3">2.3 Build the Lizard</A></H2>
 <P>
 <UL>
-The following environment variables need to be set:
 <CODE>
-<PRE>
-MOZILLA_CLIENT=1
-MOZ_MEDIUM=1
-NO_SECURITY=1
-NO_MDUPDATE=1
-</PRE>
+autoconf<BR>
+mkdir obj-`./build/autoconf/config.guess`<BR>
+cd obj-`./build/autoconf/config.guess`<BR>
+../configure --with-nspr=/usr/local/nspr --enable-toolkit=motif<BR>
+gmake depend<BR>
+gmake<BR>
 </CODE>
-Optionally, you can set <CODE>BUILD_OPT=1</CODE> if you don't want a debug
-build.
-<BR>
-Environment variables are set by the shell, and each shell may or may not have
-its own way of setting them. Type <CODE>man setenv</CODE> to find out how your
-shell sets variables, if you don't know already.
-<P>
 </UL>
-
-<H2><A NAME="ss2.4">2.4 Run the build </A></H2>
+<H2><A NAME="ss2.4">2.4 After the build </A></H2>
 <UL>
-Change to the directory you copied the source into (for example,
-<CODE>cd /builds</CODE>). If this directory was empty before you
-installed the source, there should be two directories here:
-<CODE>README</CODE> and <CODE>mozilla</CODE>.
-<CODE>
-<PRE>
-cd mozilla
-gmake
-</PRE>
-</CODE>
+
+<LI> <CODE>cd dist/bin</CODE> and you should see links to the objects you
+      need to run <CODE>main</CODE>. 
+
+<LI>On most unixen LD_LIBRARY_PATH must be set to wherever the necessary
+libraries are. 
+
+<UL>
+<LI>On HP-UX, the equivalent environment variable is <CODE>SHLIB_PATH</CODE>.
+<LI>On AIX, the equivalent environment variable is <CODE>LIBPATH</CODE>.
+</UL>
+</UL>
 </UL>
 <HR>
 <H2><A NAME="s3">3. Common Sticking Points</A></H2>
-<LI>My linker dies with this error: undefined reference to `_Xsetlocale'
-<UL>If this error occurs, you might have to recompile libX11.so
-with the -DX_LOCALE flag (thanks to Scott Lampert,
-<A HREF="mailto:fortunato@heavymetal.org">fortunato@heavymetal.org</A>).
-This problem stems from use of an older version of RedHat Motif.
-Moving to Motif 2.1 should resolve this. There are probably other problems
-with using the older versions of Motif, but i haven't encountered them.
-
-</UL>
+<LI>I'm sure there are bound to be some. Send 
+<A HREF="mailto:leaf@mozilla.org"> me</A> mail. 
 <HR>
 
 
