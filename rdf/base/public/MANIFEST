@@ -9,3 +9,4 @@ nsIRDFResourceFactory.h
 nsIRDFService.h
 nsIRDFXMLDataSource.h
 nsIRDFXMLSource.h
+nsRDFResource.h
