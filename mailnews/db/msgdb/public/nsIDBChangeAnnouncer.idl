@@ -1,0 +1,39 @@
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+ *
+ * The contents of this file are subject to the Netscape Public License
+ * Version 1.0 (the "NPL"); you may not use this file except in
+ * compliance with the NPL.  You may obtain a copy of the NPL at
+ * http://www.mozilla.org/NPL/
+ *
+ * Software distributed under the NPL is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the NPL
+ * for the specific language governing rights and limitations under the
+ * NPL.
+ *
+ * The Initial Developer of this code under the NPL is Netscape
+ * Communications Corporation.  Portions created by Netscape are
+ * Copyright (C) 1999 Netscape Communications Corporation.  All Rights
+ * Reserved.
+ */
+
+#include "nsISupports.idl"
+#include "MailNewsTypes2.idl"
+
+interface nsIDBChangeListener;
+
+[scriptable, uuid(2aa6733a-2b36-11d3-a51c-0060b0fc04b7)]
+
+interface nsIDBChangeAnnouncer  : nsISupports {
+ /* these 2 calls return NS_OK on success, NS_COMFALSE on failure */
+  void AddListener(in nsIDBChangeListener listener);
+  void RemoveListener(in nsIDBChangeListener listener);
+
+  void NotifyKeyChangeAll(in nsMsgKey keyChanged, in unsigned long aOldFlags, in unsigned long aNewFlags, 
+                                in nsIDBChangeListener instigator);
+  void NotifyKeyAddedAll(in nsMsgKey keyAdded, in long flags, 
+                               in nsIDBChangeListener instigator);
+  void NotifyKeyDeletedAll(in nsMsgKey keyDeleted, in long flags, 
+                                 in nsIDBChangeListener instigator);
+  void NotifyAnnouncerGoingAway();
+};
+
