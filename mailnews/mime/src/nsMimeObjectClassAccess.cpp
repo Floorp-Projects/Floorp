@@ -16,6 +16,7 @@
  * Reserved.
  */
 #include "stdio.h"
+#include "mimecom.h"
 #include "nscore.h"
 #include "nsIFactory.h"
 #include "nsISupports.h"
@@ -79,41 +80,48 @@ nsMimeObjectClassAccess::MimeObjectWrite(void *mimeObject,
                                 PRInt32 length, 
                                 PRBool user_visible_p)
 {
+  int rc = XPCOM_MimeObject_write(mimeObject, data, length, user_visible_p);
   return NS_OK;
 }
 
 nsresult 
 nsMimeObjectClassAccess::GetmimeInlineTextClass(void **ptr)
 {
+  *ptr = XPCOM_GetmimeInlineTextClass();
   return NS_OK;
 }
 
 nsresult 
 nsMimeObjectClassAccess::GetmimeLeafClass(void **ptr)
 {
+  *ptr = XPCOM_GetmimeLeafClass();
   return NS_OK;
 }
 
 nsresult 
 nsMimeObjectClassAccess::GetmimeObjectClass(void **ptr)
 {
+  *ptr = XPCOM_GetmimeObjectClass();
   return NS_OK;
 }
 
 nsresult 
 nsMimeObjectClassAccess::GetmimeContainerClass(void **ptr)
 {
+  *ptr = XPCOM_GetmimeContainerClass();
   return NS_OK;
 }
 
 nsresult 
 nsMimeObjectClassAccess::GetmimeMultipartClass(void **ptr)
 {
+  *ptr = XPCOM_GetmimeMultipartClass();
   return NS_OK;
 }
 
 nsresult 
 nsMimeObjectClassAccess::GetmimeMultipartSignedClass(void **ptr)
 {
+  *ptr = XPCOM_GetmimeMultipartSignedClass();
   return NS_OK;
 }

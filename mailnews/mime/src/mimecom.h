@@ -22,6 +22,8 @@
 #ifndef _MIMECOM_H_
 #define _MIMECOM_H_
 
+#include "prtypes.h"
+
 /*
  * These functions are exposed by libmime to be used by content type
  * handler plugins for processing stream data. 
@@ -29,18 +31,18 @@
 /*
  * This is the write call for outputting processed stream data.
  */ 
-extern int  XPCOM_MimeObject_write(void *mimeObject, char *data, 
+extern "C" int  XPCOM_MimeObject_write(void *mimeObject, char *data, 
                                   PRInt32 length, 
                                   PRBool user_visible_p);
 /*
  * The following group of calls expose the pointers for the object
  * system within libmime. 
  */                                                        
-extern void *XPCOM_GetmimeInlineTextClass(void);
-extern void *XPCOM_GetmimeLeafClass(void);
-extern void *XPCOM_GetmimeObjectClass(void);
-extern void *XPCOM_GetmimeContainerClass(void);
-extern void *XPCOM_GetmimeMultipartClass(void);
-extern void *XPCOM_GetmimeMultipartSignedClass(void);
+extern "C" void *XPCOM_GetmimeInlineTextClass(void);
+extern "C" void *XPCOM_GetmimeLeafClass(void);
+extern "C" void *XPCOM_GetmimeObjectClass(void);
+extern "C" void *XPCOM_GetmimeContainerClass(void);
+extern "C" void *XPCOM_GetmimeMultipartClass(void);
+extern "C" void *XPCOM_GetmimeMultipartSignedClass(void);
 
 #endif /* _MIMECOM_H_ */
