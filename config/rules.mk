@@ -267,8 +267,9 @@ ifdef MOZ_UPDATE_XTERM
 UPDATE_TITLE = sed -e "s!Y!$@ in $(shell $(BUILD_TOOLS)/print-depth-path.sh)/$$d!" $(topsrcdir)/config/xterm.str;
 endif
 
-ifdef DIRS
 EXIT_ON_ERROR := set -e; # Shell loops continue past errors without this.
+
+ifdef DIRS
 LOOP_OVER_DIRS = \
     @$(EXIT_ON_ERROR) \
     for d in $(DIRS); do \
@@ -279,6 +280,16 @@ LOOP_OVER_DIRS = \
 LOOP_OVER_MOZ_DIRS = \
     @$(EXIT_ON_ERROR) \
     for d in $(filter-out $(STATIC_MAKEFILES), $(DIRS)); do \
+        $(UPDATE_TITLE) \
+        $(MAKE) -C $$d $@; \
+    done
+
+endif
+
+ifdef EXPORT_DIRS
+LOOP_OVER_EXPORT_DIRS = \
+    @$(EXIT_ON_ERROR) \
+    for d in $(EXPORT_DIRS); do \
         $(UPDATE_TITLE) \
         $(MAKE) -C $$d $@; \
     done
@@ -556,9 +567,11 @@ clean clobber realclean clobber_all:: $(SUBMAKEFILES)
 	rm -f $(ALL_TRASH); \
 	rm -rf $(ALL_TRASH_DIRS)
 	+$(LOOP_OVER_DIRS)
+	+$(LOOP_OVER_EXPORT_DIRS)
 
 distclean:: $(SUBMAKEFILES)
 	+$(LOOP_OVER_DIRS)
+	+$(LOOP_OVER_EXPORT_DIRS)
 	rm -f $(ALL_TRASH) ; \
 	rm -rf $(ALL_TRASH_DIRS) ;
 	echo $(wildcard *.map) \

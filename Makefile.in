@@ -31,18 +31,11 @@ include $(topsrcdir)/build/unix/modules.mk
 ifneq ($(BUILD_MODULES),all)
 
 DIRS		= $(BUILD_MODULE_DIRS)
-
-ifdef USE_ELF_DYNSTR_GC
-DIRS		+= tools/elf-dynstr-gc
-endif
+EXPORT_DIRS	= $(BUILD_MODULE_DEP_DIRS)
 
 else
 
 DIRS		= config build
-
-ifdef USE_ELF_DYNSTR_GC
-DIRS		+= tools/elf-dynstr-gc
-endif
 
 ifdef MOZ_L10N
 DIRS        += l10n
@@ -171,4 +164,7 @@ DIST_GARBAGE = config.cache config.log config.status config-defs.h \
    $(topsrcdir)/.mozconfig.mk $(topsrcdir)/.mozconfig.out 
 
 include $(topsrcdir)/config/rules.mk
+
+export::
+	+$(LOOP_OVER_EXPORT_DIRS)
 

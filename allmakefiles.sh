@@ -1003,7 +1003,7 @@ else
 		;;
 	    transformiix) add_makefiles "$MAKEFILES_transformiix"
 		;;
-	    xpcom) add_makefiles "$MAKEFILES_xpcom $MAKEFILES_libreg"
+	    xpcom) add_makefiles "$MAKEFILES_xpcom $MAKEFILES_libreg $MAKEFILES_intl $MAKEFILES_libjar"
 		;;
 	    xpconnect) add_makefiles "
 		$MAKEFILES_xpconnect $MAKEFILES_js $MAKEFILES_xpcom
