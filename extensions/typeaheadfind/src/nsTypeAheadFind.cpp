@@ -730,11 +730,13 @@ nsTypeAheadFind::HandleBackspace()
   if (mTypeAheadBuffer.Length() == 1 && 
       mRepeatingMode != eRepeatingCharReverse) {
     if (mStartFindRange) {
+      mIsFindingText = PR_TRUE; // Prevent selection listener side effects
       mFocusedDocSelection->RemoveAllRanges();
       mFocusedDocSelection->AddRange(mStartFindRange);
     }
 
     mFocusedDocSelection->CollapseToStart();
+    mIsFindingText = PR_FALSE;      
     CancelFind();
     mIsBackspaceProtectOn = PR_TRUE;
 
