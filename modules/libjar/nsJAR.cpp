@@ -226,11 +226,15 @@ nsJAREnumerator::GetNext(nsISupports** aResult)
 
     // pack into an nsIJARItem
     nsIJARItem* jarItem = new nsJARItem(mCurr);
-    jarItem->AddRef();
-    *aResult = jarItem;
-    mIsCurrStale = PR_TRUE; // we just gave this one away
-
-    return NS_OK;
+    if(jarItem)
+    {
+      jarItem->AddRef();
+      *aResult = jarItem;
+      mIsCurrStale = PR_TRUE; // we just gave this one away
+      return NS_OK;
+    }
+    else
+      return NS_ERROR_OUT_OF_MEMORY;
 }
 
 
