@@ -32,7 +32,7 @@
  */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: certificate.c,v $ $Revision: 1.25 $ $Date: 2002/01/10 20:24:46 $ $Name:  $";
+static const char CVS_ID[] = "@(#) $RCSfile: certificate.c,v $ $Revision: 1.26 $ $Date: 2002/01/22 21:56:16 $ $Name:  $";
 #endif /* DEBUG */
 
 #ifndef NSSPKI_H
@@ -190,6 +190,41 @@ nssCertificate_GetDecoding
     return c->decoding;
 }
 
+static void
+nssCertificateArray_Destroy
+(
+  NSSCertificate **certArray
+)
+{
+    NSSCertificate **ci;
+    ci = certArray;
+    while (ci && *ci) {
+	NSSCertificate_Destroy(*ci);
+	ci++;
+    }
+    nss_ZFreeIf(certArray);
+}
+
+static NSSCertificate *
+filter_subject_certs_for_id(NSSCertificate **subjectCerts, NSSItem *id)
+{
+    NSSCertificate **si;
+    NSSCertificate *rvCert = NULL;
+    nssDecodedCert *dcp;
+    /* walk the subject certs */
+    si = subjectCerts;
+    while (*si) {
+	dcp = nssCertificate_GetDecoding(*si);
+	if (dcp->matchIdentifier(dcp, id)) {
+	    /* this cert has the correct identifier */
+	    rvCert = nssCertificate_AddRef(*si);
+	    break;
+	}
+	si++;
+    }
+    return rvCert;
+}
+
 static NSSCertificate *
 find_issuer_cert_for_identifier(NSSCertificate *c, NSSItem *id)
 {
@@ -205,8 +240,12 @@ find_issuer_cert_for_identifier(NSSCertificate *c, NSSItem *id)
 	                                                          NULL,
 	                                                          0,
 	                                                          NULL);
+	if (subjectCerts) {
+	    rvCert = filter_subject_certs_for_id(subjectCerts, id);
+	    nssCertificateArray_Destroy(subjectCerts);
+	}
     }
-    if (!subjectCerts) {
+    if (!rvCert) {
 	/* The general behavior of NSS <3.4 seems to be that if the search
 	 * turns up empty in the temp db, fall back to the perm db,
 	 * irregardless of whether or not the cert itself is perm or temp.
@@ -218,29 +257,10 @@ find_issuer_cert_for_identifier(NSSCertificate *c, NSSItem *id)
 	                                                        NULL,
 	                                                        0,
 	                                                        NULL);
-    }
-    if (subjectCerts) {
-	NSSCertificate *p;
-	nssDecodedCert *dcp;
-	int i = 0;
-	/* walk the subject certs */
-	while ((p = subjectCerts[i++])) {
-	    dcp = nssCertificate_GetDecoding(p);
-	    if (dcp->matchIdentifier(dcp, id)) {
-		/* this cert has the correct identifier */
-		rvCert = p;
-		/* now free all the remaining subject certs */
-		while ((p = subjectCerts[i++])) {
-		    NSSCertificate_Destroy(p);
-		}
-		/* and exit */
-		break;
-	    } else {
-		/* cert didn't have the correct identifier, so free it */
-		NSSCertificate_Destroy(p);
-	    }
+	if (subjectCerts) {
+	    rvCert = filter_subject_certs_for_id(subjectCerts, id);
+	    nssCertificateArray_Destroy(subjectCerts);
 	}
-	nss_ZFreeIf(subjectCerts);
     }
     return rvCert;
 }
@@ -269,6 +289,7 @@ NSSCertificate_BuildChain
     NSSTrustDomain *td;
     NSSCryptoContext *cc;
     nssDecodedCert *dc;
+    NSSCertificate *ct, *cp;
     cc = c->object.cryptoContext; /* NSSCertificate_GetCryptoContext(c); */
     td = NSSCertificate_GetTrustDomain(c);
 #ifdef NSS_3_4_CODE
@@ -292,25 +313,26 @@ NSSCertificate_BuildChain
 		goto finish;
 	    }
 	} else {
+	    nssBestCertificateCB best;
 	    NSSDER *issuer = &c->issuer;
 #ifdef NSS_3_4_CODE
 	    PRBool tmpca = usage->nss3lookingForCA;
 	    usage->nss3lookingForCA = PR_TRUE;
 #endif
-	    c = NULL;
+	    c = ct = cp = NULL;
 	    if (cc) {
-		c = NSSCryptoContext_FindBestCertificateBySubject(cc,
-		                                                  issuer,
-		                                                  timeOpt,
-		                                                  usage,
-		                                                  policiesOpt);
+		ct = NSSCryptoContext_FindBestCertificateBySubject(cc,
+		                                                   issuer,
+		                                                   timeOpt,
+		                                                   usage,
+		                                                   policiesOpt);
 		/* Mimic functionality from CERT_FindCertIssuer.  If a matching
 		 * cert (based on trust & usage) cannot be found, just take the
 		 * newest cert with the correct subject.
 		 */
-		if (!c && !usage->anyUsage) {
+		if (!ct && !usage->anyUsage) {
 		    usage->anyUsage = PR_TRUE;
-		    c = NSSCryptoContext_FindBestCertificateBySubject(cc,
+		    ct = NSSCryptoContext_FindBestCertificateBySubject(cc,
 		                                                  issuer,
 		                                                  timeOpt,
 		                                                  usage,
@@ -318,26 +340,47 @@ NSSCertificate_BuildChain
 		    usage->anyUsage = PR_FALSE;
 		}
 	    }
-	    if (!c) {
-		c = NSSTrustDomain_FindBestCertificateBySubject(td,
-		                                                issuer,
-		                                                timeOpt,
-		                                                usage,
-		                                                policiesOpt);
-	    }
+	    cp = NSSTrustDomain_FindBestCertificateBySubject(td,
+	                                                     issuer,
+	                                                     timeOpt,
+	                                                     usage,
+	                                                     policiesOpt);
 	    /* Mimic functionality from CERT_FindCertIssuer.  If a matching
 	     * cert (based on trust & usage) cannot be found, just take the
 	     * newest cert with the correct subject.
 	     */
-	    if (!c && !usage->anyUsage) {
+	    if (!cp && !usage->anyUsage) {
 		usage->anyUsage = PR_TRUE;
-		c = NSSTrustDomain_FindBestCertificateBySubject(td,
-		                                                issuer,
-		                                                timeOpt,
-		                                                usage,
-		                                                policiesOpt);
+		cp = NSSTrustDomain_FindBestCertificateBySubject(td,
+		                                                 issuer,
+		                                                 timeOpt,
+		                                                 usage,
+		                                                 policiesOpt);
 		usage->anyUsage = PR_FALSE;
 	    }
+	    nssBestCertificate_SetArgs(&best, timeOpt, usage, policiesOpt);
+	    /* Take the better of the best temp and best perm cert, according
+	     * to the given usage
+	     */
+	    if (ct) {
+		nssBestCertificate_Callback(ct, (void *)&best);
+	    }
+	    if (cp) {
+		nssBestCertificate_Callback(cp, (void *)&best);
+	    }
+	    if (!best.cert) {
+		best.usage->anyUsage = PR_TRUE;
+		/* Take the newest of the best temp and best perm cert */
+		if (ct) {
+		    nssBestCertificate_Callback(ct, (void *)&best);
+		}
+		if (cp) {
+		    nssBestCertificate_Callback(cp, (void *)&best);
+		}
+	    }
+	    if (ct) NSSCertificate_Destroy(ct);
+	    if (cp) NSSCertificate_Destroy(cp);
+	    c = best.cert;
 #ifdef NSS_3_4_CODE
 	    usage->nss3lookingForCA = tmpca;
 #endif
