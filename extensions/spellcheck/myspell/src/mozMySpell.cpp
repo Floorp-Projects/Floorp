@@ -299,6 +299,8 @@ NS_IMETHODIMP mozMySpell::Check(const PRUnichar *aWord, PRBool *aResult)
   }
 
   char *charsetWord = (char *) nsMemory::Alloc(sizeof(char) * (outLength+1));
+  NS_ENSURE_TRUE(charsetWord, NS_ERROR_OUT_OF_MEMORY);
+
   rv = mEncoder->Convert(aWord, &inLength, charsetWord, &outLength);
   charsetWord[outLength] = '\0';
 
