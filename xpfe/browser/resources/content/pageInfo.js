@@ -482,6 +482,7 @@ function makeMediaTab()
   var mediaObject = theBundle.getString("mediaObject");
   var mediaEmbed = theBundle.getString("mediaEmbed");
   var mediaLink = theBundle.getString("mediaLink");
+  var mediaInput = theBundle.getString("mediaInput");
 
   var row = null;
   var length = imageList.length;
@@ -494,6 +495,9 @@ function makeMediaTab()
     {
       case "img":
         imageView.addRow([++imageIndex, elem.src, mediaImg]);
+        break;
+      case "input":
+        imageView.addRow([++imageIndex, elem.src, mediaInput]);
         break;
       case "applet":
         imageView.addRow([++imageIndex, elem.code || elem.object, mediaApplet]);
@@ -542,7 +546,7 @@ function grabAllMedia(aWindow, aDocument)
   var linkList = aDocument.getElementsByTagName("link");
   length = linkList.length;
   for (i = 0; i < length; i++)
-    if(linkList[i].rel.toLowerCase() == "icon")
+    if(linkList[i].rel.match(/\bicon\b/i))
       theList = theList.concat(linkList[i]);
 
   return theList.concat(aDocument.images);
@@ -660,10 +664,11 @@ function makePreview(item)
   var oldImage = document.getElementById("thepreviewimage");
 
   var newImage = null;
-  if (item.nodeName.toLowerCase() == "link")
+  var nn = item.nodeName.toLowerCase();
+  if (nn == "link" || nn == "input")
   {
-    newImage = document.createElementNS("http://www.w3.org/1999/xhtml", "IMG");
-    newImage.src = getAbsoluteURL(item.href, item);
+    newImage = new Image();
+    newImage.src = getAbsoluteURL(item.href || item.src, item);
   }
   else
   {
@@ -672,8 +677,10 @@ function makePreview(item)
   }
 
   newImage.setAttribute("id", "thepreviewimage");
-  newImage.width = ("width" in item && item.width) || unknown;
-  newImage.height = ("height" in item && item.height) || unknown;
+  if ("width" in item && item.width)
+    newImage.width = item.width;
+  if ("height" in item && item.height)
+    newImage.height = item.height;
   newImage.removeAttribute("align"); // just in case.
 
   imageContainer.removeChild(oldImage);
