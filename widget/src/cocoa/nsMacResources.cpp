@@ -37,7 +37,7 @@
 
 #include "nsMacResources.h"
 #include <Resources.h>
-
+#include <Processes.h>
 
 short nsMacResources::mRefNum				= kResFileNotOpened;
 short nsMacResources::mSaveResFile	= 0;
@@ -86,11 +86,23 @@ pascal void __terminateResources(void)
 nsresult nsMacResources::OpenLocalResourceFile()
 {
 #ifdef XP_MACOSX
-  // XXX quick and dirty hack to make resources available so we don't crash.
-	if (mRefNum == kResFileNotOpened) {
-    FSSpec spec = { 0, 0, "\plibwidget.rsrc" };
-    if (FindFolder(kUserDomain, kDomainLibraryFolderType, false, &spec.vRefNum, &spec.parID) == noErr)
-      mRefNum = FSpOpenResFile(&spec, fsRdPerm);
+  if (mRefNum == kResFileNotOpened) {
+    ProcessSerialNumber PSN;
+    ProcessInfoRec pinfo;
+    FSSpec appSpec;
+
+    PSN.highLongOfPSN = 0;
+    PSN.lowLongOfPSN = kCurrentProcess;
+    pinfo.processInfoLength = sizeof(pinfo);
+    pinfo.processName = NULL;
+    pinfo.processAppSpec = &appSpec;
+
+    if (GetProcessInformation(&PSN, &pinfo) == noErr) {
+      FSSpec resSpec = { appSpec.vRefNum, appSpec.parID, "\plibwidget.rsrc" };
+      FSRef resRef;
+      if (FSpMakeFSRef(&resSpec, &resRef) == noErr)
+        FSOpenResourceFile(&resRef, 0, NULL, fsRdPerm, &mRefNum);
+    }
   }
 #endif
 	if (mRefNum == kResFileNotOpened)

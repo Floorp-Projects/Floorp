@@ -3810,6 +3810,12 @@
 			isa = PBXTargetDependency;
 			target = F58581AE022B8D62010001CA;
 		};
+		F585F52902B2C66C01A967F3 = {
+			fileRef = F5F14E9602A5A43A01A967F3;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
 		F58A94F2023F10CA010001CA = {
 			children = (
 				29B97319FDCFA39411CA2CEA,
@@ -5805,6 +5811,7 @@
 				F5BAAC3E02AC6AA201A967F3,
 				F5BAAC3F02AC6AA201A967F3,
 				F5BAAC4002AC6AA201A967F3,
+				F585F52902B2C66C01A967F3,
 			);
 			isa = PBXCopyFilesBuildPhase;
 			name = "Copy Files";
@@ -6073,6 +6080,18 @@
 			name = "Gray Images";
 			refType = 4;
 		};
+		F5F14E9602A5A43A01A967F3 = {
+			isa = PBXFileReference;
+			name = libwidget.rsrc;
+			path = ../dist/Embed/libwidget.rsrc;
+			refType = 2;
+		};
+		F5F14E9802A5A43A01A967F3 = {
+			fileRef = F5F14E9602A5A43A01A967F3;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
 		F5F181C50208006F0124611D = {
 			isa = PBXFileReference;
 			name = history.xpt;
@@ -6200,6 +6219,7 @@
 				F6BD638101B30EA301A962F7,
 				F6BD638201B30EA301A962F7,
 				F6BD638701B30F5301A962F7,
+				F5F14E9602A5A43A01A967F3,
 				F5247C2F0228B5E7013DD99A,
 				F6BD645501B3167601A962F7,
 				F6BD64FB01B3184301A962F7,
@@ -6222,6 +6242,7 @@
 				F6BD638C01B30F5301A962F7,
 				F6BD638D01B30F5301A962F7,
 				F6BD638E01B30F5301A962F7,
+				F5F14E9802A5A43A01A967F3,
 			);
 			isa = PBXCopyFilesBuildPhase;
 			name = "Copy Files";

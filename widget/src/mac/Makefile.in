@@ -114,6 +114,21 @@ include $(topsrcdir)/config/rules.mk
 export:: $(addprefix $(topsrcdir)/gfx/src/mac/,$(GFX_LCPPSRCS))
 	$(INSTALL) $^ .
 
+# nsMacWidget.rsrc is an AppleSingle encoded resource file.
+# For Mach-O, we want to decode it and copy it to a data-fork resource file 
+# that lives in the application directory.
+
+RES_DEST = $(DIST)/bin/libwidget.rsrc
+RES_SRC = $(srcdir)/nsMacWidget.rsrc
+
+$(RES_DEST): $(RES_SRC)
+	$(DIST)/bin/asdecode $(RES_SRC) $(RES_DEST).tmp
+	rm -f $(RES_DEST)
+	cp $(RES_DEST).tmp/rsrc $(RES_DEST)
+	rm -rf $(RES_DEST).tmp
+
+libs:: $(RES_DEST)
+
 LOCAL_INCLUDES	= \
 	$(TK_CFLAGS) \
 	-I$(topsrcdir)/gfx/src/mac \
