@@ -36,7 +36,7 @@ $StartupPerformanceTest   = 0;
 
 $TestsPhoneHome           = 0;  # Should test report back to server?
 $results_server           = "tegu.mozilla.org";
-$pageload_server          = "10.169.115.168";  # localhost
+$pageload_server          = "spider";  # localhost
 
 #
 # Timeouts, values are in seconds.
