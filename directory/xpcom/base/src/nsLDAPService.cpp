@@ -1021,7 +1021,7 @@ nsLDAPService::NextToken(nsReadingIterator<PRUnichar> & aIter,
         ++aIter;
     }
 
-    return token.ToNewCString();
+    return NS_ConvertUCS2toUTF8(token).ToNewCString();
 }
 
 // Note that these 2 functions might go away in the future, see bug 84186.
