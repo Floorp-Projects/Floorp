@@ -46,6 +46,7 @@ CScanner::CScanner(nsString& anHTMLString) :
   mIncremental=PR_FALSE;
   mOwnsStream=PR_FALSE;
   mOffset=0;
+  mMarkPos=-1;
   mFileStream=0;
 }
 
@@ -63,6 +64,7 @@ CScanner::CScanner(nsString& aFilename,PRBool aCreateStream) :
 {
   mIncremental=PR_TRUE;
   mOffset=0;
+  mMarkPos=-1;
   mTotalRead=0;
   mOwnsStream=aCreateStream;
   mFileStream=0;
@@ -92,6 +94,7 @@ CScanner::CScanner(nsString& aFilename,fstream& aStream,PRBool assumeOwnership) 
 {    
   mIncremental=PR_TRUE;
   mOffset=0;
+  mMarkPos=-1;
   mTotalRead=0;
   mOwnsStream=assumeOwnership;
   mFileStream=&aStream;
@@ -125,7 +128,7 @@ CScanner::~CScanner() {
  *  @return  
  */
 PRInt32 CScanner::RewindToMark(void){
-  mOffset=0;
+  mOffset=mMarkPos;
   return mOffset;
 }
 
@@ -140,9 +143,10 @@ PRInt32 CScanner::RewindToMark(void){
  *  @return  
  */
 PRInt32 CScanner::Mark(void){
-  if((mOffset>0) && (mOffset>eBufferSizeThreshold)) {
-    mBuffer.Cut(0,mOffset);   //delete chars up to mark position
-    mOffset=0;
+  mMarkPos=mOffset;
+  if((mMarkPos>0) && (mMarkPos>eBufferSizeThreshold)) {
+    mBuffer.Cut(0,mMarkPos);   //delete chars up to mark position
+    mOffset-=mMarkPos;
   }
   return 0;
 }

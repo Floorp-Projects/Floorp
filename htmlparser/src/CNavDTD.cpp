@@ -119,14 +119,14 @@ CTagStack::CTagStack(int aDefaultSize) {
   mSize=eStackSize;
 #endif
   mCount=0;
-	mPrevious=0;
+  mPrevious=0;
   nsCRT::zero(mTags,mSize*sizeof(eHTMLTags));
   nsCRT::zero(mBits,mSize*sizeof(PRBool));
 }
 
 /**
  * Default constructor
- * @update	gess7/9/98
+ * @update  gess7/9/98
  * @param   aDefaultsize tells the stack what size to start out.
  *          however, we'll autosize as needed.
  */
@@ -142,7 +142,7 @@ CTagStack::~CTagStack() {
 
 /**
  * 
- * @update	gess7/9/98
+ * @update  gess7/9/98
  * @param 
  * @return
  */
@@ -170,7 +170,7 @@ void CTagStack::Push(eHTMLTags aTag) {
 
 /**
  * 
- * @update	gess7/9/98
+ * @update  gess7/9/98
  * @param 
  * @return
  */
@@ -186,7 +186,7 @@ eHTMLTags CTagStack::Pop() {
 
 /**
  * 
- * @update	gess7/9/98
+ * @update  gess7/9/98
  * @param 
  * @return
  */
@@ -198,7 +198,7 @@ eHTMLTags CTagStack::First() const {
 
 /**
  * 
- * @update	gess7/9/98
+ * @update  gess7/9/98
  * @param 
  * @return
  */
@@ -233,7 +233,7 @@ protected:
 
 /**
  * 
- * @update	gess7/25/98
+ * @update  gess7/25/98
  * @param 
  */
 CTokenFactory::CTokenFactory() {
@@ -243,7 +243,7 @@ CTokenFactory::CTokenFactory() {
 
 /**
  * Destructor for the token factory
- * @update	gess7/25/98
+ * @update  gess7/25/98
  */
 CTokenFactory::~CTokenFactory() {
 }
@@ -252,7 +252,7 @@ CTokenFactory::~CTokenFactory() {
  * This method is used as the factory for all HTML tokens. 
  * There will be a corresponding recycler method, so that we can
  * cut down on the number of tokens we create.
- * @update	gess7/24/98
+ * @update  gess7/24/98
  * @param   aType
  * @param   aTag
  * @param   aString
@@ -290,7 +290,7 @@ CToken* CTokenFactory::CreateToken(eHTMLTokenTypes aType, eHTMLTags aTag, const 
 /**
  * This method gets called when the DTD wants to recycle a token
  * it has finished using.
- * @update	gess7/24/98
+ * @update  gess7/24/98
  * @param   aToken -- token to be recycled.
  * @return  nada
  */
@@ -465,7 +465,7 @@ CNavDTD::CNavDTD() : nsIDTD(), mContextStack(), mTokenDeque(gTokenKiller)  {
   mSink = nsnull;
   mDTDDebug=0;
   mLineNumber=1;
-	mStyleStack=new CTagStack();
+  mStyleStack=new CTagStack();
   nsCRT::zero(mTokenHandlers,sizeof(mTokenHandlers));
   mHasOpenForm=PR_FALSE;
   mHasOpenMap=PR_FALSE;
@@ -481,7 +481,7 @@ CNavDTD::CNavDTD() : nsIDTD(), mContextStack(), mTokenDeque(gTokenKiller)  {
  */
 CNavDTD::~CNavDTD(){
   DeleteTokenHandlers();
-	delete mStyleStack;
+  delete mStyleStack;
   NS_IF_RELEASE(mDTDDebug);
 
 }
@@ -489,7 +489,7 @@ CNavDTD::~CNavDTD(){
 /**
  * Call this method if you want the DTD to construct a fresh 
  * instance of itself. 
- * @update	gess7/23/98
+ * @update  gess7/23/98
  * @param 
  * @return
  */
@@ -500,7 +500,7 @@ nsresult CNavDTD::CreateNewInstance(nsIDTD** aInstancePtrResult){
 /**
  * Called by the parser to initiate dtd verification of the
  * internal context stack.
- * @update	gess 7/23/98
+ * @update  gess 7/23/98
  * @param 
  * @return
  */
@@ -525,7 +525,7 @@ PRBool CNavDTD::Verify(nsString& aURLRef){
 /**
  * This method adds a new parser context to the list,
  * pushing the current one to the next position.
- * @update	gess7/22/98
+ * @update  gess7/22/98
  * @param   ptr to new context
  * @return  nada
  */
@@ -538,7 +538,7 @@ void CNavDTD::PushStack(CTagStack& aStack) {
  * This method pops the topmost context off the stack,
  * returning it to the user. The next context  (if any)
  * becomes the current context.
- * @update	gess7/22/98
+ * @update  gess7/22/98
  * @return  prev. context
  */
 CTagStack* CNavDTD::PopStack() {
@@ -554,7 +554,7 @@ CTagStack* CNavDTD::PopStack() {
  * a document in a given source-type. 
  * NOTE: Parsing always assumes that the end result will involve
  *       storing the result in the main content model.
- * @update	gess6/24/98
+ * @update  gess6/24/98
  * @param   
  * @return  TRUE if this DTD can satisfy the request; FALSE otherwise.
  */
@@ -565,7 +565,7 @@ PRBool CNavDTD::CanParse(nsString& aContentType, PRInt32 aVersion){
 
 /**
  * 
- * @update	gess7/7/98
+ * @update  gess7/7/98
  * @param 
  * @return
  */
@@ -578,7 +578,7 @@ eAutoDetectResult CNavDTD::AutoDetectContentType(nsString& aBuffer,nsString& aTy
 
 /**
  * 
- * @update	gess5/18/98
+ * @update  gess5/18/98
  * @param 
  * @return
  */
@@ -597,7 +597,7 @@ nsresult CNavDTD::WillBuildModel(nsString& aFilename,PRBool aNotifySink){
 
 /**
  * 
- * @update	gess5/18/98
+ * @update  gess5/18/98
  * @param 
  * @return
  */
@@ -721,7 +721,7 @@ nsresult CNavDTD::HandleStartToken(CToken* aToken) {
   eHTMLTags     tokenTagType=(eHTMLTags)st->GetTypeID();
 
   //Begin by gathering up attributes...
-  nsCParserNode attrNode((CHTMLToken*)aToken,mLineNumber);
+  nsCParserNode attrNode((CHTMLToken*)aToken,mLineNumber); 
   PRInt16       attrCount=aToken->GetAttributeCount();
   PRInt32       theCount;
   nsresult      result=(0==attrCount)
@@ -857,7 +857,7 @@ nsresult CNavDTD::HandleEndToken(CToken* aToken) {
 
     //now check to see if this token should be omitted, or 
     //if it's gated from closing by the presence of another tag.
-	  if(PR_TRUE==CanOmitEndTag(GetTopNode(),tokenTagType)) {
+  if(PR_TRUE==CanOmitEndTag(GetTopNode(),tokenTagType)) {
     UpdateStyleStackForCloseTag(tokenTagType,tokenTagType);
     return result;
   }
@@ -1078,7 +1078,7 @@ PRInt32 CNavDTD::CollectAttributes(nsCParserNode& aNode,PRInt32 aCount){
 /**
  * Causes the next skipped-content token (if any) to
  * be consumed by this node.
- * @update	gess5/11/98
+ * @update  gess5/11/98
  * @param   node to consume skipped-content
  * @param   holds the number of skipped content elements encountered
  * @return  Error condition.
@@ -1506,7 +1506,7 @@ PRBool CNavDTD::CanContain(PRInt32 aParent,PRInt32 aChild) {
       if (eHTMLTag_li == aChild) {
         result = PR_FALSE;
       }
-      result=PRBool(!strchr(gHeadingTags,aChild));
+      else result=PRBool(!strchr(gHeadingTags,aChild));
       break;
 
     case eHTMLTag_listing:
@@ -1775,7 +1775,7 @@ PRBool CNavDTD::CanOmit(eHTMLTags aParent,eHTMLTags aChild) const {
  * synonymous with another. Cases where this are true include style
  * tags (where <i> is allowed to close <b> for example). Another
  * is <H?>, where any open heading tag can be closed by any close heading tag.
- * @update	gess6/16/98
+ * @update  gess6/16/98
  * @param 
  * @return
  */
@@ -2179,7 +2179,7 @@ PRInt32 CNavDTD::GetTopmostIndexOf(eHTMLTags aTag) const {
  * are there. Of course, we shouldn't bother to open styles that are incompatible
  * with our parent container.
  *
- * @update	gess6/4/98
+ * @update  gess6/4/98
  * @param   tag of the container just opened
  * @return  0 (for now)
  */
@@ -2225,7 +2225,7 @@ nsresult CNavDTD::OpenTransientStyles(eHTMLTags aTag){
  * with our parent container.
  * SEE THE TOP OF THIS FILE for more information about how the transient style stack works.
  *
- * @update	gess6/4/98
+ * @update  gess6/4/98
  * @param   tag of the container just opened
  * @return  0 (for now)
  */
@@ -2767,7 +2767,7 @@ nsresult CNavDTD::ReduceContextStackFor(eHTMLTags aChildTag){
  * This method causes all explicit style-tag containers that
  * are opened to be reflected on our internal style-stack.
  *
- * @update	gess6/4/98
+ * @update  gess6/4/98
  * @param   aTag is the id of the html container being opened
  * @return  0 if all is well.
  */
@@ -2797,7 +2797,7 @@ CNavDTD::UpdateStyleStackForOpenTag(eHTMLTags aTag,eHTMLTags anActualTag){
  * This method gets called when an explicit style close-tag is encountered.
  * It results in the style tag id being popped from our internal style stack.
  *
- * @update	gess6/4/98
+ * @update  gess6/4/98
  * @param 
  * @return  0 if all went well (which it always does)
  */
@@ -2947,7 +2947,7 @@ CNavDTD::ConsumeAttributes(PRUnichar aChar,CScanner& aScanner,CStartToken* aToke
 nsresult
 CNavDTD::ConsumeContentToEndTag(const nsString& aString,
                                 PRUnichar aChar,
-																eHTMLTags aChildTag,
+                                eHTMLTags aChildTag,
                                 CScanner& aScanner,
                                 CToken*& aToken){
   
@@ -3241,7 +3241,7 @@ CToken* CNavDTD::CreateTokenOfType(eHTMLTokenTypes aType) {
 
 /**
  * 
- * @update	gess5/18/98
+ * @update  gess5/18/98
  * @param 
  * @return
  */
@@ -3255,7 +3255,7 @@ nsresult CNavDTD::WillResumeParse(void){
 
 /**
  * 
- * @update	gess5/18/98
+ * @update  gess5/18/98
  * @param 
  * @return
  */

@@ -37,6 +37,17 @@ static char* tagTable[] = {
   "TR", "TT", "U", "UL", "VAR", "WBR", "XMP"
 };
 
+
+/**
+ * This method converts a tagname (string) into an int.
+ * Note that we use a caseless comparision, because the tag 
+ * data we get is so inconsistent. It seems that doing a
+ * caseless compare is faster than constantly copying the
+ * tag name to a buffer, uppercasing, then comparing.
+ * @update	gess8/4/98
+ * @param   aTagname is the name of the tag to find an id for
+ * @return  enumerated tag value (may be eHTMLTag_unknown).
+ */
 nsHTMLTag NS_TagToEnum(const char* aTagName) {
   int low = 0;
   int high = NS_HTML_TAG_MAX - 1;
@@ -46,7 +57,7 @@ nsHTMLTag NS_TagToEnum(const char* aTagName) {
     if (result == 0)
       return (nsHTMLTag) (middle + 1);
     if (result < 0)
-      high = middle - 1; 
+      high = middle - 1;  
     else
       low = middle + 1; 
   }
