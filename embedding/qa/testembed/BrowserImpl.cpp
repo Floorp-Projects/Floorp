@@ -136,6 +136,7 @@ NS_INTERFACE_MAP_BEGIN(CBrowserImpl)
    NS_INTERFACE_MAP_ENTRY(nsIRequestObserver) // de: added 6/29
    NS_INTERFACE_MAP_ENTRY(nsITooltipListener) // de: added 7/25
 //   NS_INTERFACE_MAP_ENTRY(nsITooltipTextProvider) // de: added 7/26
+//   NS_INTERFACE_MAP_ENTRY(nsIURIContentListener) 
 NS_INTERFACE_MAP_END
 
 //*****************************************************************************

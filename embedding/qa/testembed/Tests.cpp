@@ -474,7 +474,7 @@ void CTests::OnTestsAddHistoryListener()
 
 void CTests::OnTestsRemovehistorylistener() 
 {
-  // addSHistoryListener test
+  // RemoveSHistoryListener test
 	nsWeakPtr weakling(
         dont_AddRef(NS_GetWeakReference(NS_STATIC_CAST(nsISHistoryListener*, qaBrowserImpl))));
 	rv = qaWebBrowser->RemoveWebBrowserListener(weakling, NS_GET_IID(nsISHistoryListener));
@@ -560,47 +560,50 @@ void CTests::OnToolsTestYourMethod()
 {
 	// place your test code here
 
-	PRInt32 stateValue=0;
-	short state=0;
-	PRUint32 stateIndex=0, progIndex=0, progValue=0, progMaxVal=0;
+	// nsIContextMenuListener, nsIStreamListener
+	// nsIURIContentListener
 
-	nsCOMPtr<nsIXPIDialogService> 
-		myXPIDlog(do_CreateInstance("@mozilla.org/embedui/xpinstall-dialog-service;1"));
-	if (!myXPIDlog)
-		QAOutput("XPIDlogService object not created.", 2);
-	else
-		QAOutput("XPIDlogService object is created.", 2);
+	// test cases for nsIWebBrowser
 
-	nsCOMPtr<nsIXPIProgressDialog> 
-		myProgDlog(do_QueryInterface(myXPIDlog, &rv));
-	if (!myProgDlog)
-		QAOutput("XPIProgDlog object not created.", 2);
-	else
-		QAOutput("XPIProgDlog object is created.", 2);
-/*
-	NS_IMPL_THREADSAFE_ISUPPORTS1(CTests, nsIXPIProgressDialog);
+	// AddWebBrowserListener
+	nsWeakPtr weakling(
+        dont_AddRef(NS_GetWeakReference(NS_STATIC_CAST(nsIContextMenuListener*, qaBrowserImpl))));
+    rv = qaWebBrowser->AddWebBrowserListener(weakling, NS_GET_IID(nsIContextMenuListener));	
+	RvTestResult(rv, "AddWebBrowserListener(). nsIContextMenuListener test", 2);
 
-	rv = myProgDlog->onStateChange(stateIndex, state, stateValue);
-	RvTestResult(rv, "xpiProgDlog->onStateChange() test ", 2);
+	// RemoveWebBrowserListener
+	rv = qaWebBrowser->RemoveWebBrowserListener(weakling, NS_GET_IID(nsIContextMenuListener));
+	RvTestResult(rv, "RemoveWebBrowserListener(). nsIContextMenuListener test", 2);
 
-	rv = myProgDlog->onProgress(progIndex, progValue, progMaxVal);
-	RvTestResult(rv, "xpiProgDlog->onProgress() test ", 2);
-*/
+	// GetContainerWindow
+	nsCOMPtr<nsIWebBrowserChrome> qaWebBrowserChrome;
+	rv = qaWebBrowser->GetContainerWindow(getter_AddRefs(qaWebBrowserChrome));
+	if (!qaWebBrowserChrome)
+		QAOutput("Didn't get web browser chrome object.", 2);
+	RvTestResult(rv, "nsIWebBrowser::GetContainerWindow() test", 2);
+
+	// SetContainerWindow
+	rv = qaWebBrowser->SetContainerWindow(qaWebBrowserChrome);
+	RvTestResult(rv, "nsIWebBrowser::SetContainerWindow() test", 2);
+
+	// GetParentURIContentListener
+	nsCOMPtr<nsIURIContentListener> qaURIContentListener;
+	rv = qaWebBrowser->GetParentURIContentListener(getter_AddRefs(qaURIContentListener));
+	if (!qaURIContentListener)
+		QAOutput("Didn't get uri content listener object.", 2);
+	RvTestResult(rv, "nsIWebBrowser::GetParentURIContentListener() test", 2);
+
+	// SetParentURIContentListener
+	rv = qaWebBrowser->SetParentURIContentListener(qaURIContentListener);
+	RvTestResult(rv, "nsIWebBrowser::SetParentURIContentListener() test", 2);
+
+	// GetContentDOMWindow
+	nsCOMPtr<nsIDOMWindow> qaDOMWindow;
+	rv = qaWebBrowser->GetContentDOMWindow(getter_AddRefs(qaDOMWindow));
+	if (!qaDOMWindow)
+		QAOutput("Didn't get dom window object.", 2);
+	RvTestResult(rv, "nsIWebBrowser::GetContentDOMWindow() test", 2);
 }
-/*
-NS_IMETHODIMP CTests::onStateChange(PRUint32 stateIndex, short state, PRInt32 stateValue)
-{
-	QAOutput("Entered onStateChange().", 2);
-    return NS_OK;
-}
-
-
-NS_IMETHODIMP CTests::onProgress(PRUint32 progIndex, PRUint32 progValue, PRUint32 progMaxVal);
-{
-	QAOutput("Entered onProgress().", 2);
-    return NS_OK;
-}
-*/
 
 // ***********************************************************************
 void CTests::OnToolsTestYourMethod2()
