@@ -566,6 +566,11 @@ void nsRenderingContextMac :: SetFont(const nsFont& aFont)
     		::GetFNum(macfont, &fnum);
 		}
 		::TextFont(fnum);
+
+
+		float  dev2app;
+		mContext->GetDevUnitsToAppUnits(dev2app);
+		::TextSize(aFont.size / dev2app);
 	}
 }
 
@@ -582,6 +587,7 @@ const nsFont& nsRenderingContextMac :: GetFont()
 
 nsIFontMetrics* nsRenderingContextMac :: GetFontMetrics()
 {
+  NS_IF_ADDREF(mFontMetrics);
   return mFontMetrics;
 }
 
