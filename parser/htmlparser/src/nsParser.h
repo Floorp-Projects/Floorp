@@ -376,7 +376,7 @@ private:
                                        nsString* aDocTypeStr,
                                        eParserCommands aCommand,
                                        const nsString* aMimeType=nsnull, 
-                                       nsDTDMode aDTDMode=eDTDMode_unknown);
+                                       nsDTDMode aDTDMode);
 protected:
     //*********************************************
     // And now, some data members...
