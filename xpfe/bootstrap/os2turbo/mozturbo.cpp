@@ -1,4 +1,4 @@
-/* ***** BEGIN LICENSE BLOCK *****
+ /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
  * The contents of this file are subject to the Mozilla Public License
@@ -53,6 +53,14 @@ seeing which DLLs were in use at that time.
 #include <os2.h>
 #include <stdio.h>
 #include <string.h>
+
+/* define DosQueryModFromEIP just in case someone doesn't have it */
+   APIRET APIENTRY  DosQueryModFromEIP(HMODULE *phMod,
+                                        ULONG *pObjNum,
+                                        ULONG BuffLen,
+                                        PCHAR pBuff,
+                                        ULONG *pOffset,
+                                        ULONG Address);
 
 /* BIN directory */
 char *bindir[] = {
@@ -161,7 +169,6 @@ int main(int argc, char *argv[]) {
     return(1);
   }
 
-#if 0
   if (do_path == 0) {
     /* Get the name of this EXE and use its location as the path */
     HMODULE hmodule;
@@ -171,7 +178,6 @@ int main(int argc, char *argv[]) {
     pchar++;
     *pchar = '\0';
   }
-#endif
 
   if (do_load) {
     ULONG ulCurMaxFH;
