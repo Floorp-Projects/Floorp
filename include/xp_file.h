@@ -179,9 +179,19 @@
 # include <Files.h>
 #endif /* XP_MAC */
 
-#ifdef XP_WIN
-# include "winfile.h"
-#endif /* XP_WIN */
+#ifdef XP_WIN32
+# include <windows.h>
+# include <sys/stat.h>
+/* 
+ * typedef taken from dbm/include/winfile.h 
+ * removing dbm dependency for bug 100966
+ */
+typedef struct DIR_Struct {
+    void            * directoryPtr;
+    WIN32_FIND_DATA   data;
+} DIR;
+
+#endif /* XP_WIN32 */
 
 #ifdef XP_OS2
 # include "dirent.h"
