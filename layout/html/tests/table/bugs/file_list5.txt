@@ -31,6 +31,7 @@ file:///s|/mozilla/layout/html/tests/table/bugs/bug4385.html
 file:///s|/mozilla/layout/html/tests/table/bugs/bug4427.html
 file:///s|/mozilla/layout/html/tests/table/bugs/bug4429.html
 file:///s|/mozilla/layout/html/tests/table/bugs/bug4501.html
+file:///s|/mozilla/layout/html/tests/table/bugs/bug45055.html
 file:///s|/mozilla/layout/html/tests/table/bugs/bug4520.html
 file:///s|/mozilla/layout/html/tests/table/bugs/bug4523.html
 file:///s|/mozilla/layout/html/tests/table/bugs/bug4527.html
@@ -51,6 +52,7 @@ file:///s|/mozilla/layout/html/tests/table/bugs/bug4849.html
 file:///s|/mozilla/layout/html/tests/table/bugs/bug4849-2.html
 file:///s|/mozilla/layout/html/tests/table/bugs/bug50695-1.html
 file:///s|/mozilla/layout/html/tests/table/bugs/bug50695-2.html
+file:///s|/mozilla/layout/html/tests/table/bugs/bug51140.html
 file:///s|/mozilla/layout/html/tests/table/bugs/bug51727.html
 delay:=6
 file:///s|/mozilla/layout/html/tests/table/bugs/bug5188.html
