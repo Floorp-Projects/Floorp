@@ -183,7 +183,7 @@ void JSFunction::initFunctionObject(JSScope *g)
 
 JSString* JSBoolean::BooleanString = new JSString("Boolean");
 
-static JSValue boolean_constructor(Context */*cx*/, const JSValues& argv)
+static JSValue boolean_constructor(Context *, const JSValues& argv)
 {
     // argv[0] will be NULL
     if (argv.size() > 1)
@@ -192,7 +192,7 @@ static JSValue boolean_constructor(Context */*cx*/, const JSValues& argv)
         return JSValue(new JSBoolean(false));
 }
 
-static JSValue boolean_toString(Context */*cx*/, const JSValues& argv)
+static JSValue boolean_toString(Context *, const JSValues& argv)
 {
     if (argv.size() > 0) {
         JSValue theThis = argv[0];
