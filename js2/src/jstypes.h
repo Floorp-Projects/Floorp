@@ -242,14 +242,13 @@ namespace JSTypes {
 	    typedef gc_allocator<JSFunction, traits> allocator;
 		
     public:
-        virtual bool isNative()         { return false; }
         JSFunction(ICodeModule* iCode) : mICode(iCode) {}
         ~JSFunction();
     
         void* operator new(size_t) { return allocator::allocate(1); }
-        void operator delete(void* ptr) {}
 
-        ICodeModule* getICode() { return mICode; }
+        ICodeModule* getICode()    { return mICode; }
+        virtual bool isNative()    { return false; }
     };
 
     class JSNativeFunction : public JSFunction {
@@ -257,7 +256,7 @@ namespace JSTypes {
         typedef JSValue (*JSCode)(const JSValues& argv);
         JSCode mCode;
         JSNativeFunction(JSCode code) : mCode(code) {}
-        virtual bool isNative()         { return true; }
+        virtual bool isNative()    { return true; }
     };
         
     class JSException : public gc_base {
