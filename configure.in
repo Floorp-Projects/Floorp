@@ -2943,7 +2943,7 @@ fi
 MOZ_ARG_ENABLE_STRING(optimize,
 [  --enable-optimize[=OPT] Enable compiler optimizations (default=-O) ],
 [ MOZ_OPTIMIZE=1
-	if test -n "$enableval" && test "$enableval" != "yes"; then
+	if test -n "$enableval" && test "$enableval" != "yes" && test "$enableval" != "no"; then
 	    MOZ_OPTIMIZE_FLAGS=`echo $enableval | sed -e 's|\\\ | |g'`
 	fi ])
 
