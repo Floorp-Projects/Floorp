@@ -49,6 +49,7 @@ public:
                      nsIStreamListener *aNotify);
 
     NS_IMETHOD GetURL(nsIURL **aURL);
+	NS_IMETHOD SetURL(nsIURL  *aURL);
     NS_IMETHOD GetInputStream(nsIInputStream **aStream);
     NS_IMETHOD GetOutputStream(nsIOutputStream **aStream);
     NS_IMETHOD GetConsumer(nsIStreamListener **aConsumer);
