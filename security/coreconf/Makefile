@@ -35,7 +35,7 @@ CORE_DEPTH	= ..
 
 MODULE		= coreconf
 
-DIRS		= nsinstall mkdepend md
+DIRS		= nsinstall
 
 include $(DEPTH)/coreconf/config.mk
 include $(DEPTH)/coreconf/rules.mk
