@@ -1432,6 +1432,15 @@ nsBrowserWindow::CreateStatusBar(PRInt32 aWidth)
     widget->SetForegroundColor(NS_RGB(0, 0, 0));
     PRUint32 size;
     mStatus->SetText("",size);
+
+		nsITextWidget*	textWidget = nsnull;
+		if (NS_OK == mStatus->QueryInterface(kITextWidgetIID,(void**)&textWidget))
+		{
+	    PRBool		wasReadOnly;
+	    textWidget->SetReadOnly(PR_TRUE, wasReadOnly);
+			NS_RELEASE(textWidget);
+		}
+
     NS_RELEASE(widget);
   }
 
