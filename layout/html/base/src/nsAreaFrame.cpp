@@ -460,7 +460,7 @@ nsAreaFrame::CreateContinuingFrame(nsIPresContext&  aPresContext,
   if (nsnull == cf) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
-  cf->Init(aPresContext, mContent, aParent, mContentParent, aStyleContext);
+  cf->Init(aPresContext, mContent, aParent, aStyleContext);
   cf->SetFlags(mFlags);
   cf->AppendToFlow(this);
   aContinuingFrame = cf;
@@ -593,13 +593,13 @@ void nsAreaFrame::TranslatePoint(nsIFrame* aFrameFrom, nsPoint& aPoint) const
 {
   nsIFrame* parent;
 
-  aFrameFrom->GetGeometricParent(parent);
+  aFrameFrom->GetParent(parent);
   while ((nsnull != parent) && (parent != (nsIFrame*)this)) {
     nsPoint origin;
 
     parent->GetOrigin(origin);
     aPoint += origin;
-    parent->GetGeometricParent(parent);
+    parent->GetParent(parent);
   }
 }
 

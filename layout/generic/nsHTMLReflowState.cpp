@@ -244,13 +244,13 @@ nsHTMLReflowState::InitAbsoluteConstraints(nsIPresContext& aPresContext,
       placeholderFrame->GetOrigin(placeholderOffset);
 
       nsIFrame* parent;
-      placeholderFrame->GetGeometricParent(parent);
+      placeholderFrame->GetParent(parent);
       while ((nsnull != parent) && (parent != cbrs->frame)) {
         nsPoint origin;
 
         parent->GetOrigin(origin);
         placeholderOffset += origin;
-        parent->GetGeometricParent(parent);
+        parent->GetParent(parent);
       }
     }
   }

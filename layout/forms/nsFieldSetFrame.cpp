@@ -131,7 +131,7 @@ nsFieldSetFrame::SetInitialChildList(nsIPresContext& aPresContext,
   nsIStyleContext* styleContext = aPresContext.ResolvePseudoStyleContextFor(mContent, 
                                                                             nsHTMLAtoms::fieldsetContentPseudo,
                                                                             mStyleContext);
-  mFirstChild->Init(aPresContext, mContent, this, this, styleContext);
+  mFirstChild->Init(aPresContext, mContent, this, styleContext);
   NS_RELEASE(styleContext);                                           
 
   nsIFrame* newChildList = aChildList;
@@ -151,15 +151,13 @@ nsFieldSetFrame::SetInitialChildList(nsIPresContext& aPresContext,
       } else {
         newChildList = nextFrame;
       }
-      frame->SetGeometricParent(this);
-      frame->SetContentParent(this);
+      frame->SetParent(this);
       mFirstChild->SetNextSibling(frame);
       mLegendFrame = frame;
       mLegendFrame->SetNextSibling(nsnull);
       frame = nextFrame;
      } else {
-      frame->SetGeometricParent(mFirstChild);
-      frame->SetContentParent(mFirstChild);
+      frame->SetParent(mFirstChild);
       frame->GetNextSibling(frame);
     }
     lastFrame = frame;

@@ -272,14 +272,12 @@ nsrefcnt nsFrame::Release(void)
 NS_IMETHODIMP
 nsFrame::Init(nsIPresContext&  aPresContext,
               nsIContent*      aContent,
-              nsIFrame*        aGeometricParent,
-              nsIFrame*        aContentParent,
+              nsIFrame*        aParent,
               nsIStyleContext* aContext)
 {
   mContent = aContent;
   NS_IF_ADDREF(mContent);
-  mGeometricParent = aGeometricParent;
-  mContentParent = aContentParent;
+  mParent = aParent;
   return SetStyleContext(&aPresContext, aContext);
 }
 
@@ -418,29 +416,17 @@ NS_IMETHODIMP nsFrame::ReResolveStyleContext(nsIPresContext* aPresContext,
   return NS_OK;
 }
 
-// Geometric and content parent member functions
+// Geometric parent member functions
 
-NS_IMETHODIMP nsFrame::GetContentParent(nsIFrame*& aParent) const
+NS_IMETHODIMP nsFrame::GetParent(nsIFrame*& aParent) const
 {
-  aParent = mContentParent;
+  aParent = mParent;
   return NS_OK;
 }
 
-NS_IMETHODIMP nsFrame::SetContentParent(const nsIFrame* aParent)
+NS_IMETHODIMP nsFrame::SetParent(const nsIFrame* aParent)
 {
-  mContentParent = (nsIFrame*)aParent;
-  return NS_OK;
-}
-
-NS_IMETHODIMP nsFrame::GetGeometricParent(nsIFrame*& aParent) const
-{
-  aParent = mGeometricParent;
-  return NS_OK;
-}
-
-NS_IMETHODIMP nsFrame::SetGeometricParent(const nsIFrame* aParent)
-{
-  mGeometricParent = (nsIFrame*)aParent;
+  mParent = (nsIFrame*)aParent;
   return NS_OK;
 }
 
@@ -1169,8 +1155,8 @@ nsFrame::GetCursor(nsIPresContext& aPresContext,
   GetStyleData(eStyleStruct_Color, (const nsStyleStruct*&)styleColor);
   aCursor = styleColor->mCursor;
 
-  if ((NS_STYLE_CURSOR_AUTO == aCursor) && (nsnull != mContentParent)) {
-    mContentParent->GetCursor(aPresContext, aPoint, aCursor);
+  if ((NS_STYLE_CURSOR_AUTO == aCursor) && (nsnull != mParent)) {
+    mParent->GetCursor(aPresContext, aPoint, aCursor);
   }
 
   return NS_OK;
@@ -1398,7 +1384,7 @@ NS_IMETHODIMP nsFrame::SetView(nsIView* aView)
 // Find the first geometric parent that has a view
 NS_IMETHODIMP nsFrame::GetParentWithView(nsIFrame*& aParent) const
 {
-  aParent = mGeometricParent;
+  aParent = mParent;
 
   while (nsnull != aParent) {
     nsIView* parView;
@@ -1407,7 +1393,7 @@ NS_IMETHODIMP nsFrame::GetParentWithView(nsIFrame*& aParent) const
     if (nsnull != parView) {
       break;
     }
-    aParent->GetGeometricParent(aParent);
+    aParent->GetParent(aParent);
   }
 
   return NS_OK;
@@ -1426,7 +1412,7 @@ NS_IMETHODIMP nsFrame::GetOffsetFromView(nsPoint& aOffset, nsIView*& aView) cons
 
     frame->GetOrigin(origin);
     aOffset += origin;
-    frame->GetGeometricParent(frame);
+    frame->GetParent(frame);
     if (nsnull != frame) {
       frame->GetView(aView);
     }
@@ -1678,14 +1664,9 @@ nsFrame::DumpBaseRegressionData(FILE* out, PRInt32 aIndent)
   IndentBy(out, aIndent);
   fprintf(out, "<ident addr=\"%p\"/>\n", this);
 
-  if (mContentParent != mGeometricParent) {
+  if (nsnull != mParent) {
     IndentBy(out, aIndent);
-    fprintf(out, "<content-parent addr=\"%p\"/>\n", mContentParent);
-  }
-
-  if (nsnull != mGeometricParent) {
-    IndentBy(out, aIndent);
-    fprintf(out, "<geometric-parent addr=\"%p\"/>\n", mGeometricParent);
+    fprintf(out, "<parent addr=\"%p\"/>\n", mParent);
   }
 
   if (nsnull != mNextSibling) {

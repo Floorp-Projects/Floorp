@@ -345,12 +345,10 @@ nsImageFrame::DeleteFrame(nsIPresContext& aPresContext)
 NS_IMETHODIMP
 nsImageFrame::Init(nsIPresContext&  aPresContext,
                    nsIContent*      aContent,
-                   nsIFrame*        aGeometricParent,
-                   nsIFrame*        aContentParent,
+                   nsIFrame*        aParent,
                    nsIStyleContext* aContext)
 {
-  nsresult  rv = nsLeafFrame::Init(aPresContext, aContent, aGeometricParent,
-                                   aContentParent, aContext);
+  nsresult  rv = nsLeafFrame::Init(aPresContext, aContent, aParent, aContext);
 
   // Set the image loader's source URL and base URL
   nsAutoString src, base;

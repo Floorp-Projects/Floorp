@@ -1383,14 +1383,7 @@ nsBaseIBFrame::ReflowDirtyLines(nsBlockReflowState& aState)
     nsIFrame* lastFrame = nsnull;
     PRInt32 n = line->ChildCount();
     while (--n >= 0) {
-      nsIFrame* geometricParent;
-      nsIFrame* contentParent;
-      frame->GetGeometricParent(geometricParent);
-      frame->GetContentParent(contentParent);
-      if (contentParent == geometricParent) {
-        frame->SetContentParent(this);
-      }
-      frame->SetGeometricParent(this);
+      frame->SetParent(this);
       lastFrame = frame;
       frame->GetNextSibling(frame);
     }
@@ -1768,14 +1761,7 @@ nsBaseIBFrame::PullFrame(nsBlockReflowState& aState,
 
     // Change geometric parents
     if (aUpdateGeometricParent) {
-      nsIFrame* geometricParent;
-      nsIFrame* contentParent;
-      frame->GetGeometricParent(geometricParent);
-      frame->GetContentParent(contentParent);
-      if (contentParent == geometricParent) {
-        frame->SetContentParent(this);
-      }
-      frame->SetGeometricParent(this);
+      frame->SetParent(this);
 
       // The frame is being pulled from a next-in-flow; therefore we
       // need to add it to our sibling list.
@@ -2880,14 +2866,7 @@ nsBaseIBFrame::DrainOverflowLines()
       nsIFrame* lastFrame = nsnull;
       nsIFrame* frame = line->mFirstChild;
       while (nsnull != frame) {
-        nsIFrame* geometricParent;
-        nsIFrame* contentParent;
-        frame->GetGeometricParent(geometricParent);
-        frame->GetContentParent(contentParent);
-        if (contentParent == geometricParent) {
-          frame->SetContentParent(this);
-        }
-        frame->SetGeometricParent(this);
+        frame->SetParent(this);
         lastFrame = frame;
         frame->GetNextSibling(frame);
       }
@@ -3263,7 +3242,7 @@ nsBaseIBFrame::DoRemoveFrame(nsBlockReflowState& aState,
     while ((nsnull != line) && (nsnull != aDeletedFrame)) {
 #ifdef NS_DEBUG
       nsIFrame* parent;
-      aDeletedFrame->GetGeometricParent(parent);
+      aDeletedFrame->GetParent(parent);
       NS_ASSERTION(flow == parent, "messed up delete code");
 #endif
       NS_FRAME_TRACE(NS_FRAME_TRACE_CHILD_REFLOW,
@@ -3346,9 +3325,9 @@ nsBaseIBFrame::DoRemoveFrame(nsBlockReflowState& aState,
           // continuation is in a different parent. So break out of
           // the loop so that we advance to the next parent.
 #ifdef NS_DEBUG
-          nsIFrame* contParent;
-          aDeletedFrame->GetContentParent(contParent);
-          NS_ASSERTION(contParent != flow, "strange continuation");
+          nsIFrame* parent;
+          aDeletedFrame->GetParent(parent);
+          NS_ASSERTION(parent != flow, "strange continuation");
 #endif
           break;
         }
@@ -3481,7 +3460,7 @@ nsBaseIBFrame::DeleteChildsNextInFlow(nsIPresContext& aPresContext,
    
   aChild->GetNextInFlow(nextInFlow);
   NS_PRECONDITION(nsnull != nextInFlow, "null next-in-flow");
-  nextInFlow->GetGeometricParent((nsIFrame*&)parent);
+  nextInFlow->GetParent((nsIFrame*&)parent);
 
   // If the next-in-flow has a next-in-flow then delete it, too (and
   // delete it first).
@@ -3642,7 +3621,7 @@ nsBlockReflowState::InitFloater(nsPlaceholderFrame* aPlaceholder)
 {
   // Set the geometric parent of the floater
   nsIFrame* floater = aPlaceholder->GetAnchoredItem();
-  floater->SetGeometricParent(mBlock);
+  floater->SetParent(mBlock);
 
   // Then add the floater to the current line and place it when
   // appropriate
@@ -3732,7 +3711,7 @@ nsBlockReflowState::IsLeftMostChild(nsIFrame* aFrame)
 {
   for (;;) {
     nsIFrame* parent;
-    aFrame->GetGeometricParent(parent);
+    aFrame->GetParent(parent);
     if (parent == mBlock) {
       nsIFrame* child = mCurrentLine->mFirstChild;
       PRInt32 n = mCurrentLine->ChildCount();
@@ -4104,7 +4083,7 @@ PRBool
 nsBaseIBFrame::IsChild(nsIFrame* aFrame)
 {
   nsIFrame* parent;
-  aFrame->GetGeometricParent(parent);
+  aFrame->GetParent(parent);
   if (parent != (nsIFrame*)this) {
     return PR_FALSE;
   }
@@ -4290,7 +4269,7 @@ nsBlockFrame::SetInitialChildList(nsIPresContext& aPresContext,
       NS_RELEASE(kidSC);
       return NS_ERROR_OUT_OF_MEMORY;
     }
-    mBullet->Init(aPresContext, mContent, this, this, kidSC);
+    mBullet->Init(aPresContext, mContent, this, kidSC);
     NS_RELEASE(kidSC);
 
     // If the list bullet frame should be positioned inside then add
@@ -4453,7 +4432,7 @@ nsBlockFrame::CreateContinuingFrame(nsIPresContext& aPresContext,
   if (nsnull == cf) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
-  cf->Init(aPresContext, mContent, aParent, mContentParent, aStyleContext);
+  cf->Init(aPresContext, mContent, aParent, aStyleContext);
   cf->SetFlags(mFlags);
   cf->AppendToFlow(this);
   aContinuingFrame = cf;
@@ -4805,14 +4784,7 @@ nsBlockFrame::TakeRunInFrames(nsBlockFrame* aRunInFrame)
   nsIFrame* lastFrame = nsnull;
   nsIFrame* frame = line->mFirstChild;
   while (nsnull != frame) {
-    nsIFrame* geometricParent;
-    nsIFrame* contentParent;
-    frame->GetGeometricParent(geometricParent);
-    frame->GetContentParent(contentParent);
-    if (contentParent == geometricParent) {
-      frame->SetContentParent(this);
-    }
-    frame->SetGeometricParent(this);
+    frame->SetParent(this);
     lastFrame = frame;
     frame->GetNextSibling(frame);
   }

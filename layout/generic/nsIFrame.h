@@ -158,8 +158,7 @@ public:
    */
   NS_IMETHOD  Init(nsIPresContext&  aPresContext,
                    nsIContent*      aContent,
-                   nsIFrame*        aGeometricParent,
-                   nsIFrame*        aContentParent,
+                   nsIFrame*        aParent,
                    nsIStyleContext* aContext) = 0;
 
   /**
@@ -230,12 +229,10 @@ public:
                                     nsIStyleContext* aParentContext) = 0;
 
   /**
-   * Accessor functions for geometric and content parent.
+   * Accessor functions for geometric parent
    */
-                                              NS_IMETHOD  GetContentParent(nsIFrame*& aParent) const = 0;
-  NS_IMETHOD  SetContentParent(const nsIFrame* aParent) = 0;
-  NS_IMETHOD  GetGeometricParent(nsIFrame*& aParent) const = 0;
-  NS_IMETHOD  SetGeometricParent(const nsIFrame* aParent) = 0;
+  NS_IMETHOD  GetParent(nsIFrame*& aParent) const = 0;
+  NS_IMETHOD  SetParent(const nsIFrame* aParent) = 0;
 
   /**
    * Bounding rect of the frame. The values are in twips, and the origin is

@@ -405,7 +405,7 @@ nsContainerFrame::ReflowChild(nsIFrame*                aKidFrame,
       // the right parent to do the removal (it's possible that the
       // parent is not this because we are executing pullup code)
       nsIFrame* parent;
-      aKidFrame->GetGeometricParent(parent);
+      aKidFrame->GetParent(parent);
       ((nsContainerFrame*)parent)->DeleteChildsNextInFlow(aPresContext, aKidFrame);
     }
   }
@@ -433,7 +433,7 @@ nsContainerFrame::DeleteChildsNextInFlow(nsIPresContext& aPresContext, nsIFrame*
    
   aChild->GetNextInFlow(nextInFlow);
   NS_PRECONDITION(nsnull != nextInFlow, "null next-in-flow");
-  nextInFlow->GetGeometricParent((nsIFrame*&)parent);
+  nextInFlow->GetParent((nsIFrame*&)parent);
 
   // If the next-in-flow has a next-in-flow then delete it, too (and
   // delete it first).
@@ -455,7 +455,7 @@ nsContainerFrame::DeleteChildsNextInFlow(nsIPresContext& aPresContext, nsIFrame*
     nsIFrame* top = nextInFlow;
     for (;;) {
       nsIFrame* parent;
-      top->GetGeometricParent(parent);
+      top->GetParent(parent);
       if (nsnull == parent) {
         break;
       }
@@ -549,14 +549,7 @@ void nsContainerFrame::PushChildren(nsIFrame* aFromChild, nsIFrame* aPrevSibling
       printf("\n");
 #endif
       lastChild = f;
-      f->SetGeometricParent(nextInFlow);
-
-      nsIFrame* contentParent;
-
-      f->GetContentParent(contentParent);
-      if (this == contentParent) {
-        f->SetContentParent(nextInFlow);
-      }
+      f->SetParent(nextInFlow);
     }
     NS_ASSERTION(numChildren > 0, "no children to push");
 
@@ -637,15 +630,7 @@ void nsContainerFrame::AppendChildren(nsIFrame* aChild, PRBool aSetParent)
 
     // Reset the geometric parent if requested
     if (aSetParent) {
-      nsIFrame* geometricParent;
-      nsIFrame* contentParent;
-
-      f->GetGeometricParent(geometricParent);
-      f->GetContentParent(contentParent);
-      if (contentParent == geometricParent) {
-        f->SetContentParent(this);
-      }
-      f->SetGeometricParent(this);
+      f->SetParent(this);
     }
   }
 }
@@ -772,7 +757,7 @@ PRBool nsContainerFrame::IsChild(const nsIFrame* aChild) const
   // Check the geometric parent
   nsIFrame* parent;
 
-  aChild->GetGeometricParent(parent);
+  aChild->GetParent(parent);
   if (parent != (nsIFrame*)this) {
     return PR_FALSE;
   }
