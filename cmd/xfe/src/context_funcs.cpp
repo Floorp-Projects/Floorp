@@ -55,6 +55,10 @@ extern "C" char * _XmStringGetTextConcat(XmString);
 #include "Netcaster.h"
 #include "BuiltinTreeView.h"
 
+#if defined(SMOOTH_PROGRESS)
+#include "progress.h"
+#endif
+
 #include "xpgetstr.h"
 
 #if defined(IRIX) || defined(OSF1) || defined(SOLARIS) || defined(UNIXWARE) || defined(SNI) || defined(NCR) || defined(NEC) || defined(DGUX)
@@ -583,6 +587,10 @@ XFE_AllConnectionsComplete(MWContext *context)
   
   fe_RefreshAllAnchors ();
   
+#if defined(SMOOTH_PROGRESS)
+    PM_ReleaseProgressManager(context);
+#endif
+
   /* If either the user resized during layout or there was a webfont that
 	 was being downloaded while rendering the page, reload the document right
 	 now (it will come from the cache.) */

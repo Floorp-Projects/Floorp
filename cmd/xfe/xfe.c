@@ -31,6 +31,10 @@
 #include "rdf.h"
 #include "private/prpriv.h"	/* for PR_GetMonitorEntryCount */
 
+#if defined(SMOOTH_PROGRESS)
+#include "progress.h"
+#endif
+
 #include <plevent.h>		/* for mocha */
 #include <prtypes.h>
 #include <libevent.h>
@@ -560,12 +564,20 @@ fe_GetSecondaryURL (MWContext *context,
             {
 	      top_context = top_context->grid_parent;
             }
+#if !defined(SMOOTH_PROGRESS)
           fe_StartProgressGraph (top_context->grid_parent);
+#endif
         }
       else
         {
+#if !defined(SMOOTH_PROGRESS)
 	  fe_StartProgressGraph (context);
+#endif
         }
+
+#if defined(SMOOTH_PROGRESS)
+      PM_EnsureProgressManager(context);
+#endif
 
       fe_SetCursor (context, False);
 
