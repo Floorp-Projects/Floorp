@@ -823,16 +823,17 @@ END of Deprecated -->
 			<button class="button-toolbar-2 top" id="button-stop" value="&stopButton.label;"  tooltip="aTooltip" tooltiptext="&stopButton.tooltip;" onclick="MsgStop();"/>
 			<spring flex="1"/>
 		</box>
-    <button class="plain" id="navigator-throbber" oncommand='goClickThrobber("messenger.throbber.url")'/>
+	<button class="plain" id="navigator-throbber" oncommand='goClickThrobber("messenger.throbber.url")'/>
 	</toolbar>
 </toolbox>
 
-<box id="status-bar">
-	<box align="vertical" style="width:100px" position="1">
-		<spring flex="100%"/>
-		<progressmeter id="statusbar-icon" mode="normal" value="0" onclick="dumpProgress()"/>
-		<spring flex="100%"/>
+<statusbar id="status-bar" class="chromeclass-status"> 
+	<box position="1" flex="1">
+		<statusbarpanel id="offline-status"/> 
+		<progressmeter class="progressmeter-statusbar" statusbar="true" id="statusbar-icon" mode="normal" value="0" onclick="dumpProgress()"/> 
+		<statusbarpanel id="statusText" value="&statusText.label;" crop="right" flex="1"/> 
 	</box>
-	<text id="statusText" class="status-bar" align="left" flex="100%" value="&statusText.label;" position="2"/>
-</box>
+	<statusbarpanel id="security-button"/>
+</statusbar> 
+<toolbox id="taskbar" class="chromeclass-extrachrome toolbox-bottom"/>
 </overlay>

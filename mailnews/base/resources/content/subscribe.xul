@@ -124,11 +124,11 @@ Rights Reserved.
 
   <separator class="groove"/>
   
-  <box>
-	<progressmeter id="statusbar-icon" mode="normal" value="0" style="width:100px;height:10px"/> 	
-    <text id="statusText" class="status-bar" value="this space for rent"/>
-    <spring flex="1"/>
+  <statusbar id="status-bar" class="chromeclass-status">
+    <statusbarpanel id="offline-status"/>
+    <progressmeter class="progressmeter-statusbar" statusbar="true" id="statusbar-icon" mode="normal" value="0" style="width:100px;height:10px"/>
+    <statusbarpanel id="statusText" value="this space for rent" crop="right" flex="1"/>
+    <statusbarpanel id="security-button"/>
     <box id="okCancelButtons"/>
-  </box>	
-
+  </statusbar>
 </window>
