@@ -520,6 +520,11 @@ nsAppShellService::Quit(PRUint32 aFerocity)
     }
   }
 
+#ifdef MOZ_PHOENIX
+  nsCOMPtr<nsIObserverService> obsService = do_GetService("@mozilla.org/observer-service;1", &rv);
+  obsService->NotifyObservers(nsnull, "quit-application", nsnull);
+#endif
+
   /* Currently aFerocity can never have the value of eForceQuit here.
      That's temporary (in an unscheduled kind of way) and logically
      this code is part of the eForceQuit case, so I'm checking against
