@@ -1,5 +1,5 @@
---- mozilla/xpfe/browser/resources/content/navigatorOverlay.xul.debug	Tue Nov 13 15:40:09 2001
-+++ mozilla/xpfe/browser/resources/content/navigatorOverlay.xul	Tue Nov 13 15:40:43 2001
+--- mozilla/xpfe/browser/resources/content/navigatorOverlay.xul.debug	Tue Nov 20 19:50:21 2001
++++ mozilla/xpfe/browser/resources/content/navigatorOverlay.xul	Tue Nov 20 19:50:54 2001
 @@ -348,120 +348,7 @@
    <menu id="tasksMenu"/>
    
@@ -27,7 +27,7 @@
 -          <menuitem label="Frames" oncommand="window._content.location.href='http://www.mozilla.org/quality/browser/debugtc/bft_frame_index.html'"/>
 -          <menuitem label="Tables" oncommand="window._content.location.href='resource:/res/samples/test6.html'"/>
 -          <menuitem label="Applets" oncommand="window._content.location.href='http://www.mozilla.org/quality/browser/debugtc/bft_browser_applet.html'"/>
--          <menuitem label="JavaScript" oncommand="window._content.location.href='http://www.abcnews.com'"/>
+-          <menuitem label="JavaScript" oncommand="window._content.location.href='http://mozilla.org/quality/browser/standards/javascript/tcmatrix/index.html'"/>
 -          <menuitem label="GIF Images" oncommand="window._content.location.href='http://www.mozilla.org/quality/browser/debugtc/bft_browser_imagemap.html'"/>
 -          <menuitem label="JPEG Images" oncommand="window._content.location.href='resource:/res/samples/test2.html'"/>
 -          <menuitem label="PNG Images" oncommand="window._content.location.href='http://www.libpng.org/pub/png/png-MagnoliaAlpha.html'"/>
