@@ -71,18 +71,15 @@
 #include "nsHTMLAtoms.h"
 #include "nsContentUtils.h"
 #include "nsLayoutAtoms.h"
-#include "nsContentCID.h"
 #include "nsIScriptContext.h"
 #include "nsINameSpace.h"
 #include "nsINameSpaceManager.h"
 #include "nsIServiceManager.h"
 #include "nsIScriptSecurityManager.h"
 #include "nsIContentViewer.h"
-#include "jsapi.h" // for JSVERSION_* and JS_VersionToString
 #include "prtime.h"
 #include "prlog.h"
 #include "prmem.h"
-#include "nsParserCIID.h"
 #include "nsParserUtils.h"
 #include "nsIScrollable.h"
 #include "nsRect.h"
@@ -113,8 +110,6 @@ static const char kNameSpaceSeparator = ':';
 #define kXSLType "text/xsl"
 
 static const char kLoadAsData[] = "loadAsData";
-
-static NS_DEFINE_CID(kXMLDocumentCID, NS_XMLDOCUMENT_CID);
 
 class nsScriptLoaderObserverProxy : public nsIScriptLoaderObserver
 {

@@ -146,7 +146,6 @@
 #include "nsISimpleEnumerator.h"
 #include "nsXPCOM.h"
 #include "nsISupportsPrimitives.h"
-static NS_DEFINE_IID(kPrinterEnumeratorCID, NS_PRINTER_ENUMERATOR_CID);
 
 // PrintOptions is now implemented by PrintSettingsService
 static const char sPrintSettingsServiceContractID[] = "@mozilla.org/gfx/printsettings-service;1";
@@ -195,9 +194,7 @@ static const char sPrintOptionsContractID[]         = "@mozilla.org/gfx/printset
 
 #include "nsBidiUtils.h"
 
-static NS_DEFINE_CID(kPresShellCID, NS_PRESSHELL_CID);
 static NS_DEFINE_CID(kGalleyContextCID,  NS_GALLEYCONTEXT_CID);
-static NS_DEFINE_CID(kPrintContextCID,  NS_PRINTCONTEXT_CID);
 static NS_DEFINE_CID(kStyleSetCID,  NS_STYLESET_CID);
 
 #ifdef NS_DEBUG
@@ -2135,8 +2132,6 @@ NS_IMETHODIMP DocumentViewerImpl::GetCanGetContents(PRBool *aCanGetContents)
 #ifdef XP_MAC
 #pragma mark -
 #endif
-
-static NS_DEFINE_IID(kDeviceContextSpecFactoryCID, NS_DEVICE_CONTEXT_SPEC_FACTORY_CID);
 
 /* ========================================================================================
  * nsIContentViewerFile
