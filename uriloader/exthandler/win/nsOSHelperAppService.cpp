@@ -75,6 +75,8 @@ NS_IMETHODIMP nsOSHelperAppService::DoContent(const char *aMimeContentType, nsIU
   if (NS_SUCCEEDED(rv)) return NS_OK;
 
   // okay the base class couldn't do anything so now it's our turn!!!
+  // reset our rv value.
+  rv = NS_OK;
 
   // ACK!!! we've done all this work to discover the content type just to find out that windows
   // registery uses the extension to figure out the right helper app....that's a bummer...
@@ -83,7 +85,7 @@ NS_IMETHODIMP nsOSHelperAppService::DoContent(const char *aMimeContentType, nsIU
   nsCOMPtr<nsIMIMEInfo> mimeInfo;
   nsXPIDLCString fileExtension;
 
-  rv = GetFromMIMEType(aMimeContentType, getter_AddRefs(mimeInfo));
+  GetFromMIMEType(aMimeContentType, getter_AddRefs(mimeInfo));
 
   // here's a nifty little trick. If we got a match back for the content type; but the content type is
   // unknown or octet (both of these are pretty much unhelpful mime objects), then see if the file extension
@@ -107,7 +109,7 @@ NS_IMETHODIMP nsOSHelperAppService::DoContent(const char *aMimeContentType, nsIU
     }
   }
 
-  if (NS_FAILED(rv) || !mimeInfo)
+  if (!mimeInfo)
   {
     // if we didn't get a mime info object then the OS knows nothing about this mime type and WE know nothing about this mime type
     // so create a new mime info object and use it....
