@@ -574,7 +574,7 @@ main(int argc, char* argv[])
     nsresult rv;
     nsIServiceManager* servMgr;
 
-    rv = NS_InitXPCOM(&servMgr);
+    rv = NS_InitXPCOM(&servMgr, NULL, NULL);
     if (NS_FAILED(rv)) return rv;
 
     if (argc > 1 && nsCRT::strcmp(argv[1], "-trace") == 0)

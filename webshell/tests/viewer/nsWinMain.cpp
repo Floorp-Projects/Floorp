@@ -125,7 +125,7 @@ int main(int argc, char **argv)
 {
   nsresult rv;
   nsIServiceManager* servMgr;
-  rv = NS_InitXPCOM(&servMgr);
+  rv = NS_InitXPCOM(&servMgr, NULL, NULL);
   NS_ASSERTION(NS_SUCCEEDED(rv), "NS_InitXPCOM failed");
   nsViewerApp* app = new nsNativeViewerApp();
   NS_ADDREF(app);

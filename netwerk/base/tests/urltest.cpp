@@ -233,7 +233,6 @@ int main(int argc, char **argv)
         return 0;
     }
 
-    NS_InitXPCOM(nsnull);
     nsComponentManager::AutoRegister(nsIComponentManager::NS_Startup, "./components");
 
     testURL(argv[1]);

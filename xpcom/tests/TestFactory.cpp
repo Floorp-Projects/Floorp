@@ -31,9 +31,6 @@ int main(int argc, char **argv) {
   nsresult rv;
   nsIServiceManager* servMgr;
 
-  rv = NS_InitXPCOM(&servMgr);
-  if (NS_FAILED(rv)) return rv;
-
   rv = nsComponentManager::AutoRegister(nsIComponentManager::NS_Startup,
                                         NULL /* default */);
   if (NS_FAILED(rv)) return rv;

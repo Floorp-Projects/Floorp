@@ -80,7 +80,7 @@ PR_PUBLIC_API(nsresult) XPI_Init(
     //--------------------------------------------------------------------
     // Initialize XPCOM and AutoRegister() its components
     //--------------------------------------------------------------------
-    rv = NS_InitXPCOM(&gServiceMgr);
+    rv = NS_InitXPCOM(&gServiceMgr, NULL, NULL);
     if (!NS_SUCCEEDED(rv))
         return rv;
 

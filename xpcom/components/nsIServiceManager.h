@@ -23,6 +23,7 @@
 #include "nsID.h"
 
 class nsIShutdownListener;
+class nsFileSpec;
 
 #define NS_ISERVICEMANAGER_IID                       \
 { /* cf0df3b0-3401-11d2-8163-006008119d7a */         \
@@ -335,8 +336,13 @@ NS_NewServiceManager(nsIServiceManager* *result);
 // and registers xpcom components with the ComponentManager. Should be called
 // before any call can be made to XPCOM. Currently we are coping with this
 // not being called and internally initializing XPCOM if not already.
+//
+// registryFileName is the absolute path to the registry file.  This
+// file will be checked for existence.  If it does not exist, it
+// will use the current process directory name, and tack on "component.reg"
+
 extern NS_COM nsresult
-NS_InitXPCOM(nsIServiceManager* *result);
+NS_InitXPCOM(nsIServiceManager* *result, nsFileSpec* registryFile, nsFileSpec* componentDir);
 
 extern NS_COM nsresult
 NS_ShutdownXPCOM(nsIServiceManager* servMgr);
