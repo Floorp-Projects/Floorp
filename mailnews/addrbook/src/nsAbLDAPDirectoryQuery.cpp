@@ -507,13 +507,13 @@ nsresult nsAbQueryLDAPMessageListener::OnLDAPMessageSearchEntry (nsILDAPMessage 
     rv = aMessage->GetAttributes(attrs.GetSizeAddr(), attrs.GetArrayAddr());
     NS_ENSURE_SUCCESS(rv, rv);
 
-    nsCAutoString n;
+    nsCAutoString propertyName;
     for (PRUint32 i = 0; i < properties.GetSize(); i++)
     {
-        n.Assign (properties[i]);
+        propertyName.Assign (properties[i]);
 
         nsAbDirectoryQueryPropertyValue* _propertyValue = 0;
-        if (n.Equals("card:nsIAbCard"))
+        if (propertyName.Equals("card:nsIAbCard"))
         {
             // Meta property
             nsXPIDLString dn;
@@ -533,22 +533,36 @@ nsresult nsAbQueryLDAPMessageListener::OnLDAPMessageSearchEntry (nsILDAPMessage 
             if (hasSetCardProperty == PR_FALSE)
                 continue;
 
-            _propertyValue = new nsAbDirectoryQueryPropertyValue(n.get (), card);
+            _propertyValue = new nsAbDirectoryQueryPropertyValue(propertyName.get (), card);
             if (_propertyValue == NULL)
                 return NS_ERROR_OUT_OF_MEMORY;
 
         }
         else
         {
-            const MozillaLdapPropertyRelation* p =
-                MozillaLdapPropertyRelator::findLdapPropertyFromMozilla (n.get ());
-
-            if (!p)
+            if (!MozillaLdapPropertyRelator::findLdapPropertyFromMozilla (propertyName.get ()))
                 continue;
+
+            const MozillaLdapPropertyRelation* relation ;
 
             for (PRUint32 j = 0; j < attrs.GetSize(); j++)
             {
-                if (nsCRT::strcasecmp (p->ldapProperty, attrs[j]) == 0)
+                relation = MozillaLdapPropertyRelator::findMozillaPropertyFromLdap (attrs[j]);
+                if (!relation)
+                    continue;
+                /*
+                 * This change is necessary due to a side effect of #124022. The list of
+                 * requested attributes is created in reverse order than how they appear
+                 * in nsAbLDAPProperties.cpp. Thus while "surname" and "sn" both map to
+                 * LastName, "sn" will be returned by findLdapPropertyFromMozilla() as it
+                 * appears first in the hash table but "surname" will be returned by the 
+                 * request. 
+                 *
+                 * Rather than simply reversing the order, an alternative is to compare
+                 * the mapped Mozilla attributes where a one to one match exists.
+                */
+
+                if (nsCRT::strcasecmp (relation->mozillaProperty, propertyName.get()) == 0)
                 {
                     PRUnicharPtrArrayGuard vals;
                     rv = aMessage->GetValues (attrs[j], vals.GetSizeAddr(), vals.GetArrayAddr());
@@ -557,7 +571,7 @@ nsresult nsAbQueryLDAPMessageListener::OnLDAPMessageSearchEntry (nsILDAPMessage 
                     if (vals.GetSize() == 0)
                         break;
 
-                    _propertyValue = new nsAbDirectoryQueryPropertyValue(n.get (), vals[0]);
+                    _propertyValue = new nsAbDirectoryQueryPropertyValue(propertyName.get (), vals[0]);
                     if (_propertyValue == NULL)
                         return NS_ERROR_OUT_OF_MEMORY;
                     break;
@@ -840,12 +854,12 @@ nsresult nsAbLDAPDirectoryQuery::getLdapReturnAttributes (
     rv = arguments->GetReturnProperties (properties.GetSizeAddr(), properties.GetArrayAddr());
     NS_ENSURE_SUCCESS(rv, rv);
 
-    nsCAutoString n;
+    nsCAutoString propertyName;
     for (PRUint32 i = 0; i < properties.GetSize(); i++)
     {
-        n.Assign (properties[i]);
+        propertyName.Assign (properties[i]);
 
-        if (n.Equals("card:nsIAbCard"))
+        if (propertyName.Equals("card:nsIAbCard"))
         {
             // Meta property
             // require all attributes
@@ -855,15 +869,15 @@ nsresult nsAbLDAPDirectoryQuery::getLdapReturnAttributes (
             break;
         }
 
-        const MozillaLdapPropertyRelation* p=
-            MozillaLdapPropertyRelator::findLdapPropertyFromMozilla (n.get ());
-        if (!p)
+        const MozillaLdapPropertyRelation* tableEntry=
+            MozillaLdapPropertyRelator::findLdapPropertyFromMozilla (propertyName.get ());
+        if (!tableEntry)
             continue;
 
         if (i)
             returnAttributes.Append (",");
 
-        returnAttributes.Append (p->ldapProperty);
+        returnAttributes.Append (tableEntry->ldapProperty);
     }
 
     return rv;
