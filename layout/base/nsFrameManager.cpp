@@ -141,12 +141,13 @@ private:
   FrameHashTable*                 mPlaceholderMap;
   CantRenderReplacedElementEvent* mPostedEvents;
 
-  void HandleCantRenderReplacedElementEvent(CantRenderReplacedElementEvent* aEvent);
   void RevokePostedEvents();
   CantRenderReplacedElementEvent** FindPostedEventFor(nsIFrame* aFrame);
   void DequeuePostedEventFor(nsIFrame* aFrame);
 
-  friend void PR_CALLBACK HandlePLEvent(CantRenderReplacedElementEvent* aEvent);
+  friend struct CantRenderReplacedElementEvent;
+  static void HandlePLEvent(CantRenderReplacedElementEvent* aEvent);
+  static void DestroyPLEvent(CantRenderReplacedElementEvent* aEvent);
 };
 
 //----------------------------------------------------------------------
@@ -155,11 +156,11 @@ NS_LAYOUT nsresult
 NS_NewFrameManager(nsIFrameManager** aInstancePtrResult)
 {
   NS_PRECONDITION(nsnull != aInstancePtrResult, "null ptr");
-  if (nsnull == aInstancePtrResult) {
+  if (!aInstancePtrResult) {
     return NS_ERROR_NULL_POINTER;
   }
   FrameManager* it = new FrameManager;
-  if (nsnull == it) {
+  if (!it) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
   return it->QueryInterface(nsIFrameManager::GetIID(), (void **)aInstancePtrResult);
@@ -207,15 +208,13 @@ FrameManager::Init(nsIPresShell* aPresShell,
 NS_IMETHODIMP
 FrameManager::GetPrimaryFrameFor(nsIContent* aContent, nsIFrame** aResult)
 {
-  NS_PRECONDITION(nsnull != aResult, "null ptr");
-  NS_PRECONDITION(nsnull != aContent, "no content object");
-  if (nsnull == aResult) {
+  NS_PRECONDITION(aResult, "null ptr");
+  NS_PRECONDITION(aContent, "no content object");
+  if (!aResult) {
     return NS_ERROR_NULL_POINTER;
   }
 
-  if (nsnull == mPrimaryFrameMap) {
-    *aResult = nsnull;
-  } else {
+  if (mPrimaryFrameMap) {
     *aResult = (nsIFrame*)mPrimaryFrameMap->Search(aContent);
     if (!*aResult) {
       nsCOMPtr<nsIStyleSet>    styleSet;
@@ -227,6 +226,8 @@ FrameManager::GetPrimaryFrameFor(nsIContent* aContent, nsIFrame** aResult)
       mPresShell->GetPresContext(getter_AddRefs(presContext));
       styleSet->FindPrimaryFrameFor(presContext, this, aContent, aResult);
     }
+  } else {
+    *aResult = nsnull;
   }
   
   return NS_OK;
@@ -279,16 +280,16 @@ NS_IMETHODIMP
 FrameManager::GetPlaceholderFrameFor(nsIFrame*  aFrame,
                                      nsIFrame** aResult) const
 {
-  NS_PRECONDITION(nsnull != aResult, "null ptr");
-  NS_PRECONDITION(nsnull != aFrame, "no frame");
-  if ((nsnull == aResult) || (nsnull == aFrame)) {
+  NS_PRECONDITION(aResult, "null ptr");
+  NS_PRECONDITION(aFrame, "no frame");
+  if (!aResult || !aFrame) {
     return NS_ERROR_NULL_POINTER;
   }
 
-  if (nsnull == mPlaceholderMap) {
-    *aResult = nsnull;
-  } else {
+  if (mPlaceholderMap) {
     *aResult = (nsIFrame*)mPlaceholderMap->Get(aFrame);
+  } else {
+    *aResult = nsnull;
   }
 
   return NS_OK;
@@ -476,10 +477,12 @@ FrameManager::DequeuePostedEventFor(nsIFrame* aFrame)
 }
 
 void
-FrameManager::HandleCantRenderReplacedElementEvent(CantRenderReplacedElementEvent* aEvent)
+FrameManager::HandlePLEvent(CantRenderReplacedElementEvent* aEvent)
 {
-  // Remove the posted event from our linked list
-  CantRenderReplacedElementEvent** events = &mPostedEvents;
+  FrameManager* frameManager = (FrameManager*)aEvent->owner;
+  
+  // Remove the posted event from the linked list
+  CantRenderReplacedElementEvent** events = &frameManager->mPostedEvents;
   while (*events) {
     if (*events == aEvent) {
       *events = (*events)->mNext;
@@ -492,20 +495,13 @@ FrameManager::HandleCantRenderReplacedElementEvent(CantRenderReplacedElementEven
   // Notify the style system and then process any reflow commands that
   // are generated
   nsCOMPtr<nsIPresContext>  presContext;
-  mPresShell->GetPresContext(getter_AddRefs(presContext));
-  mStyleSet->CantRenderReplacedElement(presContext, aEvent->mFrame);
-  mPresShell->ProcessReflowCommands();
+  frameManager->mPresShell->GetPresContext(getter_AddRefs(presContext));
+  frameManager->mStyleSet->CantRenderReplacedElement(presContext, aEvent->mFrame);
+  frameManager->mPresShell->ProcessReflowCommands();
 }
 
-void PR_CALLBACK
-HandlePLEvent(CantRenderReplacedElementEvent* aEvent)
-{
-  FrameManager* frameManager = (FrameManager*)aEvent->owner;
-  frameManager->HandleCantRenderReplacedElementEvent(aEvent);
-}
-
-static void PR_CALLBACK
-DestroyPLEvent(CantRenderReplacedElementEvent* aEvent)
+void
+FrameManager::DestroyPLEvent(CantRenderReplacedElementEvent* aEvent)
 {
   delete aEvent;
 }
@@ -515,8 +511,8 @@ CantRenderReplacedElementEvent::CantRenderReplacedElementEvent(FrameManager* aFr
 {
   // Note: because the frame manager owns us we don't hold a reference to the
   // frame manager
-  PL_InitEvent(this, aFrameManager, (PLHandleEventProc)::HandlePLEvent,
-               (PLDestroyEventProc)::DestroyPLEvent);
+  PL_InitEvent(this, aFrameManager, (PLHandleEventProc)&FrameManager::HandlePLEvent,
+               (PLDestroyEventProc)&FrameManager::DestroyPLEvent);
   mFrame = aFrame;
 }
 
@@ -594,7 +590,7 @@ FrameHashTable::Get(void* aKey)
   PRInt32 hashCode = (PRInt32) aKey;
   PLHashEntry** hep = PL_HashTableRawLookup(mTable, hashCode, aKey);
   PLHashEntry* he = *hep;
-  if (nsnull != he) {
+  if (he) {
     return he->value;
   }
   return nsnull;
@@ -606,7 +602,7 @@ FrameHashTable::Put(void* aKey, void* aData)
   PRInt32 hashCode = (PRInt32) aKey;
   PLHashEntry** hep = PL_HashTableRawLookup(mTable, hashCode, aKey);
   PLHashEntry* he = *hep;
-  if (nsnull != he) {
+  if (he) {
     void* oldValue = he->value;
     he->value = aData;
     return oldValue;
@@ -622,7 +618,7 @@ FrameHashTable::Remove(void* aKey)
   PLHashEntry** hep = PL_HashTableRawLookup(mTable, hashCode, aKey);
   PLHashEntry* he = *hep;
   void* oldValue = nsnull;
-  if (nsnull != he) {
+  if (he) {
     oldValue = he->value;
     PL_HashTableRawRemove(mTable, hep, he);
   }
