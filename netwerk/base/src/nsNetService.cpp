@@ -22,7 +22,6 @@
 #include "nsStandardUrl.h"
 #include "nscore.h"
 #include "nsString2.h"
-#include "nsXPComCIID.h"
 #include "nsIServiceManager.h"
 #include "nsIEventQueueService.h"
 #include "nsIFileTransportService.h"
