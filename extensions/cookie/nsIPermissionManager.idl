@@ -43,7 +43,7 @@
  */
 
 #include "nsISupports.idl"
-#include "nsIEnumerator.idl"
+#include "nsISimpleEnumerator.idl"
 
 [scriptable, uuid(4F6B5E00-0C36-11d5-A535-0010A401EB10)]
 interface nsIPermissionManager : nsISupports

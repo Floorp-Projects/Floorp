@@ -36,7 +36,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "nsISupports.idl"
-#include "nsIEnumerator.idl"
+#include "nsISimpleEnumerator.idl"
 #include "MailNewsTypes2.idl"
 
 interface nsIMsgDBHdr;

@@ -25,7 +25,7 @@
 
 #include "nsISupports.idl"
 #include "nsIVariant.idl"
-#include "nsIEnumerator.idl"
+#include "nsISimpleEnumerator.idl"
 
 [scriptable, uuid(6dcf9030-a49f-11d5-910d-0010a4e73d9a)]
 interface nsIProperty : nsISupports

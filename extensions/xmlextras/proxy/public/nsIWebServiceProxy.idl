@@ -40,7 +40,7 @@
 
 #include "nsISupports.idl"
 #include "nsIWSDL.idl"
-#include "nsIEnumerator.idl"
+#include "nsISimpleEnumerator.idl"
 #include "nsIException.idl"
 
 %{ C++

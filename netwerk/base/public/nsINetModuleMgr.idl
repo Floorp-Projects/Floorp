@@ -48,7 +48,7 @@
  */
 
 #include "nsISupports.idl"
-#include "nsIEnumerator.idl"
+#include "nsISimpleEnumerator.idl"
 #include "nsINetNotify.idl"
 
 interface nsIEventQueue;

@@ -43,7 +43,7 @@
 #include "nsIMsgCopyServiceListener.idl"
 #include "nsIUrlListener.idl"
 #include "nsIEnumerator.idl"
-
+#include "nsISimpleEnumerator.idl"
 %{ C++
 #include "nsIMsgDatabase.h"
 #include "nsMsgKeyArray.h"
