@@ -23,7 +23,7 @@
  * 04/20/2000       IBM Corp.      OS/2 VisualAge build.
  */
 
-#include "prlog.h" 
+#include "prlog.h"
 #include "nsIComponentLoader.h"
 #include "nsIComponentManager.h"
 #include "nsIServiceManager.h"
@@ -412,26 +412,13 @@ nsresult
 mozJSComponentLoader::SetRegistryInfo(const char *registryLocation,
                                       nsIFile *component)
 {
-    nsresult rv;
     if (!mRegistry.get())
         return NS_OK;           // silent failure
 
-    PRUint32 length = strlen(registryLocation);
-    char* eRegistryLocation;
-    rv = mRegistry->EscapeKey((PRUint8*)registryLocation, 1, &length, (PRUint8**)&eRegistryLocation);
-    if (rv != NS_OK)
-    {
-        return rv;
-    }
-    if (eRegistryLocation == nsnull)    //  No escaping required
-    eRegistryLocation = (char*)registryLocation;
-
-
+    nsresult rv;
     nsRegistryKey key;
 
-    rv = mRegistry->AddSubtreeRaw(mXPCOMKey, eRegistryLocation, &key);
-    if (registryLocation != eRegistryLocation)
-	nsAllocator::Free(eRegistryLocation);
+    rv = mRegistry->AddSubtreeRaw(mXPCOMKey, registryLocation, &key);
     if (NS_FAILED(rv))
         return rv;
 
@@ -444,8 +431,6 @@ mozJSComponentLoader::SetRegistryInfo(const char *registryLocation,
     PRInt64 fileSize;
     if (NS_FAILED(rv = component->GetFileSize(&fileSize)) ||
         NS_FAILED(rv = mRegistry->SetLongLong(key, fileSizeValueName, &fileSize)))
-	if (registryLocation != eRegistryLocation)
-	    nsAllocator::Free(eRegistryLocation);
         return rv;
 
 #ifdef DEBUG_shaver_off
@@ -462,53 +447,20 @@ mozJSComponentLoader::RemoveRegistryInfo(const char *registryLocation)
     if (!mRegistry.get())
         return NS_OK;           // silent failure
 
-    nsresult rv;
-    if (!mRegistry.get())
-        return NS_OK;           // silent failure
-
-    PRUint32 length = strlen(registryLocation);
-    char* eRegistryLocation;
-    rv = mRegistry->EscapeKey((PRUint8*)registryLocation, 1, &length, (PRUint8**)&eRegistryLocation);
-    if (rv != NS_OK)
-    {
-        return rv;
-    }
-    if (eRegistryLocation == nsnull)    //  No escaping required
-    eRegistryLocation = (char*)registryLocation;
-
-
-    rv = mRegistry->RemoveSubtree(mXPCOMKey, eRegistryLocation);
-	
-    if (registryLocation != eRegistryLocation)
-	    nsAllocator::Free(eRegistryLocation);
-
-    return rv;
+    return mRegistry->RemoveSubtree(mXPCOMKey, registryLocation);
 }
 
 PRBool
 mozJSComponentLoader::HasChanged(const char *registryLocation,
                                  nsIFile *component)
 {
+
     /* if we don't have a registry handle, force registration of component */
     if (!mRegistry)
         return PR_TRUE;
 
-    nsresult rv;
-    PRUint32 length = strlen(registryLocation);
-    char* eRegistryLocation;
-    rv = mRegistry->EscapeKey((PRUint8*)registryLocation, 1, &length, (PRUint8**)&eRegistryLocation);
-    if (rv != NS_OK)
-    {
-        return rv;
-    }
-    if (eRegistryLocation == nsnull)    //  No escaping required
-        eRegistryLocation = (char*)registryLocation;
-
     nsRegistryKey key;
-    int r = NS_FAILED(mRegistry->GetSubtreeRaw(mXPCOMKey, eRegistryLocation, &key));
-    if (registryLocation != eRegistryLocation)
-	nsAllocator::Free(eRegistryLocation);
-    if (r)
+    if (NS_FAILED(mRegistry->GetSubtreeRaw(mXPCOMKey, registryLocation, &key)))
         return PR_TRUE;
 
     /* check modification date */
