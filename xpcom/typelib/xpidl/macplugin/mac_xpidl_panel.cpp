@@ -1,4 +1,21 @@
 /*
+ * The contents of this file are subject to the Netscape Public License
+ * Version 1.0 (the "NPL"); you may not use this file except in
+ * compliance with the NPL.  You may obtain a copy of the NPL at
+ * http://www.mozilla.org/NPL/
+ *
+ * Software distributed under the NPL is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the NPL
+ * for the specific language governing rights and limitations under the
+ * NPL.
+ *
+ * The Initial Developer of this code under the NPL is Netscape
+ * Communications Corporation.  Portions created by Netscape are
+ * Copyright (C) 1998 Netscape Communications Corporation.  All Rights
+ * Reserved.
+ */
+
+/*
 	mac_xpidl_panel.cpp
  */
 
@@ -26,10 +43,6 @@
 /* project headers */
 #include "mac_xpidl_panel.h"
 
-/* current version number for our prefs data */
-#define PSAMPLEPANELVERSION		3
-
-
 enum {
 	kFactoryPrefsID = 128,
 	kCW7ItemListID = 128,
@@ -39,44 +52,23 @@ enum {
 	kXPIDLWarningsItem,
 	kXPIDLVerboseItem,
 
-	kXPTLinkerOutputItem = 4,
-	
-	kLinkSymItem = 1,
-	kProjTypeItem,
-	kOutFileItem,
-	kOutFileLabelItem,
-	kPictLabelItem,
-	kPictItem,
-	kBoxItem,
-	
-	kSampleStringsID = 128,
-	kSampleInfoStr = 1
+	kXPTLinkerOutputItem = 4
 };
 
 
 /* local variables */
-static Boolean		sPictActive;
-static Point		sDotPosition;
 static RgnHandle	sDragRgn;
 static Boolean		sHighlightOn;
 
 
 /* prototypes of local functions */
-static void		PanelDrawBox(PanelParameterBlock *pb, long whichItem, short strIndex);
-static void		DrawDot(Point dotPos, const Rect* itemRect);
-static void		DrawPictBox(PanelParameterBlock *pb);
-static void		ActivatePictBox(PanelParameterBlock *pb, Boolean activateIt);
 static short	InitDialog(PanelParameterBlock *pb);
 static void		TermDialog(PanelParameterBlock *pb);
 static void		PutData(PanelParameterBlock *pb, Handle options);
 static short	GetData(PanelParameterBlock *pb, Handle options, Boolean noisy);
 static void		ByteSwapData(XPIDLSettingsHandle options);
 static short	Filter(PanelParameterBlock *pb, EventRecord *event, short *itemHit);
-static void		HandleKey(PanelParameterBlock *pb, EventRecord *event);
-static void		HandleClick(PanelParameterBlock *pb, EventRecord *event);
 static void		ItemHit(PanelParameterBlock *pb);
-static void		FindStatus(PanelParameterBlock *pb);
-static void		ObeyCommand(PanelParameterBlock *pb);
 static void		Validate(Handle original, Handle current, Boolean *recompile, Boolean *relink, Boolean *reset);
 static short	GetPref(AEKeyword keyword, AEDesc *prefsDesc, Handle settings);
 static short	SetPref(AEKeyword keyword, const AEDesc *prefsDesc, Handle settings);
@@ -89,7 +81,6 @@ static OSErr	DragEnter(PanelParameterBlock *pb);
 static void		DragWithin(PanelParameterBlock *pb);
 static void		DragExit(PanelParameterBlock *pb);
 static void		DragDrop(PanelParameterBlock *pb);
-static pascal void	PanelDrawBoxCB(DialogPtr dp, short item);
 
 extern "C" {
 
@@ -104,7 +95,7 @@ pascal short	xpidl_panel(PanelParameterBlock *pb);
  
 pascal short xpidl_panel(PanelParameterBlock *pb)
 {
-	short	result, theItem;
+	short	result;
 	
 	EnterCodeResource();
 	PrepareCallback();
@@ -162,57 +153,24 @@ pascal short xpidl_panel(PanelParameterBlock *pb)
 		
 	case reqDrawCustomItem:
 		/* handle a request to draw one of our user items (CW/8 and later) */
-		theItem = pb->itemHit - pb->baseItems;
-		switch (theItem)
-		{
-		case kBoxItem:
-			PanelDrawBox(pb, theItem, kSampleInfoStr);
-			break;
-			
-		case kPictItem:
-			DrawPictBox(pb);
-			break;
-		}
 		break;
 		
 	case reqActivateItem:
-		theItem = pb->itemHit - pb->baseItems;
-		if (theItem == kPictItem)
-		{
-			ActivatePictBox(pb, true);
-		}
 		break;
 		
 	case reqDeactivateItem:
-		theItem = pb->itemHit - pb->baseItems;
-		if (theItem == kPictItem)
-		{
-			ActivatePictBox(pb, false);
-		}
 		break;
 		
 	case reqHandleKey:
-		theItem = pb->itemHit - pb->baseItems;
-		if (theItem == kPictItem)
-		{
-			HandleKey(pb, pb->event);
-		}
 		break;
 		
 	case reqHandleClick:
-		theItem = pb->itemHit - pb->baseItems;
-		if (theItem == kPictItem)
-		{
-			HandleClick(pb, pb->event);
-		}
 		break;
 		
 	case reqFindStatus:
-		FindStatus(pb);
 		break;
 		
 	case reqObeyCommand:
-		ObeyCommand(pb);
 		break;
 		
 	case reqAEGetPref:
@@ -270,119 +228,6 @@ pascal short xpidl_panel(PanelParameterBlock *pb)
 	return (result);
 }
 
-
-/*
- *	PanelDrawBoxCB  -	user item proc to draw box
- *
- */
- 
-static pascal void PanelDrawBoxCB(DialogPtr dp, short item)
-{
-	Str255	str;
-	
-	EnterCallback();
-	GetIndString(str, kSampleStringsID, kSampleInfoStr);
-	CWPanlDrawUserItemBox(dp, item, str);
-	ExitCallback();
-}
-
-
-/*
- *	PanelDrawBox
- *
- */
- 
-static void PanelDrawBox(PanelParameterBlock *pb, long whichItem, short strIndex)
-{
-	Str255	str;
-	
-	GetIndString(str, kSampleStringsID, strIndex);
-	CWPanlDrawPanelBox(pb, whichItem, str);
-}
-
-
-/*
- *	DrawDot
- *
- */
- 
-static void DrawDot(Point dotPos, const Rect* itemRect)
-{
-	Rect		frameRect, dotRect;
-	RgnHandle	savedClip;
-	
-	frameRect = *itemRect;
-	SetRect(&dotRect, dotPos.h, dotPos.v, dotPos.h, dotPos.v);
-	InsetRect(&dotRect, -6, -6);
-	OffsetRect(&dotRect, frameRect.left, frameRect.top);
-	
-	savedClip = NewRgn();
-	GetClip(savedClip);
-	FrameRect(&frameRect);
-	InsetRect(&frameRect, 1, 1);
-	ClipRect(&frameRect);
-	EraseRect(&frameRect);
-	PaintOval(&dotRect);
-	SetClip(savedClip);
-}
-
-
-/*
- *	PanelDrawDotCB  -	user item proc to draw dot
- *
- */
- 
-static pascal void PanelDrawDotCB(DialogPtr dp, short item)
-{
-	short		itemType;
-	Handle		itemHand;
-	Rect		itemRect;
-	GrafPtr		savedPort;
-	PenState	savedPen;
-	
-	EnterCallback();
-	GetDialogItem(dp, item, &itemType, &itemHand, &itemRect);
-	GetPort(&savedPort);
-	SetPort(dp);
-	GetPenState(&savedPen);
-	PenNormal();
-	DrawDot(sDotPosition, &itemRect);
-	SetPenState(&savedPen);
-	SetPort(savedPort);
-	ExitCallback();
-}
-
-
-/*
- *	DrawPictBox
- *
- */
- 
-static void DrawPictBox(PanelParameterBlock *pb)
-{
-	Rect	itemRect;
-	
-	CWPanlGetItemRect(pb, kPictItem, &itemRect);
-	OutlineRect(&itemRect, sPictActive);
-	InsetRect(&itemRect, 3, 3);
-	DrawDot(sDotPosition, &itemRect);
-}
-
-
-/*
- *	ActivatePictBox
- *
- */
- 
-static void ActivatePictBox(PanelParameterBlock *pb, Boolean activateIt)
-{
-	Rect	itemRect;
-	
-	sPictActive = activateIt;
-	CWPanlGetItemRect(pb, kPictItem, &itemRect);
-	OutlineRect(&itemRect, sPictActive);
-}
- 
 /*
  *	InitDialog  -	initialize Dialog Box items for this panel
  *
@@ -390,30 +235,15 @@ static void ActivatePictBox(PanelParameterBlock *pb, Boolean activateIt)
 
 static short InitDialog(PanelParameterBlock *pb)
 {
-	short	ditlID;
 	OSErr	err;
 	
 	// The library function will call the IDE to append the dialog items 
 	// if possible;  else it will call AppendDITL itself.  This way, you 
 	// don't have to worry about it.
 	
-	if (pb->version < DROPINPANELAPIVERSION_2)
-		ditlID = kCW7ItemListID;
-	else
-		ditlID = kCW8ItemListID;
-	
-	err = CWPanlAppendItems(pb, ditlID);
+	err = CWPanlAppendItems(pb, kCW8ItemListID);
 	if (err != noErr)
 		return (err);
-	
-	sPictActive = false;
-	
-	if (pb->version < DROPINPANELAPIVERSION_2) {
-		// CW/7 API -- we have to do install user item procs ourselves
-		
-		CWPanlInstallUserItem(pb, kBoxItem, PanelDrawBoxCB);
-		CWPanlInstallUserItem(pb, kPictItem, PanelDrawDotCB);
-	}
 	
 	sDragRgn = NewRgn();
 	
@@ -427,13 +257,6 @@ static short InitDialog(PanelParameterBlock *pb)
 
 static void TermDialog(PanelParameterBlock *pb)
 {
-	if (pb->version < DROPINPANELAPIVERSION_2) {
-		// CW/7 API -- we have to release the memory we allocated in InitDialog
-		
-		CWPanlRemoveUserItem(pb, kBoxItem);
-		CWPanlRemoveUserItem(pb, kPictItem);
-	}
-	
 	DisposeRgn(sDragRgn);
 }
 
@@ -518,109 +341,6 @@ static short Filter(PanelParameterBlock *pb, EventRecord *event, short *itemHit)
 }
 
 /*
- *	HandleKey
- *
- */
-static void HandleKey(PanelParameterBlock *pb, EventRecord *event)
-{
-	Point	tempPos			= sDotPosition;
-	short	simulatedItem	= kPictItem;
-	Rect	itemRect, dotRect;
-	
-	CWPanlGetItemRect(pb, kPictItem, &itemRect);
-	dotRect = itemRect;
-	InsetRect(&itemRect, 4, 4);
-	OffsetRect(&itemRect, -itemRect.left, -itemRect.top);
-	
-	switch (event->message & charCodeMask)
-	{
-	case 0x1C:	// left arrow
-		if (tempPos.h-- <= itemRect.left)
-			return;
-		break;
-		
-	case 0x1D:	// right arrow
-		if (tempPos.h++ > itemRect.right)
-			return;
-		break;
-		
-	case 0x1E:	// up arrow
-		if (tempPos.v-- <= itemRect.top)
-			return;
-		break;
-		
-	case 0x1F:	// down arrow
-		if (tempPos.v++ > itemRect.bottom)
-			return;
-		break;
-		
-	default:
-		return;
-	}
-	
-	sDotPosition = tempPos;
-	InsetRect(&dotRect, 3, 3);
-	DrawDot(sDotPosition, &dotRect);
-	
-	pb->itemHit = simulatedItem + pb->baseItems;
-}
-
-/*
- *	HandleClick
- *
- */
-static void HandleClick(PanelParameterBlock *pb, EventRecord *event)
-{
-	short	simulatedItem	= kPictItem;
-	Rect	itemRect, dotRect;
-	GrafPtr	savedPort, panelPort;
-	Point	oldPt, newPt;
-	
-	CWPanlGetMacPort(pb, &panelPort);
-	GetPort(&savedPort);
-	SetPort(panelPort);
-	
-	CWPanlGetItemRect(pb, kPictItem, &itemRect);
-	InsetRect(&itemRect, 3, 3);
-	dotRect = itemRect;
-	InsetRect(&itemRect, 1, 1);
-	
-	oldPt = event->where;
-	GlobalToLocal(&oldPt);
-	
-	if (PtInRect(oldPt, &itemRect))
-	{
-		newPt.h = newPt.v = -32000;
-		
-		while (StillDown())
-		{
-			long	pinned;
-			
-			if (!EqualPt(oldPt, newPt))
-			{
-				sDotPosition.h = newPt.h - itemRect.left;
-				sDotPosition.v = newPt.v - itemRect.top;
-				
-				DrawDot(sDotPosition, &dotRect);
-				oldPt = newPt;
-			}
-			
-			GetMouse(&newPt);
-			pinned = PinRect(&itemRect, newPt);
-			newPt = * (Point *) &pinned;
-		}
-		
-		simulatedItem = kPictItem;
-	}
-	else
-	{
-		simulatedItem = 0;
-	}
-	
-	pb->itemHit = simulatedItem + pb->baseItems;
-}
-
-/*
  *	ItemHit		-	handle an itemHit in a Preferences panel
  *
  */
@@ -646,67 +366,6 @@ static void ItemHit(PanelParameterBlock *pb)
 
 	pb->canRevert	= !ComparePrefs(pb->originalPrefs, pb->currentPrefs);
 	pb->canFactory	= !ComparePrefs(pb->factoryPrefs,  pb->currentPrefs);
-}
-
-/*
- *	FindStatus
- *
- */
-static void FindStatus(PanelParameterBlock *pb)
-{
-	short	command	= pb->itemHit;
-	Boolean	enabled	= false;
-	
-	if (sPictActive)
-	{
-		// itemHit contains the menu command we want the status for
-		
-		switch (command)
-		{
-		case menu_Copy:
-			enabled = true;
-			break;
-		}
-	}
-	
-	pb->itemHit = enabled;
-}
-
-/*
- *	ObeyCommand
- *
- */
-
-static void ObeyCommand(PanelParameterBlock *pb)
-{
-	short		command			= pb->itemHit;
-	short		simulatedItem	= 0;
-#if 0
-	Rect		itemRect;
-	PicHandle	thePict;
-	Handle		pictH;
-#endif
-	
-	switch (command)
-	{
-	case menu_Copy:
-#if 0
-		CWPanlGetItemRect(pb, kPictItem, &itemRect);
-		InsetRect(&itemRect, 3, 3);
-		thePict = OpenPicture(&itemRect);
-		ClipRect(&itemRect);
-		DrawDot(sDotPosition, &itemRect);
-		ClosePicture();
-		ZeroScrap();
-		pictH = (Handle) thePict;
-		HLock(pictH);
-		PutScrap(GetHandleSize(pictH), 'PICT', *pictH);
-		KillPicture(thePict);
-#endif
-		break;
-	}
-	
-	pb->itemHit = simulatedItem /* ????? + pb->baseItems */;
 }
 
 /*
@@ -964,43 +623,7 @@ static OSErr	DragEnter(PanelParameterBlock *pb)
 	OSErr			err;
 	
 	/* Return paramErr if the user is on a item that can't be dropped on */
-	if (theItem != kPictItem)
-		return (paramErr);
-	
-	/* At this point, test if the item can accept the dragged data.  We don't */
-	/* actually handle dropping data, so we just check if there are any drag */
-	/* items.  You should return dragNotAcceptedErr if you can't handle the */
-	/* data being dragged. */
-	err = CountDragItems(pb->dragref, &itemCount);
-	if ((err != noErr) || (itemCount < 1))
-		return (dragNotAcceptedErr);
-	
-	/* Compute the highlight region */
-	CWPanlGetItemRect(pb, kPictItem, &itemRect);
-	InsetRect(&itemRect, 4, 4);
-	RectRgn(sDragRgn, &itemRect);
-	
-	/* If the mouse isn't in the highlight region, act as if we can't handle */
-	/* the drag. */
-	if (!PtInRgn(pb->dragmouse, sDragRgn))
-		return (paramErr);
-	
-///	SysBreakStr("\preqDragEnter");
-	
-	/* Return a modified item rect in dragrect.  This is useful if the highlight */
-	/* region is a different shape than the item rect (as is the case here).  You */
-	/* can also make the dragrect larger, to handle autoscrolling for example. */
-	/* The IDE uses the modified dragrect for determining which item the mouse is */
-	/* in in the reqDragWithin and reqDragExit requests. */
-	pb->dragrect = itemRect;
-	
-	/* draw the highlight region */
-	sHighlightOn = false;
-	err = ShowDragHilite(pb->dragref, sDragRgn, true);
-	if (err == noErr)
-		sHighlightOn = true;
-	
-	return (err);
+	return (paramErr);
 }
 
 /*
@@ -1026,8 +649,7 @@ static void	DragExit(PanelParameterBlock *pb)
 	
 ///	SysBreakStr("\preqDragExit");
 	
-	if (sHighlightOn)
-	{
+	if (sHighlightOn) {
 		err = HideDragHilite(pb->dragref);
 		if (err == noErr)
 			sHighlightOn = false;
@@ -1040,19 +662,9 @@ static void	DragExit(PanelParameterBlock *pb)
  */
 static void	DragDrop(PanelParameterBlock *pb)
 {
-	Rect	itemRect, dotRect;
+	Rect	itemRect;
 	
 ///	SysBreakStr("\preqDragDrop");
 	
 	DragExit(pb);
-	
-	CWPanlGetItemRect(pb, kPictItem, &itemRect);
-	InsetRect(&itemRect, 3, 3);
-	dotRect = itemRect;
-	InsetRect(&itemRect, 1, 1);
-	
-	sDotPosition.h = pb->dragmouse.h - itemRect.left;
-	sDotPosition.v = pb->dragmouse.v - itemRect.top;
-	
-	DrawDot(sDotPosition, &dotRect);
 }
