@@ -768,7 +768,7 @@ nsContentSink::PrefetchHref(const nsAString &aHref, PRBool aExplicit)
 
 
 // Convert the ref from document charset to unicode.
-static nsresult
+nsresult
 CharsetConvRef(const nsCString& aDocCharset, const nsCString& aRefInDocCharset,
                nsString& aRefInUnicode)
 {

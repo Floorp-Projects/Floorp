@@ -399,6 +399,7 @@ protected:
 
   void StartLayout();
 
+  void ScrollToRef(PRBool aReallyScroll);
   void TryToScrollToRef();
 
   /**
@@ -2409,9 +2410,7 @@ HTMLContentSink::DidBuildModel(void)
     PRUint32 LoadType = 0;
     mDocShell->GetLoadType(&LoadType);
 
-    if (ScrollToRef(!(LoadType & nsIDocShell::LOAD_CMD_HISTORY))) {
-      mScrolledToRefAlready = PR_TRUE;
-    }
+    ScrollToRef(!(LoadType & nsIDocShell::LOAD_CMD_HISTORY));
   }
 
   nsCOMPtr<nsIScriptLoader> loader;
@@ -3895,8 +3894,72 @@ HTMLContentSink::TryToScrollToRef()
     return;
   }
 
-  if (ScrollToRef(PR_TRUE)) {
-    mScrolledToRefAlready = PR_TRUE;
+  ScrollToRef(PR_TRUE);
+}
+
+nsresult
+CharsetConvRef(const nsCString& aDocCharset, const nsCString& aRefInDocCharset,
+               nsString& aRefInUnicode);
+
+void
+HTMLContentSink::ScrollToRef(PRBool aReallyScroll)
+{
+  // XXX Duplicate code in nsXMLContentSink.
+  // XXX Be sure to change both places if you make changes here.
+  if (mRef.IsEmpty()) {
+    return;
+  }
+
+  char* tmpstr = ToNewCString(mRef);
+  if (!tmpstr) {
+    return;
+  }
+
+  nsUnescape(tmpstr);
+  nsCAutoString unescapedRef;
+  unescapedRef.Assign(tmpstr);
+  nsMemory::Free(tmpstr);
+
+  nsresult rv = NS_ERROR_FAILURE;
+  // We assume that the bytes are in UTF-8, as it says in the spec:
+  // http://www.w3.org/TR/html4/appendix/notes.html#h-B.2.1
+  nsAutoString ref;
+  CopyUTF8toUTF16(unescapedRef, ref);
+
+  PRUint32 i, ns = mDocument->GetNumberOfShells();
+  for (i = 0; i < ns; i++) {
+    nsIPresShell *shell = mDocument->GetShellAt(i);
+
+    // Scroll to the anchor
+    if (aReallyScroll) {
+      shell->FlushPendingNotifications(PR_FALSE);
+    }
+
+    // Check an empty string which might be caused by the UTF-8 conversion
+    if (!ref.IsEmpty()) {
+      rv = shell->GoToAnchor(ref, aReallyScroll);
+    } else {
+      rv = NS_ERROR_FAILURE;
+    }
+
+    // If UTF-8 URL failed then try to assume the string as a
+    // document's charset.
+
+    if (NS_FAILED(rv)) {
+      nsCAutoString docCharset;
+      rv = mDocument->GetDocumentCharacterSet(docCharset);
+
+      if (NS_SUCCEEDED(rv)) {
+        rv = CharsetConvRef(docCharset, unescapedRef, ref);
+
+        if (NS_SUCCEEDED(rv) && !ref.IsEmpty())
+          rv = shell->GoToAnchor(ref, aReallyScroll);
+      }
+    }
+
+    if (NS_SUCCEEDED(rv)) {
+      mScrolledToRefAlready = PR_TRUE;
+    }
   }
 }
 
