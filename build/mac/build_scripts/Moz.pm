@@ -512,8 +512,12 @@ sub GetFileModDate($)
 
 sub LaunchCodeWarrior()
 {
+  my($cur_dir) = cwd();
+  
   # this both launches and writes idepath.txt
   CodeWarriorLib::activate();
+  
+  chdir($cur_dir);
 }
 
 #//--------------------------------------------------------------------------------------------------
