@@ -24,6 +24,7 @@ $BloatTest                = 0;
 $BloatTest2               = 0;
 $DomToTextConversionTest  = 0;
 $MailNewsTest             = 0;  # Bit-rotted, currently not working.
+$MailBloatTest            = 0;
 $EmbedTest                = 0;  # Assumes you wanted $BuildEmbed=1
 $LayoutPerformanceTest    = 0;
 $XULWindowOpenTest        = 0;
