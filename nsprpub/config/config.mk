@@ -78,6 +78,9 @@ endef
 
 LINK_DLL	= $(LD) $(OS_DLLFLAGS) $(DLLFLAGS)
 
+ifneq (,$(filter WINNT OS2, $(OS_ARCH)))
+INSTALL		= $(NSINSTALL)
+else
 ifeq ($(NSDISTMODE),copy)
 # copy files, but preserve source mtime
 INSTALL		= $(NSINSTALL) -t
@@ -90,6 +93,7 @@ else
 INSTALL		= $(NSINSTALL) -R
 endif
 endif
+endif # WINNT || OS2
 
 ifdef BUILD_DEBUG_GC
 DEFINES		+= -DDEBUG_GC
