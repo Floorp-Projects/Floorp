@@ -487,6 +487,7 @@ Rights Reserved.
 <!ENTITY SearchSubjectOrSender.label "Subject or Sender contains:">
 <!ENTITY SearchSubjectOrSender.accesskey "S">
 <!ENTITY SearchNameOrEmail.label "Name or Email contains:">
+<!ENTITY SearchNameOrEmail.accesskey "N">
 <!ENTITY advancedButton.label "Advanced...">
 <!ENTITY advancedButton.accesskey "A">
 
