@@ -508,6 +508,13 @@ ns4xPluginStreamListener::OnDataAvailable(nsIPluginStreamInfo* pluginInfo,
                         "return(towrite)=%d, url=%s\n",
                         this, npp, numtowrite, mNPStream.url));
 
+        if (!mStreamStarted) {
+          // The plugin called NPN_DestroyStream() from within
+          // NPP_WriteReady(), kill the stream.
+
+          return NS_BINDING_ABORTED;
+        }
+
         // if WriteReady returned 0, the plugin is not ready to handle
         // the data, suspend the stream (if it isn't already
         // suspended).
@@ -543,6 +550,13 @@ ns4xPluginStreamListener::OnDataAvailable(nsIPluginStreamInfo* pluginInfo,
                       "buf=%s, return(written)=%d,  url=%s\n",
                       this, npp, streamPosition, numtowrite,
                       ptrStreamBuffer, writeCount, mNPStream.url));
+
+      if (!mStreamStarted) {
+        // The plugin called NPN_DestroyStream() from within
+        // NPP_WriteReady(), kill the stream.
+
+        return NS_BINDING_ABORTED;
+      }
 
       if (writeCount > 0) {
         NS_ASSERTION(writeCount <= mStreamBufferByteCount,
@@ -656,9 +670,9 @@ ns4xPluginStreamListener::OnStopBinding(nsIPluginStreamInfo* pluginInfo,
 {
   StopDataPump();
 
-  if (mIsSuspended && NS_FAILED(status)) {
-    // We're suspended, and the stream was destroyed, or died for some
-    // reason. Make sure we cancel the suspended request.
+  if (NS_FAILED(status)) {
+    // The stream was destroyed, or died for some reason. Make sure we
+    // cancel the underlying request.
     nsCOMPtr<nsI4xPluginStreamInfo> pluginInfo4x =
       do_QueryInterface(mStreamInfo);
 
