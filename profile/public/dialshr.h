@@ -31,6 +31,8 @@
 #include <ras.h>
 #include "shlobj.h"
 #include "winerror.h"
+#include "nsString.h"
+#include "prmem.h"
 
 extern HINSTANCE	gDLL;   		// dll instance    
 extern int			gPlatformOS;          // platform OS  (95 or NT40)
@@ -156,4 +158,7 @@ BOOL 	DialerConfig( char* accountname );
 BOOL	DialerConnect();
 void	DialerHangup();
 BOOL	CheckEnvironment();
+void SetDataArray(nsString data);
+char* GetValue(char *name);
+char* GetModemConfig(void);
 
