@@ -21,9 +21,13 @@
 
 # Send comments, improvements, bugs to Steve Lamm (slamm@netscape.com).
 
-$field_separator = "<<fs>>";
-$configure_in = "configure.in";
-$chrome_color = "#F0A000";
+$field_separator = '<<fs>>';
+$configure_in    = 'mozilla/configure.in';
+$chrome_color    = '#F0A000';
+$ENV{CVSROOT}    = ':pserver:anonymous@cvs-mirror.mozilla.org:/cvsroot';
+$ENV{PATH}       = "$ENV{PATH}:/usr/bin/ccs";
+
+system "cvs co mozilla/configure.in";
 
 print "Content-type: text/html\n\n\n";
   print qq(
@@ -36,8 +40,8 @@ print "Content-type: text/html\n\n\n";
 
 print "PATH=$ENV{PATH}\n";
 
-  #open(OPTIONS, "<parsed-configure.txt")
-  open(OPTIONS, "/usr/ccs/bin/m4 webify-configure.m4 $configure_in|")
+#  open(OPTIONS, "/usr/ccs/bin/m4 webify-configure.m4 $configure_in|")
+  open(OPTIONS, "m4 webify-configure.m4 $configure_in|")
     or die "Error parsing configure.in\n";
 
   foreach (<OPTIONS>) {
