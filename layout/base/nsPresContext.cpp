@@ -56,6 +56,8 @@
 #include "nsIServiceManager.h"
 #include "nsBoxLayoutState.h"
 #include "nsIBox.h"
+#include "nsIDOMElement.h"
+#include "nsContentPolicyUtils.h"
 
 #ifdef _WIN32
 #include <windows.h>
@@ -905,6 +907,21 @@ nsPresContext::StartLoadImage(const nsString& aURL,
       loader->AddFrame(aTargetFrame, aCallBack, aClosure);
       return NS_OK;
     }
+  }
+  
+  // Check with the content-policy things to make sure this load is permitted.
+  PRBool shouldLoad = PR_TRUE; // default permit
+  nsCOMPtr<nsIContent> content;
+  nsCOMPtr<nsIDOMElement> element;
+  if (aTargetFrame &&
+      NS_SUCCEEDED(aTargetFrame->GetContent(getter_AddRefs(content)))) {
+    element = do_QueryInterface(content);
+  }
+
+  if (NS_SUCCEEDED(NS_CheckContentLoadPolicy(nsIContentPolicy::CONTENT_IMAGE,
+                                             aURL, element, &shouldLoad))
+      && !shouldLoad) {
+    return NS_OK;
   }
 
   // Create image group if needed
