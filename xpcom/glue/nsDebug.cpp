@@ -80,7 +80,7 @@
  * Define output so users will always see it
  */
 
-#if defined(XP_UNIX) || (defined(_M_ALPHA) && defined(_WIN32))
+#if defined(XP_UNIX) || defined(_WIN32)
 #define DBG_LOG(log,err,pargs) \
   InitLog(); \
   PR_LOG(log,err,pargs); \
