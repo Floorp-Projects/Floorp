@@ -55,7 +55,7 @@ BEGIN
 #ifdef FORTEZZA
     IDS_APP_VERSION         "3.0b5Fortezza"
 #else
-    IDS_APP_VERSION         "5.0"
+    IDS_APP_VERSION         "5.0a1"
 #endif
 	IDS_APP_BUILD_NUMBER	""
 END
