@@ -28,6 +28,7 @@
 #include "nsIUrlListener.h"
 #include "nsIStreamListener.h"
 #include "nsFileSpec.h"
+#include "nsIFileSpec.h"
 
 ////////////////////////////////////////////////////////////////////////////////////////
 // The Mailbox Service is an interface designed to make building and running mailbox urls
