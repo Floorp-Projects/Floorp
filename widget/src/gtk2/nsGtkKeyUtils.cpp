@@ -237,16 +237,6 @@ DOMKeyCodeToGdkKeyCode(PRUint32 aKeysym)
     if (aKeysym >= NS_VK_NUMPAD0 && aKeysym <= NS_VK_NUMPAD9)
       return aKeysym - NS_VK_NUMPAD0 + GDK_KP_0;
 
-    // map Sun Keyboard special keysyms
-    if (IS_XSUN_XSERVER(GDK_DISPLAY())) {
-      length = NS_ARRAY_LENGTH(nsSunKeycodes);
-      for (i = 0; i < length; ++i) {
-        if (nsSunKeycodes[i].vkCode == aKeysym) {
-          return nsSunKeycodes[i].keysym;
-        }
-      }
-    }
-
     // misc other things
     length = NS_ARRAY_LENGTH(nsKeycodes);
     for (i = 0; i < length; ++i) {
