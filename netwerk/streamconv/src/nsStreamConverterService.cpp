@@ -562,15 +562,16 @@ nsStreamConverterService::AsyncConvertData(const PRUnichar *aFromType,
             return NS_ERROR_FAILURE;
         }
 
-        PRInt32 edgeCount = converterChain->Count();
-        NS_ASSERTION(edgeCount > 0, "findConverter should have failed");
+        // aListener is the listener that wants the final, converted, data.
+        // we initialize finalListener w/ aListener so it gets put at the 
+        // tail end of the chain, which in the loop below, means the *first*
+        // converter created.
+        nsCOMPtr<nsIStreamListener> finalListener = aListener;
 
         // convert the stream using each edge of the graph as a step.
         // this is our stream conversion traversal.
-
-        nsCOMPtr<nsIStreamListener> forwardListener = aListener;
-        nsCOMPtr<nsIStreamListener> fromListener;
-
+        PRInt32 edgeCount = converterChain->Count();
+        NS_ASSERTION(edgeCount > 0, "findConverter should have failed");
         for (int i = 0; i < edgeCount; i++) {
             nsCString *contractIDStr = converterChain->CStringAt(i);
             if (!contractIDStr) {
@@ -579,6 +580,7 @@ nsStreamConverterService::AsyncConvertData(const PRUnichar *aFromType,
             }
             const char *lContractID = contractIDStr->get();
 
+            // create the converter for this from/to pair
             nsCOMPtr<nsIStreamConverter> converter(do_CreateInstance(lContractID, &rv));
             NS_ASSERTION(NS_SUCCEEDED(rv), "graph construction problem, built a contractid that wasn't registered");
 
@@ -602,7 +604,8 @@ nsStreamConverterService::AsyncConvertData(const PRUnichar *aFromType,
                 return NS_ERROR_OUT_OF_MEMORY;
             }
 
-            rv = converter->AsyncConvertData(fromStrUni, toStrUni, forwardListener, aContext);
+            // connect the converter w/ the listener that should get the converted data.
+            rv = converter->AsyncConvertData(fromStrUni, toStrUni, finalListener, aContext);
             nsMemory::Free(fromStrUni);
             nsMemory::Free(toStrUni);
             if (NS_FAILED(rv)) {
@@ -616,15 +619,16 @@ nsStreamConverterService::AsyncConvertData(const PRUnichar *aFromType,
                 return rv;
             }
 
-            // store the listener of the first converter in the chain.
-            if (!fromListener)
-                fromListener = chainListener;
-
-            forwardListener = chainListener;
+            // the last iteration of this loop will result in finalListener
+            // pointing to the converter that "starts" the conversion chain.
+            // this converter's "from" type is the original "from" type. Prior
+            // to the last iteration, finalListener will continuously be wedged
+            // into the next listener in the chain, then be updated.
+            finalListener = chainListener;
         }
         delete converterChain;
         // return the first listener in the chain.
-        *_retval = fromListener;
+        *_retval = finalListener;
         NS_ADDREF(*_retval);
 
     } else {
