@@ -358,6 +358,7 @@ createPixmap(PluginInstance *This)
            style = gtk_widget_get_style((GtkWidget *)gdk_window->user_data);
            nullPluginGdkPixmap = gdk_pixmap_create_from_xpm_d(gdk_window , &mask,
                                              &style->bg[GTK_STATE_NORMAL], npnul320_xpm);
+           gdk_pixmap_ref(nullPluginGdkPixmap);
        }
     }
 }
@@ -435,12 +436,4 @@ makePixmap(PluginInstance *This)
     drawPixmap(This);
     setCursor(This);
     addXtEventHandler(This);
-}
-
-void destroyPixmap()
-{
-  if (nullPluginGdkPixmap)
-  {
-     gdk_pixmap_unref(nullPluginGdkPixmap);
-  }
 }
