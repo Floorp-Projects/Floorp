@@ -18,6 +18,7 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *   Pierre Phaneuf <pp@ludusdesign.com>
  */
 
 #include "msgCore.h"    // precompiled header...
@@ -79,7 +80,7 @@ nsresult nsNntpUrl::QueryInterface(const nsIID &aIID, void** aInstancePtr)
         return NS_ERROR_NULL_POINTER;
     }
  
-    if (aIID.Equals(nsINntpUrl::GetIID()))
+    if (aIID.Equals(NS_GET_IID(nsINntpUrl)))
 	{
         *aInstancePtr = (void*) ((nsINntpUrl*)this);
         NS_ADDREF_THIS();
@@ -336,7 +337,7 @@ NS_IMETHODIMP nsNntpUrl::GetMessageHeader(nsIMsgDBHdr ** aMsgHdr)
     nsCOMPtr<nsIMsgDatabase> newsDBFactory;
     nsCOMPtr<nsIMsgDatabase> newsDB;
     
-    rv = nsComponentManager::CreateInstance(kCNewsDB, nsnull, nsIMsgDatabase::GetIID(), getter_AddRefs(newsDBFactory));
+    rv = nsComponentManager::CreateInstance(kCNewsDB, nsnull, NS_GET_IID(nsIMsgDatabase), getter_AddRefs(newsDBFactory));
     if (NS_FAILED(rv) || (!newsDBFactory)) {
         return rv;
     }

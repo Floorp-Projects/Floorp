@@ -18,6 +18,7 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *   Pierre Phaneuf <pp@ludusdesign.com>
  */
 #include "rosetta_mailnews.h"
 #include "nsMsgLocalFolderHdrs.h"
@@ -46,7 +47,7 @@ int MIME_EncoderWrite(MimeEncoderData *data, const char *buffer, PRInt32 size)
   nsIMimeConverter *converter;
   PRInt32 written = 0;
   nsresult res = nsComponentManager::CreateInstance(kCMimeConverterCID, nsnull, 
-    nsCOMTypeInfo<nsIMimeConverter>::GetIID(), (void **)&converter);
+    NS_GET_IID(nsIMimeConverter), (void **)&converter);
   if (NS_SUCCEEDED(res) && nsnull != converter) {
     res = converter->EncoderWrite(data, buffer, size, &written);
     NS_RELEASE(converter);

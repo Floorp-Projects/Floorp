@@ -18,6 +18,7 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *   Pierre Phaneuf <pp@ludusdesign.com>
  */
 
 #include <stdio.h>
@@ -182,7 +183,7 @@ nsresult newsTestDriver::GetDatabase(const char *uri)
         nsresult newsDBOpen = NS_OK;
         nsCOMPtr<nsIMsgDatabase> newsDBFactory;
         
-        rv = nsComponentManager::CreateInstance(kCNewsDB, nsnull, nsIMsgDatabase::GetIID(), getter_AddRefs(newsDBFactory));
+        rv = nsComponentManager::CreateInstance(kCNewsDB, nsnull, NS_GET_IID(nsIMsgDatabase), getter_AddRefs(newsDBFactory));
         if (NS_SUCCEEDED(rv) && newsDBFactory) {
                 newsDBOpen = newsDBFactory->Open(path, PR_TRUE, PR_FALSE, getter_AddRefs(m_newsDB));
 #ifdef DEBUG_NEWS

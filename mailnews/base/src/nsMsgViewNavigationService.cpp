@@ -18,6 +18,7 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *   Pierre Phaneuf <pp@ludusdesign.com>
  */
 
 #include "nsMsgViewNavigationService.h"
@@ -228,7 +229,7 @@ NS_IMETHODIMP nsMsgViewNavigationService::FindNextMessage(PRInt32 type, nsIDOMXU
 	if(originalMessage)
 	{
 		checkStartMessage = PR_FALSE;
-		rv = originalMessage->QueryInterface(nsIDOMNode::GetIID(), getter_AddRefs(originalMessageNode));
+		rv = originalMessage->QueryInterface(NS_GET_IID(nsIDOMNode), getter_AddRefs(originalMessageNode));
 		if(NS_FAILED(rv))
 			return rv;
 	}
@@ -264,7 +265,7 @@ NS_IMETHODIMP nsMsgViewNavigationService::FindNextMessage(PRInt32 type, nsIDOMXU
 
 	if(next)
 	{
-		rv = next->QueryInterface(nsIDOMXULElement::GetIID(), (void**) nextMessage);
+		rv = next->QueryInterface(NS_GET_IID(nsIDOMXULElement), (void**) nextMessage);
 		if(NS_FAILED(rv))
 		{
 			delete info;
@@ -287,7 +288,7 @@ NS_IMETHODIMP nsMsgViewNavigationService::FindPreviousMessage(PRInt32 type, nsID
 	if(originalMessage)
 	{
 		checkStartMessage = PR_FALSE;
-		rv = originalMessage->QueryInterface(nsIDOMNode::GetIID(), getter_AddRefs(originalMessageNode));
+		rv = originalMessage->QueryInterface(NS_GET_IID(nsIDOMNode), getter_AddRefs(originalMessageNode));
 		if(NS_FAILED(rv))
 			return rv;
 	}
@@ -304,7 +305,7 @@ NS_IMETHODIMP nsMsgViewNavigationService::FindPreviousMessage(PRInt32 type, nsID
 
 	if(previous)
 	{
-		rv = previous->QueryInterface(nsIDOMXULElement::GetIID(), (void**) previousMessage);
+		rv = previous->QueryInterface(NS_GET_IID(nsIDOMXULElement), (void**) previousMessage);
 		if(NS_FAILED(rv))
 		{
 			delete info;
@@ -340,7 +341,7 @@ NS_IMETHODIMP nsMsgViewNavigationService::FindNextThread(PRInt32 type, nsIDOMXUL
 
 	if(next)
 	{
-		rv = next->QueryInterface(nsIDOMXULElement::GetIID(), (void**)nextThread);
+		rv = next->QueryInterface(NS_GET_IID(nsIDOMXULElement), (void**)nextThread);
 		if(NS_FAILED(rv))
 		{
 			delete info;
@@ -376,7 +377,7 @@ NS_IMETHODIMP nsMsgViewNavigationService::FindNextInThread(PRInt32 type, nsIDOMX
 
 	if(next)
 	{
-		rv = next->QueryInterface(nsIDOMXULElement::GetIID(), (void**)nextMessage);
+		rv = next->QueryInterface(NS_GET_IID(nsIDOMXULElement), (void**)nextMessage);
 		if(NS_FAILED(rv))
 		{
 			delete info;
@@ -422,7 +423,7 @@ NS_IMETHODIMP nsMsgViewNavigationService::FindFirstMessage(nsIDOMXULTreeElement 
 			if(NS_FAILED(rv))
 				return rv;
 
-			rv = firstChild->QueryInterface(nsIDOMXULElement::GetIID(), (void**)firstMessage);
+			rv = firstChild->QueryInterface(NS_GET_IID(nsIDOMXULElement), (void**)firstMessage);
 			return rv;
 		}
 
@@ -790,7 +791,7 @@ nsresult nsMsgViewNavigationService::FindNextInChildren(nsIDOMNode *parent, navi
 					return rv;
 				if(nextElement)
 				{
-					rv = nextElement->QueryInterface(nsIDOMNode::GetIID(), (void**)nextMessage);
+					rv = nextElement->QueryInterface(NS_GET_IID(nsIDOMNode), (void**)nextMessage);
 					return rv;
 				}
 			}
@@ -1140,7 +1141,7 @@ nsresult nsMsgViewNavigationService::GetNextMessageByThread(nsIDOMXULElement *st
 
 	if(nextMessageElement)
 	{
-		rv = nextMessageElement->QueryInterface(nsIDOMNode::GetIID(), (void**)nextMessage);
+		rv = nextMessageElement->QueryInterface(NS_GET_IID(nsIDOMNode), (void**)nextMessage);
 		return rv;
 	}
 	else

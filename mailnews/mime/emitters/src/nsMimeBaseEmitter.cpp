@@ -18,6 +18,7 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *   Pierre Phaneuf <pp@ludusdesign.com>
  */
 
 #include "nsCOMPtr.h"
@@ -96,7 +97,7 @@ nsMimeBaseEmitter::nsMimeBaseEmitter()
                                      getter_AddRefs(mUnicodeConverter));
 
   // Do prefs last since we can live without this if it fails...
-  nsresult rv = nsServiceManager::GetService(kPrefCID, nsIPref::GetIID(), (nsISupports**)&(mPrefs));
+  nsresult rv = nsServiceManager::GetService(kPrefCID, NS_GET_IID(nsIPref), (nsISupports**)&(mPrefs));
   if (! (mPrefs && NS_SUCCEEDED(rv)))
     return;
 

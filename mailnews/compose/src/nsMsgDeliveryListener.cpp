@@ -18,6 +18,7 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *   Pierre Phaneuf <pp@ludusdesign.com>
  */
 #include "prprf.h"
 #include "nsCOMPtr.h"
@@ -25,7 +26,7 @@
 #include "nsIMsgMailNewsUrl.h"
 #include "nsMsgPrompts.h"
 
-NS_IMPL_ISUPPORTS(nsMsgDeliveryListener, nsCOMTypeInfo<nsIUrlListener>::GetIID())
+NS_IMPL_ISUPPORTS(nsMsgDeliveryListener, NS_GET_IID(nsIUrlListener))
 
 nsresult 
 nsMsgDeliveryListener::OnStartRunningUrl(nsIURI * aUrl)

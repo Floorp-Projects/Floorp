@@ -18,6 +18,7 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *   Pierre Phaneuf <pp@ludusdesign.com>
  */
 #include "msgCore.h"
 #include "nsMsgNotificationManager.h"
@@ -97,11 +98,11 @@ nsMsgNotificationManager::QueryInterface(REFNSIID iid, void** result)
 	{
 		*result = NS_STATIC_CAST(nsISupports*, this);
 	}
-	else if(iid.Equals(nsCOMTypeInfo<nsIFolderListener>::GetIID()))
+	else if(iid.Equals(NS_GET_IID(nsIFolderListener)))
 	{
 		*result = NS_STATIC_CAST(nsIFolderListener*, this);
 	}
-	else if(iid.Equals(nsCOMTypeInfo<nsIRDFDataSource>::GetIID()))
+	else if(iid.Equals(NS_GET_IID(nsIRDFDataSource)))
 	{
         // Support nsIRDFDataSource by aggregation.
 		return mInMemoryDataSourceISupports->QueryInterface(iid, result);
@@ -121,7 +122,7 @@ nsresult nsMsgNotificationManager::Init()
 
 	rv = nsComponentManager::CreateInstance(kRDFInMemoryDataSourceCID, 
                                           this, 
-                                          nsCOMTypeInfo<nsISupports>::GetIID(), 
+                                          NS_GET_IID(nsISupports), 
                                           getter_AddRefs(mInMemoryDataSourceISupports));
 
 	if(NS_FAILED(rv))

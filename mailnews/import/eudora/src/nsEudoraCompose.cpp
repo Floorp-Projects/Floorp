@@ -14,6 +14,9 @@
  * Communications Corporation.  Portions created by Netscape are
  * Copyright (C) 1998 Netscape Communications Corporation.  All Rights
  * Reserved.
+ *
+ * Contributors: 
+ *   Pierre Phaneuf <pp@ludusdesign.com>
  */
 
 
@@ -126,7 +129,7 @@ public:
 };
 
 
-NS_IMPL_ISUPPORTS( SendListener, nsCOMTypeInfo<nsIMsgSendListener>::GetIID())
+NS_IMPL_ISUPPORTS( SendListener, NS_GET_IID(nsIMsgSendListener))
 
 nsresult SendListener::CreateSendListener( nsIMsgSendListener **ppListener)
 {
@@ -214,7 +217,7 @@ nsresult nsEudoraCompose::CreateComponents( void)
 	
 	NS_IF_RELEASE( m_pMsgFields);
 	if (!m_pMsgSend)
-		rv = nsComponentManager::CreateInstance( kMsgSendCID, nsnull, nsCOMTypeInfo<nsIMsgSend>::GetIID(), (void **) &m_pMsgSend); 
+		rv = nsComponentManager::CreateInstance( kMsgSendCID, nsnull, NS_GET_IID(nsIMsgSend), (void **) &m_pMsgSend); 
 	if (!m_pListener && NS_SUCCEEDED( rv)) {
 		rv = SendListener::CreateSendListener( &m_pListener);
 		if (NS_SUCCEEDED( rv)) {
@@ -227,7 +230,7 @@ nsresult nsEudoraCompose::CreateComponents( void)
 	}
 
 	if (NS_SUCCEEDED(rv) && m_pMsgSend) { 
-	    rv = nsComponentManager::CreateInstance( kMsgCompFieldsCID, nsnull, nsCOMTypeInfo<nsIMsgCompFields>::GetIID(), (void **) &m_pMsgFields); 
+	    rv = nsComponentManager::CreateInstance( kMsgCompFieldsCID, nsnull, NS_GET_IID(nsIMsgCompFields), (void **) &m_pMsgFields); 
 		if (NS_SUCCEEDED(rv) && m_pMsgFields) {
 			// IMPORT_LOG0( "nsEudoraCompose - CreateComponents succeeded\n");
 			return( NS_OK);

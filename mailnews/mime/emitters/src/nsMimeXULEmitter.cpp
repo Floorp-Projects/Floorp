@@ -18,6 +18,7 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *   Pierre Phaneuf <pp@ludusdesign.com>
  */
 #include "msgCore.h"
 #include "stdio.h"
@@ -79,7 +80,7 @@ nsMimeXULEmitter::nsMimeXULEmitter()
   BuildListOfStatusProviders();
 
   nsresult rv = nsComponentManager::CreateInstance(kMsgHeaderParserCID, 
-                                          NULL, nsIMsgHeaderParser::GetIID(), 
+                                          NULL, NS_GET_IID(nsIMsgHeaderParser), 
                                           (void **) getter_AddRefs(mHeaderParser));
   if (NS_FAILED(rv))
     mHeaderParser = null_nsCOMPtr();

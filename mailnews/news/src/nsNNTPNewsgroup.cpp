@@ -18,6 +18,7 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *   Pierre Phaneuf <pp@ludusdesign.com>
  */
 
 #include "nscore.h"
@@ -49,7 +50,7 @@ nsNNTPNewsgroup::~nsNNTPNewsgroup()
 	PR_FREEIF(m_prettyName);
 }
 
-NS_IMPL_ISUPPORTS(nsNNTPNewsgroup, nsINNTPNewsgroup::GetIID());
+NS_IMPL_ISUPPORTS(nsNNTPNewsgroup, NS_GET_IID(nsINNTPNewsgroup));
 
 nsresult nsNNTPNewsgroup::GetName(char ** aName)
 {

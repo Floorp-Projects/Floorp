@@ -1,4 +1,4 @@
-/* -*- Mode: C; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*-
  *
  * The contents of this file are subject to the Netscape Public
  * License Version 1.1 (the "License"); you may not use this file
@@ -18,6 +18,7 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *   Pierre Phaneuf <pp@ludusdesign.com>
  */
 #define NS_IMPL_IDS
 #include "nsICharsetConverterManager.h"
@@ -1284,7 +1285,7 @@ PRInt32 MimeCharsetConverterClass::Initialize(const char* from_charset, const ch
     }
 
     res = nsComponentManager::CreateInstance(detector_progid, nsnull, 
-                                             nsIStringCharsetDetector::GetIID(), (void**)&mDetector);
+                                             NS_GET_IID(nsIStringCharsetDetector), (void**)&mDetector);
     if (NS_FAILED(res)) {
       mDetector = NULL;   // no charset detector is available
     }

@@ -18,6 +18,7 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *   Pierre Phaneuf <pp@ludusdesign.com>
  */
 
 // this file implements the nsMsgFilterList interface 
@@ -53,8 +54,8 @@ NS_IMETHODIMP nsMsgFilterList::QueryInterface(REFNSIID aIID, void** aResult)
     if (aResult == NULL)  
         return NS_ERROR_NULL_POINTER;  
 
-    if (aIID.Equals(nsIMsgFilterList::GetIID()) ||
-        aIID.Equals(nsCOMTypeInfo<nsISupports>::GetIID()))
+    if (aIID.Equals(NS_GET_IID(nsIMsgFilterList)) ||
+        aIID.Equals(NS_GET_IID(nsISupports)))
 	{
         *aResult = NS_STATIC_CAST(nsMsgFilterList*, this);   
         NS_ADDREF_THIS();

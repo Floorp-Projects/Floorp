@@ -18,6 +18,7 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *   Pierre Phaneuf <pp@ludusdesign.com>
  */
 
 #include "msgCore.h"
@@ -61,7 +62,7 @@ nsLocalMoveCopyMsgTxn::QueryInterface(REFNSIID aIID, void** aInstancePtr)
 
     *aInstancePtr = nsnull;
 
-    if (aIID.Equals(nsLocalMoveCopyMsgTxn::GetIID())) 
+    if (aIID.Equals(NS_GET_IID(nsLocalMoveCopyMsgTxn))) 
     {
         *aInstancePtr = NS_STATIC_CAST(nsLocalMoveCopyMsgTxn*, this);
     }

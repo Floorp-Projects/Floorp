@@ -18,6 +18,7 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *   Pierre Phaneuf <pp@ludusdesign.com>
  */
 
 #include <stdio.h>
@@ -134,7 +135,7 @@ protected:
 	PRBool		m_runningURL;	// are we currently running a url? this flag is set to false on exit...
 };
 
-NS_IMPL_ISUPPORTS(nsPop3TestDriver, nsIUrlListener::GetIID())
+NS_IMPL_ISUPPORTS(nsPop3TestDriver, NS_GET_IID(nsIUrlListener))
 
 nsPop3TestDriver::nsPop3TestDriver(nsIEventQueue *queue)
 {
@@ -170,7 +171,7 @@ nsresult nsPop3TestDriver::OnStopRunningUrl(nsIURI * aUrl, nsresult aExitCode)
 	{
 		// query it for a mailnews interface for now....
 		nsIMsgMailNewsUrl * mailUrl = nsnull;
-		rv = aUrl->QueryInterface(nsIMsgMailNewsUrl::GetIID(), (void **) &mailUrl);
+		rv = aUrl->QueryInterface(NS_GET_IID(nsIMsgMailNewsUrl), (void **) &mailUrl);
 		if (NS_SUCCEEDED(rv))
 		{
 			mailUrl->UnRegisterListener(this);

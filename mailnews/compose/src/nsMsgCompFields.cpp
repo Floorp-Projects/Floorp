@@ -18,6 +18,7 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *   Pierre Phaneuf <pp@ludusdesign.com>
  */
 
 #include "rosetta_mailnews.h"
@@ -52,7 +53,7 @@ nsresult NS_NewMsgCompFields(const nsIID &aIID, void ** aInstancePtrResult)
 }
 
 /* the following macro actually implement addref, release and query interface for our component. */
-NS_IMPL_ISUPPORTS(nsMsgCompFields, nsCOMTypeInfo<nsIMsgCompFields>::GetIID());
+NS_IMPL_ISUPPORTS(nsMsgCompFields, NS_GET_IID(nsIMsgCompFields));
 
 nsMsgCompFields::nsMsgCompFields()
 {

@@ -18,6 +18,7 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *   Pierre Phaneuf <pp@ludusdesign.com>
  */
 /*
   This program simply goes through the network service to grab a URL
@@ -96,7 +97,7 @@ SetupRegistry(void)
 {
   // i18n
   nsComponentManager::RegisterComponent(kCharsetConverterManagerCID, NULL, NULL, UNICHAR_DLL,  PR_FALSE, PR_FALSE);
-  nsresult res = nsServiceManager::GetService(kCharsetConverterManagerCID, nsICharsetConverterManager::GetIID(), (nsISupports **)&ccMan);
+  nsresult res = nsServiceManager::GetService(kCharsetConverterManagerCID, NS_GET_IID(nsICharsetConverterManager), (nsISupports **)&ccMan);
   if (NS_FAILED(res)) 
   {
     printf("ERROR at GetService() code=0x%x.\n",res);
@@ -155,7 +156,7 @@ public:
         return NS_OK;
     }
 };
-NS_IMPL_ISUPPORTS(ConsoleOutputStreamImpl, nsCOMTypeInfo<nsIOutputStream>::GetIID());
+NS_IMPL_ISUPPORTS(ConsoleOutputStreamImpl, NS_GET_IID(nsIOutputStream));
 ////////////////////////////////////////////////////////////////////////////////////
 // END OF CONSUMER STREAM
 ////////////////////////////////////////////////////////////////////////////////////

@@ -18,6 +18,7 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *   Pierre Phaneuf <pp@ludusdesign.com>
  */
 #include "nsCOMPtr.h"
 #include "stdio.h"
@@ -471,7 +472,7 @@ NS_IMETHODIMP nsStreamConverter::Init(nsIURI *aURI, nsIStreamListener * aOutList
 		progID += mOutputFormat;
 
 		rv = nsComponentManager::CreateInstance(progID, nsnull,
-										                         nsIMimeEmitter::GetIID(),
+										                         NS_GET_IID(nsIMimeEmitter),
 										                         (void **) getter_AddRefs(mEmitter));
 		if ((NS_FAILED(rv)) || (!mEmitter))
 		{
@@ -738,7 +739,7 @@ nsStreamConverter::OnStopRequest(nsIChannel * aChannel, nsISupports *ctxt, nsres
         nsCOMPtr<nsIMimeHeaders> mimeHeaders;
         
         rv = nsComponentManager::CreateInstance(kCIMimeHeadersCID, 
-          nsnull, nsCOMTypeInfo<nsIMimeHeaders>::GetIID(), 
+          nsnull, NS_GET_IID(nsIMimeHeaders), 
           (void **) getter_AddRefs(mimeHeaders)); 
         
         if (NS_SUCCEEDED(rv))

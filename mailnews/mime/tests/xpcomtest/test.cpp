@@ -19,7 +19,7 @@ int main(int argc, char *argv[])
   
   printf("Time for try the nsMimeObjectClassAccess class...\n");
   res = nsComponentManager::CreateInstance(kMimeObjectClassAccessCID, 
-                    NULL, nsIMimeObjectClassAccess::GetIID(), 
+                    NULL, NS_GET_IID(nsIMimeObjectClassAccess), 
                     (void **) &objAccess); 
   if (res == NS_OK && objAccess) 
   { 

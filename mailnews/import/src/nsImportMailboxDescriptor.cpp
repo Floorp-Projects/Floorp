@@ -18,6 +18,7 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *   Pierre Phaneuf <pp@ludusdesign.com>
  */
 
 
@@ -43,7 +44,7 @@ NS_METHOD nsImportMailboxDescriptor::Create( nsISupports *aOuter, REFNSIID aIID,
   return rv;
 }
 
-NS_IMPL_ISUPPORTS(nsImportMailboxDescriptor, nsIImportMailboxDescriptor::GetIID());
+NS_IMPL_ISUPPORTS(nsImportMailboxDescriptor, NS_GET_IID(nsIImportMailboxDescriptor));
 
 nsImportMailboxDescriptor::nsImportMailboxDescriptor() 
 { 

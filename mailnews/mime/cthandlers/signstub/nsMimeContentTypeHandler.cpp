@@ -18,6 +18,7 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *   Pierre Phaneuf <pp@ludusdesign.com>
  */
 #include "stdio.h"
 #include "nscore.h"
@@ -39,7 +40,7 @@ nsresult NS_NewMimeContentTypeHandler(nsIMimeContentTypeHandler ** aInstancePtrR
 	{
 		nsMimeContentTypeHandler *obj = new nsMimeContentTypeHandler();
 		if (obj)
-			return obj->QueryInterface(nsIMimeContentTypeHandler::GetIID(), (void**) aInstancePtrResult);
+			return obj->QueryInterface(NS_GET_IID(nsIMimeContentTypeHandler), (void**) aInstancePtrResult);
 		else
 			return NS_ERROR_OUT_OF_MEMORY; /* we couldn't allocate the object */
 	}
@@ -53,7 +54,7 @@ nsresult NS_NewMimeContentTypeHandler(nsIMimeContentTypeHandler ** aInstancePtrR
  */
 NS_IMPL_ADDREF(nsMimeContentTypeHandler)
 NS_IMPL_RELEASE(nsMimeContentTypeHandler)
-NS_IMPL_QUERY_INTERFACE(nsMimeContentTypeHandler, nsIMimeContentTypeHandler::GetIID()); /* we need to pass in the interface ID of this interface */
+NS_IMPL_QUERY_INTERFACE(nsMimeContentTypeHandler, NS_GET_IID(nsIMimeContentTypeHandler)); /* we need to pass in the interface ID of this interface */
 
 /*
  * nsIMimeEmitter definitions....

@@ -18,6 +18,7 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *   Pierre Phaneuf <pp@ludusdesign.com>
  */
 #include "nsMsgRecipientArray.h"
 #include "nsString.h"
@@ -36,7 +37,7 @@ nsMsgRecipientArray::~nsMsgRecipientArray()
 }
 
 /* the following macro actually implement addref, release and query interface for our class. */
-NS_IMPL_ISUPPORTS(nsMsgRecipientArray, nsCOMTypeInfo<nsMsgRecipientArray>::GetIID());
+NS_IMPL_ISUPPORTS(nsMsgRecipientArray, NS_GET_IID(nsMsgRecipientArray));
 
 nsresult nsMsgRecipientArray::StringAt(PRInt32 idx, PRUnichar **_retval)
 {

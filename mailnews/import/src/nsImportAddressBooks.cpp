@@ -18,6 +18,7 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *   Pierre Phaneuf <pp@ludusdesign.com>
  */
 
 #include "prthread.h"
@@ -165,7 +166,7 @@ nsresult NS_NewGenericAddressBooks(nsIImportGeneric** aImportGeneric)
 		return NS_ERROR_OUT_OF_MEMORY;
 
 	NS_ADDREF( pGen);
-	nsresult rv = pGen->QueryInterface( nsIImportGeneric::GetIID(), (void **)aImportGeneric);
+	nsresult rv = pGen->QueryInterface( NS_GET_IID(nsIImportGeneric), (void **)aImportGeneric);
 	NS_RELEASE( pGen);
     
     return( rv);
@@ -216,7 +217,7 @@ nsImportGenericAddressBooks::~nsImportGenericAddressBooks()
 
 
 
-NS_IMPL_ISUPPORTS(nsImportGenericAddressBooks, nsIImportGeneric::GetIID());
+NS_IMPL_ISUPPORTS(nsImportGenericAddressBooks, NS_GET_IID(nsIImportGeneric));
 
 
 NS_IMETHODIMP nsImportGenericAddressBooks::GetData(const char *dataId, nsISupports **_retval)
@@ -322,18 +323,18 @@ NS_IMETHODIMP nsImportGenericAddressBooks::SetData( const char *dataId, nsISuppo
 	if (!nsCRT::strcasecmp( dataId, "addressInterface")) {
 		NS_IF_RELEASE( m_pInterface);
 		if (item)
-			item->QueryInterface( nsIImportAddressBooks::GetIID(), (void **) &m_pInterface);
+			item->QueryInterface( NS_GET_IID(nsIImportAddressBooks), (void **) &m_pInterface);
 	}
 	if (!nsCRT::strcasecmp( dataId, "addressBooks")) {
 		NS_IF_RELEASE( m_pBooks);
 		if (item)
-			item->QueryInterface( nsISupportsArray::GetIID(), (void **) &m_pBooks);
+			item->QueryInterface( NS_GET_IID(nsISupportsArray), (void **) &m_pBooks);
 	}
 	
 	if (!nsCRT::strcasecmp( dataId, "addressLocation")) {
 		NS_IF_RELEASE( m_pLocation);
 		if (item)
-			item->QueryInterface( nsIFileSpec::GetIID(), (void **) &m_pLocation);
+			item->QueryInterface( NS_GET_IID(nsIFileSpec), (void **) &m_pLocation);
 		if (m_pInterface)
 			m_pInterface->SetSampleLocation( m_pLocation);
 	}
@@ -354,7 +355,7 @@ NS_IMETHODIMP nsImportGenericAddressBooks::SetData( const char *dataId, nsISuppo
 	if (!nsCRT::strcasecmp( dataId, "fieldMap")) {
 		NS_IF_RELEASE( m_pFieldMap);
 		if (item)
-			item->QueryInterface( nsIImportFieldMap::GetIID(), (void **) &m_pFieldMap);
+			item->QueryInterface( NS_GET_IID(nsIImportFieldMap), (void **) &m_pFieldMap);
 	}
 	
 	return( NS_OK);
@@ -927,7 +928,7 @@ PR_STATIC_CALLBACK( void) ImportAddressThread( void *stuff)
 					PRUnichar *pName;
 					book->GetPreferredName( &pName);
 					if (destDB) {
-						destDB->QueryInterface( nsIAddrDatabase::GetIID(), (void **)&pDestDB);
+						destDB->QueryInterface( NS_GET_IID(nsIAddrDatabase), (void **)&pDestDB);
 					}
 					else {
 						pDestDB = GetAddressBook( pName, PR_TRUE);

@@ -18,11 +18,12 @@
  * Rights Reserved.
  *
  * Contributor(s): 
- * mscott@netscape.com
- * sspitzer@netscape.com
- * alecf@netscape.com
- * bienvenu@netscape.com
- * jefft@netscape.com
+ *   Scott MacGregor <mscott@netscape.com>
+ *   Seth Spitzer <sspitzer@netscape.com>
+ *   Alec Flett <alecf@netscape.com>
+ *   David Bienvenu <bienvenu@netscape.com>
+ *   Jeff Tsai <jefft@netscape.com>
+ *   Pierre Phaneuf <pp@ludusdesign.com>
  *
  */
 
@@ -430,7 +431,7 @@ nsDummyBufferStream::QueryInterface(REFNSIID aIID, void** result)
 {
     if (!result) return NS_ERROR_NULL_POINTER;
     *result = nsnull;
-    if (aIID.Equals(nsIInputStream::GetIID()))
+    if (aIID.Equals(NS_GET_IID(nsIInputStream)))
         *result = NS_STATIC_CAST(nsIInputStream*, this);
     if (*result)
     {
@@ -627,7 +628,7 @@ nsresult nsNNTPProtocol::LoadUrl(nsIURI * aURL, nsISupports * aConsumer)
  
 	  rv = nsComponentManager::CreateInstance(kNNTPHostCID,
                                             nsnull,
-                                            nsINNTPHost::GetIID(),
+                                            NS_GET_IID(nsINNTPHost),
                                             getter_AddRefs(m_newsHost));
                           
       if (NS_FAILED(rv) || (!m_newsHost)) 
@@ -836,7 +837,7 @@ nsresult nsNNTPProtocol::LoadUrl(nsIURI * aURL, nsISupports * aConsumer)
             
             rv = nsComponentManager::CreateInstance(kMsgOfflineNewsStateCID,
                                             nsnull,
-                                            nsIMsgOfflineNewsState::GetIID(),
+                                            NS_GET_IID(nsIMsgOfflineNewsState),
                                             getter_AddRefs(cd->offline_state));
 
             if (NS_FAILED(rv) || ! cd->offline_state) {
@@ -3619,7 +3620,7 @@ PRBool nsNNTPProtocol::CheckIfAuthor(nsISupports *aElement, void *data)
     nsCOMPtr<nsIMsgHeaderParser> parser;                  
     rv = nsComponentManager::CreateInstance(kCHeaderParserCID,
                                             nsnull,
-                                            nsIMsgHeaderParser::GetIID(),
+                                            NS_GET_IID(nsIMsgHeaderParser),
                                             getter_AddRefs(parser));
 
     if (NS_FAILED(rv)) {
@@ -4227,7 +4228,7 @@ PRInt32 nsNNTPProtocol::ListGroup()
                 (const char *) group_name);
     rv = nsComponentManager::CreateInstance(kNNTPArticleListCID,
                                             nsnull,
-                                            nsINNTPArticleList::GetIID(),
+                                            NS_GET_IID(nsINNTPArticleList),
                                             getter_AddRefs(m_articleList));
     if (NS_FAILED(rv)) return -1;  // ???
 

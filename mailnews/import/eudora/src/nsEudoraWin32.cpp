@@ -14,6 +14,9 @@
  * Communications Corporation.  Portions created by Netscape are
  * Copyright (C) 1998 Netscape Communications Corporation.  All Rights
  * Reserved.
+ *
+ * Contributor(s):
+ *   Pierre Phaneuf <pp@ludusdesign.com>
  */
 
 #include "nsCOMPtr.h"
@@ -743,7 +746,7 @@ PRBool nsEudoraWin32::BuildPOPAccount( nsIMsgAccountManager *accMgr, const char 
 				SetIdentities( accMgr, account, pSection, pIni, valBuff);
 				result = PR_TRUE;
 				if (ppAccount)
-					account->QueryInterface( nsIMsgAccount::GetIID(), (void **)ppAccount);
+					account->QueryInterface( NS_GET_IID(nsIMsgAccount), (void **)ppAccount);
 			}				
 		}
 	}
@@ -801,7 +804,7 @@ PRBool nsEudoraWin32::BuildIMAPAccount( nsIMsgAccountManager *accMgr, const char
 				SetIdentities( accMgr, account, pSection, pIni, valBuff);
 				result = PR_TRUE;
 				if (ppAccount)
-					account->QueryInterface( nsIMsgAccount::GetIID(), (void **)ppAccount);
+					account->QueryInterface( NS_GET_IID(nsIMsgAccount), (void **)ppAccount);
 			}				
 		}
 	}

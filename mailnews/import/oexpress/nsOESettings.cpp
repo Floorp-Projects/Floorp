@@ -18,6 +18,7 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *   Pierre Phaneuf <pp@ludusdesign.com>
  */
 
 /*
@@ -93,7 +94,7 @@ nsOESettings::~nsOESettings()
 {
 }
 
-NS_IMPL_ISUPPORTS(nsOESettings, nsIImportSettings::GetIID());
+NS_IMPL_ISUPPORTS(nsOESettings, NS_GET_IID(nsIImportSettings));
 
 NS_IMETHODIMP nsOESettings::AutoLocate(PRUnichar **description, nsIFileSpec **location, PRBool *_retval)
 {
@@ -355,7 +356,7 @@ PRBool OESettings::DoIMAPServer( nsIMsgAccountManager *pMgr, HKEY hKey, char *pS
 				SetIdentities( pMgr, account, hKey);
 				result = PR_TRUE;
 				if (ppAccount)
-					account->QueryInterface( nsIMsgAccount::GetIID(), (void **)ppAccount);
+					account->QueryInterface( NS_GET_IID(nsIMsgAccount), (void **)ppAccount);
 			}				
 		}
 	}
@@ -420,7 +421,7 @@ PRBool OESettings::DoPOP3Server( nsIMsgAccountManager *pMgr, HKEY hKey, char *pS
 				SetIdentities( pMgr, account, hKey);
 				result = PR_TRUE;
 				if (ppAccount)
-					account->QueryInterface( nsIMsgAccount::GetIID(), (void **)ppAccount);
+					account->QueryInterface( NS_GET_IID(nsIMsgAccount), (void **)ppAccount);
 			}				
 		}
 	}

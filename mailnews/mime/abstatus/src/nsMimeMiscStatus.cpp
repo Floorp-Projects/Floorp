@@ -18,6 +18,7 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *   Pierre Phaneuf <pp@ludusdesign.com>
  */
 #include "nsCOMPtr.h"
 #include "stdio.h"
@@ -44,7 +45,7 @@ nsresult NS_NewMimeMiscStatus(const nsIID& iid, void **result)
  */
 NS_IMPL_ADDREF(nsMimeMiscStatus)
 NS_IMPL_RELEASE(nsMimeMiscStatus)
-NS_IMPL_QUERY_INTERFACE(nsMimeMiscStatus, nsIMimeMiscStatus::GetIID()); /* we need to pass in the interface ID of this interface */
+NS_IMPL_QUERY_INTERFACE(nsMimeMiscStatus, NS_GET_IID(nsIMimeMiscStatus)); /* we need to pass in the interface ID of this interface */
 
 /*
  * nsMimeMiscStatus definitions....

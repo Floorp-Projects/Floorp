@@ -14,6 +14,9 @@
  * Communications Corporation.  Portions created by Netscape are
  * Copyright (C) 1998 Netscape Communications Corporation.  All Rights
  * Reserved.
+ * 
+ * Contributor(s): 
+ *   Pierre Phaneuf <pp@ludusdesign.com>
  */
 
 
@@ -190,7 +193,7 @@ nsEudoraImport::~nsEudoraImport()
 
 
 
-NS_IMPL_ISUPPORTS(nsEudoraImport, nsIImportModule::GetIID());
+NS_IMPL_ISUPPORTS(nsEudoraImport, NS_GET_IID(nsIImportModule));
 
 
 NS_IMETHODIMP nsEudoraImport::GetName( PRUnichar **name)
@@ -334,7 +337,7 @@ ImportMailImpl::~ImportMailImpl()
 
 
 
-NS_IMPL_ISUPPORTS(ImportMailImpl, nsIImportMail::GetIID());
+NS_IMPL_ISUPPORTS(ImportMailImpl, NS_GET_IID(nsIImportMail));
 
 NS_IMETHODIMP ImportMailImpl::GetDefaultLocation( nsIFileSpec **ppLoc, PRBool *found, PRBool *userVerify)
 {
@@ -545,7 +548,7 @@ ImportAddressImpl::~ImportAddressImpl()
 
 
 
-NS_IMPL_ISUPPORTS(ImportAddressImpl, nsIImportAddressBooks::GetIID());
+NS_IMPL_ISUPPORTS(ImportAddressImpl, NS_GET_IID(nsIImportAddressBooks));
 
 	
 NS_IMETHODIMP ImportAddressImpl::GetAutoFind(PRUnichar **description, PRBool *_retval)

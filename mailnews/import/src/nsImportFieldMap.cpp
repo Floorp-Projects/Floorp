@@ -18,6 +18,7 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *   Pierre Phaneuf <pp@ludusdesign.com>
  */
 
 
@@ -47,7 +48,7 @@ NS_METHOD nsImportFieldMap::Create( nsISupports *aOuter, REFNSIID aIID, void **a
   return rv;
 }
 
-NS_IMPL_ISUPPORTS(nsImportFieldMap, nsIImportFieldMap::GetIID());
+NS_IMPL_ISUPPORTS(nsImportFieldMap, NS_GET_IID(nsIImportFieldMap));
 
 nsImportFieldMap::nsImportFieldMap() 
 { 

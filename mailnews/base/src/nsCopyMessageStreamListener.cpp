@@ -18,6 +18,7 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *   Pierre Phaneuf <pp@ludusdesign.com>
  */
 
 #include "nsCopyMessageStreamListener.h"
@@ -60,7 +61,7 @@ static nsresult GetMessage(nsIURI *aURL, nsIMessage **message)
 		nsCOMPtr<nsIRDFResource> messageResource;
 		if(NS_SUCCEEDED(rdfService->GetResource(uri, getter_AddRefs(messageResource))))
 		{
-			messageResource->QueryInterface(nsCOMTypeInfo<nsIMessage>::GetIID(), (void**)message);
+			messageResource->QueryInterface(NS_GET_IID(nsIMessage), (void**)message);
 		}
 	}
 	nsAllocator::Free(uri);

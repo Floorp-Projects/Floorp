@@ -14,6 +14,9 @@
  * Communications Corporation.  Portions created by Netscape are
  * Copyright (C) 1998 Netscape Communications Corporation.  All Rights
  * Reserved.
+ *
+ * Contributor(s):
+ *   Pierre Phaneuf <pp@ludusdesign.com>
  */
 
 #include "nsCOMPtr.h"
@@ -177,7 +180,7 @@ nsresult nsEudoraMailbox::ImportMailbox( PRUint32 *pBytes, PRBool *pAbort, const
 		rv = mailFile->OpenStreamForReading();
 		if (NS_SUCCEEDED( rv)) {
 			pSrc->Release();
-			mailFile->QueryInterface( nsIFileSpec::GetIID(), (void **)&pSrc);
+			mailFile->QueryInterface( NS_GET_IID(nsIFileSpec), (void **)&pSrc);
 
 			IMPORT_LOG0( "Compacting mailbox was successful\n");
 		}

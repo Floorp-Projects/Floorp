@@ -18,6 +18,7 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *   Pierre Phaneuf <pp@ludusdesign.com>
  */ 
 
 #include "msgCore.h"
@@ -1217,7 +1218,7 @@ nsMsgComposeAndSend::GetBodyFromEditor()
   {
     nsCOMPtr<mozITXTToHTMLConv> conv;
     rv = nsComponentManager::CreateInstance(kTXTToHTMLConvCID,
-      NULL, nsCOMTypeInfo<mozITXTToHTMLConv>::GetIID(),
+      NULL, NS_GET_IID(mozITXTToHTMLConv),
       (void **) getter_AddRefs(conv));
     if (NS_SUCCEEDED(rv)) 
     {
@@ -1373,7 +1374,7 @@ nsMsgComposeAndSend::ProcessMultipartRelated(PRInt32 *aMailboxCount, PRInt32 *aN
         if (ownerDocument)
         {
           nsIDocument     *doc = nsnull;
-          if (NS_FAILED(ownerDocument->QueryInterface(nsIDocument::GetIID(),(void**)&doc)) || !doc)
+          if (NS_FAILED(ownerDocument->QueryInterface(NS_GET_IID(nsIDocument),(void**)&doc)) || !doc)
           {
             return NS_ERROR_OUT_OF_MEMORY;
           }

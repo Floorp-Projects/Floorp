@@ -18,6 +18,7 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *   Pierre Phaneuf <pp@ludusdesign.com>
  */
 
 #include "msgCore.h"    // precompiled header...
@@ -43,7 +44,7 @@ NS_IMETHODIMP nsMessage::QueryInterface(REFNSIID aIID, void** aInstancePtr)
 {
 	if (!aInstancePtr) return NS_ERROR_NULL_POINTER;
 	*aInstancePtr = nsnull;
-	if (aIID.Equals(nsCOMTypeInfo<nsIMessage>::GetIID()) || aIID.Equals(nsCOMTypeInfo<nsIDBMessage>::GetIID()))
+	if (aIID.Equals(NS_GET_IID(nsIMessage)) || aIID.Equals(NS_GET_IID(nsIDBMessage)))
 	{
 		*aInstancePtr = NS_STATIC_CAST(nsIDBMessage*, this);
 	}              

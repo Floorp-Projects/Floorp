@@ -18,6 +18,7 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *   Pierre Phaneuf <pp@ludusdesign.com>
  */
 
 #include "nsCOMPtr.h" 
@@ -124,13 +125,13 @@ SendOperationListener::QueryInterface(const nsIID &aIID, void** aInstancePtr)
     return NS_ERROR_NULL_POINTER;
   *aInstancePtr = NULL;
 
-  if (aIID.Equals(nsCOMTypeInfo<nsIMsgSendListener>::GetIID())) 
+  if (aIID.Equals(NS_GET_IID(nsIMsgSendListener))) 
   {
 	  *aInstancePtr = (nsIMsgSendListener *) this;                                                   
 	  NS_ADDREF_THIS();
 	  return NS_OK;
   }
-  if (aIID.Equals(nsCOMTypeInfo<nsIMsgCopyServiceListener>::GetIID()))
+  if (aIID.Equals(NS_GET_IID(nsIMsgCopyServiceListener)))
   {
 	  *aInstancePtr = (nsIMsgCopyServiceListener *) this;
 	  NS_ADDREF_THIS();
@@ -365,11 +366,11 @@ main(int argc, char *argv[])
   }
 
 
-  rv = nsComponentManager::CreateInstance(kMsgSendCID, NULL, nsCOMTypeInfo<nsIMsgSend>::GetIID(), (void **) &pMsgSend); 
+  rv = nsComponentManager::CreateInstance(kMsgSendCID, NULL, NS_GET_IID(nsIMsgSend), (void **) &pMsgSend); 
   if (NS_SUCCEEDED(rv) && pMsgSend) 
   { 
     printf("We succesfully obtained a nsIMsgSend interface....\n");    
-    rv = nsComponentManager::CreateInstance(kMsgCompFieldsCID, NULL, nsCOMTypeInfo<nsIMsgCompFields>::GetIID(), 
+    rv = nsComponentManager::CreateInstance(kMsgCompFieldsCID, NULL, NS_GET_IID(nsIMsgCompFields), 
                                              (void **) &pMsgCompFields); 
     if (NS_SUCCEEDED(rv) && pMsgCompFields) 
     if (rv == NS_OK && pMsgCompFields)

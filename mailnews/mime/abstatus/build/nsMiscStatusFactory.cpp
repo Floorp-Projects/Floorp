@@ -18,6 +18,7 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *   Pierre Phaneuf <pp@ludusdesign.com>
  */
 
 #include "nsIFactory.h"
@@ -94,9 +95,9 @@ nsresult nsMimeMiscStatusFactory::QueryInterface(const nsIID &aIID, void **aResu
   *aResult = NULL;   
 
   // we support two interfaces....nsISupports and nsFactory.....
-  if (aIID.Equals(nsCOMTypeInfo<nsISupports>::GetIID()))    
+  if (aIID.Equals(NS_GET_IID(nsISupports)))    
     *aResult = (void *)(nsISupports*)this;   
-  else if (aIID.Equals(nsIFactory::GetIID()))   
+  else if (aIID.Equals(NS_GET_IID(nsIFactory)))   
     *aResult = (void *)(nsIFactory*)this;   
 
   if (*aResult == NULL)
@@ -155,7 +156,7 @@ extern "C" NS_EXPORT nsresult NSGetFactory(nsISupports* aServMgr,
 
   *aFactory = new nsMimeMiscStatusFactory(aClass, aClassName, aProgID, aServMgr);
   if (aFactory)
-    return (*aFactory)->QueryInterface(nsIFactory::GetIID(),
+    return (*aFactory)->QueryInterface(NS_GET_IID(nsIFactory),
                                        (void**)aFactory);
   else
     return NS_ERROR_OUT_OF_MEMORY;

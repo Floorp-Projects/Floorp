@@ -18,6 +18,7 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *   Pierre Phaneuf <pp@ludusdesign.com>
  */
 
 #include "msgCore.h"
@@ -106,8 +107,8 @@ nsMsgFolderCache::QueryInterface(const nsIID& iid, void **result)
 		return NS_ERROR_NULL_POINTER;
 
 	void *res = nsnull;
-	if (iid.Equals(nsCOMTypeInfo<nsIMsgFolderCache>::GetIID()) ||
-	      iid.Equals(nsCOMTypeInfo<nsISupports>::GetIID()))
+	if (iid.Equals(NS_GET_IID(nsIMsgFolderCache)) ||
+	      iid.Equals(NS_GET_IID(nsISupports)))
 		res = NS_STATIC_CAST(nsIMsgFolderCache*, this);
 	if (res) 
 	{

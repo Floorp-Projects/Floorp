@@ -21,7 +21,7 @@ static NS_DEFINE_CID(kMsgHeaderParserCID, NS_MSGHEADERPARSER_CID);
    
    nsresult res = nsComponentManager::CreateInstance(kMsgHeaderParserCID, 
                                                NULL, 
-                                               nsCOMTypeInfo<nsIMsgHeaderParser>::GetIID(), 
+                                               NS_GET_IID(nsIMsgHeaderParser), 
                                                (void **) &sample); 
 
    if (res == NS_OK && sample) { 

@@ -18,6 +18,7 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *   Pierre Phaneuf <pp@ludusdesign.com>
  */
 
 #include "msgCore.h"
@@ -73,7 +74,7 @@ nsresult GetMessageServiceFromURI(const char *uri, nsIMsgMessageService **messag
 
 	if(NS_SUCCEEDED(rv))
 	{
-		rv = nsServiceManager::GetService((const char *) nsCAutoString(progID), nsCOMTypeInfo<nsIMsgMessageService>::GetIID(),
+		rv = nsServiceManager::GetService((const char *) nsCAutoString(progID), NS_GET_IID(nsIMsgMessageService),
 		           (nsISupports**)messageService, nsnull);
 	}
 
@@ -102,30 +103,30 @@ nsresult CreateStartupUrl(char *uri, nsIURI** aUrl)
     {
         nsCOMPtr<nsIImapUrl> imapUrl;
         rv = nsComponentManager::CreateInstance(kImapUrlCID, nsnull,
-                                                nsIImapUrl::GetIID(),
+                                                NS_GET_IID(nsIImapUrl),
                                                 getter_AddRefs(imapUrl));
         if (NS_SUCCEEDED(rv) && imapUrl)
-            rv = imapUrl->QueryInterface(nsCOMTypeInfo<nsIURI>::GetIID(),
+            rv = imapUrl->QueryInterface(NS_GET_IID(nsIURI),
                                          (void**) aUrl);
     }
     else if (PL_strncasecmp(uri, "mailbox", 7) == 0)
     {
         nsCOMPtr<nsIMailboxUrl> mailboxUrl;
         rv = nsComponentManager::CreateInstance(kCMailboxUrl, nsnull,
-                                                nsIMailboxUrl::GetIID(),
+                                                NS_GET_IID(nsIMailboxUrl),
                                                 getter_AddRefs(mailboxUrl));
         if (NS_SUCCEEDED(rv) && mailboxUrl)
-            rv = mailboxUrl->QueryInterface(nsCOMTypeInfo<nsIURI>::GetIID(),
+            rv = mailboxUrl->QueryInterface(NS_GET_IID(nsIURI),
                                             (void**) aUrl);
     }
     else if (PL_strncasecmp(uri, "news", 4) == 0)
     {
         nsCOMPtr<nsINntpUrl> nntpUrl;
         rv = nsComponentManager::CreateInstance(kCNntpUrlCID, nsnull,
-                                                nsINntpUrl::GetIID(),
+                                                NS_GET_IID(nsINntpUrl),
                                                 getter_AddRefs(nntpUrl));
         if (NS_SUCCEEDED(rv) && nntpUrl)
-            rv = nntpUrl->QueryInterface(nsCOMTypeInfo<nsIURI>::GetIID(),
+            rv = nntpUrl->QueryInterface(NS_GET_IID(nsIURI),
                                          (void**) aUrl);
     }
     if (*aUrl)
@@ -134,7 +135,7 @@ nsresult CreateStartupUrl(char *uri, nsIURI** aUrl)
 }
 
 
-NS_IMPL_ISUPPORTS(nsMessageFromMsgHdrEnumerator, nsCOMTypeInfo<nsISimpleEnumerator>::GetIID())
+NS_IMPL_ISUPPORTS(nsMessageFromMsgHdrEnumerator, NS_GET_IID(nsISimpleEnumerator))
 
 nsMessageFromMsgHdrEnumerator::nsMessageFromMsgHdrEnumerator(nsISimpleEnumerator *srcEnumerator,
 															 nsIMsgFolder *folder)

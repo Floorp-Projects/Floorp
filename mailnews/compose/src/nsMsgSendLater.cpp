@@ -18,6 +18,7 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *   Pierre Phaneuf <pp@ludusdesign.com>
  */
 #include "nsCOMPtr.h"
 #include "nsMsgCopy.h"
@@ -305,7 +306,7 @@ nsMsgSendLater::OnStartRequest(nsIChannel *channel, nsISupports *ctxt)
 // This is the listener class for the send operation. We have to create this class 
 // to listen for message send completion and eventually notify the caller
 ////////////////////////////////////////////////////////////////////////////////////
-NS_IMPL_ISUPPORTS(SendOperationListener, nsCOMTypeInfo<nsIMsgSendListener>::GetIID());
+NS_IMPL_ISUPPORTS(SendOperationListener, NS_GET_IID(nsIMsgSendListener));
 
 SendOperationListener::SendOperationListener(void) 
 { 
@@ -446,7 +447,7 @@ nsCOMPtr<nsIMsgSend>        pMsgSend = nsnull;
   	mMessage->GetCcList(getter_Copies(ccList));
 
   // Get the composition fields interface
-  nsresult res = nsComponentManager::CreateInstance(kMsgCompFieldsCID, NULL, nsCOMTypeInfo<nsIMsgCompFields>::GetIID(), 
+  nsresult res = nsComponentManager::CreateInstance(kMsgCompFieldsCID, NULL, NS_GET_IID(nsIMsgCompFields), 
                                                     (void **) getter_AddRefs(compFields)); 
   if (NS_FAILED(res) || !compFields)
   {
@@ -454,7 +455,7 @@ nsCOMPtr<nsIMsgSend>        pMsgSend = nsnull;
   }
 
   // Get the message send interface
-  rv = nsComponentManager::CreateInstance(kMsgSendCID, NULL, nsCOMTypeInfo<nsIMsgSend>::GetIID(), 
+  rv = nsComponentManager::CreateInstance(kMsgSendCID, NULL, NS_GET_IID(nsIMsgSend), 
                                           (void **) getter_AddRefs(pMsgSend)); 
   if (NS_FAILED(res) || !pMsgSend)
   {
@@ -702,7 +703,7 @@ nsMsgSendLater::DeleteCurrentMessage()
   nsCOMPtr<nsISupportsArray>  msgArray;
 
   // Get the composition fields interface
-  nsresult res = nsComponentManager::CreateInstance(kISupportsArrayCID, NULL, nsCOMTypeInfo<nsISupportsArray>::GetIID(), 
+  nsresult res = nsComponentManager::CreateInstance(kISupportsArrayCID, NULL, NS_GET_IID(nsISupportsArray), 
                                                     (void **) getter_AddRefs(msgArray)); 
   if (NS_FAILED(res) || !msgArray)
   {

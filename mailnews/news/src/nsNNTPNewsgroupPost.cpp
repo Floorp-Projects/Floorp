@@ -18,6 +18,7 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *   Pierre Phaneuf <pp@ludusdesign.com>
  */
 
 #include "msgCore.h"    // precompiled header...
@@ -55,7 +56,7 @@ const char* nsNNTPNewsgroupPost::m_headerName[HEADER_LAST+1]=
     "Message-ID: ",
 };
     
-NS_IMPL_ISUPPORTS(nsNNTPNewsgroupPost, nsINNTPNewsgroupPost::GetIID());
+NS_IMPL_ISUPPORTS(nsNNTPNewsgroupPost, NS_GET_IID(nsINNTPNewsgroupPost));
 
 nsNNTPNewsgroupPost::nsNNTPNewsgroupPost()
 {

@@ -18,6 +18,7 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *   Pierre Phaneuf <pp@ludusdesign.com>
  */
 #include "nsXPIDLString.h"
 #include "nsMsgCopy.h"
@@ -49,7 +50,7 @@ static NS_DEFINE_CID(kRDFServiceCID, NS_RDFSERVICE_CID);
 ////////////////////////////////////////////////////////////////////////////////////
 NS_IMPL_ADDREF(CopyListener);
 NS_IMPL_RELEASE(CopyListener);
-NS_IMPL_QUERY_INTERFACE(CopyListener,nsCOMTypeInfo<nsIMsgCopyServiceListener>::GetIID());
+NS_IMPL_QUERY_INTERFACE(CopyListener,NS_GET_IID(nsIMsgCopyServiceListener));
 
 CopyListener::CopyListener(void) 
 { 
@@ -139,7 +140,7 @@ CopyListener::SetMsgComposeAndSendObject(nsMsgComposeAndSend *obj)
 // to listen for message copy completion and eventually notify the caller
 ////////////////////////////////////////////////////////////////////////////////////
 
-NS_IMPL_ISUPPORTS(nsMsgCopy, nsMsgCopy::GetIID());
+NS_IMPL_ISUPPORTS(nsMsgCopy, NS_GET_IID(nsMsgCopy));
 
 nsMsgCopy::nsMsgCopy()
 {
@@ -421,7 +422,7 @@ MessageFolderIsLocal(nsIMsgIdentity   *userIdentity,
   if (!aFolderURI) return NS_ERROR_NULL_POINTER;
 
   nsCOMPtr <nsIURL> url;
-  rv = nsComponentManager::CreateInstance(kStandardUrlCID, nsnull, nsCOMTypeInfo<nsIURL>::GetIID(), getter_AddRefs(url));
+  rv = nsComponentManager::CreateInstance(kStandardUrlCID, nsnull, NS_GET_IID(nsIURL), getter_AddRefs(url));
   if (NS_FAILED(rv)) return rv;
 
   rv = url->SetSpec(aFolderURI);

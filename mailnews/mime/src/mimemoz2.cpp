@@ -18,6 +18,7 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *   Pierre Phaneuf <pp@ludusdesign.com>
  */
 #include "nsCOMPtr.h"
 #include "modlmime.h"
@@ -1172,7 +1173,7 @@ mime_bridge_create_display_stream(
 
   // Need the text converter...
   rv = nsComponentManager::CreateInstance(kTXTToHTMLConvCID,
-                                          NULL, nsCOMTypeInfo<mozITXTToHTMLConv>::GetIID(),
+                                          NULL, NS_GET_IID(mozITXTToHTMLConv),
                                           (void **)&(msd->options->conv));
   if (NS_FAILED(rv))
 	{

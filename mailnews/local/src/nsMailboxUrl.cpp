@@ -18,6 +18,7 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *   Pierre Phaneuf <pp@ludusdesign.com>
  */
 
 #include "msgCore.h"    // precompiled header...
@@ -279,7 +280,7 @@ NS_IMETHODIMP nsMailboxUrl::GetMessageHeader(nsIMsgDBHdr ** aMsgHdr)
 		nsCOMPtr<nsIMsgDatabase> mailDBFactory;
 		nsCOMPtr<nsIMsgDatabase> mailDB;
 
-		rv = nsComponentManager::CreateInstance(kCMailDB, nsnull, nsIMsgDatabase::GetIID(), 
+		rv = nsComponentManager::CreateInstance(kCMailDB, nsnull, NS_GET_IID(nsIMsgDatabase), 
 														 (void **) getter_AddRefs(mailDBFactory));
 		nsCOMPtr <nsIFileSpec> dbFileSpec;
 		NS_NewFileSpecWithSpec(*m_filePath, getter_AddRefs(dbFileSpec));

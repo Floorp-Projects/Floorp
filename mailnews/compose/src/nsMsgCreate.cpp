@@ -18,6 +18,7 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *   Pierre Phaneuf <pp@ludusdesign.com>
  */
 #include "nsCOMPtr.h"
 #include "nsIURL.h"
@@ -82,7 +83,7 @@ nsMsgDraft::~nsMsgDraft()
 }
 
 /* the following macro actually implement addref, release and query interface for our component. */
-NS_IMPL_ISUPPORTS(nsMsgDraft, nsCOMTypeInfo<nsIMsgDraft>::GetIID());
+NS_IMPL_ISUPPORTS(nsMsgDraft, NS_GET_IID(nsIMsgDraft));
 
 /* this function will be used by the factory to generate an Message Compose Fields Object....*/
 nsresult 
@@ -122,7 +123,7 @@ GetIMessageFromURI(const PRUnichar *msgURI)
   if (!myRDFNode)
     return nsnull;
 
-  myRDFNode->QueryInterface(nsCOMTypeInfo<nsIMessage>::GetIID(), (void **)&returnMessage);
+  myRDFNode->QueryInterface(NS_GET_IID(nsIMessage), (void **)&returnMessage);
   NS_IF_RELEASE(myRDFNode);
   return returnMessage;
 }
@@ -155,7 +156,7 @@ nsresult  rv;
   // Now, we can create a mime parser (nsIStreamConverter)!
   nsCOMPtr<nsIStreamConverter> mimeParser;
   rv = nsComponentManager::CreateInstance(kStreamConverterCID, 
-                                          NULL, nsCOMTypeInfo<nsIStreamConverter>::GetIID(), 
+                                          NULL, NS_GET_IID(nsIStreamConverter), 
                                           (void **) getter_AddRefs(mimeParser)); 
   if (NS_FAILED(rv) || !mimeParser)
   {

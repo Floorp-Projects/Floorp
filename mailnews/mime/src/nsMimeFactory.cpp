@@ -18,6 +18,7 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *   Pierre Phaneuf <pp@ludusdesign.com>
  */
 #include "stdio.h"
 #include "pratom.h"
@@ -106,9 +107,9 @@ nsresult nsMimeFactory::QueryInterface(const nsIID &aIID, void **aResult)
   *aResult = NULL;   
 
   // we support three interfaces....nsISupports, nsFactory and nsINetPlugin.....
-  if (aIID.Equals(nsCOMTypeInfo<nsISupports>::GetIID()))    
+  if (aIID.Equals(NS_GET_IID(nsISupports)))    
     *aResult = (void *)(nsISupports*)this;   
-  else if (aIID.Equals(nsIFactory::GetIID()))   
+  else if (aIID.Equals(NS_GET_IID(nsIFactory)))   
     *aResult = (void *)(nsIFactory*)this;
 
   if (*aResult == NULL)
@@ -210,7 +211,7 @@ extern "C" NS_EXPORT nsresult NSGetFactory(nsISupports* aServMgr,
 	*aFactory = new nsMimeFactory(aClass);
 
 	if (aFactory)
-		return (*aFactory)->QueryInterface(nsIFactory::GetIID(), (void**)aFactory); // they want a Factory Interface so give it to them
+		return (*aFactory)->QueryInterface(NS_GET_IID(nsIFactory), (void**)aFactory); // they want a Factory Interface so give it to them
 	else
 		return NS_ERROR_OUT_OF_MEMORY;
 }

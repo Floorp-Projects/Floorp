@@ -14,6 +14,9 @@
  * Communications Corporation.  Portions created by Netscape are
  * Copyright (C) 1998 Netscape Communications Corporation.  All Rights
  * Reserved.
+ * 
+ * Contributor(s):
+ *   Pierre Phaneuf <pp@ludusdesign.com>
  */
 
 #include "nsCOMPtr.h"
@@ -707,7 +710,7 @@ PRBool nsEudoraMac::BuildPOPAccount( nsIMsgAccountManager *accMgr, nsCString **p
 				SetIdentities( accMgr, account, pStrs);
 				result = PR_TRUE;
 				if (ppAccount)
-					account->QueryInterface( nsIMsgAccount::GetIID(), (void **)ppAccount);
+					account->QueryInterface( NS_GET_IID(nsIMsgAccount), (void **)ppAccount);
 			}				
 		}
 	}
@@ -757,7 +760,7 @@ PRBool nsEudoraMac::BuildIMAPAccount( nsIMsgAccountManager *accMgr, nsCString **
 				SetIdentities( accMgr, account, pStrs);
 				result = PR_TRUE;
 				if (ppAccount)
-					account->QueryInterface( nsIMsgAccount::GetIID(), (void **)ppAccount);
+					account->QueryInterface( NS_GET_IID(nsIMsgAccount), (void **)ppAccount);
 			}				
 		}
 	}

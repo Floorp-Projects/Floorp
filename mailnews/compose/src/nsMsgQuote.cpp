@@ -18,6 +18,7 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *   Pierre Phaneuf <pp@ludusdesign.com>
  */
 
 #include "nsIURL.h"
@@ -126,7 +127,7 @@ nsMsgQuote::~nsMsgQuote()
 }
 
 /* the following macro actually implement addref, release and query interface for our component. */
-NS_IMPL_ISUPPORTS(nsMsgQuote, nsCOMTypeInfo<nsIMsgQuote>::GetIID());
+NS_IMPL_ISUPPORTS(nsMsgQuote, NS_GET_IID(nsIMsgQuote));
 
 NS_IMETHODIMP nsMsgQuote::GetStreamListener(nsIStreamListener ** aStreamListener)
 {
@@ -179,9 +180,7 @@ nsMsgQuote::QuoteMessage(const PRUnichar *msgURI, PRBool quoteHeaders, nsIStream
   if (NS_FAILED(rv)) return rv;
   mQuoteListener->SetMsgQuote(this);
 
-  nsCOMPtr<nsISupports> quoteSupport;
-  rv = QueryInterface(nsCOMTypeInfo<nsISupports>::GetIID(),
-                      getter_AddRefs(quoteSupport));
+  nsCOMPtr<nsISupports> quoteSupport = do_QueryInterface(this);
 
   mQuoteChannel = null_nsCOMPtr();
   rv = NS_NewInputStreamChannel(aURL, 

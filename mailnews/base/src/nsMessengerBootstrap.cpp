@@ -18,6 +18,7 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *   Pierre Phaneuf <pp@ludusdesign.com>
  */
 
 #include "nsMessengerBootstrap.h"
@@ -32,7 +33,7 @@ static NS_DEFINE_CID(kCMsgMailSessionCID, NS_MSGMAILSESSION_CID);
 static NS_DEFINE_CID(kMsgAccountManagerCID, NS_MSGACCOUNTMANAGER_CID);
 
 
-NS_IMPL_ISUPPORTS(nsMessengerBootstrap, nsCOMTypeInfo<nsIAppShellComponent>::GetIID())
+NS_IMPL_ISUPPORTS(nsMessengerBootstrap, NS_GET_IID(nsIAppShellComponent))
 
 nsMessengerBootstrap::nsMessengerBootstrap()
 {

@@ -18,6 +18,7 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *   Pierre Phaneuf <pp@ludusdesign.com>
  */
 
 #include <stdio.h>
@@ -109,7 +110,7 @@ nsresult nsNntpTestDriver::RunDriver()
 {
     nsresult rv;
     
-    rv = nsComponentManager::CreateInstance(kNntpServiceCID, nsnull, nsINntpService::GetIID(), getter_AddRefs(m_nntpService));
+    rv = nsComponentManager::CreateInstance(kNntpServiceCID, nsnull, NS_GET_IID(nsINntpService), getter_AddRefs(m_nntpService));
     if (NS_FAILED(rv)) return rv;
 
 	rv = TestConvertNewsgroupsString();

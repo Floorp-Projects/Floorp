@@ -18,6 +18,7 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *   Pierre Phaneuf <pp@ludusdesign.com>
  */
 #include "nsCOMPtr.h"
 #include "nsMsgCompose.h"
@@ -127,7 +128,7 @@ nsMsgCompose::~nsMsgCompose()
 }
 
 /* the following macro actually implement addref, release and query interface for our component. */
-NS_IMPL_ISUPPORTS(nsMsgCompose, nsCOMTypeInfo<nsMsgCompose>::GetIID());
+NS_IMPL_ISUPPORTS(nsMsgCompose, NS_GET_IID(nsMsgCompose));
 
 //
 // Once we are here, convert the data which we know to be UTF-8 to UTF-16
@@ -1342,7 +1343,7 @@ QuotingOutputStreamListener::SetMimeHeaders(nsIMimeHeaders * headers)
 }
 
 
-NS_IMPL_ISUPPORTS(QuotingOutputStreamListener, nsCOMTypeInfo<nsIStreamListener>::GetIID());
+NS_IMPL_ISUPPORTS(QuotingOutputStreamListener, NS_GET_IID(nsIStreamListener));
 ////////////////////////////////////////////////////////////////////////////////////
 // END OF QUOTING LISTENER
 ////////////////////////////////////////////////////////////////////////////////////
@@ -1363,7 +1364,7 @@ nsMsgCompose::QuoteOriginalMessage(const PRUnichar *originalMsgURI, PRInt32 what
   
   // Create a mime parser (nsIStreamConverter)!
   rv = nsComponentManager::CreateInstance(kMsgQuoteCID, 
-                                          NULL, nsCOMTypeInfo<nsIMsgQuote>::GetIID(), 
+                                          NULL, NS_GET_IID(nsIMsgQuote), 
                                           (void **) getter_AddRefs(mQuote)); 
   if (NS_FAILED(rv) || !mQuote)
     return NS_ERROR_FAILURE;
@@ -1462,13 +1463,13 @@ nsMsgComposeSendListener::QueryInterface(const nsIID &aIID, void** aInstancePtr)
     return NS_ERROR_NULL_POINTER;
   *aInstancePtr = NULL;
 
-  if (aIID.Equals(nsCOMTypeInfo<nsIMsgSendListener>::GetIID())) 
+  if (aIID.Equals(NS_GET_IID(nsIMsgSendListener))) 
   {
 	  *aInstancePtr = (nsIMsgSendListener *) this;                                                   
 	  NS_ADDREF_THIS();
 	  return NS_OK;
   }
-  if (aIID.Equals(nsCOMTypeInfo<nsIMsgCopyServiceListener>::GetIID()))
+  if (aIID.Equals(NS_GET_IID(nsIMsgCopyServiceListener)))
   {
 	  *aInstancePtr = (nsIMsgCopyServiceListener *) this;
 	  NS_ADDREF_THIS();
@@ -1642,7 +1643,7 @@ nsMsgComposeSendListener::GetMessageId(nsCString* aMessageId)
 // is ready before we do various quoting operations
 ////////////////////////////////////////////////////////////////////////////////////
 
-NS_IMPL_ISUPPORTS(nsMsgDocumentStateListener, nsCOMTypeInfo<nsIDocumentStateListener>::GetIID());
+NS_IMPL_ISUPPORTS(nsMsgDocumentStateListener, NS_GET_IID(nsIDocumentStateListener));
 
 nsMsgDocumentStateListener::nsMsgDocumentStateListener(void)
 {

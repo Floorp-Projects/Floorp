@@ -18,6 +18,7 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *   Pierre Phaneuf <pp@ludusdesign.com>
  */
 
 #include "msgCore.h" // for pre-compiled headers
@@ -53,7 +54,7 @@ nsresult NS_NewURLFetcher(nsURLFetcher ** aInstancePtrResult)
 	{
 		nsURLFetcher *obj = new nsURLFetcher();
 		if (obj)
-			return obj->QueryInterface(nsCOMTypeInfo<nsIStreamListener>::GetIID(), (void**) aInstancePtrResult);
+			return obj->QueryInterface(NS_GET_IID(nsIStreamListener), (void**) aInstancePtrResult);
 		else
 			return NS_ERROR_OUT_OF_MEMORY; // we couldn't allocate the object 
 	}

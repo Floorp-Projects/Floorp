@@ -18,6 +18,7 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *   Pierre Phaneuf <pp@ludusdesign.com>
  */
 
 #include "msgCore.h" // for pre-compiled headers
@@ -50,7 +51,7 @@ nsMsgIdentity::getPrefService()
 {
   if (m_prefs) return NS_OK;
   return nsServiceManager::GetService(kPrefServiceCID,
-                                      nsCOMTypeInfo<nsIPref>::GetIID(),
+                                      NS_GET_IID(nsIPref),
                                       (nsISupports**)&m_prefs);
 }
 

@@ -18,6 +18,7 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *   Pierre Phaneuf <pp@ludusdesign.com>
  */
 
 #include "nsMsgIncomingServer.h"
@@ -90,7 +91,7 @@ nsMsgIncomingServer::SetKey(const char * serverKey)
     // in order to actually make use of the key, we need the prefs
     if (!m_prefs)
         rv = nsServiceManager::GetService(kPrefServiceCID,
-                                          nsCOMTypeInfo<nsIPref>::GetIID(),
+                                          NS_GET_IID(nsIPref),
                                           (nsISupports**)&m_prefs);
 
     PR_FREEIF(m_serverKey);

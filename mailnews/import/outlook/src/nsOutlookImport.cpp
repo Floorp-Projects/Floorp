@@ -18,6 +18,7 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *   Pierre Phaneuf <pp@ludusdesign.com>
  */
 
 
@@ -175,7 +176,7 @@ nsOutlookImport::~nsOutlookImport()
 
 
 
-NS_IMPL_ISUPPORTS(nsOutlookImport, nsIImportModule::GetIID());
+NS_IMPL_ISUPPORTS(nsOutlookImport, NS_GET_IID(nsIImportModule));
 
 
 NS_IMETHODIMP nsOutlookImport::GetName( PRUnichar **name)
@@ -318,7 +319,7 @@ ImportMailImpl::~ImportMailImpl()
 
 
 
-NS_IMPL_ISUPPORTS(ImportMailImpl, nsIImportMail::GetIID());
+NS_IMPL_ISUPPORTS(ImportMailImpl, NS_GET_IID(nsIImportMail));
 
 NS_IMETHODIMP ImportMailImpl::GetDefaultLocation( nsIFileSpec **ppLoc, PRBool *found, PRBool *userVerify)
 {
@@ -511,7 +512,7 @@ ImportAddressImpl::~ImportAddressImpl()
 
 
 
-NS_IMPL_ISUPPORTS(ImportAddressImpl, nsIImportAddressBooks::GetIID());
+NS_IMPL_ISUPPORTS(ImportAddressImpl, NS_GET_IID(nsIImportAddressBooks));
 
 	
 NS_IMETHODIMP ImportAddressImpl::GetAutoFind(PRUnichar **description, PRBool *_retval)
@@ -534,7 +535,7 @@ void ImportAddressImpl::GetOEInterface( void)
 	if (m_pWabImport)
 		return;
 	nsIImportModule *	oeModule = nsnull;
-	nsresult rv = nsComponentManager::CreateInstance( "component://mozilla/import/import-oe", nsnull, nsIImportModule::GetIID(), (void **) &oeModule);
+	nsresult rv = nsComponentManager::CreateInstance( "component://mozilla/import/import-oe", nsnull, NS_GET_IID(nsIImportModule), (void **) &oeModule);
 	if (NS_SUCCEEDED( rv) && oeModule) {
 		nsIImportGeneric *	generic = nsnull;
 		rv = oeModule->GetImportInterface( "addressbook", (nsISupports **) &generic);

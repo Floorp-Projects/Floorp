@@ -18,6 +18,7 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *   Pierre Phaneuf <pp@ludusdesign.com>
  */
 
 #include "msgCore.h"    // precompiled header...
@@ -264,7 +265,7 @@ nsresult nsNntpService::ConvertNewsMessageURI2NewsURI(const char *messageURI, ns
   nsCOMPtr<nsIMsgDatabase> newsDBFactory;
   nsCOMPtr<nsIMsgDatabase> newsDB;
   
-  rv = nsComponentManager::CreateInstance(kCNewsDB, nsnull, nsIMsgDatabase::GetIID(), getter_AddRefs(newsDBFactory));
+  rv = nsComponentManager::CreateInstance(kCNewsDB, nsnull, NS_GET_IID(nsIMsgDatabase), getter_AddRefs(newsDBFactory));
   if (NS_FAILED(rv) || (!newsDBFactory)) {
     return rv;
   }
@@ -728,7 +729,7 @@ nsresult nsNntpService::PostMessage(nsIFileSpec *fileToPost, const char *newsgro
   nsCOMPtr <nsINntpUrl> nntpUrl;
   nsresult rv = NS_OK;
   
-  rv = nsComponentManager::CreateInstance(kCNntpUrlCID, nsnull, nsINntpUrl::GetIID(), getter_AddRefs(nntpUrl));
+  rv = nsComponentManager::CreateInstance(kCNntpUrlCID, nsnull, NS_GET_IID(nsINntpUrl), getter_AddRefs(nntpUrl));
   if (NS_FAILED(rv) || !nntpUrl) return rv;
 
   nntpUrl->SetNewsAction(nsINntpUrl::ActionPostArticle);
@@ -756,7 +757,7 @@ nsresult nsNntpService::PostMessage(nsIFileSpec *fileToPost, const char *newsgro
   if (NS_FAILED(rv)) return rv;
   
   nsCOMPtr <nsINNTPNewsgroupPost> post;
-  rv = nsComponentManager::CreateInstance(kCNNTPNewsgroupPostCID, nsnull, nsINNTPNewsgroupPost::GetIID(), getter_AddRefs(post));
+  rv = nsComponentManager::CreateInstance(kCNNTPNewsgroupPostCID, nsnull, NS_GET_IID(nsINNTPNewsgroupPost), getter_AddRefs(post));
   if (NS_FAILED(rv) || !post) return rv;
 
   rv = post->SetPostMessageFile(fileToPost);
@@ -768,7 +769,7 @@ nsresult nsNntpService::PostMessage(nsIFileSpec *fileToPost, const char *newsgro
   rv = nntpProtocol->LoadUrl(mailnewsurl, /* aConsumer */ nsnull);
 		
   if (_retval)
-	  nntpUrl->QueryInterface(nsIURI::GetIID(), (void **) _retval);
+	  nntpUrl->QueryInterface(NS_GET_IID(nsIURI), (void **) _retval);
     
   NS_UNLOCK_INSTANCE();
 
@@ -780,7 +781,7 @@ nsresult nsNntpService::ConstructNntpUrl(const char * urlString, const char * ne
   nsCOMPtr <nsINntpUrl> nntpUrl;
   nsresult rv = NS_OK;
 
-  rv = nsComponentManager::CreateInstance(kCNntpUrlCID, nsnull, nsINntpUrl::GetIID(), getter_AddRefs(nntpUrl));
+  rv = nsComponentManager::CreateInstance(kCNntpUrlCID, nsnull, NS_GET_IID(nsINntpUrl), getter_AddRefs(nntpUrl));
   if (NS_FAILED(rv) || !nntpUrl) return rv;
   
   nsCOMPtr <nsIMsgMailNewsUrl> mailnewsurl = do_QueryInterface(nntpUrl);
@@ -791,7 +792,7 @@ nsresult nsNntpService::ConstructNntpUrl(const char * urlString, const char * ne
 
   if (newsgroupName != "") {
     nsCOMPtr <nsINNTPNewsgroup> newsgroup;
-    rv = nsComponentManager::CreateInstance(kCNNTPNewsgroupCID, nsnull, nsINNTPNewsgroup::GetIID(), getter_AddRefs(newsgroup));
+    rv = nsComponentManager::CreateInstance(kCNNTPNewsgroupCID, nsnull, NS_GET_IID(nsINNTPNewsgroup), getter_AddRefs(newsgroup));
     if (NS_FAILED(rv) || !newsgroup) return rv;                       
        
     rv = newsgroup->Initialize(newsgroupName, nsnull /* set */, PR_TRUE);

@@ -18,6 +18,7 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *   Pierre Phaneuf <pp@ludusdesign.com>
  */
 
 
@@ -217,7 +218,7 @@ nsImportService::~nsImportService()
 
 
 
-NS_IMPL_ISUPPORTS(nsImportService, nsIImportService::GetIID());
+NS_IMPL_ISUPPORTS(nsImportService, NS_GET_IID(nsIImportService));
 
 
 NS_IMETHODIMP nsImportService::DiscoverModules( void)
@@ -229,21 +230,21 @@ NS_IMETHODIMP nsImportService::DiscoverModules( void)
 NS_IMETHODIMP nsImportService::CreateNewFieldMap( nsIImportFieldMap **_retval)
 {
   nsresult rv;
-  rv = nsImportFieldMap::Create( nsnull, nsIImportFieldMap::GetIID(), (void**)_retval);
+  rv = nsImportFieldMap::Create( nsnull, NS_GET_IID(nsIImportFieldMap), (void**)_retval);
   return rv;
 }
 
 NS_IMETHODIMP nsImportService::CreateNewMailboxDescriptor( nsIImportMailboxDescriptor **_retval)
 {
   nsresult rv;
-  rv = nsImportMailboxDescriptor::Create( nsnull, nsIImportMailboxDescriptor::GetIID(), (void**)_retval);
+  rv = nsImportMailboxDescriptor::Create( nsnull, NS_GET_IID(nsIImportMailboxDescriptor), (void**)_retval);
   return rv;
 }
 
 NS_IMETHODIMP nsImportService::CreateNewABDescriptor(nsIImportABDescriptor **_retval)
 {
   nsresult rv;
-  rv = nsImportABDescriptor::Create( nsnull, nsIImportABDescriptor::GetIID(), (void**)_retval);
+  rv = nsImportABDescriptor::Create( nsnull, NS_GET_IID(nsIImportABDescriptor), (void**)_retval);
   return rv;
 }
 

@@ -18,6 +18,7 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *   Pierre Phaneuf <pp@ludusdesign.com>
  */
 
 #include "msgCore.h"    // precompiled header...
@@ -141,7 +142,7 @@ nsresult nsMsgMessageDataSource::Init()
 
 	rv = nsComponentManager::CreateInstance(kMsgHeaderParserCID, 
                                           NULL, 
-                                          nsCOMTypeInfo<nsIMsgHeaderParser>::GetIID(), 
+                                          NS_GET_IID(nsIMsgHeaderParser), 
                                           (void **) &mHeaderParser);
 
 	if(NS_FAILED(rv))
@@ -246,7 +247,7 @@ nsMsgMessageDataSource::QueryInterface(REFNSIID iid, void** result)
 		return NS_ERROR_NULL_POINTER;
 
 	*result = nsnull;
-	if(iid.Equals(nsCOMTypeInfo<nsIFolderListener>::GetIID()))
+	if(iid.Equals(NS_GET_IID(nsIFolderListener)))
 	{
 		*result = NS_STATIC_CAST(nsIFolderListener*, this);
 		NS_ADDREF(this);
@@ -626,7 +627,7 @@ nsresult nsMsgMessageDataSource::OnItemAddedOrRemoved(nsISupports *parentItem, n
 		return NS_OK;
 
 	//If we are removing a message
-	if(NS_SUCCEEDED(item->QueryInterface(nsCOMTypeInfo<nsIMessage>::GetIID(), getter_AddRefs(message))))
+	if(NS_SUCCEEDED(item->QueryInterface(NS_GET_IID(nsIMessage), getter_AddRefs(message))))
 	{
 		//We only handle threaded views
 

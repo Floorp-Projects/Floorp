@@ -18,6 +18,7 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *   Pierre Phaneuf <pp@ludusdesign.com>
  */
 
 #include "msgCore.h"    // precompiled header...
@@ -161,7 +162,7 @@ nsresult nsPop3Service::BuildPop3Url(char * urlSpec,
 	nsCOMPtr<nsIPop3URL> pop3Url;
 	nsresult rv = nsComponentManager::CreateInstance(kPop3UrlCID,
                                             nsnull,
-                                            nsCOMTypeInfo<nsIPop3URL>::GetIID(),
+                                            NS_GET_IID(nsIPop3URL),
                                             getter_AddRefs(pop3Url));
 	if (pop3Url)
 	{
@@ -192,7 +193,7 @@ nsresult nsPop3Service::BuildPop3Url(char * urlSpec,
 
 		if (aUrl)
 		{
-			rv = pop3Url->QueryInterface(nsCOMTypeInfo<nsIURI>::GetIID(), (void **) aUrl);
+			rv = pop3Url->QueryInterface(NS_GET_IID(nsIURI), (void **) aUrl);
 			if (*aUrl)
 			{
 				(*aUrl)->SetSpec(urlSpec);

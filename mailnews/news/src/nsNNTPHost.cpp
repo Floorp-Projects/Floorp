@@ -18,6 +18,7 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *   Pierre Phaneuf <pp@ludusdesign.com>
  */
 
 #include "nsNNTPHost.h"
@@ -1015,7 +1016,7 @@ nsNNTPHost::AddGroup(const char *name,
         nsresult rv = FindGroup(containerName, &newsInfo);
         
 		if (NS_SUCCEEDED(rv)) {
-            rv = newsInfo->QueryInterface(nsINNTPCategoryContainer::GetIID(),
+            rv = newsInfo->QueryInterface(NS_GET_IID(nsINNTPCategoryContainer),
                                           getter_AddRefs(categoryContainer));
             
             // if we're not subscribed to container, do that instead.
@@ -1134,7 +1135,7 @@ nsNNTPHost::AddGroup(const char *name,
         // return an nsresult
         nsINNTPCategoryContainer *catContainer;
         rv =
-            newsInfo->QueryInterface(nsINNTPCategoryContainer::GetIID(),
+            newsInfo->QueryInterface(NS_GET_IID(nsINNTPCategoryContainer),
                                      (void **)&catContainer);
 		if (NS_FAILED(rv))
 		{
@@ -1187,7 +1188,7 @@ nsNNTPHost::SwitchNewsToCategoryContainer(nsINNTPNewsgroup *newsInfo)
 		nsINNTPCategoryContainer *newCatCont = nsnull;
         // formerly newsInfo->CloneIntoCategoryContainer();
 #if 0                           // not implemented yet
-        rv = nsComponentManager::CreateInstance(kNNTPCategoryContainerCID, nsnull, nsINNTPCategoryContainer::GetIID(), getter_AddRefs(newCatCont));
+        rv = nsComponentManager::CreateInstance(kNNTPCategoryContainerCID, nsnull, NS_GET_IID(nsINNTPCategoryContainer), getter_AddRefs(newCatCont));
         if (NS_FAILED(rv)) return nsnull;
         
         rv = newCatCont->Initialize(newsInfo);
@@ -1199,7 +1200,7 @@ nsNNTPHost::SwitchNewsToCategoryContainer(nsINNTPNewsgroup *newsInfo)
 
         nsIMsgFolder *newsFolder = getFolderFor(newsInfo);
 
-        rv = newsInfo->QueryInterface(nsIMsgFolder::GetIID(),
+        rv = newsInfo->QueryInterface(NS_GET_IID(nsIMsgFolder),
                                       (void **)&newsFolder);
         if (newsFolder) {
             nsIMsgFolder *catContFolder = getFolderFor(newCatCont);
@@ -1807,7 +1808,7 @@ nsNNTPHost::SetIsCategoryContainer(const char* name, PRBool value, nsMsgGroupRec
 			{
                 // change category container into a newsgroup
                 nsINNTPCategoryContainer *catCont;
-                rv = newsgroup->QueryInterface(nsINNTPCategoryContainer::GetIID(),
+                rv = newsgroup->QueryInterface(NS_GET_IID(nsINNTPCategoryContainer),
                                                (void **)&catCont);
 
 				if (NS_SUCCEEDED(rv))
@@ -2382,7 +2383,7 @@ nsNNTPHost::ReorderGroup(nsINNTPNewsgroup *groupToMove, nsINNTPNewsgroup *groupT
                 (void)infoList->CurrentItem(&hostInfoSupports);
                 
 				nsIMsgFolder *groupInHostInfo=nsnull;
-                rv = hostInfoSupports->QueryInterface(nsCOMTypeInfo<nsISupports>::GetIID(),
+                rv = hostInfoSupports->QueryInterface(NS_GET_IID(nsISupports),
                                                       (void **)&groupInHostInfo);
 #endif
 #ifdef HAVE_PANE
@@ -2408,7 +2409,7 @@ nsNNTPHost::ReorderGroup(nsINNTPNewsgroup *groupToMove, nsINNTPNewsgroup *groupT
 			{
 				m_groups->InsertElementAt(groupToMove, idxInData); // the index has to be the same, right?
                 nsISupports* groupSupports;
-                groupToMove->QueryInterface(nsCOMTypeInfo<nsISupports>::GetIID(),
+                groupToMove->QueryInterface(NS_GET_IID(nsISupports),
                                             (void **)&groupSupports);
 //XXX				infoList->InsertElementAt(groupSupports, idxInHostInfo);
                 NS_RELEASE(groupSupports);
@@ -2624,7 +2625,7 @@ nsNNTPHost::DisplaySubscribedGroup(nsINNTPNewsgroup *newsgroup,
 
     nsCOMPtr<nsINNTPNewsgroupList> newsgroupList;
     
-    rv = nsComponentManager::CreateInstance(kNNTPNewsgroupListCID, nsnull, nsINNTPNewsgroupList::GetIID(), getter_AddRefs(newsgroupList));
+    rv = nsComponentManager::CreateInstance(kNNTPNewsgroupListCID, nsnull, NS_GET_IID(nsINNTPNewsgroupList), getter_AddRefs(newsgroupList));
     if (NS_FAILED(rv)) return rv;
 
     char *name = nsnull;
@@ -2658,7 +2659,7 @@ nsIMsgFolder * \
 nsNNTPHost::getFolderFor(_type * _class) {\
    nsIMsgFolder* folder;\
    nsresult rv = \
-      _class->QueryInterface(nsIMsgFolder::GetIID(), (void **)&folder);\
+      _class->QueryInterface(NS_GET_IID(nsIMsgFolder), (void **)&folder);\
    if (NS_SUCCEEDED(rv)) return folder;\
    else return nsnull;\
 }\

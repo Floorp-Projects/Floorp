@@ -18,6 +18,7 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *   Pierre Phaneuf <pp@ludusdesign.com>
  */
 
 #include "msgCore.h"    // precompiled header...
@@ -31,7 +32,7 @@
 #include "nsIFolder.h"
 #include "nsIMsgIncomingServer.h"
 
-NS_IMPL_ISUPPORTS(nsPop3Sink, nsIPop3Sink::GetIID());
+NS_IMPL_ISUPPORTS(nsPop3Sink, NS_GET_IID(nsIPop3Sink));
 
 nsPop3Sink::nsPop3Sink()
 {

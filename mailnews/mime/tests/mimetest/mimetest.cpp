@@ -18,6 +18,7 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *   Pierre Phaneuf <pp@ludusdesign.com>
  */
 /*
   This program drives libmime to parse an RFC822 message and output the 
@@ -225,7 +226,7 @@ private:
 };
 
 //NS_IMPL_ISUPPORTS2(ConsoleOutputStreamListener, nsIOutputStream, nsIStreamListener);
-NS_IMPL_ISUPPORTS(ConsoleOutputStreamListener, nsIStreamListener::GetIID());
+NS_IMPL_ISUPPORTS(ConsoleOutputStreamListener, NS_GET_IID(nsIStreamListener));
 
 #define TAB_SPACES    2
 
@@ -389,7 +390,7 @@ FileInputStreamImpl::PumpFileStream()
     return NS_ERROR_FAILURE;
 }
 
-NS_IMPL_ISUPPORTS(FileInputStreamImpl, nsIInputStream::GetIID());
+NS_IMPL_ISUPPORTS(FileInputStreamImpl, NS_GET_IID(nsIInputStream));
 
 ////////////////////////////////////////////////////////////////////////////////////
 // End of FileInputStreamImpl()
@@ -527,7 +528,7 @@ DoRFC822toHTMLConversion(char *filename, int numArgs)
   // Create a mime parser (nsIStreamConverter)!
   nsCOMPtr<nsIStreamConverter> mimeParser;
   rv = nsComponentManager::CreateInstance(kStreamConverterCID, 
-                                          NULL, nsIStreamConverter::GetIID(), 
+                                          NULL, NS_GET_IID(nsIStreamConverter), 
                                           (void **) getter_AddRefs(mimeParser)); 
   if (NS_FAILED(rv) || !mimeParser)
   {

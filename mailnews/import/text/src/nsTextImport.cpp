@@ -14,6 +14,9 @@
  * Communications Corporation.  Portions created by Netscape are
  * Copyright (C) 1998 Netscape Communications Corporation.  All Rights
  * Reserved.
+ * 
+ * Contributor(s): 
+ *   Pierre Phaneuf <pp@ludusdesign.com>
  */
 
 
@@ -137,7 +140,7 @@ nsTextImport::~nsTextImport()
 
 
 
-NS_IMPL_ISUPPORTS(nsTextImport, nsIImportModule::GetIID());
+NS_IMPL_ISUPPORTS(nsTextImport, NS_GET_IID(nsIImportModule));
 
 
 NS_IMETHODIMP nsTextImport::GetName( PRUnichar **name)
@@ -258,7 +261,7 @@ ImportAddressImpl::~ImportAddressImpl()
 
 
 
-NS_IMPL_ISUPPORTS(ImportAddressImpl, nsIImportAddressBooks::GetIID());
+NS_IMPL_ISUPPORTS(ImportAddressImpl, NS_GET_IID(nsIImportAddressBooks));
 
 	
 NS_IMETHODIMP ImportAddressImpl::GetAutoFind(PRUnichar **addrDescription, PRBool *_retval)

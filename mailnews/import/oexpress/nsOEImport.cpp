@@ -18,6 +18,7 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *   Pierre Phaneuf <pp@ludusdesign.com>
  */
 
 
@@ -173,7 +174,7 @@ nsOEImport::~nsOEImport()
 
 
 
-NS_IMPL_ISUPPORTS(nsOEImport, nsIImportModule::GetIID());
+NS_IMPL_ISUPPORTS(nsOEImport, NS_GET_IID(nsIImportModule));
 
 
 NS_IMETHODIMP nsOEImport::GetName( PRUnichar **name)
@@ -317,7 +318,7 @@ ImportMailImpl::~ImportMailImpl()
 
 
 
-NS_IMPL_ISUPPORTS(ImportMailImpl, nsIImportMail::GetIID());
+NS_IMPL_ISUPPORTS(ImportMailImpl, NS_GET_IID(nsIImportMail));
 
 NS_IMETHODIMP ImportMailImpl::GetDefaultLocation( nsIFileSpec **ppLoc, PRBool *found, PRBool *userVerify)
 {
@@ -532,7 +533,7 @@ ImportAddressImpl::~ImportAddressImpl()
 
 
 
-NS_IMPL_ISUPPORTS(ImportAddressImpl, nsIImportAddressBooks::GetIID());
+NS_IMPL_ISUPPORTS(ImportAddressImpl, NS_GET_IID(nsIImportAddressBooks));
 
 	
 NS_IMETHODIMP ImportAddressImpl::GetAutoFind(PRUnichar **description, PRBool *_retval)

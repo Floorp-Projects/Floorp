@@ -18,6 +18,7 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *   Pierre Phaneuf <pp@ludusdesign.com>
  */
 
 #include "msgCore.h"    // precompiled header...
@@ -251,7 +252,7 @@ nsMsgFolderDataSource::QueryInterface(REFNSIID iid, void** result)
     return NS_ERROR_NULL_POINTER;
 
 	*result = nsnull;
-	if(iid.Equals(nsCOMTypeInfo<nsIFolderListener>::GetIID()))
+	if(iid.Equals(NS_GET_IID(nsIFolderListener)))
 	{
 		*result = NS_STATIC_CAST(nsIFolderListener*, this);
 		NS_ADDREF(this);
@@ -735,7 +736,7 @@ nsresult nsMsgFolderDataSource::OnItemAddedOrRemoved(nsISupports *parentItem, ns
 		return NS_OK;
 
 	//If it is a message
-	if(NS_SUCCEEDED(item->QueryInterface(nsCOMTypeInfo<nsIMessage>::GetIID(), getter_AddRefs(message))))
+	if(NS_SUCCEEDED(item->QueryInterface(NS_GET_IID(nsIMessage), getter_AddRefs(message))))
 	{
 		//If we're in a threaded view only do this if the view passed in is the thread view. Or if we're in 
 		//a non threaded view only do this if the view passed in is the flat view.
@@ -756,7 +757,7 @@ nsresult nsMsgFolderDataSource::OnItemAddedOrRemoved(nsISupports *parentItem, ns
 		}
 	}
 	//If we are doing this to a folder
-	else if(NS_SUCCEEDED(item->QueryInterface(nsCOMTypeInfo<nsIMsgFolder>::GetIID(), getter_AddRefs(folder))))
+	else if(NS_SUCCEEDED(item->QueryInterface(NS_GET_IID(nsIMsgFolder), getter_AddRefs(folder))))
 	{
 		nsCOMPtr<nsIRDFNode> itemNode(do_QueryInterface(item, &rv));
 		if(NS_SUCCEEDED(rv))
@@ -1394,7 +1395,7 @@ nsMsgFolderDataSource::createFolderChildNode(nsIMsgFolder *folder,
     nsCOMPtr<nsISupports> firstFolder;
     rv = subFolders->CurrentItem(getter_AddRefs(firstFolder));
     if (NS_SUCCEEDED(rv)) {
-      firstFolder->QueryInterface(nsCOMTypeInfo<nsIRDFResource>::GetIID(), (void**)target);
+      firstFolder->QueryInterface(NS_GET_IID(nsIRDFResource), (void**)target);
     }
   }
   return NS_FAILED(rv) ? NS_RDF_NO_VALUE : rv;
@@ -1416,7 +1417,7 @@ nsMsgFolderDataSource::createFolderMessageNode(nsIMsgFolder *folder,
 		rv = messages->GetNext(getter_AddRefs(firstMessage));
 		if (NS_SUCCEEDED(rv)) 
 		{
-			rv = firstMessage->QueryInterface(nsCOMTypeInfo<nsIRDFNode>::GetIID(), (void**)target);
+			rv = firstMessage->QueryInterface(NS_GET_IID(nsIRDFNode), (void**)target);
 		}
     }
   }

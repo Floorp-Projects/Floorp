@@ -18,6 +18,7 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *   Pierre Phaneuf <pp@ludusdesign.com>
  */
 
 #include "msgCore.h"
@@ -224,7 +225,7 @@ nsSmtpTestDriver::nsSmtpTestDriver(nsIEventQueue *queue)
 	InitializeTestDriver(); // prompts user for initialization information...
 
 	m_smtpService = nsnull;
-	nsServiceManager::GetService(kSmtpServiceCID, nsCOMTypeInfo<nsISmtpService>::GetIID(),
+	nsServiceManager::GetService(kSmtpServiceCID, NS_GET_IID(nsISmtpService),
                                  (nsISupports **)&m_smtpService); // XXX probably need shutdown listener here
 }
 
@@ -235,7 +236,7 @@ nsSmtpTestDriver::~nsSmtpTestDriver()
 	nsServiceManager::ReleaseService(kSmtpServiceCID, m_smtpService); // XXX probably need shutdown listener here
 }
 
-NS_IMPL_ISUPPORTS(nsSmtpTestDriver, nsCOMTypeInfo<nsIUrlListener>::GetIID())
+NS_IMPL_ISUPPORTS(nsSmtpTestDriver, NS_GET_IID(nsIUrlListener))
 
 nsresult nsSmtpTestDriver::RunDriver()
 {

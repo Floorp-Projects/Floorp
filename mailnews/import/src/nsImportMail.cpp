@@ -18,6 +18,7 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *   Pierre Phaneuf <pp@ludusdesign.com>
  */
 
 /*
@@ -186,7 +187,7 @@ nsresult NS_NewGenericMail(nsIImportGeneric** aImportGeneric)
 		return NS_ERROR_OUT_OF_MEMORY;
 
 	NS_ADDREF( pGen);
-	nsresult rv = pGen->QueryInterface( nsIImportGeneric::GetIID(), (void **)aImportGeneric);
+	nsresult rv = pGen->QueryInterface( NS_GET_IID(nsIImportGeneric), (void **)aImportGeneric);
 	NS_RELEASE( pGen);
     
     return( rv);
@@ -235,7 +236,7 @@ nsImportGenericMail::~nsImportGenericMail()
 
 
 
-NS_IMPL_ISUPPORTS(nsImportGenericMail, nsIImportGeneric::GetIID());
+NS_IMPL_ISUPPORTS(nsImportGenericMail, NS_GET_IID(nsIImportGeneric));
 
 
 NS_IMETHODIMP nsImportGenericMail::GetData(const char *dataId, nsISupports **_retval)
@@ -299,25 +300,25 @@ NS_IMETHODIMP nsImportGenericMail::SetData( const char *dataId, nsISupports *ite
 	if (!nsCRT::strcasecmp( dataId, "mailInterface")) {
 		NS_IF_RELEASE( m_pInterface);
 		if (item)
-			item->QueryInterface( nsIImportMail::GetIID(), (void **) &m_pInterface);
+			item->QueryInterface( NS_GET_IID(nsIImportMail), (void **) &m_pInterface);
 	}
 	if (!nsCRT::strcasecmp( dataId, "mailBoxes")) {
 		NS_IF_RELEASE( m_pMailboxes);
 		if (item)
-			item->QueryInterface( nsISupportsArray::GetIID(), (void **) &m_pMailboxes);
+			item->QueryInterface( NS_GET_IID(nsISupportsArray), (void **) &m_pMailboxes);
 	}
 	
 	if (!nsCRT::strcasecmp( dataId, "mailLocation")) {
 		NS_IF_RELEASE( m_pMailboxes);
 		NS_IF_RELEASE( m_pSrcLocation);
 		if (item)
-			item->QueryInterface( nsIFileSpec::GetIID(), (void **) &m_pSrcLocation);
+			item->QueryInterface( NS_GET_IID(nsIFileSpec), (void **) &m_pSrcLocation);
 	}
 	
 	if (!nsCRT::strcasecmp( dataId, "mailDestination")) {
 		NS_IF_RELEASE( m_pDestFolder);
 		if (item)
-			item->QueryInterface( nsIMsgFolder::GetIID(), (void **) &m_pDestFolder);
+			item->QueryInterface( NS_GET_IID(nsIMsgFolder), (void **) &m_pDestFolder);
 		m_deleteDestFolder = PR_FALSE;
 	}
 	
@@ -412,7 +413,7 @@ void nsImportGenericMail::GetDefaultDestination( void)
 			nsCOMPtr<nsISupports> subFolder;
 			rootFolder->GetChildNamed( pName, getter_AddRefs( subFolder));
 			if (subFolder) {
-				subFolder->QueryInterface( nsIMsgFolder::GetIID(), (void **) &m_pDestFolder);
+				subFolder->QueryInterface( NS_GET_IID(nsIMsgFolder), (void **) &m_pDestFolder);
 				if (m_pDestFolder)
 					m_deleteDestFolder = PR_TRUE;
 			}
@@ -796,7 +797,7 @@ ImportMailThread( void *stuff)
 	// Initialize the curFolder proxy object
 	NS_WITH_SERVICE( nsIProxyObjectManager, proxyMgr, kProxyObjectManagerCID, &rv);
 	if (NS_SUCCEEDED(rv)) {
-		rv = proxyMgr->GetProxyObject( NS_UI_THREAD_EVENTQ, nsIMsgFolder::GetIID(),
+		rv = proxyMgr->GetProxyObject( NS_UI_THREAD_EVENTQ, NS_GET_IID(nsIMsgFolder),
 										curFolder, PROXY_SYNC, getter_AddRefs( curProxy));
 
 		IMPORT_LOG1( "Proxy result for curFolder: 0x%lx\n", (long) rv);
@@ -834,7 +835,7 @@ ImportMailThread( void *stuff)
 						break;
 					}
 
-					rv = proxyMgr->GetProxyObject( NS_UI_THREAD_EVENTQ, nsIMsgFolder::GetIID(), 
+					rv = proxyMgr->GetProxyObject( NS_UI_THREAD_EVENTQ, NS_GET_IID(nsIMsgFolder), 
 													subFolder, PROXY_SYNC, getter_AddRefs( curProxy));
 					if (NS_FAILED( rv)) {
 						nsImportStringBundle::GetStringByID( IMPORT_ERROR_MB_NOPROXY, error);
@@ -849,7 +850,7 @@ ImportMailThread( void *stuff)
 					while ((newDepth < depth) && NS_SUCCEEDED( rv)) {
 						nsCOMPtr<nsIFolder> parFolder;
 						curProxy->GetParent( getter_AddRefs( parFolder));
-						rv = proxyMgr->GetProxyObject( NS_UI_THREAD_EVENTQ, nsIMsgFolder::GetIID(),
+						rv = proxyMgr->GetProxyObject( NS_UI_THREAD_EVENTQ, NS_GET_IID(nsIMsgFolder),
 														parFolder, PROXY_SYNC, getter_AddRefs( curProxy));
 						depth--;
 					}
@@ -1031,7 +1032,7 @@ PRBool nsImportGenericMail::GetAccount( nsIMsgFolder **ppFolder)
 	nsCOMPtr<nsIFolder>	rootFolder;
 	rv = server->GetRootFolder( getter_AddRefs( rootFolder));
 	if (NS_SUCCEEDED( rv) && (rootFolder != nsnull)) {
-		rv = rootFolder->QueryInterface( nsIMsgFolder::GetIID(), (void **)ppFolder);
+		rv = rootFolder->QueryInterface( NS_GET_IID(nsIMsgFolder), (void **)ppFolder);
 		if (NS_SUCCEEDED( rv)) {
 			IMPORT_LOG0( "****** CREATED NEW ACCOUNT FOR IMPORT\n");
 			return( PR_TRUE);
@@ -1122,7 +1123,7 @@ PRBool nsImportGenericMail::FindAccount( nsIMsgFolder **ppFolder)
 				nsCRT::free( pServerType);
 				rv = localServer->GetRootFolder( getter_AddRefs( rootFolder));
 				if (NS_SUCCEEDED( rv) && (rootFolder != nsnull)) {
-					rv = rootFolder->QueryInterface( nsIMsgFolder::GetIID(), (void **)ppFolder);
+					rv = rootFolder->QueryInterface( NS_GET_IID(nsIMsgFolder), (void **)ppFolder);
 					if (NS_SUCCEEDED( rv))
 						return( PR_TRUE);
 				}
@@ -1168,7 +1169,7 @@ PRBool nsImportGenericMail::FindAccount( nsIMsgFolder **ppFolder)
 							nsCRT::free( pType);
 							rv = server->GetRootFolder( getter_AddRefs( rootFolder));
 							if (NS_SUCCEEDED( rv) && (rootFolder != nsnull)) {   
-								rv = rootFolder->QueryInterface( nsIMsgFolder::GetIID(), (void **) ppFolder);
+								rv = rootFolder->QueryInterface( NS_GET_IID(nsIMsgFolder), (void **) ppFolder);
 								if (NS_SUCCEEDED( rv))
 									return( PR_TRUE);
 							}

@@ -18,6 +18,7 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *   Pierre Phaneuf <pp@ludusdesign.com>
  */
 
 #include "msgCore.h"    // precompiled header...
@@ -139,7 +140,7 @@ nsresult NS_MsgBuildSmtpUrl(nsIFileSpec * aFilePath,
 	nsresult rv = NS_OK;
 	nsCOMPtr <nsISmtpUrl> smtpUrl;
 
-	rv = nsComponentManager::CreateInstance(kCSmtpUrlCID, NULL, nsCOMTypeInfo<nsISmtpUrl>::GetIID(), getter_AddRefs(smtpUrl));
+	rv = nsComponentManager::CreateInstance(kCSmtpUrlCID, NULL, NS_GET_IID(nsISmtpUrl), getter_AddRefs(smtpUrl));
 
 	if (NS_SUCCEEDED(rv) && smtpUrl)
 	{
@@ -159,7 +160,7 @@ nsresult NS_MsgBuildSmtpUrl(nsIFileSpec * aFilePath,
 			url->RegisterListener(aUrlListener);
 			PR_Free(urlSpec);
 		}
-		rv = smtpUrl->QueryInterface(nsCOMTypeInfo<nsIURI>::GetIID(), (void **) aUrl);
+		rv = smtpUrl->QueryInterface(NS_GET_IID(nsIURI), (void **) aUrl);
 	 }
 
 	 return rv;

@@ -18,6 +18,7 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *   Pierre Phaneuf <pp@ludusdesign.com>
  */
 
 #include "msgCore.h"
@@ -53,11 +54,11 @@ NS_IMETHODIMP nsMsgDBFolder::QueryInterface(REFNSIID aIID, void** aInstancePtr)
 {
 	if (!aInstancePtr) return NS_ERROR_NULL_POINTER;
 	*aInstancePtr = nsnull;
-	if (aIID.Equals(nsCOMTypeInfo<nsIDBChangeListener>::GetIID()))
+	if (aIID.Equals(NS_GET_IID(nsIDBChangeListener)))
 	{
 		*aInstancePtr = NS_STATIC_CAST(nsIDBChangeListener*, this);
 	}              
-	else if (aIID.Equals(nsCOMTypeInfo<nsIUrlListener>::GetIID()))
+	else if (aIID.Equals(NS_GET_IID(nsIUrlListener)))
 	{
 		*aInstancePtr = NS_STATIC_CAST(nsIUrlListener*, this);
 	}              
@@ -576,7 +577,7 @@ nsresult nsMsgDBFolder::OnKeyAddedOrDeleted(nsMsgKey aKeyChanged, nsMsgKey  aPar
 
 		nsCOMPtr<nsISupports> msgSupports(do_QueryInterface(message));
 		nsCOMPtr<nsISupports> folderSupports;
-		rv = QueryInterface(nsCOMTypeInfo<nsISupports>::GetIID(), getter_AddRefs(folderSupports));
+		rv = QueryInterface(NS_GET_IID(nsISupports), getter_AddRefs(folderSupports));
 		if(msgSupports && NS_SUCCEEDED(rv) && doFlat)
 		{
 			if(added)

@@ -18,6 +18,7 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *   Pierre Phaneuf <pp@ludusdesign.com>
  */
 
 /*
@@ -466,7 +467,7 @@ PRBool nsOutlookMail::WriteAttachment( nsIFileSpec *pDest, CMapiMessage *pMsg)
 
 	if (bResult) {
 		nsCOMPtr<nsIImportMimeEncode> encoder;
-		rv = nsComponentManager::CreateInstance( kImportMimeEncodeCID, nsnull, nsIImportMimeEncode::GetIID(), getter_AddRefs( encoder));
+		rv = nsComponentManager::CreateInstance( kImportMimeEncodeCID, nsnull, NS_GET_IID(nsIImportMimeEncode), getter_AddRefs( encoder));
 		if (NS_FAILED( rv)) {
 			IMPORT_LOG0( "*** Error creating mime encoder\n");
 			return( PR_FALSE);

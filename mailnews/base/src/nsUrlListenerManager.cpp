@@ -18,6 +18,7 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *   Pierre Phaneuf <pp@ludusdesign.com>
  */
 
 #include "msgCore.h" // for pre-compiled headers...
@@ -51,7 +52,7 @@ void nsUrlListenerManager::ReleaseListeners()
 	}
 }
 
-NS_IMPL_THREADSAFE_ISUPPORTS(nsUrlListenerManager, nsCOMTypeInfo<nsIUrlListenerManager>::GetIID());
+NS_IMPL_THREADSAFE_ISUPPORTS(nsUrlListenerManager, NS_GET_IID(nsIUrlListenerManager));
 
 nsresult nsUrlListenerManager::RegisterListener(nsIUrlListener * aUrlListener)
 {

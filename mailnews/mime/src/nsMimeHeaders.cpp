@@ -18,6 +18,7 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *   Pierre Phaneuf <pp@ludusdesign.com>
  */
 
 #include "msgCore.h"    // precompiled header...
@@ -36,7 +37,7 @@ nsMimeHeaders::~nsMimeHeaders()
 		MimeHeaders_free(mHeaders);
 }
 
-NS_IMPL_ISUPPORTS(nsMimeHeaders, nsCOMTypeInfo<nsIMimeHeaders>::GetIID())
+NS_IMPL_ISUPPORTS(nsMimeHeaders, NS_GET_IID(nsIMimeHeaders))
 
 nsresult nsMimeHeaders::Initialize(const char * aAllHeaders)
 {

@@ -18,6 +18,7 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *   Pierre Phaneuf <pp@ludusdesign.com>
  */ 
 
 // as does this
@@ -242,7 +243,7 @@ char * nsMsgI18NEncodeMimePartIIStr(const char *header, const char *charset, PRB
   char *encodedString = nsnull;
   nsIMimeConverter *converter;
   nsresult res = nsComponentManager::CreateInstance(kCMimeConverterCID, nsnull, 
-                                           nsCOMTypeInfo<nsIMimeConverter>::GetIID(), (void **)&converter);
+                                           NS_GET_IID(nsIMimeConverter), (void **)&converter);
   if (NS_SUCCEEDED(res) && nsnull != converter) {
     res = converter->EncodeMimePartIIStr_UTF8(header, charset, kMIME_ENCODED_WORD_SIZE, &encodedString);
     NS_RELEASE(converter);
@@ -255,7 +256,7 @@ nsresult nsMsgI18NDecodeMimePartIIStr(const nsString& header, nsString& charset,
 {
   nsIMimeConverter *converter;
   nsresult res = nsComponentManager::CreateInstance(kCMimeConverterCID, nsnull, 
-                                                    nsCOMTypeInfo<nsIMimeConverter>::GetIID(), (void **)&converter);
+                                                    NS_GET_IID(nsIMimeConverter), (void **)&converter);
   if (NS_SUCCEEDED(res) && nsnull != converter) {
     res = converter->DecodeMimePartIIStr(header, charset, decodedString, eatContinuations);
     NS_RELEASE(converter);
@@ -373,7 +374,7 @@ nsresult nsMsgI18NConvertToEntity(const nsString& inString, nsString* outString)
   outString->SetString("");
   nsCOMPtr <nsIEntityConverter> entityConv;
   res = nsComponentManager::CreateInstance(kEntityConverterCID, NULL, 
-                                           nsIEntityConverter::GetIID(), getter_AddRefs(entityConv));
+                                           NS_GET_IID(nsIEntityConverter), getter_AddRefs(entityConv));
   if(NS_SUCCEEDED(res)) {
     PRUnichar *entities = NULL;
     res = entityConv->ConvertToEntities(inString.GetUnicode(), nsIEntityConverter::html40Latin1, &entities);
@@ -424,7 +425,7 @@ nsresult nsMsgI18NSaveAsCharset(const char* contentType, const char *charset, co
 
   nsCOMPtr <nsISaveAsCharset> aConv;  // charset converter plus entity, NCR generation
   res = nsComponentManager::CreateInstance(kSaveAsCharsetCID, NULL, 
-                                           nsISaveAsCharset::GetIID(), getter_AddRefs(aConv));
+                                           NS_GET_IID(nsISaveAsCharset), getter_AddRefs(aConv));
   if(NS_SUCCEEDED(res)) {
     // attribute: 
     // html text - charset conv then fallback to entity or NCR

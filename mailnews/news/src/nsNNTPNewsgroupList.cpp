@@ -18,6 +18,7 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *   Pierre Phaneuf <pp@ludusdesign.com>
  */
 
 /*
@@ -101,7 +102,7 @@ nsNNTPNewsgroupList::~nsNNTPNewsgroupList()
 	CleanUp();
 }
 
-NS_IMPL_ISUPPORTS(nsNNTPNewsgroupList, nsINNTPNewsgroupList::GetIID());
+NS_IMPL_ISUPPORTS(nsNNTPNewsgroupList, NS_GET_IID(nsINNTPNewsgroupList));
 
 
 nsresult
@@ -185,7 +186,7 @@ nsNNTPNewsgroupList::GetDatabase(const char *uri, nsIMsgDatabase **db)
         nsresult newsDBOpen = NS_OK;
         nsCOMPtr <nsIMsgDatabase> newsDBFactory;
 
-        rv = nsComponentManager::CreateInstance(kCNewsDB, nsnull, nsIMsgDatabase::GetIID(), getter_AddRefs(newsDBFactory));
+        rv = nsComponentManager::CreateInstance(kCNewsDB, nsnull, NS_GET_IID(nsIMsgDatabase), getter_AddRefs(newsDBFactory));
         if (NS_SUCCEEDED(rv) && newsDBFactory) {
 				nsCOMPtr <nsIFileSpec> dbFileSpec;
 				NS_NewFileSpecWithSpec(path, getter_AddRefs(dbFileSpec));
@@ -386,7 +387,7 @@ nsNNTPNewsgroupList::GetRangeOfArtsToDownload(
 		
 	// QI to get the nntp incoming msg server
 	nsCOMPtr<nsINntpIncomingServer> nntpServer;
-	rv = server->QueryInterface(nsINntpIncomingServer::GetIID(), getter_AddRefs(nntpServer));
+	rv = server->QueryInterface(NS_GET_IID(nsINntpIncomingServer), getter_AddRefs(nntpServer));
 	if (NS_FAILED(rv)) return rv;
 
 	/* Determine if we only want to get just new articles or more messages.

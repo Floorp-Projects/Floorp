@@ -18,6 +18,7 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *   Pierre Phaneuf <pp@ludusdesign.com>
  */
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -234,7 +235,7 @@ nsresult nsMailboxTestDriver::OnStopRunningUrl(nsIURI * aUrl, nsresult aExitCode
 	{
 		// query it for a mailnews interface for now....
 		nsIMsgMailNewsUrl * mailUrl = nsnull;
-		rv = aUrl->QueryInterface(nsIMsgMailNewsUrl::GetIID(), (void **) mailUrl);
+		rv = aUrl->QueryInterface(NS_GET_IID(nsIMsgMailNewsUrl), (void **) mailUrl);
 		if (NS_SUCCEEDED(rv))
 		{
 			mailUrl->UnRegisterListener(this);
@@ -253,13 +254,13 @@ NS_IMETHODIMP nsMailboxTestDriver::QueryInterface(const nsIID &aIID, void** aIns
     if (NULL == aInstancePtr)
         return NS_ERROR_NULL_POINTER;
  
-    if (aIID.Equals(nsCOMTypeInfo<nsIStreamListener>::GetIID()) || aIID.Equals(nsCOMTypeInfo<nsISupports>::GetIID())) 
+    if (aIID.Equals(NS_GET_IID(nsIStreamListener)) || aIID.Equals(NS_GET_IID(nsISupports))) 
 	{
         *aInstancePtr = (void*) ((nsIStreamListener*)this);
         NS_ADDREF_THIS();
         return NS_OK;
     }
-    if (aIID.Equals(nsCOMTypeInfo<nsIUrlListener>::GetIID())) 
+    if (aIID.Equals(NS_GET_IID(nsIUrlListener))) 
 	{
         *aInstancePtr = (void*) ((nsIUrlListener*)this);
         NS_ADDREF_THIS();
@@ -423,7 +424,7 @@ nsIMsgDatabase * nsMailboxTestDriver::OpenDB(nsFileSpec filePath)
 {
 	nsIMsgDatabase * db;
 	nsCOMPtr<nsIMsgDatabase> mailDB;
-	nsresult rv = nsComponentManager::CreateInstance(kCMailDB, nsnull, nsCOMTypeInfo<nsIMsgDatabase>::GetIID(), (void **) getter_AddRefs(mailDB));
+	nsresult rv = nsComponentManager::CreateInstance(kCMailDB, nsnull, NS_GET_IID(nsIMsgDatabase), (void **) getter_AddRefs(mailDB));
 	if (NS_SUCCEEDED(rv) && mailDB)
 	{
 		nsCOMPtr <nsIFileSpec> dbFileSpec;
@@ -501,7 +502,7 @@ nsresult nsMailboxTestDriver::OnDisplayMessage(PRBool copyMessage)
 			if (NS_SUCCEEDED(rv) && messageService)
 			{
 				nsISupports * asupport = nsnull;
-				QueryInterface(nsCOMTypeInfo<nsISupports>::GetIID(), (void **) asupport);
+				QueryInterface(NS_GET_IID(nsISupports), (void **) asupport);
 				messageService->DisplayMessage(uri, asupport, nsnull, nsnull, nsnull);
 				ReleaseMessageServiceFromURI(uri, messageService);
 			}
@@ -552,7 +553,7 @@ nsresult nsMailboxTestDriver::OpenMailbox()
 		nsIURI * url = nsnull;
 		mailboxService->ParseMailbox(nsnull, filePath, m_mailboxParser, this /* register self as url listener */, &url);
 		if (url)
-			url->QueryInterface(nsIMailboxUrl::GetIID(), (void **) &m_url);
+			url->QueryInterface(NS_GET_IID(nsIMailboxUrl), (void **) &m_url);
 		NS_IF_RELEASE(url);
 	}
 	else
@@ -637,7 +638,7 @@ int main()
     // Create the Event Queue for this thread...
     nsIEventQueueService* pEventQService;
     result = nsServiceManager::GetService(kEventQueueServiceCID,
-                                          nsIEventQueueService::GetIID(),
+                                          NS_GET_IID(nsIEventQueueService),
                                           (nsISupports**)&pEventQService);
 	if (NS_FAILED(result)) return result;
 
@@ -654,7 +655,7 @@ int main()
 	// that gets passed into the mailbox test driver and it binds your parser to the mailbox url you run
 	// through the driver.
 	nsCOMPtr<nsIStreamListener> mailboxParser = nsnull;
-	nsComponentManager::CreateInstance(kCMailboxParser, nsnull, nsIStreamListener::GetIID(), getter_AddRefs(mailboxParser));
+	nsComponentManager::CreateInstance(kCMailboxParser, nsnull, NS_GET_IID(nsIStreamListener), getter_AddRefs(mailboxParser));
    
 	// okay, everything is set up, now we just need to create a test driver and run it...
 	nsMailboxTestDriver * driver = new nsMailboxTestDriver(queue, mailboxParser);

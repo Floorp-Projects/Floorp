@@ -18,6 +18,7 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *   Pierre Phaneuf <pp@ludusdesign.com>
  */
 
 #include "msgCore.h"    // precompiled header...
@@ -50,8 +51,8 @@ nsMsgImapMailFolder::QueryInterface(REFNSIID iid, void** result)
 		return NS_ERROR_NULL_POINTER;
 
 	*result = nsnull;
-	if (iid.Equals(nsCOMTypeInfo<nsIMsgImapMailFolder>::GetIID()) ||
-		iid.Equals(nsCOMTypeInfo<nsISupports>::GetIID()))
+	if (iid.Equals(NS_GET_IID(nsIMsgImapMailFolder)) ||
+		iid.Equals(NS_GET_IID(nsISupports)))
 	{
 		*result = NS_STATIC_CAST(nsIMsgImapMailFolder*, this);
 		AddRef();

@@ -18,6 +18,7 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *   Pierre Phaneuf <pp@ludusdesign.com>
  */
 
 #include "msgCore.h"    // precompiled header...
@@ -546,7 +547,7 @@ nsresult NS_NewHeaderParser(nsIMsgHeaderParser ** aInstancePtrResult)
 	{
 		nsMsgHeaderParser* parser = new nsMsgHeaderParser();
 		if (parser)
-			return parser->QueryInterface(nsIMsgHeaderParser::GetIID(), (void **)aInstancePtrResult);
+			return parser->QueryInterface(NS_GET_IID(nsIMsgHeaderParser), (void **)aInstancePtrResult);
 		else
 			return NS_ERROR_OUT_OF_MEMORY; /* we couldn't allocate the object */
 	}

@@ -18,6 +18,7 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *   Pierre Phaneuf <pp@ludusdesign.com>
  */
 
 // sorry, this has to be before the pre-compiled header
@@ -80,7 +81,7 @@ void nsMailboxProtocol::Initialize(nsIURI * aURL)
 	nsresult rv = NS_OK;
 	if (aURL)
 	{
-		rv = aURL->QueryInterface(nsIMailboxUrl::GetIID(), (void **) getter_AddRefs(m_runningUrl));
+		rv = aURL->QueryInterface(NS_GET_IID(nsIMailboxUrl), (void **) getter_AddRefs(m_runningUrl));
 		if (NS_SUCCEEDED(rv) && m_runningUrl)
 		{
 			rv = m_runningUrl->GetMailboxAction(&m_mailboxAction); 

@@ -18,6 +18,7 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *   Pierre Phaneuf <pp@ludusdesign.com>
  */
 
 #define NS_IMPL_IDS
@@ -116,7 +117,7 @@ NS_IMETHODIMP nsMsgNewsFolder::QueryInterface(REFNSIID aIID, void** aInstancePtr
 {
 	if (!aInstancePtr) return NS_ERROR_NULL_POINTER;
 	*aInstancePtr = nsnull;
-	if (aIID.Equals(nsIMsgNewsFolder::GetIID()))
+	if (aIID.Equals(NS_GET_IID(nsIMsgNewsFolder)))
 	{
 		*aInstancePtr = NS_STATIC_CAST(nsIMsgNewsFolder*, this);
 	}              
@@ -152,7 +153,7 @@ nsMsgNewsFolder::CreateSubFolders(nsFileSpec &path)
     if (NS_FAILED(rv)) return rv;
   
     nsCOMPtr<nsINntpIncomingServer> nntpServer;
-    rv = server->QueryInterface(nsINntpIncomingServer::GetIID(),
+    rv = server->QueryInterface(NS_GET_IID(nsINntpIncomingServer),
                                 getter_AddRefs(nntpServer));
     if (NS_FAILED(rv)) return rv;
     
@@ -341,7 +342,7 @@ nsresult nsMsgNewsFolder::GetDatabase(nsIMsgWindow *aMsgWindow)
 		nsresult folderOpen = NS_OK;
 		nsCOMPtr <nsIMsgDatabase> newsDBFactory;
 
-		rv = nsComponentManager::CreateInstance(kCNewsDB, nsnull, nsIMsgDatabase::GetIID(), getter_AddRefs(newsDBFactory));
+		rv = nsComponentManager::CreateInstance(kCNewsDB, nsnull, NS_GET_IID(nsIMsgDatabase), getter_AddRefs(newsDBFactory));
 		if (NS_SUCCEEDED(rv) && newsDBFactory)
 		{
 			folderOpen = newsDBFactory->Open(pathSpec, PR_TRUE, PR_FALSE, getter_AddRefs(mDatabase));
@@ -500,7 +501,7 @@ NS_IMETHODIMP nsMsgNewsFolder::CreateSubfolder(const char *newsgroupname)
 	rv = AddNewsgroupToNewsrcFile(newsgroupname);
 	if (NS_FAILED(rv)) return rv;
 
-	rv = nsComponentManager::CreateInstance(kCNewsDB, nsnull, nsIMsgDatabase::GetIID(), getter_AddRefs(newsDBFactory));
+	rv = nsComponentManager::CreateInstance(kCNewsDB, nsnull, NS_GET_IID(nsIMsgDatabase), getter_AddRefs(newsDBFactory));
 	if (NS_SUCCEEDED(rv) && newsDBFactory) {
 		nsCOMPtr <nsIFileSpec> dbFileSpec;
 		NS_NewFileSpecWithSpec(path, getter_AddRefs(dbFileSpec));
@@ -520,7 +521,7 @@ NS_IMETHODIMP nsMsgNewsFolder::CreateSubfolder(const char *newsgroupname)
 	{
 		nsCOMPtr<nsISupports> childSupports(do_QueryInterface(child));
 		nsCOMPtr<nsISupports> folderSupports;
-		rv = QueryInterface(nsCOMTypeInfo<nsISupports>::GetIID(), getter_AddRefs(folderSupports));
+		rv = QueryInterface(NS_GET_IID(nsISupports), getter_AddRefs(folderSupports));
 		if(childSupports && NS_SUCCEEDED(rv))
 		{
 
@@ -569,7 +570,7 @@ NS_IMETHODIMP nsMsgNewsFolder::GetAbbreviatedName(PRUnichar * *aAbbreviatedName)
 	if (NS_FAILED(rv)) return rv;
 
 	nsCOMPtr<nsINntpIncomingServer> nntpServer;
-	rv = server->QueryInterface(nsINntpIncomingServer::GetIID(),
+	rv = server->QueryInterface(NS_GET_IID(nsINntpIncomingServer),
 				      getter_AddRefs(nntpServer));
 
 	if (NS_FAILED(rv)) return rv; 
@@ -681,7 +682,7 @@ nsresult  nsMsgNewsFolder::GetDBFolderInfoAndDB(nsIDBFolderInfo **folderInfo, ns
 	nsCOMPtr <nsIMsgDatabase> newsDBFactory;
 	nsIMsgDatabase *newsDB;
 
-	nsresult rv = nsComponentManager::CreateInstance(kCNewsDB, nsnull, nsIMsgDatabase::GetIID(), getter_AddRefs(newsDBFactory));
+	nsresult rv = nsComponentManager::CreateInstance(kCNewsDB, nsnull, NS_GET_IID(nsIMsgDatabase), getter_AddRefs(newsDBFactory));
 	if (NS_SUCCEEDED(rv) && newsDBFactory) {
 		openErr = newsDBFactory->Open(mPath, PR_FALSE, PR_FALSE, (nsIMsgDatabase **) &newsDB);
 	}
@@ -847,7 +848,7 @@ NS_IMETHODIMP nsMsgNewsFolder::GetNewMessages(nsIMsgWindow *aWindow)
   if (NS_FAILED(rv)) return rv;
   
   nsCOMPtr<nsINntpIncomingServer> nntpServer;
-  rv = server->QueryInterface(nsINntpIncomingServer::GetIID(),
+  rv = server->QueryInterface(NS_GET_IID(nsINntpIncomingServer),
                               getter_AddRefs(nntpServer));
   if (NS_FAILED(rv)) return rv;
   

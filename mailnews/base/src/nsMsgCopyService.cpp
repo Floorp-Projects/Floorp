@@ -18,6 +18,7 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *   Pierre Phaneuf <pp@ludusdesign.com>
  */
 
 #include "nsMsgCopyService.h"
@@ -290,7 +291,7 @@ nsMsgCopyService::FindRequest(nsISupports* aSupport,
     return copyRequest;
 }
 
-NS_IMPL_THREADSAFE_ISUPPORTS(nsMsgCopyService, nsCOMTypeInfo<nsIMsgCopyService>::GetIID())
+NS_IMPL_THREADSAFE_ISUPPORTS(nsMsgCopyService, NS_GET_IID(nsIMsgCopyService))
 
 NS_IMETHODIMP
 nsMsgCopyService::CopyMessages(nsIMsgFolder* srcFolder, /* UI src folder */

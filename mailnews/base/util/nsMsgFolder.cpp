@@ -18,6 +18,7 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *   Pierre Phaneuf <pp@ludusdesign.com>
  */
 
 #include "msgCore.h"    // precompiled header...
@@ -134,8 +135,8 @@ NS_IMETHODIMP nsMsgFolder::QueryInterface(REFNSIID aIID, void** aInstancePtr)
 {
 	if (!aInstancePtr) return NS_ERROR_NULL_POINTER;
 	*aInstancePtr = nsnull;
-	if (aIID.Equals(nsCOMTypeInfo<nsIMsgFolder>::GetIID()) ||
-      aIID.Equals(nsCOMTypeInfo<nsIFolder>::GetIID()))
+	if (aIID.Equals(NS_GET_IID(nsIMsgFolder)) ||
+      aIID.Equals(NS_GET_IID(nsIFolder)))
 	{
 		*aInstancePtr = NS_STATIC_CAST(nsIMsgFolder*, this);
 	}              
@@ -958,7 +959,7 @@ NS_IMETHODIMP nsMsgFolder::PropagateDelete(nsIMsgFolder *folder, PRBool deleteSt
 					child->SetParent(nsnull);
 					nsCOMPtr<nsISupports> childSupports(do_QueryInterface(child));
 					nsCOMPtr<nsISupports> folderSupports;
-					rv = QueryInterface(nsCOMTypeInfo<nsISupports>::GetIID(), getter_AddRefs(folderSupports));
+					rv = QueryInterface(NS_GET_IID(nsISupports), getter_AddRefs(folderSupports));
 					if(childSupports && NS_SUCCEEDED(rv))
 						NotifyItemDeleted(folderSupports, childSupports, "folderView");
 					break;
@@ -998,7 +999,7 @@ NS_IMETHODIMP nsMsgFolder::RecursiveDelete(PRBool deleteStorage)
 			child->SetParent(nsnull);
 			nsCOMPtr<nsISupports> childSupports(do_QueryInterface(child));
 			nsCOMPtr<nsISupports> folderSupports;
-			rv = QueryInterface(nsCOMTypeInfo<nsISupports>::GetIID(), getter_AddRefs(folderSupports));
+			rv = QueryInterface(NS_GET_IID(nsISupports), getter_AddRefs(folderSupports));
 			if(childSupports && NS_SUCCEEDED(rv))
 				NotifyItemDeleted(folderSupports, childSupports, "folderView");
 		}
@@ -1727,7 +1728,7 @@ NS_IMETHODIMP nsMsgFolder::SetBiffState(PRUint32 aBiffState)
 		PRUint32 oldBiffState = mBiffState;
 		mBiffState = aBiffState;
 		nsCOMPtr<nsISupports> supports;
-		if(NS_SUCCEEDED(QueryInterface(nsCOMTypeInfo<nsISupports>::GetIID(), getter_AddRefs(supports))))
+		if(NS_SUCCEEDED(QueryInterface(NS_GET_IID(nsISupports), getter_AddRefs(supports))))
 			NotifyPropertyFlagChanged(supports, kBiffStateAtom, oldBiffState, mBiffState);
 	}
 	return NS_OK;
@@ -1809,7 +1810,7 @@ NS_IMETHODIMP nsMsgFolder::GetRootFolder(nsIMsgFolder * *aRootFolder)
 	if (NS_FAILED(rv)) return rv;
 	if (!aRoot) return NS_ERROR_NULL_POINTER;
 
-	return aRoot->QueryInterface(nsCOMTypeInfo<nsIMsgFolder>::GetIID(), (void**)aRootFolder);
+	return aRoot->QueryInterface(NS_GET_IID(nsIMsgFolder), (void**)aRootFolder);
 }
 
 NS_IMETHODIMP
@@ -1932,7 +1933,7 @@ nsMsgFolder::NotifyPropertyChanged(nsIAtom *property,
                                    char *oldValue, char* newValue)
 {
 	nsCOMPtr<nsISupports> supports;
-	if(NS_SUCCEEDED(QueryInterface(nsCOMTypeInfo<nsISupports>::GetIID(), getter_AddRefs(supports))))
+	if(NS_SUCCEEDED(QueryInterface(NS_GET_IID(nsISupports), getter_AddRefs(supports))))
 	{
 		PRInt32 i;
 		for(i = 0; i < mListeners->Count(); i++)
@@ -1985,7 +1986,7 @@ nsMsgFolder::NotifyUnicharPropertyChanged(nsIAtom *property,
 nsresult nsMsgFolder::NotifyIntPropertyChanged(nsIAtom *property, PRInt32 oldValue, PRInt32 newValue)
 {
 	nsCOMPtr<nsISupports> supports;
-	if(NS_SUCCEEDED(QueryInterface(nsCOMTypeInfo<nsISupports>::GetIID(), getter_AddRefs(supports))))
+	if(NS_SUCCEEDED(QueryInterface(NS_GET_IID(nsISupports), getter_AddRefs(supports))))
 	{
 		PRInt32 i;
 		for(i = 0; i < mListeners->Count(); i++)
@@ -2012,7 +2013,7 @@ nsMsgFolder::NotifyBoolPropertyChanged(nsIAtom* property,
                                        PRBool oldValue, PRBool newValue)
 {
 	nsCOMPtr<nsISupports> supports;
-	if(NS_SUCCEEDED(QueryInterface(nsCOMTypeInfo<nsISupports>::GetIID(), getter_AddRefs(supports))))
+	if(NS_SUCCEEDED(QueryInterface(NS_GET_IID(nsISupports), getter_AddRefs(supports))))
 	{
 		PRInt32 i;
 		for(i = 0; i < mListeners->Count(); i++)

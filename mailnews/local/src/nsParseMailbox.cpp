@@ -18,6 +18,7 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *   Pierre Phaneuf <pp@ludusdesign.com>
  */
 
 #include "msgCore.h"
@@ -113,7 +114,7 @@ NS_IMETHODIMP nsMsgMailboxParser::OnStartRequest(nsIChannel * /* aChannel */, ns
 			UpdateStatusText(LOCAL_STATUS_SELECTING_MAILBOX);
 			
 			nsCOMPtr<nsIMsgDatabase> mailDB;
-			rv = nsComponentManager::CreateInstance(kCMailDB, nsnull, nsIMsgDatabase::GetIID(), (void **) getter_AddRefs(mailDB));
+			rv = nsComponentManager::CreateInstance(kCMailDB, nsnull, NS_GET_IID(nsIMsgDatabase), (void **) getter_AddRefs(mailDB));
 			if (NS_SUCCEEDED(rv) && mailDB)
 			{
 				nsCOMPtr <nsIFileSpec> dbFileSpec;
@@ -419,7 +420,7 @@ PRInt32 nsMsgMailboxParser::HandleLine(char *line, PRUint32 lineLength)
 
 }
 
-NS_IMPL_ISUPPORTS(nsParseMailMessageState, nsIMsgParseMailMsgState::GetIID());
+NS_IMPL_ISUPPORTS(nsParseMailMessageState, NS_GET_IID(nsIMsgParseMailMsgState));
 
 nsParseMailMessageState::nsParseMailMessageState()
 {
@@ -1401,7 +1402,7 @@ nsParseNewMailState::Init(nsIFolder *rootFolder, nsFileSpec &folder, nsIOFileStr
 	// the new mail parser isn't going to get the stream input, it seems, so we can't use
 	// the OnStartRequest mechanism the mailbox parser uses. So, let's open the db right now.
 	nsCOMPtr<nsIMsgDatabase> mailDB;
-	rv = nsComponentManager::CreateInstance(kCMailDB, nsnull, nsIMsgDatabase::GetIID(), (void **) getter_AddRefs(mailDB));
+	rv = nsComponentManager::CreateInstance(kCMailDB, nsnull, NS_GET_IID(nsIMsgDatabase), (void **) getter_AddRefs(mailDB));
 	if (NS_SUCCEEDED(rv) && mailDB)
 	{
 		nsCOMPtr <nsIFileSpec> dbFileSpec;
@@ -1845,7 +1846,7 @@ nsresult nsParseNewMailState::MoveIncorporatedMessage(nsIMsgDBHdr *mailHdr,
 
 	nsCOMPtr<nsIMsgDatabase> mailDBFactory;
 	nsCOMPtr<nsIMsgDatabase> destMailDB;
-	nsresult rv = nsComponentManager::CreateInstance(kCMailDB, nsnull, nsIMsgDatabase::GetIID(), (void **) getter_AddRefs(mailDBFactory));
+	nsresult rv = nsComponentManager::CreateInstance(kCMailDB, nsnull, NS_GET_IID(nsIMsgDatabase), (void **) getter_AddRefs(mailDBFactory));
 	if (NS_SUCCEEDED(rv) && mailDBFactory)
 	{
 		nsCOMPtr <nsIFileSpec> dbFileSpec;

@@ -18,6 +18,7 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *   Pierre Phaneuf <pp@ludusdesign.com>
  */
 
 #include "msgCore.h"    // precompiled header...
@@ -58,7 +59,7 @@ nsresult nsMailboxService::ParseMailbox(nsIMsgWindow *aMsgWindow, nsFileSpec& aM
 
     rv = nsComponentManager::CreateInstance(kCMailboxUrl,
                                             nsnull,
-                                            nsIMailboxUrl::GetIID(),
+                                            NS_GET_IID(nsIMailboxUrl),
                                             (void **) getter_AddRefs(mailboxurl));
 	if (NS_SUCCEEDED(rv) && mailboxurl)
 	{
@@ -138,7 +139,7 @@ nsresult nsMailboxService::FetchMessage(const char* aMessageURI,
 	}
 
 	if (aURL)
-		mailboxurl->QueryInterface(nsIURI::GetIID(), (void **) aURL);
+		mailboxurl->QueryInterface(NS_GET_IID(nsIURI), (void **) aURL);
 
   return rv;
 }
@@ -180,7 +181,7 @@ nsMailboxService::SaveMessageToDisk(const char *aMessageURI,
 	}
 
 	if (aURL)
-		mailboxurl->QueryInterface(nsIURI::GetIID(), (void **) aURL);
+		mailboxurl->QueryInterface(NS_GET_IID(nsIURI), (void **) aURL);
 	
 	return rv;
 }
@@ -234,7 +235,7 @@ nsresult nsMailboxService::PrepareMessageUrl(const char * aSrcMsgMailboxURI, nsI
 	nsresult rv = NS_OK;
 	rv = nsComponentManager::CreateInstance(kCMailboxUrl,
                                             nsnull,
-                                            nsIMailboxUrl::GetIID(),
+                                            NS_GET_IID(nsIMailboxUrl),
                                             (void **) aMailboxUrl);
 
 	if (NS_SUCCEEDED(rv) && aMailboxUrl && *aMailboxUrl)
@@ -304,7 +305,7 @@ NS_IMETHODIMP nsMailboxService::NewURI(const char *aSpec, nsIURI *aBaseURI, nsIU
 	nsresult rv = NS_OK;
 	rv = nsComponentManager::CreateInstance(kCMailboxUrl,
                                             nsnull,
-                                            nsIMailboxUrl::GetIID(),
+                                            NS_GET_IID(nsIMailboxUrl),
                                             getter_AddRefs(aMsgUrl));
 
 	if (NS_SUCCEEDED(rv))

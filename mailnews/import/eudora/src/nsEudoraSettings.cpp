@@ -14,6 +14,9 @@
  * Communications Corporation.  Portions created by Netscape are
  * Copyright (C) 1998 Netscape Communications Corporation.  All Rights
  * Reserved.
+ *
+ * Contributor(s):
+ *   Pierre Phaneuf <pp@ludusdesign.com>
  */
 
 /*
@@ -62,7 +65,7 @@ nsEudoraSettings::~nsEudoraSettings()
 	NS_IF_RELEASE( m_pLocation);
 }
 
-NS_IMPL_ISUPPORTS(nsEudoraSettings, nsIImportSettings::GetIID());
+NS_IMPL_ISUPPORTS(nsEudoraSettings, NS_GET_IID(nsIImportSettings));
 
 NS_IMETHODIMP nsEudoraSettings::AutoLocate(PRUnichar **description, nsIFileSpec **location, PRBool *_retval)
 {

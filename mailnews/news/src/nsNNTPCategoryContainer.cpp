@@ -18,6 +18,7 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *   Pierre Phaneuf <pp@ludusdesign.com>
  */
 
  /* This is a stub event sink for a NNTP Newsgroup introduced by mscott to test
@@ -25,7 +26,7 @@
 
 #include "nsNNTPCategoryContainer.h"
 
-NS_IMPL_ISUPPORTS(nsNNTPCategoryContainer, nsINNTPCategoryContainer::GetIID());
+NS_IMPL_ISUPPORTS(nsNNTPCategoryContainer, NS_GET_IID(nsINNTPCategoryContainer));
 
 nsNNTPCategoryContainer::nsNNTPCategoryContainer()
 {

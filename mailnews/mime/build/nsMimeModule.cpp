@@ -18,6 +18,7 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *   Pierre Phaneuf <pp@ludusdesign.com>
  */
 
 #include "nsIModule.h"
@@ -257,7 +258,7 @@ extern "C" NS_EXPORT nsresult NSGetModule(nsIComponentManager *servMgr,
         return NS_ERROR_OUT_OF_MEMORY;
 
     // Increase refcnt and store away nsIModule interface to m in return_cobj
-    rv = module->QueryInterface(nsIModule::GetIID(), (void**)return_cobj);
+    rv = module->QueryInterface(NS_GET_IID(nsIModule), (void**)return_cobj);
     if (NS_FAILED(rv)) 
     {
         delete module;

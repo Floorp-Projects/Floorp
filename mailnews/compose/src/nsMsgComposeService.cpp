@@ -18,6 +18,7 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *   Pierre Phaneuf <pp@ludusdesign.com>
  */
 
 #include "nsMsgComposeService.h"
@@ -102,7 +103,7 @@ nsresult nsMsgComposeService::OpenComposeWindow(const PRUnichar *msgComposeWindo
 	    nsCOMPtr<nsIMsgDraft> pMsgDraft;
 	    rv = nsComponentManager::CreateInstance(kMsgDraftCID,
 	                                 nsnull,
-	                                 nsCOMTypeInfo<nsIMsgDraft>::GetIID(), 
+	                                 NS_GET_IID(nsIMsgDraft), 
 	                                 getter_AddRefs(pMsgDraft));
 	    if (NS_SUCCEEDED(rv) && pMsgDraft)
 		{
@@ -233,7 +234,7 @@ nsresult nsMsgComposeService::OpenComposeWindowWithValues(const PRUnichar *msgCo
 	nsCOMPtr<nsIMsgCompFields> pCompFields;
     rv = nsComponentManager::CreateInstance(kMsgCompFieldsCID,
                                  nsnull,
-                                 nsCOMTypeInfo<nsIMsgCompFields>::GetIID(), 
+                                 NS_GET_IID(nsIMsgCompFields), 
                                  getter_AddRefs(pCompFields));
     if (NS_SUCCEEDED(rv) && pCompFields)
     {
@@ -304,7 +305,7 @@ nsresult nsMsgComposeService::InitCompose(nsIDOMWindow *aWindow,
 	nsIMsgCompose * msgCompose = nsnull;
 	
 	rv = nsComponentManager::CreateInstance(kMsgComposeCID, nsnull,
-	                                        nsCOMTypeInfo<nsIMsgCompose>::GetIID(),
+	                                        NS_GET_IID(nsIMsgCompose),
 	                                        (void **) &msgCompose);
 	if (NS_SUCCEEDED(rv) && msgCompose)
 	{

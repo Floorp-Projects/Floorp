@@ -18,6 +18,7 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *   Pierre Phaneuf <pp@ludusdesign.com>
  */
 #include "nsCOMPtr.h"
 #include "modmimee.h"
@@ -277,7 +278,7 @@ CreateCompositionFields(const char        *from,
 
   // Create the compose fields...
   nsresult rv = nsComponentManager::CreateInstance(kMsgCompFieldsCID, NULL, 
-                                                   nsCOMTypeInfo<nsIMsgCompFields>::GetIID(), 
+                                                   NS_GET_IID(nsIMsgCompFields), 
                                                    (void **) &cFields);   
   if (NS_FAILED(rv) || !cFields) 
     return nsnull;
@@ -1828,7 +1829,7 @@ mime_bridge_create_draft_stream(
   mdd->options->decompose_file_output_fn = mime_decompose_file_output_fn;
   mdd->options->decompose_file_close_fn = mime_decompose_file_close_fn;
 
-  nsresult rv = nsServiceManager::GetService(kPrefCID, nsIPref::GetIID(), (nsISupports**)&(mdd->options->prefs));
+  nsresult rv = nsServiceManager::GetService(kPrefCID, NS_GET_IID(nsIPref), (nsISupports**)&(mdd->options->prefs));
   if (! (mdd->options->prefs && NS_SUCCEEDED(rv)))
 	{
     PR_FREEIF(mdd);

@@ -18,13 +18,14 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *   Pierre Phaneuf <pp@ludusdesign.com>
  */
 
 #include "nsMessageView.h"
 
 
 
-NS_IMPL_ISUPPORTS(nsMessageView, nsCOMTypeInfo<nsIMessageView>::GetIID())
+NS_IMPL_ISUPPORTS(nsMessageView, NS_GET_IID(nsIMessageView))
 
 nsMessageView::nsMessageView()
 {

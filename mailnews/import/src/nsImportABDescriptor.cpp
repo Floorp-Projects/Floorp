@@ -18,6 +18,7 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *   Pierre Phaneuf <pp@ludusdesign.com>
  */
 
 
@@ -43,7 +44,7 @@ NS_METHOD nsImportABDescriptor::Create( nsISupports *aOuter, REFNSIID aIID, void
   return rv;
 }
 
-NS_IMPL_ISUPPORTS(nsImportABDescriptor, nsIImportABDescriptor::GetIID());
+NS_IMPL_ISUPPORTS(nsImportABDescriptor, NS_GET_IID(nsIImportABDescriptor));
 
 nsImportABDescriptor::nsImportABDescriptor() 
 { 

@@ -18,6 +18,7 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *   Pierre Phaneuf <pp@ludusdesign.com>
  */
 
 
@@ -64,7 +65,7 @@ int main() {
   nsIMsgAccountManager *accountManager;
   rv = nsComponentManager::CreateInstance(kMsgAccountManagerCID,
                                           nsnull,
-                                          nsCOMTypeInfo<nsIMsgAccountManager>::GetIID(),
+                                          NS_GET_IID(nsIMsgAccountManager),
                                           (void **)&accountManager);
 
   if (NS_FAILED(rv)) {

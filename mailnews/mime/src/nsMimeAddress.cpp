@@ -1,4 +1,4 @@
-/* -*- Mode: C; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*-
  *
  * The contents of this file are subject to the Netscape Public
  * License Version 1.1 (the "License"); you may not use this file
@@ -18,6 +18,7 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *   Pierre Phaneuf <pp@ludusdesign.com>
  */
 
 #include "plstr.h"
@@ -38,7 +39,7 @@ ParseRFC822Addresses (const char *line,
   nsCOMPtr<nsIMsgHeaderParser>  pHeader;
 
   nsresult res = nsComponentManager::CreateInstance(kMsgHeaderParserCID, 
-                                                    NULL, nsIMsgHeaderParser::GetIID(), 
+                                                    NULL, NS_GET_IID(nsIMsgHeaderParser), 
                                                     (void **) getter_AddRefs(pHeader)); 
   if (NS_SUCCEEDED(res) && pHeader)
   {
@@ -60,7 +61,7 @@ UnquotePhraseOrAddr (char *line, char** lineout)
   nsCOMPtr<nsIMsgHeaderParser>  pHeader;
 
   nsresult res = nsComponentManager::CreateInstance(kMsgHeaderParserCID, 
-                                                    NULL, nsIMsgHeaderParser::GetIID(), 
+                                                    NULL, NS_GET_IID(nsIMsgHeaderParser), 
                                                     (void **) getter_AddRefs(pHeader)); 
   if (NS_SUCCEEDED(res) && pHeader)
   {
@@ -81,7 +82,7 @@ ExtractRFC822AddressMailboxes (const char *line)
   nsCOMPtr<nsIMsgHeaderParser>  pHeader;
 
   nsresult res = nsComponentManager::CreateInstance(kMsgHeaderParserCID, 
-                                                    NULL, nsIMsgHeaderParser::GetIID(), 
+                                                    NULL, NS_GET_IID(nsIMsgHeaderParser), 
                                                     (void **) getter_AddRefs(pHeader)); 
   if (NS_SUCCEEDED(res) && pHeader)
     pHeader->ExtractHeaderAddressMailboxes(NULL, line, &retVal);
@@ -104,7 +105,7 @@ ExtractRFC822AddressNames (const char *line)
   nsCOMPtr<nsIMsgHeaderParser>  pHeader;
 
   nsresult res = nsComponentManager::CreateInstance(kMsgHeaderParserCID, 
-                                                    NULL, nsIMsgHeaderParser::GetIID(), 
+                                                    NULL, NS_GET_IID(nsIMsgHeaderParser), 
                                                     (void **) getter_AddRefs(pHeader)); 
   if (NS_SUCCEEDED(res) && pHeader)
     pHeader->ExtractHeaderAddressNames(NULL, line, &retVal);
@@ -122,7 +123,7 @@ ExtractRFC822AddressName (const char *line)
   nsCOMPtr<nsIMsgHeaderParser>  pHeader;
 
   nsresult res = nsComponentManager::CreateInstance(kMsgHeaderParserCID, 
-                                                    NULL, nsIMsgHeaderParser::GetIID(), 
+                                                    NULL, NS_GET_IID(nsIMsgHeaderParser), 
                                                     (void **) getter_AddRefs(pHeader)); 
   if (NS_SUCCEEDED(res) && pHeader)
     pHeader->ExtractHeaderAddressName(NULL, line, &retVal);
@@ -141,7 +142,7 @@ ReformatRFC822Addresses (const char *line)
   nsCOMPtr<nsIMsgHeaderParser>  pHeader;
 
   nsresult res = nsComponentManager::CreateInstance(kMsgHeaderParserCID, 
-                                                    NULL, nsIMsgHeaderParser::GetIID(), 
+                                                    NULL, NS_GET_IID(nsIMsgHeaderParser), 
                                                     (void **) getter_AddRefs(pHeader)); 
   if (NS_SUCCEEDED(res) && pHeader)
     pHeader->ReformatHeaderAddresses(NULL, line, &retVal);
