@@ -111,7 +111,6 @@ CPPSRCS		= \
 		nsPageContentFrame.cpp \
 		nsPlaceholderFrame.cpp \
 		nsPresShell.cpp \
-		nsScrollPortFrame.cpp \
 		nsSelectsAreaFrame.cpp \
 		nsSimplePageSequence.cpp \
 		nsSpacerFrame.cpp \

@@ -228,7 +228,7 @@ nsListBoxObject::GetListBoxBody()
   if (!frame)
      return nsnull;
 
-  // this frame will be a nsListBoxScrollPortFrame
+  // this frame will be a nsScrollBoxFrame
   nsIFrame* scrollPort = frame->GetFirstChild(nsnull);
   if (!scrollPort)
      return nsnull;
