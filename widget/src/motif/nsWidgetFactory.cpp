@@ -30,6 +30,7 @@
 #include "nsCheckButton.h"
 #include "nsTextWidget.h"
 #include "nsFileWidget.h"
+#include "nsListBox.h"
 
 static NS_DEFINE_IID(kCWindow,        NS_WINDOW_CID);
 static NS_DEFINE_IID(kCChild,         NS_CHILD_CID);
@@ -47,6 +48,7 @@ static NS_DEFINE_IID(kIButton,        NS_IBUTTON_IID);
 static NS_DEFINE_IID(kICheckButton,   NS_ICHECKBUTTON_IID);
 static NS_DEFINE_IID(kIScrollbar,     NS_ISCROLLBAR_IID);
 static NS_DEFINE_IID(kIFileWidget,    NS_IFILEWIDGET_IID);
+static NS_DEFINE_IID(kIListBox,       NS_ILISTBOX_IID);
 
 static NS_DEFINE_IID(kISupportsIID,   NS_ISUPPORTS_IID);
 static NS_DEFINE_IID(kIFactoryIID,    NS_IFACTORY_IID);
@@ -146,6 +148,9 @@ nsresult nsWidgetFactory::CreateInstance(nsISupports *aOuter,
     }
     else if (mClassID.Equals(kCTextWidgetCID)) {
         inst = new nsTextWidget(aOuter);
+    }
+    else if (aIID.Equals(kIListBox)) {
+        //inst = new nsListBox(aOuter);
     }
     else if (aIID.Equals(kIFileWidget)) {
         inst = new nsFileWidget(aOuter);
