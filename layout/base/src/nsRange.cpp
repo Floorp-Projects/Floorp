@@ -23,6 +23,7 @@
 #include "nsIDOMRange.h"
 #include "nsIDOMNode.h"
 #include "nsIDOMDocument.h"
+#include "nsIDOMDocumentFragment.h"
 #include "nsIContent.h"
 #include "nsVoidArray.h"
 #include "nsIDOMText.h"
@@ -54,12 +55,12 @@ public:
   NS_IMETHOD    GetCommonParent(nsIDOMNode** aCommonParent);
 
   NS_IMETHOD    SetStart(nsIDOMNode* aParent, PRInt32 aOffset);
-  NS_IMETHOD    SetStartBefore(nsIDOMNode* sibling);
-  NS_IMETHOD    SetStartAfter(nsIDOMNode* sibling);
+  NS_IMETHOD    SetStartBefore(nsIDOMNode* aSibling);
+  NS_IMETHOD    SetStartAfter(nsIDOMNode* aSibling);
 
   NS_IMETHOD    SetEnd(nsIDOMNode* aParent, PRInt32 aOffset);
-  NS_IMETHOD    SetEndBefore(nsIDOMNode* sibling);
-  NS_IMETHOD    SetEndAfter(nsIDOMNode* sibling);
+  NS_IMETHOD    SetEndBefore(nsIDOMNode* aSibling);
+  NS_IMETHOD    SetEndAfter(nsIDOMNode* aSibling);
 
   NS_IMETHOD    Collapse(PRBool aToStart);
 
@@ -724,13 +725,17 @@ nsresult nsRange::SetStart(nsIDOMNode* aParent, PRInt32 aOffset)
   return res;
 }
 
-nsresult nsRange::SetStartBefore(nsIDOMNode* sibling)
+nsresult nsRange::SetStartBefore(nsIDOMNode* aSibling)
 {
+  if (!aSibling) return NS_ERROR_NULL_POINTER;
+
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
-nsresult nsRange::SetStartAfter(nsIDOMNode* sibling)
+nsresult nsRange::SetStartAfter(nsIDOMNode* aSibling)
 {
+  if (!aSibling) return NS_ERROR_NULL_POINTER;
+
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
@@ -757,13 +762,17 @@ nsresult nsRange::SetEnd(nsIDOMNode* aParent, PRInt32 aOffset)
   return res;
 }
 
-nsresult nsRange::SetEndBefore(nsIDOMNode* sibling)
+nsresult nsRange::SetEndBefore(nsIDOMNode* aSibling)
 {
+  if (!aSibling) return NS_ERROR_NULL_POINTER;
+
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
-nsresult nsRange::SetEndAfter(nsIDOMNode* sibling)
+nsresult nsRange::SetEndAfter(nsIDOMNode* aSibling)
 {
+  if (!aSibling) return NS_ERROR_NULL_POINTER;
+
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
@@ -917,10 +926,10 @@ nsresult nsRange::DeleteContents()
 }
 
 nsresult nsRange::CompareEndPoints(PRUint16 how, nsIDOMRange* srcRange,
-                                   PRInt32* ret)
+                                   PRInt32* aCmpRet)
 {
   nsresult res;
-  if (ret == 0)
+  if (aCmpRet == 0)
     return NS_ERROR_NULL_POINTER;
   if (srcRange == 0)
     return NS_ERROR_INVALID_ARG;
@@ -970,11 +979,11 @@ nsresult nsRange::CompareEndPoints(PRUint16 how, nsIDOMRange* srcRange,
   }
 
   if ((node1 == node2) && (offset1 == offset2))
-    *ret = 0;
+    *aCmpRet = 0;
   else if (IsIncreasing(node1, offset2, node2, offset2))
-    *ret = 1;
+    *aCmpRet = 1;
   else
-    *ret = -1;
+    *aCmpRet = -1;
   NS_IF_RELEASE(node2);
   return NS_OK;
 }
@@ -989,15 +998,81 @@ nsresult nsRange::ExtractContents(nsIDOMDocumentFragment** aReturn)
 }
 
 nsresult nsRange::CloneContents(nsIDOMDocumentFragment** aReturn)
-{ return NS_ERROR_NOT_IMPLEMENTED; }
+{
+  if (!mIsPositioned)
+    return NS_ERROR_NOT_INITIALIZED;
+
+  nsresult res;
+
+  nsIDOMDocument* document;
+  res = mStartParent->GetOwnerDocument(&document);
+  if (!NS_SUCCEEDED(res))
+    return res;
+
+  // Create a new document fragment in the context of this document
+  nsIDOMDocumentFragment* docfrag;
+  res = document->CreateDocumentFragment(&docfrag);
+  NS_IF_RELEASE(document);
+
+  // XXX but who owns this doc frag -- when will it be released?
+  if (NS_SUCCEEDED(res))
+  {
+    // Loop over the nodes contained in this Range:
+    // XXX Getting the nodes still needs to be implemented!
+#if 0
+    while (1)
+    {
+      // This is how to append a node to a doc frag:
+      nsIDOMNode* clonedNode;
+      res = thisNode->cloneNode(PR_TRUE, &clonedNode);
+      if (!NS_SUCCEEDED(res))
+        break;    // punt
+      nsIDOMNode* retNode;
+      res = docfrag->insertBefore(clonedNode, (nsIDOMNode*)0, &retNode);
+      if (!NS_SUCCEEDED(res))
+        break;
+    }
+
+    // haven't implemented it yet, so just punt:
+    if (!NS_SUCCEEDED(res))
+    {
+      NS_IF_RELEASE(docfrag);
+      return res;
+    }
+    return NS_OK;
+#endif
+  }
+
+  NS_IF_RELEASE(document);
+}
+
+nsresult nsRange::Clone(nsIDOMRange** aReturn)
+{
+  if (aReturn == 0)
+    return NS_ERROR_NULL_POINTER;
+
+  return NS_ERROR_NOT_IMPLEMENTED;
+
+  nsresult res = NS_NewRange(aReturn);
+  if (!NS_SUCCEEDED(res))
+    return res;
+
+  res = (*aReturn)->SetStart(mStartParent, mStartOffset);
+  if (NS_SUCCEEDED(res))
+    res = (*aReturn)->SetEnd(mEndParent, mEndOffset);
+  if (!NS_SUCCEEDED(res))
+  {
+    NS_IF_RELEASE(*aReturn);
+    return res;
+  }
+
+  return NS_OK;
+}
 
 nsresult nsRange::InsertNode(nsIDOMNode* aN)
 { return NS_ERROR_NOT_IMPLEMENTED; }
 
 nsresult nsRange::SurroundContents(nsIDOMNode* aN)
-{ return NS_ERROR_NOT_IMPLEMENTED; }
-
-nsresult nsRange::Clone(nsIDOMRange** aReturn)
 { return NS_ERROR_NOT_IMPLEMENTED; }
 
 nsresult nsRange::ToString(nsString& aReturn)
