@@ -224,6 +224,12 @@ nsPrefMigration::ProcessPrefs(const char* oldProfilePathStr, const char * newPro
           /* use the default locations */
           oldPOPMailPath = oldProfilePathStr;
           oldPOPMailPath += OLD_MAIL_DIR_NAME;
+
+	// if we are here, then PREF_MAIL_DIRECTORY was not set.
+	// but we still need it in the actual pref migration
+          rv = SetPremigratedFilePref(PREF_MAIL_DIRECTORY, oldPOPMailPath);
+	  if (NS_FAILED(rv)) return rv;
+
           newPOPMailPath = newProfilePathStr;
           newPOPMailPath += NEW_MAIL_DIR_NAME;
         }
@@ -246,6 +252,12 @@ nsPrefMigration::ProcessPrefs(const char* oldProfilePathStr, const char * newPro
         { 
           oldIMAPLocalMailPath = oldProfilePathStr;
           oldIMAPLocalMailPath += OLD_MAIL_DIR_NAME;
+
+	// if we are here, then PREF_MAIL_DIRECTORY was not set.
+	// but we still need it in the actual pref migration
+          rv = SetPremigratedFilePref(PREF_MAIL_DIRECTORY, oldIMAPLocalMailPath);
+	  if (NS_FAILED(rv)) return rv;
+
           newIMAPLocalMailPath = newProfilePathStr;
           newIMAPLocalMailPath += NEW_MAIL_DIR_NAME;
         }
@@ -265,6 +277,12 @@ nsPrefMigration::ProcessPrefs(const char* oldProfilePathStr, const char * newPro
         { 
           oldIMAPMailPath = oldProfilePathStr;
           oldIMAPMailPath += OLD_IMAPMAIL_DIR_NAME;
+      
+	// if we are here, then PREF_MAIL_IMAP_ROOT_DIR was not set.
+	// but we still need it in the actual pref migration
+          rv = SetPremigratedFilePref(PREF_MAIL_IMAP_ROOT_DIR, oldIMAPMailPath);
+          if (NS_FAILED(rv)) return rv;   
+
           newIMAPMailPath = newProfilePathStr;
           newIMAPMailPath += NEW_IMAPMAIL_DIR_NAME;
         }
@@ -286,6 +304,12 @@ nsPrefMigration::ProcessPrefs(const char* oldProfilePathStr, const char * newPro
     {
     oldNewsPath = oldProfilePathStr;
     oldNewsPath += OLD_NEWS_DIR_NAME;
+ 
+    // if we are here, then PREF_NEWS_DIRECTORY was not set.
+    // but we still need it in the actual pref migration
+    rv = SetPremigratedFilePref(PREF_NEWS_DIRECTORY, oldNewsPath);
+    if (NS_FAILED(rv)) return rv; 
+
     newNewsPath = newProfilePathStr;
     newNewsPath += NEW_NEWS_DIR_NAME;
   }
@@ -572,16 +596,8 @@ nsPrefMigration::GetDirFromPref(const char *oldProfilePath, const char* newProfi
     *newPath = PR_smprintf("%s%s",*oldPath,NEW_DIR_SUFFIX);
 #endif /* XP_UNIX */
 
-    // save off the old pref, prefixed with "premigration"
-    // for example, we need the old "mail.directory" pref when
-    // migrating the copies and folder prefs in nsMsgAccountManager.cpp
-    //
-    // note we do this for all platforms.
-    char *premigration_pref = nsnull;
-    premigration_pref = PR_smprintf("%s.%s", PREMIGRATION_PREFIX,pref);
-    if (!premigration_pref) return NS_ERROR_FAILURE;
-    m_prefs->SetCharPref(premigration_pref, *oldPath);
-    PR_FREEIF(premigration_pref);
+    rv = SetPremigratedCharPref(pref, *oldPath);
+    if (NS_FAILED(rv)) return rv;
 
 #ifdef XP_UNIX
     /* on UNIX, we kept the newsrc files in "news.directory", (which was usually ~)
@@ -860,6 +876,49 @@ NSGetFactory(nsISupports* serviceMgr,
   return res;
 }
 
+nsresult 
+nsPrefMigration::SetPremigratedFilePref(const char *pref_name, nsFileSpec &filePath)
+{
+	nsresult rv;
+	nsCOMPtr <nsIFileSpec> path;
+	rv = NS_NewFileSpecWithSpec(filePath, getter_AddRefs(path));
+	if (NS_FAILED(rv)) return rv; 
+
+	// save off the old pref, prefixed with "premigration"
+	// for example, we need the old "mail.directory" pref when
+	// migrating the copies and folder prefs in nsMsgAccountManager.cpp
+	//
+	// note we do this for all platforms.
+	char *premigration_pref = nsnull;
+	premigration_pref = PR_smprintf("%s.%s", PREMIGRATION_PREFIX,pref_name);
+	if (!premigration_pref) return NS_ERROR_FAILURE;
+#ifdef NS_DEBUG
+	printf("setting %s (from a nsFileSpec) for later...\n", premigration_pref);
+#endif
+	rv = m_prefs->SetFilePref(premigration_pref, path, PR_FALSE /* set default */);
+	PR_FREEIF(premigration_pref);   
+	return rv;
+}
+
+nsresult
+nsPrefMigration::SetPremigratedCharPref(const char *pref_name, char *value)
+{
+	nsresult rv;
+	// save off the old pref, prefixed with "premigration"
+	// for example, we need the old "mail.directory" pref when
+	// migrating the copies and folder prefs in nsMsgAccountManager.cpp
+	//
+	// note we do this for all platforms.
+	char *premigration_pref = nsnull;
+	premigration_pref = PR_smprintf("%s.%s", PREMIGRATION_PREFIX,pref_name);
+	if (!premigration_pref) return NS_ERROR_FAILURE;
+#ifdef NS_DEBUG
+	printf("setting %s (from a char *) for later...\n", premigration_pref);
+#endif
+	rv = m_prefs->SetCharPref(premigration_pref, value);
+	PR_FREEIF(premigration_pref);   
+	return rv;
+}
 
 /* called if the prefs service goes offline */
 NS_IMETHODIMP
