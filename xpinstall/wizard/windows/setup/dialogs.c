@@ -672,7 +672,6 @@ LRESULT CALLBACK DlgProcSetupType(HWND hDlg, UINT msg, WPARAM wParam, LONG lPara
           break;
 
         case IDWIZNEXT:
-          GetDlgItemText(hDlg, IDC_EDIT_DESTINATION, szTempSetupPath, MAX_PATH);
           lstrcpy(sgProduct.szPath, szTempSetupPath);
 
           /* check for legacy file.  We're trying not to install over an old incompatible version */
