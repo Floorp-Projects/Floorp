@@ -2195,6 +2195,9 @@ nsresult
 nsGenericHTMLElement::GetAttr(PRInt32 aNameSpaceID, nsIAtom *aAttribute,
                               nsIAtom** aPrefix, nsAString& aResult) const
 {
+  NS_ASSERTION(aNameSpaceID != kNameSpaceID_Unknown,
+               "must have a real namespace ID!");
+  
   nsresult rv;
   aResult.Truncate();
 
@@ -2281,6 +2284,8 @@ nsGenericHTMLElement::GetAttr(PRInt32 aNameSpaceID, nsIAtom *aAttribute,
 NS_IMETHODIMP_(PRBool)
 nsGenericHTMLElement::HasAttr(PRInt32 aNameSpaceID, nsIAtom* aName) const
 {
+  NS_ASSERTION(aNameSpaceID != kNameSpaceID_Unknown,
+               "must have a real namespace ID!");
   return mAttributes && mAttributes->HasAttribute(aName, aNameSpaceID);
 }
 
