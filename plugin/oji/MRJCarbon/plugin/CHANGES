@@ -1,3 +1,13 @@
+Changes since 1.0d7:
+
+1. Added support for relative height and width. This fixes problems with apples failing to load
+because their height or width was specified as a percentage value.
+
+2. Removed checks for zero height and width when instantiating the applet. This was keeping
+some applets from being created.
+
+3. Fixed Unicode to UTF-8 conversion on strings that were being passed to the status bar.
+
 Changes since 1.0d6:
 
 1. Using cfref template class to simplify and guard releases of CFTypeRef objects. This fixes
