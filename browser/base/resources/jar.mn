@@ -5,7 +5,6 @@ browser.jar:
         content/browser/pageInfo.xul                 (content/pageInfo.xul)
         content/browser/browser.xul                  (content/browser.xul)
         content/browser/sessionHistoryUI.js          (content/sessionHistoryUI.js)
-        content/browser/navigatorOverlay.xul         (content/navigatorOverlay.xul)
         content/browser/browser.js                   (content/browser.js)
         content/browser/navigatorDD.js               (content/navigatorDD.js)
         content/browser/nsBrowserStatusHandler.js    (content/nsBrowserStatusHandler.js)
