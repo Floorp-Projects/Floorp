@@ -40,8 +40,9 @@
 	/* globals */
 RDFL		gAllDBs = 0;
 
-
-
+#ifdef DEBUG_guha
+#define SMART_MAIL 1
+#endif
 
 RDFT
 getTranslator (char* url)
@@ -88,8 +89,14 @@ getTranslator (char* url)
     else if (startsWith("http://", url)) {
 	  ans = MakeFileDB(url); 
     } else if (startsWith("mailbox://", url)){
-#ifdef SMART_MAIL
+#ifdef SMART_MAIL 
       ans = MakePopDB(url);
+#else
+      ans = NULL;
+#endif
+    } else if (startsWith("mailaccount://", url)) {
+#ifdef SMART_MAIL
+      ans = MakeMailAccountDB(url);
 #else
       ans = NULL;
 #endif
@@ -155,7 +162,7 @@ PR_PUBLIC_API(RDFT)
 RDF_AddDataSource(RDF rdf, char* dataSource)
 {
   RDFT newDB;
-  int16 n = 0;
+  int32 n = 0;
   RDFT next;
   while (((next = rdf->translators[n++]) != NULL) && (n < rdf->numTranslators)) {
     if (strcmp(next->url, dataSource) == 0) return next;
@@ -198,8 +205,8 @@ PR_PUBLIC_API(RDF_Error)
 RDF_ReleaseDataSource(RDF rdf, RDFT dataSource)
 {
   RDFT* temp = (RDFT*)getMem((rdf->numTranslators-1)*(sizeof(RDFT)));
-  int16 m = 0;
-  int16 n= 0;
+  int32 m = 0;
+  int32 n= 0;
   RDFT next;
   while ((next = rdf->translators[n++]) != NULL) {
     if (next != dataSource) {
@@ -257,8 +264,8 @@ PR_PUBLIC_API(RDF_Error)
 RDF_ReleaseDB(RDF rdf)
 {
   if (rdf != NULL) {
-    uint16 n = 0;
-    uint16 size = rdf->numTranslators;
+    uint32 n = 0;
+    uint32 size = rdf->numTranslators;
     while (n < size) { 
 	  RDFT rdft = (*((RDFT*)rdf->translators + n));
 	  RDFL rlx ;
@@ -303,8 +310,8 @@ PRBool
 rdfassert(RDF rdf, RDF_Resource u, RDF_Resource  s, void* value, 
 	      RDF_ValueType type,  PRBool tv)
 {
-   uint16 size =  rdf->numTranslators;
-   int16 n = size -1;
+   int32 size =  rdf->numTranslators;
+   int32 n = size -1;
    
    /* XXX - what happens here if there is no local store? */     
    if ((size > 1) && (callHasAssertions(0, rdf, u, s, value, type, (!tv)))) {
@@ -367,8 +374,8 @@ PR_PUBLIC_API(PRBool)
 RDF_Unassert (RDF rdf, RDF_Resource u, RDF_Resource s, void* value, RDF_ValueType type)
 {
   PRBool allok = 1;
-  uint16 size =  rdf->numTranslators;
-  uint16 n = 0;
+  int32 size =  rdf->numTranslators;
+  int32 n = 0;
   
   setLockedp(u, 1);
   while (allok && (n < size)) {
@@ -572,8 +579,8 @@ PR_PUBLIC_API(PRBool)
 RDF_HasAssertion (RDF rdf, RDF_Resource u, RDF_Resource s, 
 		     void* v, RDF_ValueType type, PRBool tv)
 {
-  uint16 size = rdf->numTranslators;
-  uint16 n = 0;
+  int32 size = rdf->numTranslators;
+  int32 n = 0;
   if (callHasAssertions(0, rdf, u, s, v, type, !tv)) return 0;
   while (n < size) {
     if (callHasAssertions(n, rdf, u, s, v, type, tv)) return 1;
@@ -588,8 +595,8 @@ PR_PUBLIC_API(void *)
 RDF_GetSlotValue (RDF rdf, RDF_Resource u, RDF_Resource s, 
 		    RDF_ValueType type, PRBool inversep, PRBool tv)
 {
-  uint16 size =  rdf->numTranslators; 
-  uint16 n = 0;
+  int32 size =  rdf->numTranslators; 
+  int32 n = 0;
   if ((s == gWebData->RDF_URL) && (tv) && (!inversep) && (type == RDF_STRING_TYPE))
     return  copyString(resourceID(u));         
   while (n < size) {
@@ -611,8 +618,8 @@ RDF_GetSlotValue (RDF rdf, RDF_Resource u, RDF_Resource s,
 RDFT
 RDFTNamed (RDF rdf, char* name)
 {
-  uint16 size =  rdf->numTranslators; 
-  uint16 n = 0;
+  int32 size =  rdf->numTranslators; 
+  int32 n = 0;
   while (n < size) {
     char* nn = (*((RDFT*)rdf->translators + n))->url;
     if (strcmp(nn, name) == 0) return  (*((RDFT*)rdf->translators + n));
@@ -805,8 +812,8 @@ RDF_NextValue (RDF_Cursor c)
 void 
 disposeResourceInt (RDF rdf, RDF_Resource u)
 {
-  uint16 size = rdf->numTranslators;
-  uint16 n = 0;
+  int32 size = rdf->numTranslators;
+  int32 n = 0;
   PRBool ok = 1;
   while (n < size && ok) {
     ok = (callDisposeResource(n, rdf, u));

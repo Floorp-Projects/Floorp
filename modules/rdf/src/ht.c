@@ -63,6 +63,9 @@ HT_MenuCmd
 menus[] = {
 	HT_CMD_OPEN_NEW_WIN, HT_CMD_OPEN_COMPOSER, HT_CMD_SEPARATOR, HT_CMD_OPEN,
 	HT_CMD_OPEN_AS_WORKSPACE, HT_CMD_OPEN_FILE, HT_CMD_PRINT_FILE, HT_CMD_REVEAL_FILEFOLDER,
+#ifdef SMART_MAIL
+	HT_CMD_GET_NEW_MAIL, 
+#endif	
 	HT_CMD_SEPARATOR, HT_CMD_NEW_BOOKMARK, HT_CMD_NEW_FOLDER, HT_CMD_NEW_SEPARATOR,
 	HT_CMD_MAKE_ALIAS, HT_CMD_ADD_TO_BOOKMARKS, HT_CMD_SAVE_AS, HT_CMD_CREATE_SHORTCUT,	
 	HT_CMD_EXPORT, HT_CMD_EXPORTALL, HT_CMD_RENAME,
@@ -74,7 +77,7 @@ menus[] = {
 	HT_CMD_COPY, HT_CMD_PASTE, HT_CMD_UNDO, HT_CMD_DELETE_FILE, HT_CMD_DELETE_FOLDER,
 	HT_CMD_SEPARATOR, HT_CMD_REFRESH, HT_CMD_FIND, HT_CMD_PROPERTIES, HT_CMD_SEPARATOR,
 	HT_CMD_NEW_WORKSPACE, HT_CMD_RENAME_WORKSPACE, HT_CMD_DELETE_WORKSPACE, HT_CMD_MOVE_WORKSPACE_UP,
-	HT_CMD_MOVE_WORKSPACE_DOWN, HT_CMD_SEPARATOR,
+	HT_CMD_MOVE_WORKSPACE_DOWN, HT_CMD_SEPARATOR, 
 	/* commands from the graph appear at the end */
 	(HT_MenuCmd)(-1),
 };
@@ -1214,7 +1217,7 @@ HT_PaneFromURL(char *url, HT_Notification n, PRBool autoFlush, int32 param_count
         HT_View                 view;
 	HT_Column		*columnList, column;
         char*                   topUrl = NULL;
-        
+        char*                   title = NULL;
 
 	XP_ASSERT(url != NULL);
         while (pn < param_count) {
@@ -1222,17 +1225,23 @@ HT_PaneFromURL(char *url, HT_Notification n, PRBool autoFlush, int32 param_count
           if (!param_name) break;
           if (strcmp(param_name, "root") == 0) {
             topUrl = *(param_values + pn);
-            break;
+          }
+          if (strcmp(param_name, "title") == 0) {
+            title = *(param_values + pn);
           }
           pn++;
         }
+
         if (!topUrl) topUrl = url;
+        r = RDF_GetResource(db, topUrl, 1);
 
 	dbstr[0] = dburl;
 	dbstr[1] = NULL;
 	if ((db = RDF_GetDB(dbstr)) != NULL) {
-          if ((r = RDF_GetResource(db, topUrl, 1)) != NULL)
+          if (r != NULL)
             {
+              remoteStoreAdd(db->translators[0], r, gCoreVocab->RDF_name, 
+                             copyString(title), RDF_STRING_TYPE, 1);
               setContainerp(r, 1);
               pane = paneFromResource(db, r, n, autoFlush, 1, 0);
               view = pane->viewList;
@@ -1241,7 +1250,7 @@ HT_PaneFromURL(char *url, HT_Notification n, PRBool autoFlush, int32 param_count
 	if (!db) return NULL;
         columnList = &view->columns;
         pn = 0;
-        while (pn < param_count) {
+        while ((db->translators[0]) && (pn < param_count)) {
           char* param_name = *(param_names + pn) ;
           if (!param_name) break;
           if (strcmp(param_name, "Column") == 0) {
@@ -1253,11 +1262,8 @@ HT_PaneFromURL(char *url, HT_Notification n, PRBool autoFlush, int32 param_count
             *columnList = column;
             columnList = &(column->next);
             column->name = copyString(param_value);
-          } else if (strcmp(param_name, "title") == 0) {
-            char* param_value = *(param_values + pn);
-            remoteStoreAdd(db->translators[0], r, gCoreVocab->RDF_name, 
-                           copyString(param_value), RDF_STRING_TYPE, 1);
-          }
+            HT_SetColumnVisibility(view, r,  HT_COLUMN_STRING, 0);
+          } 
           pn++;
         }    
         freeMem(dburl);        
@@ -3328,7 +3334,16 @@ htIsMenuCmdEnabled(HT_Pane pane, HT_MenuCmd menuCmd,
 			if (node->view->pane->personaltoolbar == true)
 								return(false);
 			break;
-
+#ifdef SMART_MAIL
+                       case HT_CMD_GET_NEW_MAIL:
+                         if (isBackgroundFlag &&
+							 (resourceType(pane->viewList->top->node) == PM_RT)) {
+                           return(true);
+                         } else {
+                           return(false);
+                         }
+                         break;
+#endif
 			case	HT_CMD_OPEN_FILE:
 			if (node == NULL)			return(false);
 			if (HT_IsContainer(node))		return(false);
@@ -4004,7 +4019,7 @@ HT_GetMenuCmdName(HT_MenuCmd menuCmd)
 				break;
 			}
 			menuCommand = menuCommand->next;
-		}
+		} 
 	}
 	return(menuName);
 }
@@ -4174,7 +4189,11 @@ HT_DoMenuCmd(HT_Pane pane, HT_MenuCmd menuCmd)
 			HT_SetWorkspaceOrder(view, view->next, TRUE);
 		}
 		break;
-
+#ifdef SMART_MAIL
+               case HT_CMD_GET_NEW_MAIL:                 
+                   PopGetNewMail(view->top->node);
+                   break;
+#endif
 		default:
 		node = HT_GetNextSelection(view, NULL);
 		do

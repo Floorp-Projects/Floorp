@@ -49,7 +49,7 @@
 
 #define ITEM_LIST_SIZE			500		/* XXX ITEM_LIST_SIZE should be dynamic */
 #define ITEM_LIST_ELEMENT_SIZE		20
-#define NUM_MENU_CMDS           	39
+#define NUM_MENU_CMDS           	40
 
 #define RDF_SITEMAP			1
 #define RDF_RELATED_LINKS		2

@@ -117,10 +117,11 @@ RDF_Init(RDF_InitParams params)
 #ifdef MOZILLA_CLIENT
   PREF_SetDefaultCharPref("browser.NavCenter", "http://rdf.netscape.com/rdf/navcntr.rdf");
   PREF_CopyCharPref("browser.NavCenter", &navCenterURL);
-   gNavCntrUrl = copyString(navCenterURL); 
+    
   if (!strchr(navCenterURL, ':')) {
     navCenterURL = makeDBURL(navCenterURL);
   }
+   gNavCntrUrl = copyString(navCenterURL);
   *(gNavCenterDataSources + 1) = copyString(navCenterURL);
   gNCDB = newNavCenterDB(); 
   freeMem(navCenterURL);

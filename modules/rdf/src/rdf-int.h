@@ -292,8 +292,9 @@ PRBool		asEqual(RDFT r, Assertion as, RDF_Resource u, RDF_Resource s, void* v, R
 Assertion	makeNewAssertion (RDFT r, RDF_Resource u, RDF_Resource s, void* v, RDF_ValueType type, PRBool tv);
 
 RDFT MakeRemoteStore (char* url);
+RDFT MakeMailAccountDB(char* url);
 PRDir * OpenDir(char *name);
-
+void PopGetNewMail (RDF_Resource r) ;
 void readResourceFile(RDF rdf, RDF_Resource u);
 void possiblyGCResource(RDF_Resource u);
 PLHashNumber idenHash(const void* key);
