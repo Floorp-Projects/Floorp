@@ -1,7 +1,7 @@
 var insertNew = true;
 var imageElement;
 var tagName = "img"
-var expanded = true;
+var doSeeAll = true;
 var wasEnableAll = false;
 var hasAnyChanged = false;
 var oldSourceInt = 0;
@@ -19,8 +19,8 @@ function Startup()
   dialog.srcInput = document.getElementById("image.srcInput");
   dialog.altTextInput = document.getElementById("image.altTextInput");
 
-  dialog.MoreOrLessButton = document.getElementById("MoreOrLessButton");
-  dialog.MoreOrLessRow = document.getElementById("MoreOrLessRow");
+  dialog.MoreFewerButton = document.getElementById("MoreFewerButton");
+  dialog.MoreRow = document.getElementById("MoreRow");
 
   dialog.customsizeRadio = document.getElementById( "customsizeRadio" );
   dialog.imagewidthInput = document.getElementById( "imagewidthInput" );
@@ -30,13 +30,13 @@ function Startup()
   dialog.imagetbInput = document.getElementById( "imagetopbottomInput" );
   dialog.imageborderInput = document.getElementById( "imageborderInput" );
 
-  // Start in the mode initialized in the "expanded" var above
+  // Start in the mode initialized in the "doSeeAll" var above
   // THIS IS NOT WORKING NOW - After switching to "basic" mode,
   // then back to 
-  if (expanded) {
-    dialog.MoreOrLessRow.style.visibility = "inherit"; // visible
+  if (doSeeAll) {
+    dialog.MoreRow.style.visibility = "inherit"; // visible
   } else {
-    dialog.MoreOrLessRow.style.visibility = "hidden"; // collapse
+    dialog.MoreRow.style.visibility = "hidden"; // collapse
   }
 
   if (null == dialog.srcInput || 
@@ -152,20 +152,16 @@ function chooseFile()
   dialog.srcInput.focus();
 }
 
-function onMoreOrLess()
+function onMoreFewer()
 {
-  if (expanded) {
-    dump("Changing to BASIC mode\n");
-    expanded = false;
+  if (doSeeAll) {
+    doSeeAll = false;
     // BUG: This works to hide the row, but
     //   setting visibility to "show" doesn't bring it back
-    dialog.MoreOrLessRow.style.visibility = "hidden"; // collapse
-    //dialog.MoreOrLessRow.style.display = "none";
+    dialog.MoreRow.style.visibility = "collapse"; // hidden
   } else {
-    dump("Changing to EXPANDED mode\n");
-    expanded = true;
-    //dialog.MoreOrLessRow.style.display = "table-row";
-    dialog.MoreOrLessRow.style.visibility = "inherit"; // visible
+    doSeeAll = true;
+    dialog.MoreRow.style.visibility = "visible"; // inherit
   }
 }
 
@@ -196,8 +192,8 @@ function OnChangeSrc()
 
 function doDimensionEnabling( doEnable )
 {
-//  SetLabelEnabledByID( "originalsizeLabel", doEnable );
-//  SetLabelEnabledByID( "customsizeLabel", doEnable );
+  SetLabelEnabledByID( "originalsizeLabel", doEnable );
+  SetLabelEnabledByID( "customsizeLabel", doEnable );
 
 	customradio = document.getElementById( "customsizeRadio" );
   if ( customradio )
@@ -209,9 +205,9 @@ function doDimensionEnabling( doEnable )
     SetElementEnabledByID( "heightunitSelect", doEnable && customradio.checked );
     SetElementEnabledByID( "constrainCheckbox", doEnable && customradio.checked );
 
-//    SetLabelEnabledByID( "imagewidthLabel", doEnable && customradio.checked );
-//    SetLabelEnabledByID( "imageheightLabel", doEnable && customradio.checked );
-//    SetLabelEnabledByID( "constrainLabel", doEnable && customradio.checked );
+    SetLabelEnabledByID( "imagewidthLabel", doEnable && customradio.checked );
+    SetLabelEnabledByID( "imageheightLabel", doEnable && customradio.checked );
+    SetLabelEnabledByID( "constrainLabel", doEnable && customradio.checked );
   }
 }
 
@@ -238,13 +234,14 @@ function doOverallEnabling()
     doDimensionEnabling( canEnableAll );
   }
   
-  // handle altText and MoreOrLess button
-//  SetLabelEnabledByID( "image.altTextLabel", canEnableAll );
+  // handle altText and MoreFewer button
+  SetLabelEnabledByID( "image.altTextLabel", canEnableAll );
   SetElementEnabledByID("image.altTextInput", canEnableAll );
-  SetElementEnabledByID("MoreOrLessButton", canEnableAll );
+  SetElementEnabledByID("MoreFewerButton", canEnableAll );
+  SetElementEnabledByID("AdvancedButton", canEnableAll );
 
     // commented out since it asserts right now
-//  SetLabelEnabledByID( "imagealignmentLabel", canEnableAll );
+  SetLabelEnabledByID( "imagealignmentLabel", canEnableAll );
   SetElementEnabledByID("image.alignType", canEnableAll );
 
     // spacing fieldset
@@ -255,16 +252,19 @@ function doOverallEnabling()
 
     // do spacing labels
     // commented out since they all assert right now
-//  SetLabelEnabledByID( "leftrightLabel", canEnableAll );
-//  SetLabelEnabledByID( "leftrighttypeLabel", canEnableAll );
-//  SetLabelEnabledByID( "topbottomLabel", canEnableAll );
-//  SetLabelEnabledByID( "topbottomtypeLabel", canEnableAll );
-//  SetLabelEnabledByID( "borderLabel", canEnableAll );
-//  SetLabelEnabledByID( "bordertypeLabel", canEnableAll );
+  SetLabelEnabledByID( "leftrightLabel", canEnableAll );
+  SetLabelEnabledByID( "leftrighttypeLabel", canEnableAll );
+  SetLabelEnabledByID( "topbottomLabel", canEnableAll );
+  SetLabelEnabledByID( "topbottomtypeLabel", canEnableAll );
+  SetLabelEnabledByID( "borderLabel", canEnableAll );
+  SetLabelEnabledByID( "bordertypeLabel", canEnableAll );
 }
 
-function SetImageAlignment()
+function SetImageAlignment(align)
 {
+// do stuff
+
+//  contentWindow.focus();
 }
 
 // constrainProportions contribution by pete@postpagan.com
