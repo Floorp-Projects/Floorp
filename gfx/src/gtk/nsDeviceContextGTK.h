@@ -74,6 +74,9 @@ public:
 
   NS_IMETHOD GetDepth(PRUint32& aDepth);
 
+  static int prefChanged(const char *aPref, void *aClosure);
+  nsresult   SetDPI(PRInt32 dpi);
+  
 private:
   PRUint32      mDepth;
   PRBool        mWriteable;
@@ -81,6 +84,7 @@ private:
   PRUint32      mNumCells;
   PRInt16       mScrollbarHeight;
   PRInt16       mScrollbarWidth;
+  static nscoord mDpi;
 
   float         mWidthFloat;
   float         mHeightFloat;

@@ -42,6 +42,7 @@
 #define GDK_COLOR_TO_NS_RGB(c) \
   ((nscolor) NS_RGB(c.red, c.green, c.blue))
 
+nscoord nsDeviceContextGTK::mDpi = 96;
 
 NS_IMPL_ISUPPORTS1(nsDeviceContextGTK, nsIDeviceContext)
 
@@ -77,7 +78,6 @@ NS_IMETHODIMP nsDeviceContextGTK::Init(nsNativeWidget aNativeWidget)
 
   mWidget = aNativeWidget;
 
-  static nscoord dpi = 96;
   static int initialized = 0;
   if (!initialized) {
     initialized = 1;
@@ -96,6 +96,8 @@ NS_IMETHODIMP nsDeviceContextGTK::Init(nsNativeWidget aNativeWidget)
       if (! NS_SUCCEEDED(res)) {
         prefVal = -1;
       }
+      prefs->RegisterCallback("browser.screen_resolution", prefChanged,
+                              (void *)this);
     }
 
     // Set OSVal to what the operating system thinks the logical resolution is.
@@ -106,24 +108,20 @@ NS_IMETHODIMP nsDeviceContextGTK::Init(nsNativeWidget aNativeWidget)
     if (prefVal > 0) {
       // If there's a valid pref value for the logical resolution,
       // use it.
-      dpi = prefVal;
+      mDpi = prefVal;
     } else if ((prefVal == 0) || (OSVal > 96)) {
       // Either if the pref is 0 (force use of OS value) or the OS
       // value is bigger than 96, use the OS value.
-      dpi = OSVal;
+      mDpi = OSVal;
     } else {
       // if we couldn't get the pref or it's negative, and the OS
       // value is under 96ppi, then use 96.
-      dpi = 96;
+      mDpi = 96;
     }
   }
 
-  int pt2t = 72;
-
-  // make p2t a nice round number - this prevents rounding problems
-  mPixelsToTwips = float(NSToIntRound(float(NSIntPointsToTwips(pt2t)) / float(dpi)));
-  mTwipsToPixels = 1.0f / mPixelsToTwips;
-
+  SetDPI(mDpi);
+  
   vis = gdk_rgb_get_visual();
   mDepth = vis->depth;
 
@@ -149,7 +147,7 @@ NS_IMETHODIMP nsDeviceContextGTK::Init(nsNativeWidget aNativeWidget)
 #ifdef DEBUG
   static PRBool once = PR_TRUE;
   if (once) {
-    printf("GFX: dpi=%d t2p=%g p2t=%g depth=%d\n", dpi, mTwipsToPixels, mPixelsToTwips,mDepth);
+    printf("GFX: dpi=%d t2p=%g p2t=%g depth=%d\n", mDpi, mTwipsToPixels, mPixelsToTwips,mDepth);
     once = PR_FALSE;
   }
 #endif
@@ -463,4 +461,35 @@ NS_IMETHODIMP nsDeviceContextGTK::GetDepth(PRUint32& aDepth)
   aDepth = (PRUint32) rgb_depth;
 
   return NS_OK;
+}
+
+nsresult
+nsDeviceContextGTK::SetDPI(PRInt32 aDpi)
+{
+  mDpi = aDpi;
+  
+  int pt2t = 72;
+
+  // make p2t a nice round number - this prevents rounding problems
+  mPixelsToTwips = float(NSToIntRound(float(NSIntPointsToTwips(pt2t)) / float(aDpi)));
+  mTwipsToPixels = 1.0f / mPixelsToTwips;
+
+  // XXX need to reflow all documents
+  return NS_OK;
+}
+
+int nsDeviceContextGTK::prefChanged(const char *aPref, void *aClosure)
+{
+  nsDeviceContextGTK *context = (nsDeviceContextGTK*)aClosure;
+  nsresult rv;
+  
+  if (nsCRT::strcmp(aPref, "browser.screen_resolution")==0) {
+    PRInt32 dpi;
+    NS_WITH_SERVICE(nsIPref, prefs, kPrefCID, &rv);
+    rv = prefs->GetIntPref(aPref, &dpi);
+    if (NS_SUCCEEDED(rv))
+      context->SetDPI(dpi);
+  }
+  
+  return 0;
 }
