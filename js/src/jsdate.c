@@ -1864,12 +1864,10 @@ js_InitDateClass(JSContext *cx, JSObject *obj)
 }
 
 JS_FRIEND_API(JSObject *)
-js_NewDateObject(JSContext* cx, int year, int mon, int mday,
-		 int hour, int min, int sec)
+js_NewDateObjectMsec(JSContext *cx, jsdouble msec_time)
 {
     JSObject *obj;
     jsdouble *date;
-    jsdouble msec_time;
 
     obj = js_NewObject(cx, &date_class, NULL, NULL);
     if (!obj)
@@ -1881,8 +1879,19 @@ js_NewDateObject(JSContext* cx, int year, int mon, int mday,
     if (!date)
 	return NULL;
 
+    *date = msec_time;
+    return obj;
+}
+
+JS_FRIEND_API(JSObject *)
+js_NewDateObject(JSContext* cx, int year, int mon, int mday,
+                 int hour, int min, int sec)
+{
+    JSObject *obj;
+    jsdouble msec_time;
+
     msec_time = date_msecFromDate(year, mon, mday, hour, min, sec, 0);
-    *date = UTC(msec_time);
+    obj = js_NewDateObjectMsec(cx, UTC(msec_time));
     return obj;
 }
 
