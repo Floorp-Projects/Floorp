@@ -44,6 +44,7 @@ nsAbDirProperty::nsAbDirProperty(void)
   : m_DirName(nsnull), m_LastModifiedDate(nsnull),
 	m_DbPath(nsnull), m_Server(nsnull)
 {
+	NS_INIT_REFCNT();
 }
 
 nsAbDirProperty::~nsAbDirProperty(void)
