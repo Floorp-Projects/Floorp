@@ -81,8 +81,6 @@ Rights Reserved.
 	<broadcaster id="cmd_paste"/>
 	<broadcaster id="cmd_delete"/>
 	<broadcaster id="cmd_selectAll"/>
-	<broadcaster id="cmd_find" oncommand="nsCmd:ComposeNYI"/>
-	<broadcaster id="cmd_findAgain" oncommand="nsCmd:ComposeNYI"/>
 	<broadcaster id="cmd_preferences"/>
 
 	<broadcaster id="broadcaster_throbber" busy="false"/>
@@ -119,8 +117,8 @@ Rights Reserved.
 	<key id="key_paste"/>
 	<key id="key_delete"/>
 	<key id="key_selectAll"/>
-	<key id="key_find" xulkey="true" key="&findCmd.key;" disabled="true" observes="cmd_find"/>
-	<key id="key_findAgain" xulkey="true" key="&findAgainCmd.key;" disabled="true" observes="cmd_findAgain"/>
+	<key id="key_find" xulkey="true" key="&findCmd.key;"  observes="cmd_find"/>
+	<key id="key_findAgain" xulkey="true" key="&findAgainCmd.key;" observes="cmd_findAgain"/>
 	<key id="key_preferences"/>
 	
 </keyset>
@@ -203,8 +201,8 @@ ACTUALLY, EVERY TIME YOU TYPE ANY OF THE KEY DEFINED HERE AFTER WITHOUT ANY OF T
 			<menuseparator/>
 			<menuitem id="menu_selectAll"/>
 			<menuseparator/>
-			<menuitem value="&findCmd.label;" disabled="true" key="key_find" accesskey="&findCmd.accesskey;" observes="cmd_find"/>
-			<menuitem value="&findAgainCmd.label;" disabled="true" key="key_findAgain" accesskey="&findAgainCmd.accesskey;" observes="cmd_findAgain"/>
+			<menuitem value="&findCmd.label;"      key="key_find"      accesskey="&findCmd.accesskey;"      observes="cmd_find"/>
+			<menuitem value="&findAgainCmd.label;" key="key_findAgain" accesskey="&findAgainCmd.accesskey;" observes="cmd_findAgain"/>
 			<menuseparator/>
 			<menuitem id="menu_preferences" oncommand="goPreferences('messengercompose.xul', 'chrome://messenger/content/messengercompose/pref-messages.xul')"/>
 		</menupopup>
