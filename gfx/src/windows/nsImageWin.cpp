@@ -1661,7 +1661,6 @@ nsImageWin::ConvertDDBtoDIB()
 {
   PRInt32             numbytes,tWidth,tHeight;
   BITMAP              srcinfo;
-  HBITMAP             oldbits;
   HDC                 memPrDC;
   UINT                palType;
 
@@ -1670,7 +1669,6 @@ nsImageWin::ConvertDDBtoDIB()
 
     if (mHBitmap != nsnull){
       memPrDC = ::CreateDC("DISPLAY",NULL,NULL,NULL);
-      oldbits = (HBITMAP)::SelectObject(memPrDC,mHBitmap);
 
       numbytes = ::GetObject(mHBitmap,sizeof(BITMAP),&srcinfo);
       
@@ -1697,7 +1695,6 @@ nsImageWin::ConvertDDBtoDIB()
 
       numbytes = ::GetDIBits(memPrDC, mHBitmap, 0, srcinfo.bmHeight, mImageBits,
                              (LPBITMAPINFO)mBHead, palType);
-      ::SelectObject(memPrDC,oldbits);
       DeleteDC(memPrDC);
     }
   }
