@@ -712,13 +712,15 @@ NS_IMETHODIMP nsRenderingContextGTK::DrawRect(nscoord aX, nscoord aY, nscoord aW
 
   mTMatrix->TransformCoord(&x,&y,&w,&h);
 
-  // FIXME why are we drawign this 1 pixel less than we should be?
-
-  ::gdk_draw_rectangle(mSurface->GetDrawable(), mSurface->GetGC(),
-                       FALSE,
-                       x, y,
-                       w - 1,
-                       h - 1);
+  // Don't draw empty rectangles; also, w/h are adjusted down by one
+  // so that the right number of pixels are drawn.
+  if (w && h) {
+    ::gdk_draw_rectangle(mSurface->GetDrawable(), mSurface->GetGC(),
+                         FALSE,
+                         x, y,
+                         w - 1,
+                         h - 1);
+  }
 
   return NS_OK;
 }
