@@ -30,7 +30,6 @@
 #include "plstr.h"
 #include "nsString.h"
 #include "nsXPIDLString.h"
-#include "nsIMsgBiffManager.h"
 #include "nscore.h"
 #include "nsIProfile.h"
 #include "nsIFileLocator.h"
@@ -48,6 +47,7 @@
 #include "nsIURL.h"
 #include "nsISmtpService.h"
 #include "nsString.h"
+#include "nsIMsgBiffManager.h"
 
 // this should eventually be moved to the pop3 server for upgrading
 #include "nsIPop3IncomingServer.h"
@@ -317,6 +317,7 @@ nsMsgAccountManager::nsMsgAccountManager() :
 {
   NS_INIT_REFCNT();
   NS_NewISupportsArray(&m_accounts);
+  NS_NewISupportsArray(getter_AddRefs(m_incomingServerListeners));
 
   m_alreadySetImapDefaultLocalPath = PR_FALSE;
   m_alreadySetNntpDefaultLocalPath = PR_FALSE;
@@ -541,8 +542,7 @@ nsMsgAccountManager::createKeyedServer(const char* key,
   NS_ADDREF(serversupports);
   m_incomingServers.Put(&hashKey, serversupports);
 
-  // add to biff
-  AddServerToBiff(server);
+  NotifyServerLoaded(server);
 
   *aServer = server;
   NS_ADDREF(*aServer);
@@ -550,47 +550,6 @@ nsMsgAccountManager::createKeyedServer(const char* key,
   return NS_OK;
 }
 
-nsresult
-nsMsgAccountManager::AddServerToBiff(nsIMsgIncomingServer *server)
-{
-	nsresult rv;
-	PRBool doBiff = PR_FALSE;
-
-	NS_WITH_SERVICE(nsIMsgBiffManager, biffManager, kMsgBiffManagerCID, &rv);
-
-	if(NS_FAILED(rv))
-		return rv;
-
-    rv = server->GetDoBiff(&doBiff);
-
-	if(NS_SUCCEEDED(rv) && doBiff)
-	{
-		rv = biffManager->AddServerBiff(server);
-	}
-
-	return rv;
-}
-
-nsresult
-nsMsgAccountManager::RemoveServerFromBiff(nsIMsgIncomingServer *server)
-{
-	nsresult rv;
-	PRBool doBiff = PR_FALSE;
-
-	NS_WITH_SERVICE(nsIMsgBiffManager, biffManager, kMsgBiffManagerCID, &rv);
-
-	if(NS_FAILED(rv))
-		return rv;
-
-    rv = server->GetDoBiff(&doBiff);
-
-	if(NS_SUCCEEDED(rv) && doBiff)
-	{
-		rv = biffManager->RemoveServerBiff(server);
-	}
-
-	return rv;
-}
 
 NS_IMETHODIMP
 nsMsgAccountManager::RemoveAccount(nsIMsgAccount *aAccount)
@@ -600,11 +559,18 @@ nsMsgAccountManager::RemoveAccount(nsIMsgAccount *aAccount)
   if (NS_FAILED(rv)) return rv;
   
   rv = m_accounts->RemoveElement(aAccount);
+
 #ifdef DEBUG_alecf
   if (NS_FAILED(rv))
     printf("error removing account. perhaps we need a NS_STATIC_CAST?\n");
 #endif
 
+  nsCOMPtr<nsIMsgIncomingServer> server;
+  rv = aAccount->GetIncomingServer(getter_AddRefs(server));
+  if(NS_SUCCEEDED(rv))
+  {
+    NotifyServerUnloaded(server);
+  }
   return NS_OK;
 }
 
@@ -653,9 +619,9 @@ nsMsgAccountManager::SetDefaultAccount(nsIMsgAccount * aDefaultAccount)
   return NS_OK;
 }
 
-// enumaration for removing accounts from the BiffManager
+// enumaration for sending unload notifications
 PRBool
-nsMsgAccountManager::removeServerFromBiff(nsHashKey *aKey, void *aData,
+nsMsgAccountManager::hashUnloadServer(nsHashKey *aKey, void *aData,
                                           void *closure)
 {
     nsresult rv;
@@ -665,7 +631,7 @@ nsMsgAccountManager::removeServerFromBiff(nsHashKey *aKey, void *aData,
     
 	nsMsgAccountManager *accountManager = (nsMsgAccountManager*)closure;
 
-	accountManager->RemoveServerFromBiff(server);
+	accountManager->NotifyServerUnloaded(server);
 	
 	return PR_TRUE;
 
@@ -899,6 +865,10 @@ nsMsgAccountManager::LoadAccounts()
     return NS_OK;
   
   m_accountsLoaded = PR_TRUE;
+
+  //Ensure biff service has started
+  NS_WITH_SERVICE(nsIMsgBiffManager, biffService, kMsgBiffManagerCID, &rv);
+  
   // mail.accountmanager.accounts is the main entry point for all accounts
 
   nsXPIDLCString accountList;
@@ -967,7 +937,7 @@ nsMsgAccountManager::UnloadAccounts()
 {
   // release the default account
   m_defaultAccount=nsnull;
-  m_incomingServers.Enumerate(removeServerFromBiff, this);
+  m_incomingServers.Enumerate(hashUnloadServer, this);
 
   m_accounts->Clear();          // will release all elements
   m_identities.Reset(hashElementRelease, nsnull);
@@ -1261,6 +1231,90 @@ nsMsgAccountManager::UpgradePrefs()
 
     // XXX TODO: remove dummy migration identity
     return NS_OK;
+}
+
+NS_IMETHODIMP nsMsgAccountManager::AddIncomingServerListener(nsIIncomingServerListener *serverListener)
+{
+    m_incomingServerListeners->AppendElement(serverListener);
+    return NS_OK;
+}
+
+NS_IMETHODIMP nsMsgAccountManager::RemoveIncomingServerListener(nsIIncomingServerListener *serverListener)
+{
+    m_incomingServerListeners->RemoveElement(serverListener);
+    return NS_OK;
+}
+
+
+NS_IMETHODIMP nsMsgAccountManager::NotifyServerLoaded(nsIMsgIncomingServer *server)
+{
+	nsresult rv;
+	PRUint32 count;
+	rv = m_incomingServerListeners->Count(&count);
+	if (NS_FAILED(rv)) return rv;
+
+	
+	for(PRUint32 i = 0; i < count; i++)
+	{
+		nsCOMPtr<nsIIncomingServerListener> listener = 
+			getter_AddRefs((nsIIncomingServerListener*)m_incomingServerListeners->ElementAt(i));
+		listener->OnServerLoaded(server);
+	}
+
+	return NS_OK;
+}
+
+NS_IMETHODIMP nsMsgAccountManager::NotifyServerUnloaded(nsIMsgIncomingServer *server)
+{
+	nsresult rv;
+	PRUint32 count;
+	rv = m_incomingServerListeners->Count(&count);
+	if (NS_FAILED(rv)) return rv;
+
+	
+	for(PRUint32 i = 0; i < count; i++)
+	{
+		nsCOMPtr<nsIIncomingServerListener> listener = 
+			getter_AddRefs((nsIIncomingServerListener*)m_incomingServerListeners->ElementAt(i));
+		listener->OnServerUnloaded(server);
+	}
+
+	return NS_OK;
+}
+
+NS_IMETHODIMP nsMsgAccountManager::NotifyServerAdded(nsIMsgIncomingServer *server)
+{
+	nsresult rv;
+	PRUint32 count;
+	rv = m_incomingServerListeners->Count(&count);
+	if (NS_FAILED(rv)) return rv;
+
+	
+	for(PRUint32 i = 0; i < count; i++)
+	{
+		nsCOMPtr<nsIIncomingServerListener> listener = 
+			getter_AddRefs((nsIIncomingServerListener*)m_incomingServerListeners->ElementAt(i));
+		listener->OnServerAdded(server);
+	}
+
+	return NS_OK;}
+
+NS_IMETHODIMP nsMsgAccountManager::NotifyServerRemoved(nsIMsgIncomingServer *server)
+{
+	nsresult rv;
+	PRUint32 count;
+	rv = m_incomingServerListeners->Count(&count);
+	if (NS_FAILED(rv)) return rv;
+
+	
+	for(PRUint32 i = 0; i < count; i++)
+	{
+		nsCOMPtr<nsIIncomingServerListener> listener = 
+			getter_AddRefs((nsIIncomingServerListener*)m_incomingServerListeners->ElementAt(i));
+		listener->OnServerRemoved(server);
+	}
+
+	return NS_OK;
 }
 
 nsresult

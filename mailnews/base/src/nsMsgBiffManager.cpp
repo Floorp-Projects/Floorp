@@ -22,39 +22,25 @@
 
 #include "nsMsgBiffManager.h"
 #include "nsCRT.h"
+#include "nsIMsgMailSession.h"
+#include "nsMsgBaseCID.h"
 
+static NS_DEFINE_CID(kMsgAccountManagerCID, NS_MSGACCOUNTMANAGER_CID);
 
+NS_IMPL_ISUPPORTS2(nsMsgBiffManager, nsIMsgBiffManager, nsIIncomingServerListener)
 
-NS_IMPL_ADDREF(nsMsgBiffManager)
-NS_IMPL_RELEASE(nsMsgBiffManager)
-
-NS_IMETHODIMP
-nsMsgBiffManager::QueryInterface(REFNSIID iid, void** result)
+void OnBiffTimer(nsITimer *timer, void *aBiffManager)
 {
-    if (! result)
-        return NS_ERROR_NULL_POINTER;
-
-    *result = nsnull;
-    if (iid.Equals(nsCOMTypeInfo<nsIMsgBiffManager>::GetIID()) ||
-        iid.Equals(nsCOMTypeInfo<nsISupports>::GetIID())) {
-        *result = NS_STATIC_CAST(nsIMsgBiffManager*, this);
-        NS_ADDREF_THIS();
-        return NS_OK;
-    }
-	else if(iid.Equals(nsCOMTypeInfo<nsITimerCallback>::GetIID()))
-	{
-		*result = NS_STATIC_CAST(nsITimerCallback*, this);
-		NS_ADDREF_THIS();
-		return NS_OK;
-	}
-    return NS_NOINTERFACE;
+	nsMsgBiffManager *biffManager = (nsMsgBiffManager*)aBiffManager;
+	biffManager->PerformBiff();		
 }
+
 nsMsgBiffManager::nsMsgBiffManager()
 {
 	NS_INIT_REFCNT();
 
 	mBiffTimer = nsnull;
-	mBiffArray = new nsVoidArray();
+	mBiffArray = nsnull;
 }
 
 nsMsgBiffManager::~nsMsgBiffManager()
@@ -73,6 +59,28 @@ nsMsgBiffManager::~nsMsgBiffManager()
 	}
 	delete mBiffArray;
 
+	nsresult rv;
+	NS_WITH_SERVICE(nsIMsgAccountManager, accountManager, kMsgAccountManagerCID, &rv);
+	if(NS_SUCCEEDED(rv))
+	{
+		rv = accountManager->RemoveIncomingServerListener(this);
+	}
+
+}
+
+nsresult nsMsgBiffManager::Init()
+{
+	nsresult rv;
+
+	mBiffArray = new nsVoidArray();
+	if(!mBiffArray)
+		return NS_ERROR_OUT_OF_MEMORY;
+
+	NS_WITH_SERVICE(nsIMsgAccountManager, accountManager, kMsgAccountManagerCID, &rv);
+	if (NS_FAILED(rv)) return rv;
+
+	rv = accountManager->AddIncomingServerListener(this);
+	return rv;
 }
 
 NS_IMETHODIMP nsMsgBiffManager::AddServerBiff(nsIMsgIncomingServer *server)
@@ -122,9 +130,44 @@ NS_IMETHODIMP nsMsgBiffManager::ForceBiffAll()
 	return NS_OK;
 }
 
-void nsMsgBiffManager::Notify(nsITimer *timer)
+NS_IMETHODIMP nsMsgBiffManager::OnServerAdded(nsIMsgIncomingServer *server)
 {
-	PerformBiff();		
+	return NS_OK;
+}
+
+NS_IMETHODIMP nsMsgBiffManager::OnServerRemoved(nsIMsgIncomingServer *server)
+{
+	return NS_OK;
+}
+
+NS_IMETHODIMP nsMsgBiffManager::OnServerLoaded(nsIMsgIncomingServer *server)
+{
+	nsresult rv;
+	PRBool doBiff = PR_FALSE;
+
+    rv = server->GetDoBiff(&doBiff);
+
+	if(NS_SUCCEEDED(rv) && doBiff)
+	{
+		rv = AddServerBiff(server);
+	}
+
+	return rv;
+}
+
+NS_IMETHODIMP nsMsgBiffManager::OnServerUnloaded(nsIMsgIncomingServer *server)
+{
+	nsresult rv;
+	PRBool doBiff = PR_FALSE;
+
+    rv = server->GetDoBiff(&doBiff);
+
+	if(NS_SUCCEEDED(rv) && doBiff)
+	{
+		rv = RemoveServerBiff(server);
+	}
+
+	return rv;
 }
 
 PRInt32 nsMsgBiffManager::FindServer(nsIMsgIncomingServer *server)
@@ -147,7 +190,7 @@ nsresult nsMsgBiffManager::AddBiffEntry(nsBiffEntry *biffEntry)
 	{
 		nsBiffEntry *current = (nsBiffEntry*)mBiffArray->ElementAt(i);
 		if(biffEntry->nextBiffTime < current->nextBiffTime)
-			mBiffArray->InsertElementAt(biffEntry, i);
+			break;
 
 	}
 	mBiffArray->InsertElementAt(biffEntry, i);
@@ -199,7 +242,7 @@ nsresult nsMsgBiffManager::SetupNextBiff()
 			NS_RELEASE(mBiffTimer);
 		}
 		NS_NewTimer(&mBiffTimer);
-		mBiffTimer->Init(this, timeInMSUint32);
+		mBiffTimer->Init(OnBiffTimer, (void*)this, timeInMSUint32);
 		
 	}
 	return NS_OK;
@@ -238,3 +281,5 @@ nsresult nsMsgBiffManager::PerformBiff()
 	SetupNextBiff();
 	return NS_OK;
 }
+
+

@@ -68,9 +68,6 @@ public:
   
   NS_DECL_NSIMSGACCOUNTMANAGER
   
-  //Add/remove an account to/from the Biff Manager if it has Biff turned on.
-  nsresult AddServerToBiff(nsIMsgIncomingServer *account);
-  nsresult RemoveServerFromBiff(nsIMsgIncomingServer *account);
 private:
 
   PRBool m_accountsLoaded;
@@ -82,6 +79,7 @@ private:
   nsHashtable m_identities;
   nsHashtable m_incomingServers;
   nsCOMPtr<nsIMsgAccount> m_defaultAccount;
+  nsCOMPtr<nsISupportsArray> m_incomingServerListeners;
 
   nsCAutoString accountKeyList;
   
@@ -106,8 +104,8 @@ private:
   static PRBool hashElementRelease(nsHashKey *aKey, void *aData,
                                    void *closure);
 
-  // remove all of the servers from the Biff Manager
-  static PRBool removeServerFromBiff(nsHashKey *aKey, void *aData,
+  // Send unload server notification.
+  static PRBool hashUnloadServer(nsHashKey *aKey, void *aData,
                                      void *closure);
 
   //
