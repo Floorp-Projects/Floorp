@@ -682,27 +682,32 @@ void nsCSSSelector::ToStringInternal(nsAString& aString,
       // Append the attribute name
       list->mAttr->ToString(temp);
       aString.Append(temp);
-      // Append the function
-      if (list->mFunction == NS_ATTR_FUNC_INCLUDES)
-        aString.Append(PRUnichar('~'));
-      else if (list->mFunction == NS_ATTR_FUNC_DASHMATCH)
-        aString.Append(PRUnichar('|'));
-      else if (list->mFunction == NS_ATTR_FUNC_BEGINSMATCH)
-        aString.Append(PRUnichar('^'));
-      else if (list->mFunction == NS_ATTR_FUNC_ENDSMATCH)
-        aString.Append(PRUnichar('$'));
-      else if (list->mFunction == NS_ATTR_FUNC_CONTAINSMATCH)
-        aString.Append(PRUnichar('*'));
 
-      aString.Append(PRUnichar('='));
+      if (list->mFunction != NS_ATTR_FUNC_SET) {
+        // Append the function
+        if (list->mFunction == NS_ATTR_FUNC_INCLUDES)
+          aString.Append(PRUnichar('~'));
+        else if (list->mFunction == NS_ATTR_FUNC_DASHMATCH)
+          aString.Append(PRUnichar('|'));
+        else if (list->mFunction == NS_ATTR_FUNC_BEGINSMATCH)
+          aString.Append(PRUnichar('^'));
+        else if (list->mFunction == NS_ATTR_FUNC_ENDSMATCH)
+          aString.Append(PRUnichar('$'));
+        else if (list->mFunction == NS_ATTR_FUNC_CONTAINSMATCH)
+          aString.Append(PRUnichar('*'));
+
+        aString.Append(PRUnichar('='));
       
-      // Append the value
-      nsAutoString escaped;
-      nsStyleUtil::EscapeCSSString(list->mValue, escaped);
+        // Append the value
+        nsAutoString escaped;
+        nsStyleUtil::EscapeCSSString(list->mValue, escaped);
       
-      aString.Append(PRUnichar('\"'));
-      aString.Append(escaped);
-      aString.AppendLiteral("\"]");
+        aString.Append(PRUnichar('\"'));
+        aString.Append(escaped);
+        aString.Append(PRUnichar('\"'));
+      }
+
+      aString.Append(PRUnichar(']'));
       
       NS_IF_NEGATED_END(aIsNegated, aString)
       list = list->mNext;
