@@ -21,7 +21,6 @@
 #include "prmem.h"
 #include "nsMsgSend.h"
 #include "nsINetService.h"
-#include "nsMsgCompose.h"
 #include "nsMailHeaders.h"
 #include "nsMsgI18N.h"
 #include "xp_time.h"
@@ -522,16 +521,16 @@ mime_generate_headers (nsMsgCompFields *fields,
 		else
 		  PUSH_STRING("uuencode=0");
 
-		htmlAction = PR_smprintf("html=%d", 
-		  ((nsMsgCompose*)fields->GetOwner())->GetHTMLAction());
+// RICHIE		htmlAction = PR_smprintf("html=%d", 
+// RICHIE		  ((nsMsgCompose*)fields->GetOwner())->GetHTMLAction());
 		if (htmlAction) {
 			PUSH_STRING("; ");
 			PUSH_STRING(htmlAction);
 			PR_FREEIF(htmlAction);
 		}
 
-		lineWidth = PR_smprintf("; linewidth=%d",
-		  ((nsMsgCompose*)fields->GetOwner())->GetLineWidth());
+// RICHIE		lineWidth = PR_smprintf("; linewidth=%d",
+// RICHIE		  ((nsMsgCompose*)fields->GetOwner())->GetLineWidth());
 		if (lineWidth) {
 			PUSH_STRING(lineWidth);
 			PR_FREEIF(lineWidth);

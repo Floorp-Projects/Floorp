@@ -19,6 +19,8 @@
 #ifndef _nsMsgI18N_H_
 #define _nsMsgI18N_H_
 
+#include "nsMsgTransition.h"
+
 NS_BEGIN_EXTERN_C
 
 char      *nsMsgI18NEncodeMimePartIIStr(const char *header, const char *charset, PRBool bUseMime);

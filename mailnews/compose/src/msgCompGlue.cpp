@@ -11,7 +11,8 @@
 #include "nsIMimeConverter.h"
 #include "msgCore.h"
 #include "rosetta_mailnews.h"
-#include "nsMsgCompose.h"
+
+#include "msgCompGlue.h"
 
 static NS_DEFINE_CID(kPrefCID, NS_PREF_CID);
 static NS_DEFINE_CID(kCMimeConverterCID, NS_MIME_CONVERTER_CID);

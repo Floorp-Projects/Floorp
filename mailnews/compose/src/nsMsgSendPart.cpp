@@ -17,7 +17,6 @@
  */
 #include "rosetta_mailnews.h"
 #include "nsMsgLocalFolderHdrs.h"
-#include "nsMsgCompose.h"
 #include "nsMsgSend.h"
 #include "nsMsgSendPart.h"
 #include "nsIMimeConverter.h"

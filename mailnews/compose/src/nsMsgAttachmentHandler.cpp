@@ -22,7 +22,6 @@
 #include "nsMsgSend.h"
 #include "nsMsgUtils.h"
 #include "nsIPref.h"
-#include "nsMsgCompose.h"
 #include "nsMsgEncoders.h"
 #include "nsMsgI18N.h"
 

@@ -42,6 +42,7 @@ EXPORTS = \
 	nsMsgI18N.h \
 	nsMsgAttachmentHandler.h \
 	nsMsgPrompts.h \
+	nsMsgTransition.h \
 	$(NULL)
 
 CPPSRCS = \
