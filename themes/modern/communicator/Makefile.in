@@ -46,7 +46,7 @@ EXPORT_RESOURCE = \
 		$(srcdir)/offline.gif \
 		$(NULL)
 
-DIRS = search xpinstall sidebar bookmarks directory profile regviewer related wallet pageholder 
+DIRS = search xpinstall sidebar bookmarks directory profile regviewer related wallet 
 
 include $(topsrcdir)/config/rules.mk
 
