@@ -44,7 +44,7 @@ class nsIEditor;
 class nsISelectionController;
 class nsTextAreaSelectionImpl;
 class nsTextAreaKeyListener;
-
+class nsIDOMCharacterData;
 
 
 class nsGfxTextControlFrame2 : public nsStackFrame,
@@ -215,6 +215,16 @@ protected:
   NS_IMETHOD RestoreState(nsIPresContext* aPresContext, nsIPresState* aState);
 
 
+private:
+  //helper methods
+  enum {
+    eIgnoreSelect = -2,
+    eSelectToEnd  = -1  
+  };
+
+  NS_IMETHODIMP GetFirstTextNode(nsIDOMCharacterData* *aFirstTextNode);
+  nsresult SelectAllContents();
+  nsresult SetSelectionEndPoints(PRInt32 aSelStart, PRInt32 aSelEnd);
 private:
   nsCOMPtr<nsIEditor> mEditor;
   nsCOMPtr<nsISelectionController> mSelCon;
