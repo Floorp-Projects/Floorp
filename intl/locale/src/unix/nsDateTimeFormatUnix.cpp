@@ -21,8 +21,13 @@
 #include "nsIServiceManager.h"
 #include "nsICharsetConverterManager.h"
 #include "nsDateTimeFormatUnix.h"
+#include "nsIComponentManager.h"
+#include "nsLocaleCID.h"
+#include "nsIPosixLocale.h"
 
 static NS_DEFINE_IID(kIDateTimeFormatIID, NS_IDATETIMEFORMAT_IID);
+static NS_DEFINE_IID(kPosixLocaleFactoryCID, NS_POSIXLOCALEFACTORY_CID);
+static NS_DEFINE_IID(kIPosixLocaleIID, NS_IPOSIXLOCALE_IID);
 
 NS_IMPL_ISUPPORTS(nsDateTimeFormatUnix, kIDateTimeFormatIID);
 
@@ -43,14 +48,14 @@ nsresult nsDateTimeFormatUnix::FormatTMTime(nsILocale* locale,
                                         nsString& stringOut) 
 {
 #define NSDATETIME_FORMAT_BUFFER_LEN  80
+#define kPlatformLocaleLength 64
   char strOut[NSDATETIME_FORMAT_BUFFER_LEN];
   char fmtD[32], fmtT[32];
-  char platformLocale[16];
+  char platformLocale[kPlatformLocaleLength+1];
   nsString aCharset("ISO-8859-1");	//TODO: need to get this from locale
   nsresult res;
   
   PL_strcpy(platformLocale, "en_US");
-  //PL_strcpy(platformLocale, "fr_FR");
   if (locale != nsnull) {
     nsString aLocale;
     nsString aCategory("NSILOCALE_TIME");
@@ -59,8 +64,15 @@ nsresult nsDateTimeFormatUnix::FormatTMTime(nsILocale* locale,
     if (NS_FAILED(res)) {
       return res;
     }
-    //TODO: Use GetPlatformLocale() when it's ready
-    //TODO: Get a charset name from a locale
+
+    nsIPosixLocale* posixLocale;
+    res = nsComponentManager::CreateInstance(kPosixLocaleFactoryCID, NULL, kIPosixLocaleIID, (void**)&posixLocale);
+    if (NS_FAILED(res)) {
+      return res;
+    }
+    res = posixLocale->GetPlatformLocale(&aCategory, platformLocale, kPlatformLocaleLength+1);
+
+    posixLocale->Release();
   }
 
   // set date format
