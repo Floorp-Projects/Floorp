@@ -383,15 +383,27 @@ main(int argc, char **argv)
  *   Default Error Handler
  *------------------------------------------------------------------*/
 int 
-ErrorHandler(int aErr)
+ErrorHandler(int aErr, const char* aErrMsg)
 {
     GtkWidget *okButton, *label;
     char msg[256];
+    char newmsg[256];
     char errStr[16];
     
     sprintf(errStr, "%d", aErr); 
     if (!IsErrFatal(aErr))
-        sprintf(msg, gCtx->Res("ERROR"), aErr, gCtx->Res(errStr));
+    {
+	if(aErr == E_INSTALL)
+	{
+	    if (aErrMsg != NULL)
+	    {
+		sprintf(newmsg, gCtx->Res(errStr), aErrMsg);
+		sprintf(msg, gCtx->Res("ERROR"), aErr, newmsg);
+	    }
+	}
+	else
+	    sprintf(msg, gCtx->Res("ERROR"), aErr, gCtx->Res(errStr));
+    }
     else
         sprintf(msg, gCtx->Res("FATAL_ERROR"), aErr, gCtx->Res(errStr));
     
