@@ -20,7 +20,6 @@
  * Contributor(s): 
  */
 
-var toolkitCore;
 var tagName = "hr";
 var hLineElement;
 var width;
