@@ -47,6 +47,7 @@
 #include "plbase64.h"
 #include "nsCRT.h"
 #include "nsString.h"
+#include "nsNativeCharsetUtils.h"
 
 static HINSTANCE              gLib = NULL;
 static PSecurityFunctionTable gFT = NULL;
@@ -101,6 +102,26 @@ IsNTLMDisabled()
     if (NS_FAILED(rv)) return PR_TRUE;
 
     return result;
+}
+
+//-----------------------------------------------------------------------------
+
+static PRBool
+IsWin9x()
+{
+    static PRInt32 result = -1;
+    if (result == -1) {
+        OSVERSIONINFO info = { sizeof(OSVERSIONINFO) };
+        if (GetVersionEx(&info)) {
+            result = (info.dwPlatformId == VER_PLATFORM_WIN32_WINDOWS &&
+                      info.dwMajorVersion == 4);
+        }
+        else {
+            NS_WARNING("GetVersionEx failed");
+            result = PR_FALSE;
+        }
+    }
+    return (PRBool) result;
 }
 
 //-----------------------------------------------------------------------------
@@ -271,19 +292,41 @@ nsHttpNTLMAuth::GenerateCredentials(nsIHttpChannel  *httpChannel,
 
     // initial challenge
     if (PL_strcasecmp(challenge, "NTLM") == 0) {
-        SEC_WINNT_AUTH_IDENTITY_W ident, *pIdent = NULL;
+        SEC_WINNT_AUTH_IDENTITY_W identW;
+        SEC_WINNT_AUTH_IDENTITY_A identA;
+        nsCString domainBuf, userBuf, passBuf;
+        void *pIdent = NULL;
         TimeStamp useBefore;
         PRUnichar *buf = nsnull;
 
         if (user && pass && domain) {
-            ident.User           = (PRUnichar *) user;
-            ident.UserLength     = nsCRT::strlen(user);
-            ident.Domain         = (PRUnichar *) domain;
-            ident.DomainLength   = nsCRT::strlen(domain);
-            ident.Password       = (PRUnichar *) pass;
-            ident.PasswordLength = nsCRT::strlen(pass);
-            ident.Flags          = SEC_WINNT_AUTH_IDENTITY_UNICODE;
-            pIdent = &ident;
+            //
+            // The version of SECUR32.DLL that ships with many versions of Win9x will
+            // crash and burn if given a unicode user identity.  See bug 212336.
+            //
+            if (IsWin9x()) {
+                NS_CopyUnicodeToNative(nsDependentString(user), userBuf);
+                NS_CopyUnicodeToNative(nsDependentString(domain), domainBuf);
+                NS_CopyUnicodeToNative(nsDependentString(pass), passBuf);
+                identA.User           = (unsigned char *) userBuf.get();
+                identA.UserLength     = userBuf.Length();
+                identA.Domain         = (unsigned char *) domainBuf.get();
+                identA.DomainLength   = domainBuf.Length();
+                identA.Password       = (unsigned char *) passBuf.get();
+                identA.PasswordLength = passBuf.Length();
+                identA.Flags          = SEC_WINNT_AUTH_IDENTITY_ANSI;
+                pIdent = &identA;
+            }
+            else {
+                identW.User           = (PRUnichar *) user;
+                identW.UserLength     = nsCRT::strlen(user);
+                identW.Domain         = (PRUnichar *) domain;
+                identW.DomainLength   = nsCRT::strlen(domain);
+                identW.Password       = (PRUnichar *) pass;
+                identW.PasswordLength = nsCRT::strlen(pass);
+                identW.Flags          = SEC_WINNT_AUTH_IDENTITY_UNICODE;
+                pIdent = &identW;
+            }
 
 #ifdef DEBUG_darinf
             LOG(("  using supplied logon [domain=%s user=%s pass=%s]\n",
