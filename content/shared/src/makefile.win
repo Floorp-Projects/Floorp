@@ -52,7 +52,7 @@ CPP_OBJS=					\
   .\$(OBJDIR)\nsStyleUtil.obj \
   .\$(OBJDIR)\nsTextFragment.obj \
   .\$(OBJDIR)\nsXULAtoms.obj \
-  .\$(OBJDIR)\StyleCoord.obj \
+  .\$(OBJDIR)\nsStyleCoord.obj \
 	$(NULL)
 
 LCFLAGS = \
