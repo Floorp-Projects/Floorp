@@ -48,6 +48,9 @@ public:
 
   NS_IMETHOD    GetParagraphFormat(nsString& aParagraphFormat)=0;
 
+  NS_IMETHOD    GetWrapColumn(PRInt32* aWrapColumn)=0;
+  NS_IMETHOD    SetWrapColumn(PRInt32 aWrapColumn)=0;
+
   NS_IMETHOD    SetEditorType(const nsString& aEditorType)=0;
 
   NS_IMETHOD    SetTextProperty(const nsString& aProp, const nsString& aAttr, const nsString& aValue)=0;
@@ -120,6 +123,8 @@ public:
   NS_IMETHOD    GetEditorDocument(nsIDOMDocument** aEditorDocument);  \
   NS_IMETHOD    GetEditorSelection(nsIDOMSelection** aEditorSelection);  \
   NS_IMETHOD    GetParagraphFormat(nsString& aParagraphFormat);  \
+  NS_IMETHOD    GetWrapColumn(PRInt32* aWrapColumn);  \
+  NS_IMETHOD    SetWrapColumn(PRInt32 aWrapColumn);  \
   NS_IMETHOD    SetEditorType(const nsString& aEditorType);  \
   NS_IMETHOD    SetTextProperty(const nsString& aProp, const nsString& aAttr, const nsString& aValue);  \
   NS_IMETHOD    RemoveTextProperty(const nsString& aProp, const nsString& aAttr);  \
@@ -161,6 +166,8 @@ public:
   NS_IMETHOD    GetEditorDocument(nsIDOMDocument** aEditorDocument) { return _to GetEditorDocument(aEditorDocument); } \
   NS_IMETHOD    GetEditorSelection(nsIDOMSelection** aEditorSelection) { return _to GetEditorSelection(aEditorSelection); } \
   NS_IMETHOD    GetParagraphFormat(nsString& aParagraphFormat) { return _to GetParagraphFormat(aParagraphFormat); } \
+  NS_IMETHOD    GetWrapColumn(PRInt32* aWrapColumn) { return _to GetWrapColumn(aWrapColumn); } \
+  NS_IMETHOD    SetWrapColumn(PRInt32 aWrapColumn) { return _to SetWrapColumn(aWrapColumn); } \
   NS_IMETHOD    SetEditorType(const nsString& aEditorType) { return _to SetEditorType(aEditorType); }  \
   NS_IMETHOD    SetTextProperty(const nsString& aProp, const nsString& aAttr, const nsString& aValue) { return _to SetTextProperty(aProp, aAttr, aValue); }  \
   NS_IMETHOD    RemoveTextProperty(const nsString& aProp, const nsString& aAttr) { return _to RemoveTextProperty(aProp, aAttr); }  \
