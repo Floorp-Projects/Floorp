@@ -1782,15 +1782,18 @@ nsresult nsGlobalHistory::Commit(eCommitType commitType)
         // a lot of deleted rows. The file size is the size when we opened the db,
         // and we really want it to be the size after we've written out the file,
         // but I think this is a good enough approximation.
-        PRInt64 numRows;
-        PRInt64 bytesPerRow;
-        PRInt64 desiredAvgRowSize;
+        if (count > 0)
+        {
+          PRInt64 numRows;
+          PRInt64 bytesPerRow;
+          PRInt64 desiredAvgRowSize;
 
-        LL_UI2L(numRows, count);
-        LL_DIV(bytesPerRow, mFileSizeOnDisk, numRows);
-        LL_I2L(desiredAvgRowSize, 400);
-        if (LL_CMP(bytesPerRow, >, desiredAvgRowSize))
-          commitType = kCompressCommit;
+          LL_UI2L(numRows, count);
+          LL_DIV(bytesPerRow, mFileSizeOnDisk, numRows);
+          LL_I2L(desiredAvgRowSize, 400);
+          if (LL_CMP(bytesPerRow, >, desiredAvgRowSize))
+            commitType = kCompressCommit;
+        }
       }
     }
   }
