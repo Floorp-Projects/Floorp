@@ -54,6 +54,14 @@
 
 #include "LegacyPlugin.h"
 
+#ifdef XPC_IDISPATCH_SUPPORT
+#include "nsCOMPtr.h"
+#include "nsString.h"
+#include "nsIDocument.h"
+#include "nsIDOMElement.h"
+#include "nsIDOMDocument.h"
+#include "nsIURI.h"
+#endif
 
 ///////////////////////////////////////////////////////////////////////////////
 // These are constants to control certain default behaviours
@@ -696,6 +704,40 @@ NewControl(const char *pluginType,
         else if (stricmp(argn[i], "CODEBASE") == 0)
         {
             codebase = argv[i];
+
+#ifdef XPC_IDISPATCH_SUPPORT
+            // resolve relative URLs on CODEBASE
+            if (argv[i])
+            {
+                nsCOMPtr<nsIDOMElement> element;
+                NPN_GetValue(pData->pPluginInstance, NPNVDOMElement, (void *) &element);
+                if (element)
+                {
+                    nsCOMPtr<nsIDOMNode> tagAsNode (do_QueryInterface(element));
+                    if (tagAsNode)
+                    {
+                        nsCOMPtr<nsIDOMDocument> DOMdocument;
+                        tagAsNode->GetOwnerDocument(getter_AddRefs(DOMdocument));
+                        // XXX nsIDocument is not frozen!!!
+                        nsCOMPtr<nsIDocument> doc(do_QueryInterface(DOMdocument));
+                        if (doc)
+                        {
+                            nsCOMPtr<nsIURI> baseURI;
+                            doc->GetBaseURL(*getter_AddRefs(baseURI));
+                            if (baseURI)
+                            {
+                                nsCAutoString newURL;
+                                if (NS_SUCCEEDED(baseURI->Resolve(nsDependentCString(argv[i]), newURL)))
+                                {
+                                    codebase = newURL.get();
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+#endif
+
         }
         else 
         {
