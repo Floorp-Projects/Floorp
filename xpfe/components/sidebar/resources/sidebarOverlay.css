@@ -1,72 +1,131 @@
-box#sidebarbox
+box#sidebar-box
 {
   width: 200px;
+  min-height: 0px;
   min-width: 10px;
+  max-width: 400px;
 }
 
-splitter#sidebarsplitter
+splitter#sidebar-splitter
 {
   border: 1px solid outset;
 }
 
-box#sidebarbox[hidden="true"]
+box#sidebar-box[hidden="true"]
 {
   display: none;
 }
 
-splitter#sidebarsplitter[hidden="true"]
+splitter#sidebar-splitter[hidden="true"]
 {
   display: none;
 }
 
-box#sidebarpanels
+box#sidebar-panels
 {
   overflow: auto;
 }
 
-iframe.panelframe 
+iframe.panel-frame 
 {
   width:  100px;
   height: 125px;
   border: 0px;
 }
 
-iframe.notlast
-{
-  height: 125px;
-}
-
 /*
  *  Sidebar and Panel title buttons
  */
-box#titlebox
+splitter#title-box
 {
+  color: white;
   background-color: #666699;
 }
 
-box#titlebox titledbutton
+splitter#title-box > titledbutton
 {
-  color: white;
+  color: inherit;
 }
 
-splitter.panelbar
+splitter#title-box > div
+{
+  color: inherit;
+  padding: 5px;
+}
+
+
+splitter.panel-bar
 {
   padding: 0px;
   border-top: 1px solid #ffffff;
+  background-color: #c8ccd8;
 }
 
-splitter.panelbar div
+splitter.panel-bar div
 {
   padding: 5px;
 }
 
-splitter.panelbar titledbutton
+splitter.panel-bar titledbutton
 {
   padding: 0px;
 }
 
-titledbutton.showhide
+splitter > titledbutton.show-hide
 {
-  list-style-image:url(chrome://sidebar/skin/showhide.gif);
+  list-style-image:url(chrome://sidebar/skin/panel-collapse.gif);
+}
+
+splitter[state="collapsed"] > titledbutton.show-hide
+{
+  list-style-image:url(chrome://sidebar/skin/panel-expand.gif);
+}
+
+/*
+ * Alerts
+ */
+splitter#alerts-splitter
+{
+  background-color: #666699;
+}
+
+splitter#alerts-splitter > div
+{
+  padding-left:   5px;
+  padding-top:    2px;
+  padding-bottom: 3px;
+  color:white;
+}
+
+box#alerts-panel
+{
+  min-width:5px;
+}
+
+box#alerts-panel > div
+{
+  width:10px;
+  height:50px;
+}
+
+box#alerts-panel > div > tree 
+{
+ width: 100%;
+ height: 100%;
+}
+
+treeitem[type="http://www.mozilla.org/RDF#TinderboxFlash"] > treerow > treecell > titledbutton
+{
+  list-style-image: url("chrome://sidebar/skin/flames.gif");
+}
+
+treeitem[type="http://home.netscape.com/NC-rdf#MsgNewMessages"] > treerow > treecell > titledbutton 
+{
+  list-style-image: url("chrome://messenger/skin/folderHasMail.gif");
+}
+
+treeitem[type="http://www.mozilla.org/rdf#XPInstallNotification"] > treerow > treecell > titledbutton 
+{
+  list-style-image: url("resource:/res/xpinstall/notification.gif");
 }
 
