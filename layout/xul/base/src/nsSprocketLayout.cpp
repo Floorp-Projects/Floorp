@@ -265,13 +265,17 @@ nsSprocketLayout::Layout(nsIBox* aBox, nsBoxLayoutState& aState)
     PRInt32 count = 0;
     while (child || (childBoxSize && childBoxSize->bogus))
     {    
+      //NS_ASSERTION(childBoxSize, "no childBoxSize");
+      if (childBoxSize == nsnull)
+        break;
+        
       nscoord width = clientRect.width;
       nscoord height = clientRect.height;
 
       nsSize prefSize(0,0);
       nsSize minSize(0,0);
       nsSize maxSize(0,0);
-
+      
       if (!childBoxSize->bogus) {
         if (!(frameState & NS_STATE_AUTO_STRETCH)) {
            child->GetPrefSize(aState, prefSize);
