@@ -47,7 +47,7 @@
 #include "nsIProtocolHandler.h"
 #include "nsIDNSService.h"
 #include "nsIPrefService.h"
-#include "nsIPrefBranchInternal.h"
+#include "nsIPrefBranch2.h"
 #include "nsReadableUtils.h"
 #include "nsString.h"
 #include "nsNetUtil.h"
@@ -249,7 +249,7 @@ nsProtocolProxyService::Init()
         return NS_ERROR_OUT_OF_MEMORY;
 
     // failure to access prefs is non-fatal
-    nsCOMPtr<nsIPrefBranchInternal> prefBranch =
+    nsCOMPtr<nsIPrefBranch2> prefBranch =
             do_GetService(NS_PREFSERVICE_CONTRACTID);
     if (prefBranch) {
         // monitor proxy prefs

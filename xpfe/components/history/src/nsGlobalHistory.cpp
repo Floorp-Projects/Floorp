@@ -81,7 +81,7 @@
 #include "nsIMdbFactoryFactory.h"
 
 #include "nsIPrefService.h"
-#include "nsIPrefBranchInternal.h"
+#include "nsIPrefBranch2.h"
 
 #include "nsIObserverService.h"
 #include "nsITextToSubURI.h"
@@ -2409,7 +2409,7 @@ nsGlobalHistory::Init()
 
   gPrefBranch->GetIntPref(PREF_BROWSER_HISTORY_EXPIRE_DAYS, &mExpireDays);
   gPrefBranch->GetBoolPref(PREF_AUTOCOMPLETE_ONLY_TYPED, &mAutocompleteOnlyTyped);
-  nsCOMPtr<nsIPrefBranchInternal> pbi = do_QueryInterface(gPrefBranch);
+  nsCOMPtr<nsIPrefBranch2> pbi = do_QueryInterface(gPrefBranch);
   if (pbi) {
     pbi->AddObserver(PREF_AUTOCOMPLETE_ONLY_TYPED, this, PR_FALSE);
     pbi->AddObserver(PREF_BROWSER_HISTORY_EXPIRE_DAYS, this, PR_FALSE);

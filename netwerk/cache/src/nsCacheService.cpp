@@ -61,7 +61,7 @@
 #include "nsIObserverService.h"
 #include "nsIPrefService.h"
 #include "nsIPrefBranch.h"
-#include "nsIPrefBranchInternal.h"
+#include "nsIPrefBranch2.h"
 #include "nsILocalFile.h"
 #include "nsDirectoryServiceDefs.h"
 #include "nsAppDirectoryServiceDefs.h"
@@ -155,7 +155,7 @@ nsCacheProfilePrefObserver::Install()
     
     
     // install preferences observer
-    nsCOMPtr<nsIPrefBranchInternal> branch = do_GetService(NS_PREFSERVICE_CONTRACTID);
+    nsCOMPtr<nsIPrefBranch2> branch = do_GetService(NS_PREFSERVICE_CONTRACTID);
     if (!branch) return NS_ERROR_FAILURE;
 
     char * prefList[] = { 
@@ -213,7 +213,7 @@ nsCacheProfilePrefObserver::Remove()
 
 
     // remove Pref Service observers
-    nsCOMPtr<nsIPrefBranchInternal> prefInternal = do_GetService(NS_PREFSERVICE_CONTRACTID);
+    nsCOMPtr<nsIPrefBranch2> prefInternal = do_GetService(NS_PREFSERVICE_CONTRACTID);
 
     // remove Disk cache pref observers
     rv  = prefInternal->RemoveObserver(DISK_CACHE_ENABLE_PREF, this);

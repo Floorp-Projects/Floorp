@@ -43,7 +43,7 @@
 #include "nsServiceManagerUtils.h"
 #include "nsISupportsUtils.h"
 #include "nsIPrefService.h"
-#include "nsIPrefBranchInternal.h"
+#include "nsIPrefBranch2.h"
 #include "nsWeakReference.h"
 #include "nsIObserver.h"
 #include "nsCRT.h"
@@ -75,7 +75,7 @@ protected:
     void Sync(nsIPrefBranch *aPrefBranch);
     
     PRUint32 mHostingFlags;
-    nsCOMPtr<nsIPrefBranchInternal> mPrefBranch;
+    nsCOMPtr<nsIPrefBranch2> mPrefBranch;
 public:
     NS_DECL_ISUPPORTS
     NS_DECL_NSIOBSERVER

@@ -125,7 +125,7 @@ function nsUpdateService()
   
   this.watchForUpdates();
 
-  var pbi = gPref.QueryInterface(Components.interfaces.nsIPrefBranchInternal);
+  var pbi = gPref.QueryInterface(Components.interfaces.nsIPrefBranch2);
   pbi.addObserver(PREF_UPDATE_APP_AUTOUPDATEENABLED, this, false);
   pbi.addObserver(PREF_UPDATE_APP_ENABLED, this, false);
   pbi.addObserver(PREF_UPDATE_EXTENSIONS_AUTOUPDATEENABLED, this, false);
@@ -453,7 +453,7 @@ nsUpdateService.prototype = {
       gOS.removeObserver(this, "xpcom-shutdown");    
       
       // Clean up held observers etc to avoid leaks. 
-      var pbi = gPref.QueryInterface(Components.interfaces.nsIPrefBranchInternal);
+      var pbi = gPref.QueryInterface(Components.interfaces.nsIPrefBranch2);
       pbi.removeObserver(PREF_UPDATE_APP_AUTOUPDATEENABLED, this);
       pbi.removeObserver(PREF_UPDATE_APP_ENABLED, this);
       pbi.removeObserver(PREF_UPDATE_EXTENSIONS_AUTOUPDATEENABLED, this);

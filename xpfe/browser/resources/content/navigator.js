@@ -212,7 +212,7 @@ const gPopupPrefListener =
 function addPrefListener(observer)
 {
   try {
-    var pbi = pref.QueryInterface(Components.interfaces.nsIPrefBranchInternal);
+    var pbi = pref.QueryInterface(Components.interfaces.nsIPrefBranch2);
     pbi.addObserver(observer.domain, observer, false);
   } catch(ex) {
     dump("Failed to observe prefs: " + ex + "\n");
@@ -222,7 +222,7 @@ function addPrefListener(observer)
 function removePrefListener(observer)
 {
   try {
-    var pbi = pref.QueryInterface(Components.interfaces.nsIPrefBranchInternal);
+    var pbi = pref.QueryInterface(Components.interfaces.nsIPrefBranch2);
     pbi.removeObserver(observer.domain, observer);
   } catch(ex) {
     dump("Failed to remove pref observer: " + ex + "\n");

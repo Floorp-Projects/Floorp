@@ -85,7 +85,7 @@
 #include "nsIPlatformCharset.h"
 #include "nsIPrefService.h"
 #include "nsIPrefBranch.h"
-#include "nsIPrefBranchInternal.h"
+#include "nsIPrefBranch2.h"
 
 #include "nsIParser.h"          // for kCharsetFromBookmarks
 
@@ -5060,7 +5060,7 @@ nsBookmarksService::ReadBookmarks(PRBool *didLoadBookmarks)
         LoadBookmarks();
         if (mBookmarksFile) {
             *didLoadBookmarks = PR_TRUE;
-            nsCOMPtr<nsIPrefBranchInternal> prefBranchInt(do_GetService(NS_PREFSERVICE_CONTRACTID));
+            nsCOMPtr<nsIPrefBranch2> prefBranchInt(do_GetService(NS_PREFSERVICE_CONTRACTID));
             if (prefBranchInt)
                 prefBranchInt->AddObserver("browser.bookmarks.file", this, true);
         }

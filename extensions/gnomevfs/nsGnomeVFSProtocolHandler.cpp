@@ -45,7 +45,7 @@ extern "C" {
 #include "nsIGenericFactory.h"
 #include "nsIInterfaceRequestorUtils.h"
 #include "nsIPrefService.h"
-#include "nsIPrefBranchInternal.h"
+#include "nsIPrefBranch2.h"
 #include "nsIObserver.h"
 #include "nsEventQueueUtils.h"
 #include "nsProxyRelease.h"
@@ -817,7 +817,7 @@ nsGnomeVFSProtocolHandler::Init()
     }
   }
 
-  nsCOMPtr<nsIPrefBranchInternal> prefs = do_GetService(NS_PREFSERVICE_CONTRACTID);
+  nsCOMPtr<nsIPrefBranch2> prefs = do_GetService(NS_PREFSERVICE_CONTRACTID);
   if (prefs)
   {
     InitSupportedProtocolsPref(prefs);

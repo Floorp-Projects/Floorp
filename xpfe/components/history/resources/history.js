@@ -101,7 +101,7 @@ function HistoryCommonInit()
         }
         else {  // must be the sidebar panel
             var pb = Components.classes["@mozilla.org/preferences-service;1"].getService(Components.interfaces.nsIPrefBranch);
-            var pbi = pb.QueryInterface(Components.interfaces.nsIPrefBranchInternal);
+            var pbi = pb.QueryInterface(Components.interfaces.nsIPrefBranch2);
             pbi.addObserver("browser.history.grouping", groupObserver, false);
         }
     } 
@@ -116,7 +116,7 @@ function HistoryCommonInit()
 function HistoryPanelUnload()
 {
   var pb = Components.classes["@mozilla.org/preferences-service;1"].getService(Components.interfaces.nsIPrefBranch);
-  var pbi = pb.QueryInterface(Components.interfaces.nsIPrefBranchInternal);
+  var pbi = pb.QueryInterface(Components.interfaces.nsIPrefBranch2);
   pbi.removeObserver("browser.history.grouping", groupObserver, false);
 }
 

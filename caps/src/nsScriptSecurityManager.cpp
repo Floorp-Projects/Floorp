@@ -74,7 +74,7 @@
 #include "nsIWindowWatcher.h"
 #include "nsIConsoleService.h"
 #include "nsISecurityCheckedComponent.h"
-#include "nsIPrefBranchInternal.h"
+#include "nsIPrefBranch2.h"
 #include "nsIJSRuntimeService.h"
 #include "nsIObserverService.h"
 #include "nsIContent.h"
@@ -3327,7 +3327,7 @@ nsScriptSecurityManager::InitPrefs()
     NS_ENSURE_SUCCESS(rv, rv);
     rv = prefService->GetBranch(nsnull, getter_AddRefs(mPrefBranch));
     NS_ENSURE_SUCCESS(rv, rv);
-    nsCOMPtr<nsIPrefBranchInternal> prefBranchInternal(do_QueryInterface(mPrefBranch, &rv));
+    nsCOMPtr<nsIPrefBranch2> prefBranchInternal(do_QueryInterface(mPrefBranch, &rv));
     NS_ENSURE_SUCCESS(rv, rv);
     mSecurityPref = do_QueryInterface(mPrefBranch, &rv);
     NS_ENSURE_SUCCESS(rv, rv);

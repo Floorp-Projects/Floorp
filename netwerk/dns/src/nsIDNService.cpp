@@ -44,7 +44,7 @@
 #include "nsIServiceManager.h"
 #include "nsIPrefService.h"
 #include "nsIPrefBranch.h"
-#include "nsIPrefBranchInternal.h"
+#include "nsIPrefBranch2.h"
 #include "nsIObserverService.h"
 #include "punycode.h"
 
@@ -70,7 +70,7 @@ NS_IMPL_THREADSAFE_ISUPPORTS3(nsIDNService,
 
 nsresult nsIDNService::Init()
 {
-  nsCOMPtr<nsIPrefBranchInternal> prefInternal(do_GetService(NS_PREFSERVICE_CONTRACTID));
+  nsCOMPtr<nsIPrefBranch2> prefInternal(do_GetService(NS_PREFSERVICE_CONTRACTID));
   if (prefInternal) {
     prefInternal->AddObserver(NS_NET_PREF_IDNTESTBED, this, PR_TRUE); 
     prefInternal->AddObserver(NS_NET_PREF_IDNPREFIX, this, PR_TRUE); 

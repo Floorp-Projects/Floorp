@@ -95,7 +95,7 @@
         const kPrefSvcIID = Components.interfaces.nsIPrefService;
         var prefSvc = Components.classes[kPrefSvcContractID].getService(kPrefSvcIID);
         var prefs = prefSvc.getBranch(null);
-        const kPrefBranchInternalIID = Components.interfaces.nsIPrefBranchInternal;
+        const kPrefBranchInternalIID = Components.interfaces.nsIPrefBranch2;
         var bookmarksPrefsInternal = prefs.QueryInterface(kPrefBranchInternalIID);
         bookmarksPrefsInternal.addObserver(this.sortChangedObserver.domain, 
                                            this.sortChangedObserver, false);
@@ -141,7 +141,7 @@
         const kPrefSvcIID = Components.interfaces.nsIPrefService;
         var prefSvc = Components.classes[kPrefSvcContractID].getService(kPrefSvcIID);
         var prefs = prefSvc.getBranch(null);
-        const kPrefBranchInternalIID = Components.interfaces.nsIPrefBranchInternal;
+        const kPrefBranchInternalIID = Components.interfaces.nsIPrefBranch2;
         var bookmarksPrefsInternal = prefs.QueryInterface(kPrefBranchInternalIID);
         bookmarksPrefsInternal.removeObserver(this.sortChangedObserver.domain, 
                                               this.sortChangedObserver);

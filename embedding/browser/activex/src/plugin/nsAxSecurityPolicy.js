@@ -99,7 +99,7 @@ function addPrefListener(observer, prefStr)
                                         .getService(Components.interfaces.nsIPrefService);
             gPref = prefService.getBranch(null);
         }
-        var pbi = gPref.QueryInterface(Components.interfaces.nsIPrefBranchInternal);
+        var pbi = gPref.QueryInterface(Components.interfaces.nsIPrefBranch2);
         pbi.addObserver(prefStr, observer, false);
     } catch(ex) {
         dump("Failed to observe prefs: " + ex + "\n");

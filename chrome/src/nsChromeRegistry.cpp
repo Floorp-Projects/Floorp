@@ -83,7 +83,7 @@
 #include "nsIObserverService.h"
 #include "nsIPrefService.h"
 #include "nsIPrefBranch.h"
-#include "nsIPrefBranchInternal.h"
+#include "nsIPrefBranch2.h"
 #include "nsIPresShell.h"
 #include "nsISimpleEnumerator.h"
 #include "nsIStyleSheet.h"
@@ -404,7 +404,7 @@ nsChromeRegistry::Init()
   mSelectedLocale = NS_LITERAL_CSTRING("en-US");
   mSelectedSkin = NS_LITERAL_CSTRING("classic/1.0");
 
-  nsCOMPtr<nsIPrefBranchInternal> prefs (do_GetService(NS_PREFSERVICE_CONTRACTID));
+  nsCOMPtr<nsIPrefBranch2> prefs (do_GetService(NS_PREFSERVICE_CONTRACTID));
   if (!prefs) {
     NS_WARNING("Could not get pref service!");
   }
@@ -471,7 +471,7 @@ nsChromeRegistry::CheckForOSAccessibility()
         RefreshSkins();
       }
 
-      nsCOMPtr<nsIPrefBranchInternal> prefs (do_GetService(NS_PREFSERVICE_CONTRACTID));
+      nsCOMPtr<nsIPrefBranch2> prefs (do_GetService(NS_PREFSERVICE_CONTRACTID));
       if (prefs) {
         prefs->RemoveObserver(SELECTED_SKIN_PREF, this);
       }
@@ -1236,7 +1236,7 @@ NS_IMETHODIMP nsChromeRegistry::Observe(nsISupports *aSubject, const char *aTopi
                                         PR_FALSE, uiLocale);
       if (NS_SUCCEEDED(rv) && !uiLocale.IsEmpty()) {
         CopyUTF16toUTF8(uiLocale, mSelectedLocale);
-        nsCOMPtr<nsIPrefBranchInternal> prefs (do_GetService(NS_PREFSERVICE_CONTRACTID));
+        nsCOMPtr<nsIPrefBranch2> prefs (do_GetService(NS_PREFSERVICE_CONTRACTID));
         if (prefs) {
           prefs->RemoveObserver(SELECTED_LOCALE_PREF, this);
         }

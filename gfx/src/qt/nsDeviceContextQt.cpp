@@ -45,7 +45,7 @@
 #include "nspr.h"
 #include "nsIPrefBranch.h"
 #include "nsIPrefService.h"
-#include "nsIPrefBranchInternal.h"
+#include "nsIPrefBranch2.h"
 #include "nsIServiceManager.h"
 #include "nsCRT.h"
 #include "nsDeviceContextQt.h"
@@ -96,7 +96,7 @@ nsDeviceContextQt::nsDeviceContextQt()
 
 nsDeviceContextQt::~nsDeviceContextQt()
 {
-  nsCOMPtr<nsIPrefBranchInternal> pbi = do_GetService(NS_PREFSERVICE_CONTRACTID);
+  nsCOMPtr<nsIPrefBranch2> pbi = do_GetService(NS_PREFSERVICE_CONTRACTID);
   if (pbi) {
     pbi->RemoveObserver("browser.display.screen_resolution", this);
   }
@@ -147,7 +147,7 @@ NS_IMETHODIMP nsDeviceContextQt::Init(nsNativeWidget aNativeWidget)
       if (NS_FAILED(res)) {
         prefVal = -1;
       }
-      nsCOMPtr<nsIPrefBranchInternal> pbi(do_QueryInterface(prefBranch));
+      nsCOMPtr<nsIPrefBranch2> pbi(do_QueryInterface(prefBranch));
       pbi->AddObserver("browser.display.screen_resolution", this, PR_FALSE);
     }
 

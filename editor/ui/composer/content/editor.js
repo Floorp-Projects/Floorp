@@ -140,7 +140,7 @@ nsPrefListener.prototype =
   {
     this.domain = prefName;
     try {
-      var pbi = pref.QueryInterface(Components.interfaces.nsIPrefBranchInternal);
+      var pbi = pref.QueryInterface(Components.interfaces.nsIPrefBranch2);
       pbi.addObserver(this.domain, this, false);
     } catch(ex) {
       dump("Failed to observe prefs: " + ex + "\n");
@@ -149,7 +149,7 @@ nsPrefListener.prototype =
   shutdown: function()
   {
     try {
-      var pbi = pref.QueryInterface(Components.interfaces.nsIPrefBranchInternal);
+      var pbi = pref.QueryInterface(Components.interfaces.nsIPrefBranch2);
       pbi.removeObserver(this.domain, this);
     } catch(ex) {
       dump("Failed to remove pref observers: " + ex + "\n");

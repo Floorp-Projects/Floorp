@@ -94,7 +94,7 @@
 #include "nsIDOMWindow.h"
 #include "nsIDOMDocument.h"
 #include "nsCSSFrameConstructor.h"
-#include "nsIPrefBranchInternal.h"
+#include "nsIPrefBranch2.h"
 #include "nsIPrefService.h"
 #include "gfxIImageFrame.h"
 #include "nsIDOMRange.h"
@@ -2017,7 +2017,7 @@ nsImageFrame::IconLoad::IconLoad(imgIDecoderObserver *aObserver)
   : mLoadObserver(aObserver),
     mIconsLoaded(0)
 {
-  nsCOMPtr<nsIPrefBranchInternal> prefBranch =
+  nsCOMPtr<nsIPrefBranch2> prefBranch =
     do_QueryInterface(nsContentUtils::GetPrefBranch());
 
   // register observers
