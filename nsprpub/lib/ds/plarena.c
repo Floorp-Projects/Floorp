@@ -66,7 +66,7 @@ static PRCallOnceType once;
 **
 ** InitializeArenas() is called exactly once and only once from 
 ** LockArena(). This function creates the arena protection 
-** monitor: arenaLock.
+** lock: arenaLock.
 **
 ** Note: If the arenaLock cannot be created, InitializeArenas()
 ** fails quietly, returning only PR_FAILURE. This percolates up
@@ -343,13 +343,16 @@ PR_IMPLEMENT(void) PL_ArenaFinish()
 {
     PLArena *a, *next;
 
-    LockArena();
     for (a = arena_freelist; a; a = next) {
         next = a->next;
         PR_DELETE(a);
     }
     arena_freelist = NULL;
-    UnlockArena();
+
+    if (arenaLock) {
+        PR_DestroyLock(arenaLock);
+        arenaLock = NULL;
+    }
 }
 
 #ifdef PL_ARENAMETER
