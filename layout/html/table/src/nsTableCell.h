@@ -125,8 +125,6 @@ public:
   /** set the starting column for this cell.  Always >= 1 */
   virtual void SetColIndex (int aColIndex);
 
-  virtual void ResetCellMap ();
-
 protected:
   virtual nsContentAttr AttributeToString(nsIAtom* aAttribute,
                                           nsHTMLValue& aValue,

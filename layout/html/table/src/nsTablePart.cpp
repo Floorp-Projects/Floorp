@@ -112,20 +112,8 @@ const char *nsTablePart::kHeaderCellTagString="TH";
   * I do not check or addref aTag because my superclass does that for me
   */
 nsTablePart::nsTablePart(nsIAtom* aTag)
-  : nsHTMLContainer(aTag),
-    mColCount(0),
-    mSpecifiedColCount(0)
+  : nsHTMLContainer(aTag)
 { 
-}
-
-/** constructor
-  * I do not check or addref aTag because my superclass does that for me
-  */
-nsTablePart::nsTablePart (nsIAtom* aTag, PRInt32 aColumnCount)
-  : nsHTMLContainer(aTag),
-    mColCount(aColumnCount),
-    mSpecifiedColCount(0)
-{
 }
 
 /**
@@ -159,13 +147,6 @@ nsrefcnt nsTablePart::Release(void)
     return 0;
   }
   return mRefCnt;
-}
-
-/** assumes that mColCount has been set */
-///QQQQQ can be removed?
-PRInt32 nsTablePart::GetMaxColumns ()
-{
-  return mColCount;
 }
 
 /** add a child to the table content.
@@ -229,7 +210,10 @@ nsTablePart::AppendChild (nsIContent * aContent, PRBool aNotify)
         }
         NS_RELEASE(child);                        // child: REFCNT--
       }
-      if ((nsnull == group) || (! group->IsImplicit ()))
+      PRBool groupIsImplicit = PR_FALSE;
+      if (nsnull!=group)
+        group->IsSynthetic(groupIsImplicit);
+      if ((nsnull == group) || (PR_FALSE==groupIsImplicit))
       {
         if (gsDebug==PR_TRUE) printf ("nsTablePart::AppendChild -- creating an implicit row group.\n");
         nsIAtom * rowGroupTag = NS_NewAtom(kRowGroupBodyTagString); // rowGroupTag: REFCNT++
@@ -285,7 +269,10 @@ nsTablePart::AppendChild (nsIContent * aContent, PRBool aNotify)
           caption = (nsTableCaption *)content;
         NS_RELEASE(lastChild);                            // lastChild: REFCNT--
       }
-      if ((nsnull == caption) || (! caption->IsImplicit ()))
+      PRBool captionIsImplicit = PR_FALSE;
+      if (nsnull!=caption)
+        caption->IsSynthetic(captionIsImplicit);
+      if ((nsnull == caption) || (PR_FALSE==captionIsImplicit))
       {
         if (gsDebug==PR_TRUE) printf ("nsTablePart::AppendChild -- adding an implicit caption.\n");
         caption = new nsTableCaption (PR_TRUE);
@@ -535,7 +522,10 @@ PRBool nsTablePart::AppendColumn(nsTableCol *aContent)
       NS_RELEASE(child);                      // child: REFCNT--
     }
   }
-  if ((PR_FALSE == foundColGroup) || (! group->IsImplicit ()))
+  PRBool groupIsImplicit = PR_FALSE;
+  if (nsnull!=group)
+    group->IsSynthetic(groupIsImplicit);
+  if ((PR_FALSE == foundColGroup) || (PR_FALSE==groupIsImplicit))
   {
     if (gsDebug==PR_TRUE) 
       printf ("nsTablePart::AppendChild -- creating an implicit column group.\n");

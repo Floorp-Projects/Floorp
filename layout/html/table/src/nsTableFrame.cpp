@@ -464,7 +464,6 @@ void nsTableFrame::EnsureColumns(nsIPresContext*      aPresContext,
       // need to find the generic way to stamp out this content, and ::AppendChild it
       // this might be ok.  no matter what my mcontent is, I know it needs a colgroup as a kid?
 
-      // QQQ needs a ref count?
       lastColGroup = new nsTableColGroup (PR_TRUE);
       // XXX: how do I know whether AppendChild should notify or not?
       mContent->AppendChild(lastColGroup, PR_FALSE);  // was AppendColGroup
@@ -629,7 +628,6 @@ void nsTableFrame::BuildCellMap ()
   }
   if (gsDebug==PR_TRUE)
     DumpCellMap ();
-  //QQQ EnsureColumns();
 }
 
 /**
@@ -810,7 +808,6 @@ void nsTableFrame::AppendLayoutData(nsVoidArray* aList, nsTableCellFrame* aTable
 
 void nsTableFrame::RecalcLayoutData()
 {
-  //QQQ should we ensureCellMap here?
   PRInt32 colCount = mCellMap->GetColCount();
   PRInt32 rowCount = mCellMap->GetRowCount();
   PRInt32 row = 0;
@@ -1261,9 +1258,9 @@ nsReflowStatus nsTableFrame::ResizeReflowPass1(nsIPresContext* aPresContext,
     }
   }
 
+  // BuildColumnCache calls EnsureCellMap. If that ever changes, be sure to call EnsureCellMap
+  // here first.
   BuildColumnCache(aPresContext, aDesiredSize, aReflowState, aStatus);
-  EnsureCellMap();//QQQ have to determine where the right place for this is now that it's a frame-side operation
-  //QQQ cell map used to be forced before loop
   // Recalculate Layout Dependencies
   RecalcLayoutData();
 

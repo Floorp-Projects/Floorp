@@ -55,10 +55,7 @@ public:
   /** destructor, not responsible for any memory destruction itself */
   virtual ~nsTableRowGroup();
 
-  /** return the max of the number of columns represented by the contained rows */
-  virtual PRInt32 GetMaxColumns();
-
-    // For debugging purposes only
+  // For debugging purposes only
   NS_IMETHOD_(nsrefcnt) AddRef();
   NS_IMETHOD_(nsrefcnt) Release();
 
@@ -74,14 +71,8 @@ public:
                                nsIStyleContext* aStyleContext,
                                nsIFrame*&       aResult);
 
-  /** return the number of contained rows */
-  int GetRowCount ();
-
   /** returns nsITableContent::kTableRowGroupType */
   int GetType();
-
-  /** notify the containing nsTablePart that cell information has changed */
-  virtual void ResetCellMap ();
 
   /* ----------- overrides from nsTableContent ---------- */
 
@@ -116,11 +107,6 @@ protected:
 
 };
 
-/** return the number of contained rows */
-inline int nsTableRowGroup::GetRowCount ()
-{
-  return ChildCount ();
-}
 
 /** returns nsITableContent::kTableRowGroupType */
 inline int nsTableRowGroup::GetType()

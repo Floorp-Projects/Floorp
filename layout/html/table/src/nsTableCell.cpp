@@ -355,8 +355,6 @@ void nsTableCell::SetRowSpan(int aRowSpan)
   NS_ASSERTION(0<aRowSpan, "bad row span");
   int oldSpan = mRowSpan;
   mRowSpan = aRowSpan;
-  if (mRowSpan != oldSpan)
-    ResetCellMap ();
 }
 
 void nsTableCell::SetColSpan (int aColSpan)
@@ -364,14 +362,6 @@ void nsTableCell::SetColSpan (int aColSpan)
   NS_ASSERTION(0<aColSpan, "bad col span");
   int oldSpan = mColSpan;
   mColSpan = aColSpan;
-  if (mColSpan != oldSpan)
-    ResetCellMap ();
-}
-
-void nsTableCell::ResetCellMap ()
-{
-  if (nsnull != mRow)
-    mRow->ResetCellMap ();
 }
 
 nsresult

@@ -43,27 +43,10 @@ static const PRBool gsNoisyRefs = PR_FALSE;
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 static NS_DEFINE_IID(kITableContentIID, NS_ITABLECONTENT_IID);
 
-// hack, remove when hack in nsTableCol constructor is removed
-static PRInt32 HACKcounter=0;
-static nsIAtom *HACKattribute=nsnull;
-#include "prprf.h"  // remove when nsTableCol constructor hack is removed
-// end hack code
-
 // nsTableContent checks aTag
 nsTableRowGroup::nsTableRowGroup(nsIAtom* aTag)
   : nsTableContent(aTag)
 {
-  /* begin hack */
-  // temporary hack to get around style sheet optimization that folds all
-  // col style context into one, unless there is a unique HTML attribute set
-  char out[40];
-  PR_snprintf(out, 40, "%d", HACKcounter);
-  const nsString value(out);
-  if (nsnull==HACKattribute)
-    HACKattribute = NS_NewAtom("Steve's unbelievable hack attribute");
-  SetAttribute(HACKattribute, value);
-  HACKcounter++;
-  /* end hack */
 }
 
 // nsTableContent checks aTag
@@ -71,37 +54,10 @@ nsTableRowGroup::nsTableRowGroup(nsIAtom* aTag, PRBool aImplicit)
   : nsTableContent(aTag)
 {
   mImplicit = aImplicit;
-  /* begin hack */
-  // temporary hack to get around style sheet optimization that folds all
-  // col style context into one, unless there is a unique HTML attribute set
-  char out[40];
-  PR_snprintf(out, 40, "%d", HACKcounter);
-  const nsString value(out);
-  if (nsnull==HACKattribute)
-    HACKattribute = NS_NewAtom("Steve's unbelievable hack attribute");
-  SetAttribute(HACKattribute, value);
-  HACKcounter++;
-  /* end hack */
 }
 
 nsTableRowGroup::~nsTableRowGroup()
 {
-}
-
-/** return the number of columns in the widest row in this group */
-///QQQ could be removed
-PRInt32 nsTableRowGroup::GetMaxColumns()
-{ // computed every time for now, could be cached
-  PRInt32 result = 0;
-  PRInt32 numRows = ChildCount();
-  for (PRInt32 rowIndex = 0; rowIndex < numRows; rowIndex++)
-  {
-    nsTableRow *row = (nsTableRow*)ChildAt(rowIndex);
-    PRInt32 numCols = row->GetMaxColumns();
-    if (result < numCols)
-      result = numCols;
-  }
-  return result;
 }
 
 // Added for debuging purposes -- remove from final build
@@ -186,11 +142,6 @@ nsTableRowGroup::CreateFrame(nsIPresContext* aPresContext,
   return rv;
 }
 
-void nsTableRowGroup::ResetCellMap ()
-{
-
-}
-
 NS_IMETHODIMP
 nsTableRowGroup::AppendChild (nsIContent *aContent, PRBool aNotify)
 {
@@ -210,7 +161,6 @@ nsTableRowGroup::AppendChild (nsIContent *aContent, PRBool aNotify)
     {
       ((nsTableRow *)aContent)->SetRowGroup (this);
       // make sure the table cell map gets rebuilt
-      ResetCellMap ();
     }
   }
   // otherwise, if it's a cell, create an implicit row for it
@@ -229,7 +179,10 @@ nsTableRowGroup::AppendChild (nsIContent *aContent, PRBool aNotify)
         NS_RELEASE(child);                    // child: REFCNT--
       }
     }
-    if ((nsnull == row) || (! row->IsImplicit ()))
+    PRBool rowIsImplicit = PR_FALSE;
+    if (nsnull!=row)
+      row->IsSynthetic(rowIsImplicit);
+    if ((nsnull == row) || (PR_FALSE==rowIsImplicit))
     {
       printf ("nsTableRow::AppendChild -- creating an implicit row.\n");
       nsIAtom * trDefaultTag = NS_NewAtom(nsTablePart::kRowTagString);   // trDefaultTag: REFCNT++
@@ -271,7 +224,6 @@ nsTableRowGroup::InsertChildAt (nsIContent *aContent, PRInt32 aIndex,
   if (NS_OK==result)
   {
     ((nsTableRow *)aContent)->SetRowGroup (this);
-    ResetCellMap ();
   }
 
   return result;
@@ -304,7 +256,6 @@ nsTableRowGroup::ReplaceChildAt (nsIContent *aContent, PRInt32 aIndex,
     ((nsTableRow *)aContent)->SetRowGroup (this);
     if (nsnull != lastChild)
       ((nsTableRow *)lastChild)->SetRowGroup (nsnull);
-    ResetCellMap ();
   }
   NS_IF_RELEASE(lastChild);                   // lastChild: REFCNT--
   return result;
@@ -327,7 +278,6 @@ nsTableRowGroup::RemoveChildAt (PRInt32 aIndex, PRBool aNotify)
   {
     if (nsnull != lastChild)
       ((nsTableRow *)lastChild)->SetRowGroup (nsnull);
-    ResetCellMap ();
   }
   NS_IF_RELEASE(lastChild);                  // lastChild: REFCNT-- 
   return result;
@@ -381,9 +331,9 @@ NS_NewTableRowGroupPart(nsIHTMLContent** aInstancePtrResult,
   if (nsnull == aInstancePtrResult) {
     return NS_ERROR_NULL_POINTER;
   }
-  nsIHTMLContent* body = new nsTableRowGroup(aTag);
-  if (nsnull == body) {
+  nsIHTMLContent* content = new nsTableRowGroup(aTag);
+  if (nsnull == content) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
-  return body->QueryInterface(kIHTMLContentIID, (void **) aInstancePtrResult);
+  return content->QueryInterface(kIHTMLContentIID, (void **) aInstancePtrResult);
 }

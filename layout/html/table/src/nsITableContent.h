@@ -70,7 +70,7 @@ public:
   /** returns PR_TRUE if there is an actual input tag corresponding to
     * this content object.
     */
-  virtual PRBool IsImplicit () const =0;
+  NS_IMETHOD IsSynthetic(PRBool& aResult) = 0;
 
   /** returns PR_TRUE if this content object should NOT be written to the output stream.
     * for example, we don't generally want to output implicit tags when saving.
