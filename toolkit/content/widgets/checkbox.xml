@@ -11,7 +11,7 @@
     </resources>
   </binding>
 
-  <binding id="checkbox-baseline" extends="chrome://global/content/bindings/general.xml#basetext">
+  <binding id="checkbox-baseline" extends="chrome://global/content/widgets/general.xml#basetext">
     <content>
       <xul:image class="checkbox-check" xbl:inherits="checked,disabled"/>
       <xul:hbox class="checkbox-label-box" flex="1">

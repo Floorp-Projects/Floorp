@@ -26,7 +26,7 @@
     </implementation>
   </binding>
 
-  <binding id="text-label" extends="chrome://global/content/bindings/text.xml#text-base">
+  <binding id="text-label" extends="chrome://global/content/widgets/text.xml#text-base">
     <implementation implements="nsIDOMXULLabelElement">
       <property name="accessKey" onget="return this.getAttribute('accesskey');"
                                  onset="this.setAttribute('accesskey', val); return val;"/>
@@ -35,7 +35,7 @@
     </implementation>
   </binding>
 
-  <binding id="label-control" extends="chrome://global/content/bindings/text.xml#text-label">
+  <binding id="label-control" extends="chrome://global/content/widgets/text.xml#text-label">
     <handlers>
       <handler event="click" action="if (this.disabled) return;
                                      var controlElementID = this.getAttribute('control');
@@ -48,7 +48,7 @@
     </handlers>
   </binding>  
 
-  <binding id="text-link" extends="chrome://global/content/bindings/text.xml#text-label">
+  <binding id="text-link" extends="chrome://global/content/widgets/text.xml#text-label">
     <handlers>
      <handler event="keypress" keycode="VK_ENTER" action="this.click()" />
      <handler event="keypress" keycode="VK_RETURN" action="this.click()" />
