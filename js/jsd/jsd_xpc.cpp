@@ -544,7 +544,7 @@ jsds_ErrorHookProc (JSDContext *jsdc, JSContext *cx, const char *message,
     hook->OnError (message, fileName, line, pos, flags, errnum, val, &rval);
     gJsds->UnPause(nsnull);
     
-    running = false;
+    running = PR_FALSE;
     if (!rval)
         return JSD_ERROR_REPORTER_DEBUG;
     
