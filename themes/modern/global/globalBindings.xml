@@ -6,13 +6,13 @@
           xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
   <binding id="button-doubletext" extends="chrome://global/content/xulBindings.xml#basetext">
-    <content>
+    <content includes="menupopup">
   	  <xul:box class="button-internal-box" orient="vertical" autostretch="never" flex="1">
         <xul:image class="button-icon" inherits="src"/>
         <xul:box orient="vertical" class="button-text-container" autostretch="never" flex="1">
-		  <xul:stack flex="1">
-          	<xul:text class="button-text-shadow" inherits="value,accesskey,crop,dragover-top,disabled"/>		  
-          	<xul:text class="button-text" inherits="value,accesskey,crop,dragover-top"/>          	
+          <xul:stack flex="1">
+            <xul:text class="button-text-shadow" inherits="value,accesskey,crop,dragover-top,disabled"/>		  
+            <xul:text class="button-text" inherits="value,accesskey,crop,dragover-top"/>          	
           </xul:stack>
         </xul:box>
       </xul:box>
@@ -260,12 +260,13 @@
           <xul:spring class="tab-image-left-mid" inherits="selected" flex="1"/>
           <xul:spring class="tab-image-left-btm" inherits="selected"/>
         </xul:box>
-        <xul:box flex="1" class="tab-image-middle" orient="vertical" inherits="selected">
-          <xul:box orient="horizontal" align="center" autostretch="never">
+        <xul:box flex="1" class="tab-image-mid" orient="vertical" inherits="selected">
+          <xul:box class="tab-image-mid-top" inherits="selected"/>
+          <xul:box class="tab-image-mid-mid" orient="horizontal" align="center" autostretch="never" flex="1">
     	      <xul:image class="tab-left"/>
         	  <xul:text flex="1" inherits="value,crop,accesskey" crop="right" class="tab-text"/>
           </xul:box>
-          <xul:box class="tab-image-middle-btm" inherits="selected"/>
+          <xul:box class="tab-image-mid-btm" inherits="selected"/>
         </xul:box>
         <xul:box class="tab-image-right" orient="vertical">
           <xul:spring class="tab-image-right-top" inherits="selected"/>
