@@ -139,7 +139,7 @@ extern int XFE_RESOURCES_NOT_INSTALLED_CORRECTLY;
 extern int XFE_USAGE_MSG1;
 extern int XFE_USAGE_MSG2;
 extern int XFE_USAGE_MSG3;
-#if defined(MOZ_MAIL_NEWS) && defined(EDITOR) && defined(TASKBAR)
+#if defined(MOZ_MAIL_NEWS) && defined(EDITOR) && defined(MOZ_TASKBAR)
 extern int XFE_USAGE_MSG4;
 #endif
 extern int XFE_USAGE_MSG5;
