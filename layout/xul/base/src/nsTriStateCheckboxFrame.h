@@ -43,6 +43,7 @@
 
 
 #include "nsFormControlFrame.h"
+#include "nsLeafFrame.h"
 #include "prtypes.h"
 
 class nsIPresContext;
@@ -54,7 +55,7 @@ class nsIAtom;
 nsresult NS_NewTriStateCheckboxFrame(nsIFrame*& aResult) ;
 
 
-class nsTriStateCheckboxFrame : public nsFormControlFrame
+class nsTriStateCheckboxFrame : public nsLeafFrame
 {
 public:
   nsTriStateCheckboxFrame();
@@ -65,13 +66,6 @@ public:
 
 
   virtual PRInt32 GetMaxNumValues();
-
-   // nsFormControlFrame overrides
-  nsresult RequiresWidget(PRBool &aHasWidget);
-
-  //
-  // Methods used to GFX-render the checkbox
-  // 
 
   NS_IMETHOD Paint(nsIPresContext& aPresContext,
                    nsIRenderingContext& aRenderingContext,
@@ -86,12 +80,16 @@ public:
   
 protected:
 
+  virtual void GetDesiredSize(nsIPresContext* aPresContext,
+                              const nsHTMLReflowState& aReflowState,
+                              nsHTMLReflowMetrics& aDesiredSize) ;
+
   enum CheckState { eOff, eOn, eMixed } ;
 
-  nsresult GetCurrentCheckState(CheckState *outState) ;
-  nsresult SetCurrentCheckState(CheckState aState) ;
+  CheckState GetCurrentCheckState() ;
+  void SetCurrentCheckState(CheckState aState) ;
   
-  virtual void MouseClicked(nsIPresContext* aPresContext);
+  virtual void MouseClicked(const nsIPresContext & aPresContext);
  
   virtual void PaintCheckBox(nsIPresContext& aPresContext,
                              nsIRenderingContext& aRenderingContext,
