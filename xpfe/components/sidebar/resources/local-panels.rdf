@@ -31,6 +31,7 @@
         <rdf:li resource="urn:sidebar:panel:whats-related"/>
         <rdf:li resource="urn:sidebar:panel:search"/>
         <rdf:li resource="urn:sidebar:panel:bookmarks"/>
+        <rdf:li resource="urn:sidebar:panel:history"/>
       </rdf:Seq>
     </nc:panel-list>
   </rdf:Description>
