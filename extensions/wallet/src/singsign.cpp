@@ -86,6 +86,7 @@ si_SaveSignonDataInKeychain();
  *************************************/
 
 extern nsresult Wallet_ProfileDirectory(nsFileSpec& dirSpec);
+extern PRUnichar * Wallet_Localize(char * genericString);
 
 
 /***********
@@ -136,6 +137,109 @@ si_SelectDialog(const PRUnichar* szMessage, PRUnichar** pList, PRInt32* pCount) 
   return rtnValue;  
 }
 
+nsresult
+si_CheckGetPassword
+  (PRUnichar ** password,
+  const PRUnichar * szMessage,
+  PRBool* checkValue)
+{
+  nsresult res;  
+  NS_WITH_SERVICE(nsIPrompt, dialog, kNetSupportDialogCID, &res);
+  if (NS_FAILED(res)) {
+    return res;
+  }
+
+  PRInt32 buttonPressed = 1; /* in case user exits dialog by clickin X */
+  PRUnichar * prompt_string = Wallet_Localize("PromptForPassword");
+  PRUnichar * check_string = Wallet_Localize("SaveThisValue");
+
+  res = dialog->UniversalDialog(
+    NULL, /* title message */
+    prompt_string, /* title text in top line of window */
+    szMessage, /* this is the main message */
+    check_string, /* This is the checkbox message */
+    NULL, /* first button text, becomes OK by default */
+    NULL, /* second button text, becomes CANCEL by default */
+    NULL, /* third button text */
+    NULL, /* fourth button text */
+    NULL, /* first edit field label */
+    NULL, /* second edit field label */
+    password, /* first edit field initial and final value */
+    NULL, /* second edit field initial and final value */
+    NULL,  /* icon: question mark by default */
+    checkValue, /* initial and final value of checkbox */
+    2, /* number of buttons */
+    1, /* number of edit fields */
+    1, /* is first edit field a password field */
+    &buttonPressed);
+
+  Recycle(prompt_string);
+  Recycle(check_string);
+
+  if (NS_FAILED(res)) {
+    return res;
+  }
+  if (buttonPressed == 0) {
+    return NS_OK;
+  } else {
+    return NS_ERROR_FAILURE; /* user pressed cancel */
+  }
+}
+
+nsresult
+si_CheckGetUsernamePassword
+  (PRUnichar ** username,
+  PRUnichar ** password,
+  const PRUnichar * szMessage,
+  PRBool* checkValue)
+{
+  nsresult res;  
+  NS_WITH_SERVICE(nsIPrompt, dialog, kNetSupportDialogCID, &res);
+  if (NS_FAILED(res)) {
+    return res;
+  }
+
+  PRInt32 buttonPressed = 1; /* in case user exits dialog by clickin X */
+  PRUnichar * prompt_string = Wallet_Localize("PromptForPassword");
+  PRUnichar * check_string = Wallet_Localize("SaveTheseValues");
+  PRUnichar * user_string = Wallet_Localize("UserName");
+  PRUnichar * password_string = Wallet_Localize("Password");
+
+  res = dialog->UniversalDialog(
+    NULL, /* title message */
+    prompt_string, /* title text in top line of window */
+    szMessage, /* this is the main message */
+    check_string, /* This is the checkbox message */
+    NULL, /* first button text, becomes OK by default */
+    NULL, /* second button text, becomes CANCEL by default */
+    NULL, /* third button text */
+    NULL, /* fourth button text */
+    user_string, /* first edit field label */
+    password_string, /* second edit field label */
+    username, /* first edit field initial and final value */
+    password, /* second edit field initial and final value */
+    NULL,  /* icon: question mark by default */
+    checkValue, /* initial and final value of checkbox */
+    2, /* number of buttons */
+    2, /* number of edit fields */
+    0, /* is first edit field a password field */
+    &buttonPressed);
+
+  Recycle(prompt_string);
+  Recycle(check_string);
+  Recycle(user_string);
+  Recycle(password_string);
+
+  if (NS_FAILED(res)) {
+    return res;
+  }
+  if (buttonPressed == 0) {
+    return NS_OK;
+  } else {
+    return NS_ERROR_FAILURE; /* user pressed cancel */
+  }
+}
+
 
 /******************
  * Key Management *
@@ -148,7 +252,6 @@ extern void Wallet_KeyResetTime();
 extern PRBool Wallet_KeyTimedOut();
 extern PRBool Wallet_SetKey(PRBool newkey);
 extern PRInt32 Wallet_KeySize();
-extern PRUnichar * Wallet_Localize(char * genericString);
 extern PRBool Wallet_CancelKey();
 
 char* signonFileName = nsnull;
@@ -1926,7 +2029,6 @@ SINGSIGN_RememberSignonData (char* URLName, nsVoidArray * signonData)
   } else if (passwordCount == 3) {
     /* three-password form is a change-of-password request */
 
-    si_SignonDataStruct* data = nsnull;
     si_SignonUserStruct* user;
 
     /* make sure all passwords are non-null and 2nd and 3rd are identical */
@@ -2157,7 +2259,6 @@ SINGSIGN_PromptUsernameAndPassword
 
   nsresult res;
 
-
   /* do only the dialog if signon preference is not enabled */
   if (!si_GetSignonRememberingPref()){
     return dialog->PromptUsernameAndPassword(text, user, pwd, returnValue);
@@ -2180,21 +2281,20 @@ SINGSIGN_PromptUsernameAndPassword
   /* prefill with previous username/password if any */
   nsAutoString username, password;
   si_RestoreOldSignonDataFromBrowser(host, PR_FALSE, username, password);
-  *user = username.ToNewUnicode();
-  *pwd = password.ToNewUnicode();
 
   /* get new username/password from user */
-  res = dialog->PromptUsernameAndPassword(text, user, pwd, returnValue);
-  if (NS_FAILED(res) || !(*returnValue)) {
+  *user = username.ToNewUnicode();
+  *pwd = password.ToNewUnicode();
+  PRBool checked = PR_TRUE;
+  res = si_CheckGetUsernamePassword(user, pwd, text, &checked);
+  if (NS_FAILED(res)) {
     /* user pressed Cancel */
     PR_FREEIF(*user);
     PR_FREEIF(*pwd);
     PR_FREEIF(host);
     return res;
   }
-
-  /* remember these values for next time */
-  if (si_OkToSave(host, nsAutoString(username))) {
+  if (checked) {
     si_RememberSignonDataFromBrowser (host, nsAutoString(*user), nsAutoString(*pwd));
   }
 
@@ -2253,17 +2353,17 @@ SINGSIGN_PromptPassword
     return NS_OK;
   }
 
-  /* if no password found, get new password from user */
-  res = dialog->PromptPassword(text, nsnull /* window title */, pwd, returnValue);
-  if (NS_FAILED(res) || !(*returnValue)) {
+  /* no password found, get new password from user */
+  *pwd = password.ToNewUnicode();
+  PRBool checked = PR_TRUE;
+  res = si_CheckGetPassword(pwd, text, &checked);
+  if (NS_FAILED(res)) {
     /* user pressed Cancel */
+    PR_FREEIF(*pwd);
     PR_FREEIF(host);
     return res;
   }
-        
-  /* remember these values for next time */
-  nsAutoString temp = *pwd;
-  if (temp.Length() != 0 && si_OkToSave(host, username)) {
+  if (checked) {
     si_RememberSignonDataFromBrowser (host, username, nsAutoString(*pwd));
   }
 
