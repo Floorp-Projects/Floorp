@@ -172,10 +172,8 @@ PRBool nsFileWidget::Show()
 	nsFilePath					filePath(fileSpec);
 	
 	mFile = filePath;
+	mFileSpec = fileSpec;
 	
-   // Set user-selected location of file or directory
-  //Str255ToString(reply.sfFile.name, mFile);  
-  
   return PR_TRUE;
 }
 
@@ -229,6 +227,7 @@ NS_IMETHODIMP  nsFileWidget::GetFile(nsString& aFile)
 
 NS_IMETHODIMP  nsFileWidget::GetFile(nsFileSpec& aFile)
 {
+  aFile = mFileSpec;
   return NS_OK;
 }
 

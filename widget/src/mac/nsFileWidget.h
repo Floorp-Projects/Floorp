@@ -92,6 +92,7 @@ class nsFileWidget : public nsWindow, public nsIFileWidget
      const nsString*        mFilters;
      nsString               mDefault;
      nsString               mDisplayDirectory;
+     nsFileSpec				mFileSpec;
 
      void GetFilterListArray(nsString& aFilterList);
           
