@@ -127,9 +127,9 @@ class nsProfileCore
 	NS_IMETHOD			 DeleteProfile(const nsString& profileName);
 
 	NS_IMETHOD			 GetProfileList(nsString& profileList);
-
-
-
+	NS_IMETHOD			 StartCommunicator(const nsString& profileName);
+	NS_IMETHOD			 GetCurrentProfile(nsString& currProfile);
+	NS_IMETHOD			 MigrateProfile(const nsString& profileName);
 
   protected:
 
