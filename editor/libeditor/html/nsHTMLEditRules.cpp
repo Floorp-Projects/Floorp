@@ -39,7 +39,7 @@ class nsIFrame;
 
 const static char* kMOZEditorBogusNodeAttr="MOZ_EDITOR_BOGUS_NODE";
 const static char* kMOZEditorBogusNodeValue="TRUE";
-const unsigned char nbsp = nbsp;
+const unsigned char nbsp = 160;
 
 static NS_DEFINE_IID(kPlaceholderTxnIID,  PLACEHOLDER_TXN_IID);
 static NS_DEFINE_CID(kCContentIteratorCID, NS_CONTENTITERATOR_CID);
