@@ -38,7 +38,7 @@
 #ifndef nsRenderingContextImpl_h___
 #define nsRenderingContextImpl_h___
 
-#include "nsComObsolete.h"
+#include "gfxCore.h"
 #include "nsIRenderingContext.h"
 #include "nsPoint.h"
 #include "nsSize.h"

@@ -47,6 +47,7 @@ XPIDL_MODULE	= widget
 GRE_MODULE	= 1
 
 EXPORTS		= \
+		widgetCore.h \
 		nsIMenuBar.h \
 		nsIMenu.h \
 		nsIMenuItem.h \

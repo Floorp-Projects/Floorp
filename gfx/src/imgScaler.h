@@ -36,7 +36,7 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "nsComObsolete.h"
+#include "gfxCore.h"
 
 NS_GFX_(void)
 RectStretch(unsigned aSrcWidth, unsigned aSrcHeight,

@@ -45,7 +45,7 @@
 #include "nsSize.h"
 #include "nsMargin.h"
 #include "nsUnitConversion.h"
-#include "nsComObsolete.h"
+#include "gfxCore.h"
 
 struct NS_GFX nsRect {
   nscoord x, y;

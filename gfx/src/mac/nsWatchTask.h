@@ -45,8 +45,7 @@
 #endif
 #include <Quickdraw.h>
 #include "prtypes.h"
-#include "nscore.h"
-#include "nsComObsolete.h"
+#include "gfxCore.h"
 
 //
 // class nsWatchTask

@@ -36,6 +36,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 
+#include "widgetCore.h"
 #include "nsWidgetSupport.h"
 #include "nsRect.h"
 #include "nsIAppShell.h"

@@ -43,7 +43,7 @@
 
 #include "nsIFontMetrics.h"
 #include "nsIDeviceContext.h"
-#include "nsComObsolete.h"
+#include "gfxCore.h"
 
 class NS_GFX nsFontUtils
 {

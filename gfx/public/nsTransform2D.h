@@ -38,10 +38,9 @@
 #ifndef nsTransform2D_h___
 #define nsTransform2D_h___
 
-#include "nscore.h"
+#include "gfxCore.h"
 #include "nsCoord.h"
 #include "nsUnitConversion.h"
-#include "nsComObsolete.h"
 
 #define MG_2DIDENTITY     0
 #define MG_2DTRANSLATION  1
