@@ -114,6 +114,8 @@ NS_IMETHODIMP nsMsgDBFolder::Shutdown(PRBool shutdownChildren)
 
 NS_IMETHODIMP nsMsgDBFolder::ForceDBClosed ()
 {
+   NotifyStoreClosedAllHeaders();
+
     PRUint32 cnt = 0, i;
     if (mSubFolders)
     {

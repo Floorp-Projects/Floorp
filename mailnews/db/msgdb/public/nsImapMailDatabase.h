@@ -34,13 +34,17 @@ public:
 	virtual ~nsImapMailDatabase();
 	
 	NS_IMETHOD		Open(nsIFileSpec *folderName, PRBool create, PRBool upgrading, nsIMsgDatabase** pMessageDB);
-	
-	NS_IMETHOD			SetSummaryValid(PRBool valid = TRUE);
+
+  NS_IMETHOD    StartBatch();
+  NS_IMETHOD    EndBatch();
+	NS_IMETHOD    SetSummaryValid(PRBool valid = TRUE);
+  NS_IMETHOD    DeleteMessages(nsMsgKeyArray* nsMsgKeys, nsIDBChangeListener *instigator);
 	
 protected:
 	// IMAP does not set local file flags, override does nothing
 	virtual void	UpdateFolderFlag(nsIMsgDBHdr *msgHdr, PRBool bSet, 
 									 MsgFlags flag, nsIOFileStream **ppFileStream);
+
 };
 
 

@@ -61,6 +61,7 @@ public:
   virtual nsresult GetThreadForMsgKey(nsMsgKey msgKey, nsIMsgThread **result);
   virtual nsresult EnumerateUnreadMessages(nsISimpleEnumerator* *result);
   virtual nsresult EnumerateReadMessages(nsISimpleEnumerator* *result);
+  virtual nsresult EnumerateMessagesWithFlag(nsISimpleEnumerator* *result, PRUint32 flag);
 
   // this might just be for debugging - we'll see.
   nsresult ListAllThreads(nsMsgKeyArray *threadIds);

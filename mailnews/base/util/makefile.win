@@ -76,6 +76,7 @@ CPP_OBJS=                               \
 	.\$(OBJDIR)\nsMsgMailNewsUrl.obj	\
 	.\$(OBJDIR)\nsMsgTxn.obj			\
 	.\$(OBJDIR)\nsMsgI18N.obj			\
+	.\$(OBJDIR)\nsMsgCompactFolder.obj			\
 	$(NULL)
 
 LLIBS=								\

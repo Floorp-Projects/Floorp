@@ -1293,6 +1293,16 @@ NS_IMETHODIMP nsMsgDatabase::GetMsgHdrForKey(nsMsgKey key, nsIMsgDBHdr **pmsgHdr
 	return err;
 }
 
+NS_IMETHODIMP nsMsgDatabase::StartBatch()
+{
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsMsgDatabase::EndBatch()
+{
+  return NS_OK;
+}
+
 NS_IMETHODIMP nsMsgDatabase::DeleteMessage(nsMsgKey key, nsIDBChangeListener *instigator, PRBool commit)
 {
 	nsresult	err = NS_OK;
@@ -2432,44 +2442,16 @@ nsMsgDatabase::EnumerateThreads(PRUint32 viewType, nsISimpleEnumerator* *result)
     return NS_OK;
 }
 
-
-#if 0
-// convenience function to iterate through a db only looking for unread messages.
-// It turns out to be possible to do this more efficiently in news, since read/unread
-// status is kept in a much more compact format (the newsrc format).
-// So this is the base implementation, which news databases override.
-nsresult nsMsgDatabase::ListNextUnread(ListContext **pContext, nsMsgHdr **pResult)
+// only return headers with a particular flag set
+static nsresult
+nsMsgFlagSetFilter(nsIMsgDBHdr *msg, void *closure)
 {
-	nsMsgHdr	*pHeader;
-	nsresult			dbErr = NS_OK;
-	PRBool			lastWasRead = TRUE;
-	*pResult = NULL;
-
-	while (PR_TRUE)
-	{
-		if (*pContext == NULL)
-			dbErr = ListFirst (pContext, &pHeader);
-		else
-			dbErr = ListNext(*pContext, &pHeader);
-
-		if (dbErr != NS_OK)
-		{
-			ListDone(*pContext);
-			break;
-		}
-
-		else if (dbErr != NS_OK)	 
-			break;
-		if (IsHeaderRead(pHeader, &lastWasRead) == NS_OK && !lastWasRead)
-			break;
-		else
-			NS_RELEASE(pHeader);
-	}
-	if (!lastWasRead)
-		*pResult = pHeader;
-	return dbErr;
+  PRUint32 msgFlags, desiredFlags;
+  desiredFlags = * (PRUint32 *) closure;
+  msg->GetFlags(&msgFlags);
+  return (msgFlags & desiredFlags) ? NS_OK : NS_COMFALSE;
 }
-#else
+
 static nsresult
 nsMsgUnreadFilter(nsIMsgDBHdr* msg, void* closure)
 {
@@ -2492,6 +2474,17 @@ nsMsgDatabase::EnumerateUnreadMessages(nsISimpleEnumerator* *result)
     return NS_OK;
 }
 
+nsresult  
+nsMsgDatabase::EnumerateMessagesWithFlag(nsISimpleEnumerator* *result, PRUint32 flag)
+{
+    nsMsgDBEnumerator* e = new nsMsgDBEnumerator(this, nsMsgFlagSetFilter, &flag);
+    if (e == nsnull)
+        return NS_ERROR_OUT_OF_MEMORY;
+    NS_ADDREF(e);
+    *result = e;
+    return NS_OK;
+}
+
 static nsresult
 nsMsgReadFilter(nsIMsgDBHdr* msg, void* closure)
 {
@@ -2503,6 +2496,8 @@ nsMsgReadFilter(nsIMsgDBHdr* msg, void* closure)
     return wasRead ? NS_OK : NS_COMFALSE;
 }
 
+// note that we can't just use EnumerateMessagesWithFlag(MSG_FLAG_READ) because we need
+// to call IsHeaderRead.
 nsresult
 nsMsgDatabase::EnumerateReadMessages(nsISimpleEnumerator* *result)
 {
@@ -2513,7 +2508,6 @@ nsMsgDatabase::EnumerateReadMessages(nsISimpleEnumerator* *result)
     *result = e;
     return NS_OK;
 }
-#endif
 
 NS_IMETHODIMP nsMsgDatabase::CreateNewHdr(nsMsgKey key, nsIMsgDBHdr **pnewHdr)
 {
@@ -3309,6 +3303,35 @@ nsresult nsMsgDatabase::ListAllThreads(nsMsgKeyArray *threadIds)
 		pThread = nsnull;
 	}
 	return rv;
+}
+
+NS_IMETHODIMP nsMsgDatabase::ListAllOfflineMsgs(nsMsgKeyArray *outputKeys)
+{
+  nsCOMPtr <nsISimpleEnumerator> enumerator;
+  nsresult rv = EnumerateMessagesWithFlag(getter_AddRefs(enumerator), MSG_FLAG_OFFLINE);
+  if (NS_SUCCEEDED(rv) && enumerator)
+  {
+		PRBool hasMoreElements;
+		while(NS_SUCCEEDED(enumerator->HasMoreElements(&hasMoreElements)) && hasMoreElements)
+		{
+			nsCOMPtr<nsISupports> childSupports;
+			rv = enumerator->GetNext(getter_AddRefs(childSupports));
+			if(NS_FAILED(rv))
+				return rv;
+
+      // clear out db hdr, because it won't be valid when we get rid of the .msf file
+		  nsCOMPtr<nsIMsgDBHdr> dbMessage(do_QueryInterface(childSupports, &rv));
+		  if(NS_SUCCEEDED(rv) && dbMessage)
+      {
+        nsMsgKey msgKey;
+			  dbMessage->GetMessageKey(&msgKey);
+        outputKeys->Add(msgKey);
+      }
+    }
+  }
+  outputKeys->QuickSort();
+
+  return rv;
 }
 
 NS_IMETHODIMP nsMsgDatabase::ListAllOfflineOpIds(nsMsgKeyArray *offlineOpIds)

@@ -176,10 +176,28 @@ nsresult nsMailDatabase::OnNewPath (nsFileSpec &newPath)
 	return ret;
 }
 
-nsresult nsMailDatabase::DeleteMessages(nsMsgKeyArray* nsMsgKeys, nsIDBChangeListener *instigator)
+// cache m_folderStream to make updating mozilla status flags fast
+NS_IMETHODIMP nsMailDatabase::StartBatch()
+{
+  if (!m_folderStream)
+	  m_folderStream = new nsIOFileStream(nsFileSpec(m_dbName));
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsMailDatabase::EndBatch()
+{
+	if (m_folderStream)
+		delete m_folderStream;
+	m_folderStream = NULL;
+  return NS_OK;
+}
+
+
+NS_IMETHODIMP nsMailDatabase::DeleteMessages(nsMsgKeyArray* nsMsgKeys, nsIDBChangeListener *instigator)
 {
 	nsresult ret = NS_OK;
-	m_folderStream = new nsIOFileStream(nsFileSpec(m_dbName));
+  if (!m_folderStream)
+	  m_folderStream = new nsIOFileStream(nsFileSpec(m_dbName));
 	ret = nsMsgDatabase::DeleteMessages(nsMsgKeys, instigator);
 	if (m_folderStream)
 		delete m_folderStream;

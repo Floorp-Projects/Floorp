@@ -52,6 +52,9 @@ public:
 
 	NS_IMETHOD DeleteMessages(nsMsgKeyArray* nsMsgKeys, nsIDBChangeListener *instigator);
 
+  NS_IMETHOD StartBatch();
+  NS_IMETHOD EndBatch();
+
 	static  nsresult		SetFolderInfoValid(nsFileSpec *folderSpec, int num, int numunread);
 	nsresult				GetFolderName(nsString &folderName);
 	virtual nsMailDatabase	*GetMailDB() {return this;}

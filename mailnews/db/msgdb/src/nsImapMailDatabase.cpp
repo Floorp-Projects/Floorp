@@ -160,3 +160,19 @@ void	nsImapMailDatabase::UpdateFolderFlag(nsIMsgDBHdr * /* msgHdr */, PRBool /* 
 {
 }
 
+// override so nsMailDatabase methods that deal with m_folderStream are *not* called
+NS_IMETHODIMP nsImapMailDatabase::StartBatch()
+{
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsImapMailDatabase::EndBatch()
+{
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsImapMailDatabase::DeleteMessages(nsMsgKeyArray* nsMsgKeys, nsIDBChangeListener *instigator)
+{
+	return nsMsgDatabase::DeleteMessages(nsMsgKeys, instigator);
+}
+

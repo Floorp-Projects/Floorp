@@ -204,9 +204,14 @@ interface  nsIMsgDatabase : nsIDBChangeAnnouncer {
   // but also useful to tell the summary to mark itself invalid
   void SetSummaryValid(in boolean valid);
 
+  // batching - can be used to cache file stream for local mail,
+  // and perhaps to use the mdb batching mechanism as well.
+  void StartBatch();
+  void EndBatch();
   // offline operations
   [noscript] void ListAllOfflineOpIds(in nsMsgKeyArrayPtr offlineOpIds);
   [noscript] void ListAllOfflineDeletes(in nsMsgKeyArrayPtr offlineDeletes);
+  [noscript] void ListAllOfflineMsgs(in nsMsgKeyArrayPtr offlineMsgs);
 
   readonly attribute nsMsgKey LowWaterArticleNum;
   readonly attribute nsMsgKey HighWaterArticleNum;
