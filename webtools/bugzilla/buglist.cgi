@@ -86,6 +86,12 @@ else {
     quietly_check_login();
 }
 
+# Hack to support legacy applications that think the RDF ctype is at format=rdf.
+if ($::FORM{'format'} eq "rdf" && !$::FORM{'ctype'}) { 
+    $::FORM{'ctype'} = "rdf";
+    delete($::FORM{'format'});
+}
+
 # Determine the format in which the user would like to receive the output.
 # Uses the default format if the user did not specify an output format;
 # otherwise validates the user's choice against the list of available formats.
