@@ -287,7 +287,7 @@ PRBool BasicTableLayoutStrategy::AssignPreliminaryColumnWidths()
                 rowIndex, colSpan, cellMinSize.width, cellMinSize.height,
                 cellDesiredSize.width, cellDesiredSize.height);
 
-      if (PR_TRUE==haveColWidth  &&  PR_TRUE==cellGrantingWidth) 
+      if (PR_TRUE==haveColWidth)//  &&  PR_TRUE==cellGrantingWidth) 
       {
         // This col has a specified fixed width so set the min and max width to the larger of 
         // (specified width, largest max_element_size of the cells in the column)
@@ -297,7 +297,6 @@ PRBool BasicTableLayoutStrategy::AssignPreliminaryColumnWidths()
         widthForThisCell = widthForThisCell/colSpan;
         mTableFrame->SetColumnWidth(colIndex, widthForThisCell);
         maxColWidth = widthForThisCell;
-        //minColWidth = (cellMinSize.width)/colSpan;
         if ((1==colSpan) && (effectiveMaxColumnWidth < widthForThisCell))
           effectiveMaxColumnWidth = widthForThisCell;
         if (gsDebug) 
@@ -754,6 +753,7 @@ PRBool BasicTableLayoutStrategy::BalanceColumnsTableFits(const nsReflowState& aR
   nsVoidArray *proportionalColumnsList=nsnull; // a list of the columns that are proportional-width
   nsVoidArray *spanList=nsnull;       // a list of the cells that span columns
   PRInt32 numRows = mTableFrame->GetRowCount();
+  nscoord colInset = mTableFrame->GetCellSpacing();
 
   for (PRInt32 colIndex = 0; colIndex<mNumCols; colIndex++)
   { 
@@ -765,7 +765,6 @@ PRBool BasicTableLayoutStrategy::BalanceColumnsTableFits(const nsReflowState& aR
     PRInt32 maxColWidth = 0;
     PRInt32 rowIndex;
     PRInt32 firstRowIndex = -1;
-    nscoord colInset = mTableFrame->GetCellSpacing();
 
     const nsStylePosition* colPosition;
     colFrame->GetStyleData(eStyleStruct_Position, (nsStyleStruct*&)colPosition);    
@@ -1133,6 +1132,13 @@ PRBool BasicTableLayoutStrategy::BalanceColumnsTableFits(const nsReflowState& aR
   if ((PR_FALSE==aTableIsAutoWidth) && (aAvailWidth > (tableWidth-widthOfFixedTableColumns)))
   {
     DistributeExcessSpace(aAvailWidth, tableWidth, widthOfFixedTableColumns);
+  }
+  nscoord computedWidth=0;
+  for (PRInt32 i=0; i<mNumCols; i++) {
+    computedWidth += mTableFrame->GetColumnWidth(i) + colInset;
+  }
+  if (computedWidth>aMaxWidth) {
+    AdjustTableThatIsTooWide(computedWidth, aMaxWidth, PR_FALSE);
   }
   if (nsnull!=spanList)
   {
@@ -1597,7 +1603,7 @@ PRBool BasicTableLayoutStrategy::BalanceColumnsConstrained( const nsReflowState&
     AdjustTableThatIsTooNarrow(computedWidth, aMaxWidth);
   }
   else if (computedWidth>aMaxWidth) {
-    AdjustTableThatIsTooWide(computedWidth, aMaxWidth);
+    AdjustTableThatIsTooWide(computedWidth, aMaxWidth, PR_FALSE);
   }
 
 
@@ -1808,7 +1814,7 @@ void BasicTableLayoutStrategy::EnsureCellMinWidths(PRBool aShrinkFixedWidthCells
 // this is in the case of having to set a col to its min width instead of just
 // subtracting out excessPerColumn
 void BasicTableLayoutStrategy::AdjustTableThatIsTooWide(nscoord aComputedWidth, 
-                                                        nscoord aTableWidth)
+                                                        nscoord aTableWidth, PRBool aShrinkFixedCols)
 {
   if (PR_TRUE==gsDebug)
   {
@@ -1824,27 +1830,66 @@ void BasicTableLayoutStrategy::AdjustTableThatIsTooWide(nscoord aComputedWidth,
 
   PRInt32 numFixedColumns=0;
   PRInt32 *fixedColumns=nsnull;
-  //XXX todo: exclude fixed width columns
-  //mTableFrame->GetColumnsByType(eStyleUnit_Coord, numFixedColumns, fixedColumns);
+  if (PR_TRUE==aShrinkFixedCols)
+    mTableFrame->GetColumnsByType(eStyleUnit_Coord, numFixedColumns, fixedColumns);
   nscoord excess = aComputedWidth - aTableWidth;
-  if (0<excess && mNumCols!=numFixedColumns)
+  nscoord minDiff;    // the smallest non-zero delta between a column's current width and its min width
+  PRInt32 * colsToShrink = new PRInt32[mNumCols];
+  // while there is still extra computed space in the table
+  while (0<excess)
   {
-    nscoord excessPerColumn = excess/(mNumCols-numFixedColumns);
-    for (PRInt32 colIndex = 0; colIndex<mNumCols; colIndex++)
+    // reinit state variables
+    PRInt32 colIndex;
+    for (colIndex=0; colIndex<mNumCols; colIndex++)
+      colsToShrink[colIndex]=0;
+    minDiff=0;
+
+    // determine what columns we can take remove width from
+    PRInt32 numColsToShrink = 0;
+    for (colIndex=0; colIndex<mNumCols; colIndex++)
     {
-      //XXX todo: exclude fixed width columns
-      //if (PR_FALSE==IsFixedWidthColumn(colIndex, fixedColumns)
+      nscoord currentColWidth = mTableFrame->GetColumnWidth(colIndex);
+      nsTableColFrame *colFrame;
+      mTableFrame->GetColumnFrame(colIndex, colFrame);
+      nscoord minColWidth = colFrame->GetEffectiveMinColWidth();
+      if (currentColWidth==minColWidth)
+        continue;
+      if ((PR_FALSE==aShrinkFixedCols) && 
+          (PR_TRUE==IsColumnInList(colIndex, fixedColumns, numFixedColumns)))
+        continue;
+      colsToShrink[numColsToShrink] = colIndex;
+      numColsToShrink++;
+      nscoord diff = currentColWidth - minColWidth;
+      if ((0==minDiff) || (diff<minDiff))
+        minDiff = diff;
+    }
+    // if there are no columns we can remove space from, we're done
+    if (0==numColsToShrink)
+      break;
+    
+    // determine the amount to remove from each column
+    nscoord excessPerColumn;
+    if (excess<numColsToShrink)
+      excess=1;
+    else
+      excessPerColumn = excess/numColsToShrink;  // guess we can remove as much as we want
+    if (excessPerColumn>minDiff)                 // then adjust for minimum col widths
+      excessPerColumn=minDiff;
+    // remove excessPerColumn from every column we've determined we can remove width from
+    for (colIndex = 0; colIndex<mNumCols; colIndex++)
+    {
+      if ((PR_TRUE==IsColumnInList(colIndex, colsToShrink, numColsToShrink)))
       {
         nscoord colWidth = mTableFrame->GetColumnWidth(colIndex);
         colWidth -= excessPerColumn;
-        nsTableColFrame *colFrame = mTableFrame->GetColFrame(colIndex);
-        if (colWidth > colFrame->GetEffectiveMinColWidth())
-          mTableFrame->SetColumnWidth(colIndex, colWidth);
-        else
-          mTableFrame->SetColumnWidth(colIndex, colFrame->GetEffectiveMinColWidth());
+        mTableFrame->SetColumnWidth(colIndex, colWidth);
+        excess -= excessPerColumn;
+        if (0==excess)
+          break;
       }
     }
-  }
+  } // end while (0<excess)
+
   if (PR_TRUE==gsDebug)
   {
     nscoord tableWidth=0;
@@ -1854,8 +1899,20 @@ void BasicTableLayoutStrategy::AdjustTableThatIsTooWide(nscoord aComputedWidth,
       tableWidth += mTableFrame->GetColumnWidth(i);
       printf(" %d ", mTableFrame->GetColumnWidth(i));
     }
-    printf ("\n  computed table width is %d\n",tableWidth);
+    printf ("\n  computed table width is %d with aShrinkFixedCols = %s\n",
+            tableWidth, aShrinkFixedCols ? "TRUE" : "FALSE");
   }
+  delete [] colsToShrink;
+
+  // deal with any excess left over 
+  if ((PR_FALSE==aShrinkFixedCols) && (0!=excess))
+  {
+    // if there's any excess left, we know we've shrunk every non-fixed column to its min
+    // so we have to shrink fixed width columns if possible
+    AdjustTableThatIsTooWide(aComputedWidth, aTableWidth, PR_TRUE);
+  }
+  // otherwise we've shrunk the table to its min, and that's all we can do
+
 }
 
 void BasicTableLayoutStrategy::AdjustTableThatIsTooNarrow(nscoord aComputedWidth, 
@@ -1884,7 +1941,7 @@ void BasicTableLayoutStrategy::AdjustTableThatIsTooNarrow(nscoord aComputedWidth
     for (PRInt32 colIndex = 0; colIndex<mNumCols; colIndex++)
     {
       //XXX todo: exclude fixed width columns
-      //if (PR_FALSE==IsFixedWidthColumn(colIndex, fixedColumns)
+      //if (PR_FALSE==IsColumnInList(colIndex, fixedColumns))
       {
         nscoord colWidth = mTableFrame->GetColumnWidth(colIndex);
         colWidth += excessPerColumn;
@@ -1909,6 +1966,22 @@ void BasicTableLayoutStrategy::AdjustTableThatIsTooNarrow(nscoord aComputedWidth
   }
 }
 
-//PRBool BasicTableLayoutStrategy::IsFixedWidthColumn(PRInt32 colIndex, PRInt32 *colIndexes)
+PRBool BasicTableLayoutStrategy::IsColumnInList(const PRInt32 colIndex, 
+                                                PRInt32 *colIndexes, 
+                                                PRInt32 aNumFixedColumns)
+{
+  PRBool result = PR_FALSE;
+  for (PRInt32 i=0; i<aNumFixedColumns; i++)
+  {
+    if (colIndex==colIndexes[i])
+    {
+      result = PR_TRUE;
+      break;
+    }
+    else if (colIndex<colIndexes[i])
+      break;
+  }
+  return result;
+}
 
 
