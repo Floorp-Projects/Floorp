@@ -44,6 +44,7 @@ REQUIRES	= xpcom \
 		  shistory \
 		  webshell \
 		  windowwatcher \
+                  history \
 		  appcomps \
 		  webbrowserpersist \
 		  unicharutil \
@@ -52,7 +53,7 @@ REQUIRES	= xpcom \
 		  $(NULL)
 
 ifdef MOZ_PHOENIX
-REQUIRES	+= history toolkitcomps
+REQUIRES	+= toolkitcomps
 endif
 
 EXPORTS         = \
