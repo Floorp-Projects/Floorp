@@ -1950,10 +1950,11 @@ NS_METHOD nsTableFrame::Paint(nsIPresContext& aPresContext,
   }
 
   PaintChildren(aPresContext, aRenderingContext, aDirtyRect, aWhichLayer);
-  return nsFrame::Paint(aPresContext,
+  return NS_OK;
+  /*nsFrame::Paint(aPresContext,
                         aRenderingContext,
                         aDirtyRect,
-                        aWhichLayer);
+                        aWhichLayer);*/
 }
 
 
@@ -1962,16 +1963,16 @@ NS_IMETHODIMP
 nsTableFrame::SetSelected(nsIDOMRange *aRange,PRBool aSelected, nsSpread aSpread)
 {
   //traverse through children unselect tables
-  if ((aSpread == eSpreadDown) && aSelected){
+  if ((aSpread == eSpreadDown)){
     nsIFrame* kid;
     nsresult rv = FirstChild(nsnull, &kid);
     while (NS_SUCCEEDED(rv) && nsnull != kid) {
-      kid->SetSelected(nsnull,PR_FALSE,eSpreadDown);
+      kid->SetSelected(nsnull,aSelected,eSpreadDown);
 
       rv = kid->GetNextSibling(&kid);
     }
   }
-  return nsFrame::SetSelected(aRange,aSelected,eSpreadNone);
+  return NS_OK;//nsFrame::SetSelected(aRange,aSelected,eSpreadNone);
 }
 
 PRBool nsTableFrame::ParentDisablesSelection() const //override default behavior
