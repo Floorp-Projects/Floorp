@@ -224,7 +224,22 @@ nsHTMLEditUtils::IsListItem(nsIDOMNode *node)
 
 
 ///////////////////////////////////////////////////////////////////////////
-// IsTableCell: true if node an html td or th
+// IsTable: true if node an html table
+//                  
+PRBool 
+nsHTMLEditUtils::IsTable(nsIDOMNode *node)
+{
+  NS_PRECONDITION(node, "null node passed to nsHTMLEditor::IsTable");
+  nsAutoString tag;
+  nsEditor::GetTagString(node,tag);
+  if (tag == "table")
+    return PR_TRUE;
+
+  return PR_FALSE;
+}
+
+///////////////////////////////////////////////////////////////////////////
+// IsTableRow: true if node an html tr
 //                  
 PRBool 
 nsHTMLEditUtils::IsTableRow(nsIDOMNode *node)

@@ -40,8 +40,8 @@
 #include "nsIDOMSelection.h"
 #include "nsIDOMHTMLAnchorElement.h"
 #include "nsIDOMHTMLImageElement.h"
-
 #include "nsISelectionController.h"
+#include "nsIFrameSelection.h"  // For TABLESELECTION_ defines
 
 #include "nsICSSLoader.h"
 #include "nsICSSStyleSheet.h"
@@ -196,11 +196,10 @@ static PRBool IsCellNode(nsIDOMNode *aNode)
       nsAutoString tagName;
       if (NS_SUCCEEDED(element->GetTagName(tagName)))
       {
-        tagName.ToLowerCase();
-        // With only 3 tests, it doesn't 
+        // With only 2 tests, it doesn't 
         //  seem worth using nsAtoms
-        if (tagName.Equals("td") || 
-            tagName.Equals("th"))
+        if (tagName.EqualsIgnoreCase("td") || 
+            tagName.EqualsIgnoreCase("th"))
         {
           return PR_TRUE;
         }
@@ -217,7 +216,7 @@ nsHTMLEditor::nsHTMLEditor()
 , mRules(nsnull)
 , mIsComposing(PR_FALSE)
 , mMaxTextLength(-1)
-, mSelectingTableCells(PR_FALSE)
+, mSelectedCellIndex(0)
 {
 // Done in nsEditor
 // NS_INIT_REFCNT();
@@ -2620,11 +2619,10 @@ nsHTMLEditor::GetElementOrParentByTagName(const nsString &aTagName, nsIDOMNode *
       res = selection->GetAnchorOffset(&offset);
       if(NS_FAILED(res)) return res;
       currentNode = nsEditor::GetChildAt(anchorNode, offset);
-      if (!currentNode) return NS_ERROR_FAILURE;
-    } else {
-      // anchor node is probably a text node - just use that
-      currentNode = anchorNode;
     }
+    // anchor node is probably a text node - just use that
+    if (!currentNode)
+      currentNode = anchorNode;
   }
    
   nsAutoString TagName = aTagName;
@@ -3053,14 +3051,30 @@ nsHTMLEditor::SetBackgroundColor(const nsString& aColor)
   NS_PRECONDITION(mDocWeak, "Missing Editor DOM Document");
   
   // Find a selected or enclosing table element to set background on
-  // TODO: Handle case of > 1 table cell or row selected
   nsCOMPtr<nsIDOMElement> element;
-  PRBool isSelected;
+  PRInt32 selectedCount;
   nsAutoString tagName;
-  nsresult res = GetSelectedOrParentTableElement(*getter_AddRefs(element), tagName, isSelected);
+  nsresult res = GetSelectedOrParentTableElement(*getter_AddRefs(element), tagName, selectedCount);
   if (NS_FAILED(res)) return res;
-  if (!element)
+  if (element)
   {
+    if (selectedCount > 0)
+    {
+      // Traverse all selected cells
+      nsCOMPtr<nsIDOMElement> cell;
+      res = GetFirstSelectedCell(getter_AddRefs(cell));
+      if (NS_SUCCEEDED(res) && cell)
+      {
+        while(cell)
+        {
+          SetAttribute(cell, "bgcolor", aColor);
+          GetNextSelectedCell(getter_AddRefs(cell));
+        };
+        return NS_OK;
+      }
+    }
+    // If we failed to find a cell, fall through to use originally-found element
+  } else {
     // No table element -- set the background color on the body tag
     res = nsEditor::GetBodyElement(getter_AddRefs(element));
     if (NS_FAILED(res)) return res;
@@ -5826,7 +5840,7 @@ nsHTMLEditor::IsTableCell(nsIDOMNode *node)
   NS_PRECONDITION(node, "null node passed to nsHTMLEditor::IsTableCell");
   nsAutoString tag;
   nsEditor::GetTagString(node,tag);
-  if (tag == "td")
+  if (tag == "td" || tag == "th")
   {
     return PR_TRUE;
   }
@@ -7844,4 +7858,3 @@ nsHTMLEditor::InsertContainerAbove(nsIDOMNode *inNode,
 
   return NS_OK;
 }
-

@@ -50,6 +50,7 @@ var bgcolor = "bgcolor";
 var CellIsHeader = false;
 var rowCount = 1;
 var colCount = 1;
+var selectedCellCount = 0;
 var error = 0;
 
 // dialog initialization code
@@ -81,7 +82,11 @@ function Startup()
 //  dialog.TableLeaveLocCheck = document.getElementById("TableLeaveLocCheck");
 
   // Cell Panel
-  dialog.SelectionSelect = document.getElementById("SelectionSelect");
+  dialog.SelectionList = document.getElementById("SelectionList");
+  dialog.SelectCellItem = document.getElementById("SelectCellItem");
+  dialog.SelectRowItem = document.getElementById("SelectRowItem");
+  dialog.SelectColumnItem = document.getElementById("SelectColumnItem");
+
   dialog.CellHeightInput = document.getElementById("CellHeightInput");
   dialog.CellHeightUnits = document.getElementById("CellHeightUnits");
   dialog.CellWidthInput = document.getElementById("CellWidthInput");
@@ -98,14 +103,28 @@ function Startup()
 //  dialog.CellLeaveLocCheck = document.getElementById("CellLeaveLocCheck");
 
   TableElement = editorShell.GetElementOrParentByTagName("table", null);
-  CellElement = editorShell.GetElementOrParentByTagName("td", null);
+  var tagNameObj = new Object;
+  var countObj = new Object;
+  var element = editorShell.GetSelectedOrParentTableElement(tagNameObj, countObj);
+  var tagName = tagNameObj.value;
 
-  // We allow a missing cell -- see below
+  if (tagNameObj.value == "td")
+  {
+dump("*** Found cell around selection\n");
+    CellElement = element;
+  }
+  selectedCellCount = countObj.value;
+
+  // If the count is 0, then we are inside the cell, so select it
+  if (selectedCellCount == 0)
+    editorShell.SelectCell();
+
   if(!TableElement)
   {
     dump("Failed to get selected element or create a new one!\n");
     window.close();
   }
+  // We allow a missing cell -- see below
 
   TabPanel = document.getElementById("TabPanel");
   var TableTab = document.getElementById("TableTab");
@@ -123,6 +142,7 @@ function Startup()
   // Activate the Cell Panel if requested
   if (currentPanel == CellPanel)
   {
+dump("*** Requested CellPanel for Table Properties dialog.\n");
     // We must have a cell element to start in this panel
     if(!CellElement)
     {
@@ -156,11 +176,17 @@ function Startup()
   
   doSetOKCancel(onOK, null);
 
+  // Note: we must use TableElement, not globalTableElement for these,
+  //  thus we should not put this in InitDialog.
+  // Instead, monitor desired counts with separate globals
+  rowCount = editorShell.GetTableRowCount(TableElement);
+  colCount = editorShell.GetTableColumnCount(TableElement);
+
   // This uses values set on global Elements;
   InitDialog();
 
   // Should be dialog.TableRowsInput, or
-  //  SelectionSelect in cel panenl,
+  //  SelectionList in cel panenl,
   // but this is disabled for Beta1disabled for Beta1
   if (currentPanel == CellPanel)
     dialog.CellHeightInput.focus(); 
@@ -172,19 +198,8 @@ function Startup()
 function InitDialog()
 {
   // Get Table attributes
-  try {
-    // For some strange reason, we are failing to the "layoutObject" for the table!
-    rowCount = editorShell.GetTableRowCount(globalTableElement);
-    dialog.TableRowsInput.value = rowCount;
-    colCount = editorShell.GetTableColumnCount(tableGlobatlElement);
-    dialog.TableColumnsInput.value = colCount;
-  }
-  catch (ex) {
-    dump("Failed to get table rows and/or columns count\n");
-    dialog.TableRowsInput.value = "";
-    dialog.TableColumnsInput.value = "";
-  }
-
+  dialog.TableRowsInput.value = rowCount;
+  dialog.TableColumnsInput.value = colCount;
   dialog.TableHeightInput.value = InitPixelOrPercentCombobox(globalTableElement, "height", "TableHeightUnits");
   dialog.TableWidthInput.value = InitPixelOrPercentCombobox(globalTableElement, "width", "TableWidthUnits");
   dialog.BorderWidthInput.value = globalTableElement.border;
@@ -220,12 +235,25 @@ dump("Caption Element = "+captionElement+"\n");
   // Get cell attributes
   if (globalCellElement)
   {
-    //TODO: Test if all cells in selection are in a row or column,
-    //      and set dialog.SelectionSelect.selectedIndex appropriately
+    // Test if entire rows or columns are selected and set menu appropriately
+    var SelectionType = editorShell.GetSelectedCellsType(TableElement);
+    dump("SelectionList.selectedIndex = "+dialog.SelectionList.selectedIndex+"\n");
+    switch (SelectionType)
+    {
+      case 2:
+        dialog.SelectionList.selectedItem = dialog.SelectRowItem;
+        break;
+      case 3:
+        dialog.SelectionList.selectedItem = dialog.SelectColumnItem;
+        break;
+      default:
+        dialog.SelectionList.selectedItem = dialog.SelectCellItem;
+        break;
+    }
     dialog.CellHeightInput.value = InitPixelOrPercentCombobox(globalCellElement, "height", "CellHeightUnits");
     dialog.CellWidthInput.value = InitPixelOrPercentCombobox(globalCellElement, "width", "CellWidthUnits");
 
-//BUG: We don't suppor "rowSpan" or "colSpan" JS attributes?
+//BUG: We don't support "rowSpan" or "colSpan" JS attributes?
 dump("RowSpan="+globalCellElement.rowSpan+" ColSpan="+globalCellElement.colSpan+"\n");
 
     dialog.RowSpanInput.value = globalCellElement.getAttribute("rowspan");
@@ -584,12 +612,22 @@ function onOK()
 {
   if (ValidateData())
   {
+    editorShell.BeginBatchChanges();
     editorShell.CloneAttributes(TableElement, globalTableElement);
-    editorShell.CloneAttributes(CellElement, globalCellElement);
+    // Apply changes to all selected cells
+    var selectedCell = editorShell.GetFirstSelectedCell();
+    while (selectedCell)
+    {
+      // TODO: We need to change this to set only particular attributes
+      // Set an "ignore" attribute on the attribute node?
+      editorShell.CloneAttributes(selectedCell,globalCellElement); 
+      selectedCell = editorShell.GetNextSelectedCell();
+    }
     //TODO: DOM manipulation to add/remove table rows/columns,
     //      Switch cell type to TH -- involves removing TD and replacing with TD
     //      Creating and moving CAPTION element
             
+    editorShell.EndBatchChanges();
     return true;
   }
   return false;

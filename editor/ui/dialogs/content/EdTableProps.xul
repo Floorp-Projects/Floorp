@@ -172,11 +172,13 @@
         <titledbox class="NoTopMargin NoTopPadding NoBottomPad" autostretch="never" valign="middle">
           <title><text align="left" value="&cellSelection.label;"/></title>
           <spring class="spacer"/>
-          <html:select class="MinWidth50" id="SelectionSelect" disabled="true">
-            <html:option>&cellSelectionCell.label;</html:option>
-            <html:option>&cellSelectionRow.label;</html:option>
-            <html:option>&cellSelectionColumn.label;</html:option>
-          </html:select>
+          <menulist class="MinWidth50" id="SelectionList">
+            <menupopup>
+              <menuitem data="1" id="SelectCellItem"   value="&cellSelectionCell.label;"/>
+              <menuitem data="2" id="SelectRowItem"    value="&cellSelectionRow.label;"/>
+              <menuitem data="3" id="SelectColumnItem" value="&cellSelectionColumn.label;"/>
+            </menupopup>
+          </menulist>
           <spring class="bigspacer"/>
           <titledbutton class="push MinWidth50" value="&cellSelectionPrevious.label;" onclick="SelectPrevious()" disabled="true"/>
           <spring class="bigspacer"/>

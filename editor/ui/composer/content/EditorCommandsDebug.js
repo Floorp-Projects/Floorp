@@ -107,6 +107,18 @@ function EditorTestSelection()
 
 function EditorTestTableLayout()
 {
+  dump("\n\n\n************ Dump Selection Ranges ************\n");
+  var selection = editorShell.editorSelection;
+  for (i = 0; i < selection.rangeCount; i++)
+  {
+    var range = selection.getRangeAt(i);
+    if (range)
+    {
+      dump("Range "+i+": StartParent="+range.startParent+", offset="+range.startOffset+"\n");
+    }
+  }
+  dump("\n\n");
+
   var table = editorShell.GetElementOrParentByTagName("table", null);
   if (!table) {
     dump("Enclosing Table not found: Place caret in a table cell to do this test\n\n");
