@@ -60,10 +60,9 @@ AC_ARG_WITH(nspr,
 [  --with-nspr=\$dir        location of nspr headers and libs],
 	NSPR_DIR=$withval, NSPR_DIR=)
 
-if test -z $NSPR_DIR; then
+if test -z "$NSPR_DIR"; then
 	NSPR_DIR=$MOZILLA_DIR/dist
 fi
-
 
 dnl ========================================================
 dnl By default, turn rtti and exceptions off on g++/egcs
