@@ -72,6 +72,7 @@ DIRS		+= \
 		widget/timer \
 		include \
 		modules/libutil \
+		modules/zlib \
 		security \
 		netwerk \
 		uriloader \
