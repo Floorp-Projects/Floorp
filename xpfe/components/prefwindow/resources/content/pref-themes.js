@@ -72,13 +72,15 @@ function Startup()
   for (var i = 0; i < list.childNodes.length; ++i) {
     var child = list.childNodes[i];
     var name = child.getAttribute("name");
-    if (!theme)
-      matches = chromeRegistry.isSkinSelected(name, true) == Components.interfaces.nsIChromeRegistry.FULL;
-    else
-      matches = name == theme;
-    if (matches) {
-      list.selectItem(child);
-      break;
+    if (name) {
+      if (!theme)
+        matches = chromeRegistry.isSkinSelected(name, true) == Components.interfaces.nsIChromeRegistry.FULL;
+      else
+        matches = name == theme;
+      if (matches) {
+        list.selectItem(child);
+        break;
+      }
     }      
   }
 
