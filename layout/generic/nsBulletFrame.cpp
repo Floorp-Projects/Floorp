@@ -30,8 +30,7 @@
 #include "nsIRenderingContext.h"
 #include "prprf.h"
 
-nsBulletFrame::nsBulletFrame(nsIContent* aContent, nsIFrame* aParentFrame)
-  : nsFrame(aContent, aParentFrame)
+nsBulletFrame::nsBulletFrame()
 {
 }
 

@@ -28,7 +28,7 @@
  */
 class nsBulletFrame : public nsFrame {
 public:
-  nsBulletFrame(nsIContent* aContent, nsIFrame* aParentFrame);
+  nsBulletFrame();
   virtual ~nsBulletFrame();
 
   // nsIFrame
