@@ -888,7 +888,6 @@ pref_addChild(PLHashEntry *he, int i, void *arg)
 		char* nextdelim;
 		PRUint32 parentlen = strlen(pcs->parent);
 		char* substring;
-		PRBool substringBordersSeparator = PR_FALSE;
 
 		PL_strncpy(buf, (char*)he->key, PR_MIN(512, strlen((char*)he->key) + 1));
 		nextdelim = buf + parentlen;

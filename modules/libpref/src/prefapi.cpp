@@ -2047,7 +2047,6 @@ pref_addChild(PLHashEntry *he, int i, void *arg)
 		char* nextdelim;
 		PRUint32 parentlen = PL_strlen(pcs->parent);
 		char* substring;
-		PRBool substringBordersSeparator = PR_FALSE;
 
 		strncpy(buf, he->key, PR_MIN(512, PL_strlen(he->key) + 1));
 		nextdelim = buf + parentlen;
@@ -2056,23 +2055,17 @@ pref_addChild(PLHashEntry *he, int i, void *arg)
 			/* Find the next delimiter if any and truncate the string there */
 			nextdelim = strstr(nextdelim, ".");
 			if (nextdelim)
-				*nextdelim = '\0';
+			{
+				*nextdelim = ';';
+				*(nextdelim + 1) = '\0';
+			}
 		}
 
 		substring = strstr(pcs->childList, buf);
-		if (substring)
-		{
-			int buflen = PL_strlen(buf);
-			PR_ASSERT(substring[buflen] > 0);
-			substringBordersSeparator = (substring[buflen] == '\0' || substring[buflen] == ';');
-		}
 
-		if (!substring || !substringBordersSeparator)
+		if (!substring)
 		{
 			int newsize = PL_strlen(pcs->childList) + PL_strlen(buf) + 2;
-#ifdef XP_WIN16
-			return HT_ENUMERATE_STOP;
-#else
 			if (newsize > pcs->bufsize)
 			{
 				pcs->bufsize *= 3;
@@ -2080,9 +2073,7 @@ pref_addChild(PLHashEntry *he, int i, void *arg)
 				if (!pcs->childList)
 					return HT_ENUMERATE_STOP;
 			}
-#endif
 			PL_strcat(pcs->childList, buf);
-			PL_strcat(pcs->childList, ";");
 		}
 	}
 	return 0;
