@@ -27,7 +27,7 @@
 */
 
 #if defined(CookieManagement)
-#define TRUST_LABELS 1
+/* #define TRUST_LABELS 1 */
 #endif
 
 
