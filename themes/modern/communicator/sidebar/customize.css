@@ -27,6 +27,7 @@
 */
 
 /* These rules apply appropriate images to the 'reorder' buttons */
+/* Try using text instead
 .up {
   list-style-image:url("chrome://global/skin/scroll-up.gif");
   min-width: 0px;
@@ -44,40 +45,24 @@
 .down[disabled="true"] {
   list-style-image:url("chrome://global/skin/scroll-down-disabled.gif");
 }
-
-.treecell-panel
-{
- list-style-image: url("chrome://communicator/skin/bookmarks/bookmark-item.gif");
-}
-
-.treecell-panel[haslink="true"],
-treeitem[container="true"] > treerow > .treecell-panel
-{
- list-style-image: url("chrome://communicator/skin/bookmarks/bookmark-folder-closed.gif");
-}
-treeitem[selected="true"] > treerow > .treecell-panel[haslink="true"],
-treeitem[selected="true"][container="true"] > treerow > .treecell-panel
-{
- list-style-image: url("chrome://communicator/skin/bookmarks/bookmark-folder-closed-sel.gif");
-}
-
-treeitem[container="true"][open="true"] > treerow > .treecell-panel
-{
- list-style-image: url("chrome://communicator/skin/bookmarks/bookmark-folder-open.gif");
-}
-treeitem[selected="true"][container="true"][open="true"] > treerow > .treecell-panel
-{
- list-style-image: url("chrome://communicator/skin/bookmarks/bookmark-folder-open-sel.gif");
-}
-
-#header {
-  list-style-image: url("chrome://communicator/skin/sidebar/sidebar-icon.gif");
-}
-
-.tree-cell-twisty {
- display: none !important;
-}
-
+*/
 box#reorder {
   text-align: center;
+}
+
+#other-panels {
+  min-width: 180px;
+}
+
+
+#more-panels-link
+{
+  color: blue;
+  text-decoration: underline;
+}
+
+#more-panels-link:active
+#more-panels-link[loading="true"]
+{
+  color: red;
 }
