@@ -408,7 +408,7 @@ nsCOMPtr<nsIDOMNode> nsWebShellWindow::FindNamedParentFromDoc(nsIDOMDocument * a
     nsCOMPtr<nsIDOMNode> oldNode(node);
     oldNode->GetNextSibling(getter_AddRefs(node));
   }
-  node = nsnull;
+  node = do_QueryInterface(nsnull);
   return node;
 }
 
@@ -630,7 +630,7 @@ nsCOMPtr<nsIDOMNode> nsWebShellWindow::FindNamedDOMNode(const nsString &aName, n
     nsCOMPtr<nsIDOMNode> oldNode = node;
     oldNode->GetNextSibling(getter_AddRefs(node));
   }
-  node = nsnull;
+  node = do_QueryInterface(nsnull);
   return node;
 
 } // nsWebShellWindow::FindNamedDOMNode
@@ -659,7 +659,7 @@ nsCOMPtr<nsIDOMDocument> nsWebShellWindow::GetNamedDOMDoc(const nsString & aWebS
   // first get the toolbar child WebShell
   nsCOMPtr<nsIWebShell> childWebShell;
   if (aWebShellName.Equals("this")) { // XXX small kludge for code reused
-    childWebShell = mWebShell;
+    childWebShell = do_QueryInterface(mWebShell);
   } else {
     mWebShell->FindChildWithName(aWebShellName, *getter_AddRefs(childWebShell));
     if (!childWebShell)
