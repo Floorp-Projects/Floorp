@@ -56,15 +56,7 @@ function inSection(x)
  */
 function inRhino()
 {
-  try
-  {
-    java;
-    return true;
-  }
-  catch(e)
-  {
-    return false;
-  }
+  return (typeof defineClass == "function");
 }
 
 /*
