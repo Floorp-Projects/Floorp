@@ -1061,7 +1061,7 @@ if test -d $(@D); then \
 	touch $(_MDDEPFILE) && \
 	$(MKDEPEND) -o'.$(OBJ_SUFFIX)' -f$(_MDDEPFILE) $(DEFINES) $(ACDEFINES) $(INCLUDES) $< >/dev/null 2>&1 && \
 	mv $(_MDDEPFILE) $(_MDDEPFILE).old && \
-	cat $(_MDDEPFILE).old | sed -e "s|^$(_dos_srcdir)/||g" > $(_MDDEPFILE) && rm -f $(_MDDEPFILE).old ; \
+	cat $(_MDDEPFILE).old | sed -e "s|^$(srcdir)/||" -e "s|^$(_dos_srcdir)/||" > $(_MDDEPFILE) && rm -f $(_MDDEPFILE).old ; \
 fi
 endef
 else
