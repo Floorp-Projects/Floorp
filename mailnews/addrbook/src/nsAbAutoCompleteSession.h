@@ -49,6 +49,7 @@ protected:
   PRBool	m_tableInitialized;
   nsAbStubEntry m_searchNameCompletionEntryTable[MAX_ENTRIES];
   PRInt32   m_numEntries;
+  nsString	m_domain;
 };
 
 // factory method

@@ -25,9 +25,12 @@
 #include "nsIAbDirectory.h"
 #include "nsIAbCard.h"
 #include "nsXPIDLString.h"
+#include "nsMsgBaseCID.h"
+#include "nsIMsgMailSession.h"
 
 static NS_DEFINE_CID(kHeaderParserCID, NS_MSGHEADERPARSER_CID);
 static NS_DEFINE_CID(kRDFServiceCID, NS_RDFSERVICE_CID);
+static NS_DEFINE_CID(kCMsgMailSessionCID, NS_MSGMAILSESSION_CID); 
 
 nsresult NS_NewAbAutoCompleteSession(const nsIID &aIID, void ** aInstancePtrResult)
 {
@@ -52,6 +55,23 @@ nsAbAutoCompleteSession::nsAbAutoCompleteSession()
 	NS_INIT_REFCNT();
     m_numEntries = 0;
     m_tableInitialized = PR_FALSE;
+    
+    // temporary hack to get the current identity
+    nsresult rv;
+    NS_WITH_SERVICE(nsIMsgMailSession, mailSession, kCMsgMailSessionCID, &rv);
+    if (NS_SUCCEEDED(rv))
+    {    
+	    nsCOMPtr<nsIMsgIdentity> identity;
+	    rv = mailSession->GetCurrentIdentity(getter_AddRefs(identity));
+	    if (NS_SUCCEEDED(rv))
+	    {
+			char * email;
+	    	identity->GetEmail(&email);
+	    	if (email && *email)
+	    		m_domain = PL_strchr(email, '@');
+	    	PR_FREEIF(email);
+	    }
+	}
 }
 
 nsresult nsAbAutoCompleteSession::PopulateTableWithAB(nsIEnumerator * aABCards)
@@ -159,10 +179,6 @@ NS_IMETHODIMP nsAbAutoCompleteSession::AutoComplete(const PRUnichar *aDocId, con
       if (NS_FAILED(rv)) return rv;
     }
 
-    if (m_numEntries == 0) {
-      return NS_OK;
-    }
-
 	if (aResultListener)
 	{
 		PRUint32 searchStringLen = nsCRT::strlen(aSearchString);
@@ -192,7 +208,18 @@ NS_IMETHODIMP nsAbAutoCompleteSession::AutoComplete(const PRUnichar *aDocId, con
 				break;
 			}
 		}
-
+		
+		if (!matchFound)
+		{
+			//Does the search string has a domain name?
+			nsString searchResult(aSearchString);
+			PRInt32 atSignIndex = searchResult.FindChar('@');
+			if (atSignIndex < 0)
+			{
+				searchResult += m_domain;				
+				rv = aResultListener->OnAutoCompleteResult(aDocId, aSearchString, searchResult.GetUnicode());
+			}
+		}
 	}
 	else
 		rv = NS_ERROR_NULL_POINTER;
