@@ -24,14 +24,12 @@
 //#include "npglue.h"
 #include "prefapi.h"
 #include "np.h"
-#ifndef XP_MAC
-#include "primpl.h"
-#endif
 #include "prio.h"
 #include "prmem.h"
 #include "prthread.h"
 #include "pprthred.h"
 #include "plstr.h"
+#include "plevent.h"
 #include "jni.h"
 #include "jsjava.h"
 #include "jsdbgapi.h"
@@ -46,19 +44,26 @@
 #include "nsIPluginHost.h"
 #include "nsIPluginManager.h"
 #include "nsIServiceManager.h"
+#include "nsXPComCIID.h"
+#include "nsIEventQueueService.h"
 #include "lcglue.h"
 #include "xpgetstr.h"
+
 extern "C" int XP_PROGRESS_STARTING_JAVA;
 extern "C" int XP_PROGRESS_STARTING_JAVA_DONE;
 extern "C" int XP_JAVA_NO_CLASSES;
 extern "C" int XP_JAVA_GENERAL_FAILURE;
 extern "C" int XP_JAVA_STARTUP_FAILED;
 extern "C" int XP_JAVA_DEBUGGER_FAILED;
+
 extern nsIServiceManager  *theServiceManager;
+
 static NS_DEFINE_CID(kPluginManagerCID, NS_PLUGINMANAGER_CID);
-//static NS_DEFINE_CID(kPluginHostIID, NS_IPLUGINHOST_IID);
 static NS_DEFINE_IID(kPluginHostIID, NS_IPLUGINHOST_IID);
 static NS_DEFINE_IID(kPluginManagerIID, NS_IPLUGINMANAGER_IID);
+
+static NS_DEFINE_IID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);
+static NS_DEFINE_IID(kIEventQueueServiceIID, NS_IEVENTQUEUESERVICE_IID);
 
 // FIXME -- need prototypes for these functions!!! XXX
 #ifdef XP_MAC
@@ -188,6 +193,57 @@ nsJVMManager::CreateThread(PRUint32* outThreadID, nsIRunnable* runnable)
 									PR_PRIORITY_NORMAL, PR_GLOBAL_THREAD, PR_JOINABLE_THREAD, 0);
 	*outThreadID = (PRUint32) thread;
 	return (thread != NULL ?  NS_OK : NS_ERROR_FAILURE);
+}
+
+struct RunnableEvent : PLEvent {
+	RunnableEvent(nsIRunnable* runnable);
+	~RunnableEvent();
+
+	nsIRunnable* mRunnable;	
+};
+
+static void PR_CALLBACK
+handleRunnableEvent(RunnableEvent* aEvent)
+{
+	aEvent->mRunnable->Run();
+}
+
+static void PR_CALLBACK
+destroyRunnableEvent(RunnableEvent* aEvent)
+{
+	delete aEvent;
+}
+
+RunnableEvent::RunnableEvent(nsIRunnable* runnable)
+	:	mRunnable(runnable)
+{
+	NS_ADDREF(mRunnable);
+	PL_InitEvent(this, nsnull, PLHandleEventProc(handleRunnableEvent), PLDestroyEventProc(&destroyRunnableEvent));
+}
+
+RunnableEvent::~RunnableEvent()
+{
+	NS_RELEASE(mRunnable);
+}
+
+NS_METHOD
+nsJVMManager::PostEvent(PRUint32 threadID, nsIRunnable* runnable, PRBool async)
+{
+	nsIEventQueueService* eventService = NULL;
+	nsresult rv = theServiceManager->GetService(kEventQueueServiceCID, kIEventQueueServiceIID, (nsISupports **)&eventService);
+	if (NS_SUCCEEDED(rv)) {
+		PLEventQueue* eventQueue = NULL;
+		rv = eventService->GetThreadEventQueue((PRThread*)threadID, &eventQueue);
+		theServiceManager->ReleaseService(kEventQueueServiceCID, eventService);
+		if (NS_SUCCEEDED(rv) && eventQueue != NULL) {
+			RunnableEvent* runnableEvent = new RunnableEvent(runnable);
+			if (async)
+				PL_PostEvent(eventQueue, runnableEvent);
+			else
+				PL_PostSynchronousEvent(eventQueue, runnableEvent);
+		}
+	}
+	return rv;
 }
 
 NS_METHOD

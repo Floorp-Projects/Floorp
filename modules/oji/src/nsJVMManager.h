@@ -115,10 +115,19 @@ public:
 	NotifyAll(void* address);
 	
 	/**
-	 * Thread creation primitives.
+	 * Creates a new thread, calling the specified runnable's Run method (a la Java).
 	 */
 	NS_IMETHOD
 	CreateThread(PRUint32* threadID, nsIRunnable* runnable);
+	
+	/**
+	 * Posts an event to specified thread, calling the runnable from that thread.
+	 * @param threadID thread to call runnable from
+	 * @param runnable object to invoke from thread
+	 * @param async if true, won't block current thread waiting for result
+	 */
+	NS_IMETHOD
+	PostEvent(PRUint32 threadID, nsIRunnable* runnable, PRBool async);
 
 	/* from nsILiveConnectManager: */
 
