@@ -526,7 +526,7 @@ PR_IMPLEMENT(void) PREF_Cleanup()
 	if (gFileName)
 		PL_strfree(gFileName);
 	gFileName = NULL;
-#endif //  PREF_SUPPORT_OLD_PATH_STRINGS
+#endif
 }
 
 PR_IMPLEMENT(PrefResult)
@@ -1028,8 +1028,8 @@ This is called by them and does the right thing.
 
 #ifdef PREF_SUPPORT_OLD_PATH_STRINGS
 
-#define PREF_FILE_BANNER "// Netscape User Preferences" LINEBREAK \
-			 "// This is a generated file!  Do not edit." LINEBREAK LINEBREAK
+#define PREF_FILE_BANNER "/* Netscape User Preferences */" LINEBREAK \
+			 "/* This is a generated file!  Do not edit. */" LINEBREAK LINEBREAK
 
 PR_IMPLEMENT(PrefResult)
 PREF_SavePrefFileWith(const char *filename, PLHashEnumerator heSaveProc)
@@ -1957,9 +1957,9 @@ JSBool PR_CALLBACK pref_NativeSetConfig
 JSBool PR_CALLBACK pref_NativeGetPref
 	(JSContext *cx, JSObject *obj, unsigned int argc, jsval *argv, jsval *rval)
 {
-    //void* value = NULL;
+    /*void* value = NULL;*/
 	PrefNode* pref;
-	//PRBool prefExists = PR_TRUE;
+	/*PRBool prefExists = PR_TRUE;*/
 	
     if (argc >= 1 && JSVAL_IS_STRING(argv[0]))
     {
