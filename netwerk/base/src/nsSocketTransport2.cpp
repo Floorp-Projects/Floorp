@@ -171,6 +171,10 @@ ErrorAccordingToNSPR(PRErrorCode errorCode)
     case PR_NETWORK_UNREACHABLE_ERROR: // XXX need new nsresult for this!
     case PR_HOST_UNREACHABLE_ERROR:    // XXX and this!
     case PR_ADDRESS_NOT_AVAILABLE_ERROR:
+    // Treat EACCES as a soft error since (at least on Linux) connect() returns
+    // EACCES when an IPv6 connection is blocked by a firewall. See bug 270784.
+    case PR_ADDRESS_NOT_SUPPORTED_ERROR:
+    case PR_NO_ACCESS_RIGHTS_ERROR:
         rv = NS_ERROR_CONNECTION_REFUSED;
         break;
     case PR_IO_TIMEOUT_ERROR:
