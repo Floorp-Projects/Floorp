@@ -609,7 +609,16 @@ public final class JavaAdapter implements IdFunctionCall
 
     public static ContextFactory currentFactory()
     {
-        return Context.getContext().getFactory();
+        ContextFactory factory;
+        Context cx = Context.getCurrentContext();
+        if (cx == null) {
+            // It can happen during instantiating of classes created
+            // with the class compiler in script-unaware application.
+            factory = ContextFactory.getGlobal();
+        } else {
+            factory = cx.getFactory();
+        }
+        return factory;
     }
 
     /**
