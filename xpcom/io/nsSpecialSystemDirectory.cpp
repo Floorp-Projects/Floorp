@@ -43,7 +43,9 @@
 #include "plstr.h"
 
 #if XP_PC
+//----------------------------------------------------------------------------------------
 static char* MakeUpperCase(char* aPath)
+//----------------------------------------------------------------------------------------
 {
   // windows does not care about case.  push to uppercase:
   int length = strlen(aPath);
@@ -55,8 +57,9 @@ static char* MakeUpperCase(char* aPath)
 }
 #endif
 
-static void
-GetCurrentProcessDirectory(nsFileSpec& aFileSpec)
+//----------------------------------------------------------------------------------------
+static void GetCurrentProcessDirectory(nsFileSpec& aFileSpec)
+//----------------------------------------------------------------------------------------
 {
 #ifdef XP_PC
     char buf[MAX_PATH];
@@ -75,7 +78,8 @@ GetCurrentProcessDirectory(nsFileSpec& aFileSpec)
     // its located in
     OSErr err;
     ProcessSerialNumber psn;
-    if (!(err = GetCurrentProcess(&psn))) {
+    if (!(err = GetCurrentProcess(&psn)))
+    {
         ProcessInfoRec pInfo;
         FSSpec         tempSpec;
 
@@ -85,10 +89,9 @@ GetCurrentProcessDirectory(nsFileSpec& aFileSpec)
         pInfo.processAppSpec = &tempSpec;
         pInfo.processInfoLength = sizeof(ProcessInfoRec);
 
-        if (!(err = GetProcessInformation(&psn, &pInfo))) {
+        if (!(err = GetProcessInformation(&psn, &pInfo)))
+        {
             FSSpec appFSSpec = *(pInfo.processAppSpec);
-            Handle pathH;
-
             long theDirID = appFSSpec.parID;
 
             Str255 name;
@@ -99,7 +102,8 @@ GetCurrentProcessDirectory(nsFileSpec& aFileSpec)
             catInfo.dirInfo.ioDrDirID = theDirID;
             catInfo.dirInfo.ioFDirIndex = -1; // -1 = query dir in ioDrDirID
 
-            if (!(err = PBGetCatInfoSync(&catInfo))) {
+            if (!(err = PBGetCatInfoSync(&catInfo)))
+            {
                 aFileSpec = nsFileSpec(appFSSpec.vRefNum,
                                        catInfo.dirInfo.ioDrParID,
                                        name);
@@ -116,12 +120,15 @@ GetCurrentProcessDirectory(nsFileSpec& aFileSpec)
     //	- else give the current directory
     char buf[MAXPATHLEN];
     char *moz5 = getenv("MOZILLA_FIVE_HOME");
-    if (moz5) {
+    if (moz5)
+    {
         aFileSpec = moz5;
         return;
     }
-    else {
-        if (getcwd(buf, sizeof(buf))) {
+    else
+    {
+        if (getcwd(buf, sizeof(buf)))
+        {
             aFileSpec = buf;
             return;
         }
@@ -137,19 +144,25 @@ GetCurrentProcessDirectory(nsFileSpec& aFileSpec)
 //{
 //}
 
+//----------------------------------------------------------------------------------------
 nsSpecialSystemDirectory::nsSpecialSystemDirectory(SystemDirectories aSystemSystemDirectory)
+//----------------------------------------------------------------------------------------
 :    nsFileSpec(nsnull)
 {
     *this = aSystemSystemDirectory;
 }
 
+//----------------------------------------------------------------------------------------
 nsSpecialSystemDirectory::~nsSpecialSystemDirectory()
+//----------------------------------------------------------------------------------------
 {
 }
 
+//----------------------------------------------------------------------------------------
 void nsSpecialSystemDirectory::operator = (SystemDirectories aSystemSystemDirectory)
+//----------------------------------------------------------------------------------------
 {
-    *this = nsnull;
+    *this = (const char*)nsnull;
     switch (aSystemSystemDirectory)
     {
         
@@ -243,6 +256,10 @@ void nsSpecialSystemDirectory::operator = (SystemDirectories aSystemSystemDirect
         case Mac_PreferencesDirectory:
             *this = kPreferencesFolderType;
             break;
+
+        case Mac_DocumentsDirectory:
+            *this = kDocumentsFolderType;
+            break;
 #endif
             
 #ifdef XP_PC
@@ -313,16 +330,31 @@ void nsSpecialSystemDirectory::operator = (OSType folderType)
     DirInfo *dipb=(DirInfo *)&cinfo;
     
     // Call FindFolder to fill in the vrefnum and dirid
-    mError = NS_FILE_RESULT(
-        FindFolder(
-            kOnSystemDisk,
-            folderType,
-            true,
-            &dipb->ioVRefNum,
-            &dipb->ioDrDirID));
-	if (NS_FAILED(mError))
-		return;
-
+    for (int attempts = 0; attempts < 2; attempts++)
+    {
+        mError = NS_FILE_RESULT(
+            FindFolder(
+                kOnSystemDisk,
+                folderType,
+                true,
+                &dipb->ioVRefNum,
+                &dipb->ioDrDirID));
+        if (NS_SUCCEEDED(mError))
+            break;
+        if (attempts > 0)
+		    return;
+		switch (folderType)
+		{
+	    case kDocumentsFolderType:
+	        // Find folder will find this, as long as it exists.
+	        // The "create" parameter, however, is sadly ignored.
+	        // How do we internationalize this?
+	        *this = kVolumeRootFolderType;
+	        *this += "Documents";
+	        CreateDirectory();
+	        break;
+		} // switch
+    } // for
     mSpec.name[0] = '\0';
     dipb->ioNamePtr = (StringPtr)&mSpec.name;
     dipb->ioFDirIndex = -1;
