@@ -12,6 +12,8 @@ interface Window {
         readonly attribute  Window top;
         readonly replaceable attribute  Window _content;
         readonly replaceable attribute  xpidl nsISidebar sidebar;
+        readonly replaceable attribute  xpidl nsIPrompt prompt;
+
         readonly attribute  BarProp menubar;
         readonly attribute  BarProp toolbar;
         readonly attribute  BarProp locationbar;
@@ -81,11 +83,12 @@ interface Window {
         noscript void  close();
         void  close(/* ... */);
 
-				void updateCommands(in DOMString action);
+		void updateCommands(in DOMString action);
 
-				DOMString escape(in DOMString str);
+		DOMString escape(in DOMString str);
         DOMString unescape(in DOMString str);
         Selection getSelection();
+        
 };
 
 interface EventTarget {

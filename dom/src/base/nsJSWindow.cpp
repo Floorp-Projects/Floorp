@@ -35,6 +35,7 @@
 #include "nsDOMPropEnums.h"
 #include "nsString.h"
 #include "nsIDOMNavigator.h"
+#include "nsIPrompt.h"
 #include "nsIDOMElement.h"
 #include "nsIDOMDocumentView.h"
 #include "nsIDOMCSSStyleDeclaration.h"
@@ -60,6 +61,7 @@ static NS_DEFINE_IID(kIScriptObjectOwnerIID, NS_ISCRIPTOBJECTOWNER_IID);
 static NS_DEFINE_IID(kIJSScriptObjectIID, NS_IJSSCRIPTOBJECT_IID);
 static NS_DEFINE_IID(kIScriptGlobalObjectIID, NS_ISCRIPTGLOBALOBJECT_IID);
 static NS_DEFINE_IID(kINavigatorIID, NS_IDOMNAVIGATOR_IID);
+static NS_DEFINE_IID(kIPromptIID, NS_IPROMPT_IID);
 static NS_DEFINE_IID(kIElementIID, NS_IDOMELEMENT_IID);
 static NS_DEFINE_IID(kIDocumentViewIID, NS_IDOMDOCUMENTVIEW_IID);
 static NS_DEFINE_IID(kICSSStyleDeclarationIID, NS_IDOMCSSSTYLEDECLARATION_IID);
@@ -94,33 +96,34 @@ enum Window_slots {
   WINDOW_TOP = -8,
   WINDOW__CONTENT = -9,
   WINDOW_SIDEBAR = -10,
-  WINDOW_MENUBAR = -11,
-  WINDOW_TOOLBAR = -12,
-  WINDOW_LOCATIONBAR = -13,
-  WINDOW_PERSONALBAR = -14,
-  WINDOW_STATUSBAR = -15,
-  WINDOW_SCROLLBARS = -16,
-  WINDOW_DIRECTORIES = -17,
-  WINDOW_CLOSED = -18,
-  WINDOW_FRAMES = -19,
-  WINDOW_CRYPTO = -20,
-  WINDOW_PKCS11 = -21,
-  WINDOW_CONTROLLERS = -22,
-  WINDOW_OPENER = -23,
-  WINDOW_STATUS = -24,
-  WINDOW_DEFAULTSTATUS = -25,
-  WINDOW_NAME = -26,
-  WINDOW_INNERWIDTH = -27,
-  WINDOW_INNERHEIGHT = -28,
-  WINDOW_OUTERWIDTH = -29,
-  WINDOW_OUTERHEIGHT = -30,
-  WINDOW_SCREENX = -31,
-  WINDOW_SCREENY = -32,
-  WINDOW_PAGEXOFFSET = -33,
-  WINDOW_PAGEYOFFSET = -34,
-  WINDOW_SCROLLX = -35,
-  WINDOW_SCROLLY = -36,
-  ABSTRACTVIEW_DOCUMENT = -37
+  WINDOW_PROMPT = -11,
+  WINDOW_MENUBAR = -12,
+  WINDOW_TOOLBAR = -13,
+  WINDOW_LOCATIONBAR = -14,
+  WINDOW_PERSONALBAR = -15,
+  WINDOW_STATUSBAR = -16,
+  WINDOW_SCROLLBARS = -17,
+  WINDOW_DIRECTORIES = -18,
+  WINDOW_CLOSED = -19,
+  WINDOW_FRAMES = -20,
+  WINDOW_CRYPTO = -21,
+  WINDOW_PKCS11 = -22,
+  WINDOW_CONTROLLERS = -23,
+  WINDOW_OPENER = -24,
+  WINDOW_STATUS = -25,
+  WINDOW_DEFAULTSTATUS = -26,
+  WINDOW_NAME = -27,
+  WINDOW_INNERWIDTH = -28,
+  WINDOW_INNERHEIGHT = -29,
+  WINDOW_OUTERWIDTH = -30,
+  WINDOW_OUTERHEIGHT = -31,
+  WINDOW_SCREENX = -32,
+  WINDOW_SCREENY = -33,
+  WINDOW_PAGEXOFFSET = -34,
+  WINDOW_PAGEYOFFSET = -35,
+  WINDOW_SCROLLX = -36,
+  WINDOW_SCROLLY = -37,
+  ABSTRACTVIEW_DOCUMENT = -38
 };
 
 /***********************************************************************/
@@ -948,6 +951,67 @@ WindowsidebarSetter(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 
 
   JS_DefineProperty(cx, obj, "sidebar", *vp, nsnull, nsnull, JSPROP_ENUMERATE);
+  return PR_TRUE;
+}
+
+/***********************************************************************/
+//
+// prompt Property Getter
+//
+PR_STATIC_CALLBACK(JSBool)
+WindowpromptGetter(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
+{
+  nsIDOMWindow *a = (nsIDOMWindow*)nsJSUtils::nsGetNativeThis(cx, obj);
+
+  // If there's no private data, this must be the prototype, so ignore
+  if (nsnull == a) {
+    return JS_TRUE;
+  }
+
+  nsresult rv;
+  nsIScriptSecurityManager *secMan = nsJSUtils::nsGetSecurityManager(cx, obj);
+  if (!secMan)
+      return PR_FALSE;
+  rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_WINDOW_PROMPT, PR_FALSE);
+  if (NS_FAILED(rv)) {
+    return nsJSUtils::nsReportError(cx, obj, rv);
+  }
+
+          nsIPrompt* prop;
+          rv = a->GetPrompt(&prop);
+          if (NS_SUCCEEDED(rv)) {
+            // get the js object; n.b., this will do a release on 'prop'
+            nsJSUtils::nsConvertXPCObjectToJSVal(prop, NS_GET_IID(nsIPrompt), cx, obj, vp);
+          }
+
+  return PR_TRUE;
+}
+
+/***********************************************************************/
+//
+// prompt Property Setter
+//
+PR_STATIC_CALLBACK(JSBool)
+WindowpromptSetter(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
+{
+  nsIDOMWindow *a = (nsIDOMWindow*)nsJSUtils::nsGetNativeThis(cx, obj);
+
+  // If there's no private data, this must be the prototype, so ignore
+  if (nsnull == a) {
+    return JS_TRUE;
+  }
+
+  nsresult rv;
+  nsIScriptSecurityManager *secMan = nsJSUtils::nsGetSecurityManager(cx, obj);
+  if (!secMan)
+      return PR_FALSE;
+  rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_WINDOW_PROMPT, PR_TRUE);
+  if (NS_FAILED(rv)) {
+    return nsJSUtils::nsReportError(cx, obj, rv);
+  }
+
+
+  JS_DefineProperty(cx, obj, "prompt", *vp, nsnull, nsnull, JSPROP_ENUMERATE);
   return PR_TRUE;
 }
 
@@ -2761,6 +2825,7 @@ static JSPropertySpec WindowProperties[] =
   {"top",    WINDOW_TOP,    JSPROP_ENUMERATE | JSPROP_READONLY},
   {"_content",    WINDOW__CONTENT,    JSPROP_ENUMERATE, Window_contentGetter, Window_contentSetter},
   {"sidebar",    WINDOW_SIDEBAR,    JSPROP_ENUMERATE, WindowsidebarGetter, WindowsidebarSetter},
+  {"prompt",    WINDOW_PROMPT,    JSPROP_ENUMERATE, WindowpromptGetter, WindowpromptSetter},
   {"menubar",    WINDOW_MENUBAR,    JSPROP_ENUMERATE | JSPROP_READONLY},
   {"toolbar",    WINDOW_TOOLBAR,    JSPROP_ENUMERATE | JSPROP_READONLY},
   {"locationbar",    WINDOW_LOCATIONBAR,    JSPROP_ENUMERATE | JSPROP_READONLY},
