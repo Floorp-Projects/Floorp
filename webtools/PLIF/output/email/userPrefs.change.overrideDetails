@@ -1,7 +1,7 @@
 TemplateToolkit
 1
 
-To: [% session.fields.contact:email %]
+To: [% session.fields.contact.email %]
 From: [% output.address %]
 Subject: Changing your [% app.name %] e-mail address
 
