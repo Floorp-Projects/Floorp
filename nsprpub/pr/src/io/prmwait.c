@@ -269,6 +269,17 @@ void _PR_InitMW(void)
     max_polling_interval = PR_MillisecondsToInterval(MAX_POLLING_INTERVAL);
 }  /* _PR_InitMW */
 
+void _PR_CleanupMW(void)
+{
+    PR_DestroyLock(mw_lock);
+    mw_lock = NULL;
+    if (mw_state->group) {
+        PR_DestroyWaitGroup(mw_state->group);
+        /* mw_state->group is set to NULL as a side effect. */
+    }
+    PR_DELETE(mw_state);
+}  /* _PR_CleanupMW */
+
 static PRWaitGroup *MW_Init2(void)
 {
     PRWaitGroup *group = mw_state->group;  /* it's the null group */
