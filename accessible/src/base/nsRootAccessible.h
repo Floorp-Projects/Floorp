@@ -28,16 +28,12 @@
 #include "nsIAccessibleEventListener.h"
 #include "nsIDOMFormListener.h"
 #include "nsIDOMFocusListener.h"
-#include "nsIDOMTextListener.h"
-#include "nsIDOMMutationListener.h"
 #include "nsIDocument.h"
 
 class nsRootAccessible : public nsAccessible,
                          public nsIAccessibleEventReceiver,
                          public nsIDOMFocusListener,
-             public nsIDOMFormListener,
-             public nsIDOMTextListener,
-             public nsIDOMMutationListener
+                         public nsIDOMFormListener
 
 {
   
@@ -60,27 +56,17 @@ class nsRootAccessible : public nsAccessible,
 
     // ----- nsIDOMEventListener --------------------------
     NS_IMETHOD HandleEvent(nsIDOMEvent* anEvent);
+
+    // ----- nsIDOMFocusListener --------------------------
     NS_IMETHOD Focus(nsIDOMEvent* aEvent);
     NS_IMETHOD Blur(nsIDOMEvent* aEvent);
 
-  // ----- nsIDOMFormListener ---------------------------
+    // ----- nsIDOMFormListener ---------------------------
     NS_IMETHOD Submit(nsIDOMEvent* aEvent);
     NS_IMETHOD Reset(nsIDOMEvent* aEvent);
     NS_IMETHOD Change(nsIDOMEvent* aEvent);
     NS_IMETHOD Select(nsIDOMEvent* aEvent);
     NS_IMETHOD Input(nsIDOMEvent* aEvent);
-
-  // ----- nsIDOMTextListener ---------------------------
-    NS_IMETHOD HandleText(nsIDOMEvent* aTextEvent);
-
-  // ----- nsIDOMMutationEventListener ------------------
-    NS_IMETHOD SubtreeModified(nsIDOMEvent* aMutationEvent);
-    NS_IMETHOD NodeInserted(nsIDOMEvent* aMutationEvent);
-    NS_IMETHOD NodeRemoved(nsIDOMEvent* aMutationEvent);
-    NS_IMETHOD NodeRemovedFromDocument(nsIDOMEvent* aMutationEvent);
-    NS_IMETHOD NodeInsertedIntoDocument(nsIDOMEvent* aMutationEvent);
-    NS_IMETHOD AttrModified(nsIDOMEvent* aMutationEvent);
-    NS_IMETHOD CharacterDataModified(nsIDOMEvent* aMutationEvent);
 
 protected:
   virtual void GetBounds(nsRect& aRect);
