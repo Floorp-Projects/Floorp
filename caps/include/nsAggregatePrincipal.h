@@ -82,7 +82,7 @@ public:
     DisableCapability(const char *capability, void **annotation);
 
     NS_IMETHOD
-    ToStreamableForm(char** aName, char** aData);
+    Save(nsSupportsHashtable* aPrincipals, nsIPref *prefs);
     
     nsAggregatePrincipal();
 
