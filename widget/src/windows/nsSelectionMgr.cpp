@@ -187,25 +187,24 @@ nsresult nsSelectionMgr::CopyToClipboard()
 
 nsresult nsSelectionMgr::PasteTextBlocking(nsString* aPastedText)
 {
-  HGLOBAL hglb; 
-  LPSTR   lpstr; 
-  
+  HGLOBAL   hglb; 
+  LPSTR     lpstr; 
+  nsresult  result = NS_ERROR_FAILURE;
+
   if (aPastedText && OpenClipboard(NULL))
   {
     // Just Grab TEXT for now, later we will grab HTML, XIF, etc.
     hglb = GetClipboardData(CF_TEXT); 
-    lpstr = (LPSTR)GlobalLock(hglb);
-
-    aPastedText->SetString((char*)lpstr);
-    GlobalUnlock(hglb); 
-
+    if (hglb != NULL)
+    {
+      lpstr = (LPSTR)GlobalLock(hglb);
+      aPastedText->SetString((char*)lpstr);
+      GlobalUnlock(hglb);
+      result = NS_OK;
+    }
     CloseClipboard();
   }
-  else
-  {
-    aPastedText = nsnull;
-  }
-  return NS_OK;
+  return result;
 }
 
 nsresult NS_NewSelectionMgr(nsISelectionMgr** aInstancePtrResult)
