@@ -61,6 +61,7 @@
 #include "nsIAccessibilityService.h"
 #endif
 #include "nsIServiceManager.h"
+#include "nsSpaceManager.h"
 
 class nsLegendFrame;
 
@@ -302,7 +303,17 @@ nsFieldSetFrame::Reflow(nsIPresContext*          aPresContext,
   DISPLAY_REFLOW(aPresContext, this, aReflowState, aDesiredSize, aStatus);
 
   // Initialize OUT parameter
-   aStatus = NS_FRAME_COMPLETE;
+  aStatus = NS_FRAME_COMPLETE;
+
+  // Should we create a space manager?
+  nsAutoSpaceManager autoSpaceManager(NS_CONST_CAST(nsHTMLReflowState &, aReflowState));
+
+  // XXXldb If we start storing the space manager in the frame rather
+  // than keeping it around only during reflow then we should create it
+  // only when there are actually floats to manage.  Otherwise things
+  // like tables will gain significant bloat.
+  if (NS_BLOCK_SPACE_MGR & mState)
+    autoSpaceManager.CreateSpaceManagerFor(aPresContext, this);
 
   if (aDesiredSize.mComputeMEW) {
     aDesiredSize.mMaxElementWidth = 0;

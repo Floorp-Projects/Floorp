@@ -45,6 +45,7 @@
 #include "nsString.h"
 #include "nsIPresShell.h"
 #include "nsMemory.h"
+#include "nsHTMLReflowState.h"
 #ifdef DEBUG
 #include "nsIFrameDebug.h"
 #endif
@@ -1376,4 +1377,55 @@ nsSpaceManager::BandRect::Length() const
   }
 
   return len;
+}
+
+
+//----------------------------------------------------------------------
+
+nsAutoSpaceManager::~nsAutoSpaceManager()
+{
+  // Restore the old space manager in the reflow state if necessary.
+  if (mNew) {
+#ifdef NOISY_SPACEMANAGER
+    printf("restoring old space manager %p\n", mOld);
+#endif
+
+    mReflowState.mSpaceManager = mOld;
+
+#ifdef NOISY_SPACEMANAGER
+    if (mOld) {
+      NS_STATIC_CAST(nsFrame *, mReflowState.frame)->ListTag(stdout);
+      printf(": space-manager %p after reflow\n", mOld);
+      mOld->List(stdout);
+    }
+#endif
+
+#ifdef DEBUG
+    if (mOwns)
+#endif
+      delete mNew;
+  }
+}
+
+nsresult
+nsAutoSpaceManager::CreateSpaceManagerFor(nsIPresContext *aPresContext, nsIFrame *aFrame)
+{
+  // Create a new space manager and install it in the reflow
+  // state. `Remember' the old space manager so we can restore it
+  // later.
+  nsCOMPtr<nsIPresShell> shell;
+  aPresContext->GetShell(getter_AddRefs(shell));
+  mNew = new nsSpaceManager(shell, aFrame);
+  if (! mNew)
+    return NS_ERROR_OUT_OF_MEMORY;
+
+#ifdef NOISY_SPACEMANAGER
+  printf("constructed new space manager %p (replacing %p)\n",
+         mNew, mReflowState.mSpaceManager);
+#endif
+
+  // Set the space manager in the existing reflow state
+  mOld = mReflowState.mSpaceManager;
+  mReflowState.mSpaceManager = mNew;
+  return NS_OK;
 }
