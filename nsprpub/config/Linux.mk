@@ -82,7 +82,7 @@ ifeq ($(CPU_ARCH),ppc)
 PORT_FLAGS		+= -D_XOPEN_SOURCE
 endif
 ifeq ($(CPU_ARCH),x86)
-PLATFORM_FLAGS		+= -mno-486 -Di386
+PLATFORM_FLAGS		+= -Di386
 PORT_FLAGS		+= -D_XOPEN_SOURCE
 endif
 ifeq ($(CPU_ARCH),m68k)
