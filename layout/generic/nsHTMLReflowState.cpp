@@ -2085,20 +2085,26 @@ ComputeLineHeight(nsIRenderingContext* aRenderingContext,
   else {
     // For "normal", factor or percentage units the computed value of
     // the line-height property is found by multiplying the factor by
-    // the font's <b>actual</b> height. For "normal" we use a factor
-    // value of "1.0".
-    float factor = 1.0f;
+    // the font's <b>actual</b> em height. For "normal" we use the
+    // font's normal line height (em height + leading).
+    nscoord emHeight = -1;
+    nscoord normalLineHeight = -1;
+    aRenderingContext->SetFont(font->mFont);
+    nsCOMPtr<nsIFontMetrics> fm;
+    aRenderingContext->GetFontMetrics(*getter_AddRefs(fm));
+    if (fm) {
+      fm->GetEmHeight(emHeight);
+      fm->GetNormalLineHeight(normalLineHeight);
+    }
+    float factor;
     if (eStyleUnit_Factor == unit) {
       factor = text->mLineHeight.GetFactorValue();
     }
     else if (eStyleUnit_Percent == unit) {
       factor = text->mLineHeight.GetPercentValue();
     }
-    aRenderingContext->SetFont(font->mFont);
-    nsCOMPtr<nsIFontMetrics> fm;
-    aRenderingContext->GetFontMetrics(*getter_AddRefs(fm));
-    if (fm) {
-      fm->GetHeight(lineHeight);
+    else {
+      factor = (((float) normalLineHeight) / PR_MAX(1, emHeight));
     }
 
     // Note: we normally use the actual font height for computing the
@@ -2107,10 +2113,10 @@ ComputeLineHeight(nsIRenderingContext* aRenderingContext,
     // little hack lets us override that behavior to allow for more
     // precise layout in the face of imprecise fonts.
     if (nsHTMLReflowState::UseComputedHeight()) {
-      lineHeight = font->mFont.size;
+      emHeight = font->mFont.size;
     }
 
-    lineHeight = NSToCoordRound(factor * lineHeight);
+    lineHeight = NSToCoordRound(factor * emHeight);
   }
 
   return lineHeight;
@@ -2129,7 +2135,7 @@ nsHTMLReflowState::CalcLineHeight(nsIPresContext* aPresContext,
   }
   if (lineHeight < 0) {
     // Negative line-heights are not allowed by the spec. Translate
-    // them into "normal" (== 1.0) when found.
+    // them into "normal" when found.
     const nsStyleFont* font = (const nsStyleFont*)
       sc->GetStyleData(eStyleStruct_Font);
     if (UseComputedHeight()) {
@@ -2140,7 +2146,7 @@ nsHTMLReflowState::CalcLineHeight(nsIPresContext* aPresContext,
       nsCOMPtr<nsIFontMetrics> fm;
       aRenderingContext->GetFontMetrics(*getter_AddRefs(fm));
       if (fm) {
-        fm->GetHeight(lineHeight);
+        fm->GetNormalLineHeight(lineHeight);
       }
     }
   }
