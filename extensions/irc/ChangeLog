@@ -1,4 +1,56 @@
 #################################################################################
+# 06/03/01, ChatZilla 0.8.2, <rginda@netscape.com>
+
+=================================================================================
+= Bugs fixed
+79311, 75226, 80993
+
+=================================================================================
+= Changes by file name...
+chatzilla-service.js:
+- Add stub allowPort method.
+- Fix signature for handleContent method, bug 80993
+
+connection-xpcom.js:
+- factor chatzilla specific code out of this file.  Callbacks into chatzilla specific code are now used, making this file more generic.
+- according to darinf (the current necko guy), using openOutputStream with asyncRead is a bad thing.  Most of the changes in this file involve migrating from usage of openOutputStream to asyncWrite.
+- Changes also include fixing the function declaration syntax to match the rest of the code (two lines, named functions.)
+
+irc-debug.js:
+- check nextLine before using it.
+
+irc.js:
+- changes to work with new socket interface.
+- correct isOp detection in setTopic
+- remove checks for undefined exceptions
+- route data-available immediatley.  inserting a data-available event to be routed later caused disconnect events to be recieved out of order.
+
+utils.js:
+- fix HAS_XPCOM test (XPCDOM broke it.)
+- add jsenv.HAS_NSPR_EVENTQ
+
+mybot.js:
+- not built -
+- add dummy escape/unescape if it isn't there
+
+handlers.js:
+- return false the first time through onClose(), and disconnect from all servers.  This makes sure we keep the window around long enough to send the QUIT messages.
+- close window if client.userClose is set and we disconnected from the last server.
+
+chatzilla.xul:
+- hook up onclose event.
+- apply patch from 75226, fixes initial splitter position.
+
+static.js:
+- copy client.userAgent code from chatzilla 0.8.1x
+- implement getConnectionCount()
+
+#################################################################################
+# ChatZilla 0.8.1a and 0.8.1b released only in XPI format, changes to be merged
+# in later.
+#################################################################################
+
+#################################################################################
 # 03/08/01, ChatZilla 0.8, <rginda@netscape.com>
 
 =================================================================================
