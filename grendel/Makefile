@@ -22,7 +22,7 @@ SUBDIRS=		\
 	composition	\
 	dnd		\
 	filters		\
-	integrator	\
+#	integrator	\
 	mime		\
 	prefs		\
 	search		\
