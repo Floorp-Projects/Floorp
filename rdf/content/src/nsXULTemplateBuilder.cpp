@@ -4863,20 +4863,22 @@ nsXULTemplateBuilder::BuildContentFromTemplate(nsIContent *aTemplateNode,
             nsAutoString uri;
             tmplKid->GetAttribute(kNameSpaceID_None, nsXULAtoms::uri, uri);
 
-            if (aMatch->mRule && uri[0] == PRUnichar('?')) {
-                isResourceElement = PR_TRUE;
-                isUnique = PR_FALSE;
+            if ( !uri.IsEmpty() ) {
+              if (aMatch->mRule && uri[0] == PRUnichar('?')) {
+                  isResourceElement = PR_TRUE;
+                  isUnique = PR_FALSE;
 
-                // XXXwaterson hack! refactor me please
-                Value member;
-                aMatch->mAssignments.GetAssignmentFor(aMatch->mRule->GetMemberVariable(), &member);
-                aChild = VALUE_TO_IRDFRESOURCE(member);
-            }
-            else if (uri.EqualsWithConversion("...") || uri.EqualsWithConversion("rdf:*")) {
-                // If we -are- the resource element, then we are no
-                // matter unique.
-                isResourceElement = PR_TRUE;
-                isUnique = PR_FALSE;
+                  // XXXwaterson hack! refactor me please
+                  Value member;
+                  aMatch->mAssignments.GetAssignmentFor(aMatch->mRule->GetMemberVariable(), &member);
+                  aChild = VALUE_TO_IRDFRESOURCE(member);
+              }
+              else if (uri.EqualsWithConversion("...") || uri.EqualsWithConversion("rdf:*")) {
+                  // If we -are- the resource element, then we are no
+                  // matter unique.
+                  isResourceElement = PR_TRUE;
+                  isUnique = PR_FALSE;
+              }
             }
         }
 
@@ -6994,7 +6996,7 @@ nsXULTemplateBuilder::CompileExtendedRule(nsIContent* aRuleElement,
             nsAutoString uri;
             next->GetAttribute(kNameSpaceID_None, nsXULAtoms::uri, uri);
 
-            if (uri[0] == PRUnichar('?')) {
+            if (!uri.IsEmpty() && uri[0] == PRUnichar('?')) {
                 // Found it.
                 mMemberSymbol = uri;
                 rule->AddSymbol(uri, mMemberVar);
