@@ -12,8 +12,8 @@ messenger.jar:
 comm.jar:
 +   content/communicator/pref/pref.xul                                 (content/pref.xul)
 *+  content/communicator/pref/nsPrefWindow.js                          (content/nsPrefWindow.js)
-+   content/communicator/pref/pref-themes.xul                          (content/pref-themes.xul)
-+   content/communicator/pref/pref-themes.js                           (content/pref-themes.js)
+*+  content/communicator/pref/pref-themes.xul                          (content/pref-themes.xul)
+*+  content/communicator/pref/pref-themes.js                           (content/pref-themes.js)
 *   content/communicator/pref/pref-extensions.xul                      (content/pref-extensions.xul)
 *   content/communicator/pref/pref-extensions.js                       (content/pref-extensions.js)
 *+  content/communicator/pref/pref-fonts.xul                           (content/pref-fonts.xul)
