@@ -19,6 +19,8 @@
 #ifndef nsTransactionManager_h__
 #define nsTransactionManager_h__
 
+#include "prmon.h"
+
 class nsITransaction;
 class nsITransactionManager;
 class nsITransactionListener;
@@ -39,6 +41,8 @@ private:
   nsTransactionStack     mUndoStack;
   nsTransactionRedoStack mRedoStack;
   nsVoidArray            *mListeners;
+
+  PRMonitor              *mMonitor;
 
 public:
 
@@ -95,6 +99,8 @@ private:
   /* nsTransactionManager specific private methods. */
   virtual nsresult BeginTransaction(nsITransaction *aTransaction);
   virtual nsresult EndTransaction(void);
+  virtual nsresult Lock(void);
+  virtual nsresult Unlock(void);
 };
 
 #endif // nsTransactionManager_h__
