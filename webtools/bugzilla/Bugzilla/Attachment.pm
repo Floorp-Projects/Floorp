@@ -73,9 +73,10 @@ sub list
     my %a;
     ($a{'attachid'}, $a{'date'}, $a{'contenttype'}, $a{'description'}, $a{'ispatch'}, $a{'isobsolete'}) = &::FetchSQLData();
 
-    # Format the attachment's creation/modification date into something readable.
-    if ($a{'date'} =~ /^(\d\d)(\d\d)(\d\d)(\d\d)(\d\d)(\d\d)(\d\d)$/) {
-        $a{'date'} = "$3/$4/$2&nbsp;$5:$6";
+    # Format the attachment's creation/modification date into a standard
+    # format (YYYY-MM-DD HH:MM)
+    if ($a{'date'} =~ /^(\d\d\d\d)(\d\d)(\d\d)(\d\d)(\d\d)(\d\d)$/) {
+        $a{'date'} = "$1-$2-$3 $4:$5";
     }
 
     # Retrieve a list of status flags that have been set on the attachment.
