@@ -616,7 +616,7 @@ struct JSFunctionSpec {
     JSNative        call;
     uint8           nargs;
     uint8           flags;
-    uint16          extra;
+    uint16          extra;      /* number of arg slots for local GC roots */
 };
 
 extern JS_PUBLIC_API(JSObject *)
@@ -882,6 +882,24 @@ JS_DefineFunction(JSContext *cx, JSObject *obj, const char *name, JSNative call,
 extern JS_PUBLIC_API(JSObject *)
 JS_CloneFunctionObject(JSContext *cx, JSObject *funobj, JSObject *parent);
 
+/*
+ * Given a buffer, return JS_FALSE if the buffer might become a valid
+ * javascript statement with the addition of more lines.  Otherwise return
+ * JS_TRUE.  The intent is to support interactive compilation - accumulate
+ * lines in a buffer until JS_BufferIsCompilableUnit is true, then pass it to
+ * the compiler.
+ */
+extern JS_PUBLIC_API(JSBool)
+JS_BufferIsCompilableUnit(JSContext *cx, JSObject *obj,
+                          const char *bytes, size_t length);
+
+/*
+ * The JSScript objects returned by the following functions refer to string and
+ * other kinds of literals, including doubles and RegExp objects.  These
+ * literals are vulnerable to garbage collection; to root script objects and
+ * prevent literals from being collected, create a rootable object using
+ * JS_NewScriptObject, and root the resulting object using JS_Add[Named]Root.
+ */
 extern JS_PUBLIC_API(JSScript *)
 JS_CompileScript(JSContext *cx, JSObject *obj,
 		 const char *bytes, size_t length,
@@ -903,17 +921,6 @@ JS_CompileUCScriptForPrincipals(JSContext *cx, JSObject *obj,
 				JSPrincipals *principals,
 				const jschar *chars, size_t length,
 				const char *filename, uintN lineno);
-
-/*
- * Given a buffer, return JS_FALSE if the buffer might become a valid
- * javascript statement with the addition of more lines.  Otherwise return
- * JS_TRUE.  The intended use is to support interactive compilation, by
- * accumulating lines in a buffer until JS_BufferIsCompilableUnit is true, then
- * passing it to the compiler.
- */
-extern JS_PUBLIC_API(JSBool)
-JS_BufferIsCompilableUnit(JSContext *cx, JSObject *obj,
-                          const char *bytes, size_t length);
 
 extern JS_PUBLIC_API(JSScript *)
 JS_CompileFile(JSContext *cx, JSObject *obj, const char *filename);
