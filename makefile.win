@@ -147,7 +147,6 @@ splitsymbols:
 !if defined(FIND)
 !if "$(SPLITSYM)" != ""
 	echo splitting symbols out of binaries
-	# componentreg leaves us in $(DIST)/bin
 	cd $(MOZ_SRC)\mozilla
 	$(FIND) $(DIST) -name "*.dll" -exec $(SPLITSYM) {} ;
 	$(FIND) $(DIST) -name "*.exe" -exec $(SPLITSYM) {} ;
