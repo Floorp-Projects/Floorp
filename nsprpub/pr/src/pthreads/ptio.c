@@ -194,8 +194,11 @@ static PRBool IsValidNetAddrLen(const PRNetAddr *addr, PRInt32 addr_len)
 #define PT_DEFAULT_POLL_MSEC 100
 
 /*
- * Latest POSIX defines this type as socklen_t.  It may also be
- * size_t or int.
+ * pt_SockLen is the type for the length of a socket address
+ * structure, used in the address length argument to bind,
+ * connect, accept, getsockname, getpeername, etc.  Posix.1g
+ * defines this type as socklen_t.  It is size_t or int on
+ * most current systems.
  */
 #if defined(HAVE_SOCKLEN_T) \
     || (defined(LINUX) && defined(__GLIBC__) && __GLIBC__ >= 2 \
