@@ -61,8 +61,6 @@
 #include "nsMsgMailNewsUrl.h"
 #include "nsXPIDLString.h"
 
-static NS_DEFINE_CID(kIStreamConverterServiceCID, NS_STREAMCONVERTERSERVICE_CID);
-
 NS_IMPL_THREADSAFE_ADDREF(nsMsgQuoteListener)
 NS_IMPL_THREADSAFE_RELEASE(nsMsgQuoteListener)
 
@@ -232,8 +230,8 @@ nsMsgQuote::QuoteMessage(const char *msgURI, PRBool quoteHeaders, nsIStreamListe
   nsCOMPtr<nsISupports> ctxt = do_QueryInterface(aURL);
 
   nsCOMPtr<nsIStreamConverterService> streamConverterService = 
-           do_GetService(kIStreamConverterServiceCID, &rv);
-  if (NS_FAILED(rv)) return rv;
+           do_GetService("@mozilla.org/streamConverters;1", &rv);
+  NS_ENSURE_SUCCESS(rv,rv);
 
   nsCOMPtr<nsIStreamListener> convertedListener;
   rv = streamConverterService->AsyncConvertData(NS_LITERAL_STRING("message/rfc822").get(),

@@ -111,7 +111,6 @@ PRLogModuleInfo *IMAP;
 
 #define ONE_SECOND ((PRUint32)1000)    // one second
 
-static NS_DEFINE_CID(kIStreamConverterServiceCID, NS_STREAMCONVERTERSERVICE_CID);
 static NS_DEFINE_CID(kSocketTransportServiceCID, NS_SOCKETTRANSPORTSERVICE_CID);
 static NS_DEFINE_CID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);
 static NS_DEFINE_CID(kCharsetConverterManagerCID, NS_ICHARSETCONVERTERMANAGER_CID);
@@ -8030,7 +8029,7 @@ nsresult nsImapMockChannel::SetupPartExtractorListener(nsIImapUrl * aUrl, nsIStr
   aUrl->GetMimePartSelectorDetected(&refersToPart);
   if (refersToPart)
   {
-    nsCOMPtr<nsIStreamConverterService> converter = do_GetService(kIStreamConverterServiceCID);
+    nsCOMPtr<nsIStreamConverterService> converter = do_GetService("@mozilla.org/streamConverters;1");
     if (converter && aConsumer)
     {
       nsCOMPtr<nsIStreamListener> newConsumer;
