@@ -1073,6 +1073,10 @@ for extension in $MOZ_EXTENSIONS; do
 	inspector ) MAKEFILES_extensions="$MAKEFILES_extensions
 	    $MAKEFILES_inspector"
 	    ;;
+ 	help ) MAKEFILES_extensions="$MAKEFILES_extensions
+ 	    extensions/help/resources/Makefile
+ 	    " ;;
+ 
     esac
 done
 

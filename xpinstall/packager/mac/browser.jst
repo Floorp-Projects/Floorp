@@ -43,6 +43,8 @@ if (verifyDiskSpace(fProgram, srDest))
     registerChrome(SKIN | DELAYED_CHROME, getFolder(cf,"modern.jar"),"skin/modern/global/");
     registerChrome(SKIN | DELAYED_CHROME, getFolder(cf,"modern.jar"),"skin/modern/messenger/");
     registerChrome(SKIN | DELAYED_CHROME, getFolder(cf,"modern.jar"),"skin/modern/navigator/");
+    registerChrome(CONTENT | DELAYED_CHROME, getFolder(cf,"help.jar"),"content/help/");
+    registerChrome(LOCALE | DELAYED_CHROME, getFolder(cf,"help.jar"),"locale/en-US/help/");
 
     // make an alias to the browser on the desktop 
     var desktopFolder = getFolder("Mac Desktop");

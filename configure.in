@@ -3390,7 +3390,7 @@ dnl ========================================================
 dnl Need cookie and wallet to build mozilla, this should
 dnl not be the case, 18352 has been filed.
 dnl http://bugzilla.mozilla.org/show_bug.cgi?id=18352
-MOZ_EXTENSIONS_DEFAULT="cookie wallet xml-rpc xmlextras"
+MOZ_EXTENSIONS_DEFAULT="cookie wallet xml-rpc xmlextras help"
 
 MOZ_ARG_WITH_STRING(extensions,
 [  --with-extensions       Enable extensions (dirs in extensions/)],

@@ -1,4 +1,3 @@
-#!nmake
 #
 # The contents of this file are subject to the Netscape Public
 # License Version 1.1 (the "License"); you may not use this file
@@ -18,23 +17,14 @@
 # Rights Reserved.
 #
 # Contributor(s): 
+#
 
-DEPTH=..
+DEPTH		= ..\..\..
+
 include <$(DEPTH)/config/config.mak>
 
-DIRS = wallet \
-	cookie \
-	irc \
-	help \
-!if defined(BUILD_PSM)
-	psm-glue \
-!endif 
-!if defined(MOZ_XSL)
-	transformiix \
-!endif 
-	xml-rpc \
-	xmlextras \
-	$(NULL)
-
-
 include <$(DEPTH)\config\rules.mak>
+
+chrome::
+	$(REGCHROME) content help help.jar
+	$(REGCHROME) locale en-US/help help.jar

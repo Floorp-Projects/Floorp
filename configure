@@ -11356,7 +11356,7 @@ fi
 
 
 
-MOZ_EXTENSIONS_DEFAULT="cookie wallet xml-rpc xmlextras"
+MOZ_EXTENSIONS_DEFAULT="cookie wallet xml-rpc xmlextras help"
 
 # Check whether --with-extensions or --without-extensions was given.
 if test "${with_extensions+set}" = set; then
