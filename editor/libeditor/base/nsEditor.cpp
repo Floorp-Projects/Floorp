@@ -540,7 +540,7 @@ NS_IMETHODIMP nsEditor::BeginningOfDocument()
     {
       PRUint32 count;
       nodeList->GetLength(&count);
-      NS_VERIFY(1==count, "there is not exactly 1 body in the document!");
+      NS_VERIFY(PRBool(1==count), "there is not exactly 1 body in the document!");
       nsCOMPtr<nsIDOMNode> bodyNode;
       result = nodeList->Item(0, getter_AddRefs(bodyNode));
       if ((NS_SUCCEEDED(result)) && bodyNode)
@@ -578,7 +578,7 @@ NS_IMETHODIMP nsEditor::EndOfDocument()
     {
       PRUint32 count;
       nodeList->GetLength(&count);
-      NS_VERIFY(1==count, "there is not exactly 1 body in the document!");
+      NS_VERIFY(PRBool(1==count), "there is not exactly 1 body in the document!");
       nsCOMPtr<nsIDOMNode> bodyNode;
       result = nodeList->Item(0, getter_AddRefs(bodyNode));
       if ((NS_SUCCEEDED(result)) && bodyNode)
