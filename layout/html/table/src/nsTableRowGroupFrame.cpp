@@ -340,7 +340,7 @@ nsTableRowGroupFrame::ReflowChildren(nsIPresContext*        aPresContext,
       nsSize kidAvailSize(aReflowState.availSize);
       if (0 >= kidAvailSize.height)
         kidAvailSize.height = 1;      // XXX: HaCk - we don't handle negative heights yet
-      nsHTMLReflowMetrics desiredSize(PR_FALSE);
+      nsHTMLReflowMetrics desiredSize(aDesiredSize.mComputeMEW);
       desiredSize.width = desiredSize.height = desiredSize.ascent = desiredSize.descent = 0;
   
       // Reflow the child into the available space, giving it as much height as
