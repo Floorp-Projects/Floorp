@@ -106,6 +106,7 @@ editor/txtsvc/src/Makefile
 editor/ui/Makefile
 editor/ui/composer/Makefile
 editor/ui/composer/content/Makefile
+editor/ui/composer/content/images/Makefile
 editor/ui/composer/skin/Makefile
 editor/ui/composer/skin/images/Makefile
 editor/ui/composer/locale/Makefile
