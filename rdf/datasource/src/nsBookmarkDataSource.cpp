@@ -164,6 +164,7 @@ class BookmarkParser {
 private:
     nsInputFileStream      *mStream;
     nsIRDFDataSource       *mDataSource;
+    const char             *mIEFavoritesRoot;
     PRBool                 mFoundIEFavoritesRoot;
 
 protected:
@@ -190,6 +191,11 @@ public:
     nsresult AddBookmark(nsIRDFResource * aContainer, const char *url, const char *optionalTitle,
 			PRInt32 addDate, PRInt32 lastVisitDate, PRInt32 lastModifiedDate,
 			const char *shortcutURL, nsIRDFResource *nodeType);
+    nsresult SetIEFavoritesRoot(const char *IEFavoritesRootURL)
+    {
+    	mIEFavoritesRoot = IEFavoritesRootURL;
+    	return(NS_OK);
+    }
     nsresult ParserFoundIEFavoritesRoot(PRBool *foundIEFavoritesRoot)
     {
     	*foundIEFavoritesRoot = mFoundIEFavoritesRoot;
@@ -208,6 +214,7 @@ BookmarkParser::Init(nsInputFileStream *aStream, nsIRDFDataSource *aDataSource)
 {
 	mStream = aStream;
 	mDataSource = aDataSource;
+	mIEFavoritesRoot = nsnull;
 	mFoundIEFavoritesRoot = PR_FALSE;
 	return(NS_OK);
 }
@@ -440,9 +447,9 @@ BookmarkParser::AddBookmark(nsIRDFResource * aContainer, const char *url, const 
 	}
 
 	PRBool		result = PR_FALSE;
-	if (NS_SUCCEEDED(rv = bookmark->EqualsResource(kNC_IEFavoritesRoot, &result)))
+	if (nsnull != mIEFavoritesRoot)
 	{
-		if (result == PR_TRUE)
+		if (!PL_strcmp(url, mIEFavoritesRoot))
 		{
 			mFoundIEFavoritesRoot = PR_TRUE;
 		}
@@ -1057,13 +1064,26 @@ BookmarkDataSourceImpl::ReadBookmarks(void)
 
 	BookmarkParser parser;
 	parser.Init(&strm, NS_STATIC_CAST(nsIRDFDataSource *, this));
+
+#ifdef	XP_MAC
+	parse.SetIEFavoritesRoot(kURINC_IEFavoritesRoot);
+#endif
+
+#ifdef	XP_WIN
+	nsCOMPtr<nsIRDFResource>	ieFolder;
+	nsSpecialSystemDirectory	ieFavoritesFile(nsSpecialSystemDirectory::Win_Favorites);
+	nsFileURL			ieFavoritesURLSpec(ieFavoritesFile);
+	const char			*ieFavoritesURL = ieFavoritesURLSpec.GetAsString();
+	parser.SetIEFavoritesRoot(ieFavoritesURL);
+#endif
+
 	parser.Parse(kNC_BookmarksRoot, kNC_Bookmark);
 
 	PRBool	foundIERoot = PR_FALSE;
 	parser.ParserFoundIEFavoritesRoot(&foundIERoot);
 
 	// look for and import any IE Favorites
-	nsAutoString	ieTitle("Imported IE Favorites");
+	nsAutoString	ieTitle("Imported IE Favorites");		// XXX localization?
 
 #ifdef	XP_MAC
 	nsSpecialSystemDirectory ieFavoritesFile(nsSpecialSystemDirectory::Mac_PreferencesDirectory);
@@ -1104,11 +1124,6 @@ BookmarkDataSourceImpl::ReadBookmarks(void)
 #endif
 
 #ifdef	XP_WIN
-	nsCOMPtr<nsIRDFResource>	ieFolder;
-	nsSpecialSystemDirectory	ieFavoritesFile(nsSpecialSystemDirectory::Win_Favorites);
-	nsFileURL			ieFavoritesURLSpec(ieFavoritesFile);
-	const char			*ieFavoritesURL = ieFavoritesURLSpec.GetAsString();
-	
 	if (NS_SUCCEEDED(rv = gRDFService->GetResource(ieFavoritesURL, getter_AddRefs(ieFolder))))
 	{
 		nsCOMPtr<nsIRDFLiteral>	ieTitleLiteral;
