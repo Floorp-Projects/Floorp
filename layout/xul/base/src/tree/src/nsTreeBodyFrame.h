@@ -316,7 +316,7 @@ public:
                        const nsRect&        aDirtyRect,
                        nsFramePaintLayer    aWhichLayer);
 
-  // This method paints a drop feedback in a given row of the outliner.
+  // This method paints a drop feedback of the outliner.
   NS_IMETHOD PaintDropFeedback(nsIPresContext*      aPresContext,
                                nsIRenderingContext& aRenderingContext,
                                const nsRect&        aDirtyRect,
