@@ -489,8 +489,30 @@ PRInt32 CNavDTD::HandleStartToken(CToken* aToken) {
           break;
 
         case eHTMLTag_script:
-          result=HandleScriptToken(st); break;
-      
+          {
+            PRInt32 pos=GetTopmostIndexOf(eHTMLTag_body);
+            nsCParserNode theNode((CHTMLToken*)aToken);
+            if (kNotFound == pos) {
+              // We're in the HEAD
+              result=OpenHead(theNode);
+              if(kNoError==result) {
+                mParser->CollectSkippedContent(attrNode,theCount);
+                if(kNoError==result) {
+                  result=AddLeaf(attrNode);
+                  if(kNoError==result)
+                    result=CloseHead(theNode);
+                }
+              }
+            }
+            else {
+              // We're in the BODY
+              mParser->CollectSkippedContent(attrNode,theCount);
+              if(kNoError==result) {
+                result=AddLeaf(attrNode);
+              }
+            }
+            break;
+          }
 
         case eHTMLTag_head:
           break; //ignore head tags...
