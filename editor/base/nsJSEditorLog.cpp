@@ -18,6 +18,12 @@
 
 #include <stdio.h>
 #include "nsIPresShell.h"
+#include "nsIDOMElement.h"
+#include "nsIDOMAttr.h"
+#include "nsIDOMNode.h"
+#include "nsIDOMNodeList.h"
+#include "nsIDOMCharacterData.h"
+#include "nsIDOMNamedNodeMap.h"
 #include "nsIDOMSelection.h"
 #include "nsIDOMRange.h"
 #include "nsJSEditorLog.h"
@@ -660,19 +666,37 @@ nsJSEditorLog::CreateElementWithDefaults(const nsString& aTagName, nsIDOMElement
 NS_IMETHODIMP
 nsJSEditorLog::InsertElement(nsIDOMElement* aElement, PRBool aDeleteSelection)
 {
-  // XXX: Need to add code here to dump out the element
-  // XXX: and it's children.
+  if (!aElement)
+    return NS_ERROR_NULL_POINTER;
 
-  return NS_ERROR_NOT_IMPLEMENTED;
+  nsCOMPtr<nsIDOMNode> node = do_QueryInterface(aElement);
+
+  if (!node)
+    return NS_ERROR_NULL_POINTER;
+
+  PrintSelection();
+  PrintNode(node, 0);
+  printf("appCore.insertElement(n0, %s);\n", aDeleteSelection ? "true" : "false");
+
+  return NS_OK;
 }
 
 NS_IMETHODIMP
 nsJSEditorLog::InsertLinkAroundSelection(nsIDOMElement* aAnchorElement)
 {
-  // XXX: Need to add code here to dump out the element
-  // XXX: and it's children.
+  if (!aAnchorElement)
+    return NS_ERROR_NULL_POINTER;
 
-  return NS_ERROR_NOT_IMPLEMENTED;
+  nsCOMPtr<nsIDOMNode> node = do_QueryInterface(aAnchorElement);
+
+  if (!node)
+    return NS_ERROR_NULL_POINTER;
+
+  PrintSelection();
+  PrintNode(node, 0);
+  printf("appCore.insertLinkAroundSelection(n0);\n");
+
+  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -934,6 +958,205 @@ nsJSEditorLog::PrintSelection()
 
   printf(" ];\nEditorSetSelectionFromOffsets(selRanges);\n");
   return NS_OK;
+}
+
+nsresult
+nsJSEditorLog::PrintElementNode(nsIDOMNode *aNode, PRInt32 aDepth)
+{
+  nsresult result;
+  nsAutoString tag, name, value;
+  nsCOMPtr<nsIDOMElement> ele = do_QueryInterface(aNode);
+  nsCOMPtr<nsIDOMNamedNodeMap> map;
+
+  if (!ele)
+    return NS_ERROR_NULL_POINTER;
+
+  result = ele->GetTagName(tag);
+
+  if (NS_FAILED(result))
+    return result;
+
+  printf("n%d = appCore.editorDocument.createElement(\"", aDepth);
+  PrintUnicode(tag);
+  printf("\");\n");
+
+  result = aNode->GetAttributes(getter_AddRefs(map));
+
+  if (NS_FAILED(result))
+    return result;
+
+  if (!map)
+    return NS_ERROR_NULL_POINTER;
+
+  PRUint32 i, len;
+  nsCOMPtr<nsIDOMNode> attr;
+
+  result = map->GetLength(&len);
+
+  if (NS_FAILED(result))
+    return result;
+
+  for (i = 0; i < len; i++)
+  {
+    result = map->Item(i, getter_AddRefs(attr));
+
+    if (NS_FAILED(result))
+      return result;
+
+    if (!attr)
+      return NS_ERROR_NULL_POINTER;
+
+    result = PrintAttributeNode(attr, aDepth);
+
+    if (NS_FAILED(result))
+      result;
+  }
+
+  result = PrintNodeChildren(aNode, aDepth);
+
+  return result;
+}
+
+nsresult
+nsJSEditorLog::PrintAttributeNode(nsIDOMNode *aNode, PRInt32 aDepth)
+{
+  nsresult result;
+  nsCOMPtr<nsIDOMAttr> attr = do_QueryInterface(aNode);
+
+  if (!attr)
+    return NS_ERROR_NULL_POINTER;
+
+  nsAutoString str;
+
+  result = attr->GetName(str);
+
+  if (NS_FAILED(result))
+    return result;
+
+  printf("a%d = appCore.editorDocument.createAttribute(\"", aDepth);
+  PrintUnicode(str);
+  printf("\");\n");
+
+  result = attr->GetValue(str);
+
+  if (NS_FAILED(result))
+    return result;
+
+  printf("a%d.value = \"", aDepth);
+  PrintUnicode(str);
+  printf("\";\n");
+  
+  printf("n%d.setAttributeNode(a%d);\n", aDepth, aDepth);
+
+  return NS_OK;
+}
+
+nsresult
+nsJSEditorLog::PrintNodeChildren(nsIDOMNode *aNode, PRInt32 aDepth)
+{
+  nsresult result;
+
+  if (!aNode)
+    return NS_ERROR_NULL_POINTER;
+
+  nsCOMPtr<nsIDOMNodeList> list;
+
+  result = aNode->GetChildNodes(getter_AddRefs(list));
+  
+  if (NS_FAILED(result))
+    return result;
+
+  if (!list)
+  {
+    // Must not have any children!
+    return NS_OK;
+  }
+
+  PRUint32 i, len;
+  nsCOMPtr<nsIDOMNode> node;
+
+  result = list->GetLength(&len);
+
+  if (NS_FAILED(result))
+    return result;
+
+  for (i = 0; i < len; i++)
+  {
+    result = list->Item(i, getter_AddRefs(node));
+
+    if (NS_FAILED(result))
+      return result;
+
+    result = PrintNode(node, aDepth + 1);
+
+    if (NS_FAILED(result))
+      return result;
+
+    printf("n%d.appendChild(n%d);\n", aDepth, aDepth+1);
+  }
+
+  return NS_OK;
+}
+
+nsresult
+nsJSEditorLog::PrintTextNode(nsIDOMNode *aNode, PRInt32 aDepth)
+{
+  nsresult result;
+
+  nsCOMPtr<nsIDOMCharacterData> cd = do_QueryInterface(aNode);
+
+  if (!cd)
+    return NS_ERROR_NULL_POINTER;
+
+  nsAutoString str;
+
+  result = cd->GetData(str);
+
+  if (NS_FAILED(result))
+    return result;
+
+  printf("n%d = appCore.editorDocument.createTextNode(\"", aDepth);
+  PrintUnicode(str);
+  printf("\");\n");
+
+  return NS_OK;
+}
+
+nsresult
+nsJSEditorLog::PrintNode(nsIDOMNode *aNode, PRInt32 aDepth)
+{
+  nsresult result = NS_OK;
+
+  if (!aNode)
+    return NS_ERROR_NULL_POINTER;
+
+  PRUint16 nodeType;
+  
+  result = aNode->GetNodeType(&nodeType);
+
+  switch (nodeType)
+  {
+    case nsIDOMNode::ELEMENT_NODE:
+      result = PrintElementNode(aNode, aDepth);
+      break;
+    case nsIDOMNode::TEXT_NODE:
+      result = PrintTextNode(aNode, aDepth);
+      break;
+    case nsIDOMNode::ATTRIBUTE_NODE:
+    case nsIDOMNode::CDATA_SECTION_NODE:
+    case nsIDOMNode::ENTITY_REFERENCE_NODE:
+    case nsIDOMNode::ENTITY_NODE:
+    case nsIDOMNode::PROCESSING_INSTRUCTION_NODE:
+    case nsIDOMNode::COMMENT_NODE:
+    case nsIDOMNode::DOCUMENT_NODE:
+    case nsIDOMNode::DOCUMENT_TYPE_NODE:
+    case nsIDOMNode::DOCUMENT_FRAGMENT_NODE:
+    case nsIDOMNode::NOTATION_NODE:
+    default:
+      break;
+  }
+
+  return result;
 }
 
 nsresult
