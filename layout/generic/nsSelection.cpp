@@ -373,8 +373,8 @@ public:
                                nsDirection aDirection,
                                PRUint8 aBidiLevel,
                                nsIFrame **aFrameOut);
-
-  /*END nsIFrameSelection interfacse*/
+  NS_IMETHOD MaintainSelection();
+  /*END nsIFrameSelection interfaces */
 
 
 
@@ -421,6 +421,8 @@ private:
                          PRInt32 aCurrentOffset,
                          nsPeekOffsetStruct aPos);
 #endif // VISUALSELECTION
+
+  PRBool AdjustForMaintainedSelection(nsIContent *aContent, PRInt32 aOffset);
 
 // post and pop reasons for notifications. we may stack these later
   void    PostReason(PRInt16 aReason) { mSelectionChangeReason = aReason; }
@@ -485,6 +487,9 @@ private:
   nsCOMPtr<nsIContent> mUnselectCellOnMouseUp;
   PRInt32  mSelectingTableCellMode;
   PRInt32  mSelectedCellIndex;
+
+  // maintain selection
+  nsCOMPtr<nsIDOMRange> mMaintainRange;
 
   //batching
   PRInt32 mBatching;
@@ -2451,6 +2456,37 @@ NS_IMETHODIMP nsSelection::GetFrameFromLevel(nsIPresContext *aPresContext,
   return NS_OK;
 }
 
+
+NS_IMETHODIMP 
+nsSelection::MaintainSelection()
+{
+  PRInt8 index = GetIndexFromSelectionType(nsISelectionController::SELECTION_NORMAL);
+  nsCOMPtr<nsIDOMRange> range;
+  nsresult rv = mDomSelections[index]->GetRangeAt(0, getter_AddRefs(range));
+  if (NS_FAILED(rv))
+    return rv;
+  if (!range)
+    return NS_ERROR_FAILURE;
+
+  nsCOMPtr<nsIDOMNode> startNode;
+  nsCOMPtr<nsIDOMNode> endNode;
+  PRInt32 startOffset;
+  PRInt32 endOffset;
+  range->GetStartContainer(getter_AddRefs(startNode));
+  range->GetEndContainer(getter_AddRefs(endNode));
+  range->GetStartOffset(&startOffset);
+  range->GetEndOffset(&endOffset);
+
+  mMaintainRange = nsnull;
+  NS_NewRange(getter_AddRefs(mMaintainRange));
+  if (!mMaintainRange)
+    return NS_ERROR_OUT_OF_MEMORY;
+
+  mMaintainRange->SetStart(startNode, startOffset);
+  return mMaintainRange->SetEnd(endNode, endOffset);
+}
+
+
 /** After moving the caret, its Bidi level is set according to the following rules:
  *
  *  After moving over a character with left/right arrow, set to the Bidi level of the last moved over character.
@@ -2538,6 +2574,62 @@ void nsSelection::BidiLevelFromClick(nsIContent *aNode, PRUint32 aContentOffset)
   shell->SetCaretBidiLevel(frameLevel);
 }
 
+
+PRBool
+nsSelection::AdjustForMaintainedSelection(nsIContent *aContent, PRInt32 aOffset)
+{
+  // Is the desired content and offset currently in selection?
+  // If the double click flag is set then don't continue selection if the 
+  // desired content and offset are currently inside a selection.
+  // This will stop double click then mouse-drag from undoing the desired
+  // selecting of a word.
+  if (!mMaintainRange)
+    return PR_FALSE;
+
+  nsCOMPtr<nsIDOMNode> rangenode;
+  PRInt32 rangeOffset;
+  mMaintainRange->GetStartContainer(getter_AddRefs(rangenode));
+  mMaintainRange->GetStartOffset(&rangeOffset);
+
+  nsCOMPtr<nsIDOMNode> domNode = do_QueryInterface(aContent);
+  if (domNode)
+  {
+    PRInt8 index = GetIndexFromSelectionType(nsISelectionController::SELECTION_NORMAL);
+    nsCOMPtr<nsIDOMNSRange> nsrange = do_QueryInterface(mMaintainRange);
+    if (nsrange)
+    {
+      PRBool insideSelection = PR_FALSE;
+      nsrange->IsPointInRange(domNode, aOffset, &insideSelection);
+
+      // Done when we find a range that we are in
+      if (insideSelection)
+      {
+        mDomSelections[index]->Collapse(rangenode, rangeOffset);
+        mMaintainRange->GetEndContainer(getter_AddRefs(rangenode));
+        mMaintainRange->GetEndOffset(&rangeOffset);
+        mDomSelections[index]->Extend(rangenode,rangeOffset);
+        return PR_TRUE; // dragging in selection aborted
+      }
+    }
+
+    PRInt32 relativePosition = ComparePoints(rangenode, rangeOffset, domNode, aOffset);
+    // if == 0 or -1 do nothing if < 0 then we need to swap direction
+    if (relativePosition > 0
+        && (mDomSelections[index]->GetDirection() == eDirNext))
+    {
+      mMaintainRange->GetEndContainer(getter_AddRefs(rangenode));
+      mMaintainRange->GetEndOffset(&rangeOffset);
+      mDomSelections[index]->Collapse(rangenode, rangeOffset);
+    }
+    else if (relativePosition < 0
+             && (mDomSelections[index]->GetDirection() == eDirPrevious))
+      mDomSelections[index]->Collapse(rangenode, rangeOffset);
+  }
+
+  return PR_FALSE;
+}
+
+
 NS_IMETHODIMP
 nsSelection::HandleClick(nsIContent *aNewFocus, PRUint32 aContentOffset, 
                        PRUint32 aContentEndOffset, PRBool aContinueSelection, 
@@ -2545,14 +2637,22 @@ nsSelection::HandleClick(nsIContent *aNewFocus, PRUint32 aContentOffset,
 {
   if (!aNewFocus)
     return NS_ERROR_INVALID_ARG;
+
   InvalidateDesiredX();
-  
+
+  if (!aContinueSelection)
+    mMaintainRange = nsnull;
+
   mHint = HINT(aHint);
   // Don't take focus when dragging off of a table
   if (!mDragSelectingCells)
   {
     BidiLevelFromClick(aNewFocus, aContentOffset);
     PostReason(nsISelectionListener::MOUSEDOWN_REASON + nsISelectionListener::DRAG_REASON);
+    if (aContinueSelection &&
+        AdjustForMaintainedSelection(aNewFocus, aContentOffset))
+      return NS_OK; //shift clicked to maintained selection. rejected.
+
     return TakeFocus(aNewFocus, aContentOffset, aContentEndOffset, aContinueSelection, aMultipleSelection);
   }
   
@@ -2569,21 +2669,11 @@ nsSelection::HandleDrag(nsIPresContext *aPresContext, nsIFrame *aFrame, nsPoint&
   nsIFrame *newFrame = 0;
   nsPoint   newPoint;
 
-
   result = ConstrainFrameAndPointToAnchorSubtree(aPresContext, aFrame, aPoint, &newFrame, newPoint);
-
   if (NS_FAILED(result))
     return result;
-
   if (!newFrame)
     return NS_ERROR_FAILURE;
-
-  nsCOMPtr<nsIPresShell> presShell;
-
-  result = aPresContext->GetShell(getter_AddRefs(presShell));
-
-  if (NS_FAILED(result))
-    return result;
 
   PRInt32 startPos = 0;
   PRInt32 contentOffsetEnd = 0;
@@ -2594,57 +2684,9 @@ nsSelection::HandleDrag(nsIPresContext *aPresContext, nsIFrame *aFrame, nsPoint&
                                                    getter_AddRefs(newContent), 
                                                    startPos, contentOffsetEnd, beginOfContent);
 
-  //Is the desired content and offset currently in selection?
-  //if the double click flag is set then dont continue selection if the desired content and offset 
-  //are currently inside a selection.
-  //this will stop double click then mouse-drag from undo-ing the desired selecting of a word.
-  if (mMouseDoubleDownState)
-  {
-    nsFrameState  frameState;
-    newFrame->GetFrameState(&frameState);
-    PRBool insideSelection(PR_FALSE);
-    if ((frameState & NS_FRAME_SELECTED_CONTENT))
-    {
-      PRBool isCollapsed;
-      PRInt8 index = GetIndexFromSelectionType(nsISelectionController::SELECTION_NORMAL);
-      mDomSelections[index]->GetIsCollapsed(&isCollapsed);
-      if (!isCollapsed)
-      {
-        PRInt32 rangeCount;
-        result = mDomSelections[index]->GetRangeCount(&rangeCount);
-        if (NS_FAILED(result)) return result;
-
-        nsCOMPtr<nsIDOMNode> domNode;
-        domNode = do_QueryInterface(newContent);
-        if (domNode)
-        {
-          for (PRInt32 i = 0; i < rangeCount; i++)
-          {
-            nsCOMPtr<nsIDOMRange> range;
-
-            result = mDomSelections[index]->GetRangeAt(i, getter_AddRefs(range));
-            if (NS_FAILED(result) || !range) 
-              continue;//dont bail yet, iterate through them all
-
-            nsCOMPtr<nsIDOMNSRange> nsrange(do_QueryInterface(range));
-            if (NS_FAILED(result) || !nsrange) 
-              continue;//dont bail yet, iterate through them all
-
-            nsrange->IsPointInRange(domNode, startPos, &insideSelection);
-
-            // Done when we find a range that we are in
-            if (insideSelection)
-              break;
-          }
-        }
-      }
-    }
-
-    if (!insideSelection)
-      mMouseDoubleDownState = PR_FALSE;
-    else
-      return NS_OK; //dragging in selection aborted
-  }
+  if ((newFrame->GetStateBits() & NS_FRAME_SELECTED_CONTENT) &&
+       AdjustForMaintainedSelection(newContent, startPos))
+    return NS_OK;
 
   // do we have CSS that changes selection behaviour?
   {
