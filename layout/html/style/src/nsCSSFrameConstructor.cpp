@@ -7560,11 +7560,13 @@ nsCSSFrameConstructor::ConstructFrameInternal( nsIPresShell*            aPresShe
 NS_IMETHODIMP
 nsCSSFrameConstructor::ReconstructDocElementHierarchy(nsIPresContext* aPresContext)
 {
+  NS_PRECONDITION(aPresContext, "null pres context argument");
+  
   nsresult rv = NS_OK;
   nsCOMPtr<nsIPresShell> shell;
   aPresContext->GetShell(getter_AddRefs(shell));
 
-  if (nsnull != mDocument) {
+  if (nsnull != mDocument && shell) {
     nsCOMPtr<nsIContent> rootContent(dont_AddRef(mDocument->GetRootContent()));
     
     if (rootContent) {
@@ -7594,27 +7596,30 @@ nsCSSFrameConstructor::ReconstructDocElementHierarchy(nsIPresContext* aPresConte
           rv = state.mFrameManager->RemoveFrame(aPresContext, *shell,
                                                 docParentFrame, nsnull, 
                                                 docElementFrame);
-          // XXX Remove any existing fixed items...          
           if (NS_SUCCEEDED(rv)) {
-            // Create the new document element hierarchy
-            nsIFrame*                 newChild;
-            nsCOMPtr<nsIStyleContext> rootPseudoStyle;
-          
-            docParentFrame->GetStyleContext(getter_AddRefs(rootPseudoStyle));
-            rv = ConstructDocElementFrame(shell, aPresContext, state, rootContent,
-                                          docParentFrame, rootPseudoStyle,
-                                          newChild);
-
+            // Remove any existing fixed items: they are always on the FixedContainingBlock
+            rv = RemoveFixedItems(*aPresContext, *shell);
             if (NS_SUCCEEDED(rv)) {
-              rv = state.mFrameManager->InsertFrames(aPresContext, *shell,
-                                                     docParentFrame, nsnull,
-                                                     nsnull, newChild);
+              // Create the new document element hierarchy
+              nsIFrame*                 newChild;
+              nsCOMPtr<nsIStyleContext> rootPseudoStyle;
+          
+              docParentFrame->GetStyleContext(getter_AddRefs(rootPseudoStyle));
+              rv = ConstructDocElementFrame(shell, aPresContext, state, rootContent,
+                                            docParentFrame, rootPseudoStyle,
+                                            newChild);
 
-              // Tell the fixed containing block about its 'fixed' frames
-              if (state.mFixedItems.childList) {
-                state.mFrameManager->InsertFrames(aPresContext, *shell,
-                                       mFixedContainingBlock, nsLayoutAtoms::fixedList,
-                                       nsnull, state.mFixedItems.childList);
+              if (NS_SUCCEEDED(rv)) {
+                rv = state.mFrameManager->InsertFrames(aPresContext, *shell,
+                                                       docParentFrame, nsnull,
+                                                       nsnull, newChild);
+
+                // Tell the fixed containing block about its 'fixed' frames
+                if (state.mFixedItems.childList) {
+                  state.mFrameManager->InsertFrames(aPresContext, *shell,
+                                         mFixedContainingBlock, nsLayoutAtoms::fixedList,
+                                         nsnull, state.mFixedItems.childList);
+                }
               }
             }
           }
@@ -13035,3 +13040,32 @@ nsCSSFrameConstructor::RecreateEntireFrameTree(nsIPresContext* aPresContext)
   // XXX write me some day
   return NS_OK;
 }
+
+nsresult nsCSSFrameConstructor::RemoveFixedItems(nsIPresContext& aPresContext,
+                                                 nsIPresShell&   aPresShell)
+{
+  nsresult rv=NS_OK;
+
+  if (mFixedContainingBlock) {
+    nsIFrame *fixedChild = nsnull;
+    do {
+      mFixedContainingBlock->FirstChild(&aPresContext,
+                                        nsLayoutAtoms::fixedList,
+                                        &fixedChild);
+      if (fixedChild) {
+        rv = mFixedContainingBlock->RemoveFrame(&aPresContext,
+                                                aPresShell,
+                                                nsLayoutAtoms::fixedList,
+                                                fixedChild);
+        if (NS_FAILED(rv)) {
+          NS_WARNING("Error removing frame from fixed containing block in RemoveFixedItems");
+          break;
+        }
+      }
+    } while(fixedChild);
+  } else {
+    NS_WARNING( "RemoveDixedItems called with no FixedContainingBlock data member set");
+  }
+  return rv;
+}
+
