@@ -245,6 +245,48 @@ sub load_buildlog {
   }
 }
 
+sub loadquickparseinfo {
+  my ($tree, $build, $times) = (@_);
+
+  do "$tree/ignorebuilds.pl";
+    
+  use Backwards;
+
+  my ($bw) = Backwards->new("$form{tree}/build.dat") or die;
+    
+  my $latest_time = 0;
+  my $tooearly = 0;
+  while( $_ = $bw->readline ) {
+    chop;
+    my ($buildtime, $buildname, $buildstatus) = (split /\|/)[1,2,4];
+    
+    if ($buildstatus =~ /^success|busted|testfailed$/) {
+
+      # Ignore stuff in the future.
+      next if $buildtime > $maxdate;
+
+      $latest_time = $buildtime if $buildtime > $latest_time;
+
+      # Ignore stuff more than 12 hours old
+      if ($buildtime < $latest_time - 12*60*60) {
+        # Hack: A build may give a bogus time. To compensate, we will
+        # not stop until we hit 20 consecutive lines that are too early.
+
+        last if $tooearly++ > 20;
+        next;
+      }
+      $tooearly = 0;
+
+      next if exists $ignore_builds->{$buildname};
+      next if exists $build->{$buildname}
+              and $times->{$buildname} >= $buildtime;
+      
+      $build->{$buildname} = $buildstatus;
+      $times->{$buildname} = $buildtime;
+    }
+  }
+}
+
 sub load_who {
   my ($who_list, $td) = @_;
   my $d, $w, $i, $bfound;

@@ -56,12 +56,13 @@ if (exists $form{rebuildguilty} or exists $form{showall}) {
   undef $form{rebuildguilty};
 }
 
-&show_tree_selector, exit if $form{tree} eq '';
-&do_quickparse,      exit if $form{quickparse};
-&do_express,         exit if $form{express};
-&do_rdf,             exit if $form{rdf};
-&do_flash,           exit if $form{flash};
-&do_panel,           exit if $form{panel};
+&show_tree_selector,  exit if $form{tree} eq '';
+&do_quickparse,       exit if $form{quickparse};
+&do_express,          exit if $form{express};
+&do_rdf,              exit if $form{rdf};
+&do_flash, &do_panel, exit if $form{static};
+&do_flash,            exit if $form{flash};
+&do_panel,            exit if $form{panel};
 
 &load_data;
 &print_page_head;
@@ -652,48 +653,6 @@ __ENDJS
 __ENDJS
 }
 
-sub loadquickparseinfo {
-  my ($tree, $build, $times) = (@_);
-
-  do "$tree/ignorebuilds.pl";
-    
-  use Backwards;
-
-  my ($bw) = Backwards->new("$form{tree}/build.dat") or die;
-    
-  my $latest_time = 0;
-  my $tooearly = 0;
-  while( $_ = $bw->readline ) {
-    chop;
-    my ($buildtime, $buildname, $buildstatus) = (split /\|/)[1,2,4];
-    
-    if ($buildstatus =~ /^success|busted|testfailed$/) {
-
-      # Ignore stuff in the future.
-      next if $buildtime > $maxdate;
-
-      $latest_time = $buildtime if $buildtime > $latest_time;
-
-      # Ignore stuff more than 12 hours old
-      if ($buildtime < $latest_time - 12*60*60) {
-        # Hack: A build may give a bogus time. To compensate, we will
-        # not stop until we hit 20 consecutive lines that are too early.
-
-        last if $tooearly++ > 20;
-        next;
-      }
-      $tooearly = 0;
-
-      next if exists $ignore_builds->{$buildname};
-      next if exists $build->{$buildname}
-              and $times->{$buildname} >= $buildtime;
-      
-      $build->{$buildname} = $buildstatus;
-      $times->{$buildname} = $buildtime;
-    }
-  }
-}
-
 sub do_express {
   print "Content-type: text/html\nRefresh: 900\n\n<HTML>\n";
 
@@ -717,11 +676,20 @@ sub do_express {
 
 # This is essentially do_express but it outputs a different format
 sub do_panel {
-  # Refresh the tinderbox sidebar panel every minute.
-  print "Content-type: text/html\nRefresh: 60\n\n<HTML>\n";
+  local *OUT;
+  my $oldfh;
+  my $outfile = "$form{tree}/panel.html";
+
+  if ($form{static}) {
+    open(OUT,">$outfile.$$");
+    $oldfh = select OUT;
+  } else {
+    print "Content-type: text/html\n\n<HTML>\n";
+  }
 
   print q(
     <head>
+      <META HTTP-EQUIV="Refresh" CONTENT="60">
       <style>
         body, td { 
           font-family: Verdana, Sans-Serif;
@@ -755,10 +723,25 @@ sub do_panel {
     print "<tr><td bgcolor='$colormap->{$status}'>$name</td></tr>";
   }
   print "</table></body>";
+
+  if ($form{static}) {
+    close(OUT);
+    system "mv $outfile.$$ $outfile";
+    select $oldfh;
+  }
 }
 
 sub do_flash {
-  print "Content-type: text/rdf\n\n";
+  local *OUT;
+  my $oldfh;
+  my $outfile = "$form{tree}/flash.rdf";
+
+  if ($form{static}) {
+    open(OUT,">$outfile.$$");
+    $oldfh = select OUT;
+  } else {
+    print "Content-type: text/rdf\n\n";
+  }
 
   my %build, %times;
   loadquickparseinfo($form{tree}, \%build, \%times);
@@ -820,6 +803,12 @@ sub do_flash {
     </RDF:Description>
     </RDF:RDF>
   };
+
+  if ($form{static}) {
+    close(OUT);
+    system "mv $outfile.$$ $outfile";
+    select $oldfh;
+  }
 }
 
 sub do_quickparse {
