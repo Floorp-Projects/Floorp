@@ -428,10 +428,9 @@ void nsImapServerResponseParser::ProcessOkCommand(const char *commandToken)
 				{
 					PR_LOG(IMAP, PR_LOG_ALWAYS, 
                            ("BODYSHELL:  Adding shell to cache."));
-                    const char *userName = fServerConnection.GetImapUserName();
+                    const char *serverKey = fServerConnection.GetImapServerKey();
 					fHostSessionList->AddShellToCacheForHost(
-                        fServerConnection.GetImapHostName(), userName,
-                        m_shell);
+                        serverKey, m_shell);
 				}
 			}
 			else
@@ -799,8 +798,7 @@ void nsImapServerResponseParser::mailbox_list(PRBool discoveredFromLsub)
 void nsImapServerResponseParser::mailbox(mailbox_spec *boxSpec)
 {
 	char *boxname = nsnull;
-    const char *userName = fServerConnection.GetImapUserName();
-    const char* hostName = fServerConnection.GetImapHostName();
+    const char *serverKey = fServerConnection.GetImapServerKey();
 	
 	if (!PL_strcasecmp(fNextToken, "INBOX"))
 	{
@@ -824,12 +822,11 @@ void nsImapServerResponseParser::mailbox(mailbox_spec *boxSpec)
     {
 		// should the namespace check go before or after the Utf7 conversion?
 		fHostSessionList->SetNamespaceHierarchyDelimiterFromMailboxForHost(
-            hostName, userName, boxname, boxSpec->hierarchySeparator);
+            serverKey, boxname, boxSpec->hierarchySeparator);
 
 		
 		nsIMAPNamespace *ns = nsnull;
-		fHostSessionList->GetNamespaceForMailboxForHost(hostName, userName
-                                                        ,boxname, ns);
+		fHostSessionList->GetNamespaceForMailboxForHost(serverKey, boxname, ns);
 		if (ns)
 		{
 			switch (ns->GetType())
@@ -1708,8 +1705,7 @@ void nsImapServerResponseParser::capability_data()
 
     if (fHostSessionList)
         fHostSessionList->SetCapabilityForHost(
-            fServerConnection.GetImapHostName(), 
-            userName,
+            fServerConnection.GetImapServerKey(), 
             fCapabilityFlag);
 	nsImapProtocol *navCon = &fServerConnection;
 	NS_ASSERTION(navCon, "null imap protocol connection while parsing capability response");	// we should always have this
@@ -1777,8 +1773,7 @@ void nsImapServerResponseParser::namespace_data()
 {
 	EIMAPNamespaceType namespaceType = kPersonalNamespace;
 	PRBool namespacesCommitted = PR_FALSE;
-    const char* hostName = fServerConnection.GetImapHostName();
-    const char* userName = fServerConnection.GetImapUserName();
+    const char* serverKey = fServerConnection.GetImapServerKey();
 	while ((namespaceType != kUnknownNamespace) && ContinueParse())
 	{
 		fNextToken = GetNextToken();
@@ -1831,7 +1826,7 @@ void nsImapServerResponseParser::namespace_data()
 						// add it to a temporary list in the host
 						if (newNamespace && fHostSessionList)
 							fHostSessionList->AddNewNamespaceForHost(
-                                hostName, userName, newNamespace);
+                                serverKey, newNamespace);
 
 						skip_to_close_paren();	// Ignore any extension data
 	
@@ -1877,8 +1872,7 @@ void nsImapServerResponseParser::namespace_data()
 	if (!namespacesCommitted && fHostSessionList)
 	{
 		PRBool success;
-		fHostSessionList->FlushUncommittedNamespacesForHost(hostName,
-                                                            userName,
+		fHostSessionList->FlushUncommittedNamespacesForHost(serverKey,
                                                             success);
 	}
 }
@@ -2106,11 +2100,8 @@ void nsImapServerResponseParser::ResetCapabilityFlag()
 {
     if (fHostSessionList)
     {
-        const char* userName = fServerConnection.GetImapUserName();
-
         fHostSessionList->SetCapabilityForHost(
-            fServerConnection.GetImapHostName(), userName,
-            kCapabilityUndefined);
+            fServerConnection.GetImapServerKey(), kCapabilityUndefined);
     }
 }
 
@@ -2272,14 +2263,13 @@ struct mailbox_spec *nsImapServerResponseParser::CreateCurrentMailboxSpec(const 
 		const char *mailboxNameToConvert = (mailboxName) ? mailboxName : fSelectedMailboxName;
 	    if (mailboxNameToConvert)
 	    {
-			const char *host = 				
-                fServerConnection.GetImapHostName();
+			const char *serverKey = 				
+                fServerConnection.GetImapServerKey();
 			nsIMAPNamespace *ns = nsnull;
-			if (host && fHostSessionList)
+			if (serverKey && fHostSessionList)
 			{
                 const char* userName = fServerConnection.GetImapUserName();
-				fHostSessionList->GetNamespaceForMailboxForHost(host, 
-                           userName, mailboxNameToConvert, ns);	// for
+				fHostSessionList->GetNamespaceForMailboxForHost(serverKey, mailboxNameToConvert, ns);	// for
                                                                 // delimiter
 			}
 

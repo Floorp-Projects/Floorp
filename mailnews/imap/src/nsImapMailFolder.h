@@ -278,6 +278,7 @@ protected:
     nsresult GetFolder(const char *name, nsIMsgFolder **pFolder);
 	nsresult GetTrashFolder(nsIMsgFolder **pTrashFolder);
     PRBool InTrash(nsIMsgFolder* folder);
+	nsresult GetServerKey(char **serverKey);
 
     nsresult AddDirectorySeparator(nsFileSpec &path);
     nsresult CreateDirectoryForFolder(nsFileSpec &path);

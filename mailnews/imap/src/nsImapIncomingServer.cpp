@@ -146,17 +146,11 @@ NS_IMETHODIMP nsImapIncomingServer::SetKey(char * aKey)  // override nsMsgIncomi
 	// every time we create an imap incoming server, we need to add it to the
 	// host session list!! 
 
-	// get the user and host name and the fields to the host session list.
-	char * userName = nsnull;
-	char * hostName = nsnull;
-	
-	nsresult rv = GetHostName(&hostName);
-	rv = GetUsername(&userName);
-
+	nsresult rv;
 	NS_WITH_SERVICE(nsIImapHostSessionList, hostSession, kCImapHostSessionList, &rv);
     if (NS_FAILED(rv)) return rv;
 
-	hostSession->AddHostToList(hostName, userName);
+	hostSession->AddHostToList(aKey);
 
 	char *personalNamespace = nsnull;
 	char *publicNamespace = nsnull;
@@ -171,24 +165,21 @@ NS_IMETHODIMP nsImapIncomingServer::SetKey(char * aKey)  // override nsMsgIncomi
 
 	if (NS_SUCCEEDED(rv))
 	{
-		hostSession->SetNamespaceFromPrefForHost(hostName, userName, personalNamespace, kPersonalNamespace);
+		hostSession->SetNamespaceFromPrefForHost(aKey, personalNamespace, kPersonalNamespace);
 		PR_FREEIF(personalNamespace);
 	}
 
 	if (NS_SUCCEEDED(rv))
 	{
-		hostSession->SetNamespaceFromPrefForHost(hostName, userName, publicNamespace, kPublicNamespace);
+		hostSession->SetNamespaceFromPrefForHost(aKey, publicNamespace, kPublicNamespace);
 		PR_FREEIF(publicNamespace);
 	}
 
 	if (NS_SUCCEEDED(rv))
 	{
-		hostSession->SetNamespaceFromPrefForHost(hostName, userName, otherUsersNamespace, kOtherUsersNamespace);
+		hostSession->SetNamespaceFromPrefForHost(aKey, otherUsersNamespace, kOtherUsersNamespace);
 		PR_FREEIF(otherUsersNamespace);
 	}
-
-	PR_FREEIF(userName);
-	PR_FREEIF(hostName);
 
 	return rv;
 }

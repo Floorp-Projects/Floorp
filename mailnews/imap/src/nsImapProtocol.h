@@ -185,8 +185,8 @@ public:
     
 	const char* GetImapHostName(); // return the host name from the url for the
                                    // current connection
-    const char* GetImapUserName(); // return the user name from the identity; caller
-                             // must free the returned username string
+    const char* GetImapUserName(); // return the user name from the identity;
+    const char* GetImapServerKey(); // return the user name from the incoming server; 
 	
 	// state set by the imap parser...
 	void NotifyMessageFlags(imapMessageFlagsType flags, nsMsgKey key);
@@ -279,6 +279,7 @@ private:
 
 	char			*m_userName;
 	char			*m_hostName;
+	char			*m_serverKey;
 	char			*m_dataOutputBuf;
 	nsMsgLineStreamBuffer * m_inputStreamBuffer;
     PRUint32		m_allocatedSize; // allocated size

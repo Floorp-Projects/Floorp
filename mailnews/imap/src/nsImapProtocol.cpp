@@ -242,6 +242,7 @@ nsImapProtocol::nsImapProtocol() :
 
 	m_userName = nsnull;
 	m_hostName = nsnull;
+	m_serverKey = nsnull;
 
 	m_progressStringId = 0;
 
@@ -379,6 +380,15 @@ nsImapProtocol::GetImapUserName()
 	if (!m_userName && server)
 		server->GetUsername(&m_userName);
 	return m_userName;
+}
+
+const char*
+nsImapProtocol::GetImapServerKey()
+{
+	nsIMsgIncomingServer * server = m_server;
+	if (!m_serverKey && server)
+		server->GetKey(&m_serverKey);
+	return m_serverKey;
 }
 
 void
@@ -520,7 +530,7 @@ nsresult nsImapProtocol::SetupWithUrl(nsIURI * aURL, nsISupports* aConsumer)
 
 		PRUint32 capability = kCapabilityUndefined;
 
-		m_hostSessionList->GetCapabilityForHost(GetImapHostName(), GetImapUserName(), capability);
+		m_hostSessionList->GetCapabilityForHost(GetImapServerKey(), capability);
 		GetServerStateParser().SetCapabilityFlag(capability);
 
 		if ( m_runningUrl && !m_channel /* and we don't have a transport yet */)
@@ -3138,8 +3148,7 @@ PRUint32 nsImapProtocol::GetMessageSize(nsCString &messageId,
 
 		nsIMAPNamespace *nsForMailbox = nsnull;
         const char *userName = GetImapUserName();
-        m_hostSessionList->GetNamespaceForMailboxForHost(
-            GetImapHostName(), userName, folderFromParser,
+        m_hostSessionList->GetNamespaceForMailboxForHost(GetImapServerKey(), folderFromParser,
             nsForMailbox);
 
 		char *nonUTF7ConvertedName = CreateUtf7ConvertedString(folderFromParser, PR_FALSE);
@@ -3333,7 +3342,7 @@ void nsImapProtocol::AddFolderRightsForUser(const char *mailboxName, const char 
         NS_ASSERTION (m_hostSessionList, "fatal ... null host session list");
         if (m_hostSessionList)
             m_hostSessionList->GetNamespaceForMailboxForHost(
-                GetImapHostName(), userName, mailboxName,
+                GetImapServerKey(), mailboxName,
                 namespaceForFolder);
 
 		aclRightsInfo->hostName = PL_strdup(GetImapHostName());
@@ -3565,7 +3574,7 @@ nsImapProtocol::DiscoverMailboxSpec(mailbox_spec * adoptedBoxSpec)
     if (!m_hostSessionList) return;
 
     m_hostSessionList->GetDefaultNamespaceOfTypeForHost(
-        hostName, userName, kPersonalNamespace, ns);
+        GetImapServerKey(), kPersonalNamespace, ns);
 	const char *nsPrefix = ns ? ns->GetPrefix() : 0;
 
 	nsCString canonicalSubDir;
@@ -3593,7 +3602,7 @@ nsImapProtocol::DiscoverMailboxSpec(mailbox_spec * adoptedBoxSpec)
                 PRBool onlineTrashFolderExists = PR_FALSE;
                 if (m_hostSessionList)
                     m_hostSessionList->GetOnlineTrashFolderExistsForHost(
-                        hostName, userName, onlineTrashFolderExists);
+                        GetImapServerKey(), onlineTrashFolderExists);
 
 				if (GetDeleteIsMoveToTrash() &&	// don't set the Trash flag if not using the Trash model
 					!onlineTrashFolderExists && 
@@ -3629,7 +3638,7 @@ nsImapProtocol::DiscoverMailboxSpec(mailbox_spec * adoptedBoxSpec)
                             if (m_hostSessionList)
 							m_hostSessionList->
                                 SetOnlineTrashFolderExistsForHost(
-                                    hostName, userName, trashExists);
+                                    GetImapServerKey(), trashExists);
 							PR_Free(serverTrashName);
 						}
 					}
@@ -3657,7 +3666,7 @@ nsImapProtocol::DiscoverMailboxSpec(mailbox_spec * adoptedBoxSpec)
 
                     if (m_hostSessionList)
                         m_hostSessionList->GetHostIsUsingSubscription(
-                            hostName, userName,
+                            GetImapServerKey(),
                             useSubscription);
 
 					if ((GetMailboxDiscoveryStatus() != eContinue) && 
@@ -4692,8 +4701,7 @@ PRBool nsImapProtocol::MailboxIsNoSelectMailbox(const char *mailboxName)
 	PRBool rv = PR_FALSE;
 
 	nsIMAPNamespace *nsForMailbox = nsnull;
-    m_hostSessionList->GetNamespaceForMailboxForHost(GetImapHostName(),
-                                                     GetImapUserName(),
+    m_hostSessionList->GetNamespaceForMailboxForHost(GetImapServerKey(),
                                                      mailboxName, nsForMailbox);
 	// NS_ASSERTION (nsForMailbox, "Oops .. null nsForMailbox\n");
 
@@ -4791,15 +4799,13 @@ PRBool nsImapProtocol::RenameHierarchyByHand(const char *oldParentMailboxName,
 	{
 		m_hierarchyNameState = kDeleteSubFoldersInProgress;
 		nsIMAPNamespace *ns = nsnull;
-        m_hostSessionList->GetNamespaceForMailboxForHost(GetImapHostName(),
-                                                         GetImapUserName(), 
+        m_hostSessionList->GetNamespaceForMailboxForHost(GetImapServerKey(), 
                                                          oldParentMailboxName,
                                                          ns);	// for delimiter
 		if (!ns)
 		{
 			if (!PL_strcasecmp(oldParentMailboxName, "INBOX"))
-                m_hostSessionList->GetDefaultNamespaceOfTypeForHost(GetImapHostName(),
-                                                                    GetImapUserName(), 
+                m_hostSessionList->GetDefaultNamespaceOfTypeForHost(GetImapServerKey(), 
                                                                     kPersonalNamespace,
                                                                     ns);
 		}
@@ -4808,8 +4814,7 @@ PRBool nsImapProtocol::RenameHierarchyByHand(const char *oldParentMailboxName,
             nsCString pattern = oldParentMailboxName;
             pattern += ns->GetDelimiter();
             PRBool isUsingSubscription = PR_FALSE;
-            m_hostSessionList->GetHostIsUsingSubscription(GetImapHostName(),
-                                                          GetImapUserName(),
+            m_hostSessionList->GetHostIsUsingSubscription(GetImapServerKey(),
                                                           isUsingSubscription);
 
             if (isUsingSubscription)
@@ -5074,7 +5079,7 @@ void nsImapProtocol::FindMailboxesIfNecessary()
 	nsresult rv = NS_OK;
 
 	rv = m_runningUrl->GetImapAction(&imapAction);
-	rv = m_hostSessionList->GetHaveWeEverDiscoveredFoldersForHost(GetImapHostName(), GetImapUserName(), foundMailboxesAlready);
+	rv = m_hostSessionList->GetHaveWeEverDiscoveredFoldersForHost(GetImapServerKey(), foundMailboxesAlready);
     if (NS_SUCCEEDED(rv) && !foundMailboxesAlready &&
 		(imapAction != nsIImapUrl::nsImapBiff) &&
 		(imapAction != nsIImapUrl::nsImapDiscoverAllBoxesUrl) &&
@@ -5107,17 +5112,16 @@ void nsImapProtocol::DiscoverMailboxList()
 		m_hierarchyNameState = kNoOperationInProgress;
 
 	// Pretend that the Trash folder doesn't exist, so we will rediscover it if we need to.
-	m_hostSessionList->SetOnlineTrashFolderExistsForHost(GetImapHostName(), GetImapUserName(), PR_FALSE);
-	m_hostSessionList->GetHostIsUsingSubscription(GetImapHostName(), GetImapUserName(), usingSubscription);
+	m_hostSessionList->SetOnlineTrashFolderExistsForHost(GetImapServerKey(), PR_FALSE);
+	m_hostSessionList->GetHostIsUsingSubscription(GetImapServerKey(), usingSubscription);
 
 	// iterate through all namespaces and LSUB them.
 	PRUint32 count = 0;
-	m_hostSessionList->GetNumberOfNamespacesForHost(GetImapHostName(),
-                                                    GetImapUserName(), count);
+	m_hostSessionList->GetNumberOfNamespacesForHost(GetImapServerKey(), count);
 	for (PRUint32 i = 0; i < count; i++ )
 	{
 		nsIMAPNamespace * ns = nsnull;
-		m_hostSessionList->GetNamespaceNumberForHost(GetImapHostName(), GetImapUserName(),i,ns);
+		m_hostSessionList->GetNamespaceNumberForHost(GetImapServerKey(),i,ns);
 		if (ns)
 		{
 			const char *prefix = ns->GetPrefix();
@@ -5213,7 +5217,7 @@ void nsImapProtocol::DiscoverMailboxList()
 	// explicitly LIST the INBOX if (a) we're not using subscription, or (b) we are using subscription and
 	// the user wants us to always show the INBOX.
 	PRBool listInboxForHost = PR_FALSE;
-	m_hostSessionList->GetShouldAlwaysListInboxForHost(GetImapHostName(), GetImapUserName(), listInboxForHost);
+	m_hostSessionList->GetShouldAlwaysListInboxForHost(GetImapServerKey(), listInboxForHost);
 	if (!usingSubscription || listInboxForHost) 
 		List("INBOX", PR_TRUE);
 
@@ -5276,13 +5280,13 @@ void nsImapProtocol::MailboxDiscoveryFinished()
 		 (m_hierarchyNameState == kListingForInfoAndDiscovery)))
     {
 		nsIMAPNamespace *ns = nsnull;
-		m_hostSessionList->GetDefaultNamespaceOfTypeForHost(GetImapHostName(),GetImapUserName(), kPersonalNamespace, ns);
+		m_hostSessionList->GetDefaultNamespaceOfTypeForHost(GetImapServerKey(), kPersonalNamespace, ns);
 		const char *personalDir = ns ? ns->GetPrefix() : 0;
 		
 		PRBool trashFolderExists = PR_FALSE;
 		PRBool usingSubscription = PR_FALSE;
-		m_hostSessionList->GetOnlineTrashFolderExistsForHost(GetImapHostName(), GetImapUserName(), trashFolderExists);
-		m_hostSessionList->GetHostIsUsingSubscription(GetImapHostName(), GetImapUserName(),usingSubscription);
+		m_hostSessionList->GetOnlineTrashFolderExistsForHost(GetImapServerKey(), trashFolderExists);
+		m_hostSessionList->GetHostIsUsingSubscription(GetImapServerKey(),usingSubscription);
 		if (!trashFolderExists && GetDeleteIsMoveToTrash() && usingSubscription)
 		{
 			// maybe we're not subscribed to the Trash folder
@@ -5318,13 +5322,13 @@ void nsImapProtocol::MailboxDiscoveryFinished()
 						m_hierarchyNameState = kNoOperationInProgress;
 					}
     				else
-						m_hostSessionList->SetOnlineTrashFolderExistsForHost(GetImapHostName(), GetImapUserName(), PR_TRUE);
+						m_hostSessionList->SetOnlineTrashFolderExistsForHost(GetImapServerKey(), PR_TRUE);
 					PR_Free(onlineTrashName);
 				}
    				PR_FREEIF(trashName);
 			} // if trash name
 		} //if trashg folder doesn't exist
-		m_hostSessionList->SetHaveWeEverDiscoveredFoldersForHost(GetImapHostName(), GetImapUserName(), PR_TRUE);
+		m_hostSessionList->SetHaveWeEverDiscoveredFoldersForHost(GetImapServerKey(), PR_TRUE);
 
 		// notify front end that folder discovery is complete....
 		m_imapServerSink->DiscoveryDone();
@@ -5751,7 +5755,7 @@ void nsImapProtocol::ProcessAfterAuthenticated()
 	// if we're a netscape server, and we haven't got the admin url, get it
 	PRBool hasAdminUrl = PR_TRUE;
 
-	if (NS_SUCCEEDED(m_hostSessionList->GetHostHasAdminURL(GetImapHostName(), GetImapUserName(), hasAdminUrl)) 
+	if (NS_SUCCEEDED(m_hostSessionList->GetHostHasAdminURL(GetImapServerKey(), hasAdminUrl)) 
 		&& !hasAdminUrl)
 	{
 		if (GetServerStateParser().ServerHasServerInfo())
@@ -5778,8 +5782,8 @@ void nsImapProtocol::ProcessAfterAuthenticated()
 	{
 		PRBool nameSpacesOverridable = PR_FALSE;
 		PRBool haveNameSpacesForHost = PR_FALSE;
-		m_hostSessionList->GetNamespacesOverridableForHost(GetImapHostName(), GetImapUserName(), nameSpacesOverridable);
-		m_hostSessionList->GetGotNamespacesForHost(GetImapHostName(), GetImapUserName(), haveNameSpacesForHost); 
+		m_hostSessionList->GetNamespacesOverridableForHost(GetImapServerKey(), nameSpacesOverridable);
+		m_hostSessionList->GetGotNamespacesForHost(GetImapServerKey(), haveNameSpacesForHost); 
 
 	// mscott: VERIFY THIS CLAUSE!!!!!!!
 		if (nameSpacesOverridable && !haveNameSpacesForHost)
@@ -5962,8 +5966,7 @@ PRBool nsImapProtocol::TryToLogon()
 	            {
 					      AlertUserEventUsingId(IMAP_LOGIN_FAILED);
                 m_server->SetPassword("");  // clear out the password
-					      m_hostSessionList->SetPasswordForHost(GetImapHostName(), 
-															  GetImapUserName(), nsnull);
+					      m_hostSessionList->SetPasswordForHost(GetImapServerKey(), nsnull);
 					      PR_FREEIF(password);
 		            m_currentBiffState = nsMsgBiffState_Unknown;
 		            SendSetBiffIndicatorEvent(m_currentBiffState);
@@ -5971,11 +5974,10 @@ PRBool nsImapProtocol::TryToLogon()
 			    } // if login failed
 	    else	// login succeeded
 	    {
-				rv = m_hostSessionList->SetPasswordForHost(GetImapHostName(), 
-						  								   GetImapUserName(), password);
-				rv = m_hostSessionList->GetPasswordVerifiedOnline(GetImapHostName(), GetImapUserName(), imapPasswordIsNew);
+				rv = m_hostSessionList->SetPasswordForHost(GetImapServerKey(), password);
+				rv = m_hostSessionList->GetPasswordVerifiedOnline(GetImapServerKey(), imapPasswordIsNew);
 				if (NS_SUCCEEDED(rv) && imapPasswordIsNew)
-					m_hostSessionList->SetPasswordVerifiedOnline(GetImapHostName(), GetImapUserName());
+					m_hostSessionList->SetPasswordVerifiedOnline(GetImapServerKey());
 #ifdef UNREADY_CODE
 				NET_SetPopPassword2(passwordForHost); // bug 53380
 #endif
@@ -6050,8 +6052,7 @@ nsImapProtocol::GetDeleteIsMoveToTrash()
     const char *userName = GetImapUserName();
     NS_ASSERTION (m_hostSessionList, "fatal... null host session list");
     if (m_hostSessionList)
-        m_hostSessionList->GetDeleteIsMoveToTrashForHost(GetImapHostName(),
-                                                         userName, rv);
+        m_hostSessionList->GetDeleteIsMoveToTrashForHost(GetImapServerKey(), rv);
     return rv;
 }
 

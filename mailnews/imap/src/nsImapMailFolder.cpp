@@ -777,7 +777,17 @@ NS_IMETHODIMP nsImapMailFolder::GetSizeOnDisk(PRUint32 * size)
     nsresult rv = NS_ERROR_FAILURE;
     return rv;
 }
-    
+
+nsresult nsImapMailFolder::GetServerKey(char **serverKey)
+{
+	// look for matching imap folders, then pop folders
+	nsCOMPtr<nsIMsgIncomingServer> server;
+	nsresult rv = GetServer(getter_AddRefs(server));
+	if (NS_SUCCEEDED(rv) && server)
+		return server->GetKey(serverKey);
+	return rv;
+}
+
 NS_IMETHODIMP nsImapMailFolder::GetUsername(char** userName)
 {
     nsresult rv = NS_ERROR_NULL_POINTER;
@@ -2373,13 +2383,10 @@ PRBool nsImapMailFolder::ShowDeletedMessages()
 
     if (NS_SUCCEEDED(err) && hostSession)
 	{
-        char *hostName = nsnull;
-		char *userName = nsnull;
-        GetHostname(&hostName);
-		GetUsername(&userName);
-        err = hostSession->GetShowDeletedMessagesForHost(hostName, userName, rv);
-        PR_FREEIF(hostName);
-		PR_FREEIF(userName);
+        char *serverKey = nsnull;
+        GetServerKey(&serverKey);
+        err = hostSession->GetShowDeletedMessagesForHost(serverKey, rv);
+        PR_FREEIF(serverKey);
 	}
 	return rv;
 }
@@ -2395,13 +2402,10 @@ PRBool nsImapMailFolder::DeleteIsMoveToTrash()
 
     if (NS_SUCCEEDED(err) && hostSession)
 	{
-        char *hostName = nsnull;
-		char *userName = nsnull;
-        GetHostname(&hostName);
-		GetUsername(&userName);
-        err = hostSession->GetDeleteIsMoveToTrashForHost(hostName, userName, rv);
-        PR_FREEIF(hostName);
-		PR_FREEIF(userName);
+        char *serverKey = nsnull;
+        GetServerKey(&serverKey);
+        err = hostSession->GetDeleteIsMoveToTrashForHost(serverKey, rv);
+        PR_FREEIF(serverKey);
 	}
 	return rv;
 }

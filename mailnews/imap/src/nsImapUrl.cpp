@@ -737,8 +737,7 @@ NS_IMETHODIMP nsImapUrl::AllocateCanonicalPath(const char *serverPath, char onli
     nsresult rv = NS_ERROR_NULL_POINTER;
     char *canonicalPath = nsnull;
 	char delimiterToUse = onlineDelimiter;
-    nsXPIDLCString hostName;
-    char* userName = nsnull;
+	char *serverKey = nsnull;
     nsString aString;
 	char *currentPath = (char *) serverPath;
     char *onlineDir = nsnull;
@@ -760,14 +759,12 @@ NS_IMETHODIMP nsImapUrl::AllocateCanonicalPath(const char *serverPath, char onli
 	if (!serverPath || NS_FAILED(rv))
 		goto done;
 
-    GetHost(getter_Copies(hostName));
 	rv = GetServer(getter_AddRefs(server));
 	if (NS_FAILED(rv))
 		goto done;
 
-	server->GetUsername(&userName);
-
-    hostSessionList->GetOnlineDirForHost(hostName, userName, aString); 
+	server->GetKey(&serverKey);
+    hostSessionList->GetOnlineDirForHost(serverKey, aString); 
     // First we have to check to see if we should strip off an online server
     // subdirectory 
 	// If this host has an online server directory configured
@@ -819,9 +816,8 @@ NS_IMETHODIMP nsImapUrl::AllocateCanonicalPath(const char *serverPath, char onli
 	}
 
 done:
-    PR_FREEIF(userName);
     PR_FREEIF(onlineDir);
-
+	PR_FREEIF(serverKey);
     NS_UNLOCK_INSTANCE();
     return rv;
 }
