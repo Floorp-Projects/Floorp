@@ -23,6 +23,7 @@
 #include "nsMsgMailSession.h"
 #include "nsMsgLocalCID.h"
 #include "nsMsgBaseCID.h"
+#include "nsIPref.h"
 
 NS_IMPL_ISUPPORTS(nsMsgMailSession, nsIMsgMailSession::GetIID());
 
