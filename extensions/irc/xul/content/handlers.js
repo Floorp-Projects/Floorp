@@ -1323,7 +1323,7 @@ function my_invite (e)
 CIRCNetwork.prototype.on433 = /* nickname in use */
 function my_433 (e)
 {
-    if (e.params[2] == this.INITIAL_NICK && this.connecting)
+    if ((e.params[2] == this.INITIAL_NICK) && (this.state == NET_CONNECTING))
     {
         var newnick = this.INITIAL_NICK + "_";
         this.INITIAL_NICK = newnick;
@@ -1352,6 +1352,7 @@ CIRCNetwork.prototype.onError =
 function my_neterror (e)
 {
     var msg;
+    var type = "ERROR";
 
     if (typeof e.errorCode != "undefined")
     {
@@ -1364,16 +1365,20 @@ function my_neterror (e)
             case JSIRC_ERR_EXHAUSTED:
                 msg = MSG_ERR_EXHAUSTED;
                 break;
+
+            case JSIRC_ERR_CANCELLED:
+                msg = MSG_ERR_CANCELLED;
+                type = "INFO";
+                break;
         }
     }
     else
         msg = e.params[e.params.length - 1];
 
-    this.connecting = false;
     dispatch("sync-header");
     updateTitle();
 
-    this.display (msg, "ERROR");
+    this.display(msg, type);
 }
 
 
@@ -1381,7 +1386,6 @@ CIRCNetwork.prototype.onDisconnect =
 function my_netdisconnect (e)
 {
     var msg;
-    var reconnect = false;
 
     if (typeof e.disconnectStatus != "undefined")
     {
@@ -1417,7 +1421,6 @@ function my_netdisconnect (e)
                 msg = getMsg(MSG_CLOSE_STATUS,
                              [this.getURL(), e.server.getURL(),
                               e.disconnectStatus]);
-                reconnect = true;
                 break;
         }
     }
@@ -1430,7 +1433,7 @@ function my_netdisconnect (e)
     /* If we were only /trying/ to connect, and failed, just put an error on
      * the network tab. If we were actually connected ok, put it on all tabs.
      */
-    if (this.connecting)
+    if (this.state != NET_ONLINE)
     {
         this.busy = false;
         updateProgress();

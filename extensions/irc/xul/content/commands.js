@@ -588,25 +588,14 @@ function cmdCancel(e)
 {
     var network = e.network;
 
-    if (!network.connecting)
+    if ((network.state != NET_CONNECTING) && (network.state != NET_WAITING))
     {
         display(MSG_NOTHING_TO_CANCEL, MT_ERROR);
         return;
     }
 
-    network.cancelConnect = true;
     display(getMsg(MSG_CANCELLING, network.unicodeName));
-    if (network.isConnected())
-    {
-        // Pull the plug on the current connection, or...
-        network.dispatch("disconnect");
-    }
-    else
-    {
-        // ...try a reconnect (which will fail us).
-        var ev = new CEvent("network", "do-connect", network, "onDoConnect");
-        network.eventPump.addEvent(ev);
-    }
+    network.cancel();
 }
 
 function cmdChanUserMode(e)

@@ -39,6 +39,7 @@
 
 const JSIRC_ERR_NO_SOCKET = "JSIRCE:NS";
 const JSIRC_ERR_EXHAUSTED = "JSIRCE:E";
+const JSIRC_ERR_CANCELLED = "JSIRCE:C";
 
 function userIsMe (user)
 {
@@ -74,6 +75,17 @@ function decodeParam(number, charsetOrObject)
     return rv;
 }
 
+var i = 1;
+
+const NET_OFFLINE       = i++; // Initial, disconected.
+const NET_WAITING       = i++; // Waiting before trying.
+const NET_CONNECTING    = i++; // Trying a connect...
+const NET_CANCELLING    = i++; // Cancelling connect.
+const NET_ONLINE        = i++; // Connected ok.
+const NET_DISCONNECTING = i++; // Disconnecting.
+
+delete i;
+
 /*
  * irc network
  */
@@ -87,7 +99,7 @@ function CIRCNetwork (name, serverList, eventPump)
     this.serverList = new Array();
     this.ignoreList = new Object();
     this.ignoreMaskCache = new Object();
-    this.connecting = false;
+    this.state = NET_OFFLINE;
 
     for (var i = 0; i < serverList.length; ++i)
     {
@@ -174,6 +186,7 @@ function net_connect(requireSecurity)
     if ("primServ" in this && this.primServ.isConnected)
         return;
 
+    this.state = NET_CONNECTING;
     this.connectAttempt = 0;
     this.nextHost = 0;
     var ev = new CEvent("network", "do-connect", this, "onDoConnect");
@@ -189,6 +202,28 @@ function net_quit (reason)
         this.primServ.logout(reason);
 }
 
+CIRCNetwork.prototype.cancel =
+function net_cancel()
+{
+    if (this.state == NET_ONLINE)
+    {
+        // Pull the plug on the current connection, or...
+        this.quit();
+    }
+    else if ((this.state == NET_CONNECTING) || (this.state == NET_WAITING))
+    {
+        this.state = NET_CANCELLING;
+
+        // ...try a reconnect (which will fail us).
+        var ev = new CEvent("network", "do-connect", this, "onDoConnect");
+        this.eventPump.addEvent(ev);
+    }
+    else
+    {
+        dd("Network cancel in odd state: " + this.state);
+    }
+}
+
 /*
  * Handles a request to connect to a primary server.
  */
@@ -197,32 +232,49 @@ function net_doconnect(e)
 {
     var c;
 
-    if ("primServ" in this && this.primServ.isConnected)
-        return true;
+    // Clear the timer, if there is one.
+    if ("reconnectTimer" in this)
+    {
+        clearTimeout(this.reconnectTimer);
+        delete this.reconnectTimer;
+    }
 
     var ev;
 
-    if ((this.connectAttempt++ >= this.MAX_CONNECT_ATTEMPTS) ||
-        ("cancelConnect" in this))
+    if (this.state == NET_CANCELLING)
     {
-        if ("reconnectTimer" in this)
-        {
-            clearTimeout(this.reconnectTimer);
-            delete this.reconnectTimer;
-        }
-        delete this.cancelConnect;
+        if ("primServ" in this && this.primServ.connection)
+            this.primServ.connection.disconnect();
+        else
+            this.state = NET_OFFLINE;
+
+        ev = new CEvent ("network", "error", this, "onError");
+        ev.server = this;
+        ev.debug = "Connect sequence was cancelled.";
+        ev.errorCode = JSIRC_ERR_CANCELLED;
+        this.eventPump.addEvent(ev);
+
+        return false;
+    }
+
+    if ("primServ" in this && this.primServ.isConnected)
+        return true;
+
+    if (this.connectAttempt++ >= this.MAX_CONNECT_ATTEMPTS)
+    {
+        this.state = NET_OFFLINE;
 
         ev = new CEvent ("network", "error", this, "onError");
         ev.server = this;
         ev.debug = "Connection attempts exhausted, giving up.";
         ev.errorCode = JSIRC_ERR_EXHAUSTED;
-        this.eventPump.addEvent (ev);
+        this.eventPump.addEvent(ev);
 
         return false;
     }
 
-    this.connecting = true; /* connection is considered "made" when serve
-                             * sends a 001 message (see server.on001) */
+    this.state = NET_CONNECTING; /* connection is considered "made" when server
+                                  * sends a 001 message (see server.on001) */
 
     var host = this.nextHost++;
     if (host >= this.serverList.length)
@@ -784,9 +836,13 @@ function serv_whois (target)
 CIRCServer.prototype.onDisconnect =
 function serv_disconnect(e)
 {
-    if ((this.parent.connecting) ||
+    function stateChangeFn(network, state) {
+        network.state = state;
+    };
+
+    if ((this.parent.state == NET_CONNECTING) ||
         /* fell off while connecting, try again */
-        (this.parent.primServ == this) &&
+        (this.parent.primServ == this) && (this.parent.state == NET_ONLINE) &&
         (!("quitting" in this) && this.parent.stayingPower))
     { /* fell off primary server, reconnect to any host in the serverList */
         var reconnectFn = function(server) {
@@ -795,7 +851,12 @@ function serv_disconnect(e)
                                 "onDoConnect");
             server.parent.eventPump.addEvent(ev);
         };
+        setTimeout(stateChangeFn, 0, this.parent, NET_WAITING);
         this.parent.reconnectTimer = setTimeout(reconnectFn, 15000, this);
+    }
+    else
+    {
+        setTimeout(stateChangeFn, 0, this.parent, NET_OFFLINE);
     }
 
     e.server = this;
@@ -1165,7 +1226,7 @@ CIRCServer.prototype.on001 =
 function serv_001 (e)
 {
     this.parent.connectAttempt = 0;
-    this.parent.connecting = false;
+    this.parent.state = NET_ONLINE;
 
     /* servers won't send a nick change notification if user was forced
      * to change nick while logging in (eg. nick already in use.)  We need

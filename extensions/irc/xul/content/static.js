@@ -2821,7 +2821,7 @@ function cli_connect(networkOrName, requireSecurity)
         return network;
     }
 
-    if (network.connecting)
+    if (network.state != NET_OFFLINE)
         return network;
 
     if (network.prefs["nickname"] == DEFAULT_NICK)
@@ -2830,7 +2830,6 @@ function cli_connect(networkOrName, requireSecurity)
     if (!("connecting" in network))
         network.display(getMsg(MSG_NETWORK_CONNECTING, name));
 
-    network.connecting = true;
     network.connect(requireSecurity);
 
     network.updateHeader();
