@@ -944,7 +944,8 @@ JFD */
 	  if (m_encoding) PR_Free (m_encoding);
 	  m_encoding = 0;
 	}
-#ifdef XP_UNIX
+/* this used to be XP_UNIX? */
+#if 0
   else if (m_desired_type &&
 		   !PL_strcasecmp (m_desired_type, APPLICATION_POSTSCRIPT) /* #### &&
 		   mime_type_conversion_possible (m_type, m_desired_type) */ )
@@ -2172,7 +2173,11 @@ int nsMsgSendMimeDeliveryState::GatherMimeAttachments ()
 	char *buffer = 0;
 	char *buffer_tail = 0;
 	char* error_msg = 0;
+#ifndef XP_UNIX
 	PRInt16 win_csid	 = INTL_DefaultWinCharSetID(GetContext());
+#else
+    PRInt16 win_csid=0;
+#endif
  
   // to news is true if we have a m_field and we have a Newsgroup and it is not empty
 	PRBool tonews = PR_FALSE;
