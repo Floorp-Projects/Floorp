@@ -35,6 +35,3 @@ REQUIRES	= $(MODULE)
 export:: libs
 
 include $(topsrcdir)/config/rules.mk
-
-Move xptinfo, xptcall from export phase (erroneously copied from libxpt Makefile.in) to libs and back out previous temporary fix.
-
