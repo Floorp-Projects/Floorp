@@ -385,8 +385,8 @@ public:
 
     nsISupports *Context() { return mContext; }
     
-    nsresult OnStart();
-    nsresult OnStop();
+    virtual nsresult OnStart();
+    virtual nsresult OnStop();
 
 protected:
     nsSocketTransport          *mTransport;
@@ -410,6 +410,7 @@ public:
     void SetSocket(PRFileDesc *);
     void SetListener(nsIStreamListener *l) { mListener = l; }
 
+    nsresult OnStop();
     nsresult OnRead();
 
 private:
@@ -429,6 +430,7 @@ public:
     void SetSocket(PRFileDesc *);
     void SetProvider(nsIStreamProvider *p) { mProvider = p; }
 
+    nsresult OnStop();
     nsresult OnWrite();
 
 private:
