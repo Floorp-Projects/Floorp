@@ -26,7 +26,8 @@
 #include "nsIDeviceContext.h"
 #include "nsCRT.h"
 
-#include <gtk/gtk.h>
+#include <gdk/gdk.h>
+#include <gdk/gdkx.h>
 
 class nsFontMetricsGTK : public nsIFontMetrics
 {
@@ -61,7 +62,20 @@ public:
   NS_IMETHOD  GetFontHandle(nsFontHandle &aHandle);
 
 protected:
+  char *PickAppropriateSize(char **names, XFontStruct *fonts, int cnt, nscoord desired);
+  void RealizeFont();
 
+  nsFont            *mFont;
+  nsIDeviceContext  *mContext;
+  GdkFont           *mFontHandle;
+  nscoord           mCharWidths[256];
+  nscoord           mHeight;
+  nscoord           mAscent;
+  nscoord           mDescent;
+  nscoord           mLeading;
+  nscoord           mMaxAscent;
+  nscoord           mMaxDescent;
+  nscoord           mMaxAdvance;
 };
 
 #endif
