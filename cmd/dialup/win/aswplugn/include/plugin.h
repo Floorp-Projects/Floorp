@@ -197,5 +197,6 @@ void SizeofRASNT40();      // ini WinNT RAS sizes
 #endif // WIN32
 
 void SizeofRAS();          // init Win95 & Win3.1 RAS sizes
+void trace( const char* traceStatement );
 
 #endif // _INC_PLUGIN_H_

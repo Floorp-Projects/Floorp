@@ -88,7 +88,6 @@ HINSTANCE DLLinstance = NULL;
 JRIGlobalRef  g_globalRefReg = NULL; 
 
 
-
 //********************************************************************************
 //
 // NPP_Initialize
@@ -106,7 +105,8 @@ NPError NPP_Initialize(void)
         //register_java_lang_String(env); //Not necessary?
     }
 
-
+	trace( "initialized plug-in" );
+	
 #ifdef WIN32 // ******************* WIN32 ***********************
     // gets the OS version
     // note: we need another way to check for win31
@@ -626,6 +626,22 @@ native_netscape_npasw_SetupPlugin_SECURE_0005fCheckEnvironment(JRIEnv* env,
 
 	return (TRUE);
 }
+
+void trace( const char* traceStatement )
+{
+	if ( !env )
+		return;
+	
+	java_lang_Class* self = (java_lang_Class*)NPP_GetJavaClass();
+	if ( !self )
+		return;
+	
+	java_lang_String* traceString = JRI_NewStringPlatform( env, traceStatement,
+		strlen( traceStatement), NULL, 0 );
+		
+	netscape_npasw_SetupPlugin_debug( env, self, traceString );
+}
+
 
 /*******************************************************************************
  * Native Methods: 
