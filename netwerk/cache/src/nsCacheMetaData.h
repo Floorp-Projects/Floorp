@@ -59,8 +59,9 @@ public:
     nsresult              SetElement(const nsAReadableCString& key,
                                      const nsAReadableCString& value);
 
-    nsresult              GetKeyValueArray(nsCacheMetaDataKeyValuePair ** array,
-                                           PRUint32 *                     count);
+    nsresult              FlattenMetaData(char ** data, PRUint32 * size);
+    
+    nsresult              UnflattenMetaData(char * data, PRUint32 size);
 
 private:
     // PLDHashTable operation callbacks
@@ -81,17 +82,16 @@ private:
     static void           Finalize( PLDHashTable *table);
 
     static
-    PLDHashOperator       CountElements(PLDHashTable *table,
+    PLDHashOperator       CalculateSize(PLDHashTable *table,
                                         PLDHashEntryHdr *hdr,
                                         PRUint32 number,
                                         void *arg);
 
-
     static
     PLDHashOperator       AccumulateElements(PLDHashTable *table,
-                                             PLDHashEntryHdr *hdr,
-                                             PRUint32 number,
-                                             void *arg);
+                                        PLDHashEntryHdr *hdr,
+                                        PRUint32 number,
+                                        void *arg);
 
     static
     PLDHashOperator       FreeElements(PLDHashTable *table,

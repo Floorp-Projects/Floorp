@@ -116,6 +116,7 @@ nsCacheEntry::SetMetaDataElement( const nsAReadableCString& key,
 }
 
 
+#if 0
 nsresult
 nsCacheEntry::GetKeyValueArray(nsCacheMetaDataKeyValuePair ** array,
                                PRUint32 *                     count)
@@ -129,7 +130,31 @@ nsCacheEntry::GetKeyValueArray(nsCacheMetaDataKeyValuePair ** array,
     }
     return mMetaData->GetKeyValueArray(array, count);
 }
+#endif
 
+nsresult
+nsCacheEntry::FlattenMetaData(char ** data, PRUint32 * size)
+{
+    NS_ENSURE_ARG_POINTER(size);
+
+    if (mMetaData)
+        return mMetaData->FlattenMetaData(data, size);
+
+    if (data) *data = nsnull;
+    *size = 0;
+
+    return NS_OK;
+}
+
+nsresult
+nsCacheEntry::UnflattenMetaData(char * data, PRUint32 size)
+{
+    delete mMetaData;
+    mMetaData = nsCacheMetaData::Create();
+    if (!mMetaData)
+        return NS_ERROR_OUT_OF_MEMORY;
+    return mMetaData->UnflattenMetaData(data, size);
+}
 
 /**
  *  cache entry states
