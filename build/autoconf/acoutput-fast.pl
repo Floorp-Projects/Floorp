@@ -83,9 +83,13 @@ sub create_directories {
   }
 }
 
-$ac_given_srcdir = $0;
-$ac_given_srcdir =~ s|/?build/autoconf/.*$||;
-$ac_given_srcdir = '.' if $ac_given_srcdir eq '';
+if ($ARGV[0] =~ /^--srcdir=/) {
+  $ac_given_srcdir = (split /=/, shift @ARGV)[1];
+} else {
+  $ac_given_srcdir = $0;
+  $ac_given_srcdir =~ s|/?build/autoconf/.*$||;
+  $ac_given_srcdir = '.' if $ac_given_srcdir eq '';
+}
 
 # Read list of makefiles from the stdin or,
 #   from files listed on the command-line.
