@@ -81,17 +81,19 @@ UINT nsClipboard::GetFormat(const char* aMimeStr)
   nsCAutoString mimeStr ( CBufDescriptor(NS_CONST_CAST(char*,aMimeStr), PR_TRUE, PL_strlen(aMimeStr)+1) );
   UINT format = 0;
 
-  if (mimeStr.Equals(kTextMime)) {
+  if (mimeStr.Equals(kTextMime))
     format = CF_TEXT;
-  } else if (mimeStr.Equals(kUnicodeMime)) {
+  else if (mimeStr.Equals(kUnicodeMime))
     format = CF_UNICODETEXT;
-  } else if (mimeStr.Equals(kJPEGImageMime)) {
+  else if (mimeStr.Equals(kJPEGImageMime))
     format = CF_DIB;
-  } else if (mimeStr.Equals(kFileMime)) {
+  else if (mimeStr.Equals(kFileMime))
     format = CF_HDROP;
-  } else {
+  else if (mimeStr.Equals(kURLMime))
+    format = CF_UNICODETEXT;
+  else
     format = ::RegisterClipboardFormat(aMimeStr);
-  }
+
 #if DEBUG_PINK
    printf("nsClipboard::GetFormat [%s] 0x%x\n", aMimeStr, format);
 #endif
@@ -161,12 +163,27 @@ nsresult nsClipboard::SetupNativeDataObject(nsITransferable * aTransferable, IDa
       // the native data format
       dObj->AddDataFlavor(flavorStr, &fe);
       
-      // if we find text/unicode, also advertise text/plain (which we will convert
-      // on our own in nsDataObj::GetText().
+      // Do various things internal to the implementation, like map one
+      // flavor to another or add additional flavors based on what's required
+      // for the win32 impl.
       if ( strcmp(flavorStr, kUnicodeMime) == 0 ) {
+        // if we find text/unicode, also advertise text/plain (which we will convert
+        // on our own in nsDataObj::GetText().
         FORMATETC fe2;
-        SET_FORMATETC(fe2, CF_TEXT, 0, DVASPECT_CONTENT, -1, TYMED_HGLOBAL)
-        dObj->AddDataFlavor("text/plain", &fe2);
+        SET_FORMATETC(fe2, CF_TEXT, 0, DVASPECT_CONTENT, -1, TYMED_HGLOBAL);
+        dObj->AddDataFlavor(kTextMime, &fe2);
+      }
+      if ( strcmp(flavorStr, kURLMime) == 0 ) {
+        // if we're a url, in addition to also being text, we need to register
+        // the "file" flavors so that the win32 shell knows to create an internet
+        // shortcut when it sees one of these beasts.
+        FORMATETC fe2;
+        SET_FORMATETC(fe2, ::RegisterClipboardFormat(CFSTR_FILEDESCRIPTOR), 0, DVASPECT_CONTENT, -1, TYMED_HGLOBAL)
+        dObj->AddDataFlavor(kURLMime, &fe2);      
+        SET_FORMATETC(fe2, ::RegisterClipboardFormat(CFSTR_FILECONTENTS), 0, DVASPECT_CONTENT, -1, TYMED_HGLOBAL)
+        dObj->AddDataFlavor(kURLMime, &fe2);      
+        SET_FORMATETC(fe2, ::RegisterClipboardFormat(CFSTR_SHELLURL), 0, DVASPECT_CONTENT, -1, TYMED_HGLOBAL)
+        dObj->AddDataFlavor(kURLMime, &fe2);      
       }
     }
   }
@@ -405,7 +422,10 @@ nsresult nsClipboard::GetNativeDataOffClipboard(IDataObject * aDataObject, UINT 
   if (S_OK == hres) {
     switch (stm.tymed) {
 
-      case TYMED_HGLOBAL: 
+     static CLIPFORMAT fileDescriptorFlavor = ::RegisterClipboardFormat( CFSTR_FILEDESCRIPTOR ); 
+     static CLIPFORMAT fileFlavor = ::RegisterClipboardFormat( CFSTR_FILECONTENTS ); 
+
+     case TYMED_HGLOBAL: 
         {
           switch (fe.cfFormat) {
             case CF_TEXT:
@@ -423,7 +443,7 @@ nsresult nsClipboard::GetNativeDataOffClipboard(IDataObject * aDataObject, UINT 
                 }
               } break;
 
-			case CF_UNICODETEXT:
+            case CF_UNICODETEXT:
               {
                 // Get the data out of the global data handle. The size we return
                 // should not include the null because the other platforms don't
@@ -507,19 +527,11 @@ nsresult nsClipboard::GetNativeDataOffClipboard(IDataObject * aDataObject, UINT 
               } break;
 
             default: {
-              // Check to see if there is HTML on the clipboard
-              // if not, then just get the data and return it
-              /*UINT format = GetFormat(nsAutoString(kHTMLMime));
-              if (fe.cfFormat == format) {
+              if ( fe.cfFormat == fileDescriptorFlavor || fe.cfFormat == fileFlavor )
+                NS_WARNING ( "Mozilla doesn't yet understand how to read this type of file flavor" );
+              else
                 result = GetGlobalData(stm.hGlobal, aData, aLen);
-                //char * str = (char *)*aData;
-                //while (str[*aLen-1] == 0) {
-                //  (*aLen)--;
-                //}
-              } else {*/
-                result = GetGlobalData(stm.hGlobal, aData, aLen);
-              //}
-              } break;
+            } break;
           } // switch
         } break;
 
@@ -758,7 +770,7 @@ NS_IMETHODIMP nsClipboard::HasDataMatchingFlavors(nsISupportsArray *aFlavorList,
 
   PRUint32 cnt;
   aFlavorList->Count(&cnt);
-  for (PRUint32 i = 0;i < cnt; i++) {
+  for ( PRUint32 i = 0;i < cnt; ++i ) {
     nsCOMPtr<nsISupports> genericFlavor;
     aFlavorList->GetElementAt (i, getter_AddRefs(genericFlavor));
     nsCOMPtr<nsISupportsString> currentFlavor (do_QueryInterface(genericFlavor));

@@ -50,24 +50,9 @@ class nsDataObj : public IDataObject
 		STDMETHODIMP 			QueryInterface(REFIID, void**);
 		STDMETHODIMP_(ULONG) Release       ();
 
-	public: // DataGet and DataSet helper methods
-		virtual HRESULT AddSetFormat(FORMATETC&  FE);
-		virtual HRESULT AddGetFormat(FORMATETC&  FE);
-
-		virtual HRESULT GetBitmap(FORMATETC&  FE, STGMEDIUM&  STM);
-		virtual HRESULT GetDib   (FORMATETC&  FE, STGMEDIUM&  STM);
-		virtual HRESULT GetMetafilePict(FORMATETC&  FE, STGMEDIUM&  STM);
-
-		virtual HRESULT SetBitmap(FORMATETC&  FE, STGMEDIUM&  STM);
-		virtual HRESULT SetDib   (FORMATETC&  FE, STGMEDIUM&  STM);
-		virtual HRESULT SetText  (FORMATETC&  FE, STGMEDIUM&  STM);
-		virtual HRESULT SetMetafilePict(FORMATETC&  FE, STGMEDIUM&  STM);
-
     // support for clipboard
     void AddDataFlavor(const char* aDataFlavor, LPFORMATETC aFE);
     void SetTransferable(nsITransferable * aTransferable);
-
-		virtual HRESULT GetText(nsCAutoString * aDF, FORMATETC&  FE, STGMEDIUM&  STM);
 
 		// Return the registered OLE class ID of this object's CfDataObj.
 		CLSID GetClassID() const;
@@ -121,12 +106,6 @@ class nsDataObj : public IDataObject
 
 	public: // other methods
 
-		// Set the adapter to dragDrop 
-		//void SetDragDrop(CfDragDrop& dragDrop);
-
-		// Return the adapter
-		//CfDragDrop& GetDragDrop() const;
-
 		// Return the total reference counts of all instances of this class.
 		static ULONG GetCumRefCount();
 
@@ -135,6 +114,30 @@ class nsDataObj : public IDataObject
 		ULONG GetRefCount() const;
 
 	protected:
+	
+	    // Help determine if the drag should create an internet shortcut
+	  PRBool IsInternetShortcut ( ) ;
+
+		virtual HRESULT AddSetFormat(FORMATETC&  FE);
+		virtual HRESULT AddGetFormat(FORMATETC&  FE);
+
+		virtual HRESULT GetText(nsCAutoString * aDF, FORMATETC&  FE, STGMEDIUM&  STM);
+		virtual HRESULT GetBitmap(FORMATETC&  FE, STGMEDIUM&  STM);
+		virtual HRESULT GetDib   (FORMATETC&  FE, STGMEDIUM&  STM);
+		virtual HRESULT GetMetafilePict(FORMATETC&  FE, STGMEDIUM&  STM);
+
+    virtual HRESULT GetFileDescriptor ( FORMATETC& aFE, STGMEDIUM& aSTG ) ;
+    virtual HRESULT GetFileContents ( FORMATETC& aFE, STGMEDIUM& aSTG ) ;
+   
+		virtual HRESULT SetBitmap(FORMATETC&  FE, STGMEDIUM&  STM);
+		virtual HRESULT SetDib   (FORMATETC&  FE, STGMEDIUM&  STM);
+		virtual HRESULT SetText  (FORMATETC&  FE, STGMEDIUM&  STM);
+		virtual HRESULT SetMetafilePict(FORMATETC&  FE, STGMEDIUM&  STM);
+
+      // Provide the structures needed for an internet shortcut by the shell
+    virtual HRESULT GetFileDescriptorInternetShortcut ( FORMATETC& aFE, STGMEDIUM& aSTG ) ;
+    virtual HRESULT GetFileContentsInternetShortcut ( FORMATETC& aFE, STGMEDIUM& aSTG ) ;
+
     nsString mStringData;
 
     BOOL FormatsMatch(const FORMATETC& source, const FORMATETC& target) const;
