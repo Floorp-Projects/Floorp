@@ -1467,8 +1467,7 @@ $::template ||= Template->new(
         url_quote => \&url_quote ,
       } ,
   }
-) || DisplayError("Template creation failed: " . Template->error())
-  && exit;
+) || die("Template creation failed: " . Template->error());
 
 # Use the Toolkit Template's Stash module to add utility pseudo-methods
 # to template variables.
