@@ -39,6 +39,9 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#define PL_ARENA_CONST_ALIGN_MASK (sizeof(void*)-1)
+#include "plarena.h"
+
 #include "nsViewManager.h"
 #include "nsUnitConversion.h"
 #include "nsIRenderingContext.h"
@@ -142,6 +145,9 @@ struct DisplayListElement2 {
   nscoord       mAbsX, mAbsY; // coordinates relative to the view that we're Refreshing 
   PRUint32      mFlags;       // see above
   nsInt64       mZIndex;      // temporary used during z-index processing (see below)
+private: // Prevent new/delete of these elements
+  DisplayListElement2();
+  ~DisplayListElement2();
 };
 
 /*
@@ -196,6 +202,20 @@ struct DisplayListElement2 {
   [ Td*(V1)(0), Tf*(V2)(0), Tg*(V3)(0), Ti*(V5)(0), Th*(V4)(0) ].
   Finally we collect the elements for Ta(V0):
   [ Tb*(V0), Td*(V1)(0), Tf*(V2)(0), Tg*(V3)(0), Ti*(V5)(0), Th*(V4)(0), Tj*(V6)(1) ].
+
+  The z-tree code is called frequently and was a heavy user of the heap.
+  In order to reduce the amount of time spent allocating and deallocating
+  memory, the code was changed so that all the memory used to build the z-tree,
+  including the DisplayListElement2 elements, is allocated from an Arena.
+  This greatly reduces the number of function calls to new and delete,
+  and eleminates a final call to DestroyZTreeNode which was needed to
+  recursivly walk and free the tree.
+
+  In order to ensure that all the z-tree elements are allocated from the Arena,
+  the DisplayZTreeNode and DisplayListElement2 structures have private (and
+  unimplemented) constructors and destructors.  This will ensure a compile
+  error if someone attempts to create or destroy one of these structures
+  using new or delete.
 */
 
 struct DisplayZTreeNode {
@@ -205,6 +225,9 @@ struct DisplayZTreeNode {
   // We can't have BOTH an mZChild and an mDisplayElement
   DisplayZTreeNode*    mZChild;          // tree interior nodes
   DisplayListElement2* mDisplayElement;  // tree leaf nodes
+private: // Prevent new/delete of these elements
+  DisplayZTreeNode();
+  ~DisplayZTreeNode();
 };
 
 void nsViewManager::DestroyZTreeNode(DisplayZTreeNode* aNode) 
@@ -217,8 +240,12 @@ void nsViewManager::DestroyZTreeNode(DisplayZTreeNode* aNode)
   
     DestroyZTreeNode(aNode->mZChild);
     DestroyZTreeNode(aNode->mZSibling);
-    delete aNode->mDisplayElement;
-    delete aNode;
+    // We no longer need to delete the node & element.  They are now allocated
+    // from an Arena, and the entire Arena is freed after the elements are
+    // used.  This function is only called to remove unused elements from
+    // the Placeholder hash.
+    // delete aNode->mDisplayElement;
+    // delete aNode;
   }
 }
 
@@ -797,8 +824,10 @@ void nsViewManager::Refresh(nsView *aView, nsIRenderingContext *aContext,
   // to use our blender, which requires access to the "current pixel values"
   // when it blends onto the canvas.
   nsAutoVoidArray displayList;
+  PLArenaPool displayArena;
+  PL_INIT_ARENA_POOL(&displayArena, "displayArena", 1024);
   PRBool anyTransparentPixels
-    = BuildRenderingDisplayList(aView, damageRegion, &displayList);
+    = BuildRenderingDisplayList(aView, damageRegion, &displayList, displayArena);
   if (!(aUpdateFlags & NS_VMREFRESH_DOUBLE_BUFFER)) {
     for (PRInt32 i = 0; i < displayList.Count(); i++) {
       DisplayListElement2* element = NS_STATIC_CAST(DisplayListElement2*, displayList.ElementAt(i));
@@ -856,6 +885,7 @@ void nsViewManager::Refresh(nsView *aView, nsIRenderingContext *aContext,
     localcx->FillRect(damageRegion.GetBounds());
   }
   RenderViews(aView, *localcx, damageRegion, ds, displayList);
+  PL_FinishArenaPool(&displayArena);
 
   if (usingDoubleBuffer) {
     // Flush bits back to the screen
@@ -1007,7 +1037,9 @@ static nsInt64 BuildExtendedZIndex(nsView* aView) {
 // Their z-index is set to the z-index they will have in aNode's parent.
 // I.e. if aNode's view has "z-index: auto", the nodes will keep their z-index, otherwise
 // their z-indices will all be equal to the z-index value of aNode's view.
-static void SortByZOrder(DisplayZTreeNode *aNode, nsVoidArray &aBuffer, nsVoidArray &aMergeTmp, PRBool aForceSort) {
+static void SortByZOrder(DisplayZTreeNode *aNode, nsVoidArray &aBuffer, nsVoidArray &aMergeTmp,
+                         PRBool aForceSort, PLArenaPool &aPool)
+{
   PRBool autoZIndex = PR_TRUE;
   nsInt64 explicitZIndex = 0;
 
@@ -1029,7 +1061,7 @@ static void SortByZOrder(DisplayZTreeNode *aNode, nsVoidArray &aBuffer, nsVoidAr
   DisplayZTreeNode *child;
   PRInt32 childStartIndex = aBuffer.Count();
   for (child = aNode->mZChild; nsnull != child; child = child->mZSibling) {
-    SortByZOrder(child, aBuffer, aMergeTmp, PR_FALSE);
+    SortByZOrder(child, aBuffer, aMergeTmp, PR_FALSE, aPool);
   }
   PRInt32 childEndIndex = aBuffer.Count();
   PRInt32 sortStartIndex = childStartIndex;
@@ -1093,8 +1125,10 @@ static void SortByZOrder(DisplayZTreeNode *aNode, nsVoidArray &aBuffer, nsVoidAr
         NS_ASSERTION(e->mZIndex <= eNext->mZIndex, "Display Z-list is not sorted!!");
         if (e->mZIndex != eNext->mZIndex) {
           // need to insert a POP for the last sequence and a PUSH for the next sequence
-          DisplayListElement2* newPop = new DisplayListElement2;
-          DisplayListElement2* newPush = new DisplayListElement2;
+          DisplayListElement2 *newPop, *newPush;
+
+          PL_ARENA_ALLOCATE((void*)newPop, &aPool, sizeof(DisplayListElement2));
+          PL_ARENA_ALLOCATE((void*)newPush, &aPool, sizeof(DisplayListElement2));
 
           *newPop = *ePop;
           newPop->mZIndex = e->mZIndex;
@@ -1194,9 +1228,10 @@ void nsViewManager::AddCoveringWidgetsToOpaqueRegion(nsRegion &aRgn, nsIDeviceCo
 }
 
 PRBool nsViewManager::BuildRenderingDisplayList(nsIView* aRootView,
-  const nsRegion& aRegion, nsVoidArray* aDisplayList) {
+  const nsRegion& aRegion, nsVoidArray* aDisplayList, PLArenaPool &aPool)
+{
   BuildDisplayList(NS_STATIC_CAST(nsView*, aRootView),
-                   aRegion.GetBounds(), PR_FALSE, PR_FALSE, aDisplayList);
+                   aRegion.GetBounds(), PR_FALSE, PR_FALSE, aDisplayList, aPool);
 
   nsRegion opaqueRgn;
   AddCoveringWidgetsToOpaqueRegion(opaqueRgn, mContext,
@@ -1323,7 +1358,8 @@ void nsViewManager::RenderViews(nsView *aRootView, nsIRenderingContext& aRC,
       PopState(RCs, 2);
     }
       
-    delete element;
+    // The element is destroyed when the pool is finished
+    // delete element;
   }
     
   if (translucentWindow) {
@@ -2056,7 +2092,8 @@ void nsViewManager::ReparentViews(DisplayZTreeNode* aNode) {
           placeholder->mDisplayElement = child->mDisplayElement;
           placeholder->mView = child->mView;
           placeholder->mZChild = child->mZChild;
-          delete child;
+          // We used to delete the child, but since we switched to Arenas just unreference it
+          // delete child;
         } else {
           // the placeholder was not added to the display list
           // we don't need the real view then, either
@@ -2102,7 +2139,9 @@ static PRBool ComputePlaceholderContainment(nsView* aView) {
   Set aCaptured if the event is being captured by the given view.
 */
 void nsViewManager::BuildDisplayList(nsView* aView, const nsRect& aRect, PRBool aEventProcessing,
-                                     PRBool aCaptured, nsVoidArray* aDisplayList) {
+                                     PRBool aCaptured, nsVoidArray* aDisplayList,
+                                     PLArenaPool &aPool)
+{
   // compute this view's origin
   nsPoint origin = ComputeViewOffset(aView);
     
@@ -2137,9 +2176,9 @@ void nsViewManager::BuildDisplayList(nsView* aView, const nsRect& aRect, PRBool 
   } else {
     paintFloats = displayRoot->GetFloating();
   }
-  CreateDisplayList(displayRoot, PR_FALSE, zTree, origin.x, origin.y,
+  CreateDisplayList(displayRoot, zTree, origin.x, origin.y,
                     aView, &aRect, displayRoot, displayRootOrigin.x, displayRootOrigin.y,
-                    paintFloats, aEventProcessing);
+                    paintFloats, aEventProcessing, aPool);
 
   // Reparent any views that need reparenting in the Z-order tree
   ReparentViews(zTree);
@@ -2149,14 +2188,15 @@ void nsViewManager::BuildDisplayList(nsView* aView, const nsRect& aRect, PRBool 
     // Apply proper Z-order handling
     nsAutoVoidArray mergeTmp;
 
-    SortByZOrder(zTree, *aDisplayList, mergeTmp, PR_TRUE);
+    SortByZOrder(zTree, *aDisplayList, mergeTmp, PR_TRUE, aPool);
   }
-    
-  DestroyZTreeNode(zTree);
+
+  mMapPlaceholderViewToZTreeNode.Reset();
 }
 
 void nsViewManager::BuildEventTargetList(nsVoidArray &aTargets, nsView* aView, nsGUIEvent* aEvent,
-  PRBool aCaptured) {
+                                         PRBool aCaptured, PLArenaPool &aPool)
+{
   NS_ASSERTION(!mPainting, "View manager cannot handle events during a paint");
   if (mPainting) {
     return;
@@ -2164,7 +2204,7 @@ void nsViewManager::BuildEventTargetList(nsVoidArray &aTargets, nsView* aView, n
 
   nsRect eventRect(aEvent->point.x, aEvent->point.y, 1, 1);
   nsAutoVoidArray displayList;
-  BuildDisplayList(aView, eventRect, PR_TRUE, aCaptured, &displayList);
+  BuildDisplayList(aView, eventRect, PR_TRUE, aCaptured, &displayList, aPool);
 
 #ifdef DEBUG_roc
   if (getenv("MOZ_SHOW_DISPLAY_LIST")) ShowDisplayList(&displayList);
@@ -2176,8 +2216,6 @@ void nsViewManager::BuildEventTargetList(nsVoidArray &aTargets, nsView* aView, n
     DisplayListElement2* element = NS_STATIC_CAST(DisplayListElement2*, displayList.ElementAt(i));
     if (element->mFlags & VIEW_RENDERED) {
       aTargets.AppendElement(element);
-    } else {
-      delete element;
     }
   }
 }
@@ -2209,7 +2247,9 @@ nsEventStatus nsViewManager::HandleEvent(nsView* aView, nsGUIEvent* aEvent, PRBo
   nsAutoVoidArray heldRefCountsToOtherVMs;
 
   // In fact, we only need to take this expensive path when the event is a mouse event ... riiiight?
-  BuildEventTargetList(targetViews, aView, aEvent, aCaptured);
+  PLArenaPool displayArena;
+  PL_INIT_ARENA_POOL(&displayArena, "displayArena", 1024);
+  BuildEventTargetList(targetViews, aView, aEvent, aCaptured, displayArena);
 
   nsEventStatus status = nsEventStatus_eIgnore;
 
@@ -2260,19 +2300,14 @@ nsEventStatus nsViewManager::HandleEvent(nsView* aView, nsGUIEvent* aEvent, PRBo
       aEvent->point.y += y;
 
       if (handled) {
-        while (i < targetViews.Count()) {
-          DisplayListElement2* e = NS_STATIC_CAST(DisplayListElement2*, targetViews.ElementAt(i));
-          delete e;
-          i++;
-        }
         break;
       }
       // if the child says "not handled" but did something which deleted the entire view hierarchy,
       // we'll crash in the next iteration. Oh well. The old code would have crashed too.
     }
-
-    delete element;
   }
+
+  PL_FinishArenaPool(&displayArena);
 
   // release death grips
   for (i = 0; i < heldRefCountsToOtherVMs.Count(); i++) {
@@ -2753,7 +2788,9 @@ PRBool nsViewManager::CanScrollWithBitBlt(nsView* aView)
   }
 
   nsAutoVoidArray displayList;
-  BuildDisplayList(aView, r, PR_FALSE, PR_FALSE, &displayList);
+  PLArenaPool displayArena;
+  PL_INIT_ARENA_POOL(&displayArena, "displayArena", 1024);
+  BuildDisplayList(aView, r, PR_FALSE, PR_FALSE, &displayList, displayArena);
 
   PRInt32 i;
   for (i = 0; i < displayList.Count(); i++) {
@@ -2830,9 +2867,9 @@ PRBool nsViewManager::CanScrollWithBitBlt(nsView* aView)
         anyUnblittableViews = PR_TRUE;
       }
     }
-      
-    delete element;
   }
+
+  PL_FinishArenaPool(&displayArena);
 
   return !anyUnscrolledViews && !anyUnblittableViews;
 }
@@ -3235,8 +3272,11 @@ NS_IMETHODIMP nsViewManager::Display(nsIView* aView, nscoord aX, nscoord aY, con
   // Paint the view. The clipping rect was set above set don't clip again.
   //aView->Paint(*localcx, trect, NS_VIEW_FLAG_CLIP_SET, result);
   nsAutoVoidArray displayList;
-  BuildRenderingDisplayList(view, nsRegion(trect), &displayList);
+  PLArenaPool displayArena;
+  PL_INIT_ARENA_POOL(&displayArena, "displayArena", 1024);
+  BuildRenderingDisplayList(view, nsRegion(trect), &displayList, displayArena);
   RenderViews(view, *localcx, nsRegion(trect), PR_FALSE, displayList);
+  PL_FinishArenaPool(&displayArena);
 
   NS_RELEASE(localcx);
 
@@ -3279,9 +3319,10 @@ NS_IMETHODIMP nsViewManager::ForceUpdate()
   return NS_OK;
 }
 
-static nsresult EnsureZTreeNodeCreated(nsView* aView, DisplayZTreeNode* &aNode) {
+static nsresult EnsureZTreeNodeCreated(nsView* aView, DisplayZTreeNode* &aNode, PLArenaPool &aPool)
+{
   if (nsnull == aNode) {
-    aNode = new DisplayZTreeNode;
+    PL_ARENA_ALLOCATE((void*)aNode, &aPool, sizeof(DisplayZTreeNode));
 
     if (nsnull == aNode) {
       return NS_ERROR_OUT_OF_MEMORY;
@@ -3297,7 +3338,6 @@ static nsresult EnsureZTreeNodeCreated(nsView* aView, DisplayZTreeNode* &aNode) 
 /**
  * XXX this needs major simplification and cleanup
  * @param aView the view are visiting to create display list element(s) for
- * @param aReparentedViewsPresent unused, always PR_FALSE
  * @param aResult insert display list elements under here
  * @param aOriginX/aOriginY the offset from the origin of aTopView
  * to the origin of the view that is being painted (aRealView)
@@ -3311,13 +3351,14 @@ static nsresult EnsureZTreeNodeCreated(nsView* aView, DisplayZTreeNode* &aNode) 
  * if we should avoid descending into any floating views
  * @param aEventProcessing PR_TRUE if we intend to do event processing with
  * this display list
+ * @param aPool the arena to allocate the aResults elements from
  */
-PRBool nsViewManager::CreateDisplayList(nsView *aView, PRBool aReparentedViewsPresent,
+PRBool nsViewManager::CreateDisplayList(nsView *aView,
                                         DisplayZTreeNode* &aResult,
                                         nscoord aOriginX, nscoord aOriginY, nsView *aRealView,
                                         const nsRect *aDamageRect, nsView *aTopView,
                                         nscoord aX, nscoord aY, PRBool aPaintFloats,
-                                        PRBool aEventProcessing)
+                                        PRBool aEventProcessing, PLArenaPool &aPool)
 {
   PRBool retval = PR_FALSE;
 
@@ -3407,7 +3448,7 @@ PRBool nsViewManager::CreateDisplayList(nsView *aView, PRBool aReparentedViewsPr
     
     // Add POP first because the z-tree is in reverse order
     retval = AddToDisplayList(aView, aResult, bounds, bounds,
-                              POP_FILTER, aX - aOriginX, aY - aOriginY, PR_TRUE);
+                              POP_FILTER, aX - aOriginX, aY - aOriginY, PR_TRUE, aPool);
     if (retval)
       return retval;
     
@@ -3424,7 +3465,7 @@ PRBool nsViewManager::CreateDisplayList(nsView *aView, PRBool aReparentedViewsPr
 
       // Add POP first because the z-tree is in reverse order
       retval = AddToDisplayList(aView, aResult, bounds, bounds,
-                                POP_CLIP, aX - aOriginX, aY - aOriginY, PR_TRUE);
+                                POP_CLIP, aX - aOriginX, aY - aOriginY, PR_TRUE, aPool);
 
       if (retval)
         return retval;
@@ -3440,11 +3481,11 @@ PRBool nsViewManager::CreateDisplayList(nsView *aView, PRBool aReparentedViewsPr
     for (childView = aView->GetFirstChild(); nsnull != childView;
          childView = childView->GetNextSibling()) {
       DisplayZTreeNode* createdNode;
-      retval = CreateDisplayList(childView, aReparentedViewsPresent, createdNode,
-                                 aOriginX, aOriginY, aRealView, aDamageRect, aTopView, pos.x, pos.y, aPaintFloats,
-                                 aEventProcessing);
+      retval = CreateDisplayList(childView, createdNode,
+                                 aOriginX, aOriginY, aRealView, aDamageRect, aTopView,
+                                 pos.x, pos.y, aPaintFloats, aEventProcessing, aPool);
       if (createdNode != nsnull) {
-        EnsureZTreeNodeCreated(aView, aResult);
+        EnsureZTreeNodeCreated(aView, aResult, aPool);
         createdNode->mZSibling = aResult->mZChild;
         aResult->mZChild = createdNode;
       }
@@ -3466,7 +3507,7 @@ PRBool nsViewManager::CreateDisplayList(nsView *aView, PRBool aReparentedViewsPr
           flags |= VIEW_TRANSPARENT;
         retval = AddToDisplayList(aView, aResult, bounds, irect, flags,
                                   aX - aOriginX, aY - aOriginY,
-                                  aEventProcessing && aTopView == aView);
+                                  aEventProcessing && aTopView == aView, aPool);
         // We're forcing AddToDisplayList to pick up the view only
         // during event processing, and only when aView is back at the
         // root of the tree of acceptable views (note that when event
@@ -3478,7 +3519,7 @@ PRBool nsViewManager::CreateDisplayList(nsView *aView, PRBool aReparentedViewsPr
       bounds.y += aOriginY;
     } else {
       if (aView->IsZPlaceholderView()) {
-        EnsureZTreeNodeCreated(aView, aResult);
+        EnsureZTreeNodeCreated(aView, aResult, aPool);
         nsVoidKey key(aView);
         mMapPlaceholderViewToZTreeNode.Put(&key, aResult);
       }
@@ -3491,7 +3532,7 @@ PRBool nsViewManager::CreateDisplayList(nsView *aView, PRBool aReparentedViewsPr
     bounds.y -= aOriginY;
 
     if (AddToDisplayList(aView, aResult, bounds, bounds, PUSH_CLIP,
-                         aX - aOriginX, aY - aOriginY, PR_TRUE)) {
+                         aX - aOriginX, aY - aOriginY, PR_TRUE, aPool)) {
       retval = PR_TRUE;
     }
     
@@ -3506,7 +3547,7 @@ PRBool nsViewManager::CreateDisplayList(nsView *aView, PRBool aReparentedViewsPr
     bounds.y -= aOriginY;
     
     retval = AddToDisplayList(aView, aResult, bounds, bounds,
-                              PUSH_FILTER, aX - aOriginX, aY - aOriginY, PR_TRUE);
+                              PUSH_FILTER, aX - aOriginX, aY - aOriginY, PR_TRUE, aPool);
     if (retval)
       return retval;
     
@@ -3522,7 +3563,7 @@ PRBool nsViewManager::AddToDisplayList(nsView *aView,
                                        DisplayZTreeNode* &aParent, nsRect &aClipRect,
                                        nsRect& aDirtyRect, PRUint32 aFlags,
                                        nscoord aAbsX, nscoord aAbsY,
-                                       PRBool aAssumeIntersection)
+                                       PRBool aAssumeIntersection, PLArenaPool &aPool)
 {
   nsRect clipRect = aView->GetClippedRect();
   PRBool clipped = clipRect != aView->GetDimensions();
@@ -3545,17 +3586,18 @@ PRBool nsViewManager::AddToDisplayList(nsView *aView,
     return PR_FALSE;
   }
 
-  DisplayListElement2* element = new DisplayListElement2;
+  DisplayListElement2* element;
+  PL_ARENA_ALLOCATE((void*)element, &aPool, sizeof(*element));
   if (element == nsnull) {
     return PR_TRUE;
   }
-  DisplayZTreeNode* node = new DisplayZTreeNode;
+  DisplayZTreeNode* node;
+  PL_ARENA_ALLOCATE((void*)node, &aPool, sizeof(*node));
   if (nsnull == node) {
-    delete element;
     return PR_TRUE;
   }
 
-  EnsureZTreeNodeCreated(aView, aParent);
+  EnsureZTreeNodeCreated(aView, aParent, aPool);
 
   node->mDisplayElement = element;
   node->mView = nsnull;
