@@ -40,6 +40,8 @@ class nsRulesInfo
   int action;
 };
 
+MOZ_DECL_CTOR_COUNTER(nsEditRules);
+
 /***************************************************************************
  * Interface of editing rules.
  *  
@@ -47,6 +49,8 @@ class nsRulesInfo
 class nsEditRules
 {
 public:
+  nsEditRules()          { MOZ_COUNT_CTOR(nsEditRules); }
+  virtual ~nsEditRules() { MOZ_COUNT_DTOR(nsEditRules); }
   NS_IMETHOD Init(nsHTMLEditor *aEditor, PRUint32 aFlags)=0;
   NS_IMETHOD BeforeEdit(PRInt32 action, nsIEditor::EDirection aDirection)=0;
   NS_IMETHOD AfterEdit(PRInt32 action, nsIEditor::EDirection aDirection, PRBool aSetSelection)=0;
