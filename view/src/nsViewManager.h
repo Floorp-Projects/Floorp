@@ -170,7 +170,6 @@ private:
 
   nsIPresContext    *mContext;
   nsIWidget         *mRootWindow;
-  nsPoint           mOffset;
   nsRect            mDSBounds;
   nsDrawingSurface  mDrawingSurface;
                             

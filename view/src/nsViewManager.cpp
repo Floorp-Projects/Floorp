@@ -23,6 +23,7 @@
 #include "nsIRenderingContext.h"
 #include "nsIDeviceContext.h"
 #include "nsGfxCIID.h"
+#include "nsIScrollableView.h"
 
 static const PRBool gsDebug = PR_FALSE;
 
@@ -123,8 +124,6 @@ nsresult nsViewManager::Init(nsIPresContext* aPresContext)
   }
   mContext = aPresContext;
 
-  mOffset.x = mOffset.y = 0;
-
   mDSBounds.Empty();
   mDrawingSurface = nsnull;
   mTimer = nsnull;
@@ -221,14 +220,38 @@ void nsViewManager :: SetWindowDimensions(nscoord width, nscoord height)
 
 void nsViewManager :: GetWindowOffsets(nscoord *xoffset, nscoord *yoffset)
 {
-  *xoffset = mOffset.x;
-  *yoffset = mOffset.y;
+  if (nsnull != mRootView)
+  {
+    nsIScrollableView *scroller;
+
+    static NS_DEFINE_IID(kscroller, NS_ISCROLLABLEVIEW_IID);
+
+    if (NS_OK == mRootView->QueryInterface(kscroller, (void **)&scroller))
+    {
+      scroller->GetVisibleOffset(xoffset, yoffset);
+      NS_RELEASE(scroller);
+    }
+    else
+      *xoffset = *yoffset = 0;
+  }
+  else
+    *xoffset = *yoffset = 0;
 }
 
 void nsViewManager :: SetWindowOffsets(nscoord xoffset, nscoord yoffset)
 {
-  mOffset.x = xoffset;
-  mOffset.y = yoffset;
+  if (nsnull != mRootView)
+  {
+    nsIScrollableView *scroller;
+
+    static NS_DEFINE_IID(kscroller, NS_ISCROLLABLEVIEW_IID);
+
+    if (NS_OK == mRootView->QueryInterface(kscroller, (void **)&scroller))
+    {
+      scroller->SetVisibleOffset(xoffset, yoffset);
+      NS_RELEASE(scroller);
+    }
+  }
 }
 
 void nsViewManager :: Refresh(nsIRenderingContext *aContext, nsRegion *region, PRUint32 aUpdateFlags)
@@ -239,6 +262,7 @@ void nsViewManager :: Refresh(nsIView *aView, nsIRenderingContext *aContext, nsR
 {
   nsRect              wrect;
   nsIRenderingContext *localcx = nsnull;
+  nscoord             xoff, yoff;
 
   if (nsnull == aContext)
   {
@@ -262,12 +286,14 @@ void nsViewManager :: Refresh(nsIView *aView, nsIRenderingContext *aContext, nsR
   if (aUpdateFlags & NS_VMREFRESH_SCREEN_RECT)
     localcx->SetClipRect(*rect, PR_FALSE);
 
-  localcx->Translate(-mOffset.x, -mOffset.y); 
+  GetWindowOffsets(&xoff, &yoff);
+
+  localcx->Translate(-xoff, -yoff); 
 
   nsRect trect = *rect;
 
   if (aUpdateFlags & NS_VMREFRESH_SCREEN_RECT)
-    trect.MoveBy(mOffset.x, mOffset.y);
+    trect.MoveBy(xoff, yoff);
   else
     localcx->SetClipRect(trect, PR_FALSE);
 

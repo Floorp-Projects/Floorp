@@ -35,23 +35,26 @@ public:
   virtual void ComputeContainerSize(void) = 0;
 
   /**
-   * Get the height of the container
-   * @result height of container
+   * Get the dimensions of the container
+   * @param aWidth return value for width of container
+   * @param aHeight return value for height of container
    */
-  virtual PRInt32 GetContainerSize(void) = 0;
+  virtual void GetContainerSize(nscoord *aWidth, nscoord *aHeight) = 0;
 
   /**
    * Set the offset into the container of the
-   * topmost visible coordinate
-   * @param aOffset offset in twips
+   * top/left most visible coordinate
+   * @param aOffsetX X offset in twips
+   * @param aOffsetY Y offset in twips
    */
-  virtual void SetVisibleOffset(PRInt32 aOffset) = 0;
+  virtual void SetVisibleOffset(nscoord aOffsetX, nscoord aOffsetY) = 0;
 
   /**
-   * Get the offset of the topmost visible coordinate
-   * @result coordinate in twips
+   * Get the offset of the top/left most visible coordinate
+   * @param aOffsetX return value for X coordinate in twips
+   * @param aOffsetY return value for Y coordinate in twips
    */
-  virtual PRInt32 GetVisibleOffset(void) = 0;
+  virtual void GetVisibleOffset(nscoord *aOffsetX, nscoord *aOffsetY) = 0;
 
   /**
    * Get the view that we are scrolling within the
