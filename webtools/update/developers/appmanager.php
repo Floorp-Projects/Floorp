@@ -204,6 +204,7 @@ $public_ver = $row["public_ver"];
 
 <h1>Add New Application</h1>
 <form name="addapplication" method="post" action="?function=&action=addnewapp">
+<?writeFormKey();?>
 Application Name: <input name="appname" type="text" title="Name of Application (e.g. Firefox)"><BR>
 GUID of App: <input name="guid" type="text" size=35 title="Application Identifier"><BR>
 Shortname: <input name="shortname" type="text" size="5" maxlength=2 title="two char abbrieviation of appname. (Eg fx for Firefox, or tb for Thunderbird)"><BR>
