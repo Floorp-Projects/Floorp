@@ -44,7 +44,7 @@
 #include "nsSupportsPrimitives.h"
 #include "nsISupportsArray.h"
 #include "nsString.h"
-#include <vector>
+#include "nsVoidArray.h"
 
 extern "C" {
     #include "ical.h"
@@ -76,7 +76,7 @@ oeEventEnumerator : public nsISimpleEnumerator
 
   private:
     PRUint32 mCurrentIndex;
-    std::vector<nsISupports *> mEventVector;
+    nsCOMPtr<nsISupportsArray> mEventVector;
 };
 
 class
@@ -95,8 +95,8 @@ oeDateEnumerator : public nsISimpleEnumerator
     NS_IMETHOD AddDate( PRTime date );
 
   private:
-    PRUint32 mCurrentIndex;
-    std::vector<PRTime> mDateVector;
+    PRInt32 mCurrentIndex;
+    nsVoidArray mDateVector;
 };
 
 /* oeIcalEvent Header file */
@@ -150,8 +150,8 @@ private:
     oeDateTimeImpl *m_stamp;
     oeDateTimeImpl *m_recurend;
     icaltimetype m_lastalarmack;
-    std::vector<PRTime> m_exceptiondates;
-    std::vector<PRTime> m_snoozetimes;
+    nsVoidArray m_exceptiondates;
+    nsVoidArray m_snoozetimes;
     icaltimetype CalculateAlarmTime( icaltimetype date );
     bool IsExcepted( PRTime date );
     nsCOMPtr<nsISupportsArray> m_attachments;

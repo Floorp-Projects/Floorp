@@ -37,7 +37,6 @@
 #define _OEICALIMPL_H_
 
 #include "oeIICal.h"
-#include <vector>
 #include "nsITimer.h"
 #include "oeICalEventImpl.h"
 #include "oeICalTodoImpl.h"
@@ -205,8 +204,6 @@ private:
     oeDateTimeImpl *m_end;
     oeDateTimeImpl *m_recurend;
     icaltimetype m_lastalarmack;
-    std::vector<PRTime> m_exceptiondates;
-    std::vector<PRTime> m_snoozetimes;
     int m_percent;
     oeDateTimeImpl *m_due;*/
 };
@@ -242,8 +239,8 @@ class oeICalImpl : public oeIICal
         icaltimetype GetNextEvent( icaltimetype starting );
         EventList *GetEventList();
 private:
-    std::vector<oeIICalObserver*> m_observerlist;
-    std::vector<oeIICalTodoObserver*> m_todoobserverlist;
+    nsCOMPtr<nsISupportsArray> m_observerlist;
+    nsCOMPtr<nsISupportsArray> m_todoobserverlist;
     bool m_batchMode;
     EventList m_eventlist;
     TodoList m_todolist;

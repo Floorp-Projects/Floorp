@@ -37,11 +37,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 #ifndef WIN32
-#ifdef XP_MAC
 #include <stdlib.h> // for atol
-#else
-#include <unistd.h>
-#endif
 #endif
 
 #include "oeICalEventImpl.h"
@@ -308,6 +304,12 @@ oeICalEventImpl::~oeICalEventImpl()
         m_stamp->Release();
     if( m_recurend )
         m_recurend->Release();
+    for( int i=0; i<m_snoozetimes.Count(); i++ ) {
+        PRTime *snoozetimeptr = (PRTime*)(m_snoozetimes[i]);
+        delete snoozetimeptr;
+    }
+    m_snoozetimes.Clear();
+    RemoveAllExceptions();
 }
 
 NS_IMETHODIMP oeICalEventImpl::SetParent( oeIICal *calendar )
@@ -1131,8 +1133,8 @@ icaltimetype oeICalEventImpl::GetNextAlarmTime( icaltimetype begin ) {
         result = CalculateAlarmTime( result );
     } while ( icaltime_compare( starting, result ) >= 0 );
 
-    for( unsigned int i=0; i<m_snoozetimes.size(); i++ ) {
-        icaltimetype snoozetime = ConvertFromPrtime( m_snoozetimes[i] );
+    for( int i=0; i<m_snoozetimes.Count(); i++ ) {
+        icaltimetype snoozetime = ConvertFromPrtime( *(PRTime*)(m_snoozetimes[i]) );
         if( icaltime_is_null_time( result ) || icaltime_compare( snoozetime, result ) < 0 ) {
             if ( icaltime_compare( snoozetime, starting ) > 0 ) {
                 result = snoozetime;
@@ -1282,7 +1284,9 @@ NS_IMETHODIMP oeICalEventImpl::AddException( PRTime exdate )
     tmpexdate.minute = 0;
     tmpexdate.second = 0;
     exdate = ConvertToPrtime( tmpexdate );
-    m_exceptiondates.push_back( exdate );
+    PRTime *newexdate = new PRTime;
+    *newexdate = exdate;
+    m_exceptiondates.AppendElement( newexdate );
     return NS_OK;
 }
 
@@ -1291,7 +1295,11 @@ NS_IMETHODIMP oeICalEventImpl::RemoveAllExceptions()
 #ifdef ICAL_DEBUG_ALL
     printf( "oeICalEventImpl::RemoveAllExceptions()\n" );
 #endif
-    m_exceptiondates.clear();
+    for( int i=0; i<m_exceptiondates.Count(); i++ ) {
+        PRTime *exceptiondateptr = (PRTime*)(m_exceptiondates[i]);
+        delete exceptiondateptr;
+    }
+    m_exceptiondates.Clear();
     return NS_OK;
 }
 
@@ -1312,8 +1320,8 @@ oeICalEventImpl::GetExceptions(nsISimpleEnumerator **datelist )
 
     do {
         found = false;
-        for( unsigned int i=0; i<m_exceptiondates.size(); i++ ) {
-            current = m_exceptiondates[i];
+        for( int i=0; i<m_exceptiondates.Count(); i++ ) {
+            current = *(PRTime *)(m_exceptiondates[i]);
             if( !count ) {
                 if( i == 0 ) {
                     minimum = current;
@@ -1356,8 +1364,8 @@ bool oeICalEventImpl::IsExcepted( PRTime date ) {
     date = ConvertToPrtime( tmpexdate );
     
     bool result = false;
-    for( unsigned int i=0; i<m_exceptiondates.size(); i++ ) {
-        if( m_exceptiondates[i] == date ) {
+    for( int i=0; i<m_exceptiondates.Count(); i++ ) {
+        if( *(PRTime *)(m_exceptiondates[i]) == date ) {
             result = true;
             break;
         }
@@ -1375,8 +1383,9 @@ NS_IMETHODIMP oeICalEventImpl::SetSnoozeTime( PRTime snoozetime )
 #endif
     icaltimetype tmpdate = ConvertFromPrtime( snoozetime );
     snoozetime = icaltime_as_timet( tmpdate );
-    snoozetime *= 1000;
-    m_snoozetimes.push_back( snoozetime );
+    PRTime *snoozetimeinms = new PRTime;
+    *snoozetimeinms = snoozetime * 1000;
+    m_snoozetimes.AppendElement( snoozetimeinms );
     PRTime nowinms = time( nsnull );
     nowinms *= 1000;
     m_lastalarmack = ConvertFromPrtime( nowinms );
@@ -2044,16 +2053,21 @@ bool oeICalEventImpl::ParseIcalComponent( icalcomponent *comp )
     }
     
     //recur exceptions
-    m_exceptiondates.clear();
+    RemoveAllExceptions();
     for( prop = icalcomponent_get_first_property( vevent, ICAL_EXDATE_PROPERTY );
         prop != 0 ;
         prop = icalcomponent_get_next_property( vevent, ICAL_EXDATE_PROPERTY ) ) {
         icaltimetype exdate = icalproperty_get_exdate( prop );
-        PRTime exdateinms = ConvertToPrtime( exdate );
-        m_exceptiondates.push_back( exdateinms );
+        PRTime *exdateinms = new PRTime;
+        *exdateinms = ConvertToPrtime( exdate );
+        m_exceptiondates.AppendElement( exdateinms );
     }
 
-    m_snoozetimes.clear();
+    for( int i=0; i<m_snoozetimes.Count(); i++ ) {
+        PRTime *snoozetimeptr = (PRTime*)(m_snoozetimes[i]);
+        delete snoozetimeptr;
+    }
+    m_snoozetimes.Clear();
     //snoozetimes
     icalcomponent *tmpcomp = icalcomponent_get_first_component( vevent, ICAL_X_COMPONENT );
     if ( tmpcomp != 0) {
@@ -2063,9 +2077,10 @@ bool oeICalEventImpl::ParseIcalComponent( icalcomponent *comp )
             icaltimetype snoozetime = icalproperty_get_dtstamp( prop );
             if( !icaltime_is_null_time( m_lastalarmack ) && icaltime_compare( m_lastalarmack, snoozetime ) >= 0 )
                 continue;
-            PRTime snoozetimeinms = icaltime_as_timet( snoozetime );
-            snoozetimeinms *= 1000;
-            m_snoozetimes.push_back( snoozetimeinms );
+            PRTime *snoozetimeinms = new PRTime;
+            *snoozetimeinms = icaltime_as_timet( snoozetime );
+            *snoozetimeinms = *snoozetimeinms * 1000;
+            m_snoozetimes.AppendElement( snoozetimeinms );
         }
     }
 
@@ -2388,8 +2403,8 @@ icalcomponent* oeICalEventImpl::AsIcalComponent()
         }
 
         //exceptions
-        for( unsigned int i=0; i<m_exceptiondates.size(); i++ ) {
-            icaltimetype exdate = ConvertFromPrtime( m_exceptiondates[i] );
+        for( int i=0; i<m_exceptiondates.Count(); i++ ) {
+            icaltimetype exdate = ConvertFromPrtime( *(PRTime *)(m_exceptiondates[i]) );
             prop = icalproperty_new_exdate( exdate );
             icalcomponent_add_property( vevent, prop );
         }
@@ -2425,11 +2440,11 @@ icalcomponent* oeICalEventImpl::AsIcalComponent()
 
     //snoozetimes
     icalcomponent *tmpcomp=NULL;
-    unsigned int i;
-    for( i=0; i<m_snoozetimes.size(); i++ ) {
+    int i;
+    for( i=0; i<m_snoozetimes.Count(); i++ ) {
         if( tmpcomp == NULL )
             tmpcomp = icalcomponent_new( ICAL_X_COMPONENT );
-        icaltimetype snoozetime = ConvertFromPrtime( m_snoozetimes[i] );
+        icaltimetype snoozetime = ConvertFromPrtime( *(PRTime *)(m_snoozetimes[i]) );
         prop = icalproperty_new_dtstamp( snoozetime );
         icalcomponent_add_property( tmpcomp, prop );
     }

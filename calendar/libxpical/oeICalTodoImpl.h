@@ -42,7 +42,6 @@
 #include "nsISimpleEnumerator.h"
 #include "nsISupportsPrimitives.h"
 #include "nsSupportsPrimitives.h"
-#include <vector>
 
 extern "C" {
     #include "ical.h"

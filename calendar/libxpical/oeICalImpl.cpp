@@ -40,7 +40,6 @@
 
 #define __cplusplus__ 1
 
-#include <vector>
 #include "oeICalImpl.h"
 #include "oeICalEventImpl.h"
 #include "nsMemory.h"
@@ -95,11 +94,11 @@ oeEventEnumerator::oeEventEnumerator( )
 :
     mCurrentIndex( 0 )
 {
+    NS_NewISupportsArray(getter_AddRefs(mEventVector));
 }
 
 oeEventEnumerator::~oeEventEnumerator()
 {
-    mEventVector.clear();
 }
 
 NS_IMPL_ISUPPORTS1(oeEventEnumerator, nsISimpleEnumerator)
@@ -107,7 +106,9 @@ NS_IMPL_ISUPPORTS1(oeEventEnumerator, nsISimpleEnumerator)
 NS_IMETHODIMP
 oeEventEnumerator::HasMoreElements(PRBool *result)
 {
-    if( mCurrentIndex >= mEventVector.size() )
+    PRUint32 count = 0;
+    mEventVector->Count(&count);
+    if( mCurrentIndex >= count )
     {
         *result = PR_FALSE;
     }
@@ -122,13 +123,16 @@ NS_IMETHODIMP
 oeEventEnumerator::GetNext(nsISupports **_retval)
 {
         
-    if( mCurrentIndex >= mEventVector.size() )
+    PRUint32 count = 0;
+    mEventVector->Count(&count);
+    if( mCurrentIndex >= count )
     {
         *_retval = nsnull;
     }
     else
     {
-        nsISupports* event = mEventVector[ mCurrentIndex ];
+        nsCOMPtr<nsISupports> event;
+        mEventVector->QueryElementAt( mCurrentIndex, NS_GET_IID(nsISupports), getter_AddRefs(event));
         event->AddRef();
         *_retval = event;
         ++mCurrentIndex;
@@ -141,7 +145,9 @@ oeEventEnumerator::GetNext(nsISupports **_retval)
 NS_IMETHODIMP
 oeEventEnumerator::AddEvent( nsISupports* event)
 {
-    mEventVector.push_back( event );
+    PRUint32 count = 0;
+    mEventVector->Count( &count );
+    mEventVector->InsertElementAt( event, count );
     return NS_OK;
 }
 
@@ -154,7 +160,11 @@ oeDateEnumerator::oeDateEnumerator( )
 
 oeDateEnumerator::~oeDateEnumerator()
 {
-    mDateVector.clear();
+    for( int i=0; i<mDateVector.Count(); i++ ) {
+        PRTime *timeptr = (PRTime*)(mDateVector[i]);
+        delete timeptr;
+    }
+    mDateVector.Clear();
 }
 
 NS_IMPL_ISUPPORTS1(oeDateEnumerator, nsISimpleEnumerator)
@@ -162,7 +172,7 @@ NS_IMPL_ISUPPORTS1(oeDateEnumerator, nsISimpleEnumerator)
 NS_IMETHODIMP
 oeDateEnumerator::HasMoreElements(PRBool *result)
 {
-    if( mCurrentIndex >= mDateVector.size() )
+    if( mCurrentIndex >= mDateVector.Count() )
     {
         *result = PR_FALSE;
     }
@@ -177,7 +187,7 @@ NS_IMETHODIMP
 oeDateEnumerator::GetNext(nsISupports **_retval) 
 { 
 
-    if( mCurrentIndex >= mDateVector.size() ) 
+    if( mCurrentIndex >= mDateVector.Count() ) 
     { 
         *_retval = nsnull; 
     } 
@@ -196,7 +206,7 @@ oeDateEnumerator::GetNext(nsISupports **_retval)
             return rv; 
         } 
 
-        date->SetData( mDateVector[ mCurrentIndex ] ); 
+        date->SetData( *(PRTime *)(mDateVector[ mCurrentIndex ]) ); 
         *_retval = date; 
         ++mCurrentIndex; 
     } 
@@ -207,7 +217,9 @@ oeDateEnumerator::GetNext(nsISupports **_retval)
 NS_IMETHODIMP
 oeDateEnumerator::AddDate(PRTime date)
 {
-    mDateVector.push_back( date );
+    PRTime *newdate = new PRTime;
+    *newdate = date;
+    mDateVector.AppendElement( newdate );
     return NS_OK;
 }
 
@@ -242,6 +254,9 @@ oeICalImpl::oeICalImpl()
 
         m_filter = new oeICalFilter();
         NS_ADDREF( m_filter );
+
+        NS_NewISupportsArray(getter_AddRefs(m_observerlist));
+        NS_NewISupportsArray(getter_AddRefs(m_todoobserverlist));
 }
 
 oeICalImpl::~oeICalImpl()
@@ -249,15 +264,6 @@ oeICalImpl::~oeICalImpl()
 #ifdef ICAL_DEBUG
     printf( "oeICalImpl::~oeICalImpl()\n" );
 #endif
-    unsigned int i;
-    for( i=0; i<m_observerlist.size(); i++ ) {
-        m_observerlist[i]->Release();
-    }
-    m_observerlist.clear();
-    for( i=0; i<m_todoobserverlist.size(); i++ ) {
-        m_todoobserverlist[i]->Release();
-    }
-    m_todoobserverlist.clear();
     if( m_alarmtimer  ) {
         PRUint32 delay = 0;
         #ifdef NS_INIT_REFCNT //A temporary way of keeping backward compatibility with Mozilla 1.0 source compile
@@ -726,18 +732,25 @@ oeICalImpl::SetServer( const char *str ) {
     icalfileset_free(stream);
     
     unsigned int i;
-    for( i=0; i<m_observerlist.size(); i++ ) {
+    PRUint32 observercount;
+    m_observerlist->Count(&observercount);
+    for( i=0; i<observercount; i++ ) {
+        nsCOMPtr<oeIICalObserver>observer;
+        m_observerlist->QueryElementAt( i, NS_GET_IID(oeIICalObserver), getter_AddRefs(observer));
         nsresult rv;
-        rv = m_observerlist[i]->OnLoad();
+        rv = observer->OnLoad();
         #ifdef ICAL_DEBUG
         if( NS_FAILED( rv ) ) {
             printf( "oeICalImpl::SetServer() : WARNING Call to observer's onLoad() unsuccessful: %x\n", rv );
         }
         #endif
     }
-    for( i=0; i<m_todoobserverlist.size(); i++ ) {
+    m_todoobserverlist->Count(&observercount);
+    for( i=0; i<observercount; i++ ) {
+        nsCOMPtr<oeIICalTodoObserver>observer;
+        m_todoobserverlist->QueryElementAt( i, NS_GET_IID(oeIICalTodoObserver), getter_AddRefs(observer));
         nsresult rv;
-        rv = m_todoobserverlist[i]->OnLoad();
+        rv = observer->OnLoad();
         #ifdef ICAL_DEBUG
         if( NS_FAILED( rv ) ) {
             printf( "oeICalImpl::SetServer() : WARNING Call to observer's onLoad() unsuccessful: %x\n", rv );
@@ -898,9 +911,13 @@ NS_IMETHODIMP oeICalImpl::AddEvent(oeIICalEvent *icalevent,char **retid)
     m_eventlist.Add( icalevent );
     ((oeICalEventImpl *)icalevent)->SetParent( this );
 
-    for( unsigned int i=0; i<m_observerlist.size(); i++ ) {
+    PRUint32 observercount;
+    m_observerlist->Count(&observercount);
+    for( unsigned int i=0; i<observercount; i++ ) {
+        nsCOMPtr<oeIICalObserver>observer;
+        m_observerlist->QueryElementAt( i, NS_GET_IID(oeIICalObserver), getter_AddRefs(observer));
         nsresult rv;
-        rv = m_observerlist[i]->OnAddItem( icalevent );
+        rv = observer->OnAddItem( icalevent );
         #ifdef ICAL_DEBUG
         if( NS_FAILED( rv ) ) {
             printf( "oeICalImpl::AddEvent() : WARNING Call to observer's onAddItem() unsuccessful: %x\n", rv );
@@ -999,9 +1016,13 @@ NS_IMETHODIMP oeICalImpl::ModifyEvent(oeIICalEvent *icalevent, char **retid)
     }
     icalfileset_free(stream);
     
-    for( unsigned int i=0; i<m_observerlist.size(); i++ ) {
+    PRUint32 observercount;
+    m_observerlist->Count(&observercount);
+    for( unsigned int i=0; i<observercount; i++ ) {
+        nsCOMPtr<oeIICalObserver>observer;
+        m_observerlist->QueryElementAt( i, NS_GET_IID(oeIICalObserver), getter_AddRefs(observer));
         nsresult rv;
-        rv = m_observerlist[i]->OnModifyItem( icalevent, oldevent );
+        rv = observer->OnModifyItem( icalevent, oldevent );
         #ifdef ICAL_DEBUG
         if( NS_FAILED( rv ) ) {
             printf( "oeICalImpl::ModifyEvent() : WARNING Call to observer's onModifyItem() unsuccessful: %x\n", rv );
@@ -1127,9 +1148,13 @@ oeICalImpl::DeleteEvent( const char *id )
 
     m_eventlist.Remove( id );
     
-    for( unsigned int i=0; i<m_observerlist.size(); i++ ) {
+    PRUint32 observercount;
+    m_observerlist->Count(&observercount);
+    for( unsigned int i=0; i<observercount; i++ ) {
+        nsCOMPtr<oeIICalObserver>observer;
+        m_observerlist->QueryElementAt( i, NS_GET_IID(oeIICalObserver), getter_AddRefs(observer));
         nsresult rv;
-        rv = m_observerlist[i]->OnDeleteItem( icalevent );
+        rv = observer->OnDeleteItem( icalevent );
         #ifdef ICAL_DEBUG
         if( NS_FAILED( rv ) ) {
             printf( "oeICalImpl::DeleteEvent() : WARNING Call to observer's onDeleteItem() unsuccessful: %x\n", rv );
@@ -1537,7 +1562,9 @@ oeICalImpl::AddObserver(oeIICalObserver *observer)
 #endif
     if( observer ) {
         observer->AddRef();
-        m_observerlist.push_back( observer );
+        PRUint32 observercount;
+        m_observerlist->Count( &observercount );
+        m_observerlist->InsertElementAt( observer, observercount );
 //        observer->OnLoad();
     }
     return NS_OK;
@@ -1550,10 +1577,14 @@ oeICalImpl::RemoveObserver(oeIICalObserver *observer)
     printf( "oeICalImpl::RemoveObserver()\n" );
 #endif
     if( observer ) {
-        for( unsigned int i=0; i<m_observerlist.size(); i++ ) {
-            if( observer == m_observerlist[i] ) {
-//                m_observerlist.erase( &m_observerlist[i] );
-//                observer->Release();
+        PRUint32 observercount;
+        m_observerlist->Count( &observercount );
+        for( unsigned int i=0; i<observercount; i++ ) {
+            nsCOMPtr<oeIICalObserver>tmpobserver;
+            m_observerlist->QueryElementAt( i, NS_GET_IID(oeIICalObserver), getter_AddRefs(tmpobserver));
+            if( observer == tmpobserver ) {
+                m_observerlist->RemoveElementAt( i );
+                observer->Release();
                 break;
             }
         }
@@ -1569,7 +1600,9 @@ oeICalImpl::AddTodoObserver(oeIICalTodoObserver *observer)
 #endif
     if( observer ) {
         observer->AddRef();
-        m_todoobserverlist.push_back( observer );
+        PRUint32 observercount;
+        m_todoobserverlist->Count( &observercount );
+        m_todoobserverlist->InsertElementAt( observer, observercount );
 //        observer->OnLoad();
     }
     return NS_OK;
@@ -1582,10 +1615,14 @@ oeICalImpl::RemoveTodoObserver(oeIICalTodoObserver *observer)
     printf( "oeICalImpl::RemoveTodoObserver()\n" );
 #endif
     if( observer ) {
-        for( unsigned int i=0; i<m_todoobserverlist.size(); i++ ) {
-            if( observer == m_todoobserverlist[i] ) {
-//                m_todoobserverlist.erase( &m_todoobserverlist[i] );
-//                observer->Release();
+        PRUint32 observercount;
+        m_todoobserverlist->Count( &observercount );
+        for( unsigned int i=0; i<observercount; i++ ) {
+            nsCOMPtr<oeIICalObserver>tmpobserver;
+            m_todoobserverlist->QueryElementAt( i, NS_GET_IID(oeIICalTodoObserver), getter_AddRefs(tmpobserver));
+            if( observer == tmpobserver ) {
+                m_todoobserverlist->RemoveElementAt( i );
+                observer->Release();
                 break;
             }
         }
@@ -1650,8 +1687,12 @@ void oeICalImpl::SetupAlarmManager() {
                     #endif
                     icaltimetype eventtime = event->CalculateEventTime( alarmtime );
                     eventDisplay->SetDisplayDate( ConvertToPrtime( eventtime ) );
-                    for( unsigned int i=0; i<m_observerlist.size(); i++ ) {
-                        rv = m_observerlist[i]->OnAlarm( eventDisplay );
+                    PRUint32 observercount;
+                    m_observerlist->Count( &observercount );
+                    for( unsigned int i=0; i<observercount; i++ ) {
+                        nsCOMPtr<oeIICalObserver>observer;
+                        m_observerlist->QueryElementAt( i, NS_GET_IID(oeIICalObserver), getter_AddRefs(observer));
+                        rv = observer->OnAlarm( eventDisplay );
                         #ifdef ICAL_DEBUG
                         if( NS_FAILED( rv ) ) {
                             printf( "oeICalImpl::SetupAlarmManager() : WARNING Call to observer's onAlarm() unsuccessful: %x\n", rv );
@@ -1759,9 +1800,13 @@ NS_IMETHODIMP oeICalImpl::AddTodo(oeIICalTodo *icaltodo,char **retid)
     m_todolist.Add( icaltodo );
     ((oeICalTodoImpl *)icaltodo)->SetParent( this );
 
-    for( unsigned int i=0; i<m_todoobserverlist.size(); i++ ) {
+    PRUint32 observercount;
+    m_todoobserverlist->Count( &observercount );
+    for( unsigned int i=0; i<observercount; i++ ) {
+        nsCOMPtr<oeIICalTodoObserver>observer;
+        m_todoobserverlist->QueryElementAt( i, NS_GET_IID(oeIICalTodoObserver), getter_AddRefs(observer));
         nsresult rv;
-        rv = m_todoobserverlist[i]->OnAddItem( icaltodo );
+        rv = observer->OnAddItem( icaltodo );
         #ifdef ICAL_DEBUG
         if( NS_FAILED( rv ) ) {
             printf( "oeICalImpl::AddTodo() : WARNING Call to observer's onAddItem() unsuccessful: %x\n", rv );
@@ -1836,9 +1881,13 @@ oeICalImpl::DeleteTodo( const char *id )
 
     m_todolist.Remove( id );
     
-    for( unsigned int i=0; i<m_todoobserverlist.size(); i++ ) {
+    PRUint32 observercount;
+    m_todoobserverlist->Count( &observercount );
+    for( unsigned int i=0; i<observercount; i++ ) {
+        nsCOMPtr<oeIICalTodoObserver>observer;
+        m_todoobserverlist->QueryElementAt( i, NS_GET_IID(oeIICalTodoObserver), getter_AddRefs(observer));
         nsresult rv;
-        rv = m_todoobserverlist[i]->OnDeleteItem( icalevent );
+        rv = observer->OnDeleteItem( icalevent );
         #ifdef ICAL_DEBUG
         if( NS_FAILED( rv ) ) {
             printf( "oeICalImpl::DeleteTodo() : WARNING Call to observer's onDeleteItem() unsuccessful: %x\n", rv );
@@ -1948,9 +1997,13 @@ NS_IMETHODIMP oeICalImpl::ModifyTodo(oeIICalTodo *icalevent, char **retid)
     }
     icalfileset_free(stream);
     
-    for( unsigned int i=0; i<m_todoobserverlist.size(); i++ ) {
+    PRUint32 observercount;
+    m_todoobserverlist->Count( &observercount );
+    for( unsigned int i=0; i<observercount; i++ ) {
+        nsCOMPtr<oeIICalTodoObserver>observer;
+        m_todoobserverlist->QueryElementAt( i, NS_GET_IID(oeIICalTodoObserver), getter_AddRefs(observer));
         nsresult rv;
-        rv = m_todoobserverlist[i]->OnModifyItem( icalevent, oldevent );
+        rv = observer->OnModifyItem( icalevent, oldevent );
         #ifdef ICAL_DEBUG
         if( NS_FAILED( rv ) ) {
             printf( "oeICalImpl::ModifyTodo() : WARNING Call to observer's onModifyItem() unsuccessful: %x\n", rv );
