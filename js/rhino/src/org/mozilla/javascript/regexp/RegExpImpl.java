@@ -420,31 +420,17 @@ class ReplaceData extends GlobData {
                     num = tmp;
                 }
             }
-            else {
-                if (dc == '0') {/* ECMA 3, 1-9 or 01-99 */
-                    if ((dp + 2) < da.length) {
-                        dc = da[dp + 2];
-                        if (NativeRegExp.isDigit(dc)) {
-                            num = NativeRegExp.unDigit(dc);
-                            cp = dp + 3;
-                        }
-                        else
-                            return null;
-                    }
-                    else
-                        return null; /* $0 is not valid */
-                }
-                else {
-                    num = NativeRegExp.unDigit(dc);
-                    cp = dp + 2;
-                    if ((dp + 2) < da.length) {
-                        dc = da[dp + 2];
-                        if (NativeRegExp.isDigit(dc)) {
-                            num = 10 * num + NativeRegExp.unDigit(dc);
-                            cp++;
-                        }
+            else {  /* ECMA 3, 1-9 or 01-99 */
+                num = NativeRegExp.unDigit(dc);
+                cp = dp + 2;
+                if ((dp + 2) < da.length) {
+                    dc = da[dp + 2];
+                    if (NativeRegExp.isDigit(dc)) {
+                        num = 10 * num + NativeRegExp.unDigit(dc);
+                        cp++;
                     }
                 }
+                if (num == 0) return null;  /* $0 or $00 is not valid */
             }
             /* Adjust num from 1 $n-origin to 0 array-index-origin. */
             num--;
