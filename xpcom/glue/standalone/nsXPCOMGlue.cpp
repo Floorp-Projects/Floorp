@@ -52,6 +52,8 @@ static XPCOMFunctions *xpcomFunctions = nsnull;
 #define XPCOM_GLUE_FLUSH_HEAP
 #endif
 
+//#ifdef XPCOM_GLUE_NO_DYNAMIC_LOADING
+
 // seawood tells me there isn't a better way...
 #ifdef XP_PC
 #define XPCOM_DLL  "xpcom.dll"
@@ -66,6 +68,9 @@ static XPCOMFunctions *xpcomFunctions = nsnull;
 extern "C"
 nsresult NS_COM XPCOMGlueStartup(const char* xpcomFile)
 {
+#ifdef XPCOM_GLUE_NO_DYNAMIC_LOADING
+    return NS_OK;
+#else
     nsresult rv;
     const char* libFile;
     if (!xpcomFile)
@@ -105,10 +110,12 @@ nsresult NS_COM XPCOMGlueStartup(const char* xpcomFile)
         return NS_ERROR_FAILURE;
     }
     return NS_OK;
+#endif
 }
 #ifdef XPCOM_GLUE_FLUSH_HEAP
 static void FlushHeap()
 {
+
 #if defined(XP_WIN32)
     // Heap compaction and shrink working set now 
 #ifdef DEBUG_dougt
@@ -151,6 +158,9 @@ static void FlushHeap()
 extern "C"
 nsresult NS_COM XPCOMGlueShutdown()
 {
+#ifdef XPCOM_GLUE_NO_DYNAMIC_LOADING
+    return NS_OK;
+#else
     if (xpcomFunctions) {
         free ((void*)xpcomFunctions);
         xpcomFunctions = nsnull;
@@ -166,8 +176,10 @@ nsresult NS_COM XPCOMGlueShutdown()
 #endif 
 
     return NS_OK;
+#endif
 }
 
+#ifndef XPCOM_GLUE_NO_DYNAMIC_LOADING
 extern "C" NS_COM nsresult
 NS_InitXPCOM2(nsIServiceManager* *result, 
               nsIFile* binDirectory,
@@ -249,3 +261,4 @@ NS_UnregisterXPCOMExitRoutine(XPCOMExitRoutine exitRoutine)
         return NS_ERROR_NOT_INITIALIZED;
     return xpcomFunctions->unregisterExitRoutine(exitRoutine);
 }
+#endif // #ifndef  XPCOM_GLUE_NO_DYNAMIC_LOADING
