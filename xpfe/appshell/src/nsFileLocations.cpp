@@ -427,7 +427,7 @@ NS_IMETHODIMP nsFileLocator::GetFileLocation(
            = (nsSpecialSystemDirectory::SystemDirectories)aType;
        return NS_OK;
    }
-   *(nsSpecialFileSpec*)outSpec = (nsSpecialFileSpec::Type)aType;
+   *(nsSpecialFileSpec*)&spec = (nsSpecialFileSpec::Type)aType;
    return NS_NewFileSpecWithSpec(spec, outSpec);
 }
 
