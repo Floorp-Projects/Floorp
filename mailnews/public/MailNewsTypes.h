@@ -16,14 +16,49 @@
  * Reserved.
  */
 
+#ifndef MailNewsTypes_h__
+#define MailNewsTypes_h__
+
+#include "msgCore.h"
+#include "prtypes.h"
 
 /* MessageKey is a unique ID for a particular message in a folder.  If you want
    a handle to a message that will remain valid even after resorting the folder
    or otherwise changing their indices, you want one of these rather than a
-   MSG_ViewIndex.
+   MSG_ViewIndex. MessageKeys don't survive local mail folder compression, however.
  */
-typedef PRUInt32 MessageKey;
+typedef PRUint32 MessageKey;
 const MessageKey MSG_MESSAGEKEYNONE = 0xffffffff;
+
+/* XP_Index
+ *
+ * A generic index type from which other index types are derived.  All XP_Index
+ * derived types are zero based.
+ *
+ * The following index types are currently supported:
+ *  - MSG_ViewIndex - an index into the list of messages or folders or groups,
+ *    where zero is the first one to show, one is the second, etc...
+ *  - AB_SelectionIndex
+ *  - AB_NameCompletionIndex
+ */
+
+/* I'm not sure it's correct to carry these over into Mozilla, but we can always take them out */
+typedef enum _XP_IndexType
+{
+	kViewIndex = 0,
+	kSelectionIndex,
+	kNameCompletionIndex
+} XP_IndexType;
+
+typedef uint32 XP_Index;
+typedef XP_Index MSG_ViewIndex;
+typedef MSG_ViewIndex MsgViewIndex; 
+
+/* XP_INDEXNONE and MSG_VIEWINDEXNONE are used to indicate an invalid or
+ * non-existent index.
+ */
+const XP_Index      XP_INDEXNONE      = 0xFFFFFFFF;
+const MSG_ViewIndex MSG_VIEWINDEXNONE = 0xFFFFFFFF;
 
 /* Message priorities as determined by X-Priority hdr, or Priority header? */
 typedef enum
@@ -123,143 +158,4 @@ typedef enum
 #define MSG_FLAG_TEMPLATE       0x1000000	/* this message is a template */
 #define MSG_FLAG_ATTACHMENT		0x10000000	/* this message has files attached to it */
 
-/* Flags about a folder or a newsgroup.  Used in the MSG_FolderLine struct;
-   also used internally in libmsg (the `flags' slot in MSG_Folder).  Note that
-   these don't have anything to do with the above MSG_FLAG flags; they belong
-   to different objects entirely.  */
-
-    /* These flags say what kind of folder this is:
-       mail or news, directory or leaf.
-     */
-#define MSG_FOLDER_FLAG_NEWSGROUP   0x0001  /* The type of this folder. */
-#define MSG_FOLDER_FLAG_NEWS_HOST   0x0002  /* Exactly one of these three */
-#define MSG_FOLDER_FLAG_MAIL        0x0004  /* flags will be set. */
-
-#define MSG_FOLDER_FLAG_DIRECTORY   0x0008  /* Whether this is a directory:
-                                               NEWS_HOSTs are always
-                                               directories; NEWS_GROUPs can be
-                                               directories if we are in ``show
-                                               all groups'' mode; MAIL folders
-                                               will have this bit if they are
-                                               really directories, not files.
-                                               (Note that directories may have
-                                               zero children.) */
-
-#define MSG_FOLDER_FLAG_ELIDED      0x0010  /* Whether the children of this
-                                               folder are currently hidden in
-                                               the listing.  This will only
-                                               be present if the DIRECTORY
-                                               bit is on. */
-
-    /* These flags only occur in folders which have
-       the MSG_FOLDER_FLAG_NEWSGROUP bit set, and do
-       not have the MSG_FOLDER_FLAG_DIRECTORY or
-       MSG_FOLDER_FLAG_ELIDED bits set.
-     */
-
-#define MSG_FOLDER_FLAG_MODERATED   0x0020  /* Whether this folder represents
-                                               a moderated newsgroup. */
-#define MSG_FOLDER_FLAG_SUBSCRIBED  0x0040  /* Whether this folder represents
-                                               a subscribed newsgroup. */
-#define MSG_FOLDER_FLAG_NEW_GROUP   0x0080  /* A newsgroup which has just
-                                               been added by the `Check
-                                               New Groups' command. */
-
-
-    /* These flags only occur in folders which have
-       the MSG_FOLDER_FLAG_MAIL bit set, and do
-       not have the MSG_FOLDER_FLAG_DIRECTORY or
-       MSG_FOLDER_FLAG_ELIDED bits set.
-
-	   The numeric order of these flags is important;
-	   folders with these flags on get displayed first,
-	   in reverse numeric order, before folders that have
-	   none of these flags on.  (Note that if a folder is,
-	   say, *both* inbox and sentmail, then its numeric value
-	   will be even bigger, and so will bubble up to where the
-	   inbox generally is.  What a hack!)
-     */
-
-#define MSG_FOLDER_FLAG_TRASH       0x0100  /* Whether this is the trash
-                                               folder. */
-#define MSG_FOLDER_FLAG_SENTMAIL	0x0200	/* Whether this is a folder that
-											   sent mail gets delivered to.
-											   This particular magic flag is
-											   used only during sorting of
-											   folders; we generally don't care
-											   otherwise. */
-#define MSG_FOLDER_FLAG_DRAFTS      0x0400	/* Whether this is the folder in
-                                               which unfinised, unsent messages
-                                               are saved for later editing. */
-#define MSG_FOLDER_FLAG_QUEUE       0x0800  /* Whether this is the folder in
-                                               which messages are queued for
-                                               later delivery. */
-#define MSG_FOLDER_FLAG_INBOX       0x1000  /* Whether this is the primary
-                                               inbox folder. */
-#define MSG_FOLDER_FLAG_IMAPBOX		0x2000	/* Whether this folder on online
-											   IMAP */
-
-#define MSG_FOLDER_FLAG_CAT_CONTAINER 0x4000 /* This group contains categories */
-
-#define MSG_FOLDER_FLAG_PROFILE_GROUP 0x8000 /* This is a virtual newsgroup */
-
-#define MSG_FOLDER_FLAG_CATEGORY	0x10000  /* this is a category */
-
-#define MSG_FOLDER_FLAG_GOT_NEW		0x20000		/* folder got new msgs */
-
-#define MSG_FOLDER_FLAG_IMAP_SERVER	0x40000		/* folder is an IMAP server */
-
-#define MSG_FOLDER_FLAG_IMAP_PERSONAL	0x80000		/* folder is an IMAP personal folder */
-
-#define MSG_FOLDER_FLAG_IMAP_PUBLIC		0x100000		/* folder is an IMAP public folder */
-
-#define MSG_FOLDER_FLAG_IMAP_OTHER_USER	0x200000		/* folder is another user's IMAP folder */
-														/* Think of it like a folder that someone would share. */
-#define MSG_FOLDER_FLAG_TEMPLATES		0x400000	/* Whether this is the template folder */
-
-#define MSG_FOLDER_FLAG_PERSONAL_SHARED	0x800000	/* This folder is one of your personal folders that
-								`					   is shared with other users */
-
-#define MSG_FOLDER_FLAG_IMAP_NOSELECT	0x1000000	/* This folder is an IMAP \Noselect folder */
-
-
-/* Flags in the subscribe pane (used inside of MSG_GroupNameLine).  Where
-   the flags overlap with the MSG_FOLDER_FLAG_* flags, it has the same value,
-   to reduce the chance of someone using the wrong constant. */
-
-#define MSG_GROUPNAME_FLAG_ELIDED		0x0010  /* Whether the children of this
-												   group are currently hidden
-												   in the listing.  This will
-												   only be present if it has
-												   any children. */
-
-#define MSG_GROUPNAME_FLAG_MODERATED	0x0020  /* Whether this folder
-												   represents a moderated
-												   newsgroup. */
-#define MSG_GROUPNAME_FLAG_SUBSCRIBED	0x0040  /* Whether this folder
-												   represents a subscribed
-												   newsgroup. */
-#define MSG_GROUPNAME_FLAG_NEW_GROUP	0x0080  /* A newsgroup which has just
-												   been added by the `Check
-												   New Groups' command. */
-#define MSG_GROUPNAME_FLAG_HASCHILDREN	0x40000 /* Whether there are children
-												  of this group.  Whether those
-												  chilren are visible in this
-												  list is determined by the
-												  above "ELIDED" flag. 
-												  Setting this to the same value
-												  as a MSG_FOLDER_FLAG_* IMAP server,
-												  since an IMAP _server_ will never
-												  appear in the subscribe pane.  */
-#define MSG_GROUPNAME_FLAG_IMAP_PERSONAL	0x80000		/* folder is an IMAP personal folder */
-
-#define MSG_GROUPNAME_FLAG_IMAP_PUBLIC		0x100000		/* folder is an IMAP public folder */
-
-#define MSG_GROUPNAME_FLAG_IMAP_OTHER_USER	0x200000		/* folder is another user's IMAP folder */
-
-#define MSG_GROUPNAME_FLAG_IMAP_NOSELECT	0x400000		/* A \NoSelect IMAP folder */
-
-#define MSG_GROUPNAME_FLAG_PERSONAL_SHARED	0x800000	/* whether or not this folder is one of your personal folders that
-								`					       is shared with other users */
-
-
+#endif
