@@ -615,7 +615,6 @@ sub MakeResourceAliases()
 		# messenger compose resides within messenger
 		my($messengercompose_content_chrome_dir) = "$messenger_content_chrome_dir" . "messengercompose:";
 		my($messengercompose_locale_chrome_dir) = "$messenger_locale_chrome_dir" . "messengercompose:";
-		my($messengercompose_skin_chrome_dir) = "$messenger_skin_chrome_dir" . "messengercompose:";
 
 		# addressbook resides within messenger
 		my($addressbook_content_chrome_dir) = "$messenger_content_chrome_dir" . "addressbook:";
@@ -646,7 +645,6 @@ sub MakeResourceAliases()
 		_InstallResources(":mozilla:mailnews:mime:cthandlers:resources:MANIFEST",		"$mailnews_dir:messenger:", 0);
 
 		_InstallResources(":mozilla:mailnews:compose:resources:content:MANIFEST",		"$messengercompose_content_chrome_dir", 0);
-		_InstallResources(":mozilla:mailnews:compose:resources:skin:MANIFEST",			"$messengercompose_skin_chrome_dir", 0);
 		_InstallResources(":mozilla:mailnews:compose:resources:locale:en-US:MANIFEST",	"$messengercompose_locale_chrome_dir", 0);
 		_InstallResources(":mozilla:mailnews:compose:prefs:resources:content:MANIFEST",	"$messengercompose_content_chrome_dir", 0);
 		_InstallResources(":mozilla:mailnews:compose:prefs:resources:locale:en-US:MANIFEST",	"$messengercompose_locale_chrome_dir", 0);
