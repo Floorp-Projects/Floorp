@@ -192,6 +192,7 @@ public:
 
   NS_IMETHOD GetFrameElementInternal(nsIDOMElement** aFrameElement);
   NS_IMETHOD SetFrameElementInternal(nsIDOMElement* aFrameElement);
+  NS_IMETHOD SetOpenerScriptURL(nsIURI* aURI);
 
   // nsIDOMViewCSS
   NS_DECL_NSIDOMVIEWCSS
@@ -310,6 +311,7 @@ protected:
   nsCOMPtr<nsIDOMCrypto>        mCrypto;
   nsCOMPtr<nsIDOMPkcs11>        mPkcs11;
   nsCOMPtr<nsIPrincipal>        mDocumentPrincipal;
+  nsCOMPtr<nsIURI>              mOpenerScriptURL; // Used to determine whether to clear scope
 
   nsIDOMElement*                mFrameElement; // WEAK
 
