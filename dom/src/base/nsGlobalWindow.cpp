@@ -262,8 +262,9 @@ NS_IMETHODIMP GlobalWindowImpl::SetNewDocument(nsIDOMDocument* aDocument)
   // when those sub-window objects are finalized, after JS_ClearScope and
   // a GC run that finds them to be garbage.
 
-  ::JS_ClearWatchPointsForObject((JSContext *) mContext->GetNativeContext(),
-                                 (JSObject *) mScriptObject);
+  if (mContext && mScriptObject)
+    ::JS_ClearWatchPointsForObject((JSContext *) mContext->GetNativeContext(),
+                                   (JSObject *) mScriptObject);
 
   if (mFirstDocumentLoad) {
     mFirstDocumentLoad = PR_FALSE;
