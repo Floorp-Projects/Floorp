@@ -153,19 +153,14 @@ ifndef NO_MDUPDATE
 MDUPDATE_FLAGS		= -MDupdate $(DEPENDENCIES)
 endif
 
-ifeq ($(FORCE_SW_THREADS),1)
-USE_KERNEL_THREADS	= 0
-USE_PTHREADS		= 0
-endif
-
-ifeq ($(USE_KERNEL_THREADS),1)
-PORT_FLAGS		+= -D_REENTRANT
-THREAD_LIB		= -lthread
-endif
-
 ifeq ($(USE_PTHREADS),1)
+ifdef NS_USE_NATIVE
+CCC			+= -mt
+endif
 PORT_FLAGS		+= -D_REENTRANT
 THREAD_LIB		= -lpthread
+else
+PORT_FLAGS		+= -DSW_THREADS
 endif
 
 #
