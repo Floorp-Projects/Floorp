@@ -129,6 +129,15 @@ public:
   NS_DEFINE_STATIC_IID_ACCESSOR(NS_IVIEW_IID)
 
   /**
+   * Get the view manager which "owns" the view.
+   * This method might require some expensive traversal work in the future. If you can get the
+   * view manager from somewhere else, do that instead.
+   * @result the view manager
+   */
+  nsIViewManager* GetViewManager() const
+  { return NS_REINTERPRET_CAST(nsIViewManager*, mViewManager); }
+
+  /**
    * Initialize the view
    * @param aManager view manager that "owns" the view. The view does NOT
    *        hold a reference to the view manager
@@ -158,15 +167,6 @@ public:
    * otherwise.
    */
   void Destroy();
-
-  /**
-   * Get the view manager which "owns" the view.
-   * This method might require some expensive traversal work in the future. If you can get the
-   * view manager from somewhere else, do that instead.
-   * @result the view manager
-   */
-  nsIViewManager* GetViewManager() const
-  { return NS_REINTERPRET_CAST(nsIViewManager*, mViewManager); }
 
   /**
    * Called to get the position of a view.
