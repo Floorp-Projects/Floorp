@@ -21,7 +21,7 @@
 
 DEPTH=..
 
-DIRS=globals driver ib customcd cckcd cckwiz 
+DIRS=globals driver ib customcd cckcd cckwiz wizard
 
 include <$(DEPTH)\config\rules.mak>
 
