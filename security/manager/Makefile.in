@@ -34,8 +34,15 @@ SMIME3_LIB = $(LIB_PREFIX)smime3$(DLL_SUFFIX)
 SSL3_LIB =  $(LIB_PREFIX)ssl3$(DLL_SUFFIX)
 SOFTOKEN3_LIB = $(LIB_PREFIX)softokn3$(DLL_SUFFIX)
 
+ifneq (,$(filter SunOS HP-UX,$(OS_ARCH)))
+ifeq (,$(filter i86pc ia64,$(OS_TEST)))
+ifndef HAVE_64BIT_OS
+HAVE_FREEBL_MODULES = 1
 FREEBL_PURE32_MODULE = libfreebl_pure32_3$(DLL_SUFFIX)
 FREEBL_HYBRID_MODULE = libfreebl_hybrid_3$(DLL_SUFFIX)
+endif
+endif
+endif
 
 # NSS makefiles are not safe for parallel execution.
 DEFAULT_GMAKE_FLAGS = MAKE="$(MAKE) -j1" -j1
@@ -104,13 +111,9 @@ endif
 	$(INSTALL) -m 755 $(DIST)/lib/$(NSS3_LIB) $(DIST)/bin
 	$(INSTALL) -m 755 $(DIST)/lib/$(SSL3_LIB) $(DIST)/bin
 	$(INSTALL) -m 755 $(DIST)/lib/$(SMIME3_LIB) $(DIST)/bin
-ifneq (,$(filter SunOS HP-UX,$(OS_ARCH)))
-ifneq ($(OS_TEST),i86pc)
-ifndef HAVE_64BIT_OS
+ifdef HAVE_FREEBL_MODULES
 	$(INSTALL) -m 755 $(DIST)/lib/$(FREEBL_PURE32_MODULE) $(DIST)/bin
 	$(INSTALL) -m 755 $(DIST)/lib/$(FREEBL_HYBRID_MODULE) $(DIST)/bin
-endif
-endif
 endif
 	$(MAKE) -C boot $@
 	$(MAKE) -C ssl $@
@@ -122,13 +125,9 @@ install::
 	$(SYSINSTALL) -m 755 $(DIST)/lib/$(NSS3_LIB) $(DESTDIR)$(mozappdir)
 	$(SYSINSTALL) -m 755 $(DIST)/lib/$(SSL3_LIB) $(DESTDIR)$(mozappdir)
 	$(SYSINSTALL) -m 755 $(DIST)/lib/$(SMIME3_LIB) $(DESTDIR)$(mozappdir)
-ifneq (,$(filter SunOS HP-UX,$(OS_ARCH)))
-ifneq ($(OS_TEST),i86pc)
-ifndef HAVE_64BIT_OS
+ifdef HAVE_FREEBL_MODULES
 	$(SYSINSTALL) -m 755 $(DIST)/lib/$(FREEBL_PURE32_MODULE) $(DESTDIR)$(mozappdir)
 	$(SYSINSTALL) -m 755 $(DIST)/lib/$(FREEBL_HYBRID_MODULE) $(DESTDIR)$(mozappdir)
-endif
-endif
 endif
 	$(MAKE) -C boot $@
 	$(MAKE) -C ssl $@
