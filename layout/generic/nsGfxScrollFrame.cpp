@@ -655,7 +655,9 @@ nsGfxScrollFrame::ScrollbarStyles
 nsGfxScrollFrame::GetScrollbarStyles() const
 {
   PRUint8 overflow;
-  if (GetParent() && GetParent()->GetType() == nsLayoutAtoms::viewportFrame) {
+  if (GetParent() && GetParent()->GetType() == nsLayoutAtoms::viewportFrame &&
+      // Make sure we're actually the root scrollframe
+      GetParent()->GetFirstChild(nsnull) == this) {
     overflow = GetPresContext()->GetViewportOverflowOverride();
   } else {
     overflow = GetStyleDisplay()->mOverflow;
