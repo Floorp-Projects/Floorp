@@ -283,9 +283,9 @@ malloc_dump(FILE *fd)
 
     /* print out various info */
     fprintf(fd,"Minsize\t%d\n",malloc_minsize);
-    fprintf(fd,"Maxsize\t%d\n",malloc_maxsize);
-    fprintf(fd,"Pagesize\t%d\n",malloc_pagesize);
-    fprintf(fd,"Pageshift\t%d\n",malloc_pageshift);
+    fprintf(fd,"Maxsize\t%ld\n",malloc_maxsize);
+    fprintf(fd,"Pagesize\t%ld\n",malloc_pagesize);
+    fprintf(fd,"Pageshift\t%ld\n",malloc_pageshift);
     fprintf(fd,"FirstPage\t%ld\n",malloc_origo);
     fprintf(fd,"LastPage\t%ld %lx\n",last_index+malloc_pageshift,
 	(last_index + malloc_pageshift) << malloc_pageshift);
