@@ -339,7 +339,7 @@ my $tablestart = "<TABLE CELLSPACING=0 CELLPADDING=2>
 foreach my $c (@collist) {
     if (exists $::needquote{$c}) {
         if ($::needquote{$c}) {
-            $tablestart .= "<TH WIDTH=100% valigh=left>";
+            $tablestart .= "<TH WIDTH=100% valign=left>";
         } else {
             $tablestart .= "<TH valign=left>";
         }
@@ -377,10 +377,13 @@ while (@row = FetchSQLData()) {
         pnl "<A HREF=\"show_bug.cgi?id=$bug_id\">";
         pnl "$bug_id</A> ";
         foreach my $c (@collist) {
+            if (!exists $::needquote{$c}) {
+                next;
+            }
             my $value = shift @row;
             my $nowrap = "";
 
-            if (exists $::needquote{$c} && $::needquote{$c}) {
+            if ($::needquote{$c}) {
                 $value = html_quote($value);
             } else {
                 $value = "<nobr>$value</nobr>";
