@@ -45,6 +45,7 @@ public:
     virtual nsresult       DoomEntry( nsCacheEntry * entry );
 
     virtual nsresult GetTransportForEntry(nsCacheEntry * entry,
+                                          nsCacheAccessMode mode,
                                           nsITransport ** result);
 
     virtual nsresult OnDataSizeChanged(nsCacheEntry * entry);

@@ -109,6 +109,7 @@ nsMemoryCacheDevice::DoomEntry(nsCacheEntry * entry)
 
 nsresult
 nsMemoryCacheDevice::GetTransportForEntry( nsCacheEntry * entry,
+                                           nsCacheAccessMode mode,
                                            nsITransport **transport )
 {
     NS_ENSURE_ARG_POINTER(entry);
