@@ -403,7 +403,11 @@ public:
     virtual ~BlobImpl()
     {
         gRDFService->UnregisterBlob(this);
-        NS_RELEASE(gRDFService);
+        // Use NS_RELEASE2() here, because we want to decrease the
+        // refcount, but not null out the gRDFService pointer (which is
+        // what a vanilla NS_RELEASE() would do).
+        nsrefcnt refcnt;
+        NS_RELEASE2(gRDFService, refcnt);
         delete[] mData.mBytes;
     }
 
