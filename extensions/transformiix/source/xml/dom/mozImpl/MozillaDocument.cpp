@@ -34,8 +34,8 @@
 // 
  
 #include "mozilladom.h" 
-#include "nsXMLDocument.h" 
 #include "iostream.h" 
+#include "nsCOMPtr.h" 
  
 // 
 //Construct a Document Wrapper object without specificy a nsIDOMDocument 
@@ -43,7 +43,11 @@
 // 
 Document::Document() 
 { 
-  nsDocument = new nsXMLDocument(); 
+  nsCOMPtr<nsIDocument> document;
+  nsresult res = NS_NewXMLDocument(getter_AddRefs(document));
+  if (NS_SUCCEEDED(res) && document) {
+    document->QueryInterface(NS_GET_IID(nsIDOMDocument), (void**) &nsDocument);
+  }
   Node::setNSObj(nsDocument, this); 
 } 
  
