@@ -391,7 +391,6 @@
 			children = (
 				F58A94F2023F10CA010001CA,
 				F5264FCB020D4C25010001CA,
-				F5264FCC020D4C25010001CA,
 				F50BC9A40239FA8D010001CA,
 				F538DFAE023B36A7010001CA,
 				F564872E023B954E010001CA,
@@ -484,7 +483,6 @@
 			dependencies = (
 				F5F9FBD702DFF351012B5DB7,
 				F53EAB79027EBDE801000102,
-				F58581BA022B8F28010001CA,
 				F57F20760299A34A01000106,
 				F51704F3034A31C201026D5D,
 				F5170513034A396401026D5D,
@@ -779,15 +777,7 @@
 				F5555C8902022F070164C72B,
 				F5547D61020333DA01F448B0,
 				F507A84503116E5501026D5D,
-				F51842FF020629B701A966FE,
 				F507A84B03116E6E01026D5D,
-				F5264FD4020D4C25010001CA,
-				F5264FD5020D4C25010001CA,
-				F5264FD6020D4C25010001CA,
-				F5264FD7020D4C25010001CA,
-				F5264FD8020D4C25010001CA,
-				F5264FD9020D4C25010001CA,
-				F5264FDA020D4C25010001CA,
 				F55CCFD3020E98EA010001CA,
 				F507A84E03116E7401026D5D,
 				F5568A8F0217C7F5010001CA,
@@ -808,9 +798,6 @@
 				F5648732023B957F010001CA,
 				F5648733023B957F010001CA,
 				F5648734023B957F010001CA,
-				F53F5AEB02448BC9010001CA,
-				F53F5AEC02448BC9010001CA,
-				F53EB4810269861601A80166,
 				F5DAB15102698C0D01A80166,
 				F5DAB15502698D5401A80166,
 				F5DAB15602698D5401A80166,
@@ -3921,18 +3908,6 @@
 			path = resources/localized/English.lproj/BrowserWindow.nib;
 			refType = 2;
 		};
-		F51842FE020629B701A966FE = {
-			isa = PBXFileReference;
-			name = sidebar.tif;
-			path = resources/images/toolbar/sidebar.tif;
-			refType = 2;
-		};
-		F51842FF020629B701A966FE = {
-			fileRef = F51842FE020629B701A966FE;
-			isa = PBXBuildFile;
-			settings = {
-			};
-		};
 		F51B70B4026EC8A601A80166 = {
 			isa = PBXFileReference;
 			name = Camino.scriptSuite;
@@ -4409,9 +4384,6 @@
 				F5555C8402022F070164C72B,
 				F5555C8502022F070164C72B,
 				F5547D60020333DA01F448B0,
-				F51842FE020629B701A966FE,
-				F53F5AE902448BC8010001CA,
-				F53F5AEA02448BC8010001CA,
 				F55CCFD2020E98EA010001CA,
 				F5EB9376030C92450100010C,
 				F5F94BEF0338E8C501026D5D,
@@ -4427,104 +4399,6 @@
 			name = "Toolbar-Browser";
 			path = "";
 			refType = 4;
-		};
-		F5264FCC020D4C25010001CA = {
-			children = (
-				F5264FCD020D4C25010001CA,
-				F5264FCE020D4C25010001CA,
-				F5264FCF020D4C25010001CA,
-				F5264FD0020D4C25010001CA,
-				F5264FD1020D4C25010001CA,
-				F5264FD2020D4C25010001CA,
-				F5264FD3020D4C25010001CA,
-			);
-			isa = PBXGroup;
-			name = "Toolbar-SaveDialog";
-			refType = 4;
-		};
-		F5264FCD020D4C25010001CA = {
-			isa = PBXFileReference;
-			name = saveCancel.tif;
-			path = resources/images/toolbar/saveCancel.tif;
-			refType = 2;
-		};
-		F5264FCE020D4C25010001CA = {
-			isa = PBXFileReference;
-			name = saveLeaveOpenNO.tif;
-			path = resources/images/toolbar/saveLeaveOpenNO.tif;
-			refType = 2;
-		};
-		F5264FCF020D4C25010001CA = {
-			isa = PBXFileReference;
-			name = saveLeaveOpenYES.tif;
-			path = resources/images/toolbar/saveLeaveOpenYES.tif;
-			refType = 2;
-		};
-		F5264FD0020D4C25010001CA = {
-			isa = PBXFileReference;
-			name = saveOpenFile.tif;
-			path = resources/images/toolbar/saveOpenFile.tif;
-			refType = 2;
-		};
-		F5264FD1020D4C25010001CA = {
-			isa = PBXFileReference;
-			name = savePause.tif;
-			path = resources/images/toolbar/savePause.tif;
-			refType = 2;
-		};
-		F5264FD2020D4C25010001CA = {
-			isa = PBXFileReference;
-			name = saveResume.tif;
-			path = resources/images/toolbar/saveResume.tif;
-			refType = 2;
-		};
-		F5264FD3020D4C25010001CA = {
-			isa = PBXFileReference;
-			name = saveShowFile.tif;
-			path = resources/images/toolbar/saveShowFile.tif;
-			refType = 2;
-		};
-		F5264FD4020D4C25010001CA = {
-			fileRef = F5264FCD020D4C25010001CA;
-			isa = PBXBuildFile;
-			settings = {
-			};
-		};
-		F5264FD5020D4C25010001CA = {
-			fileRef = F5264FCE020D4C25010001CA;
-			isa = PBXBuildFile;
-			settings = {
-			};
-		};
-		F5264FD6020D4C25010001CA = {
-			fileRef = F5264FCF020D4C25010001CA;
-			isa = PBXBuildFile;
-			settings = {
-			};
-		};
-		F5264FD7020D4C25010001CA = {
-			fileRef = F5264FD0020D4C25010001CA;
-			isa = PBXBuildFile;
-			settings = {
-			};
-		};
-		F5264FD8020D4C25010001CA = {
-			fileRef = F5264FD1020D4C25010001CA;
-			isa = PBXBuildFile;
-			settings = {
-			};
-		};
-		F5264FD9020D4C25010001CA = {
-			fileRef = F5264FD2020D4C25010001CA;
-			isa = PBXBuildFile;
-			settings = {
-			};
-		};
-		F5264FDA020D4C25010001CA = {
-			fileRef = F5264FD3020D4C25010001CA;
-			isa = PBXBuildFile;
-			settings = {
-			};
 		};
 		F527C90203BCD43601A80166 = {
 			fileEncoding = 30;
@@ -5008,18 +4882,6 @@
 			isa = PBXTargetDependency;
 			target = F52627CE027E976B01000102;
 		};
-		F53EB4800269861601A80166 = {
-			isa = PBXFileReference;
-			name = panel_icon.tif;
-			path = resources/images/toolbar/panel_icon.tif;
-			refType = 2;
-		};
-		F53EB4810269861601A80166 = {
-			fileRef = F53EB4800269861601A80166;
-			isa = PBXBuildFile;
-			settings = {
-			};
-		};
 		F53F21EB022B7C77010001CA = {
 			children = (
 				F5CA1A1D02D4ECDA01F34900,
@@ -5178,30 +5040,6 @@
 		};
 		F53F2210022B7C78010001CA = {
 			fileRef = F53F21F4022B7C77010001CA;
-			isa = PBXBuildFile;
-			settings = {
-			};
-		};
-		F53F5AE902448BC8010001CA = {
-			isa = PBXFileReference;
-			name = sidebarOpened.tif;
-			path = resources/images/toolbar/sidebarOpened.tif;
-			refType = 2;
-		};
-		F53F5AEA02448BC8010001CA = {
-			isa = PBXFileReference;
-			name = sidebarClosed.tif;
-			path = resources/images/toolbar/sidebarClosed.tif;
-			refType = 2;
-		};
-		F53F5AEB02448BC9010001CA = {
-			fileRef = F53F5AE902448BC8010001CA;
-			isa = PBXBuildFile;
-			settings = {
-			};
-		};
-		F53F5AEC02448BC9010001CA = {
-			fileRef = F53F5AEA02448BC8010001CA;
 			isa = PBXBuildFile;
 			settings = {
 			};
@@ -5961,7 +5799,6 @@
 				F5568A900217CA82010001CA,
 				F5568A8E0217C7F5010001CA,
 				F55714A1023B4898010001CA,
-				F53EB4800269861601A80166,
 				F5DAB15002698C0D01A80166,
 				F5DAB15202698D5401A80166,
 				F5DAB15302698D5401A80166,
@@ -6605,10 +6442,6 @@
 			isa = PBXTargetDependency;
 			target = F52627CE027E976B01000102;
 		};
-		F56F24A002AC72EF01A967F3 = {
-			isa = PBXTargetDependency;
-			target = F58581AE022B8D62010001CA;
-		};
 		F56F24A102AC72EF01A967F3 = {
 			isa = PBXTargetDependency;
 			target = F57F205C029997C901000106;
@@ -6948,12 +6781,6 @@
 		};
 		F57F206E0299988E01000106 = {
 			fileRef = F557193A022B4102010001CA;
-			isa = PBXBuildFile;
-			settings = {
-			};
-		};
-		F57F20740299A34101000106 = {
-			fileRef = F58581AD022B8D61010001CA;
 			isa = PBXBuildFile;
 			settings = {
 			};
@@ -7340,10 +7167,6 @@
 			isa = PBXBuildFile;
 			settings = {
 			};
-		};
-		F58581BA022B8F28010001CA = {
-			isa = PBXTargetDependency;
-			target = F58581AE022B8D62010001CA;
 		};
 		F585F52902B2C66C01A967F3 = {
 			fileRef = F5F14E9602A5A43A01A967F3;
@@ -8335,7 +8158,6 @@
 			dependencies = (
 				F56F836002E3606C01EF35C9,
 				F56F249F02AC72EF01A967F3,
-				F56F24A002AC72EF01A967F3,
 				F56F24A102AC72EF01A967F3,
 				F51704F4034A31C601026D5D,
 				F5170514034A396701026D5D,
@@ -8630,15 +8452,7 @@
 				F5BAAB4702AC4A5301A967F3,
 				F5BAAB4802AC4A5301A967F3,
 				F507A84603116E5501026D5D,
-				F5BAAB4A02AC4A5301A967F3,
 				F507A84C03116E6E01026D5D,
-				F5BAAB4C02AC4A5301A967F3,
-				F5BAAB4D02AC4A5301A967F3,
-				F5BAAB4E02AC4A5301A967F3,
-				F5BAAB4F02AC4A5301A967F3,
-				F5BAAB5002AC4A5301A967F3,
-				F5BAAB5102AC4A5301A967F3,
-				F5BAAB5202AC4A5301A967F3,
 				F5BAAB5302AC4A5301A967F3,
 				F507A84F03116E7401026D5D,
 				F5BAAB5602AC4A5301A967F3,
@@ -8659,9 +8473,6 @@
 				F5BAAB6602AC4A5301A967F3,
 				F5BAAB6702AC4A5301A967F3,
 				F5BAAB6802AC4A5301A967F3,
-				F5BAAB6902AC4A5301A967F3,
-				F5BAAB6A02AC4A5301A967F3,
-				F5BAAB6B02AC4A5301A967F3,
 				F5BAAB6C02AC4A5301A967F3,
 				F5BAAB6D02AC4A5301A967F3,
 				F5BAAB6E02AC4A5301A967F3,
@@ -9074,54 +8885,6 @@
 			settings = {
 			};
 		};
-		F5BAAB4A02AC4A5301A967F3 = {
-			fileRef = F51842FE020629B701A966FE;
-			isa = PBXBuildFile;
-			settings = {
-			};
-		};
-		F5BAAB4C02AC4A5301A967F3 = {
-			fileRef = F5264FCD020D4C25010001CA;
-			isa = PBXBuildFile;
-			settings = {
-			};
-		};
-		F5BAAB4D02AC4A5301A967F3 = {
-			fileRef = F5264FCE020D4C25010001CA;
-			isa = PBXBuildFile;
-			settings = {
-			};
-		};
-		F5BAAB4E02AC4A5301A967F3 = {
-			fileRef = F5264FCF020D4C25010001CA;
-			isa = PBXBuildFile;
-			settings = {
-			};
-		};
-		F5BAAB4F02AC4A5301A967F3 = {
-			fileRef = F5264FD0020D4C25010001CA;
-			isa = PBXBuildFile;
-			settings = {
-			};
-		};
-		F5BAAB5002AC4A5301A967F3 = {
-			fileRef = F5264FD1020D4C25010001CA;
-			isa = PBXBuildFile;
-			settings = {
-			};
-		};
-		F5BAAB5102AC4A5301A967F3 = {
-			fileRef = F5264FD2020D4C25010001CA;
-			isa = PBXBuildFile;
-			settings = {
-			};
-		};
-		F5BAAB5202AC4A5301A967F3 = {
-			fileRef = F5264FD3020D4C25010001CA;
-			isa = PBXBuildFile;
-			settings = {
-			};
-		};
 		F5BAAB5302AC4A5301A967F3 = {
 			fileRef = F55CCFD2020E98EA010001CA;
 			isa = PBXBuildFile;
@@ -9214,24 +8977,6 @@
 		};
 		F5BAAB6802AC4A5301A967F3 = {
 			fileRef = F5648731023B957F010001CA;
-			isa = PBXBuildFile;
-			settings = {
-			};
-		};
-		F5BAAB6902AC4A5301A967F3 = {
-			fileRef = F53F5AE902448BC8010001CA;
-			isa = PBXBuildFile;
-			settings = {
-			};
-		};
-		F5BAAB6A02AC4A5301A967F3 = {
-			fileRef = F53F5AEA02448BC8010001CA;
-			isa = PBXBuildFile;
-			settings = {
-			};
-		};
-		F5BAAB6B02AC4A5301A967F3 = {
-			fileRef = F53EB4800269861601A80166;
 			isa = PBXBuildFile;
 			settings = {
 			};
@@ -10229,7 +9974,6 @@
 				F5A6185202E5E3A6018E99BF,
 				F5BAAC3802AC6AA201A967F3,
 				F5BAAC3902AC6AA201A967F3,
-				F5BAAC3A02AC6AA201A967F3,
 				F5170524034A39E801026D5D,
 				F5170525034A39E801026D5D,
 			);
@@ -10244,12 +9988,6 @@
 		};
 		F5BAAC3902AC6AA201A967F3 = {
 			fileRef = F57F2062029997E701000106;
-			isa = PBXBuildFile;
-			settings = {
-			};
-		};
-		F5BAAC3A02AC6AA201A967F3 = {
-			fileRef = F58581AD022B8D61010001CA;
 			isa = PBXBuildFile;
 			settings = {
 			};
@@ -10892,7 +10630,6 @@
 				F5F9FBD802E09210012B5DB7,
 				F540BD2402ABB11E01026D5D,
 				F540BD2502ABB11E01026D5D,
-				F57F20740299A34101000106,
 				F51704FB034A35AC01026D5D,
 				F5170521034A39D001026D5D,
 			);
