@@ -24,6 +24,7 @@
 #                 Jacob Steenhagen <jake@bugzilla.org>
 #                 J. Paul Reed <preed@sigkill.com>
 #                 Bradley Baetz <bbaetz@student.usyd.edu.au>
+#                 Joseph Heenan <joseph@heenan.me.uk>
 #
 
 # This file defines all the parameters that we have a GUI to edit within
@@ -557,16 +558,16 @@ Configure bugmail: %urlbase%userprefs.cgi?tab=email
 
   {
    name => 'whinemail',
-   desc => 'The email that gets sent to anyone who has a NEW bug that '.
-           'hasn\'t been touched for more than <b>whinedays</b>.  Within ' .
-           'this text, %email% gets replaced by the offender\'s email ' .
-           'address. %userid% gets replaced by the offender\'s bugzilla ' .
-           'login (which, in most installations, is the same as the email ' .
-           ' address.) %<i>anythingelse</i>% gets replaced by the definition ' .
-           'of that parameter (as defined on this page).<p> It is a good ' .
-           'idea to make sure this message has a valid From: address, so ' .
-           'that if the mail bounces, a real person can know that there are ' .
-           'bugs assigned to an invalid address.',
+   desc => 'The email that gets sent to anyone who has a NEW or REOPENED ' .
+           'bug that hasn\'t been touched for more than <b>whinedays</b>.  ' .
+           'Within this text, %email% gets replaced by the offender\'s ' .
+           'email address. %userid% gets replaced by the offender\'s ' .
+           'bugzilla login (which, in most installations, is the same as ' .
+           'the email address.) %<i>anythingelse</i>% gets replaced by the ' .
+           'definition of that parameter (as defined on this page).<p> It ' .
+           'is a good idea to make sure this message has a valid From: ' .
+           'address, so that if the mail bounces, a real person can know '.
+           'that there are bugs assigned to an invalid address.',
    type => 'l',
    default => 'From: %maintainer%
 To: %email%
@@ -578,9 +579,9 @@ You have one or more bugs assigned to you in the Bugzilla
 bugsystem (%urlbase%) that require
 attention.
 
-All of these bugs are in the NEW state, and have not been touched
-in %whinedays% days or more.  You need to take a look at them, and 
-decide on an initial action.
+All of these bugs are in the NEW or REOPENED state, and have not
+been touched in %whinedays% days or more.  You need to take a look
+at them, and decide on an initial action.
 
 Generally, this means one of three things:
 
@@ -593,9 +594,10 @@ Generally, this means one of three things:
 (3) You decide the bug belongs to you, but you can\'t solve it this moment.
     Just use the "Accept bug" command.
 
-To get a list of all NEW bugs, you can use this URL (bookmark it if you like!):
+To get a list of all NEW/REOPENED bugs, you can use this URL (bookmark
+it if you like!):
 
-   %urlbase%buglist.cgi?bug_status=NEW&assigned_to=%userid%
+ %urlbase%buglist.cgi?bug_status=NEW&bug_status=REOPENED&assigned_to=%userid%
 
 Or, you can use the general query page, at
 %urlbase%query.cgi.

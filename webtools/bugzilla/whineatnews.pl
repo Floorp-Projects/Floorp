@@ -19,12 +19,13 @@
 # Rights Reserved.
 #
 # Contributor(s): Terry Weissman <terry@mozilla.org>
+#                 Joseph Heenan <joseph@heenan.me.uk>
 
 
 # This is a script suitable for running once a day from a cron job.  It 
 # looks at all the bugs, and sends whiny mail to anyone who has a bug 
-# assigned to them that has status NEW that has not been touched for
-# more than 7 days.
+# assigned to them that has status NEW or REOPENED that has not been 
+# touched for more than 7 days.
 
 use strict;
 
@@ -33,8 +34,9 @@ require "globals.pl";
 ConnectToDatabase();
 
 SendSQL("select bug_id,short_desc,login_name from bugs,profiles where " .
-        "bug_status = 'NEW' and to_days(now()) - to_days(delta_ts) > " .
-        Param('whinedays') . " and userid=assigned_to order by bug_id");
+        "(bug_status = 'NEW' or bug_status = 'REOPENED') and " . 
+        "to_days(now()) - to_days(delta_ts) > " . Param('whinedays') .
+	" and userid=assigned_to order by bug_id");
 
 my %bugs;
 my %desc;
