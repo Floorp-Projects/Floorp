@@ -69,6 +69,13 @@ LDFLAGS += $(PERLLDFLAGS)
 endif
 
 #
+#	Server-related changes :
+#
+ifdef NES40 
+DEFINES += -DNES40 
+endif 
+
+#
 # Line editing support.
 #
 ifdef JS_READLINE
