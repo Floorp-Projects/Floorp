@@ -65,6 +65,17 @@ captureThis();
 *************************************************************************/
 
 
+status = 'Section D of test: no error intended!';
+actual =  0.00001.toFixed(2);
+expect = '0.00';
+captureThis();
+
+status = 'Section E of test: no error intended!';
+actual =  0.000000000000000000001.toFixed(20);
+expect = '0.00000000000000000000';
+captureThis();
+
+
 
 //-----------------------------------------------------------------------------
 test();
@@ -85,7 +96,7 @@ function test()
   enterFunc ('test');
   printBugNumber (bug);
   printStatus (summary);
- 
+
   for (var i = 0; i < UBound; i++)
   {
     reportCompare(expectedvalues[i], actualvalues[i], statusitems[i]);
