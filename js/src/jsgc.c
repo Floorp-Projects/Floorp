@@ -185,24 +185,15 @@ js_AllocGCThing(JSContext *cx, uintN flags)
     JSRuntime *rt;
     JSGCThing *thing;
     uint8 *flagp = NULL;
-#ifdef TOO_MUCH_GC
     JSBool tried_gc = JS_TRUE;
+#ifdef TOO_MUCH_GC
+    /*
+     * This breaks modern code that holds unpinned, unrooted atoms.  It dates
+     * from before atoms became garbage collected (they used be ref-counted).
+     * Therefore defining TOO_MUCH_GC also pins all atoms (see jsatom.c).
+     */
     js_GC(cx);
-#else
-    JSBool tried_gc = JS_FALSE;
 #endif
-
-#ifdef NES40
-/* Fix for GC bug - previous allocation of a new atom has
-not yet found a home, so a subsequent call to GC here will
-flush that atom. This 'hack' prevents that from happening
-by requiring that the heap grow rather than running a GC.
-The concern is that enough GC's will not occur then, since
-we're counting on back-branches and force_GC's from the
-server.
-*/
-	tried_gc = JS_TRUE;
-#endif  /* NES40 */
 
     rt = cx->runtime;
     JS_LOCK_GC(rt);
