@@ -2092,12 +2092,14 @@ mime_bridge_create_draft_stream(
   if (! (mdd->options->prefs && NS_SUCCEEDED(rv)))
     goto FAIL;
 
+#ifdef FO_MAIL_MESSAGE_TO
   /* If we're attaching a message (for forwarding) then we must eradicate all
    traces of xlateion from it, since forwarding someone else a message
    that wasn't xlated for them doesn't work.  We have to dexlate it
    before sending it.
    */
-  mdd->options->decrypt_p = PR_TRUE;
+// RICHIE  mdd->options->dexlate_p = PR_TRUE;
+#endif /* FO_MAIL_MESSAGE_TO */
 
   obj = mime_new ( (MimeObjectClass *) &mimeMessageClass, (MimeHeaders *) NULL, MESSAGE_RFC822 );
   if ( !obj ) 

@@ -52,7 +52,6 @@
 #include "nsEscape.h"
 #include "nsString.h"
 #include "mimetext.h"
-#include "mimecryp.h"
 
 #define MIME_SUPERCLASS mimeContainerClass
 MimeDefClass(MimeMessage, MimeMessageClass, mimeMessageClass,
@@ -294,13 +293,14 @@ MimeMessage_close_headers (MimeObject *obj)
 		  obj->options &&
           (obj->options->decompose_file_p || obj->options->caller_need_root_headers) &&
 		  obj->options->decompose_headers_info_fn)
-    {
-      if (obj->options->decrypt_p && !mime_crypto_object_p (msg->hdrs, PR_FALSE))
-        obj->options->decrypt_p = PR_FALSE;
-      if (!obj->options->caller_need_root_headers || (obj == obj->options->state->root))
+		{
+#ifdef MOZ_SECURITY	
+HG09091
+#endif /* MOZ_SECURITY */			  
+          if (!obj->options->caller_need_root_headers || (obj == obj->options->state->root))
 		  	status = obj->options->decompose_headers_info_fn (
-												obj->options->stream_closure,
-												msg->hdrs );
+												 obj->options->stream_closure,
+															 msg->hdrs );
 		}
 #endif /* MIME_DRAFTS */
 
@@ -385,23 +385,10 @@ MimeMessage_close_headers (MimeObject *obj)
 		PR_FREEIF(mv);  /* done with this now. */
 	  }
 
-    /* If this message has a body which is encrypted and we're going to
-       decrypt it (whithout converting it to HTML, since decrypt_p and
-       write_html_p are never true at the same time)
-    */
-    if (obj->output_p &&
-        obj->options &&
-        obj->options->decrypt_p &&
-        !mime_crypto_object_p (msg->hdrs, PR_FALSE))
-    {
-      /* The body of this message is not an encrypted object, so we need
-         to turn off the decrypt_p flag (to prevent us from s#$%ing the
-         body of the internal object up into one.) In this case,
-         our output will end up being identical to our input.
-      */
-      obj->options->decrypt_p = PR_FALSE;
-    }
-    
+#ifdef MOZ_SECURITY
+    HG67023
+#endif /* MOZ_SECURITY */
+
 	  /* Emit the HTML for this message's headers.  Do this before
 		 creating the object representing the body.
 	   */
@@ -568,7 +555,9 @@ MimeMessage_parse_eof (MimeObject *obj, PRBool abort_p)
 	   obj->options->decompose_file_p &&
 	   obj->options->done_parsing_outer_headers &&
 	   ! obj->options->is_multipart_msg &&
-	   ! mime_typep(obj, (MimeObjectClass*) &mimeEncryptedClass) &&
+#ifdef MOZ_SECURITY
+	   HG00234
+#endif /* MOZ_SECURITY */
 	   obj->options->decompose_file_close_fn ) {
 	status = obj->options->decompose_file_close_fn (
 											   obj->options->stream_closure );
@@ -604,7 +593,9 @@ MimeMessage_add_child (MimeObject *parent, MimeObject *child)
   if ( parent->options &&
 	   parent->options->decompose_file_p &&
 	   ! parent->options->is_multipart_msg &&
-	   ! mime_typep(child, (MimeObjectClass*) &mimeEncryptedClass) &&
+#ifdef MOZ_SECURITY
+	   HG00234
+#endif /* MOZ_SECURITY */
 	   parent->options->decompose_file_init_fn ) {
 	int status = 0;
 	status = parent->options->decompose_file_init_fn (
