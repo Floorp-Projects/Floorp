@@ -59,6 +59,7 @@
 #include "prprf.h"
 #include "prenv.h"
 #include "nsTraceMalloc.h"
+#include "nscore.h"
 
 #ifdef XP_WIN32
 #include "nsStackFrameWin.h"
@@ -76,8 +77,10 @@
 #ifdef XP_UNIX
 #define WRITE_FLAGS "w"
 
+#ifdef MOZ_DEMANGLE_SYMBOLS
 /* From libiberty, why aren't these in <libiberty.h> ? */
 extern char *cplus_demangle(const char *, int);
+#endif
 
 #define DMGL_PARAMS     0x1
 #define DMGL_ANSI       0x2
@@ -1020,10 +1023,12 @@ static callsite *calltree(uint32 *bp)
         symbol = info.dli_sname;
         offset = (char*)pc - (char*)info.dli_saddr;
         method = NULL;
+#ifdef MOZ_DEMANGLE_SYMBOLS
         if (symbol && (len = strlen(symbol)) != 0) {
             /* Attempt to demangle symbol in case it's a C++ mangled name. */
             method = cplus_demangle(symbol, DMGL_PARAMS | DMGL_ANSI);
         }
+#endif
         if (!method) {
             method = symbol
                      ? strdup(symbol)
@@ -1280,7 +1285,8 @@ __ptr_t malloc(size_t size)
         site = backtrace(1);
         if (site)
             log_event4(logfp, TM_EVENT_MALLOC,
-                       site->serial, PR_IntervalNow(), (uint32)ptr, size);
+                       site->serial, PR_IntervalNow(),
+                       (uint32)NS_PTR_TO_INT32(ptr), size);
         if (get_allocations()) {
             suppress_tracing++;
             he = PL_HashTableAdd(allocations, ptr, site);
@@ -1312,7 +1318,8 @@ __ptr_t calloc(size_t count, size_t size)
         size *= count;
         if (site)
             log_event4(logfp, TM_EVENT_CALLOC,
-                       site->serial, PR_IntervalNow(), (uint32)ptr, size);
+                       site->serial, PR_IntervalNow(),
+                       (uint32)NS_PTR_TO_INT32(ptr), size);
         if (get_allocations()) {
             suppress_tracing++;
             he = PL_HashTableAdd(allocations, ptr, site);
@@ -1369,8 +1376,10 @@ __ptr_t realloc(__ptr_t ptr, size_t size)
         site = backtrace(1);
         if (site) {
             log_event7(logfp, TM_EVENT_REALLOC,
-                       site->serial, PR_IntervalNow(), (uint32)ptr, size,
-                       oldsite ? oldsite->serial : 0, (uint32)oldptr, oldsize);
+                       site->serial, PR_IntervalNow(),
+                       (uint32)NS_PTR_TO_INT32(ptr), size,
+                       oldsite ? oldsite->serial : 0,
+                       (uint32)NS_PTR_TO_INT32(oldptr), oldsize);
         }
         if (ptr && allocations) {
             suppress_tracing++;
@@ -1423,7 +1432,8 @@ void free(__ptr_t ptr)
                 if (site) {
                     alloc = (allocation*) he;
                     log_event4(logfp, TM_EVENT_FREE,
-                               site->serial, PR_IntervalNow(), (uint32)ptr, alloc->size);
+                               site->serial, PR_IntervalNow(),
+                               (uint32)NS_PTR_TO_INT32(ptr), alloc->size);
                 }
                 PL_HashTableRawRemove(allocations, hep, he);
             }
@@ -1849,7 +1859,8 @@ MallocCallback(void *ptr, size_t size)
         site = backtrace(4);
         if (site)
             log_event4(logfp, TM_EVENT_MALLOC,
-                       site->serial, PR_IntervalNow(), (uint32)ptr, size);
+                       site->serial, PR_IntervalNow(),
+                       (uint32)NS_PTR_TO_INT32(ptr), size);
         if (get_allocations()) {
             suppress_tracing++;
             he = PL_HashTableAdd(allocations, ptr, site);
@@ -1879,7 +1890,8 @@ CallocCallback(void *ptr, size_t count, size_t size)
         size *= count;
         if (site)
             log_event4(logfp, TM_EVENT_CALLOC,
-                       site->serial, PR_IntervalNow(), (uint32)ptr, size);
+                       site->serial, PR_IntervalNow(),
+                       (uint32)NS_PTR_TO_INT32(ptr), size);
         if (get_allocations()) {
             suppress_tracing++;
             he = PL_HashTableAdd(allocations, ptr, site);
@@ -1930,8 +1942,10 @@ ReallocCallback(void * oldptr, void *ptr, size_t size)
         site = backtrace(1);
         if (site) {
             log_event7(logfp, TM_EVENT_REALLOC,
-                       site->serial, PR_IntervalNow(), (uint32)ptr, size,
-                       oldsite ? oldsite->serial : 0, (uint32)oldptr, oldsize);
+                       site->serial, PR_IntervalNow(),
+                       (uint32)NS_PTR_TO_INT32(ptr), size,
+                       oldsite ? oldsite->serial : 0,
+                       (uint32)NS_PTR_TO_INT32(oldptr), oldsize);
         }
         if (ptr && allocations) {
             suppress_tracing++;
@@ -1983,7 +1997,8 @@ FreeCallback(void * ptr)
                 if (site) {
                     alloc = (allocation*) he;
                     log_event4(logfp, TM_EVENT_FREE,
-                               site->serial, PR_IntervalNow(), (uint32)ptr, alloc->size);
+                               site->serial, PR_IntervalNow(),
+                               (uint32)NS_PTR_TO_INT32(ptr), alloc->size);
                 }
                 PL_HashTableRawRemove(allocations, hep, he);
             }
