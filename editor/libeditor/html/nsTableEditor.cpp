@@ -1350,7 +1350,6 @@ nsHTMLEditor::SplitTableCell()
   nsCOMPtr<nsIDOMElement> newCellInRow;
   nsCOMPtr<nsIDOMElement> newCellInCol;
   PRInt32 rowIndex = startRowIndex;
-  PRInt32 colIndex = startColIndex;
   PRInt32 rowSpanBelow, colSpanAfter;
 
   // Split up cell row-wise first into rowspan=1 above, and the rest below,
@@ -1363,6 +1362,7 @@ nsHTMLEditor::SplitTableCell()
       res = SplitCellIntoRows(table, rowIndex, startColIndex, 1, rowSpanBelow, nsnull);
       if (NS_FAILED(res)) return res;
     }
+    PRInt32 colIndex = startColIndex;
     // Now split the cell with rowspan = 1 into cells if it has colSpan > 1
     for (colSpanAfter = actualColSpan-1; colSpanAfter > 0; colSpanAfter--)
     {
@@ -1427,7 +1427,7 @@ nsHTMLEditor::SplitCellIntoRows(nsIDOMElement *aTable, PRInt32 aRowIndex, PRInt3
   nsCOMPtr<nsIDOMElement> cell2;
   PRInt32 startRowIndex2, startColIndex2, rowSpan2, colSpan2, actualRowSpan2, actualColSpan2;
   PRBool  isSelected2;
-  PRInt32 colIndex = startColIndex;
+  PRInt32 colIndex = 0;
   PRBool insertAfter = (startColIndex > 0);
   // This is the row we will insert new cell into
   PRInt32 rowBelowIndex = startRowIndex+aRowSpanAbove;
@@ -1454,10 +1454,10 @@ nsHTMLEditor::SplitCellIntoRows(nsIDOMElement *aTable, PRInt32 aRowIndex, PRInt3
       {
         // If cell found is AFTER desired new cell colum,
         //  we have multiple cells with rowspan > 1 that
-        //  fool us into thinking we insert after...
-        if (startColIndex2 > startColIndex2)
+        //  prevented us from finding a cell to insert after...
+        if (startColIndex2 > aColIndex)
         {
-          // ... so insert before the cell we found
+          // ... so instead insert before the cell we found
           insertAfter = PR_FALSE;
           break;
         }
