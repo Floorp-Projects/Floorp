@@ -45,7 +45,7 @@
 #include "XMLUtils.h"
 
 #define EMPTY_ELEMENTS_COUNT 13
-const char* kHTMLEmptyTags[] =
+const char* const kHTMLEmptyTags[] =
 {
     "area",
     "base",
@@ -63,7 +63,7 @@ const char* kHTMLEmptyTags[] =
 };
 
 #define SHORTHAND_ATTR_COUNT 12
-const char* kHTMLEmptyAttributes[] =
+const char* const kHTMLEmptyAttributes[] =
 {
     "checked",
     "compact",

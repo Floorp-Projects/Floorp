@@ -121,11 +121,11 @@ nsStaticCaseInsensitiveNameTable::~nsStaticCaseInsensitiveNameTable()
 }  
 
 PRBool 
-nsStaticCaseInsensitiveNameTable::Init(const char* Names[], PRInt32 Count)
+nsStaticCaseInsensitiveNameTable::Init(const char* const aNames[], PRInt32 Count)
 {
     NS_ASSERTION(!mNameArray, "double Init");  
     NS_ASSERTION(!mNameTable.ops, "double Init");  
-    NS_ASSERTION(Names, "null name table");
+    NS_ASSERTION(aNames, "null name table");
     NS_ASSERTION(Count, "0 count");
 
     mNameArray = (nsDependentCString*)nsMemory::Alloc(Count * sizeof(nsDependentCString));
@@ -136,7 +136,7 @@ nsStaticCaseInsensitiveNameTable::Init(const char* Names[], PRInt32 Count)
     }
 
     for (PRInt32 index = 0; index < Count; ++index) {
-        char*    raw = (char*) Names[index];
+        const char* raw = aNames[index];
 #ifdef DEBUG
        {
          // verify invariants of contents
