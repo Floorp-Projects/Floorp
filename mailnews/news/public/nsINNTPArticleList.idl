@@ -21,12 +21,12 @@
 /* the XPIDL compiler doesn't like including this file?
  * I think it's because this file include another file 
  * I had to change the type below to a string temporarily */
-/* #include "nsIMsgNewsHost.idl" */
+#include "nsINNTPHost.idl"
 
 [object, uuid(921AC214-96B5-11d2-B7EB-00805F05FFA5)]
 interface nsINNTPArticleList : nsISupports {
 
-    void Init(in /* nsIMsgNewsHost */ string newsHost,
+    void Init(in /* nsINNTPHost */ string newsHost,
           in nsIMsgNewsgroup newsgroup); 
     void AddArticleKey(in long key);
     void FinishAddingArticleKeys();

@@ -7,6 +7,9 @@
 
 #include "nsISupports.h" /* interface nsISupports */
 #include "nsIMsgNewsgroup.h" /* interface nsIMsgNewsgroup */
+#include "nsIMsgHost.h" /* interface nsIMsgHost */
+#include "nsINNTPNewsgroupList.h" /* interface nsINNTPNewsgroupList */
+#include "nsINNTPHost.h" /* interface nsINNTPHost */
 
 
 /* starting interface nsINNTPArticleList */

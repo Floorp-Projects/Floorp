@@ -24,7 +24,7 @@ include $(DEPTH)/config/autoconf.mk
 
 EXPORTS= \
 		nsINNTPNewsgroupList.h \
-		nsIMsgNewsHost.h \
+		nsINNTPHost.h \
 		nsIMsgNewsgroup.h \
 		nsIMsgOfflineNewsState.h \
 		nsINNTPArticleList.h \
