@@ -157,6 +157,7 @@ main(int argc, char *argv[])
 	char *defincdir = NULL;
 	char **undeflist = NULL;
 	int numundefs = 0, i;
+	register char offset;
 
 	ProgramName = argv[0];
 
@@ -231,16 +232,19 @@ main(int argc, char *argv[])
 			if (endmarker[0] == '\0') endmarker = "--";
 			break;
 		case 'D':
+			offset = 2;
 			if (argv[0][2] == '\0') {
 				argv++;
 				argc--;
+				offset = 0;
 			}
-			for (p=argv[0] + 2; *p ; p++)
+			//offset +1 here since first def letter cannot be `=`
+			for (p = argv[0] + offset + 1; *p; p++)
 				if (*p == '=') {
 					*p = ' ';
 					break;
 				}
-			define(argv[0] + 2, &maininclist);
+			define(argv[0] + offset, &maininclist);
 			break;
 		case 'I':
 			if (incp >= includedirs + MAXDIRS)
@@ -259,11 +263,13 @@ main(int argc, char *argv[])
 			else
 			    undeflist = realloc(undeflist,
 						numundefs * sizeof(char *));
+			offset = 2;
 			if (argv[0][2] == '\0') {
 				argv++;
 				argc--;
+				offset = 0;
 			}
-			undeflist[numundefs - 1] = argv[0] + 2;
+			undeflist[numundefs - 1] = argv[0] + offset;
 			break;
 		case 'Y':
 			defincdir = argv[0]+2;
