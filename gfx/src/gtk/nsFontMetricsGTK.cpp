@@ -279,31 +279,37 @@ void nsFontMetricsGTK::RealizeFont()
 
   if (::XGetFontProperty(fontInfo, XA_UNDERLINE_POSITION, &pr))
   {
-    g_print("XA_UNDERLINE_POSITION = %i\nIf you see the above message, please "
-    "email pavlov@pavlov.net with the URL that you were on when you got it.", pr);
+    /* this will only be provided from adobe .afm fonts */
     mUnderlineOffset = NSToIntRound(pr * f);
   }
   else
   {
-  /* needs to be different than one for those weird asian fonts */
-    mUnderlineOffset = 0; //NSToIntRound( * f);
+    /* this may need to be different than one for those weird asian fonts */
+    /* mHeight is already multipled by f */
+    float height;
+    height = fontInfo->ascent + fontInfo->descent;
+    mUnderlineOffset = -NSToIntRound(MAX (2, floor (0.1 * height + 0.5)) * f);
   }
+
+
 
   if (::XGetFontProperty(fontInfo, XA_UNDERLINE_THICKNESS, &pr))
   {
-    g_print("XA_UNDERLINE_THICKNESS = %i\nIf you see the above message, please "
-    "email pavlov@pavlov.net with the URL that you were on when you got it.", pr);
+    /* this will only be provided from adobe .afm fonts */
     mUnderlineSize = nscoord(MAX(f, NSToIntRound(pr * f)));
   }
   else
   {
-    // TODO do some gdk magic and get a '_' and figure it out...
-    mUnderlineSize = NSToIntRound(1 * f);
+    /* mHeight is already multipled by f */
+    float height;
+    height = fontInfo->ascent + fontInfo->descent;
+    mUnderlineSize = NSToIntRound(MAX(1, floor (0.05 * height + 0.5)) * f);
   }
 
-  /* this is what xfe does */
+
+  /* need better way to calculate this */
   mStrikeoutOffset = NSToIntRound((mAscent + 1) / 2);
-  mStrikeoutSize = NSToIntRound(1*f);
+  mStrikeoutSize = mUnderlineSize;
 
   PRUint32 i;
 
