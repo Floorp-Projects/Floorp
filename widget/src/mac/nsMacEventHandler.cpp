@@ -722,10 +722,11 @@ PRBool nsMacEventHandler::HandleActivateEvent(EventRecord& aOSEvent)
 			err = ::ActivateTSMDocument(mTSMDocument);
 #if 0
 			NS_ASSERTION(err==noErr,"nsMacEventHandler::HandleActivateEvent: ActivateTSMDocument failed");
-#endif
 			printf("nsEventHandler::HandleActivateEvent: ActivateTSMDocument[%p]\n",mTSMDocument);
+#endif
 			
 			//¥TODO: retrieve the focused widget for that window
+			
 			nsWindow*	focusedWidget = mTopLevelWidget;
 			toolkit->SetFocus(focusedWidget);
 			nsIMenuBar* menuBar = focusedWidget->GetMenuBar();
@@ -754,18 +755,18 @@ PRBool nsMacEventHandler::HandleActivateEvent(EventRecord& aOSEvent)
 			err = ::DeactivateTSMDocument(mTSMDocument);
 #if 0
 			NS_ASSERTION(err==noErr,"nsMacEventHandler::HandleActivateEvent: DeactivateTSMDocument failed");
-#endif
 			printf("nsEventHandler::HandleActivateEvent: DeactivateTSMDocument[%p]\n",mTSMDocument);
+#endif
 			
 			//¥TODO: save the focused widget for that window
 			toolkit->SetFocus(nsnull);
 	
-			nsIMenuBar* menuBarInterface = mTopLevelWidget->GetMenuBar();
-			if (menuBarInterface)
-			{
-				Handle menuBar = ::GetMenuBar(); // Get a copy of the menu list
-				menuBarInterface->SetNativeData((void*)menuBar);
-			}
+			//nsIMenuBar* menuBarInterface = mTopLevelWidget->GetMenuBar();
+			//if (menuBarInterface)
+			//{
+				//Handle menuBar = ::GetMenuBar(); // Get a copy of the menu list
+				//menuBarInterface->SetNativeData((void*)menuBar);
+			//}
 		}
 	}
 	return PR_TRUE;
