@@ -74,6 +74,7 @@ DIRS = \
 !if defined(NECKO)
   netwerk			\
 !endif
+  uriloader			\
   profile			\
   htmlparser			\
   widget			\
