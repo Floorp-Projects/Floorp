@@ -271,7 +271,7 @@ sub GetVersion
 
   $distWinPathName = "dist";
 
-  $fileMozilla = "$depthPath\\$distWinPathName\\bin\\$ENV{WIZ_fileApplicationExe}";
+  $fileMozilla = "$depthPath\\$distWinPathName\\bin\\$ENV{WIZ_fileMainExe}";
   # verify the existance of file
   if(!(-e "$fileMozilla"))
   {
@@ -326,8 +326,8 @@ sub ParseInstallerCfg
     elsif ($prop eq "NameProductInternal") {
       $ENV{WIZ_nameProductInternal} = $value;
     }
-    elsif ($prop eq "FileApplicationExe") {
-      $ENV{WIZ_fileApplicationExe} = $value;
+    elsif ($prop eq "FileInstallerEXE") {
+      $ENV{WIZ_fileInstallerExe} = $value;
     }
     elsif ($prop eq "FileUninstall") {
       $ENV{WIZ_fileUninstall} = $value;

@@ -59,7 +59,7 @@ if ($inConfigFiles eq "")
 $versionLanguage          = $ENV{WIZ_versionLanugage};
 @gComponentList           = split(/,/, $ENV{WIZ_componentList});
 $seiFileNameGeneric       = "nsinstall.exe";
-$seiFileNameSpecific      = $ENV{WIZ_fileMainExe};
+$seiFileNameSpecific      = $ENV{WIZ_fileInstallerEXE};
 $seiStubRootName          = $ENV{WIZ_fileNetStubRootName};
 $seiFileNameSpecificStub  = "$seiStubRootName.exe";
 $seuFileNameSpecific      = $ENV{WIZ_fileUninstall};
@@ -118,6 +118,7 @@ print "\n";
 $gDirPackager         = "$topsrcdir/xpinstall/packager";
 $gDirStageProduct     = $inStagePath;
 $gDirDistInstall      = "$inDistPath/install";
+$gNGAppsScriptsDir    = "$topsrcdir/toolkit/mozapps/installer/windows";
 
 # The following variables are for displaying version info in the 
 # the installer.
@@ -460,18 +461,18 @@ sub ParseArgv
 
 sub MakeConfigFile
 {
-  chdir($inConfigFiles);
   # Make config.ini file
-  if(system("perl $gDirPackager/windows/makecfgini.pl config.it $gDefaultProductVersion $gDirStageProduct $gDirDistInstall/xpi $inRedirIniURL $inXpiURL"))
+  chdir($inConfigFiles);
+  if(system("perl $gNGAppsScriptsDir/makecfgini.pl config.it $gDefaultProductVersion $gDirStageProduct $gDirDistInstall/xpi $inRedirIniURL $inXpiURL"))
   {
-    print "\n Error: perl $gDirPackager/windows/makecfgini.pl config.it $gDefaultProductVersion $gDirStageProduct $gDirDistInstall/xpi $inRedirIniURL $inXpiURL\n";
+    print "\n Error: perl $gNGAppsScriptsDir/makecfgini.pl config.it $gDefaultProductVersion $gDirStageProduct $gDirDistInstall/xpi $inRedirIniURL $inXpiURL\n";
     return(1);
   }
 
   # Make install.ini file
-  if(system("perl $gDirPackager/windows/makecfgini.pl install.it $gDefaultProductVersion $gDirStageProduct $gDirDistInstall/xpi $inRedirIniURL $inXpiURL"))
+  if(system("perl $gNGAppsScriptsDir/makecfgini.pl install.it $gDefaultProductVersion $gDirStageProduct $gDirDistInstall/xpi $inRedirIniURL $inXpiURL"))
   {
-    print "\n Error: perl $gDirPackager/windows/makecfgini.pl install.it $gDefaultProductVersion $gDirStageProduct $gDirDistInstall/xpi $inRedirIniURL $inXpiURL\n";
+    print "\n Error: perl $gNGAppsScriptsDir/makecfgini.pl install.it $gDefaultProductVersion $gDirStageProduct $gDirDistInstall/xpi $inRedirIniURL $inXpiURL\n";
     return(1);
   }
   return(0);

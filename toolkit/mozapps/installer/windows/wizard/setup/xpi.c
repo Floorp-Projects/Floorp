@@ -55,7 +55,6 @@ char                    szStrCopyingFile[MAX_BUF];
 char                    szStrInstalling[MAX_BUF];
 static char             gSavedCwd[MAX_BUF];
 
-static void UpdateGaugeFileProgressBar(unsigned value);
 static void UpdateArchiveInstallProgress(int aValue);
 
 struct ExtractFilesDlgInfo
@@ -278,9 +277,9 @@ HRESULT SmartUpdateJars(HWND aWizardPanel)
         dwBarberDirection = BDIR_RIGHT;
 			  dlgInfo.nFileBars = 0;
 
+        // We need to send this message otherwise the progress bars will paint
+        // over the completion page for some unknown reason! -ben
         SendMessage(aWizardPanel, WM_PAINT, 0, 0);
-
-        UpdateGaugeFileProgressBar(0);
 
         lstrcpy(szArchive, sgProduct.szAlternateArchiveSearchPath);
         AppendBackSlash(szArchive, sizeof(szArchive));
@@ -411,32 +410,12 @@ void cbXPIProgress(const char* msg, PRInt32 val, PRInt32 max)
   {
     ParsePath((char *)msg, szFilename, sizeof(szFilename), FALSE, PP_FILENAME_ONLY);
 
-    if(max == 0)
-    {
-      wsprintf(szStrProcessingFileBuf, szStrProcessingFile, szFilename);
-      SetDlgItemText(dlgInfo.hWndDlg, IDC_STATUS3, szStrProcessingFileBuf);
-      bBarberBar = TRUE;
-      // XXXben
-      // UpdateGaugeFileBarber();
-    }
-    else
-    {
-      if(bBarberBar == TRUE)
-      {
-        dlgInfo.nFileBars = 0;
-        ++dwCurrentArchive;
-        UpdateArchiveInstallProgress((int)(((double)(dwCurrentArchive)/(double)dwTotalArchives)*(double)100));
-        UpdateGREInstallProgress((int)(((double)(dwCurrentArchive)/(double)dwTotalArchives)*(double)100));
-
-        // XXXben
-        // InvalidateBarberBarArea();
-        bBarberBar = FALSE;
-      }
-
-      wsprintf(szStrCopyingFileBuf, szStrCopyingFile, szFilename);
-      SetDlgItemText(dlgInfo.hWndDlg, IDC_STATUS3, szStrCopyingFileBuf);
-      UpdateGaugeFileProgressBar((unsigned)(((double)(val+1)/(double)max)*(double)100));
-    }
+    dlgInfo.nFileBars = 0;
+    ++dwCurrentArchive;
+#if 0
+    UpdateArchiveInstallProgress((int)(((double)(dwCurrentArchive)/(double)dwTotalArchives)*(double)100));
+    UpdateGREInstallProgress((int)(((double)(dwCurrentArchive)/(double)dwTotalArchives)*(double)100));
+#endif
   }
 
   ProcessWindowsMessages();
@@ -459,7 +438,3 @@ static void UpdateArchiveInstallProgress(int aValue)
   }
 }
 
-static void UpdateGaugeFileProgressBar(unsigned value)
-{
-  return;
-}

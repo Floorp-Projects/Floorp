@@ -582,6 +582,7 @@ struct sinfoComponent
   int             iNetRetries;
   int             iCRCRetries;
   int             iNetTimeOuts;
+  int             iFileCount;
   siCD            *siCDDependencies;
   siCD            *siCDDependees;
   siC             *Next;
