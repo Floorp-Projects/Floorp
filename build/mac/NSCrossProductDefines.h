@@ -20,9 +20,7 @@
 
 #define OLDROUTINELOCATIONS 0
 #define XP_MAC 1
-#ifndef NSPR20
 #define NSPR20 1
-#endif
 #define _NSPR 1
 #define _NO_FAST_STRING_INLINES_ 1
 #define HAVE_BOOLEAN 1
