@@ -21,7 +21,6 @@ MODULE=rdf
 DEPTH=..\..\..
 
 EXPORTS	= \
-	nsIRDFMail.h        \
         nsIXULContentSink.h \
 	$(NULL)
 
