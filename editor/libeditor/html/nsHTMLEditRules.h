@@ -46,6 +46,7 @@
 #include "nsISupportsArray.h"
 #include "nsCOMPtr.h"
 #include "nsString.h"
+#include "nsEditorUtils.h"
 
 class nsISupportsArray;
 class nsVoidArray;
@@ -133,9 +134,8 @@ protected:
   nsresult SplitMailCites(nsISelection *aSelection, PRBool aPlaintext, PRBool *aHandled);
   nsresult WillDeleteSelection(nsISelection *aSelection, nsIEditor::EDirection aAction, 
                                PRBool *aCancel, PRBool *aHandled);
-  nsresult JoinBlocks(nsISelection *aSelection, nsCOMPtr<nsIDOMNode> *aLeftBlock, 
-                      nsCOMPtr<nsIDOMNode> *aRightBlock, PRBool *aCanceled);
-  nsresult MoveBlock(nsISelection *aSelection, nsIDOMNode *aNewParent, PRInt32 aOffset = -1);
+  nsresult JoinBlocks(nsCOMPtr<nsIDOMNode> *aLeftBlock, nsCOMPtr<nsIDOMNode> *aRightBlock, PRBool *aCanceled);
+  nsresult MoveBlock(nsIDOMNode *aLeft, nsIDOMNode *aRight, PRInt32 aLeftOffset, PRInt32 aRightOffset);
   nsresult MoveNodeSmart(nsIDOMNode *aSource, nsIDOMNode *aDest, PRInt32 *aOffset);
   nsresult MoveContents(nsIDOMNode *aSource, nsIDOMNode *aDest, PRInt32 *aOffset);
   nsresult DeleteNonTableElements(nsIDOMNode *aNode);
@@ -180,10 +180,6 @@ protected:
                               nsIDOMNode *aBodyNode,
                               nsISelection *aSelection,
                               PRBool *aHandled);
-  nsresult CheckForWhitespaceDeletion(nsCOMPtr<nsIDOMNode> *ioStartNode,
-                                      PRInt32 *ioStartOffset,
-                                      PRInt32 aAction,
-                                      PRBool *aHandled);
   nsresult CheckForInvisibleBR(nsIDOMNode *aBlock, nsHTMLEditRules::BRLocation aWhere, 
                                nsCOMPtr<nsIDOMNode> *outBRNode, PRInt32 aOffset=0);
   PRBool ExpandSelectionForDeletion(nsISelection *aSelection);
@@ -206,6 +202,10 @@ protected:
                                 PRBool aDontTouchContent=PR_FALSE);
   nsresult GetChildNodesForOperation(nsIDOMNode *inNode, 
                                      nsCOMPtr<nsISupportsArray> *outArrayOfNodes);
+  nsresult GetNodesFromPoint(DOMPoint point,
+                             PRInt32 operation,
+                             nsCOMPtr<nsISupportsArray> *arrayOfNodes,
+                             PRBool dontTouchContent);
   nsresult GetNodesFromSelection(nsISelection *selection,
                                        PRInt32 operation,
                                        nsCOMPtr<nsISupportsArray> *arrayOfNodes,

@@ -238,4 +238,26 @@ class nsTrivialFunctor : public nsBoolDomIterFunctor
 };
 
 
+/******************************************************************************
+ * general dom point utility struct
+ *****************************************************************************/
+struct DOMPoint
+{
+  nsCOMPtr<nsIDOMNode> node;
+  PRInt32 offset;
+  
+  DOMPoint() : node(0),offset(0) {}
+  DOMPoint(nsIDOMNode *aNode, PRInt32 aOffset) : 
+                 node(aNode),offset(aOffset) {}
+  void SetPoint(nsIDOMNode *aNode, PRInt32 aOffset)
+  {
+    node = aNode; offset = aOffset;
+  }
+  void GetPoint(nsCOMPtr<nsIDOMNode> &aNode, PRInt32 &aOffset)
+  {
+    aNode = node; aOffset = offset;
+  }
+};
+
+
 #endif // nsEditorUtils_h__

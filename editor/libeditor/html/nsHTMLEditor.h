@@ -728,10 +728,7 @@ protected:
   nsresult GetFirstEditableChild( nsIDOMNode *aNode, nsCOMPtr<nsIDOMNode> *aOutFirstChild);
   nsresult GetLastEditableChild( nsIDOMNode *aNode, nsCOMPtr<nsIDOMNode> *aOutLastChild);
 
-#ifdef XXX_DEAD_CODE
-  // these should be removed some day by jfrancis:  GetFirstEditableLeaf & GetLastEditableLeaf
   nsresult GetFirstEditableLeaf( nsIDOMNode *aNode, nsCOMPtr<nsIDOMNode> *aOutFirstLeaf);
-#endif
   nsresult GetLastEditableLeaf( nsIDOMNode *aNode, nsCOMPtr<nsIDOMNode> *aOutLastLeaf);
 
   nsresult GetDOMEventReceiver(nsIDOMEventReceiver **aEventReceiver);
