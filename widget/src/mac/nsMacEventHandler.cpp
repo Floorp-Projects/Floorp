@@ -75,8 +75,7 @@ void nsMacEventHandler::NotifyDelete(void* aDeletedObject)
 // HandleOSEvent
 //
 //-------------------------------------------------------------------------
-PRBool nsMacEventHandler::HandleOSEvent(
-															EventRecord&		aOSEvent)
+PRBool nsMacEventHandler::HandleOSEvent ( EventRecord& aOSEvent )
 {
 	PRBool retVal = PR_FALSE;
 
@@ -112,13 +111,16 @@ PRBool nsMacEventHandler::HandleOSEvent(
 			unsigned char eventType = ((aOSEvent.message >> 24) & 0x00ff);
 			if (eventType == suspendResumeMessage)
 			{
-					if ((aOSEvent.message & 1) == resumeFlag)
-						mInBackground = PR_FALSE;		// resume message
-					else
-						mInBackground = PR_TRUE;		// suspend message
-					break;
+				if ((aOSEvent.message & 1) == resumeFlag)
+					mInBackground = PR_FALSE;		// resume message
+				else
+					mInBackground = PR_TRUE;		// suspend message
 			}
-			// no break;
+			else {
+				if (! mInBackground)
+					retVal = HandleMouseMoveEvent(aOSEvent);
+			}
+			break;
 	
 		case nullEvent:
 			if (! mInBackground)
@@ -128,6 +130,7 @@ PRBool nsMacEventHandler::HandleOSEvent(
 
 	return retVal;
 }
+
 
 //-------------------------------------------------------------------------
 //
@@ -186,6 +189,75 @@ PRBool nsMacEventHandler::HandleMenuCommand(
 
 	return eventHandled;
 }
+
+
+//
+// DropOccurred
+//
+// Someone on the outside told us that a drop from the DragManager has occurred in
+// this window. We need to send this event into Gecko for processing. Create a Gecko
+// event of type NS_DRAGDROP_DROP and pass it in.
+//
+// ¥¥¥THIS REALLY NEEDS TO BE CLEANED UP! TOO MUCH CODE COPIED FROM ConvertOSEventToMouseEvent
+//
+PRBool nsMacEventHandler::DropOccurred ( Point aMouseGlobal, UInt16 aKeyModifiers )
+{
+printf("dispatching drop into Gecko\n");
+	nsMouseEvent geckoEvent;
+
+	// convert the mouse to local coordinates. We have to do all the funny port origin
+	// stuff just in case it has been changed.
+	Point hitPointLocal = aMouseGlobal;
+#if TARGET_CARBON
+	GrafPtr grafPort = reinterpret_cast<GrafPtr>(mTopLevelWidget->GetNativeData(NS_NATIVE_GRAPHIC));
+	::SetPort(grafPort);
+	Rect savePortRect;
+	::GetPortBounds(grafPort, &savePortRect);
+#else
+	GrafPtr grafPort = static_cast<GrafPort*>(mTopLevelWidget->GetNativeData(NS_NATIVE_GRAPHIC));
+	::SetPort(grafPort);
+	Rect savePortRect = grafPort->portRect;
+#endif
+	::SetOrigin(0, 0);
+	::GlobalToLocal(&hitPointLocal);
+	::SetOrigin(savePortRect.left, savePortRect.top);
+	nsPoint widgetHitPoint(hitPointLocal.h, hitPointLocal.v);
+
+	nsWindow* widgetHit = mTopLevelWidget->FindWidgetHit(hitPointLocal);
+	if ( widgetHit ) {
+		// adjust from local coordinates to window coordinates in case the top level widget
+		// isn't at 0, 0
+		nsRect bounds;
+		mTopLevelWidget->GetBounds(bounds);
+		nsPoint widgetOrigin(bounds.x, bounds.y);
+		widgetHit->LocalToWindowCoordinate(widgetOrigin);
+		widgetHitPoint.MoveBy(-widgetOrigin.x, -widgetOrigin.y);
+	}
+		
+	// nsEvent
+	geckoEvent.eventStructType = NS_DRAGDROP_EVENT;
+	geckoEvent.message = NS_DRAGDROP_DROP;
+	geckoEvent.point = widgetHitPoint;
+	geckoEvent.time	= PR_IntervalNow();
+
+	// nsGUIEvent
+	geckoEvent.widget = widgetHit;
+	geckoEvent.nativeMsg = nsnull;
+
+	// nsInputEvent
+	geckoEvent.isShift = ((aKeyModifiers & shiftKey) != 0);
+	geckoEvent.isControl = ((aKeyModifiers & controlKey) != 0);
+	geckoEvent.isAlt = ((aKeyModifiers & optionKey) != 0);
+	geckoEvent.isCommand = ((aKeyModifiers & cmdKey) != 0);
+
+	// nsMouseEvent
+	geckoEvent.clickCount = 1;
+	
+	mTopLevelWidget->DispatchMouseEvent(geckoEvent);
+	
+	return PR_TRUE;
+	
+} // DropOccurred
 
 
 #pragma mark -
@@ -499,7 +571,13 @@ PRBool nsMacEventHandler::HandleMouseDownEvent(
 		case inDrag:
 		{
 			Point macPoint;
+#if TARGET_CARBON
+			Rect portRect;
+			::GetPortBounds(GetWindowPort(whichWindow), &portRect);
+			macPoint = topLeft(portRect);
+#else
 			macPoint = topLeft(whichWindow->portRect);
+#endif
 			::LocalToGlobal(&macPoint);
 			mTopLevelWidget->Move(macPoint.h, macPoint.v);
 			break;
@@ -507,7 +585,12 @@ PRBool nsMacEventHandler::HandleMouseDownEvent(
 
 		case inGrow:
 		{
+#if TARGET_CARBON
+			Rect macRect;
+			::GetWindowPortBounds ( whichWindow, &macRect );
+#else
 			Rect macRect = whichWindow->portRect;
+#endif
 			::LocalToGlobal(&topLeft(macRect));
 			::LocalToGlobal(&botRight(macRect));
 			mTopLevelWidget->Resize(macRect.right - macRect.left, macRect.bottom - macRect.top, PR_FALSE);
@@ -554,7 +637,12 @@ PRBool nsMacEventHandler::HandleMouseDownEvent(
 			// Now that we have found the partcode it is ok to actually zoom the window
 			ZoomWindow(whichWindow, partCode, (whichWindow == FrontWindow()));
 			
+#if TARGET_CARBON
+			Rect macRect;
+			::GetWindowPortBounds(whichWindow, &macRect);
+#else
 			Rect macRect = whichWindow->portRect;
+#endif
 			::LocalToGlobal(&topLeft(macRect));
 			::LocalToGlobal(&botRight(macRect));
 			mTopLevelWidget->Resize(macRect.right - macRect.left, macRect.bottom - macRect.top, PR_FALSE);
@@ -709,9 +797,16 @@ void nsMacEventHandler::ConvertOSEventToMouseEvent(
 
 	// get the widget hit and the hit point inside that widget
 	Point hitPoint = aOSEvent.where;
-	GrafPtr grafPort = static_cast<GrafPort*>(mTopLevelWidget->GetNativeData(NS_NATIVE_DISPLAY));
+#if TARGET_CARBON
+	GrafPtr grafPort = reinterpret_cast<GrafPtr>(mTopLevelWidget->GetNativeData(NS_NATIVE_GRAPHIC));
+	::SetPort(grafPort);
+	Rect savePortRect;
+	::GetPortBounds(grafPort, &savePortRect);
+#else
+	GrafPtr grafPort = static_cast<GrafPort*>(mTopLevelWidget->GetNativeData(NS_NATIVE_GRAPHIC));
 	::SetPort(grafPort);
 	Rect savePortRect = grafPort->portRect;
+#endif
 	::SetOrigin(0, 0);
 	::GlobalToLocal(&hitPoint);
 	::SetOrigin(savePortRect.left, savePortRect.top);
