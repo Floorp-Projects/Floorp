@@ -149,9 +149,7 @@ function OnLDBLoad()
   else
     gBrowser.goHome();
 
-  // XXX Shouldn't this be gBrowser.contentWindow?
-  var win = gBrowser.docShell.getInterface(Components.interfaces.nsIDOMWindow);
-  gDebugger.init(win);
+  gDebugger.init(gBrowser.contentWindow);
 
   checkPersistentMenus();
   gRTestIndexList = new RTestIndexList();
