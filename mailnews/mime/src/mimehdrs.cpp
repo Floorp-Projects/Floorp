@@ -2498,7 +2498,14 @@ MimeHeaders_write_attachment_box(MimeHeaders *hdrs,
   // routine will probably go away for good...but until then, just return
   // success
   //
-  // status = MimeHeaders_write_all_headers (hdrs, opt, TRUE);
+  nsIPref *pref = GetPrefServiceManager(opt);   // Pref service manager
+  PRBool      mimeXULOutput = PR_FALSE;
+  
+  if (pref)
+    pref->GetBoolPref("mail.mime_xul_output", &mimeXULOutput);
+
+  if (!mimeXULOutput)
+    status = MimeHeaders_write_all_headers (hdrs, opt, TRUE);
 
   if (status < 0) 
     return status;
