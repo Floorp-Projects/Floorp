@@ -2646,7 +2646,7 @@ QBCurve       cr1,cr2,cr3,cr4;
 QBCurve       UL,UR,LL,LR;
 PRInt32       curIndex,c1Index;
 nsFloatPoint  thePath[MAXPATHSIZE];
-nsPoint       polyPath[MAXPOLYPATHSIZE];
+static nsPoint       polyPath[MAXPOLYPATHSIZE];
 PRInt16       np;
 nscoord       twipsPerPixel;
 float         p2t;
@@ -2872,7 +2872,7 @@ nsCSSRendering::RenderSide(nsFloatPoint aPoints[],nsIRenderingContext& aRenderin
 {
   QBCurve   thecurve;
   nscolor   sideColor = NS_RGB(0,0,0);
-  nsPoint   polypath[MAXPOLYPATHSIZE];
+  static nsPoint   polypath[MAXPOLYPATHSIZE];
   PRInt32   curIndex,c1Index,c2Index,junk;
   PRInt8    border_Style;
   PRInt16   thickness;
