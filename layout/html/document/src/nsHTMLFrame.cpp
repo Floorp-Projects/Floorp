@@ -27,7 +27,6 @@
 #include "nsIStreamListener.h"
 #include "nsIURL.h"
 #include "nsIDocument.h"
-#include "nsIWebFrame.h"
 #include "nsIView.h"
 #include "nsIViewManager.h"
 #include "nsWidgetsCID.h"
@@ -46,7 +45,6 @@ class nsHTMLFrame;
 static NS_DEFINE_IID(kIStreamObserverIID, NS_ISTREAMOBSERVER_IID);
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 static NS_DEFINE_IID(kIWebShellIID, NS_IWEB_SHELL_IID);
-static NS_DEFINE_IID(kIWebFrameIID, NS_IWEBFRAME_IID);
 static NS_DEFINE_IID(kWebShellCID, NS_WEB_SHELL_CID);
 static NS_DEFINE_IID(kIViewIID, NS_IVIEW_IID);
 static NS_DEFINE_IID(kCViewCID, NS_VIEW_CID);
