@@ -362,8 +362,15 @@ $default{'querytype'} = $deforder || 'Importance';
 # Add in the defaults.
 $vars->{'default'} = \%default;
 
+$vars->{'format'} = $::FORM{'format'};
+
 # Generate and return the UI (HTML page) from the appropriate template.
-my $format = GetFormat("search/search", $::FORM{'format'}, $::FORM{'ctype'});
+# If we submit back to ourselves (for e.g. boolean charts), we need to
+# preserve format information; hence query_format taking priority over
+# format.
+my $format = GetFormat("search/search", 
+                       $::FORM{'query_format'} || $::FORM{'format'}, 
+                       $::FORM{'ctype'});
 print "Content-Type: $format->{'ctype'}\n\n";
 $template->process($format->{'template'}, $vars)
   || ThrowTemplateError($template->error());
