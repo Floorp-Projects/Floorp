@@ -146,6 +146,8 @@ public:
 
     NS_IMETHOD OnFull(nsIBuffer* buffer);
 
+    NS_IMETHOD OnWrite(nsIBuffer* aBuffer, PRUint32 aCount);
+
     NS_IMETHOD OnEmpty(nsIBuffer* buffer);
 
     ////////////////////////////////////////////////////////////////////////////
