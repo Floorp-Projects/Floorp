@@ -1406,6 +1406,8 @@ NS_IMETHODIMP oeICalEventImpl::AddException( PRTime exdate )
     tmpexdate.second = 0;
     exdate = ConvertToPrtime( tmpexdate );
     PRTime *newexdate = new PRTime;
+    if (!newexdate)
+      return NS_ERROR_OUT_OF_MEMORY;
     *newexdate = exdate;
     m_exceptiondates.AppendElement( newexdate );
     return NS_OK;
@@ -1505,6 +1507,8 @@ NS_IMETHODIMP oeICalEventImpl::SetSnoozeTime( PRTime snoozetime )
     icaltimetype tmpdate = ConvertFromPrtime( snoozetime );
     snoozetime = icaltime_as_timet( tmpdate );
     PRTime *snoozetimeinms = new PRTime;
+    if (!snoozetimeinms)
+      return NS_ERROR_OUT_OF_MEMORY;
     *snoozetimeinms = snoozetime * 1000;
     m_snoozetimes.AppendElement( snoozetimeinms );
     PRTime nowinms = time( nsnull );
@@ -2287,6 +2291,8 @@ bool oeICalEventImpl::ParseIcalComponent( icalcomponent *comp )
         prop = icalcomponent_get_next_property( vevent, ICAL_EXDATE_PROPERTY ) ) {
         icaltimetype exdate = icalproperty_get_exdate( prop );
         PRTime *exdateinms = new PRTime;
+        if (!exdateinms)
+          return NS_ERROR_OUT_OF_MEMORY;
         *exdateinms = ConvertToPrtime( exdate );
         m_exceptiondates.AppendElement( exdateinms );
     }
@@ -2306,6 +2312,8 @@ bool oeICalEventImpl::ParseIcalComponent( icalcomponent *comp )
             if( !icaltime_is_null_time( m_lastalarmack ) && icaltime_compare( m_lastalarmack, snoozetime ) >= 0 )
                 continue;
             PRTime *snoozetimeinms = new PRTime;
+            if (!snoozetimeinms)
+              return NS_ERROR_OUT_OF_MEMORY;
             *snoozetimeinms = icaltime_as_timet( snoozetime );
             *snoozetimeinms = *snoozetimeinms * 1000;
             m_snoozetimes.AppendElement( snoozetimeinms );

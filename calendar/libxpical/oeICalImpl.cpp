@@ -322,6 +322,8 @@ NS_IMETHODIMP
 oeDateEnumerator::AddDate(PRTime date)
 {
     PRTime *newdate = new PRTime;
+    if (!newdate)
+      return NS_ERROR_OUT_OF_MEMORY;
     *newdate = date;
     mDateVector.AppendElement( newdate );
     return NS_OK;
