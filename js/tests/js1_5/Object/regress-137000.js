@@ -40,6 +40,7 @@
 * See http://bugzilla.mozilla.org/show_bug.cgi?id=137000
 * See http://bugzilla.mozilla.org/show_bug.cgi?id=138708
 * See http://bugzilla.mozilla.org/show_bug.cgi?id=150032
+* See http://bugzilla.mozilla.org/show_bug.cgi?id=150859
 *
 */
 //-----------------------------------------------------------------------------
@@ -169,11 +170,37 @@ actual = obj.getVarA(); // this one was returning 'undefined'
 expect = 'A';
 addThis();
 
-status = inSection(7); 
+status = inSection(7);
 actual = obj.getVarB(); // this one is easy; it never failed
 expect = 'C';
 addThis();
 
+
+
+/*
+ * By martin.honnen@t-online.de
+ * From http://bugzilla.mozilla.org/show_bug.cgi?id=150859
+ *
+ * Here the same name is being used for a local var in F
+ * and as a property name for |F| as an object
+ *
+ * Twist: the property is added via another function.
+ */
+function setFProperty(val)
+{
+  F.propA = val;
+}
+
+function F()
+{
+ var propA = 'Local variable in F';
+}
+
+status = inSection(8);
+setFProperty('Hello');
+actual = F.propA; // this was returning 'undefined'
+expect = 'Hello';
+addThis();
 
 
 
