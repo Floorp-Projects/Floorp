@@ -935,13 +935,16 @@ void ReplaceDotMess(char* io_Path)
     {
 		if (*fwdPtr == '\\')
 			*fwdPtr = '/';
-        if (*fwdPtr == '/' && *(fwdPtr+1) == '.' && *(fwdPtr+2) == '/')
+        if (*fwdPtr == '/' && *(fwdPtr+1) == '.' && 
+			(*(fwdPtr+2) == '/' || *(fwdPtr+2) == '\\'))
         {
-            // remove ./
+            // remove . followed by slash or a backslash
             fwdPtr += 1;
         }
         else if(*fwdPtr == '/' && *(fwdPtr+1) == '.' && *(fwdPtr+2) == '.' && 
-                (*(fwdPtr+3) == '/' || *(fwdPtr+3) == '\0'))
+                (*(fwdPtr+3) == '/' || 
+					*(fwdPtr+3) == '\0' || 
+					*(fwdPtr+3) == '\\'))
         {
             // remove foo/.. 
             // reverse the urlPtr to the previous slash 
