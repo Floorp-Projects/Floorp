@@ -205,8 +205,8 @@ nsMenuFrame::Reflow(nsIPresContext&   aPresContext,
     nsSize availSize(NS_UNCONSTRAINEDSIZE, NS_UNCONSTRAINEDSIZE);
     nsHTMLReflowState kidReflowState(aPresContext, aReflowState, frame,
                                      availSize);
-    kidReflowState.computedWidth = NS_UNCONSTRAINEDSIZE;
-    kidReflowState.computedHeight = NS_UNCONSTRAINEDSIZE;
+    kidReflowState.mComputedWidth = NS_UNCONSTRAINEDSIZE;
+    kidReflowState.mComputedHeight = NS_UNCONSTRAINEDSIZE;
       
      // Reflow child
     nscoord w = aDesiredSize.width;
