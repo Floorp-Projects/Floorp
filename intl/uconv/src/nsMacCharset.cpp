@@ -63,7 +63,7 @@ nsMacCharset::nsMacCharset()
   // XXX we should make the following block critical section
   if(gInfo == nsnull) 
   {
-	  nsAutoString propertyURL("resource:/res/maccharset.properties");
+	  nsAutoString propertyURL; propertyURL.AssignWithConversion("resource:/res/maccharset.properties");
 
 	  nsURLProperties *info = new nsURLProperties( propertyURL );
 	  NS_ASSERTION(info , "cannot open properties file");
@@ -73,23 +73,23 @@ nsMacCharset::nsMacCharset()
   if( gInfo ) { 
 	  long ret = ::GetScriptManagerVariable(smRegionCode);
 	  PRInt32 reg = (PRInt32)(ret & 0x00FFFF);
- 	  nsAutoString regionKey("region.");
-	  regionKey.Append(reg, 10);
+ 	  nsAutoString regionKey; regionKey.AssignWithConversion("region.");
+	  regionKey.AppendWithConversion(reg, 10);
 	  
 	  nsresult res = gInfo->Get(regionKey, mCharset);
 	  if(NS_FAILED(res)) {
 		  ret = ::GetScriptManagerVariable(smSysScript);
 		  PRInt32 script = (PRInt32)(ret & 0x00FFFF);
-		  nsAutoString scriptKey("script.");
-		  scriptKey.Append(script, 10);
+		  nsAutoString scriptKey; scriptKey.AssignWithConversion("script.");
+		  scriptKey.AppendWithConversion(script, 10);
 	 	  nsresult res = gInfo->Get(scriptKey, mCharset);
 	      if(NS_FAILED(res)) {
-	      	  mCharset = "x-mac-roman";
+	      	  mCharset.AssignWithConversion("x-mac-roman");
 		  }   
 	  }
 	  
   } else {
-  	mCharset = "x-mac-roman";
+  	mCharset.AssignWithConversion("x-mac-roman");
   }
 }
 nsMacCharset::~nsMacCharset()
@@ -108,7 +108,7 @@ NS_IMETHODIMP
 nsMacCharset::GetDefaultCharsetForLocale(const PRUnichar* localeName, PRUnichar** _retValue)
 {
 	nsCOMPtr<nsIMacLocale>	pMacLocale;
-	nsString localeAsString(localeName), charset("x-mac-roman");
+	nsString localeAsString(localeName), charset; charset.AssignWithConversion("x-mac-roman");
 	short script, language, region;
 	
 	nsresult rv = nsComponentManager::CreateInstance(kMacLocaleFactoryCID,nsnull,kMacLocaleIID,
@@ -120,15 +120,15 @@ nsMacCharset::GetDefaultCharsetForLocale(const PRUnichar* localeName, PRUnichar*
 	
 	if (!gInfo) { *_retValue = charset.ToNewUnicode(); return NS_ERROR_OUT_OF_MEMORY; }
 	
-	nsAutoString locale_key("region.");
-	locale_key.Append(region,10);
+	nsAutoString locale_key; locale_key.AssignWithConversion("region.");
+	locale_key.AppendWithConversion(region,10);
 	
 	rv = gInfo->Get(locale_key,charset);
 	if (NS_FAILED(rv)) {
-		locale_key = "script.";
-		locale_key.Append(script,10);
+		locale_key.AssignWithConversion("script.");
+		locale_key.AppendWithConversion(script,10);
 		rv = gInfo->Get(locale_key,charset);
-		if (NS_FAILED(rv)) { charset="x-mac-roman";}
+		if (NS_FAILED(rv)) { charset.AssignWithConversion("x-mac-roman");}
 	}
 	*_retValue = charset.ToNewUnicode();	
 	return rv;

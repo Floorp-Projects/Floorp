@@ -239,8 +239,8 @@ nsresult nsCharsetConverterManager::RegisterConverterTitles(
   nsresult res;
   nsRegistryKey key;
 
-  nsAutoString str(aRegistryPath);
-  str.Append("defaultFile");
+  nsAutoString str; str.AssignWithConversion(aRegistryPath);
+  str.AppendWithConversion("defaultFile");
 
   char * p = str.ToNewCString();
   res = aRegistry->AddSubtree(nsIRegistry::Common, p, &key);
@@ -259,8 +259,8 @@ nsresult nsCharsetConverterManager::RegisterConverterData(
   nsresult res;
   nsRegistryKey key;
 
-  nsAutoString str(aRegistryPath);
-  str.Append("defaultFile");
+  nsAutoString str; str.AssignWithConversion(aRegistryPath);
+  str.AppendWithConversion("defaultFile");
 
   char * p = str.ToNewCString();
   res = aRegistry->AddSubtree(nsIRegistry::Common, p, &key);
@@ -340,11 +340,13 @@ void nsCharsetConverterManager::FillInfoArrays()
 
     // XXX do an alias resolution here instead
     if (!strcmp(src, "Unicode")) {
-      ci->mName = new nsString(dest);
+      ci->mName = new nsString;
+      ci->mName->AssignWithConversion(dest);
       ci->mName->ToLowerCase();
       mEncoderArray.AddObject(ci);
     } else if (!strcmp(dest, "Unicode")) {
-      ci->mName = new nsString(src);
+      ci->mName = new nsString;
+      ci->mName->AssignWithConversion(src);
       ci->mName->ToLowerCase();
       mDecoderArray.AddObject(ci);
     } else goto done1;
@@ -504,12 +506,15 @@ nsresult nsCharsetConverterManager::GetRegistryEnumeration(
     res = node->GetNameUTF8(&name);
     if (NS_FAILED(res)) goto done1;
 
-    s = new nsString("charsetDetector.");
+      // STRING USE WARNING: this use should be looked at.  Why does |s| have to be allocated?
+      //  Couldn't it just be an |nsAutoString| on the stack?
+    s = new nsString;
+    s->AssignWithConversion("charsetDetector.");
     if (s == NULL) {
       res = NS_ERROR_OUT_OF_MEMORY;
       goto done1;
     }
-    s->Append(name);
+    s->AppendWithConversion(name);
     aArray->AppendString(*s);
 
 done1:
@@ -623,7 +628,7 @@ NS_IMETHODIMP nsCharsetConverterManager::GetCharsetTitle(nsString * aCharset,
   *aResult = NULL;
 
   nsresult res = NS_OK;
-  nsAutoString prop(".title");
+  nsAutoString prop; prop.AssignWithConversion(".title");
 
   if (mTitleBundle == NULL) {
     res = LoadExtensibleBundle(NS_TITLE_BUNDLE_REGISTRY_KEY, &mTitleBundle);
@@ -643,7 +648,7 @@ NS_IMETHODIMP nsCharsetConverterManager::GetCharsetLangGroup(
   *aResult = NULL;
 
   nsresult res = NS_OK;;
-  nsAutoString prop(".LangGroup");
+  nsAutoString prop; prop.AssignWithConversion(".LangGroup");
 
   if (mDataBundle == NULL) {
     res = LoadExtensibleBundle(NS_DATA_BUNDLE_REGISTRY_KEY, &mDataBundle);
@@ -658,7 +663,7 @@ NS_IMETHODIMP nsCharsetConverterManager::GetMIMEMailCharset(
                                          nsString * aCharset, 
                                          nsString ** aResult)
 {
-  nsAutoString prop(".MIMEMailCharset");
+  nsAutoString prop; prop.AssignWithConversion(".MIMEMailCharset");
   return GetCharsetData(aCharset, &prop, aResult);
 }
 
@@ -666,7 +671,7 @@ NS_IMETHODIMP nsCharsetConverterManager::GetMIMEHeaderEncodingMethod(
                                          nsString * aCharset, 
                                          nsString ** aResult)
 {
-  nsAutoString prop(".MIMEHeaderEncodingMethod");
+  nsAutoString prop; prop.AssignWithConversion(".MIMEHeaderEncodingMethod");
   return GetCharsetData(aCharset, &prop, aResult);
 }
 

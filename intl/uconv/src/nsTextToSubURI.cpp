@@ -58,7 +58,7 @@ NS_IMETHODIMP  nsTextToSubURI::ConvertAndEscape(
   if(nsnull == _retval)
     return NS_ERROR_NULL_POINTER;
   *_retval = nsnull;
-  nsAutoString charsetStr(charset);
+  nsAutoString charsetStr; charsetStr.AssignWithConversion(charset);
   nsIUnicodeEncoder *encoder = nsnull;
   nsresult rv = NS_OK;
   
@@ -122,7 +122,7 @@ NS_IMETHODIMP  nsTextToSubURI::UnEscapeAndConvert(
   // Convert from the charset to unicode
   NS_WITH_SERVICE(nsICharsetConverterManager, ccm, kCharsetConverterManagerCID, &rv); 
   if (NS_SUCCEEDED(rv)) {
-    nsAutoString charsetStr(charset);
+    nsAutoString charsetStr; charsetStr.AssignWithConversion(charset);
     nsIUnicodeDecoder *decoder;
     rv = ccm->GetUnicodeDecoder(&charsetStr, &decoder);
     if (NS_SUCCEEDED(rv)) {
