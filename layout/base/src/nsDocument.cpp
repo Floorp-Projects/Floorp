@@ -905,7 +905,7 @@ nsDocument::Reset(nsIChannel* aChannel, nsILoadGroup* aLoadGroup)
   NS_IF_RELEASE(mNameSpaceManager);
 
   if (aChannel) {
-    (void)aChannel->GetURI(&mDocumentURL);
+    (void)aChannel->GetOriginalURI(&mDocumentURL);
     nsCOMPtr<nsISupports> owner;
     aChannel->GetOwner(getter_AddRefs(owner));
     if (owner)
