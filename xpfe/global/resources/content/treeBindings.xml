@@ -363,7 +363,7 @@
   </binding>
 
   <binding id="treerows">
-    <content flex="1"/>
+    <content outer="true"/>
     <handlers>
       <!-- If there is no modifier key, we select on mousedown, not
            click, so that drags work correctly. -->
