@@ -87,6 +87,10 @@ public interface CryptoStore {
     public void deletePrivateKey(org.mozilla.jss.crypto.PrivateKey key)
         throws NoSuchItemOnTokenException, TokenException;
 
+
+    public byte[] getEncryptedPrivateKeyInfo(X509Certificate cert,
+        PBEAlgorithm pbeAlg, Password pw, int iteration);
+
     ////////////////////////////////////////////////////////////
     // Certs
     ////////////////////////////////////////////////////////////
