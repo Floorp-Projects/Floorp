@@ -29,6 +29,7 @@
 #ifdef XP_UNIX
 #include <locale.h>
 #include <stdlib.h>
+#include <ctype.h>  // for isalpha, tolower & isspace
 #endif
 
 #define NSILOCALE_MAX_ACCEPT_LANGUAGE	16
