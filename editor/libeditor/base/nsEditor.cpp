@@ -2058,7 +2058,7 @@ nsEditor::ForceCompositionEnd()
 // flag for Unix.
 // We should use nsILookAndFeel to resolve this
 
-#if defined(XP_MAC) || defined(XP_WIN) || defined(XP_OS2)
+#if defined(XP_MAC) || defined(XP_MACOSX) || defined(XP_WIN) || defined(XP_OS2)
   if(! mInIMEMode)
     return NS_OK;
 #endif
