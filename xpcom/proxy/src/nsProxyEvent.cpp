@@ -144,9 +144,11 @@ nsProxyObject::Post( PRUint32 methodIndex, nsXPTMethodInfo *methodInfo, nsXPTCMi
     ///////////////////////////////////////////////////////////////////////
     // Auto-proxification
     ///////////////////////////////////////////////////////////////////////
-    AutoProxyParameterList(methodInfo, params, interfaceInfo, convertInParameters);
+    nsresult rv = AutoProxyParameterList(methodInfo, params, interfaceInfo, convertInParameters);
     ///////////////////////////////////////////////////////////////////////
-
+    
+    if (NS_FAILED(rv))
+        return rv;
 
     // convert the nsXPTCMiniVariant to a nsXPTCVariant
 
@@ -187,13 +189,13 @@ nsProxyObject::Post( PRUint32 methodIndex, nsXPTMethodInfo *methodInfo, nsXPTCMi
     {
         mDestQueue->PostSynchronousEvent(event, nsnull);
         
-        nsresult rv = proxyInfo->GetResult();
+        rv = proxyInfo->GetResult();
         delete proxyInfo;
 
         ///////////////////////////////////////////////////////////////////////
         // Auto-proxification
         ///////////////////////////////////////////////////////////////////////
-        AutoProxyParameterList(methodInfo, params, interfaceInfo, convertOutParameters);
+        rv = AutoProxyParameterList(methodInfo, params, interfaceInfo, convertOutParameters);
         ///////////////////////////////////////////////////////////////////////
         
         mDestQueue->ExitMonitor();
@@ -212,7 +214,7 @@ nsProxyObject::Post( PRUint32 methodIndex, nsXPTMethodInfo *methodInfo, nsXPTCMi
 }
 
 
-void
+nsresult
 nsProxyObject::AutoProxyParameterList(nsXPTMethodInfo *methodInfo, nsXPTCMiniVariant * params, 
                                       nsIInterfaceInfo *interfaceInfo, AutoProxyConvertTypes convertType)
 {
@@ -262,20 +264,27 @@ nsProxyObject::AutoProxyParameterList(nsXPTMethodInfo *methodInfo, nsXPTCMiniVar
 
                     interfaceInfo->GetIIDForParam(&paramInfo, &iid);
 
-                    manager->GetProxyObject( GetQueue(), 
-                                             *iid,
-                                             anInterface, 
-                                             GetProxyType(), 
-                                             (void**) &aProxyObject);
+                    rv = manager->GetProxyObject(GetQueue(), 
+                                                 *iid,
+                                                 anInterface, 
+                                                 GetProxyType(), 
+                                                 (void**) &aProxyObject);
 
                     nsAllocator::Free((void*)iid);
-                    
+                    NS_RELEASE(manager);
+
+                    if (NS_FAILED(rv))
+                        return rv;
+
                     if (paramInfo.IsOut())
                         *((void**)params[i].val.p) = ((void*)aProxyObject);
                     else
                         (params[i].val.p)  = ((void*)aProxyObject);                    
-
-                    NS_RELEASE(manager);
+                }
+                else
+                {   
+                    // Could not get nsIProxyObjectManager
+                    return rv;
                 }
             } 
             else

@@ -176,6 +176,20 @@ typedef PRUint32 nsresult;
 /* Returned when a factory already is registered */
 #define NS_ERROR_FACTORY_EXISTS            (NS_ERROR_BASE + 0x100)
 
+
+/* Returned when a proxy could not be create a proxy for one of the IN parameters
+   This is returned only when the "real" meathod has NOT been invoked. 
+*/
+
+#define NS_ERROR_PROXY_INVALID_IN_PARAMETER        ((nsresult) 0x80010010L)
+
+/* Returned when a proxy could not be create a proxy for one of the OUT parameters
+   This is returned only when the "real" meathod has ALREADY been invoked. 
+*/
+
+#define NS_ERROR_PROXY_INVALID_OUT_PARAMETER        ((nsresult) 0x80010011L)
+
+
 /*@}*/
 
 ////////////////////////////////////////////////////////////////////////////////
