@@ -252,7 +252,14 @@ extern "C" NS_EXPORT nsresult
 NSRegisterSelf(nsISupports* aServMgr, const char* path)
 {
   nsresult rv;
-  nsService<nsIComponentManager> compMgr(aServMgr, kComponentManagerCID, &rv);
+
+  nsCOMPtr<nsIServiceManager> servMgr(do_QueryInterface(aServMgr, &rv));
+  if (NS_FAILED(rv)) return rv;
+
+  nsIComponentManager* compMgr;
+  rv = servMgr->GetService(kComponentManagerCID, 
+                           nsIComponentManager::GetIID(), 
+                           (nsISupports**)&compMgr);
   if (NS_FAILED(rv)) return rv;
 
   // register the message folder factory
@@ -260,49 +267,52 @@ NSRegisterSelf(nsISupports* aServMgr, const char* path)
                                        "Folder Event",
                                        nsnull,
                                        path, PR_TRUE, PR_TRUE);
-  if (NS_FAILED(rv)) return rv;
+  if (NS_FAILED(rv)) goto done;
 
   rv = compMgr->RegisterComponent(kCUrlListenerManagerCID,
                                        "UrlListenerManager",
                                        nsnull,
                                        path, PR_TRUE, PR_TRUE);
-  if (NS_FAILED(rv)) return rv;
+  if (NS_FAILED(rv)) goto done;
 
   rv = compMgr->RegisterComponent(kCMsgRFC822ParserCID,
                                        "RFC822 Parser",
                                        nsnull,
                                        path, PR_TRUE, PR_TRUE);
-  if (NS_FAILED(rv)) return rv;
+  if (NS_FAILED(rv)) goto done;
 
   rv = compMgr->RegisterComponent(kCMessengerCID,
                                        "Netscape Messenger",
                                        "component://netscape/messenger/application",
                                        path, PR_TRUE, PR_TRUE);
-  if (NS_FAILED(rv)) return rv;
+  if (NS_FAILED(rv)) goto done;
   
   rv = compMgr->RegisterComponent(kCMessengerBootstrapCID,
                                        "Netscape Messenger Bootstrapper",
                                        "component://netscape/messenger",
                                        path,
                                        PR_TRUE, PR_TRUE);
-  if (NS_FAILED(rv)) return rv;
+  if (NS_FAILED(rv)) goto done;
 #if 0
   rv = compMgr->RegisterComponent(kCMsgGroupRecordCID,
                                        nsnull,
                                        nsnull,
                                        path,
                                        PR_TRUE, PR_TRUE);
-  if (NS_FAILED(rv)) return rv;
+  if (NS_FAILED(rv)) goto done;
 #endif
   rv = compMgr->RegisterComponent(kCMsgMailSessionCID,
                                   "Mail Session",
                                   nsnull,
                                   path,
                                   PR_TRUE, PR_TRUE);
-  if (NS_FAILED(rv)) return rv;
+  if (NS_FAILED(rv)) goto done;
 #ifdef NS_DEBUG
   printf("mailnews registering from %s\n",path);
 #endif
+
+  done:
+  (void)servMgr->ReleaseService(kComponentManagerCID, compMgr);
   return rv;
 }
 
@@ -310,23 +320,34 @@ extern "C" NS_EXPORT nsresult
 NSUnregisterSelf(nsISupports* aServMgr, const char* path)
 {
   nsresult rv;
-  nsService<nsIComponentManager> compMgr(aServMgr, kComponentManagerCID, &rv);
+
+  nsCOMPtr<nsIServiceManager> servMgr(do_QueryInterface(aServMgr, &rv));
+  if (NS_FAILED(rv)) return rv;
+
+  nsIComponentManager* compMgr;
+  rv = servMgr->GetService(kComponentManagerCID, 
+                           nsIComponentManager::GetIID(), 
+                           (nsISupports**)&compMgr);
+  if (NS_FAILED(rv)) return rv;
 
   rv = compMgr->UnregisterComponent(kCUrlListenerManagerCID, path);
-  if (NS_FAILED(rv)) return rv;
+  if (NS_FAILED(rv)) goto done;
   rv = compMgr->UnregisterComponent(kCMsgRFC822ParserCID, path);
-  if (NS_FAILED(rv)) return rv;
+  if (NS_FAILED(rv)) goto done;
   rv = compMgr->UnregisterComponent(kCMessengerCID, path);
-  if (NS_FAILED(rv)) return rv;
+  if (NS_FAILED(rv)) goto done;
   rv = compMgr->UnregisterComponent(kCMessengerBootstrapCID, path);
-  if (NS_FAILED(rv)) return rv;
+  if (NS_FAILED(rv)) goto done;
 #if 0
   rv = compMgr->UnregisterComponent(kCMsgGroupRecordCID, path);
-  if (NS_FAILED(rv)) return rv;
+  if (NS_FAILED(rv)) goto done;
 #endif
   rv = compMgr->UnregisterComponent(kCMsgFolderEventCID, path);
-  if (NS_FAILED(rv)) return rv;
+  if (NS_FAILED(rv)) goto done;
   rv = compMgr->UnregisterComponent(kCMsgMailSessionCID, path);
+
+  done:
+  (void)servMgr->ReleaseService(kComponentManagerCID, compMgr);
   return rv;
 }
 

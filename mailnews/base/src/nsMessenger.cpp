@@ -98,13 +98,20 @@ nsresult
 nsMessengerBootstrap::Initialize()
 {
   nsresult rv;
-  nsService<nsIScriptNameSetRegistry> registry(kCScriptNameSetRegistryCID, &rv);
+
+  rv = nsServiceManager::GetService(kCScriptNameSetRegistryCID, 
+                                    nsIScriptNameSetRegistry::GetIID(),
+                                    (nsISupports**)&registry);
   if (NS_FAILED(rv))
     return rv;
   nsMessengerNameSet* nameSet = new nsMessengerNameSet();
   if (nameSet == nsnull)
-    return NS_ERROR_OUT_OF_MEMORY;
-  return registry->AddExternalNameSet(nameSet);
+    rv = NS_ERROR_OUT_OF_MEMORY;
+  else
+    rv = registry->AddExternalNameSet(nameSet);
+  (void)nsServiceManager::ReleaseService(kCScriptNameSetRegistryCID, 
+                                         registry);
+  return rv;
 }
 
 

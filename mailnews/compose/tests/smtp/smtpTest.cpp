@@ -424,7 +424,10 @@ int main()
 	nsComponentManager::RegisterComponent(kEventQueueServiceCID, NULL, NULL, XPCOM_DLL, PR_FALSE, PR_FALSE);
 
 	// Create the Event Queue for this thread...
-    nsService<nsIEventQueueService> pEventQService(kEventQueueServiceCID, &result);
+    nsIEventQueueService* pEventQService;
+    result = nsServiceManager::GetService(kEventQueueServiceCID,
+                                          nsIEventQueueService::GetIID(),
+                                          (nsISupports**)&pNetService);
 	if (NS_FAILED(result)) return result;
 
     result = pEventQService->CreateThreadEventQueue();

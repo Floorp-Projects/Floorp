@@ -530,11 +530,14 @@ int main()
 	nsComponentManager::RegisterComponent(kEventQueueServiceCID, NULL, NULL, XPCOM_DLL, PR_FALSE, PR_FALSE);
 
 	// Create the Event Queue for this thread...
-    nsService<nsIEventQueueService> pEventQService(kEventQueueServiceCID, &result);
-	if (NS_SUCCEEDED(result)) {
-      // XXX: What if this fails?
-      result = pEventQService->CreateThreadEventQueue();
-    }
+    nsIEventQueueService* pEventQService;
+    result = nsServiceManager::GetService(kEventQueueServiceCID,
+                                          nsIEventQueueService::GetIID(),
+                                          (nsISupports**)&pNetService);
+	if (NS_FAILED(result)) return result;
+
+    result = pEventQService->CreateThreadEventQueue();
+	if (NS_FAILED(result)) return result;
 
 	// ask the net lib service for a nsINetStream:
 	result = NS_NewINetService(&pNetService, NULL);

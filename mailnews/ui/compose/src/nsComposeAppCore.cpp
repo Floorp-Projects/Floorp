@@ -289,7 +289,12 @@ nsComposeAppCore::NewMessage(const nsString& aUrl)
 	nsresult rv;
 	nsString controllerCID;
 
-	nsService<nsIAppShellService> appShell(kAppShellServiceCID, &rv);
+	nsIAppShellService* appShell
+    rv = nsServiceManager::GetService(kAppShellServiceCID,
+                                      nsIAppShellService::GetIID(),
+                                      (nsISupports**)&appShell);
+    if (NS_FAILED(rv)) return rv;
+
 	nsIURL* url;
 	nsIWidget* newWindow;
   
@@ -309,6 +314,7 @@ nsComposeAppCore::NewMessage(const nsString& aUrl)
                                    650);        // height
 done:
 	NS_RELEASE(url);
+    (void)nsServiceManager::ReleaseService(kAppShellServiceCID, appShell);
 	return NS_OK;
 }
 

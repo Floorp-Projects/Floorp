@@ -153,9 +153,6 @@ nsresult NS_MsgLoadMailtoUrl(nsIURL * aUrl, nsISupports * aConsumer)
 	if (!aUrl)
 		return rv;
 
-    nsService<nsINetService> pNetService(kNetServiceCID, &rv);
-	if (NS_FAILED(rv)) return rv;
-
     // turn the url into an smtp url...
     rv = aUrl->QueryInterface(nsISmtpUrl::GetIID(), (void **) &smtpUrl);
     if (NS_SUCCEEDED(rv) && smtpUrl)
@@ -170,15 +167,24 @@ nsresult NS_MsgLoadMailtoUrl(nsIURL * aUrl, nsISupports * aConsumer)
       smtpUrl->GetHost(&hostName);
       smtpUrl->GetHostPort(&port);
 
-      pNetService->CreateSocketTransport(&transport, port, hostName);
-      if (NS_SUCCEEDED(rv) && transport)
-      {
-        // almost there...now create a nntp protocol instance to run the url in...
-        smtpProtocol = new nsSmtpProtocol(smtpUrl, transport);
-        if (smtpProtocol == nsnull)
-          return NS_ERROR_OUT_OF_MEMORY;
-        NS_ADDREF(smtpProtocol);
-        smtpProtocol->LoadURL(smtpUrl);
+      nsINetService* pNetService;
+      rv = nsServiceManager::GetService(kNetServiceCID,
+                                        nsINetService::GetIID(),
+                                        (nsISupports**)&pNetService);
+      if (NS_SUCCEEDED(rv)) {
+        pNetService->CreateSocketTransport(&transport, port, hostName);
+        if (NS_SUCCEEDED(rv) && transport)
+        {
+          // almost there...now create a nntp protocol instance to run the url in...
+          smtpProtocol = new nsSmtpProtocol(smtpUrl, transport);
+          if (smtpProtocol == nsnull)
+            rv = NS_ERROR_OUT_OF_MEMORY;
+          else {
+            NS_ADDREF(smtpProtocol);
+            smtpProtocol->LoadURL(smtpUrl);
+          }
+        }
+        (void)nsServiceManager::ReleaseService(kNetServiceCID, pNetService);
       }
 
       NS_RELEASE(smtpUrl);

@@ -181,35 +181,44 @@ extern "C" NS_EXPORT nsresult
 NSRegisterSelf(nsISupports* aServMgr, const char* path)
 {
   nsresult rv;
-  nsService<nsIComponentManager> compMgr(aServMgr, kComponentManagerCID, &rv);
+
+  nsCOMPtr<nsIServiceManager> servMgr(do_QueryInterface(aServMgr, &rv));
+  if (NS_FAILED(rv)) return rv;
+
+  nsIComponentManager* compMgr;
+  rv = servMgr->GetService(kComponentManagerCID, 
+                           nsIComponentManager::GetIID(), 
+                           (nsISupports**)&compMgr);
   if (NS_FAILED(rv)) return rv;
 
   rv = compMgr->RegisterComponent(kCMailboxUrl, nsnull, nsnull,
                                   path, PR_TRUE, PR_TRUE);
-  if (NS_FAILED(rv)) return rv;
+  if (NS_FAILED(rv)) goto done;
 
   rv = compMgr->RegisterComponent(kCMailboxService, nsnull, nsnull, 
                                   path, PR_TRUE, PR_TRUE);
-  if (NS_FAILED(rv)) return rv;
+  if (NS_FAILED(rv)) goto done;
 
   rv = compMgr->RegisterComponent(kCMailboxParser, nsnull, nsnull,
                                   path, PR_TRUE, PR_TRUE);
-  if (NS_FAILED(rv)) return rv;
+  if (NS_FAILED(rv)) goto done;
 
   // register our RDF datasources:
   rv = compMgr->RegisterComponent(kMailNewsDatasourceCID, 
                                   "Mail/News Data Source",
                                   NS_RDF_DATASOURCE_PROGID_PREFIX "mailnews",
                                   path, PR_TRUE, PR_TRUE);
-  if (NS_FAILED(rv)) return rv;
+  if (NS_FAILED(rv)) goto done;
 
   // register our RDF resource factories:
   rv = compMgr->RegisterComponent(kMailNewsResourceCID,
                                   "Mail/News Resource Factory",
                                   NS_RDF_RESOURCE_FACTORY_PROGID_PREFIX "mailbox",
                                   path, PR_TRUE, PR_TRUE);
-  if (NS_FAILED(rv)) return rv;
+  if (NS_FAILED(rv)) goto done;
 
+  done:
+  (void)servMgr->ReleaseService(kComponentManagerCID, compMgr);
   return rv;
 }
 
@@ -217,24 +226,32 @@ extern "C" NS_EXPORT nsresult
 NSUnregisterSelf(nsISupports* aServMgr, const char* path)
 {
   nsresult rv;
-  nsService<nsIComponentManager> compMgr(aServMgr, kComponentManagerCID, &rv);
+
+  nsCOMPtr<nsIServiceManager> servMgr(do_QueryInterface(aServMgr, &rv));
+  if (NS_FAILED(rv)) return rv;
+
+  nsIComponentManager* compMgr;
+  rv = servMgr->GetService(kComponentManagerCID, 
+                           nsIComponentManager::GetIID(), 
+                           (nsISupports**)&compMgr);
   if (NS_FAILED(rv)) return rv;
 
   rv = compMgr->UnregisterFactory(kCMailboxUrl, path);
-  if (NS_FAILED(rv)) return rv;
+  if (NS_FAILED(rv)) goto done;
 
   rv = compMgr->UnregisterFactory(kCMailboxService, path);
-  if (NS_FAILED(rv)) return rv;
+  if (NS_FAILED(rv)) goto done;
 
   rv = compMgr->UnregisterFactory(kCMailboxParser, path);
-  if (NS_FAILED(rv)) return rv;
+  if (NS_FAILED(rv)) goto done;
 
   rv = compMgr->UnregisterComponent(kMailNewsDatasourceCID, path);
-  if (NS_FAILED(rv)) return rv;
+  if (NS_FAILED(rv)) goto done;
 
   rv = compMgr->UnregisterComponent(kMailNewsResourceCID, path);
-  if (NS_FAILED(rv)) return rv;
+  if (NS_FAILED(rv)) goto done;
 
+  done:
+  (void)servMgr->ReleaseService(kComponentManagerCID, compMgr);
   return rv;
 }
-

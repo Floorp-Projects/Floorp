@@ -161,28 +161,48 @@ nsresult
 NSRegisterSelf(nsISupports* aServMgr, const char *fullpath)
 {
     nsresult rv;
-    nsService<nsIComponentManager> compMgr(aServMgr, kComponentManagerCID, &rv);
+
+    nsCOMPtr<nsIServiceManager> servMgr(do_QueryInterface(aServMgr, &rv));
+    if (NS_FAILED(rv)) return rv;
+
+    nsIComponentManager* compMgr;
+    rv = servMgr->GetService(kComponentManagerCID, 
+                             nsIComponentManager::GetIID(), 
+                             (nsISupports**)&compMgr);
     if (NS_FAILED(rv)) return rv;
 
 #ifdef NS_DEBUG
     printf("messenger: NSRegisterSelf()\n");
 #endif
-    return compMgr->RegisterComponent(kCMsgAppCoreCID,
-                                      "Messenger AppCore",
-                                      "component://netscape/appcores/messenger",
-                                      fullpath,
-                                      PR_TRUE, PR_TRUE);
+    rv = compMgr->RegisterComponent(kCMsgAppCoreCID,
+                                    "Messenger AppCore",
+                                    "component://netscape/appcores/messenger",
+                                    fullpath,
+                                    PR_TRUE, PR_TRUE);
+    
+    (void)servMgr->ReleaseService(kComponentManagerCID, compMgr);
+    return rv;
 }
     
 nsresult
 NSUnregisterSelf(nsISupports* aServMgr, const char *fullpath)
 {
     nsresult rv;
-    nsService<nsIComponentManager> compMgr(aServMgr, kComponentManagerCID, &rv);
+
+    nsCOMPtr<nsIServiceManager> servMgr(do_QueryInterface(aServMgr, &rv));
+    if (NS_FAILED(rv)) return rv;
+
+    nsIComponentManager* compMgr;
+    rv = servMgr->GetService(kComponentManagerCID, 
+                             nsIComponentManager::GetIID(), 
+                             (nsISupports**)&compMgr);
     if (NS_FAILED(rv)) return rv;
 
 #ifdef NS_DEBUG
     printf("messenger: NSUnregisterSelf()\n");
 #endif
-    return compMgr->UnregisterComponent(kCMsgAppCoreCID, fullpath);
+    rv = compMgr->UnregisterComponent(kCMsgAppCoreCID, fullpath);
+
+    (void)servMgr->ReleaseService(kComponentManagerCID, compMgr);
+    return rv;
 }

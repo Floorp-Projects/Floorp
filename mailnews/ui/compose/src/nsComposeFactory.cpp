@@ -161,29 +161,47 @@ nsresult
 NSRegisterSelf(nsISupports* aServMgr, const char *fullpath)
 {
     nsresult rv;
-    nsService<nsIComponentManager> compMgr(aServMgr, kComponentManagerCID, &rv);
+
+    nsCOMPtr<nsIServiceManager> servMgr(do_QueryInterface(aServMgr, &rv));
     if (NS_FAILED(rv)) return rv;
+
+    nsIComponentManager* compMgr;
+    rv = servMgr->GetService(kComponentManagerCID, 
+                             nsIComponentManager::GetIID(), 
+                             (nsISupports**)&compMgr);
 
 #ifdef NS_DEBUG
     printf("compose: NSRegisterSelf()\n");
 #endif
 
-    return compMgr->RegisterComponent(kCComposeAppCoreCID,
-                                      "Netscape Mail Composer",
-                                      "component://netscape/appcores/composer",
-                                      fullpath,
-                                      PR_TRUE, PR_TRUE);
+    rv = compMgr->RegisterComponent(kCComposeAppCoreCID,
+                                    "Netscape Mail Composer",
+                                    "component://netscape/appcores/composer",
+                                    fullpath,
+                                    PR_TRUE, PR_TRUE);
+
+    (void)servMgr->ReleaseService(kComponentManagerCID, compMgr);
+    return rv;
 }
     
 nsresult
 NSUnregisterSelf(nsISupports* aServMgr, const char *fullpath)
 {
     nsresult rv;
-    nsService<nsIComponentManager> compMgr(aServMgr, kComponentManagerCID, &rv);
+
+    nsCOMPtr<nsIServiceManager> servMgr(do_QueryInterface(aServMgr, &rv));
     if (NS_FAILED(rv)) return rv;
+
+    nsIComponentManager* compMgr;
+    rv = servMgr->GetService(kComponentManagerCID, 
+                             nsIComponentManager::GetIID(), 
+                             (nsISupports**)&compMgr);
 
 #ifdef NS_DEBUG
     printf("compose: NSUnregisterSelf()\n");
 #endif
-    return compMgr->UnregisterComponent(kCComposeAppCoreCID, fullpath);
+    rv = compMgr->UnregisterComponent(kCComposeAppCoreCID, fullpath);
+
+    (void)servMgr->ReleaseService(kComponentManagerCID, compMgr);
+    return rv;
 }

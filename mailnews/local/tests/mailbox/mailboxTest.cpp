@@ -519,7 +519,10 @@ nsresult nsMailboxTestDriver::OpenMailbox()
 	PR_FREEIF(fullFolderPath);
 
 	// now ask the mailbox service to parse this mailbox...
-    nsService<nsIMailboxService> mailboxService(kCMailboxServiceCID, &rv);
+    nsIMailboxService* mailboxService;
+    rv = nsServiceManager::GetService(kCMailboxServiceCID,
+                                      nsIMailboxService::GetIID(),
+                                      (nsISupports**)&mailboxService);
 	if (NS_SUCCEEDED(rv) && mailboxService)
 	{
 		nsIURL * url = nsnull;
@@ -527,6 +530,7 @@ nsresult nsMailboxTestDriver::OpenMailbox()
 		if (url)
 			url->QueryInterface(nsIMailboxUrl::GetIID(), (void **) &m_url);
 		NS_IF_RELEASE(url);
+        (void)nsServiceManager::ReleaseService(kCMailboxServiceCID, mailboxService)
 	}
 	else
 		NS_ASSERTION(PR_FALSE, "unable to acquire a mailbox service...registration problem?");
@@ -551,11 +555,14 @@ int main()
 	nsComponentManager::RegisterComponent(kCMailboxServiceCID, nsnull, nsnull, LOCAL_DLL, PR_TRUE, PR_TRUE);
 
 	// Create the Event Queue for this thread...
-    nsService<nsIEventQueueService> pEventQService(kEventQueueServiceCID, &result);
-	if (NS_SUCCEEDED(result)) {
-      // XXX: What if this fails?
-      result = pEventQService->CreateThreadEventQueue();
-    }
+    nsIEventQueueService* pEventQService;
+    result = nsServiceManager::GetService(kEventQueueServiceCID,
+                                          nsIEventQueueService::GetIID(),
+                                          (nsISupports**)&pNetService);
+	if (NS_FAILED(result)) return result;
+
+    result = pEventQService->CreateThreadEventQueue();
+	if (NS_FAILED(result)) return result;
 
 	// ask the net lib service for a nsINetStream:
 	result = NS_NewINetService(&pNetService, NULL);

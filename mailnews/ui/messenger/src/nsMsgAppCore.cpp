@@ -229,7 +229,10 @@ nsMsgAppCore::Open3PaneWindow()
 	nsString controllerCID;
 
 	urlstr = "resource:/res/samples/messenger.html";
-    nsService<nsIAppShellService> appShell(kAppShellServiceCID, &rv);
+    nsIAppShellService* appShell;
+    rv = nsServiceManager::GetService(kAppShellServiceCID,
+                                      nsIAppShellService::GetIID(),
+                                      (nsISupports**)&appShell);
     if (NS_FAILED(rv)) goto done;
 	nsIURL* url;
 	nsIWidget* newWindow;
@@ -248,6 +251,7 @@ nsMsgAppCore::Open3PaneWindow()
                                    200);        // height
 	done:
 	NS_RELEASE(url);
+    (void)nsServiceManager::ReleaseService(kAppShellServiceCID, appShell);
 	return NS_OK;
 }
 

@@ -94,35 +94,40 @@ nsMsgLocalMailFolder::CreateSubFolders(void)
   rv = GetPath(path);
   if (NS_FAILED(rv)) return rv;
 
-  nsService<nsIRDFService> rdf(kRDFServiceCID, &rv);
-  if (NS_FAILED(rv)) return rv;
+  nsIRDFService* rdf;
+  rv = nsServiceManager::GetService(kRDFServiceCID,
+                                    nsIRDFService::GetIID(),
+                                    (nsISupports**)&rdf);
+  if (NS_SUCCEEDED(rv)) {
 
-  for (nsDirectoryIterator dir(path); dir.Exists(); dir++) {
-    nsFileSpec currentFolderPath = (nsFileSpec&)dir;
+    for (nsDirectoryIterator dir(path); dir.Exists(); dir++) {
+      nsFileSpec currentFolderPath = (nsFileSpec&)dir;
 
-    currentFolderName = currentFolderPath.GetLeafName();
-    if (nsShouldIgnoreFile(currentFolderName))
-      continue;
+      currentFolderName = currentFolderPath.GetLeafName();
+      if (nsShouldIgnoreFile(currentFolderName))
+        continue;
 
-    nsAutoString uri;
-    uri.Append(mURI);
-    uri.Append('/');
+      nsAutoString uri;
+      uri.Append(mURI);
+      uri.Append('/');
 
-    uri.Append(currentFolderName);
-    char* uriStr = uri.ToNewCString();
-    if (uriStr == nsnull) 
-      return NS_ERROR_OUT_OF_MEMORY;
+      uri.Append(currentFolderName);
+      char* uriStr = uri.ToNewCString();
+      if (uriStr == nsnull) 
+        return NS_ERROR_OUT_OF_MEMORY;
 	
-    // XXX trim off .sbd from uriStr
-    nsIRDFResource* res;
-    rv = rdf->GetResource(uriStr, &res);
-    if (NS_FAILED(rv))
-      return rv;
-    nsCOMPtr<nsIMsgFolder> folder(do_QueryInterface(res, &rv));
-    if (NS_FAILED(rv))
-      return rv;        // continue?
-    delete[] uriStr;
-    mSubFolders->AppendElement(folder);
+      // XXX trim off .sbd from uriStr
+      nsIRDFResource* res;
+      rv = rdf->GetResource(uriStr, &res);
+      if (NS_FAILED(rv))
+        return rv;
+      nsCOMPtr<nsIMsgFolder> folder(do_QueryInterface(res, &rv));
+      if (NS_FAILED(rv))
+        return rv;        // continue?
+      delete[] uriStr;
+      mSubFolders->AppendElement(folder);
+    }
+    (void)nsServiceManager::ReleaseService(kRDFServiceCID, rdf);
   }
   return rv;
 }
