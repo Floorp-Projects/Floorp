@@ -24,10 +24,10 @@ include $(DEPTH)/config/autoconf.mk
 MODULE		= unicharutil
 LIBRARY_NAME	= unicharutil
 
-CSRCS		= ucdata.c \
+CSRCS		= \
 		  $(NULL)
 
-CPPSRCS		= nsCaseConversionImp.cpp \
+CPPSRCS		= nsCaseConversionImp2.cpp \
 		  nsUnicharUtilFactory.cpp \
 		  $(NULL)
 
