@@ -95,7 +95,7 @@ SECStatus PK11_TokenRefresh(PK11SlotInfo *slot);
 /******************************************************************
  *           Slot info functions
  ******************************************************************/
-PK11SlotInfo *PK11_FindSlotByName(char *name);
+PK11SlotInfo *PK11_FindSlotByName(const char *name);
 /******************************************************************
  * PK11_FindSlotsByNames searches for a PK11SlotInfo using one or
  * more criteria : dllName, slotName and tokenName . In addition, if
