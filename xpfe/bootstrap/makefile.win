@@ -116,7 +116,8 @@ LLFLAGS=$(LLFLAGS) /HEAP:0x40000
 LLIBS=                               \
  $(DIST)\lib\xpcom.lib               \
 !ifndef DISABLE_LDAP
- $(DIST)\lib\nsldap32v40.lib         \
+ $(DIST)\lib\nsldap32v50.lib         \
+ $(DIST)\lib\nsldappr32v50.lib       \
 !endif
  $(DIST)\lib\js3250.lib              \
  $(DIST)\lib\util.lib                \

@@ -366,7 +366,8 @@ bin\components\absync.xpt
 bin\components\nsLDAPPrefsService.js
 bin\components\mozldap.dll
 bin\components\mozldap.xpt
-bin\nsldap32v40.dll
+bin\nsldap32v50.dll
+bin\nsldappr32v50.dll
 bin\chrome\messenger.jar
 bin\chrome\messenger\*
 bin\components\msgsmime.dll

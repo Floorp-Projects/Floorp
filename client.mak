@@ -160,7 +160,7 @@ LDAPCSDK_CO_FLAGS=$(MOZ_CO_FLAGS)
 !if "$(LDAPCSDK_CO_TAG)" != ""
 LDAPCSDK_CO_FLAGS=$(LDAPCSDK_CO_FLAGS) -r $(LDAPCSDK_CO_TAG)
 !else
-LDAPCSDK_CO_FLAGS=$(LDAPCSDK_CO_FLAGS) -r LDAPCSDK_40_BRANCH
+LDAPCSDK_CO_FLAGS=$(LDAPCSDK_CO_FLAGS) -r ldapcsdk_50_client_branch
 !endif
 
 CVSCO_LDAPCSDK = cvs $(CVS_FLAGS) co $(LDAPCSDK_CO_FLAGS)
@@ -334,18 +334,25 @@ pull_clientmak:
 # nmake has to be hardcoded, or we have to depend on mozilla/config
 # being pulled already to figure out what $(NMAKE) should be.
 
-clobber_all: clobber_nspr clobber_psm clobber_seamonkey
+clobber_all: clobber_nspr clobber_ldapcsdk clobber_psm clobber_seamonkey
 
-build_all: build_nspr build_seamonkey
+build_all: build_nspr build_ldapcsdk build_seamonkey
 
 build_all_dep: depend libs
 
 distclean: 
+	@cd $(MOZ_SRC)\$(MOZ_TOP)\directory\c-sdk
+	gmake -f gmakefile.win distclean MOZ_SRC_FLIPPED=$(MOZ_SRC_FLIPPED)
 	@cd $(MOZ_SRC)\$(MOZ_TOP)\nsprpub
 	gmake -f gmakefile.win distclean MOZ_SRC_FLIPPED=$(MOZ_SRC_FLIPPED)
 	@cd $(MOZ_SRC)\$(MOZ_TOP)
 	nmake /f client.mak clobber_psm
 	nmake /f client.mak clobber_seamonkey
+
+clobber_ldapcsdk:
+	@cd $(MOZ_SRC)\$(MOZ_TOP)\directory\c-sdk
+	gmake -f gmakefile.win clobber_all MOZ_SRC_FLIPPED=$(MOZ_SRC_FLIPPED) \
+		SHELL=sh
 
 clobber_nspr: 
 	@cd $(MOZ_SRC)\$(MOZ_TOP)\nsprpub
@@ -400,6 +407,10 @@ build_nspr:
 	@cd $(MOZ_SRC)\$(MOZ_TOP)\nsprpub
 	gmake -f gmakefile.win MOZ_SRC_FLIPPED=$(MOZ_SRC_FLIPPED)
 
+build_ldapcsdk:
+	@cd $(MOZ_SRC)\$(MOZ_TOP)\directory\c-sdk
+	gmake -f gmakefile.win MOZ_SRC_FLIPPED=$(MOZ_SRC_FLIPPED) SHELL=sh
+
 build_psm:
 	@cd $(MOZ_SRC)\$(MOZ_TOP)\security
 	nmake -f makefile.win 
@@ -440,7 +451,7 @@ libs:
 	@cd $(MOZ_SRC)\$(MOZ_TOP)\.
 	nmake -f makefile.win libs
 
-export: build_nspr
+export: build_nspr build_ldapcsdk
 	@cd $(MOZ_SRC)\$(MOZ_TOP)\.
 	nmake -f makefile.win export
 

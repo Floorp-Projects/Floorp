@@ -40,6 +40,7 @@
 #include "nsLDAPMessage.h"
 #include "nsLDAPServer.h"
 #include "nsLDAPService.h"
+#include "ldappr.h"
 
 #ifdef MOZ_LDAP_XPCOM_EXPERIMENTAL
 #include "nsLDAPProtocolHandler.h"
@@ -85,9 +86,49 @@ static const nsModuleComponentInfo components[] =
           "@mozilla.org/network/ldap-url;1", nsLDAPURLConstructor }
 };
 
+PR_STATIC_CALLBACK(nsresult)
+nsLDAPInitialize(nsIModule *aSelf)
+{
+#ifdef PR_LOGGING
+    gLDAPLogModule = PR_NewLogModule("ldap");
+    if (!gLDAPLogModule) {
+        PR_fprintf(PR_STDERR, "LDAP_Initialize(): PR_NewLogModule() failed\n");
+        return NS_ERROR_NOT_AVAILABLE;
+    }
+#endif
+
+    // use NSPR under the hood for all networking
+    //
+    int rv = prldap_install_routines( NULL, 1 /* shared */ );
+
+    if (rv != LDAP_SUCCESS) {
+        PR_LOG(gLDAPLogModule, PR_LOG_ERROR,
+               ("LDAPInitialize(): pr_ldap_install_routines() failed: %s\n",
+               ldap_err2string(rv)));
+        return NS_ERROR_FAILURE;
+    }
+
+#if 0
+    // XXXdmose - for some reason, turning on this code causes connects to 
+    // fail
+    //
+    rv = prldap_set_session_option(0, 0, PRLDAP_OPT_IO_MAX_TIMEOUT, 
+                                   LDAP_X_IO_TIMEOUT_NO_WAIT);
+    if (rv != LDAP_SUCCESS) {
+        PR_LOG(gLDAPLogModule, PR_LOG_ERROR,
+               ("LDAPInitialize(): error setting LDAP_X_IO_TIMEOUT_NO_WAIT:"
+                " %s\n",ldap_err2string(rv)));
+        return NS_ERROR_FAILURE;
+    }
+#endif
+
+    return NS_OK;
+}
+
 // implement the NSGetModule() exported function
 //
-NS_IMPL_NSGETMODULE(nsLDAPProtocolModule, components);
+NS_IMPL_NSGETMODULE_WITH_CTOR(nsLDAPProtocolModule, components, 
+                              nsLDAPInitialize)
 
 #ifdef PR_LOGGING
 PRLogModuleInfo *gLDAPLogModule = 0;

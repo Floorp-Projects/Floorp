@@ -108,7 +108,6 @@ DIRS =                         \
   extensions                   \
   themes \
 !if !defined(DISABLE_LDAP)       
-  directory\c-sdk              \
   directory\xpcom              \
 !endif
   l10n                     \

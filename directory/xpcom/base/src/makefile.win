@@ -30,7 +30,8 @@ MODULE_NAME=nsLDAPProtocolModule
 
 LLIBS = $(LIBNSPR) \
 	$(DIST)\lib\xpcom.lib \
-	$(DIST)\lib\nsldap32v40.lib \
+	$(DIST)\lib\nsldap32v50.lib \
+	$(DIST)\lib\nsldappr32v50.lib \
 	$(NULL)
 
 CPP_OBJS = .\$(OBJDIR)\nsLDAPURL.obj             \

@@ -54,9 +54,6 @@
 const char kConsoleServiceContractId[] = "@mozilla.org/consoleservice;1";
 const char kDNSServiceContractId[] = "@mozilla.org/network/dns-service;1";
 
-extern "C" int nsLDAPThreadDataInit(void);
-extern "C" int nsLDAPThreadFuncsInit(LDAP *aLDAP);
-
 // constructor
 //
 nsLDAPConnection::nsLDAPConnection()
@@ -79,23 +76,21 @@ nsLDAPConnection::~nsLDAPConnection()
   PR_LOG(gLDAPLogModule, PR_LOG_DEBUG, ("unbinding\n"));
 
   if (mConnectionHandle) {
-      rc = ldap_unbind_s(mConnectionHandle);
+      // note that the ldap_unbind() call in the 5.0 version of the LDAP C SDK
+      // appears to be exactly identical to ldap_unbind_s(), so it may in fact
+      // still be synchronous
+      //
+      rc = ldap_unbind(mConnectionHandle);
 #ifdef PR_LOGGING
       if (rc != LDAP_SUCCESS) {
-          if (gLDAPLogModule) {
-              PR_LOG(gLDAPLogModule, PR_LOG_WARNING, 
-                     ("nsLDAPConnection::~nsLDAPConnection: %s\n", 
-                      ldap_err2string(rc)));
-          }
+          PR_LOG(gLDAPLogModule, PR_LOG_WARNING, 
+                 ("nsLDAPConnection::~nsLDAPConnection: %s\n", 
+                  ldap_err2string(rc)));
       }
 #endif
   }
 
-#ifdef PR_LOGGING
-  if (gLDAPLogModule) {
-      PR_LOG(gLDAPLogModule, PR_LOG_DEBUG, ("unbound\n"));
-  }
-#endif
+  PR_LOG(gLDAPLogModule, PR_LOG_DEBUG, ("unbound\n"));
 
   if (mBindName) {
       delete mBindName;
@@ -185,17 +180,6 @@ nsLDAPConnection::Init(const char *aHost, PRInt16 aPort,
         return NS_ERROR_ILLEGAL_VALUE;
     }
 
-#ifdef PR_LOGGING
-    // initialize logging, if it hasn't been already
-    //
-    if (!gLDAPLogModule) {
-        gLDAPLogModule = PR_NewLogModule("ldap");
-
-        NS_ABORT_IF_FALSE(gLDAPLogModule, 
-                          "failed to initialize LDAP log module");
-    }
-#endif
-
     // Make sure we haven't called Init earlier, i.e. there's a DNS
     // request pending.
     //
@@ -225,12 +209,6 @@ nsLDAPConnection::Init(const char *aHost, PRInt16 aPort,
     //
     mInitListener = aMessageListener;
 
-    // initialize the thread-specific data for the calling thread as necessary
-    //
-    if (!nsLDAPThreadDataInit()) {
-        return NS_ERROR_FAILURE;
-    }
-        
     // allocate a hashtable to keep track of pending operations.
     // 10 buckets seems like a reasonable size, and we do want it to 
     // be threadsafe
@@ -779,14 +757,6 @@ nsLDAPConnectionLoop::Run(void)
     PR_LOG(gLDAPLogModule, PR_LOG_DEBUG, 
            ("nsLDAPConnection::Run() entered\n"));
 
-    // initialize the thread-specific data for the child thread (as necessary)
-    //
-    if (!nsLDAPThreadDataInit()) {
-        NS_ERROR("nsLDAPConnection::Run() couldn't initialize "
-                   "thread-specific data");
-        return NS_ERROR_FAILURE;
-    }
-
     // wait for results
     //
     while(1) {
@@ -981,14 +951,10 @@ nsLDAPConnection::OnStopLookup(nsISupports *aContext,
         //
         if ( !mConnectionHandle ) {
             rv = NS_ERROR_FAILURE;  // LDAP C SDK API gives no useful error
-        } else if (!nsLDAPThreadFuncsInit(mConnectionHandle)) {
-            rv = NS_ERROR_UNEXPECTED;
         } else {
 #ifdef DEBUG_dmose
             const int lDebug = 0;
             ldap_set_option(mConnectionHandle, LDAP_OPT_DEBUG_LEVEL, &lDebug);
-            ldap_set_option(mConnectionHandle, LDAP_OPT_ASYNC_CONNECT, 
-                            NS_REINTERPRET_CAST(void *, 0));
 #endif
         }
 
