@@ -155,12 +155,14 @@ button[type="menu-button"] {
 .button-menu-dropmarker,
 .button-menubutton-dropmarker {
   margin: 1px;
-  list-style-image: url("chrome://global/skin/arrow/arrow-dn.gif");
+  background-image: url("chrome://global/skin/arrow/arrow-dn.gif");
+  min-width:9px;
+  min-height:5px;
 }
   
 .button-menu-dropmarker[disabled="true"],
 .button-menubutton-dropmarker[disabled="true"] {
-  list-style-image: url("chrome://global/skin/arrow/arrow-dn-dis.gif");
+  background-image: url("chrome://global/skin/arrow/arrow-dn-dis.gif");
 }
 
 .button-menubutton-dropmarker[open="true"] {
