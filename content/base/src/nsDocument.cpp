@@ -475,18 +475,15 @@ nsDOMImplementation::GetScriptObject(nsIScriptContext *aContext,
   nsresult result = NS_OK;
 
   if (nsnull == mScriptObject) {
-    nsIDOMScriptObjectFactory *factory;
+    NS_WITH_SERVICE(nsIDOMScriptObjectFactory, factory, 
+                    kDOMScriptObjectFactoryCID, &result);
 
-    result = nsServiceManager::GetService(kDOMScriptObjectFactoryCID,
-                                          kIDOMScriptObjectFactoryIID,
-                                          (nsISupports **)&factory);
     if (NS_OK == result) {
       nsIScriptGlobalObject *global = aContext->GetGlobalObject();
 
       result = factory->NewScriptDOMImplementation(aContext, (nsISupports*)(nsIDOMDOMImplementation*)this,
                                                    global, &mScriptObject);
       NS_RELEASE(global);
-      NS_RELEASE(factory);
     }
   }
   
