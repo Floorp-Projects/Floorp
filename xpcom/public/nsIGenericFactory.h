@@ -44,12 +44,20 @@ public:
     static const nsIID& IID() { static nsIID iid = NS_IGENERICFACTORY_IID; return iid; }
     
     typedef NS_CALLBACK(ConstructorProcPtr) (nsISupports *aOuter, REFNSIID aIID, void **aResult);
+    typedef NS_CALLBACK(DestructorProcPtr) (void);
 
 	/**
 	 * Establishes the generic factory's constructor function, which will be called
 	 * by CreateInstance.
 	 */
     NS_IMETHOD SetConstructor(ConstructorProcPtr constructor) = 0;
+
+	/**
+	 * Establishes the generic factory's destructor function, which will be called
+	 * whe the generic factory is deleted. This is used to notify the DLL that
+	 * an instance of one of its generic factories is going away.
+	 */
+    NS_IMETHOD SetDestructor(DestructorProcPtr destructor) = 0;
 };
 
 #endif /* nsIGenericFactory_h___ */

@@ -18,12 +18,17 @@
 
 #include "nsGenericFactory.h"
 
-nsGenericFactory::nsGenericFactory(ConstructorProcPtr constructor) : mConstructor(constructor)
+nsGenericFactory::nsGenericFactory(ConstructorProcPtr constructor)
+	: mConstructor(constructor), mDestructor(NULL)
 {
 	NS_INIT_ISUPPORTS();
 }
 
-nsGenericFactory::~nsGenericFactory() {}
+nsGenericFactory::~nsGenericFactory()
+{
+	if (mDestructor != NULL)
+		(*mDestructor) ();
+}
 
 NS_METHOD nsGenericFactory::QueryInterface(const nsIID& aIID, void** aInstancePtr)
 {
@@ -56,6 +61,12 @@ NS_IMETHODIMP nsGenericFactory::LockFactory(PRBool aLock)
 NS_IMETHODIMP nsGenericFactory::SetConstructor(ConstructorProcPtr constructor)
 {
 	mConstructor = constructor;
+	return NS_OK;
+}
+
+NS_IMETHODIMP nsGenericFactory::SetDestructor(DestructorProcPtr destructor)
+{
+	mDestructor = destructor;
 	return NS_OK;
 }
 
