@@ -903,6 +903,11 @@ printf("doReverse set to TRUE\n");
   else if (aIsOddLevel) {
     doReverse = PR_TRUE;
   }
+  PRBool isVisual;
+  aPresContext->IsVisualMode(isVisual);
+  if (aIsBidiSystem && isVisual && (eCharType_RightToLeftArabic == aCharType)) {
+    doReverse = (!doReverse);
+  }
   newLen = aTextLength;
   if (doReverse) {
     newLen = mBuffer.Length();
