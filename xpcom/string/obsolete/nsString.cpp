@@ -587,8 +587,8 @@ nsCString& nsCString::Trim(const char* aTrimSet, PRBool aEliminateLeading,PRBool
     nsStr::Trim(*this,aTrimSet,aEliminateLeading,aEliminateTrailing);
 
     if(aIgnoreQuotes && theQuotesAreNeeded) {
-      Insert(theFirstChar,0);
-      Append(theLastChar);
+      InsertWithConversion(theFirstChar,0);
+      AppendWithConversion(theLastChar);
     }
 
   }
@@ -946,8 +946,18 @@ void nsCString::AssignWithConversion(const PRUnichar* aString,PRInt32 aCount) {
  */
 void nsCString::AssignWithConversion(PRUnichar aChar) {
   nsStr::Truncate(*this,0);
-  Append(aChar);
+  AppendWithConversion(aChar);
 }
+
+#ifdef NEW_STRING_APIS
+void nsCString::do_AppendFromReadable( const nsAReadableCString& aReadable )
+  {
+    if ( SameImplementation(*this, aReadable) )
+      StrAppend(*this, NS_STATIC_CAST(const nsCString&, aReadable), 0, aReadable.Length());
+    else
+      nsAWritableCString::do_AppendFromReadable(aReadable);
+  }
+#endif
 
 #ifndef NEW_STRING_APIS
 /**
@@ -1051,7 +1061,7 @@ void nsCString::AppendWithConversion(PRUnichar aChar) {
  * @param   aRadix:
  * @return
  */
-void nsCString::AppendWithConversion(PRInt32 anInteger,PRInt32 aRadix) {
+void nsCString::AppendInt(PRInt32 anInteger,PRInt32 aRadix) {
 
   PRUint32 theInt=(PRUint32)anInteger;
 
@@ -1089,7 +1099,7 @@ void nsCString::AppendWithConversion(PRInt32 anInteger,PRInt32 aRadix) {
  * @param   aFloat:
  * @return
  */
-void nsCString::AppendWithConversion(float aFloat){
+void nsCString::AppendFloat( double aFloat ){
   char buf[40];
   // *** XX UNCOMMENT THIS LINE
   //PR_snprintf(buf, sizeof(buf), "%g", aFloat);
@@ -1178,6 +1188,16 @@ void nsCString::InsertWithConversion(PRUnichar aChar,PRUint32 anOffset){
   temp.mLength=1;
   StrInsert(*this,anOffset,temp,0,1);
 }
+
+#ifdef NEW_STRING_APIS
+void nsCString::do_InsertFromReadable( const nsAReadableCString& aReadable, PRUint32 atPosition )
+  {
+    if ( SameImplementation(*this, aReadable) )
+      StrInsert(*this, atPosition, NS_STATIC_CAST(const nsCString&, aReadable), 0, aReadable.Length());
+    else
+      nsAWritableCString::do_InsertFromReadable(aReadable, atPosition);
+  }
+#endif
 
 #ifndef NEW_STRING_APIS
 /*
