@@ -493,3 +493,25 @@ extern "C" NS_COM nsresult NS_NewCharIOStream(
 {
     return NS_NewCharOutputStream(aStreamResult, aStringToChange);
 }
+
+//----------------------------------------------------------------------------------------
+extern "C" NS_COM nsresult NS_NewByteInputStream(
+    nsISupports** aStreamResult,
+    const char* aStringToRead,
+     PRInt32 aLength)
+    // Factory method to get an nsInputStream from a string.  Result will implement all the
+    // file stream interfaces in nsIFileStream.h
+//----------------------------------------------------------------------------------------
+{
+    NS_PRECONDITION(aStreamResult != nsnull, "null ptr");
+    if (! aStreamResult)
+        return NS_ERROR_NULL_POINTER;
+
+    ConstCharImpl* stream = new ConstCharImpl(aStringToRead, aLength);
+    if (! stream)
+        return NS_ERROR_OUT_OF_MEMORY;
+
+    NS_ADDREF(stream);
+    *aStreamResult = (nsISupports*)(void*)stream;
+    return NS_OK;
+}
