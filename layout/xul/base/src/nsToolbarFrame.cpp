@@ -64,9 +64,7 @@ NS_NewToolbarFrame ( nsIFrame** aNewFrame )
 nsToolbarFrame :: nsToolbarFrame ( )
 {
 	//*** anything?
-#ifdef TOOLBAR_DD
   mXDropLoc = -1;
-#endif
 }
 
 
@@ -91,7 +89,6 @@ nsToolbarFrame::Init(nsIPresContext&  aPresContext,
 {
   nsresult  rv = nsBoxFrame::Init(aPresContext, aContent, aParent, aContext, aPrevInFlow);
 
-#ifdef TOOLBAR_DD
   //nsCOMPtr<nsIDOMEventReceiver> reciever(do_QueryInterface(mContent));
   nsCOMPtr<nsIContent> content;
   GetContent(getter_AddRefs(content));
@@ -115,7 +112,6 @@ nsToolbarFrame::Init(nsIPresContext&  aPresContext,
 
   //      nsCOMPtr<nsIDOMEventListener> eventListener = do_QueryInterface(popupListener);
   //      AddEventListener("mousedown", eventListener, PR_FALSE);  
-#endif
 
   return rv;
 }
@@ -166,7 +162,6 @@ nsToolbarFrame :: Paint ( nsIPresContext& aPresContext,
 
   nsresult res =  nsBoxFrame::Paint ( aPresContext, aRenderingContext, aDirtyRect, aWhichLayer );
 
-#ifdef TOOLBAR_DD
   if (mXDropLoc != -1) {
     //printf("mXDropLoc: %d\n", mXDropLoc);
     // XXX this is temporary
@@ -187,7 +182,7 @@ nsToolbarFrame :: Paint ( nsIPresContext& aPresContext,
     aRenderingContext.SetColor(color);
     aRenderingContext.DrawLine(mXDropLoc, 0, mXDropLoc, mRect.height);
   }
-#endif
+
   return res;
   
 } // Paint
@@ -245,11 +240,9 @@ nsToolbarFrame :: HandleEvent ( nsIPresContext& aPresContext,
                                    nsGUIEvent*     aEvent, 
                                    nsEventStatus&  aEventStatus) 
 { 
-#ifdef TOOLBAR_DD
   if(mDragListener) {
     mDragListener->SetPresContext(&aPresContext); // not ref counted
   }
-#endif
 
   if ( !aEvent ) 
     return nsEventStatus_eIgnore; 
@@ -257,24 +250,20 @@ nsToolbarFrame :: HandleEvent ( nsIPresContext& aPresContext,
   switch (aEvent->message) { 
     case NS_DRAGDROP_ENTER: 
 
-#ifdef TOOLBAR_DD
       if (!mMarkerStyle) {
         nsCOMPtr<nsIAtom> atom ( getter_AddRefs(NS_NewAtom(":-moz-drop-marker")) );
         aPresContext.ProbePseudoStyleContextFor(mContent, atom, mStyleContext,
 										      PR_FALSE,
 										      getter_AddRefs(mMarkerStyle));
       }
-#endif
       break; 
 
     case NS_DRAGDROP_OVER: 
       break; 
 
     case NS_DRAGDROP_EXIT: 
-#ifdef TOOLBAR_DD
       mMarkerStyle = do_QueryInterface(nsnull);
       // remove drop feedback 
-#endif
       break; 
 
     case NS_DRAGDROP_DROP: 

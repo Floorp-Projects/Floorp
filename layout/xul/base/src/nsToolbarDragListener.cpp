@@ -307,9 +307,8 @@ nsToolbarDragListener::DragOver(nsIDOMEvent* aDragEvent)
       PRBool onChild = IsOnToolbarItem(aDragEvent, xLoc, isLegalChild);
 
       if (xLoc != mCurrentDropLoc) {
-#ifdef TOOLBAR_DD
         mToolbar->SetDropfeedbackLocation(xLoc);
-#endif
+
         // force the toolbar frame to redraw
         ForceDrawFrame(mToolbar);
 
@@ -342,9 +341,7 @@ nsToolbarDragListener::DragExit(nsIDOMEvent* aDragEvent)
     nsCOMPtr<nsIDragSession> dragSession(do_QueryInterface(dragService));
     nsAutoString toolbarItemFlavor(TOOLBARITEM_MIME);
     if (dragSession && NS_OK == dragSession->IsDataFlavorSupported(&toolbarItemFlavor)) {
-#ifdef TOOLBAR_DD
       mToolbar->SetDropfeedbackLocation(-1); // clears drawing of marker
-#endif
       ForceDrawFrame(mToolbar);
       rv = NS_ERROR_BASE; // consume event
     }
@@ -363,9 +360,8 @@ nsToolbarDragListener::DragExit(nsIDOMEvent* aDragEvent)
 nsresult
 nsToolbarDragListener::DragDrop(nsIDOMEvent* aMouseEvent)
 {
-#ifdef TOOLBAR_DD
   mToolbar->SetDropfeedbackLocation(-1); // clears drawing of marker
-#endif
+
   // XXX At the moment toolbar drags contain "text"
   // in the future they will probably contain some form of content
   // that will be translated into some RDF form

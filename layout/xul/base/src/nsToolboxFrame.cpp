@@ -39,7 +39,6 @@
 #include "nsIWidget.h"
 #include "nsINameSpaceManager.h"
 
-#ifdef TOOLBAR_DD
 #include "nsIServiceManager.h"
 #include "nsWidgetsCID.h"
 #include "nsIDragService.h"
@@ -62,7 +61,7 @@ static NS_DEFINE_IID(kISupportsIID,  NS_ISUPPORTS_IID);
 static NS_DEFINE_IID(kIDOMEventReceiverIID,  NS_IDOMEVENTRECEIVER_IID);
 
 #include "nsISupportsArray.h"
-#endif
+
 
 //
 // NS_NewToolboxFrame
@@ -121,13 +120,11 @@ NS_IMPL_RELEASE(nsToolboxFrame)
 nsresult
 nsToolboxFrame::QueryInterface(REFNSIID aIID, void** aInstancePtr)
 {
-#ifdef TOOLBAR_DD
   if (aIID.Equals(kIDOMEventReceiverIID)) {
     *aInstancePtr = (void*)(nsIDOMEventListener*)this;
     NS_ADDREF_THIS();
     return NS_OK;
   }
-#endif
   if (aIID.Equals(nsIDOMDragListener::GetIID())) {
     *aInstancePtr = (void*)(nsIDOMDragListener*)this;
     NS_ADDREF_THIS();
@@ -195,7 +192,6 @@ nsToolboxFrame::Init(nsIPresContext&  aPresContext,
   nsresult  rv = nsBoxFrame::Init(aPresContext, aContent, aParent, aContext, aPrevInFlow);
   UpdateStyles(&aPresContext);
 
-#ifdef TOOLBAR_DD
   nsCOMPtr<nsIContent> content;
   GetContent(getter_AddRefs(content));
 
@@ -204,8 +200,6 @@ nsToolboxFrame::Init(nsIPresContext&  aPresContext,
   if (NS_OK == reciever->AddEventListenerByIID((nsIDOMDragListener *)this, nsIDOMDragListener::GetIID())) {
     printf("Toolbar registered as Drag Listener\n");
   }
-
-#endif
 
   return rv;
 }
@@ -744,8 +738,6 @@ nsToolboxFrame :: ExpandToolbar ( TabInfo & inTab )
 } // ExpandToolbar
 
 
-#ifdef TOOLBAR_DD
-
 ////////////////////////////////////////////////////////////////////////
 nsresult
 nsToolboxFrame::HandleEvent(nsIDOMEvent* aEvent)
@@ -882,4 +874,5 @@ nsToolboxFrame::DragDrop(nsIDOMEvent* aMouseEvent)
 
   return NS_ERROR_BASE; // consume the event;
 }
-#endif
+
+
