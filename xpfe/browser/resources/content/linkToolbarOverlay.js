@@ -38,29 +38,22 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-/** 
- * called on every page load 
- *
- * FIXME: refresh isn't called until the entire document has finished loading
- * XXX: optimization: don't refresh when page reloaded if the page hasn't
- *    been modified
- * XXX: optimization: don't refresh when toolbar is compacted
- */
- 
-LinkToolbarUI = function()
+var LinkToolbarUI = function()
 {
 }
 
-LinkToolbarUI.prototype.refresh =
+LinkToolbarUI.prototype.linkAdded =
 function(event)
 {
-  if (event.originalTarget != getBrowser().contentDocument)
+  var element = event.originalTarget;
+
+  if (element.ownerDocument != getBrowser().contentDocument ||
+      !linkToolbarUI.isLinkToolbarEnabled() ||
+      !element instanceof Components.interfaces.nsIDOMHTMLLinkElement ||
+      !element.href || (!element.rel && !element.rev))
     return;
 
-  if (!linkToolbarUI.isLinkToolbarEnabled())
-    return;
-
-  linkToolbarUI.doRefresh();
+  linkToolbarHandler.handle(element);
 }
 
 LinkToolbarUI.prototype.isLinkToolbarEnabled =
@@ -72,87 +65,84 @@ function()
     return true;
 }
 
-LinkToolbarUI.prototype.doRefresh =
+LinkToolbarUI.prototype.clear =
+function(event)
+{
+  if (event.originalTarget != getBrowser().contentDocument ||
+      !linkToolbarUI.isLinkToolbarEnabled() ||
+      !linkToolbarHandler.hasItems)
+    return;
+
+  linkToolbarHandler.clearAllItems();
+}
+
+LinkToolbarUI.prototype.fullSlowRefresh =
 function()
 {
- // Not doing <meta http-equiv> elements yet.
- // If you enable checking for A links, the browser becomes 
- // unresponsive during this call...for as long as 2 or more 
- // seconds on heavily linked documents.
-
- var currentNode = window._content.document.documentElement;
-  if(!(currentNode instanceof Components.interfaces.nsIDOMHTMLHtmlElement)) return;
+  var currentNode = getBrowser().contentDocument.documentElement;
+  if (!(currentNode instanceof Components.interfaces.nsIDOMHTMLHtmlElement))
+    return;
   currentNode = currentNode.firstChild;
   
-  while(currentNode) {
-    if(currentNode instanceof Components.interfaces.nsIDOMHTMLHeadElement) {
+  while(currentNode)
+  {
+    if (currentNode instanceof Components.interfaces.nsIDOMHTMLHeadElement) {
       currentNode = currentNode.firstChild;
       
-      while(currentNode) {
-        if ((currentNode instanceof Components.interfaces.nsIDOMHTMLLinkElement) && 
-            (currentNode.rel || currentNode.rev) && 
-             currentNode.href) {
-          linkToolbarHandler.handle(currentNode);
-        }
-        
+      while(currentNode)
+      {
+        if (currentNode instanceof Components.interfaces.nsIDOMHTMLLinkElement)
+          linkToolbarUI.linkAdded({originalTarget: currentNode});
         currentNode = currentNode.nextSibling;
       }
-    } else if (currentNode instanceof Components.interfaces.nsIDOMElement) {
+    }
+    else if (currentNode instanceof Components.interfaces.nsIDOMElement)
+    {
       // head is supposed to be the first element inside html.
       // Got something else instead. returning
        return;
-    } else {
+    }
+    else
+    {
       // Got a comment node or something like that. Moving on.
       currentNode = currentNode.nextSibling;
     }
   }  
-
-  document.getElementById("linktoolbar").
-           setAttribute("hasitems", linkToolbarHandler.hasItems);
 }
 
-LinkToolbarUI.prototype.getLinkElements =
+LinkToolbarUI.prototype.toolbarActive = false;
+
+LinkToolbarUI.prototype.activate =
 function()
 {
-  return getHeadElement().getElementsByTagName("link");
+  if (!linkToolbarUI.toolbarActive) {
+    linkToolbarUI.toolbarActive = true;
+    document.getElementById("linktoolbar").setAttribute("hasitems", "true");
+    var contentArea = document.getElementById("appcontent");
+    contentArea.addEventListener("unload", linkToolbarUI.clear, true);
+    contentArea.addEventListener("load", linkToolbarUI.deactivate, true);
+    contentArea.addEventListener("DOMHeadLoaded", linkToolbarUI.deactivate,
+                                 true);
+  }
 }
 
-LinkToolbarUI.prototype.getHeadElement =
+LinkToolbarUI.prototype.deactivate =
 function()
 {
-  return window._content.document.getElementsByTagName("head").item(0);
-}
-
-LinkToolbarUI.prototype.getAnchorElements =
-function()
-{
-  // XXX: document.links includes AREA links, which technically 
-  //    shouldn't be checked for REL attributes
-  // FIXME: doesn't work on XHTML served as application/xhtml+xml
-  return window._content.document.links;
-}
-
-/** called on every page unload */
-LinkToolbarUI.prototype.clear =
-function(event)
-{
-  if (event.originalTarget != getBrowser().contentDocument)
-    return;
-
-  if (!linkToolbarUI.isLinkToolbarEnabled())
-    return;
-
-  if (!linkToolbarHandler.hasItems)
-    return;
-
-  linkToolbarUI.doClear();
-}
-
-LinkToolbarUI.prototype.doClear =
-function()
-{
-  hideMiscellaneousSeparator();
-  linkToolbarHandler.clearAllItems();
+  // This function can never be called unless the toolbar is active, because
+  // it's a handler that's only activated in that situation, so there's no need
+  // to check toolbarActive. On the other hand, by the time this method is
+  // called the toolbar might have been populated again already, in which case
+  // we don't want to deactivate.
+  if (!linkToolbarHandler.hasItems) {
+    linkToolbarUI.toolbarActive = false;
+    document.getElementById("linktoolbar").setAttribute("hasitems", "false");
+    var contentArea = document.getElementById("appcontent");
+    contentArea.removeEventListener("unload", linkToolbarUI.clear, true);
+    contentArea.removeEventListener("load", linkToolbarUI.deactivate, true);
+    contentArea.removeEventListener("DOMHeadLoaded", linkToolbarUI.deactivate,
+                                    true);
+  }
 }
 
 /* called whenever something on the toolbar is clicked */
@@ -189,9 +179,9 @@ function(checkedItem)
   this.goToggleTristateToolbar("linktoolbar", checkedItem);
   this.initHandlers();
   if (this.isLinkToolbarEnabled())
-    this.doRefresh();
+    this.fullSlowRefresh();
   else
-    this.doClear();
+    linkToolbarHandler.clearAllItems();
 }
 
 LinkToolbarUI.prototype.initLinkbarVisibilityMenu = 
@@ -204,6 +194,7 @@ function()
   checkedItem.setAttribute("checked", true);
   checkedItem.checked = true;
 }
+
 LinkToolbarUI.prototype.goToggleTristateToolbar =
 function(id, checkedItem)
 {
@@ -214,23 +205,26 @@ function(id, checkedItem)
     document.persist(id, "hidden");
   }
 }
+
+LinkToolbarUI.prototype.addHandlerActive = false;
+
 LinkToolbarUI.prototype.initHandlers =
 function()
 {
   var contentArea = document.getElementById("appcontent");
   if (linkToolbarUI.isLinkToolbarEnabled())
   {
-    if (!linkToolbarUI.handlersActive) {
-      contentArea.addEventListener("load", linkToolbarUI.refresh, true);
-      contentArea.addEventListener("unload", linkToolbarUI.clear, true);
-      linkToolbarUI.handlersActive = true;
+    if (!linkToolbarUI.addHandlerActive) {
+      contentArea.addEventListener("DOMLinkAdded", linkToolbarUI.linkAdded,
+                                   true);
+      linkToolbarUI.addHandlerActive = true;
     }
   } else
   {
-    if (linkToolbarUI.handlersActive) {
-      contentArea.removeEventListener("load", linkToolbarUI.refresh, true);
-      contentArea.removeEventListener("unload", linkToolbarUI.clear, true);
-      linkToolbarUI.handlersActive = false;
+    if (linkToolbarUI.addHandlerActive) {
+      contentArea.removeEventListener("DOMLinkAdded", linkToolbarUI.linkAdded,
+                                      true);
+      linkToolbarUI.addHandlerActive = false;
     }
   }
   if (!linkToolbarUI.initialized)
