@@ -877,8 +877,8 @@ function setupLdapAutocompleteSession()
                     Components.interfaces.nsILDAPURL);
 
             try {
-                serverURL.spec = sPrefs.getCharPref(autocompleteDirectory + 
-                                                    ".uri");
+                serverURL.spec = sPrefs.getComplexValue(autocompleteDirectory +".uri",
+                                           Components.interfaces.nsISupportsWString).data;
             } catch (ex) {
                 dump("ERROR: " + ex + "\n");
             }
