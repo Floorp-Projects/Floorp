@@ -124,7 +124,7 @@ sub do_static {
   
   $rel_path = '../';
   while (($key, $value) = each %images) {
-    $images{$key} = "$rel_path/$value";
+    $images{$key} = "$rel_path$value";
   }
 
   my $oldfh = select;
@@ -288,15 +288,14 @@ sub print_table_row {
     my $logurl = "${rel_path}showlog.cgi?log=$buildtree/$logfile";
 
     if ($hasnote) {
-      print "<a href='$logurl' onClick=\"return ",
+      print "<a href='$logurl' onclick=\"return ",
             "note(event,$noteid,'$logfile');\">",
             "<img src='$images{star}' border=0></a>\n";
     }
         
     # Build Log
     # 
-    print "<A HREF='$logurl' ",
-      "onClick=\"return log(event,$bn,'$logfile');\">";
+    print "<A HREF='$logurl' onclick=\"return log(event,$bn,'$logfile');\">";
     print "L</a>";
       
     # What Changed
@@ -516,7 +515,7 @@ sub print_javascript {
       }
       var l = document.layers['popup'];
       l.document.write("<table border=1 cellspacing=1><tr><td>"
-                       + note[noteid] + "</tr></table>");
+                       + notes[noteid] + "</tr></table>");
       l.document.close();
 
       l.top = d.y-10;
@@ -550,7 +549,7 @@ sub print_javascript {
       q.left = yy;
       q.visibility="show"; 
       q.document.write("<TABLE BORDER=1><TR><TD><B>"
-        + build[buildindex] + "</B><BR>"
+        + builds[buildindex] + "</B><BR>"
         + "<A HREF=$rel_path" + logurl + ">View Brief Log</A><BR>"
         + "<A HREF=$rel_path" + logurl + "&fulltext=1"+">View Full Log</A><BR>"
         + "<A HREF=$rel_path" + commenturl + ">Add a Comment</A><BR>"
@@ -559,8 +558,8 @@ sub print_javascript {
       return false;
     }
 
-    note = new Array();
-    build = new Array();
+    notes = new Array();
+    builds = new Array();
 
 __ENDJS
   print $script;
@@ -569,7 +568,7 @@ __ENDJS
   while ($ii < @note_array) {
     $ss = $note_array[$ii];
     while ($ii < @note_array && $note_array[$ii] eq $ss) {
-      print "note[$ii] = ";
+      print "notes[$ii] = ";
       $ii++;
     }
     $ss =~ s/\\/\\\\/g;
@@ -580,7 +579,7 @@ __ENDJS
   for ($ii=1; $ii <= $name_count; $ii++) {
     if (defined($br = $build_table->[1][$ii]) and $br != -1) {
       my $bn = $build_name_names->[$ii];
-      print "build[$ii]='$bn';\n";
+      print "builds[$ii]='$bn';\n";
     }
   }
   print "buildtree = '$form{tree}';\n";
