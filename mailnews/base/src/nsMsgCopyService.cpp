@@ -55,6 +55,7 @@ public:
     ~nsCopyRequest();
 
     void Init(nsCopyRequestType type, nsISupports* aSupport,
+              nsIMsgFolder* dstFolder,
               PRBool bVal, nsIMsgCopyServiceListener* listener,
               nsISupports* data, nsITransactionManager* txnMgr);
     nsCopySource* AddNewCopySource(nsIMsgFolder* srcFolder);
@@ -154,12 +155,14 @@ nsCopyRequest::~nsCopyRequest()
 
 void
 nsCopyRequest::Init(nsCopyRequestType type, nsISupports* aSupport,
+                    nsIMsgFolder* dstFolder,
                     PRBool bVal, nsIMsgCopyServiceListener* listener,
                     nsISupports* data, nsITransactionManager* txnMgr)
 {
     nsresult rv;
     m_requestType = type;
     m_srcSupport = do_QueryInterface(aSupport, &rv);
+    m_dstFolder = do_QueryInterface(dstFolder, &rv);
     m_isMoveOrDraft = bVal;
     if (listener)
         m_listener = do_QueryInterface(listener, &rv);
@@ -358,8 +361,8 @@ nsMsgCopyService::CopyMessages(nsIMsgFolder* srcFolder, /* UI src foler */
     if (!copyRequest) return rv;
     aSupport = do_QueryInterface(srcFolder, &rv);
 
-    copyRequest->Init(nsCopyMessagesType, aSupport, isMove, listener, 
-                      listenerData, txnMgr);
+    copyRequest->Init(nsCopyMessagesType, aSupport, dstFolder, 
+                      isMove, listener, listenerData, txnMgr);
 
     messages->Count(&cnt);
 
@@ -443,8 +446,8 @@ nsMsgCopyService::CopyFileMessage(nsIFileSpec* fileSpec,
     aSupport = do_QueryInterface(fileSpec, &rv);
     if (NS_FAILED(rv)) goto done;
 
-    copyRequest->Init(nsCopyFileMessageType, aSupport, isDraft, listener,
-                      listenerData, txnMgr);
+    copyRequest->Init(nsCopyFileMessageType, aSupport, dstFolder,
+                      isDraft, listener, listenerData, txnMgr);
     if (msgToReplace)
     {
         copySource = copyRequest->AddNewCopySource(dstFolder);
