@@ -79,6 +79,7 @@ pref("mail.use_altmail",                    false);
 pref("mail.altmail_dll",                    "postal32.dll");
 pref("mail.use_altmail_for_news",           true);
 pref("mail.thread_mail",                    false);
+pref("mail.thread_without_re",				true);
 pref("mail.sort_mail",                      false);
 pref("mail.ascend_mail",                    false);
 pref("mail.leave_on_server",                false);
