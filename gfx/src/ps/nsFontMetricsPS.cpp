@@ -116,7 +116,8 @@ NS_IMPL_ISUPPORTS(nsFontMetricsPS, kIFontMetricsIID)
  *	@update 2/26/99 dwc
  */
 NS_IMETHODIMP
-nsFontMetricsPS :: Init(const nsFont& aFont, nsIDeviceContext *aContext)
+nsFontMetricsPS :: Init(const nsFont& aFont, nsIAtom* aLangGroup,
+  nsIDeviceContext *aContext)
 {
 
   mFont = new nsFont(aFont);
@@ -331,6 +332,19 @@ NS_IMETHODIMP
 nsFontMetricsPS :: GetFont(const nsFont *&aFont)
 {
   aFont = mFont;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsFontMetricsPS :: GetLangGroup(nsIAtom** aLangGroup)
+{
+  if (!aLangGroup) {
+    return NS_ERROR_NULL_POINTER;
+  }
+
+  // XXX need to return real lang group
+  *aLangGroup = nsnull;
+
   return NS_OK;
 }
 
