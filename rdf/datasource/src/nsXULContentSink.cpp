@@ -743,11 +743,11 @@ XULContentSinkImpl::ProcessStyleLink(nsIContent* aElement,
 
   if ((0 == mimeType.Length()) || mimeType.EqualsIgnoreCase(kCSSType)) {
     nsIURI* url = nsnull;
-    nsIURLGroup* urlGroup = nsnull;
-    mDocumentBaseURL->GetURLGroup(&urlGroup);
-    if (urlGroup) {
-      result = urlGroup->CreateURL(&url, mDocumentBaseURL, aHref, nsnull);
-      NS_RELEASE(urlGroup);
+    nsILoadGroup* LoadGroup = nsnull;
+    mDocumentBaseURL->GetLoadGroup(&LoadGroup);
+    if (LoadGroup) {
+      result = LoadGroup->CreateURL(&url, mDocumentBaseURL, aHref, nsnull);
+      NS_RELEASE(LoadGroup);
     }
     else {
 #ifndef NECKO
@@ -1437,13 +1437,13 @@ XULContentSinkImpl::OpenScript(const nsIParserNode& aNode)
             // Use the SRC attribute value to load the URL
             nsIURI* url = nsnull;
             nsAutoString absURL;
-            nsIURLGroup* urlGroup;
+            nsILoadGroup* LoadGroup;
 
-            rv = mDocumentBaseURL->GetURLGroup(&urlGroup);
+            rv = mDocumentBaseURL->GetLoadGroup(&LoadGroup);
       
-            if ((NS_OK == rv) && urlGroup) {
-                rv = urlGroup->CreateURL(&url, mDocumentBaseURL, src, nsnull);
-                NS_RELEASE(urlGroup);
+            if ((NS_OK == rv) && LoadGroup) {
+                rv = LoadGroup->CreateURL(&url, mDocumentBaseURL, src, nsnull);
+                NS_RELEASE(LoadGroup);
             }
             else {
 #ifndef NECKO

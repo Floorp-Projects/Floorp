@@ -82,7 +82,7 @@ static NS_DEFINE_IID(kISupportsIID,                NS_ISUPPORTS_IID);
 static NS_DEFINE_IID(kIDocumentIID,                NS_IDOCUMENT_IID);
 static NS_DEFINE_IID(kIStreamListenerIID,          NS_ISTREAMLISTENER_IID);
 #ifndef NECKO
-static NS_DEFINE_IID(kIURLGroupIID,                NS_IURLGROUP_IID);
+static NS_DEFINE_IID(kILoadGroupIID,                NS_ILOADGROUP_IID);
 static NS_DEFINE_IID(kINetServiceIID,              NS_INETSERVICE_IID);
 static NS_DEFINE_IID(kNetServiceCID,             NS_NETSERVICE_CID);
 #else
@@ -163,7 +163,7 @@ protected:
  ****************************************************************************/
 
 #ifndef NECKO
-class nsDocLoaderImpl : public nsIDocumentLoader, public nsIURLGroup
+class nsDocLoaderImpl : public nsIDocumentLoader, public nsILoadGroup
 #else
 class nsDocLoaderImpl : public nsIDocumentLoader
 #endif // NECKO
@@ -207,7 +207,7 @@ public:
                                          nsIContentViewerContainer** aResult);
 
 #ifndef NECKO
-    // nsIURLGroup interface...
+    // nsILoadGroup interface...
     NS_IMETHOD CreateURL(nsIURI** aInstancePtrResult, 
                          nsIURI* aBaseURL,
                          const nsString& aSpec,
@@ -219,8 +219,8 @@ public:
     NS_IMETHOD GetDefaultLoadAttributes(nsILoadAttribs*& aLoadAttribs);
     NS_IMETHOD SetDefaultLoadAttributes(nsILoadAttribs*  aLoadAttribs);
 
-    NS_IMETHOD AddChildGroup(nsIURLGroup* aGroup);
-    NS_IMETHOD RemoveChildGroup(nsIURLGroup* aGroup);
+    NS_IMETHOD AddChildGroup(nsILoadGroup* aGroup);
+    NS_IMETHOD RemoveChildGroup(nsILoadGroup* aGroup);
 #endif // NECKO
 
     // Implementation specific methods...
@@ -367,8 +367,8 @@ nsDocLoaderImpl::QueryInterface(REFNSIID aIID, void** aInstancePtr)
         return NS_OK;
     }
 #ifndef NECKO
-    if (aIID.Equals(kIURLGroupIID)) {
-        *aInstancePtr = (void*)(nsIURLGroup*)this;
+    if (aIID.Equals(kILoadGroupIID)) {
+        *aInstancePtr = (void*)(nsILoadGroup*)this;
         NS_ADDREF_THIS();
         return NS_OK;
     }
@@ -797,7 +797,7 @@ nsDocLoaderImpl::SetDefaultLoadAttributes(nsILoadAttribs*  aLoadAttribs)
   PRInt32 index;
 
   for (index = 0; index < count; index++) {
-    nsIURLGroup* child = (nsIURLGroup*)mChildGroupList.ElementAt(index);
+    nsILoadGroup* child = (nsILoadGroup*)mChildGroupList.ElementAt(index);
     child->SetDefaultLoadAttributes(m_LoadAttrib);
   }
 
@@ -806,7 +806,7 @@ nsDocLoaderImpl::SetDefaultLoadAttributes(nsILoadAttribs*  aLoadAttribs)
 
 
 NS_IMETHODIMP
-nsDocLoaderImpl::AddChildGroup(nsIURLGroup* aGroup)
+nsDocLoaderImpl::AddChildGroup(nsILoadGroup* aGroup)
 {
   mChildGroupList.AppendElement(aGroup);
   return NS_OK;
@@ -814,7 +814,7 @@ nsDocLoaderImpl::AddChildGroup(nsIURLGroup* aGroup)
 
 
 NS_IMETHODIMP
-nsDocLoaderImpl::RemoveChildGroup(nsIURLGroup* aGroup)
+nsDocLoaderImpl::RemoveChildGroup(nsILoadGroup* aGroup)
 {
   nsresult rv = NS_OK;
 

@@ -432,7 +432,7 @@ public:
 
     virtual nsIURI* GetDocumentURL() const;
 
-    virtual nsIURLGroup* GetDocumentLoadGroup() const;
+    virtual nsILoadGroup* GetDocumentLoadGroup() const;
 
     NS_IMETHOD GetBaseURL(nsIURI*& aURL) const;
 
@@ -753,7 +753,7 @@ protected:
     nsVoidArray                mObservers;
     nsAutoString               mDocumentTitle;
     nsCOMPtr<nsIURI>           mDocumentURL;        // [OWNER] ??? compare with loader
-    nsCOMPtr<nsIURLGroup>      mDocumentURLGroup;   // [OWNER] leads to loader
+    nsCOMPtr<nsILoadGroup>      mDocumentLoadGroup;   // [OWNER] leads to loader
     nsCOMPtr<nsIContent>       mRootContent;        // [OWNER] 
     nsIDocument*               mParentDocument;     // [WEAK]
     nsIScriptContextOwner*     mScriptContextOwner; // [WEAK] it owns me! (indirectly)
@@ -1096,7 +1096,7 @@ XULDocumentImpl::PrepareToLoad( nsCOMPtr<nsIParser>* created_parser,
     mDocumentTitle.Truncate();
 
     mDocumentURL = syntheticURL;
-    syntheticURL->GetURLGroup(getter_AddRefs(mDocumentURLGroup));
+    syntheticURL->GetLoadGroup(getter_AddRefs(mDocumentLoadGroup));
 
     SetDocumentURLAndGroup(syntheticURL);
 
@@ -1295,7 +1295,7 @@ void
 XULDocumentImpl::SetDocumentURLAndGroup(nsIURI* anURL)
 {
     mDocumentURL = dont_QueryInterface(anURL);
-    anURL->GetURLGroup(getter_AddRefs(mDocumentURLGroup));
+    anURL->GetLoadGroup(getter_AddRefs(mDocumentLoadGroup));
 }
 
 NS_IMETHODIMP 
@@ -1358,10 +1358,10 @@ XULDocumentImpl::GetDocumentURL() const
     return result;
 }
 
-nsIURLGroup* 
+nsILoadGroup* 
 XULDocumentImpl::GetDocumentLoadGroup() const
 {
-    nsIURLGroup* result = mDocumentURLGroup;
+    nsILoadGroup* result = mDocumentLoadGroup;
     NS_IF_ADDREF(result);
     return result;
 }
