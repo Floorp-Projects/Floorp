@@ -891,7 +891,7 @@ nsresult nsViewManager2::CreateBlendingBuffers(nsIRenderingContext &aRC)
     	if (NS_FAILED(rv))
     		return rv;
 
-		offscreenBounds.ScaleRoundOut(mPixelsToTwips);
+		offscreenBounds.ScaleRoundIn(mPixelsToTwips);
         gOffScreenSize.width = offscreenBounds.width;
         gOffScreenSize.height = offscreenBounds.height;
     }
@@ -922,7 +922,7 @@ nsresult nsViewManager2::CreateBlendingBuffers(nsIRenderingContext &aRC)
     	if (NS_FAILED(rv))
     		return rv;
 
-		blenderBounds.ScaleRoundOut(mPixelsToTwips);
+		blenderBounds.ScaleRoundIn(mPixelsToTwips);
         gBlendSize.width = blenderBounds.width;
         gBlendSize.height = blenderBounds.height;
     }
