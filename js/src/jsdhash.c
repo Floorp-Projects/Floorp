@@ -95,7 +95,7 @@ JS_NewDHashTable(JSDHashTableOps *ops, void *data, uint32 entrySize,
     if (!table)
         return NULL;
     if (!JS_DHashTableInit(table, ops, data, entrySize, capacity)) {
-        JS_DHashTableDestroy(table);
+        free(table);
         return NULL;
     }
     return table;
