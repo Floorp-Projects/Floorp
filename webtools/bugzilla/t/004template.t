@@ -42,7 +42,7 @@ foreach my $file(@testitems) {
     if (-e $include_path . "/" . $file) {
         ok(1, "$file exists");
     } else {
-        ok(0, "$file does not exist");
+        ok(0, "$file does not exist --ERROR");
     }
 }
 
@@ -58,7 +58,7 @@ foreach my $file(@testitems) {
     if ($template->process($file)) {
         ok(1, "$file syntax ok");
     } else {
-        ok(0, "$file has bad syntax");
+        ok(0, "$file has bad syntax --ERROR");
     }
 }
 open STDOUT, ">&SAVEOUT";     # redirect back to original stream
