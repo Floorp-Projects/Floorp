@@ -25,7 +25,7 @@
  *   David Hyatt              <hyatt@netscape.com>
  *   Ben Goodger              <ben@netscape.com>
  *   Andreas Otte             <andreas.otte@debitel.net>
- *   Jan Varga                <varga@nixcorp.com>
+ *   Jan Varga                <varga@ku.sk>
  *   Benjamin Smedberg        <bsmedberg@covad.net>
  *
  * Alternatively, the contents of this file may be used under the terms of

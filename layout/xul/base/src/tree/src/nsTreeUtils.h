@@ -21,7 +21,7 @@
  *
  * Contributor(s):
  *   Chris Waterson <waterson@netscape.com>
- *   Jan Varga <varga@nixcorp.com>
+ *   Jan Varga <varga@ku.sk>
  *   Nate Nielsen <nielsen@memberwebs.com>
  *
  * Alternatively, the contents of this file may be used under the terms of

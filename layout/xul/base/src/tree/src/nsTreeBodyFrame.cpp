@@ -23,7 +23,7 @@
  *   Dave Hyatt <hyatt@mozilla.org> (Original Author)
  *   Ben Goodger <ben@netscape.com>
  *   Joe Hewitt <hewitt@netscape.com>
- *   Jan Varga <varga@nixcorp.com>
+ *   Jan Varga <varga@ku.sk>
  *   Dean Tessman <dean_tessman@hotmail.com>
  *   Brian Ryner <bryner@brianryner.com>
  *   Blake Ross <blaker@netscape.com>

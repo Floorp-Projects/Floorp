@@ -22,7 +22,7 @@
  * Contributor(s):
  *   Chris Waterson <waterson@netscape.com>
  *   Ben Goodger <ben@netscape.com>
- *   Jan Varga <varga@nixcorp.com>
+ *   Jan Varga <varga@ku.sk>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
