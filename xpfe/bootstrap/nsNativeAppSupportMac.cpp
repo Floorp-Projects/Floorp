@@ -382,17 +382,14 @@ nsNativeAppSupportMac::ReOpen()
       NS_WARNING("trying to open new window");
       //use the bootstrap helpers to make the right kind(s) of window open        
       nsresult rv = PR_FALSE;
-      nsCOMPtr<nsICmdLineService> cmdLineArgs(do_GetService(kCmdLineServiceCID, &rv));
+      nsCOMPtr<nsIAppShellService> appShell(do_GetService(kAppShellServiceCID, &rv));
       if (!rv)
       {
-        nsCOMPtr<nsIAppShellService> appShell(do_GetService(kAppShellServiceCID, &rv));
-        if (!rv)
-          {
-            //PRBool openedAWindow;
-            // uncomment when bug 109811 is fixed
-            //appShell->DoCommandLines(cmdLineArgs, true, &openedAWindow);
-          }
-        }        
+        PRBool openedAWindow = PR_FALSE;
+        appShell->CreateStartupState(nsIAppShellService::SIZE_TO_CONTENT,
+                                        nsIAppShellService::SIZE_TO_CONTENT,
+                                        &openedAWindow);
+      }
     }
     
   } // got window mediator
