@@ -56,9 +56,11 @@ nsXULSelectableAccessible(aDOMNode, aShell)
   if (mTree)
     mTree->GetView(getter_AddRefs(mTreeView));
   NS_ASSERTION(mTree && mTreeView, "Can't get mTree or mTreeView!\n");
+
+  mCaption = nsnull;
 }
 
-NS_IMPL_ISUPPORTS_INHERITED0(nsXULTreeAccessible, nsXULSelectableAccessible)
+NS_IMPL_ISUPPORTS_INHERITED1(nsXULTreeAccessible, nsXULSelectableAccessible, nsIAccessibleTable)
 
 NS_IMETHODIMP nsXULTreeAccessible::GetAccState(PRUint32 *_retval)
 {
@@ -349,9 +351,294 @@ void nsXULTreeAccessible::GetTreeBoxObject(nsIDOMNode *aDOMNode, nsITreeBoxObjec
   *aBoxObject = nsnull;
 }
 
+/* Implementation of nsIAccessibleTable for nsXULTreeAccessible */
+NS_IMETHODIMP nsXULTreeAccessible::GetCaption(nsIAccessible **aCaption)
+{
+  *aCaption = mCaption;
+  NS_IF_ADDREF(*aCaption);
+
+  return NS_OK;
+}
+NS_IMETHODIMP nsXULTreeAccessible::SetCaption(nsIAccessible *aCaption)
+{
+  mCaption = aCaption;
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsXULTreeAccessible::GetSummary(nsAString &aSummary)
+{
+  aSummary = mSummary;
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsXULTreeAccessible::SetSummary(const nsAString &aSummary)
+{
+  mSummary = aSummary;
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsXULTreeAccessible::GetColumns(PRInt32 *aColumns)
+{
+  nsresult rv = NS_OK;
+
+  nsCOMPtr<nsIAccessible> acc;
+  rv = nsAccessible::GetAccFirstChild(getter_AddRefs(acc));
+  NS_ENSURE_TRUE(acc, NS_ERROR_FAILURE);
+
+  return acc->GetAccChildCount(aColumns);
+}
+
+NS_IMETHODIMP nsXULTreeAccessible::GetColumnHeader(nsIAccessibleTable **aColumnHeader)
+{
+  nsresult rv = NS_OK;
+
+  nsCOMPtr<nsIAccessible> acc;
+  nsAccessible::GetAccFirstChild(getter_AddRefs(acc));
+  NS_ENSURE_TRUE(acc, NS_ERROR_FAILURE);
+
+  nsCOMPtr<nsIAccessibleTable> accTable(do_QueryInterface(acc, &rv));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  *aColumnHeader = accTable;
+  NS_IF_ADDREF(*aColumnHeader);
+
+  return rv;
+}
+
+NS_IMETHODIMP nsXULTreeAccessible::GetRows(PRInt32 *aRows)
+{
+  NS_ENSURE_TRUE(mTree && mTreeView, NS_ERROR_FAILURE);
+
+  return mTreeView->GetRowCount(aRows);
+}
+
+NS_IMETHODIMP nsXULTreeAccessible::GetRowHeader(nsIAccessibleTable **aRowHeader)
+{
+  // Row header not supported
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP nsXULTreeAccessible::GetSelectedColumns(PRUint32 *aNumColumns, PRInt32 **aColumns)
+{
+  // If all the row has been selected, then all the columns are selected.
+  // Because we can't select a column alone.
+  NS_ENSURE_TRUE(mTree && mTreeView, NS_ERROR_FAILURE);
+  NS_ENSURE_ARG_POINTER(aNumColumns);
+
+  nsresult rv = NS_OK;
+
+  PRInt32 rows;
+  rv = GetRows(&rows);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  PRInt32 selectedRows;
+  rv = GetSelectionCount(&selectedRows);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  if (rows == selectedRows) {
+    PRInt32 columns;
+    rv = GetColumns(&columns);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    *aNumColumns = columns;
+  } else {
+    *aNumColumns = 0;
+    return rv;
+  }
+
+  PRInt32 *outArray = (PRInt32 *)nsMemory::Alloc((*aNumColumns) * sizeof(PRInt32));
+  NS_ENSURE_TRUE(outArray, NS_ERROR_OUT_OF_MEMORY);
+
+  for (PRUint32 index = 0; index < *aNumColumns; index++) {
+    outArray[index] = index;
+  }
+
+  *aColumns = outArray;
+  return rv;
+}
+
+NS_IMETHODIMP nsXULTreeAccessible::GetSelectedRows(PRUint32 *aNumRows, PRInt32 **aRows)
+{
+  NS_ENSURE_TRUE(mTree && mTreeView, NS_ERROR_FAILURE);
+  NS_ENSURE_ARG_POINTER(aNumRows);
+
+  nsresult rv = NS_OK;
+
+  rv = GetSelectionCount((PRInt32 *)aNumRows);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  PRInt32 *outArray = (PRInt32 *)nsMemory::Alloc((*aNumRows) * sizeof(PRInt32));
+  NS_ENSURE_TRUE(outArray, NS_ERROR_OUT_OF_MEMORY);
+
+  nsCOMPtr<nsITreeSelection> selection;
+  rv = mTree->GetSelection(getter_AddRefs(selection));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  PRInt32 rowCount;
+  rv = GetRows(&rowCount);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  PRBool isSelected;
+  PRInt32 index, curr = 0;
+  for (index = 0; index < rowCount; index++) {
+    selection->IsSelected(index, &isSelected);
+    if (isSelected) {
+      outArray[curr++] = index;
+    }
+  }
+
+  *aRows = outArray;
+  return rv;
+}
+
+NS_IMETHODIMP nsXULTreeAccessible::CellRefAt(PRInt32 aRow, PRInt32 aColumn, nsIAccessible **_retval)
+{
+  NS_ENSURE_TRUE(mDOMNode && mTree, NS_ERROR_FAILURE);
+
+  nsresult rv = NS_OK;
+
+  nsCOMPtr<nsIAccessibleTable> header;
+  rv = GetColumnHeader(getter_AddRefs(header));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsCOMPtr<nsIAccessible> column;
+  rv = header->CellRefAt(0, aColumn, getter_AddRefs(column));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsCOMPtr<nsIDOMNode> columnNode;
+  rv = column->AccGetDOMNode(getter_AddRefs(columnNode));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsCOMPtr<nsIDOMElement> columnElement(do_QueryInterface(columnNode, &rv));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsAutoString id;
+  rv = columnElement->GetAttribute(NS_LITERAL_STRING("id"), id);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  PRInt32 realColumn;
+  rv = mTree->GetColumnIndex(id.get(), &realColumn);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  *_retval = new nsXULTreeitemAccessible(this, mDOMNode, mPresShell, aRow, realColumn);
+  NS_ENSURE_TRUE(*_retval, NS_ERROR_OUT_OF_MEMORY);
+
+  NS_IF_ADDREF(*_retval);
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsXULTreeAccessible::GetIndexAt(PRInt32 aRow, PRInt32 aColumn, PRInt32 *_retval)
+{
+  NS_ENSURE_ARG_POINTER(_retval);
+
+  nsresult rv = NS_OK;
+
+  PRInt32 columns;
+  rv = GetColumns(&columns);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  *_retval = aRow * columns + aColumn;
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsXULTreeAccessible::GetColumnAtIndex(PRInt32 aIndex, PRInt32 *_retval)
+{
+  NS_ENSURE_ARG_POINTER(_retval);
+
+  nsresult rv = NS_OK;
+
+  PRInt32 columns;
+  rv = GetColumns(&columns);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  *_retval = aIndex % columns;
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsXULTreeAccessible::GetRowAtIndex(PRInt32 aIndex, PRInt32 *_retval)
+{
+  NS_ENSURE_ARG_POINTER(_retval);
+
+  nsresult rv = NS_OK;
+
+  PRInt32 columns;
+  rv = GetColumns(&columns);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  *_retval = aIndex / columns;
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsXULTreeAccessible::GetColumnExtentAt(PRInt32 aRow, PRInt32 aColumn, PRInt32 *_retval)
+{
+  NS_ENSURE_ARG_POINTER(_retval);
+
+  *_retval = 1;
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsXULTreeAccessible::GetRowExtentAt(PRInt32 aRow, PRInt32 aColumn, PRInt32 *_retval)
+{
+  NS_ENSURE_ARG_POINTER(_retval);
+
+  *_retval = 1;
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsXULTreeAccessible::GetColumnDescription(PRInt32 aColumn, nsAString & _retval)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP nsXULTreeAccessible::GetRowDescription(PRInt32 aRow, nsAString & _retval)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP nsXULTreeAccessible::IsColumnSelected(PRInt32 aColumn, PRBool *_retval)
+{
+  // If all the row has been selected, then all the columns are selected.
+  // Because we can't select a column alone.
+  NS_ENSURE_TRUE(mTree && mTreeView, NS_ERROR_FAILURE);
+  NS_ENSURE_ARG_POINTER(_retval);
+
+  nsresult rv = NS_OK;
+
+  PRInt32 rows;
+  rv = GetRows(&rows);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  PRInt32 selectedRows;
+  rv = GetSelectionCount(&selectedRows);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  *_retval = rows == selectedRows;
+  return rv;
+}
+
+NS_IMETHODIMP nsXULTreeAccessible::IsRowSelected(PRInt32 aRow, PRBool *_retval)
+{
+  NS_ENSURE_TRUE(mTree && mTreeView, NS_ERROR_FAILURE);
+
+  nsresult rv = NS_OK;
+
+  nsCOMPtr<nsITreeSelection> selection;
+  rv = mTree->GetSelection(getter_AddRefs(selection));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  return selection->IsSelected(aRow, _retval);
+}
+
+NS_IMETHODIMP nsXULTreeAccessible::IsCellSelected(PRInt32 aRow, PRInt32 aColumn, PRBool *_retval)
+{
+  return IsRowSelected(aRow, _retval);
+}
+/* End Implementation of nsIAccessibleTable for nsXULTreeAccessible */
+
 // ---------- nsXULTreeitemAccessible ---------- 
 
-nsXULTreeitemAccessible::nsXULTreeitemAccessible(nsIAccessible *aParent, nsIDOMNode *aDOMNode, nsIWeakReference *aShell, PRInt32 aRow):
+nsXULTreeitemAccessible::nsXULTreeitemAccessible(nsIAccessible *aParent, nsIDOMNode *aDOMNode, nsIWeakReference *aShell, PRInt32 aRow, PRInt32 aColumn):
 nsLeafAccessible(aDOMNode, aShell)
 {
   mParent = aParent;
@@ -363,10 +650,15 @@ nsLeafAccessible(aDOMNode, aShell)
 
   // Since the real tree item does not correspond to any DOMNode, use the row index to distinguish each item
   mRow = aRow;
+  mColumnIndex = aColumn;
   if (mTree) {
-    PRInt32 keyColumn;
-    mTree->GetKeyColumnIndex(&keyColumn);
-    mTree->GetColumnID(keyColumn, mColumn);
+    if (mColumnIndex < 0) {
+      PRInt32 keyColumn;
+      mTree->GetKeyColumnIndex(&keyColumn);
+      mTree->GetColumnID(keyColumn, mColumn);
+    } else {
+      mTree->GetColumnID(aColumn, mColumn);
+    }
   }
 }
 
@@ -495,7 +787,8 @@ NS_IMETHODIMP nsXULTreeitemAccessible::GetAccParent(nsIAccessible **aAccParent)
   return NS_OK;
 }
 
-// Return the next row of tree (if any)
+// Return the next row of tree if mColumnIndex < 0 (if any),
+// otherwise return the next cell.
 NS_IMETHODIMP nsXULTreeitemAccessible::GetAccNextSibling(nsIAccessible **aAccNextSibling)
 {
   *aAccNextSibling = nsnull;
@@ -505,31 +798,76 @@ NS_IMETHODIMP nsXULTreeitemAccessible::GetAccNextSibling(nsIAccessible **aAccNex
   PRInt32 rowCount;
   mTreeView->GetRowCount(&rowCount);
 
-  if (mRow < rowCount - 1) {
+  if (mRow < rowCount - 1 && mColumnIndex < 0) {
     *aAccNextSibling = new nsXULTreeitemAccessible(mParent, mDOMNode, mPresShell, mRow + 1);
     if (! *aAccNextSibling)
       return NS_ERROR_OUT_OF_MEMORY;
     NS_ADDREF(*aAccNextSibling);
+
+    return NS_OK;
   }
 
-  return NS_OK;
+  nsresult rv = NS_OK;
+  nsCOMPtr<nsIAccessibleTable> table(do_QueryInterface(mParent, &rv));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  PRInt32 columnCount, row = mRow, column = mColumnIndex;
+  rv = table->GetColumns(&columnCount);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  if (mColumnIndex < columnCount - 1) {
+    column++;
+  } else if (mRow < rowCount - 1) {
+    column = 0;
+    row++;
+  }
+
+  *aAccNextSibling = new nsXULTreeitemAccessible(mParent, mDOMNode, mPresShell, row, column);
+  NS_ENSURE_TRUE(*aAccNextSibling, NS_ERROR_OUT_OF_MEMORY);
+
+  NS_ADDREF(*aAccNextSibling);
+  
+  return rv;
 }
 
-// Return the previous row of tree (if any)
+// Return the previou row of tree if mColumnIndex < 0 (if any),
+// otherwise return the previou cell.
 NS_IMETHODIMP nsXULTreeitemAccessible::GetAccPreviousSibling(nsIAccessible **aAccPreviousSibling)
 {
   *aAccPreviousSibling = nsnull;
 
   NS_ENSURE_TRUE(mTree && mTreeView, NS_ERROR_FAILURE);
 
-  if (mRow > 0) {
+  if (mRow > 0 && mColumnIndex < 0) {
     *aAccPreviousSibling = new nsXULTreeitemAccessible(mParent, mDOMNode, mPresShell, mRow - 1);
     if (! *aAccPreviousSibling)
       return NS_ERROR_OUT_OF_MEMORY;
     NS_ADDREF(*aAccPreviousSibling);
+
+    return NS_OK;
   }
 
-  return NS_OK;
+  nsresult rv = NS_OK;
+  nsCOMPtr<nsIAccessibleTable> table(do_QueryInterface(mParent, &rv));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  PRInt32 columnCount, row = mRow, column = mColumnIndex;
+  rv = table->GetColumns(&columnCount);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  if (mColumnIndex > 0) {
+    column--;
+  } else if (mRow > 0) {
+    column = columnCount - 1;
+    row--;
+  }
+
+  *aAccPreviousSibling = new nsXULTreeitemAccessible(mParent, mDOMNode, mPresShell, row, column);
+  NS_ENSURE_TRUE(*aAccPreviousSibling, NS_ERROR_OUT_OF_MEMORY);
+
+  NS_ADDREF(*aAccPreviousSibling);
+  
+  return rv;
 }
 
 NS_IMETHODIMP nsXULTreeitemAccessible::AccDoAction(PRUint8 index)
@@ -644,9 +982,10 @@ NS_IMETHODIMP nsXULTreeitemAccessible::AccTakeFocus()
 nsXULTreeColumnsAccessible::nsXULTreeColumnsAccessible(nsIDOMNode *aDOMNode, nsIWeakReference *aShell):
 nsAccessible(aDOMNode, aShell)
 {
+  mCaption = nsnull;
 }
 
-NS_IMPL_ISUPPORTS_INHERITED0(nsXULTreeColumnsAccessible, nsAccessible)
+NS_IMPL_ISUPPORTS_INHERITED1(nsXULTreeColumnsAccessible, nsAccessible, nsIAccessibleTable)
 
 NS_IMETHODIMP nsXULTreeColumnsAccessible::GetAccState(PRUint32 *_retval)
 {
@@ -716,6 +1055,156 @@ NS_IMETHODIMP nsXULTreeColumnsAccessible::AccDoAction(PRUint8 index)
 
   return NS_ERROR_INVALID_ARG;
 }
+
+// Implementation of nsIAccessibleTable for nsXULTreeColumnsAccessible
+NS_IMETHODIMP nsXULTreeColumnsAccessible::GetCaption(nsIAccessible **aCaption)
+{
+  *aCaption = mCaption;
+  NS_IF_ADDREF(*aCaption);
+
+  return NS_OK;
+}
+NS_IMETHODIMP nsXULTreeColumnsAccessible::SetCaption(nsIAccessible *aCaption)
+{
+  mCaption = aCaption;
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsXULTreeColumnsAccessible::GetSummary(nsAString &aSummary)
+{
+  aSummary = mSummary;
+  return NS_OK;
+}
+NS_IMETHODIMP nsXULTreeColumnsAccessible::SetSummary(const nsAString &aSummary)
+{
+  mSummary = aSummary;
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsXULTreeColumnsAccessible::GetColumns(PRInt32 *aColumns)
+{
+  return GetAccChildCount(aColumns);
+}
+
+NS_IMETHODIMP nsXULTreeColumnsAccessible::GetColumnHeader(nsIAccessibleTable * *aColumnHeader)
+{
+  // Column header not supported.
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP nsXULTreeColumnsAccessible::GetRows(PRInt32 *aRows)
+{
+  NS_ENSURE_ARG_POINTER(aRows);
+
+  *aRows = 1;
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsXULTreeColumnsAccessible::GetRowHeader(nsIAccessibleTable * *aRowHeader)
+{
+  // Row header not supported.
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP nsXULTreeColumnsAccessible::GetSelectedColumns(PRUint32 *columnsSize, PRInt32 **columns)
+{
+  // Header can not be selected.
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP nsXULTreeColumnsAccessible::GetSelectedRows(PRUint32 *rowsSize, PRInt32 **rows)
+{
+  // Header can not be selected.
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP nsXULTreeColumnsAccessible::CellRefAt(PRInt32 aRow, PRInt32 aColumn, nsIAccessible **_retval)
+{
+  nsCOMPtr<nsIAccessible> next, temp;
+  GetAccFirstChild(getter_AddRefs(next));
+  NS_ENSURE_TRUE(next, NS_ERROR_FAILURE);
+
+  for (PRInt32 col = 0; col < aColumn; col++) {
+    next->GetAccNextSibling(getter_AddRefs(temp));
+    NS_ENSURE_TRUE(temp, NS_ERROR_FAILURE);
+
+    next = temp;
+  }
+
+  *_retval = next;
+  NS_IF_ADDREF(*_retval);
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsXULTreeColumnsAccessible::GetIndexAt(PRInt32 aRow, PRInt32 aColumn, PRInt32 *_retval)
+{
+  NS_ENSURE_ARG_POINTER(_retval);
+
+  *_retval = aColumn;
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsXULTreeColumnsAccessible::GetColumnAtIndex(PRInt32 aIndex, PRInt32 *_retval)
+{
+  NS_ENSURE_ARG_POINTER(_retval);
+
+  *_retval = aIndex;
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsXULTreeColumnsAccessible::GetRowAtIndex(PRInt32 aIndex, PRInt32 *_retval)
+{
+  NS_ENSURE_ARG_POINTER(_retval);
+
+  *_retval = 0;
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsXULTreeColumnsAccessible::GetColumnExtentAt(PRInt32 aRow, PRInt32 aColumn, PRInt32 *_retval)
+{
+  NS_ENSURE_ARG_POINTER(_retval);
+
+  *_retval = 1;
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsXULTreeColumnsAccessible::GetRowExtentAt(PRInt32 aRow, PRInt32 aColumn, PRInt32 *_retval)
+{
+  NS_ENSURE_ARG_POINTER(_retval);
+
+  *_retval = 1;
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsXULTreeColumnsAccessible::GetColumnDescription(PRInt32 aColumn, nsAString & _retval)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP nsXULTreeColumnsAccessible::GetRowDescription(PRInt32 aRow, nsAString & _retval)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP nsXULTreeColumnsAccessible::IsColumnSelected(PRInt32 aColumn, PRBool *_retval)
+{
+  // Header can not be selected.
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP nsXULTreeColumnsAccessible::IsRowSelected(PRInt32 aRow, PRBool *_retval)
+{
+  // Header can not be selected.
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP nsXULTreeColumnsAccessible::IsCellSelected(PRInt32 aRow, PRInt32 aColumn, PRBool *_retval)
+{
+  // Header can not be selected.
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+// End Implementation of nsIAccessibleTable for nsXULTreeColumnsAccessible
 
 // ---------- nsXULTreeColumnitemAccessible ----------
 

@@ -47,15 +47,18 @@
 #include "nsITreeBoxObject.h"
 #include "nsITreeView.h"
 #include "nsXULSelectAccessible.h"
+#include "nsIAccessibleTable.h"
 
 /*
  * A class the represents the XUL Tree widget.
  */
-class nsXULTreeAccessible : public nsXULSelectableAccessible
+class nsXULTreeAccessible : public nsXULSelectableAccessible,
+                            public nsIAccessibleTable
 {
 public:
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_NSIACCESSIBLESELECTABLE
+  NS_DECL_NSIACCESSIBLETABLE
 
   nsXULTreeAccessible(nsIDOMNode* aDOMNode, nsIWeakReference* aShell);
   virtual ~nsXULTreeAccessible() {}
@@ -74,6 +77,8 @@ public:
 private:
   nsCOMPtr<nsITreeBoxObject> mTree;
   nsCOMPtr<nsITreeView> mTreeView;
+  nsCOMPtr<nsIAccessible> mCaption;
+  nsString mSummary;
 
   NS_IMETHOD ChangeSelection(PRInt32 aIndex, PRUint8 aMethod, PRBool *aSelState);
 };
@@ -86,7 +91,7 @@ class nsXULTreeitemAccessible : public nsLeafAccessible
 public:
   NS_DECL_ISUPPORTS_INHERITED
 
-  nsXULTreeitemAccessible(nsIAccessible* aParent, nsIDOMNode* aDOMNode, nsIWeakReference* aShell, PRInt32 aRow);
+  nsXULTreeitemAccessible(nsIAccessible *aParent, nsIDOMNode *aDOMNode, nsIWeakReference *aShell, PRInt32 aRow, PRInt32 aColumn = -1);
   virtual ~nsXULTreeitemAccessible() {}
 
   /* ----- nsIAccessible ----- */
@@ -111,14 +116,16 @@ public:
 private:
   nsCOMPtr<nsITreeBoxObject> mTree;
   nsCOMPtr<nsITreeView> mTreeView;
-  PRInt32  mRow;
+  PRInt32  mRow, mColumnIndex;
   nsString mColumn;
 };
 
-class nsXULTreeColumnsAccessible : public nsAccessible
+class nsXULTreeColumnsAccessible : public nsAccessible,
+                                   public nsIAccessibleTable
 {
 public:
   NS_DECL_ISUPPORTS_INHERITED
+  NS_DECL_NSIACCESSIBLETABLE
 
   nsXULTreeColumnsAccessible(nsIDOMNode* aDOMNode, nsIWeakReference* aShell);
   virtual ~nsXULTreeColumnsAccessible() {}
@@ -133,6 +140,10 @@ public:
   NS_IMETHOD GetAccPreviousSibling(nsIAccessible **_retval); 
 
   NS_IMETHOD AccDoAction(PRUint8 index);
+
+private:
+  nsCOMPtr<nsIAccessible> mCaption;
+  nsString mSummary;
 };
 
 class nsXULTreeColumnitemAccessible : public nsLeafAccessible
