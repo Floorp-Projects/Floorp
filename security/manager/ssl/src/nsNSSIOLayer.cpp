@@ -323,6 +323,17 @@ nsSSLIOLayerConnect(PRFileDesc* fd, const PRNetAddr* addr,
   return status;
 }
 
+static PRInt32 PR_CALLBACK
+nsSSLIOLayerAvailable(PRFileDesc *fd)
+{
+  if (!fd || !fd->lower)
+    return PR_FAILURE;
+
+  PRInt32 bytesAvailable = SSL_DataPending(fd->lower);
+  PR_LOG(gPIPNSSLog, PR_LOG_DEBUG, ("[%p] available %d bytes\n", (void*)fd, bytesAvailable));
+  return bytesAvailable;
+}
+
 static PRStatus PR_CALLBACK
 nsSSLIOLayerClose(PRFileDesc *fd)
 {
@@ -375,6 +386,7 @@ nsresult InitNSSMethods()
   
   nsSSLIOLayerMethods.connect = nsSSLIOLayerConnect;
   nsSSLIOLayerMethods.close = nsSSLIOLayerClose;
+  nsSSLIOLayerMethods.available = nsSSLIOLayerAvailable;
 
 #ifdef DEBUG_SSL_VERBOSE
   nsSSLIOLayerMethods.read = nsSSLIOLayerRead;
