@@ -98,7 +98,7 @@
   <binding id="tree">
     <content>
       <children/>
-      <xul:treerows>
+      <xul:treerows class="tree-container-treerows">
         <children includes="treehead,treechildren"/>
       </xul:treerows> 
     </content>
