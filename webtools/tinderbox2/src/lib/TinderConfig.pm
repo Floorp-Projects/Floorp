@@ -4,8 +4,8 @@
 
 
 
-# $Revision: 1.8 $ 
-# $Date: 2000/09/18 19:32:46 $ 
+# $Revision: 1.9 $ 
+# $Date: 2000/09/22 15:07:28 $ 
 # $Author: kestes%staff.mail.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/lib/Attic/TinderConfig.pm,v $ 
 # $Name:  $ 
@@ -98,6 +98,7 @@ $PopUpImpl = (
 	   'TinderDB::Time',
 	   'TinderDB::VC_CVS',
 	   'TinderDB::Notice',
+	   'TinderDB::BT_Generic',
 	   'TinderDB::Build',
 	  );
 

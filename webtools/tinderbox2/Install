@@ -7,8 +7,13 @@ code and documentation.
 
 To install:
 
-1) read and edit the variables found in the files ./src/lib/*,
-	 particularly TinderConfig.pm, TreeData.pm, and FileStructure.pm
+1) read and edit the variables found in the files ./src/lib/* particularly: 
+
+	TinderConfig.pm: general configuration settings
+	Error_Parse.pm: the regular expressions for highlighting errors
+	FileStructure.pm: filesystem (storage) and global/per-project settings
+	BTData.pm: bug tracking configuration
+	TreeData.pm: version control configuration
 
 2) run ./configure
 
@@ -25,10 +30,13 @@ that you have configured the program correctly.
      six am is a good time to run this as the machine load is light and 
      will avoids any day light savings problems.
 
-7) set up $prefix/bin/processmail to receive the incoming tinderbox
-mail.  We use the mail address 'tinder-builds' for build information
-destined for the webserver.  The process id which receives and process
-the mail must be the the same id which runs the cron job.
+7) set up the $prefix/bin/processmail* programs to receive the
+incoming tinderbox mail.  We use the mail address 'tinderbox_builds'
+for build information destined for the webserver (similarly the bug
+tracking system sends mail to 'tinderbox_bugs' on the webserver).  The
+process id which receives and process the mail must be the the same id
+which runs the cron job.  (currently I have a program called
+'processmail' it will eventually be renamed to 'processmail_builds')
 
 8) if you are using VC_CVS.pm then you will need to put a ~/.cvspass
 for tinderbox to use.  Log into the CVS repository yourself, once for
@@ -39,8 +47,9 @@ This is the REAL home of the Tinderbox daemon, as listed in
 tinder.cgi.
 
 9) setup the build machines to mail their build logs 
-	(with tinderbox variables on the top) to the web server machine. 
-   New builds must not start earlier then 6 minutes after the last build started.
+   (with tinderbox variables on the top) to the web server machine. 
+   New builds must not start earlier then 6 minutes after the 
+   last build started.
 
 10) Check that the time on your webserver and your build machine is in
 sync.  Check that mail if build mail bounces either on the build
