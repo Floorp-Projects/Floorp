@@ -1,7 +1,7 @@
 #!/usr/bin/perl
 
 #
-# mre.pl
+# gre.pl
 #
 
 while (<STDIN>) {
