@@ -445,10 +445,18 @@ if($::usergroupset ne '0') {
     SendSQL("SELECT bit, isactive FROM groups WHERE " .
             "isbuggroup != 0 AND bit & $::usergroupset != 0 ORDER BY bit");
     while (my ($b, $isactive) = FetchSQLData()) {
-        if (!$::FORM{"bit-$b"}) {
-            $groupDel .= "+$b";
-        } elsif ($::FORM{"bit-$b"} == 1 && $isactive) {
-            $groupAdd .= "+$b";
+        # The multiple change page may not show all groups a bug is in
+        # (eg product groups when listing more than one product)
+        # Only consider groups which were present on the form. We can't do this
+        # for single bug changes because non-checked checkboxes aren't present.
+        # All the checkboxes should be shown in that case, though, so its not
+        # an issue there
+        if ($::FORM{'id'} || exists $::FORM{"bit-$b"}) {
+            if (!$::FORM{"bit-$b"}) {
+                $groupDel .= "+$b";
+            } elsif ($::FORM{"bit-$b"} == 1 && $isactive) {
+                $groupAdd .= "+$b";
+            }
         }
     }
     if ($groupAdd ne "0" || $groupDel ne "0") {
