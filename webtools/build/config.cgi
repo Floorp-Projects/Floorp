@@ -70,15 +70,9 @@ sub parse_params {
 sub print_script_preview {
   my ($saveoptions) = '';
   foreach $param ($query->param()) {
-    if ($param =~ /^MOZ_/) {
+    if ($param =~ /^(MOZ_|--)/) {
       next if $query->param($param) eq '';
-      $saveopts .= "$param=".$query->param($param)."&";
-    }
-    if ($param =~ /^--/) {
-      next if $query->param($param) eq '';
-      $saveopts .= "$param";
-      $saveopts .= "=".$query->param($param) if $query->param($param) ne "yes";
-      $saveopts .= "&";
+      $saveopts .= "$param=".$query->param($param).'&';
     }
   }
   chop($saveopts);
