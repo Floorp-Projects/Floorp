@@ -517,7 +517,8 @@ nsresult nsExternalHelperAppService::FillContentHandlerProperties(const char * a
 
   // save to disk
   FillLiteralValueFromTarget(contentTypeHandlerNodeResource,kNC_SaveToDisk, &stringValue);
-  NS_NAMED_LITERAL_STRING( trueString, "true" );
+  NS_NAMED_LITERAL_STRING(trueString, "true");
+  NS_NAMED_LITERAL_STRING(falseString, "false");
   if (stringValue && trueString.Equals(stringValue))
        aMIMEInfo->SetPreferredAction(nsIMIMEInfo::saveToDisk);
 
@@ -533,10 +534,10 @@ nsresult nsExternalHelperAppService::FillContentHandlerProperties(const char * a
   
   // always ask
   FillLiteralValueFromTarget(contentTypeHandlerNodeResource,kNC_AlwaysAsk, &stringValue);
-  if (trueString.Equals(stringValue))
-    aMIMEInfo->SetAlwaysAskBeforeHandling(PR_TRUE);
-  else
-    aMIMEInfo->SetAlwaysAskBeforeHandling(PR_FALSE);
+  // Only skip asking if we are absolutely sure the user does not want
+  // to be asked.  Any sort of bofus data should mean we ask.
+  aMIMEInfo->SetAlwaysAskBeforeHandling(!stringValue ||
+                                        !falseString.Equals(stringValue)));
 
 
   // now digest the external application information
@@ -1329,13 +1330,14 @@ NS_IMETHODIMP nsExternalAppHandler::OnStartRequest(nsIRequest *request, nsISuppo
     }
 
 #endif
-    if ( action == nsIMIMEInfo::saveToDisk )
-    {
-        rv = SaveToDisk(nsnull, PR_FALSE);
-    }
-    else
+    if (action == nsIMIMEInfo::useHelperApp ||
+        action == nsIMIMEInfo::useSystemDefault)
     {
         rv = LaunchWithApplication(nsnull, PR_FALSE);
+    }
+    else // Various unknown actions go here too
+    {
+        rv = SaveToDisk(nsnull, PR_FALSE);
     }
   }
 
@@ -1561,11 +1563,8 @@ nsresult nsExternalAppHandler::ExecuteDesiredAction()
   {
     nsMIMEInfoHandleAction action = nsIMIMEInfo::saveToDisk;
     mMimeInfo->GetPreferredAction(&action);
-    if (action == nsIMIMEInfo::saveToDisk)
-      // XXX Put progress dialog in barber-pole mode
-      //     and change text to say "Copying from:".
-      rv = MoveFile(mFinalFileDestination);
-    else
+    if (action == nsIMIMEInfo::useHelperApp ||
+        action == nsIMIMEInfo::useSystemDefault)
     {
       // Make sure the suggested name is unique since in this case we don't
       // have a file name that was guaranteed to be unique by going through
@@ -1579,7 +1578,13 @@ nsresult nsExternalAppHandler::ExecuteDesiredAction()
           rv = OpenWithApplication(nsnull);
       }
     }
-
+    else // Various unknown actions go here too
+    {
+      // XXX Put progress dialog in barber-pole mode
+      //     and change text to say "Copying from:".
+      rv = MoveFile(mFinalFileDestination);
+    }
+    
     // Notify dialog that download is complete.
     // By waiting till this point, it ensures that the progress dialog doesn't indicate
     // success until we're really done.
