@@ -25,6 +25,7 @@
 #include "nsIWidget.h"
 #include "nsITimer.h"
 #include "prtime.h"
+#include "prinrval.h"
 #include "nsVoidArray.h"
 #include "nsIScrollableView.h"
 #include "nsIRegion.h"
