@@ -28,7 +28,7 @@ include $(DEPTH)/config/autoconf.mk
 
 MODULE		= layout
 LIBRARY_NAME	= gkconxulcon_s
-REQUIRES	= xpcom
+REQUIRES	= xpcom widget htmlparser necko dom webshell js
 
 CPPSRCS		= nsXULAtoms.cpp nsAnonymousElement.cpp
 
