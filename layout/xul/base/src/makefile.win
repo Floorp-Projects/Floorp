@@ -24,6 +24,7 @@ REQUIRES=xpcom raptor pref
 DEFINES=-D_IMPL_NS_HTML -DWIN32_LEAN_AND_MEAN
 
 CPPSRCS=					\
+        nsFrameNavigator.cpp        \
         nsRepeatService.cpp        \
         nsToolbarDragListener.cpp        \
         nsToolbarItemFrame.cpp        \
@@ -58,6 +59,7 @@ CPPSRCS=					\
 	$(NULL)
 
 CPP_OBJS=					\
+        .\$(OBJDIR)\nsFrameNavigator.obj    \
         .\$(OBJDIR)\nsRepeatService.obj    \
         .\$(OBJDIR)\nsToolbarDragListener.obj    \
         .\$(OBJDIR)\nsToolbarItemFrame.obj    \
