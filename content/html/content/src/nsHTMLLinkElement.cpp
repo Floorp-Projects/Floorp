@@ -56,7 +56,9 @@
 #include "nsIURL.h"
 #include "nsNetUtil.h"
 #include "nsIDocument.h"
-
+#include "nsIDOMEvent.h"
+#include "nsIDOMDocumentEvent.h"
+#include "nsIDOMEventTarget.h"
 
 class nsHTMLLinkElement : public nsGenericHTMLLeafElement,
                           public nsIDOMHTMLLinkElement,
@@ -90,12 +92,38 @@ public:
   NS_IMETHOD SetDocument(nsIDocument* aDocument, PRBool aDeep,
                          PRBool aCompileEventHandlers) {
     nsIDocument *oldDoc = mDocument;
+
+    nsAutoString rel;
+    GetAttr(kNameSpaceID_None, nsHTMLAtoms::rel, rel);
+    
+    CreateAndDispatchEvent(oldDoc, rel, NS_LITERAL_STRING("DOMLinkRemoved"));
+
+    // Do the removal and addition into the new doc.
     nsresult rv = nsGenericHTMLLeafElement::SetDocument(aDocument, aDeep,
                                                         aCompileEventHandlers);
     UpdateStyleSheet(PR_TRUE, oldDoc);
+		
+    CreateAndDispatchEvent(mDocument, rel, NS_LITERAL_STRING("DOMLinkAdded"));
+
     return rv;
   }
  
+  void CreateAndDispatchEvent(nsIDocument* aDoc, const nsString& aRel, 
+                              const nsAString& aEventName) {
+    if (aDoc && !aRel.IsEmpty() && !aRel.EqualsIgnoreCase("stylesheet")) {
+      nsCOMPtr<nsIDOMDocumentEvent> docEvent(do_QueryInterface(aDoc));
+      nsCOMPtr<nsIDOMEvent> event;
+      docEvent->CreateEvent(NS_LITERAL_STRING("Events"), getter_AddRefs(event));
+      if (event) {
+        event->InitEvent(aEventName, PR_TRUE, PR_TRUE);
+        PRBool noDefault;
+        nsCOMPtr<nsIDOMEventTarget> target(do_QueryInterface(NS_STATIC_CAST(nsIDOMNode*, this)));
+        if (target)
+          target->DispatchEvent(event, &noDefault);
+      }
+    }
+  }
+
   NS_IMETHOD SetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
                      const nsAReadableString& aValue, PRBool aNotify) {
     nsresult rv = nsGenericHTMLLeafElement::SetAttr(aNameSpaceID, aName,

@@ -70,6 +70,7 @@
 #include "nsIPrivateDOMEvent.h"
 #include "nsIDOMWindowInternal.h"
 #include "nsPIDOMWindow.h"
+#include "nsIDOMEventTarget.h"
 #include "nsIEnumerator.h"
 #include "nsFrameTraversal.h"
 #include "nsIDocShellTreeItem.h"
@@ -3800,6 +3801,9 @@ nsEventStateManager::DispatchNewEvent(nsISupports* aTarget, nsIDOMEvent* aEvent,
 
   nsCOMPtr<nsIPrivateDOMEvent> privEvt(do_QueryInterface(aEvent));
   if (aEvent) {
+    nsCOMPtr<nsIDOMEventTarget> eventTarget(do_QueryInterface(aTarget));
+    privEvt->SetTarget(eventTarget);
+
     nsEvent* innerEvent;
     privEvt->GetInternalNSEvent(&innerEvent);
     if (innerEvent) {
