@@ -921,11 +921,12 @@ int main()
     jsval rval;
     JSBool success = JS_TRUE;
     MySecMan* sm = new MySecMan();
+    nsTestXPCFoo* foo3 = new nsTestXPCFoo();
 
-    if(!sm)
+    if(!sm || ! foo3)
     {
         success = JS_FALSE;
-        printf("failed to create SecurityManager!\n");
+        printf("failed to create object!\n");
         goto sm_test_done;
     }
 
@@ -1009,7 +1010,7 @@ int main()
 
     sm->SetMode(MySecMan::VETO_ALL);
     printf("  build wrapper with veto: ");
-    if(NS_SUCCEEDED(xpc->WrapNative(jscontext, foo, nsITestXPCFoo2::GetIID(), &wrapper3)))
+    if(NS_SUCCEEDED(xpc->WrapNative(jscontext, foo3, nsITestXPCFoo2::GetIID(), &wrapper3)))
     {
         success = JS_FALSE;
         printf("failed\n");
@@ -1023,7 +1024,73 @@ int main()
 sm_test_done:
     success = success && JS_GetProperty(jscontext, glob, "failed", &rval) && JSVAL_TRUE != rval;
     printf("SecurityManager tests : %s\n", success ? "passed" : "failed");
+    NS_RELEASE(foo3);
     }
+
+
+    {
+        // arg formatter test...
+
+        jsval* argv;
+        void* mark;
+
+        const char* a_in = "some string";
+        const char* b_in = "another meaningless chunck of text";
+        char* a_out;
+        char* b_out;
+
+        printf("ArgumentFormatter test: ");
+        
+        argv = JS_PushArguments(jscontext, &mark, "s%ips", 
+                                a_in, &nsITestXPCFoo2::GetIID(), foo, b_in);
+
+        if(argv)
+        {
+            nsISupports* fooc;
+            nsTestXPCFoo* foog;
+            if(JS_ConvertArguments(jscontext, 3, argv, "s%ips", 
+                                   &a_out, &fooc, &b_out))
+            {
+                if(fooc)
+                {
+                    if(NS_SUCCEEDED(fooc->QueryInterface(nsTestXPCFoo::GetIID(), 
+                                    (void**)&foog)))
+                    {
+                        if(foog == foo)
+                        {
+                            if(!strcmp(a_in, a_out) && !strcmp(b_in, b_out))
+                                printf("passed\n");
+                            else
+                                printf(" conversion OK, but surrounding was mangled -- failed!\n");
+                        }
+                        else
+                            printf(" JS to native returned wrong value -- failed!\n");
+                        NS_RELEASE(foog);
+                    }
+                    else
+                    {
+                        printf(" could not QI value JS to native returned -- failed!\n");
+                    }
+                    NS_RELEASE(fooc);
+                }
+                else
+                {
+                    printf(" JS to native returned NULL -- failed!\n");
+                }
+            }
+            else
+            {
+                printf(" could not convert from JS to native -- failed!\n");
+            }
+            JS_PopArguments(jscontext, mark);
+        }
+        else
+        {
+            printf(" could not convert from native to JS -- failed!\n");
+        }
+    }
+
+
 
     // cleanup
 
