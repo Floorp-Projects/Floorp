@@ -78,9 +78,6 @@ public:
                    nsFramePaintLayer    aWhichLayer);
 #endif
 
-  NS_IMETHOD DidReflow(nsIPresContext&   aPresContext,
-                       nsDidReflowStatus aStatus);
-
   /**
    * Get the "type" of the frame
    *
