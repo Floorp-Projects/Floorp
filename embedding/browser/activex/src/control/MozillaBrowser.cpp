@@ -524,9 +524,10 @@ LRESULT CMozillaBrowser::OnSaveAs(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL
 		}
 
 		// Create an nsILocalFile from the selected file path.
-		nsCOMPtr<nsILocalFile> theFile(do_CreateInstance(NS_LOCAL_FILE_CONTRACTID, &hr);
-		if (FAILED(hr))
-		  return hr;
+		nsresult rv;
+		nsCOMPtr<nsILocalFile> theFile(do_CreateInstance(NS_LOCAL_FILE_CONTRACTID, &rv));
+		if (NS_FAILED(rv))
+			return rv;
 
 		hr = theFile->InitWithPath(szFile);
 		if (FAILED(hr))
