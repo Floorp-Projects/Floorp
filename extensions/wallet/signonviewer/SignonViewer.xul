@@ -31,6 +31,7 @@
 
 <window id="signonviewer"
         title="&windowtitle.label;"
+        alttitle="&windowalttitle.label;"
         xmlns:html="http://www.w3.org/1999/xhtml"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         align="vertical"
@@ -44,13 +45,13 @@
            
   <tabcontrol flex="100%" align="vertical">
     <tabbox>
-      <tab selected="true" value="&tab.signonsstored.label;"/>
-      <tab value="&tab.signonsnotstored.label;"/>
-      <tab id="nopreview" value="&tab.nopreview.label;"/>
-      <tab id="nocapture" value="&tab.nocapture.label;"/>
+      <tab id="signonTab" style="display:none" value="&tab.signonsstored.label;"/>
+      <tab id="signonSitesTab" style="display:none" value="&tab.signonsnotstored.label;"/>
+      <tab id="nopreview" style="display:none" value="&tab.nopreview.label;"/>
+      <tab id="nocapture" style="display:none" value="&tab.nocapture.label;"/>
       <spring flex="1"/>
     </tabbox>
-    <tabpanel align="horizontal" style="width: 480px;">
+    <tabpanel id="panel" align="horizontal" style="width: 480px;">
       <!-- saved signons -->
       <box class="tabpanel" id="savedsignons" flex="100%" align="vertical">
           <text class="label" value="&spiel.signonsstored.label;"/>

@@ -41,6 +41,8 @@
 <!-- LOCALIZATION NOTE (walletContentsCmd.label): Do NOT translate "Wallet"-->
 <!ENTITY walletContentsCmd.label "View Captured Form Data">
 <!ENTITY walletContentsCmd.accesskey "v">
+<!ENTITY walletSitesCmd.label "View Sites">
+<!ENTITY walletSitesCmd.accesskey "s">
 <!ENTITY walletDisplaySignonsCmd.label "View Stored Passwords">
 <!ENTITY walletDisplaySignonsCmd.accesskey "v">
 <!ENTITY walletDisplayCookiesCmd.label "View Stored Cookies">

@@ -2,14 +2,16 @@
 <!ENTITY  lHeader                     "Forms and Passwords">
 <!ENTITY  rHeader                     "Manage personal information and passwords">
 
-<!ENTITY  walletHeader.label          "Forms Manager">
-<!ENTITY  walletDescription.label     "Forms Manager can remember information about you so that filling out forms on webpages is faster.">
-<!ENTITY  walletServer.label          "Server for Forms Manager tables:">
+<!ENTITY  walletHeader.label          "Form Manager">
+<!ENTITY  walletDescription.label     "Form Manager can remember information about you so that filling out forms on webpages is faster.">
+<!ENTITY  walletServer.label          "Server for Form Manager tables:">
 <!ENTITY  walletServer.accesskey      "s">
 <!ENTITY  walletEnabled.label         "Save form data from webpages when completing forms.">
 <!ENTITY  walletEnabled.accesskey     "f">
 <!ENTITY  viewWallet.label            "View Saved Data...">
 <!ENTITY  viewWallet.accesskey        "v">
+<!ENTITY  viewWalletSites.label       "View Sites...">
+<!ENTITY  viewWalletSites.accesskey   "w">
 
 <!ENTITY  signonHeader.label          "Password Manager">
 <!ENTITY  signonDescription.label     "Password Manager stores your usernames and passwords for sites that require you to log in, and enters them automatically when you visit those sites.">
@@ -18,7 +20,7 @@
 <!ENTITY  viewSignons.label           "View Saved Passwords...">
 <!ENTITY  viewSignons.accesskey       "e">
 
-<!ENTITY  changePasswords.label       "Change Forms Manager Password...">
+<!ENTITY  changePasswords.label       "Change Form Manager Password...">
 <!ENTITY  changePasswords.accesskey   "c">
 
 <!ENTITY  encryptHeader.label         "Encrypting versus Obscuring">
