@@ -22,8 +22,9 @@ srcdir		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-MODULE = mailnewsbase
-LIBRARY_NAME=mailnewsbase
+MODULE=mailnewsbase
+LIBRARY_NAME=mailnewsbase_s
+NO_SHARED_LIB=1
 
 EXPORTS = \
 	nsMessenger.h	\

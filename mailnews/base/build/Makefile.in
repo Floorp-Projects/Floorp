@@ -23,7 +23,7 @@ srcdir		= @srcdir@
 include $(DEPTH)/config/autoconf.mk
 
 MODULE=mailnews
-LIBRARY_NAME=mailnewsbuild
+LIBRARY_NAME=mailnews
 
 CPPSRCS= \
 		nsMsgFactory.cpp \
@@ -32,6 +32,16 @@ CPPSRCS= \
 EXPORTS = \
 		nsMsgBaseCID.h \
 		$(NULL)
+
+SHARED_LIBRARY_LIBS = \
+		$(DIST)/lib/libmailnewsbase_s.a	\
+		$(NULL)
+
+EXTRA_DSO_LDOPTS = \
+		$(SHARED_LIBRARY_LIBS)	\
+		$(NULL)
+
+$(SHARED_LIBRARY): $(SHARED_LIBRARY_LIBS) Makefile
 
 include $(topsrcdir)/config/config.mk
 
