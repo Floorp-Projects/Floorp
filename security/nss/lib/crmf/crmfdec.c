@@ -346,7 +346,7 @@ CRMF_CreateCertReqMessagesFromDER(const char *buf, long len)
     /* Wanna make sure the arena is big enough to store all of the requests
      * coming in.  We'll guestimate according to the length of the buffer.
      */
-    arenaSize = len * 1.5;
+    arenaSize = len + len/2;
     poolp = PORT_NewArena(arenaSize);
     if (poolp == NULL) {
         return NULL;
