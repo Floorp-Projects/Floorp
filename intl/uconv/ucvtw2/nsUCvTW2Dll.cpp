@@ -311,9 +311,11 @@ extern "C" NS_EXPORT nsresult NSRegisterSelf(nsISupports * aServMgr,
 
     // register component info
     // XXX take these KONSTANTS out of here
+#ifdef DEBUG
     char *cidString = g_FactoryData[i].mCID->ToString();
     sprintf(buff, "%s/%s", "software/netscape/intl/uconv", cidString);
-    delete [] cidString;
+    nsCRT::free(cidString);
+#endif
     res = registry -> AddSubtree(nsIRegistry::Common, buff, &key);
     if (NS_FAILED(res)) goto done;
     res = registry -> SetString(key, "source", g_FactoryData[i].mCharsetSrc);

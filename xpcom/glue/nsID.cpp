@@ -17,6 +17,7 @@
  */
 #include "nsID.h"
 #include "prprf.h"
+#include "prmem.h"
 
 static const char gIDFormat[] = 
   "{%08x-%04x-%04x-%02x%02x-%02x%02x%02x%02x%02x%02x}";
@@ -59,7 +60,7 @@ NS_COM PRBool nsID::Parse(char *aIDStr)
 
 NS_COM char *nsID::ToString() const 
 {
-  char *res = new char[39];
+  char *res = (char*)PR_Malloc(39);    // use PR_Malloc if this is to be freed with nsCRT::free
 
   if (res != NULL) {
     PR_snprintf(res, 39, gIDFormat,
