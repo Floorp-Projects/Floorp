@@ -511,13 +511,17 @@ void
 nsIMEStatus::setParentWindow(nsWindow *aWindow) {
   GdkWindow *gdkWindow = (GdkWindow*)aWindow->GetNativeData(NS_NATIVE_WINDOW);
   GdkWindow *newParentGdk = gdk_window_get_toplevel(gdkWindow);
+
+  // mAttachedWindow is set to 0 when target window is destroyed
+  // set aWindow to this even if newParentGdk == mParent case
+  // keep focused (target) Window as mAttachedWindow
+  mAttachedWindow = aWindow;
+
   if (newParentGdk != mParent) {
     hide();
     if (mParent) {
       UnregisterClientFilter(GDK_WINDOW_XWINDOW(mParent));
     }
-    // keep focused Window as mAttachedWindow
-    mAttachedWindow = aWindow;
     mParent = newParentGdk;
     if (mIMStatusWindow) {
       Display *display = GDK_DISPLAY();
