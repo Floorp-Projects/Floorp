@@ -156,6 +156,7 @@ public:
   NS_IMETHOD    GetRangeCount(PRInt32* aRangeCount);
   NS_IMETHOD    GetRangeAt(PRInt32 aIndex, nsIDOMRange** aReturn);
   NS_IMETHOD    RemoveAllRanges();
+  NS_IMETHOD    GetTableSelectionType(nsIDOMRange* aRange, PRInt32* aTableSelectionType);
   NS_IMETHOD    Collapse(nsIDOMNode* aParentNode, PRInt32 aOffset);
   NS_IMETHOD    CollapseToStart();
   NS_IMETHOD    CollapseToEnd();
@@ -249,6 +250,8 @@ private:
   void         setAnchorFocusRange(PRInt32 aIndex); //pass in index into FrameSelection
   NS_IMETHOD   selectFrames(nsIPresContext* aPresContext, nsIContentIterator *aInnerIter, nsIContent *aContent, nsIDOMRange *aRange, nsIPresShell *aPresShell, PRBool aFlags);
   NS_IMETHOD   selectFrames(nsIPresContext* aPresContext, nsIDOMRange *aRange, PRBool aSelect);
+  nsresult     getTableCellLocationFromRange(nsIDOMRange *aRange, PRInt32 *aSelectionType, PRInt32 *aRow, PRInt32 *aCol);
+  nsresult     addTableCellRange(nsIDOMRange *aRange, PRBool *aDidAddRange);
   
 #if OLD_SELECTION
   NS_IMETHOD   FixupSelectionPoints(nsIDOMRange *aRange, nsDirection *aDir, PRBool *aFixupState);
@@ -302,7 +305,7 @@ public:
   NS_IMETHOD HandleClick(nsIContent *aNewFocus, PRUint32 aContentOffset, PRUint32 aContentEndOffset, 
                        PRBool aContinueSelection, PRBool aMultipleSelection,PRBool aHint);
   NS_IMETHOD HandleDrag(nsIPresContext *aPresContext, nsIFrame *aFrame, nsPoint& aPoint);
-  NS_IMETHOD HandleTableSelection(nsIContent *aParentContent, PRInt32 aContentOffset, PRUint32 aTarget, nsMouseEvent *aMouseEvent);
+  NS_IMETHOD HandleTableSelection(nsIContent *aParentContent, PRInt32 aContentOffset, PRInt32 aTarget, nsMouseEvent *aMouseEvent);
   NS_IMETHOD StartAutoScrollTimer(nsIPresContext *aPresContext, nsIFrame *aFrame, nsPoint& aPoint, PRUint32 aDelay);
   NS_IMETHOD StopAutoScrollTimer();
   NS_IMETHOD EnableFrameNotification(PRBool aEnable){mNotifyFrames = aEnable; return NS_OK;}
@@ -349,6 +352,7 @@ public:
   NS_IMETHOD    DeleteFromDocument();
 
   nsIFocusTracker *GetTracker(){return mTracker;}
+
 private:
   NS_IMETHOD TakeFocus(nsIContent *aNewFocus, PRUint32 aContentOffset, PRUint32 aContentEndOffset, 
                        PRBool aContinueSelection, PRBool aMultipleSelection);
@@ -390,6 +394,7 @@ private:
   // Interfaces that let us get info based on cellmap locations
   nsITableLayout* GetTableLayout(nsIContent *aTableContent);
   nsITableCellLayout* GetCellLayout(nsIContent *aCellContent);
+
   nsresult SelectBlockOfCells(nsIContent *aEndNode);
   nsresult SelectRowOrColumn(nsIContent *aCellContent, PRUint32 aTarget);
   nsresult GetCellIndexes(nsIContent *aCell, PRInt32 &aRowIndex, PRInt32 &aColIndex);
@@ -409,7 +414,7 @@ private:
   nsCOMPtr<nsIContent> mAppendStartSelectedCell;
   nsCOMPtr<nsIContent> mUnselectCellOnMouseUp;
   PRBool   mSelectingTableCells;
-  PRUint32 mSelectingTableCellMode;
+  PRInt32  mSelectingTableCellMode;
   PRInt32  mSelectedCellIndex;
 
   //batching
@@ -2185,9 +2190,9 @@ nsSelection::FrameOrParentHasSpecialSelectionStyle(nsIFrame* aFrame, PRUint8 aSe
 
 static PRBool IsCell(nsIContent *aContent)
 {
-  nsIAtom *tag;
-  aContent->GetTag(tag);
-  return (tag != 0 && tag == nsSelection::sCellAtom);
+  nsCOMPtr<nsIAtom> tag;
+  aContent->GetTag(*getter_AddRefs(tag));
+  return (tag != 0 && tag.get() == nsSelection::sCellAtom);
 }
 
 nsITableCellLayout* 
@@ -2223,11 +2228,13 @@ nsSelection::ClearNormalSelection()
   return mDomSelections[index]->RemoveAllRanges();
 }
 
+// Table selection support.
+// TODO: Separate table methods into a separate nsITableSelection interface
 nsresult
-nsSelection::HandleTableSelection(nsIContent *aParentContent, PRInt32 aContentOffset, PRUint32 aTarget, nsMouseEvent *aMouseEvent)
+nsSelection::HandleTableSelection(nsIContent *aParentContent, PRInt32 aContentOffset, PRInt32 aTarget, nsMouseEvent *aMouseEvent)
 {
   if (!aParentContent) return NS_ERROR_NULL_POINTER;
-  if (mSelectingTableCells && (aTarget & TABLESELECTION_TABLE))
+  if (mSelectingTableCells && (aTarget & nsISelectionPrivate::TABLESELECTION_TABLE))
   {
     // We were selecting cells and user drags mouse in table border or inbetween cells,
     //  just do nothing
@@ -2259,7 +2266,7 @@ nsSelection::HandleTableSelection(nsIContent *aParentContent, PRInt32 aContentOf
   {
     // We are drag-selecting
 
-    if (aTarget != TABLESELECTION_TABLE)
+    if (aTarget != nsISelectionPrivate::TABLESELECTION_TABLE)
     {
       // If dragging in the same cell as last event, do nothing
       if (mEndSelectedCell == childContent)
@@ -2271,8 +2278,8 @@ nsSelection::HandleTableSelection(nsIContent *aParentContent, PRInt32 aContentOf
       //  we can drift into any cell to stay in that mode
       //  even if aTarget = TABLESELECTION_CELL
 
-      if (mSelectingTableCellMode == TABLESELECTION_ROW ||
-          mSelectingTableCellMode == TABLESELECTION_COLUMN)
+      if (mSelectingTableCellMode == nsISelectionPrivate::TABLESELECTION_ROW ||
+          mSelectingTableCellMode == nsISelectionPrivate::TABLESELECTION_COLUMN)
       {
         if (mEndSelectedCell)
         {
@@ -2282,8 +2289,8 @@ nsSelection::HandleTableSelection(nsIContent *aParentContent, PRInt32 aContentOf
           result = GetCellIndexes(childContent, curRowIndex, curColIndex);
           if (NS_FAILED(result)) return result;
         
-          if ((mSelectingTableCellMode == TABLESELECTION_ROW && startRowIndex == curRowIndex) ||
-              (mSelectingTableCellMode == TABLESELECTION_COLUMN && startColIndex == curColIndex)) 
+          if ((mSelectingTableCellMode == nsISelectionPrivate::TABLESELECTION_ROW && startRowIndex == curRowIndex) ||
+              (mSelectingTableCellMode == nsISelectionPrivate::TABLESELECTION_COLUMN && startColIndex == curColIndex)) 
             return NS_OK;
         }
 #ifdef DEBUG_TABLE_SELECTION
@@ -2292,7 +2299,7 @@ printf("HandleTableSelection: Dragged into a new column or row\n");
         // Continue dragging row or column selection
         return SelectRowOrColumn(childContent, mSelectingTableCellMode);
       }
-      else if (mSelectingTableCellMode == TABLESELECTION_CELL)
+      else if (mSelectingTableCellMode == nsISelectionPrivate::TABLESELECTION_CELL)
       {
 #ifdef DEBUG_TABLE_SELECTION
 printf("HandleTableSelection: Dragged into a new cell\n");
@@ -2318,8 +2325,10 @@ printf("HandleTableSelection: Dragged into a new cell\n");
             mStartSelectedCell = nsnull;
             mDomSelections[index]->RemoveAllRanges();
 
-            mSelectingTableCellMode = 
-              (startRowIndex == curRowIndex) ? TABLESELECTION_ROW : TABLESELECTION_COLUMN;
+            if (startRowIndex == curRowIndex)
+              mSelectingTableCellMode = nsISelectionPrivate::TABLESELECTION_ROW;
+            else
+              mSelectingTableCellMode = nsISelectionPrivate::TABLESELECTION_COLUMN;
 
             return SelectRowOrColumn(childContent, mSelectingTableCellMode);
           }
@@ -2344,7 +2353,7 @@ printf("HandleTableSelection: Mouse down event\n");
       // Clear cell we stored in mouse-down
       mUnselectCellOnMouseUp = nsnull;
       
-      if (aTarget == TABLESELECTION_CELL)
+      if (aTarget == nsISelectionPrivate::TABLESELECTION_CELL)
       {
         PRBool isSelected = PR_FALSE;
 
@@ -2401,7 +2410,7 @@ printf("HandleTableSelection: Saving mUnselectCellOnMouseUp\n");
 
         return NS_OK;
       }
-      else if (aTarget == TABLESELECTION_TABLE)
+      else if (aTarget == nsISelectionPrivate::TABLESELECTION_TABLE)
       {
         //TODO: We currently select entire table when clicked between cells,
         //  should we restrict to only around border?
@@ -2414,7 +2423,7 @@ printf("HandleTableSelection: Saving mUnselectCellOnMouseUp\n");
         mDomSelections[index]->RemoveAllRanges();
         return CreateAndAddRange(parentNode, aContentOffset);
       }
-      else if (aTarget == TABLESELECTION_ROW || aTarget == TABLESELECTION_COLUMN)
+      else if (aTarget == nsISelectionPrivate::TABLESELECTION_ROW || aTarget == nsISelectionPrivate::TABLESELECTION_COLUMN)
       {
         // Start drag-selecting mode so multiple rows/cols can be selected
         // Note: Currently, nsFrame::GetDataForTableSelection
@@ -2685,9 +2694,9 @@ nsSelection::SelectRowOrColumn(nsIContent *aCellContent, PRUint32 aTarget)
 
   // Be sure we start at proper beginning
   // (This allows us to select row or col given ANY cell!)
-  if (aTarget == TABLESELECTION_ROW)
+  if (aTarget == nsISelectionPrivate::TABLESELECTION_ROW)
     colIndex = 0;
-  if (aTarget == TABLESELECTION_COLUMN)
+  if (aTarget == nsISelectionPrivate::TABLESELECTION_COLUMN)
     rowIndex = 0;
 
   nsCOMPtr<nsIDOMElement> cellElement;
@@ -2711,7 +2720,7 @@ nsSelection::SelectRowOrColumn(nsIContent *aCellContent, PRUint32 aTarget)
       lastCell = cellElement;
 
       // Move to next cell in cellmap, skipping spanned locations
-      if (aTarget == TABLESELECTION_ROW)
+      if (aTarget == nsISelectionPrivate::TABLESELECTION_ROW)
         colIndex += actualColSpan;
       else
         rowIndex += actualRowSpan;
@@ -2759,7 +2768,7 @@ nsSelection::SelectRowOrColumn(nsIContent *aCellContent, PRUint32 aTarget)
       if (NS_FAILED(result)) return result;
     }
     // Move to next row or column in cellmap, skipping spanned locations
-    if (aTarget == TABLESELECTION_ROW)
+    if (aTarget == nsISelectionPrivate::TABLESELECTION_ROW)
       colIndex += actualColSpan;
     else
       rowIndex += actualRowSpan;
@@ -2973,6 +2982,190 @@ nsSelection::SelectCellElement(nsIDOMElement *aCellElement)
   result = parentContent->IndexOf(cellContent, offset);
   if (NS_FAILED(result)) return result;
   return CreateAndAddRange(parent, offset);
+}
+
+nsresult
+nsTypedSelection::getTableCellLocationFromRange(nsIDOMRange *aRange, PRInt32 *aSelectionType, PRInt32 *aRow, PRInt32 *aCol)
+{
+  if (!aRange || !aSelectionType || !aRow || !aCol)
+    return NS_ERROR_NULL_POINTER;
+
+  *aSelectionType = nsISelectionPrivate::TABLESELECTION_NONE;
+  *aRow = 0;
+  *aCol = 0;
+
+  // Must have access to frame selection to get cell info
+  if (!mFrameSelection) return NS_OK;
+
+  nsresult result = GetTableSelectionType(aRange, aSelectionType);
+  if (NS_FAILED(result)) return result;
+  
+  // Don't fail if range does not point to a single table cell,
+  //  let aSelectionType tell user if we don't have a cell
+  if (*aSelectionType  != nsISelectionPrivate::TABLESELECTION_CELL)
+    return NS_OK;
+
+  // Get the child content (the cell) pointed to by starting node of range
+  // We do minimal checking since GetTableSelectionType assures
+  //   us that this really is a table cell
+  nsCOMPtr<nsIDOMNode> startNode;
+  result = aRange->GetStartContainer(getter_AddRefs(startNode));
+  if (NS_FAILED(result)) return result;
+
+  nsCOMPtr<nsIContent> content(do_QueryInterface(startNode));
+  if (!content) return NS_ERROR_FAILURE;
+  PRInt32 startOffset;
+  result = aRange->GetStartOffset(&startOffset);
+  if (NS_FAILED(result)) return result;
+
+  nsCOMPtr<nsIContent> child;
+  result = content->ChildAt(startOffset, *getter_AddRefs(child));
+  if (NS_FAILED(result)) return result;
+  if (!child) return NS_ERROR_FAILURE;
+
+  //Note: This is a non-ref-counted pointer to the frame
+  nsITableCellLayout *cellLayout = mFrameSelection->GetCellLayout(child);
+  if (NS_FAILED(result)) return result;
+  if (!cellLayout) return NS_ERROR_FAILURE;
+  
+  return cellLayout->GetCellIndexes(*aRow, *aCol);
+}
+
+nsresult
+nsTypedSelection::addTableCellRange(nsIDOMRange *aRange, PRBool *aDidAddRange)
+{
+  if (!aDidAddRange)
+    return NS_ERROR_NULL_POINTER;
+
+  *aDidAddRange = PR_FALSE;
+
+  if (!mFrameSelection)
+    return NS_OK;
+
+  if (!aRange)
+    return NS_ERROR_NULL_POINTER;
+
+  if (!mRangeArray)
+    return NS_ERROR_FAILURE;
+
+  nsresult result;
+  nsCOMPtr<nsISupports> isupp = do_QueryInterface(aRange, &result);
+  if (NS_FAILED(result)) return result;
+
+  // Get row, col of cell we will add
+  //   and set the FrameSelection's selection mode value
+  PRInt32 newRow, newCol;
+  result = getTableCellLocationFromRange(aRange, &mFrameSelection->mSelectingTableCellMode, &newRow, &newCol);
+  if (NS_FAILED(result)) return result;
+  // Don't fail if range isn't a selected cell, aDidAddRange tells caller if we didn't proceed
+  if (mFrameSelection->mSelectingTableCellMode != nsISelectionPrivate::TABLESELECTION_CELL)
+    return NS_OK;
+
+  PRUint32 count;
+  result = mRangeArray->Count(&count);
+  if (NS_FAILED(result)) return result;
+
+  if (count > 0)
+  {
+    // Adding a cell range to existing list of cell ranges
+    PRUint32 index;
+    PRInt32 row, col;
+    // Insert range at appropriate location
+    for (index = 0; index < count; index++)
+    {
+      nsCOMPtr<nsISupports> element = dont_AddRef(mRangeArray->ElementAt(index));
+	    nsCOMPtr<nsIDOMRange> range = do_QueryInterface(element);
+      if (!range) return NS_ERROR_FAILURE;
+
+      PRInt32 selectionMode;
+      result = getTableCellLocationFromRange(range, &selectionMode, &row, &col);
+      if (NS_FAILED(result)) return result;
+
+      // Don't proceed if range not a table cell
+      if (selectionMode != nsISelectionPrivate::TABLESELECTION_CELL)
+        return NS_OK;
+
+      if (row > newRow ||
+          (row == newRow && col > newCol))
+      {
+        // Existing selected cell is after cell to add,
+        //  so insert at this index
+        result = mRangeArray->InsertElementAt(isupp, index);
+        *aDidAddRange = NS_SUCCEEDED(result);
+        return result;
+      }
+    }          
+  }
+  // If here, we are adding a selected cell range 
+  //   to end of range array or it's the first selected range 
+  result = mRangeArray->AppendElement(isupp);
+  *aDidAddRange = NS_SUCCEEDED(result);
+  return result;
+}
+
+//TODO: Figure out TABLESELECTION_COLUMN and TABLESELECTION_ALLCELLS
+NS_IMETHODIMP
+nsTypedSelection::GetTableSelectionType(nsIDOMRange* aRange, PRInt32* aTableSelectionType)
+{
+  if (!aRange || !aTableSelectionType)
+    return NS_ERROR_NULL_POINTER;
+  
+  *aTableSelectionType = nsISelectionPrivate::TABLESELECTION_NONE;
+ 
+  // Must have access to frame selection to get cell info
+  if(!mFrameSelection) return NS_OK;
+
+  nsCOMPtr<nsIDOMNode> startNode;
+  nsresult result = aRange->GetStartContainer(getter_AddRefs(startNode));
+  if (NS_FAILED(result)) return result;
+  if (!startNode) return NS_ERROR_FAILURE;
+  
+  nsCOMPtr<nsIDOMNode> endNode;
+  result = aRange->GetEndContainer(getter_AddRefs(endNode));
+  if (NS_FAILED(result)) return result;
+  if (!endNode) return NS_ERROR_FAILURE;
+
+  // Not a single selected node
+  if (startNode != endNode) return NS_OK;
+
+  nsCOMPtr<nsIContent> content = do_QueryInterface(startNode);
+  if (!content) return NS_ERROR_FAILURE;
+
+  PRInt32 startOffset;
+  PRInt32 endOffset;
+  result = aRange->GetEndOffset(&endOffset);
+  if (NS_FAILED(result)) return result;
+  result = aRange->GetStartOffset(&startOffset);
+  if (NS_FAILED(result)) return result;
+
+  // Not a single selected node
+  if ((endOffset - startOffset) != 1)
+    return NS_OK;
+
+  nsCOMPtr<nsIAtom> atom;
+  content->GetTag(*getter_AddRefs(atom));
+  if (!atom) return NS_ERROR_FAILURE;
+
+  if (atom.get() == nsSelection::sRowAtom)
+  {
+    *aTableSelectionType = nsISelectionPrivate::TABLESELECTION_CELL;
+  }
+  else //check to see if we are selecting a table or row (column and all cells not done yet)
+  {
+    nsCOMPtr<nsIContent> child;
+    result = content->ChildAt(startOffset, *getter_AddRefs(child));
+    if (NS_FAILED(result)) return result;
+    if (!child) return NS_ERROR_FAILURE;
+
+    child->GetTag(*getter_AddRefs(atom));
+    if (!atom) return NS_ERROR_FAILURE;
+
+    if (atom.get() == nsSelection::sTableAtom)
+      *aTableSelectionType = nsISelectionPrivate::TABLESELECTION_TABLE;
+    else if (atom.get() == nsSelection::sRowAtom)
+      *aTableSelectionType = nsISelectionPrivate::TABLESELECTION_ROW;
+  }
+  return result;
 }
 
 nsresult
@@ -4582,14 +4775,24 @@ nsTypedSelection::RemoveAllRanges()
 NS_IMETHODIMP
 nsTypedSelection::AddRange(nsIDOMRange* aRange)
 {
-  nsresult      result = AddItem(aRange);
-  
-  if (NS_FAILED(result))
-    return result;
+  if (!aRange) return NS_ERROR_NULL_POINTER;
+
+  // This inserts a table cell range in proper document order
+  //  and returns NS_ERROR_FAILURE if range doesn't contain just one table cell
+  PRBool didAddRange;
+  nsresult result = addTableCellRange(aRange, &didAddRange);
+  if (NS_FAILED(result)) return result;
+
+  if (!didAddRange)
+  {
+    result = AddItem(aRange);
+    if (NS_FAILED(result)) return result;
+  }
+
   PRInt32 count;
   result = GetRangeCount(&count);
-  if (NS_FAILED(result))
-    return result;
+  if (NS_FAILED(result)) return result;
+
   if (count <= 0)
   {
     NS_ASSERTION(0,"bad count after additem\n");
@@ -4597,62 +4800,14 @@ nsTypedSelection::AddRange(nsIDOMRange* aRange)
   }
   setAnchorFocusRange(count -1);
   
-//TABLE CELL CHECK
-  if(mFrameSelection)// don't assume we have a FrameSelection
-  {
-    nsCOMPtr<nsIDOMNode> startNode;
-    result = aRange->GetStartContainer(getter_AddRefs(startNode));
-    if (NS_SUCCEEDED(result))
-    {
-      nsCOMPtr<nsIDOMNode> endNode;
-      result = aRange->GetEndContainer(getter_AddRefs(endNode));
-      if (NS_SUCCEEDED(result))
-      {
-        if (startNode == endNode)
-        {//check for table row
-          nsCOMPtr<nsIContent> content(do_QueryInterface(startNode));
-          if (content)
-          {
-            nsIAtom *atom;
-            if (NS_SUCCEEDED(content->GetTag(atom)) && atom == nsSelection::sRowAtom)
-            {//we are selecting a talble cell!
-              mFrameSelection->mSelectingTableCellMode = TABLESELECTION_CELL;
-            }
-            else //check to see if we are selecting a table
-            {
-              PRInt32 startOffset;
-              PRInt32 endOffset;
-              result = aRange->GetEndOffset(&endOffset);
-              result &= aRange->GetStartOffset(&startOffset);
-              if (NS_SUCCEEDED(result))
-              {
-                if ((endOffset - startOffset) == 1) //1 child selected
-                {
-                  nsCOMPtr<nsIContent> childAt;
-                  if (NS_SUCCEEDED(content->ChildAt(startOffset, *getter_AddRefs(childAt))))
-                  {
-                    if ( (childAt) &&  
-                        (NS_SUCCEEDED(childAt->GetTag(atom)) && atom == nsSelection::sTableAtom) )
-                    {
-                      mFrameSelection->mSelectingTableCellMode = TABLESELECTION_TABLE;
-                    }
-                  }
-                }
-              }
-            }
-          }
-        }
-      }
-    }
-  }
-
-
   nsCOMPtr<nsIPresContext>  presContext;
   GetPresContext(getter_AddRefs(presContext));
   selectFrames(presContext, aRange, PR_TRUE);        
+
   //ScrollIntoView(); this should not happen automatically
   if (!mFrameSelection)
     return NS_OK;//nothing to do
+
   return mFrameSelection->NotifySelectionListeners(GetType());
 }
 
@@ -4723,8 +4878,8 @@ nsTypedSelection::Collapse(nsIDOMNode* aParentNode, PRInt32 aOffset)
     content = do_QueryInterface(aParentNode);
     if (!content)
       return NS_ERROR_FAILURE;
-    nsIAtom *tag;
-    content->GetTag(tag);
+    nsCOMPtr<nsIAtom> tag;
+    content->GetTag(*getter_AddRefs(tag));
     if (tag)
     {
 	    nsAutoString tagString;
@@ -4762,8 +4917,8 @@ nsTypedSelection::CollapseToStart()
   if (NS_FAILED(rv) || cnt<=0 || !mRangeArray)
 		return NS_ERROR_FAILURE;
 
-  // Get the first range (from GetRangeAt)
-	nsISupports*	element = mRangeArray->ElementAt(0);
+  // Get the first range
+	nsCOMPtr<nsISupports>	element = dont_AddRef(mRangeArray->ElementAt(0));
 	nsCOMPtr<nsIDOMRange>	firstRange = do_QueryInterface(element);
   if (!firstRange)
     return NS_ERROR_FAILURE;
@@ -4797,8 +4952,8 @@ nsTypedSelection::CollapseToEnd()
   if (NS_FAILED(rv) || cnt<=0 || !mRangeArray)
 		return NS_ERROR_FAILURE;
 
-  // Get the last range (from GetRangeAt)
-	nsISupports*	element = mRangeArray->ElementAt(cnt-1);
+  // Get the last range
+	nsCOMPtr<nsISupports>	element = dont_AddRef(mRangeArray->ElementAt(cnt-1));
 	nsCOMPtr<nsIDOMRange>	lastRange = do_QueryInterface(element);
   if (!lastRange)
     return NS_ERROR_FAILURE;
@@ -5539,8 +5694,8 @@ nsTypedSelection::Extend(nsIDOMNode* aParentNode, PRInt32 aOffset)
   {
     nsCOMPtr<nsIContent>content;
     content = do_QueryInterface(aParentNode);
-    nsIAtom *tag;
-    content->GetTag(tag);
+    nsCOMPtr<nsIAtom> tag;
+    content->GetTag(*getter_AddRefs(tag));
     if (tag)
     {
 	    nsAutoString tagString;
@@ -6476,4 +6631,3 @@ nsTypedSelection::CanSetProperty(const nsIID * iid, const PRUnichar *propertyNam
   }
   return NS_OK;
 }
-
