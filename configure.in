@@ -318,6 +318,8 @@ case "$target" in
         # Determine compiler version
         CC_VERSION=`"${CC}" -v 2>&1 | grep Version | sed -e 's|.* Version ||' -e 's| .*||'`
         _CC_MAJOR_VERSION=`echo ${CC_VERSION} | $AWK -F\. '{ print $1 }'`
+        _CC_MINOR_VERSION=`echo ${CC_VERSION} | $AWK -F\. '{ print $2 }'`
+        _MSC_VER=${_CC_MAJOR_VERSION}${_CC_MINOR_VERSION}
 
         CXX_VERSION=`"${CXX}" -v 2>&1 | grep Version | sed -e 's|.* Version ||' -e 's| .*||'`
         _CXX_MAJOR_VERSION=`echo ${CXX_VERSION} | $AWK -F\. '{ print $1 }'`
@@ -329,6 +331,8 @@ case "$target" in
             _CC_SUITE=6
         elif test "$_CC_MAJOR_VERSION" = "13"; then
             _CC_SUITE=7
+        elif test "$_CC_MAJOR_VERSION" = "14"; then
+            _CC_SUITE=8
         else
             AC_MSG_ERROR([This version of the MSVC compiler, $CC_VERSION , is unsupported.])
         fi
@@ -346,8 +350,8 @@ case "$target" in
         _MIDL_MAJOR_VERSION=`echo ${_MIDL_FULL_VERSION} | $AWK -F\. '{ print $1 }'`
         _MIDL_MINOR_VERSION=`echo ${_MIDL_FULL_VERSION} | $AWK -F\. '{ print $2 }'`
         _MIDL_REV_VERSION=`echo ${_MIDL_FULL_VERSION} | $AWK -F\. '{ print $3 }'`
-         if test "$_MIDL_MAJOR_VERSION" != "5" -a "$_MIDL_FULL_VERSION" != "6.00.0347" -a "$_MIDL_FULL_VERSION" != "6.00.0361"; then
-             AC_MSG_ERROR([Midl version $_MIDL_FULL_VERSION was found.  Midl version must be 5.x.x (VC6*) or 6.00.0347 (VC7) or 6.00.0361 (VC.net 2003).])
+         if test "$_MIDL_MAJOR_VERSION" != "5" -a "$_MIDL_FULL_VERSION" != "6.00.0347" -a "$_MIDL_FULL_VERSION" != "6.00.0361" -a "$_MIDL_FULL_VERSION" != "6.00.0364"; then
+             AC_MSG_ERROR([Midl version $_MIDL_FULL_VERSION was found.  Midl version must be 5.x.x (VC6*) or 6.00.0347 (VC7) or 6.00.0361 (VC.net 2003) or 6.00.0364 (VC 2005).])
          fi
 
          # Add flags if necessary
@@ -405,6 +409,7 @@ case "$target" in
 esac
 
 AC_SUBST(MIDL_FLAGS)
+AC_SUBST(_MSC_VER)
 
 if test -n "$_WIN32_MSVC"; then
     SKIP_PATH_CHECKS=1

@@ -331,7 +331,7 @@ endif
 # if MOZ_COVERAGE is set, we handle pdb files slightly differently
 ifdef MOZ_COVERAGE
 MOZ_OPTIMIZE_FLAGS=-Zi -O1 -UDEBUG -DNDEBUG
-OS_LDFLAGS = /DEBUG /DEBUGTYPE:CV /PDB:NONE /OPT:REF /OPT:nowin98
+OS_LDFLAGS = /DEBUG /PDB:NONE /OPT:REF /OPT:nowin98
 _ORDERFILE := $(wildcard $(srcdir)/win32.order)
 ifneq (,$(_ORDERFILE))
 OS_LDFLAGS += /ORDER:@$(srcdir)/win32.order
@@ -345,7 +345,7 @@ endif
 #
 ifdef NS_TRACE_MALLOC
 MOZ_OPTIMIZE_FLAGS=-Zi -Od -UDEBUG -DNDEBUG
-OS_LDFLAGS = /DEBUG /DEBUGTYPE:CV /PDB:NONE /OPT:REF /OPT:nowin98
+OS_LDFLAGS = /DEBUG /PDB:NONE /OPT:REF /OPT:nowin98
 endif
 # NS_TRACE_MALLOC
 
@@ -646,20 +646,19 @@ ifeq ($(OS_ARCH)_$(GNU_CC),WINNT_)
 #//
 #//------------------------------------------------------------------------
 ifdef USE_STATIC_LIBS
-RTL_FLAGS=-MT          # Statically linked multithreaded RTL
-ifneq (,$(MOZ_DEBUG)$(NS_TRACE_MALLOC))
-RTL_FLAGS=-MTd         # Statically linked multithreaded MSVC4.0 debug RTL
-endif # MOZ_DEBUG || NS_TRACE_MALLOC
-
-else # !USE_STATIC_LIBS
-
-ifdef USE_NON_MT_LIBS
+ifeq (,$(filter-out 1200 1300 1310,$(_MSC_VER)))
 RTL_FLAGS=-ML          # Statically linked non-multithreaded LIBC RTL
 ifneq (,$(MOZ_DEBUG)$(NS_TRACE_MALLOC))
 RTL_FLAGS=-MLd         # Statically linked non-multithreaded LIBC debug RTL
 endif # MOZ_DEBUG || NS_TRACE_MALLOC
+else
+RTL_FLAGS=-MT          # Statically linked multithreaded RTL
+ifneq (,$(MOZ_DEBUG)$(NS_TRACE_MALLOC))
+RTL_FLAGS=-MTd         # Statically linked multithreaded MSVC4.0 debug RTL
+endif # MOZ_DEBUG || NS_TRACE_MALLOC
+endif # _MSC_VER
 
-else # ! USE_NON_MT_LIBS
+else # !USE_STATIC_LIBS
 
 RTL_FLAGS=-MD          # Dynamically linked, multithreaded RTL
 ifneq (,$(MOZ_DEBUG)$(NS_TRACE_MALLOC))
@@ -667,7 +666,6 @@ ifndef MOZ_NO_DEBUG_RTL
 RTL_FLAGS=-MDd         # Dynamically linked, multithreaded MSVC4.0 debug RTL
 endif 
 endif # MOZ_DEBUG || NS_TRACE_MALLOC
-endif # USE_NON_MT_LIBS
 endif # USE_STATIC_LIBS
 endif # WINNT && !GNU_CC
 

@@ -52,7 +52,7 @@ LIBS			= -lxpnet_s
 
 ifeq ($(OS_ARCH),WINNT)
 MAPFILE			= TestLibxpnet.map
-USE_NON_MT_LIBS		= 1
+USE_STATIC_LIBS		= 1
 endif
 
 include $(topsrcdir)/config/rules.mk

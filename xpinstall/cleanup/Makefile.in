@@ -63,7 +63,7 @@ else
 ifeq ($(OS_ARCH),WINNT)
 CPPSRCS += InstallCleanupWin.cpp
 MOZ_WINCONSOLE = 0
-USE_NON_MT_LIBS = 1
+USE_STATIC_LIBS = 1
 else
 CPPSRCS += InstallCleanupUnix.cpp
 endif

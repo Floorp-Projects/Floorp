@@ -228,9 +228,9 @@ endif
 
 SRCS_IN_OBJDIR	= 1
 
-include $(topsrcdir)/config/rules.mk
+ENABLE_CXX_EXCEPTIONS = 1
 
-CXXFLAGS += -GX
+include $(topsrcdir)/config/rules.mk
 
 ifdef MOZ_ACTIVEX_PLUGIN_LIVCONNECT
 copy-sources: $(addprefix $(MOZCTLSRC)/,$(_CONTROL_CPPSRCS))

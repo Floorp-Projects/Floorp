@@ -210,6 +210,18 @@ endif
 #endif
 
 endif # !GNU_CC
+
+ifdef ENABLE_CXX_EXCEPTIONS
+ifdef GNU_CC
+CXXFLAGS		+= -fexceptions
+else
+ifeq (,$(filter-out 1200 1300 1310,$(_MSC_VER)))
+CXXFLAGS		+= -GX
+else
+CXXFLAGS		+= -EHsc
+endif # _MSC_VER
+endif # GNU_CC
+endif # ENABLE_CXX_EXCEPTIONS
 endif # WINNT
 
 ifndef TARGETS

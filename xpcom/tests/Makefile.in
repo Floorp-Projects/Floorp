@@ -94,20 +94,14 @@ ifeq ($(OS_ARCH)$(OS_RELEASE),FreeBSD2)
 LIBS		+= -lpcap
 endif
 
+ENABLE_CXX_EXCEPTIONS = 1
+
 include $(topsrcdir)/config/rules.mk
 
 LOCAL_INCLUDES	= \
                 -I$(srcdir)/../ds \
 		-I$(srcdir)/services \
 		$(NULL)
-
-ifeq ($(OS_ARCH),WINNT)
-ifdef GNU_CXX
-CXXFLAGS	+= -fexceptions
-else
-CXXFLAGS	+= -GX
-endif
-endif
 
 libs::
 	$(INSTALL) $(srcdir)/test.properties $(DIST)/bin/res
