@@ -1955,7 +1955,7 @@ case $target in
 	AC_CHECK_LIB(c_r, gethostbyname_r)
 	;;
 esac
-dnl AC_CHECK_LIB(m, atan)
+AC_CHECK_LIB(m, atan)
 AC_CHECK_LIB(dl, dlopen)
 if test ! "$GNU_CXX"; then
 
