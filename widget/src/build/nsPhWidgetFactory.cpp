@@ -27,6 +27,7 @@
 #include "nsITextAreaWidget.h"
 #include "nsIListBox.h"
 #include "nsIFileWidget.h"
+#include "nsFileSpecWithUIImpl.h"
 #include "nsIComboBox.h"
 
 #include "nsWidgetsCID.h"
@@ -264,6 +265,11 @@ PR_LOG(PhWidLog, PR_LOG_DEBUG,("nsWidgetFactory::CreateInstance\n"));
     else if (mClassID.Equals(kCXIFFormatConverter)) {
     printf( "Creating nsXIFFormatConverter instance.\n" );
         inst = (nsISupports*)new nsXIFFormatConverter();
+    }
+    else if (mClassID.Equals(nsIFileSpecWithUI::GetIID()))
+    {
+    printf( "Creating nsFileSpecWithUIImpl instance.\n" );
+    	inst = (nsISupports*) (nsIFileSpecWithUI *) new nsFileSpecWithUIImpl;
     }
     else if (mClassID.Equals(kCTransferable)) {
     printf( "Creating nsTransferable instance.\n" );

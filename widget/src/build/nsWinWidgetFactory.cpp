@@ -25,6 +25,7 @@
 #include "nsCheckButton.h"
 #include "nsComboBox.h"
 #include "nsFileWidget.h"
+#include "nsFileSpecWithUIImpl.h"
 #include "nsListBox.h"
 #include "nsLookAndFeel.h"
 #include "nsRadioButton.h"
@@ -240,6 +241,10 @@ nsresult nsWidgetFactory::CreateInstance( nsISupports* aOuter,
     	nsISound* aSound = nsnull;
     	NS_NewSound(&aSound);
         inst = (nsISupports*) aSound;
+    }
+    else if (mClassID.Equals(nsIFileSpecWithUI::GetIID()))
+    {
+    	inst = (nsISupports*) (nsIFileSpecWithUI *) new nsFileSpecWithUIImpl;
     }
     else if (mClassID.Equals(kCTransferable)) {
         inst = (nsISupports*)new nsTransferable();
