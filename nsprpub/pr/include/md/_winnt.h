@@ -50,7 +50,10 @@
 #define _PR_HAVE_ATOMIC_OPS
 #define _PR_HAVE_ATOMIC_CAS
 #define PR_HAVE_WIN32_NAMED_SHARED_MEMORY
-#define _PR_EMULATE_MSG_PEEK
+#define _PR_HAVE_PEEK_BUFFER
+#define _PR_PEEK_BUFFER_MAX (32 * 1024)
+#define _PR_FD_NEED_EMULATE_MSG_PEEK(fd) \
+    (!(fd)->secret->nonblocking && !(fd)->secret->inheritable)
 
 /* --- Common User-Thread/Native-Thread Definitions --------------------- */
 

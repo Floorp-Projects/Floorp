@@ -46,7 +46,9 @@
 #include <setjmp.h>
 #include <Errors.h>
 
-#define _PR_EMULATE_MSG_PEEK
+#define _PR_HAVE_PEEK_BUFFER
+#define _PR_PEEK_BUFFER_MAX (16 * 1024)
+#define _PR_FD_NEED_EMULATE_MSG_PEEK(fd) 1
 
 struct _MDProcess {
     PRInt8 notused;

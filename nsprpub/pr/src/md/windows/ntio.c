@@ -96,7 +96,7 @@ PRInt32 IsFileLocal(HANDLE hFile);
 static PRInt32 _md_MakeNonblock(HANDLE);
 
 PRInt32 _nt_nonblock_accept(PRFileDesc *fd, struct sockaddr_in *addr, int *len, PRIntervalTime);
-PRInt32 _nt_nonblock_recv(PRFileDesc *fd, char *buf, int len, PRIntervalTime);
+PRInt32 _nt_nonblock_recv(PRFileDesc *fd, char *buf, int len, int flags, PRIntervalTime);
 PRInt32 _nt_nonblock_send(PRFileDesc *fd, char *buf, int len, PRIntervalTime);
 PRInt32 _nt_nonblock_writev(PRFileDesc *fd, const PRIOVec *iov, int size, PRIntervalTime);
 PRInt32 _nt_nonblock_sendto(PRFileDesc *, const char *, int, const struct sockaddr *, int, PRIntervalTime);
@@ -1729,7 +1729,7 @@ _PR_MD_RECV(PRFileDesc *fd, void *buf, PRInt32 amount, PRIntn flags,
             PR_ASSERT(0 != rv);
             fd->secret->md.io_model_committed = PR_TRUE;
         }
-        return _nt_nonblock_recv(fd, buf, amount, timeout);
+        return _nt_nonblock_recv(fd, buf, amount, flags, timeout);
     }
 
     if (me->io_suspended) {
@@ -3808,14 +3808,21 @@ retry:
     return(rv);
 }
 
-PRInt32 _nt_nonblock_recv(PRFileDesc *fd, char *buf, int len, PRIntervalTime timeout)
+PRInt32 _nt_nonblock_recv(PRFileDesc *fd, char *buf, int len, int flags, PRIntervalTime timeout)
 {
     PRInt32 osfd = fd->secret->md.osfd;
     PRInt32 rv, err;
     struct timeval tv, *tvp;
     fd_set rd;
+    int osflags;
 
-    while ((rv = recv(osfd,buf,len,0)) == -1) {
+    if (0 == flags) {
+        osflags = 0;
+    } else {
+        PR_ASSERT(PR_MSG_PEEK == flags);
+        osflags = MSG_PEEK;
+    }
+    while ((rv = recv(osfd,buf,len,osflags)) == -1) {
         if (((err = WSAGetLastError()) == WSAEWOULDBLOCK)
                 && (!fd->secret->nonblocking)) {
             FD_ZERO(&rd);

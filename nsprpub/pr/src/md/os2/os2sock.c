@@ -320,8 +320,15 @@ _PR_MD_RECV(PRFileDesc *fd, void *buf, PRInt32 amount, PRIntn flags,
     int socks[1]; 
     long lTimeout = -1; 
 #endif
+    int osflags;
 
-    while ((rv = recv( osfd, buf, amount, 0)) == -1) 
+    if (0 == flags) {
+        osflags = 0;
+    } else {
+        PR_ASSERT(PR_MSG_PEEK == flags);
+        osflags = MSG_PEEK;
+    }
+    while ((rv = recv( osfd, buf, amount, osflags)) == -1) 
     {
         if (((err = sock_errno()) == EWOULDBLOCK) 
             && (!fd->secret->nonblocking))

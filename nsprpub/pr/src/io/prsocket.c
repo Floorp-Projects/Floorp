@@ -543,6 +543,10 @@ PRIntervalTime timeout)
 	PRInt32 rv;
 	PRThread *me = _PR_MD_CURRENT_THREAD();
 
+	if ((flags != 0) && (flags != PR_MSG_PEEK)) {
+		PR_SetError(PR_INVALID_ARGUMENT_ERROR, 0);
+		return -1;
+	}
 	if (_PR_PENDING_INTERRUPT(me)) {
 		me->flags &= ~_PR_INTERRUPT;
 		PR_SetError(PR_PENDING_INTERRUPT_ERROR, 0);
@@ -553,11 +557,61 @@ PRIntervalTime timeout)
 		return -1;
 	}
 
-	PR_LOG(_pr_io_lm, PR_LOG_MAX, ("recv: fd=%p osfd=%d buf=%p amount=%d",
-		    						fd, fd->secret->md.osfd, buf, amount));
+	PR_LOG(_pr_io_lm, PR_LOG_MAX, ("recv: fd=%p osfd=%d buf=%p amount=%d flags=%d",
+		    						fd, fd->secret->md.osfd, buf, amount, flags));
+
+#ifdef _PR_HAVE_PEEK_BUFFER
+	if (fd->secret->peekBytes != 0) {
+		rv = (amount < fd->secret->peekBytes) ?
+			amount : fd->secret->peekBytes;
+		memcpy(buf, fd->secret->peekBuffer, rv);
+		if (flags == 0) {
+			/* consume the bytes in the peek buffer */
+			fd->secret->peekBytes -= rv;
+			if (fd->secret->peekBytes != 0) {
+				memmove(fd->secret->peekBuffer,
+					fd->secret->peekBuffer + rv,
+					fd->secret->peekBytes);
+			}
+		}
+		return rv;
+	}
+
+	/* allocate peek buffer, if necessary */
+	if ((PR_MSG_PEEK == flags) && _PR_FD_NEED_EMULATE_MSG_PEEK(fd)) {
+		PR_ASSERT(0 == fd->secret->peekBytes);
+		/* impose a max size on the peek buffer */
+		if (amount > _PR_PEEK_BUFFER_MAX) {
+			amount = _PR_PEEK_BUFFER_MAX;
+		}
+		if (fd->secret->peekBufSize < amount) {
+			if (fd->secret->peekBuffer) {
+				PR_Free(fd->secret->peekBuffer);
+			}
+			fd->secret->peekBufSize = amount;
+			fd->secret->peekBuffer = PR_Malloc(amount);
+			if (NULL == fd->secret->peekBuffer) {
+				fd->secret->peekBufSize = 0;
+				PR_SetError(PR_OUT_OF_MEMORY_ERROR, 0);
+				return -1;
+			}
+		}
+	}
+#endif
+
 	rv = _PR_MD_RECV(fd, buf, amount, flags, timeout);
 	PR_LOG(_pr_io_lm, PR_LOG_MAX, ("recv -> %d, error = %d, os error = %d",
 		rv, PR_GetError(), PR_GetOSError()));
+
+#ifdef _PR_HAVE_PEEK_BUFFER
+	if ((PR_MSG_PEEK == flags) && _PR_FD_NEED_EMULATE_MSG_PEEK(fd)) {
+		if (rv > 0) {
+			memcpy(fd->secret->peekBuffer, buf, me->md.blocked_io_bytes);
+			fd->secret->peekBytes = me->md.blocked_io_bytes;
+		}
+	}
+#endif
+
 	return rv;
 }
 
@@ -626,6 +680,15 @@ static PRStatus PR_CALLBACK SocketClose(PRFileDesc *fd)
 		fd->secret->state = _PR_FILEDESC_CLOSED;
 	}
 
+#ifdef _PR_HAVE_PEEK_BUFFER
+	if (fd->secret->peekBuffer) {
+		PR_ASSERT(fd->secret->peekBufSize > 0);
+		PR_DELETE(fd->secret->peekBuffer);
+		fd->secret->peekBufSize = 0;
+		fd->secret->peekBytes = 0;
+	}
+#endif
+
 	PR_FreeFileDesc(fd);
 	return PR_SUCCESS;
 }
@@ -633,6 +696,11 @@ static PRStatus PR_CALLBACK SocketClose(PRFileDesc *fd)
 static PRInt32 PR_CALLBACK SocketAvailable(PRFileDesc *fd)
 {
 	PRInt32 rv;
+#ifdef _PR_HAVE_PEEK_BUFFER
+	if (fd->secret->peekBytes != 0) {
+		return fd->secret->peekBytes;
+	}
+#endif
 	rv =  _PR_MD_SOCKETAVAILABLE(fd);
 	return rv;		
 }
@@ -640,6 +708,12 @@ static PRInt32 PR_CALLBACK SocketAvailable(PRFileDesc *fd)
 static PRInt64 PR_CALLBACK SocketAvailable64(PRFileDesc *fd)
 {
     PRInt64 rv;
+#ifdef _PR_HAVE_PEEK_BUFFER
+    if (fd->secret->peekBytes != 0) {
+        LL_I2L(rv, fd->secret->peekBytes);
+        return rv;
+    }
+#endif
     LL_I2L(rv, _PR_MD_SOCKETAVAILABLE(fd));
 	return rv;		
 }
