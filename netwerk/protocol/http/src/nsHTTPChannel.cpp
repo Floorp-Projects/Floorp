@@ -780,12 +780,13 @@ nsresult nsHTTPChannel::ResponseCompleted(nsIChannel* aTransport,
 
   PRBool bPropogateOnStop = PR_TRUE;
 
-  // Don't fire OnStops for redirects-- confuses imagelib. See #17393
+  // Don't fire OnStops for redirects -- confuses imagelib. See #17393
   if (mResponse && (aStatus == NS_OK))
   {
     PRUint32 resp;
     mResponse->GetStatus(&resp);
-    if (3 == (int)(resp/100)) // 3* is the redirects
+    // 3* is the redirects. A 401 error will also confuse imagelib.
+    if (3 == (int)(resp/100) || 401 == resp)
         bPropogateOnStop = PR_FALSE;
   }
 
