@@ -1385,7 +1385,7 @@ RDFXMLDataSourceImpl::SerializePrologue(nsIOutputStream* aStream)
 {
 static const char kXMLVersion[] = "<?xml version=\"1.0\"?>\n";
 static const char kOpenRDF[]  = "<RDF:RDF";
-static const char kXMLNS[]    = "\n     xmlns:";
+static const char kXMLNS[]    = "\n     xmlns";
 
     rdf_BlockingWrite(aStream, kXMLVersion, sizeof(kXMLVersion) - 1);
 
@@ -1418,9 +1418,12 @@ static const char kNamedDataSource2[] = "\"?>\n";
     for (NameSpaceMap* entry = mNameSpaces; entry != nsnull; entry = entry->Next) {
         rdf_BlockingWrite(aStream, kXMLNS, sizeof(kXMLNS) - 1);
 
-        nsAutoString prefix;
-        entry->Prefix->ToString(prefix);
-        rdf_BlockingWrite(aStream, prefix);
+        if (entry->Prefix) {
+            rdf_BlockingWrite(aStream, ":", 1);
+            nsAutoString prefix;
+            entry->Prefix->ToString(prefix);
+            rdf_BlockingWrite(aStream, prefix);
+        }
 
         rdf_BlockingWrite(aStream, "=\"", 2);
         rdf_BlockingWrite(aStream, entry->URI);
