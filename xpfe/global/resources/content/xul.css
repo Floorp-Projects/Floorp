@@ -428,6 +428,7 @@ outlinercol.outliner-columnpicker {
 
 outlinercol[hidden="true"] {
   visibility: collapse;
+  display: -moz-box;
 }
 
 /********** deck & stack *********/
