@@ -113,7 +113,7 @@ NS_IMETHODIMP nsClipboard::SetNativeClipboardData()
   {
     PhClipHeader *cliphdr = (PhClipHeader *) malloc( cnt * sizeof( PhClipHeader ));
 
-    PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsClipboard::SetNativeClipboardData cnt=<%d>\n", cnt));
+    PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsClipboard::SetNativeClipboardData cnt=<%d> cliphdr=<%p>\n", cnt, cliphdr));
 
     if( cliphdr )
     {    
@@ -147,9 +147,58 @@ NS_IMETHODIMP nsClipboard::SetNativeClipboardData()
  
            PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsClipboard::SetNativeClipboardData adding %d index=<%d> type=<%s> length=%d data=<%s>\n", i, index, cliphdr[index].type, dataLen, data));
 
+
+printf("nsClipboard::setNativeClipboardData 1 data=<%s> dataLen=<%d> \n", data, dataLen );
+
+#if defined(DEBUG) && 1
+{
+  unsigned char *ptr = data;
+  int i=0;
+   printf("nsClipboard::setNativeClipboardData before:  ");
+   for(i=0; i < dataLen; ptr++,i++)
+   {
+     printf("%x ",*ptr);
+   }
+   printf("\n");
+}
+#endif
+
+           int     len;
+           char *mbsbuffer = calloc(dataLen,1);					/* MEMORY LEAK */
+           len = wcstombs (mbsbuffer, data, dataLen);
+
+printf("nsClipboard::setNativeClipboardData 2 mbsbuffer=<%s> dataLen=<%d> len=<%d> \n", mbsbuffer, dataLen, len );
+
+#if defined(DEBUG) && 1
+{
+  unsigned char *ptr = mbsbuffer;
+  int i=0;
+   printf("nsClipboard::setNativeClipboardData after:  ");
+   for(i=0; i < len; ptr++,i++)
+   {
+     printf("%x ",*ptr);
+   }
+   printf("\n");
+
+}
+#endif
+
+#if 0
            cliphdr[index].length = dataLen;
            cliphdr[index].data = data;
-		   index++;
+#endif
+
+#if 0
+           cliphdr[index].length = len;
+           cliphdr[index].data = mbsbuffer;
+#endif
+
+#if 1
+           cliphdr[index].length = strlen(mbsbuffer) + 1;	/* Add the NULL */
+           cliphdr[index].data = mbsbuffer;
+#endif
+
+           index++;
          }
        }
        PhClipboardCopy( 1, index, cliphdr );
@@ -224,8 +273,48 @@ NS_IMETHODIMP nsClipboard::GetNativeClipboardData(nsITransferable * aTransferabl
 		{
 		  data = cliphdr->data;
 		  dataLen = cliphdr->length;
-          char *dataStr = (char *)cliphdr->data;
-		  
+
+printf("nsClipboard::GetNativeClipboardData 1 data=<%s> dataLen=<%d> \n", data, dataLen );
+
+#if defined(DEBUG) && 1
+{
+  unsigned char *ptr = data;
+  int i=0;
+   printf("nsClipboard::GetNativeClipboardData before:  ");
+   for(i=0; i < dataLen; ptr++,i++)
+   {
+     printf("%x ",*ptr);
+   }
+   printf("\n");
+}
+#endif
+
+           int     len;
+           wchar_t    *wbuffer  = calloc(dataLen*3, 1);					/* MEMORY LEAK */
+           len = mbstowcs(wbuffer, data, dataLen*3);
+
+        printf("nsClipboard::GetNativeClipboardData  %s(%d)\n", data, len );
+        
+           data = wbuffer;         
+           dataLen = len*2;
+
+printf("nsClipboard::GetNativeClipboardData 2 data=<%s> dataLen=<%d>\n", data, dataLen );
+
+#if defined(DEBUG) && 1
+{
+  unsigned char *ptr = data;
+  int i=0;
+   printf("nsClipboard::GetNativeClipboardData after:  ");
+   for(i=0; i < dataLen; ptr++,i++)
+   {
+     printf("%x ",*ptr);
+   }
+   printf("\n");
+}
+#endif
+
+#if 0
+/* Kirk - 2/25/99 Disable this for unicode text */
 		  /* If this is a TEXT, and is NULL teminated then strip it off */
           if ( (strcmp(cliptype.type, Ph_CLIPBOARD_TYPE_TEXT) == 0)
 	           && (*(dataStr+(dataLen-1)) == NULL)
@@ -233,6 +322,8 @@ NS_IMETHODIMP nsClipboard::GetNativeClipboardData(nsITransferable * aTransferabl
 		  {
 			dataLen--;		  
 		  }
+#endif
+
 
           nsCOMPtr<nsISupports> genericDataWrapper;
           nsPrimitiveHelpers::CreatePrimitiveForData ( flavorStr, data, dataLen, getter_AddRefs(genericDataWrapper) );
@@ -273,7 +364,7 @@ nsClipboard::HasDataMatchingFlavors(nsISupportsArray* aFlavorList, PRBool * outR
 		 {
            nsXPIDLCString flavorStr;
            currentFlavor->ToString(getter_Copies(flavorStr));
-           printf("nsClipboard::HasDataMatchingFlavors : <%d>\n", (const char *) flavorStr);
+           printf("nsClipboard::HasDataMatchingFlavors : <%s>\n", (const char *) flavorStr);
          }
       }
   }
@@ -294,29 +385,15 @@ nsresult nsClipboard::GetFormat(const char* aMimeStr, PhClipHeader *cliphdr )
   printf("nsClipboard::GetFormat this=<%p> aMimeStr=<%s>\n", this, aMimeStr);
 #endif
 
+
   nsCAutoString mimeStr ( CBufDescriptor(NS_CONST_CAST(char*,aMimeStr), PR_TRUE, PL_strlen(aMimeStr)+1) );
 
   cliphdr->type[0]=0;
 
-  if (mimeStr.Equals(kTextMime))
+  if (mimeStr.Equals(kUnicodeMime))
   {
     strcpy( cliphdr->type, Ph_CLIPBOARD_TYPE_TEXT );
   }
-
-#if 0
-  else if (mimeStr.Equals("STRING"))
-  {
-    strcpy( cliphdr->type, Ph_CLIPBOARD_TYPE_TEXT );
-  }
-  else if (mimeStr.Equals(kUnicodeMime))
-  {
-    strcpy( cliphdr->type, Ph_CLIPBOARD_TYPE_TEXT );
-  }
-  else if (mimeStr.Equals(kJPEGImageMime))
-  {
-    strcpy( cliphdr->type, "BMAP" );
-  }
-#endif
 
  if (cliphdr->type[0] == 0)
    return NS_ERROR_FAILURE;
