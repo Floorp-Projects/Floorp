@@ -32,7 +32,7 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  *
- * $Id: sslsnce.c,v 1.20 2002/02/22 04:23:26 wtc%netscape.com Exp $
+ * $Id: sslsnce.c,v 1.21 2002/04/04 00:14:11 nelsonb%netscape.com Exp $
  */
 
 /* Note: ssl_FreeSID() in sslnonce.c gets used for both client and server 
@@ -69,7 +69,7 @@
 #include "nssrenam.h"
 #include "seccomon.h"
 
-#if defined(XP_UNIX) || defined(XP_WIN32) || defined (XP_OS2) || defined(XP_BEOS)
+#if (defined(XP_UNIX) || defined(XP_WIN32) || defined (XP_OS2) || defined(XP_BEOS)) && !defined(_WIN32_WCE)
 
 #include "cert.h"
 #include "ssl.h"
