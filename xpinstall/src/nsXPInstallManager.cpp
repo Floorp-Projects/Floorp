@@ -267,7 +267,7 @@ nsXPInstallManager::InitManagerInternal()
         {
             nsXPITriggerItem *item = mTriggers->Get(i);
             packageList[j++] = item->mName.get();
-            packageList[j++] = item->mURL.get();
+            packageList[j++] = item->GetSafeURLString();
             packageList[j++] = item->mIconURL.get();
             packageList[j++] = item->mCertName.get();
         }
