@@ -11,3 +11,4 @@ root directory at IO/Capture.pm.
 You probably also need to hack the Perl path at the top of doctor.cgi
 to point to a reasonable location for Perl on your server.
 
+Testing new CVS server.
