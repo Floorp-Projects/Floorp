@@ -515,6 +515,10 @@ ifdef USE_ABCOM
 DEFINES		+= -DUSE_ABCOM
 endif
 
+ifdef MOZILLA_XFE_USE_WINNING_FILE_SELECTION
+DEFINES		+= -DUSE_WINNING_FILE_SELECTION
+endif
+
 INCLUDES	+= -Isrc -I. -I$(DEPTH)/dist/public/nls -I$(DEPTH)/dist/public/security \
 		-I$(DEPTH)/lib/libmsg -I$(DEPTH)/dist/public/ldap \
 		-I$(DEPTH)/modules/libimg/public
@@ -693,71 +697,51 @@ endif
 # Linux
 ifeq ($(OS_ARCH),Linux)
 
-# If the motif.mk file exists, it might define extra flags needed for
-# specific versions of motif.
-#
-# Currently there is only 2 flags:
-#
-# MOZILLA_XM_2_1_PRINT_SHELL_FLAGS: X Print Shell Extension available
-# starting with X11R6.3 and needed by motif 2.1.
-#
-# MOZILLA_XM_2_1_BROKEN_LOCALE_FLAGS: Needed because of currently
-# broken locale support in motif 2.1 when linked with gnu libc2.
-#
-# Please direct questions about motif and linux to ramiro@netscape.com.
-#
--include $(DEPTH)/config/motif.mk
+XFE_MOTIF_LDFLAGS	=\
+					$(MOZILLA_XFE_GLIBC_BROKEN_LOCALE_FLAGS) \
+					$(MOZILLA_XFE_MOTIF_STATIC_FLAGS) \
+					$(MOZILLA_XFE_MOTIF_PRINT_SHELL_FLAGS)
 
-XTOOLLIB	= -L/usr/X11R6/lib -lXt -lSM -lICE
-XLIB		= -lXext -lX11
-XMULIB		= -lXmu -lXpm
+XFE_X11_LDFLAGS		=\
+					$(MOZILLA_XFE_X11_DYNAMIC_PATHS) \
+					-lXt \
+					-lXmu \
+					$(MOZILLA_XFE_MOTIF_XPM_FLAGS) \
+					$(MOZILLA_XFE_X11_DYNAMIC_FLAGS) \
+					-lXext \
+					$(MOZILLA_XFE_X11_SM_FLAGS)
 
-ifeq ($(OS_RELEASE),2.0)
-ifeq ($(CPU_ARCH),ppc)
-MOTIFLIB	= /usr/local/lib/libXm.a
-else
-#
-# Ramiro: pls double check this block
-#
-MOTIFLIB	=\
-			$(MOTIFPATCH_LIB) \
-			$(MOZILLA_XM_2_1_BROKEN_LOCALE_FLAGS) \
-			-L/usr/X11R6/lib -lXm \
-			$(MOZILLA_XM_2_1_PRINT_SHELL_FLAGS)
+OTHER_LIBS			=\
+					$(XFE_MOTIF_LDFLAGS) \
+					$(XFE_X11_LDFLAGS) \
+					-lm \
+					-ldl
 
+# Dynamic motif binary
+ifdef MOZILLA_XFE_MOTIF_HAVE_DYNAMIC_LIB
 
-endif
-else
-MOTIFLIB	= /usr/X11R6/lib/libXm.a
-endif
-
-OTHER_LIBS	= $(MOTIFLIB) $(XTOOLLIB) $(XMULIB) $(EXTENSIONLIB) $(XLIB) -lm -ldl
-
-#
-# This assumes there is a libXm.so on the system.  If there isn't, you'll
-# get two identical binaries.
-#
-ifeq ($(OS_RELEASE)$(CPU_ARCH),2.0x86)
-
-DYN_MOTIFLIB		=\
+XFE_DYN_MOTIFLIB	=\
 					$(MOTIFPATCH_LIB) \
-					$(MOZILLA_XM_2_1_BROKEN_LOCALE_FLAGS) \
-					-lXm \
-					$(MOZILLA_XM_2_1_PRINT_SHELL_FLAGS)
-
+					$(MOZILLA_XFE_GLIBC_BROKEN_LOCALE_FLAGS) \
+					$(MOZILLA_XFE_MOTIF_DYNAMIC_PATHS) \
+					$(MOZILLA_XFE_MOTIF_DYNAMIC_FLAGS) \
+					$(MOZILLA_XFE_MOTIF_PRINT_SHELL_FLAGS)
 
 EXTRA_EXPORT_OBJS	= $(OBJDIR)/$(XFE_PROGNAME)-motif-export
 EXTRA_EXPORT_BINARY	= $(EXTRA_EXPORT_OBJS)
 
 PLUGIN_DSO	+= $(DIST)/bin/libnullplugin-dynMotif.so
 
+endif
+
+# Web fonts are only available on x86
+ifeq ($(OS_RELEASE)$(CPU_ARCH),2.0x86)
+
 ifndef NO_WEBFONTS
 EXTRA_REL_FILES += $(WEBFONT_DSO)
 endif
 
 endif
-
-EXPORT_LDFLAGS	+= -lc
 
 endif
 
@@ -1040,13 +1024,14 @@ $(OBJDIR)/$(XFE_PROGNAME)-nis-export: $(OBJS) $(NIS_EXPORT_OBJS) $(NIS_OBJS) $(E
 #
 # Build a dynamic Motif version.
 #
-ifeq ($(OS_ARCH)$(OS_RELEASE)$(CPU_ARCH),Linux2.0x86)
-
+ifeq ($(OS_ARCH),Linux)
+ifdef MOZILLA_XFE_MOTIF_HAVE_DYNAMIC_LIB
 $(OBJDIR)/$(XFE_PROGNAME)-motif-export: $(OBJS) $(EXPORT_OBJS) $(EXPORT_DEPLIBS)
 	@$(MAKE_OBJDIR)
 	rm -f $@
-	$(CCLD) -o $@ $(LDFLAGS) $(OBJS) $(EXPORT_OBJS) $(BASIC_LIBS) $(EXPORT_LIB) $(BASIC_LIBS_2) -L/usr/X11R6/lib $(DYN_MOTIFLIB) -lXt -lSM -lICE $(XMULIB) $(EXTENSIONLIB) $(XLIB) -lm -ldl $(NSPR_LIB) $(DNS_LIB) -lc
+	$(CCLD) -o $@ $(LDFLAGS) $(OBJS) $(EXPORT_OBJS) $(BASIC_LIBS) $(EXPORT_LIB) $(BASIC_LIBS_2) $(XFE_DYN_MOTIFLIB) $(XFE_X11_LDFLAGS) -lm -ldl $(NSPR_LIB) $(DNS_LIB) -lc
 	@$(EXTRA_POST_LINK_CMD) $@
+endif
 endif
 
 #---------------- Misc link targets follow ----------------------#

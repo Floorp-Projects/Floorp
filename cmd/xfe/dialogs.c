@@ -1151,8 +1151,6 @@ static XmString fe_file_selection_directory;
  *
  * ...djw
  */
-#define USE_WINNING_FILE_SELECTION win
-
 #ifdef USE_WINNING_FILE_SELECTION
 
 #include <Xm/XmP.h>
