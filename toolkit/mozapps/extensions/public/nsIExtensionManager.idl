@@ -38,7 +38,7 @@
 
 #include "nsISupports.idl"
 
-interface nsIZipReader;
+interface nsIFile;
 interface nsIRDFDataSource;
 interface nsIUpdateItem;
 
@@ -48,7 +48,7 @@ interface nsIExtensionManager : nsISupports
   const unsigned long FLAG_INSTALL_PROFILE = 0x01;
   const unsigned long FLAG_INSTALL_GLOBAL  = 0x02;
 
-  void installExtensionFromXPI(in nsIZipReader aZipReader, in unsigned long aFlags);
+  void installExtensionFromXPI(in nsIFile aXPIFile, in unsigned long aFlags);
 
   void uninstallExtension(in string aExtensionID);
   void enableExtension(in string aExtensionID);
