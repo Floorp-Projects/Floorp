@@ -35,6 +35,7 @@
  * 06/30/2000       sobotka@axess.com      Added nsFilePicker
  * 03/11/2001       achimha@innotek.de     converted to XPCOM module
  * 03/20/2001       achimha@innotek.de     Added class for embedded module init
+ * 12/16/2001       pavlov@netscape.com    Removed timer stuff
  */
 
 #include "nsIGenericFactory.h"
@@ -57,9 +58,6 @@
 #include "nsToolkit.h"
 #include "nsModule.h"
 
-#include "nsWindowsTimer.h"
-#include "nsTimerManager.h"
-
 // Drag & Drop, Clipboard
 #include "nsClipboard.h"
 #include "nsClipboardHelper.h"
@@ -79,8 +77,6 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsFrameWindow)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsLookAndFeel)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsSound)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsToolkit)
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsTimer)
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsTimerManager)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsTransferable)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsHTMLFormatConverter)
 // OS2TODO NS_GENERIC_FACTORY_CONSTRUCTOR(nsDragService)
@@ -281,14 +277,6 @@ static nsModuleComponentInfo components[] =
     NS_WINDOW_CID,
     "@mozilla.org/widget/window/os2;1",
     nsFrameWindowConstructor },
-  { "OS/2 Timer",
-    NS_TIMER_CID,
-    "@mozilla.org/timer;1",
-    nsTimerConstructor },
-  { "OS/2 Timer Manager",
-    NS_TIMERMANAGER_CID,
-    "@mozilla.org/widget/timermanager/os2;1",
-    nsTimerManagerConstructor },
   { "OS/2 Transferable",
     NS_TRANSFERABLE_CID,
     "@mozilla.org/widget/transferable;1",
