@@ -420,6 +420,9 @@ NS_IMETHODIMP nsTextEditor::SetTextProperty(nsIAtom        *aProperty,
     }
   }
   if (gNoisy) {DebugDumpContent(); } // DEBUG
+  //HACK TO DRAW CHANGES
+  HACKForceRedraw();
+  //END HACK
   return result;
 }
 
