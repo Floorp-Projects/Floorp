@@ -827,6 +827,7 @@ NS_NewImageNetContext(ilINetContext **aInstancePtrResult,
      
   PRUint32  necko_attribs;
   ImgCachePolicy imglib_attribs = USE_IMG_CACHE;
+  nsLoadFlags defchan_attribs = nsIChannel::LOAD_NORMAL;
 
   NS_PRECONDITION(nsnull != aInstancePtrResult, "null ptr");
   if (nsnull == aInstancePtrResult) {
@@ -839,19 +840,16 @@ NS_NewImageNetContext(ilINetContext **aInstancePtrResult,
      nsresult rv = group->GetDefaultLoadAttributes(&necko_attribs);
 /*
 Need code to check freshness of necko cache.
-
+*/
      nsCOMPtr<nsIChannel> defLoadChannel; 
      if (NS_SUCCEEDED(group->GetDefaultLoadChannel(
                         getter_AddRefs(defLoadChannel))) && defLoadChannel)
-          defLoadChannel->CheckCacheFresh(&isFresh);
+     defLoadChannel->GetLoadAttributes(&defchan_attribs);
 
-Modify code below to work w/r to freshness of necko cache.
-    
-*/
-     if((nsIChannel::FORCE_VALIDATION & necko_attribs)||   
-        (nsIChannel::VALIDATE_ALWAYS & necko_attribs) ||
-        (nsIChannel::INHIBIT_PERSISTENT_CACHING & necko_attribs)||
-        (nsIChannel::FORCE_RELOAD & necko_attribs))           
+     if((nsIChannel::FORCE_VALIDATION & defchan_attribs)||   
+        (nsIChannel::VALIDATE_ALWAYS & defchan_attribs) ||
+        (nsIChannel::INHIBIT_PERSISTENT_CACHING & defchan_attribs)||
+        (nsIChannel::FORCE_RELOAD & defchan_attribs))           
                        imglib_attribs = DONT_USE_IMG_CACHE;
   }
 
