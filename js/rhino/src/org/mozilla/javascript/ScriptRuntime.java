@@ -899,39 +899,6 @@ public class ScriptRuntime {
         return errorObject;
     }
 
-    /**
-     * Rethrow exception wrapped into {@link WrappedException} unless
-     * the exception is an instance of {@link EvaluatorExceptions},
-     * {@link EcmaError} or java.lang.Error which are rethrown as-is.
-     * <p>
-     * Instances of java.lang.reflect.InvocationTargetExceptions are treated
-     * specially. They are unwrapped and throwAsUncheckedException  is applied
-     * recursively to its target.
-     * <p>
-     * This method always throws an exception, its return value is provided
-     * only for convenience to allow a usage like:
-     * <pre>
-     * throw ScriptRuntime.throwAsUncheckedException(ex);
-     * </pre>
-     * to indicate that code after the method is unreachable.
-     */
-    public static RuntimeException throwAsUncheckedException(Throwable e)
-    {
-        while ((e instanceof InvocationTargetException)) {
-            e = ((InvocationTargetException) e).getTargetException();
-        }
-        if (e instanceof Error) {
-            throw (Error)e;
-        }
-        if (e instanceof EvaluatorException) {
-            throw (EvaluatorException)e;
-        }
-        if (e instanceof EcmaError) {
-            throw (EcmaError)e;
-        }
-        throw new WrappedException(e);
-    }
-
     public static Object getProp(Object obj, String id, Scriptable scope) {
         if (obj == null || obj == Undefined.instance) {
             throw undefReadError(obj, id);

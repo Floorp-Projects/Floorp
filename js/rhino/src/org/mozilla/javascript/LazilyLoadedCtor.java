@@ -63,7 +63,7 @@ public final class LazilyLoadedCtor {
                                  ScriptableObject.DONTENUM);
         }
         catch (PropertyException e) {
-            throw ScriptRuntime.throwAsUncheckedException(e);
+            throw Context.throwAsUncheckedException(e);
         }
     }
 
@@ -88,7 +88,7 @@ public final class LazilyLoadedCtor {
                     } catch (SecurityException ex) {
                         removeOnError = true;
                     } catch (Exception e) {
-                        throw ScriptRuntime.throwAsUncheckedException(e);
+                        throw Context.throwAsUncheckedException(e);
                     }
                 }
                 if (removeOnError) {

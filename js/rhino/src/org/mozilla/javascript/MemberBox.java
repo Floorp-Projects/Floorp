@@ -163,7 +163,7 @@ final class MemberBox implements Serializable
             try {
                 return invoker.invoke(target, args);
             } catch (Exception ex) {
-                throw ScriptRuntime.throwAsUncheckedException(ex);
+                throw Context.throwAsUncheckedException(ex);
             } catch (LinkageError ex) {
                 invoker = null;
             }
@@ -179,16 +179,16 @@ final class MemberBox implements Serializable
                     method = accessible;
                 } else {
                     if (!tryToMakeAccessible(method)) {
-                        throw ScriptRuntime.throwAsUncheckedException(ex);
+                        throw Context.throwAsUncheckedException(ex);
                     }
                 }
                 // Retry after recovery
                 return method.invoke(target, args);
             }
         } catch (IllegalAccessException ex) {
-            throw ScriptRuntime.throwAsUncheckedException(ex);
+            throw Context.throwAsUncheckedException(ex);
         } catch (InvocationTargetException ex) {
-            throw ScriptRuntime.throwAsUncheckedException(ex);
+            throw Context.throwAsUncheckedException(ex);
         }
     }
 
@@ -200,16 +200,16 @@ final class MemberBox implements Serializable
                 return ctor.newInstance(args);
             } catch (IllegalAccessException ex) {
                 if (!tryToMakeAccessible(ctor)) {
-                    throw ScriptRuntime.throwAsUncheckedException(ex);
+                    throw Context.throwAsUncheckedException(ex);
                 }
             }
             return ctor.newInstance(args);
         } catch (IllegalAccessException ex) {
-            throw ScriptRuntime.throwAsUncheckedException(ex);
+            throw Context.throwAsUncheckedException(ex);
         } catch (InvocationTargetException ex) {
-            throw ScriptRuntime.throwAsUncheckedException(ex);
+            throw Context.throwAsUncheckedException(ex);
         } catch (InstantiationException ex) {
-            throw ScriptRuntime.throwAsUncheckedException(ex);
+            throw Context.throwAsUncheckedException(ex);
         }
     }
 

@@ -691,7 +691,7 @@ WrapFactory#wrap(Context cx, Scriptable scope, Object obj, Class)}
                         try {
                             glue = adapter_makeIFGlue.invoke(null, args);
                         } catch (Exception ex) {
-                            throw ScriptRuntime.throwAsUncheckedException(ex);
+                            throw Context.throwAsUncheckedException(ex);
                         }
                         if (glue != null) {
                             // Store for later retrival

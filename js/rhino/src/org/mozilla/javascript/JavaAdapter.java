@@ -255,7 +255,7 @@ public final class JavaAdapter
                                  newInstance(ctorArgs);
             return getAdapterSelf(adapterClass, adapter);
         } catch (Exception ex) {
-            throw ScriptRuntime.throwAsUncheckedException(ex);
+            throw Context.throwAsUncheckedException(ex);
         }
     }
 
@@ -509,7 +509,7 @@ public final class JavaAdapter
             try {
                 master = (IFGlue)glueClass.newInstance();
             } catch (Exception ex) {
-                throw ScriptRuntime.throwAsUncheckedException(ex);
+                throw Context.throwAsUncheckedException(ex);
             }
             int[] argsToConvert = getArgsToConvert(argTypes);
             master.ifglue_initMaster(argsToConvert);
@@ -633,7 +633,7 @@ public final class JavaAdapter
         try {
             return f.call(cx, scope, thisObj, args);
         } catch (JavaScriptException ex) {
-            throw ScriptRuntime.throwAsUncheckedException(ex);
+            throw Context.throwAsUncheckedException(ex);
         }
     }
 
