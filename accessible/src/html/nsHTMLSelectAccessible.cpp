@@ -60,7 +60,7 @@
   *
   *  Listbox:
   *     - nsHTMLListboxAccessible
-  *        - nsHTMLSelctListAccessible
+  *        - nsHTMLSelectListAccessible
   *           - nsHTMLSelectOptionAccessible
   *
   *  Comboboxes:
@@ -68,7 +68,7 @@
   *        - nsHTMLComboboxTextFieldAccessible
   *        - nsHTMLComboboxButtonAccessible
   *        - nsHTMLComboboxWindowAccessilbe
-  *           - nsHTMLSelctListAccessible
+  *           - nsHTMLSelectListAccessible
   *              - nsHTMLSelectOptionAccessible
   */
 

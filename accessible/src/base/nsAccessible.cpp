@@ -651,7 +651,7 @@ PRBool nsAccessible::IsPartiallyVisible()
   float p2t;
   presContext->GetPixelsToTwips(&p2t);
   PRBool isVisible = PR_FALSE;
-  viewManager->IsRectVisible(containingView, relFrameRect, kMinPixels * p2t, &isVisible);
+  viewManager->IsRectVisible(containingView, relFrameRect, NS_STATIC_CAST(PRUint16, (kMinPixels * p2t)), &isVisible);
 
   return isVisible;
 }
