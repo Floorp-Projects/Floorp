@@ -488,6 +488,9 @@ nsresult CNavDTD::WillBuildModel(nsString& aFilename,PRBool aNotifySink,nsString
 #endif
 
     result = mSink->WillBuildModel();
+    CStartToken theToken(eHTMLTag_html);
+    HandleStartToken(&theToken);
+
     mSkipTarget=eHTMLTag_unknown;
     mComputedCRC32=0;
     mExpectedCRC32=0;
@@ -542,6 +545,8 @@ nsresult CNavDTD::DidBuildModel(nsresult anErrorCode,PRBool aNotifySink,nsIParse
   if((NS_OK==anErrorCode) && (!mHadBodyOrFrameset)) {
     CStartToken theToken(eHTMLTag_body);  //open the body container...
     result=HandleStartToken(&theToken);
+    mTokenizer->PrependTokens(mMisplacedContent); //push misplaced content
+    result=BuildModel(aParser,mTokenizer,0,aSink);
   }
 
   if(aParser){
@@ -2081,24 +2086,21 @@ PRBool CNavDTD::ForwardPropagate(nsEntryStack& aStack,eHTMLTags aParentTag,eHTML
  */
 PRBool CNavDTD::BackwardPropagate(nsEntryStack& aStack,eHTMLTags aParentTag,eHTMLTags aChildTag) const {
 
-  eHTMLTags theParentTag=aChildTag;
-
+  eHTMLTags theParentTag=aParentTag; //just init to get past first condition...
   do {
-    CTagList* theRootTags=gHTMLElements[theParentTag].GetRootTags();
-    theParentTag=theRootTags->GetTagAt(0);
-    if(theParentTag!=eHTMLTag_unknown) {
-      aStack.Push(theParentTag);
+    CTagList* theRootTags=gHTMLElements[aChildTag].GetRootTags();
+    if(theRootTags) {
+      theParentTag=theRootTags->GetTagAt(0);
+      if(CanContain(theParentTag,aChildTag)) {
+        //we've found a complete sequence, so push the parent...
+        aChildTag=theParentTag;
+        aStack.Push(theParentTag);
+      }
     }
+    else break;
+  } 
+  while((theParentTag!=eHTMLTag_unknown) && (theParentTag!=aParentTag));
 
-    PRBool theCanContainResult=CanContain(aParentTag,theParentTag);
-
-    if(theCanContainResult) {
-      //we've found a complete sequence, so push the parent...
-      theParentTag=aParentTag;
-      aStack.Push(theParentTag);
-    }
-  } while((theParentTag!=eHTMLTag_unknown) && (theParentTag!=aParentTag));
-  
   return PRBool(aParentTag==theParentTag);
 }
 
