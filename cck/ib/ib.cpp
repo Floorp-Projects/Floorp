@@ -34,6 +34,8 @@ int xpiLen = -1;
 // Setup Sections for config.ini
 CString Setup0Short = "&Typical";
 CString Setup1Short = "C&ustom";
+CString quotes = "\"";
+CString spaces = " ";
 
 COMPONENT Components[100];
 int		numComponents;
@@ -67,7 +69,7 @@ int ExtractXPIFile(CString xpiname, CString xpifile)
 
 	// Can use -d instead of change CWD???
 	CString xpiArchive = nscpxpiPath + "\\" + xpiname;
-	command = rootPath + "unzip.exe -o" + " " + xpiArchive + " " + xpifile;
+	command = quotes +rootPath + "unzip.exe"+ quotes + "-o" + spaces + quotes + xpiArchive + quotes + spaces + quotes + xpifile + quotes;
 	ExecuteCommand((char *)(LPCTSTR) command, SW_HIDE, INFINITE);
 
 	return TRUE;
@@ -89,7 +91,7 @@ int ReplaceXPIFiles()
 		if (!CopyFile(xpiArchive, xpiArcDest, TRUE))
 			DWORD e = GetLastError();
 
-		command = rootPath + "zip.exe -m " + xpiArcDest + " " + xpiList[i].filename;
+		command = quotes + rootPath + "zip.exe" + quotes + "-m " + spaces + quotes +xpiArcDest + quotes + spaces + quotes + xpiList[i].filename + quotes;
 		ExecuteCommand((char *)(LPCTSTR) command, SW_HIDE, INFINITE);
 	}
 
@@ -111,8 +113,7 @@ int ReplaceINIFile()
 	CString Dst = xpiDstPath + "\\" + exeName;
 	if (!CopyFile(Src, Dst, FALSE))
 		DWORD e = GetLastError();
-
-	command = rootPath + "nszip.exe " + exeName +  " config.ini";
+	command = quotes + rootPath + "nszip.exe " + quotes + spaces + exeName + spaces + "config.ini";
 	ExecuteCommand((char *)(LPCTSTR) command, SW_SHOW, INFINITE);
 
 	SetCurrentDirectory(olddir);

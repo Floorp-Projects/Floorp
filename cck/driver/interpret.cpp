@@ -334,7 +334,9 @@ BOOL CInterpret::OpenBrowser(const char *url)
 			*pos = '\0';        /* remove the parameter */
 
 		lstrcat(pos," ");
+		lstrcat(pos,"\"");
 		lstrcat(pos,url);
+		lstrcat(pos,"\"");
 		ExecuteCommand(key,SW_SHOW,50); 
 		retflag = TRUE;
 		}
@@ -375,7 +377,9 @@ BOOL CInterpret::OpenViewer(const char *url)
 			*pos = '\0';        /* remove the parameter */
 
 		lstrcat(pos," ");
+		lstrcat(pos,"\"");
 		lstrcat(pos,url);
+		lstrcat(pos,"\"");
 		ExecuteCommand(key,SW_SHOW,50); 
 		retflag = TRUE;
 		}
