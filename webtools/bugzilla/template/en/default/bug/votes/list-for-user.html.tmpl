@@ -39,7 +39,7 @@
 [% END %]
 
 [% IF products.size %]
-  <form action="votes.cgi">
+  <form method="post" action="votes.cgi">
     <input type="hidden" name="action" value="vote">
     <table cellspacing="4">
       <tr>
