@@ -153,7 +153,7 @@ nsDOMCSSAttributeDeclaration::GetCSSDeclaration(nsCSSDeclaration **aDecl,
         decl->RuleAbort();
         return NS_ERROR_OUT_OF_MEMORY;
       }
-      result = SetCSSDeclaration(*aDecl, PR_FALSE, PR_FALSE);
+      result = SetCSSDeclaration(decl, PR_FALSE, PR_FALSE);
       if (NS_SUCCEEDED(result)) {
         *aDecl = decl;
       }
