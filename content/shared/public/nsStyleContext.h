@@ -66,7 +66,6 @@ public:
     --mRefCnt;
     NS_LOG_RELEASE(this, mRefCnt, "nsStyleContext");
     if (mRefCnt == 0) {
-      mRefCnt = 1;
       Destroy();
       return 0;
     }
