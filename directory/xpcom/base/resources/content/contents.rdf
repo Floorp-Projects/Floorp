@@ -12,7 +12,7 @@
         chrome:displayName="MozLDAP"
         chrome:author="mozilla.org"
         chrome:name="mozldap"
- 	chrome:localeVersion="1.0.0">
+ 	chrome:localeVersion="1.1a">
   </RDF:Description>
 
 </RDF:RDF>

@@ -22,5 +22,5 @@
   <!-- Version Information.  State that we work only with major version of this
        package. -->
   <RDF:Description about="urn:mozilla:locale:US:messenger-region"
-	chrome:localeVersion="1.0.0"/>
+	chrome:localeVersion="1.1a"/>
 </RDF:RDF>
