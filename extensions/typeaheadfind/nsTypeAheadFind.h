@@ -143,9 +143,12 @@ protected:
 
   // Current find state
   nsString mTypeAheadBuffer;
-  PRBool mLinksOnlyPref, mLinksOnly, mErrorBeepsPref, mIsTypeAheadOn;
+  PRBool mLinksOnlyPref;
+  PRBool mLinksOnly;
+  PRBool mIsTypeAheadOn;
   PRBool mCaretBrowsingOn;
   PRBool mIsRepeatingSameChar;
+  PRBool mLiteralTextSearchOnly;
   PRBool mKeepSelectionOnCancel;
   PRInt32 mTimeoutLength; // Amount of time before find is automatically cancelled
   static PRBool gIsFindingText; // this flag prevents side effects from listener callbacks while selecting/focusing found text

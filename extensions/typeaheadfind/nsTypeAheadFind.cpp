@@ -120,8 +120,8 @@ nsTypeAheadFind* nsTypeAheadFind::mInstance = nsnull;
 
 nsTypeAheadFind::nsTypeAheadFind(): 
   mLinksOnlyPref(PR_FALSE), mLinksOnly(PR_FALSE), mIsTypeAheadOn(PR_FALSE), 
-  mCaretBrowsingOn(PR_FALSE), mIsRepeatingSameChar(PR_FALSE), mKeepSelectionOnCancel(PR_FALSE),
-  mTimeoutLength(0),
+  mCaretBrowsingOn(PR_FALSE), mIsRepeatingSameChar(PR_FALSE), mLiteralTextSearchOnly(PR_FALSE),
+  mKeepSelectionOnCancel(PR_FALSE), mTimeoutLength(0),
   mFind(do_CreateInstance(NS_FIND_CONTRACTID)), 
   mFindService(do_GetService("@mozilla.org/find/find_service;1"))
 {
@@ -539,7 +539,7 @@ NS_IMETHODIMP nsTypeAheadFind::KeyPress(nsIDOMEvent* aEvent)
         aEvent->PreventDefault(); // Use the space if it's not the first character, but don't page down
     }
     if (bufferLength > 0 && mTypeAheadBuffer.First() == uniChar) {
-      if (mTypeAheadBuffer.Length() == 1 && mTypeAheadBuffer.First() == uniChar)
+      if (mTypeAheadBuffer.Length() == 1 && mTypeAheadBuffer.First() == uniChar && !mLiteralTextSearchOnly)
         isLinksOnly = mIsRepeatingSameChar = PR_TRUE;  // only look for links when using repeated character method
     }
     else if (mIsRepeatingSameChar) {
@@ -548,6 +548,8 @@ NS_IMETHODIMP nsTypeAheadFind::KeyPress(nsIDOMEvent* aEvent)
     }
     if (bufferLength == 0 && (uniChar == '`' || uniChar=='\'' || uniChar=='\"')) {
       mLinksOnly = !mLinksOnly; // If you type quote, you can search for all text - it reverses the setting
+      if (!mLinksOnly)
+        mLiteralTextSearchOnly = PR_TRUE;
       return NS_OK;
     }
     mTypeAheadBuffer += uniChar;
@@ -576,7 +578,7 @@ NS_IMETHODIMP nsTypeAheadFind::KeyPress(nsIDOMEvent* aEvent)
 
   if (NS_SUCCEEDED(rv)) {
     // ------- Success!!! ---------------------------------------------------------------------------------
-    mKeepSelectionOnCancel = PR_FALSE;   // Next time CancelFind() is called, selection will be collapsed
+    mKeepSelectionOnCancel = !isLinksOnly;   // Next time CancelFind() is called, selection will be collapsed
     DisplayStatus(PR_TRUE, PR_FALSE);    // display success status
 
     // ------- Store current find string for regular find usage: find-next or find dialog text field ------
@@ -777,6 +779,11 @@ nsresult nsTypeAheadFind::FindItNow(PRBool aIsLinksOnly, PRBool aIsFirstVisibleP
       // first find exactly what they typed, if not there start over with new char
       mTypeAheadBuffer = mTypeAheadBuffer.Last();
       return FindItNow(PR_TRUE, aIsFirstVisiblePreferred, aIsBackspace);
+    }
+    if (mIsRepeatingSameChar && mTypeAheadBuffer.Length() > 1 && mTypeAheadBuffer.Length() <5) {
+      // Can't find a link that starts with the repeated char, so try a normal search
+      mIsRepeatingSameChar = PR_FALSE;
+      return FindItNow(mLinksOnly, aIsFirstVisiblePreferred, aIsBackspace);
     }
     
     // ------------- Failed --------------
@@ -993,7 +1000,8 @@ void nsTypeAheadFind::CancelFind()
   if (!mTypeAheadBuffer.IsEmpty()) {
     mTypeAheadBuffer.Truncate();
     DisplayStatus(PR_FALSE, PR_TRUE); // Clear status
-    if (!mKeepSelectionOnCancel)
+    nsCOMPtr<nsIPresShell> presShell(do_QueryReferent(mFocusedWeakShell));
+    if (!mKeepSelectionOnCancel && presShell)
       mFocusedDocSelection->CollapseToStart();
 #ifdef RESTORE_SEARCH
     // Restore old find settings
@@ -1013,6 +1021,7 @@ void nsTypeAheadFind::CancelFind()
   // These will be initialized to their true values after the first character is typed
   mCaretBrowsingOn = PR_FALSE;
   mIsRepeatingSameChar = PR_FALSE;
+  mLiteralTextSearchOnly = PR_FALSE;
   mStartFindRange = nsnull;
 }
 
