@@ -996,7 +996,7 @@ void IdlScanner::TKeywords(char *aCurrentPos, Token *aToken)
 }
 
 //
-// It's either 'union' or 'unsigned' if it's a keyword
+// It's either 'union', 'unsigned' or 'unknown' if it's a keyword
 // otherwise must be an identifier
 //
 void IdlScanner::UKeywords(char *aCurrentPos, Token *aToken)
@@ -1057,6 +1057,30 @@ void IdlScanner::UKeywords(char *aCurrentPos, Token *aToken)
             aToken->SetToken(ULONG_TOKEN);
           }
         }
+      }
+    }
+    else if (aCurrentPos == startPos + 1 &&
+             c != EOF && c == 'k' && (*aCurrentPos++ = c) && (c = mInputFile->get()) &&
+             c != EOF && c == 'n' && (*aCurrentPos++ = c) && (c = mInputFile->get()) &&
+             c != EOF && c == 'o' && (*aCurrentPos++ = c) && (c = mInputFile->get()) &&
+             c != EOF && c == 'w' && (*aCurrentPos++ = c) && (c = mInputFile->get()) &&
+             c != EOF && c == 'n' && (*aCurrentPos++ = c)) {
+      // if terminated is a keyword
+      c = mInputFile->get();
+      if (c != EOF) {
+        if (isalpha(c) || isdigit(c) || c == '_') {
+          // more characters, it must be an identifier
+          *aCurrentPos++ = c;
+          Identifier(aCurrentPos, aToken);
+        }
+        else {
+          // it is a keyword
+          aToken->SetToken(UNKNOWN_TOKEN);
+          mInputFile->putback(c);
+        }
+      }
+      else {
+        aToken->SetToken(UNION_TOKEN);
       }
     }
     else {
