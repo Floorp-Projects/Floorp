@@ -39,7 +39,7 @@ endif
 # The following don't need a CPLUSPLUSRUNTIME defined:  WINNT, HP-UX
 # so filter them out.
 ifeq (,$(filter WINNT HP-UX,$(OS_ARCH)))
-ifeq ($(OS_ARCH), Linux)
+ifeq (,$(filter-out Linux FreeBSD, $(OS_ARCH)))
 # On linux, we link with libstdc++ (we're always using egcs on linux, right?)
 CPLUSPLUSRUNTIME = -L /usr/lib -lstdc++ -lm
 else
