@@ -823,6 +823,11 @@ nsHandleSSLError(nsNSSSocketInfo *socketInfo, PRInt32 err)
                                                 getter_Copies(formattedString));
     break;
 
+  case SEC_ERROR_REUSED_ISSUER_AND_SERIAL:
+    nssComponent->GetPIPNSSBundleString(NS_LITERAL_STRING("HostReusedIssuerSerial").get(),
+                                                getter_Copies(formattedString));
+    break;
+
   default:
     params[0] = hostNameU.get();
     params[1] = errorCode.get(); 
