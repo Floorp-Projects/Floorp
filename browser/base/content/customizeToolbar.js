@@ -71,30 +71,7 @@ function buildDialog()
   var toolbarItem = toolbar.firstChild;
   while (toolbarItem) {
     var newItem = toolbarItem.cloneNode(true);
-<<<<<<< customizeToolbar.js
     addItemToToolbar(newItem, newToolbar);
-=======
-    newItem.removeAttribute("observes");
-    newItem.removeAttribute("disabled");
-    newItem.removeAttribute("type");
-
-    if (newItem.localName == "toolbaritem" && 
-        newItem.firstChild) {
-      newItem.firstChild.removeAttribute("observes");
-      if (newItem.firstChild.localName == "textbox")
-        newItem.firstChild.setAttribute("disabled", "true");
-      else
-        newItem.firstChild.removeAttribute("disabled");
-    }
-
-    enclosure = document.createElementNS("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul",
-                                         "toolbarpaletteitem");
-    
-    // Set a draggesture handler to allow drag-rearrange within the clone toolbar.
-    enclosure.setAttribute("ondraggesture", "gDraggingFromPalette = false; nsDragAndDrop.startDrag(event, dragObserver)");
-    enclosure.appendChild(newItem);
-    newToolbar.appendChild(enclosure);
->>>>>>> 1.20
     toolbarItem = toolbarItem.nextSibling;
   }
 
