@@ -30,6 +30,11 @@
 #include "nsIDNSService.h" 
 #include "nsCOMPtr.h"
 #include "nsURLHelper.h"
+#include "nsWeakPtr.h"
+
+#define NS_N(x) (sizeof(x)/sizeof(*x))
+
+static const char *gScheme[] = {"chrome", "resource", "file", "http"};
 
 class nsIOService : public nsIIOService
 {
@@ -51,10 +56,21 @@ public:
                     nsIURI* *result, nsIProtocolHandler* *hdlrResult);
 
 protected:
+    NS_METHOD GetCachedProtocolHandler(const char *scheme,
+                                       nsIProtocolHandler* *hdlrResult);
+    NS_METHOD CacheProtocolHandler(const char *scheme,
+                                   nsIProtocolHandler* hdlr);
+
+protected:
     PRBool      mOffline;
     nsCOMPtr<nsISocketTransportService> mSocketTransportService;
     nsCOMPtr<nsIFileTransportService>   mFileTransportService;
     nsCOMPtr<nsIDNSService>             mDNSService;
+
+    // Cached protocol handlers
+    nsWeakPtr                  mWeakHandler[NS_N(gScheme)];
 };
 
 #endif // nsIOService_h__
+
+

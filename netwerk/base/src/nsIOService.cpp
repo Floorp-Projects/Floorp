@@ -149,6 +149,54 @@ NS_IMPL_THREADSAFE_ISUPPORTS1(nsIOService, nsIIOService);
 #define MAX_NET_PROGID_LENGTH   (MAX_SCHEME_LENGTH + NS_NETWORK_PROTOCOL_PROGID_PREFIX_LENGTH + 1)
 
 NS_IMETHODIMP
+nsIOService::CacheProtocolHandler(const char *scheme, nsIProtocolHandler *handler)
+{
+    for (unsigned int i=0; i<NS_N(gScheme); i++)
+    {
+        if (!nsCRT::strcasecmp(scheme, gScheme[i]))
+        {
+            nsresult rv;
+            NS_ASSERTION(!mWeakHandler[i], "Protocol handler already cached");
+            // Make sure the handler supports weak references.
+            nsCOMPtr<nsISupportsWeakReference> factoryPtr = do_QueryInterface(handler, &rv);
+            if (!factoryPtr)
+            {
+                // Dont cache handlers that dont support weak reference as
+                // there is real danger of a circular reference.
+#ifdef DEBUG_dp
+                printf("DEBUG: %s protcol handler doesn't support weak ref. Not cached.\n", scheme);
+#endif /* DEBUG_dp */
+                return NS_ERROR_FAILURE;
+            }
+            mWeakHandler[i] = getter_AddRefs(NS_GetWeakReference(handler));
+            return NS_OK;
+        }
+    }
+    return NS_ERROR_FAILURE;
+}
+
+NS_IMETHODIMP
+nsIOService::GetCachedProtocolHandler(const char *scheme, nsIProtocolHandler **result)
+{
+    for (unsigned int i=0; i<NS_N(gScheme); i++)
+    {
+        if (!nsCRT::strcasecmp(scheme, gScheme[i]))
+            if (mWeakHandler[i])
+            {
+                nsCOMPtr<nsIProtocolHandler> temp = do_QueryReferent(mWeakHandler[i]);
+                if (temp)
+                {
+                    *result = temp.get();
+                    NS_ADDREF(*result);
+                    return NS_OK;
+                }
+            }
+    }
+    return NS_ERROR_FAILURE;
+}
+ 
+
+NS_IMETHODIMP
 nsIOService::GetProtocolHandler(const char* scheme, nsIProtocolHandler* *result)
 {
     nsresult rv;
@@ -162,6 +210,9 @@ nsIOService::GetProtocolHandler(const char* scheme, nsIProtocolHandler* *result)
     // scheme -> protocol handler mapping, avoiding the string manipulation
     // and service manager stuff
 
+    rv = GetCachedProtocolHandler(scheme, result);
+    if (NS_SUCCEEDED(rv)) return NS_OK;
+
     char buf[MAX_NET_PROGID_LENGTH];
     nsCAutoString progID(NS_NETWORK_PROTOCOL_PROGID_PREFIX);
     progID += scheme;
@@ -171,6 +222,8 @@ nsIOService::GetProtocolHandler(const char* scheme, nsIProtocolHandler* *result)
     rv = nsServiceManager::GetService(buf, NS_GET_IID(nsIProtocolHandler), (nsISupports **)result);
     if (NS_FAILED(rv)) 
         return NS_ERROR_UNKNOWN_PROTOCOL;
+
+    CacheProtocolHandler(scheme, *result);
 
     return NS_OK;
 }
