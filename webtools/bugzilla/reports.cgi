@@ -234,7 +234,7 @@ sub chart_image_name {
     # Instead, just require that each field name consists only of letters
     # and number
 
-    if ($datasets !~ m/[A-Za-z0-9:]/) {
+    if ($datasets !~ m/^[A-Za-z0-9:]+$/) {
         die "Invalid datasets $datasets";
     }
 
