@@ -207,8 +207,10 @@ nsresult nsWindow::StandardCreate(nsIWidget *aParent,
 	if (mWindowPtr == nsnull) {
 		if (aParent)
 			mWindowPtr = (WindowPtr)aParent->GetNativeData(NS_NATIVE_DISPLAY);
+/* this is always null
 		else if (aAppShell)
 			mWindowPtr = (WindowPtr)aAppShell->GetNativeData(NS_NATIVE_SHELL);
+*/
 	}
 	return NS_OK;
 }

@@ -90,9 +90,10 @@ NS_IMETHODIMP nsTextAreaWidget::Create(nsIWidget *aParent,const nsRect &aRect,EV
 	mWindowPtr = nsnull;
 	if (aParent)
 		mWindowPtr = (WindowPtr)aParent->GetNativeData(NS_NATIVE_DISPLAY);
+/* this always returned NULL, so it was removed
 	else if (aAppShell)
 		mWindowPtr = (WindowPtr)aAppShell->GetNativeData(NS_NATIVE_SHELL);
-  
+  */
 	// Initialize the TE record
 	LongRect destRect, viewRect;
 	viewRect.top	= MARGIN;
