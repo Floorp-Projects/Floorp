@@ -27,7 +27,7 @@
 #include "nsGUIEvent.h"
 #include "nsStyleConsts.h"
 
-#define DO_SELECTION 1
+#define DO_SELECTION 0
 
 #if DO_SELECTION
 #include "nsIDOMText.h"
@@ -419,6 +419,7 @@ NS_METHOD nsFrame::HandleEvent(nsIPresContext& aPresContext,
 
     HandlePress(aPresContext, aEvent, aEventStatus, this);
   }
+#endif
 
   aEventStatus = nsEventStatus_eIgnore;
   return NS_OK;
@@ -430,6 +431,7 @@ NS_METHOD nsFrame::HandlePress(nsIPresContext& aPresContext,
                                nsEventStatus&  aEventStatus,
                                nsFrame *       aFrame)
 {
+#if DO_SELECTION
   nsFrame * currentFrame = aFrame;
 
   PRInt32 offset = 0;
@@ -535,6 +537,7 @@ NS_METHOD nsFrame::HandleDrag(nsIPresContext& aPresContext,
                               nsEventStatus&  aEventStatus,
                               nsFrame *       aFrame)
 {
+#if DO_SELECTION
   PRBool isNewFrame = PR_FALSE; // for testing (rcs)
 
   mDidDrag = PR_TRUE;
@@ -615,6 +618,7 @@ NS_METHOD nsFrame::HandleDrag(nsIPresContext& aPresContext,
       //??doDragRepaint(mCurrentFrame);
     }
   }
+#endif
 
   aEventStatus = nsEventStatus_eIgnore;
   return NS_OK;
@@ -625,7 +629,9 @@ NS_METHOD nsFrame::HandleRelease(nsIPresContext& aPresContext,
                                  nsEventStatus&  aEventStatus,
                                  nsFrame *       aFrame)
 {
+#if DO_SELECTION
   mDoingSelection = PR_FALSE;
+#endif
   aEventStatus = nsEventStatus_eIgnore;
   return NS_OK;
 }
