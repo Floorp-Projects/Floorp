@@ -1897,15 +1897,7 @@ nsEventListenerManager::DispatchEvent(nsIDOMEvent* aEvent, PRBool *_retval)
     return NS_ERROR_FAILURE;
   }
   
-  nsCOMPtr<nsIDocument> document = targetContent->GetDocument();
-
-  if (!document) {
-    // XXXbz GetOwnerDocument
-    nsINodeInfo *nodeInfo = targetContent->GetNodeInfo();
-    if (nodeInfo) {
-      document = nsContentUtils::GetDocument(nodeInfo);
-    }
-  }
+  nsCOMPtr<nsIDocument> document = targetContent->GetOwnerDoc();
 
   // Do nothing if the element does not belong to a document
   if (!document) {
