@@ -384,6 +384,8 @@ pref("security.policy.default.nshtmldocument.vlinkcolor.write", "sameOrigin");
 pref("security.policy.default.nshtmldocument.write", "sameOrigin");
 pref("security.policy.default.nshtmldocument.writeln", "sameOrigin");
 
+pref("security.policy.default.eventtarget.addeventlistener", "sameOrigin");
+
 pref("security.policy.default.navigator.preference.read", "UniversalPreferencesRead");
 pref("security.policy.default.navigator.preference.write", "UniversalPreferencesWrite");
 

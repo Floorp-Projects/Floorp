@@ -2381,15 +2381,7 @@ nsresult nsDocument::GetListenerManager(nsIEventListenerManager **aInstancePtrRe
 
 nsresult nsDocument::GetNewListenerManager(nsIEventListenerManager **aInstancePtrResult)
 {
-  nsresult rv = NS_NewEventListenerManager(aInstancePtrResult);
-  if (NS_FAILED(rv))
-    return rv;
-  nsIPrincipal *principal = GetDocumentPrincipal();
-  if (principal) {
-    (*aInstancePtrResult)->SetPrincipal(principal);
-    NS_RELEASE(principal);
-  }
-  return NS_OK;
+  return NS_NewEventListenerManager(aInstancePtrResult);
 } 
 
 nsresult nsDocument::HandleDOMEvent(nsIPresContext* aPresContext, 

@@ -390,8 +390,12 @@ nsScriptSecurityManager::CheckLoadURIFromScript(nsIScriptContext *aContext,
         return NS_ERROR_FAILURE;
     }
 
+    // Native code can load all URIs.
+    if (!principal) 
+        return NS_OK;
+
     // The system principal can load all URIs.
-    PRBool equals;
+    PRBool equals = PR_FALSE;
     if (NS_FAILED(principal->Equals(mSystemPrincipal, &equals)))
         return NS_ERROR_FAILURE;
     if (equals)
@@ -477,50 +481,15 @@ nsScriptSecurityManager::CheckLoadURI(nsIURI *aFromURI,
     return NS_ERROR_DOM_BAD_URI;
 }
 
-NS_IMETHODIMP
-nsScriptSecurityManager::CheckCanListenTo(nsIPrincipal *principal) 
-{
-    nsCOMPtr<nsIPrincipal> subject;
-    nsresult rv;
-    PRBool hasSubject;
-    if (NS_FAILED(rv = HasSubjectPrincipal(&hasSubject)))
-        return rv;
-    if (!hasSubject)
-        return NS_OK;       // No script code, so native code has access.
-    if (NS_FAILED(rv = GetSubjectPrincipal(getter_AddRefs(subject))))
-        return rv;
-    nsCOMPtr<nsICodebasePrincipal> codebase = do_QueryInterface(subject);
-    PRBool equals;
-    if (codebase && NS_SUCCEEDED(codebase->SameOrigin(principal, &equals))) {
-        if (equals) 
-            return NS_OK;   // Listener and Listened-to have same origin
-    }
-
-    PRBool enabled;
-    if (NS_SUCCEEDED(IsCapabilityEnabled("UniversalBrowserRead", &enabled))) {
-        if (enabled)
-            return NS_OK;   // Capability allows access
-    }
-
-    // Report error
-    JSContext *cx = GetCurrentContext();
-    JS_ReportError(cx, "Access denied to listen to events across origins");
-    return NS_ERROR_DOM_PROP_ACCESS_DENIED;
-}
-
-NS_IMETHODIMP
-nsScriptSecurityManager::HasSubjectPrincipal(PRBool *result)
-{
-    *result = GetCurrentContext() != nsnull;
-    return NS_OK;
-}
 
 NS_IMETHODIMP
 nsScriptSecurityManager::GetSubjectPrincipal(nsIPrincipal **result)
 {
     JSContext *cx = GetCurrentContext();
-    if (!cx)
-        return NS_ERROR_FAILURE;
+    if (!cx) {
+        *result = nsnull;
+        return NS_OK;
+    }
     return GetSubjectPrincipal(cx, result);
 }
 
@@ -889,13 +858,7 @@ nsScriptSecurityManager::GetSubjectPrincipal(JSContext *cx,
                                              nsIPrincipal **result)
 {
     JSStackFrame *fp;
-    if (NS_FAILED(GetPrincipalAndFrame(cx, result, &fp)))
-        return NS_ERROR_FAILURE;
-    if (*result)
-        return NS_OK;
-    // Couldn't find principals: no mobile code on stack.
-    // Use system principal.
-    return GetSystemPrincipal(result);
+    return GetPrincipalAndFrame(cx, result, &fp);
 }
 
 
@@ -945,6 +908,15 @@ nsScriptSecurityManager::CheckPermissions(JSContext *aCx, JSObject *aObj,
     nsCOMPtr<nsIPrincipal> subject;
     if (NS_FAILED(GetSubjectPrincipal(aCx, getter_AddRefs(subject))))
         return NS_ERROR_FAILURE;
+
+    // If native code or system principal, allow access
+    PRBool equals;
+    if (!subject || 
+        (NS_SUCCEEDED(subject->Equals(mSystemPrincipal, &equals)) && equals))
+    {
+        *aResult = PR_TRUE;
+        return NS_OK;
+    }
 
     nsCOMPtr<nsIPrincipal> object;
     if (NS_FAILED(GetObjectPrincipal(aCx, aObj, getter_AddRefs(object))))
@@ -1951,8 +1923,8 @@ nsScriptSecurityManager::GetPrefName(JSContext *cx, nsDOMProp domProp,
         if (NS_FAILED(GetSubjectPrincipal(cx, getter_AddRefs(principal)))) {
             return NS_ERROR_FAILURE;
         }
-        PRBool equals;
-        if (NS_FAILED(principal->Equals(mSystemPrincipal, &equals)))
+        PRBool equals = PR_TRUE;
+        if (principal && NS_FAILED(principal->Equals(mSystemPrincipal, &equals)))
             return NS_ERROR_FAILURE;
         if (equals) {
             s += defaultStr;
