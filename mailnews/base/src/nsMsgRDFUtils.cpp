@@ -84,7 +84,13 @@ nsresult createNode(const PRUnichar *str, nsIRDFNode **node, nsIRDFService *rdfS
 {
   nsresult rv;
   nsCOMPtr<nsIRDFLiteral> value;
-  rv = rdfService->GetLiteral(str, getter_AddRefs(value));
+
+  if (str) {
+	rv = rdfService->GetLiteral(str, getter_AddRefs(value));
+  } else {
+	PRUnichar blankStr[] = { 0 };
+	rv = rdfService->GetLiteral(blankStr, getter_AddRefs(value));
+  }
   if (NS_SUCCEEDED(rv)) {
     *node = value;
     NS_IF_ADDREF(*node);
