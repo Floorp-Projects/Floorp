@@ -3858,106 +3858,85 @@ static PRBool SelectorMatchesTree(RuleProcessorData &data,
                                   nsCSSSelector* aSelector) 
 {
   nsCSSSelector* selector = aSelector;
+  RuleProcessorData* curdata = &data;
+  while (selector) { // check compound selectors
+    // Find the appropriate content (whether parent or previous sibling)
+    // to check next, and if we don't already have a RuleProcessorData
+    // for it, create one.
 
-  if (selector) {
-    nsIContent* content = nsnull;
-    nsIContent* lastContent = data.mContent;
-    NS_ADDREF(lastContent);
-    RuleProcessorData* curdata = &data;
-    while (nsnull != selector) { // check compound selectors
-      // Find the appropriate content (whether parent or previous sibling)
-      // to check next, and if we don't already have a RuleProcessorData
-      // for it, create one.
-
-      // for adjacent sibling combinators, the content to test against the
-      // selector is the previous sibling
-      nsCompatibility compat = curdata->mCompatMode;
-      RuleProcessorData* newdata;
-      if (PRUnichar('+') == selector->mOperator) {
-        newdata = curdata->mPreviousSiblingData;
-        if (!newdata) {
-          nsIContent* parent = lastContent->GetParent();
-          if (parent) {
-            PRInt32 index = parent->IndexOf(lastContent);
-            while (0 <= --index) {  // skip text & comment nodes
-              content = parent->GetChildAt(index);
-              nsCOMPtr<nsIAtom> tag;
-              content->GetTag(getter_AddRefs(tag));
-              if ((tag != nsLayoutAtoms::textTagName) && 
-                  (tag != nsLayoutAtoms::commentTagName)) {
-                newdata =
-                    new (curdata->mPresContext) RuleProcessorData(curdata->mPresContext, content,
-                                                                    curdata->mRuleWalker, &compat);
-                curdata->mPreviousSiblingData = newdata;    
-                break;
-              }
+    // for adjacent sibling combinators, the content to test against the
+    // selector is the previous sibling
+    nsCompatibility compat = curdata->mCompatMode;
+    RuleProcessorData* newdata;
+    if (PRUnichar('+') == selector->mOperator) {
+      newdata = curdata->mPreviousSiblingData;
+      if (!newdata) {
+        nsIContent* content = curdata->mContent;
+        nsIContent* parent = content->GetParent();
+        if (parent) {
+          PRInt32 index = parent->IndexOf(content);
+          while (0 <= --index) {  // skip text & comment nodes
+            content = parent->GetChildAt(index);
+            nsCOMPtr<nsIAtom> tag;
+            content->GetTag(getter_AddRefs(tag));
+            if ((tag != nsLayoutAtoms::textTagName) && 
+                (tag != nsLayoutAtoms::commentTagName)) {
+              newdata =
+                  new (curdata->mPresContext) RuleProcessorData(curdata->mPresContext, content,
+                                                                  curdata->mRuleWalker, &compat);
+              curdata->mPreviousSiblingData = newdata;    
+              break;
             }
-
-            content = nsnull;
-          }
-        } else {
-          content = newdata->mContent;
-          NS_ADDREF(content);
-        }
-      }
-      // for descendant combinators and child combinators, the content
-      // to test against is the parent
-      else {
-        newdata = curdata->mParentData;
-        if (!newdata) {
-          content = lastContent->GetParent();
-          if (content) {
-            NS_ADDREF(content);
-            newdata = new (curdata->mPresContext) RuleProcessorData(curdata->mPresContext, content,
-                                                                      curdata->mRuleWalker, &compat);
-            curdata->mParentData = newdata;    
-          }
-        } else {
-          content = newdata->mContent;
-          NS_ADDREF(content);
-        }
-      }
-      if (! newdata) {
-        NS_ASSERTION(!content, "content must be null");
-        break;
-      }
-      if (SelectorMatches(*newdata, selector, 0, nsnull, 0)) {
-        // to avoid greedy matching, we need to recurse if this is a
-        // descendant combinator and the next combinator is not
-        if ((NS_IS_GREEDY_OPERATOR(selector->mOperator)) &&
-            (selector->mNext) &&
-            (!NS_IS_GREEDY_OPERATOR(selector->mNext->mOperator))) {
-
-          // pretend the selector didn't match, and step through content
-          // while testing the same selector
-
-          // This approach is slightly strange is that when it recurses
-          // it tests from the top of the content tree, down.  This
-          // doesn't matter much for performance since most selectors
-          // don't match.  (If most did, it might be faster...)
-          if (SelectorMatchesTree(*newdata, selector)) {
-            selector = nsnull; // indicate success
-            break;
           }
         }
-        selector = selector->mNext;
       }
-      else {
-        // for adjacent sibling and child combinators, if we didn't find
-        // a match, we're done
-        if (!NS_IS_GREEDY_OPERATOR(selector->mOperator)) {
-          NS_RELEASE(content);
-          break;  // parent was required to match
-        }
-      }
-      NS_IF_RELEASE(lastContent);
-      lastContent = content;  // take refcount
-      content = nsnull;
-      curdata = newdata;
     }
-    NS_IF_RELEASE(lastContent);
+    // for descendant combinators and child combinators, the content
+    // to test against is the parent
+    else {
+      newdata = curdata->mParentData;
+      if (!newdata) {
+        nsIContent *content = curdata->mContent->GetParent();
+        if (content) {
+          newdata = new (curdata->mPresContext) RuleProcessorData(curdata->mPresContext, content,
+                                                                    curdata->mRuleWalker, &compat);
+          curdata->mParentData = newdata;    
+        }
+      }
+    }
+    if (! newdata) {
+      return PR_FALSE;
+    }
+    if (SelectorMatches(*newdata, selector, 0, nsnull, 0)) {
+      // to avoid greedy matching, we need to recurse if this is a
+      // descendant combinator and the next combinator is not
+      if ((NS_IS_GREEDY_OPERATOR(selector->mOperator)) &&
+          (selector->mNext) &&
+          (!NS_IS_GREEDY_OPERATOR(selector->mNext->mOperator))) {
+
+        // pretend the selector didn't match, and step through content
+        // while testing the same selector
+
+        // This approach is slightly strange is that when it recurses
+        // it tests from the top of the content tree, down.  This
+        // doesn't matter much for performance since most selectors
+        // don't match.  (If most did, it might be faster...)
+        if (SelectorMatchesTree(*newdata, selector)) {
+          return PR_TRUE;
+        }
+      }
+      selector = selector->mNext;
+    }
+    else {
+      // for adjacent sibling and child combinators, if we didn't find
+      // a match, we're done
+      if (!NS_IS_GREEDY_OPERATOR(selector->mOperator)) {
+        return PR_FALSE;  // parent was required to match
+      }
+    }
+    curdata = newdata;
   }
-  return nsnull == selector;  // matches if ran out of selectors
+  return PR_TRUE; // all the selectors matched.
 }
 
 static void ContentEnumFunc(nsICSSStyleRule* aRule, nsCSSSelector* aSelector,
