@@ -36,6 +36,10 @@ body > *:first-node, td > *:first-node {
   margin-top: 0;
 }
 
+td > *:last-node {
+  margin-bottom: 0;
+}
+
 frameset {
   display: block ! important;
   overflow: hidden;
