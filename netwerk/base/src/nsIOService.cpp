@@ -152,7 +152,32 @@ nsIOService::NewChannelFromURI(const char* verb, nsIURI *aURI,
                                nsIEventSinkGetter *eventSinkGetter,
                                nsIChannel **result)
 {
-    return NS_ERROR_NOT_IMPLEMENTED;
+    nsresult rv;
+
+    char* scheme;
+    rv = aURI->GetScheme(&scheme);
+    if (NS_FAILED(rv)) return rv;
+
+    nsIProtocolHandler* handler;
+    rv = GetProtocolHandler(scheme, &handler);
+    nsCRT::free(scheme);
+    if (NS_FAILED(rv)) return rv;
+
+    nsIEventQueue* eventQ;
+    NS_WITH_SERVICE(nsIEventQueueService, eventQService, kEventQueueService, &rv);
+    if (NS_SUCCEEDED(rv)) {
+        rv = eventQService->GetThreadEventQueue(PR_CurrentThread(), &eventQ);
+    }
+    if (NS_FAILED(rv)) return rv;
+
+    nsIChannel* channel;
+    rv = handler->NewChannel(verb, aURI, eventSinkGetter, eventQ,
+                             &channel);
+    NS_RELEASE(handler);
+    if (NS_FAILED(rv)) return rv;
+
+    *result = channel;
+    return rv;
 }
 
 NS_IMETHODIMP
@@ -161,7 +186,11 @@ nsIOService::NewChannel(const char* verb, const char *aSpec,
                         nsIEventSinkGetter *eventSinkGetter,
                         nsIChannel **result)
 {
-    return NS_ERROR_NOT_IMPLEMENTED;
+    nsresult rv;
+    nsIURI* uri;
+    rv = NewURI(aSpec, aBaseURI, &uri);
+    if (NS_FAILED(rv)) return rv;
+    return NewChannelFromURI(verb, uri, eventSinkGetter, result);
 }
 
 NS_IMETHODIMP
