@@ -43,8 +43,11 @@
 #include "nsIAccessibilityService.h"
 #include "nsIAccessibleDocument.h"
 #include "nsPIAccessibleDocument.h"
+#include "nsIDocShell.h"
+#include "nsIDocShellTreeItem.h"
 #include "nsIDocument.h"
 #include "nsIDOMCSSStyleDeclaration.h"
+#include "nsIDOMDocument.h"
 #include "nsIDOMElement.h"
 #include "nsIDOMNSHTMLElement.h"
 #include "nsIDOMViewCSS.h"
@@ -242,11 +245,8 @@ nsPresContext* nsAccessNode::GetPresContext()
 
 already_AddRefed<nsIAccessibleDocument> nsAccessNode::GetDocAccessible()
 {
-  nsIAccessibleDocument *docAccessible;
-  GetDocAccessibleFor(mWeakShell, &docAccessible); // Addref'd
-  return docAccessible;
+  return GetDocAccessibleFor(mWeakShell); // Addref'd
 }
-
 
 nsIFrame* nsAccessNode::GetFrame()
 {
@@ -294,7 +294,7 @@ nsAccessNode::GetNumChildren(PRInt32 *aNumChildren)
 NS_IMETHODIMP
 nsAccessNode::GetAccessibleDocument(nsIAccessibleDocument **aDocAccessible)
 {
-  GetDocAccessibleFor(mWeakShell, aDocAccessible);
+  *aDocAccessible = GetDocAccessibleFor(mWeakShell).get();
   return NS_OK;
 }
 
@@ -437,18 +437,76 @@ nsAccessNode::GetComputedStyleValue(const nsAString& aPseudoElt, const nsAString
 
 /***************** Hashtable of nsIAccessNode's *****************/
 
-void nsAccessNode::GetDocAccessibleFor(nsIWeakReference *aPresShell, 
-                                       nsIAccessibleDocument **aDocAccessible)
+already_AddRefed<nsIAccessibleDocument>
+nsAccessNode::GetDocAccessibleFor(nsIWeakReference *aPresShell)
 {
-  *aDocAccessible = nsnull;
-
+  nsIAccessibleDocument *docAccessible = nsnull;
   nsCOMPtr<nsIAccessNode> accessNode;
   gGlobalDocAccessibleCache.Get(NS_STATIC_CAST(void*, aPresShell), getter_AddRefs(accessNode));
   if (accessNode) {
-    CallQueryInterface(accessNode, aDocAccessible);
+    CallQueryInterface(accessNode, &docAccessible);
   }
+  return docAccessible;
 }
  
+already_AddRefed<nsIAccessibleDocument>
+nsAccessNode::GetDocAccessibleFor(nsISupports *aContainer)
+{
+  nsCOMPtr<nsIDocShell> docShell(do_QueryInterface(aContainer));
+  NS_ASSERTION(docShell, "This method currently only supports docshells");
+  nsCOMPtr<nsIPresShell> presShell;
+  docShell->GetPresShell(getter_AddRefs(presShell));
+  nsCOMPtr<nsIWeakReference> weakShell(do_GetWeakReference(presShell));
+  return weakShell ? GetDocAccessibleFor(weakShell) : nsnull;
+}
+ 
+already_AddRefed<nsIAccessibleDocument>
+nsAccessNode::GetDocAccessibleFor(nsIDOMNode *aNode)
+{
+  nsCOMPtr<nsIPresShell> eventShell = GetPresShellFor(aNode);
+  nsCOMPtr<nsIWeakReference> weakEventShell(do_GetWeakReference(eventShell));
+  return weakEventShell? GetDocAccessibleFor(weakEventShell) : nsnull;
+}
+
+already_AddRefed<nsIPresShell>
+nsAccessNode::GetPresShellFor(nsIDOMNode *aNode)
+{
+  nsCOMPtr<nsIDOMDocument> domDocument;
+  aNode->GetOwnerDocument(getter_AddRefs(domDocument));
+  nsCOMPtr<nsIDocument> doc(do_QueryInterface(domDocument));
+  if (!doc) {   // This is necessary when the node is the document node
+    doc = do_QueryInterface(aNode);
+  }
+  nsIPresShell *presShell = nsnull;
+  if (doc) {
+    presShell = doc->GetShellAt(0);
+    NS_IF_ADDREF(presShell);
+  }
+  return presShell;
+}
+
+
+already_AddRefed<nsIDocShellTreeItem>
+nsAccessNode::GetSameTypeRootFor(nsIDOMNode *aStartNode)
+{
+
+  nsCOMPtr<nsIDOMDocument> domDoc;
+  aStartNode->GetOwnerDocument(getter_AddRefs(domDoc));
+  nsCOMPtr<nsIDocument> doc(do_QueryInterface(domDoc));
+  if (!doc) {
+    doc = do_QueryInterface(aStartNode);
+  }
+  NS_ASSERTION(doc, "No document for node passed in");
+  nsCOMPtr<nsISupports> container = doc->GetContainer();
+  nsCOMPtr<nsIDocShellTreeItem> docShellTreeItem(do_QueryInterface(container));
+  NS_ENSURE_TRUE(docShellTreeItem, nsnull);
+  nsIDocShellTreeItem *topOfDocShellTree = nsnull;
+  docShellTreeItem->GetSameTypeRootTreeItem(&topOfDocShellTree);
+  NS_ASSERTION(topOfDocShellTree, "No same type root tree item for doc shell");
+
+  return topOfDocShellTree;
+}
+
 void nsAccessNode::PutCacheEntry(nsInterfaceHashtable<nsVoidHashKey, nsIAccessNode> &aCache, 
                                  void* aUniqueID, 
                                  nsIAccessNode *aAccessNode)

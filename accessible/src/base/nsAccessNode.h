@@ -46,10 +46,10 @@
 #include "nsCOMPtr.h"
 #include "nsIAccessNode.h"
 #include "nsPIAccessNode.h"
+#include "nsIDocShellTreeItem.h"
 #include "nsIDOMNode.h"
 #include "nsIStringBundle.h"
 #include "nsWeakReference.h"
-
 #include "nsInterfaceHashtable.h"
 
 class nsIPresShell;
@@ -115,9 +115,13 @@ class nsAccessNode: public nsIAccessNode, public nsPIAccessNode
     static PLDHashOperator PR_CALLBACK ClearCacheEntry(const void* aKey, nsCOMPtr<nsIAccessNode>& aAccessNode, void* aUserArg);
 
     // Static cache methods for global document cache
-    static void GetDocAccessibleFor(nsIWeakReference *aPresShell,
-                                    nsIAccessibleDocument **aDocAccessible);
+    static already_AddRefed<nsIAccessibleDocument> GetDocAccessibleFor(nsIWeakReference *aPresShell);
+    static already_AddRefed<nsIAccessibleDocument> GetDocAccessibleFor(nsISupports *aContainer);
+    static already_AddRefed<nsIAccessibleDocument> GetDocAccessibleFor(nsIDOMNode *aNode);
 
+    static already_AddRefed<nsIDocShellTreeItem> GetSameTypeRootFor(nsIDOMNode *aStartNode);
+    static already_AddRefed<nsIPresShell> GetPresShellFor(nsIDOMNode *aStartNode);
+    
     static nsIDOMNode *gLastFocusedNode;
 
 protected:

@@ -630,18 +630,6 @@ void nsDocAccessible::FireDocLoadFinished()
   }
 }
 
-void nsDocAccessible::DocLoadCallback(nsITimer *aTimer, void *aClosure)
-{
-  // Doc has finished loading, fire "load finished" event
-  // This path is only used if the doc was already finished loading
-  // when the DocAccessible was created. 
-  // Otherwise, ::OnStateChange() fires the event when doc is loaded.
-
-  nsDocAccessible *docAcc = NS_REINTERPRET_CAST(nsDocAccessible*, aClosure);
-  if (docAcc)
-    docAcc->FireDocLoadFinished();
-}
-
 void nsDocAccessible::ScrollTimerCallback(nsITimer *aTimer, void *aClosure)
 {
   nsDocAccessible *docAcc = NS_REINTERPRET_CAST(nsDocAccessible*, aClosure);
@@ -730,24 +718,32 @@ NS_IMETHODIMP nsDocAccessible::OnStateChange(nsIWebProgress *aWebProgress,
   if (!mWeakShell || !mDocument) {
     return NS_OK;
   }
+  nsCOMPtr<nsIDOMWindow> domWin;
+  aWebProgress->GetDOMWindow(getter_AddRefs(domWin));
+  nsCOMPtr<nsIDOMDocument> domDoc;
+  domWin->GetDocument(getter_AddRefs(domDoc));
+  if (!SameCOMIdentity(mDocument, domDoc)) {
+    return NS_OK;
+  }
+
   if (aStateFlags & STATE_STOP) {
-    if (!mDocLoadTimer) {
-      mDocLoadTimer = do_CreateInstance("@mozilla.org/timer;1");
-    }
-    if (mDocLoadTimer) {
-      mDocLoadTimer->InitWithFuncCallback(DocLoadCallback, this, 4,
-                                          nsITimer::TYPE_ONE_SHOT);
-    }
+    FireDocLoadFinished();
     return NS_OK;
   }
 
   // STATE_START
+  if (!mIsNewDocument) {
+    return NS_OK;  // Already fired for this document
+  }
 
   if (gLastFocusedNode) {
-    nsCOMPtr<nsIDOMDocument> focusedDOMDoc;
-    gLastFocusedNode->GetOwnerDocument(getter_AddRefs(focusedDOMDoc));
-    if (!SameCOMIdentity(focusedDOMDoc, mDocument)) {
-      // Load is not occuring in the currently focused pane, so don't fire 
+    nsCOMPtr<nsIDocShellTreeItem> topOfLoadingContentTree =
+      GetSameTypeRootFor(mDOMNode);
+    nsCOMPtr<nsIDocShellTreeItem> topOfFocusedContentTree =
+      GetSameTypeRootFor(gLastFocusedNode);
+
+    if (topOfLoadingContentTree != topOfFocusedContentTree) {
+      // Load is not occuring in the currently focused tab, so don't fire 
       // doc load event there, otherwise assistive technology may become confused
       return NS_OK;
     }
@@ -761,7 +757,7 @@ NS_IMETHODIMP nsDocAccessible::OnStateChange(nsIWebProgress *aWebProgress,
 
   if (mBusy != eBusyStateLoading) {
     mBusy = eBusyStateLoading; 
-    // Fire a "new doc has started to load" event
+    // Fire a "new doc has started to load" event if at top of content tree
 #ifndef MOZ_ACCESSIBILITY_ATK
     FireToolkitEvent(nsIAccessibleEvent::EVENT_STATE_CHANGE, this, nsnull);
 #else
@@ -817,37 +813,6 @@ NS_IMETHODIMP nsDocAccessible::Observe(nsISupports *aSubject, const char *aTopic
   }
 
   return NS_OK;
-}
-
-void nsDocAccessible::GetEventShell(nsIDOMNode *aNode, nsIPresShell **aEventShell)
-{
-  // XXX aaronl - this is not ideal.
-  // We could avoid this whole section and the fallible 
-  // doc->GetShellAt(0) by putting the event handler
-  // on nsDocAccessible instead.
-  // The disadvantage would be that we would be seeing some events
-  // for inner documents that we don't care about.
-  *aEventShell = nsnull;
-  nsCOMPtr<nsIDOMDocument> domDocument;
-  aNode->GetOwnerDocument(getter_AddRefs(domDocument));
-  nsCOMPtr<nsIDocument> doc(do_QueryInterface(domDocument));
-  if (doc) {
-    *aEventShell = doc->GetShellAt(0);
-    NS_IF_ADDREF(*aEventShell);
-  }
-}
-
-void nsDocAccessible::GetEventDocAccessible(nsIDOMNode *aNode, 
-                                            nsIAccessibleDocument **aAccessibleDoc)
-{
-  *aAccessibleDoc = nsnull;
-  nsCOMPtr<nsIPresShell> eventShell;
-  GetEventShell(aNode, getter_AddRefs(eventShell));
-  nsCOMPtr<nsIWeakReference> weakEventShell(do_GetWeakReference(eventShell));
-  if (!weakEventShell) {
-    return;
-  }
-  GetDocAccessibleFor(weakEventShell, aAccessibleDoc);
 }
 
 // ---------- Mutation event listeners ------------
@@ -1144,8 +1109,7 @@ void nsDocAccessible::HandleMutationEvent(nsIDOMEvent *aEvent, PRUint32 aAccessi
     subTreeToInvalidate = targetNode; // targetNode is parent for DOMNodeRemoved event
   }
 
-  nsCOMPtr<nsIAccessibleDocument> docAccessible;
-  GetEventDocAccessible(subTreeToInvalidate, getter_AddRefs(docAccessible));
+  nsCOMPtr<nsIAccessibleDocument> docAccessible = GetDocAccessibleFor(subTreeToInvalidate);
   if (!docAccessible)
     return;
 

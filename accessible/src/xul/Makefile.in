@@ -48,6 +48,7 @@ LIBRARY_NAME = accessibility_xul_s
 LIBXUL_LIBRARY = 1
 
 REQUIRES	= content \
+		  docshell \
 		  dom \
 		  gfx \
 		  intl \

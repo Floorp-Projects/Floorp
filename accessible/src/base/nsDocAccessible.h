@@ -118,11 +118,7 @@ class nsDocAccessible : public nsBlockAccessible,
     void RemoveScrollListener();
     virtual void FireDocLoadFinished();
     void HandleMutationEvent(nsIDOMEvent *aEvent, PRUint32 aEventType);
-    static void DocLoadCallback(nsITimer *aTimer, void *aClosure);
     static void ScrollTimerCallback(nsITimer *aTimer, void *aClosure);
-    void GetEventShell(nsIDOMNode *aNode, nsIPresShell **aEventShell);
-    void GetEventDocAccessible(nsIDOMNode *aNode, 
-                               nsIAccessibleDocument **aAccessibleDoc);
     virtual void CheckForEditor();
 
     nsInterfaceHashtable<nsVoidHashKey, nsIAccessNode> mAccessNodeCache;
