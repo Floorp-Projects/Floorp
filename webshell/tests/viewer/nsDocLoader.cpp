@@ -24,8 +24,7 @@
 #include "nsIWebWidget.h"
 #include "resources.h"
 #include "nsString.h"
-
-#include <windows.h>
+#include "nsViewer.h"
 
 /* 
   This class loads creates and loads URLs until finished.
@@ -34,7 +33,7 @@
 
 */
 
-nsDocLoader::nsDocLoader(nsIWebWidget* aWebWidget, PRInt32 aSeconds, PRBool aPostExit)
+nsDocLoader::nsDocLoader(nsIWebWidget* aWebWidget, nsViewer* aViewer, PRInt32 aSeconds, PRBool aPostExit)
 {
   mStart = PR_FALSE;
   mDelay = aSeconds;
@@ -42,6 +41,7 @@ nsDocLoader::nsDocLoader(nsIWebWidget* aWebWidget, PRInt32 aSeconds, PRBool aPos
   mDocNum = 0;
   mWebWidget = aWebWidget;
 
+  mViewer = aViewer;
   mTimers = new nsVoidArray();
   mURLList = new nsVoidArray();
 }
@@ -215,7 +215,7 @@ void nsDocLoader::CallTest()
     if (mPostExit)
     {
       printf("QUITTING APPLICATION \n");
-      PostMessage(HWND_BROADCAST,(UINT)WM_COMMAND,(WPARAM)VIEWER_EXIT,0);
+      mViewer->ExitViewer();
     }
   }
 }

@@ -26,6 +26,7 @@ class nsIWebWidget;
 class nsITimer;
 class nsVoidArray;
 class nsString;
+class nsViewer;
 
 /* 
   This class loads creates and loads URLs until finished.
@@ -36,7 +37,7 @@ class nsString;
 class nsDocLoader
 {
   public:
-    nsDocLoader(nsIWebWidget* aWebWidget, PRInt32 aSeconds=1, PRBool aPostExit=PR_TRUE);
+    nsDocLoader(nsIWebWidget* aWebWidget, nsViewer* aViewer, PRInt32 aSeconds=1, PRBool aPostExit=PR_TRUE);
     virtual ~nsDocLoader();
     
     // Add a URL to the doc loader
@@ -84,6 +85,7 @@ class nsDocLoader
     PRInt32       mDelay;
     PRBool        mPostExit;
     nsIWebWidget* mWebWidget;
+    nsViewer*     mViewer;
 
     nsVoidArray*  mURLList;
     nsVoidArray*  mTimers;

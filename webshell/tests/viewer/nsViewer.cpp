@@ -90,7 +90,7 @@ static PRBool gLoadTestFromFile;  // run in auto mode by pulling URLs from a fil
 static PRInt32 gDelay=1;          // if running in an auto mode, this is the delay between URL loads
 static PRInt32 gRepeatCount=1;    // if running in an auto mode, this is the number of times to cycle through the input
 static PRInt32 gNumSamples=9;     // if running in an auto mode that uses the samples, this is the last sample to load
-static char gInputFileName[_MAX_PATH+1];
+static char gInputFileName[MAXPATHLEN];
 
 
 // Temporary Netlib stuff...
@@ -144,8 +144,8 @@ OnLinkClickEvent::OnLinkClickEvent(DocObserver* aHandler,
 
 #ifdef XP_PC
   PLEventQueue* eventQueue = PL_GetMainEventQueue();
-#endif
   PL_PostEvent(eventQueue, this);
+#endif
 }
 
 OnLinkClickEvent::~OnLinkClickEvent()
@@ -602,12 +602,12 @@ PRBool nsViewer::GetFileNameFromFileSelector(nsIWidget* aParentWindow, nsString*
 void nsViewer::OpenHTMLFile(WindowData* wd)
 {
   nsString      fileName;
-  char          szFile[_MAX_PATH];
+  char          szFile[MAXPATHLEN];
 
   if (GetFileNameFromFileSelector(wd->windowWidget, &fileName)) {
     
 
-    fileName.ToCString(szFile, _MAX_PATH);
+    fileName.ToCString(szFile, MAXPATHLEN);
     PRInt32 len = strlen(szFile);
     char*   lpszFileURL = (char*)malloc(len + sizeof(FILE_PROTOCOL));
     
@@ -619,7 +619,7 @@ void nsViewer::OpenHTMLFile(WindowData* wd)
     }
 
     // Build the file URL
-    PR_snprintf(lpszFileURL, _MAX_PATH, "%s%s", FILE_PROTOCOL, szFile);
+    PR_snprintf(lpszFileURL, MAXPATHLEN, "%s%s", FILE_PROTOCOL, szFile);
 
     // Ask the Web widget to load the file URL
     wd->observer->LoadURL(lpszFileURL);
@@ -713,6 +713,11 @@ nsresult nsViewer::ShowPrintPreview(nsIWebWidget* web, PRIntn aColumns)
   return NS_OK;
 }
 
+void nsViewer::ExitViewer()
+{
+  DestroyAllWindows();
+  Stop();
+}
 
 nsEventStatus nsViewer::DispatchMenuItem(nsGUIEvent *aEvent)
 {
@@ -726,8 +731,7 @@ nsEventStatus nsViewer::DispatchMenuItem(nsGUIEvent *aEvent)
       switch(menuEvent->menuItem) {
 
         case VIEWER_EXIT:
-          DestroyAllWindows();
-          Stop();
+          ExitViewer();
           return nsEventStatus_eConsumeNoDefault;
 
         case PREVIEW_CLOSE:
@@ -887,7 +891,7 @@ nsDocLoader* nsViewer::SetupViewer(nsIWidget **aMainWindow)
     // Determine if we should run the purify test
   nsDocLoader* dl = nsnull;
   if (gDoPurify) {
-    dl = new nsDocLoader(wd->ww, gDelay);
+    dl = new nsDocLoader(wd->ww, this, gDelay);
 
       // Add the documents to the loader
     for (PRInt32 i=0; i<gRepeatCount; i++)
@@ -897,7 +901,7 @@ nsDocLoader* nsViewer::SetupViewer(nsIWidget **aMainWindow)
     dl->StartTimedLoading();
   }
   else if (gLoadTestFromFile) {
-    dl = new nsDocLoader(wd->ww, gDelay);
+    dl = new nsDocLoader(wd->ww, this, gDelay);
     for (PRInt32 i=0; i<gRepeatCount; i++)
       AddTestDocsFromFile(dl, gInputFileName);
     dl->StartTimedLoading();
