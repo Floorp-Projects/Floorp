@@ -29,8 +29,14 @@ include $(DEPTH)/config/autoconf.mk
 MODULE		= caps
 
 EXPORTS		= \
-            nsJSPrincipals.h \
-            $(NULL)
+		nsBasePrincipal.h \
+		nsSystemPrincipal.h \
+		nsCertificatePrincipal.h \
+		nsCodebasePrincipal.h \
+		nsAggregatePrincipal.h \
+		nsJSPrincipals.h \
+		nsScriptSecurityManager.h \
+		$(NULL)
 
 include $(topsrcdir)/config/rules.mk
 

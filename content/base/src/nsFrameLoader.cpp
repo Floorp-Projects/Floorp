@@ -59,6 +59,7 @@
 #include "nsIWebShell.h"
 
 #include "nsIScriptSecurityManager.h"
+#include "nsICodebasePrincipal.h"
 
 #include "nsIURI.h"
 #include "nsIURL.h"
@@ -202,8 +203,12 @@ nsFrameLoader::LoadFrame()
   // If we were called from script, get the referring URL from the script
 
   if (principal) {
-    rv = principal->GetURI(getter_AddRefs(referrer));
-    NS_ENSURE_SUCCESS(rv, rv);
+    nsCOMPtr<nsICodebasePrincipal> codebase(do_QueryInterface(principal));
+
+    if (codebase) {
+      rv = codebase->GetURI(getter_AddRefs(referrer));
+      NS_ENSURE_SUCCESS(rv, rv);
+    }
 
     // Pass the script principal to the docshell
 

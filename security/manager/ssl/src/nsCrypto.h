@@ -28,6 +28,7 @@
 #include "nsIDOMPkcs11.h"
 #include "nsString.h"
 #include "jsapi.h"
+#include "nsIPrincipal.h"
 
 #define NS_CRYPTO_CLASSNAME "Crypto JavaScript Class"
 #define NS_CRYPTO_CID \
@@ -42,7 +43,6 @@
 class nsIPSMComponent;
 class nsIDOMScriptObjectFactory;
 class nsIEventQueue;
-class nsIPrincipal;
 
 
 class nsCRMFObject : public nsIDOMCRMFObject

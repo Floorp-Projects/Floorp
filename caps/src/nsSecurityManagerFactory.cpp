@@ -43,7 +43,9 @@
 #include "nsIScriptSecurityManager.h"
 #include "nsScriptSecurityManager.h"
 #include "nsIPrincipal.h"
-#include "nsPrincipal.h"
+#include "nsAggregatePrincipal.h"
+#include "nsCertificatePrincipal.h"
+#include "nsCodebasePrincipal.h"
 #include "nsSystemPrincipal.h"
 #include "nsIScriptNameSpaceManager.h"
 #include "nsIScriptExternalNameSet.h"
@@ -232,8 +234,8 @@ netscape_security_invalidate(JSContext *cx, JSObject *obj, uintN argc,
 
     //    NS_ASSERTION(cx == GetCurrentContext(), "unexpected context");
 
-    rv = securityManager->SetCanEnableCapability(principalID,
-                                                 nsPrincipal::sInvalid,
+    rv = securityManager->SetCanEnableCapability(principalID, 
+                                                 nsBasePrincipal::Invalid,
                                                  nsIPrincipal::ENABLE_GRANTED);
     if (NS_FAILED(rv))
         return JS_FALSE;
@@ -308,13 +310,17 @@ nsSecurityNameSet::InitializeNameSet(nsIScriptContext* aScriptContext)
 
 
 
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsPrincipal)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsAggregatePrincipal)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsCertificatePrincipal)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsCodebasePrincipal)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsSecurityNameSet)
 NS_GENERIC_FACTORY_SINGLETON_CONSTRUCTOR(nsSystemPrincipal,
     nsScriptSecurityManager::SystemPrincipalSingletonConstructor)
 
 
-NS_DECL_CLASSINFO(nsPrincipal)
+NS_DECL_CLASSINFO(nsAggregatePrincipal)
+NS_DECL_CLASSINFO(nsCertificatePrincipal)
+NS_DECL_CLASSINFO(nsCodebasePrincipal)
 NS_DECL_CLASSINFO(nsSystemPrincipal)
 
 
@@ -382,16 +388,42 @@ static const nsModuleComponentInfo capsComponentInfo[] =
       nsIClassInfo::MAIN_THREAD_ONLY
     },
 
-    { NS_PRINCIPAL_CLASSNAME, 
-      NS_PRINCIPAL_CID, 
-      NS_PRINCIPAL_CONTRACTID,
-      nsPrincipalConstructor,
+    { NS_AGGREGATEPRINCIPAL_CLASSNAME, 
+      NS_AGGREGATEPRINCIPAL_CID, 
+      NS_AGGREGATEPRINCIPAL_CONTRACTID,
+      nsAggregatePrincipalConstructor,
       nsnull,
       nsnull,
       nsnull,
-      NS_CI_INTERFACE_GETTER_NAME(nsPrincipal),
+      NS_CI_INTERFACE_GETTER_NAME(nsAggregatePrincipal),
       nsnull,
-      &NS_CLASSINFO_NAME(nsPrincipal),
+      &NS_CLASSINFO_NAME(nsAggregatePrincipal),
+      nsIClassInfo::MAIN_THREAD_ONLY | nsIClassInfo::EAGER_CLASSINFO
+    },
+
+    { NS_CERTIFICATEPRINCIPAL_CLASSNAME, 
+      NS_CERTIFICATEPRINCIPAL_CID, 
+      NS_CERTIFICATEPRINCIPAL_CONTRACTID,
+      nsCertificatePrincipalConstructor,
+      nsnull,
+      nsnull,
+      nsnull,
+      NS_CI_INTERFACE_GETTER_NAME(nsCertificatePrincipal),
+      nsnull,
+      &NS_CLASSINFO_NAME(nsCertificatePrincipal),
+      nsIClassInfo::MAIN_THREAD_ONLY | nsIClassInfo::EAGER_CLASSINFO
+    },
+
+    { NS_CODEBASEPRINCIPAL_CLASSNAME, 
+      NS_CODEBASEPRINCIPAL_CID, 
+      NS_CODEBASEPRINCIPAL_CONTRACTID,
+      nsCodebasePrincipalConstructor,
+      nsnull,
+      nsnull,
+      nsnull,
+      NS_CI_INTERFACE_GETTER_NAME(nsCodebasePrincipal),
+      nsnull,
+      &NS_CLASSINFO_NAME(nsCodebasePrincipal),
       nsIClassInfo::MAIN_THREAD_ONLY | nsIClassInfo::EAGER_CLASSINFO
     },
 

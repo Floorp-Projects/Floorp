@@ -16,7 +16,7 @@
  *
  * The Initial Developer of the Original Code is 
  * Netscape Communications Corporation.
- * Portions created by the Initial Developer are Copyright (C) 1999-2000
+ * Portions created by the Initial Developer are Copyright (C) 1998-2000
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
@@ -36,49 +36,58 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-/* Defines the abstract interface for a principal. */
+/* describes principals by their orginating URIs */
 
-#include "nsISerializable.idl"
+#ifndef _NS_CODEBASE_PRINCIPAL_H_
+#define _NS_CODEBASE_PRINCIPAL_H_
 
-%{C++
-struct JSPrincipals;
-%}
+#include "jsapi.h"
+#include "nsBasePrincipal.h"
+#include "nsICodebasePrincipal.h"
+#include "nsIURI.h"
+#include "nsCOMPtr.h"
 
-[ptr] native JSPrincipals(JSPrincipals);
+#define NS_CODEBASEPRINCIPAL_CID \
+{ 0x7ee2a400, 0x0b91, 0xaad3, \
+{ 0xba, 0x18, 0xd7, 0x60, 0xb0, 0xf1, 0x99, 0xa2 }}
 
-[uuid(ff9313d0-25e1-11d2-8160-006008119d7a)]
-interface nsIPrincipal : nsISerializable
-{
-    // Values of capabilities for each principal. Order is
-    // significant: if an operation is performed on a set
-    // of capabilities, the minimum is computed.
-    const short ENABLE_DENIED                = 1;
-    const short ENABLE_UNKNOWN               = 2;
-    const short ENABLE_WITH_USER_PERMISSION  = 3;
-    const short ENABLE_GRANTED               = 4;
-
-    string ToString();
-
-    string ToUserVisibleString();
-
-    void GetPreferences(out string prefName, out string id, 
-                        out string grantedList, out string deniedList);
-
-    boolean Equals(in nsIPrincipal other);
-
-    unsigned long HashValue();
-
-    JSPrincipals GetJSPrincipals();
-
-    short CanEnableCapability(in string capability);
-
-    void SetCanEnableCapability(in string capability, in short canEnable);
-
-    boolean IsCapabilityEnabled(in string capability, in voidPtr annotation);
+class nsCodebasePrincipal : public nsBasePrincipal, public nsICodebasePrincipal {
+public:
     
-    void EnableCapability(in string capability, inout voidPtr annotation);
+    NS_DEFINE_STATIC_CID_ACCESSOR(NS_CODEBASEPRINCIPAL_CID)
+        
+    NS_DECL_ISUPPORTS
+    NS_DECL_NSISERIALIZABLE
+    NS_DECL_NSICODEBASEPRINCIPAL
+    
+    NS_IMETHOD ToString(char **result);
 
-    void RevertCapability(in string capability, inout voidPtr annotation);
+    NS_IMETHOD ToUserVisibleString(char **result);
+    
+    NS_IMETHOD GetPreferences(char** aPrefName, char** aID, 
+                              char** aGrantedList, char** aDeniedList);
+    
+    NS_IMETHOD Equals(nsIPrincipal *other, PRBool *result);
 
-    void DisableCapability(in string capability, inout voidPtr annotation);
+    NS_IMETHOD HashValue(PRUint32 *result);
+
+    NS_IMETHOD CanEnableCapability(const char *capability, PRInt16 *result);
+
+    nsCodebasePrincipal();
+    
+    nsresult
+    Init(nsIURI *uri);
+
+    nsresult
+    InitFromPersistent(const char* aPrefName, const char* aID, 
+                       const char* aGrantedList, const char* aDeniedList,
+                       PRBool aTrusted);
+
+    virtual ~nsCodebasePrincipal(void);
+    
+protected:
+    nsCOMPtr<nsIURI> mURI;
+    PRBool mTrusted;
 };
+
+#endif // _NS_CODEBASE_PRINCIPAL_H_

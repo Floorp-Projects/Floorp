@@ -98,6 +98,8 @@
 #include "nsIChannel.h"
 #include "nsIHttpChannel.h"
 #include "nsIPrincipal.h"
+#include "nsIAggregatePrincipal.h"
+#include "nsICodebasePrincipal.h"
 #include "nsXBLAtoms.h"
 #include "nsXMLPrettyPrinter.h"
 
@@ -1072,19 +1074,25 @@ nsXMLContentSink::ProcessHeaderData(nsIAtom* aHeader,const nsAString& aValue,nsI
     // We use the original codebase in case the codebase was changed by SetDomain
     nsCOMPtr<nsIPrincipal> docPrincipal;
     rv = mDocument->GetPrincipal(getter_AddRefs(docPrincipal));
-    if (NS_FAILED(rv) || !docPrincipal) {
-      return rv;
+    if (NS_FAILED(rv)) return rv;
+    if (!docPrincipal) return NS_OK;
+
+    nsCOMPtr<nsIAggregatePrincipal> agg(do_QueryInterface(docPrincipal, &rv));
+    // Document principal should always be an aggregate
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    nsCOMPtr<nsIPrincipal> originalPrincipal;
+    rv = agg->GetOriginalCodebase(getter_AddRefs(originalPrincipal));
+    nsCOMPtr<nsICodebasePrincipal> originalCodebase(
+        do_QueryInterface(originalPrincipal, &rv));
+    if (NS_FAILED(rv)) {
+      // Document's principal is not a codebase (may be system), so can't set cookies
+      return NS_OK; 
     }
 
     nsCOMPtr<nsIURI> codebaseURI;
-    docPrincipal->GetURI(getter_AddRefs(codebaseURI));
-
-    if (!codebaseURI) {
-      // Document's principal is not a codebase (may be system), so
-      // can't set cookies
-
-      return NS_OK;
-    }
+    rv = originalCodebase->GetURI(getter_AddRefs(codebaseURI));
+    NS_ENSURE_SUCCESS(rv, rv);
 
     nsCOMPtr<nsIScriptGlobalObject> globalObj;
     nsCOMPtr<nsIPrompt> prompt;

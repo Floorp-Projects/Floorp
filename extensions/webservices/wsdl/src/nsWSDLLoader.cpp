@@ -40,7 +40,7 @@
 // XPConnect includes
 #include "nsIXPConnect.h"
 #include "nsIScriptSecurityManager.h"
-#include "nsIPrincipal.h"
+#include "nsICodebasePrincipal.h"
 
 // XPCOM includes
 #include "nsIServiceManager.h"
@@ -218,7 +218,10 @@ nsWSDLLoader::GetResolvedURI(const nsAString& aWSDLURI, const char* aMethod,
     nsCOMPtr<nsIPrincipal> principal;
     rv = secMan->GetSubjectPrincipal(getter_AddRefs(principal));
     if (NS_SUCCEEDED(rv)) {
-      principal->GetURI(getter_AddRefs(baseURI));
+      nsCOMPtr<nsICodebasePrincipal> codebase = do_QueryInterface(principal);
+      if (codebase) {
+        codebase->GetURI(getter_AddRefs(baseURI));
+      }
     }
 
     rv = NS_NewURI(aURI, aWSDLURI, nsnull, baseURI);

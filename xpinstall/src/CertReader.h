@@ -36,12 +36,11 @@
 #include "nsCOMPtr.h"
 #include "nsIStreamListener.h"
 #include "nsString.h"
-
-class nsISignatureVerifier;
-class nsIPrincipal;
-class nsIURI;
-class nsPICertNotification;
-
+#include "nsISignatureVerifier.h"
+#include "nsICertificatePrincipal.h"
+#include "nsIPrincipal.h"
+#include "nsIURI.h"
+#include "nsPICertNotification.h"
 
 class CertReader : public nsIStreamListener
 {

@@ -50,6 +50,7 @@
 
 #include "nsIJSContextStack.h"
 #include "nsIScriptSecurityManager.h"
+#include "nsICodebasePrincipal.h"
 #include "nsIURI.h"
 
 nsDOMSerializer::nsDOMSerializer()
@@ -155,8 +156,11 @@ nsresult CheckSameOrigin(nsIDOMNode *aRoot)
 
       doc->GetPrincipal(getter_AddRefs(principal));
 
-      if (principal) {
-        principal->GetURI(getter_AddRefs(root_uri));
+      nsCOMPtr<nsICodebasePrincipal> codebase_principal =
+        do_QueryInterface(principal);
+
+      if (codebase_principal) {
+        codebase_principal->GetURI(getter_AddRefs(root_uri));
       }
 
       if (root_uri) {

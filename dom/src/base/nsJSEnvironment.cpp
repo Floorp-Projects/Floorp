@@ -628,7 +628,7 @@ nsJSContext::EvaluateStringWithValue(const nsAString& aScript,
   JSPrincipals *jsprin;
   nsCOMPtr<nsIPrincipal> principal = aPrincipal;
   if (aPrincipal) {
-    aPrincipal->GetJsPrincipals(&jsprin);
+    aPrincipal->GetJSPrincipals(&jsprin);
   }
   else {
     nsCOMPtr<nsIScriptGlobalObject> global;
@@ -641,7 +641,7 @@ nsJSContext::EvaluateStringWithValue(const nsAString& aScript,
     rv = objPrincipal->GetPrincipal(getter_AddRefs(principal));
     if (NS_FAILED(rv))
       return NS_ERROR_FAILURE;
-    principal->GetJsPrincipals(&jsprin);
+    principal->GetJSPrincipals(&jsprin);
   }
   // From here on, we must JSPRINCIPALS_DROP(jsprin) before returning...
 
@@ -806,7 +806,7 @@ nsJSContext::EvaluateString(const nsAString& aScript,
   JSPrincipals *jsprin;
   nsCOMPtr<nsIPrincipal> principal = aPrincipal;
   if (aPrincipal) {
-    aPrincipal->GetJsPrincipals(&jsprin);
+    aPrincipal->GetJSPrincipals(&jsprin);
   }
   else {
     nsCOMPtr<nsIScriptGlobalObject> global;
@@ -819,7 +819,7 @@ nsJSContext::EvaluateString(const nsAString& aScript,
     rv = objPrincipal->GetPrincipal(getter_AddRefs(principal));
     if (NS_FAILED(rv))
       return NS_ERROR_FAILURE;
-    principal->GetJsPrincipals(&jsprin);
+    principal->GetJSPrincipals(&jsprin);
   }
   // From here on, we must JSPRINCIPALS_DROP(jsprin) before returning...
 
@@ -919,7 +919,7 @@ nsJSContext::CompileScript(const PRUnichar* aText,
     aScopeObject = ::JS_GetGlobalObject(mContext);
 
   JSPrincipals *jsprin;
-  aPrincipal->GetJsPrincipals(&jsprin);
+  aPrincipal->GetJSPrincipals(&jsprin);
   // From here on, we must JSPRINCIPALS_DROP(jsprin) before returning...
 
   PRBool ok = PR_FALSE;
@@ -1093,7 +1093,7 @@ nsJSContext::CompileEventHandler(void *aTarget, nsIAtom *aName,
                                                        getter_AddRefs(prin));
     NS_ENSURE_SUCCESS(rv, rv);
 
-    prin->GetJsPrincipals(&jsprin);
+    prin->GetJSPrincipals(&jsprin);
     NS_ENSURE_TRUE(jsprin, NS_ERROR_NOT_AVAILABLE);
   }
 
@@ -1146,7 +1146,7 @@ nsJSContext::CompileFunction(void* aTarget,
       nsCOMPtr<nsIPrincipal> prin;
       if (NS_FAILED(globalData->GetPrincipal(getter_AddRefs(prin))))
         return NS_ERROR_FAILURE;
-      prin->GetJsPrincipals(&jsprin);
+      prin->GetJSPrincipals(&jsprin);
     }
   }
 
