@@ -73,6 +73,11 @@ interface nsIWebDAVOperationListener : nsISupports
      */
     const unsigned long GET_TO_STRING = 12;
 
+    /**
+     * @param detail will be an nsIDOMElement of the <response> element
+     */
+    const unsigned long REPORT = 13;
+
     void onOperationComplete(in unsigned long statusCode,
                              in nsIWebDAVResource resource,
                              in unsigned long operation,

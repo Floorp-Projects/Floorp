@@ -73,6 +73,11 @@ NS_WD_NewPropfindStreamListener(nsIWebDAVResource *resource,
                                 nsISupports *closure,
                                 PRBool isPropname);
 
+nsIStreamListener *
+NS_WD_NewReportStreamListener(nsIWebDAVResource *resource,
+                              nsIWebDAVOperationListener *listener,
+                              nsISupports *closure);
+
 nsresult
 NS_WD_NewGetOperationRequestObserver(nsIWebDAVResource *resource,
                                      nsIWebDAVOperationListener *listener,

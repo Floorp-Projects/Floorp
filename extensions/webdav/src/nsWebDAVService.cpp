@@ -94,10 +94,10 @@ protected:
                               nsIWebDAVOperationListener *listener,
                               nsISupports *closure, PRBool namesOnly);
 
-    nsresult SendPropfindDocumentToChannel(nsIDocument *doc,
-                                           nsIHttpChannel *channel,
-                                           nsIStreamListener *listener,
-                                           PRBool withDepth);
+    nsresult SendDocumentToChannel(nsIDocument *doc, nsIHttpChannel *channel,
+                                   const char *const method,
+                                   nsIStreamListener *listener,
+                                   PRBool withDepth);
     nsCOMPtr<nsIIOService> mIOService; // XXX weak?
     nsAutoString mDAVNSString; // "DAV:"
 };
@@ -124,10 +124,11 @@ nsWebDAVService::EnsureIOService()
 }
 
 nsresult
-nsWebDAVService::SendPropfindDocumentToChannel(nsIDocument *doc,
-                                               nsIHttpChannel *channel,
-                                               nsIStreamListener *listener,
-                                               PRBool withDepth)
+nsWebDAVService::SendDocumentToChannel(nsIDocument *doc,
+                                       nsIHttpChannel *channel, 
+                                       const char *const method,
+                                       nsIStreamListener *listener,
+                                       PRBool withDepth)
 {
     nsCOMPtr<nsIStorageStream> storageStream;
     // Why do I have to pick values for these?  I just want to store some data
@@ -183,7 +184,7 @@ nsWebDAVService::SendPropfindDocumentToChannel(nsIDocument *doc,
                                         NS_LITERAL_CSTRING("text/xml"), -1);
     NS_ENSURE_SUCCESS(rv, rv);
     
-    channel->SetRequestMethod(NS_LITERAL_CSTRING("PROPFIND"));
+    channel->SetRequestMethod(nsDependentCString(method));
 
     if (withDepth) {
         channel->SetRequestHeader(NS_LITERAL_CSTRING("Depth"),
@@ -198,7 +199,7 @@ nsWebDAVService::SendPropfindDocumentToChannel(nsIDocument *doc,
         channel->GetURI(getter_AddRefs(uri));
         nsCAutoString spec;
         uri->GetSpec(spec);
-        LOG(("PROPFIND starting for %s", spec.get()));
+        LOG(("%s starting for %s", method, spec.get()));
     }
 
     return channel->AsyncOpen(listener, channel);
@@ -427,8 +428,8 @@ nsWebDAVService::PropfindInternal(nsIWebDAVResource *resource,
         return NS_ERROR_OUT_OF_MEMORY;
     
     nsCOMPtr<nsIDocument> requestBaseDoc = do_QueryInterface(requestDoc);
-    return SendPropfindDocumentToChannel(requestBaseDoc, channel,
-                                         streamListener, withDepth);
+    return SendDocumentToChannel(requestBaseDoc, channel, "PROPFIND",
+                                 streamListener, withDepth);
 }
 
 NS_IMETHODIMP
@@ -696,6 +697,38 @@ nsWebDAVService::CopyTo(nsIWebDAVResource *resource,
     }
 
     return channel->AsyncOpen(streamListener, channel);
+}
+
+
+NS_IMETHODIMP
+nsWebDAVService::Report(nsIWebDAVResource *resource, nsIDOMDocument *query, 
+                        PRBool withDepth, 
+                        nsIWebDAVOperationListener *listener, 
+                        nsISupports *closure)
+{
+    nsresult rv;
+
+    NS_ENSURE_ARG(resource);
+    NS_ENSURE_ARG(query);
+    NS_ENSURE_ARG(listener);
+
+    nsCOMPtr<nsIDocument> queryDoc = do_QueryInterface(query, &rv);
+    NS_ENSURE_SUCCESS(rv, rv);
+    
+    nsCOMPtr<nsIURI> resourceURI;
+    nsCOMPtr<nsIHttpChannel> channel;
+    rv = ChannelFromResource(resource, getter_AddRefs(channel),
+                             getter_AddRefs(resourceURI));
+    if (NS_FAILED(rv))
+        return rv;
+
+    nsCOMPtr<nsIStreamListener> streamListener = 
+        NS_WD_NewReportStreamListener(resource, listener, closure);
+    if (!streamListener)
+        return NS_ERROR_OUT_OF_MEMORY;
+
+    return SendDocumentToChannel(queryDoc, channel, "REPORT", streamListener,
+                                 withDepth);
 }
 
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsWebDAVService)

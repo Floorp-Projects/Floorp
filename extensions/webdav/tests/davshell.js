@@ -131,7 +131,7 @@ OperationListener.opToName = { };
 OperationListener.opNames =
     ["PUT", "GET", "MOVE", "COPY", "REMOVE",
      "MAKE_COLLECTION", "LOCK", "UNLOCK", "GET_PROPERTIES",
-     "GET_PROPERTY_NAMES", "GET_TO_STRING"];
+     "GET_PROPERTY_NAMES", "GET_TO_STRING", "REPORT"];
 for (var i in OperationListener.opNames) {
     var opName = OperationListener.opNames[i];
     OperationListener.opToName[CI.nsIWebDAVOperationListener[opName]] = opName;
@@ -168,6 +168,13 @@ OperationListener.prototype =
             break;
           case CI.nsIWebDAVOperationListener.GET_TO_STRING:
             this.mGetToStringResult = detail.QueryInterface(CI.nsISupportsCString).data;
+            break;
+
+          case CI.nsIWebDAVOperationListener.REPORT:
+
+            var xSerializer = getService('@mozilla.org/xmlextras/domparser;1',
+                                         CI.nsIDOMParser);
+            dump("detail: " + xSerializer.serializeToString(aDetail) + "\n");
             break;
         }
     }
@@ -281,5 +288,12 @@ function PUT_string(string, url, contentType)
 {
     davSvc.putFromString(new Resource(url), contentType, string,
                          new OperationListener(), null);
+    runEventPump();
+}
+
+function REPORT(url, query, depth)
+{
+    davSvc.report(new Resource(url), query, depth, new OperationListener(),
+                  null);
     runEventPump();
 }

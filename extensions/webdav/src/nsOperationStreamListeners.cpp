@@ -431,6 +431,40 @@ PropfindStreamListener::ProcessResponse(nsIDOMElement *responseElt)
     return NS_OK;
 }
 
+
+class ReportStreamListener : public OperationStreamListener
+{
+public:
+    NS_DECL_ISUPPORTS_INHERITED
+
+    ReportStreamListener(nsIWebDAVResource *resource,
+                         nsIWebDAVOperationListener *listener,
+                         nsISupports *closure) :
+        OperationStreamListener(resource, listener, closure, nsnull,
+                                nsIWebDAVOperationListener::REPORT) { }
+    virtual ~ReportStreamListener() { }
+
+protected:
+    virtual nsresult ProcessResponse(nsIDOMElement *responseElt);
+};
+
+NS_IMPL_ISUPPORTS_INHERITED0(ReportStreamListener, OperationStreamListener)
+
+nsresult
+ReportStreamListener::ProcessResponse(nsIDOMElement *responseElt)
+{
+    nsCAutoString href;
+    PRUint32 statusCode;
+    nsresult rv = StatusAndHrefFromResponse(responseElt, href, &statusCode);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    LOG(("response for %s: %d", href.get(), statusCode));
+
+    SignalDetail(statusCode, href, responseElt);
+    return NS_OK;
+}
+
+
 class GetToStringStreamListener : public OperationStreamListener
 {
 public:
@@ -488,6 +522,14 @@ NS_WD_NewPropfindStreamListener(nsIWebDAVResource *resource,
                                 PRBool isPropname)
 {
     return new PropfindStreamListener(resource, listener, closure, isPropname);
+}
+
+nsIStreamListener *
+NS_WD_NewReportStreamListener(nsIWebDAVResource *resource,
+                              nsIWebDAVOperationListener *listener,
+                              nsISupports *closure)
+{
+    return new ReportStreamListener(resource, listener, closure);
 }
 
 nsresult
