@@ -60,7 +60,7 @@ ifdef GNU_CC
 MODULE_OPTIMIZE_FLAGS = -O3
 endif
 
-ifndef MOZ_AUTO_DEPS
+ifndef COMPILER_DEPEND
 ifndef MOZ_NATIVE_MAKEDEPEND
 DIRS		+= mkdepend
 endif
