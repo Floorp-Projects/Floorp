@@ -444,6 +444,8 @@ PR_IMPLEMENT(PRMonitor*) PR_NewMonitor(void)
         rv = _PT_PTHREAD_MUTEX_INIT(mon->lock.mutex, _pt_mattr); 
         PR_ASSERT(0 == rv);
 
+        _PT_PTHREAD_INVALIDATE_THR_HANDLE(mon->owner);
+
         mon->cvar = cvar;
         rv = _PT_PTHREAD_COND_INIT(mon->cvar->cv, _pt_cvar_attr); 
         PR_ASSERT(0 == rv);
@@ -484,42 +486,43 @@ PR_IMPLEMENT(void) PR_DestroyMonitor(PRMonitor *mon)
  */
 PR_IMPLEMENT(PRInt32) PR_GetMonitorEntryCount(PRMonitor *mon)
 {
-    PRThread *self = PR_GetCurrentThread();
-    if (mon->owner == self)
+    pthread_t self = pthread_self();
+    if (pthread_equal(mon->owner, self))
         return mon->entryCount;
     return 0;
 }
 
 PR_IMPLEMENT(void) PR_EnterMonitor(PRMonitor *mon)
 {
-    PRThread *self = PR_GetCurrentThread();
+    pthread_t self = pthread_self();
 
     PR_ASSERT(mon != NULL);
     /*
-     * This is safe only if mon->owner (a PRThread*) can be
-     * read in one instruction.
+     * This is safe only if mon->owner (a pthread_t) can be
+     * read in one instruction.  Perhaps mon->owner should be
+     * a "PRThread *"?
      */
-    if (mon->owner != self)
+    if (!pthread_equal(mon->owner, self))
     {
         PR_Lock(&mon->lock);
         /* and now I have the lock */
         PR_ASSERT(0 == mon->entryCount);
-        PR_ASSERT(NULL == mon->owner);
-        mon->owner = self;
+        PR_ASSERT(_PT_PTHREAD_THR_HANDLE_IS_INVALID(mon->owner));
+        _PT_PTHREAD_COPY_THR_HANDLE(self, mon->owner);
     }
     mon->entryCount += 1;
 }  /* PR_EnterMonitor */
 
 PR_IMPLEMENT(PRStatus) PR_ExitMonitor(PRMonitor *mon)
 {
-    PRThread *self = PR_GetCurrentThread();
+    pthread_t self = pthread_self();
 
     PR_ASSERT(mon != NULL);
     /* The lock better be that - locked */
     PR_ASSERT(_PT_PTHREAD_MUTEX_IS_LOCKED(mon->lock.mutex));
     /* we'd better be the owner */
-    PR_ASSERT(mon->owner == self);
-    if (mon->owner != self)
+    PR_ASSERT(pthread_equal(mon->owner, self));
+    if (!pthread_equal(mon->owner, self))
         return PR_FAILURE;
 
     /* if it's locked and we have it, then the entries should be > 0 */
@@ -528,7 +531,7 @@ PR_IMPLEMENT(PRStatus) PR_ExitMonitor(PRMonitor *mon)
     if (mon->entryCount == 0)
     {
         /* and if it transitioned to zero - unlock */
-        mon->owner = NULL;  /* make the owner unknown */
+        _PT_PTHREAD_INVALIDATE_THR_HANDLE(mon->owner);  /* make the owner unknown */
         PR_Unlock(&mon->lock);
     }
     return PR_SUCCESS;
@@ -538,7 +541,7 @@ PR_IMPLEMENT(PRStatus) PR_Wait(PRMonitor *mon, PRIntervalTime timeout)
 {
     PRStatus rv;
     PRInt16 saved_entries;
-    PRThread *saved_owner;
+    pthread_t saved_owner;
 
     PR_ASSERT(mon != NULL);
     /* we'd better be locked */
@@ -546,19 +549,19 @@ PR_IMPLEMENT(PRStatus) PR_Wait(PRMonitor *mon, PRIntervalTime timeout)
     /* and the entries better be positive */
     PR_ASSERT(mon->entryCount > 0);
     /* and it better be by us */
-    PR_ASSERT(mon->owner == PR_GetCurrentThread());
+    PR_ASSERT(pthread_equal(mon->owner, pthread_self()));
 
     /* tuck these away 'till later */
     saved_entries = mon->entryCount; 
     mon->entryCount = 0;
-    saved_owner = mon->owner;
-    mon->owner = NULL;
+    _PT_PTHREAD_COPY_THR_HANDLE(mon->owner, saved_owner);
+    _PT_PTHREAD_INVALIDATE_THR_HANDLE(mon->owner);
     
     rv = PR_WaitCondVar(mon->cvar, timeout);
 
     /* reinstate the intresting information */
     mon->entryCount = saved_entries;
-    mon->owner = saved_owner;
+    _PT_PTHREAD_COPY_THR_HANDLE(saved_owner, mon->owner);
 
     return rv;
 }  /* PR_Wait */
@@ -571,7 +574,7 @@ PR_IMPLEMENT(PRStatus) PR_Notify(PRMonitor *mon)
     /* and the entries better be positive */
     PR_ASSERT(mon->entryCount > 0);
     /* and it better be by us */
-    PR_ASSERT(mon->owner == PR_GetCurrentThread());
+    PR_ASSERT(pthread_equal(mon->owner, pthread_self()));
 
     pt_PostNotifyToCvar(mon->cvar, PR_FALSE);
 
@@ -586,7 +589,7 @@ PR_IMPLEMENT(PRStatus) PR_NotifyAll(PRMonitor *mon)
     /* and the entries better be positive */
     PR_ASSERT(mon->entryCount > 0);
     /* and it better be by us */
-    PR_ASSERT(mon->owner == PR_GetCurrentThread());
+    PR_ASSERT(pthread_equal(mon->owner, pthread_self()));
 
     pt_PostNotifyToCvar(mon->cvar, PR_TRUE);
 
