@@ -71,23 +71,6 @@ nsresult nsSound::Init()
   return NS_OK;
 }
 
-#if 0
-nsresult NS_NewSound(nsISound** aSound)
-{
-  NS_PRECONDITION(aSound != nsnull, "null ptr");
-  if (! aSound)
-    return NS_ERROR_NULL_POINTER;
-  
-  *aSound = new nsSound();
-  if (! *aSound)
-    return NS_ERROR_OUT_OF_MEMORY;
-  
-  NS_ADDREF(*aSound);
-  return NS_OK;
-}
-#endif
-
-
 NS_METHOD nsSound::Beep()
 {
   ::PtBeep();
@@ -97,6 +80,11 @@ NS_METHOD nsSound::Beep()
 NS_METHOD nsSound::Play(nsIURL *aURL)
 {
   NS_NOTYETIMPLEMENTED("nsSound::Play");
+
+#ifdef DEBUG
+printf( "\n\n\nnsSound::Play\n\n" );
+#endif
+
   return NS_OK;
 }
 
@@ -108,13 +96,32 @@ NS_IMETHODIMP nsSound::OnStreamComplete(nsIStreamLoader *aLoader,
 {
   nsresult rv = NS_ERROR_FAILURE;
 
+#ifdef DEBUG
+printf( "\n\n\nnsSound::OnStreamComplete stringData=%s\n\n", stringData );
+#endif
+
   if (NS_FAILED(aStatus))
     return NS_ERROR_FAILURE;
 
   return rv;
 }
 
+static void child_exit( void *data, int status ) { }
+
 NS_IMETHODIMP nsSound::PlaySystemSound(const char *aSoundAlias)
 {
-  return Beep();
+#ifdef DEBUG
+printf( "\n\n\nnsSound::PlaySystemSound aSoundAlias=%s\n\n", aSoundAlias );
+#endif
+
+	char *soundfile;
+
+	if( !strcmp( "_moz_mailbeep", aSoundAlias ) )
+		soundfile = "/usr/share/mozilla/gotmail.wav";
+	else soundfile = "/usr/share/mozilla/rest.wav";
+
+	const char* argv[] = { "/opt/Mozilla/mozilla/wave", soundfile, NULL };
+	PtSpawn( "/opt/Mozilla/mozilla/wave", ( const char ** ) argv, NULL, NULL, child_exit, NULL, NULL );
+
+	return NS_OK;
 }

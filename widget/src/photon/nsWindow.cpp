@@ -72,6 +72,7 @@
 #include "nsIPresShell.h"
 #include "nsReadableUtils.h"
 
+static PhTile_t *GetWindowClipping( PtWidget_t *aWidget );
 PRBool             nsWindow::mResizeQueueInited = PR_FALSE;
 DamageQueueEntry  *nsWindow::mResizeQueue = nsnull;
 PtWorkProcId_t    *nsWindow::mResizeProcID = nsnull;
@@ -802,19 +803,6 @@ void nsWindow::RawDrawFunc( PtWidget_t * pWidget, PhTile_t * damage )
   nsPaintEvent pev;
   PhRect_t   extent;
 
-#if 0
-  PgSetFillColor(Pg_WHITE);
-  PgSetDrawMode(Pg_DRAWMODE_XOR);
-  PtWidgetExtent(pWidget, &extent);
-  int i;
-  for (i = 0; i < 5 * 2; i++)
-  {
-	  PgDrawRect(&extent, Pg_DRAW_FILL);
-	  PgFlush();
-	  delay(1);
-  }
-  PgSetDrawMode(Pg_DRAWMODE_OPAQUE);
-#endif	
   if( !pWin || !pWin->mContext ) return;
 
   // This prevents redraws while any window is resizing, ie there are
@@ -834,7 +822,7 @@ void nsWindow::RawDrawFunc( PtWidget_t * pWidget, PhTile_t * damage )
 		/* Intersect the Damage tile list w/ the clipped out list and see whats left! */
 		new_damage = PhRectsToTiles(&damage->rect, 1);
 		PhDeTranslateTiles(new_damage, &offset);
-		clip_tiles = pWin->GetWindowClipping();
+		clip_tiles = GetWindowClipping( pWidget );
 		if (clip_tiles) {
 			new_damage = PhClipTilings( new_damage, clip_tiles, NULL);
 			PhFreeTiles(clip_tiles);
@@ -900,8 +888,8 @@ void nsWindow::ScreenToWidget( PhPoint_t &pt ) {
 	}
 
 
-PhTile_t *nsWindow::GetWindowClipping( ) {
-	PtWidget_t *w, *aWidget = (PtWidget_t *)GetNativeData(NS_NATIVE_WIDGET);
+static PhTile_t *GetWindowClipping( PtWidget_t *aWidget ) {
+	PtWidget_t *w;
 	PhTile_t *clip_tiles = NULL, *last = NULL;
 	PhRect_t w_extent;
 
@@ -909,7 +897,7 @@ PhTile_t *nsWindow::GetWindowClipping( ) {
 	
 	for( w = PtWidgetChildFront( aWidget ); w; w=PtWidgetBrotherBehind( w ) ) {
 		long flags = PtWidgetFlags( w );
-		if( (flags & (Pt_OPAQUE|Pt_REALIZED)) && !(PtIsDisjoint(w))) {
+		if( (flags & Pt_REALIZED) && (flags & Pt_OPAQUE) && !PtIsDisjoint(w) ) {
 			PhTile_t *tile = PhGetTile( );
 			if( !tile ) return NULL;
 

@@ -136,7 +136,6 @@ protected:
 	static int            EvInfo( PtWidget_t *widget, void *data, PtCallbackInfo_t *cbinfo );
   static int            WindowWMHandler( PtWidget_t *widget, void *data, PtCallbackInfo_t *cbinfo );
   PRBool                HandleEvent( PtWidget_t *widget, PtCallbackInfo_t* aCbInfo );
-  PhTile_t              *GetWindowClipping( );
 
   void                  ResizeHoldOff();
   void                  RemoveResizeWidget();

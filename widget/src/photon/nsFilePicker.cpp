@@ -21,8 +21,11 @@
  *   Adrian Mardare <amardare@qnx.com>
  */
 
+
 #include "nsCOMPtr.h"
+#include "nsReadableUtils.h"
 #include "nsNetUtil.h"
+#include "nsWindow.h"
 #include "nsIServiceManager.h"
 #include "nsIPlatformCharset.h"
 #include "nsFilePicker.h"
@@ -30,8 +33,8 @@
 #include "nsIURL.h"
 #include "nsIFileURL.h"
 #include "nsIStringBundle.h"
+#include "nsEnumeratorUtils.h"
 #include "nsCRT.h"
-#include "nsReadableUtils.h"
 
 
 static NS_DEFINE_CID(kCharsetConverterManagerCID, NS_ICHARSETCONVERTERMANAGER_CID);
@@ -93,6 +96,10 @@ NS_IMETHODIMP nsFilePicker::Show(PRInt16 *retval)
 		flags |= Pt_FSR_NO_FCHECK;
 		btn1 = "&Save";
   }
+	else if( mMode == modeOpenMultiple ) {
+		flags |= Pt_FSR_MULTIPLE;
+		btn1 = "&Select";
+		}
   else {
     printf("nsFilePicker::Show() wrong mode");
     return PR_FALSE;
@@ -159,10 +166,32 @@ NS_IMETHODIMP nsFilePicker::Show(PRInt16 *retval)
 	if( info.ret == Pt_FSDIALOG_BTN2 ) {
 		result = PR_FALSE;
 		}
-	else {
+	else if( mMode != modeOpenMultiple ) {
 		mFile.SetLength(0);
 		mFile.Append( info.path );
 		}
+	else { /* here mMode is modeOpenMultiple */
+		PtFileSelectorInfo_t *minfo = info.minfo;
+		if( minfo ) {
+			nsresult rv = NS_NewISupportsArray(getter_AddRefs(mFiles));
+			NS_ENSURE_SUCCESS(rv,rv);
+
+			for( int i=0; i<minfo->nitems; i++ ) {
+				nsCOMPtr<nsILocalFile> file = do_CreateInstance("@mozilla.org/file/local;1", &rv);
+				NS_ENSURE_SUCCESS(rv,rv);
+	
+				nsCString s ( minfo->multipath[i] );
+				rv = file->InitWithNativePath( s );
+				NS_ENSURE_SUCCESS(rv,rv);
+	
+				rv = mFiles->AppendElement(file);
+				NS_ENSURE_SUCCESS(rv,rv);
+				}
+
+			PtFSFreeInfo( &info ); /* clean the info structure if the multiple mode is set */
+			}
+		}
+
 	PL_strncpyz( mLastUsedDirectory, info.path, PATH_MAX+1 );
 	mDisplayDirectory->InitWithNativePath( nsDependentCString(mLastUsedDirectory) );
 
@@ -191,6 +220,12 @@ NS_IMETHODIMP nsFilePicker::GetFile(nsILocalFile **aFile)
   NS_ADDREF(*aFile = file);
 
   return NS_OK;
+}
+
+NS_IMETHODIMP nsFilePicker::GetFiles(nsISimpleEnumerator **aFiles)
+{
+ 	NS_ENSURE_ARG_POINTER(aFiles);
+ 	return NS_NewArrayEnumerator(aFiles, mFiles);
 }
 
 //-------------------------------------------------------------------------

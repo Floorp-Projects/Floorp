@@ -1263,16 +1263,15 @@ nsWidget* nsWidget::GetInstance( PtWidget_t * pWidget ) {
 	}
 
 
-// Input keysym is in gtk format; output is in NS_VK format
-PRUint32 nsWidget::nsConvertKey(unsigned long keysym, PRBool *aIsChar ) {
 
-  struct nsKeyConverter {
-    PRUint32       vkCode; // Platform independent key code
-    unsigned long  keysym; // Photon key_sym key code
-    PRBool         isChar;
-  };
 
- struct nsKeyConverter nsKeycodes[] = {
+struct nsKeyConverter {
+  PRUint32       vkCode; // Platform independent key code
+  unsigned long  keysym; // Photon key_sym key code
+  PRBool         isChar;
+};
+
+static struct nsKeyConverter nsKeycodes[] = {
   { NS_VK_CANCEL,     Pk_Cancel, PR_FALSE },
   { NS_VK_BACK,       Pk_BackSpace, PR_FALSE },
   { NS_VK_TAB,        Pk_Tab, PR_FALSE },
@@ -1326,12 +1325,14 @@ PRUint32 nsWidget::nsConvertKey(unsigned long keysym, PRBool *aIsChar ) {
   { NS_VK_PAGE_UP,       Pk_KP_9, PR_FALSE }
   };
 
+
+// Input keysym is in gtk format; output is in NS_VK format
+PRUint32 nsWidget::nsConvertKey(unsigned long keysym, PRBool *aIsChar ) {
+
   const int length = sizeof(nsKeycodes) / sizeof(struct nsKeyConverter);
 
-  if (aIsChar) {
 	/* Default this to TRUE */
-    *aIsChar = PR_TRUE;
-  	}
+	*aIsChar = PR_TRUE;
 	
   // First, try to handle alphanumeric input, not listed in nsKeycodes:
   if (keysym >= Pk_a && keysym <= Pk_z)
@@ -1350,7 +1351,7 @@ PRUint32 nsWidget::nsConvertKey(unsigned long keysym, PRBool *aIsChar ) {
 
   for (int i = 0; i < length; i++) {
     if( nsKeycodes[i].keysym == keysym ) {
-      if( aIsChar ) *aIsChar = (nsKeycodes[i].isChar);
+      *aIsChar = (nsKeycodes[i].isChar);
       return (nsKeycodes[i].vkCode);
     	}
   	}
@@ -1378,8 +1379,8 @@ void nsWidget::InitKeyEvent(PhKeyEvent_t *aPhKeyEvent,
     unsigned long keysym;
     if (Pk_KF_Cap_Valid & aPhKeyEvent->key_flags)
         keysym = nsConvertKey(aPhKeyEvent->key_sym, &IsChar);
-	else
-    	keysym = nsConvertKey(aPhKeyEvent->key_cap, &IsChar);
+		else
+				keysym = nsConvertKey(aPhKeyEvent->key_cap, &IsChar);
 
     anEvent.isShift =   ( aPhKeyEvent->key_mods & Pk_KM_Shift ) ? PR_TRUE : PR_FALSE;
     anEvent.isControl = ( aPhKeyEvent->key_mods & Pk_KM_Ctrl )  ? PR_TRUE : PR_FALSE;
@@ -1435,8 +1436,8 @@ PRBool  nsWidget::DispatchKeyEvent( PhKeyEvent_t *aPhKeyEvent ) {
   w->AddRef();
  
   if (aPhKeyEvent->key_flags & Pk_KF_Key_Down) {
-    InitKeyEvent(aPhKeyEvent, this, keyEvent, NS_KEY_DOWN);
-    result = w->OnKey(keyEvent); 
+//    InitKeyEvent(aPhKeyEvent, this, keyEvent, NS_KEY_DOWN);
+//    result = w->OnKey(keyEvent); 
 
     InitKeyEvent(aPhKeyEvent, this, keyEvent, NS_KEY_PRESS);
     result = w->OnKey(keyEvent); 
@@ -1624,7 +1625,7 @@ PRBool nsWidget::HandleEvent( PtWidget_t *widget, PtCallbackInfo_t* aCbInfo ) {
 				}
 				
 				result = DispatchKeyEvent(keyev);
-#if 1
+#if 0
 				if ((result == PR_TRUE) && (keyev->key_cap != Pk_Up) && (keyev->key_cap != Pk_Down) &&
 					(keyev->key_cap != Pk_Left) && (keyev->key_cap != Pk_Right) && old_menu && (keyev->key_flags & Pk_KF_Key_Down))
 				{
