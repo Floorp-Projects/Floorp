@@ -1992,10 +1992,11 @@ $table{bug_group_map} =
      index(group_id)';
 
 # 2002-07-19, davef@tetsubo.com, bug 67950:
+# 2005-02-20, LpSolit@gmail.com, bug 277504
 # Store quips in the db.
 $table{quips} =
     'quipid mediumint not null auto_increment primary key,
-     userid mediumint not null default 0, 
+     userid mediumint null, 
      quip text not null,
      approved tinyint(1) not null default 1';
 
@@ -4262,6 +4263,16 @@ ChangeFieldType ('bugs', 'priority', 'varchar(64) not null');
 ChangeFieldType ('bugs', 'bug_severity', 'varchar(64) not null');
 ChangeFieldType ('bugs', 'rep_platform', 'varchar(64) not null');
 ChangeFieldType ('bugs', 'op_sys', 'varchar(64) not null');
+
+
+# 2005-02-20 - LpSolit@gmail.com - Bug 277504
+# When migrating quips from the '$datadir/comments' file to the DB,
+# the user ID should be NULL instead of 0 (which is an invalid user ID).
+if (!GetFieldDef('quips', 'userid')->[2]) {
+    ChangeFieldType('quips', 'userid', 'mediumint null');
+    print "Changing owner to NULL for quips where the owner is unknown...\n";
+    $dbh->do('UPDATE quips SET userid = NULL WHERE userid = 0');
+}
 
 # If you had to change the --TABLE-- definition in any way, then add your
 # differential change code *** A B O V E *** this comment.
