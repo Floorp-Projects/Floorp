@@ -33,14 +33,11 @@ REQUIRES	= xpcom string uconv
 
 CPPSRCS		= \
 		nsJapaneseToUnicode.cpp \
-		nsSJIS2Unicode.cpp \
 		nsUnicodeToSJIS.cpp \
 		nsCP932ToUnicode.cpp \
 		nsUnicodeToCP932.cpp \
 		nsUCvJaSupport.cpp \
 		nsUCvJaModule.cpp \
-		nsEUCJPToUnicode.cpp \
-		nsISO2022JPToUnicode.cpp \
 		nsUnicodeToEUCJP.cpp \
 		nsUnicodeToISO2022JP.cpp \
 		nsUnicodeToJISx0201.cpp \

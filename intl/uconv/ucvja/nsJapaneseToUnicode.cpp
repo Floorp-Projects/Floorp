@@ -673,20 +673,3 @@ error1:
    *aSrcLen = src-(unsigned char*)aSrc;
    return NS_OK_UDEC_MOREOUTPUT;
 }
-#if 0
-nsresult NEW_ShiftJISToUnicode(nsISupports **aResult)
-{
-   *aResult = new nsShiftJISToUnicode();
-   return (NULL == *aResult) ? NS_ERROR_OUT_OF_MEMORY : NS_OK;
-}
-nsresult NEW_EUCJPToUnicode(nsISupports **aResult)
-{
-   *aResult = new nsEUCJPToUnicodeV2();
-   return (NULL == *aResult) ? NS_ERROR_OUT_OF_MEMORY : NS_OK;
-}
-nsresult NEW_ISO2022JPToUnicode(nsISupports **aResult)
-{
-   *aResult = new nsISO2022JPToUnicodeV2();
-   return (NULL == *aResult) ? NS_ERROR_OUT_OF_MEMORY : NS_OK;
-}
-#endif
