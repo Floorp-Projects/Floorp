@@ -2847,10 +2847,30 @@ nsListControlFrame::AboutToDropDown()
 NS_IMETHODIMP 
 nsListControlFrame::AboutToRollup()
 {
-  // XXX By uncommenting this line below the "act" of rolling up
-  // will reset the the contents of the combobox to it's original contents
-  // (i.e. the contents before it was dropped down
-  ResetSelectedItem();
+  // XXX To have clicking outside the combobox ALWAYS reset the contents to the
+  // state before it was dropped, remove the all the code in the "if" below and replace it
+  // with just the call to ResetSelectedItem()
+  //
+  //
+  // When the dropdown is dropped down via a mouse click and the user moves the mouse 
+  // up and down without clicking, the currently selected item is being tracking inside 
+  // the dropdown, but the combobox is not being updated. When the user selects items
+  // with the arrow keys, the combobox is being updated. So when the user clicks outside
+  // the dropdown and it needs to roll up it has to decide whether to keep the current 
+  // selection or not. The GetIndexOfDisplayArea method is used to get the current index 
+  // in the combobox to compare it to the current index in the dropdown to see if the combox 
+  // has been updated and that way it knows whether to "cancel" the the current selection 
+  // residing in the dropdown. Or whether to leave the selection alone.
+  if (IsInDropDownMode() == PR_TRUE) {
+    PRInt32 index;
+    mComboboxFrame->GetIndexOfDisplayArea(&index);
+    // if the indexes do NOT match then the selection in the combobox 
+    // was never updated, and therefore we should reset the the selection back to 
+    // whatever it was before it was dropped down.
+    if (index != mSelectedIndex) {
+      ResetSelectedItem();
+    }
+  }
   return NS_OK;
 }
 

@@ -166,6 +166,7 @@ public:
   NS_IMETHOD UpdateSelection(PRBool aDoDispatchEvent, PRBool aForceUpdate, PRInt32 aNewIndex);
   NS_IMETHOD AbsolutelyPositionDropDown();
   NS_IMETHOD GetAbsoluteRect(nsRect* aRect);
+  NS_IMETHOD GetIndexOfDisplayArea(PRInt32* aSelectedIndex);
 
   // nsISelectControlFrame
   NS_IMETHOD AddOption(nsIPresContext* aPresContext, PRInt32 index);
