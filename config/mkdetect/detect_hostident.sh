@@ -30,7 +30,7 @@
 HOSTIDENT_ARCH=`uname -s`
 
 # Determine the host name
-if [ "$HOSTIDENT" = "Linux" ]
+if [ "$HOSTIDENT_ARCH" = "Linux" ]
 then
 	HOSTIDENT_HOSTNAME=`hostname -s`
 else
