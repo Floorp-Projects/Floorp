@@ -23,6 +23,7 @@
 #                 Bradley Baetz <bbaetz@student.usyd.edu.au>
 #                 Christopher Aillon <christopher@aillon.com>
 #                 Tobias Burnus <burnus@net-b.de>
+#                 Myk Melez <myk@mozilla.org>
 
 
 package Bugzilla::Template;
@@ -38,12 +39,16 @@ use Date::Format ();
 use base qw(Template);
 
 # Convert the constants in the Bugzilla::Constants module into a hash we can
-# pass to the template object.  To do so, we have to traverse the symbol table
-# for the module, pulling out the functions (which is how Perl constants are
-# implemented) and ignoring the rest (i.e. things like the @EXPORT array).
+# pass to the template object for reflection into its "constants" namespace
+# (which is like its "variables" namespace, but for constants).  To do so, we
+# traverse the arrays of exported and exportable symbols, pulling out functions
+# (which is how Perl implements constants) and ignoring the rest (which, if
+# Constants.pm exports only constants, as it should, will be nothing else).
 use Bugzilla::Constants ();
 my %constants;
-foreach my $constant (keys %Bugzilla::Constants::) {
+foreach my $constant (@Bugzilla::Constants::EXPORT,
+                      @Bugzilla::Constants::EXPORT_OK)
+{
     if (defined &{$Bugzilla::Constants::{$constant}}) {
         # Constants can be lists, and we can't know whether we're getting
         # a scalar or a list in advance, since they come to us as the return
