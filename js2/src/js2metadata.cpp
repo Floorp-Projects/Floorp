@@ -3741,6 +3741,27 @@ static const uint8 urlCharType[256] =
         }
     }
     
+    static js2val Object_underbarProtoGet(JS2Metadata *meta, const js2val thisValue, js2val /* argv */ [], uint32 /* argc */)
+    {
+        ASSERT(JS2VAL_IS_OBJECT(thisValue));
+        JS2Object *obj = JS2VAL_TO_OBJECT(thisValue);
+        if (obj->kind == SimpleInstanceKind)
+            return (checked_cast<SimpleInstance *>(obj))->super;
+        else
+            return JS2VAL_UNDEFINED;
+    }
+
+    static js2val Object_underbarProtoSet(JS2Metadata *meta, const js2val thisValue, js2val *argv, uint32 argc)
+    {
+        ASSERT(JS2VAL_IS_OBJECT(thisValue));
+        JS2Object *obj = JS2VAL_TO_OBJECT(thisValue);
+        if ((argc > 0) && (obj->kind == SimpleInstanceKind)) {
+            (checked_cast<SimpleInstance *>(obj))->super = argv[0];
+            return argv[0];
+        }
+        return JS2VAL_UNDEFINED;
+    }
+
     static js2val Object_valueOf(JS2Metadata *meta, const js2val thisValue, js2val /* argv */ [], uint32 /* argc */)
     {
         return thisValue;
@@ -3808,7 +3829,8 @@ bool nullClass_BracketDelete(JS2Metadata *meta, js2val base, JS2Class *limit, Mu
         // A 'forbidden' member, used to mark hidden bindings
         forbiddenMember = new LocalMember(Member::ForbiddenMember, true);
 
-        Variable *v;       
+        Variable *v;
+        FunctionInstance *fInst = NULL;
         
 // XXX Built-in Attributes... XXX 
 /*
@@ -3860,8 +3882,22 @@ XXX see EvalAttributeExpression, where identifiers are being handled for now...
         addGlobalObjectFunction("version", GlobalObject_version, 1);
 
 
+// Add __proto__ as a getter instance member to Object        
+        Multiname mn(&world.identifiers["__proto__"], publicNamespace);
+        fInst = new FunctionInstance(this, functionClass->prototype, functionClass);
+        fInst->fWrap = new FunctionWrapper(true, new ParameterFrame(JS2VAL_VOID, true), Object_underbarProtoGet, env);
+        fInst->fWrap->length = 0;
+        InstanceGetter *g = new InstanceGetter(&mn, fInst, objectClass, true, true);
+        defineInstanceMember(objectClass, &cxt, mn.name, *mn.nsList, Attribute::NoOverride, false, g, 0);
+        fInst = new FunctionInstance(this, functionClass->prototype, functionClass);
+        fInst->fWrap = new FunctionWrapper(true, new ParameterFrame(JS2VAL_VOID, true), Object_underbarProtoSet, env);
+        fInst->fWrap->length = 0;
+        InstanceSetter *s = new InstanceSetter(&mn, fInst, objectClass, true, true);
+        defineInstanceMember(objectClass, &cxt, mn.name, *mn.nsList, Attribute::NoOverride, false, g, 0);
+
+
 // Adding 'toString' to the Object.prototype XXX Or make this a static class member?
-        FunctionInstance *fInst = new FunctionInstance(this, functionClass->prototype, functionClass);
+        fInst = new FunctionInstance(this, functionClass->prototype, functionClass);
         fInst->fWrap = new FunctionWrapper(true, new ParameterFrame(JS2VAL_VOID, true), Object_toString, env);
         fInst->fWrap->length = 0;
         createDynamicProperty(JS2VAL_TO_OBJECT(objectClass->prototype), engine->toString_StringAtom, OBJECT_TO_JS2VAL(fInst), ReadAccess, true, false);
