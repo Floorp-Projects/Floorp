@@ -53,7 +53,7 @@ class nsImageFrame : public nsIImageFrame
 {
 public:
   NS_DECL_ISUPPORTS
-  NS_DECL_NSIIMAGEFRAME
+  NS_DECL_GFXIIMAGEFRAME
 
   nsImageFrame();
   virtual ~nsImageFrame();
