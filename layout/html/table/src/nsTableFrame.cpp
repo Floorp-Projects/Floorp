@@ -3163,48 +3163,52 @@ nscoord nsTableFrame::ComputeDesiredHeight(nsIPresContext&          aPresContext
       result = tableSpecifiedHeight;
       nscoord excess = tableSpecifiedHeight - aDefaultHeight;
       nscoord sumOfRowHeights = 0;
-      nsIFrame* rowGroupFrame=mFrames.FirstChild();
-      while (nsnull != rowGroupFrame) {
-        const nsStyleDisplay *rowGroupDisplay;
-        rowGroupFrame->GetStyleData(eStyleStruct_Display, ((const nsStyleStruct *&)rowGroupDisplay));
-        if (PR_TRUE==IsRowGroup(rowGroupDisplay->mDisplay) &&
-            ((nsTableRowGroupFrame*)rowGroupFrame)->RowGroupReceivesExcessSpace()) { 
-          ((nsTableRowGroupFrame*)rowGroupFrame)->GetHeightOfRows(sumOfRowHeights);
-        }
-        rowGroupFrame->GetNextSibling(&rowGroupFrame);
-      }
-      rowGroupFrame=mFrames.FirstChild();
-      // the first row group's y position starts inside our padding
       nscoord rowGroupYPos = 0;
-      if (rowGroupFrame) {
-        const nsStyleSpacing* spacing =
-          (const nsStyleSpacing*)mStyleContext->GetStyleData(eStyleStruct_Spacing);
-	      nsMargin margin(0,0,0,0);
-        if (spacing->GetBorder(margin)) { // XXX see bug 10636 and handle percentages
-          rowGroupYPos = margin.top;
+      nsIFrame* childFrame = mFrames.FirstChild();
+      nsIFrame* firstRowGroupFrame = nsnull;
+      while (nsnull != childFrame) {
+        const nsStyleDisplay* childDisplay;
+        childFrame->GetStyleData(eStyleStruct_Display, ((const nsStyleStruct *&)childDisplay));
+        if (IsRowGroup(childDisplay->mDisplay)) {
+          if (((nsTableRowGroupFrame*)childFrame)->RowGroupReceivesExcessSpace()) { 
+            ((nsTableRowGroupFrame*)childFrame)->GetHeightOfRows(sumOfRowHeights);
+          }
+          if (!firstRowGroupFrame) {
+            // the first row group's y position starts inside our padding
+            const nsStyleSpacing* spacing =
+              (const nsStyleSpacing*)mStyleContext->GetStyleData(eStyleStruct_Spacing);
+	          nsMargin margin(0,0,0,0);
+            if (spacing->GetBorder(margin)) { // XXX see bug 10636 and handle percentages
+              rowGroupYPos = margin.top;
+            }
+            if (spacing->GetPadding(margin)) { // XXX see bug 10636 and handle percentages
+              rowGroupYPos += margin.top;
+            }
+            firstRowGroupFrame = childFrame;
+          }
         }
-        if (spacing->GetPadding(margin)) { // XXX see bug 10636 and handle percentages
-          rowGroupYPos += margin.top;
-        }
+        childFrame->GetNextSibling(&childFrame);
       }
-      while (nsnull!=rowGroupFrame) {
-        const nsStyleDisplay *rowGroupDisplay;
-        rowGroupFrame->GetStyleData(eStyleStruct_Display, ((const nsStyleStruct *&)rowGroupDisplay));
-        if (PR_TRUE==IsRowGroup(rowGroupDisplay->mDisplay)) {
-          if (((nsTableRowGroupFrame*)rowGroupFrame)->RowGroupReceivesExcessSpace()) {
+
+      childFrame = mFrames.FirstChild();
+      while (childFrame) {
+        const nsStyleDisplay* childDisplay;
+        childFrame->GetStyleData(eStyleStruct_Display, ((const nsStyleStruct *&)childDisplay));
+        if (IsRowGroup(childDisplay->mDisplay)) {
+          if (((nsTableRowGroupFrame*)childFrame)->RowGroupReceivesExcessSpace()) {
             nscoord excessForGroup = 0;
             const nsStyleTable* tableStyle;
             GetStyleData(eStyleStruct_Table, (const nsStyleStruct *&)tableStyle);
-            DistributeSpaceToRows(aPresContext, aReflowState, rowGroupFrame, sumOfRowHeights, 
+            DistributeSpaceToRows(aPresContext, aReflowState, childFrame, sumOfRowHeights, 
                                   excess, tableStyle, excessForGroup, rowGroupYPos);
           }
           else {
             nsRect rowGroupRect;
-            rowGroupFrame->GetRect(rowGroupRect);
+            childFrame->GetRect(rowGroupRect);
             rowGroupYPos += rowGroupRect.height;
           }
         }
-        rowGroupFrame->GetNextSibling(&rowGroupFrame);
+        childFrame->GetNextSibling(&childFrame);
       }
     }
   }
