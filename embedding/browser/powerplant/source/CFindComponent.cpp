@@ -80,7 +80,7 @@ CFindComponent::Find(const nsString& searchString,
 {
   NS_ENSURE_TRUE(mDocShell, NS_ERROR_NOT_INITIALIZED);
 
-	nsAutoString		matchString = searchString;
+	nsAutoString		matchString(searchString);
 	if (!caseSensitive)
 		matchString.ToLowerCase();
 
