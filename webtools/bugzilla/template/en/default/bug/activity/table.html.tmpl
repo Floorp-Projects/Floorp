@@ -39,11 +39,11 @@
 
 [% IF incomplete_data %]
   <p>
-    There used to be [% terms.abug %] in [% terms.Bugzilla %] which caused activity data
-    to be lost if there was a large number of cc's or dependencies.  That
-    has been fixed, however, there was some data already lost on this [% terms.bug %] that
-    could not be regenerated.  The changes that the script could not
-    reliably determine are prefixed by '?'.
+    There used to be an issue in <a href="http://www.bugzilla.org/">Bugzilla</a>
+    which caused activity data to be lost if there were a large number of cc's
+    or dependencies.  That has been fixed, but some data was already lost in
+    your activity table that could not be regenerated.  The changes that the
+    script could not reliably determine are prefixed by '?'.
   </p>
 [% END %]
 
