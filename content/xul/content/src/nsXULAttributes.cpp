@@ -55,7 +55,6 @@ static NS_DEFINE_CID(kICSSParserIID, NS_ICSS_PARSER_IID);
 ////////////////////////////////////////////////////////////////////////
 // nsXULAttribute
 
-MOZ_DECL_CTOR_COUNTER(RDF_nsXULAttribute);
 
 nsXULAttribute::nsXULAttribute(nsIContent* aContent,
                                PRInt32 aNameSpaceID,

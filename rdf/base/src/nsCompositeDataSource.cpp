@@ -136,7 +136,6 @@ protected:
     PRBool		mCoalesceDuplicateArcs;
 };
 
-MOZ_DECL_CTOR_COUNTER(RDF_CompositeEnumeratorImpl);
 
 CompositeEnumeratorImpl::CompositeEnumeratorImpl(CompositeDataSourceImpl* aCompositeDataSource,
 						 PRBool aAllowNegativeAssertions,
@@ -372,7 +371,6 @@ private:
     PRBool      mCoalesceDuplicateArcs;
 };
 
-MOZ_DECL_CTOR_COUNTER(RDF_CompositeArcsInOutEnumeratorImpl);
 
 CompositeArcsInOutEnumeratorImpl::CompositeArcsInOutEnumeratorImpl(
                 CompositeDataSourceImpl* aCompositeDataSource,
@@ -460,7 +458,6 @@ private:
     PRBool          mCoalesceDuplicateArcs;
 };
 
-MOZ_DECL_CTOR_COUNTER(RDF_CompositeAssertionEnumeratorImpl);
 
 CompositeAssertionEnumeratorImpl::CompositeAssertionEnumeratorImpl(
                   CompositeDataSourceImpl* aCompositeDataSource,
@@ -542,7 +539,6 @@ NS_NewRDFCompositeDataSource(nsIRDFCompositeDataSource** result)
     return NS_OK;
 }
 
-MOZ_DECL_CTOR_COUNTER(RDF_CompositeDataSourceImpl);
 
 CompositeDataSourceImpl::CompositeDataSourceImpl(void)
 	: mAllowNegativeAssertions(PR_TRUE),

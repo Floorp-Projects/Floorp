@@ -191,7 +191,6 @@ public:
 
 ////////////////////////////////////////////////////////////////////////
 
-MOZ_DECL_CTOR_COUNTER(RDF_LocalStoreImpl);
 
 LocalStoreImpl::LocalStoreImpl(void)
 {

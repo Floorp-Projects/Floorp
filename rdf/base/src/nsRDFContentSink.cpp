@@ -288,7 +288,6 @@ nsIAtom* RDFContentSinkImpl::kLiAtom;
 
 ////////////////////////////////////////////////////////////////////////
 
-MOZ_DECL_CTOR_COUNTER(RDF_RDFContentSinkImpl);
 
 RDFContentSinkImpl::RDFContentSinkImpl()
     : mText(nsnull),

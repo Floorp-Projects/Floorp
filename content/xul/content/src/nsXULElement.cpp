@@ -608,7 +608,6 @@ RDFElementImpl::ObserverForwardReference::Resolve()
 ////////////////////////////////////////////////////////////////////////
 // RDFElementImpl
 
-MOZ_DECL_CTOR_COUNTER(RDF_RDFElementImpl);
 
 RDFElementImpl::RDFElementImpl(PRInt32 aNameSpaceID, nsIAtom* aTag)
     : mDocument(nsnull),

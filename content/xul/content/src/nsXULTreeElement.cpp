@@ -60,7 +60,6 @@ nsXULTreeElement::QueryInterface(REFNSIID aIID, void** aResult)
     return NS_OK;
 }
 
-MOZ_DECL_CTOR_COUNTER(RDF_nsXULTreeElement);
 
 nsXULTreeElement::nsXULTreeElement(nsIDOMXULElement* aOuter)
 :nsXULElement(aOuter)

@@ -256,7 +256,6 @@ PRInt32  XULSortServiceImpl::kNameSpaceID_RDF;
 
 ////////////////////////////////////////////////////////////////////////
 
-MOZ_DECL_CTOR_COUNTER(RDF_XULSortServiceImpl);
 
 XULSortServiceImpl::XULSortServiceImpl(void)
 {
@@ -294,18 +293,18 @@ XULSortServiceImpl::XULSortServiceImpl(void)
 						  (nsISupports**) &gXULUtils);
 		NS_ASSERTION(NS_SUCCEEDED(rv), "unable to get XUL content utils");
 
-		nsILocaleFactory	*localeFactory = nsnull; 
-
 		// get a locale factory 
-		if (NS_SUCCEEDED(rv = nsComponentManager::FindFactory(kLocaleFactoryCID, (nsIFactory**)&localeFactory))
-			&& (localeFactory))
+		nsCOMPtr<nsIFactory>		aFactory;
+		nsCOMPtr<nsILocaleFactory>	localeFactory;
+		if (NS_SUCCEEDED(rv = nsComponentManager::FindFactory(kLocaleFactoryCID, getter_AddRefs(aFactory)))
+			&& ((localeFactory = do_QueryInterface(aFactory)) != nsnull))
 		{
-			nsILocale		*locale = nsnull;
-			if (NS_SUCCEEDED(rv = localeFactory->GetApplicationLocale(&locale)) && (locale))
+			nsCOMPtr<nsILocale>	locale;
+			if (NS_SUCCEEDED(rv = localeFactory->GetApplicationLocale(getter_AddRefs(locale))) && (locale))
 			{
-				nsICollationFactory	*colFactory;
+				nsCOMPtr<nsICollationFactory>	colFactory;
 				if (NS_SUCCEEDED(rv = nsComponentManager::CreateInstance(kCollationFactoryCID, NULL,
-						kICollationFactoryIID, (void**) &colFactory)))
+						kICollationFactoryIID, getter_AddRefs(colFactory))))
 				{
 					if (NS_FAILED(rv = colFactory->CreateCollation(locale, &collationService)))
 					{
@@ -316,15 +315,11 @@ XULSortServiceImpl::XULSortServiceImpl(void)
 				{
 					NS_ERROR("couldn't create instance of collation factory");
 				}
-				NS_RELEASE(locale);
-				locale = nsnull;
 			}
 			else
 			{
 				NS_ERROR("unable to get application locale");
 			}
-			NS_RELEASE(localeFactory);
-			localeFactory = nsnull;
 		}
 		else
 		{

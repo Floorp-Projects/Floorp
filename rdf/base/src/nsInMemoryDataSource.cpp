@@ -99,7 +99,6 @@ private:
     PRInt16         mRefCnt; // XXX not used yet: to be used for threadsafety
 };
 
-MOZ_DECL_CTOR_COUNTER(RDF_Assertion);
 
 Assertion::Assertion(nsIRDFResource* aSource,
                      nsIRDFResource* aProperty,
@@ -292,7 +291,6 @@ public:
 
 ////////////////////////////////////////////////////////////////////////
 
-MOZ_DECL_CTOR_COUNTER(RDF_InMemoryAssertionEnumeratorImpl);
 
 InMemoryAssertionEnumeratorImpl::InMemoryAssertionEnumeratorImpl(
                  InMemoryDataSource* aDataSource,
@@ -434,7 +432,6 @@ public:
     NS_DECL_NSISIMPLEENUMERATOR
 };
 
-MOZ_DECL_CTOR_COUNTER(RDF_InMemoryArcsEnumeratorImpl);
 
 InMemoryArcsEnumeratorImpl::InMemoryArcsEnumeratorImpl(InMemoryDataSource* aDataSource,
                                                        nsIRDFResource* aSource,
@@ -581,7 +578,6 @@ NS_NewRDFInMemoryDataSource(nsISupports* aOuter, const nsIID& aIID, void** aResu
     return rv;
 }
 
-MOZ_DECL_CTOR_COUNTER(RDF_InMemoryDataSource);
 
 InMemoryDataSource::InMemoryDataSource(nsISupports* aOuter)
     : mForwardArcs(nsnull),

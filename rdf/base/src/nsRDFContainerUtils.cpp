@@ -308,7 +308,6 @@ RDFContainerUtilsImpl::MakeAlt(nsIRDFDataSource *aDataSource, nsIRDFResource *aR
 
 ////////////////////////////////////////////////////////////////////////
 
-MOZ_DECL_CTOR_COUNTER(RDF_RDFContainerUtilsImpl);
 
 RDFContainerUtilsImpl::RDFContainerUtilsImpl()
 {

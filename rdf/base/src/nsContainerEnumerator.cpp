@@ -81,7 +81,6 @@ public:
 nsrefcnt        ContainerEnumeratorImpl::gRefCnt;
 nsIRDFResource* ContainerEnumeratorImpl::kRDF_nextVal;
 
-MOZ_DECL_CTOR_COUNTER(RDF_ContainerEnumeratorImpl);
 
 ContainerEnumeratorImpl::ContainerEnumeratorImpl(nsIRDFDataSource* aDataSource,
                                                  nsIRDFResource* aContainer)
