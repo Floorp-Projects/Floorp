@@ -477,6 +477,7 @@ PresShell::Init(nsIDocument* aDocument,
   if (!NS_SUCCEEDED(result))
     return result;
   selection->Clear();//clear all old selection
+#if 0
   nsCOMPtr<nsIDOMRange>range;
   if (NS_SUCCEEDED(nsRepository::CreateInstance(kCRangeCID, nsnull, kIDOMRangeIID, getter_AddRefs(range)))){ //create an irange
     nsCOMPtr<nsIDocument>doc(GetDocument());
@@ -496,6 +497,7 @@ PresShell::Init(nsIDocument* aDocument,
       }
     }
   }
+#endif
   mSelection = selection;
   return NS_OK;
 }

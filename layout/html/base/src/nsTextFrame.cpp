@@ -1359,7 +1359,6 @@ TextFrame::PaintAsciiText(nsIPresContext& aPresContext,
   nsIDocument* doc = shell->GetDocument();
   PRBool displaySelection;
   displaySelection = doc->GetDisplaySelection();
-  displaySelection = PR_FALSE;
 
   // Make enough space to transform
   PRUnichar wordBufMem[WORD_BUF_SIZE];
@@ -1393,7 +1392,7 @@ TextFrame::PaintAsciiText(nsIPresContext& aPresContext,
 
   char* text = paintBuf;
   if (0 != textLength) {
-    if (!displaySelection) {
+    if (!displaySelection || !mSelected) {
       // When there is no selection showing, use the fastest and
       // simplest rendering approach
       aRenderingContext.DrawString(text, textLength, dx, dy, width);
@@ -1401,56 +1400,72 @@ TextFrame::PaintAsciiText(nsIPresContext& aPresContext,
                            dx, dy, width);
     }
     else {
-      SelectionInfo si;
-//      ComputeSelectionInfo(aRenderingContext, doc, ip, textLength, si);
+/*      SelectionInfo si;
+      ComputeSelectionInfo(aRenderingContext, doc, ip, textLength, si);*/
 
       nscoord textWidth;
-      if (si.mEmptySelection) {
+      if (mSelectionOffset < 0)
+        mSelectionOffset = 0;
+      if (mSelectionEnd < 0)
+        mSelectionEnd = mContentLength;
+      if (mSelectionOffset >= mContentLength)
+        mSelectionOffset = mContentLength;
+      PRInt32 selectionEnd = mSelectionEnd;
+      PRInt32 selectionOffset = mSelectionOffset;
+      if (mSelectionEnd < mSelectionOffset)
+      {
+        selectionEnd = mSelectionOffset;
+        selectionOffset = mSelectionEnd;
+      }
+
+      if (selectionOffset == selectionEnd){
         aRenderingContext.DrawString(text, textLength, dx, dy, width);
-        PaintTextDecorations(aRenderingContext, aStyleContext, aTextStyle,
-                             dx, dy, width);
-        aRenderingContext.GetWidth(text, PRUint32(si.mStartOffset), textWidth);
+        PaintTextDecorations(aRenderingContext, aStyleContext,
+                             aTextStyle, dx, dy, width);
+//        aRenderingContext.GetWidth(text, PRUint32(si.mStartOffset), textWidth);
+        aRenderingContext.GetWidth(text, PRUint32(selectionOffset), textWidth);
         RenderSelectionCursor(aRenderingContext,
                               dx + textWidth, dy, mRect.height,
                               CURSOR_COLOR);
       }
-      else {
+      else 
+      {
         nscoord x = dx;
 
-        if (0 != si.mStartOffset) {
+        if (selectionOffset) {
           // Render first (unselected) section
-          aRenderingContext.GetWidth(text, PRUint32(si.mStartOffset),
+          aRenderingContext.GetWidth(text, PRUint32(selectionOffset),//si.mStartOffset),
                                      textWidth);
-          aRenderingContext.DrawString(text, si.mStartOffset,
+          aRenderingContext.DrawString(text, selectionOffset,
                                        x, dy, textWidth);
           PaintTextDecorations(aRenderingContext, aStyleContext, aTextStyle,
                                x, dy, textWidth);
           x += textWidth;
         }
-        PRInt32 secondLen = si.mEndOffset - si.mStartOffset;
+        PRInt32 secondLen = selectionEnd - selectionOffset; 
         if (0 != secondLen) {
           // Get the width of the second (selected) section
-          aRenderingContext.GetWidth(text + si.mStartOffset,
+          aRenderingContext.GetWidth(text + selectionOffset,
                                      PRUint32(secondLen), textWidth);
 
           // Render second (selected) section
           aRenderingContext.SetColor(aTextStyle.mSelectionBGColor);
           aRenderingContext.FillRect(x, dy, textWidth, mRect.height);
           aRenderingContext.SetColor(aTextStyle.mSelectionTextColor);
-          aRenderingContext.DrawString(text + si.mStartOffset, secondLen,
-                                       x, dy, textWidth);
+          aRenderingContext.DrawString(text + selectionOffset,
+                                        secondLen, x, dy, textWidth);
           PaintTextDecorations(aRenderingContext, aStyleContext, aTextStyle,
                                x, dy, textWidth);
           aRenderingContext.SetColor(aTextStyle.mColor->mColor);
           x += textWidth;
         }
-        if (textLength != si.mEndOffset) {
-          PRInt32 thirdLen = textLength - si.mEndOffset;
+        if (textLength != selectionEnd) {
+          PRInt32 thirdLen = textLength - selectionEnd;
 
           // Render third (unselected) section
-          aRenderingContext.GetWidth(text + si.mEndOffset, PRUint32(thirdLen),
+          aRenderingContext.GetWidth(text + selectionEnd, PRUint32(thirdLen),
                                      textWidth);
-          aRenderingContext.DrawString(text + si.mEndOffset,
+          aRenderingContext.DrawString(text + selectionEnd,
                                        thirdLen, x, dy, textWidth);
           PaintTextDecorations(aRenderingContext, aStyleContext, aTextStyle,
                                x, dy, textWidth);
@@ -1462,9 +1477,6 @@ TextFrame::PaintAsciiText(nsIPresContext& aPresContext,
   // Cleanup
   if (paintBuf != paintBufMem) {
     delete [] paintBuf;
-  }
-  if (rawPaintBuf != rawPaintBufMem) {
-    delete [] rawPaintBuf;
   }
   if (ip != indicies) {
     delete [] ip;
