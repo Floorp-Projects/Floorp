@@ -141,6 +141,33 @@ nsURLFetcher::DoContent(const char * aContentType,
   return rv;
 }
 
+NS_IMETHODIMP 
+nsURLFetcher::GetParentContentListener(nsIURIContentListener** aParent)
+{
+  *aParent = nsnull;
+  return NS_OK;
+}
+
+NS_IMETHODIMP 
+nsURLFetcher::SetParentContentListener(nsIURIContentListener* aParent)
+{
+  return NS_OK;
+}
+
+NS_IMETHODIMP 
+nsURLFetcher::GetLoadCookie(nsISupports ** aLoadCookie)
+{
+  *aLoadCookie = mLoadCookie;
+  NS_IF_ADDREF(*aLoadCookie);
+  return NS_OK;
+}
+
+NS_IMETHODIMP 
+nsURLFetcher::SetLoadCookie(nsISupports * aLoadCookie)
+{
+  mLoadCookie = aLoadCookie;
+  return NS_OK;
+}
 
 nsresult
 nsURLFetcher::StillRunning(PRBool *running)
@@ -280,9 +307,7 @@ nsURLFetcher::FireURLRequest(nsIURI *aURL, nsOutputFileStream *fOut,
   nsCOMPtr<nsISupports> openContext;
   nsCOMPtr<nsISupports> cntListener (do_QueryInterface(NS_STATIC_CAST(nsIStreamListener *, this)));
   rv = pURILoader->OpenURI(channel, nsIURILoader::viewNormal, nsnull /* window target */, 
-                           cntListener,
-                           /* group */ nsnull, 
-                           getter_AddRefs(openContext));
+                           cntListener);
 
   mURL = dont_QueryInterface(aURL);
   mOutStream = fOut;

@@ -78,6 +78,7 @@ private:
   char                            *mCharset;      // The charset retrieved from the server
   void                            *mTagData;      // Tag data for callback...
   nsAttachSaveCompletionCallback  mCallback;      // Callback to call once the file is saved...
+  nsCOMPtr<nsISupports>           mLoadCookie;    // load cookie used by the uri loader when we fetch the url
 }; 
 
 /* this function will be used by the factory to generate an class access object....*/

@@ -23,6 +23,7 @@
 #include "nsMsgWindow.h"
 #include "nsIURILoader.h"
 #include "nsCURILoader.h"
+#include "nsIDocShell.h"
 #include "nsIScriptGlobalObject.h"
 #include "nsIDOMElement.h"
 #include "nsIDOMWindow.h"
@@ -172,7 +173,11 @@ NS_IMETHODIMP nsMsgWindow::SetRootWebShell(nsIWebShell * aWebShell)
 {
 	mRootWebShell = aWebShell;
   if (mRootWebShell)
-    mRootWebShell->SetParentURIContentListener(this);
+  {
+    nsCOMPtr<nsIDocShell> docShell(do_QueryInterface(mRootWebShell));
+    NS_ENSURE_TRUE(docShell, NS_ERROR_FAILURE);
+    docShell->SetParentURIContentListener(this);
+  }
 	return NS_OK;
 }
 
@@ -194,8 +199,11 @@ NS_IMETHODIMP nsMsgWindow::SetDOMWindow(nsIDOMWindow *aWindow)
 		nsIWebShell *root = mRootWebShell;
 		NS_RELEASE(root); // don't hold reference
     if (mRootWebShell)
-      mRootWebShell->SetParentURIContentListener(this);
-
+    {
+      nsCOMPtr<nsIDocShell> docShell(do_QueryInterface(mRootWebShell));
+      if (docShell)
+        docShell->SetParentURIContentListener(this);
+    }
 
     nsAutoString  webShellName("messagepane");
     nsCOMPtr<nsIWebShell> msgWebShell;
@@ -320,5 +328,27 @@ NS_IMETHODIMP nsMsgWindow::CanHandleContent(const char * aContentType,
     }
   }
 
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsMsgWindow::GetParentContentListener(nsIURIContentListener** aParent)
+{
+  *aParent = nsnull;
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsMsgWindow::SetParentContentListener(nsIURIContentListener* aParent)
+{
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsMsgWindow::GetLoadCookie(nsISupports ** aLoadCookie)
+{
+  *aLoadCookie = nsnull;
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsMsgWindow::SetLoadCookie(nsISupports * aLoadCookie)
+{
   return NS_OK;
 }
