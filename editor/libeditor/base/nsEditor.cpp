@@ -472,7 +472,6 @@ nsEditor::Init(nsIDOMDocument *aDoc, nsIPresShell* aPresShell)
 NS_IMETHODIMP
 nsEditor::EnableUndo(PRBool aEnable)
 {
-  nsITransactionManager *txnMgr = 0;
   nsresult result=NS_OK;
 
   if (PR_TRUE==aEnable)
@@ -481,12 +480,11 @@ nsEditor::EnableUndo(PRBool aEnable)
     {
       result = gCompMgr->CreateInstance(kCTransactionManagerCID,
                                         nsnull,
-                                        nsITransactionManager::GetIID(), (void **)&txnMgr);
-      if (NS_FAILED(result) || !txnMgr) {
+                                        nsITransactionManager::GetIID(), getter_AddRefs(mTxnMgr));
+      if (NS_FAILED(result) || !mTxnMgr) {
         printf("ERROR: Failed to get TransactionManager instance.\n");
         return NS_ERROR_NOT_AVAILABLE;
       }
-      mTxnMgr = do_QueryInterface(txnMgr); // CreateInstance refCounted the instance for us, remember it in an nsCOMPtr
 
 #ifdef DEBUG_WITH_JS_EDITOR_LOG
       nsJSEditorLog *log = new nsJSEditorLog();
