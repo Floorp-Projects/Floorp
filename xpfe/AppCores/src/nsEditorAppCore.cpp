@@ -80,13 +80,17 @@
 #include "nsWidgetsCID.h"
 #include "nsIClipboard.h"
 #include "nsITransferable.h"
+#include "nsIGenericTransferable.h"
 #include "nsIDataFlavor.h"
 #include "nsISupportsArray.h"
 
 // Drag & Drop, Clipboard Support
 static NS_DEFINE_IID(kIClipboardIID,    NS_ICLIPBOARD_IID);
 static NS_DEFINE_IID(kIDataFlavorIID,   NS_IDATAFLAVOR_IID);
+static NS_DEFINE_IID(kCDataFlavorCID,   NS_DATAFLAVOR_CID);
 static NS_DEFINE_CID(kCClipboardCID,    NS_CLIPBOARD_CID);
+static NS_DEFINE_CID(kIGenericTransferableIID,  NS_IGENERICTRANSFERABLE_IID);
+static NS_DEFINE_CID(kCGenericTransferableCID,  NS_GENERICTRANSFERABLE_CID);
 
 
 /* Define Class IDs */
@@ -1264,9 +1268,9 @@ nsEditorAppCore::ShowClipboard()
   fprintf(fd, "      appCore = new BrowserAppCore();\n");
   fprintf(fd, "      if (appCore != null) {\n");
   fprintf(fd, "        appCore.Init(\"BrowserAppCore\");\n");
-  fprintf(fd, "	      appCore.setContentWindow(window.frames[0]);\n");
-  fprintf(fd, "	      appCore.setWebShellWindow(window);\n");
-  fprintf(fd, "	      appCore.setToolbarWindow(window);\n");
+  fprintf(fd, "	       appCore.setContentWindow(window.frames[0]);\n");
+  fprintf(fd, "	       appCore.setWebShellWindow(window);\n");
+  fprintf(fd, "	       appCore.setToolbarWindow(window);\n");
   fprintf(fd, "        XPAppCoresManager.Add(appCore);  \n");
   fprintf(fd, "      }\n");
   fprintf(fd, "    }\n");
@@ -1290,60 +1294,105 @@ nsEditorAppCore::ShowClipboard()
   strcpy(firstPage, "test0.html");
 
   if (NS_OK == rvv) {
-    nsITransferable * trans;
-    clipboard->GetData(trans);
-    if (nsnull != trans) {
+    // Create generic Transferable for getting the data
+    nsCOMPtr<nsIGenericTransferable> genericTrans;
+    nsresult rv = nsComponentManager::CreateInstance(kCGenericTransferableCID, nsnull, 
+                                                     kIGenericTransferableIID, (void**) getter_AddRefs(genericTrans));
+    if (NS_OK == rv) {
+      // Get the nsITransferable interface for getting the data from the clipboard
+      nsCOMPtr<nsITransferable> trans(do_QueryInterface(genericTrans));
+      if (trans) {
+        nsCOMPtr<nsIDataFlavor> textFlavor;
+        nsCOMPtr<nsIDataFlavor> xifFlavor;
+        nsCOMPtr<nsIDataFlavor> htmlFlavor;
 
-      // Get the transferable list of data flavors
-      nsISupportsArray * dfList;
-      trans->GetTransferDataFlavors(&dfList);
+        // Create the desired DataFlavor for the type of data we want to get out of the transferable
+        rv = nsComponentManager::CreateInstance(kCDataFlavorCID, nsnull, kIDataFlavorIID, (void**) getter_AddRefs(textFlavor));
+        if (NS_OK == rv) {
+          // Initialize the DataFlavor and set it into the GenericTransferable
+          textFlavor->Init(kTextMime, "Text");
+          genericTrans->AddDataFlavor(textFlavor);
+        }
 
-      // Walk through flavors and see which flavor is on the clipboard them on the native clipboard,
-      PRUint32 i;
-      for (i=0;i<dfList->Count();i++) {
-        nsIDataFlavor * df;
-        nsISupports * supports = dfList->ElementAt(i);
-        if (NS_OK == supports->QueryInterface(kIDataFlavorIID, (void **)&df)) {
-          nsString mime;
-          df->GetMimeType(mime);
+        // Create the desired DataFlavor for the type of data we want to get out of the transferable
+        rv = nsComponentManager::CreateInstance(kCDataFlavorCID, nsnull, kIDataFlavorIID, (void**) getter_AddRefs(htmlFlavor));
+        if (NS_OK == rv) {
+          // Initialize the DataFlavor and set it into the GenericTransferable
+          htmlFlavor->Init(kHTMLMime, "HTML");
+          genericTrans->AddDataFlavor(htmlFlavor);
+        }
 
-          void   * data;
-          PRUint32 dataLen;
+        // Create the desired DataFlavor for the type of data we want to get out of the transferable
+        rv = nsComponentManager::CreateInstance(kCDataFlavorCID, nsnull, kIDataFlavorIID, (void**) getter_AddRefs(xifFlavor));
+        if (NS_OK == rv) {
+          // Initialize the DataFlavor and set it into the GenericTransferable
+          xifFlavor->Init(kXIFMime, "XIF");
+          genericTrans->AddDataFlavor(xifFlavor);
+        }
 
-          trans->GetTransferData(df, &data, &dataLen);
-          if (nsnull != data) {
+        // Get the Data from the clipboard
+        clipboard->GetData(trans);
+
+        // Get the transferable list of data flavors
+        nsISupportsArray * dfList;
+        trans->GetTransferDataFlavors(&dfList);
+
+        // Walk through flavors and see which flavor is on the clipboard them on the native clipboard,
+        PRUint32 i;
+        for (i=0;i<dfList->Count();i++) {
+          nsIDataFlavor * df;
+          nsISupports * supports = dfList->ElementAt(i);
+          if (NS_OK == supports->QueryInterface(kIDataFlavorIID, (void **)&df)) {
+            nsString mime;
+            df->GetMimeType(mime);
+
+            void   * data = nsnull;
+            PRUint32 dataLen;
+
             char clipFileName[256];
             sprintf(clipFileName, "clip%d.", i);
+
             if (mime.Equals(kTextMime)) {
+              trans->GetTransferData(textFlavor, &data, &dataLen);
               strcat(clipFileName, "txt");
+
             } else if (mime.Equals(kHTMLMime)) {
-              // Generate html a "text" like in "view source"
-              char htmlsrc[256];
-              strcpy(htmlsrc, clipFileName);
-              strcat(htmlsrc, "txt");
-              GenerateBarItem(fd, htmlsrc, nsAutoString("HTML Src"), data, dataLen);
-              strcat(clipFileName, "html");
+              trans->GetTransferData(htmlFlavor, &data, &dataLen);
+              if (nsnull != data) {
+                // Generate html a "text" like in "view source"
+                char htmlsrc[256];
+                strcpy(htmlsrc, clipFileName);
+                strcat(htmlsrc, "txt");
+                GenerateBarItem(fd, htmlsrc, nsAutoString("HTML Src"), data, dataLen);
+                strcat(clipFileName, "html");
+              }
+
             } else if (mime.Equals(kXIFMime)) {
+              trans->GetTransferData(xifFlavor, &data, &dataLen);
               strcat(clipFileName, "txt");
+
             } else {
+              trans->GetTransferData(textFlavor, &data, &dataLen);
               strcat(clipFileName, "txt");
             }
 
             if (i == 0) {
               strcpy(firstPage, clipFileName);
             }
-            nsAutoString desc;
-            df->GetHumanPresentableName(desc);
-            GenerateBarItem(fd, clipFileName, desc, data, dataLen);
 
+            if (nsnull != data) {
+              nsAutoString desc;
+              df->GetHumanPresentableName(desc);
+              GenerateBarItem(fd, clipFileName, desc, data, dataLen);
+            }
+
+            NS_RELEASE(df);
           }
-          NS_RELEASE(df);
-        }
-        NS_RELEASE(supports);
+          NS_RELEASE(supports);
+        } // for loop
       }
-      NS_RELEASE(trans);
     }
-     nsServiceManager::ReleaseService(kCClipboardCID, clipboard);
+    nsServiceManager::ReleaseService(kCClipboardCID, clipboard);
   }
   fprintf(fd, "	  </toolbar>\n");
   fprintf(fd, "  </toolbox>\n");
