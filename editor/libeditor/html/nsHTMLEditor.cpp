@@ -5384,7 +5384,10 @@ nsHTMLEditor::SetAttributeOrEquivalent(nsIDOMElement * aElement,
       res = GetAttributeValue(aElement, aAttribute, existingValue, &wasSet);
       if (NS_FAILED(res)) return res;
       if (wasSet) {
-        res = RemoveAttribute(aElement, aAttribute);
+        if (aSuppressTransaction)
+          res = aElement->RemoveAttribute(aAttribute);
+        else
+          res = RemoveAttribute(aElement, aAttribute);
       }
     }
     else {
@@ -5400,18 +5403,27 @@ nsHTMLEditor::SetAttributeOrEquivalent(nsIDOMElement * aElement,
         if (NS_FAILED(res)) return res;
         existingValue.Append(NS_LITERAL_STRING(" "));
         existingValue.Append(aValue);
-        res = SetAttribute(aElement, aAttribute, existingValue);
+        if (aSuppressTransaction)
+          res = aElement->SetAttribute(aAttribute, existingValue);
+        else
+          res = SetAttribute(aElement, aAttribute, existingValue);
       }
       else {
         // we have no CSS equivalence for this attribute and it is not the style
         // attribute; let's set it the good'n'old HTML way
-        res = SetAttribute(aElement, aAttribute, aValue);
+        if (aSuppressTransaction)
+          res = aElement->SetAttribute(aAttribute, aValue);
+        else
+          res = SetAttribute(aElement, aAttribute, aValue);
       }
     }
   }
   else {
     // we are not in an HTML+CSS editor; let's set the attribute the HTML way
-    res = SetAttribute(aElement, aAttribute, aValue);
+    if (aSuppressTransaction)
+      res = aElement->SetAttribute(aAttribute, aValue);
+    else
+      res = SetAttribute(aElement, aAttribute, aValue);
   }  
   return res;
 }
@@ -5435,7 +5447,10 @@ nsHTMLEditor::RemoveAttributeOrEquivalent(nsIDOMElement * aElement,
   res = GetAttributeValue(aElement, aAttribute, existingValue, &wasSet);
   if (NS_FAILED(res)) return res;
   if (wasSet) {
-    res = RemoveAttribute(aElement, aAttribute);
+    if (aSuppressTransaction)
+      res = aElement->RemoveAttribute(aAttribute);
+    else
+      res = RemoveAttribute(aElement, aAttribute);
   }
   return res;
 }
