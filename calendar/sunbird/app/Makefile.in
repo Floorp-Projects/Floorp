@@ -44,7 +44,7 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-DIRS		= profile
+#Remove for sunbird DIRS		= profile
 
 PREF_FILES = $(srcdir)/profile/all.js
 
