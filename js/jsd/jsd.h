@@ -637,14 +637,15 @@ jsd_EvaluateUCScriptInStackFrame(JSDContext* jsdc,
                                  JSDStackFrameInfo* jsdframe,
                                  const jschar *bytes, uintN length,
                                  const char *filename, uintN lineno,
-                                 jsval *rval);
+                                 JSBool eatExceptions, jsval *rval);
 
 extern JSBool
 jsd_EvaluateScriptInStackFrame(JSDContext* jsdc,
                                JSDThreadState* jsdthreadstate,
                                JSDStackFrameInfo* jsdframe,
                                const char *bytes, uintN length,
-                               const char *filename, uintN lineno, jsval *rval);
+                               const char *filename, uintN lineno,
+                               JSBool eatExceptions, jsval *rval);
 
 extern JSString*
 jsd_ValToStringInStackFrame(JSDContext* jsdc,

@@ -323,7 +323,8 @@ jsd_EvaluateUCScriptInStackFrame(JSDContext* jsdc,
                                  JSDThreadState* jsdthreadstate,
                                  JSDStackFrameInfo* jsdframe,
                                  const jschar *bytes, uintN length,
-                                 const char *filename, uintN lineno, jsval *rval)
+                                 const char *filename, uintN lineno,
+                                 JSBool eatExceptions, jsval *rval)
 {
     JSBool retval;
     JSBool valid;
@@ -342,12 +343,15 @@ jsd_EvaluateUCScriptInStackFrame(JSDContext* jsdc,
     cx = jsdthreadstate->context;
     JS_ASSERT(cx);
 
-    exceptionState = JS_SaveExceptionState(cx);
+    if (eatExceptions)
+        exceptionState = JS_SaveExceptionState(cx);
+    JS_ClearPendingException(cx);
     jsd_StartingEvalUsingFilename(jsdc, filename);
     retval = JS_EvaluateUCInStackFrame(cx, jsdframe->fp, bytes, length, 
                                        filename, lineno, rval);
     jsd_FinishedEvalUsingFilename(jsdc, filename);
-    JS_RestoreExceptionState(cx, exceptionState);
+    if (eatExceptions)
+        JS_RestoreExceptionState(cx, exceptionState);
 
     return retval;
 }
@@ -357,7 +361,8 @@ jsd_EvaluateScriptInStackFrame(JSDContext* jsdc,
                                JSDThreadState* jsdthreadstate,
                                JSDStackFrameInfo* jsdframe,
                                const char *bytes, uintN length,
-                               const char *filename, uintN lineno, jsval *rval)
+                               const char *filename, uintN lineno,
+                               JSBool eatExceptions, jsval *rval)
 {
     JSBool retval;
     JSBool valid;
@@ -376,12 +381,15 @@ jsd_EvaluateScriptInStackFrame(JSDContext* jsdc,
     cx = jsdthreadstate->context;
     JS_ASSERT(cx);
 
-    exceptionState = JS_SaveExceptionState(cx);
+    if (eatExceptions)
+        exceptionState = JS_SaveExceptionState(cx);
+    JS_ClearPendingException(cx);
     jsd_StartingEvalUsingFilename(jsdc, filename);
     retval = JS_EvaluateInStackFrame(cx, jsdframe->fp, bytes, length,
                                      filename, lineno, rval);
     jsd_FinishedEvalUsingFilename(jsdc, filename);
-    JS_RestoreExceptionState(cx, exceptionState);
+    if (eatExceptions)
+        JS_RestoreExceptionState(cx, exceptionState);
 
     return retval;
 }
