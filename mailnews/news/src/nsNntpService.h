@@ -69,7 +69,7 @@ public:
 protected:
   PRBool WeAreOffline();
 
-  nsresult SetUpNntpUrlForPosting(nsINntpUrl * nntpUrl, const char *newsgroupNames, const char *newshost, char **newsUrlSpec);
+  nsresult SetUpNntpUrlForPosting(nsINntpUrl * nntpUrl, const char *newsgroupNames, const char *newspostingUrl, char **newsUrlSpec);
   nsresult FindHostFromGroup(nsCString &host, nsCString &groupName);
   nsresult FindServerWithNewsgroup(nsCString &host, nsCString &groupName);
   

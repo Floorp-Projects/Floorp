@@ -528,6 +528,7 @@ NS_IMETHODIMP nsNNTPProtocol::Initialize(nsIURI * aURL, nsIMsgWindow *aMsgWindow
     else {
 	    rv = OpenNetworkSocket(m_url, nsnull, ir);
     }
+	NS_ENSURE_SUCCESS(rv,rv);
 	m_nextState = NNTP_LOGIN_RESPONSE;
   }
   else {

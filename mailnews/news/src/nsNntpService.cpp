@@ -591,12 +591,19 @@ nsresult nsNntpService::FindHostFromGroup(nsCString &host, nsCString &groupName)
 }
 
 nsresult 
-nsNntpService::SetUpNntpUrlForPosting(nsINntpUrl *nntpUrl, const char *newsgroupsNames, const char *newshost, char **newsUrlSpec)
+nsNntpService::SetUpNntpUrlForPosting(nsINntpUrl *nntpUrl, const char *newsgroupsNames, const char *newspostingUrl, char **newsUrlSpec)
 {
   nsresult rv = NS_OK;
   NS_ENSURE_ARG_POINTER(nntpUrl);
   NS_ENSURE_ARG_POINTER(newsgroupsNames);
   if (*newsgroupsNames == '\0') return NS_ERROR_FAILURE;
+
+  // XXX TODO rewrite this
+  // instead of using the hostname, we need to keep track of the current server id
+  // if newspostingUrl is non-null, we'll use that to determine the initial currentServer
+  // before we do that, I need to make sure the newspostingUrl we pass in is correct.
+  // until then, it is going to be safer to ignore it and try to determine the posting host
+  // from the newsgroups.
 
   nsCAutoString host;
 
@@ -643,9 +650,6 @@ nsNntpService::SetUpNntpUrlForPosting(nsINntpUrl *nntpUrl, const char *newsgroup
         // theRest is "host/group"
         theRest.Left(currentHost, slashpos);
         theRest.Right(currentGroup, slashpos);
-      }
-      else if (newshost && (*newshost != '\0')) {
-        currentHost.Assign(newshost);
       }
       else {
         // str is "group"
@@ -824,7 +828,7 @@ nsNntpService::GenerateNewsHeaderValsForPosting(const char *newsgroupsList, char
 }
 
 NS_IMETHODIMP
-nsNntpService::PostMessage(nsIFileSpec *fileToPost, const char *newsgroupsNames, const char *newshost, nsIUrlListener * aUrlListener, nsIMsgWindow *aMsgWindow, nsIURI **_retval)
+nsNntpService::PostMessage(nsIFileSpec *fileToPost, const char *newsgroupsNames, const char *newspostingUrl, nsIUrlListener * aUrlListener, nsIMsgWindow *aMsgWindow, nsIURI **_retval)
 {
   NS_ENSURE_ARG_POINTER(aMsgWindow);
   NS_ENSURE_ARG_POINTER(newsgroupsNames);
@@ -843,7 +847,7 @@ nsNntpService::PostMessage(nsIFileSpec *fileToPost, const char *newsgroupsNames,
   NS_ENSURE_SUCCESS(rv,rv);
 
   nsXPIDLCString newsUrlSpec;
-  rv = SetUpNntpUrlForPosting(nntpUrl, newsgroupsNames, newshost, getter_Copies(newsUrlSpec));
+  rv = SetUpNntpUrlForPosting(nntpUrl, newsgroupsNames, newspostingUrl, getter_Copies(newsUrlSpec));
   NS_ENSURE_SUCCESS(rv,rv);
 
   nsCOMPtr<nsIMsgMailNewsUrl> mailnewsurl = do_QueryInterface(nntpUrl, &rv);

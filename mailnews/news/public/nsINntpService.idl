@@ -49,9 +49,9 @@ interface nsINntpService : nsISupports {
    */
   void generateNewsHeaderValsForPosting(in string newsgroupsList, out string newsgroupsHeaderVal, out string newshostHeaderVal);
 
-  nsIURI postMessage (in nsIFileSpec fileToPost, in string newsgroupNames, in string newshostName, in nsIUrlListener aUrlListener, in nsIMsgWindow aMsgWindow);
+  nsIURI postMessage(in nsIFileSpec fileToPost, in string newsgroupNames, in string newspostingUrl, in nsIUrlListener aUrlListener, in nsIMsgWindow aMsgWindow);
 
-  nsIURI getNewNews (in nsINntpIncomingServer nntpServer, in string uri, in boolean getOld, in nsIUrlListener aUrlListener, in nsIMsgWindow aMsgWindow);
+  nsIURI getNewNews(in nsINntpIncomingServer nntpServer, in string uri, in boolean getOld, in nsIUrlListener aUrlListener, in nsIMsgWindow aMsgWindow);
 
   nsIURI cancelMessage(in string cancelURL, in string messageURI, in nsISupports aConsumer, in nsIUrlListener aUrlListener, in nsIMsgWindow aMsgWindow);
  
