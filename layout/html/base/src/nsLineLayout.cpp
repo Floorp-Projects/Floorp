@@ -2648,8 +2648,9 @@ nsLineLayout::TrimTrailingWhiteSpaceIn(PerSpanData* psd,
     }
     else if (!pfd->GetFlag(PFD_ISTEXTFRAME) &&
              !pfd->GetFlag(PFD_SKIPWHENTRIMMINGWHITESPACE)) {
-      // If we hit a frame on the end that's not text and not a placeholder,
-      // then there is no trailing whitespace to trim. Stop the search.
+      // If we hit a frame on the end that we're not supposed to be skipping
+      // (not text, not a placeholder and not a br frame) then there is no
+      // trailing whitespace to trim. Stop the search.
       *aDeltaWidth = 0;
       return PR_TRUE;
     }
