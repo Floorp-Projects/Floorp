@@ -227,7 +227,7 @@ function onReplaceAll()
 
   var finder = Components.classes["@mozilla.org/embedcomp/rangefind;1"].createInstance().QueryInterface(Components.interfaces.nsIFind);
 
-  finder.caseSensitive    = gReplaceDialog.caseSensitive.checked;
+  finder.caseSensitive = gReplaceDialog.caseSensitive.checked;
   finder.findBackwards = gReplaceDialog.searchBackwards.checked;
 
   // Make a range containing the current selection, 
@@ -244,13 +244,18 @@ function onReplaceAll()
   wholeDocRange.selectNodeContents(rootNode);
 
   // And start and end points:
-  var startPt = gEditor.document.createRange();
-  startPt.setStart(wholeDocRange.startContainer, wholeDocRange.startOffset);
-  startPt.setEnd(wholeDocRange.startContainer, wholeDocRange.startOffset);
-
   var endPt = gEditor.document.createRange();
-  endPt.setStart(wholeDocRange.endContainer, wholeDocRange.endOffset);
-  endPt.setEnd(wholeDocRange.endContainer, wholeDocRange.endOffset);
+
+  if (gReplaceDialog.searchBackwards.checked)
+  {
+    endPt.setStart(wholeDocRange.startContainer, wholeDocRange.startOffset);
+    endPt.setEnd(wholeDocRange.startContainer, wholeDocRange.startOffset);
+  }
+  else
+  {
+    endPt.setStart(wholeDocRange.endContainer, wholeDocRange.endOffset);
+    endPt.setEnd(wholeDocRange.endContainer, wholeDocRange.endOffset);
+  }
 
   // Find and replace from here to end of document:
   var foundRange;
@@ -267,25 +272,40 @@ function onReplaceAll()
     selecRange = selection.getRangeAt(0);
   }
 
-  // If wrapping, find from start of document back to start point.
-  selecRange.setStart(wholeDocRange.startContainer, wholeDocRange.startOffset);
-  selecRange.setEnd(wholeDocRange.startContainer, wholeDocRange.startOffset);
-  // Collapse origRange to start:
-  origRange.setEnd(origRange.startContainer, origRange.startOffset);
-  if (gReplaceDialog.wrap.checked)
+  // If no wrapping, then we're done
+  if (!gReplaceDialog.wrap.checked)
+    return;
+
+  // If wrapping, find from start/end of document back to start point.
+  if (gReplaceDialog.searchBackwards.checked)
   {
-    while ((foundRange = finder.Find(findStr, wholeDocRange,
-                                     selecRange, origRange)) != null)
-    {
-      gEditor.selection.removeAllRanges();
-      gEditor.selection.addRange(foundRange);
-      gEditor.insertText(repStr);
-      selection = gEditor.selection;
-      if (selection.rangeCount <= 0) {
-        return;
-      }
-      selecRange = selection.getRangeAt(0);
+    // Collapse origRange to end
+    origRange.setStart(origRange.endContainer, origRange.endOffset);
+    // Set current position to document end
+    selecRange.setEnd(wholeDocRange.endContainer, wholeDocRange.endOffset);
+    selecRange.setStart(wholeDocRange.endContainer, wholeDocRange.endOffset);
+  }
+  else
+  {
+    // Collapse origRange to start
+    origRange.setEnd(origRange.startContainer, origRange.startOffset);
+    // Set current position to document start
+    selecRange.setStart(wholeDocRange.startContainer,
+                        wholeDocRange.startOffset);
+    selecRange.setEnd(wholeDocRange.startContainer, wholeDocRange.startOffset);
+  }
+
+  while ((foundRange = finder.Find(findStr, wholeDocRange,
+                                   selecRange, origRange)) != null)
+  {
+    gEditor.selection.removeAllRanges();
+    gEditor.selection.addRange(foundRange);
+    gEditor.insertText(repStr);
+    selection = gEditor.selection;
+    if (selection.rangeCount <= 0) {
+      return;
     }
+    selecRange = selection.getRangeAt(0);
   }
 }
 
