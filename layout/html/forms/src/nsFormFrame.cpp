@@ -27,6 +27,7 @@
 #undef NS_IMPL_IDS 
 
 #include "nsCOMPtr.h"
+#include "nsXPIDLString.h"
 
 #include "nsID.h"
 
@@ -69,6 +70,7 @@ static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
 #include "nsDocument.h"
 #include "nsIDOMHTMLFormElement.h"
 #include "nsIDOMNSHTMLFormElement.h"
+#include "nsDOMError.h"
 #include "nsHTMLParts.h"
 #include "nsIReflowCommand.h"
 
@@ -624,6 +626,22 @@ nsFormFrame::OnSubmit(nsIPresContext* aPresContext, nsIFrame* aFrame)
           NS_FAILED(result = securityManager->CheckLoadURI(docURL, actionURL))) 
       {
         return result;
+      }
+
+      nsXPIDLCString scheme;
+      if (NS_FAILED(result = actionURL->GetScheme(getter_Copies(scheme))))
+        return result;
+      if (nsCRT::strcmp(scheme, "mailto") == 0) {
+        PRBool enabled;
+        if (NS_FAILED(result = securityManager->IsCapabilityEnabled("UniversalSendMail", 
+                                                                    &enabled)))
+        {
+          return result;
+        }
+        if (!enabled) {
+          // Form submit to a mailto: URI requires the UniversalSendMail privilege
+          return NS_ERROR_DOM_SECURITY_ERR;
+        }
       }
     }
 

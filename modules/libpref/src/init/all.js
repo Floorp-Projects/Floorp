@@ -305,21 +305,7 @@ pref("security.checkxpconnect", true);
 
 pref("signed.applets.codebase_principal_support", false);
 
-pref("security.policy.default.htmlinputelement.value", "sameOrigin");
-
-pref("security.policy.default.htmlimageelement.src", "sameOrigin");
-pref("security.policy.default.htmlimageelement.lowsrc", "sameOrigin");
-
-pref("security.policy.default.location.hash", "sameOrigin");
-pref("security.policy.default.location.host", "sameOrigin");
-pref("security.policy.default.location.hostname", "sameOrigin");
-pref("security.policy.default.location.pathname", "sameOrigin");
-pref("security.policy.default.location.port", "sameOrigin");
-pref("security.policy.default.location.protocol", "sameOrigin");
-pref("security.policy.default.location.search", "sameOrigin");
-pref("security.policy.default.location.tostring", "sameOrigin");
-pref("security.policy.default.nslocation.reload", "sameOrigin");
-pref("security.policy.default.nslocation.replace", "sameOrigin");
+pref("security.policy.default.barprop.visible.write", "UniversalBrowserWrite");
 
 pref("security.policy.default.document.createattribute", "sameOrigin");
 pref("security.policy.default.document.createcdatasection", "sameOrigin");
@@ -365,6 +351,24 @@ pref("security.policy.default.nshtmldocument.writeln", "sameOrigin");
 
 pref("security.policy.default.eventtarget.addeventlistener", "sameOrigin");
 
+pref("security.policy.default.history.current.read", "UniversalBrowserRead");
+pref("security.policy.default.history.next.read", "UniversalBrowserRead");
+pref("security.policy.default.history.previous.read", "UniversalBrowserRead");
+
+pref("security.policy.default.htmlinputelement.value", "sameOrigin");
+
+pref("security.policy.default.htmlimageelement.src", "sameOrigin");
+pref("security.policy.default.htmlimageelement.lowsrc", "sameOrigin");
+
+pref("security.policy.default.location.hash.read", "sameOrigin");
+pref("security.policy.default.location.host.read", "sameOrigin");
+pref("security.policy.default.location.hostname.read", "sameOrigin");
+pref("security.policy.default.location.pathname.read", "sameOrigin");
+pref("security.policy.default.location.port.read", "sameOrigin");
+pref("security.policy.default.location.protocol.read", "sameOrigin");
+pref("security.policy.default.location.search.read", "sameOrigin");
+pref("security.policy.default.location.tostring.read", "sameOrigin");
+
 pref("security.policy.default.navigator.preference.read", "UniversalPreferencesRead");
 pref("security.policy.default.navigator.preference.write", "UniversalPreferencesWrite");
 
@@ -385,6 +389,11 @@ pref("security.policy.default.node.parentnode", "sameOrigin");
 pref("security.policy.default.node.previoussibling", "sameOrigin");
 pref("security.policy.default.node.removechild", "sameOrigin");
 pref("security.policy.default.node.replacechild", "sameOrigin");
+
+pref("security.policy.default.window.innerheight.write", "UniversalBrowserWrite");
+pref("security.policy.default.window.innerwidth.write", "UniversalBrowserWrite");
+pref("security.policy.default.window.outerheight.write", "UniversalBrowserWrite");
+pref("security.policy.default.window.outerwidth.write", "UniversalBrowserWrite");
 
 /* 0=lines, 1=pages, 2=history */
 pref("mousewheel.withnokey.action",0);
