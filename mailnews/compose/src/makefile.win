@@ -30,6 +30,9 @@ EXPORTS=    nsSmtpUrl.h             \
             nsMsgCreate.h \
             nsMsgSendLater.h \
             nsMsgCompUtils.h \
+            nsMsgDeliveryListener.h \
+            nsMsgSend.h \
+            nsMsgAttachmentHandler.h \
 			nsMsgComposeService.h \
 			nsMsgCompose.h \
 			nsMsgCompFields.h \

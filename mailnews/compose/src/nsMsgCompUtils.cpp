@@ -33,6 +33,11 @@
 #include "nsXPIDLString.h"
 #include "nsSpecialSystemDirectory.h"
 
+/* for GET_xxx_PART */
+#include "net.h"
+/* for StrAllocCat */
+#include "xp_str.h"
+
 static NS_DEFINE_CID(kPrefCID, NS_PREF_CID); 
 static NS_DEFINE_CID(kMsgHeaderParserCID, NS_MSGHEADERPARSER_CID); 
 static NS_DEFINE_CID(kMimeURLUtilsCID, NS_IMIME_URLUTILS_CID);
@@ -667,7 +672,7 @@ mime_generate_headers (nsMsgCompFields *fields,
 			while (references && PL_strlen(references) >= 986 && trimAt) {
 				ptr = PL_strchr(trimAt+1, '<');
 				if (ptr)
-				  XP_MEMMOVE(trimAt, ptr, PL_strlen(ptr)+1); // including the
+				  nsCRT::memmove(trimAt, ptr, PL_strlen(ptr)+1); // including the
 				else
 				  break;
 			}
@@ -1007,7 +1012,7 @@ msg_generate_message_id (nsIMsgIdentity *identity)
 		if (host) {
 			const char *s;
 			for (s = ++host; *s; s++)
-				if (!XP_IS_ALPHA(*s) && !XP_IS_DIGIT(*s) &&
+				if (!nsString::IsAlpha(*s) && !nsString::IsDigit(*s) &&
 						*s != '-' && *s != '_' && *s != '.') {
 					host = 0;
 					break;

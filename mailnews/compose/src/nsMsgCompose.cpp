@@ -41,6 +41,7 @@
 #include "nsMsgCreate.h"
 #include "nsMailHeaders.h"
 #include "nsMsgPrompts.h"
+#include "nsMimeTypes.h"
 
 // XXX temporary so we can use the current identity hack -alecf
 #include "nsIMsgMailSession.h"

@@ -25,11 +25,8 @@
 #define _nsMsgTransition_h_
 
 #define   NS_IMPL_IDS
-#include "mimeenc.h"
-#include "xpgetstr.h"
-#include "xp_qsort.h"
-#include "msgcom.h"
 #include "rosetta_mailnews.h"
+#include "msgcom.h"
 #include "nsMsgZapIt.h"
 
 // These are transitional defines that will go away when we 
