@@ -55,8 +55,7 @@ public:
 
   NS_IMETHOD IsSynthetic(PRBool& aResult);
 
-  NS_IMETHOD MapAttributesInto(nsIStyleContext* aContext, 
-                               nsIPresContext* aPresContext);
+  NS_IMETHOD GetAttributeMappingFunction(nsMapAttributesFunc& aMapFunc) const;
 
   NS_IMETHOD List(FILE* out, PRInt32 aIndent) const;
 
@@ -119,14 +118,20 @@ Bullet::Bullet()
 {
 }
 
-NS_IMETHODIMP
-Bullet::MapAttributesInto(nsIStyleContext* aContext, 
-                          nsIPresContext*  aPresContext)
+static void
+MapAttributesInto(nsIHTMLAttributes* aAttributes,
+                  nsIStyleContext* aContext,
+                  nsIPresContext* aPresContext)
 {
-  // Force display to be inline (bullet's are not block level)
   nsStyleDisplay* display = (nsStyleDisplay*)
     aContext->GetMutableStyleData(eStyleStruct_Display);
   display->mDisplay = NS_STYLE_DISPLAY_INLINE;
+}
+
+NS_IMETHODIMP
+Bullet::GetAttributeMappingFunction(nsMapAttributesFunc& aMapFunc) const
+{
+  aMapFunc = &MapAttributesInto;
   return NS_OK;
 }
 

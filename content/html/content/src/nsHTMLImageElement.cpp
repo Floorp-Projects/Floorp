@@ -26,6 +26,7 @@
 #include "nsIStyleContext.h"
 #include "nsStyleConsts.h"
 #include "nsIPresContext.h"
+#include "nsIHTMLAttributes.h"
 
 // XXX nav attrs: suppress
 
@@ -209,13 +210,14 @@ nsHTMLImageElement::AttributeToString(nsIAtom* aAttribute,
   return mInner.AttributeToString(aAttribute, aValue, aResult);
 }
 
-NS_IMETHODIMP
-nsHTMLImageElement::MapAttributesInto(nsIStyleContext* aContext,
-                                      nsIPresContext* aPresContext)
+static void
+MapAttributesInto(nsIHTMLAttributes* aAttributes,
+                  nsIStyleContext* aContext,
+                  nsIPresContext* aPresContext)
 {
-  if (nsnull != mInner.mAttributes) {
+  if (nsnull != aAttributes) {
     nsHTMLValue value;
-    GetAttribute(nsHTMLAtoms::align, value);
+    aAttributes->GetAttribute(nsHTMLAtoms::align, value);
     if (value.GetUnit() == eHTMLUnit_Enumerated) {
       PRUint8 align = value.GetIntValue();
       nsStyleDisplay* display = (nsStyleDisplay*)
@@ -243,10 +245,18 @@ nsHTMLImageElement::MapAttributesInto(nsIStyleContext* aContext,
       }
     }
   }
-  mInner.MapImageAttributesInto(aContext, aPresContext);
-  mInner.MapImageBorderAttributesInto(aContext, aPresContext, nsnull);
-  return mInner.MapAttributesInto(aContext, aPresContext);
+  nsGenericHTMLElement::MapImageAttributesInto(aAttributes, aContext, aPresContext);
+  nsGenericHTMLElement::MapImageBorderAttributesInto(aAttributes, aContext, aPresContext, nsnull);
+  nsGenericHTMLElement::MapCommonAttributesInto(aAttributes, aContext, aPresContext);
 }
+
+NS_IMETHODIMP
+nsHTMLImageElement::GetAttributeMappingFunction(nsMapAttributesFunc& aMapFunc) const
+{
+  aMapFunc = &MapAttributesInto;
+  return NS_OK;
+}
+
 
 NS_IMETHODIMP
 nsHTMLImageElement::HandleDOMEvent(nsIPresContext& aPresContext,

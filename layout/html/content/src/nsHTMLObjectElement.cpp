@@ -222,15 +222,24 @@ nsHTMLObjectElement::AttributeToString(nsIAtom* aAttribute,
   return mInner.AttributeToString(aAttribute, aValue, aResult);
 }
 
-NS_IMETHODIMP
-nsHTMLObjectElement::MapAttributesInto(nsIStyleContext* aContext,
-                                       nsIPresContext* aPresContext)
+static void
+MapAttributesInto(nsIHTMLAttributes* aAttributes,
+                  nsIStyleContext* aContext,
+                  nsIPresContext* aPresContext)
 {
-  mInner.MapImageAlignAttributeInto(aContext, aPresContext);
-  mInner.MapImageAttributesInto(aContext, aPresContext);
-  mInner.MapImageBorderAttributesInto(aContext, aPresContext, nsnull);
-  return mInner.MapAttributesInto(aContext, aPresContext);
+  nsGenericHTMLElement::MapImageAlignAttributeInto(aAttributes, aContext, aPresContext);
+  nsGenericHTMLElement::MapImageAttributesInto(aAttributes, aContext, aPresContext);
+  nsGenericHTMLElement::MapImageBorderAttributesInto(aAttributes, aContext, aPresContext, nsnull);
+  nsGenericHTMLElement::MapCommonAttributesInto(aAttributes, aContext, aPresContext);
 }
+
+NS_IMETHODIMP
+nsHTMLObjectElement::GetAttributeMappingFunction(nsMapAttributesFunc& aMapFunc) const
+{
+  aMapFunc = &MapAttributesInto;
+  return NS_OK;
+}
+
 
 NS_IMETHODIMP
 nsHTMLObjectElement::HandleDOMEvent(nsIPresContext& aPresContext,

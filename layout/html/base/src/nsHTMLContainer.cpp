@@ -296,9 +296,9 @@ nsHTMLContainer::AttributeToString(nsIAtom* aAttribute,
 }
 
 NS_IMETHODIMP
-nsHTMLContainer::MapAttributesInto(nsIStyleContext* aContext, 
-                                   nsIPresContext* aPresContext)
+nsHTMLContainer::GetAttributeMappingFunction(nsMapAttributesFunc& aMapFunc) const
 {
+  NS_ERROR("you must override this method");
   return NS_OK;
 }
 

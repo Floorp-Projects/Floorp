@@ -26,6 +26,8 @@
 #include "nsHTMLIIDs.h"
 #include "nsHTMLAtoms.h"
 #include "nsIPtr.h"
+#include "nsIHTMLAttributes.h"
+#include "nsGenericHTMLElement.h"
 
 // hack, remove when hack in nsTableCol constructor is removed
 static PRInt32 HACKcounter=0;
@@ -35,8 +37,6 @@ static nsIAtom *HACKattribute=nsnull;
 
 
 NS_DEF_PTR(nsIStyleContext);
-
-static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 
 #ifdef NS_DEBUG
 static PRBool gsDebug = PR_FALSE;
@@ -232,9 +232,10 @@ nsTableCell::SetAttribute(nsIAtom* aAttribute, const nsString& aValue,
 
 
 
-NS_IMETHODIMP
-nsTableCell::MapAttributesInto(nsIStyleContext* aContext,
-                               nsIPresContext* aPresContext)
+static void
+MapAttributesInto(nsIHTMLAttributes* aAttributes,
+                  nsIStyleContext* aContext,
+                  nsIPresContext* aPresContext)
 {
   NS_PRECONDITION(nsnull!=aContext, "bad style context arg");
   NS_PRECONDITION(nsnull!=aPresContext, "bad presentation context arg");
@@ -244,7 +245,7 @@ nsTableCell::MapAttributesInto(nsIStyleContext* aContext,
   nsStyleText* textStyle = nsnull;
 
   // align: enum
-  GetAttribute(nsHTMLAtoms::align, value);
+  aAttributes->GetAttribute(nsHTMLAtoms::align, value);
   if (value.GetUnit() == eHTMLUnit_Enumerated) 
   {
     textStyle = (nsStyleText*)aContext->GetMutableStyleData(eStyleStruct_Text);
@@ -252,7 +253,7 @@ nsTableCell::MapAttributesInto(nsIStyleContext* aContext,
   }
   
   // valign: enum
-  GetAttribute(nsHTMLAtoms::valign, value);
+  aAttributes->GetAttribute(nsHTMLAtoms::valign, value);
   if (value.GetUnit() == eHTMLUnit_Enumerated) 
   {
     if (nsnull==textStyle)
@@ -260,13 +261,11 @@ nsTableCell::MapAttributesInto(nsIStyleContext* aContext,
     textStyle->mVerticalAlign.SetIntValue(value.GetIntValue(), eStyleUnit_Enumerated);
   }
 
-  MapBackgroundAttributesInto(aContext, aPresContext);
-
   // width: pixel
   float p2t = aPresContext->GetPixelsToTwips();
   nsStylePosition* pos = (nsStylePosition*)
     aContext->GetMutableStyleData(eStyleStruct_Position);
-  GetAttribute(nsHTMLAtoms::width, widthValue);
+  aAttributes->GetAttribute(nsHTMLAtoms::width, widthValue);
   if (widthValue.GetUnit() == eHTMLUnit_Pixel) {
     nscoord twips = NSIntPixelsToTwips(widthValue.GetPixelValue(), p2t);
     pos->mWidth.SetCoordValue(twips);
@@ -276,7 +275,7 @@ nsTableCell::MapAttributesInto(nsIStyleContext* aContext,
   }
 
   // height: pixel
-  GetAttribute(nsHTMLAtoms::height, value);
+  aAttributes->GetAttribute(nsHTMLAtoms::height, value);
   if (value.GetUnit() == eHTMLUnit_Pixel) {
     nscoord twips = NSIntPixelsToTwips(value.GetPixelValue(), p2t);
     pos->mHeight.SetCoordValue(twips);
@@ -284,7 +283,7 @@ nsTableCell::MapAttributesInto(nsIStyleContext* aContext,
 
   // nowrap
   // nowrap depends on the width attribute, so be sure to handle it after width is mapped!
-  GetAttribute(nsHTMLAtoms::nowrap, value);
+  aAttributes->GetAttribute(nsHTMLAtoms::nowrap, value);
   if (value.GetUnit() == eHTMLUnit_Empty)
   {
     if (widthValue.GetUnit() != eHTMLUnit_Pixel)
@@ -295,68 +294,18 @@ nsTableCell::MapAttributesInto(nsIStyleContext* aContext,
     }
   }
 
+  nsGenericHTMLElement::MapBackgroundAttributesInto(aAttributes, aContext, aPresContext);
+  nsGenericHTMLElement::MapCommonAttributesInto(aAttributes, aContext, aPresContext);
+}
+
+NS_IMETHODIMP
+nsTableCell::GetAttributeMappingFunction(nsMapAttributesFunc& aMapFunc) const
+{
+  aMapFunc = &MapAttributesInto;
   return NS_OK;
 }
 
-void
-nsTableCell::MapBackgroundAttributesInto(nsIStyleContext* aContext,
-                                         nsIPresContext* aPresContext)
-{
-  nsHTMLValue value;
-  nsStyleColor* color=nsnull;
 
-  // background
-  if (NS_CONTENT_ATTR_HAS_VALUE == GetAttribute(nsHTMLAtoms::background, value)) {
-    if (eHTMLUnit_String == value.GetUnit()) {
-      color = (nsStyleColor*)aContext->GetMutableStyleData(eStyleStruct_Color);
-      SetBackgroundFromAttribute(color, &value);
-    }
-  }
-
-  // bgcolor
-  if (NS_CONTENT_ATTR_HAS_VALUE == GetAttribute(nsHTMLAtoms::bgcolor, value)) {
-    if (eHTMLUnit_Color == value.GetUnit()) {
-      if (nsnull==color)
-        color = (nsStyleColor*)aContext->GetMutableStyleData(eStyleStruct_Color);
-      color->mBackgroundColor = value.GetColorValue();
-      color->mBackgroundFlags &= ~NS_STYLE_BG_COLOR_TRANSPARENT;
-    }
-    else if (eHTMLUnit_String == value.GetUnit()) {
-      nsAutoString buffer;
-      value.GetStringValue(buffer);
-      char cbuf[40];
-      buffer.ToCString(cbuf, sizeof(cbuf));
-
-      if (nsnull==color)
-        color = (nsStyleColor*)aContext->GetMutableStyleData(eStyleStruct_Color);
-      NS_ColorNameToRGB(cbuf, &(color->mBackgroundColor));
-      color->mBackgroundFlags &= ~NS_STYLE_BG_COLOR_TRANSPARENT;
-    }
-  }
-}
-
-void nsTableCell::SetBackgroundFromAttribute(nsStyleColor *aColor, nsHTMLValue *aValue)
-{
-  NS_ASSERTION(nsnull!=aColor && nsnull!=aValue, "bad args");
-
-  // Resolve url to an absolute url
-  nsIURL* docURL = nsnull;
-  nsIDocument* doc = mDocument;
-  if (nsnull != doc) {
-    docURL = doc->GetDocumentURL();
-  }
-
-  nsAutoString absURLSpec;
-  nsAutoString spec;
-  aValue->GetStringValue(spec);
-  nsresult rv = NS_MakeAbsoluteURL(docURL, "", spec, absURLSpec);
-  if (nsnull != docURL) {
-    NS_RELEASE(docURL);
-  }
-  aColor->mBackgroundImage = absURLSpec;
-  aColor->mBackgroundFlags &= ~NS_STYLE_BG_IMAGE_NONE;
-  aColor->mBackgroundRepeat = NS_STYLE_BG_REPEAT_XY;
-}
 
 NS_IMETHODIMP
 nsTableCell::AttributeToString(nsIAtom* aAttribute,

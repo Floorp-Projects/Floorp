@@ -112,6 +112,7 @@ public:
   NS_IMETHOD GetAllAttributeNames(nsISupportsArray* aArray,
                                   PRInt32& aCountResult) const;
   NS_IMETHOD GetAttributeCount(PRInt32& aCountResult) const;
+  NS_IMETHOD GetAttributeMappingFunction(nsMapAttributesFunc& aMapFunc) const;
 
   NS_IMETHOD SetID(nsIAtom* aID);
   NS_IMETHOD GetID(nsIAtom*& aResult) const;
@@ -121,9 +122,6 @@ public:
   NS_IMETHOD GetClass(nsIAtom*& aResult) const;
 
   NS_IMETHOD GetStyleRule(nsIStyleRule*& aResult);
-
-  NS_IMETHOD MapAttributesInto(nsIStyleContext* aContext, 
-                               nsIPresContext* aPresContext);
 
   NS_IMETHOD AttributeToString(nsIAtom* aAttribute,
                                nsHTMLValue& aValue,

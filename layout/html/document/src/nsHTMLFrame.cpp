@@ -40,11 +40,11 @@
 #include "nsIPref.h"
 //#include "nsIDocumentWidget.h"
 #include "nsHTMLFrameset.h"
+#include "nsGenericHTMLElement.h"
 class nsHTMLFrame;
 
 static NS_DEFINE_IID(kIWebShellContainerIID, NS_IWEB_SHELL_CONTAINER_IID);
 static NS_DEFINE_IID(kIStreamObserverIID, NS_ISTREAMOBSERVER_IID);
-static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 static NS_DEFINE_IID(kIWebShellIID, NS_IWEB_SHELL_IID);
 static NS_DEFINE_IID(kWebShellCID, NS_WEB_SHELL_CID);
 static NS_DEFINE_IID(kIViewIID, NS_IVIEW_IID);
@@ -183,8 +183,7 @@ public:
                          nsIStyleContext* aStyleContext,
                          nsIFrame*&       aResult);
   NS_IMETHOD List(FILE* out = stdout, PRInt32 aIndent = 0) const;
-  NS_IMETHOD MapAttributesInto(nsIStyleContext* aContext,
-                               nsIPresContext* aPresContext);
+  NS_IMETHOD GetAttributeMappingFunction(nsMapAttributesFunc& aMapFunc) const;
   NS_IMETHOD SetAttribute(nsIAtom* aAttribute, const nsString& aValue,
                           PRBool aNotify);
 
@@ -693,13 +692,22 @@ nsHTMLFrame::SetAttribute(nsIAtom* aAttribute, const nsString& aValue,
 }
 
 
-NS_IMETHODIMP
-nsHTMLFrame::MapAttributesInto(nsIStyleContext* aContext, 
-                               nsIPresContext* aPresContext)
+static void
+MapAttributesInto(nsIHTMLAttributes* aAttributes,
+                  nsIStyleContext* aContext,
+                  nsIPresContext* aPresContext)
 {
-  MapImagePropertiesInto(aContext, aPresContext);
+  nsGenericHTMLElement::MapImageAttributesInto(aAttributes, aContext, aPresContext);
+  nsGenericHTMLElement::MapCommonAttributesInto(aAttributes, aContext, aPresContext);
+}
+
+NS_IMETHODIMP
+nsHTMLFrame::GetAttributeMappingFunction(nsMapAttributesFunc& aMapFunc) const
+{
+  aMapFunc = &MapAttributesInto;
   return NS_OK;
 }
+
 
 PRInt32 nsHTMLFrame::GetMargin(nsIAtom* aType, nsIPresContext* aPresContext) 
 {

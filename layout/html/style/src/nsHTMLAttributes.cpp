@@ -164,14 +164,13 @@ HTMLAttribute::SizeOf(nsISizeOfHandler* aHandler) const
 
 // ----------------
 
-
 class HTMLAttributesImpl: public nsIHTMLAttributes, public nsIStyleRule {
 public:
   void* operator new(size_t size);
   void* operator new(size_t size, nsIArena* aArena);
   void operator delete(void* ptr);
 
-  HTMLAttributesImpl(void);
+  HTMLAttributesImpl(nsMapAttributesFunc aMapFunc);
   HTMLAttributesImpl(const HTMLAttributesImpl& aCopy);
   ~HTMLAttributesImpl(void);
 
@@ -208,11 +207,11 @@ public:
 
   NS_IMETHOD Clone(nsIHTMLAttributes** aInstancePtrResult);
   NS_IMETHOD Reset(void);
+  NS_IMETHOD SetMappingFunction(nsMapAttributesFunc aMapFunc);
 
   // nsIStyleRule 
   NS_IMETHOD Equals(const nsIStyleRule* aRule, PRBool& aResult) const;
-  NS_IMETHOD MapStyleInto(nsIStyleContext* aContext, nsIPresContext* aPresContext, 
-                          nsIContent* aContent);
+  NS_IMETHOD MapStyleInto(nsIStyleContext* aContext, nsIPresContext* aPresContext);
 
   /**
    * Add this object's size information to the sizeof handler.
@@ -229,11 +228,12 @@ protected:
   PRUint32 mInHeap : 1;
   PRUint32 mRefCnt : 31;
 
+  PRInt32       mContentRefCount;
   PRInt32       mCount;
   HTMLAttribute mFirst;
   nsIAtom*      mID;
   nsIAtom*      mClass;
-  PRInt32       mContentRefCount;
+  nsMapAttributesFunc mMapper;
 };
 
 void* HTMLAttributesImpl::operator new(size_t size)
@@ -271,12 +271,13 @@ void HTMLAttributesImpl::operator delete(void* ptr)
 }
 
 
-HTMLAttributesImpl::HTMLAttributesImpl(void)
+HTMLAttributesImpl::HTMLAttributesImpl(nsMapAttributesFunc aMapFunc)
   : mFirst(),
     mCount(0),
     mID(nsnull),
     mClass(nsnull),
-    mContentRefCount(0)
+    mContentRefCount(0),
+    mMapper(aMapFunc)
 {
   NS_INIT_REFCNT();
 }
@@ -286,7 +287,8 @@ HTMLAttributesImpl::HTMLAttributesImpl(const HTMLAttributesImpl& aCopy)
     mCount(aCopy.mCount),
     mID(aCopy.mID),
     mClass(aCopy.mClass),
-    mContentRefCount(0)
+    mContentRefCount(0),
+    mMapper(aCopy.mMapper)
 {
   NS_INIT_REFCNT();
 
@@ -424,7 +426,7 @@ HTMLAttributesImpl::SetAttribute(nsIAtom* aAttribute, const nsString& aValue,
   HTMLAttribute*  last = nsnull;
   HTMLAttribute*  attr = &mFirst;
 
-  if (0 < mCount) {
+  if (nsnull != mFirst.mAttribute) {
     while (nsnull != attr) {
       if (attr->mAttribute == aAttribute) {
         attr->mValue.SetStringValue(aValue);
@@ -477,7 +479,7 @@ HTMLAttributesImpl::SetAttribute(nsIAtom* aAttribute,
   HTMLAttribute*  last = nsnull;
   HTMLAttribute*  attr = &mFirst;
 
-  if (0 < mCount) {
+  if (nsnull != mFirst.mAttribute) {
     while (nsnull != attr) {
       if (attr->mAttribute == aAttribute) {
         attr->mValue = aValue;
@@ -728,15 +730,23 @@ HTMLAttributesImpl::Reset(void)
   mFirst.mNext = nsnull;
   NS_IF_RELEASE(mID);
   NS_IF_RELEASE(mClass);
+  mMapper = nsnull;
   return NS_OK;
 }
 
 NS_IMETHODIMP
-HTMLAttributesImpl::MapStyleInto(nsIStyleContext* aContext, nsIPresContext* aPresContext, 
-                                 nsIContent* aContent)
+HTMLAttributesImpl::SetMappingFunction(nsMapAttributesFunc aMapFunc)
 {
-  if (nsnull != aContent) {
-    ((nsIHTMLContent*)aContent)->MapAttributesInto(aContext, aPresContext);
+  mMapper = aMapFunc;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+HTMLAttributesImpl::MapStyleInto(nsIStyleContext* aContext, nsIPresContext* aPresContext)
+{
+  NS_ASSERTION(nsnull != mMapper, "no mapping function");
+  if (nsnull != mMapper) {
+    (*mMapper)(this, aContext, aPresContext);
   }
   return NS_OK;
 }
@@ -770,13 +780,13 @@ HTMLAttributesImpl::List(FILE* out, PRInt32 aIndent) const
 }
 
 extern NS_HTML nsresult
-  NS_NewHTMLAttributes(nsIHTMLAttributes** aInstancePtrResult)
+  NS_NewHTMLAttributes(nsIHTMLAttributes** aInstancePtrResult, nsMapAttributesFunc aMapFunc)
 {
   if (aInstancePtrResult == nsnull) {
     return NS_ERROR_NULL_POINTER;
   }
 
-  HTMLAttributesImpl  *it = new HTMLAttributesImpl();
+  HTMLAttributesImpl  *it = new HTMLAttributesImpl(aMapFunc);
 
   if (nsnull == it) {
     return NS_ERROR_OUT_OF_MEMORY;

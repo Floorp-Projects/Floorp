@@ -365,6 +365,13 @@ nsHTMLContent::GetAttributeCount(PRInt32& aCount) const
 }
 
 NS_IMETHODIMP
+nsHTMLContent::GetAttributeMappingFunction(nsMapAttributesFunc& aMapFunc) const
+{
+  aMapFunc = nsnull;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 nsHTMLContent::SetID(nsIAtom* aID)
 {
   return NS_OK;
@@ -396,14 +403,6 @@ nsHTMLContent::GetStyleRule(nsIStyleRule*& aResult)
   aResult = nsnull;
   return NS_OK;
 }
-
-NS_IMETHODIMP
-nsHTMLContent::MapAttributesInto(nsIStyleContext* aContext, 
-                                 nsIPresContext* aPresContext)
-{
-  return NS_OK;
-}
-
 
 void nsHTMLContent::ListAttributes(FILE* out) const
 {

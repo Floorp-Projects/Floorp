@@ -208,8 +208,7 @@ public:
                          nsIFrame*&       aResult);
 
   NS_IMETHOD List(FILE* out = stdout, PRInt32 aIndent = 0) const;
-  NS_IMETHOD MapAttributesInto(nsIStyleContext* aContext,
-                               nsIPresContext* aPresContext);
+  NS_IMETHOD GetAttributeMappingFunction(nsMapAttributesFunc& aMapFunc) const;
   NS_IMETHOD SetAttribute(nsIAtom* aAttribute, const nsString& aValue,
                           PRBool aNotify);
 

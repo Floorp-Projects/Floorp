@@ -29,6 +29,8 @@
 #include "nsIContentDelegate.h"
 #include "nsHTMLIIDs.h"
 #include "nsHTMLAtoms.h"
+#include "nsIHTMLAttributes.h"
+#include "nsGenericHTMLElement.h"
 
 static NS_DEFINE_IID(kITableContentIID, NS_ITABLECONTENT_IID);
 
@@ -253,18 +255,19 @@ nsTableRow::SetAttribute(nsIAtom* aAttribute, const nsString& aValue,
   return nsTableContent::SetAttribute(aAttribute, aValue, aNotify);
 }
 
-NS_IMETHODIMP
-nsTableRow::MapAttributesInto(nsIStyleContext* aContext,
-                              nsIPresContext* aPresContext)
+static void
+MapAttributesInto(nsIHTMLAttributes* aAttributes,
+                  nsIStyleContext* aContext,
+                  nsIPresContext* aPresContext)
 {
   NS_PRECONDITION(nsnull!=aContext, "bad style context arg");
   NS_PRECONDITION(nsnull!=aPresContext, "bad presentation context arg");
-  if (nsnull != mAttributes) {
+  if (nsnull != aAttributes) {
     nsHTMLValue value;
     nsStyleText* textStyle = nsnull;
 
     // align: enum
-    GetAttribute(nsHTMLAtoms::align, value);
+    aAttributes->GetAttribute(nsHTMLAtoms::align, value);
     if (value.GetUnit() == eHTMLUnit_Enumerated) 
     {
       textStyle = (nsStyleText*)aContext->GetMutableStyleData(eStyleStruct_Text);
@@ -272,7 +275,7 @@ nsTableRow::MapAttributesInto(nsIStyleContext* aContext,
     }
     
     // valign: enum
-    GetAttribute(nsHTMLAtoms::valign, value);
+    aAttributes->GetAttribute(nsHTMLAtoms::valign, value);
     if (value.GetUnit() == eHTMLUnit_Enumerated) 
     {
       if (nsnull==textStyle)
@@ -281,10 +284,19 @@ nsTableRow::MapAttributesInto(nsIStyleContext* aContext,
     }
 
     //background: color
-    MapBackgroundAttributesInto(aContext, aPresContext);
+    nsGenericHTMLElement::MapBackgroundAttributesInto(aAttributes, aContext, aPresContext);
   }
+  nsGenericHTMLElement::MapCommonAttributesInto(aAttributes, aContext, aPresContext);
+}
+
+NS_IMETHODIMP
+nsTableRow::GetAttributeMappingFunction(nsMapAttributesFunc& aMapFunc) const
+{
+  aMapFunc = &MapAttributesInto;
   return NS_OK;
 }
+
+
 
 NS_IMETHODIMP
 nsTableRow::AttributeToString(nsIAtom* aAttribute,

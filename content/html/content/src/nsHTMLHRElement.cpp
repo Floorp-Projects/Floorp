@@ -26,6 +26,7 @@
 #include "nsIStyleContext.h"
 #include "nsStyleConsts.h"
 #include "nsIPresContext.h"
+#include "nsIHTMLAttributes.h"
 
 static NS_DEFINE_IID(kIDOMHTMLHRElementIID, NS_IDOMHTMLHRELEMENT_IID);
 
@@ -180,14 +181,15 @@ nsHTMLHRElement::AttributeToString(nsIAtom* aAttribute,
   return mInner.AttributeToString(aAttribute, aValue, aResult);
 }
 
-NS_IMETHODIMP
-nsHTMLHRElement::MapAttributesInto(nsIStyleContext* aContext,
-                            nsIPresContext* aPresContext)
+static void
+MapAttributesInto(nsIHTMLAttributes* aAttributes,
+                  nsIStyleContext* aContext,
+                  nsIPresContext* aPresContext)
 {
-  if (nsnull != mInner.mAttributes) {
+  if (nsnull != aAttributes) {
     nsHTMLValue value;
     // align: enum
-    GetAttribute(nsHTMLAtoms::align, value);
+    aAttributes->GetAttribute(nsHTMLAtoms::align, value);
     if (value.GetUnit() == eHTMLUnit_Enumerated) {
       nsStyleText* text = (nsStyleText*)
         aContext->GetMutableStyleData(eStyleStruct_Text);
@@ -198,7 +200,7 @@ nsHTMLHRElement::MapAttributesInto(nsIStyleContext* aContext,
     float p2t = aPresContext->GetPixelsToTwips();
     nsStylePosition* pos = (nsStylePosition*)
       aContext->GetMutableStyleData(eStyleStruct_Position);
-    GetAttribute(nsHTMLAtoms::width, value);
+    aAttributes->GetAttribute(nsHTMLAtoms::width, value);
     if (value.GetUnit() == eHTMLUnit_Pixel) {
       nscoord twips = NSIntPixelsToTwips(value.GetPixelValue(), p2t);
       pos->mWidth.SetCoordValue(twips);
@@ -207,8 +209,16 @@ nsHTMLHRElement::MapAttributesInto(nsIStyleContext* aContext,
       pos->mWidth.SetPercentValue(value.GetPercentValue());
     }
   }
-  return mInner.MapAttributesInto(aContext, aPresContext);
+  nsGenericHTMLElement::MapCommonAttributesInto(aAttributes, aContext, aPresContext);
 }
+
+NS_IMETHODIMP
+nsHTMLHRElement::GetAttributeMappingFunction(nsMapAttributesFunc& aMapFunc) const
+{
+  aMapFunc = &MapAttributesInto;
+  return NS_OK;
+}
+
 
 NS_IMETHODIMP
 nsHTMLHRElement::HandleDOMEvent(nsIPresContext& aPresContext,

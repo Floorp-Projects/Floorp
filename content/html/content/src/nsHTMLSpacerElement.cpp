@@ -26,6 +26,7 @@
 #include "nsIStyleContext.h"
 #include "nsStyleConsts.h"
 #include "nsIPresContext.h"
+#include "nsIHTMLAttributes.h"
 
 // XXX add nsIDOMHTMLSpacer?
 
@@ -158,15 +159,16 @@ nsHTMLSpacerElement::AttributeToString(nsIAtom* aAttribute,
   return mInner.AttributeToString(aAttribute, aValue, aResult);
 }
 
-NS_IMETHODIMP
-nsHTMLSpacerElement::MapAttributesInto(nsIStyleContext* aContext,
-                                       nsIPresContext* aPresContext)
+static void
+MapAttributesInto(nsIHTMLAttributes* aAttributes,
+                  nsIStyleContext* aContext,
+                  nsIPresContext* aPresContext)
 {
-  if (nsnull != mInner.mAttributes) {
+  if (nsnull != aAttributes) {
     nsHTMLValue value;
     nsStyleDisplay* display = (nsStyleDisplay*)
       aContext->GetMutableStyleData(eStyleStruct_Display);
-    GetAttribute(nsHTMLAtoms::align, value);
+    aAttributes->GetAttribute(nsHTMLAtoms::align, value);
     if (eHTMLUnit_Enumerated == value.GetUnit()) {
       switch (value.GetIntValue()) {
       case NS_STYLE_TEXT_ALIGN_LEFT:
@@ -180,7 +182,7 @@ nsHTMLSpacerElement::MapAttributesInto(nsIStyleContext* aContext,
       }
     }
 
-    GetAttribute(nsHTMLAtoms::type, value);
+    aAttributes->GetAttribute(nsHTMLAtoms::type, value);
     if (eHTMLUnit_String == value.GetUnit()) {
       nsAutoString tmp;
       value.GetStringValue(tmp);
@@ -195,8 +197,16 @@ nsHTMLSpacerElement::MapAttributesInto(nsIStyleContext* aContext,
       }
     }
   }
-  return mInner.MapAttributesInto(aContext, aPresContext);
+  nsGenericHTMLElement::MapCommonAttributesInto(aAttributes, aContext, aPresContext);
 }
+
+NS_IMETHODIMP
+nsHTMLSpacerElement::GetAttributeMappingFunction(nsMapAttributesFunc& aMapFunc) const
+{
+  aMapFunc = &MapAttributesInto;
+  return NS_OK;
+}
+
 
 NS_IMETHODIMP
 nsHTMLSpacerElement::HandleDOMEvent(nsIPresContext& aPresContext,
