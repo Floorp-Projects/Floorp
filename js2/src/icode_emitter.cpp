@@ -74,22 +74,28 @@ bool LabelEntry::containsLabel(const StringAtom *label)
     return false;
 }
 
-static bool hasAttribute(const IdentifierList* identifiers, Token::Kind tokenKind)
+// ***** FIX ME! *****
+// The attributes should be evaluated, not pattern-matched against fixed names.
+static bool hasAttribute(const ExprList *attributes, Token::Kind tokenKind)
 {
-    while (identifiers) {
-        if (identifiers->name.tokenKind == tokenKind)
+    while (attributes) {
+        ExprNode *expr = attributes->expr;
+        if (expr->hasKind(ExprNode::identifier) && static_cast<IdentifierExprNode *>(expr)->name.tokenKind == tokenKind)
             return true;
-        identifiers = identifiers->next;
+        attributes = attributes->next;
     }
     return false;
 }
 
-static bool hasAttribute(const IdentifierList* identifiers, StringAtom &name)
+// ***** FIX ME! *****
+// The attributes should be evaluated, not pattern-matched against fixed names.
+static bool hasAttribute(const ExprList *attributes, const StringAtom &name)
 {
-    while (identifiers) {
-        if (identifiers->name == name)
+    while (attributes) {
+        ExprNode *expr = attributes->expr;
+        if (expr->hasKind(ExprNode::identifier) && static_cast<IdentifierExprNode *>(expr)->name == name)
             return true;
-        identifiers = identifiers->next;
+        attributes = attributes->next;
     }
     return false;
 }
@@ -931,7 +937,7 @@ GenericNotBranch:
         }
         break;
 
-    case ExprNode::at:
+    case ExprNode::As:
         {
             BinaryExprNode *b = static_cast<BinaryExprNode *>(p);
             // for now, just handle simple identifiers on the rhs.
@@ -989,11 +995,13 @@ ICodeModule *ICodeGenerator::genFunction(FunctionDefinition &function, bool isSt
             if (v->name && (v->name->getKind() == ExprNode::identifier)) {
                 JSType *pType = mContext->extractType(v->type);
                 TypedRegister r = icg.allocateParameter((static_cast<IdentifierExprNode *>(v->name))->name, (v->initializer != NULL), pType);
+#if 0 // *****
                 IdentifierList *a = v->aliases;
                 while (a) {
                     icg.parameterList->add(a->name, r, (v->initializer != NULL));
                     a = a->next;
                 }
+#endif
                 // every unnamed parameter is also named with it's positional name
                 if (unnamed) {
                     positionalCount++;
@@ -1055,21 +1063,10 @@ ICodeModule *ICodeGenerator::genFunction(FunctionDefinition &function, bool isSt
         if (superclass) {
             bool foundSuperCall = false;
             BlockStmtNode *b = function.body;
-            if (b && b->statements && (b->statements->getKind() == StmtNode::expression)) {
+            if (b && b->statements && (b->statements->hasKind(StmtNode::expression))) {
                 ExprStmtNode *e = static_cast<ExprStmtNode *>(b->statements);
-                if (e->expr->getKind() == ExprNode::call) {
-                    InvokeExprNode *i = static_cast<InvokeExprNode *>(e->expr);
-                    if (i->op->getKind() == ExprNode::dot) {
-                        BinaryExprNode *b = static_cast<BinaryExprNode *>(i->op);
-                        if ((b->op1->getKind() == ExprNode::This) && (b->op2->getKind() == ExprNode::qualify)) {
-                            BinaryExprNode *q = static_cast<BinaryExprNode *>(b->op2);
-                            if (q->op1->getKind() == ExprNode::Super) {
-                                // XXX verify that q->op2 is either the superclass name or a constructor for it
-                                foundSuperCall = true;
-                            }
-                        }
-                    }
-                }
+                if (e->expr->hasKind(ExprNode::superStmt))
+                    foundSuperCall = true; // ***** FIX ME ***** There are other forms of super-call.
             }
             if (!foundSuperCall) {         // invoke the default superclass constructor
                 icg.call(icg.bindThis(thisValue, icg.getStatic(superclass, superclass->getName())), args);
@@ -1099,7 +1096,6 @@ JSTypes::Operator simpleLookup[ExprNode::kindsEnd] = {
    JSTypes::None,                    // True,
    JSTypes::None,                    // False,
    JSTypes::None,                    // This,
-   JSTypes::None,                    // Super,
    JSTypes::None,                    // parentheses,
    JSTypes::None,                    // numUnit,
    JSTypes::None,                    // exprUnit,
@@ -1113,10 +1109,12 @@ JSTypes::Operator simpleLookup[ExprNode::kindsEnd] = {
    JSTypes::None,                    // dot,
    JSTypes::None,                    // dotClass,
    JSTypes::None,                    // dotParen,
-   JSTypes::None,                    // at,
+   JSTypes::None,                    // superExpr,
+   JSTypes::None,                    // superStmt,
+   JSTypes::None,                    // Const,
    JSTypes::None,                    // Delete,
+   JSTypes::None,                    // Void,
    JSTypes::None,                    // Typeof,
-   JSTypes::None,                    // Eval,
    JSTypes::None,                    // preIncrement,
    JSTypes::None,                    // preDecrement,
    JSTypes::None,                    // postIncrement,
@@ -1147,6 +1145,7 @@ JSTypes::Operator simpleLookup[ExprNode::kindsEnd] = {
    JSTypes::None,                    // greaterThanOrEqual,
    JSTypes::SpittingImage,           // identical,
    JSTypes::None,                    // notIdentical,
+   JSTypes::None,                    // As,
    JSTypes::In,                      // In,
    JSTypes::None,                    // Instanceof,
    JSTypes::None,                    // assignment,

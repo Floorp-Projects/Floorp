@@ -87,7 +87,7 @@ ICodeModule* Context::compileFunction(const String &source)
     Arena a;
     String filename = widenCString("Some source source");
     Parser p(getWorld(), a, source, filename);
-    ExprNode* e = p.parseExpression(false);
+    ExprNode* e = p.parseListExpression(false);
     ASSERT(e->getKind() == ExprNode::functionLiteral);
     FunctionExprNode* f = static_cast<FunctionExprNode*>(e);
     ICodeGenerator icg(this, NULL, NULL, ICodeGenerator::kIsTopLevel, extractType(f->function.resultType));
@@ -107,9 +107,9 @@ ICodeModule* Context::compileFunction(const String &source)
 JSValue Context::readEvalFile(FILE* in, const String& fileName)
 {
     String buffer;
-	int ch;
-	while ((ch = getc(in)) != EOF)
-		buffer += static_cast<char>(ch);
+    int ch;
+    while ((ch = getc(in)) != EOF)
+        buffer += static_cast<char>(ch);
     
     JSValues emptyArgs;
     JSValue result;
@@ -119,18 +119,18 @@ JSValue Context::readEvalFile(FILE* in, const String& fileName)
         Parser p(getWorld(), a, buffer, fileName);
         StmtNode *parsedStatements = p.parseProgram();
 /*******/
-		ASSERT(p.lexer.peek(true).hasKind(Token::end));
+        ASSERT(p.lexer.peek(true).hasKind(Token::end));
         {
             PrettyPrinter f(stdOut, 30);
             {
-            	PrettyPrinter::Block b(f, 2);
+                PrettyPrinter::Block b(f, 2);
                 f << "Program =";
                 f.linearBreak(1);
                 StmtNode::printStatements(f, parsedStatements);
             }
             f.end();
         }
-    	stdOut << '\n';
+        stdOut << '\n';
 /*******/
 
         // Generate code for parsedStatements, which is a linked 
@@ -207,37 +207,37 @@ struct Linkage : public Context::Frame, public gc_base {
     }
 };
 
-static JSValue shiftLeft_Default(Context *cx, const JSValue& r1, const JSValue& r2)
+static JSValue shiftLeft_Default(Context *, const JSValue& r1, const JSValue& r2)
 {
     JSValue num1(r1.toInt32());
     JSValue num2(r2.toUInt32());
     return JSValue(num1.i32 << (num2.u32 & 0x1F));
 }
-static JSValue shiftRight_Default(Context *cx, const JSValue& r1, const JSValue& r2)
+static JSValue shiftRight_Default(Context *, const JSValue& r1, const JSValue& r2)
 {
     JSValue num1(r1.toInt32());
     JSValue num2(r2.toUInt32());
     return JSValue(num1.i32 >> (num2.u32 & 0x1F));
 }
-static JSValue UshiftRight_Default(Context *cx, const JSValue& r1, const JSValue& r2)
+static JSValue UshiftRight_Default(Context *, const JSValue& r1, const JSValue& r2)
 {
     JSValue num1(r1.toUInt32());
     JSValue num2(r2.toUInt32());
     return JSValue(num1.u32 >> (num2.u32 & 0x1F));
 }
-static JSValue and_Default(Context *cx, const JSValue& r1, const JSValue& r2)
+static JSValue and_Default(Context *, const JSValue& r1, const JSValue& r2)
 {
     JSValue num1(r1.toInt32());
     JSValue num2(r2.toInt32());
     return JSValue(num1.i32 & num2.i32);
 }
-static JSValue or_Default(Context *cx, const JSValue& r1, const JSValue& r2)
+static JSValue or_Default(Context *, const JSValue& r1, const JSValue& r2)
 {
     JSValue num1(r1.toInt32());
     JSValue num2(r2.toInt32());
     return JSValue(num1.i32 | num2.i32);
 }
-static JSValue xor_Default(Context *cx, const JSValue& r1, const JSValue& r2)
+static JSValue xor_Default(Context *, const JSValue& r1, const JSValue& r2)
 {
     JSValue num1(r1.toInt32());
     JSValue num2(r2.toInt32());
@@ -272,50 +272,50 @@ static JSValue add_Default(Context *cx, const JSValue& r1, const JSValue& r2)
     }
 }
 
-static JSValue subtract_Default(Context *cx, const JSValue& r1, const JSValue& r2)
+static JSValue subtract_Default(Context *, const JSValue& r1, const JSValue& r2)
 {
     JSValue num1(r1.toNumber());
     JSValue num2(r2.toNumber());
     return JSValue(num1.f64 - num2.f64);
 }
-static JSValue multiply_Default(Context *cx, const JSValue& r1, const JSValue& r2)
+static JSValue multiply_Default(Context *, const JSValue& r1, const JSValue& r2)
 {
     JSValue num1(r1.toNumber());
     JSValue num2(r2.toNumber());
     return JSValue(num1.f64 * num2.f64);
 }
-static JSValue divide_Default(Context *cx, const JSValue& r1, const JSValue& r2)
+static JSValue divide_Default(Context *, const JSValue& r1, const JSValue& r2)
 {
     JSValue num1(r1.toNumber());
     JSValue num2(r2.toNumber());
     return JSValue(num1.f64 / num2.f64);
 }
-static JSValue remainder_Default(Context *cx, const JSValue& r1, const JSValue& r2)
+static JSValue remainder_Default(Context *, const JSValue& r1, const JSValue& r2)
 {
     JSValue num1(r1.toNumber());
     JSValue num2(r2.toNumber());
     return JSValue(fmod(num1.f64, num2.f64));
 }
-static JSValue predecrement_Default(Context *cx, const JSValue& r)
+static JSValue predecrement_Default(Context *, const JSValue& r)
 {
     JSValue num(r.toNumber());
     return JSValue(num.f64 - 1.0);
 }
-static JSValue preincrement_Default(Context *cx, const JSValue& r)
+static JSValue preincrement_Default(Context *, const JSValue& r)
 {
     JSValue num(r.toNumber());
     return JSValue(num.f64 + 1.0);
 }
-static JSValue plus_Default(Context *cx, const JSValue& r)
+static JSValue plus_Default(Context *, const JSValue& r)
 {
     return JSValue(r.toNumber());
 }
-static JSValue minus_Default(Context *cx, const JSValue& r)
+static JSValue minus_Default(Context *, const JSValue& r)
 {
     JSValue num(r.toNumber());
     return JSValue(-num.f64);
 }
-static JSValue complement_Default(Context *cx, const JSValue& r)
+static JSValue complement_Default(Context *, const JSValue& r)
 {
     JSValue num(r.toInt32());
     return JSValue(~num.i32);
@@ -392,7 +392,7 @@ static JSValue equal_Default(Context *cx, const JSValue& r1, const JSValue& r2)
     }
     return kFalseValue;
 }
-static JSValue identical_Default(Context *cx, const JSValue& r1, const JSValue& r2)
+static JSValue identical_Default(Context *, const JSValue& r1, const JSValue& r2)
 {
     if (r1.getType() != r2.getType())
         return kFalseValue;
@@ -971,7 +971,7 @@ JSValue Context::interpret(ICodeModule* iCode, const JSValues& args)
                         if (getter->isNative()) {
                             JSValues argv(2);
                             argv[0] = kNullValue;
-							argv[1] = getter;
+                            argv[1] = getter;
                             JSValue result = static_cast<JSNativeFunction*>(getter)->mCode(this, argv);
                             if (dst(ln).first != NotARegister)
                                 (*registers)[dst(ln).first] = result;

@@ -39,7 +39,7 @@
 #include "hash.h"
 
 namespace JavaScript {
-    
+
 //
 // String atom management
 //
@@ -48,24 +48,19 @@ namespace JavaScript {
 // StringAtoms A and B have the same character sequences if and only if A and
 // B are the same StringAtom.
 
-    class StringAtom : public String {
+    class StringAtom: public String {
       public:
         // Token::Kind if this is a keyword; Token::identifier if not
         Token::Kind tokenKind;
         
-        explicit StringAtom(const String &s) :
-                String(s), tokenKind(Token::identifier) {}
+        explicit StringAtom(const String &s): String(s), tokenKind(Token::identifier) {}
       private:
         StringAtom(const StringAtom&);      // No copy constructor
         void operator=(const StringAtom&);  // No assignment operator
     };
     
-    inline bool operator==(const StringAtom &s1, const StringAtom &s2) {
-        return &s1 == &s2;
-    }
-    inline bool operator!=(const StringAtom &s1, const StringAtom &s2) {
-        return &s1 != &s2;
-    }
+    inline bool operator==(const StringAtom &s1, const StringAtom &s2) {return &s1 == &s2;}
+    inline bool operator!=(const StringAtom &s1, const StringAtom &s2) {return &s1 != &s2;}
 
     class StringAtomTable {
         typedef HashTable<StringAtom, const String&> HT;
@@ -73,10 +68,7 @@ namespace JavaScript {
         
       public:
         StringAtom &operator[](const String &s);
-        
-        StringAtom &operator[](const char *s) {
-            return operator[](widenCString(s));
-        }
+        StringAtom &operator[](const char *s) {return operator[](widenCString(s));}
     };    
     
     class World {

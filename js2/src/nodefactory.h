@@ -60,10 +60,6 @@ namespace JavaScript {
         Identifier(const Token &t) {
             return new(getArena()) IdentifierExprNode(t);
         }
-        static IdentifierList *
-        ListedIdentifier(String &name) {
-            return new(getArena()) IdentifierList(*new StringAtom(name));
-        }
 #if 0
         static QualifiedIdentifierNode
         QualifiedIdentifier(Node qualifier, IdentifierNode identifier ) {
