@@ -43,7 +43,23 @@ public class ScriptOrFnNode extends Node {
 
     public final VariableTable getVariableTable() { return variableTable; }
 
+    public final String getSourceName() { return sourceName; }
+
+    public final void setSourceName(String sourceName) {
+        // One time action
+        if (sourceName == null || this.sourceName != null)
+            Context.codeBug();
+        this.sourceName = sourceName;
+    }
+
     public final String getEncodedSource() { return encodedSource; }
+
+    public final void setEncodedSource(String encodedSource) {
+        // One time action
+        if (encodedSource == null || this.encodedSource != null)
+            Context.codeBug();
+        this.encodedSource = encodedSource;
+    }
 
     public final String getOriginalSource() { return originalSource; }
 
@@ -54,11 +70,21 @@ public class ScriptOrFnNode extends Node {
         this.originalSource = originalSource;
     }
 
-    public final String getSourceName() { return sourceName; }
-
     public final int getBaseLineno() { return baseLineno; }
 
+    public final void setBaseLineno(int lineno) {
+        // One time action
+        if (lineno < 0 || baseLineno >= 0) Context.codeBug();
+        baseLineno = lineno;
+    }
+
     public final int getEndLineno() { return baseLineno; }
+
+    public final void setEndLineno(int lineno) {
+        // One time action
+        if (lineno < 0 || endLineno >= 0) Context.codeBug();
+        endLineno = lineno;
+    }
 
     public final int getFunctionCount() {
         if (functions == null) { return 0; }
@@ -102,13 +128,20 @@ public class ScriptOrFnNode extends Node {
         return (regexps.size() - 2) / 2;
     }
 
+    public final int getLocalCount() { return localCount; }
+
+    public final void incrementLocalCount() {
+        ++localCount;
+    }
+
     VariableTable variableTable;
-    String encodedSource;
+    private String encodedSource;
     private String originalSource;
-    String sourceName;
-    int baseLineno = -1;
-    int endLineno = -1;
+    private String sourceName;
+    private int baseLineno = -1;
+    private int endLineno = -1;
     private ObjArray functions;
     private ObjArray regexps;
+    private int localCount;
 
 }

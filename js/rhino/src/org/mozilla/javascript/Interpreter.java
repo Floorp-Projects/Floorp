@@ -423,7 +423,7 @@ public class Interpreter {
                     child = child.getNext();
                     childCount++;
                 }
-                if (node.getProp(Node.SPECIALCALL_PROP) != null) {
+                if (node.getIntProp(Node.SPECIALCALL_PROP, 0) != 0) {
                     // embed line number and source filename
                     iCodeTop = addByte(TokenStream.CALLSPECIAL, iCodeTop);
                     iCodeTop = addShort(itsLineNumber, iCodeTop);

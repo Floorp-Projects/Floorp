@@ -58,10 +58,10 @@ public class IRFactory {
     {
         ScriptOrFnNode result = new ScriptOrFnNode(TokenStream.SCRIPT);
         result.variableTable = vars;
-        result.encodedSource = source;
-        result.sourceName = sourceName;
-        result.baseLineno = baseLineno;
-        result.endLineno = endLineno;
+        result.setEncodedSource(source);
+        result.setSourceName(sourceName);
+        result.setBaseLineno(baseLineno);
+        result.setEndLineno(endLineno);
 
         Node children = ((Node) body).getFirstChild();
         if (children != null) { result.addChildrenToBack(children); }
@@ -213,10 +213,10 @@ public class IRFactory {
         }
         FunctionNode f = compiler.createFunctionNode(this, name);
         f.variableTable = vars;
-        f.encodedSource = source;
-        f.sourceName = sourceName;
-        f.baseLineno = baseLineno;
-        f.endLineno = endLineno;
+        f.setEncodedSource(source);
+        f.setSourceName(sourceName);
+        f.setBaseLineno(baseLineno);
+        f.setEndLineno(endLineno);
         f.setFunctionType(functionType);
         f.addChildToBack((Node)statements);
         Node result = Node.newString(TokenStream.FUNCTION, name);

@@ -286,7 +286,6 @@ public class Node implements Cloneable {
         SPECIAL_PROP_PROP = 16,
         LABEL_PROP        = 17,
         FINALLY_PROP      = 18,
-        LOCALCOUNT_PROP   = 19,
     /*
         the following properties are defined and manipulated by the
         optimizer -
@@ -301,13 +300,13 @@ public class Node implements Cloneable {
                           matches.
     */
 
-        TARGETBLOCK_PROP  = 20,
-        VARIABLE_PROP     = 21,
-        LASTUSE_PROP      = 22,
-        ISNUMBER_PROP     = 23,
-        DIRECTCALL_PROP   = 24,
+        TARGETBLOCK_PROP  = 19,
+        VARIABLE_PROP     = 20,
+        LASTUSE_PROP      = 21,
+        ISNUMBER_PROP     = 22,
+        DIRECTCALL_PROP   = 23,
 
-        SPECIALCALL_PROP  = 25;
+        SPECIALCALL_PROP  = 24;
 
     public static final int    // this value of the ISNUMBER_PROP specifies
         BOTH = 0,               // which of the children are Number types
@@ -337,7 +336,6 @@ public class Node implements Cloneable {
                 case SPECIAL_PROP_PROP:  return "special_prop";
                 case LABEL_PROP:         return "label";
                 case FINALLY_PROP:       return "finally";
-                case LOCALCOUNT_PROP:    return "localcount";
 
                 case TARGETBLOCK_PROP:   return "targetblock";
                 case VARIABLE_PROP:      return "variable";

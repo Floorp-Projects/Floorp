@@ -121,11 +121,6 @@ class OptFunctionNode extends FunctionNode {
         itsContainsCalls = true;
     }
 
-    void incrementLocalCount() {
-        int localCount = getIntProp(Node.LOCALCOUNT_PROP, 0);
-        putIntProp(Node.LOCALCOUNT_PROP, localCount + 1);
-    }
-
     int getVarCount() {
         return optVars.length;
     }

@@ -1358,7 +1358,7 @@ public class Codegen extends Interpreter {
 
         // These locals are to be pre-allocated since they need function scope.
         // They are primarily used by the exception handling mechanism
-        int localCount = tree.getIntProp(Node.LOCALCOUNT_PROP, 0);
+        int localCount = tree.getLocalCount();
         if (localCount != 0) {
             itsLocalAllocationBase = (short)(argsLocal + 1);
             for (int i = 0; i < localCount; i++) {
@@ -1926,7 +1926,7 @@ public class Codegen extends Interpreter {
         if (firstArgDone && (type == TokenStream.NEW))
             constructArgArray(childCount - argSkipCount);
 
-        boolean isSpecialCall = node.getProp(Node.SPECIALCALL_PROP) != null;
+        boolean isSpecialCall = node.getIntProp(Node.SPECIALCALL_PROP, 0) != 0;
         boolean isSimpleCall = false;
         String simpleCallName = null;
         if (!firstArgDone && type != TokenStream.NEW) {

@@ -63,8 +63,9 @@ public class NodeTransformer {
         loops = new ObjArray();
         loopEnds = new ObjArray();
         inFunction = tree.getType() == TokenStream.FUNCTION;
-        VariableTable vars = getVariableTable(tree);
+        VariableTable vars = tree.getVariableTable();
         if (inFunction) {
+            Node stmts = tree.getLastChild();
             FunctionNode fn = (FunctionNode)tree;
             if (fn.getFunctionType() == FunctionNode.FUNCTION_EXPRESSION) {
                 String name = fn.getFunctionName();
@@ -77,14 +78,20 @@ public class NodeTransformer {
                     // function to initialize a local variable of the
                     // function's name to the function value.
                     vars.addLocal(name);
-                    Node block = tree.getLastChild();
                     Node setFn = new Node(TokenStream.POP,
                                     new Node(TokenStream.SETVAR,
                                         Node.newString(name),
                                         new Node(TokenStream.PRIMARY,
                                                  TokenStream.THISFN)));
-                    block.addChildrenToFront(setFn);
+                    stmts.addChildrenToFront(setFn);
                 }
+            }
+            // Add return to end if needed.
+            Node lastStmt = stmts.getLastChild();
+            if (lastStmt == null ||
+                lastStmt.getType() != TokenStream.RETURN)
+            {
+                stmts.addChildToBack(new Node(TokenStream.RETURN));
             }
             fn.markVariableTableReady();
         }
@@ -101,17 +108,7 @@ public class NodeTransformer {
             switch (type) {
 
               case TokenStream.FUNCTION:
-                if (node == tree) {
-                    // Add return to end if needed.
-                    Node stmts = node.getLastChild();
-                    Node lastStmt = stmts.getLastChild();
-                    if (lastStmt == null ||
-                        lastStmt.getType() != TokenStream.RETURN)
-                    {
-                        stmts.addChildToBack(new Node(TokenStream.RETURN));
-                    }
-
-                } else {
+                if (node != tree) {
                     FunctionNode
                         fnNode = (FunctionNode)node.getProp(Node.FUNCTION_PROP);
                     if (inFunction) {
@@ -217,10 +214,8 @@ public class NodeTransformer {
                 break;
               }
 
-              case TokenStream.NEWLOCAL : {
-                    int localCount = tree.getIntProp(Node.LOCALCOUNT_PROP, 0);
-                    tree.putIntProp(Node.LOCALCOUNT_PROP, localCount + 1);
-                }
+              case TokenStream.NEWLOCAL :
+                  tree.incrementLocalCount();
                 break;
 
               case TokenStream.LOOP:
@@ -251,8 +246,7 @@ public class NodeTransformer {
                     loops.push(node);
                     loopEnds.push(finallytarget);
                 }
-                int localCount = tree.getIntProp(Node.LOCALCOUNT_PROP, 0);
-                tree.putIntProp(Node.LOCALCOUNT_PROP, localCount + 1);
+                tree.incrementLocalCount();
                 break;
               }
 
@@ -368,13 +362,13 @@ public class NodeTransformer {
 
               case TokenStream.CALL:
                 if (isSpecialCallName(tree, node))
-                    node.putProp(Node.SPECIALCALL_PROP, Boolean.TRUE);
+                    node.putIntProp(Node.SPECIALCALL_PROP, 1);
                 visitCall(node, tree);
                 break;
 
               case TokenStream.NEW:
                 if (isSpecialCallName(tree, node))
-                    node.putProp(Node.SPECIALCALL_PROP, Boolean.TRUE);
+                    node.putIntProp(Node.SPECIALCALL_PROP, 1);
                 visitNew(node, tree);
                 break;
 
@@ -395,7 +389,7 @@ public class NodeTransformer {
                 Node right = node.getLastChild();
                 String string = left.getString();
                 String flags = (left != right) ? right.getString() : null;
-                int index = ((ScriptOrFnNode)tree).addRegexp(string, flags);
+                int index = tree.addRegexp(string, flags);
                 Node n = new Node(TokenStream.REGEXP);
                 iter.replaceCurrent(n);
                 n.putIntProp(Node.REGEXP_PROP, index);
@@ -519,7 +513,7 @@ public class NodeTransformer {
         }
         boolean addGetThis = false;
         if (left.getType() == TokenStream.NAME) {
-            VariableTable vars = getVariableTable(tree);
+            VariableTable vars = tree.getVariableTable();
             String name = left.getString();
             if (inFunction && vars.hasVariable(name) && !inWithStatement()) {
                 // call to a var. Transform to Call(GetVar("a"), b, c)
@@ -604,10 +598,6 @@ public class NodeTransformer {
             return true;
         }
         return false;
-    }
-
-    protected VariableTable getVariableTable(Node tree) {
-        return ((ScriptOrFnNode)tree).getVariableTable();
     }
 
     private void
