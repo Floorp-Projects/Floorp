@@ -583,6 +583,7 @@ sub print_javascript {
       margin: -5em 0 0 -5em;
       }
     .who#popup{
+      border: 0px;
       height: 8em;
       width: 16em;
       }
