@@ -9,10 +9,19 @@
       <handler event="keypress" key=" ">
       <![CDATA[
         var v = document.commandDispatcher.focusedElement;
-			
-			  if (v && (v.localName == 'TEXTAREA'))
-			    return true;
-       
+        if (v && (v.localName == 'TEXTAREA')) {
+          return true;
+        }
+        if (v && v.localName == 'INPUT') {
+          var str = v.getAttribute('type').toLowerCase();
+          if (str == 'button' || str == 'submit' || str == 'reset') {
+            return true;
+          }
+          str = v.getAttribute('TYPE').toLowerCase();
+          if (str == 'button' || str == 'submit' || str == 'reset') {
+            return true;
+          }
+        }
         var controller =
           document.commandDispatcher.getControllerForCommand('cmd_scrollPageDown');
           controller.doCommand('cmd_scrollPageDown');
@@ -20,7 +29,6 @@
         return true;
       ]]>
       </handler>
-      
       <handler event="keypress" keycode="VK_PAGE_UP" command="cmd_scrollPageUp"/>
       <handler event="keypress" keycode="VK_PAGE_DOWN" command="cmd_scrollPageDown"/>
       

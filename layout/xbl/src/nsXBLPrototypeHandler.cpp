@@ -271,6 +271,7 @@ nsXBLPrototypeHandler::ExecuteHandler(nsIDOMEventReceiver* aReceiver, nsIDOMEven
       mHandlerElement->GetAttribute(kNameSpaceID_None, kOnCommandAtom, handlerText);
       if (handlerText.IsEmpty())
         return NS_ERROR_FAILURE; // For whatever reason, they didn't give us anything to do.
+ aEvent->PreventDefault(); // Preventing default for XUL key handlers
     }
   }
   
