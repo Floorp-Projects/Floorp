@@ -5,3 +5,7 @@
 <!ENTITY  closeTab.accesskey         "c">
 <!ENTITY  closeOtherTabs.label   "Close Other Tabs">
 <!ENTITY  closeOtherTabs.accesskey         "o">
+<!ENTITY  reloadAllTabs.label    "Reload All Tabs">
+<!ENTITY  reloadAllTabs.accesskey         "a">
+<!ENTITY  reloadTab.label        "Reload Tab">
+<!ENTITY  reloadTab.accesskey         "r">
