@@ -31,6 +31,7 @@ LIBRARY_NAME	= raptorxbl_s
 
 CPPSRCS		= \
     nsXBLBinding.cpp \
+    nsXBLEventHandler.cpp \
 		nsXBLService.cpp \
 		$(NULL)
 
