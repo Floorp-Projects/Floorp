@@ -109,24 +109,38 @@ nsDeque& nsDeque::Erase() {
  * @param   anItem: new item to be added to deque
  * @return  nada
  */
+nsDeque& nsDeque::GrowCapacity(void) {
+  void** temp=new void*[mCapacity+eGrowthDelta];
+
+  //Here's the interesting part: You can't just move the elements
+  //directy (in situ) from the old buffer to the new one.
+  //Since capacity has changed, the old origin doesn't make
+  //sense anymore. It's better to resequence the elements now.
+  
+  int tempi=0;
+  int i=0;
+  int j=0;
+  for(i=mOrigin;i<mCapacity;i++) temp[tempi++]=mData[i]; //copy the leading elements...
+  for(j=0;j<mOrigin;j++) temp[tempi++]=mData[j];         //copy the trailing elements...
+  mCapacity+=eGrowthDelta;
+  mOrigin=0;       //now realign the origin...
+  delete[]mData;
+  mData=temp;
+  return *this;
+}
+
+/**
+ * This method adds an item to the end of the deque. 
+ * This operation has the potential to cause the 
+ * underlying buffer to resize.
+ *
+ * @update	gess4/18/98
+ * @param   anItem: new item to be added to deque
+ * @return  nada
+ */
 nsDeque& nsDeque::Push(void* anItem) {
   if(mSize==mCapacity) {
-    void** temp=new void*[mCapacity+eGrowthDelta];
-
-    //Here's the interesting part: You can't just move the elements
-    //directy (in situ) from the old buffer to the new one.
-    //Since capacity has changed, the old origin doesn't make
-    //sense anymore. It's better to resequence the elements now.
-    
-    int tempi=0;
-    int i=0;
-    int j=0;
-    for(i=mOrigin;i<mCapacity;i++) temp[tempi++]=mData[i]; //copy the leading elements...
-    for(j=0;j<mOrigin;j++) temp[tempi++]=mData[j];         //copy the trailing elements...
-    mCapacity+=eGrowthDelta;
-    mOrigin=0;       //now realign the origin...
-    delete[]mData;
-    mData=temp;
+    GrowCapacity();
   }
   int offset=mOrigin+mSize;
   if(offset<mCapacity)
@@ -135,7 +149,6 @@ nsDeque& nsDeque::Push(void* anItem) {
   mSize++;
   return *this;
 }
-
 
 /**
  * This method adds an item to the front of the deque. 
@@ -147,14 +160,16 @@ nsDeque& nsDeque::Push(void* anItem) {
  * @return  nada
  */
 nsDeque& nsDeque::PushFront(void* anItem) {
-  if(mOrigin>0) {
-    mOrigin-=1;
-    mData[mOrigin]=anItem;
-    mSize++;
+  if(mSize==mCapacity) {
+    GrowCapacity();
   }
-  else {
-    Push(anItem);
-    mOrigin=mSize-1;
+  if(0==mOrigin){  //case1: [xxx..]
+    mOrigin=mCapacity-mSize++;
+    mData[mOrigin]=anItem;
+  }
+  else if(mCapacity==(mOrigin+mSize-1)){ //case2: [..xxx] and case3: [.xxx.]
+    mData[--mOrigin]=anItem;
+    mSize++;
   }
   return *this;
 }

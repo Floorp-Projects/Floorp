@@ -252,6 +252,8 @@ private:
    */
   nsDeque& operator=(const nsDeque& anOther);
 
+  nsDeque&  GrowCapacity(void);
+
 };
 
 /******************************************************
@@ -400,6 +402,7 @@ public:
   const void* FirstThat(nsDequeFunctor& aFunctor) const;
 
   protected:
+
         PRInt32         mIndex;
         const nsDeque&  mDeque;
 };
