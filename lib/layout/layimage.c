@@ -2604,7 +2604,7 @@ static void
 lo_image_pixmap_update(MWContext *context, LO_ImageStruct *lo_image,
                        IL_Rect *update_rect)
 {
-#ifdef XP_WIN
+#if defined(XP_WIN) || defined(XP_MAC)
 	IL_ImageReq *image_req = NULL;	// See below at the end of the function.
 #endif
 
@@ -2638,7 +2638,7 @@ lo_image_pixmap_update(MWContext *context, LO_ImageStruct *lo_image,
         }
     }
 
-#ifdef XP_WIN
+#if defined(XP_WIN) || defined(XP_MAC)
 	
 	// This is a hack in the update event to allow RDF images to get updates
 	// even though they have no compositors in their contexts.
