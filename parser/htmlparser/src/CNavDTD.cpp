@@ -953,7 +953,7 @@ nsresult CNavDTD::WillHandleStartTag(CToken* aToken,eHTMLTags aTag,nsCParserNode
             theScanner->SetDocumentCharset(theValue);
           } //if
         }
-      }
+      } //if
 #ifdef NS_DEBUG
       else if(theKey.EqualsIgnoreCase("NAME")) {
         const nsString& theValue1=aNode.GetValueAt(0);
@@ -966,9 +966,9 @@ nsresult CNavDTD::WillHandleStartTag(CToken* aToken,eHTMLTags aTag,nsCParserNode
           } //if
         } //if
       } //else
+#endif
     } //if
   }//if
-#endif
 
   //XXX Hack until I get the node observer API in place...
   //**********************************************************
