@@ -53,6 +53,7 @@
 #include "nsIHTMLCSSStyleSheet.h"
 #include "nsIHTMLContentContainer.h"
 #include "nsIHTMLStyleSheet.h"
+#include "nsICSSLoader.h"
 #include "nsIJSScriptObject.h"
 #include "nsINameSpace.h"
 #include "nsINameSpaceManager.h"
@@ -118,6 +119,7 @@ static NS_DEFINE_IID(kIDocumentIID,               NS_IDOCUMENT_IID);
 static NS_DEFINE_IID(kIHTMLContentContainerIID,   NS_IHTMLCONTENTCONTAINER_IID);
 static NS_DEFINE_IID(kIHTMLStyleSheetIID,         NS_IHTML_STYLE_SHEET_IID);
 static NS_DEFINE_IID(kIHTMLCSSStyleSheetIID,      NS_IHTML_CSS_STYLE_SHEET_IID);
+static NS_DEFINE_IID(kICSSLoaderIID,              NS_ICSS_LOADER_IID);
 static NS_DEFINE_IID(kIJSScriptObjectIID,         NS_IJSSCRIPTOBJECT_IID);
 static NS_DEFINE_IID(kINameSpaceManagerIID,       NS_INAMESPACEMANAGER_IID);
 static NS_DEFINE_IID(kIParserIID,                 NS_IPARSER_IID);
@@ -147,6 +149,7 @@ static NS_DEFINE_CID(kCSSParserCID,              NS_CSSPARSER_CID);
 static NS_DEFINE_CID(kDOMScriptObjectFactoryCID, NS_DOM_SCRIPT_OBJECT_FACTORY_CID);
 static NS_DEFINE_CID(kHTMLStyleSheetCID,         NS_HTMLSTYLESHEET_CID);
 static NS_DEFINE_CID(kHTMLCSSStyleSheetCID,      NS_HTML_CSS_STYLESHEET_CID);
+static NS_DEFINE_CID(kCSSLoaderCID,              NS_CSS_LOADER_CID);
 static NS_DEFINE_CID(kNameSpaceManagerCID,       NS_NAMESPACEMANAGER_CID);
 static NS_DEFINE_CID(kParserCID,                 NS_PARSER_IID); // XXX
 static NS_DEFINE_CID(kPresShellCID,              NS_PRESSHELL_CID);
@@ -470,9 +473,12 @@ public:
     virtual PRInt32 GetIndexOfStyleSheet(nsIStyleSheet* aSheet);
 
     virtual void AddStyleSheet(nsIStyleSheet* aSheet);
+    NS_IMETHOD InsertStyleSheetAt(nsIStyleSheet* aSheet, PRInt32 aIndex, PRBool aNotify);
 
     virtual void SetStyleSheetDisabledState(nsIStyleSheet* aSheet,
                                             PRBool mDisabled);
+
+    NS_IMETHOD GetCSSLoader(nsICSSLoader*& aLoader);
 
     virtual nsIScriptContextOwner *GetScriptContextOwner();
 
@@ -745,6 +751,7 @@ protected:
     nsINameSpaceManager*       mNameSpaceManager;  // [OWNER] 
     nsIHTMLStyleSheet*         mAttrStyleSheet;    // [OWNER] 
     nsCOMPtr<nsIHTMLCSSStyleSheet> mInlineStyleSheet;
+    nsICSSLoader*              mCSSLoader;
     nsElementMap               mResources;
     nsISupportsArray*          mBuilders;        // [OWNER] of array, elements shouldn't own this, but they do
     nsIRDFContentModelBuilder* mXULBuilder;     // [OWNER] 
@@ -783,6 +790,7 @@ XULDocumentImpl::XULDocumentImpl(void)
       mDisplaySelection(PR_FALSE),
       mNameSpaceManager(nsnull),
       mAttrStyleSheet(nsnull),
+      mCSSLoader(nsnull),
       mBuilders(nsnull),
       mXULBuilder(nsnull),
       mLocalDataSource(nsnull),
@@ -895,6 +903,7 @@ XULDocumentImpl::~XULDocumentImpl()
     NS_IF_RELEASE(mXULBuilder);
     NS_IF_RELEASE(mSelection);
     NS_IF_RELEASE(mAttrStyleSheet);
+    NS_IF_RELEASE(mCSSLoader);
     NS_IF_RELEASE(mRootContent);
     NS_IF_RELEASE(mDocumentURLGroup);
     NS_IF_RELEASE(mDocumentURL);
@@ -1080,6 +1089,13 @@ XULDocumentImpl::PrepareToLoad( nsCOMPtr<nsIParser>* created_parser,
     nsresult rv;
 
     mDocumentTitle.Truncate();
+
+    NS_IF_RELEASE(mDocumentURL);
+    NS_IF_RELEASE(mDocumentURLGroup);
+
+		mDocumentURL = syntheticURL;
+		NS_ADDREF(mDocumentURL);
+    syntheticURL->GetURLGroup(&mDocumentURLGroup);
 
     SetDocumentURLAndGroup(syntheticURL);
 
@@ -1639,7 +1655,21 @@ XULDocumentImpl::AddStyleSheet(nsIStyleSheet* aSheet)
     if (!aSheet)
         return;
 
-    mStyleSheets.AppendElement(aSheet);
+    if (aSheet == mAttrStyleSheet) {  // always first
+      mStyleSheets.InsertElementAt(aSheet, 0);
+    }
+    else if (aSheet == mInlineStyleSheet) {  // always last
+      mStyleSheets.AppendElement(aSheet);
+    }
+    else {
+      if (mInlineStyleSheet == mStyleSheets.ElementAt(mStyleSheets.Count() - 1)) {
+        // keep attr sheet last
+        mStyleSheets.InsertElementAt(aSheet, mStyleSheets.Count() - 1);
+      }
+      else {
+        mStyleSheets.AppendElement(aSheet);
+      }
+    }
     NS_ADDREF(aSheet);
 
     aSheet->SetOwningDocument(this);
@@ -1661,12 +1691,51 @@ XULDocumentImpl::AddStyleSheet(nsIStyleSheet* aSheet)
         }
 
         // XXX should observers be notified for disabled sheets??? I think not, but I could be wrong
-        count = mObservers.Count();
-        for (index = 0; index < count; index++) {
+        for (index = 0; index < mObservers.Count(); index++) {
             nsIDocumentObserver*  observer = (nsIDocumentObserver*)mObservers.ElementAt(index);
             observer->StyleSheetAdded(this, aSheet);
+            if (observer != (nsIDocumentObserver*)mObservers.ElementAt(index)) {
+              index--;
+            }
         }
     }
+}
+
+NS_IMETHODIMP
+XULDocumentImpl::InsertStyleSheetAt(nsIStyleSheet* aSheet, PRInt32 aIndex, PRBool aNotify)
+{
+  NS_PRECONDITION(nsnull != aSheet, "null ptr");
+  mStyleSheets.InsertElementAt(aSheet, aIndex + 1); // offset by one for attribute sheet
+
+  NS_ADDREF(aSheet);
+  aSheet->SetOwningDocument(this);
+
+  PRBool enabled = PR_TRUE;
+  aSheet->GetEnabled(enabled);
+
+  PRInt32 count;
+  PRInt32 index;
+  if (enabled) {
+    count = mPresShells.Count();
+    for (index = 0; index < count; index++) {
+      nsIPresShell* shell = (nsIPresShell*)mPresShells.ElementAt(index);
+      nsCOMPtr<nsIStyleSet> set;
+      shell->GetStyleSet(getter_AddRefs(set));
+      if (set) {
+        set->AddDocStyleSheet(aSheet, this);
+      }
+    }
+  }
+  if (aNotify) {  // notify here even if disabled, there may have been others that weren't notified
+    for (index = 0; index < mObservers.Count(); index++) {
+      nsIDocumentObserver*  observer = (nsIDocumentObserver*)mObservers.ElementAt(index);
+      observer->StyleSheetAdded(this, aSheet);
+      if (observer != (nsIDocumentObserver*)mObservers.ElementAt(index)) {
+        index--;
+      }
+    }
+  }
+  return NS_OK;
 }
 
 void 
@@ -1695,11 +1764,31 @@ XULDocumentImpl::SetStyleSheetDisabledState(nsIStyleSheet* aSheet,
         }
     }  
 
-    count = mObservers.Count();
-    for (index = 0; index < count; index++) {
+    for (index = 0; index < mObservers.Count(); index++) {
         nsIDocumentObserver*  observer = (nsIDocumentObserver*)mObservers.ElementAt(index);
         observer->StyleSheetDisabledStateChanged(this, aSheet, aDisabled);
+        if (observer != (nsIDocumentObserver*)mObservers.ElementAt(index)) {
+          index--;
+        }
     }
+}
+
+NS_IMETHODIMP
+XULDocumentImpl::GetCSSLoader(nsICSSLoader*& aLoader)
+{
+  nsresult result = NS_OK;
+  if (! mCSSLoader) {
+    result = nsComponentManager::CreateInstance(kCSSLoaderCID,
+                                                nsnull,
+                                                kICSSLoaderIID,
+                                                (void**)&mCSSLoader);
+    if (NS_SUCCEEDED(result)) {
+      result = mCSSLoader->Init(this);
+    }
+  }
+  aLoader = mCSSLoader;
+  NS_IF_ADDREF(aLoader);
+  return result;
 }
 
 nsIScriptContextOwner *
@@ -1752,10 +1841,13 @@ XULDocumentImpl::RemoveObserver(nsIDocumentObserver* aObserver)
 NS_IMETHODIMP 
 XULDocumentImpl::BeginLoad()
 {
-    PRInt32 i, count = mObservers.Count();
-    for (i = 0; i < count; i++) {
+    PRInt32 i;
+    for (i = 0; i < mObservers.Count(); i++) {
         nsIDocumentObserver* observer = (nsIDocumentObserver*) mObservers[i];
         observer->BeginLoad(this);
+        if (observer != (nsIDocumentObserver*)mObservers.ElementAt(i)) {
+          i--;
+        }
     }
     return NS_OK;
 }
@@ -1765,10 +1857,13 @@ XULDocumentImpl::EndLoad()
 {
     StartLayout();
 
-    PRInt32 i, count = mObservers.Count();
-    for (i = 0; i < count; i++) {
+    PRInt32 i;
+    for (i = 0; i < mObservers.Count(); i++) {
         nsIDocumentObserver* observer = (nsIDocumentObserver*) mObservers[i];
         observer->EndLoad(this);
+        if (observer != (nsIDocumentObserver*)mObservers.ElementAt(i)) {
+          i--;
+        }
     }
     return NS_OK;
 }
@@ -1778,10 +1873,13 @@ NS_IMETHODIMP
 XULDocumentImpl::ContentChanged(nsIContent* aContent,
                               nsISupports* aSubContent)
 {
-    PRInt32 count = mObservers.Count();
-    for (PRInt32 i = 0; i < count; i++) {
+    PRInt32 i;
+    for (i = 0; i < mObservers.Count(); i++) {
         nsIDocumentObserver*  observer = (nsIDocumentObserver*)mObservers[i];
         observer->ContentChanged(this, aContent, aSubContent);
+        if (observer != (nsIDocumentObserver*)mObservers.ElementAt(i)) {
+          i--;
+        }
     }
     return NS_OK;
 }
@@ -1789,10 +1887,13 @@ XULDocumentImpl::ContentChanged(nsIContent* aContent,
 NS_IMETHODIMP 
 XULDocumentImpl::ContentStatesChanged(nsIContent* aContent1, nsIContent* aContent2)
 {
-    PRInt32 count = mObservers.Count();
-    for (PRInt32 i = 0; i < count; i++) {
+    PRInt32 i;
+    for (i = 0; i < mObservers.Count(); i++) {
         nsIDocumentObserver*  observer = (nsIDocumentObserver*)mObservers[i];
         observer->ContentStatesChanged(this, aContent1, aContent2);
+        if (observer != (nsIDocumentObserver*)mObservers.ElementAt(i)) {
+          i--;
+        }
     }
     return NS_OK;
 }
@@ -1802,10 +1903,13 @@ XULDocumentImpl::AttributeChanged(nsIContent* aChild,
                                 nsIAtom* aAttribute,
                                 PRInt32 aHint)
 {
-    PRInt32 count = mObservers.Count();
-    for (PRInt32 i = 0; i < count; i++) {
+    PRInt32 i;
+    for (i = 0; i < mObservers.Count(); i++) {
         nsIDocumentObserver*  observer = (nsIDocumentObserver*)mObservers[i];
         observer->AttributeChanged(this, aChild, aAttribute, aHint);
+        if (observer != (nsIDocumentObserver*)mObservers.ElementAt(i)) {
+          i--;
+        }
     }
     return NS_OK;
 }
@@ -1814,10 +1918,13 @@ NS_IMETHODIMP
 XULDocumentImpl::ContentAppended(nsIContent* aContainer,
                                PRInt32 aNewIndexInContainer)
 {
-    PRInt32 count = mObservers.Count();
-    for (PRInt32 i = 0; i < count; i++) {
+    PRInt32 i;
+    for (i = 0; i < mObservers.Count(); i++) {
         nsIDocumentObserver*  observer = (nsIDocumentObserver*)mObservers[i];
         observer->ContentAppended(this, aContainer, aNewIndexInContainer);
+        if (observer != (nsIDocumentObserver*)mObservers.ElementAt(i)) {
+          i--;
+        }
     }
     return NS_OK;
 }
@@ -1828,10 +1935,13 @@ XULDocumentImpl::ContentInserted(nsIContent* aContainer,
                                PRInt32 aIndexInContainer)
 {
     
-    PRInt32 count = mObservers.Count();
-    for (PRInt32 i = 0; i < count; i++) {
+    PRInt32 i;
+    for (i = 0; i < mObservers.Count(); i++) {
         nsIDocumentObserver*  observer = (nsIDocumentObserver*)mObservers[i];
         observer->ContentInserted(this, aContainer, aChild, aIndexInContainer);
+        if (observer != (nsIDocumentObserver*)mObservers.ElementAt(i)) {
+          i--;
+        }
     }
     return NS_OK;
 }
@@ -1842,11 +1952,14 @@ XULDocumentImpl::ContentReplaced(nsIContent* aContainer,
                                nsIContent* aNewChild,
                                PRInt32 aIndexInContainer)
 {
-    PRInt32 count = mObservers.Count();
-    for (PRInt32 i = 0; i < count; i++) {
+    PRInt32 i;
+    for (i = 0; i < mObservers.Count(); i++) {
         nsIDocumentObserver*  observer = (nsIDocumentObserver*)mObservers[i];
         observer->ContentReplaced(this, aContainer, aOldChild, aNewChild,
                                   aIndexInContainer);
+        if (observer != (nsIDocumentObserver*)mObservers.ElementAt(i)) {
+          i--;
+        }
     }
     return NS_OK;
 }
@@ -1856,11 +1969,14 @@ XULDocumentImpl::ContentRemoved(nsIContent* aContainer,
                               nsIContent* aChild,
                               PRInt32 aIndexInContainer)
 {
-    PRInt32 count = mObservers.Count();
-    for (PRInt32 i = 0; i < count; i++) {
+    PRInt32 i;
+    for (i = 0; i < mObservers.Count(); i++) {
         nsIDocumentObserver*  observer = (nsIDocumentObserver*)mObservers[i];
         observer->ContentRemoved(this, aContainer, 
                                  aChild, aIndexInContainer);
+        if (observer != (nsIDocumentObserver*)mObservers.ElementAt(i)) {
+          i--;
+        }
     }
     return NS_OK;
 }
@@ -1870,10 +1986,13 @@ XULDocumentImpl::StyleRuleChanged(nsIStyleSheet* aStyleSheet,
                               nsIStyleRule* aStyleRule,
                               PRInt32 aHint)
 {
-    PRInt32 count = mObservers.Count();
-    for (PRInt32 i = 0; i < count; i++) {
+    PRInt32 i;
+    for (i = 0; i < mObservers.Count(); i++) {
         nsIDocumentObserver*  observer = (nsIDocumentObserver*)mObservers[i];
         observer->StyleRuleChanged(this, aStyleSheet, aStyleRule, aHint);
+        if (observer != (nsIDocumentObserver*)mObservers.ElementAt(i)) {
+          i--;
+        }
     }
     return NS_OK;
 }
@@ -1882,10 +2001,13 @@ NS_IMETHODIMP
 XULDocumentImpl::StyleRuleAdded(nsIStyleSheet* aStyleSheet,
                             nsIStyleRule* aStyleRule)
 {
-    PRInt32 count = mObservers.Count();
-    for (PRInt32 i = 0; i < count; i++) {
+    PRInt32 i;
+    for (i = 0; i < mObservers.Count(); i++) {
         nsIDocumentObserver*  observer = (nsIDocumentObserver*)mObservers[i];
         observer->StyleRuleAdded(this, aStyleSheet, aStyleRule);
+        if (observer != (nsIDocumentObserver*)mObservers.ElementAt(i)) {
+          i--;
+        }
     }
     return NS_OK;
 }
@@ -1894,10 +2016,13 @@ NS_IMETHODIMP
 XULDocumentImpl::StyleRuleRemoved(nsIStyleSheet* aStyleSheet,
                               nsIStyleRule* aStyleRule)
 {
-    PRInt32 count = mObservers.Count();
-    for (PRInt32 i = 0; i < count; i++) {
+    PRInt32 i;
+    for (i = 0; i < mObservers.Count(); i++) {
         nsIDocumentObserver*  observer = (nsIDocumentObserver*)mObservers[i];
         observer->StyleRuleRemoved(this, aStyleSheet, aStyleRule);
+        if (observer != (nsIDocumentObserver*)mObservers.ElementAt(i)) {
+          i--;
+        }
     }
     return NS_OK;
 }
