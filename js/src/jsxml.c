@@ -90,6 +90,33 @@
  * - see also XXXbe
  */
 
+static struct {
+    jsrefcount  qname;
+    jsrefcount  qnameobj;
+    jsrefcount  liveqname;
+    jsrefcount  liveqnameobj;
+    jsrefcount  namespace;
+    jsrefcount  namespaceobj;
+    jsrefcount  livenamespace;
+    jsrefcount  livenamespaceobj;
+    jsrefcount  xml;
+    jsrefcount  xmlobj;
+    jsrefcount  livexml;
+    jsrefcount  livexmlobj;
+} xml_stats;
+
+#ifdef DEBUG_brendan
+#define METERING        1
+#endif
+
+#ifdef METERING
+#define METER(x)        JS_ATOMIC_INCREMENT(&(x))
+#define UNMETER(x)      JS_ATOMIC_DECREMENT(&(x))
+#else
+#define METER(x)        /* nothing */
+#define UNMETER(x)      /* nothing */
+#endif
+
 /*
  * Random utilities and global functions.
  */
@@ -136,6 +163,7 @@ namespace_finalize(JSContext *cx, JSObject *obj)
         ns->object = NULL;
         js_DestroyXMLNamespace(cx, ns);
     }
+    UNMETER(xml_stats.livenamespaceobj);
 }
 
 static void
@@ -257,14 +285,18 @@ js_NewXMLNamespace(JSContext *cx, JSString *prefix, JSString *uri)
     ns->object = NULL;
     ns->prefix = prefix;
     ns->uri = uri;
+    METER(xml_stats.namespace);
+    METER(xml_stats.livenamespace);
     return ns;
 }
 
 void
 js_DestroyXMLNamespace(JSContext *cx, JSXMLNamespace *ns)
 {
-    if (!ns->object)
-        JS_free(cx, ns);
+    if (ns->object)
+        return;
+    JS_free(cx, ns);
+    UNMETER(xml_stats.livenamespace);
 }
 
 JSObject *
@@ -298,6 +330,8 @@ js_GetXMLNamespaceObject(JSContext *cx, JSXMLNamespace *ns)
         return NULL;
     }
     ns->object = obj;
+    METER(xml_stats.namespaceobj);
+    METER(xml_stats.livenamespaceobj);
     return obj;
 }
 
@@ -318,6 +352,7 @@ qname_finalize(JSContext *cx, JSObject *obj)
         qn->object = NULL;
         js_DestroyXMLQName(cx, qn);
     }
+    UNMETER(xml_stats.liveqnameobj);
 }
 
 static void
@@ -450,14 +485,18 @@ js_NewXMLQName(JSContext *cx, JSString *uri, JSString *prefix,
     qn->uri = uri;
     qn->prefix = prefix;
     qn->localName = localName;
+    METER(xml_stats.qname);
+    METER(xml_stats.liveqname);
     return qn;
 }
 
 void
 js_DestroyXMLQName(JSContext *cx, JSXMLQName *qn)
 {
-    if (!qn->object)
-        JS_free(cx, qn);
+    if (qn->object)
+        return;
+    JS_free(cx, qn);
+    UNMETER(xml_stats.liveqname);
 }
 
 JSObject *
@@ -492,6 +531,8 @@ js_GetXMLQNameObject(JSContext *cx, JSXMLQName *qn)
         return NULL;
     }
     qn->object = obj;
+    METER(xml_stats.qnameobj);
+    METER(xml_stats.liveqnameobj);
     return obj;
 }
 
@@ -604,6 +645,8 @@ Namespace(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
             return JS_FALSE;
         *rval = OBJECT_TO_JSVAL(obj);
     }
+    METER(xml_stats.namespaceobj);
+    METER(xml_stats.livenamespaceobj);
 
     /*
      * Create and connect private data to rooted obj early, so we don't have
@@ -703,6 +746,8 @@ QName(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
             return JS_FALSE;
         *rval = OBJECT_TO_JSVAL(obj);
     }
+    METER(xml_stats.qnameobj);
+    METER(xml_stats.liveqnameobj);
 
     if (isQName) {
         /* If namespace is not specified and name is a QName, clone it. */
@@ -1046,6 +1091,7 @@ ToXML(JSContext *cx, jsval v)
         }
 
         if (clasp->flags & JSCLASS_W3C_XML_INFO_ITEM) {
+            JS_ASSERT(0);
         }
 
         if (clasp != &js_StringClass &&
@@ -1885,6 +1931,8 @@ ToAttributeName(JSContext *cx, jsval v)
         return NULL;
     }
     qn->object = obj;
+    METER(xml_stats.qnameobj);
+    METER(xml_stats.liveqnameobj);
     return qn;
 }
 
@@ -3427,6 +3475,7 @@ xml_finalize(JSContext *cx, JSObject *obj)
             xml->object = NULL;
         js_DestroyXML(cx, xml);
     }
+    UNMETER(xml_stats.livexmlobj);
 }
 
 static void
@@ -3680,7 +3729,7 @@ xml_callMethod(JSContext *cx, JSObject *obj, jsid id, uintN argc, jsval *argv,
     fp = cx->fp;
 
 retry:
-    /* 11.2.2.1 Step 3(d). */
+    /* 11.2.2.1 Step 3(d) onward. */
     if (!js_GetProperty(cx, OBJ_GET_PROTO(cx, obj), id, &fval))
         return JS_FALSE;
 
@@ -4836,6 +4885,8 @@ js_NewXML(JSContext *cx, JSXMLClass xml_class)
             XMLARRAY_INIT(cx, &xml->xml_attrs, 0);
         }
     }
+    METER(xml_stats.xml);
+    METER(xml_stats.livexml);
     return xml;
 }
 
@@ -4853,6 +4904,7 @@ js_DestroyXML(JSContext *cx, JSXML *xml)
             XMLARRAY_FINISH(cx, &xml->xml_attrs, js_DestroyXML);
         }
     }
+    UNMETER(xml_stats.livexml);
 }
 
 static JSXMLQName *
@@ -5061,6 +5113,8 @@ js_GetXMLObject(JSContext *cx, JSXML *xml)
         return NULL;
     }
     xml->object = obj;
+    METER(xml_stats.xmlobj);
+    METER(xml_stats.livexmlobj);
     return obj;
 }
 
@@ -5101,6 +5155,8 @@ js_InitXMLClass(JSContext *cx, JSObject *obj)
     if (!xml || !JS_SetPrivate(cx, proto, xml))
         return NULL;
     xml->object = proto;
+    METER(xml_stats.xmlobj);
+    METER(xml_stats.livexmlobj);
 
     /*
      * Prepare to set default settings on the XML constructor we just made.
@@ -5290,6 +5346,8 @@ js_GetAnyName(JSContext *cx, jsval *vp)
             return JS_FALSE;
         }
         qn->object = obj;
+        METER(xml_stats.qnameobj);
+        METER(xml_stats.liveqnameobj);
 
         atom = js_AtomizeObject(cx, obj, ATOM_PINNED);
         if (!atom)
@@ -5532,6 +5590,8 @@ js_CloneXMLObject(JSContext *cx, JSObject *obj)
         return NULL;
     }
     JS_ATOMIC_INCREMENT(&xml->nrefs);
+    METER(xml_stats.xmlobj);
+    METER(xml_stats.livexmlobj);
     return newobj;
 }
 
