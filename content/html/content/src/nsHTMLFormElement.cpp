@@ -92,6 +92,7 @@ public:
   // nsIDOMNSHTMLFormElement
   NS_IMETHOD    GetEncoding(nsString& aEncoding);
   NS_IMETHOD    NamedItem(const nsString& aName, nsIDOMElement** aReturn);
+  NS_IMETHOD    Item(PRUint32 aIndex, nsIDOMElement** aReturn);
   
   // nsIScriptObjectOwner
   NS_IMPL_ISCRIPTOBJECTOWNER_USING_GENERIC(mInner)
@@ -600,6 +601,24 @@ void
 nsHTMLFormElement::Finalize(JSContext *aContext)
 {
   mInner.Finalize(aContext);
+}
+
+NS_IMETHODIMP 
+nsHTMLFormElement::Item(PRUint32 aIndex, nsIDOMElement** aReturn)
+{
+  if (mControls) {
+    nsIDOMNode *node;
+    nsresult result = mControls->Item(aIndex, &node);
+    if ((NS_OK == result) && (nsnull != node)) {
+      result = node->QueryInterface(kIDOMElementIID, (void **)aReturn);
+      NS_RELEASE(node);
+    }
+    else {
+      *aReturn = nsnull;
+    }
+    return result;
+  }
+  return NS_ERROR_FAILURE;
 }
 
 // nsFormControlList implementation, this could go away if there were a lightweight collection implementation somewhere
