@@ -27,7 +27,6 @@ VPATH           = @srcdir@
 include $(DEPTH)/config/autoconf.mk
 
 CPPSRCS	= ArrayList.cpp             \
-	CommandLineUtils.cpp        \
 	DefaultStringComparator.cpp \
 	Double.cpp \
 	HashTable.cpp \
@@ -45,7 +44,8 @@ CPPSRCS	= ArrayList.cpp             \
 ifdef MOZ_XSL
 	CPPSRCS	+= MozillaString.cpp
 else
-	CPPSRCS	+= TxString.cpp 
+	CPPSRCS	+= CommandLineUtils.cpp	\
+		TxString.cpp
 endif
 include $(topsrcdir)/config/rules.mk
 

@@ -35,10 +35,8 @@ CPPSRCS=						\
 
 CPP_OBJS=							\
 	..\source\base\$(OBJDIR)\ArrayList.obj \
-	..\source\base\$(OBJDIR)\CommandLineUtils.obj \
 	..\source\base\$(OBJDIR)\DefaultStringComparator.obj \
 	..\source\base\$(OBJDIR)\Double.obj \
-	..\source\base\$(OBJDIR)\HashTable.obj \
 	..\source\base\$(OBJDIR)\Integer.obj \
 	..\source\base\$(OBJDIR)\List.obj \
 	..\source\base\$(OBJDIR)\MITREObjectWrapper.obj \
