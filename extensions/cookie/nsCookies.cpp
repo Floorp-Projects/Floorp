@@ -1435,7 +1435,7 @@ cookie_SetCookieString(nsIURI * curURL, nsIPrompt *aPrompter, const char * setCo
       prev_cookie->status == nsICookie::STATUS_FLAGGED) {
     nsCOMPtr<nsIObserverService> os(do_GetService("@mozilla.org/observer-service;1"));
     if (os) {
-        rv = os->NotifyObservers(nsnull, "cookieIcon", NS_ConvertASCIItoUCS2("on").get());
+        rv = os->NotifyObservers(nsnull, "cookieIcon", NS_LITERAL_STRING("on").get());
     }
   }
 
@@ -1496,7 +1496,7 @@ COOKIE_SetCookieStringFromHttp(nsIURI * curURL, nsIURI * firstURL, nsIPrompt *aP
     if (status == nsICookie::STATUS_REJECTED) {
       nsCOMPtr<nsIObserverService> os(do_GetService("@mozilla.org/observer-service;1"));
       if (os) {
-        nsresult rv = os->NotifyObservers(nsnull, "cookieIcon", NS_ConvertASCIItoUCS2("on").get());
+        nsresult rv = os->NotifyObservers(nsnull, "cookieIcon", NS_LITERAL_STRING("on").get());
       }
       return;
     }
@@ -1571,7 +1571,7 @@ COOKIE_SetCookieStringFromHttp(nsIURI * curURL, nsIURI * firstURL, nsIPrompt *aP
 
 /* saves out the HTTP cookies to disk */
 PUBLIC nsresult
-COOKIE_Write() {
+COOKIE_Write(PRBool notify = PR_TRUE) {
   if (!cookie_changed) {
     return NS_OK;
   }
@@ -1646,6 +1646,15 @@ COOKIE_Write() {
   cookie_changed = PR_FALSE;
   strm.flush();
   strm.close();
+
+  /* Notify cookie manager dialog to update its display */
+  if (notify) {
+    nsCOMPtr<nsIObserverService> os(do_GetService("@mozilla.org/observer-service;1"));
+    if (os) {
+      os->NotifyObservers(nsnull, "cookieChanged", NS_LITERAL_STRING("cookies").get());
+    }
+  }
+
   return NS_OK;
 }
 
@@ -1919,7 +1928,7 @@ COOKIE_Remove
         cookie_list->RemoveElementAt(count);
         deleteCookie((void*)cookie, nsnull);
         cookie_changed = PR_TRUE;
-        COOKIE_Write();
+        COOKIE_Write(PR_FALSE); // don't update cookie-manager display
         break;
       }
     }
