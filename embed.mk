@@ -33,10 +33,6 @@ ifdef USE_ELF_DYNSTR_GC
 DIRS		+= tools/elf-dynstr-gc
 endif
 
-ifdef MOZ_STATIC_COMPONENTS
-DIRS   += modules/staticmod
-endif
-
 DIRS		+= nsprpub
 
 ifeq ($(exporting),1)
@@ -110,7 +106,7 @@ else
 		dom \
 		view \
 		layout \
-		xpfe/appfilelocprovider \
+		modules/appfilelocprovider \
 		rdf \
 		docshell \
 		webshell \
@@ -122,6 +118,10 @@ else
 		extensions/cookie \
 		extensions/psm-glue \
 		$(NULL)
+endif
+
+ifdef MOZ_STATIC_COMPONENTS
+DIRS   += modules/staticmod
 endif
 
 GARBAGE += dist
@@ -147,6 +147,25 @@ CONFIG_RELEASE_SMALL_OPTIONS :=  \
 config_release_small:
 	$(DEPTH)/configure $(CONFIG_RELEASE_SMALL_OPTIONS) 
 
+build_small:
+	$(MAKE) -f embed.mk config_release_small
+	$(MAKE) -f embed.mk export exporting=1
+	$(MAKE) -f embed.mk
+
+### does not seam to work....
+# I was hoping that we could just pull SeaMonkeyCore, but I think I need editor and l10n :-(
+
+NSPR_CO_MODULE = mozilla/nsprpub
+NSPR_CO_TAG = NSPRPUB_CLIENT_BRANCH
+
+PSM_CO_MODULE= mozilla/security
+PSM_CO_TAG = SECURITY_CLIENT_BRANCH
+
+pull:
+	cd ..; \
+	cvs co -P SeaMonkeyAll&& \
+	cvs co -P -r $(PSM_CO_TAG) $(PSM_CO_MODULE)  && \
+	cvs co -P -r $(NSPR_CO_TAG) $(NSPR_CO_MODULE)
 
 
 
