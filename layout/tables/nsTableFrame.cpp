@@ -29,7 +29,7 @@
 #include "nsIHTMLContent.h"
 
 #include "BasicTableLayoutStrategy.h"
-#include "FixedTableLayoutStrategy.h"
+// #include "FixedTableLayoutStrategy.h"
 
 #include "nsIPresContext.h"
 #include "nsCSSRendering.h"
@@ -2298,9 +2298,11 @@ void nsTableFrame::BalanceColumnWidths(nsIPresContext* aPresContext,
   {
     nsStyleTable* tableStyle;
     GetStyleData(eStyleStruct_Table, (nsStyleStruct *&)tableStyle);
+#if XXX
     if (NS_STYLE_TABLE_LAYOUT_FIXED==tableStyle->mLayoutStrategy)
       mTableLayoutStrategy = new FixedTableLayoutStrategy(this, numCols);
     else
+#endif
       mTableLayoutStrategy = new BasicTableLayoutStrategy(this, numCols);
     mTableLayoutStrategy->Initialize(aMaxElementSize);
   }
