@@ -44,10 +44,10 @@ void SetProxyPref(const nsACString& aHostPort, const char* aPref,
 {
   nsCAutoString hostPort(aHostPort);  
   PRInt32 portDelimOffset = hostPort.RFindChar(':');
-  if (portDelimOffset) {
-    nsDependentCString host(Substring(hostPort, 0, portDelimOffset));
-    nsDependentCString port(Substring(hostPort, portDelimOffset + 1, 
-                                      hostPort.Length() - (portDelimOffset + 1)));
+  if (portDelimOffset > 0) {
+    nsCAutoString host(Substring(hostPort, 0, portDelimOffset));
+    nsCAutoString port(Substring(hostPort, portDelimOffset + 1, 
+                                 hostPort.Length() - (portDelimOffset + 1)));
     
     aPrefs->SetCharPref(aPref, host.get());
     PRInt32 stringErr;
