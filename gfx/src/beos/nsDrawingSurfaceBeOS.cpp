@@ -156,6 +156,7 @@ NS_IMETHODIMP nsDrawingSurfaceBeOS :: Unlock(void)
 #ifdef CHEAP_PERFORMANCE_MEASUREMENT 
   printf("Time taken to unlock: %d\n", PR_Now() - mUnlockTime);
 #endif
+  return NS_OK;
 }
 
 NS_IMETHODIMP nsDrawingSurfaceBeOS :: GetDimensions(PRUint32 *aWidth, PRUint32 *aHeight)
