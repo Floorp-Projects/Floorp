@@ -5406,8 +5406,8 @@ nsCSSFrameConstructor::ContentAppended(nsIPresContext* aPresContext,
       // WipeContainingBlock because it will throw away the entire selct frame and 
       // start over which is something we do not want to do
       //
-      nsCOMPtr<nsIDOMHTMLSelectElement> selectContent(do_QueryInterface(blockContent));
-      if (selectContent) {
+      nsCOMPtr<nsIDOMHTMLSelectElement> selectContent(do_QueryInterface(aContainer));
+      if (!selectContent) {
         if (WipeContainingBlock(aPresContext, state, blockContent, adjustedParentFrame,
                                 frameItems.childList)) {
           return NS_OK;
