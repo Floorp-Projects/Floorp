@@ -50,6 +50,7 @@
 #include "nsIPref.h"
 #include "nsIRDFService.h"
 #include "nsMsgI18N.h"
+#include "nsAppDirectoryServiceDefs.h"
 
 
 static NS_DEFINE_CID(kCMailDB, NS_MAILDB_CID);
@@ -1634,8 +1635,16 @@ nsOutputFileStream * nsParseNewMailState::GetLogFile ()
 	// This log file is used by regular filters and JS filters
 	if (m_logFile == nsnull)
 	{
-		// ### TODO file spec sub-class for log file
-		nsFileSpec logFile("filter.log");
+    nsCOMPtr<nsIFile> logDir;
+    NS_GetSpecialDirectory(NS_APP_MAIL_50_DIR, getter_AddRefs(logDir));
+
+    nsXPIDLCString pathBuf;
+    logDir->Append("filter.log");
+    nsresult rv = logDir->GetPath(getter_Copies(pathBuf));
+    if (NS_FAILED(rv)) return nsnull;
+    nsCOMPtr<nsIFileSpec> outSpec;
+
+		nsFileSpec logFile(pathBuf);
 		m_logFile = new nsOutputFileStream(logFile, PR_WRONLY | PR_CREATE_FILE, 00600);
 	}
 	return m_logFile;
