@@ -208,13 +208,8 @@ tree {
  height: 200px;
  min-width: 0px;
  min-height: 0px;
-}
-
-/*
-tree {
  behavior: url("chrome://global/content/treeBindings.xml#tree");
 }
-*/
 
 tree > treechildren {
  behavior: url("chrome://global/content/treeBindings.xml#treerows");
@@ -222,6 +217,7 @@ tree > treechildren {
 
 treeitem { 
  display: table-row-group; 
+ behavior: url("chrome://global/content/treeBindings.xml#treeitem");
 } 
 
 treerow {
