@@ -47,7 +47,7 @@ extern PRBool gJustGotDeactivate;
 extern HWND   gHwndBeingDestroyed;
 
 
-nsFrameWindow::nsFrameWindow() : nsCanvas()
+nsFrameWindow::nsFrameWindow() : nsWindow()
 {
    hwndFrame    = 0;
    fnwpDefFrame = 0;
@@ -165,7 +165,7 @@ void nsFrameWindow::RealDoCreate( HWND hwndP, nsWindow *aParent,
 
    // Now create the client as a child of us, triggers resize and sets
    // up the client size (with any luck...)
-   nsCanvas::RealDoCreate( hwndFrame, nsnull, frameRect, aHandleEventFunction,
+   nsWindow::RealDoCreate( hwndFrame, nsnull, frameRect, aHandleEventFunction,
                            aContext, aAppShell, aInitData, hwndO);
 
    // Subclass frame
@@ -413,4 +413,9 @@ MRESULT nsFrameWindow::FrameMessage( ULONG msg, MPARAM mp1, MPARAM mp2)
       mRC = (*fnwpDefFrame)( hwndFrame, msg, mp1, mp2);
 
    return mRC;
+}
+
+ULONG nsFrameWindow::WindowStyle()
+{
+   return BASE_CONTROL_STYLE | WS_CLIPCHILDREN | WS_CLIPSIBLINGS;
 }

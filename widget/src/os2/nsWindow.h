@@ -186,7 +186,7 @@ protected:
 
    static  nsWindow*   gCurrentWindow;
    // nsWindow methods subclasses must provide for creation to work
-   virtual PCSZ  WindowClass() = 0;
+   virtual PCSZ  WindowClass();
    virtual ULONG WindowStyle() = 0;
 
    // hooks subclasses may wish to override!

@@ -30,10 +30,10 @@
 //
 // The frame itself is subclassed so OnMove events for the client happen.
 
-#include "nscanvas.h"
+#include "nsWindow.h"
 #include "nssize.h"
 
-class nsFrameWindow : public nsCanvas
+class nsFrameWindow : public nsWindow
 {
  public:
    nsFrameWindow();
@@ -77,6 +77,7 @@ class nsFrameWindow : public nsCanvas
    NS_IMETHOD GetClientBounds( nsRect &aRect);
 
    friend MRESULT EXPENTRY fnwpFrame( HWND, ULONG, MPARAM, MPARAM);
+   virtual ULONG WindowStyle();
 };
 
 #endif
