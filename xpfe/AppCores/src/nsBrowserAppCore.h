@@ -38,7 +38,7 @@ class nsIDOMWindow;
 class nsIURL;
 class nsIWebShellWindow;
 class nsIGlobalHistory;
-struct nsIFindComponent;
+class nsIFindComponent;
 
 
 ////////////////////////////////////////////////////////////////////////////////

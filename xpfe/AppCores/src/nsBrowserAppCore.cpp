@@ -77,7 +77,7 @@ static NS_DEFINE_IID(kWalletServiceCID, NS_WALLETSERVICE_CID);
 #endif
 
 // Interface for "unknown content type handler" component/service.
-#include "nsIUnknownContentTypeHandler.h"
+#include "nsIUnkContentTypeHandler.h"
 
 // Stuff to implement file download dialog.
 #include "nsIXULWindowCallbacks.h"

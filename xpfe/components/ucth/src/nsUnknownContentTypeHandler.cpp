@@ -15,7 +15,7 @@
  * Copyright (C) 1998 Netscape Communications Corporation.  All Rights
  * Reserved.
  */
-#include "nsIUnknownContentTypeHandler.h"
+#include "nsIUnkContentTypeHandler.h"
 
 #include "nsIAppShellComponentImpl.h"
 
