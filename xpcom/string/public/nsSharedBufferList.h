@@ -62,14 +62,12 @@ class NS_COM nsSharedBufferList
     public:
 
       class Buffer
-          : public nsFlexBufferHandle<PRUnichar>
+          : public nsSharedBufferHandle<PRUnichar>
         {
           public:
-            Buffer( PRUnichar* aDataStart, PRUnichar* aDataEnd, PRUnichar* aStorageStart, PRUnichar* aStorageEnd, PRBool aIsSingleAllocation=PR_FALSE )
-                : nsFlexBufferHandle<PRUnichar>(aDataStart, aDataEnd, aStorageStart, aStorageEnd)
+            Buffer( PRUnichar* aDataStart, PRUnichar* aDataEnd, size_type aStorageLength, PRBool aIsSingleAllocation=PR_FALSE )
+                : nsSharedBufferHandle<PRUnichar>(aDataStart, aDataEnd, aStorageLength, aIsSingleAllocation)
               {
-                if ( aIsSingleAllocation )
-                  this->mFlags |= this->kIsSingleAllocationWithBuffer;
               }
 
               /**
@@ -198,7 +196,7 @@ class NS_COM nsSharedBufferList
       Buffer*
       NewWrappingBuffer( PRUnichar* aDataStart, PRUnichar* aDataEnd, PRUnichar* aStorageEnd )
         {
-          return new Buffer(aDataStart, aDataEnd, aDataStart, aStorageEnd);
+          return new Buffer(aDataStart, aDataEnd, aStorageEnd - aDataStart);
         }
 
       void    DiscardSuffix( PRUint32 );

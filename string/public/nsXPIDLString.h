@@ -32,9 +32,66 @@
 #include <stdio.h>
 #endif
 
+  /**
+   * Interface documentation:
+   *
+   * |nsXPIDLC?String| differs from |nsSharableC?String| in that one can
+   * assign into it from an XPCOM getter that fills in a |char_type**|
+   * with a pointer to a buffer whose ownership is to be transferred to
+   * the caller.
+   *
+   * Consider the following interface:
+   *
+   *   interface nsIFoo {
+   *     attribute string Bar;
+   *   };
+   *
+   * This will generate the following C++ header file:
+   *
+   *   class nsIFoo {
+   *     NS_IMETHOD SetBar(const PRUnichar* aValue);
+   *     NS_IMETHOD GetBar(PRUnichar* *aValue);
+   *   };
+   *
+   * The GetBar() method will allocate a copy of the nsIFoo object's
+   * "bar" attribute, and leave you to deal with freeing it:
+   *
+   *   nsIFoo* aFoo; // assume we get this somehow
+   *   PRUnichar* bar;
+   *   aFoo->GetFoo(&bar);
+   *   do_something_with_buffer(bar);
+   *   nsMemory::Free(bar);
+   *
+   * This makes your life harder, because you need to convolute your
+   * code to ensure that you don't leak `bar'.
+   *
+   * Enter nsXPIDLString, which manages the ownership of the allocated
+   * string, and automatically destroys it when the nsXPIDLString goes
+   * out of scope:
+   *
+   *   nsIFoo* aFoo; // assume we get this somehow
+   *   nsXPIDLString bar;
+   *   aFoo->GetFoo( getter_Copies(bar) );
+   *   do_something_with_buffer(bar.get());
+   *   // no need to remember to nsMemory::Free().
+   *
+   * Like nsCOMPtr, nsXPIDLString uses some syntactic sugar to make it
+   * painfully clear exactly what the code expects. You need to wrap an
+   * nsXPIDLString object with `getter_Copies()' before passing it to a
+   * getter: these tell the nsXPIDLString how ownership is being
+   * handled.
+   *
+   * In the case of `getter_Copies()', the callee is allocating a copy
+   * (which is usually the case). In the case where the callee is
+   * returning a const reference to `the real deal' (this can be done
+   * using the [shared] attribute in XPIDL) you can just use a
+   * |const char*| or |const PRUnichar*|.
+   */
 
 
   /**
+   * Implementation notes:
+   *
    * |nsXPIDLC?String| extends |nsSharableC?String| with the ability
    * to defer calculation of its length.  This is crucial to allowing
    * the |getter_Copies| assignment behavior.
@@ -45,7 +102,7 @@
    * the operation on which all other flat string operations are based.
    * A valid handle will either have all |NULL| or all non-|NULL|
    * pointers.  After use as an `out' string pointer parameter, an
-   * |nsXPIDLC?String|'s handle will have a non-|NULL| storage start, but
+   * |nsXPIDLC?String|'s handle will have a non-|NULL| data start, but
    * all other members will be |NULL|.  This is the signal that the
    * length needs to be recalculated.  |GetSharedBufferHandle| detects
    * this situation and repairs it.
@@ -54,7 +111,8 @@
    * the string before it's destruction.  In this case, because the start of
    * storage is known, storage can still be freed in the usual way.
    *
-   * An |nsXPIDLC?String| is now a sharable object, just like |nsSharableC?String|.
+   * An |nsXPIDLC?String| is now a sharable object, just like
+   * |nsSharableC?String|.
    * This simple implementation always allocates an intermediary handle
    * object.  This cost might turn out to be a burden, it's something we'll
    * want to measure.  A couple of optimizations spring to mind if allocation
@@ -75,6 +133,7 @@ class NS_COM nsXPIDLString
 
     public:
       nsXPIDLString()
+          : nsSharableString(GetSharedEmptyBufferHandle())
         {
 #if DEBUG_STRING_STATS
           ++sCreatedCount;
@@ -84,8 +143,18 @@ class NS_COM nsXPIDLString
         }
 
       nsXPIDLString( const self_type& aString )
-          : nsSharableString(aString.GetSharedBufferHandle())
+          : nsSharableString(aString.mBuffer.get())
           // copy-constructor required (or else C++ generates one for us)
+        {
+#if DEBUG_STRING_STATS
+          ++sCreatedCount;
+          if ( ++sAliveCount > sHighWaterCount )
+            sHighWaterCount = sAliveCount;
+#endif
+        }
+
+      explicit nsXPIDLString( const abstract_string_type& aReadable )
+          : nsSharableString(aReadable)
         {
 #if DEBUG_STRING_STATS
           ++sCreatedCount;
@@ -102,22 +171,26 @@ class NS_COM nsXPIDLString
 #endif
 
       self_type&
-      operator=( const self_type& rhs )
-          // copy-assignment operator required (or else C++ generates one for us)
+      operator=( const abstract_string_type& aReadable )
         {
-          // self-assignment is handled by the underlying |nsAutoBufferHandle|
-          mBuffer = rhs.GetSharedBufferHandle();
+          Assign(aReadable);
           return *this;
         }
 
+      /**
+       * This is an override of a non-virtual function on
+       * |nsSharableString|.  This override is not necessary, but it can
+       * improve performance in the case where we know we have an
+       * |nsXPIDLString|.
+       */
       void Adopt( char_type* aNewValue ) { *PrepareForUseAsOutParam() = aNewValue; }
 
         // overridden to make getter_Copies mechanism work
-      const char_type* get() const
+      virtual const char_type* get() const
         {
-          const buffer_handle_type* handle = GetBufferHandle();
-          // NS_ASSERTION(handle, "handle is null!");
-          return handle ? handle->DataStart() : 0;
+          return (mBuffer.get() != GetSharedEmptyBufferHandle())
+                    ? mBuffer->DataStart()
+                    : 0;
         }
 
         // deprecated, to be eliminated
@@ -150,6 +223,8 @@ class NS_COM nsXPIDLString
 
       char_type** PrepareForUseAsOutParam();
 
+      static shared_buffer_handle_type* GetSharedEmptyBufferHandle();
+
 #if DEBUG_STRING_STATS
       static size_t sCreatedCount;    // total number of |nsXPIDLString|s ever created
       static size_t sAliveCount;      // total number of |nsXPIDLStrings|s alive right now
@@ -180,6 +255,7 @@ class NS_COM nsXPIDLCString
 
     public:
       nsXPIDLCString()
+          : nsSharableCString(GetSharedEmptyBufferHandle())
         {
 #if DEBUG_STRING_STATS
           ++sCreatedCount;
@@ -189,7 +265,7 @@ class NS_COM nsXPIDLCString
         }
 
       nsXPIDLCString( const self_type& aString )
-          : nsSharableCString(aString.GetSharedBufferHandle())
+          : nsSharableCString(aString.mBuffer.get())
           // copy-constructor required (or else C++ generates one for us)
         {
 #if DEBUG_STRING_STATS
@@ -207,22 +283,26 @@ class NS_COM nsXPIDLCString
 #endif
 
       self_type&
-      operator=( const self_type& rhs )
-          // copy-assignment operator required (or else C++ generates one for us)
+      operator=( const abstract_string_type& aReadable )
         {
-          // self-assignment is handled by the underlying |nsAutoBufferHandle|
-          mBuffer = rhs.GetSharedBufferHandle();
+          Assign(aReadable);
           return *this;
         }
 
+      /**
+       * This is an override of a non-virtual function on
+       * |nsSharableCString|.  This override is not necessary, but it can
+       * improve performance in the case where we know we have an
+       * |nsXPIDLCString|.
+       */
       void Adopt( char_type* aNewValue ) { *PrepareForUseAsOutParam() = aNewValue; }
 
         // overridden to make getter_Copies mechanism work
-      const char_type* get() const
+      virtual const char_type* get() const
         {
-          const buffer_handle_type* handle = GetBufferHandle();
-          // NS_ASSERTION(handle, "handle is null!");
-          return handle ? handle->DataStart() : 0;
+          return (mBuffer.get() != GetSharedEmptyBufferHandle())
+                    ? mBuffer->DataStart()
+                    : 0;
         }
 
         // deprecated, to be eliminated
@@ -254,6 +334,8 @@ class NS_COM nsXPIDLCString
         // overridden to fix the length after `out' parameter assignment, if necessary
 
       char_type** PrepareForUseAsOutParam();
+
+      static shared_buffer_handle_type* GetSharedEmptyBufferHandle();
 
 #if DEBUG_STRING_STATS
       static size_t sCreatedCount;    // total number of |nsXPIDLCString|s ever created

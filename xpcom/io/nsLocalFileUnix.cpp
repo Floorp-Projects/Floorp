@@ -265,8 +265,7 @@ nsLocalFile::InitWithPath(const char *filePath)
     ssize_t len  = strlen(filePath);
     while (filePath[len-1] == '/' && len > 1)
         --len;
-    // XXXldb change to |Assign| rather than |Adopt(ToNewCString|
-    mPath.Adopt(ToNewCString(Substring(filePath, filePath+len)));
+    mPath.Assign(Substring(filePath, filePath+len));
 
     InvalidateCache();
     return NS_OK;
@@ -439,8 +438,8 @@ nsLocalFile::AppendRelativePath(const char *fragment)
     if (*fragment == '/')
         return NS_ERROR_FILE_UNRECOGNIZED_PATH;
 
-    mPath.Adopt(ToNewCString(mPath + NS_LITERAL_CSTRING("/") +
-                             nsDependentCString(fragment)));
+    mPath.Assign(mPath + NS_LITERAL_CSTRING("/") +
+                 nsDependentCString(fragment));
 
     if (!mPath.get())
         return NS_ERROR_OUT_OF_MEMORY;

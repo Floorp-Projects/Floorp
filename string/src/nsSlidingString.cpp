@@ -125,7 +125,7 @@ AllocateContiguousHandleWithData( Buffer_ptr aDummyHandlePtr, const nsAString& a
         nsAString::const_iterator fromBegin, fromEnd;
         PRUnichar* toBegin = string_start_ptr;
         copy_string(aDataSource.BeginReading(fromBegin), aDataSource.EndReading(fromEnd), toBegin);
-        result = new (handle_ptr) nsSharedBufferList::Buffer(string_start_ptr, string_end_ptr, string_start_ptr, string_end_ptr+1, PR_TRUE);
+        result = new (handle_ptr) nsSharedBufferList::Buffer(string_start_ptr, string_end_ptr, string_end_ptr-string_start_ptr+1, PR_TRUE);
       }
 
     return result;
@@ -282,7 +282,8 @@ nsSlidingString::nsSlidingString( PRUnichar* aStorageStart, PRUnichar* aDataEnd,
 void
 nsSlidingString::AppendBuffer( PRUnichar* aStorageStart, PRUnichar* aDataEnd, PRUnichar* aStorageEnd )
   {
-    Buffer* new_buffer = new Buffer(aStorageStart, aDataEnd, aStorageStart, aStorageEnd);
+    Buffer* new_buffer =
+        new Buffer(aStorageStart, aDataEnd, aStorageEnd - aStorageStart);
     Buffer* old_last_buffer = mBufferList->GetLastBuffer();
     mBufferList->LinkBuffer(old_last_buffer, new_buffer, 0);
     mLength += new_buffer->DataLength();

@@ -44,16 +44,29 @@ class NS_COM nsAFlatString
     : public nsASingleFragmentString
   {
     public:
-        // don't really want this to be virtual, and won't after |obsolete_nsString| is really dead
-      virtual const char_type* get() const { const char_type* temp; return BeginReading(temp); }
+        // don't really want this to be virtual, and won't after
+        // |obsolete_nsString| is really dead and |nsXPIDLString| works
+        // differently
+      virtual const char_type* get() const
+        {
+          const char_type* temp;
+          return BeginReading(temp);
+        }
   };
 
 class NS_COM nsAFlatCString
     : public nsASingleFragmentCString
   {
     public:
-        // don't really want this to be virtual, and won't after |obsolete_nsCString| is really dead
-      virtual const char_type* get() const { const char_type* temp; return BeginReading(temp); }
+        // don't really want this to be virtual, and won't after
+        // |obsolete_nsCString| is really dead and |nsXPIDLCString|
+        // works differently
+      virtual const char_type* get() const
+        {
+          const char_type* temp;
+          return BeginReading(temp);
+        }
+
   };
 
 #endif /* !defined(nsAFlatString_h___) */

@@ -337,7 +337,7 @@ NS_IMETHODIMP nsIconChannel::AsyncOpen(nsIStreamListener *aListener, nsISupports
       nsCAutoString formattedFileExt;
       formattedFileExt = ".";
       formattedFileExt.Append(fileExt.get());
-      filePath.Adopt(ToNewCString(formattedFileExt));
+      filePath.Assign(formattedFileExt);
     }
   }
 
