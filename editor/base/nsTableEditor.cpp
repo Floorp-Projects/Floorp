@@ -2259,7 +2259,7 @@ nsHTMLEditor::GetFirstSelectedCellInTable(nsIDOMElement **aCell, PRInt32 *aRowIn
   nsCOMPtr<nsIDOMElement> cell;
   nsresult res = GetFirstSelectedCell(getter_AddRefs(cell), nsnull);
   if (NS_FAILED(res)) return res;
-  if (!cell) return NS_ERROR_FAILURE;
+  if (!cell) return NS_EDITOR_ELEMENT_NOT_FOUND;
 
   PRInt32 startRowIndex, startColIndex;
   res = GetCellIndexes(cell, startRowIndex, startColIndex);
@@ -2274,10 +2274,10 @@ nsHTMLEditor::GetFirstSelectedCellInTable(nsIDOMElement **aCell, PRInt32 *aRowIn
   {
     nsresult res = GetNextSelectedCell(getter_AddRefs(cell), nsnull);
     if (NS_FAILED(res)) return res;
-    res = GetCellIndexes(cell, startRowIndex, startColIndex);
-    if(NS_FAILED(res)) return res;
     if (cell)
     {
+      res = GetCellIndexes(cell, startRowIndex, startColIndex);
+      if(NS_FAILED(res)) return res;
       // Find the topmost row
       if (startRowIndex <= firstRowIndex)
       {
