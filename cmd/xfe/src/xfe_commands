@@ -66,6 +66,7 @@ xfeCmdToggleMenubar                                                toggleMenubar
 xfeCmdToggleNavigationToolbar                                      toggleNavigationToolbar
 xfeCmdToggleLocationToolbar                                        toggleLocationToolbar
 xfeCmdTogglePersonalToolbar                                        togglePersonalToolbar
+xfeCmdToggleNavCenter                                              toggleNavCenter
 xfeCmdToggleAddressArea                                            toggleAddressArea
 
 # Task Bar
