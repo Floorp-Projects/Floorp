@@ -2117,9 +2117,9 @@ nsresult
 InternetSearchDataSource::BeginSearchRequest(nsIRDFResource *source, PRBool doNetworkRequest)
 {
         nsresult		rv = NS_OK;
-	char			*sourceURI = nsnull;
+	const char		*sourceURI = nsnull;
 
-	if (NS_FAILED(rv = source->GetValue(&sourceURI)))
+	if (NS_FAILED(rv = source->GetValueConst(&sourceURI)))
 		return(rv);
 	nsAutoString		uri(sourceURI);
 	if (uri.Find("internetsearch:") != 0)
@@ -2275,8 +2275,8 @@ InternetSearchDataSource::FindData(nsIRDFResource *engine, nsString &data)
 		nsCOMPtr<nsIRDFLiteral>	dataLiteral = do_QueryInterface(dataTarget);
 		if (!dataLiteral)
 			return(rv);
-		PRUnichar	*dataUni;
-		if (NS_FAILED(rv = dataLiteral->GetValue(&dataUni)))
+		const PRUnichar	*dataUni;
+		if (NS_FAILED(rv = dataLiteral->GetValueConst(&dataUni)))
 			return(rv);
 		data = dataUni;
 	}
@@ -3240,8 +3240,8 @@ InternetSearchDataSource::ParseHTML(nsIURI *aURL, nsIRDFResource *mParent, nsIRD
 		nsCOMPtr<nsIRDFLiteral>	dataLiteral = do_QueryInterface(dataNode);
 		if (!dataLiteral)	return(NS_ERROR_NULL_POINTER);
 
-		PRUnichar	*dataUni = nsnull;
-		if (NS_FAILED(rv = dataLiteral->GetValue(&dataUni)))
+		const PRUnichar	*dataUni = nsnull;
+		if (NS_FAILED(rv = dataLiteral->GetValueConst(&dataUni)))
 			return(rv);
 		if (!dataUni)	return(NS_ERROR_NULL_POINTER);
 		data = dataUni;
