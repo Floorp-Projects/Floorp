@@ -4246,8 +4246,8 @@ nsDOMSelection::AddRange(nsIDOMRange* aRange)
                 {
                   if (NS_SUCCEEDED(childAt->GetTag(atom)) && atom == nsSelection::sTableAtom)
                   {
-                    mFrameSelection->mSelectingTableCellMode == TABLESELECTION_TABLE;
-                  }
+                    mFrameSelection->mSelectingTableCellMode = TABLESELECTION_TABLE;
+                  } 
                 }
               }
             }
