@@ -1,6 +1,6 @@
 <?xml version="1.0"?>
-<?xml-stylesheet href="mathml-doc.css" type="text/css"?>
-<!DOCTYPE math SYSTEM "file:///C:\Mozilla/src/mozilla/layout/mathml/tests/mathml.dtd">
+<?xml-stylesheet href="mathml.css" type="text/css"?>
+<!DOCTYPE math SYSTEM "mathml.dtd">
 <!-- 
   *  The contents of this file are subject to the Mozilla Public
   *  License Version 1.1 (the "License"); you may not use this file
@@ -470,11 +470,15 @@
 
 
 <mfrac>
-      <mstyle scriptlevel="-2">
+      <mstyle scriptlevel="0">
          <mi>x</mi>
       </mstyle>
       <mi>z</mi>
 </mfrac>
 
+<mstyle scriptlevel="-4">
+         <mi>x</mi>
+</mstyle>
+      
 </math>
 </para>

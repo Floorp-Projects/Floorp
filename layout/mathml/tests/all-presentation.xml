@@ -1,6 +1,6 @@
 <?xml version="1.0"?>
 <?xml-stylesheet href="mathml.css" type="text/css"?>
-<!DOCTYPE math SYSTEM "file:///C:\Mozilla/src/mozilla/layout/mathml/tests/mathml.dtd">
+<!DOCTYPE math SYSTEM "mathml.dtd">
 <!-- 
   *  The contents of this file are subject to the Mozilla Public
   *  License Version 1.1 (the "License"); you may not use this file
@@ -35,14 +35,57 @@ This with &lt;none/&gt;,
 <!-- {{} \atop i} A {p \atop q} -->
 <math:mmultiscripts><math:mi>A</math:mi><math:mi>q</math:mi><math:mi>p</math:mi><math:mprescripts/><math:mi>i</math:mi><none/></math:mmultiscripts></math>;
 
-A bit of calculus
-<math xmlns:math="http://www.w3.org/Math/MathML">
+A bit of calculus with poor markup:
+<math xmlns="http://www.w3.org/Math/MathML">
+
 <!-- \int_a^b f(x)dx -->
-<math:msubsup><math:mo>&Integral;</math:mo><math:mi>a</math:mi><math:mi>b</math:mi></math:msubsup><math:mi>f(x)dx</math:mi>
+
+<msubsup>
+  <mo>&Integral;</mo>
+   <mi>a</mi>
+   <mi>b</mi>
+</msubsup>
+<mi>f</mi><mo>(</mo><mi>x</mi><mo>)</mo><mi>dx</mi>
 
 <!-- \frac{\partial}{\partial x}F(x,y) + \frac{\partial}{\partial y}F(x,y) -->
-<math:mrow><math:mfrac><math:mo>&PartialD;</math:mo><math:mrow><math:mo>&PartialD;</math:mo><math:mi>x</math:mi></math:mrow></math:mfrac><math:mi>F(x,y)</math:mi><math:mo>
-+ </math:mo><math:mfrac><math:mo>&PartialD;</math:mo><math:mrow><math:mo>&PartialD;</math:mo><math:mi>y</math:mi></math:mrow></math:mfrac><math:mi>F(x,y)</math:mi></math:mrow>
+
+<mrow>
+   <mfrac>
+      <mo>&PartialD;</mo>
+      <mrow>
+         <mo>&PartialD;</mo>
+         <mi>x</mi>
+      </mrow>
+   </mfrac>
+
+   <mrow>
+       <mi>F</mi>
+       <mo>(</mo>
+       <mi>x</mi>
+       <mo>,</mo>
+       <mi>y</mi>
+       <mo>)</mo>
+   </mrow>  
+
+   <mo>+</mo>
+
+   <mfrac>
+      <mo>&PartialD;</mo>
+      <mrow>
+         <mo>&PartialD;</mo>
+         <mi>y</mi>
+     </mrow>
+   </mfrac>
+
+   <mrow>
+       <mi>F</mi>
+       <mo>(</mo>
+       <mi>x</mi>
+       <mo>,</mo>
+       <mi>y</mi>
+       <mo>)</mo>
+   </mrow>
+</mrow>
 </math>;
 
 Here is the alphabet with invisible
