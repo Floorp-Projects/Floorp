@@ -902,10 +902,16 @@ nsresult nsFormFrame::ProcessAsURLEncoded(nsIFormProcessor* aFormProcessor, PRBo
 const char*
 nsFormFrame::GetFileNameWithinPath(char* aPathName)
 {
+#ifdef XP_MAC
+  // On a Mac the only invalid character in a file name is a : so we have to avoid
+  // the test for '\'
+  char* fileNameStart = PL_strrchr(aPathName, ':');
+#else
   char* fileNameStart = PL_strrchr(aPathName, '\\'); // windows
   if (!fileNameStart) { // try unix
-    fileNameStart = PL_strrchr(aPathName, '\\');
+    fileNameStart = PL_strrchr(aPathName, '/');
   }
+#endif
   if (fileNameStart) { 
     return fileNameStart+1;
   }
