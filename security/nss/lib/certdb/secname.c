@@ -566,7 +566,7 @@ CERT_DecodeAVAValue(SECItem *derAVAValue)
           PRBool            convertUCS4toUTF8 = PR_FALSE;
           PRBool            convertUCS2toUTF8 = PR_FALSE;
           SECItem           avaValue          = {siBuffer, 0}; 
-    PRArenaPool* newarena = NULL;
+          PLArenaPool      *newarena          = NULL;
 
     if(!derAVAValue) {
 	return NULL;
@@ -605,37 +605,36 @@ CERT_DecodeAVAValue(SECItem *derAVAValue)
     }
     if(SEC_QuickDERDecodeItem(newarena, &avaValue, theTemplate, derAVAValue) 
 				!= SECSuccess) {
+	PORT_FreeArena(newarena, PR_FALSE);
 	return NULL;
     }
 
     if (convertUCS4toUTF8) {
 	unsigned int   utf8ValLen = avaValue.len * 3;
-	unsigned char *utf8Val    = (unsigned char*)PORT_ZAlloc(utf8ValLen);
+	unsigned char *utf8Val    = (unsigned char*)
+				    PORT_ArenaZAlloc(newarena, utf8ValLen);
 
 	if(!PORT_UCS4_UTF8Conversion(PR_FALSE, avaValue.data, avaValue.len,
 				     utf8Val, utf8ValLen, &utf8ValLen)) {
-	    PORT_Free(utf8Val);
             PORT_FreeArena(newarena, PR_FALSE);
 	    return NULL;
 	}
 
-        PORT_FreeArena(newarena, PR_FALSE);
 	avaValue.data = utf8Val;
 	avaValue.len = utf8ValLen;
 
     } else if (convertUCS2toUTF8) {
 
 	unsigned int   utf8ValLen = avaValue.len * 3;
-	unsigned char *utf8Val    = (unsigned char*)PORT_ZAlloc(utf8ValLen);
+	unsigned char *utf8Val    = (unsigned char*)
+				    PORT_ArenaZAlloc(newarena, utf8ValLen);
 
 	if(!PORT_UCS2_UTF8Conversion(PR_FALSE, avaValue.data, avaValue.len,
 				     utf8Val, utf8ValLen, &utf8ValLen)) {
-	    PORT_Free(utf8Val);
             PORT_FreeArena(newarena, PR_FALSE);
 	    return NULL;
 	}
 
-        PORT_FreeArena(newarena, PR_FALSE);
 	avaValue.data = utf8Val;
 	avaValue.len = utf8ValLen;
     }
