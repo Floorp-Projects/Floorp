@@ -1,3 +1,11 @@
+Changes since 1.0fc1:
+
+1. Fixed crash resulting from stale reference to an nsIPluginInstancePeer held by the Carbon
+event loop timer used for both status messages and opening new browser documents from Java.
+
+2. Made all SupportsMixin::addRef/release thread-safe, since a Java thread is calling
+AddRef on an MRJPluginInstance in the event loop timer.
+
 Changes since 1.0b2:
 
 1. Added call to SizeJavaControl() when processing window size changes. This causes the applet
