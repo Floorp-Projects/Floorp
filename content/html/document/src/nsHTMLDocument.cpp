@@ -1711,7 +1711,7 @@ nsHTMLDocument::GetVlinkColor(nsString& aVlinkColor)
   aVlinkColor.Truncate();
   result = GetBodyElement(&body);
   if (NS_OK == result) {
-    result = body->GetLink(aVlinkColor);
+    result = body->GetVLink(aVlinkColor);
     NS_RELEASE(body);
   }
   else if (nsnull != mAttrStyleSheet) {
