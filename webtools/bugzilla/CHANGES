@@ -10,6 +10,18 @@ query the CVS tree.  For example,
 will tell you what has been changed in the last week.
 
 
+10/12/99 The CHANGES file is now obsolete!  There is a new file called
+checksetup.pl.  You should get in the habit of running that file every time
+you update your installation of Bugzilla.  That file will be constantly 
+updated to automatically update your installation to match any code changes.
+If you're curious as to what is going on, changes are commented in that file, 
+at the end.
+
+Many thanks to Holger Schurig <holgerschurig@nikocity.de> for writing this
+script!
+
+
+
 10/11/99 Restructured voting database to add a cached value in each
 bug recording how many total votes that bug has.  While I'm at it, I
 removed the unused "area" field from the bugs database.  It is

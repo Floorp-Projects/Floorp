@@ -201,17 +201,8 @@ you can get at the files in that directory through your web server.
 
    Once all the files are in a web accessible directory, make that
 directory writable by your webserver's user (which may require just
-making it world writable).  Inside this main bugzilla directory issue the
-following commands:
-
-	mkdir data
-	cd data
-	touch comments
-	touch nomail
-	touch mail
+making it world writable).  
 	
-   Make sure the data directory and files are writable by the webserver.
-
    Lastly, you'll need to set up a symbolic link from /usr/bonsaitools/bin
 to the correct location of your perl executable (probably /usr/bin/perl).  Or,
 you'll have to hack all the .cgi files to change where they look for perl.
@@ -249,54 +240,19 @@ For much more information about MySQL permissions, see the MySQL documentation.
 After you've tweaked the permissions, run "mysqladmin reload" to make sure that
 the database server knows to look at your new permission list.
 
-   Next we'll create the bugs database in MySQL.  This is done using the
-'mysql' command line client.  This client allows one to funnel SQL
-statements into the MySQL server directly.  It's usage summary is
-available by running:
+Next, you can just run the magic checksetup.pl script.  (Many thanks to Holger
+Schurig <holgerschurig@nikocity.de> for writing this script!)  It will make
+sure things have reasonable permissions, set up the "data" directory, and
+create all the MySQL tables.  Just run:
 
-	mysql --help
+	./checksetup.pl
 
-from the command line.
-
-   Once you've begun mysql you'll see a 'mysql>' prompt.  At the prompt you
-should enter:
-
-	create database bugs;
-	quit  
+The first time you run it, it will create a file called "localconfig" which you
+should examine and perhaps tweak a bit.  Then re-run checksetup.pl and it will
+do the real work.
 
 
-   To create the tables necessary for bug tracking and to minimally
-populate the bug tracking system you'll need to run the eight shell
-scripts found in your bugzilla directory that begin with 'make'.  These
-scripts load data into the database by piping input into the mysql
-command.  Order does not matter, but this one is fine:
-
-	./makeactivitytable.sh
-	./makeattachmenttable.sh
-	./makebugtable.sh
-	./makecctable.sh
-	./makecomponenttable.sh
-	./makedependenciestable.sh
-	./makegroupstable.sh
-	./makelogincookiestable.sh
-	./makeproducttable.sh
-	./makeprofilestable.sh
-	./makeversiontable.sh
-	./makevotestable.sh
-
-You may want to edit the scripts; once bugs are entered it gets very hard to
-make changes. Think carefully about how you want database users to describe bugs.  Here's one
-suggested alternative:
-
-	priority enum("P1", "P2", "P3", "P4", "defer") not null,
-	bug_severity enum("critical", "normal", "low", "---",
-                          "enhancement", "requirement", "polish") not null,
-	op_sys enum("Unspecified", "Windows 3.1", "Windows 95", "Windows 98",
-                    "Windows NT", "Mac System 7", "Mac System 8", "Linux",
-                    "Solaris", "FreeBSD", "Other Unix", "other") not null,
-	rep_platform enum("Unspecified", "Apple", "PC Clone", "Sun", "other"),
- 
-After running the scripts you've got a nearly empty copy of the bug tracking setup.
+At ths point, you should have a nearly empty copy of the bug tracking setup.
 
 4. Tweaking the Bugzilla->MySQL Connection Data
 
@@ -336,7 +292,7 @@ effectively make you 'superuser'.  The SQL to type is:
 
 	update profiles set groupset=0x7fffffffffffffff where login_name = 'XXX';
 
-replacing XXX with your BugZilla email address.
+replacing XXX with your Bugzilla email address.
 
 Now, if you go to the query page (off of the bugzilla main menu) where you'll
 now find a 'edit parameters' option which is filled with editable treats.
@@ -468,19 +424,13 @@ hour old, so Bugzilla will eventually notice your changes by itself, but
 generally you want it to notice right away, so that you can test things.
 
 
-Appendix C. Upgrading from previous versions of BugZilla
+Appendix C. Upgrading from previous versions of Bugzilla
 
-The developers of BugZilla are constantly adding new tables, columns and fields.
-You'll get SQL errors if you just update the code.  The strategy to update is
-to read the CHANGES file backwards, and apply all of the instructions given,
-typically things like:
-
-	./makeattachmenttable.sh
-	./makegroupstable.sh
-	alter table products add column disallownew tinyint not null;
-
-Someday someone should write a script that queries the existing database
-for all the required columns, and if any are missing, adds them.
+The developers of Bugzilla are constantly adding new tables, columns and
+fields.  You'll get SQL errors if you just update the code.  The strategy to
+update is to simply always run the checksetup.pl script whenever you upgrade
+your installation of Bugzilla.  If you want to see what has changed, you can
+read the comments in that file, starting from the end.
 
 
 Appendix D. History
