@@ -71,12 +71,12 @@ sub _get_project ($) {
 		if ($num) {  # is a list
 			foreach (1 .. AECountItems($cps)) {
 				my($cp) = AEGetNthDesc($cps, $_);
-				if ($full_path eq _full_path($cp)) {
+				if (lc $full_path eq lc _full_path($cp)) {
 					return($cp);
 				}
 			}
 		} else {     # is only one, not a list
-			if ($full_path eq _full_path($cps)) {
+			if (lc $full_path eq lc _full_path($cps)) {
 				return($cps);
 			}
 		}
