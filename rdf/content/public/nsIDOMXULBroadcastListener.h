@@ -35,16 +35,20 @@ public:
   static const nsIID& IID() { static nsIID iid = NS_IDOMXULBROADCASTLISTENER_IID; return iid; }
 
   NS_IMETHOD    GetBroadcaster(nsIDOMNode** aNode)=0;
+
+  NS_IMETHOD    SetBroadcaster(nsIDOMNode* aNode)=0;
 };
 
 
 #define NS_DECL_IDOMXULBROADCASTLISTENER   \
   NS_IMETHOD    GetBroadcaster(nsIDOMNode** aNode);  \
+  NS_IMETHOD    SetBroadcaster(nsIDOMNode* aNode);  \
 
 
 
 #define NS_FORWARD_IDOMXULBROADCASTLISTENER(_to)  \
   NS_IMETHOD    GetBroadcaster(nsIDOMNode** aNode) { return _to##GetBroadcaster(aNode); }  \
+  NS_IMETHOD    SetBroadcaster(nsIDOMNode* aNode) { return _to##SetBroadcaster(aNode); }  \
 
 
 extern nsresult NS_InitXULBroadcastListenerClass(nsIScriptContext *aContext, void **aPrototype);
