@@ -41,6 +41,15 @@
 
 #include "msmap.h"
 
+#if defined(_WIN32)
+#include <windows.h>
+#include <imagehlp.h>
+
+#define F_DEMANGLE 1
+#else
+#define F_DEMANGLE 0
+#endif /* WIN32 */
+
 
 #define ERROR_REPORT(num, val, msg)   fprintf(stderr, "error(%d):\t\"%s\"\t%s\n", (num), (val), (msg));
 #define CLEANUP(ptr)    do { if(NULL != ptr) { free(ptr); ptr = NULL; } } while(0)
@@ -192,6 +201,78 @@ char* lastWord(char* inString)
 }
 
 
+char* symdup(const char* inSymbol)
+/*
+**  Attempts to demangle the symbol if appropriate.
+**  Otherwise acts like strdup.
+*/
+{
+    char* retval = NULL;
+
+#if F_DEMANGLE
+    {
+        int isImport = 0;
+
+        if(0 == strncmp("__imp_", inSymbol, 6))
+        {
+            isImport = __LINE__;
+            inSymbol += 6;
+        }
+
+        if('?' == inSymbol[0])
+        {
+            char demangleBuf[0x200];
+            DWORD demangleRes = 0;
+            
+            demangleRes = UnDecorateSymbolName(inSymbol, demangleBuf, sizeof(demangleBuf), UNDNAME_COMPLETE);
+            if(0 != demangleRes)
+            {
+                retval = strdup(demangleBuf);
+            }
+            else
+            {
+                /*
+                ** fall back to normal.
+                */
+                retval = strdup(inSymbol);
+            }
+        }
+        else if('_' == inSymbol[0])
+        {
+            retval = strdup(inSymbol + 1);
+        }
+        else
+        {
+            retval = strdup(inSymbol);
+        }
+
+        /*
+        **  May need to rewrite the symbol if an import.
+        */
+        if(NULL != retval && isImport)
+        {
+            const char importPrefix[] = "__declspec(dllimport) ";
+            char importBuf[0x200];
+            int printRes = 0;
+
+            printRes = _snprintf(importBuf, sizeof(importBuf), "%s%s", importPrefix, retval);
+            free(retval);
+            retval = NULL;
+
+            if(printRes > 0)
+            {
+                retval = strdup(importBuf);
+            }
+        }
+    }
+#else /* F_DEMANGLE */
+    retval = strdup(symbolBuf);
+#endif  /* F_DEMANGLE */
+
+    return retval;
+}
+
+
 int readmap(Options* inOptions, MSMap_Module* inModule)
 /*
 **  Read the input line by line, adding it to the module.
@@ -283,22 +364,26 @@ int readmap(Options* inOptions, MSMap_Module* inModule)
                                             scanRes = sscanf(current, "%x:%x %s %x", (unsigned*)&(theSymbol->mPrefix), (unsigned*)&(theSymbol->mOffset), symbolBuf, (unsigned*)&(theSymbol->mRVABase));
                                             if(4 == scanRes)
                                             {
-                                                theSymbol->mSymbol = strdup(symbolBuf);
-                                                if(NULL != theSymbol->mSymbol)
+                                                theSymbol->mSymbol = symdup(symbolBuf);
+
+                                                if(0 == retval)
                                                 {
-                                                    char *last = lastWord(current);
-                                                    
-                                                    theSymbol->mObject = strdup(last);
-                                                    if(NULL == theSymbol->mObject)
+                                                    if(NULL != theSymbol->mSymbol)
+                                                    {
+                                                        char *last = lastWord(current);
+                                                        
+                                                        theSymbol->mObject = strdup(last);
+                                                        if(NULL == theSymbol->mObject)
+                                                        {
+                                                            retval = __LINE__;
+                                                            ERROR_REPORT(retval, last, "Unable to copy object name.");
+                                                        }
+                                                    }
+                                                    else
                                                     {
                                                         retval = __LINE__;
-                                                        ERROR_REPORT(retval, last, "Unable to copy object name.");
+                                                        ERROR_REPORT(retval, symbolBuf, "Unable to copy symbol name.");
                                                     }
-                                                }
-                                                else
-                                                {
-                                                    retval = __LINE__;
-                                                    ERROR_REPORT(retval, symbolBuf, "Unable to copy symbol name.");
                                                 }
                                             }
                                             else
@@ -404,7 +489,8 @@ int readmap(Options* inOptions, MSMap_Module* inModule)
                                         scanRes = sscanf(current, "%x:%x %s %x", (unsigned*)&(theSymbol->mPrefix), (unsigned*)&(theSymbol->mOffset), symbolBuf, (unsigned *)&(theSymbol->mRVABase));
                                         if(4 == scanRes)
                                         {
-                                            theSymbol->mSymbol = strdup(symbolBuf);
+                                            theSymbol->mSymbol = symdup(symbolBuf);
+
                                             if(NULL != theSymbol->mSymbol)
                                             {
                                                 char *last = lastWord(current);
