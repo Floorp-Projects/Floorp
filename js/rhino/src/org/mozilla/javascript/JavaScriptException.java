@@ -48,23 +48,22 @@ import java.lang.reflect.Method;
  */
 public class JavaScriptException extends Exception {
     /**
-     * <p>Pointer to initCause() method of Throwable. 
+     * <p>Pointer to initCause() method of Throwable.
      * If this method does not exist,
      * (i.e. we're running on something earlier than Java 1.4), the pointer will
      * be null.</p>
      */
-    public static Method initCauseMethod = null;
+    private static Method initCauseMethod = null;
 
     static {
         // Are we running on a JDK 1.4 or later system?
         try {
-            initCauseMethod = Throwable.class.getMethod("initCause", 
-                                          new Class[]{Throwable.class});
-        } catch (NoSuchMethodException nsme) {
-                // We are not running on JDK 1.4
-        } catch (SecurityException se) {
-                // This should have not happened, but if it does,
-                // pretend the method odes not exist.
+            Class ThrowableClass = ScriptRuntime.classOrNull(
+                                       "java.lang.Throwable");
+            initCauseMethod = ThrowableClass.getMethod("initCause", 
+                                          new Class[]{ThrowableClass});
+        } catch (Exception ex) {
+            // Assume any exceptions means the method does not exist.
         }
     }
 
@@ -77,18 +76,11 @@ public class JavaScriptException extends Exception {
      */
     public JavaScriptException(Object value) {
         super(ScriptRuntime.toString(value));
-        if ((value instanceof Throwable) && (initCauseMethod != null)) {
+        if (value instanceof Throwable && initCauseMethod != null) {
             try {
-                initCauseMethod.invoke(this, new Object[] {(Throwable) value});
-            } catch (IllegalAccessException e) {
-                // we cannot help you here
-                e.printStackTrace(); // Print the stacktrace to System.err so nice people would know what hit them
-            } catch (IllegalArgumentException e) {
-                // Should never happen.
-                e.printStackTrace(); // Print the stacktrace to System.err so nice people would know what hit them
-            } catch (InvocationTargetException e) {
-                // This neither, since initCause() does not throw any exceptions (at least in Java 1.4 it doesn't)
-                e.printStackTrace(); // Print the stacktrace to System.err so nice people would know what hit them
+                initCauseMethod.invoke(this, new Object[] {value});
+            } catch (Exception e) {
+                // Ignore any exceptions 
             }
         }
         this.value = value;
