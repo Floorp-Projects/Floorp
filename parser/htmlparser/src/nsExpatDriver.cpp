@@ -200,7 +200,7 @@ Driver_HandleExternalEntityRef(XML_Parser parser,
       
       XML_SetBase(entParser, (const XML_Char*) absURL.get());
 
-      while (NS_SUCCEEDED(uniIn->Read(uniBuf, 0, 1024, &readCount))) {
+      while (NS_SUCCEEDED(uniIn->Read(uniBuf, 0, 1024, &readCount)) && result) {
         if (readCount) {
           // Pass the buffer to expat for parsing
           result = XML_Parse(entParser, (char *)uniBuf,  readCount * sizeof(PRUnichar), 0);
@@ -459,7 +459,9 @@ IsLoadableDTD(const XML_Char* aFPIStr, nsCOMPtr<nsIURI>* aDTD)
   if (!isLoadable) {
     // try to see if we can map the public ID to a known local DTD
     nsXPIDLCString fileName;
-    RemapDTD(aFPIStr, fileName);
+    if (aFPIStr) {
+      RemapDTD(aFPIStr, fileName);
+    }
     if (fileName.IsEmpty()) {
       // try to see if the user has installed the DTD file -- we extract the
       // filename.ext of the DTD here. Hence, for any DTD for which we have
