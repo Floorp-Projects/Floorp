@@ -32,7 +32,7 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  *
- * $Id: sslgathr.c,v 1.1 2000/03/31 19:35:05 relyea%netscape.com Exp $
+ * $Id: sslgathr.c,v 1.2 2000/12/02 00:54:01 nelsonb%netscape.com Exp $
  */
 #include "cert.h"
 #include "ssl.h"
@@ -436,11 +436,9 @@ ssl_NewGather(void)
 void 
 ssl_DestroyGather(sslGather *gs)
 {
-    if (gs->inbuf.buf != NULL) {
-	PORT_ZFree(gs->inbuf.buf, gs->inbuf.len);
-    }
-    if (gs) {
-	PORT_Free(gs->buf.buf);
+    if (gs) {	/* the PORT_*Free functions check for NULL pointers. */
+	PORT_ZFree(gs->buf.buf, gs->buf.space);
+	PORT_Free(gs->inbuf.buf);
 	PORT_Free(gs);
     }
 }
