@@ -138,8 +138,10 @@ int main(int argc, char* argv[])
 {
   nsresult rv;
 
+#ifndef XP_MAC
   // Unbuffer debug output (necessary for automated QA performance scripts).
   setbuf( stdout, 0 );
+#endif
   
   nsICmdLineService *  cmdLineArgs = nsnull;
   NS_VERIFY(NS_SUCCEEDED(nsIThread::SetMainThread()), "couldn't set main thread");
