@@ -617,10 +617,15 @@ nsProgressDialog.prototype = {
             // If the "keep dialog open" box is checked, then update dialog.
             if ( this.dialog && this.dialogElement( "keep" ).checked ) {
                 // Indicate completion in status area.
-                this.setValue( "status", this.replaceInsert( this.getString( "completeMsg" ),
-                                                             1,
-                                                             this.formatSeconds( this.elapsed/1000 ) ) );
+                var string = this.getString( "completeMsg" );
+                string = this.replaceInsert( string,
+                                             1,
+                                             this.formatSeconds( this.elapsed/1000 ) );
+                string = this.replaceInsert( string,
+                                             2,
+                                             this.target.fileSize >> 10 );
 
+                this.setValue( "status", string);
                 // Put progress meter at 100%.
                 this.percent = 100;
 
