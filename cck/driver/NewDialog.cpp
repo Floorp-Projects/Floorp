@@ -47,7 +47,23 @@ void CNewDialog::DoDataExchange(CDataExchange* pDX)
 	CDialog::DoDataExchange(pDX);
 	//{{AFX_DATA_MAP(CNewDialog)
 	DDX_Text(pDX, IDC_EDIT1, m_EditField);
+    DDV_INIFile(pDX, m_EditField);
+
 	//}}AFX_DATA_MAP
+}
+
+void CNewDialog::DDV_INIFile(CDataExchange* pDX, CString value)
+{
+	if(pDX->m_bSaveAndValidate) 
+	{
+		if(value.Right(4) != ".nci")
+		{
+			value = value +".nci";
+			CWnd nbox;
+			nbox.MessageBox("We have appended '.nci' to the file" ,"value",MB_ICONEXCLAMATION);
+		}
+		myData = value;
+	}
 }
 
 
@@ -80,8 +96,8 @@ BOOL CNewDialog::OnCommand(WPARAM wParam, LPARAM lParam)
 void CNewDialog::OnOK() 
 {
 	// TODO: Add extra validation here
-	UpdateData();
-	myData = m_EditField;
+//	UpdateData();
+//	myData = m_EditField;
 	CDialog::OnOK();
 }
 

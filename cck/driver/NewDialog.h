@@ -38,6 +38,7 @@ public:
 
 	CString myData;
 	CString GetData();
+	void DDV_INIFile(CDataExchange* pDX, CString value);
 
 // Overrides
 	// ClassWizard generated virtual function overrides
