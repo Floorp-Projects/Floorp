@@ -1,8 +1,8 @@
 # -*- Mode: perl; indent-tabs-mode: nil -*-
 
 
-# $Revision: 1.18 $ 
-# $Date: 2002/05/02 01:58:00 $ 
+# $Revision: 1.19 $ 
+# $Date: 2002/05/02 23:43:24 $ 
 # $Author: kestes%walrus.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/default_conf/BuildStatus.pm,v $ 
 # $Name:  $ 
@@ -182,9 +182,9 @@ package BuildStatus;
 sub TinderboxPrintLegend {
     my $out;
 
-    my @keys = sort keys %TinderboxPrintLegand;
+    my @keys = sort keys %TinderboxPrint;
     foreach $key (@keys) {
-        my $value = $TinderboxPrintLegand{$key}{'description'};
+        my $value = $TinderboxPrint{$key}{'description'};
         
         $out .= "\t\t\t<tr><td align=center><TT>$key</TT></td>\n";
         $out .= "\t\t\t\t<td>= $value</td></tr>\n";
