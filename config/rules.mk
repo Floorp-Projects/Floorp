@@ -439,7 +439,7 @@ endif
 makefiles: $(SUBMAKEFILES)
 ifdef DIRS
 	@for d in $(filter-out $(STATIC_MAKEFILES), $(DIRS)); do\
-		$(UPDATE_TITLE);				\
+		$(UPDATE_TITLE) 				\
 		$(MAKE) -C $$d $@				\
 	done
 endif
@@ -1469,6 +1469,10 @@ showhost:
 	@echo "HOST_EXTRA_DEPS    = $(HOST_EXTRA_DEPS)"
 	@echo "HOST_PROGRAM       = $(HOST_PROGRAM)"
 	@echo "HOST_PROGOBJS      = $(HOST_PROGOBJS)"
+
+showbuildmods::
+	@echo "Build Modules	= $(BUILD_MODULES)"
+	@echo "Module dirs	= $(BUILD_MODULE_DIRS)"
 
 zipmakes:
 ifneq (,$(filter $(PROGRAM) $(SIMPLE_PROGRAMS) $(LIBRARY) $(SHARED_LIBRARY),$(TARGETS)))
