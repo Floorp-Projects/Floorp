@@ -202,6 +202,7 @@ public:
   // nsIBindableContent
   NS_IMETHOD SetBinding(nsIXBLBinding* aBinding);
   NS_IMETHOD GetBinding(nsIXBLBinding** aResult);
+  NS_IMETHOD GetBaseTag(nsIAtom** aResult);
 
   // Helper method
   NS_IMETHOD SetPresStateChecked(nsIHTMLContent * aHTMLContent, 
@@ -755,6 +756,15 @@ nsHTMLInputElement::GetBinding(nsIXBLBinding** aResult)
   *aResult = mBinding;
   NS_IF_ADDREF(*aResult);
   return NS_OK;
+}
+
+NS_IMETHODIMP
+nsHTMLInputElement::GetBaseTag(nsIAtom** aResult)
+{
+  if (mBinding)
+    return mBinding->GetBaseTag(aResult);
+  else
+    return NS_OK;
 }
 
 NS_IMETHODIMP

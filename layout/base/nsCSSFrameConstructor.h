@@ -562,6 +562,7 @@ protected:
                              nsIAtom*                 aTag,
                              nsIStyleContext*         aStyleContext,
                              nsFrameItems&            aFrameItems,
+                             PRBool                   aXBLBaseTag,
                              PRBool&                  aHaltProcessing);
 
 #endif

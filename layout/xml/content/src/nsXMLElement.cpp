@@ -235,3 +235,11 @@ nsXMLElement::GetBinding(nsIXBLBinding** aResult)
   return NS_OK;
 }
 
+NS_IMETHODIMP
+nsXMLElement::GetBaseTag(nsIAtom** aResult)
+{
+  if (mBinding)
+    return mBinding->GetBaseTag(aResult);
+  else
+    return NS_OK;
+}

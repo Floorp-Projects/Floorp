@@ -203,6 +203,7 @@ public:
   // nsIBindableContent
   NS_IMETHOD SetBinding(nsIXBLBinding* aBinding);
   NS_IMETHOD GetBinding(nsIXBLBinding** aResult);
+  NS_IMETHOD GetBaseTag(nsIAtom** aResult);
 
   // nsIDOMEventReceiver
   NS_IMPL_IDOMEVENTRECEIVER_USING_GENERIC(mInner)

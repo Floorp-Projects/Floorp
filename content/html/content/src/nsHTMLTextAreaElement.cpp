@@ -133,6 +133,7 @@ public:
   // nsIBindableContent
   NS_IMETHOD SetBinding(nsIXBLBinding* aBinding);
   NS_IMETHOD GetBinding(nsIXBLBinding** aResult);
+  NS_IMETHOD GetBaseTag(nsIAtom** aResult);
 
 protected:
   nsGenericHTMLContainerElement mInner;
@@ -334,6 +335,14 @@ nsHTMLTextAreaElement::GetBinding(nsIXBLBinding** aResult)
   return NS_OK;
 }
 
+NS_IMETHODIMP
+nsHTMLTextAreaElement::GetBaseTag(nsIAtom** aResult)
+{
+  if (mBinding)
+    return mBinding->GetBaseTag(aResult);
+  else
+    return NS_OK;
+}
 
 NS_IMETHODIMP
 nsHTMLTextAreaElement::Select() 
