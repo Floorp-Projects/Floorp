@@ -1,0 +1,411 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- ***** BEGIN LICENSE BLOCK *****
+   - Version: MPL 1.1/GPL 2.0/LGPL 2.1
+   -
+   - The contents of this file are subject to the Mozilla Public License Version
+   - 1.1 (the "License"); you may not use this file except in compliance with
+   - the License. You may obtain a copy of the License at
+   - http://www.mozilla.org/MPL/
+   -
+   - Software distributed under the License is distributed on an "AS IS" basis,
+   - WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+   - for the specific language governing rights and limitations under the
+   - License.
+   -
+   - The Original Code is __________________________________________.
+   -
+   - The Initial Developer of the Original Code is
+   - ____________________________________________.
+   - Portions created by the Initial Developer are Copyright (C) 2___
+   - the Initial Developer. All Rights Reserved.
+   -
+   - Contributor(s):
+   -
+   - Alternatively, the contents of this file may be used under the terms of
+   - either the GNU General Public License Version 2 or later (the "GPL"), or
+   - the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+   - in which case the provisions of the GPL or the LGPL are applicable instead
+   - of those above. If you wish to allow use of your version of this file only
+   - under the terms of either the GPL or the LGPL, and not to allow others to
+   - use your version of this file under the terms of the MPL, indicate your
+   - decision by deleting the provisions above and replace them with the notice
+   - and other provisions required by the LGPL or the GPL. If you do not delete
+   - the provisions above, a recipient may use your version of this file under
+   - the terms of any one of the MPL, the GPL or the LGPL.
+   -
+   - ***** END LICENSE BLOCK ***** -->
+
+<?xml-stylesheet href="chrome://help/skin/" type="text/css"?>
+<?xml-stylesheet href="chrome://help/skin/sidebar.css" type="text/css"?>
+
+<?xul-overlay href="chrome://help/content/helpContextOverlay.xul"?>
+<?xul-overlay href="chrome://communicator/content/utilityOverlay.xul"?>
+
+<!DOCTYPE window [
+    <!ENTITY % brandDTD SYSTEM "chrome://global/locale/brand.dtd">
+    %brandDTD;
+    <!ENTITY % helpDTD SYSTEM "chrome://help/locale/help.dtd">
+    %helpDTD;
+]>
+
+<window id="help"
+        windowtype="mozilla:help"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        width="640"
+        height="550"
+        persist="width height screenX screenY"
+        onload="init();"
+        onunload="window.XULBrowserWindow.destroy();">
+
+    <script type="application/x-javascript" src="chrome://help/content/toolbarCustomization.js"/>
+    <script type="application/x-javascript" src="chrome://help/content/help.js"/>
+    <script type="application/x-javascript" src="chrome://browser/content/sessionHistoryUI.js"/>
+    <script type="application/x-javascript" src="chrome://communicator/content/Utils.js"/>
+    <script type="application/x-javascript" src="chrome://global/content/findUtils.js"/>
+    <script type="application/x-javascript" src="chrome://global/content/viewZoomOverlay.js"/>
+    <script type="application/x-javascript" src="chrome://global/content/globalOverlay.js"/>
+
+    <menupopup id="backMenu" position="after_start"
+        onpopupshowing="return createBackMenu(event);"
+        oncommand="gotoHistoryIndex(event);"/>
+    <menupopup id="forwardMenu" position="after_start"
+        onpopupshowing="return createForwardMenu(event);"
+        oncommand="gotoHistoryIndex(event);"/>
+    <popupset id="contentAreaContextSet"/>
+    <popup id="toolbar-context-menu">
+      <menuitem command="cmd_CustomizeToolbars"
+                label="&viewCustomizeToolbar.label;"
+                accesskey="&viewCustomizeToolbar.accesskey;"/>
+    </popup>    
+    <broadcasterset id="helpBroadcasters">
+        <broadcaster id="canGoBack"    disabled="true"/>
+        <broadcaster id="canGoForward" disabled="true"/>
+    </broadcasterset>
+    <commandset id="globalEditMenuItems"/>
+    <commandset id="selectEditMenuItems">
+        <command id="cmd_close" oncommand="close();"/>
+        <command id="Help:Home" oncommand="goHome();"/>
+        <command id="Help:Back" oncommand="goBack();"       observes="canGoBack"/>
+        <command id="Help:Forward" oncommand="goForward();" observes="canGoForward"/>
+        <command id="Help:Find" oncommand="helpBrowser.find();"/>
+        <command id="Help:FindAgain" oncommand="helpBrowser.findAgain();"/>      
+	<command id="Help:ToggleSidebar" oncommand="toggleSidebar();"/>
+        <command id="cmd_textZoomReduce" oncommand="ZoomManager.prototype.getInstance().reduce();"/>
+        <command id="cmd_textZoomEnlarge" oncommand="ZoomManager.prototype.getInstance().enlarge();"/>
+        <command id="cmd_CustomizeToolbars" oncommand="CustomizeToolbar('help-toolbox');"/>
+    </commandset>
+    <commandset id="clipboardEditMenuItems"/>
+    <commandset id="viewZoomCommands"/>
+    <keyset id="keys">
+        <key id="key_close"/>
+        <key id="printKb" key="&printCmd.commandkey;" oncommand="print();"
+            modifiers="accel"/>
+        <keyset id="viewZoomKeys"/>
+        <keyset id="navigationKeys"/>
+        <key id="key_find" key="&findOnCmd.commandkey;"
+            command="Help:Find" modifiers="accel"/>
+        <key id="key_findAgain" key="&findAgainCmd.commandkey;"
+            command="Help:FindAgain" modifiers="accel"/>
+        <key id="key_textZoomEnlarge" key="&textZoomEnlargeCmd.commandkey;"
+            command="cmd_textZoomEnlarge" modifiers="accel"/>
+        <key id="key_textZoomReduce" key="&textZoomReduceCmd.commandkey;"
+            command="cmd_textZoomReduce" modifiers="accel"/>
+        <key id="key_toggleSidebar" keycode="VK_F9" command="Help:ToggleSidebar"/>
+    </keyset>
+    <stringbundle id="bundle_viewZoom"/>
+    <stringbundle id="findBundle"
+        src="chrome://global/locale/finddialog.properties"/>
+    <stringbundle id="bundle_help"
+        src="chrome://help/locale/help.properties"/>
+
+    <vbox flex="1">
+
+        <!-- button bar -->
+        <toolbox id="help-toolbox" class="toolbox-top" mode="icons" iconsize="small" customizable="true">
+            
+            <toolbarpalette id="HelpToolbarPalette">
+            
+                <toolbarbutton id="sidebar-button"
+                	class="toolbarbutton-1"
+                	customizeable="true" label="&sidebarBtn.label;"
+                	command="Help:ToggleSidebar"/>
+                <toolbarbutton id="back-button" type="menu-button"
+                        class="toolbarbutton-1" label="&backCmd.label;"
+                        oncommand="if (event.target==this) goBack(); else gotoHistoryIndex(event);"
+                        observes="canGoBack" context="backMenu"
+                        tooltiptext="&backButton.tooltip;">
+                    <menupopup context=""
+                        onpopupshowing="createBackMenu(event);"/>
+                </toolbarbutton>
+                <toolbarbutton id="forward-button" type="menu-button"
+                        class="toolbarbutton-1"
+                        label="&forwardCmd.label;"
+                        oncommand="if (event.target==this) goForward(); else gotoHistoryIndex(event);"
+                        tooltiptext="&forwardButton.tooltip;"
+                        observes="canGoForward">
+                    <menupopup context=""
+                        onpopupshowing="createForwardMenu(event);"/>
+                </toolbarbutton>
+                <toolbarbutton id="home-button"
+                    class="toolbarbutton-1" label="&homeButton.label;"
+                    command="Help:Home"/>
+                <toolbarbutton id="find-button"
+                    class="toolbarbutton-1" label="&findBtn.label;"
+                    command="Help:Find"/>
+                <toolbarbutton id="zoom-small-button"
+                    class="toolbarbutton-1" label="&textZoomReduceBtn.label;"
+                    command="cmd_textZoomReduce"/>
+                <toolbarbutton id="zoom-large-button"
+                    class="toolbarbutton-1" label="&textZoomEnlargeBtn.label;"
+                    command="cmd_textZoomEnlarge"/>    
+                <toolbarbutton id="print-button" class="toolbarbutton-1"
+                    label="&printButton.label;"
+                    oncommand="print();"
+                    tooltiptext="&printButton.tooltip;"/>                   
+                
+                <toolbaritem id="throbber-box" title="&throbberItem.title;"
+                    align="center" pack="center">
+                  <button id="help-throbber" tooltiptext="&throbber.tooltip;"
+                    command="Help:Home"/>
+                </toolbaritem>
+            </toolbarpalette>
+            <toolbar id="helpToolbar" toolbarname="Help Toolbar" class="toolbar-primary
+                    chromeclass-toolbar" mode="icons" iconsize="small"
+                    customizable="true"
+                    defaultset="sidebar-button,spacer,separator,spacer,back-button,forward-button,home-button,spacer,separator,spacer,print-button,spring,throbber-box"
+                    context="toolbar-context-menu"/>
+	    <toolbarset id="customToolbars"/>
+        </toolbox>
+
+        <!-- the two help panes (sidebar & content) -->
+        <hbox flex="1">
+            <vbox id="helpsidebar-box" persist="width">
+
+                <!-- glossary panel -->
+                <button id="help-glossary-btn"
+                    class="box-texttab texttab-sidebar"
+                    label="&glossarytab.label;"
+                    oncommand="showPanel('help-glossary')"/>
+                <tree id="help-glossary-panel" flex="1" hidecolumnpicker="true"
+                        hidden="true" datasources="rdf:null"
+                        containment="http://home.netscape.com/NC-rdf#subheadings"
+                        ref="urn:root" flags="dont-build-content"
+                        onselect="onselect_loadURI(this, 'GlossaryNameColumn');">
+                    <template>
+                        <rule>
+                            <conditions>
+                                <content uri="?uri"/>
+                                <triple subject="?uri"
+                                    predicate="http://home.netscape.com/NC-rdf#subheadings"
+                                    object="?subheadings"/>
+                                <member container="?subheadings"
+                                    child="?subheading"/>
+                            </conditions>
+                            <bindings>
+                                <binding subject="?subheading"
+                                    predicate="http://home.netscape.com/NC-rdf#name"
+                                    object="?name"/>
+
+                                <binding subject="?subheading"
+                                    predicate="http://home.netscape.com/NC-rdf#link"
+                                    object="?link"/>
+                            </bindings>
+
+                            <action>
+                                <treechildren>
+                                    <treeitem uri="?subheading">
+                                        <treerow>
+                                            <treecell label="?name"
+                                                properties="link-?link"/>
+                                        </treerow>
+                                    </treeitem>
+                                </treechildren>
+                            </action>
+                        </rule>
+                    </template>
+                    <treecols>
+                        <treecol id="GlossaryNameColumn" flex="1"
+                            hideheader="true" primary="true"/>
+                    </treecols>
+                </tree>
+
+                <!-- index panel -->
+                <button id="help-index-btn" class="box-texttab texttab-sidebar"
+                    label="&indextab.label;"
+                    oncommand="showPanel('help-index');expandAllIndexEntries();"/>
+
+                <tree id="help-index-panel" flex="1" datasources="rdf:null"
+                        hidecolumnpicker="true" hidden="true"
+                        containment="http://home.netscape.com/NC-rdf#subheadings"
+                        ref="urn:root"
+                        flags="dont-build-content dont-test-empty"
+                        onselect="onselect_loadURI(this, 'IndexNameColumn')">
+                    <template>
+                        <rule>
+                            <conditions>
+                                <content uri="?uri"/>
+                                <triple subject="?uri"
+                                    predicate="http://home.netscape.com/NC-rdf#subheadings"
+                                    object="?subheadings"/>
+                                <member container="?subheadings"
+                                    child="?subheading"/>
+                            </conditions>
+                            <bindings>
+                                <binding subject="?subheading"
+                                    predicate="http://home.netscape.com/NC-rdf#name"
+                                    object="?name"/>
+
+                                <binding subject="?subheading"
+                                    predicate="http://home.netscape.com/NC-rdf#link"
+                                    object="?link"/>
+                            </bindings>
+
+                            <action>
+                                <treechildren>
+                                    <treeitem uri="?subheading">
+                                        <treerow>
+                                            <treecell ref="IndexNameColumn"
+                                                label="?name"
+                                                properties="link-?link"/>
+                                        </treerow>
+                                    </treeitem>
+                                </treechildren>
+                            </action>
+                        </rule>
+                    </template>
+                    <treecols>
+                        <treecol id="IndexNameColumn" flex="1" hideheader="true"
+                            primary="true" sortActive="true"
+                            sortDirection="ascending" sort="?name"/>
+                    </treecols>
+                </tree>
+
+                <!-- search panel -->
+                <button id="help-search-btn" class="box-texttab texttab-sidebar"
+                    label="&searchtab.label;"
+                    oncommand="showPanel('help-search')"/>
+
+                <vbox id="help-search-panel" hidden="true" flex="1">
+                    <hbox align="center">
+                        <textbox id="findText" flex="1" oninput="doEnabling();"
+                            onkeypress="if ((event.keyCode 
+                                == KeyEvent.DOM_VK_ENTER) || (event.keyCode
+                                == KeyEvent.DOM_VK_RETURN))
+                                doFind();"/>
+                        <button id="findButton" default="true" disabled="true"
+                            label="&gobtn.label;" oncommand="doFind()"
+                            flex="0"/>
+                    </hbox>
+                    <tree id="help-search-tree"
+                            flex="1" hidecolumnpicker="true"
+                            datasources="rdf:null"
+                            containment="http://home.netscape.com/NC-rdf#child"
+                            ref="urn:root" flags="dont-build-content"
+                            onselect="onselect_loadURI(this, 'ResultsColumn');">
+                        <template>
+                            <rule>
+                                <conditions>
+                                    <content uri="?uri"/>
+                                    <member container="?uri"
+                                        child="?subheading"/>
+                                </conditions>
+
+                                <bindings>
+                                    <binding subject="?subheading"
+                                        predicate="http://home.netscape.com/NC-rdf#name"
+                                        object="?name"/>
+                                    <binding subject="?subheading"
+                                        predicate="http://home.netscape.com/NC-rdf#link"
+                                        object="?link"/>
+                                </bindings>
+
+                                <action>
+                                    <treechildren>
+                                        <treeitem uri="?subheading">
+                                            <treerow>
+                                                <treecell label="?name"
+                                                    properties="link-?link"/>
+                                            </treerow>
+                                        </treeitem>
+                                    </treechildren>
+                                </action>
+                            </rule>
+                        </template>
+
+                        <treecols>
+                            <treecol id="ResultsColumn" flex="1"
+                                hideheader="true" primary="true"
+                                sortActive="true" sortDirection="ascending"
+                                sort="?name"/>
+                        </treecols>
+                    </tree>
+                </vbox>
+
+                <!-- table of contents panel -->
+                <button id="help-toc-btn" class="box-texttab texttab-sidebar"
+                    label="&toctab.label;"
+                    oncommand="showPanel('help-toc')"/>
+                <tree id="help-toc-panel" flex="1"  hidecolumnpicker="true"
+                        datasources="rdf:null"
+                        containment="http://home.netscape.com/NC-rdf#subheadings"
+                        ref="urn:root" flags="dont-build-panel"
+                        onselect="onselect_loadURI(this, 'NameColumn');">
+                    <template>
+                        <rule>
+                            <conditions>
+                                <content uri="?uri"/>
+                                <triple subject="?uri"
+                                    predicate="http://home.netscape.com/NC-rdf#subheadings"
+                                    object="?subheadings"/>
+                                <member container="?subheadings"
+                                    child="?subheading"/>
+                            </conditions>
+
+                            <bindings>
+                                <binding subject="?subheading"
+                                    predicate="http://home.netscape.com/NC-rdf#name"
+                                    object="?name"/>
+                                <binding subject="?subheading"
+                                    predicate="http://home.netscape.com/NC-rdf#link"
+                                    object="?link"/>
+                            </bindings>
+
+                            <action>
+                                <treechildren>
+                                    <treeitem uri="?subheading">
+                                        <treerow>
+                                            <treecell label="?name"
+                                                properties="link-?link"/>
+                                        </treerow>
+                                    </treeitem>
+                                </treechildren>
+                            </action>
+                        </rule>
+                    </template>
+                    <treecols>
+                        <treecol id="NameColumn" flex="1" hideheader="true"
+                            primary="true"/>
+                    </treecols>
+                </tree>
+
+            </vbox>
+
+            <splitter id="helpsidebar-splitter" collapse="before"
+                    persist="state hidden" autostretch="never" state="open">
+            </splitter>
+
+            <vbox id="appcontent" flex="3">
+                <!-- this box is temporary, pending XBLified <browser> -->
+                <hbox id="browser" flex="1">
+                    <!-- type attribute is used by frame construction to locate
+                        iframes intended to hold (html) content -->
+                    <browser context="contentAreaContextMenu"
+                        type="content-primary" id="help-content"
+                        src="about:blank" flex="1"
+                        ondraggesture="nsDragAndDrop.startDrag(event,
+                            contentAreaDNDObserver);"/>
+                </hbox>
+            </vbox>
+        </hbox>
+    </vbox>
+</window>
