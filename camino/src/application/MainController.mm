@@ -407,7 +407,7 @@ const int kReuseWindowOnAE = 2;
 +(BOOL) isBlankURL:(NSString*)inURL
 {
   BOOL isBlank = NO;
-  if ([inURL isEqualToString: @"about:blank"] || [inURL isEqualToString: @""])
+  if (inURL == nil || [inURL isEqualToString: @"about:blank"] || [inURL isEqualToString: @""])
     isBlank = YES;
   return isBlank;
 }
@@ -1076,7 +1076,7 @@ const int kReuseWindowOnAE = 2;
     return (browserController && [browserController newTabsAllowed]);
   
   // check if someone has previously done a find before allowing findAgain to be enabled
-  if (action == @selector(findAgain:))
+  if (action == @selector(findAgain:) || action == @selector(findPrevious:))
     return (browserController && [[browserController lastFindText] length] > 0);
   
   // check what the state of the personal toolbar should be, but only if there is a browser
