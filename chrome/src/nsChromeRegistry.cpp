@@ -80,6 +80,7 @@ public:
 
 protected:
     nsresult EnsureRegistryDataSource();
+    nsresult GetSkinOrContentResource(nsIRDFResource** aResult);
 };
 
 PRUint32 nsChromeRegistry::gRefCnt = 0;
@@ -213,6 +214,36 @@ nsChromeRegistry::ConvertChromeURL(nsIURL* aChromeURL)
         NS_ERROR("Unable to ensure the existence of a chrome registry.");
         return rv;
     }
+
+    // Retrieve the resource for this chrome element.
+    const char* host;
+    if (NS_FAILED(rv = aChromeURL->GetHost(&host))) {
+        NS_ERROR("Unable to retrieve the host for a chrome URL.");
+        return rv;
+    }
+
+    nsAutoString hostStr(host);
+    hostStr.ToLowerCase();
+
+    // Construct a chrome URL and use it to look up a resource.
+    nsAutoString windowType = nsAutoString("chrome://") + hostStr + "/";
+
+    // Find out if the chrome URL referenced a skin or content.
+    const char* file;
+    aChromeURL->GetFile(&file);
+    nsAutoString restOfURL(file);
+    restOfURL.ToLowerCase();
+    if (restOfURL.Find("/skin") == 0)
+        windowType += "/skin/";
+    else windowType += "/content/";
+
+    // We have the resource URI that we wish to retrieve. Fetch it.
+    nsCOMPtr<nsIRDFResource> chromeResource;
+    if (NS_FAILED(rv = GetSkinOrContentResource(getter_AddRefs(chromeResource)))) {
+        NS_ERROR("Unable to retrieve the resource corresponding to the chrome skin or content.");
+        return rv;
+    }
+
     return NS_OK;
 }
 
@@ -257,6 +288,11 @@ nsChromeRegistry::EnsureRegistryDataSource()
     return gRDFService->GetDataSource("resource:/chrome/registry.rdf", &gRegistryDB);
 }
 
+nsresult
+nsChromeRegistry::GetSkinOrContentResource(nsIRDFResource** aResult)
+{
+    return NS_OK;
+}
 nsresult
 NS_NewChromeRegistry(nsIChromeRegistry** aResult)
 {
