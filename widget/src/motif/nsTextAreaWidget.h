@@ -19,7 +19,6 @@
 #ifndef nsTextAreaWidget_h__
 #define nsTextAreaWidget_h__
 
-#include "nsWindow.h"
 #include "nsTextHelper.h"
 #include "nsITextAreaWidget.h"
 
@@ -55,13 +54,8 @@ public:
               nsIToolkit *aToolkit = nsnull,
               nsWidgetInitData *aInitData = nsnull);
 
-
-  virtual PRBool  OnPaint(nsPaintEvent & aEvent);
-  virtual PRBool  OnResize(nsSizeEvent &aEvent);
-
 private:
   PRBool mMakeReadOnly;
-
 };
 
 #endif // nsTextAreaWidget_h__

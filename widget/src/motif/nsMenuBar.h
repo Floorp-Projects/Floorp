@@ -42,15 +42,15 @@ public:
   virtual ~nsMenuBar();
 
   // nsIMenuListener interface
+  nsEventStatus MenuItemSelected(const nsMenuEvent & aMenuEvent);
   nsEventStatus MenuSelected(const nsMenuEvent & aMenuEvent);
-  virtual nsEventStatus MenuItemSelected(const nsMenuEvent & aMenuEvent);
-  virtual nsEventStatus MenuDeselected(const nsMenuEvent & aMenuEvent);
-  virtual nsEventStatus MenuConstruct(
+  nsEventStatus MenuDeselected(const nsMenuEvent & aMenuEvent);
+  nsEventStatus MenuConstruct(
     const nsMenuEvent& aMenuEvent,
     nsIWidget        * aParentWindow,
     void             * menubarNode,
     void             * aWebShell);
-  virtual nsEventStatus MenuDestruct(const nsMenuEvent & aMenuEvent);
+  nsEventStatus MenuDestruct(const nsMenuEvent & aMenuEvent);
 
   NS_DECL_ISUPPORTS
 
@@ -69,7 +69,7 @@ public:
   NS_IMETHOD Paint();
   NS_IMETHOD SetNativeData(void* aData);
 protected:
-  Widget      mMenu;
+  Widget      mMenuBar;
   nsIWidget * mParent;
   PRBool      mIsMenuBarAdded;
 

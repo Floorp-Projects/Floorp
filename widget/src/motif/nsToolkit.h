@@ -20,9 +20,7 @@
 #define TOOLKIT_H
 
 #include "nsIToolkit.h"
-#include "X11/Xlib.h"
-
-struct MethodInfo;
+#include <X11/Xlib.h>
 
 /**
  * Wrapper around the thread running the message pump.
@@ -48,7 +46,5 @@ private:
   GC mSharedGC;
 
 };
-
-
 
 #endif  // TOOLKIT_H
