@@ -18,6 +18,9 @@ use strict;
 package PostMozilla;
 
 
+sub PreBuild {
+}
+
 sub main {
   # Get build directory from caller.
   my ($mozilla_build_dir) = @_;
