@@ -327,7 +327,7 @@ struct nsHTMLReflowState {
    * there isn't one (but that should really only happen for root
    * frames).
    */
-  static const nsIFrame* GetContainingBlockFor(const nsIFrame* aFrame);
+  static nsIFrame* GetContainingBlockFor(const nsIFrame* aFrame);
 
   /**
    * Get the page box reflow state, starting from a frames
