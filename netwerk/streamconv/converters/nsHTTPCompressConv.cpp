@@ -293,8 +293,14 @@ nsHTTPCompressConv::do_OnDataAvailable (nsIChannel *aChannel, nsISupports *aCont
 
 	nsCOMPtr<nsIByteArrayInputStream> convertedStreamSup;
 
-	rv = NS_NewByteArrayInputStream (getter_AddRefs(convertedStreamSup), buffer, aCount);
-	if (NS_FAILED (rv)) 
+	char * lBuf = (char *) nsAllocator::Alloc (aCount);
+	if (lBuf == NULL)
+		return NS_ERROR_OUT_OF_MEMORY;
+
+	memcpy (lBuf, buffer, aCount);
+
+	rv = NS_NewByteArrayInputStream (getter_AddRefs(convertedStreamSup), lBuf, aCount);
+	if (NS_FAILED (rv))
 	    return rv;
 
 	nsCOMPtr<nsIInputStream> convertedStream = do_QueryInterface (convertedStreamSup, &rv);
