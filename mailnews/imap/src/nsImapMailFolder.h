@@ -129,7 +129,6 @@ public:
   NS_IMETHOD EmptyTrash(nsIMsgWindow *msgWindow, nsIUrlListener *aListener);
 	NS_IMETHOD Delete ();
 	NS_IMETHOD Rename (const PRUnichar *newName, nsIMsgWindow *msgWindow);
-	NS_IMETHOD Adopt(nsIMsgFolder *srcFolder, PRUint32 *outPos);
     NS_IMETHOD GetNoSelect(PRBool *aResult);
 
 	NS_IMETHOD GetPrettyName(PRUnichar ** prettyName);	// Override of the base, for top-level mail folder
@@ -351,6 +350,7 @@ protected:
 	PRBool				m_msgMovedByFilter;
 	nsImapMoveCoalescer *m_moveCoalescer;
 	nsMsgKey			m_curMsgUid;
+  PRUint32    m_uidValidity;
 	PRInt32			m_nextMessageByteLength;
   nsCOMPtr<nsIEventQueue> m_eventQueue;
   PRBool m_urlRunning;

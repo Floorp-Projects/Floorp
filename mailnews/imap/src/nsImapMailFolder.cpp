@@ -182,6 +182,7 @@ nsImapMailFolder::nsImapMailFolder() :
                                             getter_AddRefs(m_eventQueue));
   m_moveCoalescer = nsnull;
   m_boxFlags = 0;
+  m_uidValidity = 0;
   m_hierarchyDelimiter = kOnlineHierarchySeparatorUnknown;
   m_pathName = nsnull;
 }
@@ -1582,13 +1583,6 @@ nsImapMailFolder::MarkMessagesFlagged(nsISupportsArray *messages, PRBool markFla
   return rv;
 }
 
-
-NS_IMETHODIMP nsImapMailFolder::Adopt(nsIMsgFolder *srcFolder, 
-                                      PRUint32 *outPos)
-{
-    nsresult rv = NS_ERROR_FAILURE;
-    return rv;
-}
 
 NS_IMETHODIMP nsImapMailFolder::SetOnlineName(const char * aOnlineFolderName)
 {
@@ -4224,14 +4218,17 @@ NS_IMETHODIMP
 nsImapMailFolder::GetStoredUIDValidity(nsIImapProtocol* aProtocol,
                                        uid_validity_info* aInfo)
 {
-    return NS_ERROR_FAILURE;
+  NS_ENSURE_ARG(aInfo);
+  aInfo->returnValidity = m_uidValidity;
+  return NS_OK;
 }
 
 NS_IMETHODIMP
 nsImapMailFolder::LiteSelectUIDValidity(nsIImapProtocol* aProtocol,
                                         PRUint32 uidValidity)
 {
-    return NS_ERROR_FAILURE;
+  m_uidValidity = uidValidity;
+  return NS_OK;
 }
 
 NS_IMETHODIMP nsImapMailFolder::GetPath(nsIFileSpec ** aPathName)
