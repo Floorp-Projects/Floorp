@@ -80,7 +80,8 @@
  * On these platforms, symbols have a leading '_'.
  */
 #if defined(SUNOS4) || defined(RHAPSODY) || defined(NEXTSTEP) \
-    || defined(OPENBSD) || defined(WIN16) || defined(NETBSD)
+    || defined(OPENBSD) || defined(WIN16) \
+    || (defined(NETBSD) && !defined(__ELF__))
 #define NEED_LEADING_UNDERSCORE
 #endif
 
