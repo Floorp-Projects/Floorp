@@ -1000,11 +1000,60 @@ HTMLStyleSheetImpl::ConstructTableFrame(nsIPresContext*  aPresContext,
         NS_NewTableRowGroupFrame(childContent, innerFrame, frame);
         break;
 
+      case NS_STYLE_DISPLAY_TABLE_ROW:
+      {
+        // When we're done here, "frame" will be the pseudo rowgroup frame and will be dealt with normally after the swtich.
+        // The row itself will have already been dealt with
+        nsIStyleContext*  rowStyleContext;
+        nsIStyleContext*  rowGroupStyleContext;
+        rowGroupStyleContext = aPresContext->ResolvePseudoStyleContextFor (childContent, 
+                                                                           nsHTMLAtoms::columnPseudo,
+                                                                           aStyleContext);
+        nsStyleDisplay *rowGroupDisplay = (nsStyleDisplay *)rowGroupStyleContext->GetMutableStyleData(eStyleStruct_Display);
+        rowGroupDisplay->mDisplay = NS_STYLE_DISPLAY_TABLE_ROW_GROUP;
+        NS_NewTableRowGroupFrame(childContent, innerFrame, frame);
+        NS_RELEASE(childStyleContext); // we can't use this resolved style, so get rid of it
+        childStyleContext = rowGroupStyleContext;  // the row group style context will get set to childStyleContext after the switch ends.
+        // need to resolve the style context for the column again to be sure it's a child of the colgroup style context
+        rowStyleContext = aPresContext->ResolveStyleContextFor(childContent, rowGroupStyleContext);
+        nsIFrame *rowFrame;
+        NS_NewTableRowFrame(childContent, frame, rowFrame);
+        rowFrame->SetInitialChildList(*aPresContext, nsnull, nsnull);
+        rowFrame->SetStyleContext(aPresContext, rowStyleContext); 
+        grandChildList = rowFrame;
+        break;
+      }
+/*
+      case NS_STYLE_DISPLAY_TABLE_CELL:
+      {
+        // When we're done here, "frame" will be the pseudo rowgroup frame and will be dealt with normally after the swtich.
+        // The row itself will have already been dealt with
+        nsIStyleContext*  cellStyleContext;
+        nsIStyleContext*  rowStyleContext;
+        nsIStyleContext*  rowGroupStyleContext;
+        rowGroupStyleContext = aPresContext->ResolvePseudoStyleContextFor (childContent, 
+                                                                           nsHTMLAtoms::columnPseudo,
+                                                                           aStyleContext);
+        nsStyleDisplay *rowGroupDisplay = (nsStyleDisplay *)rowGroupStyleContext->GetMutableStyleData(eStyleStruct_Display);
+        rowGroupDisplay->mDisplay = NS_STYLE_DISPLAY_TABLE_ROW_GROUP;
+        NS_NewTableRowGroupFrame(childContent, innerFrame, frame);
+        NS_RELEASE(childStyleContext); // we can't use this resolved style, so get rid of it
+        childStyleContext = rowGroupStyleContext;  // the row group style context will get set to childStyleContext after the switch ends.
+        // need to resolve the style context for the column again to be sure it's a child of the colgroup style context
+        rowStyleContext = aPresContext->ResolveStyleContextFor(childContent, rowGroupStyleContext);
+        nsIFrame *rowFrame;
+        NS_NewTableRowFrame(childContent, frame, rowFrame);
+        rowFrame->SetInitialChildList(*aPresContext, nsnull, nsnull);
+        rowFrame->SetStyleContext(aPresContext, rowStyleContext); 
+        grandChildList = rowFrame;
+        break;
+      }
+*/
       case NS_STYLE_DISPLAY_TABLE_COLUMN:
       {
         //XXX: Peter -  please code review and remove this comment when all is well.
         // When we're done here, "frame" will be the pseudo colgroup frame and will be dealt with normally after the swtich.
-        // The the column itself will have already been dealt with
+        // The column itself will have already been dealt with
         nsIStyleContext*  colStyleContext;
         nsIStyleContext*  colGroupStyleContext;
         colGroupStyleContext = aPresContext->ResolvePseudoStyleContextFor (childContent, 
@@ -1013,6 +1062,7 @@ HTMLStyleSheetImpl::ConstructTableFrame(nsIPresContext*  aPresContext,
         nsStyleDisplay *colGroupDisplay = (nsStyleDisplay *)colGroupStyleContext->GetMutableStyleData(eStyleStruct_Display);
         colGroupDisplay->mDisplay = NS_STYLE_DISPLAY_TABLE_COLUMN_GROUP;
         NS_NewTableColGroupFrame(childContent, innerFrame, frame);
+        NS_RELEASE(childStyleContext);  // we can't use this resolved style, so get rid of it
         childStyleContext = colGroupStyleContext;  // the col group style context will get set to childStyleContext after the switch ends.
         // need to resolve the style context for the column again to be sure it's a child of the colgroup style context
         colStyleContext = aPresContext->ResolveStyleContextFor(childContent, colGroupStyleContext);
@@ -1040,11 +1090,16 @@ HTMLStyleSheetImpl::ConstructTableFrame(nsIPresContext*  aPresContext,
         frame->SetStyleContext(aPresContext, childStyleContext);
 
         // Process the children, and set the frame's initial child list
+        nsIFrame* childChildList;
         if (nsnull==grandChildList)
         {
-          nsIFrame* childChildList;
           ProcessChildren(aPresContext, frame, childContent, childChildList);
           grandChildList = childChildList;
+        }
+        else
+        {
+          ProcessChildren(aPresContext, grandChildList, childContent, childChildList);
+          grandChildList->SetInitialChildList(*aPresContext, nsnull, childChildList);
         }
         frame->SetInitialChildList(*aPresContext, nsnull, grandChildList);
   
