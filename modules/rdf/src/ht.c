@@ -8790,8 +8790,10 @@ dropOn (HT_Resource dropTarget, HT_Resource dropObject, PRBool justAction)
 	targetType  = resourceType(dropTarget->node);
 	objType     = resourceType(dropObject->node);
 
+#ifdef DEBUG
 	FE_Trace(resourceID(dropTarget->node));
 	FE_Trace("\n");
+#endif
 	if (!containerp(dropTarget->node) && (targetType != PMF_RT))
 	{
 		return dropOnSmartNode(dropTarget, dropObject, justAction);
