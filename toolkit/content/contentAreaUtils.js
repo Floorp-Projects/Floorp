@@ -344,6 +344,9 @@ function getTargetFile(aData, aSniffer, aContentType, aIsDocument, aSkipPrompt, 
 #ifdef XP_MACOSX
         return "UsrDsk";
 #endif
+#ifdef XP_OS2
+        return "Desk";
+#endif
         return "Home";
       }
       
