@@ -192,6 +192,7 @@ ShowTxt(void)
 			if(gControls->lw->licTxt)
 			{
 			    RGBColor backColorOld;
+			    Rect     textRect;
 			    
 			    // get back color
 			    GetBackColor(&backColorOld);
@@ -200,8 +201,9 @@ ShowTxt(void)
 			    BackColor(whiteColor);
 			    
 			    // erase rect and update
-			    EraseRect(&(**(gControls->lw->licTxt)).viewRect);
-				TEUpdate( &(**(gControls->lw->licTxt)).viewRect, gControls->lw->licTxt);
+			    textRect = (**(gControls->lw->licTxt)).viewRect;
+			    EraseRect(&textRect);
+				TEUpdate(&textRect, gControls->lw->licTxt);
 				
 				// restore back color
 				RGBBackColor(&backColorOld);

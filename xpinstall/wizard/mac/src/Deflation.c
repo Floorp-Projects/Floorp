@@ -221,7 +221,7 @@ InflateFiles(void *hZip, void *hFind, short tgtVRefNum, long tgtDirID)
 		if (err!=noErr)
 			return err;
 
-        strncpy(macfilename, filename, strlen(filename));
+        strcpy(macfilename, filename);        
         SLASHES_2_COLONS(macfilename);
 		HLock(fullPathH);
 		fullPathStr = NewPtrClear(fullPathLen + strlen(macfilename) + 1);
