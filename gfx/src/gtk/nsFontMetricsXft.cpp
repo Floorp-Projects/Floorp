@@ -63,6 +63,7 @@
 #include "nsCompressedCharMap.h"
 #include "nsNetUtil.h"
 #include "nsClassHashtable.h"
+#include "nsAutoBuffer.h"
 
 #include <gdk/gdkx.h>
 #include <freetype/tttables.h>
@@ -232,7 +233,8 @@ struct BoundingMetricsData {
 };
 #endif /* MOZ_MATHML */
 
-class nsAutoBuffer;
+#define AUTO_BUFFER_SIZE 3000
+typedef nsAutoBuffer<FcChar32, AUTO_BUFFER_SIZE> nsAutoFcChar32Buffer;
 
 static int      CalculateSlant   (PRUint8  aStyle);
 static int      CalculateWeight  (PRUint16 aWeight);
@@ -251,17 +253,17 @@ static const MozXftLangGroup* FindFCLangGroup (nsACString &aLangGroup);
 
 static        void ConvertCharToUCS4    (const char *aString,
                                          PRUint32 aLength,
-                                         nsAutoBuffer &aOutBuffer,
+                                         nsAutoFcChar32Buffer &aOutBuffer,
                                          PRUint32 *aOutLen);
 static        void ConvertUnicharToUCS4 (const PRUnichar *aString,
                                          PRUint32 aLength,
-                                         nsAutoBuffer &aOutBuffer,
+                                         nsAutoFcChar32Buffer &aOutBuffer,
                                          PRUint32 *aOutLen);
 static    nsresult ConvertUCS4ToCustom  (FcChar32 *aSrc, PRUint32 aSrcLen,
                                          PRUint32& aDestLen, 
                                          nsIUnicodeEncoder *aConverter, 
                                          PRBool aIsWide, 
-                                         nsAutoBuffer& aResult);
+                                         nsAutoFcChar32Buffer &Result);
 
 #ifdef MOZ_WIDGET_GTK2
 static void GdkRegionSetXftClip(GdkRegion *aGdkRegion, XftDraw *aDraw);
@@ -273,7 +275,6 @@ static void GdkRegionSetXftClip(GdkRegion *aGdkRegion, XftDraw *aDraw);
 // that value instead of the requested size.
 #define FONT_MAX_FONT_SCALE 2
 
-#define AUTO_BUFFER_SIZE 3000
 #define UCS2_REPLACEMENT 0xFFFD
 
 #define IS_NON_BMP(c) ((c) >> 16)
@@ -300,18 +301,6 @@ private:
     XftGlyphFontSpec mSpecBuffer[BUFFER_LEN];
 };
 
-// a helper class for automatic  buffer allocation
-class nsAutoBuffer {
-public:
-    nsAutoBuffer();
-    ~nsAutoBuffer();
-    void* GetArray(PRInt32 aMinLen = 0);
-
-private:
-    char* mArray;
-    char  mAutoArray[AUTO_BUFFER_SIZE];
-    PRInt32  mCount;
-};
 
 PRLogModuleInfo *gXftFontLoad = nsnull;
 static int gNumInstances = 0;
@@ -1452,14 +1441,15 @@ nsFontMetricsXft::EnumerateGlyphs(const PRUnichar *aString,
                                   void *aCallbackData)
 {
     PRUint32 len;
-    nsAutoBuffer charBuffer;
-    FcChar32 *chars;
+    nsAutoFcChar32Buffer charBuffer;
+
+    NS_ENSURE_TRUE(aLen, NS_OK); 
 
     ConvertUnicharToUCS4(aString, aLen, charBuffer, &len);
-    if (!len || !(chars = NS_STATIC_CAST(FcChar32 *, charBuffer.GetArray())))
+    if (!len)
         return NS_ERROR_OUT_OF_MEMORY;
 
-    return EnumerateXftGlyphs(chars, len, aCallback, aCallbackData);
+    return EnumerateXftGlyphs(charBuffer.get(), len, aCallback, aCallbackData);
 }
 
 nsresult
@@ -1469,15 +1459,16 @@ nsFontMetricsXft::EnumerateGlyphs(const char *aString,
                                   void *aCallbackData)
 {
     PRUint32 len;
-    nsAutoBuffer charBuffer;
-    FcChar32 *chars;
+    nsAutoFcChar32Buffer charBuffer;
+
+    NS_ENSURE_TRUE(aLen, NS_OK); 
 
     // Convert the incoming string into an array of UCS4 chars
     ConvertCharToUCS4(aString, aLen, charBuffer, &len);
-    if (!len || !(chars = NS_STATIC_CAST(FcChar32 *, charBuffer.GetArray())))
+    if (!len)
         return NS_ERROR_OUT_OF_MEMORY;
 
-    return EnumerateXftGlyphs(chars, len, aCallback, aCallbackData);
+    return EnumerateXftGlyphs(charBuffer.get(), len, aCallback, aCallbackData);
 }
 
 void
@@ -2062,7 +2053,7 @@ nsresult
 nsFontXftCustom::GetTextExtents32(const FcChar32 *aString, PRUint32 aLen, 
                                   XGlyphInfo &aGlyphInfo)
 {
-    nsAutoBuffer buffer;
+    nsAutoFcChar32Buffer buffer;
     nsresult rv;
     PRUint32 destLen = aLen;
     PRBool isWide = (mFontInfo->mFontType == eFontTypeCustomWide); 
@@ -2073,9 +2064,7 @@ nsFontXftCustom::GetTextExtents32(const FcChar32 *aString, PRUint32 aLen,
                              isWide, buffer);
     NS_ENSURE_SUCCESS(rv, rv);
       
-    FcChar32 *str = NS_STATIC_CAST(FcChar32 *, buffer.GetArray());
-    if (!str)
-        return NS_ERROR_OUT_OF_MEMORY;
+    FcChar32 *str = buffer.get();
 
     if (!mXftFont && !GetXftFont())
             return NS_ERROR_NOT_AVAILABLE;
@@ -2124,7 +2113,7 @@ nsFontXftCustom::DrawStringSpec(FcChar32* aString, PRUint32 aLen,
                                 void* aData)
 {
     nsresult rv = NS_OK;
-    nsAutoBuffer buffer;
+    nsAutoFcChar32Buffer buffer;
     PRUint32 destLen = aLen;
     PRBool isWide = (mFontInfo->mFontType == eFontTypeCustomWide); 
 
@@ -2147,7 +2136,7 @@ nsFontXftCustom::DrawStringSpec(FcChar32* aString, PRUint32 aLen,
         NS_ENSURE_SUCCESS(rv, rv);
     }
 
-    FcChar32 *str = NS_STATIC_CAST(FcChar32 *, buffer.GetArray());
+    FcChar32 *str = buffer.get();
 
     return nsFontXft::DrawStringSpec(str, destLen, aData);
 }
@@ -2172,40 +2161,6 @@ nsFontXftCustom::SetFT_FaceCharmap(void)
         return NS_ERROR_UNEXPECTED;
 
     return NS_OK;
-}
-
-// class nsAutoBuffer
-
-nsAutoBuffer::nsAutoBuffer()
-    : mArray(mAutoArray),
-      mCount(AUTO_BUFFER_SIZE)
-{
-}
-
-nsAutoBuffer::~nsAutoBuffer()
-{
-    if (mArray && (mArray != mAutoArray)) {
-        delete [] mArray;
-    }
-}
-
-void* nsAutoBuffer::GetArray(PRInt32 aMinLen)
-{
-    if (aMinLen > mCount) {
-        char* newArray = new char[aMinLen];
-        if (!newArray) {
-            return nsnull;
-        }
-
-        if (mArray != mAutoArray) {
-            delete [] mArray;
-        }
-
-        mArray = newArray;
-        mCount = aMinLen;
-    }
-
-    return (void *) mArray;
 }
 
 void
@@ -2566,15 +2521,14 @@ FindFCLangGroup (nsACString &aLangGroup)
 /* static */
 void
 ConvertCharToUCS4(const char *aString, PRUint32 aLength, 
-                  nsAutoBuffer &aOutBuffer, PRUint32 *aOutLen)
+                  nsAutoFcChar32Buffer &aOutBuffer, PRUint32 *aOutLen)
 {
     *aOutLen = 0;
     FcChar32 *outBuffer;
 
-    // It takes 4bytes to represent a char. in UCS4.
-    outBuffer  = NS_STATIC_CAST(FcChar32 *, aOutBuffer.GetArray(aLength * 4));
-    if (!outBuffer)
+    if (!aOutBuffer.EnsureElemCapacity(aLength))
         return;
+    outBuffer  = aOutBuffer.get();
     
     for (PRUint32 i = 0; i < aLength; ++i) {
         outBuffer[i] = PRUint8(aString[i]); // to convert char >= 0x80 correctly
@@ -2588,16 +2542,14 @@ ConvertCharToUCS4(const char *aString, PRUint32 aLength,
 /* static */
 void
 ConvertUnicharToUCS4(const PRUnichar *aString, PRUint32 aLength,
-                     nsAutoBuffer &aOutBuffer, PRUint32 *aOutLen)
+                     nsAutoFcChar32Buffer &aOutBuffer, PRUint32 *aOutLen)
 {
     *aOutLen = 0;
     FcChar32 *outBuffer;
 
-    // It takes 4bytes to represent a char. in UCS4.
-    outBuffer  = NS_STATIC_CAST(FcChar32 *, aOutBuffer.GetArray(aLength * 4));
-
-    if (!outBuffer)
+    if (!aOutBuffer.EnsureElemCapacity(aLength))
         return;
+    outBuffer  = aOutBuffer.get();
 
     PRUint32 outLen = 0;
 
@@ -2856,7 +2808,7 @@ GetFontXftInfo(FcPattern* aPattern)
 nsresult
 ConvertUCS4ToCustom(FcChar32 *aSrc,  PRUint32 aSrcLen,
                     PRUint32& aDestLen, nsIUnicodeEncoder *aConverter,
-                    PRBool aIsWide, nsAutoBuffer& aResult)
+                    PRBool aIsWide, nsAutoFcChar32Buffer& aResult)
 {
     nsresult rv = NS_OK;
 
@@ -2890,10 +2842,10 @@ ConvertUCS4ToCustom(FcChar32 *aSrc,  PRUint32 aSrcLen,
         return NS_ERROR_UNEXPECTED;
     }
 
-    nsAutoBuffer medBuffer;
-    char *med  = NS_STATIC_CAST(char *, medBuffer.GetArray(medLen));
-    if (!med)
+    nsAutoBuffer<char, AUTO_BUFFER_SIZE> medBuffer;
+    if (!medBuffer.EnsureElemCapacity(medLen))
         return NS_ERROR_OUT_OF_MEMORY;
+    char *med  = medBuffer.get();
 
     // Convert utf16Src  to font-specific encoding with mConverter.
     rv = converter->Convert(utf16Src, &utf16SrcLen, med, &medLen);
@@ -2914,10 +2866,12 @@ ConvertUCS4ToCustom(FcChar32 *aSrc,  PRUint32 aSrcLen,
         // Convert 16bit  custom font codes to UCS4
         ConvertUnicharToUCS4(NS_REINTERPRET_CAST(PRUnichar *, med),
                              medLen >> 1, aResult, &aDestLen);
+        rv = aDestLen ? rv : NS_ERROR_OUT_OF_MEMORY;
     }
     else {
         // Convert 8bit custom font codes to UCS4
         ConvertCharToUCS4(med, medLen, aResult, &aDestLen);
+        rv = aDestLen ? rv : NS_ERROR_OUT_OF_MEMORY;
     }
 
     return rv;

@@ -51,6 +51,7 @@
 
 #include "MoreFilesX.h"
 #include "FSCopyObject.h"
+#include "nsAutoBuffer.h"
 
 // Mac Includes
 #include <Aliases.h>
@@ -247,65 +248,7 @@ public:
     }
 };
 
-#pragma mark -
-#pragma mark [StBuffer]
-
-template <class T>
-class StBuffer
-{
-public:
-  
-  StBuffer() :
-    mBufferPtr(mBuffer),
-    mCurElemCapacity(kStackBufferNumElems)
-  {
-  }
-
-  ~StBuffer()
-  {
-    DeleteBuffer();
-  }
-
-  PRBool EnsureElemCapacity(PRInt32 inElemCapacity)
-  {
-    if (inElemCapacity <= mCurElemCapacity)
-      return PR_TRUE;
-    
-    if (inElemCapacity > kStackBufferNumElems)
-    {
-      DeleteBuffer();
-      mBufferPtr = (T*)malloc(inElemCapacity * sizeof(T));
-      mCurElemCapacity = inElemCapacity;
-      return (mBufferPtr != NULL);
-    }
-    
-    mCurElemCapacity = kStackBufferNumElems;
-    return PR_TRUE;
-  }
-                
-  T*          get()     { return mBufferPtr;    }
-  
-  PRInt32     GetElemCapacity()   { return mCurElemCapacity;  }
-
-protected:
-
-  void DeleteBuffer()
-  {
-    if (mBufferPtr != mBuffer)
-    {
-      free(mBufferPtr);
-      mBufferPtr = mBuffer;
-    }                
-  }
-  
-protected:
-  enum { kStackBufferNumElems		= 512 };
-
-  T             *mBufferPtr;
-  T             mBuffer[kStackBufferNumElems];
-  PRInt32       mCurElemCapacity;
-};
-
+#define FILENAME_BUFFER_SIZE 512
 
 //*****************************************************************************
 //  nsLocalFile
@@ -443,7 +386,7 @@ NS_IMETHODIMP nsLocalFile::Create(PRUint32 type, PRUint32 permissions)
   CFURLRef pathURLRef = mBaseRef;
   FSRef pathFSRef;
   CFStringRef leafStrRef = nsnull;
-  StBuffer<UniChar> buffer;
+  nsAutoBuffer<UniChar, FILENAME_BUFFER_SIZE> buffer;
   Boolean success;
   
   // Work backwards through the path to find the last node which
@@ -2040,7 +1983,7 @@ nsresult nsLocalFile::CFStringReftoUTF8(CFStringRef aInStrRef, nsACString& aOutS
   CFIndex charsConverted = ::CFStringGetBytes(aInStrRef, CFRangeMake(0, inStrLen),
                               kCFStringEncodingUTF8, 0, PR_FALSE, nsnull, 0, &usedBufLen);
   if (charsConverted == inStrLen) {
-    StBuffer<UInt8> buffer;
+    nsAutoBuffer<UInt8, FILENAME_BUFFER_SIZE> buffer;
     if (buffer.EnsureElemCapacity(usedBufLen + 1)) {
       ::CFStringGetBytes(aInStrRef, CFRangeMake(0, inStrLen),
           kCFStringEncodingUTF8, 0, false, buffer.get(), usedBufLen, &usedBufLen);
@@ -2228,7 +2171,7 @@ static void CopyUTF8toUTF16NFC(const nsACString& aSrc, nsAString& aResult)
     if (chars) 
         aResult.Assign(chars, length);
     else {
-        StBuffer<UniChar> buffer;
+        nsAutoBuffer<UniChar, FILENAME_BUFFER_SIZE> buffer;
         if (!buffer.EnsureElemCapacity(length))
             CopyUTF8toUTF16(aSrc, aResult);
         else {

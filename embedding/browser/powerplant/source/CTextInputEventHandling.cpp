@@ -29,72 +29,10 @@
  
 #include "CTextInputEventHandler.h"
 #include "nsCRT.h"
+#include "nsAutoBuffer.h"
 
 #pragma mark -
 
-class nsSpillableStackBuffer
-{
-protected:
-
-  enum {
-      kStackBufferSize		= 256
-
-  };
-
-public:
-
-  nsSpillableStackBuffer()
-  :	mBufferPtr(mBuffer)
-  , mCurCapacity(kStackBufferSize)
-  {
-  }
-
-  ~nsSpillableStackBuffer()
-  {
-    DeleteBuffer();
-  }
-
-
-  PRBool EnsureCapacity(PRInt32 inCharsCapacity)
-  {
-    if (inCharsCapacity < mCurCapacity)
-      return PR_TRUE;
-    
-    if (inCharsCapacity > kStackBufferSize)
-    {
-      DeleteBuffer();
-      mBufferPtr = (PRUnichar*)nsMemory::Alloc(inCharsCapacity * sizeof(PRUnichar));
-      mCurCapacity = inCharsCapacity;
-      return (mBufferPtr != NULL);
-    }
-    
-    mCurCapacity = kStackBufferSize;
-    return PR_TRUE;
-  }
-                
-  PRUnichar*  GetBuffer()     { return mBufferPtr;    }
-  
-  PRInt32     GetCapacity()   { return mCurCapacity;  }
-
-protected:
-
-  void DeleteBuffer()
-  {
-    if (mBufferPtr != mBuffer)
-    {
-      nsMemory::Free(mBufferPtr);
-      mBufferPtr = mBuffer;
-    }                
-  }
-  
-protected:
-
-  PRUnichar	    *mBufferPtr;
-  PRUnichar	    mBuffer[kStackBufferSize];
-  PRInt32       mCurCapacity;
-
-};
- 
 #pragma mark -
 
 
@@ -131,15 +69,15 @@ OSStatus CTextInputEventHandler::GetText(EventRef inEvent, nsString& outString)
     
   if (neededSize > 0) 
   {
-    nsSpillableStackBuffer buf;
-    if (! buf.EnsureCapacity(neededSize/sizeof(PRUnichar)))
+    nsAutoBuffer<PRUnichar, 256> buf;
+    if (! buf.EnsureElemCapacity(neededSize/sizeof(PRUnichar)))
       return eventParameterNotFoundErr;
 
     err = ::GetEventParameter(inEvent, kEventParamTextInputSendText, typeUnicodeText, NULL, 
-                            neededSize, &neededSize, buf.GetBuffer());
+                            neededSize, &neededSize, buf.get());
                             
     if (noErr == err) 
-       outString.Assign(buf.GetBuffer(), neededSize/sizeof(PRUnichar));
+       outString.Assign(buf.get(), neededSize/sizeof(PRUnichar));
   }
   return err;
 }
