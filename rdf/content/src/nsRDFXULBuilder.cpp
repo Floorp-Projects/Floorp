@@ -1195,7 +1195,7 @@ RDFXULBuilderImpl::OnSetAttribute(nsIDOMElement* aElement, const nsString& aName
 
     // Check for "special" properties that may wreak havoc on the
     // content model.
-    if ((nameSpaceID == kNameSpaceID_None) && (nameAtom == kIdAtom)) {
+    if ((nameSpaceID == kNameSpaceID_None) && (nameAtom.get() == kIdAtom)) {
         // They're changing the ID of the element.
 
         // XXX Punt for now.
@@ -1203,7 +1203,7 @@ RDFXULBuilderImpl::OnSetAttribute(nsIDOMElement* aElement, const nsString& aName
         return NS_OK;
     }
     else if (nameSpaceID == kNameSpaceID_RDF) {
-        if (nameAtom == kDataSourcesAtom) {
+        if (nameAtom.get() == kDataSourcesAtom) {
             NS_NOTYETIMPLEMENTED("can't change the data sources yet");
             return NS_ERROR_NOT_IMPLEMENTED;
         }
