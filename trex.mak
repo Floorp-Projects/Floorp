@@ -150,9 +150,9 @@ TREX_DIRS =		\
 
 default:: 		        build_all
 
-depend::                depend_dist depend_trex
+depend::                depend_dist depend_julian depend_trex
 
-clobber::               clobber_dist clobber_trex
+clobber::               clobber_dist clobber_julian clobber_trex
 
 pull_and_build_all::    pull_all    \
 					    build_all
@@ -258,6 +258,13 @@ depend_dist::
     nmake -f nglayout.mak depend
     cd $(MOZ_SRC)\.
 
+depend_julian::
+    cd $(MOZ_SRC)\ns\modules\libnls
+    nmake -f makefile.win depend
+    cd $(MOZ_SRC)\ns\julian
+    nmake -f makefile.win depend
+    cd $(MOZ_SRC)\.
+
 depend_trex::
     cd $(MOZ_SRC)\$(MOZ_TOP)\xpfc
     nmake -f makefile.win depend
@@ -268,6 +275,13 @@ depend_trex::
 clobber_dist::
     cd $(MOZ_SRC)\$(MOZ_TOP)\.
     nmake -f nglayout.mak clobber_all
+    cd $(MOZ_SRC)\.
+
+clobber_julian::
+    cd $(MOZ_SRC)\ns\modules\libnls
+    nmake -f makefile.win clobber_all
+    cd $(MOZ_SRC)\ns\julian
+    nmake -f makefile.win clobber_all
     cd $(MOZ_SRC)\.
 
 clobber_trex::
