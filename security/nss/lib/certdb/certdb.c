@@ -34,7 +34,7 @@
 /*
  * Certificate handling code
  *
- * $Id: certdb.c,v 1.15 2001/09/20 21:34:38 relyea%netscape.com Exp $
+ * $Id: certdb.c,v 1.16 2001/10/19 18:05:37 ian.mcgreer%sun.com Exp $
  */
 
 #include "nssilock.h"
@@ -59,6 +59,11 @@
 #include "sslerr.h"
 #include "nsslocks.h"
 #include "cdbhdl.h"
+
+#ifndef NSS_3_4_CODE
+#define NSS_3_4_CODE
+#endif /* NSS_3_4_CODE */
+#include "pkit.h"
 
 /*
  * Certificate database handling code
@@ -1188,6 +1193,7 @@ CERT_GetDefaultCertDB(void)
 SECStatus
 CERT_OpenVolatileCertDB(CERTCertDBHandle *handle)
 {
+#ifndef STAN_CERT_DB
 #define DBM_DEFAULT 0
     static const HASHINFO hashInfo = {
         DBM_DEFAULT,    /* bucket size */
@@ -1238,6 +1244,7 @@ loser:
 	handle->tempCertDB = 0;
     }
 
+#endif
     return(SECFailure);
 }
 
@@ -2325,8 +2332,10 @@ loser:
 void
 CERT_LockDB(CERTCertDBHandle *handle)
 {
+#ifndef STAN_CERT_DB
     PZ_EnterMonitor(handle->dbMon);
     return;
+#endif
 }
 
 /*
@@ -2335,6 +2344,7 @@ CERT_LockDB(CERTCertDBHandle *handle)
 void
 CERT_UnlockDB(CERTCertDBHandle *handle)
 {
+#ifndef STAN_CERT_DB
     PRStatus prstat;
     
     prstat = PZ_ExitMonitor(handle->dbMon);
@@ -2342,6 +2352,7 @@ CERT_UnlockDB(CERTCertDBHandle *handle)
     PORT_Assert(prstat == PR_SUCCESS);
     
     return;
+#endif
 }
 
 static PZLock *certRefCountLock = NULL;
