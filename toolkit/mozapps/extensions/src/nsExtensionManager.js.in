@@ -492,6 +492,12 @@ nsExtensionInstaller.prototype = {
     // Move files from the staging dir into the extension's final home.
     // This function generates uninstall log files and creates backups of
     // existing files. 
+    // XXXben - would like to add exception handling here to test for file
+    //          I/O failures on uninstall log so that if there's a crash
+    //          and the uninstall log is incorrectly/incompletely written 
+    //          we can roll back. It's not critical that we do so right now
+    //          since if this throws the extension's chrome is never 
+    //          registered. 
     this._installExtensionFiles();
     
     // Load the metadata datasource
@@ -1364,6 +1370,7 @@ nsExtensionManager.prototype = {
     return this._ds.safeMode;
   },
   
+  // XXXben write to temporary file then move to final when done.
   _writeProfileFile: function (aFile, aGetDirFunc, aWriteLineFunc)
   {
     // When an operation is performed that requires a component re-registration
@@ -1697,8 +1704,9 @@ nsExtensionManager.prototype = {
     var txn = new nsItemDownloadTransaction(this);
     for (var i = 0; i < aItemCount; ++i) {
       var currItem = aItems[i];
+      var txnID = Math.round(Math.random() * 100);
       txn.addDownload(currItem.name, currItem.updateURL, currItem.iconURL, 
-                      currItem.type, this._transactions.length);
+                      currItem.type, txnID);
       this._transactions.push(txn);
     }
 
@@ -1746,10 +1754,13 @@ nsExtensionManager.prototype = {
     const nsIXPIProgressDialog = Components.interfaces.nsIXPIProgressDialog;
     switch (aState) {
     case nsIXPIProgressDialog.INSTALL_DONE:
+      dump("*** install done for " + aURL + "\n");
       --this._downloadCount;
       break;
     case nsIXPIProgressDialog.DIALOG_CLOSE:
+      dump("*** dialogClose trying to remove " + aTransaction.id + "\n");
       for (var i = 0; i < this._transactions.length; ++i) {
+        dump("*** this txn = " + this._transactions[i].id + "\n");
         if (this._transactions[i].id == aTransaction.id) {
           this._transactions.splice(i, 1);
           delete aTransaction;

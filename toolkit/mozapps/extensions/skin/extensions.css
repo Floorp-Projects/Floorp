@@ -18,19 +18,37 @@
 #uninstallButton {
   margin: 0px;
   -moz-user-focus: ignore;
-  list-style-image: url("chrome://mozapps/skin/extensions/placeholder.gif");
+  list-style-image: url("chrome://mozapps/skin/extensions/actionbuttons.png");
+  -moz-image-region: rect(0px, 20px, 20px, 0px) !important;
+}
+
+#uninstallButton[disabled="true"] {
+  list-style-image: url("chrome://mozapps/skin/extensions/actionbuttons.png");
+  -moz-image-region: rect(20px, 20px, 40px, 0px) !important;
 }
 
 #updateButton {
   margin: 0px;
   -moz-user-focus: ignore;
-  list-style-image: url("chrome://mozapps/skin/extensions/placeholder.gif");
+  list-style-image: url("chrome://mozapps/skin/extensions/actionbuttons.png");
+  -moz-image-region: rect(0px, 40px, 20px, 20px) !important;
+}
+
+#updateButton[disabled="true"] {
+  list-style-image: url("chrome://mozapps/skin/extensions/actionbuttons.png");
+  -moz-image-region: rect(20px, 40px, 40px, 20px) !important;
 }
 
 #useThemeButton {
   margin: 0px;
   -moz-user-focus: ignore;
-  list-style-image: url("chrome://mozapps/skin/extensions/placeholder.gif");
+  list-style-image: url("chrome://mozapps/skin/extensions/actionbuttons.png");
+  -moz-image-region: rect(0px, 60px, 20px, 40px) !important;
+}
+
+#useThemeButton[disabled="true"] {
+  list-style-image: url("chrome://mozapps/skin/extensions/actionbuttons.png");
+  -moz-image-region: rect(20px, 60px, 40px, 40px) !important;
 }
 
 #uninstallButton .button-icon, #updateButton .button-icon {
