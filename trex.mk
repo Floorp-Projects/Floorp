@@ -47,7 +47,7 @@ default:  pull_all build_all
 
 pull_and_build_all: pull_all build_all
 
-pull_all: pull_platform pull_julian pull_trex pull_trex_ns 
+pull_all: pull_platform pull_julian pull_trex
 
 pull_platform:
 	cd $(MOZ_SRC); \
