@@ -5,7 +5,6 @@ pref-applications.properties
 pref-applications-edit.dtd
 pref-cache.dtd
 pref-charset.dtd
-pref-cookies.dtd
 pref-colors.dtd
 pref-themes.dtd
 pref-debug.dtd
@@ -14,7 +13,6 @@ pref-debug2.dtd
 pref-download.dtd
 pref-fonts.dtd
 pref-history.dtd
-pref-images.dtd
 pref-languages.dtd
 pref-languages.properties
 pref-navigator.dtd
@@ -26,7 +24,5 @@ pref-smart_browsing.dtd
 pref-smartupdate.dtd
 preftree.dtd
 pref.dtd
-pref-wallet.dtd
-pref-passwords.dtd
 prefutilities.properties
 
