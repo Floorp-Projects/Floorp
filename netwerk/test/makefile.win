@@ -59,6 +59,8 @@ include <$(DEPTH)\config\rules.mak>
 
 install:: $(PROGRAMS)
 	-for %p in ($(PROGRAMS)) do $(MAKE_INSTALL) %p $(DIST)\bin
+        $(MAKE_INSTALL) urlparse.dat $(DIST)\bin\res
+        $(MAKE_INSTALL) urlparse_win.dat $(DIST)\bin\res
 
 clobber::
 	-for %p in ($(PROGRAMS)) do $(RM) %p $(DIST)\bin\%p

@@ -46,10 +46,10 @@ static NS_DEFINE_CID(kStdURLCID,                 NS_STANDARDURL_CID);
 
 char* gFileIO = 0;
 
-int writeoutto(const char* i_pURL, char** o_Result, PRBool bUseStd = PR_TRUE)
+nsresult writeoutto(const char* i_pURL, char** o_Result, PRBool bUseStd = PR_TRUE)
 {
     if (!o_Result || !i_pURL)
-        return -1;
+        return NS_ERROR_FAILURE;
     *o_Result = 0;
     nsCOMPtr<nsIURI> pURL;
     nsresult result = NS_OK;
@@ -62,7 +62,7 @@ int writeoutto(const char* i_pURL, char** o_Result, PRBool bUseStd = PR_TRUE)
         if (NS_FAILED(result))
         {
             cout << "CreateInstance failed" << endl;
-            return 1;
+            return NS_ERROR_FAILURE;
         }
         pURL = url;
         pURL->SetSpec((char*)i_pURL);
@@ -74,22 +74,25 @@ int writeoutto(const char* i_pURL, char** o_Result, PRBool bUseStd = PR_TRUE)
         if (NS_FAILED(result)) 
         {
             cout << "Service failed!" << endl;
-            return 1;
+            return NS_ERROR_FAILURE;
         }   
 
         result = pService->NewURI(i_pURL, nsnull, getter_AddRefs(pURL));
     }
+    nsCString output;
     if (NS_SUCCEEDED(result))
     {
         nsCOMPtr<nsIURL> tURL = do_QueryInterface(pURL);
         nsXPIDLCString temp;
         PRInt32 port;
 
-        nsCString output;
         tURL->GetScheme(getter_Copies(temp));
         output += temp ? (const char*)temp : "";
         output += ',';
-        tURL->GetPreHost(getter_Copies(temp));
+        tURL->GetUsername(getter_Copies(temp));
+        output += temp ? (const char*)temp : "";
+        output += ',';
+        tURL->GetPassword(getter_Copies(temp));
         output += temp ? (const char*)temp : "";
         output += ',';
         tURL->GetHost(getter_Copies(temp));
@@ -98,34 +101,46 @@ int writeoutto(const char* i_pURL, char** o_Result, PRBool bUseStd = PR_TRUE)
         tURL->GetPort(&port);
         output.AppendInt(port);
         output += ',';
+        tURL->GetDirectory(getter_Copies(temp));
+        output += temp ? (const char*)temp : "";
+        output += ',';
+        tURL->GetFileBaseName(getter_Copies(temp));
+        output += temp ? (const char*)temp : "";
+        output += ',';
+        tURL->GetFileExtension(getter_Copies(temp));
+        output += temp ? (const char*)temp : "";
+        output += ',';
+        tURL->GetParam(getter_Copies(temp));
+        output += temp ? (const char*)temp : "";
+        output += ',';
         tURL->GetQuery(getter_Copies(temp));
         output += temp ? (const char*)temp : "";
         output += ',';
-        tURL->GetPath(getter_Copies(temp));
+        tURL->GetRef(getter_Copies(temp));
         output += temp ? (const char*)temp : "";
-
+        output += ',';
+        tURL->GetSpec(getter_Copies(temp));
+        output += temp ? (const char*)temp : "";
         *o_Result = output.ToNewCString();
-    } 
-    else  {
-        cout << "Can not create URL" << endl; 
-        return -1;
+    } else {
+        output = "Can not create URL";
+        *o_Result = output.ToNewCString();
     }
-    return 1;
+    return NS_OK;
 }
 
-int writeout(const char* i_pURL, PRBool bUseStd =PR_TRUE)
+nsresult writeout(const char* i_pURL, PRBool bUseStd =PR_TRUE)
 {
     char* temp = 0;
-    if (!i_pURL) return -1;
+    if (!i_pURL) return NS_ERROR_FAILURE;
     int rv = writeoutto(i_pURL, &temp, bUseStd);
-    if (rv < 0)
-        return rv;
     cout << i_pURL << endl << temp << endl;
     delete[] temp;
     return rv;
 }
 
-/* construct a url and print out its five elements separated by commas */
+/* construct a url and print out its elements separated by commas and
+   the whole spec */
 nsresult testURL(const char* i_pURL, PRBool bUseStd=PR_TRUE)
 {
 
@@ -145,49 +160,63 @@ nsresult testURL(const char* i_pURL, PRBool bUseStd=PR_TRUE)
     char temp[512];
     int count=0;
     int failed=0;
-    char* prevResult =0;
+    char* prevResult = nsnull;
+    char* tempurl = nsnull;
 
     while (testfile.getline(temp,512))
     {
         if ((*temp == '#') || (PL_strlen(temp)==0))
             continue;
 
-        if (0 == count%2)
+        if (0 == count%3)
         {
             if (prevResult) delete[] prevResult;
+            cout << "Testing:  " << temp << endl;
             writeoutto(temp, &prevResult, bUseStd);
         }
-        else 
-        {
+        else if (1 == count%3) {
+            if (tempurl) delete[] tempurl;
+            tempurl = nsCRT::strdup(temp);
+        } else { 
             if (!prevResult)
                 cout << "no results to compare to!" << endl;
             else 
             {
-                cout << prevResult << endl;
-                cout << temp << endl;
-                if (PL_strcmp(temp, prevResult) == 0)
-                    cout << "\tPASSED" << endl;
+                PRInt32 res;
+                cout << "Result:   " << prevResult << endl;
+                if (bUseStd) {
+                    cout << "Expected: " << tempurl << endl;
+                    res = PL_strcmp(tempurl, prevResult);
+                } else {
+                    cout << "Expected: " << temp << endl;
+                    res = PL_strcmp(temp, prevResult);
+                }
+
+                if (res == 0)
+                    cout << "\tPASSED" << endl << endl;
                 else 
                 {
-                    cout << "\tFAILED" << endl;
+                    cout << "\tFAILED" << endl << endl;
                     failed++;
                 }
             }
         }
         count++;
-   }
-    if (failed>0)
-        cout << failed << " tests FAILED out of " << count << endl;
-    else
-        cout << "All " << count << " tests PASSED." << endl;
-
-    return 0;
+    }
+    if (failed>0) {
+        cout << failed << " tests FAILED out of " << count/3 << endl;
+        return NS_ERROR_FAILURE;
+    } else {
+        cout << "All " << count/3 << " tests PASSED." << endl;
+        return NS_OK;
+    }
 }
 
-int makeAbsTest(const char* i_BaseURI, const char* relativePortion)
+nsresult makeAbsTest(const char* i_BaseURI, const char* relativePortion,
+                     const char* expectedResult)
 {
     if (!i_BaseURI)
-        return -1;
+        return NS_ERROR_FAILURE;
     
     // build up the base URL
     nsCOMPtr<nsIURI> baseURL;
@@ -211,22 +240,35 @@ int makeAbsTest(const char* i_BaseURI, const char* relativePortion)
     baseURL->GetSpec(getter_Copies(temp));
 
     cout << "Analyzing " << temp << endl;
-    cout << "With " << relativePortion << endl;
+    cout << "With      " << relativePortion << endl;
     
-    cout << "Got    " <<  newURL << endl;
-    return 0;
+    cout << "Got       " <<  newURL << endl;
+    if (expectedResult) {
+        cout << "Expect    " << expectedResult << endl;
+        int res = PL_strcmp(newURL, expectedResult);
+        if (res == 0) {
+            cout << "\tPASSED" << endl << endl;
+            return NS_OK;
+        } else {
+            cout << "\tFAILED" << endl << endl;
+            return NS_ERROR_FAILURE;
+        }
+    }
+    return NS_OK;
 }
 
 int doMakeAbsTest(const char* i_URL = 0, const char* i_relativePortion=0)
 {
     if (i_URL && i_relativePortion)
     {
-        return makeAbsTest(i_URL, i_relativePortion);
+        return makeAbsTest(i_URL, i_relativePortion, nsnull);
     }
 
     // Run standard tests. These tests are based on the ones described in 
-    // rfc1808
-    /* Section 5.1.  Normal Examples
+    // rfc2396 with the exception of the handling of ?y which is wrong as
+    // notified by on of the RFC authors.
+
+    /* Section C.1.  Normal Examples
 
       g:h        = <URL:g:h>
       g          = <URL:http://a/b/c/g>
@@ -241,7 +283,7 @@ int doMakeAbsTest(const char* i_URL = 0, const char* i_relativePortion=0)
       g#s        = <URL:http://a/b/c/g#s>
       g#s/./x    = <URL:http://a/b/c/g#s/./x>
       g?y#s      = <URL:http://a/b/c/g?y#s>
-      ;x         = <URL:http://a/b/c/d;x>
+      ;x         = <URL:http://a/b/c/;x>
       g;x        = <URL:http://a/b/c/g;x>
       g;x?y#s    = <URL:http://a/b/c/g;x?y#s>
       .          = <URL:http://a/b/c/>
@@ -252,69 +294,81 @@ int doMakeAbsTest(const char* i_URL = 0, const char* i_relativePortion=0)
       ../..      = <URL:http://a/>
       ../../     = <URL:http://a/>
       ../../g    = <URL:http://a/g>
-
     */
 
-    const char baseURL[] = "http://a/b/c/d;p?q#f";
-
     struct test {
+        const char* baseURL;
         const char* relativeURL;
         const char* expectedResult;
     };
 
     test tests[] = {
-        // Tests from rfc1808, section 5.1
-        { "g:h",                "g:h" },
-        { "g",                  "http://a/b/c/g" },
-        { "./g",                "http://a/b/c/g" },
-        { "g/",                 "http://a/b/c/g/" },
-        { "/g",                 "http://a/g" },
-        { "//g",                "http://g" },
-        { "?y",                 "http://a/b/c/d;p?y" },
-        { "g?y",                "http://a/b/c/g?y" },
-        { "g?y/./x",            "http://a/b/c/g?y/./x" },
-        { "#s",                 "http://a/b/c/d;p?q#s" },
-        { "g#s",                "http://a/b/c/g#s" },
-        { "g#s/./x",            "http://a/b/c/g#s/./x" },
-        { "g?y#s",              "http://a/b/c/g?y#s" },
-        { ";x",                 "http://a/b/c/d;x" },
-        { "g;x",                "http://a/b/c/g;x" },
-        { "g;x?y#s",            "http://a/b/c/g;x?y#s" },
-        { ".",                  "http://a/b/c/" },
-        { "./",                 "http://a/b/c/" },
-        { "..",                 "http://a/b/" },
-        { "../",                "http://a/b/" },
-        { "../g",               "http://a/b/g" },
-        { "../..",              "http://a/" },
-        { "../../",             "http://a/" },
-        { "../../g",            "http://a/g" },
+        // Tests from rfc2396, section C.1 with the exception of the
+        // handling of ?y
+        { "http://a/b/c/d;p?q#f",     "g:h",         "g:h" },
+        { "http://a/b/c/d;p?q#f",     "g",           "http://a/b/c/g" },
+        { "http://a/b/c/d;p?q#f",     "./g",         "http://a/b/c/g" },
+        { "http://a/b/c/d;p?q#f",     "g/",          "http://a/b/c/g/" },
+        { "http://a/b/c/d;p?q#f",     "/g",          "http://a/g" },
+        { "http://a/b/c/d;p?q#f",     "//g",         "http://g" },
+        { "http://a/b/c/d;p?q#f",     "?y",          "http://a/b/c/d;p?y" },
+        { "http://a/b/c/d;p?q#f",     "g?y",         "http://a/b/c/g?y" },
+        { "http://a/b/c/d;p?q#f",     "g?y/./x",     "http://a/b/c/g?y/./x" },
+        { "http://a/b/c/d;p?q#f",     "#s",          "http://a/b/c/d;p?q#s" },
+        { "http://a/b/c/d;p?q#f",     "g#s",         "http://a/b/c/g#s" },
+        { "http://a/b/c/d;p?q#f",     "g#s/./x",     "http://a/b/c/g#s/./x" },
+        { "http://a/b/c/d;p?q#f",     "g?y#s",       "http://a/b/c/g?y#s" },
+        { "http://a/b/c/d;p?q#f",     ";x",          "http://a/b/c/;x" },
+        { "http://a/b/c/d;p?q#f",     "g;x",         "http://a/b/c/g;x" },
+        { "http://a/b/c/d;p?q#f",     "g;x?y#s",     "http://a/b/c/g;x?y#s" },
+        { "http://a/b/c/d;p?q#f",     ".",           "http://a/b/c/" },
+        { "http://a/b/c/d;p?q#f",     "./",          "http://a/b/c/" },
+        { "http://a/b/c/d;p?q#f",     "..",          "http://a/b/" },
+        { "http://a/b/c/d;p?q#f",     "../",         "http://a/b/" },
+        { "http://a/b/c/d;p?q#f",     "../g",        "http://a/b/g" },
+        { "http://a/b/c/d;p?q#f",     "../..",       "http://a/" },
+        { "http://a/b/c/d;p?q#f",     "../../",      "http://a/" },
+        { "http://a/b/c/d;p?q#f",     "../../g",     "http://a/g" },
 
         // Our additional tests...
-        { "#my::anchor",        "http://a/b/c/d;p?q#my::anchor" },
-        { "get?baseRef=viewcert.jpg", "http://a/b/c/get?baseRef=viewcert.jpg" },
+        { "http://a/b/c/d;p?q#f",     "#my::anchor", "http://a/b/c/d;p?q#my::anchor" },
+        { "http://a/b/c/d;p?q#f",     "get?baseRef=viewcert.jpg", "http://a/b/c/get?baseRef=viewcert.jpg" },
 
         // Make sure relative query's work right even if the query
         // string contains absolute urls or other junk.
-        { "?http://foo",        "http://a/b/c/d;p?http://foo" },
-        { "g?http://foo",       "http://a/b/c/g?http://foo" },
-        { "g/h?http://foo",     "http://a/b/c/g/h?http://foo" },
-        { "g/h/../H?http://foo","http://a/b/c/g/H?http://foo" },
-        { "g/h/../H?http://foo?baz", "http://a/b/c/g/H?http://foo?baz" },
-        { "g/h/../H?http://foo;baz", "http://a/b/c/g/H?http://foo;baz" },
-        { "g/h/../H?http://foo#bar", "http://a/b/c/g/H?http://foo#bar" },
-        { "g/h/../H;baz?http://foo", "http://a/b/c/g/H;baz?http://foo" },
-        { "g/h/../H;baz?http://foo#bar", "http://a/b/c/g/H;baz?http://foo#bar" },
-        { "g/h/../H;baz?C:\\temp", "http://a/b/c/g/H;baz?C:\\temp" },
+        { "http://a/b/c/d;p?q#f",     "?http://foo",        "http://a/b/c/d;p?http://foo" },
+        { "http://a/b/c/d;p?q#f",     "g?http://foo",       "http://a/b/c/g?http://foo" },
+        {"http://a/b/c/d;p?q#f",      "g/h?http://foo",     "http://a/b/c/g/h?http://foo" },
+        { "http://a/b/c/d;p?q#f",     "g/h/../H?http://foo","http://a/b/c/g/H?http://foo" },
+        { "http://a/b/c/d;p?q#f",     "g/h/../H?http://foo?baz", "http://a/b/c/g/H?http://foo?baz" },
+        { "http://a/b/c/d;p?q#f",     "g/h/../H?http://foo;baz", "http://a/b/c/g/H?http://foo;baz" },
+        { "http://a/b/c/d;p?q#f",     "g/h/../H?http://foo#bar", "http://a/b/c/g/H?http://foo#bar" },
+        { "http://a/b/c/d;p?q#f",     "g/h/../H;baz?http://foo", "http://a/b/c/g/H;baz?http://foo" },
+        { "http://a/b/c/d;p?q#f",     "g/h/../H;baz?http://foo#bar", "http://a/b/c/g/H;baz?http://foo#bar" },
+        { "http://a/b/c/d;p?q#f",     "g/h/../H;baz?C:\\temp", "http://a/b/c/g/H;baz?C:\\temp" },
+        { "http://a/b/c/d;p?q#f",     "", "http://a/b/c/d;p?q" },
+        { "http://a/b/c/d;p?q#f",     "#", "http://a/b/c/d;p?q#" },
+        { "http://a/b/c;p/d;p?q#f",   "../g;p" , "http://a/b/g;p" },
+
     };
 
     const int numTests = sizeof(tests) / sizeof(tests[0]);
-
+    int failed = 0;
+    nsresult rv;
     for (int i = 0 ; i<numTests ; ++i)
     {
-        makeAbsTest(baseURL, tests[i].relativeURL);
-        cout << "Expect " << tests[i].expectedResult << endl << endl;
+        rv = makeAbsTest(tests[i].baseURL, tests[i].relativeURL,
+                         tests[i].expectedResult);
+        if (NS_FAILED(rv))
+            failed++;
     }
-    return 0;
+    if (failed>0) {
+        cout << failed << " tests FAILED out of " << numTests << endl;
+        return NS_ERROR_FAILURE;
+    } else {
+        cout << "All " << numTests << " tests PASSED." << endl;
+        return NS_OK;
+    }
 }
 
 nsresult NS_AutoregisterComponents()
@@ -325,14 +379,14 @@ nsresult NS_AutoregisterComponents()
 
 void printusage(void)
 {
-    cout << "urltest [-std] [-all] [-file <filename>] <URL> " <<
+    cout << "urltest [-std] [-file <filename>] <URL> " <<
         " [-abs <relative>]" << endl << endl
         << "\t-std  : Generate results using nsStdURL. "  << endl
         << "\t-file : Read URLs from file. "  << endl
-        << "\t-all  : Run all standard tests. Ignores <URL> then." << endl
-        << "\t-abs  : Make an absolute URL from the base (<URI>) and the" << endl
-        << "\t\trelative path specified. Can be used with -all. " 
-        << "Implies -std" << endl
+        << "\t-abs  : Make an absolute URL from the base (<URL>) and the" << endl
+        << "\t\trelative path specified. If -abs is given without " << endl
+        << "\t\ta base URI standard RFC 2396 relative URL tests" << endl
+        << "\t\tare performed. Implies -std." << endl
         << "\t<URL> : The string representing the URL." << endl;
 }
 
@@ -343,7 +397,7 @@ int main(int argc, char **argv)
 
     if (argc < 2) {
         printusage();
-        return 0;
+        return NS_OK;
     }
 
     result = NS_AutoregisterComponents();
@@ -360,16 +414,16 @@ int main(int argc, char **argv)
         if (PL_strcasecmp(argv[i], "-std") == 0) 
         {
             bStdTest = PR_TRUE;
+            if (i+1 >= argc)
+            {
+                printusage();
+                return NS_OK;
+            }
         }
         else if (PL_strcasecmp(argv[i], "-abs") == 0)
         {
             if (!gFileIO) 
             {
-                if (i+1 >= argc)
-                {
-                    printusage(); 
-                    return 0;
-                }
                 relativePath = argv[i+1]; 
                 i++;
             }
@@ -380,7 +434,7 @@ int main(int argc, char **argv)
             if (i+1 >= argc)
             {
                 printusage();
-                return 0;
+                return NS_OK;
             }
             gFileIO = argv[i+1];
             i++;

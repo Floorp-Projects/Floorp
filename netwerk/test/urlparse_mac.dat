@@ -1,0 +1,14 @@
+# Any blank lines and those beginning with # are comments and 
+# ignored. To add additional test cases that could potentially 
+# break URL parsing in mozilla add the input URL on a new line 
+# and follow it with the expected output for the standard URL 
+# parser and one line for the case when the URL is really 
+# created. Then run urltest with the -std option and without it 
+# on this file and hopefully the expected output should match 
+# the one from the program. 
+#   - Gagan Saksena 03/28/00
+# 
+# This version is specifically for the Mac platform.
+#
+
+# testing different versions of file urls
