@@ -16,6 +16,9 @@
  * Communications Corporation.  Portions created by Netscape are
  * Copyright (C) 1998 Netscape Communications Corporation. All
  * Rights Reserved.
+ * 
+ * Author:
+ *   Adam Lock <adamlock@netscape.com>
  *
  * Contributor(s): 
  */
@@ -30,8 +33,10 @@ NS_EXTERN_IID(kEventQueueServiceCID);
 NS_EXTERN_IID(kHTMLEditorCID);
 NS_EXTERN_IID(kCookieServiceCID);
 NS_EXTERN_IID(kPrefCID);
+NS_EXTERN_IID(kWindowCID);
 
 // Interface IDs
+NS_EXTERN_IID(kISupportsIID);
 NS_EXTERN_IID(kIBaseWindowIID);
 NS_EXTERN_IID(kIBrowserWindowIID);
 NS_EXTERN_IID(kIEventQueueServiceIID);
@@ -41,12 +46,7 @@ NS_EXTERN_IID(kIDOMNodeIID);
 NS_EXTERN_IID(kIDOMElementIID);
 NS_EXTERN_IID(kIStreamObserverIID);
 NS_EXTERN_IID(kIDocumentLoaderObserverIID);
-NS_EXTERN_IID(kISupportsIID);
+NS_EXTERN_IID(kIWidgetIID);
 
-#ifdef USE_PLUGIN
-NS_EXTERN_IID(kIFactoryIID);
-NS_EXTERN_IID(kIPluginIID);
-NS_EXTERN_IID(kIPluginInstanceIID);
-#endif
 
 #endif
