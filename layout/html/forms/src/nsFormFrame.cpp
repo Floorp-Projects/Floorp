@@ -1416,7 +1416,7 @@ nsresult nsFormFrame::ProcessAsMultipart(nsIFormProcessor* aFormProcessor,nsIFil
 
           // convert value to CRLF line breaks
           char* newValue = nsLinebreakConverter::ConvertLineBreaks(value,
-                           nsLinebreakConverter::eLinebreakPlatform, nsLinebreakConverter::eLinebreakNet);
+                           nsLinebreakConverter::eLinebreakAny, nsLinebreakConverter::eLinebreakNet);
           delete [] value;
           value = newValue;
           
@@ -1555,7 +1555,7 @@ nsresult nsFormFrame::ProcessAsMultipart(nsIFormProcessor* aFormProcessor,nsIFil
 
             // convert value to CRLF line breaks
             char* newValue = nsLinebreakConverter::ConvertLineBreaks(value,
-                             nsLinebreakConverter::eLinebreakPlatform, nsLinebreakConverter::eLinebreakNet);
+                             nsLinebreakConverter::eLinebreakAny, nsLinebreakConverter::eLinebreakNet);
             delete [] value;
             value = newValue;
 
