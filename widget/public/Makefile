@@ -21,6 +21,7 @@ DEFINES = -D_IMPL_NS_UI
 
 EXPORTS =               \
 	nsui.h		\
+		nsITabWidget.h  \
         nsIWidget.h     \
         nsIButton.h     \
         nsICheckButton.h\

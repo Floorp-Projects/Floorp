@@ -23,49 +23,51 @@ DLLNAME = raptorwidget
 DLL=.\$(OBJDIR)\$(DLLNAME).dll
 RESFILE = widget.res
 
-MISCDEP =			\
+MISCDEP =                       \
  $(DIST)\lib\xpcom32.lib        \
- $(DIST)\lib\raptorbase.lib	\
+ $(DIST)\lib\raptorbase.lib     \
  $(DIST)\lib\raptorgfx.lib
 
 MODULE=raptor 
 
 DEFINES =-D_IMPL_NS_WIDGET
 
-OBJS =					 \
-	.\$(OBJDIR)\nsWidgetFactory.obj	 \
-	.\$(OBJDIR)\nsObject.obj	 \
-	.\$(OBJDIR)\nsWindow.obj	 \
-	.\$(OBJDIR)\nsToolkit.obj	 \
-	.\$(OBJDIR)\nsButton.obj	 \
-	.\$(OBJDIR)\nsCheckButton.obj	 \
-	.\$(OBJDIR)\nsRadioGroup.obj	 \
-	.\$(OBJDIR)\nsRadioButton.obj	 \
-	.\$(OBJDIR)\nsListBox.obj	 \
-	.\$(OBJDIR)\nsComboBox.obj	 \
-	.\$(OBJDIR)\nsTextWidget.obj	 \
-	.\$(OBJDIR)\nsTextHelper.obj	 \
+OBJS =                                   \
+	.\$(OBJDIR)\nsWidgetFactory.obj  \
+	.\$(OBJDIR)\nsObject.obj         \
+	.\$(OBJDIR)\nsWindow.obj         \
+	.\$(OBJDIR)\nsToolkit.obj        \
+	.\$(OBJDIR)\nsButton.obj         \
+	.\$(OBJDIR)\nsCheckButton.obj    \
+	.\$(OBJDIR)\nsRadioGroup.obj     \
+	.\$(OBJDIR)\nsRadioButton.obj    \
+	.\$(OBJDIR)\nsListBox.obj        \
+	.\$(OBJDIR)\nsComboBox.obj       \
+	.\$(OBJDIR)\nsTextWidget.obj     \
+	.\$(OBJDIR)\nsTextHelper.obj     \
 	.\$(OBJDIR)\nsTextAreaWidget.obj \
-	.\$(OBJDIR)\nsFileWidget.obj	 \
-	.\$(OBJDIR)\nsScrollbar.obj	 \
+	.\$(OBJDIR)\nsFileWidget.obj     \
+	.\$(OBJDIR)\nsScrollbar.obj      \
+	.\$(OBJDIR)\nsTabWidget.obj      \
 	$(NULL)
 
-LINCS=					\
-	-I$(PUBLIC)\raptor		\
-	-I$(PUBLIC)\xpcom		\
+LINCS=                                  \
+	-I$(PUBLIC)\raptor              \
+	-I$(PUBLIC)\xpcom               \
 	$(NULL)
 
-LCFLAGS =				\
-	$(LCFLAGS)			\
-	-D_IMPL_NS_WIDGET		\
-	-DNS_DLLNAME=$(DLLNAME).dll	\
+LCFLAGS =                               \
+	$(LCFLAGS)                      \
+	-D_IMPL_NS_WIDGET               \
+	-DNS_DLLNAME=$(DLLNAME).dll     \
 	$(NULL)
 
-LLIBS=					\
- comdlg32.lib				\
- $(DIST)\lib\xpcom32.lib		\
- $(DIST)\lib\raptorgfx.lib		\
- $(DIST)\lib\raptorbase.lib		\
+LLIBS=                                  \
+ comctl32.lib                           \
+ comdlg32.lib                           \
+ $(DIST)\lib\xpcom32.lib                \
+ $(DIST)\lib\raptorgfx.lib              \
+ $(DIST)\lib\raptorbase.lib             \
  $(LIBNSPR)  
 
 include <$(DEPTH)\config\rules.mak>
