@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*-
  *
  * The contents of this file are subject to the Netscape Public
  * License Version 1.1 (the "License"); you may not use this file
@@ -53,6 +53,37 @@ public:
 
   NS_IMETHOD GetBinding(nsIContent* aContent, nsIXBLBinding** aResult) = 0;
   NS_IMETHOD SetBinding(nsIContent* aContent, nsIXBLBinding* aBinding) = 0;
+
+  /**
+   * Notify the binding manager that an element
+   * has been moved from one document to another,
+   * so that it can update any bindings or
+   * nsIAnonymousContentCreator-created anonymous
+   * content that may depend on the document.
+   * @param aContent the element that's being moved
+   * @param aOldDocument the old document in which the
+   *   content resided. May be null if the the content
+   *   was not in any document.
+   * @param aNewDocument the document in which the
+   *   content will reside. May be null if the content
+   *   will not reside in any document, or if the
+   *   content is being destroyed.
+   */
+  NS_IMETHOD ChangeDocumentFor(nsIContent* aContent, nsIDocument* aOldDocument,
+                               nsIDocument* aNewDocument) = 0;
+
+
+  /**
+   * Notify the binding manager that an element has
+   * nsIAnonymousContentCreator-generated anonymous
+   * content associated with it.
+   * @param aContent the element with which the anonymous
+   *   content is to be associated with.
+   * @param aAnonymousElements an array of nsIContent
+   *   objects, or null to indicate that any anonymous
+   *   content should be dissociated from the aContent.
+   */
+  NS_IMETHOD SetAnonymousContentFor(nsIContent* aContent, nsISupportsArray* aAnonymousElements) = 0;
 
   NS_IMETHOD ResolveTag(nsIContent* aContent, PRInt32* aNameSpaceID, nsIAtom** aResult) = 0;
 

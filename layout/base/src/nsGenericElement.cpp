@@ -1226,43 +1226,13 @@ nsGenericElement::SetDocument(nsIDocument* aDocument, PRBool aDeep, PRBool aComp
     }
     
     if (mDocument && aDeep) {
-
-      // call SetDocument for XBL anonymous content
-
+      // Notify XBL- & nsIAnonymousContentCreator-generated
+      // anonymous content that the document is changing.
       nsCOMPtr<nsIBindingManager> bindingManager;
       mDocument->GetBindingManager(getter_AddRefs(bindingManager));
       NS_ASSERTION(bindingManager, "No binding manager.");
       if (bindingManager) {
-        nsCOMPtr<nsIXBLBinding> binding;
-        bindingManager->GetBinding(mContent, getter_AddRefs(binding));
-        if (binding) {
-          binding->ChangeDocument(mDocument, aDocument);
-          bindingManager->SetBinding(mContent, nsnull);
-          if (aDocument) {
-            nsCOMPtr<nsIBindingManager> otherManager;
-            aDocument->GetBindingManager(getter_AddRefs(otherManager));
-            otherManager->SetBinding(mContent, binding);
-          }
-        }
-      }
-
-      // call SetDocument for nsIAnonymousContentCreator anonymous content
-
-      // XXX It would slightly help performance to use the same list of
-      // tags as used in nsCSSFrameConstructor::CreateAnonymousFrames,
-      // but that doesn't work for nsGfxScrollFrames.
-
-      nsCOMPtr<nsIPresShell> shell( dont_AddRef(mDocument->GetShellAt(0)) );
-      if (shell) {
-        nsIFrame* frame = nsnull;
-        shell->GetPrimaryFrameFor(mContent, &frame);
-        if (frame) {
-          // XXX nsCOMPtrs for frames are evil...
-          nsCOMPtr<nsIAnonymousContentCreator> creator(do_QueryInterface(frame));
-          if (creator) {
-            creator->SetDocumentForAnonymousContent(aDocument, aDeep, aCompileEventHandlers);
-          }
-        }
+        bindingManager->ChangeDocumentFor(mContent, mDocument, aDocument);
       }
     }
 

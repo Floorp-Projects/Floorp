@@ -3707,7 +3707,7 @@ nsCSSFrameConstructor::ConstructRootFrame(nsIPresShell*        aPresShell,
       BeginBuildingScrollFrame( aPresShell,
                                 aPresContext,
                                 state,
-                                nsnull,
+                                aDocElement,
                                 styleContext,
                                 viewportFrame,
                                 rootPseudo,
@@ -5454,7 +5454,7 @@ nsCSSFrameConstructor::CreateAnonymousFrames(nsIPresShell*        aPresShell,
   nsCOMPtr<nsIAnonymousContentCreator> creator(do_QueryInterface(aParentFrame));
   
   if (!creator)
-     return NS_OK;
+    return NS_OK;
 
   nsCOMPtr<nsISupportsArray> anonymousItems;
   NS_NewISupportsArray(getter_AddRefs(anonymousItems));
@@ -5465,24 +5465,34 @@ nsCSSFrameConstructor::CreateAnonymousFrames(nsIPresShell*        aPresShell,
   PRUint32 count = 0;
   anonymousItems->Count(&count);
 
-  for (PRUint32 i=0; i < count; i++)
-  {
-    // get our child's content and set its parent to our content
-    nsCOMPtr<nsIContent> content;
-    if (NS_FAILED(anonymousItems->QueryElementAt(i, NS_GET_IID(nsIContent), getter_AddRefs(content))))
+  if (count) {
+    // Inform the binding manager about the anonymous content
+    nsCOMPtr<nsIBindingManager> bindingManager;
+    aDocument->GetBindingManager(getter_AddRefs(bindingManager));
+    NS_ASSERTION(bindingManager, "no binding manager");
+    if (bindingManager) {
+      bindingManager->SetAnonymousContentFor(aParent, anonymousItems);
+    }
+
+    for (PRUint32 i=0; i < count; i++) {
+      // get our child's content and set its parent to our content
+      nsCOMPtr<nsIContent> content;
+      if (NS_FAILED(anonymousItems->QueryElementAt(i, NS_GET_IID(nsIContent), getter_AddRefs(content))))
         continue;
 
-    content->SetParent(aParent);
-    content->SetDocument(aDocument, PR_TRUE, PR_TRUE);
-    content->SetBindingParent(content);
+      content->SetParent(aParent);
+      content->SetDocument(aDocument, PR_TRUE, PR_TRUE);
+      content->SetBindingParent(content);
     
-    nsIFrame * newFrame = nsnull;
-    nsresult rv = creator->CreateFrameFor(aPresContext, content, &newFrame);
-    if (NS_SUCCEEDED(rv) && newFrame != nsnull) {
-      aChildItems.AddChild(newFrame);
-    } else {
-      // create the frame and attach it to our frame
-      ConstructFrame(aPresShell, aPresContext, aState, content, aParentFrame, aChildItems);
+      nsIFrame * newFrame = nsnull;
+      nsresult rv = creator->CreateFrameFor(aPresContext, content, &newFrame);
+      if (NS_SUCCEEDED(rv) && newFrame != nsnull) {
+        aChildItems.AddChild(newFrame);
+      }
+      else {
+        // create the frame and attach it to our frame
+        ConstructFrame(aPresShell, aPresContext, aState, content, aParentFrame, aChildItems);
+      }
     }
   }
 
