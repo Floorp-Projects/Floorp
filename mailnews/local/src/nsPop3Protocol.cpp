@@ -2052,7 +2052,8 @@ nsPop3Protocol::RetrResponse(nsIInputStream* inputStream,
 		do
 		{
 			BufferInput(line, buffer_size);
-			BufferInput(CRLF, 2);
+			// BufferInput(CRLF, 2);
+      BufferInput(MSG_LINEBREAK, MSG_LINEBREAK_LEN);
 
 			// now read in the next line
 			PR_FREEIF(line);

@@ -222,8 +222,8 @@ nsPop3Sink::IncorporateBegin(const char* uidlString,
     char *dummyEnvelope = GetDummyEnvelope();
 
     WriteLineToMailbox(dummyEnvelope);
-    WriteLineToMailbox("X-Mozilla-Status: 8000\r\n");
-    WriteLineToMailbox("X-Mozilla-Status2: 00000000\r\n");
+    WriteLineToMailbox("X-Mozilla-Status: 8000" MSG_LINEBREAK);
+    WriteLineToMailbox("X-Mozilla-Status2: 00000000" MSG_LINEBREAK);
 
     return NS_OK;
 }
