@@ -95,6 +95,19 @@ NS_METHOD BRFrame::GetReflowMetrics(nsIPresContext* aPresContext, nsReflowMetric
   aMetrics.ascent = fm->GetMaxAscent();
   aMetrics.descent = fm->GetMaxDescent();
   NS_RELEASE(fm);
+
+  // Get cached state for containing block frame
+  nsLineLayout* lineLayoutState = nsnull;
+  nsBlockReflowState* state =
+    nsBlockFrame::FindBlockReflowState(aPresContext, this);
+  if (nsnull != state) {
+    lineLayoutState = state->mCurrentLine;
+    if (nsnull != lineLayoutState) {
+      lineLayoutState->mReflowResult =
+        NS_LINE_LAYOUT_REFLOW_RESULT_BREAK_AFTER;
+    }
+  }
+
   return NS_OK;
 }
 
