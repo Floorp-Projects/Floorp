@@ -45,28 +45,25 @@
 
 
   <binding id="menu-menubar">
-    <content>
+    <content includes="menupopup">
       <xul:text class="menubar-text" inherits="value,accesskey,crop" crop="right"/>
-      <children includes="menupopup,template"/>
     </content>
   </binding>
 
   <binding id="menu-menubar-iconic">
-    <content>
+    <content includes="menupopup">
       <xul:image class="menubar-left"/>
       <xul:text class="menubar-text" inherits="value,accesskey,crop" crop="right"/>
-      <children includes="menupopup,template"/>
     </content>
   </binding>
 
   <binding id="menu">
-    <content autostretch="never">
+    <content autostretch="never" includes="menupopup">
       <xul:text class="menu-text" flex="1" align="left" inherits="value,accesskey,crop" crop="right"/>
       <xul:text class="menu-accel" inherits="acceltext:value"/>
       <xul:box autostretch="never" class="menu-right" inherits="menuactive,disabled">
         <xul:image/>
       </xul:box>
-      <children includes="menupopup,template"/>
     </content>
     <implementation>
       <property name="data" onset="this.setAttribute('data',val); return val;"
