@@ -198,7 +198,8 @@ CWebShellContainer::Close()
 }
 
 
-NS_IMETHODIMP ShowModally(PRBool aPrepare)
+NS_IMETHODIMP
+CWebShellContainer::ShowModally(PRBool aPrepare)
 {
 	NG_TRACE_METHOD(CWebShellContainer::ShowModally);
 	return NS_OK;
@@ -397,7 +398,7 @@ CWebShellContainer::ProgressLoadURL(nsIWebShell* aShell, const PRUnichar* aURL, 
 
 
 NS_IMETHODIMP
-CWebShellContainer::EndLoadURL(nsIWebShell* aShell, const PRUnichar* aURL, PRInt32 aStatus)
+CWebShellContainer::EndLoadURL(nsIWebShell* aShell, const PRUnichar* aURL, nsresult aStatus)
 {
 	USES_CONVERSION;
 	NG_TRACE(_T("CWebShellContainer::EndLoadURL(..., \"%s\", %d)\n"), W2T(aURL), (int) aStatus);
@@ -580,7 +581,7 @@ CWebShellContainer::OnStatusURLLoad(nsIDocumentLoader* loader, nsIChannel* aChan
 
 
 NS_IMETHODIMP
-CWebShellContainer::OnEndURLLoad(nsIDocumentLoader* loader, nsIChannel* aChannel, PRInt32 aStatus)
+CWebShellContainer::OnEndURLLoad(nsIDocumentLoader* loader, nsIChannel* channel, nsresult aStatus)
 {
 	return NS_OK; 
 } 
