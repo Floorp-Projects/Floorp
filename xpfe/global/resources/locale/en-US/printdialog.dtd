@@ -6,16 +6,12 @@
 
 <!ENTITY fpDialog.title "Save File">
 
-<!ENTITY printTo.label "Print To:">
-<!ENTITY printerRadio.label "Printer">
-<!ENTITY fileRadio.label "File">
+<!ENTITY fileCheck.label "Print to File">
 
 <!ENTITY propertiesButton.label "Properties...">
 <!ENTITY descText.label "Printer Description:">
 <!ENTITY printer.label "Printer">
 <!ENTITY printerInput.label "Printer Name:">
-<!ENTITY fileInput.label "File Name:">
-<!ENTITY chooseButton.label "Select File...">
 
 <!ENTITY printrangeGroup.label "Print Range">
 <!ENTITY allpagesRadio.label "All Pages">
