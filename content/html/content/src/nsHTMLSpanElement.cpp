@@ -122,8 +122,7 @@ nsHTMLSpanElement::GetAttributeMappingFunction(nsMapRuleToAttributesFunc& aMapRu
 nsresult
 nsHTMLSpanElement::GetInnerHTML(nsAString& aInnerHTML)
 {
-  if (mNodeInfo->Equals(nsHTMLAtoms::xmp) ||
-      mNodeInfo->Equals(nsHTMLAtoms::plaintext)) {
+  if (mNodeInfo->Equals(nsHTMLAtoms::xmp)) {
     GetContentsAsText(aInnerHTML);
     return NS_OK;
   }
@@ -134,8 +133,7 @@ nsHTMLSpanElement::GetInnerHTML(nsAString& aInnerHTML)
 nsresult
 nsHTMLSpanElement::SetInnerHTML(const nsAString& aInnerHTML)
 {
-  if (mNodeInfo->Equals(nsHTMLAtoms::xmp) ||
-      mNodeInfo->Equals(nsHTMLAtoms::plaintext)) {
+  if (mNodeInfo->Equals(nsHTMLAtoms::xmp)) {
     return ReplaceContentsWithText(aInnerHTML, PR_TRUE);
   }
 
