@@ -87,7 +87,7 @@ private:
                       PRInt32 attrCount,
                       PRBool aTagInError);
     
-    nsresult WriteAttributes(PRInt32 attrCount);
+    nsresult WriteAttributes(PRInt32 attrCount, PRBool aOwnerInError);
     nsresult GenerateSummary();
     void StartNewPreBlock(void);
     // Utility method for adding attributes to the nodes we generate

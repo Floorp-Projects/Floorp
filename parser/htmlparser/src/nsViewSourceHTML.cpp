@@ -200,8 +200,7 @@ public:
 class CSharedVSContext {
 public:
 
-  CSharedVSContext() : 
-    mErrorToken(NS_LITERAL_STRING("error")) {
+  CSharedVSContext() {
   }
   
   ~CSharedVSContext() {
@@ -216,7 +215,8 @@ public:
   nsCParserStartNode  mStartNode;
   nsCParserStartNode  mTokenNode;
   CIndirectTextToken  mITextToken;
-  CTextToken          mErrorToken;
+  nsCParserStartNode  mErrorNode;
+  nsCParserNode       mEndErrorNode;
 };
 
 enum {
@@ -937,7 +937,7 @@ PRBool CViewSourceHTML::IsContainer(PRInt32 aTag) const{
  *  @param   
  *  @return  result status
  */
-nsresult CViewSourceHTML::WriteAttributes(PRInt32 attrCount) {
+nsresult CViewSourceHTML::WriteAttributes(PRInt32 attrCount, PRBool aOwnerInError) {
   nsresult result=NS_OK;
   
   if(attrCount){ //go collect the attributes...
@@ -955,12 +955,16 @@ nsresult CViewSourceHTML::WriteAttributes(PRInt32 attrCount) {
 
           CAttributeToken* theAttrToken = (CAttributeToken*)theToken;
           const nsAString& theKey = theAttrToken->GetKey();
+          
+          // The attribute is only in error if its owner is NOT in error.
+          const PRBool attributeInError =
+            !aOwnerInError && theAttrToken->IsInError();
 
-          result = WriteTag(mKey,theKey,0,PR_FALSE);
+          result = WriteTag(mKey,theKey,0,attributeInError);
           const nsAString& theValue = theAttrToken->GetValue();
 
           if(!theValue.IsEmpty() || theAttrToken->mHasEqualWithoutValue){
-            result = WriteTag(mValue,theValue,0,PR_FALSE);
+            result = WriteTag(mValue,theValue,0,attributeInError);
           }
         } 
       }
@@ -996,6 +1000,25 @@ nsresult CViewSourceHTML::WriteTag(PRInt32 aTagType,const nsAString & aText,PRIn
   if(0==theAllocator)
     return NS_ERROR_FAILURE;
 
+  // Highlight all parts of all erroneous tags.
+  if (mSyntaxHighlight && aTagInError) {
+    CStartToken* theTagToken=
+      NS_STATIC_CAST(CStartToken*,
+                     theAllocator->CreateTokenOfType(eToken_start,
+                                                     eHTMLTag_span,
+                                                     NS_LITERAL_STRING("SPAN")));
+    theContext.mErrorNode.Init(theTagToken, theAllocator);
+    AddAttrToNode(theContext.mErrorNode, theAllocator,
+                  NS_LITERAL_STRING("class"),
+                  NS_LITERAL_STRING("error"));
+    mSink->OpenContainer(theContext.mErrorNode);
+#ifdef DUMP_TO_FILE
+    if (gDumpFile) {
+      fprintf(gDumpFile, "<span class=\"error\">");
+    }
+#endif
+  }
+
   if (kBeforeText[aTagType][0] != 0) {
     NS_ConvertASCIItoUTF16 beforeText(kBeforeText[aTagType]);
     theContext.mITextToken.SetIndirectString(beforeText);
@@ -1008,8 +1031,11 @@ nsresult CViewSourceHTML::WriteTag(PRInt32 aTagType,const nsAString & aText,PRIn
 #endif // DUMP_TO_FILE
   
   if (mSyntaxHighlight && aTagType != mText) {
-    CStartToken* theTagToken=NS_STATIC_CAST(CStartToken*,theAllocator->CreateTokenOfType(eToken_start,eHTMLTag_span,NS_LITERAL_STRING("SPAN")));
-
+    CStartToken* theTagToken=
+      NS_STATIC_CAST(CStartToken*,
+                     theAllocator->CreateTokenOfType(eToken_start,
+                                                     eHTMLTag_span,
+                                                     NS_LITERAL_STRING("SPAN")));
     theContext.mStartNode.Init(theTagToken, theAllocator);
     AddAttrToNode(theContext.mStartNode, theAllocator,
                   NS_LITERAL_STRING("class"),
@@ -1040,7 +1066,7 @@ nsresult CViewSourceHTML::WriteTag(PRInt32 aTagType,const nsAString & aText,PRIn
     theContext.mStartNode.ReleaseAll(); 
     CEndToken theEndToken(eHTMLTag_span);
     theContext.mEndNode.Init(&theEndToken, 0/*stack token*/);
-    mSink->CloseContainer(eHTMLTag_span);  //emit </starttag>...
+    mSink->CloseContainer(eHTMLTag_span);  //emit </endtag>...
 #ifdef DUMP_TO_FILE
     if (gDumpFile)
       fprintf(gDumpFile, "</span>");
@@ -1048,7 +1074,7 @@ nsresult CViewSourceHTML::WriteTag(PRInt32 aTagType,const nsAString & aText,PRIn
   }
 
   if(attrCount){
-    result=WriteAttributes(attrCount);
+    result=WriteAttributes(attrCount, aTagInError);
   }
 
   // Tokens are set in error if their ending > is not there, so don't output 
@@ -1064,6 +1090,16 @@ nsresult CViewSourceHTML::WriteTag(PRInt32 aTagType,const nsAString & aText,PRIn
     fprintf(gDumpFile, kDumpFileAfterText[aTagType]);
 #endif // DUMP_TO_FILE
 
+  if (mSyntaxHighlight && aTagInError) {
+    theContext.mErrorNode.ReleaseAll(); 
+    CEndToken theEndToken(eHTMLTag_span);
+    theContext.mEndErrorNode.Init(&theEndToken, 0/*stack token*/);
+    mSink->CloseContainer(eHTMLTag_span);  //emit </endtag>...
+#ifdef DUMP_TO_FILE
+    if (gDumpFile)
+      fprintf(gDumpFile, "</span>");
+#endif //DUMP_TO_FILE
+  }
 
   START_TIMER();
 
