@@ -92,7 +92,7 @@
             Multiname *mn = bCon->mMultinameList[BytecodeContainer::getShort(pc)];
             pc += sizeof(short);
             push(meta->env->lexicalRead(meta, mn, phase));
-	}
+        }
         break;
 
     case eLexicalDelete: 
@@ -100,7 +100,7 @@
             Multiname *mn = bCon->mMultinameList[BytecodeContainer::getShort(pc)];
             pc += sizeof(short);
             push(BOOLEAN_TO_JS2VAL(meta->env->lexicalDelete(meta, mn, phase)));
-	}
+        }
         break;
 
     // Write the top value to the multiname in the environment, leave
@@ -111,7 +111,7 @@
             Multiname *mn = bCon->mMultinameList[BytecodeContainer::getShort(pc)];
             pc += sizeof(short);
             meta->env->lexicalWrite(meta, mn, a, true, phase);
-	}
+        }
         break;
 
     // Write the top value to the multiname in the environment, leave
@@ -122,7 +122,7 @@
             Multiname *mn = bCon->mMultinameList[BytecodeContainer::getShort(pc)];
             pc += sizeof(short);
             meta->env->lexicalInit(meta, mn, a);
-	}
+        }
         break;
 
     // Construct a reference pair consisting of a NULL base and the read value
@@ -133,7 +133,7 @@
             a = meta->env->lexicalRead(meta, mn, phase);
             push(JS2VAL_NULL);
             push(a);
-	}
+        }
         break;
 
     // Read an index property from a base object, push the value onto the stack

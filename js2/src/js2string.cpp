@@ -66,10 +66,11 @@ js2val String_Constructor(JS2Metadata *meta, const js2val /*thisValue*/, js2val 
         strInst->mValue = meta->engine->allocStringPtr(meta->toString(argv[0]));
     else
         strInst->mValue = meta->engine->allocStringPtr("");
-    const DynamicPropertyMap::value_type e(*meta->engine->length_StringAtom, 
+
+    DynamicPropertyBinding *dpb = new DynamicPropertyBinding(*meta->engine->length_StringAtom, 
                                                         DynamicPropertyValue(meta->engine->allocNumber(strInst->mValue->length()), 
                                                         DynamicPropertyValue::READONLY | DynamicPropertyValue::PERMANENT));
-    strInst->dynamicProperties.insert(e);
+    strInst->dynamicProperties.insert(dpb->name, dpb); 
     JS2Object::removeRoot(ri);
     return thatValue;
 }
@@ -798,10 +799,11 @@ void initStringObject(JS2Metadata *meta)
     StringInstance *strInst = new StringInstance(meta, meta->objectClass->prototype, meta->stringClass);
     meta->stringClass->prototype = strInst;
     strInst->mValue = meta->engine->allocStringPtr("");
-    const DynamicPropertyMap::value_type e(*meta->engine->length_StringAtom, 
+
+    DynamicPropertyBinding *dpb = new DynamicPropertyBinding(*meta->engine->length_StringAtom, 
                                                         DynamicPropertyValue(meta->engine->allocNumber(strInst->mValue->length()), 
                                                         DynamicPropertyValue::READONLY | DynamicPropertyValue::PERMANENT));
-    strInst->dynamicProperties.insert(e);
+    strInst->dynamicProperties.insert(dpb->name, dpb); 
     meta->initBuiltinClass(meta->stringClass, &prototypeFunctions[0], &staticFunctions[0], String_Constructor, String_Call);
 
 }

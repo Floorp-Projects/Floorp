@@ -239,6 +239,7 @@ public:
 // A QualifiedName is the combination of an identifier and a namespace
 class QualifiedName {
 public:
+    QualifiedName() : nameSpace(NULL), id(NULL) { }
     QualifiedName(Namespace *nameSpace, const String *id) : nameSpace(nameSpace), id(id) { }
 
     bool operator ==(const QualifiedName &b) { return (nameSpace == b.nameSpace) && (*id == *b.id); }
@@ -395,8 +396,18 @@ public:
     js2val value;
     uint32 flags;
 };
-typedef std::map<String, DynamicPropertyValue> DynamicPropertyMap;
-typedef DynamicPropertyMap::iterator DynamicPropertyIterator;
+
+class DynamicPropertyBinding {
+public:
+    DynamicPropertyBinding(const String name) : name(name), v(JS2VAL_VOID) { }
+    DynamicPropertyBinding(const String name, DynamicPropertyValue v) : name(name), v(v) { }
+
+    const String name;
+    DynamicPropertyValue v;
+};
+
+typedef HashTable<DynamicPropertyBinding *, const String> DynamicPropertyMap;
+typedef TableIterator<DynamicPropertyBinding *, const String> DynamicPropertyIterator;
 
 
 // A LOCALBINDING describes the member to which one qualified name is bound in a frame. Multiple 
@@ -1105,7 +1116,7 @@ typedef std::vector<StmtNode *>::reverse_iterator TargetListReverseIterator;
 
 struct MemberDescriptor {
     LocalMember *localMember;
-    QualifiedName *qname;
+    Namespace *ns;
 };
 
 class CompilationData {
@@ -1153,7 +1164,7 @@ public:
     bool relaxedHasType(js2val objVal, JS2Class *c);
 
     LocalMember *findFlatMember(NonWithFrame *container, Multiname *multiname, Access access, Phase phase);
-    InstanceBinding *resolveInstanceMemberName(JS2Class *js2class, Multiname *multiname, Access access, Phase phase);
+    InstanceBinding *resolveInstanceMemberName(JS2Class *js2class, Multiname *multiname, Access access, Phase phase, QualifiedName *qname);
 
     DynamicVariable *defineHoistedVar(Environment *env, const String *id, StmtNode *p);
     Multiname *defineLocalMember(Environment *env, const String *id, NamespaceList *namespaces, Attribute::OverrideModifier overrideMod, bool xplicit, Access access, LocalMember *m, size_t pos);
@@ -1288,6 +1299,13 @@ public:
 
 inline bool operator==(MetaData::LocalBindingEntry *s1, const String &s2) { return s1->name == s2;}
 inline bool operator!=(MetaData::LocalBindingEntry *s1, const String &s2) { return s1->name != s2;}
+
+inline bool operator==(MetaData::InstanceBindingEntry *s1, const String &s2) { return s1->name == s2;}
+inline bool operator!=(MetaData::InstanceBindingEntry *s1, const String &s2) { return s1->name != s2;}
+
+inline bool operator==(MetaData::DynamicPropertyBinding *s1, const String &s2) { return s1->name == s2;}
+inline bool operator!=(MetaData::DynamicPropertyBinding *s1, const String &s2) { return s1->name != s2;}
+
 
 }; // namespace Javascript
 

@@ -91,13 +91,13 @@ js2val setLength(JS2Metadata *meta, JS2Object *obj, uint32 newLength)
         // Can't call 'writeDynamicProperty' as that'll just cycle back here for
         // ArrayInstances.
         DynamicPropertyMap *dMap = &checked_cast<PrototypeInstance *>(obj)->dynamicProperties;
-        DynamicPropertyIterator i = dMap->find(*meta->engine->length_StringAtom);
-        if (i != dMap->end()) {
-            i->second.value = result;
+        DynamicPropertyBinding **dpbP = (*dMap)[*meta->engine->length_StringAtom];
+        if (dpbP) {
+            (*dpbP)->v.value = result;
             return result;
         }
-        const DynamicPropertyMap::value_type e(*meta->engine->length_StringAtom, DynamicPropertyValue(result, DynamicPropertyValue::PERMANENT));
-        checked_cast<PrototypeInstance *>(obj)->dynamicProperties.insert(e);
+        DynamicPropertyBinding *dpb = new DynamicPropertyBinding(*meta->engine->length_StringAtom, DynamicPropertyValue(result, DynamicPropertyValue::PERMANENT));
+        checked_cast<PrototypeInstance *>(obj)->dynamicProperties.insert(dpb->name, dpb); 
     }
     else {
         meta->mn1->name = meta->engine->length_StringAtom;
@@ -128,8 +128,8 @@ js2val Array_Constructor(JS2Metadata *meta, const js2val /*thisValue*/, js2val *
         else {
             uint32 i;
             for (i = 0; i < argc; i++) {
-                const DynamicPropertyMap::value_type e(*meta->engine->numberToString(i), DynamicPropertyValue(argv[i], DynamicPropertyValue::ENUMERATE));
-                arrInst->dynamicProperties.insert(e);
+                DynamicPropertyBinding *dpb = new DynamicPropertyBinding(*meta->engine->numberToString(i), DynamicPropertyValue(argv[i], DynamicPropertyValue::ENUMERATE));
+                arrInst->dynamicProperties.insert(dpb->name, dpb); 
             }
             setLength(meta, arrInst, i);
         }

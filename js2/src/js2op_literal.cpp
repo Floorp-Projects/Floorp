@@ -123,8 +123,8 @@
                 String *name = JS2VAL_TO_STRING(a);
                 const StringAtom &nameAtom = meta->world.identifiers[*name];
                 b = pop();
-                const DynamicPropertyMap::value_type e(nameAtom, b);
-                pInst->dynamicProperties.insert(e);
+                DynamicPropertyBinding *dpb = new DynamicPropertyBinding(nameAtom, DynamicPropertyValue(b, DynamicPropertyValue::ENUMERATE));
+                pInst->dynamicProperties.insert(dpb->name, dpb); 
             }
             push(baseVal);
             baseVal = JS2VAL_VOID;
@@ -139,8 +139,8 @@
             baseVal = OBJECT_TO_JS2VAL(aInst);
             for (uint16 i = 0; i < argCount; i++) {
                 b = pop();
-                const DynamicPropertyMap::value_type e(*numberToString((argCount - 1) - i), DynamicPropertyValue(b));
-                aInst->dynamicProperties.insert(e);
+                DynamicPropertyBinding *dpb = new DynamicPropertyBinding(*numberToString((argCount - 1) - i), DynamicPropertyValue(b, DynamicPropertyValue::ENUMERATE));
+                aInst->dynamicProperties.insert(dpb->name, dpb);
             }
             setLength(meta, aInst, argCount);
             push(baseVal);

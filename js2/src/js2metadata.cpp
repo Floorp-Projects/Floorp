@@ -2092,8 +2092,9 @@ doUnary:
                                 *exprType = checked_cast<Variable *>(m2.localMember)->type;
                             break;
                         }
-                        if (m2.qname) {   // an instance member
-                            InstanceMember *m = findInstanceMember(c, m2.qname, ReadAccess);
+                        if (m2.ns) {   // an instance member
+                            QualifiedName qname(m2.ns, multiname->name);
+                            InstanceMember *m = findInstanceMember(c, &qname, ReadAccess);
                             if (m) {
                                 if (m->kind == InstanceMember::InstanceVariableKind)
                                     *exprType = checked_cast<InstanceVariable *>(m)->type;
@@ -2186,21 +2187,25 @@ doUnary:
                         MemberDescriptor m2;
                         Multiname multiname(&i->name);
                         if (findLocalMember(*exprType, &multiname, ReadAccess, CompilePhase, &m2)) {
-                            if (m2.qname) {
-                                InstanceMember *m = findInstanceMember(*exprType, m2.qname, ReadAccess);
+                            if (m2.ns) {
+                                QualifiedName qname(m2.ns, multiname.name);
+                                InstanceMember *m = findInstanceMember(*exprType, &qname, ReadAccess);
                                 if (m->kind == InstanceMember::InstanceVariableKind)
                                     returnRef = new SlotReference(checked_cast<InstanceVariable *>(m)->slotIndex);
                             }
                         }
                     }
-                    if (returnRef == NULL)
+                    if (returnRef == NULL) {
                         returnRef = new DotReference(&i->name);
+                        checked_cast<DotReference *>(returnRef)->propertyMultiname.addNamespace(cxt);
+                    }
                 } 
                 else {
                     if (b->op2->getKind() == ExprNode::qualify) {
                         Reference *rVal = SetupExprNode(env, phase, b->op2, exprType);
                         ASSERT(rVal && checked_cast<LexicalReference *>(rVal));
                         returnRef = new DotReference(&((LexicalReference *)rVal)->variableMultiname);
+                        checked_cast<DotReference *>(returnRef)->propertyMultiname.addNamespace(cxt);
                     }
                     // XXX else bracketRef...
                     else
@@ -2865,8 +2870,8 @@ doUnary:
         if (result == NULL) {
             if (regionalFrame->kind == GlobalObjectKind) {
                 GlobalObject *gObj = checked_cast<GlobalObject *>(regionalFrame);
-                DynamicPropertyIterator dp = gObj->dynamicProperties.find(*id);
-                if (dp != gObj->dynamicProperties.end())
+                DynamicPropertyBinding **dpbP = gObj->dynamicProperties[*id];
+                if (dpbP)
                     reportError(Exception::definitionError, "Duplicate definition {0}", p->pos, id);
             }
             else { // ParameterFrame didn't have any bindings, scan the preceding 
@@ -3365,8 +3370,8 @@ XXX see EvalAttributeExpression, where identifiers are being handled for now...
             isPrototypeInstance = true;
             dMap = &(checked_cast<PrototypeInstance *>(obj))->dynamicProperties;
         }
-        DynamicPropertyIterator i = dMap->find(*name);
-        if (i != dMap->end())
+        DynamicPropertyBinding **dpbP = (*dMap)[*name];
+        if (dpbP)
             return obj;
         if (isPrototypeInstance) {
             PrototypeInstance *pInst = checked_cast<PrototypeInstance *>(obj);
@@ -3393,8 +3398,8 @@ XXX see EvalAttributeExpression, where identifiers are being handled for now...
             isPrototypeInstance = true;
             dMap = &(checked_cast<PrototypeInstance *>(obj))->dynamicProperties;
         }
-        DynamicPropertyIterator i = dMap->find(*name);
-        if (i != dMap->end())
+        DynamicPropertyBinding **dpbP = (*dMap)[*name];
+        if (dpbP)
             return true;
         return false;
     }
@@ -3424,9 +3429,9 @@ XXX see EvalAttributeExpression, where identifiers are being handled for now...
         }
         if (dMap == NULL)
             return false; // 'None'
-        DynamicPropertyIterator i = dMap->find(*name);
-        if (i != dMap->end()) {
-            *rval = i->second.value;
+        DynamicPropertyBinding **dpbP = (*dMap)[*name];
+        if (dpbP) {
+            *rval = (*dpbP)->v.value;
             return true;
         }
         if (isPrototypeInstance) {
@@ -3444,14 +3449,14 @@ XXX see EvalAttributeExpression, where identifiers are being handled for now...
     void SimpleInstance::writeProperty(JS2Metadata * /* meta */, const String *name, js2val newValue, uint32 flags)
     {
         ASSERT(dynamicProperties);
-        const DynamicPropertyMap::value_type e(*name, DynamicPropertyValue(newValue, flags));
-        dynamicProperties->insert(e);
+        DynamicPropertyBinding *dpb = new DynamicPropertyBinding(*name, DynamicPropertyValue(newValue, flags));
+        dynamicProperties->insert(dpb->name, dpb); 
     }
 
     void PrototypeInstance::writeProperty(JS2Metadata * /* meta */, const String *name, js2val newValue, uint32 flags)
     {
-        const DynamicPropertyMap::value_type e(*name, DynamicPropertyValue(newValue, flags));
-        dynamicProperties.insert(e);
+        DynamicPropertyBinding *dpb = new DynamicPropertyBinding(*name, DynamicPropertyValue(newValue, flags));
+        dynamicProperties.insert(dpb->name, dpb); 
     }
 
     void ArrayInstance::writeProperty(JS2Metadata *meta, const String *name, js2val newValue, uint32 flags)
@@ -3467,8 +3472,8 @@ XXX see EvalAttributeExpression, where identifiers are being handled for now...
         // (which it more typically is) rather than converted to string
         // and back.
 
-        const DynamicPropertyMap::value_type e(*name, DynamicPropertyValue(newValue, flags));
-        dynamicProperties.insert(e);
+        DynamicPropertyBinding *dpb = new DynamicPropertyBinding(*name, DynamicPropertyValue(newValue, flags));
+        dynamicProperties.insert(dpb->name, dpb); 
 
         const char16 *numEnd;        
         float64 f = stringToDouble(name->data(), name->data() + name->length(), numEnd);
@@ -3503,8 +3508,8 @@ XXX see EvalAttributeExpression, where identifiers are being handled for now...
             dMap = &(checked_cast<PrototypeInstance *>(container))->dynamicProperties;
         if (dMap == NULL)
             return false; // 'None'
-        DynamicPropertyIterator i = dMap->find(*name);
-        if (i != dMap->end()) {
+        DynamicPropertyBinding **dpbP = (*dMap)[*name];
+        if (dpbP) {
             // special case handling for setting 'length' property of ArrayInstances
             // XXX should handle this with dispatch to 'writeProperty' of each of
             // the different dynamic map containing objects, and change current
@@ -3519,15 +3524,16 @@ XXX see EvalAttributeExpression, where identifiers are being handled for now...
                 setLength(this, container, newLength);
             }
             else
-                if ((i->second.flags & DynamicPropertyValue::READONLY) == 0)
-                    i->second.value = newValue;
+                if (((*dpbP)->v.flags & DynamicPropertyValue::READONLY) == 0)
+                    (*dpbP)->v.value = newValue;
             return true;
         }
         if (!createIfMissing)
             return false;
         if (container->kind == SimpleInstanceKind) {
             SimpleInstance *dynInst = checked_cast<SimpleInstance *>(container);
-            InstanceBinding *ib = resolveInstanceMemberName(dynInst->type, multiname, ReadAccess, phase);
+            QualifiedName qname;
+            InstanceBinding *ib = resolveInstanceMemberName(dynInst->type, multiname, ReadAccess, phase, &qname);
             if (ib == NULL) {
                 dynInst->writeProperty(this, name, newValue, 0);
                 return true;
@@ -3538,8 +3544,8 @@ XXX see EvalAttributeExpression, where identifiers are being handled for now...
                 GlobalObject *glob = checked_cast<GlobalObject *>(container);
                 LocalMember *m = findFlatMember(glob, multiname, ReadAccess, phase);
                 if (m == NULL) {
-                    const DynamicPropertyMap::value_type e(*name, DynamicPropertyValue(newValue));
-                    glob->dynamicProperties.insert(e);
+                    DynamicPropertyBinding *dpb = new DynamicPropertyBinding(*name, DynamicPropertyValue(newValue, DynamicPropertyValue::ENUMERATE));
+                    glob->dynamicProperties.insert(dpb->name, dpb); 
                     return true;
                 }
             }
@@ -3632,7 +3638,8 @@ XXX see EvalAttributeExpression, where identifiers are being handled for now...
         if (JS2VAL_IS_PRIMITIVE(*containerVal)) {
 readClassProperty:
             JS2Class *c = objectType(*containerVal);
-            InstanceBinding *ib = resolveInstanceMemberName(c, multiname, ReadAccess, phase);
+            QualifiedName qname;
+            InstanceBinding *ib = resolveInstanceMemberName(c, multiname, ReadAccess, phase, &qname);
             if ((ib == NULL) && isSimpleInstance) 
                 return readDynamicProperty(JS2VAL_TO_OBJECT(*containerVal), multiname, lookupKind, phase, rval);
             else {
@@ -3641,7 +3648,7 @@ readClassProperty:
                 if (!JS2VAL_IS_OBJECT(*containerVal))
                     *containerVal = toObject(*containerVal);
                 else
-                    return readInstanceMember(*containerVal, c, (ib) ? &ib->qname : NULL, phase, rval);
+                    return readInstanceMember(*containerVal, c, (ib) ? &qname : NULL, phase, rval);
             }
         }
         container = JS2VAL_TO_OBJECT(*containerVal);
@@ -3753,7 +3760,8 @@ readClassProperty:
                     // 'this' is {generic}
                     // XXX is ??? in spec.
                 }
-                return readInstanceMember(thisObject, objectType(thisObject), m2.qname, phase, rval);
+                QualifiedName qname(m2.ns, multiname->name);
+                return readInstanceMember(thisObject, objectType(thisObject), &qname, phase, rval);
             }
         }
     }
@@ -3774,11 +3782,12 @@ readClassProperty:
         case SimpleInstanceKind:
             {
                 JS2Class *c = checked_cast<SimpleInstance *>(container)->type;
-                InstanceBinding *ib = resolveInstanceMemberName(c, multiname, WriteAccess, phase);
+                QualifiedName qname;
+                InstanceBinding *ib = resolveInstanceMemberName(c, multiname, WriteAccess, phase, &qname);
                 if (ib == NULL)
                     return writeDynamicProperty(container, multiname, createIfMissing, newValue, phase);
                 else
-                    return writeInstanceMember(containerVal, c, (ib) ? &ib->qname : NULL, newValue, phase); 
+                    return writeInstanceMember(containerVal, c, (ib) ? &qname : NULL, newValue, phase); 
             }
 
         case SystemKind:
@@ -3865,7 +3874,8 @@ readClassProperty:
                     // 'this' is {generic}
                     // XXX is ??? in spec.
                 }
-                return writeInstanceMember(thisObject, objectType(thisObject), m2.qname, newValue, phase);
+                QualifiedName qname(m2.ns, multiname->name);
+                return writeInstanceMember(thisObject, objectType(thisObject), &qname, newValue, phase);
             }
         }
     }
@@ -3877,11 +3887,12 @@ readClassProperty:
         if (JS2VAL_IS_PRIMITIVE(containerVal)) {
 deleteClassProperty:
             JS2Class *c = objectType(containerVal);
-            InstanceBinding *ib = resolveInstanceMemberName(c, multiname, ReadAccess, phase);
+            QualifiedName qname;
+            InstanceBinding *ib = resolveInstanceMemberName(c, multiname, ReadAccess, phase, &qname);
             if ((ib == NULL) && isSimpleInstance) 
                 return deleteDynamicProperty(JS2VAL_TO_OBJECT(containerVal), multiname, lookupKind, result);
             else 
-                return deleteInstanceMember(c, (ib) ? &ib->qname : NULL, result);
+                return deleteInstanceMember(c, (ib) ? &qname : NULL, result);
         }
         JS2Object *container = JS2VAL_TO_OBJECT(containerVal);
         switch (container->kind) {
@@ -3943,7 +3954,8 @@ deleteClassProperty:
                     *result = false;
                     return true;
                 }
-                return deleteInstanceMember(objectType(thisObject), m2.qname, result);
+                QualifiedName qname(m2.ns, multiname->name);
+                return deleteInstanceMember(objectType(thisObject), &qname, result);
             }
         }
     }
@@ -3965,10 +3977,10 @@ deleteClassProperty:
         else {
             dMap = &(checked_cast<PrototypeInstance *>(container))->dynamicProperties;
         }
-        DynamicPropertyIterator i = dMap->find(*name);
-        if (i != dMap->end()) {
-            if ((i->second.flags & DynamicPropertyValue::PERMANENT) == 0) {
-                dMap->erase(i);
+        DynamicPropertyBinding **dpbP = (*dMap)[*name];
+        if (dpbP) {
+            if (((*dpbP)->v.flags & DynamicPropertyValue::PERMANENT) == 0) {
+                dMap->erase(*name);         // XXX more efficient scheme?
                 *result = true;
                 return true;
             }
@@ -4031,7 +4043,7 @@ deleteClassProperty:
     bool JS2Metadata::findLocalMember(JS2Class *c, Multiname *multiname, Access access, Phase /* phase */, MemberDescriptor *result)
     {
         result->localMember = NULL;
-        result->qname = NULL;
+        result->ns = NULL;
         JS2Class *s = c;
         while (s) {
             LocalMember *found = NULL;
@@ -4042,41 +4054,33 @@ deleteClassProperty:
                     if ((ns.second->accesses & access) && multiname->listContains(ns.first)) {
                         if (found && (ns.second->content != found))
                             reportError(Exception::propertyAccessError, "Ambiguous reference to {0}", engine->errorPos(), multiname->name);
-                        else
+                        else {
                             found = ns.second->content;
+                            result->localMember = found;
+                        }
                     }
                 }
             }
-            if (found) {
-                result->localMember = found;
-                result->qname = NULL;
+            if (found)
                 return true;
-            }
 
             InstanceBinding *iFound = NULL;
-            InstanceBindingIterator ib, iend;
-            if (access & ReadAccess) {
-                ib = s->instanceReadBindings.lower_bound(*multiname->name);
-                iend = s->instanceReadBindings.upper_bound(*multiname->name);
+            InstanceBindingEntry **ibeP = s->instanceBindings[*multiname->name];
+            if (ibeP) {
+                for (InstanceBindingEntry::NS_Iterator i = (*ibeP)->begin(), end = (*ibeP)->end(); (i != end); i++) {
+                    InstanceBindingEntry::NamespaceBinding &ns = *i;
+                    if ((ns.second->accesses & access) && multiname->listContains(ns.first))
+                        if (iFound && (ns.second->content != iFound->content))
+                            reportError(Exception::propertyAccessError, "Ambiguous reference to {0}", engine->errorPos(), multiname->name);
+                        else {
+                            iFound = ns.second;
+                            result->ns = ns.first;
+                        }
+                    }
             }
-            else {
-                ib = s->instanceWriteBindings.lower_bound(*multiname->name);
-                iend = s->instanceWriteBindings.upper_bound(*multiname->name);
-            }
-            while (ib != iend) {
-                if (multiname->matches(ib->second->qname)) {
-                    if (iFound && (ib->second->content != iFound->content))
-                        reportError(Exception::propertyAccessError, "Ambiguous reference to {0}", engine->errorPos(), multiname->name);
-                    else
-                        iFound = ib->second;
-                }
-                ib++;
-            }
-            if (iFound) {
-                result->localMember = NULL;
-                result->qname = &iFound->qname;
+            
+            if (iFound)
                 return true;
-            }
             s = s->super;
         }
         return false;
@@ -4087,40 +4091,26 @@ deleteClassProperty:
     * Find the binding that matches the given access and multiname, it's an error if more than one such exists.
     *
     */
-    InstanceBinding *JS2Metadata::resolveInstanceMemberName(JS2Class *c, Multiname *multiname, Access access, Phase phase)
+    InstanceBinding *JS2Metadata::resolveInstanceMemberName(JS2Class *c, Multiname *multiname, Access access, Phase phase, QualifiedName *qname)
     {
         InstanceBinding *result = NULL;
         if (c->super) {
-            result = resolveInstanceMemberName(c->super, multiname, access, phase);
+            result = resolveInstanceMemberName(c->super, multiname, access, phase, qname);
             if (result) return result;
         }
-        InstanceBindingIterator b, end;
-        if (access & ReadAccess) {
-            b = c->instanceReadBindings.lower_bound(*multiname->name);
-            end = c->instanceReadBindings.upper_bound(*multiname->name);
-        }
-        else {
-            b = c->instanceWriteBindings.lower_bound(*multiname->name);
-            end = c->instanceWriteBindings.upper_bound(*multiname->name);
-        }
-        while (true) {
-            if (b == end) {
-                if (access == ReadWriteAccess) {
-                    access = WriteAccess;
-                    b = c->instanceWriteBindings.lower_bound(*multiname->name);
-                    end = c->instanceWriteBindings.upper_bound(*multiname->name);
-                    continue;
-                }
-                else
-                    break;
+        InstanceBindingEntry **ibeP = c->instanceBindings[*multiname->name];
+        if (ibeP) {
+            for (InstanceBindingEntry::NS_Iterator i = (*ibeP)->begin(), end = (*ibeP)->end(); (i != end); i++) {
+                InstanceBindingEntry::NamespaceBinding &ns = *i;
+                if ((ns.second->accesses & access) && multiname->listContains(ns.first))
+                    if (result && (ns.second->content != result->content))
+                        reportError(Exception::propertyAccessError, "Ambiguous reference to {0}", engine->errorPos(), multiname->name);
+                    else {
+                        result = ns.second;
+                        qname->id = multiname->name;
+                        qname->nameSpace = ns.first;
+                    }
             }
-            if (multiname->matches(b->second->qname)) {
-                if (result && (b->second->content != result->content))
-                    reportError(Exception::propertyAccessError, "Ambiguous reference to {0}", engine->errorPos(), multiname->name);
-                else
-                    result = b->second;
-            }
-            b++;
         }
         return result;
     }
@@ -4315,13 +4305,13 @@ deleteClassProperty:
         GCMARKOBJECT(privateNamespace)
         if (name) JS2Object::mark(name);
         GCMARKVALUE(defaultValue);
-        InstanceBindingIterator ib, iend;
-        for (ib = instanceReadBindings.begin(), iend = instanceReadBindings.end(); (ib != iend); ib++) {
-            ib->second->content->mark();
-        }        
-        for (ib = instanceWriteBindings.begin(), iend = instanceWriteBindings.end(); (ib != iend); ib++) {
-            ib->second->content->mark();
-        }        
+        for (InstanceBindingIterator rib = instanceBindings.begin(), riend = instanceBindings.end(); (rib != riend); rib++) {
+            InstanceBindingEntry *ibe = *rib;
+            for (InstanceBindingEntry::NS_Iterator i = ibe->begin(), end = ibe->end(); (i != end); i++) {
+                InstanceBindingEntry::NamespaceBinding ns = *i;
+                ns.second->content->mark();
+            }
+        }
     }
 
     // return true if 'heir' is this class or is any antecedent
@@ -4436,8 +4426,9 @@ deleteClassProperty:
             }
         }
         if (dynamicProperties) {
-            for (DynamicPropertyIterator i = dynamicProperties->begin(), end = dynamicProperties->end(); (i != end); i++) {
-                GCMARKVALUE(i->second.value);
+            for (DynamicPropertyIterator dpi = dynamicProperties->begin(), dpend = dynamicProperties->end(); (dpi != dpend); dpi++) {
+                DynamicPropertyBinding *dpb = *dpi;
+                GCMARKVALUE(dpb->v.value);
             }        
         }
     }
@@ -4497,8 +4488,9 @@ deleteClassProperty:
     void PrototypeInstance::markChildren()
     {
         GCMARKOBJECT(parent)
-        for (DynamicPropertyIterator i = dynamicProperties.begin(), end = dynamicProperties.end(); (i != end); i++) {
-            GCMARKVALUE(i->second.value);
+        for (DynamicPropertyIterator dpi = dynamicProperties.begin(), dpend = dynamicProperties.end(); (dpi != dpend); dpi++) {
+            DynamicPropertyBinding *dpb = *dpi;
+            GCMARKVALUE(dpb->v.value);
         }        
     }
 
@@ -4588,8 +4580,9 @@ deleteClassProperty:
     {
         NonWithFrame::markChildren();
         GCMARKOBJECT(internalNamespace)
-        for (DynamicPropertyIterator i = dynamicProperties.begin(), end = dynamicProperties.end(); (i != end); i++) {
-            GCMARKVALUE(i->second.value);
+        for (DynamicPropertyIterator dpi = dynamicProperties.begin(), dpend = dynamicProperties.end(); (dpi != dpend); dpi++) {
+            DynamicPropertyBinding *dpb = *dpi;
+            GCMARKVALUE(dpb->v.value);
         }        
     }
 

@@ -1032,9 +1032,10 @@ namespace MetaData {
             if (dMap) {
                 nameList = new const String *[dMap->size()];
                 length = 0;
-                for (DynamicPropertyIterator i = dMap->begin(), end = dMap->end(); (i != end); i++) {
-                    if (i->second.flags & DynamicPropertyValue::ENUMERATE)
-                        nameList[length++] = &i->first;
+                for (DynamicPropertyIterator dpi = dMap->begin(), dpend = dMap->end(); (dpi != dpend); dpi++) {
+                    DynamicPropertyBinding *dpb = *dpi;
+                    if (dpb->v.flags & DynamicPropertyValue::ENUMERATE)
+                        nameList[length++] = &dpb->name;
                 }
                 it = 0;
                 return (length != 0);

@@ -283,27 +283,19 @@ js2val dump(JS2Metadata *meta, const js2val /* thisValue */, js2val argv[], uint
                     printFrameBindings(c);
 
                     stdOut << " Instance Bindings:\n";                    
-                    for (InstanceBindingIterator rib = c->instanceReadBindings.begin(), riend = c->instanceReadBindings.end(); (rib != riend); rib++) {
-                        stdOut << "\t" << *rib->second->qname.nameSpace->name << "::" << *rib->second->qname.id;
-                        bool found = false;
-                        for (InstanceBindingIterator wib = c->instanceWriteBindings.begin(), wiend = c->instanceWriteBindings.end(); (wib != wiend); wib++) {
-                            if (rib->second->qname == wib->second->qname) {
-                                found = true;
-                                break;
-                            }
+                    for (InstanceBindingIterator rib = c->instanceBindings.begin(), riend = c->instanceBindings.end(); (rib != riend); rib++) {
+                        InstanceBindingEntry *ibe = *rib;
+                        for (InstanceBindingEntry::NS_Iterator i = ibe->begin(), end = ibe->end(); (i != end); i++) {
+                            InstanceBindingEntry::NamespaceBinding ns = *i;
+                            stdOut << "\t" << *(ns.first->name) << "::" << ibe->name;
+                            if (ns.second->accesses & ReadAccess)
+                                if (ns.second->accesses & WriteAccess)
+                                    stdOut << " [read/write]\n";
+                                else
+                                    stdOut << " [read-only]\n";
+                            else
+                                stdOut << " [write-only]\n";
                         }
-                        stdOut << ((found) ? " [read/write]" : " [read-only]") << "\n";
-                    }
-                    for (InstanceBindingIterator wib = c->instanceWriteBindings.begin(), wiend = c->instanceWriteBindings.end(); (wib != wiend); wib++) {
-                        bool found = false;
-                        for (InstanceBindingIterator rib = c->instanceReadBindings.begin(), riend = c->instanceReadBindings.end(); (rib != riend); rib++) {
-                            if (rib->second->qname == wib->second->qname) {
-                                found = true;
-                                break;
-                            }
-                        }
-                        if (!found)
-                            stdOut << "\t" << *wib->second->qname.nameSpace->name << "::" << *wib->second->qname.id << " [write-only]" << "\n";
                     }
                 }
                 else {
@@ -321,7 +313,8 @@ js2val dump(JS2Metadata *meta, const js2val /* thisValue */, js2val argv[], uint
 
                         stdOut << " Dynamic Properties:\n";                    
                         for (DynamicPropertyIterator dpi = pInst->dynamicProperties.begin(), dpend = pInst->dynamicProperties.end(); (dpi != dpend); dpi++) {
-                            stdOut << "\t" << dpi->first << " = " << *meta->toString(dpi->second.value) << "\n";
+                            DynamicPropertyBinding *dpb = *dpi;
+                            stdOut << "\t" << dpb->name << " = " << *meta->toString(dpb->v.value) << "\n";
                         }
                     }
                 }
