@@ -72,7 +72,8 @@ nsWidget::nsWidget() : nsBaseWidget()
   mName = "unnamed";
   mScrollX = 0;
   mScrollY = 0;
-  mIsVisible = PR_FALSE;
+  mIsShown = PR_FALSE;
+  mIsToplevel = PR_FALSE;
 }
 
 nsWidget::~nsWidget()
@@ -150,6 +151,7 @@ nsWidget::StandardWidgetCreate(nsIWidget *aParent,
   // if there's no parent, make the parent the root window.
   if (parent == 0) {
     parent = RootWindowOfScreen(mScreen);
+    mIsToplevel = PR_TRUE;
   }
   // set the bounds
   mBounds = aRect;
@@ -365,24 +367,27 @@ NS_IMETHODIMP nsWidget::SetColorMap(nsColorMap *aColorMap)
 
 NS_IMETHODIMP nsWidget::Show(PRBool bState)
 {
+  PR_LOG(XlibWidgetsLM, PR_LOG_DEBUG, ("nsWidget::Show()\n"));
+  PR_LOG(XlibWidgetsLM, PR_LOG_DEBUG, ("state is %d\n", bState));
+         
   if (bState) {
     if (mParentWidget) {
       ((nsWidget *)mParentWidget)->WidgetShow(this);
     }
     else {
       if (mBaseWindow) {
-        PR_LOG(XlibWidgetsLM, PR_LOG_DEBUG, ("Mapping window...\n"));
+        PR_LOG(XlibWidgetsLM, PR_LOG_DEBUG, ("Mapping window 0x%lx...\n", mBaseWindow));
         XMapWindow(mDisplay, mBaseWindow);
       }
     }
-    mIsVisible = PR_TRUE;
+    mIsShown = PR_TRUE;
   }
   else {
     if (mBaseWindow) {
-      PR_LOG(XlibWidgetsLM, PR_LOG_DEBUG, ("Unmapping window...\n"));
+      PR_LOG(XlibWidgetsLM, PR_LOG_DEBUG, ("Unmapping window 0x%lx...\n", mBaseWindow));
       XUnmapWindow(mDisplay, mBaseWindow);
     }
-    mIsVisible = PR_FALSE;
+    mIsShown = PR_FALSE;
   }
   return NS_OK;
 }
@@ -438,7 +443,10 @@ NS_IMETHODIMP nsWidget::SetCursor(nsCursor aCursor)
 
 nsIWidget *nsWidget::GetParent(void)
 {
-  return nsnull;
+  if (nsnull != mParentWidget) {
+    NS_ADDREF(mParentWidget);
+  }
+  return mParentWidget;
 }
 
 void nsWidget::CreateNative(Window aParent, nsRect aRect)
@@ -510,10 +518,9 @@ void nsWidget::CreateNativeWindow(Window aParent, nsRect aRect,
                               mVisual,          // visual
                               aMask,
                               &aAttr);
-
   PR_LOG(XlibWidgetsLM, PR_LOG_DEBUG, 
-         ("nsWidget: Created window 0x%lx with parent 0x%lx\n",
-          mBaseWindow, aParent));
+         ("nsWidget: Created window 0x%lx with parent 0x%lx %s\n",
+          mBaseWindow, aParent, (mIsToplevel ? "TopLevel" : "")));
   // XXX when we stop getting lame values for this remove it.
   // sometimes the dimensions have been corrected by the code above.
   mBounds.height = height;
@@ -688,13 +695,15 @@ void nsWidget::WidgetMove(nsWidget *aWidget)
               aWidget->mBounds.y - mScrollY);
   if (PR_TRUE == WidgetVisible(aWidget->mBounds)) {
     PR_LOG(XlibWidgetsLM, PR_LOG_DEBUG, ("Widget is visible...\n"));
-    if (aWidget->mIsVisible == PR_FALSE) {
-      aWidget->Show(PR_TRUE);
+    if (aWidget->mIsShown == PR_TRUE) {
+      PR_LOG(XlibWidgetsLM, PR_LOG_DEBUG, ("Mapping window 0x%lx...\n", mBaseWindow));
+      XMapWindow(aWidget->mDisplay, aWidget->mBaseWindow);
     }
   }
   else {
     PR_LOG(XlibWidgetsLM, PR_LOG_DEBUG, ("Widget is not visible...\n"));
-    aWidget->Show(PR_FALSE);
+    PR_LOG(XlibWidgetsLM, PR_LOG_DEBUG, ("Unmapping window 0x%lx...\n", mBaseWindow));
+    XUnmapWindow(aWidget->mDisplay, aWidget->mBaseWindow);
   }
 }
 
@@ -707,13 +716,15 @@ void nsWidget::WidgetResize(nsWidget *aWidget)
                 aWidget->mBounds.height);
   if (PR_TRUE == WidgetVisible(aWidget->mBounds)) {
     PR_LOG(XlibWidgetsLM, PR_LOG_DEBUG, ("Widget is visible...\n"));
-    if (aWidget->mIsVisible == PR_FALSE) {
-      aWidget->Show(PR_TRUE);
+    if (aWidget->mIsShown == PR_TRUE) {
+      PR_LOG(XlibWidgetsLM, PR_LOG_DEBUG, ("Mapping window 0x%lx...\n", mBaseWindow));
+      XMapWindow(aWidget->mDisplay, aWidget->mBaseWindow);
     }
   }
   else {
     PR_LOG(XlibWidgetsLM, PR_LOG_DEBUG, ("Widget is not visible...\n"));
-    aWidget->Show(PR_FALSE);
+    PR_LOG(XlibWidgetsLM, PR_LOG_DEBUG, ("Unmapping window 0x%lx...\n", mBaseWindow));
+    XUnmapWindow(aWidget->mDisplay, aWidget->mBaseWindow);
   }
 }
 
@@ -728,21 +739,27 @@ void nsWidget::WidgetMoveResize(nsWidget *aWidget)
               aWidget->mBounds.y - mScrollY);
   if (PR_TRUE == WidgetVisible(aWidget->mBounds)) {
     PR_LOG(XlibWidgetsLM, PR_LOG_DEBUG, ("Widget is visible...\n"));
-    if (aWidget->mIsVisible == PR_FALSE) {
-      aWidget->Show(PR_TRUE);
+    if (aWidget->mIsShown == PR_TRUE) {
+      PR_LOG(XlibWidgetsLM, PR_LOG_DEBUG, ("Mapping window 0x%lx...\n", mBaseWindow));
+      XMapWindow(aWidget->mDisplay, aWidget->mBaseWindow);
     }
   }
   else {
     PR_LOG(XlibWidgetsLM, PR_LOG_DEBUG, ("Widget is not visible...\n"));
-    aWidget->Show(PR_FALSE);
+    PR_LOG(XlibWidgetsLM, PR_LOG_DEBUG, ("Unmapping window 0x%lx...\n", mBaseWindow));
+    XUnmapWindow(aWidget->mDisplay, aWidget->mBaseWindow);
   }
 }
 
 void nsWidget::WidgetShow(nsWidget *aWidget)
 {
   if (PR_TRUE == WidgetVisible(aWidget->mBounds)) {
+    PR_LOG(XlibWidgetsLM, PR_LOG_DEBUG, ("Mapping window...\n"));
+    PR_LOG(XlibWidgetsLM, PR_LOG_DEBUG, ("Mapping window 0x%lx...\n", mBaseWindow));
     XMapWindow(aWidget->mDisplay, aWidget->mBaseWindow);
-    mIsVisible = PR_TRUE;
+  }
+  else {
+    PR_LOG(XlibWidgetsLM, PR_LOG_DEBUG, ("Not Mapping window...\n"));
   }
 }
 
