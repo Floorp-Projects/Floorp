@@ -9,3 +9,6 @@
 <!ENTITY mainWindow.preface "Source of: ">
 
 <!ENTITY menu_wrapLongLines.title "Wrap Long Lines"> 
+
+<!ENTITY findNextCmd.label "Find Next">
+<!ENTITY findNextCmd.accesskey "n">
