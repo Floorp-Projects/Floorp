@@ -51,6 +51,7 @@ interface nsIDocumentLoader : nsISupports
   // this should really be in a private interface as it is only
   // called between a parent doc loader and it's child.
   void clearParentDocLoader();
+  readonly attribute nsIChannel documentChannel;
 
   void fireOnLocationChange(in nsIWebProgress aWebProgress,
                             in nsIRequest aRequest,
