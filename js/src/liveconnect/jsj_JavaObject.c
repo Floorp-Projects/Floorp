@@ -691,14 +691,14 @@ JavaObject_setPropertyById(JSContext *cx, JSObject *obj, jsid id, jsval *vp)
     return result;
 
 no_such_field:
-        JS_IdToValue(cx, id, &idval);
-        member_name = JS_GetStringBytes(JSVAL_TO_STRING(idval));
-        class_descriptor = java_wrapper->class_descriptor;
-        JS_ReportErrorNumber(cx, jsj_GetErrorMessage, NULL, 
-                       JSJMSG_NO_NAME_IN_CLASS,
-                       member_name, class_descriptor->name);
-	jsj_ExitJava(jsj_env);
-        return JS_FALSE;
+    JS_IdToValue(cx, id, &idval);
+    member_name = JS_GetStringBytes(JSVAL_TO_STRING(idval));
+    class_descriptor = java_wrapper->class_descriptor;
+    JS_ReportErrorNumber(cx, jsj_GetErrorMessage, NULL, 
+                         JSJMSG_NO_NAME_IN_CLASS,
+                         member_name, class_descriptor->name);
+    jsj_ExitJava(jsj_env);
+    return JS_FALSE;
 }
 
 JS_STATIC_DLL_CALLBACK(JSBool)

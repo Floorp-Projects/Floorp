@@ -83,15 +83,15 @@ typedef struct JSJCallbacks {
     /* This callback is invoked when there is no JavaScript execution
        environment (JSContext) associated with the current Java thread and
        a call is made from Java into JavaScript.  (A JSContext is associated
-       with a Java thread by calling the JSJ_SetJSContextForJavaThread()
+       with a Java thread by calling the JSJ_SetDefaultJSContextForJavaThread()
        function.)  This callback is only invoked when Java spontaneously calls
        into JavaScript, i.e. it is not called when JS calls into Java which
        calls back into JS.
        
        This callback can be used to create a JSContext lazily, or obtain
        one from a pool of available JSContexts.  The implementation of this
-       callback can call JSJ_SetJSContextForJavaThread() to avoid any further
-       callbacks of this type for this Java thread. */
+       callback can call JSJ_SetDefaultJSContextForJavaThread() to avoid any
+       further callbacks of this type for this Java thread. */
     JSContext *	        (*map_jsj_thread_to_js_context)(JSJavaThreadState *jsj_env,
 #ifdef OJI
                                                         void *java_applet_obj,
