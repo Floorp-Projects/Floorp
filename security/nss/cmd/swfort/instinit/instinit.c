@@ -37,10 +37,8 @@
 #include "swforti.h"
 #include "cert.h"
 #include "pk11func.h"
-#include "secmod.h"
-#include "secmodi.h"
+#include "nss.h"
 #include "secutil.h"
-#include "secrng.h"
 #include "cdbhdl.h"
 
 #define CERTDB_VALID_CA        (1<<3)
@@ -303,38 +301,7 @@ main(int argc, char ** argv)
 	exit(1);
     }
 
-    /* now we want to verify the signature */
-    /*  Initialize the cert code */
-    rv = CERT_OpenVolatileCertDB(&certhandle);
-    if (rv != SECSuccess) {
-	fprintf(stderr,"%s: Couldn't build temparary Cert Database.\n",
-		progname);
-	exit(1);
-    }
-    CERT_SetDefaultCertDB(&certhandle);
-
-    RNG_RNGInit();
-    PK11_InitSlotLists();
-
-    module = SECMOD_NewInternal();
-    if (module == NULL) {
-	fprintf(stderr,"%s: Couldn't initialize security.\n",
-		progname);
-	exit(1);
-    }
-    rv = SECMOD_LoadModule(module);
-    if (rv != SECSuccess) {
-	fprintf(stderr,"%s: Couldn't initialize security.\n",
-		progname);
-	exit(1);
-    }
-
-    /*
-     * This really shouldn't happen, but we aren't fully initializing the
-     * NSS code here, so we end up calling some internal functions to do
-     * some of this initialization. 
-     */
-    secmod_GetInternalModule(module);
+    NSS_NoDB_Init(NULL);
     sec_SetCheckKRLState(1);
 
     /* now dump the certs into the temparary data base */
