@@ -120,6 +120,7 @@ private:
 
   nsresult GetModifiableMapped(nsIHTMLContent* aContent,
                                nsIHTMLStyleSheet* aSheet,
+                               PRBool aWillAddAttr,
                                nsMappedAttributes** aModifiable);
   nsresult MakeMappedUnique(nsMappedAttributes* aAttributes);
 

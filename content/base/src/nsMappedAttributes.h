@@ -52,7 +52,10 @@ class nsMappedAttributes : public nsIStyleRule
 public:
   nsMappedAttributes(nsIHTMLStyleSheet* aSheet,
                      nsMapRuleToAttributesFunc aMapRuleFunc);
-  nsMappedAttributes(const nsMappedAttributes& aCopy);
+
+  void* operator new(size_t size, PRUint32 aAttrCount = 1) CPP_THROW_NEW;
+
+  nsMappedAttributes* Clone(PRBool aWillAddAttr);
 
   NS_DECL_ISUPPORTS
 
@@ -68,9 +71,6 @@ public:
   PRBool Equals(const nsMappedAttributes* aAttributes) const;
   PRUint32 HashValue() const;
 
-  void AddUse();
-  void ReleaseUse();
-
   void DropStyleSheetReference()
   {
     mSheet = nsnull;
@@ -84,12 +84,12 @@ public:
   const nsAttrName* NameAt(PRUint32 aPos) const
   {
     NS_ASSERTION(aPos < mAttrCount, "out-of-bounds");
-    return &mAttrs[aPos].mName;
+    return &Attrs()[aPos].mName;
   }
   const nsAttrValue* AttrAt(PRUint32 aPos) const
   {
     NS_ASSERTION(aPos < mAttrCount, "out-of-bounds");
-    return &mAttrs[aPos].mValue;
+    return &Attrs()[aPos].mValue;
   }
   void RemoveAttrAt(PRUint32 aPos);
   const nsAttrName* GetExistingAttrNameFromQName(const nsACString& aName) const;
@@ -104,9 +104,8 @@ public:
 #endif
 
 private:
+  nsMappedAttributes(const nsMappedAttributes& aCopy);
   ~nsMappedAttributes();
-
-  PRBool EnsureBufferSize(PRUint32 aSize);
 
   struct InternalAttr
   {
@@ -114,12 +113,29 @@ private:
     nsAttrValue mValue;
   };
 
+  /**
+   * Due to a compiler bug in VisualAge C++ for AIX, we need to return the 
+   * address of the first index into mAttrs here, instead of simply
+   * returning mAttrs itself.
+   *
+   * See Bug 231104 for more information.
+   */
+  const InternalAttr* Attrs() const
+  {
+    return NS_REINTERPRET_CAST(const InternalAttr*, &(mAttrs[0]));
+  }
+  InternalAttr* Attrs()
+  {
+    return NS_REINTERPRET_CAST(InternalAttr*, &(mAttrs[0]));
+  }
+
   PRUint16 mAttrCount;
+#ifdef DEBUG
   PRUint16 mBufferSize;
-  PRUint32 mUseCount;
+#endif
   nsIHTMLStyleSheet* mSheet; //weak
   nsMapRuleToAttributesFunc mRuleMapper;
-  InternalAttr* mAttrs;
+  void* mAttrs[1];
 };
 
 #endif /* nsMappedAttributes_h___ */
