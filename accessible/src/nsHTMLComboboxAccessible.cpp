@@ -19,7 +19,7 @@
  *
  * Original Author: Eric Vaughan (evaughan@netscape.com)
  *
- * Contributor(s): 
+ * Contributor(s):  John Gaunt (jgaunt@netscape.com)
  */
 
 #include "nsHTMLComboboxAccessible.h"
@@ -260,10 +260,10 @@ NS_IMETHODIMP nsHTMLComboboxTextFieldAccessible::GetAccValue(nsAWritableString& 
 }
 
 /**
-  * Gets the bounds for the AreaFrame around the BlockFrame.
+  * Gets the bounds for the BlockFrame.
   *     Walks the Frame tree and checks for proper frames.
   */
-void nsHTMLComboboxTextFieldAccessible::GetBounds(nsRect& aBounds, nsIFrame** aRelativeFrame)
+void nsHTMLComboboxTextFieldAccessible::GetBounds(nsRect& aBounds, nsIFrame** aBoundingFrame)
 {
   // get our first child's frame
   nsIFrame* frame = nsAccessible::GetBoundsFrame();
@@ -272,15 +272,10 @@ void nsHTMLComboboxTextFieldAccessible::GetBounds(nsRect& aBounds, nsIFrame** aR
   if (!frame || !context)
     return;
 
+  frame->FirstChild(context, nsnull, aBoundingFrame);
   frame->FirstChild(context, nsnull, &frame);
 #ifdef DEBUG
   if (! nsAccessible::IsCorrectFrameType(frame, nsLayoutAtoms::blockFrame))
-    return;
-#endif
-
-  frame->GetParent(aRelativeFrame);
-#ifdef DEBUG
-  if (! nsAccessible::IsCorrectFrameType(*aRelativeFrame, nsLayoutAtoms::areaFrame))
     return;
 #endif
 
@@ -413,10 +408,10 @@ NS_IMETHODIMP nsHTMLComboboxButtonAccessible::GetAccNumActions(PRUint8 *_retval)
 }
 
 /**
-  * Gets the bounds for the AreaFrame around the gfxButtonControlFrame.
+  * Gets the bounds for the gfxButtonControlFrame.
   *     Walks the Frame tree and checks for proper frames.
   */
-void nsHTMLComboboxButtonAccessible::GetBounds(nsRect& aBounds, nsIFrame** aRelativeFrame)
+void nsHTMLComboboxButtonAccessible::GetBounds(nsRect& aBounds, nsIFrame** aBoundingFrame)
 {
   // get our second child's frame
   nsIFrame* frame = nsAccessible::GetBoundsFrame();
@@ -431,15 +426,10 @@ void nsHTMLComboboxButtonAccessible::GetBounds(nsRect& aBounds, nsIFrame** aRela
     return;
 #endif
 
+  frame->GetNextSibling(aBoundingFrame);
   frame->GetNextSibling(&frame);
 #ifdef DEBUG
   if (! nsAccessible::IsCorrectFrameType(frame, nsLayoutAtoms::gfxButtonControlFrame))
-    return;
-#endif
-
-  frame->GetParent(aRelativeFrame);
-#ifdef DEBUG
-  if (! nsAccessible::IsCorrectFrameType(*aRelativeFrame, nsLayoutAtoms::areaFrame))
     return;
 #endif
 
@@ -484,8 +474,8 @@ NS_IMETHODIMP nsHTMLComboboxButtonAccessible::GetAccActionName(PRUint8 index, ns
   PRBool isOpen = PR_FALSE;
   nsIFrame *boundsFrame = GetBoundsFrame();
   nsIComboboxControlFrame* comboFrame;
-  nsresult rv = QueryInterface(NS_GET_IID(nsIComboboxControlFrame), (void**)&comboFrame);
-  if (NS_FAILED(rv))
+  boundsFrame->QueryInterface(NS_GET_IID(nsIComboboxControlFrame), (void**)&comboFrame);
+  if (!comboFrame)
     return NS_ERROR_FAILURE;
   comboFrame->IsDroppedDown(&isOpen);
   if (isOpen)
@@ -570,8 +560,8 @@ NS_IMETHODIMP nsHTMLComboboxButtonAccessible::GetAccState(PRUint32 *_retval)
   PRBool isOpen = PR_FALSE;
   nsIFrame *boundsFrame = GetBoundsFrame();
   nsIComboboxControlFrame* comboFrame;
-  nsresult rv = QueryInterface(NS_GET_IID(nsIComboboxControlFrame), (void**)&comboFrame);
-  if (NS_FAILED(rv))
+  boundsFrame->QueryInterface(NS_GET_IID(nsIComboboxControlFrame), (void**)&comboFrame);
+  if (!comboFrame)
     return NS_ERROR_FAILURE;
   comboFrame->IsDroppedDown(&isOpen);
   if (isOpen)
@@ -611,9 +601,9 @@ NS_IMETHODIMP nsHTMLComboboxWindowAccessible::GetAccState(PRUint32 *_retval)
   // we are open or closed
   PRBool isOpen = PR_FALSE;
   nsIFrame *boundsFrame = GetBoundsFrame();
-  nsIComboboxControlFrame* comboFrame;
-  nsresult rv = QueryInterface(NS_GET_IID(nsIComboboxControlFrame), (void**)&comboFrame);
-  if (NS_FAILED(rv))
+  nsIComboboxControlFrame* comboFrame = nsnull;
+  boundsFrame->QueryInterface(NS_GET_IID(nsIComboboxControlFrame), (void**)&comboFrame);
+  if (!comboFrame)
     return NS_ERROR_FAILURE;
   comboFrame->IsDroppedDown(&isOpen);
   if (! isOpen)
@@ -702,9 +692,10 @@ NS_IMETHODIMP nsHTMLComboboxWindowAccessible::GetAccChildCount(PRInt32 *_retval)
 }
 
 /**
-  * Find the bounds of the window, the window may be invisible.
+  * Gets the bounds for the areaFrame.
+  *     Walks the Frame tree and checks for proper frames.
   */
-void nsHTMLComboboxWindowAccessible::GetBounds(nsRect& aBounds, nsIFrame** aRelativeFrame)
+void nsHTMLComboboxWindowAccessible::GetBounds(nsRect& aBounds, nsIFrame** aBoundingFrame)
 {
    // get our first option
   nsCOMPtr<nsIDOMNode> child;
@@ -713,7 +704,7 @@ void nsHTMLComboboxWindowAccessible::GetBounds(nsRect& aBounds, nsIFrame** aRela
   // now get its frame
   nsCOMPtr<nsIPresShell> shell(do_QueryReferent(mPresShell));
   if (!shell) {
-    *aRelativeFrame = nsnull;
+    *aBoundingFrame = nsnull;
     return;
   }
 
@@ -725,15 +716,10 @@ void nsHTMLComboboxWindowAccessible::GetBounds(nsRect& aBounds, nsIFrame** aRela
     return;
 #endif
 
+  frame->GetParent(aBoundingFrame);
   frame->GetParent(&frame);
 #ifdef DEBUG
   if (! nsAccessible::IsCorrectFrameType(frame, nsLayoutAtoms::areaFrame))
-    return;
-#endif
-
-  frame->GetParent(aRelativeFrame);
-#ifdef DEBUG
-  if (! nsAccessible::IsCorrectFrameType(*aRelativeFrame, nsLayoutAtoms::listControlFrame))
     return;
 #endif
 

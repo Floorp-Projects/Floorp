@@ -90,7 +90,7 @@ public:
   NS_IMETHOD GetAccValue(nsAWritableString& _retval);
   NS_IMETHOD GetAccState(PRUint32 *_retval);
 
-  virtual void GetBounds(nsRect& aBounds, nsIFrame** aRelativeFrame);
+  virtual void GetBounds(nsRect& aBounds, nsIFrame** aBoundingFrame);
 
 protected:
   
@@ -123,7 +123,7 @@ public:
   NS_IMETHOD AccDoAction(PRUint8 index);
   NS_IMETHOD GetAccState(PRUint32 *_retval);
 
-  virtual void GetBounds(nsRect& aBounds, nsIFrame** aRelativeFrame);
+  virtual void GetBounds(nsRect& aBounds, nsIFrame** aBoundingFrame);
 
 protected:
   
@@ -151,7 +151,7 @@ public:
   NS_IMETHOD GetAccRole(PRUint32 *_retval);
   NS_IMETHOD GetAccState(PRUint32 *_retval);
 
-  virtual void GetBounds(nsRect& aBounds, nsIFrame** aRelativeFrame);
+  virtual void GetBounds(nsRect& aBounds, nsIFrame** aBoundingFrame);
    
 protected:
   
