@@ -292,7 +292,8 @@ NS_IMETHODIMP
 PluginViewerImpl::StartLoad(nsIRequest* request, nsIStreamListener*& aResult)
 {
   nsCOMPtr<nsIChannel> channel = do_QueryInterface(request);
-  if (!channel) return NS_ERROR_FAILURE;
+  if (!channel || !mWindow) 
+    return NS_ERROR_FAILURE;
   
   NS_IF_RELEASE(mChannel);
   mChannel = channel;
@@ -967,6 +968,7 @@ PluginListener::PluginListener(PluginViewerImpl* aViewer)
   NS_INIT_ISUPPORTS();
   mViewer = aViewer;
   NS_ADDREF(aViewer);
+  mNextStream = nsnull;
 }
 
 PluginListener::~PluginListener()
