@@ -37,6 +37,7 @@
 #include <PP_Types.h>
 #include <LView.h>
 #include <LListener.h>
+#include "auto_HT_Pane.h"
 
 #include "CRDFNotificationHandler.h"
 #include "CShelfMixin.h"
@@ -85,7 +86,7 @@ protected:
 		// protected to prevent anyone from instantiating one of these by itself.
 					CRDFCoordinator(LStream* inStream);
 	virtual			~CRDFCoordinator();
-	
+
 public:
 	enum { class_ID = 'RCoo' };
 	enum {
@@ -100,8 +101,9 @@ public:
 	void UnregisterNavCenter ( ) const ;
 	
 		// because sometimes you just need to get to the top-level HT pane....
-	const HT_Pane HTPane ( ) const { return mHTPane; } ;
-	HT_Pane HTPane ( ) { return mHTPane; }
+	const HT_Pane HTPane ( ) const { return mHTPane.get(); }
+	HT_Pane HTPane ( ) { return mHTPane.get(); }
+	void HTPane ( auto_ptr<_HT_PaneStruct> inNewPane ) { mHTPane = inNewPane; }
 	
 		// get/set the frame to which urls are dispatched. It's ok not to set
 		// this as the default will be the top-most HTML view.
@@ -142,7 +144,14 @@ protected:
 	CNavCenterTitle*		mTitleStrip;
 	CNavCenterCommandStrip*	mTitleCommandArea;
 	
-	HT_Pane					mHTPane;			// the HT pane containing all the workspaces
+private:
+
+	auto_ptr<_HT_PaneStruct>	mHTPane;		// the HT pane containing all the workspaces
+
+		// pass-by-value not allowed for a coordinator because it corresponds 1-to-1
+		// with an element in the UI.
+	CRDFCoordinator( const CRDFCoordinator& );				// DON'T IMPLEMENT
+	CRDFCoordinator& operator=( const CRDFCoordinator& );	// DON'T IMPLEMENT
 	
 }; // CRDFCoordinator
 
@@ -200,6 +209,11 @@ private:
 	CShelf*			mAdSpace;
 	
 	CBrowserView*	mAdSpaceView;
+
+		// pass-by-value not allowed for a coordinator because it corresponds 1-to-1
+		// with an element in the UI.
+	CDockedRDFCoordinator( const CDockedRDFCoordinator& );				// DON'T IMPLEMENT
+	CDockedRDFCoordinator& operator=( const CDockedRDFCoordinator& );	// DON'T IMPLEMENT
 	
 }; // CDockedRDFCoordinator
 
@@ -226,6 +240,12 @@ public:
 
 	void			BuildHTPane ( const char* inURL, unsigned int inCount, 
 									char** inParamNames, char** inParamValues ) ;
+
+private:
+		// pass-by-value not allowed for a coordinator because it corresponds 1-to-1
+		// with an element in the UI.
+	CShackRDFCoordinator( const CShackRDFCoordinator& );				// DON'T IMPLEMENT
+	CShackRDFCoordinator& operator=( const CShackRDFCoordinator& );		// DON'T IMPLEMENT
 	
 }; // CShackRDFCoordinator
 
@@ -256,6 +276,12 @@ public:
 protected:
 
 	void			FinishCreateSelf ( ) ;
+
+private:
+		// pass-by-value not allowed for a coordinator because it corresponds 1-to-1
+		// with an element in the UI.
+	CWindowRDFCoordinator( const CWindowRDFCoordinator& );				// DON'T IMPLEMENT
+	CWindowRDFCoordinator& operator=( const CWindowRDFCoordinator& );	// DON'T IMPLEMENT
 
 }; // CWindowRDFCoordinator
 
@@ -294,5 +320,11 @@ protected:
 									Boolean	&outUsesMark,
 									Char16	&outMark,
 									Str255	outName);
+
+private:
+		// pass-by-value not allowed for a coordinator because it corresponds 1-to-1
+		// with an element in the UI.
+	CPopdownRDFCoordinator( const CPopdownRDFCoordinator& );				// DON'T IMPLEMENT
+	CPopdownRDFCoordinator& operator=( const CPopdownRDFCoordinator& );		// DON'T IMPLEMENT
 	
 }; // CPopdownRDFCoordinator

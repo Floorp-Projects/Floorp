@@ -105,7 +105,7 @@ CRDFCoordinator::~CRDFCoordinator()
 	
 	if ( HTPane() ) {
 		UnregisterNavCenter();
-		HT_DeletePane ( mHTPane );
+		// ...no need to destroy the HTPane, auto_ptr does that for us...
 	}
 	
 } // destructor
@@ -431,8 +431,8 @@ void CRDFCoordinator::SelectView(HT_View view)
 //
 void CRDFCoordinator::SelectView ( HT_ViewType inPane )
 {
-	HT_View view = HT_GetViewType ( mHTPane, inPane );
-	HT_SetSelectedView ( mHTPane, view );
+	HT_View view = HT_GetViewType ( HTPane(), inPane );
+	HT_SetSelectedView ( HTPane(), view );
 
 } // SelectView
 
@@ -497,7 +497,7 @@ CRDFCoordinator :: ObeyCommand ( CommandT inCommand, void* ioParam )
 
 	if ( inCommand >= cmd_NavCenterBase && inCommand <= cmd_NavCenterCap ) {
 		// ¥make sure nav center is open???
-		HT_Error err = HT_DoMenuCmd ( mHTPane, (HT_MenuCmd)(inCommand - cmd_NavCenterBase) );
+		HT_Error err = HT_DoMenuCmd ( HTPane(), (HT_MenuCmd)(inCommand - cmd_NavCenterBase) );
 		Assert_( err == HT_NoErr );
 		return true;
 	}
@@ -508,19 +508,19 @@ CRDFCoordinator :: ObeyCommand ( CommandT inCommand, void* ioParam )
 		// handle commands that we have to share with other parts of the UI
 		//
 		case cmd_Cut:
-			HT_DoMenuCmd(mHTPane, HT_CMD_CUT );
+			HT_DoMenuCmd(HTPane(), HT_CMD_CUT );
 			cmdHandled = true;
 			break;
 		case cmd_Copy:
-			HT_DoMenuCmd(mHTPane, HT_CMD_COPY );
+			HT_DoMenuCmd(HTPane(), HT_CMD_COPY );
 			cmdHandled = true;
 			break;
 		case cmd_Paste:
-			HT_DoMenuCmd(mHTPane, HT_CMD_PASTE );
+			HT_DoMenuCmd(HTPane(), HT_CMD_PASTE );
 			cmdHandled = true;
 			break;
 		case cmd_Clear:
-			HT_DoMenuCmd(mHTPane, HT_CMD_DELETE_FILE );
+			HT_DoMenuCmd(HTPane(), HT_CMD_DELETE_FILE );
 			cmdHandled = true;
 			break;
 
@@ -554,7 +554,7 @@ void
 CRDFCoordinator :: RegisterNavCenter ( const MWContext* inContext ) const
 {
 	if ( HTPane() )
-		XP_RegisterNavCenter ( mHTPane, const_cast<MWContext*>(inContext) );
+		XP_RegisterNavCenter ( HTPane(), const_cast<MWContext*>(inContext) );
 
 } // RegisterNavCenter
 
@@ -568,7 +568,7 @@ void
 CRDFCoordinator :: UnregisterNavCenter ( ) const
 {
 	if ( HTPane() )
-		XP_UnregisterNavCenter ( mHTPane );	
+		XP_UnregisterNavCenter ( HTPane() );	
 
 } // UnregisterNavCenter
 
@@ -777,21 +777,21 @@ CDockedRDFCoordinator :: BuildHTPane ( HT_Resource inNode, MWContext* inContext 
 	// out with the old
 	if ( HTPane() ) {
 		UnregisterNavCenter();
-		HT_DeletePane ( mHTPane );
+		// no need to delete the pane, auto_ptr does that for us
 	}
 	
 	// in with the new
-	mHTPane = CreateHTPane ( inNode );
-	if ( mHTPane ) {
+	HTPane ( CreateHTPane(inNode) );
+	if ( HTPane() ) {
 		// tell HT we're a docked view
-		HT_SetWindowType ( mHTPane, HT_DOCKED_WINDOW );
+		HT_SetWindowType ( HTPane(), HT_DOCKED_WINDOW );
 		
 		ShowOrHideColumnHeaders();
 		
 		// we don't get a view selected event like other trees, so setup the tree 
 		// view to point to the already selected view in HT and broadcast to tell 
 		// the title bar to update the title.
-		HT_View currView = HT_GetSelectedView(mHTPane);
+		HT_View currView = HT_GetSelectedView(HTPane());
 		SelectView ( currView );
 		
 		// show or hide the shelf containing the HTML pane. We want to do this 
@@ -890,18 +890,17 @@ void
 CShackRDFCoordinator :: BuildHTPane ( const char* inURL, unsigned int inCount, 
 										char** inParamNames, char** inParamValues )
 {
-	mHTPane = CreateHTPane ( inURL, inCount, inParamNames, inParamValues );
-	
-	if ( mHTPane ) {
+	HTPane ( CreateHTPane(inURL, inCount, inParamNames, inParamValues) );	
+	if ( HTPane() ) {
 		// tell HT we're a shack view
-		HT_SetWindowType ( mHTPane, HT_EMBEDDED_WINDOW );
+		HT_SetWindowType ( HTPane(), HT_EMBEDDED_WINDOW );
 
 		ShowOrHideColumnHeaders();
 		
 		// we don't get a view selected event like other trees, so setup the tree 
 		// view to point to the already selected view in HT and broadcast to tell 
 		// the title bar to update the title.
-		HT_View view =  HT_GetSelectedView(mHTPane);
+		HT_View view =  HT_GetSelectedView(HTPane());
 		SelectView ( view );		
 	}
 
@@ -932,17 +931,17 @@ CWindowRDFCoordinator :: FinishCreateSelf ( )
 void
 CWindowRDFCoordinator :: BuildHTPane ( HT_Resource inNode )
 {
-	mHTPane = CreateHTPane ( inNode );
-	if ( mHTPane ) {
+	HTPane ( CreateHTPane(inNode) );
+	if ( HTPane() ) {
 		// tell HT we're a standalone window
-		HT_SetWindowType ( mHTPane, HT_STANDALONE_WINDOW );
+		HT_SetWindowType ( HTPane(), HT_STANDALONE_WINDOW );
 
 		ShowOrHideColumnHeaders();
 		
 		// we don't get a view selected event like other trees, so setup the tree 
 		// view to point to the already selected view in HT and broadcast to tell 
 		// the title bar to update the title.
-		SelectView ( HT_GetSelectedView(mHTPane) );
+		SelectView ( HT_GetSelectedView(HTPane()) );
 	}
 
 } // BuildHTPane
@@ -950,17 +949,17 @@ CWindowRDFCoordinator :: BuildHTPane ( HT_Resource inNode )
 void
 CWindowRDFCoordinator :: BuildHTPane ( RDF_Resource inNode )
 {
-	mHTPane = CreateHTPane ( inNode );
-	if ( mHTPane ) {
+	HTPane ( CreateHTPane(inNode) );
+	if ( HTPane() ) {
 		// tell HT we're a standalone window
-		HT_SetWindowType ( mHTPane, HT_STANDALONE_WINDOW );
+		HT_SetWindowType ( HTPane(), HT_STANDALONE_WINDOW );
 
 		ShowOrHideColumnHeaders();
 		
 		// we don't get a view selected event like other trees, so setup the tree 
 		// view to point to the already selected view in HT and broadcast to tell 
 		// the title bar to update the title.
-		SelectView ( HT_GetSelectedView(mHTPane) );
+		SelectView ( HT_GetSelectedView(HTPane()) );
 	}
 
 } // BuildHTPane
@@ -990,23 +989,23 @@ void
 CPopdownRDFCoordinator :: BuildHTPane ( HT_Resource inNode, MWContext* inContext )
 {
 	// out with the old, but only if it is not the pane originating d&d. 
-	if ( mHTPane != CPopdownFlexTable::HTPaneOriginatingDragAndDrop() ) {
+	if ( HTPane() != CPopdownFlexTable::HTPaneOriginatingDragAndDrop() ) {
 		UnregisterNavCenter();
-		HT_DeletePane ( mHTPane );
+		// no need to delete the pane, auto_ptr takes care of that for us
 	}
 	
 	// in with the new
-	mHTPane = CreateHTPane ( inNode );
-	if ( mHTPane ) {
+	HTPane ( CreateHTPane(inNode) );
+	if ( HTPane() ) {
 		// tell HT we're a standalone window
-		HT_SetWindowType ( mHTPane, HT_POPUP_WINDOW );
+		HT_SetWindowType ( HTPane(), HT_POPUP_WINDOW );
 
 		ShowOrHideColumnHeaders();
 		
 		// we don't get a view selected event like other trees, so setup the tree 
 		// view to point to the already selected view in HT and broadcast to tell 
 		// the title bar to update the title.
-		SelectView ( HT_GetSelectedView(mHTPane) );
+		SelectView ( HT_GetSelectedView(HTPane()) );
 
 		// register so things like What's Related will work.
 		RegisterNavCenter ( inContext );
