@@ -3794,7 +3794,7 @@ HTMLContentSink::AddDocTypeDecl(const nsIParserNode& aNode)
       }
 
       /*
-       * If we didn't find 'SYSTEM' we tread everything after the public id
+       * If we didn't find 'SYSTEM' we treat everything after the public id
        * as the system id.
        */
       if (systemStart < 0) {
@@ -3809,7 +3809,7 @@ HTMLContentSink::AddDocTypeDecl(const nsIParserNode& aNode)
                      docTypeStr.Length() - systemStart);
 
       // Strip off 'SYSTEM' if we have it.
-      if (Substring(systemId, 0, 6).Equals(NS_LITERAL_STRING("SYSTEM")))
+      if (StringBeginsWith(systemId, NS_LITERAL_STRING("SYSTEM")))
         systemId.Cut(0, 6);
 
       systemId.Trim(" \t\n\r");
@@ -3843,10 +3843,9 @@ HTMLContentSink::AddDocTypeDecl(const nsIParserNode& aNode)
   }
 
   // Cut out "<!DOCTYPE" or "DOCTYPE" from the name.
-  nsCaseInsensitiveStringComparator ignoreCase;
-  if (Substring(name, 0, 9).Equals(NS_LITERAL_STRING("<!DOCTYPE"), ignoreCase)) {
+  if (StringBeginsWith(name, NS_LITERAL_STRING("<!DOCTYPE"), nsCaseInsensitiveStringComparator())) {
     name.Cut(0, 9);
-  } else if (Substring(name, 0, 7).Equals(NS_LITERAL_STRING("DOCTYPE"), ignoreCase)) {
+  } else if (StringBeginsWith(name, NS_LITERAL_STRING("DOCTYPE"), nsCaseInsensitiveStringComparator())) {
     name.Cut(0, 7);
   }
 

@@ -827,8 +827,7 @@ nsXULPrototypeCache::StartFastLoad(nsIURI* aURI)
 
     nsCAutoString path;
     aURI->GetPath(path);
-    const nsACString& extn = Substring(path, path.Length()-4, 4);
-    if (! extn.Equals(NS_LITERAL_CSTRING(".xul")))
+    if (!StringEndsWith(path, NS_LITERAL_CSTRING(".xul")))
         return NS_ERROR_NOT_AVAILABLE;
 
     nsIURIKey key(aURI);

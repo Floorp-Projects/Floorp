@@ -616,7 +616,7 @@ nsCookieService::GetCookieStringFromHttp(nsIURI     *aHostURI,
     // the cookie list is in order of path length; longest to shortest.
     // if the nsIURI path is shorter than the cookie path, then we know the path
     // isn't on the cookie path.
-    if (!Substring(pathFromURI, 0, cookiePathLen).Equals(Substring(cookieInList->Path(), 0, cookiePathLen))) {
+    if (!StringBeginsWith(pathFromURI, Substring(cookieInList->Path(), 0, cookiePathLen))) {
       continue;
     }
 
@@ -2313,7 +2313,7 @@ nsCookieService::CheckPath(nsCookieAttributes &aCookieAttributes,
     // get path from aHostURI
     nsCAutoString pathFromURI;
     if (NS_FAILED(aHostURI->GetPath(pathFromURI)) ||
-        !Substring(pathFromURI, 0, aCookieAttributes.path.Length()).Equals(aCookieAttributes.path)) {
+        !StringBeginsWith(pathFromURI, aCookieAttributes.path)) {
       return PR_FALSE;
     }
 #endif

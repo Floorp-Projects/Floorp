@@ -1456,7 +1456,7 @@ nsPlainTextSerializer::AddToLine(const PRUnichar * aLineFragment,
               (
                 restOfLine[0] == '>' ||
                 restOfLine[0] == ' ' ||
-                Substring(restOfLine, 0, 5).Equals(NS_LITERAL_STRING("From "))
+                StringBeginsWith(restOfLine, NS_LITERAL_STRING("From "))
               )
               && mCiteQuoteLevel == 0  // We space-stuff quoted lines anyway
             )

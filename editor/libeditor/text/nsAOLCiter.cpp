@@ -85,7 +85,7 @@ nsAOLCiter::StripCites(const nsAString& aInString, nsAString& aOutString)
   nsReadingIterator <PRUnichar> iter,enditer;
   aInString.BeginReading(iter);
   aInString.EndReading(enditer);
-  if (Substring(aInString,0,2).Equals(NS_LITERAL_STRING(">>")))
+  if (StringBeginsWith(aInString, NS_LITERAL_STRING(">>")))
   {
     iter.advance(2);
     while (nsCRT::IsAsciiSpace(*iter))

@@ -970,10 +970,10 @@ nsresult nsHTMLTokenizer::ConsumeSpecialMarkup(PRUnichar aChar,CToken*& aToken,n
   if(theIndex==kNotFound) {
     if('['==theBufCopy.CharAt(0)) {
       aToken = theAllocator->CreateTokenOfType(eToken_cdatasection,eHTMLTag_comment);  
-    } else if (Substring(theBufCopy, 0, 7).Equals(NS_LITERAL_STRING("ELEMENT")) || 
-      Substring(theBufCopy, 0, 7).Equals(NS_LITERAL_STRING("ATTLIST")) || 
-      Substring(theBufCopy, 0, 6).Equals(NS_LITERAL_STRING("ENTITY")) || 
-      Substring(theBufCopy, 0, 8).Equals(NS_LITERAL_STRING("NOTATION"))) {
+    } else if (StringBeginsWith(theBufCopy, NS_LITERAL_STRING("ELEMENT")) ||
+               StringBeginsWith(theBufCopy, NS_LITERAL_STRING("ATTLIST")) || 
+               StringBeginsWith(theBufCopy, NS_LITERAL_STRING("ENTITY")) || 
+               StringBeginsWith(theBufCopy, NS_LITERAL_STRING("NOTATION"))) {
       aToken = theAllocator->CreateTokenOfType(eToken_markupDecl,eHTMLTag_markupDecl);
     } else {
       aToken = theAllocator->CreateTokenOfType(eToken_comment,eHTMLTag_comment);

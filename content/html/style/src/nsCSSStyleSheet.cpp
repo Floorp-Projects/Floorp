@@ -3462,13 +3462,11 @@ DashMatchCompare(const nsAString& aAttributeValue,
       result = PR_FALSE;
     }
     else {
-      const nsAString& attributeSubstring =
-        Substring(aAttributeValue, 0, selectorLen);
       if (aCaseSensitive)
-        result = attributeSubstring.Equals(aSelectorValue);
+        result = StringBeginsWith(aAttributeValue, aSelectorValue);
       else
-        result = attributeSubstring.Equals(aSelectorValue,
-                                          nsCaseInsensitiveStringComparator());
+        result = StringBeginsWith(aAttributeValue, aSelectorValue,
+                                  nsCaseInsensitiveStringComparator());
     }
   }
   return result;
@@ -3496,35 +3494,20 @@ static PRBool AttrMatchesValue(const nsAttrSelector* aAttrSelector,
     case NS_ATTR_FUNC_DASHMATCH: 
       return DashMatchCompare(aValue, aAttrSelector->mValue, isCaseSensitive);
     case NS_ATTR_FUNC_ENDSMATCH:
-      {
-        PRUint32 selLen = aAttrSelector->mValue.Length();
-        PRUint32 valLen = aValue.Length();
-        if (selLen > valLen) {
-          return PR_FALSE;
-        } else {
-          if (isCaseSensitive)
-            return Substring(aValue, valLen - selLen, selLen).
-                     Equals(aAttrSelector->mValue);
-          else
-            return Substring(aValue, valLen - selLen, selLen).
-                     Equals(aAttrSelector->mValue,
-                            nsCaseInsensitiveStringComparator());
-        }
+      if (isCaseSensitive) {
+        return StringEndsWith(aValue, aAttrSelector->mValue);
+      }
+      else {
+        return StringEndsWith(aValue, aAttrSelector->mValue,
+                              nsCaseInsensitiveStringComparator());
       }
     case NS_ATTR_FUNC_BEGINSMATCH:
-      {
-        PRUint32 selLen = aAttrSelector->mValue.Length();
-        PRUint32 valLen = aValue.Length();
-        if (selLen > valLen) {
-          return PR_FALSE;
-        } else {
-          if (isCaseSensitive)
-            return Substring(aValue, 0, selLen).Equals(aAttrSelector->mValue);
-          else
-            return Substring(aValue, 0, selLen).
-                     Equals(aAttrSelector->mValue,
-                            nsCaseInsensitiveStringComparator());
-        }
+      if (isCaseSensitive) {
+        return StringBeginsWith(aValue, aAttrSelector->mValue);
+      }
+      else {
+        return StringBeginsWith(aValue, aAttrSelector->mValue,
+                                nsCaseInsensitiveStringComparator());
       }
     case NS_ATTR_FUNC_CONTAINSMATCH:
       return FindInReadable(aAttrSelector->mValue, aValue,

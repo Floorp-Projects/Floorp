@@ -4007,9 +4007,8 @@ nsGlobalHistory::AutoCompleteSearch(const nsAString& aSearchString,
   if (aPrevResults) {
     nsXPIDLString prevURL;
     aPrevResults->GetSearchString(getter_Copies(prevURL));
-    nsDependentString prevURLStr(prevURL);
     // if search string begins with the previous search string, it's a go
-    searchPrevious = Substring(aSearchString, 0, prevURLStr.Length()).Equals(prevURLStr);
+    searchPrevious = StringBeginsWith(aSearchString, prevURL);
   }
     
   nsCOMPtr<nsISupportsArray> resultItems;
@@ -4131,7 +4130,7 @@ nsGlobalHistory::AutoCompleteGetExcludeInfo(const nsAString& aURL, AutocompleteE
   PRInt32 i;
   for (i = 0; i < mIgnoreSchemes.Count(); ++i) {
     nsString* string = mIgnoreSchemes.StringAt(i);    
-    if (Substring(aURL, 0, string->Length()).Equals(*string)) {
+    if (StringBeginsWith(aURL, *string)) {
       aExclude->schemePrefix = i;
       index = string->Length();
       break;
@@ -4160,7 +4159,7 @@ nsGlobalHistory::AutoCompleteCutPrefix(nsAString& aURL, AutocompleteExclude* aEx
     if (aExclude && i == aExclude->schemePrefix)
       continue;
     nsString* string = mIgnoreSchemes.StringAt(i);    
-    if (Substring(aURL, 0, string->Length()).Equals(*string)) {
+    if (StringBeginsWith(aURL, *string)) {
       idx = string->Length();
       break;
     }
@@ -4174,7 +4173,7 @@ nsGlobalHistory::AutoCompleteCutPrefix(nsAString& aURL, AutocompleteExclude* aEx
     if (aExclude && i == aExclude->hostnamePrefix)
       continue;
     nsString* string = mIgnoreHostnames.StringAt(i);    
-    if (Substring(aURL, 0, string->Length()).Equals(*string)) {
+    if (StringBeginsWith(aURL, *string)) {
       idx = string->Length();
       break;
     }
@@ -4213,7 +4212,7 @@ nsGlobalHistory::AutoCompleteCompare(nsAString& aHistoryURL,
 {
   AutoCompleteCutPrefix(aHistoryURL, aExclude);
   
-  return Substring(aHistoryURL, 0, aUserURL.Length()).Equals(aUserURL);
+  return StringBeginsWith(aHistoryURL, aUserURL);
 }
 
 int PR_CALLBACK 

@@ -76,7 +76,7 @@ nsTreeUtils::TokenizeProperties(const nsAString& aProperties, nsISupportsArray* 
     if (iter == first)
       break;
 
-    nsCOMPtr<nsIAtom> atom = dont_AddRef(NS_NewAtom(Substring(first, iter)));
+    nsCOMPtr<nsIAtom> atom = do_GetAtom(Substring(first, iter));
     aPropertiesArray->AppendElement(atom);
   } while (iter != end);
 

@@ -2312,7 +2312,7 @@ nsXULTemplateBuilder::AddBindingsFor(nsXULTemplateBuilder* aThis,
 {
     // We should *only* be recieving "rdf:"-style variables. Make
     // sure...
-    if (Substring(aVariable, PRUint32(0), PRUint32(4)) != NS_LITERAL_STRING("rdf:"))
+    if (!StringBeginsWith(aVariable, NS_LITERAL_STRING("rdf:")))
         return;
 
     nsTemplateRule* rule = NS_STATIC_CAST(nsTemplateRule*, aClosure);

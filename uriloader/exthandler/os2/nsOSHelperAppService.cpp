@@ -487,8 +487,8 @@ IsNetscapeFormat(const nsAString& aBuffer) {
                           "#--Netscape Communications Corporation MIME Information");
   NS_NAMED_LITERAL_STRING(MCOMHeader, "#--MCOM MIME Information");
 
-  return Substring(aBuffer, 0, netscapeHeader.Length()).Equals(netscapeHeader) ||
-         Substring(aBuffer, 0, MCOMHeader.Length()).Equals(MCOMHeader);  
+  return StringBeginsWith(aBuffer, netscapeHeader) ||
+         StringBeginsWith(aBuffer, MCOMHeader);
 }
 
 /*

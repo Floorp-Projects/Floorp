@@ -427,10 +427,10 @@ NS_METHOD
 nsDirectoryService::Create(nsISupports *outer, REFNSIID aIID, void **aResult)
 {
     NS_ENSURE_ARG_POINTER(aResult);
-    if (mService == nsnull)
+    if (!mService)
     {
         mService = new nsDirectoryService();
-        if (mService == NULL)
+        if (!mService)
             return NS_ERROR_OUT_OF_MEMORY;
     }
     return mService->QueryInterface(aIID, aResult);
@@ -636,9 +636,7 @@ nsDirectoryService::Get(const char* prop, const nsIID & uuid, void* *result)
     {
         nsCOMPtr<nsIFile> cloneFile;
         nsCOMPtr<nsIFile> cachedFile = do_QueryInterface(value);
-        
-        if (!cachedFile)
-            return NS_ERROR_NULL_POINTER;
+        NS_ASSERTION(cachedFile, "nsIFile expected");
 
         cachedFile->Clone(getter_AddRefs(cloneFile));
         return cloneFile->QueryInterface(uuid, result);

@@ -63,7 +63,7 @@ nsNameSpaceMap::const_iterator
 nsNameSpaceMap::GetNameSpaceOf(const nsAString& aURI) const
 {
     for (Entry* entry = mEntries; entry != nsnull; entry = entry->mNext) {
-        if (Substring(aURI, 0, entry->mURI.Length()) == entry->mURI)
+        if (StringBeginsWith(aURI, entry->mURI))
             return const_iterator(entry);
     }
 

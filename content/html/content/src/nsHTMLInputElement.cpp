@@ -2357,8 +2357,8 @@ nsHTMLInputElement::SubmitNamesValues(nsIFormSubmission* aFormSubmission,
     //
     nsCOMPtr<nsIFile> file;
  
-    if (Substring(value, 0, 5).Equals(NS_LITERAL_STRING("file:"),
-                                      nsCaseInsensitiveStringComparator())) {
+    if (StringBeginsWith(value, NS_LITERAL_STRING("file:"),
+                         nsCaseInsensitiveStringComparator())) {
       // Converts the URL string into the corresponding nsIFile if possible.
       // A local file will be created if the URL string begins with file://.
       rv = NS_GetFileFromURLSpec(NS_ConvertUCS2toUTF8(value),

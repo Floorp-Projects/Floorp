@@ -68,7 +68,7 @@ class nsXPITriggerItem
     nsCOMPtr<nsIPrincipal>      mPrincipal;
   
 
-    PRBool  IsFileURL() { return Substring(mURL, 0, 6).Equals(NS_LITERAL_STRING("file:/")); }
+    PRBool  IsFileURL() { return StringBeginsWith(mURL, NS_LITERAL_STRING("file:/")); }
     PRBool  IsRelativeURL();
 
     void    SetPrincipal(nsIPrincipal* aPrincipal);

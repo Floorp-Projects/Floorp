@@ -71,6 +71,7 @@
 #include "nsIRootBox.h"
 #include "nsIDocShellTreeItem.h"
 #include "nsITimerInternal.h"
+#include "nsReadableUtils.h"
 #include "nsUnicharUtils.h"
 #ifdef XP_WIN
 #include "nsISound.h"
@@ -1781,7 +1782,8 @@ nsMenuPopupFrame::FindMenuWithShortcut(nsIDOMKeyEvent* aKeyEvent, PRBool& doActi
       else
         isShortcut = PR_TRUE;
 
-      if (Substring(textKey, 0, stringLength).Equals(incrementalString, nsCaseInsensitiveStringComparator())) {
+      if (StringBeginsWith(textKey, incrementalString,
+                           nsCaseInsensitiveStringComparator())) {
         // mIncrementalString is a prefix of textKey
         nsCOMPtr<nsIMenuFrame> menuFrame = do_QueryInterface(currFrame);
         if (menuFrame) {
