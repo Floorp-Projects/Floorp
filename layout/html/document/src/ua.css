@@ -15,6 +15,9 @@
  * Reserved.
  */
 
+@namespace url(http://www.w3.org/TR/REC-html40); /* set default namespace to HTML */
+@namespace xul url(http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul); /* namespace for XUL elements */
+
 html {
   display: block;
 }
@@ -134,20 +137,19 @@ table {
   border-spacing: 2px; 
   margin-top: 0;
   margin-bottom: 0;
-  background: transparent;
 }
 
 /* must never set padding in td, th */
 td, th {
   vertical-align: inherit;
-  text-align: left;
+  text-align: left; 
 /* border-style: inset; */
   border-color: #c0c0c0;
   display: table-cell;
 }
 th {
   font-weight: bold;
-  text-align: center;
+  text-align: center; 
 }
 caption {
   text-align: center;
@@ -178,10 +180,10 @@ colgroup {
 
 /* spans */
 
-Q:before {
+q:before {
   content: open-quote;
 }
-Q:after {
+q:after {
   content: close-quote;
 }
 
@@ -790,7 +792,7 @@ param {
   display: none;
 }
 
-parsererror {
+parsererror {  /* XXX should not be in HTML namespace */
   display: block;
   font-family: sans-serif;
   font-weight: bold;
@@ -804,7 +806,7 @@ parsererror {
   background-color: lightyellow;
 }
 
-sourcetext {
+sourcetext { /* XXX should not be in HTML namespace */
   display: block;
   white-space: pre;
   font-family: Courier;
@@ -871,8 +873,6 @@ sourcetext {
   display: table;
   border-style: inherit;
   border-color: inherit;
-  cell-spacing: inherit;
-  cell-padding: inherit;
   margin-top: inherit;
   margin-bottom: inherit;
   background: inherit;
@@ -949,6 +949,7 @@ sourcetext {
  background-color:white;
  border: 1px solid blue;
 } 
+
 
 :-moz-combobox-text {
   color: black;
