@@ -79,7 +79,6 @@ interface nsICategoryManager : nsISupports
     /**
      * Delete a category and all entries.
      * @param aCategory The category to be deleted.
-     * @param aPersist Delete the category from the registry?
      */
     void deleteCategory(in string aCategory);
 
