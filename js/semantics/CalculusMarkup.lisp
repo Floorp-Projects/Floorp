@@ -22,6 +22,9 @@
 
 (defvar *hide-$-nonterminals* t) ; Should rules and actions expanding nonterminals starting with $ be invisible?
 
+(defvar *styled-text-world*)
+
+
 (defun hidden-nonterminal? (general-nonterminal)
   (and *hide-$-nonterminals*
        (eql (first-symbol-char (general-grammar-symbol-symbol general-nonterminal)) #\$)))
@@ -112,48 +115,6 @@
     (dolist (command (world-commands-source world))
       (depict-command markup-stream world depict-env command))
     (depict-clear-grammar markup-stream world depict-env)))
-
-
-;;; ------------------------------------------------------------------------------------------------------
-;;; DEPICTING STYLED TEXT
-
-; Styled text can include the formats below as long as *styled-text-world* is bound around the call
-; to depict-styled-text.
-
-(defvar *styled-text-world*)
-
-; (:type <type-expression>)
-(defun depict-styled-text-type (markup-stream type-expression)
-  (depict-type-expr markup-stream *styled-text-world* type-expression))
-
-(setf (styled-text-depictor :type) #'depict-styled-text-type)
-
-
-; (:field <name> <type-expression>)
-(defun depict-styled-text-field (markup-stream name type-expression)
-  (depict-field-name markup-stream name :reference (scan-type *styled-text-world* type-expression)))
-
-(setf (styled-text-depictor :field) #'depict-styled-text-field)
-
-
-; (:global <name>)
-(defun depict-styled-text-global-variable (markup-stream name)
-  (depict-global-variable markup-stream name :reference))
-
-(setf (styled-text-depictor :global) #'depict-styled-text-global-variable)
-
-
-; (:local <name>)
-(setf (styled-text-depictor :local) #'depict-local-variable)
-
-
-; (:constant <value>)
-; <value> can be either an integer, a float, a character, or a string.
-(setf (styled-text-depictor :constant) #'depict-constant)
-
-
-; (:action <name>)
-(setf (styled-text-depictor :action) #'depict-action-name)
 
 
 ;;; ------------------------------------------------------------------------------------------------------
@@ -1201,3 +1162,44 @@
 ; (terminal-action <action-name> <terminal> <lisp-function-name>)
 (defun depict-terminal-action (markup-stream world depict-env action-name terminal function-name)
   (declare (ignore markup-stream world depict-env action-name terminal function-name)))
+
+
+;;; ------------------------------------------------------------------------------------------------------
+;;; DEPICTING STYLED TEXT
+
+; Styled text can include the formats below as long as *styled-text-world* is bound around the call
+; to depict-styled-text.
+
+; (:type <type-expression>)
+(defun depict-styled-text-type (markup-stream type-expression)
+  (depict-type-expr markup-stream *styled-text-world* type-expression))
+
+(setf (styled-text-depictor :type) #'depict-styled-text-type)
+
+
+; (:field <name> <type-expression>)
+(defun depict-styled-text-field (markup-stream name type-expression)
+  (depict-field-name markup-stream name :reference (scan-type *styled-text-world* type-expression)))
+
+(setf (styled-text-depictor :field) #'depict-styled-text-field)
+
+
+; (:global <name>)
+(defun depict-styled-text-global-variable (markup-stream name)
+  (depict-global-variable markup-stream name :reference))
+
+(setf (styled-text-depictor :global) #'depict-styled-text-global-variable)
+
+
+; (:local <name>)
+(setf (styled-text-depictor :local) #'depict-local-variable)
+
+
+; (:constant <value>)
+; <value> can be either an integer, a float, a character, or a string.
+(setf (styled-text-depictor :constant) #'depict-constant)
+
+
+; (:action <name>)
+(setf (styled-text-depictor :action) #'depict-action-name)
+
