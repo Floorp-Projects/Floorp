@@ -115,64 +115,75 @@ myLL_L2II(PRInt64 result, PRInt32 *hi, PRInt32 *lo )
     LL_L2I(*lo, a64);
 }
 
-
 nsresult 
 MyGetFileAttributesEx(const char* file, WIN32_FILE_ATTRIBUTE_DATA* data)
 {
     BOOL okay;
 	if (!data || !file)
 		return NS_ERROR_FAILURE;
-    
-#ifdef WIN95
-    okay = PR_FALSE;
-	
-	memset(data, 0, sizeof(WIN32_FILE_ATTRIBUTE_DATA));
-    data->dwFileAttributes =  GetFileAttributes(file);
-    
-	if(! (data->dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY))
-	{
-		HANDLE hFile = CreateFile(file,
-								  GENERIC_READ, 
-								  FILE_SHARE_READ, 
-								  NULL, 
-								  OPEN_EXISTING, 
-								  FILE_ATTRIBUTE_NORMAL, 
-								  NULL); 
 
-		if (hFile != INVALID_HANDLE_VALUE)
+    HINSTANCE hInst = LoadLibrary("KERNEL32.DLL");
+    NS_ASSERTION(hInst != NULL, "COULD NOT LOAD KERNEL32.DLL");
+    if (hInst != NULL)
+    {
+        if (GetProcAddress(hInst, "GetFileAttributesEx"))
 		{
-			okay = GetFileTime(hFile,
-							   &data->ftCreationTime,
-							   &data->ftLastAccessTime,
-							   &data->ftLastWriteTime);
-			if (okay)
-			{
-			   // Try to obtain hFile's huge size. 
-			   data->nFileSizeLow = GetFileSize (hFile, 
-												 &data->nFileSizeHigh);
-
-			   if (data->nFileSizeLow == 0xFFFFFFFF && 
-				   GetLastError() != NO_ERROR )
-			   { 
-				   //error in getting filesize
-				   okay = PR_FALSE;      
-			   } 
-			   else
-			   {
-				   okay = PR_TRUE;
-			   }
-			}
-			CloseHandle(hFile);
+			okay =  GetFileAttributesEx(file,GetFileExInfoStandard,data);
 		}
+		else
+		{
+			okay = PR_FALSE;
+			
+			memset(data, 0, sizeof(WIN32_FILE_ATTRIBUTE_DATA));
+			data->dwFileAttributes =  GetFileAttributes(file);
+    
+			if(! (data->dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY))
+			{
+				HANDLE hFile = CreateFile(file,
+										  GENERIC_READ, 
+										  FILE_SHARE_READ, 
+										  NULL, 
+										  OPEN_EXISTING, 
+										  FILE_ATTRIBUTE_NORMAL, 
+										  NULL); 
+
+				if (hFile != INVALID_HANDLE_VALUE)
+				{
+					okay = GetFileTime(hFile,
+									   &data->ftCreationTime,
+									   &data->ftLastAccessTime,
+									   &data->ftLastWriteTime);
+					if (okay)
+					{
+					   // Try to obtain hFile's huge size. 
+					   data->nFileSizeLow = GetFileSize (hFile, 
+														 &data->nFileSizeHigh);
+
+					   if (data->nFileSizeLow == 0xFFFFFFFF && 
+						   GetLastError() != NO_ERROR )
+					   { 
+						   //error in getting filesize
+						   okay = PR_FALSE;      
+					   } 
+					   else
+					   {
+						   okay = PR_TRUE;
+					   }
+					}
+					CloseHandle(hFile);
+				}
+			}
+			else
+			{
+				// it is a directory, 
+				okay = PR_TRUE;
+			}
+		}
+
+		FreeLibrary(hInst);
 	}
-	else
-	{
-		// it is a directory, 
-		okay = PR_TRUE;
-	}
-#else
-    okay =  GetFileAttributesEx(file,GetFileExInforStandard,data);
-#endif
+
+
     if (!okay)
        return ConvertWinError(GetLastError());
     
@@ -1525,7 +1536,7 @@ nsLocalFile::IsWritable(PRBool *_retval)
     if (NS_FAILED(rv))
         return rv;  
     
-    *_retval = (PRBool) !( mFileAttrData.dwFileAttributes & FILE_ATTRIBUTE_READONLY); 
+    *_retval = (PRBool) !( mFileAttrData.dwFileAttributes & FILE_ATTRIBUTE_READONLY  != 0); 
 
     return NS_OK;
 }
@@ -1597,7 +1608,7 @@ nsLocalFile::IsDirectory(PRBool *_retval)
     if (NS_FAILED(rv))
         return rv;
     
-    *_retval = (PRBool)( mFileAttrData.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY); 
+    *_retval = (PRBool)( mFileAttrData.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY  != 0); 
 
     return NS_OK;
 }
@@ -1605,17 +1616,10 @@ nsLocalFile::IsDirectory(PRBool *_retval)
 NS_IMETHODIMP  
 nsLocalFile::IsFile(PRBool *_retval)
 {
-    NS_ENSURE_ARG(_retval);
-    *_retval = PR_FALSE;
+    nsresult rv = IsDirectory(_retval);
+	*_retval = !*_retval;
 
-    nsresult rv = ResolveAndStat(PR_TRUE);
-    
-    if (NS_FAILED(rv))
-        return rv;
-    
-    *_retval = (PRBool) !( mFileAttrData.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY); 
-
-    return NS_OK;
+    return rv;
 }
 
 NS_IMETHODIMP  
@@ -1629,7 +1633,7 @@ nsLocalFile::IsHidden(PRBool *_retval)
     if (NS_FAILED(rv))
         return rv;
     
-    *_retval = (PRBool) ( mFileAttrData.dwFileAttributes & FILE_ATTRIBUTE_HIDDEN); 
+    *_retval =  ( mFileAttrData.dwFileAttributes & FILE_ATTRIBUTE_HIDDEN  != 0); 
 
     return NS_OK;
 }
@@ -1669,7 +1673,7 @@ nsLocalFile::IsSpecial(PRBool *_retval)
     if (NS_FAILED(rv))
         return rv;
     
-    *_retval = (PRBool) ( mFileAttrData.dwFileAttributes & FILE_ATTRIBUTE_SYSTEM); 
+    *_retval = (PRBool) ( mFileAttrData.dwFileAttributes & FILE_ATTRIBUTE_SYSTEM  != 0); 
 
     return NS_OK;
 }
