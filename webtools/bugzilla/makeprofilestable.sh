@@ -34,7 +34,7 @@ password varchar(16),
 cryptpassword varchar(64),
 realname varchar(255),
 groupset bigint not null,
-emailnotification enum("ExcludeSelfChanges", "CConly", "All") not null default "ExcludeSelfChanges";
+emailnotification enum("ExcludeSelfChanges", "CConly", "All") not null default "ExcludeSelfChanges",
 index(login_name)
 );
 
