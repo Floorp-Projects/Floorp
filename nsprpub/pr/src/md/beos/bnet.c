@@ -491,6 +491,9 @@ _MD_accept (PRFileDesc *fd, PRNetAddr *addr, PRUint32 *addrlen,
     }
     if (rv < 0) {
         _PR_MD_MAP_ACCEPT_ERROR(err);
+    } else if (addr != NULL) {
+        /* bug 134099 */
+        err = getpeername(rv, (struct sockaddr *) addr, (_PRSockLen_t *)addrlen);
     }
 done:
 #ifdef _PR_HAVE_SOCKADDR_LEN
@@ -498,9 +501,6 @@ done:
         /* Mask off the first byte of struct sockaddr (the length field) */
         if (addr) {
             addr->raw.family = ((struct sockaddr *) addr)->sa_family;
-#ifdef IS_LITTLE_ENDIAN
-            addr->raw.family = ntohs(addr->raw.family);
-#endif
         }
     }
 #endif /* _PR_HAVE_SOCKADDR_LEN */
