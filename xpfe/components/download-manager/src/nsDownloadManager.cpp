@@ -1359,6 +1359,20 @@ nsDownload::GetPercentComplete(PRInt32* aPercentComplete)
 }
 
 NS_IMETHODIMP
+nsDownload::GetAmountTransferred(PRUint64* aAmountTransferred)
+{
+  *aAmountTransferred = mCurrBytes;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsDownload::GetSize(PRUint64* aSize)
+{
+  *aSize = mMaxBytes;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 nsDownload::SetListener(nsIWebProgressListener* aListener)
 {
   mListener = aListener;

@@ -247,8 +247,8 @@ private:
 
   PRBool  mPaused;
   PRInt32 mPercentComplete;
-  PRInt32 mCurrBytes;
-  PRInt32 mMaxBytes;
+  PRUint64 mCurrBytes;
+  PRUint64 mMaxBytes;
   PRInt64 mStartTime;
   PRTime mLastUpdate;
 

@@ -972,7 +972,7 @@ nsDownloadManager::ValidateDownloadsContainer()
   // Now Remove all the bad downloads. 
   PRUint32 cnt;
   ary->Count(&cnt);
-  for (PRInt32 i = 0; i < cnt; ++i) {
+  for (PRUint32 i = 0; i < cnt; ++i) {
     nsCOMPtr<nsIRDFResource> download(do_QueryElementAt(ary, i));
 
     // Use the internal method because we know what we're doing! (We hope!)
@@ -1042,7 +1042,10 @@ nsDownloadManager::PauseResumeDownload(const PRUnichar* aPath, PRBool aPause)
   // Update download state in the DataSource
   nsCOMPtr<nsIRDFInt> intLiteral;
 
-  gRDFService->GetIntLiteral(aPause ? nsIDownloadManager::DOWNLOAD_PAUSED : nsIDownloadManager::DOWNLOAD_DOWNLOADING, getter_AddRefs(intLiteral));
+  gRDFService->GetIntLiteral(
+    aPause ? 
+    (PRInt32)nsIDownloadManager::DOWNLOAD_PAUSED : 
+    (PRInt32)nsIDownloadManager::DOWNLOAD_DOWNLOADING, getter_AddRefs(intLiteral));
 
   nsCOMPtr<nsIRDFResource> res;
   gRDFService->GetUnicodeResource(nsDependentString(aPath), getter_AddRefs(res));
@@ -1285,7 +1288,7 @@ nsDownloadManager::Observe(nsISupports* aSubject, const char* aTopic, const PRUn
         // Now Remove all the downloads. 
         PRUint32 cnt;
         ary->Count(&cnt);
-        for (PRInt32 i = 0; i < cnt; ++i) {
+        for (PRUint32 i = 0; i < cnt; ++i) {
           nsCOMPtr<nsIRDFResource> download(do_QueryElementAt(ary, i));
           // Here we use the internal RemoveDownload method, and only here
           // because this is _after_ the download table |mCurrDownloads| has been 
@@ -2213,6 +2216,20 @@ NS_IMETHODIMP
 nsDownload::GetPercentComplete(PRInt32* aPercentComplete)
 {
   *aPercentComplete = mPercentComplete;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsDownload::GetAmountTransferred(PRUint64* aAmountTransferred)
+{
+  *aAmountTransferred = mCurrBytes;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsDownload::GetSize(PRUint64* aSize)
+{
+  *aSize = mMaxBytes;
   return NS_OK;
 }
 

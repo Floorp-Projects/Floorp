@@ -405,35 +405,41 @@ function onDownloadRetry(aEvent)
 
 // This is called by the progress listener. We don't actually use the event
 // system here to minimize time wastage. 
-var gLastComputedMean = 0;
+var gLastComputedMean = -1;
 function onUpdateProgress()
 {
   var numActiveDownloads = gActiveDownloads.length;
   if (numActiveDownloads == 0) {
     document.title = document.documentElement.getAttribute("statictitle");
-    gLastComputedMean = 0;
+    gLastComputedMean = -1;
     return;
   }
     
   var mean = 0;
+  var base = 0;
+  var dl = null;
   for (var i = 0; i < numActiveDownloads; ++i) {
-    var dl = gActiveDownloads[i];
-    var progress = dl.percentComplete;
-    if (progress < 100)
-      mean += progress;
+    dl = gActiveDownloads[i];
+
+    // gActiveDownloads is screwed so it's possible 
+    // to have more files than we're really downloading.
+    // The good news is that those files have size==0.
+    // Same with files with unknown size. Their size==0.
+    if (dl.percentComplete < 100 && dl.size > 0) {
+      mean += dl.amountTransferred;
+      base += dl.size;
+    }
   }
 
-  mean = Math.round(mean / numActiveDownloads);
-  
-  // At the end of a download, progress is set from 100% to 0% for 
-  // some reason. We can identify this case because at this point the
-  // mean progress will be zero but the last computed mean will be
-  // greater than zero. 
-  if (mean == 0 && gLastComputedMean > 0) {
-    document.title = document.documentElement.getAttribute("statictitle");
-    return;
+  // we're not downloading anything at the moment,
+  // but we already downloaded something.
+  if (base == 0) {
+    mean = 100;
+  } else {
+    mean = Math.floor((mean / base) * 100);
   }
-  if (mean != gLastComputedMean) {
+
+  if (gLastComputedMean == -1 || mean != gLastComputedMean) {
     gLastComputedMean = mean;
     var strings = document.getElementById("downloadStrings");
     
