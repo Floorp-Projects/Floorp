@@ -703,7 +703,7 @@ nsFrame::Paint(nsIPresContext*      aPresContext,
       result = shell->GetFrameSelection(getter_AddRefs(frameSelection));
       if (NS_SUCCEEDED(result) && frameSelection){
         result = frameSelection->LookUpSelection(newContent, offset, 
-                              1, &details);// last param notused
+                              1, &details, PR_FALSE);
       }
     }
   //}
@@ -2243,7 +2243,7 @@ nsFrame::PeekOffset(nsIPresContext* aPresContext, nsPeekOffsetStruct *aPos)
         }
         //this block is now one child down from blockframe
         if (NS_FAILED(result) || !it || !blockFrame || !thisBlock)
-          return result;
+          return ((result) ? result : NS_ERROR_FAILURE);
         result = it->FindLineContaining(thisBlock, &thisLine);
         if (NS_FAILED(result) || thisLine <0)
           return result;
