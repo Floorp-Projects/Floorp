@@ -65,14 +65,3 @@ function AbResultsPaneOnClick(event)
        }
     }
 }
-
-var gAbResultsOutliner = null;
-
-function GetAbResultsOutliner()
-{
-  if (gAbResultsOutliner) 
-    return gAbResultsOutliner;
-
-	gAbResultsOutliner = document.getElementById('abResultsOutliner');
-	return gAbResultsOutliner;
-}

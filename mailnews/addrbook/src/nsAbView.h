@@ -93,6 +93,7 @@ private:
   nsresult SetGeneratedNameFormatFromPrefs();
   nsresult GetSelectedCards(nsISupportsArray **cards);
   nsresult ReselectCards(nsISupportsArray *cards, nsIAbCard *indexCard);
+  nsresult GetCardValue(nsIAbCard *card, const PRUnichar *colID, PRUnichar **_retval);
 
   nsCString mURI;
   nsCOMPtr <nsIAbDirectory> mDirectory;

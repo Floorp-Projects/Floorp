@@ -31,7 +31,8 @@ function AbPanelLoad()
 {
   InitCommonJS(); 
 
-  // XXX duplicated code, see OnLoadMailList()
+  // XXX todo
+  // can we combine some common code?  see OnLoadNewMailList()
   // set popup with address book names
   var abPopup = document.getElementById('addressbookList');
   if ( abPopup )
@@ -39,7 +40,7 @@ function AbPanelLoad()
     var menupopup = document.getElementById('addressbookList-menupopup');
     var selectedAB = abPopup.getAttribute("selectedAB");
     if (!selectedAB.length) 
-      selectedAB = "moz-abmdbdirectory://abook.mab";
+      selectedAB = kPersonalAddressbookURI;
       
     if ( selectedAB && menupopup && menupopup.childNodes )
     {

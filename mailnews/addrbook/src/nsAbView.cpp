@@ -53,6 +53,8 @@
 #include "nsIPrefBranch.h"
 #include "nsIPrefBranchInternal.h"
 
+#include "nsIAddrDatabase.h" // for kPriEmailColumn
+
 #define CARD_NOT_FOUND -1
 #define ALL_ROWS -1
 
@@ -60,9 +62,6 @@
 
 // also, our default primary sort
 #define GENERATED_NAME_COLUMN_ID "GeneratedName" 
-
-// also, our default secondary sort
-#define PRIMARY_EMAIL_COLUMN_ID "PrimaryEmail" 
 
 static NS_DEFINE_CID(kCollationFactoryCID, NS_COLLATIONFACTORY_CID);
 
@@ -106,8 +105,10 @@ NS_IMETHODIMP nsAbView::Close()
   NS_ENSURE_SUCCESS(rv,rv);
   
   nsCOMPtr<nsIAddrBookSession> abSession = do_GetService(NS_ADDRBOOKSESSION_CONTRACTID, &rv); 
-  if(NS_SUCCEEDED(rv))
-    abSession->RemoveAddressBookListener(this);
+  NS_ENSURE_SUCCESS(rv,rv);
+
+  rv = abSession->RemoveAddressBookListener(this);
+	NS_ENSURE_SUCCESS(rv,rv);
 
   PRInt32 i = mCards.Count();
   while(i-- > 0)
@@ -234,7 +235,11 @@ NS_IMETHODIMP nsAbView::Init(const char *aURI, nsIAbViewListener *abViewListener
   if (nsCRT::strcmp(colID, NS_LITERAL_STRING(GENERATED_NAME_COLUMN_ID).get()) && mCards.Count()) {
     nsIAbCard *card = ((AbCard *)(mCards.ElementAt(0)))->card;
     nsXPIDLString value;
-    rv = card->GetCardUnicharValue(colID, getter_Copies(value));
+    // XXX todo
+    // need to check if _Generic is valid.  GetCardValue() will always return NS_OK for _Generic
+    // we're going to have to ask mDirectory if it is.
+    // it might not be.  example:  _ScreenName is valid in Netscape, but not Mozilla.
+    rv = GetCardValue(card, colID, getter_Copies(value));
     if (NS_FAILED(rv))
       actualSortColumn = NS_LITERAL_STRING(GENERATED_NAME_COLUMN_ID).get();
   }
@@ -292,8 +297,12 @@ nsresult nsAbView::EnumerateCards()
         abcard->card = card;
         NS_IF_ADDREF(abcard->card);
 
-        // XXX better to do an assertion sort, than append and sort?
-        // XXX do we know how many cards ahead of time?
+        // XXX todo
+        // would it be better to do an insertion sort, than append and sort?
+        // XXX todo
+        // if we knew how many cards there was going to be
+        // we could allocate an array of the size, 
+        // instead of growing and copying as we append
         rv = mCards.AppendElement((void *)abcard);
         NS_ASSERTION(NS_SUCCEEDED(rv), "failed to append card");
       }
@@ -412,20 +421,40 @@ NS_IMETHODIMP nsAbView::GetLevel(PRInt32 index, PRInt32 *_retval)
   return NS_OK;
 }
 
-NS_IMETHODIMP nsAbView::GetCellText(PRInt32 row, const PRUnichar *colID, PRUnichar **_retval)
+nsresult nsAbView::GetCardValue(nsIAbCard *card, const PRUnichar *colID, PRUnichar **_retval)
 {
-  nsIAbCard *card = ((AbCard *)(mCards.ElementAt(row)))->card;
-
   nsresult rv;
 
   // "G" == "GeneratedName"
-  if (colID[0] == 'G')
-    rv = card->GetGeneratedName(mGeneratedNameFormat, _retval);
-  else 
-    rv = card->GetCardUnicharValue(colID, _retval);
+  // "_" == generic column (like _AimScreenName)
+  // else, standard column (like PrimaryEmail)
+  if (colID[0] == 'G') {
+    // XXX todo 
+    // cache the ab session?
+    nsCOMPtr<nsIAddrBookSession> abSession = do_GetService(NS_ADDRBOOKSESSION_CONTRACTID, &rv);
+    NS_ENSURE_SUCCESS(rv,rv);
 
+    rv = abSession->GenerateNameFromCard(card, mGeneratedNameFormat, _retval);
   NS_ENSURE_SUCCESS(rv,rv);
+  }
+  else {
+    // XXX todo
+    // do this conversion once, and cache it?
+    nsCAutoString column;
+    column.AssignWithConversion(colID);
+
+    if (colID[0] == '_')
+      rv = mDirectory->GetValueForCard(card, column.get(), _retval);
+    else 
+      rv = card->GetCardUnicharValue(column.get(), _retval);
+  }
   return rv;
+}
+
+NS_IMETHODIMP nsAbView::GetCellText(PRInt32 row, const PRUnichar *colID, PRUnichar **_retval)
+{
+  nsIAbCard *card = ((AbCard *)(mCards.ElementAt(row)))->card;
+  return GetCardValue(card, colID, _retval);
 }
 
 NS_IMETHODIMP nsAbView::SetOutliner(nsIOutlinerBoxObject *outliner)
@@ -660,24 +689,26 @@ nsresult nsAbView::GenerateCollationKeysForCard(const PRUnichar *colID, AbCard *
 {
   nsresult rv;
   nsXPIDLString value;
-  // XXX fix me, do this with const to avoid the strcpy
-  if (colID[0] == 'G') // "G" == "GeneratedName"
-    rv = abcard->card->GetGeneratedName(mGeneratedNameFormat, getter_Copies(value));
-  else
-    rv = abcard->card->GetCardUnicharValue(colID, getter_Copies(value));
+
+  rv = GetCardValue(abcard->card, colID, getter_Copies(value));
   NS_ENSURE_SUCCESS(rv,rv);
   
-  // XXX be smarter about the allocation
+  // XXX todo
+  // be smarter about the allocation, use an arena?
   if (abcard->primaryCollationKey)
     nsMemory::Free(abcard->primaryCollationKey);
   rv = CreateCollationKey(value, &(abcard->primaryCollationKey), &(abcard->primaryCollationKeyLen));
   NS_ENSURE_SUCCESS(rv,rv);
   
-  // XXX fix me, do this with const to avoid the strcpy
-  rv = abcard->card->GetCardUnicharValue(NS_LITERAL_STRING(PRIMARY_EMAIL_COLUMN_ID).get(), getter_Copies(value));
+  // XXX todo
+  // fix me, do this with a const getter, to avoid the strcpy
+
+  // hardcode email to be our secondary key
+  rv = GetCardValue(abcard->card, NS_LITERAL_STRING(kPriEmailColumn).get(), getter_Copies(value));
   NS_ENSURE_SUCCESS(rv,rv);
   
- // XXX be smarter about the allocation
+  // XXX todo
+  // be smarter about the allocation, use an arena?
   if (abcard->secondaryCollationKey)
     nsMemory::Free(abcard->secondaryCollationKey);
   rv = CreateCollationKey(value, &(abcard->secondaryCollationKey), &(abcard->secondaryCollationKeyLen));
@@ -707,7 +738,7 @@ nsresult nsAbView::CreateCollationKey(const PRUnichar *aSource, PRUint8 **aKey, 
 		NS_ENSURE_SUCCESS(rv, rv);
 	}
 
-  // XXX can we avoid this copy?
+        // XXX can we avoid this copy?
 	nsAutoString sourceString(aSource);
 	rv = mCollationKeyGenerator->GetSortKeyLen(kCollationCaseInSensitive, sourceString, aKeyLen);
 	NS_ENSURE_SUCCESS(rv, rv);
@@ -779,7 +810,7 @@ NS_IMETHODIMP nsAbView::Observe(nsISupports *aSubject, const char *aTopic, const
       // if neither the primary nor the secondary sorts are GeneratedName, all we have to do is
       // invalidate (to show the new GeneratedNames), but the sort will not change.
       if (!nsCRT::strcmp(mSortColumn.get(), NS_LITERAL_STRING(GENERATED_NAME_COLUMN_ID).get()) ||
-          !nsCRT::strcmp(mSortColumn.get(), NS_LITERAL_STRING(PRIMARY_EMAIL_COLUMN_ID).get())) {
+          !nsCRT::strcmp(mSortColumn.get(), NS_LITERAL_STRING(kPriEmailColumn).get())) {
         rv = SortBy(mSortColumn.get(), mSortDirection.get());
       }
       else {
@@ -826,11 +857,12 @@ PRInt32 nsAbView::FindIndexForInsert(AbCard *abcard)
   SortClosure closure;
   SetSortClosure(mSortColumn.get(), mSortDirection.get(), this, &closure);
   
-  // XXX todo, binary search
+  // XXX todo
+  // make this a binary search
   for (i=0; i < count; i++) {
     void *current = mCards.ElementAt(i);
     PRInt32 value = inplaceSortCallback(item, current, (void *)(&closure));
-    // XXX not right, for ascending and descending
+    // XXX fix me, this is not right for both ascending and descending
     if (value <= 0) 
       break;
   }
@@ -857,13 +889,25 @@ nsresult nsAbView::RemoveCardAndSelectNextCard(nsISupports *item)
   if (card) {
     PRInt32 index = FindIndexForCard(card);
     if (index != CARD_NOT_FOUND) {
+      PRBool selectNextCard = PR_FALSE;
+      if (mOutlinerSelection) {
+        PRInt32 selectedIndex;
+        // XXX todo
+        // make sure it works if nothing selected
+        mOutlinerSelection->GetCurrentIndex(&selectedIndex);
+        if (index == selectedIndex)
+          selectNextCard = PR_TRUE;
+      }
+
       rv = RemoveCardAt(index);
       NS_ENSURE_SUCCESS(rv,rv);
 
-      if (mOutliner)
+      if (mOutliner) {
         rv = mOutliner->RowCountChanged(index, -1);
       NS_ENSURE_SUCCESS(rv,rv);
+      }
 
+      if (selectNextCard) {
       PRInt32 count = mCards.Count();
       if (count && mOutlinerSelection) {
         // if we deleted the last card, adjust so we select the new "last" card
@@ -874,6 +918,7 @@ nsresult nsAbView::RemoveCardAndSelectNextCard(nsISupports *item)
         mOutlinerSelection->RangedSelect(index, index, PR_FALSE /* augment */);
       }
     }
+  }
   }
   return rv;
 }
@@ -888,7 +933,9 @@ PRInt32 nsAbView::FindIndexForCard(nsIAbCard *card)
   // could be the collation key.
   for (i=0; i < count; i++) {
     AbCard *abcard = (AbCard*) (mCards.ElementAt(i));
-    if (abcard->card == card) {
+    PRBool equals;
+    nsresult rv = card->Equals(abcard->card, &equals);
+    if (NS_SUCCEEDED(rv) && equals) {
       return i;
     }
   }
@@ -1083,3 +1130,4 @@ nsresult nsAbView::GetSelectedCards(nsISupportsArray **selectedCards)
   }
   return NS_OK;
 }
+
