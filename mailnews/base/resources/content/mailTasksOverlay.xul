@@ -1,8 +1,6 @@
 <?xml version="1.0"?>
 
 <!DOCTYPE window [
-<!ENTITY % brandDTD SYSTEM "chrome://global/locale/brand.dtd" >
-%brandDTD;
 <!ENTITY % mailTasksOverlayDTD SYSTEM "chrome://messenger/locale/mailTasksOverlay.dtd" >
 %mailTasksOverlayDTD;
 ]>

@@ -2,8 +2,6 @@
 <?xml-stylesheet href="chrome://communicator/skin/tasksOverlay.css" type="text/css"?> 
 
 <!DOCTYPE window [
-<!ENTITY % brandDTD SYSTEM "chrome://global/locale/brand.dtd" >
-%brandDTD;
 <!ENTITY % tasksDTD SYSTEM "chrome://communicator/locale/tasksOverlay.dtd" >
 %tasksDTD;
 ]>

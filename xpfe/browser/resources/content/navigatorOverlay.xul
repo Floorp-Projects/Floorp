@@ -30,8 +30,6 @@
 <?xul-overlay href="chrome://navigator/content/platformNavigationBindings.xul"?>
 
 <!DOCTYPE window [
-<!ENTITY % brandDTD SYSTEM "chrome://global/locale/brand.dtd" >
-%brandDTD;
 <!ENTITY % navigatorDTD SYSTEM "chrome://navigator/locale/navigator.dtd" >
 %navigatorDTD;
 <!ENTITY % contentAreaCommandsDTD SYSTEM "chrome://communicator/locale/contentAreaCommands.dtd" >
