@@ -754,8 +754,7 @@ PRInt32 CNavDTD::HandleStyleToken(CToken* aToken){
  *  @return  valid tag handler (if found) or null
  */
 void CNavDTD::DeleteTokenHandlers(void) {
-  int i=0;
-  for(i=eToken_unknown;i<eToken_last;i++){
+  for(int i=eToken_unknown;i<eToken_last;i++){
     delete mTokenHandlers[i];
     mTokenHandlers[i]=0;
   }
@@ -891,7 +890,6 @@ PRBool CNavDTD::CanContain(PRInt32 aParent,PRInt32 aChild) {
 
   PRBool result=PR_FALSE;
 
-    //tagset1 has 65 members...
   static char  gTagSet1[]={ 
     eHTMLTag_a,         eHTMLTag_acronym,   eHTMLTag_address,   eHTMLTag_applet,
     eHTMLTag_blink,     eHTMLTag_b,      eHTMLTag_basefont,  eHTMLTag_bdo,
@@ -915,10 +913,9 @@ PRBool CNavDTD::CanContain(PRInt32 aParent,PRInt32 aChild) {
     
     eHTMLTag_textarea,  eHTMLTag_tt,        eHTMLTag_u,         eHTMLTag_ul,        
     eHTMLTag_userdefined,   eHTMLTag_var,   
-    eHTMLTag_whitespace,  //JUST ADDED!
+    eHTMLTag_whitespace,
     0};
 
-    //tagset2 has 44 members...
   static char  gTagSet2[]={ 
     eHTMLTag_a,         eHTMLTag_acronym,   eHTMLTag_applet,    eHTMLTag_blink,
     eHTMLTag_b,
@@ -935,10 +932,9 @@ PRBool CNavDTD::CanContain(PRInt32 aParent,PRInt32 aChild) {
     eHTMLTag_select,    eHTMLTag_small,     eHTMLTag_span,      eHTMLTag_strong,    
     eHTMLTag_sub,       eHTMLTag_sup,       eHTMLTag_text,      eHTMLTag_textarea,  
     eHTMLTag_tt,        eHTMLTag_u,         eHTMLTag_userdefined, eHTMLTag_var,       
-    eHTMLTag_whitespace,//JUST ADDED!
+    eHTMLTag_whitespace,
     0};
 
-    //tagset3 has 57 members...
   static char  gTagSet3[]={ 
     eHTMLTag_a,         eHTMLTag_acronym,   eHTMLTag_applet,    eHTMLTag_blink,
     eHTMLTag_b,
@@ -951,7 +947,7 @@ PRBool CNavDTD::CanContain(PRInt32 aParent,PRInt32 aChild) {
     eHTMLTag_i,    eHTMLTag_iframe,    eHTMLTag_ins,       eHTMLTag_kbd,       
 
     eHTMLTag_label,     eHTMLTag_legend,    
-    eHTMLTag_li,  eHTMLTag_newline,   //JUST ADDED!
+    eHTMLTag_li,  eHTMLTag_newline,
         
     eHTMLTag_noframes,
     eHTMLTag_noscript,  eHTMLTag_object,    eHTMLTag_p, eHTMLTag_pre,
@@ -961,7 +957,7 @@ PRBool CNavDTD::CanContain(PRInt32 aParent,PRInt32 aChild) {
     eHTMLTag_td,        eHTMLTag_text,
     
     eHTMLTag_th,        eHTMLTag_tt,        eHTMLTag_u,         eHTMLTag_userdefined,
-    eHTMLTag_var,       eHTMLTag_whitespace,  //JUST ADDED!
+    eHTMLTag_var,       eHTMLTag_whitespace,
     0};
 
     //This hack code is here because we don't yet know what to do
