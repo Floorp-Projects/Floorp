@@ -26,6 +26,7 @@
 #include "plstr.h"
 #include "prmem.h"
 #include "nsMsgBaseCID.h"
+#include "nsIPref.h"
 
 static NS_DEFINE_CID(kMsgIdentityCID, NS_MSGIDENTITY_CID);
 static NS_DEFINE_CID(kPrefServiceCID, NS_PREF_CID);
