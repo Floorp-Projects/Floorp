@@ -60,7 +60,7 @@ function doUnload()
     var w = window.outerWidth;
 
     // Store these into the window attributes (for persistence).
-    var win = document.getElementById( "bookmark-window" );
+    var win = document.getElementById( "bookmark-find-window" );
     win.setAttribute( "x", x );
     win.setAttribute( "y", y );
     win.setAttribute( "height", h );
