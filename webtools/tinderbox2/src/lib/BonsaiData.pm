@@ -7,8 +7,8 @@
 # module which uses this library is: lib/TinderDB/VC_Bonsai.pm
 
 
-# $Revision: 1.7 $ 
-# $Date: 2002/01/02 18:09:56 $ 
+# $Revision: 1.8 $ 
+# $Date: 2002/04/24 23:24:42 $ 
 # $Author: kestes%walrus.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/lib/BonsaiData.pm,v $ 
 # $Name:  $ 
@@ -89,9 +89,19 @@ sub load_bonsai_libs {
 
         "");
 
-  ($@) && 
-    die($@);
-  
+    if ($@) {
+        die(
+            "Error in Tinderbox2 package: BonsaiData".
+            "Could not load Bonsai file: \n".
+            "\t'$BONSAI_DIR/adminfuncs.pl'\n ".
+            "or\n"
+            "\t'$BONSAI_DIR/adminfuncs.pl'\n".
+            "Check that CVS repository is readable at: '$::CVS_ROOT'\n".
+            "\n".
+            $@
+            );
+    }
+
   # turn the warnings off.  Bonsai turns them on but it still is not
   # clean.  Also I get warnings in ./lib/HTMLPopUp.pm inside the code
   # which comes from cgi.pm.  I do not wish to tamper with that code.
@@ -110,8 +120,6 @@ sub load_bonsai_libs {
 
 # This modules must not use Tinderbox Specific Libraries. 
 # This library is only an interface abstraction layer.
-
-
 
 # Read the bonsai data file and return the value of interest.  For
 # security reasons we avoid loading the data via an eval.
