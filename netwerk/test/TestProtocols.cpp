@@ -45,11 +45,11 @@
 #include "nsIHttpEventSink.h" 
 #include "nsIEventSinkGetter.h" 
 
-#if 1
+#ifdef NECKO
 // this test app handles cookies.
 #include "nsICookieService.h"
 static NS_DEFINE_CID(nsCookieServiceCID, NS_COOKIESERVICE_CID);
-#endif // 0
+#endif // NECKO
 
 static NS_DEFINE_CID(kEventQueueServiceCID,      NS_EVENTQUEUESERVICE_CID);
 static NS_DEFINE_CID(kIOServiceCID,              NS_IOSERVICE_CID);
@@ -499,14 +499,14 @@ main(int argc, char* argv[])
 
     eventQService->GetThreadEventQueue(PR_CurrentThread(), &gEventQ);
 
-#if 1
+#ifdef NECKO
     // fire up an instance of the cookie manager.
     // I'm doing this using the serviceManager for convenience's sake.
     // Presumably an application will init it's own cookie service a 
     // different way (this way works too though).
     NS_WITH_SERVICE(nsICookieService, cookieService, nsCookieServiceCID, &rv);
     if (NS_FAILED(rv)) return rv;
-#endif // 0
+#endif // NECKO
 
     int i;
     printf("\nTrying to load:\n");
