@@ -498,7 +498,7 @@ void CWizardUI::UpdateScreenWidget(WIDGET *curWidget)
 				i = ((CCheckListBox*)curWidget->control)->FindString(0, s);
 				if (i != -1)
 				{
-					if ((strcmp(s,"Navigator")==0) || (strcmp(s,"Classic Skin")==0))
+					if (strcmp(s,"Navigator")==0) 
 					{
 						((CCheckListBox*)curWidget->control)->SetCheck(i, 2);
 						((CCheckListBox*)curWidget->control)->Enable(i, FALSE);
