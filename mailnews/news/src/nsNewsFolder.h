@@ -141,9 +141,8 @@ protected:
 
 protected:
   PRUint32  mExpungedBytes;
-  PRBool		mGettingNews;
-  PRBool		mInitialized;
-  nsISupportsArray *mMessages;
+  PRBool    mGettingNews;
+  PRBool    mInitialized;
   nsCString mOptionLines;
   nsCString mUnsubscribedNewsgroupLines;
   PRBool m_downloadMessageForOfflineUse;

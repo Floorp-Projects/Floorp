@@ -129,7 +129,6 @@ nsMsgNewsFolder::nsMsgNewsFolder(void) : nsMsgLineBuffer(nsnull, PR_FALSE),
     SetLookingForCRLF(PR_FALSE);
   }
 
-  mMessages = nsnull;
 //  NS_INIT_REFCNT(); done by superclass
 }
 
@@ -611,6 +610,9 @@ NS_IMETHODIMP nsMsgNewsFolder::Delete()
   rv = pathSpec->GetFileSpec(&path);
   if (NS_FAILED(rv)) return rv;
   
+  // delete local store, if it exists
+  if (path.Exists())
+    path.Delete(PR_FALSE);
   // Remove summary file.	
   nsNewsSummarySpec summarySpec(path);
   summarySpec.Delete(PR_FALSE);
