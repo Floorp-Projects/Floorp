@@ -111,13 +111,13 @@ MapperToCCMap(nsICharRepresentable *aMapper)
 }
 
 PRBool
-NextNonEmptyCCMapPage(const PRUint16* aCCMap, PRUint32 *aPageStart)
+NextNonEmptyCCMapPage(PRUint16* aCCMap, PRUint32 *aPageStart)
 {
   int i, j, l;
   int planeend = 0;
   int planestart = 0;
   unsigned int k;
-  const PRUint16* ccmap;
+  PRUint16* ccmap;
   PRUint32 pagestart = *aPageStart;
 
   if(CCMAP_FLAG(aCCMap) & CCMAP_SURROGATE_FLAG) {
@@ -154,20 +154,20 @@ NextNonEmptyCCMapPage(const PRUint16* aCCMap, PRUint32 *aPageStart)
     }
 
     // walk thru the upper pointers
-    const PRUint16 *upper = &ccmap[0];
+    PRUint16 *upper = &ccmap[0];
     for (i=upper_index; i<CCMAP_NUM_UPPER_POINTERS; i++, mid_index=0) {
       if (upper[i] == CCMAP_EMPTY_MID) {
         continue;
       }
 
       // walk the mid array
-      const PRUint16 *mid = &ccmap[upper[i]];
+      PRUint16 *mid = &ccmap[upper[i]];
       for (j=mid_index; j<CCMAP_NUM_MID_POINTERS; j++) {
         if (mid[j] == CCMAP_EMPTY_PAGE)
           continue;
   
         // walk the page
-        const ALU_TYPE *page = (ALU_TYPE*)&ccmap[mid[j]];
+        ALU_TYPE *page = (ALU_TYPE*)&ccmap[mid[j]];
         for (k=0; k<CCMAP_NUM_ALUS_PER_PAGE; k++) {
           if (page[k] != 0) {
             PRUint32 base = (i*CCMAP_NUM_UCHARS_PER_MID) + (j*CCMAP_NUM_UCHARS_PER_PAGE);

@@ -67,7 +67,7 @@ extern PRUint16* CreateEmptyCCMap();
 extern PRUint16* MapToCCMap(PRUint32* aMap);
 extern PRUint16* MapperToCCMap(nsICharRepresentable *aMapper);
 extern void FreeCCMap(PRUint16* &aMap);
-extern PRBool NextNonEmptyCCMapPage(const PRUint16 *, PRUint32 *);
+extern PRBool NextNonEmptyCCMapPage(PRUint16 *, PRUint32 *);
 extern PRBool IsSameCCMap(PRUint16* ccmap1, PRUint16* ccmap2);
 #ifdef DEBUG
 void printCCMap(PRUint16* aCCMap);
