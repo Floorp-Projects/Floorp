@@ -65,6 +65,7 @@
             <xul:menuitem label="&closeOtherTabs.label;" accesskey="&closeOtherTabs.accesskey;" oncommand="var tabbrowser = this.parentNode.parentNode.parentNode.parentNode; tabbrowser.removeAllTabsBut(document.popupNode);"/>
           </xul:menupopup>
           <xul:tabs style="padding-left:1px; padding-top: 1px;" flex="1"
+                    onclick="if (event.button != 1 || event.target.localName != 'tab') return; this.parentNode.parentNode.parentNode.removeTab(event.target);"
                     ondragover="nsDragAndDrop.dragOver(event, this.parentNode.parentNode.parentNode); event.stopPropagation();"
                     ondragdrop="nsDragAndDrop.drop(event, this.parentNode.parentNode.parentNode); event.stopPropagation();">
             <xul:tab maxwidth="250" width="0" minwidth="30" flex="100000" class="tabbrowser-tab" label="(Untitled)" crop="end"/>
