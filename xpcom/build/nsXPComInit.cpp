@@ -483,12 +483,17 @@ nsresult NS_COM NS_ShutdownXPCOM(nsIServiceManager* servMgr)
     // libraries:
     NS_RELEASE2(nsComponentManagerImpl::gComponentManager, cnt);
     NS_ASSERTION(cnt == 0, "Component Manager being held past XPCOM shutdown.");
+
 #ifdef DEBUG
     extern void _FreeAutoLockStatics();
     _FreeAutoLockStatics();
 #endif
 
     NS_PurgeAtomTable();
+
+#ifdef BLOATY
+    NS_DumpBloatStatistics();
+#endif
 
 #if defined(DEBUG) && (defined(_WIN32) || defined(XP_UNIX))
     if (getenv("MOZ_DUMP_LEAKS")) {

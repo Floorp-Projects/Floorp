@@ -73,11 +73,13 @@ public:
 
   static NS_COM void LogAddRef(void* aPtr,
                                nsrefcnt aRefCnt,
-                               const char* aClass);
+                               const char* aClass,
+                               PRUint32 classSize);
 
   static NS_COM void LogRelease(void* aPtr,
                                 nsrefcnt aRefCnt,
-                                const char* aClass);
+                                const char* aClass,
+                                PRUint32 classSize);
 
 #ifdef DEBUG
   /**
@@ -136,5 +138,10 @@ PR_END_MACRO
 #define MOZ_COUNT_DTOR(_type)
 
 #endif /* DEBUG */
+
+#ifdef BLOATY
+extern "C" void
+NS_DumpBloatStatistics(void);
+#endif
 
 #endif /* nsTraceRefcnt_h___ */

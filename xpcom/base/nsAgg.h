@@ -84,7 +84,7 @@ _class::AddRef(void)                                                        \
 NS_IMETHODIMP_(nsrefcnt)                                                    \
 _class::Release(void)                                                       \
 {                                                                           \
-	return fOuter->Release();                                                \
+	return fOuter->Release();                                               \
 }                                                                           \
                                                                             \
 NS_IMETHODIMP                                                               \
@@ -98,15 +98,21 @@ NS_IMETHODIMP_(nsrefcnt)                                                    \
 _class::Internal::AddRef(void)                                              \
 {                                                                           \
     _class* agg = (_class*)((char*)(this) - offsetof(_class, fAggregated)); \
-    return ++agg->mRefCnt;                                                  \
+    NS_PRECONDITION(PRInt32(agg->mRefCnt) >= 0, "illegal refcnt");          \
+    ++agg->mRefCnt;                                                         \
+    NS_LOG_ADDREF(this, agg->mRefCnt, #_class);                             \
+    return agg->mRefCnt;                                                    \
 }                                                                           \
                                                                             \
 NS_IMETHODIMP_(nsrefcnt)                                                    \
 _class::Internal::Release(void)                                             \
 {                                                                           \
     _class* agg = (_class*)((char*)(this) - offsetof(_class, fAggregated)); \
-    if (--agg->mRefCnt == 0) {                                              \
-        delete agg;                                                         \
+    NS_PRECONDITION(0 != agg->mRefCnt, "dup release");                      \
+    --agg->mRefCnt;                                                         \
+    NS_LOG_RELEASE(this, agg->mRefCnt, #_class);                            \
+    if (agg->mRefCnt == 0) {                                                \
+        NS_DELETEXPCOM(agg);                                                \
         return 0;                                                           \
     }                                                                       \
     return agg->mRefCnt;                                                    \
