@@ -68,7 +68,6 @@ nsGtkUtils::gtk_widget_set_color(GtkWidget *  widget,
 								 GtkStateType state,
 								 GdkColor *   color)
 {
-#if 0
   GtkRcStyle * rc_style;
 
   g_return_if_fail (widget != NULL);
@@ -90,27 +89,26 @@ nsGtkUtils::gtk_widget_set_color(GtkWidget *  widget,
 
   if (flags & GTK_RC_FG)
   {
-    rc_style->color_flags[state] |= GTK_RC_FG;
+    rc_style->color_flags[state] = GtkRcFlags(rc_style->color_flags[state] | GTK_RC_FG);
     rc_style->fg[state] = *color;
   }
 
   if (flags & GTK_RC_BG)
   {
-    rc_style->color_flags[state] |= GTK_RC_BG;
+    rc_style->color_flags[state] = GtkRcFlags(rc_style->color_flags[state] | GTK_RC_BG);
     rc_style->bg[state] = *color;
   }
 
   if (flags & GTK_RC_TEXT)
   {
-    rc_style->color_flags[state] |= GTK_RC_TEXT;
+    rc_style->color_flags[state] = GtkRcFlags(rc_style->color_flags[state] | GTK_RC_TEXT);
     rc_style->text[state] = *color;
   }
 
   if (flags & GTK_RC_BASE)
   {
-    rc_style->color_flags[state] |= GTK_RC_BASE;
+    rc_style->color_flags[state] = GtkRcFlags(rc_style->color_flags[state] | GTK_RC_BASE);
     rc_style->base[state] = *color;
   }
-#endif
 }
 //////////////////////////////////////////////////////////////////
