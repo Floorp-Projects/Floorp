@@ -651,9 +651,11 @@ NS_IMETHODIMP nsImapService::Search(nsIMsgSearchSession *aSearchSession, nsIMsgW
   nsCAutoString	folderURI;
 
   nsCOMPtr<nsIImapUrl> imapUrl;
+  nsCOMPtr <nsIUrlListener> urlListener = do_QueryInterface(aSearchSession);
+
   nsCAutoString urlSpec;
   PRUnichar hierarchySeparator = GetHierarchyDelimiter(aMsgFolder);
-  rv = CreateStartOfImapUrl(nsnull, getter_AddRefs(imapUrl), aMsgFolder, nsnull, urlSpec, hierarchySeparator);
+  rv = CreateStartOfImapUrl(nsnull, getter_AddRefs(imapUrl), aMsgFolder, urlListener, urlSpec, hierarchySeparator);
   if (NS_FAILED(rv)) 
         return rv;
   nsCOMPtr<nsIMsgMailNewsUrl> msgurl (do_QueryInterface(imapUrl));

@@ -37,11 +37,13 @@ public:
   NS_IMETHOD Search (PRBool *aDone);
   NS_IMETHOD GetEncoding (char **result);
   NS_IMETHOD AddHit(nsMsgKey key);
+  NS_IMETHOD CurrentUrlDone(PRInt32 exitCode);
 
 	virtual nsresult Encode (nsCString *outEncoding);
 	virtual char *EncodeTerm (nsIMsgSearchTerm *);
 	PRUnichar *EncodeToWildmat (const PRUnichar *);
 	
+  void ReportHits ();
     PRBool DuplicateHit(PRUint32 artNum) ;
     void CollateHits ();
     void ReportHit (nsIMsgDBHdr *pHeaders, nsIMsgFolder *folder);

@@ -324,8 +324,16 @@ NS_IMETHODIMP nsMsgSearchSession::OnStartRunningUrl(nsIURI *url)
 /* void OnStopRunningUrl (in nsIURI url, in nsresult aExitCode); */
 NS_IMETHODIMP nsMsgSearchSession::OnStopRunningUrl(nsIURI *url, nsresult aExitCode)
 {
-  GetNextUrl();
-    return NS_OK;
+  nsCOMPtr <nsIMsgSearchAdapter> runningAdapter;
+
+  nsresult rv = GetRunningAdapter (getter_AddRefs(runningAdapter));
+  // tell the current adapter that the current url has run.
+  if (NS_SUCCEEDED(rv) && runningAdapter)
+    runningAdapter->CurrentUrlDone(aExitCode);
+  m_idxRunningScope++;
+  if (m_idxRunningScope < m_scopeList.Count())
+    GetNextUrl();
+  return NS_OK;
 }
 
 
@@ -419,7 +427,7 @@ nsresult nsMsgSearchSession::GetNextUrl()
   nsCOMPtr <nsIMsgMessageService> msgService;
   nsXPIDLCString folderUri;
 
-  m_urlQueue.CStringAt(0, nextUrl);
+  m_urlQueue.CStringAt(m_idxRunningScope, nextUrl);
   nsMsgSearchScopeTerm *currentTerm = GetRunningScope();
   nsCOMPtr <nsIMsgFolder> folder = currentTerm->m_folder;
   if (folder)

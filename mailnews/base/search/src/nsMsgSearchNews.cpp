@@ -28,6 +28,7 @@
 #include "nsIMsgHdr.h"
 #include "nsMsgSearchNews.h"
 #include "nsINNTPHost.h"
+#include "nsIDBFolderInfo.h"
 
 // Implementation of search for IMAP mail folders
 
@@ -304,6 +305,15 @@ NS_IMETHODIMP nsMsgSearchNews::AddHit(nsMsgKey key)
   return NS_OK;
 }
 
+/* void CurrentUrlDone (in long exitCode); */
+NS_IMETHODIMP nsMsgSearchNews::CurrentUrlDone(PRInt32 exitCode)
+{
+	CollateHits();
+	ReportHits();
+  return NS_OK;
+}
+
+
 #if 0 // need to switch this to a notify stop loading handler, I think.
 void nsMsgSearchNews::PreExitFunction (URL_Struct * /*url*/, int status, MWContext *context)
 {
@@ -386,43 +396,27 @@ void nsMsgSearchNews::CollateHits ()
 	}
 }
 
-#ifdef OLD_WAY
 void nsMsgSearchNews::ReportHits ()
 {
-	XP_ASSERT (m_scope->m_folder->IsNews());
-	if (!m_scope->m_folder->IsNews())
-		return;
-	
-	MSG_FolderInfoNews *folder = (MSG_FolderInfoNews*) m_scope->m_folder;
+  nsCOMPtr <nsIMsgDatabase> db;
+  nsCOMPtr <nsIDBFolderInfo>  folderInfo;
+  nsCOMPtr <nsIMsgFolder> scopeFolder;
 
-	// Construct a URL for the newsgroup, since thats what newDB::open wants
-	char *url = folder->BuildUrl(nsnull, MSG_MESSAGEKEYNONE);
-	if (!url)
-		return;
+  nsresult err = m_scope->GetFolder(getter_AddRefs(scopeFolder));
+  if (NS_SUCCEEDED(err) && scopeFolder)
+  {
+    err = scopeFolder->GetDBFolderInfoAndDB(getter_AddRefs(folderInfo), getter_AddRefs(db));
+  }
 
-	NewsGroupDB	*newsDB = nsnull;
-	MsgERR status = NewsGroupDB::Open(url, m_scope->m_frame->m_pane->GetMaster(), &newsDB);
-	if (status == eSUCCESS)
+	for (PRUint32 i = 0; i < m_hits.GetSize(); i++)
 	{
-		XP_ASSERT(newsDB);
-		if (!newsDB)
-			return;
+    nsCOMPtr <nsIMsgDBHdr> header;
 
-		CRTFREEIF(url);
-
-		for (uint32 i = 0; i < m_hits.Count(); i++)
-		{
-			NewsMessageHdr *header = newsDB->GetNewsHdrForKey(m_hits.ElementAt(i));
-			if (header)
-			{
-				ReportHit(header);
-				header->unrefer();
-			}
-		}
-		newsDB->Close();
+		db->GetMsgHdrForKey(m_hits.ElementAt(i), getter_AddRefs(header));
+		if (header)
+			ReportHit(header, scopeFolder);
 	}
 }
-#endif // OLDWAY
 
 // ### this should take an nsIMsgFolder instead of a string location.
 void nsMsgSearchNews::ReportHit (nsIMsgDBHdr *pHeaders, nsIMsgFolder *folder)

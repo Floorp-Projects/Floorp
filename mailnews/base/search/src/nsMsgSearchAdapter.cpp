@@ -110,6 +110,13 @@ NS_IMETHODIMP nsMsgSearchAdapter::SendUrl ()
   return NS_OK; 
 }
 
+/* void CurrentUrlDone (in long exitCode); */
+NS_IMETHODIMP nsMsgSearchAdapter::CurrentUrlDone(PRInt32 exitCode)
+{
+  // base implementation doesn't need to do anything.
+  return NS_OK;
+}
+
 NS_IMETHODIMP nsMsgSearchAdapter::GetEncoding (char **encoding) 
 {
   return NS_OK; 

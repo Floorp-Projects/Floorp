@@ -55,6 +55,7 @@
 #include "nsICategoryManager.h"
 #include "nsIDocShell.h"
 #include "nsIMessengerWindowService.h"
+#include "nsIMsgSearchSession.h"
 
 #undef GetPort  // XXX Windows!
 #undef SetPort  // XXX Windows!
@@ -1303,7 +1304,9 @@ NS_IMETHODIMP nsNntpService::Search(nsIMsgSearchSession *aSearchSession, nsIMsgW
     nsCString asciiNewsgroupName;
     asciiNewsgroupName.AssignWithConversion(newsgroupName);
     searchUrl.Append(aSearchUri);
-    rv = ConstructNntpUrl(searchUrl.GetBuffer(), asciiNewsgroupName.GetBuffer(), nsMsgKey_None, nsnull, getter_AddRefs(uri));
+    nsCOMPtr <nsIUrlListener> urlListener = do_QueryInterface(aSearchSession);
+
+    rv = ConstructNntpUrl(searchUrl.GetBuffer(), asciiNewsgroupName.GetBuffer(), nsMsgKey_None, urlListener, getter_AddRefs(uri));
     if (NS_FAILED(rv)) return rv;
 
     nsCOMPtr<nsIMsgMailNewsUrl> msgurl (do_QueryInterface(uri));
