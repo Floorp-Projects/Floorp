@@ -44,5 +44,5 @@ treeitem[container="true"][open="true"][id="NC:SiteMapRoot"] > treerow > treecel
 }
 
 treeitem > treerow > treecell > .tree-icon {
-    list-style-image: url("resource:/res/rdf/document.gif");
+    list-style-image: url("chrome://bookmarks/skin/bookmark-item.gif");
 }
