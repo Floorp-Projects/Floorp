@@ -438,7 +438,7 @@
         </menupopup>
       </menu>
 
-      <menuitem label="Form Manager Samples" oncommand="loadURI('chrome://communicator/locale/wallet/index.html');"/>
+      <menuitem label="Form Manager Samples" oncommand="loadURI('http://www.mozilla.org/wallet/samples/wallet.html');"/>
 
       <menuitem label="chofmann's Browser Buster" oncommand="loadURI('http://komodo.mozilla.org/buster/');"/>
       <menuitem label="Composer (with test page)" oncommand="window.openDialog('chrome://editor/content','_blank','chrome,all,dialog=no','chrome://editor/content/EditorInitPage.html')"/>

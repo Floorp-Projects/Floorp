@@ -33,17 +33,6 @@ en-US.jar:
     locale/en-US/communicator/wallet/SignonViewer.dtd         (signonviewer/SignonViewer.dtd)
     locale/en-US/communicator/wallet/WalletPreview.dtd        (walletpreview/WalletPreview.dtd)
     locale/en-US/communicator/wallet/wallet.properties        (src/wallet.properties)
-    locale/en-US/communicator/wallet/index.html               (editor/index.html)
-    locale/en-US/communicator/wallet/sample1.html             (editor/sample1.html)
-    locale/en-US/communicator/wallet/sample2.html             (editor/sample2.html)
-    locale/en-US/communicator/wallet/sample3.html             (editor/sample3.html)
-    locale/en-US/communicator/wallet/sample4.html             (editor/sample4.html)
-    locale/en-US/communicator/wallet/sample5.html             (editor/sample5.html)
-    locale/en-US/communicator/wallet/sample6.html             (editor/sample6.html)
-    locale/en-US/communicator/wallet/sample7.html             (editor/sample7.html)
-    locale/en-US/communicator/wallet/sample8.html             (editor/sample8.html)
-    locale/en-US/communicator/wallet/sample9.html             (editor/sample9.html)
-    locale/en-US/communicator/wallet/sample10.html            (editor/sample10.html)
     locale/en-US/communicator/wallet/WalletViewer.dtd         (editor/WalletViewer.dtd)
 
 US.jar:
