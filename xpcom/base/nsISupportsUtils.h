@@ -236,44 +236,46 @@ NS_IMETHODIMP _class::QueryInterface(REFNSIID aIID, void** aInstancePtr) \
 {                                                                        \
   NS_ASSERTION(aInstancePtr, "QueryInterface requires a non-NULL destination!"); \
   if ( !aInstancePtr )                                                   \
-    return NS_ERROR_NULL_POINTER;
+    return NS_ERROR_NULL_POINTER;                                        \
+  nsISupports* foundInterface;
 
 #define NS_IMPL_QUERY_BODY(_interface)                                   \
   if ( aIID.Equals(NS_GET_IID(_interface)) )                             \
-    *aInstancePtr = NS_STATIC_CAST(_interface*, this);                   \
+    foundInterface = NS_STATIC_CAST(_interface*, this);                  \
   else
 
-#define NS_IMPL_QUERY_TAIL                                               \
+#define NS_IMPL_QUERY_TAIL(_supports_interface)                          \
   if ( aIID.Equals(NS_GET_IID(nsISupports)) )                            \
-    *aInstancePtr = NS_REINTERPRET_CAST(nsISupports*, this);             \
+    foundInterface = NS_STATIC_CAST(_supports_interface*, this);         \
   else                                                                   \
-    *aInstancePtr = 0;                                                   \
+    foundInterface = 0;                                                  \
   nsresult status;                                                       \
-  if ( !*aInstancePtr )                                                  \
+  if ( !foundInterface )                                                 \
     status = NS_NOINTERFACE;                                             \
   else                                                                   \
     {                                                                    \
-      NS_ADDREF( NS_REINTERPRET_CAST(nsISupports*, *aInstancePtr) );     \
+      NS_ADDREF(foundInterface);                                         \
       status = NS_OK;                                                    \
     }                                                                    \
+  *aInstancePtr = foundInterface;                                        \
   return status;                                                         \
 }
 
 
 #define NS_IMPL_QUERY_INTERFACE0(_class)                                 \
   NS_IMPL_QUERY_HEAD(_class)                                             \
-  NS_IMPL_QUERY_TAIL
+  NS_IMPL_QUERY_TAIL(nsISupports)
 
 #define NS_IMPL_QUERY_INTERFACE1(_class, _interface)                     \
   NS_IMPL_QUERY_HEAD(_class)                                             \
   NS_IMPL_QUERY_BODY(_interface)                                         \
-  NS_IMPL_QUERY_TAIL
+  NS_IMPL_QUERY_TAIL(nsISupports)
 
 #define NS_IMPL_QUERY_INTERFACE2(_class, _i1, _i2)                       \
   NS_IMPL_QUERY_HEAD(_class)                                             \
   NS_IMPL_QUERY_BODY(_i1)                                                \
   NS_IMPL_QUERY_BODY(_i2)                                                \
-  NS_IMPL_QUERY_TAIL
+  NS_IMPL_QUERY_TAIL(_i1)
 
 
 
