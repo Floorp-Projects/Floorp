@@ -2348,7 +2348,7 @@ void CGenericFrame::OnDisplayPrivacyReceipts()
 
 void CGenericFrame::OnDisplayPrivacySiteInfo()
 {
-    // needs to be hooked up
+    PRVCY_SiteInfo(GetMainContext()->GetContext());
 }
 
 void CGenericFrame::OnDisplayPrivacyTutorial()
