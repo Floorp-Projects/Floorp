@@ -1229,6 +1229,24 @@ void js_FinishDtoa(void)
 
 /* nspr2 watcom bug ifdef omitted */
 
+#ifdef XP_OS2
+/* On OS/2, some system function calls seem to change the FPU control word, 
+ * such that we crash with a floating underflow exception.  The FIX_FPU() call 
+ * in jsnum.c does not always work, as sometimes it happens BEFORE the OS/2
+ * system call that horks the FPU control word.  So, on OS/2, we need to do
+ * what the comment at the top of this file (around line 80) suggests: setting
+ * the FPU precision (& exceptions mask) before calling strtod or dtoa.
+ *
+ * Set the exception mask to mask all exceptions and set the FPU precision
+ * to 53 bit mantissa.
+ * On Alpha platform this is handled via Compiler option.
+ */
+ #define FIX_FPU()    _control87((CW_DEFAULT & ~MCW_PC) | PC_53, 0xffff)
+#else
+ #define FIX_FPU()    ((void)0)
+#endif
+
+
 JS_FRIEND_API(double)
 JS_strtod(CONST char *s00, char **se, int *err)
 {
@@ -1240,6 +1258,8 @@ JS_strtod(CONST char *s00, char **se, int *err)
     Long L;
     ULong y, z;
     Bigint *bb, *bb1, *bd, *bd0, *bs, *delta;
+
+    FIX_FPU();
 
     *err = 0;
 
@@ -2088,6 +2108,8 @@ js_dtoa(double d, int mode, JSBool biasUp, int ndigits,
     Bigint *b, *b1, *delta, *mlo, *mhi, *S;
     double d2, ds, eps;
     char *s;
+
+    FIX_FPU();
 
     if (word0(d) & Sign_bit) {
         /* set sign for everything, including 0's and NaNs */
