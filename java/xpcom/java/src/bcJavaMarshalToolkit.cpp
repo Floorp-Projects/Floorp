@@ -526,7 +526,7 @@ bcJavaMarshalToolkit::UnMarshalElement(jobject *value, uint8 ind, bcIUnMarshaler
                     if (str != NULL) {
                         {
                             for (int i = 0; i < size && type == bc_T_WCHAR_STR; i++) {
-                                char c = ((char*)data)[i];
+                                char c = str[i];
                                 PR_LOG(log, PR_LOG_DEBUG,("--[c++] bcJavaMarshalToolkit::UnMarshalElement T_WCHAR_STR [%d] = %d %c\n",i,c,c));
                             }
                         }
