@@ -174,6 +174,11 @@ public:
    */
   NS_IMETHOD SetBounds(PRInt32 x, PRInt32 y, PRInt32 w, PRInt32 h) = 0;
 
+  /**
+   * Shrink-to-fit the WebShell to its contents
+   */
+  NS_IMETHOD SizeToContent() = 0;
+
   NS_IMETHOD MoveTo(PRInt32 aX, PRInt32 aY) = 0;
 
   /**

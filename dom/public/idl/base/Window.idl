@@ -48,20 +48,21 @@
         void  moveTo(in long xPos, in long yPos);
         void  moveBy(in long xDif, in long yDif);
         void  resizeTo(in long width, in long height);
-        void  resizeBy(in long widthDif, in long heightDif);        
+        void  resizeBy(in long widthDif, in long heightDif);
+        void  sizeToContent();
         void  scrollTo(in long xScroll, in long yScroll);
-        void  scrollBy(in long xScrollDif, in long yScrollDif);        
+        void  scrollBy(in long xScrollDif, in long yScrollDif);
 
         void clearTimeout(in long timerID);
         void clearInterval(in long timerID);
         long setTimeout(/* ... */);
         long setInterval(/* ... */);
 
-		Window createPopup(in Element element, in Element popupContent,
-					     in long xPos, in long yPos, 
-						 in DOMString popupType, in DOMString anchorAlignment,
-						 in DOMString popupAlignment);
-						  
+        Window createPopup(in Element element, in Element popupContent,
+                           in long xPos, in long yPos, 
+                           in DOMString popupType, in DOMString anchorAlignment,
+                           in DOMString popupAlignment);
+
         Window open(/* ... */);
         Window openDialog(/* ... */);
       };

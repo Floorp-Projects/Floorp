@@ -1709,6 +1709,48 @@ WindowResizeBy(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rva
 
 
 //
+// Native method SizeToContent
+//
+PR_STATIC_CALLBACK(JSBool)
+WindowSizeToContent(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
+{
+  nsIDOMWindow *nativeThis = (nsIDOMWindow*)nsJSUtils::nsGetNativeThis(cx, obj);
+
+  *rval = JSVAL_NULL;
+
+  nsIScriptContext *scriptCX = (nsIScriptContext *)JS_GetContextPrivate(cx);
+  nsCOMPtr<nsIScriptSecurityManager> secMan;
+  if (NS_OK != scriptCX->GetSecurityManager(getter_AddRefs(secMan))) {
+    return JS_FALSE;
+  }
+  {
+    PRBool ok;
+    secMan->CheckScriptAccess(scriptCX, obj, "window.sizetocontent",PR_FALSE , &ok);
+    if (!ok) {
+      //Need to throw error here
+      return JS_FALSE;
+    }
+  }
+
+  // If there's no private data, this must be the prototype, so ignore
+  if (nsnull == nativeThis) {
+    return JS_TRUE;
+  }
+
+  {
+
+    if (NS_OK != nativeThis->SizeToContent()) {
+      return JS_FALSE;
+    }
+
+    *rval = JSVAL_VOID;
+  }
+
+  return JS_TRUE;
+}
+
+
+//
 // Native method ScrollTo
 //
 PR_STATIC_CALLBACK(JSBool)
@@ -2498,6 +2540,7 @@ static JSFunctionSpec WindowMethods[] =
   {"moveBy",          WindowMoveBy,     2},
   {"resizeTo",          WindowResizeTo,     2},
   {"resizeBy",          WindowResizeBy,     2},
+  {"sizeToContent",          WindowSizeToContent,     0},
   {"scrollTo",          WindowScrollTo,     2},
   {"scrollBy",          WindowScrollBy,     2},
   {"clearTimeout",          WindowClearTimeout,     1},

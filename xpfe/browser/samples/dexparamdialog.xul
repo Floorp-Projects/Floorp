@@ -215,6 +215,11 @@
     </html:tr>
     <html:tr>
       <html:td>
+        <html:button onclick="sizeToContent()">Size To Content</html:button>
+      </html:td>
+    </html:tr>
+    <html:tr>
+      <html:td>
         <html:button onclick="DumpWindow()">Dump Window</html:button>
       </html:td>
     </html:tr>
