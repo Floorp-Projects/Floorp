@@ -145,11 +145,6 @@ DefParam("preferlists",
 	"b",
 	1);
 
-DefParam("prettyasciimail",
-	"If this is on, Bugzilla will send email reports formatted (assuming 76 character monospace font display). If this is off, email reports are sent using the old 'one-item-per-line' format.",
-	"b",
-	0);
-
 DefParam("capitalizelists",
 	"If this is on, Bugzilla will capitalize list entries, checkboxes, and radio buttons. If this is off, Bugzilla will leave these items untouched.",
 	"b",
@@ -374,51 +369,18 @@ To use the wonders of Bugzilla, you can use the following:
 });
 
 
-
-DefParam("changedmail",
-q{The email that gets sent to people when a bug changes.  Within this
-text, %to% gets replaced by the assigned-to and reported-by people,
-separated by a comma (with duplication removed, if they're the same
-person).  %cc% gets replaced by the list of people on the CC list,
-separated by commas.  %bugid% gets replaced by the bug number.
-%diffs% gets replaced by the diff text from the old version to the new
-version of this bug.  %neworchanged% is "New: " if this mail is
-reporting a new bug or empty if changes were made
-to an existing one.  %summary% gets replaced by the summary of this
-bug.  %<i>anythingelse</i>% gets replaced by the definition of that
-parameter (as defined on this page).},
-         "l",
-"From: bugzilla-daemon
-To: %to%
-Cc: %cc%
-Subject: [Bug %bugid%] %neworchanged%%summary%
-
-%urlbase%show_bug.cgi?id=%bugid%
-
-%diffs%");
-
-DefParam("newemailtech",
-q{The way that email diffs are constructed by Bugzilla.  You can revert to
-the old technology by turning this off, but this is not advised, as the old 
-email tech will probably disappear in the next version of Bugzilla.  Some
-features (watches, server side mail filtering) depend on newemailtech being
-set to on.},
-    "b",
-    1);
-
-DefParam("newemailtechdefault",
-q{Make "newemailtech" the default for all new accounts created.  This will
-not change any existing accounts nor will it remove a users ability to go
-back to the oldmail system (requires "newemailtech" to be on as well).},
-    "b",
-    1);
-
 DefParam("newchangedmail",
-q{The same as 'changedmail', but used for the newemailtech stuff.},
+q{The email that gets sent to people when a bug changes.  Within this
+text, %to% gets replaced with the e-mail address of the person recieving
+the mail.  %bugid% gets replaced by the bug number.  %diffs% gets
+replaced with what's changed.  %neworchanged% is "New:" if this mail is
+reporting a new bug or empty if changes were made to an existing one.
+%summary% gets replaced by the summary of this bug. %<i>anythingelse</i>%
+gets replaced by the definition of that parameter (as defined on this
+page).},
          "l",
 "From: bugzilla-daemon
 To: %to%
-Cc: %cc%
 Subject: [Bug %bugid%] %neworchanged%%summary%
 
 %urlbase%show_bug.cgi?id=%bugid%

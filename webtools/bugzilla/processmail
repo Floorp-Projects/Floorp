@@ -22,9 +22,8 @@
 #                 Bryce Nesbitt <bryce-mozilla@nextbus.com>
 #                 Dan Mosedale <dmose@mozilla.org>
 #                 Alan Raetz <al_raetz@yahoo.com>
+#                 Jacob Steenhagen <jake@actex.net>
 #
-
-# To recreate the shadow database,  run "processmail regenerate" .
 
 use diagnostics;
 use strict;
@@ -37,9 +36,8 @@ $| = 1;
 
 umask(0);
 
-$::lockcount = 0;
-my $regenerate = 0;
 my $nametoexclude = "";
+my %nomail;
 
 my @excludedAddresses = ();
 
@@ -53,276 +51,9 @@ my %force;
 @{$force{'CClist'}} = ();
 @{$force{'Voter'}} = ();
 
-sub Lock {
-    if ($::lockcount <= 0) {
-        $::lockcount = 0;
-        if (!open(LOCKFID, ">>data/maillock")) {
-            mkdir "data", 0777;
-            chmod 0777, "data";
-            open(LOCKFID, ">>data/maillock") || die "Can't open lockfile.";
-        }
-        my $val = flock(LOCKFID,2);
-        if (!$val) { # '2' is magic 'exclusive lock' const.
-            print "Lock failed: $val\n";
-        }
-        chmod 0666, "data/maillock";
-    }
-    $::lockcount++;
-}
-
-sub Unlock {
-    $::lockcount--;
-    if ($::lockcount <= 0) {
-        flock(LOCKFID,8);       # '8' is magic 'unlock' const.
-        close LOCKFID;
-    }
-}
-
-sub FileSize {
-    my ($filename) = (@_);
-    my ($dev,$ino,$mode,$nlink,$uid,$gid,$rdev,$size,
-        $atime,$mtime,$ctime,$blksize,$blocks)
-        = stat($filename);
-    if (defined $size) {
-        return $size;
-    }
-    return -1;
-}
-
-
-
-sub Different {
-    my ($file1, $file2) = (@_);
-    my $size1 = FileSize($file1);
-    my $size2 = FileSize($file2);
-    if ($size1 != $size2) {
-        return 1;
-    }
-    open(FID1, "<$file1") || die "Can't open $file1";
-    open(FID2, "<$file2") || die "Can't open $file2";
-    my $d1; 
-    my $d2; 
-    if (read(FID1, $d1, $size1) ne $size1) {
-        die "Can't read $size1 bytes from $file1";
-    }
-    if (read(FID2, $d2, $size2) ne $size2) {
-        die "Can't read $size2 bytes from $file2";
-    }
-    close FID1;
-    close FID2;
-    return ($d1 ne $d2);
-}
-
-
-sub DescCC {
-    my $cclist = shift();
-
-    return "" if ( $cclist->size() == 0 );
-
-    return "Cc: " . $cclist->toString() . "\n";
-}
-
-
-sub DescDependencies {
-    my ($id) = (@_);
-    if (!Param("usedependencies")) {
-        return "";
-    }
-    my $result = "";
-    my $me = "blocked";
-    my $target = "dependson";
-    my $title = "BugsThisDependsOn";
-    for (1..2) {
-        SendSQL("select $target from dependencies where $me = $id order by $target");
-        my @list;
-        while (MoreSQLData()) {
-            push(@list, FetchOneColumn());
-        }
-        if (@list) {
-            my @verbose;
-            my $count = 0;
-            foreach my $i (@list) {
-                SendSQL("select bug_status, resolution from bugs where bug_id = $i");
-                my ($bug_status, $resolution) = (FetchSQLData());
-                my $desc;
-                if ($bug_status eq "NEW" || $bug_status eq "ASSIGNED" ||
-                    $bug_status eq "REOPENED" || $bug_status eq "UNCONFIRMED") {
-                    $desc = "";
-                } else {
-                    $desc = "[$resolution]";
-                }
-                push(@verbose, $i . "$desc");
-                $count++;
-            }
-            if ($count > 5) {
-                $result .= "$title: Big list (more than 5) has been omitted\n";
-            } else {
-                $result .= "$title: " . join(', ', @verbose) . "\n";
-            }
-        }
-        my $tmp = $me;
-        $me = $target;
-        $target = $tmp;
-        $title = "OtherBugsDependingOnThis";
-    }
-    return $result;
-}
-
-
-
-sub GetBugText {
-    my ($id) = (@_);
-    undef %::bug;
-    
-    my @collist = ("bug_id", "product", "version", "rep_platform", "op_sys",
-                   "bug_status", "resolution", "priority", "bug_severity",
-                   "assigned_to", "reporter", "bug_file_loc",
-                   "short_desc", "component", "qa_contact", "target_milestone",
-                   "status_whiteboard", "groupset");
-
-    my $query = "select " . join(", ", @collist) .
-        " from bugs where bug_id = $id";
-
-    SendSQL($query);
-
-    my @row;
-    if (!(@row = FetchSQLData())) {
-        return "";
-    }
-    foreach my $field (@collist) {
-        $::bug{$field} = shift @row;
-        if (!defined $::bug{$field}) {
-            $::bug{$field} = "";
-        }
-    }
-
-    $::bug{'assigned_to'} = DBID_to_name($::bug{'assigned_to'});
-    $::bug{'reporter'} = DBID_to_name($::bug{'reporter'});
-    my $qa_contact = "";
-    my $target_milestone = "";
-    my $status_whiteboard = "";
-    if (Param('useqacontact') && $::bug{'qa_contact'} > 0) {
-        $::bug{'qa_contact'} = DBID_to_name($::bug{'qa_contact'});
-        $qa_contact = "QAContact: $::bug{'qa_contact'}\n";
-    } else {
-        $::bug{'qa_contact'} = "";
-    }
-    if (Param('usetargetmilestone') && $::bug{'target_milestone'} ne "") {
-        $target_milestone = "TargetMilestone: $::bug{'target_milestone'}\n";
-    }
-    if (Param('usestatuswhiteboard') && $::bug{'status_whiteboard'} ne "") {
-        $status_whiteboard = "StatusWhiteboard: $::bug{'status_whiteboard'}\n";
-    }
-
-    $::bug{'long_desc'} = GetLongDescriptionAsText($id);
-
-    my $cclist = new RelationSet();
-    $cclist->mergeFromDB("select who from cc where bug_id = $id");
-    my @voterlist;
-    SendSQL("select profiles.login_name from votes, profiles where votes.bug_id = $id and profiles.userid = votes.who");
-    while (MoreSQLData()) {
-        my $v = FetchOneColumn();
-        push(@voterlist, $v);
-    }
-    $::bug{'cclist'} = $cclist->toString();
-    $::bug{'voterlist'} = join(',', @voterlist);
-
-    if (Param("prettyasciimail")) {
-        $^A = "";
-        my $temp = formline <<'END',$::bug{'short_desc'},$id,$::bug{'product'},$::bug{'bug_status'},$::bug{'version'},$::bug{'resolution'},$::bug{'rep_platform'},$::bug{'bug_severity'},$::bug{'op_sys'},$::bug{'priority'},$::bug{'component'},$::bug{'assigned_to'},$::bug{'reporter'},$qa_contact,DescCC($cclist),$target_milestone,${status_whiteboard},$::bug{'bug_file_loc'},DescDependencies($id);
-+============================================================================+
-| @<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<< |
-+----------------------------------------------------------------------------+
-|        Bug #: @<<<<<<<<<<<                Product: @<<<<<<<<<<<<<<<<<<<<<< |
-|       Status: @<<<<<<<<<<<<<<<<<<         Version: @<<<<<<<<<<<<<<<<<<<<<< |
-|   Resolution: @<<<<<<<<<<<<<<<<<<        Platform: @<<<<<<<<<<<<<<<<<<<<<< |
-|     Severity: @<<<<<<<<<<<<<<<<<<      OS/Version: @<<<<<<<<<<<<<<<<<<<<<< |
-|     Priority: @<<<<<<<<<<<<<<<<<<       Component: @<<<<<<<<<<<<<<<<<<<<<< |
-+----------------------------------------------------------------------------+
-|  Assigned To: @<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<< |
-|  Reported By: @<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<< |
-|  ~QA Contact: ^<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<< |
-|  ~   CC list: ^<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<< |
-+----------------------------------------------------------------------------+
-| ~  Milestone: ^<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<< |
-|~  Whiteboard: ^<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<< |
-|          URL: @<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<< |
-|~Dependencies: ^<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<< |
-+============================================================================+
-|                              DESCRIPTION                                   |
-END
-
-    my $prettymail = $^A . $::bug{'long_desc'};
-        return $prettymail;
-
-
-    } else {
-        return "Bug\#: $id
-Product: $::bug{'product'}
-Version: $::bug{'version'}
-Platform: $::bug{'rep_platform'}
-OS/Version: $::bug{'op_sys'}
-Status: $::bug{'bug_status'}   
-Resolution: $::bug{'resolution'}
-Severity: $::bug{'bug_severity'}
-Priority: $::bug{'priority'}
-Component: $::bug{'component'}
-AssignedTo: $::bug{'assigned_to'}                            
-ReportedBy: $::bug{'reporter'}               
-$qa_contact$target_milestone${status_whiteboard}URL: $::bug{'bug_file_loc'}
-" . DescCC($cclist) . "Summary: $::bug{'short_desc'}
-" . DescDependencies($id) . "
-$::bug{'long_desc'}
-";
-}
-
-}
-
 
 my %seen;
 my @sentlist;
-sub fixaddresses {
-    my ($field, $list) = (@_);
-    my @result;
-    foreach my $i (@$list) {
-        if (!defined $i || $i eq "") {
-            next;
-        }
-        SendSQL("select emailnotification, groupset & $::bug{'groupset'} from profiles where login_name = " .
-                SqlQuote($i));
-        my ($emailnotification, $groupset) = (FetchSQLData());
-        if ($groupset ne $::bug{'groupset'}) {
-            next;
-        }
-        if ($emailnotification eq "CConly") {
-            if ($field ne "cc") {
-                next;
-            }
-        }
-        if ($emailnotification eq "ExcludeSelfChanges" &&
-           (lc($i) eq $nametoexclude)) {
-            push @excludedAddresses, $nametoexclude;
-            next;
-        }
-        
-        if (!defined $::nomail{$i} && !defined $seen{$i}) {
-            push(@result, $i . Param('emailsuffix'));
-            $seen{$i} = 1;
-        }
-    }
-    return join(", ",  @result);
-}
-
-
-sub Log {
-    my ($str) = (@_);
-    Lock();
-    open(FID, ">>data/maillog") || die "Can't write to data/maillog";
-    print FID time2str("%D %H:%M", time()) . ": $str\n";
-    close FID;
-    Unlock();
-}
-    
 
 sub FormatTriple {
     my ($a, $b, $c) = (@_);
@@ -346,7 +77,7 @@ END
 }
     
 
-sub NewProcessOneBug {
+sub ProcessOneBug {
     my ($id) = (@_);
 
     my @headerlist;
@@ -473,119 +204,96 @@ sub NewProcessOneBug {
 
     my $newcomments = GetLongDescriptionAsText($id, $start, $end);
 
-    if (Param('newemailtech')) {
-        
-        #
-        # Start of email filtering code
-        #
-        # Even if the user sending the email has not enabled #
-        # 'newEmailTech', we still want to filter the email
-        # based on other user's email preferences if the global Param 
-        # 'newemailtech' is enabled.
-        #
-        # Note: users who have not enabled newEmailTech will default
-        # to no filtering (they will get all email Bugzilla sends).
-        
-        my $count = 0;
-        
-        my @currentEmailAttributes = getEmailAttributes($newcomments,
-                                                        @diffs);
-        my (@assigned_toList,@reporterList,@qa_contactList,@ccList) = 
-          ();
-        
-        #open(LOG, ">>/tmp/maillog");
-        #print LOG "\nBug ID: $id   CurrentEmailAttributes:";
-        #print LOG join(',', @currentEmailAttributes) . "\n";
-        
-        @excludedAddresses = (); # zero out global list 
+    #
+    # Start of email filtering code
+    #
+    my $count = 0;
 
-        @assigned_toList = filterEmailGroup('Owner',
-                                            \@currentEmailAttributes,
-                                            $values{'assigned_to'});
-        @reporterList = filterEmailGroup('Reporter', 
-                                         \@currentEmailAttributes,
-                                         $values{'reporter'});
-        if (Param('useqacontact') && $values{'qa_contact'}) {
-            @qa_contactList = filterEmailGroup('QAcontact',
-                                               \@currentEmailAttributes,
-                                               $values{'qa_contact'});
-        } else { 
-            @qa_contactList = (); 
-        }
+    my @currentEmailAttributes = getEmailAttributes($newcomments, @diffs);
+    my (@assigned_toList,@reporterList,@qa_contactList,@ccList) = ();
 
-        @ccList = filterEmailGroup('CClist', \@currentEmailAttributes,
-                                   $values{'cc'});
+    #open(LOG, ">>/tmp/maillog");
+    #print LOG "\nBug ID: $id   CurrentEmailAttributes:";
+    #print LOG join(',', @currentEmailAttributes) . "\n";
 
-        @voterlist = filterEmailGroup('Voter', \@currentEmailAttributes,
-                                      join(',',@voterlist));
+    @excludedAddresses = (); # zero out global list 
 
-        my @emailList = (@assigned_toList, @reporterList, 
-                         @qa_contactList, @ccList, @voterlist);
+    @assigned_toList = filterEmailGroup('Owner',
+                                        \@currentEmailAttributes,
+                                        $values{'assigned_to'});
+    @reporterList = filterEmailGroup('Reporter', 
+                                     \@currentEmailAttributes,
+                                     $values{'reporter'});
+    if (Param('useqacontact') && $values{'qa_contact'}) {
+        @qa_contactList = filterEmailGroup('QAcontact',
+                                           \@currentEmailAttributes,
+                                           $values{'qa_contact'});
+    } else { 
+        @qa_contactList = (); 
+    }
 
-        # only need one entry per person
-        my @allEmail = ();
-        my %AlreadySeen = ();
-        foreach my $person (@emailList) {
-            if ( !($AlreadySeen{$person}) ) {
-                push(@allEmail,$person);
-                $AlreadySeen{$person}++;
-            }
-        }
+    @ccList = filterEmailGroup('CClist', \@currentEmailAttributes,
+                               $values{'cc'});
 
-        #print LOG "\nbug $id email sent: " . join(',', @allEmail) . "\n";
-        
-        @excludedAddresses = filterExcludeList(\@excludedAddresses,
-                                               \@allEmail);
+    @voterlist = filterEmailGroup('Voter', \@currentEmailAttributes,
+                                  join(',',@voterlist));
 
-        # print LOG "excluded: " . join(',',@excludedAddresses) . "\n\n";
+    my @emailList = (@assigned_toList, @reporterList, 
+                     @qa_contactList, @ccList, @voterlist);
 
-        foreach my $person ( @allEmail ) {
-            $count++;
-            if ( !defined(NewProcessOnePerson($person, $count, \@headerlist,
-                                              \%values, \%defmailhead, 
-                                              \%fielddescription, $difftext, 
-                                              $newcomments, $start, $id))) {
-
-                # if a value is not returned, this means that the person
-                # was not sent mail.  add them to the excludedAddresses list.
-                # it will be filtered later for dups.
-                #
-                push @excludedAddresses, $person;
-
-            }
-        }
-
-    } else {
-        my $count = 0;
-        my @personlist = ($values{'assigned_to'}, $values{'reporter'},
-                          split(/,/, $values{'cc'}),
-                          @voterlist,
-                          $force{'CClist'});
-        if ($values{'qa_contact'}) { push @personlist, $values{'qa_contact'} }
-        for my $person (@personlist) {
-            $count++;
-
-            my $match = "^[^@, ]*@[^@, ]*\.[^@, ]*\$";
-            if ($person !~ /$match/) {
-                $person = $person . Param('emailsuffix');
-            }
-
-            if ( !defined(NewProcessOnePerson($person, $count, \@headerlist, 
-                                              \%values, \%defmailhead, 
-                                              \%fielddescription, $difftext, 
-                                              $newcomments, $start, $id))) {
-
-                # if a value is not returned, this means that the person
-                # was not sent mail.  add them to the excludedAddresses list.
-                # it will be filtered later for dups.
-                #
-                push @excludedAddresses, $person;
-            }
+    # only need one entry per person
+    my @allEmail = ();
+    my %AlreadySeen = ();
+    foreach my $person (@emailList) {
+        if ( !($AlreadySeen{$person}) ) {
+            push(@allEmail,$person);
+            $AlreadySeen{$person}++;
         }
     }
 
+    #print LOG "\nbug $id email sent: " . join(',', @allEmail) . "\n";
+        
+    @excludedAddresses = filterExcludeList(\@excludedAddresses,
+                                           \@allEmail);
+
+    # print LOG "excluded: " . join(',',@excludedAddresses) . "\n\n";
+
+    foreach my $person ( @allEmail ) {
+        $count++;
+        if ( !defined(NewProcessOnePerson($person, $count, \@headerlist,
+                                          \%values, \%defmailhead, 
+                                          \%fielddescription, $difftext, 
+                                          $newcomments, $start, $id))) {
+
+            # if a value is not returned, this means that the person
+            # was not sent mail.  add them to the excludedAddresses list.
+            # it will be filtered later for dups.
+            #
+            push @excludedAddresses, $person;
+
+        }
+    }
+
+
     SendSQL("UPDATE bugs SET lastdiffed = '$end', delta_ts = delta_ts " .
             "WHERE bug_id = $id");
+
+    # Filter the exclude list for dupes one last time
+    @excludedAddresses = filterExcludeList(\@excludedAddresses,
+                                           \@sentlist);
+    if (@sentlist) {
+        print "<b>Email sent to:</b> " . join(", ", @sentlist) ."<br>\n";
+    } else {
+        print "<b>Email sent to:</b> no one<br>\n";
+    }
+
+    if (@excludedAddresses) {
+        print "<b>Excluding:</b> " . join(", ", @excludedAddresses) . "\n";
+    }
+
+    print "<br><center>If you wish to tweak the kinds of mail Bugzilla sends you, you can";
+    print " <a href=\"userprefs.cgi?bank=diffs\">change your preferences</a></center>\n";
+
 }
 
 # When one person is in different fields on one bug, they may be
@@ -775,19 +483,11 @@ sub filterEmailGroup ($$$) {
             next;
         }
         
-        SendSQL("SELECT emailflags, newemailtech FROM profiles WHERE " .
+        SendSQL("SELECT emailflags FROM profiles WHERE " .
                 "userid = $userid" );
         
-        my ($userFlagString, $newemailtech) = FetchSQLData();
+        my ($userFlagString) = FetchSQLData();
         
-        # people who are not using newemailtech get skipped; they will 
-        # be dealt with later by the old email tech code in 
-        # ProcessOneBug().
-        #
-        if (!defined($newemailtech) || $newemailtech == 0) {
-            next;
-        }
-
         # If the sender doesn't want email, exclude them from list
         
         if (lc($person) eq $nametoexclude) {
@@ -916,16 +616,15 @@ sub NewProcessOnePerson ($$$$$$$$$$) {
     if ($seen{$person}) {
       return;
     }
-        
-    SendSQL("SELECT userid, emailnotification, newemailtech," .
-            "       groupset & $values{'groupset'} " .
-            "FROM profiles WHERE login_name = " . SqlQuote($person));
-    my ($userid, $emailnotification, $newemailtech, 
-        $groupset) =  (FetchSQLData());
-    
-    if (!$newemailtech || !Param('newemailtech')) {
+
+    if ($nomail{$person}) {
       return;
     }
+        
+    SendSQL("SELECT userid, groupset & $values{'groupset'} " .
+            "FROM profiles WHERE login_name = " . SqlQuote($person));
+    my ($userid, $groupset) =  (FetchSQLData());
+    
     $seen{$person} = 1;
 
 
@@ -938,16 +637,6 @@ sub NewProcessOnePerson ($$$$$$$$$$) {
     # quietly disappear from their radar.
     #
     if ($groupset ne $values{'groupset'}) {
-      return;
-    }
-    if ($emailnotification eq "ExcludeSelfChanges" &&
-        lc($person) eq $nametoexclude) {
-      push @excludedAddresses, $nametoexclude;
-      return;
-    }
-    # "$count < 3" means "this person is either assigned_to or reporter"
-    #
-    if ($emailnotification eq "CCOnly" && $count < 3) {
       return;
     }
     
@@ -1013,160 +702,20 @@ sub NewProcessOnePerson ($$$$$$$$$$) {
     return 1;
 }
 
-
-sub ProcessOneBug {
-  my $i = $_[0];
-  NewProcessOneBug($i);
-
-  # Make sure that everyone who was excluded because of the advanced
-  # filtering options (and thus are using new email tech) has the
-  # corresponding element in %seen set.  This is so that they won't
-  # also be processed by the old email tech code, which follows.
-  #
-  # It's necessary because people who are excluded by the advanced
-  # filtering code never make it into NewProcessOnePerson(), which is
-  # where %seen would have otherwise been touched for them.
-  # 
-  foreach my $person (@excludedAddresses) {
-      $seen{$person} = 1;
-  }
-
-  my $old = "shadow/$i";
-  my $new = "shadow/$i.tmp.$$";
-  my $diffs = "shadow/$i.diffs.$$";
-  my $verb = "Changed";
-  if (!stat($old)) {
-    mkdir "shadow", 0777;
-    chmod 0777, "shadow";
-        open(OLD, ">$old") || die "Couldn't create null $old";
-        close OLD;
-        $verb = "New";
-    }
-    my $text = GetBugText($i);
-    if ($text eq "") {
-        die "Couldn't find bug $i.";
-    }
-    open(FID, ">$new") || die "Couldn't create $new";
-    print FID $text;
-    close FID;
-    if (Different($old, $new)) {
-        system("diff -c -b $old $new > $diffs");
-        my $tolist = fixaddresses("to",
-                                  [$::bug{'assigned_to'}, $::bug{'reporter'},
-                                   $::bug{'qa_contact'}]);
-        my @combinedcc;
-        foreach my $v (split(/,/, "$::bug{'cclist'},$::bug{'voterlist'}")) {
-            push @combinedcc, $v;
-        }
-        push (@combinedcc, (@{$force{'CClist'}}, @{$force{'QAcontact'}}, 
-                            @{$force{'Reporter'}}, @{$force{'Owner'}}));
-        my $cclist = fixaddresses("cc", \@combinedcc);
-        my $logstr = "Bug $i $verb";
-        if ($tolist ne "" || $cclist ne "") {
-            my %substs;
-
-            $substs{"fullbugreport"} = $text; # added ability to include the full bug report
-            $substs{"to"} = $tolist;
-            $substs{"cc"} = $cclist;
-            $substs{"bugid"} = $i;
-            $substs{"diffs"} = "";
-            open(DIFFS, "<$diffs") || die "Can't open $diffs";
-            while (<DIFFS>) {
-                $substs{"diffs"} .= $_;
-            }
-            close DIFFS;
-            $substs{"neworchanged"} = ($verb eq "New") ? "New: " : "";
-            $substs{"summary"} = $::bug{'short_desc'};
-            my $msg = PerformSubsts(Param("changedmail"), \%substs);
-
-            if (!$regenerate) {
-                # Note: fixaddresses may result in a Cc: only.  This seems
-                # harmless.
-                my $sendmailparam = "-ODeliveryMode=deferred";
-                if (Param("sendmailnow")) {
-                    $sendmailparam = "";
-                }
-                if ($enableSendMail==1) {
-                open(SENDMAIL, 
-                     "|/usr/lib/sendmail $sendmailparam -t") ||
-                       die "Can't open sendmail";
-
-                print SENDMAIL $msg;
-                close SENDMAIL;
-                }
-                foreach my $n (split(/[, ]+/, "$tolist,$cclist")) {
-                    if ($n ne "") {
-                        push(@sentlist, $n);
-                    }
-                }
-
-                $logstr = "$logstr; mail sent to $tolist, $cclist";
-            }
-        }
-        unlink($diffs);
-        Log($logstr);
-    }
-
-    # on the off chance that there are duplicate addresses in the exclude list,
-    # we filter it for dups one more time.  They could have gotten there in 
-    # fixaddresses(), NewProcessOnePerson(), or NewProcessOneBug.
-    # 
-    @excludedAddresses = filterExcludeList(\@excludedAddresses, 
-                                           \@sentlist);
-
-    if (!$regenerate) {
-    if (@sentlist) {
-            print "<B>Email sent to:</B> " . join(", ", @sentlist) . "<br>\n";
-        } else {
-            print "<B>Email sent to:</B> no one<br>\n";
-        }
-
-        if ( @excludedAddresses ) {
-            print "<br><B>Excluding: </B>" . join(", ", @excludedAddresses) . 
-              "\n";
-        }
-
-        print "<br><br><center>New: <a href=\"userprefs.cgi\?bank=diffs\">" .
-          "change your email preferences<\/a> if you wish to tweak the " .
-            "kinds of Bugzilla email you get.<\/center>\n";
-    }
-    rename($new, $old) || die "Can't rename $new to $old";
-    chmod 0666, $old;
-    if ($regenerate) {
-        print "$i ";
-    }
-    %seen = ();
-    @sentlist = ();
-}
-
 # Code starts here
 
 ConnectToDatabase();
 GetVersionTable();
-Lock();
 
 if (open(FID, "<data/nomail")) {
     while (<FID>) {
-        $::nomail{trim($_)} = 1;
+        $nomail{trim($_)} = 1;
     }
     close FID;
 }
 
-# To recreate the shadow database,  run "processmail regenerate" .
 if ($#ARGV >= 0 && $ARGV[0] eq "regenerate") {
-    $regenerate = 1;
-    shift @ARGV;
-    SendSQL("select bug_id from bugs order by bug_id");
-    my @regenerate_list;
-    while (my @row = FetchSQLData()) {
-        push @regenerate_list, $row[0];
-    }
-    foreach my $i (@regenerate_list) {
-        ProcessOneBug($i);
-        Unlock();
-        Lock();
-    }
-    print("\n");
+    print "Regenerating is no longer required or supported\n";
     exit;
 }
 
@@ -1190,7 +739,7 @@ if ($#ARGV >= 0 && $ARGV[0] eq "-forceqacontact") {
 if (($#ARGV < 0) || ($#ARGV > 1)) {
     print "Usage:\n processmail {bugid} {nametoexclude} " . 
       "[-forcecc list,of,users]\n             [-forceowner name] " .
-      "[-forceqacontact name]\nor\n processmail regenerate\nor\n" .
+      "[-forceqacontact name]\nor\n" .
       " processmail rescanall\n";
     exit;
 }

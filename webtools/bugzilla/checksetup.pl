@@ -518,7 +518,6 @@ sub isExecutableFile {
 }
 
 if ($my_webservergroup) {
-    mkdir 'shadow', 0770 unless -d 'shadow';
     # Funny! getgrname returns the GID if fed with NAME ...
     my $webservergid = getgrnam($my_webservergroup);
     # chmod needs to be called with a valid uid, not 0.  $< returns the
@@ -540,7 +539,7 @@ if ($my_webservergroup) {
     }
 
     # make sure that contrib keeps the permissions it had (don't touch it)
-    chmod 0770, 'data', 'shadow', 'graphs';
+    chmod 0770, 'data', 'graphs';
     chmod 0666, glob('data/*');
     chmod 01777, glob('data/*/'); # directories stay executable
 }
@@ -817,9 +816,7 @@ $table{profiles} =
     cryptpassword varchar(64),
     realname varchar(255),
     groupset bigint not null,
-    emailnotification enum("ExcludeSelfChanges", "CConly", "All") not null default "ExcludeSelfChanges",
     disabledtext mediumtext,
-    newemailtech tinyint not null default 1,
     mybugslink tinyint not null default 1,
     blessgroupset bigint not null default 0,
     emailflags mediumtext,
@@ -1186,7 +1183,6 @@ sub CheckEnumField ($$@)
         $dbh->do("ALTER TABLE $table
                   CHANGE $field
                   $field $_");
-        $::regenerateshadow = 1;
     }
 }
 
@@ -1328,8 +1324,8 @@ _End_Of_SQL_
 
     $dbh->do(<<_End_Of_SQL_);
       INSERT INTO profiles
-      (login_name, realname, password, cryptpassword, groupset, newemailtech)
-      VALUES ($login, $realname, $pass1, encrypt($pass1), 0x7fffffffffffffff, 1)
+      (login_name, realname, password, cryptpassword, groupset)
+      VALUES ($login, $realname, $pass1, encrypt($pass1), 0x7fffffffffffffff)
 _End_Of_SQL_
   } else {
     $dbh->do(<<_End_Of_SQL_);
@@ -1467,8 +1463,6 @@ sub TableExists ($)
    return $exists;
 }   
 
-$::regenerateshadow = 0;
-
 
 # really old fields that were added before checksetup.pl existed
 # but aren't in very old bugzilla's (like 2.1)
@@ -1482,14 +1476,6 @@ AddField('products', 'milestoneurl', 'tinytext not null');
 AddField('components', 'initialqacontact', 'tinytext not null');
 AddField('components', 'description', 'mediumtext not null');
 ChangeFieldType('components', 'program', 'varchar(64)');
-
-
-# 1999-05-12 Added a pref to control how much email you get.  This needs a new
-# column in the profiles table, so feed the following to mysql:
-
-AddField('profiles', 'emailnotification', 'enum("ExcludeSelfChanges", "CConly", 
-                      "All") not null default "ExcludeSelfChanges"');
-
 
 
 # 1999-06-22 Added an entry to the attachments table to record who the
@@ -1724,8 +1710,6 @@ if (GetFieldDef('bugs', 'long_desc')) {
     DropField('bugs', 'long_desc');
 
     $dbh->do("UNLOCK TABLES");
-    $::regenerateshadow = 1;
-
 }
 
 
@@ -1768,13 +1752,13 @@ if (GetFieldDef('bugs_activity', 'field')) {
 # record when email notifications were last sent about this bug.  Also,
 # added a user pref whether a user wants to use the brand new experimental
 # stuff.
+# 2001-04-29 jake@acutex.net - The newemailtech field is no longer needed
+#   http://bugzilla.mozilla.org/show_bugs.cgi?id=71552
 
 if (!GetFieldDef('bugs', 'lastdiffed')) {
     AddField('bugs', 'lastdiffed', 'datetime not null');
     $dbh->do('UPDATE bugs SET lastdiffed = now(), delta_ts = delta_ts');
 }
-
-AddField('profiles', 'newemailtech', 'tinyint not null');
 
 
 # 2000-01-22 The "login_name" field in the "profiles" table was not
@@ -1999,8 +1983,6 @@ if ( CountIndexes('cc') != 3 ) {
     DropIndexes('cc');
     $dbh->do("ALTER TABLE cc ADD UNIQUE (bug_id,who)");
     $dbh->do("ALTER TABLE cc ADD INDEX (who)");
-
-    $::regenerateshadow=1; # cc fields no longer have spaces in them
 }    
 
 if ( CountIndexes('keywords') != 3 ) {
@@ -2045,8 +2027,6 @@ if (!($sth->fetchrow_arrayref()->[0])) {
 		$dbh->do("INSERT INTO duplicates VALUES('$dupes{$key}', '$key')");
 		#					 BugItsADupeOf   Dupe
 	}
-	
-	$::regenerateshadow = 1;
 }
 
 # 2000-12-14 New graphing system requires a directory to put the graphs in
@@ -2162,6 +2142,17 @@ unless (-d 'data/duplicates') {
     } 
 }
 
+# 2001-04-29 jake@acutex.net - Remove oldemailtech
+#   http://bugzilla.mozilla.org/show_bugs.cgi?id=71552
+if (-d 'shadow') {
+    print "Removing shadow directory...\n";
+    unlink glob("shadow/*");
+    unlink glob("shadow/.*");
+    rmdir "shadow";
+}
+DropField("profiles", "emailnotification");
+DropField("profiles", "newemailtech");
+
 # If you had to change the --TABLE-- definition in any way, then add your
 # differential change code *** A B O V E *** this comment.
 #
@@ -2173,10 +2164,6 @@ unless (-d 'data/duplicates') {
 #
 #
 # Final checks...
-if ($::regenerateshadow) {
-    print "Now regenerating the shadow database for all bugs.\n";
-    system("./processmail", "regenerate");
-}
 
 unlink "data/versioncache";
 print "Reminder: Bugzilla now requires version 8.7 or later of sendmail.\n";

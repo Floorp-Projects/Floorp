@@ -97,10 +97,10 @@ sub EmitElement ($$)
 # Displays the form to edit a user parameters
 #
 
-sub EmitFormElements ($$$$$$$$)
+sub EmitFormElements ($$$$$$)
 {
     my ($user, $password, $realname, $groupset, $blessgroupset,
-        $emailnotification, $disabledtext, $newemailtech) = @_;
+        $disabledtext) = @_;
 
     print "  <TH ALIGN=\"right\">Login name:</TH>\n";
     EmitElement("user", $user);
@@ -118,25 +118,6 @@ sub EmitFormElements ($$$$$$$$)
           print "  <TD><INPUT TYPE=\"PASSWORD\" SIZE=16 MAXLENGTH=16 NAME=\"password\" VALUE=\"$password\"></TD>\n";
         }
         print "</TR><TR>\n";
-
-        if (!$newemailtech) {
-            print "  <TH ALIGN=\"right\">Email notification:</TH>\n";
-            print qq{<TD><SELECT NAME="emailnotification">};
-            foreach my $i (["ExcludeSelfChanges", 
-                            "All qualifying bugs except those which I change"],
-                           ["CConly", 
-                           "Only those bugs which I am listed on the CC line"],
-                           ["All", "All qualifying bugs"]) {
-                my ($tag, $desc) = (@$i);
-                my $selectpart = "";
-                if ($tag eq $emailnotification) {
-                    $selectpart = " SELECTED";
-                }
-                print qq{<OPTION$selectpart VALUE="$tag">$desc\n};
-            }
-            print "</SELECT></TD>\n";
-            print "</TR><TR>\n";
-        }
 
         print "  <TH ALIGN=\"right\">Disable text:</TH>\n";
         print "  <TD ROWSPAN=2><TEXTAREA NAME=\"disabledtext\" ROWS=10 COLS=60>" .
@@ -397,7 +378,7 @@ if ($action eq 'add') {
     print "<FORM METHOD=POST ACTION=editusers.cgi>\n";
     print "<TABLE BORDER=0 CELLPADDING=4 CELLSPACING=0><TR>\n";
 
-    EmitFormElements('', '', '', 0, 0, 'ExcludeSelfChanges', '', 1);
+    EmitFormElements('', '', '', 0, 0, '');
 
     print "</TR></TABLE>\n<HR>\n";
     print "<INPUT TYPE=SUBMIT VALUE=\"Add\">\n";
@@ -515,10 +496,9 @@ if ($action eq 'del') {
     CheckUser($user);
 
     # display some data about the user
-    SendSQL("SELECT realname, groupset, emailnotification, newemailtech 
-	     FROM profiles
+    SendSQL("SELECT realname, groupset FROM profiles
 	     WHERE login_name=" . SqlQuote($user));
-    my ($realname, $groupset, $emailnotification, $newemailtech) = 
+    my ($realname, $groupset) = 
       FetchSQLData();
     $realname ||= "<FONT COLOR=\"red\">missing</FONT>";
     
@@ -534,12 +514,6 @@ if ($action eq 'del') {
     print "</TR><TR>\n";
     print "  <TD VALIGN=\"top\">Real name:</TD>\n";
     print "  <TD VALIGN=\"top\">$realname</TD>\n";
-
-    if ( !$newemailtech ) {
-        print "</TR><TR>\n";
-        print "  <TD VALIGN=\"top\">E-Mail notification:</TD>\n";
-        print "  <TD VALIGN=\"top\">$emailnotification</TD>\n";
-    }
 
     print "</TR><TR>\n";
     print "  <TD VALIGN=\"top\">Group set:</TD>\n";
@@ -680,18 +654,17 @@ if ($action eq 'edit') {
     CheckUser($user);
 
     # get data of user
-    SendSQL("SELECT password, realname, groupset, blessgroupset,
-                    emailnotification, disabledtext, newemailtech
+    SendSQL("SELECT password, realname, groupset, blessgroupset, disabledtext
 	     FROM profiles
 	     WHERE login_name=" . SqlQuote($user));
-    my ($password, $realname, $groupset, $blessgroupset, $emailnotification,
-        $disabledtext, $newemailtech) = FetchSQLData();
+    my ($password, $realname, $groupset, $blessgroupset,
+        $disabledtext) = FetchSQLData();
 
     print "<FORM METHOD=POST ACTION=editusers.cgi>\n";
     print "<TABLE BORDER=0 CELLPADDING=4 CELLSPACING=0><TR>\n";
 
     EmitFormElements($user, $password, $realname, $groupset, $blessgroupset,
-                     $emailnotification, $disabledtext, $newemailtech);
+                     $disabledtext);
     
     print "</TR></TABLE>\n";
 
@@ -702,10 +675,6 @@ if ($action eq 'edit') {
     print "<INPUT TYPE=HIDDEN NAME=\"realnameold\" VALUE=\"$realname\">\n";
     print "<INPUT TYPE=HIDDEN NAME=\"groupsetold\" VALUE=\"$groupset\">\n";
     print "<INPUT TYPE=HIDDEN NAME=\"blessgroupsetold\" VALUE=\"$blessgroupset\">\n";
-    if (!$newemailtech) {
-        print "<INPUT TYPE=HIDDEN NAME=\"emailnotificationold\" " . 
-          "VALUE=\"$emailnotification\">\n";
-    }
     print "<INPUT TYPE=HIDDEN NAME=\"disabledtextold\" VALUE=\"" .
         value_quote($disabledtext) . "\">\n";
     print "<INPUT TYPE=HIDDEN NAME=\"action\" VALUE=\"update\">\n";
@@ -731,8 +700,6 @@ if ($action eq 'update') {
     my $realnameold           = trim($::FORM{realnameold}          || '');
     my $password              = trim($::FORM{password}             || '');
     my $passwordold           = trim($::FORM{passwordold}          || '');
-    my $emailnotification     = trim($::FORM{emailnotification}    || '');
-    my $emailnotificationold  = trim($::FORM{emailnotificationold} || '');
     my $disabledtext          = trim($::FORM{disabledtext}         || '');
     my $disabledtextold       = trim($::FORM{disabledtextold}      || '');
     my $groupsetold           = trim($::FORM{groupsetold}          || '0');
@@ -796,12 +763,6 @@ if ($action eq 'update') {
 	print "Updated ability to tweak permissions of other users.\n";
     }
 
-    if ($editall && $emailnotification ne $emailnotificationold) {
-        SendSQL("UPDATE profiles
-		 SET emailnotification=" . SqlQuote($emailnotification) . "
-		 WHERE login_name=" . SqlQuote($userold));
-	print "Updated email notification.<BR>\n";
-    }
     if(!Param('useLDAP')) {
       if ($editall && $password ne $passwordold) {
         my $q = SqlQuote($password);

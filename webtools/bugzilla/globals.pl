@@ -585,7 +585,6 @@ sub InsertNewUser {
     for (my $i=0 ; $i<8 ; $i++) {
         $password .= substr("abcdefghijklmnopqrstuvwxyz", int(rand(26)), 1);
     }
-    my $usenewemailtech = Param('newemailtech') & Param('newemailtechdefault');
 
     PushGlobalSQLState();
     SendSQL("select bit, userregexp from groups where userregexp != ''");
@@ -605,7 +604,7 @@ sub InsertNewUser {
             
     $username = SqlQuote($username);
     $realname = SqlQuote($realname);
-    SendSQL("insert into profiles (login_name, realname, password, cryptpassword, groupset, newemailtech) values ($username, $realname, '$password', encrypt('$password'), $groupset, $usenewemailtech)");
+    SendSQL("insert into profiles (login_name, realname, password, cryptpassword, groupset) values ($username, $realname, '$password', encrypt('$password'), $groupset)");
     PopGlobalSQLState();
     return $password;
 }
