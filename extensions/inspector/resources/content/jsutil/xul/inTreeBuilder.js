@@ -544,6 +544,8 @@ inTreeBuilder.prototype =
   buildContent: function()
   {
     this.mTreeBody.builder.rebuild();
+    var bx = this.mTree.boxObject.QueryInterface(Components.interfaces.nsITreeBoxObject);
+    setTimeout(function(a) { a.invalidate() }, 1, bx);
   },
 
   buildColumns: function()
