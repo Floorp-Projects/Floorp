@@ -36,6 +36,8 @@
 #include "nsWindow.h"
 #include "nsIAppShell.h"
 #include "nsIFontMetrics.h"
+#include "nsIFontEnumerator.h" 
+#include "nsIPref.h"
 #include "nsFont.h"
 #include "nsGUIEvent.h"
 #include "nsIRenderingContext.h"
@@ -2971,6 +2973,30 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT 
               }
               break;
 
+            }
+          }
+          break;
+
+        case WM_FONTCHANGE: 
+          {
+            nsresult rv;
+
+            // update the global font list
+            nsCOMPtr<nsIFontEnumerator> fontEnum = do_GetService("@mozilla.org/gfx/fontenumerator;1", &rv);
+            if (NS_SUCCEEDED(rv)) {
+              fontEnum->UpdateFontList();
+            }
+
+            // update device context font cache
+            // Dirty but easiest way: 
+            // Changing nsIPref entry which triggers callbacks
+            // and flows into calling mDeviceContext->FlushFontCache()
+            // to update the font cache in all the instance of Browsers
+            nsCOMPtr<nsIPref> pPrefs = do_GetService(NS_PREF_CONTRACTID, &rv); 
+            if (NS_SUCCEEDED(rv)) { 
+              PRBool fontInternalChange = PR_FALSE;  
+              pPrefs->GetBoolPref("font.internaluseonly.changed", &fontInternalChange);
+              pPrefs->SetBoolPref("font.internaluseonly.changed", !fontInternalChange);
             }
           }
           break;
