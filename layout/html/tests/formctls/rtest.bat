@@ -1,15 +1,17 @@
 @echo off
-if %1==baseline goto baseline
 
-:verify
-if not exist verify mkdir verify
-s:\mozilla\dist\win32_d.obj\bin\viewer -B 1 -o s:\mozilla\layout\html\tests\formctls\verify\ -rd s:\mozilla\layout\html\tests\formctls -f s:\mozilla\layout\html\tests\formctls\file_list.txt
-goto done
+rem Treat assertions as warnings so the tests don't choke waiting on a
+rem dialog box
 
-:baseline
-s:\mozilla\dist\win32_d.obj\bin\viewer -o s:\mozilla\layout\html\tests\formctls\ -f s:\mozilla\layout\html\tests\formctls\file_list.txt
-goto done
+set XPCOM_DEBUG_BREAK_SAVE=%XPCOM_DEBUG_BREAK%
+set XPCOM_DEBUG_BREAK=warn
 
-:error
-echo syntax: rtest (baseline verify) 
-:done
+cd base
+call rtest.bat %1
+
+cd ..\bugs
+call rtest.bat %1
+
+cd ..
+
+set XPCOM_DEBUG_BREAK=%XPCOM_DEBUG_BREAK_SAVE%
