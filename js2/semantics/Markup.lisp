@@ -289,7 +289,7 @@
   (pretail nil :type list)            ;Tail's predecessor if tail's car is a block that can be inlined at the end of the output list; nil otherwise.
   (logical-line-width 0 :type integer);Logical line width for the current paragraph
   (division-length nil)               ;Number of characters in the current division block; t if more than one line; nil if not emitting division block.
-  (logical-position nil :type logical-position)) ;Information about the current logical lines or nil if not emitting paragraph contents
+  (logical-position nil :type (or null logical-position))) ;Information about the current logical lines or nil if not emitting paragraph contents
 
 ;                                                ;RTF                     ;HTML
 (defconstant *markup-stream-top-level* 0)        ;Top-level group         ;Top level
