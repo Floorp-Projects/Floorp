@@ -25,9 +25,10 @@ MODULE=uconv
 
 DEPTH=..\..\..
 
-XPIDLSRCS =										\
-            .\nsITextToSubURI.idl	\
+XPIDLSRCS =					\
+            .\nsITextToSubURI.idl		\
             .\nsICurrentCharsetListener.idl	\
+            .\nsICharsetConverterManager2.idl	\
             $(NULL)
 
 
