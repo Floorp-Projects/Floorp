@@ -276,24 +276,17 @@ nsWalletlibService::OnEndDocumentLoad(nsIDocumentLoader* aLoader, nsIURI *aUrl, 
 #else
     const char* spec;
 #endif
-    while (doc) {
-      docURL = doc->GetDocumentURL();
-      if (nsnull != docURL) {
-        (void)docURL->GetSpec(&spec);
-        if (PL_strcmp(spec, "about:blank")) {
-          break;
-        }
-#ifdef NECKO
-        nsCRT::free(spec);
-#endif
-      }
-//??    doc = nsFormFrame::GetParentHTMLFrameDocument(doc);
+    if (!doc) {
+      return NS_OK;
     }
-    if (nsnull != docURL) {
-      URLName = (char*)PR_Malloc(PL_strlen(spec)+1);
-      PL_strcpy(URLName, spec);
-      NS_IF_RELEASE(docURL);
+    docURL = doc->GetDocumentURL();
+    if (!docURL) {
+      return NS_OK;
     }
+    (void)docURL->GetSpec(&spec);
+    URLName = (char*)PR_Malloc(PL_strlen(spec)+1);
+    PL_strcpy(URLName, spec);
+    NS_IF_RELEASE(docURL);
 #ifdef NECKO
     nsCRT::free(spec);
 #endif

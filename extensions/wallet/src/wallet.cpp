@@ -1317,6 +1317,7 @@ wallet_ReadFromURLFieldToSchemaFile
 
 void
 wallet_FetchFromNetCenter(char* from, char* to) {
+return;
     nsIInputStream* newStream;
     nsIInputStream* *aNewStream = &newStream;
     nsresult rv;
@@ -2493,24 +2494,17 @@ WLLT_OnSubmit(nsIContent* formNode) {
 #else
   const char* spec;
 #endif
-  while (doc) {
-    docURL = doc->GetDocumentURL();
-    if (nsnull != docURL) {
-      (void)docURL->GetSpec(&spec);
-      if (PL_strcmp(spec, "about:blank")) {
-        break;
-      }
-#ifdef NECKO
-      nsCRT::free(spec);
-#endif
-    }
-//??    doc = nsFormFrame::GetParentHTMLFrameDocument(doc);
+  if (!doc) {
+    return;
   }
-  if (nsnull != docURL) {
-    URLName = (char*)PR_Malloc(PL_strlen(spec)+1);
-    PL_strcpy(URLName, spec);
-    NS_IF_RELEASE(docURL);
+  docURL = doc->GetDocumentURL();
+  if (!docURL) {
+    return;
   }
+  (void)docURL->GetSpec(&spec);
+  URLName = (char*)PR_Malloc(PL_strlen(spec)+1);
+  PL_strcpy(URLName, spec);
+  NS_IF_RELEASE(docURL);
 #ifdef NECKO
   nsCRT::free(spec);
 #endif
