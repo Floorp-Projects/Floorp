@@ -32,7 +32,7 @@ Contributor(s):  Håkan Waara <hwaara@chello.se>
   xmlns:nc="http://home.netscape.com/NC-rdf#"
   xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
   windowtype="mailnews:filterlist"
-  width="480" height="360"
+  style="width: 45em; height: 31em;"
   onload="onLoad();"
   onclose="return onFilterClose();"
   persist="width height screenX screenY"
