@@ -58,7 +58,7 @@ nsSupportsArray::operator=(const nsISupportsArray& aOther)
 {
   PRUint32 otherCount = aOther.Count();
 
-  if (otherCount > (PRInt32)mArraySize) {
+  if (otherCount > mArraySize) {
     DeleteArray();
     mArraySize = otherCount;
     mArray = new nsISupports*[mArraySize];
