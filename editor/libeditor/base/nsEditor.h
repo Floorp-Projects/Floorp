@@ -496,6 +496,9 @@ public:
   
   static nsresult GetStartNodeAndOffset(nsISelection *aSelection, nsCOMPtr<nsIDOMNode> *outStartNode, PRInt32 *outStartOffset);
   static nsresult GetEndNodeAndOffset(nsISelection *aSelection, nsCOMPtr<nsIDOMNode> *outEndNode, PRInt32 *outEndOffset);
+#if DEBUG_JOE
+  static void DumpNode(nsIDOMNode *aNode, PRInt32 indent=0);
+#endif
 
   // Helpers to add a node to the selection. 
   // Used by table cell selection methods

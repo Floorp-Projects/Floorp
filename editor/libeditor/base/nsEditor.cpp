@@ -48,6 +48,7 @@
 #include "nsIDOMElement.h"
 #include "nsIDOMAttr.h"
 #include "nsIDOMNode.h"
+#include "nsIDOMDocumentFragment.h"
 #include "nsIDOMNamedNodeMap.h"
 #include "nsIDOMNodeList.h"
 #include "nsIDOMRange.h"
@@ -5118,4 +5119,56 @@ nsEditor::RemoveAttributeOrEquivalent(nsIDOMElement * aElement,
 {
   return RemoveAttribute(aElement, aAttribute);
 }
-
+#if DEBUG_JOE
+void
+nsEditor::DumpNode(nsIDOMNode *aNode, PRInt32 indent)
+{
+  PRInt32 i;
+  for (i=0; i<indent; i++)
+    printf("  ");
+  
+  nsCOMPtr<nsIDOMElement> element = do_QueryInterface(aNode);
+  nsCOMPtr<nsIDOMDocumentFragment> docfrag = do_QueryInterface(aNode);
+  
+  if (element || docfrag)
+  { 
+    if (element)
+    {
+      nsAutoString tag;
+      char ctag[40];
+      element->GetTagName(tag);
+      tag.ToCString(ctag,40);
+      ctag[40]=0;
+      printf("<%s>\n", ctag);
+    }
+    else
+    {
+      printf("<document fragment>\n");
+    }
+    nsCOMPtr<nsIDOMNodeList> childList;
+    aNode->GetChildNodes(getter_AddRefs(childList));
+    if (!childList) return NS_ERROR_NULL_POINTER;
+    PRUint32 numChildren;
+    childList->GetLength(&numChildren);
+    nsCOMPtr<nsIDOMNode> child, tmp;
+    aNode->GetFirstChild(getter_AddRefs(child));
+    for (i=0; i<numChildren; i++)
+    {
+      DumpNode(child, indent+1);
+      child->GetNextSibling(getter_AddRefs(tmp));
+      child = tmp;
+    }
+  }
+  else if (IsTextNode(aNode))
+  {
+    nsCOMPtr<nsIDOMCharacterData> textNode = do_QueryInterface(aNode);
+    nsAutoString str;
+    textNode->GetData(str);
+    char theText[30], *c;
+    str.ToCString(theText,30);
+    theText[30]=0;
+    while (c=strchr(theText,'\n')) (*c) = ' ';
+    printf("<textnode> %s\n", theText);
+  }
+}
+#endif
