@@ -506,8 +506,10 @@ nsHTMLDocument::GetDomain(nsString& aDomain)
 NS_IMETHODIMP    
 nsHTMLDocument::GetURL(nsString& aURL)
 {
-  //XXX TBI
-  return NS_ERROR_NOT_IMPLEMENTED;
+  if (nsnull != mDocumentURL) {
+    mDocumentURL->ToString(aURL);
+  }
+  return NS_OK;
 }
 
 NS_IMETHODIMP    
