@@ -846,7 +846,7 @@ NS_IMETHODIMP nsDeviceContextOS2 :: GetDeviceContextFor(nsIDeviceContextSpec *aD
   HDC dc = PrnOpenDC(pq, "Mozilla", numCopies, toPrinter, file);
 
   if (!dc) {
-     PMERROR("DevOpenDC");
+     return NS_ERROR_FAILURE; //PMERROR("DevOpenDC");
   } /* endif */
 
   return ((nsDeviceContextOS2 *)aContext)->Init((nsNativeDeviceContext)dc, this);
