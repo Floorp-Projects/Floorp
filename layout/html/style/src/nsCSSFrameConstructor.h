@@ -457,9 +457,11 @@ protected:
                                       nsIContent*        aContent,
                                       nsIStyleContext*   aStyleContext);
 
-  nsresult ConstructCheckboxControlFrame(nsIPresShell*        aPresShell, 
-                                         nsIPresContext*      aPresContext,
-                                         nsIFrame*&           aNewFrame);
+  nsresult ConstructCheckboxControlFrame(nsIPresShell*    aPresShell, 
+                                         nsIPresContext*  aPresContext,
+                                         nsIFrame*&       aNewFrame,
+                                         nsIContent*      aContent,
+                                         nsIStyleContext* aStyleContext);
 
   nsresult ConstructButtonControlFrame(nsIPresShell*          aPresShell,
                                        nsIPresContext*      	aPresContext,

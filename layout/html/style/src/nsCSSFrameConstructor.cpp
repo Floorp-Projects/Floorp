@@ -57,6 +57,7 @@
 #include "nsIComboboxControlFrame.h"
 #include "nsIListControlFrame.h"
 #include "nsIRadioControlFrame.h"
+#include "nsICheckboxControlFrame.h"
 #include "nsIListControlFrame.h"
 #include "nsIDOMCharacterData.h"
 #include "nsIDOMHTMLImageElement.h"
@@ -127,11 +128,6 @@ static PRBool gNoisyContentUpdates = PR_FALSE;
 static PRBool gReallyNoisyContentUpdates = PR_FALSE;
 static PRBool gNoisyInlineConstruction = PR_FALSE;
 #endif
-
-//------------------------------------------------------------------
-// This is temporary while GfxLists and GfxDropdowns are being put in
-static PRBool gDoGfxDropdown = PR_FALSE;
-static PRBool gDoGfxListbox  = PR_FALSE;
 
 #define NEWGFX_LIST_SCROLLFRAME
 //------------------------------------------------------------------
@@ -1328,7 +1324,7 @@ nsCSSFrameConstructor::CreateInputFrame(nsIPresShell    *aPresShell,
       rv = ConstructButtonControlFrame(aPresShell, aPresContext, aFrame);
     }
     else if (val.EqualsIgnoreCase("checkbox")) {
-      rv = ConstructCheckboxControlFrame(aPresShell, aPresContext, aFrame);
+      rv = ConstructCheckboxControlFrame(aPresShell, aPresContext, aFrame, aContent, aStyleContext);
     }
     else if (val.EqualsIgnoreCase("file")) {
       rv = NS_NewFileControlFrame(aPresShell, &aFrame);
@@ -3119,13 +3115,15 @@ nsCSSFrameConstructor::ConstructRadioControlFrame(nsIPresShell*        aPresShel
     radio->SetRadioButtonFaceStyleContext(radioStyle);
     NS_RELEASE(radio);
   }
- return rv;
+  return rv;
 }
 
 nsresult
-nsCSSFrameConstructor::ConstructCheckboxControlFrame(nsIPresShell*        aPresShell, 
-                                                     nsIPresContext*     		aPresContext,
-                                                	 nsIFrame*&          		aNewFrame)
+nsCSSFrameConstructor::ConstructCheckboxControlFrame(nsIPresShell*    aPresShell, 
+                                                     nsIPresContext*  aPresContext,
+                                                     nsIFrame*&       aNewFrame,
+                                                     nsIContent*      aContent,
+                                                     nsIStyleContext* aStyleContext)
 {
   nsresult rv = NS_OK;
 	if (GetFormElementRenderingMode(aPresContext, eWidgetType_Checkbox) == eWidgetRendering_Gfx)
@@ -3136,6 +3134,16 @@ nsCSSFrameConstructor::ConstructCheckboxControlFrame(nsIPresShell*        aPresS
 
   if (NS_FAILED(rv)) {
     aNewFrame = nsnull;
+  }
+
+  nsCOMPtr<nsIStyleContext> checkboxStyle;
+  aPresContext->ResolvePseudoStyleContextFor(aContent, nsHTMLAtoms::checkPseudo, 
+                                             aStyleContext, PR_FALSE, getter_AddRefs(checkboxStyle));
+  nsICheckboxControlFrame* checkbox = nsnull;
+  if (aNewFrame != nsnull && 
+      NS_SUCCEEDED(aNewFrame->QueryInterface(NS_GET_IID(nsICheckboxControlFrame), (void**)&checkbox))) {
+    checkbox->SetCheckboxFaceStyleContext(checkboxStyle);
+    NS_RELEASE(checkbox);
   }
   return rv;
 }
@@ -3239,6 +3247,13 @@ nsCSSFrameConstructor::ConstructSelectFrame(nsIPresShell*        aPresShell,
   const PRInt32 kNoSizeSpecified = -1;
 
   PRBool hasGfxScrollbars = HasGfxScrollbars(aPresContext);
+  nsCOMPtr<nsIPref> pref(do_GetService(NS_PREF_PROGID));
+  PRBool doGfxListbox  = PR_FALSE;
+  PRBool doGfxCombobox = PR_FALSE;
+  if (pref) {
+	  pref->GetBoolPref("nglayout.widget.gfxlistbox", &doGfxListbox);
+	  pref->GetBoolPref("nglayout.widget.gfxcombobox", &doGfxCombobox);
+  }
 
   if (eWidgetRendering_Gfx == mode) {
     // Construct a frame-based listbox or combobox
@@ -3272,7 +3287,8 @@ nsCSSFrameConstructor::ConstructSelectFrame(nsIPresShell*        aPresShell,
 
         nsHTMLContainerFrame::CreateViewForFrame(aPresContext, comboboxFrame,
                                                  aStyleContext, PR_FALSE);
-        if (hasGfxScrollbars && gDoGfxDropdown) {
+
+        if (hasGfxScrollbars && doGfxCombobox) {
           ///////////////////////////////////////////////////////////////////
           // Combobox - New GFX Implementation
           ///////////////////////////////////////////////////////////////////
@@ -3524,7 +3540,7 @@ nsCSSFrameConstructor::ConstructSelectFrame(nsIPresShell*        aPresShell,
             aFrameHasBeenInitialized = PR_TRUE;
           }
         }
-      } else if (hasGfxScrollbars && gDoGfxListbox) {
+      } else if (hasGfxScrollbars && doGfxListbox) {
         
         ///////////////////////////////////////////////////////////////////
         // ListBox - New GFX Implementation
@@ -3927,27 +3943,15 @@ nsCSSFrameConstructor::ConstructFieldSetFrame(nsIPresShell*        aPresShell,
   const nsStyleDisplay* styleDisplay;
   newFrame->GetStyleData(eStyleStruct_Display, (const nsStyleStruct*&) styleDisplay);
 
-  /*
-  PRUint32 childFlags = (NS_STYLE_DISPLAY_BLOCK != styleDisplay->mDisplay) ? NS_BLOCK_SHRINK_WRAP : 0;
-  // inherit the FieldSet state 
-  PRUint32 parentState;
-  newFrame->GetFrameState( &parentState );
-  childFlags |= parentState;
-  childFlags |= NS_BLOCK_SHRINK_WRAP;
-*/
-
-  nsIFrame * areaFrame;
-//  NS_NewAreaFrame(shell, &areaFrame, childFlags);
-
-
-  NS_NewBlockFrame(shell, &areaFrame);
+  nsIFrame * blkFrame;
+  NS_NewBlockFrame(shell, &blkFrame, flags);
 
   // Resolve style and initialize the frame
   nsIStyleContext* styleContext;
   aPresContext->ResolvePseudoStyleContextFor(aContent, nsHTMLAtoms::fieldsetContentPseudo,
                                              aStyleContext, PR_FALSE, &styleContext);
   InitAndRestoreFrame(aPresContext, aState, aContent, 
-                      newFrame, styleContext, nsnull, areaFrame);
+                      newFrame, styleContext, nsnull, blkFrame);
 
   NS_RELEASE(styleContext);          
   
@@ -3957,7 +3961,7 @@ nsCSSFrameConstructor::ConstructFieldSetFrame(nsIPresShell*        aPresShell,
     HaveSpecialBlockStyle(aPresContext, aContent, aStyleContext,
                           &haveFirstLetterStyle, &haveFirstLineStyle);
     nsFrameConstructorSaveState floaterSaveState;
-    aState.PushFloaterContainingBlock(areaFrame, floaterSaveState,
+    aState.PushFloaterContainingBlock(blkFrame, floaterSaveState,
                                       haveFirstLetterStyle,
                                       haveFirstLineStyle);
 
@@ -3970,10 +3974,10 @@ nsCSSFrameConstructor::ConstructFieldSetFrame(nsIPresShell*        aPresShell,
     if (isPositionedContainingBlock) {
       // The area frame becomes a container for child frames that are
       // absolutely positioned
-      aState.PushAbsoluteContainingBlock(areaFrame, absoluteSaveState);
+      aState.PushAbsoluteContainingBlock(blkFrame, absoluteSaveState);
     }
      
-    ProcessChildren(aPresShell, aPresContext, aState, aContent, areaFrame, PR_FALSE,
+    ProcessChildren(aPresShell, aPresContext, aState, aContent, blkFrame, PR_FALSE,
                     childItems, PR_TRUE);
 
     static NS_DEFINE_IID(kLegendFrameCID, NS_LEGEND_FRAME_CID);
@@ -3987,7 +3991,7 @@ nsCSSFrameConstructor::ConstructFieldSetFrame(nsIPresShell*        aPresShell,
           nsIFrame * nxt;
           legendFrame->GetNextSibling(&nxt);
           previous->SetNextSibling(nxt);
-          areaFrame->SetNextSibling(legendFrame);
+          blkFrame->SetNextSibling(legendFrame);
           legendFrame->SetParent(newFrame);
           legendFrame->SetNextSibling(nsnull);
           break;
@@ -3995,7 +3999,7 @@ nsCSSFrameConstructor::ConstructFieldSetFrame(nsIPresShell*        aPresShell,
           nsIFrame * nxt;
           legendFrame->GetNextSibling(&nxt);
           childItems.childList = nxt;
-          areaFrame->SetNextSibling(legendFrame);
+          blkFrame->SetNextSibling(legendFrame);
           legendFrame->SetParent(newFrame);
           legendFrame->SetNextSibling(nsnull);
           break;
@@ -4006,21 +4010,21 @@ nsCSSFrameConstructor::ConstructFieldSetFrame(nsIPresShell*        aPresShell,
     }
 
     // Set the scrolled frame's initial child lists
-    areaFrame->SetInitialChildList(aPresContext, nsnull, childItems.childList);
+    blkFrame->SetInitialChildList(aPresContext, nsnull, childItems.childList);
     if (isPositionedContainingBlock && aState.mAbsoluteItems.childList) {
-      areaFrame->SetInitialChildList(aPresContext,
+      blkFrame->SetInitialChildList(aPresContext,
                                          nsLayoutAtoms::absoluteList,
                                          aState.mAbsoluteItems.childList);
     }
 
     if (aState.mFloatedItems.childList) {
-      areaFrame->SetInitialChildList(aPresContext,
+      blkFrame->SetInitialChildList(aPresContext,
                                          nsLayoutAtoms::floaterList,
                                          aState.mFloatedItems.childList);
     }
 
   // Set the scroll frame's initial child list
-  newFrame->SetInitialChildList(aPresContext, nsnull, areaFrame);
+  newFrame->SetInitialChildList(aPresContext, nsnull, blkFrame);
 
   // our new frame retured is the top frame which is the list frame. 
   aNewFrame = newFrame; 
@@ -4029,52 +4033,6 @@ nsCSSFrameConstructor::ConstructFieldSetFrame(nsIPresShell*        aPresShell,
   aFrameHasBeenInitialized = PR_TRUE; 
 
   return NS_OK;
-
-#if 0
-
-  nsIFrame* newChildList = aChildList;
-
-  // Set the geometric and content parent for each of the child frames 
-  // that will go into the area frame's child list.
-  // The legend frame does not go into the list
-  nsIFrame* lastNewFrame = nsnull;
-  for (nsIFrame* frame = aChildList; nsnull != frame;) {
-    nsIFrame* legendFrame = nsnull;
-    nsresult result = frame->QueryInterface(kLegendFrameCID, (void**)&legendFrame);
-    if (NS_SUCCEEDED(result) && legendFrame) {
-      if (mLegendFrame) { // we already have a legend, destroy it
-        frame->GetNextSibling(&frame);
-        if (lastNewFrame) {
-          lastNewFrame->SetNextSibling(frame);
-        } 
-        else {
-          aChildList = frame;
-        }
-        legendFrame->Destroy(aPresContext);
-      } 
-      else {
-        nsIFrame* nextFrame;
-        frame->GetNextSibling(&nextFrame);
-        if (lastNewFrame) {
-          lastNewFrame->SetNextSibling(nextFrame);
-        } else {
-          newChildList = nextFrame;
-        }
-        frame->SetParent(this);
-        mFrames.FirstChild()->SetNextSibling(frame);
-        mLegendFrame = frame;
-        mLegendFrame->SetNextSibling(nsnull);
-        frame = nextFrame;
-      }
-    } else {
-      frame->SetParent(mFrames.FirstChild());
-      lastNewFrame = frame;
-      frame->GetNextSibling(&frame);
-    }
-  }
-  // Queue up the frames for the content frame
-  return mFrames.FirstChild()->SetInitialChildList(aPresContext, nsnull, newChildList);  
-#endif
 }
 
 nsresult
