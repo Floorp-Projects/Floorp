@@ -1,5 +1,5 @@
 /*
- * $XFree86: xc/lib/fontconfig/src/fccfg.c,v 1.3 2002/02/19 08:33:23 keithp Exp $
+ * $XFree86: xc/lib/fontconfig/src/fccfg.c,v 1.5 2002/03/01 01:00:54 keithp Exp $
  *
  * Copyright © 2000 Keith Packard, member of The XFree86 Project, Inc.
  *
@@ -224,7 +224,7 @@ FcConfigAddDir (FcConfig    *config,
 	dir = (FcChar8 *) malloc (strlen ((char *) d) + 1);
 	if (!dir)
 	    return FcFalse;
-	strcpy (dir, d);
+	strcpy ((char *) dir, (const char *) d);
     }
     if (!FcConfigAddString (&config->dirs, dir))
     {
@@ -849,7 +849,7 @@ FcConfigValues (FcPattern *p, FcExpr *e)
 	l->value = FcConfigEvaluate (p, e);
 	l->next  = 0;
     }
-    while (l->value.type == FcTypeVoid)
+    while (l && l->value.type == FcTypeVoid)
     {
 	FcValueList	*next = l->next;
 	
@@ -1192,7 +1192,7 @@ FcConfigFileExists (const FcChar8 *dir, const FcChar8 *file)
     if (!path)
 	return 0;
 
-    strcpy (path, dir);
+    strcpy ((char *) path, (const char *) dir);
     /* make sure there's a single separating / */
     if ((!path[0] || path[strlen((char *) path)-1] != '/') && file[0] != '/')
 	strcat ((char *) path, "/");
@@ -1240,7 +1240,7 @@ FcConfigGetPath (void)
 	    path[i] = malloc (colon - e + 1);
 	    if (!path[i])
 		goto bail1;
-	    strncpy (path[i], e, colon - e);
+	    strncpy ((char *) path[i], (const char *) e, colon - e);
 	    path[i][colon - e] = '\0';
 	    if (*colon)
 		e = colon + 1;
@@ -1254,7 +1254,7 @@ FcConfigGetPath (void)
     path[i] = malloc (strlen ((char *) dir) + 1);
     if (!path[i])
 	goto bail1;
-    strcpy (path[i], dir);
+    strcpy ((char *) path[i], (const char *) dir);
     return path;
 
 bail1:

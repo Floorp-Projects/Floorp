@@ -1,5 +1,5 @@
 /*
- * $XFree86: xc/lib/fontconfig/src/fccharset.c,v 1.4 2002/02/19 07:50:43 keithp Exp $
+ * $XFree86: xc/lib/fontconfig/src/fccharset.c,v 1.6 2002/03/27 04:33:55 keithp Exp $
  *
  * Copyright © 2001 Keith Packard, member of The XFree86 Project, Inc.
  *
@@ -812,7 +812,7 @@ FcNameUnparseCharSet (FcStrBuf *buf, const FcCharSet *c)
 #   define HAS_NEXT_CHAR
 #  else
 #   if FREETYPE_MINOR == 0
-#    if FREETYPE_PATCH >= 8
+#    if FREETYPE_PATCH >= 9
 #     define HAS_NEXT_CHAR
 #    endif
 #   endif
@@ -824,7 +824,10 @@ FcNameUnparseCharSet (FcStrBuf *buf, const FcCharSet *c)
  * For our purposes, this approximation is sufficient
  */
 #ifndef HAS_NEXT_CHAR
-#define FT_Get_Next_Char(face, ucs4) ((ucs4) >= 0xffffff ? 0 : (ucs4) + 1)
+#define FT_Get_First_Char(face, gi) ((*(gi) = 1), 1)
+#define FT_Get_Next_Char(face, ucs4, gi) ((ucs4) >= 0xffffff ? \
+					  (*(gi) = 0), 0 : \
+					  (*(gi) = 1), (ucs4) + 1)
 #warning "No FT_Get_Next_Char"
 #endif
 
@@ -843,271 +846,6 @@ typedef struct _FcFontDecode {
     const FcCharMap *map;
     FcChar32	    max;
 } FcFontDecode;
-
-static const FcCharMap AppleRoman;
-static const FcCharMap AdobeSymbol;
-    
-static const FcFontDecode fcFontDecoders[] = {
-    { ft_encoding_unicode,	0,		(1 << 21) - 1 },
-    { ft_encoding_symbol,	&AdobeSymbol,	(1 << 16) - 1 },
-    { ft_encoding_apple_roman,	&AppleRoman,	(1 << 16) - 1 },
-};
-
-#define NUM_DECODE  (sizeof (fcFontDecoders) / sizeof (fcFontDecoders[0]))
-
-static FT_ULong
-FcFreeTypeMapChar (FcChar32 ucs4, const FcCharMap *map)
-{
-    int		low, high, mid;
-    FcChar16	bmp;
-
-    low = 0;
-    high = map->nent - 1;
-    if (ucs4 < map->ent[low].bmp || map->ent[high].bmp < ucs4)
-	return ~0;
-    while (high - low > 1)
-    {
-	mid = (high + low) >> 1;
-	bmp = map->ent[mid].bmp;
-	if (ucs4 == bmp)
-	    return (FT_ULong) map->ent[mid].encode;
-	if (ucs4 < bmp)
-	    high = mid;
-	else
-	    low = mid;
-    }
-    for (mid = low; mid <= high; mid++)
-    {
-	if (ucs4 == map->ent[mid].bmp)
-	    return (FT_ULong) map->ent[mid].encode;
-    }
-    return ~0;
-}
-
-/*
- * Map a UCS4 glyph to a glyph index.  Use all available encoding
- * tables to try and find one that works.  This information is expected
- * to be cached by higher levels, so performance isn't critical
- */
-
-FT_UInt
-FcFreeTypeCharIndex (FT_Face face, FcChar32 ucs4)
-{
-    int		    initial, offset, decode;
-    FT_UInt	    glyphindex;
-    FT_ULong	    charcode;
-
-    initial = 0;
-    /*
-     * Find the current encoding
-     */
-    if (face->charmap)
-    {
-	for (; initial < NUM_DECODE; initial++)
-	    if (fcFontDecoders[initial].encoding == face->charmap->encoding)
-		break;
-	if (initial == NUM_DECODE)
-	    initial = 0;
-    }
-    /*
-     * Check each encoding for the glyph, starting with the current one
-     */
-    for (offset = 0; offset < NUM_DECODE; offset++)
-    {
-	decode = (initial + offset) % NUM_DECODE;
-	if (!face->charmap || face->charmap->encoding != fcFontDecoders[decode].encoding)
-	    if (FT_Select_Charmap (face, fcFontDecoders[decode].encoding) != 0)
-		continue;
-	if (fcFontDecoders[decode].map)
-	{
-	    charcode = FcFreeTypeMapChar (ucs4, fcFontDecoders[decode].map);
-	    if (charcode == ~0)
-		continue;
-	}
-	else
-	    charcode = (FT_ULong) ucs4;
-	glyphindex = FT_Get_Char_Index (face, charcode);
-	if (glyphindex)
-	    return glyphindex;
-    }
-    return 0;
-}
-
-static FcBool
-FcFreeTypeCheckGlyph (FT_Face face, FcChar32 ucs4, 
-		      FT_UInt glyph, FcBlanks *blanks)
-{
-    FT_Int	    load_flags = FT_LOAD_NO_SCALE | FT_LOAD_NO_HINTING;
-    FT_GlyphSlot    slot;
-    
-    /*
-     * When using scalable fonts, only report those glyphs
-     * which can be scaled; otherwise those fonts will
-     * only be available at some sizes, and never when
-     * transformed.  Avoid this by simply reporting bitmap-only
-     * glyphs as missing
-     */
-    if (face->face_flags & FT_FACE_FLAG_SCALABLE)
-	load_flags |= FT_LOAD_NO_BITMAP;
-    
-    if (FT_Load_Glyph (face, glyph, load_flags))
-	return FcFalse;
-    
-    slot = face->glyph;
-    if (!glyph)
-	return FcFalse;
-    
-    switch (slot->format) {
-    case ft_glyph_format_bitmap:
-	/*
-	 * Bitmaps are assumed to be reasonable; if
-	 * this proves to be a rash assumption, this
-	 * code can be easily modified
-	 */
-	return FcTrue;
-    case ft_glyph_format_outline:
-	/*
-	 * Glyphs with contours are always OK
-	 */
-	if (slot->outline.n_contours != 0)
-	    return FcTrue;
-	/*
-	 * Glyphs with no contours are only OK if
-	 * they're members of the Blanks set specified
-	 * in the configuration.  If blanks isn't set,
-	 * then allow any glyph to be blank
-	 */
-	if (!blanks || FcBlanksIsMember (blanks, ucs4))
-	    return FcTrue;
-	/* fall through ... */
-    default:
-	break;
-    }
-    return FcFalse;
-}
-
-FcCharSet *
-FcFreeTypeCharSet (FT_Face face, FcBlanks *blanks)
-{
-    FcChar32	    page, off, max, ucs4;
-#ifdef CHECK
-    FcChar32	    font_max = 0;
-#endif
-    FcCharSet	    *fcs;
-    FcCharLeaf	    *leaf;
-    const FcCharMap *map;
-    int		    o;
-    int		    i;
-    FT_UInt	    glyph;
-
-    fcs = FcCharSetCreate ();
-    if (!fcs)
-	goto bail0;
-    
-    for (o = 0; o < NUM_DECODE; o++)
-    {
-	if (FT_Select_Charmap (face, fcFontDecoders[o].encoding) != 0)
-	    continue;
-	map = fcFontDecoders[o].map;
-	if (map)
-	{
-	    /*
-	     * Non-Unicode tables are easy; there's a list of all possible
-	     * characters
-	     */
-	    for (i = 0; i < map->nent; i++)
-	    {
-		ucs4 = map->ent[i].bmp;
-		glyph = FT_Get_Char_Index (face, map->ent[i].encode);
-		if (glyph && FcFreeTypeCheckGlyph (face, ucs4, glyph, blanks))
-		{
-		    leaf = FcCharSetFindLeafCreate (fcs, ucs4);
-		    if (!leaf)
-			goto bail1;
-		    leaf->map[(ucs4 & 0xff) >> 5] |= (1 << (ucs4 & 0x1f));
-#ifdef CHECK
-		    if (ucs4 > font_max)
-			font_max = ucs4;
-#endif
-		}
-	    }
-	}
-	else
-	{
-	    max = fcFontDecoders[o].max;
-	  
-	    /*
-	     * Find the first encoded character in the font
-	     */
-	    ucs4 = 0;
-	    if (FT_Get_Char_Index (face, 0))
-		ucs4 = 0;
-	    else
-		ucs4 = FT_Get_Next_Char (face, 0);
-
-	    for (;;)
-	    {
-		page = ucs4 >> 8;
-		leaf = 0;
-		while ((ucs4 >> 8) == page)
-		{
-		    glyph = FT_Get_Char_Index (face, ucs4);
-		    if (glyph && FcFreeTypeCheckGlyph (face, ucs4, 
-						       glyph, blanks))
-		    {
-			if (!leaf)
-			{
-			    leaf = FcCharSetFindLeafCreate (fcs, ucs4);
-			    if (!leaf)
-				goto bail1;
-			}
-			off = ucs4 & 0xff;
-			leaf->map[off >> 5] |= (1 << (off & 0x1f));
-#ifdef CHECK
-			if (ucs4 > font_max)
-			    font_max = ucs4;
-#endif
-		    }
-		    ucs4++;
-		}
-		ucs4 = FT_Get_Next_Char (face, ucs4 - 1);
-		if (!ucs4)
-		    break;
-	    }
-#ifdef CHECK
-	    for (ucs4 = 0; ucs4 < 0x10000; ucs4++)
-	    {
-		FcBool	    FT_Has, FC_Has;
-
-		FT_Has = FT_Get_Char_Index (face, ucs4) != 0;
-		FC_Has = FcCharSetHasChar (fcs, ucs4);
-		if (FT_Has != FC_Has)
-		{
-		    printf ("0x%08x FT says %d FC says %d\n", ucs4, FT_Has, FC_Has);
-		}
-	    }
-#endif
-	}
-    }
-#ifdef CHECK
-    printf ("%d glyphs %d encoded\n", (int) face->num_glyphs, FcCharSetCount (fcs));
-    for (ucs4 = 0; ucs4 <= font_max; ucs4++)
-    {
-	FcBool	has_char = FcFreeTypeCharIndex (face, ucs4) != 0;
-	FcBool	has_bit = FcCharSetHasChar (fcs, ucs4);
-
-	if (has_char && !has_bit)
-	    printf ("Bitmap missing char 0x%x\n", ucs4);
-	else if (!has_char && has_bit)
-	    printf ("Bitmap extra char 0x%x\n", ucs4);
-    }
-#endif
-    return fcs;
-bail1:
-    FcCharSetDestroy (fcs);
-bail0:
-    return 0;
-}
 
 static const FcCharEnt AppleRomanEnt[] = {
     { 0x0020, 0x20 }, /* SPACE */
@@ -1541,3 +1279,273 @@ static const FcCharMap AdobeSymbol = {
     AdobeSymbolEnt,
     sizeof (AdobeSymbolEnt) / sizeof (AdobeSymbolEnt[0]),
 };
+    
+static const FcFontDecode fcFontDecoders[] = {
+    { ft_encoding_unicode,	0,		(1 << 21) - 1 },
+    { ft_encoding_symbol,	&AdobeSymbol,	(1 << 16) - 1 },
+    { ft_encoding_apple_roman,	&AppleRoman,	(1 << 16) - 1 },
+};
+
+#define NUM_DECODE  (sizeof (fcFontDecoders) / sizeof (fcFontDecoders[0]))
+
+static FT_ULong
+FcFreeTypeMapChar (FcChar32 ucs4, const FcCharMap *map)
+{
+    int		low, high, mid;
+    FcChar16	bmp;
+
+    low = 0;
+    high = map->nent - 1;
+    if (ucs4 < map->ent[low].bmp || map->ent[high].bmp < ucs4)
+	return ~0;
+    while (high - low > 1)
+    {
+	mid = (high + low) >> 1;
+	bmp = map->ent[mid].bmp;
+	if (ucs4 == bmp)
+	    return (FT_ULong) map->ent[mid].encode;
+	if (ucs4 < bmp)
+	    high = mid;
+	else
+	    low = mid;
+    }
+    for (mid = low; mid <= high; mid++)
+    {
+	if (ucs4 == map->ent[mid].bmp)
+	    return (FT_ULong) map->ent[mid].encode;
+    }
+    return ~0;
+}
+
+/*
+ * Map a UCS4 glyph to a glyph index.  Use all available encoding
+ * tables to try and find one that works.  This information is expected
+ * to be cached by higher levels, so performance isn't critical
+ */
+
+FT_UInt
+FcFreeTypeCharIndex (FT_Face face, FcChar32 ucs4)
+{
+    int		    initial, offset, decode;
+    FT_UInt	    glyphindex;
+    FT_ULong	    charcode;
+
+    initial = 0;
+    /*
+     * Find the current encoding
+     */
+    if (face->charmap)
+    {
+	for (; initial < NUM_DECODE; initial++)
+	    if (fcFontDecoders[initial].encoding == face->charmap->encoding)
+		break;
+	if (initial == NUM_DECODE)
+	    initial = 0;
+    }
+    /*
+     * Check each encoding for the glyph, starting with the current one
+     */
+    for (offset = 0; offset < NUM_DECODE; offset++)
+    {
+	decode = (initial + offset) % NUM_DECODE;
+	if (!face->charmap || face->charmap->encoding != fcFontDecoders[decode].encoding)
+	    if (FT_Select_Charmap (face, fcFontDecoders[decode].encoding) != 0)
+		continue;
+	if (fcFontDecoders[decode].map)
+	{
+	    charcode = FcFreeTypeMapChar (ucs4, fcFontDecoders[decode].map);
+	    if (charcode == ~0)
+		continue;
+	}
+	else
+	    charcode = (FT_ULong) ucs4;
+	glyphindex = FT_Get_Char_Index (face, charcode);
+	if (glyphindex)
+	    return glyphindex;
+    }
+    return 0;
+}
+
+static FcBool
+FcFreeTypeCheckGlyph (FT_Face face, FcChar32 ucs4, 
+		      FT_UInt glyph, FcBlanks *blanks)
+{
+    FT_Int	    load_flags = FT_LOAD_NO_SCALE | FT_LOAD_NO_HINTING;
+    FT_GlyphSlot    slot;
+    
+    /*
+     * When using scalable fonts, only report those glyphs
+     * which can be scaled; otherwise those fonts will
+     * only be available at some sizes, and never when
+     * transformed.  Avoid this by simply reporting bitmap-only
+     * glyphs as missing
+     */
+    if (face->face_flags & FT_FACE_FLAG_SCALABLE)
+	load_flags |= FT_LOAD_NO_BITMAP;
+    
+    if (FT_Load_Glyph (face, glyph, load_flags))
+	return FcFalse;
+    
+    slot = face->glyph;
+    if (!glyph)
+	return FcFalse;
+    
+    switch (slot->format) {
+    case ft_glyph_format_bitmap:
+	/*
+	 * Bitmaps are assumed to be reasonable; if
+	 * this proves to be a rash assumption, this
+	 * code can be easily modified
+	 */
+	return FcTrue;
+    case ft_glyph_format_outline:
+	/*
+	 * Glyphs with contours are always OK
+	 */
+	if (slot->outline.n_contours != 0)
+	    return FcTrue;
+	/*
+	 * Glyphs with no contours are only OK if
+	 * they're members of the Blanks set specified
+	 * in the configuration.  If blanks isn't set,
+	 * then allow any glyph to be blank
+	 */
+	if (!blanks || FcBlanksIsMember (blanks, ucs4))
+	    return FcTrue;
+	/* fall through ... */
+    default:
+	break;
+    }
+    return FcFalse;
+}
+
+FcCharSet *
+FcFreeTypeCharSet (FT_Face face, FcBlanks *blanks)
+{
+    FcChar32	    page, off, max, ucs4;
+#ifdef CHECK
+    FcChar32	    font_max = 0;
+#endif
+    FcCharSet	    *fcs;
+    FcCharLeaf	    *leaf;
+    const FcCharMap *map;
+    int		    o;
+    int		    i;
+    FT_UInt	    glyph;
+
+    fcs = FcCharSetCreate ();
+    if (!fcs)
+	goto bail0;
+    
+    for (o = 0; o < NUM_DECODE; o++)
+    {
+	if (FT_Select_Charmap (face, fcFontDecoders[o].encoding) != 0)
+	    continue;
+	map = fcFontDecoders[o].map;
+	if (map)
+	{
+	    /*
+	     * Non-Unicode tables are easy; there's a list of all possible
+	     * characters
+	     */
+	    for (i = 0; i < map->nent; i++)
+	    {
+		ucs4 = map->ent[i].bmp;
+		glyph = FT_Get_Char_Index (face, map->ent[i].encode);
+		if (glyph && FcFreeTypeCheckGlyph (face, ucs4, glyph, blanks))
+		{
+		    leaf = FcCharSetFindLeafCreate (fcs, ucs4);
+		    if (!leaf)
+			goto bail1;
+		    leaf->map[(ucs4 & 0xff) >> 5] |= (1 << (ucs4 & 0x1f));
+#ifdef CHECK
+		    if (ucs4 > font_max)
+			font_max = ucs4;
+#endif
+		}
+	    }
+	}
+	else
+	{
+	    FT_UInt gindex;
+	  
+	    max = fcFontDecoders[o].max;
+	    /*
+	     * Find the first encoded character in the font
+	     */
+	    if (FT_Get_Char_Index (face, 0))
+	    {
+		ucs4 = 0;
+		gindex = 1;
+	    }
+	    else
+	    {
+		ucs4 = FT_Get_Next_Char (face, 0, &gindex);
+		if (!ucs4)
+		    gindex = 0;
+	    }
+
+	    while (gindex)
+	    {
+		page = ucs4 >> 8;
+		leaf = 0;
+		while ((ucs4 >> 8) == page)
+		{
+		    glyph = FT_Get_Char_Index (face, ucs4);
+		    if (glyph && FcFreeTypeCheckGlyph (face, ucs4, 
+						       glyph, blanks))
+		    {
+			if (!leaf)
+			{
+			    leaf = FcCharSetFindLeafCreate (fcs, ucs4);
+			    if (!leaf)
+				goto bail1;
+			}
+			off = ucs4 & 0xff;
+			leaf->map[off >> 5] |= (1 << (off & 0x1f));
+#ifdef CHECK
+			if (ucs4 > font_max)
+			    font_max = ucs4;
+#endif
+		    }
+		    ucs4++;
+		}
+		ucs4 = FT_Get_Next_Char (face, ucs4 - 1, &gindex);
+		if (!ucs4)
+		    gindex = 0;
+	    }
+#ifdef CHECK
+	    for (ucs4 = 0; ucs4 < 0x10000; ucs4++)
+	    {
+		FcBool	    FT_Has, FC_Has;
+
+		FT_Has = FT_Get_Char_Index (face, ucs4) != 0;
+		FC_Has = FcCharSetHasChar (fcs, ucs4);
+		if (FT_Has != FC_Has)
+		{
+		    printf ("0x%08x FT says %d FC says %d\n", ucs4, FT_Has, FC_Has);
+		}
+	    }
+#endif
+	}
+    }
+#ifdef CHECK
+    printf ("%d glyphs %d encoded\n", (int) face->num_glyphs, FcCharSetCount (fcs));
+    for (ucs4 = 0; ucs4 <= font_max; ucs4++)
+    {
+	FcBool	has_char = FcFreeTypeCharIndex (face, ucs4) != 0;
+	FcBool	has_bit = FcCharSetHasChar (fcs, ucs4);
+
+	if (has_char && !has_bit)
+	    printf ("Bitmap missing char 0x%x\n", ucs4);
+	else if (!has_char && has_bit)
+	    printf ("Bitmap extra char 0x%x\n", ucs4);
+    }
+#endif
+    return fcs;
+bail1:
+    FcCharSetDestroy (fcs);
+bail0:
+    return 0;
+}
+

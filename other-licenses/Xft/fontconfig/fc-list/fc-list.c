@@ -1,5 +1,5 @@
 /*
- * $XFree86: xc/lib/fontconfig/fc-list/fc-list.c,v 1.2 2002/02/15 06:01:26 keithp Exp $
+ * $XFree86: xc/lib/fontconfig/fc-list/fc-list.c,v 1.4 2002/02/28 16:51:46 keithp Exp $
  *
  * Copyright © 2002 Keith Packard, member of The XFree86 Project, Inc.
  *
@@ -29,10 +29,21 @@
 #ifdef HAVE_CONFIG_H
 #include <config.h>
 #else
+#ifdef linux
+#define HAVE_GETOPT_LONG 1
+#endif
 #define HAVE_GETOPT 1
 #endif
 
+#ifndef HAVE_GETOPT
+#define HAVE_GETOPT 0
+#endif
+#ifndef HAVE_GETOPT_LONG
+#define HAVE_GETOPT_LONG 0
+#endif
+
 #if HAVE_GETOPT_LONG
+#undef  _GNU_SOURCE
 #define _GNU_SOURCE
 #include <getopt.h>
 const struct option longopts[] = {
@@ -101,7 +112,7 @@ main (int argc, char **argv)
 	return 1;
     }
     if (argv[i])
-	pat = FcNameParse (argv[i]);
+	pat = FcNameParse ((FcChar8 *) argv[i]);
     else
 	pat = FcPatternCreate ();
     

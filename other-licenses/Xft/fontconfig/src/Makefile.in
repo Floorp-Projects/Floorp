@@ -16,6 +16,8 @@ REQUIRES	= \
 		expat
 
 CSRCS		= \
+		fcatomic.c \
+		fcavl.c \
 	        fcblanks.c \
 	        fccache.c \
 	        fccfg.c \

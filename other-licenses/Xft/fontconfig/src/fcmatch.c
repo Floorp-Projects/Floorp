@@ -1,5 +1,5 @@
 /*
- * $XFree86: xc/lib/fontconfig/src/fcmatch.c,v 1.2 2002/02/15 06:01:28 keithp Exp $
+ * $XFree86: xc/lib/fontconfig/src/fcmatch.c,v 1.4 2002/03/03 18:39:05 keithp Exp $
  *
  * Copyright © 2000 Keith Packard, member of The XFree86 Project, Inc.
  *
@@ -239,19 +239,61 @@ FcCompare (FcPattern	*pat,
 }
 
 FcPattern *
-FcFontMatch (FcConfig	*config,
-	     FcPattern	*p, 
-	     FcResult	*result)
+FcFontRenderPrepare (FcConfig	    *config,
+		     FcPattern	    *pat,
+		     FcPattern	    *font)
+{
+    FcPattern	    *new;
+    int		    i;
+    FcPatternElt    *fe, *pe;
+    FcValue	    v;
+    double	    score[NUM_MATCHER];
+    FcResult	    result;
+    
+    new = FcPatternCreate ();
+    if (!new)
+	return 0;
+    for (i = 0; i < font->num; i++)
+    {
+	fe = &font->elts[i];
+	pe = FcPatternFind (pat, fe->object, FcFalse);
+	if (pe)
+	{
+	    if (!FcCompareValueList (pe->object, pe->values, 
+				     fe->values, &v, score, &result))
+	    {
+		FcPatternDestroy (new);
+		return 0;
+	    }
+	}
+	else
+	    v = fe->values->value;
+	FcPatternAdd (new, fe->object, v, FcTrue);
+    }
+    for (i = 0; i < pat->num; i++)
+    {
+	pe = &pat->elts[i];
+	fe = FcPatternFind (font, pe->object, FcFalse);
+	if (!fe)
+	    FcPatternAdd (new, pe->object, pe->values->value, FcTrue);
+    }
+    FcConfigSubstitute (config, new, FcMatchFont);
+    return new;
+}
+
+FcPattern *
+FcFontSetMatch (FcConfig    *config,
+		FcFontSet   **sets,
+		int	    nsets,
+		FcPattern   *p,
+		FcResult    *result)
 {
     double    	    score[NUM_MATCHER], bestscore[NUM_MATCHER];
     int		    f;
     FcFontSet	    *s;
     FcPattern	    *best;
-    FcPattern	    *new;
-    FcPatternElt   *fe, *pe;
-    FcValue	    v;
     int		    i;
-    FcSetName	    set;
+    int		    set;
 
     for (i = 0; i < NUM_MATCHER; i++)
 	bestscore[i] = 0;
@@ -267,9 +309,9 @@ FcFontMatch (FcConfig	*config,
 	if (!config)
 	    return 0;
     }
-    for (set = FcSetSystem; set <= FcSetApplication; set++)
+    for (set = 0; set < nsets; set++)
     {
-	s = config->fonts[set];
+	s = sets[set];
 	if (!s)
 	    continue;
 	for (f = 0; f < s->nfont; f++)
@@ -316,33 +358,174 @@ FcFontMatch (FcConfig	*config,
 	*result = FcResultNoMatch;
 	return 0;
     }
-    new = FcPatternCreate ();
-    if (!new)
-	return 0;
-    for (i = 0; i < best->num; i++)
+    return FcFontRenderPrepare (config, p, best);
+}
+
+FcPattern *
+FcFontMatch (FcConfig	*config,
+	     FcPattern	*p, 
+	     FcResult	*result)
+{
+    FcFontSet	*sets[2];
+    int		nsets;
+
+    if (!config)
     {
-	fe = &best->elts[i];
-	pe = FcPatternFind (p, fe->object, FcFalse);
-	if (pe)
+	config = FcConfigGetCurrent ();
+	if (!config)
+	    return 0;
+    }
+    nsets = 0;
+    if (config->fonts[FcSetSystem])
+	sets[nsets++] = config->fonts[FcSetSystem];
+    if (config->fonts[FcSetApplication])
+	sets[nsets++] = config->fonts[FcSetApplication];
+    return FcFontSetMatch (config, sets, nsets, p, result);
+}
+
+#include "fcavl.h"
+
+typedef struct _FcSortNode {
+    FcAvlNode	avl;
+    FcPattern	*pattern;
+    double	score[NUM_MATCHER];
+} FcSortNode;
+
+static FcBool
+FcSortMore (FcAvlNode *aa, FcAvlNode *ab)
+{
+    FcSortNode	*a = (FcSortNode *) aa;
+    FcSortNode	*b = (FcSortNode *) ab;
+    int		i;
+
+    for (i = 0; i < NUM_MATCHER; i++)
+    {
+	if (a->score[i] > b->score[i])
+	    return FcTrue;
+	if (a->score[i] < b->score[i])
+	    return FcFalse;
+    }
+    if (aa > ab)
+	return FcTrue;
+    return FcFalse;
+}
+
+static FcBool
+FcSortWalk (FcSortNode *n, FcFontSet *fs, FcCharSet **cs, FcBool trim)
+{
+    FcCharSet	*ncs;
+    
+    if (!n)
+	return FcTrue;
+    if (!FcSortWalk ((FcSortNode *) n->avl.left, fs, cs, trim))
+	return FcFalse;
+    if (FcPatternGetCharSet (n->pattern, FC_CHARSET, 0, &ncs) == FcResultMatch)
+    {
+	if (!trim || !*cs || FcCharSetSubtractCount (ncs, *cs) != 0)
 	{
-	    if (!FcCompareValueList (pe->object, pe->values, 
-				     fe->values, &v, score, result))
+	    if (*cs)
 	    {
-		FcPatternDestroy (new);
-		return 0;
+		ncs = FcCharSetUnion (ncs, *cs);
+		if (!ncs)
+		    return FcFalse;
+		FcCharSetDestroy (*cs);
 	    }
+	    else
+		ncs = FcCharSetCopy (ncs);
+	    *cs = ncs;
+	    if (!FcFontSetAdd (fs, n->pattern))
+		return FcFalse;
 	}
-	else
-	    v = fe->values->value;
-	FcPatternAdd (new, fe->object, v, FcTrue);
     }
-    for (i = 0; i < p->num; i++)
+    if (!FcSortWalk ((FcSortNode *) n->avl.right, fs, cs, trim))
+	return FcFalse;
+    return FcTrue;
+}
+
+FcFontSet *
+FcFontSetSort (FcConfig	    *config,
+	       FcFontSet    **sets,
+	       int	    nsets,
+	       FcPattern    *p,
+	       FcBool	    trim,
+	       FcCharSet    **csp,
+	       FcResult	    *result)
+{
+    FcFontSet	    *ret;
+    FcFontSet	    *s;
+    FcSortNode	    *nodes;
+    int		    nnodes;
+    FcSortNode	    *root;
+    FcSortNode	    *new;
+    FcCharSet	    *cs;
+    int		    set;
+    int		    f;
+    int		    i;
+
+    nnodes = 0;
+    for (set = 0; set < nsets; set++)
     {
-	pe = &p->elts[i];
-	fe = FcPatternFind (best, pe->object, FcFalse);
-	if (!fe)
-	    FcPatternAdd (new, pe->object, pe->values->value, FcTrue);
+	s = sets[set];
+	if (!s)
+	    continue;
+	nnodes += s->nfont;
     }
-    FcConfigSubstitute (config, new, FcMatchFont);
-    return new;
+    if (!nnodes)
+	goto bail0;
+    nodes = malloc (nnodes * sizeof (FcSortNode));
+    if (!nodes)
+	goto bail0;
+    
+    root = 0;
+    new = nodes;
+    for (set = 0; set < nsets; set++)
+    {
+	s = sets[set];
+	if (!s)
+	    continue;
+	for (f = 0; f < s->nfont; f++)
+	{
+	    if (FcDebug () & FC_DBG_MATCHV)
+	    {
+		printf ("Font %d ", f);
+		FcPatternPrint (s->fonts[f]);
+	    }
+	    new->pattern = s->fonts[f];
+	    if (!FcCompare (p, new->pattern, new->score, result))
+		goto bail1;
+	    if (FcDebug () & FC_DBG_MATCHV)
+	    {
+		printf ("Score");
+		for (i = 0; i < NUM_MATCHER; i++)
+		{
+		    printf (" %g", new->score[i]);
+		}
+		printf ("\n");
+	    }
+	    FcAvlInsert (FcSortMore, (FcAvlNode **) &root, &new->avl);
+	    new++;
+	}
+    }
+
+    ret = FcFontSetCreate ();
+    if (!ret)
+	goto bail1;
+
+    cs = 0;
+
+    if (!FcSortWalk (root, ret, &cs, trim))
+	goto bail2;
+
+    *csp = cs;
+
+    return ret;
+
+bail2:
+    if (cs)
+	FcCharSetDestroy (cs);
+    FcFontSetDestroy (ret);
+bail1:
+    free (nodes);
+bail0:
+    return 0;
 }

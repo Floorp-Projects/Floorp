@@ -1,5 +1,5 @@
 /*
- * $XFree86: xc/lib/fontconfig/src/fccache.c,v 1.3 2002/02/19 07:50:43 keithp Exp $
+ * $XFree86: xc/lib/fontconfig/src/fccache.c,v 1.6 2002/03/03 00:19:43 keithp Exp $
  *
  * Copyright © 2000 Keith Packard, member of The XFree86 Project, Inc.
  *
@@ -54,7 +54,7 @@ FcFileCacheFind (FcFileCache	*cache,
     maxid = -1;
     for (c = cache->ents[hash % FC_FILE_CACHE_HASH_SIZE]; c; c = c->next)
     {
-	if (c->hash == hash && !strcmp (match, c->file))
+	if (c->hash == hash && !strcmp ((const char *) match, (const char *) c->file))
 	{
 	    if (c->id > maxid)
 		maxid = c->id;
@@ -222,7 +222,8 @@ FcFileCacheAdd (FcFileCache	*cache,
 	 (old = *prev);
 	 prev = &(*prev)->next)
     {
-	if (old->hash == hash && old->id == id && !strcmp (old->file, file))
+	if (old->hash == hash && old->id == id && !strcmp ((const char *) old->file,
+							   (const char *) file))
 	    break;
     }
     if (*prev)
@@ -249,10 +250,10 @@ FcFileCacheAdd (FcFileCache	*cache,
     c->file = (FcChar8 *) (c + 1);
     c->id = id;
     c->name = c->file + strlen ((char *) file) + 1;
-    strcpy (c->file, file);
+    strcpy ((char *) c->file, (const char *) file);
     c->time = time;
     c->referenced = replace;
-    strcpy (c->name, name);
+    strcpy ((char *) c->name, (const char *) name);
     cache->entries++;
     return FcTrue;
 }
@@ -415,28 +416,24 @@ FcBool
 FcFileCacheSave (FcFileCache	*cache,
 		 const FcChar8	*cache_file)
 {
-    FcChar8	    *lck;
-    FcChar8	    *tmp;
     FILE	    *f;
     int		    h;
-    FcFileCacheEnt *c;
+    FcFileCacheEnt  *c;
+    FcAtomic	    *atomic;
 
     if (!cache->updated && cache->referenced == cache->entries)
 	return FcTrue;
     
-    lck = malloc (strlen ((char *) cache_file)*2 + 4);
-    if (!lck)
+    /* Set-UID programs can't safely update the cache */
+    if (getuid () != geteuid ())
+	return FcFalse;
+    
+    atomic = FcAtomicCreate (cache_file);
+    if (!atomic)
 	goto bail0;
-    tmp = lck + strlen ((char *) cache_file) + 2;
-    strcpy ((char *) lck, (char *) cache_file);
-    strcat ((char *) lck, "L");
-    strcpy ((char *) tmp, (char *) cache_file);
-    strcat ((char *) tmp, "T");
-    if (link ((char *) lck, (char *) cache_file) < 0 && errno != ENOENT)
+    if (!FcAtomicLock (atomic))
 	goto bail1;
-    if (access ((char *) tmp, F_OK) == 0)
-	goto bail2;
-    f = fopen ((char *) tmp, "w");
+    f = fopen ((char *) FcAtomicNewFile(atomic), "w");
     if (!f)
 	goto bail2;
 
@@ -468,21 +465,23 @@ FcFileCacheSave (FcFileCache	*cache,
     if (fclose (f) == EOF)
 	goto bail3;
     
-    if (rename ((char *) tmp, (char *) cache_file) < 0)
+    if (!FcAtomicReplaceOrig (atomic))
 	goto bail3;
     
-    unlink ((char *) lck);
+    FcAtomicUnlock (atomic);
+    FcAtomicDestroy (atomic);
+
     cache->updated = FcFalse;
     return FcTrue;
 
 bail4:
     fclose (f);
 bail3:
-    unlink ((char *) tmp);
+    FcAtomicDeleteNew (atomic);
 bail2:
-    unlink ((char *) lck);
+    FcAtomicUnlock (atomic);
 bail1:
-    free (lck);
+    FcAtomicDestroy (atomic);
 bail0:
     return FcFalse;
 }
@@ -533,7 +532,7 @@ FcFileCacheReadDir (FcFontSet *set, const FcChar8 *cache_file)
 	font = FcNameParse (name);
 	if (font)
 	{
-	    strcpy (base, file);
+	    strcpy ((char *) base, (const char *) file);
 	    if (FcDebug () & FC_DBG_CACHEV)
 	    {
 		printf (" dir cache file \"%s\"\n", file);

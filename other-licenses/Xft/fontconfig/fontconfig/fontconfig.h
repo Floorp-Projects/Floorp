@@ -1,5 +1,5 @@
 /*
- * $XFree86: xc/lib/fontconfig/fontconfig/fontconfig.h,v 1.3 2002/02/19 07:50:43 keithp Exp $
+ * $XFree86: xc/lib/fontconfig/fontconfig/fontconfig.h,v 1.7 2002/03/03 18:39:04 keithp Exp $
  *
  * Copyright © 2001 Keith Packard, member of The XFree86 Project, Inc.
  *
@@ -212,6 +212,8 @@ typedef enum _FcSetName {
     FcSetApplication = 1
 } FcSetName;
 
+typedef struct _FcAtomic FcAtomic;
+
 #if defined(__cplusplus) || defined(c_plusplus) /* for C++ V2.0 */
 #define _FCFUNCPROTOBEGIN extern "C" {	/* do not leave open across includes */
 #define _FCFUNCPROTOEND }
@@ -334,7 +336,13 @@ FcCharSetCoverage (const FcCharSet *a, FcChar32 page, FcChar32 *result);
 
 /* fcdbg.c */
 void
+FcValuePrint (FcValue v);
+
+void
 FcPatternPrint (FcPattern *p);
+
+void
+FcFontSetPrint (FcFontSet *s);
 
 /* fcdefault.c */
 void
@@ -400,15 +408,69 @@ FcObjectSet *
 FcObjectSetBuild (const char *first, ...);
 
 FcFontSet *
+FcFontSetList (FcConfig	    *config,
+	       FcFontSet    **sets,
+	       int	    nsets,
+	       FcPattern    *p,
+	       FcObjectSet  *os);
+
+FcFontSet *
 FcFontList (FcConfig	*config,
 	    FcPattern	*p,
 	    FcObjectSet *os);
 
+/* fcatomic.c */
+
+FcAtomic *
+FcAtomicCreate (const FcChar8   *file);
+
+FcBool
+FcAtomicLock (FcAtomic *atomic);
+
+FcChar8 *
+FcAtomicNewFile (FcAtomic *atomic);
+
+FcChar8 *
+FcAtomicOrigFile (FcAtomic *atomic);
+
+FcBool
+FcAtomicReplaceOrig (FcAtomic *atomic);
+
+void
+FcAtomicDeleteNew (FcAtomic *atomic);
+
+void
+FcAtomicUnlock (FcAtomic *atomic);
+
+void
+FcAtomicDestroy (FcAtomic *atomic);
+
 /* fcmatch.c */
+FcPattern *
+FcFontSetMatch (FcConfig    *config,
+		FcFontSet   **sets,
+		int	    nsets,
+		FcPattern   *p,
+		FcResult    *result);
+
 FcPattern *
 FcFontMatch (FcConfig	*config,
 	     FcPattern	*p, 
 	     FcResult	*result);
+
+FcPattern *
+FcFontRenderPrepare (FcConfig	    *config,
+		     FcPattern	    *pat,
+		     FcPattern	    *font);
+
+FcFontSet *
+FcFontSetSort (FcConfig	    *config,
+	       FcFontSet    **sets,
+	       int	    nsets,
+	       FcPattern    *p,
+	       FcBool	    trim,
+	       FcCharSet    **csp,
+	       FcResult	    *result);
 
 /* fcmatrix.c */
 FcMatrix *
