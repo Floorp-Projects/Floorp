@@ -500,7 +500,7 @@ nsresult nsMsgDBFolder::SendFlagNotifications(nsISupports *item, PRUint32 oldFla
 	PRUint32 changedFlags = oldFlags ^ newFlags;
 	if((changedFlags & MSG_FLAG_READ) || (changedFlags & MSG_FLAG_REPLIED)
 		|| (changedFlags & MSG_FLAG_FORWARDED) || (changedFlags & MSG_FLAG_IMAP_DELETED)
-		|| (changedFlags & MSG_FLAG_NEW))
+		|| (changedFlags & MSG_FLAG_NEW) || (changedFlags & MSG_FLAG_OFFLINE))
 	{
 		rv = NotifyPropertyFlagChanged(item, kStatusAtom, oldFlags, newFlags);
 	}
