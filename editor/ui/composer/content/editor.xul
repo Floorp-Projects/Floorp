@@ -155,9 +155,7 @@
     <menu id="tasksMenu" accesskey="t"/>
 
     <!-- DEBUG only -->
-    <!-- Removing debug menu
     <menu id="debugMenu" /> 
-    -->
     <!-- end DEBUG only -->
   
     <!-- help menu filled from globalOverlay -->
