@@ -345,7 +345,7 @@ NS_METHOD nsMenu::AddMenu(nsIMenu * aMenu)
   
   aMenu->GetLabel(Label);
   char *labelStr = Label.ToNewCString();
-  PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsMenu::AddMenu this=<%p> aMenu=<%p> label=<%s> - not implemented.\n", this, aMenu, labelStr));
+  PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsMenu::AddMenu this=<%p> aMenu=<%p> label=<%s>\n", this, aMenu, labelStr));
   delete[] labelStr;
 #endif
 
