@@ -42,7 +42,6 @@ export::
     $(MAKE_INSTALL) java.h      $(PUBLIC)\java
     $(MAKE_INSTALL) javasec.h   $(PUBLIC)\java
     $(MAKE_INSTALL) lj.h        $(PUBLIC)\java
-    $(MAKE_INSTALL) softupdt.h  $(PUBLIC)\java
     $(MAKE_INSTALL) edtplug.h   $(PUBLIC)\java
 
 install::
